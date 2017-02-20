@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="5506">
+<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="80">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.516136 0.516136 0.516136 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0 0 0 1" type="Light" unique="1" visible="1">
         <Object at="-4.5 4 -1" at_dir="1" base_name="Headlight_beacon" from="-4 5 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="-23.259 4.46788 -38.3707" at_dir="0" base_name="Default" far="1024" fov="1.0472" from="106.548 64.5825 108.192" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="14.3378 1.2216 12.0731" at_dir="0" base_name="Default" far="1024" fov="1.0472" from="68.6438 78.5814 86.0054" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
       </Object>
@@ -14,7 +14,7 @@
   </Objects>
   <Rendering deferred_rendering="0" frustum_culling="1" hmdd="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
-    <Script base_name="click" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
+    <Script base_name="click" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	import VR
 	
@@ -23,11 +23,11 @@
 </core>
       <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" name_suffix="4" base_name="trigger" name_space="__global__"/>
     </Script>
-    <Script base_name="init" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
+    <Script base_name="init" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	import VR
 	
-	#VR.init_terrain()
+	VR.init_terrain()
 	#VR.init_trees()
 	VR.init_woods()
 	#VR.init_grass()
@@ -35,7 +35,7 @@
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="2" base_name="trigger" name_space="__global__"/>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" name_suffix="3" base_name="trigger" name_space="__global__"/>
     </Script>
-    <Script base_name="init_grass" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
+    <Script base_name="init_grass" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	import VR, random
 	
@@ -61,7 +61,7 @@
 	
 </core>
     </Script>
-    <Script base_name="init_terrain" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
+    <Script base_name="init_terrain" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	import VR
 	from math import pi, sin
@@ -72,13 +72,13 @@
 	VR.terrain = VR.Terrain('ground')
 	r.addChild(VR.terrain)
 	
-	VR.terrain.setParameters([120,120],0.01)
+	VR.terrain.setParameters([120,120],0.1)
 	
 	#tex = VR.Image()
 	#tex.read('face.png')
 	
 	tg = VR.TextureGenerator()
-	tg.setSize([600,600,1], True)
+	tg.setSize([200,200,1], True)
 	#tg.drawFill([0,10,0])
 	r = 0.85
 	g = 0.9
@@ -94,7 +94,7 @@
 	
 </core>
     </Script>
-    <Script base_name="init_trees" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
+    <Script base_name="init_trees" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	import VR
 	from random import random
@@ -155,7 +155,7 @@
 	
 </core>
     </Script>
-    <Script base_name="init_woods" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
+    <Script base_name="init_woods" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	import VR
 	from random import random
@@ -167,7 +167,7 @@
 	r.addChild(VR.woods)
 		
 	def addTree():
-		t = VR.Tree()
+		t = VR.Tree('tree')
 		
 		H = 2+random()*6
 		Nn = int(H)-1
@@ -183,7 +183,7 @@
 		return t
 		
 	def addBush():
-		t = VR.Tree()
+		t = VR.Tree('bush')
 		
 		t.addBranching(1,10, 0.2,0.4,0.1,0.1, 0.2,0.4,0.2,0.2)
 		t.addBranching(1,4, 0.2,0.9,0.8,0.02, 0.2,0.4,0.2,0.2)
@@ -223,7 +223,7 @@
 	
 </core>
     </Script>
-    <Script base_name="shdr_dfrag" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1" group="">
+    <Script base_name="shdr_dfrag" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL" unique="1">
       <core>
 #version 400 compatibility&#13;
 &#13;
@@ -386,7 +386,7 @@ void main( void ) {
 
 </core>
     </Script>
-    <Script base_name="shdr_leaf_lod_fp" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1" group="no group">
+    <Script base_name="shdr_leaf_lod_fp" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL" unique="1">
       <core>
 #version 400 compatibility&#13;
 &#13;
@@ -419,7 +419,7 @@ void main( void ) {&#13;
 }
 </core>
     </Script>
-    <Script base_name="shdr_leaf_lod_setup" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
+    <Script base_name="shdr_leaf_lod_setup" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	import VR
 	
@@ -441,7 +441,7 @@ void main( void ) {&#13;
 	m.setFragmentProgram('shdr_leaf_lod_fp')
 </core>
     </Script>
-    <Script base_name="shdr_leaf_lod_vp" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1" group="no group">
+    <Script base_name="shdr_leaf_lod_vp" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL" unique="1">
       <core>
 // vertex shader program&#13;
 varying vec3 vn;&#13;
@@ -460,7 +460,7 @@ void main( void ) {&#13;
 }
 </core>
     </Script>
-    <Script base_name="shdr_leafs_frag" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1" group="">
+    <Script base_name="shdr_leafs_frag" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL" unique="1">
       <core>
 #version 400 compatibility&#13;
 &#13;
@@ -499,7 +499,7 @@ void main( void ) {
 
 </core>
     </Script>
-    <Script base_name="shdr_leafs_geo" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1" group="">
+    <Script base_name="shdr_leafs_geo" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL" unique="1">
       <core>
 //----------------------------------------------------------------------------------------------MAIN--GP&#13;
 #version 400 compatibility&#13;
@@ -556,7 +556,7 @@ void main() {&#13;
 
 </core>
     </Script>
-    <Script base_name="shdr_leafs_vert" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1" group="">
+    <Script base_name="shdr_leafs_vert" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL" unique="1">
       <core>
 // vertex shader program
 varying vec3 vn;&#13;
@@ -570,7 +570,7 @@ void main( void ) {
 }
 </core>
     </Script>
-    <Script base_name="shdr_tc" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1" group="">
+    <Script base_name="shdr_tc" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL" unique="1">
       <core>
 #version 400 compatibility
 #extension GL_ARB_tessellation_shader : enable
@@ -596,7 +596,7 @@ void main() {
 }
 </core>
     </Script>
-    <Script base_name="shdr_te" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1" group="">
+    <Script base_name="shdr_te" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL" unique="1">
       <core>
 #version 400 compatibility
 #extension GL_ARB_tessellation_shader : enable
@@ -623,7 +623,7 @@ void main() {
 }
 </core>
     </Script>
-    <Script base_name="shrd_frag" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1" group="">
+    <Script base_name="shrd_frag" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL" unique="1">
       <core>
 #version 400 compatibility&#13;
 &#13;
@@ -794,7 +794,7 @@ void main( void ) {
 
 </core>
     </Script>
-    <Script base_name="shrd_geo" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1" group="">
+    <Script base_name="shrd_geo" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL" unique="1">
       <core>
 //----------------------------------------------------------------------------------------------MAIN--GP&#13;
 #version 400 compatibility&#13;
@@ -909,7 +909,7 @@ void main() {&#13;
 
 </core>
     </Script>
-    <Script base_name="shrd_vert" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1" group="">
+    <Script base_name="shrd_vert" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL" unique="1">
       <core>
 // vertex shader program
 varying vec2 vtc;
@@ -943,13 +943,13 @@ void main( void ) {
 }
 </core>
     </Script>
-    <Script base_name="test" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
+    <Script base_name="test" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	import VR
 </core>
       <trig type="none" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
     </Script>
-    <Script base_name="test_materials" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
+    <Script base_name="test_materials" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	import VR
 	
@@ -961,7 +961,7 @@ void main( void ) {
 		print m.getName()
 </core>
     </Script>
-    <Script base_name="wind" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
+    <Script base_name="wind" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	import VR
 	from math import sin, cos, asin
