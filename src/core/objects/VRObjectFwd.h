@@ -28,6 +28,7 @@ ptrFwd(VRLightBeacon);
 ptrFwd(VRGroup);
 ptrFwd(VRBillboard);
 ptrFwd(VRStage);
+ptrFwd(VRSky);
 
 // other
 ptrFwd(VRTexture);

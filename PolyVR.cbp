@@ -653,6 +653,8 @@
 		<Unit filename="src/core/objects/geometry/VRPhysics.h" />
 		<Unit filename="src/core/objects/geometry/VRPrimitive.cpp" />
 		<Unit filename="src/core/objects/geometry/VRPrimitive.h" />
+		<Unit filename="src/core/objects/geometry/VRSky.cpp" />
+		<Unit filename="src/core/objects/geometry/VRSky.h" />
 		<Unit filename="src/core/objects/geometry/VRSprite.cpp" />
 		<Unit filename="src/core/objects/geometry/VRSprite.h" />
 		<Unit filename="src/core/objects/geometry/VRStroke.cpp" />

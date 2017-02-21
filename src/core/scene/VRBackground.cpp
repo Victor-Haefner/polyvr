@@ -10,8 +10,10 @@
 #include <boost/filesystem.hpp>
 
 #include "core/setup/VRSetup.h"
+#include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
+#include "core/objects/geometry/VRSky.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -20,10 +22,10 @@ using namespace std;
 class VRBackgroundBase {
     public:
         BackgroundRecPtr bg;
-        SkyBackgroundRecPtr sky;
+        SkyBackgroundRecPtr skybg;
         SolidBackgroundRecPtr sbg;
-        SkyBackgroundRecPtr sky2;
         TextureBackgroundRecPtr tbg;
+        VRSkyPtr sky;
         vector<ImageRecPtr> skyImgs;
 
         int type;
@@ -77,23 +79,13 @@ void VRBackgroundBase::updateSkyTextures() {
 }
 
 void VRBackgroundBase::initSky() {
-    sky = SkyBackground::create();
-    sky->setBackTexture( createSkyTexture() );
-    sky->setFrontTexture( createSkyTexture() );
-    sky->setLeftTexture( createSkyTexture() );
-    sky->setRightTexture( createSkyTexture() );
-    sky->setBottomTexture( createSkyTexture() );
-    sky->setTopTexture( createSkyTexture() );
-
-    sky2 = SkyBackground::create();
-    /*
-    sky2->setBackTexture( createSkyTexture() );
-    sky2->setFrontTexture( createSkyTexture() );
-    sky2->setLeftTexture( createSkyTexture() );
-    sky2->setRightTexture( createSkyTexture() );
-    sky2->setBottomTexture( createSkyTexture() );
-    sky2->setTopTexture( createSkyTexture() );
-    */
+    skybg = SkyBackground::create();
+    skybg->setBackTexture( createSkyTexture() );
+    skybg->setFrontTexture( createSkyTexture() );
+    skybg->setLeftTexture( createSkyTexture() );
+    skybg->setRightTexture( createSkyTexture() );
+    skybg->setBottomTexture( createSkyTexture() );
+    skybg->setTopTexture( createSkyTexture() );
 }
 
 void VRBackgroundBase::updateImgTexture() {
@@ -107,7 +99,7 @@ void VRBackgroundBase::initImg() {
 
 
 VRBackground::VRBackground () {
-    base = new VRBackgroundBase();
+    base = shared_ptr<VRBackgroundBase>( new VRBackgroundBase() );
 
     base->sbg = SolidBackground::create();
     base->initSky();
@@ -125,12 +117,11 @@ VRBackground::VRBackground () {
     store("format", &base->format);
 }
 
-VRBackground::~VRBackground() {
-    delete base;
-}
+VRBackground::~VRBackground() {}
 
 void VRBackground::setBackground(TYPE t) {
     base->type = t;
+    if (base->sky) base->sky->hide();
     switch(t) {
         case SOLID:
             base->bg = base->sbg;
@@ -141,11 +132,18 @@ void VRBackground::setBackground(TYPE t) {
             base->updateImgTexture();
             break;
         case SKYBOX:
-            base->bg = base->sky;
+            base->bg = base->skybg;
             base->updateSkyTextures();
             break;
         case SKY:
-            base->bg = base->sky2;
+            base->bg = base->sbg; // set solid bg
+            base->sbg->setColor(base->color);
+            if (!base->sky) {
+                base->sky = VRSky::create();
+                auto scene = VRScene::getCurrent();
+                scene->getRoot()->addLink( base->sky );
+            }
+            base->sky->show();
             break;
     }
 
