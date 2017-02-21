@@ -10,10 +10,32 @@ using namespace std;
 
 class VRSky : public VRGeometry {
     protected:
+        struct Date {
+            double second = 0;
+            int hour = 0;
+            int day = 0;
+            int year = 2000;
+
+            void propagate(double seconds); // positive or negative
+            double getDay();
+
+        };
+
         VRUpdateCbPtr updatePtr;
+        VRMaterialPtr mat;
+
+        uint textureSize;
+        Vec2f cloudVel;
+        Vec2f cloudOffset;
+        Vec3f sunFromTime();
+        Vec3f sunPos;
+
+        double lastTime;
+        Date date;
+        float speed; // how quickly time passes
 
         void update();
-        Vec3f sunFromTime();
+        void updateClouds(float dt);
 
     public:
         VRSky();
@@ -21,7 +43,9 @@ class VRSky : public VRGeometry {
 
         static VRSkyPtr create();
         VRSkyPtr ptr();
-        void setTime();
+        void setTime(double second, int hour, int day, int year = 2000); // 0-3600, 0-24, 0-356, x
+        void setCloudVel(float x, float z);
+        void setSpeed(float speed = 1);
 };
 
 OSG_END_NAMESPACE;

@@ -8,8 +8,10 @@ in mat4 miMV;
 uniform sampler2D tex;
 uniform vec2 OSGViewportSize;
 
-vec3 sunDir = vec3(1.0, 1.0, 1.0); //define sun direction
-	
+uniform vec3 sunPos; //define sun direction
+uniform vec2 cloudOffset; //to shift cloud texture
+
+vec3 sunDir = vec3(1., 0., 0.);
 vec3 fragDir;
 vec2 angles;
 
@@ -19,7 +21,7 @@ vec3 colLuminance = vec3(0.11); //
 vec3 colClouds = vec3(0.9);
 
 float cloudHeight = 1000.;
-float cloudScale = 1e-6;
+float cloudScale = 1e-5;
 
 void computeDirection() { 
 	float aspect = OSGViewportSize.y/OSGViewportSize.x;
@@ -42,7 +44,7 @@ float computeLuminanceDaylight() {
 
 	//vec3 colour = vec3(0.2 , 0.32487, 0.38008); // get colour val from charts
 	
-	sunDir = normalize(sunDir);
+	sunDir = normalize(sunPos);
 	//fragDir = normalize(fragDir); // is this necessary?
 	
 	/// LUMINANCE
@@ -95,9 +97,9 @@ float modifyCloudLuminance(float h) {
 // put overcast luminance model here?
 void computeClouds() {
 	vec2 lowerMap = planeIntersect(cloudHeight);
-	float lowerClouds = texture(tex, cloudScale * lowerMap).x;
+	float lowerClouds = texture(tex, cloudScale * lowerMap + cloudOffset).x;
 	vec2 upperMap = planeIntersect(1.1 * cloudHeight);
-	float upperClouds = texture(tex, 0.9 * cloudScale * upperMap).x;
+	float upperClouds = texture(tex, 0.9 * cloudScale * upperMap + cloudOffset).x;
 	// compute luminance of clouds based on angle
 	float y = computeLuminanceOvercast();
 	
