@@ -5,6 +5,7 @@
 #include <OpenSG/OSGSField.h>
 #include <OpenSG/OSGColor.h>
 #include "core/utils/VRStorage.h"
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -15,10 +16,10 @@ class VRBackgroundBase;
 
 class VRBackground : public VRStorage {
     public:
-        enum TYPE { SOLID, IMAGE, SKY };
+        enum TYPE { SOLID, IMAGE, SKYBOX, SKY };
 
     private:
-        VRBackgroundBase* base = 0;
+        shared_ptr<VRBackgroundBase> base;
 
     protected:
         void update();
