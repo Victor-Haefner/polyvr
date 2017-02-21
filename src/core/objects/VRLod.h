@@ -19,6 +19,7 @@ class VRLod : public VRObject {
         map<uint, float> decimation;
 
         void setup();
+        void loadSetup();
         void decimateGeometries(VRObjectPtr o, float f);
 
     protected:

@@ -81,6 +81,7 @@ void ModuleFloor::loadBbox(MapGrid::Box bbox) {
     VRGeoData geo;
     makeFloor(min, max, geo);
     VRGeometryPtr geom = geo.asGeometry("Subquad");
+    geom->addAttachment("ground", 0);
     geom->setMaterial(matSubquad);
     root->addChild(geom);
 

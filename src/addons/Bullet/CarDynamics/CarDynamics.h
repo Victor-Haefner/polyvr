@@ -84,6 +84,11 @@ class CarDynamics : public VRObject {
         float rearZOffset = -2.7f;
         float height = .4f;
 
+        float speed = 0;
+        float acceleration = 0;
+        float s_measurement = 0;
+        double a_measurement_t = 0;
+
         boost::recursive_mutex& mtx();
         void initPhysics();
         void initVehicle();

@@ -1093,6 +1093,16 @@ bool VRGuiScripts::on_shortkey( GdkEventKey* e ) {
         return true;
     }
 
+    if (e->keyval == 115) {// s
+        on_save_clicked();
+        return true;
+    }
+
+    if (e->keyval == 101) {// e
+        on_exec_clicked();
+        return true;
+    }
+
     if (e->keyval == 100) {// d
         auto l = getCurrentLine();
         string line = getLine(l);

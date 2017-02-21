@@ -18,6 +18,7 @@ void VRProjectManager::addItem(VRStoragePtr s, string mode) {
     if (!s) return;
     if (mode == "RELOAD") vault_reload.push_back(s);
     if (mode == "REBUILD") vault_rebuild.push_back(s);
+    s->store("pmMode", mode);
 }
 
 vector<VRStoragePtr> VRProjectManager::getItems() {
@@ -38,21 +39,11 @@ void VRProjectManager::save(string path) {
 
     xmlpp::Document doc;
     xmlpp::Element* root = doc.create_root_node("Project", "", "VRP"); // name, ns_uri, ns_prefix
-
     for (auto v : vault_reload) {
-        int p = v->getPersistency();
-        v->setPersistency(1);
-        v->saveUnder(root);
-        v->setPersistency(p);
+        cout << "VRProjectManager::save " << v << " " << persistencyLvl << endl;
+        v->saveUnder(root, persistencyLvl);
     }
-
-    for (auto v : vault_rebuild) {
-        int p = v->getPersistency();
-        v->setPersistency(2);
-        v->saveUnder(root);
-        v->setPersistency(p);
-    }
-
+    for (auto v : vault_rebuild) v->saveUnder(root, persistencyLvl);
     doc.write_to_file_formatted(path);
 }
 
@@ -76,11 +67,16 @@ void VRProjectManager::load(string path) {
         if (!e) continue;
 
         VRStoragePtr s;
-        int p = VRStorage::getPersistency(e);
-        if (p == 1) { if (i < vault_reload.size()) s = vault_reload[i]; i++; }
-        if (p == 2) { s = VRStorage::createFromStore(e); vault_rebuild.push_back(s); }
+        string mode = "RELOAD";
+        if (e->get_attribute("pmMode")) mode = e->get_attribute("pmMode")->get_value();
+        if (mode == "RELOAD") { if (i < vault_reload.size()) s = vault_reload[i]; i++; }
+        if (mode == "REBUILD") { s = VRStorage::createFromStore(e); vault_rebuild.push_back(s); }
         if (!s) { cout << "VRProjectManager::load Warning! element unhandled"; continue; }
 
         s->load(e);
     }
 }
+
+void VRProjectManager::setPersistencyLevel(int p) { persistencyLvl = p; }
+
+

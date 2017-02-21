@@ -18,6 +18,7 @@ PyMethodDef VRPyProjectManager::methods[] = {
     {"new", (PyCFunction)VRPyProjectManager::newp, METH_VARARGS, "New project - new( str path )" },
     {"save", (PyCFunction)VRPyProjectManager::save, METH_VARARGS, "Save project to file - save( | str path )" },
     {"load", (PyCFunction)VRPyProjectManager::load, METH_VARARGS, "Load project from file - load( | str path )" },
+    {"setPersistencyLevel", (PyCFunction)VRPyProjectManager::setPersistencyLevel, METH_VARARGS, "Set the3 persistency level of objects to store - setPersistencyLevel( int lvl )" },
     {NULL}  /* Sentinel */
 };
 
@@ -44,6 +45,14 @@ PyObject* VRPyProjectManager::addItem(VRPyProjectManager* self, PyObject* args) 
     else { PyErr_SetString(err, "Not a storable item!"); return NULL; }
 
     self->objPtr->addItem(s, m);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyProjectManager::setPersistencyLevel(VRPyProjectManager* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    int p = 0;
+    if (! PyArg_ParseTuple(args, "i", (char*)&p)) return NULL;
+    self->objPtr->setPersistencyLevel(p);
     Py_RETURN_TRUE;
 }
 

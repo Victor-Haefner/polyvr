@@ -20,10 +20,26 @@ void VRStorage::regStorageSetupFkt(VRUpdateCbPtr u) { f_setup.push_back(u); }
 void VRStorage::regStorageSetupAfterFkt(VRUpdateCbPtr u) { f_setup_after.push_back(u); }
 void VRStorage::setStorageType(string t) { type = t; }
 
+void VRStorage::load_str_cb(string t, string tag, xmlpp::Element* e) {}
+void VRStorage::save_str_cb(string t, string tag, xmlpp::Element* e) { e->set_attribute(tag, t); }
+
+void VRStorage::store(string tag, string val) {
+    VRStorageBin b;
+    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_str_cb, this, val, tag, _1 ) );
+    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_str_cb, this, val, tag, _1 ) );
+    storage[tag] = b;
+}
+
+void VRStorage::setOverrideCallbacks(bool b) { overrideCallbacks = b; }
+
 void VRStorage::save(xmlpp::Element* e, int p) {
     if (e == 0) return;
     if (persistency <= p) return;
-    for (auto s : storage) (*s.second.f2)(e);
+    cout << "VRStorage::save " << e << " " << p << " " << this << endl;
+    for (auto s : storage) {
+        cout << " " << s.first << endl;
+        (*s.second.f2)(e);
+    }
 }
 
 xmlpp::Element* VRStorage::saveUnder(xmlpp::Element* e, int p, string t) {

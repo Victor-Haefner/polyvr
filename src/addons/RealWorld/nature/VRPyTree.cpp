@@ -6,7 +6,7 @@
 using namespace OSG;
 
 simpleVRPyType(Terrain, New_VRObjects_ptr);
-simpleVRPyType(Tree, New_VRObjects_unnamed_ptr);
+simpleVRPyType(Tree, New_VRObjects_ptr);
 simpleVRPyType(Woods, New_VRObjects_unnamed_ptr);
 
 PyMethodDef VRPyTree::methods[] = {
@@ -60,10 +60,13 @@ PyObject* VRPyTree::setLeafMaterial(VRPyTree* self, PyObject* args) {
     Py_RETURN_TRUE;
 }
 
+
 PyMethodDef VRPyWoods::methods[] = {
     {"addTree", (PyCFunction)VRPyWoods::addTree, METH_VARARGS, "Add a copy of the passed tree to the woods and return the copy - tree addTree( tree | bool updateLODs ) " },
     {"computeLODs", (PyCFunction)VRPyWoods::computeLODs, METH_NOARGS, "Compute LODs - computeLODs() " },
     {"clear", (PyCFunction)VRPyWoods::clear, METH_NOARGS, "Clear woods - clear() " },
+    {"getTree", (PyCFunction)VRPyWoods::getTree, METH_VARARGS, "Get a tree by id - getTree( int ) " },
+    {"removeTree", (PyCFunction)VRPyWoods::removeTree, METH_VARARGS, "Remove a tree by id - removeTree( int ) " },
     {NULL}  /* Sentinel */
 };
 
@@ -72,6 +75,19 @@ PyObject* VRPyWoods::addTree(VRPyWoods* self, PyObject* args) {
     int u = 0;
     if (! PyArg_ParseTuple(args, "O|i", &o, &u)) return NULL;
     return VRPyTree::fromSharedPtr( self->objPtr->addTree( o->objPtr, u ) );
+}
+
+PyObject* VRPyWoods::removeTree(VRPyWoods* self, PyObject* args) {
+    int i = 0;
+    if (! PyArg_ParseTuple(args, "i", &i)) return NULL;
+    self->objPtr->remTree(i);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyWoods::getTree(VRPyWoods* self, PyObject* args) {
+    int i = 0;
+    if (! PyArg_ParseTuple(args, "i", &i)) return NULL;
+    return VRPyTree::fromSharedPtr( self->objPtr->getTree(i) );
 }
 
 PyObject* VRPyWoods::clear(VRPyWoods* self) {

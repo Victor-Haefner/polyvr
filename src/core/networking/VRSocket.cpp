@@ -247,6 +247,7 @@ VRSocket::VRSocket(string name) {
     http_args = 0;
     http_serv = 0;
 
+    setOverrideCallbacks(true);
     queued_signal = VRFunction<int>::create("signal_trigger", boost::bind(&VRSocket::trigger, this));
     sig = VRSignal::create();
     setNameSpace("Sockets");

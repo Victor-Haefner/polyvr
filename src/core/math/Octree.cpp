@@ -155,6 +155,10 @@ void Octree::destroy(Octree* guard) {
     }
 }
 
+void Octree::remData(void* d) {
+    data.erase(std::remove(data.begin(), data.end(), d), data.end());
+}
+
 void Octree::clear() { getRoot()->destroy(this); }
 
 Octree* Octree::getRoot() {

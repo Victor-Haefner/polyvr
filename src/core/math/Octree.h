@@ -48,6 +48,7 @@ class Octree {
         Vec3f getCenter();
         Vec3f getLocalCenter();
 
+        void remData(void* data);
         void clear();
 
         vector<Octree*> getChildren();
