@@ -47,6 +47,9 @@ void graph_base::setPosition(int i, Vec3f v) {
     update(i, true);
 }
 
+int graph_base::addNode() { return 0; }
+void graph_base::remNode(int i) {}
+
 graph_base::edge::edge(int i, int j, CONNECTION c) : from(i), to(j), connection(c) {}
 
 //vector<graph_base::node>::iterator graph_base::begin() { return nodes.begin(); }

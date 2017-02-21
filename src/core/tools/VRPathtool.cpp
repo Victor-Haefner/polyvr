@@ -1,5 +1,4 @@
 #include "VRPathtool.h"
-#include "core/math/path.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRConstraint.h"
 #include "core/objects/geometry/VRStroke.h"
@@ -7,6 +6,8 @@
 #include "core/scene/VRScene.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/devices/VRDevice.h"
+#include "core/math/path.h"
+#include "core/math/graphT.h"
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeoFunctions.h>
@@ -86,18 +87,13 @@ VRPathtoolPtr VRPathtool::create() { return VRPathtoolPtr( new VRPathtool() ); }
 
 void VRPathtool::setGraph(graph_basePtr g) {
     if (!g) return;
-    graph = g;
+    Graph = g;
     clear();
     knots.clear();
     auto& nodes = g->getNodes();
     auto& edges = g->getEdges();
 
-    for (uint i=0; i<nodes.size(); i++) {
-        knots[i] = knot();
-        auto h = newHandle();
-        knots[i].handle = h;
-        addChild(h);
-    }
+    for (uint i=0; i<nodes.size(); i++) setGraphNode(i);
 
     for (auto& n : edges) {
         for (auto& e : n) {
@@ -111,8 +107,43 @@ void VRPathtool::setGraph(graph_basePtr g) {
     }
 }
 
+int VRPathtool::addNode(posePtr p) {
+    if (!Graph) setGraph( SimpleGraph::create() );
+    int i = Graph->addNode();
+    auto h = setGraphNode(i);
+    h->setPose(p);
+    return i;
+}
+
+void VRPathtool::remNode(int i) {
+    if (!Graph) return;
+    Graph->remNode(i);
+    if (knots.count(i)) {
+        if (auto h = knots[i].handle.lock()) {
+            h->destroy();
+            handleToNode.erase(h.get());
+        }
+        knots.erase(i);
+    }
+}
+
+int VRPathtool::getNodeID(VRObjectPtr o) {
+    auto k = (VRGeometry*)o.get();
+    if (!handleToNode.count(k)) return -1;
+    return handleToNode[k];
+}
+
+VRGeometryPtr VRPathtool::setGraphNode(int i) {
+    knots[i] = knot();
+    auto h = newHandle();
+    knots[i].handle = h;
+    handleToNode[h.get()] = i;
+    addChild(h);
+    return h;
+}
+
 void VRPathtool::update() {
-    if (graph) { // smooth knot transformations
+    if (Graph) { // smooth knot transformations
         // get handle positions
         map<int, Vec3f> hPositions;
         for (uint i=0; i<knots.size(); i++)
