@@ -46,6 +46,7 @@ class VRLodTree : public VRObject {
         VRLodTreePtr ptr();
 
         VRLodLeafPtr addObject(VRTransformPtr obj, Vec3f p, int lvl);
+        VRLodLeafPtr remObject(VRTransformPtr obj);
         void reset(float size = 0);
 };
 
@@ -53,7 +54,7 @@ struct VRWoodsTreeEntry;
 
 class VRWoods : public VRLodTree {
     private:
-        vector<VRTreePtr> trees;
+        map<int, VRTreePtr> treesByID;
         map<string, VRTreePtr> treeTemplates;
         map<string, shared_ptr<VRWoodsTreeEntry>> treeEntries;
         map<VRTree*, VRTreePtr> treeRefs;
@@ -76,10 +77,10 @@ class VRWoods : public VRLodTree {
 
         void clear();
         VRTreePtr addTree(VRTreePtr t, bool updateLODs = 0);
+        VRTreePtr getTree(int id);
+        void remTree(int id);
         void computeLODs();
         void computeLODs(map<Octree*, VRLodLeafPtr>& leafs);
-
-        void test();
 };
 
 OSG_END_NAMESPACE;

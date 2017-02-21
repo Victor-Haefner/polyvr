@@ -43,8 +43,9 @@ void VRLodLeaf::add(VRObjectPtr obj, int lvl) {
 }
 
 void VRLodLeaf::set(VRObjectPtr obj, int lvl) {
+    cout << "VRLodLeaf::set " << obj << endl;
     levels[lvl]->clearChildren();
-    levels[lvl]->addChild(obj);
+    if (obj) levels[lvl]->addChild(obj);
 }
 
 Octree* VRLodLeaf::getOLeaf() { return oLeaf; }
@@ -124,11 +125,19 @@ VRLodLeafPtr VRLodTree::addObject(VRTransformPtr obj, Vec3f p, int lvl) {
     return leaf;
 }
 
+VRLodLeafPtr VRLodTree::remObject(VRTransformPtr obj) { // TODO, finish it!
+    if (!octree) return 0;
+    Octree* o = octree->get( obj->getWorldPosition() );
+    o->remData(obj.get());
+    return leafs[o];
+}
+
 // --------------------------------------------------------------------------------------------------
 
 struct OSG::VRWoodsTreeEntry : public VRName {
     Vec3f pos;
     string type;
+
     VRWoodsTreeEntry(string name = "") {
         setName("treeEntry");
         store("position", &pos);
@@ -162,14 +171,38 @@ void VRWoods::setup() {
     computeLODs();
 }
 
+VRTreePtr VRWoods::getTree(int id) {
+    if (treesByID.count(id)) return treesByID[id];
+    return 0;
+}
+
+void VRWoods::remTree(int id) {
+    if (!treesByID.count(id)) return;
+    auto t = treesByID[id];
+    auto leaf = remObject(t);
+    treesByID.erase(id);
+    treeRefs.erase(t.get());
+    treeEntries.erase(t->getName());
+    t->destroy();
+
+    auto oLeafs = leaf->getOLeaf()->getAncestry();
+    map<Octree*, VRLodLeafPtr> aLeafs;
+    for (auto o : oLeafs) {
+        if (leafs.count(o) == 0) continue;
+        aLeafs[o] = leafs[o];
+    }
+    computeLODs(aLeafs);
+}
+
 VRTreePtr VRWoods::addTree(VRTreePtr t, bool updateLODs) {
     auto td = dynamic_pointer_cast<VRTree>( t->duplicate() );
     treeTemplates[t->getName()] = t;
     treeRefs[td.get()] = t;
     auto leaf = addObject(td, t->getFrom(), 0);
+    treesByID[td->getID()] = td;
 
     auto te = VRWoodsTreeEntry::create();
-    te->set( t->getFrom(), t->getName() );
+    te->set( t->getFrom(), t->getName());
     treeEntries[td->getName()] = te;
 
     if (updateLODs) {
@@ -236,9 +269,10 @@ void VRWoods::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
     // create layer node geometries
     for (auto l : leafs) {
         auto& leaf = l.second;
-        if (trees.count(leaf.get()) == 0) continue;
+        leaf->set( 0, 1 );
         int lvl = leaf->getLevel();
         if (lvl == 0) continue;
+        if (trees.count(leaf.get()) == 0) continue;
 
         Vec3f pos;
         for (auto t : trees[leaf.get()]) pos += t->getWorldPosition();
@@ -251,8 +285,8 @@ void VRWoods::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
             auto tRef = treeRefs[t];
             if (!tRef || !t) continue;
             Vec3f offset = t->getWorldPosition() - pos;
-            tRef->createHullTrunkLod(geoTrunk, lvl, offset);
-            tRef->createHullLeafLod (geoLeafs, lvl, offset);
+            tRef->createHullTrunkLod(geoTrunk, lvl, offset, t->getID());
+            tRef->createHullLeafLod (geoLeafs, lvl, offset, t->getID());
         }
 
         if (geoTrunk.size() > 0) {
@@ -277,150 +311,11 @@ void VRWoods::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
 }
 
 void VRWoods::clear() {
-    trees.clear();
+    treesByID.clear();
+    treeRefs.clear();
+    treeEntries.clear();
     treeTemplates.clear();
     VRLodTree::reset();
-}
-
-void VRWoods::test() {
-    /*auto newCylinder = [](float s) {
-        auto box = VRGeometry::create("box");
-        string S = toString(s*0.5);
-        box->setPrimitive("Cylinder", "1 "+S+" 16 1 1 1");
-        return box;
-    };*/
-
-    auto simpleLeafMat = []() {
-        auto m = VRMaterial::create("lmat");
-        m->setPointSize(3);
-        m->setDiffuse(Vec3f(0.5,1,0));
-        return m;
-    };
-
-    auto simpleTrunkMat = []() {
-        auto m = VRMaterial::create("brown");
-        m->setDiffuse(Vec3f(0.6,0.3,0));
-        return m;
-    };
-
-    auto newTree = [](VRMaterialPtr m) {
-        auto t = VRTree::create();
-        t->setup(5, 5, rand());
-        t->addLeafs(4, 3);
-        t->addLeafs(5, 3);
-        //t->setLeafMaterial(m);
-        return t;
-    };
-
-    /*auto simpleTest = [&]() {
-        // add highest detail objects
-        int N = 4;
-        for (int i=0; i<N; i++) {
-            for (int j=0; j<N; j++) {
-                auto c = newCylinder(1);
-                Vec3f p = Vec3f((i-N*0.5)*15,0,(j-N*0.5)*15);
-                addObject(c, p, 0);
-            }
-        }
-
-        // add lower detailed objects
-        for (auto l : leafs) {
-            auto& leaf = l.second;
-            cout << "LEAF: " << leaf->getOLeaf()->getSize() << " " << leaf->getLevel() << endl;
-            int lvl = leaf->getLevel();
-            if (lvl == 0) continue;
-            auto c = newCylinder(pow(2.0,lvl));
-            leaf->add(c,1);
-            //c->setWorldPosition(Vec3f());
-        }
-    };*/
-
-    /*auto simpleTest2 = [&]() { // TODO: not perfectly working
-        reset(1);
-
-        for (int k=0; k<5; k++) {
-            int N = pow(2,k);
-            float s = 16.0/N;
-            float o = 0.5*s;
-            for (int i=0; i<N; i++) {
-                for (int j=0; j<N; j++) {
-                    auto c = newCylinder(s);
-                    Vec3f p = Vec3f(o+s*i,0,o+s*j);
-                    addObject(c, p, 4-k);
-                }
-            }
-        }
-    };*/
-
-    auto simpleTest3 = [&]() {
-        reset(5);
-        auto green = simpleLeafMat();
-        auto brown = simpleTrunkMat();
-
-        float W = 100;
-        float L = 100;
-        int N = 100;
-
-
-        // lowest level trees
-        srand(time(0));
-        vector<Vec3f> positions;
-        for (int i=0; i<N; i++) {
-            float x = (float(rand())/RAND_MAX)*W;
-            float z = (float(rand())/RAND_MAX)*L;
-            positions.push_back(Vec3f(x,0,z));
-        }
-
-        for (auto p : positions) {
-            auto t = newTree(green);
-            addObject(t, p, 0);
-        }
-
-        // get all trees for each layer leaf
-        map<VRLodLeaf*, vector<VRTree*> > trees;
-        for (auto l : leafs) {
-            auto& leaf = l.second;
-            int lvl = leaf->getLevel();
-            if (lvl == 0) continue;
-
-            vector<void*> data = leaf->getOLeaf()->getAllData();
-            for (auto v : data) trees[leaf.get()].push_back((VRTree*)v);
-        }
-
-        // create layer node geometries
-        for (auto l : leafs) {
-            auto& leaf = l.second;
-            int lvl = leaf->getLevel();
-            if (lvl == 0) continue;
-
-            Vec3f pos;
-            for (auto t : trees[leaf.get()]) pos += t->getWorldPosition();
-            pos *= 1.0/trees[leaf.get()].size();
-
-            VRGeoData geoLeafs;
-            VRGeoData geoTrunk;
-            for (auto t : trees[leaf.get()]) {
-                Vec3f offset = t->getWorldPosition() - pos;
-                float amount = 0.1/lvl;
-                t->createHullTrunkLod(geoTrunk, amount, offset);
-                t->createHullLeafLod (geoLeafs, amount, offset);
-            }
-            auto trunk = geoTrunk.asGeometry("trunk");
-            auto leafs = geoLeafs.asGeometry("leafs");
-            trunk->addChild( leafs );
-            leafs->setMaterial(green);
-            trunk->setMaterial(brown);
-
-            leaf->add( trunk, 1 );
-            trunk->setWorldPosition(pos);
-            trunk->setDir(Vec3f(0,0,-1));
-            trunk->setUp(Vec3f(0,1,0));
-        }
-    };
-
-    //simpleTest();
-    //simpleTest2();
-    simpleTest3();
 }
 
 /**
@@ -428,6 +323,7 @@ void VRWoods::test() {
 TODO:
  - get rid of transform of lodleaf?
  - optimize level zero structure
+
 */
 
 

@@ -398,7 +398,7 @@ void VRTree::setLeafMaterial(VRMaterialPtr mat) {
     for (auto g : leafGeos) g->setMaterial(mat);
 }
 
-void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset) {
+void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset, int ID) {
     Matrix Offset;
     Offset.setTranslate(offset); // TODO, use tree transformation rotation?
 
@@ -478,9 +478,11 @@ void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset) {
     geo.append(Hull, Offset);
 }
 
-void VRTree::createHullTrunkLod(VRGeoData& geo, int lvl, Vec3f offset) {
+void VRTree::createHullTrunkLod(VRGeoData& geo, int lvl, Vec3f offset, int ID) {
     Matrix Offset;
     Offset.setTranslate(offset); // TODO, use tree transformation rotation?
+
+    Vec2f id = Vec2f(ID,1); // the 1 is a flag to identify the ID as such!
 
     if (truncLodCache.count(lvl)) {
         geo.append(truncLodCache[lvl], Offset);
@@ -501,10 +503,10 @@ void VRTree::createHullTrunkLod(VRGeoData& geo, int lvl, Vec3f offset) {
         static Vec3f n2 = normalize( Vec3f(-1,0, 1) );
         static Vec3f n3 = normalize( Vec3f( 1,0, 1) );
         static Vec3f n4 = normalize( Vec3f( 1,0,-1) );
-        int i1 = Hull.pushVert( Pnt3f(-r,0,-r) + p, n1, truncColor );
-        int i2 = Hull.pushVert( Pnt3f(-r,0, r) + p, n2, truncColor );
-        int i3 = Hull.pushVert( Pnt3f( r,0, r) + p, n3, truncColor );
-        int i4 = Hull.pushVert( Pnt3f( r,0,-r) + p, n4, truncColor );
+        int i1 = Hull.pushVert( Pnt3f(-r,0,-r) + p, n1, truncColor, id );
+        int i2 = Hull.pushVert( Pnt3f(-r,0, r) + p, n2, truncColor, id );
+        int i3 = Hull.pushVert( Pnt3f( r,0, r) + p, n3, truncColor, id );
+        int i4 = Hull.pushVert( Pnt3f( r,0,-r) + p, n4, truncColor, id );
         return Vec4i(i1,i2,i3,i4);
     };
 
