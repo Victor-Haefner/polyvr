@@ -104,6 +104,7 @@ class VRPathtool : public VRObject {
         void remNode(int i);
         int getNodeID(VRObjectPtr o);
         void connect(int i1, int i2);
+        void disconnect(int i1, int i2);
 
         pathPtr newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution = 10);
         VRGeometryPtr extrude(VRDevicePtr dev, pathPtr p);

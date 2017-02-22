@@ -29,6 +29,16 @@ void graph_base::disconnect(int i, int j) {
     }
 }
 
+bool graph_base::connected(int i, int j) {
+    if (i >= int(nodes.size()) || j >= int(nodes.size())) return false;
+    if (i >= int(edges.size())) return false;
+    auto& v = edges[i];
+    for (uint k=0; k<v.size(); k++) {
+        if (v[k].to == j) return true;
+    }
+    return false;
+}
+
 vector< vector< graph_base::edge > >& graph_base::getEdges() { return edges; }
 vector< graph_base::node >& graph_base::getNodes() { return nodes; }
 graph_base::node& graph_base::getNode(int i) { return nodes[i]; }

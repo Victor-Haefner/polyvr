@@ -49,6 +49,7 @@ class graph_base {
         vector< vector<edge> >& getEdges();
         int getNEdges();
         int size();
+        bool connected(int i1, int i2);
 
         //vector<node>::iterator begin();
         //vector<node>::iterator end();

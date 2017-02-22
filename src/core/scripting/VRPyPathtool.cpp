@@ -34,6 +34,7 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"removeNode", (PyCFunction)VRPyPathtool::removeNode, METH_VARARGS, "Remove node by id - removeNode( int )" },
     {"getNodeID", (PyCFunction)VRPyPathtool::getNodeID, METH_VARARGS, "Return node ID from handle - getNodeID( handle )" },
     {"connect", (PyCFunction)VRPyPathtool::connect, METH_VARARGS, "Connect two nodes - connect( id1, id2 )" },
+    {"disconnect", (PyCFunction)VRPyPathtool::disconnect, METH_VARARGS, "Disconnect two nodes - disconnect( id1, id2 )" },
     {NULL}  /* Sentinel */
 };
 
@@ -49,6 +50,15 @@ PyObject* VRPyPathtool::setGraph(VRPyPathtool* self, PyObject* args) {
     VRPyGraph* g = 0;
     if (! PyArg_ParseTuple(args, "O:setGraph", &g)) return NULL;
     if (g) self->objPtr->setGraph( g->objPtr );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyPathtool::disconnect(VRPyPathtool* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    int i1 = 0;
+    int i2 = 0;
+    if (! PyArg_ParseTuple(args, "ii:disconnect", &i1, &i2)) return NULL;
+    self->objPtr->disconnect( i1, i2 );
     Py_RETURN_TRUE;
 }
 

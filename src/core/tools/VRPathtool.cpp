@@ -125,11 +125,33 @@ int VRPathtool::getNodeID(VRObjectPtr o) {
     return handleToNode[k];
 }
 
+template <class T, class V>
+void vecRemVal(V& vec, T& val) {
+    vec.erase(std::remove(vec.begin(), vec.end(), val), vec.end());
+};
+
+void VRPathtool::disconnect(int i1, int i2) {
+    if (i1 == i2) return;
+    if (!Graph) return;
+    Graph->disconnect(i1,i2);
+
+    for (auto e1 : entries[knots[i1].handle.lock().get()] ) {
+        for (auto e2 : entries[knots[i2].handle.lock().get()] ) {
+            if (e1 == e2) remPath(e1->p);
+        }
+    }
+
+    vecRemVal(knots[i1].out, i2);
+    vecRemVal(knots[i2].in, i1);
+}
+
 void VRPathtool::connect(int i1, int i2) {
     if (i1 == i2) return;
     if (!Graph) return;
-    auto& e = Graph->connect(i1,i2);
-    setGraphEdge(e);
+    if (!Graph->connected(i1,i2)) {
+        auto& e = Graph->connect(i1,i2);
+        setGraphEdge(e);
+    } else disconnect(i1,i2);
 }
 
 void VRPathtool::setGraphEdge(graph_base::edge& e) {
