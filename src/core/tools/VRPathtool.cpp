@@ -102,7 +102,6 @@ int VRPathtool::addNode(posePtr p) {
     if (!Graph) setGraph( SimpleGraph::create() );
     int i = Graph->addNode();
     Graph->setPosition(i, p->pos());
-    cout << "VRPathtool::addNode " << i << "    " << p->pos() << "   " << Graph->getNodes()[i].box.center() << endl;
     auto h = setGraphNode(i);
     h->setPose(p);
     return i;
@@ -136,7 +135,6 @@ void VRPathtool::connect(int i1, int i2) {
 void VRPathtool::setGraphEdge(graph_base::edge& e) {
     auto& nodes = Graph->getNodes();
     pathPtr p = path::create();
-    cout << "VRPathtool::setGraphEdge " << e.from << " " << e.to << "   " << nodes[e.from].box.center() << "   " << nodes[e.to].box.center() << endl;
     p->addPoint(nodes[e.from].box.center());
     p->addPoint(nodes[e.to].box.center());
     addPath(p, 0, knots[e.from].handle.lock(), knots[e.to].handle.lock());

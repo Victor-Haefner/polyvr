@@ -59,8 +59,9 @@ void VRObject::setup() {
 }
 
 void VRObject::destroy() {
+    destroyed = true;
     auto p = ptr();
-    if (getParent()) getParent()->subChild( p );
+    if (auto pa = parent.lock())     pa->subChild( p );
 }
 
 void VRObject::detach() {
@@ -242,6 +243,7 @@ void VRObject::subChild(VRObjectPtr child, bool doOsg) {
 }
 
 void VRObject::switchParent(VRObjectPtr new_p, int place) {
+    if (destroyed) return;
     if (new_p == 0) { cout << "\nERROR : new parent is 0!\n"; return; }
 
     if (getParent() == 0) { new_p->addChild(ptr(), true, place); return; }

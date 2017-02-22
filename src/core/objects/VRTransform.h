@@ -53,10 +53,7 @@ class VRTransform : public VRObject {
         Matrix WorldTransformation;
         VRConstraintPtr constraint;
 
-        bool held = false;//drag n drop
-        VRObjectWeakPtr old_parent;
-        Matrix old_transformation;
-        int old_child_id = 0;
+        Matrix old_transformation; //drag n drop
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 

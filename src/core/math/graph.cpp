@@ -45,9 +45,7 @@ int graph_base::getNEdges() {
 void graph_base::setPosition(int i, Vec3f v) {
     auto& n = nodes[i];
     n.box.setCenter(v);
-    cout << " graph_base::setPosition " << i << " " << v << "    " << n.box.center() << endl;
     update(i, true);
-    cout << " graph_base::setPosition " << i << " " << v << "    " << n.box.center() << endl;
 }
 
 int graph_base::addNode() { return 0; }
