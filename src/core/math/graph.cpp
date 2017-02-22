@@ -10,10 +10,11 @@ template class graph<graph_base::emptyNode*>;
 graph_base::graph_base() {}
 graph_base::~graph_base() {}
 
-void graph_base::connect(int i, int j, CONNECTION c) {
-    if (i >= int(nodes.size()) || j >= int(nodes.size())) return;
+graph_base::edge& graph_base::connect(int i, int j, CONNECTION c) {
+    //if (i >= int(nodes.size()) || j >= int(nodes.size())) return edge;
     while (i >= int(edges.size())) edges.push_back( vector<edge>() );
     edges[i].push_back(edge(i,j,c));
+    return *edges[i].rbegin();
 }
 
 void graph_base::disconnect(int i, int j) {
@@ -44,7 +45,9 @@ int graph_base::getNEdges() {
 void graph_base::setPosition(int i, Vec3f v) {
     auto& n = nodes[i];
     n.box.setCenter(v);
+    cout << " graph_base::setPosition " << i << " " << v << "    " << n.box.center() << endl;
     update(i, true);
+    cout << " graph_base::setPosition " << i << " " << v << "    " << n.box.center() << endl;
 }
 
 int graph_base::addNode() { return 0; }

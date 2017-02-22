@@ -89,27 +89,20 @@ void VRPathtool::setGraph(graph_basePtr g) {
     if (!g) return;
     Graph = g;
     clear();
-    knots.clear();
     auto& nodes = g->getNodes();
     auto& edges = g->getEdges();
 
     for (uint i=0; i<nodes.size(); i++) setGraphNode(i);
-
     for (auto& n : edges) {
-        for (auto& e : n) {
-            pathPtr p = path::create();
-            p->addPoint(nodes[e.from].box.center());
-            p->addPoint(nodes[e.to].box.center());
-            addPath(p, 0, knots[e.from].handle.lock(), knots[e.to].handle.lock());
-            knots[e.from].out.push_back(e.to);
-            knots[e.to].in.push_back(e.from);
-        }
+        for (auto& e : n) setGraphEdge(e);
     }
 }
 
 int VRPathtool::addNode(posePtr p) {
     if (!Graph) setGraph( SimpleGraph::create() );
     int i = Graph->addNode();
+    Graph->setPosition(i, p->pos());
+    cout << "VRPathtool::addNode " << i << "    " << p->pos() << "   " << Graph->getNodes()[i].box.center() << endl;
     auto h = setGraphNode(i);
     h->setPose(p);
     return i;
@@ -131,6 +124,24 @@ int VRPathtool::getNodeID(VRObjectPtr o) {
     auto k = (VRGeometry*)o.get();
     if (!handleToNode.count(k)) return -1;
     return handleToNode[k];
+}
+
+void VRPathtool::connect(int i1, int i2) {
+    if (i1 == i2) return;
+    if (!Graph) return;
+    auto& e = Graph->connect(i1,i2);
+    setGraphEdge(e);
+}
+
+void VRPathtool::setGraphEdge(graph_base::edge& e) {
+    auto& nodes = Graph->getNodes();
+    pathPtr p = path::create();
+    cout << "VRPathtool::setGraphEdge " << e.from << " " << e.to << "   " << nodes[e.from].box.center() << "   " << nodes[e.to].box.center() << endl;
+    p->addPoint(nodes[e.from].box.center());
+    p->addPoint(nodes[e.to].box.center());
+    addPath(p, 0, knots[e.from].handle.lock(), knots[e.to].handle.lock());
+    knots[e.from].out.push_back(e.to);
+    knots[e.to].in.push_back(e.from);
 }
 
 VRGeometryPtr VRPathtool::setGraphNode(int i) {
@@ -361,6 +372,8 @@ void VRPathtool::clear(pathPtr p) {
     e->line.reset();
 
     p->clear();
+
+    knots.clear();
 }
 
 void VRPathtool::remPath(pathPtr p) {

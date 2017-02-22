@@ -93,6 +93,7 @@ class VRPathtool : public VRObject {
         void updateDevs();
 
         VRGeometryPtr setGraphNode(int i);
+        void setGraphEdge(graph_base::edge& e);
 
     public:
         VRPathtool();
@@ -102,6 +103,7 @@ class VRPathtool : public VRObject {
         int addNode(posePtr p);
         void remNode(int i);
         int getNodeID(VRObjectPtr o);
+        void connect(int i1, int i2);
 
         pathPtr newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution = 10);
         VRGeometryPtr extrude(VRDevicePtr dev, pathPtr p);
