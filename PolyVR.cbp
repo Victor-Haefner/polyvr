@@ -700,6 +700,8 @@
 		<Unit filename="src/core/scene/VRHMDDistortion.h" />
 		<Unit filename="src/core/scene/VRMaterialManager.cpp" />
 		<Unit filename="src/core/scene/VRMaterialManager.h" />
+		<Unit filename="src/core/scene/VRObjectGroupManager.cpp" />
+		<Unit filename="src/core/scene/VRObjectGroupManager.h" />
 		<Unit filename="src/core/scene/VRObjectManager.cpp" />
 		<Unit filename="src/core/scene/VRObjectManager.h" />
 		<Unit filename="src/core/scene/VRPhysicsManager.cpp" />
