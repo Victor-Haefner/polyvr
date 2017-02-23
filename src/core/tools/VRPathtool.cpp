@@ -135,10 +135,25 @@ void VRPathtool::disconnect(int i1, int i2) {
     if (!Graph) return;
     Graph->disconnect(i1,i2);
 
-    for (auto e1 : entries[knots[i1].handle.lock().get()] ) {
-        for (auto e2 : entries[knots[i2].handle.lock().get()] ) {
-            if (e1 == e2) remPath(e1->p);
+    auto h1 = knots[i1].handle.lock().get();
+    auto h2 = knots[i2].handle.lock().get();
+    entry* e = 0;
+    for (auto e1 : entries[h1] ) {
+        for (auto e2 : entries[h2] ) {
+            if (e1 == e2) { // found entry between h1 and h2!
+                e = e1;
+                break;
+            }
         }
+        if (e) break;
+    }
+
+    if (e) {
+        if (auto l = e->line.lock()) l->destroy(); // TODO: entry destructor?
+        paths.erase(e->p.get());
+        vecRemVal(entries[h1], e);
+        vecRemVal(entries[h2], e);
+        delete e; e = 0;
     }
 
     vecRemVal(knots[i1].out, i2);

@@ -35,11 +35,7 @@ void VRStorage::setOverrideCallbacks(bool b) { overrideCallbacks = b; }
 void VRStorage::save(xmlpp::Element* e, int p) {
     if (e == 0) return;
     if (persistency <= p) return;
-    cout << "VRStorage::save " << e << " " << p << " " << this << endl;
-    for (auto s : storage) {
-        cout << " " << s.first << endl;
-        (*s.second.f2)(e);
-    }
+    for (auto s : storage) (*s.second.f2)(e);
 }
 
 xmlpp::Element* VRStorage::saveUnder(xmlpp::Element* e, int p, string t) {
