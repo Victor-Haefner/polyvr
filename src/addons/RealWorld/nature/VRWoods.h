@@ -48,6 +48,8 @@ class VRLodTree : public VRObject {
         VRLodLeafPtr addObject(VRTransformPtr obj, Vec3f p, int lvl);
         VRLodLeafPtr remObject(VRTransformPtr obj);
         void reset(float size = 0);
+
+        vector<VRLodLeafPtr> getSubTree(VRLodLeafPtr l);
 };
 
 struct VRWoodsTreeEntry;
