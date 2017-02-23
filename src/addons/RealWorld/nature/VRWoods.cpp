@@ -43,7 +43,7 @@ void VRLodLeaf::add(VRObjectPtr obj, int lvl) {
 }
 
 void VRLodLeaf::set(VRObjectPtr obj, int lvl) {
-    cout << "VRLodLeaf::set " << obj << endl;
+    if (lvl < 0 || lvl >= levels.size()) return;
     levels[lvl]->clearChildren();
     if (obj) levels[lvl]->addChild(obj);
 }
@@ -68,6 +68,16 @@ void VRLodTree::reset(float size) {
         octree = Octree::create(s,s);
     }
     clearChildren();
+}
+
+vector<VRLodLeafPtr> VRLodTree::getSubTree(VRLodLeafPtr l) {
+    vector<VRLodLeafPtr> res;
+    if (!l->getOLeaf()) return res;
+    for (auto o : l->getOLeaf()->getSubtree()) {
+        if (!leafs.count(o)) continue;
+        res.push_back(leafs[o]);
+    }
+    return res;
 }
 
 VRLodLeafPtr VRLodTree::addLeaf(Octree* o, int lvl) {
@@ -97,17 +107,23 @@ VRLodLeafPtr VRLodTree::addLeaf(Octree* o, int lvl) {
             -> add as child to tree
     */
 
+    VRLodLeafPtr oldRootLeaf = 0;
     if (auto p = o->getParent()) {
         if (!leafs.count(p)) addLeaf(p, lvl+1);
         leafs[p]->add(l,0);
     } else {
-        if (rootLeaf) {
-            l->add(rootLeaf,0);
-            rootLeaf->setFrom(rootLeaf->getOLeaf()->getLocalCenter());
-        }
+        if (rootLeaf) oldRootLeaf = rootLeaf;
         rootLeaf = l;
         addChild(l);
     }
+
+    if (oldRootLeaf) { // TODO: find pl
+        auto p = oldRootLeaf->getOLeaf()->getParent();
+        if (!leafs.count(p)) addLeaf(p, lvl+1);
+        leafs[p]->add(oldRootLeaf,0);
+        oldRootLeaf->setFrom( oldRootLeaf->getOLeaf()->getLocalCenter() );
+    }
+
     return l;
 }
 
