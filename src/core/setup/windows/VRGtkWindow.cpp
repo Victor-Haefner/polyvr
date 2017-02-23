@@ -228,7 +228,7 @@ void VRGtkWindow::on_realize() {
 }
 
 void printGLversion() {
-    const GLubyte* renderer = glGetString (GL_RENDERER); // get renderer string
+    //const GLubyte* renderer = glGetString (GL_RENDERER); // get renderer string
     const GLubyte* version = glGetString (GL_VERSION); // version as a string
     cout << "Renderer B " << endl;
     cout << "OpenGL version supported " << version << endl;

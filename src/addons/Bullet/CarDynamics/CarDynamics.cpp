@@ -287,7 +287,7 @@ void CarDynamics::updateEngine() {
 }
 
 void CarDynamics::setIgnition(bool b) { engine.running = b; }
-bool CarDynamics::isRunning() { if (engine.running) return true; }
+bool CarDynamics::isRunning() { return engine.running; }
 float CarDynamics::getClutch() { return clutch; }
 float CarDynamics::getThrottle() { return throttle; }
 float CarDynamics::getBreaking() { return breaking; }
