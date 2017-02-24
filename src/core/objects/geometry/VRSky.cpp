@@ -29,8 +29,9 @@ void VRSky::Date::propagate(double seconds) {
     }
 }
 
-double VRSky::Date::getDay() {
-    return day + (second + hour*3600) / (24*3600);
+double VRSky::Date::getDay() { // returns time since 12:00 at 1-1-2000
+    // not accounting for leap or other inconsistencies
+    return (year - 2000)*365 + day + (second/3600 + hour - 12) / 24;
 }
 
 VRSky::VRSky() : VRGeometry("Sky") {
@@ -38,41 +39,78 @@ VRSky::VRSky() : VRGeometry("Sky") {
     string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Sky/";
     string vScript = resDir + "Sky.vp";
     string fScript = resDir + "Sky.fp";
-    textureSize = 128;
+
+    // TODO: break up into separate setup functions
+
+	// observer params
     speed = 1;
+    // 49.0069° N, 8.4037° E Karlsruhe
+    observerPosition.latitude = 49.0069;
+    observerPosition.longitude = 8.4037;
+
+    setTime(0,12,120,2016);
+
+    // shader setup
     mat = VRMaterial::create("Sky");
     mat->readVertexShader(vScript);
     mat->readFragmentShader(fScript);
     setMaterial(mat);
     setPrimitive("Plane", "2 2 1 1");
     mat->setLit(false);
-	mat->setDiffuse(OSG::Vec3f(1.,1.,1.));
+	mat->setDiffuse(Vec3f(1));
 
+
+
+    // sun params
     sunPos = sunFromTime();
 	mat->setShaderParameter<Vec3f>("sunPos", sunPos);
 
-	cloudVel =  Vec2f(1000, 200);
+    float factor = 1/speed;
+
+    // cloud params
+    cloudDensity = 0.2;
+    cloudScale = 3e-4;
+    cloudHeight = 1000.;
+    cloudVel =  Vec2f(.01*factor, .003*factor);
 	cloudOffset =  Vec2f(0, 0);
+    mat->setShaderParameter<float>("cloudDensity", cloudDensity);
+    mat->setShaderParameter<float>("cloudScale", cloudScale);
+    mat->setShaderParameter<float>("cloudHeight", cloudHeight);
     mat->setShaderParameter<Vec2f>("cloudOffset", cloudOffset);
 
+    //textureSize = 2048;
+    textureSize = 512;
 	VRTextureGenerator tg;
 	tg.setSize(textureSize, textureSize);
-	tg.add(PERLIN, 1, Vec3f(0.9), Vec3f(1.0));
-	tg.add(PERLIN, 1.0/2, Vec3f(0.7), Vec3f(1.0));
-	tg.add(PERLIN, 1.0/4, Vec3f(0.6), Vec3f(1.0));
-	tg.add(PERLIN, 1.0/8, Vec3f(0.5), Vec3f(1.0));
+    tg.add(PERLIN, 1, Vec3f(0.9), Vec3f(1.0));
+	tg.add(PERLIN, 1.0/2, Vec3f(0.8), Vec3f(1.0));
+	tg.add(PERLIN, 1.0/4, Vec3f(0.7), Vec3f(1.0));
+	tg.add(PERLIN, 1.0/8, Vec3f(0.6), Vec3f(1.0));
 	tg.add(PERLIN, 1.0/16, Vec3f(0.4), Vec3f(1.0));
-
+	tg.add(PERLIN, 1.0/32, Vec3f(0.2), Vec3f(1.0));
+	tg.add(PERLIN, 1.0/64, Vec3f(0.1), Vec3f(1.0));
+	/*
+	tg.add(PERLIN, 1, Vec3f(0.95), Vec3f(1.0));
+	tg.add(PERLIN, 1.0/2, Vec3f(0.9), Vec3f(1.0));
+	tg.add(PERLIN, 1.0/4, Vec3f(0.7), Vec3f(1.0));
+	tg.add(PERLIN, 1.0/8, Vec3f(0.6), Vec3f(1.0));
+	tg.add(PERLIN, 1.0/16, Vec3f(0.5), Vec3f(1.0));
+	tg.add(PERLIN, 1.0/32, Vec3f(0.4), Vec3f(1.0));
+	tg.add(PERLIN, 1.0/64, Vec3f(0.4), Vec3f(1.0));
+	tg.add(PERLIN, 1.0/128, Vec3f(0.3), Vec3f(1.0));
+	tg.add(PERLIN, 1.0/256, Vec3f(0.2), Vec3f(1.0));
+	*/
 	mat->setTexture(tg.compose(0));
+
+	// sky params
+	turbidity = 2.;
+    mat->setShaderParameter<float>("theta_s", theta_s);
+    mat->setShaderParameter<float>("turbidity", turbidity);
 
     allowCulling(false, true);
 
     updatePtr = VRFunction<int>::create("sky update", boost::bind(&VRSky::update, this));
     VRScene::getCurrent()->addUpdateFkt(updatePtr);
-
-    // test date function
-    setTime(3601, 23, 364, 1);
-
 }
 
 VRSky::~VRSky() {}
@@ -92,7 +130,6 @@ void VRSky::update() {
 
     // update sun
     sunPos = sunFromTime();
-    sunPos[1] = cos(current);
 
     mat->setShaderParameter<Vec3f>("sunPos", sunPos);
     // update clouds
@@ -123,8 +160,13 @@ void VRSky::setTime(double second, int hour, int day, int year) {
         std::cout<<"WARNING: setTime(double second, int hour, int day, int year = 2000) must be of format:\n";
         std::cout<<"seconds in [0,3600), hours in [0,24), days in [0, 365), year.\n";
         std::cout<<"Date set as: day "<<date.day<<" of year "<<date.year<<" at "
-                <<date.hour<<":"<<date.second/60<<":"<<fmod(date.second,60)<<std::endl;
+                <<date.hour<<":"<<floor(date.second/60)<<":"<<fmod(date.second,60)<<std::endl;
     }
+}
+
+void VRSky::setPosition(float latitude, float longitude) {
+    observerPosition.latitude = latitude;
+    observerPosition.longitude = longitude;
 }
 
 void VRSky::setCloudVel(float x, float z) {
@@ -135,48 +177,61 @@ void VRSky::updateClouds(float dt) {
     cloudOffset += cloudVel * dt;
     cloudOffset[0] = fmod(cloudOffset[0], textureSize);
     cloudOffset[1] = fmod(cloudOffset[1], textureSize);
-    //if (cloudOffset[0] == 0 && cloudOffset[1] == 0) {
-    //    std::cout<<"no offset"<<std::endl;
-    //    std::cout<<"dt: "<<dt<<" Vel.: "<<cloudVel[0]<<" "<<cloudVel[1];
-    //    std::cout<<"\nOff.: "<<cloudOffset[0]<<" "<<cloudOffset[1]<<std::endl;
-    //}
 }
 
 Vec3f VRSky::sunFromTime() {
-	// lets set the lattitude and longitude
-	// Karlsruhe 49.0069° N, 8.4037° E
-	// http://aa.usno.navy.mil/faq/docs/SunApprox.php
 
-	// and time of day
-
-	// ...and time of year...
-
-	// ...and year - lets assume 1. jan 2000 12:00 GMT (=&gt; n=0) then
-	//D = JD - 2451545.0
 	float day = date.getDay();
-
-	// use these values to calculate the sun angle
-
-	// all in deg
 	float g = 357.529 + 0.98560028 * day; // mean anomaly of sun
 	float q = 280.459 + 0.98564736 * day; // mean longitude of sun
-	float L = q + 1.915 * sin(g) + 0.020 * sin(2*g); // geocentric (apparent/adjusted) elliptic
+	float L = (q + 1.915 * sin(g*Pi/180) + 0.020 * sin(2*g*Pi/180))*Pi/180; // geocentric (apparent/adjusted) elliptic (in rad)
 	// long. of sun
 
-	// map to range 360 deg?
-
 	// approx. ecliptic latitude as b=0.
-	// approx. distance of the Sun from the Earth R (AU)
-	float R = 1.00014 - 0.01671 * cos(g) - 0.00014 * cos(2*g);
 	// obliquity (deg)
-	float e = 23.439 - 0.00000036 * day;
+	float e = (23.439 - 0.00000036 * day)*Pi/180; // (in rad)
 
-	float RA = atan2(cos(e) * sin(L), cos(L)); // right ascension
-	float d = asin(sin(e) * sin(L)); // declination
+	float right_ascension = atan2(cos(e) * sin(L), cos(L)); // right ascension (in rad)
+	float declination = asin(sin(e) * sin(L)); // declination (in rad)
 
-    return Vec3f(1, 0, 0);
+    // convert right ascension to hour angle
+    float gmst = 18.697374558 + 24.06570982441908 * day; // Greenwich mean sidereal time
+    float hour_angle = (gmst*15 - observerPosition.longitude - right_ascension); // (deg)
+    // map hour angle onto (0,2pi)
+    hour_angle = fmod(hour_angle,360)*Pi/180; // (rad)
+
+    // solar zenith
+    float cos_theta_s = sin(observerPosition.latitude*Pi/180)*sin(declination)
+                   + cos(observerPosition.latitude*Pi/180)*cos(declination)*cos(hour_angle);
+
+    theta_s = acos(cos_theta_s);
+    float sin_theta_s = sin(theta_s); // check mapping
+
+    //solar azimuth
+    // z = cos(phi) * sin(theta)
+    float z = sin(declination)*cos(observerPosition.latitude*Pi/180)
+                -cos(hour_angle)*cos(declination)*sin(observerPosition.latitude*Pi/180);
+
+    float phi_s = acos(z/sin_theta_s);
+    // take care of negatives
+    if (hour_angle > Pi) phi_s *= -1;
+
+    // let +z dir be south => x is east
+    // azimuth = 0 => sun directly south should be defines as angle to z axis
+    // also rotating clockwise (-ve)
+    // r = 1 (normalised)
+    float y = cos_theta_s;
+    float x = sin(phi_s)*sin_theta_s;
+
+    return Vec3f(x, y, z);
 }
 
+
+void VRSky::reloadShader() {
+    string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Sky/";
+    mat->readVertexShader(resDir + "Sky.vp");
+    mat->readFragmentShader(resDir + "Sky.fp");
+}
 
 
 
