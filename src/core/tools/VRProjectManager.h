@@ -16,7 +16,7 @@ class VRProjectManager : public VRObject {
 
     public:
         VRProjectManager();
-
+        ~VRProjectManager();
         static VRProjectManagerPtr create();
 
         void addItem(VRStoragePtr s, string mode);

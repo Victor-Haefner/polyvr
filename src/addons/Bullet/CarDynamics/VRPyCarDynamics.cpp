@@ -26,7 +26,9 @@ PyMethodDef VRPyCarDynamics::methods[] = {
     {"getChassis", (PyCFunction)VRPyCarDynamics::getChassis, METH_NOARGS, "Get car chassis" },
     {"getWheels", (PyCFunction)VRPyCarDynamics::getWheels, METH_NOARGS, "Get car wheels" },
     {"getRPM", (PyCFunction)VRPyCarDynamics::getRPM, METH_NOARGS, "Get car RPM" },
+    {"isRunning", (PyCFunction)VRPyCarDynamics::isRunning, METH_NOARGS, "Is car engine running - bool isRunning()" },
     {"getGear", (PyCFunction)VRPyCarDynamics::getGear, METH_NOARGS, "Get car gear" },
+    {"setIgnition", (PyCFunction)VRPyCarDynamics::setIgnition, METH_VARARGS, "Set ignition - setIgnition(bool)" },
     {NULL}  /* Sentinel */
 };
 
@@ -39,6 +41,10 @@ PyObject* VRPyCarDynamics::getWheels(VRPyCarDynamics* self) {
 
 PyObject* VRPyCarDynamics::getRPM(VRPyCarDynamics* self) {
     return PyInt_FromLong(self->objPtr->getRPM());
+}
+
+PyObject* VRPyCarDynamics::isRunning(VRPyCarDynamics* self) {
+    return PyInt_FromLong(self->objPtr->isRunning());
 }
 
 PyObject* VRPyCarDynamics::getGear(VRPyCarDynamics* self) {
@@ -81,6 +87,13 @@ PyObject* VRPyCarDynamics::reset(VRPyCarDynamics* self, PyObject* args) {
     VRPyPose* p;
     if (! PyArg_ParseTuple(args, "O", &p)) return NULL;
     self->objPtr->reset(*p->objPtr);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyCarDynamics::setIgnition(VRPyCarDynamics* self, PyObject* args) {
+    int b;
+    if (! PyArg_ParseTuple(args, "i", &b)) return NULL;
+    self->objPtr->setIgnition(b);
     Py_RETURN_TRUE;
 }
 

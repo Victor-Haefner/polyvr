@@ -15,7 +15,7 @@ class MapCoordinator {
         float gridSize;
         float SCALE_REAL_TO_WORLD = 111000.0;
         Elevation* ele = 0;
-        float startElevation;
+        float startElevation = 0;
 
     public:
         MapCoordinator(Vec2f zeroPos, float gridSize);

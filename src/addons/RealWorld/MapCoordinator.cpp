@@ -8,8 +8,8 @@ using namespace OSG;
 MapCoordinator::MapCoordinator(Vec2f zeroPos, float gridSize) {
     this->zeroPos = zeroPos;
     this->gridSize = gridSize;
-    ele = new Elevation;
-    startElevation = ele->getElevation(zeroPos[0], zeroPos[1]);
+    //ele = new Elevation; // TODO: takes very long to start up
+    //startElevation = ele->getElevation(zeroPos[0], zeroPos[1]);
 };
 
 Vec2f MapCoordinator::realToWorld(Vec2f realPosition) {
@@ -26,7 +26,8 @@ float MapCoordinator::getElevation(float x, float y) { return getElevation(Vec2f
 float MapCoordinator::getElevation(Vec2f v) {
     return 0; // TODO
     Vec2f real = worldToReal(v);
-    float res = ele->getElevation(real[0], real[1]) - startElevation - 1;
+    float res = 0;
+    if (ele) res = ele->getElevation(real[0], real[1]) - startElevation - 1;
     return res;
 }
 

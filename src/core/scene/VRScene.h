@@ -2,7 +2,7 @@
 #define VRSCENE_H_INCLUDED
 
 #include "VRSceneFwd.h"
-#include "VRObjectManager.h"
+#include "VRObjectGroupManager.h"
 #include "VRCameraManager.h"
 #include "VRAnimationManager.h"
 #include "VRPhysicsManager.h"
@@ -25,7 +25,7 @@ using namespace std;
 class VRObject;
 class VRVisualLayer;
 
-class VRScene : public VRObjectManager,
+class VRScene : public VRObjectGroupManager,
                 public VRCameraManager,
                 public VRAnimationManager,
                 public VRPhysicsManager,

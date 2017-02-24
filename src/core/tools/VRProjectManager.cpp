@@ -11,6 +11,7 @@ using namespace std;
 namespace fs = boost::filesystem;
 
 VRProjectManager::VRProjectManager() : VRObject("ProjectManager") {}
+VRProjectManager::~VRProjectManager() {}
 
 VRProjectManagerPtr VRProjectManager::create() { return shared_ptr<VRProjectManager>(new VRProjectManager()); }
 

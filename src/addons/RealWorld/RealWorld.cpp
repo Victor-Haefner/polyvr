@@ -60,11 +60,12 @@ World* RealWorld::getWorld() { return world; }
 OSMMapDB* RealWorld::getDB() { return mapDB; }
 TrafficSimulation* RealWorld::getTrafficSimulation() { return trafficSimulation; }
 
-void RealWorld::update(Vec3f pos) { mapManager->updatePosition( Vec2f(pos[0], pos[2]) ); }
+void RealWorld::update(Vec3f pos) { if (mapManager) mapManager->updatePosition( Vec2f(pos[0], pos[2]) ); }
 void RealWorld::configure(string var, string val) { options[var] = val; }
 string RealWorld::getOption(string var) { return options[var]; }
 
 void RealWorld::enableModule(string mod, bool b, bool t, bool p) {
+    if (!mapManager) return;
     if (b) {
         if (mod == "Ground") mapManager->addModule(new ModuleFloor(t,p));
         if (mod == "Streets") mapManager->addModule(new ModuleStreets(t,p));

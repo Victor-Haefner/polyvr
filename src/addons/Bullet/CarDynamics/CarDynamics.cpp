@@ -228,6 +228,22 @@ void CarDynamics::updateEngine() {
     if (!wheels.size()) return;
     PLock lock(mtx());
 
+    /* input variables
+
+        clutch
+        throttle
+        breaking
+        steering
+
+        engine
+    */
+
+    auto clamp = [](float v, float a, float b) {
+        if (v < a) return a;
+        if (v > b) return b;
+        return v;
+    };
+
     // compute gears
     float clutchF = 1;
     if (engine.clutchForceCurve) engine.clutchForceCurve->getPosition(clutch)[1];
@@ -238,11 +254,14 @@ void CarDynamics::updateEngine() {
     // compute RPM
 	float s = abs( getSpeed() );
 	if (engine.gear ==  0) engine.rpm = (engine.maxRpm - engine.minRpm) * throttle + engine.minRpm;
-	else engine.rpm = s * engine.gearRatios[engine.gear] * 100 / (wheels[0].radius * 12 * Pi);
+	else engine.rpm = s * engine.gearRatios[engine.gear] * 100 / (wheels[0].radius * 12 * Pi)*engine.running;
     if (engine.rpm > 3800) gearmod = 0;
 
 	// apply force to engine
-    float eForce = throttle*engine.power*clutchF*gearmod;
+	float tmin = 0.1;
+	float tmax = 0.9;
+    float eForce = (clamp(throttle,tmin,tmax)-tmin)/(tmax-tmin); // stretch throttle
+    eForce *= engine.power*clutchF*gearmod*engine.running;
     for (int i=0; i<wheels.size(); i++) {
         auto& wheel = wheels[i];
 
@@ -267,6 +286,8 @@ void CarDynamics::updateEngine() {
     }
 }
 
+void CarDynamics::setIgnition(bool b) { engine.running = b; }
+bool CarDynamics::isRunning() { return engine.running; }
 float CarDynamics::getClutch() { return clutch; }
 float CarDynamics::getThrottle() { return throttle; }
 float CarDynamics::getBreaking() { return breaking; }

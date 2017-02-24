@@ -23,6 +23,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
     private:
         OSGObjectPtr osg;
         OSGCorePtr core;
+        bool destroyed = false;
         bool specialized = false;
         VRObjectWeakPtr parent;
         int ID = 0;
@@ -42,6 +43,10 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         vector<VRObjectPtr> children;
         map<VRObject*, VRObjectWeakPtr> links;
         string type;
+
+        bool held = false;//drag n drop
+        VRObjectWeakPtr old_parent;
+        int old_child_id = 0;
 
         void setIntern(bool b);
         virtual void printInformation();

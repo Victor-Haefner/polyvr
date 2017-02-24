@@ -3,6 +3,7 @@
 
 #include "core/objects/VRLod.h"
 #include "core/objects/VRTransform.h"
+#include "core/scene/VRObjectManager.h"
 #include "core/math/VRMathFwd.h"
 #include "addons/RealWorld/VRRealWorldFwd.h"
 
@@ -48,15 +49,15 @@ class VRLodTree : public VRObject {
         VRLodLeafPtr addObject(VRTransformPtr obj, Vec3f p, int lvl);
         VRLodLeafPtr remObject(VRTransformPtr obj);
         void reset(float size = 0);
-};
 
-struct VRWoodsTreeEntry;
+        vector<VRLodLeafPtr> getSubTree(VRLodLeafPtr l);
+};
 
 class VRWoods : public VRLodTree {
     private:
         map<int, VRTreePtr> treesByID;
         map<string, VRTreePtr> treeTemplates;
-        map<string, shared_ptr<VRWoodsTreeEntry>> treeEntries;
+        map<string, shared_ptr<VRObjectManager::Entry> > treeEntries;
         map<VRTree*, VRTreePtr> treeRefs;
 
         VRMaterialPtr truncMat;

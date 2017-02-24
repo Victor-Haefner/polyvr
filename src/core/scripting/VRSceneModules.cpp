@@ -56,6 +56,7 @@
 #include "VRPyGeoPrimitive.h"
 #include "VRPyProgress.h"
 #include "VRPyUndoManager.h"
+#include "VRPyObjectManager.h"
 
 #include "addons/Algorithms/VRPyGraphLayout.h"
 #include "addons/CaveKeeper/VRPyCaveKeeper.h"
@@ -140,6 +141,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 
     sm->registerModule<VRPyProgress>("Progress", pModVR);
     sm->registerModule<VRPyUndoManager>("UndoManager", pModVR);
+    sm->registerModule<VRPyObjectManager>("ObjectManager", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyMenu>("Menu", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyClipPlane>("ClipPlane", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyWaypoint>("Waypoint", pModVR, VRPyGeometry::typeRef);

@@ -51,6 +51,7 @@ class CarDynamics : public VRObject {
             float maxRpm = 4500;
             map<int,float> gearRatios;
             pathPtr clutchForceCurve;
+            bool running = false;
         };
 
         struct Chassis {
@@ -126,6 +127,8 @@ class CarDynamics : public VRObject {
         void reset(const pose& p);
         float getSpeed();
         float getAcceleration();
+        void setIgnition(bool b);
+        bool isRunning();
 };
 
 OSG_END_NAMESPACE

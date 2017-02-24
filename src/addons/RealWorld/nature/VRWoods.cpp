@@ -43,7 +43,7 @@ void VRLodLeaf::add(VRObjectPtr obj, int lvl) {
 }
 
 void VRLodLeaf::set(VRObjectPtr obj, int lvl) {
-    cout << "VRLodLeaf::set " << obj << endl;
+    if (lvl < 0 || lvl >= levels.size()) return;
     levels[lvl]->clearChildren();
     if (obj) levels[lvl]->addChild(obj);
 }
@@ -68,6 +68,16 @@ void VRLodTree::reset(float size) {
         octree = Octree::create(s,s);
     }
     clearChildren();
+}
+
+vector<VRLodLeafPtr> VRLodTree::getSubTree(VRLodLeafPtr l) {
+    vector<VRLodLeafPtr> res;
+    if (!l->getOLeaf()) return res;
+    for (auto o : l->getOLeaf()->getSubtree()) {
+        if (!leafs.count(o)) continue;
+        res.push_back(leafs[o]);
+    }
+    return res;
 }
 
 VRLodLeafPtr VRLodTree::addLeaf(Octree* o, int lvl) {
@@ -97,17 +107,23 @@ VRLodLeafPtr VRLodTree::addLeaf(Octree* o, int lvl) {
             -> add as child to tree
     */
 
+    VRLodLeafPtr oldRootLeaf = 0;
     if (auto p = o->getParent()) {
         if (!leafs.count(p)) addLeaf(p, lvl+1);
         leafs[p]->add(l,0);
     } else {
-        if (rootLeaf) {
-            l->add(rootLeaf,0);
-            rootLeaf->setFrom(rootLeaf->getOLeaf()->getLocalCenter());
-        }
+        if (rootLeaf) oldRootLeaf = rootLeaf;
         rootLeaf = l;
         addChild(l);
     }
+
+    if (oldRootLeaf) { // TODO: find pl
+        auto p = oldRootLeaf->getOLeaf()->getParent();
+        if (!leafs.count(p)) addLeaf(p, lvl+1);
+        leafs[p]->add(oldRootLeaf,0);
+        oldRootLeaf->setFrom( oldRootLeaf->getOLeaf()->getLocalCenter() );
+    }
+
     return l;
 }
 
@@ -134,23 +150,6 @@ VRLodLeafPtr VRLodTree::remObject(VRTransformPtr obj) { // TODO, finish it!
 
 // --------------------------------------------------------------------------------------------------
 
-struct OSG::VRWoodsTreeEntry : public VRName {
-    Vec3f pos;
-    string type;
-
-    VRWoodsTreeEntry(string name = "") {
-        setName("treeEntry");
-        store("position", &pos);
-        store("tree", &type);
-    }
-    static shared_ptr<VRWoodsTreeEntry> create(string name = "") { return shared_ptr<VRWoodsTreeEntry>(new VRWoodsTreeEntry(name)); }
-
-    void set(Vec3f p, string t) {
-        pos = p;
-        type = t;
-    }
-};
-
 VRWoods::VRWoods() : VRLodTree("woods", 5) {
     storeMap("templateTrees", &treeTemplates, true);
     storeMap("trees", &treeEntries, true);
@@ -165,7 +164,7 @@ void VRWoods::setup() {
     for (auto& t : treeEntries) {
         if (!treeTemplates.count(t.second->type)) { cout << "VRWoods::setup Warning, " << t.second->type << " is not a tree template!" << endl; continue; }
         auto tree = treeTemplates[t.second->type];
-        tree->setFrom(t.second->pos);
+        tree->setPose(t.second->pos);
         addTree(tree);
     }
     computeLODs();
@@ -201,8 +200,8 @@ VRTreePtr VRWoods::addTree(VRTreePtr t, bool updateLODs) {
     auto leaf = addObject(td, t->getFrom(), 0);
     treesByID[td->getID()] = td;
 
-    auto te = VRWoodsTreeEntry::create();
-    te->set( t->getFrom(), t->getName());
+    auto te = VRObjectManager::Entry::create();
+    te->set( t->getPose(), t->getName());
     treeEntries[td->getName()] = te;
 
     if (updateLODs) {
