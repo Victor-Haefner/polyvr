@@ -35,9 +35,13 @@ VRObjectManager::~VRObjectManager() {}
 VRObjectManagerPtr VRObjectManager::create() { return shared_ptr<VRObjectManager>(new VRObjectManager()); }
 
 void VRObjectManager::setup() {
+    for (auto t : templatesByName) addTemplate(t.second);
+
     for (auto& t : entries) {
         if (!templatesByName.count(t.second->type)) { cout << "VRObjectManager::setup Warning, " << t.second->type << " is not a template!" << endl; continue; }
         auto o = copy(t.second->type, t.second->pos);
+        o->show();
+        o->setPose(t.second->pos);
     }
 }
 
@@ -56,15 +60,19 @@ VRTransformPtr VRObjectManager::copy(string name, posePtr p) {
 
 VRTransformPtr VRObjectManager::add(VRTransformPtr s) {
     if (!s) return 0;
-    addTemplate(s, s->getName());
-    return copy(s->getName(), s->getPose());
+    addTemplate(s, s->getBaseName());
+    return copy(s->getBaseName(), s->getPose());
 }
 
 void VRObjectManager::addTemplate(VRTransformPtr s, string name) {
     if (!s) return;
     if (!templates.count(s.get())) {
         templates[s.get()] = s;
-        if (name != "") templatesByName[name] = s;
+        s->setNameSpace("OMtemplate");
+        if (name != "") {
+            s->setName(name);
+            templatesByName[name] = s;
+        }
     }
 }
 
@@ -76,6 +84,7 @@ void VRObjectManager::clear() {
     instances.clear();
     templates.clear();
     templatesByName.clear();
+    clearChildren();
 }
 
 vector<VRTransformPtr> VRObjectManager::getCatalog() {

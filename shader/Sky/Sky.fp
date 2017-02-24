@@ -38,6 +38,7 @@ void computeDirection() {
 	fragDir = vec3(tcs*2-vec2(1),l);
 	fragDir.x /= aspect;
 	fragDir = (miMV*vec4(normalize(fragDir),0)).xyz;
+	fragDir.y = max(fragDir.y, 0.0001);
 }
 
 void zenithColor() {

@@ -84,7 +84,7 @@ class VRStorage {
         void loadChildFrom(xmlpp::Element* e, string t = "");
 
         static int getPersistency(xmlpp::Element* e);
-        static VRStoragePtr createFromStore(xmlpp::Element* e);
+        static VRStoragePtr createFromStore(xmlpp::Element* e, bool verbose = true);
         template<class T> static void regStorageType(string t);
 
         void setPersistency(int p);

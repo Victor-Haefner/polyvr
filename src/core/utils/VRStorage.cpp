@@ -67,16 +67,16 @@ int VRStorage::getPersistency(xmlpp::Element* e) {
     return toInt( e->get_attribute("persistency")->get_value() );
 }
 
-VRStoragePtr VRStorage::createFromStore(xmlpp::Element* e) {
+VRStoragePtr VRStorage::createFromStore(xmlpp::Element* e, bool verbose) {
     if (!e->get_attribute("type")) {
-        cout << "VRStorage::createFromStore WARNING: element has no attribute type\n";
+        if (verbose) cout << "VRStorage::createFromStore WARNING: element " << e->get_name() << " has no attribute type\n";
         return 0;
     }
 
     string type = e->get_attribute("type")->get_value();
     //cout << "VRStorage::createFromStore " << type << " " << factory.count(type) << endl;
     if (!factory.count(type)) {
-        cout << "VRStorage::createFromStore WARNING: factory can not handle type " << type << endl;
+        if (verbose) cout << "VRStorage::createFromStore WARNING: factory can not handle type " << type << endl;
         return 0;
     }
 

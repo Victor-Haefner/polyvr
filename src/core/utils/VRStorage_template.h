@@ -141,7 +141,7 @@ void VRStorage::load_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool
     if (under) e = getChild(e, tag);
     if (e == 0) return;
     for (auto el : getChildren(e)) {
-        VRStoragePtr s = VRStorage::createFromStore(el);
+        VRStoragePtr s = VRStorage::createFromStore(el, false);
         if (!s) s = T::create();
         auto c = static_pointer_cast<T>(s);
         if (!c) continue;
