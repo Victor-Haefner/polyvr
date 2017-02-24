@@ -142,7 +142,7 @@ void VRBackground::setBackground(TYPE t) {
                 base->sky = VRSky::create();
                 auto scene = VRScene::getCurrent();
                 scene->getRoot()->addLink( base->sky );
-            }
+            } else base->sky->reloadShader();
             base->sky->show();
             break;
     }
