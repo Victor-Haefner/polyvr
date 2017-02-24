@@ -150,23 +150,6 @@ VRLodLeafPtr VRLodTree::remObject(VRTransformPtr obj) { // TODO, finish it!
 
 // --------------------------------------------------------------------------------------------------
 
-struct OSG::VRWoodsTreeEntry : public VRName {
-    Vec3f pos;
-    string type;
-
-    VRWoodsTreeEntry(string name = "") {
-        setName("treeEntry");
-        store("position", &pos);
-        store("tree", &type);
-    }
-    static shared_ptr<VRWoodsTreeEntry> create(string name = "") { return shared_ptr<VRWoodsTreeEntry>(new VRWoodsTreeEntry(name)); }
-
-    void set(Vec3f p, string t) {
-        pos = p;
-        type = t;
-    }
-};
-
 VRWoods::VRWoods() : VRLodTree("woods", 5) {
     storeMap("templateTrees", &treeTemplates, true);
     storeMap("trees", &treeEntries, true);
@@ -181,7 +164,7 @@ void VRWoods::setup() {
     for (auto& t : treeEntries) {
         if (!treeTemplates.count(t.second->type)) { cout << "VRWoods::setup Warning, " << t.second->type << " is not a tree template!" << endl; continue; }
         auto tree = treeTemplates[t.second->type];
-        tree->setFrom(t.second->pos);
+        tree->setPose(t.second->pos);
         addTree(tree);
     }
     computeLODs();
@@ -217,8 +200,8 @@ VRTreePtr VRWoods::addTree(VRTreePtr t, bool updateLODs) {
     auto leaf = addObject(td, t->getFrom(), 0);
     treesByID[td->getID()] = td;
 
-    auto te = VRWoodsTreeEntry::create();
-    te->set( t->getFrom(), t->getName());
+    auto te = VRObjectManager::Entry::create();
+    te->set( t->getPose(), t->getName());
     treeEntries[td->getName()] = te;
 
     if (updateLODs) {
