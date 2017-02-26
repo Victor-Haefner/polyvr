@@ -46,13 +46,16 @@ void VRObjectManager::setup() {
 }
 
 VRTransformPtr VRObjectManager::copy(string name, posePtr p) {
+    cout << "  VRObjectManager::copy " << name << endl;
     auto t = getTemplate(name);
     if (!t) return 0;
     auto dupe = dynamic_pointer_cast<VRTransform>( t->duplicate() );
+    dupe->resetNameSpace();
     instances[dupe->getID()] = dupe;
     auto e = Entry::create();
     e->set(p,name);
     entries[dupe->getName()] = e;
+    dupe->setPose(p);
     dupe->setPersistency(0);
     addChild(dupe);
     return dupe;

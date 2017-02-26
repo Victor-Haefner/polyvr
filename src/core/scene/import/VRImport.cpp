@@ -319,8 +319,8 @@ void VRImport::Cache::setup(VRTransformPtr root) {
 
 VRTransformPtr VRImport::Cache::retrieve(VRObjectPtr parent) {
     auto res = static_pointer_cast<VRTransform>(root->duplicate());
-    res->setNameSpace("__global__");
-    for (auto o : res->getChildren(true) ) o->setNameSpace("__global__");
+    res->resetNameSpace();
+    for (auto o : res->getChildren(true) ) o->resetNameSpace();
 
     if (parent) parent->addChild(res);
     return res;
