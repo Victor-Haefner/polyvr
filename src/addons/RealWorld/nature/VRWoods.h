@@ -77,7 +77,7 @@ class VRWoods : public VRLodTree {
         VRWoodsPtr ptr();
 
         void clear();
-        VRTreePtr addTree(VRTreePtr t, bool updateLODs = 0);
+        VRTreePtr addTree(VRTreePtr t, bool updateLODs = 0, bool addToStore = true);
         VRTreePtr getTree(int id);
         void remTree(int id);
         void computeLODs();

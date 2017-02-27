@@ -11,7 +11,7 @@ using namespace std;
 VRObjectManager::Entry::Entry(string name) {
     setName("ObjectManagerEntry");
     store("pose", &pos);
-    store("tree", &type);
+    store("object", &type);
 }
 
 VRObjectManager::Entry::~Entry() {}
@@ -37,15 +37,17 @@ VRObjectManagerPtr VRObjectManager::create() { return shared_ptr<VRObjectManager
 void VRObjectManager::setup() {
     for (auto t : templatesByName) addTemplate(t.second);
 
+    cout << "VRObjectManager::setup " << entries.size() << endl;
     for (auto& t : entries) {
         if (!templatesByName.count(t.second->type)) { cout << "VRObjectManager::setup Warning, " << t.second->type << " is not a template!" << endl; continue; }
-        auto o = copy(t.second->type, t.second->pos);
+        auto o = copy(t.second->type, t.second->pos, false);
         o->show();
         o->setPose(t.second->pos);
     }
+    cout << "VRObjectManager::setup done" << endl;
 }
 
-VRTransformPtr VRObjectManager::copy(string name, posePtr p) {
+VRTransformPtr VRObjectManager::copy(string name, posePtr p, bool addToStore) {
     cout << "  VRObjectManager::copy " << name << endl;
     auto t = getTemplate(name);
     if (!t) return 0;
@@ -54,7 +56,7 @@ VRTransformPtr VRObjectManager::copy(string name, posePtr p) {
     instances[dupe->getID()] = dupe;
     auto e = Entry::create();
     e->set(p,name);
-    entries[dupe->getName()] = e;
+    if (addToStore) entries[dupe->getName()] = e;
     dupe->setPose(p);
     dupe->setPersistency(0);
     addChild(dupe);
@@ -84,6 +86,7 @@ VRTransformPtr VRObjectManager::get(int id) { return instances.count(id) ? insta
 void VRObjectManager::rem(int id) { if (instances.count(id)) instances.erase(id); }
 
 void VRObjectManager::clear() {
+    entries.clear();
     instances.clear();
     templates.clear();
     templatesByName.clear();
