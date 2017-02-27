@@ -31,6 +31,7 @@ class VRName_base {
         int getNameSuffix();
         void setSeparator(char s);
         void setNameSpace(string s);
+        void resetNameSpace();
         void setUniqueName(bool b);
         void filterNameChars(string chars, char replacement);
 

@@ -10,7 +10,6 @@ struct VRPyObjectManager : VRPyBaseT<OSG::VRObjectManager> {
     static PyObject* add(VRPyObjectManager* self, PyObject* args);
     static PyObject* copy(VRPyObjectManager* self, PyObject* args);
     static PyObject* clear(VRPyObjectManager* self);
-    static PyObject* get(VRPyObjectManager* self, PyObject* args);
     static PyObject* remove(VRPyObjectManager* self, PyObject* args);
     static PyObject* addTemplate(VRPyObjectManager* self, PyObject* args);
     static PyObject* getTemplate(VRPyObjectManager* self, PyObject* args);

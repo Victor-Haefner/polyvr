@@ -11,10 +11,9 @@ simpleVRPyType(ObjectManager, New_VRObjects_unnamed_ptr);
 
 PyMethodDef VRPyObjectManager::methods[] = {
     {"add", (PyCFunction)VRPyObjectManager::add, METH_VARARGS, "Add a copy of the passed object to the managed object pool and return it - obj add( obj ) " },
-    {"copy", (PyCFunction)VRPyObjectManager::copy, METH_VARARGS, "Add a copy of the passed object to the managed object pool and return it - obj copy( str ) " },
+    {"copy", (PyCFunction)VRPyObjectManager::copy, METH_VARARGS, "Add a copy of the passed object to the managed object pool and return it - obj copy( str, pose ) " },
     {"clear", (PyCFunction)VRPyObjectManager::clear, METH_NOARGS, "Clear objects - clear() " },
-    {"get", (PyCFunction)VRPyObjectManager::get, METH_VARARGS, "Get an object by id - get( int ) " },
-    {"remove", (PyCFunction)VRPyObjectManager::remove, METH_VARARGS, "Remove an object by id - remove( int ) " },
+    {"remove", (PyCFunction)VRPyObjectManager::remove, METH_VARARGS, "Remove an object - remove( object ) " },
     {"addTemplate", (PyCFunction)VRPyObjectManager::addTemplate, METH_VARARGS, "Add template - addTemplate( int | name ) " },
     {"getTemplate", (PyCFunction)VRPyObjectManager::getTemplate, METH_VARARGS, "Return all template objects - obj getTemplate( str ) " },
     {"getCatalog", (PyCFunction)VRPyObjectManager::getCatalog, METH_VARARGS, "Return all template objects - [ obj ] getCatalog() " },
@@ -39,17 +38,10 @@ PyObject* VRPyObjectManager::copy(VRPyObjectManager* self, PyObject* args) {
 
 PyObject* VRPyObjectManager::remove(VRPyObjectManager* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    int i = 0;
-    if (! PyArg_ParseTuple(args, "i", &i)) return NULL;
-    self->objPtr->rem(i);
+    VRPyTransform* o = 0;
+    if (! PyArg_ParseTuple(args, "O", &o)) return NULL;
+    self->objPtr->rem(o->objPtr);
     Py_RETURN_TRUE;
-}
-
-PyObject* VRPyObjectManager::get(VRPyObjectManager* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    int i = 0;
-    if (! PyArg_ParseTuple(args, "i", &i)) return NULL;
-    return VRPyTypeCaster::cast( self->objPtr->get(i) );
 }
 
 PyObject* VRPyObjectManager::getTemplate(VRPyObjectManager* self, PyObject* args) {

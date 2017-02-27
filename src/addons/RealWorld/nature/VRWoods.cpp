@@ -165,7 +165,7 @@ void VRWoods::setup() {
         if (!treeTemplates.count(t.second->type)) { cout << "VRWoods::setup Warning, " << t.second->type << " is not a tree template!" << endl; continue; }
         auto tree = treeTemplates[t.second->type];
         tree->setPose(t.second->pos);
-        addTree(tree);
+        addTree(tree, 0, false);
     }
     computeLODs();
 }
@@ -193,7 +193,7 @@ void VRWoods::remTree(int id) {
     computeLODs(aLeafs);
 }
 
-VRTreePtr VRWoods::addTree(VRTreePtr t, bool updateLODs) {
+VRTreePtr VRWoods::addTree(VRTreePtr t, bool updateLODs, bool addToStore) {
     auto td = dynamic_pointer_cast<VRTree>( t->duplicate() );
     treeTemplates[t->getName()] = t;
     treeRefs[td.get()] = t;
@@ -202,7 +202,7 @@ VRTreePtr VRWoods::addTree(VRTreePtr t, bool updateLODs) {
 
     auto te = VRObjectManager::Entry::create();
     te->set( t->getPose(), t->getName());
-    treeEntries[td->getName()] = te;
+    if (addToStore) treeEntries[td->getName()] = te;
 
     if (updateLODs) {
         auto oLeafs = leaf->getOLeaf()->getAncestry();

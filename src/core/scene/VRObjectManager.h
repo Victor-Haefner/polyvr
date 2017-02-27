@@ -44,9 +44,8 @@ class VRObjectManager : public VRObject {
         vector<VRTransformPtr> getCatalog();
 
         VRTransformPtr add(VRTransformPtr s); // returns duplicate, first time the object is stored as template
-        VRTransformPtr copy(string name, posePtr p); // returns duplicate
-        VRTransformPtr get(int i);
-        void rem(int id);
+        VRTransformPtr copy(string name, posePtr p, bool addToStore = true); // returns duplicate
+        void rem(VRTransformPtr id);
         void clear();
 };
 
