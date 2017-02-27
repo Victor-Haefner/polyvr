@@ -45,14 +45,22 @@ class VRSky : public VRGeometry {
 
         // luminance
         float turbidity;
-        Vec3f zenithColor;
+        Vec3f xyY_z;
+        Vec3f coeffsA;
+        Vec3f coeffsB;
+        Vec3f coeffsC;
+        Vec3f coeffsD;
+        Vec3f coeffsE;
 
         // sun
         Vec3f sunPos;
         float theta_s;
 
+        void setTurbidity(float t);
+        void calculateCoeffs();
+        void calculateZenithColor();
         void updateClouds(float dt);
-        Vec3f sunFromTime();
+        void sunFromTime();
         void setCloudVel(float x, float z);
         void update();
 
