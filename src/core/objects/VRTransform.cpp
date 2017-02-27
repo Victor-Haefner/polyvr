@@ -458,9 +458,7 @@ void VRTransform::setEuler(Vec3f e) {
     _euler = e;
     Vec3f s = Vec3f(sin(e[0]), sin(e[1]), sin(e[2]));
     Vec3f c = Vec3f(cos(e[0]), cos(e[1]), cos(e[2]));
-    //orientation_mode = OM_EULER;
 
-    //Vec3f d = Vec3f( -c[1]*c[2], -c[1]*s[2], s[1]);
     Vec3f d = Vec3f( -c[0]*c[2]*s[1]-s[0]*s[2], -c[0]*s[1]*s[2]+s[0]*c[2], -c[0]*c[1]);
     Vec3f u = Vec3f( s[0]*s[1]*c[2]-s[2]*c[0], s[0]*s[1]*s[2]+c[2]*c[0], c[1]*s[0]);
 
@@ -470,7 +468,15 @@ void VRTransform::setEuler(Vec3f e) {
 }
 
 Vec3f VRTransform::getScale() { return _scale; }
-Vec3f VRTransform::getEuler() { return _euler; }
+Vec3f VRTransform::getEuler() {
+    //return _euler;
+    auto m = getMatrix();
+    Vec3f a;
+    a[0] = atan2( m[1][2], m[2][2]);
+    a[1] = atan2(-m[0][2], sqrt(m[1][2]*m[1][2] + m[2][2]*m[2][2]));
+    a[2] = atan2( m[0][1], m[0][0]);
+    return a;
+}
 
 void VRTransform::rotate(float a, Vec3f v) {//rotate around axis
     if (isNan(a) || isNan(v)) return;

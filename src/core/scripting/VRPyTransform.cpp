@@ -30,6 +30,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getWorldDir", (PyCFunction)VRPyTransform::getWorldDir, METH_NOARGS, "Return the object's dir vector" },
     {"getWorldUp", (PyCFunction)VRPyTransform::getWorldUp, METH_NOARGS, "Return the object's up vector" },
     {"getScale", (PyCFunction)VRPyTransform::getScale, METH_NOARGS, "Return the object's scale vector" },
+    {"getEuler", (PyCFunction)VRPyTransform::getEuler, METH_NOARGS, "Return the object's euler angles - [X,Y,Z] getEuler()" },
     {"setWorldFrom", (PyCFunction)VRPyTransform::setWFrom, METH_VARARGS, "Set the object's world position" },
     {"setWorldOrientation", (PyCFunction)VRPyTransform::setWOrientation, METH_VARARGS, "Set the object's world direction" },
     {"setPose", (PyCFunction)VRPyTransform::setPose, METH_VARARGS, "Set the object's pose - setPose(pose)\n\tsetPose(pos, dir, up)" },
@@ -221,6 +222,11 @@ PyObject* VRPyTransform::rotateAround(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
     self->objPtr->rotateAround( parseFloat(args) );
     Py_RETURN_TRUE;
+}
+
+PyObject* VRPyTransform::getEuler(VRPyTransform* self) {
+    if (!self->valid()) return NULL;
+    return toPyTuple(self->objPtr->getEuler());
 }
 
 PyObject* VRPyTransform::getFrom(VRPyTransform* self) {

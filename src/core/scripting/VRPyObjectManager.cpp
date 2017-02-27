@@ -17,8 +17,17 @@ PyMethodDef VRPyObjectManager::methods[] = {
     {"addTemplate", (PyCFunction)VRPyObjectManager::addTemplate, METH_VARARGS, "Add template - addTemplate( int | name ) " },
     {"getTemplate", (PyCFunction)VRPyObjectManager::getTemplate, METH_VARARGS, "Return all template objects - obj getTemplate( str ) " },
     {"getCatalog", (PyCFunction)VRPyObjectManager::getCatalog, METH_VARARGS, "Return all template objects - [ obj ] getCatalog() " },
+    {"updateObject", (PyCFunction)VRPyObjectManager::updateObject, METH_VARARGS, "Update object data - updateObject( obj ) " },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyObjectManager::updateObject(VRPyObjectManager* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    VRPyTransform* o = 0;
+    if (! PyArg_ParseTuple(args, "O", &o)) return NULL;
+    self->objPtr->updateObject( o->objPtr );
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyObjectManager::add(VRPyObjectManager* self, PyObject* args) {
     if (!self->valid()) return NULL;

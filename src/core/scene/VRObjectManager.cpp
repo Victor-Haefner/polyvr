@@ -80,11 +80,19 @@ void VRObjectManager::addTemplate(VRTransformPtr s, string name) {
 }
 
 VRTransformPtr VRObjectManager::getTemplate(string name) { return templatesByName.count(name) ? templatesByName[name] : 0; }
+
 void VRObjectManager::rem(VRTransformPtr t) {
     if (!t) return;
     if (entries.count(t->getName())) entries.erase(t->getName());
     if (instances.count(t->getID())) instances.erase(t->getID());
     subChild(t);
+}
+
+void VRObjectManager::updateObject(VRTransformPtr t) {
+    if (!t) return;
+    if (entries.count(t->getName())) {
+        entries[t->getName()]->pos = t->getPose();
+    }
 }
 
 void VRObjectManager::clear() {
