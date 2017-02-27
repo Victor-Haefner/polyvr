@@ -62,16 +62,16 @@ VRSky::VRSky() : VRGeometry("Sky") {
 
 
     // sun params
-    sunPos = sunFromTime();
-	mat->setShaderParameter<Vec3f>("sunPos", sunPos);
+    sunFromTime();
+    setTurbidity(2.);
 
     float factor = 1/speed;
 
     // cloud params
-    cloudDensity = 0.2;
-    cloudScale = 3e-4;
-    cloudHeight = 1000.;
-    cloudVel =  Vec2f(.01*factor, .003*factor);
+    cloudDensity = 0.1;
+    cloudScale = 2e-5;
+    cloudHeight = 3000.;
+    cloudVel =  Vec2f(.005*factor, .0003*factor);
 	cloudOffset =  Vec2f(0, 0);
     mat->setShaderParameter<float>("cloudDensity", cloudDensity);
     mat->setShaderParameter<float>("cloudScale", cloudScale);
@@ -103,9 +103,9 @@ VRSky::VRSky() : VRGeometry("Sky") {
 	mat->setTexture(tg.compose(0));
 
 	// sky params
-	turbidity = 2.;
-    mat->setShaderParameter<float>("theta_s", theta_s);
-    mat->setShaderParameter<float>("turbidity", turbidity);
+    calculateCoeffs();
+
+    calculateZenithColor();
 
     allowCulling(false, true);
 
@@ -129,13 +129,16 @@ void VRSky::update() {
     date.propagate(dt);
 
     // update sun
-    sunPos = sunFromTime();
-
-    mat->setShaderParameter<Vec3f>("sunPos", sunPos);
+    sunFromTime();
     // update clouds
     updateClouds(dt);
-    mat->setShaderParameter<Vec2f>("cloudOffset", cloudOffset);
+    calculateZenithColor();
 
+}
+
+void VRSky::setTurbidity(float t) {
+    turbidity = t;
+    mat->setShaderParameter<float>("turbidity", turbidity);
 }
 
 void VRSky::setTime(double second, int hour, int day, int year) {
@@ -177,9 +180,62 @@ void VRSky::updateClouds(float dt) {
     cloudOffset += cloudVel * dt;
     cloudOffset[0] = fmod(cloudOffset[0], textureSize);
     cloudOffset[1] = fmod(cloudOffset[1], textureSize);
+    mat->setShaderParameter<Vec2f>("cloudOffset", cloudOffset);
 }
 
-Vec3f VRSky::sunFromTime() {
+void VRSky::calculateZenithColor() {
+	float chi = ((4. / 9.) - (turbidity / 120.) ) * ( Pi - 2 * theta_s );
+	xyY_z[2] = (4.0453 * turbidity - 4.9710) * tan(chi) - 0.2155 * turbidity + 2.4192; // get luminance
+
+	Vec4f vTheta_s = Vec4f(theta_s*theta_s*theta_s, theta_s*theta_s, theta_s, 1);
+	Vec4f vTurbidities = Vec4f(turbidity*turbidity, turbidity, 1, 0);
+
+	// this format in row-major order, all others column major
+	Matrix x_mat = Matrix( 0.0017, -0.0037, 0.0021, 0.000,
+                          -0.0290, 0.0638, -0.0320, 0.0039,
+                           0.1169, -0.2120, 0.0605, 0.2589,
+                           0., 0., 0., 0.);
+	Matrix y_mat = Matrix(0.0028, -0.0061, 0.0032, 0.000,
+                         -0.0421, 0.0897, -0.0415, 0.0052,
+                          0.1535, -0.2676, 0.0667, 0.2669,
+                          0., 0., 0., 0.);
+
+    Vec4f tmp;
+    x_mat.mult(vTheta_s, tmp);
+    xyY_z[0] = vTurbidities.dot(tmp);
+    y_mat.mult(vTheta_s, tmp);
+    xyY_z[1] = vTurbidities.dot(tmp);
+
+    mat->setShaderParameter<Vec3f>("xyY_z", xyY_z);
+}
+
+void VRSky::calculateCoeffs() {
+    coeffsA[2] = 0.1787 * turbidity - 1.4630;
+    coeffsB[2] = - 0.3554 * turbidity + 0.4275;
+    coeffsC[2] = - 0.0227 * turbidity + 5.3251;
+    coeffsD[2] = 0.1206 * turbidity - 2.5771;
+    coeffsE[2] = - 0.0670 * turbidity + 0.3703;
+
+    coeffsA[0] = - 0.0193 * turbidity - 0.2592;
+    coeffsB[0] = - 0.0665 * turbidity + 0.0008;
+    coeffsC[0] = - 0.0004 * turbidity + 0.2125;
+    coeffsD[0] = - 0.0641 * turbidity - 0.8989;
+    coeffsE[0] = - 0.0033 * turbidity + 0.0452;
+
+    coeffsA[1] = - 0.0167 * turbidity - 0.2608;
+    coeffsB[1] = - 0.0950 * turbidity + 0.0092;
+    coeffsC[1] = - 0.0079 * turbidity + 0.2102;
+    coeffsD[1] = - 0.0441 * turbidity - 1.6537;
+    coeffsE[1] = - 0.0109 * turbidity + 0.0529;
+
+    mat->setShaderParameter<Vec3f>("A", coeffsA);
+    mat->setShaderParameter<Vec3f>("B", coeffsB);
+    mat->setShaderParameter<Vec3f>("C", coeffsC);
+    mat->setShaderParameter<Vec3f>("D", coeffsD);
+    mat->setShaderParameter<Vec3f>("E", coeffsE);
+}
+
+void VRSky::sunFromTime() {
 
 	float day = date.getDay();
 	float g = 357.529 + 0.98560028 * day; // mean anomaly of sun
@@ -223,7 +279,10 @@ Vec3f VRSky::sunFromTime() {
     float y = cos_theta_s;
     float x = sin(phi_s)*sin_theta_s;
 
-    return Vec3f(x, y, z);
+    sunPos = Vec3f(x, y, z);
+
+    mat->setShaderParameter<float>("theta_s", theta_s);
+    mat->setShaderParameter<Vec3f>("sunPos", sunPos);
 }
 
 
