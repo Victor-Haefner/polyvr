@@ -37,18 +37,15 @@ VRObjectManagerPtr VRObjectManager::create() { return shared_ptr<VRObjectManager
 void VRObjectManager::setup() {
     for (auto t : templatesByName) addTemplate(t.second);
 
-    cout << "VRObjectManager::setup " << entries.size() << endl;
     for (auto& t : entries) {
         if (!templatesByName.count(t.second->type)) { cout << "VRObjectManager::setup Warning, " << t.second->type << " is not a template!" << endl; continue; }
         auto o = copy(t.second->type, t.second->pos, false);
         o->show();
         o->setPose(t.second->pos);
     }
-    cout << "VRObjectManager::setup done" << endl;
 }
 
 VRTransformPtr VRObjectManager::copy(string name, posePtr p, bool addToStore) {
-    cout << "  VRObjectManager::copy " << name << endl;
     auto t = getTemplate(name);
     if (!t) return 0;
     auto dupe = dynamic_pointer_cast<VRTransform>( t->duplicate() );
@@ -60,6 +57,7 @@ VRTransformPtr VRObjectManager::copy(string name, posePtr p, bool addToStore) {
     dupe->setPose(p);
     dupe->setPersistency(0);
     addChild(dupe);
+    dupe->addAttachment("asset",0);
     return dupe;
 }
 
@@ -82,8 +80,12 @@ void VRObjectManager::addTemplate(VRTransformPtr s, string name) {
 }
 
 VRTransformPtr VRObjectManager::getTemplate(string name) { return templatesByName.count(name) ? templatesByName[name] : 0; }
-VRTransformPtr VRObjectManager::get(int id) { return instances.count(id) ? instances[id].lock() : 0; }
-void VRObjectManager::rem(int id) { if (instances.count(id)) instances.erase(id); }
+void VRObjectManager::rem(VRTransformPtr t) {
+    if (!t) return;
+    if (entries.count(t->getName())) entries.erase(t->getName());
+    if (instances.count(t->getID())) instances.erase(t->getID());
+    subChild(t);
+}
 
 void VRObjectManager::clear() {
     entries.clear();
