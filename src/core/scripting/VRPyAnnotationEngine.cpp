@@ -73,11 +73,11 @@ PyObject* VRPyAnnotationEngine::set(VRPyAnnotationEngine* self, PyObject* args) 
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyAnnotationEngine::set - Object is invalid"); return NULL; }
 
     int i;
-    PyObject* s;
+    const char* s = 0;
     PyObject* p;
-    if (! PyArg_ParseTuple(args, "iOO", &i, &p, &s)) return NULL;
+    if (! PyArg_ParseTuple(args, "iOs", &i, &p, &s)) return NULL;
 
-    self->objPtr->set(i, parseVec3fList(p), PyString_AsString(s));
+    self->objPtr->set(i, parseVec3fList(p), s?s:"");
     Py_RETURN_TRUE;
 }
 
