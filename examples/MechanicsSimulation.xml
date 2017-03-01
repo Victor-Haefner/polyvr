@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="mecha_test" name_space="Scene" loading_time="139">
+<Scene name_suffix="0" base_name="mecha_test" name_space="Scene" loading_time="382">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
-        <Object accept_root="1" aspect="1" at="-0.00120308 -0.147901 0.00539631" at_dir="0" base_name="Default" far="250" fov="1.0472" from="1.83114 0.933836 -1.42013" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.00120308 -0.147901 0.00539631" at_dir="0" base_name="Default" far="250" fov="1.0472" from="1.49125 0.733181 -1.1557" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
             <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
@@ -39,9 +39,20 @@
 	from Math import Vec3
 	import math
 	
+	if not hasattr(VR, 'selector'):
+		VR.selector = VR.Selector()
+	
 	if dev.intersect():
 		i = dev.getIntersected()
 		a = i.hasAncestorWithTag('gear')
+		
+		if VR.tool == 'select' and a:
+			kb = VR.find('keyboard')
+			if kb.getKeyState(65507) == 1:
+				VR.selector.getSelection().add(i)
+				VR.selector.update()
+			else: VR.selector.select(i)
+			return
 		
 		if VR.tool == 'remove' and a:
 			a.destroy()
@@ -89,13 +100,18 @@
 	
 	mv = m.split(' ')
 	m = mv[0]
-	
-	print mv
 		
 	if m == 'tool':
 		VR.tool = None
 		if len(mv) == 2: VR.tool = mv[1]
 		pass
+		
+	if m == 'chain':
+		s = VR.selector.getSelection()
+		objs = s.getSelected()
+		
+		c = VR.mechanism.addChain(0.02, objs, 'l'*len(objs))
+		VR.gears.addChild(c)
 </core>
       <trig type="on_device" dev="server1" state="Released" param="" key="-1" name_suffix="0" base_name="trigger" name_space="__global__"/>
     </Script>
@@ -231,12 +247,7 @@
 			  &lt;i class="fa fa-gear"&gt;&lt;/i&gt;
 		   &lt;/label&gt;
 		&lt;/div&gt;
-		&lt;div id="ck-button"&gt;
-		   &lt;label&gt;
-			  &lt;input class="TB" type="checkbox" onclick="tool(this,'chain')" value="1"&gt;
-			  &lt;i class="fa fa-chain"&gt;&lt;/i&gt;
-		   &lt;/label&gt;
-		&lt;/div&gt;
+		  &lt;button onclick="send('chain')"&gt;&lt;i class="fa fa-chain"&gt;&lt;/i&gt;&lt;/button&gt;
 		&lt;div id="ck-button"&gt;
 		   &lt;label&gt;
 			  &lt;input class="TB" type="checkbox" onclick="tool(this,'rotate')" value="1"&gt;
@@ -260,6 +271,7 @@
 	import math
 	import string
 	
+	VR.tool = None
 	VR.rotate = 1
 	VR.block = 0
 	
