@@ -1,26 +1,66 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="mecha_test" name_space="Scene">
+<Scene name_suffix="0" base_name="mecha_test" name_space="Scene" loading_time="139">
   <Objects>
-    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
-      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.156023 0.185698 -0.109949" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-0.451005 0.433119 -0.790419" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
-          <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
-            <Node active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.00120308 -0.147901 0.00539631" at_dir="0" base_name="Default" far="250" fov="1.0472" from="1.83114 0.933836 -1.42013" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+          <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
+            <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
-          <Node active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+          <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Rendering deferred_rendering="0" frustum_culling="1" hmdd="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
-    <Script name_suffix="0" base_name="click" name_space="__script__" type="Python" mobile="">
+    <Script base_name="addGear" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	import VR
+	
+	p = VR.Geometry(params[0])
+	s = ' '.join([str(i) for i in params])
+	p.setPrimitive( s )
+	p.setPickable(True)
+	p.getConstraint().setRotationConstraint([0,0,1], 'LINE', 1)
+	VR.gears.addChild(p)
+	VR.mechanism.add(p)
+	p.setPose(pose)
+	p.addTag('gear')
+	
+</core>
+      <arg type="NoneType" value="None" name_suffix="0" base_name="params" name_space="addGear"/>
+      <arg type="NoneType" value="None" name_suffix="0" base_name="pose" name_space="addGear"/>
+    </Script>
+    <Script base_name="click" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
+      <core>
+	import VR
+	from VR import Math
+	from Math import Vec3
 	import math
 	
 	if dev.intersect():
 		i = dev.getIntersected()
+		a = i.hasAncestorWithTag('gear')
+		
+		if VR.tool == 'remove' and a:
+			a.destroy()
+			return
+			
+			
+		if VR.tool == 'rotate' and a:
+			d = a.getDir()
+			p = a.getFrom()
+			a.setConstraint(VR.Constraint())
+			a.applyChange()
+			if   abs(d[0]) &gt; 0.5: a.setPose(p,[0,1,0],[0,0,1])
+			elif abs(d[1]) &gt; 0.5: a.setPose(p,[0,0,1],[0,1,0])
+			elif abs(d[2]) &gt; 0.5: a.setPose(p,[1,0,0],[0,1,0])
+			print a.getDir()
+			a.applyChange()
+			#a.getConstraint().setRotationConstraint(a.getDir(), 'LINE', 1)
+			return
+		
 		if i == VR.P1:
 			VR.rotate = not VR.rotate # toggle state
 			
@@ -30,12 +70,191 @@
 			pub = [VR.cgr,VR.cgr*math.sqrt(3), -0.1]	
 			if VR.block: VR.P4.setFrom(pb)
 			else: VR.P4.setFrom(pub)
-		
+		return
+			
+			
+	if VR.tool == 'gear':
+		params = ['Gear', 0.02, 0.01, 0.02, 32, 0.01, 0]
+		pose = dev.getBeacon().getWorldPose()
+		pos = (Vec3( *pose.pos() ) - Vec3( *pose.dir() )).asList()
+		VR.addGear(params, VR.Pose(pos,[0,0,-1],[0,1,0]))
 	
 </core>
       <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" name_suffix="2" base_name="trigger" name_space="__global__"/>
     </Script>
-    <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
+    <Script base_name="gui_handler_toolbar" group="gui" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
+      <core>
+	import VR, os
+	m = dev.getMessage()
+	
+	mv = m.split(' ')
+	m = mv[0]
+	
+	print mv
+		
+	if m == 'tool':
+		VR.tool = None
+		if len(mv) == 2: VR.tool = mv[1]
+		pass
+</core>
+      <trig type="on_device" dev="server1" state="Released" param="" key="-1" name_suffix="0" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script base_name="gui_init" group="gui" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
+      <core>
+	import VR
+	
+	if hasattr(VR, 'gui'): VR.gui.destroy()
+	
+	cam = VR.find('Default')
+	VR.gui = VR.Transform('gui')
+	VR.gui.setPose([0,-1.5,-3], [0,0,1], [0,-1,0])
+	#root.addChild(VR.gui)
+	cam.addChild(VR.gui)
+	
+	toolbar = VR.Sprite('gui')
+	S = 2
+	toolbar.setSize(S,S*0.1)
+	toolbar.setFrom([0,-2.9,0])
+	toolbar.webOpen('http://localhost:5500/gui_site_toolbar', 600, 10)
+	VR.gui.addChild(toolbar)
+	
+	m = toolbar.getMaterial()
+	m.clearTransparency()
+	m.setDepthTest('GL_ALWAYS')
+	
+	
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="3" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script base_name="gui_site_toolbar" group="gui" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML" unique="1">
+      <core>
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+ &lt;style type="text/css"&gt;
+  body {font-size:5vw;
+		text-align:center;
+		background:#ffffff;
+		color:#555555;
+		margin:0;
+  }
+		
+  button {font-size:100%;}
+  input {font-size:100%;}
+  
+  #bar {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: no-wrap;
+	align-items: center;
+	justify-content: space-around;
+	width: 100vw;
+	height: 100vh;
+  }
+  
+	#ck-button {
+		background-color:#EFEFEF;
+		border-radius:4px;
+		border:1px solid #D0D0D0;
+		overflow:auto;
+		float:left;
+	}
+
+	#ck-button:hover {
+		background:#bbf;
+	}
+
+	#ck-button label {
+		float:left;
+		width:70vh;
+	}
+
+	#ck-button label i {
+		text-align:center;
+		padding:3px 0px;
+		display:block;
+	}
+
+	#ck-button label input {
+		position:absolute;
+		top:-20px;
+	}
+
+	#ck-button input:checked + i {
+		background-color:#88d;
+		color:#fff;
+	}
+ &lt;/style&gt;
+ &lt;link rel="stylesheet" href="font-awesome-4.5.0/css/font-awesome.min.css"&gt;
+
+  &lt;script&gt;
+	var lastTool = '';
+	
+	function tool(cb, type) {
+		if (lastTool != '' &amp;&amp; cb != lastTool) lastTool.checked = false;
+		if (cb.checked) send('tool '+type);
+		else send('tool');
+		lastTool = cb;
+	}
+  
+	function handle(m) {
+		data = m.split(" ");
+		if (data.length &gt; 0) {
+			if (data[0] == "catalog") {
+				clear_catalog();
+				for (i=1; i&lt;data.length; i++) add_tile(data[i]);
+			}
+		}
+	}; 
+	
+	var websocket = new WebSocket('ws://'+location.hostname+':5500');
+	websocket.onmessage = function(m) { if (m.data) handle(m.data); };	
+	function send(m){ websocket.send(m); };
+  &lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+
+&lt;body&gt;
+    &lt;div id="bar"&gt;
+		&lt;div id="ck-button"&gt;
+		   &lt;label&gt;
+			  &lt;input class="TB" type="checkbox" onclick="tool(this,'select')" value="1"&gt;
+			  &lt;i class="fa fa-hand-pointer-o"&gt;&lt;/i&gt;
+		   &lt;/label&gt;
+		&lt;/div&gt;
+		&lt;div id="ck-button"&gt;
+		   &lt;label&gt;
+			  &lt;input class="TB" type="checkbox" onclick="tool(this,'gear')" value="1"&gt;
+			  &lt;i class="fa fa-gear"&gt;&lt;/i&gt;
+		   &lt;/label&gt;
+		&lt;/div&gt;
+		&lt;div id="ck-button"&gt;
+		   &lt;label&gt;
+			  &lt;input class="TB" type="checkbox" onclick="tool(this,'chain')" value="1"&gt;
+			  &lt;i class="fa fa-chain"&gt;&lt;/i&gt;
+		   &lt;/label&gt;
+		&lt;/div&gt;
+		&lt;div id="ck-button"&gt;
+		   &lt;label&gt;
+			  &lt;input class="TB" type="checkbox" onclick="tool(this,'rotate')" value="1"&gt;
+			  &lt;i class="fa fa-rotate-left"&gt;&lt;/i&gt;
+		   &lt;/label&gt;
+		&lt;/div&gt;
+		&lt;div id="ck-button"&gt;
+		   &lt;label&gt;
+			  &lt;input class="TB" type="checkbox" onclick="tool(this,'remove')" value="1"&gt;
+			  &lt;i class="fa fa-remove"&gt;&lt;/i&gt;
+		   &lt;/label&gt;
+		&lt;/div&gt;
+	&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</core>
+    </Script>
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	import VR
 	import math
@@ -63,6 +282,7 @@
 		p.setPickable(True)
 		p.getConstraint().setRotationConstraint([0,0,1], 'LINE', 1)
 		VR.gears.addChild(p)
+		p.addTag('gear')
 		if mecha:
 			VR.mechanism.add(p)
 		return p
@@ -135,14 +355,15 @@
       <arg type="VRPyObjectType" value="Headlight" name_suffix="0" base_name="root" name_space="init"/>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
     </Script>
-    <Script name_suffix="0" base_name="update" name_space="__script__" type="Python" mobile="">
+    <Script base_name="update" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	import VR
 	
 	if hasattr(VR, 'P1') and VR.rotate:
 		VR.P1.rotate(0,0,1, 0.01)
 		
-	VR.mechanism.update()
+	if hasattr(VR, 'mechanism'):
+		VR.mechanism.update()
 </core>
       <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
     </Script>
@@ -151,4 +372,5 @@
   <Background color="0.6 0.6 0.6" format=".png" path="" persistency="666" type="0"/>
   <Navigation active="Orbit" persistency="666"/>
   <Materials persistency="666"/>
+  <Semantics persistency="666"/>
 </Scene>

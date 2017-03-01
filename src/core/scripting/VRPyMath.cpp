@@ -75,8 +75,9 @@ PyNumberMethods VRPyVec3f::nMethods = {
 PyMethodDef VRPyVec3f::methods[] = {
     {"normalize", (PyCFunction)VRPyVec3f::normalize, METH_NOARGS, "Normalize the vector - normalize()" },
     {"length", (PyCFunction)VRPyVec3f::length, METH_NOARGS, "Compute the length - float length()" },
-    {"dot", (PyCFunction)VRPyVec3f::dot, METH_VARARGS, "Compute the dot product - float dot( Vec3f )" },
-    {"cross", (PyCFunction)VRPyVec3f::cross, METH_VARARGS, "Compute the cross product - Vec3f cross( Vec3f )" },
+    {"dot", (PyCFunction)VRPyVec3f::dot, METH_VARARGS, "Compute the dot product - float dot( Vec3 )" },
+    {"cross", (PyCFunction)VRPyVec3f::cross, METH_VARARGS, "Compute the cross product - Vec3 cross( Vec3 )" },
+    {"asList", (PyCFunction)VRPyVec3f::asList, METH_NOARGS, "Return as python list - [x,y,z] asList()" },
     {NULL}  /* Sentinel */
 };
 
@@ -105,6 +106,14 @@ PyObject* VRPyVec3f::Print(PyObject* self) {
 PyObject* VRPyVec3f::normalize(VRPyVec3f* self) {
     self->v.normalize();
     Py_RETURN_TRUE;
+}
+
+PyObject* VRPyVec3f::asList(VRPyVec3f* self) {
+    auto l = PyList_New(3);
+    PyList_SetItem(l,0,PyFloat_FromDouble(self->v[0]));
+    PyList_SetItem(l,1,PyFloat_FromDouble(self->v[1]));
+    PyList_SetItem(l,2,PyFloat_FromDouble(self->v[2]));
+    return l;
 }
 
 PyObject* VRPyVec3f::length(VRPyVec3f* self) {
