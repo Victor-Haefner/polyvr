@@ -95,6 +95,7 @@ class VRPathtool : public VRObject {
 
         VRGeometryPtr setGraphNode(int i);
         void setGraphEdge(graph_base::edge& e);
+        void projectHandle(VRGeometryPtr handle, VRDevicePtr dev);
 
     public:
         VRPathtool();

@@ -35,8 +35,17 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"getNodeID", (PyCFunction)VRPyPathtool::getNodeID, METH_VARARGS, "Return node ID from handle - getNodeID( handle )" },
     {"connect", (PyCFunction)VRPyPathtool::connect, METH_VARARGS, "Connect two nodes - connect( id1, id2 )" },
     {"disconnect", (PyCFunction)VRPyPathtool::disconnect, METH_VARARGS, "Disconnect two nodes - disconnect( id1, id2 )" },
+    {"setProjectionGeometry", (PyCFunction)VRPyPathtool::setProjectionGeometry, METH_VARARGS, "Set an object to project handles onto - setProjectionGeometry( object )" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyPathtool::setProjectionGeometry(VRPyPathtool* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    VRPyObject* g = 0;
+    if (! PyArg_ParseTuple(args, "O:setProjectionGeometry", &g)) return NULL;
+    self->objPtr->setProjectionGeometry( g->objPtr );
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyPathtool::getNodeID(VRPyPathtool* self, PyObject* args) {
     if (!self->valid()) return NULL;

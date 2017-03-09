@@ -28,6 +28,7 @@ struct VRPyPathtool : VRPyBaseT<OSG::VRPathtool> {
     static PyObject* getNodeID(VRPyPathtool* self, PyObject* args);
     static PyObject* connect(VRPyPathtool* self, PyObject* args);
     static PyObject* disconnect(VRPyPathtool* self, PyObject* args);
+    static PyObject* setProjectionGeometry(VRPyPathtool* self, PyObject* args);
 };
 
 #endif // VRPYPATHTOOL_H_INCLUDED

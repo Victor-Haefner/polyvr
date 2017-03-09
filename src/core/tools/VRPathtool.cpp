@@ -225,7 +225,7 @@ void VRPathtool::update() {
     for (auto e : paths) updateEntry(e.second);
 }
 
-void VRPathtool::updateEntry(entry* e) {
+void VRPathtool::updateEntry(entry* e) { // update path representation
     if (!e) return;
     int hN = e->handles.size();
     if (hN <= 0) return;
@@ -260,11 +260,20 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
     }
 }
 
+void VRPathtool::projectHandle(VRGeometryPtr handle, VRDevicePtr dev) {
+    if (!projObj) return;
+    OSG::VRIntersection ins = dev->intersect(projObj);
+    if (ins.hit) {
+        handle->setWorldPosition( Vec3f(ins.point) );
+    }
+}
+
 void VRPathtool::updateDevs() { // update when something is dragged
     for (auto dev : VRSetup::getCurrent()->getDevices()) { // get dragged objects
         VRGeometryPtr obj = static_pointer_cast<VRGeometry>(dev.second->getDraggedObject());
         if (obj == 0) continue;
         if (entries.count(obj.get()) == 0) continue;
+        projectHandle(obj, dev.second);
         updateHandle(obj);
     }
 }
