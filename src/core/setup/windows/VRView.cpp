@@ -101,8 +101,8 @@ void VRView::setViewports() {//create && set size of viewports
     if (p[1] > p[3]) p[1] = p[3]-0.01;
 
     //active, stereo
-    lView_act = active_stereo ? StereoBufferViewport::create() : 0;
-    rView_act = active_stereo ? StereoBufferViewport::create() : 0;
+    lView_act = active_stereo ? StereoBufferViewportRecPtr(StereoBufferViewport::create()) : 0;
+    rView_act = active_stereo ? StereoBufferViewportRecPtr(StereoBufferViewport::create()) : 0;
 
     //no stereo
     if (!stereo && !active_stereo) {
