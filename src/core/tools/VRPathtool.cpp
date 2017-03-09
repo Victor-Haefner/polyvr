@@ -264,7 +264,9 @@ void VRPathtool::projectHandle(VRGeometryPtr handle, VRDevicePtr dev) {
     if (!projObj) return;
     OSG::VRIntersection ins = dev->intersect(projObj);
     if (ins.hit) {
-        handle->setWorldPosition( Vec3f(ins.point) );
+        Vec3f d = handle->getWorldDirection();
+        d -= d.dot(ins.normal)*ins.normal;
+        handle->setWorldPose( pose::create(Vec3f(ins.point), -d, ins.normal) );
     }
 }
 
