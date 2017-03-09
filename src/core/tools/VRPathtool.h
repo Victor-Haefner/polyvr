@@ -71,8 +71,10 @@ class VRPathtool : public VRObject {
             VRGeometryWeakPtr handle;
         };
 
-        map<path*, entry*> paths;
-        map<VRGeometry*, vector<entry*> > entries; // map handle geometries to the entries
+        typedef shared_ptr<entry> entryPtr;
+
+        map<path*, entryPtr> paths;
+        map<VRGeometry*, vector<entryPtr> > entries; // map handle geometries to the entries
         vector<VRGeometryWeakPtr> handles;
         map<VRGeometry*, int> handleToNode;
         graph_basePtr Graph;
@@ -90,7 +92,7 @@ class VRPathtool : public VRObject {
         VRGeometryPtr customHandle;
         VRGeometryPtr newHandle();
         void updateHandle(VRGeometryPtr handle);
-        void updateEntry(entry* e);
+        void updateEntry(entryPtr e);
         void updateDevs();
 
         VRGeometryPtr setGraphNode(int i);

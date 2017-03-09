@@ -139,7 +139,7 @@ void VRPathtool::disconnect(int i1, int i2) {
 
     auto h1 = knots[i1].handle.lock().get();
     auto h2 = knots[i2].handle.lock().get();
-    entry* e = 0;
+    entryPtr e = 0;
     for (auto e1 : entries[h1] ) {
         for (auto e2 : entries[h2] ) {
             if (e1 == e2) { // found entry between h1 and h2!
@@ -152,10 +152,9 @@ void VRPathtool::disconnect(int i1, int i2) {
 
     if (e) {
         if (auto l = e->line.lock()) l->destroy(); // TODO: entry destructor?
-        paths.erase(e->p.get());
         vecRemVal(entries[h1], e);
         vecRemVal(entries[h2], e);
-        delete e; e = 0;
+        paths.erase(e->p.get());
     }
 
     vecRemVal(knots[i1].out, i2);
@@ -225,7 +224,7 @@ void VRPathtool::update() {
     for (auto e : paths) updateEntry(e.second);
 }
 
-void VRPathtool::updateEntry(entry* e) { // update path representation
+void VRPathtool::updateEntry(entryPtr e) { // update path representation
     if (!e) return;
     int hN = e->handles.size();
     if (hN <= 0) return;
@@ -281,7 +280,7 @@ void VRPathtool::updateDevs() { // update when something is dragged
 }
 
 void VRPathtool::addPath(pathPtr p, VRObjectPtr anchor, VRGeometryPtr ha, VRGeometryPtr he) {
-    entry* e = new entry( anchor ? anchor : ptr() );
+    auto e = entryPtr( new entry( anchor ? anchor : ptr() ) );
     e->p = p;
     paths[e->p.get()] = e;
 
@@ -309,7 +308,7 @@ void VRPathtool::entry::addHandle(VRGeometryPtr h) {
 }
 
 pathPtr VRPathtool::newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution) {
-    entry* e = new entry( anchor ? anchor : ptr() );
+    auto e = entryPtr( new entry( anchor ? anchor : ptr() ) );
     e->p = path::create();
     e->resolution = resolution;
     paths[e->p.get()] = e;
@@ -359,7 +358,7 @@ vector<VRGeometryPtr> VRPathtool::getHandles(pathPtr p) {
     if (p == 0) for (auto h : handles) res.push_back(h.lock());
     else {
         map<int, VRGeometryPtr> sor;
-        entry* e = paths[p.get()];
+        entryPtr e = paths[p.get()];
         for (auto h : e->handles) if (auto hl = h.lock()) sor[ e->points[hl.get()] ] = hl;
         for (auto h : sor) res.push_back(h.second);
     }
@@ -377,7 +376,7 @@ VRGeometryPtr VRPathtool::extrude(VRDevicePtr dev, pathPtr p) {
         return 0;
     }
 
-    entry* e = paths[p.get()];
+    auto e = paths[p.get()];
     e->p->addPoint(Vec3f(0,0,-1), Vec3f(1,0,0), Vec3f(1,1,1));
 
     VRGeometryPtr h = newHandle();
@@ -400,14 +399,20 @@ void VRPathtool::setHandleGeometry(VRGeometryPtr geo) {
 }
 
 void VRPathtool::clear(pathPtr p) {
-    if (p == 0) {
-        auto tmp = paths;
-        for (auto path : tmp) clear(path.second->p);
+    if (!p) {
+        paths.clear();
+        entries.clear();
+        handles.clear();
+        handleToNode.clear();
+        Graph->clear();
+        knots.clear();
+        selectedPath.reset();
+        clearChildren();
         return;
     }
 
     if (paths.count(p.get()) == 0) return;
-    entry* e = paths[p.get()];
+    auto e = paths[p.get()];
 
     for (auto h : e->handles) {
         if (auto hl = h.lock()) {
@@ -415,18 +420,16 @@ void VRPathtool::clear(pathPtr p) {
             hl->destroy();
         }
     }
+
     e->handles.clear();
     if (e->line.lock()) e->line.lock()->destroy();
     e->line.reset();
-
     p->clear();
-
-    knots.clear();
 }
 
 void VRPathtool::remPath(pathPtr p) {
     if (paths.count(p.get()) == 0) return;
-    entry* e = paths[p.get()];
+    auto e = paths[p.get()];
 
     for (auto hw : e->handles) {
         if (auto h = hw.lock()) {
@@ -436,7 +439,6 @@ void VRPathtool::remPath(pathPtr p) {
     }
 
     if (auto l = e->line.lock()) l->destroy();
-    delete e;
     paths.erase(p.get());
 }
 
