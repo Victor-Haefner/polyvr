@@ -85,6 +85,8 @@ VRPathtool::VRPathtool() : VRObject("Pathtool") {
 
 VRPathtoolPtr VRPathtool::create() { return VRPathtoolPtr( new VRPathtool() ); }
 
+void VRPathtool::setProjectionGeometry(VRObjectPtr obj) { projObj = obj; }
+
 void VRPathtool::setGraph(graph_basePtr g) {
     if (!g) return;
     Graph = g;
@@ -177,6 +179,8 @@ void VRPathtool::setGraphEdge(graph_base::edge& e) {
     addPath(p, 0, knots[e.from].handle.lock(), knots[e.to].handle.lock());
     knots[e.from].out.push_back(e.to);
     knots[e.to].in.push_back(e.from);
+    updateHandle( knots[e.from].handle.lock() );
+    updateHandle( knots[e.to  ].handle.lock() );
 }
 
 VRGeometryPtr VRPathtool::setGraphNode(int i) {
@@ -190,20 +194,18 @@ VRGeometryPtr VRPathtool::setGraphNode(int i) {
 
 void VRPathtool::update() {
     if (Graph) { // smooth knot transformations
-        // get handle positions
-        map<int, Vec3f> hPositions;
+        map<int, Vec3f> hPositions; // get handle positions
         for (uint i=0; i<knots.size(); i++)
             if (auto h = knots[i].handle.lock()) hPositions[i] = h->getWorldPosition();
 
-        for (uint i=0; i<knots.size(); i++) {
-            auto& knot = knots[i];
-            auto h = knot.handle.lock();
+        for (auto& knot : knots) { // compute and set direction of handles
+            auto h = knot.second.handle.lock();
             if (!h) continue;
 
             Vec3f pos = h->getWorldPosition();
             Vec3f dir;
-            for (auto k : knot.out) if (hPositions.count(k)) dir += pos - hPositions[k];
-            for (auto k : knot.in) if (hPositions.count(k)) dir += hPositions[k] - pos;
+            for (auto k : knot.second.out) if (hPositions.count(k)) dir += pos - hPositions[k];
+            for (auto k : knot.second.in) if (hPositions.count(k)) dir += hPositions[k] - pos;
             dir.normalize();
             h->setDir(dir);
         }
@@ -280,8 +282,8 @@ void VRPathtool::addPath(pathPtr p, VRObjectPtr anchor, VRGeometryPtr ha, VRGeom
         if (!h) h = newHandle();
 
         entries[h.get()].push_back(e);
-        e->addHandle(h);
         h->setPose(point.p, point.n, point.u);
+        e->addHandle(h);
     }
 }
 

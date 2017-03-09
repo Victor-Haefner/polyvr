@@ -85,6 +85,7 @@ class VRPathtool : public VRObject {
         VRUpdateCbPtr updatePtr;
         VRManipulator* manip = 0;
         VRExtruder* ext = 0;
+        VRObjectPtr projObj;
 
         VRGeometryPtr customHandle;
         VRGeometryPtr newHandle();
@@ -98,6 +99,8 @@ class VRPathtool : public VRObject {
     public:
         VRPathtool();
         static VRPathtoolPtr create();
+
+        void setProjectionGeometry(VRObjectPtr obj);
 
         void setGraph(graph_basePtr g);
         int addNode(posePtr p);
