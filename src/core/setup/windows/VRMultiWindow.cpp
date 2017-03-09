@@ -47,6 +47,8 @@ void VRMultiWindow::setServer(int x, int y, string s) {
 void VRMultiWindow::setNTiles(int x, int y) {
     Nx = x;
     Ny = y;
+    int N = Nx*Ny;
+    servers.resize(N);
 }
 
 int VRMultiWindow::getNXTiles() { return Nx; }
@@ -123,7 +125,6 @@ void VRMultiWindow::load(xmlpp::Element* node) {
     Nx = toInt( node->get_attribute("Nx")->get_value() );
     Ny = toInt( node->get_attribute("Ny")->get_value() );
     if (node->get_attribute("ConnType")) connection_type = node->get_attribute("ConnType")->get_value();
-    setNTiles(Nx, Ny);
 
     xmlpp::Node::NodeList nl = node->get_children();
     xmlpp::Node::NodeList::iterator itr;
@@ -140,6 +141,8 @@ void VRMultiWindow::load(xmlpp::Element* node) {
 
         addServer(addr);
     }
+
+    setNTiles(Nx, Ny);
 }
 
 OSG_END_NAMESPACE;
