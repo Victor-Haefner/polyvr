@@ -10,7 +10,7 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class graph_base : public VRStorage {
+class Graph : public VRStorage {
     public:
         enum CONNECTION {
             SIMPLE,
@@ -31,17 +31,15 @@ class graph_base : public VRStorage {
             edge(int i, int j, CONNECTION c);
         };
 
-        struct emptyNode {
-            void update(node& n, bool changed) {}
-        };
-
     protected:
         vector< vector<edge> > edges;
         vector< node > nodes;
 
     public:
-        graph_base();
-        ~graph_base();
+        Graph();
+        ~Graph();
+
+        static shared_ptr< Graph > create() { return shared_ptr< Graph >(new Graph()); }
 
         edge& connect(int i, int j, CONNECTION c = SIMPLE);
         void disconnect(int i, int j);
@@ -51,40 +49,13 @@ class graph_base : public VRStorage {
         int getNEdges();
         int size();
         bool connected(int i1, int i2);
-
-        //vector<node>::iterator begin();
-        //vector<node>::iterator end();
-
         void setPosition(int i, Vec3f v);
-        virtual void update(int i, bool changed);
-        virtual void clear();
+
         virtual int addNode();
         virtual void remNode(int i);
+        virtual void update(int i, bool changed);
+        virtual void clear();
 };
-
-template<class T>
-class graph : public graph_base {
-    private:
-        vector<T> elements;
-
-        void update(int i, bool changed);
-
-    public:
-        graph();
-        ~graph();
-
-        static shared_ptr< graph<T> > create() { return shared_ptr< graph<T> >(new graph<T>()); }
-
-        int addNode();
-        int addNode(T t);
-        virtual void remNode(int i);
-
-        vector<T>& getElements();
-        T& getElement(int i);
-        void clear();
-};
-
-typedef graph< shared_ptr<graph_base::emptyNode> > SimpleGraph;
 
 OSG_END_NAMESPACE;
 

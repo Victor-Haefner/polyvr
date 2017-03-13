@@ -4,7 +4,7 @@
 
 using namespace OSG;
 
-newPyType( graph_base , Graph , 0 );
+newPyType( Graph , Graph , 0 );
 
 PyMethodDef VRPyGraph::methods[] = {
     {"getEdges", (PyCFunction)VRPyGraph::getEdges, METH_NOARGS, "Return graph edges - getEdges()" },
@@ -13,7 +13,7 @@ PyMethodDef VRPyGraph::methods[] = {
     {NULL}  /* Sentinel */
 };
 
-PyObject* convEdge(graph_base::edge& e) {
+PyObject* convEdge(Graph::edge& e) {
     PyObject* epy = PyTuple_New(2);
     PyTuple_SetItem(epy, 0, PyInt_FromLong(e.from));
     PyTuple_SetItem(epy, 1, PyInt_FromLong(e.to));

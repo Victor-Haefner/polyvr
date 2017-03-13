@@ -26,7 +26,7 @@ class VRGuiSemantics {
         map<int, int> widgetIDs;
 
         VRGraphLayoutPtr layout;
-        graph_basePtr layout_graph;
+        GraphPtr layout_graph;
         VROntologyPtr current;
         VRUpdateCbPtr updateLayoutCb;
 

@@ -1,5 +1,4 @@
 #include "VRCharacter.h"
-#include "core/math/graphT.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include <math.h>
@@ -32,7 +31,7 @@ void VRBehavior::updateBones() {
 
 
 
-void VRSkeleton::Joint::update(graph_base::node& n, bool changed) {
+void VRSkeleton::Joint::update(Graph::node& n, bool changed) {
     ;
 }
 
@@ -68,13 +67,14 @@ int VRSkeleton::addBone(int j1, int j2) {
 }
 
 int VRSkeleton::addJoint(JointPtr c, Vec3f p) {
-    auto i = armature->addNode( c );
+    auto i = armature->addNode();
+    joints[i] = Joint::create();
     armature->getNode(i).box.setCenter(p);
     return i;
 }
 
-//graph_base::edge VRSkeleton::getBone(int id) { /*return armature->getEdge(id);*/ } // TODO
-VRConstraintPtr VRSkeleton::getJoint(int id) { return dynamic_pointer_cast<VRConstraint>( armature->getElement(id) ); }
+//Graph::edge VRSkeleton::getBone(int id) { /*return armature->getEdge(id);*/ } // TODO
+VRConstraintPtr VRSkeleton::getJoint(int id) { return dynamic_pointer_cast<VRConstraint>( joints[id] ); }
 
 void VRSkeleton::asGeometry(VRGeoData& data) {
     for (auto& joint : armature->getNodes()) {

@@ -27,19 +27,20 @@ class VRSkeleton : public VRGeometry {
         };
 
         struct Joint : VRConstraint {
-            void update(graph_base::node& n, bool changed);
+            void update(Graph::node& n, bool changed);
             static shared_ptr<Joint> create();
             shared_ptr<Joint> duplicate();
         };
 
         typedef shared_ptr<Configuration> ConfigurationPtr;
         typedef shared_ptr<Joint> JointPtr;
-        typedef graph< JointPtr > Armature;
+        typedef Graph Armature;
         typedef shared_ptr<Armature> ArmaturePtr;
 
     private:
         int rootBone = -1;
         ArmaturePtr armature;
+        map<int, JointPtr> joints;
 
         void initMaterial(); // skeleton visualisation
 
@@ -52,7 +53,7 @@ class VRSkeleton : public VRGeometry {
         int addBone(int joint1, int joint2);
         int addJoint(JointPtr c, Vec3f p);
 
-        //graph_base::edge getBone(int id);
+        //Graph::edge getBone(int id);
         VRConstraintPtr getJoint(int id);
 
         void simpleHumanoid();

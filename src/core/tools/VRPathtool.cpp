@@ -7,7 +7,6 @@
 #include "core/setup/VRSetup.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/math/path.h"
-#include "core/math/graphT.h"
 #include "core/utils/VRStorage_template.h"
 
 #include <OpenSG/OSGGeoProperties.h>
@@ -84,21 +83,21 @@ VRPathtool::VRPathtool() : VRObject("Pathtool") {
     lsmat->setLineWidth(3);
 
     storeObj("handle", customHandle);
-    storeObj<>("graph", Graph);
+    storeObj<>("graph", graph);
     regStorageSetupFkt( VRFunction<int>::create("pathtool setup", boost::bind(&VRPathtool::setup, this)) );
 }
 
 VRPathtoolPtr VRPathtool::create() { return VRPathtoolPtr( new VRPathtool() ); }
 
 void VRPathtool::setup() {
-    setGraph(Graph);
+    setGraph(graph);
 }
 
 void VRPathtool::setProjectionGeometry(VRObjectPtr obj) { projObj = obj; }
 
-void VRPathtool::setGraph(graph_basePtr g) {
+void VRPathtool::setGraph(GraphPtr g) {
     if (!g) return;
-    Graph = g;
+    graph = g;
     clear();
     auto& nodes = g->getNodes();
     auto& edges = g->getEdges();
@@ -110,17 +109,17 @@ void VRPathtool::setGraph(graph_basePtr g) {
 }
 
 int VRPathtool::addNode(posePtr p) {
-    if (!Graph) setGraph( SimpleGraph::create() );
-    int i = Graph->addNode();
-    Graph->setPosition(i, p->pos());
+    if (!graph) setGraph( Graph::create() );
+    int i = graph->addNode();
+    graph->setPosition(i, p->pos());
     auto h = setGraphNode(i);
     h->setPose(p);
     return i;
 }
 
 void VRPathtool::remNode(int i) {
-    if (!Graph) return;
-    Graph->remNode(i);
+    if (!graph) return;
+    graph->remNode(i);
     if (knots.count(i)) {
         if (auto h = knots[i].handle.lock()) {
             h->destroy();
@@ -143,8 +142,8 @@ void vecRemVal(V& vec, T& val) {
 
 void VRPathtool::disconnect(int i1, int i2) {
     if (i1 == i2) return;
-    if (!Graph) return;
-    Graph->disconnect(i1,i2);
+    if (!graph) return;
+    graph->disconnect(i1,i2);
 
     auto h1 = knots[i1].handle.lock().get();
     auto h2 = knots[i2].handle.lock().get();
@@ -172,15 +171,15 @@ void VRPathtool::disconnect(int i1, int i2) {
 
 void VRPathtool::connect(int i1, int i2) {
     if (i1 == i2) return;
-    if (!Graph) return;
-    if (!Graph->connected(i1,i2)) {
-        auto& e = Graph->connect(i1,i2);
+    if (!graph) return;
+    if (!graph->connected(i1,i2)) {
+        auto& e = graph->connect(i1,i2);
         setGraphEdge(e);
     } else disconnect(i1,i2);
 }
 
-void VRPathtool::setGraphEdge(graph_base::edge& e) {
-    auto& nodes = Graph->getNodes();
+void VRPathtool::setGraphEdge(Graph::edge& e) {
+    auto& nodes = graph->getNodes();
     pathPtr p = path::create();
     p->addPoint(nodes[e.from].box.center());
     p->addPoint(nodes[e.to].box.center());
@@ -201,7 +200,7 @@ VRGeometryPtr VRPathtool::setGraphNode(int i) {
 }
 
 void VRPathtool::update() {
-    if (Graph) { // smooth knot transformations
+    if (graph) { // smooth knot transformations
         map<int, Vec3f> hPositions; // get handle positions
         for (uint i=0; i<knots.size(); i++)
             if (auto h = knots[i].handle.lock()) hPositions[i] = h->getWorldPosition();
@@ -413,7 +412,7 @@ void VRPathtool::clear(pathPtr p) {
         entries.clear();
         handles.clear();
         handleToNode.clear();
-        Graph->clear();
+        graph->clear();
         knots.clear();
         selectedPath.reset();
         clearChildren();

@@ -77,7 +77,7 @@ class VRPathtool : public VRObject {
         map<VRGeometry*, vector<entryPtr> > entries; // map handle geometries to the entries
         vector<VRGeometryWeakPtr> handles;
         map<VRGeometry*, int> handleToNode;
-        graph_basePtr Graph;
+        GraphPtr graph;
         map<int, knot> knots; // maps graph node ids to pathtool knots
         pathPtr selectedPath = 0;
 
@@ -96,7 +96,7 @@ class VRPathtool : public VRObject {
         void updateDevs();
 
         VRGeometryPtr setGraphNode(int i);
-        void setGraphEdge(graph_base::edge& e);
+        void setGraphEdge(Graph::edge& e);
         void projectHandle(VRGeometryPtr handle, VRDevicePtr dev);
 
     public:
@@ -106,7 +106,7 @@ class VRPathtool : public VRObject {
 
         void setProjectionGeometry(VRObjectPtr obj);
 
-        void setGraph(graph_basePtr g);
+        void setGraph(GraphPtr g);
         int addNode(posePtr p);
         void remNode(int i);
         int getNodeID(VRObjectPtr o);
