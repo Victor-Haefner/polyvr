@@ -83,7 +83,7 @@ VRPathtool::VRPathtool() : VRObject("Pathtool") {
     lsmat->setLineWidth(3);
 
     storeObj("handle", customHandle);
-    storeObj<>("graph", graph);
+    storeObj("graph", graph);
     regStorageSetupFkt( VRFunction<int>::create("pathtool setup", boost::bind(&VRPathtool::setup, this)) );
 }
 
@@ -97,14 +97,15 @@ void VRPathtool::setProjectionGeometry(VRObjectPtr obj) { projObj = obj; }
 
 void VRPathtool::setGraph(GraphPtr g) {
     if (!g) return;
-    graph = g;
+    if (g == graph) graph = 0; // important, else the clear will also clear the graph!
     clear();
-    auto& nodes = g->getNodes();
-    auto& edges = g->getEdges();
+    graph = g;
 
-    for (uint i=0; i<nodes.size(); i++) setGraphNode(i);
-    for (auto& n : edges) {
-        for (auto& e : n) setGraphEdge(e);
+    for (uint i=0; i<g->size(); i++) setGraphNode(i);
+    for (auto& n : g->getEdges()) {
+        for (auto& e : n) {
+            setGraphEdge(e);
+        }
     }
 }
 
@@ -191,11 +192,12 @@ void VRPathtool::setGraphEdge(Graph::edge& e) {
 }
 
 VRGeometryPtr VRPathtool::setGraphNode(int i) {
-    knots[i] = knot();
     auto h = newHandle();
+    knots[i] = knot();
     knots[i].handle = h;
     handleToNode[h.get()] = i;
     addChild(h);
+    h->setFrom( graph->getPosition(i) );
     return h;
 }
 
@@ -412,7 +414,7 @@ void VRPathtool::clear(pathPtr p) {
         entries.clear();
         handles.clear();
         handleToNode.clear();
-        graph->clear();
+        if (graph) graph->clear();
         knots.clear();
         selectedPath.reset();
         clearChildren();

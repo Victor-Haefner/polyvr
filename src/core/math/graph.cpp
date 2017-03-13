@@ -1,10 +1,37 @@
 #include "graph.h"
+#include "core/utils/toString.h"
 
 #include <algorithm>
 
 using namespace OSG;
 
-Graph::Graph() {}
+string toString(Graph::edge& e) {
+    return toString(Vec3i(e.from, e.to, e.connection));
+}
+
+void toValue(string s, Graph::edge& e) {
+    Vec3i tmp;
+    toValue(s, tmp);
+    e.from = tmp[0];
+    e.to = tmp[1];
+    e.connection = Graph::CONNECTION(tmp[2]);
+}
+
+string toString(Graph::node& n) {
+    return toString(n.box);
+}
+
+void toValue(string s, Graph::node& n) { toValue(s, n.box); }
+
+
+#include "core/utils/VRStorage_template.h"
+
+
+Graph::Graph() {
+    storeVecVec("edges", edges);
+    storeVec("nodes", nodes);
+}
+
 Graph::~Graph() {}
 
 Graph::edge& Graph::connect(int i, int j, CONNECTION c) {
@@ -52,6 +79,8 @@ void Graph::setPosition(int i, Vec3f v) {
     n.box.setCenter(v);
     update(i, true);
 }
+
+Vec3f Graph::getPosition(int i) { return nodes[i].box.center(); }
 
 int Graph::addNode() { nodes.push_back(node()); return nodes.size()-1; }
 void Graph::clear() { nodes.clear(); edges.clear(); }

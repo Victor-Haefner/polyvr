@@ -23,6 +23,7 @@ string toString(OSG::Pnt3f v);
 string toString(OSG::Vec4f v);
 string toString(OSG::Vec3i v);
 string toString(OSG::posePtr p);
+string toString(const OSG::boundingbox& b);
 
 // deprecated?
 bool toBool(string s, int* N = 0);
@@ -45,5 +46,6 @@ void toValue(string s, OSG::Vec3f& v);
 void toValue(string s, OSG::Vec4f& v);
 void toValue(string s, OSG::Vec3i& v);
 void toValue(string s, OSG::posePtr& p);
+void toValue(string s, OSG::boundingbox& b);
 
 #endif // TOSTRING_H_INCLUDED

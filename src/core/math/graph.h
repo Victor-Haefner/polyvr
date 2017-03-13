@@ -13,10 +13,10 @@ OSG_BEGIN_NAMESPACE;
 class Graph : public VRStorage {
     public:
         enum CONNECTION {
-            SIMPLE,
-            HIERARCHY,
-            DEPENDENCY,
-            SIBLING
+            SIMPLE = 0,
+            HIERARCHY = 1,
+            DEPENDENCY = 2,
+            SIBLING = 3
         };
 
         struct node {
@@ -24,11 +24,11 @@ class Graph : public VRStorage {
         };
 
         struct edge {
-            int from;
-            int to;
-            CONNECTION connection;
+            int from = 0;
+            int to = 0;
+            CONNECTION connection = SIMPLE;
 
-            edge(int i, int j, CONNECTION c);
+            edge(int i = 0, int j = 0, CONNECTION c = SIMPLE);
         };
 
     protected:
@@ -50,6 +50,7 @@ class Graph : public VRStorage {
         int size();
         bool connected(int i1, int i2);
         void setPosition(int i, Vec3f v);
+        Vec3f getPosition(int i);
 
         virtual int addNode();
         virtual void remNode(int i);
