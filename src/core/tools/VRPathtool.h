@@ -102,6 +102,7 @@ class VRPathtool : public VRObject {
     public:
         VRPathtool();
         static VRPathtoolPtr create();
+        void setup();
 
         void setProjectionGeometry(VRObjectPtr obj);
 

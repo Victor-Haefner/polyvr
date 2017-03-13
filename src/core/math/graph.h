@@ -5,11 +5,12 @@
 #include <OpenSG/OSGVector.h>
 #include "core/math/VRMathFwd.h"
 #include "core/math/boundingbox.h"
+#include "core/utils/VRStorage.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class graph_base {
+class graph_base : public VRStorage {
     public:
         enum CONNECTION {
             SIMPLE,

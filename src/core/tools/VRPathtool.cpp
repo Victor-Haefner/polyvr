@@ -8,6 +8,7 @@
 #include "core/setup/devices/VRDevice.h"
 #include "core/math/path.h"
 #include "core/math/graphT.h"
+#include "core/utils/VRStorage_template.h"
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeoFunctions.h>
@@ -81,9 +82,17 @@ VRPathtool::VRPathtool() : VRObject("Pathtool") {
     lsmat->setLit(false);
     lsmat->setDiffuse(Vec3f(0.9,0.1,0.2));
     lsmat->setLineWidth(3);
+
+    storeObj("handle", customHandle);
+    storeObj<>("graph", Graph);
+    regStorageSetupFkt( VRFunction<int>::create("pathtool setup", boost::bind(&VRPathtool::setup, this)) );
 }
 
 VRPathtoolPtr VRPathtool::create() { return VRPathtoolPtr( new VRPathtool() ); }
+
+void VRPathtool::setup() {
+    setGraph(Graph);
+}
 
 void VRPathtool::setProjectionGeometry(VRObjectPtr obj) { projObj = obj; }
 
