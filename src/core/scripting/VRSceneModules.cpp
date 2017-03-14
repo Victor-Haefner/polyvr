@@ -189,7 +189,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 	sm->registerModule<VRPySimViDekont>("SimViDekont", pModVR);
 #endif
 
-    PyObject* pModMath = Py_InitModule3("Math", VRSceneGlobals::methods, "VR math module");
+    PyObject* pModMath = Py_InitModule3("VR.Math", VRSceneGlobals::methods, "VR math module");
     sm->registerModule<VRPyVec3f>("Vec3", pModMath, 0, "Math");
     PyModule_AddObject(pModVR, "Math", pModMath);
 
