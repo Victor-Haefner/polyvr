@@ -91,7 +91,7 @@ class VRPathtool : public VRObject {
         VRObjectPtr projObj;
 
         VRGeometryPtr customHandle;
-        VRGeometryPtr newControlHandle(VRGeometryPtr handle);
+        VRGeometryPtr newControlHandle(VRGeometryPtr handle, Vec3f n);
         VRGeometryPtr newHandle();
         void updateHandle(VRGeometryPtr handle);
         void updateEntry(entryPtr e);

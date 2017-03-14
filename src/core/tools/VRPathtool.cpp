@@ -283,8 +283,8 @@ void VRPathtool::updateDevs() { // update when something is dragged
     for (auto dev : VRSetup::getCurrent()->getDevices()) { // get dragged objects
         VRGeometryPtr obj = static_pointer_cast<VRGeometry>(dev.second->getDraggedObject());
         if (obj == 0) continue;
+        if (obj->hasAttachment("handle") || obj->hasAttachment("controlhandle")) projectHandle(obj, dev.second);
         if (entries.count(obj.get()) == 0) continue;
-        projectHandle(obj, dev.second);
         updateHandle(obj);
     }
 }
@@ -293,13 +293,16 @@ void VRPathtool::addPath(pathPtr p, VRObjectPtr anchor, VRGeometryPtr ha, VRGeom
     auto e = entryPtr( new entry( anchor ? anchor : ptr() ) );
     e->p = p;
     paths[e->p.get()] = e;
+    int N = p->size();
 
-    for (int i=0; i<p->size(); i++) {
+    for (int i=0; i<N; i++) {
         auto point = p->getPoint(i);
         VRGeometryPtr h;
         if (i == 0) h = ha;
-        if (i == p->size()-1) h = he;
+        if (i == N-1) h = he;
         if (!h) h = newHandle();
+        if (i > 0)      newControlHandle(h,  point.n);
+        if (i < N-1)    newControlHandle(h, -point.n);
 
         entries[h.get()].push_back(e);
         h->setPose(point.p, point.n, point.u);
@@ -328,7 +331,7 @@ pathPtr VRPathtool::newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution)
     return e->p;
 }
 
-VRGeometryPtr VRPathtool::newControlHandle(VRGeometryPtr handle) {
+VRGeometryPtr VRPathtool::newControlHandle(VRGeometryPtr handle, Vec3f n) {
     VRGeometryPtr h;
     h = VRGeometry::create("handle");
     h->setPrimitive("Sphere", "0.04 2");
@@ -339,6 +342,7 @@ VRGeometryPtr VRPathtool::newControlHandle(VRGeometryPtr handle) {
     h->getMaterial()->setDiffuse(Vec3f(0.5,0.5,0.9));
     //calcFaceNormals(h->getMesh()); // not working ??
     h->setPersistency(0);
+    h->setFrom(n);
     controlhandles.push_back(h);
     handle->addChild(h);
     return h;
