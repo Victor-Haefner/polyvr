@@ -122,8 +122,9 @@ class VRPathtool : public VRObject {
         void setHandleGeometry(VRGeometryPtr geo);
         void clear(pathPtr p = 0);
 
-        vector<pathPtr> getPaths();
+        vector<pathPtr> getPaths(VRGeometryPtr h = 0);
         pathPtr getPath(VRGeometryPtr h1, VRGeometryPtr h2);
+        VRGeometryPtr getHandle(int ID);
         vector<VRGeometryPtr> getHandles(pathPtr p);
         VRStrokePtr getStroke(pathPtr p);
 

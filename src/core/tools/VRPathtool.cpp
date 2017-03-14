@@ -347,9 +347,17 @@ VRGeometryPtr VRPathtool::newHandle() {
     return h;
 }
 
-vector<pathPtr> VRPathtool::getPaths() {
+VRGeometryPtr VRPathtool::getHandle(int ID) {
+    return knots[ID].handle.lock();
+}
+
+vector<pathPtr> VRPathtool::getPaths(VRGeometryPtr h) {
     vector<pathPtr> res;
-    for (auto p : paths) res.push_back(p.second->p);
+    if (!h) for (auto p : paths) res.push_back(p.second->p);
+    else if (entries.count(h.get())) {
+        auto& ev = entries[h.get()];
+        for (auto e : ev) res.push_back(e->p);
+    }
     return res;
 }
 
