@@ -328,8 +328,25 @@ pathPtr VRPathtool::newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution)
     return e->p;
 }
 
+VRGeometryPtr VRPathtool::newControlHandle(VRGeometryPtr handle) {
+    VRGeometryPtr h;
+    h = VRGeometry::create("handle");
+    h->setPrimitive("Sphere", "0.04 2");
+
+    h->setPickable(true);
+    h->addAttachment("controlhandle", 0);
+    h->setMaterial(VRMaterial::get("pathHandle"));
+    h->getMaterial()->setDiffuse(Vec3f(0.5,0.5,0.9));
+    //calcFaceNormals(h->getMesh()); // not working ??
+    h->setPersistency(0);
+    controlhandles.push_back(h);
+    handle->addChild(h);
+    return h;
+}
+
 VRGeometryPtr VRPathtool::newHandle() {
     VRGeometryPtr h;
+
     if (customHandle) {
         h = static_pointer_cast<VRGeometry>( customHandle->duplicate() );
     } else {

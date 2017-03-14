@@ -56,6 +56,7 @@ class VRTextureGenerator {
 
         void setSize(Vec3i dim, bool doAlpha = 0);
         void setSize(int w, int h, int d = 1);
+        Vec3i getSize();
 
         void add(GEN_TYPE type, float amount, Vec3f c1, Vec3f c2);
         void add(string type, float amount, Vec3f c1, Vec3f c2);

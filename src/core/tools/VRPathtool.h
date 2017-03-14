@@ -76,6 +76,7 @@ class VRPathtool : public VRObject {
         map<path*, entryPtr> paths;
         map<VRGeometry*, vector<entryPtr> > entries; // map handle geometries to the entries
         vector<VRGeometryWeakPtr> handles;
+        vector<VRGeometryWeakPtr> controlhandles;
         map<VRGeometry*, int> handleToNode;
         GraphPtr graph;
         map<int, knot> knots; // maps graph node ids to pathtool knots
@@ -90,6 +91,7 @@ class VRPathtool : public VRObject {
         VRObjectPtr projObj;
 
         VRGeometryPtr customHandle;
+        VRGeometryPtr newControlHandle(VRGeometryPtr handle);
         VRGeometryPtr newHandle();
         void updateHandle(VRGeometryPtr handle);
         void updateEntry(entryPtr e);
