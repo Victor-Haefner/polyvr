@@ -72,9 +72,8 @@ class VRSky : public VRGeometry {
         VRSkyPtr ptr();
         void setTime(double second, int hour, int day, int year = 2000); // 0-3600, 0-24, 0-356, x
         void setSpeed(float speed = 1);
+        void setWeather(float cCover, float cHeight, float wind, float haze);
         void setPosition(float latitude, float longitude);
-//        void setWeather(float turpidity, float cloudSpeed, Vec2f cloudDir);
-
         void reloadShader();
 };
 
