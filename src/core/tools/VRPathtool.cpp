@@ -172,18 +172,33 @@ void VRPathtool::disconnect(int i1, int i2) {
 
 void VRPathtool::connect(int i1, int i2) {
     if (i1 == i2) return;
+    auto& nodes = graph->getNodes();
+    Vec3f d = nodes[i2].box.center() - nodes[i1].box.center();
+    d.normalize();
+    connect(i1,i2,d,d);
+}
+
+void VRPathtool::connect(int i1, int i2, Vec3f n1, Vec3f n2) {
+    if (i1 == i2) return;
     if (!graph) return;
     if (!graph->connected(i1,i2)) {
         auto& e = graph->connect(i1,i2);
-        setGraphEdge(e);
+        setGraphEdge(e, n1, n2);
     } else disconnect(i1,i2);
 }
 
 void VRPathtool::setGraphEdge(Graph::edge& e) {
     auto& nodes = graph->getNodes();
+    Vec3f d = nodes[e.to].box.center() - nodes[e.from].box.center();
+    d.normalize();
+    setGraphEdge(e, d, d);
+}
+
+void VRPathtool::setGraphEdge(Graph::edge& e, Vec3f n1, Vec3f n2) {
+    auto& nodes = graph->getNodes();
     pathPtr p = path::create();
-    p->addPoint(nodes[e.from].box.center());
-    p->addPoint(nodes[e.to].box.center());
+    p->addPoint(nodes[e.from].box.center(), n1);
+    p->addPoint(nodes[e.to].box.center(), n2);
     addPath(p, 0, knots[e.from].handle.lock(), knots[e.to].handle.lock());
     knots[e.from].out.push_back(e.to);
     knots[e.to].in.push_back(e.from);
@@ -262,14 +277,35 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
     if (!handle) return;
     auto key = handle.get();
     if (!entries.count(key)) return;
-    Matrix m = handle->getWorldMatrix();
-    for (auto e : entries[key]) {
-        e->p->setPoint(e->points[key], Vec3f(m[3]), Vec3f(m[2]), Vec3f(1,1,1), Vec3f(m[1]));
+    auto p = handle->getWorldPose();
+
+    if (handle->hasAttachment("handle")) {
+        for (auto e : entries[key]) {
+            auto op = e->p->getPoint(e->points[key]);
+            e->p->setPoint(e->points[key], p->pos(), op.n, op.c, p->up());
+            updateEntry(e);
+        }
+
+        for (auto c : handle->getChildren()) {
+            VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(c);
+            if (g) updateHandle(g);
+        }
+    }
+
+    if (handle->hasAttachment("controlhandle")) {
+        VRGeometryPtr pg = dynamic_pointer_cast<VRGeometry>(handle->getDragParent());
+        if (!pg) pg = dynamic_pointer_cast<VRGeometry>(handle->getParent());
+        if (!pg) return; // failed to get parent handle
+
+        Vec3f d = p->pos() - pg->getWorldPosition();
+        auto e = entries[key][0]; // should only be one entry at most!
+        auto op = e->p->getPoint(e->points[key]);
+        e->p->setPoint(e->points[key], op.p, d, op.c, op.u);
         updateEntry(e);
     }
 }
 
-void VRPathtool::projectHandle(VRGeometryPtr handle, VRDevicePtr dev) {
+void VRPathtool::projectHandle(VRGeometryPtr handle, VRDevicePtr dev) { // project handle on projObj if set
     if (!projObj) return;
     OSG::VRIntersection ins = dev->intersect(projObj);
     if (ins.hit) {
@@ -283,8 +319,8 @@ void VRPathtool::updateDevs() { // update when something is dragged
     for (auto dev : VRSetup::getCurrent()->getDevices()) { // get dragged objects
         VRGeometryPtr obj = static_pointer_cast<VRGeometry>(dev.second->getDraggedObject());
         if (obj == 0) continue;
-        if (obj->hasAttachment("handle") || obj->hasAttachment("controlhandle")) projectHandle(obj, dev.second);
-        if (entries.count(obj.get()) == 0) continue;
+        if (!obj->hasAttachment("handle") && !obj->hasAttachment("controlhandle")) continue;
+        projectHandle(obj, dev.second);
         updateHandle(obj);
     }
 }
@@ -297,16 +333,19 @@ void VRPathtool::addPath(pathPtr p, VRObjectPtr anchor, VRGeometryPtr ha, VRGeom
 
     for (int i=0; i<N; i++) {
         auto point = p->getPoint(i);
-        VRGeometryPtr h;
+        VRGeometryPtr h, h1, h2;
         if (i == 0) h = ha;
         if (i == N-1) h = he;
         if (!h) h = newHandle();
-        if (i > 0)      newControlHandle(h,  point.n);
-        if (i < N-1)    newControlHandle(h, -point.n);
+        h->setPose(point.p, point.n, point.u);
+
+        if (i > 0)   h1 = newControlHandle(h, point.p + point.n);
+        if (i < N-1) h2 = newControlHandle(h, point.p + point.n);
 
         entries[h.get()].push_back(e);
-        h->setPose(point.p, point.n, point.u);
-        e->addHandle(h);
+        if (h1) entries[h1.get()].push_back(e);
+        if (h2) entries[h2.get()].push_back(e);
+        e->addHandle(h, i);
     }
 }
 
@@ -314,8 +353,9 @@ VRPathtool::entry::entry(VRObjectPtr a) {
     anchor = a;
 }
 
-void VRPathtool::entry::addHandle(VRGeometryPtr h) {
-    points[h.get()] = points.size()-1;
+void VRPathtool::entry::addHandle(VRGeometryPtr h, int i) {
+    points[h.get()] = i;
+    for (auto c : h->getChildren()) points[(VRGeometry*)c.get()] = i;
     handles.push_back(h);
     if (auto a = anchor.lock()) a->addChild(h);
 }
@@ -331,20 +371,19 @@ pathPtr VRPathtool::newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution)
     return e->p;
 }
 
-VRGeometryPtr VRPathtool::newControlHandle(VRGeometryPtr handle, Vec3f n) {
+VRGeometryPtr VRPathtool::newControlHandle(VRGeometryPtr handle, Vec3f p) {
     VRGeometryPtr h;
     h = VRGeometry::create("handle");
     h->setPrimitive("Sphere", "0.04 2");
+    handle->addChild(h);
 
     h->setPickable(true);
     h->addAttachment("controlhandle", 0);
     h->setMaterial(VRMaterial::get("pathHandle"));
     h->getMaterial()->setDiffuse(Vec3f(0.5,0.5,0.9));
-    //calcFaceNormals(h->getMesh()); // not working ??
     h->setPersistency(0);
-    h->setFrom(n);
+    h->setWorldPosition(p);
     controlhandles.push_back(h);
-    handle->addChild(h);
     return h;
 }
 

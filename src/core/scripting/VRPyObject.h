@@ -44,6 +44,7 @@ struct VRPyObject : VRPyBaseT<OSG::VRObject> {
     static PyObject* addLink(VRPyObject* self, PyObject* args);
     static PyObject* remLink(VRPyObject* self, PyObject* args);
     static PyObject* clearChildren(VRPyObject* self);
+    static PyObject* getChildIndex(VRPyObject* self);
 };
 
 #endif // VRPYOBJECT_H_INCLUDED

@@ -64,7 +64,7 @@ PyObject* VRPyConcept::toString(VRPyConcept* self) {
 
 PyObject* VRPyConcept::getProperty(VRPyConcept* self, PyObject* args) {
     const char* prop = 0;
-    if (! PyArg_ParseTuple(args, "|s:open", (char*)&prop)) return NULL;
+    if (! PyArg_ParseTuple(args, "|s:open", &prop)) return NULL;
     string pname; if (prop) pname = prop;
     return VRPyProperty::fromSharedPtr( self->objPtr->getProperty(pname) );
 }
@@ -80,7 +80,7 @@ PyObject* VRPyConcept::getProperties(VRPyConcept* self) {
 PyObject* VRPyConcept::addProperty(VRPyConcept* self, PyObject* args) {
     const char* prop = 0;
     const char* val = 0;
-    if (! PyArg_ParseTuple(args, "ss:addProperty", (char*)&prop, (char*)&val)) return NULL;
+    if (! PyArg_ParseTuple(args, "ss:addProperty", &prop, &val)) return NULL;
     string pname; if (prop) pname = prop;
     string pval; if (val) pval = val;
     return VRPyProperty::fromSharedPtr( self->objPtr->addProperty(pname, pval) );
@@ -88,7 +88,7 @@ PyObject* VRPyConcept::addProperty(VRPyConcept* self, PyObject* args) {
 
 PyObject* VRPyConcept::append(VRPyConcept* self, PyObject* args) {
     const char* name = 0;
-    if (! PyArg_ParseTuple(args, "s:append", (char*)&name)) return NULL;
+    if (! PyArg_ParseTuple(args, "s:append", &name)) return NULL;
     string cname; if (name) cname = name;
     return VRPyConcept::fromSharedPtr( self->objPtr->append(cname) );
 }
@@ -111,9 +111,9 @@ PyMethodDef VRPyEntity::methods[] = {
     {"toString", (PyCFunction)VRPyEntity::toString, METH_NOARGS, "Return the entity as string - str toString()" },
     {"getConcept", (PyCFunction)VRPyEntity::getConcept, METH_NOARGS, "Return the concept - concept getConcept()" },
     {"getProperties", (PyCFunction)VRPyEntity::getProperties, METH_VARARGS, "Return all properties or the properties of a certain type - [property] getProperties( str )" },
-    {"set", (PyCFunction)VRPyEntity::set, METH_VARARGS, "Set a property - set( str prop, str value )" },
+    {"set", (PyCFunction)VRPyEntity::set, METH_VARARGS, "Set a property - set( str prop, str value | int pos )" },
     {"add", (PyCFunction)VRPyEntity::add, METH_VARARGS, "Add a property - add( str prop, str value )" },
-    {"setVector", (PyCFunction)VRPyEntity::setVector, METH_VARARGS, "Set a vector property - setVector( str prop, str value [x,y,z], str vector concept )" },
+    {"setVector", (PyCFunction)VRPyEntity::setVector, METH_VARARGS, "Set a vector property - setVector( str prop, str value [x,y,z] | str vector concept, int pos )" },
     {"addVector", (PyCFunction)VRPyEntity::addVector, METH_VARARGS, "Add a vector property - addVector( str prop, str value [x,y,z], str vector concept )" },
     {"get", (PyCFunction)VRPyEntity::get, METH_VARARGS, "Get the value of ith property named prop - str get( str prop | int i = 0 )" },
     {"getVector", (PyCFunction)VRPyEntity::getVector, METH_VARARGS, "Get the value of ith vector property named prop - [x,y,z] getVector( str prop | int i = 0 ) )" },
@@ -146,7 +146,7 @@ PyObject* VRPyEntity::setSGObject(VRPyEntity* self, PyObject* args) {
 
 PyObject* VRPyEntity::get(VRPyEntity* self, PyObject* args) {
     const char* prop = 0; int i=0;
-    if (! PyArg_ParseTuple(args, "s|i", (char*)&prop, &i)) return NULL;
+    if (! PyArg_ParseTuple(args, "s|i", &prop, &i)) return NULL;
     string pname; if (prop) pname = prop;
     auto p = self->objPtr->get( pname, i );
     return VRPyPropertyCaster::cast(p, self->objPtr->ontology.lock());
@@ -154,7 +154,7 @@ PyObject* VRPyEntity::get(VRPyEntity* self, PyObject* args) {
 
 PyObject* VRPyEntity::getAll(VRPyEntity* self, PyObject* args) {
     const char* prop = 0;
-    if (! PyArg_ParseTuple(args, "s", (char*)&prop)) return NULL;
+    if (! PyArg_ParseTuple(args, "s", &prop)) return NULL;
     string pname; if (prop) pname = prop;
     vector<PyObject*> res;
     for (auto p : self->objPtr->getAll( pname )) res.push_back( VRPyPropertyCaster::cast(p, self->objPtr->ontology.lock()) );
@@ -163,7 +163,7 @@ PyObject* VRPyEntity::getAll(VRPyEntity* self, PyObject* args) {
 
 PyObject* VRPyEntity::getVector(VRPyEntity* self, PyObject* args) {
     /*const char* prop = 0; int i=0;
-    if (! PyArg_ParseTuple(args, "s|i", (char*)&prop, &i)) return NULL;
+    if (! PyArg_ParseTuple(args, "s|i", &prop, &i)) return NULL;
     string pname; if (prop) pname = prop;
     auto v = self->objPtr->getVector( pname, i );
     if (res == "") Py_RETURN_NONE;
@@ -174,7 +174,7 @@ PyObject* VRPyEntity::getVector(VRPyEntity* self, PyObject* args) {
 
 PyObject* VRPyEntity::getAllVector(VRPyEntity* self, PyObject* args) {
     /*const char* prop = 0;
-    if (! PyArg_ParseTuple(args, "s", (char*)&prop)) return NULL;
+    if (! PyArg_ParseTuple(args, "s", &prop)) return NULL;
     string pname; if (prop) pname = prop;
     auto pv = self->objPtr->getAllVector( pname );
     return toPyTuple(pv);*/
@@ -184,7 +184,7 @@ PyObject* VRPyEntity::getAllVector(VRPyEntity* self, PyObject* args) {
 PyObject* VRPyEntity::add(VRPyEntity* self, PyObject* args) {
     const char* prop = 0;
     const char* val = 0;
-    if (! PyArg_ParseTuple(args, "ss:add", (char*)&prop, (char*)&val)) return NULL;
+    if (! PyArg_ParseTuple(args, "ss:add", &prop, &val)) return NULL;
     string pname; if (prop) pname = prop;
     string pval; if (val) pval = val;
     self->objPtr->add( pname, pval );
@@ -194,18 +194,20 @@ PyObject* VRPyEntity::add(VRPyEntity* self, PyObject* args) {
 PyObject* VRPyEntity::set(VRPyEntity* self, PyObject* args) {
     const char* prop = 0;
     const char* val = 0;
-    if (! PyArg_ParseTuple(args, "ss:set", (char*)&prop, (char*)&val)) return NULL;
+    int i = 0;
+    if (! PyArg_ParseTuple(args, "ss|i:set", &prop, &val, &i)) return NULL;
     string pname; if (prop) pname = prop;
     string pval; if (val) pval = val;
-    self->objPtr->set( pname, pval );
+    self->objPtr->set( pname, pval, i );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyEntity::setVector(VRPyEntity* self, PyObject* args) {
     const char* prop = 0;
     const char* vectype = "Vector";
+    int i = 0;
     PyObject* val = 0;
-    if (! PyArg_ParseTuple(args, "sO|s:setVector", (char*)&prop, (char*)&val, (char*)&vectype)) return NULL;
+    if (! PyArg_ParseTuple(args, "sO|si:setVector", &prop, &val, &vectype, &i)) return NULL;
 
     auto o_vals = pyListToVector(val);
     vector<string> vals;
@@ -216,7 +218,7 @@ PyObject* VRPyEntity::setVector(VRPyEntity* self, PyObject* args) {
 
     string pname; if (prop) pname = prop;
     string pvt; if (vectype) pvt = vectype;
-    self->objPtr->setVector( pname, vals, pvt );
+    self->objPtr->setVector( pname, vals, pvt, i );
     Py_RETURN_TRUE;
 }
 
@@ -224,7 +226,7 @@ PyObject* VRPyEntity::addVector(VRPyEntity* self, PyObject* args) {
     const char* prop = 0;
     const char* vectype = "Vector";
     PyObject* val = 0;
-    if (! PyArg_ParseTuple(args, "sO|s:addVector", (char*)&prop, (char*)&val, (char*)&vectype)) return NULL;
+    if (! PyArg_ParseTuple(args, "sO|s:addVector", &prop, &val, &vectype)) return NULL;
 
     auto o_vals = pyListToVector(val);
     vector<string> vals;
@@ -255,7 +257,7 @@ PyObject* VRPyEntity::getConcept(VRPyEntity* self) {
 
 PyObject* VRPyEntity::getProperties(VRPyEntity* self, PyObject* args) {
     const char* prop = 0;
-    if (! PyArg_ParseTuple(args, "|s:open", (char*)&prop)) return NULL;
+    if (! PyArg_ParseTuple(args, "|s:open", &prop)) return NULL;
     string pname; if (prop) pname = prop;
     auto props = self->objPtr->getAll(pname);
     auto res = PyList_New(props.size());
@@ -291,7 +293,7 @@ PyObject* VRPyOntology::copy(VRPyOntology* self) {
 
 PyObject* VRPyOntology::process(VRPyOntology* self, PyObject* args) {
     const char* query = 0;
-    if (! PyArg_ParseTuple(args, "s:process", (char*)&query)) return NULL;
+    if (! PyArg_ParseTuple(args, "s:process", &query)) return NULL;
 
     auto pyres = PyList_New(0);
     if (!query) return pyres;
@@ -309,7 +311,7 @@ PyObject* VRPyOntology::merge(VRPyOntology* self, PyObject* args) {
 
 PyObject* VRPyOntology::addRule(VRPyOntology* self, PyObject* args) {
     const char *name = 0;
-    if (! PyArg_ParseTuple(args, "s:addRule", (char*)&name)) return NULL;
+    if (! PyArg_ParseTuple(args, "s:addRule", &name)) return NULL;
     string sname;
     if (name) sname = name;
     VROntologyRulePtr r = self->objPtr->addRule(sname, ""); // TODO, optionally pass associated concept name
@@ -320,7 +322,7 @@ PyObject* VRPyOntology::addEntity(VRPyOntology* self, PyObject* args) {
     const char* name = 0;
     const char* concept = 0;
     PyDictObject* propDict = 0;
-    if (! PyArg_ParseTuple(args, "s|sO:addEntity", (char*)&name, (char*)&concept, &propDict)) return NULL;
+    if (! PyArg_ParseTuple(args, "s|sO:addEntity", &name, &concept, &propDict)) return NULL;
     string sname, sconcept;
     if (name) sname = name;
     if (concept) sconcept = concept;
@@ -338,7 +340,7 @@ PyObject* VRPyOntology::addEntity(VRPyOntology* self, PyObject* args) {
 
 PyObject* VRPyOntology::getEntity(VRPyOntology* self, PyObject* args) {
     const char* name = 0;
-    if (! PyArg_ParseTuple(args, "s:getEntity", (char*)&name) ) return NULL;
+    if (! PyArg_ParseTuple(args, "s:getEntity", &name) ) return NULL;
     string sname;
     if (name) sname = name;
     auto entity = self->objPtr->getEntity(sname);
@@ -347,7 +349,7 @@ PyObject* VRPyOntology::getEntity(VRPyOntology* self, PyObject* args) {
 
 PyObject* VRPyOntology::remEntity(VRPyOntology* self, PyObject* args) {
     const char* name = 0;
-    if (! PyArg_ParseTuple(args, "s:remEntity", (char*)&name) ) return NULL;
+    if (! PyArg_ParseTuple(args, "s:remEntity", &name) ) return NULL;
     string sname;
     if (name) sname = name;
     self->objPtr->remEntity( self->objPtr->getEntity(sname) );
@@ -358,7 +360,7 @@ PyObject* VRPyOntology::addConcept(VRPyOntology* self, PyObject* args) {
     const char* name = 0;
     const char* parent = 0;
     PyDictObject* propDict = 0;
-    if (! PyArg_ParseTuple(args, "s|sO:addConcept", (char*)&name, (char*)&parent, &propDict)) return NULL;
+    if (! PyArg_ParseTuple(args, "s|sO:addConcept", &name, &parent, &propDict)) return NULL;
     string sname, sparent;
     if (name) sname = name;
     if (parent) sparent = parent;
@@ -382,14 +384,14 @@ PyObject* VRPyOntology::toString(VRPyOntology* self) {
 
 PyObject* VRPyOntology::open(VRPyOntology* self, PyObject* args) {
     const char* path = 0;
-    if (! PyArg_ParseTuple(args, "s:open", (char*)&path)) return NULL;
+    if (! PyArg_ParseTuple(args, "s:open", &path)) return NULL;
     self->objPtr->open(path);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyOntology::getConcept(VRPyOntology* self, PyObject* args) {
     const char* name = 0;
-    if (! PyArg_ParseTuple(args, "s:getConcept", (char*)&name)) return NULL;
+    if (! PyArg_ParseTuple(args, "s:getConcept", &name)) return NULL;
     return VRPyConcept::fromSharedPtr( self->objPtr->getConcept(name) );
 }
 
@@ -403,7 +405,7 @@ PyObject* VRPyOntology::getConcepts(VRPyOntology* self) {
 
 PyObject* VRPyOntology::getEntities(VRPyOntology* self, PyObject* args) {
     const char* c = 0;
-    if (! PyArg_ParseTuple(args, "|s:getEntities", (char*)&c)) return NULL;
+    if (! PyArg_ParseTuple(args, "|s:getEntities", &c)) return NULL;
     string concept = "";
     if (c) concept = c;
     auto entities = self->objPtr->getEntities(concept);
@@ -423,7 +425,7 @@ PyMethodDef VRPyReasoner::methods[] = {
 PyObject* VRPyReasoner::process(VRPyReasoner* self, PyObject* args) {
     const char* query = 0;
     VRPyOntology* onto = 0;
-    if (! PyArg_ParseTuple(args, "sO:process", (char*)&query, &onto)) return NULL;
+    if (! PyArg_ParseTuple(args, "sO:process", &query, &onto)) return NULL;
 
     auto pyres = PyList_New(0);
     if (!query) return pyres;

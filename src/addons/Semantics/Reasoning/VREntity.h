@@ -29,9 +29,9 @@ struct VREntity : public VROntoID, public VRName {
     void setSGObject(VRObjectPtr o);
     VRObjectPtr getSGObject();
 
-    void set(string prop, string value);
+    void set(string prop, string value, int pos = 0);
     void add(string prop, string value);
-    void setVector(string prop, vector<string> value, string type);
+    void setVector(string prop, vector<string> value, string type, int pos = 0);
     void addVector(string prop, vector<string> value, string type);
 
     VRPropertyPtr get(string prop, int i = 0);

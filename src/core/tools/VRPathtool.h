@@ -62,7 +62,7 @@ class VRPathtool : public VRObject {
             VRObjectWeakPtr anchor;
 
             entry(VRObjectPtr anchor);
-            void addHandle(VRGeometryPtr h);
+            void addHandle(VRGeometryPtr h, int i);
         };
 
         struct knot {
@@ -99,6 +99,7 @@ class VRPathtool : public VRObject {
 
         VRGeometryPtr setGraphNode(int i);
         void setGraphEdge(Graph::edge& e);
+        void setGraphEdge(Graph::edge& e, Vec3f n1, Vec3f n2);
         void projectHandle(VRGeometryPtr handle, VRDevicePtr dev);
 
     public:
@@ -113,6 +114,7 @@ class VRPathtool : public VRObject {
         void remNode(int i);
         int getNodeID(VRObjectPtr o);
         void connect(int i1, int i2);
+        void connect(int i1, int i2, Vec3f n1, Vec3f n2);
         void disconnect(int i1, int i2);
 
         pathPtr newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution = 10);

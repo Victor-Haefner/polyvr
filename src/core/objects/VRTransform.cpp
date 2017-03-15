@@ -202,6 +202,13 @@ Matrix VRTransform::getMatrix() {
     return m;
 }
 
+Matrix VRTransform::getRotationMatrix() {
+    Matrix m;
+    getMatrix(m);
+    m[3][0] = m[3][1] = m[3][2] = 0;
+    return m;
+}
+
 Matrix VRTransform::getMatrixTo(VRObjectPtr obj) {
     VRTransformPtr ent; // get first transform object
     while(obj) {
@@ -327,9 +334,7 @@ void VRTransform::setWorldPosition(Vec3f pos) {
     Matrix wm = getWorldMatrix(true);
     wm.invert();
     wm.mult(m);
-    _from = Vec3f(wm[3]);
-
-    reg_change();
+    setFrom( Vec3f(wm[3]) );
 }
 
 /** Set the world position of the object **/

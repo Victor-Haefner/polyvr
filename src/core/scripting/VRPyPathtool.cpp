@@ -35,7 +35,7 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"addNode", (PyCFunction)VRPyPathtool::addNode, METH_VARARGS, "Add node - int addNode( pose )" },
     {"removeNode", (PyCFunction)VRPyPathtool::removeNode, METH_VARARGS, "Remove node by id - removeNode( int )" },
     {"getNodeID", (PyCFunction)VRPyPathtool::getNodeID, METH_VARARGS, "Return node ID from handle - getNodeID( handle )" },
-    {"connect", (PyCFunction)VRPyPathtool::connect, METH_VARARGS, "Connect two nodes - connect( id1, id2 )" },
+    {"connect", (PyCFunction)VRPyPathtool::connect, METH_VARARGS, "Connect two nodes by id, using optional normals - connect( id1, id2 | n1, n2)" },
     {"disconnect", (PyCFunction)VRPyPathtool::disconnect, METH_VARARGS, "Disconnect two nodes - disconnect( id1, id2 )" },
     {"setProjectionGeometry", (PyCFunction)VRPyPathtool::setProjectionGeometry, METH_VARARGS, "Set an object to project handles onto - setProjectionGeometry( object )" },
     {NULL}  /* Sentinel */
@@ -77,8 +77,11 @@ PyObject* VRPyPathtool::connect(VRPyPathtool* self, PyObject* args) {
     if (!self->valid()) return NULL;
     int i1 = 0;
     int i2 = 0;
-    if (! PyArg_ParseTuple(args, "ii:connect", &i1, &i2)) return NULL;
-    self->objPtr->connect( i1, i2 );
+    PyObject* n1 = 0;
+    PyObject* n2 = 0;
+    if (! PyArg_ParseTuple(args, "ii|OO:connect", &i1, &i2, &n1, &n2)) return NULL;
+    if (n1 && n2) self->objPtr->connect( i1, i2, parseVec3fList(n1), parseVec3fList(n2) );
+    else self->objPtr->connect( i1, i2 );
     Py_RETURN_TRUE;
 }
 

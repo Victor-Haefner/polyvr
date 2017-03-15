@@ -4,6 +4,7 @@
 #include "VRPyPose.h"
 #include "VRPyPath.h"
 #include "VRPyIntersection.h"
+#include "VRPyTypeCaster.h"
 #include "VRPyBaseT.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRConstraint.h"
@@ -83,6 +84,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"drag", (PyCFunction)VRPyTransform::drag, METH_VARARGS, "Drag this object by new parent - drag(new parent)"  },
     {"drop", (PyCFunction)VRPyTransform::drop, METH_NOARGS, "Drop this object, if held, to old parent - drop()"  },
     {"castRay", (PyCFunction)VRPyTransform::castRay, METH_VARARGS, "Cast a ray and return the intersection - intersection castRay(obj, dir)"  },
+    {"getDragParent", (PyCFunction)VRPyTransform::getDragParent, METH_NOARGS, "Get the parent before the drag started - obj getDragParent()"  },
     {"lastChanged", (PyCFunction)VRPyTransform::lastChanged, METH_NOARGS, "Return the frame when the last change occured - lastChanged()"  },
     {NULL}  /* Sentinel */
 };
@@ -118,6 +120,12 @@ PyObject* VRPyTransform::castRay(VRPyTransform* self, PyObject* args) {
     auto line = self->objPtr->castRay( 0, parseVec3fList(d) );
     OSG::VRIntersect in;
     return VRPyIntersection::fromObject( in.intersect(o->objPtr, line) );
+}
+
+PyObject* VRPyTransform::getDragParent(VRPyTransform* self) {
+    if (!self->valid()) return NULL;
+    auto p = self->objPtr->getDragParent();
+    return VRPyTypeCaster::cast( p );
 }
 
 PyObject* VRPyTransform::drag(VRPyTransform* self, PyObject* args) {
