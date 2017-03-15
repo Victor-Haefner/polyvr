@@ -20,6 +20,7 @@ struct VRPyConcept : VRPyBaseT<OSG::VRConcept> {
     static PyObject* getProperty(VRPyConcept* self, PyObject* args);
     static PyObject* getProperties(VRPyConcept* self);
     static PyObject* addProperty(VRPyConcept* self, PyObject* args);
+    static PyObject* append(VRPyConcept* self, PyObject* args);
 };
 
 struct VRPyOntologyRule : VRPyBaseT<OSG::VROntologyRule> {
@@ -41,6 +42,7 @@ struct VRPyEntity : VRPyBaseT<OSG::VREntity> {
     static PyObject* getVector(VRPyEntity* self, PyObject* args);
     static PyObject* getAll(VRPyEntity* self, PyObject* args);
     static PyObject* getAllVector(VRPyEntity* self, PyObject* args);
+    static PyObject* setSGObject(VRPyEntity* self, PyObject* args);
 };
 
 struct VRPyOntology : VRPyBaseT<OSG::VROntology> {

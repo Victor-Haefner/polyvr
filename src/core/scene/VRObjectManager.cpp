@@ -1,56 +1,104 @@
 #include "VRObjectManager.h"
-#include "core/objects/VRGroup.h"
 #include "core/objects/VRTransform.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/VRStorage_template.h"
+#include <boost/bind.hpp>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 
-void VRObjectManager::addGroup(string group) {
-    groups[group] = new list<VRGroupPtr>();
+VRObjectManager::Entry::Entry(string name) {
+    setName("ObjectManagerEntry");
+    store("pose", &pos);
+    store("object", &type);
 }
 
-void VRObjectManager::updateObjects() {
-    //cout << "VRObjectManager updateObjects " << VRTransform::changedObjects.size() << " " << VRTransform::dynamicObjects.size() << endl;
+VRObjectManager::Entry::~Entry() {}
 
-    //update the Transform changelists
-    for ( auto t : VRTransform::changedObjects ) {
-        if (auto sp = t.lock()) sp->update();
+shared_ptr<VRObjectManager::Entry> VRObjectManager::Entry::create(string name) { return shared_ptr<Entry>(new Entry(name)); }
+
+void VRObjectManager::Entry::set(posePtr p, string t) {
+    pos = p;
+    type = t;
+}
+
+
+VRObjectManager::VRObjectManager() : VRObject("ObjectManager") {
+    storeMap("templates", &templatesByName, true);
+    storeMap("instances", &entries, true);
+    regStorageSetupFkt( VRFunction<int>::create("object manager setup", boost::bind(&VRObjectManager::setup, this)) );
+}
+
+VRObjectManager::~VRObjectManager() {}
+
+VRObjectManagerPtr VRObjectManager::create() { return shared_ptr<VRObjectManager>(new VRObjectManager()); }
+
+void VRObjectManager::setup() {
+    for (auto t : templatesByName) addTemplate(t.second);
+
+    for (auto& t : entries) {
+        if (!templatesByName.count(t.second->type)) { cout << "VRObjectManager::setup Warning, " << t.second->type << " is not a template!" << endl; continue; }
+        auto o = copy(t.second->type, t.second->pos, false);
+        o->show();
+        o->setPose(t.second->pos);
     }
-    VRTransform::changedObjects.clear();
+}
 
-    //update the dynamic objects
-    for ( auto t : VRTransform::dynamicObjects ) {
-        if (auto sp = t.lock()) sp->update();
-        // TODO: else: remove the t from dynamicObjects
+VRTransformPtr VRObjectManager::copy(string name, posePtr p, bool addToStore) {
+    auto t = getTemplate(name);
+    if (!t) return 0;
+    auto dupe = dynamic_pointer_cast<VRTransform>( t->duplicate() );
+    dupe->resetNameSpace();
+    instances[dupe->getID()] = dupe;
+    auto e = Entry::create();
+    e->set(p,name);
+    if (addToStore) entries[dupe->getName()] = e;
+    dupe->setPose(p);
+    dupe->setPersistency(0);
+    addChild(dupe);
+    dupe->addAttachment("asset",0);
+    return dupe;
+}
+
+VRTransformPtr VRObjectManager::add(VRTransformPtr s) {
+    if (!s) return 0;
+    addTemplate(s, s->getBaseName());
+    return copy(s->getBaseName(), s->getPose());
+}
+
+void VRObjectManager::addTemplate(VRTransformPtr s, string name) {
+    if (!s) return;
+    if (!templates.count(s.get())) {
+        templates[s.get()] = s;
+        s->setNameSpace("OMtemplate");
+        if (name != "") {
+            s->setName(name);
+            templatesByName[name] = s;
+        }
     }
 }
 
-VRObjectManager::VRObjectManager() {
-    updateObjectsFkt = VRFunction<int>::create("ObjectManagerUpdate", boost::bind(&VRObjectManager::updateObjects, this));
+VRTransformPtr VRObjectManager::getTemplate(string name) { return templatesByName.count(name) ? templatesByName[name] : 0; }
+void VRObjectManager::rem(VRTransformPtr t) {
+    if (!t) return;
+    if (entries.count(t->getName())) entries.erase(t->getName());
+    if (instances.count(t->getID())) instances.erase(t->getID());
+    subChild(t);
 }
 
-//GROUPS------------------------
-
-void VRObjectManager::addToGroup(VRGroupPtr obj, string group) {
-    if (!groups.count(group)) addGroup(group);
-    groups[group]->push_back(obj);
-    obj->setGroup(group);
+void VRObjectManager::clear() {
+    entries.clear();
+    instances.clear();
+    templates.clear();
+    templatesByName.clear();
+    clearChildren();
 }
 
-list<VRGroupPtr>* VRObjectManager::getGroup(string group) {
-    if (groups.count(group))
-        return groups[group];
-    else return 0;
-}
-
-vector<string> VRObjectManager::getGroupList() {
-    vector<string> grps;
-    for (map<string, list<VRGroupPtr>* >::iterator it = groups.begin(); it != groups.end(); it++) {
-        grps.push_back(it->first);
-    }
-    return grps;
+vector<VRTransformPtr> VRObjectManager::getCatalog() {
+    vector<VRTransformPtr> res;
+    for (auto o : templates) res.push_back(o.second);
+    return res;
 }
 
 OSG_END_NAMESPACE;

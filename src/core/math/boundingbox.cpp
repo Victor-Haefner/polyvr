@@ -51,7 +51,8 @@ void boundingbox::move(const Vec3f& t) {
 }
 
 void boundingbox::setCenter(const Vec3f& t) {
-    move( t - center() );
+    if (cleared) update(t);
+    else move( t - center() );
 }
 
 void boundingbox::scale(float s) {

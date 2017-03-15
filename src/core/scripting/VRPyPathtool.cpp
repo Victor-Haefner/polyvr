@@ -7,6 +7,7 @@
 #include "VRPyGraph.h"
 #include "VRPyBaseT.h"
 #include "VRPyStroke.h"
+#include "VRPyPose.h"
 
 using namespace OSG;
 
@@ -29,14 +30,60 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"setHandleGeometry", (PyCFunction)VRPyPathtool::setHandleGeometry, METH_VARARGS, "Replace the default handle geometry - setHandleGeometry( geo )" },
     {"getPathMaterial", (PyCFunction)VRPyPathtool::getPathMaterial, METH_NOARGS, "Get the material used for paths geometry - getPathMaterial()" },
     {"setGraph", (PyCFunction)VRPyPathtool::setGraph, METH_VARARGS, "Setup from graph - setGraph( graph )" },
+    {"addNode", (PyCFunction)VRPyPathtool::addNode, METH_VARARGS, "Add node - int addNode( pose )" },
+    {"removeNode", (PyCFunction)VRPyPathtool::removeNode, METH_VARARGS, "Remove node by id - removeNode( int )" },
+    {"getNodeID", (PyCFunction)VRPyPathtool::getNodeID, METH_VARARGS, "Return node ID from handle - getNodeID( handle )" },
+    {"connect", (PyCFunction)VRPyPathtool::connect, METH_VARARGS, "Connect two nodes - connect( id1, id2 )" },
+    {"disconnect", (PyCFunction)VRPyPathtool::disconnect, METH_VARARGS, "Disconnect two nodes - disconnect( id1, id2 )" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyPathtool::getNodeID(VRPyPathtool* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    VRPyObject* g = 0;
+    if (! PyArg_ParseTuple(args, "O:getNodeID", &g)) return NULL;
+    return PyInt_FromLong( self->objPtr->getNodeID( g->objPtr ) );
+}
 
 PyObject* VRPyPathtool::setGraph(VRPyPathtool* self, PyObject* args) {
     if (!self->valid()) return NULL;
     VRPyGraph* g = 0;
     if (! PyArg_ParseTuple(args, "O:setGraph", &g)) return NULL;
     if (g) self->objPtr->setGraph( g->objPtr );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyPathtool::disconnect(VRPyPathtool* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    int i1 = 0;
+    int i2 = 0;
+    if (! PyArg_ParseTuple(args, "ii:disconnect", &i1, &i2)) return NULL;
+    self->objPtr->disconnect( i1, i2 );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyPathtool::connect(VRPyPathtool* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    int i1 = 0;
+    int i2 = 0;
+    if (! PyArg_ParseTuple(args, "ii:connect", &i1, &i2)) return NULL;
+    self->objPtr->connect( i1, i2 );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyPathtool::removeNode(VRPyPathtool* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    int i = 0;
+    if (! PyArg_ParseTuple(args, "i:removeNode", &i)) return NULL;
+    self->objPtr->remNode( i );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyPathtool::addNode(VRPyPathtool* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    VRPyPose* g = 0;
+    if (! PyArg_ParseTuple(args, "O:addNode", &g)) return NULL;
+    return PyInt_FromLong( self->objPtr->addNode( g->objPtr ) );
     Py_RETURN_TRUE;
 }
 

@@ -459,6 +459,8 @@
 		<Unit filename="src/addons/Sandbox.h" />
 		<Unit filename="src/addons/Semantics/Processes/VRProcess.cpp" />
 		<Unit filename="src/addons/Semantics/Processes/VRProcess.h" />
+		<Unit filename="src/addons/Semantics/Processes/VRProcessEngine.cpp" />
+		<Unit filename="src/addons/Semantics/Processes/VRProcessEngine.h" />
 		<Unit filename="src/addons/Semantics/Processes/VRProcessLayout.cpp" />
 		<Unit filename="src/addons/Semantics/Processes/VRProcessLayout.h" />
 		<Unit filename="src/addons/Semantics/Processes/VRPyProcess.cpp" />
@@ -475,6 +477,7 @@
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyLibrary.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyRule.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyRule.h" />
+		<Unit filename="src/addons/Semantics/Reasoning/VROntologyT.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyUtils.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyUtils.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VRProperty.cpp" />
@@ -566,9 +569,15 @@
 		<Unit filename="src/core/gui/widgets/VRRuleWidget.h" />
 		<Unit filename="src/core/gui/widgets/VRSemanticWidget.cpp" />
 		<Unit filename="src/core/gui/widgets/VRSemanticWidget.h" />
+		<Unit filename="src/core/math/Expression.cpp" />
+		<Unit filename="src/core/math/Expression.h" />
 		<Unit filename="src/core/math/Octree.cpp" />
 		<Unit filename="src/core/math/Octree.h" />
+		<Unit filename="src/core/math/VRConvexHull.cpp" />
+		<Unit filename="src/core/math/VRConvexHull.h" />
 		<Unit filename="src/core/math/VRMathFwd.h" />
+		<Unit filename="src/core/math/VRStateMachine.cpp" />
+		<Unit filename="src/core/math/VRStateMachine.h" />
 		<Unit filename="src/core/math/boundingbox.cpp" />
 		<Unit filename="src/core/math/boundingbox.h" />
 		<Unit filename="src/core/math/coordinates.cpp" />
@@ -650,6 +659,8 @@
 		<Unit filename="src/core/objects/geometry/VRPhysics.h" />
 		<Unit filename="src/core/objects/geometry/VRPrimitive.cpp" />
 		<Unit filename="src/core/objects/geometry/VRPrimitive.h" />
+		<Unit filename="src/core/objects/geometry/VRSky.cpp" />
+		<Unit filename="src/core/objects/geometry/VRSky.h" />
 		<Unit filename="src/core/objects/geometry/VRSprite.cpp" />
 		<Unit filename="src/core/objects/geometry/VRSprite.h" />
 		<Unit filename="src/core/objects/geometry/VRStroke.cpp" />
@@ -695,6 +706,8 @@
 		<Unit filename="src/core/scene/VRHMDDistortion.h" />
 		<Unit filename="src/core/scene/VRMaterialManager.cpp" />
 		<Unit filename="src/core/scene/VRMaterialManager.h" />
+		<Unit filename="src/core/scene/VRObjectGroupManager.cpp" />
+		<Unit filename="src/core/scene/VRObjectGroupManager.h" />
 		<Unit filename="src/core/scene/VRObjectManager.cpp" />
 		<Unit filename="src/core/scene/VRObjectManager.h" />
 		<Unit filename="src/core/scene/VRPhysicsManager.cpp" />
@@ -849,6 +862,8 @@
 		<Unit filename="src/core/scripting/VRPyNavigator.h" />
 		<Unit filename="src/core/scripting/VRPyObject.cpp" />
 		<Unit filename="src/core/scripting/VRPyObject.h" />
+		<Unit filename="src/core/scripting/VRPyObjectManager.cpp" />
+		<Unit filename="src/core/scripting/VRPyObjectManager.h" />
 		<Unit filename="src/core/scripting/VRPyPatchSelection.cpp" />
 		<Unit filename="src/core/scripting/VRPyPatchSelection.h" />
 		<Unit filename="src/core/scripting/VRPyPath.cpp" />
@@ -883,6 +898,8 @@
 		<Unit filename="src/core/scripting/VRPySound.h" />
 		<Unit filename="src/core/scripting/VRPySprite.cpp" />
 		<Unit filename="src/core/scripting/VRPySprite.h" />
+		<Unit filename="src/core/scripting/VRPyStateMachine.cpp" />
+		<Unit filename="src/core/scripting/VRPyStateMachine.h" />
 		<Unit filename="src/core/scripting/VRPyStroke.cpp" />
 		<Unit filename="src/core/scripting/VRPyStroke.h" />
 		<Unit filename="src/core/scripting/VRPyTextureGenerator.cpp" />
@@ -1017,6 +1034,8 @@
 		<Unit filename="src/core/utils/VRFunction.h" />
 		<Unit filename="src/core/utils/VRFunctionFwd.h" />
 		<Unit filename="src/core/utils/VRFwdDeclTemplate.h" />
+		<Unit filename="src/core/utils/VRGlobals.cpp" />
+		<Unit filename="src/core/utils/VRGlobals.h" />
 		<Unit filename="src/core/utils/VRInternalMonitor.cpp" />
 		<Unit filename="src/core/utils/VRInternalMonitor.h" />
 		<Unit filename="src/core/utils/VRLogger.cpp" />

@@ -12,7 +12,7 @@ class VRProcessLayout : public VRTransform {
     private:
         VRProcessPtr process;
 
-        VRGeometryPtr newWidget(VRProcessNode& n, float height);
+        VRGeometryPtr newWidget(VRProcessNodePtr n, float height);
 
     public:
         VRProcessLayout(string name = "");

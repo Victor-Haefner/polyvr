@@ -83,12 +83,13 @@ PyMethodDef VRPyObject::methods[] = {
     {"getChildrenWithTag", (PyCFunction)VRPyObject::getChildrenWithTag, METH_VARARGS, "Get all children which have the tag - [objs] getChildrenWithTag( str tag )" },
     {"setVolumeCheck", (PyCFunction)VRPyObject::setVolumeCheck, METH_VARARGS, "Enables or disabled the dynamic volume computation of that node - setVolumeCheck( bool )" },
     {"setTravMask", (PyCFunction)VRPyObject::setTravMask, METH_VARARGS, "Set the traversal mask of the object - setTravMask( int mask )" },
-    {"setPersistency", (PyCFunction)VRPyObject::setPersistency, METH_VARARGS, "Set the persistency level - setPersistency( int persistency )\n   0: not persistent\n   1: persistent hiarchy\n   2: transformation\n   3: geometry\n   4: fully persistent" },
+    {"setPersistency", (PyCFunction)VRPyObject::setPersistency, METH_VARARGS, "Set the persistency level - setPersistency( int persistency | bool recursive )\n   0: not persistent\n   1: persistent hiarchy\n   2: transformation\n   3: geometry\n   4: fully persistent" },
     {"getPersistency", (PyCFunction)VRPyObject::getPersistency, METH_NOARGS, "Get the persistency level - getPersistency()" },
     {"addLink", (PyCFunction)VRPyObject::addLink, METH_VARARGS, "Link subtree - addLink( object )" },
     {"remLink", (PyCFunction)VRPyObject::remLink, METH_VARARGS, "Unlink subtree - remLink( object )" },
     {"setEntity", PySetter(Object, setEntity, VREntityPtr), "Set entity - setEntity( Entity )" },
     {"getEntity", PyGetter(Object, getEntity, VREntityPtr), "Get entity - Entity getEntity()" },
+    {"clearChildren", (PyCFunction)VRPyObject::clearChildren, METH_NOARGS, "Remove all children - clearChildren()" },
     {NULL}  /* Sentinel */
 };
 
@@ -119,9 +120,19 @@ PyObject* VRPyObject::getID(VRPyObject* self) {
     return PyInt_FromLong( self->objPtr->getID() );
 }
 
+PyObject* VRPyObject::clearChildren(VRPyObject* self) {
+    if (!self->valid()) return NULL;
+    self->objPtr->clearChildren();
+    Py_RETURN_TRUE;
+}
+
 PyObject* VRPyObject::setPersistency(VRPyObject* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::setPersistency - C Object is invalid"); return NULL; }
-    self->objPtr->setPersistency( parseInt(args) );
+    int i = 0;
+    int b = 0;
+    if (!PyArg_ParseTuple(args, "i|i", &i, &b)) return NULL;
+    self->objPtr->setPersistency( i );
+    if (b) for (auto c : self->objPtr->getChildren(true)) c->setPersistency(i);
     Py_RETURN_TRUE;
 }
 

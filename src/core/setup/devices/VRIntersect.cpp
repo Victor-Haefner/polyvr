@@ -8,6 +8,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/OSGObject.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/VRGlobals.h"
 #include "VRSignal.h"
 #include "VRDevice.h"
 
@@ -76,7 +77,7 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, Line ray) {
     auto tree = wtree.lock();
     if (!tree) return ins;
 
-    uint now = VRGlobals::get()->CURRENT_FRAME;
+    uint now = VRGlobals::CURRENT_FRAME;
 
     VRIntersectAction iAct;
     //IntersectActionRefPtr iAct = IntersectAction::create();
@@ -120,7 +121,7 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree) {
     VRTransformPtr caster = dev->getBeacon();
     if (caster == 0) { cout << "Warning: VRIntersect::intersect, caster is 0!\n"; return ins; }
 
-    uint now = VRGlobals::get()->CURRENT_FRAME;
+    uint now = VRGlobals::CURRENT_FRAME;
     for (auto t : trees) {
         if (intersections.count(t.get())) {
             auto ins_tmp = intersections[t.get()];
@@ -186,7 +187,7 @@ void VRIntersect::drop(VRDeviceWeakPtr dev) {
     if (d != 0) {
         d->drop();
         dropSignal->triggerPtr<VRDevice>();
-        drop_time = VRGlobals::get()->CURRENT_FRAME;
+        drop_time = VRGlobals::CURRENT_FRAME;
         dragged.reset();
     }
 }

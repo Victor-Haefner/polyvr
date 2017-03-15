@@ -16,11 +16,15 @@ ptrFwd(VROntology);
 ptrFwd(VREntity);
 ptrFwd(VROntologyRule);
 ptrFwd(VROntologyLink);
+ptrFwd(VRSemanticContext);
 ptrFwd(VRReasoner);
 ptrFwd(VRStatement);
+ptrFwd(VRSemanticBuiltin);
 ptrFwd(Variable);
 ptrFwd(VRProcess);
+ptrFwd(VRProcessNode);
 ptrFwd(VRProcessLayout);
+ptrFwd(VRProcessEngine);
 
 }
 

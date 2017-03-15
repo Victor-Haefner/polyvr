@@ -4,12 +4,17 @@
 #include "VRReasoner.h"
 #include "VRProperty.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRFunction.h"
+#include "core/math/Expression.h"
 
 #include <stack>
 #include <iostream>
 #include <algorithm>
 
 using namespace OSG;
+
+VRSemanticBuiltin::VRSemanticBuiltin() {}
+VRSemanticBuiltin::~VRSemanticBuiltin() {}
 
 Variable::Variable() {;}
 
@@ -120,7 +125,8 @@ bool Variable::is(VariablePtr other, VPath& p1, VPath& p2) {
     auto hasSameVal2 = [&](vector<string>& val1) {
         bool res = false;
         for (auto e : other->entities) {
-            vector<string> val2 = e.second->getAtPath(p2.nodes);
+            vector<string> val2 = p2.getValue(e.second);
+            //for (auto v : val2) cout << " var2 value: " << v << endl;
             auto r = hasSameVal(val1, val2);
             if (!r) evaluations[e.first].state = Evaluation::INVALID;
             if (r) res = true;
@@ -131,9 +137,11 @@ bool Variable::is(VariablePtr other, VPath& p1, VPath& p2) {
         return false;
     };
 
+    //cout << "Variable::is " << toString() << " at path " << p1.toString() << " =?= " << other->toString() << " at path " << p2.toString() << endl;
     bool res = false;
     for (auto e : entities) {
-        vector<string> val1 = e.second->getAtPath(p1.nodes);
+        vector<string> val1 = p1.getValue(e.second);
+        //for (auto v : val1) cout << " var1 value: " << v << endl;
         auto r = hasSameVal2(val1);
         if (!r) evaluations[e.first].state = Evaluation::INVALID;
         if (r) res = true;
@@ -169,20 +177,50 @@ string VPath::toString() {
     return s;
 }
 
-Context::Context() {}
+int VPath::size() {
+    return nodes.size();
+}
 
-Context::Context(VROntologyPtr onto) {
+vector<string> VPath::getValue(VREntityPtr e) {
+    vector<string> res;
+    if (!e) return res;
+    if (size() == 2) {
+        string m = first;
+        auto prop = e->getProperty(m);
+        if (!prop) return res;
+        if (!e->properties.count(prop->getName())) return res;
+        for (auto p : e->properties[prop->getName()]) res.push_back(p->value);
+        return res;
+    }
+    res.push_back( e->getName() );
+    return res;
+}
+
+void VPath::setValue(string v, VREntityPtr e) {
+    if (size() == 2) {
+        string m = first;
+        auto prop = e->getProperty(m);
+        if (!prop) return;
+        if (!e->properties.count(prop->getName())) return;
+        for (auto p : e->properties[prop->getName()]) {
+            p->value = v;
+        }
+    }
+}
+
+VRSemanticContext::VRSemanticContext(VROntologyPtr onto) {
+    if (!onto) return;
     this->onto = onto;
 
-    //cout << "Init context:" << endl;
+    //cout << "Init VRSemanticContext:" << endl;
     for (auto i : onto->entities) {
-        if (i.second->getConcepts().size() == 0) { cout << "Context::Context instance " << i.second->getName() << " has no concepts!" << endl; continue; }
+        if (i.second->getConcepts().size() == 0) { cout << "VRSemanticContext::VRSemanticContext instance " << i.second->getName() << " has no concepts!" << endl; continue; }
         vars[i.second->getName()] = Variable::create( onto, i.second->getConcepts()[0]->getName(), i.second->getName() );
         //cout << " add instance " << i.second->toString() << endl;
     }
 
     for ( auto r : onto->getRules()) {
-        //cout << "Context prep rule " << r->toString() << endl;
+        //cout << "VRSemanticContext prep rule " << r->rule << endl;
         Query q(r->toString());
         if (!q.request) continue;
 
@@ -201,9 +239,11 @@ Context::Context(VROntologyPtr onto) {
             }
         }
 
-        rules[r->toString()] = q;
+        rules[r->rule] = q;
     }
 }
+
+VRSemanticContextPtr VRSemanticContext::create(VROntologyPtr onto) { return VRSemanticContextPtr( new VRSemanticContext(onto) ); }
 
 // TODO: parse concept statements here
 Query::Query() {}
@@ -223,226 +263,43 @@ string Query::toString() {
     return res;
 }
 
-class mathExpression { // TODO: put this in own header!
-    public:
-        struct ValueBase {
-            virtual string toString() = 0;
-            virtual ValueBase* add(ValueBase* n) = 0;
-            virtual ValueBase* sub(ValueBase* n) = 0;
-            virtual ValueBase* mult(ValueBase* n) = 0;
-            virtual ValueBase* div(ValueBase* n) = 0;
-        };
+Term::Term(string s) : path(s), str(s) {}
 
-        template<class T> struct Value : ValueBase {
-            T value;
-            Value(const T& t) : value(t) {;}
-            string toString() { return ::toString(value); }
+bool Term::isMathExpression() { Expression e(str); return e.isMathExpression(); }
 
-            // TODO: only declare here, use partial template implementations!
-            ValueBase* add(ValueBase* n) {
-                if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value + v2->value);
-                return 0;
-            }
-            ValueBase* sub(ValueBase* n) {
-                if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value - v2->value);
-                return 0;
-            }
-            ValueBase* mult(ValueBase* n) {
-                if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value * v2->value);
-                return 0;
-            }
-            ValueBase* div(ValueBase* n) {
-                //if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value / v2->value);
-                return 0;
-            }
-        };
-
-        //ValueBase* add(Value<Vec3f>* v1, Value<Vec3f>* v2) { return new Value<T>(v1->value + v2->value); }
-
-        struct Node {
-            string param;
-            ValueBase* value = 0;
-            Node* parent = 0;
-            Node* left = 0;
-            Node* right = 0;
-
-            Node(string s) : param(s) {;}
-            ~Node() { if (value) delete value; }
-
-            void setValue(float f) { value = new Value<float>(f); }
-            void setValue(Vec3f v) { value = new Value<Vec3f>(v); }
-            void setValue(string s) {
-                cout << " Node::setValue " << param << " " << s << endl;
-                int N = std::count(s.begin(), s.end(), ' ');
-                if (N == 0) setValue(toFloat(s));
-                if (N == 2) setValue(toVec3f(s));
-            }
-
-            string toString(string indent = "") {
-                string res = param;
-                if (value) res += " ("+value->toString()+")";
-                if (left) res += "\n"+indent+" " + left->toString(indent+" ");
-                if (right) res += "\n"+indent+" " + right->toString(indent+" ");
-                return res;
-            }
-
-            void compute() { // compute value based on left and right values and param as operator
-                if (left->value == 0 || right->value == 0) return;
-                char op = param[0];
-                if (op == '+') value = left->value->add(right->value);
-                if (op == '-') value = left->value->sub(right->value);
-                if (op == '*') value = left->value->mult(right->value);
-                if (op == '/') value = left->value->div(right->value);
-            }
-        };
-
-    public:
-        string data;
-        Node* tree = 0;
-        vector<Node*> nodes;
-        map<char,int> OperatorHierarchy;
-
-        bool isMathToken(char c) {
-            if (c == '+' || c == '-' || c == '*' || c == '/') return true;
-            if (c == '(' || c == ')') return true;
-            return false;
-        }
-
-        void convToPrefixExpr() { // convert infix to prefix expression
-            vector<string> tokens;
-
-            // split into tokens
-            string last;
-            for (int i=0; i<data.size(); i++) {
-                char c = data[i];
-                if (isMathToken(c)) {
-                    if (last.size() > 0 ) tokens.push_back(last);
-                    last = "";
-                    string t; t+=c;
-                    tokens.push_back(t);
-                } else last += c;
-            }
-            if (last.size() > 0 ) tokens.push_back(last);
-
-            stack<string> OperandStack;
-            stack<char> OperatorStack;
-
-            auto processTriple = [&]() {
-                char Operator = OperatorStack.top(); OperatorStack.pop();
-                auto RightOperand = OperandStack.top(); OperandStack.pop();
-                auto LeftOperand = OperandStack.top(); OperandStack.pop();
-                string op; op += Operator;
-                string tmp = op +" "+ LeftOperand +" "+ RightOperand;
-                OperandStack.push( tmp );
-            };
-
-            for (auto t : tokens) {
-                if (t.size() != 1 || !isMathToken(t[0]) ) {
-                    OperandStack.push(t); continue;
-                }
-                char o = t[0];
-
-                if ( o == '(' || OperatorStack.size() == 0 || OperatorHierarchy[o] < OperatorHierarchy[OperatorStack.top()] ) {
-                    OperatorStack.push(o); continue;
-                }
-
-                if ( o == ')' ) {
-                    while( OperatorStack.top() != '(' ) processTriple();
-                    o = OperatorStack.top(); OperatorStack.pop();
-                    continue;
-                }
-
-                if ( OperatorHierarchy[o] >= OperatorHierarchy[OperatorStack.top()] ) {
-                    while( OperatorStack.size() != 0 and OperatorHierarchy[o] >= OperatorHierarchy[OperatorStack.top()] ) {
-                        processTriple();
-                    }
-                    OperatorStack.push(o);
+string Term::computeExpression(VRSemanticContextPtr context) {
+    Expression me(str);
+    if (!me.isMathExpression()) return "";
+    me.computeTree(); // build RDP tree
+    for (auto l : me.getLeafs()) {
+        VPath p(l->param);
+        l->setValue(p.root); // default is to use path root, might just be a number
+        if (context->vars.count(p.root)) {
+            auto v = context->vars[p.root];
+            for (auto e : v->entities) {
+                auto vals = p.getValue(e.second);
+                for (auto val : vals) {
+                    l->setValue(val);
+                    cout << " computeExpression, replace " << p.root << " by " << val << endl;
                 }
             }
-
-            while( OperatorStack.size() ) processTriple();
-            data = OperandStack.top(); // store prefix expression
         }
-
-        void buildTree() { // build a binary expression tree from the prefix expression data
-            stack<Node*> nodeStack;
-            Node* node = 0;
-            vector<string> tokens = splitString(data,' ');
-            for (int i=0; i<tokens.size(); i++) {
-                string t = tokens[tokens.size()-i-1];
-                node = new Node(t);
-                nodes.push_back(node);
-                if ( t.size() == 1 && isMathToken(t[0]) ) { // found operator
-                    node->right = nodeStack.top(); nodeStack.pop();
-                    node->left = nodeStack.top(); nodeStack.pop();
-                    nodeStack.push(node);
-                } else nodeStack.push(node);
-            }
-            node = nodeStack.top(); nodeStack.pop();
-            tree = node;
-            //cout << tree->toString() << endl;
-        }
-
-    public:
-        mathExpression(string s) {
-            data = s;
-
-            OperatorHierarchy['+'] = 6;
-            OperatorHierarchy['-'] = 6;
-            OperatorHierarchy['*'] = 5;
-            OperatorHierarchy['/'] = 5;
-            OperatorHierarchy['('] = 2;
-            OperatorHierarchy[')'] = 2;
-        }
-
-        bool isMathExpression() {
-            for (auto c : data) if (isMathToken(c)) return true;
-            return false;
-        }
-
-        void computeTree() {
-            convToPrefixExpr();
-            buildTree();
-        }
-
-        vector<Node*> getLeafs() {
-            vector<Node*> res;
-            for (auto n : nodes) if (!n->left && !n->right) res.push_back(n);
-            return res;
-        }
-
-        string compute() { // compute result of binary expression tree
-            std::function<void(Node*)> subCompute = [&](Node* n) {
-                if (!n || !n->left || !n->right) return;
-                subCompute(n->left);
-                subCompute(n->right);
-                n->compute();
-            };
-            subCompute(tree);
-            if (tree->value) return tree->value->toString();
-            else return "";
-        }
-};
-
-Term::Term(string s) : path(s), str(s) { // parse term content
-    // check for mathematical expression
-    mathExpression me(s);
-    if (me.isMathExpression()) {
-        cout << " Term::Term '"+s+"' is math expression!\n";
-        me.computeTree(); // build RDP tree
-        for (auto l : me.getLeafs()) {
-            VPath p(l->param);
-            string val = "1.5"; // TODO: get the value of p!!
-            l->setValue(val); // replace the variable with the numeric value!
-        }
-        if (me.tree) cout << me.tree->toString() << endl;
-        string res = me.compute();
-        cout << " Term::Term '"+s+"' results to " << res << endl;
-        path = VPath(res ); // override old data
     }
+    string res = me.compute();
+    cout << " computeExpression '"+str+"' results to " << res << endl;
+    return res;
 }
 
 bool Term::valid() { return var->valid; }
+
+bool Term::is(Term& t, VRSemanticContextPtr context) {
+    auto v = t.var;
+    if (t.isMathExpression()) {
+        auto res = t.computeExpression(context);
+        v = Variable::create(0,res);
+    }
+    return var->is(v, path, t.path);
+}
 
 void Query::checkState() {
     int r = 1;
@@ -451,15 +308,57 @@ void Query::checkState() {
 }
 
 void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of all paths of the terms of each statement
-    for (auto statement : statements) {
+    // compute all values to substitute
+    map<string, string> substitutes;
+    for (int i=0; i<request->terms.size(); i++) {
+        Term& t1 = request->terms[i];
+        Term& t2 = replace->terms[i];
+        substitutes[t1.var->value] = t2.str;
+    }
+
+    auto substitute = [&](string& var) {
+        if (!substitutes.count(var)) return;
+        cout << "  substitute: " << var;
+        var = substitutes[var];
+        cout << " with " << var << endl;
+    };
+
+    cout << " substitutes:\n";
+    for (auto s : substitutes) cout << "  substitute "+s.first+" "+s.second << endl;
+
+    for (auto statement : statements) { // substitute values in all statements of the query
         for (auto& ts : statement->terms) {
-            for (int i=0; i<request->terms.size(); i++) {
-                auto& t1 = request->terms[i];
-                auto& t2 = replace->terms[i];
-                if (t1.path.root == ts.path.root) {
-                    ts.path.root = t2.path.root;
-                    ts.path.nodes[0] = t2.path.nodes[0];
-                    ts.str = ts.path.toString();
+            if (ts.isMathExpression()) {
+                Expression e(ts.str);
+                e.computeTree();
+                cout << " substitute expression: " << e.toString() << endl;
+                for (auto& l : e.getLeafs()) {
+                    for (int i=0; i<request->terms.size(); i++) {
+                        auto& t1 = request->terms[i];
+                        //cout << " substitute " << l->param << " , " << t1.path.root << " in expression " << ts.str << " ?" << endl;
+                        if (t1.path.root == l->param) substitute(l->param);
+                        else {
+                            VPath lpath(l->param);
+                            if (t1.path.root == lpath.root) {
+                                substitute(lpath.root);
+                                lpath.nodes[0] = lpath.root;
+                                l->param = lpath.toString();
+                            }
+                        }
+                    }
+                }
+                ts.str = e.toString();
+                ts.path = VPath(ts.str);
+                cout << " substituted expression: " << ts.str << endl;
+            } else {
+                for (int i=0; i<request->terms.size(); i++) {
+                    auto& t1 = request->terms[i];
+                    if (t1.path.root == ts.path.root) {
+                        substitute(ts.path.root);
+                        ts.path.nodes[0] = ts.path.root;
+                        ts.str = ts.path.toString();
+                        ts.path = VPath(ts.str);
+                    }
                 }
             }
         }

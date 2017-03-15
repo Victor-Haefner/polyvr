@@ -118,8 +118,8 @@ struct VRMatData {
         colChunk->setShininess( 50 );
     }
 
-    VRMatData* copy() {
-        VRMatData* m = new VRMatData();
+    VRMatDataPtr copy() {
+        VRMatDataPtr m = VRMatDataPtr( new VRMatData() );
         m->mat = ChunkMaterial::create();
 
         if (colChunk) { m->colChunk = dynamic_pointer_cast<MaterialChunk>(colChunk->shallowCopy()); m->mat->addChunk(m->colChunk); }
@@ -195,7 +195,7 @@ VRMaterial::VRMaterial(string name) : VRObject(name) {
     //store("ambient", &ambient);
 }
 
-VRMaterial::~VRMaterial() { for (auto m : mats) delete m; }
+VRMaterial::~VRMaterial() {}
 
 VRMaterialPtr VRMaterial::ptr() { return static_pointer_cast<VRMaterial>( shared_from_this() ); }
 VRMaterialPtr VRMaterial::create(string name) {
@@ -204,7 +204,7 @@ VRMaterialPtr VRMaterial::create(string name) {
     return p;
 }
 
-string VRMaterial::constructShaderVP(VRMatData* data) {
+string VRMaterial::constructShaderVP(VRMatDataPtr data) {
     int texD = data->getTextureDimension();
 
     string vp;
@@ -228,7 +228,7 @@ string VRMaterial::constructShaderVP(VRMatData* data) {
     return vp;
 }
 
-string VRMaterial::constructShaderFP(VRMatData* data) {
+string VRMaterial::constructShaderFP(VRMatDataPtr data) {
     int texD = data->getTextureDimension();
 
     string fp;
@@ -312,7 +312,7 @@ int VRMaterial::getNPasses() { return passes->mat->getNPasses(); }
 
 int VRMaterial::addPass() {
     activePass = getNPasses();
-    VRMatData* md = new VRMatData();
+    VRMatDataPtr md = VRMatDataPtr( new VRMatData() );
     md->reset();
     passes->mat->addMaterial(md->mat);
     mats.push_back(md);
@@ -322,7 +322,6 @@ int VRMaterial::addPass() {
 
 void VRMaterial::remPass(int i) {
     if (i <= 0 || i >= getNPasses()) return;
-    delete mats[i];
     passes->mat->subMaterial(i);
     mats.erase(remove(mats.begin(), mats.end(), mats[i]), mats.end());
     if (activePass == i) activePass = 0;
@@ -349,14 +348,14 @@ void VRMaterial::setStencilBuffer(bool clear, float value, float mask, int func,
 void VRMaterial::clearExtraPasses() { for (int i=1; i<getNPasses(); i++) remPass(i); }
 void VRMaterial::appendPasses(VRMaterialPtr mat) {
     for (int i=0; i<mat->getNPasses(); i++) {
-        VRMatData* md = mat->mats[i]->copy();
+        VRMatDataPtr md = mat->mats[i]->copy();
         passes->mat->addMaterial(md->mat);
         mats.push_back(md);
     }
 }
 
 void VRMaterial::prependPasses(VRMaterialPtr mat) {
-    vector<VRMatData*> pses;
+    vector<VRMatDataPtr> pses;
     for (int i=0; i<mat->getNPasses(); i++) pses.push_back( mat->mats[i]->copy() );
     for (int i=0; i<getNPasses(); i++) pses.push_back(mats[i]);
 

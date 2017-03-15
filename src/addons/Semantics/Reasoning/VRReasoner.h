@@ -19,15 +19,12 @@ OSG_BEGIN_NAMESPACE;
 
 class VRReasoner {
     public:
-        string pre = "  ?!?  ";
-        string redBeg  = "\033[0;38;2;255;150;150m";
-        string greenBeg = "\033[0;38;2;150;255;150m";
-        string blueBeg = "\033[0;38;2;150;150;255m";
-        string yellowBeg = "\033[0;38;2;255;255;150m";
-        string colEnd = "\033[0m";
-
-        bool verbGui = true;
-        bool verbConsole = true;
+        static string pre;
+        static string redBeg;
+        static string greenBeg;
+        static string blueBeg;
+        static string yellowBeg;
+        static string colEnd;
 
         enum COLOR {
             BLUE,
@@ -36,6 +33,11 @@ class VRReasoner {
             YELLOW
         };
 
+        static bool verbGui;
+        static bool verbConsole;
+        static void print(const string& s);
+        static void print(const string& s, COLOR c);
+
         static vector<string> split(string s, string d);
         static vector<string> split(string s, char d);
         static bool startswith(string s, string subs);
@@ -43,13 +45,12 @@ class VRReasoner {
     private:
         VRReasoner();
 
-        bool evaluate(VRStatementPtr s, Context& c);
-        bool apply(VRStatementPtr s, Context& c);
-        bool is(VRStatementPtr s, Context& c);
-        bool has(VRStatementPtr s, Context& c);
-        bool findRule(VRStatementPtr s, Context& c);
-        void print(const string& s);
-        void print(const string& s, COLOR c);
+        bool evaluate(VRStatementPtr s, VRSemanticContextPtr c);
+        bool apply(VRStatementPtr s, VRSemanticContextPtr c);
+        bool builtin(VRStatementPtr s, VRSemanticContextPtr c);
+        bool is(VRStatementPtr s, VRSemanticContextPtr c);
+        bool has(VRStatementPtr s, VRSemanticContextPtr c);
+        bool findRule(VRStatementPtr s, VRSemanticContextPtr c);
 
     public:
         static VRReasonerPtr create();

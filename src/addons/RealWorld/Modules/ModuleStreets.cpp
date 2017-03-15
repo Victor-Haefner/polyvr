@@ -88,6 +88,7 @@ ModuleStreets::ModuleStreets(bool t, bool p) : BaseModule("ModuleStreets", t,p) 
 void ModuleStreets::loadBbox(MapGrid::Box bbox) {
     auto mapDB = RealWorld::get()->getDB();
     auto mc = RealWorld::get()->getCoordinator();
+    if (!mapDB || !mc) return;
     OSMMap* osmMap = mapDB->getMap(bbox.str);
     if (!osmMap) return;
 
@@ -388,6 +389,7 @@ void ModuleStreets::pushTriangle(Vec3f a1, Vec3f a2, Vec3f c, Vec3f normal, VRGe
 
 Vec3f ModuleStreets::elevate(Vec2f p, float h) {
     auto mc = RealWorld::get()->getCoordinator();
+    if (!mc) return Vec3f(p[0], 0, p[1]);
     return Vec3f(p[0], mc->getElevation(p) + h, p[1]);
 }
 

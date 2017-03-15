@@ -2,6 +2,7 @@
 
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRGlobals.h"
 #include "addons/Engineering/VRNumberingEngine.h"
 
 #include <OpenSG/OSGGeoProperties.h>
@@ -482,7 +483,7 @@ int VRMolecule::getID() {
 }
 
 uint VRMolecule::getFlag() {
-	return VRGlobals::get()->CURRENT_FRAME + rand();
+	return VRGlobals::CURRENT_FRAME + rand();
 }
 
 void VRMolecule::rotateBond(int a, int b, float f) {
@@ -491,7 +492,7 @@ void VRMolecule::rotateBond(int a, int b, float f) {
     VRAtom* A = atoms[a];
     VRAtom* B = atoms[b];
 
-	uint now = VRGlobals::get()->CURRENT_FRAME + rand();
+	uint now = VRGlobals::CURRENT_FRAME + rand();
     A->recFlag = now;
 
     Vec3f p1 = Vec3f( A->getTransformation()[3] );
@@ -560,7 +561,7 @@ void VRMolecule::substitute(int a, VRMoleculePtr m, int b) {
     A->append(B, 1, true);
 
     // transform new atoms
-	uint now = VRGlobals::get()->CURRENT_FRAME + rand();
+	uint now = VRGlobals::CURRENT_FRAME + rand();
     A->recFlag = now;
     bm.invert();
     Matrix Bm = B->getTransformation();
@@ -578,7 +579,7 @@ void VRMolecule::substitute(int a, VRMoleculePtr m, int b) {
 void VRMolecule::setLocalOrigin(int ID) {
     if (atoms.count(ID) == 0) return;
 
-	uint now = VRGlobals::get()->CURRENT_FRAME + rand();
+	uint now = VRGlobals::CURRENT_FRAME + rand();
     Matrix m = atoms[ID]->getTransformation();
     m.invert();
 

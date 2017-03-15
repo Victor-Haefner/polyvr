@@ -4,36 +4,49 @@
 #include <OpenSG/OSGConfig.h>
 #include <map>
 #include <vector>
-#include <string>
-#include <list>
 #include "core/utils/VRFunctionFwd.h"
+#include "core/math/VRMathFwd.h"
+#include "core/objects/object/VRObject.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/tools/VRToolsFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRGroup;
-class VRObject;
+class VRObjectManager : public VRObject {
+    public:
+        struct Entry : public VRName {
+            posePtr pos;
+            string type;
 
-class VRObjectManager {
-    protected:
-        map<string, list<VRGroupPtr>* > groups;
-        VRUpdateCbPtr updateObjectsFkt;
+            Entry(string name = "");
+            ~Entry();
 
-        void addGroup(string group);
+            static shared_ptr<Entry> create(string name = "");
+            void set(posePtr p, string t);
+        };
 
-        void updateObjects();
+    private:
+        map<VRTransform*, VRTransformPtr> templates;
+        map<string, VRTransformPtr> templatesByName;
+        map<int, VRTransformWeakPtr> instances;
+        map<string, shared_ptr<VRObjectManager::Entry> > entries;
+
+        void setup();
 
     public:
         VRObjectManager();
+        ~VRObjectManager();
+        static VRObjectManagerPtr create();
 
-        //GROUPS------------------------
+        void addTemplate(VRTransformPtr s, string name = ""); // store object as template
+        VRTransformPtr getTemplate(string name);
+        vector<VRTransformPtr> getCatalog();
 
-        void addToGroup(VRGroupPtr obj, string group);
-
-        list<VRGroupPtr>* getGroup(string group);
-
-        vector<string> getGroupList();
+        VRTransformPtr add(VRTransformPtr s); // returns duplicate, first time the object is stored as template
+        VRTransformPtr copy(string name, posePtr p, bool addToStore = true); // returns duplicate
+        void rem(VRTransformPtr id);
+        void clear();
 };
 
 OSG_END_NAMESPACE;

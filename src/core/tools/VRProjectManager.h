@@ -12,17 +12,21 @@ class VRProjectManager : public VRObject {
     private:
         vector<VRStoragePtr> vault_reload;
         vector<VRStoragePtr> vault_rebuild;
+        int persistencyLvl = 0;
 
     public:
         VRProjectManager();
-
+        ~VRProjectManager();
         static VRProjectManagerPtr create();
 
         void addItem(VRStoragePtr s, string mode);
         vector<VRStoragePtr> getItems();
 
-        void save(string path);
-        void load(string path);
+        void newProject(string path);
+        void save(string path = "");
+        void load(string path = "");
+
+        void setPersistencyLevel(int p);
 };
 
 OSG_END_NAMESPACE;

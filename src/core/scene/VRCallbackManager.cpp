@@ -1,5 +1,6 @@
 #include "VRCallbackManager.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/VRGlobals.h"
 #include "core/objects/object/VRObject.h"
 #include <iostream>
 #include <vector>
@@ -125,7 +126,7 @@ void VRCallbackManager::updateCallbacks() {
 
 void VRCallbackManager::printCallbacks() {
     PLock lock(mtx);
-    cout << "VRCallbackManager " << this << " t " << VRGlobals::get()->CURRENT_FRAME << endl;
+    cout << "VRCallbackManager " << this << " t " << VRGlobals::CURRENT_FRAME << endl;
     cout << " update fkts (" << updateFktPtrs.size() << ")\n";
     for (auto fl : updateFktPtrs) {
         cout << "  prio " << fl.first << " (" << fl.second->size() << ")\n";

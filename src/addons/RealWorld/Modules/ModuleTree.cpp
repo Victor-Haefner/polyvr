@@ -18,6 +18,7 @@ ModuleTree::ModuleTree(bool t, bool p) : BaseModule("ModuleTree", t,p) {}
 void ModuleTree::loadBbox(MapGrid::Box bbox) {
     auto mc = RealWorld::get()->getCoordinator();
     auto mapDB = RealWorld::get()->getDB();
+    if (!mc || !mapDB) return;
     OSMMap* osmMap = mapDB->getMap(bbox.str);
     if (!osmMap) return;
 

@@ -9,6 +9,7 @@
 #include "core/networking/VRMainInterface.h"
 #include "core/networking/VRSharedMemory.h"
 #include "core/utils/VROptions.h"
+#include "core/utils/VRGlobals.h"
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/sound/VRSoundManager.h"
 #include "core/objects/material/VRMaterial.h"
@@ -122,7 +123,7 @@ void PolyVR::run() {
     while(true) {
         VRSceneManager::get()->update();
 
-        if (VRGlobals::get()->CURRENT_FRAME == 300) {
+        if (VRGlobals::CURRENT_FRAME == 300) {
             string app = options->getOption<string>("application");
             if (app != "") VRSceneManager::get()->loadScene(app);
         }

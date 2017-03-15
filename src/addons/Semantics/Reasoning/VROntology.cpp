@@ -32,6 +32,9 @@ VROntologyPtr VROntology::create(string name) {
     o->thing = thing;
     o->concepts["Thing"] = o->thing;
     o->storeObj("Thing", o->thing);
+    o->addConcept("float");
+    o->addConcept("int");
+    o->addConcept("string");
     return o;
 }
 
@@ -153,6 +156,7 @@ void VROntology::import(VROntologyPtr o) { merge(o); }
 
 void VROntology::merge(VROntologyPtr o) { // Todo: check it well!
     for (auto c : o->rules) rules[c.first] = c.second;
+    for (auto b : o->builtins) builtins[b.first] = b.second;
     for (auto c : o->concepts) {
         auto cn = c.second.lock();
         if (cn) concepts[cn->getName()] = cn;
@@ -234,6 +238,8 @@ string VROntology::toString() {
     res += thing->toString(cMap);
     res += "Entities:\n";
     for (auto e : entities) res += e.second->toString() + "\n";
+    res += "Rules:\n";
+    for (auto r : rules) res += r.second->toString() + "\n";
     return res;
 }
 

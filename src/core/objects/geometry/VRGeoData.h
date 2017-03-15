@@ -35,6 +35,7 @@ class VRGeoData {
 
         Pnt3f getPosition(int i);
         Vec3f getNormal(int i);
+        Vec4f getColor(int i);
 
         int pushVert(Pnt3f p);
         int pushVert(Pnt3f p, Vec3f n);
@@ -44,6 +45,9 @@ class VRGeoData {
         int pushVert(Pnt3f p, Vec3f n, Vec2f t, Vec2f t2);
         int pushVert(Pnt3f p, Vec3f n, Vec3f c, Vec2f t);
         int pushVert(Pnt3f p, Vec3f n, Vec4f c, Vec2f t);
+
+        int pushColor(Vec3f c);
+        int pushColor(Vec4f c);
 
         bool setVert(int i, Pnt3f p);
         bool setVert(int i, Pnt3f p, Vec3f n);

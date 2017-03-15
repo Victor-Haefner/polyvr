@@ -29,35 +29,29 @@
 using namespace OSG;
 
 map<string, string> RealWorld::options = map<string, string>();
+RealWorld* RealWorld::singelton = 0;
 
-RealWorld::RealWorld(VRObjectPtr root, Vec2f origin) {
+RealWorld::RealWorld(string name) {
+    setName(name);
     singelton = this;
-
-    mapCoordinator = new MapCoordinator(origin, 0.002f);
-    //mapCoordinator = new MapCoordinator(Vec2f(30.270, 120.149), 0.002f); // Hongzhou
-    //mapCoordinator = new MapCoordinator(Vec2f(49.005f, 8.395f), 0.002f); // Kreuzung Kriegsstr. und Karlstr.
-    //mapCoordinator = new MapCoordinator(Vec2f(48.998969, 8.400171), 0.002f); // Tiergarten
-    //mapCoordinator = new MapCoordinator(Vec2f(49.013606f, 8.418295f), 0.002f); // Fasanengarten, funktioniert nicht?
-
-    world = new World();
-    mapDB = new OSMMapDB();
-    mapManager = new MapManager(Vec2f(0,0), mapCoordinator, world, root);
-
-    //mapCoordinator->altitude->showHeightArray(49.000070f, 8.401015f);
 }
 
 RealWorld::~RealWorld() {
-    cout << "\nDESTRUCT REALWORLD\n";
-
-    delete world;
-    delete mapDB;
-    delete mapCoordinator;
-    delete mapManager;
+    if (world) delete world;
+    if (mapDB) delete mapDB;
+    if (mapCoordinator) delete mapCoordinator;
+    if (mapManager) delete mapManager;
 }
 
-std::shared_ptr<RealWorld> RealWorld::create(VRObjectPtr root, Vec2f origin) { return std::shared_ptr<RealWorld>(new RealWorld(root, origin)); }
+std::shared_ptr<RealWorld> RealWorld::create(string name) { return std::shared_ptr<RealWorld>(new RealWorld(name)); }
 
-RealWorld* RealWorld::singelton = 0;
+void RealWorld::init(Vec2i size) {
+    mapCoordinator = new MapCoordinator(Vec2f(), 0.002f);
+    world = new World();
+    mapDB = new OSMMapDB();
+    mapManager = new MapManager(Vec2f(), mapCoordinator, world, ptr());
+    //mapCoordinator->altitude->showHeightArray(49.000070f, 8.401015f);
+}
 
 RealWorld* RealWorld::get() { return singelton; }
 MapCoordinator* RealWorld::getCoordinator() { return mapCoordinator; }
@@ -66,11 +60,12 @@ World* RealWorld::getWorld() { return world; }
 OSMMapDB* RealWorld::getDB() { return mapDB; }
 TrafficSimulation* RealWorld::getTrafficSimulation() { return trafficSimulation; }
 
-void RealWorld::update(Vec3f pos) { mapManager->updatePosition( Vec2f(pos[0], pos[2]) ); }
+void RealWorld::update(Vec3f pos) { if (mapManager) mapManager->updatePosition( Vec2f(pos[0], pos[2]) ); }
 void RealWorld::configure(string var, string val) { options[var] = val; }
 string RealWorld::getOption(string var) { return options[var]; }
 
 void RealWorld::enableModule(string mod, bool b, bool t, bool p) {
+    if (!mapManager) return;
     if (b) {
         if (mod == "Ground") mapManager->addModule(new ModuleFloor(t,p));
         if (mod == "Streets") mapManager->addModule(new ModuleStreets(t,p));

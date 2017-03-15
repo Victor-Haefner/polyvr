@@ -19,6 +19,7 @@ ptrFwd(VRWaypoint);
 ptrFwd(VRMeasure);
 ptrFwd(VRTextureRenderer);
 ptrFwd(VRProjectManager);
+ptrFwd(VRObjectManager);
 ptrFwd(VRHandle);
 ptrFwd(VRGeoPrimitive);
 ptrFwd(VRJointTool);

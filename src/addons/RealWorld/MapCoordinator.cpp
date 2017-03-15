@@ -8,8 +8,8 @@ using namespace OSG;
 MapCoordinator::MapCoordinator(Vec2f zeroPos, float gridSize) {
     this->zeroPos = zeroPos;
     this->gridSize = gridSize;
-    ele = new Elevation;
-    startElevation = ele->getElevation(zeroPos[0], zeroPos[1]);
+    //ele = new Elevation; // TODO: takes very long to start up
+    //startElevation = ele->getElevation(zeroPos[0], zeroPos[1]);
 };
 
 Vec2f MapCoordinator::realToWorld(Vec2f realPosition) {
@@ -26,7 +26,8 @@ float MapCoordinator::getElevation(float x, float y) { return getElevation(Vec2f
 float MapCoordinator::getElevation(Vec2f v) {
     return 0; // TODO
     Vec2f real = worldToReal(v);
-    float res = ele->getElevation(real[0], real[1]) - startElevation - 1;
+    float res = 0;
+    if (ele) res = ele->getElevation(real[0], real[1]) - startElevation - 1;
     return res;
 }
 
@@ -38,15 +39,4 @@ Vec2f MapCoordinator::getRealBboxPosition(Vec2f worldPosition) {
     return Vec2f(gridX / 1000.0f, gridY / 1000.0f) + offset;
 }
 
-/** returns normals for 3D planes **/
-Vec3f MapCoordinator::getSurfaceNormal(Vec3f v1, Vec3f v2){
-    float v1x = v1[0];
-    float v1y = v1[1];
-    float v1z = v1[2];
-    float v2x = v2[0];
-    float v2y = v2[1];
-    float v2z = v2[2];
 
-    Vec3f n = Vec3f(v1y*v2z - v1z*v2y, v1z*v2x - v1x*v2z, v1x*v2y - v1y*v2x);
-    return n[1] < 0 ? -n : n; // makes normal point upwards
-}

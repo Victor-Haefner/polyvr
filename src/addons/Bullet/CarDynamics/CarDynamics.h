@@ -29,7 +29,8 @@ class CarDynamics : public VRObject {
             float suspensionDamping = 2.3f;
             float suspensionCompression = 4.4f;
             float rollInfluence = 0.1f;//1.0f;
-            bool isFrontWheel = false;
+            bool isSteered = false;
+            bool isDriven = false;
 
             // wheel parameter
             float friction = 1000;//BT_LARGE_FLOAT;
@@ -50,6 +51,7 @@ class CarDynamics : public VRObject {
             float maxRpm = 4500;
             map<int,float> gearRatios;
             pathPtr clutchForceCurve;
+            bool running = false;
         };
 
         struct Chassis {
@@ -83,12 +85,18 @@ class CarDynamics : public VRObject {
         float rearZOffset = -2.7f;
         float height = .4f;
 
+        float speed = 0;
+        float acceleration = 0;
+        float s_measurement = 0;
+        double a_measurement_t = 0;
+
         boost::recursive_mutex& mtx();
         void initPhysics();
         void initVehicle();
         void updateWheels();
         void updateEngine();
 
+        void addBTWheel(Wheel& w);
         btRigidBody* createRigitBody(float mass, const btTransform& startTransform, btCollisionShape* shape);
 
     public:
@@ -119,6 +127,8 @@ class CarDynamics : public VRObject {
         void reset(const pose& p);
         float getSpeed();
         float getAcceleration();
+        void setIgnition(bool b);
+        bool isRunning();
 };
 
 OSG_END_NAMESPACE

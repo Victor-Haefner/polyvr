@@ -5,6 +5,7 @@
 #include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRGlobals.h"
 #include "core/setup/devices/VRSignal.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/setup/devices/VRMouse.h"
@@ -282,7 +283,7 @@ void VRNavigator::fly_walk(VRDeviceWeakPtr _dev) {
     float tspeed = speed[0]; // 1.5
     float rspeed = speed[1]; // 0.7
 
-    float dt = 60.0/ max(1u, VRGlobals::get()->FRAME_RATE);
+    float dt = 60.0/ max(1lu, VRGlobals::FRAME_RATE.fps);
     switch(key) {
         case 10:
             target->rotate(-dt*d*d_abs*0.1*rspeed);
@@ -453,7 +454,7 @@ void VRNavigator::hyd_walk(VRDeviceWeakPtr _dev) {
     float rspeed = 0.1;
     float tspeed = 0.1;
 
-    float dt = 60.0/ max(1u, VRGlobals::get()->FRAME_RATE);
+    float dt = 60.0/ max(1lu, VRGlobals::FRAME_RATE.fps);
     switch(key) {
         case 20:
         case 23:

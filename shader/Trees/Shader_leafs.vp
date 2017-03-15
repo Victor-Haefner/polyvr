@@ -1,0 +1,13 @@
+// vertex shader program
+varying vec3 vn;
+varying vec3 vcol;
+
+attribute vec4 osg_Vertex;
+attribute vec3 osg_Normal;
+attribute vec3 osg_Color;
+
+void main( void ) {
+	vn = osg_Normal;
+	vcol = osg_Color;
+    gl_Position = osg_Vertex;
+}

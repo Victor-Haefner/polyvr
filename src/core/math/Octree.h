@@ -5,6 +5,7 @@
 #include <vector>
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGVector.h>
+#include "VRMathFwd.h"
 #include "boundingbox.h"
 
 using namespace std;
@@ -31,22 +32,37 @@ class Octree {
         bool inBox(Vec3f p, Vec3f c, float size);
 
     public:
-        Octree(float resolution);
-        Octree* getRoot();
+        Octree(float resolution, float size = 10);
+        ~Octree();
 
-        void add(Vec3f p, void* data, int maxjump = -1, bool checkPosition = true);
-        void addBox(const boundingbox& b, void* data, int maxjump = -1, bool checkPosition = true);
+        static OctreePtr create(float resolution, float size = 10);
+
+        Octree* getParent();
+        vector<Octree*> getAncestry();
+        Octree* getRoot();
+        Octree* add(Vec3f p, void* data, int targetLevel = -1, int currentLevel = 0, bool checkPosition = true);
+        void addBox(const boundingbox& b, void* data, int targetLevel = -1, bool checkPosition = true);
         void set(Octree* node, Vec3f p, void* data);
         Octree* get(Vec3f p);
+        float getSize();
+        Vec3f getCenter();
+        Vec3f getLocalCenter();
 
+        void remData(void* data);
         void clear();
 
+        vector<Octree*> getChildren();
+        vector<Octree*> getSubtree();
+        vector<Octree*> getPathTo(Vec3f p);
+
+        vector<void*> getData();
+        vector<void*> getAllData();
         vector<void*> radiusSearch(Vec3f p, float r);
         vector<void*> boxSearch(const boundingbox& b);
 
         void test();
         void print(int indent = 0);
-        vector<void*> getData();
+        string toString(int indent = 0);
 };
 
 OSG_END_NAMESPACE

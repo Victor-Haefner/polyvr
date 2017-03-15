@@ -20,6 +20,18 @@ void VRStorage::regStorageSetupFkt(VRUpdateCbPtr u) { f_setup.push_back(u); }
 void VRStorage::regStorageSetupAfterFkt(VRUpdateCbPtr u) { f_setup_after.push_back(u); }
 void VRStorage::setStorageType(string t) { type = t; }
 
+void VRStorage::load_str_cb(string t, string tag, xmlpp::Element* e) {}
+void VRStorage::save_str_cb(string t, string tag, xmlpp::Element* e) { e->set_attribute(tag, t); }
+
+void VRStorage::store(string tag, string val) {
+    VRStorageBin b;
+    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_str_cb, this, val, tag, _1 ) );
+    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_str_cb, this, val, tag, _1 ) );
+    storage[tag] = b;
+}
+
+void VRStorage::setOverrideCallbacks(bool b) { overrideCallbacks = b; }
+
 void VRStorage::save(xmlpp::Element* e, int p) {
     if (e == 0) return;
     if (persistency <= p) return;
@@ -55,16 +67,16 @@ int VRStorage::getPersistency(xmlpp::Element* e) {
     return toInt( e->get_attribute("persistency")->get_value() );
 }
 
-VRStoragePtr VRStorage::createFromStore(xmlpp::Element* e) {
+VRStoragePtr VRStorage::createFromStore(xmlpp::Element* e, bool verbose) {
     if (!e->get_attribute("type")) {
-        cout << "VRStorage::createFromStore WARNING: element has no attribute type\n";
+        if (verbose) cout << "VRStorage::createFromStore WARNING: element " << e->get_name() << " has no attribute type\n";
         return 0;
     }
 
     string type = e->get_attribute("type")->get_value();
     //cout << "VRStorage::createFromStore " << type << " " << factory.count(type) << endl;
     if (!factory.count(type)) {
-        cout << "VRStorage::createFromStore WARNING: factory can not handle type " << type << endl;
+        if (verbose) cout << "VRStorage::createFromStore WARNING: factory can not handle type " << type << endl;
         return 0;
     }
 

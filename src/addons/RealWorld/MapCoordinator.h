@@ -15,7 +15,7 @@ class MapCoordinator {
         float gridSize;
         float SCALE_REAL_TO_WORLD = 111000.0;
         Elevation* ele = 0;
-        float startElevation;
+        float startElevation = 0;
 
     public:
         MapCoordinator(Vec2f zeroPos, float gridSize);
@@ -27,7 +27,6 @@ class MapCoordinator {
         float getElevation(float x, float y);
         float getElevation(Vec2f v);
         Vec2f getRealBboxPosition(Vec2f worldPosition);
-        static Vec3f getSurfaceNormal(Vec3f v1, Vec3f v2);
 };
 
 OSG_END_NAMESPACE;

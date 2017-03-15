@@ -46,6 +46,8 @@ void VRName_base::setNameSpace(string s) {
     }
 }
 
+void VRName_base::resetNameSpace() { setNameSpace("__global__"); }
+
 void VRName_base::compileName() {
     setNameSpace(nameSpace);
     name = base_name;

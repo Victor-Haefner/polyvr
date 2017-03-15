@@ -63,14 +63,14 @@ CGAL::Polyhedron* CSGGeometry::getCSGGeometry() {
 void CSGGeometry::operate(CGAL::Polyhedron *p1, CGAL::Polyhedron *p2) {
 	if (!p1->is_closed() || !p2->is_closed()) return;
 
-	CGAL::Nef_Polyhedron np1(*p1), np2(*p2);
-
-	if (operation == "unite") np1 += np2;
-	else if(operation == "subtract") np1 -= np2;
-	else if(operation == "intersect") np1 = np1.intersection(np2);
-	else cout << "CSGGeometry: Warning: unexpected CSG operation!\n";
-
-	np1.convert_to_polyhedron(*polyhedron);
+    try {
+        CGAL::Nef_Polyhedron np1(*p1), np2(*p2);
+        if (operation == "unite") np1 += np2;
+        else if(operation == "subtract") np1 -= np2;
+        else if(operation == "intersect") np1 = np1.intersection(np2);
+        else cout << "CSGGeometry: Warning: unexpected CSG operation!\n";
+        np1.convert_to_polyhedron(*polyhedron);
+    } catch (exception e) { cout << getName() << ": CSGGeometry::operate exception: " << e.what() << endl; }
 }
 
 void CSGGeometry::applyTransform(CGAL::Polyhedron* p, Matrix m) {

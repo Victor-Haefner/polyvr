@@ -42,13 +42,14 @@ class graph_base {
         graph_base();
         ~graph_base();
 
-        void connect(int i, int j, CONNECTION c = SIMPLE);
+        edge& connect(int i, int j, CONNECTION c = SIMPLE);
         void disconnect(int i, int j);
         node& getNode(int i);
         vector< node >& getNodes();
         vector< vector<edge> >& getEdges();
         int getNEdges();
         int size();
+        bool connected(int i1, int i2);
 
         //vector<node>::iterator begin();
         //vector<node>::iterator end();
@@ -56,6 +57,8 @@ class graph_base {
         void setPosition(int i, Vec3f v);
         virtual void update(int i, bool changed);
         virtual void clear();
+        virtual int addNode();
+        virtual void remNode(int i);
 };
 
 template<class T>
@@ -69,15 +72,18 @@ class graph : public graph_base {
         graph();
         ~graph();
 
-        static shared_ptr< graph<T> > create();
+        static shared_ptr< graph<T> > create() { return shared_ptr< graph<T> >(new graph<T>()); }
 
         int addNode();
         int addNode(T t);
+        virtual void remNode(int i);
 
         vector<T>& getElements();
         T& getElement(int i);
         void clear();
 };
+
+typedef graph< shared_ptr<graph_base::emptyNode> > SimpleGraph;
 
 OSG_END_NAMESPACE;
 

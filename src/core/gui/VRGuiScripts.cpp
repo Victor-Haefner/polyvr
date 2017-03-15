@@ -170,7 +170,7 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScriptPtr script, bool 
     bool user_focus = false;
     if(!user_focus) user_focus = ("gtkmm__GtkTreeView" == name);
     if(!user_focus) user_focus = ("GtkEntry" == name); // TODO: be more specific
-    if(onlyTime && user_focus) return;
+    if(onlyTime && (user_focus || !doPerf)) return;
 
     int Nf = script->getSearch().N;
     string icon, Nfound;
@@ -336,6 +336,10 @@ void VRGuiScripts::on_exec_clicked() {
     VRGuiSignals::get()->getSignal("scene_modified")->triggerPtr<VRDevice>();
 }
 
+void VRGuiScripts::on_perf_toggled() {
+    doPerf = getToggleButtonState("toggletoolbutton1");
+}
+
 void VRGuiScripts::on_del_clicked() {
     Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview5"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
@@ -379,7 +383,9 @@ void VRGuiScripts::on_select_script() { // selected a script
     setCombobox("combobox1", getListStorePos("liststore6", script->getType()));
     auto setup = VRSetup::getCurrent();
     if (setup) fillStringListstore("liststore7", setup->getDevices("server"));
-    vector<string> grps; for (auto g : groups) grps.push_back(g.second.name);
+    vector<string> grps;
+    grps.push_back("no group");
+    for (auto g : groups) grps.push_back(g.second.name);
     fillStringListstore("liststore10", grps);
     setCombobox("combobox24", getListStorePos("liststore7", script->getServer()));
     setCombobox("combobox10", getListStorePos("liststore10", script->getGroup()));
@@ -977,6 +983,10 @@ void VRGuiScripts::printViewerLanguages() {
         if(ids != NULL) cout << "\nLID " << *id << endl;
 }
 
+void VRGuiScripts::on_scene_changed() {
+    groups.clear();
+}
+
 void VRGuiScripts::update() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
@@ -1006,7 +1016,7 @@ void VRGuiScripts::updateList() {
 
     for (auto script : scene->getScripts()) { // check for new groups
         string grp = script.second->getGroup();
-        if (grp != "" && !grpIter.count(grp)) {
+        if (grp != "" && grp != "no group" && !grpIter.count(grp)) {
             group g;
             groups[g.ID] = g;
             groups[g.ID].name = grp;
@@ -1083,6 +1093,16 @@ bool VRGuiScripts::on_shortkey( GdkEventKey* e ) {
         return true;
     }
 
+    if (e->keyval == 115) {// s
+        on_save_clicked();
+        return true;
+    }
+
+    if (e->keyval == 101) {// e
+        on_exec_clicked();
+        return true;
+    }
+
     if (e->keyval == 100) {// d
         auto l = getCurrentLine();
         string line = getLine(l);
@@ -1156,6 +1176,7 @@ VRGuiScripts::VRGuiScripts() {
     setToolButtonCallback("toolbutton20", sigc::mem_fun(*this, &VRGuiScripts::on_addSep_clicked) );
     setToolButtonCallback("toolbutton22", sigc::mem_fun(*this, &VRGuiScripts::on_import_clicked) );
     setToolButtonCallback("toolbutton23", sigc::mem_fun(*this, &VRGuiScripts::on_find_clicked) );
+    setToolButtonCallback("toggletoolbutton1", sigc::mem_fun(*this, &VRGuiScripts::on_perf_toggled) );
 
     setButtonCallback("button12", sigc::mem_fun(*this, &VRGuiScripts::on_argadd_clicked) );
     setButtonCallback("button13", sigc::mem_fun(*this, &VRGuiScripts::on_argrem_clicked) );
@@ -1215,6 +1236,9 @@ VRGuiScripts::VRGuiScripts() {
     // update the list each frame to update the execution time
     updatePtr = VRFunction<int>::create("scripts_gui_update",  boost::bind(&VRGuiScripts::update, this) );
     VRSceneManager::get()->addUpdateFkt(updatePtr, 100);
+
+    sceneChangedCb = VRFunction<VRDeviceWeakPtr>::create("GUI_sceneChanged", boost::bind(&VRGuiScripts::on_scene_changed, this) );
+    VRGuiSignals::get()->getSignal("scene_changed")->add( sceneChangedCb );
 
     // init scriptImportWidget
     scriptImportWidget = manage( new Table() );

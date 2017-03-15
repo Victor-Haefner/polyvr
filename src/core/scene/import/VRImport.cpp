@@ -255,7 +255,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
 
         VRGeometry::Reference ref;
         ref.type = VRGeometry::FILE;
-        ref.parameter = repSpaces(currentFile) + " " + repSpaces(name);
+        ref.parameter = repSpaces(currentFile) + " " + repSpaces( tmp_g->getBaseName() );
         tmp_g->setMesh( OSGGeometry::create( dynamic_cast<Geometry *>(n->getCore()) ), ref, true);
         tmp = tmp_g;
     }
@@ -286,7 +286,7 @@ VRGeometryPtr VRImport::loadGeometry(string file, string object, string preset, 
         cout << "VRImport::loadGeometry - Warning: " << file << " in cache but has no object " << object << endl;
         cout << " cache root: " << cache[file].root->getName() << " cache size: " << cache[file].objects.size() << endl;
         //for (auto o : cache[file].root->getChildren(true)) cout << " cache " << o->getName() << endl;
-        for (auto o : cache[file].objects) cout << ", cache " << o.first << endl;
+        for (auto o : cache[file].objects) cout << " cache " << o.first << endl;
         return 0;
     }
 
@@ -309,8 +309,9 @@ VRImport::Cache::Cache(VRTransformPtr root) { setup(root); }
 void VRImport::Cache::setup(VRTransformPtr root) {
     objects.clear();
     this->root = root;
-    for (auto c : root->getChildren(true)) objects[getName(c->getNode()->node)] = c;
+    //for (auto c : root->getChildren(true)) objects[getName(c->getNode()->node)] = c;
     //for (auto c : root->getChildren(true)) objects[c->getName()] = c;
+    for (auto c : root->getChildren(true)) objects[c->getBaseName()] = c;
 
     root->setNameSpace("VRImportCache");
     for (auto o : root->getChildren(true) ) o->setNameSpace("VRImportCache");
@@ -318,8 +319,8 @@ void VRImport::Cache::setup(VRTransformPtr root) {
 
 VRTransformPtr VRImport::Cache::retrieve(VRObjectPtr parent) {
     auto res = static_pointer_cast<VRTransform>(root->duplicate());
-    res->setNameSpace("__global__");
-    for (auto o : res->getChildren(true) ) o->setNameSpace("__global__");
+    res->resetNameSpace();
+    for (auto o : res->getChildren(true) ) o->resetNameSpace();
 
     if (parent) parent->addChild(res);
     return res;

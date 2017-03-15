@@ -2,6 +2,7 @@
 #include "virtuose.h"
 #include "core/objects/VRTransform.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/VRGlobals.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
 #include <boost/bind.hpp>
@@ -159,7 +160,7 @@ Vec3i VRHaptic::getButtonStates() {return (v->getButtonStates());}
 
 
 
-void VRHaptic::setIP(string IP) { this->IP = IP; v->connect(IP,1.0f/(float)VRGlobals::get()->PHYSICS_FRAME_RATE);}
+void VRHaptic::setIP(string IP) { this->IP = IP; v->connect(IP,1.0f/(float)VRGlobals::PHYSICS_FRAME_RATE.fps);}
 string VRHaptic::getIP() { return IP; }
 
 void VRHaptic::setType(string type) { this->type = type; } // TODO: use type for configuration

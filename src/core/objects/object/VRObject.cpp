@@ -9,6 +9,7 @@
 #include <OpenSG/OSGGroup.h>
 #include <OpenSG/OSGTransform.h>
 #include <OpenSG/OSGVisitSubTree.h>
+#include "core/utils/VRGlobals.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRUndoInterfaceT.h"
@@ -19,12 +20,6 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-
-VRGlobals::VRGlobals() {}
-VRGlobals* VRGlobals::get() {
-    static VRGlobals* s = new VRGlobals();
-    return s;
-}
 
 VRObject::VRObject(string _name) {
     static int _ID = 0;
@@ -64,8 +59,9 @@ void VRObject::setup() {
 }
 
 void VRObject::destroy() {
+    destroyed = true;
     auto p = ptr();
-    if (getParent()) getParent()->subChild( p );
+    if (auto pa = parent.lock())     pa->subChild( p );
 }
 
 void VRObject::detach() {
@@ -224,7 +220,7 @@ void VRObject::addChild(VRObjectPtr child, bool osg, int place) {
     if (child->getParent() != 0) { child->switchParent(ptr(), place); return; }
 
     if (osg) addChild(child->osg);
-    child->graphChanged = VRGlobals::get()->CURRENT_FRAME;
+    child->graphChanged = VRGlobals::CURRENT_FRAME;
     child->childIndex = children.size();
     children.push_back(child);
     child->parent = ptr();
@@ -242,11 +238,12 @@ void VRObject::subChild(VRObjectPtr child, bool doOsg) {
 
     if (target != -1) children.erase(children.begin() + target);
     if (child->getParent() == ptr()) child->parent.reset();
-    child->graphChanged = VRGlobals::get()->CURRENT_FRAME;
+    child->graphChanged = VRGlobals::CURRENT_FRAME;
     updateChildrenIndices(true);
 }
 
 void VRObject::switchParent(VRObjectPtr new_p, int place) {
+    if (destroyed) return;
     if (new_p == 0) { cout << "\nERROR : new parent is 0!\n"; return; }
 
     if (getParent() == 0) { new_p->addChild(ptr(), true, place); return; }
@@ -391,7 +388,7 @@ VRObjectPtr VRObject::findPickableAncestor() {
 }
 
 bool VRObject::hasGraphChanged() {
-    if (graphChanged == VRGlobals::get()->CURRENT_FRAME) return true;
+    if (graphChanged == VRGlobals::CURRENT_FRAME) return true;
     if (getParent() == 0) return false;
     return getParent()->hasGraphChanged();
 }
