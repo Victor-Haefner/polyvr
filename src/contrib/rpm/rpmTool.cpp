@@ -7,6 +7,7 @@
 #include "arrayOut.h" // TESTING
 
 //#define SPECTRUM_OUTPUT
+#define FILTER_SPECTRUM
 
 namespace rpmTool {
 
@@ -30,7 +31,7 @@ void spectrum::print() {
 rpmSpectrum::rpmSpectrum() {
 }
 
-double* rpmSpectrum::operator()(const double rpm) {
+double* rpmSpectrum::operator()(const float rpm) {
   if (rpm == _last) { // could this return garbage: _current == null => _last == null or NaN
     return _current;
   }
@@ -43,37 +44,64 @@ double* rpmSpectrum::operator()(const double rpm) {
   if (rpm == it->first) {
     _current = it->second.ptr();
   } else {
-    // upper bound
-    double x1 = it->first;
-    double* y1 = it->second.ptr();
+    if (_lin) {
+      // upper bound
+      float x1 = it->first;
+      double* y1 = it->second.ptr();
 
-    std::advance(it, -1);
+      std::advance(it, -1);
 
-    // lower bound (check)
-    double x0 = it->first;
-    double* y0 = it->second.ptr();
+      // lower bound (check)
+      float x0 = it->first;
+      double* y0 = it->second.ptr();
 
-    // interpolate current
-    for (uint i = 0; i < _resolution; ++i) {
-      interpLin(_current[i], rpm, x0, x1, y0[i], y1[i]);
-    }
+      // interpolate current
+      for (uint i = 0; i < _resolution; ++i) {
+        interpLin(_current[i], rpm, x0, x1, y0[i], y1[i]);
+      }
+  } else { // check if iterator will go to far
+      float x2 = it->first;
+      double* y2 = it->second.ptr();
+      std::advance(it, -1);
+      float x1 = it->first;
+      double* y1 = it->second.ptr();
+      if (abs(rpm -  x1) < abs(rpm -  x2)) {
+        std::advance(it, -1);
+        float x0 = it->first;
+        double* y0 = it->second.ptr();
+        for (uint i = 0; i < _resolution; ++i) {
+          interpLag3(_current[i], rpm, x0, x1, x2, y0[i], y1[i], y2[i]);
+        }
+      } else {
+        std::advance(it, 2);
+        float x3 = it->first;
+        double* y3 = it->second.ptr();
+        for (uint i = 0; i < _resolution; ++i) {
+          interpLag3(_current[i], rpm, x1, x2, x3, y1[i], y2[i], y3[i]);
+        }
+      }
+  }
   }
   _last = rpm;
 #ifdef SPECTRUM_OUTPUT
-  arrayToFile audioToFile("../spectrumTestData/rpmSpectrum", _current, _resolution); // TESTING
+  arrayToFile audioToFile("../spectrumTestData/validationSpectrum1855", _current, _resolution); // TESTING
 #endif
   return _current;
 }
 
-void rpmSpectrum::interpLin(double& y, const double &x, const double &x0, const double &x1, const double &y0, const double &y1) {
+void rpmSpectrum::interpLin(double& y, const float &x, const float &x0, const float &x1, const double &y0, const double &y1) {
   y =  y0 + (x - x0) * (y1 - y0) / (x1 - x0);
 }
 
-double rpmSpectrum::getMinRPM() {
+void rpmSpectrum::interpLag3(double& y, const float &x, const float &x0, const float &x1, const float &x2, const double &y0, const double &y1, const double &y2) {
+  y =  (y0 * (x - x1) * (x - x2)) / ((x0 - x1)*(x0 - x2)) + (y1 * (x - x0) * (x - x2)) / ((x1 - x0)*(x1 - x2)) + (y2 * (x - x0) * (x - x1)) / ((x2 - x0)*(x2 - x1));
+}
+
+float rpmSpectrum::getMinRPM() {
   return _data.begin()->first;
 }
 
-double rpmSpectrum::getMaxRPM() {
+float rpmSpectrum::getMaxRPM() {
   return _data.rbegin()->first;
 }
 
@@ -92,7 +120,7 @@ void rpmSpectrum::readFile(const char* filename) {
     std::cout<<"Resolution: "<<_resolution<<std::endl;
 
     // 3rd line should be label vector
-    double* labels = new double [_nSamples];
+    float* labels = new float [_nSamples];
     for (int i=0; i<_nSamples; ++i){
       file >> labels[i];
     }
@@ -143,7 +171,49 @@ void rpmSpectrum::print() {
     std::cout<<std::endl;
   }
 }
+/*
+rpmFilter::rpmFilter() {
+}
 
+void rpmFilter::readFile(const char* filename){
+std::ifstream file(filename);
+
+  if (file) {
+
+    std::cout<<"Reading data from file."<<std::endl;
+    // check lines or file format?
+    file >> _nSamples; // should be 1st line
+    std::cout<<"Data:\nSamples: "<<_nSamples<<std::endl;
+
+    file >> _resolution; // should be 2nd line
+    std::cout<<"Resolution: "<<_resolution<<std::endl;
+
+
+    // 3rd line should be labels
+    for (int i=0; i<_nSamples; ++i){
+      vector<Vec2> points
+      for (int j=0; j<_resolution) {
+        file >>
+      }
+      for (int j=0; j<_resolution) {
+        file >>
+      }
+      for (int j=0; j<_resolution) {
+        file >>
+      }
+    }
+
+    }
+  } else {
+    std::cout<<"Could not read data from file."<<std::endl;
+    return;
+  }
+
+  file.close();
+  std::cout<<"Data read from file."<<std::endl;
+  init = true;
+}
+*/
 VRMotorPtr VRMotor::create() { return VRMotorPtr( new VRMotor() ); }
 
 void VRMotor::load(const char*filename) {
@@ -159,23 +229,23 @@ void VRMotor::load(const char*filename) {
   std::cout<<"Spectrum tool loaded"<<std::endl;
 }
 
-void VRMotor::play(double rpm) {
+void VRMotor::play(float rpm, float duration, float fade) {
   if (!_tool.isLoaded()) {
     std::cout<<"No spectrum data loaded"<<std::endl;
     return;
   }
-  _sound.synthesizeSpectrum(_tool(rpm), _tool.getRes());
+  _sound.synthesizeSpectrum(_tool(rpm), _tool.getRes(), duration, fade);
 }
 
-void VRMotor::play() {
+void VRMotor::play(float duration, float fade) {
   if (!_tool.isLoaded()) {
     std::cout<<"No spectrum data loaded"<<std::endl;
     return;
   }
-  _sound.synthesizeSpectrum(_tool(_persistent), _tool.getRes());
+  _sound.synthesizeSpectrum(_tool(_persistent), _tool.getRes(), duration, fade);
 }
 
-void VRMotor::setRPM(double rpm) {
+void VRMotor::setRPM(float rpm) {
     if (rpm < _minRPM) _persistent = _minRPM;
     else if (rpm > _maxRPM) _persistent = _maxRPM;
     else _persistent = rpm;

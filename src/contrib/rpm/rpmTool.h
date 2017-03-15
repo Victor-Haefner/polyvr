@@ -32,44 +32,57 @@ public:
     delete[] _current;
   };
   void print();
-  double* operator()(const double rpm);
+  double* operator()(const float rpm);
   void readFile(const char* filename);
   const uint getRes() {return _resolution; };
   const bool isLoaded() {return init; };
-  double getMinRPM();
-  double getMaxRPM();
+  float getMinRPM();
+  float getMaxRPM();
   double getMaxSample() {return _maxVal; };
 private:
-  void interpLin(double& y, const double& x, const double& x0, const double& x1, const double& y0, const double& y1);
-
+  bool _lin = true;
+  void interpLin(double& y, const float& x, const float& x0, const float& x1, const double& y0, const double& y1);
+  void interpLag3(double& y, const float &x, const float &x0, const float &x1, const float &x2, const double &y0, const double &y1, const double &y2);
   unsigned int _nSamples; // number of spectra provided
   unsigned int _resolution; // number of frequencies per spectrum, data type needs to fit ~50k
-  double _last; // previous rpm
+  float _last; // previous rpm
   bool init = false;
   double _maxVal = 0.;
 
   // map: key is rpm, value is spectrum data
-  std::map<double, spectrum > _data;
+  std::map<float, spectrum > _data;
 
   // current interpolated vector
   double* _current;
 };
+
+/*
+class rpmFilter {
+public:
+  rpmFilter();
+  void readFile(const char* filename);
+private:
+  std::map<float, vector<Vec2> > _data;
+};
+*/
 
 class VRMotor {
 public:
   VRMotor() {};
   static VRMotorPtr create();
   void load(const char* filename);
-  void play(double rpm);
-  void play();
-  void setRPM(double rpm);
-  double getRPM() {return _persistent; };
+  void play(float rpm, float duration, float fade);
+  void play(float duration, float fade);
+  void setRPM(float rpm);
+  float getRPM() {return _persistent; };
+  int getQueuedBuffer() { return _sound.getQueuedBuffer(); };
+  void recycleBuffer() {_sound.recycleBuffer(); };
 private:
   OSG::VRSound _sound;
   rpmSpectrum _tool;
-  double _persistent; // for python testing
-  double _minRPM;
-  double _maxRPM;
+  float _persistent; // for python testing
+  float _minRPM;
+  float _maxRPM;
   double _maxVal;
 };
 
