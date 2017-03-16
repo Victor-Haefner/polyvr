@@ -28,8 +28,6 @@ sudo apt-get install libfftw3-dev
 #include <fstream>
 #include <fftw3.h>
 #include <map>
-
-#include "contrib/rpm/arrayOut.h" // TESTING
 #include <climits>
 
 using namespace OSG;
@@ -378,46 +376,36 @@ void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float
 }
 
 
-void VRSound::synthesizeSpectrum(double* spectrum, uint sample_rate, float duration, float fade_factor) {
+vector<short> VRSound::synthesizeSpectrum(vector<double> spectrum, uint sample_rate, float duration, float fade_factor, bool returnBuffer) {
     if (!initiated) initiate();
 
     //ALuint buf;
     //alGenBuffers(1, &buf);
     size_t buf_size = duration * sample_rate;
-    uint fade = fade_factor * sample_rate; // number of samples to fade at beginning and end
+    uint fade = fade_factor * duration * sample_rate; // number of samples to fade at beginning and end
 
     // transform spectrum back to time domain using fftw3
-    double* out = new double[sample_rate];
+    vector<double> out(sample_rate);
     // create plan
     fftw_plan ifft;
     //out = (double *) malloc(size*sizeof(double));
 
-    ifft = fftw_plan_r2r_1d(sample_rate, spectrum, out, FFTW_DHT, FFTW_ESTIMATE);   //Setup fftw plan for ifft
-
+    ifft = fftw_plan_r2r_1d(sample_rate, &spectrum[0], &out[0], FFTW_DHT, FFTW_ESTIMATE);   //Setup fftw plan for ifft
     fftw_execute(ifft); // is output normalized?
-
     fftw_destroy_plan(ifft);
 
-    short* samples = new short[buf_size];
+    vector<short> samples(buf_size);
     for(uint i=0; i<buf_size; ++i) {
         //samples[i] = (double)(SHRT_MAX - 1) * out[i] / (sample_rate * maxVal); // for fftw normalization
         samples[i] = 0.5 * SHRT_MAX * out[i]; // for fftw normalization
     }
     for (uint i=0; i < fade; ++i) {
-        samples[i] *= i/(fade-1);
-        samples[buf_size-i-1] *= i/(fade-1);
+        samples[i] *= (float)i/(fade-1);
+        samples[buf_size-i-1] *= (float)i/(fade-1);
     }
-//#define SPECTRUM_OUTPUT
-#ifdef SPECTRUM_OUTPUT
-    arrayToFile a2f_spectrum("../spectrumTestData/synthesizeSpectrum", spectrum, sample_rate); // TESTING
-    arrayToFile a2f_double("../spectrumTestData/synthesizeAudioDouble", out, sample_rate); // TESTING
-    arrayToFile a2f_short("../spectrumTestData/synthesizeAudioShort", samples, sample_rate); // TESTING
-#endif
-    delete out;
 
-    playBuffer(samples, buf_size, sample_rate);
-    delete samples;
-
+    playBuffer(&samples[0], buf_size, sample_rate);
+    return returnBuffer ? samples : vector<short>();
 }
 
 void VRSound::synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, float duration) {

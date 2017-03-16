@@ -4,6 +4,7 @@
 #include "core/utils/VRFwdDeclTemplate.h"
 
 namespace OSG {
+    ptrFwd(CarSound);
     ptrFwd(CarDynamics);
     ptrFwd(VRDriver);
 }

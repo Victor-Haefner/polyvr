@@ -59,8 +59,6 @@
 #include "VRPyObjectManager.h"
 #include "VRPySky.h"
 
-#include "VRPyMotor.h"
-
 #include "addons/Algorithms/VRPyGraphLayout.h"
 #include "addons/CaveKeeper/VRPyCaveKeeper.h"
 #include "addons/Bullet/Particles/VRPyParticles.h"

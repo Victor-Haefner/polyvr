@@ -4,6 +4,8 @@
 #include "core/scripting/VRPyBaseT.h"
 #include "core/scripting/VRPyPose.h"
 #include "core/scripting/VRPyPath.h"
+#include "core/scripting/VRPySound.h"
+#include "addons/Bullet/CarDynamics/CarSound/CarSound.h"
 
 using namespace OSG;
 
@@ -29,8 +31,34 @@ PyMethodDef VRPyCarDynamics::methods[] = {
     {"isRunning", (PyCFunction)VRPyCarDynamics::isRunning, METH_NOARGS, "Is car engine running - bool isRunning()" },
     {"getGear", (PyCFunction)VRPyCarDynamics::getGear, METH_NOARGS, "Get car gear" },
     {"setIgnition", (PyCFunction)VRPyCarDynamics::setIgnition, METH_VARARGS, "Set ignition - setIgnition(bool)" },
+    {"loadCarSound", (PyCFunction)VRPyCarDynamics::loadCarSound, METH_VARARGS, "Load car sound dataset - loadCarSound(filename)" },
+    {"toggleCarSound", (PyCFunction)VRPyCarDynamics::toggleCarSound, METH_VARARGS, "toggle car sound - toggleCarSound(bool)" },
+    {"getCarSound", (PyCFunction)VRPyCarDynamics::getCarSound, METH_NOARGS, "Get car sound - getCarSound()" },
+    {"carSoundIsLoaded", (PyCFunction)VRPyCarDynamics::carSoundIsLoaded, METH_NOARGS, "Query if audio data has been loaded - carSoundIsLoaded()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyCarDynamics::loadCarSound(VRPyCarDynamics* self, PyObject* args) {
+    const char* t = 0;
+    if (! PyArg_ParseTuple(args, "s", &t)) return NULL;
+    self->objPtr->getCarSound()->loadSoundFile(t?t:"");
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyCarDynamics::toggleCarSound(VRPyCarDynamics* self, PyObject* args) {
+    int b;
+    if (! PyArg_ParseTuple(args, "i", &b)) return NULL;
+    self->objPtr->getCarSound()->toggleSound(b);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyCarDynamics::getCarSound(VRPyCarDynamics* self) {
+    return VRPySound::fromSharedPtr( self->objPtr->getCarSound()->getSound() );
+}
+
+PyObject* VRPyCarDynamics::carSoundIsLoaded(VRPyCarDynamics* self) {
+    return PyInt_FromLong(self->objPtr->getCarSound()->isLoaded());
+}
 
 PyObject* VRPyCarDynamics::getWheels(VRPyCarDynamics* self) {
     auto wheels = self->objPtr->getWheels();

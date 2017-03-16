@@ -247,6 +247,8 @@
 		<Unit filename="src/addons/Algorithms/VRPyGraphLayout.h" />
 		<Unit filename="src/addons/Bullet/CarDynamics/CarDynamics.cpp" />
 		<Unit filename="src/addons/Bullet/CarDynamics/CarDynamics.h" />
+		<Unit filename="src/addons/Bullet/CarDynamics/CarSound/CarSound.cpp" />
+		<Unit filename="src/addons/Bullet/CarDynamics/CarSound/CarSound.h" />
 		<Unit filename="src/addons/Bullet/CarDynamics/VRDriver.cpp" />
 		<Unit filename="src/addons/Bullet/CarDynamics/VRDriver.h" />
 		<Unit filename="src/addons/Bullet/CarDynamics/VRPyCarDynamics.cpp" />
@@ -516,10 +518,6 @@
 		<Unit filename="src/addons/construction/building/furniture/VRBlinds.cpp" />
 		<Unit filename="src/addons/construction/building/furniture/VRBlinds.h" />
 		<Unit filename="src/contrib/rpm/PyMotor" />
-		<Unit filename="src/contrib/rpm/VRrpmToolFwd.h" />
-		<Unit filename="src/contrib/rpm/arrayOut.h" />
-		<Unit filename="src/contrib/rpm/rpmTool.cpp" />
-		<Unit filename="src/contrib/rpm/rpmTool.h" />
 		<Unit filename="src/core/gui/VRCodeCompletion.cpp" />
 		<Unit filename="src/core/gui/VRCodeCompletion.h" />
 		<Unit filename="src/core/gui/VRDemos.cpp" />
@@ -796,7 +794,6 @@
 		<Unit filename="src/core/scene/sound/VRSoundManager.cpp" />
 		<Unit filename="src/core/scene/sound/VRSoundManager.h" />
 		<Unit filename="src/core/scene/sound/VRSoundUtils.h" />
-		<Unit filename="src/core/scripting/VRGeoPrimitive.h" />
 		<Unit filename="src/core/scripting/VRPyAnalyticGeometry.cpp" />
 		<Unit filename="src/core/scripting/VRPyAnalyticGeometry.h" />
 		<Unit filename="src/core/scripting/VRPyAnimation.cpp" />
@@ -852,8 +849,6 @@
 		<Unit filename="src/core/scripting/VRPyMenu.h" />
 		<Unit filename="src/core/scripting/VRPyMobile.cpp" />
 		<Unit filename="src/core/scripting/VRPyMobile.h" />
-		<Unit filename="src/core/scripting/VRPyMotor.cpp" />
-		<Unit filename="src/core/scripting/VRPyMotor.h" />
 		<Unit filename="src/core/scripting/VRPyMouse.cpp" />
 		<Unit filename="src/core/scripting/VRPyMouse.h" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.cpp" />
@@ -890,6 +885,8 @@
 		<Unit filename="src/core/scripting/VRPySelector.h" />
 		<Unit filename="src/core/scripting/VRPySetup.cpp" />
 		<Unit filename="src/core/scripting/VRPySetup.h" />
+		<Unit filename="src/core/scripting/VRPySky.cpp" />
+		<Unit filename="src/core/scripting/VRPySky.h" />
 		<Unit filename="src/core/scripting/VRPySnappingEngine.cpp" />
 		<Unit filename="src/core/scripting/VRPySnappingEngine.h" />
 		<Unit filename="src/core/scripting/VRPySocket.cpp" />

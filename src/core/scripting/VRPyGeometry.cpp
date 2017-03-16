@@ -139,6 +139,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"addLine", (PyCFunction)VRPyGeometry::addLine, METH_VARARGS, "Add a quad to geometry - addLine( | [i1,i2] )" },
     {"addTriangle", (PyCFunction)VRPyGeometry::addLine, METH_VARARGS, "Add a quad to geometry - addLine( | [i1,i2,i3] )" },
     {"addQuad", (PyCFunction)VRPyGeometry::addQuad, METH_VARARGS, "Add a quad to geometry - addQuad( | [i1,i2,i3,i4] )" },
+    {"clear", (PyCFunction)VRPyGeometry::clear, METH_NOARGS, "Clear all geometric data - clear()" },
     {NULL}  /* Sentinel */
 };
 
@@ -359,6 +360,12 @@ PyObject* VRPyGeometry::separate(VRPyGeometry* self, PyObject *args) {
     VRPySelection* sel = 0;
     if (!PyArg_ParseTuple(args, "O", &sel)) return NULL;
     return VRPyGeometry::fromSharedPtr( self->objPtr->separateSelection( sel->objPtr ) );
+}
+
+PyObject* VRPyGeometry::clear(VRPyGeometry* self) {
+    if (!self->valid()) return NULL;
+    self->objPtr->clear();
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyGeometry::copy(VRPyGeometry* self, PyObject *args) {
