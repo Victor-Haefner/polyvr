@@ -210,7 +210,7 @@ void VRStorage::load_vec_vec_cb(vector<vector<T>>* v, string tag, xmlpp::Element
 
 template<typename T>
 void VRStorage::save_obj_cb(std::shared_ptr<T>* v, string tag, xmlpp::Element* e) {
-    (*v)->saveUnder(e, 0, tag);
+    if (*v) (*v)->saveUnder(e, 0, tag);
 }
 
 template<typename T>
