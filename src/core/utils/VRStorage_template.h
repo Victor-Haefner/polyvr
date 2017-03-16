@@ -186,6 +186,29 @@ void VRStorage::load_vec_cb(vector<T>* v, string tag, xmlpp::Element* e) {
 }
 
 template<typename T>
+void VRStorage::save_vec_vec_cb(vector<vector<T>>* v, string tag, xmlpp::Element* e) {
+    e = e->add_child(tag);
+    for (auto t : *v) save_vec_cb(&t, tag, e);
+}
+
+template<typename T>
+void VRStorage::load_vec_vec_cb(vector<vector<T>>* v, string tag, xmlpp::Element* e) {
+    if (e == 0) return;
+    e = getChild(e, tag);
+    if (e == 0) return;
+    for (auto el : getChildren(e)) {
+        v->push_back(vector<T>());
+        vector<T>* vv = &v->at(v->size()-1);
+        for (auto el2 : getChildren(el)) {
+            if (el2->get_attribute("val") == 0) continue;
+            T t;
+            toValue( el2->get_attribute("val")->get_value(), t);
+            vv->push_back( t );
+        }
+    }
+}
+
+template<typename T>
 void VRStorage::save_obj_cb(std::shared_ptr<T>* v, string tag, xmlpp::Element* e) {
     (*v)->saveUnder(e, 0, tag);
 }
@@ -215,10 +238,18 @@ void VRStorage::storeObjVec(string tag, vector<std::shared_ptr<T> >& v, bool und
 }
 
 template<typename T>
-void VRStorage::storeVec(string tag, vector<T>& v, bool under) {
+void VRStorage::storeVec(string tag, vector<T>& v) {
     VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_vec_cb<T>, this, &v, tag, under, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_vec_cb<T>, this, &v, tag, under, _1 ) );
+    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_vec_cb<T>, this, &v, tag, _1 ) );
+    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_vec_cb<T>, this, &v, tag, _1 ) );
+    storage[tag] = b;
+}
+
+template<typename T>
+void VRStorage::storeVecVec(string tag, vector<vector<T>>& v){
+    VRStorageBin b;
+    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_vec_vec_cb<T>, this, &v, tag, _1 ) );
+    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_vec_vec_cb<T>, this, &v, tag, _1 ) );
     storage[tag] = b;
 }
 

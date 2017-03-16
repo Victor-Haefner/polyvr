@@ -90,8 +90,14 @@ PyMethodDef VRPyObject::methods[] = {
     {"setEntity", PySetter(Object, setEntity, VREntityPtr), "Set entity - setEntity( Entity )" },
     {"getEntity", PyGetter(Object, getEntity, VREntityPtr), "Get entity - Entity getEntity()" },
     {"clearChildren", (PyCFunction)VRPyObject::clearChildren, METH_NOARGS, "Remove all children - clearChildren()" },
+    {"getChildIndex", (PyCFunction)VRPyObject::getChildIndex, METH_NOARGS, "Return the child index of this object - int getChildIndex()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyObject::getChildIndex(VRPyObject* self) {
+    if (!self->valid()) return NULL;
+    return PyInt_FromLong( self->objPtr->getChildIndex() );
+}
 
 PyObject* VRPyObject::setVolumeCheck(VRPyObject* self, PyObject* args) {
     if (!self->valid()) return NULL;

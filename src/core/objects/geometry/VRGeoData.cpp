@@ -48,6 +48,7 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
     data = shared_ptr<Data>(new Data());
     if (!geo) { reset(); return; }
 
+    this->geo = geo;
     data->types = (GeoUInt8Property*)geo->getMesh()->geo->getTypes();
     data->lengths = (GeoUInt32Property*)geo->getMesh()->geo->getLengths();
     data->indices = (GeoUInt32Property*)geo->getMesh()->geo->getIndices();
@@ -257,9 +258,9 @@ void VRGeoData::pushPrim(Primitive p) {
     updateType(p.type, N-No);
 }
 
-void VRGeoData::apply(VRGeometryPtr geo) const {
+void VRGeoData::apply(VRGeometryPtr geo, bool check) const {
     if (!geo) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: geometry invalid!" << endl; return; }
-    if (!valid()) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: data invalid!" << endl; return; }
+    if (!valid() && check) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: data invalid!" << endl; return; }
     geo->setPositions(data->pos);
     if (data->lengths->size() > 0) geo->setLengths(data->lengths);
     if (data->types->size() > 0) geo->setTypes(data->types);
@@ -379,6 +380,8 @@ bool VRGeoData::setIndices(Primitive& p) const {
     }
     return true;
 }
+
+int VRGeoData::getNIndices() { return data->indices->size(); }
 
 VRGeoData::Primitive* VRGeoData::next() const {
     if (!valid()) return 0;

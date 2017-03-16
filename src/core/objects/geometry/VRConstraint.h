@@ -51,6 +51,7 @@ class VRConstraint : public VRStorage {
         ~VRConstraint();
 
         static VRConstraintPtr create();
+        VRConstraintPtr duplicate();
 
         void setActive(bool b, VRTransformPtr obj);
         bool isActive();

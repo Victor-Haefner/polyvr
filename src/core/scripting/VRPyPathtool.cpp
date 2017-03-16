@@ -8,6 +8,7 @@
 #include "VRPyBaseT.h"
 #include "VRPyStroke.h"
 #include "VRPyPose.h"
+#include "VRPyTypeCaster.h"
 
 using namespace OSG;
 
@@ -21,8 +22,9 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"select", (PyCFunction)VRPyPathtool::select, METH_VARARGS, "Select handle - select(handle)" },
     {"deselect", (PyCFunction)VRPyPathtool::deselect, METH_NOARGS, "Deselect anything previously selected - deselect()" },
     {"setVisible", (PyCFunction)VRPyPathtool::setVisible, METH_VARARGS, "Set the tool visibility - setVisible(bool)\n     setVisible(bool stroke, bool handles)" },
-    {"getPaths", (PyCFunction)VRPyPathtool::getPaths, METH_NOARGS, "Return all paths - [path] getPaths()" },
+    {"getPaths", (PyCFunction)VRPyPathtool::getPaths, METH_VARARGS, "Return all paths or paths connected to handle - [path] getPaths( | handle )" },
     {"getPath", (PyCFunction)VRPyPathtool::getPath, METH_VARARGS, "Return path between handles h1 and h2 - [path] getPath( handle h1, handle h2 )" },
+    {"getHandle", (PyCFunction)VRPyPathtool::getHandle, METH_VARARGS, "Return a handle by node ID - handle getHandle( int ID )" },
     {"getHandles", (PyCFunction)VRPyPathtool::getHandles, METH_VARARGS, "Return a list of paths handles - [handle] getHandles(path)" },
     {"getStroke", (PyCFunction)VRPyPathtool::getStroke, METH_VARARGS, "Return the stroke object - stroke getStroke(path)" },
     {"update", (PyCFunction)VRPyPathtool::update, METH_NOARGS, "Update the tool - update()" },
@@ -33,10 +35,19 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"addNode", (PyCFunction)VRPyPathtool::addNode, METH_VARARGS, "Add node - int addNode( pose )" },
     {"removeNode", (PyCFunction)VRPyPathtool::removeNode, METH_VARARGS, "Remove node by id - removeNode( int )" },
     {"getNodeID", (PyCFunction)VRPyPathtool::getNodeID, METH_VARARGS, "Return node ID from handle - getNodeID( handle )" },
-    {"connect", (PyCFunction)VRPyPathtool::connect, METH_VARARGS, "Connect two nodes - connect( id1, id2 )" },
+    {"connect", (PyCFunction)VRPyPathtool::connect, METH_VARARGS, "Connect two nodes by id, using optional normals - connect( id1, id2 | n1, n2)" },
     {"disconnect", (PyCFunction)VRPyPathtool::disconnect, METH_VARARGS, "Disconnect two nodes - disconnect( id1, id2 )" },
+    {"setProjectionGeometry", (PyCFunction)VRPyPathtool::setProjectionGeometry, METH_VARARGS, "Set an object to project handles onto - setProjectionGeometry( object )" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyPathtool::setProjectionGeometry(VRPyPathtool* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    VRPyObject* g = 0;
+    if (! PyArg_ParseTuple(args, "O:setProjectionGeometry", &g)) return NULL;
+    self->objPtr->setProjectionGeometry( g->objPtr );
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyPathtool::getNodeID(VRPyPathtool* self, PyObject* args) {
     if (!self->valid()) return NULL;
@@ -66,8 +77,11 @@ PyObject* VRPyPathtool::connect(VRPyPathtool* self, PyObject* args) {
     if (!self->valid()) return NULL;
     int i1 = 0;
     int i2 = 0;
-    if (! PyArg_ParseTuple(args, "ii:connect", &i1, &i2)) return NULL;
-    self->objPtr->connect( i1, i2 );
+    PyObject* n1 = 0;
+    PyObject* n2 = 0;
+    if (! PyArg_ParseTuple(args, "ii|OO:connect", &i1, &i2, &n1, &n2)) return NULL;
+    if (n1 && n2) self->objPtr->connect( i1, i2, parseVec3fList(n1), parseVec3fList(n2) );
+    else self->objPtr->connect( i1, i2 );
     Py_RETURN_TRUE;
 }
 
@@ -77,6 +91,13 @@ PyObject* VRPyPathtool::removeNode(VRPyPathtool* self, PyObject* args) {
     if (! PyArg_ParseTuple(args, "i:removeNode", &i)) return NULL;
     self->objPtr->remNode( i );
     Py_RETURN_TRUE;
+}
+
+PyObject* VRPyPathtool::getHandle(VRPyPathtool* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    int i = 0;
+    if (! PyArg_ParseTuple(args, "i:getHandle", &i)) return NULL;
+    return VRPyTypeCaster::cast( self->objPtr->getHandle( i ) );
 }
 
 PyObject* VRPyPathtool::addNode(VRPyPathtool* self, PyObject* args) {
@@ -115,12 +136,14 @@ PyObject* VRPyPathtool::update(VRPyPathtool* self) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyPathtool::getPaths(VRPyPathtool* self) {
+PyObject* VRPyPathtool::getPaths(VRPyPathtool* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    auto objs = self->objPtr->getPaths();
-    PyObject* li = PyList_New(objs.size());
-    for (uint i=0; i<objs.size(); i++) {
-        PyList_SetItem(li, i, VRPyPath::fromSharedPtr(objs[i]));
+    VRPyGeometry* h = 0;
+    if (!PyArg_ParseTuple(args, "|O", &h)) return NULL;
+    auto paths = self->objPtr->getPaths(h ? h->objPtr : 0);
+    PyObject* li = PyList_New(paths.size());
+    for (uint i=0; i<paths.size(); i++) {
+        PyList_SetItem(li, i, VRPyPath::fromSharedPtr(paths[i]));
     }
     return li;
 }

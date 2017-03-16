@@ -19,10 +19,15 @@ PyMethodDef VRPyTextureGenerator::methods[] = {
     {"drawLine", (PyCFunction)VRPyTextureGenerator::drawLine, METH_VARARGS, "Add a line, coordinates go from 0 to 1 - drawLine([x1,y1,z1], [x2,y2,z2], [r,g,b,a], flt width)" },
     {"drawPath", (PyCFunction)VRPyTextureGenerator::drawPath, METH_VARARGS, "Add a path, use normalized coordinates from 0 to 1 - drawPath(path, [r,g,b,a], flt width)" },
     {"setSize", (PyCFunction)VRPyTextureGenerator::setSize, METH_VARARGS, "Set the size - setSize([width, height, depth] | bool hasAlphaChannel)\n   set depth to 1 for 2D textures" },
+    {"getSize", (PyCFunction)VRPyTextureGenerator::getSize, METH_NOARGS, "Get the size - [width, height, depth] getSize()" },
     {"compose", (PyCFunction)VRPyTextureGenerator::compose, METH_VARARGS, "Bake the layers into an image - img compose( int seed )" },
     {"readSharedMemory", (PyCFunction)VRPyTextureGenerator::readSharedMemory, METH_VARARGS, "Read an image from shared memory - img readSharedMemory( string segment, string data )" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyTextureGenerator::getSize(VRPyTextureGenerator* self) {
+    return toPyTuple( self->objPtr->getSize() );
+}
 
 PyObject* VRPyTextureGenerator::compose(VRPyTextureGenerator* self, PyObject* args) {
     return VRPyImage::fromSharedPtr( self->objPtr->compose( parseInt(args) ) );

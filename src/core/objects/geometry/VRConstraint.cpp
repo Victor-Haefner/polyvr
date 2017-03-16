@@ -40,6 +40,12 @@ void VRConstraint::setReferenceB(Matrix m) { refMatrixB = m; refMatrixB.inverse(
 Matrix VRConstraint::getReferenceA() { return refMatrixA; };
 Matrix VRConstraint::getReferenceB() { return refMatrixB; };
 
+VRConstraintPtr VRConstraint::duplicate() {
+    auto c = create();
+    *c = *this;
+    return c;
+}
+
 void VRConstraint::apply(VRTransformPtr obj) {
     if (!hasConstraint() || !active) return;
     auto now = VRGlobals::CURRENT_FRAME;

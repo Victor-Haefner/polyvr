@@ -18,6 +18,7 @@ shared_ptr<VRTextureGenerator> VRTextureGenerator::create() { return shared_ptr<
 
 void VRTextureGenerator::setSize(Vec3i dim, bool a) { width = dim[0]; height = dim[1]; depth = dim[2]; hasAlpha = a; }
 void VRTextureGenerator::setSize(int w, int h, int d) { width = w; height = h; depth = d; }
+Vec3i VRTextureGenerator::getSize() { return Vec3i(width, height, depth); };
 
 void VRTextureGenerator::add(string type, float amount, Vec3f c1, Vec3f c2) {
     GEN_TYPE t = PERLIN;
@@ -144,7 +145,6 @@ void VRTextureGenerator::applyLine(Vec3f* data, Vec3f p1, Vec3f p2, Vec4f c, flo
     int X2 = ceil(w2*width);
     int Y2 = ceil(w2*height);
     int L2 = ceil(l2*depth);
-    int N = depth*height*width;
 
     for (int k=-L2; k<=L2; k++) {
         for (int j=-Y2; j<=Y2; j++) {
@@ -180,7 +180,6 @@ void VRTextureGenerator::applyLine(Vec4f* data, Vec3f p1, Vec3f p2, Vec4f c, flo
     int X2 = ceil(w2*width);
     int Y2 = ceil(w2*height);
     int L2 = ceil(l2*depth);
-    int N = depth*height*width;
 
     for (int k=-L2; k<=L2; k++) {
         for (int j=-Y2; j<=Y2; j++) {

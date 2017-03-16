@@ -5,7 +5,6 @@
 #include "core/utils/VRName.h"
 #include "core/math/VRMathFwd.h"
 #include "core/math/graph.h"
-#include "core/math/graphT.h"
 
 #include <string>
 
@@ -29,7 +28,7 @@ struct VRProcessNode : VRName {
     ~VRProcessNode();
     static VRProcessNodePtr create(string name, PROCESS_WIDGET type);
 
-    void update(graph_base::node& n, bool changed);
+    void update(Graph::node& n, bool changed);
 
     int getID();
     string getLabel();
@@ -37,7 +36,14 @@ struct VRProcessNode : VRName {
 
 class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName {
     public:
-        typedef graph<VRProcessNodePtr> Diagram;
+        struct Diagram : public Graph {
+            map<int, VRProcessNodePtr> processnodes;
+
+            void update(int i, bool changed);
+            void remNode(int i);
+            void clear();
+        };
+
         typedef shared_ptr< Diagram > DiagramPtr;
 
     private:

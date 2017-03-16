@@ -23,6 +23,7 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyObject* getScale(VRPyTransform* self);
     static PyObject* getPose(VRPyTransform* self);
     static PyObject* getWorldPose(VRPyTransform* self);
+    static PyObject* getEuler(VRPyTransform* self);
 
     static PyObject* setPose(VRPyTransform* self, PyObject* args);
     static PyObject* setWFrom(VRPyTransform* self, PyObject* args);
@@ -37,6 +38,7 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyObject* drag(VRPyTransform* self, PyObject* args);
     static PyObject* drop(VRPyTransform* self);
     static PyObject* castRay(VRPyTransform* self, PyObject* args);
+    static PyObject* getDragParent(VRPyTransform* self);
 
     static PyObject* duplicate(VRPyTransform* self);
     static PyObject* physicalize(VRPyTransform* self, PyObject *args);

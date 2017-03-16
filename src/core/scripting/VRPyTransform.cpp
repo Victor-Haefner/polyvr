@@ -4,6 +4,7 @@
 #include "VRPyPose.h"
 #include "VRPyPath.h"
 #include "VRPyIntersection.h"
+#include "VRPyTypeCaster.h"
 #include "VRPyBaseT.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRConstraint.h"
@@ -30,6 +31,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getWorldDir", (PyCFunction)VRPyTransform::getWorldDir, METH_NOARGS, "Return the object's dir vector" },
     {"getWorldUp", (PyCFunction)VRPyTransform::getWorldUp, METH_NOARGS, "Return the object's up vector" },
     {"getScale", (PyCFunction)VRPyTransform::getScale, METH_NOARGS, "Return the object's scale vector" },
+    {"getEuler", (PyCFunction)VRPyTransform::getEuler, METH_NOARGS, "Return the object's euler angles - [X,Y,Z] getEuler()" },
     {"setWorldFrom", (PyCFunction)VRPyTransform::setWFrom, METH_VARARGS, "Set the object's world position" },
     {"setWorldOrientation", (PyCFunction)VRPyTransform::setWOrientation, METH_VARARGS, "Set the object's world direction" },
     {"setPose", (PyCFunction)VRPyTransform::setPose, METH_VARARGS, "Set the object's pose - setPose(pose)\n\tsetPose(pos, dir, up)" },
@@ -82,6 +84,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"drag", (PyCFunction)VRPyTransform::drag, METH_VARARGS, "Drag this object by new parent - drag(new parent)"  },
     {"drop", (PyCFunction)VRPyTransform::drop, METH_NOARGS, "Drop this object, if held, to old parent - drop()"  },
     {"castRay", (PyCFunction)VRPyTransform::castRay, METH_VARARGS, "Cast a ray and return the intersection - intersection castRay(obj, dir)"  },
+    {"getDragParent", (PyCFunction)VRPyTransform::getDragParent, METH_NOARGS, "Get the parent before the drag started - obj getDragParent()"  },
     {"lastChanged", (PyCFunction)VRPyTransform::lastChanged, METH_NOARGS, "Return the frame when the last change occured - lastChanged()"  },
     {NULL}  /* Sentinel */
 };
@@ -117,6 +120,12 @@ PyObject* VRPyTransform::castRay(VRPyTransform* self, PyObject* args) {
     auto line = self->objPtr->castRay( 0, parseVec3fList(d) );
     OSG::VRIntersect in;
     return VRPyIntersection::fromObject( in.intersect(o->objPtr, line) );
+}
+
+PyObject* VRPyTransform::getDragParent(VRPyTransform* self) {
+    if (!self->valid()) return NULL;
+    auto p = self->objPtr->getDragParent();
+    return VRPyTypeCaster::cast( p );
 }
 
 PyObject* VRPyTransform::drag(VRPyTransform* self, PyObject* args) {
@@ -221,6 +230,11 @@ PyObject* VRPyTransform::rotateAround(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
     self->objPtr->rotateAround( parseFloat(args) );
     Py_RETURN_TRUE;
+}
+
+PyObject* VRPyTransform::getEuler(VRPyTransform* self) {
+    if (!self->valid()) return NULL;
+    return toPyTuple(self->objPtr->getEuler());
 }
 
 PyObject* VRPyTransform::getFrom(VRPyTransform* self) {

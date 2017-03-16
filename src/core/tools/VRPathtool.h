@@ -62,7 +62,7 @@ class VRPathtool : public VRObject {
             VRObjectWeakPtr anchor;
 
             entry(VRObjectPtr anchor);
-            void addHandle(VRGeometryPtr h);
+            void addHandle(VRGeometryPtr h, int i);
         };
 
         struct knot {
@@ -71,11 +71,14 @@ class VRPathtool : public VRObject {
             VRGeometryWeakPtr handle;
         };
 
-        map<path*, entry*> paths;
-        map<VRGeometry*, vector<entry*> > entries; // map handle geometries to the entries
+        typedef shared_ptr<entry> entryPtr;
+
+        map<path*, entryPtr> paths;
+        map<VRGeometry*, vector<entryPtr> > entries; // map handle geometries to the entries
         vector<VRGeometryWeakPtr> handles;
+        vector<VRGeometryWeakPtr> controlhandles;
         map<VRGeometry*, int> handleToNode;
-        graph_basePtr Graph;
+        GraphPtr graph;
         map<int, knot> knots; // maps graph node ids to pathtool knots
         pathPtr selectedPath = 0;
 
@@ -85,25 +88,33 @@ class VRPathtool : public VRObject {
         VRUpdateCbPtr updatePtr;
         VRManipulator* manip = 0;
         VRExtruder* ext = 0;
+        VRObjectPtr projObj;
 
         VRGeometryPtr customHandle;
+        VRGeometryPtr newControlHandle(VRGeometryPtr handle, Vec3f n);
         VRGeometryPtr newHandle();
         void updateHandle(VRGeometryPtr handle);
-        void updateEntry(entry* e);
+        void updateEntry(entryPtr e);
         void updateDevs();
 
         VRGeometryPtr setGraphNode(int i);
-        void setGraphEdge(graph_base::edge& e);
+        void setGraphEdge(Graph::edge& e);
+        void setGraphEdge(Graph::edge& e, Vec3f n1, Vec3f n2);
+        void projectHandle(VRGeometryPtr handle, VRDevicePtr dev);
 
     public:
         VRPathtool();
         static VRPathtoolPtr create();
+        void setup();
 
-        void setGraph(graph_basePtr g);
+        void setProjectionGeometry(VRObjectPtr obj);
+
+        void setGraph(GraphPtr g);
         int addNode(posePtr p);
         void remNode(int i);
         int getNodeID(VRObjectPtr o);
         void connect(int i1, int i2);
+        void connect(int i1, int i2, Vec3f n1, Vec3f n2);
         void disconnect(int i1, int i2);
 
         pathPtr newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution = 10);
@@ -115,8 +126,9 @@ class VRPathtool : public VRObject {
         void setHandleGeometry(VRGeometryPtr geo);
         void clear(pathPtr p = 0);
 
-        vector<pathPtr> getPaths();
+        vector<pathPtr> getPaths(VRGeometryPtr h = 0);
         pathPtr getPath(VRGeometryPtr h1, VRGeometryPtr h2);
+        VRGeometryPtr getHandle(int ID);
         vector<VRGeometryPtr> getHandles(pathPtr p);
         VRStrokePtr getStroke(pathPtr p);
 

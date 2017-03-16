@@ -75,8 +75,9 @@ PyNumberMethods VRPyVec3f::nMethods = {
 PyMethodDef VRPyVec3f::methods[] = {
     {"normalize", (PyCFunction)VRPyVec3f::normalize, METH_NOARGS, "Normalize the vector - normalize()" },
     {"length", (PyCFunction)VRPyVec3f::length, METH_NOARGS, "Compute the length - float length()" },
-    {"dot", (PyCFunction)VRPyVec3f::dot, METH_VARARGS, "Compute the dot product - float dot( Vec3f )" },
-    {"cross", (PyCFunction)VRPyVec3f::cross, METH_VARARGS, "Compute the cross product - Vec3f cross( Vec3f )" },
+    {"dot", (PyCFunction)VRPyVec3f::dot, METH_VARARGS, "Compute the dot product - float dot( Vec3 )" },
+    {"cross", (PyCFunction)VRPyVec3f::cross, METH_VARARGS, "Compute the cross product - Vec3 cross( Vec3 )" },
+    {"asList", (PyCFunction)VRPyVec3f::asList, METH_NOARGS, "Return as python list - [x,y,z] asList()" },
     {NULL}  /* Sentinel */
 };
 
@@ -90,10 +91,13 @@ VRPyVec3f* toPyVec3f(const Vec3f& v) {
 PyObject* toPyObject(const Vec3f& v) { return (PyObject*)toPyVec3f(v); }
 
 PyObject* VRPyVec3f::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+    PyObject* v = 0;
     float a,b,c;
-    if (! PyArg_ParseTuple(args, "fff", &a, &b, &c)) return NULL;
+    if (! PyArg_ParseTuple(args, "O", &v))
+        if (! PyArg_ParseTuple(args, "fff", &a, &b, &c)) return NULL;
     VRPyVec3f* pv = (VRPyVec3f*)allocPtr( type, 0 );
-    pv->v = Vec3f(a,b,c);
+    if (!v) pv->v = Vec3f(a,b,c);
+    else pv->v = parseVec3fList(v);
     return (PyObject*)pv;
 }
 
@@ -105,6 +109,14 @@ PyObject* VRPyVec3f::Print(PyObject* self) {
 PyObject* VRPyVec3f::normalize(VRPyVec3f* self) {
     self->v.normalize();
     Py_RETURN_TRUE;
+}
+
+PyObject* VRPyVec3f::asList(VRPyVec3f* self) {
+    auto l = PyList_New(3);
+    PyList_SetItem(l,0,PyFloat_FromDouble(self->v[0]));
+    PyList_SetItem(l,1,PyFloat_FromDouble(self->v[1]));
+    PyList_SetItem(l,2,PyFloat_FromDouble(self->v[2]));
+    return l;
 }
 
 PyObject* VRPyVec3f::length(VRPyVec3f* self) {
@@ -133,11 +145,14 @@ PyObject* VRPyVec3f::sub(PyObject* self, PyObject* v) {
 }
 
 PyObject* VRPyVec3f::mul(PyObject* self, PyObject* F) {
+    if (PyNumber_Check(self) && check(F)) swap(self, F);
+    if (!PyNumber_Check(F)) { setErr("Vector multiplication needs number"); return NULL; }
     float f = PyFloat_AsDouble(F);
     return ::toPyObject( ((VRPyVec3f*)self)->v * f );
 }
 
 PyObject* VRPyVec3f::div(PyObject* self, PyObject* F) {
+    if (!PyNumber_Check(F)) { setErr("Dividing by a vector is not allowed"); return NULL; }
     float f = PyFloat_AsDouble(F);
     return ::toPyObject( ((VRPyVec3f*)self)->v * (1.0/f) );
 }

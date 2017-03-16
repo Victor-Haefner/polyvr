@@ -283,6 +283,11 @@
 		<Unit filename="src/addons/CaveKeeper/CaveKeeper.h" />
 		<Unit filename="src/addons/CaveKeeper/VRPyCaveKeeper.cpp" />
 		<Unit filename="src/addons/CaveKeeper/VRPyCaveKeeper.h" />
+		<Unit filename="src/addons/Character/VRCharacter.cpp" />
+		<Unit filename="src/addons/Character/VRCharacter.h" />
+		<Unit filename="src/addons/Character/VRCharacterFwd.h" />
+		<Unit filename="src/addons/Character/VRPyCharacter.cpp" />
+		<Unit filename="src/addons/Character/VRPyCharacter.h" />
 		<Unit filename="src/addons/Engineering/CSG/CGALTypedefs.h" />
 		<Unit filename="src/addons/Engineering/CSG/CSGGeometry.cpp" />
 		<Unit filename="src/addons/Engineering/CSG/CSGGeometry.h" />

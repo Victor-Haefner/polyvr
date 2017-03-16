@@ -24,7 +24,7 @@ class VRGraphLayout {
         };
 
     private:
-        graph_basePtr graph;
+        GraphPtr graph;
         map<int, ALGORITHM> algorithms;
         map<int, int> flags;
         Vec3f gravity;
@@ -44,8 +44,8 @@ class VRGraphLayout {
         static VRGraphLayoutPtr create();
 
         void clear();
-        void setGraph(graph_basePtr g);
-        graph_basePtr getGraph();
+        void setGraph(GraphPtr g);
+        GraphPtr getGraph();
 
         void setAlgorithm(ALGORITHM a, int position = 0);
         void setAlgorithm(string a, int position = 0);

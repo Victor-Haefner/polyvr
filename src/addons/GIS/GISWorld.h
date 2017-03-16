@@ -8,7 +8,7 @@ OSG_BEGIN_NAMESPACE;
 
 class GISWorld {
     private:
-        //graph_basePtr streets;
+        //GraphPtr streets;
         //VROntologyPtr world;
 
     public:

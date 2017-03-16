@@ -1,5 +1,6 @@
 #include "toString.h"
 #include "core/math/pose.h"
+#include "core/math/boundingbox.h"
 
 vector<string> splitString(string s, char c) {
     stringstream ss(s);
@@ -180,4 +181,24 @@ void toValue(string s, OSG::posePtr& po) {
     ss >> u[2];
     if (po) po->set(p,d,u);
     else po = OSG::pose::create(p,d,u);
+}
+
+string toString(const OSG::boundingbox& b) {
+    return toString(b.min()) + " " + toString(b.max()) + " " + toString(b.empty());
+}
+
+void toValue(string s, OSG::boundingbox& box) {
+    OSG::Vec3f a,b;
+    bool c;
+    stringstream ss(s);
+    ss >> a[0];
+    ss >> a[1];
+    ss >> a[2];
+    ss >> b[0];
+    ss >> b[1];
+    ss >> b[2];
+    ss >> c;
+    box.update(a);
+    box.update(b);
+    if (c) box.clear();
 }

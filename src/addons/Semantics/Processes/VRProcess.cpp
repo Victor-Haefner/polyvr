@@ -9,11 +9,15 @@
 
 using namespace OSG;
 
+void VRProcess::Diagram::update(int i, bool changed) { processnodes[i]->update(nodes[i], changed); }
+void VRProcess::Diagram::remNode(int i) { Graph::remNode(i); processnodes.erase(i); }
+void VRProcess::Diagram::clear() { Graph::clear(); processnodes.clear(); }
+
 VRProcessNode::VRProcessNode(string name, PROCESS_WIDGET type) : type(type), label(name) {;}
 VRProcessNode::~VRProcessNode() {}
 VRProcessNodePtr VRProcessNode::create(string name, PROCESS_WIDGET type) { return VRProcessNodePtr( new VRProcessNode(name, type) ); }
 
-void VRProcessNode::update(graph_base::node& n, bool changed) { // callede when graph node changes
+void VRProcessNode::update(Graph::node& n, bool changed) { // callede when graph node changes
     if (widget && !widget->isDragged() && changed) widget->setFrom(n.box.center());
 
     if (widget && widget->isDragged()) {
@@ -51,7 +55,7 @@ VRProcess::DiagramPtr VRProcess::getBehaviorDiagram(int subject) { return behavi
 vector<VRProcessNodePtr> VRProcess::getSubjects() {
     vector<VRProcessNodePtr> res;
     for (int i=0; i<interactionDiagram->size(); i++) {
-        auto& e = interactionDiagram->getElement(i);
+        auto& e = interactionDiagram->processnodes[i];
         if (e->type == SUBJECT) res.push_back(e);
     }
     return res;
@@ -67,18 +71,19 @@ void VRProcess::update() {
     map<string, int> nodes;
     auto addDiagNode = [&](DiagramPtr diag, string label, PROCESS_WIDGET type) {
         auto n = VRProcessNode::create(label, type);
-        int i = diag->addNode(n);
-        diag->getElement(i)->ID = i;
+        int i = diag->addNode();
+        diag->processnodes[i] = n;
+        n->ID = i;
         return i;
     };
 
-    auto connect = [&](DiagramPtr diag, int i, string parent, graph_base::CONNECTION mode) {
+    auto connect = [&](DiagramPtr diag, int i, string parent, Graph::CONNECTION mode) {
         if (nodes.count(parent)) {
             switch (mode) {
-                case graph_base::HIERARCHY: diag->connect(nodes[parent], i, mode); break;
-                case graph_base::DEPENDENCY: diag->connect(i, nodes[parent], mode); break;
-                case graph_base::SIMPLE: break;
-                case graph_base::SIBLING: break;
+                case Graph::HIERARCHY: diag->connect(nodes[parent], i, mode); break;
+                case Graph::DEPENDENCY: diag->connect(i, nodes[parent], mode); break;
+                case Graph::SIMPLE: break;
+                case Graph::SIBLING: break;
             }
         } else cout << "VRProcess::connect " << parent << " not in nodes\n";
     };
@@ -119,8 +124,8 @@ void VRProcess::update() {
             }
 
             int nID = addDiagNode(interactionDiagram, label, MESSAGE);
-            connect(interactionDiagram, nID, sender.first, graph_base::HIERARCHY);
-            connect(interactionDiagram, nID, receiver.first, graph_base::DEPENDENCY);
+            connect(interactionDiagram, nID, sender.first, Graph::HIERARCHY);
+            connect(interactionDiagram, nID, receiver.first, Graph::DEPENDENCY);
         }
     }
 
@@ -168,9 +173,9 @@ void VRProcess::update() {
                 }*/
 
                 int nID = addDiagNode(behaviorDiagram, label, MESSAGE);
-                connect(behaviorDiagram, nID, source.first, graph_base::HIERARCHY);
-                connect(behaviorDiagram, nID, target.first, graph_base::DEPENDENCY);
-                //connect(behaviorDiagram, nodes[source.first], target.first, graph_base::DEPENDENCY);
+                connect(behaviorDiagram, nID, source.first, Graph::HIERARCHY);
+                connect(behaviorDiagram, nID, target.first, Graph::DEPENDENCY);
+                //connect(behaviorDiagram, nodes[source.first], target.first, Graph::DEPENDENCY);
             }
         }
     }
@@ -179,7 +184,8 @@ void VRProcess::update() {
 VRProcess::DiagramPtr VRProcess::addSubject(string name) {
     if (!interactionDiagram) interactionDiagram = DiagramPtr( new Diagram() );
     auto s = VRProcessNode::create(name, SUBJECT);
-    auto sID = interactionDiagram->addNode(s);
+    auto sID = interactionDiagram->addNode();
+    interactionDiagram->processnodes[sID] = s;
     s->ID = sID;
     auto behaviorDiagram = DiagramPtr( new Diagram() );
     behaviorDiagrams[sID] = behaviorDiagram;

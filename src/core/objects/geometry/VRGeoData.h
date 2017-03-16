@@ -17,6 +17,7 @@ class VRGeoData {
     private:
         struct Data;
         shared_ptr<Data> data;
+        VRGeometryPtr geo;
 
         bool isStripOrFan(int t);
         void extentType(int N);
@@ -36,6 +37,7 @@ class VRGeoData {
         Pnt3f getPosition(int i);
         Vec3f getNormal(int i);
         Vec4f getColor(int i);
+        int getNIndices();
 
         int pushVert(Pnt3f p);
         int pushVert(Pnt3f p, Vec3f n);
@@ -73,7 +75,7 @@ class VRGeoData {
 
         void pushQuad(Vec3f p, Vec3f n, Vec3f u, Vec2f s, bool addInds = false);
 
-        void apply(VRGeometryPtr geo) const;
+        void apply(VRGeometryPtr geo, bool check = true) const;
         VRGeometryPtr asGeometry(string name) const;
         void append(VRGeometryPtr geo, const Matrix& m = Matrix());
         void append(const VRGeoData& geo, const Matrix& m = Matrix());

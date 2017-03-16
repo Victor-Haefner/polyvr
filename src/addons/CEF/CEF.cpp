@@ -35,7 +35,9 @@ bool CEF_handler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
 }
 
 void CEF_handler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) {
-    image->getImage()->set(Image::OSG_BGRA_PF, width, height, 1, 0, 1, 0.0, (const uint8_t*)buffer, Image::OSG_UINT8_IMAGEDATA, true, 1);
+    if (!image) return;
+    auto img = image->getImage();
+    if (img) img->set(Image::OSG_BGRA_PF, width, height, 1, 0, 1, 0.0, (const uint8_t*)buffer, Image::OSG_UINT8_IMAGEDATA, true, 1);
 }
 
 OSG::VRTexturePtr CEF_handler::getImage() { return image; }

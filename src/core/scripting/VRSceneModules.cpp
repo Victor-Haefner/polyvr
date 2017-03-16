@@ -59,6 +59,7 @@
 #include "VRPyObjectManager.h"
 #include "VRPySky.h"
 
+#include "addons/Character/VRPyCharacter.h"
 #include "addons/Algorithms/VRPyGraphLayout.h"
 #include "addons/CaveKeeper/VRPyCaveKeeper.h"
 #include "addons/Bullet/Particles/VRPyParticles.h"
@@ -163,6 +164,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyAdjacencyGraph>("AdjacencyGraph", pModVR);
     sm->registerModule<VRPyMechanism>("Mechanism", pModVR);
     sm->registerModule<VRPyNumberingEngine>("NumberingEngine", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPyCharacter>("Character", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTree>("Tree", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyWoods>("Woods", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTerrain>("Terrain", pModVR, VRPyGeometry::typeRef);
@@ -189,7 +191,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 	sm->registerModule<VRPySimViDekont>("SimViDekont", pModVR);
 #endif
 
-    PyObject* pModMath = Py_InitModule3("Math", VRSceneGlobals::methods, "VR math module");
+    PyObject* pModMath = Py_InitModule3("VR.Math", VRSceneGlobals::methods, "VR math module");
     sm->registerModule<VRPyVec3f>("Vec3", pModMath, 0, "Math");
     PyModule_AddObject(pModVR, "Math", pModMath);
 

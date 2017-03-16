@@ -32,16 +32,16 @@
 			<Add option="-Wall" />
 			<Add option="-std=c++11" />
 			<Add directory="/usr/include/VRPN" />
-			<Add directory="/usr/include/Vive" />
 		</Compiler>
 		<Linker>
 			<Add option="-lvrpnserver" />
 			<Add option="-lopenvr_api" />
 			<Add option="-lpthread" />
 			<Add option="-lusb-1.0" />
+			<Add option="-ldl" />
 			<Add directory="/usr/lib/VRPN" />
-			<Add directory="/usr/lib/Vive" />
-			<Add directory="/usr/lib/Steam" />
+			<Add directory="/home/victor/.local/share/Steam/ubuntu12_32/steam-runtime/amd64/usr/lib/x86_64-linux-gnu" />
+			<Add directory="/home/victor/.local/share/Steam/ubuntu12_32/steam-runtime/amd64/lib/x86_64-linux-gnu" />
 		</Linker>
 		<Unit filename="main.cc" />
 		<Extensions>

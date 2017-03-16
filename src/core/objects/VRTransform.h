@@ -98,6 +98,7 @@ class VRTransform : public VRObject {
         void getMatrix(Matrix& _m);
         Matrix getMatrix();
         Matrix getMatrixTo(VRObjectPtr o);
+        Matrix getRotationMatrix();
 
         void setFrom(Vec3f pos);
         void setAt(Vec3f at);

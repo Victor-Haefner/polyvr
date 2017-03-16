@@ -18,6 +18,7 @@ struct VRPyVec3f : VRPyBaseT<OSG::Vec3f> {
     static PyObject* length(VRPyVec3f* self);
     static PyObject* dot(VRPyVec3f* self, PyObject* args);
     static PyObject* cross(VRPyVec3f* self, PyObject* args);
+    static PyObject* asList(VRPyVec3f* self);
 
     static PyObject* add(PyObject* self, PyObject* v);
     static PyObject* sub(PyObject* self, PyObject* v);

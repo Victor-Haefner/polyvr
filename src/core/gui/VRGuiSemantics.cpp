@@ -36,7 +36,6 @@
 #include "widgets/VREntityWidget.h"
 #include "widgets/VRRuleWidget.h"
 #include "widgets/VRConnectorWidget.h"
-#include "core/math/graphT.h"
 
 /** TODO:
 
@@ -131,7 +130,8 @@ void VRGuiSemantics::clearCanvas() {
 }
 
 void VRGuiSemantics::updateLayout() {
-    auto gra = dynamic_pointer_cast< graph<graph_base::emptyNode*> >(layout_graph);
+    //auto gra = dynamic_pointer_cast< graph<Graph::emptyNode*> >(layout_graph);
+    auto gra = layout_graph;
 
     for (auto c : widgets) { // update node boxes
         if (!widgetIDs.count(c.first)) continue;
@@ -248,13 +248,11 @@ void VRGuiSemantics::connect(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2, str
 
     int sID = w2->ID();
     int pID = w1->ID();
-    auto gra = dynamic_pointer_cast< graph<graph_base::emptyNode*> >(layout_graph);
-    if (widgetIDs.count(pID)) gra->connect(widgetIDs[pID], widgetIDs[sID], graph_base::HIERARCHY);
+    if (widgetIDs.count(pID)) layout_graph->connect(widgetIDs[pID], widgetIDs[sID], Graph::HIERARCHY);
 }
 
 void VRGuiSemantics::addNode(int sID) {
-    auto gra = dynamic_pointer_cast< graph<graph_base::emptyNode*> >(layout_graph);
-    widgetIDs[sID] = gra->addNode();
+    widgetIDs[sID] = layout_graph->addNode();
 }
 
 void VRGuiSemantics::disconnect(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2) {
@@ -266,8 +264,7 @@ void VRGuiSemantics::disconnect(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2) 
 
     int sID = w2->ID();
     int pID = w1->ID();
-    auto gra = dynamic_pointer_cast< graph<graph_base::emptyNode*> >(layout_graph);
-    if (widgetIDs.count(pID)) gra->disconnect(widgetIDs[pID], widgetIDs[sID]);
+    if (widgetIDs.count(pID)) layout_graph->disconnect(widgetIDs[pID], widgetIDs[sID]);
 }
 
 void VRGuiSemantics::disconnectAny(VRSemanticWidgetPtr w) {
@@ -351,7 +348,7 @@ VRGuiSemantics::VRGuiSemantics() {
     layout->setRadius(0);
     layout->setSpeed(0.7);
 
-    layout_graph = shared_ptr< graph<graph_base::emptyNode*> >( new graph<graph_base::emptyNode*>() );
+    layout_graph = Graph::create();
     layout->setGraph(layout_graph);
 }
 

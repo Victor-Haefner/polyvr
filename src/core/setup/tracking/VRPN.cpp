@@ -105,9 +105,15 @@ void VRPN_device::setAddress(string addr) {
     dial = new vrpn_Dial_Remote( addr.c_str() );
     text = new vrpn_Text_Receiver( addr.c_str() );
 
-    tracker->register_change_handler( this, handle_tracker ); // TODO: add other handlers
-    button->register_change_handler( this, handle_button ); // TODO: add other handlers
-    analog->register_change_handler( this, handle_analog ); // TODO: add other handlers
+    tracker->shutup = true;
+    button->shutup = true;
+    analog->shutup = true;
+    dial->shutup = true;
+    text->shutup = true;
+
+    tracker->register_change_handler( this, handle_tracker );
+    button->register_change_handler( this, handle_button );
+    analog->register_change_handler( this, handle_analog );
     initialized = true;
 }
 
@@ -359,6 +365,10 @@ void vrpn_test_server_main() {
     //vrpn_SleepMsecs(1);
 }
 
+void vrpn_test_server_main_t(VRThreadWeakPtr thread) {
+    vrpn_test_server_main();
+}
+
 void VRPN::stopVRPNTestServer() {
     if (testServer == 0) return;
     testServer = 0;
@@ -382,6 +392,9 @@ void VRPN::startVRPNTestServer() {
 
     testServer = VRFunction<int>::create("VRPN_test_server", boost::bind(vrpn_test_server_main));
     VRSceneManager::get()->addUpdateFkt(testServer);
+
+    //static VRThreadCbPtr update_cb = VRThreadCb::create("VRPN_test_server", boost::bind(vrpn_test_server_main_t, _1));
+    //threadID = VRSceneManager::get()->initThread(update_cb, "VRPN", true);
 }
 
 OSG_END_NAMESPACE
