@@ -240,9 +240,9 @@ void VRGeoData::pushPoint(int i) {
     updateType(GL_POINTS, 1);
 }
 
-void VRGeoData::pushLine() { int N = size(); pushLine(N-2, N-1); }
-void VRGeoData::pushTri() { int N = size(); pushTri(N-3, N-2, N-1); }
-void VRGeoData::pushQuad() { int N = size(); pushQuad(N-4, N-3, N-2, N-1); }
+void VRGeoData::pushLine() { int N = size(); if (N > 1) pushLine(N-2, N-1); }
+void VRGeoData::pushTri() { int N = size(); if (N > 2) pushTri(N-3, N-2, N-1); }
+void VRGeoData::pushQuad() { int N = size(); if (N > 3) pushQuad(N-4, N-3, N-2, N-1); }
 
 void VRGeoData::pushPrim(Primitive p) {
     int No = primNOffset(p.lid, p.type);

@@ -319,7 +319,7 @@ PyObject* VRPyGeometry::addLine(VRPyGeometry* self, PyObject *args) {
     VRGeoData geo(self->objPtr);
     bool toApply = (geo.getNIndices() == 0);
     if (l) { auto i = parseVec2iList(l); geo.pushLine( i[0], i[1] ); }
-    else geo.pushQuad();
+    else geo.pushLine();
     if (toApply) geo.apply(self->objPtr, false);
     Py_RETURN_TRUE;
 }
@@ -331,7 +331,7 @@ PyObject* VRPyGeometry::addTriangle(VRPyGeometry* self, PyObject *args) {
     VRGeoData geo(self->objPtr);
     bool toApply = (geo.getNIndices() == 0);
     if (l) { auto i = parseVec3iList(l); geo.pushTri( i[0], i[1], i[2] ); }
-    else geo.pushQuad();
+    else geo.pushTri();
     if (toApply) geo.apply(self->objPtr, false);
     Py_RETURN_TRUE;
 }
