@@ -244,30 +244,44 @@ void CarDynamics::updateEngine() {
         return v;
     };
 
+    // stretch throttle range
+	float tmin = 0.1;
+	float tmax = 0.9;
+    float clampedThrottle = (clamp(throttle,tmin,tmax)-tmin)/(tmax-tmin);
+
     // compute gears
-    float clutchF = 1;
-    if (engine.clutchForceCurve) engine.clutchForceCurve->getPosition(clutch)[1];
-    float gearmod = 1;
-    if (engine.gear == -1) gearmod = -1.0;
-    if (engine.gear ==  0) gearmod = 0;
+    float clutchForce = 1;
+    if (engine.clutchForceCurve) clutchForce = engine.clutchForceCurve->getPosition(clutch)[1];
+
+    float transmission = 1;
+    transmission = engine.gearRatios[engine.gear];
 
     // compute RPM
 	float s = abs( getSpeed() );
-	if (engine.gear ==  0) engine.rpm = (engine.maxRpm - engine.minRpm) * throttle + engine.minRpm;
-	else engine.rpm = s * engine.gearRatios[engine.gear] * 100 / (wheels[0].radius * 12 * Pi)*engine.running;
-    if (engine.rpm > 3800) gearmod = 0;
+	float wheelRPM = engine.gearRatios[engine.gear] * s * 100 / (wheels[0].radius * 12 * Pi);
+	float deltaRPM = ( wheelRPM - engine.rpm ) * clutchForce;
+	float throttleMinRPM = clamp(engine.rpm, engine.minRpm, engine.maxRpm); ///TODO
+	float throttleRPM = (engine.maxRpm - throttleMinRPM) * clampedThrottle + engine.minRpm;
+	if (wheelRPM > engine.maxRpm) transmission = 0;
 
-	// apply force to engine
-	float tmin = 0.1;
-	float tmax = 0.9;
-    float eForce = (clamp(throttle,tmin,tmax)-tmin)/(tmax-tmin); // stretch throttle
-    eForce *= engine.power*clutchF*gearmod*engine.running;
+	// compute engine breaking
+	float engineFriction = 5;//5;
+	float eBreak = breaking*engine.breakPower + max(deltaRPM*0.005 + engineFriction, 0.0) * (1.0 - clampedThrottle);
+	//cout << "throttleRPM " << throttleRPM << " clampedThrottle " << clampedThrottle << " throttleMinRPM " << throttleMinRPM << " engine.rpm " << engine.rpm << endl;
+	cout << "eBreak " << eBreak << " engineFriction " << engineFriction << " deltaRPM " << deltaRPM << " engine.rpm " << engine.rpm << endl;
+	engine.rpm += 0.01*throttleRPM * engine.running;
+	engine.rpm += 0.01*deltaRPM;
+
+	// compute engine force
+    float eForce = clampedThrottle * engine.power * clutchForce * transmission * engine.running;
+
+	// apply force wheels
     for (int i=0; i<wheels.size(); i++) {
         auto& wheel = wheels[i];
 
         if (wheel.isDriven) {
             m_vehicle->applyEngineForce(eForce, i);
-            m_vehicle->setBrake(breaking*engine.breakPower, i);
+            m_vehicle->setBrake(eBreak, i);
         }
 
         if (wheel.isSteered) {
@@ -310,12 +324,13 @@ void CarDynamics::setParameter(float mass, float maxSteering, float enginePower,
     engine.clutchForceCurve->compute(32);
 
 	engine.gearRatios.clear();
-	engine.gearRatios[-1] = 14.633;
-	engine.gearRatios[1] = 13.909;
-	engine.gearRatios[2] = 8.664;
-	engine.gearRatios[3] = 5.697;
-	engine.gearRatios[4] = 4.271;
-	engine.gearRatios[5] = 3.202;
+	engine.gearRatios[-1] = -8;
+	engine.gearRatios[0] = 0;
+	engine.gearRatios[1] = 8;
+	engine.gearRatios[2] = 6;
+	engine.gearRatios[3] = 4;
+	engine.gearRatios[4] = 3;
+	engine.gearRatios[5] = 1.5;
 	engine.gearRatios[6] = 1;
 	engine.minRpm = 800;
 	engine.maxRpm = 4500;
