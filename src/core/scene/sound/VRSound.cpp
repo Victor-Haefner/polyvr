@@ -376,27 +376,15 @@ void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float
 
 vector<short> VRSound::synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, float duration) {
     if (!initiated) initiate();
-
     int sample_rate = 22050;
     size_t buf_size = duration * sample_rate;
-    //buf_size += buf_size%2;
     vector<short> samples(buf_size);
-
     double Ni = 1.0/freqs1.size();
     double T = 2*Pi/sample_rate;
-
-    static double t = 0;
     static map<int,complex<double>> phasors;
-
-    double t0 = t;
     for (uint i=0; i<buf_size; i++) {
-        double k = 0.5 * double(i)/(buf_size-1);
-        t += T;
-
+        double k = double(i)/(buf_size-1);
         samples[i] = 0;
-
-        // phasor
-        complex<double> F;
         for (int j=0; j<freqs1.size(); j++) {
             double A = freqs1[j][1]*(1.0-k) + freqs2[j][1]*k;
             double f = freqs1[j][0]*(1.0-k) + freqs2[j][0]*k;
@@ -405,14 +393,6 @@ vector<short> VRSound::synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, f
             phasors[j] *= exp( complex<double>(0,T*f) );
             samples[i] += A*Ni*phasors[j].imag();
         }
-
-        /* sinus wave
-        for (int j=0; j<freqs1.size(); j++) {
-            double A = freqs1[j][1]*(1.0-k) + freqs2[j][1]*k;
-            double f = freqs1[j][0]*(1.0-k) + freqs2[j][0]*k;
-            double a = f*(t-t0)+freqs1[j][0]*t0;
-            samples[i] += A*sin( a )*Ni;
-        }*/
     }
     playBuffer(samples, sample_rate);
     if (true) return samples;
