@@ -258,22 +258,27 @@ void CarDynamics::updateEngine() {
 
     // compute RPM
 	float s = abs( getSpeed() );
+	float coupling = (engine.gear != 0)*clutchForce;
 	float wheelRPM = engine.gearRatios[engine.gear] * s * 100 / (wheels[0].radius * 12 * Pi);
-	float deltaRPM = ( wheelRPM - engine.rpm ) * clutchForce;
-	float throttleMinRPM = clamp(engine.rpm, engine.minRpm, engine.maxRpm); ///TODO
-	float throttleRPM = (engine.maxRpm - throttleMinRPM) * clampedThrottle + engine.minRpm;
+	float deltaRPM = ( wheelRPM - engine.rpm ) * coupling;
+	float eRPMrange = engine.maxRpm - engine.minRpm;
+	float throttleRPM = (engine.maxRpm - engine.rpm) * clampedThrottle;
 	if (wheelRPM > engine.maxRpm) transmission = 0;
 
 	// compute engine breaking
-	float engineFriction = 5;//5;
-	float eBreak = breaking*engine.breakPower + max(deltaRPM*0.005 + engineFriction, 0.0) * (1.0 - clampedThrottle);
+	float engineF = 5;//5;
+	float engineFriction = (engine.rpm - engine.minRpm) / eRPMrange * max(deltaRPM*0.005 + engineF, 0.0) * (1.0 - clampedThrottle);
+	float eBreak = breaking*engine.breakPower + max(engineFriction, 0.f);
 	//cout << "throttleRPM " << throttleRPM << " clampedThrottle " << clampedThrottle << " throttleMinRPM " << throttleMinRPM << " engine.rpm " << engine.rpm << endl;
-	cout << "eBreak " << eBreak << " engineFriction " << engineFriction << " deltaRPM " << deltaRPM << " engine.rpm " << engine.rpm << endl;
-	engine.rpm += 0.01*throttleRPM * engine.running;
-	engine.rpm += 0.01*deltaRPM;
+	//cout << "eBreak " << eBreak << " engineFriction " << engineF << " deltaRPM " << deltaRPM << " engine.rpm " << engine.rpm << endl;
+	engine.rpm += 0.1 * throttleRPM * engine.running;
+	engine.rpm -= 14 * engineFriction * engine.running;
+	engine.rpm += 0.1 * deltaRPM;
+
+	if (engine.rpm < engine.minRpm) setIgnition(false);
 
 	// compute engine force
-    float eForce = clampedThrottle * engine.power * clutchForce * transmission * engine.running;
+    float eForce = clampedThrottle * engine.power * coupling * transmission * engine.running;
 
 	// apply force wheels
     for (int i=0; i<wheels.size(); i++) {
@@ -300,7 +305,11 @@ void CarDynamics::updateEngine() {
     }
 }
 
-void CarDynamics::setIgnition(bool b) { engine.running = b; }
+void CarDynamics::setIgnition(bool b) {
+    engine.running = b;
+    engine.rpm = b ? 800 : 0;
+}
+
 bool CarDynamics::isRunning() { return engine.running; }
 float CarDynamics::getClutch() { return clutch; }
 float CarDynamics::getThrottle() { return throttle; }
