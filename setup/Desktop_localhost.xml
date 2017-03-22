@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Setup>
   <Displays>
-    <Window active="1" type="2" width="1317" height="848" name="local" mouse="mouse" keyboard="keyboard">
-      <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0 0" normal="0 0 1" user_pos="0 0 0" up="0 1 0" size="2 1" shear="0 0" warp="0 0" vsize="1317 848" user=""/>
+    <Window active="1" type="2" width="1105" height="796" name="local" mouse="mouse" keyboard="keyboard">
+      <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0 0" normal="0 0 1" user_pos="0 0 0" up="0 1 0" size="2 1" shear="0 0" warp="0 0" vsize="1105 796" user=""/>
     </Window>
     <Window active="1" type="0" width="300" height="300" name="remote" mouse="None" keyboard="None" Nx="1" Ny="1" ConnType="Multicast">
       <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 1 0" normal="0 1 0" user_pos="0 2 0" up="1 0 0" size="2 1" shear="0 0" warp="0 0" vsize="1700 1080" user=""/>
@@ -18,7 +18,7 @@
   <TrackingVRPN active="1" persistency="666" port="3883"/>
   <Network base_name="Network" name_space="Manager" name_suffix="0" persistency="666" unique="1">
     <Node address="127.0.0.1" base_name="Node" name_space="NetworkNode" name_suffix="0" persistency="666" unique="1" user="victor" ID="0">
-      <Node active_stereo="0" autostart="1" base_name="l1" connection_type="StreamSock" display=":0.0" fullscreen="0" name_space="NetworkNode" name_suffix="0" persistency="666" port="3000" unique="1" ID="0"/>
+      <Node active_stereo="0" autostart="1" base_name="l1" connection_type="Multicast" display=":0.0" fullscreen="0" name_space="NetworkNode" name_suffix="0" persistency="666" port="3000" unique="1" ID="0"/>
     </Node>
   </Network>
   <Scripts/>
