@@ -84,7 +84,7 @@ VRLodLeafPtr VRLodTree::addLeaf(Octree* o, int lvl) {
     if (leafs.count(o)) return leafs[o];
     auto l = VRLodLeaf::create("lodLeaf", o, lvl);
     l->setPersistency(0);
-    if (lvl > 0) l->addLevel( o->getSize()*2 );
+    if (lvl > 0) l->addLevel( o->getSize()*5 );
     l->setFrom(o->getLocalCenter());
     leafs[o] = l;
 
