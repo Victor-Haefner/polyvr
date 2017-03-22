@@ -9,7 +9,7 @@
 #include <OpenSG/OSGImageForeground.h>
 #include "core/objects/VRObjectFwd.h"
 #include "core/setup/VRSetupFwd.h"
-#include "core/scene/VRRenderManager.h"
+#include "core/scene/rendering/VRRenderManager.h"
 
 namespace xmlpp{ class Element; }
 

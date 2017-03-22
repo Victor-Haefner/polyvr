@@ -1,6 +1,6 @@
 #include "VRWindow.h"
 #include "core/scene/VRSceneManager.h"
-#include "core/scene/VRRenderStudio.h"
+#include "core/scene/rendering/VRRenderStudio.h"
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRThreadManager.h"
 #include "core/utils/VRFunction.h"

@@ -22,7 +22,7 @@
 #include "core/objects/object/VRObjectT.h"
 #include "core/objects/VRLight.h"
 #include "core/scene/VRSceneManager.h"
-#include "core/scene/VRRenderStudio.h"
+#include "core/scene/rendering/VRRenderStudio.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
