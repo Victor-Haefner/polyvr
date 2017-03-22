@@ -259,7 +259,7 @@ void CarDynamics::updateEngine() {
     // compute RPM
 	float s = abs( getSpeed() );
 	float coupling = (engine.gear != 0)*clutchForce;
-	float wheelRPM = engine.gearRatios[engine.gear] * s * 100 / (wheels[0].radius * 12 * Pi);
+	float wheelRPM = abs(engine.gearRatios[engine.gear]) * s * 100 / (wheels[0].radius * 12 * Pi);
 	float deltaRPM = ( wheelRPM - engine.rpm ) * coupling;
 	float eRPMrange = engine.maxRpm - engine.minRpm;
 	float throttleRPM = (engine.maxRpm - engine.rpm) * clampedThrottle;
