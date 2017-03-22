@@ -47,9 +47,21 @@ string toString(OSG::Vec4f v) {
     return ss.str();
 }
 
+string toString(OSG::Vec2i v) {
+    stringstream ss;
+    ss << v[0] << " " << v[1];
+    return ss.str();
+}
+
 string toString(OSG::Vec3i v) {
     stringstream ss;
     ss << v[0] << " " << v[1] << " " << v[2];
+    return ss.str();
+}
+
+string toString(OSG::Vec4i v) {
+    stringstream ss;
+    ss << v[0] << " " << v[1] << " " << v[2] << " " << v[3];
     return ss.str();
 }
 
@@ -106,12 +118,30 @@ OSG::Pnt3f toPnt3f(string s) {
     return v;
 }
 
+OSG::Vec2i toVec2i(string s) {
+    OSG::Vec2i v;
+    stringstream ss(s);
+    ss >> v[0];
+    ss >> v[1];
+    return v;
+}
+
 OSG::Vec3i toVec3i(string s) {
     OSG::Vec3i v;
     stringstream ss(s);
     ss >> v[0];
     ss >> v[1];
     ss >> v[2];
+    return v;
+}
+
+OSG::Vec4i toVec4i(string s) {
+    OSG::Vec4i v;
+    stringstream ss(s);
+    ss >> v[0];
+    ss >> v[1];
+    ss >> v[2];
+    ss >> v[3];
     return v;
 }
 

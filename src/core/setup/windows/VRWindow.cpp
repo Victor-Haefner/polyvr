@@ -54,7 +54,7 @@ void VRWindow::resize(int w, int h) {
     height = h;
     _win->resize(w,h);
     for (auto vw : views) {
-        if (auto v = vw.lock()) v->resize(Vec2i(w,h));
+        if (auto v = vw.lock()) v->setSize(Vec2i(w,h));
     }
 }
 

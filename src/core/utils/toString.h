@@ -21,7 +21,9 @@ string toString(OSG::Vec2f v);
 string toString(OSG::Vec3f v);
 string toString(OSG::Pnt3f v);
 string toString(OSG::Vec4f v);
+string toString(OSG::Vec2i v);
 string toString(OSG::Vec3i v);
+string toString(OSG::Vec4i v);
 string toString(OSG::posePtr p);
 string toString(const OSG::boundingbox& b);
 
@@ -34,7 +36,9 @@ double toDouble(string s, int* N = 0);
 OSG::Vec2f toVec2f(string s);
 OSG::Vec3f toVec3f(string s);
 OSG::Vec4f toVec4f(string s);
+OSG::Vec2i toVec2i(string s);
 OSG::Vec3i toVec3i(string s);
+OSG::Vec4i toVec4i(string s);
 OSG::Pnt3f toPnt3f(string s);
 
 void toValue(string s, string& s2);

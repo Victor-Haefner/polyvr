@@ -34,6 +34,7 @@ class VRGuiSetup {
         VRGuiVectorEntry sizeEntry;
         VRGuiVectorEntry shearEntry;
         VRGuiVectorEntry warpEntry;
+        VRGuiVectorEntry vsizeEntry;
 
         VRGuiVectorEntry tVRPNAxisEntry;
         VRGuiVectorEntry rVRPNAxisEntry;
@@ -81,6 +82,7 @@ class VRGuiSetup {
         void on_pos_edit();
         void on_eyesep_edit();
 
+        void on_view_size_edit(Vec2f v);
         void on_proj_user_edit(Vec3f v);
         void on_proj_center_edit(Vec3f v);
         void on_proj_normal_edit(Vec3f v);
