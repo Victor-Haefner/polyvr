@@ -20,3 +20,4 @@ examples/tmp_pics/
 extras/python/Leap/*.pyc
 extras/python/Myo/*.pyc
 examples/vals*.dat
+core

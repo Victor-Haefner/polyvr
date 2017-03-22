@@ -397,7 +397,7 @@ PyObject* VRPyGeometry::setPositionalTexCoords(VRPyGeometry* self, PyObject *arg
 PyObject* VRPyGeometry::updateNormals(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     int i = 0;
-    if (!PyArg_ParseTuple(args, "i", &i)) return NULL;
+    if (!PyArg_ParseTuple(args, "|i", &i)) return NULL;
     self->objPtr->updateNormals(i);
     Py_RETURN_TRUE;
 }
