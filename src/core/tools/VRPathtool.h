@@ -98,8 +98,8 @@ class VRPathtool : public VRObject {
         void updateDevs();
 
         VRGeometryPtr setGraphNode(int i);
-        void setGraphEdge(Graph::edge& e);
-        void setGraphEdge(Graph::edge& e, Vec3f n1, Vec3f n2);
+        void setGraphEdge(Graph::edge& e, bool handles = false);
+        void setGraphEdge(Graph::edge& e, bool handles, Vec3f n1, Vec3f n2);
         void projectHandle(VRGeometryPtr handle, VRDevicePtr dev);
 
     public:
@@ -113,15 +113,15 @@ class VRPathtool : public VRObject {
         int addNode(posePtr p);
         void remNode(int i);
         int getNodeID(VRObjectPtr o);
-        void connect(int i1, int i2);
-        void connect(int i1, int i2, Vec3f n1, Vec3f n2);
+        void connect(int i1, int i2, bool handles = true);
+        void connect(int i1, int i2, bool handles, Vec3f n1, Vec3f n2);
         void disconnect(int i1, int i2);
 
         pathPtr newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution = 10);
         VRGeometryPtr extrude(VRDevicePtr dev, pathPtr p);
         void remPath(pathPtr p);
 
-        void addPath(pathPtr p, VRObjectPtr anchor = 0, VRGeometryPtr ha = 0, VRGeometryPtr he = 0);
+        void addPath(pathPtr p, VRObjectPtr anchor = 0, VRGeometryPtr ha = 0, VRGeometryPtr he = 0, bool handles = true);
         void setVisible(bool handles, bool lines);
         void setHandleGeometry(VRGeometryPtr geo);
         void clear(pathPtr p = 0);

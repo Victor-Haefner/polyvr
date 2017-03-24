@@ -14,6 +14,7 @@ struct VRPyProcess : VRPyBaseT<OSG::VRProcess> {
     static PyObject* getBehaviorDiagram(VRPyProcess* self, PyObject* args);
     static PyObject* getSubjects(VRPyProcess* self);
     static PyObject* addSubject(VRPyProcess* self, PyObject* args);
+    static PyObject* addMessage(VRPyProcess* self, PyObject* args);
 };
 
 struct VRPyProcessNode : VRPyBaseT<OSG::VRProcessNode> {
@@ -27,6 +28,7 @@ struct VRPyProcessLayout : VRPyBaseT<OSG::VRProcessLayout> {
     static PyMethodDef methods[];
     static PyObject* setProcess(VRPyProcessLayout* self, PyObject* args);
     static PyObject* getElement(VRPyProcessLayout* self, PyObject* args);
+    static PyObject* addElement(VRPyProcessLayout* self, PyObject* args);
 };
 
 struct VRPyProcessEngine : VRPyBaseT<OSG::VRProcessEngine> {

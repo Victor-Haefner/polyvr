@@ -11,6 +11,7 @@ using namespace std;
 class VRProcessLayout : public VRTransform {
     private:
         VRProcessPtr process;
+        float height = 2;
 
         VRGeometryPtr newWidget(VRProcessNodePtr n, float height);
 
@@ -24,6 +25,8 @@ class VRProcessLayout : public VRTransform {
         //void setProcess(VRProcessPtr p);
         void setProcess(VRProcess::DiagramPtr diag);
         VRObjectPtr getElement(int i);
+
+        VRObjectPtr addElement(VRProcessNodePtr n);
 };
 
 OSG_END_NAMESPACE;

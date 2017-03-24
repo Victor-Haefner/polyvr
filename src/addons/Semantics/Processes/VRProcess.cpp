@@ -13,9 +13,9 @@ void VRProcess::Diagram::update(int i, bool changed) { processnodes[i]->update(n
 void VRProcess::Diagram::remNode(int i) { Graph::remNode(i); processnodes.erase(i); }
 void VRProcess::Diagram::clear() { Graph::clear(); processnodes.clear(); }
 
-VRProcessNode::VRProcessNode(string name, PROCESS_WIDGET type) : type(type), label(name) {;}
+VRProcessNode::VRProcessNode(string name, PROCESS_WIDGET type, int ID) : type(type), label(name), ID(ID) {;}
 VRProcessNode::~VRProcessNode() {}
-VRProcessNodePtr VRProcessNode::create(string name, PROCESS_WIDGET type) { return VRProcessNodePtr( new VRProcessNode(name, type) ); }
+VRProcessNodePtr VRProcessNode::create(string name, PROCESS_WIDGET type, int ID) { return VRProcessNodePtr( new VRProcessNode(name, type, ID) ); }
 
 void VRProcessNode::update(Graph::node& n, bool changed) { // callede when graph node changes
     if (widget && !widget->isDragged() && changed) widget->setFrom(n.box.center());
@@ -68,38 +68,18 @@ void VRProcess::update() {
     reasoner->setVerbose(true,  false); //
     auto query = [&](string q) { return reasoner->process(q, ontology); };
 
-    map<string, int> nodes;
-    auto addDiagNode = [&](DiagramPtr diag, string label, PROCESS_WIDGET type) {
-        auto n = VRProcessNode::create(label, type);
-        int i = diag->addNode();
-        diag->processnodes[i] = n;
-        n->ID = i;
-        return i;
-    };
-
-    auto connect = [&](DiagramPtr diag, int i, string parent, Graph::CONNECTION mode) {
-        if (nodes.count(parent)) {
-            switch (mode) {
-                case Graph::HIERARCHY: diag->connect(nodes[parent], i, mode); break;
-                case Graph::DEPENDENCY: diag->connect(i, nodes[parent], mode); break;
-                case Graph::SIMPLE: break;
-                case Graph::SIBLING: break;
-            }
-        } else cout << "VRProcess::connect " << parent << " not in nodes\n";
-    };
-
     /** get interaction diagram **/
-
     auto layers = query("q(x):Layer(x)");
     if (layers.size() == 0) return;
     auto layer = layers[0]; // only use first layer
     interactionDiagram = DiagramPtr( new Diagram() );
 
+    map<string, int> nodes;
     string q_subjects = "q(x):ActiveProcessComponent(x);Layer("+layer->getName()+");has("+layer->getName()+",x)";
     for ( auto subject : query(q_subjects) ) {
         string label;
         if (auto l = subject->get("hasModelComponentLable") ) label = l->value;
-        int nID = addDiagNode(interactionDiagram, label, SUBJECT);
+        int nID = addSubject(label)->ID;
         if (auto ID = subject->get("hasModelComponentID") ) nodes[ID->value] = nID;
     }
 
@@ -123,9 +103,7 @@ void VRProcess::update() {
                     if (auto l = msgs[0]->get("hasModelComponentLable") ) label += "\n - " + l->value;
             }
 
-            int nID = addDiagNode(interactionDiagram, label, MESSAGE);
-            connect(interactionDiagram, nID, sender.first, Graph::HIERARCHY);
-            connect(interactionDiagram, nID, receiver.first, Graph::DEPENDENCY);
+            addMessage(label, nodes[sender.first], nodes[receiver.first]);
         }
     }
 
@@ -146,7 +124,7 @@ void VRProcess::update() {
         for (auto state : query(q_States)) {
             string label;
             if (auto l = state->get("hasModelComponentLable") ) label = l->value;
-            int nID = addDiagNode(behaviorDiagram, label, SUBJECT);
+            int nID = addAction(label, behaviorDiagram)->ID;
             if (auto ID = state->get("hasModelComponentID") ) nodes[ID->value] = nID;
         }
 
@@ -161,35 +139,40 @@ void VRProcess::update() {
         }
 
         for ( auto source : edges ) {
-            cout << "source " << source.first << endl;
             for (auto target : source.second) {
-                cout << "target " << target.first << endl;
-                string label = "Msg:";
-                /*for (auto edge : target.second) {
-                    string q_message = "q(x):MessageSpec(x);MessageExchange("+edge->getName()+");is(x,"+edge->getName()+".hasMessageType)";
-                    auto msgs = query(q_message);
-                    if (msgs.size())
-                        if (auto l = msgs[0]->get("hasModelComponentLable") ) label += "\n - " + l->value;
-                }*/
-
-                int nID = addDiagNode(behaviorDiagram, label, MESSAGE);
-                connect(behaviorDiagram, nID, source.first, Graph::HIERARCHY);
-                connect(behaviorDiagram, nID, target.first, Graph::DEPENDENCY);
-                //connect(behaviorDiagram, nodes[source.first], target.first, Graph::DEPENDENCY);
+                addMessage("Msg:", nodes[source.first], nodes[target.first], behaviorDiagram);
             }
         }
     }
 }
 
-VRProcess::DiagramPtr VRProcess::addSubject(string name) {
+VRProcessNodePtr VRProcess::addSubject(string name) {
     if (!interactionDiagram) interactionDiagram = DiagramPtr( new Diagram() );
-    auto s = VRProcessNode::create(name, SUBJECT);
     auto sID = interactionDiagram->addNode();
+    auto s = VRProcessNode::create(name, SUBJECT, sID);
     interactionDiagram->processnodes[sID] = s;
-    s->ID = sID;
     auto behaviorDiagram = DiagramPtr( new Diagram() );
     behaviorDiagrams[sID] = behaviorDiagram;
-    return behaviorDiagram;
+    return s;
+}
+
+VRProcessNodePtr VRProcess::addMessage(string name, int i, int j, DiagramPtr diag) {
+    if (!diag) diag = interactionDiagram;
+    if (!diag) return 0;
+    auto mID = diag->addNode();
+    auto m = VRProcessNode::create(name, MESSAGE, mID);
+    diag->processnodes[mID] = m;
+    diag->connect(i, mID, Graph::HIERARCHY);
+    diag->connect(mID, j, Graph::DEPENDENCY);
+    return m;
+}
+
+VRProcessNodePtr VRProcess::addAction(string name, DiagramPtr diag) {
+    if (!diag) return 0;
+    auto aID = diag->addNode();
+    auto a = VRProcessNode::create(name, ACTION, aID);
+    diag->processnodes[aID] = a;
+    return a;
 }
 
 

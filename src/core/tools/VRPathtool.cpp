@@ -170,36 +170,36 @@ void VRPathtool::disconnect(int i1, int i2) {
     vecRemVal(knots[i2].in, i1);
 }
 
-void VRPathtool::connect(int i1, int i2) {
+void VRPathtool::connect(int i1, int i2, bool handles) {
     if (i1 == i2) return;
     auto& nodes = graph->getNodes();
     Vec3f d = nodes[i2].box.center() - nodes[i1].box.center();
     d.normalize();
-    connect(i1,i2,d,d);
+    connect(i1,i2,handles,d,d);
 }
 
-void VRPathtool::connect(int i1, int i2, Vec3f n1, Vec3f n2) {
+void VRPathtool::connect(int i1, int i2, bool handles, Vec3f n1, Vec3f n2) {
     if (i1 == i2) return;
     if (!graph) return;
     if (!graph->connected(i1,i2)) {
         auto& e = graph->connect(i1,i2);
-        setGraphEdge(e, n1, n2);
+        setGraphEdge(e, handles, n1, n2);
     } else disconnect(i1,i2);
 }
 
-void VRPathtool::setGraphEdge(Graph::edge& e) {
+void VRPathtool::setGraphEdge(Graph::edge& e, bool handles) {
     auto& nodes = graph->getNodes();
     Vec3f d = nodes[e.to].box.center() - nodes[e.from].box.center();
     d.normalize();
-    setGraphEdge(e, d, d);
+    setGraphEdge(e, handles, d, d);
 }
 
-void VRPathtool::setGraphEdge(Graph::edge& e, Vec3f n1, Vec3f n2) {
+void VRPathtool::setGraphEdge(Graph::edge& e, bool handles, Vec3f n1, Vec3f n2) {
     auto& nodes = graph->getNodes();
     pathPtr p = path::create();
     p->addPoint(nodes[e.from].box.center(), n1);
     p->addPoint(nodes[e.to].box.center(), n2);
-    addPath(p, 0, knots[e.from].handle.lock(), knots[e.to].handle.lock());
+    addPath(p, 0, knots[e.from].handle.lock(), knots[e.to].handle.lock(), handles);
     knots[e.from].out.push_back(e.to);
     knots[e.to].in.push_back(e.from);
     updateHandle( knots[e.from].handle.lock() );
@@ -216,7 +216,7 @@ VRGeometryPtr VRPathtool::setGraphNode(int i) {
     return h;
 }
 
-void VRPathtool::update() {
+void VRPathtool::update() { // call in script to have smooth knots
     if (graph) { // smooth knot transformations
         map<int, Vec3f> hPositions; // get handle positions
         for (uint i=0; i<knots.size(); i++)
@@ -286,9 +286,42 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
             updateEntry(e);
         }
 
-        for (auto c : handle->getChildren()) {
+        for (auto c : handle->getChildrenWithAttachment("controlhandle")) {
             VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(c);
             if (g) updateHandle(g);
+        }
+
+        if (handle->getChildrenWithAttachment("controlhandle").size() == 0) { // no control handles -> smooth knots curve
+            map<int, Vec3f> hPositions; // get handle positions
+            auto getPos = [&](int ID) {
+                if (!hPositions.count(ID)) {
+                    auto h = knots[ID].handle.lock();
+                    hPositions[ID] = h ? h->getWorldPosition() : Vec3f();
+                }
+                return hPositions[ID];
+            };
+
+            auto updateHandleDir = [&](int ID) {
+                Vec3f pos = getPos(ID);
+                Vec3f dir;
+                for (auto k : knots[ID].out) dir += pos - getPos(k);
+                for (auto k : knots[ID].in ) dir += getPos(k) - pos;
+                dir.normalize();
+                auto h = knots[ID].handle.lock();
+                if (h) {
+                    h->setDir(dir);
+                    for (auto e : entries[key]) {
+                        auto op = e->p->getPoint(e->points[key]);
+                        e->p->setPoint(e->points[key], op.p, dir, op.c, op.u);
+                        updateEntry(e);
+                    }
+                }
+            };
+
+            int nID = handleToNode[key];
+            updateHandleDir( nID );
+            for (auto k : knots[nID].out) updateHandleDir(k);
+            for (auto k : knots[nID].in ) updateHandleDir(k);
         }
     }
 
@@ -325,7 +358,7 @@ void VRPathtool::updateDevs() { // update when something is dragged
     }
 }
 
-void VRPathtool::addPath(pathPtr p, VRObjectPtr anchor, VRGeometryPtr ha, VRGeometryPtr he) {
+void VRPathtool::addPath(pathPtr p, VRObjectPtr anchor, VRGeometryPtr ha, VRGeometryPtr he, bool handles) {
     auto e = entryPtr( new entry( anchor ? anchor : ptr() ) );
     e->p = p;
     paths[e->p.get()] = e;
@@ -339,8 +372,8 @@ void VRPathtool::addPath(pathPtr p, VRObjectPtr anchor, VRGeometryPtr ha, VRGeom
         if (!h) h = newHandle();
         h->setPose(point.p, point.n, point.u);
 
-        if (i > 0)   h1 = newControlHandle(h, point.p + point.n);
-        if (i < N-1) h2 = newControlHandle(h, point.p + point.n);
+        if (handles && i > 0)   h1 = newControlHandle(h, point.p + point.n);
+        if (handles && i < N-1) h2 = newControlHandle(h, point.p + point.n);
 
         entries[h.get()].push_back(e);
         if (h1) entries[h1.get()].push_back(e);

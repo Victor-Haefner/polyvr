@@ -19,6 +19,7 @@ PyMethodDef VRPyProcess::methods[] = {
     {"getBehaviorDiagram", (PyCFunction)VRPyProcess::getBehaviorDiagram, METH_VARARGS, "Return subject behavior diagram - getBehaviorDiagram( int ID )" },
     {"getSubjects", (PyCFunction)VRPyProcess::getSubjects, METH_NOARGS, "Return subjects - [ProcessNode] getSubjects()" },
     {"addSubject", (PyCFunction)VRPyProcess::addSubject, METH_VARARGS, "Add a new subject - ProcessNode addSubject( name )" },
+    {"addMessage", (PyCFunction)VRPyProcess::addMessage, METH_VARARGS, "Add a new message between subjects or actions i and j - ProcessNode addMessage( name, int i, int j )" },
     {NULL}  /* Sentinel */
 };
 
@@ -33,7 +34,16 @@ PyObject* VRPyProcess::addSubject(VRPyProcess* self, PyObject* args) {
     const char* n = 0;
     if (!PyArg_ParseTuple(args, "s", &n)) return NULL;
     string name = n ? n : "subject";
-    return VRPyGraph::fromSharedPtr( self->objPtr->addSubject( name ) );
+    return VRPyProcessNode::fromSharedPtr( self->objPtr->addSubject( name ) );
+}
+
+PyObject* VRPyProcess::addMessage(VRPyProcess* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    const char* n = 0;
+    int i, j;
+    if (!PyArg_ParseTuple(args, "sii", &n, &i, &j)) return NULL;
+    string name = n ? n : "message";
+    return VRPyProcessNode::fromSharedPtr( self->objPtr->addMessage( name, i, j ) );
 }
 
 PyObject* VRPyProcess::setOntology(VRPyProcess* self, PyObject* args) {
@@ -62,15 +72,18 @@ PyObject* VRPyProcess::getSubjects(VRPyProcess* self) {
     return res;
 }
 
+
 PyMethodDef VRPyProcessNode::methods[] = {
     {"getLabel", PyGetter(ProcessNode, getLabel, string), "Get node label - str getLabel()" },
     {"getID", PyGetter(ProcessNode, getID, int), "Get node graph ID - int getID()" },
     {NULL}  /* Sentinel */
 };
 
+
 PyMethodDef VRPyProcessLayout::methods[] = {
     {"setProcess", (PyCFunction)VRPyProcessLayout::setProcess, METH_VARARGS, "Set process - setProcess(process)" },
     {"getElement", (PyCFunction)VRPyProcessLayout::getElement, METH_VARARGS, "Return element i - obj getElement(int i)" },
+    {"addElement", (PyCFunction)VRPyProcessLayout::addElement, METH_VARARGS, "Add process element - obj addElement( process node )" },
     {NULL}  /* Sentinel */
 };
 
@@ -89,6 +102,14 @@ PyObject* VRPyProcessLayout::setProcess(VRPyProcessLayout* self, PyObject* args)
     self->objPtr->setProcess( diag );
     Py_RETURN_TRUE;
 }
+
+PyObject* VRPyProcessLayout::addElement(VRPyProcessLayout* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    VRPyProcessNode* p = 0;
+    if (!PyArg_ParseTuple(args, "O", &p)) return NULL;
+    return VRPyTypeCaster::cast( self->objPtr->addElement( p->objPtr ) );
+}
+
 
 PyMethodDef VRPyProcessEngine::methods[] = {
     {"setProcess", (PyCFunction)VRPyProcessEngine::setProcess, METH_VARARGS, "Set process - setProcess( process )" },
