@@ -304,10 +304,11 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
             auto updateHandleDir = [&](int ID) {
                 Vec3f pos = getPos(ID);
                 Vec3f dir;
-                for (auto k : knots[ID].out) dir += pos - getPos(k);
-                for (auto k : knots[ID].in ) dir += getPos(k) - pos;
+                for (auto k : knots[ID].in ) dir += pos - getPos(k);
+                for (auto k : knots[ID].out) dir += getPos(k) - pos;
                 dir.normalize();
                 auto h = knots[ID].handle.lock();
+                auto key = h.get();
                 if (h) {
                     h->setDir(dir);
                     for (auto e : entries[key]) {
