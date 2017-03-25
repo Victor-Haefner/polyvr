@@ -175,5 +175,14 @@ VRProcessNodePtr VRProcess::addAction(string name, DiagramPtr diag) {
     return a;
 }
 
+VRProcessNodePtr VRProcess::getNode(int i, DiagramPtr diag) {
+    if (!diag) diag = interactionDiagram;
+    return diag->processnodes[i];
+}
+
+
+
+
+
 
 

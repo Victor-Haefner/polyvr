@@ -63,6 +63,7 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         DiagramPtr getInteractionDiagram();
         DiagramPtr getBehaviorDiagram(int subject);
         vector<VRProcessNodePtr> getSubjects();
+        VRProcessNodePtr getNode(int i, DiagramPtr diag = 0);
 
         VRProcessNodePtr addSubject(string name);
         VRProcessNodePtr addMessage(string name, int i, int j, DiagramPtr diag = 0);

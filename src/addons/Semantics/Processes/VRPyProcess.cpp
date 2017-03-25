@@ -2,6 +2,7 @@
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
 #include "core/scripting/VRPyBaseT.h"
 #include "core/scripting/VRPyGraph.h"
+#include "core/scripting/VRPyGeometry.h"
 #include "core/scripting/VRPyTypeCaster.h"
 #include "core/scripting/VRPyBaseFactory.h"
 
@@ -81,11 +82,32 @@ PyMethodDef VRPyProcessNode::methods[] = {
 
 
 PyMethodDef VRPyProcessLayout::methods[] = {
-    {"setProcess", (PyCFunction)VRPyProcessLayout::setProcess, METH_VARARGS, "Set process - setProcess(process)" },
-    {"getElement", (PyCFunction)VRPyProcessLayout::getElement, METH_VARARGS, "Return element i - obj getElement(int i)" },
+    {"setProcess", (PyCFunction)VRPyProcessLayout::setProcess, METH_VARARGS, "Set process - setProcess( process )" },
+    {"getElement", (PyCFunction)VRPyProcessLayout::getElement, METH_VARARGS, "Return element by ID - obj getElement( int ID )" },
+    {"getElementID", (PyCFunction)VRPyProcessLayout::getElementID, METH_VARARGS, "Return element ID - ID getElementID( VRObjectPtr geo )" },
+    {"getProcessNode", (PyCFunction)VRPyProcessLayout::getProcessNode, METH_VARARGS, "Return process node by ID - process node getElementID( int i )" },
     {"addElement", (PyCFunction)VRPyProcessLayout::addElement, METH_VARARGS, "Add process element - obj addElement( process node )" },
+    {"selectElement", (PyCFunction)VRPyProcessLayout::selectElement, METH_VARARGS, "Select a node geometry by changing its appearance - obj selectElement( geometry )" },
+    {"setElementName", (PyCFunction)VRPyProcessLayout::setElementName, METH_VARARGS, "Change the name of a node - obj setElementName( int i, string s )" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyProcessLayout::setElementName(VRPyProcessLayout* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    int i=0;
+    const char* n = 0;
+    if (!PyArg_ParseTuple(args, "is", &i, &n)) return NULL;
+    if (n) self->objPtr->setElementName( i, n );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyProcessLayout::selectElement(VRPyProcessLayout* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    VRPyGeometry* g = 0;
+    if (!PyArg_ParseTuple(args, "O", &g)) return NULL;
+    self->objPtr->selectElement( g->objPtr );
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyProcessLayout::getElement(VRPyProcessLayout* self, PyObject* args) {
     if (!self->valid()) return NULL;
@@ -94,13 +116,26 @@ PyObject* VRPyProcessLayout::getElement(VRPyProcessLayout* self, PyObject* args)
     return VRPyTypeCaster::cast( self->objPtr->getElement( i ) );
 }
 
+PyObject* VRPyProcessLayout::getProcessNode(VRPyProcessLayout* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    int i=0;
+    if (!PyArg_ParseTuple(args, "i", &i)) return NULL;
+    return VRPyProcessNode::fromSharedPtr( self->objPtr->getProcessNode( i ) );
+}
+
 PyObject* VRPyProcessLayout::setProcess(VRPyProcessLayout* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    VRPyGraph* p = 0;
+    VRPyProcess* p = 0;
     if (!PyArg_ParseTuple(args, "O", &p)) return NULL;
-    VRProcess::DiagramPtr diag = dynamic_pointer_cast<VRProcess::Diagram>(p->objPtr);
-    self->objPtr->setProcess( diag );
+    self->objPtr->setProcess( p->objPtr );
     Py_RETURN_TRUE;
+}
+
+PyObject* VRPyProcessLayout::getElementID(VRPyProcessLayout* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    VRPyGeometry* p = 0;
+    if (!PyArg_ParseTuple(args, "O", &p)) return NULL;
+    return PyInt_FromLong( self->objPtr->getElementID( p->objPtr ) );
 }
 
 PyObject* VRPyProcessLayout::addElement(VRPyProcessLayout* self, PyObject* args) {
