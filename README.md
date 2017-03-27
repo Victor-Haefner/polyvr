@@ -6,6 +6,7 @@ It packs common virtual reality features like clustering, tracking and scenegrap
 <h2>Requirements</h2>
 
 Ubuntu 14.04 LTS and derived distributions
+
 Ubuntu 16.04 LTS and derived distributions
 
 There are no special hardware requirements for basic usage.
