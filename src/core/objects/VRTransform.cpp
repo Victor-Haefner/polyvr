@@ -290,7 +290,7 @@ Vec3f VRTransform::getDir() { return _at-_from; }
 Vec3f VRTransform::getWorldDirection(bool parentOnly) {
     Matrix m;
     getWorldMatrix(m, parentOnly);
-    return Vec3f(m[2]);
+    return -Vec3f(m[2]);
 }
 
 /** Returns the world direction vector (not normalized) **/

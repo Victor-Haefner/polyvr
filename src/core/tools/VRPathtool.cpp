@@ -369,7 +369,7 @@ void VRPathtool::projectHandle(VRGeometryPtr handle, VRDevicePtr dev) { // proje
     if (ins.hit) {
         Vec3f d = handle->getWorldDirection();
         d -= d.dot(ins.normal)*ins.normal;
-        handle->setWorldPose( pose::create(Vec3f(ins.point), -d, ins.normal) );
+        handle->setWorldPose( pose::create(Vec3f(ins.point), d, ins.normal) );
     }
 }
 
@@ -395,7 +395,6 @@ VRPathtool::entryPtr VRPathtool::newEntry(pathPtr p, option o, VRObjectPtr ancho
 void VRPathtool::setupHandles(entryPtr e, VRGeometryPtr ha, VRGeometryPtr he) {
     auto opt = options[e->opt];
     int N = e->p->size();
-    cout << "VRPathtool::setupHandles " << opt.useControlHandles << endl;
     for (int i=0; i<N; i++) {
         auto point = e->p->getPoint(i);
         VRGeometryPtr h, h1, h2;

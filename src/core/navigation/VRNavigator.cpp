@@ -257,7 +257,7 @@ void VRNavigator::walk(VRDeviceWeakPtr _dev) {
     float speedT = speed[0]; // 0.02
     float speedR = speed[1]; // 0.04
 
-    Vec3f x = -dir_c*dir_m[1]*speedT*exp(-abs(dir_m[0]));
+    Vec3f x = dir_c*dir_m[1]*speedT*exp(-abs(dir_m[0]));
     float y = -dir_m[0]*speedR*exp(-abs(dir_m[1]));
 
     target->rotate(y);
@@ -289,7 +289,7 @@ void VRNavigator::fly_walk(VRDeviceWeakPtr _dev) {
             target->rotate(-dt*d*d_abs*0.1*rspeed);
             break;
         case 11:
-            target->translate(-dir*dt*d*d_abs*0.2*tspeed);
+            target->translate(dir*dt*d*d_abs*0.2*tspeed);
             break;
     }
 }
@@ -462,7 +462,7 @@ void VRNavigator::hyd_walk(VRDeviceWeakPtr _dev) {
             break;
         case 21:
         case 24:
-            target->translate(-dir*dt*d*d_abs*0.2*tspeed);
+            target->translate(dir*dt*d*d_abs*0.2*tspeed);
             break;
     }
 }
