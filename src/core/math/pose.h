@@ -19,6 +19,10 @@ class pose {
         static posePtr create();
         static posePtr create(Vec3f p, Vec3f d, Vec3f u);
 
+        void setPos(Vec3f p);
+        void setDir(Vec3f d);
+        void setUp(Vec3f u);
+
         Vec3f pos() const;
         Vec3f dir() const;
         Vec3f up() const;

@@ -25,7 +25,8 @@ class VRStorage {
         string type = "Node";
         int persistency = 666;
         bool overrideCallbacks = false;
-        vector<VRUpdateCbPtr> f_setup; // setup
+        vector<VRUpdateCbPtr> f_setup_before; // called before loading
+        vector<VRUpdateCbPtr> f_setup; // called after loading
         vector<VRUpdateCbPtr> f_setup_after; // setup after tree loaded
         map<string, VRStorageBin> storage;
         static map<string, VRStorageFactoryCbPtr> factory;
@@ -72,6 +73,7 @@ class VRStorage {
         template<typename T> void storeObjNames(string tag, vector<T>* o, vector<string>* t);
 
         void setStorageType(string t);
+        void regStorageSetupBeforeFkt(VRUpdateCbPtr u);
         void regStorageSetupFkt(VRUpdateCbPtr u);
         void regStorageSetupAfterFkt(VRUpdateCbPtr u);
 

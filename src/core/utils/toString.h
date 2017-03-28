@@ -10,21 +10,22 @@ using namespace std;
 
 vector<string> splitString(string s, char c = ' ');
 
-string toString(string s);
-string toString(bool b);
-string toString(int i);
-string toString(size_t i);
-string toString(unsigned int i);
-string toString(double f, int d = -1);
-string toString(float f, int d = -1);
-string toString(OSG::Vec2f v);
-string toString(OSG::Vec3f v);
-string toString(OSG::Pnt3f v);
-string toString(OSG::Vec4f v);
-string toString(OSG::Vec2i v);
-string toString(OSG::Vec3i v);
-string toString(OSG::Vec4i v);
-string toString(OSG::posePtr p);
+string toString(const string& s);
+string toString(const bool& b);
+string toString(const int& i);
+string toString(const size_t& i);
+string toString(const unsigned int& i);
+string toString(const double& f, int d = -1);
+string toString(const float& f, int d = -1);
+string toString(const OSG::Vec2f& v);
+string toString(const OSG::Vec3f& v);
+string toString(const OSG::Pnt3f& v);
+string toString(const OSG::Vec4f& v);
+string toString(const OSG::Vec2i& v);
+string toString(const OSG::Vec3i& v);
+string toString(const OSG::Vec4i& v);
+string toString(const OSG::pose& p);
+string toString(const OSG::posePtr& p);
 string toString(const OSG::boundingbox& b);
 
 // deprecated?
@@ -41,15 +42,33 @@ OSG::Vec3i toVec3i(string s);
 OSG::Vec4i toVec4i(string s);
 OSG::Pnt3f toPnt3f(string s);
 
-void toValue(string s, string& s2);
-void toValue(string s, bool& b);
-void toValue(string s, int& i);
-void toValue(string s, float& f);
-void toValue(string s, OSG::Vec2f& v);
-void toValue(string s, OSG::Vec3f& v);
-void toValue(string s, OSG::Vec4f& v);
-void toValue(string s, OSG::Vec3i& v);
-void toValue(string s, OSG::posePtr& p);
-void toValue(string s, OSG::boundingbox& b);
+template<typename T> void toValue(stringstream& s, T& t);
+
+template<typename T> stringstream toValue(string s, T& t){
+    stringstream ss(s);
+    toValue(ss,t);
+    return ss;
+}
+
+/*void toValue(string s, string& s2);
+stringstream toValue(string s, bool& b);
+stringstream toValue(string s, int& i);
+stringstream toValue(string s, float& f);
+stringstream toValue(string s, OSG::Vec2f& v);
+stringstream toValue(string s, OSG::Vec3f& v);
+stringstream toValue(string s, OSG::Vec4f& v);
+stringstream toValue(string s, OSG::Vec3i& v);
+stringstream toValue(string s, OSG::posePtr& p);
+stringstream toValue(string s, OSG::boundingbox& b);
+
+void toValue(stringstream& ss, bool& b);
+void toValue(stringstream& ss, int& i);
+void toValue(stringstream& ss, float& f);
+void toValue(stringstream& ss, OSG::Vec2f& v);
+void toValue(stringstream& ss, OSG::Vec3f& v);
+void toValue(stringstream& ss, OSG::Vec4f& v);
+void toValue(stringstream& ss, OSG::Vec3i& v);
+void toValue(stringstream& ss, OSG::posePtr& p);
+void toValue(stringstream& ss, OSG::boundingbox& b);*/
 
 #endif // TOSTRING_H_INCLUDED

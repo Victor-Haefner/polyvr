@@ -18,6 +18,7 @@ void VRStorage::setPersistency(int p) { persistency = p; }
 int VRStorage::getPersistency() { return persistency; }
 void VRStorage::regStorageSetupFkt(VRUpdateCbPtr u) { f_setup.push_back(u); }
 void VRStorage::regStorageSetupAfterFkt(VRUpdateCbPtr u) { f_setup_after.push_back(u); }
+void VRStorage::regStorageSetupBeforeFkt(VRUpdateCbPtr u) { f_setup_before.push_back(u); }
 void VRStorage::setStorageType(string t) { type = t; }
 
 void VRStorage::load_str_cb(string t, string tag, xmlpp::Element* e) {}
@@ -50,6 +51,7 @@ xmlpp::Element* VRStorage::saveUnder(xmlpp::Element* e, int p, string t) {
 
 void VRStorage::load(xmlpp::Element* e) {
     if (e == 0) return;
+    for (auto f : f_setup_before) (*f)(0);
     for (auto s : storage) (*s.second.f1)(e);
     for (auto f : f_setup) (*f)(0);
     for (auto f : f_setup_after) VRSceneManager::get()->queueJob(f);

@@ -18,10 +18,13 @@ void toValue(string s, Graph::edge& e) {
 }
 
 string toString(Graph::node& n) {
-    return toString(n.box);
+    return toString(n.box) + " " + toString(n.p);
 }
 
-void toValue(string s, Graph::node& n) { toValue(s, n.box); }
+void toValue(string s, Graph::node& n) {
+    auto ss = toValue(s, n.box);
+    toValue(ss, n.p);
+}
 
 
 #include "core/utils/VRStorage_template.h"
@@ -74,13 +77,12 @@ int Graph::getNEdges() {
     return N;
 }
 
-void Graph::setPosition(int i, Vec3f v) {
-    auto& n = nodes[i];
-    n.box.setCenter(v);
+void Graph::setPosition(int i, posePtr p) {
+    nodes[i].p = *p;
     update(i, true);
 }
 
-Vec3f Graph::getPosition(int i) { return nodes[i].box.center(); }
+posePtr Graph::getPosition(int i) { auto p = pose::create(); *p = nodes[i].p; return p; }
 
 int Graph::addNode() { nodes.push_back(node()); return nodes.size()-1; }
 void Graph::clear() { nodes.clear(); edges.clear(); }

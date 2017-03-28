@@ -52,10 +52,10 @@ class VRExtruder {
 };
 
 class VRPathtool : public VRObject {
-    private:
+    public:
         struct entry {
+            int opt = 0;
             pathPtr p = 0;
-            int resolution = 10;
             map<VRGeometry*, int> points;
             vector<VRGeometryWeakPtr> handles;
             VRStrokeWeakPtr line;
@@ -71,8 +71,17 @@ class VRPathtool : public VRObject {
             VRGeometryWeakPtr handle;
         };
 
+        struct option {
+            int resolution = 10;
+            bool useControlHandles = false;
+
+            option(int r = 10, bool uch = false);
+        };
+
         typedef shared_ptr<entry> entryPtr;
 
+    private:
+        vector< option > options;
         map<path*, entryPtr> paths;
         map<VRGeometry*, vector<entryPtr> > entries; // map handle geometries to the entries
         vector<VRGeometryWeakPtr> handles;
@@ -93,6 +102,8 @@ class VRPathtool : public VRObject {
         VRGeometryPtr customHandle;
         VRGeometryPtr newControlHandle(VRGeometryPtr handle, Vec3f n);
         VRGeometryPtr newHandle();
+        entryPtr newEntry(pathPtr p, option o, VRObjectPtr anchor = 0);
+        void setupHandles(entryPtr p, VRGeometryPtr ha, VRGeometryPtr he);
         void updateHandle(VRGeometryPtr handle);
         void updateEntry(entryPtr e);
         void updateDevs();
@@ -106,10 +117,11 @@ class VRPathtool : public VRObject {
         VRPathtool();
         static VRPathtoolPtr create();
         void setup();
+        void setupBefore();
 
         void setProjectionGeometry(VRObjectPtr obj);
 
-        void setGraph(GraphPtr g);
+        void setGraph(GraphPtr g, bool doClear = true);
         int addNode(posePtr p);
         void remNode(int i);
         int getNodeID(VRObjectPtr o);
@@ -117,7 +129,7 @@ class VRPathtool : public VRObject {
         void connect(int i1, int i2, bool handles, Vec3f n1, Vec3f n2);
         void disconnect(int i1, int i2);
 
-        pathPtr newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution = 10);
+        pathPtr newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution = 10, bool doCHandles = false);
         VRGeometryPtr extrude(VRDevicePtr dev, pathPtr p);
         void remPath(pathPtr p);
 

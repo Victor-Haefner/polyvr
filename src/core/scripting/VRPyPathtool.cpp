@@ -15,7 +15,7 @@ using namespace OSG;
 simpleVRPyType(Pathtool, New_ptr);
 
 PyMethodDef VRPyPathtool::methods[] = {
-    {"newPath", (PyCFunction)VRPyPathtool::newPath, METH_VARARGS, "Add a new path - path newPath(device, anchor | int resolution)" },
+    {"newPath", (PyCFunction)VRPyPathtool::newPath, METH_VARARGS, "Add a new path - path newPath(device, anchor | int resolution, bool doControlHandles )" },
     {"remPath", (PyCFunction)VRPyPathtool::remPath, METH_VARARGS, "Remove a path - remPath(path)" },
     {"extrude", (PyCFunction)VRPyPathtool::extrude, METH_VARARGS, "Extrude a path - handle extrude(device, path)" },
     {"addPath", (PyCFunction)VRPyPathtool::addPath, METH_VARARGS, "Add a path and add resulting stroke to object - addPath(path, object)" },
@@ -218,11 +218,12 @@ PyObject* VRPyPathtool::addPath(VRPyPathtool* self, PyObject* args) {
 
 PyObject* VRPyPathtool::newPath(VRPyPathtool* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    VRPyDevice* dev; VRPyObject* obj; int res = 10;
-    if (! PyArg_ParseTuple(args, "OO|i:newPath", &dev, &obj, &res)) return NULL;
+    VRPyDevice* dev; VRPyObject* obj;
+    int res = 10; int doCH = 0;
+    if (! PyArg_ParseTuple(args, "OO|ii:newPath", &dev, &obj, &res, &doCH)) return NULL;
     VRDevicePtr d = 0;
     if (!isNone((PyObject*)dev)) d = dev->objPtr;
-    auto p = self->objPtr->newPath( d, obj->objPtr, res );
+    auto p = self->objPtr->newPath( d, obj->objPtr, res, doCH );
     return VRPyPath::fromSharedPtr(p);
 }
 
