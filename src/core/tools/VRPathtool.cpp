@@ -7,6 +7,7 @@
 #include "core/setup/VRSetup.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/math/path.h"
+#include "core/utils/toString.h"
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeoFunctions.h>
@@ -19,8 +20,7 @@ string toString(VRPathtool::option& n) {
     return ss.str();
 }
 
-void toValue(string s, VRPathtool::option& n) {
-    stringstream ss(s);
+template<> void toValue(stringstream& ss, VRPathtool::option& n) {
     ss >> n.resolution;
     ss >> n.useControlHandles;
 }
