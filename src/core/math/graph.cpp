@@ -9,9 +9,9 @@ string toString(Graph::edge& e) {
     return toString(Vec3i(e.from, e.to, e.connection));
 }
 
-void toValue(string s, Graph::edge& e) {
+template<> void toValue(stringstream& ss, Graph::edge& e) {
     Vec3i tmp;
-    toValue(s, tmp);
+    toValue(ss, tmp);
     e.from = tmp[0];
     e.to = tmp[1];
     e.connection = Graph::CONNECTION(tmp[2]);
@@ -21,11 +21,10 @@ string toString(Graph::node& n) {
     return toString(n.box) + " " + toString(n.p);
 }
 
-void toValue(string s, Graph::node& n) {
-    auto ss = toValue(s, n.box);
+template<> void toValue(stringstream& ss, Graph::node& n) {
+    toValue(ss, n.box);
     toValue(ss, n.p);
 }
-
 
 #include "core/utils/VRStorage_template.h"
 

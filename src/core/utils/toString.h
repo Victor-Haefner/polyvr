@@ -44,10 +44,9 @@ OSG::Pnt3f toPnt3f(string s);
 
 template<typename T> void toValue(stringstream& s, T& t);
 
-template<typename T> stringstream toValue(string s, T& t){
+template<typename T> void toValue(string s, T& t){
     stringstream ss(s);
     toValue(ss,t);
-    return ss;
 }
 
 /*void toValue(string s, string& s2);
