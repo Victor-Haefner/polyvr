@@ -11,12 +11,12 @@
 #include "core/tools/VRToolsFwd.h"
 #include "core/objects/object/VRObject.h"
 #include "core/math/graph.h"
+#include "core/math/VRMathFwd.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE
 
 class VRDevice;
-class path;
 
 class VRManipulator {
     private:
@@ -54,7 +54,7 @@ class VRExtruder {
 class VRPathtool : public VRObject {
     public:
         struct entry {
-            int opt = 0;
+            int edge = 0;
             pathPtr p = 0;
             map<VRGeometry*, int> points;
             vector<VRGeometryWeakPtr> handles;
@@ -81,13 +81,15 @@ class VRPathtool : public VRObject {
         typedef shared_ptr<entry> entryPtr;
 
     private:
-        vector< option > options;
-        map<path*, entryPtr> paths;
-        map<VRGeometry*, vector<entryPtr> > entries; // map handle geometries to the entries
+        GraphPtr graph;
+        map<int, pathPtr> paths;
+        map<int, option > options;
         vector<VRGeometryWeakPtr> handles;
         vector<VRGeometryWeakPtr> controlhandles;
+
+        map<path*, entryPtr> pathToEntry;
+        map<VRGeometry*, vector<entryPtr> > handleToEntries; // map handle geometries to the entries
         map<VRGeometry*, int> handleToNode;
-        GraphPtr graph;
         map<int, knot> knots; // maps graph node ids to pathtool knots
         pathPtr selectedPath = 0;
 
@@ -102,7 +104,7 @@ class VRPathtool : public VRObject {
         VRGeometryPtr customHandle;
         VRGeometryPtr newControlHandle(VRGeometryPtr handle, Vec3f n);
         VRGeometryPtr newHandle();
-        entryPtr newEntry(pathPtr p, option o, VRObjectPtr anchor = 0);
+        entryPtr newEntry(pathPtr p, option o, int eID, VRObjectPtr anchor = 0);
         void setupHandles(entryPtr p, VRGeometryPtr ha, VRGeometryPtr he);
         void updateHandle(VRGeometryPtr handle);
         void updateEntry(entryPtr e);

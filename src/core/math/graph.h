@@ -26,15 +26,17 @@ class Graph : public VRStorage {
         };
 
         struct edge {
+            int ID = 0;
             int from = 0;
             int to = 0;
             CONNECTION connection = SIMPLE;
 
-            edge(int i = 0, int j = 0, CONNECTION c = SIMPLE);
+            edge(int i = 0, int j = 0, CONNECTION c = SIMPLE, int ID = 0);
         };
 
     protected:
         vector< vector<edge> > edges;
+        vector< Vec2i > edgesByID;
         vector< node > nodes;
 
     public:

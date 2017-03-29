@@ -31,6 +31,7 @@ template<> void toValue(stringstream& ss, Graph::node& n) {
 
 Graph::Graph() {
     storeVecVec("edges", edges);
+    storeVec("edgesByID", edgesByID);
     storeVec("nodes", nodes);
 }
 
@@ -39,7 +40,8 @@ Graph::~Graph() {}
 Graph::edge& Graph::connect(int i, int j, CONNECTION c) {
     //if (i >= int(nodes.size()) || j >= int(nodes.size())) return edge;
     while (i >= int(edges.size())) edges.push_back( vector<edge>() );
-    edges[i].push_back(edge(i,j,c));
+    edges[i].push_back(edge(i,j,c,edgesByID.size()));
+    edgesByID.push_back(Vec2i(i,j));
     return *edges[i].rbegin();
 }
 
@@ -88,7 +90,7 @@ void Graph::clear() { nodes.clear(); edges.clear(); }
 void Graph::update(int i, bool changed) {}
 void Graph::remNode(int i) { nodes.erase(nodes.begin() + i); }
 
-Graph::edge::edge(int i, int j, CONNECTION c) : from(i), to(j), connection(c) {}
+Graph::edge::edge(int i, int j, CONNECTION c, int ID) : from(i), to(j), connection(c), ID(ID) {}
 
 //vector<Graph::node>::iterator Graph::begin() { return nodes.begin(); }
 //vector<Graph::node>::iterator Graph::end() { return nodes.end(); }

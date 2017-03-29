@@ -181,6 +181,11 @@ template<> void toValue(stringstream& ss, OSG::Vec4f& v) {
     ss >> v[3];
 }
 
+template<> void toValue(stringstream& ss, OSG::Vec2i& v) {
+    ss >> v[0];
+    ss >> v[1];
+}
+
 template<> void toValue(stringstream& ss, OSG::Vec3i& v) {
     ss >> v[0];
     ss >> v[1];

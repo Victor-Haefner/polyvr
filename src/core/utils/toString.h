@@ -49,25 +49,4 @@ template<typename T> void toValue(string s, T& t){
     toValue(ss,t);
 }
 
-/*void toValue(string s, string& s2);
-stringstream toValue(string s, bool& b);
-stringstream toValue(string s, int& i);
-stringstream toValue(string s, float& f);
-stringstream toValue(string s, OSG::Vec2f& v);
-stringstream toValue(string s, OSG::Vec3f& v);
-stringstream toValue(string s, OSG::Vec4f& v);
-stringstream toValue(string s, OSG::Vec3i& v);
-stringstream toValue(string s, OSG::posePtr& p);
-stringstream toValue(string s, OSG::boundingbox& b);
-
-void toValue(stringstream& ss, bool& b);
-void toValue(stringstream& ss, int& i);
-void toValue(stringstream& ss, float& f);
-void toValue(stringstream& ss, OSG::Vec2f& v);
-void toValue(stringstream& ss, OSG::Vec3f& v);
-void toValue(stringstream& ss, OSG::Vec4f& v);
-void toValue(stringstream& ss, OSG::Vec3i& v);
-void toValue(stringstream& ss, OSG::posePtr& p);
-void toValue(stringstream& ss, OSG::boundingbox& b);*/
-
 #endif // TOSTRING_H_INCLUDED
