@@ -4,11 +4,11 @@
 using namespace OSG;
 
 pose::pose() { set(Vec3f(), Vec3f(0,0,-1), Vec3f(0,1,0)); }
+pose::pose(const pose& p) { *this = p; }
 pose::pose(Vec3f p, Vec3f d, Vec3f u) { set(p,d,u); }
 
-posePtr pose::create() {
-    return posePtr( new pose() );
-}
+posePtr pose::create() { return posePtr( new pose() ); }
+posePtr pose::create(const pose& p) { return posePtr( new pose(p) ); }
 
 posePtr pose::create(Vec3f p, Vec3f d, Vec3f u) {
     return posePtr( new pose(p,d,u) );

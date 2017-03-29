@@ -328,8 +328,8 @@ void CarDynamics::setParameter(float mass, float maxSteering, float enginePower,
     //TODO: pass it
     if (!engine.clutchForceCurve) engine.clutchForceCurve = path::create();
     engine.clutchForceCurve->clear();
-    engine.clutchForceCurve->addPoint(Vec3f(0,1,0), Vec3f(1,0,0), Vec3f(), Vec3f(0,1,0));
-    engine.clutchForceCurve->addPoint(Vec3f(1,0,0), Vec3f(1,0,0), Vec3f(), Vec3f(0,1,0));
+    engine.clutchForceCurve->addPoint( pose(Vec3f(0,1,0), Vec3f(1,0,0)));
+    engine.clutchForceCurve->addPoint( pose(Vec3f(1,0,0), Vec3f(1,0,0)));
     engine.clutchForceCurve->compute(32);
 
 	engine.gearRatios.clear();

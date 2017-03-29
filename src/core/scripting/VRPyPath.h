@@ -8,11 +8,7 @@ struct VRPyPath : VRPyBaseT<OSG::path> {
     static PyMethodDef methods[];
 
     static PyObject* set(VRPyPath* self, PyObject *args);
-    static PyObject* setStartPoint(VRPyPath* self, PyObject *args);
-    static PyObject* setEndPoint(VRPyPath* self, PyObject *args);
     static PyObject* compute(VRPyPath* self, PyObject* args);
-    static PyObject* getStartPoint(VRPyPath* self);
-    static PyObject* getEndPoint(VRPyPath* self);
     static PyObject* invert(VRPyPath* self);
     static PyObject* close(VRPyPath* self);
     static PyObject* update(VRPyPath* self);

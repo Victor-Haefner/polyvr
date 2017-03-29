@@ -335,8 +335,8 @@ void buildAnimations(AnimationLibrary& lib, VRObjectPtr objects) {
                 p = path::create();
                 Vec3f h0 = Vec3f(outtangentValues[2*i], outtangentValues[2*i+1], 0) - start;
                 Vec3f h1 = Vec3f(intangentValues[2*i+2], intangentValues[2*i+1+2], 0) - end;
-                p->addPoint( start, h0, Vec3f() );
-                p->addPoint( end, h1, Vec3f() );
+                p->addPoint( pose(start, h0) );
+                p->addPoint( pose(end, h1) );
                 p->compute(80);
             }
             bool loop = false;

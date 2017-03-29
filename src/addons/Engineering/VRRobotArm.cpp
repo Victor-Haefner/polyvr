@@ -142,8 +142,8 @@ void VRRobotArm::moveTo(Vec3f pos, Vec3f dir, Vec3f up) {
     getPose(cpos, cdir, cup);
 
     animPath->clear();
-    animPath->addPoint(cpos, cdir, Vec3f(0,0,0), cup);
-    animPath->addPoint(pos, dir, Vec3f(0,0,0), up);
+    animPath->addPoint( pose(cpos, cdir, cup) );
+    animPath->addPoint( pose(pos, dir, up) );
     animPath->compute(2);
 
     addJob( job(animPath) );

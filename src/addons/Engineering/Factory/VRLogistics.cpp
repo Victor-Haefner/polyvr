@@ -174,8 +174,8 @@ void FPath::update() {
         auto n0 = nodes[i-1];
         auto n1 = nodes[i];
         auto p = path::create();
-        p->addPoint(n0->getTransform());
-        p->addPoint(n1->getTransform());
+        p->addPoint(*n0->getTransform()->getWorldPose());
+        p->addPoint(*n1->getTransform()->getWorldPose());
         p->compute(12);
         paths[n1.get()] = p;
     }
@@ -388,8 +388,8 @@ VRStrokePtr FNetwork::stroke(Vec3f c, float k) {
             Vec3f p2 = n2->getTransform()->getWorldPosition();
 
             pathPtr p = path::create();
-            p->addPoint(p1, t1, c);
-            p->addPoint(p2, t2, c);
+            p->addPoint( pose(p1, t1), c );
+            p->addPoint( pose(p2, t2), c );
             p->compute(20);
             paths.push_back(p);
         }
