@@ -1,11 +1,20 @@
 #include "path.h"
 #include "core/objects/VRTransform.h"
 #include "core/math/equation.h"
+#include "core/utils/VRStorage_template.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-path::path(int d) : degree(d) {}
+path::path(int d) : degree(d) {
+    storeVec("points", points);
+    storeVec("point_colors", point_colors);
+    store("degree", &degree);
+    store("direction", &direction);
+    store("iterations", &iterations);
+    store("closed", &closed);
+}
+
 path::~path() {}
 
 shared_ptr<path> path::create() { return shared_ptr<path>(new path()); }

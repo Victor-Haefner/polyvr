@@ -4,11 +4,12 @@
 #include <OpenSG/OSGVector.h>
 #include "core/objects/VRObjectFwd.h"
 #include "pose.h"
+#include "core/utils/VRStorage.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class path {
+class path : public VRStorage {
     private:
         vector<pose> points;
         vector<Vec3f> point_colors;
