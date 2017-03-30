@@ -1,7 +1,7 @@
 #!/bin/bash
 
 sudo add-apt-repository -y ppa:damien-moore/codeblocks-stable
-sudo add-apt-repository -y ppa:thomas-schiex/blender
+#sudo add-apt-repository -y ppa:thomas-schiex/blender
 sudo apt-get update
 sudo apt-get install -y git codeblocks codeblocks-contrib
 
