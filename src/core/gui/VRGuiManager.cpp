@@ -39,6 +39,7 @@ VRGuiMonitor* g_mon;
 Gtk::Main* GtkMain;
 
 VRGuiManager::VRGuiManager() {
+    cout << "Init VRGuiManager..";
     standalone = VROptions::get()->getOption<bool>("standalone");
 
     int argc = 0;
@@ -107,6 +108,7 @@ VRGuiManager::VRGuiManager() {
     VRGuiBuilder()->get_widget("window1", top);
     top->maximize();
     top->show_all();
+    cout << " done" << endl;
 }
 
 VRGuiManager::~VRGuiManager() {

@@ -52,17 +52,7 @@ void printFieldContainer() {
 }
 
 PolyVR::PolyVR() {}
-PolyVR::~PolyVR() {
-    /*monitor.reset();
-    gui_mgr.reset();
-    interface.reset();
-    loader.reset();
-    setup_mgr.reset();
-    scene_mgr.reset();
-    sound_mgr.reset();
-    options.reset();*/
-    //CEF::shutdown();
-}
+PolyVR::~PolyVR() {}
 
 PolyVR* PolyVR::get() {
     static PolyVR* pvr = new PolyVR();
@@ -120,6 +110,7 @@ void PolyVR::init(int argc, char **argv) {
 }
 
 void PolyVR::run() {
+    cout << "Start main loop\n";
     while(true) {
         VRSceneManager::get()->update();
 
@@ -138,8 +129,8 @@ void PolyVR::start(bool runit) {
     cout << "Init Modules\n";
     sound_mgr = shared_ptr<VRSoundManager>(&VRSoundManager::get());
     setup_mgr = shared_ptr<VRSetupManager>(VRSetupManager::get());
-    interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
     scene_mgr = shared_ptr<VRSceneManager>(VRSceneManager::get());
+    interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
     monitor = shared_ptr<VRInternalMonitor>(VRInternalMonitor::get());
     gui_mgr = shared_ptr<VRGuiManager>(VRGuiManager::get());
     loader = shared_ptr<VRSceneLoader>(VRSceneLoader::get());
