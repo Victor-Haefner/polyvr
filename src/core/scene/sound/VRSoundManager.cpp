@@ -131,7 +131,9 @@ VRSoundManager::~VRSoundManager() {
 }
 
 VRSoundManager& VRSoundManager::get() {
-    static VRSoundManager* instance = new VRSoundManager();
+    static VRSoundManager* instance = 0;
+    if (instance && !instance->channel) instance->channel = new VRSoundChannel(); // delay init of channel
+    if (!instance) instance = new VRSoundManager();
     return *instance;
 }
 

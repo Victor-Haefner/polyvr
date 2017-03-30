@@ -16,7 +16,7 @@ struct VRSoundChannel;
 class VRSoundManager {
 public:
     map<string, VRSoundPtr> sounds;
-    VRSoundChannel* channel;
+    VRSoundChannel* channel = 0;
 
     VRSoundManager();
     VRSoundPtr getSound(string path);

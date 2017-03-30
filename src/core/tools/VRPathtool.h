@@ -136,7 +136,7 @@ class VRPathtool : public VRObject {
         void remPath(pathPtr p);
 
         void addPath(pathPtr p, VRObjectPtr anchor = 0, VRGeometryPtr ha = 0, VRGeometryPtr he = 0, bool handles = true);
-        void setVisible(bool handles, bool lines);
+        void setVisuals(bool handles, bool lines);
         void setHandleGeometry(VRGeometryPtr geo);
         void clear(pathPtr p = 0);
 

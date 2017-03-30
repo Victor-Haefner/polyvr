@@ -594,7 +594,7 @@ void VRPathtool::remPath(pathPtr p) {
     pathToEntry.erase(p.get());
 }
 
-void VRPathtool::setVisible(bool hvis, bool lines) {
+void VRPathtool::setVisuals(bool hvis, bool lines) {
     for (auto p : pathToEntry) if (p.second->line.lock()) p.second->line.lock()->setVisible(lines);
     for (auto h : handles) {
         if (auto hs = h.lock()) hs->setVisible(hvis);

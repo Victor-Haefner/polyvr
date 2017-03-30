@@ -502,6 +502,8 @@ bool VRObject::isVisible() { return visible; }
 
 /** Set the visibility **/
 void VRObject::setVisible(bool b) {
+    if (b == visible) return;
+    cout << "VRObject::setVisible " << getName() << " " << b << endl;
     recUndo(&VRObject::setVisible, ptr(), visible, b);
     visible = b;
     if (b) osg->node->setTravMask(0xffffffff);

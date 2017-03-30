@@ -1,5 +1,6 @@
 #include "VRSound.h"
 #include "VRSoundUtils.h"
+#include "VRSoundManager.h"
 
 extern "C" {
 #include <libavresample/avresample.h>
@@ -45,6 +46,7 @@ struct VRSound::ALData {
 };
 
 VRSound::VRSound() {
+    VRSoundManager::get(); // this may init channel
     buffers = new uint[Nbuffers];
     al = shared_ptr<ALData>( new ALData() );
 }

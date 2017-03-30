@@ -21,7 +21,7 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"addPath", (PyCFunction)VRPyPathtool::addPath, METH_VARARGS, "Add a path and add resulting stroke to object - addPath(path, object)" },
     {"select", (PyCFunction)VRPyPathtool::select, METH_VARARGS, "Select handle - select(handle)" },
     {"deselect", (PyCFunction)VRPyPathtool::deselect, METH_NOARGS, "Deselect anything previously selected - deselect()" },
-    {"setVisible", (PyCFunction)VRPyPathtool::setVisible, METH_VARARGS, "Set the tool visibility - setVisible(bool)\n     setVisible(bool stroke, bool handles)" },
+    {"setVisuals", (PyCFunction)VRPyPathtool::setVisuals, METH_VARARGS, "Set the tool visibility - setVisuals(bool)\n     setVisuals(bool stroke, bool handles)" },
     {"getPaths", (PyCFunction)VRPyPathtool::getPaths, METH_VARARGS, "Return all paths or paths connected to handle - [path] getPaths( | handle )" },
     {"getPath", (PyCFunction)VRPyPathtool::getPath, METH_VARARGS, "Return path between handles h1 and h2 - [path] getPath( handle h1, handle h2 )" },
     {"getHandle", (PyCFunction)VRPyPathtool::getHandle, METH_VARARGS, "Return a handle by node ID - handle getHandle( int ID )" },
@@ -182,12 +182,12 @@ PyObject* VRPyPathtool::getHandles(VRPyPathtool* self, PyObject* args) {
     return li;
 }
 
-PyObject* VRPyPathtool::setVisible(VRPyPathtool* self, PyObject* args) {
+PyObject* VRPyPathtool::setVisuals(VRPyPathtool* self, PyObject* args) {
     if (!self->valid()) return NULL;
     int b1, b2 = 0;
-    if (! PyArg_ParseTuple(args, "i|i:setVisible", &b1, &b2)) return NULL;
+    if (! PyArg_ParseTuple(args, "i|i:setVisuals", &b1, &b2)) return NULL;
     if (pySize(args) == 1) b2 = b1;
-    self->objPtr->setVisible( b1, b2 );
+    self->objPtr->setVisuals( b1, b2 );
     Py_RETURN_TRUE;
 }
 
