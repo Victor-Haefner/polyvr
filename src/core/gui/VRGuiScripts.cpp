@@ -784,8 +784,10 @@ void VRGuiScripts::updateDocumentation() {
     map<string, map<string, map<string, bool> > > data;
     map<string, map<string, map<string, bool> > > filtered;
 
+    auto sameChar = [](char c1, char c2) { return std::toupper(c1) == std::toupper(c2); };
+
     auto contain = [&](const string& s, const string& i) {
-        return bool( s.find(i) != string::npos );
+        return bool( search( s.begin(), s.end(), i.begin(), i.end(), sameChar ) != s.end() );
     };
 
     for (auto mod : scene->getPyVRModules()) {
