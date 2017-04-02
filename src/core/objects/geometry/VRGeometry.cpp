@@ -52,6 +52,7 @@ VRObjectPtr VRGeometry::copy(vector<VRObjectPtr> children) {
 class geoProxy : public Geometry {
     public:
         Action::ResultE intersectEnter(Action* action) {
+            if (!getTypes()) return Action::Skip;
             auto type = getTypes()->getValue(0);
             if ( type != GL_PATCHES ) {
                 return Geometry::intersectEnter(action);

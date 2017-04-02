@@ -91,9 +91,12 @@ string VRTerrain::fragmentShader =
 "#version 400 compatibility\n"
 GLSL(
 uniform sampler2D tex;
-const vec2 size = vec2(0.2,0.0);
 const ivec3 off = ivec3(-1,0,1);
 const vec3 light = vec3(-1,-1,-0.5);
+uniform float resolution;
+
+vec3 norm;
+vec4 color;
 
 vec3 getNormal() {
 	vec2 tc = gl_TexCoord[0].xy;
@@ -103,8 +106,9 @@ vec3 getNormal() {
     float s10 = textureOffset(tex, tc, off.yx).a;
     float s12 = textureOffset(tex, tc, off.yz).a;
 
-    vec3 va = normalize(vec3(size.xy,s21-s01));
-    vec3 vb = normalize(vec3(size.yx,s12-s10));
+    float r2 = resolution*2;
+    vec3 va = normalize(vec3(r2,s21-s01,0));
+    vec3 vb = normalize(vec3( 0,s12-s10,r2));
     vec3 n = cross(va,vb);
 	return n;
 }
@@ -131,15 +135,22 @@ vec3 getColor() {
 	return texture2D(tex, gl_TexCoord[0].xy).rgb;
 }
 
-void main( void ) {
-	vec3 n = getNormal();
-	vec3 c = getColor();
+void applyBlinnPhong() {
+	norm = gl_NormalMatrix * norm;
+	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
+	float NdotL = max(dot( norm, light ), 0.0);
+	vec4  ambient = gl_LightSource[0].ambient * color;
+	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;
+	float NdotHV = max(dot( norm, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
+	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
+	gl_FragColor = ambient + diffuse + specular;
+	gl_FragColor[3] = 1.0;
+}
 
-	// diffuse lightning
-	vec4 aCol = vec4(c * 0.4, 1.0f);
-	float dFac = dot(normalize(n), -normalize(light));
-	vec4 dCol = vec4(c * 0.6 * dFac, 1.0f);
-	gl_FragColor = aCol+dCol;
+void main( void ) {
+	norm = getNormal();
+	color = vec4(getColor(),1.0);
+	applyBlinnPhong();
 }
 );
 
