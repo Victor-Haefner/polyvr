@@ -11,23 +11,28 @@ VRTerrain::VRTerrain(string name) : VRGeometry(name) { setupMat(); }
 VRTerrain::~VRTerrain() {}
 VRTerrainPtr VRTerrain::create(string name) { return VRTerrainPtr( new VRTerrain(name) ); }
 
-void VRTerrain::setParameters( Vec2f s, float r ) { size = s; resolution = r; grid = r*64; setupGeo(); }
+void VRTerrain::setParameters( Vec2f s, float r ) { size = s; resolution = r; grid = r*64; setupGeo(); mat->setShaderParameter("resolution", resolution); }
 void VRTerrain::setMap( VRTexturePtr t ) { tex = t; mat->setTexture(t); }
 
 void VRTerrain::setupGeo() {
     Vec2i gridN = Vec2i(size*1.0/grid);
+    if (gridN[0] < 1) gridN[0] = 1;
+    if (gridN[1] < 1) gridN[1] = 1;
+    Vec2f gridS = size;
+    gridS[0] /= gridN[0];
+    gridS[1] /= gridN[1];
 	Vec2f tcChunk = Vec2f(1.0/gridN[0], 1.0/gridN[1]);
 
 	VRGeoData geo;
     for (int i =0; i < gridN[0]; i++) {
-		float px1 = -size[0]*0.5 + i*grid;
-		float px2 = px1 + grid;
+		float px1 = -size[0]*0.5 + i*gridS[0];
+		float px2 = px1 + gridS[0];
 		float tcx1 = 0 + i*tcChunk[0];
 		float tcx2 = tcx1 + tcChunk[0];
 
 		for (int j =0; j < gridN[1]; j++) {
-			float py1 = -size[1]*0.5 + j*grid;
-			float py2 = py1 + grid;
+			float py1 = -size[1]*0.5 + j*gridS[1];
+			float py2 = py1 + gridS[1];
 			float tcy1 = 0 + j*tcChunk[1];
 			float tcy2 = tcy1 + tcChunk[1];
 
@@ -64,6 +69,7 @@ void VRTerrain::setupMat() {
 	mat->setFragmentShader(fragmentShader, "terrainFS");
 	mat->setTessControlShader(tessControlShader, "terrainTCS");
 	mat->setTessEvaluationShader(tessEvaluationShader, "terrainTES");
+	mat->setShaderParameter("resolution", resolution);
 	mat->setTexture(tex);
 }
 
@@ -144,6 +150,7 @@ GLSL(
 layout(vertices = 4) out;
 out vec3 tcPosition[];
 out vec2 tcTexCoords[];
+uniform float resolution;
 )
 "\n#define ID gl_InvocationID\n"
 GLSL(
@@ -152,10 +159,12 @@ void main() {
     tcTexCoords[ID] = gl_in[ID].gl_TexCoord[0].xy;
 
     if (ID == 0) {
-		vec4 pos = gl_ModelViewProjectionMatrix * vec4(tcPosition[ID], 1.0);
+		vec4 mid = (gl_in[0].gl_Position + gl_in[1].gl_Position + gl_in[2].gl_Position + gl_in[3].gl_Position) * 0.25;
+		vec4 pos = gl_ModelViewProjectionMatrix * vec4(mid.xyz, 1.0);
 		float D = length(pos.xyz);
-		int p = int(5.0/D);
-		int res = int(pow(2,p));
+		//int p = int(5.0/(resolution*D));
+		//int res = int(pow(2,p));
+		int res = int(resolution*32*64/D);
 		res = clamp(res, 1, 64);
 
         gl_TessLevelInner[0] = res;
