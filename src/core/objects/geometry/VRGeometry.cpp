@@ -54,9 +54,8 @@ class geoProxy : public Geometry {
         Action::ResultE intersectEnter(Action* action) {
             if (!getTypes()) return Action::Skip;
             auto type = getTypes()->getValue(0);
-            if ( type != GL_PATCHES ) {
-                return Geometry::intersectEnter(action);
-            } else return Action::Skip;
+            if ( type != GL_PATCHES ) return Geometry::intersectEnter(action);
+            else return Action::Skip;
 
             if ( getPatchVertices() != 4 ) {
                 cout << "Warning: patch vertices is " + toString(getPatchVertices()) + ", not 4, skipping intersect action!\n";
@@ -88,13 +87,14 @@ class geoProxy : public Geometry {
 
                 numTris += 2;
                 if (ia_line.intersect(p1, p2, p3, t, &norm)) {
-                    //ia->setHit(t, ia->getActNode(), i/4, norm, -1);
+                    ia->setHit(t, ia->getActNode(), i/4, norm, -1);
                 }
                 if (ia_line.intersect(p1, p3, p4, t, &norm)) {
-                    //ia->setHit(t, ia->getActNode(), i/4+1, norm, -1);
+                    ia->setHit(t, ia->getActNode(), i/4+1, norm, -1);
                 }
             }
 
+            cout << "geoProxy " << ia->didHit() << endl;
             ia->getStatCollector()->getElem(IntersectAction::statNTriangles)->add(numTris);
             return Action::Skip;
             return Action::Continue;
