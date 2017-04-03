@@ -51,22 +51,14 @@ VRObjectPtr VRGeometry::copy(vector<VRObjectPtr> children) {
 
 class geoProxy : public Geometry {
     public:
-        Action::ResultE intersectEnter(Action* action) {
-            if (!getTypes()) return Action::Skip;
-            auto type = getTypes()->getValue(0);
-            if ( type != GL_PATCHES ) return Geometry::intersectEnter(action);
-            else return Action::Skip;
-
-            if ( getPatchVertices() != 4 ) {
-                cout << "Warning: patch vertices is " + toString(getPatchVertices()) + ", not 4, skipping intersect action!\n";
-                return Action::Skip;
-            }
-
-            IntersectAction* ia = dynamic_cast<IntersectAction*>(action);
+        bool intersectVolume(IntersectAction* ia) {
             ia->getActNode()->updateVolume();
             const BoxVolume& bv = ia->getActNode()->getVolume();
-            if (bv.isValid() && !bv.intersect(ia->getLine())) return Action::Skip; //bv missed -> can not hit children
+            if (bv.isValid() && !bv.intersect(ia->getLine())) return false;
+            return true;
+        }
 
+        bool intersectQuadPatch(IntersectAction* ia) {
             UInt32 numTris = 0;
             Real32 t;
             Vec3f norm;
@@ -94,8 +86,24 @@ class geoProxy : public Geometry {
                 }
             }
 
-            cout << "geoProxy " << ia->didHit() << endl;
             ia->getStatCollector()->getElem(IntersectAction::statNTriangles)->add(numTris);
+            return ia->didHit();
+        }
+
+        Action::ResultE intersectEnter(Action* action) {
+            if (!getTypes()) return Action::Skip;
+            auto type = getTypes()->getValue(0);
+            if ( type != GL_PATCHES ) return Geometry::intersectEnter(action);
+
+            if ( getPatchVertices() != 4 ) {
+                cout << "Warning: patch vertices is " + toString(getPatchVertices()) + ", not 4, skipping intersect action!\n";
+                return Action::Skip;
+            }
+
+            IntersectAction* ia = dynamic_cast<IntersectAction*>(action);
+            if (!intersectVolume(ia)) return Action::Skip; //bv missed -> can not hit children
+
+            intersectQuadPatch(ia);
             return Action::Skip;
             return Action::Continue;
         }
