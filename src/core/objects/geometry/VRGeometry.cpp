@@ -34,42 +34,6 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-/*struct GeoAttachmentDesc {
-    typedef VRGeometry* FieldTypeT;
-    static const Char8* getTypeName  (void) { return "Name"; }
-    static const Char8* getFieldName (void) { return "name"; }
-    static const Char8* getGroupName (void) { return "name"; }
-    static const Char8* getParentTypeName(void) { return "Attachment"; }
-    static InitContainerF getInitMethod(void) { return NULL;  }
-};
-
-// attach the geometry ptr to the OSG geometry, used for custom actions responses
-typedef SimpleAttachment<GeoAttachmentDesc> VRGeometryAttachment;
-
-const VRGeometryPtr getGeometryAttachment(AttachmentContainer const* const pContainer) {
-    if (!pContainer) return 0;
-    Attachment* att = pContainer->findAttachment( 15243 );
-    if (!att == NULL) return 0;
-    auto geoAtt = dynamic_cast<VRGeometryAttachment*>(att);
-    if (!geoAtt) return 0;
-    auto geo = dynamic_cast<VRGeometry*>(geoAtt->getFieldPtr()->getValue());
-    return geo ? geo->ptr() : 0;
-}
-
-void setGeometryAttachment(AttachmentContainer* const pContainer, VRGeometryPtr const &geo) {
-    if (pContainer == NULL) return;
-    Attachment* att = pContainer->findAttachment( 15243 );
-    VRGeometryAttachment* geoAtt = 0;
-    if (!att) {
-        geoAtt = VRGeometryAttachment::createDependent( pContainer->getFieldFlags()->_bNamespaceMask ).get();
-        pContainer->addAttachment( geoAtt );
-    } else {
-        geoAtt = dynamic_cast<VRGeometryAttachment*>(att);
-        if (!geoAtt) return;
-    }
-    geoAtt->editFieldPtr()->getValue().assign(geo);
-}*/
-
 map<Geometry*, VRGeometry*> geoAttachmentMap;
 
 const VRGeometryPtr getGeometryAttachment(Geometry* g) {

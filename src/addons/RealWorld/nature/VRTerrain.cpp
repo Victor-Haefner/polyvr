@@ -1,8 +1,11 @@
 #include "VRTerrain.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRTexture.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/OSGGeometry.h"
+
+#include <OpenSG/OSGIntersectAction.h>
 
 #define GLSL(shader) #shader
 
@@ -74,69 +77,57 @@ void VRTerrain::setupMat() {
 	mat->setTexture(tex);
 }
 
-
-
-
-
-/*bool intersectQuadPatch(IntersectAction* ia) {
-    UInt32 numTris = 0;
-    Real32 t;
-    Vec3f norm;
-    const Line& ia_line = ia->getLine();
-
-    auto inds = getIndices();
-    auto pos = getPositions();
-    for (uint i=0; i<inds->size(); i+=4) { // each 4 indices are a quad
-        int i1 = inds->getValue(i+0);
-        int i2 = inds->getValue(i+1);
-        int i3 = inds->getValue(i+2);
-        int i4 = inds->getValue(i+3);
-
-        Pnt3f p1 = pos->getValue<Pnt3f>(i1);
-        Pnt3f p2 = pos->getValue<Pnt3f>(i2);
-        Pnt3f p3 = pos->getValue<Pnt3f>(i3);
-        Pnt3f p4 = pos->getValue<Pnt3f>(i4);
-
-        numTris += 2;
-        if (ia_line.intersect(p1, p2, p3, t, &norm)) {
-            ia->setHit(t, ia->getActNode(), i/4, norm, -1);
-        }
-        if (ia_line.intersect(p1, p3, p4, t, &norm)) {
-            ia->setHit(t, ia->getActNode(), i/4+1, norm, -1);
-        }
-    }
-
-    ia->getStatCollector()->getElem(IntersectAction::statNTriangles)->add(numTris);
-    return ia->didHit();
-}
-
-Action::ResultE intersectDefaultGeometry(Geometry* geo, Action* action) {
-    if (!getTypes()) return Action::Skip;
-    auto type = getTypes()->getValue(0);
-    if ( type != GL_PATCHES ) return Geometry::intersectEnter(action);
-
-    if ( getPatchVertices() != 4 ) {
-        cout << "Warning: patch vertices is " + toString(getPatchVertices()) + ", not 4, skipping intersect action!\n";
-        return Action::Skip;
-    }
-
-    IntersectAction* ia = dynamic_cast<IntersectAction*>(action);
-    if (!intersectVolume(ia)) return Action::Skip; //bv missed -> can not hit children
-
-    intersectQuadPatch(ia);
-    //return Action::Skip;
-    return Action::Continue;
-}*/
-
-bool VRTerrain::applyIntersectionAction(Action* ia) {
+bool VRTerrain::applyIntersectionAction(Action* action) {
     if (!mesh || !mesh->geo) return false;
 
+    auto tex = getMaterial()->getTexture();
 
-    //auto proxy = (geoIntersectionProxy*)mesh->geo.get();
-    //if (!proxy) return false;
-    //return proxy->intersectDefaultGeometry(action) == Action::Continue;
+    auto clamp = [&](float x, float a, float b) {
+        return max(min(x,b),a);
+    };
 
-    return false;
+    auto toUV = [&](Pnt3f p) -> Vec2f {
+        auto mw = getWorldMatrix();
+        mw.invert();
+        mw.mult(p,p); // transform point in local coords
+		float u = clamp(p[0]/size[0] + 0.5, 0, 1);
+		float v = clamp(p[2]/size[1] + 0.5, 0, 1);
+		return Vec2f(u,v);
+    };
+
+	auto distToSurface = [&](Pnt3f p) -> float {
+		Vec2f uv = toUV(p);
+		auto c = tex->getPixel(uv);
+		return p[1] - c[3];
+	};
+
+	if (!VRGeometry::applyIntersectionAction(action)) return false;
+
+    IntersectAction* ia = dynamic_cast<IntersectAction*>(action);
+
+    auto ia_line = ia->getLine();
+    Pnt3f p0 = ia_line.getPosition();
+    Vec3f d = ia_line.getDirection();
+    Pnt3f p = ia->getHitPoint();
+
+    UInt32 numTris = 0;
+    Real32 t;
+    Vec3f norm(0,1,0); // TODO
+
+    int N = 100;
+    float step = 1; // TODO
+    for (int i = 0; i < N; i++) {
+        p = p-d*step; // walk
+        float l = distToSurface(p);
+        if (l > 0) {
+            Real32 t = p0.dist( p );
+            p[1] -= l;
+            ia->setHit(t, ia->getActNode(), 0, norm, -1);
+            break;
+        }
+    }
+
+    return true;
 }
 
 
@@ -171,10 +162,10 @@ vec3 getNormal() {
     float s10 = textureOffset(tex, tc, off.yx).a;
     float s12 = textureOffset(tex, tc, off.yz).a;
 
-    float r2 = resolution*2;
+    float r2 = resolution*2; // TODO, wrong
     vec3 va = normalize(vec3(r2,s21-s01,0));
     vec3 vb = normalize(vec3( 0,s12-s10,r2));
-    vec3 n = cross(va,vb);
+    vec3 n = cross(vb,va);
 	return n;
 }
 
@@ -184,19 +175,6 @@ vec3 mixColor(vec3 c1, vec3 c2, float t) {
 }
 
 vec3 getColor() {
-	/*vec3 green = vec3(0.2,0.5,0.2);
-	vec3 black = vec3(0.0);
-	vec3 brown = vec3(0.6,0.5,0.2);
-	vec3 grey = vec3(0.7);
-	vec3 white = vec3(1.0);
-
-	float h = texture2D(tex, gl_TexCoord[0].xy).a;
-	if (h > 1.2) return mixColor(grey, white, 10*(h-1.2));
-	if (h > 1.0 && h <= 1.2) return mixColor(brown, grey, 5*(h-1.0));
-	if (h > 0.8 && h <= 1.0) return mixColor(green, brown, 5*(h-0.8));
-	if (h <= 0.8) return mixColor(black, green, 1.25*h);
-	return black;*/
-
 	return texture2D(tex, gl_TexCoord[0].xy).rgb;
 }
 
@@ -242,6 +220,12 @@ void main() {
 		//int res = int(pow(2,p));
 		int res = int(resolution*32*64/D);
 		res = clamp(res, 1, 64);
+		if (res >= 64) res = 64; // take closest power of two to avoid jumpy effects
+		else if (res >= 32) res = 32;
+		else if (res >= 16) res = 16;
+		else if (res >= 8) res = 8;
+		else if (res >= 4) res = 4;
+		else if (res >= 2) res = 2;
 
         gl_TessLevelInner[0] = res;
         gl_TessLevelInner[1] = res;
@@ -276,7 +260,7 @@ void main() {
     vec3 a = mix(tcPosition[0], tcPosition[1], u);
     vec3 b = mix(tcPosition[3], tcPosition[2], u);
     vec3 tePosition = mix(a, b, v);
-    tePosition.y = 0.4*texture2D(texture, gl_TexCoord[0].xy).a;
+    tePosition.y = texture2D(texture, gl_TexCoord[0].xy).a;
     gl_Position = gl_ModelViewProjectionMatrix * vec4(tePosition, 1);
 }
 );
