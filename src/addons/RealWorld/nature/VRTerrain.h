@@ -18,11 +18,13 @@ class VRTerrain : public VRGeometry {
         static string tessEvaluationShader;
 
         Vec2f size = Vec2f(100,100);
+        Vec2f texelSize = Vec2f(0.01,0.01);
         float resolution = 1;
         float grid = 64;
         VRTexturePtr tex;
         VRMaterialPtr mat;
 
+        void updateTexelSize();
         void setupGeo();
         void setupMat();
 

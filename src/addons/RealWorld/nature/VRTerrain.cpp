@@ -15,8 +15,27 @@ VRTerrain::VRTerrain(string name) : VRGeometry(name) { setupMat(); }
 VRTerrain::~VRTerrain() {}
 VRTerrainPtr VRTerrain::create(string name) { return VRTerrainPtr( new VRTerrain(name) ); }
 
-void VRTerrain::setParameters( Vec2f s, float r ) { size = s; resolution = r; grid = r*64; setupGeo(); mat->setShaderParameter("resolution", resolution); }
-void VRTerrain::setMap( VRTexturePtr t ) { tex = t; mat->setTexture(t); }
+void VRTerrain::setParameters( Vec2f s, float r ) {
+    size = s;
+    resolution = r;
+    grid = r*64;
+    setupGeo();
+    mat->setShaderParameter("resolution", resolution);
+    updateTexelSize();
+}
+
+void VRTerrain::setMap( VRTexturePtr t ) {
+    tex = t;
+    mat->setTexture(t);
+    updateTexelSize();
+}
+
+void VRTerrain::updateTexelSize() {
+    Vec3i s = tex->getSize();
+    texelSize[0] = size[0]/s[0];
+    texelSize[1] = size[1]/s[1];
+	mat->setShaderParameter("texelSize", texelSize);
+}
 
 void VRTerrain::setupGeo() {
     Vec2i gridN = Vec2i(size*1.0/grid);
@@ -74,6 +93,8 @@ void VRTerrain::setupMat() {
 	mat->setTessControlShader(tessControlShader, "terrainTCS");
 	mat->setTessEvaluationShader(tessEvaluationShader, "terrainTES");
 	mat->setShaderParameter("resolution", resolution);
+    updateTexelSize();
+	mat->setShaderParameter("texelSize", texelSize);
 	mat->setTexture(tex);
 }
 
@@ -149,25 +170,10 @@ GLSL(
 uniform sampler2D tex;
 const ivec3 off = ivec3(-1,0,1);
 const vec3 light = vec3(-1,-1,-0.5);
-uniform float resolution;
+uniform vec2 texelSize;
 
 vec3 norm;
 vec4 color;
-
-vec3 getNormal() {
-	vec2 tc = gl_TexCoord[0].xy;
-    float s11 = texture(tex, tc).a;
-    float s01 = textureOffset(tex, tc, off.xy).a;
-    float s21 = textureOffset(tex, tc, off.zy).a;
-    float s10 = textureOffset(tex, tc, off.yx).a;
-    float s12 = textureOffset(tex, tc, off.yz).a;
-
-    float r2 = resolution*2; // TODO, wrong
-    vec3 va = normalize(vec3(r2,s21-s01,0));
-    vec3 vb = normalize(vec3( 0,s12-s10,r2));
-    vec3 n = cross(vb,va);
-	return n;
-}
 
 vec3 mixColor(vec3 c1, vec3 c2, float t) {
 	t = clamp(t, 0.0, 1.0);
@@ -188,6 +194,21 @@ void applyBlinnPhong() {
 	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
 	gl_FragColor = ambient + diffuse + specular;
 	gl_FragColor[3] = 1.0;
+}
+
+vec3 getNormal() {
+	vec2 tc = gl_TexCoord[0].xy;
+    float s11 = texture(tex, tc).a;
+    float s01 = textureOffset(tex, tc, off.xy).a;
+    float s21 = textureOffset(tex, tc, off.zy).a;
+    float s10 = textureOffset(tex, tc, off.yx).a;
+    float s12 = textureOffset(tex, tc, off.yz).a;
+
+    vec2 r2 = 2.0*texelSize;
+    vec3 va = normalize(vec3(r2.x,s21-s01,0));
+    vec3 vb = normalize(vec3(   0,s12-s10,r2.y));
+    vec3 n = cross(vb,va);
+	return n;
 }
 
 void main( void ) {

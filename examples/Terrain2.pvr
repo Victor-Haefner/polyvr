@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="Terrain2" name_space="Scene" loading_time="311">
+<Scene name_suffix="0" base_name="Terrain2" name_space="Scene" loading_time="603">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
         <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="0 29 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-96.7482 72.1528 80.3593" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0 29 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-16.7015 112.889 149.527" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
       </Object>
@@ -23,7 +23,7 @@
 		print 'add flag at', p
 		f = VR.flag.duplicate()
 		f.setFrom(p)
-		VR.find('light').addChild(f)
+		VR.scene.addChild(f)
 </core>
       <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
     </Script>
@@ -31,17 +31,23 @@
       <core>
 	import VR
 	
-	terrain = VR.Terrain('ground')
-	terrain.setParameters([300,150],0.1)
-	VR.find('light').addChild(terrain)
+	if hasattr(VR, 'scene'): VR.scene.destroy()
+	VR.scene = VR.Object('scene')
+	VR.find('light').addChild( VR.scene )
 	
+	terrain = VR.Terrain('ground')
+	terrain.setParameters([300,150],10)
+	VR.scene.addChild(terrain)
+	
+	h1 = 0
+	h2 = 20
 	
 	tg = VR.TextureGenerator()
 	tg.setSize([60,30,1], True)
 	tg.add('Perlin', 1, [0.7]*4, [1]*4 )
 	tg.add('Perlin', 0.5, [0.5]*4, [1]*4 )
 	tg.add('Perlin', 0.25, [0.2]*4, [1]*4 )
-	tg.add('Perlin', 0.125, [0.5,0.7,0.2,0], [0.5,0.7,0.2,30] )
+	tg.add('Perlin', 0.125, [0.5,0.7,0.2,h1], [0.5,0.7,0.2,h2] )
 	tex = tg.compose(0)
 	terrain.setMap(tex)
 	
