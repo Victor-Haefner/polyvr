@@ -17,6 +17,7 @@ using namespace std;
 class VRMaterial;
 class GeoVectorProperty;
 class GeoIntegralProperty;
+class Action;
 
 class VRGeometry : public VRTransform {
     public:
@@ -65,6 +66,7 @@ class VRGeometry : public VRTransform {
         void makeUnique();
         void setMeshVisibility(bool b);
 
+        virtual bool applyIntersectionAction(Action* ia);
         virtual void setPrimitive(string primitive, string args = "");
 
         /** Create a mesh using vectors with positions, normals, indices && optionaly texture coordinates **/

@@ -2,6 +2,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/geometry/OSGGeometry.h"
 
 #define GLSL(shader) #shader
 
@@ -73,6 +74,70 @@ void VRTerrain::setupMat() {
 	mat->setTexture(tex);
 }
 
+
+
+
+
+/*bool intersectQuadPatch(IntersectAction* ia) {
+    UInt32 numTris = 0;
+    Real32 t;
+    Vec3f norm;
+    const Line& ia_line = ia->getLine();
+
+    auto inds = getIndices();
+    auto pos = getPositions();
+    for (uint i=0; i<inds->size(); i+=4) { // each 4 indices are a quad
+        int i1 = inds->getValue(i+0);
+        int i2 = inds->getValue(i+1);
+        int i3 = inds->getValue(i+2);
+        int i4 = inds->getValue(i+3);
+
+        Pnt3f p1 = pos->getValue<Pnt3f>(i1);
+        Pnt3f p2 = pos->getValue<Pnt3f>(i2);
+        Pnt3f p3 = pos->getValue<Pnt3f>(i3);
+        Pnt3f p4 = pos->getValue<Pnt3f>(i4);
+
+        numTris += 2;
+        if (ia_line.intersect(p1, p2, p3, t, &norm)) {
+            ia->setHit(t, ia->getActNode(), i/4, norm, -1);
+        }
+        if (ia_line.intersect(p1, p3, p4, t, &norm)) {
+            ia->setHit(t, ia->getActNode(), i/4+1, norm, -1);
+        }
+    }
+
+    ia->getStatCollector()->getElem(IntersectAction::statNTriangles)->add(numTris);
+    return ia->didHit();
+}
+
+Action::ResultE intersectDefaultGeometry(Geometry* geo, Action* action) {
+    if (!getTypes()) return Action::Skip;
+    auto type = getTypes()->getValue(0);
+    if ( type != GL_PATCHES ) return Geometry::intersectEnter(action);
+
+    if ( getPatchVertices() != 4 ) {
+        cout << "Warning: patch vertices is " + toString(getPatchVertices()) + ", not 4, skipping intersect action!\n";
+        return Action::Skip;
+    }
+
+    IntersectAction* ia = dynamic_cast<IntersectAction*>(action);
+    if (!intersectVolume(ia)) return Action::Skip; //bv missed -> can not hit children
+
+    intersectQuadPatch(ia);
+    //return Action::Skip;
+    return Action::Continue;
+}*/
+
+bool VRTerrain::applyIntersectionAction(Action* ia) {
+    if (!mesh || !mesh->geo) return false;
+
+
+    //auto proxy = (geoIntersectionProxy*)mesh->geo.get();
+    //if (!proxy) return false;
+    //return proxy->intersectDefaultGeometry(action) == Action::Continue;
+
+    return false;
+}
 
 
 string VRTerrain::vertexShader =

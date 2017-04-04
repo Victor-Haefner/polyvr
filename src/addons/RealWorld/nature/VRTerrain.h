@@ -8,6 +8,8 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
+class Action;
+
 class VRTerrain : public VRGeometry {
     private:
         static string vertexShader;
@@ -31,6 +33,8 @@ class VRTerrain : public VRGeometry {
 
         void setParameters( Vec2f size, float resolution );
         void setMap( VRTexturePtr tex );
+
+        virtual bool applyIntersectionAction(Action* ia);
 };
 
 /* TODO:

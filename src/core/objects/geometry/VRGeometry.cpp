@@ -29,9 +29,57 @@
 
 #include <OpenSG/OSGIntersectAction.h>
 #include <OpenSG/OSGLineIterator.h>
+#include <OpenSG/OSGSimpleAttachment.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+
+/*struct GeoAttachmentDesc {
+    typedef VRGeometry* FieldTypeT;
+    static const Char8* getTypeName  (void) { return "Name"; }
+    static const Char8* getFieldName (void) { return "name"; }
+    static const Char8* getGroupName (void) { return "name"; }
+    static const Char8* getParentTypeName(void) { return "Attachment"; }
+    static InitContainerF getInitMethod(void) { return NULL;  }
+};
+
+// attach the geometry ptr to the OSG geometry, used for custom actions responses
+typedef SimpleAttachment<GeoAttachmentDesc> VRGeometryAttachment;
+
+const VRGeometryPtr getGeometryAttachment(AttachmentContainer const* const pContainer) {
+    if (!pContainer) return 0;
+    Attachment* att = pContainer->findAttachment( 15243 );
+    if (!att == NULL) return 0;
+    auto geoAtt = dynamic_cast<VRGeometryAttachment*>(att);
+    if (!geoAtt) return 0;
+    auto geo = dynamic_cast<VRGeometry*>(geoAtt->getFieldPtr()->getValue());
+    return geo ? geo->ptr() : 0;
+}
+
+void setGeometryAttachment(AttachmentContainer* const pContainer, VRGeometryPtr const &geo) {
+    if (pContainer == NULL) return;
+    Attachment* att = pContainer->findAttachment( 15243 );
+    VRGeometryAttachment* geoAtt = 0;
+    if (!att) {
+        geoAtt = VRGeometryAttachment::createDependent( pContainer->getFieldFlags()->_bNamespaceMask ).get();
+        pContainer->addAttachment( geoAtt );
+    } else {
+        geoAtt = dynamic_cast<VRGeometryAttachment*>(att);
+        if (!geoAtt) return;
+    }
+    geoAtt->editFieldPtr()->getValue().assign(geo);
+}*/
+
+map<Geometry*, VRGeometry*> geoAttachmentMap;
+
+const VRGeometryPtr getGeometryAttachment(Geometry* g) {
+    VRGeometryPtr z;
+    return geoAttachmentMap.count(g) ? geoAttachmentMap[g]->ptr() : z;
+}
+
+void setGeometryAttachment(Geometry* g, VRGeometry* geo) {
+    geoAttachmentMap[g] = geo;
+}
 
 VRGeometry::Reference::Reference(int t, string p) {
     type = t;
@@ -49,7 +97,7 @@ VRObjectPtr VRGeometry::copy(vector<VRObjectPtr> children) {
     return geo;
 }
 
-class geoProxy : public Geometry {
+class geoIntersectionProxy : public Geometry {
     public:
         bool intersectVolume(IntersectAction* ia) {
             ia->getActNode()->updateVolume();
@@ -90,7 +138,7 @@ class geoProxy : public Geometry {
             return ia->didHit();
         }
 
-        Action::ResultE intersectEnter(Action* action) {
+        Action::ResultE intersectDefaultGeometry(Action* action) {
             if (!getTypes()) return Action::Skip;
             auto type = getTypes()->getValue(0);
             if ( type != GL_PATCHES ) return Geometry::intersectEnter(action);
@@ -104,16 +152,28 @@ class geoProxy : public Geometry {
             if (!intersectVolume(ia)) return Action::Skip; //bv missed -> can not hit children
 
             intersectQuadPatch(ia);
-            return Action::Skip;
+            //return Action::Skip;
             return Action::Continue;
         }
+
+        Action::ResultE intersectEnter(Action* action) {
+            auto vrGeo = getGeometryAttachment(this);
+            if (vrGeo) return vrGeo->applyIntersectionAction(action) ? Action::Continue : Action::Skip;
+            return intersectDefaultGeometry(action);
+        }
 };
+
+bool VRGeometry::applyIntersectionAction(Action* action) {
+    if (!mesh || !mesh->geo) return false;
+    auto proxy = (geoIntersectionProxy*)mesh->geo.get();
+    if (!proxy) return false;
+    return proxy->intersectDefaultGeometry(action) == Action::Continue;
+}
 
 /** initialise a geometry object with his name **/
 VRGeometry::VRGeometry(string name) : VRTransform(name) {
     type = "Geometry";
     addAttachment("geometry", 0);
-    if (!meshSet) setMesh();
 
     store("sourcetype", &source.type);
     store("sourceparam", &source.parameter);
@@ -121,23 +181,22 @@ VRGeometry::VRGeometry(string name) : VRTransform(name) {
     regStorageSetupFkt( VRFunction<int>::create("geometry_update", boost::bind(&VRGeometry::setup, this)) );
 
     // override intersect action callbacks for geometry
-    IntersectAction::registerEnterDefault( Geometry::getClassType(), reinterpret_cast<Action::Callback>(&geoProxy::intersectEnter));
+    IntersectAction::registerEnterDefault( Geometry::getClassType(), reinterpret_cast<Action::Callback>(&geoIntersectionProxy::intersectEnter));
 }
 
 VRGeometry::VRGeometry(string name, bool hidden) : VRTransform(name) {
     setNameSpace("system");
     type = "Geometry";
     addAttachment("geometry", 0);
-    if (!meshSet) setMesh();
     if (hidden) setPersistency(0);
 }
 
 VRGeometry::~VRGeometry() {}
 
-VRGeometryPtr VRGeometry::create(string name) { return shared_ptr<VRGeometry>(new VRGeometry(name) ); }
-VRGeometryPtr VRGeometry::create(string name, bool hidden) { return shared_ptr<VRGeometry>(new VRGeometry(name, hidden) ); }
+VRGeometryPtr VRGeometry::create(string name) { auto g = VRGeometryPtr(new VRGeometry(name) ); g->setMesh(); return g; }
+VRGeometryPtr VRGeometry::create(string name, bool hidden) { auto g = VRGeometryPtr(new VRGeometry(name, hidden) ); g->setMesh(); return g; }
 VRGeometryPtr VRGeometry::create(string name, string primitive, string params) {
-    auto g = shared_ptr<VRGeometry>(new VRGeometry(name) );
+    auto g = VRGeometryPtr(new VRGeometry(name) );
     g->setPrimitive(primitive, params);
     return g;
 }
@@ -149,6 +208,7 @@ void VRGeometry::setMesh(OSGGeometryPtr g, Reference ref, bool keep_material) {
     if (g->geo == 0) return;
     if (mesh_node && mesh_node->node && getNode() && getNode()->node) getNode()->node->subChild(mesh_node->node);
 
+    setGeometryAttachment(g->geo, this);
     mesh = g;
     mesh_node = OSGObject::create( makeNodeFor(g->geo) );
     OSG::setName(mesh_node->node, getName());
