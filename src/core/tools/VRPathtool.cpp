@@ -295,12 +295,15 @@ void VRPathtool::updateEntry(entryPtr e) { // update path representation
         line->strokeProfile(profile, 0, 0);
     }
 
-    if (auto l = e->line.lock()) l->update();
+    if (auto l = e->line.lock()) {
+        //l->setWorldMatrix(Matrix()); // set path stroke in world coordinates
+        l->update();
+    }
 }
 
 void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle belongs to
     if (!handle) return;
-    auto p = handle->getWorldPose();
+    auto p = handle->getPoseTo(ptr());
     auto key = handle.get();
     if (!handleToEntries.count(key)) return;
 

@@ -425,6 +425,11 @@ posePtr VRTransform::getPose() { return pose::create(_from, getDir(), _up); }
 posePtr VRTransform::getWorldPose() { return pose::create(getWorldPosition(), getWorldDirection(), getWorldUp()); }
 void VRTransform::setWorldPose(posePtr p) { setWorldMatrix(p->asMatrix()); }
 
+posePtr VRTransform::getPoseTo(VRObjectPtr o) {
+    auto m = getMatrixTo(o);
+    return pose::create(m);
+}
+
 /** Set the local matrix **/
 void VRTransform::setMatrix(Matrix m) {
     if (isNan(m)) return;
