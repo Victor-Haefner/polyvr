@@ -384,6 +384,7 @@ void VRPathtool::updateDevs() { // update when something is dragged
         VRGeometryPtr obj = static_pointer_cast<VRGeometry>(dev.second->getDraggedObject());
         if (obj == 0) continue;
         if (!obj->hasAttachment("handle") && !obj->hasAttachment("controlhandle")) continue;
+        if (!handleToNode.count(obj.get()) && !handleToEntries.count(obj.get())) continue;
         projectHandle(obj, dev.second);
         updateHandle(obj);
     }
