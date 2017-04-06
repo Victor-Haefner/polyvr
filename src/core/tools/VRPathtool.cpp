@@ -132,6 +132,10 @@ void VRPathtool::setGraph(GraphPtr g, bool doClear) {
 }
 
 int VRPathtool::addNode(posePtr p) {
+    auto tmp = VRTransform::create("tmp");
+    tmp->setPose(p);
+    p = tmp->getRelativePose(ptr());
+
     if (!graph) setGraph( Graph::create() );
     int i = graph->addNode();
     graph->setPosition(i, p);
@@ -236,6 +240,7 @@ VRGeometryPtr VRPathtool::setGraphNode(int i) {
     knots[i].handle = h;
     handleToNode[h.get()] = i;
     addChild(h);
+    //h->setRelativePose( graph->getPosition(i), ptr() );
     h->setWorldPose( graph->getPosition(i) );
     return h;
 }
@@ -244,12 +249,14 @@ void VRPathtool::update() { // call in script to have smooth knots
     if (graph) { // smooth knot transformations
         map<int, Vec3f> hPositions; // get handle positions
         for (uint i=0; i<knots.size(); i++)
+            //if (auto h = knots[i].handle.lock()) hPositions[i] = h->getRelativePosition(ptr());
             if (auto h = knots[i].handle.lock()) hPositions[i] = h->getWorldPosition();
 
         for (auto& knot : knots) { // compute and set direction of handles
             auto h = knot.second.handle.lock();
             if (!h) continue;
 
+            //Vec3f pos = h->getRelativePosition(ptr());
             Vec3f pos = h->getWorldPosition();
             Vec3f dir;
             for (auto k : knot.second.out) if (hPositions.count(k)) dir += pos - hPositions[k];
@@ -296,7 +303,6 @@ void VRPathtool::updateEntry(entryPtr e) { // update path representation
     }
 
     if (auto l = e->line.lock()) {
-        //l->setWorldMatrix(Matrix()); // set path stroke in world coordinates
         l->update();
     }
 }
@@ -326,6 +332,7 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
             auto getPos = [&](int ID) {
                 if (!hPositions.count(ID)) {
                     auto h = knots[ID].handle.lock();
+                    //hPositions[ID] = h ? h->getRelativePosition(ptr()) : Vec3f();
                     hPositions[ID] = h ? h->getWorldPosition() : Vec3f();
                 }
                 return hPositions[ID];
@@ -361,6 +368,7 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
         if (!pg) pg = dynamic_pointer_cast<VRGeometry>(handle->getParent());
         if (!pg) return; // failed to get parent handle
 
+        //Vec3f d = p->pos() - pg->getRelativePosition(ptr());
         Vec3f d = p->pos() - pg->getWorldPosition();
         auto e = handleToEntries[key][0]; // should only be one entry at most!
         auto op = e->p->getPoint(e->points[key]);
@@ -374,7 +382,9 @@ void VRPathtool::projectHandle(VRGeometryPtr handle, VRDevicePtr dev) { // proje
     OSG::VRIntersection ins = dev->intersect(projObj);
     if (ins.hit) {
         Vec3f d = handle->getWorldDirection();
+        //Vec3f d = handle->getRelativeDirection(ptr());
         d -= d.dot(ins.normal)*ins.normal;
+        //handle->setRelativePose( pose::create(Vec3f(ins.point), d, ins.normal), ptr() );
         handle->setWorldPose( pose::create(Vec3f(ins.point), d, ins.normal) );
     }
 }
@@ -454,6 +464,7 @@ VRGeometryPtr VRPathtool::newControlHandle(VRGeometryPtr handle, Vec3f p) {
     h->setMaterial(VRMaterial::get("pathHandle"));
     h->getMaterial()->setDiffuse(Vec3f(0.5,0.5,0.9));
     h->setPersistency(0);
+    //h->setRelativePosition(p, ptr());
     h->setWorldPosition(p);
     controlhandles.push_back(h);
     return h;

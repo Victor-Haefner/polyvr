@@ -79,6 +79,8 @@ class VRTransform : public VRObject {
         static VRTransformPtr create(string name = "None");
         VRTransformPtr ptr();
 
+        static VRTransformPtr getParentTransform(VRObjectPtr o);
+
         static list< VRTransformWeakPtr > changedObjects;
         static list< VRTransformWeakPtr > dynamicObjects;
 
@@ -98,7 +100,7 @@ class VRTransform : public VRObject {
         Vec3f getEuler();
         void getMatrix(Matrix& _m);
         Matrix getMatrix();
-        Matrix getMatrixTo(VRObjectPtr o);
+        Matrix getMatrixTo(VRObjectPtr o, bool parentOnly = false);
         Matrix getRotationMatrix();
 
         void setFrom(Vec3f pos);
@@ -125,6 +127,16 @@ class VRTransform : public VRObject {
         void setWorldOrientation(Vec3f dir, Vec3f up);
         void setWorldDir(Vec3f dir);
         void setWorldUp(Vec3f up);
+
+        void getRelativeMatrix(Matrix& m, VRObjectPtr o, bool parentOnly = false);
+        Matrix getRelativeMatrix(VRObjectPtr o, bool parentOnly = false);
+        posePtr getRelativePose(VRObjectPtr o, bool parentOnly = false);
+        Vec3f getRelativePosition(VRObjectPtr o, bool parentOnly = false);
+        Vec3f getRelativeDirection(VRObjectPtr o, bool parentOnly = false);
+        Vec3f getRelativeUp(VRObjectPtr o, bool parentOnly = false);
+
+        void setRelativePosition(Vec3f pos, VRObjectPtr o);
+        void setRelativePose(posePtr p, VRObjectPtr o);
 
         int get_orientation_mode();
         void set_orientation_mode(int b);

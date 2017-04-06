@@ -9,6 +9,7 @@
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/VRLod.h"
 #include "core/math/Octree.h"
+#include "core/math/pose.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
 
@@ -135,7 +136,7 @@ VRLodLeafPtr VRLodTree::addObject(VRTransformPtr obj, Vec3f p, int lvl) {
     auto leaf = addLeaf(oLeaf, lvl);
     if (lvl == 0) leaf->add(obj, 0);
     else          leaf->add(obj, 1);
-    obj->setWorldPosition(p);
+    obj->setRelativePosition(p, ptr());
     obj->setDir(Vec3f(0,0,-1));
     obj->setUp(Vec3f(0,1,0));
     return leaf;
@@ -194,14 +195,15 @@ void VRWoods::remTree(int id) {
 }
 
 VRTreePtr VRWoods::addTree(VRTreePtr t, bool updateLODs, bool addToStore) {
+    posePtr p = t->getRelativePose(ptr());
     auto td = dynamic_pointer_cast<VRTree>( t->duplicate() );
     treeTemplates[t->getName()] = t;
     treeRefs[td.get()] = t;
-    auto leaf = addObject(td, t->getFrom(), 0);
+    auto leaf = addObject(td, p->pos(), 0); // getFrom contains the world position!
     treesByID[td->getID()] = td;
 
     auto te = VRObjectManager::Entry::create();
-    te->set( t->getPose(), t->getName());
+    te->set( p, t->getName());
     if (addToStore) treeEntries[td->getName()] = te;
 
     if (updateLODs) {

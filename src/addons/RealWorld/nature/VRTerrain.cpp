@@ -113,7 +113,6 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
         //mw.mult(p,p); // transform point in local coords
 		float u = clamp(p[0]/size[0] + 0.5, 0, 1);
 		float v = clamp(p[2]/size[1] + 0.5, 0, 1);
-        cout << "toUV p " << p << " uv " << p[0]/size[0] << " " << p[2]/size[1] << " u " << u << " v " << v << " size " << size << endl;
 		return Vec2f(u,v);
     };
 
@@ -139,19 +138,16 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
     int N = 1000;
     float step = 10; // TODO
     int dir = 1;
-    cout << "applyIntersectionAction start s " << step  << endl;
     for (int i = 0; i < N; i++) {
         p = p - d*step*dir; // walk
         float l = distToSurface(p);
-        if (l > 0 && l < 0.1) {
+        if (l > 0 && l < 0.03) {
             Real32 t = p0.dist( p );
-            cout << "applyIntersectionAction L: " << l  << " p " << p << " uv " << toUV(p) << " size " << size << endl;
             ia->setHit(t, ia->getActNode(), 0, norm, -1);
             break;
         } else if (l*dir > 0) { // jump over surface
             dir *= -1;
             step *= 0.5;
-            cout << "applyIntersectionAction swap l " << l << " s " << step << endl;
         }
     }
 
