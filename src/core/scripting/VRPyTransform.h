@@ -26,6 +26,7 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyObject* getEuler(VRPyTransform* self);
 
     static PyObject* setPose(VRPyTransform* self, PyObject* args);
+    static PyObject* setWPose(VRPyTransform* self, PyObject* args);
     static PyObject* setWFrom(VRPyTransform* self, PyObject* args);
     static PyObject* setWOrientation(VRPyTransform* self, PyObject* args);
     static PyObject* setFrom(VRPyTransform* self, PyObject* args);

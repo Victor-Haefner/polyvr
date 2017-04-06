@@ -35,6 +35,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setWorldFrom", (PyCFunction)VRPyTransform::setWFrom, METH_VARARGS, "Set the object's world position" },
     {"setWorldOrientation", (PyCFunction)VRPyTransform::setWOrientation, METH_VARARGS, "Set the object's world direction" },
     {"setPose", (PyCFunction)VRPyTransform::setPose, METH_VARARGS, "Set the object's pose - setPose(pose)\n\tsetPose(pos, dir, up)" },
+    {"setWorldPose", (PyCFunction)VRPyTransform::setWPose, METH_VARARGS, "Set the object's pose - setWorldPose(pose)\n\tsetPose(pos, dir, up)" },
     {"setPosition", (PyCFunction)VRPyTransform::setFrom, METH_VARARGS, "Set the object's from vector" },
     {"setFrom", (PyCFunction)VRPyTransform::setFrom, METH_VARARGS, "Set the object's from vector" },
     {"setAt", (PyCFunction)VRPyTransform::setAt, METH_VARARGS, "Set the object's at vector" },
@@ -299,6 +300,21 @@ PyObject* VRPyTransform::setPose(VRPyTransform* self, PyObject* args) {
     PyObject *fl, *dl, *ul;
     if (! PyArg_ParseTuple(args, "OOO", &fl, &dl, &ul)) return NULL;
     self->objPtr->setPose( parseVec3fList(fl), parseVec3fList(dl), parseVec3fList(ul));
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyTransform::setWPose(VRPyTransform* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    if (pySize(args) == 1) {
+        VRPyPose* p;
+        if (! PyArg_ParseTuple(args, "O", &p)) return NULL;
+        if (p->objPtr) self->objPtr->setWorldPose( p->objPtr );
+        Py_RETURN_TRUE;
+    }
+
+    PyObject *fl, *dl, *ul;
+    if (! PyArg_ParseTuple(args, "OOO", &fl, &dl, &ul)) return NULL;
+    self->objPtr->setWorldPose( pose::create(parseVec3fList(fl), parseVec3fList(dl), parseVec3fList(ul)) );
     Py_RETURN_TRUE;
 }
 
