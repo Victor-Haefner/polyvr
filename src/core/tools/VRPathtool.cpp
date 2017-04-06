@@ -225,7 +225,6 @@ void VRPathtool::setGraphEdge(Graph::edge& e, bool handles, Vec3f n1, Vec3f n2) 
         paths[e.ID]->addPoint( pose(nodes[e.from].p.pos(), n1));
         paths[e.ID]->addPoint( pose(nodes[e.to].p.pos(), n2));
     }
-    cout << "VRPathtool::setGraphEdge " << handles << endl;
     auto en = newEntry( paths[e.ID], option(10, handles), e.ID, 0 );
     setupHandles(en, knots[e.from].handle.lock(), knots[e.to].handle.lock());
     knots[e.from].out.push_back(e.to);

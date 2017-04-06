@@ -811,10 +811,7 @@ void VRGeometry::setMaterial(VRMaterialPtr mat) {
     setMaterial(this->mat);
 }*/
 
-VRMaterialPtr VRGeometry::getMaterial() {
-    if (!meshSet) return 0;
-    return mat;
-}
+VRMaterialPtr VRGeometry::getMaterial() { return mat; }
 
 float VRGeometry::calcSurfaceArea() {
     if (!meshSet) return 0;
