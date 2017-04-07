@@ -54,9 +54,9 @@ VRTransformPtr VRObjectManager::copy(string name, posePtr p, bool addToStore) {
     auto e = Entry::create();
     e->set(p,name);
     if (addToStore) entries[dupe->getName()] = e;
+    addChild(dupe);
     dupe->setWorldPose(p);
     dupe->setPersistency(0);
-    addChild(dupe);
     dupe->addAttachment("asset",0);
     return dupe;
 }
