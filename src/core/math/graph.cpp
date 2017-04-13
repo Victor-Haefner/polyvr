@@ -79,6 +79,7 @@ int Graph::getNEdges() {
 }
 
 void Graph::setPosition(int i, posePtr p) {
+    if (!p || i >= nodes.size() || i < 0) return;
     nodes[i].p = *p;
     update(i, true);
 }

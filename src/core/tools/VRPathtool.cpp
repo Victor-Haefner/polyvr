@@ -271,8 +271,8 @@ void VRPathtool::update() { // call in script to have smooth knots
         auto key = handle.get();
         if (!handleToEntries.count(key)) continue;
         for (auto e : handleToEntries[key]) {
-            Matrix m = handle->getMatrixTo(e->anchor.lock());
-            e->p->setPoint(e->points[key],  pose(Vec3f(m[3]), Vec3f(m[2]), Vec3f(m[1])));
+            auto po = handle->getPoseTo(e->anchor.lock());
+            e->p->setPoint(e->points[key], *po);
         }
     }
 
@@ -313,7 +313,7 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
     if (!handleToEntries.count(key)) return;
 
     if (handle->hasAttachment("handle")) {
-        if (handleToNode.count(key)) graph->setPosition( handleToNode[key], p );
+        if (graph && handleToNode.count(key)) graph->setPosition( handleToNode[key], p );
 
         for (auto e : handleToEntries[key]) {
             auto op = e->p->getPoint(e->points[key]);
