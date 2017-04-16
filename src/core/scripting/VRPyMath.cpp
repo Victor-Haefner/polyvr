@@ -94,7 +94,7 @@ PyObject* VRPyVec3f::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     PyObject* v = 0;
     float a,b,c;
     if (! PyArg_ParseTuple(args, "O", &v))
-        if (! PyArg_ParseTuple(args, "fff", &a, &b, &c)) return NULL;
+        if (! PyArg_ParseTuple(args, "fff", &a, &b, &c)) { setErr("Bad Constructor to Vec3"); return NULL; }
     VRPyVec3f* pv = (VRPyVec3f*)allocPtr( type, 0 );
     if (!v) pv->v = Vec3f(a,b,c);
     else pv->v = parseVec3fList(v);
@@ -108,7 +108,8 @@ PyObject* VRPyVec3f::Print(PyObject* self) {
 
 PyObject* VRPyVec3f::normalize(VRPyVec3f* self) {
     self->v.normalize();
-    Py_RETURN_TRUE;
+    //Py_RETURN_TRUE;
+    return (PyObject*) toPyVec3f(self->v);
 }
 
 PyObject* VRPyVec3f::asList(VRPyVec3f* self) {
@@ -130,18 +131,18 @@ PyObject* VRPyVec3f::dot(VRPyVec3f* self, PyObject* args) {
 }
 
 PyObject* VRPyVec3f::cross(VRPyVec3f* self, PyObject* args) {
-    VRPyVec3f* v;
+    PyObject* v = 0;
     if (!PyArg_ParseTuple(args, "O", &v)) return NULL;
-    return ::toPyObject( self->v.cross(v->v) );
+    return ::toPyObject( self->v.cross( parseVec3fList(v)) );
 }
 
 
 PyObject* VRPyVec3f::add(PyObject* self, PyObject* v) {
-    return ::toPyObject( ((VRPyVec3f*)self)->v + ((VRPyVec3f*)v)->v );
+    return ::toPyObject( ((VRPyVec3f*)self)->v + parseVec3fList(v) );
 }
 
 PyObject* VRPyVec3f::sub(PyObject* self, PyObject* v) {
-    return ::toPyObject( ((VRPyVec3f*)self)->v - ((VRPyVec3f*)v)->v );
+    return ::toPyObject( ((VRPyVec3f*)self)->v - parseVec3fList(v) );
 }
 
 PyObject* VRPyVec3f::mul(PyObject* self, PyObject* F) {

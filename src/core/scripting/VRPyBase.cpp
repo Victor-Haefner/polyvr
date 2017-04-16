@@ -1,4 +1,6 @@
 #include "VRPyBase.h"
+#include "VRPyBaseT.h"
+#include "VRPyMath.h"
 
 #include <OpenSG/OSGImage.h>
 
@@ -109,6 +111,7 @@ OSG::Vec2d VRPyBase::parseVec2dList(PyObject *li) {
 
 OSG::Vec3f VRPyBase::parseVec3fList(PyObject *li) {
     if (li == 0) return OSG::Vec3f();
+    if (VRPyVec3f::check(li)) return ((VRPyVec3f*)li)->v;
     vector<PyObject*> lis = pyListToVector(li);
     if (lis.size() != 3) return OSG::Vec3f();
     float x,y,z;
@@ -331,5 +334,3 @@ int VRPyBase::toGLConst(string s) {
 
 bool VRPyBase::isNone(PyObject* o) { return (o == Py_None); }
 
-template<class T>
-PyTypeObject VRPyBaseT<T>::type = NULL;

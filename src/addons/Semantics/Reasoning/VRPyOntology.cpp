@@ -5,6 +5,7 @@
 #include "core/scripting/VRPyBaseT.h"
 #include "core/scripting/VRPyBaseFactory.h"
 #include "core/scripting/VRPyObject.h"
+#include "core/scripting/VRPyMath.h"
 #include "core/utils/toString.h"
 
 using namespace OSG;
@@ -209,9 +210,13 @@ PyObject* VRPyEntity::setVector(VRPyEntity* self, PyObject* args) {
     PyObject* val = 0;
     if (! PyArg_ParseTuple(args, "sO|si:setVector", &prop, &val, &vectype, &i)) return NULL;
 
-    auto o_vals = pyListToVector(val);
     vector<string> vals;
-    for (auto v : o_vals) {
+    if (VRPyVec3f::check(val)) {
+        auto v = ((VRPyVec3f*)val)->v;
+        vals.push_back( ::toString(v[0]) );
+        vals.push_back( ::toString(v[1]) );
+        vals.push_back( ::toString(v[2]) );
+    } else for (auto v : pyListToVector(val)) {
         string s = ::toString( PyFloat_AsDouble(v) );
         vals.push_back(s);
     }
