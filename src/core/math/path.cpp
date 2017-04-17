@@ -425,5 +425,32 @@ void path::clear() {
     colors.clear();
 }
 
+void clampSegment(int& i, int& j, int N) {
+    if (i < 0 || i >= j) j = 0;
+    if (j <= i || j >= N) j = N-1;
+}
+
+bool path::isStraight(int i, int j) {
+    clampSegment(i, j, points.size());
+    Vec3f p1 = points[i].pos();
+    Vec3f d1 = points[i].dir();
+    Vec3f p2 = points[j].pos();
+    Vec3f d2 = points[j].dir();
+    Vec3f d = p2-p1;
+    d.normalize();
+    d1.normalize();
+    d2.normalize();
+    return abs(d.dot(d1)) > 0.999 && abs(d.dot(d2)) > 0.999;
+}
+
+bool path::isCurve(int i, int j) { // TODO
+    clampSegment(i, j, points.size());
+    return false;
+}
+
+bool path::isSinuous(int i, int j) { // TODO
+    clampSegment(i, j, points.size());
+    return false;
+}
 
 OSG_END_NAMESPACE;

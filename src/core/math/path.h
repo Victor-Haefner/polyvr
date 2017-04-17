@@ -59,6 +59,10 @@ class path : public VRStorage {
         float getDistance(Vec3f p);
         vector<float> computeInflectionPoints(int i, int j);
 
+        bool isStraight(int i = 0, int j = 0);
+        bool isCurve(int i = 0, int j = 0);
+        bool isSinuous(int i = 0, int j = 0);
+
         void approximate(int degree);
 
         float getLength();

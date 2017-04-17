@@ -24,6 +24,9 @@ struct VRPyPath : VRPyBaseT<OSG::path> {
     static PyObject* getDistance(VRPyPath* self, PyObject *args);
     static PyObject* getClosestPoint(VRPyPath* self, PyObject *args);
     static PyObject* approximate(VRPyPath* self, PyObject *args);
+    static PyObject* isStraight(VRPyPath* self, PyObject *args);
+    static PyObject* isCurve(VRPyPath* self, PyObject *args);
+    static PyObject* isSinuous(VRPyPath* self, PyObject *args);
 };
 
 #endif // VRPyPath_H_INCLUDED
