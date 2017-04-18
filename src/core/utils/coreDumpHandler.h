@@ -3,4 +3,6 @@
 
 void enableCoreDump(bool b);
 
+void testSignal(int sig);
+
 #endif // COREDUMPHANDLER_H_INCLUDED

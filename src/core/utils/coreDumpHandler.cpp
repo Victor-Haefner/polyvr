@@ -12,11 +12,21 @@ using namespace std;
 const char* dumpPath = "/tmp";
 const char* dumpFile = "/tmp/core";
 
+
+void testSignal(int sig) {
+    kill(getpid(), sig);
+}
+
 #ifndef _WIN32
 extern "C" void coreDump(int sig) {
-    cout << "\n dump core to " << dumpFile << endl;
-    boost::filesystem::current_path(dumpPath);
-    kill(getpid(), SIGABRT);
+    static bool once = true;
+    if (!once) signal(sig, NULL);
+    else {
+        cout << "\n dump core to " << dumpFile << endl;
+        boost::filesystem::current_path(dumpPath);
+    }
+    once = false;
+    kill(getpid(), sig);
 }
 #endif
 
@@ -34,6 +44,7 @@ void enableCoreDump(bool b) {
 
     signal(SIGSEGV, &coreDump);
     signal(SIGFPE, &coreDump);
+    signal(SIGABRT, &coreDump);
 
     /*signal(SIGHUP, &coreDump);
     signal(SIGINT, &coreDump);
