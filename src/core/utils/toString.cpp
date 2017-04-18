@@ -158,6 +158,10 @@ string toString(const OSG::boundingbox& b) {
     return toString(b.min()) + " " + toString(b.max()) + " " + toString(b.empty());
 }
 
+string toString(const OSG::Line& l) {
+    return toString(l.getPosition()) + " " + toString(l.getDirection());
+}
+
 template<> void toValue(stringstream& ss, string& s) { s = ss.str(); }
 template<> void toValue(stringstream& ss, bool& b) { ss >> b; }
 template<> void toValue(stringstream& ss, int& i) { ss >> i; }

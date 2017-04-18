@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGLine.h>
 #include "core/math/VRMathFwd.h"
 
 using namespace std;
@@ -24,6 +25,7 @@ string toString(const OSG::Vec4f& v);
 string toString(const OSG::Vec2i& v);
 string toString(const OSG::Vec3i& v);
 string toString(const OSG::Vec4i& v);
+string toString(const OSG::Line& l);
 string toString(const OSG::pose& p);
 string toString(const OSG::posePtr& p);
 string toString(const OSG::boundingbox& b);

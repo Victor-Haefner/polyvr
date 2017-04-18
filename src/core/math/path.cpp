@@ -445,11 +445,17 @@ bool path::isStraight(int i, int j) {
 
 bool path::isCurve(int i, int j) { // TODO
     clampSegment(i, j, points.size());
+    if (isStraight(i,j)) return false;
+    auto iPnts = computeInflectionPoints(i,j);
+    if (iPnts.size() == 0) return true;
     return false;
 }
 
 bool path::isSinuous(int i, int j) { // TODO
     clampSegment(i, j, points.size());
+    auto iPnts = computeInflectionPoints(i,j);
+    if (isStraight(i,j)) return false;
+    if (iPnts.size() >= 1) return true;
     return false;
 }
 

@@ -191,6 +191,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 
     PyObject* pModMath = Py_InitModule3("VR.Math", VRSceneGlobals::methods, "VR math module");
     sm->registerModule<VRPyVec3f>("Vec3", pModMath, 0, "Math");
+    sm->registerModule<VRPyLine>("Line", pModMath, 0, "Math");
     PyModule_AddObject(pModVR, "Math", pModMath);
 
     PyObject* pModSetup = Py_InitModule3("Setup", VRSceneGlobals::methods, "VR setup module");

@@ -208,6 +208,11 @@ void VRGeoData::updateType(int t, int N) {
 }
 
 void VRGeoData::pushQuad(int i, int j, int k, int l) {
+    int N = size();
+    if (i < 0) i += N;
+    if (j < 0) j += N;
+    if (k < 0) k += N;
+    if (l < 0) l += N;
     data->indices->addValue(i);
     data->indices->addValue(j);
     data->indices->addValue(k);
@@ -222,6 +227,10 @@ void VRGeoData::pushPatch(int N) {
 }
 
 void VRGeoData::pushTri(int i, int j, int k) {
+    int N = size();
+    if (i < 0) i += N;
+    if (j < 0) j += N;
+    if (k < 0) k += N;
     data->indices->addValue(i);
     data->indices->addValue(j);
     data->indices->addValue(k);
@@ -229,13 +238,17 @@ void VRGeoData::pushTri(int i, int j, int k) {
 }
 
 void VRGeoData::pushLine(int i, int j) {
+    int N = size();
+    if (i < 0) i += N;
+    if (j < 0) j += N;
     data->indices->addValue(i);
     data->indices->addValue(j);
     updateType(GL_LINES, 2);
 }
 
 void VRGeoData::pushPoint(int i) {
-    if (i < 0) i = data->pos->size()-1;
+    int N = size();
+    if (i < 0) i += N;
     data->indices->addValue(i);
     updateType(GL_POINTS, 1);
 }
