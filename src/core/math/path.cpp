@@ -309,7 +309,9 @@ void path::compute(int N) {
             // berechne die hilfspunkte fuer die directions B'(0.5)
             //  B(t) = (1 - t)^3 * p1 + 3t(1-t)^2 * h1 + 3t^2 (1-t) * h2 + t^3 * p2
             // B'(t) = -3(1-t)^2 * p1 + 3(1-t)^2 *  h1 - 6t(1-t) *    h1 - 3t^2 * h2 + 6t(1-t) * h2 + 3t^2 * p2
-            Vec3f n = (r-h1+h2)*0.75;
+            //       = (1-t^2) * (3h1-3p1) + 2t*(1-t) * (3h2-3h1) + t^2 * (3p2-3h2)
+            //       = (1-t^2) * d1*L + 2t*(1-t) * (3r - d1*L - d2*L) + t^2 * d2*L
+            Vec3f n = r*3.0/L-p1.dir()-p2.dir();
 
             // berechne hilfspunkt für up vector
             //Vec3f x = n1.cross(u1)*0.5 + n2.cross(u2)*0.5;
