@@ -82,7 +82,8 @@ void CarDynamics::initVehicle() {
         m_collisionShapes.push_back(compound);
         btTransform localTrans;
         localTrans.setIdentity();
-        localTrans.setOrigin(btVector3(0, 1, 0)); // localTrans effectively shifts the center of mass with respect to the chassis
+        //localTrans.setOrigin(btVector3(0, 1, 0)); // localTrans effectively shifts the center of mass with respect to the chassis
+        localTrans.setOrigin( VRPhysics::toBtVector3(chassis.centerOfMass) ); // localTrans effectively shifts the center of mass with respect to the chassis
 
         compound->addChildShape(localTrans, chassisShape);
         tr.setOrigin(btVector3(0, 0.f, 0));
@@ -184,8 +185,8 @@ void CarDynamics::setupSimpleWheels(VRGeometryPtr geo, float x, float fZ, float 
 	wheels[3].position = Vec3f(-xOffset, height, rearZOffset); // rear wheel left
 	wheels[0].isSteered = true;
 	wheels[1].isSteered = true;
-	wheels[2].isDriven = true;
-	wheels[3].isDriven = true;
+	wheels[0].isDriven = true;
+	wheels[1].isDriven = true;
 
 	for (auto& wheel : wheels) {
         wheel.geo = static_pointer_cast<VRGeometry>( geo->duplicate() );
@@ -253,21 +254,20 @@ void CarDynamics::updateEngine() {
     float clutchForce = 1;
     if (engine.clutchForceCurve) clutchForce = engine.clutchForceCurve->getPosition(clutch)[1];
 
-    float transmission = 1;
-    transmission = engine.gearRatios[engine.gear];
+    float gearRatio = engine.gearRatios[engine.gear];
 
     // compute RPM
-	float s = abs( getSpeed() );
+	float s = abs( getSpeed() ) * 1000/60; // from km/h to m/min
 	float coupling = (engine.gear != 0)*clutchForce;
-	float wheelRPM = abs(engine.gearRatios[engine.gear]) * s * 100 / (wheels[0].radius * 12 * Pi);
-	float deltaRPM = ( wheelRPM - engine.rpm ) * coupling;
+	float wheelRPM = s / (wheels[0].radius * 2 * Pi);
+	float wheelERPM = wheelRPM * abs(gearRatio);
+	float deltaRPM = ( wheelERPM - engine.rpm ) * coupling;
 	float eRPMrange = engine.maxRpm - engine.minRpm;
 	float throttleRPM = (engine.maxRpm - engine.rpm) * clampedThrottle;
-	if (wheelRPM > engine.maxRpm) transmission = 0;
+	if (wheelERPM > engine.maxRpm) gearRatio = 0;
 
 	// compute engine breaking
-	float engineF = 5;//5;
-	float engineFriction = (engine.rpm - engine.minRpm) / eRPMrange * max(deltaRPM*0.005 + engineF, 0.0) * (1.0 - clampedThrottle);
+	float engineFriction = (engine.rpm - engine.minRpm) / eRPMrange * max(deltaRPM*0.005 + 5, 0.0) * (1.0 - clampedThrottle);
 	float eBreak = breaking*engine.breakPower + max(engineFriction, 0.f);
 	//cout << "throttleRPM " << throttleRPM << " clampedThrottle " << clampedThrottle << " throttleMinRPM " << throttleMinRPM << " engine.rpm " << engine.rpm << endl;
 	//cout << "eBreak " << eBreak << " engineFriction " << engineF << " deltaRPM " << deltaRPM << " engine.rpm " << engine.rpm << endl;
@@ -275,18 +275,19 @@ void CarDynamics::updateEngine() {
 	engine.rpm -= 14 * engineFriction * engine.running;
 	engine.rpm += 0.1 * deltaRPM;
 
-	if (engine.rpm < engine.minRpm) setIgnition(false);
+	if (engine.rpm < engine.minRpm*0.6) setIgnition(false);
 
 	// compute engine force
-    float eForce = clampedThrottle * engine.power * coupling * transmission * engine.running;
+	float engineF = max( -deltaRPM*0.001f, 0.f); // try to keep the minRPM
+    float eForce = clamp(clampedThrottle + engineF, 0, 1) * gearRatio * engine.power * coupling * engine.running;
 
 	// apply force wheels
     for (int i=0; i<wheels.size(); i++) {
         auto& wheel = wheels[i];
+        m_vehicle->setBrake(eBreak, i);
 
         if (wheel.isDriven) {
             m_vehicle->applyEngineForce(eForce, i);
-            m_vehicle->setBrake(eBreak, i);
         }
 
         if (wheel.isSteered) {
@@ -333,16 +334,17 @@ void CarDynamics::setParameter(float mass, float maxSteering, float enginePower,
     engine.clutchForceCurve->compute(32);
 
 	engine.gearRatios.clear();
-	engine.gearRatios[-1] = -8;
+	engine.gearRatios[-1] = -3.5;
 	engine.gearRatios[0] = 0;
-	engine.gearRatios[1] = 8;
-	engine.gearRatios[2] = 6;
-	engine.gearRatios[3] = 4;
-	engine.gearRatios[4] = 3;
-	engine.gearRatios[5] = 1.5;
-	engine.gearRatios[6] = 1;
+	engine.gearRatios[1] = 3.5;
+	engine.gearRatios[2] = 1.5;
+	engine.gearRatios[3] = 0.95;
+	engine.gearRatios[4] = 0.75;
+	engine.gearRatios[5] = 0.63;
+	engine.gearRatios[6] = 0.5;
+	for (int i=-1; i<=6; i++) engine.gearRatios[i] *= 3.5;
 	engine.minRpm = 800;
-	engine.maxRpm = 4500;
+	engine.maxRpm = 6000;
 }
 
 boost::recursive_mutex& CarDynamics::mtx() {
@@ -356,7 +358,7 @@ boost::recursive_mutex& CarDynamics::mtx() {
 
 void CarDynamics::reset(const pose& p) {
     PLock lock(mtx());
-
+    setIgnition(false);
 	btTransform t;
 	t.setIdentity();
 	Matrix m = p.asMatrix();

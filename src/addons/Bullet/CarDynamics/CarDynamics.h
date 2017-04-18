@@ -58,6 +58,7 @@ class CarDynamics : public VRObject {
             VRGeometryPtr geo;
             btRigidBody* body = 0;
             float mass = 850.0f;
+            Vec3f centerOfMass = Vec3f(0,-0.5,-1); // local offset, TODO
         };
 
     private:
