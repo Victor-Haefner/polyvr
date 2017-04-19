@@ -233,9 +233,13 @@ PyObject* VRPyEntity::addVector(VRPyEntity* self, PyObject* args) {
     PyObject* val = 0;
     if (! PyArg_ParseTuple(args, "sO|s:addVector", &prop, &val, &vectype)) return NULL;
 
-    auto o_vals = pyListToVector(val);
     vector<string> vals;
-    for (auto v : o_vals) {
+    if (VRPyVec3f::check(val)) {
+        auto v = ((VRPyVec3f*)val)->v;
+        vals.push_back( ::toString(v[0]) );
+        vals.push_back( ::toString(v[1]) );
+        vals.push_back( ::toString(v[2]) );
+    } else for (auto v : pyListToVector(val)) {
         string s = ::toString( PyFloat_AsDouble(v) );
         vals.push_back(s);
     }
