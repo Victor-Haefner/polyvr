@@ -2,7 +2,7 @@
 
 out vec3 norm;
 out vec2 tcs;
-out mat4 miMV;
+out mat3 miMN;
 
 in vec4 osg_Vertex;
 in vec3 osg_Normal;
@@ -11,15 +11,14 @@ in vec2 osg_MultiTexCoord0;
 uniform int c1; // test input
 
 void main() {
-	miMV = inverse( gl_ModelViewMatrix );
-	//miMV = inverse( gl_ModelViewProjectionMatrix );
+	miMN = inverse( gl_NormalMatrix );
 
 	// standart:
-    //gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex;
-    //norm = gl_NormalMatrix * osg_Normal;
-    
-    // full screen quad:
-    gl_Position = osg_Vertex;
-    norm = osg_Normal;
-    tcs = osg_MultiTexCoord0;
+	//gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex;
+	//norm = gl_NormalMatrix * osg_Normal;
+
+	// full screen quad:
+	gl_Position = osg_Vertex;
+	norm = osg_Normal;
+	tcs = osg_MultiTexCoord0;
 }
