@@ -177,17 +177,17 @@ PySequenceMethods VRPyVec3f::sMethods = {
     0,  /* intintobjargproc sq_ass_slice; /* __setslice__ */
 };
 
-PyObject* VRPyVec3f::len(PyObject* self) {
-    /*if (!PyNumber_Check(F)) { setErr("Dividing by a vector is not allowed"); return NULL; }
-    float f = PyFloat_AsDouble(F);
-    return ::toPyObject( ((VRPyVec3f*)self)->v * (1.0/f) );*/
+Py_ssize_t VRPyVec3f::len(PyObject* self) {
+    return 3;
 }
 
-PyObject* VRPyVec3f::getItem(PyObject* self, PyObject* args) {
-    //return ::toPyObject( -((VRPyVec3f*)self)->v);
+PyObject* VRPyVec3f::getItem(PyObject* self, Py_ssize_t i) {
+    Vec3f v = ((VRPyVec3f*)self)->v;
+    return PyFloat_FromDouble(v[i]);
 }
 
-PyObject* VRPyVec3f::setItem(PyObject* self, PyObject* args) {
+PyObject* VRPyVec3f::setItem(PyObject* self, Py_ssize_t i, PyObject* val) {
+    Vec3f v = ((VRPyVec3f*)self)->v;
     //Vec3f v = ((VRPyVec3f*)self)->v;
     //return ::toPyObject( Vec3f(::abs(v[0]), ::abs(v[1]), ::abs(v[2])) );
 }
