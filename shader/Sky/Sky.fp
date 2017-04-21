@@ -3,8 +3,10 @@
 
 // gen
 in vec3 norm;
+in vec4 pos;
 in vec2 tcs;
-in mat3 miMN;
+in mat3 miN;
+in mat4 miP;
 vec3 fragDir;
 vec4 color;
 uniform vec2 OSGViewportSize;
@@ -37,12 +39,8 @@ vec4 colGround = vec4(0.7, 0.7, 0.65, 1.0);
 float rad_earth = 6.371e6;
 
 
-void computeDirection() { 
-	float aspect = OSGViewportSize.y/OSGViewportSize.x;
-	float l = -1/tan(0.5); // assumes total screen height of 2
-	real_fragDir = vec3(tcs*2-vec2(1),l);
-	real_fragDir.x /= aspect;
-	real_fragDir = miMN*normalize(real_fragDir);
+void computeDirection() {
+	real_fragDir = miN * (miP * pos).xyz;
 	float tol = 1e-5;
 	fragDir = real_fragDir;
 	if(fragDir.y<tol) fragDir.y = tol;

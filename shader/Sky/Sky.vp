@@ -1,8 +1,10 @@
 #version 400 compatibility
 
 out vec3 norm;
+out vec4 pos;
 out vec2 tcs;
-out mat3 miMN;
+out mat3 miN;
+out mat4 miP;
 
 in vec4 osg_Vertex;
 in vec3 osg_Normal;
@@ -11,13 +13,9 @@ in vec2 osg_MultiTexCoord0;
 uniform int c1; // test input
 
 void main() {
-	miMN = inverse( gl_NormalMatrix );
-
-	// standart:
-	//gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex;
-	//norm = gl_NormalMatrix * osg_Normal;
-
-	// full screen quad:
+	miN = transpose(gl_NormalMatrix);
+	miP = inverse(gl_ProjectionMatrix);
+	pos = osg_Vertex * 0.5;
 	gl_Position = osg_Vertex;
 	norm = osg_Normal;
 	tcs = osg_MultiTexCoord0;
