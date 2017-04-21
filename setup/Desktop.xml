@@ -2,7 +2,7 @@
 <Setup>
   <Displays>
     <Window active="1" type="2" width="1317" height="848" name="screen" mouse="mouse" keyboard="keyboard">
-      <View stereo="0" active_stereo="0" projection="1" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0.5 -1" normal="0 0 1" user_pos="0 0 0" up="0 1 0" size="2 1" shear="0 0" warp="0 0" vsize="1317 848" user=""/>
+      <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0.5 -1" normal="0 0 1" user_pos="0 0 0" up="0 1 0" size="2 1" shear="0 0" warp="0 0" vsize="1317 848" user=""/>
     </Window>
   </Displays>
   <Devices>
