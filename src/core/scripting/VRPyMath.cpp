@@ -17,7 +17,7 @@ template<> PyTypeObject VRPyBaseT<Vec3f>::type = {
     0,                         /*tp_compare*/
     VRPyVec3f::Print,                         /*tp_repr*/
     &VRPyVec3f::nMethods,                         /*tp_as_number*/
-    0,                         /*tp_as_sequence*/
+    &VRPyVec3f::sMethods,                         /*tp_as_sequence*/
     0,                         /*tp_as_mapping*/
     0,                         /*tp_hash */
     0,                         /*tp_call*/
@@ -167,8 +167,30 @@ PyObject* VRPyVec3f::abs(PyObject* self) {
     return ::toPyObject( Vec3f(::abs(v[0]), ::abs(v[1]), ::abs(v[2])) );
 }
 
+PySequenceMethods VRPyVec3f::sMethods = {
+    (lenfunc)VRPyVec3f::len,       /* inquiry sq_length;             /* __len__ */
+    0,    /* binaryfunc sq_concat;          /* __add__ */
+    0,    /* intargfunc sq_repeat;          /* __mul__ */
+    (ssizeargfunc)VRPyVec3f::getItem,   /* intargfunc sq_item;            /* __getitem__ */
+    0,  /* intintargfunc sq_slice;        /* __getslice__ */
+    (ssizeobjargproc)VRPyVec3f::setItem,   /* intobjargproc sq_ass_item;     /* __setitem__ */
+    0,  /* intintobjargproc sq_ass_slice; /* __setslice__ */
+};
 
+PyObject* VRPyVec3f::len(PyObject* self) {
+    /*if (!PyNumber_Check(F)) { setErr("Dividing by a vector is not allowed"); return NULL; }
+    float f = PyFloat_AsDouble(F);
+    return ::toPyObject( ((VRPyVec3f*)self)->v * (1.0/f) );*/
+}
 
+PyObject* VRPyVec3f::getItem(PyObject* self, PyObject* args) {
+    //return ::toPyObject( -((VRPyVec3f*)self)->v);
+}
+
+PyObject* VRPyVec3f::setItem(PyObject* self, PyObject* args) {
+    //Vec3f v = ((VRPyVec3f*)self)->v;
+    //return ::toPyObject( Vec3f(::abs(v[0]), ::abs(v[1]), ::abs(v[2])) );
+}
 
 
 template<> PyTypeObject VRPyBaseT<Line>::type = {

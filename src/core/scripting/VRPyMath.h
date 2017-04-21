@@ -11,6 +11,7 @@ struct VRPyVec3f : VRPyBaseT<OSG::Vec3f> {
 
     static PyMethodDef methods[];
     static PyNumberMethods nMethods;
+    static PySequenceMethods sMethods;
 
     static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* Print(PyObject* self);
@@ -27,6 +28,10 @@ struct VRPyVec3f : VRPyBaseT<OSG::Vec3f> {
     static PyObject* div(PyObject* self, PyObject* f);
     static PyObject* neg(PyObject* self);
     static PyObject* abs(PyObject* self);
+
+    static PyObject* len(PyObject* self);
+    static PyObject* getItem(PyObject* self, PyObject* args);
+    static PyObject* setItem(PyObject* self, PyObject* args);
 };
 
 struct VRPyLine : VRPyBaseT<OSG::Line> {
