@@ -163,13 +163,14 @@ PyObject* VRPyEntity::getAll(VRPyEntity* self, PyObject* args) {
 }
 
 PyObject* VRPyEntity::getVector(VRPyEntity* self, PyObject* args) {
-    /*const char* prop = 0; int i=0;
+    const char* prop = 0; int i=0;
     if (! PyArg_ParseTuple(args, "s|i", &prop, &i)) return NULL;
-    string pname; if (prop) pname = prop;
-    auto v = self->objPtr->getVector( pname, i );
-    if (res == "") Py_RETURN_NONE;
-    else return PyString_FromString(res.c_str());*/
-    Py_RETURN_TRUE;
+    auto v = self->objPtr->getVector( prop?prop:"", i );
+    if (v.size() == 0) Py_RETURN_NONE;
+    if (v.size() == 1) return VRPyPropertyCaster::cast(v[0], self->objPtr->ontology.lock());
+    PyObject* pv = PyList_New(v.size());
+    for (int i=0; i<v.size(); i++) PyList_SetItem(pv, i, VRPyPropertyCaster::cast(v[i], self->objPtr->ontology.lock()) );
+    return pv;
 }
 
 

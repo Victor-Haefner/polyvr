@@ -36,8 +36,8 @@ struct VREntity : public VROntoID, public VRName {
 
     VRPropertyPtr get(string prop, int i = 0);
     vector<VRPropertyPtr> getAll(string prop = "");
-    vector<string> getVector(string prop, int i = 0);
-    vector< vector<string> > getAllVector(string prop);
+    vector<VRPropertyPtr> getVector(string prop, int i = 0);
+    vector< vector<VRPropertyPtr> > getAllVector(string prop);
 
     bool is_a(string concept);
     string toString();

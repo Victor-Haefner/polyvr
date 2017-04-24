@@ -161,18 +161,22 @@ vector<VRPropertyPtr> VREntity::getAll(string name) {
     return res;
 }
 
-vector<string> VREntity::getVector(string prop, int i) { // TODO
-    vector<string> res;
+vector<VRPropertyPtr> VREntity::getVector(string prop, int i) { // TODO
+    vector<VRPropertyPtr> res;
     auto vp = get(prop, i);
+    if (!vp) return res;
     if (auto o = ontology.lock()) {
-        auto ve = o->getEntity( vp->value );
-
+        auto ve = o->getEntity( vp->value ); // vector entity
+        if (auto p = ve->get("x")) res.push_back( p );
+        if (auto p = ve->get("y")) res.push_back( p );
+        if (auto p = ve->get("z")) res.push_back( p );
+        if (auto p = ve->get("w")) res.push_back( p );
     }
     return res;
 }
 
-vector< vector<string> > VREntity::getAllVector(string prop) { // TODO
-    vector< vector<string> > res;
+vector< vector<VRPropertyPtr> > VREntity::getAllVector(string prop) { // TODO
+    vector< vector<VRPropertyPtr> > res;
     return res;
 }
 
