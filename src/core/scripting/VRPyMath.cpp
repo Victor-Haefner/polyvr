@@ -168,12 +168,12 @@ PyObject* VRPyVec3f::abs(PyObject* self) {
 }
 
 PySequenceMethods VRPyVec3f::sMethods = {
-    (lenfunc)VRPyVec3f::len,       /* inquiry sq_length;             /* __len__ */
+    VRPyVec3f::len,       /* inquiry sq_length;             /* __len__ */
     0,    /* binaryfunc sq_concat;          /* __add__ */
     0,    /* intargfunc sq_repeat;          /* __mul__ */
-    (ssizeargfunc)VRPyVec3f::getItem,   /* intargfunc sq_item;            /* __getitem__ */
+    VRPyVec3f::getItem,   /* intargfunc sq_item;            /* __getitem__ */
     0,  /* intintargfunc sq_slice;        /* __getslice__ */
-    (ssizeobjargproc)VRPyVec3f::setItem,   /* intobjargproc sq_ass_item;     /* __setitem__ */
+    VRPyVec3f::setItem,   /* intobjargproc sq_ass_item;     /* __setitem__ */
     0,  /* intintobjargproc sq_ass_slice; /* __setslice__ */
 };
 
@@ -186,10 +186,10 @@ PyObject* VRPyVec3f::getItem(PyObject* self, Py_ssize_t i) {
     return PyFloat_FromDouble(v[i]);
 }
 
-PyObject* VRPyVec3f::setItem(PyObject* self, Py_ssize_t i, PyObject* val) {
-    Vec3f v = ((VRPyVec3f*)self)->v;
-    //Vec3f v = ((VRPyVec3f*)self)->v;
-    //return ::toPyObject( Vec3f(::abs(v[0]), ::abs(v[1]), ::abs(v[2])) );
+int VRPyVec3f::setItem(PyObject* self, Py_ssize_t i, PyObject* val) {
+    Vec3f& v = ((VRPyVec3f*)self)->v;
+    v[i] = PyFloat_AsDouble(val);
+    return 0;
 }
 
 

@@ -31,7 +31,7 @@ struct VRPyVec3f : VRPyBaseT<OSG::Vec3f> {
 
     static Py_ssize_t len(PyObject* self);
     static PyObject* getItem(PyObject* self, Py_ssize_t i);
-    static PyObject* setItem(PyObject* self, Py_ssize_t i, PyObject* val);
+    static int setItem(PyObject* self, Py_ssize_t i, PyObject* val);
 };
 
 struct VRPyLine : VRPyBaseT<OSG::Line> {
