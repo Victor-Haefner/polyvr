@@ -833,6 +833,7 @@ float VRGeometry::calcSurfaceArea() {
 
 void VRGeometry::applyTransformation(shared_ptr<pose> po) {
     Matrix m = po->asMatrix();
+    if (!mesh) return;
     if (!mesh->geo) return;
     auto pos = mesh->geo->getPositions();
     if (!pos) return;

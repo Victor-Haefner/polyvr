@@ -110,7 +110,7 @@ PyObject* VRPyCarDynamics::update(VRPyCarDynamics* self, PyObject* args) {
 }
 
 PyObject* VRPyCarDynamics::setChassis(VRPyCarDynamics* self, PyObject* args) {
-    VRPyGeometry* dev = 0;
+    VRPyTransform* dev = 0;
     int doPhys = 1;
     if (! PyArg_ParseTuple(args, "O|i", &dev, &doPhys)) return NULL;
     self->objPtr->setChassisGeo(dev->objPtr, doPhys);

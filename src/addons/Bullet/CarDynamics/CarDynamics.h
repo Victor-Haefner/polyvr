@@ -18,7 +18,7 @@ using namespace std;
 class CarDynamics : public VRObject {
     public:
         struct Wheel {
-            VRGeometryPtr geo;
+            VRTransformPtr geo;
 
             // suspension parameter
             Vec3f position;
@@ -55,7 +55,8 @@ class CarDynamics : public VRObject {
         };
 
         struct Chassis {
-            VRGeometryPtr geo;
+            VRTransformPtr geo;
+            vector<VRGeometryPtr> geos;
             btRigidBody* body = 0;
             float mass = 850.0f;
             Vec3f massOffset;
@@ -122,8 +123,8 @@ class CarDynamics : public VRObject {
         int getGear();
         int getRPM();
 
-        void setChassisGeo(VRGeometryPtr geo, bool doPhys = 1);
-        void setupSimpleWheels(VRGeometryPtr geo, float xOffset, float frontZOffset, float rearZOffset, float height, float radius, float width);
+        void setChassisGeo(VRTransformPtr geo, bool doPhys = 1);
+        void setupSimpleWheels(VRTransformPtr geo, float xOffset, float frontZOffset, float rearZOffset, float height, float radius, float width);
         void setParameter(float mass, float maxSteering, float enginePower, float breakPower, Vec3f massOffset = Vec3f());
 
         void reset(const pose& p);

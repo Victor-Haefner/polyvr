@@ -93,7 +93,13 @@ void CarDynamics::updateWheels() {
     }
 }
 
-void CarDynamics::setChassisGeo(VRGeometryPtr geo, bool doPhys) {
+void CarDynamics::setChassisGeo(VRTransformPtr geo, bool doPhys) {
+    for ( auto obj : geo->getChildren( true, "Geometry", true ) ) {
+        auto geo = dynamic_pointer_cast<VRGeometry>(obj);
+        chassis.geos.push_back(geo);
+        geo->applyTransformation();
+    }
+
     if (doPhys) {
         PLock lock(mtx());
         geo->getPhysics()->setShape("Convex");
@@ -121,7 +127,7 @@ vector<VRTransformPtr> CarDynamics::getWheels() {
     return res;
 }
 
-void CarDynamics::setupSimpleWheels(VRGeometryPtr geo, float x, float fZ, float rZ, float h, float r, float w) {
+void CarDynamics::setupSimpleWheels(VRTransformPtr geo, float x, float fZ, float rZ, float h, float r, float w) {
     xOffset = x;
     frontZOffset = fZ;
     rearZOffset = rZ;
@@ -292,16 +298,19 @@ void CarDynamics::setParameter(float mass, float maxSteering, float enginePower,
 	engine.gearRatios[4] = 0.75;
 	engine.gearRatios[5] = 0.63;
 	engine.gearRatios[6] = 0.5;
-	for (int i=-1; i<=6; i++) engine.gearRatios[i] *= 3.5;
+	for (int i=-1; i<=6; i++) engine.gearRatios[i] *= 3.5*1.6;
 	engine.minRpm = 800;
 	engine.maxRpm = 6000;
 
 	// update physics
 	if (!chassis.geo) return;
     PLock lock(mtx());
-	chassis.geo->setMatrix(Matrix());
-    chassis.geo->setFrom( - massOffset + chassis.massOffset );
-    chassis.geo->applyTransformation();
+    for ( auto geo : chassis.geos ) {
+        geo->setMatrix(Matrix());
+        auto p = geo->getPoseTo(chassis.geo);
+        geo->setFrom( p->pos() - massOffset + chassis.massOffset );
+        geo->applyTransformation();
+    }
     chassis.massOffset = massOffset;
     updateChassis();
 }

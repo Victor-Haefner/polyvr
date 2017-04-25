@@ -290,7 +290,7 @@ VRObjectPtr VRObject::getAtPath(string path) {
     return res;
 }
 
-vector<VRObjectPtr> VRObject::getChildren(bool recursive, string type) {
+vector<VRObjectPtr> VRObject::getChildren(bool recursive, string type, bool includeSelf) {
     if (!recursive) {
         if (type == "") return children;
         vector<VRObjectPtr> res;
@@ -299,6 +299,8 @@ vector<VRObjectPtr> VRObject::getChildren(bool recursive, string type) {
     }
 
     vector<VRObjectPtr> res = getChildren(false, type);
+    if (includeSelf && getType() == type) res.push_back( ptr() );
+
     for (auto c : children) {
         vector<VRObjectPtr> tmp = c->getChildren(true, type);
         res.insert( res.end(), tmp.begin(), tmp.end() );
