@@ -58,7 +58,7 @@ class CarDynamics : public VRObject {
             VRGeometryPtr geo;
             btRigidBody* body = 0;
             float mass = 850.0f;
-            Vec3f centerOfMass = Vec3f(0,-0.5,-1); // local offset, TODO
+            Vec3f massOffset;
         };
 
     private:
@@ -93,12 +93,13 @@ class CarDynamics : public VRObject {
 
         boost::recursive_mutex& mtx();
         void initPhysics();
-        void initVehicle();
         void updateWheels();
         void updateEngine();
 
         void addBTWheel(Wheel& w);
         btRigidBody* createRigitBody(float mass, const btTransform& startTransform, btCollisionShape* shape);
+
+        void updateChassis();
 
     public:
         CarDynamics(string name);
@@ -123,7 +124,7 @@ class CarDynamics : public VRObject {
 
         void setChassisGeo(VRGeometryPtr geo, bool doPhys = 1);
         void setupSimpleWheels(VRGeometryPtr geo, float xOffset, float frontZOffset, float rearZOffset, float height, float radius, float width);
-        void setParameter(float mass, float maxSteering, float enginePower, float breakPower);
+        void setParameter(float mass, float maxSteering, float enginePower, float breakPower, Vec3f massOffset = Vec3f());
 
         void reset(const pose& p);
         float getSpeed();

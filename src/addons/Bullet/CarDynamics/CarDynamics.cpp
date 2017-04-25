@@ -23,32 +23,11 @@ CarDynamics::CarDynamics(string name) : VRObject(name) {
 }
 
 CarDynamics::~CarDynamics() {
+    PLock lock(mtx());
     cout << "\nCarDynamics::~CarDynamics()\n";
-    return;
-
-	//cleanup in the reverse order of creation/initialization
-	//remove the rigidbodies from the dynamics world && delete them
-	int i;
-	for (i = m_dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--) {
-		btCollisionObject* obj = m_dynamicsWorld->getCollisionObjectArray()[i];
-		btRigidBody* body = btRigidBody::upcast(obj);
-		if (body && body->getMotionState()) {
-			delete body->getMotionState();
-		}
-		m_dynamicsWorld->removeCollisionObject(obj);
-		delete obj;
-	}
-
-	//delete collision shapes
-	for (int j = 0; j<m_collisionShapes.size(); j++) {
-		btCollisionShape* shape = m_collisionShapes[j];
-		delete shape;
-	}
-
-	//delete dynamics world
-	delete m_vehicleRayCaster;
-	delete m_vehicle;
-	m_vehicle = 0;
+    m_dynamicsWorld->removeVehicle(m_vehicle);
+	if (m_vehicle) delete m_vehicle;
+	if (m_vehicleRayCaster) delete m_vehicleRayCaster;
 }
 
 CarDynamicsPtr CarDynamics::create(string name) { return CarDynamicsPtr( new CarDynamics(name) ); }
@@ -60,56 +39,35 @@ void CarDynamics::initPhysics() {
     updateWPtr = VRFunction<int>::create("cardyn_wheel_update", boost::bind(&CarDynamics::updateWheels, this));
     scene->addUpdateFkt(updateEPtr);
     scene->addUpdateFkt(updateWPtr);
+
+    PLock lock(mtx());
     m_dynamicsWorld = (btDynamicsWorld*) scene->bltWorld();
+	m_vehicleRayCaster = new btDefaultVehicleRaycaster(m_dynamicsWorld);
 }
 
 float CarDynamics::getSpeed() { return speed; }
 float CarDynamics::getAcceleration() { return acceleration; }
 
-void CarDynamics::initVehicle() {
+void CarDynamics::updateChassis() {
     PLock lock(mtx());
+    chassis.geo->getPhysics()->setPhysicalized(false);
+    chassis.geo->getPhysics()->setMass(chassis.mass);
+    chassis.geo->getPhysics()->setCenterOfMass(chassis.massOffset);
+    chassis.geo->getPhysics()->setPhysicalized(true);
+    chassis.body = chassis.geo->getPhysics()->getRigidBody();
 
-    if (chassis.body == 0) { // if no custom chassis set
-        cout << "\nINIT with default BOX\n";
-        btTransform tr;
-        tr.setIdentity();
-        tr.setOrigin(btVector3(0, 0, 0));
-
-        btCollisionShape* chassisShape = new btBoxShape(btVector3(1.5f, 1.f, 3.0f));
-        m_collisionShapes.push_back(chassisShape);
-
-        btCompoundShape* compound = new btCompoundShape();
-        m_collisionShapes.push_back(compound);
-        btTransform localTrans;
-        localTrans.setIdentity();
-        //localTrans.setOrigin(btVector3(0, 1, 0)); // localTrans effectively shifts the center of mass with respect to the chassis
-        localTrans.setOrigin( VRPhysics::toBtVector3(chassis.centerOfMass) ); // localTrans effectively shifts the center of mass with respect to the chassis
-
-        compound->addChildShape(localTrans, chassisShape);
-        tr.setOrigin(btVector3(0, 0.f, 0));
-        chassis.body = createRigitBody(chassis.mass, tr, compound);
-    }
-
-	m_vehicleRayCaster = new btDefaultVehicleRaycaster(m_dynamicsWorld);
+    m_dynamicsWorld->removeVehicle(m_vehicle);
+    if (m_vehicle) delete m_vehicle;
 	m_vehicle = new btRaycastVehicle(m_tuning, chassis.body, m_vehicleRayCaster);
-
-	//never deactivate the vehicle
-	chassis.body->setActivationState(DISABLE_DEACTIVATION);
-
-	// create vehicle
-	if (m_dynamicsWorld && m_vehicle){
-        m_dynamicsWorld->addVehicle(m_vehicle);
-        cout << "\n---vehicle added to the world\n";
-	} else cout << "\n!!! problem adding vehicle\n";
-
-	//choose coordinate system
+	chassis.body->setActivationState(DISABLE_DEACTIVATION); // never deactivate the vehicle
+    m_dynamicsWorld->addVehicle(m_vehicle);
 	m_vehicle->setCoordinateSystem(0, 1, 2);
 	for (auto& wheel : wheels) addBTWheel(wheel);
 }
 
 void CarDynamics::addBTWheel(Wheel& wheel) {
     if (!m_vehicle) return;
-    btVector3 pos = VRPhysics::toBtVector3(wheel.position);
+    btVector3 pos = VRPhysics::toBtVector3(wheel.position - chassis.massOffset);
     btVector3 dir = VRPhysics::toBtVector3(wheel.direction);
     btVector3 axl = VRPhysics::toBtVector3(wheel.axle);
     btWheelInfo& btWheel = m_vehicle->addWheel(pos, dir, axl, wheel.suspensionRestLength, wheel.radius, m_tuning, wheel.isSteered);
@@ -136,8 +94,8 @@ void CarDynamics::updateWheels() {
 }
 
 void CarDynamics::setChassisGeo(VRGeometryPtr geo, bool doPhys) {
-    geo->setMatrix(Matrix());
     if (doPhys) {
+        PLock lock(mtx());
         geo->getPhysics()->setShape("Convex");
         geo->getPhysics()->setMass(chassis.mass);
         geo->getPhysics()->setDynamic(true);
@@ -145,22 +103,14 @@ void CarDynamics::setChassisGeo(VRGeometryPtr geo, bool doPhys) {
         geo->getPhysics()->updateTransformation(geo);
     }
 
-    if (geo->getPhysics()->getRigidBody() == 0) {
-        cout<<"!!!!!!!!chassis is 0!!!!!!!!\ncreating vehicle with standard parameters && shapes"<<endl;
-        initVehicle();
-        return;
-    }
-
     {
         PLock lock(mtx());
         chassis.body = geo->getPhysics()->getRigidBody();
     }
 
-    cout << "\nset chassis geo " << geo->getName() << endl;
-
-    initVehicle();
     chassis.geo = geo;
     addChild(geo);
+    updateChassis();
 }
 
 VRObjectPtr CarDynamics::getRoot() { return ptr(); }
@@ -320,7 +270,7 @@ int CarDynamics::getGear() { return engine.gear; }
 int CarDynamics::getRPM() { return engine.rpm; }
 
 
-void CarDynamics::setParameter(float mass, float maxSteering, float enginePower, float breakPower) {
+void CarDynamics::setParameter(float mass, float maxSteering, float enginePower, float breakPower, Vec3f massOffset) {
     if (mass > 0) chassis.mass = mass;
     engine.maxSteer = maxSteering;
     engine.power = enginePower;
@@ -345,6 +295,15 @@ void CarDynamics::setParameter(float mass, float maxSteering, float enginePower,
 	for (int i=-1; i<=6; i++) engine.gearRatios[i] *= 3.5;
 	engine.minRpm = 800;
 	engine.maxRpm = 6000;
+
+	// update physics
+	if (!chassis.geo) return;
+    PLock lock(mtx());
+	chassis.geo->setMatrix(Matrix());
+    chassis.geo->setFrom( - massOffset + chassis.massOffset );
+    chassis.geo->applyTransformation();
+    chassis.massOffset = massOffset;
+    updateChassis();
 }
 
 boost::recursive_mutex& CarDynamics::mtx() {
@@ -377,6 +336,7 @@ void CarDynamics::reset(const pose& p) {
 
 }
 
+// deprecated
 btRigidBody* CarDynamics::createRigitBody(float mass, const btTransform& startTransform, btCollisionShape* shape) {
 	if (shape == 0) return 0;
     PLock lock(mtx());
