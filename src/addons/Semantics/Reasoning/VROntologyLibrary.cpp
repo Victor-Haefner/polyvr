@@ -39,6 +39,7 @@ void VROntology::setupLibrary() {
     mathOnto->addConcept("Path");
     mathOnto->addConcept("Border", "Path");
     mathOnto->addConcept("Node");
+    mathOnto->addConcept("NodeEntry");
     mathOnto->getConcept("Vector")->addProperty("x", "float");
     mathOnto->getConcept("Vector")->addProperty("y", "float");
     mathOnto->getConcept("Vector")->addProperty("z", "float");
@@ -49,10 +50,12 @@ void VROntology::setupLibrary() {
     mathOnto->getConcept("Area")->addProperty("borders", "Border");
     mathOnto->getConcept("Area")->addProperty("subArea", "Area");
     mathOnto->getConcept("Node")->addProperty("position", "Position");
-    mathOnto->getConcept("Node")->addProperty("paths", "Path");
+    mathOnto->getConcept("Node")->addProperty("paths", "NodeEntry");
     mathOnto->getConcept("Node")->addProperty("graphID", "int");
-    mathOnto->getConcept("Path")->addProperty("nodes", "Node");
-    mathOnto->getConcept("Path")->addProperty("normals", "Normal");
+    mathOnto->getConcept("NodeEntry")->addProperty("path", "Path");
+    mathOnto->getConcept("NodeEntry")->addProperty("node", "Node");
+    mathOnto->getConcept("NodeEntry")->addProperty("direction", "Direction");
+    mathOnto->getConcept("Path")->addProperty("nodes", "NodeEntry");
     mathOnto->getConcept("Box")->addProperty("min", "Vector");
     mathOnto->getConcept("Box")->addProperty("max", "Vector");
     mathOnto->addRule("inside(p,b):Box(b);Position(p);isGe(p,b.min);isGe(b.max,p)", "Box");

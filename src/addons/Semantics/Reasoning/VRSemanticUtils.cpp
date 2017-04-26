@@ -73,18 +73,46 @@ void Variable::addEntity(VREntityPtr e) {
 bool Variable::has(VariablePtr other, VROntologyPtr onto) {
     map<VREntityPtr, vector<VREntityPtr>> matches;
 
-    // get all matches
-    for (auto i1 : entities) { // all entities of that variable
-        for (auto i2 : other->entities) { // check each instance of the other variable
-            for (auto p : i1.second->properties) { // all properties of each instance
-                for (auto v : p.second) {
-                    if (v->value == other->value) matches[i1.second].push_back(0); // TODO: direct match with other variable value
-                    if (v->value == i2.second->getName()) {
-                        matches[i1.second].push_back(i2.second);
-                    }
-                }
+    map<VREntity*, bool> visited;
+
+    /*function<bool(VREntityPtr, string&)> computeMatches = [&](VREntityPtr e, string& oName) -> bool {
+        if (visited[e.get()]) return false; // check for cycles / visited graph nodes
+        visited[e.get()] = true;
+
+        for (auto p : e->properties) { // property vectors of local entity
+            for (auto v : p.second) { // local properties
+                //if (v->value == other->value) matches[e].push_back(0); // TODO: direct match with other variable value
+                if (v->value == oName) return true;
+                auto childEntity = onto->getEntity(v->value);
+                if (childEntity && computeMatches(childEntity, oName)) return true;
             }
         }
+        return false;
+    };*/
+
+    function<bool(VREntityPtr, string&)> computeMatches = [&](VREntityPtr e, string& oName) -> bool {
+        if (visited.count(e.get())) return false; // check for cycles / visited graph nodes
+        visited[e.get()] = true;
+
+        for (auto p : e->properties) { // property vectors of local entity
+            for (auto v : p.second) { // local properties
+                //if (v->value == other->value) matches[e].push_back(0); // TODO: direct match with other variable value
+                if (v->value == oName) return true;
+                auto childEntity = onto->getEntity(v->value);
+                if (childEntity && computeMatches(childEntity, oName)) return true;
+            }
+        }
+        return false;
+    };
+
+    // get all matches
+    for (auto i2 : other->entities) { // check each instance of the other variable
+        string oName = i2.second->getName();
+        for (auto i1 : entities) { // all entities of that variable
+            bool doMatch = computeMatches(i1.second, oName);
+            if (doMatch) matches[i1.second].push_back(i2.second);
+        }
+        visited.clear();
     }
 
     // remove non matched entities
@@ -94,7 +122,7 @@ bool Variable::has(VariablePtr other, VROntologyPtr onto) {
         if (matches.count(i1.second) == 0) toDiscard1.push_back(i1.second);
     }
 
-    for (auto i2 : other->entities) { // check each instance of the other variable
+    for (auto i2 : other->entities) { // check each entity of the other variable
         bool found = false;
         for (auto ev : matches) {
             for (auto e : ev.second) {
