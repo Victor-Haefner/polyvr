@@ -356,19 +356,31 @@ void VRTransform::setRelativePose(posePtr p, VRObjectPtr o) {
     Matrix wm = getMatrixTo(o);
     wm.invert();
     wm.mult(m);
-    setMatrix( wm );
+
+    Matrix lm = getMatrix();
+    lm.mult(wm);
+    setMatrix( lm );
 }
 
 void VRTransform::setRelativePosition(Vec3f pos, VRObjectPtr o) {
     if (isNan(pos)) return;
+    auto p = getRelativePose(o);
+    p->setPos(pos);
+    setRelativePose(p,o);
+}
 
-    Matrix m;
-    m.setTranslate(pos);
+void VRTransform::setRelativeDir(Vec3f dir, VRObjectPtr o) {
+    if (isNan(dir)) return;
+    auto p = getRelativePose(o);
+    p->setDir(dir);
+    setRelativePose(p,o);
+}
 
-    Matrix wm = getMatrixTo(o);
-    wm.invert();
-    wm.mult(m);
-    setFrom( Vec3f(wm[3]) );
+void VRTransform::setRelativeUp(Vec3f up, VRObjectPtr o) {
+    if (isNan(up)) return;
+    auto p = getRelativePose(o);
+    p->setUp(up);
+    setRelativePose(p,o);
 }
 
 /** Set the world position of the object **/

@@ -136,6 +136,8 @@ class VRTransform : public VRObject {
         Vec3f getRelativeUp(VRObjectPtr o, bool parentOnly = false);
 
         void setRelativePosition(Vec3f pos, VRObjectPtr o);
+        void setRelativeDir(Vec3f pos, VRObjectPtr o);
+        void setRelativeUp(Vec3f pos, VRObjectPtr o);
         void setRelativePose(posePtr p, VRObjectPtr o);
 
         int get_orientation_mode();

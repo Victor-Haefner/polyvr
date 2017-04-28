@@ -255,13 +255,12 @@ void VRPathtool::update() { // call in script to have smooth knots
             auto h = knot.second.handle.lock();
             if (!h) continue;
 
-            //Vec3f pos = h->getRelativePosition(ptr());
-            Vec3f pos = h->getWorldPosition();
+            Vec3f pos = h->getRelativePosition(ptr());
             Vec3f dir;
             for (auto k : knot.second.out) if (hPositions.count(k)) dir += pos - hPositions[k];
             for (auto k : knot.second.in) if (hPositions.count(k)) dir += hPositions[k] - pos;
             dir.normalize();
-            h->setDir(dir);
+            h->setRelativeDir(dir, ptr());
         }
     }
 
@@ -331,8 +330,7 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
             auto getPos = [&](int ID) {
                 if (!hPositions.count(ID)) {
                     auto h = knots[ID].handle.lock();
-                    //hPositions[ID] = h ? h->getRelativePosition(ptr()) : Vec3f();
-                    hPositions[ID] = h ? h->getWorldPosition() : Vec3f();
+                    hPositions[ID] = h ? h->getRelativePosition(ptr()) : Vec3f();
                 }
                 return hPositions[ID];
             };
@@ -346,7 +344,7 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
                 auto h = knots[ID].handle.lock();
                 auto key = h.get();
                 if (h) {
-                    h->setDir(dir);
+                    h->setRelativeDir(dir, ptr());
                     for (auto e : handleToEntries[key]) {
                         auto op = e->p->getPoint(e->points[key]);
                         e->p->setPoint( e->points[key], pose(op.pos(), dir, op.up()));
