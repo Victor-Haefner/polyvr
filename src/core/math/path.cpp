@@ -244,21 +244,22 @@ void path::approximate(int d) {
 int path::addPoint( const pose& p, Vec3f c ) {
     points.push_back(p);
     point_colors.push_back(c);
-    return points.size() - 1;
+    return size() - 1;
 }
 
-float path::getLength() {
+float path::getLength(int i, int j) {
     float l = 0;
-    for (int i=1; i<size(); i++) {
-        auto p1 = points[i-1].pos();
-        auto p2 = points[i].pos();
+    if (j <= i) j = size()-1;
+    for (int k=i+1; k<j+1; k++) {
+        auto p1 = points[k-1].pos();
+        auto p2 = points[k].pos();
         l += (p2-p1).length();
     }
     return l;
 }
 
 void path::setPoint(int i, const pose& p, Vec3f c ) {
-    if (i < 0 || i >= (int)points.size()) return;
+    if (i < 0 || i >= size()) return;
     points[i] = p;
     point_colors[i] = c;
 }

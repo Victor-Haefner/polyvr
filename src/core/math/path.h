@@ -65,7 +65,7 @@ class path : public VRStorage {
 
         void approximate(int degree);
 
-        float getLength();
+        float getLength(int i = 0, int j = 0);
         int size();
 
         void update();

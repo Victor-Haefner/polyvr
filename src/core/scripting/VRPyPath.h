@@ -19,7 +19,7 @@ struct VRPyPath : VRPyBaseT<OSG::path> {
     static PyObject* getColors(VRPyPath* self);
     static PyObject* getPoints(VRPyPath* self);
     static PyObject* getSize(VRPyPath* self);
-    static PyObject* getLength(VRPyPath* self);
+    static PyObject* getLength(VRPyPath* self, PyObject *args);
     static PyObject* getPose(VRPyPath* self, PyObject *args);
     static PyObject* getDistance(VRPyPath* self, PyObject *args);
     static PyObject* getClosestPoint(VRPyPath* self, PyObject *args);

@@ -75,21 +75,6 @@ bool Variable::has(VariablePtr other, VROntologyPtr onto) {
 
     map<VREntity*, bool> visited;
 
-    /*function<bool(VREntityPtr, string&)> computeMatches = [&](VREntityPtr e, string& oName) -> bool {
-        if (visited[e.get()]) return false; // check for cycles / visited graph nodes
-        visited[e.get()] = true;
-
-        for (auto p : e->properties) { // property vectors of local entity
-            for (auto v : p.second) { // local properties
-                //if (v->value == other->value) matches[e].push_back(0); // TODO: direct match with other variable value
-                if (v->value == oName) return true;
-                auto childEntity = onto->getEntity(v->value);
-                if (childEntity && computeMatches(childEntity, oName)) return true;
-            }
-        }
-        return false;
-    };*/
-
     function<bool(VREntityPtr, string&)> computeMatches = [&](VREntityPtr e, string& oName) -> bool {
         if (visited.count(e.get())) return false; // check for cycles / visited graph nodes
         visited[e.get()] = true;
