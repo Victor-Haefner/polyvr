@@ -35,6 +35,7 @@ PyMethodDef VRPyCarDynamics::methods[] = {
     {"toggleCarSound", (PyCFunction)VRPyCarDynamics::toggleCarSound, METH_VARARGS, "toggle car sound - toggleCarSound(bool)" },
     {"getCarSound", (PyCFunction)VRPyCarDynamics::getCarSound, METH_NOARGS, "Get car sound - getCarSound()" },
     {"carSoundIsLoaded", (PyCFunction)VRPyCarDynamics::carSoundIsLoaded, METH_NOARGS, "Query if audio data has been loaded - carSoundIsLoaded()" },
+    {"setFade", (PyCFunction)VRPyCarDynamics::setFade, METH_VARARGS, "Set ignition - setFade(float)" },
     {NULL}  /* Sentinel */
 };
 
@@ -60,12 +61,21 @@ PyObject* VRPyCarDynamics::carSoundIsLoaded(VRPyCarDynamics* self) {
     return PyInt_FromLong(self->objPtr->getCarSound()->isLoaded());
 }
 
+PyObject* VRPyCarDynamics::setFade(VRPyCarDynamics* self, PyObject* args) {
+    float f, d;
+    if (! PyArg_ParseTuple(args, "ff", &d, &f)) return NULL;
+    self->objPtr->getCarSound()->setFade(f);
+    self->objPtr->getCarSound()->setDuration(d);
+    Py_RETURN_TRUE;
+}
+
 PyObject* VRPyCarDynamics::getWheels(VRPyCarDynamics* self) {
     auto wheels = self->objPtr->getWheels();
     PyObject* pyWheels = PyList_New(wheels.size());
     for (uint i=0; i<wheels.size(); i++) PyList_SetItem(pyWheels, i, VRPyTransform::fromSharedPtr(wheels[i]));
     return pyWheels;
 }
+
 
 PyObject* VRPyCarDynamics::getRPM(VRPyCarDynamics* self) {
     return PyInt_FromLong(self->objPtr->getRPM());

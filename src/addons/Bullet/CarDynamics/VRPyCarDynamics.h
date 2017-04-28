@@ -32,6 +32,8 @@ struct VRPyCarDynamics : VRPyBaseT<OSG::CarDynamics> {
     static PyObject* toggleCarSound(VRPyCarDynamics* self, PyObject* args);
     static PyObject* getCarSound(VRPyCarDynamics* self);
     static PyObject* carSoundIsLoaded(VRPyCarDynamics* self);
+
+    static PyObject* setFade(VRPyCarDynamics* self, PyObject* args);
 };
 
 struct VRPyDriver : VRPyBaseT<OSG::VRDriver> {

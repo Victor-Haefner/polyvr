@@ -261,6 +261,13 @@ void feed1D3(PyObject* o, T& vec) {
     }
 }
 
+PyObject* VRPyGeometry::clear(VRPyGeometry* self) {
+    if (!self->valid()) return NULL;
+    VRGeoData geo(self->objPtr);
+    geo.reset();
+    Py_RETURN_TRUE;
+}
+
 PyObject* VRPyGeometry::addVertex(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     PyObject *p, *n, *c, *t;
@@ -320,7 +327,7 @@ PyObject* VRPyGeometry::addLine(VRPyGeometry* self, PyObject *args) {
     VRGeoData geo(self->objPtr);
     bool toApply = (geo.getNIndices() == 0);
     if (l) { auto i = parseVec2iList(l); geo.pushLine( i[0], i[1] ); }
-    else geo.pushQuad();
+    else geo.pushLine();
     if (toApply) geo.apply(self->objPtr, false);
     Py_RETURN_TRUE;
 }
@@ -332,7 +339,7 @@ PyObject* VRPyGeometry::addTriangle(VRPyGeometry* self, PyObject *args) {
     VRGeoData geo(self->objPtr);
     bool toApply = (geo.getNIndices() == 0);
     if (l) { auto i = parseVec3iList(l); geo.pushTri( i[0], i[1], i[2] ); }
-    else geo.pushQuad();
+    else geo.pushTri();
     if (toApply) geo.apply(self->objPtr, false);
     Py_RETURN_TRUE;
 }
@@ -372,12 +379,6 @@ PyObject* VRPyGeometry::separate(VRPyGeometry* self, PyObject *args) {
     VRPySelection* sel = 0;
     if (!PyArg_ParseTuple(args, "O", &sel)) return NULL;
     return VRPyGeometry::fromSharedPtr( self->objPtr->separateSelection( sel->objPtr ) );
-}
-
-PyObject* VRPyGeometry::clear(VRPyGeometry* self) {
-    if (!self->valid()) return NULL;
-    self->objPtr->clear();
-    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyGeometry::copy(VRPyGeometry* self, PyObject *args) {

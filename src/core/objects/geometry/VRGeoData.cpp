@@ -81,15 +81,24 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
 VRGeoDataPtr VRGeoData::create() { return VRGeoDataPtr( new VRGeoData() ); }
 
 void VRGeoData::reset() {
-    data->types = GeoUInt8Property::create();
-    data->lengths = GeoUInt32Property::create();
-    data->indices = GeoUInt32Property::create();
-    data->pos = GeoPnt3fProperty::create();
-    data->norms = GeoVec3fProperty::create();
-    data->cols3 = GeoVec3fProperty::create();
-    data->cols4 = GeoVec4fProperty::create();
-    data->texs = GeoVec2fProperty::create();
-    data->texs2 = GeoVec2fProperty::create();
+    if (data->types) data->types->clear();
+    else data->types = GeoUInt8Property::create();
+    if (data->lengths) data->lengths->clear();
+    else data->lengths = GeoUInt32Property::create();
+    if (data->indices) data->indices->clear();
+    else data->indices = GeoUInt32Property::create();
+    if (data->pos) data->pos->clear();
+    else data->pos = GeoPnt3fProperty::create();
+    if (data->norms) data->norms->clear();
+    else data->norms = GeoVec3fProperty::create();
+    if (data->cols3) data->cols3->clear();
+    else data->cols3 = GeoVec3fProperty::create();
+    if (data->cols4) data->cols4->clear();
+    else data->cols4 = GeoVec4fProperty::create();
+    if (data->texs) data->texs->clear();
+    else data->texs = GeoVec2fProperty::create();
+    if (data->texs2) data->texs2->clear();
+    else data->texs2 = GeoVec2fProperty::create();
 }
 
 bool VRGeoData::valid() const {
