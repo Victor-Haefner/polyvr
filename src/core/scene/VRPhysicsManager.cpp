@@ -93,7 +93,11 @@ long long VRPhysicsManager::getTime() { // time in seconds
 
 btSoftBodyWorldInfo* VRPhysicsManager::getSoftBodyWorldInfo() {return softBodyWorldInfo;}
 
-void VRPhysicsManager::setPhysicsActive(bool a) { active = a; }
+void VRPhysicsManager::setPhysicsActive(bool a) {
+    MLock lock(mtx);
+    active = a;
+    skip = true;
+}
 
 void VRPhysicsManager::prepareObjects() {
     for (auto o : OSGobjs) {
@@ -112,6 +116,7 @@ void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
         t0 = thread->t_last;
         thread->t_last = t1;
         dt = t1-t0;
+        if (skip) { skip = 0; dt = 0; }
 
         {
             MLock lock(mtx);
