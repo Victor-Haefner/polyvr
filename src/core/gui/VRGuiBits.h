@@ -32,6 +32,8 @@ struct VRConsoleWidget {
     bool paused = 0;
     bool isOpen = 0;
 
+    string notifyColor = "#006fe0";
+
     void forward();
     void write(string s);
     void update();
@@ -44,6 +46,7 @@ struct VRConsoleWidget {
     void setOpen(bool b);
     void setLabel(Gtk::Label* lbl);
     void setColor(string color);
+    void configColor(string color);
     void resetColor();
 };
 

@@ -167,6 +167,10 @@ void VRConsoleWidget::setColor(string color) {
     label->modify_fg( Gtk::STATE_NORMAL , Gdk::Color(color));
 }
 
+void VRConsoleWidget::configColor( string c ) {
+    notifyColor = c;
+}
+
 void VRConsoleWidget::resetColor() {
     label->unset_fg( Gtk::STATE_ACTIVE );
     label->unset_fg( Gtk::STATE_NORMAL );
@@ -175,7 +179,7 @@ void VRConsoleWidget::resetColor() {
 void VRConsoleWidget::update() {
     PLock lock(mtx);
     while(!msg_queue.empty()) {
-        if (!isOpen) setColor("#006fe0");
+        if (!isOpen) setColor(notifyColor);
         buffer->insert(buffer->end(), msg_queue.front());
 		msg_queue.pop();
     }
@@ -324,10 +328,12 @@ VRGuiBits::VRGuiBits() {
         terminal->append_page(*c->swin, name);
         c->setLabel( (Gtk::Label*)terminal->get_tab_label(*c->swin) );
         consoles[name] = c;
+        return c;
     };
 
     addTermTab("Console");
-    addTermTab("Errors");
+    auto errTab = addTermTab("Errors");
+    errTab->configColor("#e03000");
     addTermTab("Search results");
     addTermTab("Reasoning");
     addTermTab("Tracking");
