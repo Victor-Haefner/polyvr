@@ -210,4 +210,12 @@ void main() {
 
 	gl_FragColor = color;
 	gl_FragDepth = 1.0; // depth is infinite at 1.0? behind all else (check)
+
+	// vertical line for testing
+	//if (real_fragDir.x < 0.01 && real_fragDir.x > 0) gl_FragColor = vec4(0,0,0,1);
 }
+
+
+
+
+

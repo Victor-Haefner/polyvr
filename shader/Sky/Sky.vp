@@ -16,6 +16,7 @@ void main() {
 	miN = transpose(gl_NormalMatrix);
 	miP = inverse(gl_ProjectionMatrix);
 	pos = osg_Vertex * 0.5;
+	pos.z = 0.5; // try to fix stereo
 	gl_Position = osg_Vertex;
 	norm = osg_Normal;
 	tcs = osg_MultiTexCoord0;
