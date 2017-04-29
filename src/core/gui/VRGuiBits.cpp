@@ -152,6 +152,7 @@ void VRConsoleWidget::clear() {
     PLock lock(mtx);
     std::queue<string>().swap(msg_queue);
     buffer->set_text("");
+    resetColor();
 }
 
 void VRConsoleWidget::pause() { paused = getToggleButtonState("pause_terminal"); }
