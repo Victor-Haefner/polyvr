@@ -54,6 +54,7 @@ void VROntology::setupLibrary() {
     mathOnto->getConcept("Node")->addProperty("graphID", "int");
     mathOnto->getConcept("NodeEntry")->addProperty("path", "Path");
     mathOnto->getConcept("NodeEntry")->addProperty("node", "Node");
+    mathOnto->getConcept("NodeEntry")->addProperty("sign", "float");
     mathOnto->getConcept("NodeEntry")->addProperty("direction", "Direction");
     mathOnto->getConcept("Path")->addProperty("nodes", "NodeEntry");
     mathOnto->getConcept("Box")->addProperty("min", "Vector");

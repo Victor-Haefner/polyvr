@@ -125,9 +125,9 @@ PyObject* VRPyVec3f::length(VRPyVec3f* self) {
 }
 
 PyObject* VRPyVec3f::dot(VRPyVec3f* self, PyObject* args) {
-    VRPyVec3f* v;
+    PyObject* v;
     if (!PyArg_ParseTuple(args, "O", &v)) return NULL;
-    return PyFloat_FromDouble( self->v.dot(v->v) );
+    return PyFloat_FromDouble( self->v.dot( parseVec3fList(v) ) );
 }
 
 PyObject* VRPyVec3f::cross(VRPyVec3f* self, PyObject* args) {
