@@ -184,9 +184,12 @@ polygon polygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKING UN
     std::ostream_iterator< Point_2 >  out( std::cout, "\n" );*/
     vector<Kernel::Point_2> pIn; for (auto p : points) pIn.push_back(Kernel::Point_2(p[0],p[1]));
     vector<Kernel::Point_2> pOut; for (auto p : points) pOut.push_back(Kernel::Point_2());
-    CGAL::ch_graham_andrew( pIn.begin(), pIn.end(), pOut.begin() );
+    auto pOutEnd = CGAL::ch_graham_andrew( pIn.begin(), pIn.end(), pOut.begin() );
     polygon res;
-    for (auto p : pOut) res.addPoint(Vec2f(p[0],p[2]));
+    for (auto pItr = pOut.begin(); pItr != pOutEnd; pItr++) {
+        auto p = *pItr;
+        res.addPoint(Vec2f(p[0],p[2]));
+    }
     return res;
 }
 
