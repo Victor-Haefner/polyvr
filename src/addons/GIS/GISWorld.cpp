@@ -45,8 +45,10 @@ void GISWorld::setupOntology() {
     Way->addProperty("path", "Path");
     Way->addProperty("markings", RoadMarking);
     Way->addProperty("tracks", RoadTrack);
+    Way->addProperty("lanes", Lane);
     Lane->addProperty("width", "float");
-    Road->addProperty("lanes", Lane);
+    Lane->addProperty("direction", "int");
+    Lane->addProperty("path", "Path");
     Road->addProperty("sidewalks", Sidewalk);
     Road->addProperty("intersections", RoadIntersection);
     Road->addProperty("buildings", Building);

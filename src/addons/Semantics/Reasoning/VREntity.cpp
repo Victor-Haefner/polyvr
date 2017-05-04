@@ -117,6 +117,12 @@ void VREntity::add(string name, string value) {
     properties[name].push_back( prop );
 }
 
+void VREntity::clear(string name) {
+    auto prop = getProperty(name);
+    if (!prop) { WARN("Warning (clear): Entity " + this->name + " has no property " + name); return; }
+    properties[name].clear();
+}
+
 void VREntity::rem(VRPropertyPtr p) {
     string name = p->getName();
     if (properties.count(name)) {

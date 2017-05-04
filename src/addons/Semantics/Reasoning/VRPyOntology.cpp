@@ -114,6 +114,7 @@ PyMethodDef VRPyEntity::methods[] = {
     {"getProperties", (PyCFunction)VRPyEntity::getProperties, METH_VARARGS, "Return all properties or the properties of a certain type - [property] getProperties( str )" },
     {"set", (PyCFunction)VRPyEntity::set, METH_VARARGS, "Set a property - set( str prop, str value | int pos )" },
     {"add", (PyCFunction)VRPyEntity::add, METH_VARARGS, "Add a property - add( str prop, str value )" },
+    {"clear", (PyCFunction)VRPyEntity::clear, METH_VARARGS, "Clear property - clear( str prop )" },
     {"setVector", (PyCFunction)VRPyEntity::setVector, METH_VARARGS, "Set a vector property - setVector( str prop, str value [x,y,z] | str vector concept, int pos )" },
     {"addVector", (PyCFunction)VRPyEntity::addVector, METH_VARARGS, "Add a vector property - addVector( str prop, str value [x,y,z], str vector concept )" },
     {"get", (PyCFunction)VRPyEntity::get, METH_VARARGS, "Get the value of ith property named prop - str get( str prop | int i = 0 )" },
@@ -187,9 +188,7 @@ PyObject* VRPyEntity::add(VRPyEntity* self, PyObject* args) {
     const char* prop = 0;
     const char* val = 0;
     if (! PyArg_ParseTuple(args, "ss:add", &prop, &val)) return NULL;
-    string pname; if (prop) pname = prop;
-    string pval; if (val) pval = val;
-    self->objPtr->add( pname, pval );
+    self->objPtr->add( prop?prop:"", val?val:"" );
     Py_RETURN_TRUE;
 }
 
@@ -198,9 +197,14 @@ PyObject* VRPyEntity::set(VRPyEntity* self, PyObject* args) {
     const char* val = 0;
     int i = 0;
     if (! PyArg_ParseTuple(args, "ss|i:set", &prop, &val, &i)) return NULL;
-    string pname; if (prop) pname = prop;
-    string pval; if (val) pval = val;
-    self->objPtr->set( pname, pval, i );
+    self->objPtr->set( prop?prop:"", val?val:"", i );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyEntity::clear(VRPyEntity* self, PyObject* args) {
+    const char* prop = 0;
+    if (! PyArg_ParseTuple(args, "s", &prop)) return NULL;
+    self->objPtr->clear( prop?prop:"" );
     Py_RETURN_TRUE;
 }
 
