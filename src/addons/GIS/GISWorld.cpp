@@ -30,7 +30,7 @@ void GISWorld::setupOntology() {
     auto Road = world->addConcept("Road", "Way");
     auto Sidewalk = world->addConcept("Sidewalk", "Way");
     auto Crossing = world->addConcept("Crossing", "Node");
-    auto RoadIntersection = world->addConcept("RoadIntersection", "Crossing");
+    auto RoadIntersection = world->addConcept("RoadIntersection", "Way");
     auto Lane = world->addConcept("Lane", "Way");
     auto Building = world->addConcept("Building", "Area");
     auto RoadMarking = world->addConcept("RoadMarking", "Border");
@@ -42,14 +42,16 @@ void GISWorld::setupOntology() {
     WayNetwork->addProperty("nodes", Crossing);
     Way->addProperty("crossings", Crossing);
     Way->addProperty("areas", "Area");
+    Way->addProperty("path", "Path");
+    Way->addProperty("markings", RoadMarking);
+    Way->addProperty("tracks", RoadTrack);
     Lane->addProperty("width", "float");
     Road->addProperty("lanes", Lane);
     Road->addProperty("sidewalks", Sidewalk);
     Road->addProperty("intersections", RoadIntersection);
     Road->addProperty("buildings", Building);
-    Road->addProperty("path", "Path");
-    Road->addProperty("markings", RoadMarking);
-    Road->addProperty("tracks", RoadTrack);
+    RoadIntersection->addProperty("node", "Node");
+    RoadIntersection->addProperty("roads", Road);
     Sidewalk->addProperty("kerbs", Kerb);
     RoadMarking->addProperty("width", "float");
     RoadMarking->addProperty("style", "string");

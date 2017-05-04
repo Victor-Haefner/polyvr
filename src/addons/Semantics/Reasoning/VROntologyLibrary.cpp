@@ -60,6 +60,7 @@ void VROntology::setupLibrary() {
     mathOnto->getConcept("Box")->addProperty("min", "Vector");
     mathOnto->getConcept("Box")->addProperty("max", "Vector");
     mathOnto->addRule("inside(p,b):Box(b);Position(p);isGe(p,b.min);isGe(b.max,p)", "Box");
+    mathOnto->addRule("connected(n,m):Node(n);Node(m);Path(p);has(p.nodes,n);has(p.nodes,m)", "Node");
     // TODO: quaternion rotation rule to change direction
 
     objectOnto->import(mathOnto);
