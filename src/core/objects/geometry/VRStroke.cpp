@@ -63,8 +63,8 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool doColor, C
 
             // add new profile points and normals
             for (Vec3f pos : profile) {
-                if (endArrow1 || begArrow2) pos *= 2.5;
-                if (endArrow2 || begArrow1) pos *= 0.1;
+                if (endArrow1 || begArrow2) pos += (pos-pCenter)*2.5;
+                if (endArrow2 || begArrow1) pos = pCenter;
                 m.mult(pos, pos);
 
                 Vec3f norm = pos; norm.normalize();
