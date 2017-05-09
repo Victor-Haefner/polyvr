@@ -112,6 +112,7 @@ GLSL(
 varying vec4 vertex;
 varying vec3 normal;
 varying mat4 MVP;
+varying vec2 texCoord;
 
 attribute vec4 osg_Vertex;
 attribute vec4 osg_Normal;
@@ -121,6 +122,7 @@ void main( void ) {
     gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
     normal = osg_Normal.xyz;
     MVP = gl_ModelViewProjectionMatrix;
+    texCoord = vec2(0,0);
 }
 );
 
