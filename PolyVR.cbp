@@ -352,6 +352,11 @@
 		<Unit filename="src/addons/Factory/network.h" />
 		<Unit filename="src/addons/GIS/GISWorld.cpp" />
 		<Unit filename="src/addons/GIS/GISWorld.h" />
+		<Unit filename="src/addons/GIS/WorldGenerator/VRPyWorldGenerator.cpp" />
+		<Unit filename="src/addons/GIS/WorldGenerator/VRPyWorldGenerator.h" />
+		<Unit filename="src/addons/GIS/WorldGenerator/VRWorldGeneratorFwd.h" />
+		<Unit filename="src/addons/GIS/WorldGenerator/materials/VRAsphalt.cpp" />
+		<Unit filename="src/addons/GIS/WorldGenerator/materials/VRAsphalt.h" />
 		<Unit filename="src/addons/RealWorld/Altitude.h" />
 		<Unit filename="src/addons/RealWorld/Assets/Asset.cpp" />
 		<Unit filename="src/addons/RealWorld/Assets/Asset.h" />

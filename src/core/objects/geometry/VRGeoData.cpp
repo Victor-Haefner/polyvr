@@ -81,6 +81,7 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
 VRGeoDataPtr VRGeoData::create() { return VRGeoDataPtr( new VRGeoData() ); }
 
 void VRGeoData::reset() {
+    data->lastPrim = -1;
     data->types = GeoUInt8Property::create();
     data->lengths = GeoUInt32Property::create();
     data->indices = GeoUInt32Property::create();

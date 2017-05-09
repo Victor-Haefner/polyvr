@@ -80,16 +80,13 @@
 #include "addons/Engineering/Milling/VRPyMillingWorkPiece.h"
 #include "addons/Engineering/Milling/VRPyMillingCuttingToolProfile.h"
 #include "addons/Engineering/VRPyRobotArm.h"
+#include "addons/GIS/WorldGenerator/VRPyWorldGenerator.h"
 #include "addons/RealWorld/nature/VRPyTree.h"
-
-// not yet ported dependencies
-#ifndef _WIN32
 #include "addons/Engineering/CSG/VRPyCSG.h"
 #include "addons/RealWorld/VRPyRealWorld.h"
 #include "addons/RealWorld/traffic/VRPyTrafficSimulation.h"
 #include "addons/SimViDekont/VRPySimViDekont.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
-#endif
 
 using namespace OSG;
 
@@ -199,6 +196,10 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyView>("View", pModSetup, 0, "Setup");
     sm->registerModule<VRPyWindow>("Window", pModSetup, 0, "Setup");
     PyModule_AddObject(pModVR, "Setup", pModSetup);
+
+    PyObject* pModWorldGenerator = Py_InitModule3("VR.WorldGenerator", VRSceneGlobals::methods, "VR world generator module");
+    sm->registerModule<VRPyAsphalt>("Asphalt", pModWorldGenerator, VRPyMaterial::typeRef, "WorldGenerator");
+    PyModule_AddObject(pModVR, "WorldGenerator", pModWorldGenerator);
 
     PyObject* pModFactory = Py_InitModule3("Factory", VRSceneGlobals::methods, "VR factory module");
     sm->registerModule<FPyNode>("Node", pModFactory, 0, "Factory");
