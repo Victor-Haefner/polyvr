@@ -129,7 +129,7 @@ string VRAnnotationEngine::fp =
 GLSL(
 uniform sampler2D texture;
 
-in vec2 texCoord;
+varying vec2 texCoord;
 
 void main( void ) {
   //gl_FragColor = vec4(texCoord.x,texCoord.y,0.0,1.0);
@@ -138,13 +138,13 @@ void main( void ) {
 );
 
 string VRAnnotationEngine::dfp =
-"#version 400 compatibility\n"
+"#version 120\n"
 GLSL(
 uniform sampler2D texture;
 
-in vec4 geomPos;
-in vec3 geomNorm;
-in vec2 texCoord;
+varying vec4 geomPos;
+varying vec3 geomNorm;
+varying vec2 texCoord;
 
 void main( void ) {
     vec3 pos = geomPos.xyz / geomPos.w;
