@@ -5,6 +5,8 @@
 using namespace OSG;
 
 simpleVRPyType(Asphalt, New_ptr);
+simpleVRPyType(RoadNetwork, New_ptr);
+
 
 PyMethodDef VRPyAsphalt::methods[] = {
     {"addMarking", (PyCFunction)VRPyAsphalt::addMarking, METH_VARARGS, "Add marking - addMarking( rID, path, width, dashN )" },
@@ -47,3 +49,10 @@ PyObject* VRPyAsphalt::updateTexture(VRPyAsphalt* self) {
     self->objPtr->updateTexture();
     Py_RETURN_TRUE;
 }
+
+
+// ------------------------------------------------------
+
+PyMethodDef VRPyRoadNetwork::methods[] = {
+    {NULL}  /* Sentinel */
+};

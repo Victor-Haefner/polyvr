@@ -1,6 +1,6 @@
 #include "VROntology.h"
 #include "VROntologyT.h"
-#include "addons/GIS/GISWorld.h"
+#include "addons/WorldGenerator/GIS/GISWorld.h"
 
 #include "core/objects/VRTransform.h"
 

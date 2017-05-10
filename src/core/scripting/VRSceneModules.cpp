@@ -80,8 +80,8 @@
 #include "addons/Engineering/Milling/VRPyMillingWorkPiece.h"
 #include "addons/Engineering/Milling/VRPyMillingCuttingToolProfile.h"
 #include "addons/Engineering/VRPyRobotArm.h"
-#include "addons/GIS/WorldGenerator/VRPyWorldGenerator.h"
-#include "addons/RealWorld/nature/VRPyTree.h"
+#include "addons/WorldGenerator/VRPyWorldGenerator.h"
+#include "addons/WorldGenerator/nature/VRPyTree.h"
 #include "addons/Engineering/CSG/VRPyCSG.h"
 #include "addons/RealWorld/VRPyRealWorld.h"
 #include "addons/RealWorld/traffic/VRPyTrafficSimulation.h"
@@ -199,6 +199,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 
     PyObject* pModWorldGenerator = Py_InitModule3("VR.WorldGenerator", VRSceneGlobals::methods, "VR world generator module");
     sm->registerModule<VRPyAsphalt>("Asphalt", pModWorldGenerator, VRPyMaterial::typeRef, "WorldGenerator");
+    sm->registerModule<VRPyRoadNetwork>("RoadNetwork", pModWorldGenerator, VRPyObject::typeRef, "WorldGenerator");
     PyModule_AddObject(pModVR, "WorldGenerator", pModWorldGenerator);
 
     PyObject* pModFactory = Py_InitModule3("Factory", VRSceneGlobals::methods, "VR factory module");

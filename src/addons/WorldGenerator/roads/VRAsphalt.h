@@ -2,7 +2,7 @@
 #define VRASPHALT_H_INCLUDED
 
 #include "core/objects/material/VRMaterial.h"
-#include "addons/GIS/WorldGenerator/VRWorldGeneratorFwd.h"
+#include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 

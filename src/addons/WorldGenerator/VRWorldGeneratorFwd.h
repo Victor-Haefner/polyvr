@@ -6,6 +6,7 @@
 namespace OSG {
 
 ptrFwd( VRAsphalt );
+ptrFwd( VRRoadNetwork );
 
 }
 
