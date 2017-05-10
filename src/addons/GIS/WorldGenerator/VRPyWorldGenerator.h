@@ -6,6 +6,11 @@
 
 struct VRPyAsphalt : VRPyBaseT<OSG::VRAsphalt> {
     static PyMethodDef methods[];
+
+    static PyObject* addMarking(VRPyAsphalt* self, PyObject *args);
+    static PyObject* addTrack(VRPyAsphalt* self, PyObject *args);
+    static PyObject* updateTexture(VRPyAsphalt* self);
+    static PyObject* clearTexture(VRPyAsphalt* self);
 };
 
 #endif // VRPYWORLDGENERATOR_H_INCLUDED
