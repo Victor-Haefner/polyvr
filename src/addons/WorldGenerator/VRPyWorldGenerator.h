@@ -16,6 +16,11 @@ struct VRPyAsphalt : VRPyBaseT<OSG::VRAsphalt> {
 
 struct VRPyRoadNetwork : VRPyBaseT<OSG::VRRoadNetwork> {
     static PyMethodDef methods[];
+
+    static PyObject* setOntology(VRPyRoadNetwork* self, PyObject *args);
+    static PyObject* addNode(VRPyRoadNetwork* self, PyObject *args);
+    static PyObject* addLane(VRPyRoadNetwork* self, PyObject *args);
+    static PyObject* addRoad(VRPyRoadNetwork* self, PyObject *args);
 };
 
 #endif // VRPYWORLDGENERATOR_H_INCLUDED

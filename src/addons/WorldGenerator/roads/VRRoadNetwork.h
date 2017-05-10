@@ -15,6 +15,7 @@ class VRRoadNetwork : public VRObject {
         GraphPtr graph;
         VRAsphaltPtr asphalt;
         VROntologyPtr ontology;
+        VRPathtoolPtr tool;
 
     public:
         VRRoadNetwork();
@@ -25,6 +26,10 @@ class VRRoadNetwork : public VRObject {
         void setOntology(VROntologyPtr ontology);
         GraphPtr getGraph();
         void updateTexture();
+
+        VREntityPtr addNode( Vec3f pos );
+        VREntityPtr addLane( int direction, VREntityPtr road, float width );
+        VREntityPtr addRoad( string name, vector<VREntityPtr> paths, int rID, string type );
 };
 
 OSG_END_NAMESPACE;
