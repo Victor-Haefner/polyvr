@@ -135,10 +135,12 @@ void VROntology::renameConcept(VRConceptPtr c, string newName) {
 
 void VROntology::remEntity(VREntityPtr e) {
     if (!e) return;
-    //for (auto i : entities) cout << "i " << i.first << " " << i.second->getName() << " " << i.second->ID << endl;
     if (!entities.count(e->ID)) return;
-    //cout << "VROntology::remEntity " << e->getName() << " " << e->ID << endl;
     entities.erase(e->ID);
+}
+
+void VROntology::remEntities(string concept) {
+    for (auto e : getEntities(concept)) remEntity(e);
 }
 
 void VROntology::remRule(VROntologyRulePtr r) {

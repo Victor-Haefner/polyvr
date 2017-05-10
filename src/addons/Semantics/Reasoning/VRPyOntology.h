@@ -57,6 +57,7 @@ struct VRPyOntology : VRPyBaseT<OSG::VROntology> {
     static PyObject* addEntity(VRPyOntology* self, PyObject* args);
     static PyObject* getEntity(VRPyOntology* self, PyObject* args);
     static PyObject* remEntity(VRPyOntology* self, PyObject* args);
+    static PyObject* remEntities(VRPyOntology* self, PyObject* args);
     static PyObject* addRule(VRPyOntology* self, PyObject* args);
     static PyObject* merge(VRPyOntology* self, PyObject* args);
     static PyObject* copy(VRPyOntology* self);

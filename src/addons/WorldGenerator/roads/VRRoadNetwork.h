@@ -14,7 +14,7 @@ class VRRoadNetwork : public VRObject {
     private:
         GraphPtr graph;
         VRAsphaltPtr asphalt;
-        VROntologyPtr ontology
+        VROntologyPtr ontology;
 
     public:
         VRRoadNetwork();
@@ -23,9 +23,7 @@ class VRRoadNetwork : public VRObject {
         static VRRoadNetworkPtr create();
 
         void setOntology(VROntologyPtr ontology);
-
         GraphPtr getGraph();
-
         void updateTexture();
 };
 

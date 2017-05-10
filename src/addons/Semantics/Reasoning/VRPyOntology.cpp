@@ -291,7 +291,8 @@ PyMethodDef VRPyOntology::methods[] = {
     {"addConcept", (PyCFunction)VRPyOntology::addConcept, METH_VARARGS, "Add a new concept - concept addConcept( str concept, str parent = "", dict properties {str:str} )" },
     {"addEntity", (PyCFunction)VRPyOntology::addEntity, METH_VARARGS, "Add a new entity - entity addEntity( str name, str concept )" },
     {"getEntity", (PyCFunction)VRPyOntology::getEntity, METH_VARARGS, "Get an entity by name - entity getEntity( str name )" },
-    {"remEntity", (PyCFunction)VRPyOntology::remEntity, METH_VARARGS, "Remove an entity by name - entity remEntity( str name )" },
+    {"remEntity", (PyCFunction)VRPyOntology::remEntity, METH_VARARGS, "Remove an entity by name - remEntity( str name )" },
+    {"remEntities", (PyCFunction)VRPyOntology::remEntities, METH_VARARGS, "Remove all entity from concept - remEntities( str concept )" },
     {"addRule", (PyCFunction)VRPyOntology::addRule, METH_VARARGS, "Add a new rule - addRule( str rule )" },
     {"merge", (PyCFunction)VRPyOntology::merge, METH_VARARGS, "Merge in another ontology - merge( ontology )" },
     {"copy", (PyCFunction)VRPyOntology::copy, METH_NOARGS, "Copy the ontology - ontology copy()" },
@@ -364,9 +365,14 @@ PyObject* VRPyOntology::getEntity(VRPyOntology* self, PyObject* args) {
 PyObject* VRPyOntology::remEntity(VRPyOntology* self, PyObject* args) {
     const char* name = 0;
     if (! PyArg_ParseTuple(args, "s:remEntity", &name) ) return NULL;
-    string sname;
-    if (name) sname = name;
-    self->objPtr->remEntity( self->objPtr->getEntity(sname) );
+    self->objPtr->remEntity( self->objPtr->getEntity(name?name:"") );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyOntology::remEntities(VRPyOntology* self, PyObject* args) {
+    const char* concept = 0;
+    if (! PyArg_ParseTuple(args, "s:remEntities", &concept) ) return NULL;
+    self->objPtr->remEntities( concept?concept:"" );
     Py_RETURN_TRUE;
 }
 
