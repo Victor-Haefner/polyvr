@@ -411,18 +411,24 @@ void VRGeometry::setTexCoords(GeoVectorProperty* Tex, int i, bool fixMapping) {
     if (fixMapping) mesh->geo->setIndex(mesh->geo->getIndex(Geometry::PositionsIndex), Geometry::TexCoordsIndex);
 }
 
-void VRGeometry::setPositionalTexCoords(float scale) {
+void VRGeometry::setPositionalTexCoords(float scale, int i, Vec3i format) {
     GeoVectorPropertyRefPtr pos = mesh->geo->getPositions();
-    if (scale == 1.0) setTexCoords(pos, 0, 1);
-    else {
-        GeoVec3fPropertyRefPtr tex = GeoVec3fProperty::create();
-        for (uint i=0; i<pos->size(); i++) {
-            Pnt3f p = pos->getValue<Pnt3f>(i);
-            p[0] *= scale; p[1] *= scale; p[2] *= scale;
-            tex->addValue(Vec3f(p));
-        }
-        setTexCoords(tex, 0, 1);
+    GeoVec3fPropertyRefPtr tex = GeoVec3fProperty::create();
+    for (uint i=0; i<pos->size(); i++) {
+        auto p = Vec3f(pos->getValue<Pnt3f>(i))*scale;
+        tex->addValue(Vec3f(p[format[0]], p[format[1]], p[format[2]]));
     }
+    setTexCoords(tex, i, 1);
+}
+
+void VRGeometry::setPositionalTexCoords2D(float scale, int i, Vec2i format) {
+    GeoVectorPropertyRefPtr pos = mesh->geo->getPositions();
+    GeoVec3fPropertyRefPtr tex = GeoVec3fProperty::create();
+    for (uint i=0; i<pos->size(); i++) {
+        auto p = Vec3f(pos->getValue<Pnt3f>(i))*scale;
+        tex->addValue(Vec2f(p[format[0]], p[format[1]]));
+    }
+    setTexCoords(tex, i, 1);
 }
 
 void VRGeometry::setIndices(GeoIntegralProperty* Indices, bool doLengths) {

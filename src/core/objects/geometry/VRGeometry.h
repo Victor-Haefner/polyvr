@@ -83,7 +83,8 @@ class VRGeometry : public VRTransform {
         void setTexCoords(GeoVectorProperty* Tex, int i=0, bool fixMapping = false);
         void setLengths(GeoIntegralProperty* lenghts);
         void setPatchVertices(int n);
-        void setPositionalTexCoords(float scale = 1.0);
+        void setPositionalTexCoords(float scale = 1.0, int i = 0, Vec3i format = Vec3i(0,1,2));
+        void setPositionalTexCoords2D(float scale = 1.0, int i = 0, Vec2i format = Vec2i(0,1));
 
         void setRandomColors();
         void removeDoubles(float minAngle);
