@@ -17,6 +17,8 @@ class VRRoadNetwork : public VRObject {
         VROntologyPtr ontology;
         VRPathtoolPtr tool;
 
+        pathPtr toPath( VREntityPtr pathEntity, int resolution );
+
     public:
         VRRoadNetwork();
         ~VRRoadNetwork();
@@ -30,6 +32,10 @@ class VRRoadNetwork : public VRObject {
         VREntityPtr addNode( Vec3f pos );
         VREntityPtr addLane( int direction, VREntityPtr road, float width );
         VREntityPtr addRoad( string name, vector<VREntityPtr> paths, int rID, string type );
+        VREntityPtr addPath( string type, string name, vector<VREntityPtr> nodes, vector<Vec3f> normals );
+
+        void computeIntersectionLanes( VREntityPtr intersection );
+        void computeLanePaths( VREntityPtr road );
 };
 
 OSG_END_NAMESPACE;

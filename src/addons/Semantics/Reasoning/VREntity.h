@@ -1,6 +1,7 @@
 #ifndef VRENTITY_H_INCLUDED
 #define VRENTITY_H_INCLUDED
 
+#include <OpenSG/OSGVector.h>
 #include "VROntologyUtils.h"
 #include "VRConcept.h"
 #include "core/utils/VRName.h"
@@ -39,6 +40,11 @@ struct VREntity : public VROntoID, public VRName {
     vector<VRPropertyPtr> getAll(string prop = "");
     vector<VRPropertyPtr> getVector(string prop, int i = 0);
     vector< vector<VRPropertyPtr> > getAllVector(string prop);
+
+    VREntityPtr getEntity(string prop, int i = 0);
+    vector<VREntityPtr> getAllEntities(string prop = "");
+    Vec3f getVec3f(string prop, int i = 0);
+    vector< Vec3f > getAllVec3f(string prop);
 
     bool is_a(string concept);
     string toString();

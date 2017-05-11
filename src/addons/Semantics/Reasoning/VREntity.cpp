@@ -186,6 +186,29 @@ vector< vector<VRPropertyPtr> > VREntity::getAllVector(string prop) { // TODO
     return res;
 }
 
+VREntityPtr VREntity::getEntity(string prop, int i) {
+    return ontology.lock()->getEntity( get(prop, i)->value );
+}
+
+vector<VREntityPtr> VREntity::getAllEntities(string prop) {
+    vector<VREntityPtr> res;
+    for (auto p : getAll(prop)) res.push_back( ontology.lock()->getEntity( p->value ) );
+    return res;
+}
+
+Vec3f VREntity::getVec3f(string prop, int i) {
+    Vec3f res;
+    auto vec = getVector(prop, i);
+    for (int i=0; i<3; i++) res[i] = toFloat( vec[i]->value );
+    return res;
+}
+
+vector< Vec3f > VREntity::getAllVec3f(string prop) { // TODO
+    vector< Vec3f > res;
+    return res;
+}
+
+
 string VREntity::toString() {
     string data = "Entity " + name + " of type (";
     data += getConceptList() + ")";

@@ -71,8 +71,6 @@ void VRAsphalt::addPath(pathPtr path, int rID, float width, int dashN) {
     auto pnts = path->getPoints();
     int N = (pnts.size()-1)*0.5;
 
-    cout << "addPath " << rID << " " << width << " " << dashN << " " << i << endl;
-
     for (int j = 0; j<N; j++) {// p1,p2,p3
         Vec3f P0 = pnts[2*j].pos();
         Vec3f P1 = pnts[2*j+1].pos();
