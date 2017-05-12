@@ -64,6 +64,7 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"addPath", (PyCFunction)VRPyRoadNetwork::addPath, METH_VARARGS, "Add a new path - path addPath( str type, str name, [nodes], [normals] )" },
     {"computeIntersectionLanes", (PyCFunction)VRPyRoadNetwork::computeIntersectionLanes, METH_VARARGS, "Compute the lanes of an intersection - computeIntersectionLanes( intersection )" },
     {"computeLanePaths", (PyCFunction)VRPyRoadNetwork::computeLanePaths, METH_VARARGS, "Compute the path of each lane of a road - computeLanePaths( road )" },
+    {"computeIntersections", (PyCFunction)VRPyRoadNetwork::computeIntersections, METH_NOARGS, "Compute the intersections - computeIntersections( )" },
     {"createRoadGeometry", (PyCFunction)VRPyRoadNetwork::createRoadGeometry, METH_VARARGS, "Create a geometry for a road - geo createRoadGeometry( road )" },
     {"createIntersectionGeometry", (PyCFunction)VRPyRoadNetwork::createIntersectionGeometry, METH_VARARGS, "Create a geometry for an intersection - geo createIntersectionGeometry( intersection )" },
     {"getRoadID", (PyCFunction)VRPyRoadNetwork::getRoadID, METH_NOARGS, "Get a road ID - int getRoadID()" },
@@ -100,6 +101,12 @@ PyObject* VRPyRoadNetwork::createIntersectionGeometry(VRPyRoadNetwork* self, PyO
     VRPyEntity* intersection = 0;
     if (!PyArg_ParseTuple(args, "O", &intersection)) return NULL;
     return VRPyGeometry::fromSharedPtr( self->objPtr->createIntersectionGeometry( intersection->objPtr ) );
+}
+
+PyObject* VRPyRoadNetwork::computeIntersections(VRPyRoadNetwork* self) {
+    if (!self->valid()) return NULL;
+    self->objPtr->computeIntersections();
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyRoadNetwork::computeLanePaths(VRPyRoadNetwork* self, PyObject *args) {

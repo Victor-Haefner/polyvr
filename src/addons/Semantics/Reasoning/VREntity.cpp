@@ -187,12 +187,18 @@ vector< vector<VRPropertyPtr> > VREntity::getAllVector(string prop) { // TODO
 }
 
 VREntityPtr VREntity::getEntity(string prop, int i) {
-    return ontology.lock()->getEntity( get(prop, i)->value );
+    auto p = get(prop, i);
+    if (!p) return 0;
+    if (auto onto = ontology.lock()) return onto->getEntity( p->value );
+    return 0;
 }
 
 vector<VREntityPtr> VREntity::getAllEntities(string prop) {
     vector<VREntityPtr> res;
-    for (auto p : getAll(prop)) res.push_back( ontology.lock()->getEntity( p->value ) );
+    for (auto p : getAll(prop)) {
+        auto e = ontology.lock()->getEntity( p->value );
+        if (e) res.push_back( e );
+    }
     return res;
 }
 

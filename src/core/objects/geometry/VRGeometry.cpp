@@ -422,7 +422,9 @@ void VRGeometry::setPositionalTexCoords(float scale, int i, Vec3i format) {
 }
 
 void VRGeometry::setPositionalTexCoords2D(float scale, int i, Vec2i format) {
+    if (!mesh || !mesh->geo) return;
     GeoVectorPropertyRefPtr pos = mesh->geo->getPositions();
+    if (!pos) return;
     GeoVec3fPropertyRefPtr tex = GeoVec3fProperty::create();
     for (uint i=0; i<pos->size(); i++) {
         auto p = Vec3f(pos->getValue<Pnt3f>(i))*scale;
@@ -443,8 +445,9 @@ void VRGeometry::setIndices(GeoIntegralProperty* Indices, bool doLengths) {
 }
 
 int VRGeometry::size() {
-    auto m = getMesh();
-    auto p = m->geo->getPositions();
+    if (!mesh || !mesh->geo) return 0;
+    auto p = mesh->geo->getPositions();
+    if (!p) return 0;
     return p->size();
 }
 

@@ -44,6 +44,7 @@ class VRRoadNetwork : public VRObject {
 
         void computeIntersectionLanes( VREntityPtr intersection );
         void computeLanePaths( VREntityPtr road );
+        void computeIntersections();
 
         int getRoadID();
         void clear();
