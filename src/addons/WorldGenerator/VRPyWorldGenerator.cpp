@@ -65,6 +65,10 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"computeIntersectionLanes", (PyCFunction)VRPyRoadNetwork::computeIntersectionLanes, METH_VARARGS, "Compute the lanes of an intersection - computeIntersectionLanes( intersection )" },
     {"computeLanePaths", (PyCFunction)VRPyRoadNetwork::computeLanePaths, METH_VARARGS, "Compute the path of each lane of a road - computeLanePaths( road )" },
     {"computeIntersections", (PyCFunction)VRPyRoadNetwork::computeIntersections, METH_NOARGS, "Compute the intersections - computeIntersections( )" },
+    {"computeLanes", (PyCFunction)VRPyRoadNetwork::computeLanes, METH_NOARGS, "Compute the lanes - computeLanes( )" },
+    {"computeSurfaces", (PyCFunction)VRPyRoadNetwork::computeSurfaces, METH_NOARGS, "Compute the surfaces - computeSurfaces( )" },
+    {"computeMarkings", (PyCFunction)VRPyRoadNetwork::computeMarkings, METH_NOARGS, "Compute the markings - computeMarkings( )" },
+    {"compute", (PyCFunction)VRPyRoadNetwork::compute, METH_NOARGS, "Compute everything - compute( )" },
     {"createRoadGeometry", (PyCFunction)VRPyRoadNetwork::createRoadGeometry, METH_VARARGS, "Create a geometry for a road - geo createRoadGeometry( road )" },
     {"createIntersectionGeometry", (PyCFunction)VRPyRoadNetwork::createIntersectionGeometry, METH_VARARGS, "Create a geometry for an intersection - geo createIntersectionGeometry( intersection )" },
     {"getRoadID", (PyCFunction)VRPyRoadNetwork::getRoadID, METH_NOARGS, "Get a road ID - int getRoadID()" },
@@ -106,6 +110,30 @@ PyObject* VRPyRoadNetwork::createIntersectionGeometry(VRPyRoadNetwork* self, PyO
 PyObject* VRPyRoadNetwork::computeIntersections(VRPyRoadNetwork* self) {
     if (!self->valid()) return NULL;
     self->objPtr->computeIntersections();
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyRoadNetwork::computeLanes(VRPyRoadNetwork* self) {
+    if (!self->valid()) return NULL;
+    self->objPtr->computeLanes();
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyRoadNetwork::computeSurfaces(VRPyRoadNetwork* self) {
+    if (!self->valid()) return NULL;
+    self->objPtr->computeSurfaces();
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyRoadNetwork::computeMarkings(VRPyRoadNetwork* self) {
+    if (!self->valid()) return NULL;
+    self->objPtr->computeMarkings();
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyRoadNetwork::compute(VRPyRoadNetwork* self) {
+    if (!self->valid()) return NULL;
+    self->objPtr->compute();
     Py_RETURN_TRUE;
 }
 

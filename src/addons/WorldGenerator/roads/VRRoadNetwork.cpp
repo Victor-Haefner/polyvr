@@ -429,6 +429,37 @@ void VRRoadNetwork::computeIntersections() {
     }
 }
 
+void VRRoadNetwork::computeLanes() {
+    for (auto road : ontology->getEntities("Road")) computeLanePaths(road);
+    for (auto intersection : ontology->getEntities("RoadIntersection")) computeIntersectionLanes(intersection);
+}
+
+void VRRoadNetwork::computeSurfaces() {
+    for (auto road : ontology->getEntities("Road")) {
+        auto roadGeo = createRoadGeometry( road );
+        if (!roadGeo) continue;
+        roadGeo->hide();
+        addChild( roadGeo );
+    }
+
+    for (auto intersection : ontology->getEntities("RoadIntersection")) {
+        auto iGeo = createIntersectionGeometry( intersection );
+        if (!iGeo) continue;
+        iGeo->hide();
+        addChild( iGeo );
+    }
+}
+
+void VRRoadNetwork::computeMarkings() {
+    ;
+}
+
+void VRRoadNetwork::compute() {
+    computeIntersections();
+    computeLanes();
+    computeSurfaces();
+    computeMarkings();
+}
 
 
 

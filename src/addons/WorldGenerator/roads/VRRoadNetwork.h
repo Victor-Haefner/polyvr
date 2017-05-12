@@ -32,6 +32,7 @@ class VRRoadNetwork : public VRObject {
         GraphPtr getGraph();
         void updateTexture();
         VRAsphaltPtr getMaterial();
+        int getRoadID();
 
         VREntityPtr addNode( Vec3f pos );
         VREntityPtr addLane( int direction, VREntityPtr road, float width );
@@ -45,9 +46,12 @@ class VRRoadNetwork : public VRObject {
         void computeIntersectionLanes( VREntityPtr intersection );
         void computeLanePaths( VREntityPtr road );
         void computeIntersections();
+        void computeLanes();
+        void computeSurfaces();
+        void computeMarkings();
 
-        int getRoadID();
         void clear();
+        void compute();
 };
 
 OSG_END_NAMESPACE;
