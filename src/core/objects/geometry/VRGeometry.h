@@ -105,9 +105,9 @@ class VRGeometry : public VRTransform {
         void showGeometricData(string type, bool b);
         float calcSurfaceArea();
 
+        int size();
         Vec3f getGeometricCenter();
         Vec3f getAverageNormal();
-
         float getMax(int axis);
         float getMin(int axis);
 

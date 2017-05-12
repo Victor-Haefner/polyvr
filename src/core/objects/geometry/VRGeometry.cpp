@@ -442,6 +442,12 @@ void VRGeometry::setIndices(GeoIntegralProperty* Indices, bool doLengths) {
     mesh->geo->setIndices(Indices);
 }
 
+int VRGeometry::size() {
+    auto m = getMesh();
+    auto p = m->geo->getPositions();
+    return p->size();
+}
+
 int getColorChannels(GeoVectorProperty* v) {
     if (v == 0) return 0;
     int type = v->getType().getId();

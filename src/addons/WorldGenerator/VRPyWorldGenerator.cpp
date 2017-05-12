@@ -1,6 +1,7 @@
 #include "VRPyWorldGenerator.h"
 #include "core/scripting/VRPyBaseT.h"
 #include "core/scripting/VRPyPath.h"
+#include "core/scripting/VRPyGeometry.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
 
 using namespace OSG;
@@ -56,14 +57,50 @@ PyObject* VRPyAsphalt::updateTexture(VRPyAsphalt* self) {
 
 PyMethodDef VRPyRoadNetwork::methods[] = {
     {"setOntology", (PyCFunction)VRPyRoadNetwork::setOntology, METH_VARARGS, "Add a new node - setOntology( ontology )" },
-    {"addNode", (PyCFunction)VRPyRoadNetwork::addNode, METH_VARARGS, "Add a new node - addNode( [x,y,z] )" },
-    {"addLane", (PyCFunction)VRPyRoadNetwork::addLane, METH_VARARGS, "Add a new lane - addLane( int direction, road, float width )" },
-    {"addRoad", (PyCFunction)VRPyRoadNetwork::addRoad, METH_VARARGS, "Add a new road - addRoad( str name, [paths], int rID, str type )" },
-    {"addPath", (PyCFunction)VRPyRoadNetwork::addPath, METH_VARARGS, "Add a new path - addPath( str type, str name, [nodes], [normals] )" },
+    {"addNode", (PyCFunction)VRPyRoadNetwork::addNode, METH_VARARGS, "Add a new node - node addNode( [x,y,z] )" },
+    {"addLane", (PyCFunction)VRPyRoadNetwork::addLane, METH_VARARGS, "Add a new lane - lane addLane( int direction, road, float width )" },
+    {"addWay", (PyCFunction)VRPyRoadNetwork::addWay, METH_VARARGS, "Add a new way - way addWay( str name, [paths], int rID, str type )" },
+    {"addRoad", (PyCFunction)VRPyRoadNetwork::addRoad, METH_VARARGS, "Add a new road - addRoad( str name, node1, node2, norm1, norm2, lanesN )" },
+    {"addPath", (PyCFunction)VRPyRoadNetwork::addPath, METH_VARARGS, "Add a new path - path addPath( str type, str name, [nodes], [normals] )" },
     {"computeIntersectionLanes", (PyCFunction)VRPyRoadNetwork::computeIntersectionLanes, METH_VARARGS, "Compute the lanes of an intersection - computeIntersectionLanes( intersection )" },
     {"computeLanePaths", (PyCFunction)VRPyRoadNetwork::computeLanePaths, METH_VARARGS, "Compute the path of each lane of a road - computeLanePaths( road )" },
+    {"createRoadGeometry", (PyCFunction)VRPyRoadNetwork::createRoadGeometry, METH_VARARGS, "Create a geometry for a road - geo createRoadGeometry( road )" },
+    {"createIntersectionGeometry", (PyCFunction)VRPyRoadNetwork::createIntersectionGeometry, METH_VARARGS, "Create a geometry for an intersection - geo createIntersectionGeometry( intersection )" },
+    {"getRoadID", (PyCFunction)VRPyRoadNetwork::getRoadID, METH_NOARGS, "Get a road ID - int getRoadID()" },
+    {"getMaterial", (PyCFunction)VRPyRoadNetwork::getMaterial, METH_NOARGS, "Get road material - material getMaterial()" },
+    {"clear", (PyCFunction)VRPyRoadNetwork::clear, METH_NOARGS, "Clear all data - clear()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyRoadNetwork::getMaterial(VRPyRoadNetwork* self) {
+    if (!self->valid()) return NULL;
+    return VRPyAsphalt::fromSharedPtr( self->objPtr->getMaterial() );
+}
+
+PyObject* VRPyRoadNetwork::getRoadID(VRPyRoadNetwork* self) {
+    if (!self->valid()) return NULL;
+    return PyInt_FromLong( self->objPtr->getRoadID() );
+}
+
+PyObject* VRPyRoadNetwork::clear(VRPyRoadNetwork* self) {
+    if (!self->valid()) return NULL;
+    self->objPtr->clear();
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyRoadNetwork::createRoadGeometry(VRPyRoadNetwork* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    VRPyEntity* road = 0;
+    if (!PyArg_ParseTuple(args, "O", &road)) return NULL;
+    return VRPyGeometry::fromSharedPtr( self->objPtr->createRoadGeometry( road->objPtr ) );
+}
+
+PyObject* VRPyRoadNetwork::createIntersectionGeometry(VRPyRoadNetwork* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    VRPyEntity* intersection = 0;
+    if (!PyArg_ParseTuple(args, "O", &intersection)) return NULL;
+    return VRPyGeometry::fromSharedPtr( self->objPtr->createIntersectionGeometry( intersection->objPtr ) );
+}
 
 PyObject* VRPyRoadNetwork::computeLanePaths(VRPyRoadNetwork* self, PyObject *args) {
     if (!self->valid()) return NULL;
@@ -105,7 +142,7 @@ PyObject* VRPyRoadNetwork::addLane(VRPyRoadNetwork* self, PyObject *args) {
     return VRPyEntity::fromSharedPtr( l );
 }
 
-PyObject* VRPyRoadNetwork::addRoad(VRPyRoadNetwork* self, PyObject *args) {
+PyObject* VRPyRoadNetwork::addWay(VRPyRoadNetwork* self, PyObject *args) {
     if (!self->valid()) return NULL;
     const char* name;
     PyObject* paths = 0;
@@ -114,8 +151,21 @@ PyObject* VRPyRoadNetwork::addRoad(VRPyRoadNetwork* self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "sOis", &name, &paths, &rID, &type)) return NULL;
     vector<VREntityPtr> pathsV;
     for (int i=0; i<pySize(paths); i++) pathsV.push_back( ((VRPyEntity*)PyList_GetItem(paths, i))->objPtr );
-    auto r = self->objPtr->addRoad( name?name:"", pathsV, rID, type?type:"" );
+    auto r = self->objPtr->addWay( name?name:"", pathsV, rID, type?type:"" );
     return VRPyEntity::fromSharedPtr( r );
+}
+
+PyObject* VRPyRoadNetwork::addRoad(VRPyRoadNetwork* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    const char* name;
+    VRPyEntity* node1 = 0;
+    VRPyEntity* node2 = 0;
+    PyObject* norm1 = 0;
+    PyObject* norm2 = 0;
+    int Nlanes = 1;
+    if (!PyArg_ParseTuple(args, "sOOOOi", &name, &node1, &node2, &norm1, &norm2, &Nlanes)) return NULL;
+    self->objPtr->addRoad( name?name:"", node1->objPtr, node2->objPtr, parseVec3fList(norm1), parseVec3fList(norm2), Nlanes );
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyRoadNetwork::addPath(VRPyRoadNetwork* self, PyObject *args) {

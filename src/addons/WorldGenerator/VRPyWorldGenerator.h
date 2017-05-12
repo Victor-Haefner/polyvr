@@ -20,11 +20,18 @@ struct VRPyRoadNetwork : VRPyBaseT<OSG::VRRoadNetwork> {
     static PyObject* setOntology(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* addNode(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* addLane(VRPyRoadNetwork* self, PyObject *args);
+    static PyObject* addWay(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* addRoad(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* addPath(VRPyRoadNetwork* self, PyObject *args);
 
     static PyObject* computeIntersectionLanes(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* computeLanePaths(VRPyRoadNetwork* self, PyObject *args);
+
+    static PyObject* createRoadGeometry(VRPyRoadNetwork* self, PyObject *args);
+    static PyObject* createIntersectionGeometry(VRPyRoadNetwork* self, PyObject *args);
+    static PyObject* getRoadID(VRPyRoadNetwork* self);
+    static PyObject* getMaterial(VRPyRoadNetwork* self);
+    static PyObject* clear(VRPyRoadNetwork* self);
 };
 
 #endif // VRPYWORLDGENERATOR_H_INCLUDED
