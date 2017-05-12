@@ -23,9 +23,10 @@ class Road {
             Vec3f p1;
             Vec3f p2;
             Vec3f n;
+            VREntityPtr entry;
 
             edgePoint() {}
-            edgePoint(Vec3f p1, Vec3f p2, Vec3f n) : p1(p1), p2(p2), n(n) {}
+            edgePoint(Vec3f p1, Vec3f p2, Vec3f n, VREntityPtr e) : p1(p1), p2(p2), n(n), entry(e) {}
         };
 
         VREntityPtr entity;
@@ -58,7 +59,7 @@ class Road {
                 Vec3f pNode = node->getVec3f("position");
                 Vec3f p1 = pNode - x * 0.5 * width; // right
                 Vec3f p2 = pNode + x * 0.5 * width; // left
-                edgePoints[node] = edgePoint(p1,p2,norm);
+                edgePoints[node] = edgePoint(p1,p2,norm,rEntry);
             }
             return edgePoints[node];
         }
@@ -323,6 +324,7 @@ VRGeometryPtr VRRoadNetwork::createIntersectionGeometry( VREntityPtr intersectio
         string rN = roadEnt->getName();
         string qNode = "q(n):Node(n);Road("+rN+");RoadIntersection("+iN+");has("+rN+".path.nodes,n);has("+iN+".path.nodes,n)";
         auto rNodes = ontology->process(qNode);
+        if (rNodes.size() == 0) { cout << "Warning in createIntersectionGeometry, road " << roadEnt->getName() << " has no nodes!" << endl; continue; }
         auto& endP = road.getEdgePoints( rNodes[0] );
         poly.addPoint(Vec2f(endP.p1[0], endP.p1[2]));
         poly.addPoint(Vec2f(endP.p2[0], endP.p2[2]));
@@ -347,18 +349,14 @@ void VRRoadNetwork::computeIntersections() {
         for (VREntityPtr roadEnt : roads) roadData[roadEnt] = Road(roadEnt);
 
         // sort roads
-        auto compare = [&](VREntityPtr road1, VREntityPtr road2) {
+        auto compare = [&](VREntityPtr road1, VREntityPtr road2) -> bool {
             Vec3f norm1 = roadData[road1].getEdgePoints( node ).n;
             Vec3f norm2 = roadData[road2].getEdgePoints( node ).n;
             float K = norm1.cross(norm2)[1];
-            if (K < 0) return -1;
-            if (K > 0) return 1;
-            return 0;
+            return (K < 0);
         };
 
-        cout << "computeIntersections "; for (auto r : roads) cout << r->getName() << " "; cout << endl;
         sort( roads.begin(), roads.end(), compare );
-        cout << "computeIntersections "; for (auto r : roads) cout << r->getName() << " "; cout << endl;
 
         auto intersect = [&](const Pnt3f& p1, const Vec3f& n1, const Pnt3f& p2, const Vec3f& n2) -> Vec3f {
             Vec3f d = p2-p1;
@@ -378,7 +376,6 @@ void VRRoadNetwork::computeIntersections() {
             Vec3f Pi = intersect(data1.p2, data1.n, data2.p1, data2.n);
             data1.p2 = Pi;
             data2.p1 = Pi;
-            cout << " intersection " << Pi << endl;
         }
 
         for (auto roadEnt : roads) { // compute road front
@@ -394,8 +391,8 @@ void VRRoadNetwork::computeIntersections() {
 
             Vec3f pm = (data.p1 + data.p2)*0.5; // compute road node
             auto n = addNode(pm);
-            roadEnt->set("node", n->getName());
-            n->add("paths", roadEnt->getName());
+            data.entry->set("node", n->getName());
+            n->add("paths", data.entry->getName());
             k += 1;
         }
 
@@ -405,18 +402,18 @@ void VRRoadNetwork::computeIntersections() {
             auto rEntry1 = roadData[road1].getEntry(node);
             int s1 = toInt(rEntry1->get("sign")->value);
             Vec3f norm1 = rEntry1->getVec3f("direction");
-            //auto& data1 = roadData[road1].getEdgePoints( node );
-            VREntityPtr node1 = road1->getEntity("node");
+            auto& data1 = roadData[road1].getEdgePoints( node );
+            VREntityPtr node1 = data1.entry->getEntity("node");
             if (s1 == 1) {
                 for (int j=0; j<roads.size(); j++) { // compute intersection paths
                     auto road2 = roads[j];
-                    if (j <= i) continue;
+                    if (j == i) continue;
                     auto rEntry2 = roadData[road2].getEntry(node);
                     int s2 = toInt(rEntry2->get("sign")->value);
                     if (s2 != -1) continue;
                     Vec3f norm2 = rEntry2->getVec3f("direction");
-                    //auto& data2 = roadData[road2].getEdgePoints( node );
-                    VREntityPtr node2 = road2->getEntity("node");
+                    auto& data2 = roadData[road2].getEdgePoints( node );
+                    VREntityPtr node2 = data2.entry->getEntity("node");
                     vector<VREntityPtr> nodes; nodes.push_back(node1); nodes.push_back(node2);
                     vector<Vec3f> norms; norms.push_back(norm1); norms.push_back(norm2);
                     auto pathEnt = addPath("Path", "intersection", nodes, norms);
