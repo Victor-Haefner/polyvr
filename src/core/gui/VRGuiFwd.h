@@ -12,12 +12,18 @@ ptrFwd(VRConceptWidget);
 ptrFwd(VREntityWidget);
 ptrFwd(VRRuleWidget);
 ptrFwd(VRConnectorWidget);
+ptrFwd(VRVisualLayer);
+ptrFwd(VRSignal);
 
 }
 
 namespace Gtk {
 
 ptrFwd(Window);
+ptrFwd(ToggleToolButton);
+ptrFwd(ScrolledWindow);
+ptrFwd(Notebook);
+ptrFwd(Label);
 
 }
 

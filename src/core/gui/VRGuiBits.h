@@ -11,44 +11,8 @@
 #include "VRGuiRecWidget.h"
 #include "VRGuiFwd.h"
 
-namespace Gtk {
-    class ToggleToolButton;
-    class ScrolledWindow;
-    class Notebook;
-    class Label;
-}
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-class VRVisualLayer;
-class VRSignal;
-
-struct VRConsoleWidget {
-    Glib::RefPtr<Gtk::TextBuffer> buffer;
-    Gtk::ScrolledWindow* swin = 0;
-    Gtk::Label* label = 0;
-    std::queue<string> msg_queue;
-    bool paused = 0;
-    bool isOpen = 0;
-
-    string notifyColor = "#006fe0";
-
-    void forward();
-    void write(string s);
-    void update();
-
-    VRConsoleWidget();
-
-    void queue(string s);
-    void clear();
-    void pause();
-    void setOpen(bool b);
-    void setLabel(Gtk::Label* lbl);
-    void setColor(string color);
-    void configColor(string color);
-    void resetColor();
-};
 
 class VRGuiBits {
     private:
