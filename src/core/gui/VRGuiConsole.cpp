@@ -11,6 +11,8 @@ boost::recursive_mutex mtx;
 
 using namespace OSG;
 
+VRConsoleWidget::message::message(string m, string fg, string bg, string l) : msg(m), fg(fg), bg(bg), link(l) {}
+
 VRConsoleWidget::VRConsoleWidget() {
     buffer = Gtk::TextBuffer::create();
     Gtk::TextView* term_view = Gtk::manage(new Gtk::TextView(buffer));
@@ -26,20 +28,26 @@ VRConsoleWidget::VRConsoleWidget() {
     setToolButtonCallback("toolbutton24", sigc::mem_fun(*this, &VRConsoleWidget::clear));
     setToolButtonCallback("toolbutton25", sigc::mem_fun(*this, &VRConsoleWidget::forward));
     setToolButtonCallback("pause_terminal", sigc::mem_fun(*this, &VRConsoleWidget::pause));
+
+    textTag = buffer->create_tag();
+    textTag->set_property("editable", false);
 }
 
-void VRConsoleWidget::write(string s) {
+VRConsoleWidget::~VRConsoleWidget() {}
+
+void VRConsoleWidget::write(string s, string fg, string bg, string link) {
     PLock lock(mtx);
-    msg_queue.push(s);
+    msg_queue.push( message(s,fg,bg,link) );
 }
 
 void VRConsoleWidget::clear() {
     PLock lock(mtx);
-    std::queue<string>().swap(msg_queue);
+    std::queue<message>().swap(msg_queue);
     buffer->set_text("");
     resetColor();
 }
 
+Gtk::ScrolledWindow* VRConsoleWidget::getWindow() { return swin; }
 void VRConsoleWidget::pause() { paused = getToggleButtonState("pause_terminal"); }
 void VRConsoleWidget::setLabel(Gtk::Label* lbl) { label = lbl; }
 void VRConsoleWidget::setOpen(bool b) {
@@ -52,20 +60,22 @@ void VRConsoleWidget::setColor(string color) {
     label->modify_fg( Gtk::STATE_NORMAL , Gdk::Color(color));
 }
 
-void VRConsoleWidget::configColor( string c ) {
-    notifyColor = c;
-}
+void VRConsoleWidget::configColor( string c ) { notifyColor = c; }
 
 void VRConsoleWidget::resetColor() {
     label->unset_fg( Gtk::STATE_ACTIVE );
     label->unset_fg( Gtk::STATE_NORMAL );
 }
 
-void VRConsoleWidget::update() {
+void VRConsoleWidget::update() { // TODO: handle link!
     PLock lock(mtx);
     while(!msg_queue.empty()) {
         if (!isOpen) setColor(notifyColor);
-        buffer->insert(buffer->end(), msg_queue.front());
+        auto& msg = msg_queue.front();
+        textTag->set_property("foreground", msg.fg);
+        textTag->set_property("background", msg.bg);
+        if (msg.link != "") textTag->set_property("underline", Pango::UNDERLINE_SINGLE);
+        buffer->insert_with_tag(buffer->end(), msg.msg, textTag);
 		msg_queue.pop();
     }
 }
@@ -76,3 +86,7 @@ void VRConsoleWidget::forward() {
     auto a = swin->get_vadjustment();
     a->set_value(a->get_upper() - a->get_page_size());
 }
+
+
+
+

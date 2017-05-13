@@ -4,35 +4,41 @@
 #include <OpenSG/OSGConfig.h>
 #include <string.h>
 #include <queue>
-#include <gtkmm/combobox.h>
-#include <gtkmm/textbuffer.h>
+#include <glibmm/refptr.h>
 #include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRDeviceFwd.h"
-#include "VRGuiRecWidget.h"
 #include "VRGuiFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRConsoleWidget {
-    private:
     public:
+        struct message {
+            string msg;
+            string fg;
+            string bg;
+            string link;
+
+            message(string m, string fg, string bg, string l);
+        };
+
+    private:
         Glib::RefPtr<Gtk::TextBuffer> buffer;
+        Glib::RefPtr<Gtk::TextTag> textTag;
         Gtk::ScrolledWindow* swin = 0;
         Gtk::Label* label = 0;
-        std::queue<string> msg_queue;
+        std::queue<message> msg_queue;
         bool paused = 0;
         bool isOpen = 0;
-
         string notifyColor = "#006fe0";
 
-        void forward();
-        void write(string s);
-        void update();
-
+    public:
         VRConsoleWidget();
+        ~VRConsoleWidget();
 
-        void queue(string s);
+        Gtk::ScrolledWindow* getWindow();
+
         void clear();
         void pause();
         void setOpen(bool b);
@@ -40,6 +46,9 @@ class VRConsoleWidget {
         void setColor(string color);
         void configColor(string color);
         void resetColor();
+        void forward();
+        void write(string s, string fg = "#000000", string bg = "#ffffff", string link = "");
+        void update();
 };
 
 OSG_END_NAMESPACE;

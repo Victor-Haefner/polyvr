@@ -24,7 +24,7 @@ class VRGuiBits {
 	    shared_ptr<VRFunction<bool> > recToggleCb;
 
         VRGuiRecWidget recorder;
-        shared_ptr<VRVisualLayer> recorder_visual_layer;
+        VRVisualLayerPtr recorder_visual_layer;
 
         void hideAbout(int i);
         void updateVisualLayer();

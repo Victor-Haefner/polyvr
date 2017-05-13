@@ -24,6 +24,8 @@ ptrFwd(ToggleToolButton);
 ptrFwd(ScrolledWindow);
 ptrFwd(Notebook);
 ptrFwd(Label);
+ptrFwd(TextBuffer);
+ptrFwd(TextTag);
 
 }
 
