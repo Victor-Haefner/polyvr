@@ -127,6 +127,10 @@ VRGuiManager* VRGuiManager::get(bool init) {
     return instance;
 }
 
+void VRGuiManager::focusScript(string name, int line, int column) {
+    g_sc->focusScript(name, line, column);
+}
+
 void VRGuiManager::broadcast(string sig) {
     VRGuiSignals::get()->getSignal(sig)->triggerPtr<VRDevice>();
 }

@@ -142,9 +142,6 @@ static PyObject* writeOut(PyObject *self, PyObject *args) {
 static PyObject* writeErr(PyObject *self, PyObject *args) {
     const char *what;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
-
-    ;
-
     VRGuiManager::get()->getConsole("Errors")->write(what);
     return Py_BuildValue("");
 }

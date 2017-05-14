@@ -899,7 +899,7 @@ void VRGuiScripts::on_find_diag_cancel_clicked() {
     hideDialog("find_dialog");
 }
 
-VRGuiScripts::searchResult::searchResult(string q, string s, int l, int c) : query(q), scriptName(s), line(l), column(c) {}
+VRGuiScripts::searchResult::searchResult(string s, int l, int c) : scriptName(s), line(l), column(c) {}
 
 void VRGuiScripts::focusScript(string name, int line, int column) {
     Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("script_tree"));
@@ -921,13 +921,13 @@ void VRGuiScripts::focusScript(string name, int line, int column) {
     // get iterator at line and column and set cursor to iterator
     GtkTextIter itr;
     GtkTextBuffer* buffer = gtk_text_view_get_buffer((GtkTextView*)editor);
-    gtk_text_buffer_get_iter_at_line(buffer, &itr, line-1);
-    gtk_text_iter_forward_chars(&itr, column-1);
+    gtk_text_buffer_get_iter_at_line(buffer, &itr, line);
+    gtk_text_iter_forward_chars(&itr, column);
     gtk_text_buffer_place_cursor(buffer, &itr);
 }
 
 void VRGuiScripts::on_search_link_clicked(searchResult res, string s) {
-    focusScript(res.scriptName, res.line, res.column);
+    focusScript(res.scriptName, res.line-1, res.column-1);
 }
 
 void VRGuiScripts::on_find_diag_find_clicked() {
@@ -950,7 +950,7 @@ void VRGuiScripts::on_find_diag_find_clicked() {
         VRGuiManager::get()->getConsole( "Search results" )->write( m, style, link );
     };
 
-    VRGuiManager::get()->getConsole( "Search results" )->addStyle( "blue", "#3355ff", "#ffffff", false, true, true );
+    VRGuiManager::get()->getConsole( "Search results" )->addStyle( "blueLink", "#3355ff", "#ffffff", false, true, true );
 
     // result output
     print( "Results, line-position, for search of '" + search + "':\n");
@@ -961,9 +961,9 @@ void VRGuiScripts::on_find_diag_find_clicked() {
                 print( " " );
                 stringstream out;
                 out << r2.first << "-" << p;
-                searchResult sRes(search, r->getName(), r2.first, p);
+                searchResult sRes(r->getName(), r2.first, p);
                 auto fkt = VRFunction<string>::create("search_link", boost::bind(&VRGuiScripts::on_search_link_clicked, this, sRes, _1) );
-                print( out.str(), "blue", fkt );
+                print( out.str(), "blueLink", fkt );
             }
         }
         print( "\n" );

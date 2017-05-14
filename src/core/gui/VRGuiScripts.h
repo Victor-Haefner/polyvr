@@ -32,11 +32,10 @@ class VRGuiScripts {
         };
 
         struct searchResult {
-            string query;
             string scriptName;
             int line;
             int column;
-            searchResult(string q, string s, int l, int c);
+            searchResult(string s, int l, int c);
         };
 
         GtkWidget* editor;
