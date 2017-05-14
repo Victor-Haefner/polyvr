@@ -124,7 +124,7 @@ class VRGuiScripts {
         void updateList();
         VRScriptPtr getSelectedScript();
         string get_editor_core(int i);
-
+        void focusScript(string name, int line, int column);
         void update();
 };
 

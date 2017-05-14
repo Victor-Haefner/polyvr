@@ -20,6 +20,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include <libxml++/nodes/element.h>
 #include <libxml++/nodes/textnode.h>
+#include <frameobject.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -313,7 +314,23 @@ void VRScript::execute() {
             a_itr->second = a;
         }
 
-        PyObject_CallObject(fkt, pArgs);
+        auto res = PyObject_CallObject(fkt, pArgs);
+        if (!res) { // handle error and output message!
+            PyThreadState* tstate = PyThreadState_GET();
+            if (NULL != tstate) {
+                PyFrameObject* frame = tstate->frame;
+                if (auto tb = (PyTracebackObject*)tstate->exc_traceback) if (!frame) frame = tb->tb_frame;
+                if (auto tb = (PyTracebackObject*)tstate->curexc_traceback) if (!frame) frame = tb->tb_frame;
+                while (frame != NULL) {
+                    int line = PyCode_Addr2Line(frame->f_code, frame->f_lasti);
+                    const char *filename = PyString_AsString(frame->f_code->co_filename);
+                    const char *funcname = PyString_AsString(frame->f_code->co_name);
+
+                    printf("    %s(%d): %s\n", filename, line, funcname);
+                    frame = frame->f_back;
+                }
+            }
+        }
 
         execution_time = timer.stop();
 

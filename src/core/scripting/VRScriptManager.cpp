@@ -142,6 +142,9 @@ static PyObject* writeOut(PyObject *self, PyObject *args) {
 static PyObject* writeErr(PyObject *self, PyObject *args) {
     const char *what;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
+
+    ;
+
     VRGuiManager::get()->getConsole("Errors")->write(what);
     return Py_BuildValue("");
 }
@@ -185,16 +188,10 @@ void VRScriptManager::initPyModules() {
 
     PyDict_SetItemString(pLocal, "__builtins__", PyEval_GetBuiltins());
     PyDict_SetItemString(pGlobal, "__builtins__", PyEval_GetBuiltins());
-#ifndef _WIN32
     VRPyListMath::init(pModBase);
-#endif
 
     PyObject* sys_path = PySys_GetObject((char*)"path");
     PyList_Append(sys_path, PyString_FromString(".") );
-
-    //string sys_path = PyString_AsString(PySys_GetObject("path"));
-    //sys_path += ":.";
-    //PySys_SetPath(sys_path.c_str());
 
     pModVR = Py_InitModule3("VR", VRSceneGlobals::methods, "VR Module");
 
@@ -203,14 +200,10 @@ void VRScriptManager::initPyModules() {
 
 	if (!VROptions::get()->getOption<bool>("standalone")) initVRPyStdOut();
 
-    // add cython local path to python search path
-    PyRun_SimpleString(
+    PyRun_SimpleString( // add cython local path to python search path
         "import sys\n"
         "sys.path.append('cython/')\n"
     );
-
-    //PyEval_ReleaseLock();
-    //PyEval_SaveThread();
 }
 
 vector<string> VRScriptManager::getPyVRModules() {

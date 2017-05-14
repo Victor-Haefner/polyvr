@@ -901,7 +901,7 @@ void VRGuiScripts::on_find_diag_cancel_clicked() {
 
 VRGuiScripts::searchResult::searchResult(string q, string s, int l, int c) : query(q), scriptName(s), line(l), column(c) {}
 
-void VRGuiScripts::on_search_link_clicked(searchResult res, string s) {
+void VRGuiScripts::focusScript(string name, int line, int column) {
     Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("script_tree"));
     Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview5"));
 
@@ -909,8 +909,7 @@ void VRGuiScripts::on_search_link_clicked(searchResult res, string s) {
     VRGuiScripts_ModelColumns cols;
     for (auto child : store->children()) {
         Gtk::TreeModel::Row row = *child;
-        string name = row.get_value(cols.script);
-        if (name == res.scriptName) {
+        if (name == row.get_value(cols.script)) {
             Gtk::TreeModel::Path path(child);
             tree_view->set_cursor(path);
         }
@@ -922,9 +921,13 @@ void VRGuiScripts::on_search_link_clicked(searchResult res, string s) {
     // get iterator at line and column and set cursor to iterator
     GtkTextIter itr;
     GtkTextBuffer* buffer = gtk_text_view_get_buffer((GtkTextView*)editor);
-    gtk_text_buffer_get_iter_at_line(buffer, &itr, res.line-1);
-    gtk_text_iter_forward_chars(&itr, res.column-1);
+    gtk_text_buffer_get_iter_at_line(buffer, &itr, line-1);
+    gtk_text_iter_forward_chars(&itr, column-1);
     gtk_text_buffer_place_cursor(buffer, &itr);
+}
+
+void VRGuiScripts::on_search_link_clicked(searchResult res, string s) {
+    focusScript(res.scriptName, res.line, res.column);
 }
 
 void VRGuiScripts::on_find_diag_find_clicked() {
