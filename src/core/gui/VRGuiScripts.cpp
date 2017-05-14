@@ -3,6 +3,7 @@
 #include "VRGuiFile.h"
 #include "VRGuiBits.h"
 #include "VRGuiManager.h"
+#include "VRGuiConsole.h"
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRScene.h"
 #include "core/scripting/VRScript.h"
@@ -22,6 +23,7 @@
 #include <gtkmm/paned.h>
 #include <gtkmm/builder.h>
 #include <gtkmm/filechooser.h>
+#include <gtk/gtktextview.h>
 #include <gtksourceview/gtksourceview.h>
 #include <gtksourceview/gtksourcelanguagemanager.h>
 #include <gtksourceview/gtksourcecompletionprovider.h>
@@ -365,8 +367,8 @@ void VRGuiScripts::on_del_clicked() {
 }
 
 void VRGuiScripts::on_select_script() { // selected a script
-    auto adjustment = Glib::RefPtr<Gtk::ScrolledWindow>::cast_static(VRGuiBuilder()->get_object("scrolledwindow4"))->get_vadjustment();
-    if (lastSelectedScript) pages[lastSelectedScript.get()].line = adjustment->get_value();
+    //auto adjustment = Glib::RefPtr<Gtk::ScrolledWindow>::cast_static(VRGuiBuilder()->get_object("scrolledwindow4"))->get_vadjustment();
+    //if (lastSelectedScript) pages[lastSelectedScript.get()].line = adjustment->get_value();
 
     VRScriptPtr script = VRGuiScripts::getSelectedScript();
     if (script == 0) {
@@ -395,7 +397,7 @@ void VRGuiScripts::on_select_script() { // selected a script
     gtk_source_buffer_begin_not_undoable_action(VRGuiScripts_sourceBuffer);
     gtk_text_buffer_set_text(GTK_TEXT_BUFFER(VRGuiScripts_sourceBuffer), core.c_str(), core.size());
     gtk_source_buffer_end_not_undoable_action(VRGuiScripts_sourceBuffer);
-    adjustment->set_value(pages[script.get()].line);
+    //adjustment->set_value(pages[script.get()].line);
 
     // update arguments liststore
     Glib::RefPtr<Gtk::ListStore> args = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("liststore2"));
@@ -897,6 +899,34 @@ void VRGuiScripts::on_find_diag_cancel_clicked() {
     hideDialog("find_dialog");
 }
 
+VRGuiScripts::searchResult::searchResult(string q, string s, int l, int c) : query(q), scriptName(s), line(l), column(c) {}
+
+void VRGuiScripts::on_search_link_clicked(searchResult res, string s) {
+    Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("script_tree"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview5"));
+
+    // select script in tree view
+    VRGuiScripts_ModelColumns cols;
+    for (auto child : store->children()) {
+        Gtk::TreeModel::Row row = *child;
+        string name = row.get_value(cols.script);
+        if (name == res.scriptName) {
+            Gtk::TreeModel::Path path(child);
+            tree_view->set_cursor(path);
+        }
+    }
+
+    // set focus on editor
+    gtk_widget_grab_focus(editor);
+
+    // get iterator at line and column and set cursor to iterator
+    GtkTextIter itr;
+    GtkTextBuffer* buffer = gtk_text_view_get_buffer((GtkTextView*)editor);
+    gtk_text_buffer_get_iter_at_line(buffer, &itr, res.line-1);
+    gtk_text_iter_forward_chars(&itr, res.column-1);
+    gtk_text_buffer_place_cursor(buffer, &itr);
+}
+
 void VRGuiScripts::on_find_diag_find_clicked() {
     bool sa = getCheckButtonState("checkbutton38");
     //bool rep = getCheckButtonState("checkbutton12");
@@ -913,29 +943,29 @@ void VRGuiScripts::on_find_diag_find_clicked() {
     if (!sa) results = scene->searchScript(search, s);
     else results = scene->searchScript(search);
 
+    auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
+        VRGuiManager::get()->getConsole( "Search results" )->write( m, style, link );
+    };
+
+    VRGuiManager::get()->getConsole( "Search results" )->addStyle( "blue", "#3355ff", "#ffffff", false, true, true );
+
     // result output
-    stringstream out;
-    out << "Results, line (position), for search of '" << search << "'\n";
+    print( "Results, line-position, for search of '" + search + "':\n");
     for (auto r : results) {
-        VRScript::Search res = r->getSearch();
-        out << r->getName() << ":";
-
-        for (auto r2 : res.result) {
-            int l = r2.first;
-            out << " " << l << "(";
-            bool first = true;
+        print( r->getName()+":" );
+        for (auto r2 : r->getSearch().result) {
             for (auto p : r2.second) {
-                if (!first) out << ", ";
-                first = false;
-                out << p;
+                print( " " );
+                stringstream out;
+                out << r2.first << "-" << p;
+                searchResult sRes(search, r->getName(), r2.first, p);
+                auto fkt = VRFunction<string>::create("search_link", boost::bind(&VRGuiScripts::on_search_link_clicked, this, sRes, _1) );
+                print( out.str(), "blue", fkt );
             }
-            out << ")";
         }
-        out << endl;
+        print( "\n" );
     }
-    out << endl;
-
-    VRGuiManager::get()->printToConsole( "Search results", out.str() );
+    print( "\n" );
     updateList();
 }
 
@@ -1136,7 +1166,7 @@ void VRGuiScripts::initEditor() {
     gtk_source_buffer_set_highlight_matching_brackets(VRGuiScripts_sourceBuffer, true);
 
     Glib::RefPtr<Gtk::ScrolledWindow> win = Glib::RefPtr<Gtk::ScrolledWindow>::cast_static(VRGuiBuilder()->get_object("scrolledwindow4"));
-    GtkWidget* editor = gtk_source_view_new_with_buffer(VRGuiScripts_sourceBuffer);
+    editor = gtk_source_view_new_with_buffer(VRGuiScripts_sourceBuffer);
     gtk_container_add (GTK_CONTAINER (win->gobj()), editor);
 
     // buffer changed callback

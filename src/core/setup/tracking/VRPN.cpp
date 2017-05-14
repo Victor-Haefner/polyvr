@@ -1,5 +1,6 @@
 #include "VRPN.h"
 #include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiConsole.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/objects/VRTransform.h"
@@ -48,12 +49,12 @@ void VRPN_CALLBACK handle_tracker(void* data, const vrpn_TRACKERCB tracker ) {
     Vec3f pos = dev->offset + Vec3f(sta[0]*tracker.pos[(int)ta[0]]*s, sta[1]*tracker.pos[(int)ta[1]]*s, sta[2]*tracker.pos[(int)ta[2]]*s);
     for (int i=0; i<3; i++) m[3][i] = pos[i];
 
-    if (verbose) VRGuiManager::get()->printToConsole("Tracking", "vrpn tracker pos "+toString(pos)+" dir "+toString(-Vec3f(m[2]))+"\n");
+    if (verbose) VRGuiManager::get()->getConsole("Tracking")->write( "vrpn tracker pos "+toString(pos)+" dir "+toString(-Vec3f(m[2]))+"\n");
     obj->setMatrix(m);
 }
 
 void VRPN_CALLBACK handle_button(void* data, const vrpn_BUTTONCB button ) {
-    if (verbose) VRGuiManager::get()->printToConsole("Tracking", "vrpn button "+toString(button.button)+" state "+toString(button.state)+"\n");
+    if (verbose) VRGuiManager::get()->getConsole("Tracking")->write( "vrpn button "+toString(button.button)+" state "+toString(button.state)+"\n");
     VRPN_device* dev = (VRPN_device*)data;
     dev->change_button(button.button, button.state);
 }

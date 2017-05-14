@@ -1,20 +1,19 @@
 #include "VRScriptManager.h"
+#include "core/utils/VRStorage_template.h"
+#include "core/utils/VROptions.h"
+#include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiConsole.h"
+#include "VRScript.h"
+#include "VRSceneModules.h"
+#include "VRSceneGlobals.h"
+#include "VRPyListMath.h"
 
 #undef _XOPEN_SOURCE
 #undef _POSIX_C_SOURCE
 #include <Python.h>
-
-#include "core/utils/VRStorage_template.h"
-#include "core/utils/VROptions.h"
-#include "core/gui/VRGuiManager.h"
-#include "VRScript.h"
 #include <iostream>
 #include <algorithm>
 #include <memory>
-
-#include "VRSceneModules.h"
-#include "VRSceneGlobals.h"
-#include "VRPyListMath.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -136,14 +135,14 @@ void VRScriptManager::updateScript(string name, string core, bool compile) {
 static PyObject* writeOut(PyObject *self, PyObject *args) {
     const char *what;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
-    VRGuiManager::get()->printToConsole("Console", what);
+    VRGuiManager::get()->getConsole("Console")->write(what);
     return Py_BuildValue("");
 }
 
 static PyObject* writeErr(PyObject *self, PyObject *args) {
     const char *what;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
-    VRGuiManager::get()->printToConsole("Errors", what);
+    VRGuiManager::get()->getConsole("Errors")->write(what);
     return Py_BuildValue("");
 }
 

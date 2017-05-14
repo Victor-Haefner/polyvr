@@ -1,12 +1,13 @@
 #include "VRLogger.h"
 #include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiConsole.h"
 
 map<string, bool> VRLog::tags;
 
 void VRLog::print(string tag, string s) {
     if (!tags[tag]) return;
 
-    OSG::VRGuiManager::get()->printToConsole("Console", s);
+    OSG::VRGuiManager::get()->getConsole("Console")->write(s);
 }
 
 void VRLog::setTag(string tag, bool b) { tags[tag] = b; }

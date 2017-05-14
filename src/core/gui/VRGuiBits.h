@@ -48,7 +48,7 @@ class VRGuiBits {
 
         void setSceneSignal(VRSignalPtr sig);
 
-        void write_to_terminal(string t, string s);
+        VRConsoleWidgetPtr getConsole(string t);
         void update_terminals();
 
         void toggleDock();

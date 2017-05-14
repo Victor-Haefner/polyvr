@@ -7,10 +7,11 @@
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSemanticManager.h"
 #include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiConsole.h"
 #include <iostream>
 
 #define WARN(x) \
-VRGuiManager::get()->printToConsole( "Errors", x+"\n" );
+VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
 
 using namespace OSG;
 

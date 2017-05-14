@@ -126,9 +126,7 @@ void VRGuiBits::update_terminals() {
     for (auto c : consoles) c.second->update();
 }
 
-void VRGuiBits::write_to_terminal(string t, string s) {
-    consoles[t]->write(s);
-}
+VRConsoleWidgetPtr VRGuiBits::getConsole(string t) { return consoles[t]; }
 
 void VRGuiBits::hideAbout(int i) {
     Gtk::AboutDialog* diag;

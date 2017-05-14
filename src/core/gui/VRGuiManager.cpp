@@ -136,9 +136,9 @@ void VRGuiManager::wakeWindow() {
     setNotebookSensitivity("notebook3", true);
 }
 
-void VRGuiManager::printToConsole(string t, string s) {
-    if (standalone) return;
-    g_bits->write_to_terminal(t, s);
+VRConsoleWidgetPtr VRGuiManager::getConsole(string t) {
+    if (standalone) return 0;
+    return g_bits->getConsole(t);
 }
 
 void VRGuiManager::updateGtk() {

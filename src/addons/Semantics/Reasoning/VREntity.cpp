@@ -3,13 +3,14 @@
 #include "VROntology.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiConsole.h"
 
 #include <iostream>
 
 using namespace OSG;
 
 #define WARN(x) \
-VRGuiManager::get()->printToConsole( "Errors", x+"\n" );
+VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
 
 /*#include <libxml++/nodes/element.h>
 #include "core/utils/VRFunction.h"
