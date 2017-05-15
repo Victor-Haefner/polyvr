@@ -18,6 +18,8 @@ class VRRoadNetwork : public VRObject {
         VRPathtoolPtr tool;
         int nextRoadID = 0;
 
+		float trackWidth = 1.6; // TODO
+
         float getRoadWidth( VREntityPtr road );
         void setupTexCoords( VRGeometryPtr geo, VREntityPtr way );
         pathPtr toPath( VREntityPtr pathEntity, int resolution );
@@ -38,6 +40,7 @@ class VRRoadNetwork : public VRObject {
         VREntityPtr addLane( int direction, VREntityPtr road, float width );
         VREntityPtr addWay( string name, vector<VREntityPtr> paths, int rID, string type );
         VREntityPtr addPath( string type, string name, vector<VREntityPtr> nodes, vector<Vec3f> normals );
+        VREntityPtr addPath( string type, string name, VREntityPtr node1, VREntityPtr node2, Vec3f normal1, Vec3f normal2 );
 
         void addRoad( string name, VREntityPtr node1, VREntityPtr node2, Vec3f norm1, Vec3f norm2, int Nlanes );
         VRGeometryPtr createRoadGeometry( VREntityPtr road );
@@ -49,6 +52,9 @@ class VRRoadNetwork : public VRObject {
         void computeLanes();
         void computeSurfaces();
         void computeMarkings();
+
+        void computeMarkingsRoad2(VREntityPtr roadEnt);
+        void computeMarkingsIntersection(VREntityPtr intersection);
 
         void clear();
         void compute();

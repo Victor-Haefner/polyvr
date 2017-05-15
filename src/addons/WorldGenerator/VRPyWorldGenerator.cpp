@@ -69,6 +69,8 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"computeSurfaces", (PyCFunction)VRPyRoadNetwork::computeSurfaces, METH_NOARGS, "Compute the surfaces - computeSurfaces( )" },
     {"computeMarkings", (PyCFunction)VRPyRoadNetwork::computeMarkings, METH_NOARGS, "Compute the markings - computeMarkings( )" },
     {"compute", (PyCFunction)VRPyRoadNetwork::compute, METH_NOARGS, "Compute everything - compute( )" },
+    {"computeMarkingsRoad2", (PyCFunction)VRPyRoadNetwork::computeMarkingsRoad2, METH_VARARGS, "Compute markings of a type 2 road - computeMarkingsRoad2( road )" },
+    {"computeMarkingsIntersection", (PyCFunction)VRPyRoadNetwork::computeMarkingsIntersection, METH_VARARGS, "Compute markings of an intersection - computeMarkingsIntersection( intersection )" },
     {"createRoadGeometry", (PyCFunction)VRPyRoadNetwork::createRoadGeometry, METH_VARARGS, "Create a geometry for a road - geo createRoadGeometry( road )" },
     {"createIntersectionGeometry", (PyCFunction)VRPyRoadNetwork::createIntersectionGeometry, METH_VARARGS, "Create a geometry for an intersection - geo createIntersectionGeometry( intersection )" },
     {"getRoadID", (PyCFunction)VRPyRoadNetwork::getRoadID, METH_NOARGS, "Get a road ID - int getRoadID()" },
@@ -90,6 +92,22 @@ PyObject* VRPyRoadNetwork::getRoadID(VRPyRoadNetwork* self) {
 PyObject* VRPyRoadNetwork::clear(VRPyRoadNetwork* self) {
     if (!self->valid()) return NULL;
     self->objPtr->clear();
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyRoadNetwork::computeMarkingsRoad2(VRPyRoadNetwork* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    VRPyEntity* road = 0;
+    if (!PyArg_ParseTuple(args, "O", &road)) return NULL;
+    self->objPtr->computeMarkingsRoad2( road->objPtr );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyRoadNetwork::computeMarkingsIntersection(VRPyRoadNetwork* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    VRPyEntity* intersection = 0;
+    if (!PyArg_ParseTuple(args, "O", &intersection)) return NULL;
+    self->objPtr->computeMarkingsIntersection( intersection->objPtr );
     Py_RETURN_TRUE;
 }
 

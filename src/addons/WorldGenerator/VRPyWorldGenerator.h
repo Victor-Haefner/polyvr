@@ -32,6 +32,9 @@ struct VRPyRoadNetwork : VRPyBaseT<OSG::VRRoadNetwork> {
     static PyObject* computeMarkings(VRPyRoadNetwork* self);
     static PyObject* compute(VRPyRoadNetwork* self);
 
+    static PyObject* computeMarkingsRoad2(VRPyRoadNetwork* self, PyObject *args);
+    static PyObject* computeMarkingsIntersection(VRPyRoadNetwork* self, PyObject *args);
+
     static PyObject* createRoadGeometry(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* createIntersectionGeometry(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* getRoadID(VRPyRoadNetwork* self);
