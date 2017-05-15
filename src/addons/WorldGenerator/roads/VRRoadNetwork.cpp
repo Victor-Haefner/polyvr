@@ -434,74 +434,78 @@ void VRRoadNetwork::computeIntersections() {
 }
 
 void VRRoadNetwork::computeMarkingsRoad2(VREntityPtr roadEnt) {
-		float W  = 8;
-		float W2 = W*0.5;
-		float W4 = W*0.25;
-		float mw = 0.15;
+    float mw = 0.15;
 
-        // tracks
-		vector<VREntityPtr> nodes;
-		vector<Vec3f> normals;
-		VREntityPtr pathEnt = roadEnt->getEntity("path");
-		VREntityPtr nodeEntryIn = pathEnt->getEntity("nodes",0);
-		VREntityPtr nodeEntryOut = pathEnt->getEntity("nodes",1);
-		VREntityPtr nodeIn = nodeEntryIn->getEntity("node");
-		VREntityPtr nodeOut = nodeEntryOut->getEntity("node");
-		Vec3f normIn = nodeEntryIn->getVec3f("direction");
-		Vec3f normOut = nodeEntryOut->getVec3f("direction");
+    Road road(roadEnt);
 
-		auto path = toPath(pathEnt, 12);
-		for (auto point : path->getPoints()) {
-			Vec3f p = point.pos();
-			Vec3f n = point.dir();
-			Vec3f x = n.cross(Vec3f(0,1,0));
-			x.normalize();
-			Vec3f pL1 = p + x*(W4-trackWidth*0.5);
-			Vec3f pL2 = p + x*(W4+trackWidth*0.5);
-			Vec3f pL3 = p + x*(W2-mw*0.5);
-			Vec3f pR1 = p - x*(W4-trackWidth*0.5);
-			Vec3f pR2 = p - x*(W4+trackWidth*0.5);
-			Vec3f pR3 = p - x*(W2-mw*0.5);
-			nodes.push_back(addNode(pL1));
-			nodes.push_back(addNode(pL2));
-			nodes.push_back(addNode(pL3));
-			nodes.push_back(addNode(pR1));
-			nodes.push_back(addNode(pR2));
-			nodes.push_back(addNode(pR3));
-			//for (int i=0; i<6; i++) normals.push_back(n);
-            normals.insert(normals.end(), 6, n);
-		}
+    computeTracksLanes(roadEnt);
 
-		auto tL1 = addPath("RoadTrack", name, nodes[0], nodes[6], normals[0], normals[6]);
-		auto tL2 = addPath("RoadTrack", name, nodes[1], nodes[7], normals[1], normals[7]);
-		auto tR1 = addPath("RoadTrack", name, nodes[3], nodes[9], normals[3], normals[9]);
-		auto tR2 = addPath("RoadTrack", name, nodes[4], nodes[10], normals[4], normals[10]);
+    // road data
+    vector<VREntityPtr> nodes;
+    vector<Vec3f> normals;
+    VREntityPtr pathEnt = roadEnt->getEntity("path");
+    VREntityPtr nodeEntryIn = pathEnt->getEntity("nodes",0);
+    VREntityPtr nodeEntryOut = pathEnt->getEntity("nodes",1);
+    VREntityPtr nodeIn = nodeEntryIn->getEntity("node");
+    VREntityPtr nodeOut = nodeEntryOut->getEntity("node");
+    Vec3f normIn = nodeEntryIn->getVec3f("direction");
+    Vec3f normOut = nodeEntryOut->getVec3f("direction");
 
-		for (auto t : {tL1, tL2, tR1, tR2} ) {
-			t->set("width", toString(trackWidth*0.5));
-			roadEnt->add("tracks", t->getName());
-		}
+    float roadWidth = road.getWidth();
+    auto lanes = roadEnt->getAllEntities("lanes");
+    int Nlanes = lanes.size();
 
-		// markings
-		auto mL0 = addPath("RoadMarking", name, nodeIn, nodeOut, normIn, normOut);
-		auto mL1 = addPath("RoadMarking", name, nodes[2], nodes[8], normals[2], normals[8]);
-		auto mL2 = addPath("RoadMarking", name, nodes[5], nodes[11], normals[5], normals[11]);
+    // compute markings nodes
+    auto path = toPath(pathEnt, 12);
+    for (auto point : path->getPoints()) {
+        Vec3f p = point.pos();
+        Vec3f n = point.dir();
+        Vec3f x = n.cross(Vec3f(0,1,0));
+        x.normalize();
 
-		for ( m : {mL0, mL1, mL2} ) {
-			m->set("width", toString(mw));
-			roadEnt->add("markings", m->getName());
-		}
-		mL0->set("style", "dashed"); // dotted line
+        for (int li=0; li<Nlanes; li++) {
+            auto lane = lanes[li];
+            float width = toFloat( lane->get("width")->value );
+            float k = width*li - roadWidth*0.5 + mw*0.5;
+            Vec3f pi = x*k + p;
+            nodes.push_back(addNode(pi));
+            normals.push_back(n);
+        }
+        nodes.push_back(addNode(x*(roadWidth*0.5 - mw*0.5) + p));
+        normals.push_back(n);
+    }
 
-		float L = ( nodeIn->getVec3f("position") - nodeOut->getVec3f("position") ).length();
-		mL0->set("dashNumber", toString(int(L*0.5))); // dotted line
+    // markings
+    int pathN = path->size();
+    float L = path->getLength();
+    string Ndots = toString(int(L*0.5));
+    int lastDir = 0;
+    for (int li=0; li<Nlanes+1; li++) {
+        vector<VREntityPtr> nodes2;
+        vector<Vec3f> normals2;
+        for (int pi=0; pi<pathN; pi++) {
+            int i = pi*(Nlanes+1)+li;
+            nodes2.push_back( nodes[i] );
+            normals2.push_back( normals[i] );
+        }
+        auto mL = addPath("RoadMarking", name, nodes2, normals2);
+        mL->set("width", toString(mw));
+        roadEnt->add("markings", mL->getName());
+
+        if (li != Nlanes) {
+            auto lane = lanes[li];
+            int direction = toInt( lane->get("direction")->value );
+            if (li != 0 && lastDir*direction > 0) {
+                mL->set("style", "dashed");
+                mL->set("dashNumber", Ndots);
+            }
+            lastDir = direction;
+        }
+    }
 }
 
-void VRRoadNetwork::computeMarkingsIntersection( VREntityPtr intersection) {
-    string name = intersection->getName();
-
-    map<VREntityPtr, float> laneEntries;
-    for (auto lane : intersection->getAllEntities("lanes")) {
+void VRRoadNetwork::computeTracksLanes(VREntityPtr way) {
+    for (auto lane : way->getAllEntities("lanes")) {
         for (auto pathEnt : lane->getAllEntities("path")) {
             // tracks
             auto path = toPath(pathEnt, 12);
@@ -524,10 +528,20 @@ void VRRoadNetwork::computeMarkingsIntersection( VREntityPtr intersection) {
 
             for (auto t : {tL, tR}) {
                 t->set("width", toString(trackWidth*0.5));
-                intersection->add("tracks", t->getName());
+                way->add("tracks", t->getName());
             }
+        }
+    }
+}
 
-            // stop lines
+void VRRoadNetwork::computeMarkingsIntersection( VREntityPtr intersection) {
+    string name = intersection->getName();
+
+    computeTracksLanes(intersection);
+
+    map<VREntityPtr, float> laneEntries;
+    for (auto lane : intersection->getAllEntities("lanes")) {
+        for (auto pathEnt : lane->getAllEntities("path")) {
             auto entry = pathEnt->getEntity("nodes");
             laneEntries[entry] = toFloat( lane->get("width")->value );
         }

@@ -20,7 +20,6 @@ class VRRoadNetwork : public VRObject {
 
 		float trackWidth = 1.6; // TODO
 
-        float getRoadWidth( VREntityPtr road );
         void setupTexCoords( VRGeometryPtr geo, VREntityPtr way );
         pathPtr toPath( VREntityPtr pathEntity, int resolution );
 
@@ -53,6 +52,7 @@ class VRRoadNetwork : public VRObject {
         void computeSurfaces();
         void computeMarkings();
 
+        void computeTracksLanes(VREntityPtr way);
         void computeMarkingsRoad2(VREntityPtr roadEnt);
         void computeMarkingsIntersection(VREntityPtr intersection);
 
