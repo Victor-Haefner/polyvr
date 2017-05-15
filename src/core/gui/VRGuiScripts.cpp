@@ -905,15 +905,29 @@ void VRGuiScripts::focusScript(string name, int line, int column) {
     Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("script_tree"));
     Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview5"));
 
-    // select script in tree view
-    VRGuiScripts_ModelColumns cols;
-    for (auto child : store->children()) {
-        Gtk::TreeModel::Row row = *child;
+    auto selectScript = [&](Gtk::TreeIter& itr) {
+        Gtk::TreeModel::Row row = *itr;
+        VRGuiScripts_ModelColumns cols;
         if (name == row.get_value(cols.script)) {
-            Gtk::TreeModel::Path path(child);
+            Gtk::TreeModel::Path path(itr);
+            tree_view->expand_to_path(path);
             tree_view->set_cursor(path);
+            return true;
         }
-    }
+        return false;
+    };
+
+    auto selectScript2 = [&]() {
+        for (auto child : store->children()) {
+            if (selectScript(child)) return;
+            for (auto child2 : child->children()) {
+                if (selectScript(child2)) return;
+            }
+        }
+    };
+
+    // select script in tree view
+    selectScript2();
 
     // set focus on editor
     gtk_widget_grab_focus(editor);
@@ -921,13 +935,18 @@ void VRGuiScripts::focusScript(string name, int line, int column) {
     // get iterator at line and column and set cursor to iterator
     GtkTextIter itr;
     GtkTextBuffer* buffer = gtk_text_view_get_buffer((GtkTextView*)editor);
-    gtk_text_buffer_get_iter_at_line(buffer, &itr, line);
-    gtk_text_iter_forward_chars(&itr, column);
+    gtk_text_buffer_get_iter_at_line(buffer, &itr, line-1);
+    gtk_text_iter_forward_chars(&itr, max(column-1, 0));
     gtk_text_buffer_place_cursor(buffer, &itr);
+
+    // scroll to line
+    gtk_text_iter_set_line_offset(&itr, 0);
+    GtkTextMark* mark = gtk_text_buffer_create_mark(buffer, 0, &itr, false);
+    gtk_text_view_scroll_to_mark((GtkTextView*)editor, mark, 0.25, false, 0, 0);
 }
 
 void VRGuiScripts::on_search_link_clicked(searchResult res, string s) {
-    focusScript(res.scriptName, res.line-1, res.column-1);
+    focusScript(res.scriptName, res.line, res.column);
 }
 
 void VRGuiScripts::on_find_diag_find_clicked() {
