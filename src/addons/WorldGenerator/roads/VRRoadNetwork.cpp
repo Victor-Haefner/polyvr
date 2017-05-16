@@ -125,16 +125,14 @@ VREntityPtr VRRoadNetwork::addWay( string name, vector<VREntityPtr> paths, int r
 	return r;
 }
 
-void VRRoadNetwork::addRoad( string name, VREntityPtr node1, VREntityPtr node2, Vec3f norm1, Vec3f norm2, int Nlanes ) {
+VREntityPtr VRRoadNetwork::addRoad( string name, VREntityPtr node1, VREntityPtr node2, Vec3f norm1, Vec3f norm2, int Nlanes ) {
     int rID = getRoadID();
-    vector<VREntityPtr> nodes; nodes.push_back(node1); nodes.push_back(node2);
-    vector<Vec3f> norms; norms.push_back(norm1); norms.push_back(norm2);
-    VREntityPtr pathEnt = addPath("Path", name, nodes, norms);
-    vector<VREntityPtr> paths; paths.push_back(pathEnt);
-    VREntityPtr roadEnt = addWay(name, paths, rID, "Road");
+    VREntityPtr pathEnt = addPath("Path", name, node1, node2, norm1, norm2);
+    VREntityPtr roadEnt = addWay(name, {pathEnt}, rID, "Road");
     int Nm = Nlanes*0.5;
     for (int i=0; i<Nm; i++) addLane(1, roadEnt, 4 );
     for (int i=0; i<Nlanes-Nm; i++) addLane(-1, roadEnt, 4 );
+    return roadEnt;
 }
 
 VREntityPtr VRRoadNetwork::addPath( string type, string name, vector<VREntityPtr> nodes, vector<Vec3f> normals ) {
