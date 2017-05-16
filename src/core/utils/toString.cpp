@@ -71,7 +71,7 @@ T ssToVal(const string& s, int* N = 0) {
     stringstream ss;
     ss << s;
     if(N) *N = ss.tellg();
-    T v;
+    T v = 0;
     ss >> v;
     if(N) *N = int(ss.tellg()) - *N;
     return v;

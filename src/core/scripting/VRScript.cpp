@@ -97,7 +97,7 @@ void VRScript::update() {
         }
 
         if (t->trigger == "on_timeout") {
-            int i = toInt(t->param.c_str());
+            int i = toInt(t->param);
             scene->addTimeoutFkt(cbfkt_sys, 0, i);
             continue;
         }
