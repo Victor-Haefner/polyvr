@@ -62,6 +62,7 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"addWay", (PyCFunction)VRPyRoadNetwork::addWay, METH_VARARGS, "Add a new way - way addWay( str name, [paths], int rID, str type )" },
     {"addRoad", (PyCFunction)VRPyRoadNetwork::addRoad, METH_VARARGS, "Add a new road - road addRoad( str name, node1, node2, norm1, norm2, lanesN )" },
     {"addPath", (PyCFunction)VRPyRoadNetwork::addPath, METH_VARARGS, "Add a new path - path addPath( str type, str name, [nodes], [normals] )" },
+    {"addArrows", (PyCFunction)VRPyRoadNetwork::addArrows, METH_VARARGS, "Add a new path - arrows addArrows( lane, float t, [float] dirs )" },
     {"computeIntersectionLanes", (PyCFunction)VRPyRoadNetwork::computeIntersectionLanes, METH_VARARGS, "Compute the lanes of an intersection - computeIntersectionLanes( intersection )" },
     {"computeLanePaths", (PyCFunction)VRPyRoadNetwork::computeLanePaths, METH_VARARGS, "Compute the path of each lane of a road - computeLanePaths( road )" },
     {"computeIntersections", (PyCFunction)VRPyRoadNetwork::computeIntersections, METH_NOARGS, "Compute the intersections - computeIntersections( )" },
@@ -234,6 +235,18 @@ PyObject* VRPyRoadNetwork::addPath(VRPyRoadNetwork* self, PyObject *args) {
     for (int i=0; i<pySize(norms); i++) normsV.push_back( parseVec3fList(PyList_GetItem(norms, i)) );
     auto p = self->objPtr->addPath( type?type:"", name?name:"", nodesV, normsV );
     return VRPyEntity::fromSharedPtr( p );
+}
+
+PyObject* VRPyRoadNetwork::addArrows(VRPyRoadNetwork* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    VRPyEntity* lane = 0;
+    float t = 0;
+    PyObject* dirs = 0;
+    if (!PyArg_ParseTuple(args, "OfO", &lane, &t, &dirs)) return NULL;
+    vector<float> Dirs;
+    for (int i=0; i<pySize(dirs); i++) Dirs.push_back( PyFloat_AsDouble(PyList_GetItem(dirs, i)) );
+    auto a = self->objPtr->addArrows( lane->objPtr, t, Dirs );
+    return VRPyEntity::fromSharedPtr( a );
 }
 
 

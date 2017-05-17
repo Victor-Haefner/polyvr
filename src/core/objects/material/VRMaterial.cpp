@@ -871,6 +871,8 @@ void VRMaterial::setDefaultVertexShader() {
 void VRMaterial::checkShader(int type, string shader, string name) {
     auto gm = VRGuiManager::get(false);
     if (!gm) return;
+    auto errC = gm->getConsole("Errors");
+    if (!errC) return;
 
     if (!glXGetCurrentContext()) return;
 
@@ -882,7 +884,7 @@ void VRMaterial::checkShader(int type, string shader, string name) {
 
     GLint compiled;
     glGetObjectParameterivARB(shaderObject, GL_COMPILE_STATUS, &compiled);
-    if (!compiled) gm->getConsole("Errors")->write( "Shader "+name+" of material "+getName()+" did not compiled!\n");
+    if (!compiled) errC->write( "Shader "+name+" of material "+getName()+" did not compiled!\n");
 
     GLint blen = 0;
     GLsizei slen = 0;
@@ -890,8 +892,8 @@ void VRMaterial::checkShader(int type, string shader, string name) {
     if (blen > 1) {
         GLchar* compiler_log = (GLchar*)malloc(blen);
         glGetInfoLogARB(shaderObject, blen, &slen, compiler_log);
-        gm->getConsole("Errors")->write( "Shader "+name+" of material "+getName()+" warnings and errors:\n");
-        gm->getConsole("Errors")->write( string(compiler_log));
+        errC->write( "Shader "+name+" of material "+getName()+" warnings and errors:\n");
+        errC->write( string(compiler_log));
         free(compiler_log);
     }
 }

@@ -11,6 +11,8 @@ class VRAsphalt : public VRMaterial {
         static string asphalt_vp;
         static string asphalt_fp;
         static string asphalt_dfp;
+        static string asphaltArrow_fp;
+        static string asphaltArrow_dfp;
 
         struct road {
             int markingsN = 0;
@@ -29,6 +31,8 @@ class VRAsphalt : public VRMaterial {
         VRAsphalt();
         ~VRAsphalt();
         static VRAsphaltPtr create();
+
+        void setArrowMaterial();
 
         void clearTexture();
         void updateTexture();

@@ -23,6 +23,7 @@ struct VRPyRoadNetwork : VRPyBaseT<OSG::VRRoadNetwork> {
     static PyObject* addWay(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* addRoad(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* addPath(VRPyRoadNetwork* self, PyObject *args);
+    static PyObject* addArrows(VRPyRoadNetwork* self, PyObject *args);
 
     static PyObject* computeIntersectionLanes(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* computeLanePaths(VRPyRoadNetwork* self, PyObject *args);
