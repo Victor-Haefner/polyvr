@@ -59,6 +59,7 @@
 #include "VRPyObjectManager.h"
 #include "VRPySky.h"
 
+#include "addons/Character/VRPyCharacter.h"
 #include "addons/Algorithms/VRPyGraphLayout.h"
 #include "addons/CaveKeeper/VRPyCaveKeeper.h"
 #include "addons/Bullet/Particles/VRPyParticles.h"
@@ -80,16 +81,13 @@
 #include "addons/Engineering/Milling/VRPyMillingWorkPiece.h"
 #include "addons/Engineering/Milling/VRPyMillingCuttingToolProfile.h"
 #include "addons/Engineering/VRPyRobotArm.h"
-#include "addons/RealWorld/nature/VRPyTree.h"
-
-// not yet ported dependencies
-#ifndef _WIN32
+#include "addons/WorldGenerator/VRPyWorldGenerator.h"
+#include "addons/WorldGenerator/nature/VRPyTree.h"
 #include "addons/Engineering/CSG/VRPyCSG.h"
 #include "addons/RealWorld/VRPyRealWorld.h"
 #include "addons/RealWorld/traffic/VRPyTrafficSimulation.h"
 #include "addons/SimViDekont/VRPySimViDekont.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
-#endif
 
 using namespace OSG;
 
@@ -164,6 +162,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyAdjacencyGraph>("AdjacencyGraph", pModVR);
     sm->registerModule<VRPyMechanism>("Mechanism", pModVR);
     sm->registerModule<VRPyNumberingEngine>("NumberingEngine", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPyCharacter>("Character", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTree>("Tree", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyWoods>("Woods", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTerrain>("Terrain", pModVR, VRPyGeometry::typeRef);
@@ -190,8 +189,9 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 	sm->registerModule<VRPySimViDekont>("SimViDekont", pModVR);
 #endif
 
-    PyObject* pModMath = Py_InitModule3("Math", VRSceneGlobals::methods, "VR math module");
+    PyObject* pModMath = Py_InitModule3("VR.Math", VRSceneGlobals::methods, "VR math module");
     sm->registerModule<VRPyVec3f>("Vec3", pModMath, 0, "Math");
+    sm->registerModule<VRPyLine>("Line", pModMath, 0, "Math");
     PyModule_AddObject(pModVR, "Math", pModMath);
 
     PyObject* pModSetup = Py_InitModule3("Setup", VRSceneGlobals::methods, "VR setup module");
@@ -199,6 +199,11 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyView>("View", pModSetup, 0, "Setup");
     sm->registerModule<VRPyWindow>("Window", pModSetup, 0, "Setup");
     PyModule_AddObject(pModVR, "Setup", pModSetup);
+
+    PyObject* pModWorldGenerator = Py_InitModule3("VR.WorldGenerator", VRSceneGlobals::methods, "VR world generator module");
+    sm->registerModule<VRPyAsphalt>("Asphalt", pModWorldGenerator, VRPyMaterial::typeRef, "WorldGenerator");
+    sm->registerModule<VRPyRoadNetwork>("RoadNetwork", pModWorldGenerator, VRPyObject::typeRef, "WorldGenerator");
+    PyModule_AddObject(pModVR, "WorldGenerator", pModWorldGenerator);
 
     PyObject* pModFactory = Py_InitModule3("Factory", VRSceneGlobals::methods, "VR factory module");
     sm->registerModule<FPyNode>("Node", pModFactory, 0, "Factory");

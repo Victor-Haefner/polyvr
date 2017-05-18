@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="Tutorial1" name_space="Scene" loading_time="118">
+<Scene name_suffix="0" base_name="Tutorial1" name_space="Scene" loading_time="136">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
-        <Object accept_root="1" aspect="1" at="4.33788 3.8722 0.128584" at_dir="0" base_name="Default" far="512" fov="1.0472" from="15.8222 8.6074 -6.39213" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="4.33788 3.8722 0.128584" at_dir="0" base_name="Default" far="512" fov="1.0472" from="12.1353 11.091 9.28939" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
             <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
@@ -14,7 +14,7 @@
   </Objects>
   <Rendering deferred_rendering="0" frustum_culling="1" hmdd="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
-    <Script base_name="Answer_init" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
+    <Script base_name="Answer_init" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	import VR, math
 	
@@ -58,6 +58,7 @@
 	VR.factory.addChild( VR.truck )
 	p = VR.Pose([5,1,0], [0,0,-1], [0,1,0])
 	VR.truck.reset(p)
+	VR.truck.setIgnition(True)
 	
 	# truck dish
 	dish = VR.CSGGeometry('dish')
@@ -152,7 +153,7 @@
 </core>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" name_suffix="1" base_name="trigger" name_space="__global__"/>
     </Script>
-    <Script base_name="Answer_keyboard" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
+    <Script base_name="Answer_keyboard" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	import VR
 	
@@ -163,12 +164,15 @@
 	if not hasattr(VR, 'throttle'): VR.throttle = 0
 	if not hasattr(VR, 'tbreak'): VR.tbreak = 0
 	if not hasattr(VR, 'steering'): VR.steering = 0
+	if not hasattr(VR, 'gear'): VR.gear = 0
 	
 	if k == 119: 
-		VR.throttle = 500
+		VR.throttle = 1
+		VR.gear = 1
 		VR.tbreak = 0
 	if k == 120: 
-		VR.throttle = -500
+		VR.throttle = 1
+		VR.gear = -1
 		VR.tbreak = 0
 	if k == 97: VR.steering = 1
 	if k == 100: VR.steering = -1
@@ -176,7 +180,7 @@
 		VR.tbreak = 100
 		VR.throttle = 0
 	
-	VR.truck.update(VR.throttle, VR.tbreak, VR.steering, 1,1)
+	VR.truck.update(VR.throttle, VR.tbreak, VR.steering, 1,VR.gear)
 	
 	# truck dish
 	def anim(t):
@@ -210,7 +214,7 @@
 </core>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="-1" name_suffix="2" base_name="trigger" name_space="__global__"/>
     </Script>
-    <Script base_name="Answer_mouse" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
+    <Script base_name="Answer_mouse" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	import VR, math
 	
@@ -289,7 +293,7 @@
 </core>
       <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
     </Script>
-    <Script base_name="Hints" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="HTML" server="server1" group="">
+    <Script base_name="Hints" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML" unique="1">
       <core>
 
 Simple primitives:
@@ -340,7 +344,7 @@ CarDynamics:
 	car.reset([5,1,0])
 </core>
     </Script>
-    <Script base_name="Task" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="HTML" server="server1" group="">
+    <Script base_name="Task" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML" unique="1">
       <core>
 The aim of this tutorial is to build the following scene:
 	1) A dump truck
@@ -373,7 +377,7 @@ Roadmap:
 	3.2) Add mouse interaction for truck dish animation
 </core>
     </Script>
-    <Script base_name="Tutorial_init" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
+    <Script base_name="Tutorial_init" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	import VR
 	
@@ -382,12 +386,12 @@ Roadmap:
 	VR.getRoot().find('light').addChild(VR.factory)
 </core>
     </Script>
-    <Script base_name="Tutorial_keyboard" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
+    <Script base_name="Tutorial_keyboard" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	pass
 </core>
     </Script>
-    <Script base_name="Tutorial_mouse" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
+    <Script base_name="Tutorial_mouse" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	pass
 </core>

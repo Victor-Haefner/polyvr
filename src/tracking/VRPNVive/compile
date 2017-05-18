@@ -1,0 +1,6 @@
+#!/bin/sh
+
+libs="-lvrpnserver -lopenvr_api -lpthread -lusb-1.0 -ldl"
+lpaths="-L/usr/lib/VRPN -L/home/victor/.local/share/Steam/ubuntu12_32/steam-runtime/amd64/usr/lib/x86_64-linux-gnu -L/home/victor/.local/share/Steam/ubuntu12_32/steam-runtime/amd64/lib/x86_64-linux-gnu"
+
+g++ -Wall -std=c++11 -g -I/usr/include/VRPN main.cc $lpaths -o bin/Debug/VRPNServer $libs

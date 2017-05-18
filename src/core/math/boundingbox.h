@@ -16,7 +16,7 @@ class boundingbox {
     public:
         boundingbox();
         void clear();
-        bool empty();
+        bool empty() const;
 
         void update(Vec3f v);
         void update(VRGeometryPtr g);

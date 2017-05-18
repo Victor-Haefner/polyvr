@@ -23,15 +23,15 @@ OSG_BEGIN_NAMESPACE
 using namespace std;
 
 VRSceneManager::VRSceneManager() {
-    cout << "Init VRSceneManager\n";
+    cout << "Init VRSceneManager..";
 	original_workdir = boost::filesystem::current_path().string();
-	cout << " PolyVR system directory: " << original_workdir << endl;
     searchExercisesAndFavorites();
 
     on_scene_load = VRSignal::create();
     on_scene_close = VRSignal::create();
 
     VROntology::setupLibrary();
+    cout << " done" << endl;
 }
 
 VRSceneManager::~VRSceneManager() {}

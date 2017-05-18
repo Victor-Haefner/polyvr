@@ -1,5 +1,6 @@
 #include "VRPN.h"
 #include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiConsole.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/objects/VRTransform.h"
@@ -48,12 +49,12 @@ void VRPN_CALLBACK handle_tracker(void* data, const vrpn_TRACKERCB tracker ) {
     Vec3f pos = dev->offset + Vec3f(sta[0]*tracker.pos[(int)ta[0]]*s, sta[1]*tracker.pos[(int)ta[1]]*s, sta[2]*tracker.pos[(int)ta[2]]*s);
     for (int i=0; i<3; i++) m[3][i] = pos[i];
 
-    if (verbose) VRGuiManager::get()->printToConsole("Tracking", "vrpn tracker pos "+toString(pos)+" dir "+toString(-Vec3f(m[2]))+"\n");
+    if (verbose) VRGuiManager::get()->getConsole("Tracking")->write( "vrpn tracker pos "+toString(pos)+" dir "+toString(-Vec3f(m[2]))+"\n");
     obj->setMatrix(m);
 }
 
 void VRPN_CALLBACK handle_button(void* data, const vrpn_BUTTONCB button ) {
-    if (verbose) VRGuiManager::get()->printToConsole("Tracking", "vrpn button "+toString(button.button)+" state "+toString(button.state)+"\n");
+    if (verbose) VRGuiManager::get()->getConsole("Tracking")->write( "vrpn button "+toString(button.button)+" state "+toString(button.state)+"\n");
     VRPN_device* dev = (VRPN_device*)data;
     dev->change_button(button.button, button.state);
 }
@@ -105,9 +106,15 @@ void VRPN_device::setAddress(string addr) {
     dial = new vrpn_Dial_Remote( addr.c_str() );
     text = new vrpn_Text_Receiver( addr.c_str() );
 
-    tracker->register_change_handler( this, handle_tracker ); // TODO: add other handlers
-    button->register_change_handler( this, handle_button ); // TODO: add other handlers
-    analog->register_change_handler( this, handle_analog ); // TODO: add other handlers
+    tracker->shutup = true;
+    button->shutup = true;
+    analog->shutup = true;
+    dial->shutup = true;
+    text->shutup = true;
+
+    tracker->register_change_handler( this, handle_tracker );
+    button->register_change_handler( this, handle_button );
+    analog->register_change_handler( this, handle_analog );
     initialized = true;
 }
 
@@ -359,6 +366,10 @@ void vrpn_test_server_main() {
     //vrpn_SleepMsecs(1);
 }
 
+void vrpn_test_server_main_t(VRThreadWeakPtr thread) {
+    vrpn_test_server_main();
+}
+
 void VRPN::stopVRPNTestServer() {
     if (testServer == 0) return;
     testServer = 0;
@@ -382,6 +393,9 @@ void VRPN::startVRPNTestServer() {
 
     testServer = VRFunction<int>::create("VRPN_test_server", boost::bind(vrpn_test_server_main));
     VRSceneManager::get()->addUpdateFkt(testServer);
+
+    //static VRThreadCbPtr update_cb = VRThreadCb::create("VRPN_test_server", boost::bind(vrpn_test_server_main_t, _1));
+    //threadID = VRSceneManager::get()->initThread(update_cb, "VRPN", true);
 }
 
 OSG_END_NAMESPACE

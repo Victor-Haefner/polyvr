@@ -1,6 +1,8 @@
 #include "VRPyPose.h"
 #include "VRPyBaseT.h"
 
+using namespace OSG;
+
 template<> PyTypeObject VRPyBaseT<OSG::pose>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
@@ -90,19 +92,19 @@ PyObject* VRPyPose::up(VRPyPose* self) {
 
 PyObject* VRPyPose::mult(VRPyPose* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    auto v = parseVec3f(args);
+    Pnt3f v = parseVec3f(args);
     auto m = self->objPtr->asMatrix();
     m.mult(v,v);
-    return toPyTuple( v );
+    return toPyTuple( Vec3f(v) );
 }
 
 PyObject* VRPyPose::multInv(VRPyPose* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    auto v = parseVec3f(args);
+    Pnt3f v = parseVec3f(args);
     auto m = self->objPtr->asMatrix();
     m.invert();
     m.mult(v,v);
-    return toPyTuple( v );
+    return toPyTuple( Vec3f(v) );
 }
 
 

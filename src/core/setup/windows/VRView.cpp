@@ -22,7 +22,7 @@
 #include "core/objects/object/VRObjectT.h"
 #include "core/objects/VRLight.h"
 #include "core/scene/VRSceneManager.h"
-#include "core/scene/VRRenderStudio.h"
+#include "core/scene/rendering/VRRenderStudio.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -100,15 +100,9 @@ void VRView::setViewports() {//create && set size of viewports
     if (p[0] > p[2]) p[0] = p[2]-0.01;
     if (p[1] > p[3]) p[1] = p[3]-0.01;
 
-
     //active, stereo
-    if (active_stereo) {
-        lView_act = StereoBufferViewport::create();
-        rView_act = StereoBufferViewport::create();
-    } else {
-        lView_act = 0;
-        rView_act = 0;
-    }
+    lView_act = active_stereo ? StereoBufferViewportRecPtr(StereoBufferViewport::create()) : 0;
+    rView_act = active_stereo ? StereoBufferViewportRecPtr(StereoBufferViewport::create()) : 0;
 
     //no stereo
     if (!stereo && !active_stereo) {
@@ -287,7 +281,8 @@ VRViewPtr VRView::ptr() { return shared_from_this(); }
 VRRenderStudioPtr VRView::getRenderingL() { return renderingL; }
 VRRenderStudioPtr VRView::getRenderingR() { return renderingR; }
 
-void VRView::resize(Vec2i s) { window_size = s; update(); }
+void VRView::setSize(Vec2i s) { window_size = s; update(); }
+Vec2i VRView::getSize() { return window_size; }
 
 int VRView::getID() { return ID; }
 void VRView::setID(int i) { ID = i; }
@@ -537,6 +532,7 @@ void VRView::save(xmlpp::Element* node) {
     node->set_attribute("size", toString(proj_size).c_str());
     node->set_attribute("shear", toString(proj_shear).c_str());
     node->set_attribute("warp", toString(proj_warp).c_str());
+    node->set_attribute("vsize", toString(window_size).c_str());
     if (user) node->set_attribute("user", user->getName());
     else node->set_attribute("user", user_name);
 }
@@ -555,6 +551,7 @@ void VRView::load(xmlpp::Element* node) {
     proj_size = toVec2f(node->get_attribute("size")->get_value());
     if (node->get_attribute("shear")) proj_shear = toVec2f(node->get_attribute("shear")->get_value());
     if (node->get_attribute("warp")) proj_warp = toVec2f(node->get_attribute("warp")->get_value());
+    if (node->get_attribute("vsize")) window_size = toVec2i(node->get_attribute("vsize")->get_value());
     if (node->get_attribute("user")) {
         user_name = node->get_attribute("user")->get_value();
         user = VRSetup::getCurrent()->getTracker(user_name);

@@ -32,7 +32,7 @@ void boundingbox::update(VRGeometryPtr g) {
     }
 }
 
-bool boundingbox::empty() { return cleared; }
+bool boundingbox::empty() const { return cleared; }
 Vec3f boundingbox::min() const { return bb1; }
 Vec3f boundingbox::max() const { return bb2; }
 Vec3f boundingbox::center() const { return cleared ? Vec3f() : (bb2+bb1)*0.5; }

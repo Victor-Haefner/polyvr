@@ -11,6 +11,7 @@ struct VRPyObject : VRPyBaseT<OSG::VRObject> {
     static long hash(PyObject* o);
 
     static PyObject* getName(VRPyObject* self);
+    static PyObject* getBaseName(VRPyObject* self);
     static PyObject* setName(VRPyObject* self, PyObject* args);
     static PyObject* addChild(VRPyObject* self, PyObject* args, PyObject *kwds);
     static PyObject* switchParent(VRPyObject* self, PyObject* args, PyObject *kwds);
@@ -44,6 +45,7 @@ struct VRPyObject : VRPyBaseT<OSG::VRObject> {
     static PyObject* addLink(VRPyObject* self, PyObject* args);
     static PyObject* remLink(VRPyObject* self, PyObject* args);
     static PyObject* clearChildren(VRPyObject* self);
+    static PyObject* getChildIndex(VRPyObject* self);
 };
 
 #endif // VRPYOBJECT_H_INCLUDED

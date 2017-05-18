@@ -31,6 +31,14 @@ class VRGuiScripts {
             int line = 0;
         };
 
+        struct searchResult {
+            string scriptName;
+            int line;
+            int column;
+            searchResult(string s, int l, int c);
+        };
+
+        GtkWidget* editor;
         bool doPerf = false;
         bool trigger_cbs = true;
         _GtkSourceLanguage* python = 0;
@@ -105,6 +113,7 @@ class VRGuiScripts {
         void on_find_diag_cancel_clicked();
         void on_find_diag_find_clicked();
         void on_toggle_find_replace();
+        void on_search_link_clicked(searchResult res, string s);
 
         void on_scene_changed();
 
@@ -114,7 +123,7 @@ class VRGuiScripts {
         void updateList();
         VRScriptPtr getSelectedScript();
         string get_editor_core(int i);
-
+        void focusScript(string name, int line, int column);
         void update();
 };
 

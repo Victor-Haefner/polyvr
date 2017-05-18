@@ -13,7 +13,7 @@
 #include "core/scene/VRScene.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRView.h"
-#include "core/scene/VRRenderStudio.h"
+#include "core/scene/rendering/VRRenderStudio.h"
 #include "core/objects/OSGObject.h"
 #include "core/objects/material/VRMaterial.h"
 
@@ -37,6 +37,7 @@ VRGuiGeneral::VRGuiGeneral() {
     setCheckButtonCallback("checkbutton_5", sigc::mem_fun(*this, &VRGuiGeneral::toggleCalib) );
     setCheckButtonCallback("checkbutton_6", sigc::mem_fun(*this, &VRGuiGeneral::toggleHMDD) );
     setCheckButtonCallback("checkbutton_7", sigc::mem_fun(*this, &VRGuiGeneral::toggleMarker) );
+    setCheckButtonCallback("checkbutton_8", sigc::mem_fun(*this, &VRGuiGeneral::toggleFXAA) );
     setSliderCallback("hscale1", sigc::mem_fun(*this, &VRGuiGeneral::setSSAOradius) );
     setSliderCallback("hscale2", sigc::mem_fun(*this, &VRGuiGeneral::setSSAOkernel) );
     setSliderCallback("hscale3", sigc::mem_fun(*this, &VRGuiGeneral::setSSAOnoise) );
@@ -159,6 +160,12 @@ void VRGuiGeneral::toggleHMDD() {
     if (scene) scene->setHMDD( getCheckButtonState("checkbutton_6") );
 }
 
+void VRGuiGeneral::toggleFXAA() {
+    if (updating) return;
+    auto scene = VRScene::getCurrent();
+    if (scene) scene->setFXAA( getCheckButtonState("checkbutton_8") );
+}
+
 void VRGuiGeneral::toggleCalib() {
     if (updating) return;
     auto scene = VRScene::getCurrent();
@@ -215,6 +222,7 @@ void VRGuiGeneral::updateScene() {
     setCheckButton("checkbutton_3", scene->getDefferedShading() );
     setCheckButton("checkbutton_4", scene->getSSAO() );
     setCheckButton("checkbutton_6", scene->getHMDD() );
+    setCheckButton("checkbutton_8", scene->getFXAA() );
 
     updating = false;
 }

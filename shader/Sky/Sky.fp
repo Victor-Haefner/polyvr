@@ -3,8 +3,10 @@
 
 // gen
 in vec3 norm;
+in vec4 pos;
 in vec2 tcs;
-in mat4 miMV;
+in mat3 miN;
+in mat4 miP;
 vec3 fragDir;
 vec4 color;
 uniform vec2 OSGViewportSize;
@@ -32,20 +34,13 @@ float gamma;
 float theta;
 
 vec3 real_fragDir;
-
 vec3 colClouds = vec3(0.9);
-
 vec4 colGround = vec4(0.7, 0.7, 0.65, 1.0);
-
 float rad_earth = 6.371e6;
 
 
-void computeDirection() { 
-	float aspect = OSGViewportSize.y/OSGViewportSize.x;
-	float l = -1/tan(0.5); // assumes total screen height of 2
-	real_fragDir = vec3(tcs*2-vec2(1),l);
-	real_fragDir.x /= aspect;
-	real_fragDir = (miMV*vec4(normalize(real_fragDir),0)).xyz;
+void computeDirection() {
+	real_fragDir = miN * (miP * pos).xyz;
 	float tol = 1e-5;
 	fragDir = real_fragDir;
 	if(fragDir.y<tol) fragDir.y = tol;
@@ -215,4 +210,12 @@ void main() {
 
 	gl_FragColor = color;
 	gl_FragDepth = 1.0; // depth is infinite at 1.0? behind all else (check)
+
+	// vertical line for testing
+	//if (real_fragDir.x < 0.01 && real_fragDir.x > 0) gl_FragColor = vec4(0,0,0,1);
 }
+
+
+
+
+

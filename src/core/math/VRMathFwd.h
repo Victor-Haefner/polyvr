@@ -12,7 +12,8 @@ namespace OSG {
 ptrFwd(boundingbox);
 ptrFwd(path);
 ptrFwd(pose);
-ptrFwd(graph_base);
+ptrFwd(polygon);
+ptrFwd(Graph);
 ptrFwd(Octree);
 
 ptrTemplateFwd( VRStateMachine, VRStateMachinePy, PyObject* );

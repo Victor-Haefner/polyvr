@@ -5,7 +5,6 @@
 #include "core/utils/VRName.h"
 #include "core/math/VRMathFwd.h"
 #include "core/math/graph.h"
-#include "core/math/graphT.h"
 
 #include <string>
 
@@ -14,22 +13,22 @@ OSG_BEGIN_NAMESPACE;
 
 enum PROCESS_WIDGET {
     SUBJECT,
-    MESSAGE
+    MESSAGE,
+    ACTION
 };
 
 struct VRProcessNode : VRName {
     VREntityPtr entity;
     VRTransformPtr widget;
     PROCESS_WIDGET type;
+    string label;
     int ID = 0;
 
-    string label;
-
-    VRProcessNode(string name, PROCESS_WIDGET type);
+    VRProcessNode(string name, PROCESS_WIDGET type, int ID);
     ~VRProcessNode();
-    static VRProcessNodePtr create(string name, PROCESS_WIDGET type);
+    static VRProcessNodePtr create(string name, PROCESS_WIDGET type, int ID);
 
-    void update(graph_base::node& n, bool changed);
+    void update(Graph::node& n, bool changed);
 
     int getID();
     string getLabel();
@@ -37,7 +36,14 @@ struct VRProcessNode : VRName {
 
 class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName {
     public:
-        typedef graph<VRProcessNodePtr> Diagram;
+        struct Diagram : public Graph {
+            map<int, VRProcessNodePtr> processnodes;
+
+            void update(int i, bool changed);
+            void remNode(int i);
+            void clear();
+        };
+
         typedef shared_ptr< Diagram > DiagramPtr;
 
     private:
@@ -57,8 +63,11 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         DiagramPtr getInteractionDiagram();
         DiagramPtr getBehaviorDiagram(int subject);
         vector<VRProcessNodePtr> getSubjects();
+        VRProcessNodePtr getNode(int i, DiagramPtr diag = 0);
 
-        DiagramPtr addSubject(string name);
+        VRProcessNodePtr addSubject(string name);
+        VRProcessNodePtr addMessage(string name, int i, int j, DiagramPtr diag = 0);
+        VRProcessNodePtr addAction(string name, DiagramPtr diag);
 };
 
 OSG_END_NAMESPACE;

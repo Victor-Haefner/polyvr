@@ -1,5 +1,19 @@
 #include "VRMaterial.h"
 #include "OSGMaterial.h"
+#include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiConsole.h"
+#include "core/objects/VRTransform.h"
+#include "core/objects/object/OSGCore.h"
+#include "core/objects/OSGObject.h"
+#include "core/objects/material/VRTexture.h"
+#include "core/utils/toString.h"
+#include "core/utils/VRUndoInterfaceT.h"
+#include "core/scene/VRScene.h"
+#include "core/setup/VRSetup.h"
+#include "core/setup/windows/VRWindow.h"
+#include "core/scripting/VRScript.h"
+#include "VRVideo.h"
+#include "core/tools/VRQRCode.h"
 
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGMaterialGroup.h>
@@ -29,20 +43,6 @@
 #include <boost/filesystem.hpp>
 #include <GL/glext.h>
 #include <GL/glx.h>
-
-#include "core/objects/VRTransform.h"
-#include "core/objects/object/OSGCore.h"
-#include "core/objects/OSGObject.h"
-#include "core/objects/material/VRTexture.h"
-#include "core/utils/toString.h"
-#include "core/utils/VRUndoInterfaceT.h"
-#include "core/scene/VRScene.h"
-#include "core/setup/VRSetup.h"
-#include "core/setup/windows/VRWindow.h"
-#include "core/scripting/VRScript.h"
-#include "core/gui/VRGuiManager.h"
-#include "VRVideo.h"
-#include "core/tools/VRQRCode.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -871,6 +871,8 @@ void VRMaterial::setDefaultVertexShader() {
 void VRMaterial::checkShader(int type, string shader, string name) {
     auto gm = VRGuiManager::get(false);
     if (!gm) return;
+    auto errC = gm->getConsole("Errors");
+    if (!errC) return;
 
     if (!glXGetCurrentContext()) return;
 
@@ -882,7 +884,7 @@ void VRMaterial::checkShader(int type, string shader, string name) {
 
     GLint compiled;
     glGetObjectParameterivARB(shaderObject, GL_COMPILE_STATUS, &compiled);
-    if (!compiled) gm->printToConsole("Errors", "Shader "+name+" of material "+getName()+" did not compiled!\n");
+    if (!compiled) errC->write( "Shader "+name+" of material "+getName()+" did not compiled!\n");
 
     GLint blen = 0;
     GLsizei slen = 0;
@@ -890,8 +892,8 @@ void VRMaterial::checkShader(int type, string shader, string name) {
     if (blen > 1) {
         GLchar* compiler_log = (GLchar*)malloc(blen);
         glGetInfoLogARB(shaderObject, blen, &slen, compiler_log);
-        gm->printToConsole("Errors", "Shader "+name+" of material "+getName()+" warnings and errors:\n");
-        gm->printToConsole("Errors", string(compiler_log));
+        errC->write( "Shader "+name+" of material "+getName()+" warnings and errors:\n");
+        errC->write( string(compiler_log));
         free(compiler_log);
     }
 }

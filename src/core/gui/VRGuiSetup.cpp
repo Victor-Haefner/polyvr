@@ -154,6 +154,7 @@ void VRGuiSetup::updateObjectData() {
         sizeEntry.set(view->getProjectionSize());
         shearEntry.set(view->getProjectionShear());
         warpEntry.set(view->getProjectionWarp());
+        vsizeEntry.set(Vec2f(view->getSize()));
     }
 
     if (selected_type == "vrpn_device") {
@@ -673,6 +674,15 @@ void VRGuiSetup::on_change_view_user() {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
+void VRGuiSetup::on_view_size_edit(Vec2f v) {
+    if (guard) return;
+    if (selected_type != "view") return;
+
+    VRView* view = (VRView*)selected_object;
+    view->setSize(Vec2i(v));
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
 void VRGuiSetup::on_proj_user_edit(Vec3f v) {
     if (guard) return;
     if (selected_type != "view") return;
@@ -957,6 +967,7 @@ VRGuiSetup::VRGuiSetup() {
     sizeEntry.init2D("size_entry", "size", sigc::mem_fun(*this, &VRGuiSetup::on_proj_size_edit));
     shearEntry.init2D("shear_entry", "shear", sigc::mem_fun(*this, &VRGuiSetup::on_proj_shear_edit));
     warpEntry.init2D("warp_entry", "warp", sigc::mem_fun(*this, &VRGuiSetup::on_proj_warp_edit));
+    vsizeEntry.init2D("vsize_entry", "size", sigc::mem_fun(*this, &VRGuiSetup::on_view_size_edit));
 
     tVRPNAxisEntry.init("tvrpn_entry", "", sigc::mem_fun(*this, &VRGuiSetup::on_vrpn_trans_axis_edit));
     rVRPNAxisEntry.init("rvrpn_entry", "", sigc::mem_fun(*this, &VRGuiSetup::on_vrpn_rot_axis_edit));

@@ -132,7 +132,7 @@ void VRRobotArm::getPose(Vec3f& pos, Vec3f& dir, Vec3f& up) {
     Vec3f p( L*cos(d)*sin(f), L*sin(d), L*cos(d)*cos(f));
     p[1] += lengths[0]; // base
     ageo->setVector(4, Vec3f(0,0,0), p, Vec3f(0,0,0), "p");
-    p += dir*lengths[3];
+    p -= dir*lengths[3];
     pos = p;
 }
 
@@ -142,8 +142,8 @@ void VRRobotArm::moveTo(Vec3f pos, Vec3f dir, Vec3f up) {
     getPose(cpos, cdir, cup);
 
     animPath->clear();
-    animPath->addPoint(cpos, cdir, Vec3f(0,0,0), cup);
-    animPath->addPoint(pos, dir, Vec3f(0,0,0), up);
+    animPath->addPoint( pose(cpos, cdir, cup) );
+    animPath->addPoint( pose(pos, dir, up) );
     animPath->compute(2);
 
     addJob( job(animPath) );

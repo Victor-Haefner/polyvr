@@ -87,13 +87,18 @@ boost::recursive_mutex& VRPhysicsManager::physicsMutex() { return mtx; }
 VRVisualLayerPtr VRPhysicsManager::getVisualLayer() { return physics_visual_layer; }
 
 long long VRPhysicsManager::getTime() { // time in seconds
-    return 1000*glutGet(GLUT_ELAPSED_TIME);
+    long long l = glutGet(GLUT_ELAPSED_TIME);
+    return 1000*l;
     //return 1e6*clock()/CLOCKS_PER_SEC; // TODO
 }
 
 btSoftBodyWorldInfo* VRPhysicsManager::getSoftBodyWorldInfo() {return softBodyWorldInfo;}
 
-void VRPhysicsManager::setPhysicsActive(bool a) { active = a; }
+void VRPhysicsManager::setPhysicsActive(bool a) {
+    MLock lock(mtx);
+    active = a;
+    skip = true;
+}
 
 void VRPhysicsManager::prepareObjects() {
     for (auto o : OSGobjs) {
@@ -112,6 +117,7 @@ void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
         t0 = thread->t_last;
         thread->t_last = t1;
         dt = t1-t0;
+        if (skip || dt < 0) { skip = 0; dt = 0; }
 
         {
             MLock lock(mtx);
@@ -124,13 +130,14 @@ void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
 
     t2 = getTime();
     dt = t2-t1;
+    if (dt < 0) dt = 0;
 
     //sleep up to 500 fps
     if (dt < PHYSICS_THREAD_TIMESTEP_MS * 1000) this_thread::sleep_for(chrono::microseconds(PHYSICS_THREAD_TIMESTEP_MS * 1000 -dt));
     t3 = getTime();
 
     MLock lock(mtx);
-    fps = 1e6/(t3-t1);
+    if (t3-t1 > 0) fps = 1e6/(t3-t1);
 }
 
 void VRPhysicsManager::addPhysicsUpdateFunction(VRFunction<int>* fkt, bool after) {
@@ -148,7 +155,6 @@ void VRPhysicsManager::dropPhysicsUpdateFunction(VRFunction<int>* fkt, bool afte
  }
 
 void VRPhysicsManager::updatePhysObjects() {
-    //mtx.try_lock();
     MLock lock(mtx);
     VRGlobals::PHYSICS_FRAME_RATE.fps = fps;
 

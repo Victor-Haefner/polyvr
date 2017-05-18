@@ -4,7 +4,7 @@
 #include "VRPyBase.h"
 #include "core/math/graph.h"
 
-struct VRPyGraph : VRPyBaseT<OSG::graph_base> {
+struct VRPyGraph : VRPyBaseT<OSG::Graph> {
     static PyMethodDef methods[];
     static PyObject* getEdges(VRPyGraph* self);
     static PyObject* getInEdges(VRPyGraph* self, PyObject* args);

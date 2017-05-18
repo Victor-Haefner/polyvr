@@ -1,5 +1,7 @@
 #include "toString.h"
 #include "core/math/pose.h"
+#include "core/math/boundingbox.h"
+#include <OpenSG/OSGColor.h>
 
 vector<string> splitString(string s, char c) {
     stringstream ss(s);
@@ -9,46 +11,58 @@ vector<string> splitString(string s, char c) {
     return res;
 }
 
-string toString(string s) { return s; }
-string toString(bool b) { stringstream ss; ss << b; return ss.str(); }
-string toString(int i) { stringstream ss; ss << i; return ss.str(); }
-string toString(size_t i) { stringstream ss; ss << i; return ss.str(); }
-string toString(unsigned int i) { stringstream ss; ss << i; return ss.str(); }
-string toString(float f, int d) {
+string toString(const string& s) { return s; }
+string toString(const bool& b) { stringstream ss; ss << b; return ss.str(); }
+string toString(const int& i) { stringstream ss; ss << i; return ss.str(); }
+string toString(const size_t& i) { stringstream ss; ss << i; return ss.str(); }
+string toString(const unsigned int& i) { stringstream ss; ss << i; return ss.str(); }
+string toString(const float& f, int d) {
     stringstream ss;
     if (d >= 0) ss << fixed << setprecision(d);//ss.precision(d);
     ss << f;
     return ss.str();
 }
-string toString(double f, int d) {
+string toString(const double& f, int d) {
     stringstream ss;
     if (d >= 0) ss << fixed << setprecision(d);//ss.precision(d);
     ss << f;
     return ss.str();
 }
 
-string toString(OSG::Vec2f v) {
+string toString(const OSG::Vec2f& v) {
     stringstream ss;
     ss << v[0] << " " << v[1];
     return ss.str();
 }
 
-string toString(OSG::Pnt3f v) { return toString(OSG::Vec3f(v)); }
-string toString(OSG::Vec3f v) {
+string toString(const OSG::Pnt3f& v) { return toString(OSG::Vec3f(v)); }
+string toString(const OSG::Vec3f& v) {
     stringstream ss;
     ss << v[0] << " " << v[1] << " " << v[2];
     return ss.str();
 }
 
-string toString(OSG::Vec4f v) {
+string toString(const OSG::Vec4f& v) {
     stringstream ss;
     ss << v[0] << " " << v[1] << " " << v[2] << " " << v[3];
     return ss.str();
 }
 
-string toString(OSG::Vec3i v) {
+string toString(const OSG::Vec2i& v) {
+    stringstream ss;
+    ss << v[0] << " " << v[1];
+    return ss.str();
+}
+
+string toString(const OSG::Vec3i& v) {
     stringstream ss;
     ss << v[0] << " " << v[1] << " " << v[2];
+    return ss.str();
+}
+
+string toString(const OSG::Vec4i& v) {
+    stringstream ss;
+    ss << v[0] << " " << v[1] << " " << v[2] << " " << v[3];
     return ss.str();
 }
 
@@ -57,7 +71,7 @@ T ssToVal(const string& s, int* N = 0) {
     stringstream ss;
     ss << s;
     if(N) *N = ss.tellg();
-    T v;
+    T v = 0;
     ss >> v;
     if(N) *N = int(ss.tellg()) - *N;
     return v;
@@ -105,6 +119,14 @@ OSG::Pnt3f toPnt3f(string s) {
     return v;
 }
 
+OSG::Vec2i toVec2i(string s) {
+    OSG::Vec2i v;
+    stringstream ss(s);
+    ss >> v[0];
+    ss >> v[1];
+    return v;
+}
+
 OSG::Vec3i toVec3i(string s) {
     OSG::Vec3i v;
     stringstream ss(s);
@@ -114,70 +136,103 @@ OSG::Vec3i toVec3i(string s) {
     return v;
 }
 
-
-void toValue(string s, string& s2) {
-    s2 = s;
+OSG::Vec4i toVec4i(string s) {
+    OSG::Vec4i v;
+    stringstream ss(s);
+    ss >> v[0];
+    ss >> v[1];
+    ss >> v[2];
+    ss >> v[3];
+    return v;
 }
 
-void toValue(string s, bool& b) {
-    stringstream ss(s);
-    ss >> b;
+string toString(const OSG::posePtr& po) {
+    return toString(po->pos()) + " " + toString(po->dir()) + " " + toString(po->up());
 }
 
-void toValue(string s, int& i) {
-    stringstream ss(s);
-    ss >> i;
+string toString(const OSG::pose& po) {
+    return toString(po.pos()) + " " + toString(po.dir()) + " " + toString(po.up());
 }
 
-void toValue(string s, float& f) {
-    stringstream ss(s);
-    ss >> f;
+string toString(const OSG::boundingbox& b) {
+    return toString(b.min()) + " " + toString(b.max()) + " " + toString(b.empty());
 }
 
-void toValue(string s, OSG::Vec2f& v) {
-    stringstream ss(s);
+string toString(const OSG::Line& l) {
+    return toString(l.getPosition()) + " " + toString(l.getDirection());
+}
+
+template<> void toValue(stringstream& ss, string& s) { s = ss.str(); }
+template<> void toValue(stringstream& ss, bool& b) { ss >> b; }
+template<> void toValue(stringstream& ss, int& i) { ss >> i; }
+template<> void toValue(stringstream& ss, float& f) { ss >> f; }
+
+template<> void toValue(stringstream& ss, OSG::Vec2f& v) {
     ss >> v[0];
     ss >> v[1];
 }
 
-void toValue(string s, OSG::Vec3f& v) {
-    stringstream ss(s);
+template<> void toValue(stringstream& ss, OSG::Vec3f& v) {
     ss >> v[0];
     ss >> v[1];
     ss >> v[2];
 }
 
-void toValue(string s, OSG::Vec4f& v) {
-    stringstream ss(s);
+template<> void toValue(stringstream& ss, OSG::Vec4f& v) {
     ss >> v[0];
     ss >> v[1];
     ss >> v[2];
     ss >> v[3];
 }
 
-void toValue(string s, OSG::Vec3i& v) {
-    stringstream ss(s);
+template<> void toValue(stringstream& ss, OSG::Vec2i& v) {
+    ss >> v[0];
+    ss >> v[1];
+}
+
+template<> void toValue(stringstream& ss, OSG::Vec3i& v) {
     ss >> v[0];
     ss >> v[1];
     ss >> v[2];
 }
 
-string toString(OSG::posePtr po) {
-    return toString(po->pos()) + " " + toString(po->dir()) + " " + toString(po->up());
+template<> void toValue(stringstream& ss, OSG::Color3f& v) {
+    ss >> v[0];
+    ss >> v[1];
+    ss >> v[2];
 }
 
-void toValue(string s, OSG::posePtr& po) {
+template<> void toValue(stringstream& ss, OSG::Color4f& v) {
+    ss >> v[0];
+    ss >> v[1];
+    ss >> v[2];
+    ss >> v[3];
+}
+
+template<> void toValue(stringstream& ss, OSG::pose& po) {
     OSG::Vec3f p,d,u;
-    stringstream ss(s);
-    ss >> p[0];
-    ss >> p[1];
-    ss >> p[2];
-    ss >> d[0];
-    ss >> d[1];
-    ss >> d[2];
-    ss >> u[0];
-    ss >> u[1];
-    ss >> u[2];
+    toValue(ss, p);
+    toValue(ss, d);
+    toValue(ss, u);
+    po.set(p,d,u);
+}
+
+template<> void toValue(stringstream& ss, OSG::posePtr& po) {
+    OSG::Vec3f p,d,u;
+    toValue(ss, p);
+    toValue(ss, d);
+    toValue(ss, u);
     if (po) po->set(p,d,u);
     else po = OSG::pose::create(p,d,u);
+}
+
+template<> void toValue(stringstream& ss, OSG::boundingbox& box) {
+    OSG::Vec3f a,b;
+    bool c;
+    toValue(ss, a);
+    toValue(ss, b);
+    ss >> c;
+    box.update(a);
+    box.update(b);
+    if (c) box.clear();
 }

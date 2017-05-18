@@ -1,9 +1,11 @@
 #!/bin/bash
 
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:\
-/usr/lib/Steam/:\
-/usr/lib/Vive:\
-/usr/lib/VRPN
+export LD_LIBRARY_PATH=\
+/usr/lib/VRPN:\
+/home/victor/.local/share/Steam/ubuntu12_32/steam-runtime/amd64/usr/lib/x86_64-linux-gnu:\
+/home/victor/.local/share/Steam/ubuntu12_32/steam-runtime/amd64/lib/x86_64-linux-gnu:
+#/usr/lib/Steam:\
+#/usr/lib/Vive:
 
 ./bin/Debug/VRPNServer

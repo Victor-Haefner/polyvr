@@ -13,6 +13,7 @@ struct VRPyTextureGenerator : VRPyBaseT<OSG::VRTextureGenerator> {
     static PyObject* drawLine(VRPyTextureGenerator* self, PyObject* args);
     static PyObject* drawPath(VRPyTextureGenerator* self, PyObject* args);
     static PyObject* setSize(VRPyTextureGenerator* self, PyObject* args);
+    static PyObject* getSize(VRPyTextureGenerator* self);
     static PyObject* compose(VRPyTextureGenerator* self, PyObject* args);
     static PyObject* readSharedMemory(VRPyTextureGenerator* self, PyObject* args);
 };

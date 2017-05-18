@@ -38,9 +38,11 @@ class Slider : public vrpn_Analog {
 };
 
 class Device : public Button, public Slider, public Tracker {
+    public:
+        bool ready = false;
+
     private:
         struct timeval timestamp;
-        bool ready = false;
         vrpn_Connection* connection = 0;
         vr::IVRSystem* HMD = 0;
         vr::TrackedDevicePose_t poses[ vr::k_unMaxTrackedDeviceCount ];
@@ -79,7 +81,8 @@ class Device : public Button, public Slider, public Tracker {
             for( vr::TrackedDeviceIndex_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++ ) {
                 if(HMD->GetTrackedDeviceClass( i ) == vr::TrackedDeviceClass_Controller){
                     vr::VRControllerState_t state;
-                    if( HMD->GetControllerState( i, &state ) ) {
+                    if( HMD->GetControllerState( i, &state, sizeof(state) ) ) {
+                    //if( HMD->GetControllerState( i, &state ) ) {
                         channel[3*k+0] = state.rAxis[0].x; // joystick x
                         channel[3*k+1] = state.rAxis[0].y; // joystick y
                         channel[3*k+2] = state.rAxis[1].x; // trigger
@@ -114,7 +117,8 @@ class Device : public Button, public Slider, public Tracker {
 
         void updatePoses() {
             int k = 0;
-            vr::VRCompositor()->WaitGetPoses(poses, vr::k_unMaxTrackedDeviceCount, NULL, 0 );
+            //vr::VRCompositor()->WaitGetPoses(poses, vr::k_unMaxTrackedDeviceCount, NULL, 0 );
+            //vr::VRSystem()->GetDeviceToAbsoluteTrackingPose(poses, vr::k_unMaxTrackedDeviceCount, NULL, 0 );
             for ( unsigned int i = 0; i < vr::k_unMaxTrackedDeviceCount; ++i ) {
                 if ( poses[i].bPoseIsValid ) {
                     switch (HMD->GetTrackedDeviceClass(i)) {
@@ -124,7 +128,7 @@ class Device : public Button, public Slider, public Tracker {
                             k++;
                             break;
                         case vr::TrackedDeviceClass_Invalid: break;
-                        case vr::TrackedDeviceClass_Other: break;
+                        //case vr::TrackedDeviceClass_Other: break;
                         case vr::TrackedDeviceClass_TrackingReference:
                             //std::cout << "TrackedDeviceClass_TrackingReference\n"<< ConvertSteamVRMatrixToMatrix4( poses[i].mDeviceToAbsoluteTracking) << std::endl;
                             break;
@@ -161,16 +165,17 @@ class Device : public Button, public Slider, public Tracker {
 
             try {
                 vr::EVRInitError err = vr::VRInitError_None;
-                HMD = vr::VR_Init( &err, vr::VRApplication_Scene );
+                HMD = vr::VR_Init( &err, vr::VRApplication_Other ); // VRApplication_Other, VRApplication_Scene
                 if (HMD) ready = true;
                 if (HMD) cout << "---- Vive ready! ----" << endl;
-                else cout << "Vive init failed! " << VR_GetVRInitErrorAsSymbol(err) << endl;
+                else cout << "----  Vive init failed! " << VR_GetVRInitErrorAsSymbol(err) << endl;
             } catch (exception e) { cout << "Vive exception: " << e.what() << endl; }
         }
 
         ~Device() {}
 
         void mainloop() {
+            return;
             fetch_values();
             report_changes();
             server_mainloop();
@@ -187,14 +192,19 @@ int main (int argc, char *argv[]) {
     //vrpn_Connection* connection = new vrpn_Connection_IP(port);
     vrpn_Connection* connection = vrpn_create_server_connection(port);
     Device* dev = new Device(name,33,6,2,connection);
+    return 0;
 
-    while (true) {
-        dev->mainloop();
-        connection->mainloop(); // Send and receive all messages
-        usleep(1000);
+    if (dev->ready) {
+        cout << "start VRPN loop " << endl;
+        while (true) {
+            dev->mainloop();
+            connection->mainloop(); // Send and receive all messages
+            usleep(1000);
+        }
     }
 
     delete dev;
+    return 0;
 }
 
 #endif // MAIN_CC_INCLUDED

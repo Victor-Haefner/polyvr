@@ -14,10 +14,18 @@ class pose {
 
     public:
         pose();
-        pose(Vec3f p, Vec3f d, Vec3f u);
-        void set(Vec3f p, Vec3f d, Vec3f u);
+        pose(const Matrix& m);
+        pose(const pose& p);
+        pose(Vec3f p, Vec3f d = Vec3f(0,0,-1), Vec3f u = Vec3f(0,1,0));
+        void set(Vec3f p, Vec3f d = Vec3f(0,0,-1), Vec3f u = Vec3f(0,1,0));
         static posePtr create();
-        static posePtr create(Vec3f p, Vec3f d, Vec3f u);
+        static posePtr create(const Matrix& m);
+        static posePtr create(const pose& p);
+        static posePtr create(Vec3f p, Vec3f d = Vec3f(0,0,-1), Vec3f u = Vec3f(0,1,0));
+
+        void setPos(Vec3f p);
+        void setDir(Vec3f d);
+        void setUp(Vec3f u);
 
         Vec3f pos() const;
         Vec3f dir() const;

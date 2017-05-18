@@ -35,8 +35,37 @@ void listActiveMaterials() {
     }
 }
 
+#include <vrpn/vrpn_Tracker.h>
+class myTracker : public vrpn_Tracker_Remote {
+    public:
+        myTracker(string name) : vrpn_Tracker_Remote( name.c_str() ) {
+            shutup = true;
+        }
+
+        void doLoop() {
+            auto conn = connectionPtr();
+            cout << "vrpn_client do\n";
+            conn->mainloop();
+            client_mainloop();
+            cout << "vrpn_client done\n";
+        }
+};
+
+void vrpn_client() {
+    auto tracker = new myTracker( "Tracker0@localhost" );
+    while (true) tracker->doLoop();
+}
+
+#include "core/setup/VRSetup.h"
+void vrpn_server() {
+    auto setup = VRSetup::getCurrent();
+    if (setup) setup->startVRPNTestServer();
+}
+
 void VRRunTest(string test) {
     cout << "run test " << test << endl;
 
     if (test == "listActiveMaterials") listActiveMaterials();
+    if (test == "vrpn_client") vrpn_client();
+    if (test == "vrpn_server") vrpn_server();
 }

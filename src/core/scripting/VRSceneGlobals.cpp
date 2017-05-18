@@ -14,6 +14,7 @@
 #include "core/scene/import/VRImport.h"
 #include "core/scene/import/VRExport.h"
 #include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiConsole.h"
 #include "core/gui/VRGuiFile.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/material/VRMaterial.h"
@@ -142,7 +143,7 @@ PyObject* VRSceneGlobals::loadGeometry(VRSceneGlobals* self, PyObject *args, PyO
 
     VRTransformPtr obj = VRImport::get()->load( path, prnt, !ignoreCache, preset, threaded, options);
     if (obj == 0) {
-        VRGuiManager::get()->printToConsole("Errors", "Warning: " + string(path) + " not loaded!\n");
+        VRGuiManager::get()->getConsole("Errors")->write( "Warning: " + string(path) + " not loaded!\n");
         Py_RETURN_NONE;
     }
     obj->setPersistency(0);

@@ -103,7 +103,7 @@ void pushMsgBox(VRGeoData& geo, int N, float h) {
 
 VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     Color4f fg, bg;
-    if (n->type == SUBJECT) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,1,1); }
+    if (n->type == SUBJECT) { fg = Color4f(0,0,0,1); bg = Color4f(0.8,0.9,1,1); }
     if (n->type == MESSAGE) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,0,1); }
 
     int wrapN = 12;
@@ -122,28 +122,30 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     if (n->type == MESSAGE) pushMsgBox(geo, wrapN, lineN*height*0.5);
 
     auto w = geo.asGeometry("ProcessElement");
+    if (n->type == SUBJECT) w->addAttachment("subject", 0);
+    if (n->type == MESSAGE) w->addAttachment("message", 0);
     w->setMaterial(mat);
-    w->setPickable(1);
-    w->getConstraint()->setTConstraint(Vec3f(0,1,0), VRConstraint::PLANE);
-    w->getConstraint()->setRConstraint(Vec3f(0,1,0), VRConstraint::POINT);
-    w->getConstraint()->setReferential( dynamic_pointer_cast<VRTransform>(ptr()) );
+    //w->setPickable(1);
+    //w->getConstraint()->setTConstraint(Vec3f(0,1,0), VRConstraint::PLANE);
+    w->getConstraint()->lockRotation();
+    w->getConstraint()->setActive(true, w);
+    //w->getConstraint()->setReferential( dynamic_pointer_cast<VRTransform>(ptr()) );
     addChild(w);
+    n->widget = w;
     return w;
 }
 
-void VRProcessLayout::setProcess(VRProcess::DiagramPtr diag) {
-    if (!diag) return;
-    //process = p;
+void VRProcessLayout::setProcess(VRProcessPtr p) { process = p; }
 
+void VRProcessLayout::rebuild() {
+    if (!process) return;
     clearChildren();
-
-    float height = 2;
     float f=0;
-    //auto diag = process->getInteractionDiagram();
-    for (uint i=0; i<diag->getElements().size(); i++) {
-        auto& e = diag->getElement(i);
+    auto diag = process->getInteractionDiagram();
+    if (!diag) return;
+    for (uint i=0; i<diag->size(); i++) {
+        auto& e = diag->processnodes[i];
         auto geo = newWidget(e, height);
-        e->widget = geo;
 
         Vec3f p = Vec3f(f, 0, 0.01*(rand()%100));
         f += e->label.size()+2;
@@ -155,4 +157,46 @@ void VRProcessLayout::setProcess(VRProcess::DiagramPtr diag) {
     }
 }
 
-VRObjectPtr VRProcessLayout::getElement(int i) { return getChild(i); }
+VRObjectPtr VRProcessLayout::getElement(int i) { return elements.count(i) ? elements[i].lock() : 0; }
+
+VRObjectPtr VRProcessLayout::addElement(VRProcessNodePtr n) {
+    auto e = newWidget(n, height);
+    elements[n->ID] = e;
+    elementIDs[e.get()] = n->ID;
+    return e;
+}
+
+int VRProcessLayout::getElementID(VRObjectPtr o) { return elementIDs.count(o.get()) ? elementIDs[o.get()] : -1; }
+
+VRProcessNodePtr VRProcessLayout::getProcessNode(int i) { return process ? process->getNode(i) : 0; }
+
+void VRProcessLayout::selectElement(VRGeometryPtr geo) { // TODO
+    ;
+}
+
+void VRProcessLayout::setElementName(int ID, string name) {
+    if (!process) return;
+    auto e = dynamic_pointer_cast<VRGeometry>( getElement(ID) );
+    if (!e) return;
+    auto n = process->getNode(ID);
+    n->label = name;
+
+    Color4f fg, bg;
+    if (n->type == SUBJECT) { fg = Color4f(0,0,0,1); bg = Color4f(0.8,0.9,1,1); }
+    if (n->type == MESSAGE) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,0,1); }
+
+    int wrapN = 12;
+    if (n->type == MESSAGE) wrapN = 22;
+    int lineN = wrapString(name, wrapN);
+
+    auto txt = VRText::get()->create(name, "MONO 20", 18*wrapN, 32*lineN, fg, bg);
+    auto mat = VRMaterial::create("ProcessElement");
+    mat->setTexture(txt, false);
+    mat->setTextureParams(GL_LINEAR, GL_LINEAR);
+
+    e->setMaterial(mat);
+}
+
+
+
+

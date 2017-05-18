@@ -17,6 +17,7 @@ using namespace std;
 class VRMaterial;
 class GeoVectorProperty;
 class GeoIntegralProperty;
+class Action;
 
 class VRGeometry : public VRTransform {
     public:
@@ -65,6 +66,7 @@ class VRGeometry : public VRTransform {
         void makeUnique();
         void setMeshVisibility(bool b);
 
+        virtual bool applyIntersectionAction(Action* ia);
         virtual void setPrimitive(string primitive, string args = "");
 
         /** Create a mesh using vectors with positions, normals, indices && optionaly texture coordinates **/
@@ -81,7 +83,8 @@ class VRGeometry : public VRTransform {
         void setTexCoords(GeoVectorProperty* Tex, int i=0, bool fixMapping = false);
         void setLengths(GeoIntegralProperty* lenghts);
         void setPatchVertices(int n);
-        void setPositionalTexCoords(float scale = 1.0);
+        void setPositionalTexCoords(float scale = 1.0, int i = 0, Vec3i format = Vec3i(0,1,2));
+        void setPositionalTexCoords2D(float scale = 1.0, int i = 0, Vec2i format = Vec2i(0,1));
 
         void setRandomColors();
         void removeDoubles(float minAngle);
@@ -102,9 +105,9 @@ class VRGeometry : public VRTransform {
         void showGeometricData(string type, bool b);
         float calcSurfaceArea();
 
+        int size();
         Vec3f getGeometricCenter();
         Vec3f getAverageNormal();
-
         float getMax(int axis);
         float getMin(int axis);
 

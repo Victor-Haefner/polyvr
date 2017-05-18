@@ -75,7 +75,7 @@ void setMultisampling(bool on) {
   }
 #endif //!defined(GL_MULTISAMPLE_SGIS) && !defined(GL_MULTISAMPLE_ARB)
     //cout << "\nSET AA: " << res;
-    if (res) {;};//__GL_FSAA_MODE 	 = 7;//find out how to set vie application
+    if (res) {;};//__GL_FXAA_MODE 	 = 7;//find out how to set vie application
 }
 
 void VRWindowManager::initGlut() { // deprecated?

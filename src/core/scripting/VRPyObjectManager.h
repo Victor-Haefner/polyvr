@@ -14,6 +14,7 @@ struct VRPyObjectManager : VRPyBaseT<OSG::VRObjectManager> {
     static PyObject* addTemplate(VRPyObjectManager* self, PyObject* args);
     static PyObject* getTemplate(VRPyObjectManager* self, PyObject* args);
     static PyObject* getCatalog(VRPyObjectManager* self);
+    static PyObject* updateObject(VRPyObjectManager* self, PyObject* args);
 };
 
 #endif // VRPYOBJECTMANAGER_H_INCLUDED

@@ -8,7 +8,7 @@
 #include "core/objects/material/VRShader.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTextureGenerator.h"
-#include "addons/RealWorld/nature/VRTree.h"
+#include "addons/WorldGenerator/nature/VRTree.h"
 #include <OpenSG/OSGTextureObjChunk.h>
 
 using namespace OSG;

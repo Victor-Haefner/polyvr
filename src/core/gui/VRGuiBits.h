@@ -11,41 +11,8 @@
 #include "VRGuiRecWidget.h"
 #include "VRGuiFwd.h"
 
-namespace Gtk {
-    class ToggleToolButton;
-    class ScrolledWindow;
-    class Notebook;
-    class Label;
-}
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-class VRVisualLayer;
-class VRSignal;
-
-struct VRConsoleWidget {
-    Glib::RefPtr<Gtk::TextBuffer> buffer;
-    Gtk::ScrolledWindow* swin = 0;
-    Gtk::Label* label = 0;
-    std::queue<string> msg_queue;
-    bool paused = 0;
-    bool isOpen = 0;
-
-    void forward();
-    void write(string s);
-    void update();
-
-    VRConsoleWidget();
-
-    void queue(string s);
-    void clear();
-    void pause();
-    void setOpen(bool b);
-    void setLabel(Gtk::Label* lbl);
-    void setColor(string color);
-    void resetColor();
-};
 
 class VRGuiBits {
     private:
@@ -57,7 +24,7 @@ class VRGuiBits {
 	    shared_ptr<VRFunction<bool> > recToggleCb;
 
         VRGuiRecWidget recorder;
-        shared_ptr<VRVisualLayer> recorder_visual_layer;
+        VRVisualLayerPtr recorder_visual_layer;
 
         void hideAbout(int i);
         void updateVisualLayer();
@@ -81,7 +48,7 @@ class VRGuiBits {
 
         void setSceneSignal(VRSignalPtr sig);
 
-        void write_to_terminal(string t, string s);
+        VRConsoleWidgetPtr getConsole(string t);
         void update_terminals();
 
         void toggleDock();

@@ -5,6 +5,7 @@
 #include <libxml++/libxml++.h>
 #include <libxml++/nodes/element.h>
 #include <iostream>
+#include <algorithm>
 
 using namespace OSG;
 using namespace std;
@@ -20,6 +21,12 @@ void VRProjectManager::addItem(VRStoragePtr s, string mode) {
     if (mode == "RELOAD") vault_reload.push_back(s);
     if (mode == "REBUILD") vault_rebuild.push_back(s);
     s->store("pmMode", mode);
+}
+
+void VRProjectManager::remItem(VRStoragePtr s) {
+    if (!s) return;
+    vault_reload.erase(std::remove(vault_reload.begin(), vault_reload.end(), s), vault_reload.end());
+    vault_rebuild.erase(std::remove(vault_rebuild.begin(), vault_rebuild.end(), s), vault_rebuild.end());
 }
 
 vector<VRStoragePtr> VRProjectManager::getItems() {

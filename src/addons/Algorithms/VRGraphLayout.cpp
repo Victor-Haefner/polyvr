@@ -7,8 +7,8 @@ VRGraphLayout::VRGraphLayout() {}
 
 VRGraphLayoutPtr VRGraphLayout::create() { return VRGraphLayoutPtr( new VRGraphLayout() ); }
 
-void VRGraphLayout::setGraph(graph_basePtr g) { graph = g; }
-graph_basePtr VRGraphLayout::getGraph() { return graph; }
+void VRGraphLayout::setGraph(GraphPtr g) { graph = g; }
+GraphPtr VRGraphLayout::getGraph() { return graph; }
 void VRGraphLayout::setAlgorithm(ALGORITHM a, int p) { algorithms[p] = a; }
 void VRGraphLayout::clearAlgorithms() { algorithms.clear(); }
 void VRGraphLayout::setAlgorithm(string a, int p) {
@@ -38,23 +38,27 @@ void VRGraphLayout::applySprings(float eps, float v) {
 
             p1 += d*x*v;
             p2 += -d*x*v;
+            auto po1 = graph->getPosition(e.from);
+            auto po2 = graph->getPosition(e.to);
+            po1->setPos(p1);
+            po2->setPos(p2);
             switch (e.connection) {
-                case graph_base::SIMPLE:
-                    if (!(f1 & FIXED)) graph->setPosition(e.from, p1);
-                    if (!(f2 & FIXED)) graph->setPosition(e.to, p2);
+                case Graph::SIMPLE:
+                    if (!(f1 & FIXED)) graph->setPosition(e.from, po1);
+                    if (!(f2 & FIXED)) graph->setPosition(e.to, po2);
                     break;
-                case graph_base::HIERARCHY:
-                    if (!(f2 & FIXED)) graph->setPosition(e.to, p2);
-                    else if (!(f1 & FIXED)) graph->setPosition(e.from, p1);
+                case Graph::HIERARCHY:
+                    if (!(f2 & FIXED)) graph->setPosition(e.to, po2);
+                    else if (!(f1 & FIXED)) graph->setPosition(e.from, po1);
                     break;
-                case graph_base::DEPENDENCY:
-                    if (!(f1 & FIXED)) graph->setPosition(e.from, p1);
-                    else if (!(f2 & FIXED)) graph->setPosition(e.to, p2);
+                case Graph::DEPENDENCY:
+                    if (!(f1 & FIXED)) graph->setPosition(e.from, po1);
+                    else if (!(f2 & FIXED)) graph->setPosition(e.to, po2);
                     break;
-                case graph_base::SIBLING:
+                case Graph::SIBLING:
                     if (x < 0) { // push away siblings
-                        if (!(f1 & FIXED)) graph->setPosition(e.from, p1);
-                        if (!(f2 & FIXED)) graph->setPosition(e.to, p2);
+                        if (!(f1 & FIXED)) graph->setPosition(e.from, po1);
+                        if (!(f2 & FIXED)) graph->setPosition(e.to, po2);
                     }
                     break;
             }
@@ -99,7 +103,9 @@ void VRGraphLayout::applyOccupancy(float eps, float v) {
             D -= d*abs(x);
         }
 
-        graph->setPosition(i, pn+v*D); // move node away from neighbors
+        auto po = graph->getPosition(i);
+        po->setPos(pn+v*D);
+        graph->setPosition(i, po); // move node away from neighbors
     }
 }
 

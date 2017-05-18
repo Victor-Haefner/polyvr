@@ -21,6 +21,9 @@ Vec2f VRIntersect_computeTexel(VRIntersection& ins, NodeMTRecPtr node) {
 
     GeometryRefPtr geo = dynamic_cast<Geometry*>( node->getCore() );
     if (geo == 0) return Vec2f(0,0);
+    auto type = geo->getTypes()->getValue(0);
+    if ( type == GL_PATCHES ) return Vec2f(0,0);
+
     auto texcoords = geo->getTexCoords();
     if (texcoords == 0) return Vec2f(0,0);
     TriangleIterator iter = geo->beginTriangles(); iter.seek( ins.triangle );
@@ -52,6 +55,9 @@ Vec3i VRIntersect_computeVertices(VRIntersection& ins, NodeMTRecPtr node) {
 
     GeometryRefPtr geo = dynamic_cast<Geometry*>( node->getCore() );
     if (geo == 0) return Vec3i(0,0,0);
+    auto type = geo->getTypes()->getValue(0);
+    if ( type == GL_PATCHES ) return Vec3i(0,0,0);
+
     TriangleIterator iter = geo->beginTriangles(); iter.seek( ins.triangle );
     return Vec3i(iter.getPositionIndex(0), iter.getPositionIndex(1), iter.getPositionIndex(2));
 }

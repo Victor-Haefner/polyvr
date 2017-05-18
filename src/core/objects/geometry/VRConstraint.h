@@ -51,6 +51,7 @@ class VRConstraint : public VRStorage {
         ~VRConstraint();
 
         static VRConstraintPtr create();
+        VRConstraintPtr duplicate();
 
         void setActive(bool b, VRTransformPtr obj);
         bool isActive();
@@ -69,6 +70,8 @@ class VRConstraint : public VRStorage {
         void setReferenceB(Matrix m);
         Matrix getReferenceA();
         Matrix getReferenceB();
+
+        void lockRotation();
 
         void apply(VRTransformPtr t);
 

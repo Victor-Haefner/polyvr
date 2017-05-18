@@ -174,8 +174,8 @@ void FPath::update() {
         auto n0 = nodes[i-1];
         auto n1 = nodes[i];
         auto p = path::create();
-        p->addPoint(n0->getTransform());
-        p->addPoint(n1->getTransform());
+        p->addPoint(*n0->getTransform()->getWorldPose());
+        p->addPoint(*n1->getTransform()->getWorldPose());
         p->compute(12);
         paths[n1.get()] = p;
     }
@@ -377,19 +377,14 @@ vector<shared_ptr<FNode>> FNetwork::getNodes() {
 
 VRStrokePtr FNetwork::stroke(Vec3f c, float k) {
     vector<pathPtr> paths;
-    for (itr = nodes.begin(); itr != nodes.end(); itr++) {
-        shared_ptr<FNode> n1 = itr->second;
-        Vec3f t1 = n1->getTangent();
-        Vec3f p1 = n1->getTransform()->getWorldPosition();
+    for (auto n1 : nodes) {
+        auto p1 = n1.second->getTransform()->getWorldPose();
         map<int, shared_ptr<FNode>>::iterator itr2;
-        for (itr2 = n1->getOutgoing().begin(); itr2 != n1->getOutgoing().end(); itr2++) {
-            shared_ptr<FNode> n2 = itr2->second;
-            Vec3f t2 = n2->getTangent();
-            Vec3f p2 = n2->getTransform()->getWorldPosition();
-
+        for (auto n2 : n1.second->getOutgoing()) {
+            auto p2 = n2.second->getTransform()->getWorldPose();
             pathPtr p = path::create();
-            p->addPoint(p1, t1, c);
-            p->addPoint(p2, t2, c);
+            p->addPoint( *p1, c );
+            p->addPoint( *p2, c );
             p->compute(20);
             paths.push_back(p);
         }

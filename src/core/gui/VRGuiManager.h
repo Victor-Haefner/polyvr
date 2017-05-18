@@ -29,7 +29,8 @@ class VRGuiManager {
 
         static void broadcast(string sig);
 
-        void printToConsole(string t, string s);
+        VRConsoleWidgetPtr getConsole(string t);
+        void focusScript(string name, int line, int column);
         void updateGtk();
         void wakeWindow();
 

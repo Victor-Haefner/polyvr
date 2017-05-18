@@ -103,6 +103,23 @@ void polygon::close() {
     if (points3.size() > 0) points3.push_back(points3[0]);
 }
 
+bool polygon::isInside(Vec2f p) {
+    if (points.size() <= 1) return false;
+    // cast ray in +x from p and intersect all lines
+    int K = 0;
+    int N = points.size();
+    for (int i=0; i<N; i++) {
+        Vec2f p1 = points[i];
+        Vec2f d = points[(i+1)%N] - p1;
+        float a = (p[1] - p1[1]) / d[1];
+        if (a < 0 || a > 1) continue;
+        float b = p1[0] - p[0] + d[0]*a;
+        if (b < 0) continue;
+        K += 1;
+    }
+    return (K%2 == 1);
+}
+
 polygon polygon::sort() {
     if (points.size() == 0) return polygon();
     Vec2f p0 = points[0]; // rightmost lowest point
@@ -184,9 +201,12 @@ polygon polygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKING UN
     std::ostream_iterator< Point_2 >  out( std::cout, "\n" );*/
     vector<Kernel::Point_2> pIn; for (auto p : points) pIn.push_back(Kernel::Point_2(p[0],p[1]));
     vector<Kernel::Point_2> pOut; for (auto p : points) pOut.push_back(Kernel::Point_2());
-    CGAL::ch_graham_andrew( pIn.begin(), pIn.end(), pOut.begin() );
+    auto pOutEnd = CGAL::ch_graham_andrew( pIn.begin(), pIn.end(), pOut.begin() );
     polygon res;
-    for (auto p : pOut) res.addPoint(Vec2f(p[0],p[2]));
+    for (auto pItr = pOut.begin(); pItr != pOutEnd; pItr++) {
+        auto p = *pItr;
+        res.addPoint(Vec2f(p[0],p[2]));
+    }
     return res;
 }
 

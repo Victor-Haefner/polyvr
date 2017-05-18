@@ -1,4 +1,6 @@
 #include "VRScript.h"
+#include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiConsole.h"
 #include <iostream>
 #include <functional>
 #include "core/scene/VRScene.h"
@@ -20,6 +22,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include <libxml++/nodes/element.h>
 #include <libxml++/nodes/textnode.h>
+#include <frameobject.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -94,7 +97,7 @@ void VRScript::update() {
         }
 
         if (t->trigger == "on_timeout") {
-            int i = toInt(t->param.c_str());
+            int i = toInt(t->param);
             scene->addTimeoutFkt(cbfkt_sys, 0, i);
             continue;
         }
@@ -294,6 +297,12 @@ int VRScript::getHeadSize() { // number of head lines
     return 0;
 }
 
+void VRScript::on_err_link_clicked(errLink link, string s) {
+    VRGuiManager::get()->focusScript(getName(), link.line, link.column);
+}
+
+VRScript::errLink::errLink(int l, int c) : line(l), column(c) {}
+
 void VRScript::execute() {
     if (type == "Python") {
         if (fkt == 0) return;
@@ -313,7 +322,30 @@ void VRScript::execute() {
             a_itr->second = a;
         }
 
-        PyObject_CallObject(fkt, pArgs);
+        auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
+            VRGuiManager::get()->getConsole( "Errors" )->write( m, style, link );
+        };
+
+        auto res = PyObject_CallObject(fkt, pArgs);
+        if (!res) { // handle error and output message!
+            VRGuiManager::get()->getConsole( "Errors" )->addStyle( "redLink", "#ff3311", "#ffffff", false, true, true );
+            PyThreadState* tstate = PyThreadState_GET();
+            if (NULL != tstate) {
+                PyFrameObject* frame = tstate->frame;
+                if (auto tb = (PyTracebackObject*)tstate->exc_traceback) if (!frame) frame = tb->tb_frame;
+                if (auto tb = (PyTracebackObject*)tstate->curexc_traceback) if (!frame) frame = tb->tb_frame;
+                while (frame != NULL) {
+                    int line = PyCode_Addr2Line(frame->f_code, frame->f_lasti);
+                    string filename = PyString_AsString(frame->f_code->co_filename);
+                    string funcname = PyString_AsString(frame->f_code->co_name);
+
+                    errLink eLink(line, 0);
+                    auto fkt = VRFunction<string>::create("search_link", boost::bind(&VRScript::on_err_link_clicked, this, eLink, _1) );
+                    print( filename+" "+funcname+" "+toString(line)+"\n", "redLink", fkt );
+                    frame = frame->f_back;
+                }
+            }
+        }
 
         execution_time = timer.stop();
 

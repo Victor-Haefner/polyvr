@@ -153,6 +153,7 @@ void VRGtkWindow::on_resize(Gtk::Allocation& allocation) {
 }
 
 bool VRGtkWindow::on_button(GdkEventButton * event) {
+    gtk_widget_grab_focus((GtkWidget*)drawArea->gobj());
     int state = 1;
     if (event->type == GDK_BUTTON_PRESS) state = 0;
 
@@ -167,11 +168,7 @@ bool VRGtkWindow::on_button(GdkEventButton * event) {
 }
 
 bool VRGtkWindow::on_motion(GdkEventMotion * event) {
-    gtk_widget_grab_focus((GtkWidget*)drawArea->gobj());
-    //gtk_window_set_focus (window, widget);
-    //widget->grab_focus();
-
-    //if (event->type != GDK_BUTTON_PRESS) return true;
+    //gtk_widget_grab_focus((GtkWidget*)drawArea->gobj());
     if (getMouse() == 0) return false;
     getMouse()->motion(event->x ,event->y);
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="Math" name_space="Scene" loading_time="201">
+<Scene name_suffix="0" base_name="Math" name_space="Scene" loading_time="75">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
@@ -12,23 +12,25 @@
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" hmdd="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
-    <Script base_name="init" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1">
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
-	from VR import Math
-	from Math import Vec3
+	from VR.Math import Vec3
 	
-	A = Vec3(0,3,4)
-	B = Vec3(0,1,0)
-	C = Vec3(0,0,1)
-	D = Vec3(13,0,0)
+	A = Vec3([0,3,4])
+	B = Vec3([0,1,0])
+	C = Vec3([0,0,1])
+	D = Vec3([13,0,0])
 	
 	D.normalize()
 	
 	print A,B,C
 	print A.length(), A.dot(B), B.cross(C), D
 	print B.__add__(C), B+C, B*2.5, B/2, -B, abs(-B)
+	
+	A[1] = -13.4
+	print A[1], len(A)
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
     </Script>

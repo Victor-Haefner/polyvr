@@ -28,6 +28,8 @@ VRRenderManager::VRRenderManager() {
     store("deferred_rendering", &deferredRendering);
     store("ssao", &do_ssao);
     store("hmdd", &do_hmdd);
+    store("marker", &do_marker);
+    store("fxaa", &do_fxaa);
     store("ssao_kernel", &ssao_kernel);
     store("ssao_radius", &ssao_radius);
     store("ssao_noise", &ssao_noise);
@@ -56,6 +58,7 @@ void VRRenderManager::update() {
             rendering->setCalib(calib);
             rendering->setHMDD(do_hmdd);
             rendering->setMarker(do_marker);
+            rendering->setFXAA(do_fxaa);
         }
 
         rendering = v->getRenderingR();
@@ -68,6 +71,7 @@ void VRRenderManager::update() {
             rendering->setCalib(calib);
             rendering->setHMDD(do_hmdd);
             rendering->setMarker(do_marker);
+            rendering->setFXAA(do_fxaa);
         }
     }
 }
@@ -103,6 +107,7 @@ bool VRRenderManager::getSSAO() { return do_ssao; }
 bool VRRenderManager::getHMDD() { return do_hmdd; }
 bool VRRenderManager::getMarker() { return do_marker; }
 bool VRRenderManager::getCalib() { return calib; }
+bool VRRenderManager::getFXAA() { return do_fxaa; }
 
 vector<VRRenderStudioPtr> VRRenderManager::getRenderings() {
     vector<VRRenderStudioPtr> res;
@@ -153,5 +158,6 @@ void VRRenderManager::setSSAOnoise(int k) { ssao_noise = k; update(); }
 void VRRenderManager::setCalib(bool b) { calib = b; update(); }
 void VRRenderManager::setHMDD(bool b) { do_hmdd = b; update(); }
 void VRRenderManager::setMarker(bool b) { do_marker = b; update(); }
+void VRRenderManager::setFXAA(bool b) { do_fxaa = b; update(); }
 
 OSG_END_NAMESPACE;

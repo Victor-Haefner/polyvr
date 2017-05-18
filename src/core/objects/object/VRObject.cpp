@@ -290,7 +290,7 @@ VRObjectPtr VRObject::getAtPath(string path) {
     return res;
 }
 
-vector<VRObjectPtr> VRObject::getChildren(bool recursive, string type) {
+vector<VRObjectPtr> VRObject::getChildren(bool recursive, string type, bool includeSelf) {
     if (!recursive) {
         if (type == "") return children;
         vector<VRObjectPtr> res;
@@ -299,6 +299,8 @@ vector<VRObjectPtr> VRObject::getChildren(bool recursive, string type) {
     }
 
     vector<VRObjectPtr> res = getChildren(false, type);
+    if (includeSelf && getType() == type) res.push_back( ptr() );
+
     for (auto c : children) {
         vector<VRObjectPtr> tmp = c->getChildren(true, type);
         res.insert( res.end(), tmp.begin(), tmp.end() );
@@ -502,6 +504,7 @@ bool VRObject::isVisible() { return visible; }
 
 /** Set the visibility **/
 void VRObject::setVisible(bool b) {
+    if (b == visible) return;
     recUndo(&VRObject::setVisible, ptr(), visible, b);
     visible = b;
     if (b) osg->node->setTravMask(0xffffffff);
