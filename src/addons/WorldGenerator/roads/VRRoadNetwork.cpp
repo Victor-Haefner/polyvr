@@ -604,11 +604,12 @@ void VRRoadNetwork::computeSurfaces() {
         auto geo = VRGeometry::create("arrow");
         geo->setEntity(arrow);
         addChild( geo );
-        geo->setPose( pose::create(lpath->getPose(t)) );
 
         auto dirs = arrow->getAll("direction");
         geo->setPrimitive("Plane", "2.0 2.0 1 1");
-        geo->setEuler(Vec3f(0.5*pi,0,0));
+        geo->setEuler(Vec3f(-0.5*pi,0,0));
+        geo->applyTransformation();
+        geo->setPose( pose::create(lpath->getPose(t)) );
         geo->applyTransformation();
 
         VRTextureGenerator tg;
@@ -618,22 +619,22 @@ void VRRoadNetwork::computeSurfaces() {
         for (auto d : dirs) {
             float a = toFloat(d->value);
 
-            Vec3f dir(sin(a), -cos(a), 0);
+            Vec3f dir(sin(a), cos(a), 0);
             Vec2f d02 = Vec2f(0.5,0.5); // rotation point
             Vec3f d03 = Vec3f(0.5,0.5,0); // rotation point
 
             auto apath = path::create();
-            apath->addPoint( pose(Vec3f(0.5,1.0,0), Vec3f(0,-1,0), Vec3f(0,0,1)) );
-            apath->addPoint( pose(Vec3f(0.5,0.8,0), Vec3f(0,-1,0), Vec3f(0,0,1)) );
+            apath->addPoint( pose(Vec3f(0.5,0.0,0), Vec3f(0,1,0), Vec3f(0,0,1)) );
+            apath->addPoint( pose(Vec3f(0.5,0.2,0), Vec3f(0,1,0), Vec3f(0,0,1)) );
             apath->addPoint( pose(d03+dir*0.31, dir, Vec3f(0,0,1)) );
             apath->compute(12);
             tg.drawPath(apath, Vec4f(1,1,1,1), 0.1);
 
             auto poly = polygon::create();
             Matrix22<float> R = Matrix22<float>(cos(a), -sin(a), sin(a), cos(a));
-            Vec2f A = Vec2f(0.35,0.2)-d02;
-            Vec2f B = Vec2f(0.65,0.2)-d02;
-            Vec2f C = Vec2f(0.5,0.0)-d02;
+            Vec2f A = Vec2f(0.35,0.8)-d02;
+            Vec2f B = Vec2f(0.65,0.8)-d02;
+            Vec2f C = Vec2f(0.5,1.0)-d02;
             A = R.mult(A); B = R.mult(B); C = R.mult(C);
             poly->addPoint(d02+A);
             poly->addPoint(d02+B);
