@@ -631,7 +631,7 @@ void VRRoadNetwork::computeSurfaces() {
             tg.drawPath(apath, Vec4f(1,1,1,1), 0.1);
 
             auto poly = polygon::create();
-            Matrix22<float> R = Matrix22<float>(cos(a), -sin(a), sin(a), cos(a));
+            Matrix22<float> R = Matrix22<float>(cos(a), sin(a), -sin(a), cos(a));
             Vec2f A = Vec2f(0.35,0.8)-d02;
             Vec2f B = Vec2f(0.65,0.8)-d02;
             Vec2f C = Vec2f(0.5,1.0)-d02;
