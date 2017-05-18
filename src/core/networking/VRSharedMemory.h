@@ -29,14 +29,18 @@ class VRSharedMemory {
         string getHandle(void* data);
 
         void lock() {
-            //boost::interprocess::named_mutex mtx{boost::interprocess::open_or_create, (segment->name+"_mtx").c_str()};
-            boost::interprocess::named_mutex mtx{boost::interprocess::open_or_create, "kinkon_mtx"};
-            mtx.lock();
+            try {
+                //boost::interprocess::named_mutex mtx{boost::interprocess::open_or_create, (segment->name+"_mtx").c_str()};
+                boost::interprocess::named_mutex mtx{boost::interprocess::open_or_create, "kinkon_mtx"};
+                mtx.lock();
+            } catch(boost::interprocess::interprocess_exception e) { cout << "VRSharedMemory::lock failed with: " << e.what() << endl; }
         }
 
         void unlock() {
-            boost::interprocess::named_mutex mtx{boost::interprocess::open_or_create, "kinkon_mtx"};
-            mtx.unlock();
+            try {
+                boost::interprocess::named_mutex mtx{boost::interprocess::open_or_create, "kinkon_mtx"};
+                mtx.unlock();
+            } catch(boost::interprocess::interprocess_exception e) { cout << "VRSharedMemory::unlock failed with: " << e.what() << endl; }
         }
 
         template<class T>
@@ -56,7 +60,7 @@ class VRSharedMemory {
                     unlock();
                     return res;
                 }
-            } catch(boost::interprocess::interprocess_exception e) { cout << "getObject failed with: " << e.what() << endl; }
+            } catch(boost::interprocess::interprocess_exception e) { cout << "VRSharedMemory::getObject failed with: " << e.what() << endl; }
             unlock();
             return T();
         }
