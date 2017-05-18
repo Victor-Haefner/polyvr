@@ -607,19 +607,16 @@ void VRRoadNetwork::computeSurfaces() {
         geo->setPose( pose::create(lpath->getPose(t)) );
 
         auto dirs = arrow->getAll("direction");
-        //geo->setPrimitive("Plane", "0.6 1.8 1 1");
         geo->setPrimitive("Plane", "2.0 2.0 1 1");
         geo->setEuler(Vec3f(0.5*pi,0,0));
         geo->applyTransformation();
 
         VRTextureGenerator tg;
-        //tg.setSize(Vec3i(64,192,1), true);
         tg.setSize(Vec3i(400,400,1), true);
         tg.drawFill(Vec4f(0,0,1,1));
 
-        for (auto a : {float(0), float(pi*0.25), float(pi*0.5)}) {
-        //for (auto d : dirs) {
-            //float a = toFloat(d->value);
+        for (auto d : dirs) {
+            float a = toFloat(d->value);
 
             Vec3f dir(sin(a), -cos(a), 0);
             Vec2f d02 = Vec2f(0.5,0.5); // rotation point
