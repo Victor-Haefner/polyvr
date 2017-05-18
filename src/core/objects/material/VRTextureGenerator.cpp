@@ -149,11 +149,12 @@ Vec3i VRTextureGenerator::clamp(Vec3i p) {
     return p;
 }
 
-void VRTextureGenerator::applyLine(Vec3f* data, Vec3f p1, Vec3f p2, Vec4f c, float w) {
-    auto upscale = [&](Vec3f& p) {
-        p = Vec3f(p[0]*width, p[1]*height, p[2]*depth);
-    };
+Vec3f VRTextureGenerator::upscale(Vec3f& p) {
+    p = Vec3f(p[0]*width, p[1]*height, p[2]*depth);
+    return p;
+}
 
+void VRTextureGenerator::applyLine(Vec3f* data, Vec3f p1, Vec3f p2, Vec4f c, float w) {
     auto getLeadDim = [](Vec3f d) {
         Vec3i iDs = Vec3i(0,1,2);
         if (abs(d[1]) > abs(d[0]) && abs(d[1]) > abs(d[2])) iDs = Vec3i(1,0,2);
@@ -298,27 +299,52 @@ void VRTextureGenerator::applyPath(Vec3f* data, pathPtr p, Vec4f c, float w) {
 }
 
 void VRTextureGenerator::applyPath(Vec4f* data, pathPtr p, Vec4f c, float w) {
-    auto pos = p->getPositions();
-    for (uint i=1; i<pos.size(); i++) applyLine(data, pos[i-1], pos[i], c, w);
+    auto poses = p->getPoses();
+    for (uint i=1; i<poses.size(); i++) {
+        pose& p1 = poses[i-1];
+        pose& p2 = poses[i];
+
+        Vec2f A1 = Vec2f(p1.pos()-p1.x()*w*0.5);
+        Vec2f B1 = Vec2f(p1.pos()+p1.x()*w*0.5);
+        Vec2f A2 = Vec2f(p2.pos()-p2.x()*w*0.5);
+        Vec2f B2 = Vec2f(p2.pos()+p2.x()*w*0.5);
+
+        auto poly = polygon::create();
+        poly->addPoint(A1);
+        poly->addPoint(B1);
+        poly->addPoint(B2);
+        poly->addPoint(A2);
+        applyPolygon(data,poly,c,0);
+    }
 }
 
 void VRTextureGenerator::applyPolygon(Vec3f* data, polygonPtr p, Vec4f c, float h) {
-    for (int j=0; j<height; j++) {
-        for (int i=0; i<width; i++) {
+    auto bb = p->getBoundingBox();
+    Vec3f a = bb.min();
+    Vec3f b = bb.max();
+    Vec3i A = Vec3i( upscale( a ) ) - Vec3i(1,1,1);
+    Vec3i B = Vec3i( upscale( b ) ) + Vec3i(1,1,1);
+    for (int j=A[1]; j<B[1]; j++) {
+        for (int i=A[0]; i<B[0]; i++) {
             Vec2f pos = Vec2f(float(i)/width, float(j)/height);
             if (p->isInside(pos)) {
-                for (int k=0; k<depth; k++) applyPixel(data, Vec3i(i,j,k), c);
+                for (int k=0; k<depth; k++) applyPixel(data, clamp(Vec3i(i,j,k)), c);
             }
         }
     }
 }
 
 void VRTextureGenerator::applyPolygon(Vec4f* data, polygonPtr p, Vec4f c, float h) {
-    for (int j=0; j<height; j++) {
-        for (int i=0; i<width; i++) {
+    auto bb = p->getBoundingBox();
+    Vec3f a = bb.min();
+    Vec3f b = bb.max();
+    Vec3i A = Vec3i( upscale( a ) ) - Vec3i(1,1,1);
+    Vec3i B = Vec3i( upscale( b ) ) + Vec3i(1,1,1);
+    for (int j=A[1]; j<B[1]; j++) {
+        for (int i=A[0]; i<B[0]; i++) {
             Vec2f pos = Vec2f(float(i)/width, float(j)/height);
             if (p->isInside(pos)) {
-                for (int k=0; k<depth; k++) applyPixel(data, Vec3i(i,j,k), c);
+                for (int k=0; k<depth; k++) applyPixel(data, clamp(Vec3i(i,j,k)), c);
             }
         }
     }

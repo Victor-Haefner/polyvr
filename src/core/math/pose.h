@@ -30,6 +30,7 @@ class pose {
         Vec3f pos() const;
         Vec3f dir() const;
         Vec3f up() const;
+        Vec3f x() const;
 
         Matrix asMatrix() const;
         void invert();

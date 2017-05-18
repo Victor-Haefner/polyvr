@@ -628,7 +628,7 @@ void VRRoadNetwork::computeSurfaces() {
             auto apath = path::create();
             apath->addPoint( pose(Vec3f(0.5,1.0,0), Vec3f(0,-1,0), Vec3f(0,0,1)) );
             apath->addPoint( pose(Vec3f(0.5,0.8,0), Vec3f(0,-1,0), Vec3f(0,0,1)) );
-            apath->addPoint( pose(d03+dir*0.3, dir, Vec3f(0,0,1)) );
+            apath->addPoint( pose(d03+dir*0.31, dir, Vec3f(0,0,1)) );
             apath->compute(12);
             tg.drawPath(apath, Vec4f(1,1,1,1), 0.1);
 

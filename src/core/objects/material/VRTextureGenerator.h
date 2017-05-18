@@ -53,6 +53,7 @@ class VRTextureGenerator {
 
         bool inBox(Pnt3f& p, Vec3f& s);
         Vec3i clamp(Vec3i p);
+        Vec3f upscale(Vec3f& p);
 
     public:
         VRTextureGenerator();

@@ -50,6 +50,7 @@ class path : public VRStorage {
         vector<Vec3f> getDirections();
         vector<Vec3f> getUpvectors();
         vector<Vec3f> getColors();
+        vector<pose> getPoses();
         Vec3f getPosition(float t, int i = 0, int j = 0);
         void getOrientation(float t, Vec3f& dir, Vec3f& up, int i = 0, int j = 0);
         Vec3f getColor(float t, int i = 0, int j = 0);

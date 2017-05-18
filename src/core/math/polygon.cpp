@@ -124,6 +124,12 @@ bool polygon::isInside(Vec2f p) {
     return (K%2 == 1);
 }
 
+boundingbox polygon::getBoundingBox() {
+    boundingbox bb;
+    for (auto p : points) bb.update(Vec3f(p));
+    return bb;
+}
+
 polygon polygon::sort() {
     if (points.size() == 0) return polygon();
     Vec2f p0 = points[0]; // rightmost lowest point

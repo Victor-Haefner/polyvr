@@ -332,6 +332,14 @@ vector<Vec3f> path::getDirections() { return directions; }
 vector<Vec3f> path::getUpvectors() { return up_vectors; }
 vector<Vec3f> path::getColors() { return colors; }
 
+vector<pose> path::getPoses() {
+    vector<pose> res;
+    for (int i=0; i<positions.size(); i++) {
+        res.push_back( pose(positions[i], directions[i], up_vectors[i]) );
+    }
+    return res;
+}
+
 void path::invert() { direction *= -1; }
 void path::update() { compute(iterations); }
 

@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGMatrix.h>
+#include "boundingbox.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -38,6 +39,7 @@ class polygon {
         void set(vector<Vec2f> vec);
         polygon sort();
         polygon getConvexHull();
+        boundingbox getBoundingBox();
         vector< polygon > getConvexDecomposition();
 
         vector<Vec3f> toSpace(Matrix m);
