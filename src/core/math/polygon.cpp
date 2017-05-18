@@ -108,12 +108,16 @@ bool polygon::isInside(Vec2f p) {
     // cast ray in +x from p and intersect all lines
     int K = 0;
     int N = points.size();
+    Vec2f eps = Vec2f(1e-6, 1e-6); // avoid problems at corners and edges
     for (int i=0; i<N; i++) {
-        Vec2f p1 = points[i];
-        Vec2f d = points[(i+1)%N] - p1;
+        Vec2f p1 = points[i]+eps;
+        Vec2f p2 = points[(i+1)%N]+eps;
+        Vec2f d = p2 - p1;
         float a = (p[1] - p1[1]) / d[1];
         if (a < 0 || a > 1) continue;
+        if (a != a) continue; // nan
         float b = p1[0] - p[0] + d[0]*a;
+        if (b != b) continue; // nan
         if (b < 0) continue;
         K += 1;
     }

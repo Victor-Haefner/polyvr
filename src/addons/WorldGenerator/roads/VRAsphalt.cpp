@@ -657,7 +657,7 @@ void computeNormal() {
 
 void computeDepth() {
 	float o = 0.0;
-	if (true) o = -0.00002;
+	if (doLine) o = -0.00002;
 	vec4 pp = gl_ProjectionMatrix * position;
 	float d = (pp.z+o) / pp.w;
 	gl_FragDepth = d*0.5 + 0.5;

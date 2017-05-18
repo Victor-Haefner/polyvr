@@ -164,7 +164,6 @@ void VRTextureGenerator::applyLine(Vec3f* data, Vec3f p1, Vec3f p2, Vec4f c, flo
     auto BresenhamPixels = [&](Vec3f p1, Vec3f p2) {
         vector<Vec3i> pixels;
         Vec3f d = p2-p1;
-        Vec3i pi = Vec3i(p1);
         Vec3i iDs = getLeadDim(d);
         int I = iDs[0];
 
@@ -172,19 +171,23 @@ void VRTextureGenerator::applyLine(Vec3f* data, Vec3f p1, Vec3f p2, Vec4f c, flo
         if (I == 0) derr = Vec2f(abs(d[1]/d[0]), abs(d[2]/d[0]));
         if (I == 1) derr = Vec2f(abs(d[0]/d[1]), abs(d[2]/d[1]));
         if (I == 2) derr = Vec2f(abs(d[0]/d[2]), abs(d[1]/d[2]));
-
         Vec2f err = derr - Vec2f(0.5,0.5);
 
-        int k = 1;
-        if (d[I] < 0) k = -1;
+        if (p1[I] > p2[I]) { swap(p1, p2); d *= -1; }
+        Vec3i pi1 = Vec3i(p1);
+        Vec3i pi2 = Vec3i(p2);
+        if (pi1[I] == pi2[I]) pi2[I]++;
+        Vec3i pi = pi1;
 
-        for (; abs(pi[I]) < abs(p1[I]+d[I]); pi[I] += k) {
+        int ky = 1; if (d[iDs[1]] < 0) ky = -1;
+        int kz = 1; if (d[iDs[2]] < 0) kz = -1;
+
+        for (; pi[I] < pi2[I]; pi[I]++) {
             pixels.push_back(pi);
             err += derr;
-            if (err[0] >= 0.5) { pi[iDs[1]]++; err[0] -= 1.0; }
-            if (err[1] >= 0.5) { pi[iDs[2]]++; err[1] -= 1.0; }
+            if (err[0] >= 0.5) { pi[iDs[1]] += ky; err[0] -= 1.0; pixels.push_back(pi); }
+            if (err[1] >= 0.5) { pi[iDs[2]] += kz; err[1] -= 1.0; pixels.push_back(pi); }
         }
-
         return pixels;
     };
 
@@ -192,13 +195,17 @@ void VRTextureGenerator::applyLine(Vec3f* data, Vec3f p1, Vec3f p2, Vec4f c, flo
     upscale(p2);
     Vec3f d = p2-p1;
     Vec3i iDs = getLeadDim(d);
-    Vec3f u = Vec3f(0,1,0);
-    if (iDs[0] == 1) u = Vec3f(0,0,1);
+    Vec3f u = Vec3f(0,0,0); u[iDs[2]] = 1;
     Vec3f p3 = d.cross(u);
     Vec3f p4 = d.cross(p3);
+    p3.normalize();
+    p4.normalize();
 
-    p3.normalize(); p3 *= w*0.5; upscale(p3);
-    p4.normalize(); p4 *= w*0.5; upscale(p4);
+    float W = w*0.5*width; // line width in pixel
+    p3 *= W;
+    p4 *= W;
+
+    //cout << "BresenhamPixels p1 " << p1 << " p2 " << p2 << " p3 " << p3 << " p4 " << p4 << " d " << d << " u " << u << endl;
 
     auto pixels1 = BresenhamPixels(p1,p2);
     auto pixels2 = BresenhamPixels(-p3,p3);
@@ -237,17 +244,20 @@ void VRTextureGenerator::applyLine(Vec4f* data, Vec3f p1, Vec3f p2, Vec4f c, flo
         if (I == 2) derr = Vec2f(abs(d[0]/d[2]), abs(d[1]/d[2]));
         Vec2f err = derr - Vec2f(0.5,0.5);
 
+        if (p1[I] > p2[I]) { swap(p1, p2); d *= -1; }
         Vec3i pi1 = Vec3i(p1);
         Vec3i pi2 = Vec3i(p2);
-        if (pi1[I] > pi2[I]) swap(pi1, pi2);
         if (pi1[I] == pi2[I]) pi2[I]++;
         Vec3i pi = pi1;
+
+        int ky = 1; if (d[iDs[1]] < 0) ky = -1;
+        int kz = 1; if (d[iDs[2]] < 0) kz = -1;
 
         for (; pi[I] < pi2[I]; pi[I]++) {
             pixels.push_back(pi);
             err += derr;
-            if (err[0] >= 0.5) { pi[iDs[1]]++; err[0] -= 1.0; }
-            if (err[1] >= 0.5) { pi[iDs[2]]++; err[1] -= 1.0; }
+            if (err[0] >= 0.5) { pi[iDs[1]] += ky; err[0] -= 1.0; pixels.push_back(pi); }
+            if (err[1] >= 0.5) { pi[iDs[2]] += kz; err[1] -= 1.0; pixels.push_back(pi); }
         }
         return pixels;
     };
@@ -256,13 +266,17 @@ void VRTextureGenerator::applyLine(Vec4f* data, Vec3f p1, Vec3f p2, Vec4f c, flo
     upscale(p2);
     Vec3f d = p2-p1;
     Vec3i iDs = getLeadDim(d);
-    Vec3f u = Vec3f(0,1,0);
-    if (iDs[0] == 1) u = Vec3f(0,0,1);
+    Vec3f u = Vec3f(0,0,0); u[iDs[2]] = 1;
     Vec3f p3 = d.cross(u);
     Vec3f p4 = d.cross(p3);
+    p3.normalize();
+    p4.normalize();
 
-    p3.normalize(); p3 *= w*0.5; upscale(p3);
-    p4.normalize(); p4 *= w*0.5; upscale(p4);
+    float W = w*0.5*width; // line width in pixel
+    p3 *= W;
+    p4 *= W;
+
+    //cout << "BresenhamPixels p1 " << p1 << " p2 " << p2 << " p3 " << p3 << " p4 " << p4 << " d " << d << " u " << u << endl;
 
     auto pixels1 = BresenhamPixels(p1,p2);
     auto pixels2 = BresenhamPixels(-p3,p3);

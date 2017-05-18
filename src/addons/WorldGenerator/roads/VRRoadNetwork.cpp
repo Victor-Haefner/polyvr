@@ -13,6 +13,7 @@
 #include "core/utils/toString.h"
 
 #include <OpenSG/OSGGeoProperties.h>
+#include <OpenSG/OSGMatrix22.h>
 
 const double pi = 2*acos(0.0);
 
@@ -606,29 +607,41 @@ void VRRoadNetwork::computeSurfaces() {
         geo->setPose( pose::create(lpath->getPose(t)) );
 
         auto dirs = arrow->getAll("direction");
-        geo->setPrimitive("Plane", "0.6 1.8 1 1");
+        //geo->setPrimitive("Plane", "0.6 1.8 1 1");
+        geo->setPrimitive("Plane", "2.0 2.0 1 1");
         geo->setEuler(Vec3f(0.5*pi,0,0));
         geo->applyTransformation();
 
         VRTextureGenerator tg;
-        tg.setSize(Vec3i(64,192,1), true);
+        //tg.setSize(Vec3i(64,192,1), true);
+        tg.setSize(Vec3i(400,400,1), true);
         tg.drawFill(Vec4f(0,0,1,1));
 
-        for (auto d : dirs) {
-            float dir = toFloat(d->value);
+        for (auto a : {float(0), float(pi*0.25), float(pi*0.5)}) {
+        //for (auto d : dirs) {
+            //float a = toFloat(d->value);
+
+            Vec3f dir(sin(a), -cos(a), 0);
+            Vec2f d02 = Vec2f(0.5,0.5); // rotation point
+            Vec3f d03 = Vec3f(0.5,0.5,0); // rotation point
 
             auto apath = path::create();
             apath->addPoint( pose(Vec3f(0.5,1.0,0), Vec3f(0,-1,0), Vec3f(0,0,1)) );
-            apath->addPoint( pose(Vec3f(0.5,0.3,0), Vec3f(0,-1,0), Vec3f(0,0,1)) );
+            apath->addPoint( pose(Vec3f(0.5,0.8,0), Vec3f(0,-1,0), Vec3f(0,0,1)) );
+            apath->addPoint( pose(d03+dir*0.3, dir, Vec3f(0,0,1)) );
             apath->compute(12);
-            tg.drawPath(apath, Vec4f(1,1,1,1), 0.4);
+            tg.drawPath(apath, Vec4f(1,1,1,1), 0.1);
 
             auto poly = polygon::create();
-            poly->addPoint(Vec2f(0,0.33));
-            poly->addPoint(Vec2f(1,0.33));
-            poly->addPoint(Vec2f(0.5,0));
+            Matrix22<float> R = Matrix22<float>(cos(a), -sin(a), sin(a), cos(a));
+            Vec2f A = Vec2f(0.35,0.2)-d02;
+            Vec2f B = Vec2f(0.65,0.2)-d02;
+            Vec2f C = Vec2f(0.5,0.0)-d02;
+            A = R.mult(A); B = R.mult(B); C = R.mult(C);
+            poly->addPoint(d02+A);
+            poly->addPoint(d02+B);
+            poly->addPoint(d02+C);
             tg.drawPolygon(poly, Vec4f(1,1,1,1));
-
         }
 
         auto aMask = tg.compose(0);
