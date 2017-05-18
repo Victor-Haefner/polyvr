@@ -15,6 +15,7 @@ using namespace std;
 
 class VRDefShading;
 class VRSSAO;
+class VRFXAA;
 class VRHMDDistortion;
 class VRDeferredRenderStage;
 
@@ -31,6 +32,7 @@ class VRRenderStudio : public VRStorage {
         bool calib = false;
         bool do_hmdd = false;
         bool do_marker = false;
+        bool do_fxaa = false;
         int ssao_kernel = 4;
         int ssao_noise = 4;
         float ssao_radius = 0.02;
@@ -46,6 +48,7 @@ class VRRenderStudio : public VRStorage {
     protected:
         shared_ptr<VRSSAO> ssao;
         shared_ptr<VRHMDDistortion> hmdd;
+        shared_ptr<VRFXAA> fxaa;
         VRObjectPtr root_system;
         VRObjectPtr root_scene;
         map<int, VRLightPtr> light_map;
@@ -93,6 +96,8 @@ class VRRenderStudio : public VRStorage {
         bool getHMDD();
         void setMarker(bool b);
         bool getMarker();
+        void setFXAA(bool b);
+        bool getFXAA();
 
         void setHMDDeye(float e);
 

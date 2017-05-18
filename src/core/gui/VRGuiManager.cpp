@@ -39,6 +39,7 @@ VRGuiMonitor* g_mon;
 Gtk::Main* GtkMain;
 
 VRGuiManager::VRGuiManager() {
+    cout << "Init VRGuiManager..";
     standalone = VROptions::get()->getOption<bool>("standalone");
 
     int argc = 0;
@@ -107,6 +108,7 @@ VRGuiManager::VRGuiManager() {
     VRGuiBuilder()->get_widget("window1", top);
     top->maximize();
     top->show_all();
+    cout << " done" << endl;
 }
 
 VRGuiManager::~VRGuiManager() {
@@ -125,6 +127,10 @@ VRGuiManager* VRGuiManager::get(bool init) {
     return instance;
 }
 
+void VRGuiManager::focusScript(string name, int line, int column) {
+    g_sc->focusScript(name, line, column);
+}
+
 void VRGuiManager::broadcast(string sig) {
     VRGuiSignals::get()->getSignal(sig)->triggerPtr<VRDevice>();
 }
@@ -134,9 +140,9 @@ void VRGuiManager::wakeWindow() {
     setNotebookSensitivity("notebook3", true);
 }
 
-void VRGuiManager::printToConsole(string t, string s) {
-    if (standalone) return;
-    g_bits->write_to_terminal(t, s);
+VRConsoleWidgetPtr VRGuiManager::getConsole(string t) {
+    if (standalone) return 0;
+    return g_bits->getConsole(t);
 }
 
 void VRGuiManager::updateGtk() {

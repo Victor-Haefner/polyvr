@@ -3,13 +3,14 @@
 #include "VROntology.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiConsole.h"
 
 #include <iostream>
 
 using namespace OSG;
 
 #define WARN(x) \
-VRGuiManager::get()->printToConsole( "Errors", x+"\n" );
+VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
 
 /*#include <libxml++/nodes/element.h>
 #include "core/utils/VRFunction.h"
@@ -117,6 +118,12 @@ void VREntity::add(string name, string value) {
     properties[name].push_back( prop );
 }
 
+void VREntity::clear(string name) {
+    auto prop = getProperty(name);
+    if (!prop) { WARN("Warning (clear): Entity " + this->name + " has no property " + name); return; }
+    properties[name].clear();
+}
+
 void VREntity::rem(VRPropertyPtr p) {
     string name = p->getName();
     if (properties.count(name)) {
@@ -161,20 +168,53 @@ vector<VRPropertyPtr> VREntity::getAll(string name) {
     return res;
 }
 
-vector<string> VREntity::getVector(string prop, int i) { // TODO
-    vector<string> res;
+vector<VRPropertyPtr> VREntity::getVector(string prop, int i) { // TODO
+    vector<VRPropertyPtr> res;
     auto vp = get(prop, i);
+    if (!vp) return res;
     if (auto o = ontology.lock()) {
-        auto ve = o->getEntity( vp->value );
-
+        auto ve = o->getEntity( vp->value ); // vector entity
+        if (auto p = ve->get("x")) res.push_back( p );
+        if (auto p = ve->get("y")) res.push_back( p );
+        if (auto p = ve->get("z")) res.push_back( p );
+        if (auto p = ve->get("w")) res.push_back( p );
     }
     return res;
 }
 
-vector< vector<string> > VREntity::getAllVector(string prop) { // TODO
-    vector< vector<string> > res;
+vector< vector<VRPropertyPtr> > VREntity::getAllVector(string prop) { // TODO
+    vector< vector<VRPropertyPtr> > res;
     return res;
 }
+
+VREntityPtr VREntity::getEntity(string prop, int i) {
+    auto p = get(prop, i);
+    if (!p) return 0;
+    if (auto onto = ontology.lock()) return onto->getEntity( p->value );
+    return 0;
+}
+
+vector<VREntityPtr> VREntity::getAllEntities(string prop) {
+    vector<VREntityPtr> res;
+    for (auto p : getAll(prop)) {
+        auto e = ontology.lock()->getEntity( p->value );
+        if (e) res.push_back( e );
+    }
+    return res;
+}
+
+Vec3f VREntity::getVec3f(string prop, int i) {
+    Vec3f res;
+    auto vec = getVector(prop, i);
+    for (int i=0; i<3; i++) res[i] = toFloat( vec[i]->value );
+    return res;
+}
+
+vector< Vec3f > VREntity::getAllVec3f(string prop) { // TODO
+    vector< Vec3f > res;
+    return res;
+}
+
 
 string VREntity::toString() {
     string data = "Entity " + name + " of type (";

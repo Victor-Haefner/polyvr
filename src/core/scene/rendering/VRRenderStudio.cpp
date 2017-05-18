@@ -13,6 +13,7 @@
 #include "VRDefShading.h"
 #include "VRSSAO.h"
 #include "VRHMDDistortion.h"
+#include "VRFXAA.h"
 
 #include <OpenSG/OSGRenderAction.h>
 #include <boost/filesystem.hpp>
@@ -51,6 +52,7 @@ VRRenderStudio::VRRenderStudio(EYE e) {
     addStage("marker");
     addStage("calibration");
     addStage("hmdd");
+    addStage("fxaa");
     root_scene = stages["ssao"]->getBottom();
 
     //addStage("texturing", "shading");
@@ -114,14 +116,18 @@ void VRRenderStudio::setStageTexture(string name, VRTexturePtr tex, int unit, in
 void VRRenderStudio::init(VRObjectPtr root) {
     ssao = shared_ptr<VRSSAO>( new VRSSAO() );
     hmdd = shared_ptr<VRHMDDistortion>( new VRHMDDistortion() );
+    fxaa = shared_ptr<VRFXAA>( new VRFXAA() );
 
-    root_system->addChild( hmdd );
+    root_system->addChild( fxaa );
+    fxaa->addChild( hmdd );
     stages["shading"]->getTop()->switchParent( hmdd );
 
     ssao->initSSAO( stages["ssao"]->getMaterial() );
     ssao->initBlur( stages["blurX"]->getMaterial(), stages["blurY"]->getMaterial() );
     hmdd->initHMDD( stages["hmdd"]->getMaterial() );
+    fxaa->initFXAA( stages["fxaa"]->getMaterial() );
     stages["hmdd"]->getMaterial()->setTexture( stages["shading"]->getRendering()->getTarget(), 0 );
+    stages["fxaa"]->getMaterial()->setTexture( stages["shading"]->getRendering()->getTarget(), 0 );
     initCalib( stages["calibration"]->getMaterial() );
     initMarker( stages["marker"]->getMaterial() );
 
@@ -145,12 +151,15 @@ void VRRenderStudio::update() {
     // update shader code
     for (auto s : stages) s.second->getRendering()->reload();
     if (do_hmdd && hmdd) hmdd->reload();
+    if (do_fxaa && fxaa) fxaa->reload();
 
     // update render layer visibility
     stages["calibration"]->setActive(false, calib);
     stages["hmdd"]->setActive(false, do_hmdd);
+    stages["fxaa"]->setActive(false, do_fxaa);
     stages["marker"]->setActive(false, do_marker);
     if (hmdd) hmdd->setActive(do_hmdd);
+    if (fxaa) fxaa->setActive(do_fxaa);
 }
 
 void VRRenderStudio::reset() {
@@ -223,6 +232,7 @@ void VRRenderStudio::setEye(EYE e) {
 void VRRenderStudio::setCamera(CameraRecPtr cam) {
     for (auto s : stages) s.second->getRendering()->setDSCamera(cam);
     if (hmdd) hmdd->setCamera(cam);
+    if (fxaa) fxaa->setCamera(cam);
     this->cam = cam;
 }
 
@@ -231,6 +241,7 @@ void VRRenderStudio::setBackground(BackgroundRecPtr bg) {
     //if (defSSAO) defSSAO->setBackground(bg);
     //if (defBlur) defBlur->setBackground(bg);
     if (hmdd) hmdd->setBackground(bg);
+    if (fxaa) fxaa->setBackground(bg);
 }
 
 void VRRenderStudio::setScene(VRObjectPtr r) {
@@ -241,12 +252,14 @@ void VRRenderStudio::setScene(VRObjectPtr r) {
 
 void VRRenderStudio::resize(Vec2i s) {
     if (hmdd) hmdd->setSize(s);
+    if (fxaa) fxaa->setSize(s);
 }
 
 VRObjectPtr VRRenderStudio::getRoot() { return root_system; }
 bool VRRenderStudio::getSSAO() { return do_ssao; }
 bool VRRenderStudio::getHMDD() { return do_hmdd; }
 bool VRRenderStudio::getMarker() { return do_marker; }
+bool VRRenderStudio::getFXAA() { return do_fxaa; }
 bool VRRenderStudio::getDefferedShading() { return deferredRendering; }
 
 void VRRenderStudio::setDeferredChannel(int c) {
@@ -262,6 +275,7 @@ void VRRenderStudio::setSSAOnoise(int k) { ssao_noise = k; update(); }
 void VRRenderStudio::setCalib(bool b) { calib = b; update(); }
 void VRRenderStudio::setHMDD(bool b) { do_hmdd = b; update(); }
 void VRRenderStudio::setMarker(bool b) { do_marker = b; update(); }
+void VRRenderStudio::setFXAA(bool b) { do_fxaa = b; update(); }
 
 void VRRenderStudio::setHMDDeye(float e) { hmdd->setHMDDparams(e); }
 

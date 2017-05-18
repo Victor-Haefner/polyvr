@@ -111,6 +111,8 @@ string VRAnnotationEngine::vp =
 GLSL(
 varying vec4 vertex;
 varying vec3 normal;
+varying mat4 MVP;
+varying vec2 texCoord;
 
 attribute vec4 osg_Vertex;
 attribute vec4 osg_Normal;
@@ -119,15 +121,17 @@ void main( void ) {
     vertex = osg_Vertex;
     gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
     normal = osg_Normal.xyz;
+    MVP = gl_ModelViewProjectionMatrix;
+    texCoord = vec2(0,0);
 }
 );
 
 string VRAnnotationEngine::fp =
-"#version 400 compatibility\n"
+"#version 120\n"
 GLSL(
 uniform sampler2D texture;
 
-in vec2 texCoord;
+varying vec2 texCoord;
 
 void main( void ) {
   //gl_FragColor = vec4(texCoord.x,texCoord.y,0.0,1.0);
@@ -136,13 +140,13 @@ void main( void ) {
 );
 
 string VRAnnotationEngine::dfp =
-"#version 400 compatibility\n"
+"#version 120\n"
 GLSL(
 uniform sampler2D texture;
 
-in vec4 geomPos;
-in vec3 geomNorm;
-in vec2 texCoord;
+varying vec4 geomPos;
+varying vec3 geomNorm;
+varying vec2 texCoord;
 
 void main( void ) {
     vec3 pos = geomPos.xyz / geomPos.w;
@@ -154,7 +158,7 @@ void main( void ) {
 );
 
 string VRAnnotationEngine::gp =
-"#version 400 compatibility\n"
+"#version 150\n"
 "#extension GL_EXT_geometry_shader4 : enable\n"
 GLSL(
 layout (points) in;
@@ -166,6 +170,7 @@ uniform float size;
 uniform vec2 OSGViewportSize;
 in vec4 vertex[];
 in vec3 normal[];
+in mat4 MVP[];
 out vec2 texCoord;
 out vec4 geomPos;
 out vec3 geomNorm;
@@ -198,10 +203,10 @@ void emitQuad(in float offset, in vec4 tc) {
  }
 
  if (doBillboard < 0.5) {
-  p1 = p+gl_ModelViewProjectionMatrix*vec4(-sx+ox,-sy,0,0);
-  p2 = p+gl_ModelViewProjectionMatrix*vec4(-sx+ox, sy,0,0);
-  p3 = p+gl_ModelViewProjectionMatrix*vec4( sx+ox, sy,0,0);
-  p4 = p+gl_ModelViewProjectionMatrix*vec4( sx+ox,-sy,0,0);
+  p1 = p+MVP[0]*vec4(-sx+ox,-sy,0,0);
+  p2 = p+MVP[0]*vec4(-sx+ox, sy,0,0);
+  p3 = p+MVP[0]*vec4( sx+ox, sy,0,0);
+  p4 = p+MVP[0]*vec4( sx+ox,-sy,0,0);
  } else {
   float a = OSGViewportSize.y/OSGViewportSize.x;
   p1 = p+vec4(-sx*a+ox*a,-sy,0,0);

@@ -126,7 +126,8 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"influence", (PyCFunction)VRPyGeometry::influence, METH_VARARGS, "Pass a points and value vector to influence the geometry - influence([points,f3], [values,f3], int power)" },
     {"showGeometricData", (PyCFunction)VRPyGeometry::showGeometricData, METH_VARARGS, "Enable or disable a data layer - showGeometricData(string type, bool)\n layers are: ['Normals']" },
     {"calcSurfaceArea", (PyCFunction)VRPyGeometry::calcSurfaceArea, METH_NOARGS, "Compute and return the total surface area - flt calcSurfaceArea()" },
-    {"setPositionalTexCoords", (PyCFunction)VRPyGeometry::setPositionalTexCoords, METH_VARARGS, "Use the positions as texture coordinates - setPositionalTexCoords(float scale)" },
+    {"setPositionalTexCoords", (PyCFunction)VRPyGeometry::setPositionalTexCoords, METH_VARARGS, "Use the positions as texture coordinates - setPositionalTexCoords(float scale, int texID, [i,j,k] format)" },
+    {"setPositionalTexCoords2D", (PyCFunction)VRPyGeometry::setPositionalTexCoords2D, METH_VARARGS, "Use the positions as texture coordinates - setPositionalTexCoords2D(float scale, int texID, [i,j] format)" },
     {"genTexCoords", (PyCFunction)VRPyGeometry::genTexCoords, METH_VARARGS, "Generate the texture coordinates - genTexCoords( str mapping, float scale, int channel, Pose )\n\tmapping: ['CUBE', 'SPHERE']" },
     {"readSharedMemory", (PyCFunction)VRPyGeometry::readSharedMemory, METH_VARARGS, "Read the geometry from shared memory buffers - readSharedMemory( str segment, str object )" },
     {"applyTransformation", (PyCFunction)VRPyGeometry::applyTransformation, METH_VARARGS, "Apply a transformation to the mesh - applyTransformation( pose )" },
@@ -398,14 +399,28 @@ PyObject* VRPyGeometry::remove(VRPyGeometry* self, PyObject *args) {
 
 PyObject* VRPyGeometry::setPositionalTexCoords(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
-    self->objPtr->setPositionalTexCoords( parseFloat(args) );
+    float scale = 1.0;
+    int tID = 0;
+    PyObject* format = 0;
+    if (!PyArg_ParseTuple(args, "|fiO", &scale, &tID, &format)) return NULL;
+    self->objPtr->setPositionalTexCoords( scale, tID, format?parseVec3iList(format):Vec3i(0,1,2) );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyGeometry::setPositionalTexCoords2D(VRPyGeometry* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    float scale = 1.0;
+    int tID = 0;
+    PyObject* format = 0;
+    if (!PyArg_ParseTuple(args, "|fiO", &scale, &tID, &format)) return NULL;
+    self->objPtr->setPositionalTexCoords2D( scale, tID, format?parseVec2iList(format):Vec2i(0,1) );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyGeometry::updateNormals(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     int i = 0;
-    if (!PyArg_ParseTuple(args, "i", &i)) return NULL;
+    if (!PyArg_ParseTuple(args, "|i", &i)) return NULL;
     self->objPtr->updateNormals(i);
     Py_RETURN_TRUE;
 }

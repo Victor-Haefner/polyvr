@@ -1,6 +1,6 @@
 #include "VRWindow.h"
 #include "core/scene/VRSceneManager.h"
-#include "core/scene/VRRenderStudio.h"
+#include "core/scene/rendering/VRRenderStudio.h"
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRThreadManager.h"
 #include "core/utils/VRFunction.h"
@@ -54,7 +54,7 @@ void VRWindow::resize(int w, int h) {
     height = h;
     _win->resize(w,h);
     for (auto vw : views) {
-        if (auto v = vw.lock()) v->resize(Vec2i(w,h));
+        if (auto v = vw.lock()) v->setSize(Vec2i(w,h));
     }
 }
 

@@ -51,6 +51,12 @@ class VRScript : public VRName {
             map<int, vector<int> > result;
         };
 
+        struct errLink {
+            int line;
+            int column;
+            errLink(int l, int c);
+        };
+
     private:
         string core;
         string head;
@@ -73,6 +79,7 @@ class VRScript : public VRName {
         VRFunction<VRDeviceWeakPtr>* cbfkt_dev;
         VRFunction<string>* cbfkt_soc;
 
+        void on_err_link_clicked(errLink link, string s);
         void update();
 
     public:

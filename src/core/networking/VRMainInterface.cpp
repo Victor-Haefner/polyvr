@@ -12,6 +12,7 @@
 OSG_BEGIN_NAMESPACE;
 
 VRMainInterface::VRMainInterface() {
+    cout << "Init VRMainInterface..";
     server = VRServer::create(5501);
     server->setName("MainInterface");
     VRSignalPtr sig = server->addSignal(0,1);
@@ -20,6 +21,7 @@ VRMainInterface::VRMainInterface() {
     reqCb = VRServerCb::create( "VRMainInterface_request_handler", boost::bind(&VRMainInterface::handleRequest, this, _1) );
     server->addCallback( "request", reqCb);
     update();
+    cout << " done" << endl;
 }
 
 VRMainInterface::~VRMainInterface() {}

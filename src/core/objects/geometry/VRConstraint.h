@@ -71,6 +71,8 @@ class VRConstraint : public VRStorage {
         Matrix getReferenceA();
         Matrix getReferenceB();
 
+        void lockRotation();
+
         void apply(VRTransformPtr t);
 
 

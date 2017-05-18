@@ -120,16 +120,20 @@ struct VRSoundChannel {
 };
 
 VRSoundManager::VRSoundManager() {
-    channel = new VRSoundChannel();
+    cout << "Init VRSoundManager..";
+    //channel = new VRSoundChannel(); // TODO: catch internal abort when problems with pulseaudio
+    cout << " done" << endl;
 }
 
 VRSoundManager::~VRSoundManager() {
     clearSoundMap();
-    delete channel;
+    if (channel) delete channel;
 }
 
 VRSoundManager& VRSoundManager::get() {
-    static VRSoundManager* instance = new VRSoundManager();
+    static VRSoundManager* instance = 0;
+    if (instance && !instance->channel) instance->channel = new VRSoundChannel(); // delay init of channel
+    if (!instance) instance = new VRSoundManager();
     return *instance;
 }
 
@@ -139,6 +143,7 @@ void VRSoundManager::clearSoundMap() {
 
 void VRSoundManager::playSound(string path, bool loop) {
     cout << "VRSoundManager::playSound " << path << " " << loop << endl;
+    if (!channel) channel = new VRSoundChannel();
     auto sound = getSound(path);
     if (sound->isRunning()) return;
 

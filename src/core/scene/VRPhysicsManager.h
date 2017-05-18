@@ -43,6 +43,7 @@ class VRPhysicsManager {
         vector<VRFunction<int>* > updateFktsPre;
         vector<VRFunction<int>* > updateFktsPost;
         bool active = 1;
+        bool skip = 1;
 
         btBroadphaseInterface* broadphase;
         btSoftBodyRigidBodyCollisionConfiguration* collisionConfiguration;

@@ -41,6 +41,7 @@ class polygon {
         vector< polygon > getConvexDecomposition();
 
         vector<Vec3f> toSpace(Matrix m);
+        bool isInside(Vec2f p);
 
         string toString();
         static void runTest();

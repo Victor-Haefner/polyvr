@@ -60,8 +60,11 @@ PyObject* VRPySound::synthBuffer(VRPySound* self, PyObject* args) {
     vector<Vec2d> data1, data2;
     pyListToVector<vector<Vec2d>, Vec2d>(v1, data1);
     pyListToVector<vector<Vec2d>, Vec2d>(v2, data2);
-    self->objPtr->synthBuffer(data1, data2, T);
-    Py_RETURN_TRUE;
+
+    auto buf = self->objPtr->synthBuffer(data1, data2, T);
+    auto res = PyList_New(buf.size());
+    for (auto i=0; i<buf.size(); i++) PyList_SetItem(res, i, PyInt_FromLong(buf[i]));
+    return res;
 }
 
 PyObject* VRPySound::synthSpectrum(VRPySound* self, PyObject* args) {

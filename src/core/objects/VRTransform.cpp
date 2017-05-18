@@ -209,19 +209,12 @@ Matrix VRTransform::getRotationMatrix() {
     return m;
 }
 
-Matrix VRTransform::getMatrixTo(VRObjectPtr obj) {
-    VRTransformPtr ent; // get first transform object
-    while(obj) {
-        if (obj->hasAttachment("transform")) {
-            ent = static_pointer_cast<VRTransform>(obj);
-            break;
-        }
-        obj = obj->getParent();
-    }
+Matrix VRTransform::getMatrixTo(VRObjectPtr obj, bool parentOnly) {
+    VRTransformPtr ent = getParentTransform(obj);
 
     Matrix m1, m2;
     if (ent) m1 = ent->getWorldMatrix();
-    m2 = getWorldMatrix();
+    m2 = getWorldMatrix(parentOnly);
     if (!ent) return m2;
 
     m1.invert();
@@ -250,6 +243,36 @@ bool VRTransform::checkWorldChange() {
 
     return false;
 }
+
+Vec3f VRTransform::getRelativePosition(VRObjectPtr o, bool parentOnly) {
+    return getRelativePose(o, parentOnly)->pos();
+}
+
+Vec3f VRTransform::getRelativeDirection(VRObjectPtr o, bool parentOnly) {
+    return getRelativePose(o, parentOnly)->dir();
+}
+
+Vec3f VRTransform::getRelativeUp(VRObjectPtr o, bool parentOnly) {
+    return getRelativePose(o, parentOnly)->up();
+}
+
+void VRTransform::getRelativeMatrix(Matrix& m, VRObjectPtr o, bool parentOnly) {
+    m = getWorldMatrix(parentOnly);
+    VRTransformPtr ent = VRTransform::getParentTransform(o);
+    if (ent) {
+        Matrix sm = ent->getWorldMatrix();
+        sm.invert();
+        m.multLeft(sm);
+    }
+}
+
+Matrix VRTransform::getRelativeMatrix(VRObjectPtr o, bool parentOnly) {
+    Matrix m;
+    getRelativeMatrix(m,o,parentOnly);
+    return m;
+}
+
+posePtr VRTransform::getRelativePose(VRObjectPtr o, bool parentOnly) { return pose::create( getRelativeMatrix(o,parentOnly) ); }
 
 /** Returns the world matrix **/
 void VRTransform::getWorldMatrix(Matrix& M, bool parentOnly) {
@@ -290,7 +313,7 @@ Vec3f VRTransform::getDir() { return _at-_from; }
 Vec3f VRTransform::getWorldDirection(bool parentOnly) {
     Matrix m;
     getWorldMatrix(m, parentOnly);
-    return Vec3f(m[2]);
+    return -Vec3f(m[2]);
 }
 
 /** Returns the world direction vector (not normalized) **/
@@ -317,11 +340,47 @@ void VRTransform::setFixed(bool b) {
 /** Set the world matrix of the object **/
 void VRTransform::setWorldMatrix(Matrix m) {
     if (isNan(m)) return;
-
     Matrix wm = getWorldMatrix(true);
     wm.invert();
     wm.mult(m);
     setMatrix(wm);
+}
+
+VRTransformPtr VRTransform::getParentTransform(VRObjectPtr o) {
+    o = o->hasAncestorWithAttachment("transform");
+    return static_pointer_cast<VRTransform>(o);
+}
+
+void VRTransform::setRelativePose(posePtr p, VRObjectPtr o) {
+    Matrix m = p->asMatrix();
+    Matrix wm = getMatrixTo(o);
+    wm.invert();
+    wm.mult(m);
+
+    Matrix lm = getMatrix();
+    lm.mult(wm);
+    setMatrix( lm );
+}
+
+void VRTransform::setRelativePosition(Vec3f pos, VRObjectPtr o) {
+    if (isNan(pos)) return;
+    auto p = getRelativePose(o);
+    p->setPos(pos);
+    setRelativePose(p,o);
+}
+
+void VRTransform::setRelativeDir(Vec3f dir, VRObjectPtr o) {
+    if (isNan(dir)) return;
+    auto p = getRelativePose(o);
+    p->setDir(dir);
+    setRelativePose(p,o);
+}
+
+void VRTransform::setRelativeUp(Vec3f up, VRObjectPtr o) {
+    if (isNan(up)) return;
+    auto p = getRelativePose(o);
+    p->setUp(up);
+    setRelativePose(p,o);
 }
 
 /** Set the world position of the object **/
@@ -422,8 +481,13 @@ void VRTransform::setPose(Vec3f from, Vec3f dir, Vec3f up) {
 
 void VRTransform::setPose(posePtr p) { setPose(p->pos(), p->dir(), p->up()); }
 posePtr VRTransform::getPose() { return pose::create(_from, getDir(), _up); }
-posePtr VRTransform::getWorldPose() { return pose::create(getWorldPosition(), getWorldDirection(), getWorldUp()); }
+posePtr VRTransform::getWorldPose() { return pose::create( getWorldMatrix() ); }
 void VRTransform::setWorldPose(posePtr p) { setWorldMatrix(p->asMatrix()); }
+
+posePtr VRTransform::getPoseTo(VRObjectPtr o) {
+    auto m = getMatrixTo(o);
+    return pose::create(m);
+}
 
 /** Set the local matrix **/
 void VRTransform::setMatrix(Matrix m) {

@@ -1,4 +1,5 @@
 #include "VRGuiBits.h"
+#include "VRGuiConsole.h"
 
 #include <gtkmm/combobox.h>
 #include <gtkmm/liststore.h>
@@ -12,12 +13,10 @@
 #include <gtkmm/toggletoolbutton.h>
 #include <gtkmm/toolbar.h>
 #include <gtkmm/textbuffer.h>
-#include <gtkmm/textview.h>
-#include <gtkmm/scrolledwindow.h>
 #include <gtkmm/builder.h>
-//#include <vte-0.0/vte/vte.h>
+#include <gtkmm/scrolledwindow.h>
 #include <iostream>
-//#include <boost/locale.hpp>
+
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/windows/VRGtkWindow.h"
 #include "core/setup/windows/VRView.h"
@@ -36,9 +35,6 @@
 #include "core/utils/VRLogger.h"
 #include "core/setup/devices/VRSignal.h"
 #include "VRGuiManager.h"
-
-typedef boost::recursive_mutex::scoped_lock PLock;
-boost::recursive_mutex mtx;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -126,74 +122,11 @@ void VRGuiBits_on_internal_update(int i) {
 // ---------Main-------------
 // --------------------------
 
-VRConsoleWidget::VRConsoleWidget() {
-    buffer = Gtk::TextBuffer::create();
-    Gtk::TextView* term_view = Gtk::manage(new Gtk::TextView(buffer));
-    Pango::FontDescription fdesc;
-    fdesc.set_family("monospace");
-    fdesc.set_size(10 * PANGO_SCALE);
-    term_view->modify_font(fdesc);
-    swin = Gtk::manage(new Gtk::ScrolledWindow());
-    swin->add(*term_view);
-    swin->set_size_request(-1,70);
-
-    swin->get_vadjustment()->signal_changed().connect( sigc::mem_fun(*this, &VRConsoleWidget::forward) );
-    setToolButtonCallback("toolbutton24", sigc::mem_fun(*this, &VRConsoleWidget::clear));
-    setToolButtonCallback("toolbutton25", sigc::mem_fun(*this, &VRConsoleWidget::forward));
-    setToolButtonCallback("pause_terminal", sigc::mem_fun(*this, &VRConsoleWidget::pause));
-}
-
-void VRConsoleWidget::write(string s) {
-    PLock lock(mtx);
-    msg_queue.push(s);
-}
-
-void VRConsoleWidget::clear() {
-    PLock lock(mtx);
-    std::queue<string>().swap(msg_queue);
-    buffer->set_text("");
-}
-
-void VRConsoleWidget::pause() { paused = getToggleButtonState("pause_terminal"); }
-void VRConsoleWidget::setLabel(Gtk::Label* lbl) { label = lbl; }
-void VRConsoleWidget::setOpen(bool b) {
-    isOpen = b;
-    if (!b) resetColor();
-}
-
-void VRConsoleWidget::setColor(string color) {
-    label->modify_fg( Gtk::STATE_ACTIVE , Gdk::Color(color));
-    label->modify_fg( Gtk::STATE_NORMAL , Gdk::Color(color));
-}
-
-void VRConsoleWidget::resetColor() {
-    label->unset_fg( Gtk::STATE_ACTIVE );
-    label->unset_fg( Gtk::STATE_NORMAL );
-}
-
-void VRConsoleWidget::update() {
-    PLock lock(mtx);
-    while(!msg_queue.empty()) {
-        if (!isOpen) setColor("#006fe0");
-        buffer->insert(buffer->end(), msg_queue.front());
-		msg_queue.pop();
-    }
-}
-
-void VRConsoleWidget::forward() {
-    if (swin == 0) return;
-    if (paused) return;
-    auto a = swin->get_vadjustment();
-    a->set_value(a->get_upper() - a->get_page_size());
-}
-
 void VRGuiBits::update_terminals() {
     for (auto c : consoles) c.second->update();
 }
 
-void VRGuiBits::write_to_terminal(string t, string s) {
-    consoles[t]->write(s);
-}
+VRConsoleWidgetPtr VRGuiBits::getConsole(string t) { return consoles[t]; }
 
 void VRGuiBits::hideAbout(int i) {
     Gtk::AboutDialog* diag;
@@ -320,13 +253,15 @@ VRGuiBits::VRGuiBits() {
     terminal = Gtk::manage( new Gtk::Notebook() );
     auto addTermTab = [&](string name) {
         auto c = VRConsoleWidgetPtr( new VRConsoleWidget() );
-        terminal->append_page(*c->swin, name);
-        c->setLabel( (Gtk::Label*)terminal->get_tab_label(*c->swin) );
+        terminal->append_page(*c->getWindow(), name);
+        c->setLabel( (Gtk::Label*)terminal->get_tab_label(*c->getWindow()) );
         consoles[name] = c;
+        return c;
     };
 
     addTermTab("Console");
-    addTermTab("Errors");
+    auto errTab = addTermTab("Errors");
+    errTab->configColor("#e03000");
     addTermTab("Search results");
     addTermTab("Reasoning");
     addTermTab("Tracking");

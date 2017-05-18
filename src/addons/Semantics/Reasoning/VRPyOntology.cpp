@@ -5,6 +5,7 @@
 #include "core/scripting/VRPyBaseT.h"
 #include "core/scripting/VRPyBaseFactory.h"
 #include "core/scripting/VRPyObject.h"
+#include "core/scripting/VRPyMath.h"
 #include "core/utils/toString.h"
 
 using namespace OSG;
@@ -113,6 +114,7 @@ PyMethodDef VRPyEntity::methods[] = {
     {"getProperties", (PyCFunction)VRPyEntity::getProperties, METH_VARARGS, "Return all properties or the properties of a certain type - [property] getProperties( str )" },
     {"set", (PyCFunction)VRPyEntity::set, METH_VARARGS, "Set a property - set( str prop, str value | int pos )" },
     {"add", (PyCFunction)VRPyEntity::add, METH_VARARGS, "Add a property - add( str prop, str value )" },
+    {"clear", (PyCFunction)VRPyEntity::clear, METH_VARARGS, "Clear property - clear( str prop )" },
     {"setVector", (PyCFunction)VRPyEntity::setVector, METH_VARARGS, "Set a vector property - setVector( str prop, str value [x,y,z] | str vector concept, int pos )" },
     {"addVector", (PyCFunction)VRPyEntity::addVector, METH_VARARGS, "Add a vector property - addVector( str prop, str value [x,y,z], str vector concept )" },
     {"get", (PyCFunction)VRPyEntity::get, METH_VARARGS, "Get the value of ith property named prop - str get( str prop | int i = 0 )" },
@@ -162,13 +164,14 @@ PyObject* VRPyEntity::getAll(VRPyEntity* self, PyObject* args) {
 }
 
 PyObject* VRPyEntity::getVector(VRPyEntity* self, PyObject* args) {
-    /*const char* prop = 0; int i=0;
+    const char* prop = 0; int i=0;
     if (! PyArg_ParseTuple(args, "s|i", &prop, &i)) return NULL;
-    string pname; if (prop) pname = prop;
-    auto v = self->objPtr->getVector( pname, i );
-    if (res == "") Py_RETURN_NONE;
-    else return PyString_FromString(res.c_str());*/
-    Py_RETURN_TRUE;
+    auto v = self->objPtr->getVector( prop?prop:"", i );
+    if (v.size() == 0) Py_RETURN_NONE;
+    if (v.size() == 1) return VRPyPropertyCaster::cast(v[0], self->objPtr->ontology.lock());
+    PyObject* pv = PyList_New(v.size());
+    for (int i=0; i<v.size(); i++) PyList_SetItem(pv, i, VRPyPropertyCaster::cast(v[i], self->objPtr->ontology.lock()) );
+    return pv;
 }
 
 
@@ -185,9 +188,7 @@ PyObject* VRPyEntity::add(VRPyEntity* self, PyObject* args) {
     const char* prop = 0;
     const char* val = 0;
     if (! PyArg_ParseTuple(args, "ss:add", &prop, &val)) return NULL;
-    string pname; if (prop) pname = prop;
-    string pval; if (val) pval = val;
-    self->objPtr->add( pname, pval );
+    self->objPtr->add( prop?prop:"", val?val:"" );
     Py_RETURN_TRUE;
 }
 
@@ -196,9 +197,14 @@ PyObject* VRPyEntity::set(VRPyEntity* self, PyObject* args) {
     const char* val = 0;
     int i = 0;
     if (! PyArg_ParseTuple(args, "ss|i:set", &prop, &val, &i)) return NULL;
-    string pname; if (prop) pname = prop;
-    string pval; if (val) pval = val;
-    self->objPtr->set( pname, pval, i );
+    self->objPtr->set( prop?prop:"", val?val:"", i );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyEntity::clear(VRPyEntity* self, PyObject* args) {
+    const char* prop = 0;
+    if (! PyArg_ParseTuple(args, "s", &prop)) return NULL;
+    self->objPtr->clear( prop?prop:"" );
     Py_RETURN_TRUE;
 }
 
@@ -209,9 +215,13 @@ PyObject* VRPyEntity::setVector(VRPyEntity* self, PyObject* args) {
     PyObject* val = 0;
     if (! PyArg_ParseTuple(args, "sO|si:setVector", &prop, &val, &vectype, &i)) return NULL;
 
-    auto o_vals = pyListToVector(val);
     vector<string> vals;
-    for (auto v : o_vals) {
+    if (VRPyVec3f::check(val)) {
+        auto v = ((VRPyVec3f*)val)->v;
+        vals.push_back( ::toString(v[0]) );
+        vals.push_back( ::toString(v[1]) );
+        vals.push_back( ::toString(v[2]) );
+    } else for (auto v : pyListToVector(val)) {
         string s = ::toString( PyFloat_AsDouble(v) );
         vals.push_back(s);
     }
@@ -228,9 +238,13 @@ PyObject* VRPyEntity::addVector(VRPyEntity* self, PyObject* args) {
     PyObject* val = 0;
     if (! PyArg_ParseTuple(args, "sO|s:addVector", &prop, &val, &vectype)) return NULL;
 
-    auto o_vals = pyListToVector(val);
     vector<string> vals;
-    for (auto v : o_vals) {
+    if (VRPyVec3f::check(val)) {
+        auto v = ((VRPyVec3f*)val)->v;
+        vals.push_back( ::toString(v[0]) );
+        vals.push_back( ::toString(v[1]) );
+        vals.push_back( ::toString(v[2]) );
+    } else for (auto v : pyListToVector(val)) {
         string s = ::toString( PyFloat_AsDouble(v) );
         vals.push_back(s);
     }
@@ -277,7 +291,8 @@ PyMethodDef VRPyOntology::methods[] = {
     {"addConcept", (PyCFunction)VRPyOntology::addConcept, METH_VARARGS, "Add a new concept - concept addConcept( str concept, str parent = "", dict properties {str:str} )" },
     {"addEntity", (PyCFunction)VRPyOntology::addEntity, METH_VARARGS, "Add a new entity - entity addEntity( str name, str concept )" },
     {"getEntity", (PyCFunction)VRPyOntology::getEntity, METH_VARARGS, "Get an entity by name - entity getEntity( str name )" },
-    {"remEntity", (PyCFunction)VRPyOntology::remEntity, METH_VARARGS, "Remove an entity by name - entity remEntity( str name )" },
+    {"remEntity", (PyCFunction)VRPyOntology::remEntity, METH_VARARGS, "Remove an entity by name - remEntity( str name )" },
+    {"remEntities", (PyCFunction)VRPyOntology::remEntities, METH_VARARGS, "Remove all entity from concept - remEntities( str concept )" },
     {"addRule", (PyCFunction)VRPyOntology::addRule, METH_VARARGS, "Add a new rule - addRule( str rule )" },
     {"merge", (PyCFunction)VRPyOntology::merge, METH_VARARGS, "Merge in another ontology - merge( ontology )" },
     {"copy", (PyCFunction)VRPyOntology::copy, METH_NOARGS, "Copy the ontology - ontology copy()" },
@@ -350,9 +365,14 @@ PyObject* VRPyOntology::getEntity(VRPyOntology* self, PyObject* args) {
 PyObject* VRPyOntology::remEntity(VRPyOntology* self, PyObject* args) {
     const char* name = 0;
     if (! PyArg_ParseTuple(args, "s:remEntity", &name) ) return NULL;
-    string sname;
-    if (name) sname = name;
-    self->objPtr->remEntity( self->objPtr->getEntity(sname) );
+    self->objPtr->remEntity( self->objPtr->getEntity(name?name:"") );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyOntology::remEntities(VRPyOntology* self, PyObject* args) {
+    const char* concept = 0;
+    if (! PyArg_ParseTuple(args, "s:remEntities", &concept) ) return NULL;
+    self->objPtr->remEntities( concept?concept:"" );
     Py_RETURN_TRUE;
 }
 

@@ -29,6 +29,7 @@ class VRGuiGeneral {
         void toggleCalib();
         void toggleHMDD();
         void toggleMarker();
+        void toggleFXAA();
 
         bool setSSAOradius( int st, double d );
         bool setSSAOkernel( int st, double d );

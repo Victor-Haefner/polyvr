@@ -55,6 +55,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
 
 PyMethodDef VRPyObject::methods[] = {
     {"getName", (PyCFunction)VRPyObject::getName, METH_NOARGS, "Return the object name" },
+    {"getBaseName", (PyCFunction)VRPyObject::getBaseName, METH_NOARGS, "Return the object base name" },
     {"setName", (PyCFunction)VRPyObject::setName, METH_VARARGS, "Set the object name" },
     {"addChild", (PyCFunction)VRPyObject::addChild, METH_VARARGS, "Add object as child" },
     {"switchParent", (PyCFunction)VRPyObject::switchParent, METH_VARARGS, "Switch object to other parent object" },
@@ -223,6 +224,11 @@ PyObject* VRPyObject::printOSG(VRPyObject* self) {
 PyObject* VRPyObject::getName(VRPyObject* self) {
     if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
     return PyString_FromString(self->objPtr->getName().c_str());
+}
+
+PyObject* VRPyObject::getBaseName(VRPyObject* self) {
+    if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
+    return PyString_FromString(self->objPtr->getBaseName().c_str());
 }
 
 PyObject* VRPyObject::setName(VRPyObject* self, PyObject* args) {

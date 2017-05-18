@@ -99,4 +99,13 @@ Vec4f VRTexture::getPixel(Vec2f uv) { // TODO: check data format (float/integer/
     return res;
 }
 
+Vec3i VRTexture::getSize() {
+    int w = img->getWidth();
+    int h = img->getHeight();
+    int d = img->getDepth();
+    return Vec3i(w,h,d);
+}
+
+
+
 

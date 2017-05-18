@@ -9,26 +9,29 @@ string toString(Graph::edge& e) {
     return toString(Vec3i(e.from, e.to, e.connection));
 }
 
-void toValue(string s, Graph::edge& e) {
+template<> void toValue(stringstream& ss, Graph::edge& e) {
     Vec3i tmp;
-    toValue(s, tmp);
+    toValue(ss, tmp);
     e.from = tmp[0];
     e.to = tmp[1];
     e.connection = Graph::CONNECTION(tmp[2]);
 }
 
 string toString(Graph::node& n) {
-    return toString(n.box);
+    return toString(n.box) + " " + toString(n.p);
 }
 
-void toValue(string s, Graph::node& n) { toValue(s, n.box); }
-
+template<> void toValue(stringstream& ss, Graph::node& n) {
+    toValue(ss, n.box);
+    toValue(ss, n.p);
+}
 
 #include "core/utils/VRStorage_template.h"
 
 
 Graph::Graph() {
     storeVecVec("edges", edges);
+    storeVec("edgesByID", edgesByID);
     storeVec("nodes", nodes);
 }
 
@@ -37,7 +40,8 @@ Graph::~Graph() {}
 Graph::edge& Graph::connect(int i, int j, CONNECTION c) {
     //if (i >= int(nodes.size()) || j >= int(nodes.size())) return edge;
     while (i >= int(edges.size())) edges.push_back( vector<edge>() );
-    edges[i].push_back(edge(i,j,c));
+    edges[i].push_back(edge(i,j,c,edgesByID.size()));
+    edgesByID.push_back(Vec2i(i,j));
     return *edges[i].rbegin();
 }
 
@@ -74,20 +78,20 @@ int Graph::getNEdges() {
     return N;
 }
 
-void Graph::setPosition(int i, Vec3f v) {
-    auto& n = nodes[i];
-    n.box.setCenter(v);
+void Graph::setPosition(int i, posePtr p) {
+    if (!p || i >= nodes.size() || i < 0) return;
+    nodes[i].p = *p;
     update(i, true);
 }
 
-Vec3f Graph::getPosition(int i) { return nodes[i].box.center(); }
+posePtr Graph::getPosition(int i) { auto p = pose::create(); *p = nodes[i].p; return p; }
 
 int Graph::addNode() { nodes.push_back(node()); return nodes.size()-1; }
 void Graph::clear() { nodes.clear(); edges.clear(); }
 void Graph::update(int i, bool changed) {}
 void Graph::remNode(int i) { nodes.erase(nodes.begin() + i); }
 
-Graph::edge::edge(int i, int j, CONNECTION c) : from(i), to(j), connection(c) {}
+Graph::edge::edge(int i, int j, CONNECTION c, int ID) : from(i), to(j), connection(c), ID(ID) {}
 
 //vector<Graph::node>::iterator Graph::begin() { return nodes.begin(); }
 //vector<Graph::node>::iterator Graph::end() { return nodes.end(); }

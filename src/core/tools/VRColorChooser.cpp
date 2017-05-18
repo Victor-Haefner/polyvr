@@ -67,8 +67,6 @@ void VRColorChooser::resolve(VRDevicePtr dev) {
     auto g = geo.lock();
     if (obj != g || !g || !obj) return;
 
-    cout << "VRColorChooser::resolve, geo: " << g->getName() << " texel: " << ins.texel << endl;
-
     setColor(colFromUV(ins.texel));
 }
 

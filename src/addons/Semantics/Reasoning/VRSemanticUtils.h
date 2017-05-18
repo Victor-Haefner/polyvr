@@ -52,7 +52,7 @@ struct Variable {
     bool valid = true;
 
     string toString();
-    bool has(VariablePtr other, VROntologyPtr onto);
+    bool has(VariablePtr other, VPath& p1, VPath& p2, VROntologyPtr onto);
     bool is(VariablePtr other, VPath& p1, VPath& p2);
 
     Variable(VROntologyPtr onto, string concept, string var);
@@ -79,6 +79,7 @@ struct Term {
     string computeExpression(VRSemanticContextPtr c);
 
     bool is(Term& t, VRSemanticContextPtr context);
+    bool has(Term& t, VRSemanticContextPtr context);
 };
 
 struct Query {

@@ -7,6 +7,7 @@
 #include <list>
 #include "core/utils/toString.h"
 #include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiConsole.h"
 
 using namespace std;
 using namespace OSG;
@@ -53,7 +54,7 @@ bool VRReasoner::startswith(string s, string subs) {
 
 void VRReasoner::print(const string& s) {
     if (verbConsole) cout << pre << s << endl;
-    if (verbGui) VRGuiManager::get()->printToConsole( "Reasoning", s+"\n" );
+    if (verbGui) VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n" );
 }
 
 void VRReasoner::print(const string& s, COLOR c) {
@@ -67,7 +68,14 @@ void VRReasoner::print(const string& s, COLOR c) {
         cout << pre << s << colEnd << endl;
     }
 
-    if (verbGui) VRGuiManager::get()->printToConsole( "Reasoning", s+"\n" ); // TODO
+    if (verbGui) {
+        switch(c) {
+            case BLUE: VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n", "blue" );
+            case RED: VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n", "red" );
+            case GREEN: VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n", "green" );
+            case YELLOW: VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n", "yellow" );
+        }
+    }
 }
 
 bool VRReasoner::findRule(VRStatementPtr statement, VRSemanticContextPtr context) {
@@ -179,7 +187,7 @@ bool VRReasoner::has(VRStatementPtr statement, VRSemanticContextPtr context) { /
     auto& left = statement->terms[0];
     auto& right = statement->terms[1];
 
-    bool b = left.var->has(right.var, context->onto);
+    bool b = left.has(right, context);
     print("  " + left.str + " has " + (b?"":"not") + " " + right.str);
     print("RES " + toString(&right.var) + "   " + right.var->toString());
     if (b) { statement->state = 1; return true; }

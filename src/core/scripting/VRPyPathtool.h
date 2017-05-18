@@ -14,7 +14,7 @@ struct VRPyPathtool : VRPyBaseT<OSG::VRPathtool> {
     static PyObject* extrude(VRPyPathtool* self, PyObject* args);
     static PyObject* select(VRPyPathtool* self, PyObject* args);
     static PyObject* deselect(VRPyPathtool* self);
-    static PyObject* setVisible(VRPyPathtool* self, PyObject* args);
+    static PyObject* setVisuals(VRPyPathtool* self, PyObject* args);
     static PyObject* getPaths(VRPyPathtool* self, PyObject* args);
     static PyObject* getPath(VRPyPathtool* self, PyObject* args);
     static PyObject* update(VRPyPathtool* self);

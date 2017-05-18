@@ -9,7 +9,7 @@
 #include <OpenSG/OSGImageForeground.h>
 #include "core/objects/VRObjectFwd.h"
 #include "core/setup/VRSetupFwd.h"
-#include "core/scene/VRRenderManager.h"
+#include "core/scene/rendering/VRRenderManager.h"
 
 namespace xmlpp{ class Element; }
 
@@ -104,7 +104,8 @@ class VRView : public std::enable_shared_from_this<VRView> {
         void setID(int i);
 
         string getName();
-        void resize(Vec2i s);
+        void setSize(Vec2i s);
+        Vec2i getSize();
 
         void setRoot(VRObjectPtr root, VRTransformPtr _real);
         void setUser(VRTransformPtr u);

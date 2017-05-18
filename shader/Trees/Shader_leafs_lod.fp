@@ -23,7 +23,8 @@ void main( void ) {
 	color = vc;
 	vec4 noise = texture(tex,vp.xyz);
 	color.xyz *= noise.a;
-	//if (color.a < 0.5) discard;
+	//if (noise.a > 0.98) discard;
+	if (noise.a < 0.99999) discard;
 	//gl_FragColor = c;
 	applyBlinnPhong();
 }

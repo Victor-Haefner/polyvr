@@ -70,21 +70,37 @@ void Variable::addEntity(VREntityPtr e) {
     evaluations[e->ID] = Evaluation();
 }
 
-bool Variable::has(VariablePtr other, VROntologyPtr onto) {
+bool Variable::has(VariablePtr other, VPath& path1, VPath& path2, VROntologyPtr onto) {
     map<VREntityPtr, vector<VREntityPtr>> matches;
 
-    // get all matches
-    for (auto i1 : entities) { // all entities of that variable
-        for (auto i2 : other->entities) { // check each instance of the other variable
-            for (auto p : i1.second->properties) { // all properties of each instance
-                for (auto v : p.second) {
-                    if (v->value == other->value) matches[i1.second].push_back(0); // TODO: direct match with other variable value
-                    if (v->value == i2.second->getName()) {
-                        matches[i1.second].push_back(i2.second);
-                    }
-                }
+    map<VREntity*, bool> visited;
+
+    function<bool(VREntityPtr, string&)> computeMatches = [&](VREntityPtr e, string& oName) -> bool {
+        if (!e) return false;
+        if (visited.count(e.get())) return false; // check for cycles / visited graph nodes
+        visited[e.get()] = true;
+
+        for (auto p : e->properties) { // property vectors of local entity
+            for (auto v : p.second) { // local properties
+                //if (v->value == other->value) matches[e].push_back(0); // TODO: direct match with other variable value
+                if (v->value == oName) return true;
+                //auto childEntity = onto->getEntity(v->value); // TODO: this might by stupid..
+                //if (childEntity && computeMatches(childEntity, oName)) return true;
             }
         }
+        return false;
+    };
+
+    // get all matches
+    for (auto i2 : other->entities) { // check each instance of the other variable
+        string oName = i2.second->getName();
+        for (auto i1 : entities) { // all entities of that variable
+            for (auto v : path1.getValue(i1.second)) {
+                bool doMatch = computeMatches(onto->getEntity(v), oName);
+                if (doMatch) matches[i1.second].push_back(i2.second);
+            }
+        }
+        visited.clear();
     }
 
     // remove non matched entities
@@ -94,7 +110,7 @@ bool Variable::has(VariablePtr other, VROntologyPtr onto) {
         if (matches.count(i1.second) == 0) toDiscard1.push_back(i1.second);
     }
 
-    for (auto i2 : other->entities) { // check each instance of the other variable
+    for (auto i2 : other->entities) { // check each entity of the other variable
         bool found = false;
         for (auto ev : matches) {
             for (auto e : ev.second) {
@@ -112,7 +128,7 @@ bool Variable::has(VariablePtr other, VROntologyPtr onto) {
     return (matches.size() > 0);
 }
 
-bool Variable::is(VariablePtr other, VPath& p1, VPath& p2) {
+bool Variable::is(VariablePtr other, VPath& path1, VPath& path2) {
     if (!valid || !other->valid) return false;
 
     auto hasSameVal = [&](vector<string>& val1, vector<string>& val2) {
@@ -125,7 +141,7 @@ bool Variable::is(VariablePtr other, VPath& p1, VPath& p2) {
     auto hasSameVal2 = [&](vector<string>& val1) {
         bool res = false;
         for (auto e : other->entities) {
-            vector<string> val2 = p2.getValue(e.second);
+            vector<string> val2 = path2.getValue(e.second);
             //for (auto v : val2) cout << " var2 value: " << v << endl;
             auto r = hasSameVal(val1, val2);
             if (!r) evaluations[e.first].state = Evaluation::INVALID;
@@ -140,7 +156,7 @@ bool Variable::is(VariablePtr other, VPath& p1, VPath& p2) {
     //cout << "Variable::is " << toString() << " at path " << p1.toString() << " =?= " << other->toString() << " at path " << p2.toString() << endl;
     bool res = false;
     for (auto e : entities) {
-        vector<string> val1 = p1.getValue(e.second);
+        vector<string> val1 = path1.getValue(e.second);
         //for (auto v : val1) cout << " var1 value: " << v << endl;
         auto r = hasSameVal2(val1);
         if (!r) evaluations[e.first].state = Evaluation::INVALID;
@@ -184,15 +200,34 @@ int VPath::size() {
 vector<string> VPath::getValue(VREntityPtr e) {
     vector<string> res;
     if (!e) return res;
-    if (size() == 2) {
-        string m = first;
+    auto onto = e->ontology.lock();
+    if (!onto) return res;
+
+    if (size() == 1) { res.push_back( e->getName() ); return res; }
+
+    auto getEntityProperties = [&](VREntityPtr e, string m) {
+        vector<VRPropertyPtr> res;
         auto prop = e->getProperty(m);
         if (!prop) return res;
         if (!e->properties.count(prop->getName())) return res;
-        for (auto p : e->properties[prop->getName()]) res.push_back(p->value);
+        for (auto p : e->properties[prop->getName()]) res.push_back(p);
+        return res;
+    };
+
+    if (size() == 2) {
+        for (auto p : getEntityProperties(e,nodes[1])) res.push_back(p->value);
         return res;
     }
-    res.push_back( e->getName() );
+
+    if (size() == 3) {
+        for (auto p : getEntityProperties(e,nodes[1])) {
+            auto e2 = onto->getEntity(p->value);
+            if (!e2) continue;
+            for (auto p : getEntityProperties(e2,nodes[2])) res.push_back(p->value);
+        }
+        return res;
+    }
+
     return res;
 }
 
@@ -299,6 +334,15 @@ bool Term::is(Term& t, VRSemanticContextPtr context) {
         v = Variable::create(0,res);
     }
     return var->is(v, path, t.path);
+}
+
+bool Term::has(Term& t, VRSemanticContextPtr context) {
+    auto v = t.var;
+    /*if (t.isMathExpression()) { // TODO: sure this does not apply?
+        auto res = t.computeExpression(context);
+        v = Variable::create(0,res);
+    }*/
+    return var->has(v, path, t.path, context->onto);
 }
 
 void Query::checkState() {

@@ -1,20 +1,19 @@
 #include "VRScriptManager.h"
+#include "core/utils/VRStorage_template.h"
+#include "core/utils/VROptions.h"
+#include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiConsole.h"
+#include "VRScript.h"
+#include "VRSceneModules.h"
+#include "VRSceneGlobals.h"
+#include "VRPyListMath.h"
 
 #undef _XOPEN_SOURCE
 #undef _POSIX_C_SOURCE
 #include <Python.h>
-
-#include "core/utils/VRStorage_template.h"
-#include "core/utils/VROptions.h"
-#include "core/gui/VRGuiManager.h"
-#include "VRScript.h"
 #include <iostream>
 #include <algorithm>
 #include <memory>
-
-#include "VRSceneModules.h"
-#include "VRSceneGlobals.h"
-#include "VRPyListMath.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -136,14 +135,14 @@ void VRScriptManager::updateScript(string name, string core, bool compile) {
 static PyObject* writeOut(PyObject *self, PyObject *args) {
     const char *what;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
-    VRGuiManager::get()->printToConsole("Console", what);
+    VRGuiManager::get()->getConsole("Console")->write(what);
     return Py_BuildValue("");
 }
 
 static PyObject* writeErr(PyObject *self, PyObject *args) {
     const char *what;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
-    VRGuiManager::get()->printToConsole("Errors", what);
+    VRGuiManager::get()->getConsole("Errors")->write(what);
     return Py_BuildValue("");
 }
 
@@ -186,16 +185,10 @@ void VRScriptManager::initPyModules() {
 
     PyDict_SetItemString(pLocal, "__builtins__", PyEval_GetBuiltins());
     PyDict_SetItemString(pGlobal, "__builtins__", PyEval_GetBuiltins());
-#ifndef _WIN32
     VRPyListMath::init(pModBase);
-#endif
 
     PyObject* sys_path = PySys_GetObject((char*)"path");
     PyList_Append(sys_path, PyString_FromString(".") );
-
-    //string sys_path = PyString_AsString(PySys_GetObject("path"));
-    //sys_path += ":.";
-    //PySys_SetPath(sys_path.c_str());
 
     pModVR = Py_InitModule3("VR", VRSceneGlobals::methods, "VR Module");
 
@@ -204,14 +197,10 @@ void VRScriptManager::initPyModules() {
 
 	if (!VROptions::get()->getOption<bool>("standalone")) initVRPyStdOut();
 
-    // add cython local path to python search path
-    PyRun_SimpleString(
+    PyRun_SimpleString( // add cython local path to python search path
         "import sys\n"
         "sys.path.append('cython/')\n"
     );
-
-    //PyEval_ReleaseLock();
-    //PyEval_SaveThread();
 }
 
 vector<string> VRScriptManager::getPyVRModules() {

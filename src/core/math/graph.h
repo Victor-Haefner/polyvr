@@ -5,6 +5,7 @@
 #include <OpenSG/OSGVector.h>
 #include "core/math/VRMathFwd.h"
 #include "core/math/boundingbox.h"
+#include "core/math/pose.h"
 #include "core/utils/VRStorage.h"
 
 using namespace std;
@@ -20,19 +21,22 @@ class Graph : public VRStorage {
         };
 
         struct node {
+            pose p;
             boundingbox box;
         };
 
         struct edge {
+            int ID = 0;
             int from = 0;
             int to = 0;
             CONNECTION connection = SIMPLE;
 
-            edge(int i = 0, int j = 0, CONNECTION c = SIMPLE);
+            edge(int i = 0, int j = 0, CONNECTION c = SIMPLE, int ID = 0);
         };
 
     protected:
         vector< vector<edge> > edges;
+        vector< Vec2i > edgesByID;
         vector< node > nodes;
 
     public:
@@ -49,8 +53,8 @@ class Graph : public VRStorage {
         int getNEdges();
         int size();
         bool connected(int i1, int i2);
-        void setPosition(int i, Vec3f v);
-        Vec3f getPosition(int i);
+        void setPosition(int i, posePtr v);
+        posePtr getPosition(int i);
 
         virtual int addNode();
         virtual void remNode(int i);

@@ -17,7 +17,7 @@
 #include "core/utils/VRUtilsFwd.h"
 #include "core/utils/VRTimer.h"
 #include "VRBackground.h"
-#include "VRRenderManager.h"
+#include "rendering/VRRenderManager.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

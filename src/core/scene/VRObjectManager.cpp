@@ -41,7 +41,7 @@ void VRObjectManager::setup() {
         if (!templatesByName.count(t.second->type)) { cout << "VRObjectManager::setup Warning, " << t.second->type << " is not a template!" << endl; continue; }
         auto o = copy(t.second->type, t.second->pos, false);
         o->show();
-        o->setPose(t.second->pos);
+        o->setWorldPose(t.second->pos);
     }
 }
 
@@ -54,9 +54,9 @@ VRTransformPtr VRObjectManager::copy(string name, posePtr p, bool addToStore) {
     auto e = Entry::create();
     e->set(p,name);
     if (addToStore) entries[dupe->getName()] = e;
-    dupe->setPose(p);
-    dupe->setPersistency(0);
     addChild(dupe);
+    dupe->setWorldPose(p);
+    dupe->setPersistency(0);
     dupe->addAttachment("asset",0);
     return dupe;
 }
@@ -64,7 +64,7 @@ VRTransformPtr VRObjectManager::copy(string name, posePtr p, bool addToStore) {
 VRTransformPtr VRObjectManager::add(VRTransformPtr s) {
     if (!s) return 0;
     addTemplate(s, s->getBaseName());
-    return copy(s->getBaseName(), s->getPose());
+    return copy(s->getBaseName(), s->getWorldPose());
 }
 
 void VRObjectManager::addTemplate(VRTransformPtr s, string name) {

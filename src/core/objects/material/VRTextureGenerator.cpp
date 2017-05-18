@@ -8,6 +8,7 @@
 #include <OpenSG/OSGMatrixUtility.h>
 #include "core/objects/material/VRTexture.h"
 #include "core/math/path.h"
+#include "core/math/polygon.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -86,6 +87,15 @@ void VRTextureGenerator::drawPath(pathPtr p, Vec4f c, float w) {
     layers.push_back(l);
 }
 
+void VRTextureGenerator::drawPolygon(polygonPtr p, Vec4f c, float h) {
+    Layer l;
+    l.type = POLYGON;
+    l.pgon = p;
+    l.c41 = c;
+    l.amount = h;
+    layers.push_back(l);
+}
+
 void VRTextureGenerator::applyFill(Vec3f* data, Vec4f c) {
     for (int k=0; k<depth; k++) {
         for (int j=0; j<height; j++) {
@@ -119,7 +129,6 @@ void VRTextureGenerator::applyPixel(Vec4f* data, Vec3i p, Vec4f c) {
     int d = p[2]*height*width + p[1]*width + p[0];
     int N = depth*height*width;
     if (d >= N || d < 0) { cout << "Warning: applyPixel failed, pixel " << d << " " << p << " " << height << " " << width << " " << depth << " out of range! (buffer size is " << N << ")" << endl; return; }
-    //data[d] = Vec4f(c[0], c[1], c[2], 1.0)*c[3] + data[d]*(1.0-c[3]);
     data[d] = c;
 }
 
@@ -130,71 +139,139 @@ void VRTextureGenerator::applyPixel(Vec3f* data, Vec3i p, Vec4f c) {
     data[d] = Vec3f(c[0], c[1], c[2])*c[3] + data[d]*(1.0-c[3]);
 }
 
+Vec3i VRTextureGenerator::clamp(Vec3i p) {
+    if (p[0] < 0) p[0] = 0;
+    if (p[1] < 0) p[1] = 0;
+    if (p[2] < 0) p[2] = 0;
+    if (p[0] >= width)  p[0] = width-1;
+    if (p[1] >= height) p[1] = height-1;
+    if (p[2] >= depth)  p[2] = depth-1;
+    return p;
+}
+
 void VRTextureGenerator::applyLine(Vec3f* data, Vec3f p1, Vec3f p2, Vec4f c, float w) {
-    Vec3f pm = (p1+p2)*0.5;
+    auto upscale = [&](Vec3f& p) {
+        p = Vec3f(p[0]*width, p[1]*height, p[2]*depth);
+    };
+
+    auto getLeadDim = [](Vec3f d) {
+        Vec3i iDs = Vec3i(0,1,2);
+        if (abs(d[1]) > abs(d[0]) && abs(d[1]) > abs(d[2])) iDs = Vec3i(1,0,2);
+        if (abs(d[2]) > abs(d[0]) && abs(d[2]) > abs(d[1])) iDs = Vec3i(2,0,1);
+        return iDs;
+    };
+
+    auto BresenhamPixels = [&](Vec3f p1, Vec3f p2) {
+        vector<Vec3i> pixels;
+        Vec3f d = p2-p1;
+        Vec3i pi = Vec3i(p1);
+        Vec3i iDs = getLeadDim(d);
+        int I = iDs[0];
+
+        Vec2f derr; // slopes
+        if (I == 0) derr = Vec2f(abs(d[1]/d[0]), abs(d[2]/d[0]));
+        if (I == 1) derr = Vec2f(abs(d[0]/d[1]), abs(d[2]/d[1]));
+        if (I == 2) derr = Vec2f(abs(d[0]/d[2]), abs(d[1]/d[2]));
+
+        Vec2f err = derr - Vec2f(0.5,0.5);
+
+        int k = 1;
+        if (d[I] < 0) k = -1;
+
+        for (; abs(pi[I]) < abs(p1[I]+d[I]); pi[I] += k) {
+            pixels.push_back(pi);
+            err += derr;
+            if (err[0] >= 0.5) { pi[iDs[1]]++; err[0] -= 1.0; }
+            if (err[1] >= 0.5) { pi[iDs[2]]++; err[1] -= 1.0; }
+        }
+
+        return pixels;
+    };
+
+    upscale(p1);
+    upscale(p2);
     Vec3f d = p2-p1;
+    Vec3i iDs = getLeadDim(d);
     Vec3f u = Vec3f(0,1,0);
-    if (d[1] > d[2]) u = Vec3f(0,0,-1);
+    if (iDs[0] == 1) u = Vec3f(0,0,1);
+    Vec3f p3 = d.cross(u);
+    Vec3f p4 = d.cross(p3);
 
-    float l2 = (p2-p1).length()*0.5;
-    float w2 = w*0.5;
+    p3.normalize(); p3 *= w*0.5; upscale(p3);
+    p4.normalize(); p4 *= w*0.5; upscale(p4);
 
-    Matrix M; // box transformation
-    MatrixLookAt(M, pm, p1, u);
+    auto pixels1 = BresenhamPixels(p1,p2);
+    auto pixels2 = BresenhamPixels(-p3,p3);
+    auto pixels3 = BresenhamPixels(-p4,p4);
 
-    int X2 = ceil(w2*width);
-    int Y2 = ceil(w2*height);
-    int L2 = ceil(l2*depth);
-
-    for (int k=-L2; k<=L2; k++) {
-        for (int j=-Y2; j<=Y2; j++) {
-            for (int i=-X2; i<=X2; i++) {
-                Pnt3f pi = Pnt3f(float(i)/width, float(j)/height, float(k)/depth);
-                M.mult(pi, pi); // in tex coords
-                Vec3i pI(pi[0]*width, pi[1]*height, pi[2]*depth);
-                applyPixel(data, pI+Vec3i(0,0,0), c);
-                applyPixel(data, pI+Vec3i(1,0,0), c);
-                applyPixel(data, pI+Vec3i(0,1,0), c);
-                applyPixel(data, pI+Vec3i(0,0,1), c);
-                applyPixel(data, pI+Vec3i(1,1,0), c);
-                applyPixel(data, pI+Vec3i(0,1,1), c);
-                applyPixel(data, pI+Vec3i(1,0,1), c);
-                applyPixel(data, pI+Vec3i(1,1,1), c);
+    for (auto pi : pixels1) {
+        for (auto pj : pixels2) {
+            for (auto pk : pixels3) {
+                applyPixel(data, clamp(pi+pj+pk), c);
             }
         }
     }
 }
 
-void VRTextureGenerator::applyLine(Vec4f* data, Vec3f p1, Vec3f p2, Vec4f c, float w) {
-    Vec3f pm = (p1+p2)*0.5;
+void VRTextureGenerator::applyLine(Vec4f* data, Vec3f p1, Vec3f p2, Vec4f c, float w) { // Bresenham's
+    auto upscale = [&](Vec3f& p) {
+        p = Vec3f(p[0]*width, p[1]*height, p[2]*depth);
+    };
+
+    auto getLeadDim = [](Vec3f d) {
+        Vec3i iDs = Vec3i(0,1,2);
+        if (abs(d[1]) > abs(d[0]) && abs(d[1]) > abs(d[2])) iDs = Vec3i(1,0,2);
+        if (abs(d[2]) > abs(d[0]) && abs(d[2]) > abs(d[1])) iDs = Vec3i(2,0,1);
+        return iDs;
+    };
+
+    auto BresenhamPixels = [&](Vec3f p1, Vec3f p2) {
+        vector<Vec3i> pixels;
+        Vec3f d = p2-p1;
+        Vec3i iDs = getLeadDim(d);
+        int I = iDs[0];
+
+        Vec2f derr; // slopes
+        if (I == 0) derr = Vec2f(abs(d[1]/d[0]), abs(d[2]/d[0]));
+        if (I == 1) derr = Vec2f(abs(d[0]/d[1]), abs(d[2]/d[1]));
+        if (I == 2) derr = Vec2f(abs(d[0]/d[2]), abs(d[1]/d[2]));
+        Vec2f err = derr - Vec2f(0.5,0.5);
+
+        Vec3i pi1 = Vec3i(p1);
+        Vec3i pi2 = Vec3i(p2);
+        if (pi1[I] > pi2[I]) swap(pi1, pi2);
+        if (pi1[I] == pi2[I]) pi2[I]++;
+        Vec3i pi = pi1;
+
+        for (; pi[I] < pi2[I]; pi[I]++) {
+            pixels.push_back(pi);
+            err += derr;
+            if (err[0] >= 0.5) { pi[iDs[1]]++; err[0] -= 1.0; }
+            if (err[1] >= 0.5) { pi[iDs[2]]++; err[1] -= 1.0; }
+        }
+        return pixels;
+    };
+
+    upscale(p1);
+    upscale(p2);
     Vec3f d = p2-p1;
+    Vec3i iDs = getLeadDim(d);
     Vec3f u = Vec3f(0,1,0);
-    if (d[1] > d[2]) u = Vec3f(0,0,-1);
+    if (iDs[0] == 1) u = Vec3f(0,0,1);
+    Vec3f p3 = d.cross(u);
+    Vec3f p4 = d.cross(p3);
 
-    float l2 = d.length()*0.5;
-    float w2 = w*0.5;
+    p3.normalize(); p3 *= w*0.5; upscale(p3);
+    p4.normalize(); p4 *= w*0.5; upscale(p4);
 
-    Matrix M; // box transformation
-    MatrixLookAt(M, pm, p1, u);
+    auto pixels1 = BresenhamPixels(p1,p2);
+    auto pixels2 = BresenhamPixels(-p3,p3);
+    auto pixels3 = BresenhamPixels(-p4,p4);
 
-    int X2 = ceil(w2*width);
-    int Y2 = ceil(w2*height);
-    int L2 = ceil(l2*depth);
-
-    for (int k=-L2; k<=L2; k++) {
-        for (int j=-Y2; j<=Y2; j++) {
-            for (int i=-X2; i<=X2; i++) {
-                Pnt3f pi = Pnt3f(float(i)/width, float(j)/height, float(k)/depth);
-                M.mult(pi, pi); // in tex coords
-                Vec3i pI(pi[0]*width, pi[1]*height, pi[2]*depth);
-                applyPixel(data, pI+Vec3i(0,0,0), c);
-                applyPixel(data, pI+Vec3i(1,0,0), c);
-                applyPixel(data, pI+Vec3i(0,1,0), c);
-                applyPixel(data, pI+Vec3i(0,0,1), c);
-                applyPixel(data, pI+Vec3i(1,1,0), c);
-                applyPixel(data, pI+Vec3i(0,1,1), c);
-                applyPixel(data, pI+Vec3i(1,0,1), c);
-                applyPixel(data, pI+Vec3i(1,1,1), c);
+    for (auto pi : pixels1) {
+        for (auto pj : pixels2) {
+            for (auto pk : pixels3) {
+                applyPixel(data, clamp(pi+pj+pk), c);
             }
         }
     }
@@ -203,15 +280,33 @@ void VRTextureGenerator::applyLine(Vec4f* data, Vec3f p1, Vec3f p2, Vec4f c, flo
 // TODO: fix holes between curved path segments
 void VRTextureGenerator::applyPath(Vec3f* data, pathPtr p, Vec4f c, float w) {
     auto pos = p->getPositions();
-    for (uint i=1; i<pos.size(); i++) {
-        applyLine(data, pos[i-1], pos[i], c, w);
-    }
+    for (uint i=1; i<pos.size(); i++) applyLine(data, pos[i-1], pos[i], c, w);
 }
 
 void VRTextureGenerator::applyPath(Vec4f* data, pathPtr p, Vec4f c, float w) {
     auto pos = p->getPositions();
-    for (uint i=1; i<pos.size(); i++) {
-        applyLine(data, pos[i-1], pos[i], c, w);
+    for (uint i=1; i<pos.size(); i++) applyLine(data, pos[i-1], pos[i], c, w);
+}
+
+void VRTextureGenerator::applyPolygon(Vec3f* data, polygonPtr p, Vec4f c, float h) {
+    for (int j=0; j<height; j++) {
+        for (int i=0; i<width; i++) {
+            Vec2f pos = Vec2f(float(i)/width, float(j)/height);
+            if (p->isInside(pos)) {
+                for (int k=0; k<depth; k++) applyPixel(data, Vec3i(i,j,k), c);
+            }
+        }
+    }
+}
+
+void VRTextureGenerator::applyPolygon(Vec4f* data, polygonPtr p, Vec4f c, float h) {
+    for (int j=0; j<height; j++) {
+        for (int i=0; i<width; i++) {
+            Vec2f pos = Vec2f(float(i)/width, float(j)/height);
+            if (p->isInside(pos)) {
+                for (int k=0; k<depth; k++) applyPixel(data, Vec3i(i,j,k), c);
+            }
+        }
     }
 }
 
@@ -233,6 +328,7 @@ VRTexturePtr VRTextureGenerator::compose(int seed) {
             if (l.type == FILL) applyFill(data3, l.c41);
             if (l.type == PIXEL) applyPixel(data3, l.p1, l.c41);
             if (l.type == PATH) applyPath(data3, l.p, l.c41, l.amount);
+            if (l.type == POLYGON) applyPolygon(data3, l.pgon, l.c41, l.amount);
         }
         if (hasAlpha) {
             if (l.type == BRICKS) VRBricks::apply(data4, dims, l.amount, l.c41, l.c42);
@@ -241,6 +337,7 @@ VRTexturePtr VRTextureGenerator::compose(int seed) {
             if (l.type == FILL) applyFill(data4, l.c41);
             if (l.type == PIXEL) applyPixel(data4, l.p1, l.c41);
             if (l.type == PATH) applyPath(data4, l.p, l.c41, l.amount);
+            if (l.type == POLYGON) applyPolygon(data4, l.pgon, l.c41, l.amount);
         }
     }
 

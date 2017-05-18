@@ -99,6 +99,7 @@ void VRGeoData::reset() {
     else data->texs = GeoVec2fProperty::create();
     if (data->texs2) data->texs2->clear();
     else data->texs2 = GeoVec2fProperty::create();
+    data->lastPrim = -1;
 }
 
 bool VRGeoData::valid() const {
@@ -217,6 +218,11 @@ void VRGeoData::updateType(int t, int N) {
 }
 
 void VRGeoData::pushQuad(int i, int j, int k, int l) {
+    int N = size();
+    if (i < 0) i += N;
+    if (j < 0) j += N;
+    if (k < 0) k += N;
+    if (l < 0) l += N;
     data->indices->addValue(i);
     data->indices->addValue(j);
     data->indices->addValue(k);
@@ -231,6 +237,10 @@ void VRGeoData::pushPatch(int N) {
 }
 
 void VRGeoData::pushTri(int i, int j, int k) {
+    int N = size();
+    if (i < 0) i += N;
+    if (j < 0) j += N;
+    if (k < 0) k += N;
     data->indices->addValue(i);
     data->indices->addValue(j);
     data->indices->addValue(k);
@@ -238,20 +248,24 @@ void VRGeoData::pushTri(int i, int j, int k) {
 }
 
 void VRGeoData::pushLine(int i, int j) {
+    int N = size();
+    if (i < 0) i += N;
+    if (j < 0) j += N;
     data->indices->addValue(i);
     data->indices->addValue(j);
     updateType(GL_LINES, 2);
 }
 
 void VRGeoData::pushPoint(int i) {
-    if (i < 0) i = data->pos->size()-1;
+    int N = size();
+    if (i < 0) i += N;
     data->indices->addValue(i);
     updateType(GL_POINTS, 1);
 }
 
-void VRGeoData::pushLine() { int N = size(); pushLine(N-2, N-1); }
-void VRGeoData::pushTri() { int N = size(); pushTri(N-3, N-2, N-1); }
-void VRGeoData::pushQuad() { int N = size(); pushQuad(N-4, N-3, N-2, N-1); }
+void VRGeoData::pushLine() { int N = size(); if (N > 1) pushLine(N-2, N-1); }
+void VRGeoData::pushTri() { int N = size(); if (N > 2) pushTri(N-3, N-2, N-1); }
+void VRGeoData::pushQuad() { int N = size(); if (N > 3) pushQuad(N-4, N-3, N-2, N-1); }
 
 void VRGeoData::pushPrim(Primitive p) {
     int No = primNOffset(p.lid, p.type);

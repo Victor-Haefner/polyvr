@@ -29,9 +29,21 @@
 
 #include <OpenSG/OSGIntersectAction.h>
 #include <OpenSG/OSGLineIterator.h>
+#include <OpenSG/OSGSimpleAttachment.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+
+map<Geometry*, VRGeometry*> geoAttachmentMap;
+
+const VRGeometryPtr getGeometryAttachment(Geometry* g) {
+    VRGeometryPtr z;
+    return geoAttachmentMap.count(g) ? geoAttachmentMap[g]->ptr() : z;
+}
+
+void setGeometryAttachment(Geometry* g, VRGeometry* geo) {
+    geoAttachmentMap[g] = geo;
+}
 
 VRGeometry::Reference::Reference(int t, string p) {
     type = t;
@@ -49,24 +61,16 @@ VRObjectPtr VRGeometry::copy(vector<VRObjectPtr> children) {
     return geo;
 }
 
-class geoProxy : public Geometry {
+class geoIntersectionProxy : public Geometry {
     public:
-        Action::ResultE intersectEnter(Action* action) {
-            auto type = getTypes()->getValue(0);
-            if ( type != GL_PATCHES ) {
-                return Geometry::intersectEnter(action);
-            } else return Action::Skip;
-
-            if ( getPatchVertices() != 4 ) {
-                cout << "Warning: patch vertices is " + toString(getPatchVertices()) + ", not 4, skipping intersect action!\n";
-                return Action::Skip;
-            }
-
-            IntersectAction* ia = dynamic_cast<IntersectAction*>(action);
+        bool intersectVolume(IntersectAction* ia) {
             ia->getActNode()->updateVolume();
             const BoxVolume& bv = ia->getActNode()->getVolume();
-            if (bv.isValid() && !bv.intersect(ia->getLine())) return Action::Skip; //bv missed -> can not hit children
+            if (bv.isValid() && !bv.intersect(ia->getLine())) return false;
+            return true;
+        }
 
+        bool intersectQuadPatch(IntersectAction* ia) {
             UInt32 numTris = 0;
             Real32 t;
             Vec3f norm;
@@ -87,24 +91,53 @@ class geoProxy : public Geometry {
 
                 numTris += 2;
                 if (ia_line.intersect(p1, p2, p3, t, &norm)) {
-                    //ia->setHit(t, ia->getActNode(), i/4, norm, -1);
+                    ia->setHit(t, ia->getActNode(), i/4, norm, -1);
                 }
                 if (ia_line.intersect(p1, p3, p4, t, &norm)) {
-                    //ia->setHit(t, ia->getActNode(), i/4+1, norm, -1);
+                    ia->setHit(t, ia->getActNode(), i/4+1, norm, -1);
                 }
             }
 
             ia->getStatCollector()->getElem(IntersectAction::statNTriangles)->add(numTris);
-            return Action::Skip;
+            return ia->didHit();
+        }
+
+        Action::ResultE intersectDefaultGeometry(Action* action) {
+            if (!getTypes()) return Action::Skip;
+            auto type = getTypes()->getValue(0);
+            if ( type != GL_PATCHES ) return Geometry::intersectEnter(action);
+
+            if ( getPatchVertices() != 4 ) {
+                cout << "Warning: patch vertices is " + toString(getPatchVertices()) + ", not 4, skipping intersect action!\n";
+                return Action::Skip;
+            }
+
+            IntersectAction* ia = dynamic_cast<IntersectAction*>(action);
+            if (!intersectVolume(ia)) return Action::Skip; //bv missed -> can not hit children
+
+            intersectQuadPatch(ia);
+            //return Action::Skip;
             return Action::Continue;
         }
+
+        Action::ResultE intersectEnter(Action* action) {
+            auto vrGeo = getGeometryAttachment(this);
+            if (vrGeo) return vrGeo->applyIntersectionAction(action) ? Action::Continue : Action::Skip;
+            return intersectDefaultGeometry(action);
+        }
 };
+
+bool VRGeometry::applyIntersectionAction(Action* action) {
+    if (!mesh || !mesh->geo) return false;
+    auto proxy = (geoIntersectionProxy*)mesh->geo.get();
+    if (!proxy) return false;
+    return proxy->intersectDefaultGeometry(action) == Action::Continue;
+}
 
 /** initialise a geometry object with his name **/
 VRGeometry::VRGeometry(string name) : VRTransform(name) {
     type = "Geometry";
     addAttachment("geometry", 0);
-    if (!meshSet) setMesh();
 
     store("sourcetype", &source.type);
     store("sourceparam", &source.parameter);
@@ -112,23 +145,22 @@ VRGeometry::VRGeometry(string name) : VRTransform(name) {
     regStorageSetupFkt( VRFunction<int>::create("geometry_update", boost::bind(&VRGeometry::setup, this)) );
 
     // override intersect action callbacks for geometry
-    IntersectAction::registerEnterDefault( Geometry::getClassType(), reinterpret_cast<Action::Callback>(&geoProxy::intersectEnter));
+    IntersectAction::registerEnterDefault( Geometry::getClassType(), reinterpret_cast<Action::Callback>(&geoIntersectionProxy::intersectEnter));
 }
 
 VRGeometry::VRGeometry(string name, bool hidden) : VRTransform(name) {
     setNameSpace("system");
     type = "Geometry";
     addAttachment("geometry", 0);
-    if (!meshSet) setMesh();
     if (hidden) setPersistency(0);
 }
 
 VRGeometry::~VRGeometry() {}
 
-VRGeometryPtr VRGeometry::create(string name) { return shared_ptr<VRGeometry>(new VRGeometry(name) ); }
-VRGeometryPtr VRGeometry::create(string name, bool hidden) { return shared_ptr<VRGeometry>(new VRGeometry(name, hidden) ); }
+VRGeometryPtr VRGeometry::create(string name) { auto g = VRGeometryPtr(new VRGeometry(name) ); g->setMesh(); return g; }
+VRGeometryPtr VRGeometry::create(string name, bool hidden) { auto g = VRGeometryPtr(new VRGeometry(name, hidden) ); g->setMesh(); return g; }
 VRGeometryPtr VRGeometry::create(string name, string primitive, string params) {
-    auto g = shared_ptr<VRGeometry>(new VRGeometry(name) );
+    auto g = VRGeometryPtr(new VRGeometry(name) );
     g->setPrimitive(primitive, params);
     return g;
 }
@@ -140,6 +172,7 @@ void VRGeometry::setMesh(OSGGeometryPtr g, Reference ref, bool keep_material) {
     if (g->geo == 0) return;
     if (mesh_node && mesh_node->node && getNode() && getNode()->node) getNode()->node->subChild(mesh_node->node);
 
+    setGeometryAttachment(g->geo, this);
     mesh = g;
     mesh_node = OSGObject::create( makeNodeFor(g->geo) );
     OSG::setName(mesh_node->node, getName());
@@ -378,18 +411,26 @@ void VRGeometry::setTexCoords(GeoVectorProperty* Tex, int i, bool fixMapping) {
     if (fixMapping) mesh->geo->setIndex(mesh->geo->getIndex(Geometry::PositionsIndex), Geometry::TexCoordsIndex);
 }
 
-void VRGeometry::setPositionalTexCoords(float scale) {
+void VRGeometry::setPositionalTexCoords(float scale, int i, Vec3i format) {
     GeoVectorPropertyRefPtr pos = mesh->geo->getPositions();
-    if (scale == 1.0) setTexCoords(pos, 0, 1);
-    else {
-        GeoVec3fPropertyRefPtr tex = GeoVec3fProperty::create();
-        for (uint i=0; i<pos->size(); i++) {
-            Pnt3f p = pos->getValue<Pnt3f>(i);
-            p[0] *= scale; p[1] *= scale; p[2] *= scale;
-            tex->addValue(Vec3f(p));
-        }
-        setTexCoords(tex, 0, 1);
+    GeoVec3fPropertyRefPtr tex = GeoVec3fProperty::create();
+    for (uint i=0; i<pos->size(); i++) {
+        auto p = Vec3f(pos->getValue<Pnt3f>(i))*scale;
+        tex->addValue(Vec3f(p[format[0]], p[format[1]], p[format[2]]));
     }
+    setTexCoords(tex, i, 1);
+}
+
+void VRGeometry::setPositionalTexCoords2D(float scale, int i, Vec2i format) {
+    if (!mesh || !mesh->geo) return;
+    GeoVectorPropertyRefPtr pos = mesh->geo->getPositions();
+    if (!pos) return;
+    GeoVec3fPropertyRefPtr tex = GeoVec3fProperty::create();
+    for (uint i=0; i<pos->size(); i++) {
+        auto p = Vec3f(pos->getValue<Pnt3f>(i))*scale;
+        tex->addValue(Vec2f(p[format[0]], p[format[1]]));
+    }
+    setTexCoords(tex, i, 1);
 }
 
 void VRGeometry::setIndices(GeoIntegralProperty* Indices, bool doLengths) {
@@ -401,6 +442,13 @@ void VRGeometry::setIndices(GeoIntegralProperty* Indices, bool doLengths) {
         mesh->geo->setLengths(Length);
     }
     mesh->geo->setIndices(Indices);
+}
+
+int VRGeometry::size() {
+    if (!mesh || !mesh->geo) return 0;
+    auto p = mesh->geo->getPositions();
+    if (!p) return 0;
+    return p->size();
 }
 
 int getColorChannels(GeoVectorProperty* v) {
@@ -778,10 +826,7 @@ void VRGeometry::setMaterial(VRMaterialPtr mat) {
     setMaterial(this->mat);
 }*/
 
-VRMaterialPtr VRGeometry::getMaterial() {
-    if (!meshSet) return 0;
-    return mat;
-}
+VRMaterialPtr VRGeometry::getMaterial() { return mat; }
 
 float VRGeometry::calcSurfaceArea() {
     if (!meshSet) return 0;
@@ -803,6 +848,7 @@ float VRGeometry::calcSurfaceArea() {
 
 void VRGeometry::applyTransformation(shared_ptr<pose> po) {
     Matrix m = po->asMatrix();
+    if (!mesh) return;
     if (!mesh->geo) return;
     auto pos = mesh->geo->getPositions();
     if (!pos) return;

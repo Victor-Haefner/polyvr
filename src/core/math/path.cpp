@@ -1,11 +1,20 @@
 #include "path.h"
 #include "core/objects/VRTransform.h"
 #include "core/math/equation.h"
+#include "core/utils/VRStorage_template.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-path::path(int d) : degree(d) {}
+path::path(int d) : degree(d) {
+    storeVec("points", points);
+    storeVec("point_colors", point_colors);
+    store("degree", &degree);
+    store("direction", &direction);
+    store("iterations", &iterations);
+    store("closed", &closed);
+}
+
 path::~path() {}
 
 shared_ptr<path> path::create() { return shared_ptr<path>(new path()); }
@@ -88,26 +97,19 @@ void path::cubicBezier(Vec3f* container, int N, Vec3f p0, Vec3f p1, Vec3f h0, Ve
     }
 }
 
-path::pnt::pnt(Vec3f p, Vec3f n, Vec3f c, Vec3f u) {
-    this->p = p;
-    this->n = n;
-    this->c = c;
-    this->u = u;
-}
-
 vector<float> path::computeInflectionPoints(int i, int j) { // first and second derivative are parallel
-    pnt P1 = points[i];
-    pnt P2 = points[j];
+    auto& P1 = points[i];
+    auto& P2 = points[j];
 
     // help points
-    float L = (P1.p-P2.p).length();
-    Vec3f H1 = P1.p + P1.n*0.333*L;
-    Vec3f H2 = P2.p - P2.n*0.333*L;
+    float L = (P1.pos() - P2.pos()).length();
+    Vec3f H1 = P1.pos() + P1.dir()*0.333*L;
+    Vec3f H2 = P2.pos() - P2.dir()*0.333*L;
 
     // At*t*t + B*t*t + C*t + D
-    Vec3f A = P2.p - H2*3 + H1*3 - P1.p;
-    Vec3f B = H2 - H1*2 + P1.p;
-    Vec3f C = H1 - P1.p;
+    Vec3f A = P2.pos() - H2*3 + H1*3 - P1.pos();
+    Vec3f B = H2 - H1*2 + P1.pos();
+    Vec3f C = H1 - P1.pos();
 
     Vec3f CxB = C.cross(B);
     Vec3f CxA = C.cross(A);
@@ -214,10 +216,10 @@ void path::approximate(int d) {
         vector<Vec3f> res;
 
 		for (uint j=0; j<points.size()-1; j++) { // p1,p2,pm,p3,p4
-			Vec3f p1 = points[j].p;
-			Vec3f p4 = points[j+1].p;
-			Vec3f n1 = points[j].n; //n1.normalize();
-			Vec3f n4 = points[j+1].n; //n4.normalize();
+			Vec3f p1 = points[j].pos();
+			Vec3f p4 = points[j+1].pos();
+			Vec3f n1 = points[j].dir(); //n1.normalize();
+			Vec3f n4 = points[j+1].dir(); //n4.normalize();
 			res.push_back(p1);
 
 			if (isLinear(p1,p4,n1,n4)) {
@@ -234,47 +236,36 @@ void path::approximate(int d) {
 		}
 
 		points.clear();
-		for (auto p : res) points.push_back(pnt(p,Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,1,0)));
+		for (auto p : res) points.push_back( pose(p) );
 		update();
     }
 }
 
-int path::addPoint(Vec3f p, Vec3f n, Vec3f c, Vec3f u) {
-    pnt pn(p,n,c,u);
-    points.push_back(pn);
-    return points.size() - 1;
+int path::addPoint( const pose& p, Vec3f c ) {
+    points.push_back(p);
+    point_colors.push_back(c);
+    return size() - 1;
 }
 
-int path::addPoint(VRTransformPtr t) {
-    OSG::Matrix m = t->getWorldMatrix();
-    Vec3f p = Vec3f(m[3]);
-    Vec3f d = Vec3f(m[2]);
-    Vec3f u = Vec3f(m[1]);
-    pnt pn(p, d, Vec3f(1,1,1), u);
-    points.push_back(pn);
-    return points.size() - 1;
-}
-
-float path::getLength() {
+float path::getLength(int i, int j) {
     float l = 0;
-    for (int i=1; i<size(); i++) {
-        auto p1 = points[i-1].p;
-        auto p2 = points[i].p;
+    if (j <= i) j = size()-1;
+    for (int k=i+1; k<j+1; k++) {
+        auto p1 = points[k-1].pos();
+        auto p2 = points[k].pos();
         l += (p2-p1).length();
     }
     return l;
 }
 
-void path::setPoint(int i, Vec3f p, Vec3f n, Vec3f c, Vec3f u) {
-    if (i < 0 || i >= (int)points.size()) return;
-    points[i].p = p;
-    points[i].n = n;
-    points[i].c = c;
-    points[i].u = u;
+void path::setPoint(int i, const pose& p, Vec3f c ) {
+    if (i < 0 || i >= size()) return;
+    points[i] = p;
+    point_colors[i] = c;
 }
 
-vector<path::pnt> path::getPoints() { return points; }
-path::pnt path::getPoint(int i) { return points[i]; }
+vector<pose> path::getPoints() { return points; }
+pose& path::getPoint(int i) { return points[i]; }
 int path::size() { return points.size(); }
 
 void path::compute(int N) {
@@ -297,37 +288,41 @@ void path::compute(int N) {
 
     if (degree == 2) {
         for (unsigned int i=0; i<Nsegs; i++) {
-            pnt p1 = points[2*i];
-            pnt p2 = points[2*i+1];
-            pnt p3 = points[2*i+2];
-            quadraticBezier(_pts+(N-1)*i, N, p1.p, p2.p, p3.p);
+            auto& p1 = points[2*i];
+            auto& p2 = points[2*i+1];
+            auto& p3 = points[2*i+2];
+            quadraticBezier(_pts+(N-1)*i, N, p1.pos(), p2.pos(), p3.pos());
         }
     }
 
     if (degree == 3) {
         // berechne die hilfspunkte fuer die positionen
         for (unsigned int i=0; i<points.size()-1; i++) {
-            pnt p1 = points[i];
-            pnt p2 = points[i+1];
-            Vec3f r = p2.p - p1.p;
+            auto& p1 = points[i];
+            auto& p2 = points[i+1];
+            auto& c1 = point_colors[i];
+            auto& c2 = point_colors[i+1];
+            Vec3f r = p2.pos() - p1.pos();
             float L = r.length();
-            Vec3f h1 = p1.p + p1.n*0.333*L;
-            Vec3f h2 = p2.p - p2.n*0.333*L;
+            Vec3f h1 = p1.pos() + p1.dir()*0.333*L;
+            Vec3f h2 = p2.pos() - p2.dir()*0.333*L;
 
             // berechne die hilfspunkte fuer die directions B'(0.5)
             //  B(t) = (1 - t)^3 * p1 + 3t(1-t)^2 * h1 + 3t^2 (1-t) * h2 + t^3 * p2
             // B'(t) = -3(1-t)^2 * p1 + 3(1-t)^2 *  h1 - 6t(1-t) *    h1 - 3t^2 * h2 + 6t(1-t) * h2 + 3t^2 * p2
-            Vec3f n = (r-h1+h2)*0.75;
+            //       = (1-t^2) * (3h1-3p1) + 2t*(1-t) * (3h2-3h1) + t^2 * (3p2-3h2)
+            //       = (1-t^2) * d1*L + 2t*(1-t) * (3r - d1*L - d2*L) + t^2 * d2*L
+            Vec3f n = r*3.0/L-p1.dir()-p2.dir();
 
             // berechne hilfspunkt für up vector
             //Vec3f x = n1.cross(u1)*0.5 + n2.cross(u2)*0.5;
-            Vec3f u = (p1.u+p2.u)*0.5;//x.cross(n);
+            Vec3f u = (p1.up()+p2.up())*0.5;//x.cross(n);
             u.normalize();
 
-            cubicBezier    (_pts+(N-1)*i, N, p1.p, p2.p, h1, h2);
-            quadraticBezier(_drs+(N-1)*i, N, p1.n, n, p2.n);
-            quadraticBezier(_ups+(N-1)*i, N, p1.u, u, p2.u);
-            linearBezier   (_cls+(N-1)*i, N, p1.c, p2.c);
+            cubicBezier    (_pts+(N-1)*i, N, p1.pos(), p2.pos(), h1, h2);
+            quadraticBezier(_drs+(N-1)*i, N, p1.dir(), n, p2.dir());
+            quadraticBezier(_ups+(N-1)*i, N, p1.up(), u, p2.up());
+            linearBezier   (_cls+(N-1)*i, N, c1, c2);
         }
     }
 }
@@ -342,7 +337,7 @@ void path::update() { compute(iterations); }
 
 void path::close() {
     if (points.size() <= 1) return;
-    points.push_back( getPoint(0) );
+    points.push_back( points[0] );
     closed = true;
 }
 
@@ -433,5 +428,38 @@ void path::clear() {
     colors.clear();
 }
 
+void clampSegment(int& i, int& j, int N) {
+    if (i < 0 || i >= j) j = 0;
+    if (j <= i || j >= N) j = N-1;
+}
+
+bool path::isStraight(int i, int j) {
+    clampSegment(i, j, points.size());
+    Vec3f p1 = points[i].pos();
+    Vec3f d1 = points[i].dir();
+    Vec3f p2 = points[j].pos();
+    Vec3f d2 = points[j].dir();
+    Vec3f d = p2-p1;
+    d.normalize();
+    d1.normalize();
+    d2.normalize();
+    return abs(d.dot(d1)) > 0.999 && abs(d.dot(d2)) > 0.999;
+}
+
+bool path::isCurve(int i, int j) { // TODO
+    clampSegment(i, j, points.size());
+    if (isStraight(i,j)) return false;
+    auto iPnts = computeInflectionPoints(i,j);
+    if (iPnts.size() == 0) return true;
+    return false;
+}
+
+bool path::isSinuous(int i, int j) { // TODO
+    clampSegment(i, j, points.size());
+    auto iPnts = computeInflectionPoints(i,j);
+    if (isStraight(i,j)) return false;
+    if (iPnts.size() >= 1) return true;
+    return false;
+}
 
 OSG_END_NAMESPACE;

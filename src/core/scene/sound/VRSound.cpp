@@ -1,6 +1,8 @@
 #include "VRSound.h"
 #include "VRSoundUtils.h"
 #include "core/math/path.h"
+#include "VRSoundManager.h"
+
 
 extern "C" {
 #include <libavresample/avresample.h>
@@ -30,6 +32,7 @@ sudo apt-get install libfftw3-dev
 #include <fftw3.h>
 #include <map>
 #include <climits>
+//#include <complex>
 
 using namespace OSG;
 
@@ -46,6 +49,7 @@ struct VRSound::ALData {
 };
 
 VRSound::VRSound() {
+    VRSoundManager::get(); // this may init channel
     buffers = new uint[Nbuffers];
     al = shared_ptr<ALData>( new ALData() );
 }
@@ -344,13 +348,13 @@ void VRSound::play() {
     av_free(al->frame);
 }
 
-void VRSound::playBuffer(short* buffer, size_t N, int sample_rate) {
+void VRSound::playBuffer(vector<short>& buffer, int sample_rate) {
     recycleBuffer();
 
     ALint val = -1;
     ALuint buf;
     alGenBuffers(1, &buf);
-    alBufferData(buf, AL_FORMAT_MONO16, buffer, N*sizeof(short), sample_rate);
+    alBufferData(buf, AL_FORMAT_MONO16, &buffer[0], buffer.size()*sizeof(short), sample_rate);
 
     queuedBuffers += 1;
     ALCHECK( alSourceQueueBuffers(source, 1, &buf));
@@ -365,17 +369,15 @@ void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float
     int sample_rate = 22050;
     size_t buf_size = duration * sample_rate;
     buf_size += buf_size%2;
-    short* samples = new short[buf_size];
+    vector<short> samples(buf_size);
 
     for(uint i=0; i<buf_size; i++) {
         float t = i*2*Pi/sample_rate;
         samples[i] = Ac * sin( wc*t + pc + Am*sin(wm*t + pm) );
     }
 
-    playBuffer(samples, buf_size, sample_rate);
-    delete samples;
+    playBuffer(samples, sample_rate);
 }
-
 
 vector<short> VRSound::synthesizeSpectrum(vector<double> spectrum, uint sample_rate, float duration, float fade_factor, bool returnBuffer) {
     if (!initiated) initiate();
@@ -470,106 +472,34 @@ vector<short> VRSound::synthesizeSpectrum(vector<double> spectrum, uint sample_r
         samples[buf_size-i-1] *= y;
     }*/
 
-    playBuffer(&samples[0], buf_size, sample_rate);
+    playBuffer(samples, sample_rate);
     return returnBuffer ? samples : vector<short>();
 }
 
-void VRSound::synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, float duration) {
+vector<short> VRSound::synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, float duration) {
     if (!initiated) initiate();
-
-    // fourier transform TODO!!
-    /*vector<Vec2d> wave;
-    int N = frequencies.size();
-    wave.resize(N);
-    Vec2d* in = &frequencies[0];
-    Vec2d* out = &wave[0];
-    fftw_plan p = fftw_plan_dft_1d(N, (double(*)[2])in, (double(*)[2])out, FFTW_FORWARD, FFTW_ESTIMATE);
-    fftw_execute(p);
-    fftw_destroy_plan(p);
-    ofstream synthIn;
-    ofstream synthOut;
-    synthIn.open("synthIn.dat");
-    synthOut.open("synthOut.dat");
-    for (int i=0; i<N; i++) {
-        synthIn << i << " " << frequencies[i][0] << endl;
-        synthOut << i << " " << wave[i][0] << endl;
-    }
-    synthIn.close();
-    synthOut.close();
-    auto interpolate = [&](const float& t) {
-        int t1 = floor(t);
-        int t2 = ceil(t);
-        if (t2 >= N) return 0.0;
-        return (wave[t2][1]-wave[t1][1])*(t-t1) + wave[t1][1];
-    };*/
-
     // play sound
     int sample_rate = 22050;
-    //int sample_rate = 10;
     size_t buf_size = duration * sample_rate;
-    buf_size += buf_size%2;
-    short* samples = new short[buf_size];
-
-    float Ni1 = 1.0/freqs1.size();
-    float Ni2 = 1.0/freqs2.size();
-
-    static map<int, float> ma0;
-    static map<int, float> ma;
-    static float t0 = 0;
-    static float last_sample  = 0;
-    static float last_sample2 = 0;
-
-    for (auto fA : freqs1) {
-        int f = fA[0];
-        if (!ma0.count(f)) ma0[f] = 0;
-        if (!ma.count(f)) ma[f] = 0;
-    }
-    for (auto fA : freqs2) {
-        int f = fA[0];
-        if (!ma0.count(f)) ma0[f] = 0;
-        if (!ma.count(f)) ma[f] = 0;
-    }
-
-    float t;
+    vector<short> samples(buf_size);
+    double Ni = 1.0/freqs1.size();
+    double T = 2*Pi/sample_rate;
+    static map<int,complex<double>> phasors;
     for (uint i=0; i<buf_size; i++) {
-        float k = float(i)/buf_size;
-        t = i*2*Pi/sample_rate;
-
-        float w = 1.0;
-        float wL = 0.25;
-        if (k < wL) w = k/wL;
-        if (k > 1.0-wL) w = (1.0-k)/wL;
-
+        double k = double(i)/(buf_size-1);
         samples[i] = 0;
-
         for (int j=0; j<freqs1.size(); j++) {
-            float A = freqs1[j][1]*(1.0-k) + freqs2[j][1]*k;
-            float f = freqs1[j][0]*(1.0-k) + freqs2[j][0]*k;
-            //float a0 = ma0[int(freqs1[j][0])];
-            float a = f*t;
-            //float a = a0 + f*t; // TODO
-            samples[i] += A*sin( a )*Ni1;
-            //ma[int(freqs2[j][0])] = a;
+            double A = freqs1[j][1]*(1.0-k) + freqs2[j][1]*k;
+            double f = freqs1[j][0]*(1.0-k) + freqs2[j][0]*k;
+
+            if (!phasors.count(j)) phasors[j] = complex<double>(1,0);
+            phasors[j] *= exp( complex<double>(0,T*f) );
+            samples[i] += A*Ni*phasors[j].imag();
         }
     }
-    //t0 = t;
-
-    float n1 = samples[1] - samples[0];
-    float n2 = last_sample - last_sample2;
-    cout << " first sample " << samples[0] << " last sample " << last_sample << " first normal " << n1 << " last normal " << n2 << endl;
-    last_sample  = samples[buf_size-1];
-    last_sample2 = samples[buf_size-2];
-
-    for (auto& a0 : ma0) {
-        int f = a0.first;
-        a0.second = ma[f];
-        //while (a0.second > 2*Pi) a0.second -= 2*Pi;
-    }
-
-    //for (auto& a0 : ma0) cout << " f " << a0.first << " a0 " << a0.second*180/Pi << endl;
-
-    playBuffer(samples, buf_size, sample_rate);
-    delete samples;
+    playBuffer(samples, sample_rate);
+    if (true) return samples;
+    return vector<short>();
 }
 
 int VRSound::getQueuedBuffer() { return queuedBuffers; }

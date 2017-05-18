@@ -32,6 +32,7 @@ ptrFwd(VRSky);
 
 // other
 ptrFwd(VRTexture);
+ptrFwd(VRTextureGenerator);
 ptrFwd(VRConstraint);
 
 // addons

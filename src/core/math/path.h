@@ -4,20 +4,15 @@
 #include <OpenSG/OSGVector.h>
 #include "core/objects/VRObjectFwd.h"
 #include "pose.h"
+#include "core/utils/VRStorage.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class path {
-    public:
-        // points
-        struct pnt {
-            Vec3f p,n,c,u;
-            pnt(Vec3f p, Vec3f n, Vec3f c, Vec3f u);
-        };
-
+class path : public VRStorage {
     private:
-        vector<pnt> points;
+        vector<pose> points;
+        vector<Vec3f> point_colors;
 
         int degree = 3;
         int direction = 1;
@@ -41,11 +36,11 @@ class path {
 
         static shared_ptr<path> create();
 
-        int addPoint(Vec3f p = Vec3f(0,0,0), Vec3f n = Vec3f(0,0,-1), Vec3f c = Vec3f(0,0,0), Vec3f u = Vec3f(0,1,0));
-        int addPoint(VRTransformPtr t);
-        void setPoint(int i, Vec3f p, Vec3f n, Vec3f c, Vec3f u = Vec3f(0,1,0));
-        pnt getPoint(int i);
-        vector<pnt> getPoints();
+        int addPoint( const pose& p, Vec3f c = Vec3f() );
+        void setPoint(int i, const pose& p, Vec3f c = Vec3f() );
+        pose& getPoint(int i);
+        Vec3f getPointColor(int i);
+        vector<pose> getPoints();
 
         void invert();
         void close();
@@ -64,9 +59,13 @@ class path {
         float getDistance(Vec3f p);
         vector<float> computeInflectionPoints(int i, int j);
 
+        bool isStraight(int i = 0, int j = 0);
+        bool isCurve(int i = 0, int j = 0);
+        bool isSinuous(int i = 0, int j = 0);
+
         void approximate(int degree);
 
-        float getLength();
+        float getLength(int i = 0, int j = 0);
         int size();
 
         void update();
