@@ -610,33 +610,33 @@ void VRRoadNetwork::computeSurfaces() {
         geo->setEuler(Vec3f(0.5*pi,0,0));
         geo->applyTransformation();
 
-        auto apath = path::create();
-        apath->addPoint( pose(Vec3f(0.5,0.3,0), Vec3f(0,1,0), Vec3f(0,0,1)) );
-        apath->addPoint( pose(Vec3f(0.5,1.0,0), Vec3f(0,1,0), Vec3f(0,0,1)) );
-        apath->compute(12);
-
-        auto poly = polygon::create();
-        poly->addPoint(Vec2f(0,0.33));
-        poly->addPoint(Vec2f(1,0.33));
-        poly->addPoint(Vec2f(0.5,0));
-
         VRTextureGenerator tg;
         tg.setSize(Vec3i(64,192,1), true);
         tg.drawFill(Vec4f(0,0,1,1));
-        tg.drawPath(apath, Vec4f(1,1,1,1), 0.4);
-        tg.drawPolygon(poly, Vec4f(1,1,1,1));
-        auto aMask = tg.compose(0);
-
-        auto asphaltArrow = VRAsphalt::create();
-        asphaltArrow->setArrowMaterial();
-        asphaltArrow->setTexture(aMask);
-        //asphaltArrow->setTextureParams(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-        geo->setMaterial(asphaltArrow);
-        geo->setPositionalTexCoords2D(1.0, 1, Vec2i(0,2));
 
         for (auto d : dirs) {
             float dir = toFloat(d->value);
+
+            auto apath = path::create();
+            apath->addPoint( pose(Vec3f(0.5,1.0,0), Vec3f(0,-1,0), Vec3f(0,0,1)) );
+            apath->addPoint( pose(Vec3f(0.5,0.3,0), Vec3f(0,-1,0), Vec3f(0,0,1)) );
+            apath->compute(12);
+            tg.drawPath(apath, Vec4f(1,1,1,1), 0.4);
+
+            auto poly = polygon::create();
+            poly->addPoint(Vec2f(0,0.33));
+            poly->addPoint(Vec2f(1,0.33));
+            poly->addPoint(Vec2f(0.5,0));
+            tg.drawPolygon(poly, Vec4f(1,1,1,1));
+
         }
+
+        auto aMask = tg.compose(0);
+        auto asphaltArrow = VRAsphalt::create();
+        asphaltArrow->setArrowMaterial();
+        asphaltArrow->setTexture(aMask);
+        geo->setMaterial(asphaltArrow);
+        geo->setPositionalTexCoords2D(1.0, 1, Vec2i(0,2));
     }
 }
 
