@@ -1,6 +1,8 @@
 #include "VRSound.h"
 #include "VRSoundUtils.h"
+#include "core/math/path.h"
 #include "VRSoundManager.h"
+
 
 extern "C" {
 #include <libavresample/avresample.h>
@@ -29,7 +31,8 @@ sudo apt-get install libfftw3-dev
 #include <fstream>
 #include <fftw3.h>
 #include <map>
-#include <complex>
+#include <climits>
+//#include <complex>
 
 using namespace OSG;
 
@@ -376,8 +379,106 @@ void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float
     playBuffer(samples, sample_rate);
 }
 
+vector<short> VRSound::synthesizeSpectrum(vector<double> spectrum, uint sample_rate, float duration, float fade_factor, bool returnBuffer) {
+    if (!initiated) initiate();
+
+    /* --- fade in/out curve ---
+    ::path c;
+    c.addPoint(Vec3f(0,0,0), Vec3f(1,0,0));
+    c.addPoint(Vec3f(1,1,0), Vec3f(1,0,0));
+    c.compute(sample_rate);
+    */
+
+    //ALuint buf;
+    //alGenBuffers(1, &buf);
+    size_t buf_size = duration * sample_rate;
+    uint fade = min(fade_factor * sample_rate, duration * sample_rate); // number of samples to fade at beginning and end
+
+    // transform spectrum back to time domain using fftw3
+    vector<double> out(sample_rate);
+    //vector<double> out(buf_size);
+    // create plan
+    fftw_plan ifft;
+    //out = (double *) malloc(size*sizeof(double));
+
+    ifft = fftw_plan_r2r_1d(sample_rate, &spectrum[0], &out[0], FFTW_DHT, FFTW_ESTIMATE);   //Setup fftw plan for ifft
+    //ifft = fftw_plan_r2r_1d(buf_size, &spectrum[0], &out[0], FFTW_DHT, FFTW_ESTIMATE);
+    fftw_execute(ifft); // is output normalized?
+    fftw_destroy_plan(ifft);
+
+    vector<short> samples(buf_size);
+    for(uint i=0; i<buf_size; ++i) {
+        //samples[i] = (double)(SHRT_MAX - 1) * out[i] / (sample_rate * maxVal); // for fftw normalization
+        samples[i] = 0.5 * SHRT_MAX * out[i]; // for fftw normalization
+    }
+
+    //uint flat = fade / 10;
+    /*uint flat = fade / 2;
+
+    for (uint i=0; i < fade; ++i) {
+        if (i < flat) {
+            samples[i] = 0;
+            samples[buf_size-i-1] = 0;
+        } else {
+            samples[i] *= (float)(i - flat)/(fade - 1 - flat);
+            samples[buf_size-i-1] *= (float)(i - flat)/(fade - 1 - flat);
+        }
+    }*/
+
+    auto calcFade = [](double& t) {
+        if (t < 0) t = 0;
+        if (t > 1) t = 1;
+        // P3*t³ + P2*3*t²*(1-t) + P1*3*t*(1-t)² + P0*(1-t)³
+        // P0(0,0) P1(0.5,0) P2(0.5,1) P3(1,1)
+        // P0(0,0) P1(0.5,0.1) P2(0.5,1) P3(1,1)
+        double s = 1-t;
+        return t*t*(3*s + t);
+    };
+
+    for (uint i=0; i < fade; ++i) {
+        double t = double(i)/(fade-1);
+        //double y = c.getPosition(t)[1];
+        double y = calcFade(t);
+        samples[i] *= y;
+        samples[buf_size-i-1] *= y;
+    }
+
+    //float flat_samples = 100;
+    //uint flat = min((float)fade / 2, flat_samples);
+    /*uint flat_samples = 1000;
+    uint flat = min(flat_samples, fade);
+
+    for (uint i=0; i < fade; ++i) {
+        if (i < flat) {
+            if (i > 100 && i < 200){
+                //samples[i] = 0.5 * SHRT_MAX;
+                samples[buf_size-i-1] = 0.5 * SHRT_MAX;
+            } else {
+                //samples[i] = 0;
+                samples[buf_size-i-1] = 0;
+            }
+        } else {
+            double t = double(i - flat)/(fade - 1 - flat);
+            //samples[i] *= calcFade(t);
+            samples[buf_size-i-1] *= calcFade(t);
+        }
+    }*/
+
+    /*for (uint i=0; i < fade*2; ++i) {
+        double t = (double(i)-double(fade))/(fade-1);
+        //double y = c.getPosition(t)[1];
+        double y = calcFade(t);
+        //samples[i] *= y;
+        samples[buf_size-i-1] *= y;
+    }*/
+
+    playBuffer(samples, sample_rate);
+    return returnBuffer ? samples : vector<short>();
+}
+
 vector<short> VRSound::synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, float duration) {
     if (!initiated) initiate();
+    // play sound
     int sample_rate = 22050;
     size_t buf_size = duration * sample_rate;
     vector<short> samples(buf_size);
@@ -413,6 +514,8 @@ void VRSound::recycleBuffer() {
         }
     } while (val > 0);
 }
+
+
 
 
 

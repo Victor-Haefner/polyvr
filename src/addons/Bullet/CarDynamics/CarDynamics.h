@@ -9,6 +9,7 @@
 #include "core/utils/VRFunctionFwd.h"
 #include "core/tools/VRToolsFwd.h"
 #include "core/objects/object/VRObject.h"
+#include "addons/Bullet/VRPhysicsFwd.h"
 
 class pose;
 
@@ -69,6 +70,7 @@ class CarDynamics : public VRObject {
         float breaking = 0;
         float steering = 0;
 
+        CarSoundPtr carSound;
         vector<Wheel> wheels;
         Engine engine;
         Chassis chassis;
@@ -132,6 +134,8 @@ class CarDynamics : public VRObject {
         float getAcceleration();
         void setIgnition(bool b);
         bool isRunning();
+
+        CarSoundPtr getCarSound();
 };
 
 OSG_END_NAMESPACE

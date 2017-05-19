@@ -140,6 +140,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"addLine", (PyCFunction)VRPyGeometry::addLine, METH_VARARGS, "Add a quad to geometry - addLine( | [i1,i2] )" },
     {"addTriangle", (PyCFunction)VRPyGeometry::addLine, METH_VARARGS, "Add a quad to geometry - addLine( | [i1,i2,i3] )" },
     {"addQuad", (PyCFunction)VRPyGeometry::addQuad, METH_VARARGS, "Add a quad to geometry - addQuad( | [i1,i2,i3,i4] )" },
+    {"clear", (PyCFunction)VRPyGeometry::clear, METH_NOARGS, "Clear all geometric data - clear()" },
     {NULL}  /* Sentinel */
 };
 
@@ -259,6 +260,13 @@ void feed1D3(PyObject* o, T& vec) {
         tmp[2] = PyFloat_AsDouble( PyList_GetItem(o, i+2) );
         vec->addValue(tmp);
     }
+}
+
+PyObject* VRPyGeometry::clear(VRPyGeometry* self) {
+    if (!self->valid()) return NULL;
+    VRGeoData geo(self->objPtr);
+    geo.reset();
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyGeometry::addVertex(VRPyGeometry* self, PyObject *args) {

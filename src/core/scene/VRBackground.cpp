@@ -119,6 +119,8 @@ VRBackground::VRBackground () {
 
 VRBackground::~VRBackground() {}
 
+VRSkyPtr VRBackground::getSky() { return base->sky; }
+
 void VRBackground::setBackground(TYPE t) {
     base->type = t;
     if (base->sky) base->sky->hide();

@@ -31,6 +31,7 @@ class VRBackground : public VRStorage {
         void setBackground(TYPE t);
         BackgroundRecPtr getBackground();
         TYPE getBackgroundType();
+        VRSkyPtr getSky();
 
         void setBackgroundColor(Color3f c);
         void setBackgroundPath(string s);

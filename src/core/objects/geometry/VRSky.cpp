@@ -12,6 +12,7 @@
 
 using namespace OSG;
 
+// not accounting for leap or other inconsistencies
 void VRSky::Date::propagate(double seconds) {
     int sign = (seconds > 0) - (seconds < 0); // check sign
     second += seconds;
@@ -31,7 +32,10 @@ void VRSky::Date::propagate(double seconds) {
 
 double VRSky::Date::getDay() { // returns time since 12:00 at 1-1-2000
     // not accounting for leap or other inconsistencies
-    return (year - 2000)*365 + day + (second/3600 + hour - 12) / 24;
+    double d1 = (year - 2000)*365 + day;
+    double d2 = (second/3600.0 + hour - 12) / 24.0;
+    //cout << "VRSky::Date::getDay " << std::setprecision(16) << d1 << " " << d2 << " " << double(d1 + d2) << endl;
+    return double(d1 + d2);
 }
 
 VRSky::VRSky() : VRGeometry("Sky") {
@@ -63,15 +67,15 @@ VRSky::VRSky() : VRGeometry("Sky") {
 
     // sun params
     sunFromTime();
-    setTurbidity(2.);
+    setTurbidity(2);
 
     float factor = 1/speed;
 
     // cloud params
     cloudDensity = 0.1;
-    cloudScale = 2e-5;
+    cloudScale = 1e-5;
     cloudHeight = 3000.;
-    cloudVel =  Vec2f(.005*factor, .0003*factor);
+    cloudVel =  Vec2f(.0005*factor, .0003*factor);
 	cloudOffset =  Vec2f(0, 0);
     mat->setShaderParameter<float>("cloudDensity", cloudDensity);
     mat->setShaderParameter<float>("cloudScale", cloudScale);
@@ -89,6 +93,7 @@ VRSky::VRSky() : VRGeometry("Sky") {
 	tg.add(PERLIN, 1.0/16, Vec3f(0.4), Vec3f(1.0));
 	tg.add(PERLIN, 1.0/32, Vec3f(0.2), Vec3f(1.0));
 	tg.add(PERLIN, 1.0/64, Vec3f(0.1), Vec3f(1.0));
+	tg.add(PERLIN, 1.0/128, Vec3f(0.1), Vec3f(1.0));
 	/*
 	tg.add(PERLIN, 1, Vec3f(0.95), Vec3f(1.0));
 	tg.add(PERLIN, 1.0/2, Vec3f(0.9), Vec3f(1.0));
@@ -139,6 +144,10 @@ void VRSky::update() {
 void VRSky::setTurbidity(float t) {
     turbidity = t;
     mat->setShaderParameter<float>("turbidity", turbidity);
+}
+
+void VRSky::setSpeed(float s) {
+    speed = s;
 }
 
 void VRSky::setTime(double second, int hour, int day, int year) {
@@ -237,38 +246,38 @@ void VRSky::calculateCoeffs() {
 
 void VRSky::sunFromTime() {
 
-	float day = date.getDay();
-	float g = 357.529 + 0.98560028 * day; // mean anomaly of sun
-	float q = 280.459 + 0.98564736 * day; // mean longitude of sun
-	float L = (q + 1.915 * sin(g*Pi/180) + 0.020 * sin(2*g*Pi/180))*Pi/180; // geocentric (apparent/adjusted) elliptic (in rad)
+	double day = date.getDay();
+	double g = 357.529 + 0.98560028 * day; // mean anomaly of sun
+	double q = 280.459 + 0.98564736 * day; // mean longitude of sun
+	double L = (q + 1.915 * sin(g*Pi/180) + 0.020 * sin(2*g*Pi/180))*Pi/180; // geocentric (apparent/adjusted) elliptic (in rad)
 	// long. of sun
 
 	// approx. ecliptic latitude as b=0.
 	// obliquity (deg)
-	float e = (23.439 - 0.00000036 * day)*Pi/180; // (in rad)
+	double e = (23.439 - 0.00000036 * day)*Pi/180; // (in rad)
 
-	float right_ascension = atan2(cos(e) * sin(L), cos(L)); // right ascension (in rad)
-	float declination = asin(sin(e) * sin(L)); // declination (in rad)
+	double right_ascension = atan2(cos(e) * sin(L), cos(L)); // right ascension (in rad)
+	double declination = asin(sin(e) * sin(L)); // declination (in rad)
 
     // convert right ascension to hour angle
-    float gmst = 18.697374558 + 24.06570982441908 * day; // Greenwich mean sidereal time
-    float hour_angle = (gmst*15 - observerPosition.longitude - right_ascension); // (deg)
+    double gmst = 18.697374558 + 24.06570982441908 * day; // Greenwich mean sidereal time
+    double hour_angle = (gmst*15 - observerPosition.longitude - right_ascension); // (deg)
     // map hour angle onto (0,2pi)
     hour_angle = fmod(hour_angle,360)*Pi/180; // (rad)
 
     // solar zenith
-    float cos_theta_s = sin(observerPosition.latitude*Pi/180)*sin(declination)
+    double cos_theta_s = sin(observerPosition.latitude*Pi/180)*sin(declination)
                    + cos(observerPosition.latitude*Pi/180)*cos(declination)*cos(hour_angle);
 
     theta_s = acos(cos_theta_s);
-    float sin_theta_s = sin(theta_s); // check mapping
+    double sin_theta_s = sin(theta_s); // check mapping
 
     //solar azimuth
     // z = cos(phi) * sin(theta)
-    float z = sin(declination)*cos(observerPosition.latitude*Pi/180)
+    double z = sin(declination)*cos(observerPosition.latitude*Pi/180)
                 -cos(hour_angle)*cos(declination)*sin(observerPosition.latitude*Pi/180);
 
-    float phi_s = acos(z/sin_theta_s);
+    double phi_s = acos(z/sin_theta_s);
     // take care of negatives
     if (hour_angle > Pi) phi_s *= -1;
 
@@ -276,13 +285,20 @@ void VRSky::sunFromTime() {
     // azimuth = 0 => sun directly south should be defines as angle to z axis
     // also rotating clockwise (-ve)
     // r = 1 (normalised)
-    float y = cos_theta_s;
-    float x = sin(phi_s)*sin_theta_s;
+    double y = cos_theta_s;
+    double x = sin(phi_s)*sin_theta_s;
 
     sunPos = Vec3f(x, y, z);
+    //cout << "kajshdgkajgs " << date.hour << " " << date.second << "   " << sunPos << endl;
 
     mat->setShaderParameter<float>("theta_s", theta_s);
     mat->setShaderParameter<Vec3f>("sunPos", sunPos);
+}
+
+void VRSky::setWeather(float cCover, float cHeight, float wind, float haze) {
+    //clamp values to [0,1]
+
+
 }
 
 

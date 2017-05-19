@@ -1,4 +1,5 @@
 #include "CarDynamics.h"
+#include "CarSound/CarSound.h"
 #include "core/scene/VRScene.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRPhysics.h"
@@ -20,6 +21,7 @@ using namespace std;
 CarDynamics::CarDynamics(string name) : VRObject(name) {
     setPersistency(0);
 	initPhysics();
+	carSound = CarSound::create();
 }
 
 CarDynamics::~CarDynamics() {
@@ -31,6 +33,8 @@ CarDynamics::~CarDynamics() {
 }
 
 CarDynamicsPtr CarDynamics::create(string name) { return CarDynamicsPtr( new CarDynamics(name) ); }
+
+CarSoundPtr CarDynamics::getCarSound() { return carSound; }
 
 //only to be done once
 void CarDynamics::initPhysics() {
@@ -260,6 +264,8 @@ void CarDynamics::updateEngine() {
         a_measurement_t = time;
         acceleration = a;//abs(a);
     }
+
+    carSound->play(engine.rpm);
 }
 
 void CarDynamics::setIgnition(bool b) {

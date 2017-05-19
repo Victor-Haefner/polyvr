@@ -30,6 +30,7 @@ struct VRPyGeometry : VRPyBaseT<OSG::VRGeometry> {
     static PyObject* getTexCoords(VRPyGeometry* self);
     static PyObject* getMaterial(VRPyGeometry* self);
     static PyObject* duplicate(VRPyGeometry* self);
+    static PyObject* clear(VRPyGeometry* self);
     static PyObject* setPrimitive(VRPyGeometry* self, PyObject *args);
     static PyObject* decimate(VRPyGeometry* self, PyObject *args);
     static PyObject* setRandomColors(VRPyGeometry* self);

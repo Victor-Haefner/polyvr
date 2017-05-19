@@ -14,6 +14,7 @@ PyMethodDef VRPySound::methods[] = {
     {"setVolume", (PyCFunction)VRPySound::setVolume, METH_VARARGS, "Set sound volume - setVolume( float ) \n\tfrom 0.0 to 1.0 (= 100%)" },
     {"synthesize", (PyCFunction)VRPySound::synthesize, METH_VARARGS, "synthesize( Ac, wc, pc, Am, wm, pm, T)\t\n A,w,p are the amplitude, frequency and phase, c and m are the carrier sinusoid and modulator sinusoid, T is the packet duration in seconds" },
     {"synthBuffer", (PyCFunction)VRPySound::synthBuffer, METH_VARARGS, "synthBuffer( [[f,A]], T )\t\n [f,A] frequency/amplitude pairs, T is the packet duration in seconds" },
+    {"synthSpectrum", (PyCFunction)VRPySound::synthSpectrum, METH_VARARGS, "synthSpectrum( [A], int S, float T, float F, bool retBuffer )\t\n A amplitude, S sample rate, T packet duration in seconds, F fade in/out duration in s , specify if you want to return the generated buffer" },
     {"getQueuedBuffer", (PyCFunction)VRPySound::getQueuedBuffer, METH_NOARGS, "Get the buffer currently queued - int getQueuedBuffer()" },
     {"recycleBuffer", (PyCFunction)VRPySound::recycleBuffer, METH_NOARGS, "Recycle unused buffers - recycleBuffer()" },
     {NULL}  /* Sentinel */
@@ -63,6 +64,25 @@ PyObject* VRPySound::synthBuffer(VRPySound* self, PyObject* args) {
     auto buf = self->objPtr->synthBuffer(data1, data2, T);
     auto res = PyList_New(buf.size());
     for (auto i=0; i<buf.size(); i++) PyList_SetItem(res, i, PyInt_FromLong(buf[i]));
+    return res;
+}
+
+PyObject* VRPySound::synthSpectrum(VRPySound* self, PyObject* args) {
+    int S, doRB = 0;
+    float T, F;
+    PyObject* v;
+    if (! PyArg_ParseTuple(args, "Oiff|i", &v, &S, &T, &F, &doRB)) return NULL;
+
+    Py_ssize_t N = PyList_Size(v);
+    vector<double> data(N);
+    for (Py_ssize_t i=0; i<N; i++) {
+        auto f = PyList_GetItem(v, i);
+        data[i] = PyFloat_AsDouble(f);
+    }
+
+    auto buf = self->objPtr->synthesizeSpectrum(data, S, T, F, doRB);
+    auto res = PyList_New(buf.size());
+    for (int i=0; i<buf.size(); i++) PyList_SetItem(res, i, PyInt_FromLong(buf[i]));
     return res;
 }
 

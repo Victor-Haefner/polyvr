@@ -226,6 +226,7 @@
 			<Add option="-lHACD" />
 			<Add option="-lssh2" />
 			<Add option="-lfftw3" />
+			<Add option="-Wl,-rpath=/usr/lib/x86_64-linux-gnu" />
 			<Add directory="/usr/lib/virtuose" />
 			<Add directory="/usr/lib/opensg" />
 			<Add directory="/usr/lib/CEF" />
@@ -246,6 +247,8 @@
 		<Unit filename="src/addons/Algorithms/VRPyGraphLayout.h" />
 		<Unit filename="src/addons/Bullet/CarDynamics/CarDynamics.cpp" />
 		<Unit filename="src/addons/Bullet/CarDynamics/CarDynamics.h" />
+		<Unit filename="src/addons/Bullet/CarDynamics/CarSound/CarSound.cpp" />
+		<Unit filename="src/addons/Bullet/CarDynamics/CarSound/CarSound.h" />
 		<Unit filename="src/addons/Bullet/CarDynamics/VRDriver.cpp" />
 		<Unit filename="src/addons/Bullet/CarDynamics/VRDriver.h" />
 		<Unit filename="src/addons/Bullet/CarDynamics/VRPyCarDynamics.cpp" />
@@ -806,7 +809,6 @@
 		<Unit filename="src/core/scene/sound/VRSoundManager.cpp" />
 		<Unit filename="src/core/scene/sound/VRSoundManager.h" />
 		<Unit filename="src/core/scene/sound/VRSoundUtils.h" />
-		<Unit filename="src/core/scripting/VRGeoPrimitive.h" />
 		<Unit filename="src/core/scripting/VRPyAnalyticGeometry.cpp" />
 		<Unit filename="src/core/scripting/VRPyAnalyticGeometry.h" />
 		<Unit filename="src/core/scripting/VRPyAnimation.cpp" />
@@ -898,6 +900,8 @@
 		<Unit filename="src/core/scripting/VRPySelector.h" />
 		<Unit filename="src/core/scripting/VRPySetup.cpp" />
 		<Unit filename="src/core/scripting/VRPySetup.h" />
+		<Unit filename="src/core/scripting/VRPySky.cpp" />
+		<Unit filename="src/core/scripting/VRPySky.h" />
 		<Unit filename="src/core/scripting/VRPySnappingEngine.cpp" />
 		<Unit filename="src/core/scripting/VRPySnappingEngine.h" />
 		<Unit filename="src/core/scripting/VRPySocket.cpp" />
