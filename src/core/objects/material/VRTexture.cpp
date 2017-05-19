@@ -36,8 +36,9 @@ void VRTexture::paste(VRTexturePtr other, Vec3i offset) {
 
 void VRTexture::resize(Vec3i size, Vec3i offset) {
     auto tmp = VRTexture::create(img);
+    int N = getSize()[0]*getSize()[1]*getSize()[2]*getByteSize();
+    vector<char> data( N, 0 );
     ImageRecPtr nimg = Image::create();
-    vector<char> data( img->getBpp()/8, 0 );
     nimg->set(img->getPixelFormat(), size[0], size[1], size[2],
               img->getMipMapCount(), img->getFrameCount(), img->getFrameDelay(),
               (const uint8_t*)&data[0], img->getDataType(), true, img->getSideCount());
@@ -84,21 +85,20 @@ int VRTexture::getChannels() {
     return 0;
 }
 
-/*int VRTexture::getByteSize() {
+int VRTexture::getByteSize() {
     if (!img) return 0;
-    auto f = img->getPixelFormat();
-    Image::
-    if (OSG_INVALID_IMAGEDATATYPE  = GL_NONE,
-        OSG_UINT8_IMAGEDATA        = GL_UNSIGNED_BYTE,
-        OSG_UINT16_IMAGEDATA       = GL_UNSIGNED_SHORT,
-        OSG_UINT32_IMAGEDATA       = GL_UNSIGNED_INT,
-        OSG_FLOAT16_IMAGEDATA      = GL_HALF_FLOAT_NV,
-        OSG_FLOAT32_IMAGEDATA      = GL_FLOAT,
-        OSG_INT16_IMAGEDATA        = GL_SHORT,
-        OSG_INT32_IMAGEDATA        = GL_INT,
-        OSG_UINT24_8_IMAGEDATA     = GL_NONE
+    auto f = img->getDataType();
+    if (f == Image::OSG_INVALID_IMAGEDATATYPE) return 0;
+    if (f == Image::OSG_UINT8_IMAGEDATA) return 1;
+    if (f == Image::OSG_UINT16_IMAGEDATA) return 2;
+    if (f == Image::OSG_UINT32_IMAGEDATA) return 4;
+    if (f == Image::OSG_FLOAT16_IMAGEDATA) return 2;
+    if (f == Image::OSG_FLOAT32_IMAGEDATA) return 4;
+    if (f == Image::OSG_INT16_IMAGEDATA) return 2;
+    if (f == Image::OSG_INT32_IMAGEDATA) return 4;
+    if (f == Image::OSG_UINT24_8_IMAGEDATA) return 3;
     return 0;
-}*/
+}
 
 Vec4f VRTexture::getPixel(Vec2f uv) { // TODO: check data format (float/integer/char)
     auto res = Vec4f(0,0,0,1);

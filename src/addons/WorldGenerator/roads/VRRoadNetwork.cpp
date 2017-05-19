@@ -7,7 +7,9 @@
 #include "core/math/path.h"
 #include "core/math/polygon.h"
 #include "core/math/triangulator.h"
+#include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRStroke.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/material/VRTexture.h"
@@ -101,7 +103,12 @@ GraphPtr VRRoadNetwork::getGraph() { return graph; }
 void VRRoadNetwork::clear() {
 	nextRoadID = 0;
 	if (ontology) ontology->remEntities("RoadMarking");
-    //if (asphalt) asphalt = VRAsphalt::create();
+	if (arrowTexture) arrowTexture = VRTexture::create();
+    if (asphaltArrow) asphaltArrow->setTexture(arrowTexture);
+    arrowTemplates.clear();
+    arrows = VRGeometry::create("arrows");
+    arrows->setMaterial(asphaltArrow);
+    addChild( arrows );
 }
 
 void VRRoadNetwork::updateTexture() { // TODO: port from python code
@@ -362,12 +369,9 @@ VRGeometryPtr VRRoadNetwork::createIntersectionGeometry( VREntityPtr intersectio
 	return intersection;
 }
 
-VRGeometryPtr VRRoadNetwork::createArrow(Vec4i dirs, int N) {
+void VRRoadNetwork::createArrow(Vec4i dirs, int N, const pose& p) {
     if (arrowTemplates.count(dirs) == 0) {
-        auto geo = VRGeometry::create("arrow");
-        geo->setPrimitive("Plane", "2.0 2.0 1 1");
-        geo->setEuler(Vec3f(-0.5*pi,0,0));
-        geo->applyTransformation();
+        arrowTemplates[dirs] = arrowTemplates.size();
 
         VRTextureGenerator tg;
         tg.setSize(Vec3i(400,400,1), true);
@@ -401,16 +405,24 @@ VRGeometryPtr VRRoadNetwork::createArrow(Vec4i dirs, int N) {
         auto aMask = tg.compose(0);
         if (!arrowTexture) arrowTexture = VRTexture::create();
         arrowTexture->merge(aMask, Vec3f(1,0,0));
-        //auto asphaltArrow = VRAsphalt::create();
-        //asphaltArrow->setArrowMaterial();
         asphaltArrow->setTexture(arrowTexture);
-        //geo->setMaterial(asphaltArrow);
-        arrowTemplates[dirs] = geo;
+        asphaltArrow->setShaderParameter("NArrowTex", (int)arrowTemplates.size());
     }
 
-    auto a = dynamic_pointer_cast<VRGeometry>( arrowTemplates[dirs]->duplicate() );
-    a->makeUnique();
-    return a;
+    GeoVec4fPropertyRecPtr cols = GeoVec4fProperty::create();
+    Vec4f color = Vec4f(arrowTemplates[dirs]*0.001, 0, 0);
+    for (int i=0; i<4; i++) cols->addValue(color);
+
+    VRGeoData gdata;
+    gdata.pushQuad(Vec3f(0,0,0), Vec3f(0,1,0), Vec3f(0,0,1), Vec2f(2,2), true);
+    auto geo = gdata.asGeometry("arrow");
+    geo->setPose( pose::create(p) );
+    geo->applyTransformation();
+    geo->setColors(cols);
+    geo->setMaterial(asphaltArrow);
+    arrows->merge(geo);
+    arrows->setPositionalTexCoords2D(1.0, 1, Vec2i(0,2));
+    return;
 }
 
 void VRRoadNetwork::computeIntersections() {
@@ -667,12 +679,7 @@ void VRRoadNetwork::computeSurfaces() {
         auto dirs = arrow->getAll("direction");
         Vec4i drs(999,999,999,999);
         for (int i=0; i<4 && i < dirs.size(); i++) drs[i] = toFloat(dirs[i]->value)*180/pi;
-
-        auto geo = createArrow(drs, dirs.size());
-        geo->setPose( pose::create(lpath->getPose(t)) );
-        geo->applyTransformation();
-        arrows->merge(geo);
-        arrows->setPositionalTexCoords2D(1.0, 1, Vec2i(0,2));
+        createArrow(drs, dirs.size(), lpath->getPose(t));
     }
 }
 

@@ -116,12 +116,14 @@ string VRAsphalt::asphalt_vp =
 GLSL(
 
 in vec4 osg_Vertex;
+in vec4 osg_Color;
 in vec2 osg_MultiTexCoord0;
 in vec2 osg_MultiTexCoord1;
 
 out vec4 position;
 out vec2 tc1;
 out vec2 tc2;
+out vec3 col;
 flat out int rID;
 
 void main(void) {
@@ -129,6 +131,7 @@ void main(void) {
 	gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex;
 	tc1 = osg_MultiTexCoord0;
 	tc2 = osg_MultiTexCoord1;
+	col = osg_Color.rgb;
 	rID = int(osg_MultiTexCoord1.x);
 }
 );
@@ -608,6 +611,7 @@ GLSL(
 uniform sampler2D texMarkings;
 uniform sampler2D texMud;
 uniform sampler2D texNoise;
+uniform int NArrowTex;
 
 vec4 color = vec4(0.0,0.0,0.0,1.0);
 vec4 trackColor = vec4(0.3, 0.3, 0.3, 1.0);
@@ -623,8 +627,9 @@ vec3 norm = vec3(0,1,0);
 float noise = 1;
 
 in vec4 position;
-in vec2 tc1; // noise
+in vec2 tc1;
 in vec2 tc2; // noise
+in vec3 col;
 flat in int rID;
 
 void asphalt() {
@@ -680,13 +685,16 @@ void main(void) {
 	computeNormal();
 	asphalt();
 
-	doLine = bool(texture(texMarkings, tc1).r == 1);
+	vec2 tc = vec2( (tc1.x+col.x*1000)*(1.0/NArrowTex), tc1.y );
+	doLine = bool(texture(texMarkings, tc).r == 1);
 	if (doLine) applyLine();
 	applyMud();
 	norm = gl_NormalMatrix * norm;
     computeDepth();
 
     //color = texture(texMarkings, tc1);
+    //color = vec4(col.x*150, 0, 1, 1);
+    //if (col.x == 0) color = vec4(1, 1, 0, 1);
     applyBlinnPhong();
 }
 );

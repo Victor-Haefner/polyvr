@@ -21,13 +21,13 @@ class VRRoadNetwork : public VRObject {
 
         VRGeometryPtr arrows;
         VRTexturePtr arrowTexture;
-        map<Vec4i, VRGeometryPtr> arrowTemplates;
+        map<Vec4i, int> arrowTemplates;
 
 		float trackWidth = 1.6; // TODO
 
         void setupTexCoords( VRGeometryPtr geo, VREntityPtr way );
         pathPtr toPath( VREntityPtr pathEntity, int resolution );
-        VRGeometryPtr createArrow(Vec4i dirs, int N);
+        void createArrow(Vec4i dirs, int N, const pose& p);
 
         void init();
 

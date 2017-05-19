@@ -29,6 +29,7 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         void setImage(ImageRecPtr img);
         void setInternalFormat(int ipf);
         int getInternalFormat();
+        int getByteSize();
         ImageRecPtr getImage();
 
         void read(string path);
