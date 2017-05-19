@@ -5,7 +5,7 @@
 #include "core/scripting/VRPyPose.h"
 #include "core/scripting/VRPyPath.h"
 #include "core/scripting/VRPySound.h"
-#include "addons/Bullet/CarDynamics/CarSound/CarSound.h"
+#include "CarSound/CarSound.h"
 
 using namespace OSG;
 
@@ -35,7 +35,7 @@ PyMethodDef VRPyCarDynamics::methods[] = {
     {"toggleCarSound", (PyCFunction)VRPyCarDynamics::toggleCarSound, METH_VARARGS, "toggle car sound - toggleCarSound(bool)" },
     {"getCarSound", (PyCFunction)VRPyCarDynamics::getCarSound, METH_NOARGS, "Get car sound - getCarSound()" },
     {"carSoundIsLoaded", (PyCFunction)VRPyCarDynamics::carSoundIsLoaded, METH_NOARGS, "Query if audio data has been loaded - carSoundIsLoaded()" },
-    {"setFade", (PyCFunction)VRPyCarDynamics::setFade, METH_VARARGS, "Set ignition - setFade(float)" },
+    {"setFade", (PyCFunction)VRPyCarDynamics::setFade, METH_VARARGS, "Set car sound fade - setFade( flt fade, flt duration )" },
     {NULL}  /* Sentinel */
 };
 

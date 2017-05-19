@@ -265,11 +265,7 @@ void CarDynamics::updateEngine() {
         acceleration = a;//abs(a);
     }
 
-    // engine sound
-    //if (carSound->active()) {
-        //carSound->setRPM(engine.rpm);
-        carSound->play(engine.rpm);
-    //}
+    carSound->play(engine.rpm);
 }
 
 void CarDynamics::setIgnition(bool b) {
