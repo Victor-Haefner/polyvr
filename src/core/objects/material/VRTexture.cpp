@@ -1,4 +1,5 @@
 #include "VRTexture.h"
+#include "core/math/boundingbox.h"
 
 #include <OpenSG/OSGImage.h>
 
@@ -18,8 +19,48 @@ void VRTexture::setInternalFormat(int ipf) { internal_format = ipf; }
 int VRTexture::getInternalFormat() { return internal_format; }
 ImageRecPtr VRTexture::getImage() { return img; }
 
-void VRTexture::read(string path) { img->read(path.c_str()); }
-void VRTexture::write(string path) { img->write(path.c_str()); }
+void VRTexture::read(string path) {
+    if (!img->read(path.c_str())) cout << " VRTexture::read failed!" << endl;
+}
+
+void VRTexture::write(string path) {
+    if (!img->write(path.c_str())) cout << " VRTexture::write failed!" << endl;
+}
+
+void VRTexture::paste(VRTexturePtr other, Vec3i offset) {
+    const UInt8* data = other->getImage()->getData();
+    Vec3i dim = other->getSize();
+    if (dim[0]*dim[1]*dim[2] == 0) return;
+    img->setSubData(offset[0], offset[1], offset[2], dim[0], dim[1], dim[2], data);
+}
+
+void VRTexture::resize(Vec3i size, Vec3i offset) {
+    auto tmp = VRTexture::create(img);
+    ImageRecPtr nimg = Image::create();
+    vector<char> data( img->getBpp()/8, 0 );
+    nimg->set(img->getPixelFormat(), size[0], size[1], size[2],
+              img->getMipMapCount(), img->getFrameCount(), img->getFrameDelay(),
+              (const uint8_t*)&data[0], img->getDataType(), true, img->getSideCount());
+    img = nimg;
+    paste(tmp, offset);
+}
+
+void VRTexture::merge(VRTexturePtr other, Vec3f pos) {
+    if (!other) return;
+    if (!other->img) return;
+    if (!img || getSize()[0] == 0) { img = other->img; return; }
+
+    Vec3i dim1 = getSize();
+    Vec3i dim2 = other->getSize();
+    Vec3i offset = Vec3i(dim1[0]*pos[0], dim1[1]*pos[1], dim1[2]*pos[2]);
+    Vec3i offset2 = Vec3i(min(0,offset[0]), min(0,offset[1]), min(0,offset[2]));
+
+    boundingbox bb; // compute total new size
+    bb.update( { Vec3f(offset), Vec3f(offset2), Vec3f(offset+dim2), Vec3f(offset2+dim1) } );
+    Vec3i dim3 = Vec3i(bb.size());
+    resize(dim3, offset2);
+    paste(other, offset);
+}
 
 int VRTexture::getChannels() {
     if (!img) return 0;

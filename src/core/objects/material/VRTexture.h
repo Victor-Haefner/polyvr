@@ -36,6 +36,10 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         int getChannels();
         Vec3i getSize();
         Vec4f getPixel(Vec2f uv);
+
+        void resize(Vec3i size, Vec3i offset);
+        void paste(VRTexturePtr other, Vec3i offset);
+        void merge(VRTexturePtr other, Vec3f pos);
 };
 
 OSG_END_NAMESPACE;

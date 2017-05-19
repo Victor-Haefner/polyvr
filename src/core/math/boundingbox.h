@@ -18,7 +18,8 @@ class boundingbox {
         void clear();
         bool empty() const;
 
-        void update(Vec3f v);
+        void update(const Vec3f& v);
+        void update(const vector<Vec3f>& v);
         void update(VRGeometryPtr g);
 
         Vec3f min() const;

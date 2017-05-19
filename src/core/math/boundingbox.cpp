@@ -15,7 +15,7 @@ void boundingbox::clear() {
     bb2 = Vec3f(-m,-m,-m);
 }
 
-void boundingbox::update(Vec3f v) {
+void boundingbox::update(const Vec3f& v) {
     cleared = false;
     for (int i=0; i<3; i++) {
         if (v[i] < bb1[i]) bb1[i] = v[i];
@@ -31,6 +31,8 @@ void boundingbox::update(VRGeometryPtr g) {
         update(p);
     }
 }
+
+void boundingbox::update(const vector<Vec3f>& v) { for (auto p : v) update(p); }
 
 bool boundingbox::empty() const { return cleared; }
 Vec3f boundingbox::min() const { return bb1; }

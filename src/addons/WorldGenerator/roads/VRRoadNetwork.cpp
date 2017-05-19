@@ -10,6 +10,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRStroke.h"
 #include "core/objects/material/VRTextureGenerator.h"
+#include "core/objects/material/VRTexture.h"
 #include "core/utils/toString.h"
 
 #include <OpenSG/OSGGeoProperties.h>
@@ -72,14 +73,25 @@ class Road {
 
 
 
-VRRoadNetwork::VRRoadNetwork() : VRObject("RoadNetwork") {
-    tool = VRPathtool::create();
-    asphalt = VRAsphalt::create();
-}
-
+VRRoadNetwork::VRRoadNetwork() : VRObject("RoadNetwork") {}
 VRRoadNetwork::~VRRoadNetwork() {}
 
-VRRoadNetworkPtr VRRoadNetwork::create() { return VRRoadNetworkPtr( new VRRoadNetwork() ); }
+VRRoadNetworkPtr VRRoadNetwork::create() {
+    auto rn = VRRoadNetworkPtr( new VRRoadNetwork() );
+    rn->init();
+    return rn;
+}
+
+void VRRoadNetwork::init() {
+    tool = VRPathtool::create();
+    asphalt = VRAsphalt::create();
+    asphaltArrow = VRAsphalt::create();
+    asphaltArrow->setArrowMaterial();
+
+    arrows = VRGeometry::create("arrows");
+    arrows->setMaterial(asphaltArrow);
+    addChild( arrows );
+}
 
 int VRRoadNetwork::getRoadID() { return ++nextRoadID; }
 VRAsphaltPtr VRRoadNetwork::getMaterial() { return asphalt; }
@@ -350,6 +362,57 @@ VRGeometryPtr VRRoadNetwork::createIntersectionGeometry( VREntityPtr intersectio
 	return intersection;
 }
 
+VRGeometryPtr VRRoadNetwork::createArrow(Vec4i dirs, int N) {
+    if (arrowTemplates.count(dirs) == 0) {
+        auto geo = VRGeometry::create("arrow");
+        geo->setPrimitive("Plane", "2.0 2.0 1 1");
+        geo->setEuler(Vec3f(-0.5*pi,0,0));
+        geo->applyTransformation();
+
+        VRTextureGenerator tg;
+        tg.setSize(Vec3i(400,400,1), true);
+        tg.drawFill(Vec4f(0,0,1,1));
+
+        for (int i=0; i<N; i++) {
+            float a = dirs[i]*pi/180.0;
+            Vec3f dir(sin(a), cos(a), 0);
+            Vec2f d02 = Vec2f(0.5,0.5); // rotation point
+            Vec3f d03 = Vec3f(0.5,0.5,0); // rotation point
+
+            auto apath = path::create();
+            apath->addPoint( pose(Vec3f(0.5,0.0,0), Vec3f(0,1,0), Vec3f(0,0,1)) );
+            apath->addPoint( pose(Vec3f(0.5,0.2,0), Vec3f(0,1,0), Vec3f(0,0,1)) );
+            apath->addPoint( pose(d03+dir*0.31, dir, Vec3f(0,0,1)) );
+            apath->compute(12);
+            tg.drawPath(apath, Vec4f(1,1,1,1), 0.1);
+
+            auto poly = polygon::create();
+            Matrix22<float> R = Matrix22<float>(cos(a), sin(a), -sin(a), cos(a));
+            Vec2f A = Vec2f(0.35,0.8)-d02;
+            Vec2f B = Vec2f(0.65,0.8)-d02;
+            Vec2f C = Vec2f(0.5,1.0)-d02;
+            A = R.mult(A); B = R.mult(B); C = R.mult(C);
+            poly->addPoint(d02+A);
+            poly->addPoint(d02+B);
+            poly->addPoint(d02+C);
+            tg.drawPolygon(poly, Vec4f(1,1,1,1));
+        }
+
+        auto aMask = tg.compose(0);
+        if (!arrowTexture) arrowTexture = VRTexture::create();
+        arrowTexture->merge(aMask, Vec3f(1,0,0));
+        //auto asphaltArrow = VRAsphalt::create();
+        //asphaltArrow->setArrowMaterial();
+        asphaltArrow->setTexture(arrowTexture);
+        //geo->setMaterial(asphaltArrow);
+        arrowTemplates[dirs] = geo;
+    }
+
+    auto a = dynamic_pointer_cast<VRGeometry>( arrowTemplates[dirs]->duplicate() );
+    a->makeUnique();
+    return a;
+}
+
 void VRRoadNetwork::computeIntersections() {
     int k = 0;
     for (auto node : ontology->process("q(n):Node(n);Road(r);has(r.path.nodes,n)") ) {
@@ -601,53 +664,15 @@ void VRRoadNetwork::computeSurfaces() {
         float t = toFloat( arrow->get("position")->value );
         auto lane = arrow->getEntity("lane");
         auto lpath = toPath( lane->getEntity("path"), 32 );
-        auto geo = VRGeometry::create("arrow");
-        geo->setEntity(arrow);
-        addChild( geo );
-
         auto dirs = arrow->getAll("direction");
-        geo->setPrimitive("Plane", "2.0 2.0 1 1");
-        geo->setEuler(Vec3f(-0.5*pi,0,0));
-        geo->applyTransformation();
+        Vec4i drs(999,999,999,999);
+        for (int i=0; i<4 && i < dirs.size(); i++) drs[i] = toFloat(dirs[i]->value)*180/pi;
+
+        auto geo = createArrow(drs, dirs.size());
         geo->setPose( pose::create(lpath->getPose(t)) );
         geo->applyTransformation();
-
-        VRTextureGenerator tg;
-        tg.setSize(Vec3i(400,400,1), true);
-        tg.drawFill(Vec4f(0,0,1,1));
-
-        for (auto d : dirs) {
-            float a = toFloat(d->value);
-
-            Vec3f dir(sin(a), cos(a), 0);
-            Vec2f d02 = Vec2f(0.5,0.5); // rotation point
-            Vec3f d03 = Vec3f(0.5,0.5,0); // rotation point
-
-            auto apath = path::create();
-            apath->addPoint( pose(Vec3f(0.5,0.0,0), Vec3f(0,1,0), Vec3f(0,0,1)) );
-            apath->addPoint( pose(Vec3f(0.5,0.2,0), Vec3f(0,1,0), Vec3f(0,0,1)) );
-            apath->addPoint( pose(d03+dir*0.31, dir, Vec3f(0,0,1)) );
-            apath->compute(12);
-            tg.drawPath(apath, Vec4f(1,1,1,1), 0.1);
-
-            auto poly = polygon::create();
-            Matrix22<float> R = Matrix22<float>(cos(a), sin(a), -sin(a), cos(a));
-            Vec2f A = Vec2f(0.35,0.8)-d02;
-            Vec2f B = Vec2f(0.65,0.8)-d02;
-            Vec2f C = Vec2f(0.5,1.0)-d02;
-            A = R.mult(A); B = R.mult(B); C = R.mult(C);
-            poly->addPoint(d02+A);
-            poly->addPoint(d02+B);
-            poly->addPoint(d02+C);
-            tg.drawPolygon(poly, Vec4f(1,1,1,1));
-        }
-
-        auto aMask = tg.compose(0);
-        auto asphaltArrow = VRAsphalt::create();
-        asphaltArrow->setArrowMaterial();
-        asphaltArrow->setTexture(aMask);
-        geo->setMaterial(asphaltArrow);
-        geo->setPositionalTexCoords2D(1.0, 1, Vec2i(0,2));
+        arrows->merge(geo);
+        arrows->setPositionalTexCoords2D(1.0, 1, Vec2i(0,2));
     }
 }
 

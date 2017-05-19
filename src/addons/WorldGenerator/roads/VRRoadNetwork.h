@@ -14,14 +14,22 @@ class VRRoadNetwork : public VRObject {
     private:
         GraphPtr graph;
         VRAsphaltPtr asphalt;
+        VRAsphaltPtr asphaltArrow;
         VROntologyPtr ontology;
         VRPathtoolPtr tool;
         int nextRoadID = 0;
+
+        VRGeometryPtr arrows;
+        VRTexturePtr arrowTexture;
+        map<Vec4i, VRGeometryPtr> arrowTemplates;
 
 		float trackWidth = 1.6; // TODO
 
         void setupTexCoords( VRGeometryPtr geo, VREntityPtr way );
         pathPtr toPath( VREntityPtr pathEntity, int resolution );
+        VRGeometryPtr createArrow(Vec4i dirs, int N);
+
+        void init();
 
     public:
         VRRoadNetwork();

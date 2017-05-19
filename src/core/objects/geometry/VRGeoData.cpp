@@ -74,7 +74,7 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
     auto posIdx = geo->getMesh()->geo->getIndex(Geometry::PositionsIndex);
     if (normsIdx != posIdx) { // TODO: fix normals
         //map<int, int> mapping;
-        cout << "VRGeoData Warning: normals and positions dont share indices!";
+        cout << "VRGeoData Warning: normals and positions dont share indices!\n";
     }
 }
 
