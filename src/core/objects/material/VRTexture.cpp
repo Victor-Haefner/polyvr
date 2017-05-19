@@ -29,15 +29,33 @@ void VRTexture::write(string path) {
 
 void VRTexture::paste(VRTexturePtr other, Vec3i offset) {
     const UInt8* data = other->getImage()->getData();
-    Vec3i dim = other->getSize();
-    if (dim[0]*dim[1]*dim[2] == 0) return;
-    img->setSubData(offset[0], offset[1], offset[2], dim[0], dim[1], dim[2], data);
+    Vec3i s1 = getSize();
+    Vec3i s2 = other->getSize();
+    if (s2[0]*s2[1]*s2[2] == 0) return;
+
+    Vec3i S = offset + s2;
+    if (S[0] > s1[0]) { cout << "VRTexture::paste sx too big: " << S << " s " << s1 << endl; return; }
+    if (S[1] > s1[1]) { cout << "VRTexture::paste sy too big: " << S << " s " << s1 << endl; return; }
+    if (S[2] > s1[2]) { cout << "VRTexture::paste sz too big: " << S << " s " << s1 << endl; return; }
+
+    auto data1 = img->editData();
+    auto data2 = other->img->editData();
+    int Bpp = getPixelByteSize();
+    for (int k=0; k<s2[2]; k++) {
+        for (int j=0; j<s2[1]; j++) {
+            size_t J1 = (offset[0] + (j+offset[1])*s1[0] + (k+offset[2])*s1[0]*s1[1])*Bpp;
+            size_t J2 = (j*s2[0] + k*s2[0]*s2[1])*Bpp;
+            memcpy(data1+J1, data2+J2, s2[0]*Bpp);
+        }
+    }
+
+    //img->setSubData(offset[0], offset[1], offset[2], dim[0], dim[1], dim[2], data);
+    // TODO: evaluate the speed against the setSubData function!
 }
 
 void VRTexture::resize(Vec3i size, Vec3i offset) {
     auto tmp = VRTexture::create(img);
-    int N = getSize()[0]*getSize()[1]*getSize()[2]*getByteSize();
-    vector<char> data( N, 0 );
+    vector<char> data( getByteSize(), 0 );
     ImageRecPtr nimg = Image::create();
     nimg->set(img->getPixelFormat(), size[0], size[1], size[2],
               img->getMipMapCount(), img->getFrameCount(), img->getFrameDelay(),
@@ -85,7 +103,7 @@ int VRTexture::getChannels() {
     return 0;
 }
 
-int VRTexture::getByteSize() {
+int VRTexture::getPixelByteN() {
     if (!img) return 0;
     auto f = img->getDataType();
     if (f == Image::OSG_INVALID_IMAGEDATATYPE) return 0;
@@ -98,6 +116,13 @@ int VRTexture::getByteSize() {
     if (f == Image::OSG_INT32_IMAGEDATA) return 4;
     if (f == Image::OSG_UINT24_8_IMAGEDATA) return 3;
     return 0;
+}
+
+int VRTexture::getPixelByteSize() { return getPixelByteN()*getChannels(); }
+
+size_t VRTexture::getByteSize() {
+    auto s = getSize();
+    return s[0]*s[1]*s[2]*getPixelByteSize();
 }
 
 Vec4f VRTexture::getPixel(Vec2f uv) { // TODO: check data format (float/integer/char)
