@@ -693,7 +693,7 @@ void main(void) {
     computeDepth();
 
     //color = texture(texMarkings, tc1);
-    //color = vec4(col.x*150, 0, 1, 1);
+    //color = vec4(col.x*1000*(1.0/NArrowTex), 0, 1, 1);
     //if (col.x == 0) color = vec4(1, 1, 0, 1);
     applyBlinnPhong();
 }

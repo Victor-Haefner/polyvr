@@ -378,22 +378,22 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const pose& p) {
 
         for (int i=0; i<N; i++) {
             float a = dirs[i]*pi/180.0;
-            Vec3f dir(sin(a), cos(a), 0);
+            Vec3f dir(sin(a), -cos(a), 0);
             Vec2f d02 = Vec2f(0.5,0.5); // rotation point
             Vec3f d03 = Vec3f(0.5,0.5,0); // rotation point
 
             auto apath = path::create();
-            apath->addPoint( pose(Vec3f(0.5,0.0,0), Vec3f(0,1,0), Vec3f(0,0,1)) );
-            apath->addPoint( pose(Vec3f(0.5,0.2,0), Vec3f(0,1,0), Vec3f(0,0,1)) );
+            apath->addPoint( pose(Vec3f(0.5,1.0,0), Vec3f(0,-1,0), Vec3f(0,0,1)) );
+            apath->addPoint( pose(Vec3f(0.5,0.8,0), Vec3f(0,-1,0), Vec3f(0,0,1)) );
             apath->addPoint( pose(d03+dir*0.31, dir, Vec3f(0,0,1)) );
             apath->compute(12);
             tg.drawPath(apath, Vec4f(1,1,1,1), 0.1);
 
             auto poly = polygon::create();
-            Matrix22<float> R = Matrix22<float>(cos(a), sin(a), -sin(a), cos(a));
-            Vec2f A = Vec2f(0.35,0.8)-d02;
-            Vec2f B = Vec2f(0.65,0.8)-d02;
-            Vec2f C = Vec2f(0.5,1.0)-d02;
+            Matrix22<float> R = Matrix22<float>(cos(a), -sin(a), sin(a), cos(a));
+            Vec2f A = Vec2f(0.35,0.2)-d02;
+            Vec2f B = Vec2f(0.65,0.2)-d02;
+            Vec2f C = Vec2f(0.5,0.0)-d02;
             A = R.mult(A); B = R.mult(B); C = R.mult(C);
             poly->addPoint(d02+A);
             poly->addPoint(d02+B);
@@ -409,7 +409,7 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const pose& p) {
     }
 
     GeoVec4fPropertyRecPtr cols = GeoVec4fProperty::create();
-    Vec4f color = Vec4f(arrowTemplates[dirs]*0.001, 0, 0);
+    Vec4f color = Vec4f((arrowTemplates[dirs]-1)*0.001, 0, 0);
     for (int i=0; i<4; i++) cols->addValue(color);
 
     VRGeoData gdata;
