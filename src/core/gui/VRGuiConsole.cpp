@@ -67,6 +67,7 @@ void VRConsoleWidget::resetColor() {
 
 void VRConsoleWidget::addStyle( string style, string fg, string bg, bool italic, bool bold, bool underlined ) {
     auto tag = buffer->create_tag();
+    tag->signal_event().connect( sigc::mem_fun(*this, &VRConsoleWidget::on_link_activate) );
     tag->set_property("editable", false);
     tag->set_property("foreground", fg);
     tag->set_property("background", bg);
@@ -80,9 +81,14 @@ bool VRConsoleWidget::on_link_activate(const Glib::RefPtr<Glib::Object>& obj, Gd
     GdkEventButton* event_btn = (GdkEventButton*)event;
     if (event->type == GDK_BUTTON_PRESS && event_btn->button == 1) {
         Glib::RefPtr< Gtk::TextTag > null;
-        Gtk::TextIter end = itr;
-        end.forward_to_tag_toggle(null);
-        for (auto mark : end.get_marks()) {
+        Gtk::TextIter markItr, tagToggle, lineEnd;
+        tagToggle = itr;
+        lineEnd = itr;
+        tagToggle.forward_to_tag_toggle(null);
+        lineEnd.forward_to_line_end();
+        lineEnd++;
+        markItr = lineEnd < tagToggle ? lineEnd : tagToggle;
+        for (auto mark : markItr.get_marks()) {
             if (links.count(mark)) {
                 if (auto l = links[mark].link) (*l)( links[mark].msg );
             }
@@ -99,9 +105,7 @@ void VRConsoleWidget::update() {
         auto& msg = msg_queue.front();
         if (styles.count( msg.style )) {
             auto tag = styles[msg.style];
-            if (msg.link) tag->signal_event().connect( sigc::mem_fun(*this, &VRConsoleWidget::on_link_activate) );
             Gtk::TextIter itr = buffer->insert_with_tag(buffer->end(), msg.msg, tag);
-            //Glib::RefPtr<TextBuffer::Mark> mark;
             Glib::RefPtr<Gtk::TextBuffer::Mark> mark = Gtk::TextBuffer::Mark::create();
             buffer->add_mark(mark, itr);
             if (msg.link) links[mark] = msg;

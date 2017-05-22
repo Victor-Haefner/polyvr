@@ -104,7 +104,6 @@ void VRRoadNetwork::clear() {
 	nextRoadID = 0;
 	if (ontology) ontology->remEntities("RoadMarking");
 	if (arrowTexture) arrowTexture = VRTexture::create();
-    if (asphaltArrow) asphaltArrow->setTexture(arrowTexture);
     arrowTemplates.clear();
     arrows = VRGeometry::create("arrows");
     arrows->setMaterial(asphaltArrow);

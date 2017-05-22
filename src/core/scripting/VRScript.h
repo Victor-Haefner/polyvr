@@ -80,6 +80,7 @@ class VRScript : public VRName {
         VRFunction<string>* cbfkt_soc;
 
         void on_err_link_clicked(errLink link, string s);
+        void pyTraceToConsole();
         void update();
 
     public:
