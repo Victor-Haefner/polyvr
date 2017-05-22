@@ -52,9 +52,10 @@ class VRScript : public VRName {
         };
 
         struct errLink {
+            string filename;
             int line;
             int column;
-            errLink(int l, int c);
+            errLink(string f, int l, int c);
         };
 
     private:
@@ -130,6 +131,7 @@ class VRScript : public VRName {
         void changeTrigKey(string name, int key);
         void changeTrigState(string name, string state);
 
+        void compile( PyObject* pGlobal, PyObject* pModVR );
         void execute();
         void execute_dev(VRDeviceWeakPtr dev);
         void execute_soc(string);

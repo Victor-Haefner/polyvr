@@ -298,10 +298,11 @@ int VRScript::getHeadSize() { // number of head lines
 }
 
 void VRScript::on_err_link_clicked(errLink link, string s) {
-    VRGuiManager::get()->focusScript(getName(), link.line, link.column);
+    //VRGuiManager::get()->focusScript(getName(), link.line, link.column);
+    VRGuiManager::get()->focusScript(link.filename, link.line, link.column);
 }
 
-VRScript::errLink::errLink(int l, int c) : line(l), column(c) {}
+VRScript::errLink::errLink(string f, int l, int c) : filename(f), line(l), column(c) {}
 
 void VRScript::pyTraceToConsole() { // get py trace
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
@@ -321,7 +322,7 @@ void VRScript::pyTraceToConsole() { // get py trace
         return frames;
     };
 
-    VRGuiManager::get()->getConsole( "Errors" )->addStyle( "redLink", "#ff3311", "#ffffff", false, true, true );
+    VRGuiManager::get()->getConsole( "Errors" )->addStyle( "redLink", "#ff3311", "#ffffff", false, false, true );
     PyThreadState* tstate = PyThreadState_GET();
 
     for (auto frame : getThreadStateFrames(tstate)) {
@@ -329,12 +330,24 @@ void VRScript::pyTraceToConsole() { // get py trace
             int line = PyCode_Addr2Line(frame->f_code, frame->f_lasti);
             string filename = PyString_AsString(frame->f_code->co_filename);
             string funcname = PyString_AsString(frame->f_code->co_name);
-            errLink eLink(line, 0);
+            errLink eLink(filename, line, 0);
             auto fkt = VRFunction<string>::create("search_link", boost::bind(&VRScript::on_err_link_clicked, this, eLink, _1) );
-            print( filename+" "+funcname+" "+toString(line)+"\n", "redLink", fkt );
+            print( "Line "+toString(line)+" in "+funcname+" in script "+filename, "redLink", fkt );
+            print( "\n" );
             frame = frame->f_back;
         }
     }
+}
+
+void VRScript::compile( PyObject* pGlobal, PyObject* pModVR ) {
+    PyObject* pCode = Py_CompileString(getScript().c_str(), getName().c_str(), Py_file_input);
+    if (!pCode) { pyTraceToConsole(); return; }
+    PyObject* pValue = PyEval_EvalCode((PyCodeObject*)pCode, pGlobal, PyModule_GetDict(pModVR));
+    if (!pValue) { pyTraceToConsole(); return; }
+    if (PyErr_Occurred()) PyErr_Print();
+    Py_DECREF(pCode);
+    Py_DECREF(pValue);
+    setFunction( PyObject_GetAttrString(pModVR, name.c_str()) );
 }
 
 void VRScript::execute() {

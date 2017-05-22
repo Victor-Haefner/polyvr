@@ -109,23 +109,7 @@ void VRScriptManager::updateScript(string name, string core, bool compile) {
 
     VRScriptPtr script = scripts[name];
     script->setCore(core);
-
-    if (!compile) return;
-    if (script->getType() == "Python") {
-        //PyGILState_STATE gstate = PyGILState_Ensure();
-        //PyObject* pValue = PyRun_String(script->getScript().c_str(), Py_file_input, pGlobal, pLocal);
-        PyObject* pValue = PyRun_String(script->getScript().c_str(), Py_file_input, pGlobal, PyModule_GetDict(pModVR));
-//    cout << "VRScriptManager::updateScript A\n";
-        if (PyErr_Occurred() != NULL) PyErr_Print();
-//    cout << "VRScriptManager::updateScript B\n";
-
-        if (pValue == NULL) return;
-        Py_DECREF(pValue);
-
-        //script->setFunction( PyObject_GetAttrString(pModBase, name.c_str()) );
-        script->setFunction( PyObject_GetAttrString(pModVR, name.c_str()) );
-        //PyGILState_Release(gstate);
-    }
+    if (compile && script->getType() == "Python") script->compile( pGlobal, pModVR );
 }
 
 
