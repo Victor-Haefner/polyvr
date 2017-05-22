@@ -154,6 +154,7 @@ vec4 trackColor = vec4(0.3, 0.3, 0.3, 1.0);
 vec4 roadData;
 bool doLine = false;
 bool doTrack = false;
+float distTrack = 1.0;
 
 struct Point {
 	vec3 pos;
@@ -232,10 +233,10 @@ void applyLine() {
 	color = mix(color, cLine, l );
 }
 
-void applyTrack(float d) {
-	d = 0.5-d;
-	d = clamp(d, 0.0, 1.0);
-	color = mix(color, trackColor, d );
+void applyTrack() {
+	distTrack = 0.5-distTrack;
+	distTrack = clamp(distTrack, 0.0, 1.0);
+	color = mix(color, trackColor, distTrack );
 }
 
 vec2 distToQuadBezier( vec3 A, vec3 B, vec3 C, vec3 x ) {
@@ -300,10 +301,10 @@ void computeNormal() {
 	norm = normalize( cross(va,vb) );
 }
 
-void computeDepth(bool doLine, bool doTrack) {
+void computeDepth() {
 	float o = 0.0;
 	if (doLine) o = -0.00002;
-	if (doTrack) o = -0.00001;
+	if (doTrack) o = -0.00001*distTrack;
 	vec4 pp = gl_ProjectionMatrix * position;
 	float d = (pp.z+o) / pp.w;
 	gl_FragDepth = d*0.5 + 0.5;
@@ -323,15 +324,14 @@ void applyBlinnPhong() {
 void doPaths() {
     vec3 pos = toWorld(position.xyz);
 	int k = 1;
-	float dist = 1.0;
 	int Nlines = int(roadData.x);
 
 	for (int i=0; i<Nlines; i++) {
 		vec4 pathData = getData(rID, k);
 		float width = pathData.y;
 		int Npoints = int(pathData.x);
-		dist = distToPath(k, rID, pos, pathData);
-		doLine = bool(dist < 10.0);
+		distTrack = distToPath(k, rID, pos, pathData);
+		doLine = bool(distTrack < 10.0);
 		if (doLine) break;
 		k += Npoints+1;
 	}
@@ -345,14 +345,14 @@ void doPaths() {
 			float d = distToPath(k, rID, pos, pathData);
 			if (d < 10.0) {
 				doTrack = true;
-				dist = min(dist,d/width);
+				distTrack = min(distTrack,d/width);
 			}
 			k += Npoints+1;
 		}
 	}
 
 	if (doLine) applyLine();
-	if (doTrack) applyTrack(dist);
+	if (doTrack) applyTrack();
 }
 
 void main(void) {
@@ -368,7 +368,7 @@ void main(void) {
 	//color = texture(texNoise, uv);
 
 	norm = gl_NormalMatrix * norm;
-    computeDepth(doLine,doTrack);
+    computeDepth();
 
     applyBlinnPhong();
 }
@@ -687,6 +687,7 @@ void main(void) {
 
 	vec2 tc = vec2( (tc1.x+col.x*1000)*(1.0/NArrowTex), tc1.y );
 	doLine = bool(texture(texMarkings, tc).r == 1);
+	if (!doLine) discard;
 	if (doLine) applyLine();
 	applyMud();
 	norm = gl_NormalMatrix * norm;

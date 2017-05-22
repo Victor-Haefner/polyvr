@@ -60,7 +60,7 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"addNode", (PyCFunction)VRPyRoadNetwork::addNode, METH_VARARGS, "Add a new node - node addNode( [x,y,z] )" },
     {"addLane", (PyCFunction)VRPyRoadNetwork::addLane, METH_VARARGS, "Add a new lane - lane addLane( int direction, road, float width )" },
     {"addWay", (PyCFunction)VRPyRoadNetwork::addWay, METH_VARARGS, "Add a new way - way addWay( str name, [paths], int rID, str type )" },
-    {"addRoad", (PyCFunction)VRPyRoadNetwork::addRoad, METH_VARARGS, "Add a new road - road addRoad( str name, node1, node2, norm1, norm2, lanesN )" },
+    {"addRoad", (PyCFunction)VRPyRoadNetwork::addRoad, METH_VARARGS, "Add a new road - road addRoad( str name, str type, node1, node2, norm1, norm2, lanesN )" },
     {"addPath", (PyCFunction)VRPyRoadNetwork::addPath, METH_VARARGS, "Add a new path - path addPath( str type, str name, [nodes], [normals] )" },
     {"addArrows", (PyCFunction)VRPyRoadNetwork::addArrows, METH_VARARGS, "Add a new path - arrows addArrows( lane, float t, [float] dirs )" },
     {"computeIntersectionLanes", (PyCFunction)VRPyRoadNetwork::computeIntersectionLanes, METH_VARARGS, "Compute the lanes of an intersection - computeIntersectionLanes( intersection )" },
@@ -212,13 +212,14 @@ PyObject* VRPyRoadNetwork::addWay(VRPyRoadNetwork* self, PyObject *args) {
 PyObject* VRPyRoadNetwork::addRoad(VRPyRoadNetwork* self, PyObject *args) {
     if (!self->valid()) return NULL;
     const char* name;
+    const char* type;
     VRPyEntity* node1 = 0;
     VRPyEntity* node2 = 0;
     PyObject* norm1 = 0;
     PyObject* norm2 = 0;
     int Nlanes = 1;
-    if (!PyArg_ParseTuple(args, "sOOOOi", &name, &node1, &node2, &norm1, &norm2, &Nlanes)) return NULL;
-    auto road = self->objPtr->addRoad( name?name:"", node1->objPtr, node2->objPtr, parseVec3fList(norm1), parseVec3fList(norm2), Nlanes );
+    if (!PyArg_ParseTuple(args, "ssOOOOi", &name, &type, &node1, &node2, &norm1, &norm2, &Nlanes)) return NULL;
+    auto road = self->objPtr->addRoad( name?name:"", type?type:"", node1->objPtr, node2->objPtr, parseVec3fList(norm1), parseVec3fList(norm2), Nlanes );
     return VRPyEntity::fromSharedPtr( road );
 }
 

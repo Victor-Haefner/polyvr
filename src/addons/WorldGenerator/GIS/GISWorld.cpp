@@ -57,6 +57,7 @@ void GISWorld::setupOntology() {
     Road->addProperty("sidewalks", Sidewalk);
     Road->addProperty("intersections", RoadIntersection);
     Road->addProperty("buildings", Building);
+    Road->addProperty("type", "string");
     RoadIntersection->addProperty("node", "Node");
     RoadIntersection->addProperty("roads", Road);
     Sidewalk->addProperty("kerbs", Kerb);

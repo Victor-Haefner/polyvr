@@ -47,7 +47,7 @@ class VRRoadNetwork : public VRObject {
         VREntityPtr addLane( int direction, VREntityPtr road, float width );
         VREntityPtr addWay( string name, vector<VREntityPtr> paths, int rID, string type );
         VREntityPtr addPath( string type, string name, vector<VREntityPtr> nodes, vector<Vec3f> normals );
-        VREntityPtr addRoad( string name, VREntityPtr node1, VREntityPtr node2, Vec3f norm1, Vec3f norm2, int Nlanes );
+        VREntityPtr addRoad( string name, string type, VREntityPtr node1, VREntityPtr node2, Vec3f norm1, Vec3f norm2, int Nlanes );
         VREntityPtr addArrows( VREntityPtr lane, float t, vector<float> dirs );
 
         VRGeometryPtr createRoadGeometry( VREntityPtr road );

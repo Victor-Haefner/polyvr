@@ -206,7 +206,8 @@ vector<VREntityPtr> VREntity::getAllEntities(string prop) {
 Vec3f VREntity::getVec3f(string prop, int i) {
     Vec3f res;
     auto vec = getVector(prop, i);
-    for (int i=0; i<3; i++) res[i] = toFloat( vec[i]->value );
+    int N = vec.size(); N = min(N,3);
+    for (int i=0; i<N; i++) res[i] = toFloat( vec[i]->value );
     return res;
 }
 
