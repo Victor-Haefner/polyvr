@@ -247,6 +247,8 @@
 		<Unit filename="src/addons/Algorithms/VRPathFinding.h" />
 		<Unit filename="src/addons/Algorithms/VRPyGraphLayout.cpp" />
 		<Unit filename="src/addons/Algorithms/VRPyGraphLayout.h" />
+		<Unit filename="src/addons/Algorithms/VRPyPathFinding.cpp" />
+		<Unit filename="src/addons/Algorithms/VRPyPathFinding.h" />
 		<Unit filename="src/addons/Bullet/CarDynamics/CarDynamics.cpp" />
 		<Unit filename="src/addons/Bullet/CarDynamics/CarDynamics.h" />
 		<Unit filename="src/addons/Bullet/CarDynamics/CarSound/CarSound.cpp" />
