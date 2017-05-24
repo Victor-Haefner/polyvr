@@ -32,6 +32,14 @@ void boundingbox::update(VRGeometryPtr g) {
     }
 }
 
+Vec3f boundingbox::getRandomPoint() {
+    float x = float(rand())/RAND_MAX;
+    float y = float(rand())/RAND_MAX;
+    float z = float(rand())/RAND_MAX;
+    Vec3f s = size();
+    return bb1 + Vec3f(x*s[0], y*s[1], z*s[2]);
+}
+
 void boundingbox::update(const vector<Vec3f>& v) { for (auto p : v) update(p); }
 
 bool boundingbox::empty() const { return cleared; }

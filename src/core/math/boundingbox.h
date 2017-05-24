@@ -34,6 +34,8 @@ class boundingbox {
 
         bool isInside(Vec3f p) const;
         bool intersectedBy(Line l);
+
+        Vec3f getRandomPoint();
 };
 
 OSG_END_NAMESPACE;

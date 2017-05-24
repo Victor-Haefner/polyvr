@@ -89,11 +89,39 @@ void Polygon::set(vector<Vec2f> vec) { for (auto v : vec) addPoint(v); }
 
 std::shared_ptr<Polygon> Polygon::create() { return std::shared_ptr<Polygon>( new Polygon() ); }
 
+void Polygon::translate(Vec3f v) {
+    for (auto& p : points) p += Vec2f(v[0], v[2]);
+    for (auto& p : points3) p += v;
+}
+
 void Polygon::clear() {
     points.clear();
     points3.clear();
     closed = false;
     convex = false;
+}
+
+Vec3f Polygon::getRandomPoint() {
+    auto bb = getBoundingBox();
+    Vec3f p;
+    do p = bb.getRandomPoint();
+    while(!isInside(Vec2f(p[0], p[2])));
+    return p;
+}
+
+float Polygon::computeArea() {
+    float area = 0;
+    for (int i=0; i<points.size(); i++) {
+        Vec2f p1 = points[i];
+        Vec2f p2 = points[(i+1)%points.size()];
+        area += p1[0]*p2[1] - p1[1]*p2[0];
+    }
+    for (int i=0; i<points3.size(); i++) {
+        Vec3f p1 = points3[i];
+        Vec3f p2 = points3[(i+1)%points3.size()];
+        area += p1.cross(p2).length();
+    }
+    return 0.5*abs(area);
 }
 
 void Polygon::close() {
@@ -126,7 +154,8 @@ bool Polygon::isInside(Vec2f p) {
 
 boundingbox Polygon::getBoundingBox() {
     boundingbox bb;
-    for (auto p : points) bb.update(Vec3f(p));
+    for (auto p : points) bb.update(Vec3f(p[0], 0, p[1]));
+    for (auto p : points3) bb.update(p);
     return bb;
 }
 

@@ -1,6 +1,8 @@
 #include "VRPyTree.h"
 #include "core/scripting/VRPyMaterial.h"
 #include "core/scripting/VRPyImage.h"
+#include "core/scripting/VRPyPolygon.h"
+#include "core/scripting/VRPyTransform.h"
 #include "core/scripting/VRPyBaseT.h"
 
 using namespace OSG;
@@ -63,12 +65,20 @@ PyObject* VRPyTree::setLeafMaterial(VRPyTree* self, PyObject* args) {
 
 PyMethodDef VRPyWoods::methods[] = {
     {"addTree", (PyCFunction)VRPyWoods::addTree, METH_VARARGS, "Add a copy of the passed tree to the woods and return the copy - tree addTree( tree | bool updateLODs ) " },
+    {"addGrassPatch", (PyCFunction)VRPyWoods::addGrassPatch, METH_VARARGS, "Add a grass path using area - patch addTree( polygon area | bool updateLODs ) " },
     {"computeLODs", (PyCFunction)VRPyWoods::computeLODs, METH_NOARGS, "Compute LODs - computeLODs() " },
     {"clear", (PyCFunction)VRPyWoods::clear, METH_NOARGS, "Clear woods - clear() " },
     {"getTree", (PyCFunction)VRPyWoods::getTree, METH_VARARGS, "Get a tree by id - getTree( int ) " },
     {"removeTree", (PyCFunction)VRPyWoods::removeTree, METH_VARARGS, "Remove a tree by id - removeTree( int ) " },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyWoods::addGrassPatch(VRPyWoods* self, PyObject* args) {
+    VRPyPolygon* o = 0;
+    int u = 0;
+    if (! PyArg_ParseTuple(args, "O|i", &o, &u)) return NULL;
+    return VRPyTransform::fromSharedPtr( self->objPtr->addGrassPatch( o->objPtr, u ) );
+}
 
 PyObject* VRPyWoods::addTree(VRPyWoods* self, PyObject* args) {
     VRPyTree* o = 0;

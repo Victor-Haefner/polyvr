@@ -64,6 +64,7 @@ class VRWoods : public VRLodTree {
 
         VRMaterialPtr truncMat;
         VRMaterialPtr leafMat;
+        VRMaterialPtr grassMat;
 
         void computeFirstLevel();
         void computeSecondLevel();
@@ -81,7 +82,7 @@ class VRWoods : public VRLodTree {
         void clear();
         VRTreePtr addTree(VRTreePtr t, bool updateLODs = 0, bool addToStore = true);
         VRTreePtr getTree(int id);
-        VRGrassPatchPtr addGrassPatch(PolygonPtr area, bool updateLODs = 0);
+        VRTransformPtr addGrassPatch(PolygonPtr area, bool updateLODs = 0);
         void remTree(int id);
         void computeLODs();
         void computeLODs(VRLodLeafPtr leaf);

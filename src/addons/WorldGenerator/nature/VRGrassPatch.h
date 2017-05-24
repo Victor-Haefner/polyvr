@@ -15,8 +15,10 @@ class VRGrassPatch : public VRTransform {
         VRMaterialPtr mat;
         PolygonPtr area;
         map<int, VRGeometryPtr> lods;
+        float bladeHeight = 0.3;
 
-        void addGrassBlade(VRGeoData& data);
+        void addGrassBlade(VRGeoData& data, Vec3f pos, float a, float dh, Vec3f c);
+        void createPatch(VRGeoData& data, int lvl = 0);
 
     public:
         VRGrassPatch();

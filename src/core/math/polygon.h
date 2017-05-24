@@ -33,6 +33,7 @@ class Polygon {
         bool isConvex();
         bool isCCW();
         void turn();
+        void translate(Vec3f v);
 
         vector<Vec2f> get();
         vector<Vec3f> get3();
@@ -41,6 +42,8 @@ class Polygon {
         Polygon getConvexHull();
         boundingbox getBoundingBox();
         vector< Polygon > getConvexDecomposition();
+        float computeArea();
+        Vec3f getRandomPoint();
 
         vector<Vec3f> toSpace(Matrix m);
         bool isInside(Vec2f p);
