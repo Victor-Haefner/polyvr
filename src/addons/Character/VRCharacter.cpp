@@ -61,7 +61,8 @@ VRSkeleton::~VRSkeleton() {}
 VRSkeletonPtr VRSkeleton::create() { return VRSkeletonPtr(new VRSkeleton() ); }
 
 int VRSkeleton::addBone(int j1, int j2) {
-    auto& edge = armature->connect(j1, j2);
+    int eID = armature->connect(j1, j2);
+    auto& edge = armature->getEdge(eID);
     //return edge.ID; // TODO
     return 0;
 }

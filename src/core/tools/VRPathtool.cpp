@@ -208,7 +208,8 @@ void VRPathtool::connect(int i1, int i2, bool handles, Vec3f n1, Vec3f n2) {
     if (i1 == i2) return;
     if (!graph) return;
     if (!graph->connected(i1,i2)) {
-        auto& e = graph->connect(i1,i2);
+        int eID = graph->connect(i1,i2);
+        auto& e = graph->getEdge(eID);
         setGraphEdge(e, handles, n1, n2);
     } else disconnect(i1,i2);
 }

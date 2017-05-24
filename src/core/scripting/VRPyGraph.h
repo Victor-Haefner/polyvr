@@ -9,6 +9,8 @@ struct VRPyGraph : VRPyBaseT<OSG::Graph> {
     static PyObject* getEdges(VRPyGraph* self);
     static PyObject* getInEdges(VRPyGraph* self, PyObject* args);
     static PyObject* getOutEdges(VRPyGraph* self, PyObject* args);
+    static PyObject* addNode(VRPyGraph* self, PyObject* args);
+    static PyObject* connect(VRPyGraph* self, PyObject* args);
 };
 
 #endif // VRPYGRAPH_H_INCLUDED

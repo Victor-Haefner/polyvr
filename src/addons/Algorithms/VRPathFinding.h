@@ -18,32 +18,44 @@ class VRPathFinding {
             int eID = -1;
             float t = 0;
 
-            Position(int nID);
+            Position(int nID = -1);
             Position(int eID, float t);
+
+            bool operator==(const Position& p);
+            bool operator<(const Position& p) const;
         };
 
     private:
         GraphPtr graph;
+        vector<pathPtr> paths;
 
-        map<int, int> closedSet; // set of nodes already evaluated
-        map<int, int> openSet; // set of currently discovered nodes that are not evaluated yet
-        map<int, int> cameFrom; // key = current step, value=the most efficient previous step
+        map<Position, int> closedSet; // set of nodes already evaluated
+        map<Position, int> openSet; // set of currently discovered nodes that are not evaluated yet
+        map<Position, Position> cameFrom; // key = current step, value=the most efficient previous step
 
-        map<int, float> gCost; //key = node, value = cost from the start to current node
-        map<int, float> fCost; //key = node, value = estimated cost from the start to end
+        map<Position, float> gCost; //key = node, value = cost from the start to current node
+        map<Position, float> fCost; //key = node, value = estimated cost from the start to end
         float hCost; //?
 
-        int getMinFromOpenSet();
-        float getDistance(int node1, int node2); // return value?
+
+        Vec3f pos(Position& p);
+        vector<Position> getNeighbors(Position& p);
+
+        bool valid(Position& p);
+        Position getMinFromOpenSet();
+        float getDistance(Position node1, Position node2); // return value?
         float hEstimation();
-        vector<Position> reconstructBestPath(int current);
+        vector<Position> reconstructBestPath(Position current);
 
 
     public:
         VRPathFinding();
         ~VRPathFinding();
-        vector<Position> calcBestPath(int start, int goal);
+        static VRPathFindingPtr create();
 
+        void setGraph(GraphPtr g);
+        void setPaths(vector<pathPtr> p);
+        vector<Position> computePath(Position start, Position goal);
 };
 
 OSG_END_NAMESPACE

@@ -37,12 +37,12 @@ Graph::Graph() {
 
 Graph::~Graph() {}
 
-Graph::edge& Graph::connect(int i, int j, CONNECTION c) {
+int Graph::connect(int i, int j, CONNECTION c) {
     //if (i >= int(nodes.size()) || j >= int(nodes.size())) return edge;
     while (i >= int(edges.size())) edges.push_back( vector<edge>() );
     edges[i].push_back(edge(i,j,c,edgesByID.size()));
     edgesByID.push_back(Vec2i(i,j));
-    return *edges[i].rbegin();
+    return edgesByID.size()-1;
 }
 
 void Graph::disconnect(int i, int j) {
@@ -67,9 +67,12 @@ bool Graph::connected(int i, int j) {
     return false;
 }
 
+bool Graph::hasNode(int i) { return (i >= 0 && i < nodes.size()); }
+bool Graph::hasEdge(int i) { return (i >= 0 && i < edgesByID.size()); }
 vector< vector< Graph::edge > >& Graph::getEdges() { return edges; }
 vector< Graph::node >& Graph::getNodes() { return nodes; }
 Graph::node& Graph::getNode(int i) { return nodes[i]; }
+Graph::edge& Graph::getEdge(int i) { Vec2i e = edgesByID[i]; return edges[e[0]][e[1]]; }
 int Graph::size() { return nodes.size(); }
 
 int Graph::getNEdges() {

@@ -61,6 +61,7 @@
 
 #include "addons/Character/VRPyCharacter.h"
 #include "addons/Algorithms/VRPyGraphLayout.h"
+#include "addons/Algorithms/VRPyPathFinding.h"
 #include "addons/CaveKeeper/VRPyCaveKeeper.h"
 #include "addons/Bullet/Particles/VRPyParticles.h"
 #include "addons/Bullet/Fluids/VRPyFluids.h"
@@ -119,6 +120,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyStateMachine>("StateMachine", pModVR);
     sm->registerModule<VRPyState>("State", pModVR);
     sm->registerModule<VRPyGraphLayout>("GraphLayout", pModVR);
+    sm->registerModule<VRPyPathFinding>("PathFinding", pModVR);
     sm->registerModule<VRPyPolygon>("Polygon", pModVR);
     sm->registerModule<VRPyTriangulator>("Triangulator", pModVR);
     sm->registerModule<VRPyRecorder>("Recorder", pModVR);

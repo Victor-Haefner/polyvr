@@ -1,5 +1,6 @@
 #include "VRPathFinding.h"
 #include "core/math/graph.h"
+#include "core/math/path.h"
 
 #include <OpenSG/OSGVector.h>
 #include <map>
@@ -9,51 +10,102 @@ using namespace OSG;
 VRPathFinding::Position::Position(int nID) : nID(nID) {}
 VRPathFinding::Position::Position(int eID, float t) : eID(eID), t(t) {}
 
+bool VRPathFinding::Position::operator==(const Position& p) {
+    bool b1 = (nID == p.nID && eID == p.eID);
+    bool b2 = (abs(t-p.t) < 1e-6);
+    return b1 && b2;
+}
+
+bool VRPathFinding::Position::operator<(const Position& p) const {
+    float k1 = nID + eID + t;
+    float k2 = p.nID + p.eID + p.t;
+    return k1 < k2;
+}
+
+Vec3f VRPathFinding::pos(Position& p) {
+    if (p.nID >= 0) {
+        auto node = graph->getNode(p.nID);
+        return node.p.pos();
+    }
+
+    if (p.eID >= 0) {
+        auto path = paths[p.eID];
+        return path->getPose(p.t).pos();
+    }
+
+    return Vec3f();
+}
+
 
 VRPathFinding::VRPathFinding() {}
+VRPathFinding::~VRPathFinding() {}
 
-float VRPathFinding::getDistance(int node1, int node2) {
-    auto n1 = graph->getNode(node1);
-    auto n2 = graph->getNode(node2);
-    return (n2.p.pos() - n1.p.pos()).length(); // ? C++
+VRPathFindingPtr VRPathFinding::create() { return VRPathFindingPtr( new VRPathFinding() ); }
+
+void VRPathFinding::setGraph(GraphPtr g) { graph = g; }
+void VRPathFinding::setPaths(vector<pathPtr> p) { paths = p; }
+
+float VRPathFinding::getDistance(Position n1, Position n2) {
+    return (pos(n2) - pos(n1)).length(); // ? C++
 }
 
 
-vector<VRPathFinding::Position> VRPathFinding::reconstructBestPath(int current){
-     vector<Position> bestRoute( { Position(current) } );
-     auto node = graph->getNode(current);
-     while( cameFrom.count(current) ) {
+vector<VRPathFinding::Position> VRPathFinding::reconstructBestPath(Position current){
+    vector<Position> bestRoute( { current } );
+    while( cameFrom.count(current) ) {
         current = cameFrom[current];
         bestRoute.push_back(current);
-     }
-     return bestRoute;
+    }
+    reverse(bestRoute.begin(), bestRoute.end());
+    return bestRoute;
 }
 
+bool VRPathFinding::valid(Position& p) {
+    if (p.nID >= 0) if (graph->hasNode(p.nID)) return true;
+    if (p.eID >= 0 && p.t >= 0 && p.t <= 1) if (graph->hasEdge(p.eID)) return true;
+    return false;
+}
 
-int VRPathFinding::getMinFromOpenSet() {
-    int res = 0;
+VRPathFinding::Position VRPathFinding::getMinFromOpenSet() {
+    Position res;
     float fMin = 1e9;
     for (auto n : openSet) {
         float f = fCost[n.first];
         if (f < fMin) {
             fMin = f;
-            res = n.first;
+            res = Position(n.first);
         }
     }
     return res;
 }
 
-vector<VRPathFinding::Position> VRPathFinding::calcBestPath(int start, int goal) {
-    vector<Position> route;
+vector<VRPathFinding::Position> VRPathFinding::getNeighbors(Position& p) {
+    vector<Position> res;
+    if (p.nID >= 0) {
+        for (auto edge : graph->getEdges()[p.nID]) {
+            if (edge.from != p.nID) res.push_back(Position(edge.from));
+            if (edge.to != p.nID) res.push_back(Position(edge.to));
+        }
+    }
+    if (p.eID >= 0) {
+        auto edge = graph->getEdge(p.eID);
+        res.push_back(Position(edge.from));
+        res.push_back(Position(edge.to));
+    }
+    return res;
+}
+
+vector<VRPathFinding::Position> VRPathFinding::computePath(Position start, Position goal) {
+    if (!valid(start) || !valid(goal)) return vector<Position>();
+    openSet[start] = 1;
     while (!openSet.empty()) {
-        int current = getMinFromOpenSet();
+        Position current = getMinFromOpenSet();
         if (current == goal) return reconstructBestPath(current);
 
         openSet.erase(current);
         closedSet[current] = 1;
 
-        for (auto edge : graph->getEdges()[current]) {
-            int neighbor = edge.to;
+        for (auto neighbor : getNeighbors(current)) { // TODO: take edge positions into account!
             if (closedSet.count(neighbor)) continue;
             gCost[current] = getDistance(start, current);
             float tentative_gCost = gCost[current] + getDistance(current, neighbor);
@@ -65,8 +117,8 @@ vector<VRPathFinding::Position> VRPathFinding::calcBestPath(int start, int goal)
             gCost[neighbor] = tentative_gCost;
             fCost[neighbor] = gCost[neighbor] + getDistance(neighbor, goal); //heuristic_cost_estimate(node, end)
         }
-        cout << "Error openSet is empty" << endl;
     }
-    return route;
+    cout << "Error openSet is empty" << endl;
+    return vector<Position>();
 }
 

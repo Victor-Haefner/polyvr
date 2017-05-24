@@ -45,9 +45,10 @@ class Graph : public VRStorage {
 
         static shared_ptr< Graph > create() { return shared_ptr< Graph >(new Graph()); }
 
-        edge& connect(int i, int j, CONNECTION c = SIMPLE);
+        int connect(int i, int j, CONNECTION c = SIMPLE);
         void disconnect(int i, int j);
         node& getNode(int i);
+        edge& getEdge(int e);
         vector< node >& getNodes();
         vector< vector<edge> >& getEdges();
         int getNEdges();
@@ -55,6 +56,9 @@ class Graph : public VRStorage {
         bool connected(int i1, int i2);
         void setPosition(int i, posePtr v);
         posePtr getPosition(int i);
+
+        bool hasNode(int i);
+        bool hasEdge(int i);
 
         virtual int addNode();
         virtual void remNode(int i);
