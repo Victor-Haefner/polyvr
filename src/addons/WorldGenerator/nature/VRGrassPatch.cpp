@@ -1,9 +1,10 @@
 #include "VRGrassPatch.h"
 #include "core/objects/geometry/VRGeoData.h"
+#include "core/math/polygon.h"
 
 using namespace OSG;
 
-VRGrassPatch::VRGrassPatch() : VRObject("grass_patch") {}
+VRGrassPatch::VRGrassPatch() : VRTransform("grass_patch") {}
 VRGrassPatch::~VRGrassPatch() {}
 VRGrassPatchPtr VRGrassPatch::create() { return VRGrassPatchPtr( new VRGrassPatch() ); }
 
@@ -34,7 +35,30 @@ void VRGrassPatch::addGrassBlade(VRGeoData& data) { // Todo: replace by triangle
     data.pushTri(4,5,6);
 }
 
-//void VRGrassPatch::add
+void VRGrassPatch::setArea(PolygonPtr p) {
+    area = p;
+    Vec3f median = area->getBoundingBox().center();
+    setFrom(median);
+}
+
+void VRGrassPatch::createLod(VRGeoData& geo, int lvl, Vec3f offset, int ID) {
+    Matrix Offset;
+    Offset.setTranslate(offset);
+
+    Vec2f id = Vec2f(ID,1); // the 1 is a flag to identify the ID as such!
+
+    if (lods.count(lvl)) {
+        geo.append(lods[lvl], Offset);
+        return;
+    }
+
+    VRGeoData Hull;
+    addGrassBlade(Hull);
+
+    lods[lvl] = Hull.asGeometry("grassLod");
+    geo.append(Hull, Offset);
+}
+
 
 /**
 
@@ -44,11 +68,10 @@ Idea:
 - render grass as second pass, using terrain info
 - reuse road texture stuff!
 
-
-
-
-
 */
+
+
+
 
 
 

@@ -137,7 +137,7 @@ void ModuleTerrain::addTerrain(string texture, string key, string value, int hei
 }
 
 void ModuleTerrain::addTerrain(Terrain* ter, VRGeoData* gdTerrain, int height){
-    //create && fill vector a with polygon corners
+    //create && fill vector a with Polygon corners
     Vector2dVector a;
     bool first = true;
     for (Vec2f corner : ter->getCorners()) {
@@ -148,7 +148,7 @@ void ModuleTerrain::addTerrain(Terrain* ter, VRGeoData* gdTerrain, int height){
     // allocate an STL vector to hold the answer.
     Vector2dVector result;
 
-    //  Invoke the triangulator to triangulate this polygon.
+    //  Invoke the triangulator to triangulate this Polygon.
     Triangulate::Process(a,result);
 
     int tcount = result.size()/3;

@@ -181,9 +181,9 @@ MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
 
 vector<pointPolySegment> MChain::toPolygon(Vec3f p) {
     vector<pointPolySegment> res;
-    for (uint i=0; i<polygon.size(); i+=2) {
-        Vec3f p1 = polygon[i];
-        Vec3f p2 = polygon[i+1];
+    for (uint i=0; i<Polygon.size(); i+=2) {
+        Vec3f p1 = Polygon[i];
+        Vec3f p2 = Polygon[i+1];
         Vec3f d = p2-p1;
         Vec3f d1 = p1-p;
         Vec3f d2 = p2-p;
@@ -310,9 +310,9 @@ void MChain::updateGeo() {
     GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
     GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
 
-    // collect all polygon points
+    // collect all Polygon points
     //printNeighbors();
-    polygon.clear();
+    Polygon.clear();
     vector<MPart*> nbrs;
     map<int, MPart*> nbrs_m;
     for (auto n : neighbors) nbrs_m[((MChainGearRelation*)n.second)->segID] = n.first;
@@ -366,8 +366,8 @@ void MChain::updateGeo() {
         Vec3f t2 = dn.cross(nbrs[j]->geo->getWorldDirection());
         t1 = c1 + t1*y1 + dn*x1;
         t2 = c2 + t2*y2 - dn*x2;
-        polygon.push_back(t1);
-        polygon.push_back(t2);
+        Polygon.push_back(t1);
+        Polygon.push_back(t2);
 
         /*Vec3f check = t2-t1;
         cout << nbrs[i]->geo->getName() << " " << nbrs[j]->geo->getName();
@@ -376,11 +376,11 @@ void MChain::updateGeo() {
         cout << endl;*/
     }
 
-    // draw polygon
+    // draw Polygon
     j=0;
-    for (uint i=0; i<polygon.size(); i+=2) {
-        Vec3f p1 = polygon[i];
-        Vec3f p2 = polygon[i+1];
+    for (uint i=0; i<Polygon.size(); i+=2) {
+        Vec3f p1 = Polygon[i];
+        Vec3f p2 = Polygon[i+1];
         pos->addValue(p1);
         pos->addValue(p2);
         norms->addValue(Vec3f(0,1,0));

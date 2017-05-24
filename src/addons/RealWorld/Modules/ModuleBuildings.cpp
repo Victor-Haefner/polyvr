@@ -160,7 +160,7 @@ Vec2f convRTC(float u, float v, Vec2f m) {
 }
 
 void ModuleBuildings::addBuildingRoof(VRGeoData* r_geo_d, Building* building, float height, float elevation){
-    //create && fill vector a with polygon corners
+    //create && fill vector a with Polygon corners
     Vector2dVector a;
     bool first = true;
     for(auto corner : building->getCorners()) {
@@ -169,7 +169,7 @@ void ModuleBuildings::addBuildingRoof(VRGeoData* r_geo_d, Building* building, fl
     }
 
     Vector2dVector result; // allocate an STL vector to hold the answer.
-    Triangulate::Process(a,result); //  Invoke the triangulator to triangulate this polygon.
+    Triangulate::Process(a,result); //  Invoke the triangulator to triangulate this Polygon.
 
     //create roof
     height = (float)height * Config::get()->BUILDING_FLOOR_HEIGHT + elevation;

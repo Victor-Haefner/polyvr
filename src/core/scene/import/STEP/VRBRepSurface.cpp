@@ -59,7 +59,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         if (bounds.size() == 0) cout << "Warning: No bounds!\n";
         for (auto b : bounds) {
             //if (b.points.size() == 0) cout << "Warning: No bound points for bound " << b.BRepType << endl;
-            polygon poly;
+            Polygon poly;
             for(auto p : b.points) {
                 mI.mult(Pnt3f(p),p);
                 poly.addPoint(Vec2f(p[0], p[1]));
@@ -85,7 +85,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         Triangulator t;
 
         for (auto b : bounds) {
-            polygon poly;
+            Polygon poly;
             float la = -1001;
             cout << "Bound\n";
             cout << b.edgeEndsToString() << endl;
@@ -549,7 +549,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         // feed the triangulator with unprojected points
         /*Triangulator t;
         for (auto b : bounds) {
-            polygon poly;
+            Polygon poly;
             for(auto p : b.points) {
                 mI.mult(Pnt3f(p),p);
                 float u = p[0];

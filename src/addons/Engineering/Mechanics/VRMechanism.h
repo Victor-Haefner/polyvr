@@ -140,7 +140,7 @@ class MChain : public MPart {
 
         string dirs;
         CSTATE cstate = WHOLE;
-        vector<Vec3f> polygon;
+        vector<Vec3f> Polygon;
 
         MChain();
         ~MChain();

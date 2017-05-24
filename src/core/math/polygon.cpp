@@ -15,14 +15,14 @@ typedef std::list<CGALPolygon> CGALPolyList;
 
 using namespace OSG;
 
-CGALPolygon toCGALPolygon(polygon p) {
+CGALPolygon toCGALPolygon(Polygon p) {
     vector<CGALPoint> pnts;
     for (auto v : p.get()) pnts.push_back(CGALPoint(v[0], v[1]));
     return CGALPolygon( &pnts[0], &pnts[pnts.size()-1] );
 }
 
-polygon fromCGALPolygon(CGALPolygon cp) {
-    polygon p;
+Polygon fromCGALPolygon(CGALPolygon cp) {
+    Polygon p;
     for (auto itr = cp.vertices_begin(); itr != cp.vertices_end(); itr++) {
         CGALPoint k = *itr;
     //for (int i=0; i<cp.size(); i++) {
@@ -32,9 +32,9 @@ polygon fromCGALPolygon(CGALPolygon cp) {
     return p;
 }
 
-polygon::polygon() {}
+Polygon::Polygon() {}
 
-bool polygon::isCCW() {
+bool Polygon::isCCW() {
     float s = 0;
     auto tmp = points;
     if (!closed && tmp.size() > 0) tmp.push_back(tmp[0]);
@@ -46,8 +46,8 @@ bool polygon::isCCW() {
     return (s <= 0);
 }
 
-void polygon::runTest() {
-    polygon poly;
+void Polygon::runTest() {
+    Polygon poly;
 
     /*poly.addPoint(Vec2f(-1,0));
     poly.addPoint(Vec2f(0,1));
@@ -80,30 +80,30 @@ void polygon::runTest() {
     for (auto poly : res) cout << "convex " << poly.toString() << endl;
 }
 
-void polygon::addPoint(Vec2f p) { if (!closed) points.push_back(p); }
-void polygon::addPoint(Vec3f p) { if (!closed) points3.push_back(p); }
-Vec2f polygon::getPoint(int i) { return points[i]; }
-Vec3f polygon::getPoint3(int i) { return points3[i]; }
-int polygon::size() { return max( points.size(), points3.size() ); }
-void polygon::set(vector<Vec2f> vec) { for (auto v : vec) addPoint(v); }
+void Polygon::addPoint(Vec2f p) { if (!closed) points.push_back(p); }
+void Polygon::addPoint(Vec3f p) { if (!closed) points3.push_back(p); }
+Vec2f Polygon::getPoint(int i) { return points[i]; }
+Vec3f Polygon::getPoint3(int i) { return points3[i]; }
+int Polygon::size() { return max( points.size(), points3.size() ); }
+void Polygon::set(vector<Vec2f> vec) { for (auto v : vec) addPoint(v); }
 
-std::shared_ptr<polygon> polygon::create() { return std::shared_ptr<polygon>( new polygon() ); }
+std::shared_ptr<Polygon> Polygon::create() { return std::shared_ptr<Polygon>( new Polygon() ); }
 
-void polygon::clear() {
+void Polygon::clear() {
     points.clear();
     points3.clear();
     closed = false;
     convex = false;
 }
 
-void polygon::close() {
+void Polygon::close() {
     if (closed) return;
     closed = true;
     if (points.size() > 0) points.push_back(points[0]);
     if (points3.size() > 0) points3.push_back(points3[0]);
 }
 
-bool polygon::isInside(Vec2f p) {
+bool Polygon::isInside(Vec2f p) {
     if (points.size() <= 1) return false;
     // cast ray in +x from p and intersect all lines
     int K = 0;
@@ -124,14 +124,14 @@ bool polygon::isInside(Vec2f p) {
     return (K%2 == 1);
 }
 
-boundingbox polygon::getBoundingBox() {
+boundingbox Polygon::getBoundingBox() {
     boundingbox bb;
     for (auto p : points) bb.update(Vec3f(p));
     return bb;
 }
 
-polygon polygon::sort() {
-    if (points.size() == 0) return polygon();
+Polygon Polygon::sort() {
+    if (points.size() == 0) return Polygon();
     Vec2f p0 = points[0]; // rightmost lowest point
     for (uint i=0; i<points.size(); i++) {
         Vec2f p = points[i];
@@ -140,7 +140,7 @@ polygon polygon::sort() {
     }
 
     // sort fan
-    polygon radial_sort;
+    Polygon radial_sort;
     radial_sort.addPoint(p0);
     for (auto p : points) if (p != p0) radial_sort.addPoint(p);
 
@@ -155,14 +155,14 @@ polygon polygon::sort() {
     return radial_sort;
 }
 
-vector<Vec2f> polygon::get() { return points; }
-vector<Vec3f> polygon::get3() { return points3; }
+vector<Vec2f> Polygon::get() { return points; }
+vector<Vec3f> Polygon::get3() { return points3; }
 
-polygon polygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKING UNRELIABLE!!!
+Polygon Polygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKING UNRELIABLE!!!
     /*auto radial_sort = sort();
-    if (radial_sort.size() < 3) return polygon();
-    //cout << " polygon::getConvexHull points " << toString() << endl;
-    //cout << " polygon::getConvexHull sort " << radial_sort.toString() << endl;
+    if (radial_sort.size() < 3) return Polygon();
+    //cout << " Polygon::getConvexHull points " << toString() << endl;
+    //cout << " Polygon::getConvexHull sort " << radial_sort.toString() << endl;
 
     auto getTurn = [](Vec2f p0, Vec2f p1, Vec2f p2) -> float {
         return (p1[0]-p0[0])*(p2[1]-p0[1])-(p1[1]-p0[1])*(p2[0]-p0[0]);
@@ -198,10 +198,10 @@ polygon polygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKING UN
         }
     }
 
-    polygon res;
+    Polygon res;
     res.convex = true;
     for (auto p : omega) res.addPoint(p);
-    //cout << " polygon::getConvexHull res " << res.toString() << endl;
+    //cout << " Polygon::getConvexHull res " << res.toString() << endl;
     return res;*/
 
     /*CGAL::set_ascii_mode(std::cin);
@@ -212,7 +212,7 @@ polygon polygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKING UN
     vector<Kernel::Point_2> pIn; for (auto p : points) pIn.push_back(Kernel::Point_2(p[0],p[1]));
     vector<Kernel::Point_2> pOut; for (auto p : points) pOut.push_back(Kernel::Point_2());
     auto pOutEnd = CGAL::ch_graham_andrew( pIn.begin(), pIn.end(), pOut.begin() );
-    polygon res;
+    Polygon res;
     for (auto pItr = pOut.begin(); pItr != pOutEnd; pItr++) {
         auto p = *pItr;
         res.addPoint(Vec2f(p[0],p[2]));
@@ -220,11 +220,11 @@ polygon polygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKING UN
     return res;
 }
 
-float polygon::getTurn(Vec2f p0, Vec2f p1, Vec2f p2) {
+float Polygon::getTurn(Vec2f p0, Vec2f p1, Vec2f p2) {
     return (p1[0]-p0[0])*(p2[1]-p0[1])-(p1[1]-p0[1])*(p2[0]-p0[0]);
 }
 
-bool polygon::isConvex() {
+bool Polygon::isConvex() {
     if (size() <= 3) return true;
 
     for (int i=2; i<size(); i++) {
@@ -233,13 +233,13 @@ bool polygon::isConvex() {
     return true;
 }
 
-void polygon::turn() {
+void Polygon::turn() {
     reverse(points.begin(), points.end());
     reverse(points3.begin(), points3.end());
 }
 
-vector< polygon > polygon::getConvexDecomposition() {
-    vector< polygon > res;
+vector< Polygon > Polygon::getConvexDecomposition() {
+    vector< Polygon > res;
 
     if (isConvex()) { // allready convex?
         res.push_back(*this);
@@ -257,7 +257,7 @@ vector< polygon > polygon::getConvexDecomposition() {
     return res;
 }
 
-vector<Vec3f> polygon::toSpace(Matrix m) {
+vector<Vec3f> Polygon::toSpace(Matrix m) {
     vector<Vec3f> res;
     for (auto p : points) {
         Vec3f pp = Vec3f(p[0], p[1], -sqrt(1-(p[0]*p[0]+p[1]*p[1])));
@@ -267,7 +267,7 @@ vector<Vec3f> polygon::toSpace(Matrix m) {
     return res;
 }
 
-string polygon::toString() {
+string Polygon::toString() {
     stringstream ss;
     ss << "poly: \n ";
     for (auto p : points) ss << p << " \n ";

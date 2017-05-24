@@ -75,14 +75,14 @@ bool Triangulate::Snip(const Vector2dVector &contour,int u,int v,int w,int n,int
 
 bool Triangulate::Process(const Vector2dVector &contour,Vector2dVector &result)
 {
-  /* allocate && initialize list of Vertices in polygon */
+  /* allocate && initialize list of Vertices in Polygon */
 
   int n = contour.size();
   if ( n < 3 ) return false;
 
   int *V = new int[n];
 
-  /* we want a counter-clockwise polygon in V */
+  /* we want a counter-clockwise Polygon in V */
 
   if ( 0.0f < Area(contour) )
     for (int v=0; v<n; v++) V[v] = v;
@@ -96,14 +96,14 @@ bool Triangulate::Process(const Vector2dVector &contour,Vector2dVector &result)
 
   for(int m=0, v=nv-1; nv>2; )
   {
-    /* if we loop, it is probably a non-simple polygon */
+    /* if we loop, it is probably a non-simple Polygon */
     if (0 >= (count--))
     {
-      //** Triangulate: ERROR - probable bad polygon!
+      //** Triangulate: ERROR - probable bad Polygon!
       return false;
     }
 
-    /* three consecutive vertices in current polygon, <u,v,w> */
+    /* three consecutive vertices in current Polygon, <u,v,w> */
     int u = v  ; if (nv <= u) u = 0;     /* previous */
     v = u+1; if (nv <= v) v = 0;     /* new v    */
     int w = v+1; if (nv <= w) w = 0;     /* next     */
@@ -122,7 +122,7 @@ bool Triangulate::Process(const Vector2dVector &contour,Vector2dVector &result)
 
       m++;
 
-      /* remove v from remaining polygon */
+      /* remove v from remaining Polygon */
       for(s=v,t=v+1;t<nv;s++,t++) V[s] = V[t]; nv--;
 
       /* resest error detection counter */

@@ -349,7 +349,7 @@ VRGeometryPtr VRRoadNetwork::createRoadGeometry( VREntityPtr roadEnt ) {
 }
 
 VRGeometryPtr VRRoadNetwork::createIntersectionGeometry( VREntityPtr intersectionEnt ) {
-    polygon poly; // intersection polygon
+    Polygon poly; // intersection Polygon
     auto roads = intersectionEnt->getAllEntities("roads");
     VREntityPtr node = intersectionEnt->getEntity("node");
     if (!node) return 0;
@@ -396,7 +396,7 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const pose& p) {
             apath->compute(12);
             tg.drawPath(apath, Vec4f(1,1,1,1), 0.1);
 
-            auto poly = polygon::create();
+            auto poly = Polygon::create();
             Matrix22<float> R = Matrix22<float>(cos(a), -sin(a), sin(a), cos(a));
             Vec2f A = Vec2f(0.35,0.2)-d02;
             Vec2f B = Vec2f(0.65,0.2)-d02;

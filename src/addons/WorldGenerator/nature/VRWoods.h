@@ -60,6 +60,8 @@ class VRWoods : public VRLodTree {
         map<string, shared_ptr<VRObjectManager::Entry> > treeEntries;
         map<VRTree*, VRTreePtr> treeRefs;
 
+        map<VRGrassPatch*, VRGrassPatchPtr> grassPatchRefs;
+
         VRMaterialPtr truncMat;
         VRMaterialPtr leafMat;
 
@@ -79,8 +81,10 @@ class VRWoods : public VRLodTree {
         void clear();
         VRTreePtr addTree(VRTreePtr t, bool updateLODs = 0, bool addToStore = true);
         VRTreePtr getTree(int id);
+        VRGrassPatchPtr addGrassPatch(PolygonPtr area, bool updateLODs = 0);
         void remTree(int id);
         void computeLODs();
+        void computeLODs(VRLodLeafPtr leaf);
         void computeLODs(map<Octree*, VRLodLeafPtr>& leafs);
 };
 

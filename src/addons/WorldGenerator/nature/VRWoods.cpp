@@ -1,5 +1,6 @@
 #include "VRWoods.h"
 #include "VRTree.h"
+#include "VRGrassPatch.h"
 
 #include "core/scene/VRSceneManager.h"
 #include "core/objects/object/VRObject.h"
@@ -10,6 +11,8 @@
 #include "core/objects/VRLod.h"
 #include "core/math/Octree.h"
 #include "core/math/pose.h"
+#include "core/math/polygon.h"
+#include "core/math/boundingbox.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
 
@@ -194,33 +197,42 @@ void VRWoods::remTree(int id) {
     computeLODs(aLeafs);
 }
 
+VRGrassPatchPtr VRWoods::addGrassPatch(PolygonPtr area, bool updateLODs) {
+    Vec3f median = area->getBoundingBox().center();
+
+    auto grass = VRGrassPatch::create();
+    grass->setArea(area);
+    grassPatchRefs[grass.get()] = grass;
+    auto leaf = addObject(grass, median, 0); // pose contains the world position!
+    if (updateLODs) computeLODs(leaf);
+    return grass;
+}
+
 VRTreePtr VRWoods::addTree(VRTreePtr t, bool updateLODs, bool addToStore) {
     posePtr p = t->getRelativePose(ptr());
     auto td = dynamic_pointer_cast<VRTree>( t->duplicate() );
     treeTemplates[t->getName()] = t;
     treeRefs[td.get()] = t;
-    auto leaf = addObject(td, p->pos(), 0); // getFrom contains the world position!
+    auto leaf = addObject(td, p->pos(), 0); // pose contains the world position!
     treesByID[td->getID()] = td;
 
     auto te = VRObjectManager::Entry::create();
     te->set( p, t->getName());
     if (addToStore) treeEntries[td->getName()] = te;
-
-    if (updateLODs) {
-        auto oLeafs = leaf->getOLeaf()->getAncestry();
-        map<Octree*, VRLodLeafPtr> aLeafs;
-        for (auto o : oLeafs) {
-            if (leafs.count(o) == 0) continue;
-            aLeafs[o] = leafs[o];
-        }
-        computeLODs(aLeafs);
-    }
-
+    if (updateLODs) computeLODs(leaf);
     return td;
 }
 
-void VRWoods::computeLODs() {
-    computeLODs(leafs);
+void VRWoods::computeLODs() { computeLODs(leafs); }
+
+void VRWoods::computeLODs(VRLodLeafPtr leaf) {
+    auto oLeafs = leaf->getOLeaf()->getAncestry();
+    map<Octree*, VRLodLeafPtr> aLeafs;
+    for (auto o : oLeafs) {
+        if (leafs.count(o) == 0) continue;
+        aLeafs[o] = leafs[o];
+    }
+    computeLODs(aLeafs);
 }
 
 void VRWoods::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {

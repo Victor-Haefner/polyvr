@@ -43,13 +43,13 @@ struct Triangulator::GeoData {
 };
 
 void Triangulator::testQuad() {
-    polygon p1;
+    Polygon p1;
     p1.addPoint(Vec2f(-2,3));
     p1.addPoint(Vec2f(-2,0));
     p1.addPoint(Vec2f(2,0));
     p1.addPoint(Vec2f(2,3));
 
-    polygon p2;
+    Polygon p2;
     p2.addPoint(Vec2f(-1,2));
     p2.addPoint(Vec2f(-1,1));
     p2.addPoint(Vec2f(1,1));
@@ -63,7 +63,7 @@ Triangulator::Triangulator() {}
 Triangulator::~Triangulator() {}
 shared_ptr<Triangulator> Triangulator::create() { return shared_ptr<Triangulator>(new Triangulator()); }
 
-void Triangulator::add(polygon p, bool outer) {
+void Triangulator::add(Polygon p, bool outer) {
     if (outer) outer_bounds.push_back(p);
     else inner_bounds.push_back(p);
 }

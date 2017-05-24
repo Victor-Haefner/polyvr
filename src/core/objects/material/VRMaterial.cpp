@@ -625,7 +625,7 @@ void VRMaterial::setZOffset(float factor, float bias) {
 
 void VRMaterial::setSortKey(int key) {
     auto md = mats[activePass];
-    //if (md->polygonChunk == 0) { md->polygonChunk = PolygonChunk::create(); md->mat->addChunk(md->polygonChunk); }
+    //if (md->polygonChunk == 0) { md->polygonChunk = polygonChunk::create(); md->mat->addChunk(md->polygonChunk); }
     md->mat->setSortKey(key);
 }
 

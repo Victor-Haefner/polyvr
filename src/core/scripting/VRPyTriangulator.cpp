@@ -8,7 +8,7 @@ using namespace OSG;
 simplePyType(Triangulator, New_ptr);
 
 PyMethodDef VRPyTriangulator::methods[] = {
-    {"add", (PyCFunction)VRPyTriangulator::add, METH_VARARGS, "Add polygon - add( polygon )" },
+    {"add", (PyCFunction)VRPyTriangulator::add, METH_VARARGS, "Add Polygon - add( Polygon )" },
     {"compute", (PyCFunction)VRPyTriangulator::compute, METH_NOARGS, "Compute geometry - geo compute()" },
     {NULL}  /* Sentinel */
 };

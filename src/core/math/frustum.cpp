@@ -43,7 +43,7 @@ void frustum::computeProfile() {
     if (!profile.isCCW()) profile.turn();
 }
 
-frustum frustum::fromProfile(polygon p, pose t) {
+frustum frustum::fromProfile(Polygon p, pose t) {
     frustum res;
     res.setPose(t);
     auto prof3D = p.toSpace( t.asMatrix() );
@@ -73,7 +73,7 @@ vector<Plane> frustum::getNearFarPlanes() {
 
 frustum frustum::getConvexHull() {
     computeProfile();
-    polygon cnvx = profile.getConvexHull();
+    Polygon cnvx = profile.getConvexHull();
     frustum res = fromProfile(cnvx, trans);
     res.convex = true;
     return res;

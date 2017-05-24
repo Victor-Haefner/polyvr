@@ -15,8 +15,8 @@ class Triangulator {
         GeoData* geo = 0;
 
     private:
-        vector<polygon> outer_bounds;
-        vector<polygon> inner_bounds;
+        vector<Polygon> outer_bounds;
+        vector<Polygon> inner_bounds;
 
         void testQuad();
         void tessellate();
@@ -26,7 +26,7 @@ class Triangulator {
         ~Triangulator();
         static shared_ptr<Triangulator> create();
 
-        void add(polygon p, bool outer = true);
+        void add(Polygon p, bool outer = true);
 
         VRGeometryPtr compute();
 };

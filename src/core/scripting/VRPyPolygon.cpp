@@ -3,16 +3,16 @@
 
 using namespace OSG;
 
-newPyType(polygon, Polygon, New_ptr);
+newPyType(Polygon, Polygon, New_ptr);
 
 PyMethodDef VRPyPolygon::methods[] = {
     {"addPoint", (PyCFunction)VRPyPolygon::addPoint, METH_VARARGS, "Add a point - addPoint([x,y])" },
     {"getPoint", (PyCFunction)VRPyPolygon::getPoint, METH_VARARGS, "Get a point - [x,y] getPoint( int i )" },
     {"getPoints", (PyCFunction)VRPyPolygon::getPoints, METH_NOARGS, "Get the list of points - [[x,y]] getPoints()" },
-    {"getConvexHull", (PyCFunction)VRPyPolygon::getConvexHull, METH_NOARGS, "Get the convex hull - polygon getConvexHull()" },
-    {"close", (PyCFunction)VRPyPolygon::close, METH_NOARGS, "Close the polygon - close()" },
+    {"getConvexHull", (PyCFunction)VRPyPolygon::getConvexHull, METH_NOARGS, "Get the convex hull - Polygon getConvexHull()" },
+    {"close", (PyCFunction)VRPyPolygon::close, METH_NOARGS, "Close the Polygon - close()" },
     {"size", (PyCFunction)VRPyPolygon::size, METH_NOARGS, "Get the number of points - int size()" },
-    {"set", (PyCFunction)VRPyPolygon::set, METH_VARARGS, "Set the polygon from a list of points - set( [[x,y]] )" },
+    {"set", (PyCFunction)VRPyPolygon::set, METH_VARARGS, "Set the Polygon from a list of points - set( [[x,y]] )" },
     {"clear", (PyCFunction)VRPyPolygon::clear, METH_NOARGS, "Clear all points - clear()" },
     {NULL}  /* Sentinel */
 };

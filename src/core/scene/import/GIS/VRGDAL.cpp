@@ -48,7 +48,7 @@ void loadSHP(string path, VRTransformPtr res) {
             return;
         }
         if (type == wkbPolygon) {
-            //cout << "  polygon:" << endl;
+            //cout << "  Polygon:" << endl;
             OGRPolygon* poly = (OGRPolygon*) geo;
             OGRLinearRing* ex = poly->getExteriorRing();
             //cout << "   outer bound:";

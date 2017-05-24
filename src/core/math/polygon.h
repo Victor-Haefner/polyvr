@@ -8,7 +8,7 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class polygon {
+class Polygon {
     private:
         vector<Vec2f> points;
         vector<Vec3f> points3;
@@ -19,8 +19,8 @@ class polygon {
         float getTurn(Vec2f p0, Vec2f p1, Vec2f p2);
 
     public:
-        polygon();
-        static std::shared_ptr<polygon> create();
+        Polygon();
+        static std::shared_ptr<Polygon> create();
 
         void addPoint(Vec2f p);
         void addPoint(Vec3f p);
@@ -37,10 +37,10 @@ class polygon {
         vector<Vec2f> get();
         vector<Vec3f> get3();
         void set(vector<Vec2f> vec);
-        polygon sort();
-        polygon getConvexHull();
+        Polygon sort();
+        Polygon getConvexHull();
         boundingbox getBoundingBox();
-        vector< polygon > getConvexDecomposition();
+        vector< Polygon > getConvexDecomposition();
 
         vector<Vec3f> toSpace(Matrix m);
         bool isInside(Vec2f p);

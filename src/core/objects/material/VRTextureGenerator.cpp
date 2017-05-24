@@ -87,7 +87,7 @@ void VRTextureGenerator::drawPath(pathPtr p, Vec4f c, float w) {
     layers.push_back(l);
 }
 
-void VRTextureGenerator::drawPolygon(polygonPtr p, Vec4f c, float h) {
+void VRTextureGenerator::drawPolygon(PolygonPtr p, Vec4f c, float h) {
     Layer l;
     l.type = POLYGON;
     l.pgon = p;
@@ -309,7 +309,7 @@ void VRTextureGenerator::applyPath(Vec4f* data, pathPtr p, Vec4f c, float w) {
         Vec2f A2 = Vec2f(p2.pos()-p2.x()*w*0.5);
         Vec2f B2 = Vec2f(p2.pos()+p2.x()*w*0.5);
 
-        auto poly = polygon::create();
+        auto poly = Polygon::create();
         poly->addPoint(A1);
         poly->addPoint(B1);
         poly->addPoint(B2);
@@ -318,7 +318,7 @@ void VRTextureGenerator::applyPath(Vec4f* data, pathPtr p, Vec4f c, float w) {
     }
 }
 
-void VRTextureGenerator::applyPolygon(Vec3f* data, polygonPtr p, Vec4f c, float h) {
+void VRTextureGenerator::applyPolygon(Vec3f* data, PolygonPtr p, Vec4f c, float h) {
     auto bb = p->getBoundingBox();
     Vec3f a = bb.min();
     Vec3f b = bb.max();
@@ -334,7 +334,7 @@ void VRTextureGenerator::applyPolygon(Vec3f* data, polygonPtr p, Vec4f c, float 
     }
 }
 
-void VRTextureGenerator::applyPolygon(Vec4f* data, polygonPtr p, Vec4f c, float h) {
+void VRTextureGenerator::applyPolygon(Vec4f* data, PolygonPtr p, Vec4f c, float h) {
     auto bb = p->getBoundingBox();
     Vec3f a = bb.min();
     Vec3f b = bb.max();
