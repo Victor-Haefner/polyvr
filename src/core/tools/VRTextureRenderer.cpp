@@ -4,6 +4,7 @@
 #include "core/objects/VRCamera.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
+#include "core/objects/material/VRTextureGenerator.h"
 #include "core/scene/VRScene.h"
 
 #include <OpenSG/OSGBackground.h>
@@ -17,6 +18,11 @@
 #include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGSimpleTexturedMaterial.h>
+
+#include <OpenSG/OSGPassiveWindow.h>
+#include <OpenSG/OSGViewport.h>
+#include <OpenSG/OSGRenderAction.h>
+#include <OpenSG/OSGSolidBackground.h>
 
 using namespace std;
 using namespace OSG;
@@ -59,8 +65,8 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     TextureBufferRefPtr texBuf = TextureBuffer::create();
     RenderBufferRefPtr depthBuf = RenderBuffer::create();
     data->fbo = FrameBufferObject::create();
-    data->fboTexImg = Image::create();
 
+    data->fboTexImg = Image::create();
     data->fboTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
     data->fboTex->setImage(data->fboTexImg);
     texBuf->setTexture(data->fboTex);
@@ -72,7 +78,7 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     data->fbo->setWidth (data->fboWidth );
     data->fbo->setHeight(data->fboHeight);
     data->fbo->setPostProcessOnDeactivate(true);
-    texBuf->setReadBack (true);
+    texBuf->setReadBack(true);
 
     mat = VRMaterial::create("VRTextureRenderer");
     mat->setTexture(data->fboTex);
@@ -91,12 +97,14 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
 VRTextureRenderer::~VRTextureRenderer() { delete data; }
 VRTextureRendererPtr VRTextureRenderer::create(string name) { return VRTextureRendererPtr( new VRTextureRenderer(name) ); }
 
-void VRTextureRenderer::setup(VRCameraPtr cam, int width, int height) {
+void VRTextureRenderer::setup(VRCameraPtr c, int width, int height, bool alpha) {
+    cam = c;
     data->fboWidth = width;
     data->fboHeight = height;
     data->fbo->setWidth (data->fboWidth );
     data->fbo->setHeight(data->fboHeight);
-    data->fboTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
+    if (alpha) data->fboTexImg->set(Image::OSG_RGBA_PF, data->fboWidth, data->fboHeight);
+    else data->fboTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
     data->stage->setCamera(cam->getCam());
 }
 
@@ -106,4 +114,31 @@ void VRTextureRenderer::setActive(bool b) {
     if (b) setCore(OSGCore::create(data->stage), "TextureRenderer", true);
     else setCore(OSGCore::create(Group::create()), "TextureRenderer", true);
 }
+
+VRTexturePtr VRTextureRenderer::renderOnce() {
+    auto scene = VRScene::getCurrent();
+
+    RenderActionRefPtr ract = RenderAction::create();
+    PassiveWindowRecPtr win = PassiveWindow::create();
+    ViewportRecPtr view = Viewport::create();
+    SolidBackgroundRecPtr bg = SolidBackground::create();
+    bg->setAlpha(0);
+    mat->enableTransparency();
+    data->stage->setBackground(bg);
+
+    win->addPort(view);
+    view->setRoot(getNode()->node);
+    view->setCamera(cam->getCam());
+    view->setBackground(scene->getBackground());
+    win->render(ract);
+    data->stage->setBackground(scene->getBackground());
+
+    ImageRecPtr img = Image::create();
+    img->set( data->fboTexImg );
+    return VRTexture::create( img );
+}
+
+
+
+
 

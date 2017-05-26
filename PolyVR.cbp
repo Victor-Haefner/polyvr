@@ -824,6 +824,8 @@
 		<Unit filename="src/core/scripting/VRPyBaseFactory.cpp" />
 		<Unit filename="src/core/scripting/VRPyBaseFactory.h" />
 		<Unit filename="src/core/scripting/VRPyBaseT.h" />
+		<Unit filename="src/core/scripting/VRPyBoundingbox.cpp" />
+		<Unit filename="src/core/scripting/VRPyBoundingbox.h" />
 		<Unit filename="src/core/scripting/VRPyCamera.cpp" />
 		<Unit filename="src/core/scripting/VRPyCamera.h" />
 		<Unit filename="src/core/scripting/VRPyClipPlane.cpp" />

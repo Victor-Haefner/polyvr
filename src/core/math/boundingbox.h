@@ -4,6 +4,7 @@
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGLine.h>
 #include "core/objects/VRObjectFwd.h"
+#include "core/math/VRMathFwd.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -15,6 +16,8 @@ class boundingbox {
 
     public:
         boundingbox();
+        static boundingboxPtr create();
+
         void clear();
         bool empty() const;
 

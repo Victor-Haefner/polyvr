@@ -15,6 +15,7 @@ class VRTextureRenderer : public VRObject {
         Data* data = 0;
         VRMaterialPtr mat = 0;
         VRTexturePtr fbotex = 0;
+        VRCameraPtr cam = 0;
 
         void test();
 
@@ -24,10 +25,12 @@ class VRTextureRenderer : public VRObject {
 
         static VRTextureRendererPtr create(string name);
 
-        void setup(VRCameraPtr cam, int width, int height);
+        void setup(VRCameraPtr cam, int width, int height, bool alpha = false);
 
         void setActive(bool b);
         VRMaterialPtr getMaterial();
+
+        VRTexturePtr renderOnce();
 };
 
 OSG_END_NAMESPACE;

@@ -8,6 +8,8 @@ using namespace OSG;
 
 boundingbox::boundingbox() { clear(); }
 
+boundingboxPtr boundingbox::create() { return boundingboxPtr(new boundingbox()); }
+
 void boundingbox::clear() {
     cleared = true;
     float m = 1e6;
