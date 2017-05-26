@@ -99,7 +99,6 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"getIndices", (PyCFunction)VRPyGeometry::getIndices, METH_NOARGS, "get geometry indices" },
     {"getTexCoords", (PyCFunction)VRPyGeometry::getTexCoords, METH_NOARGS, "get geometry texture coordinates" },
     {"getMaterial", (PyCFunction)VRPyGeometry::getMaterial, METH_NOARGS, "get material" },
-    {"getBoundingbox", (PyCFunction)VRPyGeometry::getBoundingbox, METH_NOARGS, "get boundingbox" },
     {"merge", (PyCFunction)VRPyGeometry::merge, METH_VARARGS, "Merge another geometry into this one - merge( geo )" },
     {"remove", (PyCFunction)VRPyGeometry::remove, METH_VARARGS, "Remove a part of the geometry - remove( Selection s )" },
     {"copy", (PyCFunction)VRPyGeometry::copy, METH_VARARGS, "Copy a part of the geometry - geo copy( Selection s )" },
@@ -843,11 +842,6 @@ PyObject* VRPyGeometry::playVideo(VRPyGeometry* self, PyObject *args) {
 PyObject* VRPyGeometry::getMaterial(VRPyGeometry* self) {
     if (!self->valid()) return NULL;
     return VRPyMaterial::fromSharedPtr(self->objPtr->getMaterial());
-}
-
-PyObject* VRPyGeometry::getBoundingbox(VRPyGeometry* self) {
-    if (!self->valid()) return NULL;
-    return VRPyBoundingbox::fromSharedPtr(self->objPtr->getBoundingBox());
 }
 
 PyObject* VRPyGeometry::setPrimitive(VRPyGeometry* self, PyObject *args) {
