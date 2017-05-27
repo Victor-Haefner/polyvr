@@ -58,7 +58,7 @@ class VRIntersect {
         ~VRIntersect();
 
         VRIntersection intersect(VRObjectWeakPtr tree, Line ray);
-        VRIntersection intersect(VRObjectWeakPtr tree);
+        VRIntersection intersect(VRObjectWeakPtr tree, bool force = false);
         VRIntersection intersect();
         void drag(VRObjectWeakPtr obj, VRTransformWeakPtr caster);
         void drop(VRDeviceWeakPtr dev = VRDevicePtr(0));
