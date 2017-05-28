@@ -1,14 +1,17 @@
 #include "VRGrassPatch.h"
+#include "VRPlantMaterial.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/math/polygon.h"
 
 #include "core/objects/VRCamera.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/VRLightBeacon.h"
+#include "core/objects/VRLod.h"
 #include "core/objects/geometry/VRSprite.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/tools/VRTextureRenderer.h"
+#include "core/utils/toString.h"
 #include "core/scene/VRScene.h"
 
 const double pi = 2*acos(0.0);
@@ -20,12 +23,35 @@ VRGrassPatch::VRGrassPatch() : VRTransform("grass_patch") {}
 VRGrassPatch::~VRGrassPatch() {}
 VRGrassPatchPtr VRGrassPatch::create() { return VRGrassPatchPtr( new VRGrassPatch() ); }
 
+void VRGrassPatch::initLOD() {
+    lod = VRLod::create("tree_lod");
+    lod->setPersistency(0);
+    addChild(lod);
+    for (int i=0; i<5; i++) {
+        auto lodI = VRObject::create("tree_lod"+toString(i));
+        lodI->setPersistency(0);
+        lod->addChild(lodI);
+    }
+    lod->addDistance(2); // 10
+    lod->addDistance(3); // 30
+    lod->addDistance(4); // 30
+    lod->addDistance(5); // 30
+}
+
 void VRGrassPatch::setArea(PolygonPtr p) {
     area = p;
-    VRGeoData patch;
-    //createPatch(patch, area);
-    //addChild( patch.asGeometry("grassPatch") );
-    createSpriteLOD(patch, 0);
+    createGrassStage();
+    if (!lod) initLOD();
+
+    VRGeoData geo[5];
+    for (int i=0; i<5; i++) {
+        srand(0);
+        if (i <= 2) createPatch(geo[i], area, i, 1000);
+        else createSpriteLOD(geo[i], i);
+        auto grass = geo[i].asGeometry("grassPatch");
+        if (i > 2) grass->setMaterial(matGrassSide);
+        lod->getChild(i)->addChild(grass);
+    }
 }
 
 void VRGrassPatch::addGrassBlade(VRGeoData& data, Vec3f pos, float a, float dh, int lvl, Vec3f c) { // Todo: replace by triangle strip
@@ -100,7 +126,12 @@ vector<Vec3f> VRGrassPatch::getRandomPoints(PolygonPtr area, int density) {
     return points;
 }
 
-void VRGrassPatch::createSpriteLOD(VRGeoData& data, int lvl) {
+VRTextureRendererPtr VRGrassPatch::texRenderer = 0;
+VRPlantMaterialPtr VRGrassPatch::matGrassSide = 0;
+
+void VRGrassPatch::createGrassStage() {
+    if (texRenderer) return;
+
     float W = 0.2;
     auto area2 = Polygon::create();
     area2->addPoint(Vec2f(-W, -W));
@@ -108,66 +139,42 @@ void VRGrassPatch::createSpriteLOD(VRGeoData& data, int lvl) {
     area2->addPoint(Vec2f( W,  W));
     area2->addPoint(Vec2f(-W,  W));
     VRGeoData data2;
-    createPatch(data2, area2, lvl, 1000);
+    createPatch(data2, area2, 0, 1000);
     auto grass = data2.asGeometry("grass");
 
-    auto trend = VRTextureRenderer::create("grassRenderer");
-    trend->setPersistency(0);
+    texRenderer = VRTextureRenderer::create("grassRenderer");
+    texRenderer->setPersistency(0);
     auto cam = VRCamera::create("grassCam", false);
     auto light = VRLight::create("grassLight");
     auto lightBeacon = VRLightBeacon::create("grassLightBeacon");
-    trend->addChild(light);
+    texRenderer->addChild(light);
     light->addChild(cam);
     cam->addChild(lightBeacon);
     cam->setFov(0.33);
     light->setBeacon(lightBeacon);
     light->addChild(grass);
 	lightBeacon->setFrom(Vec3f(1,1,1));
-	trend->setup(cam, 512, 512, true);
-
-    cam->setPose(Vec3f(0,2,0), Vec3f(0,-1,0), Vec3f(0,0,1)); // top
-    cam->update();
-    auto texTop = trend->renderOnce();
-    auto matTop = VRMaterial::create("grassTop");
-    matTop->setTexture(texTop);
-    matTop->enableTransparency();
-    matTop->setLit(false);
+	texRenderer->setup(cam, 512, 512, true);
 
     cam->setPose(Vec3f(0,0,2), Vec3f(0,0,-1), Vec3f(0,1,0)); // side
     cam->update();
-    auto texSide = trend->renderOnce();
-    auto matSide = VRMaterial::create("grassTop");
-    matSide->setTexture(texSide);
-    matSide->enableTransparency();
-    matSide->setLit(false);
+    auto texSide = texRenderer->renderOnce();
+    matGrassSide = VRPlantMaterial::create();
+    matGrassSide->setTexture(texSide);
+    matGrassSide->enableTransparency();
+    matGrassSide->setLit(false);
+}
 
-    for (auto p : getRandomPoints(area, 10)) {
-        auto spriteTop = VRSprite::create("grassTop");
-        spriteTop->setSize(W*3, W*3);
-        spriteTop->setMaterial(matTop);
-        spriteTop->setPose(p, Vec3f(0,1,0), Vec3f(0,0,1));
-        //data.append(spriteTop);
-        addChild(spriteTop);
-    }
-
-    for (auto p : getRandomPoints(area, 10)) {
-        auto spriteSide = VRSprite::create("grassSide");
-        spriteSide->setSize(W*3, 0.4);
-        spriteSide->setMaterial(matSide);
-        spriteSide->setPose(p/*+Vec3f(0,0.3,0)*/, Vec3f(0,0,-1), Vec3f(0,1,0));
-        //data.append(spriteSide);
-        addChild(spriteSide);
-    }
-
-    for (auto p : getRandomPoints(area, 10)) {
-        auto spriteFront = VRSprite::create("grassFront");
-        spriteFront->setSize(W*3, 0.4);
-        spriteFront->setMaterial(matSide);
-        spriteFront->setPose(p, Vec3f(-1,0,0), Vec3f(0,1,0));
-        //data.append(spriteFront);
-        addChild(spriteFront);
+void VRGrassPatch::createSpriteLOD(VRGeoData& data, int lvl) {
+    float W = 1.0;
+    float H = 0.5;
+    for ( auto p : getRandomPoints(area, 10) ) {
+        data.pushQuad(p, Vec3f(0,0,-1), Vec3f(0,1,0), Vec2f(W, H), true);
+        data.pushQuad(p, Vec3f(-1,0,0), Vec3f(0,1,0), Vec2f(W, H), true);
     }
 }
+
+VRMaterialPtr VRGrassPatch::getGrassSideMaterial() { return matGrassSide; }
 
 void VRGrassPatch::createLod(VRGeoData& geo, int lvl, Vec3f offset, int ID) {
     Matrix Offset;
@@ -181,10 +188,10 @@ void VRGrassPatch::createLod(VRGeoData& geo, int lvl, Vec3f offset, int ID) {
     }
 
     VRGeoData patch;
-    createPatch(patch, area, lvl);
-    //createSpriteLOD(Hull, lvl);
+    createSpriteLOD(patch, lvl);
+    auto sprites = patch.asGeometry("grassPatch");
 
-    lods[lvl] = patch.asGeometry("grassLod");
+    lods[lvl] = sprites;
     geo.append(patch, Offset);
 }
 

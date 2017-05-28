@@ -272,9 +272,7 @@ void VRWoods::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
     };
 
     auto simpleGrassMat = []() {
-        auto m = VRMaterial::create("green");
-        m->setDiffuse(Vec3f(0.2,0.8,0));
-        return m;
+        return VRGrassPatch::getGrassSideMaterial();
     };
 
     // get all trees and grass patches for each leaf layer

@@ -109,6 +109,7 @@ void VRTextureRenderer::setup(VRCameraPtr c, int width, int height, bool alpha) 
 }
 
 VRMaterialPtr VRTextureRenderer::getMaterial() { return mat; }
+VRCameraPtr VRTextureRenderer::getCamera() { return cam; }
 
 void VRTextureRenderer::setActive(bool b) {
     if (b) setCore(OSGCore::create(data->stage), "TextureRenderer", true);

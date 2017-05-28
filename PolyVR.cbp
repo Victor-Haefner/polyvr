@@ -515,6 +515,8 @@
 		<Unit filename="src/addons/WorldGenerator/nature/VRGrassPatch.cpp" />
 		<Unit filename="src/addons/WorldGenerator/nature/VRGrassPatch.h" />
 		<Unit filename="src/addons/WorldGenerator/nature/VRNatureManager.h" />
+		<Unit filename="src/addons/WorldGenerator/nature/VRPlantMaterial.cpp" />
+		<Unit filename="src/addons/WorldGenerator/nature/VRPlantMaterial.h" />
 		<Unit filename="src/addons/WorldGenerator/nature/VRPyTree.cpp" />
 		<Unit filename="src/addons/WorldGenerator/nature/VRPyTree.h" />
 		<Unit filename="src/addons/WorldGenerator/nature/VRTerrain.cpp" />
