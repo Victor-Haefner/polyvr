@@ -115,7 +115,7 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, Line ray) {
     return ins;
 }
 
-VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree) {
+VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force) {
     vector<VRObjectPtr> trees;
     if (auto sp = wtree.lock()) trees.push_back(sp);
     else for (auto grp : dynTrees) {
@@ -131,7 +131,7 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree) {
     for (auto t : trees) {
         if (intersections.count(t.get())) {
             auto ins_tmp = intersections[t.get()];
-            if (ins_tmp.hit && ins_tmp.time == now) {
+            if (ins_tmp.hit && ins_tmp.time == now && !force) {
                 ins = ins_tmp;
                 break;
             }

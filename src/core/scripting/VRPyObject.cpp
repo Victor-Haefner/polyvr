@@ -6,6 +6,7 @@
 #include "addons/Semantics/VRSemanticsFwd.h"
 
 #include "VRPyBaseFactory.h"
+#include "VRPyBoundingbox.h"
 
 #include <OpenSG/OSGNode.h>
 
@@ -92,8 +93,14 @@ PyMethodDef VRPyObject::methods[] = {
     {"getEntity", PyGetter(Object, getEntity, VREntityPtr), "Get entity - Entity getEntity()" },
     {"clearChildren", (PyCFunction)VRPyObject::clearChildren, METH_NOARGS, "Remove all children - clearChildren()" },
     {"getChildIndex", (PyCFunction)VRPyObject::getChildIndex, METH_NOARGS, "Return the child index of this object - int getChildIndex()" },
+    {"getBoundingbox", (PyCFunction)VRPyObject::getBoundingbox, METH_NOARGS, "get boundingbox" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyObject::getBoundingbox(VRPyObject* self) {
+    if (!self->valid()) return NULL;
+    return VRPyBoundingbox::fromSharedPtr(self->objPtr->getBoundingBox());
+}
 
 PyObject* VRPyObject::getChildIndex(VRPyObject* self) {
     if (!self->valid()) return NULL;
