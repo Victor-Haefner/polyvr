@@ -8,6 +8,8 @@ using namespace OSG;
 newPyType( Graph , Graph , New_ptr );
 
 PyMethodDef VRPyGraph::methods[] = {
+    {"getEdge", (PyCFunction)VRPyGraph::getEdge, METH_VARARGS, "Return the graph edge between n1 and n2 - getEdge( int n1, int n2 )" },
+    {"getEdgeID", (PyCFunction)VRPyGraph::getEdgeID, METH_VARARGS, "Return the graph edge ID between n1 and n2 - getEdgeID( int n1, int n2 )" },
     {"getEdges", (PyCFunction)VRPyGraph::getEdges, METH_NOARGS, "Return graph edges - getEdges()" },
     {"getInEdges", (PyCFunction)VRPyGraph::getInEdges, METH_VARARGS, "Return graph edges going in node n - getInEdges( int n )" },
     {"getOutEdges", (PyCFunction)VRPyGraph::getOutEdges, METH_VARARGS, "Return graph edges comming out node n - getOutEdges( int n )" },
@@ -31,6 +33,22 @@ PyObject* VRPyGraph::getEdges(VRPyGraph* self) {
         for (auto& e : n) PyList_Append(res, convEdge(e));
     }
     return res;
+}
+
+PyObject* VRPyGraph::getEdgeID(VRPyGraph* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    int n1, n2;
+    if (!PyArg_ParseTuple(args, "ii", &n1, &n2)) return NULL;
+    auto eID = self->objPtr->getEdgeID(n1,n2);
+    return PyInt_FromLong(eID);
+}
+
+PyObject* VRPyGraph::getEdge(VRPyGraph* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    int n1, n2;
+    if (!PyArg_ParseTuple(args, "ii", &n1, &n2)) return NULL;
+    auto e = self->objPtr->getEdge(n1,n2);
+    return convEdge(e);
 }
 
 PyObject* VRPyGraph::getInEdges(VRPyGraph* self, PyObject* args) {

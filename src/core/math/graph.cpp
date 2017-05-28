@@ -58,22 +58,31 @@ void Graph::disconnect(int i, int j) {
 }
 
 bool Graph::connected(int i, int j) {
-    if (i >= int(nodes.size()) || j >= int(nodes.size())) return false;
+    if (!hasNode(i) || !hasNode(j)) return false;
     if (i >= int(edges.size())) return false;
-    auto& v = edges[i];
-    for (uint k=0; k<v.size(); k++) {
-        if (v[k].to == j) return true;
-    }
+    for (auto& e : edges[i]) if (e.to == j) return true;
     return false;
 }
 
+int Graph::size() { return nodes.size(); }
 bool Graph::hasNode(int i) { return (i >= 0 && i < nodes.size()); }
 bool Graph::hasEdge(int i) { return (i >= 0 && i < edgesByID.size()); }
 vector< vector< Graph::edge > >& Graph::getEdges() { return edges; }
 vector< Graph::node >& Graph::getNodes() { return nodes; }
 Graph::node& Graph::getNode(int i) { return nodes[i]; }
 Graph::edge& Graph::getEdge(int i) { Vec2i e = edgesByID[i]; return edges[e[0]][e[1]]; }
-int Graph::size() { return nodes.size(); }
+
+Graph::edge& Graph::getEdge(int n1, int n2) {
+    if (!connected(n1,n2)) return nullEdge;
+    for (auto& e : edges[n1]) if (e.to == n2) return e;
+    return nullEdge;
+}
+
+int Graph::getEdgeID(int n1, int n2) {
+    if (!connected(n1,n2)) return -1;
+    for (auto& e : edges[n1]) if (e.to == n2) return e.ID;
+    return -1;
+}
 
 int Graph::getNEdges() {
     int N = 0;

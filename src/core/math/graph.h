@@ -26,7 +26,7 @@ class Graph : public VRStorage {
         };
 
         struct edge {
-            int ID = 0;
+            int ID = -1;
             int from = 0;
             int to = 0;
             CONNECTION connection = SIMPLE;
@@ -38,6 +38,7 @@ class Graph : public VRStorage {
         vector< vector<edge> > edges;
         vector< Vec2i > edgesByID;
         vector< node > nodes;
+        edge nullEdge;
 
     public:
         Graph();
@@ -49,6 +50,8 @@ class Graph : public VRStorage {
         void disconnect(int i, int j);
         node& getNode(int i);
         edge& getEdge(int e);
+        edge& getEdge(int n1, int n2);
+        int getEdgeID(int n1, int n2);
         vector< node >& getNodes();
         vector< vector<edge> >& getEdges();
         int getNEdges();
