@@ -10,6 +10,7 @@ using namespace std;
 using namespace OSG;
 
 void OSG::loadE57(string path, VRTransformPtr res) {
+    cout << "load e57 " << path << endl;
     res->setName(path);
 
     try {
@@ -23,8 +24,8 @@ void OSG::loadE57(string path, VRTransformPtr res) {
 
         VectorNode data3D(n);
         int64_t scanCount = data3D.childCount(); // number of scans in file
+        cout << " file read succefully, it contains " << scanCount << " scans" << endl;
 
-        /// For each scan, print out first 4 points in either Cartesian or Spherical coordinates.
         for (int i = 0; i < scanCount; i++) {
             StructureNode scan(data3D.get(i));
             string sname = scan.pathName();
@@ -32,17 +33,13 @@ void OSG::loadE57(string path, VRTransformPtr res) {
             CompressedVectorNode points( scan.get("points") );
             string pname = points.pathName();
             auto cN = points.childCount();
-            cout << "Got " << cN << " points\n";
+            cout << "  scan " << i << " contains " << cN << " points\n";
 
-            /// Call subroutine in this file to print the points
-            /// Need to figure out if has Cartesian or spherical coordinate system.
-            /// Interrogate the CompressedVector's prototype of its records.
             StructureNode proto(points.prototype());
             bool hasPos = (proto.isDefined("cartesianX") && proto.isDefined("cartesianY") && proto.isDefined("cartesianZ"));
             bool hasCol = (proto.isDefined("colorRed") && proto.isDefined("colorGreen") && proto.isDefined("colorBlue"));
             if (!hasPos) continue;
 
-            VRGeoData data;
             vector<SourceDestBuffer> destBuffers;
             const int N = 4;
             double x[N]; destBuffers.push_back(SourceDestBuffer(imf, "cartesianX", x, N, true));
@@ -57,9 +54,18 @@ void OSG::loadE57(string path, VRTransformPtr res) {
                 destBuffers.push_back(SourceDestBuffer(imf, "colorBlue", b, N, true));
             }
 
+            int Nchunk = 1e6; // separate in chunks because of tcmalloc large alloc issues
+            VRGeoData data;
             unsigned int gotCount = 0;
             CompressedVectorReader reader = points.reader(destBuffers);
             do {
+                if (data.size() > Nchunk) {
+                    cout << "  assemble geometry.. " << endl;
+                    auto geo = data.asGeometry(pname);
+                    res->addChild(geo);
+                    data = VRGeoData();
+                }
+
                 gotCount = reader.read();
                 for (unsigned j=0; j < gotCount; j++) {
                     int v;
@@ -70,8 +76,11 @@ void OSG::loadE57(string path, VRTransformPtr res) {
             } while(gotCount);
             reader.close();
 
-            auto geo = data.asGeometry(pname);
-            res->addChild(geo);
+            if (data.size()) {
+                cout << "  assemble geometry.. " << endl;
+                auto geo = data.asGeometry(pname);
+                res->addChild(geo);
+            }
         }
 
         imf.close();
