@@ -14,10 +14,14 @@
 
 OSG_BEGIN_NAMESPACE;
 
+void loadPDF(string path, VRTransformPtr res) {
+    loadTIFF(path, res);
+}
+
 void loadSHP(string path, VRTransformPtr res) {
     OGRRegisterAll();
     OGRDataSource* poDS = OGRSFDriverRegistrar::Open( path.c_str(), FALSE );
-    if( poDS == NULL ) { printf( "Open failed.\n" ); exit( 1 ); }
+    if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
 
     VRGeoData data;
 
@@ -112,7 +116,7 @@ void loadSHP(string path, VRTransformPtr res) {
 void loadTIFF(string path, VRTransformPtr res) {
     GDALAllRegister();
     GDALDataset* poDS = (GDALDataset *) GDALOpen( path.c_str(), GA_ReadOnly );
-    if( poDS == NULL ) { printf( "Open failed.\n" ); exit( 1 ); }
+    if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
 
     // general information
     double adfGeoTransform[6];

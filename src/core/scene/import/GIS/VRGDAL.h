@@ -8,6 +8,7 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+void loadPDF(string path, VRTransformPtr res);
 void loadSHP(string path, VRTransformPtr res);
 void loadTIFF(string path, VRTransformPtr res);
 //void writeSHP(VRGeometryPtr geo, string path);
