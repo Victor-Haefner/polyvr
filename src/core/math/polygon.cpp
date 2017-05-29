@@ -101,6 +101,24 @@ void Polygon::clear() {
     convex = false;
 }
 
+PolygonPtr Polygon::shrink(float amount) {
+    PolygonPtr area = Polygon::create();
+    *area = *this;
+    if (amount == 0) return area;
+
+    for (int i=0; i<area->points.size(); i++) {
+        Vec2f& p1 = area->points[i];
+        Vec2f& p2 = area->points[(i+1)%area->points.size()];
+        Vec2f d = p2-p1;
+        Vec2f n = Vec2f(-d[1], d[0]);
+        n.normalize();
+        p1 += n*amount;
+        p2 += n*amount;
+    }
+
+    return area;
+}
+
 Vec3f Polygon::getRandomPoint() {
     auto bb = getBoundingBox();
     Vec3f p;

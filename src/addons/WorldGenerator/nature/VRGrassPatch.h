@@ -21,7 +21,7 @@ class VRGrassPatch : public VRTransform {
         static VRTextureRendererPtr texRenderer;
         static VRPlantMaterialPtr matGrassSide;
 
-        vector<Vec3f> getRandomPoints(PolygonPtr area, int density);
+        vector<Vec3f> getRandomPoints(PolygonPtr area, int density, float padding);
 
         void initLOD();
         void addGrassBlade(VRGeoData& data, Vec3f pos, float a, float dh, int lvl, Vec3f c);

@@ -43,6 +43,7 @@ class Polygon {
         boundingbox getBoundingBox();
         vector< Polygon > getConvexDecomposition();
         float computeArea();
+        PolygonPtr shrink(float amount);
         Vec3f getRandomPoint();
 
         vector<Vec3f> toSpace(Matrix m);
