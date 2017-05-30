@@ -8,7 +8,7 @@ in vec4 vc;
 vec4 color;
 
 void applyBlinnPhong() {
-	vec3 n = gl_NormalMatrix * vn;
+	vec3 n = normalize( gl_NormalMatrix * vn );
 	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
 	float NdotL = max(dot( n, light ), 0.0);
 	vec4  ambient = gl_LightSource[0].ambient * color;
