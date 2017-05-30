@@ -41,7 +41,7 @@ attribute vec3 osg_Color;
 attribute vec2 osg_MultiTexCoord0;
 
 void main( void ) {
-	vnrm = gl_NormalMatrix * osg_Normal;
+	vnrm = normalize( gl_NormalMatrix * osg_Normal );
 	vcol = osg_Color;
 	vtcs = osg_MultiTexCoord0;
     vpos = osg_Vertex;

@@ -136,7 +136,7 @@ void computeDepth() {
 }
 
 void applyBlinnPhong() {
-	norm = gl_NormalMatrix * norm;
+	norm = normalize( gl_NormalMatrix * norm );
 	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
 	float NdotL = max(dot( norm, light ), 0.0);
 	vec4  ambient = gl_LightSource[0].ambient * color;

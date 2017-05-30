@@ -311,7 +311,7 @@ void computeDepth() {
 }
 
 void applyBlinnPhong() {
-	vec3 n = gl_NormalMatrix * norm;
+	vec3 n = normalize( gl_NormalMatrix * norm );
 	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
 	float NdotL = max(dot( n, light ), 0.0);
 	vec4  ambient = gl_LightSource[0].ambient * color;
@@ -366,10 +366,7 @@ void main(void) {
 	//color = texture(texMarkings, uv);
 	//color = texture(texMud, uv);
 	//color = texture(texNoise, uv);
-
-	norm = gl_NormalMatrix * norm;
     computeDepth();
-
     applyBlinnPhong();
 }
 );
@@ -669,7 +666,7 @@ void computeDepth() {
 }
 
 void applyBlinnPhong() {
-	vec3 n = gl_NormalMatrix * norm;
+	vec3 n = normalize( gl_NormalMatrix * norm );
 	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
 	float NdotL = max(dot( n, light ), 0.0);
 	vec4  ambient = gl_LightSource[0].ambient * color;
@@ -690,9 +687,7 @@ void main(void) {
 	if (!doLine) discard;
 	if (doLine) applyLine();
 	applyMud();
-	norm = gl_NormalMatrix * norm;
     computeDepth();
-
     //color = texture(texMarkings, tc1);
     //color = vec4(col.x*1000*(1.0/NArrowTex), 0, 1, 1);
     //if (col.x == 0) color = vec4(1, 1, 0, 1);
@@ -754,7 +749,7 @@ void computeDepth(bool doLine) {
 }
 
 void applyBlinnPhong() {
-	vec3 n = gl_NormalMatrix * norm;
+	vec3 n = normalize( gl_NormalMatrix * norm );
 	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
 	float NdotL = max(dot( n, light ), 0.0);
 	vec4  ambient = gl_LightSource[0].ambient * color;
@@ -805,7 +800,6 @@ void main(void) {
 	asphalt();
 	doPaths();
 	applyMud();
-	norm = gl_NormalMatrix * norm;
     computeDepth(doLine,doTrack);
     applyBlinnPhong();
 }
