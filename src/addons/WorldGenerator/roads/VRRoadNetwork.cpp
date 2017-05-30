@@ -11,6 +11,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRStroke.h"
+#include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/utils/toString.h"
@@ -668,6 +669,9 @@ void VRRoadNetwork::computeSurfaces() {
         auto roadGeo = createRoadGeometry( road );
         if (!roadGeo) continue;
         roadGeo->hide();
+        roadGeo->getPhysics()->setDynamic(false);
+        roadGeo->getPhysics()->setShape("Concave");
+        roadGeo->getPhysics()->setPhysicalized(true);
         addChild( roadGeo );
     }
 
