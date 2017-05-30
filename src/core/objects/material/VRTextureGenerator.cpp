@@ -336,8 +336,8 @@ void VRTextureGenerator::applyPolygon(Vec3f* data, PolygonPtr p, Vec4f c, float 
 
 void VRTextureGenerator::applyPolygon(Vec4f* data, PolygonPtr p, Vec4f c, float h) {
     auto bb = p->getBoundingBox();
-    Vec3f a = bb.min();
-    Vec3f b = bb.max();
+    Vec3f a = bb.min(); swap(a[1], a[2]);
+    Vec3f b = bb.max(); swap(b[1], b[2]);
     Vec3i A = Vec3i( upscale( a ) ) - Vec3i(1,1,1);
     Vec3i B = Vec3i( upscale( b ) ) + Vec3i(1,1,1);
     for (int j=A[1]; j<B[1]; j++) {

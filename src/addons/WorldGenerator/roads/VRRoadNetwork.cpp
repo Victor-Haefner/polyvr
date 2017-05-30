@@ -426,9 +426,8 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const pose& p) {
     geo->setPose( pose::create(p) );
     geo->applyTransformation();
     geo->setColors(cols);
-    geo->setMaterial(asphaltArrow);
+    geo->setPositionalTexCoords2D(1.0, 1, Vec2i(0,2));
     arrows->merge(geo);
-    arrows->setPositionalTexCoords2D(1.0, 1, Vec2i(0,2));
     return;
 }
 
