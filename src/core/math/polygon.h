@@ -45,6 +45,7 @@ class Polygon {
         float computeArea();
         PolygonPtr shrink(float amount);
         Vec3f getRandomPoint();
+        vector<Vec3f> getRandomPoints(int density = 10, float padding = 0);
 
         vector<Vec3f> toSpace(Matrix m);
         bool isInside(Vec2f p);

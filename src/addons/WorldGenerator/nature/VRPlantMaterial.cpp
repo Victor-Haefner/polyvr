@@ -37,14 +37,14 @@ varying vec2 vtcs;
 varying vec3 vpos;
 attribute vec4 osg_Vertex;
 attribute vec3 osg_Normal;
-attribute vec3 osg_Color;
+attribute vec4 osg_Color;
 attribute vec2 osg_MultiTexCoord0;
 
 void main( void ) {
 	vnrm = normalize( gl_NormalMatrix * osg_Normal );
-	vcol = osg_Color;
+	vcol = osg_Color.xyz;
 	vtcs = osg_MultiTexCoord0;
-    vpos = osg_Vertex;
+    vpos = osg_Vertex.xyz;
 );
 
 string VRPlantMaterial::vShrdEnd = GLSL(

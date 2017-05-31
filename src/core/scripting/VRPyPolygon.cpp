@@ -14,6 +14,7 @@ PyMethodDef VRPyPolygon::methods[] = {
     {"size", (PyCFunction)VRPyPolygon::size, METH_NOARGS, "Get the number of points - int size()" },
     {"set", (PyCFunction)VRPyPolygon::set, METH_VARARGS, "Set the Polygon from a list of points - set( [[x,y]] )" },
     {"clear", (PyCFunction)VRPyPolygon::clear, METH_NOARGS, "Clear all points - clear()" },
+    {"getRandomPoints", (PyCFunction)VRPyPolygon::getRandomPoints, METH_VARARGS, "Clear all points - getRandomPoints( | int density, float padding)" },
     {NULL}  /* Sentinel */
 };
 
@@ -35,6 +36,17 @@ PyObject* VRPyPolygon::getPoint(VRPyPolygon* self, PyObject* args) {
     int i = 0;
     if (! PyArg_ParseTuple(args, "i", &i)) return NULL;
     return toPyTuple( self->objPtr->getPoint(i) );
+}
+
+PyObject* VRPyPolygon::getRandomPoints(VRPyPolygon* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    int d = 10;
+    float p = 0;
+    if (! PyArg_ParseTuple(args, "|if", &d, &p)) return NULL;
+    auto vec = self->objPtr->getRandomPoints(d,p);
+    PyObject* res = PyList_New(vec.size());
+    for (uint i=0; i<vec.size(); i++) PyList_SetItem(res, i, toPyTuple(vec[i]));
+    return res;
 }
 
 PyObject* VRPyPolygon::getPoints(VRPyPolygon* self) {
