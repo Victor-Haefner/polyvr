@@ -13,11 +13,14 @@
 #include "core/utils/VRGlobals.h"
 #include "core/gui/VRGuiSignals.h"
 #include "core/gui/VRGuiFile.h"
+#include "core/utils/VRFunction.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <gtkmm/main.h>
 #include <GL/glut.h>
 #include <boost/filesystem.hpp>
+
+typedef boost::recursive_mutex::scoped_lock PLock;
 
 OSG_BEGIN_NAMESPACE
 using namespace std;
@@ -202,6 +205,7 @@ void VRSceneManager::update() {
     VRTimer t1; t1.start();
     VRGuiManager::get()->updateGtk();
     VRGlobals::GTK1_FRAME_RATE.update(t1);
+    //VRGuiManager::get()->startThreadedUpdate();
 
     VRTimer t4; t4.start();
     updateCallbacks();
@@ -221,11 +225,8 @@ void VRSceneManager::update() {
         VRTimer t2; t2.start();
         setup->updateWindows(); //rendering
         VRGlobals::WINDOWS_FRAME_RATE.update(t2);
+        VRGuiManager::get()->updateGtk();
     }
-
-    VRTimer t3; t3.start();
-    VRGuiManager::get()->updateGtk();
-    VRGlobals::GTK2_FRAME_RATE.update(t3);
 
     if (current) current->allowScriptThreads();
 

@@ -24,6 +24,8 @@
 
 #include <boost/bind.hpp>
 
+typedef boost::recursive_mutex::scoped_lock PLock;
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -108,6 +110,8 @@ VRGuiManager::VRGuiManager() {
     VRGuiBuilder()->get_widget("window1", top);
     top->maximize();
     top->show_all();
+
+    gtkUpdateCb = VRThreadCb::create( "gtk update", boost::bind(&VRGuiManager::updateGtkThreaded, this, _1) );
     cout << " done" << endl;
 }
 
@@ -120,6 +124,14 @@ VRGuiManager::~VRGuiManager() {
     delete g_sc;
     delete g_di;
 }
+
+void VRGuiManager::startThreadedUpdate() {
+    if (gtkUpdateThreadID != -1) return;
+    updateGtk();
+    gtkUpdateThreadID = VRSceneManager::get()->initThread(gtkUpdateCb, "gtk update", true, 1);
+}
+
+boost::recursive_mutex& VRGuiManager::guiMutex() { return mtx; }
 
 VRGuiManager* VRGuiManager::get(bool init) {
     static VRGuiManager* instance = 0;
@@ -146,12 +158,12 @@ VRConsoleWidgetPtr VRGuiManager::getConsole(string t) {
 }
 
 void VRGuiManager::updateGtk() {
-    int N = 0;
-    while( Gtk::Main::events_pending() ) {
-        N++;
-        Gtk::Main::iteration();
-    }
-    //cout << "N " << N << endl;
+    PLock( guiMutex() );
+    while( Gtk::Main::events_pending() ) Gtk::Main::iteration();
+}
+
+void VRGuiManager::updateGtkThreaded(VRThreadWeakPtr t) {
+    updateGtk();
 }
 
 void VRGuiManager::update() {

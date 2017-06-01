@@ -12,6 +12,9 @@
 #include "core/utils/VROptions.h"
 #include "core/utils/VRGlobals.h"
 #include "core/scene/VRScene.h"
+#include "core/gui/VRGuiManager.h"
+
+typedef boost::recursive_mutex::scoped_lock PLock;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -203,6 +206,7 @@ bool VRGtkWindow::on_scroll(GdkEventScroll * event) {
 }
 
 void VRGtkWindow::render() {
+    PLock( VRGuiManager::get()->guiMutex() );
     if (!active || !content) return;
     Glib::RefPtr<Gdk::Window> drawable = drawArea->get_window();
     GdkRectangle rect; rect.x = 0; rect.y = 0; rect.width = 1; rect.height = 1;
