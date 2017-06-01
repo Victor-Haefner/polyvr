@@ -11,12 +11,13 @@ class VRProfiler {
     public:
         struct Call {
             string name;
-            int t0;
-            int t1;
+            int t0 = 0;
+            int t1 = 0;
         };
 
         struct Frame {
-            int t0, t1;
+            int t0 = 0;
+            int t1 = 0;
             bool running = true;
             map<int, Call> calls;
         };

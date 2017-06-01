@@ -433,7 +433,15 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const pose& p) {
 
 void VRRoadNetwork::computeIntersections() {
     int k = 0;
-    for (auto node : ontology->process("q(n):Node(n);Road(r);has(r.path.nodes,n)") ) {
+    //auto nodes = ontology->process("q(n):Node(n);Road(r);has(r.path.nodes,n)");
+    vector<VREntityPtr> nodes;
+    for (auto r : roads) {
+        for (auto p : r->getAllEntities("path")) {
+            for (auto n : p->getAllEntities("nodes")) nodes.push_back(n);
+        }
+    }
+
+    for (auto node : nodes ) {
         Vec3f pNode = node->getVec3f("position");
         vector<VREntityPtr> roads = ontology->process("q(r):Node("+node->getName()+");Road(r);has(r.path.nodes,"+node->getName()+")");
         if (roads.size() <= 3) continue; // for now ignore ends and curves

@@ -12,6 +12,8 @@ OSG_BEGIN_NAMESPACE;
 
 class VRRoadNetwork : public VRObject {
     private:
+        vector<VREntityPtr> roads;
+
         GraphPtr graph;
         VRAsphaltPtr asphalt;
         VRAsphaltPtr asphaltArrow;

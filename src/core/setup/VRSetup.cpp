@@ -97,7 +97,7 @@ void updateLoadingLights(int p) {
 
 void VRSetup::setupLESCCAVELights(VRScenePtr scene) {
     VRPing ping;
-    if (!ping.start("192.168.100.55", "8000", 1)) return;
+    bool lightAvailable = ping.start("192.168.100.55", "8000", 1);
 
     string core = "\n print 'YAAAAAAY'";
     //cout << "VRSetup::setupLESCCAVELights A\n";
@@ -107,13 +107,15 @@ void VRSetup::setupLESCCAVELights(VRScenePtr scene) {
     //triggerScript(name);
     //cout << "VRSetup::setupLESCCAVELights B\n";
 
-    static auto fkt = VRFunction<int>::create("setup loading lights cb", boost::bind(updateLoadingLights, _1));
+    static auto fkt1 = VRFunction<int>::create("setup loading lights cb", boost::bind(updateLoadingLights, _1));
     auto p = scene->getLoadingProgress();
-    p->setCallback(fkt);
-    setLoadingLights(1,-1,1,0,0);
-    setLoadingLights(2,-1,1,0,0);
-    setLoadingLights(3,-1,1,0,0);
-    setLoadingLights(4,-1,0,0,0);
+    if (lightAvailable) {
+        p->setCallback(fkt1);
+        setLoadingLights(1,-1,1,0,0);
+        setLoadingLights(2,-1,1,0,0);
+        setLoadingLights(3,-1,1,0,0);
+        setLoadingLights(4,-1,0,0,0);
+    } else p->setup("scene loading progress", 100, VRProgress::CONSOLE_M);
 }
 
 void VRSetup::updateTracking() {
