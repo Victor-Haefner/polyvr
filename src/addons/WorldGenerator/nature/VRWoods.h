@@ -59,6 +59,7 @@ class VRWoods : public VRLodTree {
         map<string, VRTreePtr> treeTemplates;
         map<string, shared_ptr<VRObjectManager::Entry> > treeEntries;
         map<VRTree*, VRTreePtr> treeRefs;
+        VRGeometryPtr collisionMesh;
 
         map<VRGrassPatch*, VRGrassPatchPtr> grassPatchRefs;
 

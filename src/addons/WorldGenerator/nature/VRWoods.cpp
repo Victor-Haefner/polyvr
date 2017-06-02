@@ -369,17 +369,20 @@ void VRWoods::clear() {
 }
 
 void VRWoods::addCollisionModels() {
+    VRGeoData data;
+
     for (auto tree : treesByID) {
-        cout << " VRWoods::addCollisionModels " << tree.second->getName() << endl;
-		auto pg = VRGeometry::create("collisionHull");
-		pg->setFrom(Vec3f(0,1,0));
-		pg->setPrimitive("Box", "0.3 2 0.3 1 1 1");
-        pg->getPhysics()->setDynamic(false);
-        pg->getPhysics()->setShape("Convex");
-        pg->getPhysics()->setPhysicalized(true);
-		pg->setMeshVisibility(false);
-		tree.second->addChild(pg);
+        auto p = tree.second->getPoseTo( ptr() );
+        data.pushQuad(p->pos()+Vec3f(0,1,0), p->dir(), p->up(), Vec2f(0.3, 2), true);
     }
+
+    if (collisionMesh) collisionMesh->destroy();
+    collisionMesh = data.asGeometry("treeCollisionMesh");
+    collisionMesh->getPhysics()->setDynamic(false);
+    collisionMesh->getPhysics()->setShape("Concave");
+    collisionMesh->getPhysics()->setPhysicalized(true);
+    collisionMesh->setMeshVisibility(false);
+    addChild( collisionMesh );
 }
 
 /**
