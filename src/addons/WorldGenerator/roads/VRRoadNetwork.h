@@ -45,7 +45,7 @@ class VRRoadNetwork : public VRObject {
 
         void setOntology(VROntologyPtr ontology);
         GraphPtr getGraph();
-        void updateTexture();
+        void updateAsphaltTexture();
         VRAsphaltPtr getMaterial();
         int getRoadID();
 

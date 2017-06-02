@@ -120,8 +120,35 @@ void VRRoadNetwork::clear() {
     addChild( arrows );
 }
 
-void VRRoadNetwork::updateTexture() { // TODO: port from python code
-    ;
+void VRRoadNetwork::updateAsphaltTexture() {
+	asphalt->clearTexture();
+	for (auto road : ontology->getEntities("Way")) {
+        auto id = road->get("ID");
+		if (!id) continue;
+		int rID = toInt( id->value );
+
+		auto markings = road->getAllEntities("markings");
+		auto tracks = road->getAllEntities("tracks");
+
+		for (auto marking : markings) {
+            auto w = marking->get("width");
+            auto dN = marking->get("dashNumber");
+            float width = w ? toFloat( w->value ) : 0;
+            int dashN = dN ? toInt( dN->value ) : 0;
+            asphalt->addMarking(rID, toPath(marking, 16), width, dashN);
+		}
+
+		for (auto track : tracks) {
+            auto w = track->get("width");
+            auto dN = track->get("dashNumber");
+            float width = w ? toFloat( w->value ) : 0;
+            int dashN = dN ? toInt( dN->value ) : 0;
+            asphalt->addTrack(rID, toPath(track, 16), width, dashN);
+		}
+
+		cout << "VRRoadNetwork::updateTexture, markings and tracks: " << markings.size() << " " << tracks.size() << endl;
+	}
+	asphalt->updateTexture();
 }
 
 vector<string> toStringVector(Vec3f& v) {
@@ -495,7 +522,7 @@ void VRRoadNetwork::computeIntersections() {
         Vec3f pNode = node->getVec3f("position");
         vector<VREntityPtr> roads = getNodeRoads(node);
 
-        if (roads.size() <= 3) continue; // for now ignore ends and curves
+        if (roads.size() <= 2) continue; // for now ignore ends and curves
         map<VREntityPtr, Road> roadData;
         for (VREntityPtr roadEnt : roads) roadData[roadEnt] = Road(roadEnt);
 

@@ -40,6 +40,7 @@ struct VRPyRoadNetwork : VRPyBaseT<OSG::VRRoadNetwork> {
     static PyObject* createIntersectionGeometry(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* getRoadID(VRPyRoadNetwork* self);
     static PyObject* getMaterial(VRPyRoadNetwork* self);
+    static PyObject* updateAsphaltTexture(VRPyRoadNetwork* self);
     static PyObject* clear(VRPyRoadNetwork* self);
 };
 

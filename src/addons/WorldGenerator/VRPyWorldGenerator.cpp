@@ -76,9 +76,16 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"createIntersectionGeometry", (PyCFunction)VRPyRoadNetwork::createIntersectionGeometry, METH_VARARGS, "Create a geometry for an intersection - geo createIntersectionGeometry( intersection )" },
     {"getRoadID", (PyCFunction)VRPyRoadNetwork::getRoadID, METH_NOARGS, "Get a road ID - int getRoadID()" },
     {"getMaterial", (PyCFunction)VRPyRoadNetwork::getMaterial, METH_NOARGS, "Get road material - material getMaterial()" },
+    {"updateAsphaltTexture", (PyCFunction)VRPyRoadNetwork::updateAsphaltTexture, METH_NOARGS, "Update markings and tracks on asphalt texture - updateAsphaltTexture()" },
     {"clear", (PyCFunction)VRPyRoadNetwork::clear, METH_NOARGS, "Clear all data - clear()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyRoadNetwork::updateAsphaltTexture(VRPyRoadNetwork* self) {
+    if (!self->valid()) return NULL;
+    self->objPtr->updateAsphaltTexture();
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyRoadNetwork::getMaterial(VRPyRoadNetwork* self) {
     if (!self->valid()) return NULL;
