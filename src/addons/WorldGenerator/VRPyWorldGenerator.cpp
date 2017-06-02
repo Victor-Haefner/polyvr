@@ -1,7 +1,9 @@
 #include "VRPyWorldGenerator.h"
+#include "addons/WorldGenerator/nature/VRPyTree.h"
 #include "core/scripting/VRPyBaseT.h"
 #include "core/scripting/VRPyPath.h"
 #include "core/scripting/VRPyGeometry.h"
+#include "core/scripting/VRPyPolygon.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
 
 using namespace OSG;
@@ -56,9 +58,11 @@ PyObject* VRPyAsphalt::updateTexture(VRPyAsphalt* self) {
 // ------------------------------------------------------
 
 PyMethodDef VRPyRoadNetwork::methods[] = {
-    {"setOntology", (PyCFunction)VRPyRoadNetwork::setOntology, METH_VARARGS, "Add a new node - setOntology( ontology )" },
+    {"setOntology", (PyCFunction)VRPyRoadNetwork::setOntology, METH_VARARGS, "Set the ontology - setOntology( ontology )" },
+    {"setNatureManager", (PyCFunction)VRPyRoadNetwork::setNatureManager, METH_VARARGS, "Set the nature manager - setNatureManager( woods )" },
     {"addNode", (PyCFunction)VRPyRoadNetwork::addNode, METH_VARARGS, "Add a new node - node addNode( [x,y,z] )" },
     {"addLane", (PyCFunction)VRPyRoadNetwork::addLane, METH_VARARGS, "Add a new lane - lane addLane( int direction, road, float width )" },
+    {"addGreenBelt", (PyCFunction)VRPyRoadNetwork::addGreenBelt, METH_VARARGS, "Add a green lane - lane addGreenBelt( road, float width )" },
     {"addWay", (PyCFunction)VRPyRoadNetwork::addWay, METH_VARARGS, "Add a new way - way addWay( str name, [paths], int rID, str type )" },
     {"addRoad", (PyCFunction)VRPyRoadNetwork::addRoad, METH_VARARGS, "Add a new road - road addRoad( str name, str type, node1, node2, norm1, norm2, lanesN )" },
     {"addPath", (PyCFunction)VRPyRoadNetwork::addPath, METH_VARARGS, "Add a new path - path addPath( str type, str name, [nodes], [normals] )" },
@@ -77,9 +81,18 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"getRoadID", (PyCFunction)VRPyRoadNetwork::getRoadID, METH_NOARGS, "Get a road ID - int getRoadID()" },
     {"getMaterial", (PyCFunction)VRPyRoadNetwork::getMaterial, METH_NOARGS, "Get road material - material getMaterial()" },
     {"updateAsphaltTexture", (PyCFunction)VRPyRoadNetwork::updateAsphaltTexture, METH_NOARGS, "Update markings and tracks on asphalt texture - updateAsphaltTexture()" },
+    {"computeGreenBelts", (PyCFunction)VRPyRoadNetwork::computeGreenBelts, METH_NOARGS, "Compute green belt areas - areas computeGreenBelts()" },
     {"clear", (PyCFunction)VRPyRoadNetwork::clear, METH_NOARGS, "Clear all data - clear()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyRoadNetwork::computeGreenBelts(VRPyRoadNetwork* self) {
+    if (!self->valid()) return NULL;
+    auto areas = self->objPtr->computeGreenBelts();
+    PyObject* pyAreas = PyList_New(0);
+    for (auto a : areas) PyList_Append( pyAreas, VRPyPolygon::fromSharedPtr(a) );
+    return pyAreas;
+}
 
 PyObject* VRPyRoadNetwork::updateAsphaltTexture(VRPyRoadNetwork* self) {
     if (!self->valid()) return NULL;
@@ -187,6 +200,14 @@ PyObject* VRPyRoadNetwork::setOntology(VRPyRoadNetwork* self, PyObject *args) {
     Py_RETURN_TRUE;
 }
 
+PyObject* VRPyRoadNetwork::setNatureManager(VRPyRoadNetwork* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    VRPyWoods* woods = 0;
+    if (!PyArg_ParseTuple(args, "O", &woods)) return NULL;
+    self->objPtr->setNatureManager( woods->objPtr );
+    Py_RETURN_TRUE;
+}
+
 PyObject* VRPyRoadNetwork::addNode(VRPyRoadNetwork* self, PyObject *args) {
     if (!self->valid()) return NULL;
     auto n = self->objPtr->addNode( parseVec3f( args ) );
@@ -200,6 +221,15 @@ PyObject* VRPyRoadNetwork::addLane(VRPyRoadNetwork* self, PyObject *args) {
     float width = 0;
     if (!PyArg_ParseTuple(args, "iOf", &dir, &road, &width)) return NULL;
     auto l = self->objPtr->addLane( dir, road->objPtr, width );
+    return VRPyEntity::fromSharedPtr( l );
+}
+
+PyObject* VRPyRoadNetwork::addGreenBelt(VRPyRoadNetwork* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    VRPyEntity* road = 0;
+    float width = 0;
+    if (!PyArg_ParseTuple(args, "Of", &road, &width)) return NULL;
+    auto l = self->objPtr->addGreenBelt( road->objPtr, width );
     return VRPyEntity::fromSharedPtr( l );
 }
 

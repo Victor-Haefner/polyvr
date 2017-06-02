@@ -32,6 +32,7 @@ void GISWorld::setupOntology() {
     auto Crossing = world->addConcept("Crossing", "Node");
     auto RoadIntersection = world->addConcept("RoadIntersection", "Way");
     auto Lane = world->addConcept("Lane", "Way");
+    auto GreenBelt = world->addConcept("GreenBelt", "Area");
     auto Building = world->addConcept("Building", "Area");
     auto RoadMarking = world->addConcept("RoadMarking", "Border");
     auto RoadTrack = world->addConcept("RoadTrack", "Path");
@@ -46,7 +47,7 @@ void GISWorld::setupOntology() {
     Way->addProperty("path", "Path");
     Way->addProperty("markings", RoadMarking);
     Way->addProperty("tracks", RoadTrack);
-    Way->addProperty("lanes", Lane);
+    Way->addProperty("lanes", "Area");
     Arrow->addProperty("position", "float");
     Arrow->addProperty("direction", "float");
     Arrow->addProperty("lane", Lane);
@@ -54,6 +55,8 @@ void GISWorld::setupOntology() {
     Lane->addProperty("direction", "int");
     Lane->addProperty("path", "Path");
     Lane->addProperty("arrows", "Arrow");
+    GreenBelt->addProperty("width", "float");
+    GreenBelt->addProperty("path", "Path");
     Road->addProperty("sidewalks", Sidewalk);
     Road->addProperty("intersections", RoadIntersection);
     Road->addProperty("buildings", Building);

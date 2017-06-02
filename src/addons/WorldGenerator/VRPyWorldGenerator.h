@@ -18,8 +18,12 @@ struct VRPyRoadNetwork : VRPyBaseT<OSG::VRRoadNetwork> {
     static PyMethodDef methods[];
 
     static PyObject* setOntology(VRPyRoadNetwork* self, PyObject *args);
+    static PyObject* setNatureManager(VRPyRoadNetwork* self, PyObject *args);
+    static PyObject* computeGreenBelts(VRPyRoadNetwork* self);
+
     static PyObject* addNode(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* addLane(VRPyRoadNetwork* self, PyObject *args);
+    static PyObject* addGreenBelt(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* addWay(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* addRoad(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* addPath(VRPyRoadNetwork* self, PyObject *args);

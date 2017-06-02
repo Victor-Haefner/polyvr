@@ -4,6 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 #include "addons/Semantics/VRSemanticsFwd.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
+#include "addons/RealWorld/VRRealWorldFwd.h"
 #include "core/math/graph.h"
 #include "core/objects/object/VRObject.h"
 
@@ -19,6 +20,7 @@ class VRRoadNetwork : public VRObject {
         VRAsphaltPtr asphaltArrow;
         VROntologyPtr ontology;
         VRPathtoolPtr tool;
+        VRWoodsPtr natureManager;
         int nextRoadID = 0;
 
         VRGeometryPtr arrows;
@@ -44,6 +46,7 @@ class VRRoadNetwork : public VRObject {
         static VRRoadNetworkPtr create();
 
         void setOntology(VROntologyPtr ontology);
+        void setNatureManager(VRWoodsPtr mgr);
         GraphPtr getGraph();
         void updateAsphaltTexture();
         VRAsphaltPtr getMaterial();
@@ -51,6 +54,7 @@ class VRRoadNetwork : public VRObject {
 
         VREntityPtr addNode( Vec3f pos );
         VREntityPtr addLane( int direction, VREntityPtr road, float width );
+        VREntityPtr addGreenBelt( VREntityPtr road, float width );
         VREntityPtr addWay( string name, vector<VREntityPtr> paths, int rID, string type );
         VREntityPtr addPath( string type, string name, vector<VREntityPtr> nodes, vector<Vec3f> normals );
         VREntityPtr addRoad( string name, string type, VREntityPtr node1, VREntityPtr node2, Vec3f norm1, Vec3f norm2, int Nlanes );
@@ -65,6 +69,7 @@ class VRRoadNetwork : public VRObject {
         void computeLanes();
         void computeSurfaces();
         void computeMarkings();
+        vector<PolygonPtr> computeGreenBelts();
 
         void computeTracksLanes(VREntityPtr way);
         void computeMarkingsRoad2(VREntityPtr roadEnt);
