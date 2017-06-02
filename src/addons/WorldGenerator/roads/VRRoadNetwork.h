@@ -31,6 +31,10 @@ class VRRoadNetwork : public VRObject {
         pathPtr toPath( VREntityPtr pathEntity, int resolution );
         void createArrow(Vec4i dirs, int N, const pose& p);
 
+        vector<VREntityPtr> getRoadNodes();
+        vector<VREntityPtr> getNodeRoads(VREntityPtr node);
+        VREntityPtr getIntersectionRoadNode(VREntityPtr roadEnt, VREntityPtr intersectionEnt);
+
         void init();
 
     public:

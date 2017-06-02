@@ -50,17 +50,26 @@ class Road {
             return width;
         }
 
-        VREntityPtr getEntry( VREntityPtr node ) {
-            string rN = entity->getName();
+        VREntityPtr getNodeEntry( VREntityPtr node ) {
+            /*string rN = entity->getName();
             string nN = node->getName();
             auto nodeEntry = entity->ontology.lock()->process("q(e):NodeEntry(e);Node("+nN+");Road("+rN+");has("+rN+".path,e);has("+nN+",e)");
-            return nodeEntry[0];
+            return nodeEntry[0];*/
+
+            for (auto rp : entity->getAllEntities("path")) {
+                for (auto rnE : rp->getAllEntities("nodes")) {
+                    for (auto nE : node->getAllEntities("paths")) {
+                        if (rnE == nE) return nE;
+                    }
+                }
+            }
+            return 0;
         }
 
         edgePoint& getEdgePoints( VREntityPtr node ) {
             if (edgePoints.count(node) == 0) {
                 float width = getWidth();
-                VREntityPtr rEntry = getEntry( node );
+                VREntityPtr rEntry = getNodeEntry( node );
                 Vec3f norm = rEntry->getVec3f("direction") * toInt(rEntry->get("sign")->value);
                 Vec3f x = Vec3f(0,1,0).cross(norm);
                 x.normalize();
@@ -159,6 +168,7 @@ VREntityPtr VRRoadNetwork::addRoad( string name, string type, VREntityPtr node1,
     int Nm = Nlanes*0.5;
     for (int i=0; i<Nm; i++) addLane(1, roadEnt, 4 );
     for (int i=0; i<Nlanes-Nm; i++) addLane(-1, roadEnt, 4 );
+    roads.push_back(roadEnt);
     return roadEnt;
 }
 
@@ -211,17 +221,12 @@ void VRRoadNetwork::computeIntersectionLanes( VREntityPtr intersection ) {
 	string iN = intersection->getName();
 	string nN = node->getName();
 
-	auto getRoadEntry = [&](VREntityPtr road, VREntityPtr node) {
-		string rN = road->getName();
-		auto nodeEntry = ontology->process("q(e):NodeEntry(e);Node("+nN+");Road("+rN+");has("+rN+".path,e);has("+nN+",e)");
-		return nodeEntry[0];
-	};
-
 	// get in and out lanes
 	vector< pair<VREntityPtr, VREntityPtr> > inLanes;
 	vector< pair<VREntityPtr, VREntityPtr> > outLanes;
 	for (VREntityPtr road : roads) {
-		VREntityPtr roadEntry = getRoadEntry(road, node);
+        Road r(road);
+		VREntityPtr roadEntry = r.getNodeEntry(node);
 		int reSign = toInt( roadEntry->get("sign")->value );
 		for (VREntityPtr lane : road->getAllEntities("lanes")) {
 			int direction = toInt( lane->get("direction")->value );
@@ -349,20 +354,73 @@ VRGeometryPtr VRRoadNetwork::createRoadGeometry( VREntityPtr roadEnt ) {
 	return road;
 }
 
+vector<VREntityPtr> VRRoadNetwork::getRoadNodes() {
+    //auto nodes = ontology->process("q(n):Node(n);Road(r);has(r.path.nodes,n)");
+    map<int, VREntityPtr> nodes;
+    for (auto r : roads) {
+        for (auto p : r->getAllEntities("path")) {
+            for (auto nE : p->getAllEntities("nodes")) {
+                auto n = nE->getEntity("node");
+                nodes[n->ID] = n;
+            }
+        }
+    }
+    vector<VREntityPtr> res;
+    for (auto ni : nodes) res.push_back(ni.second);
+    return res;
+}
+
+vector<VREntityPtr> VRRoadNetwork::getNodeRoads(VREntityPtr node) {
+    vector<VREntityPtr> nEntries;
+    for (auto nE : node->getAllEntities("paths")) nEntries.push_back( nE );
+
+    vector<VREntityPtr> res; //= ontology->process("q(r):Node("+node->getName()+");Road(r);has(r.path.nodes,"+node->getName()+")");
+    for (auto r : roads) {
+        bool added = false;
+        for (auto rp : r->getAllEntities("path")) {
+            for (auto rnE : rp->getAllEntities("nodes")) {
+                for (auto nE : nEntries) {
+                    if (nE == rnE) { res.push_back(r); added = true; break; }
+                }
+                if (added) break;
+            }
+            if (added) break;
+        }
+    }
+    return res;
+}
+
+VREntityPtr VRRoadNetwork::getIntersectionRoadNode(VREntityPtr roadEnt, VREntityPtr intersectionEnt) {
+    /*string iN = intersectionEnt->getName();
+    string rN = roadEnt->getName();
+    auto res = ontology->process("q(n):Node(n);Road("+rN+");RoadIntersection("+iN+");has("+rN+".path.nodes,n);has("+iN+".path.nodes,n)");
+    if (res.size() == 0) { cout << "Warning in createIntersectionGeometry, road " << roadEnt->getName() << " has no nodes!" << endl; return 0; }
+    return res[0];*/
+
+    for (auto rp : roadEnt->getAllEntities("path")) {
+        for (auto rnE : rp->getAllEntities("nodes")) {
+            for (auto ip : intersectionEnt->getAllEntities("path")) {
+                for (auto inE : ip->getAllEntities("nodes")) {
+                    auto rn = rnE->getEntity("node");
+                    auto in = inE->getEntity("node");
+                    if (in == rn) return in;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
 VRGeometryPtr VRRoadNetwork::createIntersectionGeometry( VREntityPtr intersectionEnt ) {
     Polygon poly; // intersection Polygon
     auto roads = intersectionEnt->getAllEntities("roads");
     VREntityPtr node = intersectionEnt->getEntity("node");
     if (!node) return 0;
-    string iN = intersectionEnt->getName();
-    string nN = node->getName();
     for (auto roadEnt : roads) {
         Road road(roadEnt);
-        string rN = roadEnt->getName();
-        string qNode = "q(n):Node(n);Road("+rN+");RoadIntersection("+iN+");has("+rN+".path.nodes,n);has("+iN+".path.nodes,n)";
-        auto rNodes = ontology->process(qNode);
-        if (rNodes.size() == 0) { cout << "Warning in createIntersectionGeometry, road " << roadEnt->getName() << " has no nodes!" << endl; continue; }
-        auto& endP = road.getEdgePoints( rNodes[0] );
+        auto rNode = getIntersectionRoadNode(roadEnt, intersectionEnt);
+        if (!rNode) continue;
+        auto& endP = road.getEdgePoints( rNode );
         poly.addPoint(Vec2f(endP.p1[0], endP.p1[2]));
         poly.addPoint(Vec2f(endP.p2[0], endP.p2[2]));
     }
@@ -433,17 +491,10 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const pose& p) {
 
 void VRRoadNetwork::computeIntersections() {
     int k = 0;
-    //auto nodes = ontology->process("q(n):Node(n);Road(r);has(r.path.nodes,n)");
-    vector<VREntityPtr> nodes;
-    for (auto r : roads) {
-        for (auto p : r->getAllEntities("path")) {
-            for (auto n : p->getAllEntities("nodes")) nodes.push_back(n);
-        }
-    }
-
-    for (auto node : nodes ) {
+    for (auto node : getRoadNodes() ) {
         Vec3f pNode = node->getVec3f("position");
-        vector<VREntityPtr> roads = ontology->process("q(r):Node("+node->getName()+");Road(r);has(r.path.nodes,"+node->getName()+")");
+        vector<VREntityPtr> roads = getNodeRoads(node);
+
         if (roads.size() <= 3) continue; // for now ignore ends and curves
         map<VREntityPtr, Road> roadData;
         for (VREntityPtr roadEnt : roads) roadData[roadEnt] = Road(roadEnt);
@@ -499,7 +550,8 @@ void VRRoadNetwork::computeIntersections() {
         vector<VREntityPtr> iPaths;
         for (int i=0; i<roads.size(); i++) { // compute intersection paths
             auto road1 = roads[i];
-            auto rEntry1 = roadData[road1].getEntry(node);
+            auto rEntry1 = roadData[road1].getNodeEntry(node);
+            if (!rEntry1) continue;
             int s1 = toInt(rEntry1->get("sign")->value);
             Vec3f norm1 = rEntry1->getVec3f("direction");
             auto& data1 = roadData[road1].getEdgePoints( node );
@@ -508,7 +560,8 @@ void VRRoadNetwork::computeIntersections() {
                 for (int j=0; j<roads.size(); j++) { // compute intersection paths
                     auto road2 = roads[j];
                     if (j == i) continue;
-                    auto rEntry2 = roadData[road2].getEntry(node);
+                    auto rEntry2 = roadData[road2].getNodeEntry(node);
+                    if (!rEntry2) continue;
                     int s2 = toInt(rEntry2->get("sign")->value);
                     if (s2 != -1) continue;
                     Vec3f norm2 = rEntry2->getVec3f("direction");
