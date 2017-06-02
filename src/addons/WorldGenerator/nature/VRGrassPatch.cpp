@@ -24,11 +24,11 @@ VRGrassPatch::~VRGrassPatch() {}
 VRGrassPatchPtr VRGrassPatch::create() { return VRGrassPatchPtr( new VRGrassPatch() ); }
 
 void VRGrassPatch::initLOD() {
-    lod = VRLod::create("tree_lod");
+    lod = VRLod::create("grass_lod");
     lod->setPersistency(0);
     addChild(lod);
     for (int i=0; i<5; i++) {
-        auto lodI = VRObject::create("tree_lod"+toString(i));
+        auto lodI = VRObject::create("grass_lod"+toString(i));
         lodI->setPersistency(0);
         lod->addChild(lodI);
     }

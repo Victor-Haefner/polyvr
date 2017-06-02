@@ -67,6 +67,7 @@ PyMethodDef VRPyWoods::methods[] = {
     {"addTree", (PyCFunction)VRPyWoods::addTree, METH_VARARGS, "Add a copy of the passed tree to the woods and return the copy - tree addTree( tree | bool updateLODs ) " },
     {"addGrassPatch", (PyCFunction)VRPyWoods::addGrassPatch, METH_VARARGS, "Add a grass path using area - patch addTree( polygon area | bool updateLODs ) " },
     {"computeLODs", (PyCFunction)VRPyWoods::computeLODs, METH_NOARGS, "Compute LODs - computeLODs() " },
+    {"addCollisionModels", (PyCFunction)VRPyWoods::addCollisionModels, METH_NOARGS, "Add collision box to trees and bushes - addCollisionModels() " },
     {"clear", (PyCFunction)VRPyWoods::clear, METH_NOARGS, "Clear woods - clear() " },
     {"getTree", (PyCFunction)VRPyWoods::getTree, METH_VARARGS, "Get a tree by id - getTree( int ) " },
     {"removeTree", (PyCFunction)VRPyWoods::removeTree, METH_VARARGS, "Remove a tree by id - removeTree( int ) " },
@@ -102,6 +103,11 @@ PyObject* VRPyWoods::getTree(VRPyWoods* self, PyObject* args) {
 
 PyObject* VRPyWoods::clear(VRPyWoods* self) {
     self->objPtr->clear();
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyWoods::addCollisionModels(VRPyWoods* self) {
+    self->objPtr->addCollisionModels();
     Py_RETURN_TRUE;
 }
 

@@ -104,12 +104,12 @@ void VRTree::setup() {
 }
 
 void VRTree::initLOD() {
-    lod = VRLod::create("grass_lod");
+    lod = VRLod::create("tree_lod");
     lod->setPersistency(0);
     addChild(lod);
-    auto lod1 = VRObject::create("grass_lod1");
-    auto lod2 = VRObject::create("grass_lod2");
-    auto lod3 = VRObject::create("grass_lod3");
+    auto lod1 = VRObject::create("tree_lod1");
+    auto lod2 = VRObject::create("tree_lod2");
+    auto lod3 = VRObject::create("tree_lod3");
     lod1->setPersistency(0);
     lod2->setPersistency(0);
     lod3->setPersistency(0);

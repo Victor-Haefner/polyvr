@@ -87,6 +87,8 @@ class VRWoods : public VRLodTree {
         void computeLODs();
         void computeLODs(VRLodLeafPtr leaf);
         void computeLODs(map<Octree*, VRLodLeafPtr>& leafs);
+
+        void addCollisionModels();
 };
 
 OSG_END_NAMESPACE;

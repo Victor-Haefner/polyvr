@@ -29,6 +29,7 @@ struct VRPyWoods : VRPyBaseT<OSG::VRWoods> {
     static PyObject* addTree(VRPyWoods* self, PyObject* args);
     static PyObject* addGrassPatch(VRPyWoods* self, PyObject* args);
     static PyObject* computeLODs(VRPyWoods* self);
+    static PyObject* addCollisionModels(VRPyWoods* self);
     static PyObject* clear(VRPyWoods* self);
     static PyObject* getTree(VRPyWoods* self, PyObject* args);
     static PyObject* removeTree(VRPyWoods* self, PyObject* args);

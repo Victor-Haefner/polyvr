@@ -6,6 +6,7 @@
 #include "core/objects/object/VRObject.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/VRLod.h"
@@ -365,6 +366,20 @@ void VRWoods::clear() {
     treeEntries.clear();
     treeTemplates.clear();
     VRLodTree::reset();
+}
+
+void VRWoods::addCollisionModels() {
+    for (auto tree : treesByID) {
+        cout << " VRWoods::addCollisionModels " << tree.second->getName() << endl;
+		auto pg = VRGeometry::create("collisionHull");
+		pg->setFrom(Vec3f(0,1,0));
+		pg->setPrimitive("Box", "0.3 2 0.3 1 1 1");
+        pg->getPhysics()->setDynamic(false);
+        pg->getPhysics()->setShape("Convex");
+        pg->getPhysics()->setPhysicalized(true);
+		pg->setMeshVisibility(false);
+		tree.second->addChild(pg);
+    }
 }
 
 /**
