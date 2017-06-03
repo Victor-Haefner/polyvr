@@ -119,16 +119,18 @@ PolygonPtr Polygon::shrink(float amount) {
     return area;
 }
 
-vector<Vec3f> Polygon::getRandomPoints(int density, float padding) {
-    auto area = shrink(padding);
-    auto bb = area->getBoundingBox();
-    int N = density*area->computeArea();
+vector<Vec3f> Polygon::getRandomPoints(float density, float padding) {
+    auto area1 = shrink(padding);
     vector<Vec3f> points;
-    for (int i=0; i<N; i++) {
-        Vec3f p;
-        do p = bb.getRandomPoint();
-        while( !area->isInside(Vec2f(p[0], p[2])) );
-        points.push_back( p );
+    for (auto& area : area1->getConvexDecomposition()) {
+        auto bb = area.getBoundingBox();
+        int N = density*area.computeArea();
+        for (int i=0; i<N; i++) {
+            Vec3f p;
+            do p = bb.getRandomPoint();
+            while( !area.isInside(Vec2f(p[0], p[2])) );
+            points.push_back( p );
+        }
     }
     return points;
 }

@@ -423,7 +423,7 @@ void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset, int ID) {
         return res.size() > 0 ? res.asGeometry("tmp") : 0;
     };
 
-    int Ns = pow(2,int(4/lvl));
+    int Ns = pow(2,int(4/(lvl+1)));
     vector<VRGeoData> clusters(Ns);
     vector<Pnt3f> seeds(Ns);
     for (int k=0; k<Ns; k++) {
@@ -445,7 +445,7 @@ void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset, int ID) {
         return clusters[cMin];
     };
 
-    int N = 1000/lvl;
+    int N = 100/lvl;
     float D = float(data.size())/N;
     float fuzzy = 0.2;
 

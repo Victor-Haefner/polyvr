@@ -64,7 +64,8 @@ class VRWoods : public VRLodTree {
         map<VRGrassPatch*, VRGrassPatchPtr> grassPatchRefs;
 
         VRMaterialPtr truncMat;
-        VRMaterialPtr leafMat;
+        VRMaterialPtr leafMat1;
+        VRMaterialPtr leafMat2;
         VRMaterialPtr grassMat;
 
         void computeFirstLevel();

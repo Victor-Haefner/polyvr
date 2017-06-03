@@ -240,7 +240,7 @@ void VRWoods::computeLODs(VRLodLeafPtr leaf) {
 }
 
 void VRWoods::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
-    auto simpleLeafMat = []() {
+    auto simpleLeafMat = [](bool doAlpha) {
         auto m = VRMaterial::create("simpleLeafMat");
         m->setPointSize(3);
         m->setDiffuse(Vec3f(0.5,1,0));
@@ -251,7 +251,7 @@ void VRWoods::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
         m->readVertexShader(wdir+"/shader/Trees/Shader_leafs_lod.vp");
 
         auto tg = VRTextureGenerator::create();
-        tg->setSize(Vec3i(50,50,50), 1);
+        tg->setSize(Vec3i(50,50,50), doAlpha);
         float r = 0.85;
         float g = 1.0;
         float b = 0.8;
@@ -341,8 +341,10 @@ void VRWoods::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
                 auto leafs = geoLeafs.asGeometry("leafs");
                 leafs->setPersistency(0);
                 trunk->addChild( leafs );
-                if (!leafMat) leafMat = simpleLeafMat();
-                leafs->setMaterial(leafMat);
+                if (!leafMat1) leafMat1 = simpleLeafMat(true);
+                if (!leafMat2) leafMat2 = simpleLeafMat(false);
+                if (lvl < 3) leafs->setMaterial(leafMat1);
+                else leafs->setMaterial(leafMat2);
             }
         }
 

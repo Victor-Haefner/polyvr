@@ -112,7 +112,7 @@ void VRGrassPatch::addGrassBlade(VRGeoData& data, Vec3f pos, float a, float dh, 
 }
 
 void VRGrassPatch::createPatch(VRGeoData& data, PolygonPtr area, int lvl, int density) {
-    for (auto pos : area->getRandomPoints(density, 0)) {
+    for (auto pos : area->getRandomPoints(density*1.0/(lvl+1), 0)) {
         float a = 2*pi*float(rand())/RAND_MAX;
         float dh = 0.5 + 0.5*float(rand())/RAND_MAX;
         addGrassBlade(data, pos, a, dh, lvl, Vec3f(0.2,0.8,0.0));
@@ -161,7 +161,7 @@ void VRGrassPatch::createGrassStage() {
 void VRGrassPatch::createSpriteLOD(VRGeoData& data, int lvl) {
     float W = 1.0;
     float H = 0.5;
-    for ( auto p : area->getRandomPoints(10, 0.1) ) {
+    for ( auto p : area->getRandomPoints(10*1.0/(lvl+1), 0.1) ) {
         data.pushQuad(p, Vec3f(0,0,-1), Vec3f(0,1,0), Vec2f(W, H), true);
         data.pushQuad(p, Vec3f(-1,0,0), Vec3f(0,1,0), Vec2f(W, H), true);
     }
