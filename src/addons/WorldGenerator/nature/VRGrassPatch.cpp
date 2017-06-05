@@ -32,10 +32,10 @@ void VRGrassPatch::initLOD() {
         lodI->setPersistency(0);
         lod->addChild(lodI);
     }
-    lod->addDistance(2); // 10
-    lod->addDistance(3); // 30
-    lod->addDistance(4); // 30
-    lod->addDistance(5); // 30
+    lod->addDistance(10); // 10
+    lod->addDistance(25); // 30
+    lod->addDistance(40); // 30
+    lod->addDistance(55); // 30
 }
 
 void VRGrassPatch::setArea(PolygonPtr p) {
@@ -47,7 +47,7 @@ void VRGrassPatch::setArea(PolygonPtr p) {
     for (int i=0; i<5; i++) {
         srand(0);
         if (i <= 2) createPatch(geo[i], area, i, 1000);
-        else createSpriteLOD(geo[i], i);
+        else createSpriteLOD(geo[i], 1);
         auto grass = geo[i].asGeometry("grassPatch");
         if (i > 2) grass->setMaterial(matGrassSide);
         lod->getChild(i)->addChild(grass);
@@ -159,9 +159,10 @@ void VRGrassPatch::createGrassStage() {
 }
 
 void VRGrassPatch::createSpriteLOD(VRGeoData& data, int lvl) {
-    float W = 1.0;
+    float W = 1.0*lvl;
     float H = 0.5;
-    for ( auto p : area->getRandomPoints(10*1.0/(lvl+1), 0.1) ) {
+    float d = 10/lvl;
+    for ( auto p : area->getRandomPoints(d, 0.1) ) {
         data.pushQuad(p, Vec3f(0,0,-1), Vec3f(0,1,0), Vec2f(W, H), true);
         data.pushQuad(p, Vec3f(-1,0,0), Vec3f(0,1,0), Vec2f(W, H), true);
     }

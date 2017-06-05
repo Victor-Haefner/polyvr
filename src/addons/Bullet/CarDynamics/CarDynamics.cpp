@@ -240,6 +240,7 @@ void CarDynamics::updateEngine() {
 	// compute engine force
 	float engineF = max( -deltaRPM*0.001f, 0.f); // try to keep the minRPM
     float eForce = clamp(clampedThrottle + engineF, 0, 1) * gearRatio * engine.power * coupling * engine.running;
+    if (abs(eBreak) > abs(eForce)) eForce = 0;
 
 	// apply force wheels
     for (int i=0; i<wheels.size(); i++) {
