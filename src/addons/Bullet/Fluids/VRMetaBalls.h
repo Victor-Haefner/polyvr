@@ -19,7 +19,7 @@ class VRMetaBalls : public VRObject {
     public:
         VRMetaBalls(string name);
 
-        static VRMetaBallsPtr create(string name);
+        static VRMetaBallsPtr create(string name = "metaballs");
 
         void addChild(VRObjectPtr child, bool osg = true, int place = -1);
 

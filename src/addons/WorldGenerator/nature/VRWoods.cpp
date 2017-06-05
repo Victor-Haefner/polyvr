@@ -155,14 +155,14 @@ VRLodLeafPtr VRLodTree::remObject(VRTransformPtr obj) { // TODO, finish it!
 
 // --------------------------------------------------------------------------------------------------
 
-VRWoods::VRWoods() : VRLodTree("woods", 5) {
+VRWoods::VRWoods(string name) : VRLodTree(name, 5) {
     storeMap("templateTrees", &treeTemplates, true);
     storeMap("trees", &treeEntries, true);
     regStorageSetupFkt( VRFunction<int>::create("woods setup", boost::bind(&VRWoods::setup, this)) );
 }
 
 VRWoods::~VRWoods() {}
-VRWoodsPtr VRWoods::create() { return VRWoodsPtr(new VRWoods()); }
+VRWoodsPtr VRWoods::create(string name) { return VRWoodsPtr(new VRWoods(name)); }
 VRWoodsPtr VRWoods::ptr() { return static_pointer_cast<VRWoods>( shared_from_this() ); }
 
 void VRWoods::setup() {

@@ -31,9 +31,12 @@ ptrFwd(VRStage);
 ptrFwd(VRSky);
 
 // other
+ptrFwd(VRBackground);
+ptrFwd(VRBackgroundBase);
 ptrFwd(VRTexture);
 ptrFwd(VRTextureGenerator);
 ptrFwd(VRConstraint);
+ptrFwd(VRAnimation);
 
 // addons
 ptrFwd(VRLodTree);

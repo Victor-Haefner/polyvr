@@ -31,9 +31,9 @@ class VRAnnotationEngine : public VRGeometry {
         bool checkUIn(int i);
 
     public:
-        VRAnnotationEngine();
+        VRAnnotationEngine(string name);
 
-        static VRAnnotationEnginePtr create();
+        static VRAnnotationEnginePtr create(string name = "AnnotationEngine");
         VRAnnotationEnginePtr ptr();
 
         void clear();

@@ -31,7 +31,7 @@ class VRTerrain : public VRGeometry {
     public:
         VRTerrain(string name);
         ~VRTerrain();
-        static VRTerrainPtr create(string name);
+        static VRTerrainPtr create(string name = "terrain");
 
         void setParameters( Vec2f size, float resolution );
         void setMap( VRTexturePtr tex );

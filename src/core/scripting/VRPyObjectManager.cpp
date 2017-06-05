@@ -7,7 +7,7 @@
 
 using namespace OSG;
 
-simpleVRPyType(ObjectManager, New_VRObjects_unnamed_ptr);
+simpleVRPyType(ObjectManager, New_VRObjects_ptr);
 
 PyMethodDef VRPyObjectManager::methods[] = {
     {"add", (PyCFunction)VRPyObjectManager::add, METH_VARARGS, "Add a copy of the passed object to the managed object pool and return it - obj add( obj ) " },

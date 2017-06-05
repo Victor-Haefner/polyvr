@@ -10,10 +10,9 @@ class VRFluids : public VRParticles {
     public:
         enum SimulationType { SPH, XSPH };
 
-        VRFluids();
-        VRFluids(bool spawnParticles);
+        VRFluids(string name, bool spawnParticles = true);
         ~VRFluids();
-        static shared_ptr<VRFluids> create();
+        static shared_ptr<VRFluids> create(string name = "fluid");
 
         void updateParticles(int from, int to) override;
         void updateSPH(int from, int to);

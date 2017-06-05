@@ -12,7 +12,7 @@
 
 using namespace OSG;
 
-VRAnalyticGeometry::VRAnalyticGeometry() : VRTransform("AnalyticGeometry") {
+VRAnalyticGeometry::VRAnalyticGeometry(string name) : VRTransform(name) {
     ae = VRAnnotationEngine::create();
     vectorLinesGeometry = VRGeometry::create("AGLines");
     vectorEndsGeometry = VRGeometry::create("AGPoints");
@@ -40,8 +40,8 @@ VRAnalyticGeometry::VRAnalyticGeometry() : VRTransform("AnalyticGeometry") {
 VRAnalyticGeometry::~VRAnalyticGeometry() {}
 
 VRAnalyticGeometryPtr VRAnalyticGeometry::ptr() { return static_pointer_cast<VRAnalyticGeometry>( shared_from_this() ); }
-VRAnalyticGeometryPtr VRAnalyticGeometry::create()  {
-    auto ptr = shared_ptr<VRAnalyticGeometry>(new VRAnalyticGeometry() );
+VRAnalyticGeometryPtr VRAnalyticGeometry::create(string name)  {
+    auto ptr = shared_ptr<VRAnalyticGeometry>( new VRAnalyticGeometry(name) );
     ptr->init();
     return ptr;
 }

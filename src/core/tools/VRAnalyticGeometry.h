@@ -32,10 +32,10 @@ class VRAnalyticGeometry : public VRTransform {
         void resize(int i, int j = -1, int k = -1);
 
     public:
-        VRAnalyticGeometry();
+        VRAnalyticGeometry(string name);
         ~VRAnalyticGeometry();
 
-        static VRAnalyticGeometryPtr create();
+        static VRAnalyticGeometryPtr create(string name = "AnalyticGeometry");
         VRAnalyticGeometryPtr ptr();
         void init();
 

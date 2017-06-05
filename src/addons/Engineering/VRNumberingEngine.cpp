@@ -11,7 +11,7 @@
 using namespace OSG;
 using namespace std;
 
-VRNumberingEngine::VRNumberingEngine() : VRGeometry("NumbEng") {
+VRNumberingEngine::VRNumberingEngine(string name) : VRGeometry(name) {
     group g;
     groups.push_back(g);
 
@@ -32,7 +32,7 @@ VRNumberingEngine::VRNumberingEngine() : VRGeometry("NumbEng") {
 
 void VRNumberingEngine::clear() { data->reset(); }
 
-VRNumberingEnginePtr VRNumberingEngine::create() { return shared_ptr<VRNumberingEngine>(new VRNumberingEngine() ); }
+VRNumberingEnginePtr VRNumberingEngine::create(string name) { return shared_ptr<VRNumberingEngine>(new VRNumberingEngine(name) ); }
 VRNumberingEnginePtr VRNumberingEngine::ptr() { return static_pointer_cast<VRNumberingEngine>( shared_from_this() ); }
 
 bool VRNumberingEngine::checkUIn(int grp) {

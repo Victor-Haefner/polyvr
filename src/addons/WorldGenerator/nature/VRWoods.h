@@ -75,10 +75,10 @@ class VRWoods : public VRLodTree {
         void initLOD();
 
     public:
-        VRWoods();
+        VRWoods(string name);
         ~VRWoods();
 
-        static VRWoodsPtr create();
+        static VRWoodsPtr create(string name = "woods");
         VRWoodsPtr ptr();
 
         void clear();

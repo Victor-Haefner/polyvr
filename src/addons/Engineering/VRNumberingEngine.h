@@ -23,9 +23,9 @@ class VRNumberingEngine : public OSG::VRGeometry {
         bool checkUIn(int i, int grp);
 
     public:
-        VRNumberingEngine();
+        VRNumberingEngine(string name);
 
-        static VRNumberingEnginePtr create();
+        static VRNumberingEnginePtr create(string name = "numberingEngine");
         VRNumberingEnginePtr ptr();
 
         void clear();

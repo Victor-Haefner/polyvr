@@ -11,6 +11,7 @@
 #include "core/utils/VRDeviceFwd.h"
 #include "core/utils/VRStorage.h"
 #include "core/utils/VRName.h"
+#include "core/tools/VRToolsFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -41,7 +42,7 @@ class VRNavPreset : public VRName {
     public:
         VRNavPreset();
         virtual ~VRNavPreset();
-        static shared_ptr<VRNavPreset> create();
+        static VRNavPresetPtr create();
 
         void updateBinding(VRNavBinding& b);
 
@@ -62,21 +63,21 @@ class VRNavPreset : public VRName {
 class VRNavigator_base : public VRStorage {
     private:
         map<string, VRDeviceCbPtr> library;
-        shared_ptr<VRNavPreset> current;
+        VRNavPresetPtr current;
         string current_name;
-        map<string, shared_ptr<VRNavPreset>> presets;
+        map<string, VRNavPresetPtr> presets;
 
     public:
         VRNavigator_base();
         ~VRNavigator_base();
 
-        void addNavigation(shared_ptr<VRNavPreset> ps);
+        void addNavigation(VRNavPresetPtr ps);
         void remNavigation(string name);
 
         void setActiveNavigation(string s);
         string getActiveNavigation();
-        shared_ptr<VRNavPreset> getNavigation(string s);
-        map<string, shared_ptr<VRNavPreset>> getNavigations();
+        VRNavPresetPtr getNavigation(string s);
+        map<string, VRNavPresetPtr> getNavigations();
         vector<string> getNavigationNames();
         string getNavigationTip(string name);
 

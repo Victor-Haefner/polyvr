@@ -5,7 +5,7 @@
 
 using namespace OSG;
 
-simpleVRPyType(Fluids, New_VRObjects_unnamed_ptr);
+simpleVRPyType(Fluids, New_VRObjects_ptr);
 simpleVRPyType(MetaBalls, New_VRObjects_ptr);
 
 PyMethodDef VRPyFluids::methods[] = {

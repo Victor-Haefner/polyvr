@@ -89,7 +89,7 @@ class VRMillingWorkPiece : public VRGeometry {
     public:
         VRMillingWorkPiece(string name);
         VRMillingWorkPiecePtr ptr();
-        static VRMillingWorkPiecePtr create(string name);
+        static VRMillingWorkPiecePtr create(string name = "millingWorkPiece");
         void init(Vec3i gSize, float bSize = 0.01);
         void reset();
 

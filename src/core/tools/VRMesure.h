@@ -22,7 +22,7 @@ class VRMeasure : public VRAnalyticGeometry {
     public:
         VRMeasure(string name);
 
-        static VRMeasurePtr create(string name);
+        static VRMeasurePtr create(string name = "measure");
         VRMeasurePtr ptr();
 
         void setPoint(int i, pose p);

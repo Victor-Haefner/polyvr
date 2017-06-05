@@ -4,7 +4,7 @@
 
 using namespace OSG;
 
-simpleVRPyType(AnalyticGeometry, New_VRObjects_unnamed_ptr);
+simpleVRPyType(AnalyticGeometry, New_VRObjects_ptr);
 
 PyMethodDef VRPyAnalyticGeometry::methods[] = {
     {"setVector", (PyCFunction)VRPyAnalyticGeometry::setVector, METH_VARARGS, "Add/set an annotated vector - setVector(int i, [pos], [vec], [col], str label)" },

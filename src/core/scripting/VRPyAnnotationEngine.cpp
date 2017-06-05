@@ -3,7 +3,7 @@
 #include "core/scripting/VRPyGeometry.h"
 
 using namespace OSG;
-simpleVRPyType(AnnotationEngine, New_VRObjects_unnamed_ptr);
+simpleVRPyType(AnnotationEngine, New_VRObjects_ptr);
 
 PyMethodDef VRPyAnnotationEngine::methods[] = {
     {"set", (PyCFunction)VRPyAnnotationEngine::set, METH_VARARGS, "Set label - set(int i, [x,y,z] pos, str val)" },

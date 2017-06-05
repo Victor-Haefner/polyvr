@@ -41,7 +41,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRParticles>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New_VRObjects_unnamed_ptr,                 /* tp_new */
+    New_VRObjects_ptr,                 /* tp_new */
 };
 
 PyMethodDef VRPyParticles::methods[] = {

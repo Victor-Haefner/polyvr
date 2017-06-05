@@ -28,7 +28,7 @@ class VRClipPlane : public VRGeometry {
         VRClipPlane(string name);
         ~VRClipPlane();
 
-        static VRClipPlanePtr create(string name);
+        static VRClipPlanePtr create(string name = "clipPlane");
         VRClipPlanePtr ptr();
 
         bool isActive();

@@ -9,7 +9,7 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRAnimation : public VRName, public enable_shared_from_this<VRAnimation> {
+class VRAnimation : public VRName, public std::enable_shared_from_this<VRAnimation> {
     protected:
         struct interpolator {
             virtual ~interpolator();
@@ -43,13 +43,13 @@ class VRAnimation : public VRName, public enable_shared_from_this<VRAnimation> {
     public:
         VRAnimation(string name = "animation");
         ~VRAnimation();
-        static shared_ptr<VRAnimation> create(string name = "animation");
+        static VRAnimationPtr create(string name = "animation");
 
         template<typename T>
         VRAnimation(float _duration, float _offset, std::weak_ptr< VRFunction<T> > _fkt, T _start, T _end, bool _loop);
 
         template<typename T>
-        static shared_ptr<VRAnimation> create(float _duration, float _offset, std::weak_ptr< VRFunction<T> > _fkt, T _start, T _end, bool _loop);
+        static VRAnimationPtr create(float _duration, float _offset, std::weak_ptr< VRFunction<T> > _fkt, T _start, T _end, bool _loop);
 
         void setSimpleCallback(VRAnimCbWeakPtr fkt, float _duration);
 

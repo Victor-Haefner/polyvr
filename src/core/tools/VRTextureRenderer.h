@@ -23,7 +23,7 @@ class VRTextureRenderer : public VRObject {
         VRTextureRenderer(string name);
         ~VRTextureRenderer();
 
-        static VRTextureRendererPtr create(string name);
+        static VRTextureRendererPtr create(string name = "textureRenderer");
 
         void setup(VRCameraPtr cam, int width, int height, bool alpha = false);
 

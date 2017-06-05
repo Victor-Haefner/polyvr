@@ -1,4 +1,6 @@
 #include <boost/bind.hpp>
+#include "core/scene/VRScene.h"
+#include "core/objects/object/VRObject.h"
 
 #define newPyType( X, Y, NEWfkt ) \
 template<> PyTypeObject VRPyBaseT< X >::type = { \
@@ -149,24 +151,14 @@ template<class T> PyObject* VRPyBaseT<T>::New_named_ptr(PyTypeObject *type, PyOb
 
 template<class T>
 PyObject* VRPyBaseT<T>::New_VRObjects_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds) {
-    VRPyBaseT<T>* self = (VRPyBaseT<T> *)New_named_ptr(type, args, kwds);
-    if (self != NULL) self->objPtr->setPersistency(0);
-    return (PyObject *)self;
-}
-
-template<class T>
-PyObject* VRPyBaseT<T>::New_VRObjects_optional_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+    const char* name = 0;
+    const char* parent = 0;
+    if (! PyArg_ParseTuple(args, "|ss", &name, &parent)) return NULL;
     VRPyBaseT<T>* self = 0;
-    if (pySize(args) == 0) self = (VRPyBaseT<T> *)New_ptr(type, args, kwds);
-    else self = (VRPyBaseT<T> *)New_named_ptr(type, args, kwds);
-    if (self != NULL) self->objPtr->setPersistency(0);
-    return (PyObject *)self;
-}
-
-template<class T>
-PyObject* VRPyBaseT<T>::New_VRObjects_unnamed_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds) {
-    VRPyBaseT<T>* self = (VRPyBaseT<T> *)New_ptr(type, args, kwds);
-    if (self != NULL) self->objPtr->setPersistency(0);
+    if (name) self = (VRPyBaseT<T>*)allocPtr( type, T::create( name ) );
+    else self = (VRPyBaseT<T>*)allocPtr( type, T::create() );
+    if (self) self->objPtr->setPersistency(0);
+    if (parent) OSG::VRScene::getCurrent()->get(parent)->addChild(self->objPtr);
     return (PyObject *)self;
 }
 

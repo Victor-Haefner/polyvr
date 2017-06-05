@@ -245,7 +245,7 @@ void VRAtom::propagateTransformation(Matrix& T, uint flag, bool self) {
 }
 
 
-VRMolecule::VRMolecule(string definition) : VRGeometry(definition) {
+VRMolecule::VRMolecule(string name) : VRGeometry(name) {
     bonds_geo = VRGeometry::create("bonds");
     coords_geo = VRGeometry::create("coords");
 
@@ -253,12 +253,10 @@ VRMolecule::VRMolecule(string definition) : VRGeometry(definition) {
     labels->setBillboard(true);
     labels->setOnTop(false);
     labels->setSize(0.1);
-
-    set(definition);
 }
 
-VRMoleculePtr VRMolecule::create(string definition) {
-    auto ptr = VRMoleculePtr(new VRMolecule(definition) );
+VRMoleculePtr VRMolecule::create(string name) {
+    auto ptr = VRMoleculePtr(new VRMolecule(name) );
     ptr->addChild(ptr->bonds_geo);
     ptr->addChild(ptr->coords_geo);
     ptr->addChild(ptr->labels);

@@ -7,10 +7,7 @@
 
 using namespace OSG;
 
-
-VRFluids::VRFluids() : VRFluids(true) {}
-
-VRFluids::VRFluids(bool spawnParticles) : VRParticles(false) {
+VRFluids::VRFluids(string name, bool spawnParticles) : VRParticles(name, false) {
     this->collideWithSelf = false;
     if (spawnParticles) {
         resetParticles<SphParticle>();
@@ -23,8 +20,8 @@ VRFluids::~VRFluids() {
     if (scene) scene->dropPhysicsUpdateFunction(fluidFkt.get(), this->afterBullet);
 }
 
-shared_ptr<VRFluids> VRFluids::create() {
-    return shared_ptr<VRFluids>( new VRFluids() );
+shared_ptr<VRFluids> VRFluids::create(string name) {
+    return shared_ptr<VRFluids>( new VRFluids(name) );
 }
 
 void VRFluids::setFunctions(int from, int to) {

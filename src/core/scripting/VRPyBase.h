@@ -99,8 +99,6 @@ struct VRPyBaseT : public VRPyBase {
     static PyObject* New_named_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_toZero(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_VRObjects_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds);
-    static PyObject* New_VRObjects_unnamed_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds);
-    static PyObject* New_VRObjects_optional_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds);
 
     static PyObject* allocPtr(PyTypeObject* type, std::shared_ptr<T> t);
     static void dealloc(VRPyBaseT<T>* self);

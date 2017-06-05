@@ -98,9 +98,9 @@ class VRMolecule : public VRGeometry {
 		uint getFlag();
 
     public:
-        VRMolecule(string definition);
+        VRMolecule(string name);
 
-        static VRMoleculePtr create(string definition);
+        static VRMoleculePtr create(string name = "molecule");
         VRMoleculePtr ptr();
 
         void set(string definition);

@@ -26,7 +26,7 @@ boost::recursive_mutex& VRParticles::mtx() {
     };
 }
 
-VRParticles::VRParticles(bool spawnParticles) : VRGeometry("particles"), ocparticles(0.1) {
+VRParticles::VRParticles(string name, bool spawnParticles) : VRGeometry(name), ocparticles(0.1) {
     if (spawnParticles) resetParticles<Particle>();
     allowCulling(false);
     getMesh()->geo->setDlistCache(false);
@@ -38,7 +38,7 @@ VRParticles::~VRParticles() {
     for (int i=0;i<N;i++) delete particles[i];
 }
 
-shared_ptr<VRParticles> VRParticles::create() { return shared_ptr<VRParticles>( new VRParticles() ); }
+shared_ptr<VRParticles> VRParticles::create(string name) { return shared_ptr<VRParticles>( new VRParticles(name) ); }
 
 void VRParticles::updateParticles(int b, int e) {
     if (e < 0) e = N;

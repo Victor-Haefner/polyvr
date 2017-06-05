@@ -9,7 +9,7 @@ using namespace OSG;
 
 simpleVRPyType(Terrain, New_VRObjects_ptr);
 simpleVRPyType(Tree, New_VRObjects_ptr);
-simpleVRPyType(Woods, New_VRObjects_unnamed_ptr);
+simpleVRPyType(Woods, New_VRObjects_ptr);
 
 PyMethodDef VRPyTree::methods[] = {
     {"setup", (PyCFunction)VRPyTree::setup, METH_VARARGS, "Set the tree parameters - setup( int , int, int, flt, flt, flt, flt, flt, flt, flt, flt ) " },

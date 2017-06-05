@@ -18,9 +18,9 @@ class VRParticles : public VRGeometry {
     // FIXME: Particles do not collide in ~50% of all polyvr sessions. Restart polyvr until it works.
 
     public:
-        VRParticles(bool spawnParticles = true);
+        VRParticles(string name, bool spawnParticles = true);
         ~VRParticles();
-        static shared_ptr<VRParticles> create();
+        static shared_ptr<VRParticles> create(string name = "particles");
 
         static const int startValue = 500;
         int N = startValue;

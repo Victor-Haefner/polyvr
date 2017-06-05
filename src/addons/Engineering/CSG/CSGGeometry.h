@@ -38,7 +38,7 @@ class CSGGeometry : public VRGeometry {
         CSGGeometry(string name);
         virtual ~CSGGeometry();
 
-        static CSGGeometryPtr create(string name);
+        static CSGGeometryPtr create(string name = "csgGeometry");
         CSGGeometryPtr ptr();
 
         void setThreshold(float tL, float tA);

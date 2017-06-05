@@ -11,7 +11,7 @@
 using namespace OSG;
 using namespace std;
 
-VRAnnotationEngine::VRAnnotationEngine() : VRGeometry("AnnEng") {
+VRAnnotationEngine::VRAnnotationEngine(string name) : VRGeometry(name) {
     fg = Vec4f(0,0,0,1);
     bg = Vec4f(1,0,1,0);
 
@@ -30,7 +30,7 @@ VRAnnotationEngine::VRAnnotationEngine() : VRGeometry("AnnEng") {
     data = VRGeoData::create();
 }
 
-VRAnnotationEnginePtr VRAnnotationEngine::create() { return shared_ptr<VRAnnotationEngine>(new VRAnnotationEngine() ); }
+VRAnnotationEnginePtr VRAnnotationEngine::create(string name) { return shared_ptr<VRAnnotationEngine>(new VRAnnotationEngine(name) ); }
 VRAnnotationEnginePtr VRAnnotationEngine::ptr() { return static_pointer_cast<VRAnnotationEngine>( shared_from_this() ); }
 
 void VRAnnotationEngine::clear() {

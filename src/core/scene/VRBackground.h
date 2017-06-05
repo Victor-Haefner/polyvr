@@ -19,7 +19,7 @@ class VRBackground : public VRStorage {
         enum TYPE { SOLID, IMAGE, SKYBOX, SKY };
 
     private:
-        shared_ptr<VRBackgroundBase> base;
+        VRBackgroundBasePtr base;
 
     protected:
         void update();

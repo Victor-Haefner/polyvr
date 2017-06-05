@@ -35,9 +35,9 @@ class VRObjectManager : public VRObject {
         void setup();
 
     public:
-        VRObjectManager();
+        VRObjectManager(string name);
         ~VRObjectManager();
-        static VRObjectManagerPtr create();
+        static VRObjectManagerPtr create(string name = "objectManager");
 
         void addTemplate(VRTransformPtr s, string name = ""); // store object as template
         VRTransformPtr getTemplate(string name);

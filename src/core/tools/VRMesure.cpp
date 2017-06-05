@@ -5,8 +5,7 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRMeasure::VRMeasure(string name) {
-    setName(name);
+VRMeasure::VRMeasure(string name) : VRAnalyticGeometry(name) {
     setLabelParams(0.05, true, true);
 }
 
