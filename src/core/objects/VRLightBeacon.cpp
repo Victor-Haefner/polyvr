@@ -53,8 +53,8 @@ void VRLightBeacon::showLightGeo(bool b) {
 VRLightWeakPtr VRLightBeacon::getLight() { return light; }
 void VRLightBeacon::setLight(VRLightPtr l) { light = l; }
 
-vector<VRLightBeaconPtr>& VRLightBeacon::getAll() {
-    static vector<VRLightBeaconPtr> objs;
+vector<VRLightBeaconWeakPtr>& VRLightBeacon::getAll() {
+    static vector<VRLightBeaconWeakPtr> objs;
     return objs;
 }
 

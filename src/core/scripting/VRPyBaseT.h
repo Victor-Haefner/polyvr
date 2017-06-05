@@ -158,7 +158,10 @@ PyObject* VRPyBaseT<T>::New_VRObjects_ptr(PyTypeObject *type, PyObject *args, Py
     if (name) self = (VRPyBaseT<T>*)allocPtr( type, T::create( name ) );
     else self = (VRPyBaseT<T>*)allocPtr( type, T::create() );
     if (self) self->objPtr->setPersistency(0);
-    if (parent) OSG::VRScene::getCurrent()->get(parent)->addChild(self->objPtr);
+    if (parent) {
+        auto p = OSG::VRScene::getCurrent()->get(parent);
+        if (p) p->addChild(self->objPtr);
+    }
     return (PyObject *)self;
 }
 

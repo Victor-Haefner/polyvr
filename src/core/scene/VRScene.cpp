@@ -190,7 +190,7 @@ void VRScene::showReferentials(bool b, VRObjectPtr o) {
     for (uint i=0; i<o->getChildrenCount(); i++) showReferentials(b, o->getChild(i));
 }
 
-void VRScene::showLights(bool b) { for (auto be : VRLightBeacon::getAll()) be->showLightGeo(b); }
+void VRScene::showLights(bool b) { for (auto be : VRLightBeacon::getAll()) be.lock()->showLightGeo(b); }
 void VRScene::showCameras(bool b) { for (auto c : VRCamera::getAll()) if (auto sp = c.lock()) sp->showCamGeo(b); }
 
 void VRScene::update() {

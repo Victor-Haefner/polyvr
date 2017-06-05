@@ -51,7 +51,7 @@ class VRRenderStudio : public VRStorage {
         shared_ptr<VRFXAA> fxaa;
         VRObjectPtr root_system;
         VRObjectPtr root_scene;
-        map<int, VRLightPtr> light_map;
+        map<int, VRLightWeakPtr> light_map;
 
     public:
         VRRenderStudio(EYE e);

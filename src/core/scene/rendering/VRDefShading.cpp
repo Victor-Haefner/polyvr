@@ -145,7 +145,7 @@ void VRDefShading::setDeferredShading(bool b) {
     if (stageObject == 0) return;
     if (b) stageObject->setCore(OSGCore::create(dsStage), "defShading", true);
     else stageObject->setCore(OSGCore::create(Group::create()), "Object", true);
-    for (auto li : lightInfos) li.second.vrlight->setDeferred(b);
+    for (auto li : lightInfos) li.second.vrlight.lock()->setDeferred(b);
 }
 
 bool VRDefShading::getDeferredShading() { return enabled; }

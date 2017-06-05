@@ -26,7 +26,7 @@ class VRDefShading {
         };
 
         struct LightInfo {
-            VRLightPtr vrlight;
+            VRLightWeakPtr vrlight;
             LightTypeE lightType;
             ShadowTypeE shadowType;
             LightMTRecPtr light;

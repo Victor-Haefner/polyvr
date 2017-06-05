@@ -26,7 +26,7 @@ class VRLightBeacon : public VRTransform {
 
         void showLightGeo(bool b);
 
-        static vector<VRLightBeaconPtr>& getAll();
+        static vector<VRLightBeaconWeakPtr>& getAll();
 };
 
 OSG_END_NAMESPACE;

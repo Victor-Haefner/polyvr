@@ -200,7 +200,7 @@ void VRRenderStudio::addLight(VRLightPtr l) {
     if (defShading) defShading->addDSLight(l);
 }
 
-VRLightPtr VRRenderStudio::getLight(int ID) { return light_map.count(ID) ? light_map[ID] : 0; }
+VRLightPtr VRRenderStudio::getLight(int ID) { return light_map.count(ID) ? light_map[ID].lock() : 0; }
 
 void VRRenderStudio::updateLight(VRLightPtr l) {
     auto defShading = stages["shading"]->getRendering();
@@ -217,7 +217,7 @@ void VRRenderStudio::subLight(VRLightPtr l) {
 void VRRenderStudio::clearLights() {
     auto defShading = stages["shading"]->getRendering();
     for (auto li : light_map) {
-        if (auto l = li.second) {
+        if (auto l = li.second.lock()) {
             if (defShading) defShading->subLight(l);
         }
     }
