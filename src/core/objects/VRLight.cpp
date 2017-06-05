@@ -95,6 +95,12 @@ void VRLight::setType(string type) {
     if (type == "spot") setSpotlight();
 }
 
+void VRLight::setShadowParams(bool b, int res, Color4f c) {
+    setShadows(b);
+    setShadowMapRes(res);
+    setShadowColor(c);
+}
+
 void VRLight::setBeacon(VRLightBeaconPtr b) {
     beacon = b;
     b->setLight( ptr() );

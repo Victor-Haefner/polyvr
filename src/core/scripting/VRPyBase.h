@@ -67,8 +67,6 @@ struct VRPyBase {
     static PyObject* toPyTuple(const vector<string>& v);
     static PyObject* toPyTuple(const vector<PyObject*>& v);
 
-    static PyObject* toPyObject(float f);
-
     static int toOSGConst(string cst);
     static int toOSGConst(PyObject* o);
     static int toGLConst(string cst);

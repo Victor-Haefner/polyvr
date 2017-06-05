@@ -1,4 +1,5 @@
 #include <boost/bind.hpp>
+#include "VRPyTypeCaster.h"
 #include "core/scene/VRScene.h"
 #include "core/objects/object/VRObject.h"
 
@@ -46,7 +47,7 @@ void VRPyBase::execPyCall(PyObject* pyFkt, PyObject* pArgs, T t) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     if (PyErr_Occurred() != NULL) PyErr_Print();
 
-    PyTuple_SetItem(pArgs, pySize(pArgs)-1, toPyObject(t));
+    PyTuple_SetItem(pArgs, pySize(pArgs)-1, VRPyTypeCaster::cast(t));
     PyObject_CallObject(pyFkt, pArgs);
 
     //Py_XDECREF(pArgs); Py_DecRef(pyFkt); // TODO!!

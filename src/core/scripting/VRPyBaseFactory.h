@@ -2,10 +2,9 @@
 #define VRPYBASEFACTORY_H_INCLUDED
 
 #include "VRPyBase.h"
+#include "VRPyTypeCaster.h"
 
 template<typename T> bool parseValue(PyObject* args, T& t);
-template<typename T> PyObject* toPyObject(T t);
-
 template<typename pyT, typename sT, typename T, T> struct proxy;
 template<typename pyT, typename sT, typename T, typename R, typename ...Args, R (T::*mf)(Args...)>
 struct proxy<pyT, sT, R (T::*)(Args...), mf> {
@@ -19,7 +18,7 @@ struct proxy<pyT, sT, R (T::*)(Args...), mf> {
 
     static PyObject* get(sT* self) {
         if (!self->valid()) return NULL;
-        return toPyObject( (self->objPtr.get()->*mf)() );
+        return VRPyTypeCaster::cast( (self->objPtr.get()->*mf)() );
     }
 };
 

@@ -64,6 +64,7 @@ class VRLight : public VRObject {
         void setSpecular(Color4f c);
         Color4f getSpecular();
 
+        void setShadowParams(bool b, int res, Color4f c);
         void setShadows(bool b);
         bool getShadows();
         void setShadowColor(Color4f c);

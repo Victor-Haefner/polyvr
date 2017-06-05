@@ -15,8 +15,8 @@ class VRPyTypeCaster {
         VRPyTypeCaster();
         static PyObject* err;
 
-        static PyObject* cast(OSG::VRObjectPtr obj);
-        static PyObject* cast(OSG::VRDevicePtr dev);
+        template<typename T>
+        static PyObject* cast(T t);
 };
 
 #endif // VRPYTYPECASTER_H_INCLUDED
