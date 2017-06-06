@@ -297,7 +297,7 @@ PyMethodDef VRPyOntology::methods[] = {
     {"merge", (PyCFunction)VRPyOntology::merge, METH_VARARGS, "Merge in another ontology - merge( ontology )" },
     {"copy", (PyCFunction)VRPyOntology::copy, METH_NOARGS, "Copy the ontology - ontology copy()" },
     //{"addModule", (PyCFunction)proxy<string, VRPyOntology, void (VROntology::*)(string), &VROntology::addModule>::set, METH_VARARGS, "Add module from library - addModule( str name )" },
-    {"addModule", PySetter(Ontology, addModule, string), "Add module from library - addModule( str name )" },
+    {"addModule", PyWrap(Ontology, addModule, void, (string)), "Add module from library - addModule( str name )" },
     {"process", (PyCFunction)VRPyOntology::process, METH_VARARGS, "Process a query - process( str query )" },
     {NULL}  /* Sentinel */
 };

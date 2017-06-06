@@ -10,8 +10,8 @@
 ptrFwd(VRProgress);
 
 namespace OSG {
-    ptrTemplateFwd(VRCallbackWrapper, VRCallbackStrWrapper, std::vector<std::string>);
-    ptrTemplateFwd(VRCallbackWrapper, VRCallbackPyWrapper, std::vector<PyObject*>);
+    ptrTemplateFwd(VRCallbackWrapper, VRCallbackStrWrapper, std::string);
+    ptrTemplateFwd(VRCallbackWrapper, VRCallbackPyWrapper, PyObject*);
     ptrFwd(VRVisualLayer);
 }
 

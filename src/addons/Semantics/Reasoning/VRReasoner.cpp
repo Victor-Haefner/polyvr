@@ -10,6 +10,19 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 
+OSG_BEGIN_NAMESPACE;
+template<>
+struct VRCallbackWrapper<string> {
+    VRCallbackWrapper() {}
+    virtual ~VRCallbackWrapper() {}
+
+    template<typename T>
+    string convert(const T& t) { return toString(t); }
+
+    virtual bool execute(void* obj, const vector<string>& params, string& result) = 0;
+};
+OSG_END_NAMESPACE;
+
 using namespace std;
 using namespace OSG;
 
@@ -165,7 +178,8 @@ bool VRReasoner::builtin(VRStatementPtr s, VRSemanticContextPtr c) {
 
         //cout << "builtin sg object: " << obj << endl;
         //for (auto a : args) cout << "builtin args: " << a << endl;
-        builtin->execute(obj.get(), args);
+        string res;
+        builtin->execute(obj.get(), args, res);
     }
 
     return true;

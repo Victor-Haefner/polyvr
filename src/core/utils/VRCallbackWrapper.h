@@ -6,13 +6,15 @@
 
 OSG_BEGIN_NAMESPACE;
 
-template<typename Params>
+template<typename Param>
 struct VRCallbackWrapper {
-    string format;
     VRCallbackWrapper() {}
     virtual ~VRCallbackWrapper() {}
 
-    virtual bool execute(void* obj, const Params& params) = 0;
+    template<typename T>
+    Param convert(const T& t);
+
+    virtual bool execute(void* obj, const vector<Param>& params, Param& result) = 0;
 };
 
 OSG_END_NAMESPACE;
