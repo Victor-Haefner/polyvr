@@ -7,6 +7,11 @@
 
 using namespace OSG;
 
+template<> void toValue<bool>(PyObject* o, bool& b) { b = PyInt_AsLong(o); }
+template<> void toValue<int>(PyObject* o, int& i) { i = PyInt_AsLong(o); }
+template<> void toValue<float>(PyObject* o, float& f) { f = PyFloat_AsDouble(o); }
+template<> void toValue<Color4f>(PyObject* o, Color4f& f) { f = VRPyBase::parseVec4fList(o); }
+
 // Stuff for proxy setter
 
 template<> bool parseValue<int>(PyObject* args, int& t) {
@@ -67,6 +72,5 @@ template<> bool parseValue<VRLightBeaconPtr>(PyObject* args, VRLightBeaconPtr& t
     t = b->objPtr;
     return true;
 }
-
 
 
