@@ -13,9 +13,6 @@
 
 using namespace OSG;
 
-VRSemanticBuiltin::VRSemanticBuiltin() {}
-VRSemanticBuiltin::~VRSemanticBuiltin() {}
-
 Variable::Variable() {;}
 
 string Variable::toString() {

@@ -2,16 +2,17 @@
 #define VRUTILSFWD_H_INCLUDED
 
 #include <memory>
-
-#define ptrFwd( X ) \
-class X; \
-typedef std::shared_ptr<X> X ## Ptr; \
-typedef std::weak_ptr<X> X ## WeakPtr;
+#include <vector>
+#include <string>
+#include <Python.h>
+#include "VRFwdDeclTemplate.h"
 
 ptrFwd(VRProgress);
 
 namespace OSG {
-ptrFwd(VRVisualLayer);
+    ptrTemplateFwd(VRCallbackWrapper, VRCallbackStrWrapper, std::vector<std::string>);
+    ptrTemplateFwd(VRCallbackWrapper, VRCallbackPyWrapper, PyObject*);
+    ptrFwd(VRVisualLayer);
 }
 
 #endif // VRUTILSFWD_H_INCLUDED

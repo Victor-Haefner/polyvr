@@ -6,6 +6,7 @@
 #include <sstream>
 #include <list>
 #include "core/utils/toString.h"
+#include "core/utils/VRCallbackWrapper.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 
@@ -164,7 +165,7 @@ bool VRReasoner::builtin(VRStatementPtr s, VRSemanticContextPtr c) {
 
         //cout << "builtin sg object: " << obj << endl;
         //for (auto a : args) cout << "builtin args: " << a << endl;
-        builtin->execute(obj, args);
+        builtin->execute(obj.get(), args);
     }
 
     return true;

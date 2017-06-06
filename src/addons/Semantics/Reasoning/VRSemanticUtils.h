@@ -14,16 +14,6 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-struct VRSemanticBuiltin {
-    typedef vector<string> Params;
-
-    string format;
-
-    VRSemanticBuiltin();
-    virtual ~VRSemanticBuiltin();
-    virtual bool execute(VRObjectPtr o, const Params& params) = 0;
-};
-
 struct VPath {
     string first;
     string root;
