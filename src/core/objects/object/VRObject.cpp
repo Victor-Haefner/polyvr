@@ -17,9 +17,9 @@
 #include "addons/Semantics/Reasoning/VREntity.h"
 #include <libxml++/nodes/element.h>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
 
+template<> string typeName(const VRObjectPtr& o) { return o->getType(); }
 
 VRObject::VRObject(string _name) {
     static int _ID = 0;
@@ -558,5 +558,3 @@ void VRObject::unitTest() {
 
 void VRObject::setEntity(VREntityPtr e) { entity = e; }
 VREntityPtr VRObject::getEntity() { return entity; }
-
-OSG_END_NAMESPACE

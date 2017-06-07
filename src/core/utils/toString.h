@@ -44,11 +44,11 @@ OSG::Vec3i toVec3i(string s);
 OSG::Vec4i toVec4i(string s);
 OSG::Pnt3f toPnt3f(string s);
 
-template<typename T> void toValue(stringstream& s, T& t);
-
-template<typename T> void toValue(string s, T& t){
+template<typename T> string typeName(const T& t);
+template<typename T> bool toValue(stringstream& s, T& t);
+template<typename T> bool toValue(string s, T& t){
     stringstream ss(s);
-    toValue(ss,t);
+    return toValue(ss,t);
 }
 
 #endif // TOSTRING_H_INCLUDED

@@ -3,6 +3,21 @@
 
 #include "VRCallbackWrapper.h"
 
+#define CW_CHECK_SIZE(N) \
+if (params.size() != N) { \
+    this->err = "Function takes exactly "+toString(N)+" arguments ("+toString( params.size() )+" given)"; \
+    return false; \
+}
+
+#define CW_GET_VALUE(i,T,t) \
+T t; \
+if (! toValue(params[i], t)) { \
+    this->err = "Function argument "+toString(i)+" expects a "+typeName(t)+" ("+typeName( params[i] )+" given)"; \
+    return false; \
+}
+
+//    this->err = "Function argument "+toString(i)+" expects a "+typeName(t)+" ("+typeName( params[i] )+" given)";
+
 OSG_BEGIN_NAMESPACE;
 
 template <typename P, typename T> struct VRCallbackWrapperT;
@@ -19,41 +34,45 @@ struct VRCallbackWrapperT<P, R (T::*)(Args...)> : public VRCallbackWrapper<P> {
      // template class O is not really needed, only a trick to allow to call without parameters
 
     template<class O>
-    R call(T* obj, const vector<P>& params) {
-        if (params.size() != 0) return R();
-        return (obj->*callback)();
+    bool call(T* obj, const vector<P>& params, R& r) {
+        CW_CHECK_SIZE(0);
+        r = (obj->*callback)(); return true;
     }
 
     template<class O, class A>
-    R call(T* obj, const vector<P>& params) {
-        if (params.size() != 1) return R();
-        A a; toValue(params[0], a);
-        return (obj->*callback)( a );
+    bool call(T* obj, const vector<P>& params, R& r) {
+        CW_CHECK_SIZE(1);
+        CW_GET_VALUE(0,A,a);
+        r = (obj->*callback)( a ); return true;
     }
 
     template<class O, class A, class B>
-    R call(T* obj, const vector<P>& params) {
-        if (params.size() != 2) return R();
-        A a; toValue(params[0], a);
-        B b; toValue(params[1], b);
-        return (obj->*callback)( a, b );
+    bool call(T* obj, const vector<P>& params, R& r) {
+        CW_CHECK_SIZE(2);
+        CW_GET_VALUE(0,A,a);
+        CW_GET_VALUE(1,B,b);
+        r = (obj->*callback)( a, b ); return true;
     }
 
     template<class O, class A, class B, class C>
-    R call(T* obj, const vector<P>& params) {
-        if (params.size() != 3) return R();
-        A a; toValue(params[0], a);
-        B b; toValue(params[1], b);
-        C c; toValue(params[2], c);
-        return (obj->*callback)( a, b, c );
+    bool call(T* obj, const vector<P>& params, R& r) {
+        CW_CHECK_SIZE(3);
+        CW_GET_VALUE(0,A,a);
+        CW_GET_VALUE(1,B,b);
+        CW_GET_VALUE(2,C,c);
+        r = (obj->*callback)( a, b, c ); return true;
     }
 
     bool execute(void* o, const vector<P>& params, P& result) {
         if (!callback) return false;
-        result = this->convert( call<R, Args...>((T*)o, params) );
+        R res;
+        if (!call<R, Args...>((T*)o, params, res)) return false;
+        result = this->convert( res );
         return true;
     }
 };
+
+// --- void specialisation ---
 
 template <typename P, typename T, typename ...Args>
 struct VRCallbackWrapperT<P, void (T::*)(Args...)> : public VRCallbackWrapper<P> {
@@ -65,38 +84,38 @@ struct VRCallbackWrapperT<P, void (T::*)(Args...)> : public VRCallbackWrapper<P>
     }
 
     template<class O>
-    void call(T* obj, const vector<P>& params) {
-        if (params.size() != 1) return;
-        (obj->*callback)();
+    bool call(T* obj, const vector<P>& params) {
+        CW_CHECK_SIZE(0);
+        (obj->*callback)(); return true;
     }
 
     template<class O, class A>
-    void call(T* obj, const vector<P>& params) {
-        if (params.size() != 1) return;
-        A a; toValue(params[0], a);
-        (obj->*callback)( a );
+    bool call(T* obj, const vector<P>& params) {
+        CW_CHECK_SIZE(1);
+        CW_GET_VALUE(0,A,a);
+        (obj->*callback)( a ); return true;
     }
 
     template<class O, class A, class B>
-    void call(T* obj, const vector<P>& params) {
-        if (params.size() != 2) return;
-        A a; toValue(params[0], a);
-        B b; toValue(params[1], b);
-        (obj->*callback)( a, b );
+    bool call(T* obj, const vector<P>& params) {
+        CW_CHECK_SIZE(2);
+        CW_GET_VALUE(0,A,a);
+        CW_GET_VALUE(1,B,b);
+        (obj->*callback)( a, b ); return true;
     }
 
     template<class O, class A, class B, class C>
-    void call(T* obj, const vector<P>& params) {
-        if (params.size() != 3) return;
-        A a; toValue(params[0], a);
-        B b; toValue(params[1], b);
-        C c; toValue(params[2], c);
-        (obj->*callback)( a, b, c );
+    bool call(T* obj, const vector<P>& params) {
+        CW_CHECK_SIZE(3);
+        CW_GET_VALUE(0,A,a);
+        CW_GET_VALUE(1,B,b);
+        CW_GET_VALUE(2,C,c);
+        (obj->*callback)( a, b, c ); return true;
     }
 
     bool execute(void* o, const vector<P>& params, P& result) {
         if (!callback) return false;
-        call<void, Args...>((T*)o, params);
+        if (!call<void, Args...>((T*)o, params)) return false;
         return true;
     }
 };

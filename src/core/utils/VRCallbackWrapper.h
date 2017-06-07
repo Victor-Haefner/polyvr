@@ -8,6 +8,8 @@ OSG_BEGIN_NAMESPACE;
 
 template<typename Param>
 struct VRCallbackWrapper {
+    string err;
+
     VRCallbackWrapper() {}
     virtual ~VRCallbackWrapper() {}
 

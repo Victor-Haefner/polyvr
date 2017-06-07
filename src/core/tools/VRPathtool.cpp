@@ -20,9 +20,11 @@ string toString(VRPathtool::option& n) {
     return ss.str();
 }
 
-template<> void toValue(stringstream& ss, VRPathtool::option& n) {
-    ss >> n.resolution;
-    ss >> n.useControlHandles;
+template<> bool toValue(stringstream& ss, VRPathtool::option& n) {
+    bool b = true;
+    b = ss >> n.resolution;
+    b = ss >> n.useControlHandles;
+    return b;
 }
 
 #include "core/utils/VRStorage_template.h"

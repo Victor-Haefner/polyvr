@@ -9,8 +9,9 @@
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
 #include <libxml++/nodes/element.h>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRLightBeaconPtr& o) { return o->getType(); }
 
 VRMaterialPtr getLightGeoMat() {
     VRMaterialPtr mat = VRMaterial::create("light_geo_mat");
@@ -57,5 +58,3 @@ vector<VRLightBeaconWeakPtr>& VRLightBeacon::getAll() {
     static vector<VRLightBeaconWeakPtr> objs;
     return objs;
 }
-
-OSG_END_NAMESPACE;

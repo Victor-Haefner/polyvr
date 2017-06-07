@@ -6,7 +6,7 @@
 #include "core/utils/VRCallbackWrapper.h"
 
 template<typename T>
-void toValue(PyObject* o, T& b);
+bool toValue(PyObject* o, T& b);
 
 #include "core/utils/VRCallbackWrapperT.h"
 
@@ -24,7 +24,8 @@ PyObject* proxyWrap<sT, R (T::*)(Args...), mf>::exec(sT* self, PyObject* args) {
     auto wrap = OSG::VRCallbackWrapperT<PyObject*, R (T::*)(Args...)>::create();
     wrap->callback = mf;
     PyObject* res = 0;
-    wrap->execute(self->objPtr.get(), params, res);
+    bool success = wrap->execute(self->objPtr.get(), params, res);
+    if (!success) { self->setErr(wrap->err); return NULL; }
     if (!res) Py_RETURN_TRUE;
     else return res;
 }

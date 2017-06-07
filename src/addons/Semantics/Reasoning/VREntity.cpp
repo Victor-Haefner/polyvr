@@ -9,6 +9,8 @@
 
 using namespace OSG;
 
+template<> string typeName(const VREntityPtr& o) { return "Entity"; }
+
 #define WARN(x) \
 VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
 
