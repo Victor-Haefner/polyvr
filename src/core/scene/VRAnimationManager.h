@@ -26,7 +26,7 @@ class VRAnimationManager {
         void remAnimation(VRAnimationPtr anim);
 
         template<typename T>
-        VRAnimationPtr addAnimation(float duration, float offset, std::weak_ptr< VRFunction<T> > fkt, T start, T end, bool loop = false);
+        VRAnimationPtr addAnimation(float duration, float offset, std::shared_ptr< VRFunction<T> > fkt, T start, T end, bool loop = false, bool owned = false);
 };
 
 OSG_END_NAMESPACE;

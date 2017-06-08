@@ -340,13 +340,11 @@ void buildAnimations(AnimationLibrary& lib, VRObjectPtr objects) {
                 p->compute(80);
             }
             bool loop = false;
-            fkt = VRFunction<float>::create(a.first, boost::bind(callback, t, axis, p, _1) );
+            fkt = VRAnimCb::create(a.first, boost::bind(callback, t, axis, p, _1) );
 
             VRAnimationPtr anim = 0;
-            VRAnimCbWeakPtr wkp = fkt;
-            if (bezier) anim = VRAnimation::create(duration, start[0], wkp, 0.f, 1.f, loop);
-            else anim = VRAnimation::create(duration, start[0], wkp, start[1], end[1], loop);
-            anim->setCallbackOwner(true);
+            if (bezier) anim = VRAnimation::create(duration, start[0], fkt, 0.f, 1.f, loop, true);
+            else anim = VRAnimation::create(duration, start[0], fkt, start[1], end[1], loop, true);
             t->addAnimation(anim);
         }
     }

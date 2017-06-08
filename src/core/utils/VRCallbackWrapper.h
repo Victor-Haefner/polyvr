@@ -6,10 +6,12 @@
 
 OSG_BEGIN_NAMESPACE;
 
-template<typename Param>
-struct VRCallbackWrapper {
-    string err;
+struct VRCallbackWrapperBase {
+    static string err;
+};
 
+template<typename Param>
+struct VRCallbackWrapper : VRCallbackWrapperBase {
     VRCallbackWrapper() {}
     virtual ~VRCallbackWrapper() {}
 

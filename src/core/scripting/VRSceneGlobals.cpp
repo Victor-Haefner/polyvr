@@ -225,11 +225,7 @@ PyObject* VRSceneGlobals::stackCall(VRSceneGlobals* self, PyObject *args) {
     }
 
     VRUpdateCbPtr fkt = VRFunction<int>::create( "pyExecCall", boost::bind(execCall, pyFkt, pArgs, _1) );
-    VRUpdateCbWeakPtr wkp = fkt;
-
-    auto scene = VRScene::getCurrent();
-    auto a = scene->addAnimation(0, delay, wkp, 0, 0, false);
-    a->setCallbackOwner(true);
+    auto a = VRScene::getCurrent()->addAnimation(0, delay, fkt, 0, 0, false, true);
     Py_RETURN_TRUE;
 }
 

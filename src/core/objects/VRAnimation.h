@@ -46,14 +46,13 @@ class VRAnimation : public VRName, public std::enable_shared_from_this<VRAnimati
         static VRAnimationPtr create(string name = "animation");
 
         template<typename T>
-        VRAnimation(float _duration, float _offset, std::weak_ptr< VRFunction<T> > _fkt, T _start, T _end, bool _loop);
+        VRAnimation(float _duration, float _offset, std::shared_ptr< VRFunction<T> > _fkt, T _start, T _end, bool _loop, bool owned);
 
         template<typename T>
-        static VRAnimationPtr create(float _duration, float _offset, std::weak_ptr< VRFunction<T> > _fkt, T _start, T _end, bool _loop);
+        static VRAnimationPtr create(float _duration, float _offset, std::shared_ptr< VRFunction<T> > _fkt, T _start, T _end, bool _loop, bool owned);
 
-        void setSimpleCallback(VRAnimCbWeakPtr fkt, float _duration);
-
-        void setCallbackOwner(bool b);
+        void setUnownedCallback(VRAnimCbPtr fkt);
+        void setCallback(VRAnimCbPtr fkt);
 
         void setLoop(bool b);
         bool getLoop();

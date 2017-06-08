@@ -1,6 +1,7 @@
 #include "toString.h"
 #include "core/math/pose.h"
 #include "core/math/boundingbox.h"
+#include "core/utils/VRFunctionFwd.h"
 #include <OpenSG/OSGColor.h>
 
 using namespace OSG;
@@ -171,6 +172,7 @@ template<> string typeName(const bool& t) { return "bool"; }
 template<> string typeName(const Vec3f& t) { return "Vec3f"; }
 template<> string typeName(const Vec4f& t) { return "Vec4f"; }
 template<> string typeName(const Color4f& t) { return "Vec4f"; }
+template<> string typeName(const VRAnimCbPtr& t) { return "void callback(float)"; }
 
 template<> bool toValue(stringstream& ss, string& s) { s = ss.str(); return true; }
 template<> bool toValue(stringstream& ss, bool& b) { return ss >> b; }

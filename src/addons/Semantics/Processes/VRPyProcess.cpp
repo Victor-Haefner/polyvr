@@ -75,8 +75,8 @@ PyObject* VRPyProcess::getSubjects(VRPyProcess* self) {
 
 
 PyMethodDef VRPyProcessNode::methods[] = {
-    {"getLabel", PyWrap(ProcessNode, getLabel, string, ()), "Get node label - str getLabel()" },
-    {"getID", PyWrap(ProcessNode, getID, int, ()), "Get node graph ID - int getID()" },
+    {"getLabel", PyWrap(ProcessNode, getLabel, string), "Get node label - str getLabel()" },
+    {"getID", PyWrap(ProcessNode, getID, int), "Get node graph ID - int getID()" },
     {NULL}  /* Sentinel */
 };
 

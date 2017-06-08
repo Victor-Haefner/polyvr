@@ -17,7 +17,7 @@ VRRobotArm::VRRobotArm() {
     ageo->setLabelParams(0.03);
 
     animPtr = VRFunction<float>::create("animOnPath", boost::bind(&VRRobotArm::animOnPath, this, _1 ) );
-    anim->setSimpleCallback(animPtr, 1);
+    anim->setUnownedCallback(animPtr);
 }
 
 VRRobotArm::~VRRobotArm() {}
@@ -90,8 +90,8 @@ void VRRobotArm::animOnPath(float t) {
     anim->setDuration(job.d);
 
     t += job.t0;
-    if (t >= job.t1 and !job.loop) { job_queue.pop_front(); anim->start(); return; }
-    if (t >= job.t1 and job.loop) { anim->start(); return; }
+    if (t >= job.t1 and !job.loop) { job_queue.pop_front(); anim->start(0); return; }
+    if (t >= job.t1 and job.loop) { anim->start(0); return; }
 
     Vec3f pos, dir, up;
     job.p->getOrientation(t, dir, up);
@@ -102,7 +102,7 @@ void VRRobotArm::animOnPath(float t) {
 
 void VRRobotArm::addJob(job j) {
     job_queue.push_back(j);
-    if (!anim->isActive()) anim->start();
+    if (!anim->isActive()) anim->start(0);
 }
 
 void VRRobotArm::move() {}

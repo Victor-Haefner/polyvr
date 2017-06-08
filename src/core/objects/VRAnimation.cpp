@@ -25,20 +25,21 @@ void VRAnimation::start(float offset) {
     VRScene::getCurrent()->addAnimation(shared_from_this());
 }
 
-void VRAnimation::setCallbackOwner(bool b) {
-    if (interp == 0) return;
-    interp->own(b);
-}
-
 void VRAnimation::stop() { run = false; }
 bool VRAnimation::isActive() { return run; }
 
-void VRAnimation::setSimpleCallback(VRAnimCbWeakPtr fkt, float _duration) {
+void VRAnimation::setUnownedCallback(VRAnimCbPtr fkt) {
+    setCallback(fkt);
+    interp->own(false);
+}
+
+void VRAnimation::setCallback(VRAnimCbPtr fkt) {
     run = false;
-    duration = _duration;
+    duration = 1;
 
     if (interp) delete interp;
     auto i = new interpolatorT<float>();
+    i->sp = fkt;
     i->fkt = fkt;
     i->start_value = 0;
     i->end_value = 1;

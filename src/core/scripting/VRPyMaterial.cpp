@@ -51,7 +51,7 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setTextureType", (PyCFunction)VRPyMaterial::setTextureType, METH_VARARGS, "Set the texture type - setTexture(str type)\n types are: 'Normal, 'SphereEnv'" },
     {"setStencilBuffer", (PyCFunction)VRPyMaterial::setStencilBuffer, METH_VARARGS, "Set the setStencilBuffer" },
     {"setShaderParameter", (PyCFunction)VRPyMaterial::setShaderParameter, METH_VARARGS, "Set shader variable - setShaderParameter(str var, value)" },
-    {"enableShaderParameter", PyWrap(Material, enableShaderParameter, void, (string)), "Enable OSG shader variable - enableShaderParameter(str var)"
+    {"enableShaderParameter", PyWrap(Material, enableShaderParameter, void, string), "Enable OSG shader variable - enableShaderParameter(str var)"
         "\n\t var can be { OSGWorldMatrix OSGInvWorldMatrix OSGTransInvWorldMatrix OSGCameraOrientation OSGCameraPosition OSGViewMatrix OSGInvViewMatrix"
         "\n\t OSGProjectionMatrix OSGModelViewMatrix OSGViewportSize OSGNormalMatrix OSGModelViewProjectionMatrix OSGStereoLeftEye OSGDrawerId"
         "\n\t OSGDrawableId OSGNodeId OSGNodeBoxMin OSGNodeBoxMax OSGNodeBoxCenter OSGNodeWorldBoxMin"

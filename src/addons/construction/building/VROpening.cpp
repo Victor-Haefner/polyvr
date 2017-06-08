@@ -72,8 +72,8 @@ void VROpening::open() {
     if (state == OPEN) return;
     state = OPEN;
 
-    if (fkt1) scene->addAnimation<Vec3f>(1, 0, fkt1, Vec3f(0,1,0), Vec3f(-1,0,0), false);
-    if (fkt2) scene->addAnimation<Vec3f>(1, 0, fkt2, Vec3f(0,1,0), Vec3f(1,0,0), false);
+    if (fkt1) scene->addAnimation<Vec3f>(1, 0, fkt1, Vec3f(0,1,0), Vec3f(-1,0,0), false, false);
+    if (fkt2) scene->addAnimation<Vec3f>(1, 0, fkt2, Vec3f(0,1,0), Vec3f(1,0,0), false, false);
     VRSoundManager::get().playSound(sound);
 }
 
@@ -81,8 +81,8 @@ void VROpening::close() {
     if (state == CLOSE) return;
     state = CLOSE;
 
-    if (fkt1) scene->addAnimation<Vec3f>(1, 0, fkt1, Vec3f(-1,0,0), Vec3f(0,1,0), false);
-    if (fkt2) scene->addAnimation<Vec3f>(1, 0, fkt2, Vec3f(1,0,0), Vec3f(0,1,0), false);
+    if (fkt1) scene->addAnimation<Vec3f>(1, 0, fkt1, Vec3f(-1,0,0), Vec3f(0,1,0), false, false);
+    if (fkt2) scene->addAnimation<Vec3f>(1, 0, fkt2, Vec3f(1,0,0), Vec3f(0,1,0), false, false);
     VRSoundManager::get().playSound(sound);
 }
 
