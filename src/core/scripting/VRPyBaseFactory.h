@@ -50,7 +50,7 @@ PyObject* proxyWrap<sT, R (T::*)(Args...), mf, O>::exec(sT* self, PyObject* args
 #define FOR_EACH_RSEQ_N() 7, 6, 5, 4, 3, 2, 1, 0
 
 #define FOR_EACH_(N, X, ...) CONCATENATE(FOR_EACH, N)(X, __VA_ARGS__)
-#define FOR_EACH(X, ...) FOR_EACH_(FOR_EACH_NARG(X, __VA_ARGS__), X, __VA_ARGS__)
+#define FOR_EACH(...) FOR_EACH_(FOR_EACH_NARG(__VA_ARGS__), __VA_ARGS__)
 
 // actual py wrapper macros
 
