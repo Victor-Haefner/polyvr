@@ -11,12 +11,12 @@ using namespace OSG;
 simpleVRPyType(Animation, New_named_ptr);
 
 PyMethodDef VRPyAnimation::methods[] = {
-    {"start", PyWrapOpt(Animation, start, "0", void, float), "Start animation" },
-    {"stop", PyWrap(Animation, stop, void), "Stop animation" },
-    {"isActive", PyWrap(Animation, isActive, bool), "Check if running - bool isActive()" },
-    {"setCallback", PyWrap(Animation, setCallback, void, VRAnimCbPtr), "Set animation callback - setCallback(callback)" },
-    {"setDuration", PyWrap(Animation, setDuration, void, float), "Set animation duration - setDuration(float)" },
-    {"setLoop", PyWrap(Animation, setLoop, void, bool), "Set animation loop flag - setLoop(bool)" },
+    {"start", PyWrapOpt(Animation, start, "Start animation, pass an optional offset in seconds", "0", void, float) },
+    {"stop", PyWrap(Animation, stop, "Stop animation", void) },
+    {"isActive", PyWrap(Animation, isActive, "Check if running", bool) },
+    {"setCallback", PyWrap(Animation, setCallback, "Set animation callback", void, VRAnimCbPtr) },
+    {"setDuration", PyWrap(Animation, setDuration, "Set animation duration", void, float) },
+    {"setLoop", PyWrap(Animation, setLoop, "Set animation loop flag", void, bool) },
     {NULL}  /* Sentinel */
 };
 

@@ -7,10 +7,10 @@ using namespace OSG;
 simpleVRPyType(AnalyticGeometry, New_VRObjects_ptr);
 
 PyMethodDef VRPyAnalyticGeometry::methods[] = {
-    {"setVector", PyWrap(AnalyticGeometry, setVector, void, int, Vec3f, Vec3f, Vec3f, string), "Add/set an annotated vector - setVector(int i, [pos], [vec], [col], str label)" },
-    {"setCircle", PyWrap(AnalyticGeometry, setCircle, void, int, Vec3f, Vec3f, float, Vec3f, string), "Add/set an annotated circle - setCircle(int i, [pos], [norm], radius, [col], str label)" },
-    {"setLabelParams", PyWrapOpt(AnalyticGeometry, setLabelParams, "0|0|0 0 0 1|0 0 0 0", void, float, bool, bool, Vec4f, Vec4f), "Set the size of the labels - setLabelParams( float s, bool screen_size, bool billboard, fg[r,g,b,a], bg[r,g,b,a] )" },
-    {"clear", PyWrap(AnalyticGeometry, clear, void), "Clear data" },
+    {"setVector", PyWrap(AnalyticGeometry, setVector, "Add/set an annotated vector", void, int, Vec3f, Vec3f, Vec3f, string) },
+    {"setCircle", PyWrap(AnalyticGeometry, setCircle, "Add/set an annotated circle", void, int, Vec3f, Vec3f, float, Vec3f, string) },
+    {"setLabelParams", PyWrapOpt(AnalyticGeometry, setLabelParams, "Set the size of the labels", "0|0|0 0 0 1|0 0 0 0", void, float, bool, bool, Vec4f, Vec4f) },
+    {"clear", PyWrap(AnalyticGeometry, clear, "Clear data", void) },
     {NULL}  /* Sentinel */
 };
 
