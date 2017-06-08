@@ -114,7 +114,7 @@ string VRNumberingEngine::fp =
 GLSL(
 uniform sampler2D texture;
 
-in vec2 texCoord;
+varying vec2 texCoord;
 
 void main( void ) {
   gl_FragColor = texture2D(texture, texCoord);
