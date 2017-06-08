@@ -4,16 +4,30 @@
 #include "VRCallbackWrapper.h"
 
 #define CW_CHECK_SIZE(N) \
-if (params.size() > N) { \
-    VRCallbackWrapperBase::err = "Function takes at most "+toString(N)+" arguments ("+toString( params.size() )+" given)"; \
+int Np = params.size(); \
+int Ndp = defaultParams.size(); \
+if (Np > N) { \
+    VRCallbackWrapperBase::err = "Function takes at most "+toString(N)+" arguments ("+toString( Np )+" given)"; \
+    return false; \
+} \
+if (Np < N-Ndp ) { \
+    VRCallbackWrapperBase::err = "Function takes at least "+toString(N-Ndp)+" arguments ("+toString( Np )+" given)"; \
     return false; \
 }
 
 #define CW_GET_VALUE(i,T,t) \
 T t; \
-if (! toValue(params[i], t)) { \
-    VRCallbackWrapperBase::err = "Function argument "+toString(i)+" expects a "+typeName(t)+" ("+typeName( params[i] )+" given)"; \
-    return false; \
+if (i < params.size()) { \
+    if (! toValue(params[i], t)) { \
+        VRCallbackWrapperBase::err = "Function argument "+toString(i)+" expects a "+typeName(t)+" ("+typeName( params[i] )+" given)"; \
+        return false; \
+    } \
+} else { \
+    int j = i - params.size(); \
+    if (! toValue(defaultParams[j], t)) { \
+        VRCallbackWrapperBase::err = "Internal error, function argument "+toString(i)+" expects a "+typeName(t)+", but got default argument "+defaultParams[j]; \
+        return false; \
+    } \
 }
 
 #define MACRO_GET_1(str, i) \
@@ -60,20 +74,20 @@ struct VRCallbackWrapperT<P, U, R (T::*)(Args...)> : public VRCallbackWrapper<P>
      // template class O is not really needed, only a trick to allow to call without parameters
 
     template<class O>
-    bool call(T* obj, const vector<P>& params, R& r) {
+    bool call(T* obj, const vector<P>& params, R& r, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(0);
         r = (obj->*callback)(); return true;
     }
 
     template<class O, class A>
-    bool call(T* obj, const vector<P>& params, R& r) {
+    bool call(T* obj, const vector<P>& params, R& r, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(1);
         CW_GET_VALUE(0,A,a);
         r = (obj->*callback)(); return true;
     }
 
     template<class O, class A, class B>
-    bool call(T* obj, const vector<P>& params, R& r) {
+    bool call(T* obj, const vector<P>& params, R& r, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(2);
         CW_GET_VALUE(0,A,a);
         CW_GET_VALUE(1,B,b);
@@ -81,7 +95,7 @@ struct VRCallbackWrapperT<P, U, R (T::*)(Args...)> : public VRCallbackWrapper<P>
     }
 
     template<class O, class A, class B, class C>
-    bool call(T* obj, const vector<P>& params, R& r) {
+    bool call(T* obj, const vector<P>& params, R& r, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(3);
         CW_GET_VALUE(0,A,a);
         CW_GET_VALUE(1,B,b);
@@ -90,7 +104,7 @@ struct VRCallbackWrapperT<P, U, R (T::*)(Args...)> : public VRCallbackWrapper<P>
     }
 
     template<class O, class A, class B, class C, class D>
-    bool call(T* obj, const vector<P>& params, R& r) {
+    bool call(T* obj, const vector<P>& params, R& r, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(4);
         CW_GET_VALUE(0,A,a);
         CW_GET_VALUE(1,B,b);
@@ -100,7 +114,7 @@ struct VRCallbackWrapperT<P, U, R (T::*)(Args...)> : public VRCallbackWrapper<P>
     }
 
     template<class O, class A, class B, class C, class D, class E>
-    bool call(T* obj, const vector<P>& params, R& r) {
+    bool call(T* obj, const vector<P>& params, R& r, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(5);
         CW_GET_VALUE(0,A,a);
         CW_GET_VALUE(1,B,b);
@@ -111,7 +125,7 @@ struct VRCallbackWrapperT<P, U, R (T::*)(Args...)> : public VRCallbackWrapper<P>
     }
 
     template<class O, class A, class B, class C, class D, class E, class F>
-    bool call(T* obj, const vector<P>& params, R& r) {
+    bool call(T* obj, const vector<P>& params, R& r, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(6);
         CW_GET_VALUE(0,A,a);
         CW_GET_VALUE(1,B,b);
@@ -125,7 +139,8 @@ struct VRCallbackWrapperT<P, U, R (T::*)(Args...)> : public VRCallbackWrapper<P>
     bool execute(void* o, const vector<P>& params, P& result) {
         if (!callback) return false;
         R res;
-        if (!call<R, Args...>((T*)o, params, res)) return false;
+        vector<string> defaultParams = splitString(U::str(),'|');
+        if (!call<R, Args...>((T*)o, params, res, defaultParams)) return false;
         result = this->convert( res );
         return true;
     }
@@ -144,20 +159,20 @@ struct VRCallbackWrapperT<P, U, void (T::*)(Args...)> : public VRCallbackWrapper
 
 
     template<class O>
-    bool call(T* obj, const vector<P>& params) {
+    bool call(T* obj, const vector<P>& params, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(0);
         (obj->*callback)(); return true;
     }
 
     template<class O, class A>
-    bool call(T* obj, const vector<P>& params) {
+    bool call(T* obj, const vector<P>& params, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(1);
         CW_GET_VALUE(0,A,a);
         (obj->*callback)(a); return true;
     }
 
     template<class O, class A, class B>
-    bool call(T* obj, const vector<P>& params) {
+    bool call(T* obj, const vector<P>& params, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(2);
         CW_GET_VALUE(0,A,a);
         CW_GET_VALUE(1,B,b);
@@ -165,7 +180,7 @@ struct VRCallbackWrapperT<P, U, void (T::*)(Args...)> : public VRCallbackWrapper
     }
 
     template<class O, class A, class B, class C>
-    bool call(T* obj, const vector<P>& params) {
+    bool call(T* obj, const vector<P>& params, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(3);
         CW_GET_VALUE(0,A,a);
         CW_GET_VALUE(1,B,b);
@@ -174,7 +189,7 @@ struct VRCallbackWrapperT<P, U, void (T::*)(Args...)> : public VRCallbackWrapper
     }
 
     template<class O, class A, class B, class C, class D>
-    bool call(T* obj, const vector<P>& params) {
+    bool call(T* obj, const vector<P>& params, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(4);
         CW_GET_VALUE(0,A,a);
         CW_GET_VALUE(1,B,b);
@@ -184,7 +199,7 @@ struct VRCallbackWrapperT<P, U, void (T::*)(Args...)> : public VRCallbackWrapper
     }
 
     template<class O, class A, class B, class C, class D, class E>
-    bool call(T* obj, const vector<P>& params) {
+    bool call(T* obj, const vector<P>& params, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(5);
         CW_GET_VALUE(0,A,a);
         CW_GET_VALUE(1,B,b);
@@ -195,7 +210,7 @@ struct VRCallbackWrapperT<P, U, void (T::*)(Args...)> : public VRCallbackWrapper
     }
 
     template<class O, class A, class B, class C, class D, class E, class F>
-    bool call(T* obj, const vector<P>& params) {
+    bool call(T* obj, const vector<P>& params, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(6);
         CW_GET_VALUE(0,A,a);
         CW_GET_VALUE(1,B,b);
@@ -208,9 +223,8 @@ struct VRCallbackWrapperT<P, U, void (T::*)(Args...)> : public VRCallbackWrapper
 
     bool execute(void* o, const vector<P>& params, P& result) {
         if (!callback) return false;
-        string defaultParams = U::str();
-        cout << " execute, def params " << defaultParams << endl;
-        if (!call<void, Args...>((T*)o, params)) return false;
+        vector<string> defaultParams = splitString(U::str(),'|');
+        if (!call<void, Args...>((T*)o, params, defaultParams)) return false;
         return true;
     }
 };

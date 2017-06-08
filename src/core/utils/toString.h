@@ -51,4 +51,9 @@ template<typename T> bool toValue(string s, T& t){
     return toValue(ss,t);
 }
 
+template<typename T> bool toValue(string s, std::shared_ptr<T>& t) {
+    t = 0;
+    return true;
+}
+
 #endif // TOSTRING_H_INCLUDED
