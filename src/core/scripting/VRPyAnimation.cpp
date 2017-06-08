@@ -11,7 +11,7 @@ using namespace OSG;
 simpleVRPyType(Animation, New_named_ptr);
 
 PyMethodDef VRPyAnimation::methods[] = {
-    //{"start", PyWrapOpt1(Animation, start, void, float) PyWrapOpt2(0), "Start animation" },
+    {"start", PyWrapOpt(Animation, start, void, float) PyWrapParams("0"), "Start animation" },
     {"stop", PyWrap(Animation, stop, void), "Stop animation" },
     {"isActive", PyWrap(Animation, isActive, bool), "Check if running - bool isActive()" },
     {"setCallback", PyWrap(Animation, setCallback, void, VRAnimCbPtr), "Set animation callback - setCallback(callback)" },

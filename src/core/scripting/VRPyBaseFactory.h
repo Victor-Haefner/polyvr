@@ -10,15 +10,12 @@ bool toValue(PyObject* o, T& b);
 
 #include "core/utils/VRCallbackWrapperT.h"
 
-template<typename ...Args>
+template<char... C>
 struct proxyParams {
-    template<Args... args>
-    struct Values {
-        static int size() {
-            const int n = sizeof...(Args);
-            return n;
-        }
-    };
+    static int size() {
+        const int n = sizeof...(C);
+        return n;
+    }
 };
 
 template<typename sT, typename T, T, class O> struct proxyWrap;
@@ -45,15 +42,28 @@ PyObject* proxyWrap<sT, R (T::*)(Args...), mf, O>::exec(sT* self, PyObject* args
 (PyCFunction)proxyWrap<VRPy ## X, R (OSG::VR ## X::*)( __VA_ARGS__ ), &OSG::VR ## X::Y, void >::exec \
 , METH_VARARGS
 
-// the I can be set to an integer less than or egual to the number of parameters, this means that I highest parameters are optional!
+// pass optional parameters S as a single string, will all arguments separated by '|'
 
-#define PyWrapOpt1(X, Y, R, ...) \
-(PyCFunction)proxyWrap<VRPy ## X, R (OSG::VR ## X::*)( __VA_ARGS__ ), &OSG::VR ## X::Y, proxyParams<__VA_ARGS__>
+#define MACRO_GET_1(str, i) \
+    (sizeof(str) > (i) ? str[(i)] : 0)
 
-#define PyWrapOpt2(...) \
-::Values<0.0> >::exec \
-, METH_VARARGS
+#define MACRO_GET_4(str, i) \
+    MACRO_GET_1(str, i+0),  \
+    MACRO_GET_1(str, i+1),  \
+    MACRO_GET_1(str, i+2),  \
+    MACRO_GET_1(str, i+3)
 
-// ::Values<__VA_ARGS__> >::exec
+#define MACRO_GET_16(str, i) \
+    MACRO_GET_4(str, i+0),   \
+    MACRO_GET_4(str, i+4),   \
+    MACRO_GET_4(str, i+8),   \
+    MACRO_GET_4(str, i+12)
+
+#define MACRO_GET_STR(str) MACRO_GET_16(str, 0), 0 //guard for longer strings
+
+#define PyWrapOpt(X, Y, R, ...) \
+(PyCFunction)proxyWrap<VRPy ## X, R (OSG::VR ## X::*)( __VA_ARGS__ ), &OSG::VR ## X::Y, proxyParams
+
+#define PyWrapParams( S ) < MACRO_GET_STR( S ) > >::exec, METH_VARARGS
 
 #endif // VRPYBASEFACTORY_H_INCLUDED
