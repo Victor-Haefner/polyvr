@@ -170,7 +170,7 @@ PyObject* VRPyEntity::getVector(VRPyEntity* self, PyObject* args) {
     if (v.size() == 0) Py_RETURN_NONE;
     if (v.size() == 1) return VRPyPropertyCaster::cast(v[0], self->objPtr->ontology.lock());
     PyObject* pv = PyList_New(v.size());
-    for (int i=0; i<v.size(); i++) PyList_SetItem(pv, i, VRPyPropertyCaster::cast(v[i], self->objPtr->ontology.lock()) );
+    for (int i=0; i<int(v.size()); i++) PyList_SetItem(pv, i, VRPyPropertyCaster::cast(v[i], self->objPtr->ontology.lock()) );
     return pv;
 }
 

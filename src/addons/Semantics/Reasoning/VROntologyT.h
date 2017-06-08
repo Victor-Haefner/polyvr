@@ -8,7 +8,7 @@ OSG_BEGIN_NAMESPACE;
 
 template <typename T, typename R, typename ...Args>
 VRCallbackStrWrapperPtr VROntology::addBuiltin( string builtin, R (T::*callback)(Args...) ) {
-    auto b = VRCallbackWrapperT<string, void, R (T::*)(Args...)>::create();
+    auto b = VRCallbackWrapperT<string, VRCallbackWrapperParams<MACRO_GET_STR( "" )>, R (T::*)(Args...)>::create();
     b->callback = callback;
     builtins[builtin] = b;
     return b;

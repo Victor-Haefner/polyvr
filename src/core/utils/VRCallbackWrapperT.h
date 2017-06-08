@@ -16,9 +16,35 @@ if (! toValue(params[i], t)) { \
     return false; \
 }
 
-//    this->err = "Function argument "+toString(i)+" expects a "+typeName(t)+" ("+typeName( params[i] )+" given)";
+#define MACRO_GET_1(str, i) \
+    (sizeof(str) > (i) ? str[(i)] : 0)
+
+#define MACRO_GET_4(str, i) \
+    MACRO_GET_1(str, i+0),  \
+    MACRO_GET_1(str, i+1),  \
+    MACRO_GET_1(str, i+2),  \
+    MACRO_GET_1(str, i+3)
+
+#define MACRO_GET_16(str, i) \
+    MACRO_GET_4(str, i+0),   \
+    MACRO_GET_4(str, i+4),   \
+    MACRO_GET_4(str, i+8),   \
+    MACRO_GET_4(str, i+12)
+
+#define MACRO_GET_STR(str) MACRO_GET_16(str, 0), 0 //guard for longer strings
 
 OSG_BEGIN_NAMESPACE;
+
+template<char... C>
+struct VRCallbackWrapperParams {
+    static int size() {
+        const int n = sizeof...(C);
+        return n;
+    }
+    static string str() {
+        return string({C...});
+    }
+};
 
 template <typename P, typename U, typename T> struct VRCallbackWrapperT;
 template <typename P, typename U, typename T, typename R, typename ...Args>
@@ -182,6 +208,8 @@ struct VRCallbackWrapperT<P, U, void (T::*)(Args...)> : public VRCallbackWrapper
 
     bool execute(void* o, const vector<P>& params, P& result) {
         if (!callback) return false;
+        string defaultParams = U::str();
+        cout << " execute, def params " << defaultParams << endl;
         if (!call<void, Args...>((T*)o, params)) return false;
         return true;
     }
