@@ -6,6 +6,8 @@
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
 
+PyObject* toPyObject(const OSG::Vec3f& v);
+
 struct VRPyVec3f : VRPyBaseT<OSG::Vec3f> {
     OSG::Vec3f v;
 

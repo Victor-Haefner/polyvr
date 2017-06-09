@@ -93,7 +93,8 @@ PyMethodDef VRPyObject::methods[] = {
     {"getEntity", PyWrap(Object, getEntity, "Get entity", VREntityPtr) },
     {"clearChildren", (PyCFunction)VRPyObject::clearChildren, METH_NOARGS, "Remove all children - clearChildren()" },
     {"getChildIndex", (PyCFunction)VRPyObject::getChildIndex, METH_NOARGS, "Return the child index of this object - int getChildIndex()" },
-    {"getBoundingbox", (PyCFunction)VRPyObject::getBoundingbox, METH_NOARGS, "get boundingbox" },
+    {"getBoundingbox", (PyCFunction)VRPyObject::getBoundingbox, METH_NOARGS, "get Boundingbox" },
+    {"setVolume", PyWrap(Object, setVolume, "Set the scenegraph volume to boundingbox", void, Boundingbox) },
     {NULL}  /* Sentinel */
 };
 

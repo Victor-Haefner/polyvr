@@ -22,7 +22,7 @@ class Graph : public VRStorage {
 
         struct node {
             pose p;
-            boundingbox box;
+            Boundingbox box;
         };
 
         struct edge {

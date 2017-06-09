@@ -40,7 +40,7 @@ bool Octree::inBox(Vec3f p, Vec3f c, float size) {
     return true;
 }
 
-void Octree::addBox(const boundingbox& b, void* d, int targetLevel, bool checkPosition) {
+void Octree::addBox(const Boundingbox& b, void* d, int targetLevel, bool checkPosition) {
     const Vec3f min = b.min();
     const Vec3f max = b.max();
     add(min, d, targetLevel, 0, checkPosition);
@@ -215,7 +215,7 @@ bool box_box_intersect(Vec3f min, Vec3f max, Vec3f Bpos, float Sb)  {
     return (abs(diff[0]) <= ABdiag[0]) && (abs(diff[1]) <= ABdiag[1]) && (abs(diff[2]) <= ABdiag[2]);
 }
 
-void Octree::findInBox(const boundingbox& b, vector<void*>& res) { // TODO: optimize!!
+void Octree::findInBox(const Boundingbox& b, vector<void*>& res) { // TODO: optimize!!
     if (!box_box_intersect(b.min(), b.max(), center, size)) return;
 
     for (unsigned int i=0; i<data.size(); i++) {
@@ -233,7 +233,7 @@ vector<void*> Octree::radiusSearch(Vec3f p, float r) {
     return res;
 }
 
-vector<void*> Octree::boxSearch(const boundingbox& b) {
+vector<void*> Octree::boxSearch(const Boundingbox& b) {
     vector<void*> res;
     getRoot()->findInBox(b, res);
     return res;

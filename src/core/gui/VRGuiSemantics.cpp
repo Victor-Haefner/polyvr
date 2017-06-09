@@ -152,7 +152,7 @@ void VRGuiSemantics::updateLayout() {
 
     layout->compute(2, 0.1); // N iterations, eps
 
-    auto clamp = [&](boundingbox& bb) {
+    auto clamp = [&](Boundingbox& bb) {
         //float W = canvas->get_width();
         //float H = canvas->get_height();
         Vec3f s = bb.size()*0.5;

@@ -47,6 +47,7 @@ struct VRPyObject : VRPyBaseT<OSG::VRObject> {
     static PyObject* clearChildren(VRPyObject* self);
     static PyObject* getChildIndex(VRPyObject* self);
     static PyObject* getBoundingbox(VRPyObject* self);
+    static PyObject* setVolume(VRPyObject* self, PyObject* args);
 };
 
 #endif // VRPYOBJECT_H_INCLUDED

@@ -74,8 +74,8 @@ void VRTexture::merge(VRTexturePtr other, Vec3f pos) {
     Vec3i offset = Vec3i(dim1[0]*pos[0], dim1[1]*pos[1], dim1[2]*pos[2]);
     Vec3i offset2 = Vec3i(min(0,offset[0]), min(0,offset[1]), min(0,offset[2]));
 
-    boundingbox bb; // compute total new size
-    bb.update( { Vec3f(offset), Vec3f(offset2), Vec3f(offset+dim2), Vec3f(offset2+dim1) } );
+    Boundingbox bb; // compute total new size
+    bb.updateFromPoints( { Vec3f(offset), Vec3f(offset2), Vec3f(offset+dim2), Vec3f(offset2+dim1) } );
     Vec3i dim3 = Vec3i(bb.size());
     resize(dim3, offset2);
     paste(other, offset);

@@ -157,7 +157,7 @@ string toString(const pose& po) {
     return toString(po.pos()) + " " + toString(po.dir()) + " " + toString(po.up());
 }
 
-string toString(const boundingbox& b) {
+string toString(const Boundingbox& b) {
     return toString(b.min()) + " " + toString(b.max()) + " " + toString(b.empty());
 }
 
@@ -173,6 +173,7 @@ template<> string typeName(const Vec3f& t) { return "Vec3f"; }
 template<> string typeName(const Vec4f& t) { return "Vec4f"; }
 template<> string typeName(const Color4f& t) { return "Vec4f"; }
 template<> string typeName(const VRAnimCbPtr& t) { return "void callback(float)"; }
+template<> string typeName(const Boundingbox& t) { return "Boundingbox"; }
 
 template<> bool toValue(stringstream& ss, string& s) { s = ss.str(); return true; }
 template<> bool toValue(stringstream& ss, bool& b) { return ss >> b; }
@@ -240,7 +241,7 @@ template<> bool toValue(stringstream& ss, posePtr& po) {
     return b;
 }
 
-template<> bool toValue(stringstream& ss, boundingbox& box) {
+template<> bool toValue(stringstream& ss, Boundingbox& box) {
     Vec3f a,b;
     bool c;
     toValue(ss, a);

@@ -152,7 +152,7 @@ void VRProcessLayout::rebuild() {
         e->widget->setFrom(p);
 
         auto& n = diag->getNode(i);
-        n.box.update(geo);
+        n.box.updateFromGeometry(geo);
         n.box.setCenter(p);
     }
 }

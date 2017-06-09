@@ -186,8 +186,8 @@ bool Polygon::isInside(Vec2f p) {
     return (K%2 == 1);
 }
 
-boundingbox Polygon::getBoundingBox() {
-    boundingbox bb;
+Boundingbox Polygon::getBoundingBox() {
+    Boundingbox bb;
     for (auto p : points) bb.update(Vec3f(p[0], 0, p[1]));
     for (auto p : points3) bb.update(p);
     return bb;

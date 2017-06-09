@@ -300,7 +300,7 @@ void VRWoods::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
         bool doTrees = (trees.count(leaf.get()) >= 0);
         bool doGrass = (grass.count(leaf.get()) >= 0);
 
-        boundingbox bb;
+        Boundingbox bb;
         if (doTrees) for (auto t : trees[leaf.get()]) bb.update( t->getWorldPosition() );
         //if (doGrass) for (auto g : grass[leaf.get()]) bb.update( g->getWorldPosition() );
         Vec3f pos = bb.center();

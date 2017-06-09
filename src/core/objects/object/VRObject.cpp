@@ -93,6 +93,13 @@ void VRObject::allowCulling(bool b, bool recursive) {
     if (recursive) allowCullingRecursive(getNode()->node, b);
 }
 
+void VRObject::setVolume(const Boundingbox& box) {
+    BoxVolume &vol = getNode()->node->editVolume(false);
+    vol.setBounds(box.min(), box.max());
+    vol.setStatic(true);
+    vol.setValid(true);
+}
+
 VRObjectPtr VRObject::create(string name) { return VRObjectPtr(new VRObject(name) ); }
 VRObjectPtr VRObject::ptr() { return static_pointer_cast<VRObject>( shared_from_this() ); }
 
@@ -403,12 +410,12 @@ bool VRObject::hasAncestor(VRObjectPtr a) {
 }
 
 /** Returns the Boundingbox of the OSG Node */
-boundingboxPtr VRObject::getBoundingBox() {
+BoundingboxPtr VRObject::getBoundingBox() {
     Pnt3f p1, p2;
     commitChanges();
     osg->node->updateVolume();
     osg->node->getVolume().getBounds(p1, p2);
-    boundingboxPtr b = shared_ptr<boundingbox>( new boundingbox );
+    BoundingboxPtr b = shared_ptr<Boundingbox>( new Boundingbox );
     b->update(p1.subZero());
     b->update(p2.subZero());
     return b;

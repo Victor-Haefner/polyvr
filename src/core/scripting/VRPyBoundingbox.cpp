@@ -1,24 +1,20 @@
 #include "VRPyBoundingbox.h"
 #include "VRPyBaseT.h"
+#include "VRPyBaseFactory.h"
+
+namespace OSG {
+    typedef Boundingbox VRBoundingbox;
+}
 
 using namespace OSG;
 
-newPyType(boundingbox, Boundingbox, New_ptr);
+newPyType(Boundingbox, Boundingbox, New_ptr);
 
 PyMethodDef VRPyBoundingbox::methods[] = {
-    {"min", (PyCFunction)VRPyBoundingbox::min, METH_NOARGS, "Get the minimum vector - [x,y,z] min()" },
-    {"max", (PyCFunction)VRPyBoundingbox::max, METH_NOARGS, "Get the maximum vector - [x,y,z] max()" },
+    {"min", PyWrap(Boundingbox, min, "Get the minimum vector", Vec3f) },
+    {"max", PyWrap(Boundingbox, max, "Get the maximum vector", Vec3f) },
+    {"update", PyWrap(Boundingbox, update, "Update the bounding box", void, Vec3f) },
     {NULL}  /* Sentinel */
 };
-
-PyObject* VRPyBoundingbox::min(VRPyBoundingbox* self) {
-    if (!self->valid()) return NULL;
-    return toPyTuple( self->objPtr->min() );
-}
-
-PyObject* VRPyBoundingbox::max(VRPyBoundingbox* self) {
-    if (!self->valid()) return NULL;
-    return toPyTuple( self->objPtr->max() );
-}
 
 

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="LocalShadows" name_space="Scene" loading_time="308">
+<Scene name_suffix="0" base_name="LocalShadows" name_space="Scene" loading_time="321">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
-        <Object accept_root="1" aspect="1" at="0 3 2" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-1.13674 3.93028 3.46358" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0 3 2" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-4.54537 6.71981 7.85225" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
             <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
@@ -22,14 +22,20 @@
 	VR.scene = VR.Object('scene', 'Root')
 	
 	light = VR.Light('sun', 'scene')
-	beacon = VR.LightBeacon('sunBeacon', 'sun')
+	beacon = VR.LightBeacon('sunBeacon', light.getName())
 	light.setBeacon(beacon)
 	beacon.setDir(-0.5, -1, -0.5)
 	
-	ground = VR.Geometry('ground', 'sun')
-	ground.setPrimitive('Box 10 1 10 1 1 1')
+	VR.ground = VR.Geometry('ground', light.getName())
+	VR.ground.setPrimitive('Box 100 1 100 1 1 1')
 	
-	gear = VR.Geometry('gear', 'sun')
+	X = 2
+	bb = VR.Boundingbox()
+	bb.update([-X,-X,-X])
+	bb.update([X,X,X])
+	light.setVolume(bb) # comment to see the difference
+	
+	gear = VR.Geometry('gear', light.getName())
 	gear.setPrimitive('Gear 0.1 0.1 0.01 128 0.03 0.2')
 	gear.setFrom(0,2,0)
 	

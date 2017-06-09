@@ -9,21 +9,21 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class boundingbox {
+class Boundingbox {
     private:
         Vec3f bb1, bb2;
         bool cleared = true;
 
     public:
-        boundingbox();
-        static boundingboxPtr create();
+        Boundingbox();
+        static BoundingboxPtr create();
 
         void clear();
         bool empty() const;
 
         void update(const Vec3f& v);
-        void update(const vector<Vec3f>& v);
-        void update(VRGeometryPtr g);
+        void updateFromPoints(const vector<Vec3f>& v);
+        void updateFromGeometry(VRGeometryPtr g);
 
         Vec3f min() const;
         Vec3f max() const;

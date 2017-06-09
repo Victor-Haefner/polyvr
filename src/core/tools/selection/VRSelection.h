@@ -24,7 +24,7 @@ class VRSelection {
 
     protected:
         map<VRGeometry*, selection_atom> selected;
-        boundingboxPtr bbox = 0;
+        BoundingboxPtr bbox = 0;
 
         virtual bool vertSelected(Vec3f p);
         virtual bool objSelected(VRGeometryPtr geo);

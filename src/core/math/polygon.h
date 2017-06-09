@@ -40,7 +40,7 @@ class Polygon {
         void set(vector<Vec2f> vec);
         Polygon sort();
         Polygon getConvexHull();
-        boundingbox getBoundingBox();
+        Boundingbox getBoundingBox();
         vector< Polygon > getConvexDecomposition();
         float computeArea();
         PolygonPtr shrink(float amount);

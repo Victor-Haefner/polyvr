@@ -9,7 +9,7 @@
 
 namespace OSG {
 
-ptrFwd(boundingbox);
+ptrFwd(Boundingbox);
 ptrFwd(path);
 ptrFwd(pose);
 ptrFwd(Polygon);

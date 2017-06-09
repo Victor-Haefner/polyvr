@@ -33,7 +33,7 @@ void VRSelection::add(VRGeometryPtr geo, vector<int> subselection) {
 void VRSelection::clear() {
     selected.clear();
     if (bbox) bbox->clear();
-    else bbox = boundingboxPtr( new boundingbox() );
+    else bbox = BoundingboxPtr( new Boundingbox() );
 }
 
 void VRSelection::apply(VRObjectPtr tree, bool force, bool recursive) {

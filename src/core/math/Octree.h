@@ -27,7 +27,7 @@ class Octree {
 
         void destroy(Octree* guard);
         void findInSphere(Vec3f p, float r, vector<void*>& res);
-        void findInBox(const boundingbox& b, vector<void*>& res);
+        void findInBox(const Boundingbox& b, vector<void*>& res);
         int getOctant(Vec3f p);
         bool inBox(Vec3f p, Vec3f c, float size);
 
@@ -41,7 +41,7 @@ class Octree {
         vector<Octree*> getAncestry();
         Octree* getRoot();
         Octree* add(Vec3f p, void* data, int targetLevel = -1, int currentLevel = 0, bool checkPosition = true);
-        void addBox(const boundingbox& b, void* data, int targetLevel = -1, bool checkPosition = true);
+        void addBox(const Boundingbox& b, void* data, int targetLevel = -1, bool checkPosition = true);
         void set(Octree* node, Vec3f p, void* data);
         Octree* get(Vec3f p);
         float getSize();
@@ -58,7 +58,7 @@ class Octree {
         vector<void*> getData();
         vector<void*> getAllData();
         vector<void*> radiusSearch(Vec3f p, float r);
-        vector<void*> boxSearch(const boundingbox& b);
+        vector<void*> boxSearch(const Boundingbox& b);
 
         void test();
         void print(int indent = 0);

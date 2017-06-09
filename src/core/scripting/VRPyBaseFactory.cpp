@@ -1,6 +1,7 @@
 #include "VRPyBaseT.h"
 #include "VRPyBaseFactory.h"
 #include "VRPyLightBeacon.h"
+#include "VRPyBoundingbox.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
 #include "core/utils/VRCallbackWrapper.h"
 
@@ -23,6 +24,7 @@ template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const int& t) { retur
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const string& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const bool& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VREntityPtr& t) { return VRPyTypeCaster::cast(t); }
+template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const Vec3f& t) { return VRPyTypeCaster::cast(t); }
 OSG_END_NAMESPACE;
 
 using namespace OSG;
@@ -40,6 +42,7 @@ template<> bool toValue<float>(PyObject* o, float& v) { if (!PyNumber_Check(o)) 
 template<> bool toValue<string>(PyObject* o, string& v) { if (!PyString_Check(o)) return 0; v = PyString_AsString(o); return 1; }
 template<> bool toValue<VRLightBeaconPtr>(PyObject* o, VRLightBeaconPtr& v) { if (!VRPyLightBeacon::check(o)) return 0; v = ((VRPyLightBeacon*)o)->objPtr; return 1; }
 template<> bool toValue<VREntityPtr>(PyObject* o, VREntityPtr& v) { if (!VRPyEntity::check(o)) return 0; v = ((VRPyEntity*)o)->objPtr; return 1; }
+template<> bool toValue<Boundingbox>(PyObject* o, Boundingbox& v) { if (!VRPyBoundingbox::check(o)) return 0; v = *((VRPyBoundingbox*)o)->objPtr; return 1; }
 
 template<> bool toValue<VRAnimCbPtr>(PyObject* o, VRAnimCbPtr& v) {
     //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!

@@ -28,7 +28,7 @@ string toString(const OSG::Vec4i& v);
 string toString(const OSG::Line& l);
 string toString(const OSG::pose& p);
 string toString(const OSG::posePtr& p);
-string toString(const OSG::boundingbox& b);
+string toString(const OSG::Boundingbox& b);
 
 // deprecated?
 bool toBool(string s, int* N = 0);
