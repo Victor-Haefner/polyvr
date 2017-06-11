@@ -656,6 +656,11 @@
 		<Unit filename="src/core/objects/VRLod.cpp" />
 		<Unit filename="src/core/objects/VRLod.h" />
 		<Unit filename="src/core/objects/VRObjectFwd.h" />
+		<Unit filename="src/core/objects/VRShadowEngine.cpp" />
+		<Unit filename="src/core/objects/VRShadowEngine.h" />
+		<Unit filename="src/core/objects/VRShadowEngineBase.cpp" />
+		<Unit filename="src/core/objects/VRShadowEngineBase.h" />
+		<Unit filename="src/core/objects/VRShadowEngineFields.h" />
 		<Unit filename="src/core/objects/VRStage.cpp" />
 		<Unit filename="src/core/objects/VRStage.h" />
 		<Unit filename="src/core/objects/VRTransform.cpp" />

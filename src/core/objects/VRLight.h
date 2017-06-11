@@ -11,6 +11,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class Light; OSG_GEN_CONTAINERPTR(Light);
+class VRShadowEngine; OSG_GEN_CONTAINERPTR(VRShadowEngine);
 class SimpleShadowMapEngine; OSG_GEN_CONTAINERPTR(SimpleShadowMapEngine);
 class ShaderShadowMapEngine; OSG_GEN_CONTAINERPTR(ShaderShadowMapEngine);
 class TrapezoidalShadowMapEngine; OSG_GEN_CONTAINERPTR(TrapezoidalShadowMapEngine);
@@ -22,7 +23,8 @@ class VRLight : public VRObject {
         OSGCorePtr p_light;
         OSGCorePtr s_light;
         VRLightBeaconWeakPtr beacon;
-        SimpleShadowMapEngineRefPtr ssme;
+        VRShadowEngineRecPtr ssme;
+        //SimpleShadowMapEngineRefPtr ssme;
         ShaderShadowMapEngineRefPtr gsme;
         TrapezoidalShadowMapEngineRefPtr ptsme;
         TrapezoidalShadowMapEngineRefPtr stsme;

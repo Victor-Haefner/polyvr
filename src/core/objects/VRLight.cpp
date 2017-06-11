@@ -5,6 +5,7 @@
 #include "core/objects/OSGObject.h"
 #include "core/objects/object/OSGCore.h"
 #include "VRLightBeacon.h"
+#include "VRShadowEngine.h"
 
 #include <OpenSG/OSGShadowStage.h>
 #include <OpenSG/OSGImage.h>
@@ -42,6 +43,7 @@ VRLight::VRLight(string name) : VRObject(name) {
     setDiffuse(Color4f(1,1,1,1));
     setAmbient(Color4f(.3,.3,.3,1));
     setSpecular(Color4f(.1,.1,.1,1));
+    setShadowColor(Color4f(0.1,0.1,0.1,1));
 
     store("on", &on);
     store("lightType", &lightType);
@@ -142,11 +144,13 @@ void VRLight::setDeferred(bool b) {
 }
 
 void VRLight::setupShadowEngines() {
-    ssme = SimpleShadowMapEngine::create();
+    //ssme = static_pointer_cast<VRShadowEngine>( VRShadowEngine::create() );
+    ssme = VRShadowEngine::create();
+    //ssme = SimpleShadowMapEngine::create();
     gsme = ShaderShadowMapEngine::create();
     ptsme = TrapezoidalShadowMapEngine::create();
     stsme = TrapezoidalShadowMapEngine::create();
-    setShadowColor(Color4f(0.1f, 0.1f, 0.1f, 1.0f));
+    setShadowColor(shadowColor);
 
     ssme->setWidth (shadowMapRes);
     ssme->setHeight(shadowMapRes);
@@ -182,14 +186,14 @@ void VRLight::setShadows(bool b) {
         dynamic_pointer_cast<Light>(l->core)->setLightEngine(e);
     };
 
-    if (b) { // TODO: store a shadow engine for each core or create a new engine on the fly each time!
+    if (b) {
         if (!deferred) setShadowEngine(d_light, ssme);
         if (!deferred) setShadowEngine(p_light, ssme);
         if (!deferred) setShadowEngine(s_light, ssme);
         if (deferred) setShadowEngine(d_light, gsme);
         if (deferred) setShadowEngine(p_light, ptsme);
         if (deferred) setShadowEngine(s_light, stsme);
-        auto bb = getBoundingBox(); // update osg volume
+        getBoundingBox(); // update osg volume
     } else {
         setShadowEngine(d_light, 0);
         setShadowEngine(p_light, 0);
@@ -298,5 +302,6 @@ string VRLight::getLightType() { return lightType; };
 void VRLight::updateDeferredLight() {
     VRScene::getCurrent()->updateLight( ptr() );
 }
+
 
 OSG_END_NAMESPACE;
