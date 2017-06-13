@@ -21,6 +21,7 @@ struct VRCallbackWrapper<PyObject*> : VRCallbackWrapperBase {
 };
 
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const int& t) { return VRPyTypeCaster::cast(t); }
+template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const float& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const string& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const bool& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VREntityPtr& t) { return VRPyTypeCaster::cast(t); }

@@ -7,12 +7,12 @@
 #include <Python.h>
 #include "VRFwdDeclTemplate.h"
 
-ptrFwd(VRProgress);
 
 namespace OSG {
     ptrTemplateFwd(VRCallbackWrapper, VRCallbackStrWrapper, std::string);
     ptrTemplateFwd(VRCallbackWrapper, VRCallbackPyWrapper, PyObject*);
     ptrFwd(VRVisualLayer);
+    ptrFwd(VRProgress);
 }
 
 #endif // VRUTILSFWD_H_INCLUDED

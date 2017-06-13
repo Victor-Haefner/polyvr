@@ -168,13 +168,13 @@ PyObject* VRPyVec3f::abs(PyObject* self) {
 }
 
 PySequenceMethods VRPyVec3f::sMethods = {
-    VRPyVec3f::len,       /* inquiry sq_length;             /* __len__ */
-    0,    /* binaryfunc sq_concat;          /* __add__ */
-    0,    /* intargfunc sq_repeat;          /* __mul__ */
-    VRPyVec3f::getItem,   /* intargfunc sq_item;            /* __getitem__ */
-    0,  /* intintargfunc sq_slice;        /* __getslice__ */
-    VRPyVec3f::setItem,   /* intobjargproc sq_ass_item;     /* __setitem__ */
-    0,  /* intintobjargproc sq_ass_slice; /* __setslice__ */
+    VRPyVec3f::len,       /* inquiry sq_length;              __len__ */
+    0,    /* binaryfunc sq_concat;           __add__ */
+    0,    /* intargfunc sq_repeat;           __mul__ */
+    VRPyVec3f::getItem,   /* intargfunc sq_item;             __getitem__ */
+    0,  /* intintargfunc sq_slice;         __getslice__ */
+    VRPyVec3f::setItem,   /* intobjargproc sq_ass_item;      __setitem__ */
+    0,  /* intintobjargproc sq_ass_slice;  __setslice__ */
 };
 
 Py_ssize_t VRPyVec3f::len(PyObject* self) {

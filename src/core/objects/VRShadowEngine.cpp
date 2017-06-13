@@ -630,24 +630,18 @@ void VRShadowEngine::doFinalPass(Light         *pLight,
             // creates a image without allocating main memory.
 
         pImage->set(Image::OSG_L_PF,
-                    pTarget->getWidth (),
-                    pTarget->getHeight(),
-                    1,
-                    1,
-                    1,
-                    0,
-                    NULL,
-                    Image::OSG_UINT8_IMAGEDATA,
-                    false);
+                    pTarget->getWidth (), pTarget->getHeight(), 1,
+                    1, 1, 0, NULL,
+                    Image::OSG_UINT8_IMAGEDATA, false);
 
 
         pTexChunk->setImage         (pImage);
         pTexChunk->setInternalFormat(GL_DEPTH_COMPONENT32);
         pTexChunk->setExternalFormat(GL_DEPTH_COMPONENT);
-        pTexChunk->setMinFilter     (GL_LINEAR);
+        pTexChunk->setMinFilter     (GL_LINEAR); // tried GL_LINEAR_MIPMAP_LINEAR
         pTexChunk->setMagFilter     (GL_LINEAR);
-        pTexChunk->setWrapS         (GL_CLAMP_TO_BORDER);
-        pTexChunk->setWrapT         (GL_CLAMP_TO_BORDER);
+        pTexChunk->setWrapS         (GL_CLAMP_TO_EDGE); // was GL_CLAMP_TO_BORDER
+        pTexChunk->setWrapT         (GL_CLAMP_TO_EDGE); // was GL_CLAMP_TO_BORDER
 //        pTexChunk->setEnvMode       (GL_MODULATE);
         pTexChunk->setTarget        (GL_TEXTURE_2D);
 

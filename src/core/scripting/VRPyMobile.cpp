@@ -50,9 +50,10 @@ PyMethodDef VRPyMobile::methods[] = {
 
 PyObject* VRPyMobile::answer(VRPyMobile* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMobile::answer - Object is invalid"); return NULL; }
-    int id; PyObject* msg;
-    if (! PyArg_ParseTuple(args, "iO", &id, &msg)) return NULL;
-    self->objPtr->answerWebSocket(id, PyString_AsString(msg));
+    int id;
+    const char* msg;
+    if (! PyArg_ParseTuple(args, "is", &id, &msg)) return NULL;
+    self->objPtr->answerWebSocket(id, msg?msg:"");
     Py_RETURN_TRUE;
 }
 

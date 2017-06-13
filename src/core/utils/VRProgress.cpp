@@ -1,6 +1,7 @@
 #include "VRProgress.h"
-
 #include "VRFunction.h"
+
+using namespace OSG;
 
 VRProgress::VRProgress(string title, int max, Mode m) { setup(title, max, m); }
 
@@ -36,6 +37,7 @@ void VRProgress::update(int i) {
 
 void VRProgress::finish() { count = max; part = 1.0; update(0); }
 float VRProgress::get() { return part; }
+void VRProgress::set(float t) { part = t; }
 void VRProgress::reset() { part = count = 0; }
 
 void VRProgress::setup(string title, int max, Mode m) {

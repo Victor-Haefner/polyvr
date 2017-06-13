@@ -66,8 +66,8 @@ struct VRCallbackWrapperT<P, U, R (T::*)(Args...)> : public VRCallbackWrapper<P>
     typedef R (T::*Callback)(Args...);
     Callback callback;
 
-    static shared_ptr<VRCallbackWrapperT> create() {
-        return shared_ptr<VRCallbackWrapperT>( new VRCallbackWrapperT() );
+    static std::shared_ptr<VRCallbackWrapperT> create() {
+        return std::shared_ptr<VRCallbackWrapperT>( new VRCallbackWrapperT() );
     }
 
      // TODO: generic solution instead one for each number of parameter??
@@ -153,8 +153,8 @@ struct VRCallbackWrapperT<P, U, void (T::*)(Args...)> : public VRCallbackWrapper
     typedef void (T::*Callback)(Args...);
     Callback callback;
 
-    static shared_ptr<VRCallbackWrapperT> create() {
-        return shared_ptr<VRCallbackWrapperT>( new VRCallbackWrapperT() );
+    static std::shared_ptr<VRCallbackWrapperT> create() {
+        return std::shared_ptr<VRCallbackWrapperT>( new VRCallbackWrapperT() );
     }
 
 

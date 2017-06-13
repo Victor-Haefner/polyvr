@@ -2,15 +2,18 @@
 #define VRPROGRESS_H_INCLUDED
 
 #include <string>
+#include <OpenSG/OSGConfig.h>
 #include "core/utils/VRUtilsFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 
 using namespace std;
 
+OSG_BEGIN_NAMESPACE;
+
 class VRProgress {
     public:
         enum Mode {
-            CONSOLE_M,
+            CONSOLE_M = 0,
 			WIDGET_M,
 			GEOM_M,
 			CALLBACK_M
@@ -32,11 +35,14 @@ class VRProgress {
 
         void setCallback(VRUpdateCbPtr cb);
         float get();
+        void set(float t);
 
         void setup(string title, int max, Mode m = CONSOLE_M);
         void update(int i = 1);
         void finish();
         void reset();
 };
+
+OSG_END_NAMESPACE;
 
 #endif // VRPROGRESS_H_INCLUDED

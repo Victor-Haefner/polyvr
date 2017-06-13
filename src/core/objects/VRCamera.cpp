@@ -124,20 +124,20 @@ void VRCamera::focus(Vec3f p) {
     setAt(p);
 }
 
-void VRCamera::focus(VRTransformPtr t) {
+void VRCamera::focus(VRObjectPtr t) {
     auto bb = t->getBoundingBox();
     Vec3f c = bb->center();
 
     Vec3f d = getDir();
-    //c = t->getWorldPosition();
     focus(c);
 
     Vec3f dp = getDir();
-    if (dp.length() > 1e-4) d = dp;
+    if (dp.length() > 1e-4) d = dp; // only use new dir if it is valid
     d.normalize();
+    float r = max(bb->radius()*2, 0.1f);
+    setFrom(c - d*r); // go back or forth to see whole node
 
-    // go back or forth to see whole node
-    setFrom(c - d*max(bb->radius(), 0.1f));
+    //cout << "VRCamera::focus " << t->getName() << " pos " << c << " size " << r << endl;
 }
 
 OSG_END_NAMESPACE;

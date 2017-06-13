@@ -4,7 +4,7 @@
 #include "core/utils/VRProgress.h"
 #include "core/scripting/VRPyBase.h"
 
-struct VRPyProgress : VRPyBaseT<VRProgress> {
+struct VRPyProgress : VRPyBaseT<OSG::VRProgress> {
     static PyMethodDef methods[];
 
     static PyObject* setup(VRPyProgress* self, PyObject *args);

@@ -1,5 +1,6 @@
 #include <boost/bind.hpp>
 #include "VRPyTypeCaster.h"
+#include "VRPyBaseFactory.h"
 #include "core/scene/VRScene.h"
 #include "core/objects/object/VRObject.h"
 

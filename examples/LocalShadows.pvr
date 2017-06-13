@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="LocalShadows" name_space="Scene" loading_time="367">
+<Scene name_suffix="0" base_name="LocalShadows" name_space="Scene" loading_time="262">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
-      <Object accept_root="1" aspect="1" at="-0.215871 0.5 0.739006" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-4.51245 8.61294 6.29614" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+      <Object accept_root="1" aspect="1" at="-0.215871 0.5 0.739006" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-6.53916 12.4398 8.91746" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
         <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
