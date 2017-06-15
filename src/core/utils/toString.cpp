@@ -176,50 +176,50 @@ template<> string typeName(const VRAnimCbPtr& t) { return "void callback(float)"
 template<> string typeName(const Boundingbox& t) { return "Boundingbox"; }
 
 template<> bool toValue(stringstream& ss, string& s) { s = ss.str(); return true; }
-template<> bool toValue(stringstream& ss, bool& b) { return ss >> b; }
-template<> bool toValue(stringstream& ss, int& i) { return ss >> i; }
-template<> bool toValue(stringstream& ss, float& f) { return ss >> f; }
+template<> bool toValue(stringstream& ss, bool& b) { return bool(ss >> b); }
+template<> bool toValue(stringstream& ss, int& i) { return bool(ss >> i); }
+template<> bool toValue(stringstream& ss, float& f) { return bool(ss >> f); }
 
 template<> bool toValue(stringstream& ss, Vec2f& v) {
     ss >> v[0];
-    return ss >> v[1];
+    return bool(ss >> v[1]);
 }
 
 template<> bool toValue(stringstream& ss, Vec3f& v) {
     ss >> v[0];
     ss >> v[1];
-    return ss >> v[2];
+    return bool(ss >> v[2]);
 }
 
 template<> bool toValue(stringstream& ss, Vec4f& v) {
     ss >> v[0];
     ss >> v[1];
     ss >> v[2];
-    return ss >> v[3];
+    return bool(ss >> v[3]);
 }
 
 template<> bool toValue(stringstream& ss, Vec2i& v) {
     ss >> v[0];
-    return ss >> v[1];
+    return bool(ss >> v[1]);
 }
 
 template<> bool toValue(stringstream& ss, Vec3i& v) {
     ss >> v[0];
     ss >> v[1];
-    return ss >> v[2];
+    return bool(ss >> v[2]);
 }
 
 template<> bool toValue(stringstream& ss, Color3f& v) {
     ss >> v[0];
     ss >> v[1];
-    return ss >> v[2];
+    return bool(ss >> v[2]);
 }
 
 template<> bool toValue(stringstream& ss, Color4f& v) {
     ss >> v[0];
     ss >> v[1];
     ss >> v[2];
-    return ss >> v[3];
+    return bool(ss >> v[3]);
 }
 
 template<> bool toValue(stringstream& ss, pose& po) {

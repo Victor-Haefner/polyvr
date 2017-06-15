@@ -22,8 +22,8 @@ string toString(VRPathtool::option& n) {
 
 template<> bool toValue(stringstream& ss, VRPathtool::option& n) {
     bool b = true;
-    b = ss >> n.resolution;
-    b = ss >> n.useControlHandles;
+    b = bool(ss >> n.resolution);
+    b = bool(ss >> n.useControlHandles);
     return b;
 }
 
