@@ -37,6 +37,7 @@ class VRRenderManager : public VRStorage {
         ~VRRenderManager();
 
         void addLight(VRLightPtr l);
+        void subLight(int ID);
         void updateLight(VRLightPtr l);
         void setDSCamera(VRCameraPtr cam);
 

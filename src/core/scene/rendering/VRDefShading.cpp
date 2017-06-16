@@ -145,7 +145,11 @@ void VRDefShading::setDeferredShading(bool b) {
     if (stageObject == 0) return;
     if (b) stageObject->setCore(OSGCore::create(dsStage), "defShading", true);
     else stageObject->setCore(OSGCore::create(Group::create()), "Object", true);
-    for (auto li : lightInfos) li.second.vrlight.lock()->setDeferred(b);
+    for (auto li : lightInfos) {
+        auto l = li.second.vrlight.lock();
+        //if (b) l->setDeferred(b);
+        l->setDeferred(b);
+    }
 }
 
 bool VRDefShading::getDeferredShading() { return enabled; }
@@ -248,15 +252,16 @@ const std::string& VRDefShading::getLightFPFile(LightTypeE lightType, ShadowType
     }
 }
 
-void VRDefShading::subLight(VRLightPtr l) {
-    auto& li = lightInfos[l->getID()];
+void VRDefShading::subLight(int ID) {
+    if (!lightInfos.count(ID)) return;
+    auto& li = lightInfos[ID];
     int lightIdx = li.dsID;
     OSG_ASSERT(lightIdx < lightInfos.size());
     OSG_ASSERT(lightIdx < dsStage->getMFLights()->size());
     OSG_ASSERT(lightIdx < dsStage->getMFLightPrograms()->size());
     dsStage->editMFLights()->erase(lightIdx);
     dsStage->editMFLightPrograms()->erase(lightIdx);
-    lightInfos.erase(l->getID());
+    lightInfos.erase(ID);
 }
 
 OSG_END_NAMESPACE;

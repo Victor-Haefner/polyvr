@@ -62,7 +62,9 @@ VRLight::VRLight(string name) : VRObject(name) {
     //addChild(sts->rootNode);
 }
 
-VRLight::~VRLight() {}
+VRLight::~VRLight() {
+    VRScene::getCurrent()->subLight( getID() );
+}
 
 VRLightPtr VRLight::ptr() { return static_pointer_cast<VRLight>( shared_from_this() ); }
 VRLightPtr VRLight::create(string name) {

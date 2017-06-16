@@ -80,6 +80,10 @@ void VRRenderManager::addLight(VRLightPtr l) {
     for (auto r : getRenderings()) r->addLight(l);
 }
 
+void VRRenderManager::subLight(int ID) {
+    for (auto r : getRenderings()) r->subLight(ID);
+}
+
 void VRRenderManager::updateLight(VRLightPtr l) {
     for (auto r : getRenderings()) r->updateLight(l);
 }

@@ -74,7 +74,7 @@ class VRRenderStudio : public VRStorage {
         void addLight(VRLightPtr l);
         void updateLight(VRLightPtr l);
         VRLightPtr getLight(int ID);
-        void subLight(VRLightPtr l);
+        void subLight(int ID);
         void clearLights();
 
         void setScene(VRObjectPtr root);

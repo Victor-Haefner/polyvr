@@ -81,7 +81,7 @@ class VRDefShading {
         //void setDSCamera(ProjectionCameraDecoratorRecPtr cam);
         void addDSLight(VRLightPtr light);
         void updateLight(VRLightPtr l);
-        void subLight(VRLightPtr l);
+        void subLight(int ID);
         void setBackground(BackgroundRecPtr bg);
 
         const std::string &getLightVPFile(LightTypeE lightType);
