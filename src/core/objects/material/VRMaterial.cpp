@@ -403,7 +403,7 @@ VRMaterialPtr VRMaterial::get(string s) {
 VRObjectPtr VRMaterial::copy(vector<VRObjectPtr> children) { // TODO: test it, may not work properly!
     VRMaterialPtr mat = VRMaterial::create(getBaseName());
 
-    for (int i=0; i<mats.size(); i++) {
+    for (uint i=0; i<mats.size(); i++) {
         if (i > 0) mat->addPass();
         mat->mats[i] = mats[i]->copy();
     }

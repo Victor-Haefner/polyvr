@@ -153,7 +153,7 @@ Vec3f VRTree::randomRotate(Vec3f v, float a) {
 
 segment* VRTree::grow(int seed, segment* p, int iteration, float t) {
     this->seed = seed;
-    if (parameters.size() <= iteration) return 0;
+    if (int(parameters.size()) <= iteration) return 0;
     auto sp = parameters[iteration];
 
     if (iteration == 0) { // prepare tree

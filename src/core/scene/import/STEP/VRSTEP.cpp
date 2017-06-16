@@ -615,7 +615,7 @@ void VRSTEP::explore(VRSTEP::Node* node, int parent) {
         ID = 0;
     }
 
-    if (ID >= 0) parent = explorer->add( parent, ID, name.c_str(), type.c_str() );
+    if (ID >= 0) parent = explorer->add( parent, 3, ID, name.c_str(), type.c_str() );
 
     for (auto n : node->childrenV) explore(n, parent);
 }

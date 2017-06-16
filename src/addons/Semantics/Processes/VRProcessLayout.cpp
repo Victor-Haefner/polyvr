@@ -143,7 +143,7 @@ void VRProcessLayout::rebuild() {
     float f=0;
     auto diag = process->getInteractionDiagram();
     if (!diag) return;
-    for (uint i=0; i<diag->size(); i++) {
+    for (int i=0; i<diag->size(); i++) {
         auto& e = diag->processnodes[i];
         auto geo = newWidget(e, height);
 

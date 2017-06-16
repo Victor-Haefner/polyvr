@@ -131,10 +131,7 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
     Vec3f d = ia_line.getDirection();
     Pnt3f p = ia->getHitPoint();
 
-    UInt32 numTris = 0;
-    Real32 t;
     Vec3f norm(0,1,0); // TODO
-
     int N = 1000;
     float step = 10; // TODO
     int dir = 1;

@@ -125,7 +125,7 @@ void VRPathtool::setGraph(GraphPtr g, bool doClear) {
     if (doClear) clear();
     graph = g;
 
-    for (uint i=0; i<g->size(); i++) setGraphNode(i);
+    for (int i=0; i<g->size(); i++) setGraphNode(i);
     for (auto& n : g->getEdges()) {
         for (auto& e : n) {
             setGraphEdge(e);

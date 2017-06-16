@@ -63,8 +63,8 @@ VRSkeletonPtr VRSkeleton::create() { return VRSkeletonPtr(new VRSkeleton() ); }
 int VRSkeleton::addBone(int j1, int j2) {
     int eID = armature->connect(j1, j2);
     auto& edge = armature->getEdge(eID);
-    //return edge.ID; // TODO
-    return 0;
+    return edge.ID; // TODO
+    //return 0;
 }
 
 int VRSkeleton::addJoint(JointPtr c, Vec3f p) {
@@ -103,7 +103,7 @@ void VRSkeleton::setupGeometry() {
 void VRSkeleton::updateGeometry() {
     VRGeoData data(ptr());
     auto& joints = armature->getNodes();
-    for (int i=0; i<joints.size(); i++) {
+    for (uint i=0; i<joints.size(); i++) {
         auto& joint = joints[i];
         data.setVert(i, Pnt3f(joint.box.center()) );
     }
@@ -127,11 +127,11 @@ void VRSkeleton::simpleHumanoid() {
     auto s5 = addJoint(ballJoint(), Vec3f(0,1.6,0) );
     auto s6 = addJoint(ballJoint(), Vec3f(0,1.8,0) ); // head
 
-    auto b1 = addBone(s1,s2);
-    auto b2 = addBone(s2,s3);
-    auto b3 = addBone(s3,s4);
-    auto b4 = addBone(s4,s5);
-    auto b5 = addBone(s5,s6);
+    addBone(s1,s2);
+    addBone(s2,s3);
+    addBone(s3,s4);
+    addBone(s4,s5);
+    addBone(s5,s6);
 
     auto doLeg = [&](float d) {
         auto l1 = addJoint(ballJoint(), Vec3f(d,1,0) ); // hip
@@ -139,10 +139,10 @@ void VRSkeleton::simpleHumanoid() {
         auto l3 = addJoint(ballJoint(), Vec3f(d,0,0) );
         auto l4 = addJoint(ballJoint(), Vec3f(d,0,-0.2) ); // toes
 
-        auto b0 = addBone(s1,l1);
-        auto b1 = addBone(l1,l2);
-        auto b2 = addBone(l2,l3);
-        auto b3 = addBone(l3,l4);
+        addBone(s1,l1);
+        addBone(l1,l2);
+        addBone(l2,l3);
+        addBone(l3,l4);
     };
 
     auto doArm = [&](float d) {
@@ -151,10 +151,10 @@ void VRSkeleton::simpleHumanoid() {
         auto a3 = addJoint(ballJoint(), Vec3f(d,0.8,0) );
         auto a4 = addJoint(ballJoint(), Vec3f(d,0.7,0) ); // hand
 
-        auto b0 = addBone(s4,a1);
-        auto b1 = addBone(a1,a2);
-        auto b2 = addBone(a2,a3);
-        auto b3 = addBone(a3,a4);
+        addBone(s4,a1);
+        addBone(a1,a2);
+        addBone(a2,a3);
+        addBone(a3,a4);
     };
 
     doLeg(-0.2); // left

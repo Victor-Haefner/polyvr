@@ -48,7 +48,7 @@ void VRLodLeaf::add(VRObjectPtr obj, int lvl) {
 }
 
 void VRLodLeaf::set(VRObjectPtr obj, int lvl) {
-    if (lvl < 0 || lvl >= levels.size()) return;
+    if (lvl < 0 || lvl >= int(levels.size())) return;
     levels[lvl]->clearChildren();
     if (obj) levels[lvl]->addChild(obj);
 }

@@ -351,7 +351,7 @@ void Query::checkState() {
 void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of all paths of the terms of each statement
     // compute all values to substitute
     map<string, string> substitutes;
-    for (int i=0; i<request->terms.size(); i++) {
+    for (uint i=0; i<request->terms.size(); i++) {
         Term& t1 = request->terms[i];
         Term& t2 = replace->terms[i];
         substitutes[t1.var->value] = t2.str;
@@ -374,7 +374,7 @@ void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of
                 e.computeTree();
                 cout << " substitute expression: " << e.toString() << endl;
                 for (auto& l : e.getLeafs()) {
-                    for (int i=0; i<request->terms.size(); i++) {
+                    for (uint i=0; i<request->terms.size(); i++) {
                         auto& t1 = request->terms[i];
                         //cout << " substitute " << l->param << " , " << t1.path.root << " in expression " << ts.str << " ?" << endl;
                         if (t1.path.root == l->param) substitute(l->param);
@@ -392,7 +392,7 @@ void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of
                 ts.path = VPath(ts.str);
                 cout << " substituted expression: " << ts.str << endl;
             } else {
-                for (int i=0; i<request->terms.size(); i++) {
+                for (uint i=0; i<request->terms.size(); i++) {
                     auto& t1 = request->terms[i];
                     if (t1.path.root == ts.path.root) {
                         substitute(ts.path.root);

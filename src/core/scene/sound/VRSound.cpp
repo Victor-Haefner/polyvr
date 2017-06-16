@@ -488,7 +488,7 @@ vector<short> VRSound::synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, f
     for (uint i=0; i<buf_size; i++) {
         double k = double(i)/(buf_size-1);
         samples[i] = 0;
-        for (int j=0; j<freqs1.size(); j++) {
+        for (uint j=0; j<freqs1.size(); j++) {
             double A = freqs1[j][1]*(1.0-k) + freqs2[j][1]*k;
             double f = freqs1[j][0]*(1.0-k) + freqs2[j][0]*k;
 

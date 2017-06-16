@@ -111,11 +111,11 @@ bool VRGeoData::valid() const {
 
 int VRGeoData::size() const { return data->pos->size(); }
 
-Pnt3f VRGeoData::getPosition(int i) { return data->pos->size() > i ? data->pos->getValue(i) : Pnt3f(); }
-Vec3f VRGeoData::getNormal(int i) { return data->norms->size() > i ? data->norms->getValue(i) : Vec3f(); }
+Pnt3f VRGeoData::getPosition(int i) { return int(data->pos->size()) > i ? data->pos->getValue(i) : Pnt3f(); }
+Vec3f VRGeoData::getNormal(int i) { return int(data->norms->size()) > i ? data->norms->getValue(i) : Vec3f(); }
 Vec4f VRGeoData::getColor(int i) {
-    if (data->cols4->size() > i) return data->cols4->getValue(i);
-    if (data->cols3->size() > i) {
+    if (int(data->cols4->size()) > i) return data->cols4->getValue(i);
+    if (int(data->cols3->size()) > i) {
         Vec3f c = data->cols3->getValue(i);
         return Vec4f( c[0], c[1], c[2], 1.0 );
     }

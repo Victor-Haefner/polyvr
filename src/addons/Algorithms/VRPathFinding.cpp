@@ -82,7 +82,7 @@ VRPathFinding::Position VRPathFinding::getMinFromOpenSet() {
 vector<VRPathFinding::Position> VRPathFinding::getNeighbors(Position& p) {
     vector<Position> res;
     if (!graph) return res;
-    if (graph->hasNode(p.nID) && graph->getEdges().size() > p.nID) {
+    if (graph->hasNode(p.nID) && int(graph->getEdges().size()) > p.nID) {
         for (auto edge : graph->getEdges()[p.nID]) {
             if (edge.from != p.nID) res.push_back(Position(edge.from));
             if (edge.to != p.nID) res.push_back(Position(edge.to));

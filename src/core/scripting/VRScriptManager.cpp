@@ -249,7 +249,7 @@ string VRScriptManager::getPyVRMethodDoc(string mod, string type, string method)
     string res;
 
     PyObject* dict = PyModule_GetDict(pModVR);
-    PyObject *key, *tp, *meth;
+    PyObject *key, *meth;
     Py_ssize_t pos = 0;
 
     if (type == "globals") {

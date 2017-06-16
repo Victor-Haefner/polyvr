@@ -100,17 +100,17 @@ void CarSound::readFile(string filename) {
 
     // 3rd line should be label vector
     float* labels = new float [nSamples];
-    for (int i=0; i<nSamples; ++i){
+    for (uint i=0; i<nSamples; ++i){
       file >> labels[i];
     }
 
 
     // 4th line should be data matrix
-    for (int i=0; i<nSamples; ++i) {
+    for (uint i=0; i<nSamples; ++i) {
 
       vector<double> tmp(resolution);
 
-      for (int j=0; j<resolution; ++j){
+      for (uint j=0; j<resolution; ++j){
         file >> tmp[j];
         if (abs(tmp[j]) > maxVal) maxVal = tmp[j];
       }

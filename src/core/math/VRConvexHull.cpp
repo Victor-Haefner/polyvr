@@ -54,7 +54,7 @@ VRGeometryPtr VRConvexHull::compute(VRGeometryPtr geo) {
     auto pos = geo->getMesh()->geo->getPositions();
     if (!pos) return 0;
 
-    for (int i=0; i<pos->size(); i++) {
+    for (uint i=0; i<pos->size(); i++) {
         Pnt3f p = pos->getValue<Pnt3f>(i);
         points.push_back(cgalPoint(p[0], p[1], p[2]));
     }

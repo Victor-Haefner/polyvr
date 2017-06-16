@@ -35,7 +35,7 @@ class VRGuiTreeExplorer {
 
         static VRGuiTreeExplorerPtr create(string cols, string title);
 
-        int add(int parent, ...);
+        int add(int parent, int N, ...);
 
         void move(int, int);
         void remove(int);

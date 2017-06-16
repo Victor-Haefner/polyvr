@@ -68,8 +68,8 @@ bool Graph::connected(int i, int j) {
 }
 
 int Graph::size() { return nodes.size(); }
-bool Graph::hasNode(int i) { return (i >= 0 && i < nodes.size()); }
-bool Graph::hasEdge(int i) { return (i >= 0 && i < edgesByID.size()); }
+bool Graph::hasNode(int i) { return (i >= 0 && i < int(nodes.size())); }
+bool Graph::hasEdge(int i) { return (i >= 0 && i < int(edgesByID.size())); }
 vector< vector< Graph::edge > >& Graph::getEdges() { return edges; }
 vector< Graph::node >& Graph::getNodes() { return nodes; }
 Graph::node& Graph::getNode(int i) { return nodes[i]; }
@@ -94,7 +94,7 @@ int Graph::getNEdges() {
 }
 
 void Graph::setPosition(int i, posePtr p) {
-    if (!p || i >= nodes.size() || i < 0) return;
+    if (!p || i >= int(nodes.size()) || i < 0) return;
     nodes[i].p = *p;
     update(i, true);
 }

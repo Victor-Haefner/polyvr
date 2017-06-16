@@ -144,7 +144,7 @@ struct base_parser {
 	void compute_current_transformation() {
 	    transformation.setIdentity();
 	    transformation.setScale(rescale);
-		for (int i=0; i<offset_stack.size(); i++) {
+		for (uint i=0; i<offset_stack.size(); i++) {
 			Vec3f o = offset_stack[i];
 			Vec3f s = scale_stack[i];
 			float f = rot_angle_stack[i];
@@ -757,7 +757,7 @@ Object* objectify(Object* obj) {
     Object* objects = new Object("objects");
 	for (auto& dataItr : obj->data) {
 	    auto& objs = dataItr.second;
-        for (int i=0; i<objs.size(); i++) {
+        for (uint i=0; i<objs.size(); i++) {
             auto& item = objs[i];
 
             if (item->type == "list") continue;

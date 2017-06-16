@@ -63,7 +63,7 @@ PyObject* VRPySound::synthBuffer(VRPySound* self, PyObject* args) {
 
     auto buf = self->objPtr->synthBuffer(data1, data2, T);
     auto res = PyList_New(buf.size());
-    for (auto i=0; i<buf.size(); i++) PyList_SetItem(res, i, PyInt_FromLong(buf[i]));
+    for (uint i=0; i<buf.size(); i++) PyList_SetItem(res, i, PyInt_FromLong(buf[i]));
     return res;
 }
 
@@ -82,7 +82,7 @@ PyObject* VRPySound::synthSpectrum(VRPySound* self, PyObject* args) {
 
     auto buf = self->objPtr->synthesizeSpectrum(data, S, T, F, doRB);
     auto res = PyList_New(buf.size());
-    for (int i=0; i<buf.size(); i++) PyList_SetItem(res, i, PyInt_FromLong(buf[i]));
+    for (uint i=0; i<buf.size(); i++) PyList_SetItem(res, i, PyInt_FromLong(buf[i]));
     return res;
 }
 

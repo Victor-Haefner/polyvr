@@ -88,7 +88,7 @@ void Expression::convToPrefixExpr() { // convert infix to prefix expression
 
     // split into tokens
     string last;
-    for (int i=0; i<data.size(); i++) {
+    for (uint i=0; i<data.size(); i++) {
         char c = data[i];
         if (isMathToken(c)) {
             if (last.size() > 0 ) tokens.push_back(last);
@@ -158,7 +158,7 @@ void Expression::buildTree() { // build a binary expression tree from the prefix
 
     vector<string> tokens = splitString(data, ' '); // prefix expression is delimited by spaces!
 
-    for (int i=0; i<tokens.size(); i++) {
+    for (uint i=0; i<tokens.size(); i++) {
         string t = tokens[tokens.size()-i-1];
         node = new Node(t);
         nodes.push_back(node);

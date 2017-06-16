@@ -106,7 +106,7 @@ PolygonPtr Polygon::shrink(float amount) {
     *area = *this;
     if (amount == 0) return area;
 
-    for (int i=0; i<area->points.size(); i++) {
+    for (uint i=0; i<area->points.size(); i++) {
         Vec2f& p1 = area->points[i];
         Vec2f& p2 = area->points[(i+1)%area->points.size()];
         Vec2f d = p2-p1;
@@ -145,12 +145,12 @@ Vec3f Polygon::getRandomPoint() {
 
 float Polygon::computeArea() {
     float area = 0;
-    for (int i=0; i<points.size(); i++) {
+    for (uint i=0; i<points.size(); i++) {
         Vec2f p1 = points[i];
         Vec2f p2 = points[(i+1)%points.size()];
         area += p1[0]*p2[1] - p1[1]*p2[0];
     }
-    for (int i=0; i<points3.size(); i++) {
+    for (uint i=0; i<points3.size(); i++) {
         Vec3f p1 = points3[i];
         Vec3f p2 = points3[(i+1)%points3.size()];
         area += p1.cross(p2).length();

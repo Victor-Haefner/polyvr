@@ -106,7 +106,7 @@ VRConceptPtr VROntology::addConcept(string concept, string parents, string comme
     else Concept = Parents[0]->append(concept);
 
     //cout << "VROntology::addConcept " << concept << " " << parents << " " << Concept->getName() << " " << Concept->ID << endl;
-    for (int i=1; i<Parents.size(); i++) Parents[i]->append(Concept);
+    for (uint i=1; i<Parents.size(); i++) Parents[i]->append(Concept);
     Concept->addAnnotation(comment, "comment");
     addConcept(Concept);
     return Concept;

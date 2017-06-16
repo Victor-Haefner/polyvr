@@ -243,7 +243,7 @@ void CarDynamics::updateEngine() {
     if (abs(eBreak) > abs(eForce)) eForce = 0;
 
 	// apply force wheels
-    for (int i=0; i<wheels.size(); i++) {
+    for (uint i=0; i<wheels.size(); i++) {
         auto& wheel = wheels[i];
         m_vehicle->setBrake(eBreak, i);
 

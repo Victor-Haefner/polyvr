@@ -157,11 +157,12 @@ void VRGuiTreeExplorer::on_search_edited() {
     cout << "search for txt resulted in " << N << " finds\n";
 }
 
-int VRGuiTreeExplorer::add(int parent, ...) {
+int VRGuiTreeExplorer::add(int parent, int N, ...) {
     if (parent > 0 && rows.count(parent) == 0) cout << "VRGuiTreeExplorer::add unknown parent " << parent << endl;
+    if (N != int(cols.size())) { cout << "VRGuiTreeExplorer::add wrong size " << N << endl; return -1; }
 
     va_list ap;
-    va_start(ap, cols.size()); //Requires the last fixed parameter (to get the address)
+    va_start(ap, N); //Requires the last fixed parameter (to get the address)
 
     ModelColumns m_Columns(cols);
     Gtk::TreeModel::iterator itr;

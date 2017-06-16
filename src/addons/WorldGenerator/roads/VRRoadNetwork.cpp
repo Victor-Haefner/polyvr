@@ -312,7 +312,7 @@ pathPtr VRRoadNetwork::toPath( VREntityPtr pathEntity, int resolution ) {
 	}
 
 	pathPtr Path = path::create();
-	for (int i=0; i<pos.size(); i++) Path->addPoint(pose(pos[i], norms[i]));
+	for (uint i=0; i<pos.size(); i++) Path->addPoint(pose(pos[i], norms[i]));
 	Path->compute(resolution);
 	return Path;
 }
@@ -328,7 +328,7 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
 	for (auto lane : lanes) roadWidth += toFloat( lane->get("width")->value );
 
 	float widthSum = -roadWidth*0.5;
-	for (int li=0; li<lanes.size(); li++) {
+	for (uint li=0; li<lanes.size(); li++) {
         auto lane = lanes[li];
 		float width = toFloat( lane->get("width")->value );
 
@@ -587,7 +587,7 @@ void VRRoadNetwork::computeIntersections() {
         }
 
         vector<VREntityPtr> iPaths;
-        for (int i=0; i<roads.size(); i++) { // compute intersection paths
+        for (uint i=0; i<roads.size(); i++) { // compute intersection paths
             auto road1 = roads[i];
             auto rEntry1 = roadData[road1].getNodeEntry(node);
             if (!rEntry1) continue;
@@ -596,7 +596,7 @@ void VRRoadNetwork::computeIntersections() {
             auto& data1 = roadData[road1].getEdgePoints( node );
             VREntityPtr node1 = data1.entry->getEntity("node");
             if (s1 == 1) {
-                for (int j=0; j<roads.size(); j++) { // compute intersection paths
+                for (uint j=0; j<roads.size(); j++) { // compute intersection paths
                     auto road2 = roads[j];
                     if (j == i) continue;
                     auto rEntry2 = roadData[road2].getNodeEntry(node);
@@ -794,7 +794,7 @@ void VRRoadNetwork::computeSurfaces() {
         auto lpath = toPath( lane->getEntity("path"), 32 );
         auto dirs = arrow->getAll("direction");
         Vec4i drs(999,999,999,999);
-        for (int i=0; i<4 && i < dirs.size(); i++) drs[i] = toFloat(dirs[i]->value)*180/pi;
+        for (uint i=0; i<4 && i < dirs.size(); i++) drs[i] = toFloat(dirs[i]->value)*180/pi;
         createArrow(drs, dirs.size(), lpath->getPose(t));
     }
 }

@@ -287,7 +287,7 @@ void path::compute(int N) {
     Vec3f* _cls = &colors[0];
 
     if (degree == 2) {
-        for (unsigned int i=0; i<Nsegs; i++) {
+        for (int i=0; i<Nsegs; i++) {
             auto& p1 = points[2*i];
             auto& p2 = points[2*i+1];
             auto& p3 = points[2*i+2];
@@ -297,7 +297,7 @@ void path::compute(int N) {
 
     if (degree == 3) {
         // berechne die hilfspunkte fuer die positionen
-        for (unsigned int i=0; i<points.size()-1; i++) {
+        for (int i=0; i<Nsegs; i++) {
             auto& p1 = points[i];
             auto& p2 = points[i+1];
             auto& c1 = point_colors[i];
@@ -334,7 +334,7 @@ vector<Vec3f> path::getColors() { return colors; }
 
 vector<pose> path::getPoses() {
     vector<pose> res;
-    for (int i=0; i<positions.size(); i++) {
+    for (uint i=0; i<positions.size(); i++) {
         res.push_back( pose(positions[i], directions[i], up_vectors[i]) );
     }
     return res;
@@ -389,7 +389,7 @@ float path::getClosestPoint(Vec3f p) {
     float dist = 1.0e10;
     float t_min = 0;
 
-    for (int i=1; i<positions.size(); i++){
+    for (uint i=1; i<positions.size(); i++){
         Vec3f p1 = positions[i-1];
         Vec3f p2 = positions[i];
 
@@ -412,7 +412,7 @@ float path::getDistance(Vec3f p) {
     auto positions = getPositions();
     float dist = 1.0e10;
 
-    for (int i=1; i<positions.size(); i++){
+    for (uint i=1; i<positions.size(); i++){
         Vec3f p1 = positions[i-1];
         Vec3f p2 = positions[i];
 

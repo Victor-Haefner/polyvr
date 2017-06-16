@@ -28,7 +28,6 @@ void VRTexture::write(string path) {
 }
 
 void VRTexture::paste(VRTexturePtr other, Vec3i offset) {
-    const UInt8* data = other->getImage()->getData();
     Vec3i s1 = getSize();
     Vec3i s2 = other->getSize();
     if (s2[0]*s2[1]*s2[2] == 0) return;
@@ -49,6 +48,7 @@ void VRTexture::paste(VRTexturePtr other, Vec3i offset) {
         }
     }
 
+    //const UInt8* data = other->getImage()->getData();
     //img->setSubData(offset[0], offset[1], offset[2], dim[0], dim[1], dim[2], data);
     // TODO: evaluate the speed against the setSubData function!
 }

@@ -110,7 +110,7 @@ bool VRReasoner::builtin(VRStatementPtr s, VRSemanticContextPtr c) {
 
     vector< map<VREntity*, string> > params; // get parameters
 
-    for (int i=0; i<s->terms.size()-2; i++) {
+    for (uint i=0; i<s->terms.size()-2; i++) {
         auto& t = s->terms[2+i];
         params.push_back( map<VREntity*, string>() );
         //cout << "builtin params in: " << t.str << endl;
