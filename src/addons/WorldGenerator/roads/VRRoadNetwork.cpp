@@ -694,18 +694,43 @@ void VRRoadNetwork::computeMarkingsRoad2(VREntityPtr roadEnt) {
 }
 
 void VRRoadNetwork::computeTracksLanes(VREntityPtr way) {
+    auto getBulge = [&](vector<pose>& points, uint i, Vec3f& x) -> float {
+        if (points.size() < 2) return 0;
+        Vec3f t1;
+        Vec3f t2;
+
+        if (i > 0) {
+            t1 = points[i-1].pos() - points[i].pos();
+            t1.normalize();
+        }
+
+        if (i < points.size()-1) {
+            t2 = points[i+1].pos() - points[i].pos();
+            t2.normalize();
+        }
+
+        float b1 = -x.dot(t1);
+        float b2 = -x.dot(t2);
+        return (b1+b2)*trackWidth*0.5;
+    };
+
     for (auto lane : way->getAllEntities("lanes")) {
         if (!lane->is_a("Lane")) continue;
         for (auto pathEnt : lane->getAllEntities("path")) {
-            // tracks
             auto path = toPath(pathEnt, 2);
             vector<VREntityPtr> nodes;
             vector<Vec3f> normals;
-            for (auto point : path->getPoints()) { // TODO: check if all of this still necessary!, maybe use path as is?
+            auto points = path->getPoints();
+            for (uint i=0; i < points.size(); i++) {
+                auto& point = points[i];
                 Vec3f p = point.pos();
                 Vec3f n = point.dir();
+                float nL = n.length();
                 Vec3f x = n.cross(Vec3f(0,1,0));
                 x.normalize();
+                float bulge = getBulge(points, i, x);
+                p += x*bulge;
+                n -= x*bulge*0.1; n.normalize(); n *= nL;
                 nodes.push_back( addNode(p) );
                 normals.push_back( n );
             }
