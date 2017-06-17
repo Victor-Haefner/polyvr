@@ -13,8 +13,8 @@ simpleVRPyType(RoadNetwork, New_ptr);
 
 
 PyMethodDef VRPyAsphalt::methods[] = {
-    {"addMarking", (PyCFunction)VRPyAsphalt::addMarking, METH_VARARGS, "Add marking - addMarking( rID, path, width, dashN )" },
-    {"addTrack", (PyCFunction)VRPyAsphalt::addTrack, METH_VARARGS, "Add track - addTrack( rID, path, width, dashN )" },
+    {"addMarking", (PyCFunction)VRPyAsphalt::addMarking, METH_VARARGS, "Add marking - addMarking( rID, path, width | dashN, offset )" },
+    {"addTrack", (PyCFunction)VRPyAsphalt::addTrack, METH_VARARGS, "Add track - addTrack( rID, path, width | dashN, offset )" },
     {"clearTexture", (PyCFunction)VRPyAsphalt::clearTexture, METH_NOARGS, "Clear internal textures - clearTexture()" },
     {"updateTexture", (PyCFunction)VRPyAsphalt::updateTexture, METH_NOARGS, "Update internal textures - updateTexture()" },
     {NULL}  /* Sentinel */
@@ -25,9 +25,10 @@ PyObject* VRPyAsphalt::addMarking(VRPyAsphalt* self, PyObject *args) {
     int rID = 0;
     int dashN = 0;
     float width = 0.1;
+    float offset = 0;
     VRPyPath* path = 0;
-    if (!PyArg_ParseTuple(args, "iOf|i", &rID, &path, &width, &dashN)) return NULL;
-    self->objPtr->addMarking( rID, path->objPtr, width, dashN );
+    if (!PyArg_ParseTuple(args, "iOf|if", &rID, &path, &width, &dashN, &offset)) return NULL;
+    self->objPtr->addMarking( rID, path->objPtr, width, dashN, offset );
     Py_RETURN_TRUE;
 }
 
@@ -36,9 +37,10 @@ PyObject* VRPyAsphalt::addTrack(VRPyAsphalt* self, PyObject *args) {
     int rID = 0;
     int dashN = 0;
     float width = 0.1;
+    float offset = 0;
     VRPyPath* path = 0;
-    if (!PyArg_ParseTuple(args, "iOf|i", &rID, &path, &width, &dashN)) return NULL;
-    self->objPtr->addTrack( rID, path->objPtr, width, dashN );
+    if (!PyArg_ParseTuple(args, "iOf|if", &rID, &path, &width, &dashN, &offset)) return NULL;
+    self->objPtr->addTrack( rID, path->objPtr, width, dashN, offset );
     Py_RETURN_TRUE;
 }
 

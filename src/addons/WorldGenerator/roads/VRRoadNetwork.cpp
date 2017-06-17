@@ -144,7 +144,7 @@ void VRRoadNetwork::updateAsphaltTexture() {
             auto dN = track->get("dashNumber");
             float width = w ? toFloat( w->value ) : 0;
             int dashN = dN ? toInt( dN->value ) : 0;
-            asphalt->addTrack(rID, toPath(track, 16), width, dashN);
+            asphalt->addTrack(rID, toPath(track, 16), width, dashN, trackWidth*0.5);
 		}
 
 		cout << "VRRoadNetwork::updateTexture, markings and tracks: " << markings.size() << " " << tracks.size() << endl;
@@ -699,29 +699,19 @@ void VRRoadNetwork::computeTracksLanes(VREntityPtr way) {
         for (auto pathEnt : lane->getAllEntities("path")) {
             // tracks
             auto path = toPath(pathEnt, 2);
-            vector<VREntityPtr> nodesL;
-            vector<VREntityPtr> nodesR;
-            vector<Vec3f> normalsL;
-            vector<Vec3f> normalsR;
-            for (auto point : path->getPoints()) {
+            vector<VREntityPtr> nodes;
+            vector<Vec3f> normals;
+            for (auto point : path->getPoints()) { // TODO: check if all of this still necessary!, maybe use path as is?
                 Vec3f p = point.pos();
                 Vec3f n = point.dir();
                 Vec3f x = n.cross(Vec3f(0,1,0));
                 x.normalize();
-                Vec3f pL = p + x*(-trackWidth*0.5);
-                Vec3f pR = p + x*( trackWidth*0.5);
-                nodesL.push_back( addNode(pL) );
-                nodesR.push_back( addNode(pR) );
-                normalsL.push_back( n );
-                normalsR.push_back( n );
+                nodes.push_back( addNode(p) );
+                normals.push_back( n );
             }
-            auto tL = addPath("RoadTrack", name, nodesL, normalsL);
-            auto tR = addPath("RoadTrack", name, nodesR, normalsR);
-
-            for (auto t : {tL, tR}) {
-                t->set("width", toString(trackWidth*0.5));
-                way->add("tracks", t->getName());
-            }
+            auto t = addPath("RoadTrack", name, nodes, normals);
+            t->set("width", toString(trackWidth*0.5));
+            way->add("tracks", t->getName());
         }
     }
 }

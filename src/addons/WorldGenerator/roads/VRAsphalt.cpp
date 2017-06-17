@@ -67,10 +67,10 @@ void VRAsphalt::updateTexture() {
 	setShaderParameter("texMud", 2);
 }
 
-void VRAsphalt::addPath(pathPtr path, int rID, float width, int dashN) {
+void VRAsphalt::addPath(pathPtr path, int rID, float width, int dashN, float offset) {
     int& i = roadData[rID].rDataLengths;
     int iNpnts = i;
-    i += 1;
+    i += 2;
 
     path->approximate(2);
     auto pnts = path->getPoints();
@@ -91,23 +91,24 @@ void VRAsphalt::addPath(pathPtr path, int rID, float width, int dashN) {
         i += 3;
     }
 
-    texGen->drawPixel(Vec3i(rID,iNpnts,0), Vec4f(i-iNpnts-1,width,dashN,1));
+    texGen->drawPixel(Vec3i(rID,iNpnts  ,0), Vec4f(i-iNpnts-2,width,dashN,1));
+    texGen->drawPixel(Vec3i(rID,iNpnts+1,0), Vec4f(offset,0,0,1));
     if (texGen->getSize()[0] < i) cout << "WARNING, texture width not enough!";
     if (texGen->getSize()[1] < rID) cout << "WARNING, texture height not enough!";
 }
 
-void VRAsphalt::addMarking(int rID, pathPtr marking, float width, int dashN) {
+void VRAsphalt::addMarking(int rID, pathPtr marking, float width, int dashN, float offset) {
     if (roadData.count(rID) == 0) roadData[rID] = road();
     roadData[rID].markingsN++;
     texGen->drawPixel(Vec3i(rID,0,0), Vec4f(roadData[rID].markingsN, roadData[rID].tracksN, 0, 1));
-    addPath(marking, rID, width, dashN);
+    addPath(marking, rID, width, dashN, offset);
 }
 
-void VRAsphalt::addTrack(int rID, pathPtr track, float width, int dashN) {
+void VRAsphalt::addTrack(int rID, pathPtr track, float width, int dashN, float offset) {
     if (roadData.count(rID) == 0) roadData[rID] = road();
     roadData[rID].tracksN++;
     texGen->drawPixel(Vec3i(rID,0,0), Vec4f(roadData[rID].markingsN, roadData[rID].tracksN, 0, 1));
-    addPath(track, rID, width, dashN);
+    addPath(track, rID, width, dashN, offset);
 }
 
 
@@ -267,10 +268,11 @@ vec2 distToQuadBezier( vec3 A, vec3 B, vec3 C, vec3 x ) {
     return vec2(dmin,tmin);
 }
 
-float distToPath(const int k, const int roadID, const vec3 pos, const vec4 pathData) {
-	int Npoints = int(pathData.x); // testing
-	float width2 = pathData.y*0.5;
-	float dashL = pathData.z;
+float distToPath(const int k, const int roadID, const vec3 pos, const vec4 pathData1, const vec4 pathData2) {
+	int Npoints = int(pathData1.x); // testing
+	float width2 = pathData1.y*0.5;
+	float dashL = pathData1.z;
+    float offset = pathData2.x;
 
 	vec3 A;
 	vec3 B;
@@ -281,8 +283,10 @@ float distToPath(const int k, const int roadID, const vec3 pos, const vec4 pathD
 		B = getData(roadID, k+3*j+2).xyz;
 		C = getData(roadID, k+3*j+3).xyz;
 		vec2 dtmin = distToQuadBezier(A,B,C,pos);
-		if (dtmin.x < width2 && dashL == 0) return dtmin.x;
-		if (dtmin.x < width2 && int(dtmin.y*dashL)%2 == 0) return dtmin.x;
+		if (dtmin.x > offset - width2 && dtmin.x < offset + width2) {
+            if (dashL == 0) return abs(dtmin.x - offset);
+            if (int(dtmin.y*dashL)%2 == 0) return abs(dtmin.x - offset);
+		}
 	}
 
 	return 20.0;
@@ -327,27 +331,28 @@ void doPaths() {
 	int Nlines = int(roadData.x);
 
 	for (int i=0; i<Nlines; i++) {
-		vec4 pathData = getData(rID, k);
-		float width = pathData.y;
-		int Npoints = int(pathData.x);
-		distTrack = distToPath(k, rID, pos, pathData);
+		vec4 pathData1 = getData(rID, k);
+		vec4 pathData2 = getData(rID, k+1);
+		int Npoints = int(pathData1.x);
+		distTrack = distToPath(k+1, rID, pos, pathData1, pathData2);
 		doLine = bool(distTrack < 10.0);
 		if (doLine) break;
-		k += Npoints+1;
+		k += Npoints+2;
 	}
 
 	if (!doLine) {
 		int Ntracks = int(roadData.y);
 		for (int i=0; i<Ntracks; i++) {
-			vec4 pathData = getData(rID, k);
-			float width = pathData.y;
-			int Npoints = int(pathData.x);
-			float d = distToPath(k, rID, pos, pathData);
+			vec4 pathData1 = getData(rID, k);
+            vec4 pathData2 = getData(rID, k+1);
+			float width = pathData1.y;
+			int Npoints = int(pathData1.x);
+			float d = distToPath(k+1, rID, pos, pathData1, pathData2);
 			if (d < 10.0) {
 				doTrack = true;
 				distTrack = min(distTrack,d/width);
 			}
-			k += Npoints+1;
+			k += Npoints+2;
 		}
 	}
 
