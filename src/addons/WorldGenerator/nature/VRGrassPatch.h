@@ -13,17 +13,19 @@ class VRGeoData;
 
 class VRGrassPatch : public VRTransform {
     private:
-        VRMaterialPtr mat;
         PolygonPtr area;
         VRLodPtr lod;
         map<int, VRGeometryPtr> lods;
         float bladeHeight = 0.3;
         static VRTextureRendererPtr texRenderer;
         static VRPlantMaterialPtr matGrassSide;
+        static VRPlantMaterialPtr matGrass;
+
+        void setupGrassMaterial();
+        void setupGrassStage();
 
         void initLOD();
         void addGrassBlade(VRGeoData& data, Vec3f pos, float a, float dh, int lvl, Vec3f c);
-        void createGrassStage();
         void createPatch(VRGeoData& data, PolygonPtr area, int lvl = 0, int density = 100);
         void createSpriteLOD(VRGeoData& data, int lvl);
 
@@ -36,6 +38,7 @@ class VRGrassPatch : public VRTransform {
 
         void createLod(VRGeoData& geo, int lvl, Vec3f offset, int ID);
 
+        static VRMaterialPtr getGrassMaterial();
         static VRMaterialPtr getGrassSideMaterial();
 };
 

@@ -40,7 +40,8 @@ void VRGrassPatch::initLOD() {
 
 void VRGrassPatch::setArea(PolygonPtr p) {
     area = p;
-    createGrassStage();
+    setupGrassMaterial();
+    setupGrassStage();
     if (!lod) initLOD();
 
     VRGeoData geo[5];
@@ -50,6 +51,7 @@ void VRGrassPatch::setArea(PolygonPtr p) {
         else createSpriteLOD(geo[i], 1);
         auto grass = geo[i].asGeometry("grassPatch");
         if (i > 2) grass->setMaterial(matGrassSide);
+        else grass->setMaterial(matGrass);
         lod->getChild(i)->addChild(grass);
     }
 }
@@ -120,9 +122,15 @@ void VRGrassPatch::createPatch(VRGeoData& data, PolygonPtr area, int lvl, int de
 }
 
 VRTextureRendererPtr VRGrassPatch::texRenderer = 0;
+VRPlantMaterialPtr VRGrassPatch::matGrass = 0;
 VRPlantMaterialPtr VRGrassPatch::matGrassSide = 0;
 
-void VRGrassPatch::createGrassStage() {
+void VRGrassPatch::setupGrassMaterial() { // TODO: add texture, for instance two colored grass blade, and add tex coords for blades!, maybe different types of grass blades?
+    if (matGrass) return;
+    matGrass = VRPlantMaterial::create();
+}
+
+void VRGrassPatch::setupGrassStage() {
     if (texRenderer) return;
 
     float W = 0.2;
@@ -158,6 +166,9 @@ void VRGrassPatch::createGrassStage() {
     matGrassSide->setLit(false);
 }
 
+VRMaterialPtr VRGrassPatch::getGrassMaterial() { return matGrass; }
+VRMaterialPtr VRGrassPatch::getGrassSideMaterial() { return matGrassSide; }
+
 void VRGrassPatch::createSpriteLOD(VRGeoData& data, int lvl) {
     float W = 1.0*lvl;
     float H = 0.5;
@@ -167,8 +178,6 @@ void VRGrassPatch::createSpriteLOD(VRGeoData& data, int lvl) {
         data.pushQuad(p, Vec3f(-1,0,0), Vec3f(0,1,0), Vec2f(W, H), true);
     }
 }
-
-VRMaterialPtr VRGrassPatch::getGrassSideMaterial() { return matGrassSide; }
 
 void VRGrassPatch::createLod(VRGeoData& geo, int lvl, Vec3f offset, int ID) {
     Matrix Offset;
