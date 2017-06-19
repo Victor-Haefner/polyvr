@@ -12,15 +12,9 @@ extern "C" {
 #include <libavutil/opt.h>
 }
 
-#if _WIN32
-#include <al.h>
-#include <alc.h>
-#include <alext.h>
-#else
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
-#endif
 
 /*
 not compiling?
@@ -214,7 +208,7 @@ void VRSound::playFrame() {
         cout << "reset sound " << endl;
         if (!initiated) initiate();
         if (!al->context) return;
-        al->frame = avcodec_alloc_frame();
+        al->frame = av_frame_alloc();
         av_seek_frame(al->context, stream_id, 0,  AVSEEK_FLAG_FRAME);
         al->state = AL_PLAYING;
     }
@@ -290,7 +284,7 @@ void VRSound::play() {
     if (!al->context) return;
     if (doUpdate) updateSource();
 
-    al->frame = avcodec_alloc_frame();
+    al->frame = av_frame_alloc();
     av_seek_frame(al->context, stream_id, 0,  AVSEEK_FLAG_FRAME);
 
     while (av_read_frame(al->context, &al->packet) >= 0) {
@@ -505,6 +499,7 @@ vector<short> VRSound::synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, f
 int VRSound::getQueuedBuffer() { return queuedBuffers; }
 
 void VRSound::recycleBuffer() {
+    if (!initiated) return;
     ALint val = -1;
     ALuint bufid = 0; // TODO: not working properly!!
     do { ALCHECK_BREAK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &val) ); // recycle buffers

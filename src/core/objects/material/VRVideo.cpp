@@ -58,7 +58,7 @@ void VRVideo::open(string f) {
 
     NStreams = getNStreams();
 
-    vFrame = avcodec_alloc_frame(); // Allocate video frame
+    vFrame = av_frame_alloc(); // Allocate video frame
 
     frames.clear();
     for (int i=0; i<NStreams; i++) {

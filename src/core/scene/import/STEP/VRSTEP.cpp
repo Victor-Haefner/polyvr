@@ -775,7 +775,8 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, STEPattribute* attr
     //STEPaggregate* ssa;
     SelectNode* sen;
     SDAI_Select* sdsel;
-    PrimitiveType etype, ebtype;
+    PrimitiveType etype = UNKNOWN_TYPE;
+    PrimitiveType ebtype = UNKNOWN_TYPE;
     const EntityDescriptor* ssedesc = 0;
     auto btype = atype;
     int ID;
@@ -799,7 +800,8 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, STEPattribute* attr
     auto switchEType = [&](STEPentity* e) {
         ssedesc = e->getEDesc();
         if (ssedesc) {
-            switch (ssedesc->Type()) {
+            etype = ssedesc->Type();
+            switch (etype) {
                 case SET_TYPE:
                 case LIST_TYPE:
                     ebtype = ssedesc->BaseType();

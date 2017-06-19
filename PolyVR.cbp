@@ -819,6 +819,7 @@
 		<Unit filename="src/core/scene/sound/VRSoundFwd.h" />
 		<Unit filename="src/core/scene/sound/VRSoundManager.cpp" />
 		<Unit filename="src/core/scene/sound/VRSoundManager.h" />
+		<Unit filename="src/core/scene/sound/VRSoundUtils.cpp" />
 		<Unit filename="src/core/scene/sound/VRSoundUtils.h" />
 		<Unit filename="src/core/scripting/VRPyAnalyticGeometry.cpp" />
 		<Unit filename="src/core/scripting/VRPyAnalyticGeometry.h" />

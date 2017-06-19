@@ -1,7 +1,10 @@
 #ifndef VRSOUNDUTILS_H_INCLUDED
 #define VRSOUNDUTILS_H_INCLUDED
 
-#include "core/utils/toString.h"
+#include <string>
+
+typedef int ALenum;
+std::string toString(ALenum a);
 
 #define ALCHECK(x) { \
 x; \

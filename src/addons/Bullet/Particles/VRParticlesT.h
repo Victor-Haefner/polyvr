@@ -18,9 +18,9 @@ void VRParticles::resetParticles(int amount) {
     {
         BLock lock(mtx());
         this->N = amount;
-        for (int i=0; i<particles.size(); i++) delete particles[i];
+        for (uint i=0; i<particles.size(); i++) delete particles[i];
         particles.resize(N, 0);
-        for (int i=0; i<particles.size(); i++) particles[i] = new P(world);
+        for (uint i=0; i<particles.size(); i++) particles[i] = new P(world);
 
 
         // material
