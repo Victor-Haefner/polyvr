@@ -193,7 +193,8 @@ void VRRecorder::closeCodec() {
 
 void VRRecorder::initFrame() {
     initCodec();
-    frame = av_frame_alloc();
+    frame = avcodec_alloc_frame();
+    //frame = av_frame_alloc();
     if (!frame) { fprintf(stderr, "Could not allocate video frame\n"); return; }
     frame->format = codec_context->pix_fmt;
     frame->width  = codec_context->width;
@@ -207,7 +208,8 @@ void VRRecorder::initFrame() {
 
 void VRRecorder::closeFrame() {
     av_freep(&frame->data[0]);
-    av_frame_free(&frame);
+    avcodec_free_frame(&frame);
+    //av_frame_free(&frame);
     frame = 0;
 }
 

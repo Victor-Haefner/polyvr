@@ -208,7 +208,8 @@ void VRSound::playFrame() {
         cout << "reset sound " << endl;
         if (!initiated) initiate();
         if (!al->context) return;
-        al->frame = av_frame_alloc();
+        al->frame = avcodec_alloc_frame();
+        //al->frame = av_frame_alloc();
         av_seek_frame(al->context, stream_id, 0,  AVSEEK_FLAG_FRAME);
         al->state = AL_PLAYING;
     }
@@ -284,7 +285,8 @@ void VRSound::play() {
     if (!al->context) return;
     if (doUpdate) updateSource();
 
-    al->frame = av_frame_alloc();
+    //al->frame = av_frame_alloc();
+    al->frame = avcodec_alloc_frame();
     av_seek_frame(al->context, stream_id, 0,  AVSEEK_FLAG_FRAME);
 
     while (av_read_frame(al->context, &al->packet) >= 0) {
