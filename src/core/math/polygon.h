@@ -42,6 +42,8 @@ class Polygon {
         Polygon getConvexHull();
         Boundingbox getBoundingBox();
         vector< Polygon > getConvexDecomposition();
+        vector< PolygonPtr > gridSplit(float G);
+
         float computeArea();
         PolygonPtr shrink(float amount);
         Vec3f getRandomPoint();

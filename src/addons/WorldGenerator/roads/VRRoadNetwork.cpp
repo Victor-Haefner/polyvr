@@ -696,18 +696,13 @@ void VRRoadNetwork::computeMarkingsRoad2(VREntityPtr roadEnt) {
 void VRRoadNetwork::computeTracksLanes(VREntityPtr way) {
     auto getBulge = [&](vector<pose>& points, uint i, Vec3f& x) -> float {
         if (points.size() < 2) return 0;
-        Vec3f t1;
-        Vec3f t2;
+        if (i == 0) return 0;
+        if (i == points.size()-1) return 0;
 
-        if (i > 0) {
-            t1 = points[i-1].pos() - points[i].pos();
-            t1.normalize();
-        }
-
-        if (i < points.size()-1) {
-            t2 = points[i+1].pos() - points[i].pos();
-            t2.normalize();
-        }
+        Vec3f t1 = points[i-1].pos() - points[i].pos();
+        t1.normalize();
+        Vec3f t2 = points[i+1].pos() - points[i].pos();
+        t2.normalize();
 
         float b1 = -x.dot(t1);
         float b2 = -x.dot(t2);

@@ -121,7 +121,7 @@ PolygonPtr Polygon::shrink(float amount) {
 
 vector<Vec3f> Polygon::getRandomPoints(float density, float padding) {
     auto area = shrink(padding);
-    vector<Vec3f> points;
+    vector<Vec3f> res;
     //for (auto& area : area1->getConvexDecomposition()) {
         auto bb = area->getBoundingBox();
         int N = density*area->computeArea();
@@ -129,10 +129,255 @@ vector<Vec3f> Polygon::getRandomPoints(float density, float padding) {
             Vec3f p;
             do p = bb.getRandomPoint();
             while( !area->isInside(Vec2f(p[0], p[2])) );
-            points.push_back( p );
+            res.push_back( p );
         }
     //}
-    return points;
+    return res;
+}
+
+vector< PolygonPtr > Polygon::gridSplit(float G) {
+    auto inSquare = [&](Vec2f p, Vec2i s) {
+        if (p[0] < s[0]*G) return false;
+        if (p[1] < s[1]*G) return false;
+        if (p[0] > (s[0]+1)*G) return false;
+        if (p[1] > (s[1]+1)*G) return false;
+        return true;
+    };
+
+    auto squareToPolygon = [&](Vec2i s) {
+        auto p = create();
+        p->addPoint(Vec2f(s[0]  , s[1])*G);
+        p->addPoint(Vec2f(s[0]+1, s[1])*G);
+        p->addPoint(Vec2f(s[0]+1, s[1]+1)*G);
+        p->addPoint(Vec2f(s[0]  , s[1]+1)*G);
+        return p;
+    };
+
+    auto getBBGridPnts = [&](Boundingbox& bb) {
+        map<int, map<int, Vec2i>> pnts;
+        int i0 = floor( bb.min()[0] / G);
+        int j0 = floor( bb.min()[2] / G);
+        int i1 = ceil( bb.max()[0] / G);
+        int j1 = ceil( bb.max()[2] / G);
+        if (i0 == i1) i1++;
+        if (j0 == j1) j1++;
+        for (int j=j0; j<j1; j++) {
+            for (int i=i0; i<i1; i++) {
+                pnts[j][i] = Vec2i(i,j);
+            }
+        }
+        return pnts;
+    };
+
+    auto getSegmentGridPnts = [&](Vec2f p1, Vec2f p2) {
+        auto d = p2-p1;
+        Boundingbox bb;
+        bb.update(Vec3f(p1[0], 0, p1[1]));
+        bb.update(Vec3f(p2[0], 0, p2[1]));
+
+        map<float, Vec2f> iPnts;
+        vector<float> X, Y;
+        for (auto j : getBBGridPnts(bb)) { for (auto i : j.second) X.push_back(i.first*G); break; }
+        for (auto j : getBBGridPnts(bb)) Y.push_back(j.first*G);
+
+        if (abs(d[1]) > 0) {
+            for (auto y : Y) { // intersection with vertical grid lines
+                float t = (y - p1[1]) /d[1];
+                if (t == 0 || t == 1) continue;
+                iPnts[t] = p1 + d*t;
+            }
+        }
+
+        if (abs(d[0]) > 0) {
+            for (auto x : X) { // intersection with horizontal grid lines
+                float t = (x - p1[0]) /d[0];
+                if (t == 0 || t == 1) continue;
+                iPnts[t] = p1 + d*t;
+            }
+        }
+
+        vector<Vec2f> res;
+        for (auto p : iPnts) res.push_back(p.second);
+        return res;
+    };
+
+    auto isOnGrid = [&](Vec2f p) {
+        p *= 1.0/G;
+        if (abs(p[0] - int(p[0])) < 1e-6) return true;
+        if (abs(p[1] - int(p[1])) < 1e-6) return true;
+        return false;
+    };
+
+    vector<PolygonPtr> res;
+
+    vector<Vec2i> squares; // defined by square corner left bottom, in grid lengths
+    map<int, vector<int>> pointSquaresMap; // up to 4 squares when on a corner
+    map<int, vector<int>> squarePointsMap;
+
+    // compute intersections of polygon edges with grid and insert in copy of this polygon
+    auto self = create();
+    for (int i=0; i<size(); i++) {
+        auto p1 = points[i];
+        auto p2 = points[(i+1)%size()];
+        if (i == 0) self->addPoint(p1);
+        for (auto p : getSegmentGridPnts(p1, p2) ) if (p != p1 && p != p2) self->addPoint(p);
+        self->addPoint(p2);
+    }
+
+    // get all grid squares touching the area bounding box
+    auto bb = self->getBoundingBox();
+    for (auto j : getBBGridPnts(bb))
+        for (auto i : j.second) squares.push_back(i.second);
+
+    // get all grid squares touching each point
+    for (int i=0; i<self->points.size(); i++) {
+        auto point = self->points[i];
+        for (int j=0; j<squares.size(); j++) {
+            auto square = squares[j];
+            if (inSquare(point, square)) pointSquaresMap[i].push_back(j);
+            if (inSquare(point, square)) squarePointsMap[j].push_back(i);
+        }
+    }
+
+    // get all grid squares fully inside of polygon
+    for (int i=0; i<squares.size(); i++) {
+        if (squarePointsMap.count(i)) continue; // intersects polygon, skip
+        auto s = squares[i];
+        if (self->isInside(Vec2f(s)*G)) { // at least one corner in area
+            res.push_back( squareToPolygon(s) ); // add square to chunks
+        }
+    }
+
+    map<int, Vec2f> cornerPoints;
+    cornerPoints[-1] = Vec2f(0,0);
+    cornerPoints[-2] = Vec2f(G,0);
+    cornerPoints[-3] = Vec2f(0,G);
+    cornerPoints[-4] = Vec2f(G,G);
+
+    // get all grid squares partly in polygon
+    cout << "!gridSplit!" << endl;
+    for (auto s : squarePointsMap) {
+        auto p = create();
+        Vec2f square = Vec2f(squares[s.first]) * G;
+
+        auto compAngle = [&](Vec2f pnt) {
+            float a = atan2(pnt[0]-square[0]-0.5*G, pnt[1]-square[1]-0.5*G); // angle
+            cout << "      compAngle p " << pnt << " a " << a << endl;
+            return a;
+        };
+
+        map<float, int> borderPnts; // key from -pi to pi
+        for (auto i : s.second) {
+            auto pnt = self->getPoint(i);
+            if (isOnGrid(pnt)) borderPnts[ compAngle(pnt) ] = i;
+        }
+
+        // add corner points to borderpoints
+        for (int i=-1; i>=-4; i--) {
+            auto pnt = cornerPoints[i];
+            borderPnts[ compAngle(pnt + square) ] = i;
+        }
+
+        auto getSquarePoint = [&](int i) {
+            if (i == -5) { cout << "AAARGH a -5!" << endl; return Vec2f(); };
+            if (i < 0) return cornerPoints[i] + square;
+            if (i >= 0) return self->getPoint(i);
+        };
+
+        auto getNextBorderPoint = [&](float t, int i_1, int i) {
+            int p1 = -5;
+            int p2 = -5;
+
+            /*float d1 = 1e6;
+            float d2 = 1e6;
+            for (auto pnt : borderPnts) { // get the two closest points before and after!
+                float tp = pnt.first;
+                float dt = tp-t;
+                if (dt )
+                if (dt < 0 && abs(dt) < d1) { d1 = abs(dt); p1 = pnt.second; }
+                if (dt > 0 && abs(dt) < d2) { d2 = abs(dt); p2 = pnt.second; }
+            }*/
+
+            for(auto it = borderPnts.begin(); it != borderPnts.end(); it++) {
+                if (abs(it->first-t) < 1e-6) { // found point
+                    auto it1 = it;
+                    auto it2 = it;
+                    if (it == borderPnts.begin()) { it1 = borderPnts.end(); it1--; } else it1--;
+                    if (it == borderPnts.end()) it2 = borderPnts.begin(); else it2++;
+                    p1 = it1->second;
+                    p2 = it2->second;
+                }
+            }
+
+            auto pnt1 = getSquarePoint(p1);
+            auto pnt2 = getSquarePoint(p2);
+
+            cout << "   getNextBorderPoint t " << t << "  p1 " << p1 << "  p2 " << p2 << endl;
+            if (self->isInside(pnt1) && i_1 != p1 && i != p1) return p1;
+            if (self->isInside(pnt2) && i_1 != p2 && i != p2) return p2;
+            return -5; // invalid pnt
+        };
+
+        auto getNextPoint = [&](int i_1, int i) {
+            cout << "   getNextPoint " << i_1 << " " << i << endl;
+            int j = -5;
+            auto pnt = getSquarePoint(i);
+            auto pnt_1 = getSquarePoint(i_1);
+
+            if (i != s.second[0]) { // not the first point
+                if (isOnGrid(pnt) && !isOnGrid(pnt_1)) return getNextBorderPoint( compAngle(pnt), i_1, i );
+                if (isOnGrid(pnt) && isOnGrid(pnt_1)) {
+                    for (auto k : s.second) {
+                        if (j == i) {
+                            cout << "    found k " << k << endl;
+                            return k; // last point is the one searched!
+                        }
+                        j = k;
+                    }
+                    return getNextBorderPoint( compAngle(pnt), i_1, i );
+                }
+            }
+
+            for (auto k : s.second) {
+                if (j == i) {
+                    cout << "    found k " << k << endl;
+                    return k; // last point is the one searched!
+                }
+                j = k;
+            }
+
+            return -5; // invalid pnt
+        };
+
+        int iMax = 0;
+        int i0 = s.second[0]; // first point
+        int i_1 = i0;
+        int i = i0;
+        do {
+            auto pnt = getSquarePoint(i);
+            p->addPoint(pnt);
+            int newI = getNextPoint(i_1,i);
+            if (newI == -5) break; // invalid point
+            i_1 = i;
+            i = newI;
+            iMax++;
+        } while (i != i0 && iMax < 10);
+
+        float pA = p->computeArea();
+
+        cout << " borderPnts" << endl;
+        for (auto i : borderPnts) cout << "  t " << i.first << "  pi " << i.second << " p " << getSquarePoint(i.second) << endl;
+
+        cout << " squarePnts" << endl;
+        for (auto i : s.second) cout << "  pnt " << i << "  " << getSquarePoint(i) << endl;
+
+        cout << " polygon A " << pA << endl;
+        for (auto pnt : p->points) cout << "  pnt " << pnt << endl;
+
+        if ( pA > 1e-6 && pA <= G*G+1e-6) res.push_back(p);
+    }
+
+    return res;
 }
 
 Vec3f Polygon::getRandomPoint() {
