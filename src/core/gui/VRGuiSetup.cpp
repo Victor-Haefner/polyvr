@@ -195,6 +195,13 @@ void VRGuiSetup::updateObjectData() {
     if (selected_type == "flystick") { device = true; }
 
     auto setup = current_setup.lock();
+    if (selected_type == "vrpn_device" || selected_type == "vrpn_tracker") {
+        if (setup) {
+            setTextEntry("entry13", toString(setup->getVRPNPort()));
+            setCheckButton("checkbutton25", setup->getVRPNActive());
+        }
+    }
+
     if (selected_type == "section" && setup) {
         if (selected_name == "ART") {
             setExpanderSensitivity("expander6", true);
