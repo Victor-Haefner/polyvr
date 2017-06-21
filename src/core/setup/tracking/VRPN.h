@@ -35,6 +35,7 @@ class VRPN_device : public VRDevice {
         vrpn_Connection* vrpnc = 0;
         int ID = 0;
         bool initialized = false;
+        bool verbose = false;
 
         VRPN_device();
         ~VRPN_device();
@@ -45,7 +46,7 @@ class VRPN_device : public VRDevice {
         void setAddress(string t);
         void setTranslationAxis(Vec3f v);
         void setRotationAxis(Vec3f v);
-        void loop();
+        void loop(bool verbose = false);
 };
 
 class VRPN : public VRStorage {
@@ -54,6 +55,7 @@ class VRPN : public VRStorage {
         int threadID;
         bool active = true;
         int port = 3883;
+        bool verbose = false;
 
         VRUpdateCbPtr updatePtr;
         VRUpdateCbPtr testServer = 0;

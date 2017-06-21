@@ -18,10 +18,7 @@
 #include <boost/bind.hpp>
 #include <OpenSG/OSGQuaternion.h>
 
-bool verbose = false;
-
 OSG_BEGIN_NAMESPACE
-
 
 void VRPN_CALLBACK handle_tracker(void* data, const vrpn_TRACKERCB tracker ) {
     VRPN_device* dev = (VRPN_device*)data;
@@ -49,21 +46,21 @@ void VRPN_CALLBACK handle_tracker(void* data, const vrpn_TRACKERCB tracker ) {
     Vec3f pos = dev->offset + Vec3f(sta[0]*tracker.pos[(int)ta[0]]*s, sta[1]*tracker.pos[(int)ta[1]]*s, sta[2]*tracker.pos[(int)ta[2]]*s);
     for (int i=0; i<3; i++) m[3][i] = pos[i];
 
-    if (verbose) VRGuiManager::get()->getConsole("Tracking")->write( "vrpn tracker pos "+toString(pos)+" dir "+toString(-Vec3f(m[2]))+"\n");
+    if (dev->verbose) VRGuiManager::get()->getConsole("Tracking")->write( "vrpn tracker pos "+toString(pos)+" dir "+toString(-Vec3f(m[2]))+"\n");
     obj->setMatrix(m);
 }
 
 void VRPN_CALLBACK handle_button(void* data, const vrpn_BUTTONCB button ) {
-    if (verbose) VRGuiManager::get()->getConsole("Tracking")->write( "vrpn button "+toString(button.button)+" state "+toString(button.state)+"\n");
     VRPN_device* dev = (VRPN_device*)data;
+    if (dev->verbose) VRGuiManager::get()->getConsole("Tracking")->write( "vrpn button "+toString(button.button)+" state "+toString(button.state)+"\n");
     dev->change_button(button.button, button.state);
 }
 
 void VRPN_CALLBACK handle_analog(void* data, const vrpn_ANALOGCB analog ) {
     VRPN_device* dev = (VRPN_device*)data;
     for (int i=0; i<analog.num_channel; i++) {
+        if (dev->verbose) VRGuiManager::get()->getConsole("Tracking")->write("vrpn handle_analog channel "+toString(i)+" state "+toString(analog.channel[i])+"\n");
         dev->change_slider(i+100, analog.channel[i]);
-        cout << "handle_analog " << i << " " << analog.channel[i] << endl;
     }
 }
 
@@ -121,7 +118,8 @@ void VRPN_device::setAddress(string addr) {
 void VRPN_device::setTranslationAxis(Vec3f v) { translate_axis = v; }
 void VRPN_device::setRotationAxis(Vec3f v) { rotation_axis = v; }
 
-void VRPN_device::loop() {
+void VRPN_device::loop(bool verbose) {
+    this->verbose = verbose;
     if (!initialized) setAddress(address);
 
     if (tracker) tracker->mainloop();
@@ -144,6 +142,7 @@ VRPN::VRPN() {
     storeMap("Tracker", &devices);
     store("active", &active);
     store("port", &port);
+    store("verbose", &verbose);
 }
 
 VRPN::~VRPN() {
@@ -153,8 +152,8 @@ VRPN::~VRPN() {
 void VRPN::update_t(VRThread* thread) {}
 void VRPN::update() {
     if (!active) return;
-    //if (verbose) VRGuiManager::get()->printToConsole("Tracking", "vrpn devices: "+toString(devices.size())+"\n");
-    for (auto tr : devices) tr.second->loop();
+    if (verbose) VRGuiManager::get()->getConsole("Tracking")->write("vrpn devices: "+toString(devices.size())+"\n");
+    for (auto tr : devices) tr.second->loop(verbose);
 }
 
 void VRPN::setVRPNVerbose(bool b) { verbose = b; }
