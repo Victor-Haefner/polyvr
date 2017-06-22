@@ -92,14 +92,15 @@ void VRAvatar::enableAvatar(string avatar) { if (avatars.count(avatar)) avatars[
 void VRAvatar::disableAvatar(string avatar) { if (avatars.count(avatar)) avatars[avatar]->hide(); }
 
 VRTransformPtr VRAvatar::getBeacon() { return deviceRoot; }
-VRTransformPtr VRAvatar::editBeacon() { return tmpContainer; }
+VRTransformPtr VRAvatar::editBeacon() { return tmpContainer?tmpContainer:deviceRoot; }
 void VRAvatar::setBeacon(VRTransformPtr b) {
     deviceRoot = b;
+    tmpContainer = 0;
     for (auto a : avatars) a.second->switchParent(b);
 }
 
 void VRAvatar::updateBeacon() {
-    deviceRoot->setMatrix(tmpContainer->getMatrix()); // TODO: may need world matrix here
+    if (tmpContainer) deviceRoot->setMatrix(tmpContainer->getMatrix()); // TODO: may need world matrix here
 }
 
 OSG_END_NAMESPACE;

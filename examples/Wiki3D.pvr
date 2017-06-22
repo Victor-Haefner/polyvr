@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="Wiki3D" name_space="Scene" loading_time="1673">
+<Scene name_suffix="0" base_name="Wiki3D" name_space="Scene" loading_time="9814">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
-        <Object accept_root="1" aspect="1" at="0.0584457 0.0257332 2.38419e-07" at_dir="0" base_name="Default" far="512" fov="1.0472" from="4.20889 2.10068 5.57791" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="-4.48792 0.889629 -2.1459" at_dir="1" base_name="Default" far="512" fov="1.0472" from="-0.337477 0.889629 3.43201" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 0.999999 0" visible="1">
           <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
             <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
@@ -77,7 +77,7 @@
   </Scripts>
   <Sockets persistency="666"/>
   <Background color="0 0 0" format=".png" path="" persistency="666" type="0"/>
-  <Navigation active="Orbit" persistency="666"/>
+  <Navigation active="FlyWalk" persistency="666"/>
   <Materials persistency="666"/>
   <Semantics persistency="666"/>
 </Scene>
