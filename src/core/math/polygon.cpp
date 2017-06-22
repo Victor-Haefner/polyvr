@@ -269,7 +269,9 @@ vector< PolygonPtr > Polygon::gridSplit(float G) {
     for (int i=0; i<squares.size(); i++) {
         if (squarePointsMap.count(i)) continue; // intersects polygon, skip
         auto s = squares[i];
+        cout << " check square if " << i << " is inside polygon, s " << s << endl;
         if (self->isInside(Vec2f(s)*G)) { // at least one corner in area
+            cout << "  square is inside! " << Vec2f(s)*G << " is inside polygon" << endl;
             res.push_back( squareToPolygon(s) ); // add square to chunks
         }
     }
@@ -285,24 +287,13 @@ vector< PolygonPtr > Polygon::gridSplit(float G) {
     for (auto s : squarePointsMap) {
         auto p = create();
         Vec2f square = Vec2f(squares[s.first]) * G;
+        map<float, int> borderPnts; // key from -pi to pi
 
         auto compAngle = [&](Vec2f pnt) {
             float a = atan2(pnt[0]-square[0]-0.5*G, pnt[1]-square[1]-0.5*G); // angle
             //cout << "      compAngle p " << pnt << " a " << a << endl;
             return a;
         };
-
-        map<float, int> borderPnts; // key from -pi to pi
-        for (auto i : s.second) {
-            auto pnt = self->getPoint(i);
-            if (isOnGrid(pnt)) borderPnts[ compAngle(pnt) ] = i;
-        }
-
-        // add corner points to borderpoints
-        for (int i=-1; i>=-4; i--) {
-            auto pnt = cornerPoints[i];
-            borderPnts[ compAngle(pnt + square) ] = i;
-        }
 
         auto getSquarePoint = [&](int i) {
             if (i == -5) { cout << "AAARGH a -5!" << endl; return Vec2f(); };
@@ -370,6 +361,22 @@ vector< PolygonPtr > Polygon::gridSplit(float G) {
 
             return -5; // invalid pnt
         };
+
+        for (auto i : s.second) {
+            auto pnt = self->getPoint(i);
+            if (isOnGrid(pnt)) borderPnts[ compAngle(pnt) ] = i;
+        }
+
+        // add corner points to borderpoints
+        for (int i=-1; i>=-4; i--) {
+            auto pnt = cornerPoints[i];
+            //if (!self->isInside(pnt)) continue;
+            float a = compAngle(pnt + square);
+            bool skip = false;
+            for (auto A : borderPnts) if (abs(A.first-a) < 1e-6) { skip = true; break; }
+            if (skip) continue;
+            borderPnts[ a ] = i;
+        }
 
         int iMax = 0;
         int i0 = s.second[0]; // first point
@@ -447,7 +454,11 @@ bool Polygon::isInside(Vec2f p) {
         Vec2f d = p2 - p1;
 
         // check if on the line
-        if ( abs( (p[1]-p1[1]) * d[0] - (p[0]-p1[0]) * d[1] ) < eps) return true;
+        float cross = (p[1]-p1[1])*d[0] - (p[0]-p1[0])*d[1];
+        if ( abs( cross ) < eps ) {
+            float dot = (p-p1).dot(d);
+            if (dot >= -eps && dot < d.squareLength()+eps) return true;
+        }
 
         // lines defined as (a,b,c) where ax + by + c = 0
         /*Vec3f Us(d[1], -d[0], d[0]*p1[1] - d[1]*p1[0]);
@@ -472,6 +483,7 @@ bool Polygon::isInside(Vec2f p) {
         if (b < -eps) continue;
         K += 1;
     }
+
     return (K%2 == 1);
 }
 
