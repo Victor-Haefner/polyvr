@@ -5,7 +5,6 @@
 #include "core/objects/geometry/VRSprite.h"
 
 struct VRPySprite : VRPyBaseT<OSG::VRSprite> {
-    static PyMemberDef members[];
     static PyMethodDef methods[];
 
     static PyObject* getText(VRPySprite* self);

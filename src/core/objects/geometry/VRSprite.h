@@ -39,6 +39,8 @@ class VRSprite : public VRGeometry {
 
         Vec2f getSize();
         string getLabel();
+
+        void convertToCloth();
 };
 
 OSG_END_NAMESPACE;

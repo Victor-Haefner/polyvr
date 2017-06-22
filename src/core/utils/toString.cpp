@@ -169,6 +169,7 @@ template<> string typeName(const string& t) { return "string"; }
 template<> string typeName(const int& t) { return "int"; }
 template<> string typeName(const float& t) { return "float"; }
 template<> string typeName(const bool& t) { return "bool"; }
+template<> string typeName(const Vec2f& t) { return "Vec2f"; }
 template<> string typeName(const Vec3f& t) { return "Vec3f"; }
 template<> string typeName(const Vec4f& t) { return "Vec4f"; }
 template<> string typeName(const Color4f& t) { return "Vec4f"; }

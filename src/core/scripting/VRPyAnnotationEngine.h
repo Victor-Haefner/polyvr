@@ -12,6 +12,7 @@ struct VRPyAnnotationEngine : VRPyBaseT<OSG::VRAnnotationEngine> {
     static PyObject* setSize(VRPyAnnotationEngine* self, PyObject* args);
     static PyObject* setColor(VRPyAnnotationEngine* self, PyObject* args);
     static PyObject* setBackground(VRPyAnnotationEngine* self, PyObject* args);
+    static PyObject* setBillboard(VRPyAnnotationEngine* self, PyObject* args);
 };
 
 #endif // VRPYANNOTATIONENGINE_H_INCLUDED

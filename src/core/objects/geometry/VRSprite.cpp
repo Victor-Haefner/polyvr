@@ -3,6 +3,8 @@
 #include "core/tools/VRText.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/OSGGeometry.h"
+#include "core/objects/geometry/VRPhysics.h"
+#include "core/objects/geometry/VRGeoData.h"
 #include "core/setup/VRSetup.h"
 #include "addons/CEF/CEF.h"
 #include <OpenSG/OSGNameAttachment.h>
@@ -20,43 +22,28 @@ VRSprite::VRSprite (string name, bool alpha, float w, float h) : VRGeometry(name
     type = "Sprite";
     fontColor = Color4f(0,0,0,255);
     backColor = Color4f(0,0,0,0);
-    updateGeo();
 }
 
 VRSprite::~VRSprite() {}
 
-VRSpritePtr VRSprite::create(string name, bool alpha, float w, float h) { return shared_ptr<VRSprite>(new VRSprite(name, alpha, w, h) ); }
+VRSpritePtr VRSprite::create(string name, bool alpha, float w, float h) {
+    auto s = shared_ptr<VRSprite>(new VRSprite(name, alpha, w, h) );
+    s->updateGeo();
+    return s;
+}
+
 VRSpritePtr VRSprite::ptr() { return static_pointer_cast<VRSprite>( shared_from_this() ); }
 
 void VRSprite::updateGeo() {
-    //setMesh(makePlaneGeo(width, height, 1, 1));
-    GeoPnt3fPropertyRecPtr      pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyRecPtr      norms = GeoVec3fProperty::create();
-    GeoVec2fPropertyRefPtr      texs = GeoVec2fProperty::create();
-    GeoUInt32PropertyRecPtr     inds = GeoUInt32Property::create();
-
+    VRGeoData data;
     float w2 = width*0.5;
     float h2 = height*0.5;
-    pos->addValue(Pnt3f(-w2,h2,0));
-    pos->addValue(Pnt3f(-w2,-h2,0));
-    pos->addValue(Pnt3f(w2,-h2,0));
-    pos->addValue(Pnt3f(w2,h2,0));
-
-    texs->addValue(Vec2f(0,1));
-    texs->addValue(Vec2f(0,0));
-    texs->addValue(Vec2f(1,0));
-    texs->addValue(Vec2f(1,1));
-
-    for (int i=0; i<4; i++) {
-        norms->addValue(Vec3f(0,0,1));
-        inds->addValue(i);
-    }
-
-    setType(GL_QUADS);
-    setPositions(pos);
-    setNormals(norms);
-    setTexCoords(texs);
-    setIndices(inds);
+    data.pushVert(Pnt3f(-w2,h2,0), Vec3f(0,0,1), Vec2f(0,1));
+    data.pushVert(Pnt3f(-w2,-h2,0), Vec3f(0,0,1), Vec2f(0,0));
+    data.pushVert(Pnt3f(w2,-h2,0), Vec3f(0,0,1), Vec2f(1,0));
+    data.pushVert(Pnt3f(w2,h2,0), Vec3f(0,0,1), Vec2f(1,1));
+    data.pushQuad();
+    data.apply(ptr());
 }
 
 void VRSprite::setLabel (string l, float res) {
@@ -104,6 +91,13 @@ void VRSprite::setSize(float w, float h) {
     width = w;
     height = h;
     updateGeo();
+}
+
+void VRSprite::convertToCloth() {
+    getPhysics()->setDynamic(true);
+    getPhysics()->setShape("Cloth");
+    getPhysics()->setSoft(true);
+    getPhysics()->setPhysicalized(true);
 }
 
 OSG_END_NAMESPACE;

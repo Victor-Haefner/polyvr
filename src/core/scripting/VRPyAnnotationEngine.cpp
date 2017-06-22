@@ -11,8 +11,14 @@ PyMethodDef VRPyAnnotationEngine::methods[] = {
     {"setSize", (PyCFunction)VRPyAnnotationEngine::setSize, METH_VARARGS, "Set font height - setSize( float )" },
     {"setColor", (PyCFunction)VRPyAnnotationEngine::setColor, METH_VARARGS, "Set font color - setColor( [r,g,b,a] )" },
     {"setBackground", (PyCFunction)VRPyAnnotationEngine::setBackground, METH_VARARGS, "Set background color - setBackground( [r,g,b,a] )" },
+    {"setBillboard", (PyCFunction)VRPyAnnotationEngine::setBillboard, METH_VARARGS, "Set billboard - setBillboard( bool )" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyAnnotationEngine::setBillboard(VRPyAnnotationEngine* self, PyObject* args) {
+    self->objPtr->setBillboard(parseBool(args));
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyAnnotationEngine::setSize(VRPyAnnotationEngine* self, PyObject* args) {
     self->objPtr->setSize(parseFloat(args));
