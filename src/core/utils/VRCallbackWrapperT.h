@@ -83,7 +83,7 @@ struct VRCallbackWrapperT<P, U, R (T::*)(Args...)> : public VRCallbackWrapper<P>
     bool call(T* obj, const vector<P>& params, R& r, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(1);
         CW_GET_VALUE(0,A,a);
-        r = (obj->*callback)(); return true;
+        r = (obj->*callback)( a ); return true;
     }
 
     template<class O, class A, class B>

@@ -137,10 +137,10 @@ vector<Vec3f> Polygon::getRandomPoints(float density, float padding) {
 
 vector< PolygonPtr > Polygon::gridSplit(float G) {
     auto inSquare = [&](Vec2f p, Vec2i s) {
-        if (p[0] < s[0]*G) return false;
-        if (p[1] < s[1]*G) return false;
-        if (p[0] > (s[0]+1)*G) return false;
-        if (p[1] > (s[1]+1)*G) return false;
+        if (p[0] < s[0]*G - 1e-6) return false;
+        if (p[1] < s[1]*G - 1e-6) return false;
+        if (p[0] > (s[0]+1)*G + 1e-6) return false;
+        if (p[1] > (s[1]+1)*G + 1e-6) return false;
         return true;
     };
 
@@ -183,7 +183,7 @@ vector< PolygonPtr > Polygon::gridSplit(float G) {
         if (abs(d[1]) > 0) {
             for (auto y : Y) { // intersection with vertical grid lines
                 float t = (y - p1[1]) /d[1];
-                if (t == 0 || t == 1) continue;
+                if (t <= 0 || t >= 1) continue;
                 iPnts[t] = p1 + d*t;
             }
         }
@@ -191,7 +191,7 @@ vector< PolygonPtr > Polygon::gridSplit(float G) {
         if (abs(d[0]) > 0) {
             for (auto x : X) { // intersection with horizontal grid lines
                 float t = (x - p1[0]) /d[0];
-                if (t == 0 || t == 1) continue;
+                if (t <= 0 || t >= 1) continue;
                 iPnts[t] = p1 + d*t;
             }
         }
@@ -203,9 +203,16 @@ vector< PolygonPtr > Polygon::gridSplit(float G) {
 
     auto isOnGrid = [&](Vec2f p) {
         p *= 1.0/G;
-        if (abs(p[0] - int(p[0])) < 1e-6) return true;
-        if (abs(p[1] - int(p[1])) < 1e-6) return true;
+        if (abs(p[0] - round(p[0])) < 1e-6) return true;
+        if (abs(p[1] - round(p[1])) < 1e-6) return true;
         return false;
+    };
+
+    auto samePoint = [&](Vec2f p1, Vec2f p2) {
+        Vec2f d = p2-p1;
+        if (abs(d[0]) > 1e-6) return false;
+        if (abs(d[1]) > 1e-6) return false;
+        return true;
     };
 
     vector<PolygonPtr> res;
@@ -219,15 +226,34 @@ vector< PolygonPtr > Polygon::gridSplit(float G) {
     for (int i=0; i<size(); i++) {
         auto p1 = points[i];
         auto p2 = points[(i+1)%size()];
-        if (i == 0) self->addPoint(p1);
-        for (auto p : getSegmentGridPnts(p1, p2) ) if (p != p1 && p != p2) self->addPoint(p);
-        self->addPoint(p2);
+        cout << " process segment " << p1 << "  to  " << p2 << endl;
+        if (i == 0) {
+            cout << "  add segment pnt " << p1 << endl;
+            self->addPoint(p1);
+        }
+        Vec2f pl = p1;
+        for (auto p : getSegmentGridPnts(p1, p2) ) {
+            if (!samePoint(p,p1) && !samePoint(p,p2) && !samePoint(p,pl)) {
+                cout << "  add segment grid pnt " << p << endl;
+                self->addPoint(p);
+                pl = p;
+            }
+        }
+        if (i != size()-1) {
+            cout << "  add segment pnt " << p2 << endl;
+            self->addPoint(p2);
+        }
     }
 
     // get all grid squares touching the area bounding box
     auto bb = self->getBoundingBox();
-    for (auto j : getBBGridPnts(bb))
-        for (auto i : j.second) squares.push_back(i.second);
+    //cout << " poly BB min " << bb.min() << " max " << bb.max() << endl;
+    for (auto j : getBBGridPnts(bb)) {
+        for (auto i : j.second) {
+            //cout << "  add square " << squares.size() << " at " << i.second << endl;
+            squares.push_back(i.second);
+        }
+    }
 
     // get all grid squares touching each point
     for (int i=0; i<self->points.size(); i++) {
@@ -255,14 +281,14 @@ vector< PolygonPtr > Polygon::gridSplit(float G) {
     cornerPoints[-4] = Vec2f(G,G);
 
     // get all grid squares partly in polygon
-    cout << "!gridSplit!" << endl;
+    cout << "GridSplit N squares: " << squares.size() << endl;
     for (auto s : squarePointsMap) {
         auto p = create();
         Vec2f square = Vec2f(squares[s.first]) * G;
 
         auto compAngle = [&](Vec2f pnt) {
             float a = atan2(pnt[0]-square[0]-0.5*G, pnt[1]-square[1]-0.5*G); // angle
-            cout << "      compAngle p " << pnt << " a " << a << endl;
+            //cout << "      compAngle p " << pnt << " a " << a << endl;
             return a;
         };
 
@@ -281,22 +307,12 @@ vector< PolygonPtr > Polygon::gridSplit(float G) {
         auto getSquarePoint = [&](int i) {
             if (i == -5) { cout << "AAARGH a -5!" << endl; return Vec2f(); };
             if (i < 0) return cornerPoints[i] + square;
-            if (i >= 0) return self->getPoint(i);
+            else return self->getPoint(i);
         };
 
         auto getNextBorderPoint = [&](float t, int i_1, int i) {
             int p1 = -5;
             int p2 = -5;
-
-            /*float d1 = 1e6;
-            float d2 = 1e6;
-            for (auto pnt : borderPnts) { // get the two closest points before and after!
-                float tp = pnt.first;
-                float dt = tp-t;
-                if (dt )
-                if (dt < 0 && abs(dt) < d1) { d1 = abs(dt); p1 = pnt.second; }
-                if (dt > 0 && abs(dt) < d2) { d2 = abs(dt); p2 = pnt.second; }
-            }*/
 
             for(auto it = borderPnts.begin(); it != borderPnts.end(); it++) {
                 if (abs(it->first-t) < 1e-6) { // found point
@@ -312,9 +328,15 @@ vector< PolygonPtr > Polygon::gridSplit(float G) {
             auto pnt1 = getSquarePoint(p1);
             auto pnt2 = getSquarePoint(p2);
 
-            cout << "   getNextBorderPoint t " << t << "  p1 " << p1 << "  p2 " << p2 << endl;
-            if (self->isInside(pnt1) && i_1 != p1 && i != p1) return p1;
-            if (self->isInside(pnt2) && i_1 != p2 && i != p2) return p2;
+            cout << "   getNextBorderPoint t " << t << "  p1 " << p1 << "  p2 " << p2 << " p1Inside " << self->isInside(pnt1) << " p2Inside " << self->isInside(pnt2) << endl;
+            if (self->isInside(pnt1) && i_1 != p1 && i != p1) {
+                cout << "    found p1 " << p1 << " p " << getSquarePoint(p1) << endl;
+                return p1;
+            }
+            if (self->isInside(pnt2) && i_1 != p2 && i != p2) {
+                cout << "    found p2 " << p2 << " p " << getSquarePoint(p2) << endl;
+                return p2;
+            }
             return -5; // invalid pnt
         };
 
@@ -329,7 +351,7 @@ vector< PolygonPtr > Polygon::gridSplit(float G) {
                 if (isOnGrid(pnt) && isOnGrid(pnt_1)) {
                     for (auto k : s.second) {
                         if (j == i) {
-                            cout << "    found k " << k << endl;
+                            cout << "    found k " << k << " p " << getSquarePoint(k) << endl;
                             return k; // last point is the one searched!
                         }
                         j = k;
@@ -340,7 +362,7 @@ vector< PolygonPtr > Polygon::gridSplit(float G) {
 
             for (auto k : s.second) {
                 if (j == i) {
-                    cout << "    found k " << k << endl;
+                    cout << "    found k " << k << " p " << getSquarePoint(k) << endl;
                     return k; // last point is the one searched!
                 }
                 j = k;
@@ -412,20 +434,42 @@ void Polygon::close() {
 
 bool Polygon::isInside(Vec2f p) {
     if (points.size() <= 1) return false;
-    // cast ray in +x from p and intersect all lines
+    // cast ray from p and intersect all lines
     int K = 0;
     int N = points.size();
-    Vec2f eps = Vec2f(1e-6, 1e-6); // avoid problems at corners and edges
+    //Vec2f r = Vec2f(1.0/17, 1.0/29);
+    //r.normalize();
+    float eps = 1e-6; // avoid problems at corners and edges
+
     for (int i=0; i<N; i++) {
-        Vec2f p1 = points[i]+eps;
-        Vec2f p2 = points[(i+1)%N]+eps;
+        Vec2f p1 = points[i];
+        Vec2f p2 = points[(i+1)%N];
         Vec2f d = p2 - p1;
+
+        // check if on the line
+        if ( abs( (p[1]-p1[1]) * d[0] - (p[0]-p1[0]) * d[1] ) < eps) return true;
+
+        // lines defined as (a,b,c) where ax + by + c = 0
+        /*Vec3f Us(d[1], -d[0], d[0]*p1[1] - d[1]*p1[0]);
+        Vec3f Ur(r[1], -r[0], r[0]*p[1] - r[1]*p[0]);
+        Vec3f I3 = Us.cross(Ur);
+
+        if (abs(I3[2]) < eps) continue; // lines parallel ?
+        Vec2f I(I3[0]/I3[2], I3[1]/I3[2]); // intersection of lines
+
+        // check if intersecting segment
+        float a = (I-p1).dot(d);
+        if (a < eps || a > d.squareLength()-eps) continue;
+
+        // check if point in front of p (dont intersect behind!)
+        if ((I-p).dot(r) < 0) continue;*/
+
+        if (d[1] == 0) continue;
         float a = (p[1] - p1[1]) / d[1];
-        if (a < 0 || a > 1) continue;
-        if (a != a) continue; // nan
+        if (a < -eps || a > 1+eps) continue;
         float b = p1[0] - p[0] + d[0]*a;
-        if (b != b) continue; // nan
-        if (b < 0) continue;
+        if (b != b) continue;
+        if (b < -eps) continue;
         K += 1;
     }
     return (K%2 == 1);

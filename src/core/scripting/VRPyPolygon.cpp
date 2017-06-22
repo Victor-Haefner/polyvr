@@ -15,6 +15,7 @@ PyMethodDef VRPyPolygon::methods[] = {
     {"set", (PyCFunction)VRPyPolygon::set, METH_VARARGS, "Set the Polygon from a list of points - set( [[x,y]] )" },
     {"clear", (PyCFunction)VRPyPolygon::clear, METH_NOARGS, "Clear all points - clear()" },
     {"getRandomPoints", (PyCFunction)VRPyPolygon::getRandomPoints, METH_VARARGS, "Clear all points - getRandomPoints( | float density, float padding)" },
+    {"isInside", PyWrap2(Polygon, isInside, "Check if point is inside polygon", bool, Vec2f) },
     {NULL}  /* Sentinel */
 };
 
