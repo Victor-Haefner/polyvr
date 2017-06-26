@@ -206,30 +206,35 @@ void VRSceneManager::update() {
     VRGuiManager::get()->updateGtk();
     VRGlobals::GTK1_FRAME_RATE.update(t1);
     //VRGuiManager::get()->startThreadedUpdate();
+    VRGlobals::UPDATE_LOOP1.update(timer);
 
     VRTimer t4; t4.start();
     updateCallbacks();
     VRGlobals::SMCALLBACKS_FRAME_RATE.update(t4);
+    VRGlobals::UPDATE_LOOP2.update(timer);
 
     VRTimer t5; t5.start();
     auto setup = VRSetup::getCurrent();
     if (setup) setup->updateTracking(); // tracking
     if (setup) setup->updateDevices(); // device beacon update
     VRGlobals::SMCALLBACKS_FRAME_RATE.update(t5);
+    VRGlobals::UPDATE_LOOP3.update(timer);
 
     VRTimer t6; t6.start();
     updateScene();
     VRGlobals::SCRIPTS_FRAME_RATE.update(t6);
+    VRGlobals::UPDATE_LOOP4.update(timer);
 
     if (setup) {
         VRTimer t2; t2.start();
         setup->updateWindows(); //rendering
         VRGlobals::WINDOWS_FRAME_RATE.update(t2);
+        VRGlobals::UPDATE_LOOP5.update(timer);
         VRGuiManager::get()->updateGtk();
+        VRGlobals::UPDATE_LOOP6.update(timer);
     }
 
     if (current) current->allowScriptThreads();
-
 
     // statistics
     VRGlobals::CURRENT_FRAME++;
@@ -237,6 +242,7 @@ void VRSceneManager::update() {
     VRTimer t7; t7.start();
     osgSleep(max(16-timer.stop(),0));
     VRGlobals::SLEEP_FRAME_RATE.update(t7);
+    VRGlobals::UPDATE_LOOP7.update(timer);
 }
 
 OSG_END_NAMESPACE

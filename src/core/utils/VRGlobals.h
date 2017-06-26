@@ -37,6 +37,14 @@ class VRGlobals {
         static FPS SETUP_FRAME_RATE;
         static FPS SCRIPTS_FRAME_RATE;
         static FPS PHYSICS_FRAME_RATE;
+
+        static FPS UPDATE_LOOP1;
+        static FPS UPDATE_LOOP2;
+        static FPS UPDATE_LOOP3;
+        static FPS UPDATE_LOOP4;
+        static FPS UPDATE_LOOP5;
+        static FPS UPDATE_LOOP6;
+        static FPS UPDATE_LOOP7;
 };
 
 OSG_END_NAMESPACE;
