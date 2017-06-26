@@ -118,8 +118,8 @@ PyObject* VRSceneGlobals::exit(VRSceneGlobals* self) {
 
 PyObject* VRSceneGlobals::find(VRSceneGlobals* self, PyObject *args) {
     string name = parseString(args);
-    if (auto res = VRScene::getCurrent()->getRoot()->find(name)) return VRPyTypeCaster::cast(res);
     if (auto res = VRSetup::getCurrent()->getDevice(name)) return VRPyTypeCaster::cast(res);
+    if (auto res = VRScene::getCurrent()->getRoot()->find(name)) return VRPyTypeCaster::cast(res);
     Py_RETURN_NONE;
 }
 
