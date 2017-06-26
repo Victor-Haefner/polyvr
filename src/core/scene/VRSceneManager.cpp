@@ -227,10 +227,10 @@ void VRSceneManager::update() {
 
     if (setup) {
         VRTimer t2; t2.start();
-        setup->updateWindows(); //rendering
+        setup->updateWindows(); // remote windows rendering
         VRGlobals::WINDOWS_FRAME_RATE.update(t2);
         VRGlobals::UPDATE_LOOP5.update(timer);
-        VRGuiManager::get()->updateGtk();
+        VRGuiManager::get()->updateGtk(); // local window rendering
         VRGlobals::UPDATE_LOOP6.update(timer);
     }
 

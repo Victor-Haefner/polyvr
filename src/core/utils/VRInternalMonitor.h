@@ -15,6 +15,7 @@ class VRInternalMonitor {
         typedef VRFunction<string&> varFkt;
         map<string, varFkt*> varFkts;
         VRInternalMonitor();
+        bool doUpdate = false;
 
     public:
         ~VRInternalMonitor();

@@ -33,6 +33,7 @@ void VRInternalMonitor::add( string name, VRFunction<string&>* fkt ) {
 }
 
 void VRInternalMonitor::update() {
+    if (!doUpdate) return;
     string val;
     for(auto var : varFkts) (*var.second)(val);
 }
@@ -40,6 +41,7 @@ void VRInternalMonitor::update() {
 map<string, string> VRInternalMonitor::getVariables() {
     string val;
     map<string, string> m;
+    if (!doUpdate) return m;
     for(auto var : varFkts) {
         (*var.second)(val);
         m[var.first] = val;
