@@ -146,15 +146,16 @@ void setGeometry(VRGeometryPtr g) {
     setExpanderSensitivity("expander16", true);
     VRMaterialPtr mat = g->getMaterial();
 
-    bool lit = true;
+    bool lit = false;
     Color3f _cd, _cs, _ca;
     if (mat) {
+        setLabel("label60", mat->getName());
         _cd = mat->getDiffuse();
         _cs = mat->getSpecular();
         _ca = mat->getAmbient();
         lit = mat->isLit();
     } else {
-        _cd = _cs = _ca = Color3f();
+        setLabel("label60", "NONE");
     }
 
     setColorChooserColor("mat_diffuse", _cd);
