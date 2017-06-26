@@ -198,7 +198,7 @@ void VRWoods::remTree(int id) {
     computeLODs(aLeafs);
 }
 
-VRTransformPtr VRWoods::addGrassPatch(PolygonPtr area, bool updateLODs) {
+VRTransformPtr VRWoods::addGrassPatch(VRPolygonPtr area, bool updateLODs) {
     Vec3f median = area->getBoundingBox().center();
     area->translate(-median);
     auto grass = VRGrassPatch::create();

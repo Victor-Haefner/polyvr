@@ -29,7 +29,7 @@ void ModuleTerrain::loadBbox(MapGrid::Box bbox) {
         for (auto mat : terrainList) {
             if (way->tags[mat->k] == mat->v) {
                 if (meshes.count(way->id)) continue;
-                // load Polygons from osmMap
+                // load VRPolygons from osmMap
                 Terrain* ter = new Terrain(way->id);
                 for (string nodeId : way->nodeRefs) {
                     OSMNode* node = osmMap->osmNodeMap[nodeId];
@@ -137,7 +137,7 @@ void ModuleTerrain::addTerrain(string texture, string key, string value, int hei
 }
 
 void ModuleTerrain::addTerrain(Terrain* ter, VRGeoData* gdTerrain, int height){
-    //create && fill vector a with Polygon corners
+    //create && fill vector a with VRPolygon corners
     Vector2dVector a;
     bool first = true;
     for (Vec2f corner : ter->getCorners()) {
@@ -148,7 +148,7 @@ void ModuleTerrain::addTerrain(Terrain* ter, VRGeoData* gdTerrain, int height){
     // allocate an STL vector to hold the answer.
     Vector2dVector result;
 
-    //  Invoke the triangulator to triangulate this Polygon.
+    //  Invoke the triangulator to triangulate this VRPolygon.
     Triangulate::Process(a,result);
 
     int tcount = result.size()/3;

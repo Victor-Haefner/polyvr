@@ -13,12 +13,12 @@ class frustum {
     private:
         pose trans;
         vector<Vec3f> directions;
-        Polygon profile;
+        VRPolygon profile;
         bool convex = false;
         Vec2f near_far;
 
         void computeProfile();
-        frustum fromProfile(Polygon p, pose t);
+        frustum fromProfile(VRPolygon p, pose t);
 
     public:
         frustum();

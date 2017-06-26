@@ -52,7 +52,7 @@ void VRGrassPatch::initLOD() {
     }
 }
 
-void VRGrassPatch::setArea(PolygonPtr p) {
+void VRGrassPatch::setArea(VRPolygonPtr p) {
     area = p;
     chunks = p->gridSplit(1.0);
     setupGrassMaterial();
@@ -118,7 +118,7 @@ void VRGrassPatch::addGrassBlade(VRGeoData& data, Vec3f pos, float a, float dh, 
     if (lvl >= 2) data.pushTri(N,N+1,N+2);
 }
 
-void VRGrassPatch::createPatch(VRGeoData& data, PolygonPtr area, int lvl, int density) {
+void VRGrassPatch::createPatch(VRGeoData& data, VRPolygonPtr area, int lvl, int density) {
     for (auto pos : area->getRandomPoints(density*1.0/(lvl+1), 0)) {
         float a = 2*pi*float(rand())/RAND_MAX;
         float dh = 0.5 + 0.5*float(rand())/RAND_MAX;
@@ -145,7 +145,7 @@ void VRGrassPatch::setupGrassStage() {
     if (texRenderer) return;
 
     float W = 0.2;
-    auto area2 = Polygon::create();
+    auto area2 = VRPolygon::create();
     area2->addPoint(Vec2f(-W, -W));
     area2->addPoint(Vec2f( W, -W));
     area2->addPoint(Vec2f( W,  W));
@@ -177,10 +177,10 @@ void VRGrassPatch::setupGrassStage() {
     matGrassSide->setLit(false);
 }
 
-VRMaterialPtr VRGrassPatch::getGrassMaterial() { return matGrass; }
+VRMaterialPtr VRGrassPatch::getGrassMaterial() { setupGrassMaterial(); return matGrass; }
 VRMaterialPtr VRGrassPatch::getGrassSideMaterial() { return matGrassSide; }
 
-void VRGrassPatch::createSpriteLOD(VRGeoData& data, PolygonPtr area, int lvl) {
+void VRGrassPatch::createSpriteLOD(VRGeoData& data, VRPolygonPtr area, int lvl) {
     float W = 1.0*lvl;
     float H = 0.5;
     float d = 10/lvl;

@@ -4,7 +4,7 @@
 #include "core/math/polygon.h"
 #include "core/scripting/VRPyBase.h"
 
-struct VRPyPolygon : VRPyBaseT<OSG::Polygon> {
+struct VRPyPolygon : VRPyBaseT<OSG::VRPolygon> {
     static PyMethodDef methods[];
 
     static PyObject* addPoint(VRPyPolygon* self, PyObject *args);

@@ -87,7 +87,7 @@ void VRTextureGenerator::drawPath(pathPtr p, Vec4f c, float w) {
     layers.push_back(l);
 }
 
-void VRTextureGenerator::drawPolygon(PolygonPtr p, Vec4f c, float h) {
+void VRTextureGenerator::drawVRPolygon(VRPolygonPtr p, Vec4f c, float h) {
     Layer l;
     l.type = POLYGON;
     l.pgon = p;
@@ -309,16 +309,16 @@ void VRTextureGenerator::applyPath(Vec4f* data, pathPtr p, Vec4f c, float w) {
         Vec2f A2 = Vec2f(p2.pos()-p2.x()*w*0.5);
         Vec2f B2 = Vec2f(p2.pos()+p2.x()*w*0.5);
 
-        auto poly = Polygon::create();
+        auto poly = VRPolygon::create();
         poly->addPoint(A1);
         poly->addPoint(B1);
         poly->addPoint(B2);
         poly->addPoint(A2);
-        applyPolygon(data,poly,c,0);
+        applyVRPolygon(data,poly,c,0);
     }
 }
 
-void VRTextureGenerator::applyPolygon(Vec3f* data, PolygonPtr p, Vec4f c, float h) {
+void VRTextureGenerator::applyVRPolygon(Vec3f* data, VRPolygonPtr p, Vec4f c, float h) {
     auto bb = p->getBoundingBox();
     Vec3f a = bb.min();
     Vec3f b = bb.max();
@@ -334,7 +334,7 @@ void VRTextureGenerator::applyPolygon(Vec3f* data, PolygonPtr p, Vec4f c, float 
     }
 }
 
-void VRTextureGenerator::applyPolygon(Vec4f* data, PolygonPtr p, Vec4f c, float h) {
+void VRTextureGenerator::applyVRPolygon(Vec4f* data, VRPolygonPtr p, Vec4f c, float h) {
     auto bb = p->getBoundingBox();
     Vec3f a = bb.min(); swap(a[1], a[2]);
     Vec3f b = bb.max(); swap(b[1], b[2]);
@@ -368,7 +368,7 @@ VRTexturePtr VRTextureGenerator::compose(int seed) {
             if (l.type == FILL) applyFill(data3, l.c41);
             if (l.type == PIXEL) applyPixel(data3, l.p1, l.c41);
             if (l.type == PATH) applyPath(data3, l.p, l.c41, l.amount);
-            if (l.type == POLYGON) applyPolygon(data3, l.pgon, l.c41, l.amount);
+            if (l.type == POLYGON) applyVRPolygon(data3, l.pgon, l.c41, l.amount);
         }
         if (hasAlpha) {
             if (l.type == BRICKS) VRBricks::apply(data4, dims, l.amount, l.c41, l.c42);
@@ -377,7 +377,7 @@ VRTexturePtr VRTextureGenerator::compose(int seed) {
             if (l.type == FILL) applyFill(data4, l.c41);
             if (l.type == PIXEL) applyPixel(data4, l.p1, l.c41);
             if (l.type == PATH) applyPath(data4, l.p, l.c41, l.amount);
-            if (l.type == POLYGON) applyPolygon(data4, l.pgon, l.c41, l.amount);
+            if (l.type == POLYGON) applyVRPolygon(data4, l.pgon, l.c41, l.amount);
         }
     }
 

@@ -22,9 +22,9 @@
 #define TRIANGULATE_H
 
 /*****************************************************************/
-/** Static class to triangulate any contour/Polygon efficiently **/
+/** Static class to triangulate any contour/VRPolygon efficiently **/
 /** You should replace Vector2d with whatever your own Vector   **/
-/** class might be.  Does not support Polygons with holes.      **/
+/** class might be.  Does not support VRPolygons with holes.      **/
 /** Uses STL vectors to represent a dynamic array of vertices.  **/
 /** This code snippet was submitted to FlipCode.com by          **/
 /** John W. Ratcliff (jratcliff@verant.com) on July 22, 2000    **/
@@ -59,7 +59,7 @@ private:
 };
 
 // Typedef an STL vector of vertices which are used to represent
-// a Polygon/contour && a series of triangles.
+// a VRPolygon/contour && a series of triangles.
 typedef std::vector< Vector2d > Vector2dVector;
 
 
@@ -67,12 +67,12 @@ class Triangulate
 {
 public:
 
-  // triangulate a contour/Polygon, places results in STL vector
+  // triangulate a contour/VRPolygon, places results in STL vector
   // as series of triangles.
   static bool Process(const Vector2dVector &contour,
                       Vector2dVector &result);
 
-  // compute area of a contour/Polygon
+  // compute area of a contour/VRPolygon
   static float Area(const Vector2dVector &contour);
 
   // decide if point Px/Py is inside triangle defined by

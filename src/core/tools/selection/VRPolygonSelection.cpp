@@ -7,11 +7,11 @@
 using namespace OSG;
 
 VRPolygonSelection::VRPolygonSelection() {
-    auto mat = VRMaterial::create("PolygonSelection_mat");
+    auto mat = VRMaterial::create("VRPolygonSelection_mat");
     mat->setDiffuse(Vec3f(0.5,0.5,1));
     mat->setLit(0);
     mat->setLineWidth(3);
-    shape = VRGeometry::create("PolygonSelection");
+    shape = VRGeometry::create("VRPolygonSelection");
     shape->setPersistency(0);
     shape->setMaterial(mat);
     selection.setNearFar(Vec2f(0.1,1000));

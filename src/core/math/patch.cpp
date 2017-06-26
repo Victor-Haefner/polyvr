@@ -11,19 +11,19 @@ using namespace std;
 
 
 template <int S>
-patch::bezPolygon<S>::bezPolygon() {
-    initPolygon();
+patch::bezVRPolygon<S>::bezVRPolygon() {
+    initVRPolygon();
 }
 
 template <int S>
-patch::bezPolygon<S>::~bezPolygon() {
+patch::bezVRPolygon<S>::~bezVRPolygon() {
     delete[] p;
     delete[] n;
     delete[] tex;
 }
 
 template <int S>
-void patch::bezPolygon<S>::initPolygon() {
+void patch::bezVRPolygon<S>::initVRPolygon() {
     geo = 0;
     N = 0;
     wired = false;
@@ -143,7 +143,7 @@ Vec3f patch::reflectInPlane(Vec3f v, Vec3f n) {
     return n;
 }*/
 
-void patch::calcBezQuadPlane(bezPolygon<4>& q) {
+void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
     //schrittweite
     float step = 1./(q.N-1);
 
@@ -287,7 +287,7 @@ void patch::calcBezQuadPlane(bezPolygon<4>& q) {
     }
 }
 
-/*void patch::calcBezTrianglePlane(bezPolygon<3>& q) {
+/*void patch::calcBezTrianglePlane(bezVRPolygon<3>& q) {
     //schrittweite
     float step = 1./(q.N-1);
 
@@ -543,7 +543,7 @@ void patch::calcBezQuadPlane(bezPolygon<4>& q) {
         //n->addChild(drawFaceNormals(geo,0.1));//
         n->setCore(Group::create());
         for (TriangleIterator it = geo->beginTriangles(); it != geo->endTriangles(); ++it) {
-            bezPolygon<3> q;
+            bezVRPolygon<3> q;
             q.N = N;
             q.p[0] = it.getPosition(0);
             q.p[1] = it.getPosition(1);

@@ -140,7 +140,7 @@ class MChain : public MPart {
 
         string dirs;
         CSTATE cstate = WHOLE;
-        vector<Vec3f> Polygon;
+        vector<Vec3f> VRPolygon;
 
         MChain();
         ~MChain();
@@ -149,7 +149,7 @@ class MChain : public MPart {
         void setDirs(string dirs);
         void addDir(char dir);
         void updateGeo();
-        vector<pointPolySegment> toPolygon(Vec3f p);
+        vector<pointPolySegment> toVRPolygon(Vec3f p);
 
         void move();
         void updateNeighbors(vector<MPart*> parts);

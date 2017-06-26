@@ -13,7 +13,7 @@ namespace OSG {
 ptrFwd(VRSelector);
 ptrFwd(VRSelection);
 ptrFwd(VRPatchSelection);
-ptrFwd(VRPolygonSelection);
+ptrFwd(VRVRPolygonSelection);
 
 }
 

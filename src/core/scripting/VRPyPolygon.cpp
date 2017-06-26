@@ -3,19 +3,19 @@
 
 using namespace OSG;
 
-newPyType(Polygon, Polygon, New_ptr);
+newPyType(VRPolygon, Polygon, New_ptr);
 
 PyMethodDef VRPyPolygon::methods[] = {
     {"addPoint", (PyCFunction)VRPyPolygon::addPoint, METH_VARARGS, "Add a point - addPoint([x,y])" },
     {"getPoint", (PyCFunction)VRPyPolygon::getPoint, METH_VARARGS, "Get a point - [x,y] getPoint( int i )" },
     {"getPoints", (PyCFunction)VRPyPolygon::getPoints, METH_NOARGS, "Get the list of points - [[x,y]] getPoints()" },
-    {"getConvexHull", (PyCFunction)VRPyPolygon::getConvexHull, METH_NOARGS, "Get the convex hull - Polygon getConvexHull()" },
-    {"close", (PyCFunction)VRPyPolygon::close, METH_NOARGS, "Close the Polygon - close()" },
+    {"getConvexHull", (PyCFunction)VRPyPolygon::getConvexHull, METH_NOARGS, "Get the convex hull - VRPolygon getConvexHull()" },
+    {"close", (PyCFunction)VRPyPolygon::close, METH_NOARGS, "Close the VRPolygon - close()" },
     {"size", (PyCFunction)VRPyPolygon::size, METH_NOARGS, "Get the number of points - int size()" },
-    {"set", (PyCFunction)VRPyPolygon::set, METH_VARARGS, "Set the Polygon from a list of points - set( [[x,y]] )" },
+    {"set", (PyCFunction)VRPyPolygon::set, METH_VARARGS, "Set the VRPolygon from a list of points - set( [[x,y]] )" },
     {"clear", (PyCFunction)VRPyPolygon::clear, METH_NOARGS, "Clear all points - clear()" },
     {"getRandomPoints", (PyCFunction)VRPyPolygon::getRandomPoints, METH_VARARGS, "Clear all points - getRandomPoints( | float density, float padding)" },
-    {"isInside", PyWrap2(Polygon, isInside, "Check if point is inside polygon", bool, Vec2f) },
+    {"isInside", PyWrap(Polygon, isInside, "Check if point is inside polygon", bool, Vec2f) },
     {NULL}  /* Sentinel */
 };
 

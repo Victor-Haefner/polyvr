@@ -8,7 +8,7 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class Polygon {
+class VRPolygon {
     private:
         vector<Vec2f> points;
         vector<Vec3f> points3;
@@ -19,8 +19,8 @@ class Polygon {
         float getTurn(Vec2f p0, Vec2f p1, Vec2f p2);
 
     public:
-        Polygon();
-        static std::shared_ptr<Polygon> create();
+        VRPolygon();
+        static std::shared_ptr<VRPolygon> create();
 
         void addPoint(Vec2f p);
         void addPoint(Vec3f p);
@@ -38,14 +38,14 @@ class Polygon {
         vector<Vec2f> get();
         vector<Vec3f> get3();
         void set(vector<Vec2f> vec);
-        Polygon sort();
-        Polygon getConvexHull();
+        VRPolygon sort();
+        VRPolygon getConvexHull();
         Boundingbox getBoundingBox();
-        vector< Polygon > getConvexDecomposition();
-        vector< PolygonPtr > gridSplit(float G);
+        vector< VRPolygon > getConvexDecomposition();
+        vector< VRPolygonPtr > gridSplit(float G);
 
         float computeArea();
-        PolygonPtr shrink(float amount);
+        VRPolygonPtr shrink(float amount);
         Vec3f getRandomPoint();
         vector<Vec3f> getRandomPoints(float density = 10, float padding = 0);
 

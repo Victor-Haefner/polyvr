@@ -13,8 +13,8 @@ class VRGeoData;
 
 class VRGrassPatch : public VRTransform {
     private:
-        PolygonPtr area;
-        vector<PolygonPtr> chunks;
+        VRPolygonPtr area;
+        vector<VRPolygonPtr> chunks;
         VRLodPtr lod;
         map<int, VRGeometryPtr> lods;
         float bladeHeight = 0.3;
@@ -22,20 +22,20 @@ class VRGrassPatch : public VRTransform {
         static VRPlantMaterialPtr matGrassSide;
         static VRPlantMaterialPtr matGrass;
 
-        void setupGrassMaterial();
+        static void setupGrassMaterial();
         void setupGrassStage();
 
         void initLOD();
         void addGrassBlade(VRGeoData& data, Vec3f pos, float a, float dh, int lvl, Vec3f c);
-        void createPatch(VRGeoData& data, PolygonPtr area, int lvl = 0, int density = 100);
-        void createSpriteLOD(VRGeoData& data, PolygonPtr area, int lvl);
+        void createPatch(VRGeoData& data, VRPolygonPtr area, int lvl = 0, int density = 100);
+        void createSpriteLOD(VRGeoData& data, VRPolygonPtr area, int lvl);
 
     public:
         VRGrassPatch();
         ~VRGrassPatch();
         static VRGrassPatchPtr create();
 
-        void setArea(PolygonPtr p);
+        void setArea(VRPolygonPtr p);
 
         void createLod(VRGeoData& geo, int lvl, Vec3f offset, int ID);
 

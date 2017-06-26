@@ -10,7 +10,7 @@ using namespace std;
 class patch {
     public:
         template <int S>
-        struct bezPolygon {
+        struct bezVRPolygon {
             Vec3f* p;// EckPunkte
             Vec3f* n;// Normale
             Vec2f* tex;// Normale
@@ -20,16 +20,16 @@ class patch {
             int N;//auflösung
             bool wired;
 
-            bezPolygon();
-            ~bezPolygon();
-            void initPolygon();
+            bezVRPolygon();
+            ~bezVRPolygon();
+            void initVRPolygon();
         };
 
         // instanciate the template
-        bezPolygon<1> bp1;
-        bezPolygon<2> bp2;
-        bezPolygon<3> bp3;
-        bezPolygon<4> bp4;
+        bezVRPolygon<1> bp1;
+        bezVRPolygon<2> bp2;
+        bezVRPolygon<3> bp3;
+        bezVRPolygon<4> bp4;
 
     private:
         Vec3f projectInPlane(Vec3f v, Vec3f n, bool keep_length);
@@ -40,9 +40,9 @@ class patch {
 
         NodeMTRecPtr makeTrianglePlane(int N, bool wire = false);
 
-        void calcBezQuadPlane(bezPolygon<4>& q);
+        void calcBezQuadPlane(bezVRPolygon<4>& q);
 
-        void calcBezTrianglePlane(bezPolygon<3>& q);
+        void calcBezTrianglePlane(bezVRPolygon<3>& q);
 
     public:
         patch() {}

@@ -15,14 +15,14 @@ typedef std::list<CGALPolygon> CGALPolyList;
 
 using namespace OSG;
 
-CGALPolygon toCGALPolygon(Polygon p) {
+CGALPolygon toCGALVRPolygon(VRPolygon p) {
     vector<CGALPoint> pnts;
     for (auto v : p.get()) pnts.push_back(CGALPoint(v[0], v[1]));
     return CGALPolygon( &pnts[0], &pnts[pnts.size()-1] );
 }
 
-Polygon fromCGALPolygon(CGALPolygon cp) {
-    Polygon p;
+VRPolygon fromCGALPolygon(CGALPolygon cp) {
+    VRPolygon p;
     for (auto itr = cp.vertices_begin(); itr != cp.vertices_end(); itr++) {
         CGALPoint k = *itr;
     //for (int i=0; i<cp.size(); i++) {
@@ -32,9 +32,9 @@ Polygon fromCGALPolygon(CGALPolygon cp) {
     return p;
 }
 
-Polygon::Polygon() {}
+VRPolygon::VRPolygon() {}
 
-bool Polygon::isCCW() {
+bool VRPolygon::isCCW() {
     float s = 0;
     auto tmp = points;
     if (!closed && tmp.size() > 0) tmp.push_back(tmp[0]);
@@ -46,8 +46,8 @@ bool Polygon::isCCW() {
     return (s <= 0);
 }
 
-void Polygon::runTest() {
-    Polygon poly;
+void VRPolygon::runTest() {
+    VRPolygon poly;
 
     /*poly.addPoint(Vec2f(-1,0));
     poly.addPoint(Vec2f(0,1));
@@ -80,29 +80,29 @@ void Polygon::runTest() {
     for (auto poly : res) cout << "convex " << poly.toString() << endl;
 }
 
-void Polygon::addPoint(Vec2f p) { if (!closed) points.push_back(p); }
-void Polygon::addPoint(Vec3f p) { if (!closed) points3.push_back(p); }
-Vec2f Polygon::getPoint(int i) { return points[i]; }
-Vec3f Polygon::getPoint3(int i) { return points3[i]; }
-int Polygon::size() { return max( points.size(), points3.size() ); }
-void Polygon::set(vector<Vec2f> vec) { for (auto v : vec) addPoint(v); }
+void VRPolygon::addPoint(Vec2f p) { if (!closed) points.push_back(p); }
+void VRPolygon::addPoint(Vec3f p) { if (!closed) points3.push_back(p); }
+Vec2f VRPolygon::getPoint(int i) { return points[i]; }
+Vec3f VRPolygon::getPoint3(int i) { return points3[i]; }
+int VRPolygon::size() { return max( points.size(), points3.size() ); }
+void VRPolygon::set(vector<Vec2f> vec) { for (auto v : vec) addPoint(v); }
 
-std::shared_ptr<Polygon> Polygon::create() { return std::shared_ptr<Polygon>( new Polygon() ); }
+std::shared_ptr<VRPolygon> VRPolygon::create() { return std::shared_ptr<VRPolygon>( new VRPolygon() ); }
 
-void Polygon::translate(Vec3f v) {
+void VRPolygon::translate(Vec3f v) {
     for (auto& p : points) p += Vec2f(v[0], v[2]);
     for (auto& p : points3) p += v;
 }
 
-void Polygon::clear() {
+void VRPolygon::clear() {
     points.clear();
     points3.clear();
     closed = false;
     convex = false;
 }
 
-PolygonPtr Polygon::shrink(float amount) {
-    PolygonPtr area = Polygon::create();
+VRPolygonPtr VRPolygon::shrink(float amount) {
+    VRPolygonPtr area = VRPolygon::create();
     *area = *this;
     if (amount == 0) return area;
 
@@ -119,7 +119,7 @@ PolygonPtr Polygon::shrink(float amount) {
     return area;
 }
 
-vector<Vec3f> Polygon::getRandomPoints(float density, float padding) {
+vector<Vec3f> VRPolygon::getRandomPoints(float density, float padding) {
     auto area = shrink(padding);
     vector<Vec3f> res;
     //for (auto& area : area1->getConvexDecomposition()) {
@@ -135,7 +135,7 @@ vector<Vec3f> Polygon::getRandomPoints(float density, float padding) {
     return res;
 }
 
-vector< PolygonPtr > Polygon::gridSplit(float G) {
+vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
     auto inSquare = [&](Vec2f p, Vec2i s) {
         if (p[0] < s[0]*G - 1e-6) return false;
         if (p[1] < s[1]*G - 1e-6) return false;
@@ -144,7 +144,7 @@ vector< PolygonPtr > Polygon::gridSplit(float G) {
         return true;
     };
 
-    auto squareToPolygon = [&](Vec2i s) {
+    auto squareToVRPolygon = [&](Vec2i s) {
         auto p = create();
         p->addPoint(Vec2f(s[0]  , s[1])*G);
         p->addPoint(Vec2f(s[0]+1, s[1])*G);
@@ -215,7 +215,7 @@ vector< PolygonPtr > Polygon::gridSplit(float G) {
         return true;
     };
 
-    vector<PolygonPtr> res;
+    vector<VRPolygonPtr> res;
 
     vector<Vec2i> squares; // defined by square corner left bottom, in grid lengths
     map<int, vector<int>> pointSquaresMap; // up to 4 squares when on a corner
@@ -270,7 +270,7 @@ vector< PolygonPtr > Polygon::gridSplit(float G) {
         if (squarePointsMap.count(i)) continue; // intersects polygon, skip
         auto s = squares[i];
         if (self->isInside(Vec2f(s)*G)) { // at least one corner in area
-            res.push_back( squareToPolygon(s) ); // add square to chunks
+            res.push_back( squareToVRPolygon(s) ); // add square to chunks
         }
     }
 
@@ -410,7 +410,7 @@ vector< PolygonPtr > Polygon::gridSplit(float G) {
     return res;
 }
 
-Vec3f Polygon::getRandomPoint() {
+Vec3f VRPolygon::getRandomPoint() {
     auto bb = getBoundingBox();
     Vec3f p;
     do p = bb.getRandomPoint();
@@ -418,7 +418,7 @@ Vec3f Polygon::getRandomPoint() {
     return p;
 }
 
-float Polygon::computeArea() {
+float VRPolygon::computeArea() {
     float area = 0;
     for (uint i=0; i<points.size(); i++) {
         Vec2f p1 = points[i];
@@ -433,14 +433,14 @@ float Polygon::computeArea() {
     return 0.5*abs(area);
 }
 
-void Polygon::close() {
+void VRPolygon::close() {
     if (closed) return;
     closed = true;
     if (points.size() > 0) points.push_back(points[0]);
     if (points3.size() > 0) points3.push_back(points3[0]);
 }
 
-bool Polygon::isInside(Vec2f p) {
+bool VRPolygon::isInside(Vec2f p) {
     if (points.size() <= 1) return false;
     // cast ray from p and intersect all lines
     int K = 0;
@@ -486,15 +486,15 @@ bool Polygon::isInside(Vec2f p) {
     return (K%2 == 1);
 }
 
-Boundingbox Polygon::getBoundingBox() {
+Boundingbox VRPolygon::getBoundingBox() {
     Boundingbox bb;
     for (auto p : points) bb.update(Vec3f(p[0], 0, p[1]));
     for (auto p : points3) bb.update(p);
     return bb;
 }
 
-Polygon Polygon::sort() {
-    if (points.size() == 0) return Polygon();
+VRPolygon VRPolygon::sort() {
+    if (points.size() == 0) return VRPolygon();
     Vec2f p0 = points[0]; // rightmost lowest point
     for (uint i=0; i<points.size(); i++) {
         Vec2f p = points[i];
@@ -503,7 +503,7 @@ Polygon Polygon::sort() {
     }
 
     // sort fan
-    Polygon radial_sort;
+    VRPolygon radial_sort;
     radial_sort.addPoint(p0);
     for (auto p : points) if (p != p0) radial_sort.addPoint(p);
 
@@ -518,14 +518,14 @@ Polygon Polygon::sort() {
     return radial_sort;
 }
 
-vector<Vec2f> Polygon::get() { return points; }
-vector<Vec3f> Polygon::get3() { return points3; }
+vector<Vec2f> VRPolygon::get() { return points; }
+vector<Vec3f> VRPolygon::get3() { return points3; }
 
-Polygon Polygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKING UNRELIABLE!!!
+VRPolygon VRPolygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKING UNRELIABLE!!!
     /*auto radial_sort = sort();
-    if (radial_sort.size() < 3) return Polygon();
-    //cout << " Polygon::getConvexHull points " << toString() << endl;
-    //cout << " Polygon::getConvexHull sort " << radial_sort.toString() << endl;
+    if (radial_sort.size() < 3) return VRPolygon();
+    //cout << " VRPolygon::getConvexHull points " << toString() << endl;
+    //cout << " VRPolygon::getConvexHull sort " << radial_sort.toString() << endl;
 
     auto getTurn = [](Vec2f p0, Vec2f p1, Vec2f p2) -> float {
         return (p1[0]-p0[0])*(p2[1]-p0[1])-(p1[1]-p0[1])*(p2[0]-p0[0]);
@@ -561,10 +561,10 @@ Polygon Polygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKING UN
         }
     }
 
-    Polygon res;
+    VRPolygon res;
     res.convex = true;
     for (auto p : omega) res.addPoint(p);
-    //cout << " Polygon::getConvexHull res " << res.toString() << endl;
+    //cout << " VRPolygon::getConvexHull res " << res.toString() << endl;
     return res;*/
 
     /*CGAL::set_ascii_mode(std::cin);
@@ -575,7 +575,7 @@ Polygon Polygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKING UN
     vector<Kernel::Point_2> pIn; for (auto p : points) pIn.push_back(Kernel::Point_2(p[0],p[1]));
     vector<Kernel::Point_2> pOut; for (auto p : points) pOut.push_back(Kernel::Point_2());
     auto pOutEnd = CGAL::ch_graham_andrew( pIn.begin(), pIn.end(), pOut.begin() );
-    Polygon res;
+    VRPolygon res;
     for (auto pItr = pOut.begin(); pItr != pOutEnd; pItr++) {
         auto p = *pItr;
         res.addPoint(Vec2f(p[0],p[2]));
@@ -583,11 +583,11 @@ Polygon Polygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKING UN
     return res;
 }
 
-float Polygon::getTurn(Vec2f p0, Vec2f p1, Vec2f p2) {
+float VRPolygon::getTurn(Vec2f p0, Vec2f p1, Vec2f p2) {
     return (p1[0]-p0[0])*(p2[1]-p0[1])-(p1[1]-p0[1])*(p2[0]-p0[0]);
 }
 
-bool Polygon::isConvex() {
+bool VRPolygon::isConvex() {
     if (size() <= 3) return true;
 
     for (int i=2; i<size(); i++) {
@@ -596,13 +596,13 @@ bool Polygon::isConvex() {
     return true;
 }
 
-void Polygon::turn() {
+void VRPolygon::turn() {
     reverse(points.begin(), points.end());
     reverse(points3.begin(), points3.end());
 }
 
-vector< Polygon > Polygon::getConvexDecomposition() {
-    vector< Polygon > res;
+vector< VRPolygon > VRPolygon::getConvexDecomposition() {
+    vector< VRPolygon > res;
 
     if (isConvex()) { // allready convex?
         res.push_back(*this);
@@ -611,7 +611,7 @@ vector< Polygon > Polygon::getConvexDecomposition() {
 
     CGALPolygon cgalpoly;
     if (!isCCW()) turn();
-    cgalpoly = toCGALPolygon(*this);
+    cgalpoly = toCGALVRPolygon(*this);
     CGALPolyList partitions;
     CGALTraits traits;
     CGAL::optimal_convex_partition_2(cgalpoly.vertices_begin(), cgalpoly.vertices_end(), std::back_inserter(partitions), traits);
@@ -620,7 +620,7 @@ vector< Polygon > Polygon::getConvexDecomposition() {
     return res;
 }
 
-vector<Vec3f> Polygon::toSpace(Matrix m) {
+vector<Vec3f> VRPolygon::toSpace(Matrix m) {
     vector<Vec3f> res;
     for (auto p : points) {
         Vec3f pp = Vec3f(p[0], p[1], -sqrt(1-(p[0]*p[0]+p[1]*p[1])));
@@ -630,7 +630,7 @@ vector<Vec3f> Polygon::toSpace(Matrix m) {
     return res;
 }
 
-string Polygon::toString() {
+string VRPolygon::toString() {
     stringstream ss;
     ss << "poly: \n ";
     for (auto p : points) ss << p << " \n ";

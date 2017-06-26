@@ -451,7 +451,7 @@ VREntityPtr VRRoadNetwork::getIntersectionRoadNode(VREntityPtr roadEnt, VREntity
 }
 
 VRGeometryPtr VRRoadNetwork::createIntersectionGeometry( VREntityPtr intersectionEnt ) {
-    Polygon poly; // intersection Polygon
+    VRPolygon poly; // intersection VRPolygon
     auto roads = intersectionEnt->getAllEntities("roads");
     VREntityPtr node = intersectionEnt->getEntity("node");
     if (!node) return 0;
@@ -494,7 +494,7 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const pose& p) {
             apath->compute(12);
             tg.drawPath(apath, Vec4f(1,1,1,1), 0.1);
 
-            auto poly = Polygon::create();
+            auto poly = VRPolygon::create();
             Matrix22<float> R = Matrix22<float>(cos(a), -sin(a), sin(a), cos(a));
             Vec2f A = Vec2f(0.35,0.2)-d02;
             Vec2f B = Vec2f(0.65,0.2)-d02;
@@ -503,7 +503,7 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const pose& p) {
             poly->addPoint(d02+A);
             poly->addPoint(d02+B);
             poly->addPoint(d02+C);
-            tg.drawPolygon(poly, Vec4f(1,1,1,1));
+            tg.drawVRPolygon(poly, Vec4f(1,1,1,1));
         }
 
         auto aMask = tg.compose(0);
@@ -819,10 +819,10 @@ void VRRoadNetwork::computeMarkings() {
     for (auto intersection : ontology->getEntities("RoadIntersection")) computeMarkingsIntersection( intersection );
 }
 
-vector<PolygonPtr> VRRoadNetwork::computeGreenBelts() {
-    vector<PolygonPtr> areas;
+vector<VRPolygonPtr> VRRoadNetwork::computeGreenBelts() {
+    vector<VRPolygonPtr> areas;
     for (auto belt : ontology->getEntities("GreenBelt")) {
-        PolygonPtr area = Polygon::create();
+        VRPolygonPtr area = VRPolygon::create();
         for (auto pathEnt : belt->getAllEntities("path")) {
             float width = toFloat( belt->get("width")->value ) * 0.3;
             vector<Vec3f> rightPoints;
