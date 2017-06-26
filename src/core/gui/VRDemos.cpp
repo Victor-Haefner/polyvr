@@ -315,7 +315,7 @@ void VRDemos::on_advanced_start() {
     toggleDemo(current_demo); // start demo
 
     auto scene = VRScene::getCurrent();
-    if (no_scripts && scene) scene->disableAllScripts();
+    if (no_scripts && scene) scene->pauseScripts(true);
 }
 
 void VRDemos::normFileName(string& path) {

@@ -342,6 +342,11 @@ void VRGuiScripts::on_perf_toggled() {
     doPerf = getToggleButtonState("toggletoolbutton1");
 }
 
+void VRGuiScripts::on_pause_toggled() {
+    bool b = getToggleButtonState("toggletoolbutton2");
+    VRScene::getCurrent()->pauseScripts(b);
+}
+
 void VRGuiScripts::on_del_clicked() {
     Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview5"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
@@ -1231,6 +1236,7 @@ VRGuiScripts::VRGuiScripts() {
     setToolButtonCallback("toolbutton22", sigc::mem_fun(*this, &VRGuiScripts::on_import_clicked) );
     setToolButtonCallback("toolbutton23", sigc::mem_fun(*this, &VRGuiScripts::on_find_clicked) );
     setToolButtonCallback("toggletoolbutton1", sigc::mem_fun(*this, &VRGuiScripts::on_perf_toggled) );
+    setToolButtonCallback("toggletoolbutton2", sigc::mem_fun(*this, &VRGuiScripts::on_pause_toggled) );
 
     setButtonCallback("button12", sigc::mem_fun(*this, &VRGuiScripts::on_argadd_clicked) );
     setButtonCallback("button13", sigc::mem_fun(*this, &VRGuiScripts::on_argrem_clicked) );

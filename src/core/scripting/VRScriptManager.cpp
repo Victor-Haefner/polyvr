@@ -37,8 +37,8 @@ VRScriptManager::~VRScriptManager() {
     Py_Finalize();
 }
 
-void VRScriptManager::disableAllScripts() {
-    for (auto s : scripts) s.second->enable(false);
+void VRScriptManager::pauseScripts(bool b) {
+    for (auto s : scripts) s.second->enable(!b);
 }
 
 VRScriptPtr VRScriptManager::newScript(string name, string core) {

@@ -46,7 +46,7 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         void addScript(VRScriptPtr script);
         void remScript(string name);
 
-        void disableAllScripts();
+        void pauseScripts(bool b);
 
         void updateScript(string name, string core, bool compile = true);
         VRScriptPtr changeScriptName(string name, string new_name);
