@@ -47,7 +47,7 @@ void VRWindow::remView(VRViewPtr view) {
 void VRWindow::setAction(RenderActionRefPtr ract) { this->ract = ract; }
 bool VRWindow::hasType(int i) { return (i == type); }
 Vec2i VRWindow::getSize() { return Vec2i(width, height); }
-void VRWindow::render() { if(_win) _win->render(ract); }
+void VRWindow::render(bool fromThread) { if(_win) _win->render(ract); }
 
 void VRWindow::resize(int w, int h) {
     width = w;
@@ -74,7 +74,7 @@ void VRWindow::update( weak_ptr<VRThread>  wt) {
             barrier->enter(active_window_count+1);
 
             Thread::getCurrentChangeList()->merge(*t->appThread->getChangeList());
-            render();
+            render(true);
             Thread::getCurrentChangeList()->clear();
         }
 

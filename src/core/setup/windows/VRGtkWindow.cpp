@@ -205,7 +205,8 @@ bool VRGtkWindow::on_scroll(GdkEventScroll * event) {
     return true;
 }
 
-void VRGtkWindow::render() {
+void VRGtkWindow::render(bool fromThread) {
+    if (fromThread) return;
     PLock( VRGuiManager::get()->guiMutex() );
     if (!active || !content) return;
     Glib::RefPtr<Gdk::Window> drawable = drawArea->get_window();

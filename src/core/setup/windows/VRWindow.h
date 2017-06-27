@@ -66,7 +66,7 @@ class VRWindow : public std::enable_shared_from_this<VRWindow>, public VRName {
         void remView(VRViewPtr view);
         vector<VRViewPtr> getViews();
 
-        virtual void render();
+        virtual void render(bool fromThread = false);
         virtual void save(xmlpp::Element* node);
         virtual void load(xmlpp::Element* node);
 };

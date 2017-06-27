@@ -295,13 +295,13 @@ void VRView::showStats(bool b) {
 
         stats->addText("\nPerformance:");
         stats->addElement(VRGlobals::FRAME_RATE.statFPS, " application FPS: %d");
-        stats->addElement(VRGlobals::UPDATE_LOOP1.statFPS, "  main update loop point 1 FPS: %d");
-        stats->addElement(VRGlobals::UPDATE_LOOP2.statFPS, "  main update loop point 2 FPS: %d");
-        stats->addElement(VRGlobals::UPDATE_LOOP3.statFPS, "  main update loop point 3 FPS: %d");
-        stats->addElement(VRGlobals::UPDATE_LOOP4.statFPS, "  main update loop point 4 FPS: %d");
-        stats->addElement(VRGlobals::UPDATE_LOOP5.statFPS, "  main update loop point 5 FPS: %d");
-        stats->addElement(VRGlobals::UPDATE_LOOP6.statFPS, "  main update loop point 6 FPS: %d");
-        stats->addElement(VRGlobals::UPDATE_LOOP7.statFPS, "  main update loop point 7 FPS: %d");
+        stats->addElement(VRGlobals::UPDATE_LOOP1.statFPS, "  main update loop point 1 FPS (after first Gtk update) : %d");
+        stats->addElement(VRGlobals::UPDATE_LOOP2.statFPS, "  main update loop point 2 FPS (after callbacks update) : %d");
+        stats->addElement(VRGlobals::UPDATE_LOOP3.statFPS, "  main update loop point 3 FPS (after hardware update)  : %d");
+        stats->addElement(VRGlobals::UPDATE_LOOP4.statFPS, "  main update loop point 4 FPS (after scene update)     : %d");
+        stats->addElement(VRGlobals::UPDATE_LOOP5.statFPS, "  main update loop point 5 FPS (after remote rendering) : %d");
+        stats->addElement(VRGlobals::UPDATE_LOOP6.statFPS, "  main update loop point 6 FPS (after second Gtk update): %d");
+        stats->addElement(VRGlobals::UPDATE_LOOP7.statFPS, "  main update loop point 7 FPS (end of loop iteration)  : %d");
         stats->addElement(VRGlobals::SLEEP_FRAME_RATE.statFPS, " application sleep FPS: %d");
         stats->addElement(VRGlobals::SLEEP_FRAME_RATE.statFPS, " application sleep FPS: %d");
         stats->addElement(VRGlobals::SCRIPTS_FRAME_RATE.statFPS, "  script FPS: %d");

@@ -12,6 +12,7 @@
 #include "core/objects/object/VRObject.h"
 #include "core/utils/VRRate.h"
 #include "core/scene/VRScene.h"
+#include "core/gui/VRGuiManager.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRGlobals.h"
 
@@ -178,6 +179,8 @@ void VRWindowManager::updateWindows() {
     BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
     if (barrier->getNumWaiting() == VRWindow::active_window_count) {
         barrier->enter(VRWindow::active_window_count+1);
+        for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
+        VRGuiManager::get()->updateGtk(); // local window rendering
         barrier->enter(VRWindow::active_window_count+1);
     }
 

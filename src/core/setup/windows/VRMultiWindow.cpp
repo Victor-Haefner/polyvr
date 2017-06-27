@@ -85,7 +85,7 @@ void VRMultiWindow::initialize() {
     cout << " done " << getStateString() << endl;
 }
 
-void VRMultiWindow::render() {
+void VRMultiWindow::render(bool fromThread) {
     if (state == INITIALIZING) initialize();
     if (state == CONNECTED && active && content) {
         try { _win->render(ract); }

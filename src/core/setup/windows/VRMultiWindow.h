@@ -19,7 +19,7 @@ class VRMultiWindow : public VRWindow {
         int state = INITIALIZING;
         int tries = 0;
 
-        void render();
+        void render(bool fromThread = false);
 
     public:
         VRMultiWindow();
