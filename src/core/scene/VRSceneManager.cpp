@@ -35,6 +35,9 @@ VRSceneManager::VRSceneManager() {
 
     VROntology::setupLibrary();
     cout << " done" << endl;
+
+    sceneUpdateCb = VRThreadCb::create( "update scene", boost::bind(&VRSceneManager::updateSceneThread, this, _1) );
+    //initThread(sceneUpdateCb, "update scene", true, 1); // TODO
 }
 
 VRSceneManager::~VRSceneManager() {}
@@ -185,12 +188,15 @@ vector<string> VRSceneManager::getExamplePaths() { return example_paths; }
 
 VRScenePtr VRSceneManager::getCurrent() { return current; }
 
+void VRSceneManager::updateSceneThread(VRThreadWeakPtr tw) {
+    updateScene();
+    sleep(1);
+}
+
 void VRSceneManager::updateScene() {
     if (!current) return;
     VRSetup::getCurrent()->updateActivatedSignals();
-    //current->blockScriptThreads();
     current->update();
-    //current->allowScriptThreads();
 }
 
 void VRSceneManager::update() {
@@ -199,13 +205,9 @@ void VRSceneManager::update() {
     static VRRate FPS; int fps = FPS.getRate();
     VRTimer timer; timer.start();
 
-    // update GUI
-    if (current) current->blockScriptThreads();
-
     VRTimer t1; t1.start();
-    VRGuiManager::get()->updateGtk();
+    VRGuiManager::get()->updateGtk(); // update GUI
     VRGlobals::GTK1_FRAME_RATE.update(t1);
-    //VRGuiManager::get()->startThreadedUpdate();
     VRGlobals::UPDATE_LOOP1.update(timer);
 
     VRTimer t4; t4.start();
@@ -234,15 +236,15 @@ void VRSceneManager::update() {
         VRGlobals::UPDATE_LOOP6.update(timer);
     }
 
+    // sleep
     if (current) current->allowScriptThreads();
-
-    // statistics
     VRGlobals::CURRENT_FRAME++;
     VRGlobals::FRAME_RATE.fps = fps;
     VRTimer t7; t7.start();
     osgSleep(max(16-timer.stop(),0));
     VRGlobals::SLEEP_FRAME_RATE.update(t7);
     VRGlobals::UPDATE_LOOP7.update(timer);
+    if (current) current->blockScriptThreads();
 }
 
 OSG_END_NAMESPACE

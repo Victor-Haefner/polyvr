@@ -20,6 +20,7 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager, public 
         string original_workdir;
         VRSignalPtr on_scene_load = 0;
         VRSignalPtr on_scene_close = 0;
+        VRThreadCbPtr sceneUpdateCb;
 
         VRSceneManager();
         void operator= (VRSceneManager v);
@@ -50,6 +51,7 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager, public 
 
         VRScenePtr getCurrent();
 
+        void updateSceneThread(VRThreadWeakPtr tw);
         void updateScene();
         void update();
 };
