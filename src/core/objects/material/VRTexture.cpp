@@ -55,11 +55,10 @@ void VRTexture::paste(VRTexturePtr other, Vec3i offset) {
 
 void VRTexture::resize(Vec3i size, Vec3i offset) {
     auto tmp = VRTexture::create(img);
-    vector<char> data( getByteSize(), 0 );
     ImageRecPtr nimg = Image::create();
     nimg->set(img->getPixelFormat(), size[0], size[1], size[2],
               img->getMipMapCount(), img->getFrameCount(), img->getFrameDelay(),
-              (const uint8_t*)&data[0], img->getDataType(), true, img->getSideCount());
+              0, img->getDataType(), true, img->getSideCount());
     img = nimg;
     paste(tmp, offset);
 }

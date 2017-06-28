@@ -142,10 +142,7 @@ void VRWindowManager::getWindowSize(string name, int& width, int& height) {
 }
 
 void VRWindowManager::updateWindows() {
-    //VRTimer timer;
-    //timer.start("VRWindowManager::updateWindows");
     if (rendering_paused) return;
-
     auto scene = VRScene::getCurrent();
     if (scene) scene->allowScriptThreads();
 
@@ -180,13 +177,13 @@ void VRWindowManager::updateWindows() {
     if (barrier->getNumWaiting() == VRWindow::active_window_count) {
         barrier->enter(VRWindow::active_window_count+1);
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
+        if (scene) scene->blockScriptThreads(); // TODO: updateGtk may trigger events on python scripts, like compiling a script..
         VRGuiManager::get()->updateGtk(); // local window rendering
+        if (scene) scene->allowScriptThreads();
         barrier->enter(VRWindow::active_window_count+1);
     }
 
     Thread::getCurrentChangeList()->clear();
-    //timer.stop("VRWindowManager::updateWindows");
-    //timer.print();
     if (scene) scene->blockScriptThreads();
 }
 
