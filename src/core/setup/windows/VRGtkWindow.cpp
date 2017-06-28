@@ -211,7 +211,20 @@ void VRGtkWindow::render(bool fromThread) {
     if (!active || !content) return;
     Glib::RefPtr<Gdk::Window> drawable = drawArea->get_window();
     GdkRectangle rect; rect.x = 0; rect.y = 0; rect.width = 1; rect.height = 1;
-    if (drawable) gdk_window_invalidate_rect( drawable->gobj(), &rect, false );
+    if (drawable) {
+        gdk_window_invalidate_rect( drawable->gobj(), &rect, false );
+
+        GdkGLContext* glcontext = gtk_widget_get_gl_context (widget);
+        GdkGLDrawable* gldrawable = gtk_widget_get_gl_drawable (widget);
+        gdk_gl_drawable_gl_begin (gldrawable, glcontext);
+        resize(widget->allocation.width, widget->allocation.height);
+        glClearColor(0.2, 0.2, 0.2, 1.0);
+        glClear(GL_COLOR_BUFFER_BIT);
+        VRTimer t1; t1.start();
+        if (active && content) win->render(ract);
+        VRGlobals::RENDER_FRAME_RATE.update(t1);
+        gdk_gl_drawable_gl_end (gldrawable);
+    }
 }
 
 void VRGtkWindow::on_realize() {
@@ -232,40 +245,17 @@ void VRGtkWindow::on_realize() {
 void printGLversion() {
     //const GLubyte* renderer = glGetString (GL_RENDERER); // get renderer string
     const GLubyte* version = glGetString (GL_VERSION); // version as a string
-    cout << "Renderer B " << endl;
-    cout << "OpenGL version supported " << version << endl;
+    cout << "Supported OpenGL version: " << version << endl;
 }
 
 bool VRGtkWindow::on_expose(GdkEventExpose* event) {
-    auto scene = VRScene::getCurrent();
-    if (scene) scene->allowScriptThreads();
-
-    GdkGLContext *glcontext = gtk_widget_get_gl_context (widget);
-    GdkGLDrawable *gldrawable = gtk_widget_get_gl_drawable (widget);
-
-    // check resize
-    int w = widget->allocation.width;
-    int h = widget->allocation.height;
-
+    GdkGLContext* glcontext = gtk_widget_get_gl_context (widget);
+    GdkGLDrawable* gldrawable = gtk_widget_get_gl_drawable (widget);
     gdk_gl_drawable_gl_begin (gldrawable, glcontext);
-    // printGLversion();
-    if (win->getWidth() != w || win->getHeight() != h) resize(w,h);
-
-    glClearColor(0.2, 0.2, 0.2, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    VRTimer t1; t1.start();
-    if (active && content) win->render(ract);
-    VRGlobals::RENDER_FRAME_RATE.update(t1);
-
     VRTimer t2; t2.start();
     gdk_gl_drawable_swap_buffers (gldrawable);
     VRGlobals::SWAPB_FRAME_RATE.update(t2);
-
     gdk_gl_drawable_gl_end (gldrawable);
-
-    if (scene) scene->blockScriptThreads();
-
     return true;
 }
 
