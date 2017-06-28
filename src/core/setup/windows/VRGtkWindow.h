@@ -23,6 +23,7 @@ class VRGtkWindow : public VRWindow {
         Gtk::DrawingArea* drawArea;
         GtkWidget* widget;
         PassiveWindowRecPtr win;
+        bool initialExpose = true;
 
         vector<sigc::connection> signals;
 
