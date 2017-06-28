@@ -50,6 +50,8 @@ Vec2i VRWindow::getSize() { return Vec2i(width, height); }
 void VRWindow::render(bool fromThread) { if(_win) _win->render(ract); }
 
 void VRWindow::resize(int w, int h) {
+    if (_win->getWidth() == w && _win->getHeight() == h) return;
+
     width = w;
     height = h;
     _win->resize(w,h);

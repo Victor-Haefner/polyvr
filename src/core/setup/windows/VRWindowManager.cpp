@@ -177,9 +177,6 @@ void VRWindowManager::updateWindows() {
     if (barrier->getNumWaiting() == VRWindow::active_window_count) {
         barrier->enter(VRWindow::active_window_count+1);
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
-        if (scene) scene->blockScriptThreads(); // TODO: updateGtk may trigger events on python scripts, like compiling a script..
-        VRGuiManager::get()->updateGtk(); // local window rendering
-        if (scene) scene->allowScriptThreads();
         barrier->enter(VRWindow::active_window_count+1);
     }
 
