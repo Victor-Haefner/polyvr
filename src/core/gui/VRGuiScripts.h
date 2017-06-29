@@ -5,6 +5,7 @@
 #include <gtkmm/treemodel.h>
 #include <gdkmm/event.h>
 #include <gtkmm/liststore.h>
+#include <gtkmm/textbuffer.h>
 #include "core/scene/VRSceneManager.h"
 #include "VRGuiSignals.h"
 #include "core/utils/VRFunctionFwd.h"
@@ -54,10 +55,12 @@ class VRGuiScripts {
         Glib::RefPtr<Gtk::ListStore> import_liststore1;
         Glib::RefPtr<Gtk::ListStore> import_liststore2;
         map<string, VRScriptPtr> import_scripts;
+        Glib::RefPtr<Gtk::TextBuffer> editorBuffer;
 
         string docs_filter;
         map<int, group> groups;
         vector<pair<VRScriptPtr,Gtk::TreeIter>> scriptRows;
+        map<string, Glib::RefPtr<Gtk::TextTag>> editorStyles;
 
         void initEditor();
         void printViewerLanguages();
@@ -91,7 +94,8 @@ class VRGuiScripts {
         void on_trigadd_clicked();
         void on_trigrem_clicked();
 
-        bool on_shortkey( GdkEventKey* e );
+        bool on_editor_shortkey( GdkEventKey* e );
+        void addStyle( string style, string fg, string bg, bool italiq, bool bold, bool underlined );
 
         void updateDocumentation();
         void on_select_help();
@@ -125,6 +129,7 @@ class VRGuiScripts {
         VRScriptPtr getSelectedScript();
         string get_editor_core(int i);
         void focusScript(string name, int line, int column);
+        void highlightStrings(string s, string c);
         void update();
 };
 

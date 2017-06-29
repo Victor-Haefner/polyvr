@@ -1103,7 +1103,7 @@ void VRGuiScripts::updateList() {
     on_select_script();
 }
 
-bool VRGuiScripts::on_shortkey( GdkEventKey* e ) {
+bool VRGuiScripts::on_editor_shortkey( GdkEventKey* e ) {
     if ( !(e->state & GDK_CONTROL_MASK) ) return false;
 
     auto getCurrentLine = [&]() {
@@ -1181,6 +1181,49 @@ bool VRGuiScripts::on_shortkey( GdkEventKey* e ) {
     return false;
 }
 
+void VRGuiScripts::addStyle( string style, string fg, string bg, bool italic, bool bold, bool underlined ) {
+    auto tag = editorBuffer->create_tag();
+    tag->set_property("foreground", fg);
+    tag->set_property("background", bg);
+    if (underlined) tag->set_property("underline", Pango::UNDERLINE_SINGLE);
+    if (italic) tag->set_property("style", Pango::STYLE_ITALIC);
+    if (bold) tag->set_property("weight", Pango::WEIGHT_BOLD);
+    editorStyles[style] = tag;
+}
+
+void VRGuiScripts::highlightStrings(string search, string style) {
+    auto tag = editorStyles[style];
+    editorBuffer->remove_tag(tag, editorBuffer->begin(), editorBuffer->end());
+    VRScriptPtr script = getSelectedScript();
+    auto scene = VRScene::getCurrent();
+    scene->searchScript(search, script);
+    for (auto line : script->getSearch().result) {
+        for (auto column : line.second) {
+            if (line.first == 2) column++; // strange hack..
+            auto A = editorBuffer->get_iter_at_line(line.first-1);
+            auto B = editorBuffer->get_iter_at_line(line.first-1);
+            A.forward_chars( max(column-1, 0) );
+            B.forward_chars( column-1+search.size() );
+            editorBuffer->apply_tag(tag, A, B);
+        }
+    }
+}
+
+bool VRGuiScripts_on_editor_select(GtkWidget* widget, GdkEvent* event, VRGuiScripts* self) {
+    GdkEventButton* event_btn = (GdkEventButton*)event;
+    if (event->type == GDK_BUTTON_RELEASE && event_btn->button == 1) {
+        auto editor = GTK_TEXT_VIEW(widget);
+        auto buffer = gtk_text_view_get_buffer(editor);
+
+        GtkTextIter A, B;
+        if ( gtk_text_buffer_get_selection_bounds(buffer, &A, &B) ) {
+            gchar* selection = gtk_text_buffer_get_text(buffer, &A, &B, true);
+            if (selection) self->highlightStrings(selection, "asSelected");
+        }
+    }
+    return false;
+}
+
 void VRGuiScripts::initEditor() {
     // init source view editor
     GtkSourceLanguageManager* langMgr = gtk_source_language_manager_get_default();
@@ -1194,11 +1237,15 @@ void VRGuiScripts::initEditor() {
 
     Glib::RefPtr<Gtk::ScrolledWindow> win = Glib::RefPtr<Gtk::ScrolledWindow>::cast_static(VRGuiBuilder()->get_object("scrolledwindow4"));
     editor = gtk_source_view_new_with_buffer(VRGuiScripts_sourceBuffer);
+    editorBuffer = Glib::wrap( gtk_text_view_get_buffer(GTK_TEXT_VIEW(editor)) );
     gtk_container_add (GTK_CONTAINER (win->gobj()), editor);
 
     // buffer changed callback
     g_signal_connect (VRGuiScripts_sourceBuffer, "changed", G_CALLBACK(VRGuiScripts_on_script_changed), this);
-    win->signal_key_release_event().connect( sigc::mem_fun(*this, &VRGuiScripts::on_shortkey) );
+    win->signal_key_release_event().connect( sigc::mem_fun(*this, &VRGuiScripts::on_editor_shortkey) );
+
+    // editor signals
+    g_signal_connect_after(editor, "event", G_CALLBACK(VRGuiScripts_on_editor_select), this );
 
     // editor options
     gtk_source_view_set_tab_width (GTK_SOURCE_VIEW (editor), 4);
@@ -1217,13 +1264,15 @@ void VRGuiScripts::initEditor() {
 
     auto provider = vr_code_completion_new();
     auto completion = gtk_source_view_get_completion(GTK_SOURCE_VIEW(editor));
-    GError* error = NULL;
+    GError* error = 0;
     gtk_source_completion_add_provider(completion, GTK_SOURCE_COMPLETION_PROVIDER(provider), &error);
-    if (error != NULL) {
+    if (error) {
         cout << "source view completion error: " << error->message << endl;
         g_clear_error(&error);
         g_error_free(error);
     }
+
+    addStyle( "asSelected", "#000", "#FF0", false, false, false);
 }
 
 VRGuiScripts::VRGuiScripts() {
