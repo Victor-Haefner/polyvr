@@ -26,7 +26,7 @@ void VRAsphalt::setArrowMaterial() {
 
 void VRAsphalt::clearTexture() {
     texGen = VRTextureGenerator::create();
-	texGen->setSize(Vec3i(1024,256,1), false);
+	texGen->setSize(Vec3i(256,1024,1), false);
 	texGen->drawFill(Vec4f(0,0,0,1));
     roadData.clear();
     updateTexture();

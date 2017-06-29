@@ -810,7 +810,7 @@ void VRRoadNetwork::computeSurfaces() {
 }
 
 void VRRoadNetwork::computeMarkings() {
-    for (auto way : ontology->getEntities("Road")) computeTracksLanes(way); // Way
+    for (auto way : ontology->getEntities("Way")) computeTracksLanes(way);
     for (auto road : ontology->getEntities("Road")) {
         string type = "residential";
         if (auto t = road->get("type")) type = t->value;
