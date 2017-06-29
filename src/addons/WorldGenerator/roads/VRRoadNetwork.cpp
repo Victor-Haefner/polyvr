@@ -257,46 +257,57 @@ void VRRoadNetwork::computeIntersectionLanes( VREntityPtr intersection ) {
 	string nN = node->getName();
 
 	// get in and out lanes
-	vector< pair<VREntityPtr, VREntityPtr> > inLanes;
-	vector< pair<VREntityPtr, VREntityPtr> > outLanes;
+	//vector< pair<VREntityPtr, VREntityPtr> > inLanes; // lane, road pairs
+	//vector< pair<VREntityPtr, VREntityPtr> > outLanes; // lane, road pairs
+	map< VREntityPtr, vector<VREntityPtr> > inLanes; // road is key, vector contains lanes
+	map< VREntityPtr, vector<VREntityPtr> > outLanes;
+	map< VREntityPtr, int > roadEntrySigns;
 	for (VREntityPtr road : roads) {
         Road r(road);
 		VREntityPtr roadEntry = r.getNodeEntry(node);
 		int reSign = toInt( roadEntry->get("sign")->value );
+		roadEntrySigns[road] = reSign;
 		for (VREntityPtr lane : road->getAllEntities("lanes")) {
             if (!lane->is_a("Lane")) continue;
 			int direction = toInt( lane->get("direction")->value );
-			if (direction*reSign == 1) inLanes.push_back(pair<VREntityPtr, VREntityPtr>(lane, road));
-			if (direction*reSign == -1) outLanes.push_back(pair<VREntityPtr, VREntityPtr>(lane, road));
+			if (direction*reSign == 1) inLanes[road].push_back(lane);
+			if (direction*reSign == -1) outLanes[road].push_back(lane);
+			cout << "road " << road->getName() << "  " << direction*reSign << endl;
 		}
 	}
 
+	auto checkMatchingLanes = [&](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut) { // TODO: extend the cases!
+        if (Nin == Nout && i != j && reSignIn != reSignOut) return false;
+        if (Nin == Nout && i != Nout-j-1 && reSignIn == reSignOut) return false;
+        if (Nin == 1 || Nout == 1) return true;
+        return true;
+	};
+
 	// compute lane paths
-	for (auto inRL : inLanes) {
-        VREntityPtr laneIn = inRL.first;
-        VREntityPtr roadIn = inRL.second;
-		float width = toFloat( laneIn->get("width")->value );
-		auto nodes1 = laneIn->getEntity("path")->getAllEntities("nodes");
-		VREntityPtr node1 = *nodes1.rbegin();
-		for (auto outRL : outLanes) {
-            VREntityPtr laneOut = outRL.first;
-            VREntityPtr roadOut = outRL.second;
-			if (roadIn == roadOut) continue;
-
-			auto node2 = laneOut->getEntity("path")->getAllEntities("nodes")[0];
-			auto lane = addLane(1, intersection, width);
-
-			vector<VREntityPtr> nodes;
-			nodes.push_back( node1->getEntity("node") );
-			nodes.push_back( node2->getEntity("node") );
-
-			vector<Vec3f> norms;
-			norms.push_back( node1->getVec3f("direction") );
-			norms.push_back( node2->getVec3f("direction") );
-
-			auto lPath = addPath("Path", "lane", nodes, norms);
-			lane->add("path", lPath->getName());
-		}
+	for (auto roadOut : outLanes) {
+        for (auto roadIn : inLanes) {
+            if (roadIn.first == roadOut.first) continue;
+            int Nin = roadIn.second.size();
+            int Nout = roadOut.second.size();
+            int reSignIn = roadEntrySigns[roadIn.first];
+            int reSignOut = roadEntrySigns[roadOut.first];
+            for (int i=0; i<Nin; i++) {
+                auto laneIn = roadIn.second[i];
+                float width = toFloat( laneIn->get("width")->value );
+                auto nodes1 = laneIn->getEntity("path")->getAllEntities("nodes");
+                VREntityPtr node1 = *nodes1.rbegin();
+                for (int j=0; j<Nout; j++) {
+                    if (!checkMatchingLanes(i,j,Nin, Nout, reSignIn, reSignOut)) continue;
+                    auto laneOut = roadOut.second[j];
+                    auto node2 = laneOut->getEntity("path")->getAllEntities("nodes")[0];
+                    auto lane = addLane(1, intersection, width);
+                    auto nodes = { node1->getEntity("node"), node2->getEntity("node") };
+                    auto norms = { node1->getVec3f("direction"), node2->getVec3f("direction") };
+                    auto lPath = addPath("Path", "lane", nodes, norms);
+                    lane->add("path", lPath->getName());
+                }
+            }
+        }
 	}
 }
 
