@@ -257,8 +257,6 @@ void VRRoadNetwork::computeIntersectionLanes( VREntityPtr intersection ) {
 	string nN = node->getName();
 
 	// get in and out lanes
-	//vector< pair<VREntityPtr, VREntityPtr> > inLanes; // lane, road pairs
-	//vector< pair<VREntityPtr, VREntityPtr> > outLanes; // lane, road pairs
 	map< VREntityPtr, vector<VREntityPtr> > inLanes; // road is key, vector contains lanes
 	map< VREntityPtr, vector<VREntityPtr> > outLanes;
 	map< VREntityPtr, int > roadEntrySigns;
@@ -272,7 +270,6 @@ void VRRoadNetwork::computeIntersectionLanes( VREntityPtr intersection ) {
 			int direction = toInt( lane->get("direction")->value );
 			if (direction*reSign == 1) inLanes[road].push_back(lane);
 			if (direction*reSign == -1) outLanes[road].push_back(lane);
-			cout << "road " << road->getName() << "  " << direction*reSign << endl;
 		}
 	}
 

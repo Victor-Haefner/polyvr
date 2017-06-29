@@ -1194,6 +1194,7 @@ void VRGuiScripts::addStyle( string style, string fg, string bg, bool italic, bo
 void VRGuiScripts::highlightStrings(string search, string style) {
     auto tag = editorStyles[style];
     editorBuffer->remove_tag(tag, editorBuffer->begin(), editorBuffer->end());
+    if (search == "") return;
     VRScriptPtr script = getSelectedScript();
     auto scene = VRScene::getCurrent();
     scene->searchScript(search, script);
@@ -1216,10 +1217,11 @@ bool VRGuiScripts_on_editor_select(GtkWidget* widget, GdkEvent* event, VRGuiScri
         auto buffer = gtk_text_view_get_buffer(editor);
 
         GtkTextIter A, B;
+        gchar* selection = 0;
         if ( gtk_text_buffer_get_selection_bounds(buffer, &A, &B) ) {
-            gchar* selection = gtk_text_buffer_get_text(buffer, &A, &B, true);
-            if (selection) self->highlightStrings(selection, "asSelected");
+            selection = gtk_text_buffer_get_text(buffer, &A, &B, true);
         }
+        self->highlightStrings(selection?selection:"", "asSelected");
     }
     return false;
 }
