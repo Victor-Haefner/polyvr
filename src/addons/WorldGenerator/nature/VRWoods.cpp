@@ -16,6 +16,7 @@
 #include "core/math/boundingbox.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
+#include "core/utils/VRTimer.h"
 
 using namespace OSG;
 
@@ -198,17 +199,27 @@ void VRWoods::remTree(int id) {
     computeLODs(aLeafs);
 }
 
-VRTransformPtr VRWoods::addGrassPatch(VRPolygonPtr area, bool updateLODs) {
-    Vec3f median = area->getBoundingBox().center();
-    area->translate(-median);
-    auto grass = VRGrassPatch::create();
-    grass->addAttachment("grass", 0);
-    grass->setArea(area);
-    grassPatchRefs[grass.get()] = grass;
-    auto leaf = addObject(grass, median, 0); // pose contains the world position!
-    grass->setWorldPosition(median);
-    if (updateLODs) computeLODs(leaf);
-    return grass;
+void VRWoods::addGrassPatch(VRPolygonPtr Area, bool updateLODs) { // TODO: needs optimizations!
+    VRTimer timer; timer.start();
+    int t0 = timer.stop();
+    //cout << "VRWoods::addGrassPatch " << t0 << endl;
+    int i=0;
+    for (auto area : Area->gridSplit(10.0)) {
+        //cout << " sub Area " << i << "  " << timer.stop() - t0 << endl;
+        Vec3f median = area->getBoundingBox().center();
+        area->translate(-median);
+        //cout << "  A1 " << timer.stop() - t0 << endl;
+        auto grass = VRGrassPatch::create();
+        grass->addAttachment("grass", 0);
+        grass->setArea(area);
+        //cout << "  A2 " << timer.stop() - t0 << endl;
+        grassPatchRefs[grass.get()] = grass;
+        auto leaf = addObject(grass, median, 0); // pose contains the world position!
+        grass->setWorldPosition(median);
+        if (updateLODs) computeLODs(leaf);
+        //cout << "  A3 " << timer.stop() - t0 << endl;
+        i++;
+    }
 }
 
 VRTreePtr VRWoods::addTree(VRTreePtr t, bool updateLODs, bool addToStore) {

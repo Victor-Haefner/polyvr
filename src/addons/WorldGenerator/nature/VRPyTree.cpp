@@ -78,7 +78,9 @@ PyObject* VRPyWoods::addGrassPatch(VRPyWoods* self, PyObject* args) {
     VRPyPolygon* o = 0;
     int u = 0;
     if (! PyArg_ParseTuple(args, "O|i", &o, &u)) return NULL;
-    return VRPyTransform::fromSharedPtr( self->objPtr->addGrassPatch( o->objPtr, u ) );
+    //return VRPyTransform::fromSharedPtr( self->objPtr->addGrassPatch( o->objPtr, u ) );
+    self->objPtr->addGrassPatch( o->objPtr, u );
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyWoods::addTree(VRPyWoods* self, PyObject* args) {

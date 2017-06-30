@@ -61,6 +61,7 @@ class VRGuiScripts {
         map<int, group> groups;
         vector<pair<VRScriptPtr,Gtk::TreeIter>> scriptRows;
         map<string, Glib::RefPtr<Gtk::TextTag>> editorStyles;
+        map<string, bool> styleStates;
 
         void initEditor();
         void printViewerLanguages();

@@ -84,7 +84,7 @@ class VRWoods : public VRLodTree {
         void clear();
         VRTreePtr addTree(VRTreePtr t, bool updateLODs = 0, bool addToStore = true);
         VRTreePtr getTree(int id);
-        VRTransformPtr addGrassPatch(VRPolygonPtr area, bool updateLODs = 0);
+        void addGrassPatch(VRPolygonPtr area, bool updateLODs = 0);
         void remTree(int id);
         void computeLODs();
         void computeLODs(VRLodLeafPtr leaf);

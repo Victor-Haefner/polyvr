@@ -1189,15 +1189,20 @@ void VRGuiScripts::addStyle( string style, string fg, string bg, bool italic, bo
     if (italic) tag->set_property("style", Pango::STYLE_ITALIC);
     if (bold) tag->set_property("weight", Pango::WEIGHT_BOLD);
     editorStyles[style] = tag;
+    styleStates[style] = false;
 }
 
 void VRGuiScripts::highlightStrings(string search, string style) {
     auto tag = editorStyles[style];
-    editorBuffer->remove_tag(tag, editorBuffer->begin(), editorBuffer->end());
+    if (styleStates[style]) editorBuffer->remove_tag(tag, editorBuffer->begin(), editorBuffer->end());
     if (search == "") return;
     VRScriptPtr script = getSelectedScript();
     auto scene = VRScene::getCurrent();
     scene->searchScript(search, script);
+
+    Gtk::TextBuffer::iterator S, SE;
+    editorBuffer->get_selection_bounds(S, SE);
+
     for (auto line : script->getSearch().result) {
         for (auto column : line.second) {
             if (line.first == 2) column++; // strange hack..
@@ -1205,13 +1210,16 @@ void VRGuiScripts::highlightStrings(string search, string style) {
             auto B = editorBuffer->get_iter_at_line(line.first-1);
             A.forward_chars( max(column-1, 0) );
             B.forward_chars( column-1+search.size() );
+            if (A == S) continue;
             editorBuffer->apply_tag(tag, A, B);
+            styleStates[style] = true;
         }
     }
 }
 
 bool VRGuiScripts_on_editor_select(GtkWidget* widget, GdkEvent* event, VRGuiScripts* self) {
     GdkEventButton* event_btn = (GdkEventButton*)event;
+
     if (event->type == GDK_BUTTON_RELEASE && event_btn->button == 1) {
         auto editor = GTK_TEXT_VIEW(widget);
         auto buffer = gtk_text_view_get_buffer(editor);
@@ -1222,6 +1230,12 @@ bool VRGuiScripts_on_editor_select(GtkWidget* widget, GdkEvent* event, VRGuiScri
             selection = gtk_text_buffer_get_text(buffer, &A, &B, true);
         }
         self->highlightStrings(selection?selection:"", "asSelected");
+        return false;
+    }
+
+    if (event->type == GDK_KEY_RELEASE || event->type == GDK_BUTTON_RELEASE) { // remove highlights on any key or button
+        self->highlightStrings("", "asSelected");
+        return false;
     }
     return false;
 }
@@ -1244,7 +1258,7 @@ void VRGuiScripts::initEditor() {
 
     // buffer changed callback
     g_signal_connect (VRGuiScripts_sourceBuffer, "changed", G_CALLBACK(VRGuiScripts_on_script_changed), this);
-    win->signal_key_release_event().connect( sigc::mem_fun(*this, &VRGuiScripts::on_editor_shortkey) );
+    win->signal_key_press_event().connect( sigc::mem_fun(*this, &VRGuiScripts::on_editor_shortkey) );
 
     // editor signals
     g_signal_connect_after(editor, "event", G_CALLBACK(VRGuiScripts_on_editor_select), this );
