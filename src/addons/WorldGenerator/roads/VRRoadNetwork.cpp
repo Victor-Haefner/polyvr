@@ -249,6 +249,24 @@ VREntityPtr VRRoadNetwork::addArrows( VREntityPtr lane, float t, vector<float> d
     return arrow;
 }
 
+void VRRoadNetwork::addAsset( string name, VRTransformPtr geo ) {
+    assets[name] = geo;
+}
+
+void VRRoadNetwork::addPole( Vec3f root, Vec3f end ) { // TODO
+    ;
+}
+
+VREntityPtr VRRoadNetwork::addTrafficLight( posePtr p, string asset ) {
+    if (assets.count(asset)) {
+        auto geo = assets[asset]->duplicate();
+        addChild(geo);
+        auto a = dynamic_pointer_cast<VRTransform>(geo);
+        if (a) a->setPose(p);
+    }
+    return 0;
+}
+
 void VRRoadNetwork::computeIntersectionLanes( VREntityPtr intersection ) {
 	vector<VREntityPtr> roads = intersection->getAllEntities("roads");
 	VREntityPtr node = intersection->getEntity("node");
@@ -627,6 +645,22 @@ void VRRoadNetwork::computeIntersections() {
     }
 }
 
+void VRRoadNetwork::computeIntersectionTrafficLights(VREntityPtr intersection) {
+    for (auto lane : intersection->getAllEntities("lanes")) {
+        for (auto pathEnt : lane->getAllEntities("path")) {
+            auto entry = pathEnt->getEntity("nodes");
+            float width = toFloat( lane->get("width")->value );
+
+            Vec3f p = entry->getEntity("node")->getVec3f("position");
+            Vec3f n = entry->getVec3f("direction");
+            Vec3f x = n.cross(Vec3f(0,1,0));
+            x.normalize();
+            auto P = pose::create( p + x*width*0.0 + Vec3f(0,3,0), Vec3f(0,-1,0), n);
+            addTrafficLight(P, "trafficLight");
+        }
+    }
+}
+
 void VRRoadNetwork::computeMarkingsRoad2(VREntityPtr roadEnt) {
     float mw = 0.15;
     Road road(roadEnt);
@@ -784,7 +818,10 @@ void VRRoadNetwork::setNatureManager(VRWoodsPtr mgr) { natureManager = mgr; }
 
 void VRRoadNetwork::computeLanes() {
     for (auto road : ontology->getEntities("Road")) computeLanePaths(road);
-    for (auto intersection : ontology->getEntities("RoadIntersection")) computeIntersectionLanes(intersection);
+    for (auto intersection : ontology->getEntities("RoadIntersection")) {
+        computeIntersectionLanes(intersection);
+        computeIntersectionTrafficLights(intersection);
+    }
 }
 
 void VRRoadNetwork::computeSurfaces() {

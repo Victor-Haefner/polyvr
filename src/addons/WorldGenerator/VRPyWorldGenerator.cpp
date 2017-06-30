@@ -69,6 +69,7 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"addRoad", (PyCFunction)VRPyRoadNetwork::addRoad, METH_VARARGS, "Add a new road - road addRoad( str name, str type, node1, node2, norm1, norm2, lanesN )" },
     {"addPath", (PyCFunction)VRPyRoadNetwork::addPath, METH_VARARGS, "Add a new path - path addPath( str type, str name, [nodes], [normals] )" },
     {"addArrows", (PyCFunction)VRPyRoadNetwork::addArrows, METH_VARARGS, "Add a new path - arrows addArrows( lane, float t, [float] dirs )" },
+    {"addAsset", PyWrap(RoadNetwork, addAsset, "Add an asset", void, string, VRTransformPtr) },
     {"computeIntersectionLanes", (PyCFunction)VRPyRoadNetwork::computeIntersectionLanes, METH_VARARGS, "Compute the lanes of an intersection - computeIntersectionLanes( intersection )" },
     {"computeLanePaths", (PyCFunction)VRPyRoadNetwork::computeLanePaths, METH_VARARGS, "Compute the path of each lane of a road - computeLanePaths( road )" },
     {"computeIntersections", (PyCFunction)VRPyRoadNetwork::computeIntersections, METH_NOARGS, "Compute the intersections - computeIntersections( )" },

@@ -2,6 +2,7 @@
 #include "VRPyBaseFactory.h"
 #include "VRPyLightBeacon.h"
 #include "VRPyBoundingbox.h"
+#include "VRPyGeometry.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
 #include "core/utils/VRCallbackWrapper.h"
 
@@ -45,6 +46,9 @@ template<> bool toValue<string>(PyObject* o, string& v) { if (!PyString_Check(o)
 template<> bool toValue<VRLightBeaconPtr>(PyObject* o, VRLightBeaconPtr& v) { if (!VRPyLightBeacon::check(o)) return 0; v = ((VRPyLightBeacon*)o)->objPtr; return 1; }
 template<> bool toValue<VREntityPtr>(PyObject* o, VREntityPtr& v) { if (!VRPyEntity::check(o)) return 0; v = ((VRPyEntity*)o)->objPtr; return 1; }
 template<> bool toValue<Boundingbox>(PyObject* o, Boundingbox& v) { if (!VRPyBoundingbox::check(o)) return 0; v = *((VRPyBoundingbox*)o)->objPtr; return 1; }
+template<> bool toValue<VRObjectPtr>(PyObject* o, VRObjectPtr& v) { if (!VRPyObject::check(o)) return 0; v = ((VRPyObject*)o)->objPtr; return 1; }
+template<> bool toValue<VRGeometryPtr>(PyObject* o, VRGeometryPtr& v) { if (!VRPyGeometry::check(o)) return 0; v = ((VRPyGeometry*)o)->objPtr; return 1; }
+template<> bool toValue<VRTransformPtr>(PyObject* o, VRTransformPtr& v) { if (!VRPyTransform::check(o)) return 0; v = ((VRPyTransform*)o)->objPtr; return 1; }
 
 template<> bool toValue<VRAnimCbPtr>(PyObject* o, VRAnimCbPtr& v) {
     //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!

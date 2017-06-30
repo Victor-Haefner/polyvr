@@ -6,6 +6,7 @@
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 #include "addons/RealWorld/VRRealWorldFwd.h"
 #include "core/math/graph.h"
+#include "core/math/VRMathFwd.h"
 #include "core/objects/object/VRObject.h"
 
 using namespace std;
@@ -14,6 +15,7 @@ OSG_BEGIN_NAMESPACE;
 class VRRoadNetwork : public VRObject {
     private:
         vector<VREntityPtr> roads;
+        map<string, VRTransformPtr> assets;
 
         GraphPtr graph;
         VRAsphaltPtr asphalt;
@@ -60,9 +62,14 @@ class VRRoadNetwork : public VRObject {
         VREntityPtr addRoad( string name, string type, VREntityPtr node1, VREntityPtr node2, Vec3f norm1, Vec3f norm2, int Nlanes );
         VREntityPtr addArrows( VREntityPtr lane, float t, vector<float> dirs );
 
+        void addAsset( string name, VRTransformPtr geo );
+        void addPole( Vec3f root, Vec3f end );
+        VREntityPtr addTrafficLight( posePtr p, string asset );
+
         VRGeometryPtr createRoadGeometry( VREntityPtr road );
         VRGeometryPtr createIntersectionGeometry( VREntityPtr intersectionEnt );
 
+        void computeIntersectionTrafficLights(VREntityPtr intersection);
         void computeIntersectionLanes( VREntityPtr intersection );
         void computeLanePaths( VREntityPtr road );
         void computeIntersections();

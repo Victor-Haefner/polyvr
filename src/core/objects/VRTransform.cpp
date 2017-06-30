@@ -22,6 +22,7 @@
 #include <OpenSG/OSGDepthChunk.h>
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
 
+template<> string typeName(const OSG::VRTransformPtr& t) { return "Transform"; }
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
