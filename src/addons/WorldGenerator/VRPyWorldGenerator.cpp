@@ -5,12 +5,31 @@
 #include "core/scripting/VRPyGeometry.h"
 #include "core/scripting/VRPyPolygon.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
+#include "core/scripting/VRPyBaseFactory.h"
 
 using namespace OSG;
 
-simpleVRPyType(Asphalt, New_ptr);
+simpleVRPyType(WorldGenerator, New_ptr );
+simpleVRPyType(RoadBase, 0);
+simpleVRPyType(Road, New_ptr);
 simpleVRPyType(RoadNetwork, New_ptr);
+simpleVRPyType(Asphalt, New_ptr);
 
+PyMethodDef VRPyWorldGenerator::methods[] = {
+    {"addAsset", PyWrap(WorldGenerator, addAsset, "Add an asset", void, string, VRTransformPtr) },
+    {"getRoadNetwork", PyWrap(WorldGenerator, getRoadNetwork, "Access road network", VRRoadNetworkPtr) },
+    {"setOntology", PyWrap(WorldGenerator, setOntology, "Set ontology", void, VROntologyPtr) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyRoadBase::methods[] = {
+    {"addLane", PyWrap(RoadBase, addLane, "Add a lane", VREntityPtr, int, float) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyRoad::methods[] = {
+    {NULL}  /* Sentinel */
+};
 
 PyMethodDef VRPyAsphalt::methods[] = {
     {"addMarking", (PyCFunction)VRPyAsphalt::addMarking, METH_VARARGS, "Add marking - addMarking( rID, path, width | dashN, offset )" },
@@ -60,27 +79,19 @@ PyObject* VRPyAsphalt::updateTexture(VRPyAsphalt* self) {
 // ------------------------------------------------------
 
 PyMethodDef VRPyRoadNetwork::methods[] = {
-    {"setOntology", (PyCFunction)VRPyRoadNetwork::setOntology, METH_VARARGS, "Set the ontology - setOntology( ontology )" },
     {"setNatureManager", (PyCFunction)VRPyRoadNetwork::setNatureManager, METH_VARARGS, "Set the nature manager - setNatureManager( woods )" },
     {"addNode", (PyCFunction)VRPyRoadNetwork::addNode, METH_VARARGS, "Add a new node - node addNode( [x,y,z] )" },
-    {"addLane", (PyCFunction)VRPyRoadNetwork::addLane, METH_VARARGS, "Add a new lane - lane addLane( int direction, road, float width )" },
     {"addGreenBelt", (PyCFunction)VRPyRoadNetwork::addGreenBelt, METH_VARARGS, "Add a green lane - lane addGreenBelt( road, float width )" },
-    {"addWay", (PyCFunction)VRPyRoadNetwork::addWay, METH_VARARGS, "Add a new way - way addWay( str name, [paths], int rID, str type )" },
-    {"addRoad", (PyCFunction)VRPyRoadNetwork::addRoad, METH_VARARGS, "Add a new road - road addRoad( str name, str type, node1, node2, norm1, norm2, lanesN )" },
+    {"addWay", PyWrap(RoadNetwork, addWay, "Add a way", VRRoadPtr, string, vector<VREntityPtr>, int, string) },
+    {"addRoad", PyWrap(RoadNetwork, addRoad, "Add a road", VRRoadPtr, string, string, VREntityPtr, VREntityPtr, Vec3f, Vec3f, int) },
     {"addPath", (PyCFunction)VRPyRoadNetwork::addPath, METH_VARARGS, "Add a new path - path addPath( str type, str name, [nodes], [normals] )" },
     {"addArrows", (PyCFunction)VRPyRoadNetwork::addArrows, METH_VARARGS, "Add a new path - arrows addArrows( lane, float t, [float] dirs )" },
-    {"addAsset", PyWrap(RoadNetwork, addAsset, "Add an asset", void, string, VRTransformPtr) },
-    {"computeIntersectionLanes", (PyCFunction)VRPyRoadNetwork::computeIntersectionLanes, METH_VARARGS, "Compute the lanes of an intersection - computeIntersectionLanes( intersection )" },
     {"computeLanePaths", (PyCFunction)VRPyRoadNetwork::computeLanePaths, METH_VARARGS, "Compute the path of each lane of a road - computeLanePaths( road )" },
     {"computeIntersections", (PyCFunction)VRPyRoadNetwork::computeIntersections, METH_NOARGS, "Compute the intersections - computeIntersections( )" },
     {"computeLanes", (PyCFunction)VRPyRoadNetwork::computeLanes, METH_NOARGS, "Compute the lanes - computeLanes( )" },
     {"computeSurfaces", (PyCFunction)VRPyRoadNetwork::computeSurfaces, METH_NOARGS, "Compute the surfaces - computeSurfaces( )" },
     {"computeMarkings", (PyCFunction)VRPyRoadNetwork::computeMarkings, METH_NOARGS, "Compute the markings - computeMarkings( )" },
     {"compute", (PyCFunction)VRPyRoadNetwork::compute, METH_NOARGS, "Compute everything - compute( )" },
-    {"computeMarkingsRoad2", (PyCFunction)VRPyRoadNetwork::computeMarkingsRoad2, METH_VARARGS, "Compute markings of a type 2 road - computeMarkingsRoad2( road )" },
-    {"computeMarkingsIntersection", (PyCFunction)VRPyRoadNetwork::computeMarkingsIntersection, METH_VARARGS, "Compute markings of an intersection - computeMarkingsIntersection( intersection )" },
-    {"createRoadGeometry", (PyCFunction)VRPyRoadNetwork::createRoadGeometry, METH_VARARGS, "Create a geometry for a road - geo createRoadGeometry( road )" },
-    {"createIntersectionGeometry", (PyCFunction)VRPyRoadNetwork::createIntersectionGeometry, METH_VARARGS, "Create a geometry for an intersection - geo createIntersectionGeometry( intersection )" },
     {"getRoadID", (PyCFunction)VRPyRoadNetwork::getRoadID, METH_NOARGS, "Get a road ID - int getRoadID()" },
     {"getMaterial", (PyCFunction)VRPyRoadNetwork::getMaterial, METH_NOARGS, "Get road material - material getMaterial()" },
     {"updateAsphaltTexture", (PyCFunction)VRPyRoadNetwork::updateAsphaltTexture, METH_NOARGS, "Update markings and tracks on asphalt texture - updateAsphaltTexture()" },
@@ -117,36 +128,6 @@ PyObject* VRPyRoadNetwork::clear(VRPyRoadNetwork* self) {
     if (!self->valid()) return NULL;
     self->objPtr->clear();
     Py_RETURN_TRUE;
-}
-
-PyObject* VRPyRoadNetwork::computeMarkingsRoad2(VRPyRoadNetwork* self, PyObject *args) {
-    if (!self->valid()) return NULL;
-    VRPyEntity* road = 0;
-    if (!PyArg_ParseTuple(args, "O", &road)) return NULL;
-    self->objPtr->computeMarkingsRoad2( road->objPtr );
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyRoadNetwork::computeMarkingsIntersection(VRPyRoadNetwork* self, PyObject *args) {
-    if (!self->valid()) return NULL;
-    VRPyEntity* intersection = 0;
-    if (!PyArg_ParseTuple(args, "O", &intersection)) return NULL;
-    self->objPtr->computeMarkingsIntersection( intersection->objPtr );
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyRoadNetwork::createRoadGeometry(VRPyRoadNetwork* self, PyObject *args) {
-    if (!self->valid()) return NULL;
-    VRPyEntity* road = 0;
-    if (!PyArg_ParseTuple(args, "O", &road)) return NULL;
-    return VRPyGeometry::fromSharedPtr( self->objPtr->createRoadGeometry( road->objPtr ) );
-}
-
-PyObject* VRPyRoadNetwork::createIntersectionGeometry(VRPyRoadNetwork* self, PyObject *args) {
-    if (!self->valid()) return NULL;
-    VRPyEntity* intersection = 0;
-    if (!PyArg_ParseTuple(args, "O", &intersection)) return NULL;
-    return VRPyGeometry::fromSharedPtr( self->objPtr->createIntersectionGeometry( intersection->objPtr ) );
 }
 
 PyObject* VRPyRoadNetwork::computeIntersections(VRPyRoadNetwork* self) {
@@ -187,22 +168,6 @@ PyObject* VRPyRoadNetwork::computeLanePaths(VRPyRoadNetwork* self, PyObject *arg
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyRoadNetwork::computeIntersectionLanes(VRPyRoadNetwork* self, PyObject *args) {
-    if (!self->valid()) return NULL;
-    VRPyEntity* intersection = 0;
-    if (!PyArg_ParseTuple(args, "O", &intersection)) return NULL;
-    self->objPtr->computeIntersectionLanes( intersection->objPtr );
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyRoadNetwork::setOntology(VRPyRoadNetwork* self, PyObject *args) {
-    if (!self->valid()) return NULL;
-    VRPyOntology* ontology = 0;
-    if (!PyArg_ParseTuple(args, "O", &ontology)) return NULL;
-    self->objPtr->setOntology( ontology->objPtr );
-    Py_RETURN_TRUE;
-}
-
 PyObject* VRPyRoadNetwork::setNatureManager(VRPyRoadNetwork* self, PyObject *args) {
     if (!self->valid()) return NULL;
     VRPyWoods* woods = 0;
@@ -217,16 +182,6 @@ PyObject* VRPyRoadNetwork::addNode(VRPyRoadNetwork* self, PyObject *args) {
     return VRPyEntity::fromSharedPtr( n );
 }
 
-PyObject* VRPyRoadNetwork::addLane(VRPyRoadNetwork* self, PyObject *args) {
-    if (!self->valid()) return NULL;
-    int dir = 0;
-    VRPyEntity* road = 0;
-    float width = 0;
-    if (!PyArg_ParseTuple(args, "iOf", &dir, &road, &width)) return NULL;
-    auto l = self->objPtr->addLane( dir, road->objPtr, width );
-    return VRPyEntity::fromSharedPtr( l );
-}
-
 PyObject* VRPyRoadNetwork::addGreenBelt(VRPyRoadNetwork* self, PyObject *args) {
     if (!self->valid()) return NULL;
     VRPyEntity* road = 0;
@@ -234,33 +189,6 @@ PyObject* VRPyRoadNetwork::addGreenBelt(VRPyRoadNetwork* self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "Of", &road, &width)) return NULL;
     auto l = self->objPtr->addGreenBelt( road->objPtr, width );
     return VRPyEntity::fromSharedPtr( l );
-}
-
-PyObject* VRPyRoadNetwork::addWay(VRPyRoadNetwork* self, PyObject *args) {
-    if (!self->valid()) return NULL;
-    const char* name;
-    PyObject* paths = 0;
-    int rID = 0;
-    const char* type;
-    if (!PyArg_ParseTuple(args, "sOis", &name, &paths, &rID, &type)) return NULL;
-    vector<VREntityPtr> pathsV;
-    for (int i=0; i<pySize(paths); i++) pathsV.push_back( ((VRPyEntity*)PyList_GetItem(paths, i))->objPtr );
-    auto r = self->objPtr->addWay( name?name:"", pathsV, rID, type?type:"" );
-    return VRPyEntity::fromSharedPtr( r );
-}
-
-PyObject* VRPyRoadNetwork::addRoad(VRPyRoadNetwork* self, PyObject *args) {
-    if (!self->valid()) return NULL;
-    const char* name;
-    const char* type;
-    VRPyEntity* node1 = 0;
-    VRPyEntity* node2 = 0;
-    PyObject* norm1 = 0;
-    PyObject* norm2 = 0;
-    int Nlanes = 1;
-    if (!PyArg_ParseTuple(args, "ssOOOOi", &name, &type, &node1, &node2, &norm1, &norm2, &Nlanes)) return NULL;
-    auto road = self->objPtr->addRoad( name?name:"", type?type:"", node1->objPtr, node2->objPtr, parseVec3fList(norm1), parseVec3fList(norm2), Nlanes );
-    return VRPyEntity::fromSharedPtr( road );
 }
 
 PyObject* VRPyRoadNetwork::addPath(VRPyRoadNetwork* self, PyObject *args) {

@@ -136,6 +136,33 @@ struct VRCallbackWrapperT<P, U, R (T::*)(Args...)> : public VRCallbackWrapper<P>
         r = (obj->*callback)( a, b, c, d, e, f ); return true;
     }
 
+    template<class O, class A, class B, class C, class D, class E, class F, class G>
+    bool call(T* obj, const vector<P>& params, R& r, const vector<string>& defaultParams) {
+        CW_CHECK_SIZE(7);
+        CW_GET_VALUE(0,A,a);
+        CW_GET_VALUE(1,B,b);
+        CW_GET_VALUE(2,C,c);
+        CW_GET_VALUE(3,D,d);
+        CW_GET_VALUE(4,E,e);
+        CW_GET_VALUE(5,F,f);
+        CW_GET_VALUE(6,G,g);
+        r = (obj->*callback)( a, b, c, d, e, f, g ); return true;
+    }
+
+    template<class O, class A, class B, class C, class D, class E, class F, class G, class H>
+    bool call(T* obj, const vector<P>& params, R& r, const vector<string>& defaultParams) {
+        CW_CHECK_SIZE(8);
+        CW_GET_VALUE(0,A,a);
+        CW_GET_VALUE(1,B,b);
+        CW_GET_VALUE(2,C,c);
+        CW_GET_VALUE(3,D,d);
+        CW_GET_VALUE(4,E,e);
+        CW_GET_VALUE(5,F,f);
+        CW_GET_VALUE(6,G,g);
+        CW_GET_VALUE(7,H,h);
+        r = (obj->*callback)( a, b, c, d, e, f, g, h ); return true;
+    }
+
     bool execute(void* o, const vector<P>& params, P& result) {
         if (!callback) return false;
         R res;
@@ -219,6 +246,33 @@ struct VRCallbackWrapperT<P, U, void (T::*)(Args...)> : public VRCallbackWrapper
         CW_GET_VALUE(4,E,e);
         CW_GET_VALUE(5,F,f);
         (obj->*callback)( a, b, c, d, e, f ); return true;
+    }
+
+    template<class O, class A, class B, class C, class D, class E, class F, class G>
+    bool call(T* obj, const vector<P>& params, const vector<string>& defaultParams) {
+        CW_CHECK_SIZE(7);
+        CW_GET_VALUE(0,A,a);
+        CW_GET_VALUE(1,B,b);
+        CW_GET_VALUE(2,C,c);
+        CW_GET_VALUE(3,D,d);
+        CW_GET_VALUE(4,E,e);
+        CW_GET_VALUE(5,F,f);
+        CW_GET_VALUE(6,G,g);
+        (obj->*callback)( a, b, c, d, e, f, g ); return true;
+    }
+
+    template<class O, class A, class B, class C, class D, class E, class F, class G, class H>
+    bool call(T* obj, const vector<P>& params, const vector<string>& defaultParams) {
+        CW_CHECK_SIZE(8);
+        CW_GET_VALUE(0,A,a);
+        CW_GET_VALUE(1,B,b);
+        CW_GET_VALUE(2,C,c);
+        CW_GET_VALUE(3,D,d);
+        CW_GET_VALUE(4,E,e);
+        CW_GET_VALUE(5,F,f);
+        CW_GET_VALUE(6,G,g);
+        CW_GET_VALUE(7,H,h);
+        (obj->*callback)( a, b, c, d, e, f, g, h ); return true;
     }
 
     bool execute(void* o, const vector<P>& params, P& result) {

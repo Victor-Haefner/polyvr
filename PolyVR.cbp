@@ -497,6 +497,7 @@
 		<Unit filename="src/addons/Semantics/Segmentation/VRPySegmentation.h" />
 		<Unit filename="src/addons/Semantics/Segmentation/VRSegmentation.cpp" />
 		<Unit filename="src/addons/Semantics/Segmentation/VRSegmentation.h" />
+		<Unit filename="src/addons/Semantics/Tutoring/VRTutoringSystem.h" />
 		<Unit filename="src/addons/Semantics/VRSemanticsFwd.h" />
 		<Unit filename="src/addons/SimViDekont/GeoIO.h" />
 		<Unit filename="src/addons/SimViDekont/Player.h" />
@@ -511,6 +512,8 @@
 		<Unit filename="src/addons/WorldGenerator/GIS/GISWorld.h" />
 		<Unit filename="src/addons/WorldGenerator/VRPyWorldGenerator.cpp" />
 		<Unit filename="src/addons/WorldGenerator/VRPyWorldGenerator.h" />
+		<Unit filename="src/addons/WorldGenerator/VRWorldGenerator.cpp" />
+		<Unit filename="src/addons/WorldGenerator/VRWorldGenerator.h" />
 		<Unit filename="src/addons/WorldGenerator/VRWorldGeneratorFwd.h" />
 		<Unit filename="src/addons/WorldGenerator/nature/VRGrassPatch.cpp" />
 		<Unit filename="src/addons/WorldGenerator/nature/VRGrassPatch.h" />
@@ -527,6 +530,12 @@
 		<Unit filename="src/addons/WorldGenerator/nature/VRWoods.h" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRAsphalt.cpp" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRAsphalt.h" />
+		<Unit filename="src/addons/WorldGenerator/roads/VRRoad.cpp" />
+		<Unit filename="src/addons/WorldGenerator/roads/VRRoad.h" />
+		<Unit filename="src/addons/WorldGenerator/roads/VRRoadBase.cpp" />
+		<Unit filename="src/addons/WorldGenerator/roads/VRRoadBase.h" />
+		<Unit filename="src/addons/WorldGenerator/roads/VRRoadIntersection.cpp" />
+		<Unit filename="src/addons/WorldGenerator/roads/VRRoadIntersection.h" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoadNetwork.cpp" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoadNetwork.h" />
 		<Unit filename="src/addons/construction/building/VRElectricDevice.cpp" />

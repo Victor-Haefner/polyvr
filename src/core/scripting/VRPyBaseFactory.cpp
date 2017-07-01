@@ -3,7 +3,9 @@
 #include "VRPyLightBeacon.h"
 #include "VRPyBoundingbox.h"
 #include "VRPyGeometry.h"
+#include "VRPyMath.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
+#include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 #include "core/utils/VRCallbackWrapper.h"
 
 #include <OpenSG/OSGVector.h>
@@ -28,11 +30,14 @@ template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const bool& t) { retu
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VREntityPtr& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const Vec3f& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const Vec2f& t) { return VRPyTypeCaster::cast(t); }
+template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VRRoadPtr& t) { return VRPyTypeCaster::cast(t); }
+template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VRRoadNetworkPtr& t) { return VRPyTypeCaster::cast(t); }
 OSG_END_NAMESPACE;
 
 using namespace OSG;
 
 typedef PyObject* PyObjectPtr;
+
 template<> string typeName(const PyObjectPtr& o) {
     PyTypeObject* type = o->ob_type;
     if (!type) return "undefined";
@@ -45,6 +50,7 @@ template<> bool toValue<float>(PyObject* o, float& v) { if (!PyNumber_Check(o)) 
 template<> bool toValue<string>(PyObject* o, string& v) { if (!PyString_Check(o)) return 0; v = PyString_AsString(o); return 1; }
 template<> bool toValue<VRLightBeaconPtr>(PyObject* o, VRLightBeaconPtr& v) { if (!VRPyLightBeacon::check(o)) return 0; v = ((VRPyLightBeacon*)o)->objPtr; return 1; }
 template<> bool toValue<VREntityPtr>(PyObject* o, VREntityPtr& v) { if (!VRPyEntity::check(o)) return 0; v = ((VRPyEntity*)o)->objPtr; return 1; }
+template<> bool toValue<VROntologyPtr>(PyObject* o, VROntologyPtr& v) { if (!VRPyOntology::check(o)) return 0; v = ((VRPyOntology*)o)->objPtr; return 1; }
 template<> bool toValue<Boundingbox>(PyObject* o, Boundingbox& v) { if (!VRPyBoundingbox::check(o)) return 0; v = *((VRPyBoundingbox*)o)->objPtr; return 1; }
 template<> bool toValue<VRObjectPtr>(PyObject* o, VRObjectPtr& v) { if (!VRPyObject::check(o)) return 0; v = ((VRPyObject*)o)->objPtr; return 1; }
 template<> bool toValue<VRGeometryPtr>(PyObject* o, VRGeometryPtr& v) { if (!VRPyGeometry::check(o)) return 0; v = ((VRPyGeometry*)o)->objPtr; return 1; }
@@ -58,6 +64,7 @@ template<> bool toValue<VRAnimCbPtr>(PyObject* o, VRAnimCbPtr& v) {
 }
 
 bool PyVec_Check(PyObject* o, int N, char type) {
+    if (N == 3 && type == 'f') if (VRPyVec3f::check(o)) return true;
     if (!PyList_Check(o)) return false;
     if (PyList_GET_SIZE(o) != N) return false;
     switch(type) {
@@ -78,5 +85,10 @@ template<> bool toValue<Vec3f>(PyObject* o, Vec3f& v) { if (!PyVec_Check(o, 3, '
 template<> bool toValue<Vec4f>(PyObject* o, Vec4f& v) { if (!PyVec_Check(o, 4, 'f')) return 0; v = VRPyBase::parseVec4fList(o); return 1; }
 template<> bool toValue<Vec3i>(PyObject* o, Vec3i& v) { if (!PyVec_Check(o, 3, 'i')) return 0; v = VRPyBase::parseVec3iList(o); return 1; }
 template<> bool toValue<Vec4i>(PyObject* o, Vec4i& v) { if (!PyVec_Check(o, 4, 'i')) return 0; v = VRPyBase::parseVec4iList(o); return 1; }
+
+
+
+
+
 
 

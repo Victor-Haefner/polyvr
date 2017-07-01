@@ -32,7 +32,6 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         bool visible = true;
         unsigned int graphChanged = 0; //is frame number
         map<string, VRAttachment*> attachments;
-        VREntityPtr entity;
 
         int findChild(VRObjectPtr node);
         void updateChildrenIndices(bool recursive = false);
@@ -43,6 +42,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         vector<VRObjectPtr> children;
         map<VRObject*, VRObjectWeakPtr> links;
         string type;
+        VREntityPtr entity;
 
         bool held = false;//drag n drop
         VRObjectWeakPtr old_parent;

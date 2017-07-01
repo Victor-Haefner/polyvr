@@ -45,6 +45,8 @@ OSG::Vec4i toVec4i(string s);
 OSG::Pnt3f toPnt3f(string s);
 
 template<typename T> string typeName(const T& t);
+template<typename T> string typeName(const vector<T>& t) { return "list of "+typeName<T>(T()); }
+
 template<typename T> bool toValue(stringstream& s, T& t);
 template<typename T> bool toValue(string s, T& t){
     stringstream ss(s);
@@ -53,6 +55,10 @@ template<typename T> bool toValue(string s, T& t){
 
 template<typename T> bool toValue(string s, std::shared_ptr<T>& t) {
     t = 0;
+    return true;
+}
+
+template<typename T> bool toValue(string s, vector<T>& t) {
     return true;
 }
 

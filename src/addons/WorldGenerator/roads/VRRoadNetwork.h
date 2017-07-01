@@ -2,6 +2,7 @@
 #define VRROADNETWORK_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
+#include "VRRoadBase.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 #include "addons/RealWorld/VRRealWorldFwd.h"
@@ -12,15 +13,15 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class VRRoadNetwork : public VRObject {
+class VRRoadNetwork : public VRRoadBase {
     private:
-        vector<VREntityPtr> roads;
-        map<string, VRTransformPtr> assets;
+        vector<VRRoadPtr> roads;
+        vector<VRRoadPtr> ways;
+        vector<VRRoadIntersectionPtr> intersections;
 
         GraphPtr graph;
         VRAsphaltPtr asphalt;
         VRAsphaltPtr asphaltArrow;
-        VROntologyPtr ontology;
         VRPathtoolPtr tool;
         VRWoodsPtr natureManager;
         int nextRoadID = 0;
@@ -31,13 +32,10 @@ class VRRoadNetwork : public VRObject {
 
 		float trackWidth = 1.6; // TODO
 
-        void setupTexCoords( VRGeometryPtr geo, VREntityPtr way );
-        pathPtr toPath( VREntityPtr pathEntity, int resolution );
         void createArrow(Vec4i dirs, int N, const pose& p);
 
         vector<VREntityPtr> getRoadNodes();
-        vector<VREntityPtr> getNodeRoads(VREntityPtr node);
-        VREntityPtr getIntersectionRoadNode(VREntityPtr roadEnt, VREntityPtr intersectionEnt);
+        vector<VRRoadPtr> getNodeRoads(VREntityPtr node);
 
         void init();
 
@@ -47,30 +45,19 @@ class VRRoadNetwork : public VRObject {
 
         static VRRoadNetworkPtr create();
 
-        void setOntology(VROntologyPtr ontology);
         void setNatureManager(VRWoodsPtr mgr);
         GraphPtr getGraph();
         void updateAsphaltTexture();
         VRAsphaltPtr getMaterial();
         int getRoadID();
 
-        VREntityPtr addNode( Vec3f pos );
-        VREntityPtr addLane( int direction, VREntityPtr road, float width );
         VREntityPtr addGreenBelt( VREntityPtr road, float width );
-        VREntityPtr addWay( string name, vector<VREntityPtr> paths, int rID, string type );
-        VREntityPtr addPath( string type, string name, vector<VREntityPtr> nodes, vector<Vec3f> normals );
-        VREntityPtr addRoad( string name, string type, VREntityPtr node1, VREntityPtr node2, Vec3f norm1, Vec3f norm2, int Nlanes );
+        VRRoadPtr addWay( string name, vector<VREntityPtr> paths, int rID, string type );
+        VRRoadPtr addRoad( string name, string type, VREntityPtr node1, VREntityPtr node2, Vec3f norm1, Vec3f norm2, int Nlanes );
         VREntityPtr addArrows( VREntityPtr lane, float t, vector<float> dirs );
 
-        void addAsset( string name, VRTransformPtr geo );
         void addPole( Vec3f root, Vec3f end );
-        VREntityPtr addTrafficLight( posePtr p, string asset );
 
-        VRGeometryPtr createRoadGeometry( VREntityPtr road );
-        VRGeometryPtr createIntersectionGeometry( VREntityPtr intersectionEnt );
-
-        void computeIntersectionTrafficLights(VREntityPtr intersection);
-        void computeIntersectionLanes( VREntityPtr intersection );
         void computeLanePaths( VREntityPtr road );
         void computeIntersections();
         void computeLanes();
@@ -79,8 +66,6 @@ class VRRoadNetwork : public VRObject {
         vector<VRPolygonPtr> computeGreenBelts();
 
         void computeTracksLanes(VREntityPtr way);
-        void computeMarkingsRoad2(VREntityPtr roadEnt);
-        void computeMarkingsIntersection(VREntityPtr intersection);
 
         void clear();
         void compute();

@@ -2,8 +2,22 @@
 #define VRPYWORLDGENERATOR_H_INCLUDED
 
 #include "core/scripting/VRPyBase.h"
+#include "VRWorldGenerator.h"
 #include "roads/VRAsphalt.h"
 #include "roads/VRRoadNetwork.h"
+#include "roads/VRRoad.h"
+
+struct VRPyWorldGenerator : VRPyBaseT<OSG::VRWorldGenerator> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyRoadBase : VRPyBaseT<OSG::VRRoadBase> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyRoad : VRPyBaseT<OSG::VRRoad> {
+    static PyMethodDef methods[];
+};
 
 struct VRPyAsphalt : VRPyBaseT<OSG::VRAsphalt> {
     static PyMethodDef methods[];
@@ -17,19 +31,14 @@ struct VRPyAsphalt : VRPyBaseT<OSG::VRAsphalt> {
 struct VRPyRoadNetwork : VRPyBaseT<OSG::VRRoadNetwork> {
     static PyMethodDef methods[];
 
-    static PyObject* setOntology(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* setNatureManager(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* computeGreenBelts(VRPyRoadNetwork* self);
 
     static PyObject* addNode(VRPyRoadNetwork* self, PyObject *args);
-    static PyObject* addLane(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* addGreenBelt(VRPyRoadNetwork* self, PyObject *args);
-    static PyObject* addWay(VRPyRoadNetwork* self, PyObject *args);
-    static PyObject* addRoad(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* addPath(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* addArrows(VRPyRoadNetwork* self, PyObject *args);
 
-    static PyObject* computeIntersectionLanes(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* computeLanePaths(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* computeIntersections(VRPyRoadNetwork* self);
     static PyObject* computeLanes(VRPyRoadNetwork* self);
@@ -37,11 +46,6 @@ struct VRPyRoadNetwork : VRPyBaseT<OSG::VRRoadNetwork> {
     static PyObject* computeMarkings(VRPyRoadNetwork* self);
     static PyObject* compute(VRPyRoadNetwork* self);
 
-    static PyObject* computeMarkingsRoad2(VRPyRoadNetwork* self, PyObject *args);
-    static PyObject* computeMarkingsIntersection(VRPyRoadNetwork* self, PyObject *args);
-
-    static PyObject* createRoadGeometry(VRPyRoadNetwork* self, PyObject *args);
-    static PyObject* createIntersectionGeometry(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* getRoadID(VRPyRoadNetwork* self);
     static PyObject* getMaterial(VRPyRoadNetwork* self);
     static PyObject* updateAsphaltTexture(VRPyRoadNetwork* self);
