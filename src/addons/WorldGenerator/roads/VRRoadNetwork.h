@@ -56,8 +56,6 @@ class VRRoadNetwork : public VRRoadBase {
         VRRoadPtr addRoad( string name, string type, VREntityPtr node1, VREntityPtr node2, Vec3f norm1, Vec3f norm2, int Nlanes );
         VREntityPtr addArrows( VREntityPtr lane, float t, vector<float> dirs );
 
-        void addPole( Vec3f root, Vec3f end );
-
         void computeLanePaths( VREntityPtr road );
         void computeIntersections();
         void computeLanes();

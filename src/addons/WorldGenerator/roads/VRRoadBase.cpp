@@ -4,11 +4,14 @@
 #include "core/math/path.h"
 #include "core/math/pose.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/VRStroke.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
 #include "addons/Semantics/Reasoning/VREntity.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
 
 #include <OpenSG/OSGGeoProperties.h>
+
+const double pi = 3.14159265359;
 
 using namespace OSG;
 
@@ -102,4 +105,23 @@ VREntityPtr VRRoadBase::addPath( string type, string name, vector<VREntityPtr> n
 	}
 
 	return path;
+}
+
+VRGeometryPtr VRRoadBase::addPole( Vec3f root, Vec3f end, float radius ) {
+    auto p = path::create();
+    p->addPoint(pose(root, Vec3f(0,1,0), Vec3f(0,0,1)));
+    p->addPoint(pose(end,  Vec3f(0,1,0), Vec3f(0,0,1)));
+    p->compute(16);
+
+    int N = 8;
+    vector<Vec3f> profile;
+    for (int i=0; i<N; i++) {
+        float a = i*(2*pi/N);
+        profile.push_back(radius*Vec3f(cos(a), sin(a), 0));
+    }
+
+    auto s = VRStroke::create("pole");
+    s->setPath(p);
+    s->strokeProfile(profile, true, false);
+    return s;
 }

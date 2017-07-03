@@ -29,6 +29,8 @@ class VRRoadBase : public VRObject {
         VREntityPtr addNode( Vec3f pos );
         VREntityPtr addPath( string type, string name, vector<VREntityPtr> nodes, vector<Vec3f> normals );
         VREntityPtr addLane( int direction, float width );
+
+        VRGeometryPtr addPole( Vec3f root, Vec3f end, float radius );
 };
 
 OSG_END_NAMESPACE;

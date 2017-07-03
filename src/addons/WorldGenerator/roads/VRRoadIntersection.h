@@ -16,6 +16,7 @@ OSG_BEGIN_NAMESPACE;
 class VRRoadIntersection : public VRRoadBase {
     private:
         VREntityPtr getRoadNode(VREntityPtr roadEnt);
+        vector<VRRoadPtr> roads;
 
     public:
         VRRoadIntersection();
@@ -23,14 +24,15 @@ class VRRoadIntersection : public VRRoadBase {
 
         static VRRoadIntersectionPtr create();
 
-        void addPole( Vec3f root, Vec3f end );
-        VREntityPtr addTrafficLight( posePtr p, string asset );
+        VREntityPtr addTrafficLight( posePtr p, string asset, Vec3f root );
         VRGeometryPtr createGeometry();
 
-        void computeTrafficLights();
+        void computeLayout();
         void computeLanes();
-        void compute();
         void computeMarkings();
+        void computeTrafficLights();
+
+        void addRoad(VRRoadPtr road);
 };
 
 OSG_END_NAMESPACE;
