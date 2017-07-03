@@ -16,23 +16,20 @@ VRRoadIntersection::~VRRoadIntersection() {}
 VRRoadIntersectionPtr VRRoadIntersection::create() { return VRRoadIntersectionPtr( new VRRoadIntersection() ); }
 
 void VRRoadIntersection::computeLanes() {
-	vector<VREntityPtr> roads = entity->getAllEntities("roads");
 	VREntityPtr node = entity->getEntity("node");
 	if (!node) { cout << "Warning in VRRoadNetwork::computeIntersectionLanes, intersection node is NULL!" << endl; return; }
 	string iN = entity->getName();
 	string nN = node->getName();
 
 	// get in and out lanes
-	map< VREntityPtr, vector<VREntityPtr> > inLanes; // road is key, vector contains lanes
-	map< VREntityPtr, vector<VREntityPtr> > outLanes;
-	map< VREntityPtr, int > roadEntrySigns;
-	for (VREntityPtr road : roads) {
-        VRRoad r;
-        r.setEntity(road);
-		VREntityPtr roadEntry = r.getNodeEntry(node);
+	inLanes.clear();
+	outLanes.clear();
+	map< VRRoadPtr, int > roadEntrySigns;
+	for (auto road : roads) {
+		VREntityPtr roadEntry = road->getNodeEntry(node);
 		int reSign = toInt( roadEntry->get("sign")->value );
 		roadEntrySigns[road] = reSign;
-		for (VREntityPtr lane : road->getAllEntities("lanes")) {
+		for (VREntityPtr lane : road->getEntity()->getAllEntities("lanes")) {
             if (!lane->is_a("Lane")) continue;
 			int direction = toInt( lane->get("direction")->value );
 			if (direction*reSign == 1) inLanes[road].push_back(lane);
@@ -137,12 +134,14 @@ VREntityPtr VRRoadIntersection::addTrafficLight( posePtr p, string asset, Vec3f 
 }
 
 void VRRoadIntersection::computeTrafficLights() {
-    //for (auto road : roads) {
-        for (auto lane : entity->getAllEntities("lanes")) {
-            auto road = lane->getEntity("road");
-            Vec3f root;
+    auto node = entity->getEntity("node");
+    for (auto road : inLanes) {
+        auto eP = road.first->getEdgePoints( node );
+        Vec3f root = eP.p1;
+        for (auto lane : road.second) {
             for (auto pathEnt : lane->getAllEntities("path")) {
-                auto entry = pathEnt->getEntity("nodes");
+                auto entries = pathEnt->getAllEntities("nodes");
+                auto entry = entries[entries.size()-1];
                 float width = toFloat( lane->get("width")->value );
 
                 Vec3f p = entry->getEntity("node")->getVec3f("position");
@@ -150,10 +149,10 @@ void VRRoadIntersection::computeTrafficLights() {
                 Vec3f x = n.cross(Vec3f(0,1,0));
                 x.normalize();
                 auto P = pose::create( p + Vec3f(0,3,0), Vec3f(0,-1,0), n);
-                addTrafficLight(P, "trafficLight", p);
+                addTrafficLight(P, "trafficLight", root);
             }
         }
-    //}
+    }
 }
 
 void VRRoadIntersection::computeMarkings() {

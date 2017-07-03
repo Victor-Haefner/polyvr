@@ -107,11 +107,32 @@ VREntityPtr VRRoadBase::addPath( string type, string name, vector<VREntityPtr> n
 	return path;
 }
 
-VRGeometryPtr VRRoadBase::addPole( Vec3f root, Vec3f end, float radius ) {
+VRGeometryPtr VRRoadBase::addPole( Vec3f P1, Vec3f P4, float radius ) {
     auto p = path::create();
-    p->addPoint(pose(root, Vec3f(0,1,0), Vec3f(0,0,1)));
-    p->addPoint(pose(end,  Vec3f(0,1,0), Vec3f(0,0,1)));
-    p->compute(16);
+    Vec3f Y(0,1,0);
+    Vec3f pN = Vec3f(0,0,1); // normal of the plane where the pole lies in
+    Vec3f P2 = P1; P2[1] = P4[1] - 0.5;
+    Vec3f P3 = P1; P3[1] = P4[1];
+    Vec3f D = P4-P1; D[1] = 0;
+    bool curved = (D.squareLength() > 1e-3);
+
+    if (curved) {
+        pN = D.cross(Y);
+        pN.normalize();
+        D.normalize();
+        P3 += D*0.5;
+    }
+
+    p->addPoint(pose(P1, Y, pN));
+    if (curved) {
+        p->addPoint(pose(P2, Y, pN));
+        p->addPoint(pose(P3, D, pN));
+        p->addPoint(pose(P4, D, pN));
+        p->compute(8);
+    } else {
+        p->addPoint(pose(P4, Y, pN));
+        p->compute(2);
+    }
 
     int N = 8;
     vector<Vec3f> profile;

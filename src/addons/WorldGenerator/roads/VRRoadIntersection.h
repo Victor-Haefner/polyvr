@@ -17,6 +17,8 @@ class VRRoadIntersection : public VRRoadBase {
     private:
         VREntityPtr getRoadNode(VREntityPtr roadEnt);
         vector<VRRoadPtr> roads;
+        map<VRRoadPtr, vector<VREntityPtr>> inLanes;
+        map<VRRoadPtr, vector<VREntityPtr>> outLanes;
 
     public:
         VRRoadIntersection();
