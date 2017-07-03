@@ -9,12 +9,13 @@
 
 using namespace OSG;
 
-simplePyType(CarDynamics, New_named_ptr);
+simpleVRPyType(CarDynamics, New_named_ptr);
 simpleVRPyType(Driver, New_ptr);
 
 PyMethodDef VRPyCarDynamics::methods[] = {
     {"update", (PyCFunction)VRPyCarDynamics::update, METH_VARARGS, "Update vehicle physics input (float throttle {-1,1}, float break {0,1}, float steering {-1,1}, float clutch {0,1}, int gear)" },
     {"setChassis", (PyCFunction)VRPyCarDynamics::setChassis, METH_VARARGS, "Set chassis geometry - setChassis( geo | bool physicalize) " },
+    {"addWheel", PyWrap(CarDynamics, addWheel, "Add a wheel", void, VRGeometryPtr, Vec3f, float, float, bool, bool) },
     {"setupSimpleWheels", (PyCFunction)VRPyCarDynamics::setupSimpleWheels, METH_VARARGS, "Setup classic wheels - setupSimpleWheels( geo, float X, float Zp, float Zn, float height, float radius, float width)" },
     {"setParameter", (PyCFunction)VRPyCarDynamics::setParameter, METH_VARARGS, "Set car parameter, must be done before creating car - setParameter( float mass, float max_steering, float engine_power, float break_power | [x,y,z] mass offset  )" },
     {"reset", (PyCFunction)VRPyCarDynamics::reset, METH_VARARGS, "Reset car - reset( pose )" },

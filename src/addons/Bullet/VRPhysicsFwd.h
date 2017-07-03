@@ -5,7 +5,7 @@
 
 namespace OSG {
     ptrFwd(CarSound);
-    ptrFwd(CarDynamics);
+    ptrFwd(VRCarDynamics);
     ptrFwd(VRDriver);
 }
 

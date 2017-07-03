@@ -491,6 +491,17 @@ void VRGeoData::test_copy(VRGeoData& g) {
     data->texs = g.data->texs;*/
 }
 
+void VRGeoData::addVertexColors(Vec3f c) {
+    int N = size();
+    auto& cols = data->cols3;
+    if (cols->size() == 0) {
+        for (int i=0; i<N; i++) cols->addValue(c);
+    }
+    if (geo) {
+        geo->fixColorMapping();
+        geo->getMesh()->geo->setColors(cols);
+    }
+}
 
 
 

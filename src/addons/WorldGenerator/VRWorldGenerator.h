@@ -15,7 +15,13 @@ class VRWorldGenerator : public VRObject {
     private:
         VROntologyPtr ontology;
         map<string, VRTransformPtr> assets;
+        map<string, VRMaterialPtr> materials;
         VRRoadNetworkPtr roads;
+
+        static string assetMatVShdr;
+        static string assetMatFShdr;
+        static string assetTexMatVShdr;
+        static string assetTexMatFShdr;
 
         void init();
 
@@ -31,7 +37,9 @@ class VRWorldGenerator : public VRObject {
         VRRoadNetworkPtr getRoadNetwork();
 
         void addAsset( string name, VRTransformPtr geo );
+        void addMaterial( string name, VRMaterialPtr mat );
         VRTransformPtr getAsset(string name);
+        VRMaterialPtr getMaterial(string name);
 };
 
 OSG_END_NAMESPACE;

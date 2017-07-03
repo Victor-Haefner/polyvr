@@ -18,7 +18,7 @@ VRDriver::~VRDriver() {}
 
 VRDriverPtr VRDriver::create() { return VRDriverPtr( new VRDriver() ); }
 
-void VRDriver::setCar(CarDynamicsPtr c) { car = c; }
+void VRDriver::setCar(VRCarDynamicsPtr c) { car = c; }
 
 void VRDriver::update() {
     if (!active) return;

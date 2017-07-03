@@ -6,7 +6,7 @@
 #include "CarDynamics.h"
 #include "VRDriver.h"
 
-struct VRPyCarDynamics : VRPyBaseT<OSG::CarDynamics> {
+struct VRPyCarDynamics : VRPyBaseT<OSG::VRCarDynamics> {
     static PyMethodDef methods[];
 
     static PyObject* update(VRPyCarDynamics* self, PyObject* args);

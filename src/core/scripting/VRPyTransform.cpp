@@ -60,7 +60,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setCollisionMargin", (PyCFunction)VRPyTransform::setCollisionMargin, METH_VARARGS, "Set the collision margin of the physics object" },
     {"setCollisionGroup", (PyCFunction)VRPyTransform::setCollisionGroup, METH_VARARGS, "Set the collision group of the physics object - setCollisionGroup(int g)\n\t g can be from 0 to 8" },
     {"setCollisionMask", (PyCFunction)VRPyTransform::setCollisionMask, METH_VARARGS, "Set the collision mask of the physics object - setCollisionMask(int g)\n\t g can be from 0 to 8 and it is the group to collide with" },
-    {"setCollisionShape", (PyCFunction)VRPyTransform::setCollisionShape, METH_VARARGS, "Set the collision shape of the physics object, see physicalize" },
+    {"setCollisionShape", (PyCFunction)VRPyTransform::setCollisionShape, METH_VARARGS, "Set the collision shape of the physics object, see physicalize - setCollisionShape( str shape, float param )" },
     {"getCollisions", (PyCFunction)VRPyTransform::getCollisions, METH_NOARGS, "Return the current collisions with other objects" },
     {"applyImpulse", (PyCFunction)VRPyTransform::applyImpulse, METH_VARARGS, "Apply impulse on the physics object" },
     {"applyTorqueImpulse", (PyCFunction)VRPyTransform::applyTorqueImpulse, METH_VARARGS, "Apply torque impulse on the physics object" },

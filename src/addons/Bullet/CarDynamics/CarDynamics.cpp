@@ -18,29 +18,29 @@ typedef boost::recursive_mutex::scoped_lock PLock;
 using namespace OSG;
 using namespace std;
 
-CarDynamics::CarDynamics(string name) : VRObject(name) {
+VRCarDynamics::VRCarDynamics(string name) : VRObject(name) {
     setPersistency(0);
 	initPhysics();
 	carSound = CarSound::create();
 }
 
-CarDynamics::~CarDynamics() {
+VRCarDynamics::~VRCarDynamics() {
     PLock lock(mtx());
-    cout << "\nCarDynamics::~CarDynamics()\n";
+    cout << "\nVRCarDynamics::~VRCarDynamics()\n";
     m_dynamicsWorld->removeVehicle(m_vehicle);
 	if (m_vehicle) delete m_vehicle;
 	if (m_vehicleRayCaster) delete m_vehicleRayCaster;
 }
 
-CarDynamicsPtr CarDynamics::create(string name) { return CarDynamicsPtr( new CarDynamics(name) ); }
+VRCarDynamicsPtr VRCarDynamics::create(string name) { return VRCarDynamicsPtr( new VRCarDynamics(name) ); }
 
-CarSoundPtr CarDynamics::getCarSound() { return carSound; }
+CarSoundPtr VRCarDynamics::getCarSound() { return carSound; }
 
 //only to be done once
-void CarDynamics::initPhysics() {
+void VRCarDynamics::initPhysics() {
     auto scene = VRScene::getCurrent();
-    updateEPtr = VRFunction<int>::create("cardyn_engin_update", boost::bind(&CarDynamics::updateEngine, this));
-    updateWPtr = VRFunction<int>::create("cardyn_wheel_update", boost::bind(&CarDynamics::updateWheels, this));
+    updateEPtr = VRFunction<int>::create("cardyn_engin_update", boost::bind(&VRCarDynamics::updateEngine, this));
+    updateWPtr = VRFunction<int>::create("cardyn_wheel_update", boost::bind(&VRCarDynamics::updateWheels, this));
     scene->addUpdateFkt(updateEPtr);
     scene->addUpdateFkt(updateWPtr);
 
@@ -49,10 +49,10 @@ void CarDynamics::initPhysics() {
 	m_vehicleRayCaster = new btDefaultVehicleRaycaster(m_dynamicsWorld);
 }
 
-float CarDynamics::getSpeed() { return speed; }
-float CarDynamics::getAcceleration() { return acceleration; }
+float VRCarDynamics::getSpeed() { return speed; }
+float VRCarDynamics::getAcceleration() { return acceleration; }
 
-void CarDynamics::updateChassis() {
+void VRCarDynamics::updateChassis() {
     PLock lock(mtx());
     chassis.geo->getPhysics()->setPhysicalized(false);
     chassis.geo->getPhysics()->setMass(chassis.mass);
@@ -69,7 +69,7 @@ void CarDynamics::updateChassis() {
 	for (auto& wheel : wheels) addBTWheel(wheel);
 }
 
-void CarDynamics::addBTWheel(Wheel& wheel) {
+void VRCarDynamics::addBTWheel(Wheel& wheel) {
     if (!m_vehicle) return;
     btVector3 pos = VRPhysics::toBtVector3(wheel.position - chassis.massOffset);
     btVector3 dir = VRPhysics::toBtVector3(wheel.direction);
@@ -82,7 +82,7 @@ void CarDynamics::addBTWheel(Wheel& wheel) {
     btWheel.m_rollInfluence = wheel.rollInfluence;
 }
 
-void CarDynamics::updateWheels() {
+void VRCarDynamics::updateWheels() {
     if (!m_vehicle) return;
     PLock lock(mtx());
 
@@ -97,7 +97,7 @@ void CarDynamics::updateWheels() {
     }
 }
 
-void CarDynamics::setChassisGeo(VRTransformPtr geo, bool doPhys) {
+void VRCarDynamics::setChassisGeo(VRTransformPtr geo, bool doPhys) {
     for ( auto obj : geo->getChildren( true, "Geometry", true ) ) {
         auto geo = dynamic_pointer_cast<VRGeometry>(obj);
         chassis.geos.push_back(geo);
@@ -123,68 +123,64 @@ void CarDynamics::setChassisGeo(VRTransformPtr geo, bool doPhys) {
     updateChassis();
 }
 
-VRObjectPtr CarDynamics::getRoot() { return ptr(); }
-VRTransformPtr CarDynamics::getChassis() { return chassis.geo; }
-vector<VRTransformPtr> CarDynamics::getWheels() {
+VRObjectPtr VRCarDynamics::getRoot() { return ptr(); }
+VRTransformPtr VRCarDynamics::getChassis() { return chassis.geo; }
+vector<VRTransformPtr> VRCarDynamics::getWheels() {
     vector<VRTransformPtr> res;
     for (auto& wheel : wheels) if (wheel.geo) res.push_back(wheel.geo);
     return res;
 }
 
-void CarDynamics::setupSimpleWheels(VRTransformPtr geo, float x, float fZ, float rZ, float h, float r, float w) {
-    xOffset = x;
-    frontZOffset = fZ;
-    rearZOffset = rZ;
-    height = h;
+void VRCarDynamics::addWheel(VRGeometryPtr geo, Vec3f p, float radius, float width, bool steered, bool driven) {
+    Wheel wheel;
+    wheel.position = p;
+	wheel.isSteered = steered;
+	wheel.isDriven = driven;
+    wheel.geo = geo;
+    wheel.geo->setPersistency(0);
+    wheel.width = width;
+    wheel.radius = radius;
 
-    // create simple wheels
-	for (int i=0; i<4; i++) wheels.push_back(Wheel());
-	wheels[0].position = Vec3f( xOffset, height, frontZOffset); // front wheel left
-	wheels[1].position = Vec3f(-xOffset, height, frontZOffset); // front wheel right
-	wheels[2].position = Vec3f( xOffset, height, rearZOffset); // rear wheel right
-	wheels[3].position = Vec3f(-xOffset, height, rearZOffset); // rear wheel left
-	wheels[0].isSteered = true;
-	wheels[1].isSteered = true;
-	wheels[0].isDriven = true;
-	wheels[1].isDriven = true;
-
-	for (auto& wheel : wheels) {
-        wheel.geo = static_pointer_cast<VRGeometry>( geo->duplicate() );
-        wheel.geo->setPersistency(0);
-        addChild(wheel.geo);
-        wheel.width = w;
-        wheel.radius = r;
-        addBTWheel(wheel);
-	}
+    addChild(wheel.geo);
+    wheels.push_back(wheel);
+    addBTWheel(wheel);
 }
 
-void CarDynamics::setClutch(float t) { // from 0 to 1
+void VRCarDynamics::setupSimpleWheels(VRTransformPtr geo, float x, float fZ, float rZ, float h, float r, float w) {
+    // create four simple wheels
+    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3f( x, h, fZ), r, w, true, true);
+    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3f(-x, h, fZ), r, w, true, true);
+    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3f( x, h, rZ), r, w);
+    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3f(-x, h, rZ), r, w);
+}
+
+void VRCarDynamics::setClutch(float t) { // from 0 to 1
     t = max(0.f,t);
     t = min(1.f,t);
     clutch = t;
 }
 
-void CarDynamics::setThrottle(float t) { // from 0 to 1
+void VRCarDynamics::setThrottle(float t) { // from 0 to 1
     t = max(0.f,t);
     t = min(1.f,t);
     throttle = t;
 }
 
-void CarDynamics::setBreak(float b) { // from 0 to 1
+void VRCarDynamics::setBreak(float b) { // from 0 to 1
     b = max(0.f,b);
     b = min(1.f,b);
     breaking = b;
 }
 
-void CarDynamics::setSteering(float s) { // from -1 to 1
+void VRCarDynamics::setSteering(float s) { // from -1 to 1
     s = max(-1.f,s);
     s = min( 1.f,s);
     steering = s;
 }
 
-void CarDynamics::setGear(int g) { engine.gear = g; }
+void VRCarDynamics::setGear(int g) { engine.gear = g; }
 
-void CarDynamics::updateEngine() {
+void VRCarDynamics::updateEngine() {
     if (!m_vehicle) return;
     if (!wheels.size()) return;
     PLock lock(mtx());
@@ -269,21 +265,21 @@ void CarDynamics::updateEngine() {
     carSound->play(engine.rpm);
 }
 
-void CarDynamics::setIgnition(bool b) {
+void VRCarDynamics::setIgnition(bool b) {
     engine.running = b;
     engine.rpm = b ? 800 : 0;
 }
 
-bool CarDynamics::isRunning() { return engine.running; }
-float CarDynamics::getClutch() { return clutch; }
-float CarDynamics::getThrottle() { return throttle; }
-float CarDynamics::getBreaking() { return breaking; }
-float CarDynamics::getSteering() { return steering; }
-int CarDynamics::getGear() { return engine.gear; }
-int CarDynamics::getRPM() { return engine.rpm; }
+bool VRCarDynamics::isRunning() { return engine.running; }
+float VRCarDynamics::getClutch() { return clutch; }
+float VRCarDynamics::getThrottle() { return throttle; }
+float VRCarDynamics::getBreaking() { return breaking; }
+float VRCarDynamics::getSteering() { return steering; }
+int VRCarDynamics::getGear() { return engine.gear; }
+int VRCarDynamics::getRPM() { return engine.rpm; }
 
 
-void CarDynamics::setParameter(float mass, float maxSteering, float enginePower, float breakPower, Vec3f massOffset) {
+void VRCarDynamics::setParameter(float mass, float maxSteering, float enginePower, float breakPower, Vec3f massOffset) {
     if (mass > 0) chassis.mass = mass;
     engine.maxSteer = maxSteering;
     engine.power = enginePower;
@@ -322,7 +318,7 @@ void CarDynamics::setParameter(float mass, float maxSteering, float enginePower,
     updateChassis();
 }
 
-boost::recursive_mutex& CarDynamics::mtx() {
+boost::recursive_mutex& VRCarDynamics::mtx() {
     auto scene = VRScene::getCurrent();
     if (scene) return scene->physicsMutex();
     else {
@@ -331,7 +327,7 @@ boost::recursive_mutex& CarDynamics::mtx() {
     };
 }
 
-void CarDynamics::reset(const pose& p) {
+void VRCarDynamics::reset(const pose& p) {
     PLock lock(mtx());
     setIgnition(false);
 	btTransform t;
@@ -353,7 +349,7 @@ void CarDynamics::reset(const pose& p) {
 }
 
 // deprecated
-btRigidBody* CarDynamics::createRigitBody(float mass, const btTransform& startTransform, btCollisionShape* shape) {
+btRigidBody* VRCarDynamics::createRigitBody(float mass, const btTransform& startTransform, btCollisionShape* shape) {
 	if (shape == 0) return 0;
     PLock lock(mtx());
 	if (shape->getShapeType() == INVALID_SHAPE_PROXYTYPE) return 0;

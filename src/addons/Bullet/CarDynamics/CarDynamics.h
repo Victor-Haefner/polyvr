@@ -16,7 +16,7 @@ class pose;
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class CarDynamics : public VRObject {
+class VRCarDynamics : public VRObject {
     public:
         struct Wheel {
             VRTransformPtr geo;
@@ -105,9 +105,9 @@ class CarDynamics : public VRObject {
         void updateChassis();
 
     public:
-        CarDynamics(string name);
-        ~CarDynamics();
-        static CarDynamicsPtr create(string name);
+        VRCarDynamics(string name);
+        ~VRCarDynamics();
+        static VRCarDynamicsPtr create(string name);
 
         VRObjectPtr getRoot();
         VRTransformPtr getChassis();
@@ -125,6 +125,7 @@ class CarDynamics : public VRObject {
         int getGear();
         int getRPM();
 
+        void addWheel(VRGeometryPtr geo, Vec3f p, float radius, float width, bool steered = false, bool driven = false);
         void setChassisGeo(VRTransformPtr geo, bool doPhys = 1);
         void setupSimpleWheels(VRTransformPtr geo, float xOffset, float frontZOffset, float rearZOffset, float height, float radius, float width);
         void setParameter(float mass, float maxSteering, float enginePower, float breakPower, Vec3f massOffset = Vec3f());

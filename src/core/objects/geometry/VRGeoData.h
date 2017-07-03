@@ -140,6 +140,8 @@ class VRGeoData {
         PrimItr end() const;
         PrimItr cend() const;
 
+        void addVertexColors(Vec3f c);
+
         string status();
         void test_copy(VRGeoData& g);
 };

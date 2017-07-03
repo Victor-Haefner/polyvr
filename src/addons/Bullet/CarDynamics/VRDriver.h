@@ -11,7 +11,7 @@ OSG_BEGIN_NAMESPACE;
 
 class VRDriver {
     private:
-        CarDynamicsPtr car;
+        VRCarDynamicsPtr car;
         bool active = false;
         pathPtr p_path;
         pathPtr v_path;
@@ -25,7 +25,7 @@ class VRDriver {
         static VRDriverPtr create();
 
         //void setTask(); // TODO
-        void setCar( CarDynamicsPtr car );
+        void setCar( VRCarDynamicsPtr car );
         void followPath(pathPtr p, pathPtr v);
         void stop();
         bool isDriving();

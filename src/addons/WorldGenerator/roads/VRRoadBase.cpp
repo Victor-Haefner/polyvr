@@ -109,6 +109,7 @@ VREntityPtr VRRoadBase::addPath( string type, string name, vector<VREntityPtr> n
 
 VRGeometryPtr VRRoadBase::addPole( Vec3f P1, Vec3f P4, float radius ) {
     auto p = path::create();
+    Vec3f gray(0.4,0.4,0.4);
     Vec3f Y(0,1,0);
     Vec3f pN = Vec3f(0,0,1); // normal of the plane where the pole lies in
     Vec3f P2 = P1; P2[1] = P4[1] - 0.5;
@@ -123,14 +124,14 @@ VRGeometryPtr VRRoadBase::addPole( Vec3f P1, Vec3f P4, float radius ) {
         P3 += D*0.5;
     }
 
-    p->addPoint(pose(P1, Y, pN));
+    p->addPoint(pose(P1, Y, pN), gray);
     if (curved) {
-        p->addPoint(pose(P2, Y, pN));
-        p->addPoint(pose(P3, D, pN));
-        p->addPoint(pose(P4, D, pN));
+        p->addPoint(pose(P2, Y*2, pN), gray);
+        p->addPoint(pose(P3, D*2, pN), gray);
+        p->addPoint(pose(P4, D, pN), gray);
         p->compute(8);
     } else {
-        p->addPoint(pose(P4, Y, pN));
+        p->addPoint(pose(P4, Y, pN), gray);
         p->compute(2);
     }
 
@@ -143,6 +144,7 @@ VRGeometryPtr VRRoadBase::addPole( Vec3f P1, Vec3f P4, float radius ) {
 
     auto s = VRStroke::create("pole");
     s->setPath(p);
-    s->strokeProfile(profile, true, false);
+    s->strokeProfile(profile, true, true);
+    s->setMaterial( world->getMaterial("phong") );
     return s;
 }
