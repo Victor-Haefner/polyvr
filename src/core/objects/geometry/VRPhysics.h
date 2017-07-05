@@ -49,6 +49,7 @@ class VRPhysics : public OSG::VRStorage {
         btSoftBody* soft_body = 0;
 
         btCollisionShape* shape = 0;
+        btCollisionShape* customShape = 0;
         float shape_param = -1;
         btDefaultMotionState* motionState = 0;
         btSoftRigidDynamicsWorld* world = 0;
@@ -118,6 +119,7 @@ class VRPhysics : public OSG::VRStorage {
         btCollisionShape* getCollisionShape();
 
         void setShape(string s, float param = -1);
+        void setCustomShape(btCollisionShape* shape);
         string getShape();
         OSG::VRTransformPtr getVisualShape();
 

@@ -337,6 +337,7 @@ void VRPhysics::update() {
 
     CoMOffset = OSG::Vec3f(0,0,0);
     if (comType == "custom") CoMOffset = CoMOffset_custom;
+    if (physicsShape == "Custom") shape = customShape;
     if (physicsShape == "Compound") shape = getCompoundShape();
     if (physicsShape == "Box") shape = getBoxShape();
     if (physicsShape == "Sphere") shape = getSphereShape();
@@ -751,6 +752,8 @@ btCollisionShape* VRPhysics::getHACDShape() {
 
     return shape;
 }
+
+void VRPhysics::setCustomShape(btCollisionShape* shape) { customShape = shape; physicsShape = "Custom"; }
 
 OSG::VRTransformPtr VRPhysics::getVisualShape() { return visShape; }
 

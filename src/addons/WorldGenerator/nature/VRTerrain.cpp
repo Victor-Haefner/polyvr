@@ -10,9 +10,6 @@
 
 #include <OpenSG/OSGIntersectAction.h>
 
-#include <btBulletDynamicsCommon.h>
-#include <BulletCollision/CollisionShapes/btShapeHull.h>
-
 #define GLSL(shader) #shader
 
 using namespace OSG;
@@ -79,8 +76,202 @@ void VRTerrain::setupGeo() {
 	setMaterial(mat);
 }
 
+#include <BulletCollision/CollisionShapes/btCollisionMargin.h>
+#include <BulletCollision/CollisionShapes/btPolyhedralConvexShape.h>
+#include <BulletCollision/BroadphaseCollision/btBroadphaseProxy.h>
+#include <LinearMath/btVector3.h>
+#include <LinearMath/btMinMax.h>
+
+ATTRIBUTE_ALIGNED16(class) VRTerrainShape: public btPolyhedralConvexShape {
+    private:
+        VRTerrain* terrain = 0;
+
+    public:
+        BT_DECLARE_ALIGNED_ALLOCATOR();
+
+        VRTerrainShape( VRTerrain* terrain ) : btPolyhedralConvexShape(), terrain(terrain) {
+            btVector3 boxHalfExtents(10,1,10);
+            m_shapeType = BOX_SHAPE_PROXYTYPE;
+            setSafeMargin(boxHalfExtents);
+            btVector3 margin(getMargin(),getMargin(),getMargin());
+            m_implicitShapeDimensions = (boxHalfExtents * m_localScaling) - margin;
+        };
+
+        btVector3 getHalfExtentsWithMargin() const {
+            btVector3 halfExtents = getHalfExtentsWithoutMargin();
+            btVector3 margin(getMargin(),getMargin(),getMargin());
+            halfExtents += margin;
+            return halfExtents;
+        }
+
+        const btVector3& getHalfExtentsWithoutMargin() const {
+            return m_implicitShapeDimensions;
+        }
+
+        btVector3 toSupportingVector(const btVector3& vec, const btVector3& halfExtents) const {
+            return btVector3(btFsels(vec.x(), halfExtents.x(), -halfExtents.x()),
+                btFsels(vec.y(), halfExtents.y(), -halfExtents.y()),
+                btFsels(vec.z(), halfExtents.z(), -halfExtents.z()));
+        }
+
+        SIMD_FORCE_INLINE btVector3 localGetSupportingVertexWithoutMargin(const btVector3& vec) const {
+            const btVector3& halfExtents = getHalfExtentsWithoutMargin();
+            return toSupportingVector(vec, halfExtents);
+        }
+
+        virtual btVector3 localGetSupportingVertex(const btVector3& vec) const {
+            const btVector3& halfExtents = getHalfExtentsWithMargin();
+            return toSupportingVector(vec, halfExtents);
+        }
+
+        virtual void batchedUnitVectorGetSupportingVertexWithoutMargin(const btVector3* vectors,btVector3* supportVerticesOut,int numVectors) const {
+            const btVector3& halfExtents = getHalfExtentsWithoutMargin();
+            for (int i=0;i<numVectors;i++) {
+                const btVector3& vec = vectors[i];
+                supportVerticesOut[i] = toSupportingVector(vec, halfExtents);
+            }
+        }
+
+        virtual void setMargin(btScalar collisionMargin) {
+            btVector3 oldMargin(getMargin(),getMargin(),getMargin());
+            btVector3 implicitShapeDimensionsWithMargin = m_implicitShapeDimensions+oldMargin;
+            btConvexInternalShape::setMargin(collisionMargin);
+            btVector3 newMargin(getMargin(),getMargin(),getMargin());
+            m_implicitShapeDimensions = implicitShapeDimensionsWithMargin - newMargin;
+        }
+
+        virtual void setLocalScaling(const btVector3& scaling) {
+            btVector3 oldMargin(getMargin(),getMargin(),getMargin());
+            btVector3 implicitShapeDimensionsWithMargin = m_implicitShapeDimensions+oldMargin;
+            btVector3 unScaledImplicitShapeDimensionsWithMargin = implicitShapeDimensionsWithMargin / m_localScaling;
+            btConvexInternalShape::setLocalScaling(scaling);
+            m_implicitShapeDimensions = (unScaledImplicitShapeDimensionsWithMargin * m_localScaling) - oldMargin;
+        }
+
+        virtual void getAabb(const btTransform& t,btVector3& aabbMin,btVector3& aabbMax) const {
+            btTransformAabb(getHalfExtentsWithoutMargin(),getMargin(),t,aabbMin,aabbMax);
+        }
+
+        virtual void calculateLocalInertia(btScalar mass,btVector3& inertia) const {
+            btVector3 halfExtents = getHalfExtentsWithMargin() * 2;
+            btScalar x = halfExtents.x();
+            btScalar y = halfExtents.y();
+            btScalar z = halfExtents.z();
+            inertia = btVector3( y*y + z*z, x*x + z*z, x*x + y*y) * (mass/12.0);
+        }
+
+        virtual void getPlane(btVector3& planeNormal,btVector3& planeSupport,int i ) const {
+            btVector4 plane ;
+            getPlaneEquation(plane,i);
+            planeNormal = btVector3(plane.getX(),plane.getY(),plane.getZ());
+            planeSupport = localGetSupportingVertex(-planeNormal);
+        }
+
+        virtual int getNumPlanes() const { return 6; }
+        virtual int	getNumVertices() const { return 8; }
+        virtual int getNumEdges() const { return 12; }
+
+        virtual void getVertex(int i,btVector3& vtx) const {
+            btVector3 halfExtents = getHalfExtentsWithMargin();
+            vtx = btVector3(
+                    halfExtents.x() * (1-(i&1)) - halfExtents.x() * (i&1),
+                    halfExtents.y() * (1-((i&2)>>1)) - halfExtents.y() * ((i&2)>>1),
+                    halfExtents.z() * (1-((i&4)>>2)) - halfExtents.z() * ((i&4)>>2));
+        }
+
+        virtual void getPlaneEquation(btVector4& plane,int i) const {
+            btVector3 halfExtents = getHalfExtentsWithoutMargin();
+            plane = btVector4(0,0,0,-halfExtents[i/2]);
+            plane[i/2] = 1-2*i%2; // -1 or 1
+        }
+
+        virtual void getEdge(int i,btVector3& pa,btVector3& pb) const {
+            int edgeVert0 = 0;
+            int edgeVert1 = 0;
+
+            switch (i) {
+                case 0:
+                    edgeVert0 = 0;
+                    edgeVert1 = 1;
+                    break;
+                case 1:
+                    edgeVert0 = 0;
+                    edgeVert1 = 2;
+                    break;
+                case 2:
+                    edgeVert0 = 1;
+                    edgeVert1 = 3;
+                    break;
+                case 3:
+                    edgeVert0 = 2;
+                    edgeVert1 = 3;
+                    break;
+                case 4:
+                    edgeVert0 = 0;
+                    edgeVert1 = 4;
+                    break;
+                case 5:
+                    edgeVert0 = 1;
+                    edgeVert1 = 5;
+                    break;
+                case 6:
+                    edgeVert0 = 2;
+                    edgeVert1 = 6;
+                    break;
+                case 7:
+                    edgeVert0 = 3;
+                    edgeVert1 = 7;
+                    break;
+                case 8:
+                    edgeVert0 = 4;
+                    edgeVert1 = 5;
+                    break;
+                case 9:
+                    edgeVert0 = 4;
+                    edgeVert1 = 6;
+                    break;
+                case 10:
+                    edgeVert0 = 5;
+                    edgeVert1 = 7;
+                    break;
+                case 11:
+                    edgeVert0 = 6;
+                    edgeVert1 = 7;
+                    break;
+                default:
+                    btAssert(0);
+            }
+
+            getVertex(edgeVert0,pa );
+            getVertex(edgeVert1,pb );
+        }
+
+        virtual	bool isInside(const btVector3& pt,btScalar tolerance) const {
+            btVector3 halfExtents = getHalfExtentsWithoutMargin();
+
+            bool result =	(pt.x() <= (halfExtents.x()+tolerance)) &&
+                            (pt.x() >= (-halfExtents.x()-tolerance)) &&
+                            (pt.y() <= (halfExtents.y()+tolerance)) &&
+                            (pt.y() >= (-halfExtents.y()-tolerance)) &&
+                            (pt.z() <= (halfExtents.z()+tolerance)) &&
+                            (pt.z() >= (-halfExtents.z()-tolerance));
+
+            return result;
+        }
+
+        virtual const char*	getName() const { return "Terrain"; }
+
+        virtual int getNumPreferredPenetrationDirections() const { return 6; }
+
+        virtual void getPreferredPenetrationDirection(int i, btVector3& penetrationVector) const {
+            penetrationVector = btVector3(0,0,0);
+            penetrationVector[i/2] = 1-2*i%2; // -1 or 1
+        }
+};
+
 void VRTerrain::physicalize(bool b) {
-    //getPhysics()->setCustomShape( shape );
+    auto shape = new VRTerrainShape(this);
+    getPhysics()->setCustomShape( shape );
     getPhysics()->setPhysicalized(true);
 }
 
