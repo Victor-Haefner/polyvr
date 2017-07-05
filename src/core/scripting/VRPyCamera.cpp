@@ -10,6 +10,10 @@ PyMethodDef VRPyCamera::methods[] = {
     {"activate", (PyCFunction)VRPyCamera::activate, METH_NOARGS, "Switch to camera - activate()" },
     {"setFov", (PyCFunction)VRPyCamera::setFov, METH_VARARGS, "Set the camera's field of view" },
     {"focus", (PyCFunction)VRPyCamera::focus, METH_VARARGS, "Set the camera's position to see the whole scene under the object - focus(object)" },
+    {"setAspect", PyWrap(Camera, setAspect, "Set camera aspect ratio", void, float) },
+    {"setFov", PyWrap(Camera, setFov, "Set camera field of view", void, float) },
+    {"setNear", PyWrap(Camera, setNear, "Set camera near clipping", void, float) },
+    {"setFar", PyWrap(Camera, setFar, "Set camera far clipping", void, float) },
     {NULL}  /* Sentinel */
 };
 
