@@ -92,8 +92,9 @@ void VRTerrain::physicalize(bool b) {
         }
     }
 
+    float R = resolution*0.94; // Hack, there is a scaling error somewhere, either in the shape or the visualisation
     auto shape = new btHeightfieldTerrainShape(dim[0], dim[1], &(*physicsHeightBuffer)[0], 1, -Hmax, Hmax, 1, PHY_FLOAT, false);
-    shape->setLocalScaling(btVector3(resolution,1,resolution));
+    shape->setLocalScaling(btVector3(R,1,R));
     getPhysics()->setCustomShape( shape );
     getPhysics()->setPhysicalized(true);
 }
@@ -264,7 +265,7 @@ void main() {
 		float D = length(pos.xyz);
 		//int p = int(5.0/(resolution*D));
 		//int res = int(pow(2,p));
-		int res = int(resolution*32*64/D);
+		int res = int(resolution*2048/D); // 32*64
 		res = clamp(res, 1, 64);
 		if (res >= 64) res = 64; // take closest power of two to avoid jumpy effects
 		else if (res >= 32) res = 32;
