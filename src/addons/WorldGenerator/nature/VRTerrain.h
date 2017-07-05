@@ -37,6 +37,8 @@ class VRTerrain : public VRGeometry {
         void setMap( VRTexturePtr tex );
 
         virtual bool applyIntersectionAction(Action* ia);
+
+        void physicalize(bool b);
 };
 
 /* TODO:

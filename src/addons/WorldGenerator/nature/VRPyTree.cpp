@@ -122,6 +122,7 @@ PyObject* VRPyWoods::computeLODs(VRPyWoods* self) {
 PyMethodDef VRPyTerrain::methods[] = {
     {"setParameters", (PyCFunction)VRPyTerrain::setParameters, METH_VARARGS, "Set the terrain parameters - setParameters( [x,y] size, float resolution ) " },
     {"setMap", (PyCFunction)VRPyTerrain::setMap, METH_VARARGS, "Set height map - setMap( texture )" },
+    {"physicalize", PyWrap(Terrain, physicalize, "Physicalize terrain", void, bool) },
     {NULL}  /* Sentinel */
 };
 

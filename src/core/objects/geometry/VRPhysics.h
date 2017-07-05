@@ -2,6 +2,7 @@
 #define VRTRANSFORM_PHYSICS_EXT_H_INCLUDED
 
 #include "core/utils/VRStorage.h"
+#include "core/utils/VRFunctionFwd.h"
 #include "core/objects/VRObjectFwd.h"
 #include <OpenSG/OSGMatrix.h>
 #include <LinearMath/btVector3.h>
@@ -14,6 +15,8 @@ class btPairCachingGhostObject;
 class btCollisionShape;
 class btDefaultMotionState;
 class btCollisionObject;
+class btManifoldPoint;
+class btCollisionObjectWrapper;
 
 using namespace std;
 
@@ -29,6 +32,16 @@ struct VRCollision {
 };
 
 class VRPhysics : public OSG::VRStorage {
+    public:
+        struct btCollision {
+            btManifoldPoint* cp;
+            btCollisionObjectWrapper* obj1;
+            btCollisionObjectWrapper* obj2;
+        };
+
+        typedef VRFunction<btCollision> Callback;
+        typedef std::shared_ptr<Callback> CallbackPtr;
+
     private:
         btRigidBody* body = 0;
         btPairCachingGhostObject* ghost_body = 0;
@@ -47,11 +60,13 @@ class VRPhysics : public OSG::VRStorage {
         bool ghost = false;
         bool soft = false;
         bool physTree = true;
+        bool useCallbacks = false;
         float mass = 1.0;
         float collisionMargin = 0.3;
         float linDamping = 0;
         float angDamping = 0;
         btVector3 gravity;
+        CallbackPtr callback;
 
         vector<OSG::Vec3f> torqueJob;
         vector<OSG::Vec3f> forceJob;
@@ -109,6 +124,7 @@ class VRPhysics : public OSG::VRStorage {
         void setPhysicalized(bool b);
         bool isPhysicalized();
         void physicalizeTree(bool b);
+        void setCollisionCallback(CallbackPtr cb);
 
         void setDynamic(bool b);
         bool isDynamic();
@@ -178,6 +194,8 @@ class VRPhysics : public OSG::VRStorage {
 
         void updateConstraint(VRPhysics* p);
         void updateConstraints();
+
+        void triggerCallbacks(btManifoldPoint* cp, const btCollisionObjectWrapper* obj1, const btCollisionObjectWrapper* obj2 );
 };
 
 #endif // VRTRANSFORM_PHYSICS_EXT_H_INCLUDED

@@ -2,10 +2,16 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/material/VRTextureGenerator.h"
+#include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/OSGGeometry.h"
+#include "core/utils/VRFunction.h"
+#include "core/math/boundingbox.h"
 
 #include <OpenSG/OSGIntersectAction.h>
+
+#include <btBulletDynamicsCommon.h>
+#include <BulletCollision/CollisionShapes/btShapeHull.h>
 
 #define GLSL(shader) #shader
 
@@ -71,6 +77,11 @@ void VRTerrain::setupGeo() {
 	setType(GL_PATCHES);
 	setPatchVertices(4);
 	setMaterial(mat);
+}
+
+void VRTerrain::physicalize(bool b) {
+    //getPhysics()->setCustomShape( shape );
+    getPhysics()->setPhysicalized(true);
 }
 
 void VRTerrain::setupMat() {

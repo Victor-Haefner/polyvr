@@ -287,6 +287,24 @@ void VRPhysics::clear() {
     visShape.reset();
 }
 
+void VRPhysics::triggerCallbacks(btManifoldPoint* cp, const btCollisionObjectWrapper* obj1, const btCollisionObjectWrapper* obj2 ) {
+    btCollision c;
+    c.cp = cp;
+    c.obj1 = (btCollisionObjectWrapper*)obj1;
+    c.obj2 = (btCollisionObjectWrapper*)obj2;
+    if (callback) (*callback)(c);
+}
+
+bool customContactAddedCallback( btManifoldPoint& cp, const btCollisionObjectWrapper* obj1, int partID1, int ID1, const btCollisionObjectWrapper* obj2, int partID2, int ID2) {
+    bool isCBObj1 = obj1->getCollisionObject()->getCollisionFlags() & btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK;
+    bool isCBObj2 = obj2->getCollisionObject()->getCollisionFlags() & btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK;
+    VRPhysics* phys = 0;
+    if (isCBObj1) phys = (VRPhysics*)obj1->getCollisionObject()->getUserPointer();
+    if (isCBObj2) phys = (VRPhysics*)obj2->getCollisionObject()->getUserPointer();
+    if (phys) phys->triggerCallbacks(&cp, obj1, obj2);
+	return true; // ignored
+}
+
 void VRPhysics::update() {
     auto scene = OSG::VRScene::getCurrent();
     if (scene == 0) return;
@@ -325,6 +343,7 @@ void VRPhysics::update() {
     if (physicsShape == "Convex") shape = getConvexShape(CoMOffset);
     if (physicsShape == "Concave") shape = getConcaveShape();
     if (physicsShape == "ConvexDecomposed") shape = getHACDShape();
+    if (useCallbacks) gContactAddedCallback = customContactAddedCallback;
     if (shape == 0) { cout << "ERROR: physics shape unknown: " << physicsShape << endl; return; }
 
     motionState = new btDefaultMotionState( fromVRTransform( vr_obj, scale, CoMOffset ) );
@@ -337,13 +356,16 @@ void VRPhysics::update() {
         if ( auto sp = vr_obj.lock() ) ghost_body->setUserPointer( sp.get() );
         ghost_body->setCollisionFlags( btCollisionObject::CF_KINEMATIC_OBJECT | btCollisionObject::CF_NO_CONTACT_RESPONSE );
         world->addCollisionObject(ghost_body, collisionGroup, collisionMask);
+        ghost_body->setUserPointer(this);
     } else {
         btRigidBody::btRigidBodyConstructionInfo rbInfo( _mass, motionState, shape, inertiaVector );
         body = new btRigidBody(rbInfo);
+        if (useCallbacks) body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
         body->setActivationState(activation_mode);
         body->setDamping(btScalar(linDamping),btScalar(angDamping));
         world->addRigidBody(body, collisionGroup, collisionMask);
         body->setGravity(gravity);
+        body->setUserPointer(this);
     }
 
     scene->physicalize(vr_obj.lock());
@@ -353,6 +375,8 @@ void VRPhysics::update() {
     updateVisualGeo();
     scene->getVisualLayer()->addObject(visShape);
 }
+
+void VRPhysics::setCollisionCallback(CallbackPtr cb) { callback = cb; useCallbacks = true; update(); }
 
 btSoftBody* VRPhysics::createCloth() {
     auto obj = vr_obj.lock();
@@ -417,7 +441,6 @@ btSoftBody* VRPhysics::createCloth() {
 
     return ret;//return the first and only plane....
 }
-
 
 btSoftBody* VRPhysics::createRope() {
    return 0;
@@ -735,6 +758,7 @@ void VRPhysics::updateVisualGeo() {
     auto geo = visShape;
     if (!geo) return;
     btCollisionShape* shape = getCollisionShape();
+    if (!shape) return;
     int stype = shape->getShapeType();
 
     // 0 : box
