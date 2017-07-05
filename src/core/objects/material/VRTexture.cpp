@@ -124,17 +124,16 @@ size_t VRTexture::getByteSize() {
     return s[0]*s[1]*s[2]*getPixelByteSize();
 }
 
-Vec4f VRTexture::getPixel(Vec2f uv) { // TODO: check data format (float/integer/char)
+Vec4f VRTexture::getPixel(Vec3i p) { // TODO: check data format (float/integer/char)
     auto res = Vec4f(0,0,0,1);
     if (!img) return res;
     int N = getChannels();
-    //int B = img->getBpp()/N;
     int w = img->getWidth();
     int h = img->getHeight();
-    int x = uv[0]*(w-1);
-    int y = uv[1]*(h-1);
+    //int B = img->getBpp()/N;
+
     auto data = img->getData();
-    int i = x + y*w;
+    int i = p[0] + p[1]*w + p[2]*w*h;
 
     if (N == 1) {
         float* f = (float*)data;
@@ -162,6 +161,16 @@ Vec4f VRTexture::getPixel(Vec2f uv) { // TODO: check data format (float/integer/
     //cout << "VRTexture::getPixel " << Vec4i(B, N, w, h) << " uv " << uv << " i " << i << " xy " << Vec2i(x,y) <<  " N " << w*h << " c " << res << endl;
     //cout << "  size " << img->getSize();
     return res;
+}
+
+Vec4f VRTexture::getPixel(Vec2f uv) {
+    auto res = Vec4f(0,0,0,1);
+    if (!img) return res;
+    int w = img->getWidth();
+    int h = img->getHeight();
+    int x = uv[0]*(w-1);
+    int y = uv[1]*(h-1);
+    return getPixel(Vec3i(x,y,0));
 }
 
 Vec3i VRTexture::getSize() {

@@ -23,6 +23,7 @@ class VRTerrain : public VRGeometry {
         float grid = 64;
         VRTexturePtr tex;
         VRMaterialPtr mat;
+        shared_ptr<vector<float>> physicsHeightBuffer;
 
         void updateTexelSize();
         void setupGeo();
