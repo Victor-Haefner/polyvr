@@ -6,6 +6,8 @@
 namespace OSG {
 
 ptrFwd( VRWorldGenerator );
+ptrFwd( VRTerrain );
+ptrFwd( VRPlanet );
 ptrFwd( VRPlantMaterial );
 ptrFwd( VRAsphalt );
 ptrFwd( VRRoad );

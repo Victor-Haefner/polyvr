@@ -26,8 +26,6 @@
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
 #include "addons/Engineering/CSG/VRPyCSG.h"
-#include "addons/WorldGenerator/VRPyWorldGenerator.h"
-#include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 
 using namespace OSG;
 
@@ -77,8 +75,6 @@ template<> PyObject* VRPyTypeCaster::cast<VRDevicePtr>(VRDevicePtr dev) {
 template<> PyObject* VRPyTypeCaster::cast<VRTransformPtr>(VRTransformPtr e) { return VRPyTypeCaster::cast(dynamic_pointer_cast<VRObject>(e)); }
 template<> PyObject* VRPyTypeCaster::cast<VRGeometryPtr>(VRGeometryPtr e) { return VRPyTypeCaster::cast(dynamic_pointer_cast<VRObject>(e)); }
 template<> PyObject* VRPyTypeCaster::cast<VREntityPtr>(VREntityPtr e) { return VRPyEntity::fromSharedPtr(e); }
-template<> PyObject* VRPyTypeCaster::cast<VRRoadPtr>(VRRoadPtr e) { return VRPyRoad::fromSharedPtr(e); }
-template<> PyObject* VRPyTypeCaster::cast<VRRoadNetworkPtr>(VRRoadNetworkPtr e) { return VRPyRoadNetwork::fromSharedPtr(e); }
 template<> PyObject* VRPyTypeCaster::cast<int>(int i) { return PyInt_FromLong(i); }
 template<> PyObject* VRPyTypeCaster::cast<float>(float i) { return PyFloat_FromDouble(i); }
 template<> PyObject* VRPyTypeCaster::cast<string>(string s) { return PyString_FromString(s.c_str()); }

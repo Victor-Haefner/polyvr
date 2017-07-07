@@ -3,7 +3,6 @@
 
 #include "core/scripting/VRPyBase.h"
 #include "VRTree.h"
-#include "VRTerrain.h"
 #include "VRWoods.h"
 
 struct VRPyTree : VRPyBaseT<OSG::VRTree> {
@@ -14,13 +13,6 @@ struct VRPyTree : VRPyBaseT<OSG::VRTree> {
     static PyObject* grow(VRPyTree* self, PyObject* args);
     static PyObject* addLeafs(VRPyTree* self, PyObject* args);
     static PyObject* setLeafMaterial(VRPyTree* self, PyObject* args);
-};
-
-struct VRPyTerrain : VRPyBaseT<OSG::VRTerrain> {
-    static PyMethodDef methods[];
-
-    static PyObject* setParameters(VRPyTerrain* self, PyObject* args);
-    static PyObject* setMap(VRPyTerrain* self, PyObject* args);
 };
 
 struct VRPyWoods : VRPyBaseT<OSG::VRWoods> {

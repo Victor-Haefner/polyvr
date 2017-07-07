@@ -6,16 +6,18 @@ using namespace std;
 VRPerlin::VRPerlin() {}
 
 float VRPerlin::lerp(float a0, float a1, float w) { return (1.0 - w)*a0 + w*a1; }
+float VRPerlin::hermite3(float w) { return 3*pow(w,2) - 2*pow(w,3); }
+float VRPerlin::hermite5(float w) { return 6*pow(w,5) - 15*pow(w,4) + 10*pow(w,3); }
 
 float VRPerlin::dotGridGradient(Vec3f* grid, Vec3i dim, Vec3i vi, Vec3f v) {
     Vec3f d = v-Vec3f(vi); // Compute the distance vector
 
-    if (vi[0] >= dim[0]) vi[0] = 0; // cyclic
+    if (vi[0] >= dim[0]) vi[0] = 0; // cyclic boundary condition
     if (vi[1] >= dim[1]) vi[1] = 0;
     if (vi[2] >= dim[2]) vi[2] = 0;
 
-    Vec3f g = grid[vi[0]+vi[1]*dim[0]+vi[2]*dim[1]*dim[0]]; // Compute the dot-product
-    return d.dot(g);
+    int k = vi[0]+vi[1]*dim[0]+vi[2]*dim[1]*dim[0];
+    return d.dot( grid[k] );
 }
 
 float VRPerlin::perlin(Vec3f* grid, const Vec3i& dim, const Vec3f& v) {
@@ -25,26 +27,29 @@ float VRPerlin::perlin(Vec3f* grid, const Vec3i& dim, const Vec3f& v) {
 
     // Interpolate between grid point gradients
     Vec2f n, ix0, ix1, ix2;
+    float fu = hermite5(s[0]);
+    float fv = hermite5(s[1]);
+    float fw = s[2]; //hermite5(s[2]);
 
-    n[0] = dotGridGradient(grid, dim, v0, v);
+    n[0] = dotGridGradient(grid, dim, v0             , v);
     n[1] = dotGridGradient(grid, dim, v0+Vec3i(1,0,0), v);
-    ix0[0] = lerp(n[0], n[1], s[0]);
+    ix0[0] = lerp(n[0], n[1], fu);
 
     n[0] = dotGridGradient(grid, dim, v0+Vec3i(0,1,0), v);
     n[1] = dotGridGradient(grid, dim, v0+Vec3i(1,1,0), v);
-    ix0[1] = lerp(n[0], n[1], s[0]);
+    ix0[1] = lerp(n[0], n[1], fu);
 
     n[0] = dotGridGradient(grid, dim, v0+Vec3i(0,0,1), v);
     n[1] = dotGridGradient(grid, dim, v0+Vec3i(1,0,1), v);
-    ix1[0] = lerp(n[0], n[1], s[0]);
+    ix1[0] = lerp(n[0], n[1], fu);
 
     n[0] = dotGridGradient(grid, dim, v0+Vec3i(0,1,1), v);
     n[1] = dotGridGradient(grid, dim, v0+Vec3i(1,1,1), v);
-    ix1[1] = lerp(n[0], n[1], s[0]);
+    ix1[1] = lerp(n[0], n[1], fu);
 
-    ix2[0] = lerp(ix0[0], ix0[1], s[1]);
-    ix2[1] = lerp(ix1[0], ix1[1], s[1]);
-    return lerp(ix2[0], ix2[1], s[2]);
+    ix2[0] = lerp(ix0[0], ix0[1], fv);
+    ix2[1] = lerp(ix1[0], ix1[1], fv);
+    return lerp(ix2[0], ix2[1], fw);
 }
 
 void VRPerlin::apply(Vec3f* data, Vec3i dims, float amount, Vec3f c1, Vec3f c2) {

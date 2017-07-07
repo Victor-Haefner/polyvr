@@ -7,7 +7,6 @@
 
 using namespace OSG;
 
-simpleVRPyType(Terrain, New_VRObjects_ptr);
 simpleVRPyType(Tree, New_VRObjects_ptr);
 simpleVRPyType(Woods, New_VRObjects_ptr);
 
@@ -118,27 +117,5 @@ PyObject* VRPyWoods::computeLODs(VRPyWoods* self) {
     Py_RETURN_TRUE;
 }
 
-
-PyMethodDef VRPyTerrain::methods[] = {
-    {"setParameters", (PyCFunction)VRPyTerrain::setParameters, METH_VARARGS, "Set the terrain parameters - setParameters( [x,y] size, float resolution ) " },
-    {"setMap", (PyCFunction)VRPyTerrain::setMap, METH_VARARGS, "Set height map - setMap( texture )" },
-    {"physicalize", PyWrap(Terrain, physicalize, "Physicalize terrain", void, bool) },
-    {NULL}  /* Sentinel */
-};
-
-PyObject* VRPyTerrain::setParameters(VRPyTerrain* self, PyObject* args) {
-    PyObject* o = 0;
-    float s;
-    if (! PyArg_ParseTuple(args, "Of", &o, &s)) return NULL;
-    self->objPtr->setParameters( parseVec2fList(o), s );
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyTerrain::setMap(VRPyTerrain* self, PyObject* args) {
-    VRPyImage* t = 0;
-    if (! PyArg_ParseTuple(args, "O", &t)) return NULL;
-    self->objPtr->setMap( t->objPtr );
-    Py_RETURN_TRUE;
-}
 
 

@@ -85,6 +85,7 @@
 #include "addons/Engineering/VRPyRobotArm.h"
 #include "addons/WorldGenerator/VRPyWorldGenerator.h"
 #include "addons/WorldGenerator/nature/VRPyTree.h"
+#include "addons/WorldGenerator/terrain/VRPyTerrain.h"
 #include "addons/Engineering/CSG/VRPyCSG.h"
 #include "addons/RealWorld/VRPyRealWorld.h"
 #include "addons/RealWorld/traffic/VRPyTrafficSimulation.h"
@@ -169,6 +170,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyTree>("Tree", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyWoods>("Woods", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTerrain>("Terrain", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPyPlanet>("Planet", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyMillingMachine>("MillingMachine", pModVR);
     sm->registerModule<VRPyMillingWorkPiece>("MillingWorkPiece", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyMillingCuttingToolProfile>("MillingCuttingToolProfile", pModVR);

@@ -522,8 +522,6 @@
 		<Unit filename="src/addons/WorldGenerator/nature/VRPlantMaterial.h" />
 		<Unit filename="src/addons/WorldGenerator/nature/VRPyTree.cpp" />
 		<Unit filename="src/addons/WorldGenerator/nature/VRPyTree.h" />
-		<Unit filename="src/addons/WorldGenerator/nature/VRTerrain.cpp" />
-		<Unit filename="src/addons/WorldGenerator/nature/VRTerrain.h" />
 		<Unit filename="src/addons/WorldGenerator/nature/VRTree.cpp" />
 		<Unit filename="src/addons/WorldGenerator/nature/VRTree.h" />
 		<Unit filename="src/addons/WorldGenerator/nature/VRWoods.cpp" />
@@ -538,6 +536,12 @@
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoadIntersection.h" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoadNetwork.cpp" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoadNetwork.h" />
+		<Unit filename="src/addons/WorldGenerator/terrain/VRPlanet.cpp" />
+		<Unit filename="src/addons/WorldGenerator/terrain/VRPlanet.h" />
+		<Unit filename="src/addons/WorldGenerator/terrain/VRPyTerrain.cpp" />
+		<Unit filename="src/addons/WorldGenerator/terrain/VRPyTerrain.h" />
+		<Unit filename="src/addons/WorldGenerator/terrain/VRTerrain.cpp" />
+		<Unit filename="src/addons/WorldGenerator/terrain/VRTerrain.h" />
 		<Unit filename="src/addons/construction/building/VRElectricDevice.cpp" />
 		<Unit filename="src/addons/construction/building/VRElectricDevice.h" />
 		<Unit filename="src/addons/construction/building/VROpening.cpp" />

@@ -4,6 +4,7 @@
 #include "VRPyBoundingbox.h"
 #include "VRPyGeometry.h"
 #include "VRPyMath.h"
+#include "VRPyImage.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 #include "core/utils/VRCallbackWrapper.h"
@@ -32,6 +33,8 @@ template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const Vec3f& t) { ret
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const Vec2f& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VRRoadPtr& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VRRoadNetworkPtr& t) { return VRPyTypeCaster::cast(t); }
+template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VRTerrainPtr& t) { return VRPyTypeCaster::cast(t); }
+template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VRMaterialPtr& t) { return VRPyTypeCaster::cast(t); }
 OSG_END_NAMESPACE;
 
 using namespace OSG;
@@ -55,6 +58,7 @@ template<> bool toValue<Boundingbox>(PyObject* o, Boundingbox& v) { if (!VRPyBou
 template<> bool toValue<VRObjectPtr>(PyObject* o, VRObjectPtr& v) { if (!VRPyObject::check(o)) return 0; v = ((VRPyObject*)o)->objPtr; return 1; }
 template<> bool toValue<VRGeometryPtr>(PyObject* o, VRGeometryPtr& v) { if (!VRPyGeometry::check(o)) return 0; v = ((VRPyGeometry*)o)->objPtr; return 1; }
 template<> bool toValue<VRTransformPtr>(PyObject* o, VRTransformPtr& v) { if (!VRPyTransform::check(o)) return 0; v = ((VRPyTransform*)o)->objPtr; return 1; }
+template<> bool toValue<VRTexturePtr>(PyObject* o, VRTexturePtr& v) { if (!VRPyImage::check(o)) return 0; v = ((VRPyImage*)o)->objPtr; return 1; }
 
 template<> bool toValue<VRAnimCbPtr>(PyObject* o, VRAnimCbPtr& v) {
     //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!

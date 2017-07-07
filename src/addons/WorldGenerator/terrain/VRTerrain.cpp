@@ -7,8 +7,10 @@
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/utils/VRFunction.h"
 #include "core/math/boundingbox.h"
+#include "core/scene/import/GIS/VRGDAL.h"
 
 #include <OpenSG/OSGIntersectAction.h>
+#include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
 
 #define GLSL(shader) #shader
 
@@ -18,22 +20,26 @@ VRTerrain::VRTerrain(string name) : VRGeometry(name) { setupMat(); }
 VRTerrain::~VRTerrain() {}
 VRTerrainPtr VRTerrain::create(string name) { return VRTerrainPtr( new VRTerrain(name) ); }
 
-void VRTerrain::setParameters( Vec2f s, float r ) {
+void VRTerrain::setParameters( Vec2f s, float r, float h ) {
     size = s;
     resolution = r;
+    heightScale = h;
     grid = r*64;
     setupGeo();
     mat->setShaderParameter("resolution", resolution);
+    mat->setShaderParameter("heightScale", h);
     updateTexelSize();
 }
 
-void VRTerrain::setMap( VRTexturePtr t ) {
+void VRTerrain::setMap( VRTexturePtr t, int channel ) {
     tex = t;
     mat->setTexture(t);
+	mat->setShaderParameter("channel", channel);
     updateTexelSize();
 }
 
 void VRTerrain::updateTexelSize() {
+    if (!tex) return;
     Vec3i s = tex->getSize();
     texelSize[0] = size[0]/s[0];
     texelSize[1] = size[1]/s[1];
@@ -76,9 +82,8 @@ void VRTerrain::setupGeo() {
 	setMaterial(mat);
 }
 
-#include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
-
 void VRTerrain::physicalize(bool b) {
+    if (!tex) return;
     auto dim = tex->getSize();
 
     float Hmax = -1e6;
@@ -100,16 +105,21 @@ void VRTerrain::physicalize(bool b) {
 }
 
 void VRTerrain::setupMat() {
-    Vec4f w = Vec4f(1,1,1,1);
-    VRTextureGenerator tg;
-	tg.setSize(Vec3i(400,400,1),true);
-	tg.add("Perlin", 1.0, w*0.97, w);
-	tg.add("Perlin", 1.0/2, w*0.95, w);
-	tg.add("Perlin", 1.0/4, w*0.85, w);
-	tg.add("Perlin", 1.0/8, w*0.8, w);
-	tg.add("Perlin", 1.0/16, w*0.7, w);
-	tg.add("Perlin", 1.0/32, w*0.5, w);
-	tex = tg.compose(0);
+	auto defaultMat = VRMaterial::get("defaultTerrain");
+	tex = defaultMat->getTexture();
+	if (!tex) {
+        Vec4f w = Vec4f(1,1,1,1);
+        VRTextureGenerator tg;
+        tg.setSize(Vec3i(128,128,1),true);
+        tg.add("Perlin", 1.0, w*0.97, w);
+        tg.add("Perlin", 1.0/2, w*0.95, w);
+        tg.add("Perlin", 1.0/4, w*0.85, w);
+        tg.add("Perlin", 1.0/8, w*0.8, w);
+        tg.add("Perlin", 1.0/16, w*0.7, w);
+        tg.add("Perlin", 1.0/32, w*0.5, w);
+        tex = tg.compose(0);
+        defaultMat->setTexture(tex);
+	}
 
 	mat = VRMaterial::create("terrain");
 	mat->setWireFrame(0);
@@ -119,6 +129,7 @@ void VRTerrain::setupMat() {
 	mat->setTessControlShader(tessControlShader, "terrainTCS");
 	mat->setTessEvaluationShader(tessEvaluationShader, "terrainTES");
 	mat->setShaderParameter("resolution", resolution);
+	mat->setShaderParameter("channel", 3);
     updateTexelSize();
 	mat->setShaderParameter("texelSize", texelSize);
 	mat->setTexture(tex);
@@ -177,6 +188,18 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
     return true;
 }
 
+void VRTerrain::loadMap( string path, int channel ) {
+    auto tex = loadGeoRasterData(path);
+    setMap(tex, channel);
+}
+
+
+
+
+
+
+
+// --------------------------------- shader ------------------------------------
 
 string VRTerrain::vertexShader =
 "#version 120\n"
@@ -293,6 +316,8 @@ layout( quads ) in;
 in vec3 tcPosition[];
 in vec2 tcTexCoords[];
 
+uniform float heightScale;
+uniform int channel;
 uniform sampler2D texture;
 
 void main() {
@@ -307,7 +332,7 @@ void main() {
     vec3 a = mix(tcPosition[0], tcPosition[1], u);
     vec3 b = mix(tcPosition[3], tcPosition[2], u);
     vec3 tePosition = mix(a, b, v);
-    tePosition.y = texture2D(texture, gl_TexCoord[0].xy).a;
+    tePosition.y = heightScale * texture2D(texture, gl_TexCoord[0].xy)[channel];
     gl_Position = gl_ModelViewProjectionMatrix * vec4(tePosition, 1);
 }
 );

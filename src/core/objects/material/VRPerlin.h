@@ -9,6 +9,9 @@ using namespace std;
 class VRPerlin {
     private:
         float lerp(float a0, float a1, float w);
+        float hermite3(float w);
+        float hermite5(float w);
+
         float dotGridGradient(Vec3f* grid, Vec3i dim, Vec3i vi, Vec3f v);
         float perlin(Vec3f* grid, const Vec3i& dim, const Vec3f& v);
 

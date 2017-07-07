@@ -114,68 +114,12 @@ void loadSHP(string path, VRTransformPtr res) {
 }
 
 void loadTIFF(string path, VRTransformPtr res) {
-    GDALAllRegister();
-    GDALDataset* poDS = (GDALDataset *) GDALOpen( path.c_str(), GA_ReadOnly );
-    if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
-
-    // general information
-    double adfGeoTransform[6];
-    printf( "Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
-    printf( "Size is %dx%dx%d\n", poDS->GetRasterXSize(), poDS->GetRasterYSize(), poDS->GetRasterCount() );
-    if( poDS->GetProjectionRef()  != NULL ) printf( "Projection is `%s'\n", poDS->GetProjectionRef() );
-    if( poDS->GetGeoTransform( adfGeoTransform ) == CE_None ) {
-        printf( "Origin = (%.6f,%.6f)\n", adfGeoTransform[0], adfGeoTransform[3] );
-        printf( "Pixel Size = (%.6f,%.6f)\n", adfGeoTransform[1], adfGeoTransform[5] );
-    }
-
-    // get first block
-    auto getBand = [&](int i) {
-        int nBlockXSize, nBlockYSize;
-        int bGotMin, bGotMax;
-        double adfMinMax[2];
-        GDALRasterBand* poBand = poDS->GetRasterBand( 1 );
-        poBand->GetBlockSize( &nBlockXSize, &nBlockYSize );
-        //printf( "Block=%dx%d Type=%s, ColorInterp=%s\n", nBlockXSize, nBlockYSize, GDALGetDataTypeName(poBand->GetRasterDataType()), GDALGetColorInterpretationName( poBand->GetColorInterpretation()) );
-        adfMinMax[0] = poBand->GetMinimum( &bGotMin );
-        adfMinMax[1] = poBand->GetMaximum( &bGotMax );
-        if( ! (bGotMin && bGotMax) ) GDALComputeRasterMinMax((GDALRasterBandH)poBand, TRUE, adfMinMax);
-        //printf( "Min=%.3fd, Max=%.3f\n", adfMinMax[0], adfMinMax[1] );
-        //if( poBand->GetOverviewCount() > 0 ) printf( "Band has %d overviews.\n", poBand->GetOverviewCount() );
-        //if( poBand->GetColorTable() != NULL ) printf( "Band has a color table with %d entries.\n", poBand->GetColorTable()->GetColorEntryCount() );
-        return poBand;
-    };
-
-    vector<float> data;
-    for (int i=1; i<=poDS->GetRasterCount(); i++) {
-        auto band = getBand(i);
-        int nXSize = band->GetXSize();
-        int nYSize = band->GetYSize();
-        vector<float> line(nXSize*nYSize);
-        //GDALRWFlag eRWFlag, int nXOff, int nYOff, int nXSize, int nYSize, void * pData, int nBufXSize, int nBufYSize, GDALDataType eBufType, int nPixelSpace, int nLineSpace )
-        band->RasterIO( GF_Read, 0, (i-1)*nYSize, nXSize, nYSize, &line[0], nXSize, nYSize, GDT_Float32, 0, 0 );
-        //for (int j=0; j<nXSize*nYSize; j++) line[j] *= 0.001; // hack
-        data.insert(data.end(), line.begin(), line.end());
-    }
-
-    // TODO: print some test data
-
-    int sizeX = poDS->GetRasterXSize();
-    int sizeY = poDS->GetRasterYSize();
-    //vector<float> data(sizeX*sizeY, 0.5);
-    //for (int i=0; i<sizeX*sizeY; i++) data[i] = 0.5;
-
-    // Image::OSG_A_PF, Image::OSG_ALPHA_INTEGER_PF, GL_RGBA32F_ARB, GL_ALPHA32F_ARB
-
     // setup object
-    auto t = VRTexture::create();
-    t->setInternalFormat(GL_ALPHA32F_ARB); // important for unclamped float
-    auto img = t->getImage();
-    img->set( Image::OSG_A_PF, sizeX, sizeY, 1, 1, 1, 0, (const uint8_t*)&data[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    auto t = loadGeoRasterData(path);
     auto m = VRMaterial::create("GeoTiff");
     m->setTexture(t);
     m->setLit(0);
     m->setTextureParams(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_MODULATE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-
 
     int NXgeo = 140;
     int NYgeo = 140;
@@ -184,7 +128,6 @@ void loadTIFF(string path, VRTransformPtr res) {
     float TCXchunk = 1.0/NXgeo;
     float TCYchunk = 1.0/NYgeo;
 
-    // TODO: optimize!
     VRGeoData geo;
     for (int i=0; i<NXgeo; i++) {
         float px1 = -1 + i*SXchunk;
@@ -206,15 +149,57 @@ void loadTIFF(string path, VRTransformPtr res) {
         }
     }
     auto g = geo.asGeometry(path);
-    //geo.pushPatch(4);
-
-
-    //auto g = VRGeometry::create(path);
-    //g->setPrimitive("Plane", "1 1 140 140");
-
     g->setMaterial(m);
     res->addChild( g );
+}
+
+VRTexturePtr loadGeoRasterData(string path) {
+    GDALAllRegister();
+    GDALDataset* poDS = (GDALDataset *) GDALOpen( path.c_str(), GA_ReadOnly );
+    if( poDS == NULL ) { printf( "Open failed.\n" ); return 0; }
+
+    // general information
+    double adfGeoTransform[6];
+    printf( "Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
+    printf( "Size is %dx%dx%d\n", poDS->GetRasterXSize(), poDS->GetRasterYSize(), poDS->GetRasterCount() );
+    if( poDS->GetProjectionRef()  != NULL ) printf( "Projection is `%s'\n", poDS->GetProjectionRef() );
+    if( poDS->GetGeoTransform( adfGeoTransform ) == CE_None ) {
+        printf( "Origin = (%.6f,%.6f)\n", adfGeoTransform[0], adfGeoTransform[3] );
+        printf( "Pixel Size = (%.6f,%.6f)\n", adfGeoTransform[1], adfGeoTransform[5] );
+    }
+
+    // get first block
+    auto getBand = [&](int i) {
+        int nBlockXSize, nBlockYSize;
+        int bGotMin, bGotMax;
+        double adfMinMax[2];
+        GDALRasterBand* poBand = poDS->GetRasterBand( 1 );
+        poBand->GetBlockSize( &nBlockXSize, &nBlockYSize );
+        adfMinMax[0] = poBand->GetMinimum( &bGotMin );
+        adfMinMax[1] = poBand->GetMaximum( &bGotMax );
+        if( ! (bGotMin && bGotMax) ) GDALComputeRasterMinMax((GDALRasterBandH)poBand, TRUE, adfMinMax);
+        return poBand;
+    };
+
+    vector<float> data;
+    for (int i=1; i<=poDS->GetRasterCount(); i++) {
+        auto band = getBand(i);
+        int nXSize = band->GetXSize();
+        int nYSize = band->GetYSize();
+        vector<float> line(nXSize*nYSize);
+        band->RasterIO( GF_Read, 0, (i-1)*nYSize, nXSize, nYSize, &line[0], nXSize, nYSize, GDT_Float32, 0, 0 );
+        data.insert(data.end(), line.begin(), line.end());
+    }
+
+    int sizeX = poDS->GetRasterXSize();
+    int sizeY = poDS->GetRasterYSize();
     GDALClose(poDS);
+
+    auto t = VRTexture::create();
+    t->setInternalFormat(GL_ALPHA32F_ARB); // important for unclamped float
+    auto img = t->getImage();
+    img->set( Image::OSG_A_PF, sizeX, sizeY, 1, 1, 1, 0, (const uint8_t*)&data[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    return t;
 }
 
 OSG_END_NAMESPACE;

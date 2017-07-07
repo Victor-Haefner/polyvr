@@ -9,6 +9,8 @@
 
 using namespace OSG;
 
+template<> PyObject* VRPyTypeCaster::cast<VRMaterialPtr>(VRMaterialPtr e) { return VRPyMaterial::fromSharedPtr(e); }
+
 simpleVRPyType(Material, New_VRObjects_ptr);
 
 PyMethodDef VRPyMaterial::methods[] = {

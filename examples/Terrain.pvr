@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="bla" name_space="Scene" loading_time="235">
+<Scene name_suffix="0" base_name="bla" name_space="Scene" loading_time="172">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
-        <Object accept_root="1" aspect="1" at="0 0.4 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="1.27574 1.45278 1.2807" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.365533 0 0.243778" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-0.606797 0.697542 0.487634" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
             <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
@@ -12,24 +12,24 @@
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" hmdd="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
-    <Script base_name="displ_fp" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1">
+    <Script base_name="displ_fp" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL" unique="1">
       <core>
 #version 400 compatibility
 
 uniform sampler2D tex;
-const vec2 size = vec2(0.2,0.0);
+const vec2 size = vec2(25,0.0);
 const ivec3 off = ivec3(-1,0,1);
 const vec3 light = vec3(-1,-1,-0.5);
 
 vec3 getNormal() {
 	vec2 tc = gl_TexCoord[0].xy;
-    float s11 = texture(tex, tc).r;
-    float s01 = textureOffset(tex, tc, off.xy).r;
-    float s21 = textureOffset(tex, tc, off.zy).r;
-    float s10 = textureOffset(tex, tc, off.yx).r;
-    float s12 = textureOffset(tex, tc, off.yz).r;
+    float s11 = texture(tex, tc).a;
+    float s01 = textureOffset(tex, tc, off.xy).a;
+    float s21 = textureOffset(tex, tc, off.zy).a;
+    float s10 = textureOffset(tex, tc, off.yx).a;
+    float s12 = textureOffset(tex, tc, off.yz).a;
     
     vec3 va = normalize(vec3(size.xy,s21-s01));
     vec3 vb = normalize(vec3(size.yx,s12-s10));
@@ -49,7 +49,7 @@ vec3 getColor() {
 	vec3 grey = vec3(0.7);
 	vec3 white = vec3(1.0);
 	
-	float h = texture2D(tex, gl_TexCoord[0].xy).r;
+	float h = texture2D(tex, gl_TexCoord[0].xy).a * 0.05;
 	if (h &gt; 1.2) return mixColor(grey, white, 10*(h-1.2));
 	if (h &gt; 1.0 &amp;&amp; h &lt;= 1.2) return mixColor(brown, grey, 5*(h-1.0));
 	if (h &gt; 0.8 &amp;&amp; h &lt;= 1.0) return mixColor(green, brown, 5*(h-0.8));
@@ -65,11 +65,19 @@ void main( void ) {
 	vec4 aCol = vec4(c * 0.4, 1.0f);
 	float dFac = dot(normalize(n), -normalize(light));
 	vec4 dCol = vec4(c * 0.6 * dFac, 1.0f);	
-	gl_FragColor = aCol+dCol;
+	//vec4 t = texture2D(tex, gl_TexCoord[0].xy);
+	//gl_FragColor = vec4(t.a*0.1,0,0,1);
+	gl_FragColor = vec4(n,1);
+	gl_FragColor = aCol + dCol;
 }
+
+
+
+
+
 </core>
     </Script>
-    <Script base_name="displ_tcp" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1">
+    <Script base_name="displ_tcp" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL" unique="1">
       <core>
 #version 400 compatibility
 #extension GL_ARB_tessellation_shader : enable
@@ -102,7 +110,7 @@ void main() {
 }
 </core>
     </Script>
-    <Script base_name="displ_tep" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1">
+    <Script base_name="displ_tep" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL" unique="1">
       <core>
 #version 400 compatibility
 #extension GL_ARB_tessellation_shader : enable
@@ -125,12 +133,13 @@ void main() {
     vec3 a = mix(tcPosition[0], tcPosition[1], u);
     vec3 b = mix(tcPosition[3], tcPosition[2], u);
     vec3 tePosition = mix(a, b, v);
-    tePosition.y = 0.4*texture2D(texture, gl_TexCoord[0].xy).r;
+    float k = 0.00000833; // 0.00001
+    tePosition.y = k*texture2D(texture, gl_TexCoord[0].xy).a;
     gl_Position = gl_ModelViewProjectionMatrix * vec4(tePosition, 1);
 }
 </core>
     </Script>
-    <Script base_name="displ_vp" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1">
+    <Script base_name="displ_vp" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL" unique="1">
       <core>
 #version 120
 
@@ -143,29 +152,30 @@ void main(void) {
 }
 </core>
     </Script>
-    <Script base_name="init" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1">
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	import VR
 	
 	g = VR.Geometry('terrain')
+	#g.setType('GL_QUADS')
 	g.setType('GL_PATCHES')
 	g.setPatchVertices(4)
 	
 	gridN = 16
-	pChunk = 2.0/gridN
+	pChunk = 1.0/gridN
 	tcChunk = 1.0/gridN
 
 	pos = []
 	tcs = []
 	ids = []
 	for i in range(gridN):
-		px1 = -1 + i*pChunk
+		px1 = -0.5 + i*pChunk
 		px2 = px1 + pChunk
 		tcx1 = 0 + i*tcChunk
 		tcx2 = tcx1 + tcChunk
 
 		for j in range(gridN):
-			py1 = -1 + j*pChunk
+			py1 = -0.5 + j*pChunk
 			py2 = py1 + pChunk
 			tcy1 = 0 + j*tcChunk
 			tcy2 = tcy1 + tcChunk
@@ -191,10 +201,11 @@ void main(void) {
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="2" base_name="trigger" name_space="__global__"/>
     </Script>
-    <Script base_name="setMat" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1">
+    <Script base_name="setMat" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	import VR
 	
+	"""
 	tg = VR.TextureGenerator()
 	tg.setSize([400,400,1])
 	tg.add('Perlin', 1.0, [0.97]*3, [1.0]*3)
@@ -204,15 +215,19 @@ void main(void) {
 	tg.add('Perlin', 1.0/16, [0.7]*3, [1.0]*3)
 	tg.add('Perlin', 1.0/32, [0.5]*3, [1.0]*3)
 	tex = tg.compose(0)
+	"""
 	
-	m = VR.ground.getMaterial()
-	m.setWireFrame(0)
-	m.setLineWidth(1)
+	#geo = VR.loadGeometry('N30E120.hgt').getChild(0)
+	geo = VR.loadGeometry('N-51-30_ll_2000.tif').getChild(0)
+	m = geo.getMaterial()
+	#m.setTexture('world.200412.3x21600x21600.A2.jpg')
+	
+	VR.ground.setMaterial( geo.getMaterial() )
+	
 	m.setVertexProgram('displ_vp')
 	m.setFragmentProgram('displ_fp')
 	m.setTessControlProgram('displ_tcp')
 	m.setTessEvaluationProgram('displ_tep')
-	m.setTexture(tex)
 </core>
     </Script>
   </Scripts>

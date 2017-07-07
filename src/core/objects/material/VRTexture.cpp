@@ -1,9 +1,12 @@
 #include "VRTexture.h"
 #include "core/math/boundingbox.h"
+#include "core/utils/toString.h"
 
 #include <OpenSG/OSGImage.h>
 
 using namespace OSG;
+
+template<> string typeName(const VRTexturePtr& t) { return "Texture"; }
 
 VRTexture::VRTexture() { img = Image::create(); }
 VRTexture::VRTexture(ImageRecPtr img) { this->img = img; }
