@@ -68,9 +68,9 @@ void VRPlanet::rebuild() {
     addChild(lod);
     anchor = VRObject::create("lod0");
     lod->addChild( anchor );
-    addLod(4,radius*1.25);
-    addLod(3,radius*1.50);
-    addLod(2,radius*1.75);
+    addLod(5,radius*1.25);
+    addLod(4,radius*2.0);
+    addLod(3,radius*5.0);
 }
 
 void VRPlanet::setParameters( float r ) { radius = r; rebuild(); }
@@ -144,9 +144,14 @@ void applyLightning() {
 
 void main( void ) {
 	float r = length(tcs);
-	float u = 0.5 - atan( tcs.z, tcs.x )*0.5/pi;
-	float v = -acos( tcs.y / r )/pi;
-	color = texture2D(tex, vec2(u,v));
+	float v = 1.0 - acos( tcs.y / r )/pi;
+	float u0 = 1 - atan(abs(tcs.z), tcs.x)/pi;
+	float u1 = 0.5 - atan(tcs.z, tcs.x)/pi*0.5;
+	float u2 = 0.0 - atan(-tcs.z, -tcs.x)/pi*0.5;
+	vec4 c1 = texture2D(tex, vec2(u1,v));
+	vec4 c2 = texture2D(tex, vec2(u2,v));
+	float s = clamp( (tcs.x+1)*0.3, 0, 1 );
+	color = mix(c2, c1, u0);
 	//applyLightning(); // TODO
 	gl_FragColor = color;
 }
