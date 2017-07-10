@@ -218,7 +218,7 @@ void VRCarDynamics::updateEngine() {
         // apply force
         if (wheel.isDriven) {
             m_vehicle->setBrake(eBreak, i);
-            if (eBreak > eForce) eForce = 0;
+            if (eBreak > abs(eForce)) eForce = 0;
             m_vehicle->applyEngineForce(eForce, i);
         }
 
