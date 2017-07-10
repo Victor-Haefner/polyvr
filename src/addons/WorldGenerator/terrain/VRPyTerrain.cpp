@@ -20,5 +20,6 @@ PyMethodDef VRPyTerrain::methods[] = {
 PyMethodDef VRPyPlanet::methods[] = {
     {"addSector", PyWrap(Planet, addSector, "Add sector to planet", VRTerrainPtr, int, int) },
     {"getMaterial", PyWrap(Planet, getMaterial, "Get planet material", VRMaterialPtr) },
+    {"setParameters", PyWrap(Planet, setParameters, "Set planet parameters, radius", void, float) },
     {NULL}  /* Sentinel */
 };

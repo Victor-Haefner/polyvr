@@ -6,9 +6,6 @@
 
 struct VRPyLod : VRPyBaseT<OSG::VRLod> {
     static PyMethodDef methods[];
-
-    static PyObject* setCenter(VRPyLod* self, PyObject* args);
-    static PyObject* setDistance(VRPyLod* self, PyObject* args);
 };
 
 #endif // VRPYLOD_H

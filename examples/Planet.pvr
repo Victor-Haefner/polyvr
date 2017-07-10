@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="Planet" name_space="Scene" loading_time="0">
+<Scene name_suffix="0" base_name="Planet" name_space="Scene" loading_time="610">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
-        <Object accept_root="1" aspect="1" at="0 0 2" at_dir="1" base_name="Default" far="512" fov="1.0472" from="0 0 3" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0 0 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-3.68235 -0.0741717 -1.76941" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
             <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
@@ -14,6 +14,43 @@
   </Objects>
   <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
+    <Script base_name="Script" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL" unique="1">
+      <core>
+#version 120
+uniform sampler2D tex;
+
+in vec3 tcs;
+in vec3 normal;
+in vec4 position;
+
+const float pi = 3.1415926;
+
+vec4 color;
+
+void applyLightning() {
+	vec3 n = normal;
+	vec3  light = normalize( gl_LightSource[0].position.xyz - position.xyz ); // point light
+	float NdotL = max(dot( n, light ), 0.0);
+	vec4  ambient = gl_LightSource[0].ambient * color;
+	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;
+	float NdotHV = max(dot(n, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
+	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
+	gl_FragColor = diffuse + specular;
+	//gl_FragColor = ambient + diffuse + specular;
+}
+
+void main( void ) {
+	float r = length(tcs);
+	float u = 0;
+	if (abs(tcs.z) &gt; abs(tcs.x)) u = 0.5 - atan( tcs.z, tcs.x )*0.5/pi;
+	else u = 0.5 - (pi*0.5-atan( tcs.x, tcs.z ))*0.5/pi;
+	float v = -acos( tcs.y / r )/pi;
+	color = texture2D(tex, vec2(u,v));
+	//applyLightning(); // TODO
+	gl_FragColor = color;
+}
+</core>
+    </Script>
     <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
 	import VR
@@ -23,10 +60,26 @@
 	
 	
 	planet = VR.Planet('myPlanet')
-	#planet.setParameters( 1 )
+	planet.setParameters( 1 ) # planet radius
 	VR.scene.addChild(planet)
 	
+	
+	tg = VR.TextureGenerator()
+	tg.setSize([400,400,1])
+	tg.add('Perlin', 1.0, [0.97]*3, [1.0]*3)
+	tg.add('Perlin', 1.0/2, [0.95]*3, [1.0]*3)
+	tg.add('Perlin', 1.0/4, [0.85]*3, [1.0]*3)
+	tg.add('Perlin', 1.0/8, [0.8]*3, [1.0]*3)
+	tg.add('Perlin', 1.0/16, [0.7]*3, [1.0]*3)
+	tg.add('Perlin', 1.0/32, [0.5]*3, [1.0]*3)
+	
+	
+	pm = planet.getMaterial()
+	pm.setTexture( tg.compose(0) )
+	pm.setFragmentProgram('Script')
+	
 </core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>

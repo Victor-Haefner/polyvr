@@ -99,7 +99,7 @@ VRMaterialPtr VRPlanet::getMaterial() { return sphereMat; }
 string VRPlanet::surfaceVP =
 "#version 120\n"
 GLSL(
-varying vec3 texCoords;
+varying vec3 tcs;
 varying vec3 normal;
 varying vec4 position;
 
@@ -109,7 +109,7 @@ attribute vec4 osg_Color;
 attribute vec3 osg_MultiTexCoords0;
 
 void main( void ) {
-    texCoords = osg_Normal.xyz;
+    tcs = osg_Normal.xyz;
     normal = gl_NormalMatrix * osg_Normal.xyz;
     position = gl_ModelViewProjectionMatrix*osg_Vertex;
     gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
@@ -122,7 +122,7 @@ string VRPlanet::surfaceFP =
 GLSL(
 uniform sampler2D tex;
 
-in vec3 texCoords;
+in vec3 tcs;
 in vec3 normal;
 in vec4 position;
 
@@ -143,12 +143,12 @@ void applyLightning() {
 }
 
 void main( void ) {
-	float r = length(texCoords);
-	float u = 0.5 - atan( texCoords.z , texCoords.x )*0.5/pi;
-	float v = -acos( texCoords.y / r )/pi;
+	float r = length(tcs);
+	float u = 0.5 - atan( tcs.z, tcs.x )*0.5/pi;
+	float v = -acos( tcs.y / r )/pi;
 	color = texture2D(tex, vec2(u,v));
-	//applyLightning();
-	gl_FragColor = color; // TODO
+	//applyLightning(); // TODO
+	gl_FragColor = color;
 }
 );
 
