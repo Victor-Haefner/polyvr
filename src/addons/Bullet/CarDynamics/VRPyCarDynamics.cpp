@@ -16,7 +16,7 @@ PyMethodDef VRPyCarDynamics::methods[] = {
     {"update", PyWrap(CarDynamics, update, "Update vehicle physics input, throttle {0,1}, break {0,1}, steering {-1,1}, clutch {0,1}, gear", void, float, float, float, float, int) },
     {"updateWheel", PyWrap(CarDynamics, updateWheel, "Update vehicle physics for a single wheel, wheel and parameter as in update", void, int, float, float, float, float, int) },
     {"setChassis", (PyCFunction)VRPyCarDynamics::setChassis, METH_VARARGS, "Set chassis geometry - setChassis( geo | bool physicalize) " },
-    {"addWheel", PyWrap(CarDynamics, addWheel, "Add a wheel, geometry, position, radius, width, steered, driven", void, VRGeometryPtr, Vec3f, float, float, bool, bool, int) },
+    {"addWheel", PyWrap(CarDynamics, addWheel, "Add a wheel, geometry, position, radius, width, maxSteer, steered, driven", void, VRGeometryPtr, Vec3f, float, float, float, bool, bool) },
     {"setupSimpleWheels", (PyCFunction)VRPyCarDynamics::setupSimpleWheels, METH_VARARGS, "Setup classic wheels - setupSimpleWheels( geo, float X, float Zp, float Zn, float height, float radius, float width, float max_steering)" },
     {"setParameter", (PyCFunction)VRPyCarDynamics::setParameter, METH_VARARGS, "Set car parameter, must be done before creating car - setParameter( float mass, float engine_power, float break_power | [x,y,z] mass offset  )" },
     {"reset", (PyCFunction)VRPyCarDynamics::reset, METH_VARARGS, "Reset car - reset( pose )" },
@@ -154,7 +154,7 @@ PyObject* VRPyCarDynamics::setupSimpleWheels(VRPyCarDynamics* self, PyObject* ar
 }
 
 PyObject* VRPyCarDynamics::setParameter(VRPyCarDynamics* self, PyObject* args) {
-    float m, s, e, b;
+    float m, e, b;
     PyObject* mOffset = 0;
     if (! PyArg_ParseTuple(args, "fff|O", &m, &e, &b, &mOffset)) return NULL;
 	self->objPtr->setParameter(m,e,b,parseVec3fList(mOffset));
