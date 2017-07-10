@@ -131,7 +131,7 @@ vector<VRTransformPtr> VRCarDynamics::getWheels() {
     return res;
 }
 
-void VRCarDynamics::addWheel(VRGeometryPtr geo, Vec3f p, float radius, float width, bool steered, bool driven) {
+void VRCarDynamics::addWheel(VRGeometryPtr geo, Vec3f p, float radius, float width, float maxSteering, bool steered, bool driven) {
     Wheel wheel;
     wheel.position = p;
 	wheel.isSteered = steered;
@@ -140,45 +140,26 @@ void VRCarDynamics::addWheel(VRGeometryPtr geo, Vec3f p, float radius, float wid
     wheel.geo->setPersistency(0);
     wheel.width = width;
     wheel.radius = radius;
+    wheel.maxSteer = maxSteering;
 
     addChild(wheel.geo);
     wheels.push_back(wheel);
     addBTWheel(wheel);
 }
 
-void VRCarDynamics::setupSimpleWheels(VRTransformPtr geo, float x, float fZ, float rZ, float h, float r, float w) {
+void VRCarDynamics::setupSimpleWheels(VRTransformPtr geo, float x, float fZ, float rZ, float h, float r, float w, float ms) {
     // create four simple wheels
-    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3f( x, h, fZ), r, w, true, true);
-    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3f(-x, h, fZ), r, w, true, true);
+    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3f( x, h, fZ), r, w, ms, true, true);
+    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3f(-x, h, fZ), r, w, ms, true, true);
     addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3f( x, h, rZ), r, w);
     addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3f(-x, h, rZ), r, w);
 }
 
-void VRCarDynamics::setClutch(float t) { // from 0 to 1
-    t = max(0.f,t);
-    t = min(1.f,t);
-    clutch = t;
+float VRCarDynamics::clamp(float v, float m1, float m2) {
+    v = max(m1,v);
+    v = min(m2,v);
+    return v;
 }
-
-void VRCarDynamics::setThrottle(float t) { // from 0 to 1
-    t = max(0.f,t);
-    t = min(1.f,t);
-    throttle = t;
-}
-
-void VRCarDynamics::setBreak(float b) { // from 0 to 1
-    b = max(0.f,b);
-    b = min(1.f,b);
-    breaking = b;
-}
-
-void VRCarDynamics::setSteering(float s) { // from -1 to 1
-    s = max(-1.f,s);
-    s = min( 1.f,s);
-    steering = s;
-}
-
-void VRCarDynamics::setGear(int g) { engine.gear = g; }
 
 void VRCarDynamics::updateEngine() {
     if (!m_vehicle) return;
@@ -195,60 +176,54 @@ void VRCarDynamics::updateEngine() {
         engine
     */
 
-    auto clamp = [](float v, float a, float b) {
-        if (v < a) return a;
-        if (v > b) return b;
-        return v;
-    };
-
-    // stretch throttle range
-	float tmin = 0.1;
-	float tmax = 0.9;
-    float clampedThrottle = (clamp(throttle,tmin,tmax)-tmin)/(tmax-tmin);
-
-    // compute gears
-    float clutchForce = 1;
-    if (engine.clutchForceCurve) clutchForce = engine.clutchForceCurve->getPosition(clutch)[1];
-
-    float gearRatio = engine.gearRatios[engine.gear];
-
-    // compute RPM
-	float s = abs( getSpeed() ) * 1000/60; // from km/h to m/min
-	float coupling = (engine.gear != 0)*clutchForce;
-	float wheelRPM = s / (wheels[0].radius * 2 * Pi);
-	float wheelERPM = wheelRPM * abs(gearRatio);
-	float deltaRPM = ( wheelERPM - engine.rpm ) * coupling;
-	float eRPMrange = engine.maxRpm - engine.minRpm;
-	float throttleRPM = (engine.maxRpm - engine.rpm) * clampedThrottle;
-	if (wheelERPM > engine.maxRpm) gearRatio = 0;
-
-	// compute engine breaking
-	float engineFriction = (engine.rpm - engine.minRpm) / eRPMrange * max(deltaRPM*0.005 + 5, 0.0) * (1.0 - clampedThrottle);
-	float eBreak = breaking*engine.breakPower + max(engineFriction, 0.f);
-	//cout << "throttleRPM " << throttleRPM << " clampedThrottle " << clampedThrottle << " throttleMinRPM " << throttleMinRPM << " engine.rpm " << engine.rpm << endl;
-	//cout << "eBreak " << eBreak << " engineFriction " << engineF << " deltaRPM " << deltaRPM << " engine.rpm " << engine.rpm << endl;
-	engine.rpm += 0.1 * throttleRPM * engine.running;
-	engine.rpm -= 14 * engineFriction * engine.running;
-	engine.rpm += 0.1 * deltaRPM;
-
-	if (engine.rpm < engine.minRpm*0.6) setIgnition(false);
-
-	// compute engine force
-	float engineF = max( -deltaRPM*0.001f, 0.f); // try to keep the minRPM
-    float eForce = clamp(clampedThrottle + engineF, 0, 1) * gearRatio * engine.power * coupling * engine.running;
-    if (abs(eBreak) > abs(eForce)) eForce = 0;
-
-	// apply force wheels
     for (uint i=0; i<wheels.size(); i++) {
         auto& wheel = wheels[i];
-        m_vehicle->setBrake(eBreak, i);
 
+        float tmin = 0.1;
+        float tmax = 0.9;
+        float clampedThrottle = (clamp(wheel.throttle,tmin,tmax)-tmin)/(tmax-tmin); // stretch throttle range
+
+        // compute gears
+        float clutchForce = 1;
+        if (engine.clutchForceCurve) clutchForce = engine.clutchForceCurve->getPosition(wheel.clutch)[1];
+
+        float gearRatio = engine.gearRatios[wheel.gear];
+
+        // compute RPM
+        float s = abs( getSpeed() ) * 1000/60; // from km/h to m/min
+        float coupling = (wheel.gear != 0)*clutchForce;
+        float wheelRPM = s / (wheels[0].radius * 2 * Pi);
+        float wheelERPM = wheelRPM * abs(gearRatio);
+        float deltaRPM = ( wheelERPM - engine.rpm ) * coupling;
+        float eRPMrange = engine.maxRpm - engine.minRpm;
+        float throttleRPM = (engine.maxRpm - engine.rpm) * clampedThrottle;
+        if (wheelERPM > engine.maxRpm) gearRatio = 0;
+
+        // compute engine breaking
+        float engineFriction = (engine.rpm - engine.minRpm) / eRPMrange * max(deltaRPM*0.005 + 5, 0.0) * (1.0 - clampedThrottle);
+        float eBreak = wheel.breaking*engine.breakPower + max(engineFriction, 0.f);
+        //cout << "throttleRPM " << throttleRPM << " clampedThrottle " << clampedThrottle << " throttleMinRPM " << throttleMinRPM << " engine.rpm " << engine.rpm << endl;
+        //cout << "eBreak " << eBreak << " engineFriction " << engineF << " deltaRPM " << deltaRPM << " engine.rpm " << engine.rpm << endl;
+        engine.rpm += 0.1 * throttleRPM * engine.running;
+        engine.rpm -= 14 * engineFriction * engine.running;
+        engine.rpm += 0.1 * deltaRPM;
+
+        if (engine.rpm < engine.minRpm*0.6) setIgnition(false);
+
+        // compute engine force
+        float engineF = max( -deltaRPM*0.001f, 0.f); // try to keep the minRPM
+        float eForce = clamp(clampedThrottle + engineF, 0, 1) * gearRatio * engine.power * coupling * engine.running;
+        if (abs(eBreak) > abs(eForce)) eForce = 0;
+
+        // apply force
         if (wheel.isDriven) {
+            m_vehicle->setBrake(eBreak, i);
+            if (eBreak > eForce) eForce = 0;
             m_vehicle->applyEngineForce(eForce, i);
         }
 
         if (wheel.isSteered) {
-            m_vehicle->setSteeringValue(steering*engine.maxSteer, i);
+            m_vehicle->setSteeringValue(wheel.steering*wheel.maxSteer, i);
         }
     }
 
@@ -266,22 +241,35 @@ void VRCarDynamics::updateEngine() {
 }
 
 void VRCarDynamics::setIgnition(bool b) {
+    if (!engine.stallingEnabled) b = true;
     engine.running = b;
     engine.rpm = b ? 800 : 0;
 }
 
 bool VRCarDynamics::isRunning() { return engine.running; }
-float VRCarDynamics::getClutch() { return clutch; }
-float VRCarDynamics::getThrottle() { return throttle; }
-float VRCarDynamics::getBreaking() { return breaking; }
-float VRCarDynamics::getSteering() { return steering; }
-int VRCarDynamics::getGear() { return engine.gear; }
+float VRCarDynamics::getClutch() { return wheels.size() > 0 ? wheels[0].clutch : 0; }
+float VRCarDynamics::getThrottle() { return wheels.size() > 0 ? wheels[0].throttle : 0; }
+float VRCarDynamics::getBreaking() { return wheels.size() > 0 ? wheels[0].breaking : 0; }
+float VRCarDynamics::getSteering() { return wheels.size() > 0 ? wheels[0].steering : 0; }
+int VRCarDynamics::getGear() { return wheels.size() > 0 ? wheels[0].gear : 0; }
 int VRCarDynamics::getRPM() { return engine.rpm; }
 
+void VRCarDynamics::update(float t, float b, float s, float c, int g) {
+    for (uint i=0; i<wheels.size(); i++) updateWheel(i, t, b, s, c, g);
+}
 
-void VRCarDynamics::setParameter(float mass, float maxSteering, float enginePower, float breakPower, Vec3f massOffset) {
+void VRCarDynamics::updateWheel(int w, float t, float b, float s, float c, int g) {
+    auto& wheel = wheels[w];
+    wheel.throttle = clamp(t, 0, 1);
+    wheel.breaking = clamp(b, 0, 1);
+    wheel.clutch = clamp(c, 0, 1);
+    wheel.steering = clamp(s, -1, 1);
+    wheel.gear = g;
+}
+
+void VRCarDynamics::setParameter(float mass, float enginePower, float breakPower, Vec3f massOffset, bool enableStalling) {
     if (mass > 0) chassis.mass = mass;
-    engine.maxSteer = maxSteering;
+    engine.stallingEnabled = enableStalling;
     engine.power = enginePower;
     engine.breakPower = breakPower;
 

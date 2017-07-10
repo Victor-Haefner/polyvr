@@ -13,11 +13,12 @@ simpleVRPyType(CarDynamics, New_named_ptr);
 simpleVRPyType(Driver, New_ptr);
 
 PyMethodDef VRPyCarDynamics::methods[] = {
-    {"update", (PyCFunction)VRPyCarDynamics::update, METH_VARARGS, "Update vehicle physics input (float throttle {-1,1}, float break {0,1}, float steering {-1,1}, float clutch {0,1}, int gear)" },
+    {"update", PyWrap(CarDynamics, update, "Update vehicle physics input, throttle {0,1}, break {0,1}, steering {-1,1}, clutch {0,1}, gear", void, float, float, float, float, int) },
+    {"updateWheel", PyWrap(CarDynamics, updateWheel, "Update vehicle physics for a single wheel, wheel and parameter as in update", void, int, float, float, float, float, int) },
     {"setChassis", (PyCFunction)VRPyCarDynamics::setChassis, METH_VARARGS, "Set chassis geometry - setChassis( geo | bool physicalize) " },
-    {"addWheel", PyWrap(CarDynamics, addWheel, "Add a wheel", void, VRGeometryPtr, Vec3f, float, float, bool, bool) },
-    {"setupSimpleWheels", (PyCFunction)VRPyCarDynamics::setupSimpleWheels, METH_VARARGS, "Setup classic wheels - setupSimpleWheels( geo, float X, float Zp, float Zn, float height, float radius, float width)" },
-    {"setParameter", (PyCFunction)VRPyCarDynamics::setParameter, METH_VARARGS, "Set car parameter, must be done before creating car - setParameter( float mass, float max_steering, float engine_power, float break_power | [x,y,z] mass offset  )" },
+    {"addWheel", PyWrap(CarDynamics, addWheel, "Add a wheel, geometry, position, radius, width, steered, driven", void, VRGeometryPtr, Vec3f, float, float, bool, bool, int) },
+    {"setupSimpleWheels", (PyCFunction)VRPyCarDynamics::setupSimpleWheels, METH_VARARGS, "Setup classic wheels - setupSimpleWheels( geo, float X, float Zp, float Zn, float height, float radius, float width, float max_steering)" },
+    {"setParameter", (PyCFunction)VRPyCarDynamics::setParameter, METH_VARARGS, "Set car parameter, must be done before creating car - setParameter( float mass, float engine_power, float break_power | [x,y,z] mass offset  )" },
     {"reset", (PyCFunction)VRPyCarDynamics::reset, METH_VARARGS, "Reset car - reset( pose )" },
     {"getSteering", (PyCFunction)VRPyCarDynamics::getSteering, METH_NOARGS, "Get car steering - float getSteering()" },
     {"getThrottle", (PyCFunction)VRPyCarDynamics::getThrottle, METH_NOARGS, "Get car throttle - float getThrottle()" },
@@ -136,18 +137,6 @@ PyObject* VRPyCarDynamics::setIgnition(VRPyCarDynamics* self, PyObject* args) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyCarDynamics::update(VRPyCarDynamics* self, PyObject* args) {
-    float t,b,s,c;
-    int g;
-    if (! PyArg_ParseTuple(args, "ffffi", &t, &b, &s, &c, &g)) return NULL;
-    self->objPtr->setThrottle(t);
-    self->objPtr->setBreak(b);
-    self->objPtr->setSteering(s);
-    self->objPtr->setClutch(c);
-    self->objPtr->setGear(g);
-    Py_RETURN_TRUE;
-}
-
 PyObject* VRPyCarDynamics::setChassis(VRPyCarDynamics* self, PyObject* args) {
     VRPyTransform* dev = 0;
     int doPhys = 1;
@@ -158,17 +147,17 @@ PyObject* VRPyCarDynamics::setChassis(VRPyCarDynamics* self, PyObject* args) {
 
 PyObject* VRPyCarDynamics::setupSimpleWheels(VRPyCarDynamics* self, PyObject* args) {
     VRPyGeometry* geo = NULL;
-    float X, Zp, Zn, h, r, w;
-    if (! PyArg_ParseTuple(args, "Offffff", &geo, &X, &Zp, &Zn, &h, &r, &w)) return NULL;
-    self->objPtr->setupSimpleWheels(geo->objPtr, X, Zp, Zn, h, r, w);
+    float X, Zp, Zn, h, r, w, ms;
+    if (! PyArg_ParseTuple(args, "Offfffff", &geo, &X, &Zp, &Zn, &h, &r, &w, &ms)) return NULL;
+    self->objPtr->setupSimpleWheels(geo->objPtr, X, Zp, Zn, h, r, w, ms);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyCarDynamics::setParameter(VRPyCarDynamics* self, PyObject* args) {
     float m, s, e, b;
     PyObject* mOffset = 0;
-    if (! PyArg_ParseTuple(args, "ffff|O", &m, &s, &e, &b, &mOffset)) return NULL;
-	self->objPtr->setParameter(m,s,e,b,parseVec3fList(mOffset));
+    if (! PyArg_ParseTuple(args, "fff|O", &m, &e, &b, &mOffset)) return NULL;
+	self->objPtr->setParameter(m,e,b,parseVec3fList(mOffset));
 	Py_RETURN_TRUE;
 }
 

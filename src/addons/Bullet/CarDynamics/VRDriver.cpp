@@ -71,10 +71,7 @@ void VRDriver::update() {
     clamp(steering, -1,1);
 
     // apply inputs
-    car->setGear(1);
-    car->setThrottle(throttle);
-    car->setBreak(breaking);
-    car->setSteering(steering);
+    car->update(throttle, breaking, steering);
 }
 
 void VRDriver::followPath(pathPtr p, pathPtr v) {

@@ -30,6 +30,7 @@ class VRCarDynamics : public VRObject {
             float suspensionDamping = 2.3f;
             float suspensionCompression = 4.4f;
             float rollInfluence = 0.1f;//1.0f;
+            float maxSteer = 0.3;
             bool isSteered = false;
             bool isDriven = false;
 
@@ -37,6 +38,13 @@ class VRCarDynamics : public VRObject {
             float friction = 1000;//BT_LARGE_FLOAT;
             float radius = .4f;
             float width = 0.4f;
+
+            // user inputs
+            int gear = 0;
+            float clutch = 0;
+            float throttle = 0;
+            float breaking = 0;
+            float steering = 0;
         };
 
         struct Engine {
@@ -45,14 +53,13 @@ class VRCarDynamics : public VRObject {
             float breakPower = 70;//this should be engine/velocity dependent
             float maxForce = 10000;//this should be engine/velocity dependent
             float maxBreakingForce = 100;
-            float maxSteer = .3f;
-            int gear = 0;
             float rpm = 800;
             float minRpm = 800;
             float maxRpm = 4500;
             map<int,float> gearRatios;
             pathPtr clutchForceCurve;
             bool running = false;
+            bool stallingEnabled = false;
         };
 
         struct Chassis {
@@ -64,12 +71,6 @@ class VRCarDynamics : public VRObject {
         };
 
     private:
-        // user inputs
-        float clutch = 0;
-        float throttle = 0;
-        float breaking = 0;
-        float steering = 0;
-
         CarSoundPtr carSound;
         vector<Wheel> wheels;
         Engine engine;
@@ -94,6 +95,8 @@ class VRCarDynamics : public VRObject {
         float s_measurement = 0;
         double a_measurement_t = 0;
 
+        float clamp(float v, float m1, float m2);
+
         boost::recursive_mutex& mtx();
         void initPhysics();
         void updateWheels();
@@ -113,11 +116,6 @@ class VRCarDynamics : public VRObject {
         VRTransformPtr getChassis();
         vector<VRTransformPtr> getWheels();
 
-        void setClutch(float c);
-        void setThrottle(float t);
-        void setBreak(float b);
-        void setSteering(float s);
-        void setGear(int g);
         float getClutch();
         float getThrottle();
         float getBreaking();
@@ -125,10 +123,13 @@ class VRCarDynamics : public VRObject {
         int getGear();
         int getRPM();
 
-        void addWheel(VRGeometryPtr geo, Vec3f p, float radius, float width, bool steered = false, bool driven = false);
+        void addWheel(VRGeometryPtr geo, Vec3f p, float radius, float width, float maxSteering = 0, bool steered = false, bool driven = false);
         void setChassisGeo(VRTransformPtr geo, bool doPhys = 1);
-        void setupSimpleWheels(VRTransformPtr geo, float xOffset, float frontZOffset, float rearZOffset, float height, float radius, float width);
-        void setParameter(float mass, float maxSteering, float enginePower, float breakPower, Vec3f massOffset = Vec3f());
+        void setupSimpleWheels(VRTransformPtr geo, float xOffset, float frontZOffset, float rearZOffset, float height, float radius, float width, float maxSteering);
+        void setParameter(float mass, float enginePower, float breakPower, Vec3f massOffset = Vec3f(), bool enableStalling = false);
+
+        void update(float throttle, float Break, float steering, float clutch = 0, int gear = 1);
+        void updateWheel(int wheel, float throttle, float Break, float steering, float clutch = 0, int gear = 1);
 
         void reset(const pose& p);
         float getSpeed();
