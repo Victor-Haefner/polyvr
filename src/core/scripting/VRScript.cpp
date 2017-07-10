@@ -341,9 +341,9 @@ void VRScript::pyTraceToConsole() { // get py trace
 
 void VRScript::compile( PyObject* pGlobal, PyObject* pModVR ) {
     PyObject* pCode = Py_CompileString(getScript().c_str(), getName().c_str(), Py_file_input);
-    if (!pCode) { pyTraceToConsole(); return; }
+    if (!pCode) { pyTraceToConsole(); cout << "VRScript::compile failed compilation for " << getName() << endl; return; }
     PyObject* pValue = PyEval_EvalCode((PyCodeObject*)pCode, pGlobal, PyModule_GetDict(pModVR));
-    if (!pValue) { pyTraceToConsole(); return; }
+    if (!pValue) { pyTraceToConsole(); cout << "VRScript::compile failed evaluation for " << getName() << endl; return; }
     if (PyErr_Occurred()) PyErr_Print();
     Py_DECREF(pCode);
     Py_DECREF(pValue);
