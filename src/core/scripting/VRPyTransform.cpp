@@ -87,6 +87,10 @@ PyMethodDef VRPyTransform::methods[] = {
     {"castRay", (PyCFunction)VRPyTransform::castRay, METH_VARARGS, "Cast a ray and return the intersection - intersection castRay(obj, dir)"  },
     {"getDragParent", (PyCFunction)VRPyTransform::getDragParent, METH_NOARGS, "Get the parent before the drag started - obj getDragParent()"  },
     {"lastChanged", (PyCFunction)VRPyTransform::lastChanged, METH_NOARGS, "Return the frame when the last change occured - lastChanged()"  },
+
+    {"setWorldDir", PyWrap(Transform, setWorldDir, "Set the direction in world coordinates", void, Vec3f)  },
+    {"setWorldUp", PyWrap(Transform, setWorldUp, "Set the up vector in world coordinates", void, Vec3f)  },
+    {"getPoseTo", PyWrap(Transform, getPoseTo, "Get the pose in the coordinate system of another object", posePtr, VRObjectPtr)  },
     {NULL}  /* Sentinel */
 };
 

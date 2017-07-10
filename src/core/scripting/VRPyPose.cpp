@@ -3,6 +3,8 @@
 
 using namespace OSG;
 
+template<> PyObject* VRPyTypeCaster::cast<posePtr>(posePtr e) { return VRPyPose::fromSharedPtr(e); }
+
 template<> PyTypeObject VRPyBaseT<OSG::pose>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/

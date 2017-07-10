@@ -35,6 +35,7 @@ template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VRRoadPtr& t) {
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VRRoadNetworkPtr& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VRTerrainPtr& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VRMaterialPtr& t) { return VRPyTypeCaster::cast(t); }
+template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const posePtr& t) { return VRPyTypeCaster::cast(t); }
 OSG_END_NAMESPACE;
 
 using namespace OSG;
