@@ -68,9 +68,10 @@ void VRScript::clean() {
 
     auto scene = VRScene::getCurrent();
 
-    for (auto tr : trigs) {
-        trig* t = tr.second;
-        if (t->a && args.count("dev")) { args.erase("dev"); delete t->a; }
+    if (devArg) { delete devArg; devArg = 0; }
+    if (socArg) { delete socArg; socArg = 0; }
+
+    for (auto t : trigs) {
         if (t->soc) t->soc->unsetCallbacks();
         if (t->sig) t->sig->sub(cbfkt_dev);
         if (t->trigger == "on_timeout") scene->dropTimeoutFkt(cbfkt_sys);
@@ -89,8 +90,7 @@ void VRScript::update() {
 
     auto scene = VRScene::getCurrent();
 
-    for (auto tr : trigs) {
-        trig* t = tr.second;
+    for (auto t : trigs) {
         if (t->trigger == "on_scene_close") {
             VRSceneManager::get()->getSignal_on_scene_close()->add(cbfkt_sys);
             continue;
@@ -124,12 +124,11 @@ void VRScript::update() {
             }
 
             // add dev argument
-            if (args.count("dev") == 0) args["dev"] = new arg(VRName::getName(), "dev");
-            arg* a = args["dev"];
-            a->type = "VRPyDeviceType";
-            a->val = "";
-            a->trig = true;
-            t->a = a;
+            if (!devArg) devArg = new arg(VRName::getName(), "dev");
+            devArg->type = "VRPyDeviceType";
+            devArg->val = "";
+            devArg->trig = true;
+            t->a = devArg;
             continue;
         }
 
@@ -139,34 +138,33 @@ void VRScript::update() {
             t->soc->setTCPCallback(cbfkt_soc);
 
             // add msg argument
-            arg* a = new arg(VRName::getName(), "msg");
-            args[a->getName()] = a;
-            a->type = "str";
-            a->val = "";
-            t->a = a;
-            a->trig = true;
+            if (!socArg) socArg = new arg(VRName::getName(), "msg");
+            socArg->type = "str";
+            socArg->val = "";
+            t->a = socArg;
+            socArg->trig = true;
             continue;
         }
     }
 
-    // update args namespaces && map
-    map<string, arg*> tmp_args;
-    for (auto _a : args) {
-        arg* a = _a.second;
+    // update args namespaces
+    for (auto a : args) {
         a->setNameSpace(VRName::getName());
-        tmp_args[a->getName()] = a;
         changeArgValue(a->getName(), a->val);
     }
-    args = tmp_args;
 
     // update head
     head = "";
     if (type == "Python") {
+        auto tmp = args;
+        if (socArg) tmp.push_front(socArg);
+        if (devArg) tmp.push_front(devArg);
+
         head = "def " + name + "(";
-        int i=0;
-        for (a_itr = args.begin(); a_itr != args.end(); a_itr++, i++) {
-            if (i != 0) head += ", ";
-            head += a_itr->second->getName();
+        bool first = true;
+        for (auto a : tmp) {
+            if (!first) { head += ", "; first = false; }
+            head += a->getName();
         }
         head += "):\n";
     }
@@ -189,11 +187,11 @@ VRScript::VRScript(string _name) {
 
 VRScript::~VRScript() {
     for (auto t : trigs) {
-        if (t.second->trigger == "on_scene_close") VRSceneManager::get()->getSignal_on_scene_close()->sub(cbfkt_sys);
+        if (t->trigger == "on_scene_close") VRSceneManager::get()->getSignal_on_scene_close()->sub(cbfkt_sys);
     }
 
-    for (auto a : args) delete a.second;
-    for (auto t : trigs) delete t.second;
+    for (auto a : args) delete a;
+    for (auto t : trigs) delete t;
 }
 
 VRScriptPtr VRScript::create(string name) { return VRScriptPtr( new VRScript(name) ); }
@@ -201,7 +199,7 @@ VRScriptPtr VRScript::create(string name) { return VRScriptPtr( new VRScript(nam
 VRScript::arg* VRScript::addArgument() {
     clean();
     arg* a = new arg(VRName::getName());
-    args[a->getName()] = a;
+    args.push_back(a);
     update();
     return a;
 }
@@ -226,25 +224,41 @@ PyObject* VRScript::getPyObj(arg* a) {
     else { cout << "\ngetPyObj ERROR: " << a->type << " unknown!\n"; Py_RETURN_NONE; }
 }
 
+VRScript::arg* VRScript::getArg(string name) {
+    for (auto a : args) {
+        if (a->getName() == name) return a;
+    }
+    return 0;
+}
+
+VRScript::trig* VRScript::getTrig(string name) {
+    for (auto t : trigs) {
+        if (t->getName() == name) return t;
+    }
+    return 0;
+}
+
 void VRScript::changeArgName(string name, string _new) {
-    clean();
-    a_itr = args.find(name);
-    if (a_itr == args.end()) return;
-    a_itr->second->setName(_new);
+    if (auto a = getArg(name)) {
+        clean();
+        a->setName(_new);
+    }
     update();
 }
 
 void VRScript::changeArgValue(string name, string _new) {
-    if (args.count(name) == 0) return;
-    args[name]->val = _new;
-    args[name]->ptr = 0;
-    updateArgPtr(args[name]);
+    if (auto a = getArg(name)) {
+        a->val = _new;
+        a->ptr = 0;
+        updateArgPtr(a);
+    }
 }
 
 void VRScript::changeArgType(string name, string _new) {
-    if (args.count(name) == 0) return;
-    args[name]->type = _new;
-    args[name]->val = "0";
+    if (auto a = getArg(name)) {
+        a->type = _new;
+        a->val = "0";
+    }
 }
 
 VRScript::Search VRScript::getSearch() { return search; }
@@ -279,7 +293,7 @@ VRScript::Search VRScript::find(string s) {
     return search;
 }
 
-map<string, VRScript::arg*> VRScript::getArguments() { return args; }
+list<VRScript::arg*> VRScript::getArguments() { return args; }
 
 void VRScript::setName(string n) { clean(); VRName::setName(n); update(); }
 void VRScript::setFunction(PyObject* fkt) { this->fkt = fkt; }
@@ -362,11 +376,10 @@ void VRScript::execute() {
         PyObject* pArgs = PyTuple_New(args.size());
 
         int i=0;
-        for (a_itr = args.begin(); a_itr != args.end(); a_itr++, i++) {
-            arg* a = a_itr->second;
+        for (auto a : args) {
             a->pyo = getPyObj(a);
             PyTuple_SetItem(pArgs, i, a->pyo);
-            a_itr->second = a;
+            i++;
         }
 
         auto res = PyObject_CallObject(fkt, pArgs);
@@ -401,51 +414,53 @@ void VRScript::execute() {
 
 void VRScript::execute_dev(VRDeviceWeakPtr _dev) {
     auto dev = _dev.lock();
-    if (!dev) return;
+    if (!dev || !devArg) return;
     if (type != "Python") return;
 
-    args["dev"]->type = "VRPyDeviceType";
-    if (dev->getType() == "haptic") args["dev"]->type = "VRPyHapticType";
-    if (dev->getType() == "server") args["dev"]->type = "VRPyMobileType";
-    args["dev"]->val = dev->getName();
-    args["dev"]->ptr = dev.get();
+    devArg->type = "VRPyDeviceType";
+    if (dev->getType() == "haptic") devArg->type = "VRPyHapticType";
+    if (dev->getType() == "server") devArg->type = "VRPyMobileType";
+    devArg->val = dev->getName();
+    devArg->ptr = dev.get();
     execute();
-    args["dev"]->val = "";
+    devArg->val = "";
 }
 
 void VRScript::execute_soc(string s) {
-    if (type != "Python") return;
-    if (!active) return;
-
-    args["Message"]->val = s;
+    if (type != "Python" || !active) return;
+    socArg->val = s;
     execute();
 }
 
 void VRScript::enable(bool b) { active = b; }
 bool VRScript::enabled() { return active; }
 
-map<string, VRScript::trig*> VRScript::getTriggers() { return trigs; }
-void VRScript::addTrigger() { trig* t = new trig(); trigs[t->getName()] = t; }
-void VRScript::changeTrigger(string name, string trigger) { clean(); trigs[name]->trigger = trigger; update(); }
-void VRScript::changeTrigDev(string name, string dev) { clean(); trigs[name]->dev = dev; update(); }
-void VRScript::changeTrigParams(string name, string params) { clean(); trigs[name]->param = params; update(); }
-void VRScript::changeTrigKey(string name, int key) { clean(); trigs[name]->key = key; update(); }
-void VRScript::changeTrigState(string name, string state) { clean(); trigs[name]->state = state; update(); }
+list<VRScript::trig*> VRScript::getTriggers() { return trigs; }
+void VRScript::addTrigger() { trig* t = new trig(); trigs.push_back(t); }
+void VRScript::changeTrigger(string name, string trigger) { clean(); if (auto t = getTrig(name)) t->trigger = trigger; update(); }
+void VRScript::changeTrigDev(string name, string dev) { clean(); if (auto t = getTrig(name)) t->dev = dev; update(); }
+void VRScript::changeTrigParams(string name, string params) { clean(); if (auto t = getTrig(name)) t->param = params; update(); }
+void VRScript::changeTrigKey(string name, int key) { clean(); if (auto t = getTrig(name)) t->key = key; update(); }
+void VRScript::changeTrigState(string name, string state) { clean(); if (auto t = getTrig(name)) t->state = state; update(); }
 
 void VRScript::remTrigger(string name) {
-    if (trigs.count(name) == 0) return;
-    clean();
-    delete trigs[name]; trigs.erase(name);
-    update();
+    if (auto t = getTrig(name)) {
+        clean();
+        trigs.remove(t);
+        delete t;
+        update();
+    }
 }
 
 float VRScript::getExecutionTime() { return execution_time; }
 
 void VRScript::remArgument(string name) {
-    if (args.count(name) == 0) return;
-    clean();
-    delete args[name]; args.erase(name);
-    update();
+    if (auto a = getArg(name)) {
+        clean();
+        args.remove(a);
+        delete a;
+        update();
+    }
 }
 
 void VRScript::setGroup(string g) { group = g; }
@@ -455,18 +470,15 @@ void VRScript::save(xmlpp::Element* e) {
     xmlpp::Element* ec = e->add_child("core");
     ec->set_child_text("\n"+core+"\n");
 
-    for (auto ai : args) {
-        arg* a = ai.second;
+    for (auto a : args) {
         if (a->trig) continue;
-
         xmlpp::Element* ea = e->add_child("arg");
         ea->set_attribute("type", a->type);
         ea->set_attribute("value", a->val);
         a->saveName(ea);
     }
 
-    for (auto ti : trigs) {
-        trig* t = ti.second;
+    for (auto t : trigs) {
         xmlpp::Element* ea = e->add_child("trig");
         ea->set_attribute("type", t->trigger);
         ea->set_attribute("dev", t->dev);
@@ -516,7 +528,7 @@ void VRScript::load(xmlpp::Element* e) {
             t->param = el->get_attribute("param")->get_value();
             t->key = toInt( el->get_attribute("key")->get_value() );
             t->loadName(el);
-            trigs[t->getName()] = t;
+            trigs.push_back(t);
 
             if (t->trigger == "on_scene_load" && active) {
                 auto scene = VRScene::getCurrent();

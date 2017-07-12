@@ -7,6 +7,7 @@
 #include <Python.h>
 #include <string>
 #include <map>
+#include <list>
 #include "core/utils/VRFunctionFwd.h"
 #include "core/setup/devices/VRSignal.h"
 #include "../networking/VRSocket.h"
@@ -66,10 +67,10 @@ class VRScript : public VRName {
         string group = "no group";
         PyObject* fkt = 0;
         PyObject* pargs = 0;
-        map<string, arg*> args;
-        map<string, arg*>::iterator a_itr;
-        map<string, trig*> trigs;
-        map<string, trig*>::iterator t_itr;
+        arg* devArg = 0;
+        arg* socArg = 0;
+        list<arg*> args;
+        list<trig*> trigs;
         bool active = true;
         float execution_time = -1;
         Search search;
@@ -80,6 +81,8 @@ class VRScript : public VRName {
         VRFunction<VRDeviceWeakPtr>* cbfkt_dev;
         VRFunction<string>* cbfkt_soc;
 
+        arg* getArg(string name);
+        trig* getTrig(string name);
         void on_err_link_clicked(errLink link, string s);
         void pyTraceToConsole();
         void update();
@@ -116,13 +119,13 @@ class VRScript : public VRName {
 
         arg* addArgument();
         void remArgument(string name);
-        map<string, arg*> getArguments();
+        list<arg*> getArguments();
 
         void changeArgName(string name, string _new);
         void changeArgValue(string name, string _new);
         void changeArgType(string name, string _new);
 
-        map<string, trig*> getTriggers();
+        list<trig*> getTriggers();
         void addTrigger();
         void remTrigger(string name);
         void changeTrigger(string name, string trigger);

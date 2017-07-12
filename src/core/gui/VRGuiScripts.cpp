@@ -137,13 +137,13 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScriptPtr script, bool 
 
     int trig_lvl = 0;
     for (auto trig : script->getTriggers()) {
-        if (trig.second->trigger == "on_scene_load") trig_lvl |= 1;
-        if (trig.second->trigger == "on_scene_close") trig_lvl |= 2;
-        if (trig.second->trigger == "on_timeout") trig_lvl |= 4;
-        if (trig.second->trigger == "on_device") trig_lvl |= 8;
-        if (trig.second->trigger == "on_socket") trig_lvl |= 16;
-        if (trig.second->trigger == "on_device_drag") trig_lvl |= 32;
-        if (trig.second->trigger == "on_device_drop") trig_lvl |= 64;
+        if (trig->trigger == "on_scene_load") trig_lvl |= 1;
+        if (trig->trigger == "on_scene_close") trig_lvl |= 2;
+        if (trig->trigger == "on_timeout") trig_lvl |= 4;
+        if (trig->trigger == "on_device") trig_lvl |= 8;
+        if (trig->trigger == "on_socket") trig_lvl |= 16;
+        if (trig->trigger == "on_device_drag") trig_lvl |= 32;
+        if (trig->trigger == "on_device_drop") trig_lvl |= 64;
     }
     if (script->getType() == "HTML") trig_lvl |= 128;
     if (script->getType() == "GLSL") trig_lvl |= 256;
@@ -409,8 +409,7 @@ void VRGuiScripts::on_select_script() { // selected a script
     args->clear();
 
     //if (PyErr_Occurred() != NULL) PyErr_Print();
-    for (auto ar : script->getArguments()) {
-        VRScript::arg* a = ar.second;
+    for (auto a : script->getArguments()) {
         Gtk::ListStore::Row row = *args->append();
         gtk_list_store_set(args->gobj(), row.gobj(), 0, a->getName().c_str(), -1);
         gtk_list_store_set(args->gobj(), row.gobj(), 1, a->val.c_str(), -1);
@@ -421,11 +420,7 @@ void VRGuiScripts::on_select_script() { // selected a script
     // update trigger liststore
     Glib::RefPtr<Gtk::ListStore> trigs = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("triggers"));
     trigs->clear();
-    map<string, VRScript::trig*> trig_map = script->getTriggers();
-    map<string, VRScript::trig*>::iterator itr2;
-    //if (PyErr_Occurred() != NULL) PyErr_Print();
-    for (itr2 = trig_map.begin(); itr2 != trig_map.end(); itr2++) {
-        VRScript::trig* t = itr2->second;
+    for (auto t : script->getTriggers()) {
         string key = toString(t->key);
         if (t->dev == "keyboard" && t->key > 32 && t->key < 127) {
             char kc = t->key;
