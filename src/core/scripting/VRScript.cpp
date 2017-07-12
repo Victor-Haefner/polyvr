@@ -156,13 +156,9 @@ void VRScript::update() {
     // update head
     head = "";
     if (type == "Python") {
-        auto tmp = args;
-        if (socArg) tmp.push_front(socArg);
-        if (devArg) tmp.push_front(devArg);
-
         head = "def " + name + "(";
         bool first = true;
-        for (auto a : tmp) {
+        for (auto a : getArguments(true)) {
             if (!first) { head += ", "; first = false; }
             head += a->getName();
         }
@@ -293,7 +289,13 @@ VRScript::Search VRScript::find(string s) {
     return search;
 }
 
-list<VRScript::arg*> VRScript::getArguments() { return args; }
+list<VRScript::arg*> VRScript::getArguments(bool withInternals) {
+    if (withInternals && socArg) ;
+    auto tmp = args;
+    if (socArg) tmp.push_front(socArg);
+    if (devArg) tmp.push_front(devArg);
+    return tmp;
+}
 
 void VRScript::setName(string n) { clean(); VRName::setName(n); update(); }
 void VRScript::setFunction(PyObject* fkt) { this->fkt = fkt; }
@@ -366,13 +368,12 @@ void VRScript::compile( PyObject* pGlobal, PyObject* pModVR ) {
 
 void VRScript::execute() {
     if (type == "Python") {
-        if (fkt == 0) return;
-        if (!active) return;
+        if (fkt == 0 || !active) return;
         PyGILState_STATE gstate = PyGILState_Ensure();
         if (PyErr_Occurred() != NULL) PyErr_Print();
 
         VRTimer timer; timer.start();
-
+        auto args = getArguments(true);
         PyObject* pArgs = PyTuple_New(args.size());
 
         int i=0;
@@ -383,7 +384,7 @@ void VRScript::execute() {
         }
 
         auto res = PyObject_CallObject(fkt, pArgs);
-        if (!res) pyTraceToConsole();
+        if (!res) { pyTraceToConsole(); cout << "VRScript::execute failed for " << getName() << endl; return; }
 
         execution_time = timer.stop();
 

@@ -119,7 +119,7 @@ class VRScript : public VRName {
 
         arg* addArgument();
         void remArgument(string name);
-        list<arg*> getArguments();
+        list<arg*> getArguments(bool withInternals = false);
 
         void changeArgName(string name, string _new);
         void changeArgValue(string name, string _new);
