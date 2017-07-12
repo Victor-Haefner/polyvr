@@ -902,6 +902,9 @@ void VRGuiScripts::on_find_diag_cancel_clicked() {
 VRGuiScripts::searchResult::searchResult(string s, int l, int c) : scriptName(s), line(l), column(c) {}
 
 void VRGuiScripts::focusScript(string name, int line, int column) {
+    setNotebookPage("notebook1", 2);
+    setNotebookPage("notebook3", 3);
+
     Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("script_tree"));
     Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview5"));
 
