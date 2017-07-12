@@ -42,6 +42,8 @@ class VRTerrain : public VRGeometry {
         virtual bool applyIntersectionAction(Action* ia);
 
         void physicalize(bool b);
+
+        void projectOSM(string path); // TODO, should be handled differently
 };
 
 OSG_END_NAMESPACE;

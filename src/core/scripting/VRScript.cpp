@@ -159,8 +159,9 @@ void VRScript::update() {
         head = "def " + name + "(";
         bool first = true;
         for (auto a : getArguments(true)) {
-            if (!first) { head += ", "; first = false; }
+            if (!first) head += ", ";
             head += a->getName();
+            first = false;
         }
         head += "):\n";
     }

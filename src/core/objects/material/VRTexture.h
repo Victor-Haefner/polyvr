@@ -40,6 +40,7 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         Vec3i getSize();
         Vec4f getPixel(Vec2f uv);
         Vec4f getPixel(Vec3i p);
+        void setPixel(Vec3i p, Vec4f c);
 
         void resize(Vec3i size, Vec3i offset);
         void paste(VRTexturePtr other, Vec3i offset);

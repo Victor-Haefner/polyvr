@@ -193,7 +193,29 @@ void VRTerrain::loadMap( string path, int channel ) {
     setMap(tex, channel);
 }
 
+void VRTerrain::projectOSM(string path) { // TODO!!
+    if (tex->getChannels() != 4) { // fix mono channels
+        VRTextureGenerator tg;
+        auto dim = tex->getSize();
+        tg.setSize(dim, true);
+        auto t = tg.compose(0);
+        for (int i = 0; i < dim[0]; i++) {
+            for (int j = 0; j < dim[1]; j++) {
+                float h = tex->getPixel(Vec3i(i,j,0))[0];
+                t->setPixel(Vec3i(i,j,0), Vec4f(0.5,0.5,0.5,h));
+            }
+        }
+        setMap(t);
+    }
 
+    auto dim = tex->getSize(); // a test
+    for (int i = 0; i < dim[0]; i++) {
+        for (int j = 0; j < dim[1]; j++) {
+            float h = tex->getPixel(Vec3i(i,j,0))[3];
+            tex->setPixel(Vec3i(i,j,0), Vec4f(0.5,0.5,0.5,h));
+        }
+    }
+}
 
 
 
