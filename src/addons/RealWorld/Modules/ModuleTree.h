@@ -2,7 +2,7 @@
 #define MODULETREE_H
 
 #include "BaseModule.h"
-#include "../OSM/OSMMap.h"
+#include "addons/WorldGenerator/GIS/OSMMap.h"
 #include <iostream>
 #include <string>
 #include "core/objects/VRObjectFwd.h"

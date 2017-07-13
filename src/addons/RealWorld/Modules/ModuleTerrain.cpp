@@ -5,7 +5,7 @@
 #include "core/objects/material/VRMaterial.h" // 3
 #include "core/scene/VRSceneManager.h" // 2.9
 #include "triangulate.h" // 0.1
-#include "../OSM/OSMMap.h" // 0.4
+#include "addons/WorldGenerator/GIS/OSMMap.h"
 #include "ModuleTerrain.h" // 2.3
 #include "../Config.h" // 2.2
 #include "../MapCoordinator.h" // 2.2

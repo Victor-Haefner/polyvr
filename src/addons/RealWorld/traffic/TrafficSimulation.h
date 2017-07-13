@@ -9,7 +9,7 @@
 #include <map>
 #include <boost/thread/mutex.hpp>
 #include <OpenSG/OSGVector.h>
-#include "../OSM/OSMFwd.h"
+#include "addons/WorldGenerator/GIS/GISFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

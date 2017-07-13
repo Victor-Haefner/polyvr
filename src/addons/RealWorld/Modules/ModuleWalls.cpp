@@ -6,7 +6,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 
-#include "../OSM/OSMMap.h"
+#include "addons/WorldGenerator/GIS/OSMMap.h"
 #include "triangulate.h"
 #include "Wall.h"
 

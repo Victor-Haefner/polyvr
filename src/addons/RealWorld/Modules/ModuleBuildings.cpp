@@ -1,7 +1,7 @@
 #include "ModuleBuildings.h"
 
 #include "Building.h"
-#include "../OSM/OSMMap.h"
+#include "addons/WorldGenerator/GIS/OSMMap.h"
 #include "core/objects/material/VRShader.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRGeometry.h"

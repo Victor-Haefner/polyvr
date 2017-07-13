@@ -6,8 +6,7 @@
 #include "../Config.h"
 #include "TrafficSimulation.h"
 #include "../MapCoordinator.h"
-#include "../OSM/OSMMap.h"
-#include "../OSM/OSMNode.h"
+#include "addons/WorldGenerator/GIS/OSMMap.h"
 
 #include <boost/bind.hpp>
 #include <boost/thread/locks.hpp>

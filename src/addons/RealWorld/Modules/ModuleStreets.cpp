@@ -10,7 +10,7 @@
 
 #include "../Config.h"
 #include "../RealWorld.h"
-#include "../OSM/OSMMap.h"
+#include "addons/WorldGenerator/GIS/OSMMap.h"
 #include "../MapCoordinator.h"
 #include "../StreetAlgos.h"
 #include "../Assets/StreetLamp.h"

@@ -402,12 +402,6 @@
 		<Unit filename="src/addons/RealWorld/Modules/Wall.cpp" />
 		<Unit filename="src/addons/RealWorld/Modules/Wall.h" />
 		<Unit filename="src/addons/RealWorld/Modules/triangulate.h" />
-		<Unit filename="src/addons/RealWorld/OSM/OSMMap.cpp" />
-		<Unit filename="src/addons/RealWorld/OSM/OSMMap.h" />
-		<Unit filename="src/addons/RealWorld/OSM/OSMMapDB.cpp" />
-		<Unit filename="src/addons/RealWorld/OSM/OSMMapDB.h" />
-		<Unit filename="src/addons/RealWorld/OSM/OSMNode.cpp" />
-		<Unit filename="src/addons/RealWorld/OSM/OSMNode.h" />
 		<Unit filename="src/addons/RealWorld/RealWorld.cpp" />
 		<Unit filename="src/addons/RealWorld/RealWorld.h" />
 		<Unit filename="src/addons/RealWorld/StreetAlgos.cpp" />
@@ -508,8 +502,11 @@
 		<Unit filename="src/addons/SimViDekont/VRabq.h" />
 		<Unit filename="src/addons/SimViDekont/struct.h" />
 		<Unit filename="src/addons/VRFurnitureManager.h" />
+		<Unit filename="src/addons/WorldGenerator/GIS/GISFwd.h" />
 		<Unit filename="src/addons/WorldGenerator/GIS/GISWorld.cpp" />
 		<Unit filename="src/addons/WorldGenerator/GIS/GISWorld.h" />
+		<Unit filename="src/addons/WorldGenerator/GIS/OSMMap.cpp" />
+		<Unit filename="src/addons/WorldGenerator/GIS/OSMMap.h" />
 		<Unit filename="src/addons/WorldGenerator/VRPyWorldGenerator.cpp" />
 		<Unit filename="src/addons/WorldGenerator/VRPyWorldGenerator.h" />
 		<Unit filename="src/addons/WorldGenerator/VRWorldGenerator.cpp" />

@@ -1,6 +1,5 @@
 #include "ModuleTree.h"
 #include "BaseWorldObject.h"
-#include "../OSM/OSMNode.h"
 #include "../Config.h"
 #include "../RealWorld.h"
 #include "../World.h"

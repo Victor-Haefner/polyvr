@@ -1,7 +1,7 @@
 #ifndef OSMMAP_H
 #define OSMMAP_H
 
-#include "OSMFwd.h"
+#include "GISFwd.h"
 #include "core/math/VRMathFwd.h"
 #include <string>
 #include <map>

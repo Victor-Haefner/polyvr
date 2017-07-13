@@ -1,5 +1,4 @@
 #include "OSMMap.h"
-#include "OSMNode.h"
 #include "core/utils/toString.h"
 #include "core/math/boundingbox.h"
 #include <libxml++/libxml++.h>
@@ -8,13 +7,6 @@
     http://wiki.openstreetmap.org/wiki/Elements
     http://wiki.openstreetmap.org/wiki/Map_Features
 */
-
-using namespace OSG;
-
-#include "OSMNode.h"
-#include "core/utils/toString.h"
-
-#include <libxml++/libxml++.h>
 
 using namespace OSG;
 

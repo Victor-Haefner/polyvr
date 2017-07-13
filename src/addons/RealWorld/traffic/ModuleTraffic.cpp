@@ -1,7 +1,6 @@
 #include "ModuleTraffic.h"
 #include "core/utils/VRFunction.h"
 #include "core/scene/VRSceneManager.h"
-#include "../OSM/OSMMapDB.h"
 #include "../RealWorld.h"
 #include <boost/bind.hpp>
 

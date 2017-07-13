@@ -10,7 +10,7 @@
 #include "core/objects/VRObjectFwd.h"
 #include "core/objects/object/VRObject.h"
 #include "Altitude.h"
-#include "OSM/OSMFwd.h"
+#include "addons/WorldGenerator/GIS/GISFwd.h"
 #include <map>
 
 OSG_BEGIN_NAMESPACE;
