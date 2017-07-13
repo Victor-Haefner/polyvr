@@ -18,7 +18,7 @@ PyMethodDef VRPyCarDynamics::methods[] = {
     {"setChassis", (PyCFunction)VRPyCarDynamics::setChassis, METH_VARARGS, "Set chassis geometry - setChassis( geo | bool physicalize) " },
     {"addWheel", PyWrap(CarDynamics, addWheel, "Add a wheel, geometry, position, radius, width, maxSteer, steered, driven", void, VRGeometryPtr, Vec3f, float, float, float, bool, bool) },
     {"setupSimpleWheels", (PyCFunction)VRPyCarDynamics::setupSimpleWheels, METH_VARARGS, "Setup classic wheels - setupSimpleWheels( geo, float X, float Zp, float Zn, float height, float radius, float width, float max_steering)" },
-    {"setParameter", (PyCFunction)VRPyCarDynamics::setParameter, METH_VARARGS, "Set car parameter, must be done before creating car - setParameter( float mass, float engine_power, float break_power | [x,y,z] mass offset  )" },
+    {"setParameter", (PyCFunction)VRPyCarDynamics::setParameter, METH_VARARGS, "Set car parameter, must be done before creating car - setParameter( float mass, float engine_power, float break_power | [x,y,z] mass offset, bool enableStalling  )" },
     {"reset", (PyCFunction)VRPyCarDynamics::reset, METH_VARARGS, "Reset car - reset( pose )" },
     {"getSteering", (PyCFunction)VRPyCarDynamics::getSteering, METH_NOARGS, "Get car steering - float getSteering()" },
     {"getThrottle", (PyCFunction)VRPyCarDynamics::getThrottle, METH_NOARGS, "Get car throttle - float getThrottle()" },
@@ -155,9 +155,10 @@ PyObject* VRPyCarDynamics::setupSimpleWheels(VRPyCarDynamics* self, PyObject* ar
 
 PyObject* VRPyCarDynamics::setParameter(VRPyCarDynamics* self, PyObject* args) {
     float m, e, b;
+    int s = 0;
     PyObject* mOffset = 0;
-    if (! PyArg_ParseTuple(args, "fff|O", &m, &e, &b, &mOffset)) return NULL;
-	self->objPtr->setParameter(m,e,b,parseVec3fList(mOffset));
+    if (! PyArg_ParseTuple(args, "fff|Oi", &m, &e, &b, &mOffset, &s)) return NULL;
+	self->objPtr->setParameter(m,e,b,parseVec3fList(mOffset),s);
 	Py_RETURN_TRUE;
 }
 
