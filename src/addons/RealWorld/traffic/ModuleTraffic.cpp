@@ -22,19 +22,15 @@ TrafficSimulation* ModuleTraffic::getTrafficSimulation() {
 }
 
 void ModuleTraffic::loadBbox(MapGrid::Box bbox) {
-    auto mapDB = RealWorld::get()->getDB();
-    OSMMap* osmMap = mapDB->getMap(bbox.str);
+    auto osmMap = RealWorld::get()->getMap(bbox.str);
     if (!osmMap) return;
-
     threadFkt = VRFunction<VRThreadWeakPtr>::create("trafficAddMap", boost::bind(&TrafficSimulation::addMap, simulation, osmMap));
     VRSceneManager::get()->initThread(threadFkt, "trafficAddMap", false);
 }
 
 void ModuleTraffic::unloadBbox(MapGrid::Box bbox) {
-    auto mapDB = RealWorld::get()->getDB();
-    OSMMap* osmMap = mapDB->getMap(bbox.str);
+    auto osmMap = RealWorld::get()->getMap(bbox.str);
     if (!osmMap) return;
-
     // Not inside a thread since osmMap might no longer be valid after this method returns
     simulation->removeMap(osmMap);
 }

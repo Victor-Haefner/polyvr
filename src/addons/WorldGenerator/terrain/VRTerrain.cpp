@@ -216,6 +216,8 @@ void VRTerrain::projectOSM(string path) { // TODO!!
             tex->setPixel(Vec3i(i,j,0), Vec4f(1.0,1.0,0.5,h));
         }
     }
+
+
 }
 
 

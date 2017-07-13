@@ -2,7 +2,7 @@
 #define MODULETREE_H
 
 #include "BaseModule.h"
-#include "../OSM/OSMMapDB.h"
+#include "../OSM/OSMMap.h"
 #include <iostream>
 #include <string>
 #include "core/objects/VRObjectFwd.h"

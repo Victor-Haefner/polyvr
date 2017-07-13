@@ -1,12 +1,56 @@
 #include "OSMMap.h"
+#include "OSMNode.h"
+#include "core/utils/toString.h"
+#include "core/math/boundingbox.h"
+#include <libxml++/libxml++.h>
+
+/* FILE FORMAT INFOS:
+    http://wiki.openstreetmap.org/wiki/Elements
+    http://wiki.openstreetmap.org/wiki/Map_Features
+*/
+
+using namespace OSG;
+
+#include "OSMNode.h"
 #include "core/utils/toString.h"
 
 #include <libxml++/libxml++.h>
 
 using namespace OSG;
-using namespace std;
+
+OSMBase::OSMBase(string id) : id(id) {}
+OSMNode::OSMNode(string id, double lat, double lon) : OSMBase(id), lat(lat), lon(lon) {}
+OSMWay::OSMWay(string id) : OSMBase(id) {}
+
+OSMBase::OSMBase(xmlpp::Element* el) {
+    id = el->get_attribute_value("id");
+    for(xmlpp::Node* n : el->get_children()) { // read node tags
+        if (auto e = dynamic_cast<xmlpp::Element*>(n)) {
+            if (e->get_name() == "tag") {
+                tags[e->get_attribute_value("k")] = e->get_attribute_value("v");
+            }
+        }
+    }
+}
+
+OSMNode::OSMNode(xmlpp::Element* el) : OSMBase(el) {
+    lat = toFloat(el->get_attribute_value("lat"));
+    lon = toFloat(el->get_attribute_value("lon"));
+}
+
+OSMWay::OSMWay(xmlpp::Element* el) : OSMBase(el) {
+    for(xmlpp::Node* n : el->get_children()) {
+        if (auto e = dynamic_cast<xmlpp::Element*>(n)) {
+            if (e->get_name() == "nd") {
+                nodeRefs.push_back(e->get_attribute_value("ref"));
+            }
+        }
+    }
+}
 
 OSMMap::OSMMap(string filepath) {
+    bounds = Boundingbox::create();
+
     xmlpp::DomParser parser;
     try { parser.parse_file(filepath); }
     catch(const exception& ex) { cout << "OSMMap Error: " << ex.what() << endl; return; }
@@ -21,24 +65,26 @@ OSMMap::OSMMap(string filepath) {
     }
 }
 
-OSMMap* OSMMap::loadMap(string filepath) { return new OSMMap(filepath); }
+OSMMapPtr OSMMap::loadMap(string filepath) { return OSMMapPtr( new OSMMap(filepath) ); }
+map<string, OSMWayPtr> OSMMap::getWays() { return ways; }
+map<string, OSMNodePtr> OSMMap::getNodes() { return nodes; }
+OSMNodePtr OSMMap::getNode(string id) { return nodes[id]; }
+OSMNodePtr OSMMap::getWay(string id) { return nodes[id]; }
 
 void OSMMap::readNode(xmlpp::Element* element) {
-    nodeCount++;
-    OSMNode* osmn = new OSMNode(element);
-    osmNodes.push_back(osmn);
-    osmNodeMap[osmn->id] = osmn;
+    OSMNodePtr node = OSMNodePtr( new OSMNode(element) );
+    nodes[node->id] = node;
 }
 
 void OSMMap::readWay(xmlpp::Element* element) {
-    wayCount++;
-    OSMWay* osmWay = new OSMWay(element);
-    osmWays.push_back(osmWay);
+    OSMWayPtr way = OSMWayPtr( new OSMWay(element) );
+    ways[way->id] = way;
 }
 
 void OSMMap::readBounds(xmlpp::Element* element) {
-    this->boundsMinLat = toFloat( element->get_attribute_value("minlat") );
-    this->boundsMinLon = toFloat( element->get_attribute_value("minlon") );
-    this->boundsMaxLat = toFloat( element->get_attribute_value("maxlat") );
-    this->boundsMaxLon = toFloat( element->get_attribute_value("maxlon") );
+    Vec3f min(toFloat( element->get_attribute_value("minlon") ), toFloat( element->get_attribute_value("minlat") ), 0 );
+    Vec3f max(toFloat( element->get_attribute_value("maxlon") ), toFloat( element->get_attribute_value("maxlat") ), 0 );
+    bounds->clear();
+    bounds->update(min);
+    bounds->update(max);
 }

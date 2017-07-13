@@ -5,7 +5,7 @@
 #include "core/objects/material/VRMaterial.h" // 3
 #include "core/scene/VRSceneManager.h" // 2.9
 #include "triangulate.h" // 0.1
-#include "../OSM/OSMMapDB.h" // 0.4
+#include "../OSM/OSMMap.h" // 0.4
 #include "ModuleTerrain.h" // 2.3
 #include "../Config.h" // 2.2
 #include "../MapCoordinator.h" // 2.2
@@ -19,20 +19,19 @@ ModuleTerrain::ModuleTerrain(bool t, bool p) : BaseModule("ModuleTerrain", t,p) 
 }
 
 void ModuleTerrain::loadBbox(MapGrid::Box bbox) {
-    auto mapDB = RealWorld::get()->getDB();
     auto mc = RealWorld::get()->getCoordinator();
-    if (!mc || !mapDB) return;
-    OSMMap* osmMap = mapDB->getMap(bbox.str);
+    if (!mc) return;
+    OSMMapPtr osmMap = RealWorld::get()->getMap(bbox.str);
     if (!osmMap) return;
 
-    for (OSMWay* way : osmMap->osmWays) {
+    for (auto way : osmMap->getWays()) {
         for (auto mat : terrainList) {
-            if (way->tags[mat->k] == mat->v) {
-                if (meshes.count(way->id)) continue;
+            if (way.second->tags[mat->k] == mat->v) {
+                if (meshes.count(way.second->id)) continue;
                 // load VRPolygons from osmMap
-                Terrain* ter = new Terrain(way->id);
-                for (string nodeId : way->nodeRefs) {
-                    OSMNode* node = osmMap->osmNodeMap[nodeId];
+                Terrain* ter = new Terrain(way.second->id);
+                for (string nodeId : way.second->nodeRefs) {
+                    auto node = osmMap->getNode(nodeId);
                     Vec2f pos = mc->realToWorld(Vec2f(node->lat, node->lon));
                     ter->positions.push_back(pos);
                 }
@@ -50,14 +49,12 @@ void ModuleTerrain::loadBbox(MapGrid::Box bbox) {
 }
 
 void ModuleTerrain::unloadBbox(MapGrid::Box bbox) {
-    auto mapDB = RealWorld::get()->getDB();
-    if (!mapDB) return;
-    OSMMap* osmMap = mapDB->getMap(bbox.str);
+    auto osmMap = RealWorld::get()->getMap(bbox.str);
     if (!osmMap) return;
-    for (OSMWay* way : osmMap->osmWays) {
+    for (auto way : osmMap->getWays()) {
         for (TerrainMaterial* mat : terrainList) {
-            if (way->tags[mat->k] == mat->v) {
-                if (meshes.count(way->id)) meshes.erase(way->id);
+            if (way.second->tags[mat->k] == mat->v) {
+                if (meshes.count(way.second->id)) meshes.erase(way.second->id);
             }
 
         }

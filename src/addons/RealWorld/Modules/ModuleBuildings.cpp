@@ -1,7 +1,7 @@
 #include "ModuleBuildings.h"
 
 #include "Building.h"
-#include "../OSM/OSMMapDB.h"
+#include "../OSM/OSMMap.h"
 #include "core/objects/material/VRShader.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRGeometry.h"
@@ -31,10 +31,9 @@ ModuleBuildings::ModuleBuildings(bool t, bool p) : BaseModule("ModuleBuildings",
 }
 
 void ModuleBuildings::loadBbox(MapGrid::Box bbox) {
-    auto mapDB = RealWorld::get()->getDB();
     auto mc = RealWorld::get()->getCoordinator();
-    if (!mc || !mapDB) return;
-    OSMMap* osmMap = mapDB->getMap(bbox.str);
+    if (!mc) return;
+    OSMMapPtr osmMap = RealWorld::get()->getMap(bbox.str);
     if (!osmMap) return;
 
     VRGeoData b_geo_d;
@@ -42,14 +41,14 @@ void ModuleBuildings::loadBbox(MapGrid::Box bbox) {
 
     cout << "LOADING BUILDINGS FOR " << bbox.str << "\n" << flush;
 
-    for(OSMWay* way : osmMap->osmWays) {
-        if (way->tags["building"] != "yes") continue;
-        //if (meshes.count(way->id)) continue;
+    for(auto way : osmMap->getWays()) {
+        if (way.second->tags["building"] != "yes") continue;
+        //if (meshes.count(way.second->id)) continue;
 
         // load building from osmMap
-        Building* b = new Building(way->id);
-        for(string nodeId : way->nodeRefs) {
-            OSMNode* node = osmMap->osmNodeMap[nodeId];
+        Building* b = new Building(way.second->id);
+        for(string nodeId : way.second->nodeRefs) {
+            OSMNodePtr node = osmMap->getNode(nodeId);
             Vec2f pos = mc->realToWorld(Vec2f(node->lat, node->lon));
             b->positions.push_back(pos);
         }

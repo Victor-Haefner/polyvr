@@ -9,10 +9,7 @@
 #include <map>
 #include <boost/thread/mutex.hpp>
 #include <OpenSG/OSGVector.h>
-
-class OSMMap;
-class OSMNode;
-class OSMWay;
+#include "../OSM/OSMFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -129,7 +126,7 @@ class TrafficSimulation {
          * If a map should be added/removed, its pointer is first looked after in this
          * set && only if (not) found, the simulator is notified.
          */
-        set<const OSMMap*> loadedMaps;
+        set<OSMMapPtr> loadedMaps;
 
         /**
          * The handler that is called if there might be a collision
@@ -217,14 +214,14 @@ class TrafficSimulation {
          * @param node The node to convert
          * @return A JSON value that contains data from the node.
          */
-        Value convertNode(OSMNode *node);
+        Value convertNode(OSMNodePtr node);
 
         /**
          * Converts an OSM street to a JSON representation.
          * @param street The street to convert
          * @return A JSON value that contains data from the street.
          */
-        Value convertStreet(OSMWay *street);
+        Value convertStreet(OSMWayPtr street);
 
         /**
          A helper method to fetch the data from the server.
@@ -278,14 +275,14 @@ class TrafficSimulation {
          * Adds a map consisting of streets that should be simulated.
          * @param map The map to simulate.
          */
-        void addMap(const OSMMap* map);
+        void addMap(OSMMapPtr map);
 
         /**
          * Removes a map from the simulator.
          * All vehicles on this map will be deleted && no further vehicles will drive on these streets.
          * @param map The map to delete.
          */
-        void removeMap(const OSMMap* map);
+        void removeMap(OSMMapPtr map);
 
         /**
          * Sets the distance vehicles can have to the player && still be drawn.

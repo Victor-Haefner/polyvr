@@ -32,7 +32,7 @@ vector<string> split(const string& str, char at = '|') {
     return ret;
 }
 
-Value TrafficSimulation::convertNode(OSMNode *node) {
+Value TrafficSimulation::convertNode(OSMNodePtr node) {
         Value value;
 
         value["id"] = boost::lexical_cast<Json::Value::UInt64>(node->id.c_str());
@@ -49,7 +49,7 @@ Value TrafficSimulation::convertNode(OSMNode *node) {
         return value;
 }
 
-Value TrafficSimulation::convertStreet(OSMWay *street) {
+Value TrafficSimulation::convertStreet(OSMWayPtr street) {
 
     Value value;
     value["id"] = boost::lexical_cast<Json::Value::UInt64>(street->id.c_str());
@@ -390,32 +390,24 @@ TrafficSimulation::~TrafficSimulation() {
 
 void TrafficSimulation::setServer(const string& host) {
     client.setServer(host);
-    set<const OSMMap*> tmp; // Retransmit the already loaded maps
+    set<OSMMapPtr> tmp; // Retransmit the already loaded maps
     tmp.swap(loadedMaps);
     for (auto m : tmp) addMap(m);
 }
 
-void TrafficSimulation::addMap(const OSMMap* map) {
-
-    // Check if the map is loaded. If it already is, abort
-    if (loadedMaps.count(map) > 0)
-        return;
-
-    // Insert map into set
-    loadedMaps.insert(map);
+void TrafficSimulation::addMap(OSMMapPtr map) {
+    if (loadedMaps.count(map) > 0) return; // Check if the map is loaded. If it already is, abort
+    loadedMaps.insert(map); // Insert map into set
 
     // Iterate over the streets of the map && add them to an array to send to the server
     Value arrayStreets;
     unsigned int iStreets = 0;
-    for (vector<OSMWay*>::const_iterator iter = map->osmWays.begin(); iter != map->osmWays.end(); iter++) {
-
-        // Only handle streets && no other ways (e.g. building || park boundaries)
-        if ((*iter)->tags.count("highway") && !((*iter)->tags["highway"].empty())) {
+    for (auto way : map->getWays()) {
+        if (way.second->tags.count("highway") && !way.second->tags["highway"].empty()) { // Only handle streets && no other ways (e.g. building or park boundaries)
 
             // A vector with the allowed road types
             static set<string> allowedValues;
-            if (allowedValues.empty()) {
-                // Do this initialisation only once
+            if (allowedValues.empty()) { // Do this initialisation only once
                 allowedValues.insert("motorway");
                 allowedValues.insert("trunk");
                 allowedValues.insert("primary");
@@ -435,18 +427,16 @@ void TrafficSimulation::addMap(const OSMMap* map) {
             }
 
             // Check if it is a street for cars
-            if (allowedValues.count((*iter)->tags["highway"]) == 0)
-                continue;
-
-            arrayStreets[iStreets++] = convertStreet(*iter);
+            if (allowedValues.count(way.second->tags["highway"]) == 0) continue;
+            arrayStreets[iStreets++] = convertStreet(way.second);
         }
     }
 
     // Iterate over the nodes of the map && add them to an array to send to the server
     Value arrayNodes;
     // Iterate over nodes
-    for (vector<OSMNode*>::const_iterator iter = map->osmNodes.begin(); iter != map->osmNodes.end(); iter++) {
-        uint64_t id = boost::lexical_cast<uint64_t>((*iter)->id.c_str());
+    for (auto node : map->getNodes()) {
+        uint64_t id = boost::lexical_cast<uint64_t>(node.second->id.c_str());
         bool found = false;
         // Search in the streets for a reference to this node. If non is found, ignore the node
         for (Value::iterator streetIter = arrayStreets.begin(); streetIter != arrayStreets.end() && !found; streetIter++) {
@@ -458,8 +448,7 @@ void TrafficSimulation::addMap(const OSMMap* map) {
                 }
             }
         }
-        if (found)
-            arrayNodes.append(convertNode(*iter));
+        if (found) arrayNodes.append(convertNode(node.second));
     }
 
     Value value;
@@ -471,25 +460,17 @@ void TrafficSimulation::addMap(const OSMMap* map) {
     errorMessage("adding map", value);
 }
 
-void TrafficSimulation::removeMap(const OSMMap* map) {
-
-    // Check if the map is loaded. If not, abort
-    if (loadedMaps.count(map) == 0)
-        return;
-
-    // Remove map from set
-    loadedMaps.erase(map);
+void TrafficSimulation::removeMap(OSMMapPtr map) {
+    if (loadedMaps.count(map) == 0) return; // Check if the map is loaded. If not, abort
+    loadedMaps.erase(map); // Remove map from set
 
     // Iterate over the streets of the map && add them to an array to send to the server
     Value array;
     unsigned int i = 0;
-    for (vector<OSMWay*>::const_iterator iter = map->osmWays.begin(); iter != map->osmWays.end(); iter++) {
-        array[i++] = (*iter)->id;
-    }
+    for (auto way : map->getWays()) array[i++] = way.second->id;
 
     Value value;
     value["removeStreets"] = array;
-
     value = client.sendData(value);
     errorMessage("removing streets", value);
 }
@@ -813,15 +794,15 @@ void TrafficSimulation::update() {
                 string toId = toString(lightpost["to"].asUInt());
                 bool foundAt = false, foundTo = false;
                 for (auto mapIter : loadedMaps) {
-                    for (auto nodeIter : mapIter->osmNodes) {
+                    for (auto node : mapIter->getNodes()) {
 
-                        if (!foundAt && nodeIter->id == atId) {
-                            atPos = mapCoordinator->realToWorld(Vec2f(nodeIter->lat, nodeIter->lon));
+                        if (!foundAt && node.second->id == atId) {
+                            atPos = mapCoordinator->realToWorld(Vec2f(node.second->lat, node.second->lon));
                             foundAt = true;
                         }
 
-                        if (!foundTo && nodeIter->id == toId) {
-                            toPos = mapCoordinator->realToWorld(Vec2f(nodeIter->lat, nodeIter->lon));
+                        if (!foundTo && node.second->id == toId) {
+                            toPos = mapCoordinator->realToWorld(Vec2f(node.second->lat, node.second->lon));
                             foundTo = true;
                         }
 

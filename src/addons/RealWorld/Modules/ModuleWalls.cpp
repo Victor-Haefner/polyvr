@@ -6,27 +6,26 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 
-#include "../OSM/OSMMapDB.h"
+#include "../OSM/OSMMap.h"
 #include "triangulate.h"
 #include "Wall.h"
 
 using namespace OSG;
 
 void ModuleWalls::loadBbox(MapGrid::Box bbox) {
-    auto mapDB = RealWorld::get()->getDB();
     auto mc = RealWorld::get()->getCoordinator();
-    OSMMap* osmMap = mapDB->getMap(bbox.str);
+    OSMMapPtr osmMap = RealWorld::get()->getMap(bbox.str);
     if (!osmMap) return;
 
     cout << "LOADING WALLS FOR " << bbox.str << "\n" << flush;
     VRGeoData geo;
 
-    for (OSMWay* way : osmMap->osmWays) {
+    for (auto way : osmMap->getWays()) {
         for (WallMaterial* mat : wallList) {
-            if (way->tags[mat->k] == mat->v) {
-                Wall* wall = new Wall(way->id);
-                for(string nodeId: way->nodeRefs) {
-                    OSMNode* node = osmMap->osmNodeMap[nodeId];
+            if (way.second->tags[mat->k] == mat->v) {
+                Wall* wall = new Wall(way.second->id);
+                for(string nodeId: way.second->nodeRefs) {
+                    auto node = osmMap->getNode(nodeId);
                     Vec2f pos = mc->realToWorld(Vec2f(node->lat, node->lon));
                     wall->positions.push_back(pos);
                 }

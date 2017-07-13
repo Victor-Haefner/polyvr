@@ -10,9 +10,8 @@
 #include "core/objects/VRObjectFwd.h"
 #include "core/objects/object/VRObject.h"
 #include "Altitude.h"
+#include "OSM/OSMFwd.h"
 #include <map>
-
-class OSMMapDB;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -27,7 +26,7 @@ class RealWorld : public VRObject {
         MapCoordinator* mapCoordinator = 0;
         World* world = 0;
         MapManager* mapManager = 0;
-        OSMMapDB* mapDB = 0;
+        map<string, OSMMapPtr> maps;
         TrafficSimulation* trafficSimulation = 0; // Needed for script access
         static map<string, string> options;
         static Altitude altitude; // constructor runs once, single instance
@@ -50,7 +49,7 @@ class RealWorld : public VRObject {
         MapCoordinator* getCoordinator();
         MapManager* getManager();
         World* getWorld();
-        OSMMapDB* getDB();
+        OSMMapPtr getMap(string posStr);
 };
 
 OSG_END_NAMESPACE;

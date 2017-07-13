@@ -17,17 +17,16 @@ ModuleTree::ModuleTree(bool t, bool p) : BaseModule("ModuleTree", t,p) {}
 
 void ModuleTree::loadBbox(MapGrid::Box bbox) {
     auto mc = RealWorld::get()->getCoordinator();
-    auto mapDB = RealWorld::get()->getDB();
-    if (!mc || !mapDB) return;
-    OSMMap* osmMap = mapDB->getMap(bbox.str);
+    if (!mc) return;
+    auto osmMap = RealWorld::get()->getMap(bbox.str);
     if (!osmMap) return;
 
     cout << "LOADING TREES FOR " << bbox.str << "\n" << flush;
 
-    for (OSMNode* node : osmMap->osmNodes) {
-        if(node->tags["natural"] != "tree") continue;
+    for (auto node : osmMap->getNodes()) {
+        if(node.second->tags["natural"] != "tree") continue;
 
-        Vec2f pos2D = mc->realToWorld(Vec2f(node->lat, node->lon));
+        Vec2f pos2D = mc->realToWorld(Vec2f(node.second->lat, node.second->lon));
         Vec3f pos3D = Vec3f(pos2D[0], mc->getElevation(pos2D), pos2D[1]);
 
         VRTreePtr tree = VRTree::create();

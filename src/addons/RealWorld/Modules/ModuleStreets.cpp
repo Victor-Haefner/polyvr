@@ -11,7 +11,6 @@
 #include "../Config.h"
 #include "../RealWorld.h"
 #include "../OSM/OSMMap.h"
-#include "../OSM/OSMMapDB.h"
 #include "../MapCoordinator.h"
 #include "../StreetAlgos.h"
 #include "../Assets/StreetLamp.h"
@@ -86,41 +85,40 @@ ModuleStreets::ModuleStreets(bool t, bool p) : BaseModule("ModuleStreets", t,p) 
 }
 
 void ModuleStreets::loadBbox(MapGrid::Box bbox) {
-    auto mapDB = RealWorld::get()->getDB();
     auto mc = RealWorld::get()->getCoordinator();
-    if (!mapDB || !mc) return;
-    OSMMap* osmMap = mapDB->getMap(bbox.str);
+    if (!mc) return;
+    auto osmMap = RealWorld::get()->getMap(bbox.str);
     if (!osmMap) return;
 
     map<string, StreetJoint*> listLoadJoints;
     map<string, StreetSegment*> listLoadSegments;
 
-    for (OSMNode* node : osmMap->osmNodes) { // Load StreetJoints
-        Vec2f pos = mc->realToWorld(Vec2f(node->lat, node->lon));
-        StreetJoint* joint = new StreetJoint(pos, node->id);
-        listLoadJoints[node->id] = joint;
+    for (auto node : osmMap->getNodes()) { // Load StreetJoints
+        Vec2f pos = mc->realToWorld(Vec2f(node.second->lat, node.second->lon));
+        StreetJoint* joint = new StreetJoint(pos, node.second->id);
+        listLoadJoints[node.second->id] = joint;
     }
 
-    for (OSMWay* way : osmMap->osmWays) {
-        if (!types.count(way->tags["highway"])) continue;
-        auto type = types[way->tags["highway"]];
+    for (auto way : osmMap->getWays()) {
+        if (!types.count(way.second->tags["highway"])) continue;
+        auto type = types[way.second->tags["highway"]];
 
-        for (unsigned int i=0; i < way->nodeRefs.size()-1; i++) {
-            string nodeId1 = way->nodeRefs[i];
-            string nodeId2 = way->nodeRefs[i+1];
-            string segId = way->id + "-" + boost::to_string(i);
+        for (unsigned int i=0; i < way.second->nodeRefs.size()-1; i++) {
+            string nodeId1 = way.second->nodeRefs[i];
+            string nodeId2 = way.second->nodeRefs[i+1];
+            string segId = way.second->id + "-" + boost::to_string(i);
 
             StreetSegment* seg = new StreetSegment(listLoadJoints[nodeId1], listLoadJoints[nodeId2], type.width, segId);
-            seg->bridge = ( way->tags["tunnel"] == "yes" || way->tags["bridge"] == "yes" ); // workaround: treat tunnels as bridges
+            seg->bridge = ( way.second->tags["tunnel"] == "yes" || way.second->tags["bridge"] == "yes" ); // workaround: treat tunnels as bridges
             seg->bridgeHeight = type.bridgeHeight;
             listLoadSegments[segId] = seg;
 
-            if (way->tags.count("lanes")) seg->lanes = toInt(way->tags["lanes"].c_str());
+            if (way.second->tags.count("lanes")) seg->lanes = toInt(way.second->tags["lanes"].c_str());
             //if (type.type == "secondary") seg->lanes = 2;
             seg->lanes = max(1, seg->lanes);
             seg->width = seg->width * seg->lanes;
 
-            if (way->tags.count("name")) seg->name = way->tags["name"];
+            if (way.second->tags.count("name")) seg->name = way.second->tags["name"];
 
             listLoadJoints[nodeId1]->segments.push_back(seg);
             listLoadJoints[nodeId2]->segments.push_back(seg);
