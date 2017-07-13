@@ -547,7 +547,7 @@ void VRMaterial::setTexture(VRTexturePtr img, bool alpha, int unit) {
     md->envChunks[unit]->setEnvMode(GL_MODULATE);
     if (alpha && img->getImage()->hasAlphaChannel()) enableTransparency(false);
 
-    if (img->getInternalFormat() != -1) md->texChunks[unit]->setInternalFormat(img->getInternalFormat());
+    md->texChunks[unit]->setInternalFormat(img->getInternalFormat());
     updateDeferredShader();
 }
 

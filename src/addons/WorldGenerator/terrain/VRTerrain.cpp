@@ -189,6 +189,7 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
 }
 
 void VRTerrain::loadMap( string path, int channel ) {
+    cout << "   ----------- VRTerrain::loadMap " << path << " " << channel << endl ;
     auto tex = loadGeoRasterData(path);
     setMap(tex, channel);
 }
@@ -202,7 +203,7 @@ void VRTerrain::projectOSM(string path) { // TODO!!
         for (int i = 0; i < dim[0]; i++) {
             for (int j = 0; j < dim[1]; j++) {
                 float h = tex->getPixel(Vec3i(i,j,0))[0];
-                t->setPixel(Vec3i(i,j,0), Vec4f(0.5,0.5,0.5,h));
+                t->setPixel(Vec3i(i,j,0), Vec4f(1.0,0.5,0.5,h));
             }
         }
         setMap(t);
@@ -212,7 +213,7 @@ void VRTerrain::projectOSM(string path) { // TODO!!
     for (int i = 0; i < dim[0]; i++) {
         for (int j = 0; j < dim[1]; j++) {
             float h = tex->getPixel(Vec3i(i,j,0))[3];
-            tex->setPixel(Vec3i(i,j,0), Vec4f(0.5,0.5,0.5,h));
+            tex->setPixel(Vec3i(i,j,0), Vec4f(1.0,1.0,0.5,h));
         }
     }
 }

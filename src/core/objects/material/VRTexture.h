@@ -15,7 +15,7 @@ class Image; OSG_GEN_CONTAINERPTR(Image);
 class VRTexture : public std::enable_shared_from_this<VRTexture> {
     private:
         ImageRecPtr img;
-        int internal_format = -1;
+        int internal_format = 0;
 
     public:
         VRTexture();
