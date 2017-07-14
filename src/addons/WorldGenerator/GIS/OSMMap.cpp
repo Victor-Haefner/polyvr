@@ -25,6 +25,24 @@ OSMBase::OSMBase(xmlpp::Element* el) {
     }
 }
 
+string OSMBase::toString() {
+    string res;
+    for (auto t : tags) res += " " + t.first + ":" + t.second;
+    return res;
+}
+
+string OSMNode::toString() {
+    string res = OSMBase::toString();
+    res += " N" + ::toString(lat) + " E" + ::toString(lon);
+    return res;
+}
+
+string OSMWay::toString() {
+    string res = OSMBase::toString() + " nodes:";
+    for (auto n : nodes) res += " " + n;
+    return res;
+}
+
 OSMNode::OSMNode(xmlpp::Element* el) : OSMBase(el) {
     lat = toFloat(el->get_attribute_value("lat"));
     lon = toFloat(el->get_attribute_value("lon"));
@@ -34,7 +52,7 @@ OSMWay::OSMWay(xmlpp::Element* el) : OSMBase(el) {
     for(xmlpp::Node* n : el->get_children()) {
         if (auto e = dynamic_cast<xmlpp::Element*>(n)) {
             if (e->get_name() == "nd") {
-                nodeRefs.push_back(e->get_attribute_value("ref"));
+                nodes.push_back(e->get_attribute_value("ref"));
             }
         }
     }
@@ -53,6 +71,13 @@ OSMMap::OSMMap(string filepath) {
             if (element->get_name() == "node") readNode(element);
             if (element->get_name() == "way") readWay(element);
             if (element->get_name() == "bounds") readBounds(element);
+        }
+    }
+
+    for (auto way : ways) {
+        for (auto nID : way.second->nodes) {
+            auto n = getNode(nID);
+            way.second->polygon.addPoint(Vec2f(n->lon, n->lat));
         }
     }
 }

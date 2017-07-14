@@ -7,7 +7,10 @@
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/utils/VRFunction.h"
 #include "core/math/boundingbox.h"
+#include "core/math/polygon.h"
+#include "core/math/triangulator.h"
 #include "core/scene/import/GIS/VRGDAL.h"
+#include "addons/WorldGenerator/GIS/OSMMap.h"
 
 #include <OpenSG/OSGIntersectAction.h>
 #include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
@@ -194,7 +197,7 @@ void VRTerrain::loadMap( string path, int channel ) {
     setMap(tex, channel);
 }
 
-void VRTerrain::projectOSM(string path) { // TODO!!
+void VRTerrain::projectOSM(string path) {
     if (tex->getChannels() != 4) { // fix mono channels
         VRTextureGenerator tg;
         auto dim = tex->getSize();
@@ -203,23 +206,71 @@ void VRTerrain::projectOSM(string path) { // TODO!!
         for (int i = 0; i < dim[0]; i++) {
             for (int j = 0; j < dim[1]; j++) {
                 float h = tex->getPixel(Vec3i(i,j,0))[0];
-                t->setPixel(Vec3i(i,j,0), Vec4f(1.0,0.5,0.5,h));
+                t->setPixel(Vec3i(i,j,0), Vec4f(1.0,1.0,1.0,h));
             }
         }
         setMap(t);
     }
 
-    auto dim = tex->getSize(); // a test
+    /*auto dim = tex->getSize(); // a test
     for (int i = 0; i < dim[0]; i++) {
         for (int j = 0; j < dim[1]; j++) {
             float h = tex->getPixel(Vec3i(i,j,0))[3];
             tex->setPixel(Vec3i(i,j,0), Vec4f(1.0,1.0,0.5,h));
         }
+    }*/
+
+
+    vector<VRPolygonPtr> polygons;
+    auto map = OSMMap::loadMap(path);
+    for (auto way : map->getWays()) {
+        bool isZone = way.second->tags.count("natural");
+        if (!isZone) continue;
+        auto p = way.second->polygon;
+
+        //auto c = p.getBoundingBox().center();
+        Vec3f c(119.806, 0, 29.9976);
+        p.translate(-c);
+        //p.translate(Vec3f(-sphericalCoordinates[0], 0, -sphericalCoordinates[1]) );
+        p.scale(1000);
+
+        Triangulator tri;
+        tri.add(p);
+        auto geo = tri.compute();
+        geo->setPose(Vec3f(0,1,0), Vec3f(0,-1,0), Vec3f(0,0,1));
+        addChild(geo);
+        geo->hide();
+
+        auto pp = VRPolygon::create();
+        *pp = p;
+        polygons.push_back(pp);
     }
 
+    auto dim = tex->getSize();
+    VRTextureGenerator tg;
+    tg.setSize(dim, true);
+    for (auto p : polygons) {
+        p->scale(0.01);
+        p->translate(Vec3f(0,0,0.5));
+        tg.drawPolygon(p, Vec4f(0,1,0,1));
+    }
+    VRTexturePtr t = tg.compose(0);
 
+    for (int i = 0; i < dim[0]; i++) {
+        for (int j = 0; j < dim[1]; j++) {
+            float h = tex->getPixel(Vec3i(i,j,0))[3];
+            Vec4f p = t->getPixel(Vec3i(i,j,0));
+            p[3] = h;
+            t->setPixel(Vec3i(i,j,0), Vec4f(p[0],p[1],p[2],h));
+        }
+    }
+    setMap(t);
 }
 
+void VRTerrain::setPlanet(VRPlanetPtr p, Vec2f position) {
+    sphericalCoordinates = position;
+    planet = p;
+}
 
 
 

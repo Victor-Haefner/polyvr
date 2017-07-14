@@ -31,6 +31,8 @@ class VRPlanet : public VRTransform {
     public:
         VRPlanet(string name);
         ~VRPlanet();
+
+        VRPlanetPtr ptr();
         static VRPlanetPtr create(string name = "planet");
 
         void setParameters( float radius );

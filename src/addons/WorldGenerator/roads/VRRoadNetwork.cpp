@@ -241,7 +241,7 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const pose& p) {
             poly->addPoint(d02+A);
             poly->addPoint(d02+B);
             poly->addPoint(d02+C);
-            tg.drawVRPolygon(poly, Vec4f(1,1,1,1));
+            tg.drawPolygon(poly, Vec4f(1,1,1,1));
         }
 
         auto aMask = tg.compose(0);

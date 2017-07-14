@@ -30,8 +30,8 @@ void ModuleTerrain::loadBbox(MapGrid::Box bbox) {
                 if (meshes.count(way.second->id)) continue;
                 // load VRPolygons from osmMap
                 Terrain* ter = new Terrain(way.second->id);
-                for (string nodeId : way.second->nodeRefs) {
-                    auto node = osmMap->getNode(nodeId);
+                for (string nID : way.second->nodes) {
+                    auto node = osmMap->getNode(nID);
                     Vec2f pos = mc->realToWorld(Vec2f(node->lat, node->lon));
                     ter->positions.push_back(pos);
                 }

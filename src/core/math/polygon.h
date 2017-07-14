@@ -34,6 +34,7 @@ class VRPolygon {
         bool isCCW();
         void turn();
         void translate(Vec3f v);
+        void scale(float s);
 
         vector<Vec2f> get();
         vector<Vec3f> get3();

@@ -47,8 +47,8 @@ void ModuleBuildings::loadBbox(MapGrid::Box bbox) {
 
         // load building from osmMap
         Building* b = new Building(way.second->id);
-        for(string nodeId : way.second->nodeRefs) {
-            OSMNodePtr node = osmMap->getNode(nodeId);
+        for(string nID : way.second->nodes) {
+            OSMNodePtr node = osmMap->getNode(nID);
             Vec2f pos = mc->realToWorld(Vec2f(node->lat, node->lon));
             b->positions.push_back(pos);
         }

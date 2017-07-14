@@ -24,8 +24,8 @@ void ModuleWalls::loadBbox(MapGrid::Box bbox) {
         for (WallMaterial* mat : wallList) {
             if (way.second->tags[mat->k] == mat->v) {
                 Wall* wall = new Wall(way.second->id);
-                for(string nodeId: way.second->nodeRefs) {
-                    auto node = osmMap->getNode(nodeId);
+                for(string nID: way.second->nodes) {
+                    auto node = osmMap->getNode(nID);
                     Vec2f pos = mc->realToWorld(Vec2f(node->lat, node->lon));
                     wall->positions.push_back(pos);
                 }

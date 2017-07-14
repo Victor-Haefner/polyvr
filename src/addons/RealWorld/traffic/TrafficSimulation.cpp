@@ -56,8 +56,8 @@ Value TrafficSimulation::convertStreet(OSMWayPtr street) {
     // Add node ids
     Value nodes;
     unsigned int iNodes = 0;
-    for (vector<string>::const_iterator iter2 = street->nodeRefs.begin(); iter2 != street->nodeRefs.end(); iter2++) {
-        nodes[iNodes++] = boost::lexical_cast<unsigned int>(iter2->c_str());
+    for (auto nID : street->nodes) {
+        nodes[iNodes++] = boost::lexical_cast<unsigned int>(nID.c_str());
     }
     value["nodes"] = nodes;
 

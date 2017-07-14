@@ -26,6 +26,9 @@ class VRTerrain : public VRGeometry {
         VRMaterialPtr mat;
         shared_ptr<vector<float>> physicsHeightBuffer;
 
+        VRPlanetPtr planet;
+        Vec2f sphericalCoordinates;
+
         void updateTexelSize();
         void setupGeo();
         void setupMat();
@@ -43,7 +46,8 @@ class VRTerrain : public VRGeometry {
 
         void physicalize(bool b);
 
-        void projectOSM(string path); // TODO, should be handled differently
+        void setPlanet(VRPlanetPtr planet, Vec2f position);
+        void projectOSM(string path); // TODO, gis data should be handled somewhere else
 };
 
 OSG_END_NAMESPACE;

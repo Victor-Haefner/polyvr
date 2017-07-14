@@ -87,7 +87,7 @@ void VRTextureGenerator::drawPath(pathPtr p, Vec4f c, float w) {
     layers.push_back(l);
 }
 
-void VRTextureGenerator::drawVRPolygon(VRPolygonPtr p, Vec4f c, float h) {
+void VRTextureGenerator::drawPolygon(VRPolygonPtr p, Vec4f c, float h) {
     Layer l;
     l.type = POLYGON;
     l.pgon = p;

@@ -19,6 +19,8 @@ VRPlanetPtr VRPlanet::create(string name) {
     return p;
 }
 
+VRPlanetPtr VRPlanet::ptr() { return static_pointer_cast<VRPlanet>( shared_from_this() ); }
+
 float VRPlanet::toRad(float deg) { return pi*deg/180; }
 float VRPlanet::toDeg(float rad) { return 180*rad/pi; }
 
@@ -77,6 +79,7 @@ void VRPlanet::setParameters( float r ) { radius = r; rebuild(); }
 
 VRTerrainPtr VRPlanet::addSector( int north, int east ) {
     auto terrain = VRTerrain::create( toString(north)+"N"+toString(east)+"E" );
+    terrain->setPlanet(ptr(), Vec2f(east, north));
     anchor->addChild(terrain);
     sectors[north][east] = terrain;
     terrain->setFrom( fromLatLongPosition(north, east) );

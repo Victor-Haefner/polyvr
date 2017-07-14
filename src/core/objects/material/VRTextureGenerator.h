@@ -73,7 +73,7 @@ class VRTextureGenerator {
         void drawPixel(Vec3i p, Vec4f c);
         void drawLine(Vec3f p1, Vec3f p2, Vec4f c, float width);
         void drawPath(pathPtr p, Vec4f c, float width);
-        void drawVRPolygon(VRPolygonPtr p, Vec4f c, float height = 0);
+        void drawPolygon(VRPolygonPtr p, Vec4f c, float height = 0);
 
         void clearStage();
         VRTexturePtr compose(int seed);

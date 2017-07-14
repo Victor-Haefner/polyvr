@@ -103,9 +103,9 @@ void ModuleStreets::loadBbox(MapGrid::Box bbox) {
         if (!types.count(way.second->tags["highway"])) continue;
         auto type = types[way.second->tags["highway"]];
 
-        for (unsigned int i=0; i < way.second->nodeRefs.size()-1; i++) {
-            string nodeId1 = way.second->nodeRefs[i];
-            string nodeId2 = way.second->nodeRefs[i+1];
+        for (unsigned int i=0; i < way.second->nodes.size()-1; i++) {
+            string nodeId1 = way.second->nodes[i];
+            string nodeId2 = way.second->nodes[i+1];
             string segId = way.second->id + "-" + boost::to_string(i);
 
             StreetSegment* seg = new StreetSegment(listLoadJoints[nodeId1], listLoadJoints[nodeId2], type.width, segId);

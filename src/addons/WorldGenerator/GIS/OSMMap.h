@@ -3,6 +3,7 @@
 
 #include "GISFwd.h"
 #include "core/math/VRMathFwd.h"
+#include "core/math/polygon.h"
 #include <string>
 #include <map>
 #include <vector>
@@ -19,6 +20,7 @@ struct OSMBase {
 
     OSMBase(string id);
     OSMBase(xmlpp::Element* e);
+    virtual string toString();
 };
 
 struct OSMNode : OSMBase {
@@ -27,13 +29,16 @@ struct OSMNode : OSMBase {
 
     OSMNode(string id, double lat, double lon);
     OSMNode(xmlpp::Element* e);
+    string toString();
 };
 
 struct OSMWay : OSMBase {
-    vector<string> nodeRefs;
+    vector<string> nodes;
+    VRPolygon polygon;
 
     OSMWay(string id);
     OSMWay(xmlpp::Element* e);
+    string toString();
 };
 
 class OSMMap {
