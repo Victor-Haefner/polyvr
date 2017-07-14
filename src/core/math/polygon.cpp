@@ -94,9 +94,9 @@ void VRPolygon::translate(Vec3f v) {
     for (auto& p : points3) p += v;
 }
 
-void VRPolygon::scale(float s) {
-    for (auto& p : points) p *= s;
-    for (auto& p : points3) p *= s;
+void VRPolygon::scale(Vec3f s) {
+    for (auto& p : points) { p[0] *= s[0]; p[1] *= s[2]; }
+    for (auto& p : points3) { p[0] *= s[0]; p[1] *= s[1]; p[2] *= s[2]; }
 }
 
 void VRPolygon::clear() {
@@ -458,7 +458,7 @@ bool VRPolygon::isInside(Vec2f p) {
         Vec2f p1 = points[i];
         Vec2f p2 = points[(i+1)%N];
         Vec2f d = p2 - p1;
-        if (d.squareLength() < eps) continue;
+        if (d.squareLength() < 0.1*eps) continue;
 
         // check if on the line
         float cross = (p[1]-p1[1])*d[0] - (p[0]-p1[0])*d[1];

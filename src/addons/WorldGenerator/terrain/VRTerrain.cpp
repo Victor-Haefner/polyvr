@@ -232,12 +232,12 @@ void VRTerrain::projectOSM(string path) {
         Vec3f c(119.806, 0, 29.9976);
         p.translate(-c);
         //p.translate(Vec3f(-sphericalCoordinates[0], 0, -sphericalCoordinates[1]) );
-        p.scale(1000);
+        p.scale(Vec3f(1000, 1, 1000));
 
         Triangulator tri;
         tri.add(p);
         auto geo = tri.compute();
-        geo->setPose(Vec3f(0,1,0), Vec3f(0,-1,0), Vec3f(0,0,1));
+        geo->setPose(Vec3f(0,0,0), Vec3f(0,-1,0), Vec3f(0,0,1));
         addChild(geo);
         geo->hide();
 
@@ -250,18 +250,19 @@ void VRTerrain::projectOSM(string path) {
     VRTextureGenerator tg;
     tg.setSize(dim, true);
     for (auto p : polygons) {
-        p->scale(0.01);
-        p->translate(Vec3f(0,0,0.5));
+        p->scale( Vec3f(-0.01, 1, 0.01) );
+        p->translate(Vec3f(1,0,0.5));
         tg.drawPolygon(p, Vec4f(0,1,0,1));
     }
     VRTexturePtr t = tg.compose(0);
 
     for (int i = 0; i < dim[0]; i++) {
         for (int j = 0; j < dim[1]; j++) {
-            float h = tex->getPixel(Vec3i(i,j,0))[3];
-            Vec4f p = t->getPixel(Vec3i(i,j,0));
-            p[3] = h;
-            t->setPixel(Vec3i(i,j,0), Vec4f(p[0],p[1],p[2],h));
+            Vec3i pix = Vec3i(i,j,0);
+            float h = tex->getPixel(pix)[3];
+            Vec4f col = t->getPixel(pix);
+            col[3] = h;
+            t->setPixel(pix, col);
         }
     }
     setMap(t);
