@@ -27,6 +27,10 @@ class VRRecorder {
         int maxFrames = -1;
         bool running = 0;
 
+        int bitrate; //multiplier
+        string codecName;
+        static map<string, int> codecs;
+
         AVCodec* codec = 0;
         AVCodecContext* codec_context = 0;
         AVFrame* frame = 0;
@@ -44,6 +48,11 @@ class VRRecorder {
         VRRecorder();
         ~VRRecorder();
         static shared_ptr<VRRecorder> create();
+
+        void setBitrate(int br);
+        int getBitrate();
+        void setCodec(string c);
+        string getCodec();
 
         void setView(int i);
         void capture();
@@ -65,6 +74,8 @@ class VRRecorder {
         string getPath();
 
         weak_ptr<VRFunction<bool> > getToggleCallback();
+
+        static vector<string> getCodecList();
 };
 
 OSG_END_NAMESPACE;

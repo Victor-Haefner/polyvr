@@ -5,25 +5,26 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
+#include "VRGuiUtils.h"
 
 #include <gtkmm/dialog.h>
 #include <gtkmm/image.h>
 #include <gtkmm/stock.h>
 #include <gtkmm/label.h>
 #include <gtkmm/window.h>
+#include <gtkmm/builder.h>
 #include <boost/bind.hpp>
 
 using namespace OSG;
-
-bool handleDelete(GdkEventAny* e) { return true; }
 
 VRGuiRecWidget::VRGuiRecWidget() {
     rec = VRRecorderPtr( new VRRecorder() );
     rec->setView(0);
 
-    diag = new Gtk::Dialog();
+    VRGuiBuilder()->get_widget("recorder", diag);
+    VRGuiBuilder()->get_widget("label149", lbl);
     diag->set_deletable(false); // not working on most platforms
-    diag->signal_delete_event().connect( sigc::ptr_fun(&handleDelete) );
+    diag->signal_delete_event().connect( sigc::mem_fun(*this, &VRGuiRecWidget::deleteHandler) );
     diag->set_resizable(false);
     diag->set_type_hint(Gdk::WINDOW_TYPE_HINT_MENU);
     diag->set_title("Recorder");
@@ -42,20 +43,25 @@ VRGuiRecWidget::VRGuiRecWidget() {
     addButton(Gtk::Stock::FLOPPY, 3);
     addButton(Gtk::Stock::REFRESH, 4);
 
-    lbl = Gtk::manage( new Gtk::Label() );
-    lbl->set_text("Idle");
-    diag->get_vbox()->pack_start(*lbl, false, false);
+    fillStringListstore("codecList", VRRecorder::getCodecList());
+    setCombobox("codecs", getListStorePos("codecList", rec->getCodec()));
+    setTextEntry("entry27", toString(rec->getBitrate()));
+
+    setComboboxCallback("codecs", sigc::mem_fun(*this, &VRGuiRecWidget::on_codec_changed));
+    setEntryCallback("entry27", sigc::mem_fun(*this, &VRGuiRecWidget::on_bitrate_changed));
+
     diag->show_all_children();
-
     diag->signal_response().connect( sigc::mem_fun(*this, &VRGuiRecWidget::buttonHandler) );
-
     updateCb = VRFunction<int>::create("recorder widget", boost::bind(&VRGuiRecWidget::update, this) );
     VRSceneManager::get()->addUpdateFkt( updateCb );
 }
 
-VRGuiRecWidget::~VRGuiRecWidget() {
-    delete diag;
-}
+VRGuiRecWidget::~VRGuiRecWidget() {}
+
+void VRGuiRecWidget::on_codec_changed() { rec->setCodec( getComboboxText("codecs") ); }
+void VRGuiRecWidget::on_bitrate_changed() { rec->setBitrate( toInt( getTextEntry("entry27") ) ); }
+
+bool VRGuiRecWidget::deleteHandler(GdkEventAny* e) { setVisible(false); return true; }
 
 void VRGuiRecWidget::setVisible(bool b) {
     if (b) diag->show();

@@ -125,9 +125,9 @@ string VRPlanet::surfaceFP =
 GLSL(
 uniform sampler2D tex;
 
-in vec3 tcs;
-in vec3 normal;
-in vec4 position;
+varying vec3 tcs;
+varying vec3 normal;
+varying vec4 position;
 
 const float pi = 3.1415926;
 

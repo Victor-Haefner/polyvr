@@ -222,6 +222,7 @@ void VRPathtool::setGraphEdge(Graph::edge& e, bool handles) {
 }
 
 void VRPathtool::setGraphEdge(Graph::edge& e, bool handles, Vec3f n1, Vec3f n2) {
+    return;
     auto& nodes = graph->getNodes();
     if (!paths.count(e.ID)) {
         paths[e.ID] = path::create();

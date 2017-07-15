@@ -4,6 +4,7 @@
 #include "core/tools/VRToolsFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 #include <OpenSG/OSGConfig.h>
+#include <gdk/gdkevents.h>
 
 namespace Gtk{ class Dialog; class Label; }
 
@@ -18,8 +19,12 @@ class VRGuiRecWidget {
         Gtk::Dialog* diag = 0;
         Gtk::Label* lbl = 0;
 
+        void on_codec_changed();
+        void on_bitrate_changed();
+
         void update();
         void buttonHandler(int i);
+        bool deleteHandler(GdkEventAny* e);
 
     public:
         VRGuiRecWidget();

@@ -198,6 +198,7 @@ void VRTerrain::loadMap( string path, int channel ) {
 }
 
 void VRTerrain::projectOSM(string path) {
+    if (!tex) return;
     if (tex->getChannels() != 4) { // fix mono channels
         VRTextureGenerator tg;
         auto dim = tex->getSize();
