@@ -18,12 +18,14 @@ class VRPlanet : public VRTransform {
         VRObjectPtr anchor;
         VRMaterialPtr sphereMat;
 
+        VRAnalyticGeometryPtr metaGeo;
+
         float toRad(float deg);
         float toDeg(float rad);
         void rebuild();
 
         Vec3f fromLatLongEast(float north, float east);
-        Vec3f fromLatLongSouth(float north, float east);
+        Vec3f fromLatLongNorth(float north, float east);
         Vec3f fromLatLongNormal(float north, float east);
         Vec3f fromLatLongPosition(float north, float east);
         Vec2f fromLatLongSize(float north1, float east1, float north2, float east2);
@@ -37,6 +39,8 @@ class VRPlanet : public VRTransform {
 
         void setParameters( float radius );
         VRTerrainPtr addSector( int north, int east );
+        int addPin( string label, float north, float east );
+        void remPin( int pin );
 
         VRMaterialPtr getMaterial();
 };

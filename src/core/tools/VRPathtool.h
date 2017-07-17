@@ -117,6 +117,8 @@ class VRPathtool : public VRObject {
 
     public:
         VRPathtool();
+        ~VRPathtool();
+
         static VRPathtoolPtr create();
         void setup();
         void setupBefore();

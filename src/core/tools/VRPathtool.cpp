@@ -107,6 +107,10 @@ VRPathtool::VRPathtool() : VRObject("Pathtool") {
     regStorageSetupFkt( VRFunction<int>::create("pathtool setup", boost::bind(&VRPathtool::setup, this)) );
 }
 
+VRPathtool::~VRPathtool() {
+    if (manip) delete manip;
+}
+
 VRPathtoolPtr VRPathtool::create() { return VRPathtoolPtr( new VRPathtool() ); }
 
 void VRPathtool::setupBefore() {
