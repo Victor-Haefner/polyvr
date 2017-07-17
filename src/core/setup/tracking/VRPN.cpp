@@ -73,7 +73,7 @@ VRPN_device::VRPN_device() : VRDevice("vrpn_device") {
     store("raxis", &rotation_axis);
 
     enableAvatar("cone");
-    enableAvatar("ray");
+    //enableAvatar("ray");
 }
 
 VRPN_device::~VRPN_device() {}
