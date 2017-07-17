@@ -445,51 +445,25 @@ void VRPolygon::close() {
     if (points3.size() > 0) points3.push_back(points3[0]);
 }
 
-bool VRPolygon::isInside(Vec2f p) {
-    if (points.size() <= 1) return false;
-    // cast ray from p and intersect all lines
-    int K = 0;
-    int N = points.size();
-    Vec2f r = Vec2f(1.0/17, 1.0/29);
-    r.normalize();
-    float eps = 1e-6; // avoid problems at corners and edges
+bool VRPolygon::isInside(Vec2f p) { // winding number algorithm
+    auto isLeft = []( Vec2f P0, Vec2f P1, Vec2f P2 ){
+        return ( (P1[0] - P0[0]) * (P2[1] - P0[1]) - (P2[0] -  P0[0]) * (P1[1] - P0[1]) );
+    };
 
+    int wn = 0;
+    int N = points.size();
     for (int i=0; i<N; i++) {
         Vec2f p1 = points[i];
         Vec2f p2 = points[(i+1)%N];
         Vec2f d = p2 - p1;
-        if (d.squareLength() < 0.1*eps) continue;
-
-        // check if on the line
-        float cross = (p[1]-p1[1])*d[0] - (p[0]-p1[0])*d[1];
-        if ( abs( cross ) < eps ) {
-            float dot = (p-p1).dot(d);
-            if (dot >= -eps && dot < d.squareLength()+eps) return true;
+        if (p1[1] <= p[1]) {
+            if (p2[1]  > p[1]) if (isLeft( p1, p2, p) > 0) ++wn;
         }
-
-        // lines defined as (a,b,c) where ax + by + c = 0
-        Vec3f Us(d[1], -d[0], d[0]*p1[1] - d[1]*p1[0]);
-        Vec3f Ur(r[1], -r[0], r[0]*p[1] - r[1]*p[0]);
-        Vec3f I3 = Us.cross(Ur);
-        if (abs(I3[2]) < eps) continue; // lines parallel ?
-        Vec2f I(I3[0]/I3[2], I3[1]/I3[2]); // intersection of lines
-
-        // check if intersecting segment
-        float a = (I-p1).dot(d);
-        if (a < eps || a > d.squareLength()-eps) continue;
-
-        // check if point in front of p (dont intersect behind!)
-        if ((I-p).dot(r) < 0) continue;
-
-        /*if (d[1] == 0) continue;
-        float a = (p[1] - p1[1]) / d[1];
-        if (a < 0 || a >= 1) continue;
-        float b = p1[0] - p[0] + d[0]*a;
-        if (b < 0) continue;*/
-        K += 1;
+        else {
+            if (p2[1]  <= p[1]) if (isLeft( p1, p2, p) < 0) --wn;
+        }
     }
-    //cout << "isInside " << toString() << " p " << p << " " << K << endl;
-    return (K%2 == 1);
+    return wn;
 }
 
 Boundingbox VRPolygon::getBoundingBox() {

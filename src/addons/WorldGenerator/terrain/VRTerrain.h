@@ -47,7 +47,7 @@ class VRTerrain : public VRGeometry {
         void physicalize(bool b);
 
         void setPlanet(VRPlanetPtr planet, Vec2f position);
-        void projectOSM(string path); // TODO, gis data should be handled somewhere else
+        void projectOSM(string path, float N, float E); // TODO, gis data should be handled somewhere else
 };
 
 OSG_END_NAMESPACE;

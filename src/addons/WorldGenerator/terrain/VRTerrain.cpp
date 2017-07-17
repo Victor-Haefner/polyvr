@@ -1,4 +1,5 @@
 #include "VRTerrain.h"
+#include "VRPlanet.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/material/VRTextureGenerator.h"
@@ -197,7 +198,7 @@ void VRTerrain::loadMap( string path, int channel ) {
     setMap(tex, channel);
 }
 
-void VRTerrain::projectOSM(string path) {
+void VRTerrain::projectOSM(string path, float N, float E) {
     if (!tex) return;
     if (tex->getChannels() != 4) { // fix mono channels
         VRTextureGenerator tg;
@@ -213,50 +214,58 @@ void VRTerrain::projectOSM(string path) {
         setMap(t);
     }
 
-    /*auto dim = tex->getSize(); // a test
-    for (int i = 0; i < dim[0]; i++) {
-        for (int j = 0; j < dim[1]; j++) {
-            float h = tex->getPixel(Vec3i(i,j,0))[3];
-            tex->setPixel(Vec3i(i,j,0), Vec4f(1.0,1.0,0.5,h));
-        }
-    }*/
-
-
-    vector<VRPolygonPtr> polygons;
+    // -------------- prepare polygons in terrain space
+    Matrix terrainMatrix = getMatrix();
+    terrainMatrix.invert();
+    map< string, vector<VRPolygonPtr> > polygons;
     auto map = OSMMap::loadMap(path);
     for (auto way : map->getWays()) {
-        bool isZone = way.second->tags.count("natural");
-        if (!isZone) continue;
         auto p = way.second->polygon;
-
-        //auto c = p.getBoundingBox().center();
-        Vec3f c(119.806, 0, 29.9976);
-        p.translate(-c);
-        //p.translate(Vec3f(-sphericalCoordinates[0], 0, -sphericalCoordinates[1]) );
-        p.scale(Vec3f(1000, 1, 1000));
-
-        Triangulator tri;
-        tri.add(p);
-        auto geo = tri.compute();
-        geo->setPose(Vec3f(0,0,0), Vec3f(0,-1,0), Vec3f(0,0,1));
-        addChild(geo);
-        geo->hide();
-
         auto pp = VRPolygon::create();
-        *pp = p;
-        polygons.push_back(pp);
+
+        for (auto pnt : p.get()) {
+            Pnt3f pos = planet->fromLatLongPosition(pnt[1], pnt[0]);
+            terrainMatrix.mult(pos, pos);
+            pp->addPoint( Vec2f(pos[0], pos[2]) );
+        }
+
+        /*Triangulator tri;
+        tri.add(*pp);
+        auto geo = tri.compute();
+        geo->setPose(Vec3f(0,1,0), Vec3f(0,1,0), Vec3f(0,0,1));
+        geo->getMaterial()->setLit(0);
+        geo->getMaterial()->setDiffuse(Vec3f(0,1,1));
+        addChild(geo);
+        geo->hide();*/
+
+        for (auto tag : way.second->tags) polygons[tag.first].push_back(pp);
     }
 
+    // -------------------- project OSM polygons on texture
     auto dim = tex->getSize();
     VRTextureGenerator tg;
     tg.setSize(dim, true);
-    for (auto p : polygons) {
-        p->scale( Vec3f(-0.01, 1, 0.01) );
-        p->translate(Vec3f(1,0,0.5));
-        tg.drawPolygon(p, Vec4f(0,1,0,1));
-    }
+
+    for (auto tag : polygons) cout << "polygon tag: " << tag.first << endl;
+
+    auto drawPolygons = [&](string tag, Vec4f col) {
+        if (!polygons.count(tag)) {
+            cout << "\ndrawPolygons: tag '" << tag << "' not found!" << endl;
+        }
+
+        for (auto p : polygons[tag]) {
+            p->scale( Vec3f(1.0/size[0], 1, 1.0/size[1]) );
+            p->translate( Vec3f(0.5,0,0.5) );
+            tg.drawPolygon( p, col );
+        }
+    };
+
+    drawPolygons("natural", Vec4f(0,1,0,1));
+    drawPolygons("water", Vec4f(0.2,0.4,1,1));
+    drawPolygons("industrial", Vec4f(0.2,0.2,0.2,1));
     VRTexturePtr t = tg.compose(0);
 
+    // ----------------------- combine OSM texture with heightmap
     for (int i = 0; i < dim[0]; i++) {
         for (int j = 0; j < dim[1]; j++) {
             Vec3i pix = Vec3i(i,j,0);

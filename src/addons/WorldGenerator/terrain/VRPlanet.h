@@ -24,12 +24,6 @@ class VRPlanet : public VRTransform {
         float toDeg(float rad);
         void rebuild();
 
-        Vec3f fromLatLongEast(float north, float east);
-        Vec3f fromLatLongNorth(float north, float east);
-        Vec3f fromLatLongNormal(float north, float east);
-        Vec3f fromLatLongPosition(float north, float east);
-        Vec2f fromLatLongSize(float north1, float east1, float north2, float east2);
-
     public:
         VRPlanet(string name);
         ~VRPlanet();
@@ -41,6 +35,12 @@ class VRPlanet : public VRTransform {
         VRTerrainPtr addSector( int north, int east );
         int addPin( string label, float north, float east );
         void remPin( int pin );
+
+        Vec3f fromLatLongEast(float north, float east);
+        Vec3f fromLatLongNorth(float north, float east);
+        Vec3f fromLatLongNormal(float north, float east);
+        Vec3f fromLatLongPosition(float north, float east);
+        Vec2f fromLatLongSize(float north1, float east1, float north2, float east2);
 
         VRMaterialPtr getMaterial();
 };
