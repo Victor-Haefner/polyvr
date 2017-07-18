@@ -168,10 +168,15 @@ string toString(const Line& l) {
 template<> string typeName(const string& t) { return "string"; }
 template<> string typeName(const int& t) { return "int"; }
 template<> string typeName(const float& t) { return "float"; }
+template<> string typeName(const double& t) { return "double"; }
 template<> string typeName(const bool& t) { return "bool"; }
 template<> string typeName(const Vec2f& t) { return "Vec2f"; }
 template<> string typeName(const Vec3f& t) { return "Vec3f"; }
 template<> string typeName(const Vec4f& t) { return "Vec4f"; }
+template<> string typeName(const Vec2d& t) { return "Vec2d"; }
+template<> string typeName(const Vec3d& t) { return "Vec3d"; }
+template<> string typeName(const Vec4d& t) { return "Vec4d"; }
+template<> string typeName(const Color3f& t) { return "Vec3f"; }
 template<> string typeName(const Color4f& t) { return "Vec4f"; }
 template<> string typeName(const VRAnimCbPtr& t) { return "void callback(float)"; }
 template<> string typeName(const Boundingbox& t) { return "Boundingbox"; }
@@ -180,6 +185,7 @@ template<> bool toValue(stringstream& ss, string& s) { s = ss.str(); return true
 template<> bool toValue(stringstream& ss, bool& b) { return bool(ss >> b); }
 template<> bool toValue(stringstream& ss, int& i) { return bool(ss >> i); }
 template<> bool toValue(stringstream& ss, float& f) { return bool(ss >> f); }
+template<> bool toValue(stringstream& ss, double& d) { return bool(ss >> d); }
 
 template<> bool toValue(stringstream& ss, Vec2f& v) {
     ss >> v[0];
@@ -193,6 +199,24 @@ template<> bool toValue(stringstream& ss, Vec3f& v) {
 }
 
 template<> bool toValue(stringstream& ss, Vec4f& v) {
+    ss >> v[0];
+    ss >> v[1];
+    ss >> v[2];
+    return bool(ss >> v[3]);
+}
+
+template<> bool toValue(stringstream& ss, Vec2d& v) {
+    ss >> v[0];
+    return bool(ss >> v[1]);
+}
+
+template<> bool toValue(stringstream& ss, Vec3d& v) {
+    ss >> v[0];
+    ss >> v[1];
+    return bool(ss >> v[2]);
+}
+
+template<> bool toValue(stringstream& ss, Vec4d& v) {
     ss >> v[0];
     ss >> v[1];
     ss >> v[2];
