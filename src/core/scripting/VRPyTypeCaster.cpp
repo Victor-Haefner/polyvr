@@ -79,8 +79,9 @@ template<> PyObject* VRPyTypeCaster::cast<int>(int i) { return PyInt_FromLong(i)
 template<> PyObject* VRPyTypeCaster::cast<float>(float i) { return PyFloat_FromDouble(i); }
 template<> PyObject* VRPyTypeCaster::cast<string>(string s) { return PyString_FromString(s.c_str()); }
 template<> PyObject* VRPyTypeCaster::cast<bool>(bool b) { if (b) Py_RETURN_TRUE; else Py_RETURN_FALSE; }
-template<> PyObject* VRPyTypeCaster::cast<Vec3f>(Vec3f b) { return toPyObject(b); }
 template<> PyObject* VRPyTypeCaster::cast<Vec2f>(Vec2f b) { return VRPyBase::toPyTuple(b); }
+template<> PyObject* VRPyTypeCaster::cast<Vec3f>(Vec3f b) { return toPyObject(b); }
+template<> PyObject* VRPyTypeCaster::cast<Vec3d>(Vec3d b) { return VRPyBase::toPyTuple(b); }
 
 
 

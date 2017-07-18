@@ -33,6 +33,7 @@ class VRPlanet : public VRTransform {
 
         void setParameters( double radius );
         VRTerrainPtr addSector( int north, int east );
+        VRTerrainPtr getSector( double north, double east );
         int addPin( string label, double north, double east );
         void remPin( int pin );
 

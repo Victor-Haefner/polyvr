@@ -29,8 +29,9 @@ template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const float& t) { ret
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const string& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const bool& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VREntityPtr& t) { return VRPyTypeCaster::cast(t); }
-template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const Vec3f& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const Vec2f& t) { return VRPyTypeCaster::cast(t); }
+template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const Vec3f& t) { return VRPyTypeCaster::cast(t); }
+template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const Vec3d& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VRRoadPtr& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VRRoadNetworkPtr& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VRTerrainPtr& t) { return VRPyTypeCaster::cast(t); }

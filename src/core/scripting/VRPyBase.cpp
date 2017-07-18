@@ -210,9 +210,27 @@ string VRPyBase::parseString(PyObject *args) {
     return PyString_AsString(o);
 }
 
-PyObject* VRPyBase::toPyTuple(const OSG::Vec4f& v) {
+PyObject* VRPyBase::toPyTuple(const OSG::Vec2d& v) {
+    PyObject* res = PyList_New(2);
+    for (int i=0; i<2; i++) PyList_SetItem(res, i, PyFloat_FromDouble(v[i]));
+    return res;
+}
+
+PyObject* VRPyBase::toPyTuple(const OSG::Vec3d& v) {
+    PyObject* res = PyList_New(3);
+    for (int i=0; i<3; i++) PyList_SetItem(res, i, PyFloat_FromDouble(v[i]));
+    return res;
+}
+
+PyObject* VRPyBase::toPyTuple(const OSG::Vec4d& v) {
     PyObject* res = PyList_New(4);
     for (int i=0; i<4; i++) PyList_SetItem(res, i, PyFloat_FromDouble(v[i]));
+    return res;
+}
+
+PyObject* VRPyBase::toPyTuple(const OSG::Vec2f& v) {
+    PyObject* res = PyList_New(2);
+    for (int i=0; i<2; i++) PyList_SetItem(res, i, PyFloat_FromDouble(v[i]));
     return res;
 }
 
@@ -222,9 +240,9 @@ PyObject* VRPyBase::toPyTuple(const OSG::Vec3f& v) {
     return res;
 }
 
-PyObject* VRPyBase::toPyTuple(const OSG::Vec3i& v) {
-    PyObject* res = PyList_New(3);
-    for (int i=0; i<3; i++) PyList_SetItem(res, i, PyInt_FromLong(v[i]));
+PyObject* VRPyBase::toPyTuple(const OSG::Vec4f& v) {
+    PyObject* res = PyList_New(4);
+    for (int i=0; i<4; i++) PyList_SetItem(res, i, PyFloat_FromDouble(v[i]));
     return res;
 }
 
@@ -234,9 +252,15 @@ PyObject* VRPyBase::toPyTuple(const OSG::Vec2i& v) {
     return res;
 }
 
-PyObject* VRPyBase::toPyTuple(const OSG::Vec2f& v) {
-    PyObject* res = PyList_New(2);
-    for (int i=0; i<2; i++) PyList_SetItem(res, i, PyFloat_FromDouble(v[i]));
+PyObject* VRPyBase::toPyTuple(const OSG::Vec3i& v) {
+    PyObject* res = PyList_New(3);
+    for (int i=0; i<3; i++) PyList_SetItem(res, i, PyInt_FromLong(v[i]));
+    return res;
+}
+
+PyObject* VRPyBase::toPyTuple(const OSG::Vec4i& v) {
+    PyObject* res = PyList_New(4);
+    for (int i=0; i<4; i++) PyList_SetItem(res, i, PyInt_FromLong(v[i]));
     return res;
 }
 

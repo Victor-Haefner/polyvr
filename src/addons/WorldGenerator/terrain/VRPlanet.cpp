@@ -89,7 +89,7 @@ void VRPlanet::rebuild() {
     // init meta geo
     if (!metaGeo) {
         metaGeo = VRAnalyticGeometry::create("PlanetMetaData");
-        metaGeo->setLabelParams(5, false, true, Vec4f(1,1,1,1), Vec4f(1,0,0,1));
+        metaGeo->setLabelParams(0.1, true, true, Vec4f(1,1,1,1), Vec4f(1,0,0,1));
         addChild(metaGeo);
     }
 }
@@ -108,6 +108,13 @@ VRTerrainPtr VRPlanet::addSector( int north, int east ) {
     Vec2d size = fromLatLongSize(north, east, north+1, east+1);
     terrain->setParameters( size, 10, 1);
     return terrain;
+}
+
+VRTerrainPtr VRPlanet::getSector( double north, double east ) {
+    int N = floor(north);
+    int E = floor(east);
+    if (sectors.count(N)) if (sectors[N].count(E)) return sectors[N][E];
+    return 0;
 }
 
 VRMaterialPtr VRPlanet::getMaterial() { return sphereMat; }
