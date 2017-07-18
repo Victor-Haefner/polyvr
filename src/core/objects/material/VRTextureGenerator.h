@@ -40,16 +40,12 @@ class VRTextureGenerator {
         vector<Layer> layers;
         VRTexturePtr img;
 
-        void applyFill(Vec3f* data, Vec4f c);
-        void applyFill(Vec4f* data, Vec4f c);
         void applyPixel(Vec3f* data, Vec3i p, Vec4f c);
         void applyPixel(Vec4f* data, Vec3i p, Vec4f c);
-        void applyLine(Vec3f* data, Vec3f p1, Vec3f p2, Vec4f c, float width);
-        void applyLine(Vec4f* data, Vec3f p1, Vec3f p2, Vec4f c, float width);
-        void applyPath(Vec3f* data, pathPtr p, Vec4f c, float width);
-        void applyPath(Vec4f* data, pathPtr p, Vec4f c, float width);
-        void applyVRPolygon(Vec3f* data, VRPolygonPtr p, Vec4f c, float height);
-        void applyVRPolygon(Vec4f* data, VRPolygonPtr p, Vec4f c, float height);
+        template<typename T> void applyFill(T* data, Vec4f c);
+        template<typename T> void applyLine(T* data, Vec3f p1, Vec3f p2, Vec4f c, float width);
+        template<typename T> void applyPath(T* data, pathPtr p, Vec4f c, float width);
+        template<typename T> void applyPolygon(T* data, VRPolygonPtr p, Vec4f c, float height);
 
         bool inBox(Pnt3f& p, Vec3f& s);
         Vec3i clamp(Vec3i p);
