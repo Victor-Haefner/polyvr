@@ -243,12 +243,21 @@ void VRTextureGenerator::applyPolygon(T* data, VRPolygonPtr p, Vec4f c, float h)
     Vec3f b = bb.max(); swap(b[1], b[2]);
     Vec3i A = Vec3i( upscale( a ) ) - Vec3i(1,1,1);
     Vec3i B = Vec3i( upscale( b ) ) + Vec3i(1,1,1);
+    float texelSize = 1.0/width; // TODO: non square textures?
     for (int j=A[1]; j<B[1]; j++) {
         for (int i=A[0]; i<B[0]; i++) {
             Vec2f pos = Vec2f(float(i)/width, float(j)/height);
-            if (p->isInside(pos)) {
+            float d;
+            if (p->isInside(pos, d)) {
                 for (int k=0; k<depth; k++) applyPixel(data, clamp(Vec3i(i,j,k)), c);
-            }
+            } /*else if (d < texelSize) { // TODO: finish antialiasing feature
+                float a = 1.0 - d*width;
+                auto cc = c; cc[3] = a;
+                cout << "VRTextureGenerator::applyPolygon a " << a << endl;
+                //for (int k=0; k<depth; k++) applyPixel(data, clamp(Vec3i(i,j,k)), cc);
+                for (int k=0; k<depth; k++) applyPixel(data, clamp(Vec3i(i,j,k)), Vec4f(a,0,1,1));
+                //for (int k=0; k<depth; k++) applyPixel(data, clamp(Vec3i(i,j,k)), Vec4f(0,0,1,a));
+            }*/
         }
     }
 }

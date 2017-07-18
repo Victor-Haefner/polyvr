@@ -36,6 +36,7 @@ VRTransform::VRTransform(string name) : VRObject(name) {
     addAttachment("transform", 0);
 
     store("from", &_from);
+    //store("dir", &_dir);
     store("at", &_at);
     store("up", &_up);
     store("scale", &_scale);
@@ -184,6 +185,7 @@ void VRTransform::initTranslator() { // TODO
 }
 
 Vec3f VRTransform::getFrom() { return _from; }
+Vec3f VRTransform::getDir() { return _dir; }
 Vec3f VRTransform::getAt() { return _at; }
 Vec3f VRTransform::getUp() { return _up; }
 
@@ -307,9 +309,6 @@ Vec3f VRTransform::getWorldPosition(bool parentOnly) {
     return Vec3f(m[3]);
 }
 
-/** Returns the direction vector (not normalized) **/
-Vec3f VRTransform::getDir() { return _at-_from; }
-
 /** Returns the world direction vector (not normalized) **/
 Vec3f VRTransform::getWorldDirection(bool parentOnly) {
     Matrix m;
@@ -430,11 +429,9 @@ doubleBuffer* VRTransform::getBuffer() { return dm; }
 /** Set the from vector **/
 void VRTransform::setFrom(Vec3f pos) {
     if (isNan(pos)) return;
-    //cout << "\nSet From : " << name << getID() << " : " << pos;
-    Vec3f dir;
-    if (orientation_mode == OM_DIR) dir = _at - _from; // TODO: there may a better way
     _from = pos;
-    if (orientation_mode == OM_DIR) _at = _from + dir;
+    if (orientation_mode == OM_DIR) _at = _from + _dir;
+    if (orientation_mode == OM_AT) _dir = _at - _from;
     reg_change();
 }
 
@@ -442,6 +439,7 @@ void VRTransform::setFrom(Vec3f pos) {
 void VRTransform::setAt(Vec3f at) {
     if (isNan(at)) return;
     _at = at;
+    _dir = _at - _from;
     orientation_mode = OM_AT;
     reg_change();
 }
@@ -455,6 +453,7 @@ void VRTransform::setUp(Vec3f up) {
 
 void VRTransform::setDir(Vec3f dir) {
     if (isNan(dir)) return;
+    _dir = dir;
     _at = _from + dir;
     orientation_mode = OM_DIR;
     reg_change();
@@ -550,57 +549,42 @@ Vec3f VRTransform::getEuler() {
 
 void VRTransform::rotate(float a, Vec3f v) {//rotate around axis
     if (isNan(a) || isNan(v)) return;
-    Vec3f d = _at - _from;
-
     v.normalize();
     Quaternion q = Quaternion(v, a);
-    q.multVec(d,d);
+    q.multVec(_dir,_dir);
     q.multVec(_up,_up);
-
-    _at = _from + d;
-
+    _at = _from + _dir;
     reg_change();
 }
 
-void VRTransform::rotateUp(float a) {//rotate around _up axis
+void VRTransform::rotateUp(float a) {//rotate the _up axis
     if (isNan(a)) return;
-    Vec3f d = _at - _from;
+    Vec3f d = _dir;
     d.normalize();
-
     Quaternion q = Quaternion(d, a);
     q.multVec(_up,_up);
-
     reg_change();
-    //cout << "\nRotating " << name << " " << a ;
 }
 
         /** Rotate the object around its x axis **/
 void VRTransform::rotateX(float a) {//rotate around x axis
     if (isNan(a)) return;
-    Vec3f dir = _at - _from;
-    Vec3f d = dir.cross(_up);
+    Vec3f d = _dir.cross(_up);
     d.normalize();
-
     Quaternion q = Quaternion(d, a);
     q.multVec(_up,_up);
-    q.multVec(dir,dir);
-    _at = _from + dir;
-
+    q.multVec(_dir,_dir);
+    _at = _from + _dir;
     reg_change();
-    //cout << "\nRotating " << name << " " << a ;
 }
 
 /** Rotate the object around the point where at indicates && the up axis **/
 void VRTransform::rotateAround(float a) {//rotate around focus using up axis
     if (isNan(a)) return;
     orientation_mode = OM_AT;
-    Vec3f d = _at - _from;
-
     Quaternion q = Quaternion(_up, -a);
-    q.multVec(d,d);
-
-    _from = _at - d;
-
+    q.multVec(_dir,_dir);
+    _from = _at - _dir;
     reg_change();
 }
 
@@ -615,22 +599,17 @@ void VRTransform::translate(Vec3f v) {
 /** translate the object by changing the from in direction of the at vector **/
 void VRTransform::zoom(float d) {
     if (isNan(d)) return;
-    Vec3f dv = _at-_from;
-    /*float norm = dv.length();
-    dv /= norm;
-    _from += dv*d*norm;*/
-    _from += dv*d;
+    _from += _dir*d;
+    _dir = _at - _from;
     reg_change();
 }
 
 /** Translate the object towards at **/
 void VRTransform::move(float d) {
     if (isNan(d)) return;
-    Vec3f dv = _at-_from;
+    Vec3f dv = _dir;
     dv.normalize();
-    _at += dv*d;
-    _from += dv*d;
-    reg_change();
+    translate(dv*d);
 }
 
 /** Drag the object with another **/
@@ -783,6 +762,7 @@ void VRTransform::update() {
 
 void VRTransform::setup() {
     change = true;
+    setAt(_at);
     update();
 }
 

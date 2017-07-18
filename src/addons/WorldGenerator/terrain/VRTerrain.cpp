@@ -1,6 +1,7 @@
 #include "VRTerrain.h"
 #include "VRPlanet.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRMaterialT.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/geometry/VRPhysics.h"
@@ -24,14 +25,14 @@ VRTerrain::VRTerrain(string name) : VRGeometry(name) { setupMat(); }
 VRTerrain::~VRTerrain() {}
 VRTerrainPtr VRTerrain::create(string name) { return VRTerrainPtr( new VRTerrain(name) ); }
 
-void VRTerrain::setParameters( Vec2f s, float r, float h ) {
+void VRTerrain::setParameters( Vec2d s, double r, double h ) {
     size = s;
     resolution = r;
     heightScale = h;
     grid = r*64;
     setupGeo();
     mat->setShaderParameter("resolution", resolution);
-    mat->setShaderParameter("heightScale", h);
+    mat->setShaderParameter("heightScale", heightScale);
     updateTexelSize();
 }
 
@@ -54,23 +55,23 @@ void VRTerrain::setupGeo() {
     Vec2i gridN = Vec2i(size*1.0/grid);
     if (gridN[0] < 1) gridN[0] = 1;
     if (gridN[1] < 1) gridN[1] = 1;
-    Vec2f gridS = size;
+    Vec2d gridS = size;
     gridS[0] /= gridN[0];
     gridS[1] /= gridN[1];
 	Vec2f tcChunk = Vec2f(1.0/gridN[0], 1.0/gridN[1]);
 
 	VRGeoData geo;
     for (int i =0; i < gridN[0]; i++) {
-		float px1 = -size[0]*0.5 + i*gridS[0];
-		float px2 = px1 + gridS[0];
-		float tcx1 = 0 + i*tcChunk[0];
-		float tcx2 = tcx1 + tcChunk[0];
+		double px1 = -size[0]*0.5 + i*gridS[0];
+		double px2 = px1 + gridS[0];
+		double tcx1 = 0 + i*tcChunk[0];
+		double tcx2 = tcx1 + tcChunk[0];
 
 		for (int j =0; j < gridN[1]; j++) {
-			float py1 = -size[1]*0.5 + j*gridS[1];
-			float py2 = py1 + gridS[1];
-			float tcy1 = 0 + j*tcChunk[1];
-			float tcy2 = tcy1 + tcChunk[1];
+			double py1 = -size[1]*0.5 + j*gridS[1];
+			double py2 = py1 + gridS[1];
+			double tcy1 = 0 + j*tcChunk[1];
+			double tcy2 = tcy1 + tcChunk[1];
 
 			geo.pushVert(Vec3f(px1,0,py1), Vec3f(0,1,0), Vec2f(tcx1,tcy1));
 			geo.pushVert(Vec3f(px1,0,py2), Vec3f(0,1,0), Vec2f(tcx1,tcy2));
@@ -90,7 +91,7 @@ void VRTerrain::physicalize(bool b) {
     if (!tex) return;
     auto dim = tex->getSize();
 
-    float Hmax = -1e6;
+    double Hmax = -1e6;
     physicsHeightBuffer = shared_ptr<vector<float>>( new vector<float>(dim[0]*dim[1]) );
     for (int i = 0; i < dim[0]; i++) {
         for (int j = 0; j < dim[1]; j++) {
@@ -101,7 +102,7 @@ void VRTerrain::physicalize(bool b) {
         }
     }
 
-    float R = resolution*0.94; // Hack, there is a scaling error somewhere, either in the shape or the visualisation
+    double R = resolution*0.94; // Hack, there is a scaling error somewhere, either in the shape or the visualisation
     auto shape = new btHeightfieldTerrainShape(dim[0], dim[1], &(*physicsHeightBuffer)[0], 1, -Hmax, Hmax, 1, PHY_FLOAT, false);
     shape->setLocalScaling(btVector3(R,1,R));
     getPhysics()->setCustomShape( shape );
@@ -144,7 +145,7 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
 
     auto tex = getMaterial()->getTexture();
 
-    auto clamp = [&](float x, float a, float b) {
+    auto clamp = [&](double x, double a, double b) {
         return max(min(x,b),a);
     };
 
@@ -152,12 +153,12 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
         auto mw = getWorldMatrix();
         mw.invert();
         //mw.mult(p,p); // transform point in local coords
-		float u = clamp(p[0]/size[0] + 0.5, 0, 1);
-		float v = clamp(p[2]/size[1] + 0.5, 0, 1);
+		double u = clamp(p[0]/size[0] + 0.5, 0, 1);
+		double v = clamp(p[2]/size[1] + 0.5, 0, 1);
 		return Vec2f(u,v);
     };
 
-	auto distToSurface = [&](Pnt3f p) -> float {
+	auto distToSurface = [&](Pnt3f p) -> double {
 		Vec2f uv = toUV(p);
 		auto c = tex->getPixel(uv);
 		return p[1] - c[3];
@@ -174,11 +175,11 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
 
     Vec3f norm(0,1,0); // TODO
     int N = 1000;
-    float step = 10; // TODO
+    double step = 10; // TODO
     int dir = 1;
     for (int i = 0; i < N; i++) {
         p = p - d*step*dir; // walk
-        float l = distToSurface(p);
+        double l = distToSurface(p);
         if (l > 0 && l < 0.03) {
             Real32 t = p0.dist( p );
             ia->setHit(t, ia->getActNode(), 0, norm, -1);
@@ -198,7 +199,7 @@ void VRTerrain::loadMap( string path, int channel ) {
     setMap(tex, channel);
 }
 
-void VRTerrain::projectOSM(string path, float N, float E) {
+void VRTerrain::projectOSM(string path, double N, double E) {
     if (!tex) return;
     if (tex->getChannels() != 4) { // fix mono channels
         VRTextureGenerator tg;
@@ -207,7 +208,7 @@ void VRTerrain::projectOSM(string path, float N, float E) {
         auto t = tg.compose(0);
         for (int i = 0; i < dim[0]; i++) {
             for (int j = 0; j < dim[1]; j++) {
-                float h = tex->getPixel(Vec3i(i,j,0))[0];
+                double h = tex->getPixel(Vec3i(i,j,0))[0];
                 t->setPixel(Vec3i(i,j,0), Vec4f(1.0,1.0,1.0,h));
             }
         }
@@ -224,19 +225,10 @@ void VRTerrain::projectOSM(string path, float N, float E) {
         auto pp = VRPolygon::create();
 
         for (auto pnt : p.get()) {
-            Pnt3f pos = planet->fromLatLongPosition(pnt[1], pnt[0]);
+            Pnt3f pos = Pnt3f( planet->fromLatLongPosition(pnt[1], pnt[0]) );
             terrainMatrix.mult(pos, pos);
             pp->addPoint( Vec2f(pos[0], pos[2]) );
         }
-
-        /*Triangulator tri;
-        tri.add(*pp);
-        auto geo = tri.compute();
-        geo->setPose(Vec3f(0,1,0), Vec3f(0,1,0), Vec3f(0,0,1));
-        geo->getMaterial()->setLit(0);
-        geo->getMaterial()->setDiffuse(Vec3f(0,1,1));
-        addChild(geo);
-        geo->hide();*/
 
         for (auto tag : way.second->tags) polygons[tag.first].push_back(pp);
     }
@@ -246,11 +238,12 @@ void VRTerrain::projectOSM(string path, float N, float E) {
     VRTextureGenerator tg;
     tg.setSize(dim, true);
 
-    for (auto tag : polygons) cout << "polygon tag: " << tag.first << endl;
+    //for (auto tag : polygons) cout << "polygon tag: " << tag.first << endl;
 
     auto drawPolygons = [&](string tag, Vec4f col) {
         if (!polygons.count(tag)) {
-            cout << "\ndrawPolygons: tag '" << tag << "' not found!" << endl;
+            //cout << "\ndrawPolygons: tag '" << tag << "' not found!" << endl;
+            return;
         }
 
         for (auto p : polygons[tag]) {
@@ -269,7 +262,7 @@ void VRTerrain::projectOSM(string path, float N, float E) {
     for (int i = 0; i < dim[0]; i++) {
         for (int j = 0; j < dim[1]; j++) {
             Vec3i pix = Vec3i(i,j,0);
-            float h = tex->getPixel(pix)[3];
+            double h = tex->getPixel(pix)[3];
             Vec4f col = t->getPixel(pix);
             col[3] = h;
             t->setPixel(pix, col);
@@ -278,7 +271,7 @@ void VRTerrain::projectOSM(string path, float N, float E) {
     setMap(t);
 }
 
-void VRTerrain::setPlanet(VRPlanetPtr p, Vec2f position) {
+void VRTerrain::setPlanet(VRPlanetPtr p, Vec2d position) {
     sphericalCoordinates = position;
     planet = p;
 }

@@ -42,6 +42,7 @@ class VRTransform : public VRObject {
         int orientation_mode = OM_DIR;
 
         Vec3f _at = Vec3f(0,0,-1);
+        Vec3f _dir = Vec3f(0,0,-1);
         Vec3f _from;
         Vec3f _up = Vec3f(0,1,0);
         Vec3f _scale = Vec3f(1,1,1);

@@ -17,17 +17,17 @@ class VRTerrain : public VRGeometry {
         static string tessControlShader;
         static string tessEvaluationShader;
 
-        Vec2f size = Vec2f(100,100);
-        Vec2f texelSize = Vec2f(0.01,0.01);
-        float resolution = 1;
-        float heightScale = 1;
-        float grid = 64;
+        Vec2d size = Vec2d(100,100);
+        Vec2f texelSize = Vec2f(0.01,0.01); // shader parameter
+        float resolution = 1; // shader parameter
+        float heightScale = 1; // shader parameter
+        double grid = 64;
         VRTexturePtr tex;
         VRMaterialPtr mat;
         shared_ptr<vector<float>> physicsHeightBuffer;
 
         VRPlanetPtr planet;
-        Vec2f sphericalCoordinates;
+        Vec2d sphericalCoordinates;
 
         void updateTexelSize();
         void setupGeo();
@@ -38,7 +38,7 @@ class VRTerrain : public VRGeometry {
         ~VRTerrain();
         static VRTerrainPtr create(string name = "terrain");
 
-        void setParameters( Vec2f size, float resolution, float heightScale );
+        void setParameters( Vec2d size, double resolution, double heightScale );
         void setMap( VRTexturePtr tex, int channel = 3 );
         void loadMap( string path, int channel = 3 );
 
@@ -46,8 +46,8 @@ class VRTerrain : public VRGeometry {
 
         void physicalize(bool b);
 
-        void setPlanet(VRPlanetPtr planet, Vec2f position);
-        void projectOSM(string path, float N, float E); // TODO, gis data should be handled somewhere else
+        void setPlanet(VRPlanetPtr planet, Vec2d position);
+        void projectOSM(string path, double N, double E); // TODO, gis data should be handled somewhere else
 };
 
 OSG_END_NAMESPACE;

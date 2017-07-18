@@ -8,7 +8,7 @@
 
 #define GLSL(shader) #shader
 
-const float pi = 3.14159265359;
+const double pi = 3.14159265359;
 
 using namespace OSG;
 
@@ -23,41 +23,41 @@ VRPlanetPtr VRPlanet::create(string name) {
 
 VRPlanetPtr VRPlanet::ptr() { return static_pointer_cast<VRPlanet>( shared_from_this() ); }
 
-float VRPlanet::toRad(float deg) { return pi*deg/180; }
-float VRPlanet::toDeg(float rad) { return 180*rad/pi; }
+double VRPlanet::toRad(double deg) { return pi*deg/180; }
+double VRPlanet::toDeg(double rad) { return 180*rad/pi; }
 
-Vec3f VRPlanet::fromLatLongNormal(float north, float east) {
+Vec3d VRPlanet::fromLatLongNormal(double north, double east) {
     north = -north+90;
-	float sT = sin(toRad(north));
-	float sP = sin(toRad(east));
-	float cT = cos(toRad(north));
-	float cP = cos(toRad(east));
-	return Vec3f(sT*cP, cT, -sT*sP);
+	double sT = sin(toRad(north));
+	double sP = sin(toRad(east));
+	double cT = cos(toRad(north));
+	double cP = cos(toRad(east));
+	return Vec3d(sT*cP, cT, -sT*sP);
 }
 
-Vec3f VRPlanet::fromLatLongPosition(float north, float east) { return fromLatLongNormal(north, east)*radius; }
-Vec3f VRPlanet::fromLatLongEast(float north, float east) { return fromLatLongNormal(0, east+90); }
-Vec3f VRPlanet::fromLatLongNorth(float north, float east) { return fromLatLongNormal(north+90, east); }
+Vec3d VRPlanet::fromLatLongPosition(double north, double east) { return fromLatLongNormal(north, east)*radius; }
+Vec3d VRPlanet::fromLatLongEast(double north, double east) { return fromLatLongNormal(0, east+90); }
+Vec3d VRPlanet::fromLatLongNorth(double north, double east) { return fromLatLongNormal(north+90, east); }
 
-Vec2f VRPlanet::fromLatLongSize(float north1, float east1, float north2, float east2) {
+Vec2d VRPlanet::fromLatLongSize(double north1, double east1, double north2, double east2) {
     auto n = (north1+north2)*0.5;
     auto e = (east1+east2)*0.5;
-    Vec3f p1 = fromLatLongPosition(north1, east1);
-    Vec3f p2 = fromLatLongPosition(north2, east2);
+    Vec3d p1 = fromLatLongPosition(north1, east1);
+    Vec3d p2 = fromLatLongPosition(north2, east2);
     addPin("P1", north1, east1);
     addPin("P2", north2, east2);
-    Vec3f d = p2-p1;
+    Vec3d d = p2-p1;
     auto dirEast = fromLatLongEast(n, e);
     auto dirNorth = fromLatLongNorth(n, e);
-    float u = d.dot( dirEast );
-    float v = d.dot( dirNorth );
+    double u = d.dot( dirEast );
+    double v = d.dot( dirNorth );
 
-    /*d = fromLatLongPosition(north2, east2) - fromLatLongPosition(north2, east1);
-    metaGeo->setVector(101, p1, d, Vec3f(1,1,0), "D");
-    metaGeo->setVector(102, p1, dirEast*u, Vec3f(0,1,1), "E");
-    metaGeo->setVector(103, p1, dirNorth*v, Vec3f(0,1,1), "S");*/
+    d = fromLatLongPosition(north2, east2) - fromLatLongPosition(north2, east1);
+    metaGeo->setVector(101, Vec3f(p1), Vec3f(d), Vec3f(1,1,0), "D");
+    metaGeo->setVector(102, Vec3f(p1), Vec3f(dirEast*u), Vec3f(0,1,1), "E");
+    metaGeo->setVector(103, Vec3f(p1), Vec3f(dirNorth*v), Vec3f(0,1,1), "S");
 
-    return Vec2f(abs(u),abs(v));
+    return Vec2d(abs(u),abs(v));
 }
 
 void VRPlanet::rebuild() {
@@ -71,7 +71,7 @@ void VRPlanet::rebuild() {
     // spheres
     if (lod) lod->destroy();
     lod = VRLod::create("planetLod");
-    auto addLod = [&](int i, float d) {
+    auto addLod = [&](int i, double d) {
         auto s = VRGeometry::create("sphere");
         s->setPrimitive("Sphere", toString(radius)+" "+toString(i));
         s->setMaterial(sphereMat);
@@ -94,29 +94,29 @@ void VRPlanet::rebuild() {
     }
 }
 
-void VRPlanet::setParameters( float r ) { radius = r; rebuild(); }
+void VRPlanet::setParameters( double r ) { radius = r; rebuild(); }
 
 VRTerrainPtr VRPlanet::addSector( int north, int east ) {
     auto terrain = VRTerrain::create( toString(north)+"N"+toString(east)+"E" );
-    terrain->setPlanet(ptr(), Vec2f(east, north));
+    terrain->setPlanet(ptr(), Vec2d(east, north));
     anchor->addChild(terrain);
     sectors[north][east] = terrain;
-    terrain->setFrom( fromLatLongPosition(north+0.5, east+0.5) );
-    terrain->setUp( fromLatLongNormal(north+0.5, east+0.5) );
-    terrain->setDir( fromLatLongNorth(north+0.5, east+0.5) );
+    terrain->setFrom( Vec3f(fromLatLongPosition(north+0.5, east+0.5)) );
+    terrain->setUp( Vec3f(fromLatLongNormal(north+0.5, east+0.5)) );
+    terrain->setDir( Vec3f(fromLatLongNorth(north+0.5, east+0.5)) );
 
-    Vec2f size = fromLatLongSize(north, east, north+1, east+1);
-    terrain->setParameters( size, 1, 0.001);
+    Vec2d size = fromLatLongSize(north, east, north+1, east+1);
+    terrain->setParameters( size, 10, 1);
     return terrain;
 }
 
 VRMaterialPtr VRPlanet::getMaterial() { return sphereMat; }
 
-int VRPlanet::addPin( string label, float north, float east ) {
-    Vec3f n = fromLatLongNormal(north, east);
-    Vec3f p = fromLatLongPosition(north, east);
+int VRPlanet::addPin( string label, double north, double east ) {
+    Vec3d n = fromLatLongNormal(north, east);
+    Vec3d p = fromLatLongPosition(north, east);
     static int ID = -1; ID++;//metaGeo->getNewID(); // TODO
-    metaGeo->setVector(ID, p, n*100, Vec3f(1,0,0), label);
+    metaGeo->setVector(ID, Vec3f(p), Vec3f(n)*10000, Vec3f(1,0,0), label);
     return ID;
 }
 

@@ -445,11 +445,11 @@ void VRPolygon::close() {
     if (points3.size() > 0) points3.push_back(points3[0]);
 }
 
-bool VRPolygon::isInside(Vec2f p) { // winding number algorithm
-    auto isLeft = []( Vec2f P0, Vec2f P1, Vec2f P2 ){
-        return ( (P1[0] - P0[0]) * (P2[1] - P0[1]) - (P2[0] -  P0[0]) * (P1[1] - P0[1]) );
-    };
+float isLeft( Vec2f P0, Vec2f P1, Vec2f P2 ){
+    return ( (P1[0] - P0[0]) * (P2[1] - P0[1]) - (P2[0] -  P0[0]) * (P1[1] - P0[1]) );
+};
 
+bool VRPolygon::isInside(Vec2f p) { // winding number algorithm
     int wn = 0;
     int N = points.size();
     for (int i=0; i<N; i++) {
@@ -458,11 +458,41 @@ bool VRPolygon::isInside(Vec2f p) { // winding number algorithm
         Vec2f d = p2 - p1;
         if (p1[1] <= p[1]) {
             if (p2[1]  > p[1]) if (isLeft( p1, p2, p) > 0) ++wn;
-        }
-        else {
+        } else {
             if (p2[1]  <= p[1]) if (isLeft( p1, p2, p) < 0) --wn;
         }
     }
+    return wn;
+}
+
+float squareDistToSegment(const Vec2f& p1, const Vec2f& p2, const Vec2f& p) {
+    auto d = p2-p1;
+    auto L2 = d.squareLength();
+    auto t = -(p1-p).dot(d)/L2;
+    auto ps = p1+d*t;
+    if (t<0) ps = p1;
+    if (t>1) ps = p2;
+    return (ps-p).squareLength();
+}
+
+bool VRPolygon::isInside(Vec2f p, float& dist) { // winding number algorithm
+    dist = 1e12;
+    int wn = 0;
+    int N = points.size();
+    for (int i=0; i<N; i++) {
+        Vec2f p1 = points[i];
+        Vec2f p2 = points[(i+1)%N];
+        Vec2f d = p2 - p1;
+        if (p1[1] <= p[1]) {
+            if (p2[1]  > p[1]) if (isLeft( p1, p2, p) > 0) ++wn;
+        } else {
+            if (p2[1]  <= p[1]) if (isLeft( p1, p2, p) < 0) --wn;
+        }
+
+        float D = squareDistToSegment(p1,p2,p);
+        if (D < dist) dist = D;
+    }
+    dist = sqrt(dist);
     return wn;
 }
 

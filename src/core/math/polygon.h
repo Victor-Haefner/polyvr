@@ -52,6 +52,7 @@ class VRPolygon {
 
         vector<Vec3f> toSpace(Matrix m);
         bool isInside(Vec2f p);
+        bool isInside(Vec2f p, float& dist);
 
         string toString();
         static void runTest();
