@@ -58,7 +58,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"getName", (PyCFunction)VRPyObject::getName, METH_NOARGS, "Return the object name" },
     {"getBaseName", (PyCFunction)VRPyObject::getBaseName, METH_NOARGS, "Return the object base name" },
     {"setName", (PyCFunction)VRPyObject::setName, METH_VARARGS, "Set the object name" },
-    {"addChild", (PyCFunction)VRPyObject::addChild, METH_VARARGS, "Add object as child" },
+    {"addChild", PyWrapOpt(Object, addChild, "Add object as child", "1|-1", void, VRObjectPtr, bool, int ) },
     {"switchParent", (PyCFunction)VRPyObject::switchParent, METH_VARARGS, "Switch object to other parent object" },
     {"destroy", (PyCFunction)VRPyObject::destroy, METH_NOARGS, "Destroy object" },
     {"hide", (PyCFunction)VRPyObject::hide, METH_NOARGS, "Hide object" },

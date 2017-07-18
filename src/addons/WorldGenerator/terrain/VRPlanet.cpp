@@ -140,7 +140,7 @@ attribute vec3 osg_MultiTexCoords0;
 void main( void ) {
     tcs = osg_Normal.xyz;
     normal = gl_NormalMatrix * osg_Normal.xyz;
-    position = gl_ModelViewProjectionMatrix*osg_Vertex;
+    position = gl_ModelViewMatrix*osg_Vertex;
     gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
 }
 );
