@@ -67,9 +67,28 @@ VRObjectPtr VRTransform::copy(vector<VRObjectPtr> children) {
     return geo;
 }
 
+bool MatrixLookDir(OSG::Matrix &result, Pnt3f from, Vec3f dir, Vec3f up) {
+    Vec3f right;
+    Vec3f newup;
+    Vec3f tmp;
+
+    dir.normalize();
+    right = up.cross(dir);
+    if (right.dot(right) < TypeTraits<Real32>::getDefaultEps()) return true;
+    right.normalize();
+    newup = dir.cross(right);
+    result.setIdentity();
+    result.setTranslate(from);
+    Matrix tmpm;
+    tmpm.setValue(right, newup, dir);
+    result.mult(tmpm);
+    return false;
+}
+
 void VRTransform::computeMatrix() {
     Matrix mm;
-    MatrixLookAt(mm, _from, _at, _up);
+    if (orientation_mode == OM_AT) MatrixLookAt(mm, _from, _at, _up);
+    if (orientation_mode == OM_DIR) MatrixLookDir(mm, _from, -_dir, _up);
 
     if (_scale != Vec3f(1,1,1)) {
         Matrix ms;
@@ -190,7 +209,6 @@ Vec3f VRTransform::getAt() { return _at; }
 Vec3f VRTransform::getUp() { return _up; }
 
 /** Returns the local matrix **/
-//void VRTransform::getMatrix(Matrix& _m) { if(change) update(); dm.read(_m); }
 void VRTransform::getMatrix(Matrix& _m) {
     if(change) {
         computeMatrix();
