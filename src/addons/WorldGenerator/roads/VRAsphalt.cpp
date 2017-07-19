@@ -688,12 +688,13 @@ void main(void) {
 	asphalt();
 
 	vec2 tc = vec2( (tc1.x+col.x*1000)*(1.0/NArrowTex), tc1.y );
-	doLine = bool(texture(texMarkings, tc).r == 1);
+	float mark = texture(texMarkings, tc).r;
+	doLine = bool(mark == 1.0);
 	if (!doLine) discard;
 	if (doLine) applyLine();
 	applyMud();
     computeDepth();
-    //color = texture(texMarkings, tc1);
+    //gl_FragColor = vec4(mark,0,0,1);
     //color = vec4(col.x*1000*(1.0/NArrowTex), 0, 1, 1);
     //if (col.x == 0) color = vec4(1, 1, 0, 1);
     applyBlinnPhong();

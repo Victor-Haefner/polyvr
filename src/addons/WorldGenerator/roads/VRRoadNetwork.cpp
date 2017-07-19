@@ -264,6 +264,7 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const pose& p) {
     geo->setPositionalTexCoords2D(1.0, 1, Vec2i(0,2));
     addChild(geo);
     arrows->merge(geo);
+    geo->destroy();
     return;
 }
 
@@ -370,7 +371,6 @@ void VRRoadNetwork::computeSurfaces() {
         auto dirs = arrow->getAll("direction");
         Vec4i drs(999,999,999,999);
         for (uint i=0; i<4 && i < dirs.size(); i++) drs[i] = toFloat(dirs[i]->value)*180/pi;
-        cout << "  --  ARGH " << lpath->getPose(t).toString() << endl;
         createArrow(drs, dirs.size(), lpath->getPose(t));
     }
 }
