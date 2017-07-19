@@ -2,6 +2,7 @@
 #define VRGRASSPATCH_H_INCLUDED
 
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGColor.h>
 #include "core/objects/geometry/VRGeometry.h"
 #include "addons/RealWorld/VRRealWorldFwd.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
@@ -26,7 +27,7 @@ class VRGrassPatch : public VRTransform {
         void setupGrassStage();
 
         void initLOD();
-        void addGrassBlade(VRGeoData& data, Vec3f pos, float a, float dh, int lvl, Vec3f c);
+        void addGrassBlade(VRGeoData& data, Vec3d pos, float a, float dh, int lvl, Color3f c);
         void createPatch(VRGeoData& data, VRPolygonPtr area, int lvl = 0, int density = 100);
         void createSpriteLOD(VRGeoData& data, VRPolygonPtr area, int lvl);
 
@@ -37,7 +38,7 @@ class VRGrassPatch : public VRTransform {
 
         void setArea(VRPolygonPtr p);
 
-        void createLod(VRGeoData& geo, int lvl, Vec3f offset, int ID);
+        void createLod(VRGeoData& geo, int lvl, Vec3d offset, int ID);
 
         static VRMaterialPtr getGrassMaterial();
         static VRMaterialPtr getGrassSideMaterial();

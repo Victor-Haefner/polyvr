@@ -77,7 +77,7 @@ class NodeLogicTrafficLight : public NodeLogic {
         const RoadSystem *roadSystem;
 
         /// The center of this node, interpolated from the positions of all nodes.
-        Vec2f center;
+        Vec2d center;
 
         /// The maximal distance from the center of the logic to one of its nodes.
         double radius;
@@ -152,7 +152,7 @@ class NodeLogicTrafficLight : public NodeLogic {
         static NodeLogic* makeNodeLogic(const RoadSystem *roadSystem, const ID nodeId);
         virtual ~NodeLogicTrafficLight() { };
         virtual void tick();
-        virtual Vec2f getPosition() const;
+        virtual Vec2d getPosition() const;
         virtual void addStreet(const Node* node, const Street* street);
         virtual void removeStreet(const Node* node, const Street* street);
         virtual int canEnter(const Node* node, const ID streetId, const int lane, const ID nextStreetId, const int nextLane) const;

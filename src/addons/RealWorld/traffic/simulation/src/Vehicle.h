@@ -65,13 +65,13 @@ class Vehicle {
         int controller;
 
         /// The current position of this car.
-        Vec3f position;
+        Vec3d position;
 
         /// The presumably position of this vehicle after the next tick.
-        Vec3f futurePosition;
+        Vec3d futurePosition;
 
         /// The current orientation of this car.
-        Quaternion orientation;
+        Quaterniond orientation;
 
         /// The current speed the vehicle is driving with.
         double currentSpeed;
@@ -81,7 +81,7 @@ class Vehicle {
 
         /// The current amount of rotation to apply.
         /// This can be interpreted as the steering wheel angle.
-        Quaternion currentRotation;
+        Quaterniond currentRotation;
 
         /// The route this vehicle is driving on.
         /// This list contains the IDs of all nodes the vehicle is driving through.
@@ -95,7 +95,7 @@ class Vehicle {
 
         /// The current destination.
         /// This position is near the next node but on the current lane.
-        Vec2f currentDestination;
+        Vec2d currentDestination;
 
         /// The current state of the vehicle.
         STATE state;
@@ -114,7 +114,7 @@ class Vehicle {
          @param position The position of the vehicle.
          @param orientation The orientation of the vehicle.
          */
-        Vehicle(const ID id, const Vec3f& position, const Quaternion& orientation);
+        Vehicle(const ID id, const Vec3d& position, const Quaterniond& orientation);
 
         /**
          Creates a vehicle that is controlled by the simulator.
@@ -124,7 +124,7 @@ class Vehicle {
          @param vehicleType The type of the vehicle.
          @param driverType The type of the driver.
          */
-        Vehicle(const ID id, const Vec3f& position, const Quaternion& orientation, const ID vehicleType, const ID driverType);
+        Vehicle(const ID id, const Vec3d& position, const Quaterniond& orientation, const ID vehicleType, const ID driverType);
 
         /**
          Returns the id of this vehicle.
@@ -177,31 +177,31 @@ class Vehicle {
          Sets the current position of the vehicle.
          @param pos The position to set.
          */
-        void setPosition(const Vec3f& pos);
+        void setPosition(const Vec3d& pos);
 
         /**
          Returns the current position of the vehicle.
          @return The position of the vehicle.
          */
-        const Vec3f& getPosition() const;
+        const Vec3d& getPosition() const;
 
         /**
          Sets the presumably position of this vehicle after the next tick.
          @param futurePos The future position.
          */
-        void setFuturePosition(const Vec3f& futurePos);
+        void setFuturePosition(const Vec3d& futurePos);
 
         /**
          Returns the presumably position of this vehicle after the next tick.
          @return The future position.
          */
-        const Vec3f& getFuturePosition() const;
+        const Vec3d& getFuturePosition() const;
 
         /**
          Sets the current orientation of the vehicle.
          @param orientation The orientation to set.
          */
-        void setOrientation(const Quaternion& orientation);
+        void setOrientation(const Quaterniond& orientation);
 
         /**
          Returns the current orientation of the vehicle.
@@ -209,7 +209,7 @@ class Vehicle {
          direction the vehicle is looking at.
          @return The orientation of the vehicle.
          */
-        const Quaternion& getOrientation() const;
+        const Quaterniond& getOrientation() const;
 
         /**
          Sets the current speed of the vehicle.
@@ -240,13 +240,13 @@ class Vehicle {
          This can be interpreted as the steering wheel angle.
          @param rotation The rotation to apply.
          */
-        void setCurrentRotation(const Quaternion& rotation);
+        void setCurrentRotation(const Quaterniond& rotation);
 
         /**
          Returns he current amount of rotation to apply.
          @return The rotation to apply.
          */
-        const Quaternion& getCurrentRotation() const;
+        const Quaterniond& getCurrentRotation() const;
 
         /**
          Returns the route this vehicle is driving on.
@@ -282,13 +282,13 @@ class Vehicle {
          This position is near the next node but on the current lane.
          @param dest The destination this vehicle should approach.
          */
-        void setCurrentDestination(const Vec2f& dest);
+        void setCurrentDestination(const Vec2d& dest);
 
         /**
          Returns the current destination.
          @return The destination.
          */
-        Vec2f getCurrentDestination() const;
+        Vec2d getCurrentDestination() const;
 
         /**
          Sets the current state of a vehicle.

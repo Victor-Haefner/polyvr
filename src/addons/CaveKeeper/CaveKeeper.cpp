@@ -80,9 +80,9 @@ VRMaterialPtr BlockWorld::initMaterial(string texture) {
     //texture
     VRTextureGenerator tgen;
     tgen.setSize(512,512);
-    tgen.add(PERLIN, 1./2, Vec3f(0.3,0.1,0.1), Vec3f(0.9,0.5,0.1));
-    tgen.add(PERLIN, 1./8, Vec3f(0.8,0.8,0.8), Vec3f(1.0,1.0,1.0));
-    tgen.add(PERLIN, 1./32, Vec3f(0.8,0.8,0.8), Vec3f(1.0,1.0,1.0));
+    tgen.add(PERLIN, 1./2, Color3f(0.3,0.1,0.1), Color3f(0.9,0.5,0.1));
+    tgen.add(PERLIN, 1./8, Color3f(0.8,0.8,0.8), Color3f(1.0,1.0,1.0));
+    tgen.add(PERLIN, 1./32, Color3f(0.8,0.8,0.8), Color3f(1.0,1.0,1.0));
     mat->setTexture( tgen.compose(0) );
     mat->setTextureParams(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_MODULATE, GL_REPEAT, GL_REPEAT);
 
@@ -114,12 +114,12 @@ VRGeometryPtr BlockWorld::createChunk(vector<CKOctree::element*>& elements) {
         for (int j=0;j<3;j++) {
             Pos->addValue(e->pos);
 
-            Vec4f L1 = e->vertexLight[j];
-            Vec4f L2 = e->vertexLight[j+3];
+            Vec4d L1 = e->vertexLight[j];
+            Vec4d L2 = e->vertexLight[j+3];
 
-            Norms->addValue(Vec3f(L1[0], L1[1], L1[2]));
-            Colors->addValue(Vec3f(L2[0], L2[1], L2[2]));
-            texs->addValue(Vec3f(L1[3], L2[3]));
+            Norms->addValue(Vec3d(L1[0], L1[1], L1[2]));
+            Colors->addValue(Vec3d(L2[0], L2[1], L2[2]));
+            texs->addValue(Vec3d(L1[3], L2[3]));
             Indices->addValue(c);
             c++;
         }
@@ -168,7 +168,6 @@ void BlockWorld::updateShaderCamPos() {
     auto scene = VRScene::getCurrent();
     if (e == 0 && scene) e = scene->getActiveCamera();
     Vec4f cam_pos = Vec4f(e->getWorldPosition());
-
     for (auto m : materials) m.second->setShaderParameter("cam_pos", cam_pos);
 }
 
@@ -200,7 +199,7 @@ void BlockWorld::redraw(int chunk_id) {
     anchor->addChild(chunks[chunk_id]);
 }
 
-void CaveKeeper::placeLight(Vec3f p) {
+void CaveKeeper::placeLight(Vec3d p) {
     auto l = tree->addLight(p);
 	auto elements = tree->getAround(p, 10);
 	for (auto e : elements) e->updateLightning(l);
@@ -231,8 +230,8 @@ void CaveKeeper::place(VRDevicePtr dev, string obj, VRTransformPtr geo) {
     Line ray = dev->getBeacon()->castRay();
 	CKOctree::element* e = tree->get(ray);
     if (e) {
-        Vec3f n = tree->getHitNormal();
-        Vec3f p = e->pos + n;
+        Vec3d n = tree->getHitNormal();
+        Vec3d p = e->pos + n;
 
         if (obj == "lantern") placeLight(p);
 

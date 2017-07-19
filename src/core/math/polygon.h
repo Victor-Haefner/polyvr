@@ -10,22 +10,22 @@ using namespace std;
 
 class VRPolygon {
     private:
-        vector<Vec2f> points;
-        vector<Vec3f> points3;
+        vector<Vec2d> points;
+        vector<Vec3d> points3;
         bool is3D = false;
         bool convex = false;
         bool closed = false;
 
-        float getTurn(Vec2f p0, Vec2f p1, Vec2f p2);
+        float getTurn(Vec2d p0, Vec2d p1, Vec2d p2);
 
     public:
         VRPolygon();
         static std::shared_ptr<VRPolygon> create();
 
-        void addPoint(Vec2f p);
-        void addPoint(Vec3f p);
-        Vec2f getPoint(int i);
-        Vec3f getPoint3(int i);
+        void addPoint(Vec2d p);
+        void addPoint(Vec3d p);
+        Vec2d getPoint(int i);
+        Vec3d getPoint3(int i);
         void close();
         int size();
         void clear();
@@ -33,12 +33,12 @@ class VRPolygon {
         bool isConvex();
         bool isCCW();
         void turn();
-        void translate(Vec3f v);
-        void scale(Vec3f s);
+        void translate(Vec3d v);
+        void scale(Vec3d s);
 
-        vector<Vec2f> get();
-        vector<Vec3f> get3();
-        void set(vector<Vec2f> vec);
+        vector<Vec2d> get();
+        vector<Vec3d> get3();
+        void set(vector<Vec2d> vec);
         VRPolygon sort();
         VRPolygon getConvexHull();
         Boundingbox getBoundingBox();
@@ -47,12 +47,12 @@ class VRPolygon {
 
         float computeArea();
         VRPolygonPtr shrink(float amount);
-        Vec3f getRandomPoint();
-        vector<Vec3f> getRandomPoints(float density = 10, float padding = 0);
+        Vec3d getRandomPoint();
+        vector<Vec3d> getRandomPoints(float density = 10, float padding = 0);
 
-        vector<Vec3f> toSpace(Matrix m);
-        bool isInside(Vec2f p);
-        bool isInside(Vec2f p, float& dist);
+        vector<Vec3d> toSpace(Matrix4d m);
+        bool isInside(Vec2d p);
+        bool isInside(Vec2d p, float& dist);
 
         string toString();
         static void runTest();

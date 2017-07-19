@@ -205,16 +205,16 @@ vector<VREntityPtr> VREntity::getAllEntities(string prop) {
     return res;
 }
 
-Vec3f VREntity::getVec3f(string prop, int i) {
-    Vec3f res;
+Vec3d VREntity::getVec3f(string prop, int i) {
+    Vec3d res;
     auto vec = getVector(prop, i);
     int N = vec.size(); N = min(N,3);
     for (int i=0; i<N; i++) res[i] = toFloat( vec[i]->value );
     return res;
 }
 
-vector< Vec3f > VREntity::getAllVec3f(string prop) { // TODO
-    vector< Vec3f > res;
+vector< Vec3d > VREntity::getAllVec3f(string prop) { // TODO
+    vector< Vec3d > res;
     return res;
 }
 

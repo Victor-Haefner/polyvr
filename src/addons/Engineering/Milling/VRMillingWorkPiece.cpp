@@ -48,8 +48,8 @@ void VRMillingWorkPiece::init(Vec3i gSize, float bSize) {
     }
 
     rootElement = new VRWorkpieceElement(*this, (VRWorkpieceElement*) nullptr,
-                                  Vec3i(gridSize), Vec3f(gridSize) * blockSize,
-                                  Vec3f(0, 0, 0), getWorldPosition(), 0);
+                                  Vec3i(gridSize), Vec3d(gridSize) * blockSize,
+                                  Vec3d(0, 0, 0), getWorldPosition(), 0);
 
     rootElement->build();
 }
@@ -59,7 +59,7 @@ void VRMillingWorkPiece::reset() {
 }
 
 void VRMillingWorkPiece::update() {
-    Vec3f toolPosition;
+    Vec3d toolPosition;
 
     if (cuttingProfile == nullptr) {
         return;
@@ -103,7 +103,7 @@ void VRMillingWorkPiece::setRefreshWait(int updatesToWait) {
 */
 
 VRWorkpieceElement::VRWorkpieceElement(VRMillingWorkPiece& workpiece, VRWorkpieceElement* parent,
-                                       Vec3i blocks, Vec3f size, Vec3f offset, Vec3f position, const int level)
+                                       Vec3i blocks, Vec3d size, Vec3d offset, Vec3d position, const int level)
     : workpiece(workpiece), children(), parent(parent), blocks(blocks), size(size), offset(offset),
       position(position), level(level), deleted(false), updateIssued(true)
 {}
@@ -170,10 +170,10 @@ void VRWorkpieceElement::split() {
 
     Vec3i newBlocksLeft     = blocks;
     Vec3i newBlocksRight    = blocks;
-    Vec3f newOffsetLeft     = offset;
-    Vec3f newOffsetRight    = offset;
-    Vec3f newPositionLeft   = position;
-    Vec3f newPositionRight  = position;
+    Vec3d newOffsetLeft     = offset;
+    Vec3d newOffsetRight    = offset;
+    Vec3d newPositionLeft   = position;
+    Vec3d newPositionRight  = position;
 
     newBlocksLeft[divDim]   = blocksLeft;
     newBlocksRight[divDim]  = blocksRight;
@@ -181,8 +181,8 @@ void VRWorkpieceElement::split() {
     newOffsetRight[divDim]  += centerRightOffset;
     newPositionLeft[divDim] += centerLeftOffset;
     newPositionRight[divDim] += centerRightOffset;
-    Vec3f newSizeLeft       = Vec3f(newBlocksLeft) * workpiece.blockSize;
-    Vec3f newSizeRight      = Vec3f(newBlocksRight) * workpiece.blockSize;
+    Vec3d newSizeLeft       = Vec3d(newBlocksLeft) * workpiece.blockSize;
+    Vec3d newSizeRight      = Vec3d(newBlocksRight) * workpiece.blockSize;
 
     VRWorkpieceElement* left = new VRWorkpieceElement(workpiece, this, newBlocksLeft,
         newSizeLeft, newOffsetLeft, newPositionLeft, level + 1);
@@ -193,10 +193,10 @@ void VRWorkpieceElement::split() {
     children[1] = right;
 }
 
-bool VRWorkpieceElement::collides(Vec3f position) {
-    Vec3f elementSize = this->size;
-    Vec3f distance = this->position - position;
-    Vec3f collisionDistance = (elementSize / 2.0f) + Vec3f(0.3f, 0.3f, 0.3f);
+bool VRWorkpieceElement::collides(Vec3d position) {
+    Vec3d elementSize = this->size;
+    Vec3d distance = this->position - position;
+    Vec3d collisionDistance = (elementSize / 2.0f) + Vec3d(0.3f, 0.3f, 0.3f);
 
     if (abs(distance[0]) <= collisionDistance[0]&&
         abs(distance[1]) <= collisionDistance[1]&&
@@ -207,7 +207,7 @@ bool VRWorkpieceElement::collides(Vec3f position) {
     return false;
 }
 
-bool VRWorkpieceElement::collide(Vec3f position) {
+bool VRWorkpieceElement::collide(Vec3d position) {
     if (deleted) return false;
 
     bool result = false;
@@ -244,7 +244,7 @@ template <typename T> int sgn(T val) {
 }
 
 //Add of Marie
-bool VRWorkpieceElement::doesCollide(Vec3f position) {
+bool VRWorkpieceElement::doesCollide(Vec3d position) {
     //position in argument is the lowest part of the worktool and the (0,0) point of the profile
 
     float py = this->position[1], px = this->position[0], pz = this->position[2];
@@ -265,9 +265,9 @@ bool VRWorkpieceElement::doesCollide(Vec3f position) {
             if (std::abs(diffz) <= sz / 2.0f) return true;
 
             float sgnx = sgn(diffx), sgnz = sgn(diffz);
-            Vec2f vertex(px + sgnx * sx / 2.0f, pz + sgnz * sz / 2.0f);
-            Vec2f toolMid(ptoolx, ptoolz);
-            Vec2f distanceVertexTool = vertex - toolMid;
+            Vec2d vertex(px + sgnx * sx / 2.0f, pz + sgnz * sz / 2.0f);
+            Vec2d toolMid(ptoolx, ptoolz);
+            Vec2d distanceVertexTool = vertex - toolMid;
             if (distanceVertexTool.length() < maximum) {
                 return true;
             }
@@ -336,25 +336,25 @@ void VRWorkpieceElement::build(GeoPnt3fPropertyRecPtr positions,
     }
 }
 
-Vec3f VRWorkpieceElement::mulVec3f(Vec3f lhs, Vec3f rhs) {
-    return Vec3f(lhs[0] * rhs[0], lhs[1] * rhs[1], lhs[2] * rhs[2]);
+Vec3d VRWorkpieceElement::mulVec3f(Vec3d lhs, Vec3d rhs) {
+    return Vec3d(lhs[0] * rhs[0], lhs[1] * rhs[1], lhs[2] * rhs[2]);
 }
 
 void VRWorkpieceElement::buildGeometry(GeoPnt3fPropertyRecPtr positions,
                                        GeoVec3fPropertyRecPtr normals,
                                        GeoUInt32PropertyRecPtr indices,
                                        uint32_t& index) {
-    Vec3f planeDistance = this->size / 2.0f;
+    Vec3d planeDistance = this->size / 2.0f;
     // for each dimension
     for (int sgnIndex = 0; sgnIndex < 2; sgnIndex++) {
         for (int dimension = 0; dimension < 3; dimension++) {
-            Vec3f planeNormal = planeOffsetMasks[0][dimension];
-            Vec3f planeOffset = mulVec3f(planeOffsetMasks[sgnIndex][dimension], planeDistance);
-            Vec3f planeMid = this->offset + planeOffset;
+            Vec3d planeNormal = planeOffsetMasks[0][dimension];
+            Vec3d planeOffset = mulVec3f(planeOffsetMasks[sgnIndex][dimension], planeDistance);
+            Vec3d planeMid = this->offset + planeOffset;
             for (int vertexNum = 0; vertexNum < 4; vertexNum++) {
-                Vec3f vertexOffsetMask = vertexOffsetMasks[sgnIndex][dimension][vertexNum];
-                Vec3f vertexOffset = mulVec3f(planeDistance, vertexOffsetMask);
-                Pnt3f vertexPosition = planeMid + vertexOffset;
+                Vec3d vertexOffsetMask = vertexOffsetMasks[sgnIndex][dimension][vertexNum];
+                Vec3d vertexOffset = mulVec3f(planeDistance, vertexOffsetMask);
+                Pnt3d vertexPosition = planeMid + vertexOffset;
                 positions->push_back(vertexPosition);
                 normals->push_back(planeNormal);
                 indices->push_back(index);
@@ -364,52 +364,52 @@ void VRWorkpieceElement::buildGeometry(GeoPnt3fPropertyRecPtr positions,
     }
 }
 
-const Vec3f VRWorkpieceElement::planeOffsetMasks[2][3] = {
-    { Vec3f(1.0f, 0.0f, 0.0f), Vec3f{0.0f, 1.0f, 0.0f}, Vec3f(0.0f, 0.0f, 1.0f) },
-    { Vec3f(-1.0f, 0.0f, 0.0f), Vec3f{0.0f, -1.0f, 0.0f}, Vec3f(0.0f, 0.0f, -1.0f)}
+const Vec3d VRWorkpieceElement::planeOffsetMasks[2][3] = {
+    { Vec3d(1.0f, 0.0f, 0.0f), Vec3d{0.0f, 1.0f, 0.0f}, Vec3d(0.0f, 0.0f, 1.0f) },
+    { Vec3d(-1.0f, 0.0f, 0.0f), Vec3d{0.0f, -1.0f, 0.0f}, Vec3d(0.0f, 0.0f, -1.0f)}
 };
 
-const Vec3f VRWorkpieceElement::vertexOffsetMasks[2][3][4] = {
+const Vec3d VRWorkpieceElement::vertexOffsetMasks[2][3][4] = {
     // sign, dimension, vertexnumber
     {
         { // dimension 1,0,0
-            Vec3f(0.0f, 1.0f, 1.0f),
-            Vec3f(0.0f, -1.0f, 1.0f),
-            Vec3f(0.0f, -1.0f, -1.0f),
-            Vec3f(0.0f, 1.0f, -1.0f)
+            Vec3d(0.0f, 1.0f, 1.0f),
+            Vec3d(0.0f, -1.0f, 1.0f),
+            Vec3d(0.0f, -1.0f, -1.0f),
+            Vec3d(0.0f, 1.0f, -1.0f)
         },
         { // dimension 0,1,0
-            Vec3f(1.0f, 0.0f, 1.0f),
-            Vec3f(1.0f, 0.0f, -1.0f),
-            Vec3f(-1.0f, 0.0f, -1.0f),
-            Vec3f(-1.0f, 0.0f, 1.0f)
+            Vec3d(1.0f, 0.0f, 1.0f),
+            Vec3d(1.0f, 0.0f, -1.0f),
+            Vec3d(-1.0f, 0.0f, -1.0f),
+            Vec3d(-1.0f, 0.0f, 1.0f)
         },
         { // dimension 0,0,1
-            Vec3f(1.0f, 1.0f, 0.0f),
-            Vec3f(-1.0f, 1.0f, 0.0f),
-            Vec3f(-1.0f, -1.0f, 0.0f),
-            Vec3f(1.0f, -1.0f, 0.0f)
+            Vec3d(1.0f, 1.0f, 0.0f),
+            Vec3d(-1.0f, 1.0f, 0.0f),
+            Vec3d(-1.0f, -1.0f, 0.0f),
+            Vec3d(1.0f, -1.0f, 0.0f)
         }
     },
     // sign -1
     {
         { // dimension -1,0,0
-            Vec3f(0.0f, -1.0f, -1.0f),
-            Vec3f(0.0f, 1.0f, -1.0f),
-            Vec3f(0.0f, 1.0f, 1.0f),
-            Vec3f(0.0f, -1.0f, 1.0f)
+            Vec3d(0.0f, -1.0f, -1.0f),
+            Vec3d(0.0f, 1.0f, -1.0f),
+            Vec3d(0.0f, 1.0f, 1.0f),
+            Vec3d(0.0f, -1.0f, 1.0f)
         },
         { // dimension 0,-1,0
-            Vec3f(-1.0f, 0.0f, -1.0f),
-            Vec3f(-1.0f, 0.0f, 1.0f),
-            Vec3f(1.0f, 0.0f, 1.0f),
-            Vec3f(1.0f, 0.0f, -1.0f)
+            Vec3d(-1.0f, 0.0f, -1.0f),
+            Vec3d(-1.0f, 0.0f, 1.0f),
+            Vec3d(1.0f, 0.0f, 1.0f),
+            Vec3d(1.0f, 0.0f, -1.0f)
         },
         { // dimension 0,0,-1
-            Vec3f(-1.0f, -1.0f, 0.0f),
-            Vec3f(1.0f, -1.0f, 0.0f),
-            Vec3f(1.0f, 1.0f, 0.0f),
-            Vec3f(-1.0f, 1.0f, 0.0f)
+            Vec3d(-1.0f, -1.0f, 0.0f),
+            Vec3d(1.0f, -1.0f, 0.0f),
+            Vec3d(1.0f, 1.0f, 0.0f),
+            Vec3d(-1.0f, 1.0f, 0.0f)
         }
     }
 };

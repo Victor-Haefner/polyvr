@@ -12,12 +12,12 @@ OSG_BEGIN_NAMESPACE;
 
 class VRBRepEdge : public VRBRepUtils {
     public:
-        vector<Vec3f> points;
-        vector<Vec3f> cpoints;
+        vector<Vec3d> points;
+        vector<Vec3d> cpoints;
         vector<float> angles;
         vector<double> weights;
         vector<double> knots;
-        Vec3f n, EBeg, EEnd;
+        Vec3d n, EBeg, EEnd;
         double radius;
         posePtr center;
         float a1,a2;
@@ -27,8 +27,8 @@ class VRBRepEdge : public VRBRepUtils {
 
         VRBRepEdge();
 
-        Vec3f& beg();
-        Vec3f& end();
+        Vec3d& beg();
+        Vec3d& end();
         void swap();
         bool connectsTo(VRBRepEdge& e);
 

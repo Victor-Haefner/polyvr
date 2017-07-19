@@ -10,17 +10,17 @@ StreetSegment::StreetSegment(StreetJoint* jA, StreetJoint* jB, float width, stri
     this->id = id;
 }
 
-void StreetSegment::setLeftPointFor(string jointId, Vec2f posLeft) {
+void StreetSegment::setLeftPointFor(string jointId, Vec2d posLeft) {
     if (jointA->id == jointId) rightB = posLeft;
     else leftA = posLeft;
 }
 
-void StreetSegment::setLeftExtPointFor(string jointId, Vec2f posLeft) {
+void StreetSegment::setLeftExtPointFor(string jointId, Vec2d posLeft) {
     if (jointA->id == jointId) leftExtB = posLeft;
     else leftExtA = posLeft;
 }
 
-void StreetSegment::setRightPointFor(string jointId, Vec2f posRight) {
+void StreetSegment::setRightPointFor(string jointId, Vec2d posRight) {
     if (jointA->id == jointId) leftB = posRight;
     else rightA = posRight;
 }

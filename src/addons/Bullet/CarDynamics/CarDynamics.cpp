@@ -131,7 +131,7 @@ vector<VRTransformPtr> VRCarDynamics::getWheels() {
     return res;
 }
 
-void VRCarDynamics::addWheel(VRGeometryPtr geo, Vec3f p, float radius, float width, float maxSteering, bool steered, bool driven) {
+void VRCarDynamics::addWheel(VRGeometryPtr geo, Vec3d p, float radius, float width, float maxSteering, bool steered, bool driven) {
     Wheel wheel;
     wheel.position = p;
 	wheel.isSteered = steered;
@@ -149,10 +149,10 @@ void VRCarDynamics::addWheel(VRGeometryPtr geo, Vec3f p, float radius, float wid
 
 void VRCarDynamics::setupSimpleWheels(VRTransformPtr geo, float x, float fZ, float rZ, float h, float r, float w, float ms) {
     // create four simple wheels
-    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3f( x, h, fZ), r, w, ms, true, true);
-    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3f(-x, h, fZ), r, w, ms, true, true);
-    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3f( x, h, rZ), r, w);
-    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3f(-x, h, rZ), r, w);
+    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3d( x, h, fZ), r, w, ms, true, true);
+    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3d(-x, h, fZ), r, w, ms, true, true);
+    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3d( x, h, rZ), r, w);
+    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3d(-x, h, rZ), r, w);
 }
 
 float VRCarDynamics::clamp(float v, float m1, float m2) {
@@ -267,7 +267,7 @@ void VRCarDynamics::updateWheel(int w, float t, float b, float s, float c, int g
     wheel.gear = g;
 }
 
-void VRCarDynamics::setParameter(float mass, float enginePower, float breakPower, Vec3f massOffset, bool enableStalling) {
+void VRCarDynamics::setParameter(float mass, float enginePower, float breakPower, Vec3d massOffset, bool enableStalling) {
     if (mass > 0) chassis.mass = mass;
     engine.stallingEnabled = enableStalling;
     engine.power = enginePower;
@@ -276,8 +276,8 @@ void VRCarDynamics::setParameter(float mass, float enginePower, float breakPower
     //TODO: pass it
     if (!engine.clutchForceCurve) engine.clutchForceCurve = path::create();
     engine.clutchForceCurve->clear();
-    engine.clutchForceCurve->addPoint( pose(Vec3f(0,1,0), Vec3f(1,0,0)));
-    engine.clutchForceCurve->addPoint( pose(Vec3f(1,0,0), Vec3f(1,0,0)));
+    engine.clutchForceCurve->addPoint( pose(Vec3d(0,1,0), Vec3d(1,0,0)));
+    engine.clutchForceCurve->addPoint( pose(Vec3d(1,0,0), Vec3d(1,0,0)));
     engine.clutchForceCurve->compute(32);
 
 	engine.gearRatios.clear();
@@ -297,7 +297,7 @@ void VRCarDynamics::setParameter(float mass, float enginePower, float breakPower
 	if (!chassis.geo) return;
     PLock lock(mtx());
     for ( auto geo : chassis.geos ) {
-        geo->setMatrix(Matrix());
+        geo->setMatrix(Matrix4d());
         auto p = geo->getPoseTo(chassis.geo);
         geo->setFrom( p->pos() - massOffset + chassis.massOffset );
         geo->applyTransformation();
@@ -320,7 +320,7 @@ void VRCarDynamics::reset(const pose& p) {
     setIgnition(false);
 	btTransform t;
 	t.setIdentity();
-	Matrix m = p.asMatrix();
+	auto m = toMatrix4f( p.asMatrix() );
 	t.setFromOpenGLMatrix(&m[0][0]);
 	chassis.body->setCenterOfMassTransform(t);
 	chassis.body->setLinearVelocity(btVector3(0, 0, 0));

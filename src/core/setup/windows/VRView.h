@@ -35,7 +35,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         NodeMTRecPtr viewGeo;
         VRMaterialPtr viewGeoMat;
 
-        Vec4f position = Vec4f(0,0,1,1);
+        Vec4d position = Vec4d(0,0,1,1);
         Vec2i window_size = Vec2i(300,300);
 
         float eyeSeparation = 0.06;
@@ -52,13 +52,13 @@ class VRView : public std::enable_shared_from_this<VRView> {
         //ShearedStereoCameraDecoratorPtr SSCDecoratorLeft;
         //ShearedStereoCameraDecoratorPtr SSCDecoratorRight;
 
-        Vec3f proj_user = Vec3f(0,0,0);
-        Vec3f proj_center = Vec3f(0,0,-1);
-        Vec3f proj_up = Vec3f(0,1,0);
-        Vec3f proj_normal = Vec3f(0,0,1);
-        Vec2f proj_size = Vec2f(2,1);
-        Vec2f proj_shear = Vec2f(0,0);
-        Vec2f proj_warp = Vec2f(0,0);
+        Vec3d proj_user = Vec3d(0,0,0);
+        Vec3d proj_center = Vec3d(0,0,-1);
+        Vec3d proj_up = Vec3d(0,1,0);
+        Vec3d proj_normal = Vec3d(0,0,1);
+        Vec2d proj_size = Vec2d(2,1);
+        Vec2d proj_shear = Vec2d(0,0);
+        Vec2d proj_warp = Vec2d(0,0);
 
         Pnt3f screenLowerLeft;
         Pnt3f screenLowerRight;
@@ -122,26 +122,26 @@ class VRView : public std::enable_shared_from_this<VRView> {
         float getEyeSeparation();
         bool isProjection();
 
-        void setProjectionUp(Vec3f v);
-        Vec3f getProjectionUp();
-        void setProjectionNormal(Vec3f v);
-        Vec3f getProjectionNormal();
-        void setProjectionCenter(Vec3f v);
-        Vec3f getProjectionCenter();
-        void setProjectionUser(Vec3f v);
-        Vec3f getProjectionUser();
-        void setProjectionSize(Vec2f v);
-        Vec2f getProjectionSize();
-        void setProjectionShear(Vec2f v);
-        Vec2f getProjectionShear();
-        void setProjectionWarp(Vec2f v);
-        Vec2f getProjectionWarp();
+        void setProjectionUp(Vec3d v);
+        Vec3d getProjectionUp();
+        void setProjectionNormal(Vec3d v);
+        Vec3d getProjectionNormal();
+        void setProjectionCenter(Vec3d v);
+        Vec3d getProjectionCenter();
+        void setProjectionUser(Vec3d v);
+        Vec3d getProjectionUser();
+        void setProjectionSize(Vec2d v);
+        Vec2d getProjectionSize();
+        void setProjectionShear(Vec2d v);
+        Vec2d getProjectionShear();
+        void setProjectionWarp(Vec2d v);
+        Vec2d getProjectionWarp();
 
         void showStats(bool b);
         void showViewGeo(bool b);
 
-        Vec4f getPosition();
-        void setPosition(Vec4f pos);
+        Vec4d getPosition();
+        void setPosition(Vec4d pos);
 
         ViewportRecPtr getViewport();
         VRRenderStudioPtr getRenderingL();

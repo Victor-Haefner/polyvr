@@ -22,10 +22,10 @@ using namespace std;
 class VRPN_device : public VRDevice {
     public:
         string address;
-        Vec3f offset;
+        Vec3d offset;
         float scale = 1;
-        Vec3f translate_axis;
-        Vec3f rotation_axis;
+        Vec3d translate_axis;
+        Vec3d rotation_axis;
         vrpn_Tracker_Remote* tracker = 0;
         vrpn_Button_Remote*  button = 0;
         vrpn_Analog_Remote*  analog = 0;
@@ -44,8 +44,8 @@ class VRPN_device : public VRDevice {
         VRPN_devicePtr ptr();
 
         void setAddress(string t);
-        void setTranslationAxis(Vec3f v);
-        void setRotationAxis(Vec3f v);
+        void setTranslationAxis(Vec3d v);
+        void setRotationAxis(Vec3d v);
         void loop(bool verbose = false);
 };
 
@@ -68,7 +68,7 @@ class VRPN : public VRStorage {
         VRPN();
         ~VRPN();
 
-        void addVRPNTracker(int ID, string addr, Vec3f offset, float scale);
+        void addVRPNTracker(int ID, string addr, Vec3d offset, float scale);
         void delVRPNTracker(VRPN_devicePtr t);
 
         VRFunction<int>* getVRPNUpdateFkt();

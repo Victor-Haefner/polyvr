@@ -37,7 +37,7 @@ class VRNavPreset : public VRName {
         VRDevicePtr dev = 0;
         VRTransformWeakPtr target;
         bool active = false;
-        Vec2f speed;
+        Vec2d speed;
 
     public:
         VRNavPreset();

@@ -139,7 +139,7 @@ void VRGuiSemantics::updateLayout() {
         layout->setNodeState(ID, c.second->visible);
         if (!c.second->visible) continue;
 
-        Vec3f s = c.second->getSize();
+        Vec3d s = c.second->getSize();
         s[2] = 10;
 
         if (ID >= gra->size()) continue;
@@ -155,8 +155,8 @@ void VRGuiSemantics::updateLayout() {
     auto clamp = [&](Boundingbox& bb) {
         //float W = canvas->get_width();
         //float H = canvas->get_height();
-        Vec3f s = bb.size()*0.5;
-        Vec3f p = bb.center();
+        Vec3d s = bb.size()*0.5;
+        Vec3d p = bb.center();
         if (p[0] < s[0]) p[0] = s[0];
         if (p[1] < s[1]) p[1] = s[1];
         p[2] = 0;
@@ -168,8 +168,8 @@ void VRGuiSemantics::updateLayout() {
         int ID = widgetIDs[c.first];
         if (ID >= gra->size()) break;
         clamp( gra->getNode(ID).box );
-        Vec3f p = gra->getNode(ID).box.center();
-        c.second->move(Vec2f(p[0], p[1]));
+        Vec3d p = gra->getNode(ID).box.center();
+        c.second->move(Vec2d(p[0], p[1]));
     }
 
     for (auto cv : connectors) {
@@ -203,7 +203,7 @@ void VRGuiSemantics::updateCanvas() {
 
         int x = 150+cID*60;
         int y = 150+40*lvl;
-        cw->move(Vec2f(x,y));
+        cw->move(Vec2d(x,y));
         if (cp) connect(cp, cw, "#00CCFF");
 
         i++;
@@ -220,7 +220,7 @@ void VRGuiSemantics::updateCanvas() {
             auto ew = VREntityWidgetPtr( new VREntityWidget(this, canvas, e.second) );
             widgets[ew->ID()] = ew;
             addNode(ew->ID());
-            ew->move(Vec2f(150,150));
+            ew->move(Vec2d(150,150));
             for ( auto c : e.second->getConcepts() ) connect(widgets[c->ID], ew, "#FFEE00");
         }
 
@@ -228,7 +228,7 @@ void VRGuiSemantics::updateCanvas() {
             auto rw = VRRuleWidgetPtr( new VRRuleWidget(this, canvas, r.second) );
             widgets[rw->ID()] = rw;
             addNode(rw->ID());
-            rw->move(Vec2f(150,150));
+            rw->move(Vec2d(150,150));
             if (auto c = current->getConcept( r.second->associatedConcept) )
                 connect(widgets[c->ID], rw, "#00DD00");
         }
@@ -317,7 +317,7 @@ VRSemanticManagerPtr VRGuiSemantics::getManager() {
 void VRGuiSemantics_on_drag_data_received(const Glib::RefPtr<Gdk::DragContext>& context, int x, int y, const Gtk::SelectionData& data, guint info, guint time, VRGuiSemantics* self) {
     if (data.get_target() != "concept") { cout << "VRGuiSemantics_on_drag_data_received, wrong dnd: " << data.get_target() << endl; return; }
     VRSemanticWidget* e = *(VRSemanticWidget**)data.get_data();
-    e->move(Vec2f(x,y));
+    e->move(Vec2d(x,y));
 }
 
 VRGuiSemantics::VRGuiSemantics() {
@@ -344,7 +344,7 @@ VRGuiSemantics::VRGuiSemantics() {
     layout = VRGraphLayout::create();
     layout->setAlgorithm(VRGraphLayout::SPRINGS, 0);
     layout->setAlgorithm(VRGraphLayout::OCCUPANCYMAP, 1);
-    layout->setGravity(Vec3f(0,1,0));
+    layout->setGravity(Vec3d(0,1,0));
     layout->setRadius(0);
     layout->setSpeed(0.7);
 
@@ -400,7 +400,7 @@ void VRGuiSemantics::copyConcept(VRConceptWidget* w) {
     if (!c || !w) return;
     auto cw = VRConceptWidgetPtr( new VRConceptWidget(this, canvas, c) );
     widgets[c->ID] = cw;
-    cw->move(w->pos + Vec2f(90,0));
+    cw->move(w->pos + Vec2d(90,0));
     connect(widgets[w->ID()], cw, "#00CCFF");
     saveScene();
 }
@@ -409,7 +409,7 @@ void VRGuiSemantics::addEntity(VRConceptWidget* w) {
     auto c = current->addEntity(w->concept->getName() + "_entity", w->concept->getName());
     auto cw = VREntityWidgetPtr( new VREntityWidget(this, canvas, c) );
     widgets[c->ID] = cw;
-    cw->move(w->pos + Vec2f(90,0));
+    cw->move(w->pos + Vec2d(90,0));
     connect(widgets[w->ID()], cw, "#FFEE00");
     saveScene();
 }
@@ -419,7 +419,7 @@ void VRGuiSemantics::addRule(VRConceptWidget* w) {
     auto c = current->addRule("q(x):"+n+"(x)", n);
     auto cw = VRRuleWidgetPtr( new VRRuleWidget(this, canvas, c) );
     widgets[c->ID] = cw;
-    cw->move(w->pos + Vec2f(90,0));
+    cw->move(w->pos + Vec2d(90,0));
     connect(widgets[w->ID()], cw, "#00DD00");
     saveScene();
 }

@@ -4,8 +4,8 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 doubleBuffer::doubleBuffer() {
-    t1 = new Matrix();
-    t2 = new Matrix();
+    t1 = new Matrix4d();
+    t2 = new Matrix4d();
 
     read1 = read2 = write2 = false;
     write1 = true;
@@ -18,7 +18,7 @@ doubleBuffer::~doubleBuffer() {
     delete t2;
 }
 
-void doubleBuffer::read(Matrix& result) {
+void doubleBuffer::read(Matrix4d& result) {
     reading = true;
     if(writing) {
         if (write1) {
@@ -50,7 +50,7 @@ void doubleBuffer::read(Matrix& result) {
         return;
     }
 }
-void doubleBuffer::write(Matrix m) {
+void doubleBuffer::write(Matrix4d m) {
     //static int i=0;i++;
     //m[0][0] = i;cout << "\n write : " << i;
     writing = true;

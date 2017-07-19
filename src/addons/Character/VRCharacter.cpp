@@ -49,7 +49,7 @@ VRSkeleton::Configuration::Configuration(string n) { setNameSpace("skConfig"); s
 VRSkeleton::Configuration::~Configuration() {}
 VRSkeleton::ConfigurationPtr VRSkeleton::Configuration::create(string n) { return ConfigurationPtr(new Configuration(n) ); }
 
-void VRSkeleton::Configuration::setPose(int i, Vec3f p) { joints[i] = p; }
+void VRSkeleton::Configuration::setPose(int i, Vec3d p) { joints[i] = p; }
 
 
 VRSkeleton::VRSkeleton() {
@@ -67,7 +67,7 @@ int VRSkeleton::addBone(int j1, int j2) {
     //return 0;
 }
 
-int VRSkeleton::addJoint(JointPtr c, Vec3f p) {
+int VRSkeleton::addJoint(JointPtr c, Vec3d p) {
     auto i = armature->addNode();
     joints[i] = Joint::create();
     armature->getNode(i).box.setCenter(p);
@@ -79,7 +79,7 @@ VRConstraintPtr VRSkeleton::getJoint(int id) { return dynamic_pointer_cast<VRCon
 
 void VRSkeleton::asGeometry(VRGeoData& data) {
     for (auto& joint : armature->getNodes()) {
-        data.pushVert( Pnt3f(joint.box.center()) );
+        data.pushVert( Pnt3d(joint.box.center()) );
     }
 
     for (auto& jv : armature->getEdges()) {
@@ -96,7 +96,7 @@ void VRSkeleton::setupGeometry() {
 
     auto m = VRMaterial::get("skeleton");
     m->setLit(0);
-    m->setDiffuse(Vec3f(0,1,0));
+    m->setDiffuse(Color3f(0,1,0));
     setMaterial(m);
 }
 
@@ -105,7 +105,7 @@ void VRSkeleton::updateGeometry() {
     auto& joints = armature->getNodes();
     for (uint i=0; i<joints.size(); i++) {
         auto& joint = joints[i];
-        data.setVert(i, Pnt3f(joint.box.center()) );
+        data.setVert(i, Pnt3d(joint.box.center()) );
     }
 }
 
@@ -120,12 +120,12 @@ void VRSkeleton::simpleHumanoid() {
     auto hingeJoint = [&]() { return hinge->duplicate(); };
 
     // spine
-    auto s1 = addJoint(ballJoint(), Vec3f(0,1,0) ); // lower spine
-    auto s2 = addJoint(ballJoint(), Vec3f(0,1.2,0) );
-    auto s3 = addJoint(ballJoint(), Vec3f(0,1.4,0) );
-    auto s4 = addJoint(ballJoint(), Vec3f(0,1.5,0) );
-    auto s5 = addJoint(ballJoint(), Vec3f(0,1.6,0) );
-    auto s6 = addJoint(ballJoint(), Vec3f(0,1.8,0) ); // head
+    auto s1 = addJoint(ballJoint(), Vec3d(0,1,0) ); // lower spine
+    auto s2 = addJoint(ballJoint(), Vec3d(0,1.2,0) );
+    auto s3 = addJoint(ballJoint(), Vec3d(0,1.4,0) );
+    auto s4 = addJoint(ballJoint(), Vec3d(0,1.5,0) );
+    auto s5 = addJoint(ballJoint(), Vec3d(0,1.6,0) );
+    auto s6 = addJoint(ballJoint(), Vec3d(0,1.8,0) ); // head
 
     addBone(s1,s2);
     addBone(s2,s3);
@@ -134,10 +134,10 @@ void VRSkeleton::simpleHumanoid() {
     addBone(s5,s6);
 
     auto doLeg = [&](float d) {
-        auto l1 = addJoint(ballJoint(), Vec3f(d,1,0) ); // hip
-        auto l2 = addJoint(hingeJoint(), Vec3f(d,0.5,0) ); // knee
-        auto l3 = addJoint(ballJoint(), Vec3f(d,0,0) );
-        auto l4 = addJoint(ballJoint(), Vec3f(d,0,-0.2) ); // toes
+        auto l1 = addJoint(ballJoint(), Vec3d(d,1,0) ); // hip
+        auto l2 = addJoint(hingeJoint(), Vec3d(d,0.5,0) ); // knee
+        auto l3 = addJoint(ballJoint(), Vec3d(d,0,0) );
+        auto l4 = addJoint(ballJoint(), Vec3d(d,0,-0.2) ); // toes
 
         addBone(s1,l1);
         addBone(l1,l2);
@@ -146,10 +146,10 @@ void VRSkeleton::simpleHumanoid() {
     };
 
     auto doArm = [&](float d) {
-        auto a1 = addJoint(ballJoint(), Vec3f(d,1.5,0) ); // shoulder
-        auto a2 = addJoint(hingeJoint(), Vec3f(d,1.2,0) ); // elbow
-        auto a3 = addJoint(ballJoint(), Vec3f(d,0.8,0) );
-        auto a4 = addJoint(ballJoint(), Vec3f(d,0.7,0) ); // hand
+        auto a1 = addJoint(ballJoint(), Vec3d(d,1.5,0) ); // shoulder
+        auto a2 = addJoint(hingeJoint(), Vec3d(d,1.2,0) ); // elbow
+        auto a3 = addJoint(ballJoint(), Vec3d(d,0.8,0) );
+        auto a4 = addJoint(ballJoint(), Vec3d(d,0.7,0) ); // hand
 
         addBone(s4,a1);
         addBone(a1,a2);
@@ -186,10 +186,10 @@ void VRCharacter::simpleSetup() {
 
     // leg configurations
     auto stretched_leg_L = VRSkeleton::Configuration::create("stretched_leg_L");
-    stretched_leg_L->setPose(6,Vec3f());
-    stretched_leg_L->setPose(7,Vec3f());
-    stretched_leg_L->setPose(8,Vec3f());
-    stretched_leg_L->setPose(9,Vec3f());
+    stretched_leg_L->setPose(6,Vec3d());
+    stretched_leg_L->setPose(7,Vec3d());
+    stretched_leg_L->setPose(8,Vec3d());
+    stretched_leg_L->setPose(9,Vec3d());
 
     auto lifted_leg_L = VRSkeleton::Configuration::create("lifted_leg_L");
 

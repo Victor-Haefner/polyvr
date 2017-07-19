@@ -1,6 +1,7 @@
 #include "VRMolecule.h"
 
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/VRTransform.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRGlobals.h"
 #include "addons/Engineering/VRNumberingEngine.h"
@@ -14,74 +15,72 @@
 using namespace OSG;
 
 map<string, PeriodicTableEntry> PeriodicTable;
-map<string, vector<Matrix> > AtomicStructures;
-
-#include <OpenSG/OSGMatrixUtility.h>
+map<string, vector<Matrix4d> > AtomicStructures;
 
 void initAtomicTables() { // TODO: set colors
-	PeriodicTable["H"] = PeriodicTableEntry(1, 0.37, Vec3f(1,1,1));
-	PeriodicTable["He"] = PeriodicTableEntry(8, 0.5, Vec3f(1,0,1));
+	PeriodicTable["H"] = PeriodicTableEntry(1, 0.37, Vec3d(1,1,1));
+	PeriodicTable["He"] = PeriodicTableEntry(8, 0.5, Vec3d(1,0,1));
 
-	PeriodicTable["Li"] = PeriodicTableEntry(1, 1.52, Vec3f(0.6,0.4,0.0));
-	PeriodicTable["Be"] = PeriodicTableEntry(2, 1.11, Vec3f(0.6,0.0,0.6));
-	PeriodicTable["B"] = PeriodicTableEntry(3, 0.88, Vec3f(0.4,1.0,0.4));
-	PeriodicTable["C"] = PeriodicTableEntry(4, 0.77, Vec3f(0.4,0.4,0.4));
-	PeriodicTable["N"] = PeriodicTableEntry(5, 0.7, Vec3f(0,0,1));
-	PeriodicTable["O"] = PeriodicTableEntry(6, 0.66, Vec3f(1,0,0));
-	PeriodicTable["F"] = PeriodicTableEntry(7, 0.64, Vec3f(0,0,1));
-	PeriodicTable["Ne"] = PeriodicTableEntry(8, 0.70, Vec3f(0,0,1));
+	PeriodicTable["Li"] = PeriodicTableEntry(1, 1.52, Vec3d(0.6,0.4,0.0));
+	PeriodicTable["Be"] = PeriodicTableEntry(2, 1.11, Vec3d(0.6,0.0,0.6));
+	PeriodicTable["B"] = PeriodicTableEntry(3, 0.88, Vec3d(0.4,1.0,0.4));
+	PeriodicTable["C"] = PeriodicTableEntry(4, 0.77, Vec3d(0.4,0.4,0.4));
+	PeriodicTable["N"] = PeriodicTableEntry(5, 0.7, Vec3d(0,0,1));
+	PeriodicTable["O"] = PeriodicTableEntry(6, 0.66, Vec3d(1,0,0));
+	PeriodicTable["F"] = PeriodicTableEntry(7, 0.64, Vec3d(0,0,1));
+	PeriodicTable["Ne"] = PeriodicTableEntry(8, 0.70, Vec3d(0,0,1));
 
-	PeriodicTable["Na"] = PeriodicTableEntry(1, 1.86, Vec3f(0,0,1));
-	PeriodicTable["Mg"] = PeriodicTableEntry(2, 1.60, Vec3f(0,1,0));
-	PeriodicTable["Al"] = PeriodicTableEntry(3, 1.43, Vec3f(0.6,0.6,0.6));
-	PeriodicTable["Si"] = PeriodicTableEntry(4, 1.17, Vec3f(0.5,1,0));
-	PeriodicTable["P"] = PeriodicTableEntry(5, 1.1, Vec3f(0.8,0.5,0));
-	PeriodicTable["S"] = PeriodicTableEntry(6, 1.04, Vec3f(1,1,0));
-	PeriodicTable["Cl"] = PeriodicTableEntry(7, 0.99, Vec3f(0.3,1,0));
-	PeriodicTable["Ar"] = PeriodicTableEntry(8, 0.94, Vec3f(0,1,0.5));
+	PeriodicTable["Na"] = PeriodicTableEntry(1, 1.86, Vec3d(0,0,1));
+	PeriodicTable["Mg"] = PeriodicTableEntry(2, 1.60, Vec3d(0,1,0));
+	PeriodicTable["Al"] = PeriodicTableEntry(3, 1.43, Vec3d(0.6,0.6,0.6));
+	PeriodicTable["Si"] = PeriodicTableEntry(4, 1.17, Vec3d(0.5,1,0));
+	PeriodicTable["P"] = PeriodicTableEntry(5, 1.1, Vec3d(0.8,0.5,0));
+	PeriodicTable["S"] = PeriodicTableEntry(6, 1.04, Vec3d(1,1,0));
+	PeriodicTable["Cl"] = PeriodicTableEntry(7, 0.99, Vec3d(0.3,1,0));
+	PeriodicTable["Ar"] = PeriodicTableEntry(8, 0.94, Vec3d(0,1,0.5));
 
-	AtomicStructures["tetra"] = vector<Matrix>();
-	AtomicStructures["iso"] = vector<Matrix>();
-	AtomicStructures["linear"] = vector<Matrix>();
-	AtomicStructures["single"] = vector<Matrix>();
-	AtomicStructures["none"] = vector<Matrix>();
-	AtomicStructures["invalid"] = vector<Matrix>();
+	AtomicStructures["tetra"] = vector<Matrix4d>();
+	AtomicStructures["iso"] = vector<Matrix4d>();
+	AtomicStructures["linear"] = vector<Matrix4d>();
+	AtomicStructures["single"] = vector<Matrix4d>();
+	AtomicStructures["none"] = vector<Matrix4d>();
+	AtomicStructures["invalid"] = vector<Matrix4d>();
 
     float s2 = sqrt(2);
     float s3 = sqrt(3);
     float _3 = 1.0/3.0;
-    Matrix m;
+    Matrix4d m;
 
     // linear structure
-	MatrixLookAt( m, Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["linear"].push_back( m );
-	MatrixLookAt( m, Vec3f(0,0,1), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["linear"].push_back( m );
+	MatrixLookAt( m, Vec3d(0,0,-1), Vec3d(0,0,0), Vec3d(0,-1,0) ); AtomicStructures["linear"].push_back( m );
+	MatrixLookAt( m, Vec3d(0,0,1), Vec3d(0,0,0), Vec3d(0,-1,0) ); AtomicStructures["linear"].push_back( m );
 
 	AtomicStructures["single"] = AtomicStructures["linear"];
 
     // planar structure
-	MatrixLookAt( m, Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["iso"].push_back( m );
-	MatrixLookAt( m, Vec3f(0, s3/2, 0.5), Vec3f(0,0,0), Vec3f(0, 0.5, s3/2) ); AtomicStructures["iso"].push_back( m );
-	MatrixLookAt( m, Vec3f(0, -s3/2, 0.5), Vec3f(0,0,0), Vec3f(0, 0.5, -s3/2) ); AtomicStructures["iso"].push_back( m );
+	MatrixLookAt( m, Vec3d(0,0,-1), Vec3d(0,0,0), Vec3d(0,-1,0) ); AtomicStructures["iso"].push_back( m );
+	MatrixLookAt( m, Vec3d(0, s3/2, 0.5), Vec3d(0,0,0), Vec3d(0, 0.5, s3/2) ); AtomicStructures["iso"].push_back( m );
+	MatrixLookAt( m, Vec3d(0, -s3/2, 0.5), Vec3d(0,0,0), Vec3d(0, 0.5, -s3/2) ); AtomicStructures["iso"].push_back( m );
 
     // tetraeder structure
-	Vec3f tP0 = Vec3f(0, 0, -1);
-	Vec3f tP1 = Vec3f(sqrt(2.0/3), -s2/3, _3);
-	Vec3f tP2 = Vec3f(-sqrt(2.0/3), -s2/3, _3);
-	Vec3f tP3 = Vec3f(0, 2*s2/3, _3);
+	Vec3d tP0 = Vec3d(0, 0, -1);
+	Vec3d tP1 = Vec3d(sqrt(2.0/3), -s2/3, _3);
+	Vec3d tP2 = Vec3d(-sqrt(2.0/3), -s2/3, _3);
+	Vec3d tP3 = Vec3d(0, 2*s2/3, _3);
 
-	Vec3f tU0 = Vec3f(0, -1, 0);
-	Vec3f tU1 = Vec3f(-s3/6, 1.0/6, 2*s2/3);
-	Vec3f tU2 = Vec3f(s3/6, 1.0/6, 2*s2/3);
-	Vec3f tU3 = Vec3f(0, -_3, 2*s2/3);
+	Vec3d tU0 = Vec3d(0, -1, 0);
+	Vec3d tU1 = Vec3d(-s3/6, 1.0/6, 2*s2/3);
+	Vec3d tU2 = Vec3d(s3/6, 1.0/6, 2*s2/3);
+	Vec3d tU3 = Vec3d(0, -_3, 2*s2/3);
 
-	MatrixLookAt( m, tP0, Vec3f(0,0,0), tU0); AtomicStructures["tetra"].push_back( m );
-	MatrixLookAt( m, tP1, Vec3f(0,0,0), tU1); AtomicStructures["tetra"].push_back( m );
-	MatrixLookAt( m, tP2, Vec3f(0,0,0), tU2); AtomicStructures["tetra"].push_back( m );
-	MatrixLookAt( m, tP3, Vec3f(0,0,0), tU3); AtomicStructures["tetra"].push_back( m );
+	MatrixLookAt( m, tP0, Vec3d(0,0,0), tU0); AtomicStructures["tetra"].push_back( m );
+	MatrixLookAt( m, tP1, Vec3d(0,0,0), tU1); AtomicStructures["tetra"].push_back( m );
+	MatrixLookAt( m, tP2, Vec3d(0,0,0), tU2); AtomicStructures["tetra"].push_back( m );
+	MatrixLookAt( m, tP3, Vec3d(0,0,0), tU3); AtomicStructures["tetra"].push_back( m );
 }
 
 PeriodicTableEntry::PeriodicTableEntry() {}
-PeriodicTableEntry::PeriodicTableEntry(int valence_electrons, float radius, Vec3f color) {
+PeriodicTableEntry::PeriodicTableEntry(int valence_electrons, float radius, Vec3d color) {
     this->valence_electrons = valence_electrons;
     this->color = color;
     this->radius = radius;
@@ -114,8 +113,8 @@ VRAtom::~VRAtom() {
 }
 
 PeriodicTableEntry VRAtom::getParams() { return params; }
-Matrix VRAtom::getTransformation() { return transformation; }
-void VRAtom::setTransformation(Matrix m) { transformation = m; }
+Matrix4d VRAtom::getTransformation() { return transformation; }
+void VRAtom::setTransformation(Matrix4d m) { transformation = m; }
 map<int, VRBond>& VRAtom::getBonds() { return bonds; }
 int VRAtom::getID() { return ID; }
 void VRAtom::setID(int ID) { this->ID = ID; }
@@ -136,21 +135,21 @@ void VRAtom::computePositions() {
     string g = geo;
     if (AtomicStructures.count(geo) == 0) { cout << "Error: " << geo << " is invalid!\n"; return; }
 
-    vector<Matrix> structure = AtomicStructures[geo];
+    vector<Matrix4d> structure = AtomicStructures[geo];
     for (auto& b : bonds) {
         if (b.first >= (int)structure.size()) break;
         if (b.second.extra) continue;
 
-        Matrix T = transformation;
-        Matrix S = structure[b.first];
+        Matrix4d T = transformation;
+        Matrix4d S = structure[b.first];
 
         VRAtom* a = b.second.atom2;
         if (a == 0) { // duplets
             float r = 0.5*b.second.atom1->getParams().radius;
             S[3] *= r; S[3][3] = 1;
             T.mult(S);
-            T.mult(Pnt3f(1,0,0)*r, b.second.p1);
-            T.mult(Pnt3f(-1,-0,0)*r, b.second.p2);
+            T.mult(Pnt3d(1,0,0)*r, b.second.p1);
+            T.mult(Pnt3d(-1,-0,0)*r, b.second.p2);
             continue;
         }
 
@@ -216,7 +215,7 @@ void VRAtom::detach(VRAtom* a) {
 }
 
 void VRAtom::print() {
-    cout << " ID: " << ID << " Type: " << type  << " full?: " << full << " boundEl: " << bound_valence_electrons << " geo: " << geo << " pos: " << Vec3f(transformation[3]);
+    cout << " ID: " << ID << " Type: " << type  << " full?: " << full << " boundEl: " << bound_valence_electrons << " geo: " << geo << " pos: " << Vec3d(transformation[3]);
     cout << " bonds with: ";
     for (auto b : bonds) {
         if (b.second.atom2 == 0) cout << " " << "pair";
@@ -225,12 +224,12 @@ void VRAtom::print() {
     cout << endl;
 }
 
-void VRAtom::propagateTransformation(Matrix& T, uint flag, bool self) {
+void VRAtom::propagateTransformation(Matrix4d& T, uint flag, bool self) {
     if (flag == recFlag) return;
     recFlag = flag;
 
     if (self) {
-        Matrix m = T;
+        Matrix4d m = T;
         m.mult(transformation);
         transformation = m;
     }
@@ -307,7 +306,7 @@ void VRMolecule::updateGeo() {
         PeriodicTableEntry aP = a.second->getParams();
         cols->addValue(aP.color);
         Pos->addValue(a.second->getTransformation()[3]);
-        Norms->addValue( Vec3f(0, r_scale*aP.radius, 0) );
+        Norms->addValue( Vec3d(0, r_scale*aP.radius, 0) );
         Indices->addValue(i++);
 
         // bonds
@@ -315,8 +314,8 @@ void VRMolecule::updateGeo() {
             if (b.second.atom2 == 0) { // duplet
                 Pos2->addValue(b.second.p1);
                 Pos2->addValue(b.second.p2);
-                Norms2->addValue( Vec3f(0, 1, 0) );
-                Norms2->addValue( Vec3f(0.1*b.second.type, 1,1) );
+                Norms2->addValue( Vec3d(0, 1, 0) );
+                Norms2->addValue( Vec3d(0.1*b.second.type, 1,1) );
                 Indices2->addValue(j++);
                 Indices2->addValue(j++);
                 continue;
@@ -326,8 +325,8 @@ void VRMolecule::updateGeo() {
                 PeriodicTableEntry bP = b.second.atom2->getParams();
                 Pos2->addValue(a.second->getTransformation()[3]);
                 Pos2->addValue(b.second.atom2->getTransformation()[3]);
-                Norms2->addValue( Vec3f(0, 1, 0) );
-                Norms2->addValue( Vec3f(0.1*b.second.type, r_scale*aP.radius, r_scale*bP.radius) );
+                Norms2->addValue( Vec3d(0, 1, 0) );
+                Norms2->addValue( Vec3d(0.1*b.second.type, r_scale*aP.radius, r_scale*bP.radius) );
                 Indices2->addValue(j++);
                 Indices2->addValue(j++);
             }
@@ -493,16 +492,16 @@ void VRMolecule::rotateBond(int a, int b, float f) {
 	uint now = VRGlobals::CURRENT_FRAME + rand();
     A->recFlag = now;
 
-    Vec3f p1 = Vec3f( A->getTransformation()[3] );
-    Vec3f p2 = Vec3f( B->getTransformation()[3] );
-    Vec3f dir = p2-p1;
-    Quaternion q(dir, f);
-    Matrix R;
+    Vec3d p1 = Vec3d( A->getTransformation()[3] );
+    Vec3d p2 = Vec3d( B->getTransformation()[3] );
+    Vec3d dir = p2-p1;
+    Quaterniond q(dir, f);
+    Matrix4d R;
     R.setRotate(q);
 
-    Matrix T;
+    Matrix4d T;
     T[3] = B->getTransformation()[3];
-    Matrix _T;
+    Matrix4d _T;
     T.inverse(_T);
     T.mult(R);
     T.mult(_T);
@@ -529,8 +528,8 @@ void VRMolecule::substitute(int a, VRMoleculePtr m, int b) {
     if (atoms.count(a) == 0) return;
     if (m->atoms.count(b) == 0) return;
 
-    Matrix am = atoms[a]->getTransformation();
-    Matrix bm = m->atoms[b]->getTransformation();
+    Matrix4d am = atoms[a]->getTransformation();
+    Matrix4d bm = m->atoms[b]->getTransformation();
 
     map<int, VRBond> bondsA = atoms[a]->getBonds();
     map<int, VRBond> bondsB = m->atoms[b]->getBonds();
@@ -562,11 +561,11 @@ void VRMolecule::substitute(int a, VRMoleculePtr m, int b) {
 	uint now = VRGlobals::CURRENT_FRAME + rand();
     A->recFlag = now;
     bm.invert();
-    Matrix Bm = B->getTransformation();
+    Matrix4d Bm = B->getTransformation();
     bm.mult(Bm);
-    bm.setTranslate(Vec3f(0,0,0));
+    bm.setTranslate(Vec3d(0,0,0));
     am.mult(bm);
-    MatrixLookAt( bm, Vec3f(0,0,0), Vec3f(0,0,1), Vec3f(0,-1,0) );
+    MatrixLookAt( bm, Vec3d(0,0,0), Vec3d(0,0,1), Vec3d(0,-1,0) );
     bm.mult(am);
     bm[3] = am[3];
     B->propagateTransformation(bm, now);
@@ -578,11 +577,11 @@ void VRMolecule::setLocalOrigin(int ID) {
     if (atoms.count(ID) == 0) return;
 
 	uint now = VRGlobals::CURRENT_FRAME + rand();
-    Matrix m = atoms[ID]->getTransformation();
+    Matrix4d m = atoms[ID]->getTransformation();
     m.invert();
 
-    Matrix im;
-    MatrixLookAt( im, Vec3f(0,0,0), Vec3f(0,0,1), Vec3f(0,1,0) );
+    Matrix4d im;
+    MatrixLookAt( im, Vec3d(0,0,0), Vec3d(0,0,1), Vec3d(0,1,0) );
     im.mult(m);
 
     atoms[ID]->propagateTransformation(im, now);
@@ -615,7 +614,7 @@ void VRMolecule::attachMolecule(int a, VRMoleculePtr m, int b) {
     // transform new atoms
     uint now = getFlag();
     A->recFlag = now;
-    Matrix bm = B->getTransformation();
+    Matrix4d bm = B->getTransformation();
     B->propagateTransformation(bm, now, false);
 
     updateGeo();
@@ -638,19 +637,19 @@ void VRMolecule::updateCoords() {
     int i=0;
     for (auto a : atoms) {
         float s = 0.4;
-        Vec4f p0 = a.second->getTransformation()[3];
+        Vec4d p0 = a.second->getTransformation()[3];
         Pos->addValue( p0 );
-        Pos->addValue( p0 + s*a.second->getTransformation()[0] );
-        Pos->addValue( p0 + s*a.second->getTransformation()[1] );
-        Pos->addValue( p0 + s*a.second->getTransformation()[2] );
-        cols->addValue(Vec3f(0,0,0));
-        cols->addValue(Vec3f(1,0,0));
-        cols->addValue(Vec3f(0,1,0));
-        cols->addValue(Vec3f(0,0,1));
-        Norms->addValue( Vec3f(0, 1, 0) );
-        Norms->addValue( Vec3f(0, 1, 0) );
-        Norms->addValue( Vec3f(0, 1, 0) );
-        Norms->addValue( Vec3f(0, 1, 0) );
+        Pos->addValue( p0 + a.second->getTransformation()[0]*s );
+        Pos->addValue( p0 + a.second->getTransformation()[1]*s );
+        Pos->addValue( p0 + a.second->getTransformation()[2]*s );
+        cols->addValue(Vec3d(0,0,0));
+        cols->addValue(Vec3d(1,0,0));
+        cols->addValue(Vec3d(0,1,0));
+        cols->addValue(Vec3d(0,0,1));
+        Norms->addValue( Vec3d(0, 1, 0) );
+        Norms->addValue( Vec3d(0, 1, 0) );
+        Norms->addValue( Vec3d(0, 1, 0) );
+        Norms->addValue( Vec3d(0, 1, 0) );
         Indices->addValue(i+0);
         Indices->addValue(i+1);
         Indices->addValue(i+0);
@@ -677,11 +676,11 @@ void VRMolecule::updateLabels() {
     labels->clear();
     if (!doLabels) return;
 
-    labels->add(Vec3f(), atoms.size(), 0, 0);
+    labels->add(Vec3d(), atoms.size(), 0, 0);
 
     int i=0;
     for (auto a : atoms) {
-        Vec3f p = Vec3f(a.second->getTransformation()[3]);
+        Vec3d p = Vec3d(a.second->getTransformation()[3]);
         labels->set(i++, p, a.first);
     }
 }

@@ -39,8 +39,8 @@ int Elevation::getSomeElevation(float lat, float lon){
 /** interpolate surrounding elevations **/
 float Elevation::getElevation(float lat, float lon){
     //string fastKey = toFloatString(lat, 6) + "_" + toFloatString(lat, 6);
-    if ( !(exactElevations.find(Vec2f(lat, lon)) == exactElevations.end()) ){
-        return exactElevations[Vec2f(lat, lon)];
+    if ( !(exactElevations.find(Vec2d(lat, lon)) == exactElevations.end()) ){
+        return exactElevations[Vec2d(lat, lon)];
     }
     float prec = 0.001;
     float roundedLat = cutFloat(lat, 3);
@@ -55,7 +55,7 @@ float Elevation::getElevation(float lat, float lon){
     float eleDeltaLat2 = ele3 * (deltaLat/prec) + ele4 * (1-(deltaLat/prec));
     float eleFinal = eleDeltaLat2 * (deltaLon/prec) + eleDeltaLat1 * (1-(deltaLon/prec));
     eleFinal /= 3.2808399f; //feet to meters
-    exactElevations[Vec2f(lat, lon)] = eleFinal;
+    exactElevations[Vec2d(lat, lon)] = eleFinal;
     return eleFinal;
 }
 

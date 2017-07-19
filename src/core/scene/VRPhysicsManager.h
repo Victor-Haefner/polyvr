@@ -85,7 +85,7 @@ class VRPhysicsManager {
         void dropPhysicsUpdateFunction(VRFunction<int>* fkt, bool after);
 
         void setPhysicsActive(bool a);
-        void setGravity(Vec3f g);
+        void setGravity(Vec3d g);
 
         btSoftRigidDynamicsWorld* bltWorld();
         btSoftBodyWorldInfo* getSoftBodyWorldInfo();

@@ -34,16 +34,16 @@ PyObject* VRPyColorChooser::resolve(VRPyColorChooser* self, PyObject* args) {
 
 PyObject* VRPyColorChooser::getColor(VRPyColorChooser* self) {
 	if (!self->valid()) return NULL;
-    return toPyTuple( self->objPtr->getColor() );
+    return toPyTuple( Vec3d(self->objPtr->getColor()) );
 }
 
 PyObject* VRPyColorChooser::getLastColor(VRPyColorChooser* self) {
 	if (!self->valid()) return NULL;
-    return toPyTuple( self->objPtr->getLastColor() );
+    return toPyTuple( Vec3d(self->objPtr->getLastColor()) );
 }
 
 PyObject* VRPyColorChooser::setColor(VRPyColorChooser* self, PyObject* args) {
 	if (!self->valid()) return NULL;
-    self->objPtr->setColor( parseVec3f(args) );
+    self->objPtr->setColor( Vec3f(parseVec3d(args)) );
     Py_RETURN_TRUE;
 }

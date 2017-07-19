@@ -14,13 +14,13 @@ OSG_BEGIN_NAMESPACE;
 class VRRoad : public VRRoadBase {
     private:
         struct edgePoint {
-            Vec3f p1;
-            Vec3f p2;
-            Vec3f n;
+            Vec3d p1;
+            Vec3d p2;
+            Vec3d n;
             VREntityPtr entry;
 
             edgePoint() {}
-            edgePoint(Vec3f p1, Vec3f p2, Vec3f n, VREntityPtr e) : p1(p1), p2(p2), n(n), entry(e) {}
+            edgePoint(Vec3d p1, Vec3d p2, Vec3d n, VREntityPtr e) : p1(p1), p2(p2), n(n), entry(e) {}
         };
 
         map<VREntityPtr, edgePoint> edgePoints;

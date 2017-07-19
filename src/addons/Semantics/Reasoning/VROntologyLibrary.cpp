@@ -29,11 +29,11 @@ void VROntology::setupLibrary() {
 
     mathOnto->addConcept("Volume");
     mathOnto->addConcept("Vector");
-    mathOnto->addConcept("Quaternion");
+    mathOnto->addConcept("Quaterniond");
     mathOnto->addConcept("Position", "Vector");
     mathOnto->addConcept("Normal", "Vector");
     mathOnto->addConcept("Direction", "Vector");
-    mathOnto->addConcept("Orientation", "Quaternion");
+    mathOnto->addConcept("Orientation", "Quaterniond");
     mathOnto->addConcept("Box", "Volume");
     mathOnto->addConcept("Area");
     mathOnto->addConcept("Path");
@@ -43,10 +43,10 @@ void VROntology::setupLibrary() {
     mathOnto->getConcept("Vector")->addProperty("x", "float");
     mathOnto->getConcept("Vector")->addProperty("y", "float");
     mathOnto->getConcept("Vector")->addProperty("z", "float");
-    mathOnto->getConcept("Quaternion")->addProperty("x", "float");
-    mathOnto->getConcept("Quaternion")->addProperty("y", "float");
-    mathOnto->getConcept("Quaternion")->addProperty("z", "float");
-    mathOnto->getConcept("Quaternion")->addProperty("w", "float");
+    mathOnto->getConcept("Quaterniond")->addProperty("x", "float");
+    mathOnto->getConcept("Quaterniond")->addProperty("y", "float");
+    mathOnto->getConcept("Quaterniond")->addProperty("z", "float");
+    mathOnto->getConcept("Quaterniond")->addProperty("w", "float");
     mathOnto->getConcept("Area")->addProperty("borders", "Border");
     mathOnto->getConcept("Area")->addProperty("subArea", "Area");
     mathOnto->getConcept("Node")->addProperty("position", "Position");

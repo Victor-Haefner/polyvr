@@ -186,22 +186,22 @@ void VRSemanticWidget::setVisible(bool v) {
     }
 }
 
-void VRSemanticWidget::move(Vec2f p) {
+void VRSemanticWidget::move(Vec2d p) {
     pos = p;
     float w = widget->get_width();
     float h = widget->get_height();
     canvas->move(*widget, p[0]-w*0.5, p[1]-h*0.5);
 }
 
-Vec3f VRSemanticWidget::getPosition() { return Vec3f(pos[0], pos[1], 0); }
-Vec3f VRSemanticWidget::getSize() { return Vec3f(widget->get_width()*0.5, widget->get_height()*0.5, 0); }
+Vec3d VRSemanticWidget::getPosition() { return Vec3d(pos[0], pos[1], 0); }
+Vec3d VRSemanticWidget::getSize() { return Vec3d(widget->get_width()*0.5, widget->get_height()*0.5, 0); }
 
-Vec2f VRSemanticWidget::getAnchorPoint(Vec2f p) {
+Vec2d VRSemanticWidget::getAnchorPoint(Vec2d p) {
     float w = abs(p[0]-pos[0]);
     float h = abs(p[1]-pos[1]);
-    if (w >= h && p[0] < pos[0]) return pos - Vec2f(widget->get_width()*0.5, 0);
-    if (w >= h && p[0] > pos[0]) return pos + Vec2f(widget->get_width()*0.5, 0);
-    if (w < h && p[1] < pos[1]) return pos - Vec2f(0, widget->get_height()*0.5);
-    if (w < h && p[1] > pos[1]) return pos + Vec2f(0, widget->get_height()*0.5);
+    if (w >= h && p[0] < pos[0]) return pos - Vec2d(widget->get_width()*0.5, 0);
+    if (w >= h && p[0] > pos[0]) return pos + Vec2d(widget->get_width()*0.5, 0);
+    if (w < h && p[1] < pos[1]) return pos - Vec2d(0, widget->get_height()*0.5);
+    if (w < h && p[1] > pos[1]) return pos + Vec2d(0, widget->get_height()*0.5);
     return pos;
 }

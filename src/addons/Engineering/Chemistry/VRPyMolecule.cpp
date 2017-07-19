@@ -75,10 +75,10 @@ PyObject* VRPyMolecule::remAtom(VRPyMolecule* self, PyObject* args) {
 PyObject* VRPyMolecule::getAtomPosition(VRPyMolecule* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMolecule::getAtomPosition - Object is invalid"); return NULL; }
     OSG::VRAtom* a = self->objPtr->getAtom( parseInt(args) );
-    if (a == 0) return toPyTuple( OSG::Vec3f(0,0,0) );
-    OSG::Matrix m = self->objPtr->getWorldMatrix();
+    if (a == 0) return toPyTuple( OSG::Vec3d(0,0,0) );
+    auto m = self->objPtr->getWorldMatrix();
     m.mult( a->getTransformation() );
-    return toPyTuple( OSG::Vec3f(m[3]) );
+    return toPyTuple( OSG::Vec3d(m[3]) );
 }
 
 PyObject* VRPyMolecule::setRandom(VRPyMolecule* self, PyObject* args) {

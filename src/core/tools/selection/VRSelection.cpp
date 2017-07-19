@@ -19,7 +19,7 @@ VRSelection::VRSelection() { clear(); }
 
 VRSelectionPtr VRSelection::create() { return VRSelectionPtr( new VRSelection() ); }
 
-bool VRSelection::vertSelected(Vec3f p) { return false; }
+bool VRSelection::vertSelected(Vec3d p) { return false; }
 bool VRSelection::objSelected(VRGeometryPtr geo) { return false; }
 bool VRSelection::partialSelected(VRGeometryPtr geo) { return false; }
 
@@ -93,16 +93,16 @@ void VRSelection::updateSubselection(VRGeometryPtr geo) {
     }
 
     auto& sel = selected[geo.get()];
-    Matrix m = geo->getWorldMatrix();
+    Matrix4d m = geo->getWorldMatrix();
     sel.subselection.clear();
     if (!geo->getMesh()) return;
     auto pos = geo->getMesh()->geo->getPositions();
     if (!pos) return;
     for (uint i=0; i<pos->size(); i++) {
-        Pnt3f p = pos->getValue<Pnt3f>(i);
+        Pnt3d p = Pnt3d(pos->getValue<Pnt3f>(i));
         m.mult(p,p);
-        if (vertSelected(Vec3f(p))) {
-            if (bbox) bbox->update(Vec3f(p));
+        if (vertSelected(Vec3d(p))) {
+            if (bbox) bbox->update(Vec3d(p));
             sel.subselection.push_back(i);
         }
     }
@@ -124,15 +124,15 @@ map< VRGeometryPtr, vector<int> > VRSelection::getSubselections() {
     return res;
 }
 
-Vec3f VRSelection::computeCentroid() {
-    Vec3f res;
+Vec3d VRSelection::computeCentroid() {
+    Vec3d res;
     int N = 0;
     for (auto& s : selected) {
         auto geo = s.second.geo.lock();
         auto pos = geo->getMesh()->geo->getPositions();
         N += s.second.subselection.size();
         for (auto i : s.second.subselection) {
-            auto p = Vec3f(pos->getValue<Pnt3f>(i));
+            auto p = Vec3d(pos->getValue<Pnt3f>(i));
             res += p;
         }
     }
@@ -142,18 +142,18 @@ Vec3f VRSelection::computeCentroid() {
     return res;
 }
 
-Matrix VRSelection::computeCovMatrix() {
-    Vec3f center = computeCentroid();
+Matrix4d VRSelection::computeCovMatrix() {
+    Vec3d center = computeCentroid();
     int N = 0;
-    Matrix res(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0); // 3x3?
+    Matrix4d res(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0); // 3x3?
 
     for (auto& s : selected) {
         auto geo = s.second.geo.lock();
         auto pos = geo->getMesh()->geo->getPositions();
         N += s.second.subselection.size();
         for (auto i : s.second.subselection) {
-            auto pg = Vec3f(pos->getValue<Pnt3f>(i));
-            Vec3f p = pg - center;
+            auto pg = Vec3d(pos->getValue<Pnt3f>(i));
+            Vec3d p = pg - center;
             res[0][0] += p[0]*p[0];
             res[1][1] += p[1]*p[1];
             res[2][2] += p[2]*p[2];
@@ -178,7 +178,7 @@ Matrix VRSelection::computeCovMatrix() {
     return res;
 }
 
-Matrix VRSelection::computeEigenvectors(Matrix m) {
+Matrix4d VRSelection::computeEigenvectors(Matrix4d m) {
     int n = 3, lda = 3, ldvl = 3, ldvr = 3, info, lwork;
     double wkopt;
     double* work;
@@ -194,39 +194,39 @@ Matrix VRSelection::computeEigenvectors(Matrix m) {
     info = dgeev( LAPACK_COL_MAJOR, 'V', 'V', n, a, lda, wr, wi, vl, ldvl, vr, ldvr,  work, lwork);
     delete work;
 
-    if ( info > 0 ) { cout << "Warning: computeEigenvalues failed!\n"; return Matrix(); } // Check for convergence
+    if ( info > 0 ) { cout << "Warning: computeEigenvalues failed!\n"; return Matrix4d(); } // Check for convergence
 
     Vec3i o(0,1,2);
     if (wr[0] > wr[1]) swap(o[0], o[1]);
     if (wr[1] > wr[2]) swap(o[1], o[2]);
     if (wr[0] > wr[1]) swap(o[0], o[1]);
 
-    Matrix res;
-    res[0] = Vec4f(vl[o[2]*3], vl[o[2]*3+1], vl[o[2]*3+2], 0);
-    res[1] = Vec4f(vl[o[1]*3], vl[o[1]*3+1], vl[o[1]*3+2], 0);
-    res[2] = Vec4f(vl[o[0]*3], vl[o[0]*3+1], vl[o[0]*3+2], 0);
-    res[3] = Vec4f(wr[o[2]], wr[o[1]], wr[o[0]], 0);
+    Matrix4d res;
+    res[0] = Vec4d(vl[o[2]*3], vl[o[2]*3+1], vl[o[2]*3+2], 0);
+    res[1] = Vec4d(vl[o[1]*3], vl[o[1]*3+1], vl[o[1]*3+2], 0);
+    res[2] = Vec4d(vl[o[0]*3], vl[o[0]*3+1], vl[o[0]*3+2], 0);
+    res[3] = Vec4d(wr[o[2]], wr[o[1]], wr[o[0]], 0);
     return res;
 }
 
 pose VRSelection::computePCA() {
     pose res;
-    Matrix cov = computeCovMatrix();
-    Matrix ev  = computeEigenvectors(cov);
+    Matrix4d cov = computeCovMatrix();
+    Matrix4d ev  = computeEigenvectors(cov);
 
     cout << "computePCA:\n" << ev << endl;
 
-    Vec3f pos = Vec3f(cov[3]);
+    Vec3d pos = Vec3d(cov[3]);
     //dir =
 
-    res.set(pos, Vec3f(ev[0]), Vec3f(ev[2]));
+    res.set(pos, Vec3d(ev[0]), Vec3d(ev[2]));
 
     return res;
 }
 
 void VRSelection::selectPlane(pose p, float threshold) {
-    Vec3f N = p.up();
-    Plane plane( N, Pnt3f(p.pos()) );
+    Vec3d N = p.up();
+    Plane plane( Vec3f(N), Pnt3f(p.pos()) );
 
     for (auto& s : selected) {
         auto geo = s.second.geo.lock();
@@ -235,7 +235,7 @@ void VRSelection::selectPlane(pose p, float threshold) {
         s.second.subselection.clear();
         for (uint i=0; i<pos->size(); i++) {
             auto p = pos->getValue<Pnt3f>(i);
-            auto n = norms->getValue<Vec3f>(i);
+            auto n = Vec3d(norms->getValue<Vec3f>(i));
             auto d = plane.distance(p);
             auto a = n.dot(N);
             if ( abs(d) > threshold) continue;

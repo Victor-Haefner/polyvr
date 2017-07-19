@@ -5,6 +5,7 @@
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGConfig.h>
+#include <OpenSG/OSGColor.h>
 
 #include <iterator>     // iterator
 #include <type_traits>  // remove_cv
@@ -34,38 +35,38 @@ class VRGeoData {
         void reset();
         bool valid() const;
 
-        Pnt3f getPosition(int i);
-        Vec3f getNormal(int i);
-        Vec4f getColor(int i);
+        Pnt3d getPosition(int i);
+        Vec3d getNormal(int i);
+        Color4f getColor(int i);
         int getNIndices();
 
-        int pushVert(Pnt3f p);
-        int pushVert(Pnt3f p, Vec3f n);
-        int pushVert(Pnt3f p, Vec3f n, Vec3f c);
-        int pushVert(Pnt3f p, Vec3f n, Vec4f c);
-        int pushVert(Pnt3f p, Vec3f n, Vec2f t);
-        int pushVert(Pnt3f p, Vec3f n, Vec2f t, Vec2f t2);
-        int pushVert(Pnt3f p, Vec3f n, Vec3f c, Vec2f t);
-        int pushVert(Pnt3f p, Vec3f n, Vec4f c, Vec2f t);
-        int pushVert(Pnt3f p, Vec3f n, Vec3f c, Vec2f t, Vec2f t2);
-        int pushVert(Pnt3f p, Vec3f n, Vec4f c, Vec2f t, Vec2f t2);
+        int pushVert(Pnt3d p);
+        int pushVert(Pnt3d p, Vec3d n);
+        int pushVert(Pnt3d p, Vec3d n, Color3f c);
+        int pushVert(Pnt3d p, Vec3d n, Color4f c);
+        int pushVert(Pnt3d p, Vec3d n, Vec2d t);
+        int pushVert(Pnt3d p, Vec3d n, Vec2d t, Vec2d t2);
+        int pushVert(Pnt3d p, Vec3d n, Color3f c, Vec2d t);
+        int pushVert(Pnt3d p, Vec3d n, Color4f c, Vec2d t);
+        int pushVert(Pnt3d p, Vec3d n, Color3f c, Vec2d t, Vec2d t2);
+        int pushVert(Pnt3d p, Vec3d n, Color4f c, Vec2d t, Vec2d t2);
 
-        int pushColor(Vec3f c);
-        int pushColor(Vec4f c);
+        int pushColor(Color3f c);
+        int pushColor(Color4f c);
 
-        bool setVert(int i, Pnt3f p);
-        bool setVert(int i, Pnt3f p, Vec3f n);
-        bool setVert(int i, Pnt3f p, Vec3f n, Vec3f c);
-        bool setVert(int i, Pnt3f p, Vec3f n, Vec4f c);
-        bool setVert(int i, Pnt3f p, Vec3f n, Vec2f t);
-        bool setVert(int i, Pnt3f p, Vec3f n, Vec2f t, Vec2f t2);
-        bool setVert(int i, Pnt3f p, Vec3f n, Vec3f c, Vec2f t);
-        bool setVert(int i, Pnt3f p, Vec3f n, Vec4f c, Vec2f t);
-        bool setVert(int i, Pnt3f p, Vec3f n, Vec3f c, Vec2f t, Vec2f t2);
-        bool setVert(int i, Pnt3f p, Vec3f n, Vec4f c, Vec2f t, Vec2f t2);
+        bool setVert(int i, Pnt3d p);
+        bool setVert(int i, Pnt3d p, Vec3d n);
+        bool setVert(int i, Pnt3d p, Vec3d n, Color3f c);
+        bool setVert(int i, Pnt3d p, Vec3d n, Color4f c);
+        bool setVert(int i, Pnt3d p, Vec3d n, Vec2d t);
+        bool setVert(int i, Pnt3d p, Vec3d n, Vec2d t, Vec2d t2);
+        bool setVert(int i, Pnt3d p, Vec3d n, Color3f c, Vec2d t);
+        bool setVert(int i, Pnt3d p, Vec3d n, Color4f c, Vec2d t);
+        bool setVert(int i, Pnt3d p, Vec3d n, Color3f c, Vec2d t, Vec2d t2);
+        bool setVert(int i, Pnt3d p, Vec3d n, Color4f c, Vec2d t, Vec2d t2);
 
         int pushVert(const VRGeoData& other, int i);
-        int pushVert(const VRGeoData& other, int i, Matrix m);
+        int pushVert(const VRGeoData& other, int i, Matrix4d m);
 
         void pushPoint(int i = -1);
         void pushLine(int i, int j);
@@ -77,12 +78,12 @@ class VRGeoData {
         void pushQuad();
         void pushPatch(int N);
 
-        void pushQuad(Vec3f p, Vec3f n, Vec3f u, Vec2f s, bool addInds = false);
+        void pushQuad(Vec3d p, Vec3d n, Vec3d u, Vec2d s, bool addInds = false);
 
         void apply(VRGeometryPtr geo, bool check = true) const;
         VRGeometryPtr asGeometry(string name) const;
-        void append(VRGeometryPtr geo, const Matrix& m = Matrix());
-        void append(const VRGeoData& geo, const Matrix& m = Matrix());
+        void append(VRGeometryPtr geo, const Matrix4d& m = Matrix4d());
+        void append(const VRGeoData& geo, const Matrix4d& m = Matrix4d());
 
         // primitive iterator
         struct Primitive {
@@ -140,7 +141,7 @@ class VRGeoData {
         PrimItr end() const;
         PrimItr cend() const;
 
-        void addVertexColors(Vec3f c);
+        void addVertexColors(Color3f c);
 
         string status();
         void test_copy(VRGeoData& g);

@@ -21,7 +21,7 @@ class Elevation {
         const float stepSize = 0.0011;
         const int precision = 2;
         std::map<string, Json::Value> elevations;
-        std::map<Vec2f, float> exactElevations;
+        std::map<Vec2d, float> exactElevations;
 
     public:
         Elevation();

@@ -99,14 +99,14 @@ void World::updateGeometry() {
 
     // test physics stuff
     /*VRGeometryPtr sphere;
-    Vec3f center = Vec3f(20,10,20);
+    Vec3d center = Vec3d(20,10,20);
     sphere = VRGeometry::create("sphere");
     sphere->setMesh(makeSphereGeo(1,2));
     sphere->setFrom(center);
-    sphere->setOrientation(center + Vec3f(0,1,0), Vec3f(1,0,0.5));
+    sphere->setOrientation(center + Vec3d(0,1,0), Vec3d(1,0,0.5));
     scene->add(sphere);
     scene->physicalize(sphere, false);
-    //scene->setGravity(Vec3f(0, -1000, 0));
+    //scene->setGravity(Vec3d(0, -1000, 0));
     btRigidBody* rb = sphere->getBulletObject();
     rb->setLinearVelocity(btVector3(60, -100, 60));*/
 

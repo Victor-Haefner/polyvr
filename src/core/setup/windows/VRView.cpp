@@ -38,10 +38,10 @@ string VRView::getName() { return name; }
 void VRView::setMaterial() {
     ImageRecPtr img = Image::create();
 
-    Vec3f bg  = Vec3f(0.5, 0.7, 0.95);
-    Vec3f c1  = Vec3f(0.5, 0.7, 0.95);
-    Vec3f cax = Vec3f(0.9, 0.2, 0.2);
-    Vec3f cay = Vec3f(0.2, 0.9, 0.2);
+    Vec3d bg  = Vec3d(0.5, 0.7, 0.95);
+    Vec3d c1  = Vec3d(0.5, 0.7, 0.95);
+    Vec3d cax = Vec3d(0.9, 0.2, 0.2);
+    Vec3d cay = Vec3d(0.2, 0.9, 0.2);
 
     auto label = VRText::get()->create(name, "SANS 20", 20, Color4f(1,1,1,1), Color4f(bg[2], bg[1], bg[0], 1));
     float lw = label->getImage()->getWidth();
@@ -51,9 +51,9 @@ void VRView::setMaterial() {
     int b1 = 0.5*s-8;
     int b2 = 0.5*s-50;
     int ar = 50;
-    Vec2f pl(-0.1*s, -0.05*s);
+    Vec2d pl(-0.1*s, -0.05*s);
 
-	vector<Vec3f> data;
+	vector<Vec3d> data;
 	data.resize(s*s);
 
     for (int i=0; i<s; i++) {
@@ -75,8 +75,8 @@ void VRView::setMaterial() {
                 int v = y - pl[1] + lh*0.5;
                 int w = 4*(u+v*lw);
                 const UInt8* d = label->getImage()->getData();
-                data[k] = Vec3f(d[w]/255.0, d[w+1]/255.0, d[w+2]/255.0);
-                //data[k] = Vec4f(1,1,1, 1);
+                data[k] = Vec3d(d[w]/255.0, d[w+1]/255.0, d[w+2]/255.0);
+                //data[k] = Vec4d(1,1,1, 1);
             }
         }
     }
@@ -93,7 +93,7 @@ void VRView::setViewports() {//create && set size of viewports
     lView = 0;
     rView = 0;
 
-    Vec4f p = position;
+    Vec4d p = position;
     p[1] = 1-position[3]; // invert y
     p[3] = 1-position[1];
 
@@ -170,7 +170,7 @@ void VRView::setDecorators() {//set decorators, only if projection true
         proj_up.normalize();
         float w = proj_size[0];
         float h = proj_size[1];
-        Vec3f x = proj_normal.cross(proj_up);
+        Vec3d x = proj_normal.cross(proj_up);
 
         screenLowerLeft = Pnt3f(proj_center - proj_up*h*(0.5+proj_warp[1]+proj_shear[1]) + x*w*(0.5-proj_warp[0]+proj_shear[0]));
         screenLowerRight = Pnt3f(proj_center - proj_up*h*(0.5-proj_warp[1]-proj_shear[1]) - x*w*(0.5-proj_warp[0]-proj_shear[0]));
@@ -368,8 +368,8 @@ void VRView::showViewGeo(bool b) {
     else viewGeo->setTravMask(0);
 }
 
-Vec4f VRView::getPosition() { return position; }
-void VRView::setPosition(Vec4f pos) { position = pos; update(); }
+Vec4d VRView::getPosition() { return position; }
+void VRView::setPosition(Vec4d pos) { position = pos; update(); }
 
 void VRView::setRoot(VRObjectPtr root, VRTransformPtr real) { view_root = root; real_root = real; update(); }
 
@@ -551,14 +551,14 @@ void VRView::load(xmlpp::Element* node) {
     projection = toBool(node->get_attribute("projection")->get_value());
     eyeinverted = toBool(node->get_attribute("eye_inverted")->get_value());
     eyeSeparation = toFloat(node->get_attribute("eye_separation")->get_value());
-    position = toVec4f(node->get_attribute("position")->get_value());
-    proj_center = toVec3f(node->get_attribute("center")->get_value());
-    proj_normal = toVec3f(node->get_attribute("normal")->get_value());
-    if (node->get_attribute("user_pos")) proj_user = toVec3f(node->get_attribute("user_pos")->get_value());
-    proj_up = toVec3f(node->get_attribute("up")->get_value());
-    proj_size = toVec2f(node->get_attribute("size")->get_value());
-    if (node->get_attribute("shear")) proj_shear = toVec2f(node->get_attribute("shear")->get_value());
-    if (node->get_attribute("warp")) proj_warp = toVec2f(node->get_attribute("warp")->get_value());
+    position = toVec4d(node->get_attribute("position")->get_value());
+    proj_center = toVec3d(node->get_attribute("center")->get_value());
+    proj_normal = toVec3d(node->get_attribute("normal")->get_value());
+    if (node->get_attribute("user_pos")) proj_user = toVec3d(node->get_attribute("user_pos")->get_value());
+    proj_up = toVec3d(node->get_attribute("up")->get_value());
+    proj_size = toVec2d(node->get_attribute("size")->get_value());
+    if (node->get_attribute("shear")) proj_shear = toVec2d(node->get_attribute("shear")->get_value());
+    if (node->get_attribute("warp")) proj_warp = toVec2d(node->get_attribute("warp")->get_value());
     if (node->get_attribute("vsize")) window_size = toVec2i(node->get_attribute("vsize")->get_value());
     if (node->get_attribute("user")) {
         user_name = node->get_attribute("user")->get_value();
@@ -579,20 +579,20 @@ bool VRView::isStereo() { return stereo; }
 void VRView::setProjection(bool b) { projection = b; update(); }
 bool VRView::isProjection() { return projection; }
 
-void VRView::setProjectionUp(Vec3f v) { proj_up = v; update(); }
-Vec3f VRView::getProjectionUp() { return proj_up; }
-void VRView::setProjectionNormal(Vec3f v) { proj_normal = v; update(); }
-Vec3f VRView::getProjectionNormal() { return proj_normal; }
-void VRView::setProjectionCenter(Vec3f v) { proj_center = v; update(); }
-Vec3f VRView::getProjectionCenter() { return proj_center; }
-void VRView::setProjectionSize(Vec2f v) { proj_size = v; update(); }
-Vec2f VRView::getProjectionSize() { return proj_size; }
-void VRView::setProjectionShear(Vec2f v) { proj_shear = v; update(); }
-Vec2f VRView::getProjectionShear() { return proj_shear; }
-void VRView::setProjectionWarp(Vec2f v) { proj_warp = v; update(); }
-Vec2f VRView::getProjectionWarp() { return proj_warp; }
+void VRView::setProjectionUp(Vec3d v) { proj_up = v; update(); }
+Vec3d VRView::getProjectionUp() { return proj_up; }
+void VRView::setProjectionNormal(Vec3d v) { proj_normal = v; update(); }
+Vec3d VRView::getProjectionNormal() { return proj_normal; }
+void VRView::setProjectionCenter(Vec3d v) { proj_center = v; update(); }
+Vec3d VRView::getProjectionCenter() { return proj_center; }
+void VRView::setProjectionSize(Vec2d v) { proj_size = v; update(); }
+Vec2d VRView::getProjectionSize() { return proj_size; }
+void VRView::setProjectionShear(Vec2d v) { proj_shear = v; update(); }
+Vec2d VRView::getProjectionShear() { return proj_shear; }
+void VRView::setProjectionWarp(Vec2d v) { proj_warp = v; update(); }
+Vec2d VRView::getProjectionWarp() { return proj_warp; }
 
-void VRView::setProjectionUser(Vec3f v) {
+void VRView::setProjectionUser(Vec3d v) {
     proj_user = v; update();
 
     cout << "VRView::setProjectionUser\n";
@@ -607,6 +607,6 @@ void VRView::setProjectionUser(Vec3f v) {
     setStereoEyeSeparation(eyeSeparation);
     setMaterial();*/
 }
-Vec3f VRView::getProjectionUser() { return proj_user; }
+Vec3d VRView::getProjectionUser() { return proj_user; }
 
 OSG_END_NAMESPACE;

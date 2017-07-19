@@ -32,8 +32,8 @@ VRGeometryPtr toGeometry(Polyhedron& poly, string name) {
 			if (!points.count(v)) {
                 points[v] = i; i++;
                 cgalPoint cp = vertex->vertex()->point();
-                Pnt3f p = Pnt3f(cp.x(), cp.y(), cp.z());
-                data.pushVert(p, Vec3f(1,0,0) );
+                Pnt3d p = Pnt3d(cp.x(), cp.y(), cp.z());
+                data.pushVert(p, Vec3d(1,0,0) );
             }
             faceIndx.push_back( points[v] );
 		} while (++vertex != face->facet_begin());
@@ -55,7 +55,7 @@ VRGeometryPtr VRConvexHull::compute(VRGeometryPtr geo) {
     if (!pos) return 0;
 
     for (uint i=0; i<pos->size(); i++) {
-        Pnt3f p = pos->getValue<Pnt3f>(i);
+        Pnt3d p = Pnt3d(pos->getValue<Pnt3f>(i));
         points.push_back(cgalPoint(p[0], p[1], p[2]));
     }
 

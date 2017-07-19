@@ -13,7 +13,6 @@ struct VRPyObject : VRPyBaseT<OSG::VRObject> {
     static PyObject* getName(VRPyObject* self);
     static PyObject* getBaseName(VRPyObject* self);
     static PyObject* setName(VRPyObject* self, PyObject* args);
-    static PyObject* addChild(VRPyObject* self, PyObject* args, PyObject *kwds);
     static PyObject* switchParent(VRPyObject* self, PyObject* args, PyObject *kwds);
     static PyObject* destroy(VRPyObject* self);
     static PyObject* duplicate(VRPyObject* self);

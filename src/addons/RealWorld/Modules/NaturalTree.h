@@ -7,12 +7,12 @@ using namespace std;
  {
     class NaturalTree {
     public:
-        Vec2f position;
+        Vec2d position;
         string id;
         vector<string> segmentIds;
         string info;
 
-        NaturalTree(Vec2f position, string id) {
+        NaturalTree(Vec2d position, string id) {
             this->position = position;
             this->id = id;
             this->calcSegPoints_ = false;

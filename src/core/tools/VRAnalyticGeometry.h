@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGColor.h>
 #include <string>
 
 #include "core/objects/VRObjectFwd.h"
@@ -23,8 +24,8 @@ class VRAnalyticGeometry : public VRTransform {
         VRMaterialPtr pntMat = 0;
         VRMaterialPtr cirMat = 0;
 
-        Vec4f foreground;
-        Vec4f background;
+        Color4f foreground;
+        Color4f background;
 
         static string circle_vp;
         static string circle_fp;
@@ -42,11 +43,11 @@ class VRAnalyticGeometry : public VRTransform {
         //int getNewID(); //TODO
         //void remove(int ID);
 
-        void setLabelParams(float size, bool screen_size = false, bool billboard = false, Vec4f fg = Vec4f(0,0,0,1), Vec4f bg = Vec4f(0,0,0,0));
+        void setLabelParams(float size, bool screen_size = false, bool billboard = false, Color4f fg = Color4f(0,0,0,1), Color4f bg = Color4f(0,0,0,0));
 
-        void setVector(int i, Vec3f pos, Vec3f vec, Vec3f color, string label="");
-        void setAngle(int i, Vec3f pos, Vec3f v1, Vec3f v2, Vec3f c1, Vec3f c2, string label="");
-        void setCircle(int i, Vec3f pos, Vec3f norm, float r, Vec3f color, string label="");
+        void setVector(int i, Vec3d pos, Vec3d vec, Color3f color, string label="");
+        void setAngle(int i, Vec3d pos, Vec3d v1, Vec3d v2, Color3f c1, Color3f c2, string label="");
+        void setCircle(int i, Vec3d pos, Vec3d norm, float r, Color3f color, string label="");
         void clear();
 };
 

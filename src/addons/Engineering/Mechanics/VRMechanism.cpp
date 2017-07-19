@@ -121,10 +121,10 @@ void MPart::printNeighbors() {
 MGearGearRelation* checkGearGear(MPart* p1, MPart* p2) {
     VRGear* g1 = (VRGear*)p1->prim;
     VRGear* g2 = (VRGear*)p2->prim;
-    Matrix r1 = p1->reference;
-    Matrix r2 = p2->reference;
+    Matrix4d r1 = p1->reference;
+    Matrix4d r2 = p2->reference;
     float R = g1->radius() + g2->radius();
-    Vec3f d = Vec3f(r1[3] - r2[3]);
+    Vec3d d = Vec3d(r1[3] - r2[3]);
     float D = d.length();
     float t = 0.5*g1->teeth_size;
     if (R+t < D || R-t > D) return 0; // too far apart
@@ -145,10 +145,10 @@ MRelation* checkGearThread(MPart* p1, MPart* p2) {
 }
 
 MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
-    Vec3f pp = p->geo->getWorldPosition();
+    Vec3d pp = p->geo->getWorldPosition();
     if (p->prim->getType() != "Gear") return 0;
     float r = ((VRGear*)p->prim)->radius();
-    Vec3f dir = p->geo->getWorldDirection();
+    Vec3d dir = p->geo->getWorldDirection();
 
     float eps = 0.0001;
 
@@ -179,16 +179,16 @@ MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
     return rel;
 }
 
-vector<pointPolySegment> MChain::toVRPolygon(Vec3f p) {
+vector<pointPolySegment> MChain::toVRPolygon(Vec3d p) {
     vector<pointPolySegment> res;
     for (uint i=0; i<VRPolygon.size(); i+=2) {
-        Vec3f p1 = VRPolygon[i];
-        Vec3f p2 = VRPolygon[i+1];
-        Vec3f d = p2-p1;
-        Vec3f d1 = p1-p;
-        Vec3f d2 = p2-p;
+        Vec3d p1 = VRPolygon[i];
+        Vec3d p2 = VRPolygon[i+1];
+        Vec3d d = p2-p1;
+        Vec3d d1 = p1-p;
+        Vec3d d2 = p2-p;
 
-        Vec3f dx;
+        Vec3d dx;
         float l2 = d.squareLength();
         int ID = i;
         if (l2 == 0.0) dx = d1;
@@ -196,7 +196,7 @@ vector<pointPolySegment> MChain::toVRPolygon(Vec3f p) {
             float t = d1.dot(d)/l2;
             if (t < 0.0) dx = d1;
             else if (t > 1.0) dx = d2;
-            else dx = p1 + t*d - p; // vector from p to p1p2
+            else dx = p1 + d*t - p; // vector from p to p1p2
             if (t > 0.5) ID = i+1;
         }
 
@@ -212,7 +212,7 @@ vector<pointPolySegment> MChain::toVRPolygon(Vec3f p) {
 }
 
 
-/*bool checkThreadNut(VRThread* t, VRNut* n, Matrix r1, Matrix r2) {
+/*bool checkThreadNut(VRThread* t, VRNut* n, Matrix4d r1, Matrix4d r2) {
     ; // TODO: check if nut center on thread line
     ; // TODO: check if nut && thread same orientation
     return true;
@@ -222,20 +222,20 @@ VRGear* MGear::gear() { return (VRGear*)prim; }
 VRThread* MThread::thread() { return (VRThread*)prim; }
 
 void MPart::move() {}
-void MGear::move() { trans->rotate(change.dx/gear()->radius(), Vec3f(0,0,1)); }
+void MGear::move() { trans->rotate(change.dx/gear()->radius(), Vec3d(0,0,1)); }
 void MChain::move() { if (geo == 0) return; updateGeo(); }
-void MThread::move() { trans->rotate(change.a, Vec3f(0,0,1)); }
+void MThread::move() { trans->rotate(change.a, Vec3d(0,0,1)); }
 
 void MPart::computeChange() {
-    Matrix m = reference;
+    Matrix4d m = reference;
     m.invert();
     m.mult(geo->getWorldMatrix());
 
-    change.t = Vec3f(m[3]);
+    change.t = Vec3d(m[3]);
     change.l = change.t.length();
 
     change.a = acos( (m[0][0] + m[1][1] + m[2][2] - 1)*0.5 );
-    change.n = Vec3f(m[2][1] - m[1][2], m[0][2] - m[2][0], m[1][0] - m[0][1]);
+    change.n = Vec3d(m[2][1] - m[1][2], m[0][2] - m[2][0], m[1][0] - m[0][1]);
     change.n.normalize();
 
     if (change.n[2] > 0) { change.n *= -1; change.a *= -1; }
@@ -332,9 +332,9 @@ void MChain::updateGeo() {
         int d2 = dirs[j] == 'r' ? -1 : 1;
         int z1 = -1*d1*d2;
 
-        Vec3f c1 = nbrs[i]->geo->getWorldPosition();
-        Vec3f c2 = nbrs[j]->geo->getWorldPosition();
-        Vec3f D = c2-c1;
+        Vec3d c1 = nbrs[i]->geo->getWorldPosition();
+        Vec3d c2 = nbrs[j]->geo->getWorldPosition();
+        Vec3d D = c2-c1;
         float d = D.length();
 
         float r1 = g1->radius();
@@ -350,7 +350,7 @@ void MChain::updateGeo() {
         float y2 = z1*r2;
 
         if (abs(r1+r2) > 0.001 ) {
-            Vec3f Ch = c1*r2/(r1+r2) + c2*r1/(r1+r2); // homothetic center
+            Vec3d Ch = c1*r2/(r1+r2) + c2*r1/(r1+r2); // homothetic center
             float dCh1 = (Ch-c1).length();
             float dCh2 = (Ch-c2).length();
             float rCh1 = sqrt( dCh1*dCh1 - r1*r1 );
@@ -361,15 +361,15 @@ void MChain::updateGeo() {
             y2 = z1*d2*r2*rCh2/dCh2;
         }
 
-        Vec3f dn = D/d;
-        Vec3f t1 = dn.cross(nbrs[i]->geo->getWorldDirection());
-        Vec3f t2 = dn.cross(nbrs[j]->geo->getWorldDirection());
+        Vec3d dn = D/d;
+        Vec3d t1 = dn.cross(nbrs[i]->geo->getWorldDirection());
+        Vec3d t2 = dn.cross(nbrs[j]->geo->getWorldDirection());
         t1 = c1 + t1*y1 + dn*x1;
         t2 = c2 + t2*y2 - dn*x2;
         VRPolygon.push_back(t1);
         VRPolygon.push_back(t2);
 
-        /*Vec3f check = t2-t1;
+        /*Vec3d check = t2-t1;
         cout << nbrs[i]->geo->getName() << " " << nbrs[j]->geo->getName();
         cout << " check " << check.dot(t1-c1) << " " << check.dot(t2-c2);
         cout << " r1 " << r1 << " r2 " << r2;
@@ -379,14 +379,14 @@ void MChain::updateGeo() {
     // draw VRPolygon
     j=0;
     for (uint i=0; i<VRPolygon.size(); i+=2) {
-        Vec3f p1 = VRPolygon[i];
-        Vec3f p2 = VRPolygon[i+1];
+        Vec3d p1 = VRPolygon[i];
+        Vec3d p2 = VRPolygon[i+1];
         pos->addValue(p1);
         pos->addValue(p2);
-        norms->addValue(Vec3f(0,1,0));
-        norms->addValue(Vec3f(0,1,0));
-        cols->addValue(Vec4f(0,1,0,1));
-        cols->addValue(Vec4f(1,1,0,1));
+        norms->addValue(Vec3d(0,1,0));
+        norms->addValue(Vec3d(0,1,0));
+        cols->addValue(Vec4d(0,1,0,1));
+        cols->addValue(Vec4d(1,1,0,1));
         inds->addValue(j++);
         inds->addValue(j++);
     }

@@ -30,14 +30,14 @@ void VRMillingMachine::disconnect() {
 
 void VRMillingMachine::setSpeed(float s) { speed = s; }
 
-void VRMillingMachine::setPosition(Vec3f p) {
+void VRMillingMachine::setPosition(Vec3d p) {
     if (online) return; // position comes from machine
     pos = p*1000;
 }
 
-void VRMillingMachine::setSpeed(Vec3f v) {
-    //Vec3f t = Vec3f(-v[1], v[2], -v[0]);
-    Vec3f t = Vec3f(-v[2], -v[0], v[1]);
+void VRMillingMachine::setSpeed(Vec3d v) {
+    //Vec3d t = Vec3d(-v[1], v[2], -v[0]);
+    Vec3d t = Vec3d(-v[2], -v[0], v[1]);
     v = t*1000;
 
     float vmin = 0.3;
@@ -60,7 +60,7 @@ void VRMillingMachine::update() {
 		stringstream ss(re);
 		while (getline(ss, re, '%')) res.push_back(re); // split by '%'
 
-		pos = Vec3f( toFloat(res[0]), toFloat(res[1]), toFloat(res[2]) );
+		pos = Vec3d( toFloat(res[0]), toFloat(res[1]), toFloat(res[2]) );
 		state = toInt(res[5]);
 		mode = toInt(res[6]);
 	} else {
@@ -69,15 +69,15 @@ void VRMillingMachine::update() {
 	}
 
 	float f = 0.001;
-	geos[0]->setFrom( Vec3f( 0.000,0.250+(pos[0]*f),0.033));
-	geos[0]->setAt(   Vec3f( 0.000,-1.00+(pos[0]*f),0.033));
-	geos[1]->setFrom( Vec3f( 0.031+(pos[1]*f),0.230,0.181));
-	geos[1]->setAt(   Vec3f( 0.031+(pos[1]*f),-1.00,0.181));
-	geos[2]->setFrom( Vec3f( -0.069+(pos[1]*f),0.268,0.181+(pos[2]*f)));
-	geos[2]->setAt(   Vec3f( -0.069+(pos[1]*f),-1.00,0.181+(pos[2]*f)));
+	geos[0]->setFrom( Vec3d( 0.000,0.250+(pos[0]*f),0.033));
+	geos[0]->setAt(   Vec3d( 0.000,-1.00+(pos[0]*f),0.033));
+	geos[1]->setFrom( Vec3d( 0.031+(pos[1]*f),0.230,0.181));
+	geos[1]->setAt(   Vec3d( 0.031+(pos[1]*f),-1.00,0.181));
+	geos[2]->setFrom( Vec3d( -0.069+(pos[1]*f),0.268,0.181+(pos[2]*f)));
+	geos[2]->setAt(   Vec3d( -0.069+(pos[1]*f),-1.00,0.181+(pos[2]*f)));
 }
 
-Vec3f VRMillingMachine::getPosition() { return pos; }
+Vec3d VRMillingMachine::getPosition() { return pos; }
 
 size_t httpwritefkt( char *ptr, size_t size, size_t nmemb, void *userdata) {
     string* s = (string*)userdata;

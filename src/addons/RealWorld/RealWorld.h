@@ -43,7 +43,7 @@ class RealWorld : public VRObject {
         void enableModule(string mod, bool b, bool t, bool p);
         void configure(string var, string val);
         static string getOption(string var);
-        void update(OSG::Vec3f pos);
+        void update(OSG::Vec3d pos);
 
         TrafficSimulation* getTrafficSimulation();
         MapCoordinator* getCoordinator();

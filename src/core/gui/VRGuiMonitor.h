@@ -15,9 +15,9 @@ class VRGuiMonitor {
         Glib::RefPtr<Gtk::DrawingArea> da;
         Cairo::RefPtr<Cairo::Context> cr;
 
-        map<string, Vec3f> color_map;
-        Vec3f getColor(string name);
-        string toHex(Vec3f color);
+        map<string, Vec3d> color_map;
+        Vec3d getColor(string name);
+        string toHex(Vec3d color);
 
         string selRow;
         int selFrameRange = 10;

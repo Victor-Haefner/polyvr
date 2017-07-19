@@ -36,7 +36,7 @@ Value TrafficSimulation::convertNode(OSMNodePtr node) {
 
         value["id"] = boost::lexical_cast<Json::Value::UInt64>(node->id.c_str());
         Value pos;
-        Vec2f vecPos = mapCoordinator->realToWorld(Vec2f(node->lat, node->lon));
+        Vec2d vecPos = mapCoordinator->realToWorld(Vec2d(node->lat, node->lon));
         pos[0u] = vecPos[0];
         pos[1] = vecPos[1];
         value["pos"] = pos;
@@ -359,9 +359,9 @@ TrafficSimulation::TrafficSimulation(MapCoordinator *mapCoordinator, const strin
     a_red = VRMaterial::create("a_red");
     a_orange = VRMaterial::create("a_orange");
     a_green = VRMaterial::create("a_green");
-    a_red->setDiffuse(Vec3f(1,0,0));
-    a_orange->setDiffuse(Vec3f(1,0.8,0.1));
-    a_green->setDiffuse(Vec3f(0,1,0.1));
+    a_red->setDiffuse(Color3f(1,0,0));
+    a_orange->setDiffuse(Color3f(1,0.8,0.1));
+    a_green->setDiffuse(Color3f(0,1,0.1));
     a_red->setLit(false);
     a_orange->setLit(false);
     a_green->setLit(false);
@@ -583,8 +583,8 @@ bool TrafficSimulation::isRunning() {
 
 void TrafficSimulation::tick() { update(); }
 
-Vec3f toVec3f(Json::Value val) { // TODO
-    Vec3f v;
+Vec3d toVec3d(Json::Value val) { // TODO
+    Vec3d v;
     if (!val.isConvertibleTo(arrayValue)) return v;
     //if (!val[0].isConvertibleTo(realValue) || !val[1].isConvertibleTo(realValue) || !val[2].isConvertibleTo(realValue)) return v;
     v[0] = toFloat(val[0].toStyledString());
@@ -607,7 +607,7 @@ void TrafficSimulation::update() {
 
         Value pos;
 
-        Vec3f worldPosition = player->getFrom();
+        Vec3d worldPosition = player->getFrom();
         pos[0u] = worldPosition[0];
         pos[1]  = worldPosition[1];
         pos[2]  = worldPosition[2];
@@ -700,12 +700,12 @@ void TrafficSimulation::update() {
 
                 Vehicle& v = vehicles[ID];
 
-                //v.pos = toVec3f(vehicleIter["pos"]);
-                v.pos = Vec3f(vehicleIter["pos"][0].asFloat(), vehicleIter["pos"][1].asFloat(), vehicleIter["pos"][2].asFloat());
-                v.deltaPos = Vec3f(vehicleIter["dPos"][0].asFloat(), vehicleIter["dPos"][1].asFloat(), vehicleIter["dPos"][2].asFloat());
+                //v.pos = toVec3d(vehicleIter["pos"]);
+                v.pos = Vec3d(vehicleIter["pos"][0].asFloat(), vehicleIter["pos"][1].asFloat(), vehicleIter["pos"][2].asFloat());
+                v.deltaPos = Vec3d(vehicleIter["dPos"][0].asFloat(), vehicleIter["dPos"][1].asFloat(), vehicleIter["dPos"][2].asFloat());
                 v.deltaPos *= partDelta;
-                v.orientation = Vec3f(vehicleIter["angle"][0].asFloat(), vehicleIter["angle"][1].asFloat(), vehicleIter["angle"][2].asFloat());
-                v.deltaOrientation = Vec3f(vehicleIter["dAngle"][0].asFloat(), vehicleIter["dAngle"][1].asFloat(), vehicleIter["dAngle"][2].asFloat());
+                v.orientation = Vec3d(vehicleIter["angle"][0].asFloat(), vehicleIter["angle"][1].asFloat(), vehicleIter["angle"][2].asFloat());
+                v.deltaOrientation = Vec3d(vehicleIter["dAngle"][0].asFloat(), vehicleIter["dAngle"][1].asFloat(), vehicleIter["dAngle"][2].asFloat());
                 v.deltaOrientation *= partDelta;
 
                 if (!vehicleIter["state"].isNull() && vehicleIter["state"].isArray()) {
@@ -788,7 +788,7 @@ void TrafficSimulation::update() {
                 // Calculate the vector of the street
 
                 // Get the node positions
-                Vec2f atPos, toPos;
+                Vec2d atPos, toPos;
                 string atId = toString(lightpost["at"].asUInt());
                 string toId = toString(lightpost["to"].asUInt());
                 bool foundAt = false, foundTo = false;
@@ -796,12 +796,12 @@ void TrafficSimulation::update() {
                     for (auto node : mapIter->getNodes()) {
 
                         if (!foundAt && node.second->id == atId) {
-                            atPos = mapCoordinator->realToWorld(Vec2f(node.second->lat, node.second->lon));
+                            atPos = mapCoordinator->realToWorld(Vec2d(node.second->lat, node.second->lon));
                             foundAt = true;
                         }
 
                         if (!foundTo && node.second->id == toId) {
-                            toPos = mapCoordinator->realToWorld(Vec2f(node.second->lat, node.second->lon));
+                            toPos = mapCoordinator->realToWorld(Vec2d(node.second->lat, node.second->lon));
                             foundTo = true;
                         }
 
@@ -812,12 +812,12 @@ void TrafficSimulation::update() {
                         break;
                 }
 
-                Vec2f streetOffset = toPos - atPos;
+                Vec2d streetOffset = toPos - atPos;
                 const float prevLength = streetOffset.length();
                 streetOffset.normalize();
                 streetOffset *= min(prevLength / 2, Config::get()->STREET_WIDTH);
 
-                Vec2f normal(-streetOffset[1], streetOffset[0]);
+                Vec2d normal(-streetOffset[1], streetOffset[0]);
                 normal.normalize();
                 normal *= Config::get()->STREET_WIDTH;
 
@@ -849,24 +849,24 @@ void TrafficSimulation::update() {
 
                     // color switch
                     VRGeometryPtr bulb = lightBulbs[bulbIndex++];
-                    Vec3f p = Vec3f(streetOffset[0] + lane * normal[0], postHeight, streetOffset[1] + lane * normal[1]);
+                    Vec3d p = Vec3d(streetOffset[0] + lane * normal[0], postHeight, streetOffset[1] + lane * normal[1]);
                     string lcol = light.asString();
                     if (lcol == "red") {
-                        bulb->setWorldPosition(p+Vec3f(0,3 * bulbSize,0));
+                        bulb->setWorldPosition(p+Vec3d(0,3 * bulbSize,0));
                         bulb->setMaterial(a_red);
 
                     } else if (lcol == "redamber") {
-                        bulb->setWorldPosition(p+Vec3f(0,3 * bulbSize,0));
+                        bulb->setWorldPosition(p+Vec3d(0,3 * bulbSize,0));
                         bulb->setMaterial(a_red);
 
                         bulb = lightBulbs[bulbIndex++];
-                        bulb->setWorldPosition(p+Vec3f(0,2 * bulbSize,0));
+                        bulb->setWorldPosition(p+Vec3d(0,2 * bulbSize,0));
                         bulb->setMaterial(a_orange);
                     } else if (lcol == "amber") {
-                        bulb->setWorldPosition(p+Vec3f(0,2 * bulbSize,0));
+                        bulb->setWorldPosition(p+Vec3d(0,2 * bulbSize,0));
                         bulb->setMaterial(a_orange);
                     } else if (lcol == "green") {
-                        bulb->setWorldPosition(p+Vec3f(0,bulbSize,0));
+                        bulb->setWorldPosition(p+Vec3d(0,bulbSize,0));
                         bulb->setMaterial(a_green);
                     }
                 }
@@ -885,7 +885,7 @@ void TrafficSimulation::update() {
         // Advance the vehicles a bit
     //cout << "Update " << vehicles.size() << " vehicles\n";
     for (auto v : vehicles) {
-        Vec3f p = v.second.pos;
+        Vec3d p = v.second.pos;
         p[1] = 0;//TODO: get right street height
         v.second.model->setFrom(p);
         v.second.model->setDir(v.second.pos - v.second.orientation);
@@ -899,7 +899,7 @@ void TrafficSimulation::setCollisionHandler(bool (*handler) (Vehicle& a, Vehicle
     collisionHandler = handler;
 }
 
-void TrafficSimulation::setVehiclePosition(const unsigned int id, const OSG::Vec3f& pos, const OSG::Vec3f& orientation) {
+void TrafficSimulation::setVehiclePosition(const unsigned int id, const OSG::Vec3d& pos, const OSG::Vec3d& orientation) {
     // Move the vehicle
     Value vehicle;
     vehicle["id"] = id;
@@ -942,7 +942,7 @@ void TrafficSimulation::setPlayerTransform(VRTransformPtr transform) {
         Value vehicle;
         vehicle["id"] = 0;
         Value pos;
-        Vec3f worldPosition = player->getWorldPosition();
+        Vec3d worldPosition = player->getWorldPosition();
         pos[0u] = worldPosition[0];
         pos[1]  = worldPosition[1];
         pos[2]  = worldPosition[2];
@@ -966,7 +966,7 @@ void TrafficSimulation::setPlayerTransform(VRTransformPtr transform) {
 
     } else if (player != NULL && playerCreated) {
         // Update the position
-        setVehiclePosition(0, player->getWorldPosition(), OSG::Vec3f(0,0,0));
+        setVehiclePosition(0, player->getWorldPosition(), OSG::Vec3d(0,0,0));
     } else /* player == NULL */ {
 
         // Remove area && vehicle

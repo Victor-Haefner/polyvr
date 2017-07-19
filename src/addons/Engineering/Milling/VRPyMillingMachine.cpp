@@ -48,7 +48,7 @@ PyObject* VRPyMillingMachine::update(VRPyMillingMachine* self) {
 
 PyObject* VRPyMillingMachine::setPosition(VRPyMillingMachine* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    self->objPtr->setPosition( parseVec3f(args) );
+    self->objPtr->setPosition( parseVec3d(args) );
     Py_RETURN_TRUE;
 }
 
@@ -78,6 +78,6 @@ PyObject* VRPyMillingMachine::disconnect(VRPyMillingMachine* self) {
 
 PyObject* VRPyMillingMachine::setSpeed(VRPyMillingMachine* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    self->objPtr->setSpeed( parseVec3f(args) );
+    self->objPtr->setSpeed( parseVec3d(args) );
     Py_RETURN_TRUE;
 }

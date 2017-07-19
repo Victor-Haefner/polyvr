@@ -27,8 +27,8 @@ class VRBlinds: public VRTransform {
         VRAnimCbPtr fkt;
 
         VRGeometryPtr blend_geo;
-        vector<Vec3f> bl_pos_open;
-        vector<Vec3f> bl_pos_closed;
+        vector<Vec3d> bl_pos_open;
+        vector<Vec3d> bl_pos_closed;
 
     protected:
         VRObjectPtr copy(vector<VRObjectPtr> children);

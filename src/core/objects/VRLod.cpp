@@ -24,11 +24,11 @@ VRLod::~VRLod() {}
 VRLodPtr VRLod::create(string name) { return shared_ptr<VRLod>(new VRLod(name) ); }
 VRLodPtr VRLod::ptr() { return static_pointer_cast<VRLod>( shared_from_this() ); }
 
-void VRLod::setCenter(Vec3f c) { center = c; setup(); }
+void VRLod::setCenter(Vec3d c) { center = c; setup(); }
 void VRLod::setDecimate(bool b, int N) { decimate = b; decimateNumber = N; setup(); }
 void VRLod::setDistance(uint i, float dist) { distances[i] = dist; setup(); }
 void VRLod::addDistance(float dist) { setDistance(distances.size(), dist); }
-Vec3f VRLod::getCenter() { return center; }
+Vec3d VRLod::getCenter() { return center; }
 bool VRLod::getDecimate() { return decimate; }
 int VRLod::getDecimateNumber() { return decimateNumber; }
 
@@ -41,7 +41,7 @@ void VRLod::loadSetup() {
 
 VRObjectPtr VRLod::copy(vector<VRObjectPtr> childs) {
     VRLodPtr _lod = VRLod::create(getName() + "_copy");
-    _lod->setCenter(Vec3f(lod->getCenter()));
+    _lod->setCenter(Vec3d(lod->getCenter()));
 
     MFReal32* vec = lod->editMFRange();
     for (uint i=0;i<vec->size();i++) {

@@ -26,7 +26,7 @@ void ModuleWalls::loadBbox(MapGrid::Box bbox) {
                 Wall* wall = new Wall(way.second->id);
                 for(string nID: way.second->nodes) {
                     auto node = osmMap->getNode(nID);
-                    Vec2f pos = mc->realToWorld(Vec2f(node->lat, node->lon));
+                    Vec2d pos = mc->realToWorld(Vec2d(node->lat, node->lon));
                     wall->positions.push_back(pos);
                 }
 
@@ -79,17 +79,17 @@ void ModuleWalls::addWall(string texture, string key, string value){
     addWall(texture, key, value, 0.5, 1);
 }
 
-void ModuleWalls::addWallPart(Vec2f a1, Vec2f b1, Vec2f a2, Vec2f b2, Vec2f a3, Vec2f b3, VRGeoData& gdWall, float width, float height){
-    Vec2f _NULL;
+void ModuleWalls::addWallPart(Vec2d a1, Vec2d b1, Vec2d a2, Vec2d b2, Vec2d a3, Vec2d b3, VRGeoData& gdWall, float width, float height){
+    Vec2d _NULL;
 
-    Vec2f intersectStart1;
-    Vec2f intersectStart2;
-    Vec2f intersectEnd1;
-    Vec2f intersectEnd2;
+    Vec2d intersectStart1;
+    Vec2d intersectStart2;
+    Vec2d intersectEnd1;
+    Vec2d intersectEnd2;
 
-    Vec2f ortho1;
-    Vec2f ortho2 = getNOrtho(a2, b2)*width/2;
-    Vec2f ortho3 = getNOrtho(a3, b3)*width/2;
+    Vec2d ortho1;
+    Vec2d ortho2 = getNOrtho(a2, b2)*width/2;
+    Vec2d ortho3 = getNOrtho(a3, b3)*width/2;
     if(a1 == _NULL || b1 == _NULL){
         intersectStart1 = a2 - ortho2;
         intersectStart2 = a2 + ortho2;
@@ -117,16 +117,16 @@ void ModuleWalls::addWallPart(Vec2f a1, Vec2f b1, Vec2f a2, Vec2f b2, Vec2f a3, 
     }
 }
 
-Vec2f ModuleWalls::getNOrtho(Vec2f a, Vec2f b){
-    Vec2f res = Vec2f(-(b-a)[1], (b-a)[0]);
+Vec2d ModuleWalls::getNOrtho(Vec2d a, Vec2d b){
+    Vec2d res = Vec2d(-(b-a)[1], (b-a)[0]);
     res.normalize(); //vector length = 1;
     return res;
 }
 
-Vec2f ModuleWalls::getIntersection(Vec2f a1, Vec2f b1, Vec2f a2, Vec2f b2){
-    Vec2f _NULL;
-    Vec2f v1 = a1-b1;
-    Vec2f v2 = a2-b2;
+Vec2d ModuleWalls::getIntersection(Vec2d a1, Vec2d b1, Vec2d a2, Vec2d b2){
+    Vec2d _NULL;
+    Vec2d v1 = a1-b1;
+    Vec2d v2 = a2-b2;
     if(v1 == v2) return _NULL; //if parallel
     float t;
     float ax = a1[0];
@@ -139,45 +139,45 @@ Vec2f ModuleWalls::getIntersection(Vec2f a1, Vec2f b1, Vec2f a2, Vec2f b2){
     float dy = v2[1];
 
     t = (by*ax + bx*cy - bx*ay - cx*by)/(dx*by - bx*dy);
-    return Vec2f(cx + dx*t, cy + dy*t);
+    return Vec2d(cx + dx*t, cy + dy*t);
 }
 
-void ModuleWalls::createWallSide(Vec2f a, Vec2f b, Vec2f normal2D, VRGeoData& gdWall, float height) {
+void ModuleWalls::createWallSide(Vec2d a, Vec2d b, Vec2d normal2D, VRGeoData& gdWall, float height) {
     auto mc = RealWorld::get()->getCoordinator();
-    Vec3f n = Vec3f(normal2D[0], 0, normal2D[1]);
+    Vec3d n = Vec3d(normal2D[0], 0, normal2D[1]);
     n.normalize();
 
     float Ha = mc->getElevation(a);
     float Hb = mc->getElevation(b);
     float length = (b-a).length();
 
-    int Va = gdWall.pushVert(Vec3f(a[0], Ha, a[1]), n, Vec2f(0, 0));
-    int Vb = gdWall.pushVert(Vec3f(b[0], Hb, b[1]), n, Vec2f(0, length));
-    int Vc = gdWall.pushVert(Vec3f(b[0], Hb+height, b[1]), n, Vec2f(height, length));
-    int Vd = gdWall.pushVert(Vec3f(a[0], Ha+height, a[1]), n, Vec2f(height, 0));
+    int Va = gdWall.pushVert(Vec3d(a[0], Ha, a[1]), n, Vec2d(0, 0));
+    int Vb = gdWall.pushVert(Vec3d(b[0], Hb, b[1]), n, Vec2d(0, length));
+    int Vc = gdWall.pushVert(Vec3d(b[0], Hb+height, b[1]), n, Vec2d(height, length));
+    int Vd = gdWall.pushVert(Vec3d(a[0], Ha+height, a[1]), n, Vec2d(height, 0));
     gdWall.pushQuad(Va, Vb, Vc, Vd);
 }
 
-void ModuleWalls::createWallRoof(Vec2f a1, Vec2f a2, Vec2f b1, Vec2f b2, VRGeoData& gdWall, float height) {
+void ModuleWalls::createWallRoof(Vec2d a1, Vec2d a2, Vec2d b1, Vec2d b2, VRGeoData& gdWall, float height) {
     auto mc = RealWorld::get()->getCoordinator();
-    Vec3f n = Vec3f(0, 1, 0);
-    int Va = gdWall.pushVert(Vec3f(a1[0], mc->getElevation(a1) + height, a1[1]), n, Vec2f(a1[0], a1[1]));
-    int Vb = gdWall.pushVert(Vec3f(a2[0], mc->getElevation(a2) + height, a2[1]), n, Vec2f(a2[0], a2[1]));
-    int Vc = gdWall.pushVert(Vec3f(b2[0], mc->getElevation(b2) + height, b2[1]), n, Vec2f(b2[0], b2[1]));
-    int Vd = gdWall.pushVert(Vec3f(b1[0], mc->getElevation(b1) + height, b1[1]), n, Vec2f(b1[0], b1[1]));
+    Vec3d n = Vec3d(0, 1, 0);
+    int Va = gdWall.pushVert(Vec3d(a1[0], mc->getElevation(a1) + height, a1[1]), n, Vec2d(a1[0], a1[1]));
+    int Vb = gdWall.pushVert(Vec3d(a2[0], mc->getElevation(a2) + height, a2[1]), n, Vec2d(a2[0], a2[1]));
+    int Vc = gdWall.pushVert(Vec3d(b2[0], mc->getElevation(b2) + height, b2[1]), n, Vec2d(b2[0], b2[1]));
+    int Vd = gdWall.pushVert(Vec3d(b1[0], mc->getElevation(b1) + height, b1[1]), n, Vec2d(b1[0], b1[1]));
     gdWall.pushQuad(Va, Vb, Vc, Vd);
 }
 
 //to do
 void ModuleWalls::addWall(Wall* wall, VRGeoData& gdWall, float width, float height){
     //create AB todo
-    Vec2f _NULL;
-    vector<Vec2f*> sides = wall->getSides(); //get wall part
+    Vec2d _NULL;
+    vector<Vec2d*> sides = wall->getSides(); //get wall part
 
     //create wall part
-    Vec2f* sidePrePre = NULL;
-    Vec2f* sidePre = NULL;
-    for(Vec2f* side: sides) {
+    Vec2d* sidePrePre = NULL;
+    Vec2d* sidePre = NULL;
+    for(Vec2d* side: sides) {
 
         if(sidePrePre != NULL){
             addWallPart(sidePrePre[0], sidePrePre[1], sidePre[0], sidePre[1], side[0], side[1], gdWall, width, height);

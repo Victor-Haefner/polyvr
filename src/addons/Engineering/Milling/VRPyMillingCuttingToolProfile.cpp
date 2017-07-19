@@ -17,7 +17,7 @@ PyObject* VRPyMillingCuttingToolProfile::addPointProfile(VRPyMillingCuttingToolP
     if (!self->valid()) return NULL;
     PyObject* newPoint;
     if (!PyArg_ParseTuple(args, "O", &newPoint)) return NULL;
-    auto p = parseVec2fList(newPoint);
+    auto p = parseVec2dList(newPoint);
     self->objPtr->addPointProfile(p);
     Py_RETURN_TRUE;
 }

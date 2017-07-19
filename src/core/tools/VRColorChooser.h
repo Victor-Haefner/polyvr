@@ -18,7 +18,7 @@ class VRColorChooser {
         VRGeometryWeakPtr geo;
         VRMaterialPtr mat;
 
-        Color3f colFromUV(Vec2f tc);
+        Color3f colFromUV(Vec2d tc);
         void updateTexture();
 
     public:

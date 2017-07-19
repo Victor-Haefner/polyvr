@@ -17,7 +17,7 @@ class VRBRepSurface : public VRBRepUtils {
         posePtr trans;
         double R = 1;
 
-        field<Vec3f> cpoints;
+        field<Vec3d> cpoints;
         field<double> weights;
         vector<double> knotsu;
         vector<double> knotsv;

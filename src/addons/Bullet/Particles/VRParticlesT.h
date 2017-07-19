@@ -25,7 +25,7 @@ void VRParticles::resetParticles(int amount) {
 
         // material
         mat = VRMaterial::create("particles");
-        mat->setDiffuse(Vec3f(0,0,1));
+        mat->setDiffuse(Color3f(0,0,1));
         mat->setPointSize(5);
         mat->setLit(false);
 
@@ -37,7 +37,7 @@ void VRParticles::resetParticles(int amount) {
         colors = GeoVec4fProperty::create();
         Length->addValue(N);
 
-        for(int i=0;i<N;i++) pos->addValue(Pnt3f(0,300,0));
+        for(int i=0;i<N;i++) pos->addValue(Pnt3d(0,300,0));
         for(int i=0;i<N;i++) inds->addValue(i);
         normals->resize(N);
         colors->resize(N);

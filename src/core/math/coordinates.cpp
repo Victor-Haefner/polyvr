@@ -3,7 +3,7 @@
 using namespace OSG;
 using namespace std;
 
-void coords::YtoZ(Matrix& m) {
+void coords::YtoZ(Matrix4d& m) {
     swap(m[0][1], m[0][2]);
     swap(m[1][1], m[1][2]);
     swap(m[2][1], m[2][2]);
@@ -15,7 +15,7 @@ void coords::YtoZ(Matrix& m) {
     m[3][2] *= -1;
 }
 
-void coords::ZtoY(Matrix& m) {
+void coords::ZtoY(Matrix4d& m) {
     swap(m[0][1], m[0][2]);
     swap(m[1][1], m[1][2]);
     swap(m[2][1], m[2][2]);

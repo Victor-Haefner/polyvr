@@ -19,13 +19,13 @@ class StreetSegment {
         bool bridge = false;
         float bridgeHeight = 0;
 
-        Vec2f leftA, leftB, rightA, rightB, leftExtA, leftExtB;
+        Vec2d leftA, leftB, rightA, rightB, leftExtA, leftExtB;
 
         StreetSegment(StreetJoint* jA, StreetJoint* jB, float width, string id);
 
-        void setLeftPointFor(string jointId, Vec2f posLeft);
-        void setLeftExtPointFor(string jointId, Vec2f posLeft);
-        void setRightPointFor(string jointId, Vec2f posRight);
+        void setLeftPointFor(string jointId, Vec2d posLeft);
+        void setLeftExtPointFor(string jointId, Vec2d posLeft);
+        void setRightPointFor(string jointId, Vec2d posRight);
 
         string getOtherJointId(string jointId);
         float getDistance();

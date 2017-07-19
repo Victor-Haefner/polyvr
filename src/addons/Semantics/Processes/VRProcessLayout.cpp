@@ -48,23 +48,23 @@ int wrapString(string& s, int width) {
     return N;
 }
 
-Vec4i pushRectVerts(VRGeoData& geo, float x0, float x1, float y0, float y1, Vec3f n, Vec3f u, float d) {
-    Matrix m;
-    MatrixLookAt(m, Pnt3f(0,0,0), n, u);
+Vec4i pushRectVerts(VRGeoData& geo, float x0, float x1, float y0, float y1, Vec3d n, Vec3d u, float d) {
+    Matrix4d m;
+    MatrixLookAt(m, Pnt3d(0,0,0), n, u);
 
-    Pnt3f p1(x0,y0,0); m.mult(p1,p1);
-    Pnt3f p2(x1,y0,0); m.mult(p2,p2);
-    Pnt3f p3(x1,y1,0); m.mult(p3,p3);
-    Pnt3f p4(x0,y1,0); m.mult(p4,p4);
+    Pnt3d p1(x0,y0,0); m.mult(p1,p1);
+    Pnt3d p2(x1,y0,0); m.mult(p2,p2);
+    Pnt3d p3(x1,y1,0); m.mult(p3,p3);
+    Pnt3d p4(x0,y1,0); m.mult(p4,p4);
 
-    int A = geo.pushVert(p1 - n*d, n, Vec2f(0,0));
-    int B = geo.pushVert(p2 - n*d, n, Vec2f(1,0));
-    int C = geo.pushVert(p3 - n*d, n, Vec2f(1,1));
-    int D = geo.pushVert(p4 - n*d, n, Vec2f(0,1));
+    int A = geo.pushVert(p1 - n*d, n, Vec2d(0,0));
+    int B = geo.pushVert(p2 - n*d, n, Vec2d(1,0));
+    int C = geo.pushVert(p3 - n*d, n, Vec2d(1,1));
+    int D = geo.pushVert(p4 - n*d, n, Vec2d(0,1));
     return Vec4i(A,B,C,D);
 }
 
-void pushLabelFace(VRGeoData& geo, int N, float s, float h1, float h2, Vec3f n, Vec3f u) {
+void pushLabelFace(VRGeoData& geo, int N, float s, float h1, float h2, Vec3d n, Vec3d u) {
     auto q1 = pushRectVerts(geo, -s, s, -h1, h1, n, u, s);
     auto q2 = pushRectVerts(geo, -s + 0.5, -s + 0.5 + N, -h2, h2, n, u, s);
 
@@ -77,22 +77,22 @@ void pushLabelFace(VRGeoData& geo, int N, float s, float h1, float h2, Vec3f n, 
 
 void pushSubjectBox(VRGeoData& geo, int N, float h) {
     float s = 0.5 * N + 0.5;
-    pushLabelFace(geo, N,s,s,h, Vec3f(0,-1,0), Vec3f(0,0,1));
-    pushLabelFace(geo, N,s,s,h, Vec3f(0,1,0), Vec3f(0,0,1));
-    pushLabelFace(geo, N,s,s,h, Vec3f(1,0,0), Vec3f(0,1,0));
-    pushLabelFace(geo, N,s,s,h, Vec3f(-1,0,0), Vec3f(0,1,0));
-    pushLabelFace(geo, N,s,s,h, Vec3f(0,0,1), Vec3f(0,1,0));
-    pushLabelFace(geo, N,s,s,h, Vec3f(0,0,-1), Vec3f(0,1,0));
+    pushLabelFace(geo, N,s,s,h, Vec3d(0,-1,0), Vec3d(0,0,1));
+    pushLabelFace(geo, N,s,s,h, Vec3d(0,1,0), Vec3d(0,0,1));
+    pushLabelFace(geo, N,s,s,h, Vec3d(1,0,0), Vec3d(0,1,0));
+    pushLabelFace(geo, N,s,s,h, Vec3d(-1,0,0), Vec3d(0,1,0));
+    pushLabelFace(geo, N,s,s,h, Vec3d(0,0,1), Vec3d(0,1,0));
+    pushLabelFace(geo, N,s,s,h, Vec3d(0,0,-1), Vec3d(0,1,0));
 }
 
 void pushMsgBox(VRGeoData& geo, int N, float h) {
     float s = 0.5 * N + 0.5;
-    Vec4i q1 = pushRectVerts(geo, -s, s, -h, h, Vec3f(0,-1,0), Vec3f(0,0,1), h);
-    Vec4i q2 = pushRectVerts(geo, -s, s, -h, h, Vec3f(0,1,0), Vec3f(0,0,1), h);
-    Vec4i q3 = pushRectVerts(geo, -s, s, -h, h, Vec3f(0,0,-1), Vec3f(0,1,0), h);
-    Vec4i q4 = pushRectVerts(geo, -s, s, -h, h, Vec3f(0,0,1), Vec3f(0,1,0), h);
-    Vec4i q5 = pushRectVerts(geo, -h, h, -h, h, Vec3f(1,0,0), Vec3f(0,1,0), s);
-    Vec4i q6 = pushRectVerts(geo, -h, h, -h, h, Vec3f(-1,0,0), Vec3f(0,1,0), s);
+    Vec4i q1 = pushRectVerts(geo, -s, s, -h, h, Vec3d(0,-1,0), Vec3d(0,0,1), h);
+    Vec4i q2 = pushRectVerts(geo, -s, s, -h, h, Vec3d(0,1,0), Vec3d(0,0,1), h);
+    Vec4i q3 = pushRectVerts(geo, -s, s, -h, h, Vec3d(0,0,-1), Vec3d(0,1,0), h);
+    Vec4i q4 = pushRectVerts(geo, -s, s, -h, h, Vec3d(0,0,1), Vec3d(0,1,0), h);
+    Vec4i q5 = pushRectVerts(geo, -h, h, -h, h, Vec3d(1,0,0), Vec3d(0,1,0), s);
+    Vec4i q6 = pushRectVerts(geo, -h, h, -h, h, Vec3d(-1,0,0), Vec3d(0,1,0), s);
     geo.pushQuad(q1[0],q1[3],q1[2],q1[1]);
     geo.pushQuad(q2[0],q2[3],q2[2],q2[1]);
     geo.pushQuad(q3[0],q3[3],q3[2],q3[1]);
@@ -126,7 +126,7 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     if (n->type == MESSAGE) w->addAttachment("message", 0);
     w->setMaterial(mat);
     //w->setPickable(1);
-    //w->getConstraint()->setTConstraint(Vec3f(0,1,0), VRConstraint::PLANE);
+    //w->getConstraint()->setTConstraint(Vec3d(0,1,0), VRConstraint::PLANE);
     w->getConstraint()->lockRotation();
     w->getConstraint()->setActive(true, w);
     //w->getConstraint()->setReferential( dynamic_pointer_cast<VRTransform>(ptr()) );
@@ -147,7 +147,7 @@ void VRProcessLayout::rebuild() {
         auto& e = diag->processnodes[i];
         auto geo = newWidget(e, height);
 
-        Vec3f p = Vec3f(f, 0, 0.01*(rand()%100));
+        Vec3d p = Vec3d(f, 0, 0.01*(rand()%100));
         f += e->label.size()+2;
         e->widget->setFrom(p);
 

@@ -33,7 +33,7 @@ to OSG
 y -> x
 z -> y
 x -> z
-Vec3f(y,z,x);
+Vec3d(y,z,x);
 virtVec(z,x,y);
 
 */
@@ -98,30 +98,30 @@ void virtuose::setSimulationScales(float translation, float forces)
 }
 
 
-void virtuose::applyForce(Vec3f force, Vec3f torque)
+void virtuose::applyForce(Vec3d force, Vec3d torque)
 {
     if(vc == 0) return;
     float f[6] = { force[2], force[0], force[1], torque[2], torque[0], torque[1] };
     CHECK( virtAddForce(vc, f) );
 }
 
-Vec3f virtuose::getForce() {
+Vec3d virtuose::getForce() {
 
     return totalForce;
 }
 
-Matrix virtuose::getPose()
+Matrix4d virtuose::getPose()
 {
-    if(vc == 0) return Matrix().identity();
+    if(vc == 0) return Matrix4d().identity();
     float f[7]= {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f};
 
     CHECK( virtGetAvatarPosition(vc, f) );
     //CHECK( virtGetPhysicalPosition(vc, f) );
 
-    Matrix m;
+    Matrix4d m;
 
-    Vec3f pos(f[1], f[2], f[0]);
-    Quaternion q;
+    Vec3d pos(f[1], f[2], f[0]);
+    Quaterniond q;
     q.setValue(f[4], f[5], f[3]);
     m.setRotate(q);
     m.setTranslate(pos);
@@ -170,12 +170,12 @@ void virtuose::fillSpeed(VRPhysics* p, float *to,VRPhysics* origin)
 {
 
 
-    Vec3f vel = p->getLinearVelocity();
+    Vec3d vel = p->getLinearVelocity();
     if(origin!=0)   vel -= origin->getLinearVelocity();
     to[0] = vel.z();
     to[1] = vel.x();
     to[2] = vel.y();
-    Vec3f ang = p->getAngularVelocity();
+    Vec3d ang = p->getAngularVelocity();
     if(origin!=0)   ang -= origin->getAngularVelocity();
     to[3] = ang.z();
     to[4] = ang.x();
@@ -249,7 +249,7 @@ void virtuose::updateVirtMechPre() {
                 for(int i = 0; i < 7 ; i++) {
                     tmpPos[i] = (position[i] - tmpPos[i]);
                 }
-                pPos = Vec3f(tmpPos[0],tmpPos[1],tmpPos[2]);
+                pPos = Vec3d(tmpPos[0],tmpPos[1],tmpPos[2]);
                 CHECK(virtSetPosition(vc, position));
                 //speed
                 fillSpeed(this->attached->getPhysics(),speed,phBase);
@@ -259,8 +259,8 @@ void virtuose::updateVirtMechPre() {
                 for(int i = 0; i < 6 ; i++) {
                     tmpSp[i] = (speed[i] - tmpSp[i]);
                 }
-                sPos = Vec3f(tmpSp[0],tmpSp[1],tmpSp[2]);
-                sRot = Vec3f(tmpSp[0],tmpSp[1],tmpSp[2]);
+                sPos = Vec3d(tmpSp[0],tmpSp[1],tmpSp[2]);
+                sRot = Vec3d(tmpSp[0],tmpSp[1],tmpSp[2]);
                 CHECK(virtSetSpeed(vc, speed));
 
                 int power = 0;
@@ -292,10 +292,10 @@ void virtuose::updateVirtMechPost() {
 			//get force applied by human on the haptic
 			CHECK(virtGetForce(vc, force));
             //position +1, +2, +0
-			Vec3f frc = Vec3f(force[1], force[2], force[0]);
+			Vec3d frc = Vec3d(force[1], force[2], force[0]);
 			totalForce = frc;
 			//rotation +4 +5 +3    (x-Achse am haptik: force[4])(y-Achse am haptik: force[5])(z-Achse am haptik: force[3])
-			Vec3f trqu = Vec3f( force[4], force[5], force[3]);
+			Vec3d trqu = Vec3d( force[4], force[5], force[3]);
 			//apply force on the object
             //avoiding build-ups
                 if( (pPos.length() < 0.1f) && (sPos.length() < 0.5f) &&  (sRot.length() < 0.5f)) {

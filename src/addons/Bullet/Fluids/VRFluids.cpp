@@ -66,20 +66,20 @@ void VRFluids::updateParticles(int from, int to) {
         for (int i=from; i < to; i++) {
             if (particles[i]->isActive) {
                 auto p = particles[i]->body->getWorldTransform().getOrigin();
-                pos->setValue(toVec3f(p),i);
+                pos->setValue(toVec3d(p),i);
 
-                colors->setValue(Vec4f(0,0,1,1), i);
+                colors->setValue(Vec4d(0,0,1,1), i);
                 /*
                 auto particle = (SphParticle*)particles[i];
                 //auto d = particle->sphDensity / this->REST_DENSITY; // visualize density
                 auto d = particle->body->getLinearVelocity().length2() / (3*3); // visualize velocity
                 // auto d = particle->sphPressureForce.length() + particle->sphViscosityForce.length() / 20.0;
                 if (d > 1.0) {
-                    colors->setValue(Vec4f(d-1,2-d,0,1), i); // high range -> green<->red
+                    colors->setValue(Vec4d(d-1,2-d,0,1), i); // high range -> green<->red
                 } else if (d < 0.00001) {
-                    colors->setValue(Vec4f(0,0,0,1), i); // zero or negative -> black
+                    colors->setValue(Vec4d(0,0,0,1), i); // zero or negative -> black
                 } else {
-                    colors->setValue(Vec4f(0,d,1-d,1), i); // low range -> blue<->green
+                    colors->setValue(Vec4d(0,d,1-d,1), i); // low range -> blue<->green
                 }
                 */
             }
@@ -98,7 +98,7 @@ inline void VRFluids::updateSPH(int from, int to) {
             if (particles[i]->isActive == true) {
                 p = (SphParticle*) particles[i];
                 btVector3 p_origin = p->body->getWorldTransform().getOrigin();
-                ocparticles.add(Vec3f(p_origin[0],p_origin[1],p_origin[2]),p);
+                ocparticles.add(Vec3d(p_origin[0],p_origin[1],p_origin[2]),p);
             }
         }
 
@@ -155,8 +155,8 @@ inline void VRFluids::updateXSPH(int from, int to) {
             p->body->setLinearVelocity(p->sphPressureForce);
             // simulation done.
             // use normal and color to hand over force and particle size to shaders
-            Vec4f color(0,0,0, (*p).sphArea);
-            Vec3f normal(force.x(), force.y(), force.z());
+            Vec4d color(0,0,0, (*p).sphArea);
+            Vec3d normal(force.x(), force.y(), force.z());
             normals->setValue(normal, i);
             colors->setValue(color, i);
         }
@@ -172,7 +172,7 @@ inline void VRFluids::sph_calc_properties(SphParticle* p) {
     btVector3 p_origin = p->body->getWorldTransform().getOrigin();
     //float p_speed = p->body->getLinearVelocity().length2();
 
-    p->neighbors = ocparticles.radiusSearch(Vec3f(p_origin[0],p_origin[1],p_origin[2]),p->sphArea);
+    p->neighbors = ocparticles.radiusSearch(Vec3d(p_origin[0],p_origin[1],p_origin[2]),p->sphArea);
     auto it = p->neighbors.begin();
 
     while (it != p->neighbors.end()) {

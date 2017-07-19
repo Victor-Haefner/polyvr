@@ -54,7 +54,7 @@ PyMethodDef VRPyNumberingEngine::methods[] = {
 
 PyObject* VRPyNumberingEngine::add(VRPyNumberingEngine* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyNumberingEngine::add - Object is invalid"); return NULL; }
-    self->objPtr->add(OSG::Vec3f(), parseInt(args));
+    self->objPtr->add(OSG::Vec3d(), parseInt(args));
     Py_RETURN_TRUE;
 }
 
@@ -66,7 +66,7 @@ PyObject* VRPyNumberingEngine::set(VRPyNumberingEngine* self, PyObject* args) {
     PyObject* p;
     if (! PyArg_ParseTuple(args, "iOf", &i, &p, &f)) return NULL;
 
-    OSG::Vec3f pos;
+    OSG::Vec3d pos;
     vector<PyObject*> v = pyListToVector(p);
     pos[0] = PyFloat_AsDouble(v[0]);
     pos[1] = PyFloat_AsDouble(v[1]);

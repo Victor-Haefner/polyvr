@@ -13,7 +13,7 @@ VRGeometryPtr Asset::merge(VRObjectPtr obj) {
     VRGeoData geo;
     for (auto o : geos) {
         auto g = dynamic_pointer_cast<VRGeometry>(o);
-        Matrix m = g->getMatrixTo(obj);
+        Matrix4d m = g->getMatrixTo(obj);
         geo.append(g, m);
     }
 

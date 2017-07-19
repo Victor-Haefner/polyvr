@@ -24,8 +24,8 @@ void VROpening::initAnimations(VRObjectPtr _d1, VRObjectPtr _d2) {
         d1 = 0;
     }
 
-    if (d1) fkt1 = VRFunction<Vec3f>::create("3DEntSetUp", boost::bind(&VRTransform::setUp, d1, _1));
-    if (d2) fkt2 = VRFunction<Vec3f>::create("3DEntSetUp", boost::bind(&VRTransform::setUp, d2, _1));
+    if (d1) fkt1 = VRFunction<Vec3d>::create("3DEntSetUp", boost::bind(&VRTransform::setUp, d1, _1));
+    if (d2) fkt2 = VRFunction<Vec3d>::create("3DEntSetUp", boost::bind(&VRTransform::setUp, d2, _1));
 }
 
 VRObjectPtr VROpening::copy(vector<VRObjectPtr> children) {
@@ -72,8 +72,8 @@ void VROpening::open() {
     if (state == OPEN) return;
     state = OPEN;
 
-    if (fkt1) scene->addAnimation<Vec3f>(1, 0, fkt1, Vec3f(0,1,0), Vec3f(-1,0,0), false, false);
-    if (fkt2) scene->addAnimation<Vec3f>(1, 0, fkt2, Vec3f(0,1,0), Vec3f(1,0,0), false, false);
+    if (fkt1) scene->addAnimation<Vec3d>(1, 0, fkt1, Vec3d(0,1,0), Vec3d(-1,0,0), false, false);
+    if (fkt2) scene->addAnimation<Vec3d>(1, 0, fkt2, Vec3d(0,1,0), Vec3d(1,0,0), false, false);
     VRSoundManager::get().playSound(sound);
 }
 
@@ -81,8 +81,8 @@ void VROpening::close() {
     if (state == CLOSE) return;
     state = CLOSE;
 
-    if (fkt1) scene->addAnimation<Vec3f>(1, 0, fkt1, Vec3f(-1,0,0), Vec3f(0,1,0), false, false);
-    if (fkt2) scene->addAnimation<Vec3f>(1, 0, fkt2, Vec3f(1,0,0), Vec3f(0,1,0), false, false);
+    if (fkt1) scene->addAnimation<Vec3d>(1, 0, fkt1, Vec3d(-1,0,0), Vec3d(0,1,0), false, false);
+    if (fkt2) scene->addAnimation<Vec3d>(1, 0, fkt2, Vec3d(1,0,0), Vec3d(0,1,0), false, false);
     VRSoundManager::get().playSound(sound);
 }
 

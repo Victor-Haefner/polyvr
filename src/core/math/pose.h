@@ -10,29 +10,29 @@ using namespace std;
 
 class pose {
     private:
-        vector<Vec3f> data;
+        vector<Vec3d> data;
 
     public:
         pose();
-        pose(const Matrix& m);
+        pose(const Matrix4d& m);
         pose(const pose& p);
-        pose(Vec3f p, Vec3f d = Vec3f(0,0,-1), Vec3f u = Vec3f(0,1,0));
-        void set(Vec3f p, Vec3f d = Vec3f(0,0,-1), Vec3f u = Vec3f(0,1,0));
+        pose(Vec3d p, Vec3d d = Vec3d(0,0,-1), Vec3d u = Vec3d(0,1,0));
+        void set(Vec3d p, Vec3d d = Vec3d(0,0,-1), Vec3d u = Vec3d(0,1,0));
         static posePtr create();
-        static posePtr create(const Matrix& m);
+        static posePtr create(const Matrix4d& m);
         static posePtr create(const pose& p);
-        static posePtr create(Vec3f p, Vec3f d = Vec3f(0,0,-1), Vec3f u = Vec3f(0,1,0));
+        static posePtr create(Vec3d p, Vec3d d = Vec3d(0,0,-1), Vec3d u = Vec3d(0,1,0));
 
-        void setPos(Vec3f p);
-        void setDir(Vec3f d);
-        void setUp(Vec3f u);
+        void setPos(Vec3d p);
+        void setDir(Vec3d d);
+        void setUp(Vec3d u);
 
-        Vec3f pos() const;
-        Vec3f dir() const;
-        Vec3f up() const;
-        Vec3f x() const;
+        Vec3d pos() const;
+        Vec3d dir() const;
+        Vec3d up() const;
+        Vec3d x() const;
 
-        Matrix asMatrix() const;
+        Matrix4d asMatrix() const;
         void invert();
 
         string toString();

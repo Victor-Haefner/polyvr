@@ -37,17 +37,17 @@ void VRManipulator::handle(VRGeometryPtr g) {
     c->setActive(true, sel);
 
     if (g == gTX || g == gTY || g == gTZ || g == gRX || g == gRY || g == gRZ) { // lock everything
-        c->setTConstraint(Vec3f(0,0,0), VRConstraint::LINE);
-        c->setRConstraint(Vec3f(0,0,0), VRConstraint::POINT);
+        c->setTConstraint(Vec3d(0,0,0), VRConstraint::LINE);
+        c->setRConstraint(Vec3d(0,0,0), VRConstraint::POINT);
     }
 
-    if (g == gTX) c->setTConstraint(Vec3f(1,0,0), VRConstraint::LINE);
-    if (g == gTY) c->setTConstraint(Vec3f(0,1,0), VRConstraint::LINE);
-    if (g == gTZ) c->setTConstraint(Vec3f(0,0,1), VRConstraint::LINE);
+    if (g == gTX) c->setTConstraint(Vec3d(1,0,0), VRConstraint::LINE);
+    if (g == gTY) c->setTConstraint(Vec3d(0,1,0), VRConstraint::LINE);
+    if (g == gTZ) c->setTConstraint(Vec3d(0,0,1), VRConstraint::LINE);
     //if (g == gRX) sel->setRConstraint(Vec3i(0,1,1)); // TODO: fix rotation constraints!
     //if (g == gRY) sel->setRConstraint(Vec3i(1,0,1));
     //if (g == gRZ) sel->setRConstraint(Vec3i(1,1,0));
-    if (g == gRX || g == gRY || g == gRZ) c->setRConstraint(Vec3f(0,0,0), VRConstraint::POINT);
+    if (g == gRX || g == gRY || g == gRZ) c->setRConstraint(Vec3d(0,0,0), VRConstraint::POINT);
 }
 
 void VRManipulator::manipulate(VRTransformPtr t) {
@@ -69,9 +69,9 @@ void VRManipulator::setup() {
     gRX->setPrimitive("Torus", "0.01 0.07 4 16");
     gRY->setPrimitive("Torus", "0.01 0.07 4 16");
     gRZ->setPrimitive("Torus", "0.01 0.07 4 16");
-    gRX->setDir(Vec3f(1,0,0));
-    gRY->setDir(Vec3f(0,1,0));
-    gRY->setUp(Vec3f(1,0,0));
+    gRX->setDir(Vec3d(1,0,0));
+    gRY->setDir(Vec3d(0,1,0));
+    gRY->setUp(Vec3d(1,0,0));
     anchor->addChild(gTX);
     anchor->addChild(gTY);
     anchor->addChild(gTZ);
@@ -90,12 +90,12 @@ VRPathtool::VRPathtool() : VRObject("Pathtool") {
 
     lmat = VRMaterial::create("pline");
     lmat->setLit(false);
-    lmat->setDiffuse(Vec3f(0.1,0.9,0.2));
+    lmat->setDiffuse(Color3f(0.1,0.9,0.2));
     lmat->setLineWidth(3);
 
     lsmat = VRMaterial::create("spline");
     lsmat->setLit(false);
-    lsmat->setDiffuse(Vec3f(0.9,0.1,0.2));
+    lsmat->setDiffuse(Color3f(0.9,0.1,0.2));
     lsmat->setLineWidth(3);
 
     storeObj("handle", customHandle);
@@ -205,12 +205,12 @@ void VRPathtool::disconnect(int i1, int i2) {
 void VRPathtool::connect(int i1, int i2, bool handles) {
     if (i1 == i2) return;
     auto& nodes = graph->getNodes();
-    Vec3f d = nodes[i2].p.pos() - nodes[i1].p.pos();
+    Vec3d d = nodes[i2].p.pos() - nodes[i1].p.pos();
     d.normalize();
     connect(i1,i2,handles,d,d);
 }
 
-void VRPathtool::connect(int i1, int i2, bool handles, Vec3f n1, Vec3f n2) {
+void VRPathtool::connect(int i1, int i2, bool handles, Vec3d n1, Vec3d n2) {
     if (i1 == i2) return;
     if (!graph) return;
     if (!graph->connected(i1,i2)) {
@@ -225,7 +225,7 @@ void VRPathtool::setGraphEdge(Graph::edge& e, bool handles) {
     setGraphEdge(e, handles, nodes[e.from].p.dir(), nodes[e.to].p.dir());
 }
 
-void VRPathtool::setGraphEdge(Graph::edge& e, bool handles, Vec3f n1, Vec3f n2) {
+void VRPathtool::setGraphEdge(Graph::edge& e, bool handles, Vec3d n1, Vec3d n2) {
     return;
     auto& nodes = graph->getNodes();
     if (!paths.count(e.ID)) {
@@ -254,7 +254,7 @@ VRGeometryPtr VRPathtool::setGraphNode(int i) {
 
 void VRPathtool::update() { // call in script to have smooth knots
     if (graph) { // smooth knot transformations
-        map<int, Vec3f> hPositions; // get handle positions
+        map<int, Vec3d> hPositions; // get handle positions
         for (uint i=0; i<knots.size(); i++)
             //if (auto h = knots[i].handle.lock()) hPositions[i] = h->getRelativePosition(ptr());
             if (auto h = knots[i].handle.lock()) hPositions[i] = h->getWorldPosition();
@@ -263,8 +263,8 @@ void VRPathtool::update() { // call in script to have smooth knots
             auto h = knot.second.handle.lock();
             if (!h) continue;
 
-            Vec3f pos = h->getRelativePosition(ptr());
-            Vec3f dir;
+            Vec3d pos = h->getRelativePosition(ptr());
+            Vec3d dir;
             for (auto k : knot.second.out) if (hPositions.count(k)) dir += pos - hPositions[k];
             for (auto k : knot.second.in) if (hPositions.count(k)) dir += hPositions[k] - pos;
             dir.normalize();
@@ -302,8 +302,8 @@ void VRPathtool::updateEntry(entryPtr e) { // update path representation
         line->setPersistency(0);
         line->setMaterial(lmat);
         e->anchor.lock()->addChild(line);
-        vector<Vec3f> profile;
-        profile.push_back(Vec3f());
+        vector<Vec3d> profile;
+        profile.push_back(Vec3d());
         line->addPath(e->p);
         line->strokeProfile(profile, 0, 0);
     }
@@ -334,18 +334,18 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
         }
 
         if (handle->getChildrenWithAttachment("controlhandle").size() == 0) { // no control handles -> smooth knots curve
-            map<int, Vec3f> hPositions; // get handle positions
+            map<int, Vec3d> hPositions; // get handle positions
             auto getPos = [&](int ID) {
                 if (!hPositions.count(ID)) {
                     auto h = knots[ID].handle.lock();
-                    hPositions[ID] = h ? h->getRelativePosition(ptr()) : Vec3f();
+                    hPositions[ID] = h ? h->getRelativePosition(ptr()) : Vec3d();
                 }
                 return hPositions[ID];
             };
 
             auto updateHandleDir = [&](int ID) {
-                Vec3f pos = getPos(ID);
-                Vec3f dir;
+                Vec3d pos = getPos(ID);
+                Vec3d dir;
                 for (auto k : knots[ID].in ) dir += pos - getPos(k);
                 for (auto k : knots[ID].out) dir += getPos(k) - pos;
                 dir.normalize();
@@ -373,8 +373,8 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
         if (!pg) pg = dynamic_pointer_cast<VRGeometry>(handle->getParent());
         if (!pg) return; // failed to get parent handle
 
-        //Vec3f d = p->pos() - pg->getRelativePosition(ptr());
-        Vec3f d = p->pos() - pg->getWorldPosition();
+        //Vec3d d = p->pos() - pg->getRelativePosition(ptr());
+        Vec3d d = p->pos() - pg->getWorldPosition();
         auto e = handleToEntries[key][0]; // should only be one entry at most!
         auto op = e->p->getPoint(e->points[key]);
         e->p->setPoint( e->points[key], pose(op.pos(), d, op.up()));
@@ -386,11 +386,11 @@ void VRPathtool::projectHandle(VRGeometryPtr handle, VRDevicePtr dev) { // proje
     if (!projObj) return;
     OSG::VRIntersection ins = dev->intersect(projObj);
     if (ins.hit) {
-        Vec3f d = handle->getWorldDirection();
-        //Vec3f d = handle->getRelativeDirection(ptr());
+        Vec3d d = handle->getWorldDirection();
+        //Vec3d d = handle->getRelativeDirection(ptr());
         d -= d.dot(ins.normal)*ins.normal;
-        //handle->setRelativePose( pose::create(Vec3f(ins.point), d, ins.normal), ptr() );
-        handle->setWorldPose( pose::create(Vec3f(ins.point), d, ins.normal) );
+        //handle->setRelativePose( pose::create(Vec3d(ins.point), d, ins.normal), ptr() );
+        handle->setWorldPose( pose::create(Vec3d(ins.point), d, ins.normal) );
     }
 }
 
@@ -458,7 +458,7 @@ pathPtr VRPathtool::newPath( VRDevicePtr dev, VRObjectPtr anchor, int resolution
     return e->p;
 }
 
-VRGeometryPtr VRPathtool::newControlHandle(VRGeometryPtr handle, Vec3f p) {
+VRGeometryPtr VRPathtool::newControlHandle(VRGeometryPtr handle, Vec3d p) {
     VRGeometryPtr h;
     h = VRGeometry::create("handle");
     h->setPrimitive("Sphere", "0.04 2");
@@ -467,7 +467,7 @@ VRGeometryPtr VRPathtool::newControlHandle(VRGeometryPtr handle, Vec3f p) {
     h->setPickable(true);
     h->addAttachment("controlhandle", 0);
     h->setMaterial(VRMaterial::get("pathHandle"));
-    h->getMaterial()->setDiffuse(Vec3f(0.5,0.5,0.9));
+    h->getMaterial()->setDiffuse(Color3f(0.5,0.5,0.9));
     h->setPersistency(0);
     //h->setRelativePosition(p, ptr());
     h->setWorldPosition(p);
@@ -488,7 +488,7 @@ VRGeometryPtr VRPathtool::newHandle() {
     h->setPickable(true);
     h->addAttachment("handle", 0);
     h->setMaterial(VRMaterial::get("pathHandle"));
-    h->getMaterial()->setDiffuse(Vec3f(0.5,0.5,0.9));
+    h->getMaterial()->setDiffuse(Color3f(0.5,0.5,0.9));
     //calcFaceNormals(h->getMesh()); // not working ??
     h->setPersistency(0);
     handles.push_back(h);
@@ -543,7 +543,7 @@ VRGeometryPtr VRPathtool::extrude(VRDevicePtr dev, pathPtr p) {
     }
 
     auto e = pathToEntry[p.get()];
-    e->p->addPoint( pose(Vec3f(0,0,-1), Vec3f(1,0,0)));
+    e->p->addPoint( pose(Vec3d(0,0,-1), Vec3d(1,0,0)));
 
     VRGeometryPtr h = newHandle();
     handleToEntries[h.get()].push_back(e);
@@ -553,7 +553,7 @@ VRGeometryPtr VRPathtool::extrude(VRDevicePtr dev, pathPtr p) {
     e->anchor.lock()->addChild(h);
     if (dev) {
         dev->drag(h, dev->getBeacon());
-        h->setPose( pose::create(Vec3f(0,0,-1)) );
+        h->setPose( pose::create(Vec3d(0,0,-1)) );
     }
 
     updateHandle(h);

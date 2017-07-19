@@ -19,7 +19,7 @@ VRJointTool::VRJointTool(string name) : VRGeometry(name) {
     setPrimitive("Cylinder", "0.05 0.1 16 0 0 1");
 
     auto mat = VRMaterial::create("VRJointTool");
-    mat->setDiffuse(Vec3f(0,0,0));
+    mat->setDiffuse(Color3f(0,0,0));
     mat->setWireFrame(1);
     mat->setLineWidth(4);
     mat->setLit(0);
@@ -85,14 +85,14 @@ void VRJointTool::setActive(bool b) { active = b; updateVis(); }
 void VRJointTool::select(bool b) { selected = b; updateVis(); }
 
 void VRJointTool::updateVis() {
-    Vec3f r(1,0,0);
-    Vec3f g(0,1,0);
-    Vec3f y(1,1,0);
+    Color3f r(1,0,0);
+    Color3f g(0,1,0);
+    Color3f y(1,1,0);
 
-    Vec3f ad1 = anchor1->dir();
-    Vec3f ad2 = anchor2->dir();
-    Vec3f ap1 = anchor1->pos();
-    Vec3f ap2 = anchor2->pos();
+    Vec3d ad1 = anchor1->dir();
+    Vec3d ad2 = anchor2->dir();
+    Vec3d ap1 = anchor1->pos();
+    Vec3d ap2 = anchor2->pos();
 
     // plane plane intersection axis
     /*Plane pl1(ad1, ap1);
@@ -103,10 +103,10 @@ void VRJointTool::updateVis() {
     ad3 = axis.getDirection();*/
 
     // axis axis intersection axis
-    Vec3f ad3 = ad1.cross(ad2);
-    Vec3f ap3;
-    Matrix m;
-    m[0] = Vec4f(ad1); m[1] = Vec4f(ad2); m[2] = Vec4f(ad3);
+    Vec3d ad3 = ad1.cross(ad2);
+    Vec3d ap3;
+    Matrix4d m;
+    m[0] = Vec4d(ad1); m[1] = Vec4d(ad2); m[2] = Vec4d(ad3);
     m.invert();
     m.mult(ap2-ap1, ap3);
     ap3 = ap1+ad1*ap3[0];
@@ -128,14 +128,14 @@ void VRJointTool::updateVis() {
     ageo->setMatrix(m);
 
     auto mat = getMaterial();
-    mat->setDiffuse(Vec3f(1,0,0));
-    if (o1 && !o2) mat->setDiffuse(Vec3f(1,0.8,0));
+    mat->setDiffuse(Color3f(1,0,0));
+    if (o1 && !o2) mat->setDiffuse(Color3f(1,0.8,0));
 
     if (!o1 || !o2 || o1 == o2) return;
-    mat->setDiffuse(Vec3f(0,1,0));
+    mat->setDiffuse(Color3f(0,1,0));
 
-    Matrix L; L.setTranslate(ap3);
-    Matrix A = o1->getWorldMatrix();
+    Matrix4d L; L.setTranslate(ap3);
+    Matrix4d A = o1->getWorldMatrix();
     A.invert();
     A.mult(L);
 
@@ -144,7 +144,7 @@ void VRJointTool::updateVis() {
     c->setReferenceB(L);
     c->setRConstraint(ad3, VRConstraint::LINE);
     //c->setTConstraint(lp.pos(), VRConstraint::POINT);
-    c->setTConstraint(Vec3f(0,0,0), VRConstraint::POINT);
+    c->setTConstraint(Vec3d(0,0,0), VRConstraint::POINT);
     c->setActive(active, o2);
 }
 

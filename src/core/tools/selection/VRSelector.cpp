@@ -11,7 +11,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRSelector::VRSelector() {
-    color = Vec3f(0.2, 0.65, 0.9);
+    color = Color3f(0.2, 0.65, 0.9);
     selection = VRSelection::create();
 }
 
@@ -135,7 +135,7 @@ void VRSelector::add(VRSelectionPtr s) {
     update();
 }
 
-void VRSelector::setColor(Vec3f c) { color = c; }
+void VRSelector::setColor(Color3f c) { color = c; }
 VRSelectionPtr VRSelector::getSelection() { return selection; }
 
 OSG_END_NAMESPACE;

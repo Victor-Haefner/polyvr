@@ -56,13 +56,13 @@ PyObject* VRPyPath::isSinuous(VRPyPath* self, PyObject *args) {
 
 PyObject* VRPyPath::getClosestPoint(VRPyPath* self, PyObject *args) {
     if (!self->valid()) return NULL;
-    auto p = parseVec3f( args );
+    auto p = parseVec3d( args );
     return PyFloat_FromDouble( self->objPtr->getClosestPoint(p) );
 }
 
 PyObject* VRPyPath::getDistance(VRPyPath* self, PyObject *args) {
     if (!self->valid()) return NULL;
-    auto p = parseVec3f( args );
+    auto p = parseVec3d( args );
     return PyFloat_FromDouble( self->objPtr->getDistance(p) );
 }
 
@@ -156,11 +156,11 @@ PyObject* VRPyPath::set(VRPyPath* self, PyObject* args) {
         if (! PyArg_ParseTuple(args, "OOOOi", &p1, &n1, &p2, &n2, &i)) return NULL;
     } else if (! PyArg_ParseTuple(args, "OOOOOOi", &p1, &n1, &u1, &p2, &n2, &u2, &i)) return NULL;
 
-    OSG::Vec3f uv1(0,1,0), uv2(0,1,0);
-    if (u1) uv1 = parseVec3fList(u1);
-    if (u2) uv2 = parseVec3fList(u2);
-    self->objPtr->addPoint( pose(parseVec3fList(p1), parseVec3fList(n1), uv1));
-    self->objPtr->addPoint( pose(parseVec3fList(p2), parseVec3fList(n2), uv2));
+    OSG::Vec3d uv1(0,1,0), uv2(0,1,0);
+    if (u1) uv1 = parseVec3dList(u1);
+    if (u2) uv2 = parseVec3dList(u2);
+    self->objPtr->addPoint( pose(parseVec3dList(p1), parseVec3dList(n1), uv1));
+    self->objPtr->addPoint( pose(parseVec3dList(p2), parseVec3dList(n2), uv2));
     self->objPtr->compute(i);
     Py_RETURN_TRUE;
 }
@@ -182,13 +182,13 @@ PyObject* VRPyPath::addPoint(VRPyPath* self, PyObject* args) {
     PyObject *_p, *_n, *_c, *_u; _p=_n=_c=_u=0;
     if (! PyArg_ParseTuple(args, "|OOOO", &_p, &_n, &_c, &_u)) return NULL;
 
-    OSG::Vec3f p, n, c, u;
-    p = _p ? parseVec3fList(_p) : OSG::Vec3f(0,0,0);
-    n = _n ? parseVec3fList(_n) : OSG::Vec3f(0,0,-1);
-    c = _c ? parseVec3fList(_c) : OSG::Vec3f(0,0,0);
-    u = _u ? parseVec3fList(_u) : OSG::Vec3f(0,1,0);
+    OSG::Vec3d p, n, c, u;
+    p = _p ? parseVec3dList(_p) : OSG::Vec3d(0,0,0);
+    n = _n ? parseVec3dList(_n) : OSG::Vec3d(0,0,-1);
+    c = _c ? parseVec3dList(_c) : OSG::Vec3d(0,0,0);
+    u = _u ? parseVec3dList(_u) : OSG::Vec3d(0,1,0);
 
-    self->objPtr->addPoint( pose(p,n,u), c );
+    self->objPtr->addPoint( pose(p,n,u), OSG::Vec3f(c) );
     Py_RETURN_TRUE;
 }
 

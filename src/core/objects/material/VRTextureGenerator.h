@@ -2,6 +2,7 @@
 #define VRTEXTUREGENERATOR_H_INCLUDED
 
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGColor.h>
 
 #include "core/objects/VRObjectFwd.h"
 #include "core/math/VRMathFwd.h"
@@ -29,8 +30,8 @@ class VRTextureGenerator {
         struct Layer {
             GEN_TYPE type;
             float amount = 0;
-            Vec3f c31,c32;
-            Vec4f c41,c42;
+            Color3f c31,c32;
+            Color4f c41,c42;
             Vec3i p1;
             pathPtr p;
             VRPolygonPtr pgon;
@@ -40,16 +41,16 @@ class VRTextureGenerator {
         vector<Layer> layers;
         VRTexturePtr img;
 
-        void applyPixel(Vec3f* data, Vec3i p, Vec4f c);
-        void applyPixel(Vec4f* data, Vec3i p, Vec4f c);
-        template<typename T> void applyFill(T* data, Vec4f c);
-        template<typename T> void applyLine(T* data, Vec3f p1, Vec3f p2, Vec4f c, float width);
-        template<typename T> void applyPath(T* data, pathPtr p, Vec4f c, float width);
-        template<typename T> void applyPolygon(T* data, VRPolygonPtr p, Vec4f c, float height);
+        void applyPixel(Color3f* data, Vec3i p, Color4f c);
+        void applyPixel(Color4f* data, Vec3i p, Color4f c);
+        template<typename T> void applyFill(T* data, Color4f c);
+        template<typename T> void applyLine(T* data, Vec3d p1, Vec3d p2, Color4f c, float width);
+        template<typename T> void applyPath(T* data, pathPtr p, Color4f c, float width);
+        template<typename T> void applyPolygon(T* data, VRPolygonPtr p, Color4f c, float height);
 
-        bool inBox(Pnt3f& p, Vec3f& s);
+        bool inBox(Pnt3d& p, Vec3d& s);
         Vec3i clamp(Vec3i p);
-        Vec3f upscale(Vec3f& p);
+        Vec3d upscale(Vec3d& p);
 
     public:
         VRTextureGenerator();
@@ -60,16 +61,16 @@ class VRTextureGenerator {
         void setSize(int w, int h, int d = 1);
         Vec3i getSize();
 
-        void add(GEN_TYPE type, float amount, Vec3f c1, Vec3f c2);
-        void add(string type, float amount, Vec3f c1, Vec3f c2);
-        void add(GEN_TYPE type, float amount, Vec4f c1, Vec4f c2);
-        void add(string type, float amount, Vec4f c1, Vec4f c2);
+        void add(GEN_TYPE type, float amount, Color3f c1, Color3f c2);
+        void add(string type, float amount, Color3f c1, Color3f c2);
+        void add(GEN_TYPE type, float amount, Color4f c1, Color4f c2);
+        void add(string type, float amount, Color4f c1, Color4f c2);
 
-        void drawFill(Vec4f c);
-        void drawPixel(Vec3i p, Vec4f c);
-        void drawLine(Vec3f p1, Vec3f p2, Vec4f c, float width);
-        void drawPath(pathPtr p, Vec4f c, float width);
-        void drawPolygon(VRPolygonPtr p, Vec4f c, float height = 0);
+        void drawFill(Color4f c);
+        void drawPixel(Vec3i p, Color4f c);
+        void drawLine(Vec3d p1, Vec3d p2, Color4f c, float width);
+        void drawPath(pathPtr p, Color4f c, float width);
+        void drawPolygon(VRPolygonPtr p, Color4f c, float height = 0);
 
         void clearStage();
         VRTexturePtr compose(int seed);

@@ -37,7 +37,7 @@ class VRSprite : public VRGeometry {
         void setFontColor(Color4f c);
         void setBackColor(Color4f c);
 
-        Vec2f getSize();
+        Vec2d getSize();
         string getLabel();
 
         void convertToCloth();

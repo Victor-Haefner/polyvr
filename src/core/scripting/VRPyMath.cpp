@@ -4,7 +4,7 @@
 
 using namespace OSG;
 
-template<> PyTypeObject VRPyBaseT<Vec3f>::type = {
+template<> PyTypeObject VRPyBaseT<Vec3d>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
     "VR.Math.Vec3",             /*tp_name*/
@@ -81,14 +81,14 @@ PyMethodDef VRPyVec3f::methods[] = {
     {NULL}  /* Sentinel */
 };
 
-VRPyVec3f* toPyVec3f(const Vec3f& v) {
+VRPyVec3f* toPyVec3f(const Vec3d& v) {
     VRPyVec3f* pv = (VRPyVec3f*)VRPyVec3f::typeRef->tp_alloc(VRPyVec3f::typeRef, 0);
     pv->owner = false;
     pv->v = v;
     return pv;
 }
 
-PyObject* toPyObject(const Vec3f& v) { return (PyObject*)toPyVec3f(v); }
+PyObject* toPyObject(const Vec3d& v) { return (PyObject*)toPyVec3f(v); }
 
 PyObject* VRPyVec3f::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     PyObject* v = 0;
@@ -96,8 +96,8 @@ PyObject* VRPyVec3f::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     if (! PyArg_ParseTuple(args, "O", &v))
         if (! PyArg_ParseTuple(args, "fff", &a, &b, &c)) { setErr("Bad Constructor to Vec3"); return NULL; }
     VRPyVec3f* pv = (VRPyVec3f*)allocPtr( type, 0 );
-    if (!v) pv->v = Vec3f(a,b,c);
-    else pv->v = parseVec3fList(v);
+    if (!v) pv->v = Vec3d(a,b,c);
+    else pv->v = parseVec3dList(v);
     return (PyObject*)pv;
 }
 
@@ -127,22 +127,22 @@ PyObject* VRPyVec3f::length(VRPyVec3f* self) {
 PyObject* VRPyVec3f::dot(VRPyVec3f* self, PyObject* args) {
     PyObject* v;
     if (!PyArg_ParseTuple(args, "O", &v)) return NULL;
-    return PyFloat_FromDouble( self->v.dot( parseVec3fList(v) ) );
+    return PyFloat_FromDouble( self->v.dot( parseVec3dList(v) ) );
 }
 
 PyObject* VRPyVec3f::cross(VRPyVec3f* self, PyObject* args) {
     PyObject* v = 0;
     if (!PyArg_ParseTuple(args, "O", &v)) return NULL;
-    return ::toPyObject( self->v.cross( parseVec3fList(v)) );
+    return ::toPyObject( self->v.cross( parseVec3dList(v)) );
 }
 
 
 PyObject* VRPyVec3f::add(PyObject* self, PyObject* v) {
-    return ::toPyObject( ((VRPyVec3f*)self)->v + parseVec3fList(v) );
+    return ::toPyObject( ((VRPyVec3f*)self)->v + parseVec3dList(v) );
 }
 
 PyObject* VRPyVec3f::sub(PyObject* self, PyObject* v) {
-    return ::toPyObject( ((VRPyVec3f*)self)->v - parseVec3fList(v) );
+    return ::toPyObject( ((VRPyVec3f*)self)->v - parseVec3dList(v) );
 }
 
 PyObject* VRPyVec3f::mul(PyObject* self, PyObject* F) {
@@ -163,8 +163,8 @@ PyObject* VRPyVec3f::neg(PyObject* self) {
 }
 
 PyObject* VRPyVec3f::abs(PyObject* self) {
-    Vec3f v = ((VRPyVec3f*)self)->v;
-    return ::toPyObject( Vec3f(::abs(v[0]), ::abs(v[1]), ::abs(v[2])) );
+    Vec3d v = ((VRPyVec3f*)self)->v;
+    return ::toPyObject( Vec3d(::abs(v[0]), ::abs(v[1]), ::abs(v[2])) );
 }
 
 PySequenceMethods VRPyVec3f::sMethods = {
@@ -182,12 +182,12 @@ Py_ssize_t VRPyVec3f::len(PyObject* self) {
 }
 
 PyObject* VRPyVec3f::getItem(PyObject* self, Py_ssize_t i) {
-    Vec3f v = ((VRPyVec3f*)self)->v;
+    Vec3d v = ((VRPyVec3f*)self)->v;
     return PyFloat_FromDouble(v[i]);
 }
 
 int VRPyVec3f::setItem(PyObject* self, Py_ssize_t i, PyObject* val) {
-    Vec3f& v = ((VRPyVec3f*)self)->v;
+    Vec3d& v = ((VRPyVec3f*)self)->v;
     v[i] = PyFloat_AsDouble(val);
     return 0;
 }
@@ -247,7 +247,7 @@ PyObject* VRPyLine::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     PyObject* d = 0;
     if (! PyArg_ParseTuple(args, "OO", &p, &d)) return NULL;
     VRPyLine* L = (VRPyLine*)allocPtr( type, 0 );
-    L->l = Line( parseVec3fList(p), parseVec3fList(d) );
+    L->l = Line( Pnt3f(parseVec3dList(p)), Vec3f(parseVec3dList(d)) );
     return (PyObject*)L;
 }
 
@@ -258,11 +258,11 @@ PyObject* VRPyLine::Print(PyObject* self) {
 }
 
 PyObject* VRPyLine::pos(VRPyLine* self) {
-    return ::toPyObject(Vec3f(self->l.getPosition()));
+    return ::toPyObject(Vec3d(self->l.getPosition()));
 }
 
 PyObject* VRPyLine::dir(VRPyLine* self) {
-    return ::toPyObject(Vec3f(self->l.getDirection()));
+    return ::toPyObject(Vec3d(self->l.getDirection()));
 }
 
 PyObject* VRPyLine::intersect(VRPyLine* self, PyObject *args) {
@@ -270,13 +270,13 @@ PyObject* VRPyLine::intersect(VRPyLine* self, PyObject *args) {
     if (! PyArg_ParseTuple(args, "O", &l)) return NULL;
     VRPyLine* L = (VRPyLine*)l;
 
-    auto insct = [&](const Pnt3f& p1, const Vec3f& n1, const Pnt3f& p2, const Vec3f& n2) -> Vec3f {
+    auto insct = [&](const Pnt3f& p1, const Vec3f& n1, const Pnt3f& p2, const Vec3f& n2) -> Vec3d {
 		Vec3f d = p2-p1;
 		Vec3f n3 = n1.cross(n2);
 		float N3 = n3.dot(n3);
 		if (N3 == 0) N3 = 1.0;
 		float s = d.cross(n2).dot(n1.cross(n2))/N3;
-		return Vec3f(p1) + n1*s;
+		return Vec3d(Vec3f(p1) + n1*s);
     };
 
     auto i = insct( self->l.getPosition(), self->l.getDirection(), L->l.getPosition(), L->l.getDirection() );

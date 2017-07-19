@@ -37,7 +37,7 @@ OSG_BEGIN_NAMESPACE;
 class VRGuiSemantics;
 
 struct VRSemanticWidget : public std::enable_shared_from_this<VRSemanticWidget> {
-    Vec2f pos;
+    Vec2d pos;
     bool visible = true;
     bool expanded = false;
     bool subTreeFolded = false;
@@ -62,12 +62,12 @@ struct VRSemanticWidget : public std::enable_shared_from_this<VRSemanticWidget> 
     void on_select();
     void on_expander_toggled();
 
-    void move(Vec2f p);
-    Vec2f getAnchorPoint(Vec2f p);
+    void move(Vec2d p);
+    Vec2d getAnchorPoint(Vec2d p);
     void setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag, int ID = 0, int rtype = 0);
 
-    Vec3f getPosition();
-    Vec3f getSize();
+    Vec3d getPosition();
+    Vec3d getSize();
 
     void on_fold_clicked();
     void setVisible(bool visible = true);

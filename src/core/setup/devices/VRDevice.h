@@ -16,7 +16,7 @@ class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, p
         string message;
         string type;
         VRTransformWeakPtr target;
-        Vec2f speed;
+        Vec2d speed;
 
         map< string, VRSignalPtr > callbacks; //all callbacks
         map<VRSignal*, VRSignalPtr> activatedSignals;
@@ -73,8 +73,8 @@ class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, p
 
         void printMap();
 
-        void setSpeed(Vec2f s);
-        Vec2f getSpeed();
+        void setSpeed(Vec2d s);
+        Vec2d getSpeed();
 
         //virtual void save(xmlpp::Element* node);
         //virtual void load(xmlpp::Element* node);

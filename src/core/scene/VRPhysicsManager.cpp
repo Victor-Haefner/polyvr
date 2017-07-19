@@ -66,7 +66,7 @@ VRPhysicsManager::VRPhysicsManager() {
 
     phys_mat = VRMaterial::get("phys_mat");
     phys_mat->setLit(false);
-    phys_mat->setDiffuse(Vec3f(0.8,0.8,0.4));
+    phys_mat->setDiffuse(Color3f(0.8,0.8,0.4));
     phys_mat->setTransparency(0.4);
 
     cout << "Init VRPhysicsManager" << endl;
@@ -196,10 +196,10 @@ void VRPhysicsManager::updatePhysObjects() {
             GeoVec3fPropertyRecPtr visualnorms = GeoVec3fProperty::create();
 
             for (int i = 0; i<nodes.size(); i++) { //go through the nodes and copy positions to mesh positionarray
-                    Vec3f p = VRPhysics::toVec3f(nodes[i].m_x);
-                    OSG::Vec3f tmp;
+                    Vec3d p = VRPhysics::toVec3d(nodes[i].m_x);
+                    OSG::Vec3d tmp;
                     visualpos->addValue(p);
-                    Vec3f n = VRPhysics::toVec3f(nodes[i].m_n);
+                    Vec3d n = VRPhysics::toVec3d(nodes[i].m_n);
                     visualnorms->addValue( n );
             }
 
@@ -232,9 +232,9 @@ void VRPhysicsManager::updatePhysObjects() {
                 GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
                 GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
                 for (int i = 0; i<nodes.size(); i++) { //go through the nodes and copy positions to mesh positionarray
-                    Vec3f p = VRPhysics::toVec3f(nodes[i].m_x);
+                    Vec3d p = VRPhysics::toVec3d(nodes[i].m_x);
                     positions->addValue(p);
-                    Vec3f n = VRPhysics::toVec3f(nodes[i].m_n);
+                    Vec3d n = VRPhysics::toVec3d(nodes[i].m_n);
                     norms->addValue( n );
                 }
                 geo->setPositions(positions);
@@ -263,7 +263,7 @@ void VRPhysicsManager::unphysicalize(VRTransformPtr obj) {
     if (OSGobjs.count(bdy)) OSGobjs.erase(bdy);
 }
 
-void VRPhysicsManager::setGravity(Vec3f g) { MLock lock(mtx); dynamicsWorld->setGravity(btVector3(g[0],g[1],g[2])); }
+void VRPhysicsManager::setGravity(Vec3d g) { MLock lock(mtx); dynamicsWorld->setGravity(btVector3(g[0],g[1],g[2])); }
 
 btSoftRigidDynamicsWorld* VRPhysicsManager::bltWorld() { return dynamicsWorld; }
 

@@ -6,10 +6,10 @@
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
 
-PyObject* toPyObject(const OSG::Vec3f& v);
+PyObject* toPyObject(const OSG::Vec3d& v);
 
-struct VRPyVec3f : VRPyBaseT<OSG::Vec3f> {
-    OSG::Vec3f v;
+struct VRPyVec3f : VRPyBaseT<OSG::Vec3d> {
+    OSG::Vec3d v;
 
     static PyMethodDef methods[];
     static PyNumberMethods nMethods;

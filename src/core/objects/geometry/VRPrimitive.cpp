@@ -169,42 +169,42 @@ GeometryMTRecPtr VRArrow::make() {
 
     float w2 = width*0.5;
 
-    auto pushArrow = [&](float t, Vec3f n) {
-        int v1 = data.pushVert(Vec3f(0,t,0), n);
-        int v2 = data.pushVert(Vec3f(-w2,t,hat), n);
-        int v3 = data.pushVert(Vec3f(w2,t,hat), n);
-        int v4 = data.pushVert(Vec3f(-trunc*0.5,t,hat), n);
-        int v5 = data.pushVert(Vec3f(trunc*0.5,t,hat), n);
-        int v6 = data.pushVert(Vec3f(-trunc*0.5,t,height), n);
-        int v7 = data.pushVert(Vec3f(trunc*0.5,t,height), n);
+    auto pushArrow = [&](float t, Vec3d n) {
+        int v1 = data.pushVert(Vec3d(0,t,0), n);
+        int v2 = data.pushVert(Vec3d(-w2,t,hat), n);
+        int v3 = data.pushVert(Vec3d(w2,t,hat), n);
+        int v4 = data.pushVert(Vec3d(-trunc*0.5,t,hat), n);
+        int v5 = data.pushVert(Vec3d(trunc*0.5,t,hat), n);
+        int v6 = data.pushVert(Vec3d(-trunc*0.5,t,height), n);
+        int v7 = data.pushVert(Vec3d(trunc*0.5,t,height), n);
         data.pushTri(v1,v2,v3);
         data.pushQuad(v4,v6,v7,v5);
     };
 
-    auto pushRect = [&](float x0, float x1, float y0, float y1, float z0, float z1, Vec3f n) {
-        int v1 = data.pushVert(Vec3f(x0,y0,z0), n);
-        int v2 = data.pushVert(Vec3f(x1,y0,z1), n);
-        int v3 = data.pushVert(Vec3f(x1,y1,z1), n);
-        int v4 = data.pushVert(Vec3f(x0,y1,z0), n);
+    auto pushRect = [&](float x0, float x1, float y0, float y1, float z0, float z1, Vec3d n) {
+        int v1 = data.pushVert(Vec3d(x0,y0,z0), n);
+        int v2 = data.pushVert(Vec3d(x1,y0,z1), n);
+        int v3 = data.pushVert(Vec3d(x1,y1,z1), n);
+        int v4 = data.pushVert(Vec3d(x0,y1,z0), n);
         data.pushQuad(v1,v2,v3,v4);
     };
 
-    if (thickness == 0) pushArrow(0, Vec3f(0,1,0));
+    if (thickness == 0) pushArrow(0, Vec3d(0,1,0));
     else {
         float t2 = thickness*0.5;
 
-        pushArrow(t2, Vec3f(0,1,0));
-        pushArrow(-t2, Vec3f(0,1,0));
+        pushArrow(t2, Vec3d(0,1,0));
+        pushArrow(-t2, Vec3d(0,1,0));
 
-        Vec3f nh1(hat, 0, w2); nh1.normalize();
-        Vec3f nh2(hat, 0, -w2); nh2.normalize();
+        Vec3d nh1(hat, 0, w2); nh1.normalize();
+        Vec3d nh2(hat, 0, -w2); nh2.normalize();
         pushRect(0,-w2,t2,-t2,0,hat, nh1);
         pushRect(0,w2,t2,-t2,0,hat, nh2);
-        pushRect(-w2,-trunc*0.5,t2,-t2,hat,hat, Vec3f(0,0,-1));
-        pushRect(trunc*0.5,w2,t2,-t2,hat,hat, Vec3f(0,0,-1));
-        pushRect(-trunc*0.5,trunc*0.5,t2,-t2,height,height, Vec3f(0,0,-1));
-        pushRect(-trunc*0.5,-trunc*0.5,t2,-t2,hat,height, Vec3f(1,0,0));
-        pushRect(trunc*0.5,trunc*0.5,t2,-t2,height,hat, Vec3f(-1,0,0));
+        pushRect(-w2,-trunc*0.5,t2,-t2,hat,hat, Vec3d(0,0,-1));
+        pushRect(trunc*0.5,w2,t2,-t2,hat,hat, Vec3d(0,0,-1));
+        pushRect(-trunc*0.5,trunc*0.5,t2,-t2,height,height, Vec3d(0,0,-1));
+        pushRect(-trunc*0.5,-trunc*0.5,t2,-t2,hat,height, Vec3d(1,0,0));
+        pushRect(trunc*0.5,trunc*0.5,t2,-t2,height,hat, Vec3d(-1,0,0));
     }
 
     auto geo = data.asGeometry("Arrow");
@@ -222,7 +222,7 @@ GeometryMTRecPtr VRScrewThread::make() {
     int rN = Nsegments;
 
     //positionen und Normalen
-    Vec3f n;
+    Vec3d n;
     int iN = 0;
     int tN = round(length/pitch);
     float r1 = radius;
@@ -234,10 +234,10 @@ GeometryMTRecPtr VRScrewThread::make() {
             float ca = cos(j*2*M_PI/rN);
             float o = j*pitch/rN;
 
-            Pos->addValue(Vec3f(r1*ca ,r1*sa ,o+i*pitch));
-            Pos->addValue(Vec3f(r2*ca ,r2*sa ,o+(i+0.5)*pitch));
-            Norms->addValue(Vec3f(ca,sa,0));
-            Norms->addValue(Vec3f(ca,sa,0));
+            Pos->addValue(Vec3d(r1*ca ,r1*sa ,o+i*pitch));
+            Pos->addValue(Vec3d(r2*ca ,r2*sa ,o+(i+0.5)*pitch));
+            Norms->addValue(Vec3d(ca,sa,0));
+            Norms->addValue(Vec3d(ca,sa,0));
 
             if (i == 0 && j == 0) continue;
 
@@ -293,33 +293,33 @@ GeometryMTRecPtr VRGear::make() {
     float b = z*tan(bevel);
     float bt = ts*cos(bevel);
     float bz = -ts*sin(bevel);
-    Vec3f n;
+    Vec3d n;
     int iN = 0;
     for(int i=0; i<tN; i++) {
         for (int j=0; j<4; j++) a[j] = 2*M_PI*(i+j/6.)/tN;
         for (int j=0; j<4; j++) { c[j] = cos(a[j]); s[j] = sin(a[j]); }
 
         iN = Pos->size();
-        Pos->addValue(Vec3f(c[0]*r0, s[0]*r0, -z)); // 0
-        Pos->addValue(Vec3f(c[0]*(r1-b), s[0]*(r1-b), -z)); // 1
-        Pos->addValue(Vec3f(c[0]*(r1-b+bt*0.5), s[0]*(r1-b+bt*0.5), -z+bz*0.5)); // 2
-        Pos->addValue(Vec3f(c[1]*(r1-b+bt), s[1]*(r1-b+bt), -z+bz)); // 3
-        Pos->addValue(Vec3f(c[2]*(r1-b+bt), s[2]*(r1-b+bt), -z+bz)); // 4
-        Pos->addValue(Vec3f(c[3]*(r1-b+bt*0.5), s[3]*(r1-b+bt*0.5), -z+bz*0.5)); // 5
-        Pos->addValue(Vec3f(c[3]*(r1-b), s[3]*(r1-b), -z)); // 6
-        Pos->addValue(Vec3f(c[3]*r0, s[3]*r0, -z)); // 7
+        Pos->addValue(Vec3d(c[0]*r0, s[0]*r0, -z)); // 0
+        Pos->addValue(Vec3d(c[0]*(r1-b), s[0]*(r1-b), -z)); // 1
+        Pos->addValue(Vec3d(c[0]*(r1-b+bt*0.5), s[0]*(r1-b+bt*0.5), -z+bz*0.5)); // 2
+        Pos->addValue(Vec3d(c[1]*(r1-b+bt), s[1]*(r1-b+bt), -z+bz)); // 3
+        Pos->addValue(Vec3d(c[2]*(r1-b+bt), s[2]*(r1-b+bt), -z+bz)); // 4
+        Pos->addValue(Vec3d(c[3]*(r1-b+bt*0.5), s[3]*(r1-b+bt*0.5), -z+bz*0.5)); // 5
+        Pos->addValue(Vec3d(c[3]*(r1-b), s[3]*(r1-b), -z)); // 6
+        Pos->addValue(Vec3d(c[3]*r0, s[3]*r0, -z)); // 7
 
-        Pos->addValue(Vec3f(c[0]*r0, s[0]*r0, z)); // 8
-        Pos->addValue(Vec3f(c[0]*(r1+b), s[0]*(r1+b), z)); // 9
-        Pos->addValue(Vec3f(c[0]*(r1+b+bt*0.5), s[0]*(r1+b+bt*0.5), z+bz*0.5)); // 10
-        Pos->addValue(Vec3f(c[1]*(r1+b+bt), s[1]*(r1+b+bt), z+bz)); // 11
-        Pos->addValue(Vec3f(c[2]*(r1+b+bt), s[2]*(r1+b+bt), z+bz)); // 12
-        Pos->addValue(Vec3f(c[3]*(r1+b+bt*0.5), s[3]*(r1+b+bt*0.5), z+bz*0.5)); // 13
-        Pos->addValue(Vec3f(c[3]*(r1+b), s[3]*(r1+b), z)); // 14
-        Pos->addValue(Vec3f(c[3]*r0, s[3]*r0, z)); // 15
+        Pos->addValue(Vec3d(c[0]*r0, s[0]*r0, z)); // 8
+        Pos->addValue(Vec3d(c[0]*(r1+b), s[0]*(r1+b), z)); // 9
+        Pos->addValue(Vec3d(c[0]*(r1+b+bt*0.5), s[0]*(r1+b+bt*0.5), z+bz*0.5)); // 10
+        Pos->addValue(Vec3d(c[1]*(r1+b+bt), s[1]*(r1+b+bt), z+bz)); // 11
+        Pos->addValue(Vec3d(c[2]*(r1+b+bt), s[2]*(r1+b+bt), z+bz)); // 12
+        Pos->addValue(Vec3d(c[3]*(r1+b+bt*0.5), s[3]*(r1+b+bt*0.5), z+bz*0.5)); // 13
+        Pos->addValue(Vec3d(c[3]*(r1+b), s[3]*(r1+b), z)); // 14
+        Pos->addValue(Vec3d(c[3]*r0, s[3]*r0, z)); // 15
 
-        for (int j=0; j<8; j++) { n = Vec3f(0,0,-1); Norms->addValue(n); }
-        for (int j=0; j<8; j++) { n = Vec3f(0,0,1); Norms->addValue(n); }
+        for (int j=0; j<8; j++) { n = Vec3d(0,0,-1); Norms->addValue(n); }
+        for (int j=0; j<8; j++) { n = Vec3d(0,0,1); Norms->addValue(n); }
 
         Indices->addValue(iN+1);
         Indices->addValue(iN+0); // T1 unten
@@ -379,41 +379,41 @@ GeometryMTRecPtr VRGear::make() {
         for (int j=0; j<4; j++) { c[j] = cos(a[j]); s[j] = sin(a[j]); }
 
         iN = Pos->size();
-        Pos->addValue(Vec3f(c[0]*r0, s[0]*r0, -z)); // 0
-        Pos->addValue(Vec3f(c[0]*(r1-b), s[0]*(r1-b), -z)); // 1
-        Pos->addValue(Vec3f(c[0]*(r1-b+bt*0.5), s[0]*(r1-b+bt*0.5), -z+bz*0.5)); // 2
-        Pos->addValue(Vec3f(c[1]*(r1-b+bt), s[1]*(r1-b+bt), -z+bz)); // 3
-        Pos->addValue(Vec3f(c[2]*(r1-b+bt), s[2]*(r1-b+bt), -z+bz)); // 4
-        Pos->addValue(Vec3f(c[3]*(r1-b+bt*0.5), s[3]*(r1-b+bt*0.5), -z+bz*0.5)); // 5
-        Pos->addValue(Vec3f(c[3]*(r1-b), s[3]*(r1-b), -z)); // 6
-        Pos->addValue(Vec3f(c[3]*r0, s[3]*r0, -z)); // 7
+        Pos->addValue(Vec3d(c[0]*r0, s[0]*r0, -z)); // 0
+        Pos->addValue(Vec3d(c[0]*(r1-b), s[0]*(r1-b), -z)); // 1
+        Pos->addValue(Vec3d(c[0]*(r1-b+bt*0.5), s[0]*(r1-b+bt*0.5), -z+bz*0.5)); // 2
+        Pos->addValue(Vec3d(c[1]*(r1-b+bt), s[1]*(r1-b+bt), -z+bz)); // 3
+        Pos->addValue(Vec3d(c[2]*(r1-b+bt), s[2]*(r1-b+bt), -z+bz)); // 4
+        Pos->addValue(Vec3d(c[3]*(r1-b+bt*0.5), s[3]*(r1-b+bt*0.5), -z+bz*0.5)); // 5
+        Pos->addValue(Vec3d(c[3]*(r1-b), s[3]*(r1-b), -z)); // 6
+        Pos->addValue(Vec3d(c[3]*r0, s[3]*r0, -z)); // 7
 
-        Pos->addValue(Vec3f(c[0]*r0, s[0]*r0, z)); // 8
-        Pos->addValue(Vec3f(c[0]*(r1+b), s[0]*(r1+b), z)); // 9
-        Pos->addValue(Vec3f(c[0]*(r1+b+bt*0.5), s[0]*(r1+b+bt*0.5), z+bz*0.5)); // 10
-        Pos->addValue(Vec3f(c[1]*(r1+b+bt), s[1]*(r1+b+bt), z+bz)); // 11
-        Pos->addValue(Vec3f(c[2]*(r1+b+bt), s[2]*(r1+b+bt), z+bz)); // 12
-        Pos->addValue(Vec3f(c[3]*(r1+b+bt*0.5), s[3]*(r1+b+bt*0.5), z+bz*0.5)); // 13
-        Pos->addValue(Vec3f(c[3]*(r1+b), s[3]*(r1+b), z)); // 14
-        Pos->addValue(Vec3f(c[3]*r0, s[3]*r0, z)); // 15
+        Pos->addValue(Vec3d(c[0]*r0, s[0]*r0, z)); // 8
+        Pos->addValue(Vec3d(c[0]*(r1+b), s[0]*(r1+b), z)); // 9
+        Pos->addValue(Vec3d(c[0]*(r1+b+bt*0.5), s[0]*(r1+b+bt*0.5), z+bz*0.5)); // 10
+        Pos->addValue(Vec3d(c[1]*(r1+b+bt), s[1]*(r1+b+bt), z+bz)); // 11
+        Pos->addValue(Vec3d(c[2]*(r1+b+bt), s[2]*(r1+b+bt), z+bz)); // 12
+        Pos->addValue(Vec3d(c[3]*(r1+b+bt*0.5), s[3]*(r1+b+bt*0.5), z+bz*0.5)); // 13
+        Pos->addValue(Vec3d(c[3]*(r1+b), s[3]*(r1+b), z)); // 14
+        Pos->addValue(Vec3d(c[3]*r0, s[3]*r0, z)); // 15
 
-        n = Vec3f(-c[0], -s[0], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3f(c[0]+s[0], -c[0]+s[0], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3f(s[0], -c[0], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3f(c[1]+s[1], -c[1]+s[1], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3f(c[2]-s[2], c[2]+s[2], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3f(-s[3], c[3], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3f(c[3]-s[3], c[3]+s[3], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3f(-c[3], -s[3], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(-c[0], -s[0], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(c[0]+s[0], -c[0]+s[0], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(s[0], -c[0], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(c[1]+s[1], -c[1]+s[1], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(c[2]-s[2], c[2]+s[2], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(-s[3], c[3], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(c[3]-s[3], c[3]+s[3], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(-c[3], -s[3], 0); n.normalize(); Norms->addValue(n);
 
-        n = Vec3f(-c[0], -s[0], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3f(c[0]+s[0], -c[0]+s[0], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3f(s[0], -c[0], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3f(c[1]+s[1], -c[1]+s[1], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3f(c[2]-s[2], c[2]+s[2], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3f(-s[3], c[3], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3f(c[3]-s[3], c[3]+s[3], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3f(-c[3], -s[3], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(-c[0], -s[0], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(c[0]+s[0], -c[0]+s[0], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(s[0], -c[0], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(c[1]+s[1], -c[1]+s[1], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(c[2]-s[2], c[2]+s[2], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(-s[3], c[3], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(c[3]-s[3], c[3]+s[3], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(-c[3], -s[3], 0); n.normalize(); Norms->addValue(n);
 
         Indices->addValue(iN+0); // B1
         Indices->addValue(iN+8);

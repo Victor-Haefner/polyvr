@@ -1,6 +1,7 @@
 #ifndef VRANNOTATIONENGINE_H_INCLUDED
 #define VRANNOTATIONENGINE_H_INCLUDED
 
+#include <OpenSG/OSGColor.h>
 #include "core/tools/VRToolsFwd.h"
 #include "core/objects/geometry/VRGeometry.h"
 
@@ -10,7 +11,7 @@ class VRAnnotationEngine : public VRGeometry {
     private:
         VRGeoDataPtr data = 0;
         VRMaterialPtr mat = 0;
-        Vec4f fg, bg;
+        Color4f fg, bg;
 
         static string vp;
         static string fp;
@@ -20,13 +21,13 @@ class VRAnnotationEngine : public VRGeometry {
         float size;
 
         struct Label {
-            Vec3f pos;
+            Vec3d pos;
             vector<int> entries;
         };
 
         vector<Label> labels;
 
-        void resize(Label& l, Vec3f p, int N);
+        void resize(Label& l, Vec3d p, int N);
         void updateTexture();
         bool checkUIn(int i);
 
@@ -37,12 +38,12 @@ class VRAnnotationEngine : public VRGeometry {
         VRAnnotationEnginePtr ptr();
 
         void clear();
-        void set(int i, Vec3f p, string s);
-        int add(Vec3f p, string s);
+        void set(int i, Vec3d p, string s);
+        int add(Vec3d p, string s);
 
         void setSize(float f);
-        void setColor(Vec4f c);
-        void setBackground(Vec4f c);
+        void setColor(Color4f c);
+        void setBackground(Color4f c);
         void setBillboard(bool b);
         void setScreensize(bool b);
 };

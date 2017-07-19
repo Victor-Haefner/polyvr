@@ -17,7 +17,7 @@ VRClipPlane::VRClipPlane(string name) : VRGeometry(name) {
     //m->setWireFrame(true);
     m->setFrontBackModes(GL_LINE, GL_FILL);
     m->setLit(false);
-    m->setDiffuse(Vec3f(1,1,1));
+    m->setDiffuse(Color3f(1,1,1));
     m->setLineWidth(3);
 }
 
@@ -57,9 +57,9 @@ void VRClipPlane::setActive(bool a) {
     else deactivate();
 }
 
-Vec4f VRClipPlane::getEquation() { // not used, but may come in handy
-    Vec4f plane = Vec4f(0.0, -1.0, 0.0, 0.0);
-    Matrix m = getWorldMatrix();
+Vec4d VRClipPlane::getEquation() { // not used, but may come in handy
+    Vec4d plane = Vec4d(0.0, -1.0, 0.0, 0.0);
+    Matrix4d m = getWorldMatrix();
     m.mult(plane,plane);
     plane[3] = -plane.dot(m[3]);//n*r
     return plane;
@@ -72,13 +72,13 @@ void VRClipPlane::activate() {
         VRGeometryPtr g = static_pointer_cast<VRGeometry>(o);
         VRMaterialPtr m = g->getMaterial();
         if (m == 0) continue;
-        m->setClipPlane(true, Vec4f(0,0,-1,0), ptr() );
+        m->setClipPlane(true, Vec4d(0,0,-1,0), ptr() );
         mats.push_back(m);
     }
 }
 
 void VRClipPlane::deactivate() {
-    for (auto m : mats) m->setClipPlane(false, Vec4f(), 0);
+    for (auto m : mats) m->setClipPlane(false, Vec4d(), 0);
     mats.clear();
 }
 

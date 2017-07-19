@@ -25,28 +25,28 @@ void VRPN_CALLBACK handle_tracker(void* data, const vrpn_TRACKERCB tracker ) {
     VRTransformPtr obj = dev->editBeacon();
     if (obj == 0) return;
 
-    Vec3f ra = dev->rotation_axis;
-    Vec3f ta = dev->translate_axis;
-    Vec3f sra, sta;
+    Vec3d ra = dev->rotation_axis;
+    Vec3d ta = dev->translate_axis;
+    Vec3d sra, sta;
     for (int i=0; i<3; i++) {
         sra[i] = ra[i]<0 ? -1 : 1; ra[i] = abs(ra[i]);
         sta[i] = ta[i]<0 ? -1 : 1; ta[i] = abs(ta[i]);
     }
 
     //rotation
-    Quaternion q(sra[0]*tracker.quat[(int)ra[0]], sra[1]*tracker.quat[(int)ra[1]], sra[2]*tracker.quat[(int)ra[2]], tracker.quat[3]);
-    //Quaternion q2(1,0,0,0.5*3.14);
+    Quaterniond q(sra[0]*tracker.quat[(int)ra[0]], sra[1]*tracker.quat[(int)ra[1]], sra[2]*tracker.quat[(int)ra[2]], tracker.quat[3]);
+    //Quaterniond q2(1,0,0,0.5*3.14);
     //q += q2;
-    //Quaternion q(tracker.quat[0], -tracker.quat[2], -tracker.quat[1], tracker.quat[3]);
-    Matrix m;
+    //Quaterniond q(tracker.quat[0], -tracker.quat[2], -tracker.quat[1], tracker.quat[3]);
+    Matrix4d m;
     m.setRotate(q);
 
     //position
     float s = dev->scale;
-    Vec3f pos = dev->offset + Vec3f(sta[0]*tracker.pos[(int)ta[0]]*s, sta[1]*tracker.pos[(int)ta[1]]*s, sta[2]*tracker.pos[(int)ta[2]]*s);
+    Vec3d pos = dev->offset + Vec3d(sta[0]*tracker.pos[(int)ta[0]]*s, sta[1]*tracker.pos[(int)ta[1]]*s, sta[2]*tracker.pos[(int)ta[2]]*s);
     for (int i=0; i<3; i++) m[3][i] = pos[i];
 
-    if (dev->verbose) VRGuiManager::get()->getConsole("Tracking")->write( "vrpn tracker pos "+toString(pos)+" dir "+toString(-Vec3f(m[2]))+"\n");
+    if (dev->verbose) VRGuiManager::get()->getConsole("Tracking")->write( "vrpn tracker pos "+toString(pos)+" dir "+toString(-Vec3d(m[2]))+"\n");
     obj->setMatrix(m);
 }
 
@@ -115,8 +115,8 @@ void VRPN_device::setAddress(string addr) {
     initialized = true;
 }
 
-void VRPN_device::setTranslationAxis(Vec3f v) { translate_axis = v; }
-void VRPN_device::setRotationAxis(Vec3f v) { rotation_axis = v; }
+void VRPN_device::setTranslationAxis(Vec3d v) { translate_axis = v; }
+void VRPN_device::setRotationAxis(Vec3d v) { rotation_axis = v; }
 
 void VRPN_device::loop(bool verbose) {
     this->verbose = verbose;
@@ -158,7 +158,7 @@ void VRPN::update() {
 
 void VRPN::setVRPNVerbose(bool b) { verbose = b; }
 
-void VRPN::addVRPNTracker(int ID, string addr, Vec3f offset, float scale) {
+void VRPN::addVRPNTracker(int ID, string addr, Vec3d offset, float scale) {
     while(devices.count(ID)) ID++;
 
     VRPN_devicePtr t = VRPN_device::create();

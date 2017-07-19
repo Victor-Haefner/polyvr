@@ -14,14 +14,14 @@ using namespace std;
 class VRSkeleton : public VRGeometry {
     public:
         struct Configuration : public VRName {
-            map<int,Vec3f> joints;
+            map<int,Vec3d> joints;
 
             Configuration(string name);
             ~Configuration();
 
             static shared_ptr<Configuration> create(string name);
 
-            void setPose(int i, Vec3f p);
+            void setPose(int i, Vec3d p);
 
             Configuration interpolate(Configuration& other);
         };
@@ -51,7 +51,7 @@ class VRSkeleton : public VRGeometry {
         static VRSkeletonPtr create();
 
         int addBone(int joint1, int joint2);
-        int addJoint(JointPtr c, Vec3f p);
+        int addJoint(JointPtr c, Vec3d p);
 
         //Graph::edge getBone(int id);
         VRConstraintPtr getJoint(int id);

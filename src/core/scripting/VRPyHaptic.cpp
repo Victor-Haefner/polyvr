@@ -21,7 +21,7 @@ PyMethodDef VRPyHaptic::methods[] = {
 
 PyObject* VRPyHaptic::setSimulationScales(VRPyHaptic* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyHaptic::setSimulationScales - objPtrect is invalid"); return NULL; }
-    OSG::Vec2f v = parseVec2f(args);
+    OSG::Vec2d v = parseVec2f(args);
     self->objPtr->setSimulationScales(v[0], v[1]);
     Py_RETURN_TRUE;
 }
@@ -30,7 +30,7 @@ PyObject* VRPyHaptic::setForce(VRPyHaptic* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyHaptic::setForce - objPtrect is invalid"); return NULL; }
     float x,y,z,u,v,w;
     if (! PyArg_ParseTuple(args, "ffffff", &x, &y, &z, &u, &v, &w)) return NULL;
-    self->objPtr->setForce(OSG::Vec3f(x,y,z), OSG::Vec3f(u,v,w));
+    self->objPtr->setForce(OSG::Vec3d(x,y,z), OSG::Vec3d(u,v,w));
     Py_RETURN_TRUE;
 }
 
@@ -42,7 +42,7 @@ PyObject* VRPyHaptic::getButtonStates(VRPyHaptic* self) {
 
 PyObject* VRPyHaptic::getForce(VRPyHaptic* self) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyHaptic::getForce - objPtrect is invalid"); return NULL; }
-    OSG::Vec3f force = self->objPtr->getForce();
+    OSG::Vec3d force = self->objPtr->getForce();
     return toPyTuple(force);
 }
 

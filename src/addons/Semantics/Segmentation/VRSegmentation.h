@@ -30,7 +30,7 @@ struct Edge {
     Vertex* other(Vertex* v);
     Triangle* other(Triangle* t);
     vector<Edge*> borderNeighbors();
-    Vec3f segment();
+    Vec3d segment();
     Vertex* vertexTo(Edge* e);
     bool isLinked(Edge* e);
     bool has(Vertex* v);
@@ -41,11 +41,11 @@ struct Vertex {
     vector<Triangle*> triangles;
     Border* border = 0;
     bool isBorder = false;
-    Vec3f v;
-    Vec3f n;
+    Vec3d v;
+    Vec3d n;
     int ID;
 
-    Vertex(Pnt3f p, Vec3f n, int i);
+    Vertex(Pnt3d p, Vec3d n, int i);
     vector<Vertex*> neighbors();
     vector<Vertex*> borderNeighbors();
 };
@@ -74,7 +74,7 @@ class VRSegmentation {
 
     public:
 
-        static VRObjectPtr extractPatches(VRGeometryPtr geo, SEGMENTATION_ALGORITHM algo, float curvature, float curvature_delta, Vec3f normal, Vec3f normal_delta);
+        static VRObjectPtr extractPatches(VRGeometryPtr geo, SEGMENTATION_ALGORITHM algo, float curvature, float curvature_delta, Vec3d normal, Vec3d normal_delta);
         static vector<int> growPatch(VRGeometryPtr geo, int i);
 
         static void removeDuplicates(VRGeometryPtr geo);

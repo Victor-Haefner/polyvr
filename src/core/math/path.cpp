@@ -19,21 +19,21 @@ path::~path() {}
 
 shared_ptr<path> path::create() { return shared_ptr<path>(new path()); }
 
-Vec3f path::projectInPlane(Vec3f v, Vec3f n, bool keep_length) {
+Vec3d path::projectInPlane(Vec3d v, Vec3d n, bool keep_length) {
     n.normalize();
     float l;
     if (keep_length) l = v.length();
     float k = v.dot(n);
-    v -= k*n;
+    v -= n*k;
     if (keep_length) v = v*(l/v.length());
     return v;
 }
 
-void path::linearBezier(Vec3f* container, int N, Vec3f p0, Vec3f p1) {
-    if (container == 0) container = new Vec3f[N];
+void path::linearBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1) {
+    if (container == 0) container = new Vec3d[N];
 
     //berechne schritte
-    Vec3f DEL = (p1 - p0)*1./(N-1);
+    Vec3d DEL = (p1 - p0)*1./(N-1);
 
     //fülle den vector
     container[0] = p0;
@@ -41,15 +41,15 @@ void path::linearBezier(Vec3f* container, int N, Vec3f p0, Vec3f p1) {
     for (int i=1;i<N-1;i++) container[i] = container[i-1]+DEL;
 }
 
-void path::quadraticBezier(Vec3f* container, int N, Vec3f p0, Vec3f p1, Vec3f p2) {
-    if (container == 0) container = new Vec3f[N];
+void path::quadraticBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1, Vec3d p2) {
+    if (container == 0) container = new Vec3d[N];
 
     //schrittweite
     float step = 1./(N-1);
 
     //berechne die hilfspunkte
-    Vec3f b[3];
-    Vec3f DEL[3];
+    Vec3d b[3];
+    Vec3d DEL[3];
 
     //berechne die koeffizienten -> p[0]+b[0]t+b[1]t²
     b[0] = p1*2 - p0*2;
@@ -68,14 +68,14 @@ void path::quadraticBezier(Vec3f* container, int N, Vec3f p0, Vec3f p1, Vec3f p2
     }
 }
 
-void path::cubicBezier(Vec3f* container, int N, Vec3f p0, Vec3f p1, Vec3f h0, Vec3f h1) {
-    if (container == 0) container = new Vec3f[N];
+void path::cubicBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1, Vec3d h0, Vec3d h1) {
+    if (container == 0) container = new Vec3d[N];
 
     //schrittweite
     float step = 1./(N-1);
 
-    Vec3f b[3];
-    Vec3f DEL[3];
+    Vec3d b[3];
+    Vec3d DEL[3];
 
     //berechne die koeffizienten -> p[0]+b[0]t+b[1]t²+b[2]t³
     b[0] = h0*3-p0*3;
@@ -97,38 +97,38 @@ void path::cubicBezier(Vec3f* container, int N, Vec3f p0, Vec3f p1, Vec3f h0, Ve
     }
 }
 
-vector<float> path::computeInflectionPoints(int i, int j) { // first and second derivative are parallel
+vector<double> path::computeInflectionPoints(int i, int j) { // first and second derivative are parallel
     auto& P1 = points[i];
     auto& P2 = points[j];
 
     // help points
-    float L = (P1.pos() - P2.pos()).length();
-    Vec3f H1 = P1.pos() + P1.dir()*0.333*L;
-    Vec3f H2 = P2.pos() - P2.dir()*0.333*L;
+    double L = (P1.pos() - P2.pos()).length();
+    Vec3d H1 = P1.pos() + P1.dir()*0.333*L;
+    Vec3d H2 = P2.pos() - P2.dir()*0.333*L;
 
     // At*t*t + B*t*t + C*t + D
-    Vec3f A = P2.pos() - H2*3 + H1*3 - P1.pos();
-    Vec3f B = H2 - H1*2 + P1.pos();
-    Vec3f C = H1 - P1.pos();
+    Vec3d A = P2.pos() - H2*3 + H1*3 - P1.pos();
+    Vec3d B = H2 - H1*2 + P1.pos();
+    Vec3d C = H1 - P1.pos();
 
-    Vec3f CxB = C.cross(B);
-    Vec3f CxA = C.cross(A);
-    Vec3f BxA = B.cross(A);
+    Vec3d CxB = C.cross(B);
+    Vec3d CxA = C.cross(A);
+    Vec3d BxA = B.cross(A);
 
     // CxB + CxA*t + BxA*t*t = 0
     equation ex(0,BxA[0],CxA[0],CxB[0]);
     equation ey(0,BxA[1],CxA[1],CxB[1]);
     equation ez(0,BxA[2],CxA[2],CxB[2]);
-    vector<float> T;
-    Vec3f t;
+    vector<double> T;
+    Vec3d t;
     for (int k=0; k < ex.solve(t[0],t[1],t[3]) ;k++) T.push_back(t[k]);
     for (int k=0; k < ey.solve(t[0],t[1],t[3]) ;k++) T.push_back(t[k]);
     for (int k=0; k < ez.solve(t[0],t[1],t[3]) ;k++) T.push_back(t[k]);
 
-    vector<float> R;
+    vector<double> R;
     for (auto t : T) {
-        Vec3f Vt = (A*t*t+B*t*2+C)*3;
-        Vec3f At = (A*t+B)*6;
+        Vec3d Vt = (A*t*t+B*t*2+C)*3;
+        Vec3d At = (A*t+B)*6;
         if (Vt.dot(At) != 0) continue;
         for (auto r : R) if (r == t) continue;
         R.push_back(t);
@@ -139,17 +139,17 @@ vector<float> path::computeInflectionPoints(int i, int j) { // first and second 
 void path::approximate(int d) {
     degree = d;
 
-    auto intersect = [&](Vec3f& p1, Vec3f& n1, Vec3f& p2, Vec3f& n2) {
-		Vec3f d = p2-p1;
-		Vec3f n3 = n1.cross(n2);
+    auto intersect = [&](Vec3d& p1, Vec3d& n1, Vec3d& p2, Vec3d& n2) {
+		Vec3d d = p2-p1;
+		Vec3d n3 = n1.cross(n2);
 		float N3 = n3.dot(n3);
 		if (N3 == 0) N3 = 1.0;
 		float s = d.cross(n2).dot(n1.cross(n2))/N3;
 		return p1 + n1*s;
     };
 
-    auto toQuadratic = [&](int j, Vec3f& p1, Vec3f& p4, Vec3f& n1, Vec3f& n4, Vec3f& pm, Vec3f& p2, Vec3f& p3) {
-        Vec3f nm;
+    auto toQuadratic = [&](int j, Vec3d& p1, Vec3d& p4, Vec3d& n1, Vec3d& n4, Vec3d& pm, Vec3d& p2, Vec3d& p3) {
+        Vec3d nm;
 
         auto computePoints = [&](int k) {
             float t = 0.5+0.099*k;
@@ -158,13 +158,13 @@ void path::approximate(int d) {
 
             // help points
             float L = (p1-p4).length();
-            Vec3f H1 = p1 + n1*0.333*L;
-            Vec3f H2 = p4 - n4*0.333*L;
+            Vec3d H1 = p1 + n1*0.333*L;
+            Vec3d H2 = p4 - n4*0.333*L;
 
             // At*t*t + B*t*t + C*t + D
-            Vec3f A = p4 - H2*3 + H1*3 - p1;
-            Vec3f B = H2 - H1*2 + p1;
-            Vec3f C = H1 - p1;
+            Vec3d A = p4 - H2*3 + H1*3 - p1;
+            Vec3d B = H2 - H1*2 + p1;
+            Vec3d C = H1 - p1;
             nm = (A*t*t+B*t*2+C)*3;
             nm.normalize();
 
@@ -205,28 +205,28 @@ void path::approximate(int d) {
 		//cout << "toQuadratic  p1:" << p1 << "  n1:" << n1 << "  p2:" << p2 << "  pm:" << pm << "  nm:" << nm << endl;
     };
 
-	auto isLinear = [&](Vec3f& p1, Vec3f& p2, Vec3f& n1, Vec3f& n2) {
+	auto isLinear = [&](Vec3d& p1, Vec3d& p2, Vec3d& n1, Vec3d& n2) {
 		if (abs(n1.dot(n2)-1.0) > 0.00001) return false;
-		Vec3f d = p2-p1; d.normalize();
+		Vec3d d = p2-p1; d.normalize();
 		if (abs(d.dot(n1)-1.0) > 0.00001) return false;
 		return true;
 	};
 
     if (degree == 2) {
-        vector<Vec3f> res;
+        vector<Vec3d> res;
 
 		for (uint j=0; j<points.size()-1; j++) { // p1,p2,pm,p3,p4
-			Vec3f p1 = points[j].pos();
-			Vec3f p4 = points[j+1].pos();
-			Vec3f n1 = points[j].dir(); //n1.normalize();
-			Vec3f n4 = points[j+1].dir(); //n4.normalize();
+			Vec3d p1 = points[j].pos();
+			Vec3d p4 = points[j+1].pos();
+			Vec3d n1 = points[j].dir(); //n1.normalize();
+			Vec3d n4 = points[j+1].dir(); //n4.normalize();
 			res.push_back(p1);
 
 			if (isLinear(p1,p4,n1,n4)) {
-                Vec3f p2 = (p1+p4)*0.5;
+                Vec3d p2 = (p1+p4)*0.5;
                 res.push_back(p2);
 			} else {
-				Vec3f p2,p3,pm;
+				Vec3d p2,p3,pm;
 				toQuadratic(j,p1,p4,n1,n4,pm,p2,p3);
                 res.push_back(p2);
                 res.push_back(pm);
@@ -241,7 +241,7 @@ void path::approximate(int d) {
     }
 }
 
-int path::addPoint( const pose& p, Vec3f c ) {
+int path::addPoint( const pose& p, Color3f c ) {
     points.push_back(p);
     point_colors.push_back(c);
     return size() - 1;
@@ -258,7 +258,7 @@ float path::getLength(int i, int j) {
     return l;
 }
 
-void path::setPoint(int i, const pose& p, Vec3f c ) {
+void path::setPoint(int i, const pose& p, Color3f c ) {
     if (i < 0 || i >= size()) return;
     points[i] = p;
     point_colors[i] = c;
@@ -277,14 +277,14 @@ void path::compute(int N) {
 
     int tN = (N-1)*Nsegs + 1; // (N-1) the number of subdivision points, times number of segments, plus the last point of the path
 
-    positions.assign(tN, Vec3f());
-    directions.assign(tN, Vec3f(0,0,-1));
-    up_vectors.assign(tN, Vec3f(0,1,0));
-    colors.assign(tN, Vec3f());
-    Vec3f* _pts = &positions[0];
-    Vec3f* _drs = &directions[0];
-    Vec3f* _ups = &up_vectors[0];
-    Vec3f* _cls = &colors[0];
+    positions.assign(tN, Vec3d());
+    directions.assign(tN, Vec3d(0,0,-1));
+    up_vectors.assign(tN, Vec3d(0,1,0));
+    colors.assign(tN, Vec3d());
+    Vec3d* _pts = &positions[0];
+    Vec3d* _drs = &directions[0];
+    Vec3d* _ups = &up_vectors[0];
+    Vec3d* _cls = &colors[0];
 
     if (degree == 2) {
         for (int i=0; i<Nsegs; i++) {
@@ -302,35 +302,35 @@ void path::compute(int N) {
             auto& p2 = points[i+1];
             auto& c1 = point_colors[i];
             auto& c2 = point_colors[i+1];
-            Vec3f r = p2.pos() - p1.pos();
+            Vec3d r = p2.pos() - p1.pos();
             float L = r.length();
-            Vec3f h1 = p1.pos() + p1.dir()*0.333*L;
-            Vec3f h2 = p2.pos() - p2.dir()*0.333*L;
+            Vec3d h1 = p1.pos() + p1.dir()*0.333*L;
+            Vec3d h2 = p2.pos() - p2.dir()*0.333*L;
 
             // berechne die hilfspunkte fuer die directions B'(0.5)
             //  B(t) = (1 - t)^3 * p1 + 3t(1-t)^2 * h1 + 3t^2 (1-t) * h2 + t^3 * p2
             // B'(t) = -3(1-t)^2 * p1 + 3(1-t)^2 *  h1 - 6t(1-t) *    h1 - 3t^2 * h2 + 6t(1-t) * h2 + 3t^2 * p2
             //       = (1-t^2) * (3h1-3p1) + 2t*(1-t) * (3h2-3h1) + t^2 * (3p2-3h2)
             //       = (1-t^2) * d1*L + 2t*(1-t) * (3r - d1*L - d2*L) + t^2 * d2*L
-            Vec3f n = r*3.0/L-p1.dir()-p2.dir();
+            Vec3d n = r*3.0/L-p1.dir()-p2.dir();
 
             // berechne hilfspunkt für up vector
-            //Vec3f x = n1.cross(u1)*0.5 + n2.cross(u2)*0.5;
-            Vec3f u = (p1.up()+p2.up())*0.5;//x.cross(n);
+            //Vec3d x = n1.cross(u1)*0.5 + n2.cross(u2)*0.5;
+            Vec3d u = (p1.up()+p2.up())*0.5;//x.cross(n);
             u.normalize();
 
             cubicBezier    (_pts+(N-1)*i, N, p1.pos(), p2.pos(), h1, h2);
             quadraticBezier(_drs+(N-1)*i, N, p1.dir(), n, p2.dir());
             quadraticBezier(_ups+(N-1)*i, N, p1.up(), u, p2.up());
-            linearBezier   (_cls+(N-1)*i, N, c1, c2);
+            linearBezier   (_cls+(N-1)*i, N, Vec3d(c1), Vec3d(c2));
         }
     }
 }
 
-vector<Vec3f> path::getPositions() { return positions; }
-vector<Vec3f> path::getDirections() { return directions; }
-vector<Vec3f> path::getUpvectors() { return up_vectors; }
-vector<Vec3f> path::getColors() { return colors; }
+vector<Vec3d> path::getPositions() { return positions; }
+vector<Vec3d> path::getDirections() { return directions; }
+vector<Vec3d> path::getUpvectors() { return up_vectors; }
+vector<Vec3d> path::getColors() { return colors; }
 
 vector<pose> path::getPoses() {
     vector<pose> res;
@@ -351,7 +351,7 @@ void path::close() {
 
 bool path::isClosed() { return closed; }
 
-Vec3f path::interp(vector<Vec3f>& vec, float t, int i, int j) {
+Vec3d path::interp(vector<Vec3d>& vec, float t, int i, int j) {
     if (t <= 0) t = 0; if (t >= 1) t = 1; // clamp t
     if (direction == -1) t = 1-t;
 
@@ -360,7 +360,7 @@ Vec3f path::interp(vector<Vec3f>& vec, float t, int i, int j) {
     i *= (iterations-1);
 
     int N = j-i;
-    if (N < 0) return Vec3f();
+    if (N < 0) return Vec3d();
 
     float tN = t*N;
     int ti = floor(tN);
@@ -368,30 +368,30 @@ Vec3f path::interp(vector<Vec3f>& vec, float t, int i, int j) {
     if (ti >= N) return vec[i+N];
 
     //cout << "i j ti x v[ti+i] v[ti+i+1]" << i << " " << j << " " << ti << " " << x << " " << vec[i+ti] << " " << vec[i+ti+1] << endl;
-    return (1-x)*vec[i+ti] + x*vec[i+ti+1];
+    return vec[i+ti]*(1-x) + vec[i+ti+1]*x;
 }
 
-Vec3f path::getPosition(float t, int i, int j) { return interp(positions, t, i, j); }
-Vec3f path::getColor(float t, int i, int j) { return interp(colors, t, i, j); }
+Vec3d path::getPosition(float t, int i, int j) { return interp(positions, t, i, j); }
+Color3f path::getColor(float t, int i, int j) { return Vec3f(interp(colors, t, i, j)); }
 
-void path::getOrientation(float t, Vec3f& dir, Vec3f& up, int i, int j) {
+void path::getOrientation(float t, Vec3d& dir, Vec3d& up, int i, int j) {
     dir = interp(directions, t, i, j)*direction;
     up = interp(up_vectors, t, i, j);
 }
 
 pose path::getPose(float t, int i, int j) {
-    Vec3f d,u; getOrientation(t,d,u,i,j);
+    Vec3d d,u; getOrientation(t,d,u,i,j);
     return pose(getPosition(t,i,j), d, u);
 }
 
-float path::getClosestPoint(Vec3f p) {
+float path::getClosestPoint(Vec3d p) {
     auto positions = getPositions();
     float dist = 1.0e10;
     float t_min = 0;
 
     for (uint i=1; i<positions.size(); i++){
-        Vec3f p1 = positions[i-1];
-        Vec3f p2 = positions[i];
+        Vec3d p1 = positions[i-1];
+        Vec3d p2 = positions[i];
 
         auto d = p2-p1;
         auto L = d.length();
@@ -408,13 +408,13 @@ float path::getClosestPoint(Vec3f p) {
     return t_min;
 }
 
-float path::getDistance(Vec3f p) {
+float path::getDistance(Vec3d p) {
     auto positions = getPositions();
     float dist = 1.0e10;
 
     for (uint i=1; i<positions.size(); i++){
-        Vec3f p1 = positions[i-1];
-        Vec3f p2 = positions[i];
+        Vec3d p1 = positions[i-1];
+        Vec3d p2 = positions[i];
 
         auto d = p2-p1;
         auto L = d.length();
@@ -443,11 +443,11 @@ void clampSegment(int& i, int& j, int N) {
 
 bool path::isStraight(int i, int j) {
     clampSegment(i, j, points.size());
-    Vec3f p1 = points[i].pos();
-    Vec3f d1 = points[i].dir();
-    Vec3f p2 = points[j].pos();
-    Vec3f d2 = points[j].dir();
-    Vec3f d = p2-p1;
+    Vec3d p1 = points[i].pos();
+    Vec3d d1 = points[i].dir();
+    Vec3d p2 = points[j].pos();
+    Vec3d d2 = points[j].dir();
+    Vec3d d = p2-p1;
     d.normalize();
     d1.normalize();
     d2.normalize();

@@ -81,7 +81,7 @@ class NodeLogic {
          of all these nodes.
          @return The position of this logic.
          */
-        virtual Vec2f getPosition() const = 0;
+        virtual Vec2d getPosition() const = 0;
 
         /**
          Should be called if a street is added to a connected node.

@@ -27,8 +27,8 @@ class VROCtoggle {
 class VROpening: public VRTransform, public VROCtoggle {
     private:
         VRTransformPtr d1, d2;
-        shared_ptr< VRFunction<Vec3f> > fkt1;
-        shared_ptr< VRFunction<Vec3f> > fkt2;
+        shared_ptr< VRFunction<Vec3d> > fkt1;
+        shared_ptr< VRFunction<Vec3d> > fkt2;
         VRDeviceCbPtr toggleCallback;
         VRSignalPtr sig;
         VRScene* scene;

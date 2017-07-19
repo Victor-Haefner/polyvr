@@ -79,17 +79,17 @@ template<typename dev>
 void ART::getMatrix(dev t, ART_devicePtr d) {
     if (t.quality <= 0) return;
 
-    Matrix& m = d->m;
-    m[0] = Vec4f(t.rot[0], t.rot[1], t.rot[2], 1); // orientation
-    m[1] = Vec4f(t.rot[3], t.rot[4], t.rot[5], 1);
-    m[2] = Vec4f(t.rot[6], t.rot[7], t.rot[8], 1);
+    Matrix4d& m = d->m;
+    m[0] = Vec4d(t.rot[0], t.rot[1], t.rot[2], 1); // orientation
+    m[1] = Vec4d(t.rot[3], t.rot[4], t.rot[5], 1);
+    m[2] = Vec4d(t.rot[6], t.rot[7], t.rot[8], 1);
 
-    m[1] = Vec4f(t.rot[6], t.rot[7], t.rot[8], 1); // test
-    m[2] = Vec4f(-t.rot[3], -t.rot[4], -t.rot[5], 1);
+    m[1] = Vec4d(t.rot[6], t.rot[7], t.rot[8], 1); // test
+    m[2] = Vec4d(-t.rot[3], -t.rot[4], -t.rot[5], 1);
 
-    m[3] = Vec4f(t.loc[0]*0.001, t.loc[1]*0.001, t.loc[2]*0.001, 1); // position
+    m[3] = Vec4d(t.loc[0]*0.001, t.loc[1]*0.001, t.loc[2]*0.001, 1); // position
     coords::YtoZ(m); // LESC -> TODO: use the up value and others to specify the coordinate system
-    m[3] += Vec4f(d->offset) + Vec4f(offset);
+    m[3] += Vec4d(d->offset) + Vec4d(offset);
 }
 
 void ART::scan(int type, int N) {
@@ -210,8 +210,8 @@ void ART::setARTPort(int port) {
     dtrack->receive();
 }
 
-void ART::setARTOffset(Vec3f o) { offset = o; }
-Vec3f ART::getARTOffset() { return offset; }
+void ART::setARTOffset(Vec3d o) { offset = o; }
+Vec3d ART::getARTOffset() { return offset; }
 
 void ART::startTestStream() {
     // TODO: create test data

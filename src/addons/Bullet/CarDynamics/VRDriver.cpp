@@ -39,7 +39,7 @@ void VRDriver::update() {
     float L = p_path->getLength();
     float aimingLength = 4.0;//2.0*speed;
 
-    Vec3f p0 = p_path->getPose(t).pos();
+    Vec3d p0 = p_path->getPose(t).pos();
     t += aimingLength/L; // aim some meter ahead
     clamp(t,0,1);
 
@@ -58,11 +58,11 @@ void VRDriver::update() {
 
 
     // compute steering
-    Vec3f delta = tpos - pos;
+    Vec3d delta = tpos - pos;
     delta.normalize();
     dir.normalize();
     up.normalize();
-    Vec3f w = delta.cross(dir);
+    Vec3d w = delta.cross(dir);
     float steering = w.dot(up)*3.0;
 
     // clamp inputs

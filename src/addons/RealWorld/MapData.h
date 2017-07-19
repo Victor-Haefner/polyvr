@@ -10,8 +10,8 @@ using namespace std;
 
 class MapData {
     public:
-        Vec2f boundsMin;
-        Vec2f boundsMax;
+        Vec2d boundsMin;
+        Vec2d boundsMax;
         vector<StreetJoint*> streetJoints;
         vector<StreetSegment*> streetSegments;
         vector<Building*> buildings;

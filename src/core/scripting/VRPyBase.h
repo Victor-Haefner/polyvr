@@ -34,9 +34,9 @@ struct VRPyBase {
     static VRFunction<T>* parseCallback(PyObject *args);
 
     static vector<PyObject*> parseList(PyObject *args);
-    static OSG::Vec2f parseVec2f(PyObject *args);
-    static OSG::Vec3f parseVec3f(PyObject *args);
-    static OSG::Vec4f parseVec4f(PyObject *args);
+    static OSG::Vec2d parseVec2f(PyObject *args);
+    static OSG::Vec3d parseVec3d(PyObject *args);
+    static OSG::Vec4d parseVec4d(PyObject *args);
     static OSG::Vec3i parseVec3i(PyObject *args);
     static float parseFloat(PyObject *args);
     static bool parseBool(PyObject *args);
@@ -50,9 +50,6 @@ struct VRPyBase {
     static vector<PyObject*> pyListToVector(PyObject* v);
     template <class T, class t>
     static bool pyListToVector(PyObject* data, T& vec);
-    static OSG::Vec2f parseVec2fList(PyObject *li);
-    static OSG::Vec3f parseVec3fList(PyObject *li);
-    static OSG::Vec4f parseVec4fList(PyObject *li);
     static OSG::Vec2d parseVec2dList(PyObject *li);
     static OSG::Vec3d parseVec3dList(PyObject *li);
     static OSG::Vec4d parseVec4dList(PyObject *li);
@@ -61,15 +58,12 @@ struct VRPyBase {
     static OSG::Vec4i parseVec4iList(PyObject *li);
     static OSG::Line PyToLine(PyObject *li);
 
-    static PyObject* toPyTuple(const OSG::Vec2f& v);
-    static PyObject* toPyTuple(const OSG::Vec3f& v);
-    static PyObject* toPyTuple(const OSG::Vec4f& v);
-    static PyObject* toPyTuple(const OSG::Vec2i& v);
-    static PyObject* toPyTuple(const OSG::Vec3i& v);
-    static PyObject* toPyTuple(const OSG::Vec4i& v);
     static PyObject* toPyTuple(const OSG::Vec2d& v);
     static PyObject* toPyTuple(const OSG::Vec3d& v);
     static PyObject* toPyTuple(const OSG::Vec4d& v);
+    static PyObject* toPyTuple(const OSG::Vec2i& v);
+    static PyObject* toPyTuple(const OSG::Vec3i& v);
+    static PyObject* toPyTuple(const OSG::Vec4i& v);
     static PyObject* toPyTuple(const vector<string>& v);
     static PyObject* toPyTuple(const vector<PyObject*>& v);
 

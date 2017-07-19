@@ -102,7 +102,7 @@ class VRPathtool : public VRObject {
         VRObjectPtr projObj;
 
         VRGeometryPtr customHandle;
-        VRGeometryPtr newControlHandle(VRGeometryPtr handle, Vec3f n);
+        VRGeometryPtr newControlHandle(VRGeometryPtr handle, Vec3d n);
         VRGeometryPtr newHandle();
         entryPtr newEntry(pathPtr p, option o, int eID, VRObjectPtr anchor = 0);
         void setupHandles(entryPtr p, VRGeometryPtr ha, VRGeometryPtr he);
@@ -112,7 +112,7 @@ class VRPathtool : public VRObject {
 
         VRGeometryPtr setGraphNode(int i);
         void setGraphEdge(Graph::edge& e, bool handles = false);
-        void setGraphEdge(Graph::edge& e, bool handles, Vec3f n1, Vec3f n2);
+        void setGraphEdge(Graph::edge& e, bool handles, Vec3d n1, Vec3d n2);
         void projectHandle(VRGeometryPtr handle, VRDevicePtr dev);
 
     public:
@@ -130,7 +130,7 @@ class VRPathtool : public VRObject {
         void remNode(int i);
         int getNodeID(VRObjectPtr o);
         void connect(int i1, int i2, bool handles = true);
-        void connect(int i1, int i2, bool handles, Vec3f n1, Vec3f n2);
+        void connect(int i1, int i2, bool handles, Vec3d n1, Vec3d n2);
         void disconnect(int i1, int i2);
 
         pathPtr newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution = 10, bool doCHandles = false);

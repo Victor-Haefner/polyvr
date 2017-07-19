@@ -70,7 +70,7 @@ class VRGeometry : public VRTransform {
         virtual void setPrimitive(string primitive, string args = "");
 
         /** Create a mesh using vectors with positions, normals, indices && optionaly texture coordinates **/
-        void create(int type, vector<Vec3f> pos, vector<Vec3f> norms, vector<int> inds, vector<Vec2f> texs = vector<Vec2f>());
+        void create(int type, vector<Vec3d> pos, vector<Vec3d> norms, vector<int> inds, vector<Vec2d> texs = vector<Vec2d>());
         void create(int type, GeoVectorProperty* pos, GeoVectorProperty* norms, GeoIntegralProperty* inds, GeoVectorProperty* texs);
 
         /** Overwrites the vertex positions of the mesh **/
@@ -106,8 +106,8 @@ class VRGeometry : public VRTransform {
         float calcSurfaceArea();
 
         int size();
-        Vec3f getGeometricCenter();
-        Vec3f getAverageNormal();
+        Vec3d getGeometricCenter();
+        Vec3d getAverageNormal();
         float getMax(int axis);
         float getMin(int axis);
 
@@ -119,7 +119,7 @@ class VRGeometry : public VRTransform {
         void setMaterial(VRMaterialPtr mat = 0);
         VRMaterialPtr getMaterial();
 
-        void influence(vector<Vec3f> pnts, vector<Vec3f> values, int power, float color_code = -1, float dl_max = 1.0);
+        void influence(vector<Vec3d> pnts, vector<Vec3d> values, int power, float color_code = -1, float dl_max = 1.0);
 
         void readSharedMemory(string segment, string object);
 };

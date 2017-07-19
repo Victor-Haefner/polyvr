@@ -46,7 +46,7 @@ class VRLodTree : public VRObject {
         static VRLodTreePtr create(string name);
         VRLodTreePtr ptr();
 
-        VRLodLeafPtr addObject(VRTransformPtr obj, Vec3f p, int lvl);
+        VRLodLeafPtr addObject(VRTransformPtr obj, Vec3d p, int lvl);
         VRLodLeafPtr remObject(VRTransformPtr obj);
         void reset(float size = 0);
 

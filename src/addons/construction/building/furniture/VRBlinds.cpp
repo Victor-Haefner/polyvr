@@ -77,26 +77,26 @@ void VRBlinds::toggle(VRDeviceWeakPtr d) {
 
 
 void VRBlinds::create() {
-    vector<Vec3f> norms;
+    vector<Vec3d> norms;
     vector<int> inds;
-    vector<Vec2f> texs;
+    vector<Vec2d> texs;
 
     for (int i=0;i<20;i++) {//20 blend elements
-        bl_pos_closed.push_back(Vec3f(0.55, -0.07*i, 0));
-        bl_pos_closed.push_back(Vec3f(0.55, -0.07*(i+0.3), -0.04));
-        bl_pos_closed.push_back(Vec3f(0.55, -0.07*(i+0.9), -0.08));
+        bl_pos_closed.push_back(Vec3d(0.55, -0.07*i, 0));
+        bl_pos_closed.push_back(Vec3d(0.55, -0.07*(i+0.3), -0.04));
+        bl_pos_closed.push_back(Vec3d(0.55, -0.07*(i+0.9), -0.08));
 
-        bl_pos_closed.push_back(Vec3f(-0.55, -0.07*(i+0.9), -0.08));
-        bl_pos_closed.push_back(Vec3f(-0.55, -0.07*(i+0.3), -0.04));
-        bl_pos_closed.push_back(Vec3f(-0.55, -0.07*i, 0));
+        bl_pos_closed.push_back(Vec3d(-0.55, -0.07*(i+0.9), -0.08));
+        bl_pos_closed.push_back(Vec3d(-0.55, -0.07*(i+0.3), -0.04));
+        bl_pos_closed.push_back(Vec3d(-0.55, -0.07*i, 0));
 
-        bl_pos_open.push_back(Vec3f(0.55, -0.01*i, 0));
-        bl_pos_open.push_back(Vec3f(0.55, -0.01*(i-0.7), -0.05));
-        bl_pos_open.push_back(Vec3f(0.55, -0.01*i, -0.1));
+        bl_pos_open.push_back(Vec3d(0.55, -0.01*i, 0));
+        bl_pos_open.push_back(Vec3d(0.55, -0.01*(i-0.7), -0.05));
+        bl_pos_open.push_back(Vec3d(0.55, -0.01*i, -0.1));
 
-        bl_pos_open.push_back(Vec3f(-0.55, -0.01*i, -0.1));
-        bl_pos_open.push_back(Vec3f(-0.55, -0.01*(i-0.7), -0.05));
-        bl_pos_open.push_back(Vec3f(-0.55, -0.01*i, 0));
+        bl_pos_open.push_back(Vec3d(-0.55, -0.01*i, -0.1));
+        bl_pos_open.push_back(Vec3d(-0.55, -0.01*(i-0.7), -0.05));
+        bl_pos_open.push_back(Vec3d(-0.55, -0.01*i, 0));
 
         inds.push_back(i*6+0);//quad1
         inds.push_back(i*6+1);//quad1
@@ -105,30 +105,30 @@ void VRBlinds::create() {
 
         for (int j=1;j<5;j++) inds.push_back(i*6+j);//quad2
 
-        for (int j=0;j<6;j++) norms.push_back(Vec3f(0,1,0));
+        for (int j=0;j<6;j++) norms.push_back(Vec3d(0,1,0));
 
-        texs.push_back(Vec2f(1,0));
-        texs.push_back(Vec2f(1,0.5));
-        texs.push_back(Vec2f(1,1));
+        texs.push_back(Vec2d(1,0));
+        texs.push_back(Vec2d(1,0.5));
+        texs.push_back(Vec2d(1,1));
 
-        texs.push_back(Vec2f(0,1));
-        texs.push_back(Vec2f(0,0.5));
-        texs.push_back(Vec2f(0,0));
+        texs.push_back(Vec2d(0,1));
+        texs.push_back(Vec2d(0,0.5));
+        texs.push_back(Vec2d(0,0));
     }
 
     blend_geo = VRGeometry::create("blend");
     blend_geo->create(GL_QUADS, bl_pos_open, norms, inds, texs);
 
-    Vec3f pos = window->getGeometricCenter();
-    Vec3f norm = window->getAverageNormal();
+    Vec3d pos = window->getGeometricCenter();
+    Vec3d norm = window->getAverageNormal();
     norm.normalize();
     pos[2] = window->getMax(2);
 
-    Matrix m = window->getWorldMatrix();
+    auto m = window->getWorldMatrix();
     m.mult(pos, pos);
     m.mult(norm, norm);
 
-    blend_geo->setPose(pos, norm, Vec3f(0,1,0));
+    blend_geo->setPose(pos, norm, Vec3d(0,1,0));
     scene->add(blend_geo);
 
     auto mat = VRMaterial::create("blinds");

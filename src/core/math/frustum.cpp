@@ -7,13 +7,13 @@ frustum::frustum() {}
 void frustum::runTest() {
     frustum f;
 
-    f.setPose( pose(Vec3f(0,0,0), Vec3f(0,0,-1), Vec3f(0,1,0)) );
-    f.setNearFar(Vec2f(0.1,10));
-    f.addEdge(Vec3f(-1,0,-1));
-    f.addEdge(Vec3f(0,1,-1));
-    f.addEdge(Vec3f(1,0,-1));
-    f.addEdge(Vec3f(0.1,-0.5,-1));
-    f.addEdge(Vec3f(0,-1,-1));
+    f.setPose( pose(Vec3d(0,0,0), Vec3d(0,0,-1), Vec3d(0,1,0)) );
+    f.setNearFar(Vec2d(0.1,10));
+    f.addEdge(Vec3d(-1,0,-1));
+    f.addEdge(Vec3d(0,1,-1));
+    f.addEdge(Vec3d(1,0,-1));
+    f.addEdge(Vec3d(0.1,-0.5,-1));
+    f.addEdge(Vec3d(0,-1,-1));
     f.close();
 
     auto res = f.getConvexDecomposition();
@@ -22,22 +22,22 @@ void frustum::runTest() {
 
 void frustum::setPose(pose trans) { this->trans = trans; }
 pose frustum::getPose() { return trans; }
-void frustum::addEdge(Vec3f dir) { directions.push_back(dir); }
-void frustum::setNearFar(Vec2f nf) { near_far = nf; }
+void frustum::addEdge(Vec3d dir) { directions.push_back(dir); }
+void frustum::setNearFar(Vec2d nf) { near_far = nf; }
 void frustum::close() { if (directions.size() > 0) directions.push_back(directions[0]); }
 int frustum::size() { return directions.size(); }
 void frustum::clear() { directions.clear(); profile.clear(); }
-vector< Vec3f > frustum::getEdges() { return directions; }
+vector< Vec3d > frustum::getEdges() { return directions; }
 
 void frustum::computeProfile() {
     profile.clear();
-    Matrix m = trans.asMatrix();
+    Matrix4d m = trans.asMatrix();
     m.invert();
 
     for (auto d : directions) {
-        Vec3f p;
+        Vec3d p;
         m.mult(d,p);
-        profile.addPoint( Vec2f(p[0], p[1]) );
+        profile.addPoint( Vec2d(p[0], p[1]) );
     }
 
     if (!profile.isCCW()) profile.turn();
@@ -54,11 +54,11 @@ frustum frustum::fromProfile(VRPolygon p, pose t) {
 vector<Plane> frustum::getPlanes() {
     vector<Plane> res;
     for (uint i=1; i<directions.size(); i++) {
-        Vec3f e1 = directions[i-1];
-        Vec3f e2 = directions[i];
-        Vec3f n = e2.cross( e1 );
+        Vec3d e1 = directions[i-1];
+        Vec3d e2 = directions[i];
+        Vec3d n = e2.cross( e1 );
         n.normalize();
-        Plane p = Plane(n, trans.pos() );
+        Plane p = Plane(Vec3f(n), Pnt3f(trans.pos()) );
         res.push_back(p);
     }
     return res;
@@ -66,8 +66,8 @@ vector<Plane> frustum::getPlanes() {
 
 vector<Plane> frustum::getNearFarPlanes() {
     vector<Plane> res;
-    res.push_back( Plane(trans.pos() + trans.dir()*near_far[0], -trans.dir()) ); // Near plane
-    res.push_back( Plane(trans.pos() + trans.dir()*near_far[1], trans.dir()) ); // far planse
+    res.push_back( Plane(Vec3f(trans.pos() + trans.dir()*near_far[0]), Pnt3f(-trans.dir())) ); // Near plane
+    res.push_back( Plane(Vec3f(trans.pos() + trans.dir()*near_far[1]), Pnt3f(trans.dir())) ); // far planse
     return res;
 }
 

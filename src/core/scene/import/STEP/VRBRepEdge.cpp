@@ -6,8 +6,8 @@ using namespace OSG;
 
 VRBRepEdge::VRBRepEdge() {}
 
-Vec3f& VRBRepEdge::beg() { return points.size() > 0 ? points[0] : n; }
-Vec3f& VRBRepEdge::end() { return points.size() > 0 ? points[points.size()-1] : n; }
+Vec3d& VRBRepEdge::beg() { return points.size() > 0 ? points[0] : n; }
+Vec3d& VRBRepEdge::end() { return points.size() > 0 ? points[points.size()-1] : n; }
 
 void VRBRepEdge::swap() {
     cout << "VRBRepEdge::swap\n";
@@ -30,13 +30,13 @@ void VRBRepEdge::build(string type) {
 
     if (type == "Circle") {
         float _r = 1/radius;
-        Matrix m = center->asMatrix();
-        Matrix mI = m; mI.invert();
+        Matrix4d m = center->asMatrix();
+        Matrix4d mI = m; mI.invert();
 
         // get start and end angles
-        Vec3f c1,c2;
-        mI.mult(Pnt3f(EBeg), c1);
-        mI.mult(Pnt3f(EEnd), c2);
+        Vec3d c1,c2;
+        mI.mult(Pnt3d(EBeg), c1);
+        mI.mult(Pnt3d(EEnd), c2);
         cout << " circle ends: " << EBeg << " -> " << c1 << " , " << EEnd << " -> " << c2 << endl;
         c1 *= _r; c2*= _r;
         a1 = atan2(c1[1],c1[0]);
@@ -53,9 +53,9 @@ void VRBRepEdge::build(string type) {
 
         angles = angleFrame(a1, a2);
         for (auto a : angles) {
-            Pnt3f p(radius*cos(a),radius*sin(a),0);
+            Pnt3d p(radius*cos(a),radius*sin(a),0);
             m.mult(p,p);
-            points.push_back(Vec3f(p));
+            points.push_back(Vec3d(p));
             //cout << " c point " << p << endl;
         }
 
@@ -74,7 +74,7 @@ void VRBRepEdge::build(string type) {
         float T = knots[knots.size()-1] - knots[0];
         for (int i=0; i<=res; i++) {
             float t = i*T/res;
-            Vec3f p = doWeights ? BSplineW(t, deg, cpoints, knots, weights) : BSpline(t, deg, cpoints, knots);
+            Vec3d p = doWeights ? BSplineW(t, deg, cpoints, knots, weights) : BSpline(t, deg, cpoints, knots);
             points.push_back(p);
         }
 

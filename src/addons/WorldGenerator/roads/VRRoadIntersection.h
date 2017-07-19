@@ -26,7 +26,7 @@ class VRRoadIntersection : public VRRoadBase {
 
         static VRRoadIntersectionPtr create();
 
-        VREntityPtr addTrafficLight( posePtr p, string asset, Vec3f root );
+        VREntityPtr addTrafficLight( posePtr p, string asset, Vec3d root );
         VRGeometryPtr createGeometry();
 
         void computeLayout();

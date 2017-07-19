@@ -30,8 +30,8 @@ class VRNumberingEngine : public OSG::VRGeometry {
 
         void clear();
 
-        void add(OSG::Vec3f p = OSG::Vec3f(), int N = 1, float f = 0, int d = 2, int grp = 0);
-        void set(int i, OSG::Vec3f p, float f = 0, int d = 2, int grp = 0);
+        void add(OSG::Vec3d p = OSG::Vec3d(), int N = 1, float f = 0, int d = 2, int grp = 0);
+        void set(int i, OSG::Vec3d p, float f = 0, int d = 2, int grp = 0);
 
         void setPrePost(int grp, string pre, string post);
         int addPrePost(string pre, string post);

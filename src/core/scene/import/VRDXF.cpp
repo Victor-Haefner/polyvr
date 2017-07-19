@@ -96,24 +96,24 @@ Object* get_layer(DATA& data) { return get_item(data, 8); }
 Object* objectify(Object* obj);
 
 struct Segment {
-    Vec3f p1,p2;
-    Segment(Vec3f p1, Vec3f p2) : p1(p1), p2(p2) { ; }
+    Vec3d p1,p2;
+    Segment(Vec3d p1, Vec3d p2) : p1(p1), p2(p2) { ; }
 };
 
 struct VRArc {
-    Vec3f c;
+    Vec3d c;
     float r = 0;
-    Vec2f a;
-    Vec3f box;
-    VRArc(Vec3f c, float r, float a1, float a2) : c(c), r(r), a(a1,a2) {;}
+    Vec2d a;
+    Vec3d box;
+    VRArc(Vec3d c, float r, float a1, float a2) : c(c), r(r), a(a1,a2) {;}
 };
 
 struct VRLayer {
     string name;
-    vector<Vec3f> points;
+    vector<Vec3d> points;
     vector<Segment> lines;
     vector<VRArc> arcs;
-    void addPoint( Vec3f p ) { points.push_back(p); }
+    void addPoint( Vec3d p ) { points.push_back(p); }
     void addLine( Segment l ) { lines.push_back(l); }
     void addArc( VRArc a ) { arcs.push_back(a); }
     VRLayer(string name) { this->name = name; }
@@ -129,12 +129,12 @@ struct base_parser {
     int N = 16;
     float rescale = 1;
     float rot_angle = 0;
-    Matrix transformation;
-    vector<Vec3f> offset_stack;
-    vector<Vec3f> scale_stack;
+    Matrix4d transformation;
+    vector<Vec3d> offset_stack;
+    vector<Vec3d> scale_stack;
     //vector<> rotation_stack;
     vector<float> rot_angle_stack;
-    Vec2f last_controle_point;
+    Vec2d last_controle_point;
     int element_id = 0;
     map<string, View*> viewports;
     map<string, Object*> elem_dict;
@@ -145,12 +145,12 @@ struct base_parser {
 	    transformation.setIdentity();
 	    transformation.setScale(rescale);
 		for (uint i=0; i<offset_stack.size(); i++) {
-			Vec3f o = offset_stack[i];
-			Vec3f s = scale_stack[i];
+			Vec3d o = offset_stack[i];
+			Vec3d s = scale_stack[i];
 			float f = rot_angle_stack[i];
 
-			Matrix t,S;
-			t.setRotate(Quaternion(0,0,1,f));
+			Matrix4d t,S;
+			t.setRotate(Quaterniond(0,0,1,f));
 			t.setTranslate(o);
 			S.setScale(s);
 			t.mult(S);
@@ -169,28 +169,28 @@ struct base_parser {
 		return v->layers[l_name];
 	}
 
-	void addPoint(Vec3f p) {
+	void addPoint(Vec3d p) {
 		transformation.mult(p,p);
 		layer->addPoint(p);
 	}
 
-	void addLine(Vec3f vec1, Vec3f vec2) {
+	void addLine(Vec3d vec1, Vec3d vec2) {
 		transformation.mult(vec1, vec1);
 		transformation.mult(vec2, vec2);
 		layer->addLine( Segment(vec1,vec2) );
 	}
 
-	void addCircle(Vec3f c, float r) {
+	void addCircle(Vec3d c, float r) {
 		transformation.mult(c,c);
-		Vec3f s = Vec3f(1,0,0);
+		Vec3d s = Vec3d(1,0,0);
 		transformation.mult(s,s);
 		r *= s.length();
 		layer->addArc( VRArc(c, r, 0, 2*Pi) );
 	}
 
-	void addEllipse(Vec3f c, float a, float b) {
+	void addEllipse(Vec3d c, float a, float b) {
 		transformation.mult(c,c);
-		Vec3f box = Vec3f(a, b,0);
+		Vec3d box = Vec3d(a, b,0);
 		transformation.mult(box, box);
 		for (int i=0; i<3; i++) box[i] = abs(box[i]);
 
@@ -199,15 +199,15 @@ struct base_parser {
 		layer->addArc(e);
 	}
 
-	void addArc(Vec3f c, float r, float a1, float a2, float bulge = 0) {
+	void addArc(Vec3d c, float r, float a1, float a2, float bulge = 0) {
 		//compute start and end point, transform them and compute back to angles
-		Vec3f sp = Vec3f(cos(a1),sin(a1),0)*r + c;
-		Vec3f ep = Vec3f(cos(a2),sin(a2),0)*r + c;
+		Vec3d sp = Vec3d(cos(a1),sin(a1),0)*r + c;
+		Vec3d ep = Vec3d(cos(a2),sin(a2),0)*r + c;
 		transformation.mult(sp,sp);
 		transformation.mult(ep,ep);
 		transformation.mult(c,c);
 
-		Vec3f s = Vec3f(1,0,0);
+		Vec3d s = Vec3d(1,0,0);
 		transformation.mult(s,s);
 		r *= s.length();
 
@@ -215,8 +215,8 @@ struct base_parser {
 		a1 = atan2(sp[1] - c[1], sp[0] - c[0]) + Pi;
 		a2 = atan2(ep[1] - c[1], ep[0] - c[0]) + Pi;
 
-		Vec2f ang = Vec2f(a1, a2); //check for mirror transformation
-		if (transformation.det() < 0) ang = Vec2f(a2, a1);
+		Vec2d ang = Vec2d(a1, a2); //check for mirror transformation
+		if (transformation.det() < 0) ang = Vec2d(a2, a1);
 
 		layer->addArc( VRArc(c, r, ang[0], ang[1]) );
 	}
@@ -237,9 +237,9 @@ struct base_parser {
 struct Primitive : public Object {
     string space;
     string color_index;
-    vector<Vec3f> points;
-    Vec3f ext;
-    Vec3f scale;
+    vector<Vec3d> points;
+    Vec3d ext;
+    Vec3d scale;
 
     Primitive(Object* obj) : Object("") {
         if (obj == 0) return;
@@ -251,8 +251,8 @@ struct Primitive : public Object {
         obj->visited_flag = true;
     }
 
-	Vec3f get_vec3f(int i1, int i2, int i3) {
-		Vec3f p;
+	Vec3d get_vec3f(int i1, int i2, int i3) {
+		Vec3d p;
 		for (auto item : data) {
             int k = item.second[0]->asInt();
             float v = item.second[1]->asFloat();
@@ -263,8 +263,8 @@ struct Primitive : public Object {
 		return p;
 	}
 
-	Vec4f get_vec4f(int i1, int i2, int i3, int i4) {
-		Vec4f p;
+	Vec4d get_vec4f(int i1, int i2, int i3, int i4) {
+		Vec4d p;
 		for (auto item : data) {
             int k = item.second[0]->asInt();
             float v = item.second[1]->asFloat();
@@ -289,8 +289,8 @@ struct Primitive : public Object {
 		return p;
 	}
 
-	void get_p1() { Vec3f p = get_vec3f(10,20,30); points.push_back(p); }
-	void get_p2() { Vec3f p = get_vec3f(11,21,31); points.push_back(p); }
+	void get_p1() { Vec3d p = get_vec3f(10,20,30); points.push_back(p); }
+	void get_p2() { Vec3d p = get_vec3f(11,21,31); points.push_back(p); }
 	void get_extrusion() { ext = get_vec3f(210,220,230); }
 	void get_scale() { scale = get_vec3f(41,42,43); }
 };
@@ -325,7 +325,7 @@ struct DXFArc : public DXFCircle {
 struct DXFEllipse : public DXFArc {
 	DXFEllipse(Object* obj) : DXFArc(obj) {
 	    get_p2();
-	    Vec3f m = points[1];
+	    Vec3d m = points[1];
 		radius = m.length();
 	}
 };
@@ -381,7 +381,7 @@ struct Insert : public Primitive {
 };
 
 struct Vertex : public Primitive {
-    Vec3f loc;
+    Vec3d loc;
     float bulge = 0;
     float swidth = 0;
     float ewidth = 0;
@@ -439,14 +439,14 @@ struct LWpolyline : public Polyline {
 };
 
 struct Face : public Primitive {
-    vector<Vec3f> points;
+    vector<Vec3d> points;
 
 	Face(Object* obj) : Primitive(obj) {
         get_points();
 	}
 
 	void get_points() {
-		Vec3f a,b,c,d;
+		Vec3d a,b,c,d;
 		for (auto item : data) {
             int k = item.second[0]->asInt();
             float v = item.second[1]->asFloat();
@@ -608,11 +608,11 @@ struct StateMachine {
 };
 
 //convert the bulge of lwpolylines to arcs
-void cvtbulge(float bulge, Vec3f s, Vec3f e, Vec3f& cen, Vec3f& arc) {
+void cvtbulge(float bulge, Vec3d s, Vec3d e, Vec3d& cen, Vec3d& arc) {
 	float cotbce = (1.0/bulge - bulge)*0.5;
 
 	// Compute center point and radius
-	cen = s+e+Vec3f((s[1]-e[1])*cotbce, (e[0]-s[0])*cotbce, 0)*0.5;
+	cen = s+e+Vec3d((s[1]-e[1])*cotbce, (e[0]-s[0])*cotbce, 0)*0.5;
 	float rad = (cen-s).length();
 
 	// Compute start and end angles
@@ -629,7 +629,7 @@ void cvtbulge(float bulge, Vec3f s, Vec3f e, Vec3f& cen, Vec3f& arc) {
 	while (ea < 0.0) ea += 2.0*Pi;
 	if (bulge < 0.0) swap(ea,sa); // Swap angles if clockwise // works
 
-	arc = Vec3f(rad, sa, ea);
+	arc = Vec3d(rad, sa, ea);
 }
 
 struct dxf_parser : public base_parser {
@@ -654,8 +654,8 @@ struct dxf_parser : public base_parser {
 		bool extr = false;
 		if (item->extrusion.size() >= 3 && item->extrusion[2] == -1) {
             extr = true;
-            offset_stack.push_back(Vec3f(0,0,0));
-            scale_stack.push_back(Vec3f(-1,1,1));
+            offset_stack.push_back(Vec3d(0,0,0));
+            scale_stack.push_back(Vec3d(-1,1,1));
             rot_angle_stack.push_back(0);
             compute_current_transformation();
 		}
@@ -675,8 +675,8 @@ struct dxf_parser : public base_parser {
 					if (abs(p1->bulge) < 1e-4) addLine(p1->loc, p2->loc);
 					else {
 						if (extr) p1->bulge *= -1;
-						Vec3f cen;
-						Vec3f arc;
+						Vec3d cen;
+						Vec3d arc;
 						cvtbulge(p1->bulge, p1->loc, p2->loc, cen, arc);
 						addArc(cen, arc[0], arc[1], arc[2]);
 					}
@@ -688,8 +688,8 @@ struct dxf_parser : public base_parser {
             auto l = (Polyline*)item;
             int pN = l->points.size();
 			for (int i=0; i<pN; i++) {
-				Vec3f p1 = l->points[i];
-				Vec3f p2 = l->points[(i+1)%pN];
+				Vec3d p1 = l->points[i];
+				Vec3d p2 = l->points[(i+1)%pN];
 				if (i < pN-1 || l->closed) addLine(p1,p2);
 			}
 		}
@@ -698,8 +698,8 @@ struct dxf_parser : public base_parser {
             auto f = (Face*)item;
             int pN = f->points.size();
 			for (int i=0; i<pN; i++) {
-				Vec3f p1 = f->points[i];
-				Vec3f p2 = f->points[(i+1)%pN];
+				Vec3d p1 = f->points[i];
+				Vec3d p2 = f->points[(i+1)%pN];
                 addLine(p1,p2);
 			}
 		}
@@ -711,7 +711,7 @@ struct dxf_parser : public base_parser {
             auto block = (Block*)b;
 
 			offset_stack.push_back(i->points[0]);
-			scale_stack.push_back(Vec3f(i->scale[0],i->scale[1],1));
+			scale_stack.push_back(Vec3d(i->scale[0],i->scale[1],1));
 			rot_angle_stack.push_back(i->rotation*d2r);
 			compute_current_transformation();
 

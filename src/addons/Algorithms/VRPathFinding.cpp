@@ -22,7 +22,7 @@ bool VRPathFinding::Position::operator<(const Position& p) const {
     return k1 < k2;
 }
 
-Vec3f VRPathFinding::pos(Position& p) {
+Vec3d VRPathFinding::pos(Position& p) {
     if (p.nID >= 0) {
         auto node = graph->getNode(p.nID);
         return node.p.pos();
@@ -33,7 +33,7 @@ Vec3f VRPathFinding::pos(Position& p) {
         return path->getPose(p.t).pos();
     }
 
-    return Vec3f();
+    return Vec3d();
 }
 
 

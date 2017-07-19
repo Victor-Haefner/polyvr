@@ -38,7 +38,7 @@ vector<float> VRRobotArm::getAngles() { return angles; }
 void VRRobotArm::applyAngles() {
     cout << "applyAngles";
     for (int i=0; i<N; i++) {
-        Vec3f euler;
+        Vec3d euler;
         euler[axis[i]] = angle_directions[i]*angles[i] + angle_offsets[i]*Pi;
         cout << " " << euler[axis[i]];
         parts[i]->setEuler(euler);
@@ -48,7 +48,7 @@ void VRRobotArm::applyAngles() {
 
 float clamp(float f) { return f<-1 ? -1 : f>1 ? 1 : f; }
 
-void VRRobotArm::calcReverseKinematics(Vec3f pos, Vec3f dir, Vec3f up) {
+void VRRobotArm::calcReverseKinematics(Vec3d pos, Vec3d dir, Vec3d up) {
     pos -= dir* lengths[3];
 
     pos[1] -= lengths[0];
@@ -67,21 +67,21 @@ void VRRobotArm::calcReverseKinematics(Vec3f pos, Vec3f dir, Vec3f up) {
 
     // end effector
     float e = a+b; // counter angle
-    Vec3f e0 = Vec3f(cos(-f),0,sin(-f));
-    Vec3f av = Vec3f(-cos(e)*sin(f), -sin(e), -cos(e)*cos(f));
-    Vec3f e1 = dir.cross(av);
+    Vec3d e0 = Vec3d(cos(-f),0,sin(-f));
+    Vec3d av = Vec3d(-cos(e)*sin(f), -sin(e), -cos(e)*cos(f));
+    Vec3d e1 = dir.cross(av);
     e1.normalize();
 
     float det = av.dot( e1.cross(e0) );
-    e = min( max(-e1.dot(e0), -1.f), 1.f);
+    e = min( max(-e1.dot(e0), -1.0), 1.0);
     angles[3] = det < 0 ? -acos(e) : acos(e);
     angles[4] = acos( av.dot(dir) );
 
     // vector visualization
-    ageo->setVector(0, pos, dir, Vec3f(0,1,0), "dir");
-    ageo->setVector(1, Vec3f(0,0.6,0), e0, Vec3f(1,1,0), "e0");
-    ageo->setVector(2, pos, av, Vec3f(1,0,0), "av");
-    ageo->setVector(3, pos, e1, Vec3f(0,1,1), "e1");
+    ageo->setVector(0, pos, dir, Color3f(0,1,0), "dir");
+    ageo->setVector(1, Vec3d(0,0.6,0), e0, Color3f(1,1,0), "e0");
+    ageo->setVector(2, pos, av, Color3f(1,0,0), "av");
+    ageo->setVector(3, pos, e1, Color3f(0,1,1), "e1");
 }
 
 void VRRobotArm::animOnPath(float t) {
@@ -93,7 +93,7 @@ void VRRobotArm::animOnPath(float t) {
     if (t >= job.t1 and !job.loop) { job_queue.pop_front(); anim->start(0); return; }
     if (t >= job.t1 and job.loop) { anim->start(0); return; }
 
-    Vec3f pos, dir, up;
+    Vec3d pos, dir, up;
     job.p->getOrientation(t, dir, up);
     pos = job.p->getPosition(t);
     calcReverseKinematics(pos, dir, up);
@@ -117,7 +117,7 @@ void VRRobotArm::setAngles(vector<float> angles) {
     applyAngles(); // TODO: animate from current pose
 }
 
-void VRRobotArm::getPose(Vec3f& pos, Vec3f& dir, Vec3f& up) {
+void VRRobotArm::getPose(Vec3d& pos, Vec3d& dir, Vec3d& up) {
     dir = parts[5]->getWorldDirection();
     up = parts[5]->getWorldUp();
 
@@ -129,16 +129,16 @@ void VRRobotArm::getPose(Vec3f& pos, Vec3f& dir, Vec3f& up) {
     float L = sqrt( (-2*r1*r2) * cos(b) + r1*r1 + r2*r2);
 
     float d = a - asin(r2/L*sin(b));
-    Vec3f p( L*cos(d)*sin(f), L*sin(d), L*cos(d)*cos(f));
+    Vec3d p( L*cos(d)*sin(f), L*sin(d), L*cos(d)*cos(f));
     p[1] += lengths[0]; // base
-    ageo->setVector(4, Vec3f(0,0,0), p, Vec3f(0,0,0), "p");
+    ageo->setVector(4, Vec3d(0,0,0), p, Color3f(0,0,0), "p");
     p -= dir*lengths[3];
     pos = p;
 }
 
-void VRRobotArm::moveTo(Vec3f pos, Vec3f dir, Vec3f up) {
+void VRRobotArm::moveTo(Vec3d pos, Vec3d dir, Vec3d up) {
     stop();
-    Vec3f cpos, cdir, cup;
+    Vec3d cpos, cdir, cup;
     getPose(cpos, cdir, cup);
 
     animPath->clear();
@@ -151,14 +151,14 @@ void VRRobotArm::moveTo(Vec3f pos, Vec3f dir, Vec3f up) {
 
 void VRRobotArm::setGrab(float g) {
     float l = lengths[4]*g;
-    Vec3f p; p[0] = l;
+    Vec3d p; p[0] = l;
     parts[5]->setFrom(p);
     parts[6]->setFrom(-p);
     grab = g;
 }
 
 void VRRobotArm::moveOnPath(float t0, float t1, bool loop) {
-    Vec3f p,d,u;
+    Vec3d p,d,u;
     p = robotPath->getPosition(t0);
     robotPath->getOrientation(t0,d,u);
     moveTo(p,d,u);

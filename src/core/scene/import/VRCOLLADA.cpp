@@ -217,7 +217,7 @@ void printAll(const AnimationLibrary& library) {
 
 void setPose(OSG::VRTransformPtr o, int i, pathPtr p, float t) {// object, axis, new axis values
     if (i < 0 || i > 2) { return; }
-    Vec3f f = o->getFrom();
+    Vec3d f = o->getFrom();
     if(p) f[i] = p->getPosition(t)[1];
     else f[i] = t;
     o->setFrom(f);
@@ -225,7 +225,7 @@ void setPose(OSG::VRTransformPtr o, int i, pathPtr p, float t) {// object, axis,
 
 void setRot(OSG::VRTransformPtr o, int i, pathPtr p, float t) {
     if (i < 0 || i > 2) { return; }
-    Vec3f f = o->getEuler();
+    Vec3d f = o->getEuler();
     if(p) f[i] = p->getPosition(t)[1];
     else f[i] = t;
     o->setEuler(f);
@@ -233,13 +233,13 @@ void setRot(OSG::VRTransformPtr o, int i, pathPtr p, float t) {
 
 void setScale(OSG::VRTransformPtr o, int i, pathPtr p, float t) {
     if (i < 0 || i > 2) { return; }
-    Vec3f f = o->getScale();
+    Vec3d f = o->getScale();
     if(p) f[i] = p->getPosition(t)[1];
     else f[i] = t;
     o->setScale(f);
 }
 
-void setPose3(VRTransformPtr o, int i, Vec3f t) {
+void setPose3(VRTransformPtr o, int i, Vec3d t) {
     o->setFrom(t);
 }
 
@@ -335,8 +335,8 @@ void buildAnimations(AnimationLibrary& lib, VRObjectPtr objects) {
                 p = path::create();
                 Vec3f h0 = Vec3f(outtangentValues[2*i], outtangentValues[2*i+1], 0) - start;
                 Vec3f h1 = Vec3f(intangentValues[2*i+2], intangentValues[2*i+1+2], 0) - end;
-                p->addPoint( pose(start, h0) );
-                p->addPoint( pose(end, h1) );
+                p->addPoint( pose(Vec3d(start), Vec3d(h0)) );
+                p->addPoint( pose(Vec3d(end), Vec3d(h1)) );
                 p->compute(80);
             }
             bool loop = false;
@@ -355,14 +355,14 @@ void buildAnimations(AnimationLibrary& lib, VRObjectPtr objects) {
 
 struct joint {
     string id;
-    Vec3f axis;
-    Vec2f bounds;
+    Vec3d axis;
+    Vec2d bounds;
 };
 
 struct klink;
 struct attachment {
     string joint;
-    Vec3f translate;
+    Vec3d translate;
     map<string, klink> links;
 };
 
@@ -400,7 +400,7 @@ vector<klink> parseLink(xNode* data, string model, attachment& parent) {
             a.joint = ajoint->value();
             a.joint = a.joint.substr(model.size()+1, a.joint.size()-model.size()-1);
             xNode* transNode = attachmentNode->first_node("translate");
-            a.translate = toVec3f(transNode->value());
+            a.translate = toVec3d(transNode->value());
 
             for ( auto li : parseLink(attachmentNode, model, a));
             cout << l.id << " attachment added " << a.joint << endl;
@@ -434,10 +434,10 @@ kin_scene parseColladaKinematics(string data) {
                 xNode* nLimits = nRevolute->first_node("limits");
                 xNode* nMin = nLimits->first_node("min");
                 xNode* nMax = nLimits->first_node("max");
-                j.axis = toVec3f(nAxis->value());
+                j.axis = toVec3d(nAxis->value());
                 float b1 = toFloat(nMin->value())/180.0*Pi;
                 float b2 = toFloat(nMax->value())/180.0*Pi;
-                j.bounds = Vec2f(b1, b2);
+                j.bounds = Vec2d(b1, b2);
                 joint_bin[j.id] = j;
             }
         }
@@ -534,7 +534,7 @@ VRTransformPtr buildLinks(klink l, VRObjectPtr objects, map<string, VRConstraint
 
     for (auto a : l.attachments) {
         VRConstraintPtr c = constraints[a.second.joint];
-        Matrix ref;
+        Matrix4d ref;
         ref.setTranslate(a.second.translate);
         c->setReferenceA(ref);
         //c->setReferenceB(ref);

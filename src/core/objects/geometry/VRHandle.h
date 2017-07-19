@@ -23,7 +23,7 @@ class VRHandle : public VRGeometry {
 
         float value = 0;
         float scale = 1;
-        Vec3f axis;
+        Vec3d axis;
         posePtr origin;
         TYPE constraint = LINEAR;
 
@@ -34,16 +34,16 @@ class VRHandle : public VRGeometry {
         VRHandlePtr ptr();
 
         void updateHandle();
-        void configure(VRAnimCbPtr cb, TYPE t, Vec3f n, float scale, bool symmetric);
+        void configure(VRAnimCbPtr cb, TYPE t, Vec3d n, float scale, bool symmetric);
         void set(posePtr p, float v);
 
-        Vec3f getAxis();
+        Vec3d getAxis();
         posePtr getOrigin();
 
         void drag(VRTransformPtr new_parent);
         void drop();
 
-        void setMatrix(Matrix m);
+        void setMatrix(Matrix4d m);
 };
 
 OSG_END_NAMESPACE;

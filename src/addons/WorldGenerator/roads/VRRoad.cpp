@@ -38,12 +38,12 @@ VRRoad::edgePoint& VRRoad::getEdgePoints( VREntityPtr node ) {
     if (edgePoints.count(node) == 0) {
         float width = getWidth();
         VREntityPtr rEntry = getNodeEntry( node );
-        Vec3f norm = rEntry->getVec3f("direction") * toInt(rEntry->get("sign")->value);
-        Vec3f x = Vec3f(0,1,0).cross(norm);
+        Vec3d norm = rEntry->getVec3f("direction") * toInt(rEntry->get("sign")->value);
+        Vec3d x = Vec3d(0,1,0).cross(norm);
         x.normalize();
-        Vec3f pNode = node->getVec3f("position");
-        Vec3f p1 = pNode - x * 0.5 * width; // right
-        Vec3f p2 = pNode + x * 0.5 * width; // left
+        Vec3d pNode = node->getVec3f("position");
+        Vec3d p1 = pNode - x * 0.5 * width; // right
+        Vec3d p2 = pNode + x * 0.5 * width; // left
         edgePoints[node] = edgePoint(p1,p2,norm,rEntry);
     }
     return edgePoints[node];
@@ -53,9 +53,9 @@ VRGeometryPtr VRRoad::createGeometry() {
 	auto strokeGeometry = [&]() {
 	    float width = getWidth();
 		float W = width*0.5*1.1;
-		vector<Vec3f> profile;
-		profile.push_back(Vec3f(-W,0,0));
-		profile.push_back(Vec3f(W,0,0));
+		vector<Vec3d> profile;
+		profile.push_back(Vec3d(-W,0,0));
+		profile.push_back(Vec3d(W,0,0));
 
 		auto geo = VRStroke::create("road");
 		vector<pathPtr> paths;
@@ -78,7 +78,7 @@ void VRRoad::computeMarkings2() {
 
     // road data
     vector<VREntityPtr> nodes;
-    vector<Vec3f> normals;
+    vector<Vec3d> normals;
     VREntityPtr pathEnt = entity->getEntity("path");
     if (!pathEnt) return;
 
@@ -86,8 +86,8 @@ void VRRoad::computeMarkings2() {
     VREntityPtr nodeEntryOut = pathEnt->getEntity("nodes",1);
     VREntityPtr nodeIn = nodeEntryIn->getEntity("node");
     VREntityPtr nodeOut = nodeEntryOut->getEntity("node");
-    Vec3f normIn = nodeEntryIn->getVec3f("direction");
-    Vec3f normOut = nodeEntryOut->getVec3f("direction");
+    Vec3d normIn = nodeEntryIn->getVec3f("direction");
+    Vec3d normOut = nodeEntryOut->getVec3f("direction");
 
     float roadWidth = getWidth();
     auto lanes = entity->getAllEntities("lanes");
@@ -96,9 +96,9 @@ void VRRoad::computeMarkings2() {
     // compute markings nodes
     auto path = toPath(pathEnt, 12);
     for (auto point : path->getPoints()) {
-        Vec3f p = point.pos();
-        Vec3f n = point.dir();
-        Vec3f x = point.x();
+        Vec3d p = point.pos();
+        Vec3d n = point.dir();
+        Vec3d x = point.x();
         x.normalize();
 
         float widthSum = -roadWidth*0.5;
@@ -107,7 +107,7 @@ void VRRoad::computeMarkings2() {
             float width = toFloat( lane->get("width")->value );
             float k = widthSum + mw*0.5;
 
-            Vec3f pi = x*k + p;
+            Vec3d pi = x*k + p;
             nodes.push_back(addNode(pi));
             normals.push_back(n);
             widthSum += width;
@@ -123,7 +123,7 @@ void VRRoad::computeMarkings2() {
     int lastDir = 0;
     for (int li=0; li<Nlanes+1; li++) {
         vector<VREntityPtr> nodes2;
-        vector<Vec3f> normals2;
+        vector<Vec3d> normals2;
         for (int pi=0; pi<pathN; pi++) {
             int i = pi*(Nlanes+1)+li;
             nodes2.push_back( nodes[i] );

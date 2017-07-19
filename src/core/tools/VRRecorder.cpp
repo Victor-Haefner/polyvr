@@ -36,7 +36,7 @@ class VRFrame {
         int width = 0;
         int height = 0;
 
-        Vec3f f,a,u; // from at up
+        Vec3d f,a,u; // from at up
 
         VRFrame() {}
         ~VRFrame() { if (pktData) delete pktData; }
@@ -107,10 +107,10 @@ void VRRecorder::setTransform(VRTransformPtr t, int f) {
     t->setUp(fr->u);
 }
 
-Vec3f VRRecorder::getFrom(int f) { VRFrame* fr = captures[f]; return fr->f; }
-Vec3f VRRecorder::getDir(int f) { VRFrame* fr = captures[f]; Vec3f d = fr->a - fr->f; d.normalize(); return d; }
-Vec3f VRRecorder::getAt(int f) { VRFrame* fr = captures[f]; return fr->a; }
-Vec3f VRRecorder::getUp(int f) { VRFrame* fr = captures[f]; return fr->u; }
+Vec3d VRRecorder::getFrom(int f) { VRFrame* fr = captures[f]; return fr->f; }
+Vec3d VRRecorder::getDir(int f) { VRFrame* fr = captures[f]; Vec3d d = fr->a - fr->f; d.normalize(); return d; }
+Vec3d VRRecorder::getAt(int f) { VRFrame* fr = captures[f]; return fr->a; }
+Vec3d VRRecorder::getUp(int f) { VRFrame* fr = captures[f]; return fr->u; }
 
 void VRRecorder::capture() {
     auto v = view.lock();

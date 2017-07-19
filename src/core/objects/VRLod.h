@@ -11,7 +11,7 @@ class VRLod : public VRObject {
     private:
         DistanceLODRecPtr lod;
         bool decimate = false;
-        Vec3f center;
+        Vec3d center;
         string distances_string;
         uint decimateNumber = 0;
         map<uint, float> distances;
@@ -33,8 +33,8 @@ class VRLod : public VRObject {
         static VRLodPtr create(string name = "None");
         VRLodPtr ptr();
 
-        void setCenter(Vec3f c);
-        Vec3f getCenter();
+        void setCenter(Vec3d c);
+        Vec3d getCenter();
         void setDistance(uint i, float dist);
         void addDistance(float dist);
         vector<float> getDistances();

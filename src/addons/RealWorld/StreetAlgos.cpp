@@ -5,14 +5,14 @@
 
 using namespace OSG;
 
-StreetBorder::StreetBorder(string streetSegmentId, Vec2f start, Vec2f end) {
+StreetBorder::StreetBorder(string streetSegmentId, Vec2d start, Vec2d end) {
     this->streetSegmentId = streetSegmentId;
     this->start = start;
     this->end = end;
 }
 
-Vec2f StreetBorder::dir() {
-    Vec2f result = this->end - this->start;
+Vec2d StreetBorder::dir() {
+    Vec2d result = this->end - this->start;
     result.normalize();
     return result;
 }
@@ -22,12 +22,12 @@ Vec2f StreetBorder::dir() {
 StreetBorder* StreetAlgos::segmentGetLeftBorderTo(StreetSegment* seg, string jointId, map<string, StreetJoint*> streetJoints) {
     StreetJoint* joint = streetJoints[jointId];
     StreetJoint* oJoint = streetJoints[seg->getOtherJointId(jointId)];
-    Vec2f posStart = oJoint->position;
-    Vec2f posEnd = joint->position;
-    Vec2f d = posEnd - posStart;
+    Vec2d posStart = oJoint->position;
+    Vec2d posEnd = joint->position;
+    Vec2d d = posEnd - posStart;
     d.normalize();
     d = d * (seg->width * 0.5f);
-    Vec2f dOrtho = Vec2f(d[1], -d[0]);
+    Vec2d dOrtho = Vec2d(d[1], -d[0]);
     return new StreetBorder(seg->id, posStart+dOrtho, posEnd+dOrtho);
 }
 
@@ -35,12 +35,12 @@ StreetBorder* StreetAlgos::segmentGetLeftBorderTo(StreetSegment* seg, string joi
 StreetBorder* StreetAlgos::segmentGetRightBorderTo(StreetSegment* seg, string jointId, map<string, StreetJoint*> streetJoints) {
     StreetJoint* joint = streetJoints[jointId];
     StreetJoint* oJoint = streetJoints[seg->getOtherJointId(jointId)];
-    Vec2f posStart = oJoint->position;
-    Vec2f posEnd = joint->position;
-    Vec2f d = posEnd - posStart;
+    Vec2d posStart = oJoint->position;
+    Vec2d posEnd = joint->position;
+    Vec2d d = posEnd - posStart;
     d.normalize();
     d = d * (seg->width * 0.5f);
-    Vec2f dOrtho = Vec2f(d[1], -d[0]);
+    Vec2d dOrtho = Vec2d(d[1], -d[0]);
     return new StreetBorder(seg->id, posStart-dOrtho, posEnd-dOrtho);
 }
 
@@ -70,7 +70,7 @@ void StreetAlgos::calcSegments(StreetJoint* joint, map<string, StreetSegment*> s
 
     jointOrderSegments(joint, streetSegments, streetJoints);
 
-    Vec2f jCenter = joint->position;
+    Vec2d jCenter = joint->position;
 
     if (joint->segments.size() == 1) { // special handling
         auto seg = joint->segments[0];
@@ -92,7 +92,7 @@ void StreetAlgos::calcSegments(StreetJoint* joint, map<string, StreetSegment*> s
 
         StreetBorder* s1BorderLeft = segmentGetLeftBorderTo(s1, joint->id, streetJoints);
         StreetBorder* s2BorderRight = segmentGetRightBorderTo(s2, joint->id, streetJoints);
-        pair<bool, Vec2f> point = Vec2Helper::lineIntersectionPoint(s1BorderLeft->start, s1BorderLeft->dir(), s2BorderRight->start, s2BorderRight->dir());
+        pair<bool, Vec2d> point = Vec2Helper::lineIntersectionPoint(s1BorderLeft->start, s1BorderLeft->dir(), s2BorderRight->start, s2BorderRight->dir());
         // calc length from border start to intersection
         float pDistS1 = (point.second - s1BorderLeft->start).length();
         float pDistS2 = (point.second - s2BorderRight->start).length();
@@ -107,27 +107,27 @@ void StreetAlgos::calcSegments(StreetJoint* joint, map<string, StreetSegment*> s
         } else {
             StreetJoint* s1_oJoint = streetJoints[s1->getOtherJointId(joint->id)];
             StreetJoint* s2_oJoint = streetJoints[s2->getOtherJointId(joint->id)];
-            Vec2f leftMidPoint = s1_oJoint->position + (s1BorderLeft->dir() * cDistS1);
-            Vec2f rightMidPoint = s2_oJoint->position + (s2BorderRight->dir() * cDistS2);
+            Vec2d leftMidPoint = s1_oJoint->position + (s1BorderLeft->dir() * cDistS1);
+            Vec2d rightMidPoint = s2_oJoint->position + (s2BorderRight->dir() * cDistS2);
             if (cDistS1 > pDistS1) cDistS1 = pDistS1;
             if (cDistS2 > pDistS2) cDistS2 = pDistS2;
-            Vec2f leftPoint = s1BorderLeft->start + (s1BorderLeft->dir() * cDistS1);
-            Vec2f rightPoint = s2BorderRight->start + (s2BorderRight->dir() * cDistS2);
+            Vec2d leftPoint = s1BorderLeft->start + (s1BorderLeft->dir() * cDistS1);
+            Vec2d rightPoint = s2BorderRight->start + (s2BorderRight->dir() * cDistS2);
 
             s1->setLeftPointFor(joint->id, leftPoint);
             s2->setRightPointFor(joint->id, rightPoint);
 
-            Vec2f dirLR = rightMidPoint-leftMidPoint;
+            Vec2d dirLR = rightMidPoint-leftMidPoint;
             dirLR.normalize();
-            Vec2f dirLR_ortho = Vec2f(dirLR[1], -dirLR[0]);
+            Vec2d dirLR_ortho = Vec2d(dirLR[1], -dirLR[0]);
             pair<bool, float> intersectionLeft = Vec2Helper::lineIntersection(s1BorderLeft->start, s1BorderLeft->dir(), joint->position, dirLR_ortho);
             pair<bool, float> intersectionRight = Vec2Helper::lineIntersection(s2BorderRight->start, s2BorderRight->dir(), joint->position, dirLR_ortho);
 
             if (intersectionLeft.second > intersectionRight.second) {
-                pair<bool, Vec2f> p2 = Vec2Helper::lineIntersectionPoint(s1BorderLeft->start, s1BorderLeft->dir(), joint->position, dirLR_ortho);
+                pair<bool, Vec2d> p2 = Vec2Helper::lineIntersectionPoint(s1BorderLeft->start, s1BorderLeft->dir(), joint->position, dirLR_ortho);
                 s1->setLeftExtPointFor(joint->id, p2.second);
             } else {
-                pair<bool, Vec2f> p2 = Vec2Helper::lineIntersectionPoint(s2BorderRight->start, s2BorderRight->dir(), joint->position, dirLR_ortho);
+                pair<bool, Vec2d> p2 = Vec2Helper::lineIntersectionPoint(s2BorderRight->start, s2BorderRight->dir(), joint->position, dirLR_ortho);
                 s1->setLeftExtPointFor(joint->id, p2.second);
             }
         }
@@ -150,7 +150,7 @@ vector<JointPoints*> StreetAlgos::calcJoints(StreetJoint* joint, map<string, Str
         float distRight = (p->right - borderRight->start).length();
 
         float EXTRA_DIST = 0.1f;
-        Vec2f pLeft, pRight;
+        Vec2d pLeft, pRight;
         if (distLeft < distRight) {
             pLeft = borderLeft->start + (borderLeft->dir() * (distLeft - EXTRA_DIST));
             pRight = borderRight->start + (borderLeft->dir() * (distLeft - EXTRA_DIST));
@@ -175,7 +175,7 @@ vector<JointPoints*> StreetAlgos::calcJoints(StreetJoint* joint, map<string, Str
 /** orders points of joint, so they are at the right position to work with*/
 void StreetAlgos::jointOrderSegments(StreetJoint* joint, map<string, StreetSegment*> streetSegments, map<string, StreetJoint*> streetJoints) {
     if (joint == 0) return;
-    Vec2f center = joint->position;
+    Vec2d center = joint->position;
     vector<Vec2WithId*> points;
     for (auto seg : joint->segments) {
         if (seg == 0) continue;

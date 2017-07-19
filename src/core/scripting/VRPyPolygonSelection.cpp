@@ -77,7 +77,7 @@ PyObject* VRPyPolygonSelection::getShape(VRPyPolygonSelection* self) {
 
 PyObject* VRPyPolygonSelection::addEdge(VRPyPolygonSelection* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    self->objPtr->addEdge( parseVec3f(args) );
+    self->objPtr->addEdge( parseVec3d(args) );
     Py_RETURN_TRUE;
 }
 

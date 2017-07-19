@@ -2,6 +2,7 @@
 #define VRPERLIN_H_INCLUDED
 
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGColor.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -12,14 +13,14 @@ class VRPerlin {
         float hermite3(float w);
         float hermite5(float w);
 
-        float dotGridGradient(Vec3f* grid, Vec3i dim, Vec3i vi, Vec3f v);
-        float perlin(Vec3f* grid, const Vec3i& dim, const Vec3f& v);
+        float dotGridGradient(Vec3d* grid, Vec3i dim, Vec3i vi, Vec3d v);
+        float perlin(Vec3d* grid, const Vec3i& dim, const Vec3d& v);
 
     public:
         VRPerlin();
 
-        static void apply(Vec3f* data, Vec3i dim, float amount, Vec3f c1, Vec3f c2);
-        static void apply(Vec4f* data, Vec3i dim, float amount, Vec4f c1, Vec4f c2);
+        static void apply(Color3f* data, Vec3i dim, float amount, Color3f c1, Color3f c2);
+        static void apply(Color4f* data, Vec3i dim, float amount, Color4f c1, Color4f c2);
 };
 
 OSG_END_NAMESPACE;

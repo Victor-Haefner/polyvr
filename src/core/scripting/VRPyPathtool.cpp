@@ -81,7 +81,7 @@ PyObject* VRPyPathtool::connect(VRPyPathtool* self, PyObject* args) {
     PyObject* n1 = 0;
     PyObject* n2 = 0;
     if (! PyArg_ParseTuple(args, "ii|OOi:connect", &i1, &i2, &n1, &n2, &doHandles)) return NULL;
-    if (n1 && n2) self->objPtr->connect( i1, i2, doHandles, parseVec3fList(n1), parseVec3fList(n2) );
+    if (n1 && n2) self->objPtr->connect( i1, i2, doHandles, parseVec3dList(n1), parseVec3dList(n2) );
     else self->objPtr->connect( i1, i2 );
     Py_RETURN_TRUE;
 }

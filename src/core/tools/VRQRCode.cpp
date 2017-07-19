@@ -4,14 +4,14 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
 
-void createQRCode(std::string s, OSG::VRMaterialPtr mat, OSG::Vec3f fg, OSG::Vec3f bg, int offset) {
+void createQRCode(std::string s, OSG::VRMaterialPtr mat, OSG::Vec3d fg, OSG::Vec3d bg, int offset) {
     OSG::ImageRecPtr img = OSG::Image::create();
 
     QRcode* code = QRcode_encodeString(s.c_str(), 0, QR_ECLEVEL_H, QR_MODE_8, 1);
     if (code == NULL) { cout << "\nQR code failed\n"; return; }
 
     int w = code->width + 2*offset;
-	vector<OSG::Vec3f> data;
+	vector<OSG::Vec3d> data;
 	data.resize(w*w);
 
     for (int i=0; i<w; i++) {

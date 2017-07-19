@@ -38,13 +38,13 @@ void Config::createPhongShader(SimpleMaterial* mat, bool phong) {
 }
 
 //Start Position
-Vec2f Config::getStartPosition(){
-    Vec2f tierGarten = Vec2f(48.998969, 8.400171); // Tiergarten
-    Vec2f fasanengarten = Vec2f(49.013606, 8.418295);
-    Vec2f karlKriegStr = Vec2f(49.005, 8.395); //Kreuzung Kriegsstr. und Karlstr.
-    Vec2f karlWolfWeg = Vec2f(49.000324, 8.371793);
-    Vec2f muehlburgerTor = Vec2f(49.010247, 8.388852);
-    Vec2f schloss = Vec2f(49.013449, 8.404389);
-    Vec2f huegel = Vec2f(48.912276, 8.448914); //große Höhenunterschiede
+Vec2d Config::getStartPosition(){
+    Vec2d tierGarten = Vec2d(48.998969, 8.400171); // Tiergarten
+    Vec2d fasanengarten = Vec2d(49.013606, 8.418295);
+    Vec2d karlKriegStr = Vec2d(49.005, 8.395); //Kreuzung Kriegsstr. und Karlstr.
+    Vec2d karlWolfWeg = Vec2d(49.000324, 8.371793);
+    Vec2d muehlburgerTor = Vec2d(49.010247, 8.388852);
+    Vec2d schloss = Vec2d(49.013449, 8.404389);
+    Vec2d huegel = Vec2d(48.912276, 8.448914); //große Höhenunterschiede
     return tierGarten;
 }

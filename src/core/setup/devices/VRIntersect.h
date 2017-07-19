@@ -20,9 +20,9 @@ struct VRIntersection {
     string name;
     VRObjectWeakPtr object; // hit object
     VRObjectWeakPtr tree; // intersection tree
-    Pnt3f point;
-    Vec3f normal;
-    Vec2f texel;
+    Pnt3d point;
+    Vec3d normal;
+    Vec2d texel;
     int triangle;
     Vec3i triangleVertices;
 };

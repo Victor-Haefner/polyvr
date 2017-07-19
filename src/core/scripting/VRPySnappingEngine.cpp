@@ -56,7 +56,7 @@ PyObject* VRPySnappingEngine::remRule(VRPySnappingEngine* self, PyObject* args) 
 PyObject* VRPySnappingEngine::addRule(VRPySnappingEngine* self, PyObject* args) {
 	if (!self->valid()) return NULL;
     PyObject *t, *o; // string
-    PyObject *pt, *po; // Vec4f
+    PyObject *pt, *po; // Vec4d
     float d, w;
     VRPyTransform* l;
     if (! PyArg_ParseTuple(args, "OOOOffO", &t, &o, &pt, &po, &d, &w, &l)) return NULL;

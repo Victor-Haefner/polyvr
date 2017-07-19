@@ -57,13 +57,13 @@ void VRMenu::setLinear() {
     for (unsigned int i=0; i<children.size(); i++) {
         float x = (i-a)*(param+scale[0]);
         VRMenuPtr m = static_pointer_cast<VRMenu>(children[i]);
-        m->setFrom(Vec3f(x,0,0));
+        m->setFrom(Vec3d(x,0,0));
         m->show();
         m->setMeshVisibility(true);
     }
 }
 
-void VRMenu::setLeafType(TYPE t, Vec2f s) {
+void VRMenu::setLeafType(TYPE t, Vec2d s) {
     mtype = t;
     scale = s;
     if (t == SPRITE) setPrimitive("Plane", toString(s) + " 1 1");

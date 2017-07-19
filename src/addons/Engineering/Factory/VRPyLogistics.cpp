@@ -163,7 +163,7 @@ PyObject* FPyNetwork::stroke(FPyNetwork* self, PyObject* args) {
     if (!self->valid()) return NULL;
     float r,g,b,k;
     if (! PyArg_ParseTuple(args, "ffff", &r, &g, &b, &k)) return NULL;
-    return VRPyStroke::fromSharedPtr( self->objPtr->stroke(OSG::Vec3f(r,g,b), k) );
+    return VRPyStroke::fromSharedPtr( self->objPtr->stroke(OSG::Color3f(r,g,b), k) );
 }
 
 

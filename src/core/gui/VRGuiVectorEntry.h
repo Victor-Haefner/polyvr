@@ -20,19 +20,19 @@ class VRGuiVectorEntry {
         Gtk::Entry* ez = 0;
         Gtk::Label* lbl = 0;
 
-        static bool proxy(GdkEventFocus* focus, sigc::slot<void, OSG::Vec3f&> sig, Gtk::Entry* ex, Gtk::Entry* ey, Gtk::Entry* ez);
-        static bool proxy2D(GdkEventFocus* focus, sigc::slot<void, OSG::Vec2f&> sig, Gtk::Entry* ex, Gtk::Entry* ey);
+        static bool proxy(GdkEventFocus* focus, sigc::slot<void, OSG::Vec3d&> sig, Gtk::Entry* ex, Gtk::Entry* ey, Gtk::Entry* ez);
+        static bool proxy2D(GdkEventFocus* focus, sigc::slot<void, OSG::Vec2d&> sig, Gtk::Entry* ex, Gtk::Entry* ey);
 
     public:
         VRGuiVectorEntry();
 
-        void init(string placeholder, string label,  sigc::slot<void, OSG::Vec3f&> sig);
-        void init2D(string placeholder, string label,  sigc::slot<void, OSG::Vec2f&> sig);
+        void init(string placeholder, string label,  sigc::slot<void, OSG::Vec3d&> sig);
+        void init2D(string placeholder, string label,  sigc::slot<void, OSG::Vec2d&> sig);
 
-        void set(OSG::Vec3f v);
-        void set(OSG::Vec2f v);
+        void set(OSG::Vec3d v);
+        void set(OSG::Vec2d v);
 
-        void setFontColor(OSG::Vec3f c);
+        void setFontColor(OSG::Vec3d c);
 };
 
 #endif // VRGUIVECTORENTRY_H_INCLUDED

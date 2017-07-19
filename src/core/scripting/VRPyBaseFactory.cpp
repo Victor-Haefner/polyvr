@@ -29,9 +29,9 @@ template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const float& t) { ret
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const string& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const bool& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VREntityPtr& t) { return VRPyTypeCaster::cast(t); }
-template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const Vec2f& t) { return VRPyTypeCaster::cast(t); }
-template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const Vec3f& t) { return VRPyTypeCaster::cast(t); }
+template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const Vec2d& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const Vec3d& t) { return VRPyTypeCaster::cast(t); }
+template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const Vec4d& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VRRoadPtr& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VRRoadNetworkPtr& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VRTerrainPtr& t) { return VRPyTypeCaster::cast(t); }
@@ -85,16 +85,13 @@ bool PyVec_Check(PyObject* o, int N, char type) {
     return true;
 }
 
-template<> bool toValue<Color3f>(PyObject* o, Color3f& v) { if (!PyVec_Check(o, 3, 'f')) return 0; v = VRPyBase::parseVec3fList(o); return 1; }
-template<> bool toValue<Color4f>(PyObject* o, Color4f& v) { if (!PyVec_Check(o, 4, 'f')) return 0; v = VRPyBase::parseVec4fList(o); return 1; }
-template<> bool toValue<Vec2f>(PyObject* o, Vec2f& v) { if (!PyVec_Check(o, 2, 'f')) return 0; v = VRPyBase::parseVec2fList(o); return 1; }
-template<> bool toValue<Vec3f>(PyObject* o, Vec3f& v) { if (!PyVec_Check(o, 3, 'f')) return 0; v = VRPyBase::parseVec3fList(o); return 1; }
-template<> bool toValue<Vec4f>(PyObject* o, Vec4f& v) { if (!PyVec_Check(o, 4, 'f')) return 0; v = VRPyBase::parseVec4fList(o); return 1; }
-template<> bool toValue<Vec3i>(PyObject* o, Vec3i& v) { if (!PyVec_Check(o, 3, 'i')) return 0; v = VRPyBase::parseVec3iList(o); return 1; }
-template<> bool toValue<Vec4i>(PyObject* o, Vec4i& v) { if (!PyVec_Check(o, 4, 'i')) return 0; v = VRPyBase::parseVec4iList(o); return 1; }
+template<> bool toValue<Color3f>(PyObject* o, Color3f& v) { if (!PyVec_Check(o, 3, 'f')) return 0; v = Vec3f(VRPyBase::parseVec3dList(o)); return 1; }
+template<> bool toValue<Color4f>(PyObject* o, Color4f& v) { if (!PyVec_Check(o, 4, 'f')) return 0; v = Vec4f(VRPyBase::parseVec4dList(o)); return 1; }
 template<> bool toValue<Vec2d>(PyObject* o, Vec2d& v) { if (!PyVec_Check(o, 2, 'f')) return 0; v = VRPyBase::parseVec2dList(o); return 1; }
 template<> bool toValue<Vec3d>(PyObject* o, Vec3d& v) { if (!PyVec_Check(o, 3, 'f')) return 0; v = VRPyBase::parseVec3dList(o); return 1; }
 template<> bool toValue<Vec4d>(PyObject* o, Vec4d& v) { if (!PyVec_Check(o, 4, 'f')) return 0; v = VRPyBase::parseVec4dList(o); return 1; }
+template<> bool toValue<Vec3i>(PyObject* o, Vec3i& v) { if (!PyVec_Check(o, 3, 'i')) return 0; v = VRPyBase::parseVec3iList(o); return 1; }
+template<> bool toValue<Vec4i>(PyObject* o, Vec4i& v) { if (!PyVec_Check(o, 4, 'i')) return 0; v = VRPyBase::parseVec4iList(o); return 1; }
 
 
 

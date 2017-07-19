@@ -30,7 +30,7 @@ class RoadSystem {
              @param pos The position of the area.
              @param radius The radius.
              */
-            ViewArea(const ID id, const Vec2f pos, const double radius);
+            ViewArea(const ID id, const Vec2d pos, const double radius);
 
             /// The id of the area.
             ID id;
@@ -39,7 +39,7 @@ class RoadSystem {
             double radius;
 
             /// The position the area is centered on.
-            Vec2f position;
+            Vec2d position;
         };
 
     private:
@@ -207,7 +207,7 @@ class RoadSystem {
          @param features The features the node should contain.
          @return \c True if the node has been added, \c false if there already is a node with this id.
          */
-        bool addNode(const ID id, const Vec2f& pos, const Node::FEATURE features = Node::NONE);
+        bool addNode(const ID id, const Vec2d& pos, const Node::FEATURE features = Node::NONE);
 
         /**
          Removes a node.
@@ -385,7 +385,7 @@ class RoadSystem {
          @param radius The collision radius of the vehicle.
          @return \c True if the type has been added, \c false if there already is a vehicle with this id || a parameter is invalid.
         */
-        bool addVehicle(const ID id, const Vec3f pos, const double radius);
+        bool addVehicle(const ID id, const Vec3d pos, const double radius);
 
         /**
          Adds a vehicle to the road system.
@@ -431,7 +431,7 @@ class RoadSystem {
          @param radius The radius around the area that is simulated by the microsimulator.
          @return \c True if the area has been added, \c false if there already is an area with this id || a parameter is invalid.
          */
-        bool addViewarea(const ID id, const Vec2f pos, const double radius);
+        bool addViewarea(const ID id, const Vec2d pos, const double radius);
 
         /**
          Adds a viewarea to the system.
@@ -450,7 +450,7 @@ class RoadSystem {
          @param pos The new position of the area.
          @return \c True if the area has been moved, \c false if the id is invalid.
          */
-        bool moveViewarea(const ID id, const Vec2f pos);
+        bool moveViewarea(const ID id, const Vec2d pos);
 
         /**
          Returns a pointer to the viewarea with the given id.

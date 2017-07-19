@@ -158,7 +158,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyParticles>("Particles", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyFluids>("Fluids", pModVR, VRPyParticles::typeRef);
     sm->registerModule<VRPyMetaBalls>("MetaBalls", pModVR, VRPyObject::typeRef);
-    sm->registerModule<VRPyCarDynamics>("CarDynamics", pModVR);
+    sm->registerModule<VRPyCarDynamics>("CarDynamics", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyDriver>("Driver", pModVR);
     sm->registerModule<VRPyCEF>("CEF", pModVR);
     sm->registerModule<VRPyWebCam>("Webcam", pModVR, VRPySprite::typeRef);

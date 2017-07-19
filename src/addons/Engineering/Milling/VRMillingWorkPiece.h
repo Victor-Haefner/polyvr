@@ -18,9 +18,9 @@ private:
     VRWorkpieceElement* parent;
 
     Vec3i blocks;
-    Vec3f size;
-    Vec3f offset;
-    Vec3f position;
+    Vec3d size;
+    Vec3d offset;
+    Vec3d position;
     const int level;
 
     bool deleted;
@@ -31,16 +31,16 @@ private:
     GeoVec3fPropertyRecPtr normals;
     GeoUInt32PropertyRecPtr indices;
 
-    static Vec3f mulVec3f(Vec3f lhs, Vec3f rhs);
+    static Vec3d mulVec3f(Vec3d lhs, Vec3d rhs);
 
 public:
     VRWorkpieceElement(VRMillingWorkPiece& workpiece, VRWorkpieceElement* parent,
-                       Vec3i blocks, Vec3f size, Vec3f offset, Vec3f position, const int level);
+                       Vec3i blocks, Vec3d size, Vec3d offset, Vec3d position, const int level);
 
     // 6 sides with 4 vertices each
     static const int verticesPerElement = 6 * 4;
-    static const Vec3f planeOffsetMasks[2][3];
-    static const Vec3f vertexOffsetMasks[2][3][4];
+    static const Vec3d planeOffsetMasks[2][3];
+    static const Vec3d vertexOffsetMasks[2][3][4];
     static const float sign[2];
 
     /*
@@ -51,9 +51,9 @@ public:
     void deleteChildren();
     void issueGeometryUpdate();
     void split();
-    bool collides(Vec3f position);
-    bool collide(Vec3f position);
-    bool doesCollide(Vec3f position); //Add of Marie
+    bool collides(Vec3d position);
+    bool collide(Vec3d position);
+    bool doesCollide(Vec3d position); //Add of Marie
     void deleteElement();
     bool isDeleted() const;
     void build();

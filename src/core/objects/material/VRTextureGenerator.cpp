@@ -21,13 +21,13 @@ void VRTextureGenerator::setSize(Vec3i dim, bool a) { width = dim[0]; height = d
 void VRTextureGenerator::setSize(int w, int h, int d) { width = w; height = h; depth = d; }
 Vec3i VRTextureGenerator::getSize() { return Vec3i(width, height, depth); };
 
-void VRTextureGenerator::add(string type, float amount, Vec3f c1, Vec3f c2) {
+void VRTextureGenerator::add(string type, float amount, Color3f c1, Color3f c2) {
     GEN_TYPE t = PERLIN;
     if (type == "Bricks") t = BRICKS;
     add(t, amount, c1, c2);
 }
 
-void VRTextureGenerator::add(GEN_TYPE type, float amount, Vec3f c1, Vec3f c2) {
+void VRTextureGenerator::add(GEN_TYPE type, float amount, Color3f c1, Color3f c2) {
     Layer l;
     l.amount = amount;
     l.type = type;
@@ -37,13 +37,13 @@ void VRTextureGenerator::add(GEN_TYPE type, float amount, Vec3f c1, Vec3f c2) {
     layers.push_back(l);
 }
 
-void VRTextureGenerator::add(string type, float amount, Vec4f c1, Vec4f c2) {
+void VRTextureGenerator::add(string type, float amount, Color4f c1, Color4f c2) {
     GEN_TYPE t = PERLIN;
     if (type == "Bricks") t = BRICKS;
     add(t, amount, c1, c2);
 }
 
-void VRTextureGenerator::add(GEN_TYPE type, float amount, Vec4f c1, Vec4f c2) {
+void VRTextureGenerator::add(GEN_TYPE type, float amount, Color4f c1, Color4f c2) {
     Layer l;
     l.amount = amount;
     l.type = type;
@@ -53,14 +53,14 @@ void VRTextureGenerator::add(GEN_TYPE type, float amount, Vec4f c1, Vec4f c2) {
     layers.push_back(l);
 }
 
-void VRTextureGenerator::drawFill(Vec4f c) {
+void VRTextureGenerator::drawFill(Color4f c) {
     Layer l;
     l.type = FILL;
     l.c41 = c;
     layers.push_back(l);
 }
 
-void VRTextureGenerator::drawPixel(Vec3i p, Vec4f c) {
+void VRTextureGenerator::drawPixel(Vec3i p, Color4f c) {
     Layer l;
     l.type = PIXEL;
     l.p1 = p;
@@ -68,17 +68,17 @@ void VRTextureGenerator::drawPixel(Vec3i p, Vec4f c) {
     layers.push_back(l);
 }
 
-void VRTextureGenerator::drawLine(Vec3f p1, Vec3f p2, Vec4f c, float w) {
+void VRTextureGenerator::drawLine(Vec3d p1, Vec3d p2, Color4f c, float w) {
     Layer l;
     l.type = LINE;
-    l.c31 = p1;
-    l.c32 = p2;
+    l.c31 = Vec3f(p1);
+    l.c32 = Vec3f(p2);
     l.c41 = c;
     l.amount = w;
     layers.push_back(l);
 }
 
-void VRTextureGenerator::drawPath(pathPtr p, Vec4f c, float w) {
+void VRTextureGenerator::drawPath(pathPtr p, Color4f c, float w) {
     Layer l;
     l.type = PATH;
     l.p = p;
@@ -87,7 +87,7 @@ void VRTextureGenerator::drawPath(pathPtr p, Vec4f c, float w) {
     layers.push_back(l);
 }
 
-void VRTextureGenerator::drawPolygon(VRPolygonPtr p, Vec4f c, float h) {
+void VRTextureGenerator::drawPolygon(VRPolygonPtr p, Color4f c, float h) {
     Layer l;
     l.type = POLYGON;
     l.pgon = p;
@@ -97,7 +97,7 @@ void VRTextureGenerator::drawPolygon(VRPolygonPtr p, Vec4f c, float h) {
 }
 
 template<typename T>
-void VRTextureGenerator::applyFill(T* data, Vec4f c) {
+void VRTextureGenerator::applyFill(T* data, Color4f c) {
     for (int k=0; k<depth; k++) {
         for (int j=0; j<height; j++) {
             for (int i=0; i<width; i++) {
@@ -107,25 +107,25 @@ void VRTextureGenerator::applyFill(T* data, Vec4f c) {
     }
 }
 
-bool VRTextureGenerator::inBox(Pnt3f& p, Vec3f& s) {
+bool VRTextureGenerator::inBox(Pnt3d& p, Vec3d& s) {
     if (abs(p[0]) > s[0]) return false;
     if (abs(p[1]) > s[1]) return false;
     if (abs(p[2]) > s[2]) return false;
     return true;
 }
 
-void VRTextureGenerator::applyPixel(Vec4f* data, Vec3i p, Vec4f c) {
+void VRTextureGenerator::applyPixel(Color4f* data, Vec3i p, Color4f c) {
     int d = p[2]*height*width + p[1]*width + p[0];
     int N = depth*height*width;
     if (d >= N || d < 0) { cout << "Warning: applyPixel failed, pixel " << d << " " << p << " " << width << " " << height << " " << depth << " out of range! (buffer size is " << N << ")" << endl; return; }
     data[d] = c;
 }
 
-void VRTextureGenerator::applyPixel(Vec3f* data, Vec3i p, Vec4f c) {
+void VRTextureGenerator::applyPixel(Color3f* data, Vec3i p, Color4f c) {
     int d = p[2]*height*width + p[1]*width + p[0];
     int N = depth*height*width;
     if (d >= N|| d < 0) { cout << "Warning: applyPixel failed, pixel " << d << " " << p << " " << width << " " << height << " " << depth << " out of range! (buffer size is " << N << ")" << endl; return; }
-    data[d] = Vec3f(c[0], c[1], c[2])*c[3] + data[d]*(1.0-c[3]);
+    data[d] = Color3f(c[0], c[1], c[2])*c[3] + data[d]*(1.0-c[3]);
 }
 
 Vec3i VRTextureGenerator::clamp(Vec3i p) {
@@ -138,35 +138,35 @@ Vec3i VRTextureGenerator::clamp(Vec3i p) {
     return p;
 }
 
-Vec3f VRTextureGenerator::upscale(Vec3f& p) {
-    p = Vec3f(p[0]*width, p[1]*height, p[2]*depth);
+Vec3d VRTextureGenerator::upscale(Vec3d& p) {
+    p = Vec3d(p[0]*width, p[1]*height, p[2]*depth);
     return p;
 }
 
 template<typename T>
-void VRTextureGenerator::applyLine(T* data, Vec3f p1, Vec3f p2, Vec4f c, float w) { // Bresenham's
-    auto upscale = [&](Vec3f& p) {
-        p = Vec3f(p[0]*width, p[1]*height, p[2]*depth);
+void VRTextureGenerator::applyLine(T* data, Vec3d p1, Vec3d p2, Color4f c, float w) { // Bresenham's
+    auto upscale = [&](Vec3d& p) {
+        p = Vec3d(p[0]*width, p[1]*height, p[2]*depth);
     };
 
-    auto getLeadDim = [](Vec3f d) {
+    auto getLeadDim = [](Vec3d d) {
         Vec3i iDs = Vec3i(0,1,2);
         if (abs(d[1]) > abs(d[0]) && abs(d[1]) > abs(d[2])) iDs = Vec3i(1,0,2);
         if (abs(d[2]) > abs(d[0]) && abs(d[2]) > abs(d[1])) iDs = Vec3i(2,0,1);
         return iDs;
     };
 
-    auto BresenhamPixels = [&](Vec3f p1, Vec3f p2) {
+    auto BresenhamPixels = [&](Vec3d p1, Vec3d p2) {
         vector<Vec3i> pixels;
-        Vec3f d = p2-p1;
+        Vec3d d = p2-p1;
         Vec3i iDs = getLeadDim(d);
         int I = iDs[0];
 
-        Vec2f derr; // slopes
-        if (I == 0) derr = Vec2f(abs(d[1]/d[0]), abs(d[2]/d[0]));
-        if (I == 1) derr = Vec2f(abs(d[0]/d[1]), abs(d[2]/d[1]));
-        if (I == 2) derr = Vec2f(abs(d[0]/d[2]), abs(d[1]/d[2]));
-        Vec2f err = derr - Vec2f(0.5,0.5);
+        Vec2d derr; // slopes
+        if (I == 0) derr = Vec2d(abs(d[1]/d[0]), abs(d[2]/d[0]));
+        if (I == 1) derr = Vec2d(abs(d[0]/d[1]), abs(d[2]/d[1]));
+        if (I == 2) derr = Vec2d(abs(d[0]/d[2]), abs(d[1]/d[2]));
+        Vec2d err = derr - Vec2d(0.5,0.5);
 
         if (p1[I] > p2[I]) { swap(p1, p2); d *= -1; }
         Vec3i pi1 = Vec3i(p1);
@@ -188,11 +188,11 @@ void VRTextureGenerator::applyLine(T* data, Vec3f p1, Vec3f p2, Vec4f c, float w
 
     upscale(p1);
     upscale(p2);
-    Vec3f d = p2-p1;
+    Vec3d d = p2-p1;
     Vec3i iDs = getLeadDim(d);
-    Vec3f u = Vec3f(0,0,0); u[iDs[2]] = 1;
-    Vec3f p3 = d.cross(u);
-    Vec3f p4 = d.cross(p3);
+    Vec3d u = Vec3d(0,0,0); u[iDs[2]] = 1;
+    Vec3d p3 = d.cross(u);
+    Vec3d p4 = d.cross(p3);
     p3.normalize();
     p4.normalize();
 
@@ -216,16 +216,16 @@ void VRTextureGenerator::applyLine(T* data, Vec3f p1, Vec3f p2, Vec4f c, float w
 }
 
 template<typename T>
-void VRTextureGenerator::applyPath(T* data, pathPtr p, Vec4f c, float w) {
+void VRTextureGenerator::applyPath(T* data, pathPtr p, Color4f c, float w) {
     auto poses = p->getPoses();
     for (uint i=1; i<poses.size(); i++) {
         pose& p1 = poses[i-1];
         pose& p2 = poses[i];
 
-        Vec2f A1 = Vec2f(p1.pos()-p1.x()*w*0.5);
-        Vec2f B1 = Vec2f(p1.pos()+p1.x()*w*0.5);
-        Vec2f A2 = Vec2f(p2.pos()-p2.x()*w*0.5);
-        Vec2f B2 = Vec2f(p2.pos()+p2.x()*w*0.5);
+        Vec2d A1 = Vec2d(p1.pos()-p1.x()*w*0.5);
+        Vec2d B1 = Vec2d(p1.pos()+p1.x()*w*0.5);
+        Vec2d A2 = Vec2d(p2.pos()-p2.x()*w*0.5);
+        Vec2d B2 = Vec2d(p2.pos()+p2.x()*w*0.5);
 
         auto poly = VRPolygon::create();
         poly->addPoint(A1);
@@ -237,16 +237,16 @@ void VRTextureGenerator::applyPath(T* data, pathPtr p, Vec4f c, float w) {
 }
 
 template<typename T>
-void VRTextureGenerator::applyPolygon(T* data, VRPolygonPtr p, Vec4f c, float h) {
+void VRTextureGenerator::applyPolygon(T* data, VRPolygonPtr p, Color4f c, float h) {
     auto bb = p->getBoundingBox();
-    Vec3f a = bb.min(); swap(a[1], a[2]);
-    Vec3f b = bb.max(); swap(b[1], b[2]);
+    Vec3d a = bb.min(); swap(a[1], a[2]);
+    Vec3d b = bb.max(); swap(b[1], b[2]);
     Vec3i A = Vec3i( upscale( a ) ) - Vec3i(1,1,1);
     Vec3i B = Vec3i( upscale( b ) ) + Vec3i(1,1,1);
     float texelSize = 1.0/width; // TODO: non square textures?
     for (int j=A[1]; j<B[1]; j++) {
         for (int i=A[0]; i<B[0]; i++) {
-            Vec2f pos = Vec2f(float(i)/width, float(j)/height);
+            Vec2d pos = Vec2d(float(i)/width, float(j)/height);
             float d;
             if (p->isInside(pos, d)) {
                 for (int k=0; k<depth; k++) applyPixel(data, clamp(Vec3i(i,j,k)), c);
@@ -255,8 +255,8 @@ void VRTextureGenerator::applyPolygon(T* data, VRPolygonPtr p, Vec4f c, float h)
                 auto cc = c; cc[3] = a;
                 cout << "VRTextureGenerator::applyPolygon a " << a << endl;
                 //for (int k=0; k<depth; k++) applyPixel(data, clamp(Vec3i(i,j,k)), cc);
-                for (int k=0; k<depth; k++) applyPixel(data, clamp(Vec3i(i,j,k)), Vec4f(a,0,1,1));
-                //for (int k=0; k<depth; k++) applyPixel(data, clamp(Vec3i(i,j,k)), Vec4f(0,0,1,a));
+                for (int k=0; k<depth; k++) applyPixel(data, clamp(Vec3i(i,j,k)), Color4f(a,0,1,1));
+                //for (int k=0; k<depth; k++) applyPixel(data, clamp(Vec3i(i,j,k)), Color4f(0,0,1,a));
             }*/
         }
     }
@@ -268,15 +268,15 @@ VRTexturePtr VRTextureGenerator::compose(int seed) {
     srand(seed);
     Vec3i dims(width, height, depth);
 
-    Vec3f* data3 = new Vec3f[width*height*depth];
-    Vec4f* data4 = new Vec4f[width*height*depth];
-    for (int i=0; i<width*height*depth; i++) data3[i] = Vec3f(1,1,1);
-    for (int i=0; i<width*height*depth; i++) data4[i] = Vec4f(1,1,1,1);
+    Color3f* data3 = new Color3f[width*height*depth];
+    Color4f* data4 = new Color4f[width*height*depth];
+    for (int i=0; i<width*height*depth; i++) data3[i] = Color3f(1,1,1);
+    for (int i=0; i<width*height*depth; i++) data4[i] = Color4f(1,1,1,1);
     for (auto l : layers) {
         if (!hasAlpha) {
             if (l.type == BRICKS) VRBricks::apply(data3, dims, l.amount, l.c31, l.c32);
             if (l.type == PERLIN) VRPerlin::apply(data3, dims, l.amount, l.c31, l.c32);
-            if (l.type == LINE) applyLine(data3, l.c31, l.c32, l.c41, l.amount);
+            if (l.type == LINE) applyLine(data3, Vec3d(l.c31), Vec3d(l.c32), l.c41, l.amount);
             if (l.type == FILL) applyFill(data3, l.c41);
             if (l.type == PIXEL) applyPixel(data3, l.p1, l.c41);
             if (l.type == PATH) applyPath(data3, l.p, l.c41, l.amount);
@@ -285,7 +285,7 @@ VRTexturePtr VRTextureGenerator::compose(int seed) {
         if (hasAlpha) {
             if (l.type == BRICKS) VRBricks::apply(data4, dims, l.amount, l.c41, l.c42);
             if (l.type == PERLIN) VRPerlin::apply(data4, dims, l.amount, l.c41, l.c42);
-            if (l.type == LINE) applyLine(data4, l.c31, l.c32, l.c41, l.amount);
+            if (l.type == LINE) applyLine(data4, Vec3d(l.c31), Vec3d(l.c32), l.c41, l.amount);
             if (l.type == FILL) applyFill(data4, l.c41);
             if (l.type == PIXEL) applyPixel(data4, l.p1, l.c41);
             if (l.type == PATH) applyPath(data4, l.p, l.c41, l.amount);
@@ -315,11 +315,11 @@ VRTexturePtr VRTextureGenerator::readSharedMemory(string segment, string object)
     // add texture example
     /*auto s = sm.addObject<Vec3i>(object+"_size");
     *s = Vec3i(2,2,1);
-    auto vec = sm.addVector<Vec3f>(object);
-    vec->push_back(Vec3f(1,0,1));
-    vec->push_back(Vec3f(1,1,0));
-    vec->push_back(Vec3f(0,0,1));
-    vec->push_back(Vec3f(1,0,0));*/
+    auto vec = sm.addVector<Vec3d>(object);
+    vec->push_back(Vec3d(1,0,1));
+    vec->push_back(Vec3d(1,1,0));
+    vec->push_back(Vec3d(0,0,1));
+    vec->push_back(Vec3d(1,0,0));*/
 
     // read texture
     auto tparams = sm.getObject<tex_params>(object+"_size");

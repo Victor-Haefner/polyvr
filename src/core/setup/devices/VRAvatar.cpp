@@ -14,19 +14,19 @@ using namespace std;
 VRObjectPtr VRAvatar::initRay() {
     VRGeometryPtr ray = VRGeometry::create("av_ray");
 
-    vector<Vec3f> pos, norms;
-    vector<Vec2f> texs;
+    vector<Vec3d> pos, norms;
+    vector<Vec2d> texs;
     vector<int> inds;
 
-    //pos.push_back(Vec3f(0,0,-5));
-    //pos.push_back(Vec3f(0,0,50));
-    pos.push_back(Vec3f(0,0,0));
-    pos.push_back(Vec3f(0,0,-50));
+    //pos.push_back(Vec3d(0,0,-5));
+    //pos.push_back(Vec3d(0,0,50));
+    pos.push_back(Vec3d(0,0,0));
+    pos.push_back(Vec3d(0,0,-50));
 
     for (int i=0;i<2;i++) {
-        norms.push_back(Vec3f(0,0,-1));
+        norms.push_back(Vec3d(0,0,-1));
         inds.push_back(i);
-        texs.push_back(Vec2f(0,0));
+        texs.push_back(Vec2d(0,0));
     }
 
     VRMaterialPtr mat = VRMaterial::get("yellow_ray");
@@ -45,8 +45,8 @@ VRObjectPtr VRAvatar::initRay() {
 VRObjectPtr VRAvatar::initCone() {
     VRGeometryPtr cone = VRGeometry::create("av_cone");
     cone->setMesh( OSGGeometry::create(makeConeGeo(0.3, 0.03, 32, true, true)) );
-    cone->setFrom(Vec3f(0,0,-0.1));
-    cone->setOrientation(Vec3f(1,0,-0.1), Vec3f(0,0,-1));
+    cone->setFrom(Vec3d(0,0,-0.1));
+    cone->setOrientation(Vec3d(1,0,-0.1), Vec3d(0,0,-1));
 
     return cone;
 }

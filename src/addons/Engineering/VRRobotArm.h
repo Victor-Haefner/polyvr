@@ -41,7 +41,7 @@ class VRRobotArm {
         vector<int> axis;
 
         void applyAngles();
-        void calcReverseKinematics(Vec3f pos, Vec3f dir, Vec3f up);
+        void calcReverseKinematics(Vec3d pos, Vec3d dir, Vec3d up);
         void animOnPath(float t);
         void addJob(job j);
 
@@ -58,13 +58,13 @@ class VRRobotArm {
         void setLengths(vector<float> lengths);
 
         vector<float> getAngles();
-        void getPose(Vec3f& pos, Vec3f& dir, Vec3f& up);
+        void getPose(Vec3d& pos, Vec3d& dir, Vec3d& up);
 
         void move();
         void pause();
         void stop();
 
-        void moveTo(Vec3f pos, Vec3f dir, Vec3f up);
+        void moveTo(Vec3d pos, Vec3d dir, Vec3d up);
         void setAngles(vector<float> angles);
         void setGrab(float g);
         void toggleGrab();

@@ -133,7 +133,7 @@ VRLodLeafPtr VRLodTree::addLeaf(Octree* o, int lvl) {
     return l;
 }
 
-VRLodLeafPtr VRLodTree::addObject(VRTransformPtr obj, Vec3f p, int lvl) {
+VRLodLeafPtr VRLodTree::addObject(VRTransformPtr obj, Vec3d p, int lvl) {
     if (leafs.size() == 0) addLeaf(octree.get(), 0);
     if (!octree) return 0;
     objects[lvl].push_back(obj);
@@ -142,8 +142,8 @@ VRLodLeafPtr VRLodTree::addObject(VRTransformPtr obj, Vec3f p, int lvl) {
     if (lvl == 0) leaf->add(obj, 0);
     else          leaf->add(obj, 1);
     obj->setRelativePosition(p, ptr());
-    obj->setDir(Vec3f(0,0,-1));
-    obj->setUp(Vec3f(0,1,0));
+    obj->setDir(Vec3d(0,0,-1));
+    obj->setUp(Vec3d(0,1,0));
     return leaf;
 }
 
@@ -206,7 +206,7 @@ void VRWoods::addGrassPatch(VRPolygonPtr Area, bool updateLODs) { // TODO: needs
     int i=0;
     for (auto area : Area->gridSplit(10.0)) {
         //cout << " sub Area " << i << "  " << timer.stop() - t0 << endl;
-        Vec3f median = area->getBoundingBox().center();
+        Vec3d median = area->getBoundingBox().center();
         area->translate(-median);
         //cout << "  A1 " << timer.stop() - t0 << endl;
         auto grass = VRGrassPatch::create();
@@ -254,9 +254,9 @@ void VRWoods::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
     auto simpleLeafMat = [](bool doAlpha) {
         auto m = VRMaterial::create("simpleLeafMat");
         m->setPointSize(3);
-        m->setDiffuse(Vec3f(0.5,1,0));
-        m->setAmbient(Vec3f(0.1,0.3,0));
-        m->setSpecular(Vec3f(0.1,0.4,0));
+        m->setDiffuse(Color3f(0.5,1,0));
+        m->setAmbient(Color3f(0.1,0.3,0));
+        m->setSpecular(Color3f(0.1,0.4,0));
         string wdir = VRSceneManager::get()->getOriginalWorkdir();
         m->readFragmentShader(wdir+"/shader/Trees/Shader_leafs_lod.fp");
         m->readVertexShader(wdir+"/shader/Trees/Shader_leafs_lod.vp");
@@ -266,9 +266,9 @@ void VRWoods::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
         float r = 0.85;
         float g = 1.0;
         float b = 0.8;
-        tg->add(PERLIN, 1, Vec4f(r,g,b,0.9), Vec4f(r,g,b,1) );
-        tg->add(PERLIN, 0.5, Vec4f(r,g,b,0.5), Vec4f(r,g,b,1) );
-        tg->add(PERLIN, 0.25, Vec4f(r,g,b,0.8), Vec4f(r,g,b,1) );
+        tg->add(PERLIN, 1, Color4f(r,g,b,0.9), Color4f(r,g,b,1) );
+        tg->add(PERLIN, 0.5, Color4f(r,g,b,0.5), Color4f(r,g,b,1) );
+        tg->add(PERLIN, 0.25, Color4f(r,g,b,0.8), Color4f(r,g,b,1) );
         m->setTexture(tg->compose(0));
 
         return m;
@@ -276,7 +276,7 @@ void VRWoods::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
 
     auto simpleTrunkMat = []() {
         auto m = VRMaterial::create("brown");
-        m->setDiffuse(Vec3f(0.6,0.3,0));
+        m->setDiffuse(Color3f(0.6,0.3,0));
         string wdir = VRSceneManager::get()->getOriginalWorkdir();
         m->readFragmentShader(wdir+"/shader/Trees/Shader_trunc_lod.fp");
         m->readVertexShader(wdir+"/shader/Trees/Shader_trunc_lod.vp");
@@ -314,7 +314,7 @@ void VRWoods::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
         Boundingbox bb;
         if (doTrees) for (auto t : trees[leaf.get()]) bb.update( t->getWorldPosition() );
         //if (doGrass) for (auto g : grass[leaf.get()]) bb.update( g->getWorldPosition() );
-        Vec3f pos = bb.center();
+        Vec3d pos = bb.center();
 
         VRGeoData geoLeafs;
         VRGeoData geoTrunk;
@@ -324,7 +324,7 @@ void VRWoods::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
             if (treeRefs.count(t) == 0) continue;
             auto tRef = treeRefs[t];
             if (!tRef || !t) continue;
-            Vec3f offset = t->getWorldPosition() - pos;
+            Vec3d offset = t->getWorldPosition() - pos;
             tRef->createHullTrunkLod(geoTrunk, lvl, offset, t->getID());
             tRef->createHullLeafLod (geoLeafs, lvl, offset, t->getID());
         }
@@ -333,7 +333,7 @@ void VRWoods::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
             if (grassPatchRefs.count(g) == 0) continue;
             auto gRef = grassPatchRefs[g];
             if (!gRef || !g) continue;
-            Vec3f offset = g->getWorldPosition() - pos;
+            Vec3d offset = g->getWorldPosition() - pos;
             gRef->createLod(geoGrass, lvl, offset, g->getID());
         }
 
@@ -345,8 +345,8 @@ void VRWoods::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
 
             leaf->set( trunk, 1 );
             trunk->setWorldPosition(pos);
-            trunk->setDir(Vec3f(0,0,-1));
-            trunk->setUp(Vec3f(0,1,0));
+            trunk->setDir(Vec3d(0,0,-1));
+            trunk->setUp(Vec3d(0,1,0));
 
             if (geoLeafs.size() > 0) {
                 auto leafs = geoLeafs.asGeometry("leafs");
@@ -367,8 +367,8 @@ void VRWoods::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
             if (trunk) trunk->addChild(patch);
             else leaf->set( patch, 1 );
             patch->setWorldPosition(pos);
-            patch->setDir(Vec3f(0,0,-1));
-            patch->setUp(Vec3f(0,1,0));
+            patch->setDir(Vec3d(0,0,-1));
+            patch->setUp(Vec3d(0,1,0));
         }
     }
 }
@@ -386,7 +386,7 @@ void VRWoods::addCollisionModels() {
 
     for (auto tree : treesByID) {
         auto p = tree.second->getPoseTo( ptr() );
-        data.pushQuad(p->pos()+Vec3f(0,1,0), p->dir(), p->up(), Vec2f(0.3, 2), true);
+        data.pushQuad(p->pos()+Vec3d(0,1,0), p->dir(), p->up(), Vec2d(0.3, 2), true);
     }
 
     if (collisionMesh) collisionMesh->destroy();

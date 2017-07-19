@@ -69,8 +69,8 @@ void OSG::loadE57(string path, VRTransformPtr res) {
                 gotCount = reader.read();
                 for (unsigned j=0; j < gotCount; j++) {
                     int v;
-                    if (hasCol) v = data.pushVert(Pnt3f(x[j], y[j], z[j]), Vec3f(0,1,0), Vec3f(r[j]/255.0, g[j]/255.0, b[j]/255.0));
-                    else v = data.pushVert(Pnt3f(x[j], y[j], z[j]), Vec3f(0,1,0));
+                    if (hasCol) v = data.pushVert(Pnt3d(x[j], y[j], z[j]), Vec3d(0,1,0), Color3f(r[j]/255.0, g[j]/255.0, b[j]/255.0));
+                    else v = data.pushVert(Pnt3d(x[j], y[j], z[j]), Vec3d(0,1,0));
                     data.pushPoint(v);
                 }
             } while(gotCount);

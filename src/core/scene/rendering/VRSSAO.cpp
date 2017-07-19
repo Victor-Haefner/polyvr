@@ -41,7 +41,7 @@ void VRSSAO::setSSAOparams(float radius, int kernelSize, int noiseSize) {
         srand(0);
 
         for (int i = 0; i < kernelSize2; i++) {
-            Vec3f k(random(-1,1), random(-1,1), random(0,1));
+            Vec3d k(random(-1,1), random(-1,1), random(0,1));
             k.normalize();
             k *= random(0,1);
             float scale = float(i) / float(kernelSize2);
@@ -54,7 +54,7 @@ void VRSSAO::setSSAOparams(float radius, int kernelSize, int noiseSize) {
 
         // noise texture
         for (int i = 0; i < noiseSize2; i++) {
-            Vec3f n(random(-1,1), random(-1,1), 0);
+            Vec3d n(random(-1,1), random(-1,1), 0);
             n.normalize();
 
             noise[i*3+0] = n[0];

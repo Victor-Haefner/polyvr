@@ -20,7 +20,7 @@ class VRClipPlane : public VRGeometry {
         VRObjectPtr tree = 0;
         bool active = false;
 
-        Vec4f getEquation();
+        Vec4d getEquation();
         void activate();
         void deactivate();
 

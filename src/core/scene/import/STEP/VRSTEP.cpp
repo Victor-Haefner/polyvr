@@ -870,8 +870,8 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, STEPattribute* attr
     }
 }
 
-Vec3f toVec3f(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
-    if (!instances.count(i)) { cout << "toVec3f FAILED with instance " << i << endl; return Vec3f(); }
+Vec3d toVec3d(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
+    if (!instances.count(i)) { cout << "toVec3d FAILED with instance " << i << endl; return Vec3d(); }
     auto I = instances[i];
     double L = 1.0;
     bool isVec3f = false;
@@ -890,18 +890,18 @@ Vec3f toVec3f(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
         auto x = I.get<0, double, double, double>(); if (abs(x) < 1e-14) x = 0;
         auto y = I.get<1, double, double, double>(); if (abs(y) < 1e-14) y = 0;
         auto z = I.get<2, double, double, double>(); if (abs(z) < 1e-14) z = 0;
-        return Vec3f(y,x,-z)*L;
+        return Vec3d(y,x,-z)*L;
     }
-    cout << "toVec3f FAILED with instance type " << I.type << endl;
-    return Vec3f();
+    cout << "toVec3d FAILED with instance type " << I.type << endl;
+    return Vec3d();
 }
 
 posePtr toPose(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
     auto I = instances[i];
     if (I.type == "Axis2_Placement_3d") {
-        Vec3f p = toVec3f( I.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances);
-        Vec3f d = toVec3f( I.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances);
-        Vec3f u = toVec3f( I.get<2, STEPentity*, STEPentity*, STEPentity*>(), instances);
+        Vec3d p = toVec3d( I.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances);
+        Vec3d d = toVec3d( I.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances);
+        Vec3d u = toVec3d( I.get<2, STEPentity*, STEPentity*, STEPentity*>(), instances);
         //d[2] *= -1;
         return pose::create(p,d,u);
         //return pose(p,d,u);
@@ -931,7 +931,7 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
             vector<double> Knots = EdgeGeo.get<4, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
             if (control_points.size() <= 1) cout << "Warning: No control points of B_Spline_Curve_With_Knots" << endl;
 
-            for (auto e : control_points) cpoints.push_back(toVec3f(e, instances));
+            for (auto e : control_points) cpoints.push_back(toVec3d(e, instances));
 
             if (multiplicities.size() != Knots.size()) { cout << "B_Spline_Curve_With_Knots, multiplicities and knots do not match: " << multiplicities.size() << " " << Knots.size() << " id " << EdgeGeo.ID << endl; return; }
 
@@ -954,7 +954,7 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
             //cout << "  edge type " << EdgeGeo.type << endl;
             //int deg = EdgeGeo.get<0, int, vector<STEPentity*>, bool>();
             vector<STEPentity*> control_points = EdgeGeo.get<1, int, vector<STEPentity*>, bool>();
-            for (auto e : control_points) points.push_back(toVec3f(e, instances)); // TODO: correct??
+            for (auto e : control_points) points.push_back(toVec3d(e, instances)); // TODO: correct??
             if (points.size() <= 1) cout << "Warning: No edge points of B_Spline_Curve" << endl;
             return;
         }
@@ -967,8 +967,8 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
             auto& EdgeElement = instances[ i.get<0, STEPentity*, bool>() ];
             //bool edir = i.get<1, STEPentity*, bool>();
             if (EdgeElement.type == "Edge_Curve") {
-                EBeg = toVec3f( EdgeElement.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances );
-                EEnd = toVec3f( EdgeElement.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances );
+                EBeg = toVec3d( EdgeElement.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances );
+                EEnd = toVec3d( EdgeElement.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances );
                 auto EdgeGeoI = EdgeElement.get<2, STEPentity*, STEPentity*, STEPentity*>();
 
                 if (instances[EdgeGeoI].type == "Surface_Curve") {
@@ -1083,7 +1083,7 @@ struct VRSTEP::Surface : public VRSTEP::Instance, public VRBRepSurface {
             cpoints.width = fcp.width;
             cpoints.height = fcp.height;
             for (auto e : fcp.data) {
-                cpoints.data.push_back( toVec3f(e, instances) );
+                cpoints.data.push_back( toVec3d(e, instances) );
             }
         }
 
@@ -1102,7 +1102,7 @@ struct VRSTEP::Surface : public VRSTEP::Instance, public VRBRepSurface {
             cpoints.width = fcp.width;
             cpoints.height = fcp.height;
             for (auto e : fcp.data) {
-                cpoints.data.push_back( toVec3f(e, instances) );
+                cpoints.data.push_back( toVec3d(e, instances) );
             }
         }
     }
@@ -1481,9 +1481,9 @@ solids
 
 The geometric entities:
 
-poSTEPentity*s -> Vec3f
-vectors -> Vec3f
-directions -> Vec3f
+poSTEPentity*s -> Vec3d
+vectors -> Vec3d
+directions -> Vec3d
 curves
 surfaces
 

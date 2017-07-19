@@ -82,14 +82,14 @@ VRGeometryPtr VRRoadIntersection::createGeometry() {
         auto rNode = getRoadNode(roadEnt);
         if (!rNode) continue;
         auto& endP = road.getEdgePoints( rNode );
-        poly.addPoint(Vec2f(endP.p1[0], endP.p1[2]));
-        poly.addPoint(Vec2f(endP.p2[0], endP.p2[2]));
+        poly.addPoint(Vec2d(endP.p1[0], endP.p1[2]));
+        poly.addPoint(Vec2d(endP.p2[0], endP.p2[2]));
     }
     poly = poly.getConvexHull();
     Triangulator tri;
     tri.add( poly );
     VRGeometryPtr intersection = tri.compute();
-    intersection->setPose(Vec3f(0,0,0), Vec3f(0,1,0), Vec3f(0,0,1));
+    intersection->setPose(Vec3d(0,0,0), Vec3d(0,1,0), Vec3d(0,0,1));
     intersection->applyTransformation();
 	setupTexCoords( intersection, entity );
 	return intersection;
@@ -121,7 +121,7 @@ void VRRoadIntersection::addRoad(VRRoadPtr road) {
     entity->add("roads", road->getEntity()->getName());
 }
 
-VREntityPtr VRRoadIntersection::addTrafficLight( posePtr p, string asset, Vec3f root) {
+VREntityPtr VRRoadIntersection::addTrafficLight( posePtr p, string asset, Vec3d root) {
     float R = 0.05;
     if (auto geo = world->getAsset(asset)) {
         addChild(geo);
@@ -137,18 +137,18 @@ void VRRoadIntersection::computeTrafficLights() {
     auto node = entity->getEntity("node");
     for (auto road : inLanes) {
         auto eP = road.first->getEdgePoints( node );
-        Vec3f root = eP.p1;
+        Vec3d root = eP.p1;
         for (auto lane : road.second) {
             for (auto pathEnt : lane->getAllEntities("path")) {
                 auto entries = pathEnt->getAllEntities("nodes");
                 auto entry = entries[entries.size()-1];
                 float width = toFloat( lane->get("width")->value );
 
-                Vec3f p = entry->getEntity("node")->getVec3f("position");
-                Vec3f n = entry->getVec3f("direction");
-                Vec3f x = n.cross(Vec3f(0,1,0));
+                Vec3d p = entry->getEntity("node")->getVec3f("position");
+                Vec3d n = entry->getVec3f("direction");
+                Vec3d x = n.cross(Vec3d(0,1,0));
                 x.normalize();
-                auto P = pose::create( p + Vec3f(0,3,0), Vec3f(0,-1,0), n);
+                auto P = pose::create( p + Vec3d(0,3,0), Vec3d(0,-1,0), n);
                 addTrafficLight(P, "trafficLight", root);
             }
         }
@@ -166,7 +166,7 @@ void VRRoadIntersection::computeMarkings() {
         }
     }
 
-    auto addStopLine = [&]( Vec3f p1, Vec3f p2, Vec3f n1, Vec3f n2, float w, int dashNumber) {
+    auto addStopLine = [&]( Vec3d p1, Vec3d p2, Vec3d n1, Vec3d n2, float w, int dashNumber) {
 		auto node1 = addNode( p1 );
 		auto node2 = addNode( p2 );
 		auto m = addPath("StopLine", name, {node1, node2}, {n1,n2});
@@ -179,9 +179,9 @@ void VRRoadIntersection::computeMarkings() {
     };
 
     for (auto e : laneEntries) { // entry/width
-        Vec3f p = e.first->getEntity("node")->getVec3f("position");
-        Vec3f n = e.first->getVec3f("direction");
-        Vec3f x = n.cross(Vec3f(0,1,0));
+        Vec3d p = e.first->getEntity("node")->getVec3f("position");
+        Vec3d n = e.first->getVec3f("direction");
+        Vec3d x = n.cross(Vec3d(0,1,0));
         x.normalize();
         float W = e.second*0.35;
         float D = 0.4;
@@ -191,25 +191,25 @@ void VRRoadIntersection::computeMarkings() {
 
 void VRRoadIntersection::computeLayout() {
     auto node = entity->getEntity("node");
-    Vec3f pNode = node->getVec3f("position");
+    Vec3d pNode = node->getVec3f("position");
 
     // sort roads
     auto compare = [&](VRRoadPtr road1, VRRoadPtr road2) -> bool {
-        Vec3f norm1 = road1->getEdgePoints( node ).n;
-        Vec3f norm2 = road2->getEdgePoints( node ).n;
+        Vec3d norm1 = road1->getEdgePoints( node ).n;
+        Vec3d norm2 = road2->getEdgePoints( node ).n;
         float K = norm1.cross(norm2)[1];
         return (K < 0);
     };
 
     sort( roads.begin(), roads.end(), compare );
 
-    auto intersect = [&](const Pnt3f& p1, const Vec3f& n1, const Pnt3f& p2, const Vec3f& n2) -> Vec3f {
-        Vec3f d = p2-p1;
-        Vec3f n3 = n1.cross(n2);
+    auto intersect = [&](const Pnt3d& p1, const Vec3d& n1, const Pnt3d& p2, const Vec3d& n2) -> Vec3d {
+        Vec3d d = p2-p1;
+        Vec3d n3 = n1.cross(n2);
         float N3 = n3.dot(n3);
         if (N3 == 0) N3 = 1.0;
         float s = d.cross(n2).dot(n1.cross(n2))/N3;
-        return Vec3f(p1) + n1*s;
+        return Vec3d(p1) + n1*s;
     };
 
     int N = roads.size();
@@ -218,23 +218,23 @@ void VRRoadIntersection::computeLayout() {
         auto road2 = roads[(r+1)%N];
         auto& data1 = road1->getEdgePoints( node );
         auto& data2 = road2->getEdgePoints( node );
-        Vec3f Pi = intersect(data1.p2, data1.n, data2.p1, data2.n);
+        Vec3d Pi = intersect(data1.p2, data1.n, data2.p1, data2.n);
         data1.p2 = Pi;
         data2.p1 = Pi;
     }
 
     for (auto road : roads) { // compute road front
         auto& data = road->getEdgePoints( node );
-        Vec3f p1 = data.p1;
-        Vec3f p2 = data.p2;
-        Vec3f norm = data.n;
+        Vec3d p1 = data.p1;
+        Vec3d p2 = data.p2;
+        Vec3d norm = data.n;
         float d1 = abs((p1-pNode).dot(norm));
         float d2 = abs((p2-pNode).dot(norm));
         float d = max(d1,d2);
         data.p1 = p1-norm*(d-d1);
         data.p2 = p2-norm*(d-d2);
 
-        Vec3f pm = (data.p1 + data.p2)*0.5; // compute road node
+        Vec3d pm = (data.p1 + data.p2)*0.5; // compute road node
         auto n = addNode(pm);
         data.entry->set("node", n->getName());
         n->add("paths", data.entry->getName());
@@ -246,7 +246,7 @@ void VRRoadIntersection::computeLayout() {
         auto rEntry1 = road1->getNodeEntry(node);
         if (!rEntry1) continue;
         int s1 = toInt(rEntry1->get("sign")->value);
-        Vec3f norm1 = rEntry1->getVec3f("direction");
+        Vec3d norm1 = rEntry1->getVec3f("direction");
         auto& data1 = road1->getEdgePoints( node );
         VREntityPtr node1 = data1.entry->getEntity("node");
         if (s1 == 1) {
@@ -257,7 +257,7 @@ void VRRoadIntersection::computeLayout() {
                 if (!rEntry2) continue;
                 int s2 = toInt(rEntry2->get("sign")->value);
                 if (s2 != -1) continue;
-                Vec3f norm2 = rEntry2->getVec3f("direction");
+                Vec3d norm2 = rEntry2->getVec3f("direction");
                 auto& data2 = road2->getEdgePoints( node );
                 VREntityPtr node2 = data2.entry->getEntity("node");
                 auto pathEnt = addPath("Path", "intersection", {node1, node2}, {norm1, norm2});

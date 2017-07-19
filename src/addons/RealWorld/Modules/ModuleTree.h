@@ -17,7 +17,7 @@ class ModuleTree : public BaseModule {
 
     public:
         string id;
-        vector<Vec2f> positions;
+        vector<Vec2d> positions;
 
         ModuleTree(bool t, bool p);
 
@@ -26,7 +26,7 @@ class ModuleTree : public BaseModule {
 
         void physicalize(bool b);
 
-        VRGeometryPtr makeTree(Vec3f position, int treeNum);
+        VRGeometryPtr makeTree(Vec3d position, int treeNum);
 
         int getRandom(string id);
 };

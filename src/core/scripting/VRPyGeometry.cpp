@@ -282,11 +282,11 @@ PyObject* VRPyGeometry::addVertex(VRPyGeometry* self, PyObject *args) {
     bool doC = (c != 0) && !isNone(c);
 
     int res = -1;
-    if (doN && doC && doTC) res = geo.pushVert(parseVec3fList(p), parseVec3fList(n), parseVec3fList(c), parseVec2fList(t));
-    else if (doN && doC) res = geo.pushVert(parseVec3fList(p), parseVec3fList(n), parseVec3fList(c));
-    else if (doN && doTC) res = geo.pushVert(parseVec3fList(p), parseVec3fList(n), parseVec2fList(t));
-    else if (doN) res = geo.pushVert(parseVec3fList(p), parseVec3fList(n));
-    else res = geo.pushVert(parseVec3fList(p));
+    if (doN && doC && doTC) res = geo.pushVert(parseVec3dList(p), parseVec3dList(n), Vec3f(parseVec3dList(c)), parseVec2dList(t));
+    else if (doN && doC) res = geo.pushVert(parseVec3dList(p), parseVec3dList(n), Vec3f(parseVec3dList(c)));
+    else if (doN && doTC) res = geo.pushVert(parseVec3dList(p), parseVec3dList(n), parseVec2dList(t));
+    else if (doN) res = geo.pushVert(parseVec3dList(p), parseVec3dList(n));
+    else res = geo.pushVert(parseVec3dList(p));
 
     if (res == 0) geo.apply(self->objPtr, false);
     return PyInt_FromLong(res);
@@ -303,11 +303,11 @@ PyObject* VRPyGeometry::setVertex(VRPyGeometry* self, PyObject *args) {
     bool doTC = (t != 0) && !isNone(t);
     bool doN = (n != 0) && !isNone(n);
     bool doC = (c != 0) && !isNone(c);
-    if (doN && doC && doTC) geo.setVert(i, parseVec3fList(p), parseVec3fList(n), parseVec3fList(c), parseVec2fList(t));
-    else if (doN && doC) geo.setVert(i, parseVec3fList(p), parseVec3fList(n), parseVec3fList(c));
-    else if (doN && doTC) geo.setVert(i, parseVec3fList(p), parseVec3fList(n), parseVec2fList(t));
-    else if (doN) geo.setVert(i, parseVec3fList(p), parseVec3fList(n));
-    else geo.setVert(i, parseVec3fList(p));
+    if (doN && doC && doTC) geo.setVert(i, parseVec3dList(p), parseVec3dList(n), Vec3f(parseVec3dList(c)), parseVec2dList(t));
+    else if (doN && doC) geo.setVert(i, parseVec3dList(p), parseVec3dList(n), Vec3f(parseVec3dList(c)));
+    else if (doN && doTC) geo.setVert(i, parseVec3dList(p), parseVec3dList(n), parseVec2dList(t));
+    else if (doN) geo.setVert(i, parseVec3dList(p), parseVec3dList(n));
+    else geo.setVert(i, parseVec3dList(p));
     Py_RETURN_TRUE;
 }
 
@@ -444,10 +444,10 @@ PyObject* VRPyGeometry::influence(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
 	PyObject *vP, *vV; int power; float color_coding; float dl_max;
     if (!PyArg_ParseTuple(args, "OOiff", &vP, &vV, &power, &color_coding, &dl_max)) return NULL;
-    vector<Vec3f> pos;
-    vector<Vec3f> vals;
-    feed2D_v2<vector<Vec3f>, Vec3f>(vP, pos);
-    feed2D_v2<vector<Vec3f>, Vec3f>(vV, vals);
+    vector<Vec3d> pos;
+    vector<Vec3d> vals;
+    feed2D_v2<vector<Vec3d>, Vec3d>(vP, pos);
+    feed2D_v2<vector<Vec3d>, Vec3d>(vV, vals);
     self->objPtr->influence(pos, vals, power, color_coding, dl_max);
     Py_RETURN_TRUE;
 }
@@ -543,17 +543,17 @@ PyObject* VRPyGeometry::setPositions(VRPyGeometry* self, PyObject *args) {
     string tname = vec->ob_type->tp_name;
 
     if (ld == 1) {
-        if (tname == "numpy.ndarray") feed1D3np<GeoPnt3fPropertyRecPtr, Pnt3f>(vec, pos);
-        else feed1D3<GeoPnt3fPropertyRecPtr, Pnt3f>(vec, pos);
+        if (tname == "numpy.ndarray") feed1D3np<GeoPnt3fPropertyRecPtr, Pnt3d>(vec, pos);
+        else feed1D3<GeoPnt3fPropertyRecPtr, Pnt3d>(vec, pos);
     } else if (ld == 2) {
-        if (tname == "numpy.ndarray") feed2Dnp<GeoPnt3fPropertyRecPtr, Pnt3f>(vec, pos);
-        else feed2D<GeoPnt3fPropertyRecPtr, Pnt3f>(vec, pos);
+        if (tname == "numpy.ndarray") feed2Dnp<GeoPnt3fPropertyRecPtr, Pnt3d>(vec, pos);
+        else feed2D<GeoPnt3fPropertyRecPtr, Pnt3d>(vec, pos);
     } else if (ld == 3) {
         for(Py_ssize_t i = 0; i < PyList_Size(vec); i++) {
             PyObject* vecList = PyList_GetItem(vec, i);
             string tname = vecList->ob_type->tp_name;
-            if (tname == "numpy.ndarray") feed2Dnp<GeoPnt3fPropertyRecPtr, Pnt3f>(vecList, pos);
-            else feed2D<GeoPnt3fPropertyRecPtr, Pnt3f>(vecList, pos);
+            if (tname == "numpy.ndarray") feed2Dnp<GeoPnt3fPropertyRecPtr, Pnt3d>(vecList, pos);
+            else feed2D<GeoPnt3fPropertyRecPtr, Pnt3d>(vecList, pos);
         }
     } else {
         string e = "VRPyGeometry::setPositions - bad argument, ld is " + toString(ld);
@@ -575,11 +575,11 @@ PyObject* VRPyGeometry::setNormals(VRPyGeometry* self, PyObject *args) {
     int ld = getListDepth(vec);
 
     if (ld == 1) {
-        if (tname == "numpy.ndarray") feed1D3np<GeoVec3fPropertyRecPtr, Vec3f>( vec, norms);
-        else feed1D3<GeoVec3fPropertyRecPtr, Vec3f>( vec, norms);
+        if (tname == "numpy.ndarray") feed1D3np<GeoVec3fPropertyRecPtr, Vec3d>( vec, norms);
+        else feed1D3<GeoVec3fPropertyRecPtr, Vec3d>( vec, norms);
     } else if (ld == 2) {
-        if (tname == "numpy.ndarray") feed2Dnp<GeoVec3fPropertyRecPtr, Vec3f>( vec, norms);
-        else feed2D<GeoVec3fPropertyRecPtr, Vec3f>( vec, norms);
+        if (tname == "numpy.ndarray") feed2Dnp<GeoVec3fPropertyRecPtr, Vec3d>( vec, norms);
+        else feed2D<GeoVec3fPropertyRecPtr, Vec3d>( vec, norms);
     } else {
         string e = "VRPyGeometry::setNormals - bad argument, ld is " + toString(ld);
         PyErr_SetString(err, e.c_str());
@@ -598,8 +598,8 @@ PyObject* VRPyGeometry::setColors(VRPyGeometry* self, PyObject *args) {
 
     GeoVec4fPropertyRecPtr cols = GeoVec4fProperty::create();
     string tname = vec->ob_type->tp_name;
-    if (tname == "numpy.ndarray") feed2Dnp<GeoVec4fPropertyRecPtr, Vec4f>( vec, cols);
-    else feed2D<GeoVec4fPropertyRecPtr, Vec4f>( vec, cols);
+    if (tname == "numpy.ndarray") feed2Dnp<GeoVec4fPropertyRecPtr, Vec4d>( vec, cols);
+    else feed2D<GeoVec4fPropertyRecPtr, Vec4d>( vec, cols);
 
     geo->setColors(cols, true);
     Py_RETURN_TRUE;
@@ -658,13 +658,13 @@ PyObject* VRPyGeometry::setTexCoords(VRPyGeometry* self, PyObject *args) {
 
     if (vN == 2) {
         GeoVec2fPropertyRecPtr tc = GeoVec2fProperty::create();
-        feed2D<GeoVec2fPropertyRecPtr, Vec2f>(vec, tc);
+        feed2D<GeoVec2fPropertyRecPtr, Vec2d>(vec, tc);
         self->objPtr->setTexCoords(tc, channel, doIndexFix);
     }
 
     if (vN == 3) {
         GeoVec3fPropertyRecPtr tc = GeoVec3fProperty::create();
-        feed2D<GeoVec3fPropertyRecPtr, Vec3f>(vec, tc);
+        feed2D<GeoVec3fPropertyRecPtr, Vec3d>(vec, tc);
         self->objPtr->setTexCoords(tc, channel, doIndexFix);
     }
 
@@ -701,7 +701,7 @@ PyObject* VRPyGeometry::getPositions(VRPyGeometry* self) {
     PyObject* res = PyList_New(pos->size());
 
     for (uint i=0; i<pos->size(); i++) {
-        Vec3f v;
+        Vec3d v;
         pos->getValue(v,i);
         PyObject* pv = toPyTuple(v);
         // append to list
@@ -754,7 +754,7 @@ PyObject* VRPyGeometry::getNormals(VRPyGeometry* self) {
     PyObject* res = PyList_New(pos->size());
 
     for (uint i=0; i<pos->size(); i++) {
-        Vec3f v;
+        Vec3d v;
         pos->getValue(v,i);
         PyObject* pv = toPyTuple(v);
         PyList_SetItem(res, i, pv);
@@ -772,7 +772,7 @@ PyObject* VRPyGeometry::getColors(VRPyGeometry* self) {
     PyObject* res = PyList_New(pos->size());
 
     for (uint i=0; i<pos->size(); i++) {
-        Vec3f v;
+        Vec3d v;
         pos->getValue(v,i);
         PyObject* pv = toPyTuple(v);
         PyList_SetItem(res, i, pv);
@@ -808,7 +808,7 @@ PyObject* VRPyGeometry::getTexCoords(VRPyGeometry* self) {
     PyObject* res = PyList_New(tc->size());
 
     for (unsigned int i=0; i<tc->size(); i++) {
-        Vec2f v;
+        Vec2d v;
         tc->getValue(v,i);
         PyObject* pv = toPyTuple(v);
         PyList_SetItem(res, i, pv);
@@ -832,7 +832,7 @@ PyObject* VRPyGeometry::playVideo(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     VRGeometryPtr geo = (VRGeometryPtr) self->objPtr;
 
-    Vec3f params = parseVec3f(args);
+    Vec3d params = parseVec3d(args);
 
     geo->getMaterial()->getVideo()->play(0, params[0], params[1], params[2]);
 

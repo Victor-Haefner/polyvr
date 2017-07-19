@@ -120,18 +120,18 @@ vector<string> VRCamera::getProjectionTypes() {
     return proj;
 }
 
-void VRCamera::focus(Vec3f p) {
+void VRCamera::focus(Vec3d p) {
     setAt(p);
 }
 
 void VRCamera::focus(VRObjectPtr t) {
     auto bb = t->getBoundingBox();
-    Vec3f c = bb->center();
+    Vec3d c = bb->center();
 
-    Vec3f d = getDir();
+    Vec3d d = getDir();
     focus(c);
 
-    Vec3f dp = getDir();
+    Vec3d dp = getDir();
     if (dp.length() > 1e-4) d = dp; // only use new dir if it is valid
     d.normalize();
     float r = max(bb->radius()*2, 0.1f);

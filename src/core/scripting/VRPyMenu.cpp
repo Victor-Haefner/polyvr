@@ -80,7 +80,7 @@ PyObject* VRPyMenu::setLeafType(VRPyMenu* self, PyObject* args) {
     string ts = PyString_AsString(t);
     OSG::VRMenu::TYPE type;
     if (ts == "SPRITE") type = OSG::VRMenu::SPRITE;
-    self->objPtr->setLeafType( type, parseVec2fList(s));
+    self->objPtr->setLeafType( type, parseVec2dList(s));
     Py_RETURN_TRUE;
 }
 

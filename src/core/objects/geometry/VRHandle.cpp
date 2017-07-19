@@ -14,14 +14,14 @@ VRHandle::VRHandle(string name) : VRGeometry(name) {
     setPickable(true);
     setPrimitive("Box", "0.1 0.1 0.1 1 1 1");
     auto m = VRMaterial::get("VRHandle");
-    m->setDiffuse(Vec3f(0.3,0.6,1.0));
+    m->setDiffuse(Color3f(0.3,0.6,1.0));
     setMaterial( m );
 }
 
 VRHandlePtr VRHandle::create(string name) { return VRHandlePtr( new VRHandle(name) ); }
 VRHandlePtr VRHandle::ptr() { return static_pointer_cast<VRHandle>( shared_from_this() ); }
 
-void VRHandle::configure(VRAnimCbPtr cb, TYPE t, Vec3f n, float s, bool symmetric) {
+void VRHandle::configure(VRAnimCbPtr cb, TYPE t, Vec3d n, float s, bool symmetric) {
     axis = n;
     paramCb = cb;
     constraint = t;
@@ -29,7 +29,7 @@ void VRHandle::configure(VRAnimCbPtr cb, TYPE t, Vec3f n, float s, bool symmetri
     auto c = getConstraint();
     if (t == LINEAR) { // TODO: need local constraints!
         c->setTConstraint(n, VRConstraint::LINE);
-        c->setRConstraint(Vec3f(0,1,0), VRConstraint::POINT);
+        c->setRConstraint(Vec3d(0,1,0), VRConstraint::POINT);
         c->setReferential( dynamic_pointer_cast<VRTransform>(getParent()) );
     }
 }
@@ -49,7 +49,7 @@ void VRHandle::set(posePtr p, float v) {
     }
 }
 
-Vec3f VRHandle::getAxis() { return axis; }
+Vec3d VRHandle::getAxis() { return axis; }
 posePtr VRHandle::getOrigin() { return origin; }
 
 void VRHandle::updateHandle() {
@@ -58,12 +58,12 @@ void VRHandle::updateHandle() {
     VRGeometryPtr p =  dynamic_pointer_cast<VRGeometry>(getDragParent());
     if (!p) return;
 
-    Matrix p0 = p->getWorldMatrix();
+    Matrix4d p0 = p->getWorldMatrix();
     p0.invert();
-    Pnt3f p1 = getWorldPosition();
+    Pnt3d p1 = getWorldPosition();
     p0.mult(p1,p1);
 
-    Vec3f d = Vec3f(p1)-origin->pos();
+    Vec3d d = Vec3d(p1)-origin->pos();
     float v = axis.dot(d);
     value = abs(v)/scale;
     (*paramCb)(value);
@@ -81,7 +81,7 @@ void VRHandle::drop() {
     scene->dropUpdateFkt( updateCb );
 }
 
-void VRHandle::setMatrix(Matrix m) { // for undo/redo
+void VRHandle::setMatrix(Matrix4d m) { // for undo/redo
     VRTransform::setMatrix(m);
     (*updateCb)(0); // problem: called non stop :(
 }

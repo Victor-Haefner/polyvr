@@ -45,7 +45,7 @@ PyObject* VRPyTextureGenerator::drawFill(VRPyTextureGenerator* self, PyObject* a
 	if (!self->valid()) return NULL;
     PyObject* c;
     if (! PyArg_ParseTuple(args, "O", &c)) return NULL;
-    self->objPtr->drawFill(parseVec4fList(c));
+    self->objPtr->drawFill(Vec4f(parseVec4dList(c)));
     Py_RETURN_TRUE;
 }
 
@@ -53,7 +53,7 @@ PyObject* VRPyTextureGenerator::drawPixel(VRPyTextureGenerator* self, PyObject* 
 	if (!self->valid()) return NULL;
     PyObject *p, *c;
     if (! PyArg_ParseTuple(args, "OO", &p, &c)) return NULL;
-    self->objPtr->drawPixel(parseVec3iList(p), parseVec4fList(c));
+    self->objPtr->drawPixel(parseVec3iList(p), Vec4f(parseVec4dList(c)));
     Py_RETURN_TRUE;
 }
 
@@ -62,7 +62,7 @@ PyObject* VRPyTextureGenerator::drawLine(VRPyTextureGenerator* self, PyObject* a
     PyObject *p1, *p2, *c;
     float w;
     if (! PyArg_ParseTuple(args, "OOOf", &p1, &p2, &c, &w)) return NULL;
-    self->objPtr->drawLine(parseVec3fList(p1), parseVec3fList(p2), parseVec4fList(c), w);
+    self->objPtr->drawLine(parseVec3dList(p1), parseVec3dList(p2), Vec4f(parseVec4dList(c)), w);
     Py_RETURN_TRUE;
 }
 
@@ -72,7 +72,7 @@ PyObject* VRPyTextureGenerator::drawPath(VRPyTextureGenerator* self, PyObject* a
     PyObject* c;
     float w;
     if (! PyArg_ParseTuple(args, "OOf", &p, &c, &w)) return NULL;
-    self->objPtr->drawPath(p->objPtr, parseVec4fList(c), w);
+    self->objPtr->drawPath(p->objPtr, Vec4f(parseVec4dList(c)), w);
     Py_RETURN_TRUE;
 }
 
@@ -81,8 +81,8 @@ PyObject* VRPyTextureGenerator::add(VRPyTextureGenerator* self, PyObject* args) 
     PyObject *type, *c1, *c2;
     float amount;
     if (! PyArg_ParseTuple(args, "OfOO", &type, &amount, &c1, &c2)) return NULL;
-    if (pySize(c1) == 3) self->objPtr->add(PyString_AsString(type), amount, parseVec3fList(c1), parseVec3fList(c2));
-    if (pySize(c1) == 4) self->objPtr->add(PyString_AsString(type), amount, parseVec4fList(c1), parseVec4fList(c2));
+    if (pySize(c1) == 3) self->objPtr->add(PyString_AsString(type), amount, Vec3f(parseVec3dList(c1)), Vec3f(parseVec3dList(c2)));
+    if (pySize(c1) == 4) self->objPtr->add(PyString_AsString(type), amount, Vec4f(parseVec4dList(c1)), Vec4f(parseVec4dList(c2)));
     Py_RETURN_TRUE;
 }
 

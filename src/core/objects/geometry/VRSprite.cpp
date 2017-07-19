@@ -38,10 +38,10 @@ void VRSprite::updateGeo() {
     VRGeoData data;
     float w2 = width*0.5;
     float h2 = height*0.5;
-    data.pushVert(Pnt3f(-w2,h2,0), Vec3f(0,0,1), Vec2f(0,1));
-    data.pushVert(Pnt3f(-w2,-h2,0), Vec3f(0,0,1), Vec2f(0,0));
-    data.pushVert(Pnt3f(w2,-h2,0), Vec3f(0,0,1), Vec2f(1,0));
-    data.pushVert(Pnt3f(w2,h2,0), Vec3f(0,0,1), Vec2f(1,1));
+    data.pushVert(Pnt3d(-w2,h2,0), Vec3d(0,0,1), Vec2d(0,1));
+    data.pushVert(Pnt3d(-w2,-h2,0), Vec3d(0,0,1), Vec2d(0,0));
+    data.pushVert(Pnt3d(w2,-h2,0), Vec3d(0,0,1), Vec2d(1,0));
+    data.pushVert(Pnt3d(w2,h2,0), Vec3d(0,0,1), Vec2d(1,1));
     data.pushQuad();
     data.apply(ptr());
 }
@@ -85,7 +85,7 @@ void VRSprite::setFontColor(Color4f c) { fontColor = c; }
 void VRSprite::setBackColor(Color4f c) { backColor = c; }
 
 string VRSprite::getLabel() { return label; }
-Vec2f VRSprite::getSize() { return Vec2f(width, height); }
+Vec2d VRSprite::getSize() { return Vec2d(width, height); }
 
 void VRSprite::setSize(float w, float h) {
     width = w;

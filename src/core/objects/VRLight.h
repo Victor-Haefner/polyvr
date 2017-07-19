@@ -36,7 +36,7 @@ class VRLight : public VRObject {
         Color4f lightAmbient;
         Color4f lightSpecular;
         Color4f shadowColor;
-        Vec3f attenuation; // C L Q
+        Vec3d attenuation; // C L Q
         bool shadows = false;
         bool on = true;
         bool deferred = false;
@@ -77,8 +77,8 @@ class VRLight : public VRObject {
         VRLightBeaconWeakPtr getBeacon();
         void setBeacon(VRLightBeaconPtr b);
 
-        void setAttenuation(Vec3f a);
-        Vec3f getAttenuation();
+        void setAttenuation(Vec3d a);
+        Vec3d getAttenuation();
 
         void setPointlight();
         void setSpotlight();

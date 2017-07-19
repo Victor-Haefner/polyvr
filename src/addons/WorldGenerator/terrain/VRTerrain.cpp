@@ -58,7 +58,7 @@ void VRTerrain::setupGeo() {
     Vec2d gridS = size;
     gridS[0] /= gridN[0];
     gridS[1] /= gridN[1];
-	Vec2f tcChunk = Vec2f(1.0/gridN[0], 1.0/gridN[1]);
+	Vec2d tcChunk = Vec2d(1.0/gridN[0], 1.0/gridN[1]);
 
 	VRGeoData geo;
     for (int i =0; i < gridN[0]; i++) {
@@ -73,10 +73,10 @@ void VRTerrain::setupGeo() {
 			double tcy1 = 0 + j*tcChunk[1];
 			double tcy2 = tcy1 + tcChunk[1];
 
-			geo.pushVert(Vec3f(px1,0,py1), Vec3f(0,1,0), Vec2f(tcx1,tcy1));
-			geo.pushVert(Vec3f(px1,0,py2), Vec3f(0,1,0), Vec2f(tcx1,tcy2));
-			geo.pushVert(Vec3f(px2,0,py2), Vec3f(0,1,0), Vec2f(tcx2,tcy2));
-			geo.pushVert(Vec3f(px2,0,py1), Vec3f(0,1,0), Vec2f(tcx2,tcy1));
+			geo.pushVert(Vec3d(px1,0,py1), Vec3d(0,1,0), Vec2d(tcx1,tcy1));
+			geo.pushVert(Vec3d(px1,0,py2), Vec3d(0,1,0), Vec2d(tcx1,tcy2));
+			geo.pushVert(Vec3d(px2,0,py2), Vec3d(0,1,0), Vec2d(tcx2,tcy2));
+			geo.pushVert(Vec3d(px2,0,py1), Vec3d(0,1,0), Vec2d(tcx2,tcy1));
 			geo.pushQuad();
 		}
 	}
@@ -113,7 +113,7 @@ void VRTerrain::setupMat() {
 	auto defaultMat = VRMaterial::get("defaultTerrain");
 	tex = defaultMat->getTexture();
 	if (!tex) {
-        Vec4f w = Vec4f(1,1,1,1);
+        Color4f w(1,1,1,1);
         VRTextureGenerator tg;
         tg.setSize(Vec3i(128,128,1),true);
         tg.add("Perlin", 1.0, w*0.97, w);
@@ -149,17 +149,17 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
         return max(min(x,b),a);
     };
 
-    auto toUV = [&](Pnt3f p) -> Vec2f {
+    auto toUV = [&](Pnt3d p) -> Vec2d {
         auto mw = getWorldMatrix();
         mw.invert();
         //mw.mult(p,p); // transform point in local coords
 		double u = clamp(p[0]/size[0] + 0.5, 0, 1);
 		double v = clamp(p[2]/size[1] + 0.5, 0, 1);
-		return Vec2f(u,v);
+		return Vec2d(u,v);
     };
 
-	auto distToSurface = [&](Pnt3f p) -> double {
-		Vec2f uv = toUV(p);
+	auto distToSurface = [&](Pnt3d p) -> double {
+		Vec2d uv = toUV(p);
 		auto c = tex->getPixel(uv);
 		return p[1] - c[3];
 	};
@@ -169,9 +169,9 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
     IntersectAction* ia = dynamic_cast<IntersectAction*>(action);
 
     auto ia_line = ia->getLine();
-    Pnt3f p0 = ia_line.getPosition();
-    Vec3f d = ia_line.getDirection();
-    Pnt3f p = ia->getHitPoint();
+    Pnt3d p0 = Pnt3d(ia_line.getPosition());
+    Vec3d d = Vec3d(ia_line.getDirection());
+    Pnt3d p = Pnt3d(ia->getHitPoint());
 
     Vec3f norm(0,1,0); // TODO
     int N = 1000;
@@ -209,14 +209,14 @@ void VRTerrain::projectOSM(string path, double N, double E) {
         for (int i = 0; i < dim[0]; i++) {
             for (int j = 0; j < dim[1]; j++) {
                 double h = tex->getPixel(Vec3i(i,j,0))[0];
-                t->setPixel(Vec3i(i,j,0), Vec4f(1.0,1.0,1.0,h));
+                t->setPixel(Vec3i(i,j,0), Color4f(1.0,1.0,1.0,h));
             }
         }
         setMap(t);
     }
 
     // -------------- prepare polygons in terrain space
-    Matrix terrainMatrix = getMatrix();
+    Matrix4d terrainMatrix = getMatrix();
     terrainMatrix.invert();
     map< string, vector<VRPolygonPtr> > polygons;
     auto map = OSMMap::loadMap(path);
@@ -225,9 +225,9 @@ void VRTerrain::projectOSM(string path, double N, double E) {
         auto pp = VRPolygon::create();
 
         for (auto pnt : p.get()) {
-            Pnt3f pos = Pnt3f( planet->fromLatLongPosition(pnt[1], pnt[0]) );
+            Pnt3d pos = Pnt3d( planet->fromLatLongPosition(pnt[1], pnt[0]) );
             terrainMatrix.mult(pos, pos);
-            pp->addPoint( Vec2f(pos[0], pos[2]) );
+            pp->addPoint( Vec2d(pos[0], pos[2]) );
         }
 
         for (auto tag : way.second->tags) polygons[tag.first].push_back(pp);
@@ -240,22 +240,22 @@ void VRTerrain::projectOSM(string path, double N, double E) {
 
     //for (auto tag : polygons) cout << "polygon tag: " << tag.first << endl;
 
-    auto drawPolygons = [&](string tag, Vec4f col) {
+    auto drawPolygons = [&](string tag, Color4f col) {
         if (!polygons.count(tag)) {
             //cout << "\ndrawPolygons: tag '" << tag << "' not found!" << endl;
             return;
         }
 
         for (auto p : polygons[tag]) {
-            p->scale( Vec3f(1.0/size[0], 1, 1.0/size[1]) );
-            p->translate( Vec3f(0.5,0,0.5) );
+            p->scale( Vec3d(1.0/size[0], 1, 1.0/size[1]) );
+            p->translate( Vec3d(0.5,0,0.5) );
             tg.drawPolygon( p, col );
         }
     };
 
-    drawPolygons("natural", Vec4f(0,1,0,1));
-    drawPolygons("water", Vec4f(0.2,0.4,1,1));
-    drawPolygons("industrial", Vec4f(0.2,0.2,0.2,1));
+    drawPolygons("natural", Color4f(0,1,0,1));
+    drawPolygons("water", Color4f(0.2,0.4,1,1));
+    drawPolygons("industrial", Color4f(0.2,0.2,0.2,1));
     VRTexturePtr t = tg.compose(0);
 
     // ----------------------- combine OSM texture with heightmap
@@ -263,7 +263,7 @@ void VRTerrain::projectOSM(string path, double N, double E) {
         for (int j = 0; j < dim[1]; j++) {
             Vec3i pix = Vec3i(i,j,0);
             double h = tex->getPixel(pix)[3];
-            Vec4f col = t->getPixel(pix);
+            Color4f col = t->getPixel(pix);
             col[3] = h;
             t->setPixel(pix, col);
         }

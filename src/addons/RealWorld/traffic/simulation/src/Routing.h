@@ -64,7 +64,7 @@ ID getRandomDestinationNode(const RoadSystem *roadSystem, const ID from, const I
  @param maxDistance The maximal distance to look into.
  @return The distance to the nearest vehicle. If no vehicle has been found, the return value equals \c maxDistance.
  */
-double getNearestVehicleDistance(const RoadSystem *roadSystem, const Vec2f& position, const Street *street, const double maxDistance);
+double getNearestVehicleDistance(const RoadSystem *roadSystem, const Vec2d& position, const Street *street, const double maxDistance);
 
 
 #endif // ROUTING_H

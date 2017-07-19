@@ -93,7 +93,7 @@ PyObject* VRPyRobotArm::moveTo(VRPyRobotArm* self, PyObject* args) {
 	if (!self->valid()) return NULL;
     PyObject *v1, *v2, *v3;
     if (! PyArg_ParseTuple(args, "OOO", &v1, &v2, &v3)) return NULL;
-    self->objPtr->moveTo( parseVec3fList(v1), parseVec3fList(v2), parseVec3fList(v3) );
+    self->objPtr->moveTo( parseVec3dList(v1), parseVec3dList(v2), parseVec3dList(v3) );
     Py_RETURN_TRUE;
 }
 

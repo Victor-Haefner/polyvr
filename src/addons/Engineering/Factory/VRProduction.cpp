@@ -137,18 +137,18 @@ VRObjectPtr VRProduction::test() {
 
     mathOnto->addConcept("Volume");
     mathOnto->addConcept("Vector");
-    mathOnto->addConcept("Quaternion");
+    mathOnto->addConcept("Quaterniond");
     mathOnto->getConcept("Vector")->addProperty("x", "float");
     mathOnto->getConcept("Vector")->addProperty("y", "float");
     mathOnto->getConcept("Vector")->addProperty("z", "float");
-    mathOnto->getConcept("Quaternion")->addProperty("x", "float");
-    mathOnto->getConcept("Quaternion")->addProperty("y", "float");
-    mathOnto->getConcept("Quaternion")->addProperty("z", "float");
-    mathOnto->getConcept("Quaternion")->addProperty("w", "float");
+    mathOnto->getConcept("Quaterniond")->addProperty("x", "float");
+    mathOnto->getConcept("Quaterniond")->addProperty("y", "float");
+    mathOnto->getConcept("Quaterniond")->addProperty("z", "float");
+    mathOnto->getConcept("Quaterniond")->addProperty("w", "float");
     mathOnto->addConcept("Position", "Vector");
     mathOnto->addConcept("Normal", "Vector");
     mathOnto->addConcept("Direction", "Vector");
-    mathOnto->addConcept("Orientation", "Quaternion");
+    mathOnto->addConcept("Orientation", "Quaterniond");
     mathOnto->addConcept("Box", "Volume");
     mathOnto->getConcept("Box")->addProperty("min", "Vector");
     mathOnto->getConcept("Box")->addProperty("max", "Vector");
@@ -250,7 +250,7 @@ VRObjectPtr VRProduction::test() {
 
     // drill ----------
     auto drill = new VRProductionMachine();
-    drill->geo->translate(Vec3f(-1.5,0,0));
+    drill->geo->translate(Vec3d(-1.5,0,0));
     drill->description->merge(drillOnto);
     drill->description->addVectorEntity("wsMin", "Vector", "0", "-1", "0");
     drill->description->addVectorEntity("wsMax", "Vector", "0", "1", "0");
@@ -267,7 +267,7 @@ VRObjectPtr VRProduction::test() {
 
     // robot ----------
     auto robot = new VRProductionMachine();
-    robot->geo->translate(Vec3f(1.5,0,0));
+    robot->geo->translate(Vec3d(1.5,0,0));
     robot->description->merge(robotOnto);
     auto robotI = robot->description->addEntity("robot", "Robot");
     robotI->set("position", "position");

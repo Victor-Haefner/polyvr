@@ -610,7 +610,7 @@ void VRMaterial::setTextureType(string type) {
     }
 }
 
-void VRMaterial::setQRCode(string s, Vec3f fg, Vec3f bg, int offset) {
+void VRMaterial::setQRCode(string s, Vec3d fg, Vec3d bg, int offset) {
     createQRCode(s, ptr(), fg, bg, offset);
     setTextureParams(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST, -1, -1, -1);
 }
@@ -646,7 +646,7 @@ void VRMaterial::setFrontBackModes(int front, int back) {
     } else md->polygonChunk->setBackMode(back);
 }
 
-void VRMaterial::setClipPlane(bool active, Vec4f equation, VRTransformPtr beacon) {
+void VRMaterial::setClipPlane(bool active, Vec4d equation, VRTransformPtr beacon) {
     for (int i=0; i<getNPasses(); i++) {
         auto md = mats[i];
         if (md->clipChunk == 0) md->clipChunk = ClipPlaneChunk::create();
@@ -654,7 +654,7 @@ void VRMaterial::setClipPlane(bool active, Vec4f equation, VRTransformPtr beacon
         if (active) md->mat->addChunk(md->clipChunk);
         else md->mat->subChunk(md->clipChunk);
 
-        md->clipChunk->setEquation(equation);
+        md->clipChunk->setEquation(Vec4f(equation));
         md->clipChunk->setEnable  (active);
         if (beacon) md->clipChunk->setBeacon(beacon->getNode()->node);
     }

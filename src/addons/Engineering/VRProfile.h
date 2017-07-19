@@ -8,11 +8,11 @@ using namespace std;
 
 class VRProfile {
     private:
-        vector<Vec2f> pnts;
+        vector<Vec2d> pnts;
 
     public:
-        void add(Vec2f v);
-        vector<Vec3f> get(Vec3f n = Vec3f(0,0,1), Vec3f u = Vec3f(0,1,0));
+        void add(Vec2d v);
+        vector<Vec3d> get(Vec3d n = Vec3d(0,0,1), Vec3d u = Vec3d(0,1,0));
 };
 
 OSG_END_NAMESPACE;

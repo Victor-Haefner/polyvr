@@ -88,8 +88,8 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getDragParent", (PyCFunction)VRPyTransform::getDragParent, METH_NOARGS, "Get the parent before the drag started - obj getDragParent()"  },
     {"lastChanged", (PyCFunction)VRPyTransform::lastChanged, METH_NOARGS, "Return the frame when the last change occured - lastChanged()"  },
 
-    {"setWorldDir", PyWrap(Transform, setWorldDir, "Set the direction in world coordinates", void, Vec3f)  },
-    {"setWorldUp", PyWrap(Transform, setWorldUp, "Set the up vector in world coordinates", void, Vec3f)  },
+    {"setWorldDir", PyWrap(Transform, setWorldDir, "Set the direction in world coordinates", void, Vec3d)  },
+    {"setWorldUp", PyWrap(Transform, setWorldUp, "Set the up vector in world coordinates", void, Vec3d)  },
     {"getPoseTo", PyWrap(Transform, getPoseTo, "Get the pose in the coordinate system of another object", posePtr, VRObjectPtr)  },
     {NULL}  /* Sentinel */
 };
@@ -122,7 +122,7 @@ PyObject* VRPyTransform::castRay(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
     VRPyObject* o = 0; PyObject* d;
     if (! PyArg_ParseTuple(args, "OO", &o, &d)) return NULL;
-    auto line = self->objPtr->castRay( 0, parseVec3fList(d) );
+    auto line = self->objPtr->castRay( 0, parseVec3dList(d) );
     OSG::VRIntersect in;
     return VRPyIntersection::fromObject( in.intersect(o->objPtr, line) );
 }
@@ -148,13 +148,13 @@ PyObject* VRPyTransform::drop(VRPyTransform* self) {
 
 PyObject* VRPyTransform::setEuler(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    self->objPtr->setEuler(parseVec3f(args));
+    self->objPtr->setEuler(parseVec3d(args));
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setCenterOfMass(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    self->objPtr->getPhysics()->setCenterOfMass(parseVec3f(args));
+    self->objPtr->getPhysics()->setCenterOfMass(parseVec3d(args));
     Py_RETURN_TRUE;
 }
 
@@ -202,13 +202,13 @@ PyObject* VRPyTransform::animationStop(VRPyTransform* self) {
 
 PyObject* VRPyTransform::setIdentity(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    self->objPtr->setMatrix(OSG::Matrix());
+    self->objPtr->setMatrix(OSG::Matrix4d());
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::translate(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    self->objPtr->translate( parseVec3f(args) );
+    self->objPtr->translate( parseVec3d(args) );
     Py_RETURN_TRUE;
 }
 
@@ -221,9 +221,9 @@ PyObject* VRPyTransform::move(VRPyTransform* self, PyObject* args) {
 
 PyObject* VRPyTransform::rotate(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    OSG::Vec4f r = parseVec4f(args);
+    OSG::Vec4d r = parseVec4d(args);
 
-    OSG::Vec3f axis = OSG::Vec3f(r);
+    OSG::Vec3d axis = OSG::Vec3d(r);
     float angle = r[3];
 
     OSG::VRTransformPtr e = (OSG::VRTransformPtr) self->objPtr;
@@ -303,7 +303,7 @@ PyObject* VRPyTransform::setPose(VRPyTransform* self, PyObject* args) {
 
     PyObject *fl, *dl, *ul;
     if (! PyArg_ParseTuple(args, "OOO", &fl, &dl, &ul)) return NULL;
-    self->objPtr->setPose( parseVec3fList(fl), parseVec3fList(dl), parseVec3fList(ul));
+    self->objPtr->setPose( parseVec3dList(fl), parseVec3dList(dl), parseVec3dList(ul));
     Py_RETURN_TRUE;
 }
 
@@ -318,20 +318,20 @@ PyObject* VRPyTransform::setWPose(VRPyTransform* self, PyObject* args) {
 
     PyObject *fl, *dl, *ul;
     if (! PyArg_ParseTuple(args, "OOO", &fl, &dl, &ul)) return NULL;
-    self->objPtr->setWorldPose( pose::create(parseVec3fList(fl), parseVec3fList(dl), parseVec3fList(ul)) );
+    self->objPtr->setWorldPose( pose::create(parseVec3dList(fl), parseVec3dList(dl), parseVec3dList(ul)) );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setFrom(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    OSG::Vec3f v = parseVec3f(args);
+    OSG::Vec3d v = parseVec3d(args);
     self->objPtr->setFrom(v);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setWFrom(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    OSG::Vec3f v = parseVec3f(args);
+    OSG::Vec3d v = parseVec3d(args);
     self->objPtr->setWorldPosition(v);
     Py_RETURN_TRUE;
 }
@@ -340,41 +340,41 @@ PyObject* VRPyTransform::setWOrientation(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
     PyObject *d, *u;
     if (! PyArg_ParseTuple(args, "OO", &d, &u)) return NULL;
-    self->objPtr->setWorldOrientation(parseVec3fList(d), parseVec3fList(u));
+    self->objPtr->setWorldOrientation(parseVec3dList(d), parseVec3dList(u));
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setAt(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    OSG::Vec3f v = parseVec3f(args);
+    OSG::Vec3d v = parseVec3d(args);
     self->objPtr->setAt(v);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setDir(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    OSG::Vec3f v = parseVec3f(args);
+    OSG::Vec3d v = parseVec3d(args);
     self->objPtr->setDir(v);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setUp(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    OSG::Vec3f v = parseVec3f(args);
+    OSG::Vec3d v = parseVec3d(args);
     self->objPtr->setUp(v);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setScale(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    OSG::Vec3f v = parseVec3f(args);
+    OSG::Vec3d v = parseVec3d(args);
     self->objPtr->setScale(v);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setPointConstraints(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    OSG::Vec3f v = parseVec3f(args);
+    OSG::Vec3d v = parseVec3d(args);
     auto c = self->objPtr->getConstraint();
     c->setTConstraint(v, OSG::VRConstraint::POINT);
     c->setActive(true, self->objPtr);
@@ -383,7 +383,7 @@ PyObject* VRPyTransform::setPointConstraints(VRPyTransform* self, PyObject* args
 
 PyObject* VRPyTransform::setPlaneConstraints(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    OSG::Vec3f v = parseVec3f(args);
+    OSG::Vec3d v = parseVec3d(args);
     auto c = self->objPtr->getConstraint();
     c->setTConstraint(v, OSG::VRConstraint::PLANE);
     c->setActive(true, self->objPtr);
@@ -392,7 +392,7 @@ PyObject* VRPyTransform::setPlaneConstraints(VRPyTransform* self, PyObject* args
 
 PyObject* VRPyTransform::setAxisConstraints(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    OSG::Vec3f v = parseVec3f(args);
+    OSG::Vec3d v = parseVec3d(args);
     auto c = self->objPtr->getConstraint();
     c->setTConstraint(v, OSG::VRConstraint::LINE);
     c->setActive(true, self->objPtr);
@@ -401,7 +401,7 @@ PyObject* VRPyTransform::setAxisConstraints(VRPyTransform* self, PyObject* args)
 
 PyObject* VRPyTransform::setRotationConstraints(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    OSG::Vec3f v = parseVec3f(args);
+    OSG::Vec3d v = parseVec3d(args);
     auto c = self->objPtr->getConstraint();
     c->setRConstraint(self->objPtr->getWorldPosition(), OSG::VRConstraint::POINT);
     c->setActive(true, self->objPtr);
@@ -443,7 +443,7 @@ PyObject* VRPyTransform::setPhysicsConstraintTo(VRPyTransform* self, PyObject *a
         float influence;
         PyObject* localPiv;
         if (! PyArg_ParseTuple(args, "OiOif", &t, &nodeIndex, &localPiv, &ignoreCollision, &influence)) return NULL;
-        self->objPtr->getPhysics()->setConstraint(t->objPtr->getPhysics(), nodeIndex, parseVec3fList(localPiv), ignoreCollision, influence);
+        self->objPtr->getPhysics()->setConstraint(t->objPtr->getPhysics(), nodeIndex, parseVec3dList(localPiv), ignoreCollision, influence);
     }
     else {
         VRPyTransform *t; VRPyConstraint *c; VRPyConstraint *cs;
@@ -512,42 +512,42 @@ PyObject* VRPyTransform::setPhysicsActivationMode(VRPyTransform* self, PyObject 
 
 PyObject* VRPyTransform::applyImpulse(VRPyTransform* self, PyObject *args) {
     if (!self->valid()) return NULL;
-    OSG::Vec3f i = parseVec3f(args);
+    OSG::Vec3d i = parseVec3d(args);
     self->objPtr->getPhysics()->applyImpulse(i);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::applyTorqueImpulse(VRPyTransform* self, PyObject *args) {
     if (!self->valid()) return NULL;
-    OSG::Vec3f i = parseVec3f(args);
+    OSG::Vec3d i = parseVec3d(args);
     self->objPtr->getPhysics()->applyTorqueImpulse(i);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::applyForce(VRPyTransform* self, PyObject *args) {
     if (!self->valid()) return NULL;
-    OSG::Vec3f i = parseVec3f(args);
+    OSG::Vec3d i = parseVec3d(args);
     self->objPtr->getPhysics()->addForce(i);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::applyConstantForce(VRPyTransform* self, PyObject *args) {
     if (!self->valid()) return NULL;
-    OSG::Vec3f i = parseVec3f(args);
+    OSG::Vec3d i = parseVec3d(args);
     self->objPtr->getPhysics()->addConstantForce(i);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::applyTorque(VRPyTransform* self, PyObject *args) {
     if (!self->valid()) return NULL;
-    OSG::Vec3f i = parseVec3f(args);
+    OSG::Vec3d i = parseVec3d(args);
     self->objPtr->getPhysics()->addTorque(i);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::applyConstantTorque(VRPyTransform* self, PyObject *args) {
     if (!self->valid()) return NULL;
-    OSG::Vec3f i = parseVec3f(args);
+    OSG::Vec3d i = parseVec3d(args);
     self->objPtr->getPhysics()->addConstantTorque(i);
     Py_RETURN_TRUE;
 }
@@ -555,19 +555,19 @@ PyObject* VRPyTransform::applyConstantTorque(VRPyTransform* self, PyObject *args
 
 PyObject* VRPyTransform::getForce(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    OSG::Vec3f i = self->objPtr->getPhysics()->getForce();
+    OSG::Vec3d i = self->objPtr->getPhysics()->getForce();
      return toPyTuple(i);
 }
 
 PyObject* VRPyTransform::getTorque(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    OSG::Vec3f i = self->objPtr->getPhysics()->getTorque();
+    OSG::Vec3d i = self->objPtr->getPhysics()->getTorque();
     return toPyTuple(i);
 }
 
 PyObject* VRPyTransform::setGravity(VRPyTransform* self, PyObject *args) {
     if (!self->valid()) return NULL;
-    OSG::Vec3f i = parseVec3f(args);
+    OSG::Vec3d i = parseVec3d(args);
     self->objPtr->getPhysics()->setGravity(i);
     Py_RETURN_TRUE;
 }
@@ -597,7 +597,7 @@ PyObject* VRPyTransform::getConstraintAngleWith(VRPyTransform* self, PyObject *a
     VRPyTransform *t;
     int rotationOrPosition = 0;
     if (! PyArg_ParseTuple(args, "Oi",&t, &rotationOrPosition)) return NULL;
-    OSG::Vec3f a = OSG::Vec3f(0.0,0.0,0.0);
+    OSG::Vec3d a = OSG::Vec3d(0.0,0.0,0.0);
     //cout << (self->objPtr->getPhysics()->getConstraintAngle(t->obj->getPhysics(),rotationOrPosition));
     if(rotationOrPosition == 0) {
         a[0] = (self->objPtr->getPhysics()->getConstraintAngle(t->objPtr->getPhysics(),0));

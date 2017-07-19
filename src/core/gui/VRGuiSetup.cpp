@@ -131,7 +131,7 @@ void VRGuiSetup::updateObjectData() {
 
         VRView* view = (VRView*)selected_object;
 
-        Vec4f p = view->getPosition();
+        Vec4d p = view->getPosition();
         setTextEntry("entry52", toString(p[0]).c_str());
         setTextEntry("entry53", toString(p[2]).c_str());
         setTextEntry("entry56", toString(p[1]).c_str());
@@ -145,7 +145,7 @@ void VRGuiSetup::updateObjectData() {
         setTextEntry("entry12", toString(view->getEyeSeparation()).c_str());
         setCombobox("combobox18", getListStorePos("user_list", view->getUser()->getName()));
 
-        Vec3f p3 = view->getProjectionUser();
+        Vec3d p3 = view->getProjectionUser();
         if (view->getUser()) p3 = view->getUser()->getFrom();
         userEntry.set(p3);
         centerEntry.set(view->getProjectionCenter());
@@ -154,7 +154,7 @@ void VRGuiSetup::updateObjectData() {
         sizeEntry.set(view->getProjectionSize());
         shearEntry.set(view->getProjectionShear());
         warpEntry.set(view->getProjectionWarp());
-        vsizeEntry.set(Vec2f(view->getSize()));
+        vsizeEntry.set(Vec2d(view->getSize()));
     }
 
     if (selected_type == "vrpn_device") {
@@ -208,7 +208,7 @@ void VRGuiSetup::updateObjectData() {
             setTextEntry("entry39", toString(setup->getARTPort()));
             setCheckButton("checkbutton24", setup->getARTActive());
 
-            Vec3f o = setup->getARTOffset();
+            Vec3d o = setup->getARTOffset();
             setTextEntry("entry48", toString(o[0]));
             setTextEntry("entry62", toString(o[1]));
             setTextEntry("entry63", toString(o[2]));
@@ -466,8 +466,8 @@ void VRGuiSetup::on_menu_add_viewport() {
 void VRGuiSetup::on_menu_add_vrpn_tracker() {
     auto setup = current_setup.lock();
     if (!setup) return;
-    setup->addVRPNTracker(0, "Tracker0@localhost", Vec3f(0,0,0), 1);
-    //setup->addVRPNTracker(0, "LeapTracker@tcp://141.3.151.136", Vec3f(0,0,0), 1);
+    setup->addVRPNTracker(0, "Tracker0@localhost", Vec3d(0,0,0), 1);
+    //setup->addVRPNTracker(0, "LeapTracker@tcp://141.3.151.136", Vec3d(0,0,0), 1);
 
     updateSetup();
     setToolButtonSensitivity("toolbutton12", true);
@@ -638,7 +638,7 @@ void VRGuiSetup::on_pos_edit() {
     string x1 = getTextEntry("entry53");
     string y0 = getTextEntry("entry56");
     string y1 = getTextEntry("entry57");
-    Vec4f pos = toVec4f(x0 + " " + y0 + " " + x1 + " " + y1);
+    Vec4d pos = toVec4d(x0 + " " + y0 + " " + x1 + " " + y1);
 
     VRView* view = (VRView*)selected_object;
     view->setPosition(pos);
@@ -681,7 +681,7 @@ void VRGuiSetup::on_change_view_user() {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
-void VRGuiSetup::on_view_size_edit(Vec2f v) {
+void VRGuiSetup::on_view_size_edit(Vec2d v) {
     if (guard) return;
     if (selected_type != "view") return;
 
@@ -690,7 +690,7 @@ void VRGuiSetup::on_view_size_edit(Vec2f v) {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
-void VRGuiSetup::on_proj_user_edit(Vec3f v) {
+void VRGuiSetup::on_proj_user_edit(Vec3d v) {
     if (guard) return;
     if (selected_type != "view") return;
 
@@ -700,7 +700,7 @@ void VRGuiSetup::on_proj_user_edit(Vec3f v) {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
-void VRGuiSetup::on_proj_center_edit(Vec3f v) {
+void VRGuiSetup::on_proj_center_edit(Vec3d v) {
     if (guard) return;
     if (selected_type != "view") return;
 
@@ -709,7 +709,7 @@ void VRGuiSetup::on_proj_center_edit(Vec3f v) {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
-void VRGuiSetup::on_proj_normal_edit(Vec3f v) {
+void VRGuiSetup::on_proj_normal_edit(Vec3d v) {
     if (guard) return;
     if (selected_type != "view") return;
 
@@ -718,7 +718,7 @@ void VRGuiSetup::on_proj_normal_edit(Vec3f v) {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
-void VRGuiSetup::on_proj_up_edit(Vec3f v) {
+void VRGuiSetup::on_proj_up_edit(Vec3d v) {
     if (guard) return;
     if (selected_type != "view") return;
 
@@ -727,7 +727,7 @@ void VRGuiSetup::on_proj_up_edit(Vec3f v) {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
-void VRGuiSetup::on_proj_size_edit(Vec2f v) {
+void VRGuiSetup::on_proj_size_edit(Vec2d v) {
     if (guard) return;
     if (selected_type != "view") return;
 
@@ -736,7 +736,7 @@ void VRGuiSetup::on_proj_size_edit(Vec2f v) {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
-void VRGuiSetup::on_proj_shear_edit(Vec2f v) {
+void VRGuiSetup::on_proj_shear_edit(Vec2d v) {
     if (guard) return;
     if (selected_type != "view") return;
 
@@ -745,7 +745,7 @@ void VRGuiSetup::on_proj_shear_edit(Vec2f v) {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
-void VRGuiSetup::on_proj_warp_edit(Vec2f v) {
+void VRGuiSetup::on_proj_warp_edit(Vec2d v) {
     if (guard) return;
     if (selected_type != "view") return;
 
@@ -754,7 +754,7 @@ void VRGuiSetup::on_proj_warp_edit(Vec2f v) {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
-void VRGuiSetup::on_vrpn_trans_axis_edit(Vec3f v) {
+void VRGuiSetup::on_vrpn_trans_axis_edit(Vec3d v) {
     if (guard) return;
 
     if (selected_type != "vrpn_tracker") return;
@@ -764,7 +764,7 @@ void VRGuiSetup::on_vrpn_trans_axis_edit(Vec3f v) {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
-void VRGuiSetup::on_vrpn_rot_axis_edit(Vec3f v) {
+void VRGuiSetup::on_vrpn_rot_axis_edit(Vec3d v) {
     if (guard) return;
 
     if (selected_type != "vrpn_tracker") return;
@@ -810,7 +810,7 @@ void VRGuiSetup::on_art_edit_offset() {
     float ox = toFloat(getTextEntry("entry48"));
     float oy = toFloat(getTextEntry("entry62"));
     float oz = toFloat(getTextEntry("entry63"));
-    setup->setARTOffset(Vec3f(ox,oy,oz));
+    setup->setARTOffset(Vec3d(ox,oy,oz));
     setToolButtonSensitivity("toolbutton12", true);
 }
 

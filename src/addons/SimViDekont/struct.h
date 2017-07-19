@@ -28,7 +28,7 @@ OSG_BEGIN_NAMESPACE;
             vector<vec>* norm;
             vector<float>* stress;
             vector<float>* strain;
-            vector<Vec2f>* texs;
+            vector<Vec2d>* texs;
 
             VRGeometryPtr geo;
 
@@ -38,7 +38,7 @@ OSG_BEGIN_NAMESPACE;
                         norm(new vector<vec>(N)),
                         stress(new vector<float>(N)),
                         strain(new vector<float>(N)),
-                        texs(new vector<Vec2f>(N))
+                        texs(new vector<Vec2d>(N))
                         {}
 
             frame() : pos(0), ind(0), norm(0), stress(0), texs(0) {}

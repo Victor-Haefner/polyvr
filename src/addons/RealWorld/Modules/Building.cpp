@@ -7,11 +7,11 @@ Building::Building(string id) {
     this->id = id;
 }
 
-vector<Vec2f*> Building::getSides() {
-    vector<Vec2f*> result;
+vector<Vec2d*> Building::getSides() {
+    vector<Vec2d*> result;
 
     for (unsigned int i=0; i<this->positions.size(); i++) {
-        Vec2f* side = new Vec2f[2];
+        Vec2d* side = new Vec2d[2];
         side[0] = this->positions[i];
         side[1] = this->positions[(i+1) % this->positions.size()];
         result.push_back(side);
@@ -20,24 +20,24 @@ vector<Vec2f*> Building::getSides() {
     return result;
 }
 
-vector<Vec2f> Building::getCorners(){
+vector<Vec2d> Building::getCorners(){
     return positions;
 }
 
 bool Building::isClockwise() {
     if (this->positions.size() < 2) return true;
 
-    Vec2f posA = this->positions[0];
-    Vec2f posB = this->positions[1];
-    Vec2f posAB = posA + ((posB - posA)*0.5f);
-    Vec2f dirAB = (posB - posA);
+    Vec2d posA = this->positions[0];
+    Vec2d posB = this->positions[1];
+    Vec2d posAB = posA + ((posB - posA)*0.5f);
+    Vec2d dirAB = (posB - posA);
     dirAB.normalize();
-    Vec2f dirOrtho = Vec2f(-dirAB.getValues()[1], dirAB.getValues()[0]);
+    Vec2d dirOrtho = Vec2d(-dirAB.getValues()[1], dirAB.getValues()[0]);
 
-    vector<Vec2f*> sides = this->getSides();
+    vector<Vec2d*> sides = this->getSides();
     int intersectionCount = 0;
     for (unsigned int i=1; i<sides.size(); i++) {
-        Vec2f* side = sides[i];
+        Vec2d* side = sides[i];
 
         pair<bool, float> intersect = Vec2Helper::lineWithLineSegmentIntersection(posAB, dirOrtho, side[0], side[1]);
         if (intersect.first) {
@@ -77,7 +77,7 @@ bool Building::sortVerticesX(Vec2fWithAdjIdx* vai1, Vec2fWithAdjIdx* vai2) {
 }
 
 // checks if points are on same side of a line
-bool Building::pointsOnSameSide(Vec2f p1, Vec2f p2, Vec2f l1, Vec2f l2) {
+bool Building::pointsOnSameSide(Vec2d p1, Vec2d p2, Vec2d l1, Vec2d l2) {
     return ((
             ((p1.getValues()[0] - l1.getValues()[0]) * (l2.getValues()[1] - l1.getValues()[1]) - (l2.getValues()[0] - l1.getValues()[0]) * (p1.getValues()[1] - l1.getValues()[1])) *
             ((p2.getValues()[0] - l1.getValues()[0]) * (l2.getValues()[1] - l1.getValues()[1]) - (l2.getValues()[0] - l1.getValues()[0]) * (p2.getValues()[1] - l1.getValues()[1])))
@@ -85,7 +85,7 @@ bool Building::pointsOnSameSide(Vec2f p1, Vec2f p2, Vec2f l1, Vec2f l2) {
 }
 
 // checks if point is inside of a triangle
-bool Building::pointInsideTriangle(Vec2f p, Vec2f a, Vec2f b, Vec2f c) {
+bool Building::pointInsideTriangle(Vec2d p, Vec2d a, Vec2d b, Vec2d c) {
     return pointsOnSameSide(p, a, b, c) && pointsOnSameSide(p, b, a, c) && pointsOnSameSide(p, c, a, b);
 }
 
@@ -102,15 +102,15 @@ void Building::createTriangles(BuildingStructure* bs, vector<Vec2fWithAdjIdx*>* 
 
     if (v->adjLeft == v->adjRight) return;
 
-    Vec2f a = v->pos;
-    Vec2f b = v->adjLeft->pos;
-    Vec2f c = v->adjRight->pos;
+    Vec2d a = v->pos;
+    Vec2d b = v->adjLeft->pos;
+    Vec2d c = v->adjRight->pos;
 
     for (unsigned int i = vertices->size()-1; i >= 0; i--) {
         Vec2fWithAdjIdx* vp = vertices->at(i);
         if (vp == v->adjLeft || vp == v->adjRight) continue;
 
-        Vec2f p = vp->pos;
+        Vec2d p = vp->pos;
 
         if (pointInsideTriangle(p, a, b, c)) {
             Vec2fWithAdjIdx* v1 = copyVai(v);

@@ -39,8 +39,8 @@ struct Geo {
     GeoIntegralPropertyRefPtr inds_n = 0;
     VRGeometryPtr geo = 0;
 
-    Vec3f vmin, vmax;
-    float r = 0;
+    Vec3d vmin, vmax;
+    double r = 0;
     bool vmm_changed = false;
 
     //void init(vector<VRGeometryPtr>& geos, VRMaterialPtr mat) {
@@ -58,8 +58,8 @@ struct Geo {
 
         geos.push_back(*this);
 
-        vmin = Vec3f(1e9, 1e9, 1e9);
-        vmax = Vec3f(-1e9, -1e9, -1e9);
+        vmin = Vec3d(1e9, 1e9, 1e9);
+        vmax = Vec3d(-1e9, -1e9, -1e9);
 
         Np = Nn = 0;
         r = 0;
@@ -73,9 +73,9 @@ struct Geo {
         geo->getMesh()->geo->setIndex(inds_n, Geometry::NormalsIndex);
     }
 
-    bool inBB(Pnt3f& v) {
+    bool inBB(Pnt3d& v) {
         if (vmm_changed) {
-            Vec3f d = (vmax - vmin);
+            Vec3d d = (vmax - vmin);
             for (int i=0; i<3; i++) r = max(r, d[i]);
         }
 
@@ -83,7 +83,7 @@ struct Geo {
         return true;
     }
 
-    void updateBB(Pnt3f& v) {
+    void updateBB(Pnt3d& v) {
         for (int i=0; i<3; i++) {
             vmin[i] = min(vmin[i], v[i]);
             vmax[i] = max(vmax[i], v[i]);
@@ -121,18 +121,18 @@ bool VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res
     states[5] = "colorIndex "; // x +1
     states[6] = "normalIndex "; // x +1
 
-    Vec3f color;
-    Vec3f last_col(-1,-1,-1);
+    Vec3d color;
+    Vec3d last_col(-1,-1,-1);
 
     Geo geo;
 
-    Pnt3f v;
-    Vec3f n;
+    Pnt3d v;
+    Vec3d n;
     int i;
 
     //vector<VRGeometryPtr> geos;
     vector<Geo> geos;
-    map<Vec3f, VRMaterialPtr> mats;
+    map<Vec3d, VRMaterialPtr> mats;
     bool new_obj = true;
     bool new_color = true;
     int li = 0;
@@ -150,10 +150,10 @@ bool VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res
                     case 0: break;
                     case 1:
                         new_obj = true;
-                        if (line.size() > 12) color = toVec3f( line.substr(12) );
+                        if (line.size() > 12) color = toVec3d( line.substr(12) );
                         if (mats.count(color) == 0) {
                             mats[color] = VRMaterial::create("fmat");
-                            mats[color]->setDiffuse(color);
+                            mats[color]->setDiffuse(Vec3f(color));
                         }
 
                         if (color != last_col) {
@@ -213,7 +213,7 @@ bool VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res
     res->setPersistency(0);
 
     for (auto g : geos) {
-        //Vec3f d = g.vmax - g.vmin;
+        //Vec3d d = g.vmax - g.vmin;
         //if (d.length() < 0.1) continue; // skip very small objects
 
         if (g.inds_n->size() != g.inds_p->size()) { // not happening
@@ -249,7 +249,7 @@ class VRLODSpace : public VRObject {
             VRLodPtr l = VRLod::create("lod_space");
             l->addChild( VRObject::create("lod_entry") );
             l->addDistance(max(15*p[3]/scale, 1.0f));
-            l->setCenter( Vec3f(p[0], p[1], p[2])/scale );
+            l->setCenter( Vec3d(p[0], p[1], p[2])/scale );
             addChild(l);
             lod_spaces[p] = l;
             return l;
@@ -264,7 +264,7 @@ class VRLODSpace : public VRObject {
 
         void add(VRObjectPtr g) {
             auto bb = g->getBoundingBox();
-            Vec3f c = bb->center()*scale;
+            Vec3d c = bb->center()*scale;
             Vec4i p; for(int i=0; i<3; i++) p[i] = round(c[i]);
             p[3] = ceil(bb->radius()*scale);
             getSpace(p)->getChild(0)->addChild(g);
@@ -278,7 +278,7 @@ class VRLODSpace : public VRObject {
                 // testing
                 /*VRGeometryPtr obj = VRGeometry::create("bla");
                 Vec4i p = l.first;
-                Vec3f c = Vec3f(p[0], p[1], p[2]);
+                Vec3d c = Vec3d(p[0], p[1], p[2]);
                 obj->setFrom(c);
                 obj->setPrimitive("Box", "0.1 0.1 0.1 1 1 1");
                 l.second->addChild(obj);*/
@@ -293,7 +293,7 @@ VRObjectPtr VRFactory::setupLod(vector<string> paths) {
         loadVRML(p,0,res);
         objects.push_back( res );
     }
-    Vec3f p;
+    Vec3d p;
 
     commitChanges();
     cout << "setupLod - changes commited\n";

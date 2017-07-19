@@ -13,7 +13,7 @@
 
 using namespace OSG;
 
-MapManager::MapManager(Vec2f position, MapCoordinator* mapCoordinator, World* world, VRObjectPtr root) {
+MapManager::MapManager(Vec2d position, MapCoordinator* mapCoordinator, World* world, VRObjectPtr root) {
     this->position = position;
     this->mapCoordinator = mapCoordinator;
     this->world = world;
@@ -40,9 +40,9 @@ void MapManager::addModule(BaseModule* mod) {
     root->addChild(mod->getRoot());
 }
 
-void MapManager::updatePosition(Vec2f pos) {
+void MapManager::updatePosition(Vec2d pos) {
     position = pos;
-    Vec2f bboxPosition = mapCoordinator->getRealBboxPosition(pos);
+    Vec2d bboxPosition = mapCoordinator->getRealBboxPosition(pos);
     grid->set(bboxPosition);
 
     // unload/load boxes as needed

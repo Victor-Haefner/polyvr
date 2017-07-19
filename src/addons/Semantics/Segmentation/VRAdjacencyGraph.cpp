@@ -74,8 +74,8 @@ void VRAdjacencyGraph::compCurvatures(int range) {
     int N = pos->size();
 
     /*auto curvMax = [&](int i, int range) {
-		Vec3f n = norms->getValue<Vec3f>(i);
-		Vec3f vi = pos->getValue<Vec3f>(i);
+		Vec3d n = norms->getValue<Vec3f>(i);
+		Vec3d vi = pos->getValue<Pnt3f>(i);
 		float K = 0;
 		float Kmax = 0;
 		auto Ne = getNeighbors(i,range);
@@ -83,7 +83,7 @@ void VRAdjacencyGraph::compCurvatures(int range) {
 
 		for (int j : Ne) {
 			if (j >= N) continue;
-			Vec3f d = pos->getValue<Vec3f>(j) - vi;
+			Vec3d d = pos->getValue<Pnt3f>(j) - vi;
 			float k = 2*n.dot(d)/d.squareLength();
 			if (abs(k) > Kmax) {
                 K = k;
@@ -95,15 +95,15 @@ void VRAdjacencyGraph::compCurvatures(int range) {
     };*/
 
     auto curvAvg = [&](int i, int range) {
-		Vec3f n = norms->getValue<Vec3f>(i);
-		Vec3f vi = pos->getValue<Vec3f>(i);
+		Vec3d n = Vec3d(norms->getValue<Vec3f>(i));
+		Pnt3f vi = pos->getValue<Pnt3f>(i);
 		float K = 0;
 		auto Ne = getNeighbors(i,range);
 		if (Ne.size() == 0) return K;
 
 		for (int j : Ne) {
 			if (j >= N) continue;
-			Vec3f d = pos->getValue<Vec3f>(j) - vi;
+			Vec3d d = Vec3d(pos->getValue<Pnt3f>(j) - vi);
 			K += 2*n.dot(d)/d.length();
 		}
 

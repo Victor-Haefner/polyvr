@@ -38,7 +38,7 @@ VRLight::VRLight(string name) : VRObject(name) {
     s_light->setSpotExponent(3.f);
 
     setCore(OSGCore::create(p_light), "Light");
-    attenuation = Vec3f(p_light->getConstantAttenuation(), p_light->getLinearAttenuation(), p_light->getQuadraticAttenuation());
+    attenuation = Vec3d(p_light->getConstantAttenuation(), p_light->getLinearAttenuation(), p_light->getQuadraticAttenuation());
 
     setDiffuse(Color4f(1,1,1,1));
     setAmbient(Color4f(.3,.3,.3,1));
@@ -223,7 +223,7 @@ void VRLight::setOn(bool b) {
 
 bool VRLight::isOn() { return on; }
 
-void VRLight::setAttenuation(Vec3f a) {
+void VRLight::setAttenuation(Vec3d a) {
     attenuation = a;
     dynamic_pointer_cast<Light>(d_light->core)->setConstantAttenuation(a[0]);
     dynamic_pointer_cast<Light>(d_light->core)->setLinearAttenuation(a[1]);
@@ -232,7 +232,7 @@ void VRLight::setAttenuation(Vec3f a) {
     dynamic_pointer_cast<SpotLight>(s_light->core)->setAttenuation(a[0], a[1], a[2]);
 }
 
-Vec3f VRLight::getAttenuation() { return attenuation; }
+Vec3d VRLight::getAttenuation() { return attenuation; }
 
 void VRLight::setShadowMapRes(int t) {
     shadowMapRes = t;

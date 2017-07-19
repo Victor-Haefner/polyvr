@@ -2,6 +2,7 @@
 #define path_H_INCLUDED
 
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGColor.h>
 #include "core/objects/VRObjectFwd.h"
 #include "pose.h"
 #include "core/utils/VRStorage.h"
@@ -12,23 +13,23 @@ using namespace std;
 class path : public VRStorage {
     private:
         vector<pose> points;
-        vector<Vec3f> point_colors;
+        vector<Color3f> point_colors;
 
         int degree = 3;
         int direction = 1;
         int iterations = 80;
         bool closed = false;
 
-        vector<Vec3f> positions;
-        vector<Vec3f> directions;
-        vector<Vec3f> up_vectors;
-        vector<Vec3f> colors;
+        vector<Vec3d> positions;
+        vector<Vec3d> directions;
+        vector<Vec3d> up_vectors;
+        vector<Vec3d> colors;
 
-        Vec3f interp(vector<Vec3f>& vec, float t, int i = 0, int j = 0);
-        Vec3f projectInPlane(Vec3f v, Vec3f n, bool keep_length);
-        void cubicBezier(Vec3f* container, int N, Vec3f p0, Vec3f p1, Vec3f n0, Vec3f n1);
-        void quadraticBezier(Vec3f* container, int N, Vec3f p0, Vec3f p1, Vec3f n);
-        void linearBezier(Vec3f* container, int N, Vec3f p0, Vec3f p1);
+        Vec3d interp(vector<Vec3d>& vec, float t, int i = 0, int j = 0);
+        Vec3d projectInPlane(Vec3d v, Vec3d n, bool keep_length);
+        void cubicBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1, Vec3d n0, Vec3d n1);
+        void quadraticBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1, Vec3d n);
+        void linearBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1);
 
     public:
         path(int degree = 3);
@@ -36,29 +37,29 @@ class path : public VRStorage {
 
         static shared_ptr<path> create();
 
-        int addPoint( const pose& p, Vec3f c = Vec3f() );
-        void setPoint(int i, const pose& p, Vec3f c = Vec3f() );
+        int addPoint( const pose& p, Color3f c = Color3f() );
+        void setPoint(int i, const pose& p, Color3f c = Color3f() );
         pose& getPoint(int i);
-        Vec3f getPointColor(int i);
+        Color3f getPointColor(int i);
         vector<pose> getPoints();
 
         void invert();
         void close();
         bool isClosed();
         void compute(int N);
-        vector<Vec3f> getPositions();
-        vector<Vec3f> getDirections();
-        vector<Vec3f> getUpvectors();
-        vector<Vec3f> getColors();
+        vector<Vec3d> getPositions();
+        vector<Vec3d> getDirections();
+        vector<Vec3d> getUpvectors();
+        vector<Vec3d> getColors();
         vector<pose> getPoses();
-        Vec3f getPosition(float t, int i = 0, int j = 0);
-        void getOrientation(float t, Vec3f& dir, Vec3f& up, int i = 0, int j = 0);
-        Vec3f getColor(float t, int i = 0, int j = 0);
+        Vec3d getPosition(float t, int i = 0, int j = 0);
+        void getOrientation(float t, Vec3d& dir, Vec3d& up, int i = 0, int j = 0);
+        Color3f getColor(float t, int i = 0, int j = 0);
         pose getPose(float t, int i = 0, int j = 0);
 
-        float getClosestPoint(Vec3f p); // return t parameter on path
-        float getDistance(Vec3f p);
-        vector<float> computeInflectionPoints(int i, int j);
+        float getClosestPoint(Vec3d p); // return t parameter on path
+        float getDistance(Vec3d p);
+        vector<double> computeInflectionPoints(int i, int j);
 
         bool isStraight(int i = 0, int j = 0);
         bool isCurve(int i = 0, int j = 0);

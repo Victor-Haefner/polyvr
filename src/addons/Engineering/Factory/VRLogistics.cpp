@@ -37,9 +37,9 @@ void FObject::setMetaData(string s) {
         metaData = OSG::VRSprite::create("meta");
         metaData->setMaterial(VRMaterial::create("metasprite"));
         metaData->switchParent(transform);
-        metaData->setFrom(Vec3f(0,1,0));
-        metaData->setDir(Vec3f(0,0,-1));
-        metaData->setUp(Vec3f(0,1,0));
+        metaData->setFrom(Vec3d(0,1,0));
+        metaData->setDir(Vec3d(0,0,-1));
+        metaData->setUp(Vec3d(0,1,0));
     }
 
     metaData->setLabel(s);
@@ -62,8 +62,8 @@ bool FObject::move(OSG::pathPtr p, float dx) {
     t += dx;
     if (t >= 1) { t = 1; done = true; }
 
-    Matrix m;
-    Vec3f dir, up, pos;
+    Matrix4d m;
+    Vec3d dir, up, pos;
     pos = p->getPosition(t);
     p->getOrientation(t, dir, up);
 
@@ -88,7 +88,7 @@ void FNode::set(shared_ptr<FObject> o) {
     if (o->getTransformation() == 0) return;
 
     auto t = o->getTransformation();
-    Matrix wm;
+    Matrix4d wm;
     wm = t->getWorldMatrix();
     t->switchParent(getTransform());
     wm.setTranslate(getTransform()->getWorldPosition());
@@ -132,12 +132,12 @@ shared_ptr<FNode> FNode::next() { if (out.size() > 0) return out.begin()->second
 void FNode::setTransform(OSG::VRTransformPtr t) { transform = t; }
 VRTransformPtr FNode::getTransform() { return transform; }
 
-Vec3f FNode::getTangent() {
+Vec3d FNode::getTangent() {
     int Nout = out.size();
     int Nin = in.size();
-    if (Nout == 0 && Nin == 0) return Vec3f(0,0,1);
+    if (Nout == 0 && Nin == 0) return Vec3d(0,0,1);
 
-    Vec3f t;
+    Vec3d t;
     //for (auto o : out) t += (o.second->transform->getFrom() - transform->getFrom());
     for (auto o : out) t += (o.second->transform->getWorldPosition() - transform->getWorldPosition());
     t.normalize();
@@ -198,7 +198,7 @@ void FContainer::add(shared_ptr<FProduct> p) {
     products.push_back(p);
     setMetaData("Nb: " + toString(products.size()));
 
-    Matrix wm;
+    Matrix4d wm;
     wm = t->getWorldMatrix();
     t->switchParent(getTransformation());
     wm.setTranslate(getTransformation()->getWorldPosition());
@@ -375,7 +375,7 @@ vector<shared_ptr<FNode>> FNetwork::getNodes() {
     return res;
 }
 
-VRStrokePtr FNetwork::stroke(Vec3f c, float k) {
+VRStrokePtr FNetwork::stroke(Color3f c, float k) {
     vector<pathPtr> paths;
     for (auto n1 : nodes) {
         auto p1 = n1.second->getTransform()->getWorldPose();
@@ -393,11 +393,11 @@ VRStrokePtr FNetwork::stroke(Vec3f c, float k) {
 
     VRStrokePtr stroke = VRStroke::create("FNetwork_stroke");
     stroke->setPaths(paths);
-    vector<Vec3f> profile;
-    profile.push_back(Vec3f(-k,0,0));
-    profile.push_back(Vec3f(-k*0.5,k,0));
-    profile.push_back(Vec3f(k*0.5,k,0));
-    profile.push_back(Vec3f(k,0,0));
+    vector<Vec3d> profile;
+    profile.push_back(Vec3d(-k,0,0));
+    profile.push_back(Vec3d(-k*0.5,k,0));
+    profile.push_back(Vec3d(k*0.5,k,0));
+    profile.push_back(Vec3d(k,0,0));
     stroke->strokeProfile(profile, true);
     return stroke;
 }

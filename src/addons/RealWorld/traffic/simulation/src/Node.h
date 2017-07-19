@@ -66,7 +66,7 @@ class Node {
         const ID id;
 
         /// The position of the node.
-        const Vec2f pos;
+        const Vec2d pos;
 
         /// The ids of the street connected to the node.
         vector<ID> streetIds;
@@ -101,7 +101,7 @@ class Node {
          @param position The position of the node.
          @param features (Optional) features at this position.
          */
-        Node(const RoadSystem *roadSystem, const ID id, const Vec2f position, const FEATURE features = NONE);
+        Node(const RoadSystem *roadSystem, const ID id, const Vec2d position, const FEATURE features = NONE);
 
         /**
          Returns the id of this node.
@@ -140,7 +140,7 @@ class Node {
          Gets the position of the node.
          @return The current position of the node.
          */
-        Vec2f getPosition() const;
+        Vec2d getPosition() const;
 
         /**
          Adds a street to this node.

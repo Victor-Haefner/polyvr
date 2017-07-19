@@ -64,10 +64,10 @@ class VRRecorder {
         void setMaxFrames(int maxf);
         bool frameLimitReached();
         void setTransform(VRTransformPtr t, int f);
-        Vec3f getFrom(int f);
-        Vec3f getDir(int f);
-        Vec3f getAt(int f);
-        Vec3f getUp(int f);
+        Vec3d getFrom(int f);
+        Vec3d getDir(int f);
+        Vec3d getAt(int f);
+        Vec3d getUp(int f);
         VRTexturePtr get(int f);
 
         void setRecording(bool b);

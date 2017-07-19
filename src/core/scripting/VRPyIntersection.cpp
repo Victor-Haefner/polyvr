@@ -19,5 +19,5 @@ PyObject* VRPyIntersection::getIntersected(VRPyIntersection* self) {
 
 PyObject* VRPyIntersection::getIntersection(VRPyIntersection* self) {
     if (!self->valid()) return NULL;
-    return toPyTuple( Vec3f(self->objPtr->point) );
+    return toPyTuple( Vec3d(self->objPtr->point) );
 }

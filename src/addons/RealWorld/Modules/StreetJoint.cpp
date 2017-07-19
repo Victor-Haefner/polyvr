@@ -2,7 +2,7 @@
 
 using namespace OSG;
 
-StreetJoint::StreetJoint(Vec2f position, string id) {
+StreetJoint::StreetJoint(Vec2d position, string id) {
     this->position = position;
     this->id = id;
 }

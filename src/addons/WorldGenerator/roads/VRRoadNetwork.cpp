@@ -111,7 +111,7 @@ VRRoadPtr VRRoadNetwork::addWay( string name, vector<VREntityPtr> paths, int rID
 	return road;
 }
 
-VRRoadPtr VRRoadNetwork::addRoad( string name, string type, VREntityPtr node1, VREntityPtr node2, Vec3f norm1, Vec3f norm2, int Nlanes ) {
+VRRoadPtr VRRoadNetwork::addRoad( string name, string type, VREntityPtr node1, VREntityPtr node2, Vec3d norm1, Vec3d norm2, int Nlanes ) {
     int rID = getRoadID();
     VREntityPtr pathEnt = addPath("Path", name, {node1, node2}, {norm1, norm2});
     VRRoadPtr road = addWay(name, {pathEnt}, rID, "Road");
@@ -151,15 +151,15 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
 		int direction = lane->get("direction") ? toInt( lane->get("direction")->value ) : 1;
 
         vector<VREntityPtr> nodes;
-        vector<Vec3f> norms;
+        vector<Vec3d> norms;
 
         for (auto entry : pathEnt->getAllEntities("nodes")) { // TODO: it might be more efficient to have this as outer loop
-            Vec3f p = entry->getEntity("node")->getVec3f("position");
-            Vec3f n = entry->getVec3f("direction");
-            Vec3f x = Vec3f(0,1,0).cross(n);
+            Vec3d p = entry->getEntity("node")->getVec3f("position");
+            Vec3d n = entry->getVec3f("direction");
+            Vec3d x = Vec3d(0,1,0).cross(n);
             x.normalize();
             float k = width*0.5 + widthSum ;
-            Vec3f pi = x*k + p;
+            Vec3d pi = x*k + p;
             VREntityPtr node = addNode(pi);
             nodes.push_back(node);
             norms.push_back(n*direction);
@@ -217,46 +217,46 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const pose& p) {
 
         VRTextureGenerator tg;
         tg.setSize(Vec3i(400,400,1), true);
-        tg.drawFill(Vec4f(0,0,1,1));
+        tg.drawFill(Color4f(0,0,1,1));
 
         for (int i=0; i<N; i++) {
             float a = dirs[i]*pi/180.0;
-            Vec3f dir(sin(a), -cos(a), 0);
+            Vec3d dir(sin(a), -cos(a), 0);
             Vec2f d02 = Vec2f(0.5,0.5); // rotation point
-            Vec3f d03 = Vec3f(0.5,0.5,0); // rotation point
+            Vec3d d03 = Vec3d(0.5,0.5,0); // rotation point
 
             auto apath = path::create();
-            apath->addPoint( pose(Vec3f(0.5,1.0,0), Vec3f(0,-1,0), Vec3f(0,0,1)) );
-            apath->addPoint( pose(Vec3f(0.5,0.8,0), Vec3f(0,-1,0), Vec3f(0,0,1)) );
-            apath->addPoint( pose(d03+dir*0.31, dir, Vec3f(0,0,1)) );
+            apath->addPoint( pose(Vec3d(0.5,1.0,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
+            apath->addPoint( pose(Vec3d(0.5,0.8,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
+            apath->addPoint( pose(d03+dir*0.31, dir, Vec3d(0,0,1)) );
             apath->compute(12);
-            tg.drawPath(apath, Vec4f(1,1,1,1), 0.1);
+            tg.drawPath(apath, Color4f(1,1,1,1), 0.1);
 
             auto poly = VRPolygon::create();
-            Matrix22<float> R = Matrix22<float>(cos(a), -sin(a), sin(a), cos(a));
+            Matrix22<float> R(cos(a), -sin(a), sin(a), cos(a));
             Vec2f A = Vec2f(0.35,0.2)-d02;
             Vec2f B = Vec2f(0.65,0.2)-d02;
             Vec2f C = Vec2f(0.5,0.0)-d02;
             A = R.mult(A); B = R.mult(B); C = R.mult(C);
-            poly->addPoint(d02+A);
-            poly->addPoint(d02+B);
-            poly->addPoint(d02+C);
-            tg.drawPolygon(poly, Vec4f(1,1,1,1));
+            poly->addPoint(Vec2d(d02+A));
+            poly->addPoint(Vec2d(d02+B));
+            poly->addPoint(Vec2d(d02+C));
+            tg.drawPolygon(poly, Color4f(1,1,1,1));
         }
 
         auto aMask = tg.compose(0);
         if (!arrowTexture) arrowTexture = VRTexture::create();
-        arrowTexture->merge(aMask, Vec3f(1,0,0));
+        arrowTexture->merge(aMask, Vec3d(1,0,0));
         asphaltArrow->setTexture(arrowTexture);
         asphaltArrow->setShaderParameter("NArrowTex", (int)arrowTemplates.size());
     }
 
     GeoVec4fPropertyRecPtr cols = GeoVec4fProperty::create();
-    Vec4f color = Vec4f((arrowTemplates[dirs]-1)*0.001, 0, 0);
+    Vec4d color = Vec4d((arrowTemplates[dirs]-1)*0.001, 0, 0);
     for (int i=0; i<4; i++) cols->addValue(color);
 
     VRGeoData gdata;
-    gdata.pushQuad(Vec3f(0,0.02,0), Vec3f(0,1,0), Vec3f(0,0,1), Vec2f(2,2), true);
+    gdata.pushQuad(Vec3d(0,0.02,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(2,2), true);
     auto geo = gdata.asGeometry("arrow");
     geo->setPose( pose::create(p) );
     geo->applyTransformation();
@@ -285,14 +285,14 @@ void VRRoadNetwork::computeIntersections() {
 }
 
 void VRRoadNetwork::computeTracksLanes(VREntityPtr way) {
-    auto getBulge = [&](vector<pose>& points, uint i, Vec3f& x) -> float {
+    auto getBulge = [&](vector<pose>& points, uint i, Vec3d& x) -> float {
         if (points.size() < 2) return 0;
         if (i == 0) return 0;
         if (i == points.size()-1) return 0;
 
-        Vec3f t1 = points[i-1].pos() - points[i].pos();
+        Vec3d t1 = points[i-1].pos() - points[i].pos();
         t1.normalize();
-        Vec3f t2 = points[i+1].pos() - points[i].pos();
+        Vec3d t2 = points[i+1].pos() - points[i].pos();
         t2.normalize();
 
         float b1 = -x.dot(t1);
@@ -305,14 +305,14 @@ void VRRoadNetwork::computeTracksLanes(VREntityPtr way) {
         for (auto pathEnt : lane->getAllEntities("path")) {
             auto path = toPath(pathEnt, 2);
             vector<VREntityPtr> nodes;
-            vector<Vec3f> normals;
+            vector<Vec3d> normals;
             auto points = path->getPoints();
             for (uint i=0; i < points.size(); i++) {
                 auto& point = points[i];
-                Vec3f p = point.pos();
-                Vec3f n = point.dir();
+                Vec3d p = point.pos();
+                Vec3d n = point.dir();
                 float nL = n.length();
-                Vec3f x = n.cross(Vec3f(0,1,0));
+                Vec3d x = n.cross(Vec3d(0,1,0));
                 x.normalize();
                 float bulge = getBulge(points, i, x);
                 p += x*bulge;
@@ -396,17 +396,17 @@ vector<VRPolygonPtr> VRRoadNetwork::computeGreenBelts() {
         VRPolygonPtr area = VRPolygon::create();
         for (auto pathEnt : belt->getAllEntities("path")) {
             float width = toFloat( belt->get("width")->value ) * 0.3;
-            vector<Vec3f> rightPoints;
+            vector<Vec3d> rightPoints;
             for (auto& point : toPath(pathEnt, 16)->getPoses()) {
-                Vec3f p = point.pos();
-                Vec3f n = point.dir();
-                Vec3f x = point.x();
-                Vec3f pL = p - x*width;
-                Vec3f pR = p + x*width;
-                area->addPoint( Vec2f(pL[0],pL[2]) );
+                Vec3d p = point.pos();
+                Vec3d n = point.dir();
+                Vec3d x = point.x();
+                Vec3d pL = p - x*width;
+                Vec3d pR = p + x*width;
+                area->addPoint( Vec2d(pL[0],pL[2]) );
                 rightPoints.push_back(pR);
             }
-            for (auto p = rightPoints.rbegin(); p != rightPoints.rend(); p++) area->addPoint( Vec2f((*p)[0],(*p)[2]) );
+            for (auto p = rightPoints.rbegin(); p != rightPoints.rend(); p++) area->addPoint( Vec2d((*p)[0],(*p)[2]) );
         }
 
         areas.push_back(area);

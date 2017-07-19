@@ -15,8 +15,8 @@ Octree::~Octree() {}
 
 OctreePtr Octree::create(float resolution, float size) { return OctreePtr( new Octree(resolution, size) ); }
 
-int Octree::getOctant(Vec3f p) {
-    Vec3f rp = p - center;
+int Octree::getOctant(Vec3d p) {
+    Vec3d rp = p - center;
 
     int o = 0;
     if (rp[0] < 0) o+=1;
@@ -25,15 +25,15 @@ int Octree::getOctant(Vec3f p) {
     return o;
 }
 
-Vec3f lvljumpCenter(float s2, Vec3f rp) {
-    Vec3f c(s2,s2,s2);
+Vec3d lvljumpCenter(float s2, Vec3d rp) {
+    Vec3d c(s2,s2,s2);
     if (rp[0] < 0) c[0]-=s2*2;
     if (rp[1] < 0) c[1]-=s2*2;
     if (rp[2] < 0) c[2]-=s2*2;
     return c;
 }
 
-bool Octree::inBox(Vec3f p, Vec3f c, float size) {
+bool Octree::inBox(Vec3d p, Vec3d c, float size) {
     if (abs(2*p[0] - 2*c[0]) > size) return false;
     if (abs(2*p[1] - 2*c[1]) > size) return false;
     if (abs(2*p[2] - 2*c[2]) > size) return false;
@@ -41,25 +41,25 @@ bool Octree::inBox(Vec3f p, Vec3f c, float size) {
 }
 
 void Octree::addBox(const Boundingbox& b, void* d, int targetLevel, bool checkPosition) {
-    const Vec3f min = b.min();
-    const Vec3f max = b.max();
+    const Vec3d min = b.min();
+    const Vec3d max = b.max();
     add(min, d, targetLevel, 0, checkPosition);
-    add(Vec3f(max[0],min[1],min[2]), d, targetLevel, 0, checkPosition);
-    add(Vec3f(max[0],min[1],max[2]), d, targetLevel, 0, checkPosition);
-    add(Vec3f(min[0],min[1],max[2]), d, targetLevel, 0, checkPosition);
+    add(Vec3d(max[0],min[1],min[2]), d, targetLevel, 0, checkPosition);
+    add(Vec3d(max[0],min[1],max[2]), d, targetLevel, 0, checkPosition);
+    add(Vec3d(min[0],min[1],max[2]), d, targetLevel, 0, checkPosition);
     add(max, d, targetLevel, 0, checkPosition);
-    add(Vec3f(max[0],max[1],min[2]), d, targetLevel, 0, checkPosition);
-    add(Vec3f(min[0],max[1],min[2]), d, targetLevel, 0, checkPosition);
-    add(Vec3f(min[0],max[1],max[2]), d, targetLevel, 0, checkPosition);
+    add(Vec3d(max[0],max[1],min[2]), d, targetLevel, 0, checkPosition);
+    add(Vec3d(min[0],max[1],min[2]), d, targetLevel, 0, checkPosition);
+    add(Vec3d(min[0],max[1],max[2]), d, targetLevel, 0, checkPosition);
 }
 
-Octree* Octree::add(Vec3f p, void* d, int targetLevel, int currentLevel, bool checkPosition) {
-    Vec3f rp = p - center;
+Octree* Octree::add(Vec3d p, void* d, int targetLevel, int currentLevel, bool checkPosition) {
+    Vec3d rp = p - center;
 
     if ( !inBox(p, center, size) && checkPosition ) { // not in node
         if (parent == 0) { // no parent, create it
             parent = new Octree(resolution, 2*size);
-            Vec3f c = center + lvljumpCenter(size*0.5, rp);
+            Vec3d c = center + lvljumpCenter(size*0.5, rp);
             parent->center = c;
             int o = parent->getOctant(center);
             parent->children[o] = this;
@@ -71,7 +71,7 @@ Octree* Octree::add(Vec3f p, void* d, int targetLevel, int currentLevel, bool ch
         int o = getOctant(p);
         if (children[o] == 0) {
             children[o] = new Octree(resolution, size*0.5);
-            Vec3f c = center + lvljumpCenter(size*0.25, rp);
+            Vec3d c = center + lvljumpCenter(size*0.25, rp);
             children[o]->center = c;
             children[o]->parent = this;
         }
@@ -83,7 +83,7 @@ Octree* Octree::add(Vec3f p, void* d, int targetLevel, int currentLevel, bool ch
     return this;
 }
 
-void Octree::set(Octree* node, Vec3f p, void* d) { node->data.clear(); node->points.clear(); node->data.push_back(d); node->points.push_back(p); }
+void Octree::set(Octree* node, Vec3d p, void* d) { node->data.clear(); node->points.clear(); node->data.push_back(d); node->points.push_back(p); }
 
 vector<Octree*> Octree::getAncestry() {
     vector<Octree*> res;
@@ -92,7 +92,7 @@ vector<Octree*> Octree::getAncestry() {
     return res;
 }
 
-Octree* Octree::get(Vec3f p) {
+Octree* Octree::get(Vec3d p) {
     if ( !inBox(p, center, size) ) {
         return parent == 0 ? 0 : parent->get(p);
     }
@@ -110,7 +110,7 @@ vector<Octree*> Octree::getChildren() {
     return vector<Octree*>(children, children+8);
 }
 
-vector<Octree*> Octree::getPathTo(Vec3f p) {
+vector<Octree*> Octree::getPathTo(Vec3d p) {
     vector<Octree*> res;
     auto o = get(p);
     if (!o) return res;
@@ -139,8 +139,8 @@ vector<Octree*> Octree::getSubtree() {
     return res;
 }
 
-Vec3f Octree::getCenter() { return center; }
-Vec3f Octree::getLocalCenter() { return parent ? center - parent->center : center; }
+Vec3d Octree::getCenter() { return center; }
+Vec3d Octree::getLocalCenter() { return parent ? center - parent->center : center; }
 
 void Octree::destroy(Octree* guard) {
     for (int i=0; i<8; i++) {
@@ -172,11 +172,11 @@ Octree* Octree::getParent() { return parent; }
 float Octree::getSize() { return size; }
 
 // sphere center, box center, sphere radius, box size
-bool sphere_box_intersect(Vec3f Ps, Vec3f Pb, float Rs, float Sb)  {
+bool sphere_box_intersect(Vec3d Ps, Vec3d Pb, float Rs, float Sb)  {
     float r2 = Rs * Rs;
-    Vec3f diag(Sb*0.5, Sb*0.5, Sb*0.5);
-    Vec3f Bmin = Pb - diag;
-    Vec3f Bmax = Pb + diag;
+    Vec3d diag(Sb*0.5, Sb*0.5, Sb*0.5);
+    Vec3d Bmin = Pb - diag;
+    Vec3d Bmax = Pb + diag;
     float dmin = 0;
     if( Ps[0] < Bmin[0] ) dmin += ( Ps[0] - Bmin[0] )*( Ps[0] - Bmin[0] );
     else if( Ps[0] > Bmax[0] ) dmin += ( Ps[0] - Bmax[0] )*( Ps[0] - Bmax[0] );
@@ -187,7 +187,7 @@ bool sphere_box_intersect(Vec3f Ps, Vec3f Pb, float Rs, float Sb)  {
     return dmin <= r2;
 }
 
-void Octree::findInSphere(Vec3f p, float r, vector<void*>& res) { // TODO: optimize!!
+void Octree::findInSphere(Vec3d p, float r, vector<void*>& res) { // TODO: optimize!!
     if (!sphere_box_intersect(p, center, r, size)) return;
 
     float r2 = r*r;
@@ -202,16 +202,16 @@ void Octree::findInSphere(Vec3f p, float r, vector<void*>& res) { // TODO: optim
 }
 
 // box min, box max, octree box center, octree box size
-bool box_box_intersect(Vec3f min, Vec3f max, Vec3f Bpos, float Sb)  {
-    Vec3f Bdiag(Sb, Sb, Sb);
-    Vec3f Bmin = Bpos - Bdiag*0.5;
-    Vec3f Bmax = Bpos + Bdiag*0.5;
+bool box_box_intersect(Vec3d min, Vec3d max, Vec3d Bpos, float Sb)  {
+    Vec3d Bdiag(Sb, Sb, Sb);
+    Vec3d Bmin = Bpos - Bdiag*0.5;
+    Vec3d Bmax = Bpos + Bdiag*0.5;
 
-    Vec3f Apos = (max + min)*0.5;
-    Vec3f Adiag = max-min;
+    Vec3d Apos = (max + min)*0.5;
+    Vec3d Adiag = max-min;
 
-    Vec3f diff = (Apos-Bpos)*2;
-    Vec3f ABdiag = Adiag+Bdiag;
+    Vec3d diff = (Apos-Bpos)*2;
+    Vec3d ABdiag = Adiag+Bdiag;
     return (abs(diff[0]) <= ABdiag[0]) && (abs(diff[1]) <= ABdiag[1]) && (abs(diff[2]) <= ABdiag[2]);
 }
 
@@ -227,7 +227,7 @@ void Octree::findInBox(const Boundingbox& b, vector<void*>& res) { // TODO: opti
     }
 }
 
-vector<void*> Octree::radiusSearch(Vec3f p, float r) {
+vector<void*> Octree::radiusSearch(Vec3d p, float r) {
     vector<void*> res;
     getRoot()->findInSphere(p, r, res);
     return res;
@@ -265,21 +265,21 @@ void Octree::print(int indent) {
 void Octree::test() {
     int Nv = 100000;
     float sMax = 4;
-    Vec3f p(1,2,3);
+    Vec3d p(1,2,3);
     float r = 0.1;
     resolution = 0.0001;
 
     clear();
     srand(time(0));
 
-    vector<Vec3f> Vec3fs;
+    vector<Vec3d> Vec3fs;
     vector<void*> data;
     for (int i=0; i<Nv; i++) { // create random Vec3fs
         float x = rand()*sMax/RAND_MAX;
         float y = rand()*sMax/RAND_MAX;
         float z = rand()*sMax/RAND_MAX;
         auto d = (void*)new int(i);
-        auto p = Vec3f(x,y,z);
+        auto p = Vec3d(x,y,z);
         Vec3fs.push_back(p);
         data.push_back(d);
         add(p,d);

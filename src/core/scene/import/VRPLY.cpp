@@ -58,9 +58,9 @@ void loadPly(string filename, VRTransformPtr res) {
 
     for (auto e : elements) {
         if (e.type == "vertex") {
-            Vec3f p, n;
+            Vec3d p, n;
             Vec3i c;
-            Vec2f t;
+            Vec2d t;
             bool doP = 0, doN = 0, doC = 0, doT = 0;
             for (int i=0; i<e.N; i++) {
                 progress.update(1);
@@ -85,7 +85,7 @@ void loadPly(string filename, VRTransformPtr res) {
 
                 if (doP) Pos->addValue(p);
                 if (doN) Norms->addValue(n);
-                if (doC) Cols->addValue(Vec3f(c[0]/255., c[1]/255., c[2]/255.));
+                if (doC) Cols->addValue(Vec3d(c[0]/255., c[1]/255., c[2]/255.));
                 if (doT) Tex->addValue(t);
             }
             continue;
@@ -176,14 +176,14 @@ void writePly(VRGeometryPtr geo, string path) {
 
 	auto writeVertices = [&]() {
 		string data;
-		Pnt3f p;
-		Vec3f n,c;
-		Vec2f t;
+		Pnt3d p;
+		Vec3d n,c;
+		Vec2d t;
         for (int i=0; i<Np; i++) {
-            p = pos->getValue<Pnt3f>(i);
-            if (Nn == Np) n = norms->getValue<Vec3f>(i);
-            if (Nc == Np) c = cols->getValue<Vec3f>(i);
-            if (Nt == Np) t = texc->getValue<Vec2f>(i);
+            p = Pnt3d(pos->getValue<Pnt3f>(i));
+            if (Nn == Np) n = Vec3d(norms->getValue<Vec3f>(i));
+            if (Nc == Np) c = Vec3d(cols->getValue<Vec3f>(i));
+            if (Nt == Np) t = Vec2d(texc->getValue<Vec2f>(i));
 
             data += toString(p);
             if (Nn == Np) data += " "+toString(n);

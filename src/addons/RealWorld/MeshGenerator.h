@@ -39,25 +39,25 @@ class MeshGenerator
             mat->setDiffuse(white);
 
             VRGeometryPtr geo = VRGeometry::create("featureMesh-"+feature->geom->way->id);
-            vector<Vec3f> pos;
-            vector<Vec3f> norms;
+            vector<Vec3d> pos;
+            vector<Vec3d> norms;
             vector<int> inds;
-            vector<Vec2f> texs;
+            vector<Vec2d> texs;
 
             for (int i=0;i<4;i++) {
-                norms.push_back(Vec3f(0,1,0));
+                norms.push_back(Vec3d(0,1,0));
                 inds.push_back(i);
             }
 
-            pos.push_back(Vec3f(0, 0, 0));
-            pos.push_back(Vec3f(0, 0, 1));
-            pos.push_back(Vec3f(1, 0, 1));
-            pos.push_back(Vec3f(1, 0, 0));
+            pos.push_back(Vec3d(0, 0, 0));
+            pos.push_back(Vec3d(0, 0, 1));
+            pos.push_back(Vec3d(1, 0, 1));
+            pos.push_back(Vec3d(1, 0, 0));
 
-            texs.push_back(Vec2f(0,0));
-            texs.push_back(Vec2f(0,1));
-            texs.push_back(Vec2f(1,1));
-            texs.push_back(Vec2f(1,0));
+            texs.push_back(Vec2d(0,0));
+            texs.push_back(Vec2d(0,1));
+            texs.push_back(Vec2d(1,1));
+            texs.push_back(Vec2d(1,0));
 
             geo->create(GL_QUADS, pos, norms, inds, texs);
             geo->setMaterial(mat);

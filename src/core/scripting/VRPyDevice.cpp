@@ -180,8 +180,8 @@ PyObject* VRPyDevice::getIntersected(VRPyDevice* self) {
 
 PyObject* VRPyDevice::getIntersection(VRPyDevice* self) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getIntersection, Object is invalid"); return NULL; }
-    OSG::Pnt3f v = self->objPtr->getLastIntersection().point;
-    return toPyTuple( OSG::Vec3f(v) );
+    OSG::Pnt3d v = self->objPtr->getLastIntersection().point;
+    return toPyTuple( OSG::Vec3d(v) );
 }
 
 PyObject* VRPyDevice::getIntersectionTriangle(VRPyDevice* self) {
@@ -192,13 +192,13 @@ PyObject* VRPyDevice::getIntersectionTriangle(VRPyDevice* self) {
 
 PyObject* VRPyDevice::getIntersectionNormal(VRPyDevice* self) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getIntersectionNormal, Object is invalid"); return NULL; }
-    OSG::Vec3f v = self->objPtr->getLastIntersection().normal;
+    OSG::Vec3d v = self->objPtr->getLastIntersection().normal;
     return toPyTuple(v);
 }
 
 PyObject* VRPyDevice::getIntersectionUV(VRPyDevice* self) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getIntersectionUV, Object is invalid"); return NULL; }
-    OSG::Vec2f v = self->objPtr->getLastIntersection().texel;
+    OSG::Vec2d v = self->objPtr->getLastIntersection().texel;
     return toPyTuple(v);
 }
 

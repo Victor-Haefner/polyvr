@@ -9,9 +9,9 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 struct JointPoints {
-    Vec2f left;
-    Vec2f right;
-    Vec2f leftExt;
+    Vec2d left;
+    Vec2d right;
+    Vec2d leftExt;
 };
 
 enum JointType {
@@ -26,7 +26,7 @@ class StreetSegment;
 class StreetJoint {
     public:
         JointType type;
-        Vec2f position;
+        Vec2d position;
         string id;
         vector<StreetSegment*> segments;
         string info;
@@ -36,7 +36,7 @@ class StreetJoint {
         vector<JointPoints*> jointPointCache_;
         bool calcSegPoints_ = false;
 
-        StreetJoint(Vec2f position, string id);
+        StreetJoint(Vec2d position, string id);
 
         void merge(StreetJoint* streetJoint);
 

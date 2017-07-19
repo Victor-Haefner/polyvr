@@ -23,7 +23,7 @@ void VRStroke::addPath(pathPtr p) { paths.push_back(p); }
 void VRStroke::setPaths(vector<pathPtr> p) { paths = p; }
 vector<pathPtr>& VRStroke::getPaths() { return paths; }
 
-void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool doColor, CAP l, CAP r) {
+void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool doColor, CAP l, CAP r) {
     mode = 0;
     this->profile = profile;
     this->closed = closed;
@@ -31,30 +31,30 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool doColor, C
     cap_beg = l;
     cap_end = r;
 
-    Vec3f pCenter;
+    Vec3d pCenter;
     for (auto p : profile) pCenter += p;
     pCenter *= 1.0/profile.size();
 
     VRGeoData data;
     bool doCaps = closed && profile.size() > 1;
-    Vec3f z = Vec3f(0,0,1);
+    Vec3d z = Vec3d(0,0,1);
 
     clearChildren();
     for (auto path : paths) {
-        vector<Vec3f> pnts = path->getPositions();
-        vector<Vec3f> directions = path->getDirections();
-        vector<Vec3f> up_vectors = path->getUpvectors();
-        vector<Vec3f> cols = path->getColors();
+        auto pnts = path->getPositions();
+        auto directions = path->getDirections();
+        auto up_vectors = path->getUpvectors();
+        auto cols = path->getColors();
 
-        Vec3f _p;
+        Vec3d _p;
         for (uint j=0; j<pnts.size(); j++) {
-            Vec3f p = pnts[j];
-            Vec3f n = directions[j];
-            Vec3f u = up_vectors[j];
-            Vec3f c = cols[j];
+            Vec3d p = pnts[j];
+            Vec3d n = directions[j];
+            Vec3d u = up_vectors[j];
+            Color3f c = Vec3f(cols[j]);
 
-            Matrix m;
-            MatrixLookAt(m, Vec3f(0,0,0), n, u);
+            Matrix4d m;
+            MatrixLookAt(m, Vec3d(0,0,0), n, u);
 
             bool begArrow1 = (j == 0) && (cap_beg == ARROW);
             bool begArrow2 = (j == 1) && (cap_beg == ARROW);
@@ -62,12 +62,12 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool doColor, C
             bool endArrow2 = (j == pnts.size()-1) && (cap_end == ARROW);
 
             // add new profile points and normals
-            for (Vec3f pos : profile) {
+            for (Vec3d pos : profile) {
                 if (endArrow1 || begArrow2) pos += (pos-pCenter)*2.5;
                 if (endArrow2 || begArrow1) pos = pCenter;
                 m.mult(pos, pos);
 
-                Vec3f norm = pos; norm.normalize();
+                Vec3d norm = pos; norm.normalize();
                 if (!doColor) data.pushVert(p+pos, norm);
                 else data.pushVert(p+pos, norm, c);
             }
@@ -97,33 +97,33 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool doColor, C
         for (uint i=0; i<paths.size(); i++) {
             if (paths[i]->isClosed()) continue;
 
-            vector<Vec3f> pnts = paths[i]->getPositions();
-            vector<Vec3f> directions = paths[i]->getDirections();
-            vector<Vec3f> up_vectors = paths[i]->getUpvectors();
-            vector<Vec3f> cols = paths[i]->getColors();
+            vector<Vec3d> pnts = paths[i]->getPositions();
+            vector<Vec3d> directions = paths[i]->getDirections();
+            vector<Vec3d> up_vectors = paths[i]->getUpvectors();
+            vector<Vec3d> cols = paths[i]->getColors();
 
             if (pnts.size() == 0) { cout << "VRStroke::strokeProfile path size 0!\n"; continue; }
 
-            Matrix m;
+            Matrix4d m;
 
              // first cap
-            Vec3f p = pnts[0];
-            Vec3f n = directions[0];
-            Vec3f u = up_vectors[0];
-            Vec3f c = cols[0];
-            MatrixLookAt(m, Vec3f(0,0,0), n, u);
-            Vec3f tmp; m.mult(pCenter, tmp);
+            Vec3d p = pnts[0];
+            Vec3d n = directions[0];
+            Vec3d u = up_vectors[0];
+            Color3f c = Vec3f(cols[0]);
+            MatrixLookAt(m, Vec3d(0,0,0), n, u);
+            Vec3d tmp; m.mult(pCenter, tmp);
 
             int Ni = data.size();
             if (!doColor) data.pushVert(p + tmp, -n);
-            else data.pushVert(p + tmp, -n, c);
+            else data.pushVert(p + tmp, -n, Vec3f(c));
 
             for (uint k=0; k<profile.size(); k++) {
-                Vec3f tmp = profile[k];
+                Vec3d tmp = profile[k];
                 m.mult(tmp, tmp);
 
                 if (!doColor) data.pushVert(p + tmp, -n);
-                else data.pushVert(p + tmp, -n, c);
+                else data.pushVert(p + tmp, -n, Vec3f(c));
             }
 
             for (uint k=1; k<=profile.size(); k++) {
@@ -138,15 +138,15 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool doColor, C
             p = pnts[N];
             n = directions[N];
             u = up_vectors[N];
-            c = cols[N];
-            MatrixLookAt(m, Vec3f(0,0,0), n, u);
+            c = Vec3f(cols[N]);
+            MatrixLookAt(m, Vec3d(0,0,0), n, u);
             m.mult(pCenter, tmp);
 
             if (!doColor) data.pushVert(p + tmp, n);
             else data.pushVert(p + tmp, n, c);
 
             for (uint k=0; k<profile.size(); k++) {
-                Vec3f tmp = profile[k];
+                Vec3d tmp = profile[k];
                 m.mult(tmp, tmp);
 
                 if (!doColor) data.pushVert(p + tmp, n);
@@ -172,9 +172,9 @@ void VRStroke::strokeStrew(VRGeometryPtr geo) {
 
     clearChildren();
     for (uint i=0; i<paths.size(); i++) {
-        vector<Vec3f> pnts = paths[i]->getPositions();
+        vector<Vec3d> pnts = paths[i]->getPositions();
         for (uint j=0; j<pnts.size(); j++) {
-            Vec3f p = pnts[j];
+            Vec3d p = pnts[j];
             VRGeometryPtr g = static_pointer_cast<VRGeometry>(geo->duplicate());
             addChild(g);
             g->translate(p);

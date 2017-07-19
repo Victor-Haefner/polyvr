@@ -11,7 +11,7 @@ class VRWaypoint : public VRGeometry {
     private:
         posePtr Pose;
         posePtr Floor;
-        Vec3f at;
+        Vec3d at;
         float size;
 
         void setup();

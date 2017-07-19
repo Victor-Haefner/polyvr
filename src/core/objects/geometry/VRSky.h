@@ -37,7 +37,7 @@ class VRSky : public VRGeometry {
 
         // clouds
         uint textureSize;
-        Vec2f cloudVel;
+        Vec2d cloudVel;
         Vec2f cloudOffset;
         float cloudDensity;
         float cloudScale;

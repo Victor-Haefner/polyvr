@@ -27,7 +27,7 @@ VRPolygon fromCGALPolygon(CGALPolygon cp) {
         CGALPoint k = *itr;
     //for (int i=0; i<cp.size(); i++) {
         //CGALPoint k = cp[i];
-        p.addPoint( Vec2f(k[0], k[1]) );
+        p.addPoint( Vec2d(k[0], k[1]) );
     }
     return p;
 }
@@ -49,27 +49,27 @@ bool VRPolygon::isCCW() {
 void VRPolygon::runTest() {
     VRPolygon poly;
 
-    /*poly.addPoint(Vec2f(-1,0));
-    poly.addPoint(Vec2f(0,1));
-    poly.addPoint(Vec2f(1,0));
-    poly.addPoint(Vec2f(0.1,-0.5));
-    poly.addPoint(Vec2f(0,-1));*/
+    /*poly.addPoint(Vec2d(-1,0));
+    poly.addPoint(Vec2d(0,1));
+    poly.addPoint(Vec2d(1,0));
+    poly.addPoint(Vec2d(0.1,-0.5));
+    poly.addPoint(Vec2d(0,-1));*/
 
-    /*poly.addPoint(Vec2f(-0.00383841,0.0929055));
-    poly.addPoint(Vec2f(-0.053288,0.0701582));
-    poly.addPoint(Vec2f(-0.0117584,0.014947));
-    poly.addPoint(Vec2f(-0.0658535,0.0389837));
-    poly.addPoint(Vec2f(-0.152454,0.0274887));
-    poly.addPoint(Vec2f(-0.108552,0.066948));
-    poly.addPoint(Vec2f(-0.137846,0.109314));*/
+    /*poly.addPoint(Vec2d(-0.00383841,0.0929055));
+    poly.addPoint(Vec2d(-0.053288,0.0701582));
+    poly.addPoint(Vec2d(-0.0117584,0.014947));
+    poly.addPoint(Vec2d(-0.0658535,0.0389837));
+    poly.addPoint(Vec2d(-0.152454,0.0274887));
+    poly.addPoint(Vec2d(-0.108552,0.066948));
+    poly.addPoint(Vec2d(-0.137846,0.109314));*/
 
-    poly.addPoint(Vec2f(-0.137846,0.109314));
-    poly.addPoint(Vec2f(-0.108552,0.066948));
-    poly.addPoint(Vec2f(-0.152454,0.0274887));
-    poly.addPoint(Vec2f(-0.0658535,0.0389837));
-    poly.addPoint(Vec2f(-0.0117584,0.014947));
-    poly.addPoint(Vec2f(-0.053288,0.0701582));
-    poly.addPoint(Vec2f(-0.00383841,0.0929055));
+    poly.addPoint(Vec2d(-0.137846,0.109314));
+    poly.addPoint(Vec2d(-0.108552,0.066948));
+    poly.addPoint(Vec2d(-0.152454,0.0274887));
+    poly.addPoint(Vec2d(-0.0658535,0.0389837));
+    poly.addPoint(Vec2d(-0.0117584,0.014947));
+    poly.addPoint(Vec2d(-0.053288,0.0701582));
+    poly.addPoint(Vec2d(-0.00383841,0.0929055));
 
     poly.close();
 
@@ -80,21 +80,21 @@ void VRPolygon::runTest() {
     for (auto poly : res) cout << "convex " << poly.toString() << endl;
 }
 
-void VRPolygon::addPoint(Vec2f p) { if (!closed) points.push_back(p); }
-void VRPolygon::addPoint(Vec3f p) { if (!closed) points3.push_back(p); }
-Vec2f VRPolygon::getPoint(int i) { return points[i]; }
-Vec3f VRPolygon::getPoint3(int i) { return points3[i]; }
+void VRPolygon::addPoint(Vec2d p) { if (!closed) points.push_back(p); }
+void VRPolygon::addPoint(Vec3d p) { if (!closed) points3.push_back(p); }
+Vec2d VRPolygon::getPoint(int i) { return points[i]; }
+Vec3d VRPolygon::getPoint3(int i) { return points3[i]; }
 int VRPolygon::size() { return max( points.size(), points3.size() ); }
-void VRPolygon::set(vector<Vec2f> vec) { for (auto v : vec) addPoint(v); }
+void VRPolygon::set(vector<Vec2d> vec) { for (auto v : vec) addPoint(v); }
 
 std::shared_ptr<VRPolygon> VRPolygon::create() { return std::shared_ptr<VRPolygon>( new VRPolygon() ); }
 
-void VRPolygon::translate(Vec3f v) {
-    for (auto& p : points) p += Vec2f(v[0], v[2]);
+void VRPolygon::translate(Vec3d v) {
+    for (auto& p : points) p += Vec2d(v[0], v[2]);
     for (auto& p : points3) p += v;
 }
 
-void VRPolygon::scale(Vec3f s) {
+void VRPolygon::scale(Vec3d s) {
     for (auto& p : points) { p[0] *= s[0]; p[1] *= s[2]; }
     for (auto& p : points3) { p[0] *= s[0]; p[1] *= s[1]; p[2] *= s[2]; }
 }
@@ -112,10 +112,10 @@ VRPolygonPtr VRPolygon::shrink(float amount) {
     if (amount == 0) return area;
 
     for (uint i=0; i<area->points.size(); i++) {
-        Vec2f& p1 = area->points[i];
-        Vec2f& p2 = area->points[(i+1)%area->points.size()];
-        Vec2f d = p2-p1;
-        Vec2f n = Vec2f(-d[1], d[0]);
+        Vec2d& p1 = area->points[i];
+        Vec2d& p2 = area->points[(i+1)%area->points.size()];
+        Vec2d d = p2-p1;
+        Vec2d n = Vec2d(-d[1], d[0]);
         n.normalize();
         p1 += n*amount;
         p2 += n*amount;
@@ -124,16 +124,16 @@ VRPolygonPtr VRPolygon::shrink(float amount) {
     return area;
 }
 
-vector<Vec3f> VRPolygon::getRandomPoints(float density, float padding) {
+vector<Vec3d> VRPolygon::getRandomPoints(float density, float padding) {
     auto area = shrink(padding);
-    vector<Vec3f> res;
+    vector<Vec3d> res;
     //for (auto& area : area1->getConvexDecomposition()) {
         auto bb = area->getBoundingBox();
         int N = density*area->computeArea();
         for (int i=0; i<N; i++) {
-            Vec3f p;
+            Vec3d p;
             do p = bb.getRandomPoint();
-            while( !area->isInside(Vec2f(p[0], p[2])) );
+            while( !area->isInside(Vec2d(p[0], p[2])) );
             res.push_back( p );
         }
     //}
@@ -141,7 +141,7 @@ vector<Vec3f> VRPolygon::getRandomPoints(float density, float padding) {
 }
 
 vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
-    auto inSquare = [&](Vec2f p, Vec2i s) {
+    auto inSquare = [&](Vec2d p, Vec2i s) {
         if (p[0] < s[0]*G - 1e-6) return false;
         if (p[1] < s[1]*G - 1e-6) return false;
         if (p[0] > (s[0]+1)*G + 1e-6) return false;
@@ -151,10 +151,10 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
 
     auto squareToVRPolygon = [&](Vec2i s) {
         auto p = create();
-        p->addPoint(Vec2f(s[0]  , s[1])*G);
-        p->addPoint(Vec2f(s[0]+1, s[1])*G);
-        p->addPoint(Vec2f(s[0]+1, s[1]+1)*G);
-        p->addPoint(Vec2f(s[0]  , s[1]+1)*G);
+        p->addPoint(Vec2d(s[0]  , s[1])*G);
+        p->addPoint(Vec2d(s[0]+1, s[1])*G);
+        p->addPoint(Vec2d(s[0]+1, s[1]+1)*G);
+        p->addPoint(Vec2d(s[0]  , s[1]+1)*G);
         return p;
     };
 
@@ -174,13 +174,13 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
         return pnts;
     };
 
-    auto getSegmentGridPnts = [&](Vec2f p1, Vec2f p2) {
+    auto getSegmentGridPnts = [&](Vec2d p1, Vec2d p2) {
         auto d = p2-p1;
         Boundingbox bb;
-        bb.update(Vec3f(p1[0], 0, p1[1]));
-        bb.update(Vec3f(p2[0], 0, p2[1]));
+        bb.update(Vec3d(p1[0], 0, p1[1]));
+        bb.update(Vec3d(p2[0], 0, p2[1]));
 
-        map<float, Vec2f> iPnts;
+        map<float, Vec2d> iPnts;
         vector<float> X, Y;
         for (auto j : getBBGridPnts(bb)) { for (auto i : j.second) X.push_back(i.first*G); break; }
         for (auto j : getBBGridPnts(bb)) Y.push_back(j.first*G);
@@ -201,20 +201,20 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
             }
         }
 
-        vector<Vec2f> res;
+        vector<Vec2d> res;
         for (auto p : iPnts) res.push_back(p.second);
         return res;
     };
 
-    auto isOnGrid = [&](Vec2f p) {
+    auto isOnGrid = [&](Vec2d p) {
         p *= 1.0/G;
         if (abs(p[0] - round(p[0])) < 1e-6) return true;
         if (abs(p[1] - round(p[1])) < 1e-6) return true;
         return false;
     };
 
-    auto samePoint = [&](Vec2f p1, Vec2f p2) {
-        Vec2f d = p2-p1;
+    auto samePoint = [&](Vec2d p1, Vec2d p2) {
+        Vec2d d = p2-p1;
         if (abs(d[0]) > 1e-6) return false;
         if (abs(d[1]) > 1e-6) return false;
         return true;
@@ -236,7 +236,7 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
             //cout << "  add segment pnt " << p1 << endl;
             self->addPoint(p1);
         }
-        Vec2f pl = p1;
+        Vec2d pl = p1;
         for (auto p : getSegmentGridPnts(p1, p2) ) {
             if (!samePoint(p,p1) && !samePoint(p,p2) && !samePoint(p,pl)) {
                 //cout << "  add segment grid pnt " << p << endl;
@@ -274,33 +274,33 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
     for (int i=0; i<squares.size(); i++) {
         if (squarePointsMap.count(i)) continue; // intersects polygon, skip
         auto s = squares[i];
-        if (self->isInside(Vec2f(s)*G)) { // at least one corner in area
+        if (self->isInside(Vec2d(s)*G)) { // at least one corner in area
             res.push_back( squareToVRPolygon(s) ); // add square to chunks
         }
     }
 
-    map<int, Vec2f> cornerPoints;
-    cornerPoints[-1] = Vec2f(0,0);
-    cornerPoints[-2] = Vec2f(G,0);
-    cornerPoints[-3] = Vec2f(0,G);
-    cornerPoints[-4] = Vec2f(G,G);
+    map<int, Vec2d> cornerPoints;
+    cornerPoints[-1] = Vec2d(0,0);
+    cornerPoints[-2] = Vec2d(G,0);
+    cornerPoints[-3] = Vec2d(0,G);
+    cornerPoints[-4] = Vec2d(G,G);
 
     // get all grid squares partly in polygon
     //cout << "GridSplit N squares: " << squares.size() << endl;
     for (auto s : squarePointsMap) {
         //cout << "Square: " << s.first << " --------------------------" << endl;
         auto p = create();
-        Vec2f square = Vec2f(squares[s.first]) * G;
+        Vec2d square = Vec2d(squares[s.first]) * G;
         map<float, int> borderPnts; // key from -pi to pi
 
-        auto compAngle = [&](Vec2f pnt) {
+        auto compAngle = [&](Vec2d pnt) {
             float a = atan2(pnt[0]-square[0]-0.5*G, pnt[1]-square[1]-0.5*G); // angle
             //cout << "      compAngle p " << pnt << " a " << a << endl;
             return a;
         };
 
         auto getSquarePoint = [&](int i) {
-            if (i == -5) { cout << "AAARGH a -5!" << endl; return Vec2f(); };
+            if (i == -5) { cout << "AAARGH a -5!" << endl; return Vec2d(); };
             if (i < 0) return cornerPoints[i] + square;
             else return self->getPoint(i);
         };
@@ -415,24 +415,24 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
     return res;
 }
 
-Vec3f VRPolygon::getRandomPoint() {
+Vec3d VRPolygon::getRandomPoint() {
     auto bb = getBoundingBox();
-    Vec3f p;
+    Vec3d p;
     do p = bb.getRandomPoint();
-    while( !isInside(Vec2f(p[0], p[2])) );
+    while( !isInside(Vec2d(p[0], p[2])) );
     return p;
 }
 
 float VRPolygon::computeArea() {
     float area = 0;
     for (uint i=0; i<points.size(); i++) {
-        Vec2f p1 = points[i];
-        Vec2f p2 = points[(i+1)%points.size()];
+        Vec2d p1 = points[i];
+        Vec2d p2 = points[(i+1)%points.size()];
         area += p1[0]*p2[1] - p1[1]*p2[0];
     }
     for (uint i=0; i<points3.size(); i++) {
-        Vec3f p1 = points3[i];
-        Vec3f p2 = points3[(i+1)%points3.size()];
+        Vec3d p1 = points3[i];
+        Vec3d p2 = points3[(i+1)%points3.size()];
         area += p1.cross(p2).length();
     }
     return 0.5*abs(area);
@@ -445,17 +445,17 @@ void VRPolygon::close() {
     if (points3.size() > 0) points3.push_back(points3[0]);
 }
 
-float isLeft( Vec2f P0, Vec2f P1, Vec2f P2 ){
+float isLeft( Vec2d P0, Vec2d P1, Vec2d P2 ){
     return ( (P1[0] - P0[0]) * (P2[1] - P0[1]) - (P2[0] -  P0[0]) * (P1[1] - P0[1]) );
 };
 
-bool VRPolygon::isInside(Vec2f p) { // winding number algorithm
+bool VRPolygon::isInside(Vec2d p) { // winding number algorithm
     int wn = 0;
     int N = points.size();
     for (int i=0; i<N; i++) {
-        Vec2f p1 = points[i];
-        Vec2f p2 = points[(i+1)%N];
-        Vec2f d = p2 - p1;
+        Vec2d p1 = points[i];
+        Vec2d p2 = points[(i+1)%N];
+        Vec2d d = p2 - p1;
         if (p1[1] <= p[1]) {
             if (p2[1]  > p[1]) if (isLeft( p1, p2, p) > 0) ++wn;
         } else {
@@ -465,7 +465,7 @@ bool VRPolygon::isInside(Vec2f p) { // winding number algorithm
     return wn;
 }
 
-float squareDistToSegment(const Vec2f& p1, const Vec2f& p2, const Vec2f& p) {
+float squareDistToSegment(const Vec2d& p1, const Vec2d& p2, const Vec2d& p) {
     auto d = p2-p1;
     auto L2 = d.squareLength();
     auto t = -(p1-p).dot(d)/L2;
@@ -475,14 +475,14 @@ float squareDistToSegment(const Vec2f& p1, const Vec2f& p2, const Vec2f& p) {
     return (ps-p).squareLength();
 }
 
-bool VRPolygon::isInside(Vec2f p, float& dist) { // winding number algorithm
+bool VRPolygon::isInside(Vec2d p, float& dist) { // winding number algorithm
     dist = 1e12;
     int wn = 0;
     int N = points.size();
     for (int i=0; i<N; i++) {
-        Vec2f p1 = points[i];
-        Vec2f p2 = points[(i+1)%N];
-        Vec2f d = p2 - p1;
+        Vec2d p1 = points[i];
+        Vec2d p2 = points[(i+1)%N];
+        Vec2d d = p2 - p1;
         if (p1[1] <= p[1]) {
             if (p2[1]  > p[1]) if (isLeft( p1, p2, p) > 0) ++wn;
         } else {
@@ -498,16 +498,16 @@ bool VRPolygon::isInside(Vec2f p, float& dist) { // winding number algorithm
 
 Boundingbox VRPolygon::getBoundingBox() {
     Boundingbox bb;
-    for (auto p : points) bb.update(Vec3f(p[0], 0, p[1]));
+    for (auto p : points) bb.update(Vec3d(p[0], 0, p[1]));
     for (auto p : points3) bb.update(p);
     return bb;
 }
 
 VRPolygon VRPolygon::sort() {
     if (points.size() == 0) return VRPolygon();
-    Vec2f p0 = points[0]; // rightmost lowest point
+    Vec2d p0 = points[0]; // rightmost lowest point
     for (uint i=0; i<points.size(); i++) {
-        Vec2f p = points[i];
+        Vec2d p = points[i];
         if ( p[1] < p0[1] ) p0 = p;
         if ( p[1] == p0[1] && p[0] > p0[0]) p0 = p;
     }
@@ -517,7 +517,7 @@ VRPolygon VRPolygon::sort() {
     radial_sort.addPoint(p0);
     for (auto p : points) if (p != p0) radial_sort.addPoint(p);
 
-    auto getSortTurn = [&](const Vec2f& p1, const Vec2f& p2) -> bool {
+    auto getSortTurn = [&](const Vec2d& p1, const Vec2d& p2) -> bool {
         return (p1[1]-p0[1])*(p2[0]-p0[0]) < (p1[0]-p0[0])*(p2[1]-p0[1]);
     };
 
@@ -528,8 +528,8 @@ VRPolygon VRPolygon::sort() {
     return radial_sort;
 }
 
-vector<Vec2f> VRPolygon::get() { return points; }
-vector<Vec3f> VRPolygon::get3() { return points3; }
+vector<Vec2d> VRPolygon::get() { return points; }
+vector<Vec3d> VRPolygon::get3() { return points3; }
 
 VRPolygon VRPolygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKING UNRELIABLE!!!
     /*auto radial_sort = sort();
@@ -537,12 +537,12 @@ VRPolygon VRPolygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKIN
     //cout << " VRPolygon::getConvexHull points " << toString() << endl;
     //cout << " VRPolygon::getConvexHull sort " << radial_sort.toString() << endl;
 
-    auto getTurn = [](Vec2f p0, Vec2f p1, Vec2f p2) -> float {
+    auto getTurn = [](Vec2d p0, Vec2d p1, Vec2d p2) -> float {
         return (p1[0]-p0[0])*(p2[1]-p0[1])-(p1[1]-p0[1])*(p2[0]-p0[0]);
     };
 
-    deque<Vec2f> omega;
-    auto getOmegaSecond = [&]() -> Vec2f {
+    deque<Vec2d> omega;
+    auto getOmegaSecond = [&]() -> Vec2d {
         auto top = omega.back(); omega.pop_back();
         auto sec = omega.back(); omega.push_back(top);
         return sec;
@@ -551,15 +551,15 @@ VRPolygon VRPolygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKIN
     omega.push_back(radial_sort.getPoint(0));
     omega.push_back(radial_sort.getPoint(1));
     for (int i=2; i < radial_sort.size(); ) {
-        Vec2f Pi = radial_sort.getPoint(i);
-        Vec2f PT1 = omega.back();
+        Vec2d Pi = radial_sort.getPoint(i);
+        Vec2d PT1 = omega.back();
         //cout << " ch Pi " << i << " p " << Pi << endl;
         //cout << " ch PT1 " << i << " p " << PT1 << endl;
         if ( PT1 == radial_sort.getPoint(0) ) {
                 //cout << " ch push " << i << " p " << Pi << endl;
                 omega.push_back( Pi ); i++;
         }
-        Vec2f PT2 = getOmegaSecond();
+        Vec2d PT2 = getOmegaSecond();
         float t = getTurn(PT2, PT1, Pi);
         //cout << " ch PT2 " << i << " p " << PT2 << " t " << t << endl;
         if (t > 0) {
@@ -588,12 +588,12 @@ VRPolygon VRPolygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKIN
     VRPolygon res;
     for (auto pItr = pOut.begin(); pItr != pOutEnd; pItr++) {
         auto p = *pItr;
-        res.addPoint(Vec2f(p[0],p[2]));
+        res.addPoint(Vec2d(p[0],p[2]));
     }
     return res;
 }
 
-float VRPolygon::getTurn(Vec2f p0, Vec2f p1, Vec2f p2) {
+float VRPolygon::getTurn(Vec2d p0, Vec2d p1, Vec2d p2) {
     return (p1[0]-p0[0])*(p2[1]-p0[1])-(p1[1]-p0[1])*(p2[0]-p0[0]);
 }
 
@@ -630,10 +630,10 @@ vector< VRPolygon > VRPolygon::getConvexDecomposition() {
     return res;
 }
 
-vector<Vec3f> VRPolygon::toSpace(Matrix m) {
-    vector<Vec3f> res;
+vector<Vec3d> VRPolygon::toSpace(Matrix4d m) {
+    vector<Vec3d> res;
     for (auto p : points) {
-        Vec3f pp = Vec3f(p[0], p[1], -sqrt(1-(p[0]*p[0]+p[1]*p[1])));
+        Vec3d pp = Vec3d(p[0], p[1], -sqrt(1-(p[0]*p[0]+p[1]*p[1])));
         m.mult(pp,pp);
         res.push_back(pp);
     }

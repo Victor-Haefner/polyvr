@@ -47,8 +47,8 @@ void VRParticles::updateParticles(int b, int e) {
     for (int i=b; i < e; i++) {
         if (particles[i]->isActive) {
             auto p = particles[i]->body->getWorldTransform().getOrigin();
-            pos->setValue(toVec3f(p),i);
-            colors->setValue(Vec4f(0,0,1,1),i);
+            pos->setValue(toVec3d(p),i);
+            colors->setValue(Vec4d(0,0,1,1),i);
         }
     }
 }
@@ -116,7 +116,7 @@ void VRParticles::setLifetime(int newLifetime, int variation) {
     }
 }
 
-int VRParticles::spawnCuboid(Vec3f center, Vec3f size, float distance) {
+int VRParticles::spawnCuboid(Vec3d center, Vec3d size, float distance) {
     if (distance == 0.0) distance = this->particles[0]->radius;
 
     int numX = size[0] / distance;
@@ -160,7 +160,7 @@ int VRParticles::spawnCuboid(Vec3f center, Vec3f size, float distance) {
     return spawned;
 }
 
-int VRParticles::setEmitter(Vec3f baseV, Vec3f dirV, int from, int to, int interval, bool loop) {
+int VRParticles::setEmitter(Vec3d baseV, Vec3d dirV, int from, int to, int interval, bool loop) {
     int N = particles.size();
     if (to > N || from > N || from > to) {
         printf("ERROR: Please check parameters \'from\' and \'to\'\n");

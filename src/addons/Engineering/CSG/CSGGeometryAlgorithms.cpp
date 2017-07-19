@@ -15,11 +15,11 @@ using namespace std;
 using namespace OSG;
 
 void CSGGeometry::setThreshold(float tL, float tA) { thresholdL = tL; thresholdA = tA; }
-Vec2f CSGGeometry::getThreshold() { return Vec2f(thresholdL, thresholdA); }
+Vec2d CSGGeometry::getThreshold() { return Vec2d(thresholdL, thresholdA); }
 
-float calcArea(Vec3f p1, Vec3f p2, Vec3f p3) {
-    Vec3f v1 = p2-p1;
-    Vec3f v2 = p3-p1;
+float calcArea(Vec3d p1, Vec3d p2, Vec3d p3) {
+    Vec3d v1 = p2-p1;
+    Vec3d v2 = p3-p1;
     return v1.cross(v2).length()*0.5;
 }
 
@@ -30,7 +30,7 @@ float calcArea(Vec3f p1, Vec3f p2, Vec3f p3) {
 
  // Converts geometry to a polyhedron && applies the geometry node's world transform to the polyhedron.
 // OpenSG geometry data isn't transformed itself but has an associated transform core. Both are unified for CGAL.
-CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryMTRecPtr geometry, Matrix worldTransform, bool& success) {
+CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryMTRecPtr geometry, Matrix4d worldTransform, bool& success) {
 	TriangleIterator it;
 	auto gpos = geometry->getPositions();
 
@@ -76,7 +76,7 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryMTRecPtr geometry, Matrix wo
 
     vector<CGAL::Point> positions;
 	vector<size_t> indices;
-    vector<Vec3f> pos;
+    vector<Vec3d> pos;
 	vector<int> inds;
 	size_t curIndex = 0;
 
@@ -87,7 +87,7 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryMTRecPtr geometry, Matrix wo
 
 		for (int i=0; i<3; i++) {
 			if (IDs[i] == numeric_limits<size_t>::max()) {
-                Vec3f p = Vec3f(it.getPosition(i));
+                Vec3d p = Vec3d(it.getPosition(i));
 				pos.push_back(p);
 				positions.push_back( CGAL::Point(p[0], p[1], p[2]) );
 				IDs[i] = curIndex;

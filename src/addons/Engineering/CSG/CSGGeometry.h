@@ -16,18 +16,18 @@ class CSGGeometry : public VRGeometry {
         CGAL::Polyhedron* polyhedron = 0;
         string operation = "unite";
         bool editMode = true;
-        Matrix oldWorldTrans;
+        Matrix4d oldWorldTrans;
         float thresholdL = 1e-4;
         float thresholdA = 1e-8;
         Octree* oct = 0;
 
     protected:
-        void applyTransform(CGAL::Polyhedron* p, Matrix m);
+        void applyTransform(CGAL::Polyhedron* p, Matrix4d m);
         void setCSGGeometry(CGAL::Polyhedron* p);
         CGAL::Polyhedron* getCSGGeometry();
         size_t isKnownPoint(OSG::Pnt3f newPoint);
         GeometryTransitPtr toOsgGeometry(CGAL::Polyhedron* p);
-        CGAL::Polyhedron* toPolyhedron(GeometryMTRecPtr geometry, Matrix worldTransform, bool& success);
+        CGAL::Polyhedron* toPolyhedron(GeometryMTRecPtr geometry, Matrix4d worldTransform, bool& success);
 
         void operate(CGAL::Polyhedron* minuend, CGAL::Polyhedron* subtrahend);
 
@@ -42,7 +42,7 @@ class CSGGeometry : public VRGeometry {
         CSGGeometryPtr ptr();
 
         void setThreshold(float tL, float tA);
-        Vec2f getThreshold();
+        Vec2d getThreshold();
 
         bool setEditMode(bool b);
         bool getEditMode();

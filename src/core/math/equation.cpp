@@ -3,9 +3,9 @@
 
 using namespace OSG;
 
-equation::equation(float a, float b, float c, float d) : a(a), b(b), c(c), d(d) {;}
+equation::equation(double a, double b, double c, double d) : a(a), b(b), c(c), d(d) {;}
 
-int equation::solve(float& x1, float& x2, float& x3) {
+int equation::solve(double& x1, double& x2, double& x3) {
     if (a == 0) {
         if (b == 0) { // linear equation
             if (c == 0) return 0;

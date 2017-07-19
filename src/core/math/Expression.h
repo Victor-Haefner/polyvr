@@ -33,7 +33,7 @@ class Expression {
             ValueBase* div(ValueBase* n);
         };
 
-        //ValueBase* add(Value<Vec3f>* v1, Value<Vec3f>* v2) { return new Value<T>(v1->value + v2->value); }
+        //ValueBase* add(Value<Vec3d>* v1, Value<Vec3d>* v2) { return new Value<T>(v1->value + v2->value); }
 
         struct Node {
             string param;
@@ -46,7 +46,7 @@ class Expression {
             ~Node();
 
             void setValue(float f);
-            void setValue(Vec3f v);
+            void setValue(Vec3d v);
             void setValue(string s);
 
             string toString();

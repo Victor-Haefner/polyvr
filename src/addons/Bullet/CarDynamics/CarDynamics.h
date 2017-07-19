@@ -22,9 +22,9 @@ class VRCarDynamics : public VRObject {
             VRTransformPtr geo;
 
             // suspension parameter
-            Vec3f position;
-            Vec3f direction = Vec3f(0, -1, 0);
-            Vec3f axle = Vec3f(-1, 0, 0);
+            Vec3d position;
+            Vec3d direction = Vec3d(0, -1, 0);
+            Vec3d axle = Vec3d(-1, 0, 0);
             float suspensionRestLength = 0.6;
             float suspensionStiffness = 20.f;
             float suspensionDamping = 2.3f;
@@ -67,7 +67,7 @@ class VRCarDynamics : public VRObject {
             vector<VRGeometryPtr> geos;
             btRigidBody* body = 0;
             float mass = 850.0f;
-            Vec3f massOffset;
+            Vec3d massOffset;
         };
 
     private:
@@ -123,10 +123,10 @@ class VRCarDynamics : public VRObject {
         int getGear();
         int getRPM();
 
-        void addWheel(VRGeometryPtr geo, Vec3f p, float radius, float width, float maxSteering = 0, bool steered = false, bool driven = false);
+        void addWheel(VRGeometryPtr geo, Vec3d p, float radius, float width, float maxSteering = 0, bool steered = false, bool driven = false);
         void setChassisGeo(VRTransformPtr geo, bool doPhys = 1);
         void setupSimpleWheels(VRTransformPtr geo, float xOffset, float frontZOffset, float rearZOffset, float height, float radius, float width, float maxSteering);
-        void setParameter(float mass, float enginePower, float breakPower, Vec3f massOffset = Vec3f(), bool enableStalling = false);
+        void setParameter(float mass, float enginePower, float breakPower, Vec3d massOffset = Vec3d(), bool enableStalling = false);
 
         void update(float throttle, float Break, float steering, float clutch = 0, int gear = 1);
         void updateWheel(int wheel, float throttle, float Break, float steering, float clutch = 0, int gear = 1);

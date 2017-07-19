@@ -26,7 +26,7 @@ class VRSelection {
         map<VRGeometry*, selection_atom> selected;
         BoundingboxPtr bbox = 0;
 
-        virtual bool vertSelected(Vec3f p);
+        virtual bool vertSelected(Vec3d p);
         virtual bool objSelected(VRGeometryPtr geo);
         virtual bool partialSelected(VRGeometryPtr geo);
 
@@ -48,9 +48,9 @@ class VRSelection {
         vector<int> getSubselection(VRGeometryPtr geo);
         map< VRGeometryPtr, vector<int> > getSubselections();
 
-        Vec3f computeCentroid();
-        Matrix computeCovMatrix();
-        Matrix computeEigenvectors(Matrix m);
+        Vec3d computeCentroid();
+        Matrix4d computeCovMatrix();
+        Matrix4d computeEigenvectors(Matrix4d m);
         pose computePCA();
 
         void selectPlane(pose plane, float threshold);

@@ -32,22 +32,22 @@ void VRSegmentation::removeDuplicates(VRGeometryPtr geo) {
 	for (; !it.isAtEnd() ;++it) {
         vector<size_t> IDs(3);
         for (int i=0; i<3; i++) {
-            Pnt3f p = it.getPosition(i);
-            vector<void*> resultData = oct.radiusSearch(p.subZero(), threshold);
+            auto p = it.getPosition(i);
+            vector<void*> resultData = oct.radiusSearch(Vec3d(p), threshold);
             if (resultData.size() > 0) IDs[i] = *(size_t*)resultData.at(0);
             else IDs[i] = NLM;
         }
 
 		for (int i=0; i<3; i++) {
 			if (IDs[i] == NLM) {
-                Pnt3f p = it.getPosition(i);
-                Vec3f n = it.getNormal(i);
+                auto p = it.getPosition(i);
+                auto n = it.getNormal(i);
 				pos->addValue(p);
 				norms->addValue(n);
 				IDs[i] = curIndex;
 				size_t *curIndexPtr = new size_t;
 				*curIndexPtr = curIndex;
-				oct.add(p.subZero(), curIndexPtr);
+				oct.add(Vec3d(p), curIndexPtr);
 				curIndex++;
 			}
 		}
@@ -111,9 +111,9 @@ vector<int> VRSegmentation::growPatch(VRGeometryPtr geo, int i) {
 //--------------------- hough transform approach -----------------------------------//
 
 struct VRPlane {
-    Vec3f data; // theta, phi, rho
+    Vec3d data; // theta, phi, rho
 
-    VRPlane(Pnt3f p, Vec3f n) {
+    VRPlane(Pnt3d p, Vec3d n) {
         data[0] = acos(n[1]);
         float csT = max(sin(data[0])+1, cos(data[0])+1)-1;
         data[1] = acos(n[0]/csT);
@@ -124,24 +124,24 @@ struct VRPlane {
     VRPlane(float a, float b, float c) : data(a,b,c) {;}
     VRPlane() {;}
 
-    Vec4f plane() {
+    Vec4d plane() {
         float th = data[0];
         float ph = data[1];
         float sin_th = sin(th);
-        return Vec4f(cos(ph)*sin_th, cos(th), -sin(ph)*sin_th, -data[2]);
+        return Vec4d(cos(ph)*sin_th, cos(th), -sin(ph)*sin_th, -data[2]);
     }
 
-    bool on(const Pnt3f& p, const float& th) {
+    bool on(const Pnt3d& p, const float& th) {
         return abs(dist(p)) < th;
     }
 
-    float dist(const Pnt3f& p) {
-        Vec4f pl = plane();
+    float dist(const Pnt3d& p) {
+        Vec4d pl = plane();
         return pl[0]*p[0]+pl[1]*p[1]+pl[2]*p[2]+pl[3];
     }
 };
 
-Vec3f randC() {return Vec3f(0.5+0.5*rand()/RAND_MAX, 0.5+0.5*rand()/RAND_MAX, 0.5+0.5*rand()/RAND_MAX); }
+Color3f randC() {return Color3f(0.5+0.5*rand()/RAND_MAX, 0.5+0.5*rand()/RAND_MAX, 0.5+0.5*rand()/RAND_MAX); }
 
 struct Accumulator {
     struct Bin {
@@ -149,7 +149,7 @@ struct Accumulator {
         VRPlane plane;
     };
 
-    virtual void pushPoint(Pnt3f p, Vec3f n) = 0;
+    virtual void pushPoint(Pnt3d p, Vec3d n) = 0;
 
     void pushGeometry(VRGeometryPtr geo_in) {
         GeoVectorPropertyRecPtr positions = geo_in->getMesh()->geo->getPositions();
@@ -157,8 +157,8 @@ struct Accumulator {
 
         cout << "start plane extraction of " << geo_in->getName() << " with " << positions->size() << " points && " << normals->size() << " normals" << endl;
 
-        Pnt3f p;
-        Vec3f n;
+        Pnt3d p;
+        Vec3d n;
         VRPlane pl;
         for (uint i = 0; i<positions->size(); i++) {
             positions->getValue(p, i);
@@ -199,7 +199,7 @@ struct Accumulator_grid : public Accumulator {
 
     void clear() { memset(data, 0, size()*sizeof(Bin)); }
 
-    void pushPoint(Pnt3f p, Vec3f n) {
+    void pushPoint(Pnt3d p, Vec3d n) {
         VRPlane p0(p, n);
         int T,P,R;
         T = round(p0.data[0]/Ra);
@@ -260,7 +260,7 @@ struct Accumulator_octree : public Accumulator {
         delete octree;
     }
 
-    float getWeight(Vec3f p) {
+    float getWeight(Vec3d p) {
         Octree* t = octree->get(p);
         vector<void*> data = t->getData();
         if (data.size() == 0) return 0;
@@ -268,7 +268,7 @@ struct Accumulator_octree : public Accumulator {
         return bin->weight;
     }
 
-    void pushPoint(Pnt3f p, Vec3f n) {
+    void pushPoint(Pnt3d p, Vec3d n) {
         float w = 0;
         Octree* t = octree->get(p.subZero());
         vector<void*> data = t->getData();
@@ -297,7 +297,7 @@ vector<VRGeometryPtr> extractPointsOnPlane(VRGeometryPtr geo_in, VRPlane plane, 
         res.push_back(geo);
     }
 
-    Pnt3f p;
+    Pnt3d p;
     for (uint i = 0; i<positions->size(); i++) {
         positions->getValue(p, i);
         if (plane.on(p, Dp)) res[0]->getMesh()->geo->getPositions()->addValue(p);
@@ -310,7 +310,7 @@ vector<VRGeometryPtr> extractPointsOnPlane(VRGeometryPtr geo_in, VRPlane plane, 
 vector<VRGeometryPtr> clusterByPlanes(VRGeometryPtr geo_in, vector<VRPlane> planes, float Dp, int pMax) {
     GeoVectorPropertyRecPtr positions = geo_in->getMesh()->geo->getPositions();
     map<int, VRGeometryPtr> res_map;
-    Pnt3f p;
+    Pnt3d p;
     int N = min(pMax+1, (int)planes.size());
 
     for (uint i = 0; i<positions->size(); i++) {
@@ -353,7 +353,7 @@ void finalizeClusterGeometries(vector<VRGeometryPtr>& res) {
         geo->setIndices(inds);
         geo->setMaterial(VRMaterial::create("pmat"));
 
-        //geo->getMaterial()->setDiffuse(Vec3f(pl));
+        //geo->getMaterial()->setDiffuse(Color3f(pl));
         geo->getMaterial()->setDiffuse(randC());
         geo->getMaterial()->setPointSize(5);
         geo->getMaterial()->setLit(false);
@@ -372,7 +372,7 @@ void fixNormalsIndices(VRGeometryPtr geo_in) {
 
     for (uint i=0; i<i_p->size(); i++) inds_map[i_n->getValue(i)] = i_p->getValue(i);
     for (uint i=0; i<norms->size(); i++) {
-        Vec3f n;
+        Vec3d n;
         norms->getValue(n, inds_map[i]);
         norms2->addValue(n);
     }
@@ -382,8 +382,8 @@ void fixNormalsIndices(VRGeometryPtr geo_in) {
 
     /*GeoColor4fPropertyRecPtr cols = GeoColor4fProperty::create();
     for (uint i = 0; i<norms->size(); i++) {
-        Vec3f v; norms->getValue(v, i);
-        Vec4f c(abs(v[0]), abs(v[1]), abs(v[2]), 1);
+        Vec3d v; norms->getValue(v, i);
+        Vec4d c(abs(v[0]), abs(v[1]), abs(v[2]), 1);
         cols->addValue(c);
     }
     geo_in->getMaterial()->setLit(false);
@@ -408,7 +408,7 @@ vector<VRGeometryPtr> extractPlanes(VRGeometryPtr geo_in, int N, float delta) {
     return res;
 }
 
-VRObjectPtr VRSegmentation::extractPatches(VRGeometryPtr geo, SEGMENTATION_ALGORITHM algo, float curvature, float curvature_delta, Vec3f normal, Vec3f normal_delta) {
+VRObjectPtr VRSegmentation::extractPatches(VRGeometryPtr geo, SEGMENTATION_ALGORITHM algo, float curvature, float curvature_delta, Vec3d normal, Vec3d normal_delta) {
     vector<VRGeometryPtr> patches = extractPlanes(geo, curvature, curvature_delta);
 
     VRObjectPtr anchor = VRObject::create("segmentation");
@@ -446,8 +446,8 @@ vector<Edge*> Edge::borderNeighbors() {
         res = tmp;
     }
 
-    Vec3f ed1 = segment();
-    Vec3f ed2 = res[0]->segment();
+    Vec3d ed1 = segment();
+    Vec3d ed2 = res[0]->segment();
     Vertex* v = vertexTo(res[0]);
     if (v->n.dot(ed1.cross(ed2)) <= 0) iter_swap(res.begin(), res.begin() +1);
 
@@ -472,7 +472,7 @@ bool Edge::isLinked(Edge* E) {
     return false;
 }
 
-Vec3f Edge::segment() {
+Vec3d Edge::segment() {
     return vertices[1]->v-vertices[0]->v;
 }
 
@@ -492,7 +492,7 @@ bool Edge::has(Vertex* v) {
     return false;
 }
 
-Vertex::Vertex(Pnt3f p, Vec3f n, int i) : v(p), n(n), ID(i) {;}
+Vertex::Vertex(Pnt3d p, Vec3d n, int i) : v(p), n(n), ID(i) {;}
 
 vector<Vertex*> Vertex::neighbors() {
     vector<Vertex*> res;
@@ -586,13 +586,13 @@ void VRSegmentation::fillHoles(VRGeometryPtr geo, int steps) {
         Vec3i IDs(it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2));
 
         for (int i=0; i<3; i++) {
-            Pnt3f p = it.getPosition(i);
-            Vec3f n = it.getNormal(i);
+            auto p = it.getPosition(i);
+            auto n = it.getNormal(i);
             Vertex* v = 0;
 
             int ID = IDs[i];
             if (vertices.count(ID)) v = vertices[ID];
-            if (v == 0) v = new Vertex(p, n, ID);
+            if (v == 0) v = new Vertex(Pnt3d(p), Vec3d(n), ID);
 
             vertices[ID] = v;
             t->vertices[i] = v;
@@ -672,11 +672,11 @@ void VRSegmentation::fillHoles(VRGeometryPtr geo, int steps) {
                 Vertex* v2 = b->vertices[ids[1]];
                 Vertex* v3 = b->vertices[ids[2]];
 
-                Vec3f e1 = v2->v - v1->v;
-                Vec3f e2 = v3->v - v2->v;
+                Vec3d e1 = v2->v - v1->v;
+                Vec3d e2 = v3->v - v2->v;
                 float ca = e1.dot(e2);
-                Vec3f vn = e1.cross(e2);
-                Vec3f n = v2->n;
+                Vec3d vn = e1.cross(e2);
+                Vec3d n = v2->n;
 
                 //cout << "ids " << ids << " p1 " << v1->v << " p2 " << v2->v << " p3 " << v3->v << endl;
                 //cout << " n " << n << " e1 " << e1 << " e2 " << e2 << endl;
@@ -714,8 +714,8 @@ void VRSegmentation::fillHoles(VRGeometryPtr geo, int steps) {
 	GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
 	GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
 	for (auto v : vertices) {
-        pos->addValue(Pnt3f(v.second->v));
-        norms->addValue(Vec3f(v.second->n));
+        pos->addValue(Pnt3d(v.second->v));
+        norms->addValue(Vec3d(v.second->n));
 	}
 	for (auto t : triangles) for (auto v : t->vertices) inds->addValue(v->ID);
 	lengths->addValue(triangles.size()*3);

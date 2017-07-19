@@ -40,7 +40,7 @@ struct Config {
     Config();
     static Config* get();
     static void createPhongShader(OSG::SimpleMaterial* mat, bool phong = true);
-    static OSG::Vec2f getStartPosition();
+    static OSG::Vec2d getStartPosition();
 };
 
 #endif	/* CONFIG_H */

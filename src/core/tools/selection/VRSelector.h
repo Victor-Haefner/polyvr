@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGColor.h>
 #include <string>
 #include <map>
 #include "core/objects/VRObjectFwd.h"
@@ -14,7 +15,7 @@ using namespace std;
 
 class VRSelector {
     private:
-        Vec3f color;
+        Color3f color;
         int width = 5;
         bool smooth = true;
         struct MatStore {
@@ -38,7 +39,7 @@ class VRSelector {
         void select(VRSelectionPtr s);
         void add(VRSelectionPtr s);
         VRSelectionPtr getSelection();
-        void setColor(Vec3f c);
+        void setColor(Color3f c);
         void setBorder(int width, bool smooth = true);
         void update();
         void clear();

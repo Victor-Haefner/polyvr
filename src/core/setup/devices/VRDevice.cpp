@@ -158,7 +158,7 @@ void VRDevice::printMap() {
     cout << endl;
 }
 
-void VRDevice::setSpeed(Vec2f s) { speed = s; }
-Vec2f VRDevice::getSpeed() { return speed; }
+void VRDevice::setSpeed(Vec2d s) { speed = s; }
+Vec2d VRDevice::getSpeed() { return speed; }
 
 OSG_END_NAMESPACE;

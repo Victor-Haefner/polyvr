@@ -27,7 +27,7 @@ void VRAsphalt::setArrowMaterial() {
 void VRAsphalt::clearTexture() {
     texGen = VRTextureGenerator::create();
 	texGen->setSize(Vec3i(256,1024,1), false);
-	texGen->drawFill(Vec4f(0,0,0,1));
+	texGen->drawFill(Color4f(0,0,0,1));
     roadData.clear();
     updateTexture();
 }
@@ -35,20 +35,20 @@ void VRAsphalt::clearTexture() {
 VRTexturePtr VRAsphalt::noiseTexture() {
     VRTextureGenerator tg;
     tg.setSize(Vec3i(512, 512, 1));
-    tg.add(PERLIN, 1.0, Vec3f(), Vec3f(0.6, 0.6, 0.6));
-    tg.add(PERLIN, 1.0/2, Vec3f(), Vec3f(0.7, 0.7, 0.7));
-    tg.add(PERLIN, 1.0/4, Vec3f(), Vec3f(0.8, 0.8, 0.8));
-    tg.add(PERLIN, 1.0/8, Vec3f(), Vec3f(0.9, 0.9, 0.9));
-    tg.add(PERLIN, 1.0/16, Vec3f(), Vec3f(1.0, 1.0, 1.0));
+    tg.add(PERLIN, 1.0, Color3f(), Color3f(0.6, 0.6, 0.6));
+    tg.add(PERLIN, 1.0/2, Color3f(), Color3f(0.7, 0.7, 0.7));
+    tg.add(PERLIN, 1.0/4, Color3f(), Color3f(0.8, 0.8, 0.8));
+    tg.add(PERLIN, 1.0/8, Color3f(), Color3f(0.9, 0.9, 0.9));
+    tg.add(PERLIN, 1.0/16, Color3f(), Color3f(1.0, 1.0, 1.0));
     return tg.compose(0);
 }
 
 VRTexturePtr VRAsphalt::mudTexture() {
     VRTextureGenerator tg;
     tg.setSize(Vec3i(256, 256, 1), 1);
-    tg.add(PERLIN, 5, Vec4f(0.1, 0.1, 0.1, 1.0), Vec4f(1.0, 1.0, 1.0, 1.0));
-    tg.add(PERLIN, 0.2, Vec4f(), Vec4f(0.8, 0.6, 0.4, 1.0));
-    tg.add(PERLIN, 0.1, Vec4f(), Vec4f(0.4, 0.4, 0.4, 0.4));
+    tg.add(PERLIN, 5, Color4f(0.1, 0.1, 0.1, 1.0), Color4f(1.0, 1.0, 1.0, 1.0));
+    tg.add(PERLIN, 0.2, Color4f(), Color4f(0.8, 0.6, 0.4, 1.0));
+    tg.add(PERLIN, 0.1, Color4f(), Color4f(0.4, 0.4, 0.4, 0.4));
     return tg.compose(1);
 }
 
@@ -77,22 +77,22 @@ void VRAsphalt::addPath(pathPtr path, int rID, float width, int dashN, float off
     int N = (pnts.size()-1)*0.5;
 
     for (int j = 0; j<N; j++) {// p1,p2,p3
-        Vec3f P0 = pnts[2*j].pos();
-        Vec3f P1 = pnts[2*j+1].pos();
-        Vec3f P2 = pnts[2*j+2].pos();
+        Vec3d P0 = pnts[2*j].pos();
+        Vec3d P1 = pnts[2*j+1].pos();
+        Vec3d P2 = pnts[2*j+2].pos();
 
-        Vec3f A = P2 + P0 - P1*2;
-        Vec3f B = (P1 - P0) * 2;
-        Vec3f C = P0;
+        Vec3d A = P2 + P0 - P1*2;
+        Vec3d B = (P1 - P0) * 2;
+        Vec3d C = P0;
 
-        texGen->drawPixel( Vec3i(rID, i+0, 0), Vec4f(A[0], A[1], A[2], 1.0) );
-        texGen->drawPixel( Vec3i(rID, i+1, 0), Vec4f(B[0], B[1], B[2], 1.0) );
-        texGen->drawPixel( Vec3i(rID, i+2, 0), Vec4f(C[0], C[1], C[2], 1.0) );
+        texGen->drawPixel( Vec3i(rID, i+0, 0), Color4f(A[0], A[1], A[2], 1.0) );
+        texGen->drawPixel( Vec3i(rID, i+1, 0), Color4f(B[0], B[1], B[2], 1.0) );
+        texGen->drawPixel( Vec3i(rID, i+2, 0), Color4f(C[0], C[1], C[2], 1.0) );
         i += 3;
     }
 
-    texGen->drawPixel(Vec3i(rID,iNpnts  ,0), Vec4f(i-iNpnts-2,width,dashN,1));
-    texGen->drawPixel(Vec3i(rID,iNpnts+1,0), Vec4f(offset,0,0,1));
+    texGen->drawPixel(Vec3i(rID,iNpnts  ,0), Color4f(i-iNpnts-2,width,dashN,1));
+    texGen->drawPixel(Vec3i(rID,iNpnts+1,0), Color4f(offset,0,0,1));
     if (texGen->getSize()[0] < i) cout << "WARNING, texture width not enough!";
     if (texGen->getSize()[1] < rID) cout << "WARNING, texture height not enough!";
 }
@@ -100,14 +100,14 @@ void VRAsphalt::addPath(pathPtr path, int rID, float width, int dashN, float off
 void VRAsphalt::addMarking(int rID, pathPtr marking, float width, int dashN, float offset) {
     if (roadData.count(rID) == 0) roadData[rID] = road();
     roadData[rID].markingsN++;
-    texGen->drawPixel(Vec3i(rID,0,0), Vec4f(roadData[rID].markingsN, roadData[rID].tracksN, 0, 1));
+    texGen->drawPixel(Vec3i(rID,0,0), Color4f(roadData[rID].markingsN, roadData[rID].tracksN, 0, 1));
     addPath(marking, rID, width, dashN, offset);
 }
 
 void VRAsphalt::addTrack(int rID, pathPtr track, float width, int dashN, float offset) {
     if (roadData.count(rID) == 0) roadData[rID] = road();
     roadData[rID].tracksN++;
-    texGen->drawPixel(Vec3i(rID,0,0), Vec4f(roadData[rID].markingsN, roadData[rID].tracksN, 0, 1));
+    texGen->drawPixel(Vec3i(rID,0,0), Color4f(roadData[rID].markingsN, roadData[rID].tracksN, 0, 1));
     addPath(track, rID, width, dashN, offset);
 }
 

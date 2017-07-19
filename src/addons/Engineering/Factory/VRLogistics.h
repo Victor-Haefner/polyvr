@@ -7,6 +7,7 @@
 #include <memory>
 
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGColor.h>
 #include "core/objects/VRObjectFwd.h"
 #include "core/math/VRMathFwd.h"
 
@@ -90,7 +91,7 @@ class FNode : public FID, public std::enable_shared_from_this<FNode> {
         void setState(State);
         State getState();
 
-        OSG::Vec3f getTangent();
+        OSG::Vec3d getTangent();
 
         void connect(shared_ptr<FNode> n);
         void disconnect(shared_ptr<FNode> n);
@@ -131,7 +132,7 @@ class FNetwork : public FID {
 
         std::vector<shared_ptr<FNode>> getNodes();
 
-        OSG::VRStrokePtr stroke(OSG::Vec3f c, float k);
+        OSG::VRStrokePtr stroke(OSG::Color3f c, float k);
 
         friend class FLogistics;
 };

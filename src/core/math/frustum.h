@@ -12,10 +12,10 @@ using namespace std;
 class frustum {
     private:
         pose trans;
-        vector<Vec3f> directions;
+        vector<Vec3d> directions;
         VRPolygon profile;
         bool convex = false;
-        Vec2f near_far;
+        Vec2d near_far;
 
         void computeProfile();
         frustum fromProfile(VRPolygon p, pose t);
@@ -24,8 +24,8 @@ class frustum {
         frustum();
         void setPose(pose trans);
         pose getPose();
-        void setNearFar(Vec2f near_far);
-        void addEdge(Vec3f dir);
+        void setNearFar(Vec2d near_far);
+        void addEdge(Vec3d dir);
         void close();
         int size();
         void clear();
@@ -34,7 +34,7 @@ class frustum {
         vector< frustum > getConvexDecomposition();
         vector< Plane > getPlanes();
         vector< Plane > getNearFarPlanes();
-        vector< Vec3f > getEdges();
+        vector< Vec3d > getEdges();
 
         string toString();
         static void runTest();

@@ -84,7 +84,7 @@ void VRNavPreset::addKeyBinding(VRNavBinding b) {
     updateBinding(b);
 }
 
-void VRNavPreset::setSpeed(float vt, float vr) { speed = Vec2f(vt, vr); activate(); }
+void VRNavPreset::setSpeed(float vt, float vr) { speed = Vec2d(vt, vr); activate(); }
 
 // preset management
 
@@ -176,7 +176,7 @@ void VRNavigator::zoom(VRDeviceWeakPtr _dev, int dir) {
     VRTransformPtr target = dev->getTarget();
     if (target == 0) return;
 
-    //Vec2f speed = dev->getSpeed(); // 0.05
+    //Vec2d speed = dev->getSpeed(); // 0.05
     float speed = 0.05;
     target->zoom(speed*dir);
 }
@@ -191,12 +191,12 @@ void VRNavigator::orbit(VRDeviceWeakPtr _dev) {
     if (devBeacon == 0) return;
 
     static int state = 0;
-    static Vec3f camPos;
-    static Vec3f camRef(0,0,0);
-    static Vec2f mouseOnMouseDown;
+    static Vec3d camPos;
+    static Vec3d camRef(0,0,0);
+    static Vec2d mouseOnMouseDown;
 
-    Vec3f camDelta;
-    Vec2f mousePos;
+    Vec3d camDelta;
+    Vec2d mousePos;
     mousePos[0] = dev->s_state(5);
     mousePos[1] = dev->s_state(6);
 
@@ -204,7 +204,7 @@ void VRNavigator::orbit(VRDeviceWeakPtr _dev) {
         camPos = target->getFrom();
         mouseOnMouseDown = mousePos;
 
-        Vec3f dir = -target->getDir();
+        Vec3d dir = -target->getDir();
         camRef[0] = dir.length();
         dir.normalize();
 
@@ -226,15 +226,15 @@ void VRNavigator::orbit(VRDeviceWeakPtr _dev) {
     camDelta[1] += mousePos[0]*1.5; //yaw
     camDelta[2] -= mousePos[1]*1.5; //pitch
 
-    camDelta[2] = max(camDelta[2], -Pi*0.49f);
-    camDelta[2] = min(camDelta[2], Pi*0.49f);
+    camDelta[2] = max(camDelta[2], -Pi*0.49);
+    camDelta[2] = min(camDelta[2], Pi*0.49);
 
     float cosa = cos(camDelta[1]);
 	float sina = sin(camDelta[1]);
 	float cosb = cos(camDelta[2]);
 	float sinb = sin(camDelta[2]);
 
-	camPos = Vec3f(cosa*cosb, sinb, sina*cosb)*camDelta[0] + target->getAt();
+	camPos = Vec3d(cosa*cosb, sinb, sina*cosb)*camDelta[0] + target->getAt();
 	target->set_orientation_mode(false);
 	target->setFrom(camPos);
 }
@@ -248,16 +248,16 @@ void VRNavigator::walk(VRDeviceWeakPtr _dev) {
     if (target == 0) return;
     if (devBeacon == 0) return;
 
-    Vec3f dir_c = target->getWorldDirection();
-    Vec3f dir_m = devBeacon->getAt() - devBeacon->getFrom();
+    Vec3d dir_c = target->getWorldDirection();
+    Vec3d dir_m = devBeacon->getAt() - devBeacon->getFrom();
     dir_m.normalize();
     dir_c.normalize();
 
-    Vec2f speed = dev->getSpeed();
+    Vec2d speed = dev->getSpeed();
     float speedT = speed[0]; // 0.02
     float speedR = speed[1]; // 0.04
 
-    Vec3f x = dir_c*dir_m[1]*speedT*exp(-abs(dir_m[0]));
+    Vec3d x = dir_c*dir_m[1]*speedT*exp(-abs(dir_m[0]));
     float y = -dir_m[0]*speedR*exp(-abs(dir_m[1]));
 
     target->rotate(y);
@@ -276,10 +276,10 @@ void VRNavigator::fly_walk(VRDeviceWeakPtr _dev) {
     VRTransformPtr flystick = dev->getBeacon();
     if (target == 0 || flystick == 0) return;
 
-    Vec3f dir = flystick->getWorldDirection();
+    Vec3d dir = flystick->getWorldDirection();
     dir.normalize();
 
-    Vec2f speed = dev->getSpeed();
+    Vec2d speed = dev->getSpeed();
     float tspeed = speed[0]; // 1.5
     float rspeed = speed[1]; // 0.7
 
@@ -303,7 +303,7 @@ void VRNavigator::orbit2D(VRDeviceWeakPtr _dev) {
     if (target == 0) return;
     if (devBeacon == 0) return;
 
-    Vec3f dir_m = devBeacon->getAt() - devBeacon->getFrom();
+    Vec3d dir_m = devBeacon->getAt() - devBeacon->getFrom();
     dir_m.normalize();
 
     float speedT = 0.02;
@@ -336,7 +336,7 @@ void VRNavigator::focus(VRDeviceWeakPtr _dev) {
 
     if (!ins.hit) return;
 
-    Vec3f z;
+    Vec3d z;
     path* p = new path();
     p->addPoint( pose(target->getAt(), z));
     p->addPoint( pose(ins.point.subZero(), z));
@@ -448,7 +448,7 @@ void VRNavigator::hyd_walk(VRDeviceWeakPtr _dev) {
     VRTransformPtr flystick = dev->getBeacon();
     if (target == 0 || flystick == 0) return;
 
-    Vec3f dir = flystick->getWorldDirection();
+    Vec3d dir = flystick->getWorldDirection();
     dir.normalize();
 
     float rspeed = 0.1;

@@ -35,7 +35,7 @@ PyObject* VRPyRealWorld::configure(VRPyRealWorld* self, PyObject* args) {
 
 PyObject* VRPyRealWorld::update(VRPyRealWorld* self, PyObject* args) {
 	if (!self->valid()) return NULL;
-    self->objPtr->update( parseVec3f(args) );
+    self->objPtr->update( parseVec3d(args) );
     Py_RETURN_TRUE;
 }
 

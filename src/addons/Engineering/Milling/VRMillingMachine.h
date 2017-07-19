@@ -22,7 +22,7 @@ class VRMillingMachine {
         int state = 1; // CNC Status (z.B. Achsen aktiv)
         int mode = 1; // CNC Modus (z.B. JOG, Auto, ..)
 
-        Vec3f pos;
+        Vec3d pos;
         float speed = 4;
 
         string post(string cmd, string data);
@@ -35,12 +35,12 @@ class VRMillingMachine {
         void disconnect();
         bool connected();
 
-        void setSpeed(Vec3f v);
+        void setSpeed(Vec3d v);
         void setSpeed(float s);
         void setGeometry(vector<VRTransformPtr> geos);
 
-        void setPosition(Vec3f p);
-        Vec3f getPosition();
+        void setPosition(Vec3d p);
+        Vec3d getPosition();
 
         int getState();
         int getMode();

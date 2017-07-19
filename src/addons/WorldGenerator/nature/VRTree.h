@@ -2,6 +2,7 @@
 #define VRTREE_H_INCLUDED
 
 #include "core/objects/geometry/VRGeometry.h"
+#include <OpenSG/OSGColor.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -25,12 +26,12 @@ class VRTree : public VRTransform {
         static VRMaterialPtr treeMat;
         static VRMaterialPtr leafMat;
 
-        Vec3f truncColor = Vec3f(0.4,0.2,0);
+        Color3f truncColor = Color3f(0.4,0.2,0);
 
         float random (float min, float max);
         float variation(float val, float var);
-        Vec3f randUVec();
-        Vec3f randomRotate(Vec3f v, float a); //rotate a vector with angle 'a' in a random direction
+        Vec3d randUVec();
+        Vec3d randomRotate(Vec3d v, float a); //rotate a vector with angle 'a' in a random direction
 
         void initMaterials();
 
@@ -64,8 +65,8 @@ class VRTree : public VRTransform {
         void addLeafs(int lvl, int amount, float size = 0.03);
         void setLeafMaterial(VRMaterialPtr mat);
 
-        void createHullTrunkLod(VRGeoData& geo, int lvl, Vec3f offset, int ID);
-        void createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset, int ID);
+        void createHullTrunkLod(VRGeoData& geo, int lvl, Vec3d offset, int ID);
+        void createHullLeafLod(VRGeoData& geo, int lvl, Vec3d offset, int ID);
 };
 
 OSG_END_NAMESPACE;

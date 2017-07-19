@@ -31,7 +31,7 @@ void VRMeasure::rollPoints(pose p) {
 }
 
 void VRMeasure::update() {
-    Vec3f v1,v2,v3, vn1,vn2,vn3, p1,p2,p3, n1,n2,n3;
+    Vec3d v1,v2,v3, vn1,vn2,vn3, p1,p2,p3, n1,n2,n3;
     p1 = P1.pos(); p2 = P2.pos(); p3 = P3.pos();
     n1 = P1.dir(); n2 = P2.dir(); n3 = P3.dir();
     v1 = p3-p2; v2 = p1-p3; v3 = p2-p1;
@@ -46,9 +46,9 @@ void VRMeasure::update() {
     float a2 = acos(vn1.dot(-vn3))*180/Pi;
     float a3 = acos(vn1.dot(-vn2))*180/Pi;
 
-    Vec3f r(1,0,0);
-    Vec3f g(0,1,0);
-    Vec3f y(1,1,0);
+    Color3f r(1,0,0);
+    Color3f g(0,1,0);
+    Color3f y(1,1,0);
 
     setVector(0, p1, v3, r, "a: " + toString( v3.length()*1000, 4 ) + " mm");
     setVector(1, p2, v1, g, "b: " + toString( v1.length()*1000, 4 ) + " mm");

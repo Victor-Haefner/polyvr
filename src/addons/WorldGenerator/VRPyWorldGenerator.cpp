@@ -86,7 +86,7 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"addNode", (PyCFunction)VRPyRoadNetwork::addNode, METH_VARARGS, "Add a new node - node addNode( [x,y,z] )" },
     {"addGreenBelt", (PyCFunction)VRPyRoadNetwork::addGreenBelt, METH_VARARGS, "Add a green lane - lane addGreenBelt( road, float width )" },
     {"addWay", PyWrap(RoadNetwork, addWay, "Add a way", VRRoadPtr, string, vector<VREntityPtr>, int, string) },
-    {"addRoad", PyWrap(RoadNetwork, addRoad, "Add a road", VRRoadPtr, string, string, VREntityPtr, VREntityPtr, Vec3f, Vec3f, int) },
+    {"addRoad", PyWrap(RoadNetwork, addRoad, "Add a road", VRRoadPtr, string, string, VREntityPtr, VREntityPtr, Vec3d, Vec3d, int) },
     {"addPath", (PyCFunction)VRPyRoadNetwork::addPath, METH_VARARGS, "Add a new path - path addPath( str type, str name, [nodes], [normals] )" },
     {"addArrows", (PyCFunction)VRPyRoadNetwork::addArrows, METH_VARARGS, "Add a new path - arrows addArrows( lane, float t, [float] dirs )" },
     {"computeLanePaths", (PyCFunction)VRPyRoadNetwork::computeLanePaths, METH_VARARGS, "Compute the path of each lane of a road - computeLanePaths( road )" },
@@ -181,7 +181,7 @@ PyObject* VRPyRoadNetwork::setNatureManager(VRPyRoadNetwork* self, PyObject *arg
 
 PyObject* VRPyRoadNetwork::addNode(VRPyRoadNetwork* self, PyObject *args) {
     if (!self->valid()) return NULL;
-    auto n = self->objPtr->addNode( parseVec3f( args ) );
+    auto n = self->objPtr->addNode( parseVec3d( args ) );
     return VRPyEntity::fromSharedPtr( n );
 }
 
@@ -202,9 +202,9 @@ PyObject* VRPyRoadNetwork::addPath(VRPyRoadNetwork* self, PyObject *args) {
     PyObject* norms = 0;
     if (!PyArg_ParseTuple(args, "ssOO", &type, &name, &nodes, &norms)) return NULL;
     vector<VREntityPtr> nodesV;
-    vector<Vec3f> normsV;
+    vector<Vec3d> normsV;
     for (int i=0; i<pySize(nodes); i++) nodesV.push_back( ((VRPyEntity*)PyList_GetItem(nodes, i))->objPtr );
-    for (int i=0; i<pySize(norms); i++) normsV.push_back( parseVec3fList(PyList_GetItem(norms, i)) );
+    for (int i=0; i<pySize(norms); i++) normsV.push_back( parseVec3dList(PyList_GetItem(norms, i)) );
     auto p = self->objPtr->addPath( type?type:"", name?name:"", nodesV, normsV );
     return VRPyEntity::fromSharedPtr( p );
 }

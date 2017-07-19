@@ -57,7 +57,7 @@ class BlockWorld {
 
 class CaveKeeper : public BlockWorld {
     private:
-        void placeLight(Vec3f p);
+        void placeLight(Vec3d p);
 
     public:
         CaveKeeper();

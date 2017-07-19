@@ -8,8 +8,6 @@
 #include "core/utils/VRDoublebuffer.h"
 #include "core/setup/devices/VRSignalT.h"
 
-#include <OpenSG/OSGMatrixUtility.h>
-
 OSG_BEGIN_NAMESPACE;
 
 struct VRSnappingEngine::Rule {
@@ -17,12 +15,12 @@ struct VRSnappingEngine::Rule {
     Type translation = NONE;
     Type orientation = NONE;
     Line prim_t, prim_o;
-    Vec3f snapP;
+    Vec3d snapP;
 
     VRTransformPtr csys = 0;
     float distance = 1;
     float weight = 1;
-    Matrix C;
+    Matrix4d C;
 
     Rule(Type t, Type o, Line pt, Line po, float d, float w, VRTransformPtr l) :
         translation(t), orientation(o),
@@ -32,33 +30,33 @@ struct VRSnappingEngine::Rule {
         ID = i++;
     }
 
-    Vec3f local(Vec3f p) {
+    Vec3d local(Vec3d p) {
         if (csys) {
             C = csys->getWorldMatrix();
             C.invert();
-            Pnt3f pL;
+            Pnt3d pL;
             C.mult(p,pL);
-            return Vec3f(pL);
+            return Vec3d(pL);
         } else return p;
     }
 
-    Vec3f getSnapPoint(Vec3f p) {
-        if (translation == POINT) snapP = Vec3f(prim_t.getPosition());
-        if (translation == LINE) snapP = prim_t.getClosestPoint(local(p)).subZero(); // project on line
+    Vec3d getSnapPoint(Vec3d p) {
+        if (translation == POINT) snapP = Vec3d(prim_t.getPosition());
+        if (translation == LINE) snapP = Vec3d( prim_t.getClosestPoint( Vec3f(local(p)) ) ); // project on line
         if (translation == PLANE) {
             Plane pl(prim_t.getDirection(), prim_t.getPosition());
             p = local(p);
-            float d = pl.distance(p); // project on plane
-            snapP = p + d*pl.getNormal();
+            float d = pl.distance(Pnt3f(p)); // project on plane
+            snapP = p + Vec3d(d*pl.getNormal());
         }
         return snapP;
     }
 
-    void snap(Matrix& m) {
+    void snap(Matrix4d& m) {
         if (csys) C = csys->getWorldMatrix();
 
         if (orientation == POINT) {
-            MatrixLookAt(m, snapP, snapP+Vec3f(prim_o.getPosition()), prim_o.getDirection());
+            MatrixLookAt(m, snapP, snapP+Vec3d(prim_o.getPosition()), Vec3d(prim_o.getDirection()));
             m.multLeft(C);
         }
     }
@@ -136,7 +134,7 @@ void VRSnappingEngine::remLocalRules(VRTransformPtr obj) {
 void VRSnappingEngine::addObject(VRTransformPtr obj, float weight) {
     if (!obj) return;
     objects[obj] = obj->getWorldMatrix();
-    Vec3f p = obj->getWorldPosition();
+    Vec3d p = obj->getWorldPosition();
     positions->add(p, obj.get());
 }
 
@@ -158,8 +156,8 @@ void VRSnappingEngine::update() {
         if (obj == 0 || gobj == 0) continue;
         if (objects.count(obj) == 0) continue;
 
-        Matrix m = gobj->getWorldMatrix();
-        Vec3f p = Vec3f(m[3]);
+        Matrix4d m = gobj->getWorldMatrix();
+        Vec3d p = Vec3d(m[3]);
 
         bool lastEvent = event->snap;
         event->snap = 0;
@@ -170,11 +168,11 @@ void VRSnappingEngine::update() {
 
             if (anchors.count(obj)) {
                 for (auto a : anchors[obj]) {
-                    Matrix maL = a->getMatrix();
-                    Matrix maW = m; maW.mult(maL);
-                    Vec3f pa = Vec3f(maW[3]);
-                    Vec3f paL = r->local( Vec3f(maW[3]) );
-                    Vec3f psnap = r->getSnapPoint(pa);
+                    Matrix4d maL = a->getMatrix();
+                    Matrix4d maW = m; maW.mult(maL);
+                    Vec3d pa = Vec3d(maW[3]);
+                    Vec3d paL = r->local( Vec3d(maW[3]) );
+                    Vec3d psnap = r->getSnapPoint(pa);
                     float D = (psnap-paL).length(); // check distance
                     //cout << "dist " << D << " " << pa[1] << " " << paL[1] << " " << psnap[1] << endl;
                     if (!r->inRange(D)) continue;
@@ -186,7 +184,7 @@ void VRSnappingEngine::update() {
                     break;
                 }
             } else {
-                Vec3f p2 = r->getSnapPoint(p);
+                Vec3d p2 = r->getSnapPoint(p);
                 float D = (p2-p).length(); // check distance
                 if (!r->inRange(D)) continue;
                 r->snap(m);

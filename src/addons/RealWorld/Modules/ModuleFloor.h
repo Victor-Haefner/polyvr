@@ -15,7 +15,7 @@ class ModuleFloor : public BaseModule {
     private:
         VRMaterialPtr matSubquad;
 
-        void makeFloor(Vec2f pointA, Vec2f pointB, VRGeoData& geo);
+        void makeFloor(Vec2d pointA, Vec2d pointB, VRGeoData& geo);
         void initMaterial();
 
     public:

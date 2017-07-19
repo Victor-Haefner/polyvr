@@ -5,15 +5,15 @@ using namespace OSG;
 
 MapGrid::Box::Box() {}
 
-MapGrid::Box::Box(Vec2f min, float size) {
+MapGrid::Box::Box(Vec2d min, float size) {
     this->min = min;
-    this->max = min + Vec2f(size, size);
+    this->max = min + Vec2d(size, size);
     this->str = (boost::format("%.3f") % (round(min[0]*1000) / 1000)).str() + "-" +
                 (boost::format("%.3f") % (round(min[1]*1000) / 1000)).str();
 }
 
 bool MapGrid::Box::same(MapGrid::Box* b) { return str == b->str; }
-void MapGrid::set(Vec2f p) { position = p; update(); }
+void MapGrid::set(Vec2d p) { position = p; update(); }
 vector<MapGrid::Box>& MapGrid::getBoxes() { return grid; }
 
 
@@ -34,7 +34,7 @@ void MapGrid::update() {
             int k = i*dim+j;
             int x = i-d2;
             int y = j-d2;
-            grid[k] = Box(position + Vec2f(size*x, size*y), size);
+            grid[k] = Box(position + Vec2d(size*x, size*y), size);
         }
     }
 }

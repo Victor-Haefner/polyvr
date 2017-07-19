@@ -21,8 +21,8 @@ VRGeoPrimitive::VRGeoPrimitive(string name) : VRGeometry(name) {
     params_geo->setSize(0.015);
     params_geo->setBillboard(1);
     params_geo->setScreensize(1);
-    params_geo->setColor(Vec4f(0,0,0,1));
-    params_geo->setBackground(Vec4f(1,1,1,1));
+    params_geo->setColor(Color4f(0,0,0,1));
+    params_geo->setBackground(Color4f(1,1,1,1));
     params_geo->setPersistency(0);
 }
 
@@ -104,26 +104,26 @@ void VRGeoPrimitive::setupHandles() {
 
         auto cb = VRFunction<float>::create( "geo_prim_update", boost::bind(&VRGeoPrimitive::update, this, i, _1) );
 
-        if (n == "Scale") h->configure(cb, VRHandle::LINEAR, Vec3f(1,0,0), 1, true);
-        if (n == "Size x") h->configure(cb, VRHandle::LINEAR, Vec3f(1,0,0), 0.5, true);
-        if (n == "Size y") h->configure(cb, VRHandle::LINEAR, Vec3f(0,1,0), 0.5, true);
-        if (n == "Size z") h->configure(cb, VRHandle::LINEAR, Vec3f(0,0,1), 0.5, true);
-        if (n == "Radius") h->configure(cb, VRHandle::LINEAR, Vec3f(1,0,0), 1, true);
+        if (n == "Scale") h->configure(cb, VRHandle::LINEAR, Vec3d(1,0,0), 1, true);
+        if (n == "Size x") h->configure(cb, VRHandle::LINEAR, Vec3d(1,0,0), 0.5, true);
+        if (n == "Size y") h->configure(cb, VRHandle::LINEAR, Vec3d(0,1,0), 0.5, true);
+        if (n == "Size z") h->configure(cb, VRHandle::LINEAR, Vec3d(0,0,1), 0.5, true);
+        if (n == "Radius") h->configure(cb, VRHandle::LINEAR, Vec3d(1,0,0), 1, true);
         if (n == "Height") {
-            h->configure(cb, VRHandle::LINEAR, Vec3f(0,1,0), 0.5, true);
-            if (type == "Arrow") h->configure(cb, VRHandle::LINEAR, Vec3f(0,0,1), 1, true);
+            h->configure(cb, VRHandle::LINEAR, Vec3d(0,1,0), 0.5, true);
+            if (type == "Arrow") h->configure(cb, VRHandle::LINEAR, Vec3d(0,0,1), 1, true);
         }
-        if (n == "Width") h->configure(cb, VRHandle::LINEAR, Vec3f(1,0,0), 0.5, true);
-        if (n == "Trunc") h->configure(cb, VRHandle::LINEAR, Vec3f(1,0,0), 0.5, true);
-        if (n == "Hat") h->configure(cb, VRHandle::LINEAR, Vec3f(0,0,1), 1, true);
-        if (n == "Inner radius") h->configure(cb, VRHandle::LINEAR, Vec3f(0,1,0), 1, true);
-        if (n == "Outer radius") h->configure(cb, VRHandle::LINEAR, Vec3f(1,0,0), 0.5, true);
+        if (n == "Width") h->configure(cb, VRHandle::LINEAR, Vec3d(1,0,0), 0.5, true);
+        if (n == "Trunc") h->configure(cb, VRHandle::LINEAR, Vec3d(1,0,0), 0.5, true);
+        if (n == "Hat") h->configure(cb, VRHandle::LINEAR, Vec3d(0,0,1), 1, true);
+        if (n == "Inner radius") h->configure(cb, VRHandle::LINEAR, Vec3d(0,1,0), 1, true);
+        if (n == "Outer radius") h->configure(cb, VRHandle::LINEAR, Vec3d(1,0,0), 0.5, true);
 
-        if (n == "Hole") h->configure(cb, VRHandle::LINEAR, Vec3f(1,0,0), 1, true);
-        if (n == "Pitch") h->configure(cb, VRHandle::LINEAR, Vec3f(0,0,1), 2, true);
-        if (n == "Teeth size") h->configure(cb, VRHandle::LINEAR, Vec3f(0,1,0), 1, true);
-        if (n == "Bevel") h->configure(cb, VRHandle::LINEAR, Vec3f(1,1,0), 1, true);
-        if (n == "Length") h->configure(cb, VRHandle::LINEAR, Vec3f(0,0,1), 1, true);
+        if (n == "Hole") h->configure(cb, VRHandle::LINEAR, Vec3d(1,0,0), 1, true);
+        if (n == "Pitch") h->configure(cb, VRHandle::LINEAR, Vec3d(0,0,1), 2, true);
+        if (n == "Teeth size") h->configure(cb, VRHandle::LINEAR, Vec3d(0,1,0), 1, true);
+        if (n == "Bevel") h->configure(cb, VRHandle::LINEAR, Vec3d(1,1,0), 1, true);
+        if (n == "Length") h->configure(cb, VRHandle::LINEAR, Vec3d(0,0,1), 1, true);
 
         float v = toFloat(param);
         h->set( pose::create(), v );

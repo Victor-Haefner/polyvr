@@ -16,11 +16,11 @@ class JointPoints;
 
 struct StreetBorder {
     string streetSegmentId;
-    Vec2f start;
-    Vec2f end;
+    Vec2d start;
+    Vec2d end;
 
-    StreetBorder(string streetSegmentId, Vec2f start, Vec2f end);
-    Vec2f dir();
+    StreetBorder(string streetSegmentId, Vec2d start, Vec2d end);
+    Vec2d dir();
 };
 
 class StreetAlgos {

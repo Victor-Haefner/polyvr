@@ -44,8 +44,8 @@ class VRHaptic : public VRDevice {
         static VRHapticPtr create();
         VRHapticPtr ptr();
 
-        void setForce(Vec3f force, Vec3f torque);
-        Vec3f getForce();
+        void setForce(Vec3d force, Vec3d torque);
+        Vec3d getForce();
         void setSimulationScales(float scale, float forces);
         void attachTransform(VRTransformPtr trans);
         void setBase(VRTransformPtr trans);

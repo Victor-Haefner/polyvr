@@ -59,8 +59,8 @@ void VRConnectorWidget::update() {
     auto ws1 = w1.lock();
     auto ws2 = w2.lock();
     if (ws1 && ws2) {
-        Vec2f a1 = ws1->getAnchorPoint(ws2->pos);
-        Vec2f a2 = ws2->getAnchorPoint(ws1->pos);
+        Vec2d a1 = ws1->getAnchorPoint(ws2->pos);
+        Vec2d a2 = ws2->getAnchorPoint(ws1->pos);
         float x1 = a1[0];
         float x2 = a2[0];
         float y1 = a1[1];

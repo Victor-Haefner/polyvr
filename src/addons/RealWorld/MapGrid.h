@@ -11,12 +11,12 @@ using namespace std;
 class MapGrid {
     public:
         struct Box {
-            Vec2f min;
-            Vec2f max;
+            Vec2d min;
+            Vec2d max;
             string str;
 
             Box();
-            Box(Vec2f min, float size);
+            Box(Vec2d min, float size);
 
             bool same(Box* b);
         };
@@ -24,7 +24,7 @@ class MapGrid {
     private:
         int dim = 3;
         float size = 1000;
-        Vec2f position;
+        Vec2d position;
         vector<Box> grid;
 
         void update();
@@ -34,7 +34,7 @@ class MapGrid {
 
         vector<Box>& getBoxes();
 
-        void set(Vec2f p);
+        void set(Vec2d p);
         bool has(Box& b);
 };
 

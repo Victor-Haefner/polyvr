@@ -105,7 +105,7 @@ PyObject* VRPyImage::write(VRPyImage* self, PyObject *args) {
 PyObject* VRPyImage::getPixel(VRPyImage* self, PyObject *args) {
     PyObject* uv;
     if (! PyArg_ParseTuple(args, "O", &uv)) return NULL;
-    return toPyTuple( self->objPtr->getPixel( parseVec2fList(uv) ) );
+    return toPyTuple( OSG::Vec4d(self->objPtr->getPixel( parseVec2dList(uv) )) );
 }
 
 

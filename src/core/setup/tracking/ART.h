@@ -21,13 +21,13 @@ class VRFlystick;
 class VRThread;
 
 struct ART_device : public VRName {
-    Matrix m;
+    Matrix4d m;
     list<vector<int> > buttons;
     list<vector<float> > joysticks;
 
     VRTransformPtr ent = 0;
     VRFlystickPtr dev = 0;
-    Vec3f offset;
+    Vec3d offset;
     float scale = 1;
     int ID = 0;
     int type = 0;
@@ -49,7 +49,7 @@ class ART : public VRStorage {
         bool active = false;
         int port = 5000;
         int current_port = -1;
-        Vec3f offset;
+        Vec3d offset;
         string up;
 
         DTrack* dtrack = 0;
@@ -85,8 +85,8 @@ class ART : public VRStorage {
         void setARTPort(int port);
         int getARTPort();
 
-        void setARTOffset(Vec3f o);
-        Vec3f getARTOffset();
+        void setARTOffset(Vec3d o);
+        Vec3d getARTOffset();
 
         void startTestStream();
 
@@ -99,4 +99,4 @@ OSG_END_NAMESPACE
 
 
 //KONZEPT
-//ART_tracking -> WRAPPER [ vector { Matrix + ART_ID + ART_type } -> vector { Matrix + ID } ] -> SCENEGRAPH
+//ART_tracking -> WRAPPER [ vector { Matrix4d + ART_ID + ART_type } -> vector { Matrix4d + ID } ] -> SCENEGRAPH

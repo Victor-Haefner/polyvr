@@ -19,7 +19,7 @@ class VRPolygonSelection : public VRSelection {
         bool closed = false;
         VRGeometryPtr shape;
 
-        bool vertSelected(Vec3f p);
+        bool vertSelected(Vec3d p);
         bool objSelected(VRGeometryPtr geo);
         bool partialSelected(VRGeometryPtr geo);
 
@@ -32,7 +32,7 @@ class VRPolygonSelection : public VRSelection {
         static shared_ptr<VRPolygonSelection> create();
 
         void setOrigin(pose orig);
-        void addEdge(Vec3f dir);
+        void addEdge(Vec3d dir);
         void close(VRObjectPtr world);
 
         bool isClosed();

@@ -45,12 +45,10 @@ void VRBillboard::updateSize() {
     GeoPnt3fPropertyRecPtr pos = dynamic_cast<GeoPnt3fProperty *>(BBplane->getPositions());
 
     for (unsigned int i=0;i<pos->size();i++) {
-        Pnt3f tmp = pos->getValue(i);
+        auto tmp = pos->getValue(i);
         tmp[0] *= BBsizeW*0.5/abs(tmp[0]);
         tmp[1] *= BBsizeH*0.5/abs(tmp[1]);
-
         pos->setValue(tmp, i);
-        //cout << "\nBBPos: " << tmp;
     }
 }
 
@@ -59,9 +57,7 @@ VRBillboard::VRBillboard(string name, bool alpha) : VRGeometry(name) {//TODO, BB
     initBBMesh(alpha);
 }
 
-VRBillboard::~VRBillboard() {
-    //cout << "\ndestroy entity " << name << flush;
-}
+VRBillboard::~VRBillboard() {}
 
 void VRBillboard::setTexture(VRTexturePtr img) {
     BBtexture = img;
@@ -77,8 +73,8 @@ void VRBillboard::setSize(float sizeW, float sizeH) {
 void VRBillboard::createTestScene() {//Todo
     /*VRScene* scene = VRSceneManager::get()->makeDefaultScene("testBillboard");
     VRSceneManager::get()->VRSceneManager::get()->setKeyboardNavigationCentred(scene->getActiveCamera());
-    scene->getActiveCamera()->setFrom(Vec3f(0,0,-1));
-    scene->getActiveCamera()->setOrientation(Vec3f(0,0,0), Vec3f(0,1,0));
+    scene->getActiveCamera()->setFrom(Vec3d(0,0,-1));
+    scene->getActiveCamera()->setOrientation(Vec3d(0,0,0), Vec3d(0,1,0));
     VRBillboardPtr bb = new VRBillboard("bb");
     scene->add(bb);
     bb->setSize(1, 1);

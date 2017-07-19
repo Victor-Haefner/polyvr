@@ -53,7 +53,7 @@ void loadVtk(string path, VRTransformPtr res) {
 
     for (int i=0; i<npoints; i++) {
         auto p = dataset->GetPoint(i);
-        Vec3f v(p[0], p[1], p[2]);
+        Vec3d v(p[0], p[1], p[2]);
         geo.pushVert(v);
         cout << "point " << v << endl;
     }
@@ -151,7 +151,7 @@ void loadVtk(string path, VRTransformPtr res) {
 
     auto m = VRMaterial::create(name + "_mat");
     m->setLit(0);
-    m->setDiffuse(Vec3f(0.3,0.7,1.0));
+    m->setDiffuse(Color3f(0.3,0.7,1.0));
 
     VRGeometryPtr g = geo.asGeometry(name);
     g->setMaterial(m);
@@ -193,13 +193,13 @@ void loadVtk_old(string path, VRTransformPtr res) {
 
     if (project.dataset == "STRUCTURED_POINTS") {
         auto r = splitString( next() ); Vec3i dims = toVec3i( r[1] + " " + r[2] + " " + r[3] );
-             r = splitString( next() ); Vec3f p0 = toVec3f( r[1] + " " + r[2] + " " + r[3] );
-             r = splitString( next() ); Vec3f d = toVec3f( r[1] + " " + r[2] + " " + r[3] );
+             r = splitString( next() ); Vec3d p0 = toVec3d( r[1] + " " + r[2] + " " + r[3] );
+             r = splitString( next() ); Vec3d d = toVec3d( r[1] + " " + r[2] + " " + r[3] );
 
         for (int k=0; k<dims[2]; k++) {
             for (int j=0; j<dims[1]; j++) {
                 for (int i=0; i<dims[0]; i++) {
-                    geo.pushVert(p0 + Vec3f(d[0]*i, d[1]*j, d[2]*k) );
+                    geo.pushVert(p0 + Vec3d(d[0]*i, d[1]*j, d[2]*k) );
                     geo.pushPoint();
                 }
             }
@@ -210,9 +210,9 @@ void loadVtk_old(string path, VRTransformPtr res) {
         auto r = splitString( next() ); Vec3i dims = toVec3i( r[1] + " " + r[2] + " " + r[3] );
              r = splitString( next() ); int N = toInt(r[1]); string type = r[2]; // points
 
-        vector<Vec3f> points;
+        vector<Vec3d> points;
         for (int i=0; i<N; i++) {
-            Vec3f p = toVec3f( next() );
+            Vec3d p = toVec3d( next() );
             points.push_back(p);
             geo.pushVert(p);
             geo.pushPoint();
@@ -229,7 +229,7 @@ void loadVtk_old(string path, VRTransformPtr res) {
 
     if (project.dataset == "POLYDATA") {
         auto r = splitString( next() ); int N = toInt(r[1]); string type = r[2]; // points
-        for (int i=0; i<N; i++) geo.pushVert( toVec3f( next() ) );
+        for (int i=0; i<N; i++) geo.pushVert( toVec3d( next() ) );
 
         while (next() != "") {
             r = splitString( line );
@@ -257,7 +257,7 @@ void loadVtk_old(string path, VRTransformPtr res) {
 
     auto m = VRMaterial::create(project.title + "_mat");
     m->setLit(0);
-    m->setDiffuse(Vec3f(0.3,0.7,1.0));
+    m->setDiffuse(Color3f(0.3,0.7,1.0));
 
     VRGeometryPtr g = geo.asGeometry(project.title);
     g->setMaterial(m);

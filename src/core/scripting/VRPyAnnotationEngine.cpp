@@ -26,12 +26,12 @@ PyObject* VRPyAnnotationEngine::setSize(VRPyAnnotationEngine* self, PyObject* ar
 }
 
 PyObject* VRPyAnnotationEngine::setColor(VRPyAnnotationEngine* self, PyObject* args) {
-    self->objPtr->setColor(parseVec4f(args));
+    self->objPtr->setColor(Vec4f(parseVec4d(args)));
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyAnnotationEngine::setBackground(VRPyAnnotationEngine* self, PyObject* args) {
-    self->objPtr->setBackground(parseVec4f(args));
+    self->objPtr->setBackground(Vec4f(parseVec4d(args)));
     Py_RETURN_TRUE;
 }
 
@@ -43,7 +43,7 @@ PyObject* VRPyAnnotationEngine::set(VRPyAnnotationEngine* self, PyObject* args) 
     PyObject* p;
     if (! PyArg_ParseTuple(args, "iOs", &i, &p, &s)) return NULL;
 
-    self->objPtr->set(i, parseVec3fList(p), s?s:"");
+    self->objPtr->set(i, parseVec3dList(p), s?s:"");
     Py_RETURN_TRUE;
 }
 

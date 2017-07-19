@@ -282,18 +282,6 @@ PyObject* VRPyObject::destroy(VRPyObject* self) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyObject::addChild(VRPyObject* self, PyObject* args, PyObject *kwds) {
-    VRPyObject* child = NULL;
-    if (! PyArg_ParseTuple(args, "O", &child)) return NULL;
-    if ( isNone((PyObject*)child) ) Py_RETURN_TRUE;
-
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::addChild, Parent is invalid"); return NULL; }
-    if (child->objPtr == 0) { PyErr_SetString(err, "VRPyObject::addChild, Child is invalid"); return NULL; }
-
-    self->objPtr->addChild(child->objPtr);
-    Py_RETURN_TRUE;
-}
-
 PyObject* VRPyObject::switchParent(VRPyObject* self, PyObject* args, PyObject *kwds) {
     VRPyObject* parent = NULL;
     if (! PyArg_ParseTuple(args, "O", &parent)) return NULL;

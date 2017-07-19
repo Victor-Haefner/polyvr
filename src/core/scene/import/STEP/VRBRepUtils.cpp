@@ -9,22 +9,31 @@ VRBRepUtils::VRBRepUtils() {
     for (int i=0; i<Ncurv; i++) Adict.push_back(Dangle*i);
 }
 
-bool VRBRepUtils::sameVec(const Vec3f& v1, const Vec3f& v2, float d) {
-    Vec3f dv = v2-v1;
+bool VRBRepUtils::sameVec(const Vec3d& v1, const Vec3d& v2, float d) {
+    Vec3d dv = v2-v1;
     return ( abs(dv[0]) < d && abs(dv[1]) < d && abs(dv[2]) < d );
+}
+
+int VRBRepUtils::getSideN(double a) {
+    return round( a/Dangle - 0.5 );
 }
 
 int VRBRepUtils::getSideN(float a) {
     return round( a/Dangle - 0.5 );
 }
 
-Vec2f VRBRepUtils::getSide(float a) {
+Vec2d VRBRepUtils::getSide(double a) {
     int i = getSideN(a);
     return getSide(i);
 }
 
-Vec2f VRBRepUtils::getSide(int i) {
-    return Vec2f(i*Dangle, (i+1)*Dangle);
+Vec2d VRBRepUtils::getSide(float a) {
+    int i = getSideN(a);
+    return getSide(i);
+}
+
+Vec2d VRBRepUtils::getSide(int i) {
+    return Vec2d(i*Dangle, (i+1)*Dangle);
 }
 
 vector<float> VRBRepUtils::angleFrame(float a1, float a2) {
@@ -65,42 +74,42 @@ float VRBRepUtils::Bik(float t, int i, int k, const vector<double>& knots, bool 
     return A + B;
 }
 
-Vec3f VRBRepUtils::BSpline(float t, int deg, const vector<Vec3f>& cpoints, const vector<double>& knots) {
-    Vec3f p;
+Vec3d VRBRepUtils::BSpline(float t, int deg, const vector<Vec3d>& cpoints, const vector<double>& knots) {
+    Vec3d p;
     for (uint i=0; i<cpoints.size(); i++) p += cpoints[i]*Bik(t, i, deg, knots);
     return p;
 }
 
-Vec3f VRBRepUtils::BSplineW(float t, int deg, const vector<Vec3f>& cpoints, const vector<double>& knots, const vector<double>& weights) {
-    Vec3f p;
+Vec3d VRBRepUtils::BSplineW(float t, int deg, const vector<Vec3d>& cpoints, const vector<double>& knots, const vector<double>& weights) {
+    Vec3d p;
     float W = 0;
     for (uint i=0; i<cpoints.size(); i++) W += Bik(t, i, deg, knots)*weights[i];
     for (uint i=0; i<cpoints.size(); i++) p += cpoints[i]*Bik(t, i, deg, knots)*weights[i]/W;
     return p;
 }
 
-Vec3f VRBRepUtils::BSpline(float u, float v, int degu, int degv, const field<Vec3f>& cpoints, const vector<double>& knotsu, const vector<double>& knotsv) {
-    Vec3f p;
+Vec3d VRBRepUtils::BSpline(float u, float v, int degu, int degv, const field<Vec3d>& cpoints, const vector<double>& knotsu, const vector<double>& knotsv) {
+    Vec3d p;
     for (int i=0; i<cpoints.width; i++) {
         for (int j=0; j<cpoints.height; j++) {
-            Vec3f cp = cpoints.get(i,j);
+            Vec3d cp = cpoints.get(i,j);
             p += cp*Bik(u, j, degu, knotsu)*Bik(v, i, degv, knotsv);
             //cout << " VRBRepUtils::BSpline Bik(u) " << Bik(u, j, degu, knotsu,1) << endl;
         }
     }
-    //cout << "VRBRepUtils::BSpline u,v " << Vec2f(u, v) << "\t p " << p << endl;
+    //cout << "VRBRepUtils::BSpline u,v " << Vec2d(u, v) << "\t p " << p << endl;
     return p;
 }
 
-Vec3f VRBRepUtils::BSplineNorm(float u, float v, int degu, int degv, const field<Vec3f>& cpoints, const vector<double>& knotsu, const vector<double>& knotsv) {
-    Vec3f du, dv;
+Vec3d VRBRepUtils::BSplineNorm(float u, float v, int degu, int degv, const field<Vec3d>& cpoints, const vector<double>& knotsu, const vector<double>& knotsv) {
+    Vec3d du, dv;
 
     // derivative in u
     for (int i=0; i<cpoints.width; i++) {
         for (int j=0; j<cpoints.height-1; j++) {
             float ti1 = knotsu[j+1];
             float tik1 = knotsu[j+degu+1];
-            Vec3f cp = (cpoints.get(i,j+1) - cpoints.get(i,j))*degu/(tik1-ti1);
+            Vec3d cp = (cpoints.get(i,j+1) - cpoints.get(i,j))*degu/(tik1-ti1);
             du += cp*Bik(u, j+1, degu-1, knotsu)*Bik(v, i, degv, knotsv);
         }
     }
@@ -110,7 +119,7 @@ Vec3f VRBRepUtils::BSplineNorm(float u, float v, int degu, int degv, const field
         for (int j=0; j<cpoints.height; j++) {
             float ti1 = knotsv[i+1];
             float tik1 = knotsv[i+degv+1];
-            Vec3f cp = (cpoints.get(i+1,j) - cpoints.get(i,j))*degu/(tik1-ti1);
+            Vec3d cp = (cpoints.get(i+1,j) - cpoints.get(i,j))*degu/(tik1-ti1);
             dv += cp*Bik(u, j, degu, knotsu)*Bik(v, i+1, degv-1, knotsv);
         }
     }
@@ -118,7 +127,7 @@ Vec3f VRBRepUtils::BSplineNorm(float u, float v, int degu, int degv, const field
     return dv.cross(du);
 }
 
-Vec3f VRBRepUtils::BSpline(float u, float v, int degu, int degv, const field<Vec3f>& cpoints, const vector<double>& knotsu, const vector<double>& knotsv, const field<double>& weights) {
+Vec3d VRBRepUtils::BSpline(float u, float v, int degu, int degv, const field<Vec3d>& cpoints, const vector<double>& knotsu, const vector<double>& knotsv, const field<double>& weights) {
     float W = 0;
     for (int i=0; i<cpoints.width; i++) {
         for (int j=0; j<cpoints.height; j++) {
@@ -126,17 +135,17 @@ Vec3f VRBRepUtils::BSpline(float u, float v, int degu, int degv, const field<Vec
         }
     }
 
-    Vec3f p;
+    Vec3d p;
     for (int i=0; i<cpoints.width; i++) {
         for (int j=0; j<cpoints.height; j++) {
-            Vec3f cp = cpoints.get(i,j)*weights.get(i,j)/W;
+            Vec3d cp = cpoints.get(i,j)*weights.get(i,j)/W;
             p += cp*Bik(u, j, degu, knotsu)*Bik(v, i, degv, knotsv);
         }
     }
     return p;
 }
 
-Vec3f VRBRepUtils::BSplineNorm(float u, float v, int degu, int degv, const field<Vec3f>& cpoints, const vector<double>& knotsu, const vector<double>& knotsv, const field<double>& weights) {
+Vec3d VRBRepUtils::BSplineNorm(float u, float v, int degu, int degv, const field<Vec3d>& cpoints, const vector<double>& knotsu, const vector<double>& knotsv, const field<double>& weights) {
     float W = 0;
     for (int i=0; i<cpoints.width; i++) {
         for (int j=0; j<cpoints.height; j++) {
@@ -144,14 +153,14 @@ Vec3f VRBRepUtils::BSplineNorm(float u, float v, int degu, int degv, const field
         }
     }
 
-    Vec3f du, dv;
+    Vec3d du, dv;
 
     // derivative in u
     for (int i=0; i<cpoints.width; i++) {
         for (int j=0; j<cpoints.height-1; j++) {
             float ti1 = knotsu[j+1];
             float tik1 = knotsu[j+degu+1];
-            Vec3f cp = (cpoints.get(i,j+1)/*weights.get(i,j+1)/W*/ - cpoints.get(i,j)/*weights.get(i,j)/W*/)*degu/(tik1-ti1);
+            Vec3d cp = (cpoints.get(i,j+1)/*weights.get(i,j+1)/W*/ - cpoints.get(i,j)/*weights.get(i,j)/W*/)*degu/(tik1-ti1);
             du += cp*Bik(u, j+1, degu-1, knotsu)*Bik(v, i, degv, knotsv);
         }
     }
@@ -161,7 +170,7 @@ Vec3f VRBRepUtils::BSplineNorm(float u, float v, int degu, int degv, const field
         for (int j=0; j<cpoints.height; j++) {
             float ti1 = knotsv[i+1];
             float tik1 = knotsv[i+degv+1];
-            Vec3f cp = (cpoints.get(i+1,j)/*weights.get(i+1,j)/W*/ - cpoints.get(i,j)/*weights.get(i,j)/W*/)*degu/(tik1-ti1);
+            Vec3d cp = (cpoints.get(i+1,j)/*weights.get(i+1,j)/W*/ - cpoints.get(i,j)/*weights.get(i,j)/W*/)*degu/(tik1-ti1);
             dv += cp*Bik(u, j, degu, knotsu)*Bik(v, i+1, degv-1, knotsv);
         }
     }

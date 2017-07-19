@@ -25,7 +25,7 @@ VRWaypointPtr VRWaypoint::ptr() { return static_pointer_cast<VRWaypoint>( shared
 
 void VRWaypoint::setup() {
     auto m = VRMaterial::get("waypoint");
-    m->setDiffuse(Vec3f(1,0,0));
+    m->setDiffuse(Color3f(1,0,0));
     setMaterial(m);
 }
 
@@ -44,7 +44,7 @@ void VRWaypoint::setSize(float s) { size = s; updateGeo(); }
 
 void VRWaypoint::updateGeo() {
     auto m = VRMaterial::get("waypoint");
-    m->setDiffuse(Vec3f(1,0,0));
+    m->setDiffuse(Color3f(1,0,0));
     setMaterial(m);
     float s = size;
     string params = toString(s) + " " + toString(s) + " " + toString(s*0.5) + " " + toString(s*0.4);
@@ -52,13 +52,13 @@ void VRWaypoint::updateGeo() {
     if (!Pose) return;
 
     // compute pos
-    Vec3f pos = Pose->pos();
-    Plane fPlane(Floor->up(), Floor->pos());
-    float d = fPlane.distance(pos);
-    pos -= d*Floor->up();
+    Vec3d pos = Pose->pos();
+    Plane fPlane(Vec3f(Floor->up()), Pnt3f(Floor->pos()));
+    float d = fPlane.distance(Vec3f(pos));
+    pos -= Floor->up()*d;
 
     // compute dir
-    Vec3f dir = -Pose->dir();
+    Vec3d dir = -Pose->dir();
     dir -= dir.dot(Floor->up())*Floor->up();
 
     // apply pose

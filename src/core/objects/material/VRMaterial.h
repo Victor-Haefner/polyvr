@@ -91,7 +91,7 @@ class VRMaterial : public VRObject {
         void setMagMinFilter(int mag, int min, int unit = 0);
         void setTextureWrapping(int wrapS, int wrapT, int unit = 0);
         void setTextureType(string type);
-        void setQRCode(string s, Vec3f fg, Vec3f bg, int offset);
+        void setQRCode(string s, Vec3d fg, Vec3d bg, int offset);
         void setVideo(string vid_path);
         VRVideo* getVideo();
 
@@ -114,7 +114,7 @@ class VRMaterial : public VRObject {
         void setZOffset(float factor, float bias);
         void setSortKey(int key);
         void setFrontBackModes(int front, int back);
-        void setClipPlane(bool active, Vec4f equation, VRTransformPtr beacon);
+        void setClipPlane(bool active, Vec4d equation, VRTransformPtr beacon);
         void setStencilBuffer(bool clear, float value, float mask, int func, int opFail, int opZFail, int opPass);
 
         Color3f getDiffuse();

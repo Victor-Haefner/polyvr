@@ -49,7 +49,7 @@ void ModuleBuildings::loadBbox(MapGrid::Box bbox) {
         Building* b = new Building(way.second->id);
         for(string nID : way.second->nodes) {
             OSMNodePtr node = osmMap->getNode(nID);
-            Vec2f pos = mc->realToWorld(Vec2f(node->lat, node->lon));
+            Vec2d pos = mc->realToWorld(Vec2d(node->lat, node->lon));
             b->positions.push_back(pos);
         }
 
@@ -85,10 +85,10 @@ void ModuleBuildings::unloadBbox(MapGrid::Box bbox) {
     if (r_geos.count(id)) { r_geos[id]->destroy(); r_geos.erase(id); }
 }
 
-void ModuleBuildings::addBuildingWallLevel(VRGeoData* b_geo_d, Vec2f pos1, Vec2f pos2, int level, int bNum, float elevation) {
+void ModuleBuildings::addBuildingWallLevel(VRGeoData* b_geo_d, Vec2d pos1, Vec2d pos2, int level, int bNum, float elevation) {
     srand(bNum); //seed for random windows
     float len = (pos2 - pos1).length();
-    Vec2f wallDir = (pos2 - pos1);
+    Vec2d wallDir = (pos2 - pos1);
     wallDir.normalize();
 
     float wall_segment = Config::get()->WINDOW_DOOR_WIDTH;
@@ -121,40 +121,40 @@ void ModuleBuildings::addBuildingWallLevel(VRGeoData* b_geo_d, Vec2f pos1, Vec2f
     float f_tc2 = fi * _N - e + _N;
 
     for (int i=0; i<segN; i++) {
-        Vec2f w1 = pos1 + (wallDir * (i*wall_segment));
-        Vec2f w2 = pos1 + (wallDir * ((i+1)*wall_segment));
+        Vec2d w1 = pos1 + (wallDir * (i*wall_segment));
+        Vec2d w2 = pos1 + (wallDir * ((i+1)*wall_segment));
 
-        Vec2f wallVector = w2-w1;
-        Vec3f n = Vec3f(-wallVector[1], 0, wallVector[0]);
+        Vec2d wallVector = w2-w1;
+        Vec3d n = Vec3d(-wallVector[1], 0, wallVector[0]);
 
         if (i == doorIndex) { // door
-            int Va = b_geo_d->pushVert(Vec3f(w1[0], low, w1[1]), n, Vec2f(f_tc1, e), Vec2f(d_tc1, 0.5+e));
-            int Vb = b_geo_d->pushVert(Vec3f(w2[0], low, w2[1]), n, Vec2f(f_tc2, e), Vec2f(d_tc2, 0.5+e));
-            int Vc = b_geo_d->pushVert(Vec3f(w2[0], high, w2[1]), n, Vec2f(f_tc2, 0.25-e), Vec2f(d_tc2, 0.75-e));
-            int Vd = b_geo_d->pushVert(Vec3f(w1[0], high, w1[1]), n, Vec2f(f_tc1, 0.25-e), Vec2f(d_tc1, 0.75-e));
+            int Va = b_geo_d->pushVert(Vec3d(w1[0], low, w1[1]), n, Vec2d(f_tc1, e), Vec2d(d_tc1, 0.5+e));
+            int Vb = b_geo_d->pushVert(Vec3d(w2[0], low, w2[1]), n, Vec2d(f_tc2, e), Vec2d(d_tc2, 0.5+e));
+            int Vc = b_geo_d->pushVert(Vec3d(w2[0], high, w2[1]), n, Vec2d(f_tc2, 0.25-e), Vec2d(d_tc2, 0.75-e));
+            int Vd = b_geo_d->pushVert(Vec3d(w1[0], high, w1[1]), n, Vec2d(f_tc1, 0.25-e), Vec2d(d_tc1, 0.75-e));
             b_geo_d->pushQuad(Va, Vb, Vc, Vd);
         } else { // window
-            int Va = b_geo_d->pushVert(Vec3f(w1[0], low, w1[1]), n, Vec2f(f_tc1, e), Vec2f(w_tc1, 0.25+e));
-            int Vb = b_geo_d->pushVert(Vec3f(w2[0], low, w2[1]), n, Vec2f(f_tc2, e), Vec2f(w_tc2, 0.25+e));
-            int Vc = b_geo_d->pushVert(Vec3f(w2[0], high, w2[1]), n, Vec2f(f_tc2, 0.25-e), Vec2f(w_tc2, 0.5-e));
-            int Vd = b_geo_d->pushVert(Vec3f(w1[0], high, w1[1]), n, Vec2f(f_tc1, 0.25-e), Vec2f(w_tc1, 0.5-e));
+            int Va = b_geo_d->pushVert(Vec3d(w1[0], low, w1[1]), n, Vec2d(f_tc1, e), Vec2d(w_tc1, 0.25+e));
+            int Vb = b_geo_d->pushVert(Vec3d(w2[0], low, w2[1]), n, Vec2d(f_tc2, e), Vec2d(w_tc2, 0.25+e));
+            int Vc = b_geo_d->pushVert(Vec3d(w2[0], high, w2[1]), n, Vec2d(f_tc2, 0.25-e), Vec2d(w_tc2, 0.5-e));
+            int Vd = b_geo_d->pushVert(Vec3d(w1[0], high, w1[1]), n, Vec2d(f_tc1, 0.25-e), Vec2d(w_tc1, 0.5-e));
             b_geo_d->pushQuad(Va, Vb, Vc, Vd);
         }
 
     }
 }
 
-Vec2f convRTC(float u, float v, Vec2f m) {
-    Vec2f tc(u,v);
+Vec2d convRTC(float u, float v, Vec2d m) {
+    Vec2d tc(u,v);
     tc -= m;
     float f = 0.003;
     tc *= f;
-    tc += Vec2f(0.125, 0.875);
+    tc += Vec2d(0.125, 0.875);
     //u *= f;
     //v *= f;
-    //Vec2f tc(u-0.25*floor(4*u), 0.75+v-0.25*floor(4*v));
+    //Vec2d tc(u-0.25*floor(4*u), 0.75+v-0.25*floor(4*v));
     //return tc;
-    //cout << "AA " << Vec2f(u, v)-m << endl;
+    //cout << "AA " << Vec2d(u, v)-m << endl;
     return tc;
 }
 
@@ -180,11 +180,11 @@ void ModuleBuildings::addBuildingRoof(VRGeoData* r_geo_d, Building* building, fl
 
         float mx = (p1[0] + p2[0] + p3[0] )/3.0;
         float my = (p1[1] + p2[1] + p3[1] )/3.0;
-        Vec3f n = Vec3f(0, 1, 0);
+        Vec3d n = Vec3d(0, 1, 0);
 
-        r_geo_d->pushVert(Vec3f(p1[0], height, p1[1]), n, convRTC(p1[0], p1[1], Vec2f(mx,my)));
-        r_geo_d->pushVert(Vec3f(p2[0], height, p2[1]), n, convRTC(p2[0], p2[1], Vec2f(mx,my)));
-        r_geo_d->pushVert(Vec3f(p3[0], height, p3[1]), n, convRTC(p3[0], p3[1], Vec2f(mx,my)));
+        r_geo_d->pushVert(Vec3d(p1[0], height, p1[1]), n, convRTC(p1[0], p1[1], Vec2d(mx,my)));
+        r_geo_d->pushVert(Vec3d(p2[0], height, p2[1]), n, convRTC(p2[0], p2[1], Vec2d(mx,my)));
+        r_geo_d->pushVert(Vec3d(p3[0], height, p3[1]), n, convRTC(p3[0], p3[1], Vec2d(mx,my)));
         r_geo_d->pushTri();
     }
 }

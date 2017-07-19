@@ -46,25 +46,25 @@ bool VRNumberingEngine::checkUIn(int i, int grp) {
     return false;
 }
 
-void VRNumberingEngine::add(Vec3f p, int N, float f, int d, int grp) {
+void VRNumberingEngine::add(Vec3d p, int N, float f, int d, int grp) {
     if (checkUIn(grp)) return;
 
     for (int i=0; i<N; i++) {
-        data->pushVert(p, Vec3f(0,grp,0));
+        data->pushVert(p, Vec3d(0,grp,0));
         data->pushPoint();
     }
 
     data->apply( ptr() );
 }
 
-void VRNumberingEngine::set(int i, Vec3f p, float f, int d, int grp) {
+void VRNumberingEngine::set(int i, Vec3d p, float f, int d, int grp) {
     if (checkUIn(i,grp)) return;
     float f1 = floor(f);
     float f2 = f-f1;
     string sf2 = toString(f2);
     if (sf2.size() > 2) sf2 = sf2.substr(2,sf2.size()-1);
     f2 = toFloat(sf2);
-    data->setVert(i, p, Vec3f(f1,grp,f2));
+    data->setVert(i, p, Vec3d(f1,grp,f2));
 }
 
 void VRNumberingEngine::setPrePost(int grp, string pre, string post) {

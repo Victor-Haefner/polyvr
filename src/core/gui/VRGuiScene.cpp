@@ -96,15 +96,15 @@ void setObject(VRObjectPtr o) {
 void setTransform(VRTransformPtr e) {
     setExpanderSensitivity("expander1", true);
 
-    Vec3f f = e->getFrom();
-    Vec3f a = e->getAt();
-    Vec3f u = e->getUp();
-    Vec3f d = e->getDir();
-    Vec3f s = e->getScale();
+    Vec3d f = e->getFrom();
+    Vec3d a = e->getAt();
+    Vec3d u = e->getUp();
+    Vec3d d = e->getDir();
+    Vec3d s = e->getScale();
 
     auto c = e->getConstraint();
-    Vec3f tc = c->getTConstraint();
-    Vec3f rc = c->getRConstraint();
+    Vec3d tc = c->getTConstraint();
+    Vec3d rc = c->getRConstraint();
 
     posEntry.set(f);
     atEntry.set(a);
@@ -113,10 +113,10 @@ void setTransform(VRTransformPtr e) {
     scaleEntry.set(s);
     ctEntry.set(tc);
 
-    atEntry.setFontColor(Vec3f(0, 0, 0));
-    dirEntry.setFontColor(Vec3f(0, 0, 0));
-    if (e->get_orientation_mode())  atEntry.setFontColor(Vec3f(0.6, 0.6, 0.6));
-    else                            dirEntry.setFontColor(Vec3f(0.6, 0.6, 0.6));
+    atEntry.setFontColor(Vec3d(0, 0, 0));
+    dirEntry.setFontColor(Vec3d(0, 0, 0));
+    if (e->get_orientation_mode())  atEntry.setFontColor(Vec3d(0.6, 0.6, 0.6));
+    else                            dirEntry.setFontColor(Vec3d(0.6, 0.6, 0.6));
 
     bool doTc = c->hasTConstraint();
     bool doRc = c->hasRConstraint();
@@ -212,7 +212,7 @@ void setLight(VRLightPtr l) {
     setColorChooserColor("light_amb", toColor3f(l->getAmbient()));
     setColorChooserColor("light_spec", toColor3f(l->getSpecular()));
 
-    Vec3f a = l->getAttenuation();
+    Vec3d a = l->getAttenuation();
     setTextEntry("entry44", toString(a[0]));
     setTextEntry("entry45", toString(a[1]));
     setTextEntry("entry46", toString(a[2]));
@@ -505,42 +505,42 @@ void VRGuiScene::on_group_edited() {
 }
 
 // VR3DEntities
-void on_change_from(Vec3f v) {
+void on_change_from(Vec3d v) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
     obj->setFrom(v);
     updateObjectForms();
 }
 
-void on_change_at(Vec3f v) {
+void on_change_at(Vec3d v) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
     obj->setAt(v);
     updateObjectForms();
 }
 
-void on_change_dir(Vec3f v) {
+void on_change_dir(Vec3d v) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
     obj->setDir(v);
     updateObjectForms();
 }
 
-void on_change_up(Vec3f v) {
+void on_change_up(Vec3d v) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
     obj->setUp(v);
     updateObjectForms();
 }
 
-void on_change_lod_center(Vec3f v) {
+void on_change_lod_center(Vec3d v) {
     if(!trigger_cbs) return;
     VRLodPtr obj = static_pointer_cast<VRLod>( getSelected() );
     obj->setCenter(v);
     updateObjectForms();
 }
 
-void on_scale_changed(Vec3f v) {
+void on_scale_changed(Vec3d v) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
     obj->setScale(v);
@@ -557,11 +557,11 @@ void VRGuiScene::on_focus_clicked() {
 void VRGuiScene::on_identity_clicked() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
-    obj->setPose(Vec3f(0,0,0), Vec3f(0,0,-1), Vec3f(0,1,0));
+    obj->setPose(Vec3d(0,0,0), Vec3d(0,0,-1), Vec3d(0,1,0));
     updateObjectForms();
 }
 
-void on_edit_T_constraint(Vec3f v) {
+void on_edit_T_constraint(Vec3d v) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
     obj->getConstraint()->setTConstraint(v, obj->getConstraint()->getTMode());
@@ -589,7 +589,7 @@ void VRGuiScene::on_toggle_rc() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
-    Vec3f rc;
+    Vec3d rc;
     if (getCheckButtonState("checkbutton18") ) rc[0] = 1;
     if (getCheckButtonState("checkbutton19") ) rc[1] = 1;
     if (getCheckButtonState("checkbutton20") ) rc[2] = 1;
@@ -1104,7 +1104,7 @@ void VRGuiScene::on_edit_light_attenuation() {
     string ac = getTextEntry("entry44");
     string al = getTextEntry("entry45");
     string aq = getTextEntry("entry46");
-    obj->setAttenuation(Vec3f(toFloat(ac), toFloat(al), toFloat(aq)));
+    obj->setAttenuation(Vec3d(toFloat(ac), toFloat(al), toFloat(aq)));
 }
 
 bool VRGuiScene::setShadow_color(GdkEventButton* b) {

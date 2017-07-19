@@ -27,7 +27,7 @@ class Vive {
         /*vr::IVRSystem* HMD = 0;
         vr::TrackedDevicePose_t poses[ vr::k_unMaxTrackedDeviceCount ];
 
-        Matrix convMat( const vr::HmdMatrix34_t &m );*/
+        Matrix4d convMat( const vr::HmdMatrix34_t &m );*/
         void processEvent();
         void processController();
         void updatePoses();

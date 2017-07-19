@@ -15,7 +15,7 @@ PyMethodDef VRPyPolygon::methods[] = {
     {"set", (PyCFunction)VRPyPolygon::set, METH_VARARGS, "Set the VRPolygon from a list of points - set( [[x,y]] )" },
     {"clear", (PyCFunction)VRPyPolygon::clear, METH_NOARGS, "Clear all points - clear()" },
     {"getRandomPoints", (PyCFunction)VRPyPolygon::getRandomPoints, METH_VARARGS, "Clear all points - getRandomPoints( | float density, float padding)" },
-    {"isInside", PyWrap(Polygon, isInside, "Check if point is inside polygon", bool, Vec2f) },
+    {"isInside", PyWrap(Polygon, isInside, "Check if point is inside polygon", bool, Vec2d) },
     {NULL}  /* Sentinel */
 };
 
@@ -28,7 +28,7 @@ PyObject* VRPyPolygon::addPoint(VRPyPolygon* self, PyObject* args) {
     if (!self->valid()) return NULL;
     PyObject* v;
     if (! PyArg_ParseTuple(args, "O", &v)) return NULL;
-    self->objPtr->addPoint( parseVec2fList(v) );
+    self->objPtr->addPoint( parseVec2dList(v) );
     Py_RETURN_TRUE;
 }
 
@@ -73,8 +73,8 @@ PyObject* VRPyPolygon::set(VRPyPolygon* self, PyObject* args) {
     if (!self->valid()) return NULL;
     PyObject* v;
     if (! PyArg_ParseTuple(args, "O", &v)) return NULL;
-    vector<OSG::Vec2f> vec;
-    for (int i=0; i<pySize(v); i++) vec.push_back( parseVec2fList( PyList_GetItem(v,i) ) );
+    vector<OSG::Vec2d> vec;
+    for (int i=0; i<pySize(v); i++) vec.push_back( parseVec2dList( PyList_GetItem(v,i) ) );
     self->objPtr->set(vec);
     Py_RETURN_TRUE;
 }

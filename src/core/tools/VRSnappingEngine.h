@@ -43,16 +43,16 @@ class VRSnappingEngine {
             int snap = 0;
             VRTransformPtr o1 = 0;
             VRTransformPtr o2 = 0;
-            Matrix m;
+            Matrix4d m;
             VRDevicePtr dev = 0;
-            void set(VRTransformPtr O1, VRTransformPtr O2, Matrix M, VRDevicePtr DEV, int Snap) {
+            void set(VRTransformPtr O1, VRTransformPtr O2, Matrix4d M, VRDevicePtr DEV, int Snap) {
                 o1 = O1; o2 = O2; m = M; dev = DEV; snap = Snap;
             }
         };
 
     private:
         map<int, Rule*> rules; // snapping rules, translation and orientation
-        map<VRTransformPtr, Matrix> objects; // map objects to reference matrix
+        map<VRTransformPtr, Matrix4d> objects; // map objects to reference matrix
         map<VRTransformPtr, vector<VRTransformPtr> > anchors; // object anchors
         Octree* positions = 0; // objects by positions
         VRGeometryPtr hintGeo = 0;

@@ -141,7 +141,7 @@ void VRMouse::updatePosition(int x, int y) {
 
     //cam->getCam()->calcViewRay(ray,x,y,*v->getViewport());
     calcViewRay(cam->getCam(), ray, rx,ry,w,h);
-    editBeacon()->setDir(ray.getDirection());
+    editBeacon()->setDir(Vec3d(ray.getDirection()));
 
     int side = -1;
     if (rx > 0.95) side = 0;

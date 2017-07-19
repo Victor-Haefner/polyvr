@@ -10,11 +10,11 @@ using namespace std;
 
 struct PeriodicTableEntry {
     int valence_electrons = 0;
-    Vec3f color;
+    Vec3d color;
     float radius = 1;
 
     PeriodicTableEntry();
-    PeriodicTableEntry( int valence_electrons, float radius, Vec3f color);
+    PeriodicTableEntry( int valence_electrons, float radius, Vec3d color);
 };
 
 class VRAtom;
@@ -24,7 +24,7 @@ struct VRBond {
     int type = 1;
     int slot = 0;
     bool extra = false;
-    Pnt3f p1, p2;
+    Pnt3d p1, p2;
 
     VRBond();
     VRBond(int t, int s, VRAtom* a2, VRAtom* a1);
@@ -37,7 +37,7 @@ class VRAtom {
 
         int ID = 0; // ID in molecule
         bool full = false; // all valence electrons bound
-        Matrix transformation;
+        Matrix4d transformation;
 
         int bound_valence_electrons = 0;
         uint recFlag = 0;
@@ -50,8 +50,8 @@ class VRAtom {
         ~VRAtom();
 
         PeriodicTableEntry getParams();
-        Matrix getTransformation();
-        void setTransformation(Matrix m);
+        Matrix4d getTransformation();
+        void setTransformation(Matrix4d m);
         map<int, VRBond>& getBonds();
         int getID();
         void setID(int ID);
@@ -62,7 +62,7 @@ class VRAtom {
 		bool append(VRAtom* b, int bType, bool extra = false);
 		void detach(VRAtom* a);
 
-		void propagateTransformation(Matrix& T, uint flag, bool self = true);
+		void propagateTransformation(Matrix4d& T, uint flag, bool self = true);
 
 		void print();
 };

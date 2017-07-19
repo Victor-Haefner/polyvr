@@ -35,7 +35,7 @@ class ModuleTerrain : public BaseModule {
 
         void addTerrain(string texture, string key, string value, int height = 0);
         void addTerrain(Terrain* ter, VRGeoData* gdTerrain, int height);
-        Vec3f tesselateTriangle(float p1X, float p1Y, float p2X, float p2Y, float p3X, float p3Y, float height, VRGeoData* gdTerrain, Vec3f usedCorners = Vec3f());
+        Vec3d tesselateTriangle(float p1X, float p1Y, float p2X, float p2Y, float p3X, float p3Y, float height, VRGeoData* gdTerrain, Vec3d usedCorners = Vec3d());
         VRGeometryPtr makeTerrainGeometry(Terrain* ter, TerrainMaterial* terrainMat);
 };
 

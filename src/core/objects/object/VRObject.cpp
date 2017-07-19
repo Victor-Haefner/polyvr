@@ -97,7 +97,7 @@ void VRObject::allowCulling(bool b, bool recursive) {
 
 void VRObject::setVolume(const Boundingbox& box) {
     BoxVolume &vol = getNode()->node->editVolume(false);
-    vol.setBounds(box.min(), box.max());
+    vol.setBounds(Vec3f(box.min()), Vec3f(box.max()));
     vol.setStatic(true);
     vol.setValid(true);
 }
@@ -418,13 +418,13 @@ BoundingboxPtr VRObject::getBoundingBox() {
     osg->node->updateVolume();
     osg->node->getVolume().getBounds(p1, p2);
     BoundingboxPtr b = shared_ptr<Boundingbox>( new Boundingbox );
-    b->update(p1.subZero());
-    b->update(p2.subZero());
+    b->update(Vec3d(p1));
+    b->update(Vec3d(p2));
     return b;
 }
 
 void VRObject::flattenHiarchy() {
-    map<VRTransformPtr, Matrix> geos;
+    map<VRTransformPtr, Matrix4d> geos;
     for(auto g : getChildren(true, "Geometry") ) {
         shared_ptr<VRTransform> t = static_pointer_cast<VRTransform>(g);
         geos[t] = t->getWorldMatrix();

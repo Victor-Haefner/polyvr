@@ -34,8 +34,8 @@ class VRParticles : public VRGeometry {
 
         template<class P> void resetParticles(int amount=startValue);
         virtual void updateParticles(int b = 0, int e = -1);
-        int spawnCuboid(Vec3f center, Vec3f size, float distance = 0.0);
-        virtual int setEmitter(Vec3f base, Vec3f dir, int from, int to, int interval, bool loop=false);
+        int spawnCuboid(Vec3d center, Vec3d size, float distance = 0.0);
+        virtual int setEmitter(Vec3d base, Vec3d dir, int from, int to, int interval, bool loop=false);
         void disableEmitter(int id);
         void destroyEmitter(int id);
 
@@ -54,8 +54,8 @@ class VRParticles : public VRGeometry {
         btDiscreteDynamicsWorld* world = 0;
 
         boost::recursive_mutex& mtx();
-        inline Vec3f toVec3f(btVector3 v) { return Vec3f(v[0], v[1], v[2]); };
-        inline btVector3 toBtVector3(Vec3f v) { return btVector3(v[0], v[1], v[2]); };
+        inline Vec3d toVec3d(btVector3 v) { return Vec3d(v[0], v[1], v[2]); };
+        inline btVector3 toBtVector3(Vec3d v) { return btVector3(v[0], v[1], v[2]); };
 
         virtual void setFunctions(int from, int to);
         virtual void disableFunctions();

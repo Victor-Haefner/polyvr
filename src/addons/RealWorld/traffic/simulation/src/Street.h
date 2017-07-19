@@ -338,7 +338,7 @@ class Street {
          @param lane The number of the lane that is driven on.
          @return The position to drive to.
          */
-        Vec2f getRelativeNodePosition(const ID nodeId, const int lane) const;
+        Vec2d getRelativeNodePosition(const ID nodeId, const int lane) const;
 
         /**
          Calculates a position on the street based on the lane number && an offset.
@@ -348,7 +348,7 @@ class Street {
          @param offset The offset on the lane from 0 to getLength().
          @return The position on the lane that is at the offset along the street.
          */
-        Vec2f getPositionOnLane(const int lane, const double offset) const;
+        Vec2d getPositionOnLane(const int lane, const double offset) const;
 
         /**
          Returns the node indices on this street which are next to the given position.
@@ -360,7 +360,7 @@ class Street {
          @return The indices of the two nearest nodes inside this street. The first element
             is nearer to the given position than the second one.
          */
-        pair<size_t, size_t> getNearestNodeIndices(const Vec2f& position) const;
+        pair<size_t, size_t> getNearestNodeIndices(const Vec2d& position) const;
 
         /**
          Applies a given traffic density to a street.

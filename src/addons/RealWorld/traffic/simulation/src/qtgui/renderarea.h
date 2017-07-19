@@ -53,7 +53,7 @@ class RenderArea : public QWidget {
          @param end The end position.
          @param capMaxWidth If set to \c false the line is allowed to become bigger than the given size through zooming.
          */
-        void drawLine(QPainter& painter, Vec2f start, Vec2f end, bool capMaxWidth = true);
+        void drawLine(QPainter& painter, Vec2d start, Vec2d end, bool capMaxWidth = true);
 
         /**
          Draws a line.
@@ -70,7 +70,7 @@ class RenderArea : public QWidget {
          @param pos The position of the center.
          @param radius The radius.
          */
-        void drawEllipse(QPainter& painter, Vec2f pos, double radius);
+        void drawEllipse(QPainter& painter, Vec2d pos, double radius);
 
         /**
          Draws a circle.
@@ -86,7 +86,7 @@ class RenderArea : public QWidget {
          @param pos The position of the center.
          @param size The side length.
          */
-        void drawRect(QPainter& painter, Vec2f pos, double size);
+        void drawRect(QPainter& painter, Vec2d pos, double size);
 
         /**
          Draws a square.
@@ -102,7 +102,7 @@ class RenderArea : public QWidget {
          @param pos The position.
          @param text The text to write.
          */
-        void drawText(QPainter& painter, Vec2f pos, string text);
+        void drawText(QPainter& painter, Vec2d pos, string text);
 
         /**
          Draws a text.

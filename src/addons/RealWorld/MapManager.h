@@ -20,7 +20,7 @@ class MapData;
 
 class MapManager {
     private:
-        Vec2f position;
+        Vec2d position;
         MapGrid* grid = 0;
         MapCoordinator* mapCoordinator = 0;
         World* world = 0;
@@ -41,10 +41,10 @@ class MapManager {
         void work(VRThreadWeakPtr tw);
 
     public:
-        MapManager(Vec2f position, MapCoordinator* mapCoordinator, World* world, VRObjectPtr root);
+        MapManager(Vec2d position, MapCoordinator* mapCoordinator, World* world, VRObjectPtr root);
 
         void addModule(BaseModule* mod);
-        void updatePosition(Vec2f worldPosition);
+        void updatePosition(Vec2d worldPosition);
 };
 
 OSG_END_NAMESPACE;

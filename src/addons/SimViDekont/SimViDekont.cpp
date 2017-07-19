@@ -40,7 +40,7 @@ Color3f SimViDekont::getColor2(float v) {
 bool SimViDekont::isElementValid(int i, frame* f) {
     // compute bounding box
 
-    Vec3f Min, Max, delta;
+    Vec3d Min, Max, delta;
     uint id = f->ind->at(i*8); // vert ID
 
     for (int k=0;k<3;k++) Min[k] = f->pos->at( id ).x[k];
@@ -52,8 +52,8 @@ bool SimViDekont::isElementValid(int i, frame* f) {
 
 
         for (int k=0;k<3;k++) {
-            Min[k] = min( f->pos->at(id).x[k], Min[k] );
-            Max[k] = max( f->pos->at(id).x[k], Max[k] );
+            Min[k] = min( double(f->pos->at(id).x[k]), Min[k] );
+            Max[k] = max( double(f->pos->at(id).x[k]), Max[k] );
         }
     }
 
@@ -122,7 +122,7 @@ void SimViDekont::createGeo(frame* f) {
     computeVertexColors(f, vmap, vertexStrain, false);
 
     //positionen und Normalen
-    Vec3f p;
+    Vec3d p;
     float k = 200; // scale
     int j = 0;
     for(uint i=0; i < f->pos->size(); i++) {
@@ -141,8 +141,8 @@ void SimViDekont::createGeo(frame* f) {
 
 
         Pos->addValue(p);
-        //Pos->addValue(Vec3f(i/10, i%10, 0));
-        Norms->addValue(Vec3f(0,1,0));
+        //Pos->addValue(Vec3d(i/10, i%10, 0));
+        Norms->addValue(Vec3d(0,1,0));
         //Norms->addValue(norms[i]);
         if (!doSurface) Indices->addValue(i);
         //Indices->addValue(i);
@@ -275,7 +275,7 @@ void SimViDekont::initFrameGeometries() {
 
         root->addChild(frame->geo);
         frame->geo->hide();
-        frame->geo->translate(Vec3f(0,1,0));
+        frame->geo->translate(Vec3d(0,1,0));
     }
 }
 

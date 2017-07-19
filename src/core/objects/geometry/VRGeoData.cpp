@@ -111,68 +111,68 @@ bool VRGeoData::valid() const {
 
 int VRGeoData::size() const { return data->pos->size(); }
 
-Pnt3f VRGeoData::getPosition(int i) { return int(data->pos->size()) > i ? data->pos->getValue(i) : Pnt3f(); }
-Vec3f VRGeoData::getNormal(int i) { return int(data->norms->size()) > i ? data->norms->getValue(i) : Vec3f(); }
-Vec4f VRGeoData::getColor(int i) {
+Pnt3d VRGeoData::getPosition(int i) { return int(data->pos->size()) > i ? Pnt3d(data->pos->getValue(i)) : Pnt3d(); }
+Vec3d VRGeoData::getNormal(int i) { return int(data->norms->size()) > i ? Vec3d(data->norms->getValue(i)) : Vec3d(); }
+Color4f VRGeoData::getColor(int i) {
     if (int(data->cols4->size()) > i) return data->cols4->getValue(i);
     if (int(data->cols3->size()) > i) {
-        Vec3f c = data->cols3->getValue(i);
-        return Vec4f( c[0], c[1], c[2], 1.0 );
+        auto c = data->cols3->getValue(i);
+        return Color4f( c[0], c[1], c[2], 1.0 );
     }
-    return Vec4f();
+    return Color4f();
 }
 
-int VRGeoData::pushVert(Pnt3f p) { data->pos->addValue(p); return data->pos->size()-1; }
-int VRGeoData::pushVert(Pnt3f p, Vec3f n) { data->norms->addValue(n); return pushVert(p); }
-int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec3f c) { data->cols3->addValue(c); return pushVert(p,n); }
-int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec4f c) { data->cols4->addValue(c); return pushVert(p,n); }
-int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec2f t) { data->texs->addValue(t); return pushVert(p,n); }
-int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec2f t, Vec2f t2) { data->texs2->addValue(t2); return pushVert(p,n,t); }
-int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec3f c, Vec2f t) { data->texs->addValue(t); return pushVert(p,n,c); }
-int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec4f c, Vec2f t) { data->texs->addValue(t); return pushVert(p,n,c); }
-int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec3f c, Vec2f t, Vec2f t2) { data->texs2->addValue(t2); return pushVert(p,n,c,t); }
-int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec4f c, Vec2f t, Vec2f t2) { data->texs2->addValue(t2); return pushVert(p,n,c,t); }
+int VRGeoData::pushVert(Pnt3d p) { data->pos->addValue(p); return data->pos->size()-1; }
+int VRGeoData::pushVert(Pnt3d p, Vec3d n) { data->norms->addValue(n); return pushVert(p); }
+int VRGeoData::pushVert(Pnt3d p, Vec3d n, Color3f c) { data->cols3->addValue(c); return pushVert(p,n); }
+int VRGeoData::pushVert(Pnt3d p, Vec3d n, Color4f c) { data->cols4->addValue(c); return pushVert(p,n); }
+int VRGeoData::pushVert(Pnt3d p, Vec3d n, Vec2d t) { data->texs->addValue(t); return pushVert(p,n); }
+int VRGeoData::pushVert(Pnt3d p, Vec3d n, Vec2d t, Vec2d t2) { data->texs2->addValue(t2); return pushVert(p,n,t); }
+int VRGeoData::pushVert(Pnt3d p, Vec3d n, Color3f c, Vec2d t) { data->texs->addValue(t); return pushVert(p,n,c); }
+int VRGeoData::pushVert(Pnt3d p, Vec3d n, Color4f c, Vec2d t) { data->texs->addValue(t); return pushVert(p,n,c); }
+int VRGeoData::pushVert(Pnt3d p, Vec3d n, Color3f c, Vec2d t, Vec2d t2) { data->texs2->addValue(t2); return pushVert(p,n,c,t); }
+int VRGeoData::pushVert(Pnt3d p, Vec3d n, Color4f c, Vec2d t, Vec2d t2) { data->texs2->addValue(t2); return pushVert(p,n,c,t); }
 
-int VRGeoData::pushColor(Vec3f c) { data->cols3->addValue(c); return data->cols3->size()-1; }
-int VRGeoData::pushColor(Vec4f c) { data->cols4->addValue(c); return data->cols4->size()-1; }
+int VRGeoData::pushColor(Color3f c) { data->cols3->addValue(c); return data->cols3->size()-1; }
+int VRGeoData::pushColor(Color4f c) { data->cols4->addValue(c); return data->cols4->size()-1; }
 
-bool VRGeoData::setVert(int i, Pnt3f p) { if (size() > i) data->pos->setValue(p,i); else return 0; return 1; }
-bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n) { if (size() > i) data->norms->setValue(n,i); else return 0; return setVert(i,p); }
-bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n, Vec3f c) { if (size() > i) data->cols3->setValue(c,i); else return 0; return setVert(i,p,n); }
-bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n, Vec4f c) { if (size() > i) data->cols4->setValue(c,i); else return 0; return setVert(i,p,n); }
-bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n, Vec2f t) { if (size() > i) data->texs->setValue(t,i); else return 0; return setVert(i,p,n); }
-bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n, Vec2f t, Vec2f t2) { if (size() > i) data->texs2->setValue(t2,i); else return 0; return setVert(i,p,n,t); }
-bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n, Vec3f c, Vec2f t) { if (size() > i) data->texs->setValue(t,i); else return 0; return setVert(i,p,n,c); }
-bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n, Vec4f c, Vec2f t) { if (size() > i) data->texs->setValue(t,i); else return 0; return setVert(i,p,n,c); }
-bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n, Vec3f c, Vec2f t, Vec2f t2) { if (size() > i) data->texs2->setValue(t2,i); else return 0; return setVert(i,p,n,c,t); }
-bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n, Vec4f c, Vec2f t, Vec2f t2) { if (size() > i) data->texs2->setValue(t2,i); else return 0; return setVert(i,p,n,c,t); }
+bool VRGeoData::setVert(int i, Pnt3d p) { if (size() > i) data->pos->setValue(p,i); else return 0; return 1; }
+bool VRGeoData::setVert(int i, Pnt3d p, Vec3d n) { if (size() > i) data->norms->setValue(n,i); else return 0; return setVert(i,p); }
+bool VRGeoData::setVert(int i, Pnt3d p, Vec3d n, Color3f c) { if (size() > i) data->cols3->setValue(c,i); else return 0; return setVert(i,p,n); }
+bool VRGeoData::setVert(int i, Pnt3d p, Vec3d n, Color4f c) { if (size() > i) data->cols4->setValue(c,i); else return 0; return setVert(i,p,n); }
+bool VRGeoData::setVert(int i, Pnt3d p, Vec3d n, Vec2d t) { if (size() > i) data->texs->setValue(t,i); else return 0; return setVert(i,p,n); }
+bool VRGeoData::setVert(int i, Pnt3d p, Vec3d n, Vec2d t, Vec2d t2) { if (size() > i) data->texs2->setValue(t2,i); else return 0; return setVert(i,p,n,t); }
+bool VRGeoData::setVert(int i, Pnt3d p, Vec3d n, Color3f c, Vec2d t) { if (size() > i) data->texs->setValue(t,i); else return 0; return setVert(i,p,n,c); }
+bool VRGeoData::setVert(int i, Pnt3d p, Vec3d n, Color4f c, Vec2d t) { if (size() > i) data->texs->setValue(t,i); else return 0; return setVert(i,p,n,c); }
+bool VRGeoData::setVert(int i, Pnt3d p, Vec3d n, Color3f c, Vec2d t, Vec2d t2) { if (size() > i) data->texs2->setValue(t2,i); else return 0; return setVert(i,p,n,c,t); }
+bool VRGeoData::setVert(int i, Pnt3d p, Vec3d n, Color4f c, Vec2d t, Vec2d t2) { if (size() > i) data->texs2->setValue(t2,i); else return 0; return setVert(i,p,n,c,t); }
 
-void VRGeoData::pushQuad(Vec3f p, Vec3f n, Vec3f u, Vec2f s, bool addInds) {
-    Vec3f x = n.cross(u); x.normalize();
-    pushVert(p - x*s[0]*0.5 - u*s[1]*0.5, n, Vec2f(0,0));
-    pushVert(p + x*s[0]*0.5 - u*s[1]*0.5, n, Vec2f(1,0));
-    pushVert(p + x*s[0]*0.5 + u*s[1]*0.5, n, Vec2f(1,1));
-    pushVert(p - x*s[0]*0.5 + u*s[1]*0.5, n, Vec2f(0,1));
+void VRGeoData::pushQuad(Vec3d p, Vec3d n, Vec3d u, Vec2d s, bool addInds) {
+    Vec3d x = n.cross(u); x.normalize();
+    pushVert(p - x*s[0]*0.5 - u*s[1]*0.5, n, Vec2d(0,0));
+    pushVert(p + x*s[0]*0.5 - u*s[1]*0.5, n, Vec2d(1,0));
+    pushVert(p + x*s[0]*0.5 + u*s[1]*0.5, n, Vec2d(1,1));
+    pushVert(p - x*s[0]*0.5 + u*s[1]*0.5, n, Vec2d(0,1));
     if (addInds) pushQuad();
 }
 
 int VRGeoData::pushVert(const VRGeoData& other, int i) {
     auto od = other.data;
     if (int(od->pos->size()) <= i) { cout << "VRGeoData::pushVert ERROR: invalid index " << i << endl; return 0; }
-    Pnt3f p = od->pos->getValue(i);
+    auto p = Pnt3d(od->pos->getValue(i));
     bool doNorms = (od->norms && int(od->norms->size()) > i);
     bool doCol3 = (od->cols3 && int(od->cols3->size()) > i);
     bool doCol4 = (od->cols4 && int(od->cols4->size()) > i);
     bool doTex = (od->texs && int(od->texs->size()) > i);
     bool doTex2 = (od->texs2 && int(od->texs2->size()) > i);
     if (doNorms) {
-        Vec3f n = od->norms->getValue(i);
-        if (doTex2 && doCol3) return pushVert(p, n, od->cols3->getValue(i), od->texs->getValue(i), od->texs2->getValue(i));
-        if (doTex2 && doCol4) return pushVert(p, n, od->cols4->getValue(i), od->texs->getValue(i), od->texs2->getValue(i));
-        if (doTex && doCol3) return pushVert(p, n, od->cols3->getValue(i), od->texs->getValue(i));
-        if (doTex && doCol4) return pushVert(p, n, od->cols4->getValue(i), od->texs->getValue(i));
-        if (doTex2) return pushVert(p, n, od->texs->getValue(i), od->texs2->getValue(i));
-        if (doTex)  return pushVert(p, n, od->texs->getValue(i));
+        auto n = Vec3d(od->norms->getValue(i));
+        if (doTex2 && doCol3) return pushVert(p, n, od->cols3->getValue(i), Vec2d(od->texs->getValue(i)), Vec2d(od->texs2->getValue(i)));
+        if (doTex2 && doCol4) return pushVert(p, n, od->cols4->getValue(i), Vec2d(od->texs->getValue(i)), Vec2d(od->texs2->getValue(i)));
+        if (doTex && doCol3) return pushVert(p, n, od->cols3->getValue(i), Vec2d(od->texs->getValue(i)));
+        if (doTex && doCol4) return pushVert(p, n, od->cols4->getValue(i), Vec2d(od->texs->getValue(i)));
+        if (doTex2) return pushVert(p, n, Vec2d(od->texs->getValue(i)), Vec2d(od->texs2->getValue(i)));
+        if (doTex)  return pushVert(p, n, Vec2d(od->texs->getValue(i)));
         if (doCol3) return pushVert(p, n, od->cols3->getValue(i));
         if (doCol4) return pushVert(p, n, od->cols4->getValue(i));
         return pushVert(p, n);
@@ -180,10 +180,10 @@ int VRGeoData::pushVert(const VRGeoData& other, int i) {
     return pushVert(p);
 }
 
-int VRGeoData::pushVert(const VRGeoData& other, int i, Matrix m) {
+int VRGeoData::pushVert(const VRGeoData& other, int i, Matrix4d m) {
     auto od = other.data;
     if (int(od->pos->size()) <= i) { cout << "VRGeoData::pushVert ERROR: invalid index " << i << endl; return 0; }
-    Pnt3f p = od->pos->getValue(i);
+    auto p = Pnt3d(od->pos->getValue(i));
     m.mult(p,p);
     bool doNorms = (od->norms && int(od->norms->size()) > i);
     bool doCol3 = (od->cols3 && int(od->cols3->size()) > i);
@@ -191,16 +191,16 @@ int VRGeoData::pushVert(const VRGeoData& other, int i, Matrix m) {
     bool doTex = (od->texs && int(od->texs->size()) > i);
     bool doTex2 = (od->texs2 && int(od->texs2->size()) > i);
     if (doNorms) {
-        Vec3f n = od->norms->getValue(i);
+        Vec3d n = Vec3d(od->norms->getValue(i));
         m.mult(n,n);
-        if (doTex2 && doCol3) return pushVert(p, n, od->cols3->getValue(i), od->texs->getValue(i), od->texs2->getValue(i));
-        if (doTex2 && doCol4) return pushVert(p, n, od->cols4->getValue(i), od->texs->getValue(i), od->texs2->getValue(i));
-        if (doTex && doCol3) return pushVert(p, n, od->cols3->getValue(i), od->texs->getValue(i));
-        if (doTex && doCol4) return pushVert(p, n, od->cols4->getValue(i), od->texs->getValue(i));
-        if (doTex2) return pushVert(p, n, od->texs->getValue(i), od->texs2->getValue(i));
-        if (doTex)  return pushVert(p, n, od->texs->getValue(i));
-        if (doCol3) return pushVert(p, n, od->cols3->getValue(i));
-        if (doCol4) return pushVert(p, n, od->cols4->getValue(i));
+        if (doTex2 && doCol3) return pushVert(p, n, od->cols3->getValue(i), Vec2d(od->texs->getValue(i)), Vec2d(od->texs2->getValue(i)));
+        if (doTex2 && doCol4) return pushVert(p, n, od->cols4->getValue(i), Vec2d(od->texs->getValue(i)), Vec2d(od->texs2->getValue(i)));
+        if (doTex && doCol3) return pushVert(p, n, od->cols3->getValue(i), Vec2d(od->texs->getValue(i)));
+        if (doTex && doCol4) return pushVert(p, n, od->cols4->getValue(i), Vec2d(od->texs->getValue(i)));
+        if (doTex2) return pushVert(p, n, Vec2d(od->texs->getValue(i)), Vec2d(od->texs2->getValue(i)));
+        if (doTex)  return pushVert(p, n, Vec2d(od->texs->getValue(i)));
+        if (doCol3) return pushVert(p, n, Vec2d(od->cols3->getValue(i)));
+        if (doCol4) return pushVert(p, n, Vec2d(od->cols4->getValue(i)));
         return pushVert(p, n);
     }
     return pushVert(p);
@@ -304,7 +304,7 @@ void VRGeoData::apply(VRGeometryPtr geo, bool check) const {
     if (data->texs2->size() > 0) geo->setTexCoords(data->texs2, 1);
 }
 
-void VRGeoData::append(const VRGeoData& geo, const Matrix& m) {
+void VRGeoData::append(const VRGeoData& geo, const Matrix4d& m) {
     map<int, int> mapping;
     for (auto p : geo) {
         vector<int> ninds;
@@ -317,7 +317,7 @@ void VRGeoData::append(const VRGeoData& geo, const Matrix& m) {
     }
 }
 
-void VRGeoData::append(VRGeometryPtr geo, const Matrix& m) { append( VRGeoData(geo), m ); }
+void VRGeoData::append(VRGeometryPtr geo, const Matrix4d& m) { append( VRGeoData(geo), m ); }
 
 VRGeometryPtr VRGeoData::asGeometry(string name) const {
     auto geo = VRGeometry::create(name);
@@ -335,7 +335,7 @@ string VRGeoData::status() {
     for (uint i=0; i<data->lengths->size(); i++) res += " " + toString(data->lengths->getValue(i));
     res += "\n";
     res += " " + toString(data->pos->size()) + " positions\n";
-    for (uint i=0; i<data->pos->size(); i++) res += " " + toString(data->pos->getValue(i));
+    for (uint i=0; i<data->pos->size(); i++) res += " " + toString(Pnt3d(data->pos->getValue(i)));
     res += "\n";
     res += " " + toString(data->norms->size()) + " normals\n";
     res += " " + toString(data->cols3->size()) + " colors 3\n";
@@ -491,7 +491,7 @@ void VRGeoData::test_copy(VRGeoData& g) {
     data->texs = g.data->texs;*/
 }
 
-void VRGeoData::addVertexColors(Vec3f c) {
+void VRGeoData::addVertexColors(Color3f c) {
     int N = size();
     auto& cols = data->cols3;
     if (cols->size() == 0) {

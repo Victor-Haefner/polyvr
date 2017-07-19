@@ -12,8 +12,8 @@ using namespace OSG;
 using namespace std;
 
 VRAnnotationEngine::VRAnnotationEngine(string name) : VRGeometry(name) {
-    fg = Vec4f(0,0,0,1);
-    bg = Vec4f(1,0,1,0);
+    fg = Color4f(0,0,0,1);
+    bg = Color4f(1,0,1,0);
 
     mat = VRMaterial::create("AnnEngMat");
     mat->setVertexShader(vp, "annotationVS");
@@ -38,24 +38,24 @@ void VRAnnotationEngine::clear() {
     data->reset();
 }
 
-void VRAnnotationEngine::setColor(Vec4f c) { fg = c; updateTexture(); }
-void VRAnnotationEngine::setBackground(Vec4f c) { bg = c; updateTexture(); }
+void VRAnnotationEngine::setColor(Color4f c) { fg = c; updateTexture(); }
+void VRAnnotationEngine::setBackground(Color4f c) { bg = c; updateTexture(); }
 
 bool VRAnnotationEngine::checkUIn(int i) {
     if (i < 0 || i > (int)data->size()) return true;
     return false;
 }
 
-void VRAnnotationEngine::resize(Label& l, Vec3f p, int N) {
+void VRAnnotationEngine::resize(Label& l, Vec3d p, int N) {
     int eN = l.entries.size();
-    for (int i=0; i<eN; i++) data->setVert(l.entries[i], Vec3f(), Vec3f()); // clear old buffer
+    for (int i=0; i<eN; i++) data->setVert(l.entries[i], Vec3d(), Vec3d()); // clear old buffer
 
     if (N <= eN) return;
     l.entries.resize(N, 0);
     int pN = data->size();
 
     for (int i=0; i<N-eN; i++) {
-        data->pushVert(p, Vec3f());
+        data->pushVert(p, Vec3d());
         data->pushPoint();
         l.entries[eN+i] = pN+i;
     }
@@ -63,13 +63,13 @@ void VRAnnotationEngine::resize(Label& l, Vec3f p, int N) {
     data->apply( ptr() );
 }
 
-int VRAnnotationEngine::add(Vec3f p, string s) {
+int VRAnnotationEngine::add(Vec3d p, string s) {
     int i = labels.size();
     set(i,p,s);
     return i;
 }
 
-void VRAnnotationEngine::set(int i, Vec3f p, string s) {
+void VRAnnotationEngine::set(int i, Vec3d p, string s) {
     if (i < 0) return;
     while (i >= (int)labels.size()) labels.push_back(Label());
 
@@ -85,14 +85,14 @@ void VRAnnotationEngine::set(int i, Vec3f p, string s) {
         }
         float f = c[0] + c[1]*256 + c[2]*256*256;
         int k = l.entries[j];
-        data->setVert(k, p, Vec3f(f,0,j));
+        data->setVert(k, p, Vec3d(f,0,j));
     }
 
     // bounding points to avoid word clipping
-    data->setVert(l.entries[N], p+Vec3f(-0.25*size, -0.5*size, 0), Vec3f(0,0,-1));
-    data->setVert(l.entries[N+1], p+Vec3f(-0.25*size,  0.5*size, 0), Vec3f(0,0,-1));
-    data->setVert(l.entries[N+2], p+Vec3f((s.size()-0.25)*size, -0.5*size, 0), Vec3f(0,0,-1));
-    data->setVert(l.entries[N+3], p+Vec3f((s.size()-0.25)*size,  0.5*size, 0), Vec3f(0,0,-1));
+    data->setVert(l.entries[N], p+Vec3d(-0.25*size, -0.5*size, 0), Vec3d(0,0,-1));
+    data->setVert(l.entries[N+1], p+Vec3d(-0.25*size,  0.5*size, 0), Vec3d(0,0,-1));
+    data->setVert(l.entries[N+2], p+Vec3d((s.size()-0.25)*size, -0.5*size, 0), Vec3d(0,0,-1));
+    data->setVert(l.entries[N+3], p+Vec3d((s.size()-0.25)*size,  0.5*size, 0), Vec3d(0,0,-1));
 }
 
 void VRAnnotationEngine::setSize(float f) { mat->setShaderParameter("size", Real32(f)); size = f; }

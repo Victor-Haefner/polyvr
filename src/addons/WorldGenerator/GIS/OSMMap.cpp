@@ -77,7 +77,7 @@ OSMMap::OSMMap(string filepath) {
     for (auto way : ways) {
         for (auto nID : way.second->nodes) {
             auto n = getNode(nID);
-            way.second->polygon.addPoint(Vec2f(n->lon, n->lat));
+            way.second->polygon.addPoint(Vec2d(n->lon, n->lat));
         }
     }
 }
@@ -99,8 +99,8 @@ void OSMMap::readWay(xmlpp::Element* element) {
 }
 
 void OSMMap::readBounds(xmlpp::Element* element) {
-    Vec3f min(toFloat( element->get_attribute_value("minlon") ), toFloat( element->get_attribute_value("minlat") ), 0 );
-    Vec3f max(toFloat( element->get_attribute_value("maxlon") ), toFloat( element->get_attribute_value("maxlat") ), 0 );
+    Vec3d min(toFloat( element->get_attribute_value("minlon") ), toFloat( element->get_attribute_value("minlat") ), 0 );
+    Vec3d max(toFloat( element->get_attribute_value("maxlon") ), toFloat( element->get_attribute_value("maxlat") ), 0 );
     bounds->clear();
     bounds->update(min);
     bounds->update(max);

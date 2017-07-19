@@ -17,7 +17,7 @@ ModuleFloor::ModuleFloor(bool t, bool p) : BaseModule("ModuleFloor", t,p) {
     initMaterial();
 }
 
-void ModuleFloor::makeFloor(Vec2f pointA, Vec2f pointB, VRGeoData& geo) {
+void ModuleFloor::makeFloor(Vec2d pointA, Vec2d pointB, VRGeoData& geo) {
     MapCoordinator* mapC = RealWorld::get()->getCoordinator();
     if (!mapC) return;
 
@@ -36,23 +36,23 @@ void ModuleFloor::makeFloor(Vec2f pointA, Vec2f pointB, VRGeoData& geo) {
             tempX2 = x1 + (i+1)*deltaXStep;
             tempY1 = y1 + j*deltaYStep;
             tempY2 = y1 + (j+1)*deltaYStep;
-            Vec3f v1 = Vec3f(tempX1, mapC->getElevation(Vec2f(tempX1, tempY1)), tempY1);
-            Vec3f v2 = Vec3f(tempX1, mapC->getElevation(Vec2f(tempX1, tempY2)), tempY2);
-            Vec3f v3 = Vec3f(tempX2, mapC->getElevation(Vec2f(tempX2, tempY2)), tempY2);
-            Vec3f v4 = Vec3f(tempX2, mapC->getElevation(Vec2f(tempX2, tempY1)), tempY1);
+            Vec3d v1 = Vec3d(tempX1, mapC->getElevation(Vec2d(tempX1, tempY1)), tempY1);
+            Vec3d v2 = Vec3d(tempX1, mapC->getElevation(Vec2d(tempX1, tempY2)), tempY2);
+            Vec3d v3 = Vec3d(tempX2, mapC->getElevation(Vec2d(tempX2, tempY2)), tempY2);
+            Vec3d v4 = Vec3d(tempX2, mapC->getElevation(Vec2d(tempX2, tempY1)), tempY1);
 
-            Vec3f normal = (v2-v1).cross(v3-v1); // TODO: use quads ?
+            Vec3d normal = (v2-v1).cross(v3-v1); // TODO: use quads ?
             normal = normal[1] < 0 ? -normal : normal; // face upwards!
-            geo.pushVert(v1, normal, Vec2f(x1-tempX1, y1-tempY1));
-            geo.pushVert(v2, normal, Vec2f(x1-tempX1, y1-tempY2));
-            geo.pushVert(v3, normal, Vec2f(x1-tempX2, y1-tempY2));
+            geo.pushVert(v1, normal, Vec2d(x1-tempX1, y1-tempY1));
+            geo.pushVert(v2, normal, Vec2d(x1-tempX1, y1-tempY2));
+            geo.pushVert(v3, normal, Vec2d(x1-tempX2, y1-tempY2));
             geo.pushTri();
 
             normal = (v3-v4).cross(v4-v1); // TODO: use quads ?
             normal = normal[1] < 0 ? -normal : normal; // face upwards!
-            geo.pushVert(v3, normal, Vec2f(x1-tempX2, y1-tempY2));
-            geo.pushVert(v4, normal, Vec2f(x1-tempX2, y1-tempY1));
-            geo.pushVert(v1, normal, Vec2f(x1-tempX1, y1-tempY1));
+            geo.pushVert(v3, normal, Vec2d(x1-tempX2, y1-tempY2));
+            geo.pushVert(v4, normal, Vec2d(x1-tempX2, y1-tempY1));
+            geo.pushVert(v1, normal, Vec2d(x1-tempX1, y1-tempY1));
             geo.pushTri();
         }
     }
@@ -75,8 +75,8 @@ void ModuleFloor::initMaterial() {
 void ModuleFloor::loadBbox(MapGrid::Box bbox) {
     auto mc = RealWorld::get()->getCoordinator();
     if (!mc) return;
-    Vec2f min = mc->realToWorld(bbox.min);
-    Vec2f max = mc->realToWorld(bbox.max);
+    Vec2d min = mc->realToWorld(bbox.min);
+    Vec2d max = mc->realToWorld(bbox.max);
 
     VRGeoData geo;
     makeFloor(min, max, geo);

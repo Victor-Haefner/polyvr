@@ -31,7 +31,7 @@ PyObject* VRPySelector::setBorder(VRPySelector* self, PyObject* args) {
 
 PyObject* VRPySelector::setColor(VRPySelector* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    self->objPtr->setColor(parseVec3f(args));
+    self->objPtr->setColor(Vec3f(parseVec3d(args)));
     Py_RETURN_TRUE;
 }
 

@@ -167,7 +167,7 @@ void VRSoundManager::setSoundVolume(float volume) {
     for (auto s : sounds) s.second->setGain(volume);
 }
 
-/*void VRSoundManager::updatePlayerPosition(Vec3f position, Vec3f forward) { }*/
+/*void VRSoundManager::updatePlayerPosition(Vec3d position, Vec3d forward) { }*/
 
 void VRSoundManager::stopSound(string path) {
     if (sounds.count(path) == 0) return;

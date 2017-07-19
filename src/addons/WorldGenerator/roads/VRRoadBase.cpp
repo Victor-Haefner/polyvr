@@ -18,7 +18,7 @@ using namespace OSG;
 VRRoadBase::VRRoadBase(string name) : VRObject(name) {}
 VRRoadBase::~VRRoadBase() {}
 
-vector<string> VRRoadBase::toStringVector(Vec3f& v) {
+vector<string> VRRoadBase::toStringVector(Vec3d& v) {
     vector<string> res;
     res.push_back( toString(v[0]) );
     res.push_back( toString(v[1]) );
@@ -28,8 +28,8 @@ vector<string> VRRoadBase::toStringVector(Vec3f& v) {
 
 pathPtr VRRoadBase::toPath( VREntityPtr pathEntity, int resolution ) {
     if (!pathEntity) return 0;
-	vector<Vec3f> pos;
-	vector<Vec3f> norms;
+	vector<Vec3d> pos;
+	vector<Vec3d> norms;
 	for (auto nodeEntry : pathEntity->getAllEntities("nodes")) {
         auto node = nodeEntry->getEntity("node");
         if (!node) { cout << "Warning in VRRoadBase::toPath, path node is NULL!" << endl; continue; }
@@ -48,17 +48,17 @@ void VRRoadBase::setWorld(VRWorldGeneratorPtr w) { world = w; }
 void VRRoadBase::setupTexCoords( VRGeometryPtr geo, VREntityPtr way ) {
 	int rID = toInt( way->get("ID")->value );
 	GeoVec2fPropertyRecPtr tcs = GeoVec2fProperty::create();
-	for (int i=0; i<geo->size(); i++) tcs->addValue(Vec2f(rID, 0));
+	for (int i=0; i<geo->size(); i++) tcs->addValue(Vec2d(rID, 0));
 	geo->setPositionalTexCoords2D(1.0, 0, Vec2i(0,2)); // positional tex coords
 	geo->setTexCoords(tcs, 1); // add another tex coords set
 }
 
-VREntityPtr VRRoadBase::addNode( Vec3f pos ) {
+VREntityPtr VRRoadBase::addNode( Vec3d pos ) {
 	auto node = world->getOntology()->addEntity("node", "Node");
 	node->setVector("position", toStringVector(pos), "Position");
 
 	/*if (tool) {
-        int nID = tool->addNode( pose::create(pos, Vec3f(0,0,-1), Vec3f(0,1,0) ) );
+        int nID = tool->addNode( pose::create(pos, Vec3d(0,0,-1), Vec3d(0,1,0) ) );
         auto handle = tool->getHandle(nID);
         handle->setEntity(node);
         node->set("graphID", toString(nID) );
@@ -74,10 +74,10 @@ VREntityPtr VRRoadBase::addLane( int direction, float width ) {
 	return l;
 }
 
-VREntityPtr VRRoadBase::addPath( string type, string name, vector<VREntityPtr> nodes, vector<Vec3f> normals ) {
+VREntityPtr VRRoadBase::addPath( string type, string name, vector<VREntityPtr> nodes, vector<Vec3d> normals ) {
     auto path = world->getOntology()->addEntity(name+"Path", type);
 	//VREntityPtr lastNode;
-	Vec3f nL;
+	Vec3d nL;
 	int N = nodes.size();
 
 	for ( int i = 0; i< N; i++) {
@@ -107,14 +107,14 @@ VREntityPtr VRRoadBase::addPath( string type, string name, vector<VREntityPtr> n
 	return path;
 }
 
-VRGeometryPtr VRRoadBase::addPole( Vec3f P1, Vec3f P4, float radius ) {
+VRGeometryPtr VRRoadBase::addPole( Vec3d P1, Vec3d P4, float radius ) {
     auto p = path::create();
-    Vec3f gray(0.4,0.4,0.4);
-    Vec3f Y(0,1,0);
-    Vec3f pN = Vec3f(0,0,1); // normal of the plane where the pole lies in
-    Vec3f P2 = P1; P2[1] = P4[1] - 0.5;
-    Vec3f P3 = P1; P3[1] = P4[1];
-    Vec3f D = P4-P1; D[1] = 0;
+    Color3f gray(0.4,0.4,0.4);
+    Vec3d Y(0,1,0);
+    Vec3d pN = Vec3d(0,0,1); // normal of the plane where the pole lies in
+    Vec3d P2 = P1; P2[1] = P4[1] - 0.5;
+    Vec3d P3 = P1; P3[1] = P4[1];
+    Vec3d D = P4-P1; D[1] = 0;
     bool curved = (D.squareLength() > 1e-3);
 
     if (curved) {
@@ -136,10 +136,10 @@ VRGeometryPtr VRRoadBase::addPole( Vec3f P1, Vec3f P4, float radius ) {
     }
 
     int N = 8;
-    vector<Vec3f> profile;
+    vector<Vec3d> profile;
     for (int i=0; i<N; i++) {
         float a = i*(2*pi/N);
-        profile.push_back(radius*Vec3f(cos(a), sin(a), 0));
+        profile.push_back(Vec3d(cos(a), sin(a), 0)*radius);
     }
 
     auto s = VRStroke::create("pole");

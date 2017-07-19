@@ -15,23 +15,23 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-Vec2f VRIntersect_computeTexel(VRIntersection& ins, NodeMTRecPtr node) {
-    if (!ins.hit) return Vec2f(0,0);
-    if (node == 0) return Vec2f(0,0);
+Vec2d VRIntersect_computeTexel(VRIntersection& ins, NodeMTRecPtr node) {
+    if (!ins.hit) return Vec2d(0,0);
+    if (node == 0) return Vec2d(0,0);
 
     GeometryRefPtr geo = dynamic_cast<Geometry*>( node->getCore() );
-    if (geo == 0) return Vec2f(0,0);
+    if (geo == 0) return Vec2d(0,0);
     auto type = geo->getTypes()->getValue(0);
-    if ( type == GL_PATCHES ) return Vec2f(0,0);
+    if ( type == GL_PATCHES ) return Vec2d(0,0);
 
     auto texcoords = geo->getTexCoords();
-    if (texcoords == 0) return Vec2f(0,0);
+    if (texcoords == 0) return Vec2d(0,0);
     TriangleIterator iter = geo->beginTriangles(); iter.seek( ins.triangle );
 
 
-    Matrix m = node->getToWorld();
+    Matrix4f m = node->getToWorld();
     m.invert();
-    Pnt3f local_pnt; m.mult(ins.point, local_pnt);
+    Pnt3f local_pnt; m.mult(Pnt3f(ins.point), local_pnt);
 
     Pnt3f p0 = iter.getPosition(0);
     Pnt3f p1 = iter.getPosition(1);
@@ -46,7 +46,7 @@ Vec2f VRIntersect_computeTexel(VRIntersection& ins, NodeMTRecPtr node) {
     float b = areaPCA / areaABC;
     float c = 1.0f - a - b;
 
-    return iter.getTexCoords(0) * a + iter.getTexCoords(1) * b + iter.getTexCoords(2) * c;
+    return Vec2d( iter.getTexCoords(0) * a + iter.getTexCoords(1) * b + iter.getTexCoords(2) * c );
 }
 
 Vec3i VRIntersect_computeVertices(VRIntersection& ins, NodeMTRecPtr node) {
@@ -95,10 +95,13 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, Line ray) {
     if (ins.hit) {
         ins.object = tree->find(OSGObject::create(iAct.getHitObject()->getParent()));
         if (auto sp = ins.object.lock()) ins.name = sp->getName();
-        ins.point = iAct.getHitPoint();
-        ins.normal = iAct.getHitNormal();
-        if (tree->getParent()) tree->getParent()->getNode()->node->getToWorld().mult( ins.point, ins.point );
-        if (tree->getParent()) tree->getParent()->getNode()->node->getToWorld().mult( ins.normal, ins.normal );
+        ins.point = Pnt3d(iAct.getHitPoint());
+        ins.normal = Vec3d(iAct.getHitNormal());
+        if (tree->getParent()) {
+            auto m = toMatrix4d( tree->getParent()->getNode()->node->getToWorld() );
+            m.mult( ins.point, ins.point );
+            m.mult( ins.normal, ins.normal );
+        }
         ins.triangle = iAct.getHitTriangle();
         ins.triangleVertices = VRIntersect_computeVertices(ins, iAct.getHitObject());
         ins.texel = VRIntersect_computeTexel(ins, iAct.getHitObject());
@@ -111,7 +114,7 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, Line ray) {
 
     intersections[tree.get()] = ins;
 
-    if (showHit) cross->setWorldPosition(Vec3f(ins.point));
+    if (showHit) cross->setWorldPosition(Vec3d(ins.point));
     return ins;
 }
 
@@ -209,25 +212,25 @@ void VRIntersect::initCross() {
     cross->hide();
     showHit = false;
 
-    vector<Vec3f> pos, norms;
-    vector<Vec2f> texs;
+    vector<Vec3d> pos, norms;
+    vector<Vec2d> texs;
     vector<int> inds;
 
     float d = 0.1;
-    pos.push_back(Vec3f(-d,-d,-d));
-    pos.push_back(Vec3f(d,d,d));
-    pos.push_back(Vec3f(-d,d,-d));
-    pos.push_back(Vec3f(d,-d,d));
+    pos.push_back(Vec3d(-d,-d,-d));
+    pos.push_back(Vec3d(d,d,d));
+    pos.push_back(Vec3d(-d,d,-d));
+    pos.push_back(Vec3d(d,-d,d));
 
-    pos.push_back(Vec3f(-d,-d,d));
-    pos.push_back(Vec3f(d,d,-d));
-    pos.push_back(Vec3f(-d,d,d));
-    pos.push_back(Vec3f(d,-d,-d));
+    pos.push_back(Vec3d(-d,-d,d));
+    pos.push_back(Vec3d(d,d,-d));
+    pos.push_back(Vec3d(-d,d,d));
+    pos.push_back(Vec3d(d,-d,-d));
 
     for (int i=0;i<8;i++) {
-        norms.push_back(Vec3f(0,0,-1));
+        norms.push_back(Vec3d(0,0,-1));
         inds.push_back(i);
-        texs.push_back(Vec2f(0,0));
+        texs.push_back(Vec2d(0,0));
     }
 
     VRMaterialPtr mat = VRMaterial::create("red_cross");
@@ -278,8 +281,8 @@ void VRIntersect::remDynTree(VRObjectPtr o) {
 
 VRObjectPtr VRIntersect::getCross() { return cross; }//needs to be optimized for multiple scenes
 VRDeviceCbPtr VRIntersect::getDrop() { return drop_fkt; }
-//Pnt3f VRIntersect::getHitPoint() { return hitPoint; }
-//Vec2f VRIntersect::getHitTexel() { return hitTexel; }
+//Pnt3d VRIntersect::getHitPoint() { return hitPoint; }
+//Vec2d VRIntersect::getHitTexel() { return hitTexel; }
 //VRObjectPtr VRIntersect::getHitObject() { return obj; }
 
 VRIntersection VRIntersect::getLastIntersection() { return lastIntersection; }

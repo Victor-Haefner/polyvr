@@ -81,8 +81,8 @@ PyObject* VRPySegmentation::extractPatches(VRPySegmentation* self, PyObject* arg
     PyObject *norm, *norm_d;
     if (! PyArg_ParseTuple(args, "OiffOO", &geo, &algo, &curv, &curv_d, &norm, &norm_d)) return NULL;
 
-    OSG::Vec3f vnorm = parseVec3fList(norm);
-    OSG::Vec3f vnorm_d = parseVec3fList(norm_d);
+    OSG::Vec3d vnorm = parseVec3dList(norm);
+    OSG::Vec3d vnorm_d = parseVec3dList(norm_d);
 
     OSG::VRObjectPtr patches = self->objPtr->extractPatches(geo->objPtr, OSG::SEGMENTATION_ALGORITHM(algo), curv, curv_d, vnorm, vnorm_d);
     return VRPyTypeCaster::cast( patches );

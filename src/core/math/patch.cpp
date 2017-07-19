@@ -28,9 +28,9 @@ void patch::bezVRPolygon<S>::initVRPolygon() {
     N = 0;
     wired = false;
 
-    p = new Vec3f[S];
-    n = new Vec3f[S];
-    tex = new Vec2f[S];
+    p = new Vec3d[S];
+    n = new Vec3d[S];
+    tex = new Vec2d[S];
 
     for (int i=0;i<S;i++) {
         for (int j=0;j<3;j++){
@@ -42,20 +42,20 @@ void patch::bezVRPolygon<S>::initVRPolygon() {
 }
 
 
-Vec3f patch::projectInPlane(Vec3f v, Vec3f n, bool keep_length) {
+Vec3d patch::projectInPlane(Vec3d v, Vec3d n, bool keep_length) {
     n.normalize();
     float l;
     if (keep_length) l = v.length();
     float k = v.dot(n);
-    v -= k*n;
+    v -= n*k;
     if (keep_length) v = v*(l/v.length());
     return v;
 }
 
-Vec3f patch::reflectInPlane(Vec3f v, Vec3f n) {
+Vec3d patch::reflectInPlane(Vec3d v, Vec3d n) {
     n.normalize();
     float k = v.dot(n);
-    v -= k*n*2;
+    v -= n*(k*2);
     return v;
 }
 
@@ -86,9 +86,9 @@ Vec3f patch::reflectInPlane(Vec3f v, Vec3f n) {
             for(int j=0;j<N+1-i;j++) {
                 PosCount++;
                 NormsCount++;
-                Pos->addValue(Vec3f((float)i/(N+1),(float)j/(N+1),0));
-                Norms->addValue(Vec3f(0,0,1));
-                Tex->addValue(Vec2f(0,0));
+                Pos->addValue(Vec3d((float)i/(N+1),(float)j/(N+1),0));
+                Norms->addValue(Vec3d(0,0,1));
+                Tex->addValue(Vec2d(0,0));
             }
         }
         //indizierung
@@ -148,10 +148,10 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
     float step = 1./(q.N-1);
 
     //hilfspunkte ausen und innen
-    Vec3f ha[8];
-    Vec3f hi[4];
+    Vec3d ha[8];
+    Vec3d hi[4];
     //kanten
-    Vec3f r[4];
+    Vec3d r[4];
 
     r[0] = q.p[1]-q.p[0];
     r[1] = q.p[3]-q.p[2];
@@ -161,7 +161,7 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
     //float rL[4];
     //for (int i=0;i<4;i++) rL[i] = r[i].length();
 
-    if (r[0] != Vec3f(0,0,0)) {
+    if (r[0] != Vec3d(0,0,0)) {
         ha[0] = q.p[0]+projectInPlane(r[0]*(1./3.),q.n[0],false);
         ha[1] = q.p[1]+projectInPlane(-r[0]*(1./3.),q.n[1],false);
     } else {
@@ -169,7 +169,7 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
         ha[1] = q.p[1];
     }
 
-    if (r[1] != Vec3f(0,0,0)) {
+    if (r[1] != Vec3d(0,0,0)) {
         ha[2] = q.p[2]+projectInPlane(r[1]*(1./3.),q.n[2],false);
         ha[3] = q.p[3]+projectInPlane(-r[1]*(1./3.),q.n[3],false);
     } else {
@@ -177,7 +177,7 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
         ha[3] = q.p[3];
     }
 
-    if (r[2] != Vec3f(0,0,0)) {
+    if (r[2] != Vec3d(0,0,0)) {
         ha[4] = q.p[0]+projectInPlane(r[2]*(1./3.),q.n[0],false);
         ha[5] = q.p[2]+projectInPlane(-r[2]*(1./3.),q.n[2],false);
     } else {
@@ -185,7 +185,7 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
         ha[5] = q.p[2];
     }
 
-    if (r[3] != Vec3f(0,0,0)) {
+    if (r[3] != Vec3d(0,0,0)) {
         ha[6] = q.p[1]+projectInPlane(r[3]*(1./3.),q.n[1],false);
         ha[7] = q.p[3]+projectInPlane(-r[3]*(1./3.),q.n[3],false);
     } else {
@@ -194,7 +194,7 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
     }
 
     //---V1
-    Vec3f temp[2];
+    Vec3d temp[2];
     temp[0] = ha[2]-ha[0];//zwischenrechnungen
     temp[1] = ha[3]-ha[1];
     hi[0] = ha[0]+projectInPlane(temp[0]*(1./3),q.n[0],false);
@@ -217,16 +217,16 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
     hi[3] = ha[3]+ha[7]-q.p[3];*/
 
     //forward diff
-    Vec3f DELs[3];
-    Vec3f DELt[4][3];
+    Vec3d DELs[3];
+    Vec3d DELt[4][3];
 
     //hilfskoefficienten
 
-    vector<Vec3f> T[4];
+    vector<Vec3d> T[4];
 	for (int i = 0; i < 4; i++) T[i].resize(q.N);
-    Vec3f G[4][4];
-    Vec3f P[4][4];
-    Vec3f bs[3];
+    Vec3d G[4][4];
+    Vec3d P[4][4];
+    Vec3d bs[3];
 
     //eckpunkte in die punktmatrix
     P[0][0] = q.p[0];
@@ -294,11 +294,11 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
     //normalize normals, just to be safe
     for (int i=0;i<3;i++) q.n[i].normalize();
 
-    //Punkte Matrix
-    Vec3f P[4][4][4];
+    //Punkte Matrix4d
+    Vec3d P[4][4][4];
 
     //kanten
-    Vec3f r[3];
+    Vec3d r[3];
     r[0] = q.p[1]-q.p[0];
     r[1] = q.p[0]-q.p[2];
     r[2] = q.p[2]-q.p[1];
@@ -312,7 +312,7 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
             cout << "\n\nError! No triangle!";
             return;
         }
-        if (q.n[i] == Vec3f(0,0,0)) {
+        if (q.n[i] == Vec3d(0,0,0)) {
             cout << "\n\nError! No normal vector!";
             return;
         }
@@ -334,13 +334,13 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
     P[0][1][2] = P[0][0][3]+projectInPlane(-r[2]*(1./3.),q.n[2],false);
 
     //berechne die distanzen zwischen den hilfspunkten
-    Vec3f hr[3];
+    Vec3d hr[3];
     hr[0] = P[1][2][0]-P[2][1][0];
     hr[1] = P[0][1][2]-P[0][2][1];
     hr[2] = P[2][0][1]-P[1][0][2];
 
     //berechne die mittleren normalvectoren
-    Vec3f n[3];
+    Vec3d n[3];
     n[0] = reflectInPlane(q.n[0]+q.n[1], r[0]);
     n[1] = reflectInPlane(q.n[1]+q.n[2], r[2]);
     n[2] = reflectInPlane(q.n[2]+q.n[0], r[1]);
@@ -349,12 +349,12 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
     for (int l=0;l<3;l++) n[l].normalize();
 
     //berechne den schnittpunkt der 3 ebenen
-    Matrix A = Matrix(  n[0][0], n[0][1], n[0][2], 0,
+    Matrix4d A = Matrix4d(  n[0][0], n[0][1], n[0][2], 0,
                         n[1][0], n[1][1], n[1][2], 0,
                         n[2][0], n[2][1], n[2][2], 0,
                         0,       0,       0,       1);
-    Vec4f b = Vec4f(n[0].dot(P[2][1][0]), n[1].dot(P[0][2][1]), n[2].dot(P[1][0][2]), 0);
-    Matrix Ai;
+    Vec4d b = Vec4d(n[0].dot(P[2][1][0]), n[1].dot(P[0][2][1]), n[2].dot(P[1][0][2]), 0);
+    Matrix4d Ai;
 
     if (A.det() < 0.0001 && A.det() > -0.0001) {
         for (int l=0;l<3;l++) {
@@ -373,11 +373,11 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
     //forward diff
     q.geo = makeTrianglePlaneGeo(q.N-1,q.wired);
 
-    Vec3f DELu[3];
-    Vec3f Bu[4];
-    Vec3f DELv[3][3];
-    Vec3f Bv[4][4];
-    Vec3f T[3][q.N];
+    Vec3d DELu[3];
+    Vec3d Bu[4];
+    Vec3d DELv[3][3];
+    Vec3d Bv[4][4];
+    Vec3d T[3][q.N];
 
     GeoPositions3fPtr Pos = GeoPositions3fPtr::dcast(q.geo->getPositions());
 
@@ -404,12 +404,12 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
     DELv[0][1] = Bv[0][2]*2*step*step + DELv[0][2];
     DELv[0][0] = Bv[0][1]*step + Bv[0][2]*step*step + DELv[0][2]*(1./6.);
 
-    DELv[1][2] = Vec3f(0,0,0);
+    DELv[1][2] = Vec3d(0,0,0);
     DELv[1][1] = Bv[1][2]*2*step*step;
     DELv[1][0] = Bv[1][1]*step + Bv[1][2]*step*step;
 
-    DELv[2][2] = Vec3f(0,0,0);
-    DELv[2][1] = Vec3f(0,0,0);
+    DELv[2][2] = Vec3d(0,0,0);
+    DELv[2][1] = Vec3d(0,0,0);
     DELv[2][0] = Bv[2][1]*step;
 
     T[0][0] = Bv[0][0];
@@ -480,9 +480,9 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
     T[1][0] = Bv[1][0];
 
     //Bw2 * w² + Bw1 * w + Bw0
-    Vec3f Bw[3];
-    Vec3f DELw[2];
-    Vec3f Tw;
+    Vec3d Bw[3];
+    Vec3d DELw[2];
+    Vec3d Tw;
     Bw[0] = P[2][0][0];
     Bw[1] = (P[1][1][0]-P[2][0][0])*2;
     Bw[2] = P[0][2][0] + P[2][0][0] - P[1][1][0]*2;
@@ -509,7 +509,7 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
         Norms->setValue(Bu[0], iter);
         iter++;
         for (int j=1;j<q.N-i;j++) {
-            Vec3f temp = Norms->getValue(iter-1)+DELu[0];
+            Vec3d temp = Norms->getValue(iter-1)+DELu[0];
             Norms->setValue(temp, iter);
             DELu[0] += DELu[1];
 
@@ -522,13 +522,13 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
     GeoTexCoords2fPtr Texs = GeoTexCoords2fPtr::dcast(q.geo->getTexCoords());
 
     //Baustelle
-    Vec2f r1 = (q.tex[1]-q.tex[2])*step;
-    Vec2f r2 = (q.tex[0]-q.tex[2])*step;
+    Vec2d r1 = (q.tex[1]-q.tex[2])*step;
+    Vec2d r2 = (q.tex[0]-q.tex[2])*step;
 
     iter=0;
     for (int i=0;i<q.N;i++) {
         for (int j=0;j<q.N-i;j++) {
-            Vec2f temp = q.tex[2] + r1*i + r2*j;
+            Vec2d temp = q.tex[2] + r1*i + r2*j;
             Texs->setValue(temp, iter);
             iter++;
         }

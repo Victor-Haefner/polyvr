@@ -131,8 +131,8 @@ void VRHaptic::updateHapticPost(VRTransformPtr t) { // TODO: rotation
     updateVirtMechPost();
 }
 
-void VRHaptic::setForce(Vec3f force, Vec3f torque) { v->applyForce(force, torque); }
-Vec3f VRHaptic::getForce() {return v->getForce(); }
+void VRHaptic::setForce(Vec3d force, Vec3d torque) { v->applyForce(force, torque); }
+Vec3d VRHaptic::getForce() {return v->getForce(); }
 void VRHaptic::setSimulationScales(float scale, float forces) { v->setSimulationScales(scale, forces); }
 void VRHaptic::attachTransform(VRTransformPtr trans) {v->attachTransform(trans);}
 void VRHaptic::setBase(VRTransformPtr trans) {v->setBase(trans);}

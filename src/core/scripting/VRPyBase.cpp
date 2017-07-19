@@ -87,40 +87,6 @@ OSG::Line VRPyBase::PyToLine(PyObject *li) {
     return OSG::Line(OSG::Pnt3f(r[3],r[4],r[5]), OSG::Vec3f(r[0],r[1],r[2]));
 }
 
-OSG::Vec2f VRPyBase::parseVec2fList(PyObject *li) {
-    if (li == 0) return OSG::Vec2f();
-    vector<PyObject*> lis = pyListToVector(li);
-    if (lis.size() != 2) return OSG::Vec2f();
-    float x,y;
-    x = PyFloat_AsDouble(lis[0]);
-    y = PyFloat_AsDouble(lis[1]);
-    return OSG::Vec2f(x,y);
-}
-
-OSG::Vec3f VRPyBase::parseVec3fList(PyObject *li) {
-    if (li == 0) return OSG::Vec3f();
-    if (VRPyVec3f::check(li)) return ((VRPyVec3f*)li)->v;
-    vector<PyObject*> lis = pyListToVector(li);
-    if (lis.size() != 3) return OSG::Vec3f();
-    float x,y,z;
-    x = PyFloat_AsDouble(lis[0]);
-    y = PyFloat_AsDouble(lis[1]);
-    z = PyFloat_AsDouble(lis[2]);
-    return OSG::Vec3f(x,y,z);
-}
-
-OSG::Vec4f VRPyBase::parseVec4fList(PyObject *li) {
-    if (li == 0) return OSG::Vec4f();
-    vector<PyObject*> lis = pyListToVector(li);
-    if (lis.size() != 4) return OSG::Vec4f();
-    float x,y,z,w;
-    x = PyFloat_AsDouble(lis[0]);
-    y = PyFloat_AsDouble(lis[1]);
-    z = PyFloat_AsDouble(lis[2]);
-    w = PyFloat_AsDouble(lis[3]);
-    return OSG::Vec4f(x,y,z,w);
-}
-
 OSG::Vec2d VRPyBase::parseVec2dList(PyObject *li) {
     if (li == 0) return OSG::Vec2d();
     vector<PyObject*> lis = pyListToVector(li);
@@ -133,8 +99,9 @@ OSG::Vec2d VRPyBase::parseVec2dList(PyObject *li) {
 
 OSG::Vec3d VRPyBase::parseVec3dList(PyObject *li) {
     if (li == 0) return OSG::Vec3d();
+    if (VRPyVec3f::check(li)) return ((VRPyVec3f*)li)->v;
     vector<PyObject*> lis = pyListToVector(li);
-    if (lis.size() != 2) return OSG::Vec3d();
+    if (lis.size() != 3) return OSG::Vec3d();
     float x,y,z;
     x = PyFloat_AsDouble(lis[0]);
     y = PyFloat_AsDouble(lis[1]);
@@ -145,7 +112,7 @@ OSG::Vec3d VRPyBase::parseVec3dList(PyObject *li) {
 OSG::Vec4d VRPyBase::parseVec4dList(PyObject *li) {
     if (li == 0) return OSG::Vec4d();
     vector<PyObject*> lis = pyListToVector(li);
-    if (lis.size() != 2) return OSG::Vec4d();
+    if (lis.size() != 4) return OSG::Vec4d();
     float x,y,z,w;
     x = PyFloat_AsDouble(lis[0]);
     y = PyFloat_AsDouble(lis[1]);
@@ -154,28 +121,28 @@ OSG::Vec4d VRPyBase::parseVec4dList(PyObject *li) {
     return OSG::Vec4d(x,y,z,w);
 }
 
-OSG::Vec2f VRPyBase::parseVec2f(PyObject *args) {
-    if (pySize(args) == 1) return parseVec2fList( parseObject(args) );
+OSG::Vec2d VRPyBase::parseVec2f(PyObject *args) {
+    if (pySize(args) == 1) return parseVec2dList( parseObject(args) );
 
     float x,y; x=y=0;
-    if (! PyArg_ParseTuple(args, "ff", &x, &y)) return OSG::Vec2f();
-    return OSG::Vec2f(x,y);
+    if (! PyArg_ParseTuple(args, "ff", &x, &y)) return OSG::Vec2d();
+    return OSG::Vec2d(x,y);
 }
 
-OSG::Vec3f VRPyBase::parseVec3f(PyObject *args) {
-    if (pySize(args) == 1) return parseVec3fList( parseObject(args) );
+OSG::Vec3d VRPyBase::parseVec3d(PyObject *args) {
+    if (pySize(args) == 1) return parseVec3dList( parseObject(args) );
 
     float x,y,z; x=y=z=0;
-    if (! PyArg_ParseTuple(args, "fff", &x, &y, &z)) return OSG::Vec3f();
-    return OSG::Vec3f(x,y,z);
+    if (! PyArg_ParseTuple(args, "fff", &x, &y, &z)) return OSG::Vec3d();
+    return OSG::Vec3d(x,y,z);
 }
 
-OSG::Vec4f VRPyBase::parseVec4f(PyObject *args) {
-    if (pySize(args) == 1) return parseVec4fList( parseObject(args) );
+OSG::Vec4d VRPyBase::parseVec4d(PyObject *args) {
+    if (pySize(args) == 1) return parseVec4dList( parseObject(args) );
 
     float x,y,z,w; x=y=z=w=0;
-    if (! PyArg_ParseTuple(args, "ffff", &x, &y, &z, &w)) return OSG::Vec4f();
-    return OSG::Vec4f(x,y,z,w);
+    if (! PyArg_ParseTuple(args, "ffff", &x, &y, &z, &w)) return OSG::Vec4d();
+    return OSG::Vec4d(x,y,z,w);
 }
 
 OSG::Vec3i VRPyBase::parseVec3i(PyObject *args) {
@@ -223,24 +190,6 @@ PyObject* VRPyBase::toPyTuple(const OSG::Vec3d& v) {
 }
 
 PyObject* VRPyBase::toPyTuple(const OSG::Vec4d& v) {
-    PyObject* res = PyList_New(4);
-    for (int i=0; i<4; i++) PyList_SetItem(res, i, PyFloat_FromDouble(v[i]));
-    return res;
-}
-
-PyObject* VRPyBase::toPyTuple(const OSG::Vec2f& v) {
-    PyObject* res = PyList_New(2);
-    for (int i=0; i<2; i++) PyList_SetItem(res, i, PyFloat_FromDouble(v[i]));
-    return res;
-}
-
-PyObject* VRPyBase::toPyTuple(const OSG::Vec3f& v) {
-    PyObject* res = PyList_New(3);
-    for (int i=0; i<3; i++) PyList_SetItem(res, i, PyFloat_FromDouble(v[i]));
-    return res;
-}
-
-PyObject* VRPyBase::toPyTuple(const OSG::Vec4f& v) {
     PyObject* res = PyList_New(4);
     for (int i=0; i<4; i++) PyList_SetItem(res, i, PyFloat_FromDouble(v[i]));
     return res;

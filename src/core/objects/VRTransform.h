@@ -41,26 +41,26 @@ class VRTransform : public VRObject {
         bool identity = true;
         int orientation_mode = OM_DIR;
 
-        Vec3f _at = Vec3f(0,0,-1);
-        Vec3f _dir = Vec3f(0,0,-1);
-        Vec3f _from;
-        Vec3f _up = Vec3f(0,1,0);
-        Vec3f _scale = Vec3f(1,1,1);
-        Vec3f _euler;
+        Vec3d _at = Vec3d(0,0,-1);
+        Vec3d _dir = Vec3d(0,0,-1);
+        Vec3d _from;
+        Vec3d _up = Vec3d(0,1,0);
+        Vec3d _scale = Vec3d(1,1,1);
+        Vec3d _euler;
         OSGObjectPtr coords;
         OSGObjectPtr translator;
 
         int frame = 0;
-        Matrix WorldTransformation;
+        Matrix4d WorldTransformation;
         VRConstraintPtr constraint;
 
-        Matrix old_transformation; //drag n drop
+        Matrix4d old_transformation; //drag n drop
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
-        void computeMatrix();
+        void computeMatrix4d();
 
-        //read matrix from doublebuffer && apply it to transformation
+        //read Matrix4d from doublebuffer && apply it to transformation
         //should be called from the main thread only
         void updateTransformation();
 
@@ -90,55 +90,55 @@ class VRTransform : public VRObject {
         doubleBuffer* getBuffer();
         // Local && world transformation setter && getter
 
-        Vec3f getFrom();
-        Vec3f getDir();
-        Vec3f getAt();
-        Vec3f getUp();
-        Vec3f getScale();
+        Vec3d getFrom();
+        Vec3d getDir();
+        Vec3d getAt();
+        Vec3d getUp();
+        Vec3d getScale();
         posePtr getPose();
         posePtr getPoseTo(VRObjectPtr o);
         posePtr getWorldPose();
-        Vec3f getEuler();
-        void getMatrix(Matrix& _m);
-        Matrix getMatrix();
-        Matrix getMatrixTo(VRObjectPtr o, bool parentOnly = false);
-        Matrix getRotationMatrix();
+        Vec3d getEuler();
+        void getMatrix(Matrix4d& _m);
+        Matrix4d getMatrix();
+        Matrix4d getMatrixTo(VRObjectPtr o, bool parentOnly = false);
+        Matrix4d getRotationMatrix();
 
-        void setFrom(Vec3f pos);
-        void setAt(Vec3f at);
-        void setUp(Vec3f up);
-        void setDir(Vec3f dir);
+        void setFrom(Vec3d pos);
+        void setAt(Vec3d at);
+        void setUp(Vec3d up);
+        void setDir(Vec3d dir);
         void setScale(float s);
-        void setScale(Vec3f s);
-        void setOrientation(Vec3f at, Vec3f up);
-        void setEuler(Vec3f euler);
+        void setScale(Vec3d s);
+        void setOrientation(Vec3d at, Vec3d up);
+        void setEuler(Vec3d euler);
         void setPose(posePtr p);
-        void setPose(Vec3f from, Vec3f dir, Vec3f up);
-        virtual void setMatrix(Matrix m);
+        void setPose(Vec3d from, Vec3d dir, Vec3d up);
+        virtual void setMatrix(Matrix4d m);
 
-        void getWorldMatrix(Matrix& _m, bool parentOnly = false);
-        Matrix getWorldMatrix(bool parentOnly = false);
-        Vec3f getWorldPosition(bool parentOnly = false);
-        Vec3f getWorldDirection(bool parentOnly = false);
-        Vec3f getWorldUp(bool parentOnly = false);
+        void getWorldMatrix(Matrix4d& _m, bool parentOnly = false);
+        Matrix4d getWorldMatrix(bool parentOnly = false);
+        Vec3d getWorldPosition(bool parentOnly = false);
+        Vec3d getWorldDirection(bool parentOnly = false);
+        Vec3d getWorldUp(bool parentOnly = false);
 
         void setWorldPose(posePtr p);
-        void setWorldMatrix(Matrix _m);
-        void setWorldPosition(Vec3f pos);
-        void setWorldOrientation(Vec3f dir, Vec3f up);
-        void setWorldDir(Vec3f dir);
-        void setWorldUp(Vec3f up);
+        void setWorldMatrix(Matrix4d _m);
+        void setWorldPosition(Vec3d pos);
+        void setWorldOrientation(Vec3d dir, Vec3d up);
+        void setWorldDir(Vec3d dir);
+        void setWorldUp(Vec3d up);
 
-        void getRelativeMatrix(Matrix& m, VRObjectPtr o, bool parentOnly = false);
-        Matrix getRelativeMatrix(VRObjectPtr o, bool parentOnly = false);
+        void getRelativeMatrix(Matrix4d& m, VRObjectPtr o, bool parentOnly = false);
+        Matrix4d getRelativeMatrix(VRObjectPtr o, bool parentOnly = false);
         posePtr getRelativePose(VRObjectPtr o, bool parentOnly = false);
-        Vec3f getRelativePosition(VRObjectPtr o, bool parentOnly = false);
-        Vec3f getRelativeDirection(VRObjectPtr o, bool parentOnly = false);
-        Vec3f getRelativeUp(VRObjectPtr o, bool parentOnly = false);
+        Vec3d getRelativePosition(VRObjectPtr o, bool parentOnly = false);
+        Vec3d getRelativeDirection(VRObjectPtr o, bool parentOnly = false);
+        Vec3d getRelativeUp(VRObjectPtr o, bool parentOnly = false);
 
-        void setRelativePosition(Vec3f pos, VRObjectPtr o);
-        void setRelativeDir(Vec3f pos, VRObjectPtr o);
-        void setRelativeUp(Vec3f pos, VRObjectPtr o);
+        void setRelativePosition(Vec3d pos, VRObjectPtr o);
+        void setRelativeDir(Vec3d pos, VRObjectPtr o);
+        void setRelativeUp(Vec3d pos, VRObjectPtr o);
         void setRelativePose(posePtr p, VRObjectPtr o);
 
         int get_orientation_mode();
@@ -150,11 +150,11 @@ class VRTransform : public VRObject {
 
         void showCoordAxis(bool b);
 
-        void rotate(float a, Vec3f v = Vec3f(0,1,0));
+        void rotate(float a, Vec3d v = Vec3d(0,1,0));
         void rotateUp(float a);
         void rotateX(float a);
         void rotateAround(float a);
-        void translate(Vec3f v);
+        void translate(Vec3d v);
         void zoom(float d);
         void move(float d);
 
@@ -165,7 +165,7 @@ class VRTransform : public VRObject {
         bool isDragged();
 
         /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
-        Line castRay(VRObjectPtr obj = 0, Vec3f dir = Vec3f(0,0,-1));
+        Line castRay(VRObjectPtr obj = 0, Vec3d dir = Vec3d(0,0,-1));
 
         map<string, VRAnimationPtr> animations;
         void addAnimation(VRAnimationPtr animation);
@@ -194,6 +194,11 @@ class VRTransform : public VRObject {
         void setup();
         void updatePhysics();
 };
+
+Matrix4f toMatrix4f(Matrix4d);
+Matrix4d toMatrix4d(Matrix4f);
+bool MatrixLookDir(Matrix4d &result, Pnt3d from, Vec3d dir, Vec3d up);
+bool MatrixLookAt (Matrix4d &result, Pnt3d from, Pnt3d at , Vec3d up);
 
 OSG_END_NAMESPACE;
 

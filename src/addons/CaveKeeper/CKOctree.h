@@ -16,8 +16,8 @@ class Octree;
 class CKOctree {
     public:
         struct light {
-            Vec3f pos;
-            light(Vec3f p) : pos(p) {}
+            Vec3d pos;
+            light(Vec3d p) : pos(p) {}
         };
 
         struct element {
@@ -28,7 +28,7 @@ class CKOctree {
             CKOctree* tree = 0;
             bool octIsEmpty[8]; //flag to see if octant is empty || solid earth
 
-            Vec3f pos;
+            Vec3d pos;
             Vec3i otpos;
             int size;
             int _size;
@@ -38,19 +38,19 @@ class CKOctree {
             int type;
             int chunk;
 
-            Vec4f vertexLight[6];
+            Vec4d vertexLight[6];
 
-            element(CKOctree* tree, Vec3f p, Vec3i otp, int s);
+            element(CKOctree* tree, Vec3d p, Vec3i otp, int s);
             ~element();
 
             void add(element* e);
 
             int getOctant(Vec3i p);
-            int getOctant(Vec3f p);
+            int getOctant(Vec3d p);
 
             Vec3i getOctantVec(int o);
 
-            bool inside(Vec3f f);
+            bool inside(Vec3d f);
             bool inside(Vec3i f);
 
             void print(string indent = "");
@@ -64,8 +64,8 @@ class CKOctree {
         map<int,element*> elements;
         element* root = 0;
         int N = 0;
-        Vec3f hitPoint;
-        Vec3f hitNormal;
+        Vec3d hitPoint;
+        Vec3d hitNormal;
         element* hitElement = 0;
 
         int getMax(Vec3i i);
@@ -80,21 +80,21 @@ class CKOctree {
         element* add(Vec3i _p);
         void rem(element* e);
         void addAround(element* e);
-        light* addLight(Vec3f p);
+        light* addLight(Vec3d p);
 
         //check if there is a cube at pos
-        bool isLeaf(Vec3f p);
+        bool isLeaf(Vec3d p);
 
         //check if space || solid at pos
-        bool isEmpty(Vec3f p);
+        bool isEmpty(Vec3d p);
         void setEmpty(Vec3i p);
 
         //get the smallest element at that position
-        element* get(Vec3f p, element* e = 0);
+        element* get(Vec3d p, element* e = 0);
         //ray cast
         element* get(Line ray, element* e = 0, string indent = "");
 
-        vector<element*> getAround(Vec3f pos, float r);
+        vector<element*> getAround(Vec3d pos, float r);
 
         void traverse(VRFunction<element*>* cb);
         void traverse(element* e, VRFunction<element*>* cb);
@@ -102,8 +102,8 @@ class CKOctree {
         element* getRoot();
         element* getElement(int i);
 
-        Vec3f getHitPoint();
-        Vec3f getHitNormal();
+        Vec3d getHitPoint();
+        Vec3d getHitNormal();
         element* getHitElement();
 
         void print();

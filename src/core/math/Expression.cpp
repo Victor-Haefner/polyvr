@@ -45,11 +45,11 @@ Expression::Node::Node(string s) : param(s) {;}
 Expression::Node::~Node() { if (value) delete value; }
 
 void Expression::Node::setValue(float f) { value = new Value<float>(f); }
-void Expression::Node::setValue(Vec3f v) { value = new Value<Vec3f>(v); }
+void Expression::Node::setValue(Vec3d v) { value = new Value<Vec3d>(v); }
 void Expression::Node::setValue(string s) {
     int N = std::count(s.begin(), s.end(), ' ');
     if (N == 0) setValue(toFloat(s));
-    if (N == 2) setValue(toVec3f(s));
+    if (N == 2) setValue(toVec3d(s));
 }
 
 string Expression::Node::toString() {

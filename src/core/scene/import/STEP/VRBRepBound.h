@@ -10,7 +10,7 @@ OSG_BEGIN_NAMESPACE;
 class VRBRepBound : public VRBRepUtils {
     public:
         vector<VRBRepEdge> edges;
-        vector<Vec3f> points;
+        vector<Vec3d> points;
         vector<float> angles;
         bool outer = true;
         string BRepType;

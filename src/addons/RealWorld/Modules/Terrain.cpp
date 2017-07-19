@@ -6,6 +6,6 @@ Terrain::Terrain(string id){
     this->id = id;
 }
 
-vector<Vec2f> Terrain::getCorners(){
+vector<Vec2d> Terrain::getCorners(){
     return positions;
 }

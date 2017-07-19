@@ -9,25 +9,25 @@ using namespace std;
 
 
 struct WallStructure {
-    vector<Vec2f> vertices;
+    vector<Vec2d> vertices;
     vector<int*> faces;
 };
 
 class Wall: public BaseWorldObject {
 public:
     string id;
-    vector<Vec2f> positions;
+    vector<Vec2d> positions;
     float width;
     float height;
 
     Wall(string id);
 
-    vector<Vec2f*> getSides();
+    vector<Vec2d*> getSides();
 
-    vector<Vec2f> getCorners();
+    vector<Vec2d> getCorners();
 
     struct Vec2fWithAdjIdx {
-        Vec2f pos;
+        Vec2d pos;
         unsigned int index;
         Vec2fWithAdjIdx* adjLeft;
         Vec2fWithAdjIdx* adjRight;

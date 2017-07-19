@@ -26,7 +26,7 @@ class VRMenu : public VRGeometry {
         string group;
 
         LAYOUT layout = LINEAR;
-        Vec2f scale = Vec2f(0.3,0.4);
+        Vec2d scale = Vec2d(0.3,0.4);
         float param = 0.1;
 
         VRMenuPtr active = 0;
@@ -49,7 +49,7 @@ class VRMenu : public VRGeometry {
         static VRMenuPtr create(string path = "");
         VRMenuPtr ptr();
 
-        void setLeafType(TYPE l, Vec2f scale);
+        void setLeafType(TYPE l, Vec2d scale);
         void setLayout(LAYOUT l, float param);
         void setCallback(VRFunction<VRMenuPtr>* cb);
 

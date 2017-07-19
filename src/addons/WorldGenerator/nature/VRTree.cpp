@@ -59,11 +59,11 @@ struct OSG::leaf_params : public VRStorage {
 };
 
 struct OSG::segment {
-    Vec3f p1 = Vec3f(0,0,0);
-    Vec3f p2 = Vec3f(0,1,0);
-    Vec3f n1 = Vec3f(0,1,0);
-    Vec3f n2 = Vec3f(0,1,0);
-    Vec2f radii;
+    Vec3d p1 = Vec3d(0,0,0);
+    Vec3d p2 = Vec3d(0,1,0);
+    Vec3d n1 = Vec3d(0,1,0);
+    Vec3d n2 = Vec3d(0,1,0);
+    Vec2d radii;
     int lvl = 0;
     segment* parent = 0;
     vector<segment*> children;
@@ -73,20 +73,20 @@ struct OSG::segment {
         parent = p;
         lvl = p ? p->lvl+1 : 0;
         if (p) p1 = p->p2;
-        radii = Vec2f(r, r);
+        radii = Vec2d(r, r);
         if (p) radii[0] = p->radii[1];
     }
 };
 
 VRTree::VRTree(string name) : VRTransform(name) {
     int c = random(0,10);
-    if (c == 3) truncColor = Vec3f(0.7, 0.7, 0.7);
-    if (c == 4) truncColor = Vec3f(0.7, 0.7, 0.7);
-    if (c == 5) truncColor = Vec3f(0.6, 0.5, 0.4);
-    if (c == 6) truncColor = Vec3f(0.2, 0.1, 0.1);
-    if (c == 7) truncColor = Vec3f(0.3, 0.2, 0);
-    if (c == 8) truncColor = Vec3f(0.3, 0.2, 0);
-    if (c == 9) truncColor = Vec3f(0.2, 0.1, 0.05);
+    if (c == 3) truncColor = Color3f(0.7, 0.7, 0.7);
+    if (c == 4) truncColor = Color3f(0.7, 0.7, 0.7);
+    if (c == 5) truncColor = Color3f(0.6, 0.5, 0.4);
+    if (c == 6) truncColor = Color3f(0.2, 0.1, 0.1);
+    if (c == 7) truncColor = Color3f(0.3, 0.2, 0);
+    if (c == 8) truncColor = Color3f(0.3, 0.2, 0);
+    if (c == 9) truncColor = Color3f(0.2, 0.1, 0.05);
 
     store("seed", &seed);
     storeObjVec("branching", parameters, true);
@@ -129,16 +129,16 @@ float VRTree::random (float min, float max) {
 
 float VRTree::variation(float val, float var) { return random(val*(1-var), val*(1+var)); }
 
-Vec3f VRTree::randUVec() { return Vec3f(random(-1,1), random(-1,1), random(-1,1)); }
+Vec3d VRTree::randUVec() { return Vec3d(random(-1,1), random(-1,1), random(-1,1)); }
 
 VRMaterialPtr VRTree::treeMat = 0;
 VRMaterialPtr VRTree::leafMat = 0;
 
 //rotate a vector with angle 'a' in a random direction
-Vec3f VRTree::randomRotate(Vec3f v, float a) {
+Vec3d VRTree::randomRotate(Vec3d v, float a) {
     if (a == 0) return v;
 
-    Vec3f x, d;
+    Vec3d x, d;
 
     do x = randUVec();
     while (x.dot(v) > 1e-3);
@@ -146,7 +146,7 @@ Vec3f VRTree::randomRotate(Vec3f v, float a) {
     d = v.cross(x);
     d.normalize();
 
-    Quaternion q(d, a);
+    Quaterniond q(d, a);
     q.multVec(v, v);
     return v;
 }
@@ -167,9 +167,9 @@ segment* VRTree::grow(int seed, segment* p, int iteration, float t) {
     if (p) {
         float a = variation(sp->p_angle, sp->p_angle_var);
         float l = variation(sp->length, sp->length_var);
-        Vec3f d = p->p2 - p->p1; d.normalize();
+        Vec3d d = p->p2 - p->p1; d.normalize();
         s->p1 = p->p1 + (p->p2-p->p1)*t;
-        s->p2 = s->p1 + l*randomRotate(d, a);
+        s->p2 = s->p1 + randomRotate(d, a)*l;
 
         s->n2 = s->p2 - s->p1;
         s->n2.normalize();
@@ -214,8 +214,8 @@ void VRTree::initMaterials() {
 
         VRTextureGenerator tg;
         tg.setSize(Vec3i(50,50,50));
-        tg.add("Perlin", 1, truncColor, Vec3f(1,0.9,0.7));
-        tg.add("Perlin", 0.25, Vec3f(1,0.9,0.7), truncColor);
+        tg.add("Perlin", 1, truncColor, Color3f(1,0.9,0.7));
+        tg.add("Perlin", 0.25, Color3f(1,0.9,0.7), truncColor);
         treeMat->setTexture(tg.compose(0));
     }
 
@@ -241,19 +241,19 @@ void VRTree::initArmatureGeo() {
 
     VRGeoData geo[3];
     for (segment* s : branches) {
-        geo[0].pushVert(s->p1, s->n1, truncColor, Vec2f(s->radii[0]));
-        geo[0].pushVert(s->p2, s->n2, truncColor, Vec2f(s->radii[1]));
+        geo[0].pushVert(s->p1, s->n1, truncColor, Vec2d(s->radii[0]));
+        geo[0].pushVert(s->p2, s->n2, truncColor, Vec2d(s->radii[1]));
         geo[0].pushLine();
 
         if (s->lvl <= 3) { // first lod
-            geo[1].pushVert(s->p1, s->n1, truncColor, Vec2f(s->radii[0]));
-            geo[1].pushVert(s->p2, s->n2, truncColor, Vec2f(s->radii[1]));
+            geo[1].pushVert(s->p1, s->n1, truncColor, Vec2d(s->radii[0]));
+            geo[1].pushVert(s->p2, s->n2, truncColor, Vec2d(s->radii[1]));
             geo[1].pushLine();
         }
 
         if (s->lvl <= 2) { // second lod
-            geo[2].pushVert(s->p1, s->n1, truncColor, Vec2f(s->radii[0]));
-            geo[2].pushVert(s->p2, s->n2, truncColor, Vec2f(s->radii[1]));
+            geo[2].pushVert(s->p1, s->n1, truncColor, Vec2d(s->radii[0]));
+            geo[2].pushVert(s->p2, s->n2, truncColor, Vec2d(s->radii[1]));
             geo[2].pushLine();
         }
     }
@@ -346,7 +346,7 @@ void VRTree::growLeafs(shared_ptr<leaf_params> lp) {
     normal_distribution<> ndist(0,1);
 
     auto randVecInSphere = [&](float r) {
-        return Vec3f(ndist(e2), ndist(e2), ndist(e2))*r;
+        return Vec3d(ndist(e2), ndist(e2), ndist(e2))*r;
     };
 
     float ca = 1.0; // carotene
@@ -358,20 +358,20 @@ void VRTree::growLeafs(shared_ptr<leaf_params> lp) {
         if (b->lvl != lp->level) continue;
 
         // compute branch segment basis
-        Vec3f p = (b->p1 + b->p2)*0.5;
-        Vec3f d = b->p2 - b->p1;
-        Vec3f u = Vec3f(0,1,0);
-        Vec3f n = u.cross(d); n.normalize();
+        Vec3d p = (b->p1 + b->p2)*0.5;
+        Vec3d d = b->p2 - b->p1;
+        Vec3d u = Vec3d(0,1,0);
+        Vec3d n = u.cross(d); n.normalize();
         u = d.cross(n); u.normalize();
 
         float L = d.length();
 
         for (int i=0; i<lp->amount; i++) {
-            Vec3f v = randVecInSphere(L*0.3);
-            Vec3f n = p+v-b->p1;
+            Vec3d v = randVecInSphere(L*0.3);
+            Vec3d n = p+v-b->p1;
             n.normalize();
             // TODO: add model for carotene and chlorophyl depending on leaf age/size and more..
-            geo0.pushVert(p+v, n, Vec3f(lp->size,ca,ch)); // color: leaf size, amount of carotene, amount of chlorophyl
+            geo0.pushVert(p+v, n, Color3f(lp->size,ca,ch)); // color: leaf size, amount of carotene, amount of chlorophyl
             geo0.pushPoint();
         }
     }
@@ -398,8 +398,8 @@ void VRTree::setLeafMaterial(VRMaterialPtr mat) {
     for (auto g : leafGeos) g->setMaterial(mat);
 }
 
-void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset, int ID) {
-    Matrix Offset;
+void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3d offset, int ID) {
+    Matrix4d Offset;
     Offset.setTranslate(offset); // TODO, use tree transformation rotation?
 
     if (leafLodCache.count(lvl)) {
@@ -410,11 +410,11 @@ void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset, int ID) {
     if (leafGeos.size() == 0) return;
     VRGeoData data(leafGeos[0]);
 
-    auto computeHull = [&](VRGeoData& tmpData, Vec4f color) -> VRGeometryPtr {
+    auto computeHull = [&](VRGeoData& tmpData, Color4f color) -> VRGeometryPtr {
         if (tmpData.size() == 0) return 0;
         float ca = color[1]; // carotene
         float ch = color[2]; // chlorophyll
-        Vec3f leafColor = Vec3f(0.4*ca,0.8*ch,0.2*ch);
+        Color3f leafColor(0.4*ca,0.8*ch,0.2*ch);
         VRConvexHull hull;
         auto hgeo = hull.compute( tmpData.asGeometry("tmpdata") );
         if (!hgeo) return 0;
@@ -425,13 +425,13 @@ void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset, int ID) {
 
     int Ns = pow(2,int(4/(lvl+1)));
     vector<VRGeoData> clusters(Ns);
-    vector<Pnt3f> seeds(Ns);
+    vector<Pnt3d> seeds(Ns);
     for (int k=0; k<Ns; k++) {
         int p = data.size()*k*1.0/Ns;
         seeds[k] = data.getPosition(p);
     }
 
-    auto getMinCluster = [&](const Pnt3f& pos) -> VRGeoData& {
+    auto getMinCluster = [&](const Pnt3d& pos) -> VRGeoData& {
         int cMin = 0;
         float dMin = 1.0e10;
         for (int c = 0; c<Ns; c++) {
@@ -453,14 +453,14 @@ void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset, int ID) {
     mt19937 e2(rd());
     normal_distribution<> ndist(0,fuzzy);
     auto randVecInSphere = [&]() {
-        return Vec3f(ndist(e2), ndist(e2), ndist(e2));
+        return Vec3d(ndist(e2), ndist(e2), ndist(e2));
     };
 
-    Vec4f meanColor;
+    Color4f meanColor;
     for (int i=0; i<N; i++) {
         int j = max( min( int(i*D), data.size()-1), 0);
         meanColor += data.getColor(j);
-        Pnt3f pos = data.getPosition(j);
+        Pnt3d pos = data.getPosition(j);
         VRGeoData& cluster = getMinCluster(pos + randVecInSphere());
         cluster.pushVert( pos, data.getNormal(j) );
         cluster.pushPoint();
@@ -478,11 +478,11 @@ void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset, int ID) {
     geo.append(Hull, Offset);
 }
 
-void VRTree::createHullTrunkLod(VRGeoData& geo, int lvl, Vec3f offset, int ID) {
-    Matrix Offset;
+void VRTree::createHullTrunkLod(VRGeoData& geo, int lvl, Vec3d offset, int ID) {
+    Matrix4d Offset;
     Offset.setTranslate(offset); // TODO, use tree transformation rotation?
 
-    Vec2f id = Vec2f(ID,1); // the 1 is a flag to identify the ID as such!
+    Vec2d id = Vec2d(ID,1); // the 1 is a flag to identify the ID as such!
 
     if (truncLodCache.count(lvl)) {
         geo.append(truncLodCache[lvl], Offset);
@@ -493,20 +493,20 @@ void VRTree::createHullTrunkLod(VRGeoData& geo, int lvl, Vec3f offset, int ID) {
 
     VRGeoData Hull;
 
-    auto normalize = [](Vec3f v) {
+    auto normalize = [](Vec3d v) {
         v.normalize();
         return v;
     };
 
-    auto pushRing = [&](Vec3f p, float r) {
-        static Vec3f n1 = normalize( Vec3f(-1,0,-1) );
-        static Vec3f n2 = normalize( Vec3f(-1,0, 1) );
-        static Vec3f n3 = normalize( Vec3f( 1,0, 1) );
-        static Vec3f n4 = normalize( Vec3f( 1,0,-1) );
-        int i1 = Hull.pushVert( Pnt3f(-r,0,-r) + p, n1, truncColor, id );
-        int i2 = Hull.pushVert( Pnt3f(-r,0, r) + p, n2, truncColor, id );
-        int i3 = Hull.pushVert( Pnt3f( r,0, r) + p, n3, truncColor, id );
-        int i4 = Hull.pushVert( Pnt3f( r,0,-r) + p, n4, truncColor, id );
+    auto pushRing = [&](Vec3d p, float r) {
+        static Vec3d n1 = normalize( Vec3d(-1,0,-1) );
+        static Vec3d n2 = normalize( Vec3d(-1,0, 1) );
+        static Vec3d n3 = normalize( Vec3d( 1,0, 1) );
+        static Vec3d n4 = normalize( Vec3d( 1,0,-1) );
+        int i1 = Hull.pushVert( Pnt3d(-r,0,-r) + p, n1, truncColor, id );
+        int i2 = Hull.pushVert( Pnt3d(-r,0, r) + p, n2, truncColor, id );
+        int i3 = Hull.pushVert( Pnt3d( r,0, r) + p, n3, truncColor, id );
+        int i4 = Hull.pushVert( Pnt3d( r,0,-r) + p, n4, truncColor, id );
         return Vec4i(i1,i2,i3,i4);
     };
 

@@ -136,7 +136,7 @@ cout << "Building Mesh" << endl;
             float y = mesh->mVertices[j].y;
             float z = mesh->mVertices[j].z;
            // cout << x << " " << y << " " << z << " " << endl;
-            geo.pos->addValue(Vec3f(x,y,z));
+            geo.pos->addValue(Vec3d(x,y,z));
             vertexNumber += 1;
         }
 
@@ -144,7 +144,7 @@ cout << "Building Mesh" << endl;
         float x = mesh->mNormals->x;
         float y = mesh->mNormals->y;
         float z = mesh->mNormals->z;
-        geo.norms->addValue(Vec3f(x,y,z));
+        geo.norms->addValue(Vec3d(x,y,z));
 
         //define geo.inds_n and geo.inds_p
         for(int j = 0; j < mesh->mNumFaces; j++)
@@ -163,8 +163,8 @@ cout << "Building Mesh" << endl;
 
         //create TextCoords method
         for (int i=0; i<vertexNumber; i++) { // per vertex
-            //geo.cols->addValue(Vec4f(0,0,1,1));
-            geo.tc1->addValue(Vec2f(0,0));
+            //geo.cols->addValue(Vec4d(0,0,1,1));
+            geo.tc1->addValue(Vec2d(0,0));
         }
 
         geo.types->addValue(GL_TRIANGLES);
@@ -185,12 +185,12 @@ cout << "Building Mesh" << endl;
         mat->Get(AI_MATKEY_COLOR_EMISSIVE,emissive);
         mat->Get(AI_MATKEY_SHININESS,shininess);
 
-        geo.mat->setDiffuse(Vec3f(diffuse.r,diffuse.g,diffuse.b));
-        geo.mat->setAmbient(Vec3f(ambient.r, ambient.g, ambient.b));
-        geo.mat->setSpecular(Vec3f(specular.r, specular.g, specular.b));
+        geo.mat->setDiffuse(Color3f(diffuse.r,diffuse.g,diffuse.b));
+        geo.mat->setAmbient(Vec3d(ambient.r, ambient.g, ambient.b));
+        geo.mat->setSpecular(Vec3d(specular.r, specular.g, specular.b));
         geo.mat->setTransparency(1);
         geo.mat->setShininess(shininess);
-        geo.mat->setEmission(Vec3f(emissive.r,emissive.g,emissive.b));
+        geo.mat->setEmission(Vec3d(emissive.r,emissive.g,emissive.b));
 
         geo.finish();
 

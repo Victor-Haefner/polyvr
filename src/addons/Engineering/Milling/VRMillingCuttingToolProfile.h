@@ -12,21 +12,21 @@ using namespace std;
 
 class VRMillingCuttingToolProfile {
     private:
-        vector<Vec2f> profile;
+        vector<Vec2d> profile;
 
     protected:
         bool alreadyInProfile(float newx);
         float newy(float newx, int p);
         int lookForNearestIndex(float newx);
-        float lookForMaxInList(vector<Vec2f> liste);
+        float lookForMaxInList(vector<Vec2d> liste);
 
     public:
         VRMillingCuttingToolProfile();
         virtual ~VRMillingCuttingToolProfile();
         static shared_ptr<VRMillingCuttingToolProfile> create();
 
-        void addPointProfile(Vec2f point);
-        float maxProfile(Vec3f position, Vec3f cubePosition, Vec3f cubeSize);
+        void addPointProfile(Vec2d point);
+        float maxProfile(Vec3d position, Vec3d cubePosition, Vec3d cubeSize);
         float getLength();
 };
 

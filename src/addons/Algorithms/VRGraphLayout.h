@@ -27,7 +27,7 @@ class VRGraphLayout {
         GraphPtr graph;
         map<int, ALGORITHM> algorithms;
         map<int, int> flags;
-        Vec3f gravity;
+        Vec3d gravity;
         float radius = 1;
         float speed = 1;
 
@@ -52,7 +52,7 @@ class VRGraphLayout {
         void clearAlgorithms();
         void compute(int N = 10, float eps = 0.1);
 
-        void setGravity(Vec3f v);
+        void setGravity(Vec3d v);
         void setRadius(float r);
         void setSpeed(float s);
         void fixNode(int i);

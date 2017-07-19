@@ -274,29 +274,29 @@ PyObject* VRPyMaterial::setTessEvaluationProgram(VRPyMaterial* self, PyObject* a
 
 PyObject* VRPyMaterial::getAmbient(VRPyMaterial* self) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::getAmbient, C obj is invalid"); return NULL; }
-    return toPyTuple(self->objPtr->getAmbient());
+    return toPyTuple(Vec3d(self->objPtr->getAmbient()));
 }
 
 PyObject* VRPyMaterial::setAmbient(VRPyMaterial* self, PyObject* args) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setAmbient, C obj is invalid"); return NULL; }
-	self->objPtr->setAmbient(parseVec3f(args));
+	self->objPtr->setAmbient(Vec3f(parseVec3d(args)));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::getDiffuse(VRPyMaterial* self) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::getDiffuse, C obj is invalid"); return NULL; }
-    return toPyTuple(self->objPtr->getDiffuse());
+    return toPyTuple(Vec3d(self->objPtr->getDiffuse()));
 }
 
 PyObject* VRPyMaterial::setDiffuse(VRPyMaterial* self, PyObject* args) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setDiffuse, C obj is invalid"); return NULL; }
-	self->objPtr->setDiffuse(parseVec3f(args));
+	self->objPtr->setDiffuse(Vec3f(parseVec3d(args)));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::getSpecular(VRPyMaterial* self) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::getSpecular, C obj is invalid"); return NULL; }
-    return toPyTuple(self->objPtr->getSpecular());
+    return toPyTuple(Vec3d(self->objPtr->getSpecular()));
 }
 
 PyObject* VRPyMaterial::setTransparency(VRPyMaterial* self, PyObject* args) {
@@ -323,7 +323,7 @@ PyObject* VRPyMaterial::getShininess(VRPyMaterial* self) {
 
 PyObject* VRPyMaterial::setSpecular(VRPyMaterial* self, PyObject* args) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setSpecular, C obj is invalid"); return NULL; }
-	self->objPtr->setSpecular(parseVec3f(args));
+	self->objPtr->setSpecular(Vec3f(parseVec3d(args)));
 	Py_RETURN_TRUE;
 }
 
@@ -343,6 +343,6 @@ PyObject* VRPyMaterial::setQRCode(VRPyMaterial* self, PyObject* args) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setQRCode, C obj is invalid"); return NULL; }
 	PyObject *data, *fg, *bg; int i;
     if (! PyArg_ParseTuple(args, "OOOi", &data, &fg, &bg, &i)) return NULL;
-	self->objPtr->setQRCode(PyString_AsString(data), parseVec3fList(fg), parseVec3fList(bg), i);
+	self->objPtr->setQRCode(PyString_AsString(data), parseVec3dList(fg), parseVec3dList(bg), i);
 	Py_RETURN_TRUE;
 }

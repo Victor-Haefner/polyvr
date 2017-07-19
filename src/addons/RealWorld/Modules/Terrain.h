@@ -8,19 +8,19 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 struct TerrainArea {
-    vector<Vec2f> vertices;
+    vector<Vec2d> vertices;
     vector<int*> faces;
 };
 
 class Terrain: public BaseWorldObject{
     public:
         string id;
-        vector<Vec2f> positions;
-        vector<Vec3f>positions3D;
+        vector<Vec2d> positions;
+        vector<Vec3d>positions3D;
 
         Terrain(string id);
 
-        vector<Vec2f> getCorners();
+        vector<Vec2d> getCorners();
 };
 
 OSG_END_NAMESPACE;

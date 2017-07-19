@@ -24,13 +24,13 @@ class VRRoadBase : public VRObject {
 
         pathPtr toPath( VREntityPtr pathEntity, int resolution );
         void setupTexCoords( VRGeometryPtr geo, VREntityPtr way );
-        vector<string> toStringVector(Vec3f& v);
+        vector<string> toStringVector(Vec3d& v);
 
-        VREntityPtr addNode( Vec3f pos );
-        VREntityPtr addPath( string type, string name, vector<VREntityPtr> nodes, vector<Vec3f> normals );
+        VREntityPtr addNode( Vec3d pos );
+        VREntityPtr addPath( string type, string name, vector<VREntityPtr> nodes, vector<Vec3d> normals );
         VREntityPtr addLane( int direction, float width );
 
-        VRGeometryPtr addPole( Vec3f root, Vec3f end, float radius );
+        VRGeometryPtr addPole( Vec3d root, Vec3d end, float radius );
 };
 
 OSG_END_NAMESPACE;

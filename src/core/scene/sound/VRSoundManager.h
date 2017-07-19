@@ -29,13 +29,13 @@ public:
     ~VRSoundManager();
 
     void playSound(string path, bool loop = false);
-    void playPositionalSound(string path, Vec3f vec);
+    void playPositionalSound(string path, Vec3d vec);
 
     void stopSound(string path);
     void stopAllSounds(void);
 
     void setSoundVolume(float volume);
-    void updatePlayerPosition(Vec3f position, Vec3f forward);
+    void updatePlayerPosition(Vec3d position, Vec3d forward);
 };
 
 OSG_END_NAMESPACE;

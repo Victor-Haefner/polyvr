@@ -60,22 +60,22 @@ class TrafficSimulation {
             /**
              * The position of the vehicle.
              */
-            Vec3f pos;
+            Vec3d pos;
 
             /**
              * The movement which is added to the vehicle every second.
              */
-            Vec3f deltaPos;
+            Vec3d deltaPos;
 
             /**
              * The orientation of the vehicle.
              */
-            Vec3f orientation;
+            Vec3d orientation;
 
             /**
              * The rotation which is added to the orientation every second.
              */
-            Vec3f deltaOrientation;
+            Vec3d deltaOrientation;
 
             /**
              * Possible state-flags for this vehicle.
@@ -401,7 +401,7 @@ class TrafficSimulation {
          * @param pos The position to move to.
          * @param orientation The new orientation of the vehicle.
          */
-        void setVehiclePosition(const unsigned int id, const Vec3f& pos, const Vec3f& orientation);
+        void setVehiclePosition(const unsigned int id, const Vec3d& pos, const Vec3d& orientation);
 
         /// @}
 };

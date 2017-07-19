@@ -65,7 +65,7 @@ void VRConstructionKit_on_snap(VRConstructionKit* kit, VRSnappingEngine::EventSn
     group->addAttachment("kit_group", 0);
     p2->addChild(group);
     e->o1->rebaseDrag(group);
-    Matrix m = e->o2->getWorldMatrix();
+    Matrix4d m = e->o2->getWorldMatrix();
     e->o2->switchParent(group);
     e->o1->setPickable(false);
     e->o2->setPickable(false);
@@ -97,7 +97,7 @@ void VRConstructionKit::breakup(VRTransformPtr obj) {
     }
 }
 
-int VRConstructionKit::addAnchorType(float size, Vec3f color) {
+int VRConstructionKit::addAnchorType(float size, Color3f color) {
     auto g = VRGeometry::create("anchor");
     string bs = toString(size);
     g->setPrimitive("Box", bs + " " + bs + " " + bs + " 1 1 1");
@@ -119,9 +119,9 @@ void VRConstructionKit::remObject(VRTransformPtr t) {
     snapping->remObject(t);
 }
 
-VRGeometryPtr VRConstructionKit::addObjectAnchor(VRTransformPtr t, int a, Vec3f pos, float radius) {
+VRGeometryPtr VRConstructionKit::addObjectAnchor(VRTransformPtr t, int a, Vec3d pos, float radius) {
     VRGeometryPtr anc = static_pointer_cast<VRGeometry>(anchors[a]->duplicate());
-    anc->setPose(pos, Vec3f(0,1,0), Vec3f(1,0,0));
+    anc->setPose(pos, Vec3d(0,1,0), Vec3d(1,0,0));
     anc->show();
     anc->switchParent(t);
     snapping->addObjectAnchor(t, anc);

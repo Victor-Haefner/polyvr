@@ -2,8 +2,8 @@
 
 using namespace OSG;
 
-pair<bool, float> Vec2Helper::lineWithLineSegmentIntersection(Vec2f startLineA, Vec2f dirLineA, Vec2f posSeg1, Vec2f posSeg2) {
-    Vec2f dir12 = posSeg2-posSeg1;
+pair<bool, float> Vec2Helper::lineWithLineSegmentIntersection(Vec2d startLineA, Vec2d dirLineA, Vec2d posSeg1, Vec2d posSeg2) {
+    Vec2d dir12 = posSeg2-posSeg1;
     dir12.normalize();
     float lenAB = (posSeg2 - posSeg1).length();
 
@@ -18,7 +18,7 @@ pair<bool, float> Vec2Helper::lineWithLineSegmentIntersection(Vec2f startLineA, 
 
 // returns how much line A has to be scaled to hit the intersection
 // || false if the lines do not intersect
-pair<bool, float> Vec2Helper::lineIntersection(Vec2f startLineA, Vec2f dirLineA, Vec2f startLineB, Vec2f dirLineB) {
+pair<bool, float> Vec2Helper::lineIntersection(Vec2d startLineA, Vec2d dirLineA, Vec2d startLineB, Vec2d dirLineB) {
     float u_b = dirLineB.getValues()[1] * dirLineA.getValues()[0] - dirLineB.getValues()[0] * dirLineA.getValues()[1];
 
     if (u_b != 0) {
@@ -37,15 +37,15 @@ pair<bool, float> Vec2Helper::lineIntersection(Vec2f startLineA, Vec2f dirLineA,
 }
 
 // calculates actual line intersection point
-pair<bool, Vec2f> Vec2Helper::lineIntersectionPoint(Vec2f startLineA, Vec2f dirLineA, Vec2f startLineB, Vec2f dirLineB) {
+pair<bool, Vec2d> Vec2Helper::lineIntersectionPoint(Vec2d startLineA, Vec2d dirLineA, Vec2d startLineB, Vec2d dirLineB) {
     pair<bool, float> s = lineIntersection(startLineA, dirLineA, startLineB, dirLineB);
-    if (!s.first) return make_pair(false, Vec2f(0,0));
+    if (!s.first) return make_pair(false, Vec2d(0,0));
     return make_pair(true, startLineA + dirLineA*s.second);
 }
 
-vector<Vec2WithId*> Vec2Helper::orderCW(vector<Vec2WithId*> points, Vec2f center) {
+vector<Vec2WithId*> Vec2Helper::orderCW(vector<Vec2WithId*> points, Vec2d center) {
     for (unsigned int i=0; i<points.size(); i++) {
-        Vec2f p = points[i]->vec-center;
+        Vec2d p = points[i]->vec-center;
         p.normalize();
 
         points[i]->vec = p;

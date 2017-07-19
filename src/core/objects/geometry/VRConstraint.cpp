@@ -35,13 +35,13 @@ void VRConstraint::setMax(int i, float f) { max[i] = f; }
 float VRConstraint::getMin(int i) { return min[i]; }
 float VRConstraint::getMax(int i) { return max[i]; }
 
-void VRConstraint::setReferenceA(Matrix m) { refMatrixA = m; };
-void VRConstraint::setReferenceB(Matrix m) { refMatrixB = m; refMatrixB.inverse(refMatrixBI); };
-Matrix VRConstraint::getReferenceA() { return refMatrixA; };
-Matrix VRConstraint::getReferenceB() { return refMatrixB; };
+void VRConstraint::setReferenceA(Matrix4d m) { refMatrixA = m; };
+void VRConstraint::setReferenceB(Matrix4d m) { refMatrixB = m; refMatrixB.inverse(refMatrixBI); };
+Matrix4d VRConstraint::getReferenceA() { return refMatrixA; };
+Matrix4d VRConstraint::getReferenceB() { return refMatrixB; };
 
 void VRConstraint::lockRotation() {
-    setRConstraint(Vec3f(0,0,0), VRConstraint::POINT);
+    setRConstraint(Vec3d(0,0,0), VRConstraint::POINT);
 }
 
 VRConstraintPtr VRConstraint::duplicate() {
@@ -58,8 +58,8 @@ void VRConstraint::apply(VRTransformPtr obj) {
 
     VRTransformPtr ref = Referential.lock();
 
-    Matrix t, tr, tri, t0i;
-    Matrix t0 = Reference;
+    Matrix4d t, tr, tri, t0i;
+    Matrix4d t0 = Reference;
     if (localTC) t = obj->getMatrix();
     else t = obj->getWorldMatrix();
 
@@ -77,7 +77,7 @@ void VRConstraint::apply(VRTransformPtr obj) {
             t.multLeft(rotRebase);
             t.mult(refRebasedI);
             float a = atan2(-t[2][1], t[2][2]);
-            t.setRotate( Quaternion(Vec3f(1,0,0), a) );
+            t.setRotate( Quaterniond(Vec3d(1,0,0), a) );
             t.mult(refRebased);
             t.multLeft(rotRebaseI);
         }
@@ -88,12 +88,12 @@ void VRConstraint::apply(VRTransformPtr obj) {
     //translation
     if (tConMode != NONE) {
         if (tConMode == PLANE) {
-            float d = Vec3f(t[3] - t0[3]).dot(tConstraint);
+            float d = Vec3d(t[3] - t0[3]).dot(tConstraint);
             for (int i=0; i<3; i++) t[3][i] -= d*tConstraint[i];
         }
 
         if (tConMode == LINE) {
-            Vec3f d = Vec3f(t[3] - t0[3]);
+            Vec3d d = Vec3d(t[3] - t0[3]);
             d = d.dot(tConstraint)*tConstraint;
             //cout << "t0 " << t0[3] << " t " << t[3] << " a " << tConstraint << " d " << d << endl;
             for (int i=0; i<3; i++) t[3][i] = t0[3][i] + d[i];
@@ -113,23 +113,23 @@ void VRConstraint::apply(VRTransformPtr obj) {
 }
 
 
-void VRConstraint::setReference(Matrix m) { Reference = m; prepare(); }
+void VRConstraint::setReference(Matrix4d m) { Reference = m; prepare(); }
 void VRConstraint::setReferential(VRTransformPtr t) { Referential = t; }
 
-void VRConstraint::setTConstraint(Vec3f trans, int mode, bool local) {
+void VRConstraint::setTConstraint(Vec3d trans, int mode, bool local) {
     tConstraint = trans;
     if (tConstraint.length() > 1e-4 && mode != POINT) tConstraint.normalize();
     tConMode = mode;
     localTC = local;
 }
 
-void VRConstraint::setRConstraint(Vec3f rot, int mode, bool local) {
+void VRConstraint::setRConstraint(Vec3d rot, int mode, bool local) {
     rConstraint = rot;
     if (rConstraint.length() > 1e-4 && mode != POINT) rConstraint.normalize();
     rConMode = mode;
     localRC = local;
 
-    Quaternion q(Vec3f(0, -rot[2], -rot[1]), -acos(rot[0]));
+    Quaterniond q(Vec3d(0, -rot[2], -rot[1]), -acos(rot[0]));
     rotRebase.setIdentity();
     rotRebase.setRotate(q);
     rotRebase.inverse(rotRebaseI);
@@ -144,8 +144,8 @@ void VRConstraint::prepare() {
 
 bool VRConstraint::getTMode() { return tConMode; }
 bool VRConstraint::getRMode() { return rConMode; }
-Vec3f VRConstraint::getTConstraint() { return tConstraint; }
-Vec3f VRConstraint::getRConstraint() { return rConstraint; }
+Vec3d VRConstraint::getTConstraint() { return tConstraint; }
+Vec3d VRConstraint::getRConstraint() { return rConstraint; }
 
 bool VRConstraint::hasTConstraint() { return tConMode != NONE; }
 bool VRConstraint::hasRConstraint() { return rConMode != NONE; }

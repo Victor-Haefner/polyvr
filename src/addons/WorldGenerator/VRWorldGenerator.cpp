@@ -44,7 +44,7 @@ void VRWorldGenerator::addAsset( string name, VRTransformPtr geo ) {
     auto m = getMaterial("phong");
     for (auto o : geo->getChildren(true, "Geometry")) {
         auto g = dynamic_pointer_cast<VRGeometry>(o);
-        Vec3f c = g->getMaterial()->getDiffuse();
+        auto c = g->getMaterial()->getDiffuse();
         VRGeoData data(g);
         data.addVertexColors(c);
         g->setMaterial(m);

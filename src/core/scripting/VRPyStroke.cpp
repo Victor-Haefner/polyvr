@@ -126,9 +126,9 @@ PyObject* VRPyStroke::strokeProfile(VRPyStroke* self, PyObject* args) {
     const char* end = 0;
     if (! PyArg_ParseTuple(args, "Oii|iss", &vec, &closed, &lit, &color, &beg, &end)) return NULL;
 
-    vector<OSG::Vec3f> profile;
+    vector<OSG::Vec3d> profile;
     for (int i=0; i<PyList_Size(vec); i++) {
-        OSG::Vec3f r;
+        OSG::Vec3d r;
         PyObject* v = PyList_GetItem(vec, i);
         for (int j=0; j<3; j++) {
             PyObject* vi = PyList_GetItem(v, j);

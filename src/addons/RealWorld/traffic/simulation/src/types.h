@@ -5,9 +5,9 @@
 #include <OpenSG/OSGQuaternion.h>
 #include <inttypes.h>
 
-using OSG::Vec2f;
-using OSG::Vec3f;
-using OSG::Quaternion;
+using OSG::Vec2d;
+using OSG::Vec3d;
+using OSG::Quaterniond;
 
 const double VEHICLE_LENGTH = 5;
 
@@ -17,20 +17,20 @@ const unsigned int CROSSROAD_RADIUS = 6;
 typedef uint32_t ID;
 
 // Okay, does not belong here. But I need this method everywhere...
-inline double calcDistance(const Vec2f& a, const Vec2f& b) {
+inline double calcDistance(const Vec2d& a, const Vec2d& b) {
     return sqrt((a[0] - b[0])*(a[0] - b[0]) + (a[1] - b[1])*(a[1] - b[1]));
 }
 
-inline double calcDistance(const Vec2f& a, const Vec3f& b) {
-    return calcDistance(a, Vec2f(b[0], b[2]));
+inline double calcDistance(const Vec2d& a, const Vec3d& b) {
+    return calcDistance(a, Vec2d(b[0], b[2]));
 }
 
-inline double calcDistance(const Vec3f& a, const Vec2f& b) {
-    return calcDistance(Vec2f(a[0], a[2]), b);
+inline double calcDistance(const Vec3d& a, const Vec2d& b) {
+    return calcDistance(Vec2d(a[0], a[2]), b);
 }
 
-inline double calcDistance(const Vec3f& a, const Vec3f& b) {
-    return calcDistance(Vec2f(a[0], a[2]), Vec2f(b[0], b[2]));
+inline double calcDistance(const Vec3d& a, const Vec3d& b) {
+    return calcDistance(Vec2d(a[0], a[2]), Vec2d(b[0], b[2]));
 }
 
 /**
@@ -39,7 +39,7 @@ inline double calcDistance(const Vec3f& a, const Vec3f& b) {
  @param direction The vector to calculate the angle of.
  @return An angle in [0..360].
  */
-inline double calcAngle(Vec2f direction) {
+inline double calcAngle(Vec2d direction) {
 
     double angle = atan2(direction[1], direction[0]);
     // To degree
@@ -50,12 +50,12 @@ inline double calcAngle(Vec2f direction) {
 }
 
 
-inline Vec2f toVec2f(const Vec3f& vec3) {
-    return Vec2f(vec3[0], vec3[2]);
+inline Vec2d toVec2d(const Vec3d& vec3) {
+    return Vec2d(vec3[0], vec3[2]);
 }
 
-inline Vec3f toVec3f(const Vec2f& vec2) {
-    return Vec3f(vec2[0], 0, vec2[1]);
+inline Vec3d toVec3d(const Vec2d& vec2) {
+    return Vec3d(vec2[0], 0, vec2[1]);
 }
 
 #endif // TYPES_H

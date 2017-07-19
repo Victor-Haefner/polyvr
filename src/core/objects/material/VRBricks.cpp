@@ -5,7 +5,7 @@ using namespace std;
 
 VRBricks::VRBricks() {}
 
-void VRBricks::apply(Vec4f* data, Vec3i dim, float amount, Vec4f c1, Vec4f c2) { // not tested
+void VRBricks::apply(Color4f* data, Vec3i dim, float amount, Color4f c1, Color4f c2) { // not tested
 	int d = amount;
 	int I = max(1,dim[0]);
 	int J = max(1,dim[1]);
@@ -25,7 +25,7 @@ void VRBricks::apply(Vec4f* data, Vec3i dim, float amount, Vec4f c1, Vec4f c2) {
 
                 if (yPlane || inX || inZ || outX || outZ) {
                     int l = k*J*I + j*I + i;
-                    Vec4f c = data[l];
+                    Color4f c = data[l];
                     c[0] *= c1[0]; c[1] *= c1[1]; c[2] *= c1[2]; c[3] *= c1[3];
                     data[l] = c;
                 }
@@ -34,7 +34,7 @@ void VRBricks::apply(Vec4f* data, Vec3i dim, float amount, Vec4f c1, Vec4f c2) {
     }
 }
 
-void VRBricks::apply(Vec3f* data, Vec3i dim, float amount, Vec3f c1, Vec3f c2) {
+void VRBricks::apply(Color3f* data, Vec3i dim, float amount, Color3f c1, Color3f c2) {
 	int d = amount;
 	int I = max(1,dim[0]);
 	int J = max(1,dim[1]);
@@ -54,7 +54,7 @@ void VRBricks::apply(Vec3f* data, Vec3i dim, float amount, Vec3f c1, Vec3f c2) {
 
                 if (yPlane || inX || inZ || outX || outZ) {
                     int l = k*J*I + j*I + i;
-                    Vec3f c = data[l];
+                    Color3f c = data[l];
                     c[0] *= c1[0]; c[1] *= c1[1]; c[2] *= c1[2];
                     data[l] = c;
                 }

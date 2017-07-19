@@ -63,8 +63,8 @@ void checkObj(VRPyParticles* self) {
 
 PyObject* VRPyParticles::spawnCuboid(VRPyParticles* self, PyObject* args) {
     checkObj(self);
-    OSG::Vec3f position;
-    OSG::Vec3f size;
+    OSG::Vec3d position;
+    OSG::Vec3d size;
     float x,y,z, distance=0, a=1,b=1,c=1;
 
     if (! PyArg_ParseTuple(args, "fff|ffff", &x,&y,&z, &distance, &a,&b,&c)) {
@@ -83,7 +83,7 @@ PyObject* VRPyParticles::spawnEmitter(VRPyParticles* self, PyObject* args) {
     PyObject *base, *dir;
     int from=0, to=0, interval=0, loop=0;
     if (! PyArg_ParseTuple(args, "OOiii|i", &base, &dir, &from, &to, &interval, &loop)) { return NULL; }
-    int id = self->objPtr->setEmitter(parseVec3fList(base), parseVec3fList(dir), from, to, interval, loop);
+    int id = self->objPtr->setEmitter(parseVec3dList(base), parseVec3dList(dir), from, to, interval, loop);
     return PyInt_FromLong((long) id);
 }
 

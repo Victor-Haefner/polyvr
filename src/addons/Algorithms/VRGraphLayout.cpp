@@ -27,11 +27,11 @@ void VRGraphLayout::applySprings(float eps, float v) {
 
             auto& n1 = graph->getNode(e.from);
             auto& n2 = graph->getNode(e.to);
-            Vec3f p1 = n1.box.center();
-            Vec3f p2 = n2.box.center();
+            Vec3d p1 = n1.box.center();
+            Vec3d p2 = n2.box.center();
 
             float r = radius + n1.box.radius() + n2.box.radius();
-            Vec3f d = p2 - p1;
+            Vec3d d = p2 - p1;
             float x = d.length() - r; // displacement
             d.normalize();
             if (abs(x) < eps) continue;
@@ -80,18 +80,18 @@ void VRGraphLayout::applyOccupancy(float eps, float v) {
     for (uint i=0; i<nodes.size(); i++) {
         if ( isFlag(i, FIXED) || isFlag(i, INACTIVE) ) continue;
         auto& n = nodes[i];
-        Vec3f pn = n.box.center();
+        Vec3d pn = n.box.center();
 
-        Vec3f D;
+        Vec3d D;
         for (auto& on2 : o.boxSearch(n.box) ) {
             uint j = (long)on2;
             if (i == j) continue; // no self interaction
 
             auto& n2 = nodes[j];
-            Vec3f d = n2.box.center() - pn;
-            Vec3f w = n.box.size() + n2.box.size();
+            Vec3d d = n2.box.center() - pn;
+            Vec3d w = n.box.size() + n2.box.size();
 
-            Vec3f vx = Vec3f(abs(d[0]), abs(d[1]), abs(d[2])) - w*0.5;
+            Vec3d vx = Vec3d(abs(d[0]), abs(d[1]), abs(d[2])) - w*0.5;
             float x = vx[0]; // get smallest intrusion
             if (abs(vx[1]) < abs(x) && w[1] > 0) x = vx[1];
             if (abs(vx[2]) < abs(x) && w[2] > 0) x = vx[2];
@@ -104,7 +104,7 @@ void VRGraphLayout::applyOccupancy(float eps, float v) {
         }
 
         auto po = graph->getPosition(i);
-        po->setPos(pn+v*D);
+        po->setPos(pn+D*v);
         graph->setPosition(i, po); // move node away from neighbors
     }
 }
@@ -151,7 +151,7 @@ void VRGraphLayout::setNodeState(int i, bool s) { if(!s) setFlag(i, INACTIVE); e
 
 void VRGraphLayout::setRadius(float r) { radius = r; }
 void VRGraphLayout::setSpeed(float s) { speed = s; }
-void VRGraphLayout::setGravity(Vec3f v) { gravity = v; }
+void VRGraphLayout::setGravity(Vec3d v) { gravity = v; }
 
 void VRGraphLayout::clear() {
     flags.clear();

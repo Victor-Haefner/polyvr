@@ -25,8 +25,8 @@ void loadSHP(string path, VRTransformPtr res) {
 
     VRGeoData data;
 
-    auto toVec3f = [](OGRPoint& p) {
-        return Vec3f( p.getX(), p.getZ(), -p.getY() );
+    auto toVec3d = [](OGRPoint& p) {
+        return Vec3d( p.getX(), p.getZ(), -p.getY() );
     };
 
     auto handleGeometry = [&](OGRGeometry* geo) {
@@ -35,7 +35,7 @@ void loadSHP(string path, VRTransformPtr res) {
         if (type == wkbPoint) {
             OGRPoint* pnt = (OGRPoint*) geo;
             //cout << "  point " << pos << endl;
-            data.pushVert( toVec3f(*pnt) );
+            data.pushVert( toVec3d(*pnt) );
             data.pushPoint();
             return;
         }
@@ -44,7 +44,7 @@ void loadSHP(string path, VRTransformPtr res) {
             //cout << "  polyline: (" << line->getNumPoints() << ")";
             for (int i=0; i<line->getNumPoints(); i++) {
                 line->getPoint(i, &pnt);
-                data.pushVert( toVec3f(pnt) );
+                data.pushVert( toVec3d(pnt) );
                 if (i != 0) data.pushLine(); // TODO: add polylines to VRGeoData?
                 //cout << "  p " << pos;
             }
@@ -58,7 +58,7 @@ void loadSHP(string path, VRTransformPtr res) {
             //cout << "   outer bound:";
             for (int i=0; i<ex->getNumPoints(); i++) {
                 ex->getPoint(i, &pnt);
-                data.pushVert( toVec3f(pnt) );
+                data.pushVert( toVec3d(pnt) );
                 if (i != 0) data.pushLine();
                 //cout << "  p " << pos;
             }
@@ -71,7 +71,7 @@ void loadSHP(string path, VRTransformPtr res) {
                 //cout << "   inner bound:";
                 for (int i=0; i<in->getNumPoints(); i++) {
                     in->getPoint(i, &pnt);
-                    data.pushVert( toVec3f(pnt) );
+                    data.pushVert( toVec3d(pnt) );
                     if (i != 0) data.pushLine();
                     //cout << "  p " << pos;
                 }
@@ -141,10 +141,10 @@ void loadTIFF(string path, VRTransformPtr res) {
             float tcy1 = 0 + j*TCYchunk;
             float tcy2 = tcy1 + TCYchunk;
 
-            geo.pushVert(Vec3f(px1,0,py1), Vec3f(0,1,0), Vec2f(tcx1,tcy1));
-            geo.pushVert(Vec3f(px1,0,py2), Vec3f(0,1,0), Vec2f(tcx1,tcy2));
-            geo.pushVert(Vec3f(px2,0,py2), Vec3f(0,1,0), Vec2f(tcx2,tcy2));
-            geo.pushVert(Vec3f(px2,0,py1), Vec3f(0,1,0), Vec2f(tcx2,tcy1));
+            geo.pushVert(Vec3d(px1,0,py1), Vec3d(0,1,0), Vec2d(tcx1,tcy1));
+            geo.pushVert(Vec3d(px1,0,py2), Vec3d(0,1,0), Vec2d(tcx1,tcy2));
+            geo.pushVert(Vec3d(px2,0,py2), Vec3d(0,1,0), Vec2d(tcx2,tcy2));
+            geo.pushVert(Vec3d(px2,0,py1), Vec3d(0,1,0), Vec2d(tcx2,tcy1));
             geo.pushQuad();
         }
     }

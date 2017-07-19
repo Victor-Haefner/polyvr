@@ -61,7 +61,7 @@ VRSky::VRSky() : VRGeometry("Sky") {
     setMaterial(mat);
     setPrimitive("Plane", "2 2 1 1");
     mat->setLit(false);
-	mat->setDiffuse(Vec3f(1));
+	mat->setDiffuse(Color3f(1));
 
 
 
@@ -75,7 +75,7 @@ VRSky::VRSky() : VRGeometry("Sky") {
     cloudDensity = 0.1;
     cloudScale = 1e-5;
     cloudHeight = 3000.;
-    cloudVel =  Vec2f(.0005*factor, .0003*factor);
+    cloudVel =  Vec2d(.0005*factor, .0003*factor);
 	cloudOffset =  Vec2f(0, 0);
     mat->setShaderParameter<float>("cloudDensity", cloudDensity);
     mat->setShaderParameter<float>("cloudScale", cloudScale);
@@ -86,24 +86,24 @@ VRSky::VRSky() : VRGeometry("Sky") {
     textureSize = 512;
 	VRTextureGenerator tg;
 	tg.setSize(textureSize, textureSize);
-    tg.add(PERLIN, 1, Vec3f(0.9), Vec3f(1.0));
-	tg.add(PERLIN, 1.0/2, Vec3f(0.8), Vec3f(1.0));
-	tg.add(PERLIN, 1.0/4, Vec3f(0.7), Vec3f(1.0));
-	tg.add(PERLIN, 1.0/8, Vec3f(0.6), Vec3f(1.0));
-	tg.add(PERLIN, 1.0/16, Vec3f(0.4), Vec3f(1.0));
-	tg.add(PERLIN, 1.0/32, Vec3f(0.2), Vec3f(1.0));
-	tg.add(PERLIN, 1.0/64, Vec3f(0.1), Vec3f(1.0));
-	tg.add(PERLIN, 1.0/128, Vec3f(0.1), Vec3f(1.0));
+    tg.add(PERLIN, 1, Color3f(0.9), Color3f(1.0));
+	tg.add(PERLIN, 1.0/2, Color3f(0.8), Color3f(1.0));
+	tg.add(PERLIN, 1.0/4, Color3f(0.7), Color3f(1.0));
+	tg.add(PERLIN, 1.0/8, Color3f(0.6), Color3f(1.0));
+	tg.add(PERLIN, 1.0/16, Color3f(0.4), Color3f(1.0));
+	tg.add(PERLIN, 1.0/32, Color3f(0.2), Color3f(1.0));
+	tg.add(PERLIN, 1.0/64, Color3f(0.1), Color3f(1.0));
+	tg.add(PERLIN, 1.0/128, Color3f(0.1), Color3f(1.0));
 	/*
-	tg.add(PERLIN, 1, Vec3f(0.95), Vec3f(1.0));
-	tg.add(PERLIN, 1.0/2, Vec3f(0.9), Vec3f(1.0));
-	tg.add(PERLIN, 1.0/4, Vec3f(0.7), Vec3f(1.0));
-	tg.add(PERLIN, 1.0/8, Vec3f(0.6), Vec3f(1.0));
-	tg.add(PERLIN, 1.0/16, Vec3f(0.5), Vec3f(1.0));
-	tg.add(PERLIN, 1.0/32, Vec3f(0.4), Vec3f(1.0));
-	tg.add(PERLIN, 1.0/64, Vec3f(0.4), Vec3f(1.0));
-	tg.add(PERLIN, 1.0/128, Vec3f(0.3), Vec3f(1.0));
-	tg.add(PERLIN, 1.0/256, Vec3f(0.2), Vec3f(1.0));
+	tg.add(PERLIN, 1, Color3f(0.95), Color3f(1.0));
+	tg.add(PERLIN, 1.0/2, Color3f(0.9), Color3f(1.0));
+	tg.add(PERLIN, 1.0/4, Color3f(0.7), Color3f(1.0));
+	tg.add(PERLIN, 1.0/8, Color3f(0.6), Color3f(1.0));
+	tg.add(PERLIN, 1.0/16, Color3f(0.5), Color3f(1.0));
+	tg.add(PERLIN, 1.0/32, Color3f(0.4), Color3f(1.0));
+	tg.add(PERLIN, 1.0/64, Color3f(0.4), Color3f(1.0));
+	tg.add(PERLIN, 1.0/128, Color3f(0.3), Color3f(1.0));
+	tg.add(PERLIN, 1.0/256, Color3f(0.2), Color3f(1.0));
 	*/
 	mat->setTexture(tg.compose(0));
 
@@ -182,11 +182,11 @@ void VRSky::setPosition(float latitude, float longitude) {
 }
 
 void VRSky::setCloudVel(float x, float z) {
-    cloudVel = Vec2f(x, z);
+    cloudVel = Vec2d(x, z);
 }
 
 void VRSky::updateClouds(float dt) {
-    cloudOffset += cloudVel * dt;
+    cloudOffset += Vec2f(cloudVel) * dt;
     cloudOffset[0] = fmod(cloudOffset[0], textureSize);
     cloudOffset[1] = fmod(cloudOffset[1], textureSize);
     mat->setShaderParameter<Vec2f>("cloudOffset", cloudOffset);
@@ -196,20 +196,20 @@ void VRSky::calculateZenithColor() {
 	float chi = ((4. / 9.) - (turbidity / 120.) ) * ( Pi - 2 * theta_s );
 	xyY_z[2] = (4.0453 * turbidity - 4.9710) * tan(chi) - 0.2155 * turbidity + 2.4192; // get luminance
 
-	Vec4f vTheta_s = Vec4f(theta_s*theta_s*theta_s, theta_s*theta_s, theta_s, 1);
-	Vec4f vTurbidities = Vec4f(turbidity*turbidity, turbidity, 1, 0);
+	Vec4d vTheta_s = Vec4d(theta_s*theta_s*theta_s, theta_s*theta_s, theta_s, 1);
+	Vec4d vTurbidities = Vec4d(turbidity*turbidity, turbidity, 1, 0);
 
 	// this format in row-major order, all others column major
-	Matrix x_mat = Matrix( 0.0017, -0.0037, 0.0021, 0.000,
+	Matrix4d x_mat = Matrix4d( 0.0017, -0.0037, 0.0021, 0.000,
                           -0.0290, 0.0638, -0.0320, 0.0039,
                            0.1169, -0.2120, 0.0605, 0.2589,
                            0., 0., 0., 0.);
-	Matrix y_mat = Matrix(0.0028, -0.0061, 0.0032, 0.000,
+	Matrix4d y_mat = Matrix4d(0.0028, -0.0061, 0.0032, 0.000,
                          -0.0421, 0.0897, -0.0415, 0.0052,
                           0.1535, -0.2676, 0.0667, 0.2669,
                           0., 0., 0., 0.);
 
-    Vec4f tmp;
+    Vec4d tmp;
     x_mat.mult(vTheta_s, tmp);
     xyY_z[0] = vTurbidities.dot(tmp);
     y_mat.mult(vTheta_s, tmp);

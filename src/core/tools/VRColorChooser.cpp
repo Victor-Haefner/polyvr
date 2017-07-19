@@ -16,18 +16,18 @@ using namespace std;
 VRColorChooser::VRColorChooser() {
     mat = VRMaterial::create("color choose");
     mat->setLit(false);
-    setColor(Vec3f(1,1,1));
+    setColor(Color3f(1,1,1));
 }
 
 VRColorChooser::~VRColorChooser() {}
 
 shared_ptr<VRColorChooser> VRColorChooser::create() { return shared_ptr<VRColorChooser>(new VRColorChooser()); }
 
-Color3f VRColorChooser::colFromUV(Vec2f tc) {
+Color3f VRColorChooser::colFromUV(Vec2d tc) {
     if (abs(tc[0]-0.5) > 0.5-border || abs(tc[1]-0.5) > 0.5-border) return color;
 
     tc *= 1.4;
-    tc -= Vec2f(0.2, 0.2);
+    tc -= Vec2d(0.2, 0.2);
     Color3f c;
     Color3f::convertFromHSV(&c[0], 255*tc[0], tc[1], 1);
     return c;
@@ -42,7 +42,7 @@ void VRColorChooser::updateTexture() {
     Color3f* data = new Color3f[s*s];
     for (int i=0; i<s; i++) {
         for (int j=0; j<s; j++) {
-            Vec2f tc = Vec2f(j, i)*1.0/s;
+            Vec2d tc = Vec2d(j, i)*1.0/s;
             data[i*s+j] = colFromUV(tc);
         }
     }

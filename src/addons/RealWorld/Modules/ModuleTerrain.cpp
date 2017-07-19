@@ -32,7 +32,7 @@ void ModuleTerrain::loadBbox(MapGrid::Box bbox) {
                 Terrain* ter = new Terrain(way.second->id);
                 for (string nID : way.second->nodes) {
                     auto node = osmMap->getNode(nID);
-                    Vec2f pos = mc->realToWorld(Vec2f(node->lat, node->lon));
+                    Vec2d pos = mc->realToWorld(Vec2d(node->lat, node->lon));
                     ter->positions.push_back(pos);
                 }
 
@@ -137,7 +137,7 @@ void ModuleTerrain::addTerrain(Terrain* ter, VRGeoData* gdTerrain, int height){
     //create && fill vector a with VRPolygon corners
     Vector2dVector a;
     bool first = true;
-    for (Vec2f corner : ter->getCorners()) {
+    for (Vec2d corner : ter->getCorners()) {
         if (first) { first=false; continue;} //first && last corners are equal, so ignoring first one
          a.push_back( Vector2d(corner[0], corner[1]));
     }
@@ -178,45 +178,45 @@ void ModuleTerrain::addTerrain(Terrain* ter, VRGeoData* gdTerrain, int height){
     }
 }
 
-Vec3f ModuleTerrain::tesselateTriangle(float p1X, float p1Y, float p2X, float p2Y, float p3X, float p3Y, float height, VRGeoData* gdTerrain, Vec3f usedCorners) {
+Vec3d ModuleTerrain::tesselateTriangle(float p1X, float p1Y, float p2X, float p2Y, float p3X, float p3Y, float height, VRGeoData* gdTerrain, Vec3d usedCorners) {
     auto mc = RealWorld::get()->getCoordinator();
-    if (!mc) return Vec3f();
-    Vec3f res = Vec3f(0, 0, 0);
-    Vec2f p1 = Vec2f(p1X, p1Y);
-    Vec2f p2 = Vec2f(p2X, p2Y);
-    Vec2f p3 = Vec2f(p3X, p3Y);
+    if (!mc) return Vec3d();
+    Vec3d res = Vec3d(0, 0, 0);
+    Vec2d p1 = Vec2d(p1X, p1Y);
+    Vec2d p2 = Vec2d(p2X, p2Y);
+    Vec2d p3 = Vec2d(p3X, p3Y);
     if (p1==p2 || p2==p3 || p1==p3) return res;
     if ((p1-p2).length() > Config::get()->maxTriangleSize && (p1-p2).length() > (p1-p3).length() && (p1-p2).length() > (p2-p3).length()){
-        Vec2f p12 = p1 + (p2-p1)/2;
+        Vec2d p12 = p1 + (p2-p1)/2;
         float p12X = p12.getValues()[0];
         float p12Y = p12.getValues()[1];
         res = tesselateTriangle(p1X, p1Y, p12X, p12Y, p3X, p3Y, height, gdTerrain);
-        tesselateTriangle(p12X, p12Y, p2X, p2Y, p3X, p3Y, height, gdTerrain, Vec3f(res.getValues()[1], 0, res.getValues()[2]));
-        return Vec3f(0,0,0);
+        tesselateTriangle(p12X, p12Y, p2X, p2Y, p3X, p3Y, height, gdTerrain, Vec3d(res.getValues()[1], 0, res.getValues()[2]));
+        return Vec3d(0,0,0);
     } else if((p1-p3).length() > Config::get()->maxTriangleSize && (p1-p3).length() > (p2-p3).length()){
-        Vec2f p13 = p1 + (p3-p1)/2;
+        Vec2d p13 = p1 + (p3-p1)/2;
         float p13X = p13.getValues()[0];
         float p13Y = p13.getValues()[1];
         res = tesselateTriangle(p1X, p1Y, p2X, p2Y, p13X, p13Y, height, gdTerrain);
-        tesselateTriangle(p13X, p13Y, p2X, p2Y, p3X, p3Y, height, gdTerrain, Vec3f(res.getValues()[2], res.getValues()[1], 0));
-        return Vec3f(0,0,0);
+        tesselateTriangle(p13X, p13Y, p2X, p2Y, p3X, p3Y, height, gdTerrain, Vec3d(res.getValues()[2], res.getValues()[1], 0));
+        return Vec3d(0,0,0);
     } else if((p2-p3).length() > Config::get()->maxTriangleSize){
-        Vec2f p23 = p2 + (p3-p2)/2;
+        Vec2d p23 = p2 + (p3-p2)/2;
         float p23X = p23.getValues()[0];
         float p23Y = p23.getValues()[1];
         res = tesselateTriangle(p1X, p1Y, p2X, p2Y, p23X, p23Y, height, gdTerrain);
-        tesselateTriangle(p1X, p1Y, p23X, p23Y, p3X, p3Y, height, gdTerrain, Vec3f(res.getValues()[0], 0, res.getValues()[2]));
-        return Vec3f(0,0,0);
+        tesselateTriangle(p1X, p1Y, p23X, p23Y, p3X, p3Y, height, gdTerrain, Vec3d(res.getValues()[0], 0, res.getValues()[2]));
+        return Vec3d(0,0,0);
     } else { //only if triangle is small enough, create geometry for it
-        Vec3f norm(0,1,0);
-        int Va = gdTerrain->pushVert(Vec3f(p1X, mc->getElevation(p1X,p1Y) + height, p1Y), norm, p1/5); // + getHight(p1[0], p1[1])
-        int Vb = gdTerrain->pushVert(Vec3f(p2X, mc->getElevation(p2X,p2Y) + height, p2Y), norm, p2/5);
-        int Vc = gdTerrain->pushVert(Vec3f(p3X, mc->getElevation(p3X,p3Y) + height, p3Y), norm, p3/5);
+        Vec3d norm(0,1,0);
+        int Va = gdTerrain->pushVert(Vec3d(p1X, mc->getElevation(p1X,p1Y) + height, p1Y), norm, p1/5); // + getHight(p1[0], p1[1])
+        int Vb = gdTerrain->pushVert(Vec3d(p2X, mc->getElevation(p2X,p2Y) + height, p2Y), norm, p2/5);
+        int Vc = gdTerrain->pushVert(Vec3d(p3X, mc->getElevation(p3X,p3Y) + height, p3Y), norm, p3/5);
         gdTerrain->pushTri();
-        return Vec3f(Va, Vb, Vc);
+        return Vec3d(Va, Vb, Vc);
     }
 
-    return Vec3f(0,0,0);
+    return Vec3d(0,0,0);
 }
 
 VRGeometryPtr ModuleTerrain::makeTerrainGeometry(Terrain* ter, TerrainMaterial* terrainMat) {

@@ -9,8 +9,8 @@ using namespace std;
 class doubleBuffer {
     private:
 
-    Matrix* t1;
-    Matrix* t2;
+    Matrix4d* t1;
+    Matrix4d* t2;
 
     bool read1;
     bool read2;
@@ -27,9 +27,9 @@ class doubleBuffer {
 
     ~doubleBuffer();
 
-    void read(Matrix& result);
+    void read(Matrix4d& result);
 
-    void write(Matrix m);
+    void write(Matrix4d m);
 };
 
 OSG_END_NAMESPACE;

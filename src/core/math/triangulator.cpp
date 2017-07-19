@@ -44,16 +44,16 @@ struct Triangulator::GeoData {
 
 void Triangulator::testQuad() {
     VRPolygon p1;
-    p1.addPoint(Vec2f(-2,3));
-    p1.addPoint(Vec2f(-2,0));
-    p1.addPoint(Vec2f(2,0));
-    p1.addPoint(Vec2f(2,3));
+    p1.addPoint(Vec2d(-2,3));
+    p1.addPoint(Vec2d(-2,0));
+    p1.addPoint(Vec2d(2,0));
+    p1.addPoint(Vec2d(2,3));
 
     VRPolygon p2;
-    p2.addPoint(Vec2f(-1,2));
-    p2.addPoint(Vec2f(-1,1));
-    p2.addPoint(Vec2f(1,1));
-    p2.addPoint(Vec2f(1,2));
+    p2.addPoint(Vec2d(-1,2));
+    p2.addPoint(Vec2d(-1,1));
+    p2.addPoint(Vec2d(1,1));
+    p2.addPoint(Vec2d(1,2));
 
     add(p1);
     add(p2, false);
@@ -132,12 +132,12 @@ void tessEndCB() {
 
 void tessVertexCB(const GLvoid *data) { // draw a vertex
     const GLdouble *ptr = (const GLdouble*)data;
-    Pnt3f p(*ptr, *(ptr+1), *(ptr+2));
-    //Vec3f n(*(ptr+3), *(ptr+4), *(ptr+5));
+    Pnt3d p(*ptr, *(ptr+1), *(ptr+2));
+    //Vec3d n(*(ptr+3), *(ptr+4), *(ptr+5));
 
     auto Self = current_triangulator;
     Self->geo->pos->addValue( p );
-    Self->geo->norms->addValue( Vec3f(0,0,1) );
+    Self->geo->norms->addValue( Vec3d(0,0,1) );
     //Self->geo->norms->addValue( n );
     Self->geo->current_vertex_count++;
     //cout << "vert " << p << endl;
@@ -172,13 +172,13 @@ void Triangulator::tessellate() {
     gluTessCallback(tess, GLU_TESS_VERTEX,  (void (*)()) tessVertexCB);
     gluTessCallback(tess, GLU_TESS_COMBINE, (void (*)()) tessCombineCB);
 
-    auto toSpace = [&](const vector<Vec2f>& poly) {
+    auto toSpace = [&](const vector<Vec2d>& poly) {
         vector<Vec3d> res;
         for (auto& v : poly) res.push_back(Vec3d(v));
         return res;
     };
 
-    auto toSpace3 = [&](const vector<Vec3f>& poly) {
+    auto toSpace3 = [&](const vector<Vec3d>& poly) {
         vector<Vec3d> res;
         for (auto& v : poly) res.push_back(Vec3d(v));
         return res;

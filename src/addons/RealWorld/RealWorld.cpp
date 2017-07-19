@@ -46,9 +46,9 @@ RealWorld::~RealWorld() {
 std::shared_ptr<RealWorld> RealWorld::create(string name) { return std::shared_ptr<RealWorld>(new RealWorld(name)); }
 
 void RealWorld::init(Vec2i size) {
-    mapCoordinator = new MapCoordinator(Vec2f(), 0.002f);
+    mapCoordinator = new MapCoordinator(Vec2d(), 0.002f);
     world = new World();
-    mapManager = new MapManager(Vec2f(), mapCoordinator, world, ptr());
+    mapManager = new MapManager(Vec2d(), mapCoordinator, world, ptr());
     //mapCoordinator->altitude->showHeightArray(49.000070f, 8.401015f);
 }
 
@@ -58,7 +58,7 @@ MapManager* RealWorld::getManager() { return mapManager; }
 World* RealWorld::getWorld() { return world; }
 TrafficSimulation* RealWorld::getTrafficSimulation() { return trafficSimulation; }
 
-void RealWorld::update(Vec3f pos) { if (mapManager) mapManager->updatePosition( Vec2f(pos[0], pos[2]) ); }
+void RealWorld::update(Vec3d pos) { if (mapManager) mapManager->updatePosition( Vec2d(pos[0], pos[2]) ); }
 void RealWorld::configure(string var, string val) { options[var] = val; }
 string RealWorld::getOption(string var) { return options[var]; }
 

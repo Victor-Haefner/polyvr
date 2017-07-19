@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGColor.h>
 #include <map>
 #include "core/objects/VRObjectFwd.h"
 
@@ -34,9 +35,9 @@ class VRConstructionKit {
         shared_ptr<VRSelector> getSelector();
         vector<VRObjectPtr> getObjects();
 
-        int addAnchorType(float size, Vec3f color);
+        int addAnchorType(float size, Color3f color);
         void addObject(VRTransformPtr t);
-        VRGeometryPtr addObjectAnchor(VRTransformPtr t, int a, Vec3f pos, float radius);
+        VRGeometryPtr addObjectAnchor(VRTransformPtr t, int a, Vec3d pos, float radius);
 
         void remObject(VRTransformPtr t);
 

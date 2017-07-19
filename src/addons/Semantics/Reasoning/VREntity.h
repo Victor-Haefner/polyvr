@@ -43,8 +43,8 @@ struct VREntity : public VROntoID, public VRName {
 
     VREntityPtr getEntity(string prop, int i = 0);
     vector<VREntityPtr> getAllEntities(string prop = "");
-    Vec3f getVec3f(string prop, int i = 0);
-    vector< Vec3f > getAllVec3f(string prop);
+    Vec3d getVec3f(string prop, int i = 0);
+    vector< Vec3d > getAllVec3f(string prop);
 
     bool is_a(string concept);
     string toString();

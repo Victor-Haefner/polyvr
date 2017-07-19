@@ -59,10 +59,10 @@ using namespace std;
                     obj->move(-40 * dt);
                 }
                 if (shouldMoveUp) {
-                    obj->translate(Vec3f(0, 10, 0) * dt);
+                    obj->translate(Vec3d(0, 10, 0) * dt);
                 }
                 if (shouldMoveDown) {
-                    obj->translate(Vec3f(0, -10, 0) * dt);
+                    obj->translate(Vec3d(0, -10, 0) * dt);
                 }
             }
 

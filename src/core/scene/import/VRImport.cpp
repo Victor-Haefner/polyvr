@@ -199,7 +199,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
 
         if (t_name == "Transform") {
             tmp_e = VRTransform::create(g);
-            tmp_e->setMatrix(dynamic_cast<Transform *>(n->getCore())->getMatrix());
+            tmp_e->setMatrix(toMatrix4d(dynamic_cast<Transform *>(n->getCore())->getMatrix()));
             tmp = tmp_e;
             tmp->addChild(tmp_gr);
         }
@@ -219,7 +219,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
     else if (t_name == "ComponentTransform") {
         if (tmp == 0) {
             tmp_e = VRTransform::create(name);
-            tmp_e->setMatrix(dynamic_cast<ComponentTransform *>(n->getCore())->getMatrix());
+            tmp_e->setMatrix(toMatrix4d(dynamic_cast<ComponentTransform *>(n->getCore())->getMatrix()));
             tmp = tmp_e;
         }
     }
@@ -236,7 +236,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
 
         if (tmp == 0) {
             tmp_e = VRTransform::create(name);
-            tmp_e->setMatrix(dynamic_cast<Transform *>(n->getCore())->getMatrix());
+            tmp_e->setMatrix(toMatrix4d(dynamic_cast<Transform *>(n->getCore())->getMatrix()));
             tmp = tmp_e;
             tmp->addAttachment("collada_name", name);
         }
@@ -252,7 +252,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
         tmp_g = VRGeometry::create(name);
         if (geoTrans) {
             tmp_g->addAttachment("collada_name", geoTransName);
-            tmp_g->setMatrix(dynamic_cast<Transform *>(geoTrans)->getMatrix());
+            tmp_g->setMatrix(toMatrix4d(dynamic_cast<Transform *>(geoTrans)->getMatrix()));
             geoTrans = 0;
             geoTransName = "";
         }

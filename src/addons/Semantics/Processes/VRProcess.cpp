@@ -22,7 +22,7 @@ void VRProcessNode::update(Graph::node& n, bool changed) { // callede when graph
 
     if (widget && widget->isDragged()) {
         auto m = widget->getMatrixTo( widget->getDragParent() );
-        n.box.setCenter( Vec3f(m[3]) );
+        n.box.setCenter( Vec3d(m[3]) );
     }
 }
 

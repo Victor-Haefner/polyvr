@@ -10,7 +10,7 @@ VRMillingCuttingToolProfile::~VRMillingCuttingToolProfile() {}
 
 shared_ptr<VRMillingCuttingToolProfile> VRMillingCuttingToolProfile::create() { return shared_ptr<VRMillingCuttingToolProfile>(new VRMillingCuttingToolProfile()); }
 
-void VRMillingCuttingToolProfile::addPointProfile(Vec2f point) {
+void VRMillingCuttingToolProfile::addPointProfile(Vec2d point) {
     profile.push_back(point);
 }
 
@@ -33,7 +33,7 @@ float VRMillingCuttingToolProfile::getLength() {
     return 0;
 }
 
-float VRMillingCuttingToolProfile::maxProfile(Vec3f toolPosition, Vec3f cubePosition, Vec3f cubeSize) {
+float VRMillingCuttingToolProfile::maxProfile(Vec3d toolPosition, Vec3d cubePosition, Vec3d cubeSize) {
     float py = cubePosition[1];
     float sy = cubeSize[1];
     float ptooly = toolPosition[1];
@@ -43,7 +43,7 @@ float VRMillingCuttingToolProfile::maxProfile(Vec3f toolPosition, Vec3f cubePosi
 
     int indexMax = -1;
     int indexMin = -1;
-    vector<Vec2f> newList;
+    vector<Vec2d> newList;
 
     if (profile.size() == 0) return 0;
 
@@ -63,7 +63,7 @@ float VRMillingCuttingToolProfile::maxProfile(Vec3f toolPosition, Vec3f cubePosi
         }
         else if (alreadyInProfile(newx1))
         {
-            Vec2f newPoint2 = {newx2, newy(newx2, p2)};
+            Vec2d newPoint2 = {newx2, newy(newx2, p2)};
             if (newx2 < profile[p2][0])
                 indexMin = p2 + 1;
             else
@@ -75,7 +75,7 @@ float VRMillingCuttingToolProfile::maxProfile(Vec3f toolPosition, Vec3f cubePosi
         }
         else if (alreadyInProfile(newx2))
         {
-            Vec2f newPoint1 = {newx1, newy(newx1, p1)};
+            Vec2d newPoint1 = {newx1, newy(newx1, p1)};
             if (newx1 < profile[p1][0])
                 indexMax = p1 - 1;
             else
@@ -86,8 +86,8 @@ float VRMillingCuttingToolProfile::maxProfile(Vec3f toolPosition, Vec3f cubePosi
             return lookForMaxInList(newList);
         }
 
-        Vec2f newPoint1 = {newx1, newy(newx1, p1)};
-        Vec2f newPoint2 = {newx2, newy(newx2, p2)};
+        Vec2d newPoint1 = {newx1, newy(newx1, p1)};
+        Vec2d newPoint2 = {newx2, newy(newx2, p2)};
 
         if (newx1 < profile[p1][0])
             indexMax = p1 - 1;
@@ -114,7 +114,7 @@ float VRMillingCuttingToolProfile::maxProfile(Vec3f toolPosition, Vec3f cubePosi
             }
             return lookForMaxInList(newList);
         }
-        Vec2f newPoint = {newx1, newy(newx1, p)};
+        Vec2d newPoint = {newx1, newy(newx1, p)};
 
         if (newx1 < profile[p][0])
             indexMax = p - 1;
@@ -136,7 +136,7 @@ float VRMillingCuttingToolProfile::maxProfile(Vec3f toolPosition, Vec3f cubePosi
             }
             return lookForMaxInList(newList);
         }
-        Vec2f newPoint = {newx2, newy(newx2, p)};
+        Vec2d newPoint = {newx2, newy(newx2, p)};
 
         if (newx2 < profile[p][0])
             indexMin = p + 1;
@@ -187,7 +187,7 @@ int VRMillingCuttingToolProfile::lookForNearestIndex(float newx) {
 }
 
 //Add of Marie
-float VRMillingCuttingToolProfile::lookForMaxInList(vector<Vec2f> liste) {
+float VRMillingCuttingToolProfile::lookForMaxInList(vector<Vec2d> liste) {
     float maximum = 0;
 
     for (size_t i = 0; i < liste.size(); i++)

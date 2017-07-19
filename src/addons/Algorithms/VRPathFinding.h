@@ -38,7 +38,7 @@ class VRPathFinding {
         float hCost; //?
 
 
-        Vec3f pos(Position& p);
+        Vec3d pos(Position& p);
         vector<Position> getNeighbors(Position& p);
 
         bool valid(Position& p);

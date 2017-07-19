@@ -5,11 +5,11 @@ using namespace OSG;
 
 interpolator::interpolator() {}
 
-void interpolator::setPoints(vector<Vec3f> pnts) { this->pnts = pnts; }
-void interpolator::setValues(vector<Vec3f> vals) { this->vals = vals; }
+void interpolator::setPoints(vector<Vec3d> pnts) { this->pnts = pnts; }
+void interpolator::setValues(vector<Vec3d> vals) { this->vals = vals; }
 
-Vec3f interpolator::eval(Vec3f& p, int power) { // frame
-    Vec3f d;
+Vec3d interpolator::eval(Vec3d& p, int power) { // frame
+    Vec3d d;
     float Sw = 0, w = 0;
     for (uint i=0; i<pnts.size(); i++) {
         if (i >= vals.size()) break;
@@ -25,22 +25,22 @@ Vec3f interpolator::eval(Vec3f& p, int power) { // frame
 }
 
 void interpolator::evalVec(GeoVectorProperty* pvec, int power, GeoVectorProperty* cvec, float cscale, float dl_max) {
-    Vec3f* data = (Vec3f*)pvec->editData();
-    Vec4f* cdata = 0;
-    if (cvec) cdata = (Vec4f*)cvec->editData();
+    Vec3d* data = (Vec3d*)pvec->editData();
+    Vec4d* cdata = 0;
+    if (cvec) cdata = (Vec4d*)cvec->editData();
     float eps = 1e-5;
     float dl;
     for (uint i=0; i<pvec->size(); i++) {
-        Vec3f d = eval(data[i], power);
+        Vec3d d = eval(data[i], power);
         data[i] += d;
         if (cdata) {
             dl = d.length();
             float l = dl / max(cscale*dl_max, eps);
-            cdata[i] = Vec4f(l, 1-l, 0, 1);
+            cdata[i] = Vec4d(l, 1-l, 0, 1);
         }
     }
 }
 
-void interpolator::evalVec(vector<Vec3f>& pvec, int power) {
-    for (Vec3f& p : pvec) p += eval(p, power);
+void interpolator::evalVec(vector<Vec3d>& pvec, int power) {
+    for (Vec3d& p : pvec) p += eval(p, power);
 }

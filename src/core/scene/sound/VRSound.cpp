@@ -62,7 +62,7 @@ void VRSound::setPath( string p ) { path = p; }
 void VRSound::setLoop(bool loop) { this->loop = loop; doUpdate = true; }
 void VRSound::setPitch(float pitch) { this->pitch = pitch; doUpdate = true; }
 void VRSound::setGain(float gain) { this->gain = gain; doUpdate = true; }
-void VRSound::setUser(Vec3f p, Vec3f v) { pos = p; vel = v; doUpdate = true; }
+void VRSound::setUser(Vec3d p, Vec3d v) { pos = p; vel = v; doUpdate = true; }
 bool VRSound::isRunning() { return al->state == AL_PLAYING; }
 void VRSound::stop() { interrupt = true; }
 
@@ -380,8 +380,8 @@ vector<short> VRSound::synthesizeSpectrum(vector<double> spectrum, uint sample_r
 
     /* --- fade in/out curve ---
     ::path c;
-    c.addPoint(Vec3f(0,0,0), Vec3f(1,0,0));
-    c.addPoint(Vec3f(1,1,0), Vec3f(1,0,0));
+    c.addPoint(Vec3d(0,0,0), Vec3d(1,0,0));
+    c.addPoint(Vec3d(1,1,0), Vec3d(1,0,0));
     c.compute(sample_rate);
     */
 

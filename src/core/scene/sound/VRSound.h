@@ -30,7 +30,7 @@ class VRSound {
         bool loop = false;
         float pitch = 1;
         float gain = 1;
-        Vec3f pos, vel;
+        Vec3d pos, vel;
 
         void playBuffer(vector<short>& buffer, int sample_rate);
 
@@ -44,7 +44,7 @@ class VRSound {
         void setLoop(bool loop);
         void setPitch(float pitch);
         void setGain(float gain);
-        void setUser(Vec3f p, Vec3f v);
+        void setUser(Vec3d p, Vec3d v);
 
         bool isRunning();
         int getState();

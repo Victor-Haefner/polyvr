@@ -117,7 +117,7 @@ void VRSceneManager::newScene(string path) {
     if (user) user->addChild(headlight_B);
     else cam->addChild(headlight_B);
 
-    cam->setFrom(Vec3f(0,0,3));
+    cam->setFrom(Vec3d(0,0,3));
     setScene(current);
 }
 

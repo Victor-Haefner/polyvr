@@ -52,7 +52,7 @@ void CSGGeometry::setCSGGeometry(CGAL::Polyhedron *p) {
 
 CGAL::Polyhedron* CSGGeometry::getCSGGeometry() {
     if (polyhedron == 0) {
-        Matrix worldTransform = getWorldMatrix();
+        Matrix4d worldTransform = getWorldMatrix();
         bool success;
         polyhedron = toPolyhedron(getMesh()->geo, worldTransform, success);
     }
@@ -73,7 +73,7 @@ void CSGGeometry::operate(CGAL::Polyhedron *p1, CGAL::Polyhedron *p2) {
     } catch (exception e) { cout << getName() << ": CSGGeometry::operate exception: " << e.what() << endl; }
 }
 
-void CSGGeometry::applyTransform(CGAL::Polyhedron* p, Matrix m) {
+void CSGGeometry::applyTransform(CGAL::Polyhedron* p, Matrix4d m) {
     if (p == 0) return;
     CGAL::Transformation t(m[0][0], m[1][0], m[2][0], m[3][0],
                            m[0][1], m[1][1], m[2][1], m[3][1],
@@ -93,13 +93,13 @@ GeometryTransitPtr CSGGeometry::toOsgGeometry(CGAL::Polyhedron *p) {
 	 * faces, but makes cubes look good. Well, well...
 	 */
 
-	Matrix localToWorld = getWorldMatrix();
-	OSG::Vec3f translation;
-	OSG::Quaternion rotation;
-	OSG::Vec3f scaleFactor;
-	OSG::Quaternion scaleOrientation;
+	Matrix4d localToWorld = getWorldMatrix();
+	OSG::Vec3d translation;
+	OSG::Quaterniond rotation;
+	OSG::Vec3d scaleFactor;
+	OSG::Quaterniond scaleOrientation;
 	localToWorld.getTransform(translation, rotation, scaleFactor, scaleOrientation);
-	Matrix worldToLocal;
+	Matrix4d worldToLocal;
 	worldToLocal.invertFrom(localToWorld);
 
 	// Convert indices && positions
@@ -110,14 +110,14 @@ GeometryTransitPtr CSGGeometry::toOsgGeometry(CGAL::Polyhedron *p) {
 			CGAL::Point cgalPos = circ->vertex()->point();
 			// We need to transform each point from global coordinates into our local coordinate system
 			// (CGAL uses global, OpenSG has geometry in node-local coords)
-			OSG::Vec3f vecPos = OSG::Vec3f(CGAL::to_double(cgalPos.x()),
+			OSG::Vec3d vecPos = OSG::Vec3d(CGAL::to_double(cgalPos.x()),
 											  CGAL::to_double(cgalPos.y()),
 											  CGAL::to_double(cgalPos.z()));
-			OSG::Vec3f localVec = worldToLocal * (vecPos - translation);
-			OSG::Pnt3f osgPos(localVec.x(), localVec.y(), localVec.z());
+			OSG::Vec3d localVec = worldToLocal * (vecPos - translation);
+			OSG::Pnt3d osgPos(localVec.x(), localVec.y(), localVec.z());
 
 			positions->addValue(osgPos);
-			normals->addValue(Vec3f(0,1,0));
+			normals->addValue(Vec3d(0,1,0));
 			indices->addValue(curIndex);
 			curIndex++;
 		} while (++circ != it->facet_begin());
@@ -142,7 +142,7 @@ GeometryTransitPtr CSGGeometry::toOsgGeometry(CGAL::Polyhedron *p) {
 }
 
 size_t CSGGeometry::isKnownPoint(OSG::Pnt3f newPoint) {
-	vector<void*> resultData = oct->radiusSearch(newPoint.subZero(), thresholdL);
+	vector<void*> resultData = oct->radiusSearch(Vec3d(newPoint), thresholdL);
 	if (resultData.size() > 0) return *(size_t*)resultData.at(0);
 	return numeric_limits<size_t>::max();
 }

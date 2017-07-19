@@ -25,13 +25,13 @@ void ModuleTree::loadBbox(MapGrid::Box bbox) {
     for (auto node : osmMap->getNodes()) {
         if(node.second->tags["natural"] != "tree") continue;
 
-        Vec2f pos2D = mc->realToWorld(Vec2f(node.second->lat, node.second->lon));
-        Vec3f pos3D = Vec3f(pos2D[0], mc->getElevation(pos2D), pos2D[1]);
+        Vec2d pos2D = mc->realToWorld(Vec2d(node.second->lat, node.second->lon));
+        Vec3d pos3D = Vec3d(pos2D[0], mc->getElevation(pos2D), pos2D[1]);
 
         VRTreePtr tree = VRTree::create();
         tree->setup(4,4,rand(), 0.2,0.5,0.75,0.55, 0.2,0.5,0.2,0.2);
         tree->setFrom(pos3D);
-        tree->setScale(Vec3f(2,2,2));
+        tree->setScale(Vec3d(2,2,2));
         root->addChild(tree);
         if (trees.count(bbox.str) == 0) trees[bbox.str] = vector<VRTreePtr>();
         trees[bbox.str].push_back(tree);

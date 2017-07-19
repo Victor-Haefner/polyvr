@@ -13,20 +13,20 @@ using namespace std;
 
 class VRProfile {
     private:
-        vector<Vec2f> pnts;
+        vector<Vec2d> pnts;
 
     public:
         //VRProfile();
         //~VRProfile();
 
-        void add(Vec2f v);
-        vector<Vec3f> get(Vec3f n = Vec3f(0,0,1), Vec3f u = Vec3f(0,1,0));
+        void add(Vec2d v);
+        vector<Vec3d> get(Vec3d n = Vec3d(0,0,1), Vec3d u = Vec3d(0,1,0));
 };
 
 struct MChange {
-    Vec3f t; // translation
+    Vec3d t; // translation
     float l = 0; // translation length
-    Vec3f n; // rotation axis
+    Vec3d n; // rotation axis
     float a = 0; // rotation angle
     float dx = 0;
     uint time = 0;
@@ -58,8 +58,8 @@ struct MGearGearRelation : public MRelation {
 };
 
 struct pointPolySegment {
-    Vec3f Pseg;
-    Vec3f seg;
+    Vec3d Pseg;
+    Vec3d seg;
     float dist2 = 0;
     int ID = 0;
 };
@@ -79,7 +79,7 @@ class MPart {
         VRTransformPtr trans = 0;
         VRPrimitive* prim = 0;
         MChange change;
-        Matrix reference;
+        Matrix4d reference;
         uint timestamp = 0;
         STATE state = FREE;
 
@@ -140,7 +140,7 @@ class MChain : public MPart {
 
         string dirs;
         CSTATE cstate = WHOLE;
-        vector<Vec3f> VRPolygon;
+        vector<Vec3d> VRPolygon;
 
         MChain();
         ~MChain();
@@ -149,7 +149,7 @@ class MChain : public MPart {
         void setDirs(string dirs);
         void addDir(char dir);
         void updateGeo();
-        vector<pointPolySegment> toVRPolygon(Vec3f p);
+        vector<pointPolySegment> toVRPolygon(Vec3d p);
 
         void move();
         void updateNeighbors(vector<MPart*> parts);

@@ -14,8 +14,8 @@ VRGuiVectorEntry::VRGuiVectorEntry() {
     ex = ey = ez = 0;
 }
 
-bool VRGuiVectorEntry::proxy(GdkEventFocus* focus, sigc::slot<void, OSG::Vec3f&> sig, Gtk::Entry* ex, Gtk::Entry* ey, Gtk::Entry* ez) {
-    OSG::Vec3f res;
+bool VRGuiVectorEntry::proxy(GdkEventFocus* focus, sigc::slot<void, OSG::Vec3d&> sig, Gtk::Entry* ex, Gtk::Entry* ey, Gtk::Entry* ez) {
+    OSG::Vec3d res;
     res[0] = toFloat( ex->get_text() );
     res[1] = toFloat( ey->get_text() );
     res[2] = toFloat( ez->get_text() );
@@ -23,15 +23,15 @@ bool VRGuiVectorEntry::proxy(GdkEventFocus* focus, sigc::slot<void, OSG::Vec3f&>
     return true;
 }
 
-bool VRGuiVectorEntry::proxy2D(GdkEventFocus* focus, sigc::slot<void, OSG::Vec2f&> sig, Gtk::Entry* ex, Gtk::Entry* ey) {
-    OSG::Vec2f res;
+bool VRGuiVectorEntry::proxy2D(GdkEventFocus* focus, sigc::slot<void, OSG::Vec2d&> sig, Gtk::Entry* ex, Gtk::Entry* ey) {
+    OSG::Vec2d res;
     res[0] = toFloat( ex->get_text() );
     res[1] = toFloat( ey->get_text() );
     sig(res);
     return true;
 }
 
-void VRGuiVectorEntry::init(string placeholder, string label,  sigc::slot<void, OSG::Vec3f&> sig) {
+void VRGuiVectorEntry::init(string placeholder, string label,  sigc::slot<void, OSG::Vec3d&> sig) {
     Gtk::Fixed* ph;
     VRGuiBuilder()->get_widget(placeholder.c_str(), ph);
     Gtk::Container* frame = ph->get_parent();
@@ -80,7 +80,7 @@ void VRGuiVectorEntry::init(string placeholder, string label,  sigc::slot<void, 
     ez->signal_activate().connect(sia);
 }
 
-void VRGuiVectorEntry::init2D(string placeholder, string label,  sigc::slot<void, OSG::Vec2f&> sig) {
+void VRGuiVectorEntry::init2D(string placeholder, string label,  sigc::slot<void, OSG::Vec2d&> sig) {
     Gtk::Fixed* ph;
     VRGuiBuilder()->get_widget(placeholder.c_str(), ph);
     Gtk::Container* frame = ph->get_parent();
@@ -122,18 +122,18 @@ void VRGuiVectorEntry::init2D(string placeholder, string label,  sigc::slot<void
 }
 
 
-void VRGuiVectorEntry::set(OSG::Vec3f v) {
+void VRGuiVectorEntry::set(OSG::Vec3d v) {
     ex->set_text(toString(v[0]));
     ey->set_text(toString(v[1]));
     if (ez) ez->set_text(toString(v[2]));
 }
 
-void VRGuiVectorEntry::set(OSG::Vec2f v) {
+void VRGuiVectorEntry::set(OSG::Vec2d v) {
     ex->set_text(toString(v[0]));
     ey->set_text(toString(v[1]));
 }
 
-void VRGuiVectorEntry::setFontColor(OSG::Vec3f c) {
+void VRGuiVectorEntry::setFontColor(OSG::Vec3d c) {
     Gdk::Color col("#FFFFFF");
     col.set_rgb_p(c[0], c[1], c[2]);
     if (lbl) lbl->modify_fg(lbl->get_state(), col);

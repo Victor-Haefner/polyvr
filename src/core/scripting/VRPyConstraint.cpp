@@ -78,7 +78,7 @@ PyObject* VRPyConstraint::setRotationConstraint(VRPyConstraint* self, PyObject* 
     int g = 1;
     if (! PyArg_ParseTuple(args, "Osi", &v, &m, &g)) return NULL;
     if (!self->objPtr) self->objPtr = OSG::VRConstraint::create();
-    self->objPtr->setRConstraint(parseVec3fList(v), getConstraintEnum(m), g);
+    self->objPtr->setRConstraint(parseVec3dList(v), getConstraintEnum(m), g);
     Py_RETURN_TRUE;
 }
 
@@ -88,7 +88,7 @@ PyObject* VRPyConstraint::setTranslationConstraint(VRPyConstraint* self, PyObjec
     int g = 1;
     if (! PyArg_ParseTuple(args, "Osi", &v, &m, &g)) return NULL;
     if (!self->objPtr) self->objPtr = OSG::VRConstraint::create();
-    self->objPtr->setTConstraint(parseVec3fList(v), getConstraintEnum(m), g);
+    self->objPtr->setTConstraint(parseVec3dList(v), getConstraintEnum(m), g);
     Py_RETURN_TRUE;
 }
 
@@ -105,12 +105,12 @@ PyObject* VRPyConstraint::setLocalOffsetA(VRPyConstraint* self, PyObject* args) 
     float x,y,z,roll,pitch,yaw;
     if (! PyArg_ParseTuple(args, "ffffff", &x,&y,&z,&yaw,&pitch,&roll)) return NULL;
     //translation
-    OSG::Matrix m ;
-    m.setTranslate(OSG::Vec3f(x,y,z));
+    OSG::Matrix4d m ;
+    m.setTranslate(OSG::Vec3d(x,y,z));
     //rotation
     btQuaternion q ;
     q.setEuler(yaw,pitch,roll);
-    OSG::Quaternion qtwo = OSG::Quaternion(q.x(),q.y(),q.z(),q.w());
+    OSG::Quaterniond qtwo = OSG::Quaterniond(q.x(),q.y(),q.z(),q.w());
     m.setRotate(qtwo);
 
     if (!self->objPtr) self->objPtr = OSG::VRConstraint::create();
@@ -122,12 +122,12 @@ PyObject* VRPyConstraint::setLocalOffsetB(VRPyConstraint* self, PyObject* args) 
     float x,y,z,roll,pitch,yaw;
     if (! PyArg_ParseTuple(args, "ffffff", &x,&y,&z,&yaw,&pitch,&roll)) return NULL;
     //translation
-    OSG::Matrix m ;
-    m.setTranslate(OSG::Vec3f(x,y,z));
+    OSG::Matrix4d m ;
+    m.setTranslate(OSG::Vec3d(x,y,z));
     //rotation
     btQuaternion q ;
     q.setEuler(yaw,pitch,roll);
-    OSG::Quaternion qtwo = OSG::Quaternion(q.x(),q.y(),q.z(),q.w());
+    OSG::Quaterniond qtwo = OSG::Quaterniond(q.x(),q.y(),q.z(),q.w());
     m.setRotate(qtwo);
 
     if (!self->objPtr) self->objPtr = OSG::VRConstraint::create();

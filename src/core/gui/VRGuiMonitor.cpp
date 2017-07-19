@@ -106,18 +106,18 @@ void VRGuiMonitor::draw_timeline(int N0, int N1, int DN, int w, int h, int h0, i
     cr->stroke();
 }
 
-Vec3f VRGuiMonitor::getColor(string name) {
+Vec3d VRGuiMonitor::getColor(string name) {
     if (color_map.count(name) == 0) {
         float r = float(rand())/RAND_MAX;
         float g = float(rand())/RAND_MAX;
         float b = float(rand())/RAND_MAX;
-        color_map[name] = Vec3f(r,g,b);
+        color_map[name] = Vec3d(r,g,b);
     }
     return color_map[name];
 }
 
 void VRGuiMonitor::draw_call(int x0, int y0, int w, int h, string name) {
-    Vec3f c = getColor(name);
+    Vec3d c = getColor(name);
 
     cr->set_line_width(0.5);
     if (name == selRow) cr->set_line_width(1.5);
@@ -131,9 +131,9 @@ void VRGuiMonitor::draw_call(int x0, int y0, int w, int h, string name) {
     cr->stroke();
 }
 
-string VRGuiMonitor::toHex(Vec3f color) {
+string VRGuiMonitor::toHex(Vec3d color) {
     stringstream ss;
-    Vec3f co = color*255;
+    Vec3d co = color*255;
     int hcol = (int(co[0]) << 16) + (int(co[1]) << 8) + int(co[2]);
     ss << hex << uppercase << setw(6) << setfill('0') << hcol;
     return "#"+ss.str();

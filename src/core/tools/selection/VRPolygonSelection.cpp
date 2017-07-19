@@ -8,13 +8,13 @@ using namespace OSG;
 
 VRPolygonSelection::VRPolygonSelection() {
     auto mat = VRMaterial::create("VRPolygonSelection_mat");
-    mat->setDiffuse(Vec3f(0.5,0.5,1));
+    mat->setDiffuse(Color3f(0.5,0.5,1));
     mat->setLit(0);
     mat->setLineWidth(3);
     shape = VRGeometry::create("VRPolygonSelection");
     shape->setPersistency(0);
     shape->setMaterial(mat);
-    selection.setNearFar(Vec2f(0.1,1000));
+    selection.setNearFar(Vec2d(0.1,1000));
 }
 
 shared_ptr<VRPolygonSelection> VRPolygonSelection::create() { return shared_ptr<VRPolygonSelection>( new VRPolygonSelection() ); }
@@ -38,7 +38,7 @@ void VRPolygonSelection::close(VRObjectPtr world) {
     updateShape(selection);
 }
 
-void VRPolygonSelection::addEdge(Vec3f dir) {
+void VRPolygonSelection::addEdge(Vec3d dir) {
     if (closed) clear();
     selection.addEdge(dir);
     updateShape(selection);
@@ -56,9 +56,9 @@ void VRPolygonSelection::clear() {
 bool VRPolygonSelection::objSelected(VRGeometryPtr geo) {
     if (!closed) return false;
     auto bbox = geo->getBoundingBox();
-    Vec3f p0 = origin.pos();
+    Vec3d p0 = origin.pos();
     for (auto d : selection.getEdges()) {
-        if ( bbox->intersectedBy( Line(p0,d) ) ) return true;
+        if ( bbox->intersectedBy( Line(Pnt3f(p0),Vec3f(d)) ) ) return true;
     }
     return false;
 }
@@ -66,18 +66,18 @@ bool VRPolygonSelection::objSelected(VRGeometryPtr geo) {
 bool VRPolygonSelection::partialSelected(VRGeometryPtr geo) {
     if (!closed) return false;
     auto bbox = geo->getBoundingBox();
-    Vec3f p0 = origin.pos();
-    for (auto d : selection.getEdges()) if ( bbox->intersectedBy( Line(p0,d) ) ) return true;
+    Vec3d p0 = origin.pos();
+    for (auto d : selection.getEdges()) if ( bbox->intersectedBy( Line(Pnt3f(p0),Vec3f(d)) ) ) return true;
     return false;
 }
 
-bool VRPolygonSelection::vertSelected(Vec3f p) {
+bool VRPolygonSelection::vertSelected(Vec3d p) {
     if (!closed) return false;
 
     auto inFrustum = [&](frustum& f) {
         auto planes = f.getPlanes();
         for (uint i=0; i<planes.size(); i++) {
-            float d = planes[i].distance(p);
+            float d = planes[i].distance(Vec3f(p));
             if ( d < 0 ) return false;
         }
         return true;
@@ -93,8 +93,8 @@ void VRPolygonSelection::updateShape(frustum f) {
     if (N <= 1) return;
 
     auto trans = f.getPose();
-    Vec3f dir = trans.dir(); dir.normalize();
-    Vec3f p0 = trans.pos();
+    Vec3d dir = trans.dir(); dir.normalize();
+    Vec3d p0 = trans.pos();
     float near = 1;
     float far = 1;
     if (bbox && !bbox->empty()) near = dir.dot( bbox->center() - p0 ) - bbox->radius();

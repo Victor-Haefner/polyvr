@@ -32,20 +32,32 @@ string toString(const double& f, int d) {
     return ss.str();
 }
 
-string toString(const Vec2f& v) {
+string toString(const Vec2d& v) {
     stringstream ss;
     ss << v[0] << " " << v[1];
     return ss.str();
 }
 
-string toString(const Pnt3f& v) { return toString(Vec3f(v)); }
-string toString(const Vec3f& v) {
+string toString(const Pnt3d& v) { return toString(Vec3d(v)); }
+string toString(const Vec3d& v) {
     stringstream ss;
     ss << v[0] << " " << v[1] << " " << v[2];
     return ss.str();
 }
 
-string toString(const Vec4f& v) {
+string toString(const Vec4d& v) {
+    stringstream ss;
+    ss << v[0] << " " << v[1] << " " << v[2] << " " << v[3];
+    return ss.str();
+}
+
+string toString(const Color3f& v) {
+    stringstream ss;
+    ss << v[0] << " " << v[1] << " " << v[2];
+    return ss.str();
+}
+
+string toString(const Color4f& v) {
     stringstream ss;
     ss << v[0] << " " << v[1] << " " << v[2] << " " << v[3];
     return ss.str();
@@ -86,16 +98,16 @@ unsigned int toUInt(string s, int* N) { return ssToVal<unsigned int>(s,N); }
 float toFloat(string s, int* N) { return ssToVal<float>(s,N); }
 double toDouble(string s, int* N) { return ssToVal<double>(s,N); }
 
-Vec2f toVec2f(string s) {
-    Vec2f v;
+Vec2d toVec2d(string s) {
+    Vec2d v;
     stringstream ss(s);
     ss >> v[0];
     ss >> v[1];
     return v;
 }
 
-Vec3f toVec3f(string s) {
-    Vec3f v;
+Vec3d toVec3d(string s) {
+    Vec3d v;
     stringstream ss(s);
     ss >> v[0];
     ss >> v[1];
@@ -103,8 +115,8 @@ Vec3f toVec3f(string s) {
     return v;
 }
 
-Vec4f toVec4f(string s) {
-    Vec4f v;
+Vec4d toVec4d(string s) {
+    Vec4d v;
     stringstream ss(s);
     ss >> v[0];
     ss >> v[1];
@@ -113,8 +125,8 @@ Vec4f toVec4f(string s) {
     return v;
 }
 
-Pnt3f toPnt3f(string s) {
-    Pnt3f v;
+Pnt3d toPnt3f(string s) {
+    Pnt3d v;
     stringstream ss(s);
     ss >> v[0];
     ss >> v[1];
@@ -162,7 +174,7 @@ string toString(const Boundingbox& b) {
 }
 
 string toString(const Line& l) {
-    return toString(l.getPosition()) + " " + toString(l.getDirection());
+    return toString(Pnt3d(l.getPosition())) + " " + toString(Vec3d(l.getDirection()));
 }
 
 template<> string typeName(const string& t) { return "string"; }
@@ -170,14 +182,11 @@ template<> string typeName(const int& t) { return "int"; }
 template<> string typeName(const float& t) { return "float"; }
 template<> string typeName(const double& t) { return "double"; }
 template<> string typeName(const bool& t) { return "bool"; }
-template<> string typeName(const Vec2f& t) { return "Vec2f"; }
-template<> string typeName(const Vec3f& t) { return "Vec3f"; }
-template<> string typeName(const Vec4f& t) { return "Vec4f"; }
 template<> string typeName(const Vec2d& t) { return "Vec2d"; }
 template<> string typeName(const Vec3d& t) { return "Vec3d"; }
 template<> string typeName(const Vec4d& t) { return "Vec4d"; }
-template<> string typeName(const Color3f& t) { return "Vec3f"; }
-template<> string typeName(const Color4f& t) { return "Vec4f"; }
+template<> string typeName(const Color3f& t) { return "Vec3d"; }
+template<> string typeName(const Color4f& t) { return "Vec4d"; }
 template<> string typeName(const VRAnimCbPtr& t) { return "void callback(float)"; }
 template<> string typeName(const Boundingbox& t) { return "Boundingbox"; }
 
@@ -186,24 +195,6 @@ template<> bool toValue(stringstream& ss, bool& b) { return bool(ss >> b); }
 template<> bool toValue(stringstream& ss, int& i) { return bool(ss >> i); }
 template<> bool toValue(stringstream& ss, float& f) { return bool(ss >> f); }
 template<> bool toValue(stringstream& ss, double& d) { return bool(ss >> d); }
-
-template<> bool toValue(stringstream& ss, Vec2f& v) {
-    ss >> v[0];
-    return bool(ss >> v[1]);
-}
-
-template<> bool toValue(stringstream& ss, Vec3f& v) {
-    ss >> v[0];
-    ss >> v[1];
-    return bool(ss >> v[2]);
-}
-
-template<> bool toValue(stringstream& ss, Vec4f& v) {
-    ss >> v[0];
-    ss >> v[1];
-    ss >> v[2];
-    return bool(ss >> v[3]);
-}
 
 template<> bool toValue(stringstream& ss, Vec2d& v) {
     ss >> v[0];
@@ -248,7 +239,7 @@ template<> bool toValue(stringstream& ss, Color4f& v) {
 }
 
 template<> bool toValue(stringstream& ss, pose& po) {
-    Vec3f p,d,u;
+    Vec3d p,d,u;
     toValue(ss, p);
     toValue(ss, d);
     bool b = toValue(ss, u);
@@ -257,7 +248,7 @@ template<> bool toValue(stringstream& ss, pose& po) {
 }
 
 template<> bool toValue(stringstream& ss, posePtr& po) {
-    Vec3f p,d,u;
+    Vec3d p,d,u;
     toValue(ss, p);
     toValue(ss, d);
     bool b = toValue(ss, u);
@@ -267,7 +258,7 @@ template<> bool toValue(stringstream& ss, posePtr& po) {
 }
 
 template<> bool toValue(stringstream& ss, Boundingbox& box) {
-    Vec3f a,b;
+    Vec3d a,b;
     bool c;
     toValue(ss, a);
     bool B = toValue(ss, b);

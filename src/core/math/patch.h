@@ -11,9 +11,9 @@ class patch {
     public:
         template <int S>
         struct bezVRPolygon {
-            Vec3f* p;// EckPunkte
-            Vec3f* n;// Normale
-            Vec2f* tex;// Normale
+            Vec3d* p;// EckPunkte
+            Vec3d* n;// Normale
+            Vec2d* tex;// Normale
 
             GeometryMTRecPtr geo;// eigentliche Geometrie
 
@@ -32,9 +32,9 @@ class patch {
         bezVRPolygon<4> bp4;
 
     private:
-        Vec3f projectInPlane(Vec3f v, Vec3f n, bool keep_length);
+        Vec3d projectInPlane(Vec3d v, Vec3d n, bool keep_length);
 
-        Vec3f reflectInPlane(Vec3f v, Vec3f n);
+        Vec3d reflectInPlane(Vec3d v, Vec3d n);
 
         GeometryMTRecPtr makeTrianglePlaneGeo(int N, bool wire = false);
 

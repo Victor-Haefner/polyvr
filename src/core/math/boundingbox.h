@@ -11,7 +11,7 @@ OSG_BEGIN_NAMESPACE;
 
 class Boundingbox {
     private:
-        Vec3f bb1, bb2;
+        Vec3d bb1, bb2;
         bool cleared = true;
 
     public:
@@ -21,24 +21,24 @@ class Boundingbox {
         void clear();
         bool empty() const;
 
-        void update(const Vec3f& v);
-        void updateFromPoints(const vector<Vec3f>& v);
+        void update(const Vec3d& v);
+        void updateFromPoints(const vector<Vec3d>& v);
         void updateFromGeometry(VRGeometryPtr g);
 
-        Vec3f min() const;
-        Vec3f max() const;
-        Vec3f center() const;
-        Vec3f size() const;
+        Vec3d min() const;
+        Vec3d max() const;
+        Vec3d center() const;
+        Vec3d size() const;
         float radius() const;
 
-        void setCenter(const Vec3f& t);
-        void move(const Vec3f& t);
+        void setCenter(const Vec3d& t);
+        void move(const Vec3d& t);
         void scale(float s);
 
-        bool isInside(Vec3f p) const;
+        bool isInside(Vec3d p) const;
         bool intersectedBy(Line l);
 
-        Vec3f getRandomPoint();
+        Vec3d getRandomPoint();
 };
 
 OSG_END_NAMESPACE;

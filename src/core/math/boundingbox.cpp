@@ -13,11 +13,11 @@ BoundingboxPtr Boundingbox::create() { return BoundingboxPtr(new Boundingbox());
 void Boundingbox::clear() {
     cleared = true;
     float m = 1e6;
-    bb1 = Vec3f(m,m,m);
-    bb2 = Vec3f(-m,-m,-m);
+    bb1 = Vec3d(m,m,m);
+    bb2 = Vec3d(-m,-m,-m);
 }
 
-void Boundingbox::update(const Vec3f& v) {
+void Boundingbox::update(const Vec3d& v) {
     cleared = false;
     for (int i=0; i<3; i++) {
         if (v[i] < bb1[i]) bb1[i] = v[i];
@@ -29,55 +29,55 @@ void Boundingbox::updateFromGeometry(VRGeometryPtr g) {
     clear();
     auto pos = g->getMesh()->geo->getPositions();
     for (uint i=0; i<pos->size(); i++) {
-        Vec3f p = pos->getValue<Pnt3f>(i).subZero();
+        auto p = Vec3d(pos->getValue<Pnt3f>(i));
         update(p);
     }
 }
 
-Vec3f Boundingbox::getRandomPoint() {
+Vec3d Boundingbox::getRandomPoint() {
     float x = float(rand())/RAND_MAX;
     float y = float(rand())/RAND_MAX;
     float z = float(rand())/RAND_MAX;
-    Vec3f s = size();
-    return bb1 + Vec3f(x*s[0], y*s[1], z*s[2]);
+    Vec3d s = size();
+    return bb1 + Vec3d(x*s[0], y*s[1], z*s[2]);
 }
 
-void Boundingbox::updateFromPoints(const vector<Vec3f>& v) { for (auto p : v) update(p); }
+void Boundingbox::updateFromPoints(const vector<Vec3d>& v) { for (auto p : v) update(p); }
 
 bool Boundingbox::empty() const { return cleared; }
-Vec3f Boundingbox::min() const { return bb1; }
-Vec3f Boundingbox::max() const { return bb2; }
-Vec3f Boundingbox::center() const { return cleared ? Vec3f() : (bb2+bb1)*0.5; }
-Vec3f Boundingbox::size() const { return cleared ? Vec3f() : bb2-bb1; }
+Vec3d Boundingbox::min() const { return bb1; }
+Vec3d Boundingbox::max() const { return bb2; }
+Vec3d Boundingbox::center() const { return cleared ? Vec3d() : (bb2+bb1)*0.5; }
+Vec3d Boundingbox::size() const { return cleared ? Vec3d() : bb2-bb1; }
 float Boundingbox::radius() const { return cleared ? 0 : (size()*0.5).length(); }
 
-bool Boundingbox::isInside(Vec3f p) const {
+bool Boundingbox::isInside(Vec3d p) const {
     return (p[0] <= bb2[0] && p[0] >= bb1[0]
          && p[1] <= bb2[1] && p[1] >= bb1[1]
          && p[2] <= bb2[2] && p[2] >= bb1[2]);
 }
 
-void Boundingbox::move(const Vec3f& t) {
+void Boundingbox::move(const Vec3d& t) {
     bb1 += t;
     bb2 += t;
 }
 
-void Boundingbox::setCenter(const Vec3f& t) {
+void Boundingbox::setCenter(const Vec3d& t) {
     if (cleared) update(t);
     else move( t - center() );
 }
 
 void Boundingbox::scale(float s) {
-    Vec3f si = size();
-    Vec3f sis = (si*s-si)*0.5;
+    Vec3d si = size();
+    Vec3d sis = (si*s-si)*0.5;
     bb1 -= sis;
     bb2 += sis;
 }
 
 bool Boundingbox::intersectedBy(Line l) {
-    Vec3f p0 = Vec3f(l.getPosition());
-    Vec3f dir = l.getDirection();
-    Vec3f dirfrac;
+    Vec3d p0 = Vec3d(l.getPosition());
+    Vec3d dir = Vec3d(l.getDirection());
+    Vec3d dirfrac;
 
     dirfrac[0] = 1.0f / dir[0];
     dirfrac[1] = 1.0f / dir[1];
@@ -85,8 +85,8 @@ bool Boundingbox::intersectedBy(Line l) {
 
     // lb is the corner of AABB with minimal coordinates - left bottom, rt is maximal corner
     // r.org is origin of ray
-    Vec3f bbp1 = bb1-p0;
-    Vec3f bbp2 = bb2-p0;
+    Vec3d bbp1 = bb1-p0;
+    Vec3d bbp2 = bb2-p0;
 
     float t1 = bbp1[0]*dirfrac[0];
     float t3 = bbp1[1]*dirfrac[1];
