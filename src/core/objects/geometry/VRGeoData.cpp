@@ -199,8 +199,8 @@ int VRGeoData::pushVert(const VRGeoData& other, int i, Matrix4d m) {
         if (doTex && doCol4) return pushVert(p, n, od->cols4->getValue(i), Vec2d(od->texs->getValue(i)));
         if (doTex2) return pushVert(p, n, Vec2d(od->texs->getValue(i)), Vec2d(od->texs2->getValue(i)));
         if (doTex)  return pushVert(p, n, Vec2d(od->texs->getValue(i)));
-        if (doCol3) return pushVert(p, n, Vec2d(od->cols3->getValue(i)));
-        if (doCol4) return pushVert(p, n, Vec2d(od->cols4->getValue(i)));
+        if (doCol3) return pushVert(p, n, od->cols3->getValue(i));
+        if (doCol4) return pushVert(p, n, od->cols4->getValue(i));
         return pushVert(p, n);
     }
     return pushVert(p);

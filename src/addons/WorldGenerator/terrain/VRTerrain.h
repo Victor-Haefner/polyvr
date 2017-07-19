@@ -48,6 +48,8 @@ class VRTerrain : public VRGeometry {
 
         void setPlanet(VRPlanetPtr planet, Vec2d position);
         void projectOSM(string path, double N, double E); // TODO, gis data should be handled somewhere else
+
+        void paintHeights(string path);
 };
 
 OSG_END_NAMESPACE;

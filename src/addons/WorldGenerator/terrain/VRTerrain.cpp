@@ -33,6 +33,7 @@ void VRTerrain::setParameters( Vec2d s, double r, double h ) {
     setupGeo();
     mat->setShaderParameter("resolution", resolution);
     mat->setShaderParameter("heightScale", heightScale);
+    mat->setShaderParameter("doHeightTextures", 0);
     updateTexelSize();
 }
 
@@ -233,6 +234,21 @@ void VRTerrain::projectOSM(string path, double N, double E) {
         for (auto tag : way.second->tags) polygons[tag.first].push_back(pp);
     }
 
+    // training ground hack flat ground
+    auto tgPolygon = VRPolygon::create();
+    Pnt3d pos;
+    float d = 0.003;
+    pos = Pnt3d( planet->fromLatLongPosition(29.924500-d, 119.896806-d) );
+    terrainMatrix.mult(pos, pos); tgPolygon->addPoint( Vec2d(pos[0], pos[2]) );
+    pos = Pnt3d( planet->fromLatLongPosition(29.924500-d, 119.896806+d) );
+    terrainMatrix.mult(pos, pos); tgPolygon->addPoint( Vec2d(pos[0], pos[2]) );
+    pos = Pnt3d( planet->fromLatLongPosition(29.924500+d, 119.896806+d) );
+    terrainMatrix.mult(pos, pos); tgPolygon->addPoint( Vec2d(pos[0], pos[2]) );
+    pos = Pnt3d( planet->fromLatLongPosition(29.924500+d, 119.896806-d) );
+    terrainMatrix.mult(pos, pos); tgPolygon->addPoint( Vec2d(pos[0], pos[2]) );
+    tgPolygon->scale( Vec3d(1.0/size[0], 1, 1.0/size[1]) );
+    tgPolygon->translate( Vec3d(0.5,0,0.5) );
+
     // -------------------- project OSM polygons on texture
     auto dim = tex->getSize();
     VRTextureGenerator tg;
@@ -259,13 +275,16 @@ void VRTerrain::projectOSM(string path, double N, double E) {
     VRTexturePtr t = tg.compose(0);
 
     // ----------------------- combine OSM texture with heightmap
+    cout << "\n tgPolygon " << tgPolygon->toString() << endl;
     for (int i = 0; i < dim[0]; i++) {
         for (int j = 0; j < dim[1]; j++) {
-            Vec3i pix = Vec3i(i,j,0);
-            double h = tex->getPixel(pix)[3];
-            Color4f col = t->getPixel(pix);
+            Vec3i pixK = Vec3i(i,j,0);
+            double h = tex->getPixel(pixK)[3];
+            auto pix = Vec2d(i*1.0/(dim[0]-1), j*1.0/(dim[1]-1));
+            if (tgPolygon->isInside(pix)) h = 14;
+            Color4f col = t->getPixel(pixK);
             col[3] = h;
-            t->setPixel(pix, col);
+            t->setPixel(pixK, col);
         }
     }
     setMap(t);
@@ -276,6 +295,13 @@ void VRTerrain::setPlanet(VRPlanetPtr p, Vec2d position) {
     planet = p;
 }
 
+void VRTerrain::paintHeights(string path) {
+    mat->setTexture(path, 0, 1);
+    mat->setTexture("world/textures/gravel2.jpg", 0, 2);
+    mat->setShaderParameter("texWoods", 1);
+    mat->setShaderParameter("texGravel", 2);
+    mat->setShaderParameter("doHeightTextures", 1);
+}
 
 
 
@@ -297,10 +323,14 @@ string VRTerrain::fragmentShader =
 "#version 400 compatibility\n"
 GLSL(
 uniform sampler2D tex;
+uniform sampler2D texWoods;
+uniform sampler2D texGravel;
 const ivec3 off = ivec3(-1,0,1);
 const vec3 light = vec3(-1,-1,-0.5);
 uniform vec2 texelSize;
+uniform int doHeightTextures;
 
+in float height;
 vec3 norm;
 vec4 color;
 
@@ -321,8 +351,10 @@ void applyBlinnPhong() {
 	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;
 	float NdotHV = max(dot( norm, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
 	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
-	gl_FragColor = ambient + diffuse + specular;
+	//gl_FragColor = ambient + diffuse + specular;
+	gl_FragColor = diffuse + specular;
 	gl_FragColor[3] = 1.0;
+	//gl_FragColor = vec4(diffuse.rgb, 1);
 }
 
 vec3 getNormal() {
@@ -341,8 +373,26 @@ vec3 getNormal() {
 }
 
 void main( void ) {
+	vec2 tc = gl_TexCoord[0].xy;
 	norm = getNormal();
-	color = vec4(getColor(),1.0);
+
+	if (doHeightTextures == 0) color = vec4(getColor(),1.0);
+	else {
+        vec4 cW1 = texture(texWoods, tc*1077);
+        vec4 cW2 = texture(texWoods, tc*107);
+        vec4 cW3 = texture(texWoods, tc*17);
+        vec4 cW4 = texture(texWoods, tc);
+        vec4 cW = mix(cW1,mix(cW2,mix(cW3,cW4,0.5),0.5),0.5);
+
+        vec4 cG0 = texture(texGravel, tc*10777);
+        vec4 cG1 = texture(texGravel, tc*1077);
+        vec4 cG2 = texture(texGravel, tc*107);
+        vec4 cG3 = texture(texGravel, tc*17);
+        vec4 cG4 = texture(texGravel, tc);
+        vec4 cG = mix(cG0,mix(cG1,mix(cG2,mix(cG3,cG4,0.5),0.5),0.5),0.5);
+        color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
+	}
+
 	applyBlinnPhong();
 }
 );
@@ -395,6 +445,7 @@ GLSL(
 layout( quads ) in;
 in vec3 tcPosition[];
 in vec2 tcTexCoords[];
+out float height;
 
 uniform float heightScale;
 uniform int channel;
@@ -412,7 +463,8 @@ void main() {
     vec3 a = mix(tcPosition[0], tcPosition[1], u);
     vec3 b = mix(tcPosition[3], tcPosition[2], u);
     vec3 tePosition = mix(a, b, v);
-    tePosition.y = heightScale * texture2D(texture, gl_TexCoord[0].xy)[channel];
+    height = heightScale * texture2D(texture, gl_TexCoord[0].xy)[channel];
+    tePosition.y = height;
     gl_Position = gl_ModelViewProjectionMatrix * vec4(tePosition, 1);
 }
 );

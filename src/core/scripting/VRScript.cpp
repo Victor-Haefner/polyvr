@@ -385,7 +385,7 @@ void VRScript::execute() {
         }
 
         auto res = PyObject_CallObject(fkt, pArgs);
-        if (!res) { pyTraceToConsole(); cout << "VRScript::execute failed for " << getName() << endl; return; }
+        if (!res) { pyTraceToConsole(); return; }
 
         execution_time = timer.stop();
 

@@ -5,6 +5,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/VRLod.h"
+#include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/math/VRConvexHull.h"
 #include "core/utils/VRStorage_template.h"

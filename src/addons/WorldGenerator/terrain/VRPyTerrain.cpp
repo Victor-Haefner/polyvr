@@ -15,6 +15,7 @@ PyMethodDef VRPyTerrain::methods[] = {
     {"setMap", PyWrapOpt(Terrain, setMap, "Set height map", "3", void, VRTexturePtr, int) },
     {"physicalize", PyWrap(Terrain, physicalize, "Physicalize terrain", void, bool) },
     {"projectOSM", PyWrap(Terrain, projectOSM, "Load an OSM file and project surface types onto terrain, OSM path, N, E", void, string, double, double) },
+    {"paintHeights", PyWrap(Terrain, paintHeights, "Simple function to paint by heights using a texture", void, string) },
     {NULL}  /* Sentinel */
 };
 

@@ -9,5 +9,5 @@ attribute vec4 osg_Color;
 void main( void ) {
 	vn = osg_Normal;
 	vc = osg_Color;
-    gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
+	gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
 }

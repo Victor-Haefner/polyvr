@@ -44,19 +44,19 @@ Vec2d VRPlanet::fromLatLongSize(double north1, double east1, double north2, doub
     auto e = (east1+east2)*0.5;
     Vec3d p1 = fromLatLongPosition(north1, east1);
     Vec3d p2 = fromLatLongPosition(north2, east2);
-    addPin("P1", north1, east1);
-    addPin("P2", north2, east2);
+    //addPin("P1", north1, east1);
+    //addPin("P2", north2, east2);
     Vec3d d = p2-p1;
     auto dirEast = fromLatLongEast(n, e);
     auto dirNorth = fromLatLongNorth(n, e);
     double u = d.dot( dirEast );
     double v = d.dot( dirNorth );
 
-    d = fromLatLongPosition(north2, east2) - fromLatLongPosition(north2, east1);
+    /*d = fromLatLongPosition(north2, east2) - fromLatLongPosition(north2, east1);
     metaGeo->setVector(101, Vec3d(p1), Vec3d(d), Color3f(1,1,0), "D");
     metaGeo->setVector(102, Vec3d(p1), Vec3d(dirEast*u), Color3f(0,1,1), "E");
     metaGeo->setVector(103, Vec3d(p1), Vec3d(dirNorth*v), Color3f(0,1,1), "S");
-
+    */
     return Vec2d(abs(u),abs(v));
 }
 
@@ -82,7 +82,7 @@ void VRPlanet::rebuild() {
     addChild(lod);
     anchor = VRObject::create("lod0");
     lod->addChild( anchor );
-    addLod(5,radius*1.25);
+    addLod(5,radius*1.1);
     addLod(4,radius*2.0);
     addLod(3,radius*5.0);
 

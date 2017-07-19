@@ -254,7 +254,8 @@ void VRWoods::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
     auto simpleLeafMat = [](bool doAlpha) {
         auto m = VRMaterial::create("simpleLeafMat");
         m->setPointSize(3);
-        m->setDiffuse(Color3f(0.5,1,0));
+        //m->setDiffuse(Color3f(0.5,1,0));
+        m->setDiffuse(Color3f(0,0,1));
         m->setAmbient(Color3f(0.1,0.3,0));
         m->setSpecular(Color3f(0.1,0.4,0));
         string wdir = VRSceneManager::get()->getOriginalWorkdir();
