@@ -142,7 +142,7 @@ void VRGuiTreeExplorer::on_search_edited() {
         Gtk::TreeModel::Row row = *r.second;
         int i=0;
         for (auto c : cols) {
-            if ( c == 'i' ) row_string += toString(row[m_Columns.col<int>(i)]);
+            if ( c == 'i' ) row_string += toString((int)row[m_Columns.col<int>(i)]);
             if ( c == 's' ) row_string += row[m_Columns.col<string>(i)];
             i++;
         }

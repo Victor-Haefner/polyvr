@@ -191,7 +191,7 @@ bool VRReasoner::has(VRStatementPtr statement, VRSemanticContextPtr context) { /
 
     bool b = left.has(right, context);
     print("  " + left.str + " has " + (b?"":"not") + " " + right.str);
-    print("RES " + toString(&right.var) + "   " + right.var->toString());
+    print("RES " + toString((void*)&right.var) + "   " + right.var->toString());
     if (b) { statement->state = 1; return true; }
 
     // DEBUG -> TODO

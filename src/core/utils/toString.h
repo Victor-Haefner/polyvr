@@ -12,26 +12,10 @@ using namespace std;
 
 vector<string> splitString(string s, char c = ' ');
 
-string toString(const string& s);
-string toString(const bool& b);
-string toString(const int& i);
-string toString(const size_t& i);
-string toString(const unsigned int& i);
+template<typename T>
+string toString(const T& s);
 string toString(const double& f, int d = -1);
 string toString(const float& f, int d = -1);
-string toString(const OSG::Vec2d& v);
-string toString(const OSG::Vec3d& v);
-string toString(const OSG::Vec4d& v);
-string toString(const OSG::Pnt3d& v);
-string toString(const OSG::Vec2i& v);
-string toString(const OSG::Vec3i& v);
-string toString(const OSG::Vec4i& v);
-string toString(const OSG::Color3f& v);
-string toString(const OSG::Color4f& v);
-string toString(const OSG::Line& l);
-string toString(const OSG::pose& p);
-string toString(const OSG::posePtr& p);
-string toString(const OSG::Boundingbox& b);
 
 // deprecated?
 bool toBool(string s, int* N = 0);

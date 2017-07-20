@@ -14,11 +14,15 @@ vector<string> splitString(string s, char c) {
     return res;
 }
 
-string toString(const string& s) { return s; }
-string toString(const bool& b) { stringstream ss; ss << b; return ss.str(); }
-string toString(const int& i) { stringstream ss; ss << i; return ss.str(); }
-string toString(const size_t& i) { stringstream ss; ss << i; return ss.str(); }
-string toString(const unsigned int& i) { stringstream ss; ss << i; return ss.str(); }
+typedef void* voidPtr;
+
+template<> string toString(const string& s) { return s; }
+template<> string toString(const bool& b) { stringstream ss; ss << b; return ss.str(); }
+template<> string toString(const int& i) { stringstream ss; ss << i; return ss.str(); }
+template<> string toString(const unsigned char& i) { stringstream ss; ss << i; return ss.str(); }
+template<> string toString(const voidPtr& i) { stringstream ss; ss << i; return ss.str(); }
+template<> string toString(const size_t& i) { stringstream ss; ss << i; return ss.str(); }
+template<> string toString(const unsigned int& i) { stringstream ss; ss << i; return ss.str(); }
 string toString(const float& f, int d) {
     stringstream ss;
     if (d >= 0) ss << fixed << setprecision(d);//ss.precision(d);
@@ -32,50 +36,51 @@ string toString(const double& f, int d) {
     return ss.str();
 }
 
-string toString(const Vec2d& v) {
+template<> string toString(const Vec2d& v) {
     stringstream ss;
     ss << v[0] << " " << v[1];
     return ss.str();
 }
 
-string toString(const Pnt3d& v) { return toString(Vec3d(v)); }
-string toString(const Vec3d& v) {
+template<> string toString(const Vec3d& v) {
     stringstream ss;
     ss << v[0] << " " << v[1] << " " << v[2];
     return ss.str();
 }
 
-string toString(const Vec4d& v) {
+template<> string toString(const Pnt3d& v) { return toString(Vec3d(v)); }
+
+template<> string toString(const Vec4d& v) {
     stringstream ss;
     ss << v[0] << " " << v[1] << " " << v[2] << " " << v[3];
     return ss.str();
 }
 
-string toString(const Color3f& v) {
+template<> string toString(const Color3f& v) {
     stringstream ss;
     ss << v[0] << " " << v[1] << " " << v[2];
     return ss.str();
 }
 
-string toString(const Color4f& v) {
+template<> string toString(const Color4f& v) {
     stringstream ss;
     ss << v[0] << " " << v[1] << " " << v[2] << " " << v[3];
     return ss.str();
 }
 
-string toString(const Vec2i& v) {
+template<> string toString(const Vec2i& v) {
     stringstream ss;
     ss << v[0] << " " << v[1];
     return ss.str();
 }
 
-string toString(const Vec3i& v) {
+template<> string toString(const Vec3i& v) {
     stringstream ss;
     ss << v[0] << " " << v[1] << " " << v[2];
     return ss.str();
 }
 
-string toString(const Vec4i& v) {
+template<> string toString(const Vec4i& v) {
     stringstream ss;
     ss << v[0] << " " << v[1] << " " << v[2] << " " << v[3];
     return ss.str();
@@ -161,19 +166,19 @@ Vec4i toVec4i(string s) {
     return v;
 }
 
-string toString(const posePtr& po) {
+template<> string toString(const posePtr& po) {
     return toString(po->pos()) + " " + toString(po->dir()) + " " + toString(po->up());
 }
 
-string toString(const pose& po) {
+template<> string toString(const pose& po) {
     return toString(po.pos()) + " " + toString(po.dir()) + " " + toString(po.up());
 }
 
-string toString(const Boundingbox& b) {
+template<> string toString(const Boundingbox& b) {
     return toString(b.min()) + " " + toString(b.max()) + " " + toString(b.empty());
 }
 
-string toString(const Line& l) {
+template<> string toString(const Line& l) {
     return toString(Pnt3d(l.getPosition())) + " " + toString(Vec3d(l.getDirection()));
 }
 
