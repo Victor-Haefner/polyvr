@@ -1,6 +1,8 @@
 #ifndef VRPYTYPECASTER_H_INCLUDED
 #define VRPYTYPECASTER_H_INCLUDED
 
+#include <vector>
+
 #undef _XOPEN_SOURCE
 #undef _POSIX_C_SOURCE
 #include <Python.h>
@@ -11,12 +13,22 @@
 using namespace std;
 
 class VRPyTypeCaster {
+    private:
+        static PyObject* pack(const vector<PyObject*>& v);
+
     public:
         VRPyTypeCaster();
         static PyObject* err;
 
         template<typename T>
-        static PyObject* cast(T t);
+        static PyObject* cast(const T& t);
+
+        template<typename T>
+        static PyObject* cast(const vector<T>& vt) {
+            vector<PyObject*> l;
+            for (auto t : vt) l.push_back(cast<T>(t));
+            return pack(l);
+        }
 };
 
 #endif // VRPYTYPECASTER_H_INCLUDED

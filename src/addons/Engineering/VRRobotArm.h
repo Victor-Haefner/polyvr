@@ -58,13 +58,13 @@ class VRRobotArm {
         void setLengths(vector<float> lengths);
 
         vector<float> getAngles();
-        void getPose(Vec3d& pos, Vec3d& dir, Vec3d& up);
+        posePtr getPose();
 
         void move();
         void pause();
         void stop();
 
-        void moveTo(Vec3d pos, Vec3d dir, Vec3d up);
+        void moveTo(posePtr p);
         void setAngles(vector<float> angles);
         void setGrab(float g);
         void toggleGrab();

@@ -3,9 +3,10 @@
 
 using namespace OSG;
 
-template<> PyObject* VRPyTypeCaster::cast<posePtr>(posePtr e) { return VRPyPose::fromSharedPtr(e); }
+template<> PyObject* VRPyTypeCaster::cast(const posePtr& e) { return VRPyPose::fromSharedPtr(e); }
+template<> bool toValue(PyObject* o, posePtr& p) { if (!VRPyPose::check(o)) return 0; p = ((VRPyPose*)o)->objPtr; return 1; }
 
-template<> PyTypeObject VRPyBaseT<OSG::pose>::type = {
+template<> PyTypeObject VRPyBaseT<pose>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
     "VR.Pose",             /*tp_name*/

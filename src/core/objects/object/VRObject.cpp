@@ -19,9 +19,7 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRObjectPtr& o) {
-    return o?o->getType():"Object(null)";
-}
+template<> string typeName(const VRObjectPtr& o) { return o?o->getType():"Object(null)"; }
 
 VRObject::VRObject(string _name) {
     static int _ID = 0;

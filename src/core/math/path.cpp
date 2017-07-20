@@ -1,10 +1,13 @@
 #include "path.h"
 #include "core/objects/VRTransform.h"
 #include "core/math/equation.h"
+#include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
 
-OSG_BEGIN_NAMESPACE;
 using namespace std;
+using namespace OSG;
+
+template<> string typeName(const pathPtr& p) { return "Path"; }
 
 path::path(int d) : degree(d) {
     storeVec("points", points);
@@ -469,5 +472,3 @@ bool path::isSinuous(int i, int j) { // TODO
     if (iPnts.size() >= 1) return true;
     return false;
 }
-
-OSG_END_NAMESPACE;

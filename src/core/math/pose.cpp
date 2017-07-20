@@ -1,8 +1,11 @@
 #include "pose.h"
 #include "core/utils/isNan.h"
+#include "core/utils/toString.h"
 #include "core/objects/VRTransform.h"
 
 using namespace OSG;
+
+template<> string typeName(const posePtr& p) { return "Pose"; }
 
 pose::pose() { set(Vec3d(), Vec3d(0,0,-1), Vec3d(0,1,0)); }
 pose::pose(const pose& p) { *this = p; }

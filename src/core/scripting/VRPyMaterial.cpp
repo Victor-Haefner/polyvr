@@ -9,7 +9,7 @@
 
 using namespace OSG;
 
-template<> PyObject* VRPyTypeCaster::cast<VRMaterialPtr>(VRMaterialPtr e) { return VRPyMaterial::fromSharedPtr(e); }
+template<> PyObject* VRPyTypeCaster::cast(const VRMaterialPtr& e) { return VRPyMaterial::fromSharedPtr(e); }
 
 simpleVRPyType(Material, New_VRObjects_ptr);
 
