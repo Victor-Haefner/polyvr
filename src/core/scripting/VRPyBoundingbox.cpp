@@ -2,13 +2,13 @@
 #include "VRPyBaseT.h"
 #include "VRPyBaseFactory.h"
 
-namespace OSG {
-    typedef Boundingbox VRBoundingbox;
-}
+namespace OSG { typedef Boundingbox VRBoundingbox; }
 
 using namespace OSG;
 
 newPyType(Boundingbox, Boundingbox, New_ptr);
+
+template<> bool toValue(PyObject* o, Boundingbox& v) { if (!VRPyBoundingbox::check(o)) return 0; v = *((VRPyBoundingbox*)o)->objPtr; return 1; }
 
 PyMethodDef VRPyBoundingbox::methods[] = {
     {"min", PyWrap(Boundingbox, min, "Get the minimum vector", Vec3d) },

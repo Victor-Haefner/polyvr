@@ -15,6 +15,8 @@ using namespace OSG;
 
 simpleVRPyType(Transform, New_VRObjects_ptr);
 
+template<> bool toValue(PyObject* o, VRTransformPtr& v) { if (!VRPyTransform::check(o)) return 0; v = ((VRPyTransform*)o)->objPtr; return 1; }
+
 PyMethodDef VRPyTransform::methods[] = {
     {"setIdentity", (PyCFunction)VRPyTransform::setIdentity, METH_NOARGS, "Reset transformation to identity" },
     {"translate", (PyCFunction)VRPyTransform::translate, METH_VARARGS, "Translate the object along a vector - translate(xf,yf,zf)" },

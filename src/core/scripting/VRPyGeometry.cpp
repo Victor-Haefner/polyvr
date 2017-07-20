@@ -24,6 +24,8 @@
 
 using namespace OSG;
 
+template<> bool toValue(PyObject* o, VRGeometryPtr& v) { if (!VRPyGeometry::check(o)) return 0; v = ((VRPyGeometry*)o)->objPtr; return 1; }
+
 template<> PyTypeObject VRPyBaseT<VRGeometry>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/

@@ -4,6 +4,7 @@
 #include "VRPyBase.h"
 #include "VRPyTypeCaster.h"
 #include "core/utils/VRCallbackWrapper.h"
+#include "core/utils/VRCallbackWrapperT.h"
 
 template<typename T> bool toValue(PyObject* o, T& b);
 template<typename T> bool toValue(PyObject* o, vector<T>& v) {
@@ -16,7 +17,16 @@ template<typename T> bool toValue(PyObject* o, vector<T>& v) {
     return 1;
 }
 
-#include "core/utils/VRCallbackWrapperT.h"
+template<>
+struct VRCallbackWrapper<PyObject*> : VRCallbackWrapperBase {
+    VRCallbackWrapper() {}
+    virtual ~VRCallbackWrapper() {}
+
+    template<typename T>
+    PyObject* convert(const T& t) { return VRPyTypeCaster::cast<T>(t); }
+
+    virtual bool execute(void* obj, const vector<PyObject*>& params, PyObject*& result) = 0;
+};
 
 template<typename sT, typename T, T, class O> struct proxyWrap;
 template<typename sT, typename T, typename R, typename ...Args, R (T::*mf)(Args...), class O>

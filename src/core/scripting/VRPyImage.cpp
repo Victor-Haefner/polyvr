@@ -7,7 +7,11 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include "numpy/ndarrayobject.h"
 
-template<> PyTypeObject VRPyBaseT<OSG::VRTexture>::type = {
+using namespace OSG;
+
+template<> bool toValue(PyObject* o, VRTexturePtr& v) { if (!VRPyImage::check(o)) return 0; v = ((VRPyImage*)o)->objPtr; return 1; }
+
+template<> PyTypeObject VRPyBaseT<VRTexture>::type = {
     PyObject_HEAD_INIT(NULL)
     0,
     "VR.Image",
@@ -60,7 +64,7 @@ bool CheckExtension(string extN) {
 
 PyObject* VRPyImage::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     import_array1(NULL);
-    OSG::VRTexturePtr img = OSG::VRTexture::create();
+    VRTexturePtr img = VRTexture::create();
     if (pySize(args) == 0) return allocPtr( type, img );
 
     PyArrayObject* data = 0;
@@ -105,7 +109,7 @@ PyObject* VRPyImage::write(VRPyImage* self, PyObject *args) {
 PyObject* VRPyImage::getPixel(VRPyImage* self, PyObject *args) {
     PyObject* uv;
     if (! PyArg_ParseTuple(args, "O", &uv)) return NULL;
-    return toPyTuple( OSG::Vec4d(self->objPtr->getPixel( parseVec2dList(uv) )) );
+    return toPyTuple( Vec4d(self->objPtr->getPixel( parseVec2dList(uv) )) );
 }
 
 

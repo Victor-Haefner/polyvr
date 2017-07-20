@@ -4,18 +4,13 @@
 #include "VRUtilsFwd.h"
 #include "toString.h"
 
-struct VRCallbackWrapperBase {
-    static string err;
-};
+struct VRCallbackWrapperBase { static string err; };
 
-template<typename Param>
+template<class Param>
 struct VRCallbackWrapper : VRCallbackWrapperBase {
     VRCallbackWrapper() {}
     virtual ~VRCallbackWrapper() {}
-
-    template<typename T>
-    Param convert(const T& t);
-
+    template<typename T> Param convert(const T& t);
     virtual bool execute(void* obj, const vector<Param>& params, Param& result) = 0;
 };
 

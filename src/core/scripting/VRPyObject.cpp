@@ -12,6 +12,8 @@
 
 using namespace OSG;
 
+template<> bool toValue(PyObject* o, VRObjectPtr& v) { if (!VRPyObject::check(o)) return 0; v = ((VRPyObject*)o)->objPtr; return 1; }
+
 template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
