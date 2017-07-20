@@ -1,8 +1,12 @@
 #include "toString.h"
+#include "core/math/VRMathFwd.h"
 #include "core/math/pose.h"
 #include "core/math/boundingbox.h"
 #include "core/utils/VRFunctionFwd.h"
 #include <OpenSG/OSGColor.h>
+#include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGColor.h>
+#include <OpenSG/OSGLine.h>
 
 using namespace OSG;
 
@@ -86,86 +90,6 @@ template<> string toString(const Vec4i& v) {
     return ss.str();
 }
 
-template <class T>
-T ssToVal(const string& s, int* N = 0) {
-    stringstream ss;
-    ss << s;
-    if(N) *N = ss.tellg();
-    T v = 0;
-    ss >> v;
-    if(N) *N = int(ss.tellg()) - *N;
-    return v;
-}
-
-bool toBool(string s, int* N) { return ssToVal<bool>(s,N); }
-int toInt(string s, int* N) { return ssToVal<int>(s,N); }
-unsigned int toUInt(string s, int* N) { return ssToVal<unsigned int>(s,N); }
-float toFloat(string s, int* N) { return ssToVal<float>(s,N); }
-double toDouble(string s, int* N) { return ssToVal<double>(s,N); }
-
-Vec2d toVec2d(string s) {
-    Vec2d v;
-    stringstream ss(s);
-    ss >> v[0];
-    ss >> v[1];
-    return v;
-}
-
-Vec3d toVec3d(string s) {
-    Vec3d v;
-    stringstream ss(s);
-    ss >> v[0];
-    ss >> v[1];
-    ss >> v[2];
-    return v;
-}
-
-Vec4d toVec4d(string s) {
-    Vec4d v;
-    stringstream ss(s);
-    ss >> v[0];
-    ss >> v[1];
-    ss >> v[2];
-    ss >> v[3];
-    return v;
-}
-
-Pnt3d toPnt3f(string s) {
-    Pnt3d v;
-    stringstream ss(s);
-    ss >> v[0];
-    ss >> v[1];
-    ss >> v[2];
-    return v;
-}
-
-Vec2i toVec2i(string s) {
-    Vec2i v;
-    stringstream ss(s);
-    ss >> v[0];
-    ss >> v[1];
-    return v;
-}
-
-Vec3i toVec3i(string s) {
-    Vec3i v;
-    stringstream ss(s);
-    ss >> v[0];
-    ss >> v[1];
-    ss >> v[2];
-    return v;
-}
-
-Vec4i toVec4i(string s) {
-    Vec4i v;
-    stringstream ss(s);
-    ss >> v[0];
-    ss >> v[1];
-    ss >> v[2];
-    ss >> v[3];
-    return v;
-}
-
 template<> string toString(const posePtr& po) {
     return toString(po->pos()) + " " + toString(po->dir()) + " " + toString(po->up());
 }
@@ -195,55 +119,65 @@ template<> string typeName(const Color4f& t) { return "Vec4d"; }
 template<> string typeName(const VRAnimCbPtr& t) { return "void callback(float)"; }
 template<> string typeName(const Boundingbox& t) { return "Boundingbox"; }
 
-template<> bool toValue(stringstream& ss, string& s) { s = ss.str(); return true; }
-template<> bool toValue(stringstream& ss, bool& b) { return bool(ss >> b); }
-template<> bool toValue(stringstream& ss, int& i) { return bool(ss >> i); }
-template<> bool toValue(stringstream& ss, float& f) { return bool(ss >> f); }
-template<> bool toValue(stringstream& ss, double& d) { return bool(ss >> d); }
+template <typename T> int ssToVal(stringstream& ss, T& t) {
+    int N = ss.tellg();
+    ss >> t;
+    return int(ss.tellg()) - N;
+}
 
-template<> bool toValue(stringstream& ss, Vec2d& v) {
+template<> int toValue(stringstream& ss, string& s) { s = ss.str(); ss.seekg(0, ios::end); return ss.tellg(); }
+template<> int toValue(stringstream& ss, bool& v) { return ssToVal(ss, v); }
+template<> int toValue(stringstream& ss, int& v) { return ssToVal(ss, v); }
+template<> int toValue(stringstream& ss, unsigned int& v) { return ssToVal(ss, v); }
+template<> int toValue(stringstream& ss, float& v) { return ssToVal(ss, v); }
+template<> int toValue(stringstream& ss, double& v) { return ssToVal(ss, v); }
+
+int   toInt  (string s) { return toValue<int  >(s); }
+float toFloat(string s) { return toValue<float>(s); }
+
+template<> int toValue(stringstream& ss, Vec2d& v) {
     ss >> v[0];
     return bool(ss >> v[1]);
 }
 
-template<> bool toValue(stringstream& ss, Vec3d& v) {
+template<> int toValue(stringstream& ss, Vec3d& v) {
     ss >> v[0];
     ss >> v[1];
     return bool(ss >> v[2]);
 }
 
-template<> bool toValue(stringstream& ss, Vec4d& v) {
+template<> int toValue(stringstream& ss, Vec4d& v) {
     ss >> v[0];
     ss >> v[1];
     ss >> v[2];
     return bool(ss >> v[3]);
 }
 
-template<> bool toValue(stringstream& ss, Vec2i& v) {
+template<> int toValue(stringstream& ss, Vec2i& v) {
     ss >> v[0];
     return bool(ss >> v[1]);
 }
 
-template<> bool toValue(stringstream& ss, Vec3i& v) {
+template<> int toValue(stringstream& ss, Vec3i& v) {
     ss >> v[0];
     ss >> v[1];
     return bool(ss >> v[2]);
 }
 
-template<> bool toValue(stringstream& ss, Color3f& v) {
+template<> int toValue(stringstream& ss, Color3f& v) {
     ss >> v[0];
     ss >> v[1];
     return bool(ss >> v[2]);
 }
 
-template<> bool toValue(stringstream& ss, Color4f& v) {
+template<> int toValue(stringstream& ss, Color4f& v) {
     ss >> v[0];
     ss >> v[1];
     ss >> v[2];
     return bool(ss >> v[3]);
 }
 
-template<> bool toValue(stringstream& ss, pose& po) {
+template<> int toValue(stringstream& ss, pose& po) {
     Vec3d p,d,u;
     toValue(ss, p);
     toValue(ss, d);
@@ -252,7 +186,7 @@ template<> bool toValue(stringstream& ss, pose& po) {
     return b;
 }
 
-template<> bool toValue(stringstream& ss, posePtr& po) {
+template<> int toValue(stringstream& ss, posePtr& po) {
     Vec3d p,d,u;
     toValue(ss, p);
     toValue(ss, d);
@@ -262,7 +196,7 @@ template<> bool toValue(stringstream& ss, posePtr& po) {
     return b;
 }
 
-template<> bool toValue(stringstream& ss, Boundingbox& box) {
+template<> int toValue(stringstream& ss, Boundingbox& box) {
     Vec3d a,b;
     bool c;
     toValue(ss, a);

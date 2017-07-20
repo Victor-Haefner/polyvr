@@ -121,8 +121,8 @@ bool VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res
     states[5] = "colorIndex "; // x +1
     states[6] = "normalIndex "; // x +1
 
-    Vec3d color;
-    Vec3d last_col(-1,-1,-1);
+    Color3f color;
+    Color3f last_col(-1,-1,-1);
 
     Geo geo;
 
@@ -132,7 +132,7 @@ bool VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res
 
     //vector<VRGeometryPtr> geos;
     vector<Geo> geos;
-    map<Vec3d, VRMaterialPtr> mats;
+    map<Color3f, VRMaterialPtr> mats;
     bool new_obj = true;
     bool new_color = true;
     int li = 0;
@@ -150,7 +150,7 @@ bool VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res
                     case 0: break;
                     case 1:
                         new_obj = true;
-                        if (line.size() > 12) color = toVec3d( line.substr(12) );
+                        if (line.size() > 12) color = toValue<Color3f>( line.substr(12) );
                         if (mats.count(color) == 0) {
                             mats[color] = VRMaterial::create("fmat");
                             mats[color]->setDiffuse(Vec3f(color));

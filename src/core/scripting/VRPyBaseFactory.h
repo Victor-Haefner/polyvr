@@ -29,7 +29,7 @@ PyObject* proxyWrap<sT, R (T::*)(Args...), mf, O>::exec(sT* self, PyObject* args
     if (!self->valid()) return NULL;
     vector<PyObject*> params;
     for (int i=0; i<PyTuple_Size(args); i++) params.push_back(PyTuple_GetItem(args, i));
-    auto wrap = OSG::VRCallbackWrapperT<PyObject*, O, R (T::*)(Args...)>::create();
+    auto wrap = VRCallbackWrapperT<PyObject*, O, R (T::*)(Args...)>::create();
     wrap->callback = mf;
     PyObject* res = 0;
     bool success = wrap->execute(self->objPtr.get(), params, res);

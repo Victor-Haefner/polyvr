@@ -3,10 +3,8 @@
 
 #include <string>
 #include <vector>
-#include <OpenSG/OSGVector.h>
-#include <OpenSG/OSGColor.h>
-#include <OpenSG/OSGLine.h>
-#include "core/math/VRMathFwd.h"
+#include <memory>
+#include <sstream>
 
 using namespace std;
 
@@ -17,36 +15,16 @@ string toString(const T& s);
 string toString(const double& f, int d = -1);
 string toString(const float& f, int d = -1);
 
-// deprecated?
-bool toBool(string s, int* N = 0);
-int toInt(string s, int* N = 0);
-unsigned int toUInt(string s, int* N = 0);
-float toFloat(string s, int* N = 0);
-double toDouble(string s, int* N = 0);
-OSG::Vec2d toVec2d(string s);
-OSG::Vec3d toVec3d(string s);
-OSG::Vec4d toVec4d(string s);
-OSG::Vec2i toVec2i(string s);
-OSG::Vec3i toVec3i(string s);
-OSG::Vec4i toVec4i(string s);
-OSG::Pnt3d toPnt3f(string s);
-
 template<typename T> string typeName(const T& t);
 template<typename T> string typeName(const vector<T>& t) { return "list of "+typeName<T>(T()); }
 
-template<typename T> bool toValue(stringstream& s, T& t);
-template<typename T> bool toValue(string s, T& t){
-    stringstream ss(s);
-    return toValue(ss,t);
-}
+template<typename T> int toValue(stringstream& s, T& t);
+template<typename T> int toValue(string s, T& t) { stringstream ss(s); return toValue(ss,t); }
+template<typename T> int toValue(string s, std::shared_ptr<T>& t) { t = 0; return true; }
+template<typename T> int toValue(string s, vector<T>& t) { return true; }
+template<class T>    T   toValue(string s) { T t; toValue(s,t); return t; }
 
-template<typename T> bool toValue(string s, std::shared_ptr<T>& t) {
-    t = 0;
-    return true;
-}
-
-template<typename T> bool toValue(string s, vector<T>& t) {
-    return true;
-}
+int   toInt  (string s);
+float toFloat(string s);
 
 #endif // TOSTRING_H_INCLUDED

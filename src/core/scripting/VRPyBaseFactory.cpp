@@ -12,7 +12,8 @@
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGColor.h>
 
-OSG_BEGIN_NAMESPACE;
+using namespace OSG;
+
 template<>
 struct VRCallbackWrapper<PyObject*> : VRCallbackWrapperBase {
     VRCallbackWrapper() {}
@@ -37,7 +38,6 @@ template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VRRoadNetworkPt
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VRTerrainPtr& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const VRMaterialPtr& t) { return VRPyTypeCaster::cast(t); }
 template<> PyObject* VRCallbackWrapper<PyObject*>::convert(const posePtr& t) { return VRPyTypeCaster::cast(t); }
-OSG_END_NAMESPACE;
 
 using namespace OSG;
 

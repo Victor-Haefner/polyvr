@@ -1082,10 +1082,10 @@ static char* string_nextline(char* str, char* start, int len)
 	return NULL;                      // no new line found in buffer
 }
 
-static char* string_get_i(char* str, int* f) { if (!str) return 0; int N = 0; *f = toInt(str, &N); if (N == 0) return 0; return str+N; }
-static char* string_get_ui(char* str, unsigned int* f) { if (!str) return 0; int N = 0; *f = toUInt(str, &N); if (N == 0) return 0; return str+N; }
-static char* string_get_d(char* str, double* f) { if (!str) return 0; int N = 0; *f = toDouble(str, &N); if (N == 0) return 0; return str+N; }
-static char* string_get_f(char* str, float* f) { if (!str) return 0; int N = 0; *f = toFloat(str, &N); if (N == 0) return 0; return str+N; }
+static char* string_get_i(char* str, int* f) { if (!str) return 0; int N = 0; N = toValue(str, *f); if (N == 0) return 0; return str+N; }
+static char* string_get_ui(char* str, unsigned int* f) { if (!str) return 0; int N = 0; N = toValue(str, *f); if (N == 0) return 0; return str+N; }
+static char* string_get_d(char* str, double* f) { if (!str) return 0; int N = 0; N = toValue(str, *f); if (N == 0) return 0; return str+N; }
+static char* string_get_f(char* str, float* f) { if (!str) return 0; int N = 0; N = toValue(str, *f); if (N == 0) return 0; return str+N; }
 
 // Process next block '[...]' in string:
 // str (i): string

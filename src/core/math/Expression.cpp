@@ -49,7 +49,7 @@ void Expression::Node::setValue(Vec3d v) { value = new Value<Vec3d>(v); }
 void Expression::Node::setValue(string s) {
     int N = std::count(s.begin(), s.end(), ' ');
     if (N == 0) setValue(toFloat(s));
-    if (N == 2) setValue(toVec3d(s));
+    if (N == 2) setValue(toValue<Vec3d>(s));
 }
 
 string Expression::Node::toString() {

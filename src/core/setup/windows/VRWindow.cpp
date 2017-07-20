@@ -118,7 +118,7 @@ void VRWindow::save(xmlpp::Element* node) {
 }
 
 void VRWindow::load(xmlpp::Element* node) {
-    active = toBool( node->get_attribute("active")->get_value() );
+    active = toValue<bool>( node->get_attribute("active")->get_value() );
     type = toInt( node->get_attribute("type")->get_value() );
     width = toInt( node->get_attribute("width")->get_value() );
     height = toInt( node->get_attribute("height")->get_value() );

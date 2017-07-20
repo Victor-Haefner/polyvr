@@ -108,4 +108,12 @@ vector<xmlpp::Element*> VRStorage::getChildren(xmlpp::Element* e) {
     return res;
 }
 
+int getID(xmlpp::Element* el) {
+    if (!el->get_attribute("ID")) return -1;
+    string _ID = el->get_attribute("ID")->get_value();
+    int ID;
+    toValue( _ID, ID );
+    return ID;
+}
+
 OSG_END_NAMESPACE;

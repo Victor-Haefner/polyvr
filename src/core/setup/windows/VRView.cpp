@@ -546,20 +546,20 @@ void VRView::save(xmlpp::Element* node) {
 }
 
 void VRView::load(xmlpp::Element* node) {
-    stereo = toBool(node->get_attribute("stereo")->get_value());
-    active_stereo = toBool(node->get_attribute("active_stereo")->get_value());
-    projection = toBool(node->get_attribute("projection")->get_value());
-    eyeinverted = toBool(node->get_attribute("eye_inverted")->get_value());
+    stereo = toValue<bool>(node->get_attribute("stereo")->get_value());
+    active_stereo = toValue<bool>(node->get_attribute("active_stereo")->get_value());
+    projection = toValue<bool>(node->get_attribute("projection")->get_value());
+    eyeinverted = toValue<bool>(node->get_attribute("eye_inverted")->get_value());
     eyeSeparation = toFloat(node->get_attribute("eye_separation")->get_value());
-    position = toVec4d(node->get_attribute("position")->get_value());
-    proj_center = toVec3d(node->get_attribute("center")->get_value());
-    proj_normal = toVec3d(node->get_attribute("normal")->get_value());
-    if (node->get_attribute("user_pos")) proj_user = toVec3d(node->get_attribute("user_pos")->get_value());
-    proj_up = toVec3d(node->get_attribute("up")->get_value());
-    proj_size = toVec2d(node->get_attribute("size")->get_value());
-    if (node->get_attribute("shear")) proj_shear = toVec2d(node->get_attribute("shear")->get_value());
-    if (node->get_attribute("warp")) proj_warp = toVec2d(node->get_attribute("warp")->get_value());
-    if (node->get_attribute("vsize")) window_size = toVec2i(node->get_attribute("vsize")->get_value());
+    position = toValue<Vec4d>(node->get_attribute("position")->get_value());
+    proj_center = toValue<Vec3d>(node->get_attribute("center")->get_value());
+    proj_normal = toValue<Vec3d>(node->get_attribute("normal")->get_value());
+    if (node->get_attribute("user_pos")) proj_user = toValue<Vec3d>(node->get_attribute("user_pos")->get_value());
+    proj_up = toValue<Vec3d>(node->get_attribute("up")->get_value());
+    proj_size = toValue<Vec2d>(node->get_attribute("size")->get_value());
+    if (node->get_attribute("shear")) proj_shear = toValue<Vec2d>(node->get_attribute("shear")->get_value());
+    if (node->get_attribute("warp")) proj_warp = toValue<Vec2d>(node->get_attribute("warp")->get_value());
+    if (node->get_attribute("vsize")) window_size = toValue<Vec2i>(node->get_attribute("vsize")->get_value());
     if (node->get_attribute("user")) {
         user_name = node->get_attribute("user")->get_value();
         user = VRSetup::getCurrent()->getTracker(user_name);

@@ -400,7 +400,7 @@ vector<klink> parseLink(xNode* data, string model, attachment& parent) {
             a.joint = ajoint->value();
             a.joint = a.joint.substr(model.size()+1, a.joint.size()-model.size()-1);
             xNode* transNode = attachmentNode->first_node("translate");
-            a.translate = toVec3d(transNode->value());
+            a.translate = toValue<Vec3d>(transNode->value());
 
             for ( auto li : parseLink(attachmentNode, model, a));
             cout << l.id << " attachment added " << a.joint << endl;
@@ -434,7 +434,7 @@ kin_scene parseColladaKinematics(string data) {
                 xNode* nLimits = nRevolute->first_node("limits");
                 xNode* nMin = nLimits->first_node("min");
                 xNode* nMax = nLimits->first_node("max");
-                j.axis = toVec3d(nAxis->value());
+                j.axis = toValue<Vec3d>(nAxis->value());
                 float b1 = toFloat(nMin->value())/180.0*Pi;
                 float b2 = toFloat(nMax->value())/180.0*Pi;
                 j.bounds = Vec2d(b1, b2);

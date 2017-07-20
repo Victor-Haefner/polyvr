@@ -14,13 +14,13 @@
 
 using namespace OSG;
 
-string toString(VRPathtool::option& n) {
+template<> string toString(const VRPathtool::option& n) {
     stringstream ss;
     ss << n.resolution << " " << n.useControlHandles;
     return ss.str();
 }
 
-template<> bool toValue(stringstream& ss, VRPathtool::option& n) {
+template<> int toValue(stringstream& ss, VRPathtool::option& n) {
     bool b = true;
     b = bool(ss >> n.resolution);
     b = bool(ss >> n.useControlHandles);

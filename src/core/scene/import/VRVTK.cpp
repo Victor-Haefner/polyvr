@@ -192,9 +192,9 @@ void loadVtk_old(string path, VRTransformPtr res) {
     VRGeoData geo; // build geometry
 
     if (project.dataset == "STRUCTURED_POINTS") {
-        auto r = splitString( next() ); Vec3i dims = toVec3i( r[1] + " " + r[2] + " " + r[3] );
-             r = splitString( next() ); Vec3d p0 = toVec3d( r[1] + " " + r[2] + " " + r[3] );
-             r = splitString( next() ); Vec3d d = toVec3d( r[1] + " " + r[2] + " " + r[3] );
+        auto r = splitString( next() ); Vec3i dims = toValue<Vec3i>( r[1] + " " + r[2] + " " + r[3] );
+             r = splitString( next() ); Vec3d p0 = toValue<Vec3d>( r[1] + " " + r[2] + " " + r[3] );
+             r = splitString( next() ); Vec3d d = toValue<Vec3d>( r[1] + " " + r[2] + " " + r[3] );
 
         for (int k=0; k<dims[2]; k++) {
             for (int j=0; j<dims[1]; j++) {
@@ -207,12 +207,12 @@ void loadVtk_old(string path, VRTransformPtr res) {
     }
 
     if (project.dataset == "STRUCTURED_GRID") {
-        auto r = splitString( next() ); Vec3i dims = toVec3i( r[1] + " " + r[2] + " " + r[3] );
+        auto r = splitString( next() ); Vec3i dims = toValue<Vec3i>( r[1] + " " + r[2] + " " + r[3] );
              r = splitString( next() ); int N = toInt(r[1]); string type = r[2]; // points
 
         vector<Vec3d> points;
         for (int i=0; i<N; i++) {
-            Vec3d p = toVec3d( next() );
+            Vec3d p = toValue<Vec3d>( next() );
             points.push_back(p);
             geo.pushVert(p);
             geo.pushPoint();
@@ -229,7 +229,7 @@ void loadVtk_old(string path, VRTransformPtr res) {
 
     if (project.dataset == "POLYDATA") {
         auto r = splitString( next() ); int N = toInt(r[1]); string type = r[2]; // points
-        for (int i=0; i<N; i++) geo.pushVert( toVec3d( next() ) );
+        for (int i=0; i<N; i++) geo.pushVert( toValue<Vec3d>( next() ) );
 
         while (next() != "") {
             r = splitString( line );

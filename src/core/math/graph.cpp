@@ -9,9 +9,9 @@ string toString(Graph::edge& e) {
     return toString(Vec3i(e.from, e.to, e.connection));
 }
 
-template<> bool toValue(stringstream& ss, Graph::edge& e) {
+template<> int toValue(stringstream& ss, Graph::edge& e) {
     Vec3i tmp;
-    bool b = toValue(ss, tmp);
+    auto b = toValue(ss, tmp);
     e.from = tmp[0];
     e.to = tmp[1];
     e.connection = Graph::CONNECTION(tmp[2]);
@@ -22,9 +22,8 @@ string toString(Graph::node& n) {
     return toString(n.box) + " " + toString(n.p);
 }
 
-template<> bool toValue(stringstream& ss, Graph::node& n) {
-    bool b = true;
-    b = toValue(ss, n.box);
+template<> int toValue(stringstream& ss, Graph::node& n) {
+    bool b = toValue(ss, n.box);
     b = b?toValue(ss, n.p):b;
     return b;
 }

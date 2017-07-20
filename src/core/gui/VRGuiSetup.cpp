@@ -638,7 +638,7 @@ void VRGuiSetup::on_pos_edit() {
     string x1 = getTextEntry("entry53");
     string y0 = getTextEntry("entry56");
     string y1 = getTextEntry("entry57");
-    Vec4d pos = toVec4d(x0 + " " + y0 + " " + x1 + " " + y1);
+    Vec4d pos = toValue<Vec4d>(x0 + " " + y0 + " " + x1 + " " + y1);
 
     VRView* view = (VRView*)selected_object;
     view->setPosition(pos);

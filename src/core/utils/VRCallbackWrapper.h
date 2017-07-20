@@ -4,8 +4,6 @@
 #include "VRUtilsFwd.h"
 #include "toString.h"
 
-OSG_BEGIN_NAMESPACE;
-
 struct VRCallbackWrapperBase {
     static string err;
 };
@@ -20,7 +18,5 @@ struct VRCallbackWrapper : VRCallbackWrapperBase {
 
     virtual bool execute(void* obj, const vector<Param>& params, Param& result) = 0;
 };
-
-OSG_END_NAMESPACE;
 
 #endif // VRCALLBACKWRAPPER_H_INCLUDED

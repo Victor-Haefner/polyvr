@@ -8,9 +8,10 @@
 #include "VRFwdDeclTemplate.h"
 
 
+ptrTemplateFwd(VRCallbackWrapper, VRCallbackStrWrapper, std::string);
+ptrTemplateFwd(VRCallbackWrapper, VRCallbackPyWrapper, PyObject*);
+
 namespace OSG {
-    ptrTemplateFwd(VRCallbackWrapper, VRCallbackStrWrapper, std::string);
-    ptrTemplateFwd(VRCallbackWrapper, VRCallbackPyWrapper, PyObject*);
     ptrFwd(VRVisualLayer);
     ptrFwd(VRProgress);
 }

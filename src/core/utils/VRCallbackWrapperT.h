@@ -47,8 +47,6 @@ if (i < params.size()) { \
 
 #define MACRO_GET_STR(str) MACRO_GET_16(str, 0), 0 //guard for longer strings
 
-OSG_BEGIN_NAMESPACE;
-
 template<char... C>
 struct VRCallbackWrapperParams {
     static int size() {
@@ -282,7 +280,5 @@ struct VRCallbackWrapperT<P, U, void (T::*)(Args...)> : public VRCallbackWrapper
         return true;
     }
 };
-
-OSG_END_NAMESPACE;
 
 #endif // VRCALLBACKWRAPPERT_H_INCLUDED

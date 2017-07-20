@@ -77,15 +77,15 @@ void VRStorage::save_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag
     }
 }
 
+int getID(xmlpp::Element* el);
+
 template<typename T>
 void VRStorage::load_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e) {
     if (under) e = getChild(e, tag);
     if (!e) return;
     for (auto el : getChildren(e)) {
-        string _ID;
-        if (el->get_attribute("ID")) _ID = el->get_attribute("ID")->get_value();
-        else { cout << "VRStorage::load_int_objmap_cb Error: object " << el->get_name() << " in map '" << tag << "' has no attribute ID!\n"; return; }
-        int ID = toInt( _ID );
+        int ID = getID(el);
+        if (ID < 0) { cout << "VRStorage::load_int_objmap_cb Error: object " << el->get_name() << " in map '" << tag << "' has no attribute ID!\n"; return; }
         if (mt->count(ID) == 0) {
             auto t = T::create();
             t->load(el);
@@ -130,8 +130,7 @@ void VRStorage::load_int_map_cb(map<int, T*>* mt, string tag, bool under, xmlpp:
     if (under) e = getChild(e, tag);
     if (!e) return;
     for (auto el : getChildren(e)) {
-        string _ID = el->get_attribute("ID")->get_value();
-        int ID = toInt( _ID );
+        int ID = getID(el);
         if (mt->count(ID) == 0) {
             T* o = new T();
             o->load(el);
@@ -145,8 +144,7 @@ void VRStorage::load_int_map2_cb(map<int, T>* mt, string tag, bool under, xmlpp:
     if (under) e = getChild(e, tag);
     if (!e) return;
     for (auto el : getChildren(e)) {
-        string _ID = el->get_attribute("ID")->get_value();
-        int ID = toInt( _ID );
+        int ID = getID(el);
         if (mt->count(ID) == 0) {
             T o;
             toValue( el->get_attribute("data")->get_value(), o);
