@@ -40,8 +40,8 @@ class VRThread;
 
 class VRPhysicsManager {
      private:
-        vector<VRFunction<int>* > updateFktsPre;
-        vector<VRFunction<int>* > updateFktsPost;
+        vector<VRUpdateCbWeakPtr > updateFktsPre;
+        vector<VRUpdateCbWeakPtr > updateFktsPost;
         bool active = 1;
         bool skip = 1;
 
@@ -81,8 +81,8 @@ class VRPhysicsManager {
         void physicalize(VRTransformPtr obj);
         void unphysicalize(VRTransformPtr obj);
 
-        void addPhysicsUpdateFunction(VRFunction<int>* fkt, bool after);
-        void dropPhysicsUpdateFunction(VRFunction<int>* fkt, bool after);
+        void addPhysicsUpdateFunction(VRUpdateCbPtr fkt, bool after);
+        void dropPhysicsUpdateFunction(VRUpdateCbPtr fkt, bool after);
 
         void setPhysicsActive(bool a);
         void setGravity(Vec3d g);

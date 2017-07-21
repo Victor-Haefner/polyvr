@@ -15,7 +15,7 @@ namespace OSG {
     ptrFwd( VRThread );
 }
 
-ptrFctFwd( VRUpdate, int );
+ptrFctFwd( VRUpdate, void );
 ptrFctFwd( VRToggle, bool );
 ptrFctFwd( VREval, bool& );
 ptrFctFwd( VRAnim, float );

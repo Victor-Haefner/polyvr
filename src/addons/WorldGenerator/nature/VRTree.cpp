@@ -92,7 +92,7 @@ VRTree::VRTree(string name) : VRTransform(name) {
     store("seed", &seed);
     storeObjVec("branching", parameters, true);
     storeObjVec("foliage", foliage, true);
-    regStorageSetupFkt( VRFunction<int>::create("tree setup", boost::bind(&VRTree::setup, this)) );
+    regStorageSetupFkt( VRUpdateCb::create("tree setup", boost::bind(&VRTree::setup, this)) );
 }
 
 VRTree::~VRTree() {}

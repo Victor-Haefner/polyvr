@@ -52,7 +52,7 @@ VRGuiRecWidget::VRGuiRecWidget() {
 
     diag->show_all_children();
     diag->signal_response().connect( sigc::mem_fun(*this, &VRGuiRecWidget::buttonHandler) );
-    updateCb = VRFunction<int>::create("recorder widget", boost::bind(&VRGuiRecWidget::update, this) );
+    updateCb = VRUpdateCb::create("recorder widget", boost::bind(&VRGuiRecWidget::update, this) );
     VRSceneManager::get()->addUpdateFkt( updateCb );
 }
 

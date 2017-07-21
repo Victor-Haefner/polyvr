@@ -57,7 +57,7 @@ void ART_device::update() {
 
 
 ART::ART() {
-    updatePtr  = VRFunction<int>::create("ART_apply", boost::bind(&ART::applyEvents, this));
+    updatePtr  = VRUpdateCb::create("ART_apply", boost::bind(&ART::applyEvents, this));
     VRSceneManager::get()->addUpdateFkt(updatePtr);
 
     threadFkt = VRFunction< weak_ptr<VRThread> >::create("ART_fetch", boost::bind(&ART::updateT, this, _1));

@@ -86,7 +86,7 @@ PyObject* VRSceneGlobals::getSystemDirectory(VRSceneGlobals* self, PyObject *arg
 }
 
 PyObject* VRSceneGlobals::loadScene(VRSceneGlobals* self, PyObject *args) {
-    auto fkt = VRFunction<int>::create( "scheduled scene load", boost::bind(&VRSceneManager::loadScene, VRSceneManager::get(), parseString(args), false ) );
+    auto fkt = VRUpdateCb::create( "scheduled scene load", boost::bind(&VRSceneManager::loadScene, VRSceneManager::get(), parseString(args), false ) );
     VRSceneManager::get()->queueJob(fkt);
     Py_RETURN_TRUE;
 }
@@ -167,7 +167,7 @@ PyObject* VRSceneGlobals::pyTriggerScript(VRSceneGlobals* self, PyObject *args) 
     Py_RETURN_TRUE;
 }
 
-void execCall(PyObject* pyFkt, PyObject* pArgs, int i) {
+void execCall(PyObject* pyFkt, PyObject* pArgs, float f) {
     if (pyFkt == 0) return;
     PyGILState_STATE gstate = PyGILState_Ensure();
     if (PyErr_Occurred() != NULL) PyErr_Print();
@@ -224,8 +224,8 @@ PyObject* VRSceneGlobals::stackCall(VRSceneGlobals* self, PyObject *args) {
         if (type == "list") pArgs = PyList_AsTuple(pArgs);
     }
 
-    VRUpdateCbPtr fkt = VRFunction<int>::create( "pyExecCall", boost::bind(execCall, pyFkt, pArgs, _1) );
-    auto a = VRScene::getCurrent()->addAnimation(0, delay, fkt, 0, 0, false, true);
+    auto fkt = VRAnimCb::create( "pyExecCall", boost::bind(execCall, pyFkt, pArgs, _1) );
+    auto a = VRScene::getCurrent()->addAnimation(0, delay, fkt, 0.f, 0.f, false, true);
     Py_RETURN_TRUE;
 }
 

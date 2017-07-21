@@ -14,7 +14,7 @@ VRStatement::VRStatement(string s, int p) {
     setup();
 
     store("data", &statement);
-    regStorageSetupFkt( VRFunction<int>::create("statement setup", boost::bind(&VRStatement::setup, this)) );
+    regStorageSetupFkt( VRUpdateCb::create("statement setup", boost::bind(&VRStatement::setup, this)) );
 }
 
 void VRStatement::setup() { // parse statement

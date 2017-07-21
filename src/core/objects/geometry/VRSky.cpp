@@ -114,7 +114,7 @@ VRSky::VRSky() : VRGeometry("Sky") {
 
     allowCulling(false, true);
 
-    updatePtr = VRFunction<int>::create("sky update", boost::bind(&VRSky::update, this));
+    updatePtr = VRUpdateCb::create("sky update", boost::bind(&VRSky::update, this));
     VRScene::getCurrent()->addUpdateFkt(updatePtr);
 }
 

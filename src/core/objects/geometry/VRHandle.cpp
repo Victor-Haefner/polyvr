@@ -10,7 +10,7 @@ using namespace OSG;
 
 VRHandle::VRHandle(string name) : VRGeometry(name) {
     type = "Handle";
-    updateCb = VRFunction<int>::create("handle_update", boost::bind(&VRHandle::updateHandle, this) );
+    updateCb = VRUpdateCb::create("handle_update", boost::bind(&VRHandle::updateHandle, this) );
     setPickable(true);
     setPrimitive("Box", "0.1 0.1 0.1 1 1 1");
     auto m = VRMaterial::get("VRHandle");
@@ -83,5 +83,5 @@ void VRHandle::drop() {
 
 void VRHandle::setMatrix(Matrix4d m) { // for undo/redo
     VRTransform::setMatrix(m);
-    (*updateCb)(0); // problem: called non stop :(
+    (*updateCb)(); // problem: called non stop :(
 }

@@ -46,7 +46,7 @@ class VRGuiScripts {
         _GtkSourceLanguage* web = 0;
         _GtkSourceLanguage* glsl = 0;
         map<VRScript*, page> pages;
-	    shared_ptr<VRFunction<int> > updatePtr;
+	    VRUpdateCbPtr updatePtr;
 	    VRDeviceCbPtr sceneChangedCb;
 
         Gtk::Table* scriptImportWidget = 0;

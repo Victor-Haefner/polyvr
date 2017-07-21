@@ -15,8 +15,8 @@ VRUndoAtomPtr VRUndoAtom::create(string name) { return VRUndoAtomPtr( new VRUndo
 void VRUndoAtom::set(VRUpdateCbPtr f_undo, VRUpdateCbPtr f_redo, VREvalCbPtr f_valid) { this->f_undo = f_undo; this->f_redo = f_redo; this->f_valid = f_valid; }
 
 bool VRUndoAtom::valid() { bool b; (*f_valid)(b); return b; }
-bool VRUndoAtom::undo() { if (f_undo && valid()) (*f_undo)(0); else return 0; return 1;}
-bool VRUndoAtom::redo() { if (f_redo && valid()) (*f_redo)(0); else return 0; return 1; }
+bool VRUndoAtom::undo() { if (f_undo && valid()) (*f_undo)(); else return 0; return 1;}
+bool VRUndoAtom::redo() { if (f_redo && valid()) (*f_redo)(); else return 0; return 1; }
 
 
 

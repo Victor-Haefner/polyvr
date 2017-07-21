@@ -36,7 +36,7 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
     store("far", &farClipPlaneCoeff);
     store("aspect", &aspect);
     store("fov", &fov);
-    regStorageSetupFkt( VRFunction<int>::create("camera_update", boost::bind(&VRCamera::setup, this)) );
+    regStorageSetupFkt( VRUpdateCb::create("camera_update", boost::bind(&VRCamera::setup, this)) );
 
     // cam geo
     TransformMTRecPtr trans = Transform::create();

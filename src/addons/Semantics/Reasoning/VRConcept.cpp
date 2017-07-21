@@ -22,7 +22,7 @@ VRConcept::VRConcept(string name, VROntologyPtr o) {
     storeMap("Parents", &parents, true);
     storeMap("Properties", &properties, true);
     storeMap("Annotations", &annotations, true);
-    regStorageSetupFkt( VRFunction<int>::create("concept setup", boost::bind(&VRConcept::setup, this)) );
+    regStorageSetupFkt( VRUpdateCb::create("concept setup", boost::bind(&VRConcept::setup, this)) );
 }
 
 VRConcept::~VRConcept() {

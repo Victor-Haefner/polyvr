@@ -26,7 +26,7 @@ void Emitter::set(btDiscreteDynamicsWorld* world, vector<Particle*> particlesV, 
 
     static int ID = 0;
     id = ID; ID++;
-    fkt = VRFunction<int>::create("particles_update", boost::bind(&Emitter::emitterLoop, this));
+    fkt = VRUpdateCb::create("particles_update", boost::bind(&Emitter::emitterLoop, this));
 }
 
 Emitter::~Emitter() {

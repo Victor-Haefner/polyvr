@@ -54,8 +54,8 @@ VRLight::VRLight(string name) : VRObject(name) {
     store("specular", &lightSpecular);
     store("shadowColor", &shadowColor);
     storeObjName("beacon", &beacon, &beacon_name);
-    regStorageSetupFkt( VRFunction<int>::create("light setup", boost::bind(&VRLight::setup, this)) );
-    regStorageSetupAfterFkt( VRFunction<int>::create("light setup after", boost::bind(&VRLight::setup_after, this)) );
+    regStorageSetupFkt( VRUpdateCb::create("light setup", boost::bind(&VRLight::setup, this)) );
+    regStorageSetupAfterFkt( VRUpdateCb::create("light setup after", boost::bind(&VRLight::setup_after, this)) );
 
     // test scene
     //shadow_test_scene* sts = new shadow_test_scene();

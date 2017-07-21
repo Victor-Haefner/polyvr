@@ -27,12 +27,12 @@ class VRCallbackManager {
         };
 
         bool updateListsChanged;
-        map<VRFunction<int>* , job> jobFktPtrs;
+        map<VRUpdateCb*, job> jobFktPtrs;
         map<int, list<timeoutFkt>* > timeoutFktPtrs;
         map<int, list<VRUpdateCbWeakPtr>* > updateFktPtrs;
         map<int, list<VRUpdateCbWeakPtr>* >::reverse_iterator fktPtr_list_itr;
         list<VRUpdateCbWeakPtr>::iterator fktPtr_itr;
-        map<VRFunction<int>* , int> updateFktPtrs_priorities;//to easier delete functions
+        map<VRUpdateCb*, int> updateFktPtrs_priorities;//to easier delete functions
 
     public:
         VRCallbackManager();

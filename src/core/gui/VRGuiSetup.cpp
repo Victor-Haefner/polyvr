@@ -931,7 +931,7 @@ VRGuiSetup::VRGuiSetup() {
     mwindow = 0;
     guard = true;
 
-    updatePtr = VRFunction<int>::create("Setup_gui", boost::bind(&VRGuiSetup::updateStatus, this));
+    updatePtr = VRUpdateCb::create("Setup_gui", boost::bind(&VRGuiSetup::updateStatus, this));
     VRSceneManager::get()->addUpdateFkt(updatePtr);
 
     menu = new VRGuiContextMenu("SetupMenu");

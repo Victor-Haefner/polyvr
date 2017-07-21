@@ -134,7 +134,7 @@ VRPN::VRPN() {
     //auto update_cb = new VRFunction<VRThread*>("VRPN_update", boost::bind(&VRPN::update_t, this, _1));
     //threadID = VRSceneManager::get()->initThread(update_cb, "VRPN", true);
 
-    updatePtr = VRFunction<int>::create("VRPN_update", boost::bind(&VRPN::update, this));
+    updatePtr = VRUpdateCb::create("VRPN_update", boost::bind(&VRPN::update, this));
     VRSceneManager::get()->addUpdateFkt(updatePtr);
 
     vrpn_System_TextPrinter.set_ostream_to_use(NULL);
@@ -390,7 +390,7 @@ void VRPN::startVRPNTestServer() {
 
     cout << "Created VRPN server." << endl;
 
-    testServer = VRFunction<int>::create("VRPN_test_server", boost::bind(vrpn_test_server_main));
+    testServer = VRUpdateCb::create("VRPN_test_server", boost::bind(vrpn_test_server_main));
     VRSceneManager::get()->addUpdateFkt(testServer);
 
     //static VRThreadCbPtr update_cb = VRThreadCb::create("VRPN_test_server", boost::bind(vrpn_test_server_main_t, _1));

@@ -73,7 +73,7 @@ class CEF {
         void update();
 
         void mouse(int lb, int rb, int wu, int wd, OSG::VRDeviceWeakPtr dev);
-        void mouse_move(OSG::VRDeviceWeakPtr dev, int i);
+        void mouse_move(OSG::VRDeviceWeakPtr dev);
         void keyboard(OSG::VRDeviceWeakPtr dev);
 
         CEF();

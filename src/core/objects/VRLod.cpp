@@ -16,7 +16,7 @@ VRLod::VRLod(string name) : VRObject(name) {
 
     store("center", &center);
     store("distances", &distances_string);
-    regStorageSetupFkt( VRFunction<int>::create("lod setup", boost::bind(&VRLod::loadSetup, this)) );
+    regStorageSetupFkt( VRUpdateCb::create("lod setup", boost::bind(&VRLod::loadSetup, this)) );
 }
 
 VRLod::~VRLod() {}

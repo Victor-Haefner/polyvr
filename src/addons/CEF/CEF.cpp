@@ -69,7 +69,7 @@ CefRefPtr<CEF_handler> CEF_client::getHandler() { return handler; }
 CEF::CEF() {
     global_initiate();
     client = new CEF_client();
-    update_callback = VRFunction<int>::create("webkit_update", boost::bind(&CEF::update, this));
+    update_callback = VRUpdateCb::create("webkit_update", boost::bind(&CEF::update, this));
     auto scene = VRScene::getCurrent();
     if (scene) scene->addUpdateFkt(update_callback);
 }
@@ -181,7 +181,7 @@ void CEF::addMouse(VRDevicePtr dev, VRObjectWeakPtr obj, int lb, int rb, int wu,
     dev->addSignal(-1,0)->add(mouse_dev_callback[k]);
     dev->addSignal(-1,1)->add(mouse_dev_callback[k]);
 
-    if (!mouse_move_callback.count(k)) mouse_move_callback[k] = VRFunction<int>::create( "CEF::MM", boost::bind(&CEF::mouse_move, this, dev, _1) );
+    if (!mouse_move_callback.count(k)) mouse_move_callback[k] = VRUpdateCb::create( "CEF::MM", boost::bind(&CEF::mouse_move, this, dev) );
     auto scene = VRScene::getCurrent();
     if (scene) scene->addUpdateFkt(mouse_move_callback[k]);
 }
@@ -193,7 +193,7 @@ void CEF::addKeyboard(VRDevicePtr dev) {
     dev->addSignal(-1, 1)->add( keyboard_dev_callback );
 }
 
-void CEF::mouse_move(VRDeviceWeakPtr d, int i) {
+void CEF::mouse_move(VRDeviceWeakPtr d) {
     auto dev = d.lock();
     if (!dev) return;
     auto geo = obj.lock();

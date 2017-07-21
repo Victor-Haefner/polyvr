@@ -20,8 +20,8 @@ class VRGuiBits {
         Gtk::Notebook* terminal;
         map<string, VRConsoleWidgetPtr> consoles;
 
-	    shared_ptr<VRFunction<int> > updatePtr;
-	    shared_ptr<VRFunction<bool> > recToggleCb;
+	    VRUpdateCbPtr updatePtr;
+	    VRToggleCbPtr recToggleCb;
 
         VRGuiRecWidget recorder;
         VRVisualLayerPtr recorder_visual_layer;

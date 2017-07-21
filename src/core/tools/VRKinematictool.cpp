@@ -36,7 +36,7 @@ VRJointTool::VRJointTool(string name) : VRGeometry(name) {
     //store("jt_active", &active);
     //store("jt_lastAppended", &lastAppended);
 
-    regStorageSetupAfterFkt( VRFunction<int>::create("jointtool setup", boost::bind(&VRJointTool::delayed_setup, this)) );
+    regStorageSetupAfterFkt( VRUpdateCb::create("jointtool setup", boost::bind(&VRJointTool::delayed_setup, this)) );
 }
 
 VRJointTool::~VRJointTool() {

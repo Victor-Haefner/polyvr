@@ -159,7 +159,7 @@ VRLodLeafPtr VRLodTree::remObject(VRTransformPtr obj) { // TODO, finish it!
 VRWoods::VRWoods(string name) : VRLodTree(name, 5) {
     storeMap("templateTrees", &treeTemplates, true);
     storeMap("trees", &treeEntries, true);
-    regStorageSetupFkt( VRFunction<int>::create("woods setup", boost::bind(&VRWoods::setup, this)) );
+    regStorageSetupFkt( VRUpdateCb::create("woods setup", boost::bind(&VRWoods::setup, this)) );
 }
 
 VRWoods::~VRWoods() {}

@@ -51,9 +51,9 @@ xmlpp::Element* VRStorage::saveUnder(xmlpp::Element* e, int p, string t) {
 
 void VRStorage::load(xmlpp::Element* e) {
     if (e == 0) return;
-    for (auto f : f_setup_before) (*f)(0);
+    for (auto f : f_setup_before) (*f)();
     for (auto s : storage) (*s.second.f1)(e);
-    for (auto f : f_setup) (*f)(0);
+    for (auto f : f_setup) (*f)();
     for (auto f : f_setup_after) VRSceneManager::get()->queueJob(f);
     f_setup_after.clear();
 }

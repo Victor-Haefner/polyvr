@@ -24,7 +24,7 @@ vector<VRBaseCbWeakPtr> VRSignal_base::getCallbacks() { return callbacksPtr; }
 
 VRSignal::VRSignal(VRDevicePtr _dev) : event(_dev.get()) {
     VRDevicePtr data;
-    trig_fkt = VRFunction<int>::create("Signal_trigger", boost::bind(&VRSignal::triggerPtr<VRDevice>, this, data));
+    trig_fkt = VRUpdateCb::create("Signal_trigger", boost::bind(&VRSignal::triggerPtr<VRDevice>, this, data));
 }
 
 VRSignal::~VRSignal() {}

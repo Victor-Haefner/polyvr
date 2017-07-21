@@ -40,12 +40,12 @@ void VRMainInterface::on_scene_clicked(VRDeviceWeakPtr d) {
     update();
 }
 
-void start_demo_proxy(string path, int i) {
+void start_demo_proxy(string path) {
     auto sm = VRSceneManager::get();
     sm->loadScene(path);
 }
 
-void switch_eyes_proxy(string view, int i) {
+void switch_eyes_proxy(string view) {
     auto v = VRSetup::getCurrent()->getView( view );
     v->swapEyes( !v->eyesInverted() );
     VRSetup::getCurrent()->save();
@@ -83,7 +83,7 @@ string VRMainInterface::handleRequest(map<string, string> params) {
     }
 
     if (var == "start") {
-        auto fkt = VRUpdateCb::create("start_demo", boost::bind(start_demo_proxy, param, _1) );
+        auto fkt = VRUpdateCb::create("start_demo", boost::bind(start_demo_proxy, param) );
         VRSceneManager::get()->queueJob(fkt);
     }
 
@@ -94,7 +94,7 @@ string VRMainInterface::handleRequest(map<string, string> params) {
             for ( auto v : VRSetup::getCurrent()->getViews() ) err += "'"+v->getName()+"' ";
             return err;
         }
-        auto fkt = VRUpdateCb::create("sitch_eyes", boost::bind(switch_eyes_proxy, param, _1) );
+        auto fkt = VRUpdateCb::create("sitch_eyes", boost::bind(switch_eyes_proxy, param) );
         VRSceneManager::get()->queueJob(fkt);
     }
 

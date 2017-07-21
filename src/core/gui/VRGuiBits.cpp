@@ -106,7 +106,7 @@ void VRGuiBits::on_internal_close_clicked() {
     diag->hide();
 }
 
-void VRGuiBits_on_internal_update(int i) {
+void VRGuiBits_on_internal_update() {
     VRInternalMonitor* mnr = VRInternalMonitor::get();
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("liststore4"));
     store->clear();
@@ -274,7 +274,7 @@ VRGuiBits::VRGuiBits() {
     box->show_all();
     terminal->signal_switch_page().connect( sigc::mem_fun(*this, &VRGuiBits::on_console_switch) );
 
-    updatePtr = VRFunction<int>::create( "IntMonitor_guiUpdate", VRGuiBits_on_internal_update );
+    updatePtr = VRUpdateCb::create( "IntMonitor_guiUpdate", VRGuiBits_on_internal_update );
     VRSceneManager::get()->addUpdateFkt(updatePtr);
 
     updateVisualLayer();

@@ -53,7 +53,7 @@ HTTP_args* HTTP_args::copy() {
     return res;
 }
 
-void server_answer_job(HTTP_args* args, int i) {
+void server_answer_job(HTTP_args* args) {
     if (VRLog::tag("net")) {
         stringstream ss; ss << "server_answer_job: " << args->cb << endl;
         VRLog::log("net", ss.str());
@@ -192,7 +192,7 @@ static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_eve
             if (!sad->serv->websocket_ids.count(conn)) { wslid++; sad->serv->websocket_ids[conn] = wslid; sad->serv->websockets[wslid] = conn; }
             sad->ws_id = sad->serv->websocket_ids[conn];
 
-            shared_ptr<VRFunction<int> > fkt = VRFunction<int>::create("HTTP_answer_job", boost::bind(server_answer_job, sad->copy(), _1));
+            auto fkt = VRUpdateCb::create("HTTP_answer_job", boost::bind(server_answer_job, sad->copy()));
             VRSceneManager::get()->queueJob(fkt);
             return MG_TRUE;
         }
@@ -230,7 +230,7 @@ static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_eve
         }
 
         //--- process request --------
-        shared_ptr<VRFunction<int> > fkt = VRFunction<int>::create("HTTP_answer_job", boost::bind(server_answer_job, sad->copy(), _1));
+        auto fkt = VRUpdateCb::create("HTTP_answer_job", boost::bind(server_answer_job, sad->copy()));
         VRSceneManager::get()->queueJob(fkt);
         return MG_TRUE;
     }
@@ -248,7 +248,7 @@ VRSocket::VRSocket(string name) {
     http_serv = 0;
 
     setOverrideCallbacks(true);
-    queued_signal = VRFunction<int>::create("signal_trigger", boost::bind(&VRSocket::trigger, this));
+    queued_signal = VRUpdateCb::create("signal_trigger", boost::bind(&VRSocket::trigger, this));
     sig = VRSignal::create();
     setNameSpace("Sockets");
     setName(name);

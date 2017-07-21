@@ -17,7 +17,7 @@ VRFluids::VRFluids(string name, bool spawnParticles) : VRParticles(name, false) 
 
 VRFluids::~VRFluids() {
     VRScenePtr scene = VRScene::getCurrent();
-    if (scene) scene->dropPhysicsUpdateFunction(fluidFkt.get(), this->afterBullet);
+    if (scene) scene->dropPhysicsUpdateFunction(fluidFkt, this->afterBullet);
 }
 
 shared_ptr<VRFluids> VRFluids::create(string name) {
@@ -36,16 +36,16 @@ void VRFluids::setFunctions(int from, int to) {
         }
         // enable graphical updates
         scene->dropUpdateFkt(fkt);
-        fkt = VRFunction<int>::create("particles_update", boost::bind(&VRFluids::updateParticles, this,from,to));
+        fkt = VRUpdateCb::create("particles_update", boost::bind(&VRFluids::updateParticles, this,from,to));
         scene->addUpdateFkt(fkt);
         // enable physic updates
-        scene->dropPhysicsUpdateFunction(fluidFkt.get(), this->afterBullet);
+        scene->dropPhysicsUpdateFunction(fluidFkt, this->afterBullet);
         if (this->simulation == SPH) {
-            fluidFkt = VRFunction<int>::create("sph_update", boost::bind(&VRFluids::updateSPH, this,from,to));
+            fluidFkt = VRUpdateCb::create("sph_update", boost::bind(&VRFluids::updateSPH, this,from,to));
         } else if (this->simulation == XSPH) {
-            fluidFkt = VRFunction<int>::create("xsph_update", boost::bind(&VRFluids::updateXSPH, this,from,to));
+            fluidFkt = VRUpdateCb::create("xsph_update", boost::bind(&VRFluids::updateXSPH, this,from,to));
         }
-        scene->addPhysicsUpdateFunction(fluidFkt.get(), this->afterBullet);
+        scene->addPhysicsUpdateFunction(fluidFkt, this->afterBullet);
     }
     printf("VRFluids::setFunctions(from=%i, to=%i)\n", from, to);
 }
@@ -55,7 +55,7 @@ void VRFluids::disableFunctions() {
         BLock lock(mtx());
         VRScenePtr scene = VRScene::getCurrent();
         scene->dropUpdateFkt(fkt);
-        scene->dropPhysicsUpdateFunction(fluidFkt.get(), this->afterBullet);
+        scene->dropPhysicsUpdateFunction(fluidFkt, this->afterBullet);
     }
 }
 

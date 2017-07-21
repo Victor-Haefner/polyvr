@@ -27,7 +27,7 @@ void VRObjectManager::Entry::set(posePtr p, string t) {
 VRObjectManager::VRObjectManager(string name) : VRObject(name) {
     storeMap("templates", &templatesByName, true);
     storeMap("instances", &entries, true);
-    regStorageSetupFkt( VRFunction<int>::create("object manager setup", boost::bind(&VRObjectManager::setup, this)) );
+    regStorageSetupFkt( VRUpdateCb::create("object manager setup", boost::bind(&VRObjectManager::setup, this)) );
 }
 
 VRObjectManager::~VRObjectManager() {}

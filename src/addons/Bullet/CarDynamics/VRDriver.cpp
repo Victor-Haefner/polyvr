@@ -10,7 +10,7 @@ using namespace OSG;
 
 VRDriver::VRDriver() {
     auto scene = VRScene::getCurrent();
-    updatePtr = VRFunction<int>::create("driver_update", boost::bind(&VRDriver::update, this));
+    updatePtr = VRUpdateCb::create("driver_update", boost::bind(&VRDriver::update, this));
     scene->addUpdateFkt(updatePtr);
 }
 

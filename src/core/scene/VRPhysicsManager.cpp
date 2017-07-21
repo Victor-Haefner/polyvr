@@ -59,7 +59,7 @@ VRPhysicsManager::VRPhysicsManager() {
     softBodyWorldInfo->water_normal	= btVector3(0,0,0);
 
 
-    updatePhysObjectsFkt = VRFunction<int>::create("Physics object update", boost::bind(&VRPhysicsManager::updatePhysObjects, this));
+    updatePhysObjectsFkt = VRUpdateCb::create("Physics object update", boost::bind(&VRPhysicsManager::updatePhysObjects, this));
     updatePhysicsFkt = VRFunction< VRThreadWeakPtr >::create("Physics update", boost::bind(&VRPhysicsManager::updatePhysics, this, _1));
 
     physics_visual_layer = VRVisualLayer::getLayer("Physics", "physics.png", 1);
@@ -122,9 +122,9 @@ void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
         {
             MLock lock(mtx);
             prepareObjects();
-            for (auto f : updateFktsPre) (*f)(0);
+            for (auto f : updateFktsPre) (*(f.lock()))();
             dynamicsWorld->stepSimulation(1e-6*dt, 30);
-            for (auto f : updateFktsPost) (*f)(0);
+            for (auto f : updateFktsPost) (*(f.lock()))();
         }
     }
 
@@ -140,17 +140,17 @@ void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
     if (t3-t1 > 0) fps = 1e6/(t3-t1);
 }
 
-void VRPhysicsManager::addPhysicsUpdateFunction(VRFunction<int>* fkt, bool after) {
+void VRPhysicsManager::addPhysicsUpdateFunction(VRUpdateCbPtr fkt, bool after) {
     MLock lock(mtx);
     if (after) updateFktsPost.push_back(fkt);
     else updateFktsPre.push_back(fkt);
 }
 
-void VRPhysicsManager::dropPhysicsUpdateFunction(VRFunction<int>* fkt, bool after) {
+void VRPhysicsManager::dropPhysicsUpdateFunction(VRUpdateCbPtr fkt, bool after) {
     MLock lock(mtx);
-    vector<VRFunction<int>* >* fkts = after ? &updateFktsPost : &updateFktsPre;
-    for(unsigned int i = 0; i < fkts->size() ; i++) {
-        if(fkts->at(i) == fkt) {fkts->erase(fkts->begin() + i);return;}
+    auto& fkts = after ? updateFktsPost : updateFktsPre;
+    for (unsigned int i = 0; i < fkts.size() ; i++) {
+        if (fkts[i].lock() == fkt) { fkts.erase(fkts.begin() + i); return; }
     }
  }
 

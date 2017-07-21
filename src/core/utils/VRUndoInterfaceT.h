@@ -16,8 +16,8 @@ void OSG::VRUndoInterface::recUndo(F f, std::shared_ptr<O> o, V v1, V v2) {
     if (!u) return;
     if (v1 == v2) return;
 
-    auto f_undo = VRFunction<int>::create( "undo", boost::bind(f, o.get(), v1) );
-    auto f_redo = VRFunction<int>::create( "redo", boost::bind(f, o.get(), v2) );
+    auto f_undo = VRUpdateCb::create( "undo", boost::bind(f, o.get(), v1) );
+    auto f_redo = VRUpdateCb::create( "redo", boost::bind(f, o.get(), v2) );
 
     std::weak_ptr<O> ow = o;
     auto f_valid = VRFunction<bool&>::create( "undo_valid", boost::bind(OSG_VRUndoInterface_valid<O>, ow, _1) );

@@ -9,7 +9,7 @@ using namespace std;
 
 VRMillingWorkPiece::VRMillingWorkPiece(string name) : VRGeometry(name), rootElement(nullptr) {
 	type = "MillingWorkPiece";
-	uFkt = VRFunction<int>::create("MillingWorkPiece-update", boost::bind(&VRMillingWorkPiece::update, this));
+	uFkt = VRUpdateCb::create("MillingWorkPiece-update", boost::bind(&VRMillingWorkPiece::update, this));
 	VRScene::getCurrent()->addUpdateFkt(uFkt);
 }
 

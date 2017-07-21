@@ -338,7 +338,7 @@ VRGuiSemantics::VRGuiSemantics() {
 
     // layout update cb
     auto sm = VRSceneManager::get();
-    updateLayoutCb = VRFunction<int>::create("layout_update", boost::bind(&VRGuiSemantics::updateLayout, this));
+    updateLayoutCb = VRUpdateCb::create("layout_update", boost::bind(&VRGuiSemantics::updateLayout, this));
     sm->addUpdateFkt(updateLayoutCb);
 
     layout = VRGraphLayout::create();

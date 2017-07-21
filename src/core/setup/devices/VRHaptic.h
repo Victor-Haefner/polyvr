@@ -17,8 +17,8 @@ class VRHaptic : public VRDevice {
         virtuose* v;
         string IP;
         string type;
-        VRFunction<int>* updateFktPre;
-        VRFunction<int>* updateFktPost;
+        VRUpdateCbPtr updateFktPre;
+        VRUpdateCbPtr updateFktPost;
         Vec3i button_states;
         VRUpdateCbPtr timestepWatchdog;
         VRUpdateCbPtr updatePtr;

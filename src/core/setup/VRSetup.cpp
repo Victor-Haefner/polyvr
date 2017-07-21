@@ -107,7 +107,7 @@ void VRSetup::setupLESCCAVELights(VRScenePtr scene) {
     //triggerScript(name);
     //cout << "VRSetup::setupLESCCAVELights B\n";
 
-    static auto fkt1 = VRFunction<int>::create("setup loading lights cb", boost::bind(updateLoadingLights, _1));
+    static auto fkt1 = VRAnimCb::create("setup loading lights cb", boost::bind(updateLoadingLights, _1));
     auto p = scene->getLoadingProgress();
     if (lightAvailable) {
         p->setCallback(fkt1);

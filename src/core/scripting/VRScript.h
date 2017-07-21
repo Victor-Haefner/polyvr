@@ -12,6 +12,7 @@
 #include "core/setup/devices/VRSignal.h"
 #include "../networking/VRSocket.h"
 #include "core/utils/VRName.h"
+#include "core/utils/VRGlobals.h"
 #include "VRScriptFwd.h"
 
 namespace xmlpp{ class Element; }
@@ -74,10 +75,12 @@ class VRScript : public VRName {
         bool active = true;
         float execution_time = -1;
         Search search;
+        static VRGlobals::Int loadingFrame;
+        bool isInitScript = false;
 
         PyObject* getPyObj(arg* a);
 
-        shared_ptr<VRFunction<int> > cbfkt_sys;
+        VRUpdateCbPtr cbfkt_sys;
         VRFunction<VRDeviceWeakPtr>* cbfkt_dev;
         VRFunction<string>* cbfkt_soc;
 

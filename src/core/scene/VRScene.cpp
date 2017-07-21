@@ -37,7 +37,7 @@ VRScene::VRScene() {
     addUpdateFkt(updatePhysObjectsFkt);
 
     physicsThreadID = initThread(updatePhysicsFkt, "physics", true, 0);
-    loadingTimeCb = VRFunction<int>::create("loadingTimeCb", boost::bind(&VRScene::recLoadingTime, this));
+    loadingTimeCb = VRUpdateCb::create("loadingTimeCb", boost::bind(&VRScene::recLoadingTime, this));
 
     initDevices();
     VRMaterial::getDefault()->resetDefault();

@@ -105,10 +105,10 @@ void VRCallbackManager::updateCallbacks() {
             }
 
     for (auto cb : cbsPtr) { // trigger all callbacks
-        if ( auto scb = cb.lock()) (*scb)(0);
+        if ( auto scb = cb.lock()) (*scb)();
     }
 
-    map<VRFunction<int>* , job> delayedJobs;
+    map<VRUpdateCb* , job> delayedJobs;
     for (auto j : jobFktPtrs) {
         if (j.second.delay > 0) {
             j.second.delay--;
@@ -118,7 +118,7 @@ void VRCallbackManager::updateCallbacks() {
 
         if (j.second.ptr) {
             string name = j.second.ptr->getName();
-            (*j.second.ptr)(0);
+            (*j.second.ptr)();
         }
     }
     jobFktPtrs = delayedJobs;

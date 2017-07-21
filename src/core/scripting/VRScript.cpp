@@ -172,7 +172,7 @@ VRScript::VRScript(string _name) {
     setSeparator('_');
     setNameSpace("__script__");
     setName(_name);
-    cbfkt_sys = VRFunction<int>::create(_name + "_ScriptCallback_sys", boost::bind(&VRScript::execute, this));
+    cbfkt_sys = VRUpdateCb::create(_name + "_ScriptCallback_sys", boost::bind(&VRScript::execute, this));
     cbfkt_dev = new VRFunction<VRDeviceWeakPtr>(_name + "_ScriptCallback_dev", boost::bind(&VRScript::execute_dev, this, _1));
     cbfkt_soc = new VRFunction<string>(_name + "_ScriptCallback_soc", boost::bind(&VRScript::execute_soc, this, _1));
 
@@ -369,6 +369,7 @@ void VRScript::compile( PyObject* pGlobal, PyObject* pModVR ) {
 
 void VRScript::execute() {
     if (type == "Python") {
+        if (!isInitScript && VRGlobals::CURRENT_FRAME <= loadingFrame + 2) return;
         if (fkt == 0 || !active) return;
         PyGILState_STATE gstate = PyGILState_Ensure();
         if (PyErr_Occurred() != NULL) PyErr_Print();
@@ -535,11 +536,15 @@ void VRScript::load(xmlpp::Element* e) {
             if (t->trigger == "on_scene_load" && active) {
                 auto scene = VRScene::getCurrent();
                 scene->queueJob(cbfkt_sys);
+                isInitScript = true;
+                loadingFrame = VRGlobals::CURRENT_FRAME;
             }
         }
     }
 
     update();
 }
+
+VRGlobals::Int VRScript::loadingFrame = 0;
 
 OSG_END_NAMESPACE;

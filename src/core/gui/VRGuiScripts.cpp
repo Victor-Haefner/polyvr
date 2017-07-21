@@ -1357,7 +1357,7 @@ VRGuiScripts::VRGuiScripts() {
     setToolButtonSensitivity("toolbutton9", false);
 
     // update the list each frame to update the execution time
-    updatePtr = VRFunction<int>::create("scripts_gui_update",  boost::bind(&VRGuiScripts::update, this) );
+    updatePtr = VRUpdateCb::create("scripts_gui_update",  boost::bind(&VRGuiScripts::update, this) );
     VRSceneManager::get()->addUpdateFkt(updatePtr, 100);
 
     sceneChangedCb = VRFunction<VRDeviceWeakPtr>::create("GUI_sceneChanged", boost::bind(&VRGuiScripts::on_scene_changed, this) );

@@ -67,4 +67,26 @@ class VRFunction<T, void> : public VRFunction_base {
         }
 };
 
+template<>
+class VRFunction<void, void> : public VRFunction_base {
+    boost::function<void ()> fkt;
+    public:
+        VRFunction(string name, boost::function<void ()> fkt) : fkt(fkt) { this->name = name; }
+        ~VRFunction() {}
+
+        void operator()() {
+            try {
+                if (fkt) {
+                    t0();
+                    fkt();
+                    t1();
+                }
+            } catch (boost::exception& e) { printExcept(e); }
+        }
+
+        static std::shared_ptr<VRFunction<void> > create(string name, boost::function<void ()> fkt) {
+            return std::shared_ptr<VRFunction<void> >( new VRFunction<void>(name, fkt) );
+        }
+};
+
 #endif // VRFUNCTION_H_INCLUDED

@@ -43,7 +43,7 @@ VRTransform::VRTransform(string name) : VRObject(name) {
     store("at_dir", &orientation_mode);
     storeObj("constraint", constraint);
 
-    regStorageSetupFkt( VRFunction<int>::create("transform_update", boost::bind(&VRTransform::setup, this)) );
+    regStorageSetupFkt( VRUpdateCb::create("transform_update", boost::bind(&VRTransform::setup, this)) );
 }
 
 VRTransform::~VRTransform() {
