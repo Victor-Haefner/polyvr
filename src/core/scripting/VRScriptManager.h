@@ -64,6 +64,8 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         string getPyVRDescription(string mod, string type);
         string getPyVRMethodDoc(string mod, string type, string method);
 
+        void redirectPyOutput(string pyOutput, string console);
+
         template<class T>
         void registerModule(string mod, PyObject* parent, PyTypeObject* base = 0, string mod_parent = "VR");
 };

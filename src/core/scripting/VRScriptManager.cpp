@@ -115,18 +115,23 @@ void VRScriptManager::updateScript(string name, string core, bool compile) {
 
 // ---------------------------------- Python stuff -----------------------------------------
 
+static string pyOutConsole = "Console";
+static string pyErrConsole = "Errors";
+static PyObject* modOut = 0;
+static PyObject* modErr = 0;
+
 // intersept python stdout
 static PyObject* writeOut(PyObject *self, PyObject *args) {
     const char *what;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
-    VRGuiManager::get()->getConsole("Console")->write(what);
+    VRGuiManager::get()->getConsole(pyOutConsole)->write(what);
     return Py_BuildValue("");
 }
 
 static PyObject* writeErr(PyObject *self, PyObject *args) {
     const char *what;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
-    VRGuiManager::get()->getConsole("Errors")->write(what);
+    VRGuiManager::get()->getConsole(pyErrConsole)->write(what);
     return Py_BuildValue("");
 }
 
@@ -140,12 +145,21 @@ static PyMethodDef methErr[] = {
     {NULL, NULL, 0, NULL}
 };
 
-PyMODINIT_FUNC
-initVRPyStdOut(void) {
-    PyObject *mOut = Py_InitModule("pyOut", methOut);
-    PyObject *mErr = Py_InitModule("pyErr", methErr);
-    if (mOut) PySys_SetObject((char *)"stdout", mOut);
-    if (mErr) PySys_SetObject((char *)"stderr", mErr);
+void VRScriptManager::redirectPyOutput(string pyOutput, string console) {
+    if (pyOutput == "stdout") {
+        if (!modOut) {
+            modOut = Py_InitModule(("py"+pyOutput).c_str(), methOut);
+            if (modOut) PySys_SetObject((char *)pyOutput.c_str(), modOut);
+        }
+        pyOutConsole = console;
+    }
+    if (pyOutput == "stderr") {
+        if (!modErr) {
+            modErr = Py_InitModule(("py"+pyOutput).c_str(), methErr);
+            if (modErr) PySys_SetObject((char *)pyOutput.c_str(), modErr);
+        }
+        pyErrConsole = console;
+    }
 }
 
 // ----------------------------
@@ -179,7 +193,10 @@ void VRScriptManager::initPyModules() {
     VRSceneModules sceneModules;
     sceneModules.setup(this, pModVR);
 
-	if (!VROptions::get()->getOption<bool>("standalone")) initVRPyStdOut();
+	if (!VROptions::get()->getOption<bool>("standalone")) {
+        redirectPyOutput("stdout", "Console");
+        redirectPyOutput("stderr", "Errors");
+	}
 
     PyRun_SimpleString( // add cython local path to python search path
         "import sys\n"

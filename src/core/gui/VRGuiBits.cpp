@@ -260,8 +260,10 @@ VRGuiBits::VRGuiBits() {
     };
 
     addTermTab("Console");
-    auto errTab = addTermTab("Errors");
-    errTab->configColor("#e03000");
+    auto err1Tab = addTermTab("Errors");
+    auto err2Tab = addTermTab("Syntax");
+    err1Tab->configColor("#e03000");
+    err2Tab->configColor("#e03000");
     addTermTab("Search results");
     addTermTab("Reasoning");
     addTermTab("Tracking");

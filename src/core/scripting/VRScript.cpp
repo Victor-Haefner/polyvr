@@ -357,6 +357,7 @@ void VRScript::pyTraceToConsole() { // get py trace
 }
 
 void VRScript::compile( PyObject* pGlobal, PyObject* pModVR ) {
+    VRScene::getCurrent()->redirectPyOutput("stderr", "Syntax");
     PyObject* pCode = Py_CompileString(getScript().c_str(), getName().c_str(), Py_file_input);
     if (!pCode) { if (PyErr_Occurred()) PyErr_Print(); return; }
     PyObject* pValue = PyEval_EvalCode((PyCodeObject*)pCode, pGlobal, PyModule_GetDict(pModVR));
@@ -365,6 +366,7 @@ void VRScript::compile( PyObject* pGlobal, PyObject* pModVR ) {
     Py_DECREF(pCode);
     Py_DECREF(pValue);
     setFunction( PyObject_GetAttrString(pModVR, name.c_str()) );
+    VRScene::getCurrent()->redirectPyOutput("stderr", "Errors");
 }
 
 void VRScript::execute() {
