@@ -112,7 +112,7 @@ VRSky::VRSky() : VRGeometry("Sky") {
 
     calculateZenithColor();
 
-    allowCulling(false, true);
+    setVolumeCheck(false, true);
 
     updatePtr = VRUpdateCb::create("sky update", boost::bind(&VRSky::update, this));
     VRScene::getCurrent()->addUpdateFkt(updatePtr);

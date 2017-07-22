@@ -70,11 +70,12 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
 
         template<typename T> void addAttachment(string name, T t);
         template<typename T> T getAttachment(string name);
-        bool hasAttachment(string name);
-        void remAttachment(string name);
-        vector<string> getAttachmentNames();
-        VRObjectPtr hasAncestorWithAttachment(string name);
-        vector<VRObjectPtr> getChildrenWithAttachment(string name);
+        void addTag(string name);
+        bool hasTag(string name);
+        void remTag(string name);
+        vector<string> getTags();
+        VRObjectPtr hasAncestorWithTag(string name);
+        vector<VRObjectPtr> getChildrenWithTag(string name);
 
         void setCore(OSGCorePtr c, string _type, bool force = false);
         OSGCorePtr getCore();
@@ -88,8 +89,9 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         VRObjectPtr find(OSGObjectPtr n, string indent = " ");
         static void printOSGTree(OSGObjectPtr o, string indent = "");
 
+        void setTravMask(int i);
         void setVolume(const Boundingbox& box);
-        void allowCulling(bool b, bool recursive = false);
+        void setVolumeCheck(bool b, bool recursive = false);
         void setSiblingPosition(int i);
 
         virtual void addChild(VRObjectPtr child, bool osg = true, int place = -1);
@@ -124,7 +126,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         void setEntity(VREntityPtr e);
         VREntityPtr getEntity();
 
-        BoundingboxPtr getBoundingBox();
+        BoundingboxPtr getBoundingbox();
 
         void flattenHiarchy();
 

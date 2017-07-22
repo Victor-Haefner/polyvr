@@ -9,6 +9,7 @@ using namespace OSG;
 newPyType(Boundingbox, Boundingbox, New_ptr);
 
 template<> bool toValue(PyObject* o, Boundingbox& v) { if (!VRPyBoundingbox::check(o)) return 0; v = *((VRPyBoundingbox*)o)->objPtr; return 1; }
+template<> bool toValue(PyObject* o, BoundingboxPtr& v) { if (!VRPyBoundingbox::check(o)) return 0; v = ((VRPyBoundingbox*)o)->objPtr; return 1; }
 
 PyMethodDef VRPyBoundingbox::methods[] = {
     {"min", PyWrap(Boundingbox, min, "Get the minimum vector", Vec3d) },

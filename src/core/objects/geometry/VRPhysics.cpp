@@ -383,7 +383,7 @@ btSoftBody* VRPhysics::createCloth() {
     auto obj = vr_obj.lock();
     if (!obj) return 0;
 
-    if ( !obj->hasAttachment("geometry") ) { cout << "VRPhysics::createCloth only works on geometries" << endl; return 0; }
+    if ( !obj->hasTag("geometry") ) { cout << "VRPhysics::createCloth only works on geometries" << endl; return 0; }
     OSG::VRGeometryPtr geo = static_pointer_cast<OSG::VRGeometry>(obj);
     if ( geo->getPrimitive()->getType() != "Plane") { cout << "VRPhysics::createCloth only works on Plane primitives" << endl; return 0; }
 

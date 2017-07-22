@@ -28,7 +28,7 @@ boost::recursive_mutex& VRParticles::mtx() {
 
 VRParticles::VRParticles(string name, bool spawnParticles) : VRGeometry(name), ocparticles(0.1) {
     if (spawnParticles) resetParticles<Particle>();
-    allowCulling(false);
+    setVolumeCheck(false);
     getMesh()->geo->setDlistCache(false);
 }
 

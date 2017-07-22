@@ -263,7 +263,7 @@ class VRLODSpace : public VRObject {
         static VRLODSpacePtr create() { return VRLODSpacePtr(new VRLODSpace()); }
 
         void add(VRObjectPtr g) {
-            auto bb = g->getBoundingBox();
+            auto bb = g->getBoundingbox();
             Vec3d c = bb->center()*scale;
             Vec4i p; for(int i=0; i<3; i++) p[i] = round(c[i]);
             p[3] = ceil(bb->radius()*scale);
@@ -309,7 +309,7 @@ VRObjectPtr VRFactory::setupLod(vector<string> paths) {
         for (auto g : geos) {
             prog.update(1);
 
-            auto bb = g->getBoundingBox();
+            auto bb = g->getBoundingbox();
             VRLodPtr lod = VRLod::create("factory_lod");
             lod->addChild(g);
             lod->addEmpty();

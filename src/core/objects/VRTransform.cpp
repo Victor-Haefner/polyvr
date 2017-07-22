@@ -253,7 +253,7 @@ bool VRTransform::checkWorldChange() {
     VRObjectPtr obj = ptr();
     VRTransformPtr ent;
     while(obj) {
-        if (obj->hasAttachment("transform")) {
+        if (obj->hasTag("transform")) {
             ent = static_pointer_cast<VRTransform>(obj);
             if (ent->change_time_stamp > wchange_time_stamp) {
                 wchange_time_stamp = VRGlobals::CURRENT_FRAME;
@@ -306,7 +306,7 @@ void VRTransform::getWorldMatrix(Matrix4d& M, bool parentOnly) {
     if (parentOnly && o->getParent() != 0) o = o->getParent();
 
     while(o) {
-        if (o->hasAttachment("transform")) {
+        if (o->hasTag("transform")) {
             t = static_pointer_cast<VRTransform>(o);
             t->getMatrix(m);
             M.multLeft(m);
@@ -366,7 +366,7 @@ void VRTransform::setWorldMatrix(Matrix4d m) {
 }
 
 VRTransformPtr VRTransform::getParentTransform(VRObjectPtr o) {
-    o = o->hasAncestorWithAttachment("transform");
+    o = o->hasAncestorWithTag("transform");
     return static_pointer_cast<VRTransform>(o);
 }
 
@@ -693,7 +693,7 @@ Line VRTransform::castRay(VRObjectPtr obj, Vec3d dir) {
     if (obj) obj = obj->getParent();
 
     if (obj != 0) {
-        while (!obj->hasAttachment("transform")) { obj = obj->getParent(); if(obj == 0) break; }
+        while (!obj->hasTag("transform")) { obj = obj->getParent(); if(obj == 0) break; }
         if (obj != 0) {
             VRTransformPtr tr = static_pointer_cast<VRTransform>(obj);
             Matrix4d om = tr->getWorldMatrix();

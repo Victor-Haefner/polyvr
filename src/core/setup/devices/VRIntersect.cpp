@@ -179,7 +179,7 @@ void VRIntersect::drag(VRObjectWeakPtr wobj, VRTransformWeakPtr wcaster) {
 
     obj = obj->findPickableAncestor();
     if (obj == 0) return;
-    if (!obj->hasAttachment("transform")) return;
+    if (!obj->hasTag("transform")) return;
 
     auto dobj = static_pointer_cast<VRTransform>(obj);
     dragged = dobj;

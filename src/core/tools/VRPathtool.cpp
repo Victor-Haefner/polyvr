@@ -319,7 +319,7 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
     auto key = handle.get();
     if (!handleToEntries.count(key)) return;
 
-    if (handle->hasAttachment("handle")) {
+    if (handle->hasTag("handle")) {
         if (graph && handleToNode.count(key)) graph->setPosition( handleToNode[key], p );
 
         for (auto e : handleToEntries[key]) {
@@ -328,12 +328,12 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
             updateEntry(e);
         }
 
-        for (auto c : handle->getChildrenWithAttachment("controlhandle")) {
+        for (auto c : handle->getChildrenWithTag("controlhandle")) {
             VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(c);
             if (g) updateHandle(g);
         }
 
-        if (handle->getChildrenWithAttachment("controlhandle").size() == 0) { // no control handles -> smooth knots curve
+        if (handle->getChildrenWithTag("controlhandle").size() == 0) { // no control handles -> smooth knots curve
             map<int, Vec3d> hPositions; // get handle positions
             auto getPos = [&](int ID) {
                 if (!hPositions.count(ID)) {
@@ -368,7 +368,7 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
         }
     }
 
-    if (handle->hasAttachment("controlhandle")) {
+    if (handle->hasTag("controlhandle")) {
         VRGeometryPtr pg = dynamic_pointer_cast<VRGeometry>(handle->getDragParent());
         if (!pg) pg = dynamic_pointer_cast<VRGeometry>(handle->getParent());
         if (!pg) return; // failed to get parent handle
@@ -398,7 +398,7 @@ void VRPathtool::updateDevs() { // update when something is dragged
     for (auto dev : VRSetup::getCurrent()->getDevices()) { // get dragged objects
         VRGeometryPtr obj = static_pointer_cast<VRGeometry>(dev.second->getDraggedObject());
         if (obj == 0) continue;
-        if (!obj->hasAttachment("handle") && !obj->hasAttachment("controlhandle")) continue;
+        if (!obj->hasTag("handle") && !obj->hasTag("controlhandle")) continue;
         if (!handleToNode.count(obj.get()) && !handleToEntries.count(obj.get())) continue;
         projectHandle(obj, dev.second);
         updateHandle(obj);

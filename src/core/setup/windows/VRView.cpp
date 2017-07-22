@@ -385,13 +385,13 @@ void VRView::setRoot() {
     if (renderingL) {
         renderingL->setScene(view_root);
         nl = renderingL->getRoot()->getNode()->node;
-        renderingL->getRoot()->allowCulling( false, true );
+        renderingL->getRoot()->setVolumeCheck( false, true );
     }
 
     if (renderingR) {
         renderingR->setScene(view_root);
         nr = renderingR->getRoot()->getNode()->node;
-        renderingR->getRoot()->allowCulling( false, true );
+        renderingR->getRoot()->setVolumeCheck( false, true );
     }
 
     if (lView) lView->setRoot(nl);

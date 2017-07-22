@@ -298,8 +298,8 @@ void VRWoods::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
 
         vector<void*> data = leaf->getOLeaf()->getAllData();
         for (auto v : data) {
-            if (((VRObject*)v)->hasAttachment("tree")) trees[leaf.get()].push_back((VRTree*)v);
-            if (((VRObject*)v)->hasAttachment("grass")) grass[leaf.get()].push_back((VRGrassPatch*)v);
+            if (((VRObject*)v)->hasTag("tree")) trees[leaf.get()].push_back((VRTree*)v);
+            if (((VRObject*)v)->hasTag("grass")) grass[leaf.get()].push_back((VRGrassPatch*)v);
         }
     }
 

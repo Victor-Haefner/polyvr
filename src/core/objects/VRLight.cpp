@@ -195,7 +195,7 @@ void VRLight::setShadows(bool b) {
         if (deferred) setShadowEngine(d_light, gsme);
         if (deferred) setShadowEngine(p_light, ptsme);
         if (deferred) setShadowEngine(s_light, stsme);
-        getBoundingBox(); // update osg volume
+        getBoundingbox(); // update osg volume
     } else {
         setShadowEngine(d_light, 0);
         setShadowEngine(p_light, 0);

@@ -49,9 +49,9 @@ void VRConstructionKit_on_snap(VRConstructionKit* kit, VRSnappingEngine::EventSn
     VRObjectPtr p1 = e->o1->getDragParent();
     VRObjectPtr p2 = e->o2->getParent();
     if (p1 == 0 || p2 == 0) return;
-    if (p1 == p2) if (p1->hasAttachment("kit_group")) return;
+    if (p1 == p2) if (p1->hasTag("kit_group")) return;
 
-    if (p2->hasAttachment("kit_group")) {
+    if (p2->hasTag("kit_group")) {
         e->o1->rebaseDrag(p2);
         e->o1->setPickable(false);
         e->o2->setPickable(false);
@@ -83,7 +83,7 @@ void VRConstructionKit::breakup(VRTransformPtr obj) {
 
     auto p = obj->getParent();
     if (p == 0) return;
-    if (p->hasAttachment("kit_group")) {
+    if (p->hasTag("kit_group")) {
         obj->switchParent( p->getParent() );
         obj->setPickable(true);
         return;
@@ -91,7 +91,7 @@ void VRConstructionKit::breakup(VRTransformPtr obj) {
 
     p = obj->getDragParent();
     if (p == 0) return;
-    if (p->hasAttachment("kit_group")) {
+    if (p->hasTag("kit_group")) {
         obj->rebaseDrag( p->getParent() );
         obj->setPickable(true);
     }

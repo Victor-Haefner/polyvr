@@ -324,8 +324,8 @@ void updateObjectForms(bool disable = false) {
     trigger_cbs = false;
 
     setObject(obj);
-    if (obj->hasAttachment("transform")) setTransform(static_pointer_cast<VRTransform>(obj));
-    if (obj->hasAttachment("geometry")) setGeometry(static_pointer_cast<VRGeometry>(obj));
+    if (obj->hasTag("transform")) setTransform(static_pointer_cast<VRTransform>(obj));
+    if (obj->hasTag("geometry")) setGeometry(static_pointer_cast<VRGeometry>(obj));
 
     if (type == "Light") setLight(static_pointer_cast<VRLight>(obj));
     if (type == "Camera") setCamera(static_pointer_cast<VRCamera>(obj));
@@ -725,7 +725,7 @@ void on_treeview_select(GtkTreeView* tv, gpointer user_data) {
 
     selected_geometry.reset();
     if (getSelected() == 0) return;
-    if (getSelected()->hasAttachment("geometry")) selected_geometry = static_pointer_cast<VRGeometry>(getSelected());
+    if (getSelected()->hasTag("geometry")) selected_geometry = static_pointer_cast<VRGeometry>(getSelected());
 }
 
 void VRGuiScene::on_edit_object_name(string path, string new_text) {
@@ -926,7 +926,7 @@ void VRGuiScene::on_drag_data_receive(const Glib::RefPtr<Gdk::DragContext>& dc ,
     }
     cout << "drag dest " << dragPath << " " << pos << endl;
 
-    if (selected->hasAttachment("treeviewNotDragable")) { dc->drag_status(Gdk::DragAction(0),0); return; } // object is not dragable
+    if (selected->hasTag("treeviewNotDragable")) { dc->drag_status(Gdk::DragAction(0),0); return; } // object is not dragable
     if (dragPath == "0" && pos <= 1) { dc->drag_status(Gdk::DragAction(0),0); return; } // drag out of root
 
     /*Gtk::TreeModel::iterator iter = tree_view->get_model()->get_iter(path);

@@ -244,8 +244,8 @@ void setPose3(VRTransformPtr o, int i, Vec3d t) {
 }
 
 VRObjectPtr findTarget(VRObjectPtr o, string Name) {
-    if (o->hasAttachment("collada_name")) cout << "findTarget " << Name << " current " << o->getAttachment<string>("collada_name") << endl;
-    if (o->hasAttachment("collada_name")) {
+    if (o->hasTag("collada_name")) cout << "findTarget " << Name << " current " << o->getAttachment<string>("collada_name") << endl;
+    if (o->hasTag("collada_name")) {
         if (o->getAttachment<string>("collada_name") == Name) return o;
     }
 
@@ -278,8 +278,8 @@ void buildAnimations(AnimationLibrary& lib, VRObjectPtr objects) {
         VRObjectPtr obj = findTarget(objects, a.second.channel.target);
         if(obj==0) cout << "object is 0 "<< endl;
         if (obj == 0) continue;
-        if(!obj->hasAttachment("transform")) cout << "has no attachment " << obj->getName() << endl;
-        if (!obj->hasAttachment("transform")) continue;
+        if(!obj->hasTag("transform")) cout << "has no attachment " << obj->getName() << endl;
+        if (!obj->hasTag("transform")) continue;
 
         map<string, Source> sources = a.second.sources;
         Sampler sampler = a.second.sampler;
@@ -520,7 +520,7 @@ VRTransformPtr buildLinks(klink l, VRObjectPtr objects, map<string, VRConstraint
     VRTransformPtr t1 = 0;
     auto o1 = findTarget(objects, l.parent);
     if (o1 == 0) { cout << "did not find " << l.parent << endl; return 0; }
-    if (o1->hasAttachment("transform")) t1 = static_pointer_cast<VRTransform>(o1);
+    if (o1->hasTag("transform")) t1 = static_pointer_cast<VRTransform>(o1);
     else {
         t1 = VRTransform::create(o1->getBaseName());
         t1->switchParent(o1->getParent());

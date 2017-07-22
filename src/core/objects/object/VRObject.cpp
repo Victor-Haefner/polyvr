@@ -83,7 +83,7 @@ void allowCullingRecursive(NodeMTRecPtr n, bool b) {
     }
 }
 
-void VRObject::allowCulling(bool b, bool recursive) {
+void VRObject::setVolumeCheck(bool b, bool recursive) {
     if (!getNode()) return;
     BoxVolume &vol = getNode()->node->editVolume(b);
     vol.setInfinite(!b);
@@ -115,27 +115,32 @@ VRObjectPtr VRObject::copy(vector<VRObjectPtr> children) {
 
 int VRObject::getID() { return ID; }
 string VRObject::getType() { return type; }
-bool VRObject::hasAttachment(string name) { return attachments.count(name); }
-void VRObject::remAttachment(string name) { attachments.erase(name); }
+void VRObject::addTag(string name) { addAttachment(name, 0); }
+bool VRObject::hasTag(string name) { return attachments.count(name); }
+void VRObject::remTag(string name) { attachments.erase(name); }
 
-vector<string> VRObject::getAttachmentNames() {
+vector<string> VRObject::getTags() {
     vector<string> res;
     for (auto a : attachments) res.push_back(a.first);
     return res;
 }
 
-vector<VRObjectPtr> VRObject::getChildrenWithAttachment(string name) {
+vector<VRObjectPtr> VRObject::getChildrenWithTag(string name) {
     vector<VRObjectPtr> res;
     for (auto c : getChildren()) {
-        if (c->hasAttachment(name)) res.push_back(c);
+        if (c->hasTag(name)) res.push_back(c);
     }
     return res;
 }
 
-VRObjectPtr VRObject::hasAncestorWithAttachment(string name) {
-    if (hasAttachment(name)) return ptr();
+VRObjectPtr VRObject::hasAncestorWithTag(string name) {
+    if (hasTag(name)) return ptr();
     if (getParent() == 0) return 0;
-    return getParent()->hasAncestorWithAttachment(name);
+    return getParent()->hasAncestorWithTag(name);
+}
+
+void VRObject::setTravMask(int i) {
+    getNode()->node->setTravMask(i);
 }
 
 vector<VRObjectPtr> VRObject::getLinks() {
@@ -410,7 +415,7 @@ bool VRObject::hasAncestor(VRObjectPtr a) {
 }
 
 /** Returns the Boundingbox of the OSG Node */
-BoundingboxPtr VRObject::getBoundingBox() {
+BoundingboxPtr VRObject::getBoundingbox() {
     Pnt3f p1, p2;
     commitChanges();
     osg->node->updateVolume();
@@ -525,7 +530,7 @@ void VRObject::toggleVisible() { setVisible(!visible); }
 bool VRObject::isPickable() { return pickable == 1; }
 
 /** Set the object pickable || not **/
-void VRObject::setPickable(int b) { if (hasAttachment("transform")) pickable = b; } //TODO: check if the if is necessary!
+void VRObject::setPickable(int b) { if (hasTag("transform")) pickable = b; } //TODO: check if the if is necessary!
 
 string VRObject::getPath() {
     VRObjectPtr o = ptr();

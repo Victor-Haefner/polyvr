@@ -184,7 +184,7 @@ void VRScene::showReferentials(bool b, VRObjectPtr o) {
     if (o == 0) o = root;
 
     VRTransformPtr t = 0;
-    if (o->hasAttachment("transform")) t = static_pointer_cast<VRTransform>(o);
+    if (o->hasTag("transform")) t = static_pointer_cast<VRTransform>(o);
     if (t) t->showCoordAxis(b);
 
     for (uint i=0; i<o->getChildrenCount(); i++) showReferentials(b, o->getChild(i));

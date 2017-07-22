@@ -40,8 +40,8 @@ void VRSelection::apply(VRObjectPtr tree, bool force, bool recursive) {
     if (!tree) return;
 
     vector<VRGeometryPtr> geos;
-    if (recursive) for ( auto c : tree->getChildren(true) ) if (c->hasAttachment("geometry")) geos.push_back( static_pointer_cast<VRGeometry>(c) );
-    if ( tree->hasAttachment("geometry") ) geos.push_back( static_pointer_cast<VRGeometry>(tree) );
+    if (recursive) for ( auto c : tree->getChildren(true) ) if (c->hasTag("geometry")) geos.push_back( static_pointer_cast<VRGeometry>(c) );
+    if ( tree->hasTag("geometry") ) geos.push_back( static_pointer_cast<VRGeometry>(tree) );
 
     for (auto geo : geos) {
         selection_atom a;

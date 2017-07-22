@@ -68,7 +68,7 @@ void VRBlinds::toggle(VRDeviceWeakPtr d) {
         VRIntersection ins = dev->intersect(ptr());
         if (!ins.hit) return;
         if ( ins.object.lock() == 0 ) return;
-        if ( !ins.object.lock()->hasAncestorWithAttachment("blind")) return;
+        if ( !ins.object.lock()->hasAncestorWithTag("blind")) return;
     }
 
     if (state == CLOSE) open();

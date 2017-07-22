@@ -1,10 +1,13 @@
 #include "boundingbox.h"
 
+#include "core/utils/toString.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include <OpenSG/OSGGeometry.h>
 
 using namespace OSG;
+
+template<> string typeName(const BoundingboxPtr& o) { return "Boundingbox"; }
 
 Boundingbox::Boundingbox() { clear(); }
 

@@ -125,7 +125,7 @@ void VRCamera::focus(Vec3d p) {
 }
 
 void VRCamera::focus(VRObjectPtr t) {
-    auto bb = t->getBoundingBox();
+    auto bb = t->getBoundingbox();
     Vec3d c = bb->center();
 
     Vec3d d = getDir();
