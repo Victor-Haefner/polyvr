@@ -71,7 +71,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"getID", PyWrap(Object, getID, "Return the object internal ID", int) },
     {"duplicate", PyWrap(Object, duplicate, "Duplicate object including subtree", void) },
     {"getChild", PyWrap(Object, getChild, "Return child object with index i", VRObjectPtr) },
-    {"getChildren", PyWrap(Object, getChildren, "Return the list of children objects\n\t - getChildren() : return immediate children\n\t - getChildren(bool recursive) : if true returns whole subtree\n\t - getChildren(bool recursive, str type) : filter by type", vector<VRObjectPtr>) },
+    {"getChildren", PyWrapOpt(Object, getChildren, "Return the list of children objects, bool recursive, string type-filter", "0| |0", vector<VRObjectPtr>, bool, string, bool) },
     {"getParent", PyWrap(Object, getParent, "Return parent object", VRObjectPtr) },
     {"find", PyWrap(Object, find, "Find node with given name in scene graph below this node - obj find(str)", VRObjectPtr, string) },
     {"findAll", PyWrap(Object, findAll, "Find node with given base name (str) in scene graph below this node", VRObjectPtr, string) },
