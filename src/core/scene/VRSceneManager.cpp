@@ -69,14 +69,16 @@ void VRSceneManager::closeScene() {
     on_scene_close->triggerPtr<VRDevice>();
     current = 0;
 
-    VRSetup::getCurrent()->resetViewports();
-    VRSetup::getCurrent()->clearSignals();
+    auto setup = VRSetup::getCurrent();
+    setup->resetViewports();
+    setup->clearSignals();
     VRTransform::dynamicObjects.clear();
 
-    // deactivate windows
-    auto windows = VRSetup::getCurrent()->getWindows();
-    for (auto w : windows) w.second->setContent(false);
-
+    for (auto w : setup->getWindows()) {
+        cout << "VRSceneManager::closeScene!" << endl;
+        w.second->setContent(false); // deactivate windows
+        w.second->clear(Color3f(0.2,0.2,0.2)); // render last time
+    }
     setWorkdir(original_workdir);
     VRGuiSignals::get()->getSignal("scene_changed")->triggerPtr<VRDevice>(); // update gui
 }

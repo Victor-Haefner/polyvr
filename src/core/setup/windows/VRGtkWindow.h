@@ -44,6 +44,7 @@ class VRGtkWindow : public VRWindow {
 
         PassiveWindowRecPtr getOSGWindow();
         void render(bool fromThread = false);
+        void clear(Color3f c);
 
         void setCursor(string c);
 

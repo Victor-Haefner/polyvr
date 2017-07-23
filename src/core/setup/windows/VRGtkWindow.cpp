@@ -201,6 +201,22 @@ bool VRGtkWindow::on_scroll(GdkEventScroll * event) {
     return true;
 }
 
+void VRGtkWindow::clear(Color3f c) {
+    cout << "   VRGtkWindow::clear " << c << endl;
+    Glib::RefPtr<Gdk::Window> drawable = drawArea->get_window();
+    if (drawable) {
+        cout << "    drawable ok" << endl;
+        GdkGLContext* glcontext = gtk_widget_get_gl_context (widget);
+        GdkGLDrawable* gldrawable = gtk_widget_get_gl_drawable (widget);
+        gdk_gl_drawable_gl_begin (gldrawable, glcontext);
+        resize(widget->allocation.width, widget->allocation.height);
+        glClearColor(c[0], c[1], c[2], 1.0);
+        glClear(GL_COLOR_BUFFER_BIT);
+        gdk_gl_drawable_swap_buffers (gldrawable);
+        gdk_gl_drawable_gl_end (gldrawable);
+    }
+}
+
 void VRGtkWindow::render(bool fromThread) {
     if (fromThread) return;
     PLock( VRGuiManager::get()->guiMutex() );
