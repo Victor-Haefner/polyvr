@@ -84,6 +84,7 @@ template<> PyObject* VRPyTypeCaster::cast(const Vec2d& b) { return VRPyBase::toP
 template<> PyObject* VRPyTypeCaster::cast(const Vec3d& b) { return toPyObject(b); }
 template<> PyObject* VRPyTypeCaster::cast(const Vec4d& b) { return VRPyBase::toPyTuple(b); }
 template<> PyObject* VRPyTypeCaster::cast(const Boundingbox& b) { return VRPyBoundingbox::fromObject(b); }
+template<> PyObject* VRPyTypeCaster::cast(const BoundingboxPtr& b) { return VRPyBoundingbox::fromSharedPtr(b); }
 
 PyObject* VRPyTypeCaster::pack(const vector<PyObject*>& v) {
     auto l = PyList_New(v.size());

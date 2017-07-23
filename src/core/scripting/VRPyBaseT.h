@@ -32,7 +32,7 @@ template<class T> VRPyBaseT<T>::VRPyBaseT() {;}
 
 template <typename T>
 bool VRPyBaseT<T>::valid() {
-    if (objPtr != 0) return true;
+    if (objPtr && objPtr.get()) return true;
     PyErr_SetString(err, "Py object is invalid!");
     return false;
 }

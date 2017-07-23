@@ -202,10 +202,8 @@ bool VRGtkWindow::on_scroll(GdkEventScroll * event) {
 }
 
 void VRGtkWindow::clear(Color3f c) {
-    cout << "   VRGtkWindow::clear " << c << endl;
     Glib::RefPtr<Gdk::Window> drawable = drawArea->get_window();
     if (drawable) {
-        cout << "    drawable ok" << endl;
         GdkGLContext* glcontext = gtk_widget_get_gl_context (widget);
         GdkGLDrawable* gldrawable = gtk_widget_get_gl_drawable (widget);
         gdk_gl_drawable_gl_begin (gldrawable, glcontext);

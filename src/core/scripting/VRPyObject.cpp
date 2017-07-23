@@ -61,7 +61,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"getBaseName", (PyCFunction)VRPyObject::getBaseName, METH_NOARGS, "Return the object base name" },
     {"setName", (PyCFunction)VRPyObject::setName, METH_VARARGS, "Set the object name" },
     {"addChild", PyWrapOpt(Object, addChild, "Add object as child", "1|-1", void, VRObjectPtr, bool, int ) },
-    {"switchParent", PyWrap(Object, switchParent, "Switch object to other parent object", void, VRObjectPtr) },
+    {"switchParent", PyWrapOpt(Object, switchParent, "Switch object to other parent object", "-1", void, VRObjectPtr, int) },
     {"destroy", PyWrap(Object, destroy, "Destroy object", void) },
     {"hide", PyWrap(Object, hide, "Hide object", void) },
     {"show", PyWrap(Object, show, "Show object", void) },
@@ -69,14 +69,14 @@ PyMethodDef VRPyObject::methods[] = {
     {"setVisible", PyWrap(Object, setVisible, "Set the visibility of the object", void, bool) },
     {"getType", PyWrap(Object, getType, "Return the object type string (such as \"Geometry\")", string) },
     {"getID", PyWrap(Object, getID, "Return the object internal ID", int) },
-    {"duplicate", PyWrap(Object, duplicate, "Duplicate object including subtree", void) },
-    {"getChild", PyWrap(Object, getChild, "Return child object with index i", VRObjectPtr) },
+    {"duplicate", PyWrapOpt(Object, duplicate, "Duplicate object including subtree", "0", VRObjectPtr, bool) },
+    {"getChild", PyWrap(Object, getChild, "Return child object with index i", VRObjectPtr, int) },
     {"getChildren", PyWrapOpt(Object, getChildren, "Return the list of children objects, bool recursive, string type-filter", "0| |0", vector<VRObjectPtr>, bool, string, bool) },
     {"getParent", PyWrap(Object, getParent, "Return parent object", VRObjectPtr) },
     {"find", PyWrap(Object, find, "Find node with given name in scene graph below this node - obj find(str)", VRObjectPtr, string) },
-    {"findAll", PyWrap(Object, findAll, "Find node with given base name (str) in scene graph below this node", VRObjectPtr, string) },
+    {"findAll", PyWrapOpt(Object, findAll, "Find nodes with given base name (str) in scene graph below this node", " ", vector<VRObjectPtr>, string, vector<VRObjectPtr>) },
     {"isPickable", PyWrap(Object, isPickable, "Return if the object is pickable", bool) },
-    {"setPickable", PyWrap(Object, setPickable, "Set if the object is pickable - setPickable(int pickable)\n   pickable can be 0 or 1 to disable or enable picking, as well as -1 to block picking even if an ancestor is pickable", void, bool) },
+    {"setPickable", PyWrap(Object, setPickable, "Set if the object is pickable - setPickable(int pickable)\n   pickable can be 0 or 1 to disable or enable picking, as well as -1 to block picking even if an ancestor is pickable", void, int) },
     //{"printOSG", PyWrap(Object, printOSGTree, "Print the OSG structure to console", void) },
     {"flattenHiarchy", PyWrap(Object, flattenHiarchy, "Flatten the scene graph hiarchy", void) },
     {"addTag", PyWrap(Object, addTag, "Add a tag to the object - addTag( str tag )", void, string) },
@@ -95,53 +95,10 @@ PyMethodDef VRPyObject::methods[] = {
     {"getEntity", PyWrap(Object, getEntity, "Get entity", VREntityPtr) },
     {"clearChildren", PyWrap(Object, clearChildren, "Remove all children - clearChildren()", void) },
     {"getChildIndex", PyWrap(Object, getChildIndex, "Return the child index of this object - int getChildIndex()", int) },
-    {"getBoundingbox", PyWrap(Object, getBoundingbox, "get Boundingbox", Boundingbox) },
-    {"setVolume", PyWrap(Object, setVolume, "Set the scenegraph volume to boundingbox", void, BoundingboxPtr) },
+    {"getBoundingbox", PyWrap(Object, getBoundingbox, "get Boundingbox", BoundingboxPtr) },
+    {"setVolume", PyCastWrap(Object, setVolume, "Set the scenegraph volume to boundingbox", void, Boundingbox) },
     {NULL}  /* Sentinel */
 };
-/*
-PyObject* VRPyObject::getBoundingbox(VRPyObject* self) {
-    if (!self->valid()) return NULL;
-    return VRPyBoundingbox::fromSharedPtr(self->objPtr->getBoundingBox());
-}
-
-PyObject* VRPyObject::getChildIndex(VRPyObject* self) {
-    if (!self->valid()) return NULL;
-    return PyInt_FromLong( self->objPtr->getChildIndex() );
-}
-
-PyObject* VRPyObject::setVolumeCheck(VRPyObject* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    self->objPtr->allowCulling( parseBool(args) );
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyObject::addLink(VRPyObject* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    VRPyObject* o;
-    if (!PyArg_ParseTuple(args, "O", &o)) return NULL;
-    self->objPtr->addLink( o->objPtr );
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyObject::remLink(VRPyObject* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    VRPyObject* o;
-    if (!PyArg_ParseTuple(args, "O", &o)) return NULL;
-    self->objPtr->remLink( o->objPtr );
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyObject::getID(VRPyObject* self) {
-    if (!self->valid()) return NULL;
-    return PyInt_FromLong( self->objPtr->getID() );
-}
-
-PyObject* VRPyObject::clearChildren(VRPyObject* self) {
-    if (!self->valid()) return NULL;
-    self->objPtr->clearChildren();
-    Py_RETURN_TRUE;
-}*/
 
 PyObject* VRPyObject::setPersistency(VRPyObject* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::setPersistency - C Object is invalid"); return NULL; }

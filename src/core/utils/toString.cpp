@@ -108,6 +108,7 @@ template<> string toString(const Line& l) {
 
 template<> string typeName(const string& t) { return "string"; }
 template<> string typeName(const int& t) { return "int"; }
+template<> string typeName(const unsigned int& t) { return "int"; }
 template<> string typeName(const float& t) { return "float"; }
 template<> string typeName(const double& t) { return "double"; }
 template<> string typeName(const bool& t) { return "bool"; }
@@ -207,3 +208,6 @@ template<> int toValue(stringstream& ss, Boundingbox& box) {
     if (c) box.clear();
     return B;
 }
+
+
+

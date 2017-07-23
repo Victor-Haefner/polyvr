@@ -39,7 +39,7 @@ struct proxyWrap<sT, R (T::*)(Args...), mf, O> {
 
 template<typename sT, typename T, typename R, typename ...Args, R (T::*mf)(Args...), class O>
 PyObject* proxyWrap<sT, R (T::*)(Args...), mf, O>::exec(sT* self, PyObject* args) {
-    if (!self->valid()) return NULL;
+    if (!self->valid()) return NULL; // error set in call to valid
     vector<PyObject*> params;
     for (int i=0; i<PyTuple_Size(args); i++) params.push_back(PyTuple_GetItem(args, i));
     auto wrap = VRCallbackWrapperT<PyObject*, O, R (T::*)(Args...)>::create();
@@ -69,20 +69,34 @@ PyObject* proxyWrap<sT, R (T::*)(Args...), mf, O>::exec(sT* self, PyObject* args
 #define FOR_EACH_(N, ...) CONCATENATE(FOR_EACH, N)(__VA_ARGS__)
 #define FOR_EACH(...) FOR_EACH_(FOR_EACH_NARG(__VA_ARGS__), __VA_ARGS__)
 
+
 // actual py wrapper macros
 
 #define PyWrapDoku(F, D, R, ...) \
 D " - " #R " " #F "( " FOR_EACH( __VA_ARGS__ ) " )"
 
 #define PyWrap(X, Y, D, R, ...) \
+(PyCFunction)proxyWrap<VRPy ## X, R (OSG::VR ## X::*)( __VA_ARGS__ ), &OSG::VR ## X::Y, VRCallbackWrapperParams<MACRO_GET_STR( "" )> >::exec , METH_VARARGS, PyWrapDoku(Y,D,R,__VA_ARGS__)
+
+#define PyCastWrap(X, Y, D, R, ...) \
 (PyCFunction)proxyWrap<VRPy ## X, R (OSG::VR ## X::*)( __VA_ARGS__ ), (R (OSG::VR ## X::*)( __VA_ARGS__ )) &OSG::VR ## X::Y, VRCallbackWrapperParams<MACRO_GET_STR( "" )> >::exec , METH_VARARGS, PyWrapDoku(Y,D,R,__VA_ARGS__)
+
+// TODO
+//#define PyConstWrap(X, Y, D, R, ...) \
+//(PyCFunction)proxyWrap<VRPy ## X, R (*const OSG::VR ## X::*)( __VA_ARGS__ ), &OSG::VR ## X::Y, VRCallbackWrapperParams<MACRO_GET_STR( "" )> >::exec , METH_VARARGS, PyWrapDoku(Y,D,R,__VA_ARGS__)
+
 #define PyWrap2(X, Y, D, R, ...) \
 (PyCFunction)proxyWrap<VRPy ## X, R (OSG::X::*)( __VA_ARGS__ ), (R (OSG::X::*)( __VA_ARGS__ )) &OSG::X::Y, VRCallbackWrapperParams<MACRO_GET_STR( "" )> >::exec , METH_VARARGS, PyWrapDoku(Y,D,R,__VA_ARGS__)
+
 
 // pass optional parameters S as a single string, will all arguments separated by '|'
 
 #define PyWrapOpt(X, Y, D, S, R, ...) \
+(PyCFunction)proxyWrap<VRPy ## X, R (OSG::VR ## X::*)( __VA_ARGS__ ), &OSG::VR ## X::Y, VRCallbackWrapperParams< MACRO_GET_STR( S ) > >::exec, METH_VARARGS, PyWrapDoku(Y,D,R,__VA_ARGS__)
+
+#define PyCastWrapOpt(X, Y, D, S, R, ...) \
 (PyCFunction)proxyWrap<VRPy ## X, R (OSG::VR ## X::*)( __VA_ARGS__ ), (R (OSG::VR ## X::*)( __VA_ARGS__ )) &OSG::VR ## X::Y, VRCallbackWrapperParams< MACRO_GET_STR( S ) > >::exec, METH_VARARGS, PyWrapDoku(Y,D,R,__VA_ARGS__)
+
 #define PyWrapOpt2(X, Y, D, S, R, ...) \
 (PyCFunction)proxyWrap<VRPy ## X, R (OSG::X::*)( __VA_ARGS__ ), (R (OSG::X::*)( __VA_ARGS__ )) &OSG::X::Y, VRCallbackWrapperParams< MACRO_GET_STR( S ) > >::exec, METH_VARARGS, PyWrapDoku(Y,D,R,__VA_ARGS__)
 

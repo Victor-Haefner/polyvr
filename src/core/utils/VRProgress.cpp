@@ -1,5 +1,6 @@
 #include "VRProgress.h"
 #include "VRFunction.h"
+#include "toString.h"
 
 using namespace OSG;
 
@@ -45,4 +46,11 @@ void VRProgress::setup(string title, int max, Mode m) {
     this->max = max;
     mode = m;
     reset();
+}
+
+template<> int toValue(stringstream& ss, VRProgress::Mode& m) {
+    int M;
+    int res = toValue<int>(ss, M);
+    m = (VRProgress::Mode)M;
+    return res;
 }

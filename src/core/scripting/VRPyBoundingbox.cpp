@@ -12,10 +12,10 @@ template<> bool toValue(PyObject* o, Boundingbox& v) { if (!VRPyBoundingbox::che
 template<> bool toValue(PyObject* o, BoundingboxPtr& v) { if (!VRPyBoundingbox::check(o)) return 0; v = ((VRPyBoundingbox*)o)->objPtr; return 1; }
 
 PyMethodDef VRPyBoundingbox::methods[] = {
-    {"min", PyWrap(Boundingbox, min, "Get the minimum vector", Vec3d) },
-    {"max", PyWrap(Boundingbox, max, "Get the maximum vector", Vec3d) },
-    {"update", PyWrap(Boundingbox, update, "Update the bounding box", void, Vec3d) },
-    {"center", PyWrap(Boundingbox, center, "Get the center", Vec3d) },
+    {"min", PyCastWrap(Boundingbox, min, "Get the minimum vector", Vec3d) },
+    {"max", PyCastWrap(Boundingbox, max, "Get the maximum vector", Vec3d) },
+    {"update", PyCastWrap(Boundingbox, update, "Update the bounding box", void, Vec3d) },
+    {"center", PyCastWrap(Boundingbox, center, "Get the center", Vec3d) },
     {NULL}  /* Sentinel */
 };
 
