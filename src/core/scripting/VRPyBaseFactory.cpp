@@ -16,7 +16,7 @@ template<> string typeName(const PyObjectPtr& o) {
     return type->tp_name;
 }
 
-template<> bool toValue(PyObject* o, bool& v) { if (!PyBool_Check(o)) return 0; v = PyInt_AsLong(o); return 1; }
+template<> bool toValue(PyObject* o, bool& v) { if (!PyNumber_Check(o)) return 0; v = PyInt_AsLong(o); return 1; }
 template<> bool toValue(PyObject* o, int& v) { if (!PyInt_Check(o)) return 0; v = PyInt_AsLong(o); return 1; }
 template<> bool toValue(PyObject* o, unsigned int& v) { if (!PyInt_Check(o)) return 0; v = PyInt_AsLong(o); return 1; }
 template<> bool toValue(PyObject* o, float& v) { if (!PyNumber_Check(o)) return 0; v = PyFloat_AsDouble(o); return 1; }

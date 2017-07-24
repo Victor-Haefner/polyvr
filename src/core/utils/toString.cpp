@@ -126,7 +126,7 @@ template <typename T> int ssToVal(stringstream& ss, T& t) {
     return int(ss.tellg()) - N;
 }
 
-template<> int toValue(stringstream& ss, string& s) { s = ss.str(); ss.seekg(0, ios::end); return ss.tellg(); }
+template<> int toValue(stringstream& ss, string& s) { s = ss.str(); return true; }
 template<> int toValue(stringstream& ss, bool& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, int& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, unsigned int& v) { return ssToVal(ss, v); }

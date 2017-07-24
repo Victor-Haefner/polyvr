@@ -15,7 +15,7 @@ if (Np < N-Ndp ) { \
     return false; \
 }
 
-#define CW_GET_VALUE(i,T,t) \
+#define CW_GET_VALUE(i,T,t,N) \
 T t; \
 if (i < params.size()) { \
     if (! toValue(params[i], t)) { \
@@ -23,7 +23,7 @@ if (i < params.size()) { \
         return false; \
     } \
 } else { \
-    int j = i - params.size(); \
+    int j = i - (N-defaultParams.size()); \
     if (! toValue(defaultParams[j], t)) { \
         VRCallbackWrapperBase::err = "Internal error, function argument "+toString(i)+" expects a "+typeName(t)+", but got default argument "+defaultParams[j]; \
         return false; \
@@ -80,84 +80,84 @@ struct VRCallbackWrapperT<P, U, R (T::*)(Args...)> : public VRCallbackWrapper<P>
     template<class O, class A>
     bool call(T* obj, const vector<P>& params, R& r, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(1);
-        CW_GET_VALUE(0,A,a);
+        CW_GET_VALUE(0,A,a,1);
         r = (obj->*callback)( a ); return true;
     }
 
     template<class O, class A, class B>
     bool call(T* obj, const vector<P>& params, R& r, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(2);
-        CW_GET_VALUE(0,A,a);
-        CW_GET_VALUE(1,B,b);
+        CW_GET_VALUE(0,A,a,2);
+        CW_GET_VALUE(1,B,b,2);
         r = (obj->*callback)( a, b ); return true;
     }
 
     template<class O, class A, class B, class C>
     bool call(T* obj, const vector<P>& params, R& r, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(3);
-        CW_GET_VALUE(0,A,a);
-        CW_GET_VALUE(1,B,b);
-        CW_GET_VALUE(2,C,c);
+        CW_GET_VALUE(0,A,a,3);
+        CW_GET_VALUE(1,B,b,3);
+        CW_GET_VALUE(2,C,c,3);
         r = (obj->*callback)( a, b, c ); return true;
     }
 
     template<class O, class A, class B, class C, class D>
     bool call(T* obj, const vector<P>& params, R& r, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(4);
-        CW_GET_VALUE(0,A,a);
-        CW_GET_VALUE(1,B,b);
-        CW_GET_VALUE(2,C,c);
-        CW_GET_VALUE(3,D,d);
+        CW_GET_VALUE(0,A,a,4);
+        CW_GET_VALUE(1,B,b,4);
+        CW_GET_VALUE(2,C,c,4);
+        CW_GET_VALUE(3,D,d,4);
         r = (obj->*callback)( a, b, c, d ); return true;
     }
 
     template<class O, class A, class B, class C, class D, class E>
     bool call(T* obj, const vector<P>& params, R& r, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(5);
-        CW_GET_VALUE(0,A,a);
-        CW_GET_VALUE(1,B,b);
-        CW_GET_VALUE(2,C,c);
-        CW_GET_VALUE(3,D,d);
-        CW_GET_VALUE(4,E,e);
+        CW_GET_VALUE(0,A,a,5);
+        CW_GET_VALUE(1,B,b,5);
+        CW_GET_VALUE(2,C,c,5);
+        CW_GET_VALUE(3,D,d,5);
+        CW_GET_VALUE(4,E,e,5);
         r = (obj->*callback)( a, b, c, d, e ); return true;
     }
 
     template<class O, class A, class B, class C, class D, class E, class F>
     bool call(T* obj, const vector<P>& params, R& r, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(6);
-        CW_GET_VALUE(0,A,a);
-        CW_GET_VALUE(1,B,b);
-        CW_GET_VALUE(2,C,c);
-        CW_GET_VALUE(3,D,d);
-        CW_GET_VALUE(4,E,e);
-        CW_GET_VALUE(5,F,f);
+        CW_GET_VALUE(0,A,a,6);
+        CW_GET_VALUE(1,B,b,6);
+        CW_GET_VALUE(2,C,c,6);
+        CW_GET_VALUE(3,D,d,6);
+        CW_GET_VALUE(4,E,e,6);
+        CW_GET_VALUE(5,F,f,6);
         r = (obj->*callback)( a, b, c, d, e, f ); return true;
     }
 
     template<class O, class A, class B, class C, class D, class E, class F, class G>
     bool call(T* obj, const vector<P>& params, R& r, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(7);
-        CW_GET_VALUE(0,A,a);
-        CW_GET_VALUE(1,B,b);
-        CW_GET_VALUE(2,C,c);
-        CW_GET_VALUE(3,D,d);
-        CW_GET_VALUE(4,E,e);
-        CW_GET_VALUE(5,F,f);
-        CW_GET_VALUE(6,G,g);
+        CW_GET_VALUE(0,A,a,7);
+        CW_GET_VALUE(1,B,b,7);
+        CW_GET_VALUE(2,C,c,7);
+        CW_GET_VALUE(3,D,d,7);
+        CW_GET_VALUE(4,E,e,7);
+        CW_GET_VALUE(5,F,f,7);
+        CW_GET_VALUE(6,G,g,7);
         r = (obj->*callback)( a, b, c, d, e, f, g ); return true;
     }
 
     template<class O, class A, class B, class C, class D, class E, class F, class G, class H>
     bool call(T* obj, const vector<P>& params, R& r, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(8);
-        CW_GET_VALUE(0,A,a);
-        CW_GET_VALUE(1,B,b);
-        CW_GET_VALUE(2,C,c);
-        CW_GET_VALUE(3,D,d);
-        CW_GET_VALUE(4,E,e);
-        CW_GET_VALUE(5,F,f);
-        CW_GET_VALUE(6,G,g);
-        CW_GET_VALUE(7,H,h);
+        CW_GET_VALUE(0,A,a,8);
+        CW_GET_VALUE(1,B,b,8);
+        CW_GET_VALUE(2,C,c,8);
+        CW_GET_VALUE(3,D,d,8);
+        CW_GET_VALUE(4,E,e,8);
+        CW_GET_VALUE(5,F,f,8);
+        CW_GET_VALUE(6,G,g,8);
+        CW_GET_VALUE(7,H,h,8);
         r = (obj->*callback)( a, b, c, d, e, f, g, h ); return true;
     }
 
@@ -192,84 +192,84 @@ struct VRCallbackWrapperT<P, U, void (T::*)(Args...)> : public VRCallbackWrapper
     template<class O, class A>
     bool call(T* obj, const vector<P>& params, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(1);
-        CW_GET_VALUE(0,A,a);
+        CW_GET_VALUE(0,A,a,1);
         (obj->*callback)(a); return true;
     }
 
     template<class O, class A, class B>
     bool call(T* obj, const vector<P>& params, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(2);
-        CW_GET_VALUE(0,A,a);
-        CW_GET_VALUE(1,B,b);
+        CW_GET_VALUE(0,A,a,2);
+        CW_GET_VALUE(1,B,b,2);
         (obj->*callback)( a, b ); return true;
     }
 
     template<class O, class A, class B, class C>
     bool call(T* obj, const vector<P>& params, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(3);
-        CW_GET_VALUE(0,A,a);
-        CW_GET_VALUE(1,B,b);
-        CW_GET_VALUE(2,C,c);
+        CW_GET_VALUE(0,A,a,3);
+        CW_GET_VALUE(1,B,b,3);
+        CW_GET_VALUE(2,C,c,3);
         (obj->*callback)( a, b, c ); return true;
     }
 
     template<class O, class A, class B, class C, class D>
     bool call(T* obj, const vector<P>& params, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(4);
-        CW_GET_VALUE(0,A,a);
-        CW_GET_VALUE(1,B,b);
-        CW_GET_VALUE(2,C,c);
-        CW_GET_VALUE(3,D,d);
+        CW_GET_VALUE(0,A,a,4);
+        CW_GET_VALUE(1,B,b,4);
+        CW_GET_VALUE(2,C,c,4);
+        CW_GET_VALUE(3,D,d,4);
         (obj->*callback)( a, b, c, d ); return true;
     }
 
     template<class O, class A, class B, class C, class D, class E>
     bool call(T* obj, const vector<P>& params, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(5);
-        CW_GET_VALUE(0,A,a);
-        CW_GET_VALUE(1,B,b);
-        CW_GET_VALUE(2,C,c);
-        CW_GET_VALUE(3,D,d);
-        CW_GET_VALUE(4,E,e);
+        CW_GET_VALUE(0,A,a,5);
+        CW_GET_VALUE(1,B,b,5);
+        CW_GET_VALUE(2,C,c,5);
+        CW_GET_VALUE(3,D,d,5);
+        CW_GET_VALUE(4,E,e,5);
         (obj->*callback)( a, b, c, d, e ); return true;
     }
 
     template<class O, class A, class B, class C, class D, class E, class F>
     bool call(T* obj, const vector<P>& params, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(6);
-        CW_GET_VALUE(0,A,a);
-        CW_GET_VALUE(1,B,b);
-        CW_GET_VALUE(2,C,c);
-        CW_GET_VALUE(3,D,d);
-        CW_GET_VALUE(4,E,e);
-        CW_GET_VALUE(5,F,f);
+        CW_GET_VALUE(0,A,a,6);
+        CW_GET_VALUE(1,B,b,6);
+        CW_GET_VALUE(2,C,c,6);
+        CW_GET_VALUE(3,D,d,6);
+        CW_GET_VALUE(4,E,e,6);
+        CW_GET_VALUE(5,F,f,6);
         (obj->*callback)( a, b, c, d, e, f ); return true;
     }
 
     template<class O, class A, class B, class C, class D, class E, class F, class G>
     bool call(T* obj, const vector<P>& params, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(7);
-        CW_GET_VALUE(0,A,a);
-        CW_GET_VALUE(1,B,b);
-        CW_GET_VALUE(2,C,c);
-        CW_GET_VALUE(3,D,d);
-        CW_GET_VALUE(4,E,e);
-        CW_GET_VALUE(5,F,f);
-        CW_GET_VALUE(6,G,g);
+        CW_GET_VALUE(0,A,a,7);
+        CW_GET_VALUE(1,B,b,7);
+        CW_GET_VALUE(2,C,c,7);
+        CW_GET_VALUE(3,D,d,7);
+        CW_GET_VALUE(4,E,e,7);
+        CW_GET_VALUE(5,F,f,7);
+        CW_GET_VALUE(6,G,g,7);
         (obj->*callback)( a, b, c, d, e, f, g ); return true;
     }
 
     template<class O, class A, class B, class C, class D, class E, class F, class G, class H>
     bool call(T* obj, const vector<P>& params, const vector<string>& defaultParams) {
         CW_CHECK_SIZE(8);
-        CW_GET_VALUE(0,A,a);
-        CW_GET_VALUE(1,B,b);
-        CW_GET_VALUE(2,C,c);
-        CW_GET_VALUE(3,D,d);
-        CW_GET_VALUE(4,E,e);
-        CW_GET_VALUE(5,F,f);
-        CW_GET_VALUE(6,G,g);
-        CW_GET_VALUE(7,H,h);
+        CW_GET_VALUE(0,A,a,8);
+        CW_GET_VALUE(1,B,b,8);
+        CW_GET_VALUE(2,C,c,8);
+        CW_GET_VALUE(3,D,d,8);
+        CW_GET_VALUE(4,E,e,8);
+        CW_GET_VALUE(5,F,f,8);
+        CW_GET_VALUE(6,G,g,8);
+        CW_GET_VALUE(7,H,h,8);
         (obj->*callback)( a, b, c, d, e, f, g, h ); return true;
     }
 

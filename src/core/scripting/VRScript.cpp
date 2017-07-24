@@ -360,13 +360,13 @@ void VRScript::compile( PyObject* pGlobal, PyObject* pModVR ) {
     VRScene::getCurrent()->redirectPyOutput("stderr", "Syntax");
     PyObject* pCode = Py_CompileString(getScript().c_str(), getName().c_str(), Py_file_input);
     if (!pCode) { if (PyErr_Occurred()) PyErr_Print(); return; }
+    VRScene::getCurrent()->redirectPyOutput("stderr", "Errors");
     PyObject* pValue = PyEval_EvalCode((PyCodeObject*)pCode, pGlobal, PyModule_GetDict(pModVR));
     if (!pValue) { pyTraceToConsole(); if (PyErr_Occurred()) PyErr_Print(); return; }
     if (PyErr_Occurred()) PyErr_Print();
     Py_DECREF(pCode);
     Py_DECREF(pValue);
     setFunction( PyObject_GetAttrString(pModVR, name.c_str()) );
-    VRScene::getCurrent()->redirectPyOutput("stderr", "Errors");
 }
 
 void VRScript::execute() {
@@ -374,7 +374,7 @@ void VRScript::execute() {
         if (!isInitScript && VRGlobals::CURRENT_FRAME <= loadingFrame + 2) return;
         if (fkt == 0 || !active) return;
         PyGILState_STATE gstate = PyGILState_Ensure();
-        if (PyErr_Occurred() != NULL) PyErr_Print();
+        if (PyErr_Occurred()) PyErr_Print();
 
         VRTimer timer; timer.start();
         auto args = getArguments(true);
@@ -388,13 +388,13 @@ void VRScript::execute() {
         }
 
         auto res = PyObject_CallObject(fkt, pArgs);
-        if (!res) { pyTraceToConsole(); return; }
+        if (!res) { pyTraceToConsole(); PyErr_Print(); return; }
 
         execution_time = timer.stop();
 
         Py_XDECREF(pArgs);
 
-        if (PyErr_Occurred() != NULL) PyErr_Print();
+        if (PyErr_Occurred()) PyErr_Print();
         PyGILState_Release(gstate);
     }
 

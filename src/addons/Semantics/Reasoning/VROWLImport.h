@@ -62,6 +62,8 @@ class VROWLImport {
         map<string, VRPropertyPtr> objproperties;
         map<string, VRPropertyPtr> annproperties;
 
+        map<string, VariablePtr> variables;
+
         VROntologyPtr onto;
 
         void clear();

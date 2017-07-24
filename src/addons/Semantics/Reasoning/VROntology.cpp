@@ -9,6 +9,7 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 #include <iostream>
+#include <boost/filesystem.hpp>
 
 #define WARN(x) \
 VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
@@ -92,7 +93,7 @@ vector<VRConceptPtr> VROntology::getConcepts() {
 }
 
 VRConceptPtr VROntology::addConcept(string concept, string parents, string comment) {
-    if (concepts.count(concept)) { cout << "WARNING in VROntology::addConcept, " << concept << " known, skipping!\n"; return 0;  }
+    if (concepts.count(concept) && concept != "Thing") { cout << "WARNING in VROntology::addConcept, " << concept << " known, skipping!\n"; return 0;  }
 
     vector<VRConceptPtr> Parents;
     if (parents != "") {
@@ -115,7 +116,7 @@ VRConceptPtr VROntology::addConcept(string concept, string parents, string comme
 }
 
 void VROntology::addConcept(VRConceptPtr c) {
-    if (concepts.count(c->getName())) { WARN("WARNING in VROntology::addConcept, " + c->getName() + " known, skipping!"); return;  }
+    if (concepts.count(c->getName()) && c->getName() != "Thing") { WARN("WARNING in VROntology::addConcept, " + c->getName() + " known, skipping!"); return;  }
     if (c == thing) return;
     concepts[c->getName()] = c;
     if (!c->hasParent()) thing->append(c);
@@ -249,6 +250,8 @@ string VROntology::toString() {
 }
 
 void VROntology::open(string path) {
+    if (!boost::filesystem::exists(path)) WARN("WARNING in VROntology::open, " + path + " not found!");
+
     VROWLImport importer;
     importer.load(shared_from_this(), path);
 }

@@ -1,6 +1,7 @@
 #include "VROWLImport.h"
 #include "VROntology.h"
 #include "VRProperty.h"
+#include "VRSemanticUtils.h"
 #include "core/utils/toString.h"
 
 using namespace OSG;
@@ -44,7 +45,7 @@ string VROWLImport::RDFStatement::toString(raptor_term* t) {
 }
 
 string VROWLImport::RDFStatement::toString() {
-    return "Statement: type "+type+"  predicate "+predicate+"  subject "+subject+"  object "+object;
+    return "Statement: type "+::toString(type)+"  predicate "+predicate+"  subject "+subject+"  object "+object+" RDFsubject "+::toString(RDFsubject)+" RDFobject "+::toString(RDFobject);
 }
 
 VROWLImport::VROWLImport() {
@@ -57,9 +58,20 @@ VROWLImport::VROWLImport() {
     predicate_blacklist["equivalentClass"] = 1;
 
     //type_blacklist["Restriction"] = 1;
-    list_types["unionOf"] = 1;
+    list_types["disjointUnionOf"] = 1;
+    list_types["distinctMembers"] = 1;
+    list_types["hasKey"] = 1;
     list_types["intersectionOf"] = 1;
     list_types["members"] = 1;
+    list_types["oneOf"] = 1;
+    list_types["onProperties"] = 1;
+    list_types["propertyChainAxiom"] = 1;
+    list_types["unionOf"] = 1;
+    list_types["withRestrictions"] = 1;
+
+    // rules
+    list_types["head"] = 1;
+    list_types["body"] = 1;
 }
 
 void VROWLImport::clear() {
@@ -144,6 +156,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
             }
             if (object == "Class") { return 0; } // TODO
             if (object == "AllDisjointClasses") { return 0; } // TODO
+            if (object == "Datatype") { return 0; } // TODO
         }
 
         if (predicate == "complementOf") { return 0; } // TODO
@@ -186,9 +199,10 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
 
         if (object == "Ontology") return 0;
         if (object == "Class") { concepts[subject] = VRConcept::create(subject, onto); return 0; }
-        if (object == "NamedIndividual") { entities[subject] = VREntity::create(subject); return 0; }
+        if (object == "NamedIndividual") { entities[subject] = VREntity::create(subject, onto); return 0; }
 
         // properties
+        if (object == "Datatype") { datproperties[subject] = VRProperty::create(subject); return 0; }
         if (object == "DatatypeProperty") { datproperties[subject] = VRProperty::create(subject); return 0; }
         if (object == "AnnotationProperty") { annproperties[subject] = VRProperty::create(subject); return 0; }
         if (object == "ObjectProperty") {
@@ -204,6 +218,9 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
         if (object == "FunctionalProperty") { objproperties[subject] = VRProperty::create(subject); return 0; }
         if (object == "InverseFunctionalProperty") { objproperties[subject] = VRProperty::create(subject); return 0; }
         if (object == "IrreflexiveProperty") { objproperties[subject] = VRProperty::create(subject); return 0; }
+
+        // rules
+        if (object == "Variable") { variables[subject] = Variable::create(onto, subject); return 0; }
     }
 
     if (type == "") { // resolve the subject type of the statement
@@ -348,6 +365,7 @@ void VROWLImport::processTriple(raptor_statement* rs) {
 
 void VROWLImport::load(VROntologyPtr o, string path) {
     clear();
+    onto = o;
     raptor_world* world = raptor_new_world();
     raptor_parser* rdf_parser = raptor_new_parser(world, "rdfxml");
     unsigned char* uri_string = raptor_uri_filename_to_uri_string(path.c_str());
@@ -363,7 +381,6 @@ void VROWLImport::load(VROntologyPtr o, string path) {
     raptor_free_memory(uri_string);
     raptor_free_world(world);
 
-    onto = o;
     AgglomerateData();
     //printTripleStore();
 }
