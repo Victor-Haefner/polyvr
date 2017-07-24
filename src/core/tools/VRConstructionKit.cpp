@@ -120,6 +120,7 @@ void VRConstructionKit::remObject(VRTransformPtr t) {
 }
 
 VRGeometryPtr VRConstructionKit::addObjectAnchor(VRTransformPtr t, int a, Vec3d pos, float radius) {
+    if (!anchors.count(a)) return 0;
     VRGeometryPtr anc = static_pointer_cast<VRGeometry>(anchors[a]->duplicate());
     anc->setPose(pos, Vec3d(0,1,0), Vec3d(1,0,0));
     anc->show();
