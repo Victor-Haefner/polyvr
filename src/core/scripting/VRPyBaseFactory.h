@@ -81,9 +81,10 @@ D " - " #R " " #F "( " FOR_EACH( __VA_ARGS__ ) " )"
 #define PyCastWrap(X, Y, D, R, ...) \
 (PyCFunction)proxyWrap<VRPy ## X, R (OSG::VR ## X::*)( __VA_ARGS__ ), (R (OSG::VR ## X::*)( __VA_ARGS__ )) &OSG::VR ## X::Y, VRCallbackWrapperParams<MACRO_GET_STR( "" )> >::exec , METH_VARARGS, PyWrapDoku(Y,D,R,__VA_ARGS__)
 
-// TODO
-//#define PyConstWrap(X, Y, D, R, ...) \
-//(PyCFunction)proxyWrap<VRPy ## X, R (*const OSG::VR ## X::*)( __VA_ARGS__ ), &OSG::VR ## X::Y, VRCallbackWrapperParams<MACRO_GET_STR( "" )> >::exec , METH_VARARGS, PyWrapDoku(Y,D,R,__VA_ARGS__)
+/* TODO
+#define PyConstWrap(X, Y, D, R, ...) \
+(PyCFunction)proxyWrap<VRPy ## X, R (*const OSG::VR ## X::*)( __VA_ARGS__ ), &OSG::VR ## X::Y, VRCallbackWrapperParams<MACRO_GET_STR( "" )> >::exec , METH_VARARGS, PyWrapDoku(Y,D,R,__VA_ARGS__)
+*/
 
 #define PyWrap2(X, Y, D, R, ...) \
 (PyCFunction)proxyWrap<VRPy ## X, R (OSG::X::*)( __VA_ARGS__ ), (R (OSG::X::*)( __VA_ARGS__ )) &OSG::X::Y, VRCallbackWrapperParams<MACRO_GET_STR( "" )> >::exec , METH_VARARGS, PyWrapDoku(Y,D,R,__VA_ARGS__)
