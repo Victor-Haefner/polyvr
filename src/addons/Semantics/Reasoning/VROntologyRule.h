@@ -13,6 +13,7 @@ struct VROntologyRule : public VROntoID, public VRName {
     string associatedConcept;
     VRStatementPtr query;
     vector<VRStatementPtr> statements;
+    map<int, VRPropertyPtr> annotations;
 
     VROntologyRule(string rule, string associatedConcept);
 
@@ -26,6 +27,8 @@ struct VROntologyRule : public VROntoID, public VRName {
     VRStatementPtr addStatement(string name);
     VRStatementPtr getStatement(int i);
     void remStatement(VRStatementPtr s);
+
+    void addAnnotation(VRPropertyPtr p);
 };
 
 }

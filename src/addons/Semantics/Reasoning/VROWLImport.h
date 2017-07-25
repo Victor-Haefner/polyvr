@@ -44,6 +44,24 @@ class VROWLImport {
             string dataRange;
             string someValuesFrom;
             string allValuesFrom;
+            string hasValue;
+        };
+
+        struct OWLAxiom {
+            string property;
+            int min = -1;
+            int max = -1;
+            string concept;
+            string dataRange;
+            string someValuesFrom;
+            string allValuesFrom;
+            string hasValue;
+        };
+
+        struct OWLList {
+            vector<string> entries;
+            bool ended = false;
+            string parent;
         };
 
         map<string, bool> predicate_blacklist;
@@ -52,17 +70,18 @@ class VROWLImport {
 
         map<string, vector<RDFStatement> > subjects;
         map<string, map<string, string> > objects;
-        map<string, vector<string> > lists;
-        map<string, string> list_ends;
+        map<string, OWLList> lists;
         map<string, OWLRestriction> restrictions;
+        map<string, OWLAxiom> axioms;
 
         map<string, VRConceptPtr> concepts;
         map<string, VREntityPtr> entities;
         map<string, VRPropertyPtr> datproperties;
         map<string, VRPropertyPtr> objproperties;
         map<string, VRPropertyPtr> annproperties;
-
+        map<string, VROntologyRulePtr> rules;
         map<string, VariablePtr> variables;
+        map<string, VRStatementPtr> ruleStatements;
 
         VROntologyPtr onto;
 
@@ -70,11 +89,13 @@ class VROWLImport {
         bool blacklisted(string& s, map<string, bool>& data);
         VRConceptPtr getConcept(string concept);
         VRPropertyPtr getProperty(string prop);
+        VROntologyRulePtr getRule(string rule);
 
         void AgglomerateData();
         bool ProcessSubject(RDFStatement& s, vector<RDFStatement>& statements, map<string, vector<RDFStatement> >& stack);
 
-        void printState(RDFStatement& s);
+        string whereIs(string s);
+        void printState(RDFStatement& s, string ID = "");
         void printTripleStore();
 
     public:

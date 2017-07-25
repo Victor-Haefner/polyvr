@@ -1,5 +1,6 @@
 #include "VROntology.h"
 #include "VRReasoner.h"
+#include "VRProperty.h"
 #include "core/utils/VRStorage_template.h"
 
 #include <iostream>
@@ -36,6 +37,8 @@ void VROntologyRule::setRule(string r) {
 
 void VROntologyRule::setQuery(string s) { query = VRStatement::create(s); }
 //void VROntologyRule::setStatement(string s, int i) { statements[i]; }
+
+void VROntologyRule::addAnnotation(VRPropertyPtr p) { annotations[p->ID] = p; }
 
 string VROntologyRule::toString() {
     string res;

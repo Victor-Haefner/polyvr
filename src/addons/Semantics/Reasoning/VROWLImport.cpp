@@ -1,6 +1,7 @@
 #include "VROWLImport.h"
 #include "VROntology.h"
 #include "VRProperty.h"
+#include "VRStatement.h"
 #include "VRSemanticUtils.h"
 #include "core/utils/toString.h"
 
@@ -45,7 +46,7 @@ string VROWLImport::RDFStatement::toString(raptor_term* t) {
 }
 
 string VROWLImport::RDFStatement::toString() {
-    return "Statement: type "+::toString(type)+"  predicate "+predicate+"  subject "+subject+"  object "+object+" RDFsubject "+::toString(RDFsubject)+" RDFobject "+::toString(RDFobject);
+    return "Statement: type "+type+"  predicate "+predicate+"  subject "+subject+"  object "+object+" RDFsub "+::toString(RDFsubject)+" RDFobj "+::toString(RDFobject);
 }
 
 VROWLImport::VROWLImport() {
@@ -90,14 +91,36 @@ void VROWLImport::clear() {
     annproperties["comment"]->type = "aprop";
 }
 
-void VROWLImport::printState(RDFStatement& s) {
+string VROWLImport::whereIs(string s) {
+    string res = "";
+    if (concepts.count(s)) res += " concepts";
+    if (entities.count(s)) res += " entities";
+    if (datproperties.count(s)) res += " datproperties";
+    if (objproperties.count(s)) res += " objproperties";
+    if (annproperties.count(s)) res += " annproperties";
+    if (rules.count(s)) res += " rules";
+    if (variables.count(s)) res += " variables";
+    if (ruleStatements.count(s)) res += " ruleStatements";
+    if (restrictions.count(s)) res += " restrictions";
+    if (axioms.count(s)) res += " axioms";
+    if (lists.count(s)) res += " lists";
+    return res == "" ? "nowhere" : res;
+}
+
+void VROWLImport::printState(RDFStatement& s, string ID) {
     string& object = s.object;
     string& predicate = s.predicate;
     string& subject = s.subject;
-    cout << s.toString() << endl;
-    cout << concepts.count(subject) << entities.count(subject) << datproperties.count(subject) << objproperties.count(subject) << annproperties.count(subject) << endl;
-    cout << concepts.count(predicate) << entities.count(predicate) << datproperties.count(predicate) << objproperties.count(predicate) << annproperties.count(predicate) << endl;
-    cout << concepts.count(object) << entities.count(object) << datproperties.count(object) << objproperties.count(object) << annproperties.count(object) << endl;
+
+    if (ID != "") {
+        if (subject != ID && predicate != ID && object != ID ) return;
+    }
+
+    cout << s.toString() << "  '"
+    << predicate << "' (" << whereIs(predicate) << ") '"
+    << subject << "' (" << whereIs(subject) << ") '"
+    << object << "' (" << whereIs(object) << ") '"
+    << endl;
 }
 
 void VROWLImport::printTripleStore() {
@@ -123,43 +146,57 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
     string& predicate = statement.predicate;
     string& object = statement.object;
 
-    //if (subject == "AbstractActor" || predicate == "AbstractActor" || object == "AbstractActor") printState(statement);
-    //if (subject == "genid49" || predicate == "genid49" || object == "genid49") printState(statement);
+    printState(statement, "genid4");
+    //printState(statement, "genid102");
+    //printState(statement, "unionOf");
+    //printState(statement, "first");
+    //printState(statement, "rest");
 
     if (blacklisted(predicate, predicate_blacklist)) return 0;
 
     if (statement.RDFsubject) {
-        if (list_types.count(predicate)) { // RDF list (subject) starting with (object)
-            lists[subject] = vector<string>();
-            list_ends[object] = subject;
+        if (list_types.count(predicate)) { // RDF parent (subject) owns list (object)
+            if (!lists.count(object)) lists[object] = OWLList();
+            lists[object].parent = subject;
             return 0;
         }
 
-        if (predicate == "first" && list_ends.count(subject)) {
-            lists[list_ends[subject]].push_back(object);
+        if (predicate == "first") { // first element of list
+            if (!lists.count(subject)) lists[subject] = OWLList();
+            lists[subject].entries.push_back(object);
             return 0;
         }
 
-        if (predicate == "rest" && list_ends.count(subject)) {
-            if (object == "nil") {
-                list_ends[ list_ends[subject] ] = "nil";
-                return 0;
-            }
-            list_ends[object] = list_ends[subject];
+        if (predicate == "rest" && lists.count(subject)) { // next or last element of list
+            if (object != "nil") lists[subject].entries.push_back(object);
+            else lists[subject].ended = true;
             return 0;
         }
 
         if (predicate == "type") {
-            if (object == "Restriction") {
-                restrictions[subject] = OWLRestriction();
-                return 0;
-            }
-            if (object == "Class") { return 0; } // TODO
-            if (object == "AllDisjointClasses") { return 0; } // TODO
-            if (object == "Datatype") { return 0; } // TODO
+            if (object == "Restriction") { restrictions[subject] = OWLRestriction(); return 0; }
+            if (object == "AllDisjointClasses") { axioms[subject] = OWLAxiom(); return 0; }
+            if (object == "Class") { concepts[subject] = VRConcept::create(subject, onto); return 0; }
+            if (object == "Datatype") { datproperties[subject] = VRProperty::create(subject); return 0; }
+            if (object == "Imp") { rules[subject] = VROntologyRule::create(); return 0; }
+            if (object == "ClassAtom") { ruleStatements[subject] = VRStatement::create(); return 0; }
+            if (object == "IndividualPropertyAtom") { ruleStatements[subject] = VRStatement::create(); return 0; }
+            if (object == "AtomList") { return 0; } // TODO, needed to map the statements to the corresponding rule
         }
 
-        if (predicate == "complementOf") { return 0; } // TODO
+        //if (predicate == "complementOf") { return 0; } // TODO
+
+        if (predicate == "onDatatype") {
+            if (datproperties.count(subject)) { datproperties[subject]->setType(object); return 0; }
+        }
+
+        if (predicate == "propertyPredicate" || predicate == "classPredicate") {
+            if (ruleStatements.count(subject)) { ruleStatements[subject]->verb = object; return 0; }
+        }
+
+        if (predicate == "argument1" || predicate == "argument2" || predicate == "argument3") {
+            if (ruleStatements.count(subject)) { ruleStatements[subject]->terms.push_back( Term(object) ); return 0; }
+        }
 
         if (restrictions.count(subject)) {
             if (predicate == "onProperty") { restrictions[subject].property = object; return 0; }
@@ -171,19 +208,37 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
             if (predicate == "onDataRange") { restrictions[subject].dataRange = object; return 0; }
             if (predicate == "someValuesFrom") { restrictions[subject].someValuesFrom = object; return 0; }
             if (predicate == "allValuesFrom") { restrictions[subject].allValuesFrom = object; return 0; }
+            if (predicate == "hasValue") { restrictions[subject].hasValue = object; return 0; }
         }
+
+        if (type == "") { // resolve the subject type of the statement
+            if (getConcept(predicate)) statement.type = "concept";
+            if (entities.count(predicate)) statement.type = "entity";
+            if (datproperties.count(predicate)) statement.type = "dprop";
+            if (objproperties.count(predicate)) statement.type = "oprop";
+            if (annproperties.count(predicate)) statement.type = "aprop";
+            if (statement.type == "") return 1;
+        }
+
+        if (type == "oprop" && objproperties.count(predicate)) {}
+        if (type == "dprop" && datproperties.count(predicate)) {}
+
+        if (type == "aprop" && annproperties.count(predicate)) {
+            if (auto r = getRule(subject)) { r->addAnnotation( annproperties[predicate] ); return 0; }
+        }
+
         return 1;
     }
 
     if (statement.RDFobject) {
-        if (lists.count(object) && list_ends[object] == "nil") { // RDF list fully parsed
+        /*if (lists.count(object) && list_ends[object] == "nil") { // RDF list fully parsed
             for (auto i : lists[object]) {
                 auto s = statement;
                 s.object = i; s.RDFobject = 0;
                 stack[subject].push_back(s);
             }
             return 0;
-        }
+        }*/
 
         if (predicate == "subClassOf") { // the class(subject) has some specifications on object properties
             if (restrictions.count(object)) { // the class(subject) has a restriction(object) on an object property
@@ -310,6 +365,11 @@ VRPropertyPtr VROWLImport::getProperty(string prop) {
     return VRPropertyPtr();
 };
 
+VROntologyRulePtr VROWLImport::getRule(string rule) {
+    if (rules.count(rule)) return rules[rule];
+    return VROntologyRulePtr();
+};
+
 void VROWLImport::AgglomerateData() {
     map<string, vector<RDFStatement> > tmp;
     map<string, vector<RDFStatement> > stack = subjects;
@@ -322,6 +382,7 @@ void VROWLImport::AgglomerateData() {
         return i;
     };
 
+    cout << endl;
     int lastStack = 0;
     int lastJobSize = 0;
     for( int i=0; stack.size(); i++) {
@@ -340,6 +401,11 @@ void VROWLImport::AgglomerateData() {
         if (int(stack.size()) == lastStack && jobs == lastJobSize) {
             cout << "RDF parser warning: stack not shrinking, aborting with " << jobs << " triplets remaining!" << endl;
             for (auto& sv : stack) for (auto& s : sv.second) cout << " " << s.toString() << endl;
+            for (auto& lv : lists) {
+                cout << " list: " << lv.first << " parent: " << lv.second.parent << " ended: " << lv.second.ended << " - ";
+                for (auto& e : lv.second.entries) cout << " " << e;
+                cout << endl;
+            }
             break;
         } else {
             lastStack = stack.size();
