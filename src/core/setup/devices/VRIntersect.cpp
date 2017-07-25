@@ -193,7 +193,7 @@ void VRIntersect::drag(VRObjectWeakPtr wobj, VRTransformWeakPtr wcaster) {
 
 void VRIntersect::drop(VRDeviceWeakPtr dev) {
     auto d = getDraggedObject();
-    if (d != 0) {
+    if (d) {
         d->drop();
         dropSignal->triggerPtr<VRDevice>();
         drop_time = VRGlobals::CURRENT_FRAME;
