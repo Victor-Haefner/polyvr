@@ -64,6 +64,7 @@ VRObjectPtr VRTransform::copy(vector<VRObjectPtr> children) {
     geo->setMatrix(getMatrix());
     geo->setVisible(isVisible());
     geo->setPickable(isPickable());
+    geo->old_parent = getParent();
     return geo;
 }
 
@@ -634,7 +635,7 @@ void VRTransform::move(float d) {
 void VRTransform::drag(VRTransformPtr new_parent) {
     if (held) return;
     held = true;
-    old_parent = getParent();
+    if (auto p = getParent()) old_parent = p;
     old_child_id = getChildIndex();
     setFixed(false);
 
