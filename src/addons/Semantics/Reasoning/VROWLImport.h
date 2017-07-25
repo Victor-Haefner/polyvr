@@ -60,8 +60,8 @@ class VROWLImport {
 
         struct OWLList {
             vector<string> entries;
-            bool ended = false;
-            string parent;
+            bool complete = false;
+            string listID;
         };
 
         map<string, bool> predicate_blacklist;
@@ -71,6 +71,7 @@ class VROWLImport {
         map<string, vector<RDFStatement> > subjects;
         map<string, map<string, string> > objects;
         map<string, OWLList> lists;
+        map<string, string> list_ends;
         map<string, OWLRestriction> restrictions;
         map<string, OWLAxiom> axioms;
 

@@ -146,7 +146,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
     string& predicate = statement.predicate;
     string& object = statement.object;
 
-    printState(statement, "genid4");
+    printState(statement, "genid125");
     //printState(statement, "genid102");
     //printState(statement, "unionOf");
     //printState(statement, "first");
@@ -156,20 +156,20 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
 
     if (statement.RDFsubject) {
         if (list_types.count(predicate)) { // RDF parent (subject) owns list (object)
-            if (!lists.count(object)) lists[object] = OWLList();
-            lists[object].parent = subject;
-            return 0;
-        }
-
-        if (predicate == "first") { // first element of list
             if (!lists.count(subject)) lists[subject] = OWLList();
-            lists[subject].entries.push_back(object);
+            lists[subject].listID = object;
+            list_ends[object] = subject;
             return 0;
         }
 
-        if (predicate == "rest" && lists.count(subject)) { // next or last element of list
-            if (object != "nil") lists[subject].entries.push_back(object);
-            else lists[subject].ended = true;
+        if (predicate == "first" && list_ends.count(subject)) { // list element
+            lists[list_ends[subject]].entries.push_back(object);
+            return 0;
+        }
+
+        if (predicate == "rest" && list_ends.count(subject)) { // pointer to new list or end
+            if (object == "nil") { list_ends[ list_ends[subject] ] = "nil"; lists[ list_ends[subject] ].complete = true; return 0; }
+            list_ends[object] = list_ends[subject];
             return 0;
         }
 
@@ -187,6 +187,10 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
         //if (predicate == "complementOf") { return 0; } // TODO
 
         if (predicate == "onDatatype") {
+            if (datproperties.count(subject)) { datproperties[subject]->setType(object); return 0; }
+        }
+
+        if (predicate == "minInclusive") {
             if (datproperties.count(subject)) { datproperties[subject]->setType(object); return 0; }
         }
 
@@ -231,14 +235,14 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
     }
 
     if (statement.RDFobject) {
-        /*if (lists.count(object) && list_ends[object] == "nil") { // RDF list fully parsed
-            for (auto i : lists[object]) {
+        if (lists.count(object) && lists[object].complete) { // RDF list fully parsed
+            for (auto i : lists[object].entries) {
                 auto s = statement;
                 s.object = i; s.RDFobject = 0;
                 stack[subject].push_back(s);
             }
             return 0;
-        }*/
+        }
 
         if (predicate == "subClassOf") { // the class(subject) has some specifications on object properties
             if (restrictions.count(object)) { // the class(subject) has a restriction(object) on an object property
@@ -402,7 +406,7 @@ void VROWLImport::AgglomerateData() {
             cout << "RDF parser warning: stack not shrinking, aborting with " << jobs << " triplets remaining!" << endl;
             for (auto& sv : stack) for (auto& s : sv.second) cout << " " << s.toString() << endl;
             for (auto& lv : lists) {
-                cout << " list: " << lv.first << " parent: " << lv.second.parent << " ended: " << lv.second.ended << " - ";
+                cout << " parent: " << lv.first << " list: " << lv.second.listID << " complete: " << lv.second.complete << " - ";
                 for (auto& e : lv.second.entries) cout << " " << e;
                 cout << endl;
             }
