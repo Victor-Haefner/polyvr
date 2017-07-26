@@ -146,11 +146,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
     string& predicate = statement.predicate;
     string& object = statement.object;
 
-    printState(statement, "genid125");
-    //printState(statement, "genid102");
-    //printState(statement, "unionOf");
-    //printState(statement, "first");
-    //printState(statement, "rest");
+    //printState(statement, "genid125");
 
     if (blacklisted(predicate, predicate_blacklist)) return 0;
 
@@ -167,11 +163,14 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
             return 0;
         }
 
-        if (predicate == "rest" && list_ends.count(subject)) { // pointer to new list or end
+        if (predicate == "rest" && list_ends.count(subject)) { // pointer to next list element or end
             if (object == "nil") { list_ends[ list_ends[subject] ] = "nil"; lists[ list_ends[subject] ].complete = true; return 0; }
             list_ends[object] = list_ends[subject];
             return 0;
         }
+
+        if (predicate == "minInclusive") { minInclusives[subject] = object; return 0; } // TODO
+        if (predicate == "maxInclusive") { maxInclusives[subject] = object; return 0; } // TODO: those are the values in lists, have to be used
 
         if (predicate == "type") {
             if (object == "Restriction") { restrictions[subject] = OWLRestriction(); return 0; }
@@ -187,10 +186,6 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
         //if (predicate == "complementOf") { return 0; } // TODO
 
         if (predicate == "onDatatype") {
-            if (datproperties.count(subject)) { datproperties[subject]->setType(object); return 0; }
-        }
-
-        if (predicate == "minInclusive") {
             if (datproperties.count(subject)) { datproperties[subject]->setType(object); return 0; }
         }
 

@@ -74,6 +74,8 @@ class VROWLImport {
         map<string, string> list_ends;
         map<string, OWLRestriction> restrictions;
         map<string, OWLAxiom> axioms;
+        map<string, string> minInclusives;
+        map<string, string> maxInclusives;
 
         map<string, VRConceptPtr> concepts;
         map<string, VREntityPtr> entities;
