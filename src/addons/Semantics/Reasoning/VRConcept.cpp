@@ -113,8 +113,8 @@ vector<VRPropertyPtr> VRConcept::getProperties(string type) {
         if (p->type == type) res.push_back(p);
     }
 
-    if (res.size() == 0) cout << "Warning: no properties of type " << type << " found of concept " << this->name <<  "!" << endl;
-    if (res.size() > 1) cout << "Warning: multiple properties of type " << type << " found of concept " << this->name <<  "!" << endl;
+    if (res.size() == 0) cout << "VRConcept::getProperties Warning: no properties of type " << type << " found of concept " << this->name <<  "!" << endl;
+    if (res.size() > 1) cout << "VRConcept::getProperties Warning: multiple properties of type " << type << " found of concept " << this->name <<  "!" << endl;
     return res;
 }
 

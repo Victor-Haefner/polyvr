@@ -42,7 +42,7 @@ VRProcessPtr VRProcess::create(string name) { return VRProcessPtr( new VRProcess
 VRProcessPtr VRProcess::ptr() { return shared_from_this(); }
 
 void VRProcess::open(string path) {
-    ontology = VROntology::create(getBaseName());
+    if (!ontology) ontology = VROntology::create(getBaseName());
     ontology->open(path);
     update();
 }

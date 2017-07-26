@@ -146,7 +146,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
     string& predicate = statement.predicate;
     string& object = statement.object;
 
-    //printState(statement, "genid125");
+    //printState(statement, "abstract-pass-ont");
 
     if (blacklisted(predicate, predicate_blacklist)) return 0;
 
@@ -251,7 +251,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
     if (predicate == "type") {
         if (blacklisted(object, type_blacklist)) return 0;
 
-        if (object == "Ontology") return 0;
+        if (object == "Ontology") { ontologyName = subject; return 0; }
         if (object == "Class") { concepts[subject] = VRConcept::create(subject, onto); return 0; }
         if (object == "NamedIndividual") { entities[subject] = VREntity::create(subject, onto); return 0; }
 
@@ -283,6 +283,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
         if (datproperties.count(subject)) statement.type = "dprop";
         if (objproperties.count(subject)) statement.type = "oprop";
         if (annproperties.count(subject)) statement.type = "aprop";
+        if (subject == ontologyName) statement.type = "onto";
         if (statement.type == "") return 1;
     }
 
@@ -341,10 +342,11 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
 
     // local properties
     if (annproperties.count(predicate) && annproperties[predicate]->type == "aprop") { // concept(subject) or entity(subject) or property(subject) have an annotation(predicate) with value(object)
-        // must be property
         if (auto p = getProperty(subject)) {
             return 0; // TODO
         }
+
+        if (subject == ontologyName) return 0;
     }
 
     return 1;
@@ -381,7 +383,6 @@ void VROWLImport::AgglomerateData() {
         return i;
     };
 
-    cout << endl;
     int lastStack = 0;
     int lastJobSize = 0;
     for( int i=0; stack.size(); i++) {
@@ -412,9 +413,10 @@ void VROWLImport::AgglomerateData() {
         }
     }
 
+    cout << " VROWLImport::AgglomerateData add " << concepts.size() << " concepts to ontology" << endl;
     for (auto c : concepts) onto->addConcept(c.second);
+    cout << " VROWLImport::AgglomerateData add " << entities.size() << " entities to ontology" << endl;
     for (auto e : entities) onto->addEntity(e.second);
-    //cout << onto->toString() << endl;
 }
 
 void processTriple(void* mgr, raptor_statement* rs) {
@@ -429,18 +431,22 @@ void VROWLImport::processTriple(raptor_statement* rs) {
 }
 
 void VROWLImport::load(VROntologyPtr o, string path) {
+    cout << "VROWLImport::load " << path << endl;
     clear();
     onto = o;
+    cout << "  Prepare raptor" << endl;
     raptor_world* world = raptor_new_world();
     raptor_parser* rdf_parser = raptor_new_parser(world, "rdfxml");
     unsigned char* uri_string = raptor_uri_filename_to_uri_string(path.c_str());
     raptor_uri* uri = raptor_new_uri(world, uri_string);
     raptor_uri* base_uri = raptor_uri_copy(uri);
 
+    cout << "  Crunch triples" << endl;
     raptor_parser_set_statement_handler(rdf_parser, this, ::processTriple);
     raptor_parser_parse_file(rdf_parser, uri, base_uri);
     raptor_free_parser(rdf_parser);
 
+    cout << "  Free raptor" << endl;
     raptor_free_uri(base_uri);
     raptor_free_uri(uri);
     raptor_free_memory(uri_string);
@@ -448,6 +454,7 @@ void VROWLImport::load(VROntologyPtr o, string path) {
 
     AgglomerateData();
     //printTripleStore();
+    cout << " VROWLImport::load done\n";
 }
 
 

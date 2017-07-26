@@ -64,6 +64,7 @@ class VROWLImport {
             string listID;
         };
 
+        string ontologyName;
         map<string, bool> predicate_blacklist;
         map<string, bool> type_blacklist;
         map<string, bool> list_types;
