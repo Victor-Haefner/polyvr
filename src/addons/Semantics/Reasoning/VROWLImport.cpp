@@ -146,7 +146,14 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
     string& predicate = statement.predicate;
     string& object = statement.object;
 
-    //printState(statement, "abstract-pass-ont");
+    //printState(statement, "hasEndState");
+
+    auto stackStatement = [&]() -> RDFStatement& {
+        auto s = statement;
+        s.RDFobject = 0;
+        stack[subject].push_back(s);
+        return *stack[subject].rbegin();
+    };
 
     if (blacklisted(predicate, predicate_blacklist)) return 0;
 
@@ -183,7 +190,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
             if (object == "AtomList") { return 0; } // TODO, needed to map the statements to the corresponding rule
         }
 
-        //if (predicate == "complementOf") { return 0; } // TODO
+        if (predicate == "complementOf") { return 0; } // TODO
 
         if (predicate == "onDatatype") {
             if (datproperties.count(subject)) { datproperties[subject]->setType(object); return 0; }
@@ -232,10 +239,14 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
     if (statement.RDFobject) {
         if (lists.count(object) && lists[object].complete) { // RDF list fully parsed
             for (auto i : lists[object].entries) {
-                auto s = statement;
-                s.object = i; s.RDFobject = 0;
-                stack[subject].push_back(s);
+                auto& s = stackStatement();
+                s.object = i;
             }
+            return 0;
+        }
+
+        if (concepts.count(object)) {
+            auto& s = stackStatement();
             return 0;
         }
 
@@ -345,8 +356,10 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
         if (auto p = getProperty(subject)) {
             return 0; // TODO
         }
+    }
 
-        if (subject == ontologyName) return 0;
+    if (subject == ontologyName) { // TODO
+        return 0;
     }
 
     return 1;
@@ -400,7 +413,7 @@ void VROWLImport::AgglomerateData() {
 
         if (int(stack.size()) == lastStack && jobs == lastJobSize) {
             cout << "RDF parser warning: stack not shrinking, aborting with " << jobs << " triplets remaining!" << endl;
-            for (auto& sv : stack) for (auto& s : sv.second) cout << " " << s.toString() << endl;
+            for (auto& sv : stack) for (auto& s : sv.second) printState(s);
             for (auto& lv : lists) {
                 cout << " parent: " << lv.first << " list: " << lv.second.listID << " complete: " << lv.second.complete << " - ";
                 for (auto& e : lv.second.entries) cout << " " << e;
