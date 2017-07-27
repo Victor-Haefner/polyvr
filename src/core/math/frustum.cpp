@@ -40,7 +40,7 @@ void frustum::computeProfile() {
         profile.addPoint( Vec2d(p[0], p[1]) );
     }
 
-    if (!profile.isCCW()) profile.turn();
+    if (!profile.isCCW()) profile.reverseOrder();
 }
 
 frustum frustum::fromProfile(VRPolygon p, pose t) {

@@ -65,7 +65,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
                 poly.addPoint(Vec2d(p[0], p[1]));
                 //cout << Vec2d(p[0], p[1]) << endl;
             }
-            if (!poly.isCCW()) poly.turn();
+            if (!poly.isCCW()) poly.reverseOrder();
             t.add(poly);
         }
 
@@ -166,7 +166,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
                 poly.addPoint(pc);
             }*/
 
-            if (!poly.isCCW()) poly.turn();
+            if (!poly.isCCW()) poly.reverseOrder();
             t.add(poly);
         }
 

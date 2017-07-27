@@ -5,6 +5,8 @@ using namespace OSG;
 
 newPyType(VRPolygon, Polygon, New_ptr);
 
+template<> PyObject* VRPyTypeCaster::cast(const VRPolygonPtr& e) { return VRPyPolygon::fromSharedPtr(e); }
+
 PyMethodDef VRPyPolygon::methods[] = {
     {"addPoint", (PyCFunction)VRPyPolygon::addPoint, METH_VARARGS, "Add a point - addPoint([x,y])" },
     {"getPoint", (PyCFunction)VRPyPolygon::getPoint, METH_VARARGS, "Get a point - [x,y] getPoint( int i )" },
@@ -16,6 +18,8 @@ PyMethodDef VRPyPolygon::methods[] = {
     {"clear", (PyCFunction)VRPyPolygon::clear, METH_NOARGS, "Clear all points - clear()" },
     {"getRandomPoints", (PyCFunction)VRPyPolygon::getRandomPoints, METH_VARARGS, "Clear all points - getRandomPoints( | float density, float padding)" },
     {"isInside", PyWrap(Polygon, isInside, "Check if point is inside polygon", bool, Vec2d) },
+    {"gridSplit", PyWrap(Polygon, gridSplit, "Split the polygon using a virtual grid layout", vector< VRPolygonPtr >, float) },
+    {"reverseOrder", PyWrap(Polygon, reverseOrder, "Reverse the order of the points", void) },
     {NULL}  /* Sentinel */
 };
 

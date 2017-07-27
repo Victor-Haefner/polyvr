@@ -606,7 +606,7 @@ bool VRPolygon::isConvex() {
     return true;
 }
 
-void VRPolygon::turn() {
+void VRPolygon::reverseOrder() {
     reverse(points.begin(), points.end());
     reverse(points3.begin(), points3.end());
 }
@@ -620,7 +620,7 @@ vector< VRPolygon > VRPolygon::getConvexDecomposition() {
     }
 
     CGALPolygon cgalpoly;
-    if (!isCCW()) turn();
+    if (!isCCW()) reverseOrder();
     cgalpoly = toCGALVRPolygon(*this);
     CGALPolyList partitions;
     CGALTraits traits;
