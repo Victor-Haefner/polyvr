@@ -83,7 +83,8 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"setLengths", (PyCFunction)VRPyGeometry::setLengths, METH_VARARGS, "set geometry lengths - setLengths(int[])" },
     {"setTexCoords", (PyCFunction)VRPyGeometry::setTexCoords, METH_VARARGS, "set geometry texture coordinates - setTexCoords( [[x,y]], int channel = 0, bool fixMapping = false)" },
     {"setTexture", (PyCFunction)VRPyGeometry::setTexture, METH_VARARGS, "set texture from file - setTexture(path)" },
-    {"setMaterial", (PyCFunction)VRPyGeometry::setMaterial, METH_VARARGS, "set material" },
+    {"setColor", PyWrap(Geometry, setColor, "Set a colored material to the geometry", void, string) },
+    {"setMaterial", PyWrap(Geometry, setMaterial, "Set the material of the geometry", void, VRMaterialPtr) },
     {"getTypes", (PyCFunction)VRPyGeometry::getTypes, METH_NOARGS, "get geometry primitive types - [int t] getTypes()\n\tt = 0 : GL_POINTS"
                                                                                                                     "\n\tt = 1 : GL_LINES"
                                                                                                                     "\n\tt = 2 : GL_LINE_LOOP"
@@ -683,14 +684,6 @@ PyObject* VRPyGeometry::setTexture(VRPyGeometry* self, PyObject *args) {
 
     geo->getMaterial()->setTexture(path);
 
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyGeometry::setMaterial(VRPyGeometry* self, PyObject *args) {
-    if (!self->valid()) return NULL;
-    VRPyMaterial* mat;
-    if (! PyArg_ParseTuple(args, "O", &mat)) return NULL;
-    self->objPtr->setMaterial(mat->objPtr);
     Py_RETURN_TRUE;
 }
 

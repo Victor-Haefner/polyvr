@@ -99,6 +99,9 @@ class VRMaterial : public VRObject {
 
         static Color3f toColor(string c);
 
+        void setDiffuse(string c);
+        void setSpecular(string c);
+        void setAmbient(string c);
         void setDiffuse(Color3f c);
         void setSpecular(Color3f c);
         void setAmbient(Color3f c);

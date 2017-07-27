@@ -267,6 +267,12 @@ void VRGeometry::setPositions(GeoVectorProperty* Pos) {
     meshChanged();
 }
 
+void VRGeometry::setColor(string c) {
+    auto m = VRMaterial::create(c);
+    m->setDiffuse(c);
+    setMaterial(m);
+}
+
 void VRGeometry::setType(int t) {
     if (!meshSet) setMesh();
     GeoUInt8PropertyRecPtr Type = GeoUInt8Property::create();

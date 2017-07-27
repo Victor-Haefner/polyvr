@@ -44,6 +44,8 @@
 #include <GL/glext.h>
 #include <GL/glx.h>
 
+template<> string typeName(const OSG::VRMaterialPtr& t) { return "Material"; }
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -771,6 +773,9 @@ void VRMaterial::setDepthTest(int d) {
     }
 }
 
+void VRMaterial::setDiffuse(string c) { setDiffuse(toColor(c)); }
+void VRMaterial::setSpecular(string c) { setSpecular(toColor(c)); }
+void VRMaterial::setAmbient(string c) { setAmbient(toColor(c)); }
 void VRMaterial::setDiffuse(Color3f c) { mats[activePass]->colChunk->setDiffuse( toColor4f(c, getTransparency()) );}
 void VRMaterial::setSpecular(Color3f c) { mats[activePass]->colChunk->setSpecular(toColor4f(c)); }
 void VRMaterial::setAmbient(Color3f c) { mats[activePass]->colChunk->setAmbient(toColor4f(c)); }

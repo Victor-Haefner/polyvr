@@ -409,7 +409,9 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
         cout << " polygon A " << pA << endl;
         for (auto pnt : p->points) cout << "  pnt " << pnt << endl;*/
 
-        if ( pA > 1e-6 && pA <= G*G+1e-6) res.push_back(p);
+        if ( pA <= 1e-6 && pA > G*G+1e-6 ) continue;
+        if ( p->isCCW() != isCCW() ) continue;
+        res.push_back(p);
     }
 
     return res;

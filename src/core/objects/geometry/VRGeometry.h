@@ -116,6 +116,7 @@ class VRGeometry : public VRTransform {
         VRPrimitive* getPrimitive();
 
         /** Set the material of the mesh **/
+        void setColor(string c);
         void setMaterial(VRMaterialPtr mat = 0);
         VRMaterialPtr getMaterial();
 
