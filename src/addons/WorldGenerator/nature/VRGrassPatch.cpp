@@ -43,7 +43,6 @@ void VRGrassPatch::initLOD() {
             if (i <= 1) createPatch(geo, a, i, 1000);
             else createSpriteLOD(geo, a, 1);
             if (geo.size() == 0) continue;
-
             auto grass = geo.asGeometry("grassPatch");
             if (i > 1) grass->setMaterial(matGrassSide);
             else grass->setMaterial(matGrass);
