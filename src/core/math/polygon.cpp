@@ -315,7 +315,7 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
                 if (abs(it->first-t) < 1e-6) { // found point
                     auto it1 = it;
                     auto it2 = it;
-                    if (verbose) cout << "borderPnts itrs " << (it == borderPnts.begin()) << " " << (it == borderPnts.end()) << " itt " << it->first << " t " << t << endl;
+                    if (verbose) cout << "       borderPnts itrs " << (it == borderPnts.begin()) << " " << (it == borderPnts.end()) << " itt " << it->first << " t " << t << endl;
                     if (it == borderPnts.begin()) { it1 = borderPnts.end(); it1--; } else it1--;
                     it2++; if (it2 == borderPnts.end()) it2 = borderPnts.begin();
                     p1 = it1->second;
@@ -403,8 +403,8 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
         if ( p->isCCW() != isCCW() ) p->reverseOrder();
 
         auto allEdgesInPolygon = [&]() {
-            for (int i=1; i< p->size(); i++) { // check if all edges part of polygon
-                auto pMid = (p->getPoint(i-1) + p->getPoint(i))*0.5;
+            for (int i=0; i< p->size(); i++) { // check if all edges part of polygon
+                auto pMid = (p->getPoint(i) + p->getPoint((i+1)%p->size()))*0.5;
                 if (verbose) cout << " mid " << pMid << " " << isInside(pMid) << endl;
                 if (!isInside(pMid)) return false;
             }
@@ -470,7 +470,7 @@ bool onSegment( const Vec2d& p, const Vec2d& p1, const Vec2d& p2 ) {
     float A = p1[0]*(p2[1] - p[1]) + p2[0]*(p[1] - p1[1]) + p[0]*(p1[1] - p2[1]);
     if (abs(A) > 1e-9) return false; // check for collinear
     float d = (p2-p1).dot(p-p1);
-    if (d < 1e-9) return false;
+    if (d < -1e-9) return false;
     if (d > (p2-p1).squareLength()+1e-9) return false;
     return true;
 }
