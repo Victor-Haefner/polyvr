@@ -13,7 +13,7 @@ PyMethodDef VRPySound::methods[] = {
     {"stopAllSounds", (PyCFunction)VRPySound::stopAllSounds, METH_NOARGS, "Stops all currently playing sounds." },
     {"setVolume", (PyCFunction)VRPySound::setVolume, METH_VARARGS, "Set sound volume - setVolume( float ) \n\tfrom 0.0 to 1.0 (= 100%)" },
     {"synthesize", (PyCFunction)VRPySound::synthesize, METH_VARARGS, "synthesize( Ac, wc, pc, Am, wm, pm, T)\t\n A,w,p are the amplitude, frequency and phase, c and m are the carrier sinusoid and modulator sinusoid, T is the packet duration in seconds" },
-    {"synthBuffer", (PyCFunction)VRPySound::synthBuffer, METH_VARARGS, "synthBuffer( [[f,A]], T )\t\n [f,A] frequency/amplitude pairs, T is the packet duration in seconds" },
+    {"synthBuffer", (PyCFunction)VRPySound::synthBuffer, METH_VARARGS, "synthBuffer( [[f,A]], [[f,A]], T )\t\n [f,A] frequency/amplitude pairs, interpolate the two spectra, T is the packet duration in seconds" },
     {"synthSpectrum", (PyCFunction)VRPySound::synthSpectrum, METH_VARARGS, "synthSpectrum( [A], int S, float T, float F, bool retBuffer )\t\n A amplitude, S sample rate, T packet duration in seconds, F fade in/out duration in s , specify if you want to return the generated buffer" },
     {"getQueuedBuffer", (PyCFunction)VRPySound::getQueuedBuffer, METH_NOARGS, "Get the buffer currently queued - int getQueuedBuffer()" },
     {"recycleBuffer", (PyCFunction)VRPySound::recycleBuffer, METH_NOARGS, "Recycle unused buffers - recycleBuffer()" },

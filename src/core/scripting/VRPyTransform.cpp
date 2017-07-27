@@ -23,6 +23,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"move", (PyCFunction)VRPyTransform::move, METH_VARARGS, "Move the object - move(d)" },
     {"rotate", (PyCFunction)VRPyTransform::rotate, METH_VARARGS, "Rotate the object around an axis - rotate(xf,yf,zf,af)" },
     {"rotateAround", (PyCFunction)VRPyTransform::rotateAround, METH_VARARGS, "Rotate the object around its at - rotateAround(af)" },
+    {"rotateYonZ", PyWrap(Transform, rotateYonZ, "Rotate the Y axis onto the Z axis", void) },
     {"getFrom", (PyCFunction)VRPyTransform::getFrom, METH_NOARGS, "Return the object's from vector" },
     {"getAt", (PyCFunction)VRPyTransform::getAt, METH_NOARGS, "Return the object's at vector" },
     {"getDir", (PyCFunction)VRPyTransform::getDir, METH_NOARGS, "Return the object's dir vector" },

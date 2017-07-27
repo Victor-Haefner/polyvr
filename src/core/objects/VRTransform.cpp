@@ -607,6 +607,10 @@ void VRTransform::rotateAround(float a) {//rotate around focus using up axis
     reg_change();
 }
 
+void VRTransform::rotateYonZ() {
+    rotate(Pi*0.5, Vec3d(1,0,0));
+}
+
 /** translate the object with a vector v, this changes the from && at vector **/
 void VRTransform::translate(Vec3d v) {
     if (isNan(v)) return;

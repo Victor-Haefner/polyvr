@@ -157,6 +157,7 @@ class VRTransform : public VRObject {
         void translate(Vec3d v);
         void zoom(float d);
         void move(float d);
+        void rotateYonZ();
 
         virtual void drag(VRTransformPtr new_parent);
         virtual void drop();

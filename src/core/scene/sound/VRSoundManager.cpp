@@ -145,8 +145,9 @@ void VRSoundManager::playSound(string path, bool loop) {
     cout << "VRSoundManager::playSound " << path << " " << loop << endl;
     if (!channel) channel = new VRSoundChannel();
     auto sound = getSound(path);
-    if (sound->isRunning()) return;
+    if (sound->isRunning()) { cout << "sound is playing, ignoring" << endl; return; }
 
+    cout << " VRSoundManager::playSound reset " << endl;
     sound->setLoop(loop);
     sound->reset();
     channel->play(sound);

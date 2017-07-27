@@ -64,7 +64,7 @@ void VRSound::setPitch(float pitch) { this->pitch = pitch; doUpdate = true; }
 void VRSound::setGain(float gain) { this->gain = gain; doUpdate = true; }
 void VRSound::setUser(Vec3d p, Vec3d v) { pos = p; vel = v; doUpdate = true; }
 bool VRSound::isRunning() { return al->state == AL_PLAYING; }
-void VRSound::stop() { interrupt = true; }
+void VRSound::stop() { interrupt = true; loop = false; }
 
 void VRSound::close() {
     ALCHECK( alDeleteSources(1u, &source));
@@ -88,7 +88,7 @@ void VRSound::updateSource() {
 }
 
 bool VRSound::initiate() {
-    cout << "init sound\n";
+    cout << "init sound " << path << endl;
     initiated = true;
 
     ALCHECK( alGenBuffers(Nbuffers, buffers) );
@@ -203,27 +203,28 @@ bool VRSound::initiate() {
 }
 
 void VRSound::playFrame() {
-    cout << "play frame " << endl;
     if (al->state == AL_INITIAL) {
-        cout << "reset sound " << endl;
+        //cout << "reset sound " << endl;
         if (!initiated) initiate();
         if (!al->context) return;
         al->frame = avcodec_alloc_frame();
         //al->frame = av_frame_alloc();
         av_seek_frame(al->context, stream_id, 0,  AVSEEK_FLAG_FRAME);
         al->state = AL_PLAYING;
+        interrupt = false;
     }
 
     int len;
     if (al->state == AL_PLAYING) {
         if (doUpdate) updateSource();
         auto avrf = av_read_frame(al->context, &al->packet);
+        //cout << "play frame " << interrupt << " " << avrf << endl;
         if (interrupt || avrf < 0) {
             if (al->packet.data) {
-                cout << "  free packet" << endl;
+                //cout << "  free packet" << endl;
                 av_free_packet(&al->packet);
             }
-            cout << "  free frame" << endl;
+            //cout << "  free frame" << endl;
             av_free(al->frame);
             al->state = loop ? AL_INITIAL : AL_STOPPED;
             return;

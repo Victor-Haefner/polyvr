@@ -170,6 +170,9 @@ void VRScriptManager::redirectPyOutput(string pyOutput, string console) {
 //  it should be possible to call the script with any parameter, the gui parameter should be used as default ones!
 
 void VRScriptManager::initPyModules() {
+    modOut = 0;
+    modErr = 0;
+
     Py_Initialize();
     PyEval_InitThreads();
     VRPyBase::err = PyErr_NewException((char *)"VR.Error", NULL, NULL);
