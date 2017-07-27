@@ -78,9 +78,11 @@ void VRDemos::updatePixmap(demoEntry* e, Gtk::Image* img, int w, int h) {
     if (e == 0) return;
     if (img == 0) return;
     if ( !boost::filesystem::exists( e->pxm_path ) ) return;
-    Glib::RefPtr<Gdk::Pixbuf> pxb = Gdk::Pixbuf::create_from_file (e->pxm_path);
-    img->set(pxb);
-    img->set_size_request(w, h);
+    try {
+        Glib::RefPtr<Gdk::Pixbuf> pxb = Gdk::Pixbuf::create_from_file (e->pxm_path);
+        img->set(pxb);
+        img->set_size_request(w, h);
+    } catch (...) { cout << "Warning: Caught exception in VRDemos::updatePixmap, ignoring.."; }
 }
 
 Gtk::Image* VRDemos::loadGTKIcon(Gtk::Image* img, string path, int w, int h) {
