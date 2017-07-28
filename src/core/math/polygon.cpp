@@ -285,14 +285,16 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
     cornerPoints[-3] = Vec2d(0,G);
     cornerPoints[-4] = Vec2d(G,G);
 
-    bool verbose = false;
+    bool verbose = true;
 
     // get all grid squares partly in polygon
     if (verbose) cout << "GridSplit N squares: " << squares.size() << endl;
-    for (auto s : squarePointsMap) {
-        if (verbose) cout << "Square: " << s.first << " --------------------------" << endl;
+    for (auto sItr : squarePointsMap) {
+        int squareID = sItr.first;
+        vector<int>& squarePoints = sItr.second;
+        if (verbose) cout << "Square: " << squareID << " --------------------------" << endl;
         auto p = create();
-        Vec2d square = Vec2d(squares[s.first]) * G;
+        Vec2d square = Vec2d(squares[squareID]) * G;
         map<float, int> borderPnts; // key from -pi to pi
 
         auto compAngle = [&](Vec2d pnt) {
@@ -348,7 +350,7 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
             if (i != i_1) { // not the first point
                 if (isOnGrid(pnt) && !isOnGrid(pnt_1)) return getNextBorderPoint( compAngle(pnt), i_1, i );
                 if (isOnGrid(pnt) && isOnGrid(pnt_1)) {
-                    for (auto k : s.second) {
+                    for (auto k : squarePoints) {
                         if (j == i && k == i+1) {
                             if (verbose) cout << "    found k " << k << " p " << getSquarePoint(k) << endl;
                             return k; // last point is the one searched!
@@ -359,8 +361,8 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
                 }
             }
 
-            for (auto k : s.second) {
-                if (j == i) {
+            for (auto k : squarePoints) {
+                if (j == i && k == i+1) {
                     if (verbose) cout << "    found k " << k << " p " << getSquarePoint(k) << endl;
                     return k; // last point is the one searched!
                 }
@@ -370,7 +372,7 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
             return getNextBorderPoint( compAngle(pnt), i_1, i );
         };
 
-        for (auto i : s.second) {
+        for (auto i : squarePoints) {
             auto pnt = self->getPoint(i);
             if (isOnGrid(pnt)) borderPnts[ compAngle(pnt) ] = i;
         }
@@ -387,7 +389,7 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
         }
 
         int iMax = 0;
-        int i0 = s.second[0]; // first point
+        int i0 = squarePoints[0]; // first point
         int i_1 = i0;
         int i = i0;
         do {
@@ -418,7 +420,7 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
             for (auto i : borderPnts) cout << "  t " << i.first << "  pi " << i.second << " p " << getSquarePoint(i.second) << endl;
 
             cout << " squarePnts" << endl;
-            for (auto i : s.second) cout << "  pnt " << i << "  " << getSquarePoint(i) << endl;
+            for (auto i : squarePoints) cout << "  pnt " << i << "  " << getSquarePoint(i) << endl;
 
             cout << " polygon A " << pA << endl;
             for (auto pnt : p->points) cout << "  pnt " << pnt << endl;
@@ -468,10 +470,10 @@ float isLeft( const Vec2d& P0, const Vec2d& P1, const Vec2d& P2 ){
 
 bool onSegment( const Vec2d& p, const Vec2d& p1, const Vec2d& p2 ) {
     float A = p1[0]*(p2[1] - p[1]) + p2[0]*(p[1] - p1[1]) + p[0]*(p1[1] - p2[1]);
-    if (abs(A) > 1e-9) return false; // check for collinear
+    if (abs(A) > 1e-6) return false; // check for collinear
     float d = (p2-p1).dot(p-p1);
-    if (d < -1e-9) return false;
-    if (d > (p2-p1).squareLength()+1e-9) return false;
+    if (d < -1e-6) return false;
+    if (d > (p2-p1).squareLength()+1e-6) return false;
     return true;
 }
 
