@@ -802,6 +802,8 @@ void setFromPath(VRTransformWeakPtr trp, pathPtr p, bool redirect, float t) {
     if (tr->get_orientation_mode() == VRTransform::OM_AT) tr->setAt( Vec3d(p->getColor(t)) );
 }
 
+vector<VRAnimCbPtr> animCBs;
+
 void VRTransform::addAnimation(VRAnimationPtr anim) { animations[anim->getName()] = anim; }
 vector<VRAnimationPtr> VRTransform::getAnimations() {
     vector<VRAnimationPtr> res;
@@ -810,10 +812,9 @@ vector<VRAnimationPtr> VRTransform::getAnimations() {
 }
 
 VRAnimationPtr VRTransform::startPathAnimation(pathPtr p, float time, float offset, bool redirect, bool loop) {
-    pathAnimPtr = VRFunction<float>::create("TransAnim", boost::bind(setFromPath, VRTransformWeakPtr(ptr()), p, redirect, _1));
-    auto scene = VRScene::getCurrent();
-    auto a = scene->addAnimation<float>(time, offset, pathAnimPtr, 0.f, 1.f, loop);
-    addAnimation(a);
+    pathAnimPtr = VRAnimCb::create("TransAnim", boost::bind(setFromPath, VRTransformWeakPtr(ptr()), p, redirect, _1));
+    animCBs.push_back(pathAnimPtr);
+    auto a = VRScene::getCurrent()->addAnimation<float>(time, offset, pathAnimPtr, 0.f, 1.f, loop);addAnimation(a);
     return a;
 }
 
