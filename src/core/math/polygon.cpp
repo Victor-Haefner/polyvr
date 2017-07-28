@@ -347,28 +347,15 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
             auto pnt = getSquarePoint(i);
             auto pnt_1 = getSquarePoint(i_1);
 
-            if (i != i_1) { // not the first point
-                if (isOnGrid(pnt) && !isOnGrid(pnt_1)) return getNextBorderPoint( compAngle(pnt), i_1, i );
-                if (isOnGrid(pnt) && isOnGrid(pnt_1)) {
-                    for (auto k : squarePoints) {
-                        if (j == i && k == i+1) {
-                            if (verbose) cout << "    found k " << k << " p " << getSquarePoint(k) << endl;
-                            return k; // last point is the one searched!
-                        }
-                        j = k;
+            if (i != i_1 && isOnGrid(pnt) && isOnGrid(pnt_1) || i == i_1 || !isOnGrid(pnt)) { // not the first point
+                for (auto k : squarePoints) {
+                    if (j == i && k == i+1) {
+                        if (verbose) cout << "    found k " << k << " p " << getSquarePoint(k) << endl;
+                        return k; // last point is the one searched!
                     }
-                    return getNextBorderPoint( compAngle(pnt), i_1, i );
+                    j = k;
                 }
             }
-
-            for (auto k : squarePoints) {
-                if (j == i && k == i+1) {
-                    if (verbose) cout << "    found k " << k << " p " << getSquarePoint(k) << endl;
-                    return k; // last point is the one searched!
-                }
-                j = k;
-            }
-
             return getNextBorderPoint( compAngle(pnt), i_1, i );
         };
 
