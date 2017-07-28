@@ -293,9 +293,9 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
         int squareID = sItr.first;
         vector<int>& squarePoints = sItr.second;
         if (verbose) cout << "Square: " << squareID << " --------------------------" << endl;
-        auto p = create();
         Vec2d square = Vec2d(squares[squareID]) * G;
         map<float, int> borderPnts; // key from -pi to pi
+        vector<int> processedSquarePoints;
 
         auto compAngle = [&](Vec2d pnt) {
             float a = atan2(pnt[0]-square[0]-0.5*G, pnt[1]-square[1]-0.5*G); // angle
@@ -332,10 +332,12 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
             if (verbose) cout << "   getNextBorderPoint t " << t << "  p1 " << p1 << "  p2 " << p2 << " p1Inside " << self->isInside(pnt1) << " p2Inside " << self->isInside(pnt2) << endl;
             if (self->isInside(pnt1) && i_1 != p1 && i != p1) {
                 if (verbose) cout << "    found p1 " << p1 << " p " << getSquarePoint(p1) << endl;
+                processedSquarePoints.push_back(p1);
                 return p1;
             }
             if (self->isInside(pnt2) && i_1 != p2 && i != p2) {
                 if (verbose) cout << "    found p2 " << p2 << " p " << getSquarePoint(p2) << endl;
+                processedSquarePoints.push_back(p2);
                 return p2;
             }
             return -5; // invalid pnt
@@ -351,6 +353,7 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
                 for (auto k : squarePoints) {
                     if (j == i && k == i+1) {
                         if (verbose) cout << "    found k " << k << " p " << getSquarePoint(k) << endl;
+                        processedSquarePoints.push_back(k);
                         return k; // last point is the one searched!
                     }
                     j = k;
@@ -375,47 +378,59 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
             borderPnts[ a ] = i;
         }
 
-        int iMax = 0;
-        int i0 = squarePoints[0]; // first point
-        int i_1 = i0;
-        int i = i0;
-        do {
-            auto pnt = getSquarePoint(i);
-            p->addPoint(pnt);
-            int newI = getNextPoint(i_1,i);
-            if (newI == -5) break; // invalid point
-            i_1 = i;
-            i = newI;
-            iMax++;
-        } while (i != i0 && iMax < 10);
-
-        if ( p->isCCW() != isCCW() ) p->reverseOrder();
-
-        auto allEdgesInPolygon = [&]() {
-            for (int i=0; i< p->size(); i++) { // check if all edges part of polygon
-                auto pMid = (p->getPoint(i) + p->getPoint((i+1)%p->size()))*0.5;
-                if (verbose) cout << " mid " << pMid << " " << isInside(pMid) << endl;
-                if (!isInside(pMid)) return false;
+        auto getUnprocessedSquarePoint = [&]() {
+            for (auto sp : squarePoints) {
+                int p = sp;
+                for (auto psp : processedSquarePoints) {
+                    if (sp == psp) { p = -5; break; }
+                }
+                if (p != -5) return p;
             }
-            return true;
+            return -5;
         };
 
-        float pA = p->computeArea();
+        for (int i0 = squarePoints[0]; i0 != -5; i0 = getUnprocessedSquarePoint()) {
+            processedSquarePoints.push_back(i0);
+            auto p = create();
+            int iMax = 0;
+            int i_1 = i0;
+            int i = i0;
+            do {
+                auto pnt = getSquarePoint(i);
+                p->addPoint(pnt);
+                int newI = getNextPoint(i_1,i);
+                if (newI == -5) break; // invalid point
+                i_1 = i;
+                i = newI;
+                iMax++;
+            } while (i != i0 && iMax < 10);
 
-        if (verbose) {
-            cout << " borderPnts" << endl;
-            for (auto i : borderPnts) cout << "  t " << i.first << "  pi " << i.second << " p " << getSquarePoint(i.second) << endl;
+            if ( p->isCCW() != isCCW() ) p->reverseOrder();
 
-            cout << " squarePnts" << endl;
-            for (auto i : squarePoints) cout << "  pnt " << i << "  " << getSquarePoint(i) << endl;
+            auto allEdgesInPolygon = [&]() {
+                for (int i=0; i< p->size(); i++) { // check if all edges part of polygon
+                    auto pMid = (p->getPoint(i) + p->getPoint((i+1)%p->size()))*0.5;
+                    if (verbose) cout << " mid " << pMid << " " << isInside(pMid) << endl;
+                    if (!isInside(pMid)) return false;
+                }
+                return true;
+            };
 
-            cout << " polygon A " << pA << endl;
-            for (auto pnt : p->points) cout << "  pnt " << pnt << endl;
+            float pA = p->computeArea();
+
+            if (verbose) {
+                cout << " borderPnts" << endl;
+                for (auto i : borderPnts) cout << "  t " << i.first << "  pi " << i.second << " p " << getSquarePoint(i.second) << endl;
+                cout << " squarePnts" << endl;
+                for (auto i : squarePoints) cout << "  pnt " << i << "  " << getSquarePoint(i) << endl;
+                cout << " polygon A " << pA << endl;
+                for (auto pnt : p->points) cout << "  pnt " << pnt << endl;
+            }
+
+            if ( pA <= 1e-6 && pA > G*G+1e-6 ) continue;
+            if ( !allEdgesInPolygon() ) continue;
+            res.push_back(p);
         }
-
-        if ( pA <= 1e-6 && pA > G*G+1e-6 ) continue;
-        if ( !allEdgesInPolygon() ) continue;
-        res.push_back(p);
     }
 
     return res;
