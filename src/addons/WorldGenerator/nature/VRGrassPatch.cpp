@@ -2,6 +2,7 @@
 #include "VRPlantMaterial.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/math/polygon.h"
+#include "core/math/triangulator.h"
 
 #include "core/objects/VRCamera.h"
 #include "core/objects/VRLight.h"
@@ -25,6 +26,15 @@ VRGrassPatchPtr VRGrassPatch::create() { return VRGrassPatchPtr( new VRGrassPatc
 
 void VRGrassPatch::initLOD() {
     for (auto a : chunks) {
+        /*Triangulator t;
+        t.add(*a);
+        auto c = t.compute();
+        c->rotateYonZ();
+        addChild(c);
+        c->setPickable(true);
+        c->setColor("red");
+        continue;*/
+
         lod = VRLod::create("grass_lod");
         lod->setPersistency(0);
         lod->setCenter(a->getBoundingBox().center());
@@ -37,8 +47,9 @@ void VRGrassPatch::initLOD() {
         lod->addDistance(5);
         lod->addDistance(10);
 
+        //cout << "VRGrassPatch::createPatch " << a->computeArea() << endl;
         for (int i=0; i<3; i++) {
-            srand(0);
+            //srand(0);
             VRGeoData geo;
             if (i <= 1) createPatch(geo, a, i, 1000);
             else createSpriteLOD(geo, a, 1);

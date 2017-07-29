@@ -115,7 +115,7 @@ void VRSetup::setupLESCCAVELights(VRScenePtr scene) {
         setLoadingLights(2,-1,1,0,0);
         setLoadingLights(3,-1,1,0,0);
         setLoadingLights(4,-1,0,0,0);
-    } else p->setup("scene loading progress", 100, VRProgress::CONSOLE_M);
+    }// else p->setup("scene loading progress", 100, VRProgress::CONSOLE_M);
 }
 
 void VRSetup::updateTracking() {

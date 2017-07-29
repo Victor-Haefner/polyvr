@@ -141,6 +141,7 @@ vector<Vec3d> VRPolygon::getRandomPoints(float density, float padding) {
 }
 
 vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
+    //cout << "VRPolygon::gridSplit " << G << endl;
     auto inSquare = [&](Vec2d p, Vec2i s) {
         if (p[0] < s[0]*G - 1e-6) return false;
         if (p[1] < s[1]*G - 1e-6) return false;
@@ -285,7 +286,7 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
     cornerPoints[-3] = Vec2d(0,G);
     cornerPoints[-4] = Vec2d(G,G);
 
-    bool verbose = true;
+    bool verbose = false;
 
     // get all grid squares partly in polygon
     if (verbose) cout << "GridSplit N squares: " << squares.size() << endl;
@@ -397,13 +398,14 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
             int i = i0;
             do {
                 auto pnt = getSquarePoint(i);
+                if (verbose) cout << "     add point " << i << endl;
                 p->addPoint(pnt);
                 int newI = getNextPoint(i_1,i);
                 if (newI == -5) break; // invalid point
                 i_1 = i;
                 i = newI;
                 iMax++;
-            } while (i != i0 && iMax < 10);
+            } while (i != i0 && iMax < 1000);
 
             if ( p->isCCW() != isCCW() ) p->reverseOrder();
 
