@@ -38,9 +38,7 @@ void VRGrassPatch::initLOD() {
         lod->addDistance(5);
         lod->addDistance(10);
 
-        //cout << "VRGrassPatch::createPatch " << a->computeArea() << endl;
         for (int i=0; i<3; i++) {
-            //srand(0);
             VRGeoData geo;
             if (i <= 1) createPatch(geo, a, i, 1000);
             else createSpriteLOD(geo, a, 1);
@@ -92,8 +90,10 @@ void VRGrassPatch::addGrassBlade(VRGeoData& data, Vec3d pos, float a, float dh, 
     Vec3d n0 = rot(Vec3d(0,0,-1));
     Vec3d n1 = rot(Vec3d(0,b1,-h1));
     Vec3d n2 = rot(Vec3d(0,b2,-h2));
+    Vec3d n3 = rot(Vec3d(0,b,-h));
     n1.normalize();
     n2.normalize();
+    n3.normalize();
 
     int N = data.size();
 
@@ -103,7 +103,7 @@ void VRGrassPatch::addGrassBlade(VRGeoData& data, Vec3d pos, float a, float dh, 
     if (lvl <= 1) data.pushVert(pos + p4, n1, c, Vec2d(1,0.333));
     if (lvl == 0) data.pushVert(pos + p5, n2, c, Vec2d(0,0.666));
     if (lvl == 0) data.pushVert(pos + p6, n2, c, Vec2d(1,0.666));
-    data.pushVert(pos + p7, n0, c, Vec2d(0.5,1));
+    data.pushVert(pos + p7, n3, c, Vec2d(0.5,1));
 
     if (lvl == 0) {
         data.pushQuad(N,N+1,N+3,N+2);
@@ -131,7 +131,7 @@ VRTextureRendererPtr VRGrassPatch::texRenderer = 0;
 VRPlantMaterialPtr VRGrassPatch::matGrass = 0;
 VRPlantMaterialPtr VRGrassPatch::matGrassSide = 0;
 
-void VRGrassPatch::setupGrassMaterial() { // TODO: add texture, for instance two colored grass blade, and add tex coords for blades!, maybe different types of grass blades?
+void VRGrassPatch::setupGrassMaterial() {
     if (matGrass) return;
     matGrass = VRPlantMaterial::create();
 
@@ -145,7 +145,7 @@ void VRGrassPatch::setupGrassMaterial() { // TODO: add texture, for instance two
 void VRGrassPatch::setupGrassStage() {
     if (texRenderer) return;
 
-    float W = 0.2;
+    float W = 0.1;
     auto area2 = VRPolygon::create();
     area2->addPoint(Vec2d(-W, -W));
     area2->addPoint(Vec2d( W, -W));
@@ -154,6 +154,7 @@ void VRGrassPatch::setupGrassStage() {
     VRGeoData data2;
     createPatch(data2, area2, 0, 1000);
     auto grass = data2.asGeometry("grass");
+    grass->setMaterial(matGrass);
 
     texRenderer = VRTextureRenderer::create("grassRenderer");
     texRenderer->setPersistency(0);
@@ -163,10 +164,12 @@ void VRGrassPatch::setupGrassStage() {
     texRenderer->addChild(light);
     light->addChild(cam);
     cam->addChild(lightBeacon);
-    cam->setFov(0.33);
+    cam->setFov(0.33); //0.33
+    cam->setAspect(0.2);
     light->setBeacon(lightBeacon);
     light->addChild(grass);
-	lightBeacon->setFrom(Vec3d(1,1,1));
+    light->setType("directional");
+	lightBeacon->setPose(Vec3d(), Vec3d(0.5,-1,-1), Vec3d(0,0,1));
 	texRenderer->setup(cam, 512, 512, true);
 
     cam->setPose(Vec3d(0,0,2), Vec3d(0,0,-1), Vec3d(0,1,0)); // side
@@ -182,12 +185,11 @@ VRMaterialPtr VRGrassPatch::getGrassMaterial() { setupGrassMaterial(); return ma
 VRMaterialPtr VRGrassPatch::getGrassSideMaterial() { return matGrassSide; }
 
 void VRGrassPatch::createSpriteLOD(VRGeoData& data, VRPolygonPtr area, int lvl) {
-    float W = 1.0*lvl;
-    float H = 0.5;
-    float d = 10/lvl;
-    for ( auto p : area->getRandomPoints(d, 0.1) ) {
-        data.pushQuad(p, Vec3d(0,0,-1), Vec3d(0,1,0), Vec2d(W, H), true);
-        data.pushQuad(p, Vec3d(-1,0,0), Vec3d(0,1,0), Vec2d(W, H), true);
+    float d = 100.0/lvl;
+    for ( auto p : area->getRandomPoints(d,0) ) {
+        float r1 = float(random())/RAND_MAX;
+        //float r2 = 0.5+0.5*float(random())/RAND_MAX;
+        data.pushQuad(p, Vec3d(1-r1,0.1,-r1), Vec3d(0,1,0), Vec2d(0.2, 0.65), true);
     }
 }
 

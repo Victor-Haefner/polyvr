@@ -41,7 +41,7 @@ attribute vec4 osg_Color;
 attribute vec2 osg_MultiTexCoord0;
 
 void main( void ) {
-	vnrm = normalize( gl_NormalMatrix * osg_Normal );
+	vnrm = normalize(gl_NormalMatrix * osg_Normal);
 	vcol = osg_Color.xyz;
 	vtcs = osg_MultiTexCoord0;
     vpos = osg_Vertex.xyz;
@@ -57,12 +57,12 @@ string VRPlantMaterial::vShrdEnd = GLSL(
 
 string VRPlantMaterial::lightning = GLSL(
 void applyLightning() {
-	vec3 n = normal;
 	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
-	float NdotL = max(dot( n, light ), 0.0);
+	if (gl_FrontFacing == false) normal = -normal;
+	float NdotL = max(dot( normal, light ), 0.0);
 	vec4  ambient = gl_LightSource[0].ambient * color;
 	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;
-	float NdotHV = max(dot(n, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
+	float NdotHV = max(dot(normal, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
 	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
 	gl_FragColor = ambient + diffuse + specular;
 }

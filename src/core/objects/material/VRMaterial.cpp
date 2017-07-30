@@ -1008,6 +1008,8 @@ Color3f VRMaterial::toColor(string c) {
         colorMap["green"] = Color3f(0,1,0);
         colorMap["blue"] = Color3f(0,0,1);
         colorMap["yellow"] = Color3f(1,1,0);
+        colorMap["brown"] = Color3f(0.5,0.25,0);
+        colorMap["orange"] = Color3f(1,0.6,0);
         colorMap["magenta"] = Color3f(1,0,1);
         colorMap["cyan"] = Color3f(0,1,1);
         colorMap["black"] = Color3f(0,0,0);
