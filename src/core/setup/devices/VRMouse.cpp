@@ -4,8 +4,10 @@
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRGtkWindow.h"
 #include "core/objects/VRCamera.h"
+#include "core/objects/OSGCamera.h"
 #include "VRSignal.h"
 #include <GL/glut.h>
+#include <OpenSG/OSGPerspectiveCamera.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -96,13 +98,13 @@ void VRMouse::multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut) {
     }
 }
 
-bool VRMouse::calcViewRay(PerspectiveCameraRecPtr pcam, Line &line, float x, float y, int W, int H){
+bool VRMouse::calcViewRay(VRCameraPtr cam, Line &line, float x, float y, int W, int H){
     if(W <= 0 || H <= 0) return false;
 
     Matrix proj, projtrans, view;
 
-    pcam->getProjection(proj, W, H);
-    pcam->getProjectionTranslation(projtrans, W, H);
+    cam->getCam()->cam->getProjection(proj, W, H);
+    cam->getCam()->cam->getProjectionTranslation(projtrans, W, H);
 
     Matrix wctocc;
     wctocc.mult(proj);
@@ -140,7 +142,7 @@ void VRMouse::updatePosition(int x, int y) {
     v->getViewport()->calcNormalizedCoordinates(rx, ry, x, y);
 
     //cam->getCam()->calcViewRay(ray,x,y,*v->getViewport());
-    calcViewRay(cam->getCam(), ray, rx,ry,w,h);
+    calcViewRay(cam, ray, rx,ry,w,h);
     editBeacon()->setDir(Vec3d(ray.getDirection()));
 
     int side = -1;

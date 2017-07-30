@@ -4,7 +4,6 @@
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGBackground.h>
 #include <OpenSG/OSGVector.h>
-#include <OpenSG/OSGProjectionCameraDecorator.h>
 #include "core/objects/VRObjectFwd.h"
 #include "core/scene/VRSceneFwd.h"
 #include "core/utils/VRStorage.h"
@@ -37,7 +36,7 @@ class VRRenderStudio : public VRStorage {
         int ssao_noise = 4;
         float ssao_radius = 0.02;
         EYE eye = LEFT;
-        CameraRecPtr cam;
+        OSGCameraPtr cam;
 
         map<string, std::shared_ptr<VRDeferredRenderStage>> stages;
 
@@ -78,7 +77,7 @@ class VRRenderStudio : public VRStorage {
         void clearLights();
 
         void setScene(VRObjectPtr root);
-        void setCamera(CameraRecPtr cam);
+        void setCamera(OSGCameraPtr cam);
         void setBackground(BackgroundRecPtr bg);
         void resize(Vec2i s);
         void setEye(EYE e);

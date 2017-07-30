@@ -5,6 +5,7 @@
 #include "core/objects/material/VRMaterialT.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/VRCamera.h"
+#include "core/objects/OSGCamera.h"
 #include "core/scene/VRScene.h"
 
 using namespace OSG;

@@ -1,4 +1,5 @@
 #include "VRGrassPatch.h"
+
 #include "VRPlantMaterial.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/math/polygon.h"
@@ -8,6 +9,8 @@
 #include "core/objects/VRLight.h"
 #include "core/objects/VRLightBeacon.h"
 #include "core/objects/VRLod.h"
+
+
 #include "core/objects/geometry/VRSprite.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTextureGenerator.h"
@@ -15,8 +18,8 @@
 #include "core/utils/toString.h"
 #include "core/scene/VRScene.h"
 
-const double pi = 2*acos(0.0);
 
+const double pi = 2*acos(0.0);
 using namespace OSG;
 
 VRGrassPatch::VRGrassPatch() : VRTransform("grass_patch") {}
@@ -38,14 +41,15 @@ void VRGrassPatch::initLOD() {
         lod->addDistance(5);
         lod->addDistance(10);
 
+        int Klod = -1; // 1
         for (int i=0; i<3; i++) {
             VRGeoData geo;
-            if (i <= 1) createPatch(geo, a, i, 1000);
+            if (i <= Klod) createPatch(geo, a, i, 1000);
             else createSpriteLOD(geo, a, 1);
             if (geo.size() == 0) continue;
             auto grass = geo.asGeometry("grassPatch");
-            if (i > 1) grass->setMaterial(matGrassSide);
-            else grass->setMaterial(matGrass);
+            if (i <= Klod) grass->setMaterial(matGrass);
+            else grass->setMaterial(matGrassSide);
             lod->getChild(i)->addChild(grass);
         }
     }

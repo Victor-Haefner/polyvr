@@ -3,9 +3,10 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/objects/object/OSGCore.h"
-#include <libxml++/nodes/element.h>
 
+#include <libxml++/nodes/element.h>
 #include <boost/bind.hpp>
+#include <OpenSG/OSGDistanceLOD.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

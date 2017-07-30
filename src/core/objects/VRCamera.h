@@ -1,7 +1,6 @@
 #ifndef VRCAMERA_H_INCLUDED
 #define VRCAMERA_H_INCLUDED
 
-#include <OpenSG/OSGPerspectiveCamera.h>
 #include "VRTransform.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -9,8 +8,8 @@ using namespace std;
 
 class VRCamera : public VRTransform {
     private:
-        PerspectiveCameraRecPtr cam;
-        NodeMTRecPtr camGeo;
+        OSGCameraPtr cam;
+        OSGObjectPtr camGeo;
 
         float parallaxD = 1;
         float nearClipPlaneCoeff = 0.1;
@@ -32,7 +31,7 @@ class VRCamera : public VRTransform {
         int camID = -1;
         void activate();
 
-        PerspectiveCameraRecPtr getCam();
+        OSGCameraPtr getCam();
 
         void setAcceptRoot(bool b);
         bool getAcceptRoot();

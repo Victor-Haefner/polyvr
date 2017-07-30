@@ -2,10 +2,13 @@
 #define VRLOD_H_INCLUDED
 
 #include "core/objects/object/VRObject.h"
-#include <OpenSG/OSGDistanceLOD.h>
+#include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGSField.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+
+class DistanceLOD; OSG_GEN_CONTAINERPTR(DistanceLOD);
 
 class VRLod : public VRObject {
     private:

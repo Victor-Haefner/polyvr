@@ -19,6 +19,7 @@
 #include "core/objects/geometry/VRSprite.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
+#include "core/objects/OSGCamera.h"
 #include "core/objects/object/VRObjectT.h"
 #include "core/objects/VRLight.h"
 #include "core/scene/VRSceneManager.h"
@@ -425,19 +426,19 @@ void VRView::setCamera(VRCameraPtr c) {
 void VRView::setCam() {
     if (cam == 0) return;
 
-    if (lView && PCDecoratorLeft == 0) lView->setCamera(cam->getCam());
-    if (rView && PCDecoratorRight == 0) rView->setCamera(cam->getCam());
+    if (lView && PCDecoratorLeft == 0) lView->setCamera(cam->getCam()->cam);
+    if (rView && PCDecoratorRight == 0) rView->setCamera(cam->getCam()->cam);
 
-    if (PCDecoratorLeft) PCDecoratorLeft->setDecoratee(cam->getCam());
-    if (PCDecoratorRight) PCDecoratorRight->setDecoratee(cam->getCam());
+    if (PCDecoratorLeft) PCDecoratorLeft->setDecoratee(cam->getCam()->cam);
+    if (PCDecoratorRight) PCDecoratorRight->setDecoratee(cam->getCam()->cam);
 
     if (lView && PCDecoratorLeft) lView->setCamera(PCDecoratorLeft);
     if (rView && PCDecoratorRight) rView->setCamera(PCDecoratorRight);
 
     if (renderingL) renderingL->setCamera(cam->getCam());
     if (renderingR) renderingR->setCamera(cam->getCam());
-    if (renderingL && PCDecoratorLeft) renderingL->setCamera(PCDecoratorLeft);
-    if (renderingR && PCDecoratorRight) renderingR->setCamera(PCDecoratorRight);
+    if (renderingL && PCDecoratorLeft) renderingL->setCamera( OSGCamera::create(PCDecoratorLeft) );
+    if (renderingR && PCDecoratorRight) renderingR->setCamera( OSGCamera::create(PCDecoratorRight) );
 }
 
 void VRView::setBackground(BackgroundRecPtr bg) { background = bg; update(); }

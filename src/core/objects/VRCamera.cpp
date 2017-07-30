@@ -1,4 +1,5 @@
 #include "VRCamera.h"
+#include "OSGCamera.h"
 #include "core/utils/toString.h"
 #include "core/math/boundingbox.h"
 #include "core/objects/material/VRMaterial.h"
@@ -10,6 +11,7 @@
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGMultiPassMaterial.h>
+#include <OpenSG/OSGPerspectiveCamera.h>
 #include <libxml++/nodes/element.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -27,8 +29,9 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
     type = "Camera";
     cam_invert_z = true;
 
-    cam = PerspectiveCamera::create();
-    cam->setBeacon(getNode()->node);
+    PerspectiveCameraMTRecPtr pcam = PerspectiveCamera::create();
+    cam = OSGCamera::create( pcam );
+    pcam->setBeacon(getNode()->node);
     setFov(osgDegree2Rad(60));
 
     store("accept_root", &doAcceptRoot);
@@ -44,18 +47,18 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
     trans->editMatrix().setTranslate(Vec3f(0,0,0.25));
     GeometryMTRecPtr camGeo_ = makeBoxGeo(0.2, 0.2, 0.25, 1, 1, 1); //
     GeometryMTRecPtr camGeo2_ = makeCylinderGeo(0.2, 0.07, 16, 1, 1, 1);
-    camGeo = makeNodeFor(camGeo_);
+    camGeo = OSGObject::create( makeNodeFor(camGeo_) );
     NodeMTRecPtr camGeo2 = makeNodeFor(camGeo2_);
-    camGeo->setTravMask(0);
+    camGeo->node->setTravMask(0);
     camGeo_->setMaterial(getCamGeoMat()->getMaterial()->mat);
     camGeo2_->setMaterial(getCamGeoMat()->getMaterial()->mat);
     addChild(OSGObject::create(t));
-    t->addChild(camGeo);
+    t->addChild(camGeo->node);
     TransformMTRecPtr trans2 = Transform::create();
     NodeMTRecPtr t2 = makeNodeFor(trans2);
     trans2->editMatrix().setTranslate(Vec3f(0,0,-0.15));
     trans2->editMatrix().setRotate(Quaternion(Vec3f(1,0,0), Pi*0.5));
-    camGeo->addChild(t2);
+    camGeo->node->addChild(t2);
     t2->addChild(camGeo2);
 }
 
@@ -74,10 +77,11 @@ VRCameraPtr VRCamera::create(string name, bool reg) {
 
 void VRCamera::setup() {
     cout << "VRCamera::setup\n";
-    cam->setAspect(aspect);
-    cam->setFov(fov);
-    cam->setNear(parallaxD * nearClipPlaneCoeff);
-    cam->setFar(parallaxD * farClipPlaneCoeff);
+    PerspectiveCameraMTRecPtr pcam = dynamic_pointer_cast<PerspectiveCamera>(cam->cam);
+    pcam->setAspect(aspect);
+    pcam->setFov(fov);
+    pcam->setNear(parallaxD * nearClipPlaneCoeff);
+    pcam->setFar(parallaxD * farClipPlaneCoeff);
 }
 
 void VRCamera::activate() {
@@ -87,8 +91,8 @@ void VRCamera::activate() {
 }
 
 void VRCamera::showCamGeo(bool b) {
-    if (b) camGeo->setTravMask(0xffffffff);
-    else camGeo->setTravMask(0);
+    if (b) camGeo->node->setTravMask(0xffffffff);
+    else camGeo->node->setTravMask(0);
 }
 
 list<VRCameraWeakPtr>& VRCamera::getAll() {
@@ -96,7 +100,7 @@ list<VRCameraWeakPtr>& VRCamera::getAll() {
     return objs;
 }
 
-PerspectiveCameraRecPtr VRCamera::getCam() { return cam; }
+OSGCameraPtr VRCamera::getCam() { return cam; }
 
 void VRCamera::setAcceptRoot(bool b) { doAcceptRoot = b; }
 bool VRCamera::getAcceptRoot() { return doAcceptRoot; }

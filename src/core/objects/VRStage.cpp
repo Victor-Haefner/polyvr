@@ -4,6 +4,7 @@
 #include <OpenSG/OSGRenderBuffer.h>
 
 #include "core/objects/VRCamera.h"
+#include "core/objects/OSGCamera.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/object/OSGCore.h"
 
@@ -82,7 +83,7 @@ void VRStage::setTarget(VRMaterialPtr mat, int tid) {
 }
 
 void VRStage::setSize( Vec2i s ) { size = s; update(); }
-void VRStage::setCamera(CameraRecPtr cam) { stage->setCamera( cam ); }
+void VRStage::setCamera(OSGCameraPtr cam) { stage->setCamera( cam->cam ); }
 
 
 

@@ -1,8 +1,6 @@
 #ifndef VRLIGHT_H_INCLUDED
 #define VRLIGHT_H_INCLUDED
 
-#include <OpenSG/OSGNode.h>
-
 #include "core/objects/object/VRObject.h"
 #include <OpenSG/OSGSField.h>
 #include <OpenSG/OSGColor.h>

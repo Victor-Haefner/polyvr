@@ -5,7 +5,6 @@
 #include <OpenSG/OSGShaderShadowMapEngine.h>
 #include <OpenSG/OSGTrapezoidalShadowMapEngine.h>
 #include <OpenSG/OSGImage.h>
-#include <OpenSG/OSGProjectionCameraDecorator.h>
 #include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -77,7 +76,7 @@ class VRDefShading {
         void setDeferredChannel(int channel);
         TextureObjChunkRefPtr getTarget();
 
-        void setDSCamera(CameraRecPtr cam);
+        void setDSCamera(OSGCameraPtr cam);
         //void setDSCamera(ProjectionCameraDecoratorRecPtr cam);
         void addDSLight(VRLightPtr light);
         void updateLight(VRLightPtr l);

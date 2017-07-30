@@ -7,6 +7,7 @@
 #include "VRLightBeacon.h"
 #include "VRShadowEngine.h"
 
+#include <OpenSG/OSGNode.h>
 #include <OpenSG/OSGShadowStage.h>
 #include <OpenSG/OSGImage.h>
 #include <OpenSG/OSGTextureObjChunk.h>

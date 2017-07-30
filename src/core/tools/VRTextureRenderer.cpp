@@ -2,6 +2,7 @@
 #include "core/objects/OSGObject.h"
 #include "core/objects/object/OSGCore.h"
 #include "core/objects/VRCamera.h"
+#include "core/objects/OSGCamera.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/material/VRTextureGenerator.h"
@@ -105,7 +106,7 @@ void VRTextureRenderer::setup(VRCameraPtr c, int width, int height, bool alpha) 
     data->fbo->setHeight(data->fboHeight);
     if (alpha) data->fboTexImg->set(Image::OSG_RGBA_PF, data->fboWidth, data->fboHeight);
     else data->fboTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
-    data->stage->setCamera(cam->getCam());
+    data->stage->setCamera(cam->getCam()->cam);
 }
 
 VRMaterialPtr VRTextureRenderer::getMaterial() { return mat; }
@@ -129,7 +130,7 @@ VRTexturePtr VRTextureRenderer::renderOnce() {
 
     win->addPort(view);
     view->setRoot(getNode()->node);
-    view->setCamera(cam->getCam());
+    view->setCamera(cam->getCam()->cam);
     view->setBackground(scene->getBackground());
     win->render(ract);
     data->stage->setBackground(scene->getBackground());

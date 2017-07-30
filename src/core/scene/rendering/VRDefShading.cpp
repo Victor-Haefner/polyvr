@@ -17,6 +17,7 @@
 #include <OpenSG/OSGShaderProgram.h>
 #include <OpenSG/OSGShaderShadowMapEngine.h>
 #include <OpenSG/OSGTrapezoidalShadowMapEngine.h>
+#include <OpenSG/OSGProjectionCameraDecorator.h>
 
 #include <OpenSG/OSGFrameBufferObject.h>
 #include <OpenSG/OSGTextureBuffer.h>
@@ -26,6 +27,7 @@
 #include "core/objects/object/OSGCore.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/VRCamera.h"
+#include "core/objects/OSGCamera.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
@@ -157,8 +159,8 @@ bool VRDefShading::getDeferredShading() { return enabled; }
 // channel : GL_RENDER GL_POSITION GL_NORMALIZE GL_DIFFUSE
 void VRDefShading::setDeferredChannel(int c) { channel = c; reload(); }
 
-void VRDefShading::setDSCamera(CameraRecPtr cam) {
-    if (initiated) dsStage->setCamera(cam);
+void VRDefShading::setDSCamera(OSGCameraPtr cam) {
+    if (initiated) dsStage->setCamera(cam->cam);
 }
 
 void VRDefShading::setBackground(BackgroundRecPtr bg) {

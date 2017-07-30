@@ -17,6 +17,7 @@
 
 #include <OpenSG/OSGRenderAction.h>
 #include <boost/filesystem.hpp>
+#include <OpenSG/OSGProjectionCameraDecorator.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -228,7 +229,7 @@ void VRRenderStudio::setEye(EYE e) {
     if (auto s = stages["calibration"]) s->getMaterial()->setShaderParameter<int>("isRightEye", eye);
 }
 
-void VRRenderStudio::setCamera(CameraRecPtr cam) {
+void VRRenderStudio::setCamera(OSGCameraPtr cam) {
     for (auto s : stages) s.second->getRendering()->setDSCamera(cam);
     if (hmdd) hmdd->setCamera(cam);
     if (fxaa) fxaa->setCamera(cam);

@@ -2,8 +2,7 @@
 #define OSGPANEL_H_INCLUDED
 
 #include "VRGeometry.h"
-#include <OpenSG/OSGSimpleTexturedMaterial.h>
-#include <memory>
+#include <OpenSG/OSGColor.h>
 
 class CEF;
 
