@@ -39,9 +39,15 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool doColor, C
     Vec3d z = Vec3d(0,0,1);
 
     auto paths = this->paths;
-    for (auto p : polygons) {
-        paths.push_back( p->toPath() );
+    for (auto p : polygons) paths.push_back( p->toPath() );
+
+    float Lp = 0;
+    vector<Vec2d> tcs(1);
+    for (int i=1; i<profile.size(); i++) {
+        Lp += (profile[i]-profile[i-1]).length();
+        tcs.push_back( Vec2d(0,Lp) );
     }
+    for (int i=1; i<profile.size(); i++) tcs[i] /= Lp;
 
     clearChildren();
     for (auto path : paths) {
@@ -50,10 +56,6 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool doColor, C
         auto up_vectors = path->getUpvectors();
         auto cols = path->getColors();
 
-        float Lp = 0;
-        vector<Vec2d> tcs(1);
-        for (int i=1; i<profile.size(); i++) Lp += (profile[i]-profile[i-1]).length();
-        for (int i=1; i<profile.size(); i++) tcs.push_back( Vec2d(0,(profile[i]-profile[i-1]).length()/Lp) );
 
         float L = path->getLength();
         float l = 0;
