@@ -13,8 +13,7 @@ class VRPlantMaterial : public VRMaterial {
         static string vShrdEnd;
         static string fShrdEnd;
         static string lightning;
-
-        void composeShader();
+        static string noLightning;
 
     public:
         VRPlantMaterial();
@@ -22,6 +21,7 @@ class VRPlantMaterial : public VRMaterial {
 
         static VRPlantMaterialPtr create();
 
+        void composeShader();
 };
 
 OSG_END_NAMESPACE;

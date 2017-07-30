@@ -53,7 +53,7 @@ void VRGrassPatch::initLOD() {
 
 void VRGrassPatch::setArea(VRPolygonPtr p) {
     area = p;
-    chunks = p->gridSplit(1.0);
+    chunks = p->gridSplit(2.0);
     setupGrassMaterial();
     setupGrassStage();
     initLOD();
@@ -172,13 +172,14 @@ void VRGrassPatch::setupGrassStage() {
 	lightBeacon->setPose(Vec3d(), Vec3d(0.5,-1,-1), Vec3d(0,0,1));
 	texRenderer->setup(cam, 512, 512, true);
 
-    cam->setPose(Vec3d(0,0,2), Vec3d(0,0,-1), Vec3d(0,1,0)); // side
+    cam->setPose(Vec3d(0,0,-2), Vec3d(0,0,1), Vec3d(0,1,0)); // side
     cam->update();
     auto texSide = texRenderer->renderOnce();
     matGrassSide = VRPlantMaterial::create();
     matGrassSide->setTexture(texSide);
     matGrassSide->enableTransparency();
     matGrassSide->setLit(false);
+    matGrassSide->composeShader();
 }
 
 VRMaterialPtr VRGrassPatch::getGrassMaterial() { setupGrassMaterial(); return matGrass; }
@@ -187,9 +188,8 @@ VRMaterialPtr VRGrassPatch::getGrassSideMaterial() { return matGrassSide; }
 void VRGrassPatch::createSpriteLOD(VRGeoData& data, VRPolygonPtr area, int lvl) {
     float d = 100.0/lvl;
     for ( auto p : area->getRandomPoints(d,0) ) {
-        float r1 = float(random())/RAND_MAX;
-        //float r2 = 0.5+0.5*float(random())/RAND_MAX;
-        data.pushQuad(p, Vec3d(1-r1,0.1,-r1), Vec3d(0,1,0), Vec2d(0.2, 0.65), true);
+        float r = float(random())/RAND_MAX;
+        data.pushQuad(p, Vec3d(1-r,0.1,-r), Vec3d(0,1,0), Vec2d(0.2, 0.65), true);
     }
 }
 

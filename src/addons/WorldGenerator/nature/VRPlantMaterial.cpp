@@ -19,7 +19,8 @@ void VRPlantMaterial::composeShader() {
 
     string fshrd;
     fshrd += fShrdHead;
-    fshrd += lightning;
+    if (isLit()) fshrd += lightning;
+    else fshrd += noLightning;
     fshrd += fShrdEnd;
 
     setVertexShader(vshrd, "plantVS");
@@ -65,6 +66,12 @@ void applyLightning() {
 	float NdotHV = max(dot(normal, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
 	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
 	gl_FragColor = ambient + diffuse + specular;
+}
+);
+
+string VRPlantMaterial::noLightning = GLSL(
+void applyLightning() {
+	gl_FragColor = color;
 }
 );
 

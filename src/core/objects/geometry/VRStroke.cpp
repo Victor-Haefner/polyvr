@@ -57,7 +57,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool doColor, C
         auto cols = path->getColors();
 
 
-        float L = path->getLength();
+        //float L = path->getLength();
         float l = 0;
         Vec3d _p;
         for (uint j=0; j<pnts.size(); j++) {
@@ -79,7 +79,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool doColor, C
             for (int i=0; i<profile.size(); i++) {
                 Vec3d pos = profile[i];
                 Vec2d tc = tcs[i];
-                tc[0] = l/L;
+                tc[0] = l;
                 if (endArrow1 || begArrow2) pos += (pos-pCenter)*2.5;
                 if (endArrow2 || begArrow1) pos = pCenter;
                 m.mult(pos, pos);
