@@ -1,6 +1,7 @@
 #include "VRStroke.h"
 #include "VRGeoData.h"
 #include "core/math/path.h"
+#include "core/math/polygon.h"
 #include "core/objects/material/VRMaterial.h"
 
 #include <OpenSG/OSGMatrixUtility.h>
@@ -14,14 +15,12 @@ VRStroke::VRStroke(string name) : VRGeometry(name) { }
 VRStrokePtr VRStroke::create(string name) { return shared_ptr<VRStroke>(new VRStroke(name) ); }
 VRStrokePtr VRStroke::ptr() { return static_pointer_cast<VRStroke>( shared_from_this() ); }
 
-void VRStroke::setPath(pathPtr p) {
-    paths.clear();
-    paths.push_back(p);
-}
-
 void VRStroke::addPath(pathPtr p) { paths.push_back(p); }
+void VRStroke::setPath(pathPtr p) { paths.clear(); addPath(p); }
 void VRStroke::setPaths(vector<pathPtr> p) { paths = p; }
 vector<pathPtr>& VRStroke::getPaths() { return paths; }
+
+void VRStroke::addPolygon(VRPolygonPtr p) { polygons.push_back(p); }
 
 void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool doColor, CAP l, CAP r) {
     mode = 0;
@@ -39,6 +38,11 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool doColor, C
     bool doCaps = closed && profile.size() > 1;
     Vec3d z = Vec3d(0,0,1);
 
+    auto paths = this->paths;
+    for (auto p : polygons) {
+        paths.push_back( p->toPath() );
+    }
+
     clearChildren();
     for (auto path : paths) {
         auto pnts = path->getPositions();
@@ -46,12 +50,20 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool doColor, C
         auto up_vectors = path->getUpvectors();
         auto cols = path->getColors();
 
+        float Lp = 0;
+        vector<Vec2d> tcs(1);
+        for (int i=1; i<profile.size(); i++) Lp += (profile[i]-profile[i-1]).length();
+        for (int i=1; i<profile.size(); i++) tcs.push_back( Vec2d(0,(profile[i]-profile[i-1]).length()/Lp) );
+
+        float L = path->getLength();
+        float l = 0;
         Vec3d _p;
         for (uint j=0; j<pnts.size(); j++) {
             Vec3d p = pnts[j];
             Vec3d n = directions[j];
             Vec3d u = up_vectors[j];
             Color3f c = Vec3f(cols[j]);
+            if (j > 0) l += (p-pnts[j-1]).length();
 
             Matrix4d m;
             MatrixLookAt(m, Vec3d(0,0,0), n, u);
@@ -62,14 +74,17 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool doColor, C
             bool endArrow2 = (j == pnts.size()-1) && (cap_end == ARROW);
 
             // add new profile points and normals
-            for (Vec3d pos : profile) {
+            for (int i=0; i<profile.size(); i++) {
+                Vec3d pos = profile[i];
+                Vec2d tc = tcs[i];
+                tc[0] = l/L;
                 if (endArrow1 || begArrow2) pos += (pos-pCenter)*2.5;
                 if (endArrow2 || begArrow1) pos = pCenter;
                 m.mult(pos, pos);
 
                 Vec3d norm = pos; norm.normalize();
-                if (!doColor) data.pushVert(p+pos, norm);
-                else data.pushVert(p+pos, norm, c);
+                if (!doColor) data.pushVert(p+pos, norm, tc);
+                else data.pushVert(p+pos, norm, c, tc);
             }
 
             if (j==0) continue;

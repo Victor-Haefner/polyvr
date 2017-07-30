@@ -26,15 +26,6 @@ VRGrassPatchPtr VRGrassPatch::create() { return VRGrassPatchPtr( new VRGrassPatc
 
 void VRGrassPatch::initLOD() {
     for (auto a : chunks) {
-        /*Triangulator t;
-        t.add(*a);
-        auto c = t.compute();
-        c->rotateYonZ();
-        addChild(c);
-        c->setPickable(true);
-        c->setColor("red");
-        continue;*/
-
         lod = VRLod::create("grass_lod");
         lod->setPersistency(0);
         lod->setCenter(a->getBoundingBox().center());

@@ -178,17 +178,11 @@ void Triangulator::tessellate() {
         return res;
     };
 
-    auto toSpace3 = [&](const vector<Vec3d>& poly) {
-        vector<Vec3d> res;
-        for (auto& v : poly) res.push_back(Vec3d(v));
-        return res;
-    };
-
     vector<vector<Vec3d> > bounds;
     for (auto b : outer_bounds) bounds.push_back( toSpace(b.get()) );
     for (auto b : inner_bounds) bounds.push_back( toSpace(b.get()) );
-    for (auto b : outer_bounds) bounds.push_back( toSpace3(b.get3()) );
-    for (auto b : inner_bounds) bounds.push_back( toSpace3(b.get3()) );
+    for (auto b : outer_bounds) bounds.push_back( b.get3() );
+    for (auto b : inner_bounds) bounds.push_back( b.get3() );
 
     gluTessBeginPolygon(tess, 0);
     for (auto& b : bounds) {

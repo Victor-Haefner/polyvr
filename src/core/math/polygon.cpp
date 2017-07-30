@@ -1,4 +1,6 @@
 #include "polygon.h"
+#include "path.h"
+#include "core/utils/toString.h"
 #include <deque>
 #include <list>
 
@@ -14,6 +16,8 @@ typedef CGALTraits::Polygon_2 CGALPolygon;
 typedef std::list<CGALPolygon> CGALPolyList;
 
 using namespace OSG;
+
+template<> string typeName(const VRPolygonPtr& o) { return "Polygon"; }
 
 CGALPolygon toCGALVRPolygon(VRPolygon p) {
     vector<CGALPoint> pnts;
@@ -680,6 +684,21 @@ string VRPolygon::toString() {
     return ss.str();
 }
 
+pathPtr VRPolygon::toPath() {
+    auto res = path::create();
+    for (int i=0; i<points.size(); i++) {
+        Vec2d& p1 = points[(i-1)%points.size()];
+        Vec2d& p2 = points[i];
+        Vec2d& p3 = points[(i+1)%points.size()];
+        Vec2d d1 = p2-p1; d1.normalize();
+        Vec2d d2 = p3-p2; d2.normalize();
+        Vec2d n = d1+d2; n.normalize();
+        res->addPoint( pose( Vec3d(p2[0], 0, p2[1]), Vec3d(n[0], 0, n[1]), Vec3d(0,1,0) ) );
+    }
+    res->close();
+    res->compute(2);
+    return res;
+}
 
 
 

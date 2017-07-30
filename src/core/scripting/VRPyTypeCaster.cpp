@@ -80,7 +80,7 @@ template<> PyObject* VRPyTypeCaster::cast(const int& i) { return PyInt_FromLong(
 template<> PyObject* VRPyTypeCaster::cast(const float& i) { return PyFloat_FromDouble(i); }
 template<> PyObject* VRPyTypeCaster::cast(const string& s) { return PyString_FromString(s.c_str()); }
 template<> PyObject* VRPyTypeCaster::cast(const bool& b) { if (b) Py_RETURN_TRUE; else Py_RETURN_FALSE; }
-template<> PyObject* VRPyTypeCaster::cast(const Vec2d& b) { return VRPyBase::toPyTuple(b); }
+template<> PyObject* VRPyTypeCaster::cast(const Vec2d& b) { return toPyObject(b); }
 template<> PyObject* VRPyTypeCaster::cast(const Vec3d& b) { return toPyObject(b); }
 template<> PyObject* VRPyTypeCaster::cast(const Vec4d& b) { return VRPyBase::toPyTuple(b); }
 template<> PyObject* VRPyTypeCaster::cast(const Boundingbox& b) { return VRPyBoundingbox::fromObject(b); }

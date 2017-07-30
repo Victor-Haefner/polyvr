@@ -5,7 +5,6 @@
 #include "core/objects/geometry/VRStroke.h"
 
 struct VRPyStroke : VRPyBaseT<OSG::VRStroke> {
-    static PyMemberDef members[];
     static PyMethodDef methods[];
 
     static PyObject* setPath(VRPyStroke* self, PyObject* args);

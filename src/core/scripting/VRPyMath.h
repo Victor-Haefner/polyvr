@@ -6,7 +6,36 @@
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
 
+PyObject* toPyObject(const OSG::Vec2d& v);
 PyObject* toPyObject(const OSG::Vec3d& v);
+
+struct VRPyVec2f : VRPyBaseT<OSG::Vec2d> {
+    OSG::Vec2d v;
+
+    static PyMethodDef methods[];
+    static PyNumberMethods nMethods;
+    static PySequenceMethods sMethods;
+
+    static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
+    static PyObject* Print(PyObject* self);
+
+    static PyObject* normalize(VRPyVec2f* self);
+    static PyObject* length(VRPyVec2f* self);
+    static PyObject* dot(VRPyVec2f* self, PyObject* args);
+    static PyObject* cross(VRPyVec2f* self, PyObject* args);
+    static PyObject* asList(VRPyVec2f* self);
+
+    static PyObject* add(PyObject* self, PyObject* v);
+    static PyObject* sub(PyObject* self, PyObject* v);
+    static PyObject* mul(PyObject* self, PyObject* f);
+    static PyObject* div(PyObject* self, PyObject* f);
+    static PyObject* neg(PyObject* self);
+    static PyObject* abs(PyObject* self);
+
+    static Py_ssize_t len(PyObject* self);
+    static PyObject* getItem(PyObject* self, Py_ssize_t i);
+    static int setItem(PyObject* self, Py_ssize_t i, PyObject* val);
+};
 
 struct VRPyVec3f : VRPyBaseT<OSG::Vec3d> {
     OSG::Vec3d v;

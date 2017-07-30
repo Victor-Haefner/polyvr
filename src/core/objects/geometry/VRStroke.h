@@ -17,6 +17,7 @@ class VRStroke : public VRGeometry {
 
     private:
         vector<pathPtr> paths;
+        vector<VRPolygonPtr> polygons;
 
         int mode = -1;
         vector<Vec3d> profile;
@@ -37,8 +38,9 @@ class VRStroke : public VRGeometry {
         void setPath(pathPtr p);
         void addPath(pathPtr p);
         void setPaths(vector<pathPtr> p);
-
         vector<pathPtr>& getPaths();
+
+        void addPolygon(VRPolygonPtr p);
 
         void strokeProfile(vector<Vec3d> profile, bool closed, bool doColor = true, CAP l = NONE, CAP r = NONE);
         void strokeStrew(VRGeometryPtr geo);

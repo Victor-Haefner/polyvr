@@ -89,6 +89,7 @@ OSG::Line VRPyBase::PyToLine(PyObject *li) {
 
 OSG::Vec2d VRPyBase::parseVec2dList(PyObject *li) {
     if (li == 0) return OSG::Vec2d();
+    if (VRPyVec2f::check(li)) return ((VRPyVec2f*)li)->v;
     vector<PyObject*> lis = pyListToVector(li);
     if (lis.size() != 2) return OSG::Vec2d();
     float x,y;
