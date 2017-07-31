@@ -18,6 +18,7 @@ uniform float theta_s;
 // clouds
 uniform sampler2D tex;
 uniform vec2 cloudOffset; //to shift cloud texture
+uniform vec4 cloudColor; //to shift cloud texture
 uniform float cloudScale; // 1e-5
 uniform float cloudDensity;
 uniform float cloudHeight; // 1000.
@@ -34,8 +35,7 @@ float gamma;
 float theta;
 
 vec3 real_fragDir;
-vec3 colClouds = vec3(0.9);
-vec4 colGround = vec4(0.7, 0.7, 0.65, 1.0);
+vec4 colGround = vec4(0.6, 0.6, 0.7, 1.0);
 float rad_earth = 6.371e6;
 
 
@@ -44,6 +44,7 @@ void computeDirection() {
 	float tol = 1e-5;
 	fragDir = real_fragDir;
 	if(fragDir.y<tol) fragDir.y = tol;
+	fragDir = normalize( fragDir );
 }
 
 vec3 xyYRGB(vec3 xyY) {
@@ -120,45 +121,34 @@ float computeLuminanceOvercast() {
 float computeCloudLuminance() {
 	float factor = 0.5;
 	float offset = 0.4;
-	return factor*(offset + (1 - offset)*computeLuminanceOvercast()); 
+	float l = factor*(offset + (1 - offset)*computeLuminanceOvercast());
+	return clamp(l, 0.0, 1.0);
 }
 
+void addCloudLayer(float height, vec2 offset, float density, float luminance) {
+	vec2 uv = cloudScale * sphereIntersect(height) + offset;
+	float cloud = texture(tex, uv).x;
+	cloud = smoothstep(0.0, 1.0, (1.0 - density) * cloud);
+	float noise = 0.9 + 0.1*texture(tex, uv * 4).x;
+	vec3 c = mix(cloudColor.xyz, color.xyz, 1.0 - luminance);
+	color = mix(vec4(noise*c, 1.0), color, cloud);
+}
 
 void computeClouds() {
-	
 	if (fragDir.y > 0 && cloudDensity > 0.0) {
 		float density = cloudDensity;
 		float scale = cloudScale;
-		//density = 0.7;
+		float y = computeCloudLuminance(); // compute luminance of clouds based on angle
 
-		vec2 cmap_l = sphereIntersect(cloudHeight);
-		vec2 cmap_u = sphereIntersect(1.5*cloudHeight);
-		float c_l = texture(tex, scale * cmap_l + cloudOffset).x;
-		float c_u = texture(tex, scale * cmap_u + 0.25 *cloudOffset).x;
-		
-		// compute luminance of clouds based on angle
-		float y = computeCloudLuminance();
-	
-		// write higher layers of cloud first
-		//c_u = smoothstep( 0.25*density, 0.5*density + 0.5, 0.5*c_u);
-		c_u = smoothstep(0.0, 1.0, (1.0 - 0.5*density)* c_u);
-		color = mix(vec4(y * colClouds, 1.0), color, c_u);
-
-		// overlay darker base layer last
-		c_l = smoothstep(0.2, 1.0, (1.0 - density)* c_l);
-		//c_l = smoothstep(0.5*density, 0.5*density + 0.5, 0.5 * c_l);
-		color = mix(vec4(0.8 * y * colClouds, 1.0), color, c_l);
+		addCloudLayer(1.5*cloudHeight, 0.25*cloudOffset, 0.5*cloudDensity, y);
+		addCloudLayer(    cloudHeight,      cloudOffset,     cloudDensity, 0.8*y);
 	}
 }
 
 void addSun() {
-	float sunAngSize = 0.00873; // define sun size in radians
-	//sun angular size ~0.5 degrees = 0.00873 rad http://astronomy.swin.edu.au/cosmos/A/Angular+Diameter
-	// if angle of fragment to sun is small enough, paint white
-	color = mix(vec4(1.0, 1.0, 1.0, 1.0), color, smoothstep( sunAngSize * 0.7, sunAngSize * 1.0, gamma));
-
-	//float moon_gamma = acos(dot(fragDir, - sunPos));
-	//color = mix(vec4(0.8, 0.8, 0.8, 1.0), color, smoothstep( sunAngSize * 0.7, sunAngSize * 1.0, moon_gamma));
+	float sunAngSize = 0.00873; // defined sun size in radians
+	float s = smoothstep( sunAngSize * 0.7, sunAngSize * 1.0, gamma);
+	color = mix(vec4(1.0, 1.0, 1.0, 1.0), color, s);
 }
 
 void addGround() {
@@ -200,6 +190,10 @@ void main() {
 
 	//vec3 xyY = vec3(0.150017, 0.060007, 7.22);	
 	color = vec4(xyYRGB(xyY), 1);
+
+	color.rgb *= 1.0; // hack
+	color.b *= 1.1; 
+	color.r *= 0.85; 
 
 	// add cloud cover
 	computeClouds();

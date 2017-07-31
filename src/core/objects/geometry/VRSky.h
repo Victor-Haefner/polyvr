@@ -4,6 +4,7 @@
 #include "core/objects/VRObjectFwd.h"
 #include "core/scene/VRSceneManager.h"
 #include "VRGeometry.h"
+#include <OpenSG/OSGColor.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -42,6 +43,7 @@ class VRSky : public VRGeometry {
         float cloudDensity;
         float cloudScale;
         float cloudHeight;
+        Color4f cloudColor;
 
         // luminance
         float turbidity;
@@ -56,8 +58,6 @@ class VRSky : public VRGeometry {
         Vec3f sunPos;
         float theta_s;
 
-        void setTurbidity(float t);
-        void calculateCoeffs();
         void calculateZenithColor();
         void updateClouds(float dt);
         void sunFromTime();
@@ -72,7 +72,8 @@ class VRSky : public VRGeometry {
         VRSkyPtr ptr();
         void setTime(double second, int hour, int day, int year = 2000); // 0-3600, 0-24, 0-356, x
         void setSpeed(float speed = 1);
-        void setClouds(float density, float scale, float height, Vec2d speed);
+        void setClouds(float density, float scale, float height, Vec2d speed, Color4f color);
+        void setLuminance(float turbidity);
         void setPosition(float latitude, float longitude);
         void reloadShader();
 };

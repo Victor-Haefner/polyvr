@@ -44,15 +44,6 @@ VRSky::VRSky() : VRGeometry("Sky") {
     string vScript = resDir + "Sky.vp";
     string fScript = resDir + "Sky.fp";
 
-    // TODO: break up into separate setup functions
-
-	// observer params
-    // 49.0069° N, 8.4037° E Karlsruhe
-    observerPosition.latitude = 49.0069;
-    observerPosition.longitude = 8.4037;
-
-    setTime(0,12,120,2016);
-
     // shader setup
     mat = VRMaterial::create("Sky");
     mat->readVertexShader(vScript);
@@ -62,12 +53,12 @@ VRSky::VRSky() : VRGeometry("Sky") {
     mat->setLit(false);
 	mat->setDiffuse(Color3f(1));
 
-    // sun params
+    setPosition(49.0069, 8.4037); // 49.0069° N, 8.4037° E Karlsruhe
+    setTime(0,12,120,2016);
     sunFromTime();
-    setTurbidity(2);
-
-    // cloud params
-    setClouds(0.1, 1e-5, 3000, Vec2d(.0005, .0003));
+    setClouds(0.1, 1e-5, 3000, Vec2d(.0005, .0003), Color4f(0.7, 0.7, 0.7, 1.0));
+	setLuminance(2);
+    setVolumeCheck(false, true);
 
     //textureSize = 2048;
     textureSize = 512;
@@ -94,13 +85,6 @@ VRSky::VRSky() : VRGeometry("Sky") {
 	*/
 	mat->setTexture(tg.compose(0));
 
-	// sky params
-    calculateCoeffs();
-
-    calculateZenithColor();
-
-    setVolumeCheck(false, true);
-
     updatePtr = VRUpdateCb::create("sky update", boost::bind(&VRSky::update, this));
     VRScene::getCurrent()->addUpdateFkt(updatePtr);
 }
@@ -113,24 +97,15 @@ VRSkyPtr VRSky::ptr() { return static_pointer_cast<VRSky>( shared_from_this() );
 void VRSky::update() {
     if (!isVisible()) return;
 
-    // update time
     double current = glutGet(GLUT_ELAPSED_TIME)*0.001;
     float dt = (current - lastTime)*speed;
     lastTime = current;
 
     date.propagate(dt);
-
-    // update sun
     sunFromTime();
-    // update clouds
     updateClouds(dt);
     calculateZenithColor();
 
-}
-
-void VRSky::setTurbidity(float t) {
-    turbidity = t;
-    mat->setShaderParameter<float>("turbidity", turbidity);
 }
 
 void VRSky::setSpeed(float s) { speed = s; }
@@ -203,32 +178,6 @@ void VRSky::calculateZenithColor() {
     mat->setShaderParameter<Vec3f>("xyY_z", xyY_z);
 }
 
-void VRSky::calculateCoeffs() {
-    coeffsA[2] = 0.1787 * turbidity - 1.4630;
-    coeffsB[2] = - 0.3554 * turbidity + 0.4275;
-    coeffsC[2] = - 0.0227 * turbidity + 5.3251;
-    coeffsD[2] = 0.1206 * turbidity - 2.5771;
-    coeffsE[2] = - 0.0670 * turbidity + 0.3703;
-
-    coeffsA[0] = - 0.0193 * turbidity - 0.2592;
-    coeffsB[0] = - 0.0665 * turbidity + 0.0008;
-    coeffsC[0] = - 0.0004 * turbidity + 0.2125;
-    coeffsD[0] = - 0.0641 * turbidity - 0.8989;
-    coeffsE[0] = - 0.0033 * turbidity + 0.0452;
-
-    coeffsA[1] = - 0.0167 * turbidity - 0.2608;
-    coeffsB[1] = - 0.0950 * turbidity + 0.0092;
-    coeffsC[1] = - 0.0079 * turbidity + 0.2102;
-    coeffsD[1] = - 0.0441 * turbidity - 1.6537;
-    coeffsE[1] = - 0.0109 * turbidity + 0.0529;
-
-    mat->setShaderParameter<Vec3f>("A", coeffsA);
-    mat->setShaderParameter<Vec3f>("B", coeffsB);
-    mat->setShaderParameter<Vec3f>("C", coeffsC);
-    mat->setShaderParameter<Vec3f>("D", coeffsD);
-    mat->setShaderParameter<Vec3f>("E", coeffsE);
-}
-
 void VRSky::sunFromTime() {
 
 	double day = date.getDay();
@@ -280,15 +229,46 @@ void VRSky::sunFromTime() {
     mat->setShaderParameter<Vec3f>("sunPos", sunPos);
 }
 
-void VRSky::setClouds(float density, float scale, float height, Vec2d vel) {
+void VRSky::setClouds(float density, float scale, float height, Vec2d vel, Color4f color) {
     cloudDensity = density;
     cloudScale = scale;
     cloudHeight = height;
     cloudVel = vel;
+    cloudColor = color;
     mat->setShaderParameter<float>("cloudDensity", cloudDensity);
     mat->setShaderParameter<float>("cloudScale", cloudScale);
     mat->setShaderParameter<float>("cloudHeight", cloudHeight);
     mat->setShaderParameter<Vec2f>("cloudOffset", cloudOffset);
+    mat->setShaderParameter<Color4f>("cloudColor", cloudColor);
+}
+
+void VRSky::setLuminance(float t) {
+    turbidity = t;
+    mat->setShaderParameter<float>("turbidity", turbidity);
+
+    coeffsA[2] = 0.1787 * turbidity - 1.4630;
+    coeffsB[2] = - 0.3554 * turbidity + 0.4275;
+    coeffsC[2] = - 0.0227 * turbidity + 5.3251;
+    coeffsD[2] = 0.1206 * turbidity - 2.5771;
+    coeffsE[2] = - 0.0670 * turbidity + 0.3703;
+
+    coeffsA[0] = - 0.0193 * turbidity - 0.2592;
+    coeffsB[0] = - 0.0665 * turbidity + 0.0008;
+    coeffsC[0] = - 0.0004 * turbidity + 0.2125;
+    coeffsD[0] = - 0.0641 * turbidity - 0.8989;
+    coeffsE[0] = - 0.0033 * turbidity + 0.0452;
+
+    coeffsA[1] = - 0.0167 * turbidity - 0.2608;
+    coeffsB[1] = - 0.0950 * turbidity + 0.0092;
+    coeffsC[1] = - 0.0079 * turbidity + 0.2102;
+    coeffsD[1] = - 0.0441 * turbidity - 1.6537;
+    coeffsE[1] = - 0.0109 * turbidity + 0.0529;
+
+    mat->setShaderParameter<Vec3f>("A", coeffsA);
+    mat->setShaderParameter<Vec3f>("B", coeffsB);
+    mat->setShaderParameter<Vec3f>("C", coeffsC);
+    mat->setShaderParameter<Vec3f>("D", coeffsD);
+    mat->setShaderParameter<Vec3f>("E", coeffsE);
 }
 
 void VRSky::reloadShader() {
