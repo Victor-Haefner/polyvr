@@ -6,11 +6,6 @@
 
 struct VRPySky : VRPyBaseT<OSG::VRSky> {
     static PyMethodDef methods[];
-
-    static PyObject* setDateTime(VRPySky* self, PyObject* args);
-    static PyObject* setWeather(VRPySky* self, PyObject* args);
-    static PyObject* setPosition(VRPySky* self, PyObject* args);
-    static PyObject* setSpeed(VRPySky* self, PyObject* args);
 };
 
 

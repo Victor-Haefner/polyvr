@@ -47,7 +47,6 @@ VRSky::VRSky() : VRGeometry("Sky") {
     // TODO: break up into separate setup functions
 
 	// observer params
-    speed = 1;
     // 49.0069° N, 8.4037° E Karlsruhe
     observerPosition.latitude = 49.0069;
     observerPosition.longitude = 8.4037;
@@ -63,24 +62,12 @@ VRSky::VRSky() : VRGeometry("Sky") {
     mat->setLit(false);
 	mat->setDiffuse(Color3f(1));
 
-
-
     // sun params
     sunFromTime();
     setTurbidity(2);
 
-    float factor = 1/speed;
-
     // cloud params
-    cloudDensity = 0.1;
-    cloudScale = 1e-5;
-    cloudHeight = 3000.;
-    cloudVel =  Vec2d(.0005*factor, .0003*factor);
-	cloudOffset =  Vec2f(0, 0);
-    mat->setShaderParameter<float>("cloudDensity", cloudDensity);
-    mat->setShaderParameter<float>("cloudScale", cloudScale);
-    mat->setShaderParameter<float>("cloudHeight", cloudHeight);
-    mat->setShaderParameter<Vec2f>("cloudOffset", cloudOffset);
+    setClouds(0.1, 1e-5, 3000, Vec2d(.0005, .0003));
 
     //textureSize = 2048;
     textureSize = 512;
@@ -146,9 +133,7 @@ void VRSky::setTurbidity(float t) {
     mat->setShaderParameter<float>("turbidity", turbidity);
 }
 
-void VRSky::setSpeed(float s) {
-    speed = s;
-}
+void VRSky::setSpeed(float s) { speed = s; }
 
 void VRSky::setTime(double second, int hour, int day, int year) {
     bool warning = false;
@@ -295,12 +280,16 @@ void VRSky::sunFromTime() {
     mat->setShaderParameter<Vec3f>("sunPos", sunPos);
 }
 
-void VRSky::setWeather(float cCover, float cHeight, float wind, float haze) {
-    //clamp values to [0,1]
-
-
+void VRSky::setClouds(float density, float scale, float height, Vec2d vel) {
+    cloudDensity = density;
+    cloudScale = scale;
+    cloudHeight = height;
+    cloudVel = vel;
+    mat->setShaderParameter<float>("cloudDensity", cloudDensity);
+    mat->setShaderParameter<float>("cloudScale", cloudScale);
+    mat->setShaderParameter<float>("cloudHeight", cloudHeight);
+    mat->setShaderParameter<Vec2f>("cloudOffset", cloudOffset);
 }
-
 
 void VRSky::reloadShader() {
     string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Sky/";

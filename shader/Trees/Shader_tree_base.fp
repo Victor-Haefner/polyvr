@@ -18,6 +18,7 @@ in vec3 Normal;
 in vec3 gc;
 
 vec3 norm;
+vec3 normBumped;
 vec3 position;
 vec4 color;
 vec3 tc;
@@ -106,16 +107,16 @@ vec3 raycastCone() {
 const vec2 size = vec2(0.1,-0.1);
 const ivec3 off = ivec3(-1,0,1);
 void applyBumpMap() {
-    float s11 = texture(tex, tc).r;
-    float s01 = textureOffset(tex, tc, off.xyz).r;
-    float s21 = textureOffset(tex, tc, off.zyx).r;
-    float s10 = textureOffset(tex, tc, off.yxz).r;
-    float s12 = textureOffset(tex, tc, off.yzx).r;
-    
-    vec3 va = normalize(vec3(size.xy,s21-s01));
-    vec3 vb = normalize(vec3(size.yx,s12-s10));
-    norm = normalize(norm+0.8*cross(va,vb));
-    //norm = cross(va,vb);
+	float s11 = texture(tex, tc).r;
+	float s01 = textureOffset(tex, tc, off.xyz).r;
+	float s21 = textureOffset(tex, tc, off.zyx).r;
+	float s10 = textureOffset(tex, tc, off.yxz).r;
+	float s12 = textureOffset(tex, tc, off.yzx).r;
+
+	vec3 va = normalize(vec3(size.xy,s21-s01));
+	vec3 vb = normalize(vec3(size.yx,s12-s10));
+	normBumped = normalize(norm+0.8*cross(va,vb));
+	//norm = cross(va,vb);
 }
 
 void computeNormal() {
@@ -136,15 +137,15 @@ void computeDepth() {
 }
 
 void applyBlinnPhong() {
-	norm = normalize( gl_NormalMatrix * norm );
 	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
+	color.xyz *= abs(dot( norm, normBumped )); // apply bumps to color
+	norm = normalize( gl_NormalMatrix * normBumped );
 	float NdotL = max(dot( norm, light ), 0.0);
 	vec4  ambient = gl_LightSource[0].ambient * color;
 	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;
 	float NdotHV = max(dot(norm, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
-	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess ); 
+	vec4  specular = mix(gl_FrontMaterial.specular, gl_LightSource[0].specular, 0.5) * pow( NdotHV, gl_FrontMaterial.shininess ); 
 	gl_FragColor = ambient + diffuse + specular;
-	//gl_FragColor = color;
 }
 
 void main( void ) {

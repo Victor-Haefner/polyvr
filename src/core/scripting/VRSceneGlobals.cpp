@@ -9,6 +9,7 @@
 #include "VRPyRendering.h"
 #include "VRPyTypeCaster.h"
 #include "VRPyProgress.h"
+#include "VRPySky.h"
 
 #include "core/scene/VRAnimationManagerT.h"
 #include "core/scene/import/VRImport.h"
@@ -52,6 +53,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"setPhysicsActive", (PyCFunction)VRSceneGlobals::setPhysicsActive, METH_VARARGS, "Pause and unpause physics - setPhysicsActive( bool b )" },
 	{"runTest", (PyCFunction)VRSceneGlobals::runTest, METH_VARARGS, "Run a built-in system test - runTest( string test )" },
 	{"getSceneMaterials", (PyCFunction)VRSceneGlobals::getSceneMaterials, METH_NOARGS, "Get all materials of the scene - getSceneMaterials()" },
+	{"getSky", (PyCFunction)VRSceneGlobals::getSky, METH_NOARGS, "Get sky module" },
     {NULL}  /* Sentinel */
 };
 
@@ -59,6 +61,11 @@ PyMethodDef VRSceneGlobals::methods[] = {
 // ==============
 // Python methods
 // ==============
+
+PyObject* VRSceneGlobals::getSky(VRSceneGlobals* self) {
+    auto scene = VRScene::getCurrent();
+    return VRPySky::fromSharedPtr( scene->getSky() );
+}
 
 PyObject* VRSceneGlobals::getSceneMaterials(VRSceneGlobals* self) {
     auto scene = VRScene::getCurrent();

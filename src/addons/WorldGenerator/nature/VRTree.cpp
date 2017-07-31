@@ -81,13 +81,17 @@ struct OSG::segment {
 
 VRTree::VRTree(string name) : VRTransform(name) {
     int c = random(0,10);
-    if (c == 3) truncColor = Color3f(0.7, 0.7, 0.7);
-    if (c == 4) truncColor = Color3f(0.7, 0.7, 0.7);
+    if (c == 0) truncColor = Color3f(0.3, 0.2, 0);
+    if (c == 1) truncColor = Color3f(0.6, 0.5, 0.4);
+    if (c == 2) truncColor = Color3f(0.2, 0.1, 0.05);
+    if (c == 3) truncColor = Color3f(0.2, 0.1, 0.05);
+    if (c == 4) truncColor = Color3f(0.3, 0.2, 0);
     if (c == 5) truncColor = Color3f(0.6, 0.5, 0.4);
     if (c == 6) truncColor = Color3f(0.2, 0.1, 0.1);
     if (c == 7) truncColor = Color3f(0.3, 0.2, 0);
     if (c == 8) truncColor = Color3f(0.3, 0.2, 0);
     if (c == 9) truncColor = Color3f(0.2, 0.1, 0.05);
+    if (c ==10) truncColor = Color3f(0.2, 0.1, 0.05);
 
     store("seed", &seed);
     storeObjVec("branching", parameters, true);
