@@ -5,6 +5,7 @@
 #include "core/math/polygon.h"
 #include "core/math/triangulator.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/scene/VRObjectManager.h"
 #include "addons/Semantics/Reasoning/VREntity.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
 
@@ -123,9 +124,8 @@ void VRRoadIntersection::addRoad(VRRoadPtr road) {
 
 VREntityPtr VRRoadIntersection::addTrafficLight( posePtr p, string asset, Vec3d root) {
     float R = 0.05;
-    if (auto geo = world->getAsset(asset)) {
+    if (auto geo = world->getAssetManager()->copy(asset, p)) {
         addChild(geo);
-        geo->setPose(p);
         geo->move(R);
     }
     VRGeometryPtr pole = addPole(root, p->pos(), R);

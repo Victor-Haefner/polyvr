@@ -22,14 +22,15 @@ class VRGrassPatch : public VRTransform {
         static VRTextureRendererPtr texRenderer;
         static VRPlantMaterialPtr matGrassSide;
         static VRPlantMaterialPtr matGrass;
+        static VRPlantMaterialPtr matGrassUnlit;
 
-        static void setupGrassMaterial();
+        static void setupGrassMaterials();
         void setupGrassStage();
 
         void initLOD();
         void addGrassBlade(VRGeoData& data, Vec3d pos, float a, float dh, int lvl, Color3f c);
-        void createPatch(VRGeoData& data, VRPolygonPtr area, int lvl = 0, int density = 100);
-        void createSpriteLOD(VRGeoData& data, VRPolygonPtr area, int lvl);
+        void createPatch(VRGeoData& data, VRPolygonPtr area, int lvl = 0, float density = 100);
+        void createSpriteLOD(VRGeoData& data, VRPolygonPtr area, int lvl, float density);
 
     public:
         VRGrassPatch();

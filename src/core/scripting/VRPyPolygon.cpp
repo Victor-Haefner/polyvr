@@ -21,6 +21,7 @@ PyMethodDef VRPyPolygon::methods[] = {
     {"isInside", PyWrap(Polygon, isInside, "Check if point is inside polygon", bool, Vec2d) },
     {"gridSplit", PyWrap(Polygon, gridSplit, "Split the polygon using a virtual grid layout", vector< VRPolygonPtr >, float) },
     {"reverseOrder", PyWrap(Polygon, reverseOrder, "Reverse the order of the points", void) },
+    {"translate", PyWrap(Polygon, translate, "Translate all points", void, Vec3d) },
     {NULL}  /* Sentinel */
 };
 

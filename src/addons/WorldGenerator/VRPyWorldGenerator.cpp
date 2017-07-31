@@ -19,7 +19,8 @@ simpleVRPyType(RoadNetwork, New_ptr);
 simpleVRPyType(Asphalt, New_ptr);
 
 PyMethodDef VRPyWorldGenerator::methods[] = {
-    {"addAsset", PyWrap(WorldGenerator, addAsset, "Add an asset", void, string, VRTransformPtr) },
+    {"addAsset", PyWrap(WorldGenerator, addAsset, "Add an asset template", void, string, VRTransformPtr) },
+    {"getAssetManager", PyWrap(WorldGenerator, getAssetManager, "Get the asset manager", VRObjectManagerPtr) },
     {"getRoadNetwork", PyWrap(WorldGenerator, getRoadNetwork, "Access road network", VRRoadNetworkPtr) },
     {"setOntology", PyWrap(WorldGenerator, setOntology, "Set ontology", void, VROntologyPtr) },
     {NULL}  /* Sentinel */
