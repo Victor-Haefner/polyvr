@@ -56,8 +56,8 @@ VRSky::VRSky() : VRGeometry("Sky") {
     setPosition(49.0069, 8.4037); // 49.0069° N, 8.4037° E Karlsruhe
     setTime(0,12,120,2016);
     sunFromTime();
-    setClouds(0.1, 1e-5, 3000, Vec2d(.0005, .0003), Color4f(0.7, 0.7, 0.7, 1.0));
-	setLuminance(2);
+    setClouds(0.1, 1e-5, 3000, Vec2d(.002, .001), Color4f(1,1,1, 1.0));
+	setLuminance(1.75);
     setVolumeCheck(false, true);
 
     //textureSize = 2048;
