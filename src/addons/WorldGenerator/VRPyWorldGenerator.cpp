@@ -23,6 +23,7 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"getAssetManager", PyWrap(WorldGenerator, getAssetManager, "Get the asset manager", VRObjectManagerPtr) },
     {"getRoadNetwork", PyWrap(WorldGenerator, getRoadNetwork, "Access road network", VRRoadNetworkPtr) },
     {"setOntology", PyWrap(WorldGenerator, setOntology, "Set ontology", void, VROntologyPtr) },
+    {"getMaterial", PyWrap(WorldGenerator, getMaterial, "Get a material by name", VRMaterialPtr, string) },
     {NULL}  /* Sentinel */
 };
 

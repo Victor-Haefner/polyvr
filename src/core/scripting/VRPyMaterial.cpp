@@ -45,7 +45,7 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"remPass", (PyCFunction)VRPyMaterial::remPass, METH_VARARGS, "Remove a pass - remPass(i)" },
     {"setActivePass", (PyCFunction)VRPyMaterial::setActivePass, METH_VARARGS, "Activate a pass - setActivePass(i)" },
     {"setFrontBackModes", (PyCFunction)VRPyMaterial::setFrontBackModes, METH_VARARGS, "Set the draw mode of front and back faces - setFrontBackModes(front, back)\n\tmode can be: GL_NONE, GL_FILL, GL_BACK" },
-    {"setZOffset", (PyCFunction)VRPyMaterial::setZOffset, METH_VARARGS, "Set the z offset factor and bias - setZOffset(factor, bias)" },
+    {"setZOffset", PyWrap(Material, setZOffset, "Set Z buffer offset and bias, set to 1/1 to push behind or -1/-1 to pull to front", void, float, float) },
     {"setSortKey", (PyCFunction)VRPyMaterial::setSortKey, METH_VARARGS, "Set the sort key" },
     {"setTexture", (PyCFunction)VRPyMaterial::setTexture, METH_VARARGS, "Set the texture - setTexture(str path, int pos = 0)"
                                                                         "\n\t setTexture( Texture, int pos = 0)"
