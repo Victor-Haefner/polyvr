@@ -326,16 +326,21 @@ void VRGuiScripts::on_diag_import_select_1() {} // TODO
 void VRGuiScripts::on_diag_import_select_2() {}
 
 void VRGuiScripts::on_exec_clicked() {
+
     VRScriptPtr script = VRGuiScripts::getSelectedScript();
     if (script == 0) return;
 
+    //VRTimer t; t.start();
     on_save_clicked();
+    //cout << " VRGuiScripts::on_exec_clicked t1 " << t.stop() << endl; t.reset();
 
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    scene->triggerScript(script->getName());
 
-    VRGuiSignals::get()->getSignal("scene_modified")->triggerPtr<VRDevice>();
+    scene->triggerScript(script->getName());
+    //cout << " VRGuiScripts::on_exec_clicked t2 " << t.stop() << endl; t.reset();
+    //VRGuiSignals::get()->getSignal("scene_modified")->triggerPtr<VRDevice>(); // realy needed? can take a lot of time!
+    //cout << " VRGuiScripts::on_exec_clicked t3 " << t.stop() << endl; t.reset();
 }
 
 void VRGuiScripts::on_perf_toggled() {

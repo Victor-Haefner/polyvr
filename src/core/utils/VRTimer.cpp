@@ -8,6 +8,7 @@ VRTimer::VRTimer() { start(); }
 
 void VRTimer::start() { single.start = glutGet(GLUT_ELAPSED_TIME); }
 int VRTimer::stop() { return glutGet(GLUT_ELAPSED_TIME) - single.start; }
+void VRTimer::reset() { start(); }
 
 map<string, VRTimer::timer> VRTimer::beacons = map<string, VRTimer::timer>();
 

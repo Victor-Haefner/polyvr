@@ -19,6 +19,7 @@ class VRTimer {
         VRTimer();
         void start();
         int stop();
+        void reset();
 
         void start(std::string t);
         int stop(std::string t);
