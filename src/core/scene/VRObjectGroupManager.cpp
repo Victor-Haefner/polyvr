@@ -16,13 +16,13 @@ void VRObjectGroupManager::updateObjects() {
 
     //update the Transform changelists
     for ( auto t : VRTransform::changedObjects ) {
-        if (auto sp = t.lock()) sp->update();
+        if (auto sp = t.lock()) sp->updateChange();
     }
     VRTransform::changedObjects.clear();
 
     //update the dynamic objects
     for ( auto t : VRTransform::dynamicObjects ) {
-        if (auto sp = t.lock()) sp->update();
+        if (auto sp = t.lock()) sp->updateChange();
         // TODO: else: remove the t from dynamicObjects
     }
 }

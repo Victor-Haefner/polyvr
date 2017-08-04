@@ -191,7 +191,7 @@ class VRTransform : public VRObject {
         void setNoBltFlag();
 
         /** Update the object OSG transformation **/
-        virtual void update();
+        virtual void updateChange();
         void setup();
         void updatePhysics();
 };
