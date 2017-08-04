@@ -1,5 +1,6 @@
 #include "VRRoadBase.h"
 #include "../VRWorldGenerator.h"
+#include "../terrain/VRTerrain.h"
 #include "core/utils/toString.h"
 #include "core/math/path.h"
 #include "core/math/pose.h"
@@ -51,7 +52,10 @@ void VRRoadBase::setupTexCoords( VRGeometryPtr geo, VREntityPtr way ) {
 	geo->setTexCoords(tcs, 1); // add another tex coords set
 }
 
-VREntityPtr VRRoadBase::addNode( Vec3d pos ) {
+VREntityPtr VRRoadBase::addNode( Vec3d pos, bool elevate ) {
+    cout << "VRRoadBase::addNode " << pos;
+    if (terrain && elevate) terrain->elevatePoint(pos);
+    cout << " -> " << pos << endl;
 	auto node = world->getOntology()->addEntity("node", "Node");
 	node->setVector("position", toStringVector(pos), "Position");
 

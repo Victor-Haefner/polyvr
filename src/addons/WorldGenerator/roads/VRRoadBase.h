@@ -21,7 +21,7 @@ class VRRoadBase : public VRObject, public VRWorldModule {
         void setupTexCoords( VRGeometryPtr geo, VREntityPtr way );
         vector<string> toStringVector(Vec3d& v);
 
-        VREntityPtr addNode( Vec3d pos );
+        VREntityPtr addNode( Vec3d pos, bool elevate = false );
         VREntityPtr addPath( string type, string name, vector<VREntityPtr> nodes, vector<Vec3d> normals );
         VREntityPtr addLane( int direction, float width );
 

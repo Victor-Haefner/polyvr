@@ -16,6 +16,8 @@ PyMethodDef VRPyTerrain::methods[] = {
     {"physicalize", PyWrap(Terrain, physicalize, "Physicalize terrain", void, bool) },
     {"projectOSM", PyWrap(Terrain, projectOSM, "Load an OSM file and project surface types onto terrain, OSM path, N, E", void, string, double, double) },
     {"paintHeights", PyWrap(Terrain, paintHeights, "Simple function to paint by heights using a texture", void, string) },
+    {"elevatePoint", PyCastWrap(Terrain, elevatePoint, "Elevate a point", void, Vec3d) },
+    {"elevatePose", PyWrap(Terrain, elevatePose, "Elevate a pose", void, posePtr) },
     {"elevateObject", PyWrap(Terrain, elevateObject, "Elevate an Object onto the terrain", void, VRTransformPtr) },
     {NULL}  /* Sentinel */
 };

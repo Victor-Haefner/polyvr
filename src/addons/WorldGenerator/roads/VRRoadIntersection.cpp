@@ -1,6 +1,7 @@
 #include "VRRoadIntersection.h"
 #include "VRRoad.h"
 #include "../VRWorldGenerator.h"
+#include "../terrain/VRTerrain.h"
 #include "core/utils/toString.h"
 #include "core/math/polygon.h"
 #include "core/math/triangulator.h"
@@ -87,11 +88,15 @@ VRGeometryPtr VRRoadIntersection::createGeometry() {
         poly.addPoint(Vec2d(endP.p2[0], endP.p2[2]));
     }
     poly = poly.getConvexHull();
+    Vec3d median = poly.getBoundingBox().center();
+    if (terrain) terrain->elevatePoint(median); // TODO: elevate each point of the polygon
+    poly.translate(-median);
     Triangulator tri;
     tri.add( poly );
     VRGeometryPtr intersection = tri.compute();
     intersection->setPose(Vec3d(0,0,0), Vec3d(0,1,0), Vec3d(0,0,1));
     intersection->applyTransformation();
+    intersection->translate(median);
 	setupTexCoords( intersection, entity );
 	return intersection;
 }
