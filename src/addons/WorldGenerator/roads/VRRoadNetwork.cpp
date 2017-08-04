@@ -179,10 +179,10 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
 void VRRoadNetwork::addKirb(VRPolygonPtr p, string tex) {
     auto s = VRStroke::create("kirb");
     auto path = path::create();
-    auto points = p->get();
-    int N = points.size();
     Vec3d median = p->getBoundingBox().center();
     p->translate(-median);
+    auto points = p->get();
+    int N = points.size();
 
     for (int i=0; i<N; i++) {
         Vec2d p1 = points[(i-1)%N];
@@ -210,9 +210,7 @@ void VRRoadNetwork::addKirb(VRPolygonPtr p, string tex) {
     m->setTexture(tex);
     s->setMaterial(m);
 
-    cout << "VRRoadNetwork::addKirb " << terrain << " " << median << endl;
     if (terrain) terrain->elevatePoint(median); // TODO: elevate each point of the polygon
-    cout << "VRRoadNetwork::addKirb " << terrain << " " << median << endl;
     s->translate(median);
 }
 
