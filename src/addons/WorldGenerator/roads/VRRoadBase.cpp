@@ -43,8 +43,6 @@ pathPtr VRRoadBase::toPath( VREntityPtr pathEntity, int resolution ) {
 	return Path;
 }
 
-void VRRoadBase::setWorld(VRWorldGeneratorPtr w) { world = w; }
-
 void VRRoadBase::setupTexCoords( VRGeometryPtr geo, VREntityPtr way ) {
 	int rID = toInt( way->get("ID")->value );
 	GeoVec2fPropertyRecPtr tcs = GeoVec2fProperty::create();

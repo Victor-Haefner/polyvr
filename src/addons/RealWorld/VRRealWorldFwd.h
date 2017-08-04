@@ -5,10 +5,6 @@
 
 namespace OSG {
     ptrFwd(RealWorld);
-    ptrFwd(VRTerrain);
-    ptrFwd(VRTree);
-    ptrFwd(VRGrassPatch);
-    ptrFwd(VRWoods);
 }
 
 #endif // VRREALWORLDFWD_H_INCLUDED

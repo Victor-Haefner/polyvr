@@ -334,4 +334,23 @@ VRTexturePtr VRTextureGenerator::readSharedMemory(string segment, string object)
     return img;
 }
 
+void VRTextureGenerator::addSimpleNoise(Vec3i dim, bool doAlpha, Color4f fg, Color4f bg, float amount) {
+    setSize(dim, doAlpha);
+    if (doAlpha) {
+        add(PERLIN, amount*1./2, bg, fg);
+        add(PERLIN, amount*1./4, bg, fg);
+        add(PERLIN, amount*1./8, bg, fg);
+        add(PERLIN, amount*1./16, bg, fg);
+        add(PERLIN, amount*1./32, bg, fg);
+    } else {
+        Color3f fg3(fg[0], fg[1], fg[2]);
+        Color3f bg3(bg[0], bg[1], bg[2]);
+        add(PERLIN, amount*1./2, bg3, fg3);
+        add(PERLIN, amount*1./4, bg3, fg3);
+        add(PERLIN, amount*1./8, bg3, fg3);
+        add(PERLIN, amount*1./16, bg3, fg3);
+        add(PERLIN, amount*1./32, bg3, fg3);
+    }
+}
+
 OSG_END_NAMESPACE;

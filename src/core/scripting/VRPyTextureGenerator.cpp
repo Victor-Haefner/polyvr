@@ -22,6 +22,7 @@ PyMethodDef VRPyTextureGenerator::methods[] = {
     {"getSize", (PyCFunction)VRPyTextureGenerator::getSize, METH_NOARGS, "Get the size - [width, height, depth] getSize()" },
     {"compose", (PyCFunction)VRPyTextureGenerator::compose, METH_VARARGS, "Bake the layers into an image - img compose( int seed )" },
     {"readSharedMemory", (PyCFunction)VRPyTextureGenerator::readSharedMemory, METH_VARARGS, "Read an image from shared memory - img readSharedMemory( string segment, string data )" },
+    {"addSimpleNoise", PyWrapOpt(TextureGenerator, addSimpleNoise, "Add simple noise based on front and backcolor, texture dimension, alpha channel, fg, bg, amount", "1", void, Vec3i, bool, Color4f, Color4f, float) },
     {NULL}  /* Sentinel */
 };
 

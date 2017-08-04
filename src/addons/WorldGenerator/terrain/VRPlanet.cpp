@@ -1,4 +1,5 @@
 #include "VRPlanet.h"
+#include "../VRWorldGenerator.h"
 #include "VRTerrain.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
@@ -96,21 +97,22 @@ void VRPlanet::rebuild() {
 
 void VRPlanet::setParameters( double r ) { radius = r; rebuild(); }
 
-VRTerrainPtr VRPlanet::addSector( int north, int east ) {
-    auto terrain = VRTerrain::create( toString(north)+"N"+toString(east)+"E" );
+VRWorldGeneratorPtr VRPlanet::addSector( int north, int east ) {
+    auto generator = VRWorldGenerator::create();
+    sectors[north][east] = generator;
+    auto terrain = generator->getTerrain();
     terrain->setPlanet(ptr(), Vec2d(east, north));
-    anchor->addChild(terrain);
-    sectors[north][east] = terrain;
-    terrain->setFrom( Vec3d(fromLatLongPosition(north+0.5, east+0.5)) );
-    terrain->setUp( Vec3d(fromLatLongNormal(north+0.5, east+0.5)) );
-    terrain->setDir( Vec3d(fromLatLongNorth(north+0.5, east+0.5)) );
+    anchor->addChild(generator);
+    generator->setFrom( Vec3d(fromLatLongPosition(north+0.5, east+0.5)) );
+    generator->setUp( Vec3d(fromLatLongNormal(north+0.5, east+0.5)) );
+    generator->setDir( Vec3d(fromLatLongNorth(north+0.5, east+0.5)) );
 
     Vec2d size = fromLatLongSize(north, east, north+1, east+1);
     terrain->setParameters( size, 10, 1);
-    return terrain;
+    return generator;
 }
 
-VRTerrainPtr VRPlanet::getSector( double north, double east ) {
+VRWorldGeneratorPtr VRPlanet::getSector( double north, double east ) {
     int N = floor(north);
     int E = floor(east);
     if (sectors.count(N)) if (sectors[N].count(E)) return sectors[N][E];

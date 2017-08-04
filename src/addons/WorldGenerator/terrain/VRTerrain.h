@@ -49,6 +49,11 @@ class VRTerrain : public VRGeometry {
         void setPlanet(VRPlanetPtr planet, Vec2d position);
         void projectOSM(string path, double N, double E); // TODO, gis data should be handled somewhere else
 
+        float getHeight(const Vec2d& p);
+        void elevatePoint(Vec3d& p);
+        void elevatePose(posePtr p);
+        void elevateObject(VRTransformPtr p);
+
         void paintHeights(string path);
 };
 

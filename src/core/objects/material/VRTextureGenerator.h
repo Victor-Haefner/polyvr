@@ -73,9 +73,11 @@ class VRTextureGenerator {
         void drawPolygon(VRPolygonPtr p, Color4f c, float height = 0);
 
         void clearStage();
-        VRTexturePtr compose(int seed);
+        VRTexturePtr compose(int seed = 0);
 
         VRTexturePtr readSharedMemory(string segment, string object);
+
+        void addSimpleNoise(Vec3i dim, bool doAlpha, Color4f fg, Color4f bg, float amount = 1);
 };
 
 OSG_END_NAMESPACE;

@@ -6,15 +6,17 @@
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 #include "addons/RealWorld/VRRealWorldFwd.h"
 #include "core/math/VRMathFwd.h"
-#include "core/objects/object/VRObject.h"
+#include "core/objects/VRTransform.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class VRWorldGenerator : public VRObject {
+class VRWorldGenerator : public VRTransform {
     private:
         VROntologyPtr ontology;
         VRObjectManagerPtr assets;
+        VRNaturePtr nature;
+        VRTerrainPtr terrain;
         map<string, VRMaterialPtr> materials;
         VRRoadNetworkPtr roads;
 
@@ -35,10 +37,12 @@ class VRWorldGenerator : public VRObject {
         void setOntology(VROntologyPtr ontology);
         VROntologyPtr getOntology();
         VRRoadNetworkPtr getRoadNetwork();
+        VRObjectManagerPtr getAssetManager();
+        VRNaturePtr getNature();
+        VRTerrainPtr getTerrain();
 
         void addAsset( string name, VRTransformPtr geo );
         void addMaterial( string name, VRMaterialPtr mat );
-        VRObjectManagerPtr getAssetManager();
         VRMaterialPtr getMaterial(string name);
 };
 

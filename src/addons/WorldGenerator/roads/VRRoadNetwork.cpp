@@ -1,11 +1,12 @@
 #include "VRRoadNetwork.h"
 #include "VRRoad.h"
 #include "VRRoadIntersection.h"
+#include "../terrain/VRTerrain.h"
 #include "../VRWorldGenerator.h"
 #include "VRAsphalt.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
-#include "addons/WorldGenerator/nature/VRWoods.h"
+#include "addons/WorldGenerator/nature/VRNature.h"
 #include "core/tools/VRPathtool.h"
 #include "core/math/pose.h"
 #include "core/math/path.h"
@@ -175,6 +176,46 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
 	}
 }
 
+void VRRoadNetwork::addKirb(VRPolygonPtr p, string tex) {
+    auto s = VRStroke::create("kirb");
+    auto path = path::create();
+    auto points = p->get();
+    int N = points.size();
+    Vec3d median = p->getBoundingBox().center();
+    p->translate(-median);
+
+    for (int i=0; i<N; i++) {
+        Vec2d p1 = points[(i-1)%N];
+        Vec2d p2 = points[i];
+        Vec2d p3 = points[(i+1)%N];
+        Vec2d d1 = p2-p1; d1.normalize();
+        Vec2d d2 = p3-p2; d2.normalize();
+        Vec2d n = d1+d2; n.normalize();
+        Vec2d p21 = p2 - d1*0.01;
+        Vec2d p23 = p2 + d2*0.01;
+        Vec2d p22 = (p21+p23)*0.5;
+        path->addPoint( pose(Vec3d(p21[0],0,p21[1]), Vec3d(d1[0],0,d1[1])) );
+        path->addPoint( pose(Vec3d(p22[0],0,p22[1]), Vec3d( n[0],0, n[1])) );
+        path->addPoint( pose(Vec3d(p23[0],0,p23[1]), Vec3d(d2[0],0,d2[1])) );
+    }
+    path->close();
+    path->compute(2);
+    s->addPath(path);
+
+    s->strokeProfile({Vec3d(0.0, 0.1, 0), Vec3d(-0.1, 0.1, 0), Vec3d(-0.1, 0, 0)}, 0, 0);
+    addChild(s);
+    s->updateNormals(1);
+
+    auto m = VRMaterial::create("kirb");
+    m->setTexture(tex);
+    s->setMaterial(m);
+
+    cout << "VRRoadNetwork::addKirb " << terrain << " " << median << endl;
+    if (terrain) terrain->elevatePoint(median); // TODO: elevate each point of the polygon
+    cout << "VRRoadNetwork::addKirb " << terrain << " " << median << endl;
+    s->translate(median);
+}
+
 vector<VREntityPtr> VRRoadNetwork::getRoadNodes() {
     //auto nodes = ontology->process("q(n):Node(n);Road(r);has(r.path.nodes,n)");
     map<int, VREntityPtr> nodes;
@@ -327,8 +368,6 @@ void VRRoadNetwork::computeTracksLanes(VREntityPtr way) {
         }
     }
 }
-
-void VRRoadNetwork::setNatureManager(VRWoodsPtr mgr) { natureManager = mgr; }
 
 // --------------- pipeline -----------------------
 

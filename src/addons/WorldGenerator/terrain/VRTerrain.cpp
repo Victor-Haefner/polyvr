@@ -11,6 +11,7 @@
 #include "core/math/boundingbox.h"
 #include "core/math/polygon.h"
 #include "core/math/triangulator.h"
+#include "core/math/pose.h"
 #include "core/scene/import/GIS/VRGDAL.h"
 #include "addons/WorldGenerator/GIS/OSMMap.h"
 
@@ -38,8 +39,19 @@ void VRTerrain::setParameters( Vec2d s, double r, double h ) {
 }
 
 void VRTerrain::setMap( VRTexturePtr t, int channel ) {
-    tex = t;
-    mat->setTexture(t);
+    if (t->getChannels() != 4) { // fix mono channels
+        VRTextureGenerator tg;
+        auto dim = t->getSize();
+        tg.setSize(dim, true);
+        tex = tg.compose(0);
+        for (int i = 0; i < dim[0]; i++) {
+            for (int j = 0; j < dim[1]; j++) {
+                double h = t->getPixel(Vec3i(i,j,0))[0];
+                tex->setPixel(Vec3i(i,j,0), Color4f(1.0,1.0,1.0,h));
+            }
+        }
+    } else tex = t;
+    mat->setTexture(tex);
 	mat->setShaderParameter("channel", channel);
     updateTexelSize();
 }
@@ -194,6 +206,16 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
     return true;
 }
 
+float VRTerrain::getHeight(const Vec2d& p) {
+    int i = (p[0]/size[0] + 0.5)*tex->getSize()[0];
+    int j = (p[1]/size[1] + 0.5)*tex->getSize()[1];
+    return tex->getPixel(Vec3i(i,j,0))[3];
+}
+
+void VRTerrain::elevateObject(VRTransformPtr t) { auto p = t->getFrom(); elevatePoint(p); t->setFrom(p); }
+void VRTerrain::elevatePose(posePtr p) { auto P = p->pos(); elevatePoint(P); p->setPos(P); }
+void VRTerrain::elevatePoint(Vec3d& p) { p[1] += getHeight(Vec2d(p[0], p[2])); }
+
 void VRTerrain::loadMap( string path, int channel ) {
     cout << "   ----------- VRTerrain::loadMap " << path << " " << channel << endl ;
     auto tex = loadGeoRasterData(path);
@@ -202,22 +224,9 @@ void VRTerrain::loadMap( string path, int channel ) {
 
 void VRTerrain::projectOSM(string path, double N, double E) {
     if (!tex) return;
-    if (tex->getChannels() != 4) { // fix mono channels
-        VRTextureGenerator tg;
-        auto dim = tex->getSize();
-        tg.setSize(dim, true);
-        auto t = tg.compose(0);
-        for (int i = 0; i < dim[0]; i++) {
-            for (int j = 0; j < dim[1]; j++) {
-                double h = tex->getPixel(Vec3i(i,j,0))[0];
-                t->setPixel(Vec3i(i,j,0), Color4f(1.0,1.0,1.0,h));
-            }
-        }
-        setMap(t);
-    }
 
     // -------------- prepare polygons in terrain space
-    Matrix4d terrainMatrix = getMatrix();
+    Matrix4d terrainMatrix = dynamic_pointer_cast<VRTransform>( getParent() )->getMatrix();
     terrainMatrix.invert();
     map< string, vector<VRPolygonPtr> > polygons;
     auto map = OSMMap::loadMap(path);
@@ -235,7 +244,7 @@ void VRTerrain::projectOSM(string path, double N, double E) {
     }
 
     // training ground hack flat ground
-    auto tgPolygon = VRPolygon::create();
+    /*auto tgPolygon = VRPolygon::create();
     Pnt3d pos;
     float d = 0.003;
     pos = Pnt3d( planet->fromLatLongPosition(29.924500-d, 119.896806-d) );
@@ -247,7 +256,7 @@ void VRTerrain::projectOSM(string path, double N, double E) {
     pos = Pnt3d( planet->fromLatLongPosition(29.924500+d, 119.896806-d) );
     terrainMatrix.mult(pos, pos); tgPolygon->addPoint( Vec2d(pos[0], pos[2]) );
     tgPolygon->scale( Vec3d(1.0/size[0], 1, 1.0/size[1]) );
-    tgPolygon->translate( Vec3d(0.5,0,0.5) );
+    tgPolygon->translate( Vec3d(0.5,0,0.5) );*/
 
     // -------------------- project OSM polygons on texture
     auto dim = tex->getSize();
@@ -275,13 +284,12 @@ void VRTerrain::projectOSM(string path, double N, double E) {
     VRTexturePtr t = tg.compose(0);
 
     // ----------------------- combine OSM texture with heightmap
-    cout << "\n tgPolygon " << tgPolygon->toString() << endl;
     for (int i = 0; i < dim[0]; i++) {
         for (int j = 0; j < dim[1]; j++) {
             Vec3i pixK = Vec3i(i,j,0);
             double h = tex->getPixel(pixK)[3];
             auto pix = Vec2d(i*1.0/(dim[0]-1), j*1.0/(dim[1]-1));
-            if (tgPolygon->isInside(pix)) h = 14;
+            //if (tgPolygon->isInside(pix)) h = 14;
             Color4f col = t->getPixel(pixK);
             col[3] = h;
             t->setPixel(pixK, col);

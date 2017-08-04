@@ -227,7 +227,7 @@ void VRTree::initMaterials() {
     if (!leafMat) {
         leafMat = VRMaterial::create("tree_leafs");
 
-        leafMat->setDiffuse(Color3f(0.6,1.0,0.4));
+        leafMat->setDiffuse(Color3f(0.6,0.8,0.4));
         leafMat->setAmbient(Color3f(0.2, 0.6, 0.2));
         leafMat->setSpecular(Color3f(0.1, 0.1, 0.1));
 

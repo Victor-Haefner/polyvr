@@ -449,7 +449,7 @@ doubleBuffer* VRTransform::getBuffer() { return dm; }
 /** Set the from vector **/
 void VRTransform::setFrom(Vec3d pos) {
     if (isNan(pos)) return;
-    _from = Vec3d(pos);
+    _from = pos;
     if (orientation_mode == OM_DIR) _at = _from + _dir;
     if (orientation_mode == OM_AT) _dir = _at - _from;
     reg_change();
@@ -458,7 +458,7 @@ void VRTransform::setFrom(Vec3d pos) {
 /** Set the at vector **/
 void VRTransform::setAt(Vec3d at) {
     if (isNan(at)) return;
-    _at = Vec3d(at);
+    _at = at;
     _dir = _at - _from;
     orientation_mode = OM_AT;
     reg_change();
@@ -467,13 +467,13 @@ void VRTransform::setAt(Vec3d at) {
 /** Set the up vector **/
 void VRTransform::setUp(Vec3d up) {
     if (isNan(up)) return;
-    _up = Vec3d(up);
+    _up = up;
     reg_change();
 }
 
 void VRTransform::setDir(Vec3d dir) {
     if (isNan(dir)) return;
-    _dir = Vec3d(dir);
+    _dir = dir;
     _at = _from + _dir;
     orientation_mode = OM_DIR;
     reg_change();
@@ -485,16 +485,16 @@ void VRTransform::set_orientation_mode(int b) { orientation_mode = b; }
 /** Set the orientation of the object with the at && up vectors **/
 void VRTransform::setOrientation(Vec3d at, Vec3d up) {
     if (isNan(at) || isNan(up)) return;
-    _at = Vec3d(at);
-    _up = Vec3d(up);
+    _at = at;
+    _up = up;
     reg_change();
 }
 
 /** Set the pose of the object with the from, at && up vectors **/
 void VRTransform::setPose(Vec3d from, Vec3d dir, Vec3d up) {
     if (isNan(from) || isNan(dir) || isNan(up)) return;
-    _from = Vec3d(from);
-    _up = Vec3d(up);
+    _from = from;
+    _up = up;
     setDir(dir);
 }
 

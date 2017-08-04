@@ -16,12 +16,13 @@ PyMethodDef VRPyTerrain::methods[] = {
     {"physicalize", PyWrap(Terrain, physicalize, "Physicalize terrain", void, bool) },
     {"projectOSM", PyWrap(Terrain, projectOSM, "Load an OSM file and project surface types onto terrain, OSM path, N, E", void, string, double, double) },
     {"paintHeights", PyWrap(Terrain, paintHeights, "Simple function to paint by heights using a texture", void, string) },
+    {"elevateObject", PyWrap(Terrain, elevateObject, "Elevate an Object onto the terrain", void, VRTransformPtr) },
     {NULL}  /* Sentinel */
 };
 
 PyMethodDef VRPyPlanet::methods[] = {
-    {"addSector", PyWrap(Planet, addSector, "Add sector to planet", VRTerrainPtr, int, int) },
-    {"getSector", PyWrap(Planet, getSector, "Return sector at N E", VRTerrainPtr, double, double) },
+    {"addSector", PyWrap(Planet, addSector, "Add sector to planet", VRWorldGeneratorPtr, int, int) },
+    {"getSector", PyWrap(Planet, getSector, "Return sector at N E", VRWorldGeneratorPtr, double, double) },
     {"getMaterial", PyWrap(Planet, getMaterial, "Get planet material", VRMaterialPtr) },
     {"setParameters", PyWrap(Planet, setParameters, "Set planet parameters: radius", void, double) },
     {"addPin", PyWrap(Planet, addPin, "Add a pin: label, north, east", int, string, double, double) },

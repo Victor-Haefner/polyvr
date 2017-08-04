@@ -13,7 +13,7 @@ class VRPlanet : public VRTransform {
         static string surfaceFP;
 
         double radius = 6371000; // earth radius
-        map<int, map<int, VRTerrainPtr> > sectors;
+        map<int, map<int, VRWorldGeneratorPtr> > sectors;
         VRLodPtr lod;
         VRObjectPtr anchor;
         VRMaterialPtr sphereMat;
@@ -32,8 +32,8 @@ class VRPlanet : public VRTransform {
         static VRPlanetPtr create(string name = "planet");
 
         void setParameters( double radius );
-        VRTerrainPtr addSector( int north, int east );
-        VRTerrainPtr getSector( double north, double east );
+        VRWorldGeneratorPtr addSector( int north, int east );
+        VRWorldGeneratorPtr getSector( double north, double east );
         int addPin( string label, double north, double east );
         void remPin( int pin );
 

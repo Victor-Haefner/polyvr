@@ -1,5 +1,5 @@
 #include "VRPyWorldGenerator.h"
-#include "addons/WorldGenerator/nature/VRPyTree.h"
+#include "addons/WorldGenerator/nature/VRPyNature.h"
 #include "core/scripting/VRPyBaseT.h"
 #include "core/scripting/VRPyPath.h"
 #include "core/scripting/VRPyGeometry.h"
@@ -11,6 +11,7 @@ using namespace OSG;
 
 template<> PyObject* VRPyTypeCaster::cast(const VRRoadPtr& e) { return VRPyRoad::fromSharedPtr(e); }
 template<> PyObject* VRPyTypeCaster::cast(const VRRoadNetworkPtr& e) { return VRPyRoadNetwork::fromSharedPtr(e); }
+template<> PyObject* VRPyTypeCaster::cast(const VRWorldGeneratorPtr& e) { return VRPyWorldGenerator::fromSharedPtr(e); }
 
 simpleVRPyType(WorldGenerator, New_ptr );
 simpleVRPyType(RoadBase, 0);
@@ -22,6 +23,8 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"addAsset", PyWrap(WorldGenerator, addAsset, "Add an asset template", void, string, VRTransformPtr) },
     {"getAssetManager", PyWrap(WorldGenerator, getAssetManager, "Get the asset manager", VRObjectManagerPtr) },
     {"getRoadNetwork", PyWrap(WorldGenerator, getRoadNetwork, "Access road network", VRRoadNetworkPtr) },
+    {"getNature", PyWrap(WorldGenerator, getNature, "Access nature module", VRNaturePtr) },
+    {"getTerrain", PyWrap(WorldGenerator, getTerrain, "Access the terrain", VRTerrainPtr) },
     {"setOntology", PyWrap(WorldGenerator, setOntology, "Set ontology", void, VROntologyPtr) },
     {"getMaterial", PyWrap(WorldGenerator, getMaterial, "Get a material by name", VRMaterialPtr, string) },
     {NULL}  /* Sentinel */
@@ -84,13 +87,13 @@ PyObject* VRPyAsphalt::updateTexture(VRPyAsphalt* self) {
 // ------------------------------------------------------
 
 PyMethodDef VRPyRoadNetwork::methods[] = {
-    {"setNatureManager", (PyCFunction)VRPyRoadNetwork::setNatureManager, METH_VARARGS, "Set the nature manager - setNatureManager( woods )" },
     {"addNode", (PyCFunction)VRPyRoadNetwork::addNode, METH_VARARGS, "Add a new node - node addNode( [x,y,z] )" },
     {"addGreenBelt", (PyCFunction)VRPyRoadNetwork::addGreenBelt, METH_VARARGS, "Add a green lane - lane addGreenBelt( road, float width )" },
     {"addWay", PyWrap(RoadNetwork, addWay, "Add a way", VRRoadPtr, string, vector<VREntityPtr>, int, string) },
     {"addRoad", PyWrap(RoadNetwork, addRoad, "Add a road", VRRoadPtr, string, string, VREntityPtr, VREntityPtr, Vec3d, Vec3d, int) },
     {"addPath", (PyCFunction)VRPyRoadNetwork::addPath, METH_VARARGS, "Add a new path - path addPath( str type, str name, [nodes], [normals] )" },
     {"addArrows", (PyCFunction)VRPyRoadNetwork::addArrows, METH_VARARGS, "Add a new path - arrows addArrows( lane, float t, [float] dirs )" },
+    {"addKirb", PyWrap(RoadNetwork, addKirb, "Add a kirb, polygon, texture", void, VRPolygonPtr, string) },
     {"computeLanePaths", (PyCFunction)VRPyRoadNetwork::computeLanePaths, METH_VARARGS, "Compute the path of each lane of a road - computeLanePaths( road )" },
     {"computeIntersections", (PyCFunction)VRPyRoadNetwork::computeIntersections, METH_NOARGS, "Compute the intersections - computeIntersections( )" },
     {"computeLanes", (PyCFunction)VRPyRoadNetwork::computeLanes, METH_NOARGS, "Compute the lanes - computeLanes( )" },
@@ -170,14 +173,6 @@ PyObject* VRPyRoadNetwork::computeLanePaths(VRPyRoadNetwork* self, PyObject *arg
     VRPyEntity* road = 0;
     if (!PyArg_ParseTuple(args, "O", &road)) return NULL;
     self->objPtr->computeLanePaths( road->objPtr );
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyRoadNetwork::setNatureManager(VRPyRoadNetwork* self, PyObject *args) {
-    if (!self->valid()) return NULL;
-    VRPyWoods* woods = 0;
-    if (!PyArg_ParseTuple(args, "O", &woods)) return NULL;
-    self->objPtr->setNatureManager( woods->objPtr );
     Py_RETURN_TRUE;
 }
 

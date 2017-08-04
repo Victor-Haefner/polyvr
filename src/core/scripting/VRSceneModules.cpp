@@ -84,7 +84,7 @@
 #include "addons/Engineering/Milling/VRPyMillingCuttingToolProfile.h"
 #include "addons/Engineering/VRPyRobotArm.h"
 #include "addons/WorldGenerator/VRPyWorldGenerator.h"
-#include "addons/WorldGenerator/nature/VRPyTree.h"
+#include "addons/WorldGenerator/nature/VRPyNature.h"
 #include "addons/WorldGenerator/terrain/VRPyTerrain.h"
 #include "addons/Engineering/CSG/VRPyCSG.h"
 #include "addons/RealWorld/VRPyRealWorld.h"
@@ -168,7 +168,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyNumberingEngine>("NumberingEngine", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyCharacter>("Character", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTree>("Tree", pModVR, VRPyGeometry::typeRef);
-    sm->registerModule<VRPyWoods>("Woods", pModVR, VRPyObject::typeRef);
+    sm->registerModule<VRPyNature>("Nature", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTerrain>("Terrain", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyPlanet>("Planet", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyMillingMachine>("MillingMachine", pModVR);
@@ -207,7 +207,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     PyModule_AddObject(pModVR, "Setup", pModSetup);
 
     PyObject* pModWorldGenerator = Py_InitModule3("VR.WorldGenerator", VRSceneGlobals::methods, "VR world generator module");
-    sm->registerModule<VRPyWorldGenerator>("World", pModWorldGenerator, VRPyObject::typeRef, "WorldGenerator");
+    sm->registerModule<VRPyWorldGenerator>("WorldGenerator", pModWorldGenerator, VRPyTransform::typeRef, "WorldGenerator");
     sm->registerModule<VRPyAsphalt>("Asphalt", pModWorldGenerator, VRPyMaterial::typeRef, "WorldGenerator");
     sm->registerModule<VRPyRoadBase>("RoadBase", pModWorldGenerator, VRPyObject::typeRef, "WorldGenerator");
     sm->registerModule<VRPyRoad>("Road", pModWorldGenerator, VRPyRoadBase::typeRef, "WorldGenerator");

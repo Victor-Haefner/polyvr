@@ -23,7 +23,6 @@ class VRRoadNetwork : public VRRoadBase {
         VRAsphaltPtr asphalt;
         VRAsphaltPtr asphaltArrow;
         VRPathtoolPtr tool;
-        VRWoodsPtr natureManager;
         int nextRoadID = 0;
 
         VRGeometryPtr arrows;
@@ -45,7 +44,6 @@ class VRRoadNetwork : public VRRoadBase {
 
         static VRRoadNetworkPtr create();
 
-        void setNatureManager(VRWoodsPtr mgr);
         GraphPtr getGraph();
         void updateAsphaltTexture();
         VRAsphaltPtr getMaterial();
@@ -55,6 +53,7 @@ class VRRoadNetwork : public VRRoadBase {
         VRRoadPtr addWay( string name, vector<VREntityPtr> paths, int rID, string type );
         VRRoadPtr addRoad( string name, string type, VREntityPtr node1, VREntityPtr node2, Vec3d norm1, Vec3d norm2, int Nlanes );
         VREntityPtr addArrows( VREntityPtr lane, float t, vector<float> dirs );
+        void addKirb( VRPolygonPtr, string texture );
 
         void computeLanePaths( VREntityPtr road );
         void computeIntersections();

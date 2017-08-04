@@ -1,5 +1,7 @@
 #include "VRWorldGenerator.h"
 #include "roads/VRRoadNetwork.h"
+#include "nature/VRNature.h"
+#include "terrain/VRTerrain.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
@@ -15,18 +17,7 @@ string assetTexMatFShdr;
 string assetMatVShdr;
 string assetMatFShdr;
 
-VRWorldGenerator::VRWorldGenerator() : VRObject("WorldGenerator") {
-    auto addMat = [&](string name, string vp, string fp) {
-        auto mat = VRMaterial::create(name);
-        mat->setVertexShader(vp, name+"VS");
-        mat->setFragmentShader(fp, name+"FS");
-        addMaterial(name, mat);
-    };
-
-    addMat("phong", assetMatVShdr, assetMatFShdr);
-    addMat("phongTex", assetTexMatVShdr, assetTexMatFShdr);
-}
-
+VRWorldGenerator::VRWorldGenerator() : VRTransform("WorldGenerator") {}
 VRWorldGenerator::~VRWorldGenerator() {}
 
 VRWorldGeneratorPtr VRWorldGenerator::create() {
@@ -37,13 +28,19 @@ VRWorldGeneratorPtr VRWorldGenerator::create() {
 
 VRWorldGeneratorPtr VRWorldGenerator::ptr() { return dynamic_pointer_cast<VRWorldGenerator>( shared_from_this() ); }
 
+void VRWorldGenerator::setOntology(VROntologyPtr o) { ontology = o; }
+VROntologyPtr VRWorldGenerator::getOntology() { return ontology; }
 VRRoadNetworkPtr VRWorldGenerator::getRoadNetwork() { return roads; }
+VRObjectManagerPtr VRWorldGenerator::getAssetManager() { return assets; }
+VRTerrainPtr VRWorldGenerator::getTerrain() { return terrain; }
+VRNaturePtr VRWorldGenerator::getNature() { return nature; }
 
 void VRWorldGenerator::addMaterial( string name, VRMaterialPtr mat ) { materials[name] = mat; }
 void VRWorldGenerator::addAsset( string name, VRTransformPtr geo ) {
-    auto m = getMaterial("phong");
     for (auto o : geo->getChildren(true, "Geometry")) {
         auto g = dynamic_pointer_cast<VRGeometry>(o);
+        auto m = getMaterial("phong");
+        if (g->getMaterial()->getTexture()) continue; // m = getMaterial("phongTex"); // TODO
         auto c = g->getMaterial()->getDiffuse();
         VRGeoData data(g);
         data.addVertexColors(c);
@@ -52,25 +49,35 @@ void VRWorldGenerator::addAsset( string name, VRTransformPtr geo ) {
     assets->addTemplate(geo, name);
 }
 
-VRObjectManagerPtr VRWorldGenerator::getAssetManager() { return assets; }
-
 VRMaterialPtr VRWorldGenerator::getMaterial(string name) {
     if (!materials.count(name)) return 0;
     return materials[name];
 }
 
 void VRWorldGenerator::init() {
+    auto addMat = [&](string name, string vp, string fp) {
+        auto mat = VRMaterial::create(name);
+        mat->setVertexShader(vp, name+"VS");
+        mat->setFragmentShader(fp, name+"FS");
+        addMaterial(name, mat);
+    };
+
+    addMat("phong", assetMatVShdr, assetMatFShdr);
+    addMat("phongTex", assetTexMatVShdr, assetTexMatFShdr);
+
+    terrain = VRTerrain::create();
+    addChild(terrain);
+
     roads = VRRoadNetwork::create();
     roads->setWorld( ptr() );
     addChild(roads);
 
     assets = VRObjectManager::create();
     addChild(assets);
+    nature = VRNature::create();
+    nature->setWorld( ptr() );
+    addChild(nature);
 }
-
-void VRWorldGenerator::setOntology(VROntologyPtr o) { ontology = o; }
-VROntologyPtr VRWorldGenerator::getOntology() { return ontology; }
-
 
 
 

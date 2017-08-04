@@ -31,7 +31,6 @@ struct VRPyAsphalt : VRPyBaseT<OSG::VRAsphalt> {
 struct VRPyRoadNetwork : VRPyBaseT<OSG::VRRoadNetwork> {
     static PyMethodDef methods[];
 
-    static PyObject* setNatureManager(VRPyRoadNetwork* self, PyObject *args);
     static PyObject* computeGreenBelts(VRPyRoadNetwork* self);
 
     static PyObject* addNode(VRPyRoadNetwork* self, PyObject *args);

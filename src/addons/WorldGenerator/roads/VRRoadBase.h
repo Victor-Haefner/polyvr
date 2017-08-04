@@ -5,22 +5,17 @@
 #include <string>
 #include <vector>
 #include <OpenSG/OSGVector.h>
-#include "../VRWorldGeneratorFwd.h"
+#include "../VRWorldModule.h"
 #include "core/objects/object/VRObject.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class VRRoadBase : public VRObject {
-    protected:
-        VRWorldGeneratorPtr world;
-
+class VRRoadBase : public VRObject, public VRWorldModule {
     public:
         VRRoadBase(string name);
         ~VRRoadBase();
-
-        void setWorld(VRWorldGeneratorPtr w);
 
         pathPtr toPath( VREntityPtr pathEntity, int resolution );
         void setupTexCoords( VRGeometryPtr geo, VREntityPtr way );
