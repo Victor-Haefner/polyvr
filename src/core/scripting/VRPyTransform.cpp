@@ -163,7 +163,7 @@ PyObject* VRPyTransform::setCenterOfMass(VRPyTransform* self, PyObject* args) {
 
 PyObject* VRPyTransform::applyChange(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    self->objPtr->update();
+    self->objPtr->updateChange();
     Py_RETURN_TRUE;
 }
 

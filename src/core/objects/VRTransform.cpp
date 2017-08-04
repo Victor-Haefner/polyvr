@@ -657,7 +657,7 @@ void VRTransform::drag(VRTransformPtr new_parent) {
         physics->pause(true);
     }
     reg_change();
-    update();
+    updateChange();
 }
 
 /** Drop the object, this returns the object at its old place in hirarchy **/
@@ -681,7 +681,7 @@ void VRTransform::drop() {
         physics->pause(false);
     }
     reg_change();
-    update();
+    updateChange();
 }
 
 void VRTransform::rebaseDrag(VRObjectPtr new_parent) {
@@ -771,7 +771,7 @@ VRPhysics* VRTransform::getPhysics() {
 }
 
 /** Update the object OSG transformation **/
-void VRTransform::update() {
+void VRTransform::updateChange() {
     if (checkWorldChange()) apply_constraints();
     if (held) updatePhysics();
     //if (checkWorldChange()) updatePhysics();
@@ -786,7 +786,7 @@ void VRTransform::update() {
 void VRTransform::setup() {
     change = true;
     setAt(Vec3d(_at));
-    update();
+    updateChange();
 }
 
 void setFromPath(VRTransformWeakPtr trp, pathPtr p, bool redirect, float t) {

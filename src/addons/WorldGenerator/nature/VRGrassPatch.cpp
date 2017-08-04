@@ -199,7 +199,7 @@ void VRGrassPatch::setupGrassStage() {
 	texRenderer->setup(cam, 512, 512, true);
 
     cam->setPose(Vec3d(0,0,-2), Vec3d(0,0,1), Vec3d(0,1,0)); // side
-    cam->update();
+    cam->updateChange();
     auto texSide = texRenderer->renderOnce();
     matGrassSide->setTexture(texSide);
 }

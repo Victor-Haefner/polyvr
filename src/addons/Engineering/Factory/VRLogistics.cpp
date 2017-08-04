@@ -93,7 +93,7 @@ void FNode::set(shared_ptr<FObject> o) {
     t->switchParent(getTransform());
     wm.setTranslate(getTransform()->getWorldPosition());
     t->setWorldMatrix(wm);
-    t->update();
+    t->updateChange();
 }
 
 void FNode::connect(shared_ptr<FNode> n) {
@@ -203,7 +203,7 @@ void FContainer::add(shared_ptr<FProduct> p) {
     t->switchParent(getTransformation());
     wm.setTranslate(getTransformation()->getWorldPosition());
     t->setWorldMatrix(wm);
-    t->update();
+    t->updateChange();
 }
 
 shared_ptr<FProduct> FContainer::pop() {
