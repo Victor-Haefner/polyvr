@@ -330,7 +330,8 @@ void VRMaterial::remPass(int i) {
 }
 
 void VRMaterial::setActivePass(int i) {
-    if (i < 0 || i >= getNPasses()) return;
+    if (i < 0) return;
+    while (i >= getNPasses()) addPass();
     activePass = i;
 }
 
