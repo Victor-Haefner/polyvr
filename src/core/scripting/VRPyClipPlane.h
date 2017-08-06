@@ -6,10 +6,6 @@
 
 struct VRPyClipPlane : VRPyBaseT<OSG::VRClipPlane> {
     static PyMethodDef methods[];
-
-    static PyObject* setTree(VRPyClipPlane* self, PyObject* args);
-    static PyObject* setActive(VRPyClipPlane* self, PyObject* args);
-    static PyObject* isActive(VRPyClipPlane* self);
 };
 
 #endif // VRPYCLIPPLANE_H_INCLUDED

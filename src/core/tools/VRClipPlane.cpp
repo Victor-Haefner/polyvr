@@ -66,7 +66,7 @@ Vec4d VRClipPlane::getEquation() { // not used, but may come in handy
 }
 
 void VRClipPlane::activate() {
-    vector<VRObjectPtr> objs = tree->getChildren(true, "Geometry");
+    vector<VRObjectPtr> objs = tree->getChildren(true, "Geometry", true);
     for (auto o : objs) {
         if (o->getType() == "ClipPlane") continue;
         VRGeometryPtr g = static_pointer_cast<VRGeometry>(o);
