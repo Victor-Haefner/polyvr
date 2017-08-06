@@ -6,9 +6,6 @@
 
 struct VRPyMeasure : VRPyBaseT<OSG::VRMeasure> {
     static PyMethodDef methods[];
-
-    static PyObject* setPoint(VRPyMeasure* self, PyObject* args);
-    static PyObject* rollPoints(VRPyMeasure* self, PyObject* args);
 };
 
 #endif // VRPYMEASURE_H_INCLUDED
