@@ -39,6 +39,7 @@ void VRTerrain::setParameters( Vec2d s, double r, double h ) {
 }
 
 void VRTerrain::setMap( VRTexturePtr t, int channel ) {
+    if (!t) return;
     if (t->getChannels() != 4) { // fix mono channels
         VRTextureGenerator tg;
         auto dim = t->getSize();
@@ -158,23 +159,9 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
 
     auto tex = getMaterial()->getTexture();
 
-    auto clamp = [&](double x, double a, double b) {
-        return max(min(x,b),a);
-    };
-
-    auto toUV = [&](Pnt3d p) -> Vec2d {
-        auto mw = getWorldMatrix();
-        mw.invert();
-        //mw.mult(p,p); // transform point in local coords
-		double u = clamp(p[0]/size[0] + 0.5, 0, 1);
-		double v = clamp(p[2]/size[1] + 0.5, 0, 1);
-		return Vec2d(u,v);
-    };
-
 	auto distToSurface = [&](Pnt3d p) -> double {
-		Vec2d uv = toUV(p);
-		auto c = tex->getPixel(uv);
-		return p[1] - c[3];
+		float h = getHeight(Vec2d(p[0], p[2]));
+		return p[1] - h;
 	};
 
 	if (!VRGeometry::applyIntersectionAction(action)) return false;
@@ -206,10 +193,23 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
     return true;
 }
 
-float VRTerrain::getHeight(const Vec2d& p) {
-    int i = (p[0]/size[0] + 0.5)*tex->getSize()[0];
-    int j = (p[1]/size[1] + 0.5)*tex->getSize()[1];
-    return tex->getPixel(Vec3i(i,j,0))[3];
+float VRTerrain::getHeight(const Vec2d& p) { // TODO: trilinear interpolation!
+    int W = tex->getSize()[0];
+    int H = tex->getSize()[1];
+    float u = p[0]/size[0] + 0.5;
+    float v = p[1]/size[1] + 0.5;
+    int i = floor(u*W);
+    int j = floor(v*H);
+
+    float h00 = tex->getPixel(Vec3i(i,j,0))[3];
+    float h10 = tex->getPixel(Vec3i(i+1,j,0))[3];
+    float h01 = tex->getPixel(Vec3i(i,j+1,0))[3];
+    float h11 = tex->getPixel(Vec3i(i+1,j+1,0))[3];
+
+    u = u*W-i;
+    v = v*H-j;
+
+    return ( h00*(u) + h10*(1-u) )*v + ( h01*(u) + h11*(1-u) )*(1-v);
 }
 
 void VRTerrain::elevateObject(VRTransformPtr t) { auto p = t->getFrom(); elevatePoint(p); t->setFrom(p); }
