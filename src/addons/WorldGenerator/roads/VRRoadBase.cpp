@@ -53,10 +53,11 @@ void VRRoadBase::setupTexCoords( VRGeometryPtr geo, VREntityPtr way ) {
 }
 
 VREntityPtr VRRoadBase::addNode( Vec3d pos, bool elevate ) {
+    if (!ontology) return 0; // TODO
     cout << "VRRoadBase::addNode " << pos;
     if (terrain && elevate) terrain->elevatePoint(pos);
     cout << " -> " << pos << endl;
-	auto node = world->getOntology()->addEntity("node", "Node");
+	auto node = ontology->addEntity("node", "Node");
 	node->setVector("position", toStringVector(pos), "Position");
 
 	/*if (tool) {
@@ -69,7 +70,7 @@ VREntityPtr VRRoadBase::addNode( Vec3d pos, bool elevate ) {
 }
 
 VREntityPtr VRRoadBase::addLane( int direction, float width ) {
-	auto l = world->getOntology()->addEntity( entity->getName()+"Lane", "Lane");
+	auto l = ontology->addEntity( entity->getName()+"Lane", "Lane");
 	l->set("width", toString(width));
 	l->set("direction", toString(direction));
 	entity->add("lanes", l->getName());
@@ -77,7 +78,7 @@ VREntityPtr VRRoadBase::addLane( int direction, float width ) {
 }
 
 VREntityPtr VRRoadBase::addPath( string type, string name, vector<VREntityPtr> nodes, vector<Vec3d> normals ) {
-    auto path = world->getOntology()->addEntity(name+"Path", type);
+    auto path = ontology->addEntity(name+"Path", type);
 	//VREntityPtr lastNode;
 	Vec3d nL;
 	int N = nodes.size();
@@ -86,7 +87,7 @@ VREntityPtr VRRoadBase::addPath( string type, string name, vector<VREntityPtr> n
         auto node = nodes[i];
         if (!node) { cout << "Warning in VRRoadBase::addPath, NULL node!" << endl; continue; }
         auto norm = normals[i];
-		auto nodeEntry = world->getOntology()->addEntity(name+"Entry", "NodeEntry");
+		auto nodeEntry = ontology->addEntity(name+"Entry", "NodeEntry");
 		nodeEntry->set("path", path->getName());
 		nodeEntry->set("node", node->getName());
 		nodeEntry->set("sign", "0");

@@ -43,6 +43,7 @@ void GISWorld::setupOntology() {
     WayNetwork->addProperty("ways", Way);
     WayNetwork->addProperty("nodes", Crossing);
     Way->addProperty("crossings", Crossing);
+    Way->addProperty("ID", "int");
     Way->addProperty("areas", "Area");
     Way->addProperty("path", "Path");
     Way->addProperty("markings", RoadMarking);

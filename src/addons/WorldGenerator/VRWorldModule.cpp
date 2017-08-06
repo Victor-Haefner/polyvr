@@ -9,4 +9,5 @@ VRWorldModule::~VRWorldModule() {}
 void VRWorldModule::setWorld(VRWorldGeneratorPtr w) {
     world = w;
     terrain = world->getTerrain();
+    ontology = world->getOntology();
 }

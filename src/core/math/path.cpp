@@ -218,11 +218,11 @@ void path::approximate(int d) {
     if (degree == 2) {
         vector<Vec3d> res;
 
-		for (uint j=0; j<points.size()-1; j++) { // p1,p2,pm,p3,p4
-			Vec3d p1 = points[j].pos();
-			Vec3d p4 = points[j+1].pos();
-			Vec3d n1 = points[j].dir(); //n1.normalize();
-			Vec3d n4 = points[j+1].dir(); //n4.normalize();
+		for (uint j=1; j<points.size(); j++) { // p1,p2,pm,p3,p4
+			Vec3d p1 = points[j-1].pos();
+			Vec3d p4 = points[j].pos();
+			Vec3d n1 = points[j-1].dir(); //n1.normalize();
+			Vec3d n4 = points[j].dir(); //n4.normalize();
 			res.push_back(p1);
 
 			if (isLinear(p1,p4,n1,n4)) {
@@ -235,7 +235,7 @@ void path::approximate(int d) {
                 res.push_back(pm);
                 res.push_back(p3);
 			}
-			if (j == points.size()-2) res.push_back(p4);
+			if (j == points.size()-1) res.push_back(p4);
 		}
 
 		points.clear();

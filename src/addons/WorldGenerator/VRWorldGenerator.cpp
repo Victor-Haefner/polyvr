@@ -28,7 +28,12 @@ VRWorldGeneratorPtr VRWorldGenerator::create() {
 
 VRWorldGeneratorPtr VRWorldGenerator::ptr() { return dynamic_pointer_cast<VRWorldGenerator>( shared_from_this() ); }
 
-void VRWorldGenerator::setOntology(VROntologyPtr o) { ontology = o; }
+void VRWorldGenerator::setOntology(VROntologyPtr o) {
+    ontology = o;
+    roads->setWorld( ptr() );
+    nature->setWorld( ptr() );
+}
+
 VROntologyPtr VRWorldGenerator::getOntology() { return ontology; }
 VRRoadNetworkPtr VRWorldGenerator::getRoadNetwork() { return roads; }
 VRObjectManagerPtr VRWorldGenerator::getAssetManager() { return assets; }
