@@ -44,6 +44,8 @@ class VRWorldGenerator : public VRTransform {
         void addAsset( string name, VRTransformPtr geo );
         void addMaterial( string name, VRMaterialPtr mat );
         VRMaterialPtr getMaterial(string name);
+
+        void addOSMdata(string path, double N, double E);
 };
 
 OSG_END_NAMESPACE;

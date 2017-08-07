@@ -84,6 +84,83 @@ void VRWorldGenerator::init() {
     addChild(nature);
 }
 
+void VRWorldGenerator::addOSMdata(string path, double N, double E) {
+
+    // -------------- prepare polygons in terrain space
+    /*Matrix4d terrainMatrix = dynamic_pointer_cast<VRTransform>( getParent() )->getMatrix();
+    terrainMatrix.invert();
+    map< string, vector<VRPolygonPtr> > polygons;
+    auto map = OSMMap::loadMap(path);
+    for (auto way : map->getWays()) {
+        auto p = way.second->polygon;
+        auto pp = VRPolygon::create();
+
+        for (auto pnt : p.get()) {
+            Pnt3d pos = Pnt3d( planet->fromLatLongPosition(pnt[1], pnt[0]) );
+            terrainMatrix.mult(pos, pos);
+            pp->addPoint( Vec2d(pos[0], pos[2]) );
+        }
+
+        for (auto tag : way.second->tags) polygons[tag.first].push_back(pp);
+    }*/
+
+    // training ground hack flat ground
+    /*auto tgPolygon = VRPolygon::create();
+    Pnt3d pos;
+    float d = 0.003;
+    pos = Pnt3d( planet->fromLatLongPosition(29.924500-d, 119.896806-d) );
+    terrainMatrix.mult(pos, pos); tgPolygon->addPoint( Vec2d(pos[0], pos[2]) );
+    pos = Pnt3d( planet->fromLatLongPosition(29.924500-d, 119.896806+d) );
+    terrainMatrix.mult(pos, pos); tgPolygon->addPoint( Vec2d(pos[0], pos[2]) );
+    pos = Pnt3d( planet->fromLatLongPosition(29.924500+d, 119.896806+d) );
+    terrainMatrix.mult(pos, pos); tgPolygon->addPoint( Vec2d(pos[0], pos[2]) );
+    pos = Pnt3d( planet->fromLatLongPosition(29.924500+d, 119.896806-d) );
+    terrainMatrix.mult(pos, pos); tgPolygon->addPoint( Vec2d(pos[0], pos[2]) );
+    tgPolygon->scale( Vec3d(1.0/size[0], 1, 1.0/size[1]) );
+    tgPolygon->translate( Vec3d(0.5,0,0.5) );*/
+
+    // -------------------- project OSM polygons on texture
+    /*auto dim = tex->getSize();
+    VRTextureGenerator tg;
+    tg.setSize(dim, true);
+
+    //for (auto tag : polygons) cout << "polygon tag: " << tag.first << endl;
+
+    auto drawPolygons = [&](string tag, Color4f col) {
+        if (!polygons.count(tag)) {
+            //cout << "\ndrawPolygons: tag '" << tag << "' not found!" << endl;
+            return;
+        }
+
+        for (auto p : polygons[tag]) {
+            p->scale( Vec3d(1.0/size[0], 1, 1.0/size[1]) );
+            p->translate( Vec3d(0.5,0,0.5) );
+            tg.drawPolygon( p, col );
+        }
+    };
+
+    drawPolygons("natural", Color4f(0,1,0,1));
+    drawPolygons("water", Color4f(0.2,0.4,1,1));
+    drawPolygons("industrial", Color4f(0.2,0.2,0.2,1));
+    VRTexturePtr t = tg.compose(0);
+
+    // ----------------------- combine OSM texture with heightmap
+    for (int i = 0; i < dim[0]; i++) {
+        for (int j = 0; j < dim[1]; j++) {
+            Vec3i pixK = Vec3i(i,j,0);
+            double h = tex->getPixel(pixK)[3];
+            auto pix = Vec2d(i*1.0/(dim[0]-1), j*1.0/(dim[1]-1));
+            //if (tgPolygon->isInside(pix)) h = 14;
+            Color4f col = t->getPixel(pixK);
+            col[3] = h;
+            t->setPixel(pixK, col);
+        }
+    }
+    setMap(t);*/
+}
+
+
+
 
 
 // asset material
