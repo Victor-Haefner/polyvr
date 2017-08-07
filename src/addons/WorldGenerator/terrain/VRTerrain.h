@@ -38,6 +38,8 @@ class VRTerrain : public VRGeometry {
         ~VRTerrain();
         static VRTerrainPtr create(string name = "terrain");
 
+        void setSimpleNoise();
+
         void setParameters( Vec2d size, double resolution, double heightScale );
         void setMap( VRTexturePtr tex, int channel = 3 );
         void loadMap( string path, int channel = 3 );

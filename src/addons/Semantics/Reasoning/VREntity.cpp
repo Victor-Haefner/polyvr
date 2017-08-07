@@ -94,7 +94,7 @@ string VREntity::getConceptList() {
 
 VRPropertyPtr VREntity::getProperty(string name) {
     for (auto c : getConcepts()) if (auto p = c->getProperty(name, 0)) return p;
-    WARN("Warning: property " + name + " of entity " + this->name + " not found!");
+    WARN("Warning: property " + name + " of " + toString() + " not found!");
     return 0;
 }
 

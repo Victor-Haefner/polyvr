@@ -123,19 +123,29 @@ void VRTerrain::physicalize(bool b) {
     getPhysics()->setPhysicalized(true);
 }
 
+void VRTerrain::setSimpleNoise() {
+    Color4f w(1,1,1,1);
+    VRTextureGenerator tg;
+    tg.setSize(Vec3i(128,128,1),true);
+    tg.add("Perlin", 1.0, w*0.97, w);
+    tg.add("Perlin", 1.0/2, w*0.95, w);
+    tg.add("Perlin", 1.0/4, w*0.85, w);
+    tg.add("Perlin", 1.0/8, w*0.8, w);
+    tg.add("Perlin", 1.0/16, w*0.7, w);
+    tg.add("Perlin", 1.0/32, w*0.5, w);
+    tex = tg.compose(0);
+	auto defaultMat = VRMaterial::get("defaultTerrain");
+    defaultMat->setTexture(tex);
+}
+
 void VRTerrain::setupMat() {
 	auto defaultMat = VRMaterial::get("defaultTerrain");
 	tex = defaultMat->getTexture();
 	if (!tex) {
-        Color4f w(1,1,1,1);
+        Color4f w(0,0,0,0);
         VRTextureGenerator tg;
         tg.setSize(Vec3i(128,128,1),true);
-        tg.add("Perlin", 1.0, w*0.97, w);
-        tg.add("Perlin", 1.0/2, w*0.95, w);
-        tg.add("Perlin", 1.0/4, w*0.85, w);
-        tg.add("Perlin", 1.0/8, w*0.8, w);
-        tg.add("Perlin", 1.0/16, w*0.7, w);
-        tg.add("Perlin", 1.0/32, w*0.5, w);
+        tg.drawFill(w);
         tex = tg.compose(0);
         defaultMat->setTexture(tex);
 	}

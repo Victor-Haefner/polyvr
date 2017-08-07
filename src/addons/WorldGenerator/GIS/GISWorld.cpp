@@ -35,9 +35,14 @@ void GISWorld::setupOntology() {
     auto GreenBelt = world->addConcept("GreenBelt", "Area");
     auto Building = world->addConcept("Building", "Area");
     auto RoadMarking = world->addConcept("RoadMarking", "Border");
+    auto StopLine = world->addConcept("StopLine", "RoadMarking");
     auto RoadTrack = world->addConcept("RoadTrack", "Path");
     auto Kerb = world->addConcept("Kerb", "Border", "A stone edging to a pavement or raised way");
     auto Arrow = world->addConcept("Arrow");
+    auto ParkingLot = world->addConcept("ParkingLot", "Road");
+    auto ParallelParkingLot = world->addConcept("ParallelParkingLot", "ParkingLot");
+    auto PerpendicularParkingLot = world->addConcept("PerpendicularParkingLot", "ParkingLot");
+    auto AngledParkingLot = world->addConcept("AngledParkingLot", "ParkingLot");
 
     World->addProperty("ways", WayNetwork);
     WayNetwork->addProperty("ways", Way);

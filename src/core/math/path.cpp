@@ -230,7 +230,7 @@ void path::approximate(int d) {
                 res.push_back(p2);
 			} else {
 				Vec3d p2,p3,pm;
-				toQuadratic(j,p1,p4,n1,n4,pm,p2,p3);
+				toQuadratic(j-1,p1,p4,n1,n4,pm,p2,p3);
                 res.push_back(p2);
                 res.push_back(pm);
                 res.push_back(p3);
