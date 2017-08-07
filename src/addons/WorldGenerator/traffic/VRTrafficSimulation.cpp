@@ -18,3 +18,11 @@ VRTrafficSimulation::~VRTrafficSimulation() {}
 VRTrafficSimulationPtr VRTrafficSimulation::create() { return VRTrafficSimulationPtr( new VRTrafficSimulation() ); }
 
 void VRTrafficSimulation::setRoadNetwork(VRRoadNetworkPtr rds) { roads = rds; }
+
+void VRTrafficSimulation::updateModel() {
+    ;
+}
+
+void VRTrafficSimulation::doTimeStep() {
+    ;
+}

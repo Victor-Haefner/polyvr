@@ -34,6 +34,15 @@ class Graph : public VRStorage {
             edge(int i = 0, int j = 0, CONNECTION c = SIMPLE, int ID = 0);
         };
 
+        struct position {
+            int node = -1;
+            int edge = -1;
+            float pos = 0;
+
+            position(int n);
+            position(int e, float p);
+        };
+
     protected:
         vector< vector<edge> > edges;
         vector< Vec2i > edgesByID;

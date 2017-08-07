@@ -28,6 +28,9 @@ template<> int toValue(stringstream& ss, Graph::node& n) {
     return b;
 }
 
+Graph::position::position(int n) { node = n; }
+Graph::position::position(int e, float p) { edge = e; pos = p; }
+
 #include "core/utils/VRStorage_template.h"
 
 
