@@ -203,23 +203,23 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
     return true;
 }
 
-float VRTerrain::getHeight(const Vec2d& p) { // TODO: trilinear interpolation!
+float VRTerrain::getHeight(const Vec2d& p) {
     int W = tex->getSize()[0];
     int H = tex->getSize()[1];
+
     float u = p[0]/size[0] + 0.5;
     float v = p[1]/size[1] + 0.5;
-    int i = floor(u*W);
-    int j = floor(v*H);
+    int i = floor(u*W - 0.5);
+    int j = floor(v*H - 0.5);
 
     float h00 = tex->getPixel(Vec3i(i,j,0))[3];
     float h10 = tex->getPixel(Vec3i(i+1,j,0))[3];
     float h01 = tex->getPixel(Vec3i(i,j+1,0))[3];
     float h11 = tex->getPixel(Vec3i(i+1,j+1,0))[3];
 
-    u = u*W-i;
-    v = v*H-j;
-
-    return ( h00*(u) + h10*(1-u) )*v + ( h01*(u) + h11*(1-u) )*(1-v);
+    u = u*W - 0.5 -i;
+    v = v*H - 0.5 -j;
+    return ( h00*(1-u) + h10*u )*(1-v) + ( h01*(1-u) + h11*u )*v;
 }
 
 void VRTerrain::elevateObject(VRTransformPtr t) { auto p = t->getFrom(); elevatePoint(p); t->setFrom(p); }

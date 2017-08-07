@@ -397,8 +397,6 @@
 		<Unit filename="src/addons/RealWorld/Modules/StreetJoint.h" />
 		<Unit filename="src/addons/RealWorld/Modules/StreetSegment.cpp" />
 		<Unit filename="src/addons/RealWorld/Modules/StreetSegment.h" />
-		<Unit filename="src/addons/RealWorld/Modules/Terrain.cpp" />
-		<Unit filename="src/addons/RealWorld/Modules/Terrain.h" />
 		<Unit filename="src/addons/RealWorld/Modules/Wall.cpp" />
 		<Unit filename="src/addons/RealWorld/Modules/Wall.h" />
 		<Unit filename="src/addons/RealWorld/Modules/triangulate.h" />

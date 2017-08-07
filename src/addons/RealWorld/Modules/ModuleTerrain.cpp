@@ -10,7 +10,7 @@
 #include "../Config.h" // 2.2
 #include "../MapCoordinator.h" // 2.2
 #include "../RealWorld.h" // 2.2
-#include "Terrain.h" // 2.3
+//#include "Terrain.h" // 2.3
 
 using namespace OSG;
 
@@ -29,7 +29,7 @@ void ModuleTerrain::loadBbox(MapGrid::Box bbox) {
             if (way.second->tags[mat->k] == mat->v) {
                 if (meshes.count(way.second->id)) continue;
                 // load VRPolygons from osmMap
-                Terrain* ter = new Terrain(way.second->id);
+                /*Terrain* ter = new Terrain(way.second->id);
                 for (string nID : way.second->nodes) {
                     auto node = osmMap->getNode(nID);
                     Vec2d pos = mc->realToWorld(Vec2d(node->lat, node->lon));
@@ -41,7 +41,7 @@ void ModuleTerrain::loadBbox(MapGrid::Box bbox) {
                 // generate mesh
                 VRGeometryPtr geom = makeTerrainGeometry(ter, mat);
                 root->addChild(geom);
-                meshes[ter->id] = geom;
+                meshes[ter->id] = geom;*/
             }
 
         }
@@ -137,10 +137,10 @@ void ModuleTerrain::addTerrain(Terrain* ter, VRGeoData* gdTerrain, int height){
     //create && fill vector a with VRPolygon corners
     Vector2dVector a;
     bool first = true;
-    for (Vec2d corner : ter->getCorners()) {
+    /*for (Vec2d corner : ter->getCorners()) {
         if (first) { first=false; continue;} //first && last corners are equal, so ignoring first one
          a.push_back( Vector2d(corner[0], corner[1]));
-    }
+    }*/
 
     // allocate an STL vector to hold the answer.
     Vector2dVector result;
