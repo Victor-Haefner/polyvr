@@ -1,4 +1,6 @@
 #include "VRWorldGenerator.h"
+#include "GIS/OSMMap.h"
+#include "terrain/VRPlanet.h"
 #include "roads/VRRoadNetwork.h"
 #include "nature/VRNature.h"
 #include "terrain/VRTerrain.h"
@@ -30,6 +32,15 @@ VRWorldGeneratorPtr VRWorldGenerator::ptr() { return dynamic_pointer_cast<VRWorl
 
 void VRWorldGenerator::setOntology(VROntologyPtr o) {
     ontology = o;
+    terrain->setWorld( ptr() );
+    roads->setWorld( ptr() );
+    nature->setWorld( ptr() );
+}
+
+void VRWorldGenerator::setPlanet(VRPlanetPtr p, Vec2d c) {
+    coords = c;
+    planet = p;
+    terrain->setWorld( ptr() );
     roads->setWorld( ptr() );
     nature->setWorld( ptr() );
 }
@@ -39,6 +50,7 @@ VRRoadNetworkPtr VRWorldGenerator::getRoadNetwork() { return roads; }
 VRObjectManagerPtr VRWorldGenerator::getAssetManager() { return assets; }
 VRTerrainPtr VRWorldGenerator::getTerrain() { return terrain; }
 VRNaturePtr VRWorldGenerator::getNature() { return nature; }
+VRPlanetPtr VRWorldGenerator::getPlanet() { return planet; }
 
 void VRWorldGenerator::addMaterial( string name, VRMaterialPtr mat ) { materials[name] = mat; }
 void VRWorldGenerator::addAsset( string name, VRTransformPtr geo ) {
@@ -71,6 +83,7 @@ void VRWorldGenerator::init() {
     addMat("phongTex", assetTexMatVShdr, assetTexMatFShdr);
 
     terrain = VRTerrain::create();
+    terrain->setWorld( ptr() );
     addChild(terrain);
 
     roads = VRRoadNetwork::create();
@@ -84,40 +97,41 @@ void VRWorldGenerator::init() {
     addChild(nature);
 }
 
-void VRWorldGenerator::addOSMdata(string path, double N, double E) {
+void VRWorldGenerator::addOSMMap(string path) {
+    osmMap = OSMMap::loadMap(path);
 
-    // -------------- prepare polygons in terrain space
-    /*Matrix4d terrainMatrix = dynamic_pointer_cast<VRTransform>( getParent() )->getMatrix();
-    terrainMatrix.invert();
-    map< string, vector<VRPolygonPtr> > polygons;
-    auto map = OSMMap::loadMap(path);
-    for (auto way : map->getWays()) {
-        auto p = way.second->polygon;
-        auto pp = VRPolygon::create();
+    // road network data
+
+    /*for (auto wayItr : osmMap->getWays()) {
+        auto& way = wayItr.second;
+        auto p = way->polygon;
+        vector<Pnt3d> points;
 
         for (auto pnt : p.get()) {
-            Pnt3d pos = Pnt3d( planet->fromLatLongPosition(pnt[1], pnt[0]) );
-            terrainMatrix.mult(pos, pos);
-            pp->addPoint( Vec2d(pos[0], pos[2]) );
+            Pnt3d pos = Pnt3d( planet->fromLatLongPosition(pnt[1], pnt[0], true) );
+            points.push_back(pos);
         }
 
-        for (auto tag : way.second->tags) polygons[tag.first].push_back(pp);
+        cout << " tags: ";
+        for (auto tag : way->tags) {
+            if (tag == "highway") { // TODO: prototype
+                VREntityPtr node1, node2;
+                for (int i=1; i<pp.size(); i++) {
+                    auto p1 = pp.get(i-1);
+                    auto p2 = pp.get(i);
+                    auto p3 = pp.get(i+1);
+                    node1 = node2;
+                    if (i == 1) node1 = roads->addNode(p1);
+                    node2 = roads->addNode(p2);
+                    Vec3d norm1 = ;
+                    Vec3d norm2 = ;
+                    roads->addRoad("someRoad", "highway", node1, node2, norm1, norm2, 2);
+                }
+            }
+            cout << "   " << tag.first << ":" << tag.second;
+        }
+        cout << endl;
     }*/
-
-    // training ground hack flat ground
-    /*auto tgPolygon = VRPolygon::create();
-    Pnt3d pos;
-    float d = 0.003;
-    pos = Pnt3d( planet->fromLatLongPosition(29.924500-d, 119.896806-d) );
-    terrainMatrix.mult(pos, pos); tgPolygon->addPoint( Vec2d(pos[0], pos[2]) );
-    pos = Pnt3d( planet->fromLatLongPosition(29.924500-d, 119.896806+d) );
-    terrainMatrix.mult(pos, pos); tgPolygon->addPoint( Vec2d(pos[0], pos[2]) );
-    pos = Pnt3d( planet->fromLatLongPosition(29.924500+d, 119.896806+d) );
-    terrainMatrix.mult(pos, pos); tgPolygon->addPoint( Vec2d(pos[0], pos[2]) );
-    pos = Pnt3d( planet->fromLatLongPosition(29.924500+d, 119.896806-d) );
-    terrainMatrix.mult(pos, pos); tgPolygon->addPoint( Vec2d(pos[0], pos[2]) );
-    tgPolygon->scale( Vec3d(1.0/size[0], 1, 1.0/size[1]) );
-    tgPolygon->translate( Vec3d(0.5,0,0.5) );*/
 
     // -------------------- project OSM polygons on texture
     /*auto dim = tex->getSize();

@@ -232,14 +232,14 @@ void VRTerrain::loadMap( string path, int channel ) {
     setMap(tex, channel);
 }
 
-void VRTerrain::projectOSM(string path, double N, double E) {
-    if (!tex) return;
+void VRTerrain::projectOSM() {
+    /*if (!tex) return;
 
     // -------------- prepare polygons in terrain space
     Matrix4d terrainMatrix = dynamic_pointer_cast<VRTransform>( getParent() )->getMatrix();
     terrainMatrix.invert();
     map< string, vector<VRPolygonPtr> > polygons;
-    auto map = OSMMap::loadMap(path);
+    auto map = world->get;
     for (auto way : map->getWays()) {
         auto p = way.second->polygon;
         auto pp = VRPolygon::create();
@@ -251,7 +251,7 @@ void VRTerrain::projectOSM(string path, double N, double E) {
         }
 
         for (auto tag : way.second->tags) polygons[tag.first].push_back(pp);
-    }
+    }*/
 
     // training ground hack flat ground
     /*auto tgPolygon = VRPolygon::create();
@@ -269,7 +269,7 @@ void VRTerrain::projectOSM(string path, double N, double E) {
     tgPolygon->translate( Vec3d(0.5,0,0.5) );*/
 
     // -------------------- project OSM polygons on texture
-    auto dim = tex->getSize();
+    /*auto dim = tex->getSize();
     VRTextureGenerator tg;
     tg.setSize(dim, true);
 
@@ -305,12 +305,7 @@ void VRTerrain::projectOSM(string path, double N, double E) {
             t->setPixel(pixK, col);
         }
     }
-    setMap(t);
-}
-
-void VRTerrain::setPlanet(VRPlanetPtr p, Vec2d position) {
-    sphericalCoordinates = position;
-    planet = p;
+    setMap(t);*/
 }
 
 void VRTerrain::paintHeights(string path) {

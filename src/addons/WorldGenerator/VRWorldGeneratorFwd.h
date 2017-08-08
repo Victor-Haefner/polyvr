@@ -18,6 +18,7 @@ ptrFwd( VRTree );
 ptrFwd( VRGrassPatch );
 ptrFwd( VRNature );
 ptrFwd( VRTrafficSimulation );
+ptrFwd( OSMMap );
 
 }
 

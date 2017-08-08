@@ -4,13 +4,14 @@
 #include <OpenSG/OSGVector.h>
 #include "core/objects/geometry/VRGeometry.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
+#include "addons/WorldGenerator/VRWorldModule.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class Action;
 
-class VRTerrain : public VRGeometry {
+class VRTerrain : public VRGeometry, public VRWorldModule {
     private:
         static string vertexShader;
         static string fragmentShader;
@@ -25,9 +26,6 @@ class VRTerrain : public VRGeometry {
         VRTexturePtr tex;
         VRMaterialPtr mat;
         shared_ptr<vector<float>> physicsHeightBuffer;
-
-        VRPlanetPtr planet;
-        Vec2d sphericalCoordinates;
 
         void updateTexelSize();
         void setupGeo();
@@ -48,8 +46,7 @@ class VRTerrain : public VRGeometry {
 
         void physicalize(bool b);
 
-        void setPlanet(VRPlanetPtr planet, Vec2d position);
-        void projectOSM(string path, double N, double E); // TODO, gis data should be handled somewhere else
+        void projectOSM();
 
         float getHeight(const Vec2d& p);
         void elevatePoint(Vec3d& p);

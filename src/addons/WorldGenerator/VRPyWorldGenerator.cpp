@@ -21,13 +21,14 @@ simpleVRPyType(RoadNetwork, New_ptr);
 simpleVRPyType(Asphalt, New_ptr);
 
 PyMethodDef VRPyWorldGenerator::methods[] = {
-    {"addAsset", PyWrap(WorldGenerator, addAsset, "Add an asset template", void, string, VRTransformPtr) },
-    {"getAssetManager", PyWrap(WorldGenerator, getAssetManager, "Get the asset manager", VRObjectManagerPtr) },
-    {"getRoadNetwork", PyWrap(WorldGenerator, getRoadNetwork, "Access road network", VRRoadNetworkPtr) },
-    {"getNature", PyWrap(WorldGenerator, getNature, "Access nature module", VRNaturePtr) },
-    {"getTerrain", PyWrap(WorldGenerator, getTerrain, "Access the terrain", VRTerrainPtr) },
-    {"setOntology", PyWrap(WorldGenerator, setOntology, "Set ontology", void, VROntologyPtr) },
-    {"getMaterial", PyWrap(WorldGenerator, getMaterial, "Get a material by name", VRMaterialPtr, string) },
+    {"addAsset", PyWrap( WorldGenerator, addAsset, "Add an asset template", void, string, VRTransformPtr ) },
+    {"getAssetManager", PyWrap( WorldGenerator, getAssetManager, "Get the asset manager", VRObjectManagerPtr ) },
+    {"getRoadNetwork", PyWrap( WorldGenerator, getRoadNetwork, "Access road network", VRRoadNetworkPtr ) },
+    {"getNature", PyWrap( WorldGenerator, getNature, "Access nature module", VRNaturePtr ) },
+    {"getTerrain", PyWrap( WorldGenerator, getTerrain, "Access the terrain", VRTerrainPtr ) },
+    {"setOntology", PyWrap( WorldGenerator, setOntology, "Set ontology", void, VROntologyPtr ) },
+    {"getMaterial", PyWrap( WorldGenerator, getMaterial, "Get a material by name", VRMaterialPtr, string ) },
+    {"addOSMMap", PyWrap( WorldGenerator, addOSMMap, "Add an OpenStreetMap map", void, string ) },
     {NULL}  /* Sentinel */
 };
 

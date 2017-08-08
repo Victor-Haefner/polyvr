@@ -750,6 +750,8 @@
 		<Unit filename="src/core/scene/VRSceneManager.h" />
 		<Unit filename="src/core/scene/VRSemanticManager.cpp" />
 		<Unit filename="src/core/scene/VRSemanticManager.h" />
+		<Unit filename="src/core/scene/VRSpaceWarper.cpp" />
+		<Unit filename="src/core/scene/VRSpaceWarper.h" />
 		<Unit filename="src/core/scene/VRThreadManager.cpp" />
 		<Unit filename="src/core/scene/VRThreadManager.h" />
 		<Unit filename="src/core/scene/import/E57/E57.cpp" />

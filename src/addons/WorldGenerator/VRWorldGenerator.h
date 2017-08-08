@@ -14,11 +14,14 @@ OSG_BEGIN_NAMESPACE;
 class VRWorldGenerator : public VRTransform {
     private:
         VROntologyPtr ontology;
+        VRPlanetPtr planet;
         VRObjectManagerPtr assets;
         VRNaturePtr nature;
         VRTerrainPtr terrain;
         map<string, VRMaterialPtr> materials;
         VRRoadNetworkPtr roads;
+        OSMMapPtr osmMap;
+        Vec2d coords;
 
         static string assetMatVShdr;
         static string assetMatFShdr;
@@ -35,17 +38,18 @@ class VRWorldGenerator : public VRTransform {
         VRWorldGeneratorPtr ptr();
 
         void setOntology(VROntologyPtr ontology);
+        void setPlanet(VRPlanetPtr planet, Vec2d coords);
+        void addAsset( string name, VRTransformPtr geo );
+        void addMaterial( string name, VRMaterialPtr mat );
+        void addOSMMap(string path);
+
         VROntologyPtr getOntology();
+        VRPlanetPtr getPlanet();
         VRRoadNetworkPtr getRoadNetwork();
         VRObjectManagerPtr getAssetManager();
         VRNaturePtr getNature();
         VRTerrainPtr getTerrain();
-
-        void addAsset( string name, VRTransformPtr geo );
-        void addMaterial( string name, VRMaterialPtr mat );
         VRMaterialPtr getMaterial(string name);
-
-        void addOSMdata(string path, double N, double E);
 };
 
 OSG_END_NAMESPACE;

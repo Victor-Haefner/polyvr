@@ -100,15 +100,14 @@ void VRPlanet::setParameters( double r ) { radius = r; rebuild(); }
 VRWorldGeneratorPtr VRPlanet::addSector( int north, int east ) {
     auto generator = VRWorldGenerator::create();
     sectors[north][east] = generator;
-    auto terrain = generator->getTerrain();
-    terrain->setPlanet(ptr(), Vec2d(east, north));
     anchor->addChild(generator);
+    generator->setPlanet(ptr(), Vec2d(east, north));
     generator->setFrom( Vec3d(fromLatLongPosition(north+0.5, east+0.5)) );
     generator->setUp( Vec3d(fromLatLongNormal(north+0.5, east+0.5)) );
     generator->setDir( Vec3d(fromLatLongNorth(north+0.5, east+0.5)) );
 
     Vec2d size = fromLatLongSize(north, east, north+1, east+1);
-    terrain->setParameters( size, 10, 1);
+    generator->getTerrain()->setParameters( size, 10, 1);
     return generator;
 }
 

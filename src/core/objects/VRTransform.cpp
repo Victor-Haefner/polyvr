@@ -9,6 +9,7 @@
 #include "core/utils/VRDoublebuffer.h"
 #include "core/utils/VRGlobals.h"
 #include "core/scene/VRAnimationManagerT.h"
+#include "core/scene/VRSpaceWarper.h"
 #include "core/math/pose.h"
 #include "geometry/VRPhysics.h"
 #include "core/math/path.h"
@@ -94,7 +95,7 @@ void VRTransform::computeMatrix4d() {
 
     if (_scale != Vec3d(1,1,1)) {
         Matrix4d ms;
-        ms.setScale(Vec3d(_scale));
+        ms.setScale(_scale);
         mm.mult(ms);
     }
 
@@ -143,6 +144,8 @@ void VRTransform::updateTransformation() {
         disableCore();
     }
 
+    auto sw = VRScene::getCurrent()->getSpaceWarper();
+    if (sw) sw->warp(m);
     t->trans->setMatrix(toMatrix4f(m));
 }
 

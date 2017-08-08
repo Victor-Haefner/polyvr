@@ -1,4 +1,5 @@
 #include "VRCameraManager.h"
+#include "VRSpaceWarper.h"
 #include "../objects/VRCamera.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -6,6 +7,8 @@ using namespace std;
 
 VRCameraManager::VRCameraManager() {
     cout << "Init VRCameraManager\n";
+
+    //setupSpaceWarper(true);
 }
 
 VRCameraManager::~VRCameraManager() {;}
@@ -37,5 +40,13 @@ vector<string> VRCameraManager::getCameraNames() {
     for(auto c : VRCamera::getAll()) { if (auto sp = c.lock()) res.push_back(sp->getName()); }
     return res;
 }
+
+void VRCameraManager::setupSpaceWarper(bool b) {
+    if (!spaceWarper && b) {
+        spaceWarper = VRSpaceWarper::create();
+    }
+}
+
+VRSpaceWarperPtr VRCameraManager::getSpaceWarper() { return spaceWarper; }
 
 OSG_END_NAMESPACE;

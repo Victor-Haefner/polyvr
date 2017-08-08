@@ -4,6 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 #include <string>
 #include <vector>
+#include "core/scene/VRSceneFwd.h"
 #include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -13,6 +14,7 @@ using namespace std;
 class VRCameraManager {
     private:
         VRCameraWeakPtr active;
+        VRSpaceWarperPtr spaceWarper;
 
     public:
         VRCameraManager();
@@ -25,6 +27,9 @@ class VRCameraManager {
         int getActiveCameraIndex();
 
         vector<string> getCameraNames();
+
+        void setupSpaceWarper(bool b);
+        VRSpaceWarperPtr getSpaceWarper();
 };
 
 OSG_END_NAMESPACE;
