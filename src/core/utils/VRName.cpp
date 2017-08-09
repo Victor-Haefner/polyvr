@@ -57,13 +57,13 @@ void VRName_base::compileName() {
     if (unique) nameDict[base_name][name_suffix] = name;
 }
 
-string VRName_base::setName(string name) {
+string VRName_base::setName(string name, int hint) {
+    bool b = (name == "node");
+
     for (char c : filter) replace(name.begin(), name.end(),c,filter_rep);
     //if (name == "arg") cout << "\n SET NAME " << name << " " << this->name << " " << nameSpace << flush;
 
-    if (base_name == name && name_suffix == 0) {
-        return this->name; // allready named like that, return
-    }
+    if (base_name == name && name_suffix == 0) return this->name; // already named like that, return
 
     map<string, map<int, string> >& nameDict = nameDicts[nameSpace];
 
@@ -73,7 +73,7 @@ string VRName_base::setName(string name) {
         return "";
     }
 
-    if (nameDict.count(base_name) == 1) nameDict[base_name].erase(name_suffix); // check if allready named, remove old name from dict
+    if (nameDict.count(base_name) == 1) nameDict[base_name].erase(name_suffix); // check if already named, remove old name from dict
 
     // check if passed name has a base . suffix structure
     auto vs = splitString(name, separator);
@@ -95,7 +95,7 @@ string VRName_base::setName(string name) {
     if (unique) {
         if (nameDict.count(base_name) == 0) name_suffix = 0;
         else {
-            for(unsigned int i=0; i<=nameDict[base_name].size(); i++) {
+            for(unsigned int i=hint; i<=nameDict[base_name].size(); i++) {
                 if (nameDict[base_name].count(i) == 1) continue;
                 name_suffix = i;
                 break;

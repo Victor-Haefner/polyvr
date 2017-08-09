@@ -66,6 +66,8 @@ class VRRoadNetwork : public VRRoadBase {
 
         void clear();
         void compute();
+
+        void test1();
 };
 
 OSG_END_NAMESPACE;

@@ -59,8 +59,8 @@ VREntityPtr VRRoadBase::addNode( Vec3d pos, bool elevate ) {
     //cout << " -> " << pos << endl;
 
     auto node = ontology->addEntity("node", "Node");
-    return 0;
-	//node->setVector("position", toStringVector(pos), "Position");
+    //return 0;
+	node->setVector("position", toStringVector(pos), "Position");
 
 	/*if (tool) {
         int nID = tool->addNode( pose::create(pos, Vec3d(0,0,-1), Vec3d(0,1,0) ) );
@@ -68,7 +68,7 @@ VREntityPtr VRRoadBase::addNode( Vec3d pos, bool elevate ) {
         handle->setEntity(node);
         node->set("graphID", toString(nID) );
 	}*/
-	//return node;
+    return node;
 }
 
 VREntityPtr VRRoadBase::addLane( int direction, float width ) {

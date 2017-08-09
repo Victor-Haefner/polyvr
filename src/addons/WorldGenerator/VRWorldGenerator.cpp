@@ -9,6 +9,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/scene/VRObjectManager.h"
+#include "addons/Semantics/Reasoning/VROntology.h"
 
 #define GLSL(shader) #shader
 

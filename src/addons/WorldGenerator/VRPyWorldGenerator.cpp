@@ -68,6 +68,7 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"updateAsphaltTexture", PyWrap( RoadNetwork, updateAsphaltTexture, "Update markings and tracks on asphalt texture", void ) },
     {"computeGreenBelts", PyWrap( RoadNetwork, computeGreenBelts, "Compute green belt areas", vector<VRPolygonPtr> ) },
     {"clear", PyWrap( RoadNetwork, clear, "Clear all data", void ) },
+    {"test1", PyWrap( RoadNetwork, test1, "Test", void ) },
     {NULL}  /* Sentinel */
 };
 

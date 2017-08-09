@@ -2,6 +2,7 @@
 #include "VRProperty.h"
 #include "VROntology.h"
 #include "core/utils/VRStorage_template.h"
+#include "core/utils/VRTimer.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 
@@ -62,7 +63,7 @@ VREntity::VREntity(string name, VROntologyPtr o, VRConceptPtr c) {
 
     setNameSpace("entity");
     setSeparator('_');
-    setName(name);
+    setName(name, ID);
 }
 
 VREntityPtr VREntity::create(string name, VROntologyPtr o, VRConceptPtr c) { return VREntityPtr( new VREntity(name, o, c) ); }

@@ -467,7 +467,26 @@ void VRRoadNetwork::compute() {
     //computeGreenBelts();
 }
 
+class myTest : public VREntity {
+    public:
 
+        myTest() : VREntity("bla", 0, 0) {}
+        ~myTest() {}
+
+        static shared_ptr<myTest> create() { return shared_ptr<myTest>( new myTest() ); };
+};
+
+void VRRoadNetwork::test1() {
+    //for (int i=0; i<1e4; i++) ontology->addEntity("node", "Node");
+    static map<int, VREntityPtr> m;
+    static vector<VREntityPtr> v;
+    auto c = ontology->getConcept("Node");
+    for (int i=0; i<1e4; i++) {
+        auto e = VREntity::create("node", ontology, c);
+        //m[i] = e;
+        v.push_back(e);
+    }
+}
 
 
 
