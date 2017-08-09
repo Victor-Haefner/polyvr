@@ -14,6 +14,7 @@ class VRPlanet : public VRTransform {
 
         double radius = 6371000; // earth radius
         map<int, map<int, VRWorldGeneratorPtr> > sectors;
+        VRTransformPtr origin;
         VRLodPtr lod;
         VRObjectPtr anchor;
         VRMaterialPtr sphereMat;
@@ -37,11 +38,14 @@ class VRPlanet : public VRTransform {
         int addPin( string label, double north, double east );
         void remPin( int pin );
 
-        Vec3d fromLatLongEast(double north, double east);
-        Vec3d fromLatLongNorth(double north, double east);
-        Vec3d fromLatLongNormal(double north, double east);
-        Vec3d fromLatLongPosition(double north, double east);
+        Vec3d fromLatLongEast(double north, double east, bool local = false);
+        Vec3d fromLatLongNorth(double north, double east, bool local = false);
+        Vec3d fromLatLongNormal(double north, double east, bool local = false);
+        Vec3d fromLatLongPosition(double north, double east, bool local = false);
         Vec2d fromLatLongSize(double north1, double east1, double north2, double east2);
+        posePtr fromLatLongPose(double north, double east, bool local = false);
+
+        void localizeOnSector(int north, int east);
 
         VRMaterialPtr getMaterial();
 };

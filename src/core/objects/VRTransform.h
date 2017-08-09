@@ -104,6 +104,7 @@ class VRTransform : public VRObject {
         Matrix4d getMatrixTo(VRObjectPtr o, bool parentOnly = false);
         Matrix4d getRotationMatrix();
 
+        void setIdentity();
         void setFrom(Vec3d pos);
         void setAt(Vec3d at);
         void setUp(Vec3d up);

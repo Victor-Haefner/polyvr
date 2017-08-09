@@ -10,6 +10,7 @@
 
 #include <string>
 #include <map>
+#include <unordered_map>
 #include <vector>
 #include <memory>
 
@@ -29,6 +30,8 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
     map<string, VROntologyWeakPtr> dependencies;
     map<string, VRCallbackStrWrapperPtr> builtins;
 
+    map<string, VRConceptPtr> recentConcepts; // performance optimization
+
     VROntology(string name);
     static VROntologyPtr create(string name = "");
     VROntologyPtr ptr();
@@ -41,7 +44,7 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
     map<int, vector<VRConceptPtr>> getChildrenMap();
 
     void addConcept(VRConceptPtr c);
-    void addEntity(VREntityPtr e);
+    void addEntity(VREntityPtr& e);
     void remConcept(VRConceptPtr c);
     void remEntity(VREntityPtr e);
     void remEntities(string concept);

@@ -67,6 +67,8 @@ VRConceptPtr VROntology::getConcept(string name) {
     /*cout << "add concept " << name << "in: ";
     for (auto c : concepts) if (auto p = c.second.lock()) cout << " " << c.first << " " << p->ID << " ";
     cout << endl;*/
+    if (recentConcepts.count(name)) return recentConcepts[name];
+
     VRConceptPtr p;
     if (concepts.count(name)) p = concepts[name].lock();
     else {
@@ -83,6 +85,12 @@ VRConceptPtr VROntology::getConcept(string name) {
     }
     //cout << "found " << p->name << " " << p->ID << endl;
     //if (!p) cout << "Warning: concept " << name << " not found in ontology " << getName() << endl;
+    if (recentConcepts.size() > 10) { // too big, remove random element
+        auto it = recentConcepts.begin();
+        advance(it, rand() % recentConcepts.size());
+        recentConcepts.erase(it);
+    }
+    recentConcepts[name] = p;
     return p;
 }
 
@@ -212,12 +220,24 @@ VREntityPtr VROntology::addVectorEntity(string name, string concept, vector<stri
     return i;
 }
 
-void VROntology::addEntity(VREntityPtr e) { entities[e->ID] = e; }
+void VROntology::addEntity(VREntityPtr& e) {
+    if (!e) return;
+    //pair<int, VREntityPtr> p1(e->ID,0);
+    //auto p2 = entities.insert(p1);
+    //p2.first->second = e;
+    entities[e->ID] = e;
+
+    //cout << "VROntology::addEntity " << entities.size() << " " << entities[e->ID] << endl;
+}
 
 VREntityPtr VROntology::addEntity(string name, string concept) {
     auto c = getConcept(concept);
     auto e = VREntity::create(name, ptr(), c);
     addEntity(e);
+    /*int ID = guid();
+    auto p = entities.emplace(ID, name, ptr(), c);
+    VREntityPtr e = p.first->second;
+    e->ID = ID;*/
     return e;
 }
 
@@ -230,6 +250,7 @@ vector<VREntityPtr> VROntology::getEntities(string concept) {
     vector<VREntityPtr> res;
     if (concept != "") {
         for (auto i : entities) {
+            if (!i.second) cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
             for (auto c : i.second->getConcepts()) {
                 if(c && c->is_a(concept)) { res.push_back(i.second); break; }
             }

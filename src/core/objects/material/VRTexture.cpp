@@ -156,6 +156,13 @@ void VRTexture::setPixel(Vec3i p, Color4f c) {
     }
 }
 
+void VRTexture::clampToImage(Vec3i& p) {
+    if (!img) return;
+    if (p[0] < 0) p[0] = 0; if (p[0] >= img->getWidth()) p[0] = img->getWidth()-1;
+    if (p[1] < 0) p[1] = 0; if (p[1] >= img->getHeight()) p[1] = img->getHeight()-1;
+    if (p[2] < 0) p[2] = 0; if (p[2] >= img->getDepth()) p[2] = img->getDepth()-1;
+}
+
 Color4f VRTexture::getPixel(Vec3i p) { // TODO: check data format (float/integer/char)
     auto res = Color4f(0,0,0,1);
     if (!img) return res;
@@ -164,6 +171,7 @@ Color4f VRTexture::getPixel(Vec3i p) { // TODO: check data format (float/integer
     int h = img->getHeight();
 
     auto data = img->getData();
+    clampToImage(p);
     int i = p[0] + p[1]*w + p[2]*w*h;
 
     if (N == 1) {

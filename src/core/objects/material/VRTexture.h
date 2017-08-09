@@ -18,6 +18,8 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         ImageRecPtr img;
         int internal_format = 0;
 
+        void clampToImage(Vec3i& p);
+
     public:
         VRTexture();
         VRTexture(ImageRecPtr img);

@@ -54,6 +54,7 @@ void VRTerrain::setMap( VRTexturePtr t, int channel ) {
     } else tex = t;
     mat->setTexture(tex);
 	mat->setShaderParameter("channel", channel);
+    mat->setTextureParams(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_MODULATE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
     updateTexelSize();
 }
 
@@ -211,6 +212,7 @@ float VRTerrain::getHeight(const Vec2d& p) {
     float v = p[1]/size[1] + 0.5;
     int i = floor(u*W - 0.5);
     int j = floor(v*H - 0.5);
+    //cout << " VRTerrain::getHeight " << u << " " << v << " " << i << " " << j << " " << W << " " << H << endl;
 
     float h00 = tex->getPixel(Vec3i(i,j,0))[3];
     float h10 = tex->getPixel(Vec3i(i+1,j,0))[3];

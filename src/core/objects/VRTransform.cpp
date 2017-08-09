@@ -102,6 +102,10 @@ void VRTransform::computeMatrix4d() {
     dm->write(mm);
 }
 
+void VRTransform::setIdentity() {
+    setMatrix(Matrix4d());
+}
+
 //read Matrix4d from doublebuffer && apply it to transformation
 //should be called from the main thread only
 void VRTransform::updatePhysics() {

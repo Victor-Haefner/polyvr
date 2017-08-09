@@ -5,6 +5,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRLod.h"
 #include "core/tools/VRAnalyticGeometry.h"
+#include "core/math/pose.h"
 #include "core/utils/toString.h"
 
 #define GLSL(shader) #shader
@@ -27,7 +28,24 @@ VRPlanetPtr VRPlanet::ptr() { return static_pointer_cast<VRPlanet>( shared_from_
 double VRPlanet::toRad(double deg) { return pi*deg/180; }
 double VRPlanet::toDeg(double rad) { return 180*rad/pi; }
 
-Vec3d VRPlanet::fromLatLongNormal(double north, double east) {
+void VRPlanet::localizeOnSector(int north, int east) {
+    auto p = fromLatLongPose(north+0.5, east+0.5);
+    p->invert();
+    origin->setPose(p);
+
+    auto s = getSector(north, east);
+    if (s) {
+        s->setIdentity();
+        addChild(s);
+    }
+}
+
+Vec3d VRPlanet::fromLatLongNormal(double north, double east, bool local) {
+    if (local) {
+        north -= floor(north) + 0.5;
+        east  -= floor(east)  + 0.5;
+    }
+
     north = -north+90;
 	double sT = sin(toRad(north));
 	double sP = sin(toRad(east));
@@ -36,9 +54,21 @@ Vec3d VRPlanet::fromLatLongNormal(double north, double east) {
 	return Vec3d(sT*cP, cT, -sT*sP);
 }
 
-Vec3d VRPlanet::fromLatLongPosition(double north, double east) { return fromLatLongNormal(north, east)*radius; }
-Vec3d VRPlanet::fromLatLongEast(double north, double east) { return fromLatLongNormal(0, east+90); }
-Vec3d VRPlanet::fromLatLongNorth(double north, double east) { return fromLatLongNormal(north+90, east); }
+Vec3d VRPlanet::fromLatLongPosition(double north, double east, bool local) {
+    Vec3d pS;
+    if (local) pS = fromLatLongNormal(floor(north) + 0.5, floor(east) + 0.5, true) * radius;
+    return fromLatLongNormal(north, east, local) * radius - pS;
+}
+
+Vec3d VRPlanet::fromLatLongEast(double north, double east, bool local) { return fromLatLongNormal(0, east+90, local); }
+Vec3d VRPlanet::fromLatLongNorth(double north, double east, bool local) { return fromLatLongNormal(north+90, east, local); }
+
+posePtr VRPlanet::fromLatLongPose(double north, double east, bool local) {
+    Vec3d f = fromLatLongPosition(north, east, local);
+    Vec3d d = fromLatLongNorth(north, east, local);
+    Vec3d u = fromLatLongNormal(north, east, local);
+    return pose::create(f,d,u);
+}
 
 Vec2d VRPlanet::fromLatLongSize(double north1, double east1, double north2, double east2) {
     auto n = (north1+north2)*0.5;
@@ -80,7 +110,9 @@ void VRPlanet::rebuild() {
         lod->addDistance(d);
     };
 
-    addChild(lod);
+    origin = VRTransform::create("origin");
+    addChild(origin);
+    origin->addChild(lod);
     anchor = VRObject::create("lod0");
     lod->addChild( anchor );
     addLod(5,radius*1.1);
@@ -102,9 +134,7 @@ VRWorldGeneratorPtr VRPlanet::addSector( int north, int east ) {
     sectors[north][east] = generator;
     anchor->addChild(generator);
     generator->setPlanet(ptr(), Vec2d(east, north));
-    generator->setFrom( Vec3d(fromLatLongPosition(north+0.5, east+0.5)) );
-    generator->setUp( Vec3d(fromLatLongNormal(north+0.5, east+0.5)) );
-    generator->setDir( Vec3d(fromLatLongNorth(north+0.5, east+0.5)) );
+    generator->setPose( fromLatLongPose(north+0.5, east+0.5) );
 
     Vec2d size = fromLatLongSize(north, east, north+1, east+1);
     generator->getTerrain()->setParameters( size, 10, 1);

@@ -102,36 +102,45 @@ void VRWorldGenerator::addOSMMap(string path) {
 
     // road network data
 
-    /*for (auto wayItr : osmMap->getWays()) {
+    for (auto wayItr : osmMap->getWays()) {
         auto& way = wayItr.second;
         auto p = way->polygon;
-        vector<Pnt3d> points;
+        vector<Vec3d> points;
 
         for (auto pnt : p.get()) {
-            Pnt3d pos = Pnt3d( planet->fromLatLongPosition(pnt[1], pnt[0], true) );
+            Vec3d pos = Vec3d( planet->fromLatLongPosition(pnt[1], pnt[0], true) );
             points.push_back(pos);
         }
 
         cout << " tags: ";
         for (auto tag : way->tags) {
-            if (tag == "highway") { // TODO: prototype
+            if (tag.first == "highway") { // TODO: prototype
+                vector<Vec3d> norms;
+                for (int i=0; i<points.size(); i++) {
+                    Vec3d n;
+                    if (i == 0) n = points[1]-points[0];
+                    else if (i == points.size()-1) n = points[points.size()-1]-points[points.size()-2];
+                    else n = points[i+1] - points[i-1]; // (points[i] - points[i-1]) + (points[i+1] - points[i]);
+                    n.normalize();
+                    norms.push_back(n);
+                }
+
                 VREntityPtr node1, node2;
-                for (int i=1; i<pp.size(); i++) {
-                    auto p1 = pp.get(i-1);
-                    auto p2 = pp.get(i);
-                    auto p3 = pp.get(i+1);
+                for (int i=1; i<points.size(); i++) {
+                    auto p1 = points[i-1];
+                    auto p2 = points[i];
                     node1 = node2;
-                    if (i == 1) node1 = roads->addNode(p1);
-                    node2 = roads->addNode(p2);
-                    Vec3d norm1 = ;
-                    Vec3d norm2 = ;
-                    roads->addRoad("someRoad", "highway", node1, node2, norm1, norm2, 2);
+                    if (i == 1) node1 = roads->addNode(p1, true);
+                    node2 = roads->addNode(p2, true);
+                    Vec3d norm1 = norms[i-1];
+                    Vec3d norm2 = norms[i];
+                    //roads->addRoad("someRoad", "highway", node1, node2, norm1, norm2, 2);
                 }
             }
             cout << "   " << tag.first << ":" << tag.second;
         }
         cout << endl;
-    }*/
+    }
 
     // -------------------- project OSM polygons on texture
     /*auto dim = tex->getSize();
