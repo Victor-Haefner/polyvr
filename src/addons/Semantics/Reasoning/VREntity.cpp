@@ -15,42 +15,6 @@ template<> string typeName(const VREntityPtr& o) { return "Entity"; }
 #define WARN(x) \
 VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
 
-/*#include <libxml++/nodes/element.h>
-#include "core/utils/VRFunction.h"
-#include "core/utils/toString.h"
-#include <boost/bind.hpp>
-template<typename T>
-void VRStorage::save_vec_on_cb(vector<T>* v, string tag, xmlpp::Element* e) {
-    e = e->add_child(tag);
-    for (auto t : *v) {
-        auto sp = t.lock();
-        if (sp == 0) continue;
-        auto e2 = e->add_child("e");
-        e2->set_attribute("val", sp->getName());
-    }
-}
-
-template<typename T>
-void VRStorage::load_vec_cb(vector<T>* v, string tag, xmlpp::Element* e) {
-    if (e == 0) return;
-    e = getChild(e, tag);
-    if (e == 0) return;
-    for (auto el : getChildren(e)) {
-        if (el->get_attribute("val") == 0) return;
-        T t;
-        toValue( el->get_attribute("val")->get_value(), t);
-        v->push_back( t );
-    }
-}
-
-template<typename T>
-void VRStorage::storeObjNames(string tag, vector<T>* o, vector<string>* v) {
-    VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_vec_cb<string>, this, v, tag, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_vec_on_cb<T>, this, o, tag, _1 ) );
-    storage[tag] = b;
-}*/
-
 VREntity::VREntity(string name, VROntologyPtr o, VRConceptPtr c) {
     ontology = o;
     //if (!o && c) ontology = c->ontology;
@@ -63,7 +27,7 @@ VREntity::VREntity(string name, VROntologyPtr o, VRConceptPtr c) {
 
     setNameSpace("entity");
     setSeparator('_');
-    setName(name, ID);
+    setName(name);
 }
 
 VREntityPtr VREntity::create(string name, VROntologyPtr o, VRConceptPtr c) { return VREntityPtr( new VREntity(name, o, c) ); }

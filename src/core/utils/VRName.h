@@ -25,7 +25,7 @@ class VRName_base {
         ~VRName_base();
 
         void compileName();
-        string setName(string name, int hint = 0);
+        string setName(string name);
         string getName();
         string getBaseName();
         int getNameSuffix();
