@@ -16,6 +16,7 @@ class VRPlanet : public VRTransform {
 
         double radius = 6371000; // earth radius
         map<Vec2i, VRWorldGeneratorPtr> sectors;
+        Vec2d originCoords = Vec2d(-1,-1);
         VRTransformPtr origin;
         VRLodPtr lod;
         VRObjectPtr anchor;

@@ -29,6 +29,7 @@ double VRPlanet::toRad(double deg) { return pi*deg/180; }
 double VRPlanet::toDeg(double rad) { return 180*rad/pi; }
 
 void VRPlanet::localize(double north, double east) {
+    originCoords = Vec2d(north, east);
     auto p = fromLatLongPose(north, east);
     p->invert();
     origin->setPose(p);
@@ -40,10 +41,14 @@ void VRPlanet::localize(double north, double east) {
     } else cout << "Warning: VRPlanet::localize, no sector found at location " << Vec2d(north, east) << " !\n";
 }
 
+Vec2i VRPlanet::toSID(double north, double east) {
+    return Vec2i( north/sectorSize+1e-9, east/sectorSize+1e-9 );
+}
+
 Vec3d VRPlanet::fromLatLongNormal(double north, double east, bool local) {
     if (local) {
-        north -= floor(north) + 0.5;
-        east  -= floor(east)  + 0.5;
+        north -= originCoords[0] - 90;
+        east  -= originCoords[1];
     }
 
     north = -north+90;
@@ -55,9 +60,13 @@ Vec3d VRPlanet::fromLatLongNormal(double north, double east, bool local) {
 }
 
 Vec3d VRPlanet::fromLatLongPosition(double north, double east, bool local) {
-    Vec3d pS;
-    if (local) pS = fromLatLongNormal(floor(north) + 0.5, floor(east) + 0.5, true) * radius;
-    return fromLatLongNormal(north, east, local) * radius - pS;
+    auto pos = Pnt3d( fromLatLongNormal(north, east, 0) * radius );
+    if (local) {
+        auto p = fromLatLongPose(originCoords[0], originCoords[1], 0);
+        p->invert();
+        p->asMatrix().mult(pos, pos);
+    }
+    return Vec3d( pos );
 }
 
 Vec3d VRPlanet::fromLatLongEast(double north, double east, bool local) { return fromLatLongNormal(0, east+90, local); }
@@ -128,10 +137,6 @@ void VRPlanet::rebuild() {
 }
 
 void VRPlanet::setParameters( double r ) { radius = r; rebuild(); }
-
-Vec2i VRPlanet::toSID(double north, double east) {
-    return Vec2i( north/sectorSize+1e-9, east/sectorSize+1e-9 );
-}
 
 VRWorldGeneratorPtr VRPlanet::addSector( double north, double east ) {
     auto generator = VRWorldGenerator::create();
