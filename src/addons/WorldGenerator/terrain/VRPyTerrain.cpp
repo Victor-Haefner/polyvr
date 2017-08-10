@@ -24,13 +24,13 @@ PyMethodDef VRPyTerrain::methods[] = {
 };
 
 PyMethodDef VRPyPlanet::methods[] = {
-    {"addSector", PyWrap(Planet, addSector, "Add sector to planet", VRWorldGeneratorPtr, int, int ) },
+    {"addSector", PyWrap(Planet, addSector, "Add sector to planet", VRWorldGeneratorPtr, double, double ) },
     {"getSector", PyWrap(Planet, getSector, "Return sector at N E", VRWorldGeneratorPtr, double, double ) },
     {"getMaterial", PyWrap(Planet, getMaterial, "Get planet material", VRMaterialPtr ) },
     {"setParameters", PyWrap(Planet, setParameters, "Set planet parameters: radius", void, double ) },
     {"addPin", PyWrap(Planet, addPin, "Add a pin: label, north, east", int, string, double, double) },
     {"remPin", PyWrap(Planet, remPin, "Remove a pin: ID", void, int) },
     {"fromLatLongPosition", PyWrapOpt(Planet, fromLatLongPosition, "Get Position on planet based on lat and long", "0", Vec3d, double, double, bool) },
-    {"localizeOnSector", PyWrap(Planet, localizeOnSector, "Center the planet origin on a sector", void, int, int) },
+    {"localize", PyWrap(Planet, localize, "Center the planet origin on a sector", void, double, double) },
     {NULL}  /* Sentinel */
 };

@@ -28,8 +28,8 @@ VRPlanetPtr VRPlanet::ptr() { return static_pointer_cast<VRPlanet>( shared_from_
 double VRPlanet::toRad(double deg) { return pi*deg/180; }
 double VRPlanet::toDeg(double rad) { return 180*rad/pi; }
 
-void VRPlanet::localizeOnSector(int north, int east) {
-    auto p = fromLatLongPose(north+0.5, east+0.5);
+void VRPlanet::localize(double north, double east) {
+    auto p = fromLatLongPose(north, east);
     p->invert();
     origin->setPose(p);
 
@@ -37,7 +37,7 @@ void VRPlanet::localizeOnSector(int north, int east) {
     if (s) {
         s->setIdentity();
         addChild(s);
-    }
+    } else cout << "Warning: VRPlanet::localize, no sector found at location " << Vec2d(north, east) << " !\n";
 }
 
 Vec3d VRPlanet::fromLatLongNormal(double north, double east, bool local) {
@@ -123,28 +123,32 @@ void VRPlanet::rebuild() {
     if (!metaGeo) {
         metaGeo = VRAnalyticGeometry::create("PlanetMetaData");
         metaGeo->setLabelParams(0.1, true, true, Color4f(1,1,1,1), Color4f(1,0,0,1));
-        addChild(metaGeo);
+        origin->addChild(metaGeo);
     }
 }
 
 void VRPlanet::setParameters( double r ) { radius = r; rebuild(); }
 
-VRWorldGeneratorPtr VRPlanet::addSector( int north, int east ) {
+Vec2i VRPlanet::toSID(double north, double east) {
+    return Vec2i( north/sectorSize+1e-9, east/sectorSize+1e-9 );
+}
+
+VRWorldGeneratorPtr VRPlanet::addSector( double north, double east ) {
     auto generator = VRWorldGenerator::create();
-    sectors[north][east] = generator;
+    auto sid = toSID(north, east);
+    sectors[sid] = generator;
     anchor->addChild(generator);
     generator->setPlanet(ptr(), Vec2d(east, north));
-    generator->setPose( fromLatLongPose(north+0.5, east+0.5) );
+    generator->setPose( fromLatLongPose(north+0.5*sectorSize, east+0.5*sectorSize) );
 
-    Vec2d size = fromLatLongSize(north, east, north+1, east+1);
+    Vec2d size = fromLatLongSize(north, east, north+sectorSize, east+sectorSize);
     generator->getTerrain()->setParameters( size, 10, 1);
     return generator;
 }
 
 VRWorldGeneratorPtr VRPlanet::getSector( double north, double east ) {
-    int N = floor(north);
-    int E = floor(east);
-    if (sectors.count(N)) if (sectors[N].count(E)) return sectors[N][E];
+    auto sid = toSID(north, east);
+    if (sectors.count(sid)) return sectors[sid];
     return 0;
 }
 

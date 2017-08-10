@@ -12,8 +12,10 @@ class VRPlanet : public VRTransform {
         static string surfaceVP;
         static string surfaceFP;
 
+        double sectorSize = 0.1; // in spherical coordinates
+
         double radius = 6371000; // earth radius
-        map<int, map<int, VRWorldGeneratorPtr> > sectors;
+        map<Vec2i, VRWorldGeneratorPtr> sectors;
         VRTransformPtr origin;
         VRLodPtr lod;
         VRObjectPtr anchor;
@@ -25,6 +27,8 @@ class VRPlanet : public VRTransform {
         double toDeg(double rad);
         void rebuild();
 
+        Vec2i toSID(double north, double east);
+
     public:
         VRPlanet(string name);
         ~VRPlanet();
@@ -33,7 +37,7 @@ class VRPlanet : public VRTransform {
         static VRPlanetPtr create(string name = "planet");
 
         void setParameters( double radius );
-        VRWorldGeneratorPtr addSector( int north, int east );
+        VRWorldGeneratorPtr addSector( double north, double east );
         VRWorldGeneratorPtr getSector( double north, double east );
         int addPin( string label, double north, double east );
         void remPin( int pin );
@@ -45,7 +49,7 @@ class VRPlanet : public VRTransform {
         Vec2d fromLatLongSize(double north1, double east1, double north2, double east2);
         posePtr fromLatLongPose(double north, double east, bool local = false);
 
-        void localizeOnSector(int north, int east);
+        void localize(double north, double east);
 
         VRMaterialPtr getMaterial();
 };

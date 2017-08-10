@@ -99,6 +99,7 @@ void VRWorldGenerator::init() {
 }
 
 void VRWorldGenerator::addOSMMap(string path) {
+    return;
     osmMap = OSMMap::loadMap(path);
 
     // road network data
@@ -135,7 +136,7 @@ void VRWorldGenerator::addOSMMap(string path) {
                     node2 = roads->addNode(p2, true);
                     Vec3d norm1 = norms[i-1];
                     Vec3d norm2 = norms[i];
-                    //roads->addRoad("someRoad", "highway", node1, node2, norm1, norm2, 2);
+                    roads->addRoad("someRoad", "highway", node1, node2, norm1, norm2, 2);
                 }
             }
             cout << "   " << tag.first << ":" << tag.second;
