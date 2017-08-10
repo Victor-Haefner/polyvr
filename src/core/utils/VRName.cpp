@@ -10,51 +10,58 @@
 
 using namespace std;
 
+struct VRNamePool {
+    string name;
+    map<int, string> names; // suffix, name
+    map<int, bool> freed;
+};
+
 struct VRNameSpace {
     string nspace;
-    map<string, map<int, string> > nameDict; // basename suffix name
+    map<string, VRNamePool> nameDict; // key is base name
 
     VRNameSpace(string nspace = "") : nspace(nspace) {}
 
-    int getSuffix(const string& base) {
+    int getSuffix(const string& base, const int& hint) {
+        auto& pool = nameDict[base];
+        if (hint != -1) if (!pool.names.count(hint)) return hint;
         int suffix = 0;
-        if (!nameDict.count(base)) suffix = 0;
-        else {
-            for(unsigned int i=0; i<=nameDict[base].size(); i++) {
-                if (nameDict[base].count(i)) continue;
-                suffix = i;
-                break;
-            }
+        if (nameDict.count(base)) {
+            if (pool.freed.size() > 0) {
+                suffix = pool.freed.begin()->first;
+                pool.freed.erase(suffix);
+            } else suffix = pool.names.size();
         }
         return suffix;
     }
 
     void removeName(const string& base, const int& suffix) {
-        if (nameDict.count(base)) nameDict[base].erase(suffix);
+        if (nameDict.count(base)) {
+            nameDict[base].names.erase(suffix);
+            nameDict[base].freed[suffix] = 0;
+        }
     }
 
     string compileName(const string& base, const int& suffix, const char separator) {
         string name = base;
         if (suffix > 0) name += separator + toString(suffix);
-        if (!nameDict.count(base)) nameDict[base] = map<int, string>();
-        nameDict[base][suffix] = name;
+        if (!nameDict.count(base)) nameDict[base] = VRNamePool();
+        auto& pool = nameDict[base];
+        pool.names[suffix] = name;
+        if (pool.freed.count(suffix)) pool.freed.erase(suffix);
         return name;
-    }
-
-    int getBaseNameNumber() {
-        return nameDict.size();
     }
 
     int getNameNumber() {
         int N = 0;
-        for (auto n : nameDict) N += n.second.size();
+        for (auto n : nameDict) N += n.second.names.size();
         return N;
     }
 
     void print() {
         for (auto n : nameDict) {
             cout << "\n " << n.first << flush;
-            for (auto s : n.second) cout << "\n  " << s.second << flush;
+            for (auto s : n.second.names) cout << "\n  " << s.second << flush;
         }
     }
 };
@@ -66,9 +73,9 @@ class VRNameManager {
     public:
         VRNameManager() {}
 
-        int getSuffix(const string& nspace, const string& base) {
+        int getSuffix(const string& nspace, const string& base, const int& hint = -1) {
             if (!nameDicts.count(nspace)) nameDicts[nspace] = VRNameSpace(nspace);
-            return nameDicts[nspace].getSuffix(base);
+            return nameDicts[nspace].getSuffix(base, hint);
         }
 
         void removeName(const string& nspace, const string& base, const int& suffix) {
@@ -83,7 +90,7 @@ class VRNameManager {
 
         int getBaseNameNumber() {
             int N = 0;
-            for (auto ns : nameDicts) N += ns.second.getBaseNameNumber();
+            for (auto ns : nameDicts) N += ns.second.nameDict.size();
             return N;
         }
 
@@ -132,7 +139,7 @@ string VRName_base::setName(string name) {
     nmgr.removeName(nameSpace, base_name, name_suffix); // check if already named, remove old name from dict
     if (name == "") return "";
 
-    // check if passed name has a base . suffix structure
+    // check if passed name has a base|separator|suffix structure
     auto vs = splitString(name, separator);
     if (vs.size() > 1) {
         string last = *vs.rbegin();
@@ -140,7 +147,7 @@ string VRName_base::setName(string name) {
         if (isNumber) {
             base_name = vs[0];
             for (uint i=1; i<vs.size()-1; i++) base_name += separator + vs[i];
-            name_suffix = toInt(last);
+            name_suffix = nmgr.getSuffix(nameSpace, base_name, toInt(last));
             compileName();
             return this->name;
         }
