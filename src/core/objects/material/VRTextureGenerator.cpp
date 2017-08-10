@@ -243,7 +243,7 @@ void VRTextureGenerator::applyPolygon(T* data, VRPolygonPtr p, Color4f c, float 
     Vec3d b = bb.max(); swap(b[1], b[2]);
     Vec3i A = Vec3i( upscale( a ) ) - Vec3i(1,1,1);
     Vec3i B = Vec3i( upscale( b ) ) + Vec3i(1,1,1);
-    float texelSize = 1.0/width; // TODO: non square textures?
+    //float texelSize = 1.0/width; // TODO: non square textures?
     for (int j=A[1]; j<B[1]; j++) {
         for (int i=A[0]; i<B[0]; i++) {
             Vec2d pos = Vec2d(float(i)/width, float(j)/height);
@@ -264,7 +264,7 @@ void VRTextureGenerator::applyPolygon(T* data, VRPolygonPtr p, Color4f c, float 
 
 void VRTextureGenerator::clearStage() { layers.clear(); }
 
-VRTexturePtr VRTextureGenerator::compose(int seed) {
+VRTexturePtr VRTextureGenerator::compose(int seed) { // TODO: optimise!
     srand(seed);
     Vec3i dims(width, height, depth);
 

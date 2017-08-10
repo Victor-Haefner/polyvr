@@ -22,6 +22,8 @@ class VRAsphalt : public VRMaterial {
 
         map<int, road> roadData;
         VRTextureGeneratorPtr texGen;
+        VRTexturePtr noiseTex;
+        VRTexturePtr mudTex;
 
         VRTexturePtr noiseTexture();
         VRTexturePtr mudTexture();

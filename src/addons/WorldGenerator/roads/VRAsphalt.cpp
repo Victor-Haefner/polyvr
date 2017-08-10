@@ -1,6 +1,7 @@
 #include "VRAsphalt.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/math/path.h"
+#include "core/utils/VRTimer.h"
 
 #define GLSL(shader) #shader
 
@@ -53,18 +54,21 @@ VRTexturePtr VRAsphalt::mudTexture() {
 }
 
 void VRAsphalt::updateTexture() {
+    auto setupTexture = [&](int unit, VRTexturePtr tex, string var) {
+        setTexture(tex, false, unit);
+        setMagMinFilter(GL_LINEAR, GL_LINEAR, unit);
+        setShaderParameter(var, unit);
+    };
+
+    VRTimer t; t.start();
     auto paths = texGen->compose(0);
-    auto noise = noiseTexture();
-    auto mud = mudTexture();
-    setTexture(paths, false, 0);
-    setTexture(noise, false, 1);
-    setTexture(mud, false, 2);
-    setMagMinFilter(GL_LINEAR, GL_LINEAR, 0);
-    setMagMinFilter(GL_LINEAR, GL_LINEAR, 1);
-    setMagMinFilter(GL_LINEAR, GL_LINEAR, 2);
-    setShaderParameter("texMarkings", 0);
-	setShaderParameter("texNoise", 1);
-	setShaderParameter("texMud", 2);
+    cout << " VRAsphalt::updateTexture " << t.stop() << endl;
+    if (!noiseTex) noiseTex = noiseTexture();
+    if (!mudTex) mudTex = mudTexture();
+
+    setupTexture(0, paths, "texMarkings");
+    setupTexture(1, noiseTex, "texNoise");
+    setupTexture(2, mudTex, "texMud");
 }
 
 void VRAsphalt::addPath(pathPtr path, int rID, float width, int dashN, float offset) {
