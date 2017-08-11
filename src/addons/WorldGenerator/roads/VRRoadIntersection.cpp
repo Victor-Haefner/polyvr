@@ -76,26 +76,25 @@ void VRRoadIntersection::computeLanes() {
 
 VRGeometryPtr VRRoadIntersection::createGeometry() {
     VRPolygon poly; // intersection VRPolygon
-    auto roads = entity->getAllEntities("roads");
     VREntityPtr node = entity->getEntity("node");
     if (!node) return 0;
-    for (auto roadEnt : roads) {
-        VRRoad road; road.setEntity(roadEnt);
-        auto rNode = getRoadNode(roadEnt);
+    for (auto road : roads) {
+        auto rNode = getRoadNode(road->getEntity());
         if (!rNode) continue;
-        auto& endP = road.getEdgePoints( rNode );
+        auto& endP = road->getEdgePoints( rNode );
         poly.addPoint(Vec2d(endP.p1[0], endP.p1[2]));
         poly.addPoint(Vec2d(endP.p2[0], endP.p2[2]));
     }
+    for (auto p : intersectionPoints) poly.addPoint(Vec2d(p[0], p[2]));
     poly = poly.getConvexHull();
+
     Vec3d median = poly.getBoundingBox().center();
     if (terrain) terrain->elevatePoint(median); // TODO: elevate each point of the polygon
     poly.translate(-median);
     Triangulator tri;
     tri.add( poly );
     VRGeometryPtr intersection = tri.compute();
-    intersection->setPose(Vec3d(0,0,0), Vec3d(0,1,0), Vec3d(0,0,1));
-    intersection->translate(median);
+    intersection->setPose(median, Vec3d(0,1,0), Vec3d(0,0,1));
     intersection->applyTransformation();
 	setupTexCoords( intersection, entity );
 	return intersection;
@@ -119,6 +118,7 @@ VREntityPtr VRRoadIntersection::getRoadNode(VREntityPtr roadEnt) {
             }
         }
     }
+
     return 0;
 }
 
@@ -139,6 +139,9 @@ VREntityPtr VRRoadIntersection::addTrafficLight( posePtr p, string asset, Vec3d 
 }
 
 void VRRoadIntersection::computeTrafficLights() {
+    if (roads.size() == 2) return;
+    if (inLanes.size() == 1) return;
+
     auto node = entity->getEntity("node");
     for (auto road : inLanes) {
         auto eP = road.first->getEdgePoints( node );
@@ -229,6 +232,7 @@ void VRRoadIntersection::computeLayout() {
         Vec3d Pi = intersect(data1.p2, data1.n, data2.p1, data2.n);
         data1.p2 = Pi;
         data2.p1 = Pi;
+        intersectionPoints.push_back(Pi);
     }
 
     for (auto road : roads) { // compute road front
@@ -236,11 +240,11 @@ void VRRoadIntersection::computeLayout() {
         Vec3d p1 = data.p1;
         Vec3d p2 = data.p2;
         Vec3d norm = data.n;
-        float d1 = abs((p1-pNode).dot(norm));
-        float d2 = abs((p2-pNode).dot(norm));
-        float d = max(d1,d2);
-        data.p1 = p1-norm*(d-d1);
-        data.p2 = p2-norm*(d-d2);
+        float d1 = (p1-pNode).dot(norm);
+        float d2 = (p2-pNode).dot(norm);
+        float d = min(d1,d2);
+        data.p1 = p1-norm*(d1-d);
+        data.p2 = p2-norm*(d2-d);
 
         Vec3d pm = (data.p1 + data.p2)*0.5; // compute road node
         auto n = addNode(pm);
