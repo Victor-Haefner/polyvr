@@ -95,8 +95,8 @@ VRGeometryPtr VRRoadIntersection::createGeometry() {
     tri.add( poly );
     VRGeometryPtr intersection = tri.compute();
     intersection->setPose(Vec3d(0,0,0), Vec3d(0,1,0), Vec3d(0,0,1));
-    intersection->applyTransformation();
     intersection->translate(median);
+    intersection->applyTransformation();
 	setupTexCoords( intersection, entity );
 	return intersection;
 }
@@ -164,10 +164,13 @@ void VRRoadIntersection::computeMarkings() {
     string name = entity->getName();
 
     map<VREntityPtr, float> laneEntries;
-    for (auto lane : entity->getAllEntities("lanes")) {
-        for (auto pathEnt : lane->getAllEntities("path")) {
-            auto entry = pathEnt->getEntity("nodes");
-            laneEntries[entry] = toFloat( lane->get("width")->value );
+    for (auto road : inLanes) {
+        for (auto lane : road.second) {
+            for (auto pathEnt : lane->getAllEntities("path")) {
+                auto entries = pathEnt->getAllEntities("nodes");
+                auto entry = entries[entries.size()-1];
+                laneEntries[entry] = toFloat( lane->get("width")->value );
+            }
         }
     }
 
