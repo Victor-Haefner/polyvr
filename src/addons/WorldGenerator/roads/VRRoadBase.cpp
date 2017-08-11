@@ -2,6 +2,7 @@
 #include "../VRWorldGenerator.h"
 #include "../terrain/VRTerrain.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRTimer.h"
 #include "core/math/path.h"
 #include "core/math/pose.h"
 #include "core/objects/geometry/VRGeometry.h"
@@ -31,7 +32,8 @@ pathPtr VRRoadBase::toPath( VREntityPtr pathEntity, int resolution ) {
     if (!pathEntity) return 0;
 	vector<Vec3d> pos;
 	vector<Vec3d> norms;
-	for (auto nodeEntry : pathEntity->getAllEntities("nodes")) {
+	auto nodes = pathEntity->getAllEntities("nodes");
+	for (auto& nodeEntry : nodes) {
         auto node = nodeEntry->getEntity("node");
         if (!node) { cout << "Warning in VRRoadBase::toPath, path node is NULL!" << endl; continue; }
 		pos.push_back( node->getVec3f("position") );

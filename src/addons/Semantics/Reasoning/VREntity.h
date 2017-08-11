@@ -36,17 +36,17 @@ struct VREntity : public VROntoID, public VRName {
     void setVector(string prop, vector<string> value, string type, int pos = 0);
     void addVector(string prop, vector<string> value, string type);
 
-    VRPropertyPtr get(string prop, int i = 0);
-    vector<VRPropertyPtr> getAll(string prop = "");
-    vector<VRPropertyPtr> getVector(string prop, int i = 0);
-    vector< vector<VRPropertyPtr> > getAllVector(string prop);
+    VRPropertyPtr get(const string& prop, int i = 0);
+    vector<VRPropertyPtr> getAll(const string& prop = "");
+    vector<VRPropertyPtr> getVector(const string& prop, int i = 0);
+    vector< vector<VRPropertyPtr> > getAllVector(const string& prop);
 
-    VREntityPtr getEntity(string prop, int i = 0);
-    vector<VREntityPtr> getAllEntities(string prop = "");
-    Vec3d getVec3f(string prop, int i = 0);
-    vector< Vec3d > getAllVec3f(string prop);
+    VREntityPtr getEntity(const string& prop, int i = 0);
+    vector<VREntityPtr> getAllEntities(const string& prop = "");
+    Vec3d getVec3f(const string& prop, int i = 0);
+    vector< Vec3d > getAllVec3f(const string& prop);
 
-    bool is_a(string concept);
+    bool is_a(const string& concept);
     string toString();
     void save(xmlpp::Element* e, int p);
     void load(xmlpp::Element* e);

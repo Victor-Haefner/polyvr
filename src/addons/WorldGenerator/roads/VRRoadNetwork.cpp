@@ -20,6 +20,7 @@
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRTimer.h"
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGMatrix22.h>
@@ -77,7 +78,7 @@ void VRRoadNetwork::updateAsphaltTexture() {
             auto dN = marking->get("dashNumber");
             float width = w ? toFloat( w->value ) : 0;
             int dashN = dN ? toInt( dN->value ) : 0;
-            asphalt->addMarking(rID, toPath(marking, 16), width, dashN);
+            asphalt->addMarking(rID, toPath(marking, 2), width, dashN);
 		}
 
 		for (auto track : tracks) {
@@ -85,7 +86,7 @@ void VRRoadNetwork::updateAsphaltTexture() {
             auto dN = track->get("dashNumber");
             float width = w ? toFloat( w->value ) : 0;
             int dashN = dN ? toInt( dN->value ) : 0;
-            asphalt->addTrack(rID, toPath(track, 16), width, dashN, trackWidth*0.5);
+            asphalt->addTrack(rID, toPath(track, 2), width, dashN, trackWidth*0.5);
 		}
 
 		cout << "VRRoadNetwork::updateTexture, markings and tracks: " << markings.size() << " " << tracks.size() << endl;

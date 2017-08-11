@@ -122,20 +122,7 @@ void VREntity::addVector(string name, vector<string> v, string type) {
     }
 }
 
-VRPropertyPtr VREntity::get(string prop, int i) {
-    auto props = getAll(prop);
-    if (i >= int(props.size())) return 0;
-    return props[i];
-}
-
-vector<VRPropertyPtr> VREntity::getAll(string name) {
-    if (name != "" && properties.count(name)) return properties[name];
-    vector<VRPropertyPtr> res;
-    if (name == "") for (auto pv : properties) for (auto p : pv.second) res.push_back(p);
-    return res;
-}
-
-vector<VRPropertyPtr> VREntity::getVector(string prop, int i) { // TODO
+vector<VRPropertyPtr> VREntity::getVector(const string& prop, int i) { // TODO
     vector<VRPropertyPtr> res;
     auto vp = get(prop, i);
     if (!vp) return res;
@@ -149,19 +136,31 @@ vector<VRPropertyPtr> VREntity::getVector(string prop, int i) { // TODO
     return res;
 }
 
-vector< vector<VRPropertyPtr> > VREntity::getAllVector(string prop) { // TODO
+vector< vector<VRPropertyPtr> > VREntity::getAllVector(const string& prop) { // TODO
     vector< vector<VRPropertyPtr> > res;
     return res;
 }
 
-VREntityPtr VREntity::getEntity(string prop, int i) {
-    auto p = get(prop, i);
-    if (!p) return 0;
-    if (auto onto = ontology.lock()) return onto->getEntity( p->value );
-    return 0;
+vector<VRPropertyPtr> VREntity::getAll(const string& name) {
+    if (name != "" && properties.count(name)) return properties[name];
+    vector<VRPropertyPtr> res;
+    if (name == "") for (auto pv : properties) for (auto p : pv.second) res.push_back(p);
+    return res;
 }
 
-vector<VREntityPtr> VREntity::getAllEntities(string prop) {
+VRPropertyPtr VREntity::get(const string& prop, int i) {
+    auto props = getAll(prop);
+    if (i >= int(props.size())) return 0;
+    return props[i];
+}
+
+VREntityPtr VREntity::getEntity(const string& prop, int i) {
+    auto p = get(prop, i);
+    if (!p) return 0;
+    return ontology.lock()->getEntity( p->value );
+}
+
+vector<VREntityPtr> VREntity::getAllEntities(const string& prop) {
     vector<VREntityPtr> res;
     for (auto p : getAll(prop)) {
         auto e = ontology.lock()->getEntity( p->value );
@@ -170,7 +169,7 @@ vector<VREntityPtr> VREntity::getAllEntities(string prop) {
     return res;
 }
 
-Vec3d VREntity::getVec3f(string prop, int i) {
+Vec3d VREntity::getVec3f(const string& prop, int i) {
     Vec3d res;
     auto vec = getVector(prop, i);
     int N = vec.size(); N = min(N,3);
@@ -178,7 +177,7 @@ Vec3d VREntity::getVec3f(string prop, int i) {
     return res;
 }
 
-vector< Vec3d > VREntity::getAllVec3f(string prop) { // TODO
+vector< Vec3d > VREntity::getAllVec3f(const string& prop) { // TODO
     vector< Vec3d > res;
     return res;
 }
@@ -196,7 +195,7 @@ string VREntity::toString() {
     return data;
 }
 
-bool VREntity::is_a(string concept) {
+bool VREntity::is_a(const string& concept) {
     for (auto cw : concepts) {
         if (auto c = cw.lock()) {
             if (c->is_a(concept)) return true;

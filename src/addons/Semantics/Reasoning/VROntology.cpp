@@ -226,6 +226,7 @@ void VROntology::addEntity(VREntityPtr& e) {
     //auto p2 = entities.insert(p1);
     //p2.first->second = e;
     entities[e->ID] = e;
+    entitiesByName[e->getName()] = e;
 
     //cout << "VROntology::addEntity " << entities.size() << " " << entities[e->ID] << endl;
 }
@@ -241,16 +242,20 @@ VREntityPtr VROntology::addEntity(string name, string concept) {
     return e;
 }
 
+VREntityPtr VROntology::getEntity(int ID) {
+    if (!entities.count(ID)) return 0;
+    return entities[ID];
+}
+
 VREntityPtr VROntology::getEntity(string e) {
-    for (auto i : entities) if (i.second->getName() == e) return i.second;
-    return 0;
+    if (!entitiesByName.count(e)) return 0;
+    return entitiesByName[e];
 }
 
 vector<VREntityPtr> VROntology::getEntities(string concept) {
     vector<VREntityPtr> res;
     if (concept != "") {
         for (auto i : entities) {
-            if (!i.second) cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
             for (auto c : i.second->getConcepts()) {
                 if(c && c->is_a(concept)) { res.push_back(i.second); break; }
             }

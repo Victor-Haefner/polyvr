@@ -27,7 +27,7 @@ void VRAsphalt::setArrowMaterial() {
 
 void VRAsphalt::clearTexture() {
     texGen = VRTextureGenerator::create();
-	texGen->setSize(Vec3i(256,1024,1), false);
+	texGen->setSize(Vec3i(1024,1024,1), false); // Number of roads, Number of markings per road
 	texGen->drawFill(Color4f(0,0,0,1));
     roadData.clear();
     updateTexture();
@@ -62,7 +62,6 @@ void VRAsphalt::updateTexture() {
 
     VRTimer t; t.start();
     auto paths = texGen->compose(0);
-    cout << " VRAsphalt::updateTexture " << t.stop() << endl;
     if (!noiseTex) noiseTex = noiseTexture();
     if (!mudTex) mudTex = mudTexture();
 
@@ -103,15 +102,17 @@ void VRAsphalt::addPath(pathPtr path, int rID, float width, int dashN, float off
 
 void VRAsphalt::addMarking(int rID, pathPtr marking, float width, int dashN, float offset) {
     if (roadData.count(rID) == 0) roadData[rID] = road();
-    roadData[rID].markingsN++;
-    texGen->drawPixel(Vec3i(rID,0,0), Color4f(roadData[rID].markingsN, roadData[rID].tracksN, 0, 1));
+    auto& rdata = roadData[rID];
+    rdata.markingsN++;
+    texGen->drawPixel(Vec3i(rID,0,0), Color4f(rdata.markingsN, rdata.tracksN, 0, 1));
     addPath(marking, rID, width, dashN, offset);
 }
 
 void VRAsphalt::addTrack(int rID, pathPtr track, float width, int dashN, float offset) {
     if (roadData.count(rID) == 0) roadData[rID] = road();
-    roadData[rID].tracksN++;
-    texGen->drawPixel(Vec3i(rID,0,0), Color4f(roadData[rID].markingsN, roadData[rID].tracksN, 0, 1));
+    auto& rdata = roadData[rID];
+    rdata.tracksN++;
+    texGen->drawPixel(Vec3i(rID,0,0), Color4f(rdata.markingsN, rdata.tracksN, 0, 1));
     addPath(track, rID, width, dashN, offset);
 }
 
