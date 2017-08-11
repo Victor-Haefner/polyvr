@@ -102,12 +102,7 @@ void VRWorldGenerator::addOSMMap(string path) {
     osmMap = OSMMap::loadMap(path);
 
     // road network data
-
-    int i=0; // TODO: temp until road gen optimized!
-
     for (auto wayItr : osmMap->getWays()) {
-        if (i > 5) return;
-
         auto& way = wayItr.second;
         auto p = way->polygon;
         vector<Vec3d> points;
@@ -122,7 +117,6 @@ void VRWorldGenerator::addOSMMap(string path) {
         cout << " tags: ";
         for (auto tag : way->tags) {
             if (tag.first == "highway") { // TODO: prototype
-                i++;
                 vector<Vec3d> norms;
                 for (int i=0; i<points.size(); i++) {
                     Vec3d n;
@@ -149,6 +143,7 @@ void VRWorldGenerator::addOSMMap(string path) {
         }
         cout << endl;
     }
+
 
     // -------------------- project OSM polygons on texture
     /*auto dim = tex->getSize();

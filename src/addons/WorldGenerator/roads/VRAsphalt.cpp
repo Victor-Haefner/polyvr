@@ -27,7 +27,7 @@ void VRAsphalt::setArrowMaterial() {
 
 void VRAsphalt::clearTexture() {
     texGen = VRTextureGenerator::create();
-	texGen->setSize(Vec3i(1024,1024,1), false); // Number of roads, Number of markings per road
+	texGen->setSize(Vec3i(2048,1024,1), false); // Number of roads, Number of markings per road
 	texGen->drawFill(Color4f(0,0,0,1));
     roadData.clear();
     updateTexture();
@@ -96,8 +96,8 @@ void VRAsphalt::addPath(pathPtr path, int rID, float width, int dashN, float off
 
     texGen->drawPixel(Vec3i(rID,iNpnts  ,0), Color4f(i-iNpnts-2,width,dashN,1));
     texGen->drawPixel(Vec3i(rID,iNpnts+1,0), Color4f(offset,0,0,1));
-    if (texGen->getSize()[0] < i) cout << "WARNING, texture width not enough!";
-    if (texGen->getSize()[1] < rID) cout << "WARNING, texture height not enough!";
+    if (texGen->getSize()[0] < rID) cout << "WARNING, texture width not enough! " << rID << "/" << texGen->getSize()[0] << endl;
+    if (texGen->getSize()[1] < i) cout << "WARNING, texture height not enough! " << i << "/" << texGen->getSize()[1] << endl;
 }
 
 void VRAsphalt::addMarking(int rID, pathPtr marking, float width, int dashN, float offset) {
