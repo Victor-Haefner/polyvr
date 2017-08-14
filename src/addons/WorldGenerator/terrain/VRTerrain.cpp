@@ -226,7 +226,7 @@ float VRTerrain::getHeight(const Vec2d& p) {
 
 void VRTerrain::elevateObject(VRTransformPtr t) { auto p = t->getFrom(); elevatePoint(p); t->setFrom(p); }
 void VRTerrain::elevatePose(posePtr p) { auto P = p->pos(); elevatePoint(P); p->setPos(P); }
-void VRTerrain::elevatePoint(Vec3d& p) { p[1] += getHeight(Vec2d(p[0], p[2])); }
+void VRTerrain::elevatePoint(Vec3d& p) { p[1] = getHeight(Vec2d(p[0], p[2])); }
 
 void VRTerrain::loadMap( string path, int channel ) {
     cout << "   ----------- VRTerrain::loadMap " << path << " " << channel << endl ;

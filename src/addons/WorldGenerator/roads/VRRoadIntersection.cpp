@@ -89,11 +89,11 @@ VRGeometryPtr VRRoadIntersection::createGeometry() {
     poly = poly.getConvexHull();
 
     Vec3d median = poly.getBoundingBox().center();
-    if (terrain) terrain->elevatePoint(median); // TODO: elevate each point of the polygon
     poly.translate(-median);
     Triangulator tri;
     tri.add( poly );
     VRGeometryPtr intersection = tri.compute();
+    if (terrain) terrain->elevatePoint(median); // TODO: elevate each point of the polygon
     intersection->setPose(median, Vec3d(0,1,0), Vec3d(0,0,1));
     intersection->applyTransformation();
 	setupTexCoords( intersection, entity );

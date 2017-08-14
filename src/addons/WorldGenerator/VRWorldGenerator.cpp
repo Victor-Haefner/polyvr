@@ -101,47 +101,50 @@ void VRWorldGenerator::init() {
 void VRWorldGenerator::addOSMMap(string path) {
     osmMap = OSMMap::loadMap(path);
 
-    // road network data
+    struct Node {
+        OSMNodePtr n;
+        VREntityPtr e;
+        Vec3d p;
+    };
+
+    map<string, Node> graphNodes;
+
+    auto addRoad = [&](OSMWayPtr& way, string tag) {
+        auto& nodes = way->nodes;
+        vector<Vec3d> norms;
+        if (nodes.size() < 2) return;
+
+        auto pos  = [&](int i) { return graphNodes[nodes[i]].p; };
+        auto node = [&](int i) { return graphNodes[nodes[i]].e; };
+
+        for (int i=0; i<nodes.size(); i++) {
+            Vec3d n;
+            if (i == 0) n = pos(1) - pos(0);
+            else if (i == nodes.size()-1) n = pos(nodes.size()-1) - pos(nodes.size()-2);
+            else n = pos(i+1) - pos(i-1);
+            n.normalize();
+            norms.push_back(n);
+            if (!graphNodes[nodes[i]].e) graphNodes[nodes[i]].e = roads->addNode(pos(i), true);
+        }
+
+        for (int i=1; i<nodes.size(); i++) {
+            roads->addRoad("someRoad", tag, node(i-1), node(i), norms[i-1], norms[i], 2);
+        }
+    };
+
     for (auto wayItr : osmMap->getWays()) {
         auto& way = wayItr.second;
-        auto p = way->polygon;
-        vector<Vec3d> points;
-
-        for (auto pnt : p.get()) {
-            //planet->addPin("R", pnt[1], pnt[0]);
-            Vec3d pos = Vec3d( planet->fromLatLongPosition(pnt[1], pnt[0], true) );
-            pos[1] += 1;
-            points.push_back(pos);
+        for (auto pID : way->nodes) {
+            if (graphNodes.count(pID)) continue;
+            Node n;
+            n.n = osmMap->getNode(pID);
+            n.p = Vec3d( planet->fromLatLongPosition(n.n->lat, n.n->lon, true) );
+            graphNodes[pID] = n;
         }
 
-        cout << " tags: ";
         for (auto tag : way->tags) {
-            if (tag.first == "highway") { // TODO: prototype
-                vector<Vec3d> norms;
-                for (int i=0; i<points.size(); i++) {
-                    Vec3d n;
-                    if (i == 0) n = points[1]-points[0];
-                    else if (i == points.size()-1) n = points[points.size()-1]-points[points.size()-2];
-                    else n = points[i+1] - points[i-1]; // (points[i] - points[i-1]) + (points[i+1] - points[i]);
-                    n.normalize();
-                    norms.push_back(n);
-                }
-
-                VREntityPtr node1, node2;
-                for (int i=1; i<points.size(); i++) {
-                    auto p1 = points[i-1];
-                    auto p2 = points[i];
-                    node1 = node2;
-                    if (i == 1) node1 = roads->addNode(p1, true);
-                    node2 = roads->addNode(p2, true);
-                    Vec3d norm1 = norms[i-1];
-                    Vec3d norm2 = norms[i];
-                    roads->addRoad("someRoad", "highway", node1, node2, norm1, norm2, 2);
-                }
-            }
-            cout << "   " << tag.first << ":" << tag.second;
+            if (tag.first == "highway") addRoad(way, tag.second);
         }
-        cout << endl;
     }
 
 
