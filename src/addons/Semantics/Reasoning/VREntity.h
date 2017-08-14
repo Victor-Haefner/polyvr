@@ -3,8 +3,9 @@
 
 #include <OpenSG/OSGVector.h>
 #include "VROntologyUtils.h"
-#include "VRConcept.h"
+#include "VRProperty.h"
 #include "core/utils/VRName.h"
+#include "core/utils/toString.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -40,6 +41,12 @@ struct VREntity : public VROntoID, public VRName {
     vector<VRPropertyPtr> getAll(const string& prop = "");
     vector<VRPropertyPtr> getVector(const string& prop, int i = 0);
     vector< vector<VRPropertyPtr> > getAllVector(const string& prop);
+
+    template<class T> T getValue(const string& prop, int i = 0) {
+        T t;
+        toValue(get(prop, i)->value, t);
+        return t;
+    }
 
     VREntityPtr getEntity(const string& prop, int i = 0);
     vector<VREntityPtr> getAllEntities(const string& prop = "");

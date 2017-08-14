@@ -1,6 +1,7 @@
 #include "VRWorldGenerator.h"
 #include "GIS/OSMMap.h"
 #include "terrain/VRPlanet.h"
+#include "roads/VRRoad.h"
 #include "roads/VRRoadNetwork.h"
 #include "nature/VRNature.h"
 #include "terrain/VRTerrain.h"
@@ -9,6 +10,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/scene/VRObjectManager.h"
+#include "core/utils/toString.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
 
 #define GLSL(shader) #shader
@@ -109,13 +111,14 @@ void VRWorldGenerator::addOSMMap(string path) {
 
     map<string, Node> graphNodes;
 
-    auto addRoad = [&](OSMWayPtr& way, string tag) {
+    auto addRoad = [&](OSMWayPtr& way, string tag, float Width, bool pedestrian) {
         auto& nodes = way->nodes;
         vector<Vec3d> norms;
         if (nodes.size() < 2) return;
 
         auto pos  = [&](int i) { return graphNodes[nodes[i]].p; };
         auto node = [&](int i) { return graphNodes[nodes[i]].e; };
+        auto has  = [&](const string& tag) { return way->tags.count(tag) > 0; };
 
         for (int i=0; i<nodes.size(); i++) {
             Vec3d n;
@@ -127,8 +130,16 @@ void VRWorldGenerator::addOSMMap(string path) {
             if (!graphNodes[nodes[i]].e) graphNodes[nodes[i]].e = roads->addNode(pos(i), true);
         }
 
+        int NlanesRight = has("lanes:forward") ? toInt( way->tags["lanes:forward"] ) : 0;
+        NlanesRight = has("lanes:forwards") ? toInt( way->tags["lanes:forwards"] ) : 0;
+        int NlanesLeft = has("lanes:backward") ? toInt( way->tags["lanes:backward"] ) : 0;
+        if (NlanesRight == 0 && NlanesLeft == 0) NlanesRight = has("lanes") ? toInt( way->tags["lanes"] ) : 1;
+        if ( has("lanes:forwards") ) cout << endl << has("lanes") << " hasForw " << has("lanes:forwards") << " hasBack " << has("lanes:backward") << " Nright " << NlanesRight << " Nleft " << NlanesLeft << endl;
+
         for (int i=1; i<nodes.size(); i++) {
-            roads->addRoad("someRoad", tag, node(i-1), node(i), norms[i-1], norms[i], 2);
+            auto road = roads->addRoad("someRoad", tag, node(i-1), node(i), norms[i-1], norms[i], 0);
+            for (int l=0; l < NlanesRight; l++) road->addLane(1, Width, pedestrian);
+            for (int l=0; l < NlanesLeft; l++) road->addLane(-1, Width, pedestrian);
         }
     };
 
@@ -142,9 +153,15 @@ void VRWorldGenerator::addOSMMap(string path) {
             graphNodes[pID] = n;
         }
 
+        cout << "tags: ";
         for (auto tag : way->tags) {
-            if (tag.first == "highway") addRoad(way, tag.second);
+            if (tag.first == "highway") {
+                if (tag.second == "footway") { addRoad(way, tag.second, 1, true); continue; }
+                addRoad(way, tag.second, 4, false); // default road
+            }
+            cout << " " << tag.first << " : " << tag.second;
         }
+        cout << endl;
     }
 
 

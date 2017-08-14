@@ -56,14 +56,16 @@ void VRRoadIntersection::computeLanes() {
             int reSignOut = roadEntrySigns[roadOut.first];
             for (int i=0; i<Nin; i++) {
                 auto laneIn = roadIn.second[i];
-                float width = toFloat( laneIn->get("width")->value );
+                float width = laneIn->getValue<float>("width");
+                bool pedestrianIn = laneIn->getValue<bool>("pedestrian");
                 auto nodes1 = laneIn->getEntity("path")->getAllEntities("nodes");
                 VREntityPtr node1 = *nodes1.rbegin();
                 for (int j=0; j<Nout; j++) {
                     if (!checkMatchingLanes(i,j,Nin, Nout, reSignIn, reSignOut)) continue;
                     auto laneOut = roadOut.second[j];
+                    bool pedestrianOut = laneOut->getValue<bool>("pedestrian");
                     auto node2 = laneOut->getEntity("path")->getAllEntities("nodes")[0];
-                    auto lane = addLane(1, width);
+                    auto lane = addLane(1, width, pedestrianIn || pedestrianOut);
                     auto nodes = { node1->getEntity("node"), node2->getEntity("node") };
                     auto norms = { node1->getVec3f("direction"), node2->getVec3f("direction") };
                     auto lPath = addPath("Path", "lane", nodes, norms);
@@ -93,7 +95,7 @@ VRGeometryPtr VRRoadIntersection::createGeometry() {
     Triangulator tri;
     tri.add( poly );
     VRGeometryPtr intersection = tri.compute();
-    if (terrain) terrain->elevatePoint(median); // TODO: elevate each point of the polygon
+    if (terrain) terrain->elevatePoint(median, roadTerrainOffset); // TODO: elevate each point of the polygon
     intersection->setPose(median, Vec3d(0,1,0), Vec3d(0,0,1));
     intersection->applyTransformation();
 	setupTexCoords( intersection, entity );
@@ -138,7 +140,8 @@ VREntityPtr VRRoadIntersection::addTrafficLight( posePtr p, string asset, Vec3d 
     return 0;
 }
 
-void VRRoadIntersection::computeTrafficLights() {
+void VRRoadIntersection::computeTrafficLights() { // deprecated
+    /*
     if (roads.size() == 2) return;
     if (inLanes.size() == 1) return;
 
@@ -161,21 +164,11 @@ void VRRoadIntersection::computeTrafficLights() {
             }
         }
     }
+    */
 }
 
 void VRRoadIntersection::computeMarkings() {
     string name = entity->getName();
-
-    map<VREntityPtr, float> laneEntries;
-    for (auto road : inLanes) {
-        for (auto lane : road.second) {
-            for (auto pathEnt : lane->getAllEntities("path")) {
-                auto entries = pathEnt->getAllEntities("nodes");
-                auto entry = entries[entries.size()-1];
-                laneEntries[entry] = toFloat( lane->get("width")->value );
-            }
-        }
-    }
 
     auto addStopLine = [&]( Vec3d p1, Vec3d p2, Vec3d n1, Vec3d n2, float w, int dashNumber) {
 		auto node1 = addNode( p1 );
@@ -189,14 +182,25 @@ void VRRoadIntersection::computeMarkings() {
 		return m;
     };
 
-    for (auto e : laneEntries) { // entry/width
-        Vec3d p = e.first->getEntity("node")->getVec3f("position");
-        Vec3d n = e.first->getVec3f("direction");
-        Vec3d x = n.cross(Vec3d(0,1,0));
-        x.normalize();
-        float W = e.second*0.35;
-        float D = 0.4;
-        addStopLine( p-x*W+n*D*0.5, p+x*W+n*D*0.5, x, x, D, 0);
+    if (inLanes.size() >= 2) { // stop lines
+        for (auto road : inLanes) {
+            for (auto lane : road.second) {
+                for (auto pathEnt : lane->getAllEntities("path")) {
+                    auto entries = pathEnt->getAllEntities("nodes");
+                    auto entry = entries[entries.size()-1];
+                    if (lane->getValue<bool>("pedestrian")) continue;
+                    float W = lane->getValue<float>("width");
+
+                    Vec3d p = entry->getEntity("node")->getVec3f("position");
+                    Vec3d n = entry->getVec3f("direction");
+                    Vec3d x = n.cross(Vec3d(0,1,0));
+                    x.normalize();
+                    float D = 0.4;
+                    float w = 0.35;
+                    addStopLine( p-x*W*w+n*D*0.5, p+x*W*w+n*D*0.5, x, x, D, 0);
+                }
+            }
+        }
     }
 }
 

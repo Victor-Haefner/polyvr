@@ -387,6 +387,7 @@ void VRRoadNetwork::computeTracksLanes(VREntityPtr way) {
 
     for (auto lane : way->getAllEntities("lanes")) {
         if (!lane->is_a("Lane")) continue;
+        if (lane->getValue<bool>("pedestrian")) continue;
         for (auto pathEnt : lane->getAllEntities("path")) {
             auto path = toPath(pathEnt, 2);
             vector<VREntityPtr> nodes;
@@ -462,15 +463,10 @@ void VRRoadNetwork::computeSurfaces() {
 void VRRoadNetwork::computeMarkings() {
     cout << "VRRoadNetwork::computeMarkings\n";
     for (auto way : world->getOntology()->getEntities("Way")) computeTracksLanes(way);
-    for (auto road : roads) {
-        string type = "residential";
-        if (auto t = road->getEntity()->get("type")) type = t->value;
-        if (type != "unclassified") road->computeMarkings2();
-    }
     for (auto road : ways) {
         string type = "residential";
         if (auto t = road->getEntity()->get("type")) type = t->value;
-        if (type != "unclassified") road->computeMarkings2();
+        if (type != "unclassified" && type != "footway") road->computeMarkings();
     }
     for (auto intersection : intersections) intersection->computeMarkings();
 }
@@ -516,26 +512,6 @@ void VRRoadNetwork::compute() {
     //computeGreenBelts();
 }
 
-class myTest : public VREntity {
-    public:
-
-        myTest() : VREntity("bla", 0, 0) {}
-        ~myTest() {}
-
-        static shared_ptr<myTest> create() { return shared_ptr<myTest>( new myTest() ); };
-};
-
-void VRRoadNetwork::test1() {
-    //for (int i=0; i<1e4; i++) ontology->addEntity("node", "Node");
-    static map<int, VREntityPtr> m;
-    static vector<VREntityPtr> v;
-    auto c = ontology->getConcept("Node");
-    for (int i=0; i<1e4; i++) {
-        auto e = VREntity::create("node", ontology, c);
-        //m[i] = e;
-        v.push_back(e);
-    }
-}
 
 
 

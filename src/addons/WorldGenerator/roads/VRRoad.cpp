@@ -52,7 +52,7 @@ VRRoad::edgePoint& VRRoad::getEdgePoints( VREntityPtr node ) {
 VRGeometryPtr VRRoad::createGeometry() {
 	auto strokeGeometry = [&]() {
 	    float width = getWidth();
-		float W = width*0.5*1.1;
+		float W = width*0.5;
 		vector<Vec3d> profile;
 		profile.push_back(Vec3d(-W,0,0));
 		profile.push_back(Vec3d(W,0,0));
@@ -73,7 +73,7 @@ VRGeometryPtr VRRoad::createGeometry() {
 }
 
 
-void VRRoad::computeMarkings2() {
+void VRRoad::computeMarkings() {
     float mw = 0.15;
 
     // road data

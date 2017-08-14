@@ -33,7 +33,7 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
 };
 
 PyMethodDef VRPyRoadBase::methods[] = {
-    {"addLane", PyWrap( RoadBase, addLane, "Add a lane", VREntityPtr, int, float ) },
+    {"addLane", PyWrapOpt( RoadBase, addLane, "Add a lane", "0", VREntityPtr, int, float, bool ) },
     {"addNode", PyWrapOpt( RoadBase, addNode, "Add a node", "1", VREntityPtr, Vec3d, bool ) },
     {"addPath", PyWrap( RoadBase, addPath, "Add a new path", VREntityPtr, string, string, vector<VREntityPtr>, vector<Vec3d> ) },
     {NULL}  /* Sentinel */
@@ -68,7 +68,6 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"updateAsphaltTexture", PyWrap( RoadNetwork, updateAsphaltTexture, "Update markings and tracks on asphalt texture", void ) },
     {"computeGreenBelts", PyWrap( RoadNetwork, computeGreenBelts, "Compute green belt areas", vector<VRPolygonPtr> ) },
     {"clear", PyWrap( RoadNetwork, clear, "Clear all data", void ) },
-    {"test1", PyWrap( RoadNetwork, test1, "Test", void ) },
     {NULL}  /* Sentinel */
 };
 

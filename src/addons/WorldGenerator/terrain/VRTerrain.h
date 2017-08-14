@@ -48,10 +48,10 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
 
         void projectOSM();
 
-        float getHeight(const Vec2d& p);
-        void elevatePoint(Vec3d& p);
-        void elevatePose(posePtr p);
-        void elevateObject(VRTransformPtr p);
+        float getHeight( const Vec2d& p );
+        void elevatePoint( Vec3d& p, float offset = 0 );
+        void elevatePose( posePtr p, float offset = 0 );
+        void elevateObject( VRTransformPtr p, float offset = 0 );
 
         void paintHeights(string path);
 };

@@ -61,6 +61,7 @@ void GISWorld::setupOntology() {
     Lane->addProperty("direction", "int");
     Lane->addProperty("path", "Path");
     Lane->addProperty("arrows", "Arrow");
+    Lane->addProperty("pedestrian", "bool");
     GreenBelt->addProperty("width", "float");
     GreenBelt->addProperty("path", "Path");
     Road->addProperty("sidewalks", Sidewalk);

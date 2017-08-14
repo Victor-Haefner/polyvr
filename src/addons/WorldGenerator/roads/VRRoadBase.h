@@ -13,6 +13,9 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRRoadBase : public VRObject, public VRWorldModule {
+    protected:
+        float roadTerrainOffset = 0.2;
+
     public:
         VRRoadBase(string name);
         ~VRRoadBase();
@@ -23,7 +26,7 @@ class VRRoadBase : public VRObject, public VRWorldModule {
 
         VREntityPtr addNode( Vec3d pos, bool elevate = false );
         VREntityPtr addPath( string type, string name, vector<VREntityPtr> nodes, vector<Vec3d> normals );
-        VREntityPtr addLane( int direction, float width );
+        VREntityPtr addLane( int direction, float width, bool pedestrian = false );
 
         VRGeometryPtr addPole( Vec3d root, Vec3d end, float radius );
 };

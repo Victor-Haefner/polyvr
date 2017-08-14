@@ -35,7 +35,7 @@ class VRRoad : public VRRoadBase {
         VRGeometryPtr createGeometry();
         VREntityPtr getNodeEntry( VREntityPtr node );
         edgePoint& getEdgePoints( VREntityPtr node );
-        void computeMarkings2();
+        void computeMarkings();
 };
 
 OSG_END_NAMESPACE;
