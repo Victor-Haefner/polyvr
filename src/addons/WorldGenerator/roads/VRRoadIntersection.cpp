@@ -70,6 +70,8 @@ void VRRoadIntersection::computeLanes() {
                     auto norms = { node1->getVec3f("direction"), node2->getVec3f("direction") };
                     auto lPath = addPath("Path", "lane", nodes, norms);
                     lane->add("path", lPath->getName());
+                    nextLanes[laneIn].push_back(lane);
+                    nextLanes[lane].push_back(laneOut);
                 }
             }
         }
@@ -186,27 +188,46 @@ void VRRoadIntersection::computeMarkings() {
     bool isPedestrian = false;
     for (auto road : inLanes) for (auto lane : road.second) { if (lane->getValue<bool>("pedestrian")) isPedestrian = true; break; }
 
+    int inCarLanes = 0;
+    for (auto road : inLanes) {
+        bool pedestrian = false;
+        for (auto lane : road.second)
+            for (auto l : nextLanes[lane]) if (l->getValue<bool>("pedestrian")) pedestrian = true;
+        inCarLanes += pedestrian?0:1;
+    }
+
     for (auto road : inLanes) {
         for (auto lane : road.second) {
             for (auto pathEnt : lane->getAllEntities("path")) {
-                auto entries = pathEnt->getAllEntities("nodes");
-                auto entry = entries[entries.size()-1];
+                auto entry = pathEnt->getEntity("nodes",-1);
+                auto node = entry->getEntity("node");
                 if (lane->getValue<bool>("pedestrian")) continue;
-                float W = lane->getValue<float>("width");
 
-                Vec3d p = entry->getEntity("node")->getVec3f("position");
+                float W = lane->getValue<float>("width");
+                Vec3d p = node->getVec3f("position");
                 Vec3d n = entry->getVec3f("direction");
                 Vec3d x = n.cross(Vec3d(0,1,0));
+                n.normalize();
                 x.normalize();
 
-                if (inLanes.size() >= 2) { // stop lines
+                if (inCarLanes >= 2) { // stop lines
                     float D = 0.4;
                     float w = 0.35;
                     addLine( "StopLine", p-x*W*w+n*D*0.5, p+x*W*w+n*D*0.5, x, x, D, 0);
                 }
 
                 // arrows
-                addArrows( lane, -5, {0.0f} );
+                vector<float> directions;
+                for (auto e : node->getAllEntities("paths")){
+                    if (e == entry) continue;
+                    auto n2 = e->getEntity("path")->getEntity("nodes",-1)->getVec3f("direction");
+                    n2.normalize();
+                    Vec3d w = n.cross(n2);
+                    float a = asin( w.length() );
+                    if (w[1] < 0) a = -a;
+                    directions.push_back(a);
+                }
+                addArrows( lane, -5, directions );
             }
         }
     }

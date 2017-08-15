@@ -150,6 +150,7 @@ vector<VRPropertyPtr> VREntity::getAll(const string& name) {
 
 VRPropertyPtr VREntity::get(const string& prop, int i) {
     auto props = getAll(prop);
+    if (i < 0) i += props.size();
     if (i >= int(props.size())) return 0;
     return props[i];
 }

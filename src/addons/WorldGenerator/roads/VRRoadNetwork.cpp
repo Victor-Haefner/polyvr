@@ -242,8 +242,28 @@ vector<VRRoadPtr> VRRoadNetwork::getNodeRoads(VREntityPtr node) {
     return res;
 }
 
+void VRRoadNetwork::computeArrows() {
+    for (auto arrow : world->getOntology()->getEntities("Arrow")) {
+        float t = toFloat( arrow->get("position")->value );
+        auto lane = arrow->getEntity("lane");
+        if (!lane || !lane->getEntity("path")) continue;
+        auto lpath = toPath( lane->getEntity("path"), 16 );
+        t /= lpath->getLength();
+        auto dirs = arrow->getAllValues<float>("direction");
+        Vec4i drs(999,999,999,999);
+        for (uint i=0; i<4 && i < dirs.size(); i++) drs[i] = int(dirs[i]*5/pi)*180/5;
+        if (t < 0) t = 1+t; // from the end
+        createArrow(drs, min(int(dirs.size()),4), lpath->getPose(t));
+    }
+}
+
 void VRRoadNetwork::createArrow(Vec4i dirs, int N, const pose& p) {
-    if (arrowTemplates.count(dirs) == 0) {
+    if (N == 0) return;
+
+    //if (arrowTemplates.size() > 20) { cout << "VRRoadNetwork::createArrow, Warning! arrowTexture too big!\n"; return; }
+
+    if (!arrowTemplates.count(dirs)) {
+        //cout << "VRRoadNetwork::createArrow " << dirs << "  " << N << endl;
         arrowTemplates[dirs] = arrowTemplates.size();
 
         VRTextureGenerator tg;
@@ -296,7 +316,6 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const pose& p) {
     addChild(geo);
     arrows->merge(geo);
     geo->destroy();
-    cout << "ARROW " << arrows->size() << endl;
 }
 
 
@@ -404,8 +423,6 @@ void VRRoadNetwork::computeTracksLanes(VREntityPtr way) {
     }
 }
 
-// --------------- pipeline -----------------------
-
 void VRRoadNetwork::computeLanes() {
     cout << "VRRoadNetwork::computeLanes\n";
     for (auto road : world->getOntology()->getEntities("Road")) computeLanePaths(road);
@@ -437,22 +454,6 @@ void VRRoadNetwork::computeSurfaces() {
         iGeo->setMaterial( asphalt );
         iGeo->hide();
         addChild( iGeo );
-    }
-}
-
-void VRRoadNetwork::computeArrows() {
-    for (auto arrow : world->getOntology()->getEntities("Arrow")) {
-        float t = toFloat( arrow->get("position")->value );
-        auto lane = arrow->getEntity("lane");
-        if (!lane || !lane->getEntity("path")) continue;
-        auto lpath = toPath( lane->getEntity("path"), 16 );
-        cout << "VRRoadNetwork::computeArrows " << lpath->getLength() << "  " << t << "  " << t/lpath->getLength() << endl;
-        t /= lpath->getLength();
-        auto dirs = arrow->getAll("direction");
-        Vec4i drs(999,999,999,999);
-        for (uint i=0; i<4 && i < dirs.size(); i++) drs[i] = toFloat(dirs[i]->value)*180/pi;
-        if (t < 0) t = 1+t; // from the end
-        createArrow(drs, dirs.size(), lpath->getPose(t));
     }
 }
 

@@ -48,6 +48,16 @@ struct VREntity : public VROntoID, public VRName {
         return t;
     }
 
+    template<class T> vector<T> getAllValues(const string& prop) {
+        vector<T> v;
+        for (auto p : getAll(prop)) {
+            T t;
+            toValue(p->value, t);
+            v.push_back(t);
+        }
+        return v;
+    }
+
     VREntityPtr getEntity(const string& prop, int i = 0);
     vector<VREntityPtr> getAllEntities(const string& prop = "");
     Vec3d getVec3f(const string& prop, int i = 0);
