@@ -125,15 +125,6 @@ VRRoadPtr VRRoadNetwork::addRoad( string name, string type, VREntityPtr node1, V
     return road;
 }
 
-VREntityPtr VRRoadNetwork::addArrows( VREntityPtr lane, float t, vector<float> dirs ) {
-    auto arrow = world->getOntology()->addEntity("laneArrow", "Arrow");
-    lane->add("arrows", arrow->getName());
-    arrow->set("position", toString(t));
-    arrow->set("lane", lane->getName());
-    for (auto d : dirs) arrow->add("direction", toString(d));
-    return arrow;
-}
-
 void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
     if (road->getAllEntities("path").size() > 1) cout << "Warning in VRRoadNetwork::computeLanePaths, road " << road->getName() << " has more than one path!\n";
 
@@ -305,7 +296,7 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const pose& p) {
     addChild(geo);
     arrows->merge(geo);
     geo->destroy();
-    return;
+    cout << "ARROW " << arrows->size() << endl;
 }
 
 
@@ -447,15 +438,20 @@ void VRRoadNetwork::computeSurfaces() {
         iGeo->hide();
         addChild( iGeo );
     }
+}
 
+void VRRoadNetwork::computeArrows() {
     for (auto arrow : world->getOntology()->getEntities("Arrow")) {
         float t = toFloat( arrow->get("position")->value );
         auto lane = arrow->getEntity("lane");
         if (!lane || !lane->getEntity("path")) continue;
-        auto lpath = toPath( lane->getEntity("path"), 32 );
+        auto lpath = toPath( lane->getEntity("path"), 16 );
+        cout << "VRRoadNetwork::computeArrows " << lpath->getLength() << "  " << t << "  " << t/lpath->getLength() << endl;
+        t /= lpath->getLength();
         auto dirs = arrow->getAll("direction");
         Vec4i drs(999,999,999,999);
         for (uint i=0; i<4 && i < dirs.size(); i++) drs[i] = toFloat(dirs[i]->value)*180/pi;
+        if (t < 0) t = 1+t; // from the end
         createArrow(drs, dirs.size(), lpath->getPose(t));
     }
 }
@@ -509,6 +505,7 @@ void VRRoadNetwork::compute() {
     computeLanes();
     computeSurfaces();
     computeMarkings();
+    computeArrows();
     //computeGreenBelts();
 }
 

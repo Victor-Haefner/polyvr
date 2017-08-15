@@ -115,6 +115,15 @@ VREntityPtr VRRoadBase::addPath( string type, string name, vector<VREntityPtr> n
 	return path;
 }
 
+VREntityPtr VRRoadBase::addArrows( VREntityPtr lane, float t, vector<float> dirs ) {
+    auto arrow = world->getOntology()->addEntity("laneArrow", "Arrow");
+    lane->add("arrows", arrow->getName());
+    arrow->set("position", toString(t));
+    arrow->set("lane", lane->getName());
+    for (auto d : dirs) arrow->add("direction", toString(d));
+    return arrow;
+}
+
 VRGeometryPtr VRRoadBase::addPole( Vec3d P1, Vec3d P4, float radius ) {
     auto p = path::create();
     Color3f gray(0.4,0.4,0.4);

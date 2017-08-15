@@ -36,6 +36,7 @@ PyMethodDef VRPyRoadBase::methods[] = {
     {"addLane", PyWrapOpt( RoadBase, addLane, "Add a lane", "0", VREntityPtr, int, float, bool ) },
     {"addNode", PyWrapOpt( RoadBase, addNode, "Add a node", "1", VREntityPtr, Vec3d, bool ) },
     {"addPath", PyWrap( RoadBase, addPath, "Add a new path", VREntityPtr, string, string, vector<VREntityPtr>, vector<Vec3d> ) },
+    {"addArrows", PyWrap( RoadBase, addArrows, "Add a new path", VREntityPtr, VREntityPtr, float, vector<float> ) },
     {NULL}  /* Sentinel */
 };
 
@@ -55,7 +56,6 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"addGreenBelt", PyWrap( RoadNetwork, addGreenBelt, "Add a green lane", VREntityPtr, VREntityPtr, float ) },
     {"addWay", PyWrap( RoadNetwork, addWay, "Add a way", VRRoadPtr, string, vector<VREntityPtr>, int, string ) },
     {"addRoad", PyWrap( RoadNetwork, addRoad, "Add a road", VRRoadPtr, string, string, VREntityPtr, VREntityPtr, Vec3d, Vec3d, int ) },
-    {"addArrows", PyWrap( RoadNetwork, addArrows, "Add a new path", VREntityPtr, VREntityPtr, float, vector<float> ) },
     {"addKirb", PyWrap( RoadNetwork, addKirb, "Add a kirb, polygon, texture", void, VRPolygonPtr, string ) },
     {"computeLanePaths", PyWrap( RoadNetwork, computeLanePaths, "Compute the path of each lane of a road", void, VREntityPtr ) },
     {"computeIntersections", PyWrap( RoadNetwork, computeIntersections, "Compute the intersections", void ) },

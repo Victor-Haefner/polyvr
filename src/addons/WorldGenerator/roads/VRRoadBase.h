@@ -28,6 +28,7 @@ class VRRoadBase : public VRObject, public VRWorldModule {
         VREntityPtr addNode( Vec3d pos, bool elevate = false );
         VREntityPtr addPath( string type, string name, vector<VREntityPtr> nodes, vector<Vec3d> normals );
         VREntityPtr addLane( int direction, float width, bool pedestrian = false );
+        VREntityPtr addArrows( VREntityPtr lane, float t, vector<float> dirs );
 
         VRGeometryPtr addPole( Vec3d root, Vec3d end, float radius );
 };

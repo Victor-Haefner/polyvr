@@ -183,30 +183,36 @@ void VRRoadIntersection::computeMarkings() {
 		return m;
     };
 
-    if (inLanes.size() >= 2) { // stop lines
-        for (auto road : inLanes) {
-            for (auto lane : road.second) {
-                for (auto pathEnt : lane->getAllEntities("path")) {
-                    auto entries = pathEnt->getAllEntities("nodes");
-                    auto entry = entries[entries.size()-1];
-                    if (lane->getValue<bool>("pedestrian")) continue;
-                    float W = lane->getValue<float>("width");
+    bool isPedestrian = false;
+    for (auto road : inLanes) for (auto lane : road.second) { if (lane->getValue<bool>("pedestrian")) isPedestrian = true; break; }
 
-                    Vec3d p = entry->getEntity("node")->getVec3f("position");
-                    Vec3d n = entry->getVec3f("direction");
-                    Vec3d x = n.cross(Vec3d(0,1,0));
-                    x.normalize();
+    for (auto road : inLanes) {
+        for (auto lane : road.second) {
+            for (auto pathEnt : lane->getAllEntities("path")) {
+                auto entries = pathEnt->getAllEntities("nodes");
+                auto entry = entries[entries.size()-1];
+                if (lane->getValue<bool>("pedestrian")) continue;
+                float W = lane->getValue<float>("width");
+
+                Vec3d p = entry->getEntity("node")->getVec3f("position");
+                Vec3d n = entry->getVec3f("direction");
+                Vec3d x = n.cross(Vec3d(0,1,0));
+                x.normalize();
+
+                if (inLanes.size() >= 2) { // stop lines
                     float D = 0.4;
                     float w = 0.35;
                     addLine( "StopLine", p-x*W*w+n*D*0.5, p+x*W*w+n*D*0.5, x, x, D, 0);
                 }
+
+                // arrows
+                addArrows( lane, -5, {0.0f} );
             }
         }
     }
 
-    bool isPedestrian = false;
-    for (auto road : inLanes) for (auto lane : road.second) { if (lane->getValue<bool>("pedestrian")) isPedestrian = true; break; }
-    if (!isPedestrian) { // border markings
+    if (!isPedestrian) {
+         // border markings
         vector<Vec3d> points;
         for (int i=0; i<perimeter->size(); i++) {
             auto p = perimeter->getPoint(i);
