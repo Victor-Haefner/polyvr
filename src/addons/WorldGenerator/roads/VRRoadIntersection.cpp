@@ -204,20 +204,34 @@ void VRRoadIntersection::computeMarkings() {
         }
     }
 
-    // border markings
-    vector<Vec3d> points;
-    for (int i=0; i<perimeter->size(); i++) {
-        auto p = perimeter->getPoint(i);
-        points.push_back( Vec3d(p[0], 0, p[1]) + median );
-    }
+    bool isPedestrian = false;
+    for (auto road : inLanes) for (auto lane : road.second) { if (lane->getValue<bool>("pedestrian")) isPedestrian = true; break; }
+    if (!isPedestrian) { // border markings
+        vector<Vec3d> points;
+        for (int i=0; i<perimeter->size(); i++) {
+            auto p = perimeter->getPoint(i);
+            points.push_back( Vec3d(p[0], 0, p[1]) + median );
+        }
 
-    for (int i=0; i<points.size(); i++) {
-        auto p1 = points[i];
-        auto p2 = points[(i+1)%points.size()];
-        Vec3d n = p2-p1; n.normalize();
-        p1 -= n*markingsWidth*0.5;
-        p2 += n*markingsWidth*0.5;
-        addLine( "RoadMarking", p1, p2, n, n, markingsWidth, 0);
+        auto isRoadEdge = [&](const Vec3d& p1, const Vec3d& p2) {
+            auto pm = (p1+p2)*0.5;
+            for (auto rf : roadFronts) {
+                float L = (pm-rf.first.pos()).squareLength();
+                if (L < rf.second*rf.second*0.1) return true; // ignore road edges
+                //cout << pm << "  " << rf.first.pos() << "  " << sqrt(L) << "  " << rf.second << endl;
+            }
+            return false;
+        };
+
+        for (int i=0; i<points.size(); i++) {
+            auto p1 = points[i];
+            auto p2 = points[(i+1)%points.size()];
+            if (isRoadEdge(p1, p2)) continue;
+            Vec3d n = p2-p1; n.normalize();
+            p1 -= n*markingsWidth*0.5;
+            p2 += n*markingsWidth*0.5;
+            addLine( "RoadMarking", p1, p2, n, n, markingsWidth, 0);
+        }
     }
 }
 
@@ -271,6 +285,7 @@ void VRRoadIntersection::computeLayout() {
         auto n = addNode(pm);
         data.entry->set("node", n->getName());
         n->add("paths", data.entry->getName());
+        roadFronts.push_back( make_pair(pose(pm, norm), road->getWidth()) );
     }
 
     vector<VREntityPtr> iPaths;
