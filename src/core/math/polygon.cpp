@@ -115,15 +115,28 @@ VRPolygonPtr VRPolygon::shrink(float amount) {
     *area = *this;
     if (amount == 0) return area;
 
-    for (uint i=0; i<area->points.size(); i++) {
-        Vec2d& p1 = area->points[i];
-        Vec2d& p2 = area->points[(i+1)%area->points.size()];
-        Vec2d d = p2-p1;
-        Vec2d n = Vec2d(-d[1], d[0]);
-        n.normalize();
-        p1 += n*amount;
-        p2 += n*amount;
+    auto intersect = [](const Vec2d& p1, const Vec2d& n1, const Vec2d& p2, const Vec2d& n2) {
+        auto cross = [](const Vec2d& p1, const Vec2d& p2) { return p1[0]*p2[1]-p1[1]*p2[0]; };
+        float k = cross(n1,n2);
+        if (k == 0) k = 1.0;
+        float s = cross(p2-p1,n2)/k;
+        return p1 + n1*s;
+    };
+
+    int N = area->points.size();
+    vector<Vec2d> newPositions;
+    for (int i=0; i<N; i++) {
+        Vec2d& p1 = area->points[(i+N-1)%N];
+        Vec2d& p2 = area->points[i];
+        Vec2d& p3 = area->points[(i+1)%N];
+        Vec2d d1 = p2-p1; d1.normalize();
+        Vec2d d2 = p3-p2; d2.normalize();
+        Vec2d n1 = Vec2d(-d1[1], d1[0]);
+        Vec2d n2 = Vec2d(-d2[1], d2[0]);
+        newPositions.push_back( intersect(p2+n1*amount, d1, p2+n2*amount, d2) );
     }
+
+    for (uint i=0; i<N; i++) area->points[i] = newPositions[i];
 
     return area;
 }

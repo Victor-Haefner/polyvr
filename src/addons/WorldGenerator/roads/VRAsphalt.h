@@ -34,6 +34,7 @@ class VRAsphalt : public VRMaterial {
         ~VRAsphalt();
         static VRAsphaltPtr create();
 
+        void setMarkingsColor(Color4f);
         void setArrowMaterial();
 
         void clearTexture();

@@ -77,7 +77,7 @@ void VRRoadIntersection::computeLanes() {
 }
 
 VRGeometryPtr VRRoadIntersection::createGeometry() {
-    VRPolygon poly; // intersection VRPolygon
+    VRPolygon poly;
     VREntityPtr node = entity->getEntity("node");
     if (!node) return 0;
     for (auto road : roads) {
@@ -90,7 +90,7 @@ VRGeometryPtr VRRoadIntersection::createGeometry() {
     for (auto p : intersectionPoints) poly.addPoint(Vec2d(p[0], p[2]));
     poly = poly.getConvexHull();
 
-    Vec3d median = poly.getBoundingBox().center();
+    median = poly.getBoundingBox().center();
     poly.translate(-median);
     Triangulator tri;
     tri.add( poly );
@@ -99,6 +99,7 @@ VRGeometryPtr VRRoadIntersection::createGeometry() {
     intersection->setPose(median, Vec3d(0,1,0), Vec3d(0,0,1));
     intersection->applyTransformation();
 	setupTexCoords( intersection, entity );
+	perimeter = poly.shrink(markingsWidth*0.5);
 	return intersection;
 }
 
@@ -170,10 +171,10 @@ void VRRoadIntersection::computeTrafficLights() { // deprecated
 void VRRoadIntersection::computeMarkings() {
     string name = entity->getName();
 
-    auto addStopLine = [&]( Vec3d p1, Vec3d p2, Vec3d n1, Vec3d n2, float w, int dashNumber) {
+    auto addLine = [&]( const string& type, Vec3d p1, Vec3d p2, Vec3d n1, Vec3d n2, float w, int dashNumber) {
 		auto node1 = addNode( p1 );
 		auto node2 = addNode( p2 );
-		auto m = addPath("StopLine", name, {node1, node2}, {n1,n2});
+		auto m = addPath(type, name, {node1, node2}, {n1,n2});
 		m->set("width", toString(w)); //  width in meter
 		if (dashNumber == 0) m->set("style", "solid"); // simple line
 		m->set("style", "dashed"); // dotted line
@@ -197,10 +198,26 @@ void VRRoadIntersection::computeMarkings() {
                     x.normalize();
                     float D = 0.4;
                     float w = 0.35;
-                    addStopLine( p-x*W*w+n*D*0.5, p+x*W*w+n*D*0.5, x, x, D, 0);
+                    addLine( "StopLine", p-x*W*w+n*D*0.5, p+x*W*w+n*D*0.5, x, x, D, 0);
                 }
             }
         }
+    }
+
+    // border markings
+    vector<Vec3d> points;
+    for (int i=0; i<perimeter->size(); i++) {
+        auto p = perimeter->getPoint(i);
+        points.push_back( Vec3d(p[0], 0, p[1]) + median );
+    }
+
+    for (int i=0; i<points.size(); i++) {
+        auto p1 = points[i];
+        auto p2 = points[(i+1)%points.size()];
+        Vec3d n = p2-p1; n.normalize();
+        p1 -= n*markingsWidth*0.5;
+        p2 += n*markingsWidth*0.5;
+        addLine( "RoadMarking", p1, p2, n, n, markingsWidth, 0);
     }
 }
 
@@ -223,7 +240,7 @@ void VRRoadIntersection::computeLayout() {
         Vec3d n3 = n1.cross(n2);
         float N3 = n3.dot(n3);
         if (N3 == 0) N3 = 1.0;
-        float s = d.cross(n2).dot(n1.cross(n2))/N3;
+        float s = d.cross(n2).dot(n3)/N3;
         return Vec3d(p1) + n1*s;
     };
 

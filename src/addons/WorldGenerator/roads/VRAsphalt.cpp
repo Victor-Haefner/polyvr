@@ -14,6 +14,7 @@ VRAsphalt::VRAsphalt() : VRMaterial("asphalt") {
     clearTransparency();
     setShininess(128);
     clearTexture();
+    setMarkingsColor(Color4f(0.7,0.7,0.7,1.0));
 }
 
 VRAsphalt::~VRAsphalt() {}
@@ -23,6 +24,10 @@ VRAsphaltPtr VRAsphalt::create() { return VRAsphaltPtr( new VRAsphalt() ); }
 void VRAsphalt::setArrowMaterial() {
     setFragmentShader(asphaltArrow_fp, "asphaltArrowFP");
     //setFragmentShader(asphaltArrow_dfp, "asphaltArrowDFP", true);
+}
+
+void VRAsphalt::setMarkingsColor(Color4f c) {
+    setShaderParameter("cLine", c);
 }
 
 void VRAsphalt::clearTexture() {
@@ -151,6 +156,7 @@ GLSL(
 uniform sampler2D texMarkings;
 uniform sampler2D texMud;
 uniform sampler2D texNoise;
+uniform vec4 cLine;
 
 const float Inv3 = 1.0/3.0;
 const float Inv27 = 1.0/27.0;
@@ -212,7 +218,6 @@ vec3 toWorld(const vec3 p) {
 }
 
 const float pi = 3.14159265359;
-const vec4 cLine = vec4(0.7, 0.5, 0.1, 1.0);
 const vec3 light = vec3(-1,-1,-0.5);
 const ivec3 off = ivec3(-1,0,1);
 const vec2 size = vec2(1.5,0.0);
@@ -390,6 +395,7 @@ GLSL(
 uniform sampler2D texMarkings;
 uniform sampler2D texMud;
 uniform sampler2D texNoise;
+uniform vec4 cLine;
 
 const float Inv3 = 1.0/3.0;
 const float Inv27 = 1.0/27.0;
@@ -447,7 +453,6 @@ vec3 toWorld(const vec3 p) {
 }
 
 const float pi = 3.14159265359;
-const vec4 cLine = vec4(0.7, 0.5, 0.1, 1.0);
 const vec3 light = vec3(-1,-1,-0.5);
 const ivec3 off = ivec3(-1,0,1);
 const vec2 size = vec2(1.5,0.0);
@@ -619,13 +624,13 @@ uniform sampler2D texMarkings;
 uniform sampler2D texMud;
 uniform sampler2D texNoise;
 uniform int NArrowTex;
+uniform vec4 cLine;
 
 vec4 color = vec4(0.0,0.0,0.0,1.0);
 vec4 trackColor = vec4(0.3, 0.3, 0.3, 1.0);
 bool doLine = false;
 
 const float pi = 3.14159265359;
-const vec4 cLine = vec4(0.7, 0.5, 0.1, 1.0);
 const vec3 light = vec3(-1,-1,-0.5);
 const ivec3 off = ivec3(-1,0,1);
 const vec2 size = vec2(1.5,0.0);
@@ -711,11 +716,11 @@ string VRAsphalt::asphaltArrow_dfp =
 "#version 400 compatibility\n"
 GLSL(
 uniform sampler2D texMask;
+uniform vec4 cLine;
 
 vec4 color = vec4(0.0,0.0,0.0,1.0);
 
 const float pi = 3.14159265359;
-const vec4 cLine = vec4(0.7, 0.5, 0.1, 1.0);
 const vec3 light = vec3(-1,-1,-0.5);
 vec2 uv = vec2(0);
 vec3 norm = vec3(0,1,0);

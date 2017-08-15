@@ -15,6 +15,7 @@ OSG_BEGIN_NAMESPACE;
 class VRRoadBase : public VRObject, public VRWorldModule {
     protected:
         float roadTerrainOffset = 0.2;
+        float markingsWidth = 0.15;
 
     public:
         VRRoadBase(string name);

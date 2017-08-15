@@ -74,7 +74,7 @@ VRGeometryPtr VRRoad::createGeometry() {
 
 
 void VRRoad::computeMarkings() {
-    float mw = 0.15;
+    float mw = markingsWidth;
 
     // road data
     vector<VREntityPtr> nodes;
