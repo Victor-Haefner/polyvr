@@ -207,7 +207,7 @@ VRGeometryPtr VRBuilding::addRoof(VRPolygon polygon) {
     t.add(polygon);
     auto g = t.compute();
     g->rotateYonZ();
-    g->translate(Vec3f(0,height,0));
+    g->translate(Vec3d(0,height,0));
     g->applyTransformation();
     return g;
 }
