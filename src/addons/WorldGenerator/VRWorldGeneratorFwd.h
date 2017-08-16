@@ -13,6 +13,8 @@ ptrFwd( VRAsphalt );
 ptrFwd( VRRoad );
 ptrFwd( VRRoadNetwork );
 ptrFwd( VRRoadIntersection );
+ptrFwd( VRDistrict );
+ptrFwd( VRBuilding );
 ptrFwd( VRTerrain );
 ptrFwd( VRTree );
 ptrFwd( VRGrassPatch );

@@ -5,6 +5,7 @@
 #include "roads/VRRoadNetwork.h"
 #include "nature/VRNature.h"
 #include "terrain/VRTerrain.h"
+#include "buildings/VRDistrict.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
@@ -98,6 +99,9 @@ void VRWorldGenerator::init() {
     nature = VRNature::create();
     nature->setWorld( ptr() );
     addChild(nature);
+
+    district = VRDistrict::create();
+    addChild(district);
 }
 
 void VRWorldGenerator::addOSMMap(string path) {
@@ -134,7 +138,7 @@ void VRWorldGenerator::addOSMMap(string path) {
         NlanesRight = has("lanes:forwards") ? toInt( way->tags["lanes:forwards"] ) : 0;
         int NlanesLeft = has("lanes:backward") ? toInt( way->tags["lanes:backward"] ) : 0;
         if (NlanesRight == 0 && NlanesLeft == 0) NlanesRight = has("lanes") ? toInt( way->tags["lanes"] ) : 1;
-        if ( has("lanes:forwards") ) cout << endl << has("lanes") << " hasForw " << has("lanes:forwards") << " hasBack " << has("lanes:backward") << " Nright " << NlanesRight << " Nleft " << NlanesLeft << endl;
+        //if ( has("lanes:forwards") ) cout << endl << has("lanes") << " hasForw " << has("lanes:forwards") << " hasBack " << has("lanes:backward") << " Nright " << NlanesRight << " Nleft " << NlanesLeft << endl;
 
         for (int i=1; i<nodes.size(); i++) {
             auto road = roads->addRoad("someRoad", tag, node(i-1), node(i), norms[i-1], norms[i], 0);
@@ -143,25 +147,39 @@ void VRWorldGenerator::addOSMMap(string path) {
         }
     };
 
+    auto addBuilding = [&](OSMWayPtr& way) {
+        VRPolygon poly;
+        for (auto ps : way->polygon.get()) {
+            auto p = planet->fromLatLongPosition(ps[1], ps[0], true);
+            poly.addPoint( Vec2d(p[0], p[2]) );
+        }
+        district->addBuilding( poly );
+    };
+
+    int i=0;
     for (auto wayItr : osmMap->getWays()) {
+        i++;
+        //if (i != 146) continue; // road with 2 inflection points
         auto& way = wayItr.second;
         for (auto pID : way->nodes) {
             if (graphNodes.count(pID)) continue;
             Node n;
             n.n = osmMap->getNode(pID);
-            n.p = Vec3d( planet->fromLatLongPosition(n.n->lat, n.n->lon, true) );
+            n.p = planet->fromLatLongPosition(n.n->lat, n.n->lon, true);
             graphNodes[pID] = n;
         }
 
-        cout << "tags: ";
+        //cout << "tags: ";
         for (auto tag : way->tags) {
             if (tag.first == "highway") {
                 if (tag.second == "footway") { addRoad(way, tag.second, 1, true); continue; }
                 addRoad(way, tag.second, 4, false); // default road
             }
-            cout << " " << tag.first << " : " << tag.second;
+
+            if (tag.first == "building") addBuilding(way);
+            //cout << " " << tag.first << " : " << tag.second;
         }
-        cout << endl;
+        //cout << endl;
     }
 
 

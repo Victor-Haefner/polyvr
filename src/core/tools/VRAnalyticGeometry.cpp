@@ -223,6 +223,12 @@ void VRAnalyticGeometry::setVector(int i, Vec3d p, Vec3d vec, Color3f color, str
     cols->setValue(color, i);
 }
 
+int VRAnalyticGeometry::addVector(Vec3d pos, Vec3d vec, Color3f color, string label) {
+    int i = vectorEndsGeometry->getMesh()->geo->getPositions()->size();
+    setVector(i, pos, vec, color, label);
+    return i;
+}
+
 void VRAnalyticGeometry::clear() {
     if (ae) ae->clear();
     init();

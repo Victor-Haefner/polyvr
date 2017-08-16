@@ -100,43 +100,49 @@ void path::cubicBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1, Vec3d h0, Ve
     }
 }
 
-vector<double> path::computeInflectionPoints(int i, int j) { // first and second derivative are parallel
-    auto& P1 = points[i];
-    auto& P2 = points[j];
+vector<double> path::computeInflectionPoints(int i, int j, float threshold) { // first and second derivative are parallel
+    if (j <= i) j = size()-1;
+    vector<double> res;
+    for (auto k=i+1; k<=j; k++) {
+        auto& P1 = points[k-1];
+        auto& P2 = points[k];
 
-    // help points
-    double L = (P1.pos() - P2.pos()).length();
-    Vec3d H1 = P1.pos() + P1.dir()*0.333*L;
-    Vec3d H2 = P2.pos() - P2.dir()*0.333*L;
+        // help points
+        double L = (P1.pos() - P2.pos()).length();
+        Vec3d H1 = P1.pos() + P1.dir()*0.333*L;
+        Vec3d H2 = P2.pos() - P2.dir()*0.333*L;
 
-    // At*t*t + B*t*t + C*t + D
-    Vec3d A = P2.pos() - H2*3 + H1*3 - P1.pos();
-    Vec3d B = H2 - H1*2 + P1.pos();
-    Vec3d C = H1 - P1.pos();
+        // At*t*t + B*t*t + C*t + D
+        Vec3d A = P2.pos() - H2*3 + H1*3 - P1.pos();
+        Vec3d B = H2 - H1*2 + P1.pos();
+        Vec3d C = H1 - P1.pos();
 
-    Vec3d CxB = C.cross(B);
-    Vec3d CxA = C.cross(A);
-    Vec3d BxA = B.cross(A);
+        Vec3d CxB = C.cross(B);
+        Vec3d CxA = C.cross(A);
+        Vec3d BxA = B.cross(A);
 
-    // CxB + CxA*t + BxA*t*t = 0
-    equation ex(0,BxA[0],CxA[0],CxB[0]);
-    equation ey(0,BxA[1],CxA[1],CxB[1]);
-    equation ez(0,BxA[2],CxA[2],CxB[2]);
-    vector<double> T;
-    Vec3d t;
-    for (int k=0; k < ex.solve(t[0],t[1],t[3]) ;k++) T.push_back(t[k]);
-    for (int k=0; k < ey.solve(t[0],t[1],t[3]) ;k++) T.push_back(t[k]);
-    for (int k=0; k < ez.solve(t[0],t[1],t[3]) ;k++) T.push_back(t[k]);
+        // CxB + CxA*t + BxA*t*t = 0
+        equation ex(0,BxA[0],CxA[0],CxB[0]);
+        equation ey(0,BxA[1],CxA[1],CxB[1]);
+        equation ez(0,BxA[2],CxA[2],CxB[2]);
+        vector<double> T;
+        Vec3d t;
+        for (int k=0; k < ex.solve(t[0],t[1],t[3]) ;k++) T.push_back(t[k]);
+        for (int k=0; k < ey.solve(t[0],t[1],t[3]) ;k++) T.push_back(t[k]);
+        for (int k=0; k < ez.solve(t[0],t[1],t[3]) ;k++) T.push_back(t[k]);
 
-    vector<double> R;
-    for (auto t : T) {
-        Vec3d Vt = (A*t*t+B*t*2+C)*3;
-        Vec3d At = (A*t+B)*6;
-        if (Vt.dot(At) != 0) continue;
-        for (auto r : R) if (r == t) continue;
-        R.push_back(t);
+        for (auto t : T) {
+            Vec3d Vt = (A*t*t+B*t*2+C)*3;
+            Vec3d At = (A*t+B)*6;
+            if (t <= 0 || t >= 1) continue;
+            //if (abs(Vt.dot(At)) > 1e-9) continue;
+            bool b = true;
+            for (auto r : res) if (abs(r-t) < threshold) { b = false; break; }
+            if (b) res.push_back(t);
+        }
     }
-    return R;
+    sort(res.begin(), res.end());
+    return res;
 }
 
 void path::approximate(int d) {

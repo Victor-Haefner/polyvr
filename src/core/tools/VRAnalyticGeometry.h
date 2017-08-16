@@ -48,6 +48,9 @@ class VRAnalyticGeometry : public VRTransform {
         void setVector(int i, Vec3d pos, Vec3d vec, Color3f color, string label="");
         void setAngle(int i, Vec3d pos, Vec3d v1, Vec3d v2, Color3f c1, Color3f c2, string label="");
         void setCircle(int i, Vec3d pos, Vec3d norm, float r, Color3f color, string label="");
+
+        int addVector(Vec3d pos, Vec3d vec, Color3f color, string label="");
+
         void clear();
 };
 

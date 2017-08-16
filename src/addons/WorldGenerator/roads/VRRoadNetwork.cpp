@@ -17,6 +17,7 @@
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRStroke.h"
 #include "core/objects/geometry/VRPhysics.h"
+#include "core/tools/VRAnalyticGeometry.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/utils/toString.h"
@@ -114,9 +115,38 @@ VRRoadPtr VRRoadNetwork::addWay( string name, vector<VREntityPtr> paths, int rID
 }
 
 VRRoadPtr VRRoadNetwork::addRoad( string name, string type, VREntityPtr node1, VREntityPtr node2, Vec3d norm1, Vec3d norm2, int Nlanes ) {
+    //static VRAnalyticGeometryPtr ana = 0;
+    //if (!ana) { ana = VRAnalyticGeometry::create(); addChild(ana); }
+
+    // check for inflection points!
+    path p;
+    p.addPoint( pose(node1->getVec3f("position"), norm1) );
+    p.addPoint( pose(node2->getVec3f("position"), norm2) );
+    auto ip = p.computeInflectionPoints(0,0,0.2);
+
+    vector<VREntityPtr> nodes;
+    vector<Vec3d> norms;
+    if (ip.size() > 0) {
+        p.compute(64);
+        vector<pair<VREntityPtr, Vec3d>> pnts = { make_pair(node1, norm1) };
+        for (auto t : ip) {
+            auto pnt = p.getPose(t);
+            Vec3d n = pnt.dir(); //n.normalize();
+            pnts.push_back( make_pair(addNode(pnt.pos()), n) );
+        }
+        pnts.push_back(make_pair(node2, norm2));
+        for (auto p : pnts) {
+            auto pos = p.first->getVec3f("position");
+            //ana->addVector(pos, Vec3d(0,2,0), Color3f(1,0,1), "P");
+            //ana->addVector(pos, p.second, Color3f(1,1,1), "P");
+            nodes.push_back( p.first ); norms.push_back( p.second );
+        }
+    } else { nodes = {node1, node2}; norms = {norm1, norm2}; }
+
+    // add path
     int rID = getRoadID();
-    VREntityPtr pathEnt = addPath("Path", name, {node1, node2}, {norm1, norm2});
-    VRRoadPtr road = addWay(name, {pathEnt}, rID, "Road");
+    auto path = addPath("Path", name, nodes, norms);
+    VRRoadPtr road = addWay(name, { path }, rID, "Road");
     road->getEntity()->set("type", type);
     int Nm = Nlanes*0.5;
     for (int i=0; i<Nm; i++) road->addLane(1, 4 );

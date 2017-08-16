@@ -512,6 +512,10 @@
 		<Unit filename="src/addons/WorldGenerator/VRWorldGeneratorFwd.h" />
 		<Unit filename="src/addons/WorldGenerator/VRWorldModule.cpp" />
 		<Unit filename="src/addons/WorldGenerator/VRWorldModule.h" />
+		<Unit filename="src/addons/WorldGenerator/buildings/VRBuilding.cpp" />
+		<Unit filename="src/addons/WorldGenerator/buildings/VRBuilding.h" />
+		<Unit filename="src/addons/WorldGenerator/buildings/VRDistrict.cpp" />
+		<Unit filename="src/addons/WorldGenerator/buildings/VRDistrict.h" />
 		<Unit filename="src/addons/WorldGenerator/nature/VRGrassPatch.cpp" />
 		<Unit filename="src/addons/WorldGenerator/nature/VRGrassPatch.h" />
 		<Unit filename="src/addons/WorldGenerator/nature/VRNature.cpp" />

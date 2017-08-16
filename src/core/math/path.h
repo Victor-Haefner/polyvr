@@ -59,7 +59,7 @@ class path : public VRStorage {
 
         float getClosestPoint(Vec3d p); // return t parameter on path
         float getDistance(Vec3d p);
-        vector<double> computeInflectionPoints(int i, int j);
+        vector<double> computeInflectionPoints(int i = 0, int j = 0, float threshold = 1e-9);
 
         bool isStraight(int i = 0, int j = 0);
         bool isCurve(int i = 0, int j = 0);

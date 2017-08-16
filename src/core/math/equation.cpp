@@ -1,5 +1,6 @@
 #include "equation.h"
 #include <math.h>
+#include <iostream>
 
 using namespace OSG;
 
@@ -15,11 +16,11 @@ int equation::solve(double& x1, double& x2, double& x3) {
 
         // quadratic
         double delta = (c*c-4*b*d);
-        double inv_2a = 1.0/2/b;
+        double inv_2a = 1.0/(2*b);
         if (delta >= 0) {
             double root = sqrt(delta);
-            x1 = (-b-root)*inv_2a;
-            x2 = (-b+root)*inv_2a;
+            x1 = (-c-root)*inv_2a;
+            x2 = (-c+root)*inv_2a;
             return 2;
         } else return 0;
     }
