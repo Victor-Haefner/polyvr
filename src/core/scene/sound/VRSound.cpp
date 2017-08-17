@@ -30,6 +30,13 @@ sudo apt-get install libfftw3-dev
 
 using namespace OSG;
 
+string avErrToStr(const int& e) {
+    char buf[100];
+    int N = 100;
+    av_strerror(e, buf, N);
+    return string(buf);
+}
+
 struct VRSound::ALData {
     ALenum sample = 0;
     ALenum format = 0;
@@ -99,8 +106,8 @@ bool VRSound::initiate() {
 
     if (path == "") return 1;
 
-    if (avformat_open_input(&al->context, path.c_str(), NULL, NULL) < 0) { cout << "ERROR! avformat_open_input failed\n"; return 0; }
-    if (avformat_find_stream_info(al->context, NULL) < 0) { cout << "ERROR! avformat_find_stream_info failed\n"; return 0; }
+    if (auto e = avformat_open_input(&al->context, path.c_str(), NULL, NULL)) if (e < 0) { cout << "ERROR! avformat_open_input of path '"+path+"' failed: " << avErrToStr(e) << endl; return 0; }
+    if (auto e = avformat_find_stream_info(al->context, NULL)) if (e < 0) { cout << "ERROR! avformat_find_stream_info failed: " << avErrToStr(e) << endl; return 0; }
     av_dump_format(al->context, 0, path.c_str(), 0);
 
     stream_id = av_find_best_stream(al->context, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
