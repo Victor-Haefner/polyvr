@@ -275,6 +275,7 @@ vec2 distToQuadBezier( vec3 A, vec3 B, vec3 C, vec3 x ) {
             }
         }
     }
+
     return vec2(dmin,tmin);
 }
 

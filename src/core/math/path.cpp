@@ -146,8 +146,6 @@ vector<double> path::computeInflectionPoints(int i, int j, float threshold) { //
 }
 
 void path::approximate(int d) {
-    degree = d;
-
     auto intersect = [&](pose& p1, pose& p2) {
 		Vec3d d = p2.pos() - p1.pos();
 		Vec3d n3 = p1.dir().cross(p2.dir());
@@ -159,7 +157,7 @@ void path::approximate(int d) {
 
     auto toQuadratic = [&](int j, pose& p1, pose& p4, pose& pm, pose& p2, pose& p3) {
         float t = 0.5;
-        pm = getPose(t, j, j+1);
+        pm = getPose(t, j, j+1, false);
 
         // help points
         float L = (p1.pos()-p4.pos()).length();
@@ -184,7 +182,7 @@ void path::approximate(int d) {
 		return true;
 	};
 
-    if (degree == 2) {
+    if (d == 2) {
         vector<pose> res;
 
 		for (uint j=1; j<points.size(); j++) { // p1,p2,pm,p3,p4
@@ -205,8 +203,10 @@ void path::approximate(int d) {
 
 		points.clear();
 		for (auto p : res) points.push_back(p);
-		update();
     }
+
+    degree = d;
+    update();
 }
 
 int path::addPoint( const pose& p, Color3f c ) {
@@ -286,10 +286,7 @@ void path::compute(int N) {
             //       = (1-t^2) * (3h1-3p1) + 2t*(1-t) * (3h2-3h1) + t^2 * (3p2-3h2)
             //       = (1-t^2) * d1*L + 2t*(1-t) * (3r - d1*L - d2*L) + t^2 * d2*L
             Vec3d n = r*3.0/L-p1.dir()-p2.dir();
-
-            // berechne hilfspunkt für up vector
-            //Vec3d x = n1.cross(u1)*0.5 + n2.cross(u2)*0.5;
-            Vec3d u = (p1.up()+p2.up())*0.5;//x.cross(n);
+            Vec3d u = (p1.up()+p2.up())*0.5;
             u.normalize();
 
             cubicBezier    (_pts+(N-1)*i, N, p1.pos(), p2.pos(), h1, h2);
@@ -344,17 +341,62 @@ Vec3d path::interp(vector<Vec3d>& vec, float t, int i, int j) {
     return vec[i+ti]*(1-x) + vec[i+ti+1]*x;
 }
 
-Vec3d path::getPosition(float t, int i, int j) { return interp(positions, t, i, j); }
-Color3f path::getColor(float t, int i, int j) { return Vec3f(interp(colors, t, i, j)); }
+Vec3d path::getPosition(float t, int i, int j, bool fast) {
+    if (fast) return interp(positions, t, i, j);
 
-void path::getOrientation(float t, Vec3d& dir, Vec3d& up, int i, int j) {
-    dir = interp(directions, t, i, j)*direction;
-    up = interp(up_vectors, t, i, j);
+    if (degree == 2) {
+        auto& p1 = points[2*i];
+        auto& p2 = points[2*i+1];
+        auto& p3 = points[2*i+2];
+        return p1.pos()*(1-t)*(1-t) + p2.pos()*2*t*(1-t) + p3.pos()*t*t;
+    }
+
+    if (degree == 3) {
+        auto& p1 = points[i];
+        auto& p2 = points[j];
+
+        Vec3d r = p2.pos() - p1.pos();
+        float L = r.length();
+        Vec3d h1 = p1.pos() + p1.dir()*0.333*L;
+        Vec3d h2 = p2.pos() - p2.dir()*0.333*L;
+
+        return p1.pos()*(1-t)*(1-t)*(1-t) + h1*3*t*(1-t)*(1-t) + h2*3*t*t*(1-t) + p2.pos()*t*t*t;
+    }
 }
 
-pose path::getPose(float t, int i, int j) {
-    Vec3d d,u; getOrientation(t,d,u,i,j);
-    return pose(getPosition(t,i,j), d, u);
+Color3f path::getColor(float t, int i, int j) { return Vec3f(interp(colors, t, i, j)); }
+
+void path::getOrientation(float t, Vec3d& dir, Vec3d& up, int i, int j, bool fast) {
+    if (fast) {
+        dir = interp(directions, t, i, j)*direction;
+        up  = interp(up_vectors, t, i, j);
+    } else {
+        if (degree == 2) { // TODO: stretch t over i-j segment!
+            auto& p1 = points[2*i];
+            auto& p2 = points[2*i+2];
+            dir = p1.dir()*(1-t) + p2.dir()*t;
+            up  = p1.up() *(1-t) + p2.up() *t;
+        }
+
+        if (degree == 3) { // TODO: stretch t over i-j segment!
+            auto& p1 = points[i];
+            auto& p2 = points[j];
+
+            Vec3d r = p2.pos() - p1.pos();
+            float L = r.length();
+            Vec3d n = r*3.0/L-p1.dir()-p2.dir();
+            Vec3d u = (p1.up()+p2.up())*0.5;
+            u.normalize();
+
+            dir = p1.dir()*(1-t)*(1-t) + n*2*t*(1-t) + p2.dir()*t*t;
+            up  = p1.up()*(1-t)*(1-t)  + u*2*t*(1-t) + p2.up()*t*t;
+        }
+    }
+}
+
+pose path::getPose(float t, int i, int j, bool fast) {
+    Vec3d d,u; getOrientation(t,d,u,i,j,fast);
+    return pose(getPosition(t,i,j,fast), d, u);
 }
 
 float path::getClosestPoint(Vec3d p) {

@@ -24,6 +24,7 @@ struct VRPyVec2f : VRPyBaseT<OSG::Vec2d> {
     static PyObject* dot(VRPyVec2f* self, PyObject* args);
     static PyObject* cross(VRPyVec2f* self, PyObject* args);
     static PyObject* asList(VRPyVec2f* self);
+    static PyObject* distance(VRPyVec2f* self, PyObject* args);
 
     static PyObject* add(PyObject* self, PyObject* v);
     static PyObject* sub(PyObject* self, PyObject* v);
@@ -52,6 +53,7 @@ struct VRPyVec3f : VRPyBaseT<OSG::Vec3d> {
     static PyObject* dot(VRPyVec3f* self, PyObject* args);
     static PyObject* cross(VRPyVec3f* self, PyObject* args);
     static PyObject* asList(VRPyVec3f* self);
+    static PyObject* distance(VRPyVec3f* self, PyObject* args);
 
     static PyObject* add(PyObject* self, PyObject* v);
     static PyObject* sub(PyObject* self, PyObject* v);

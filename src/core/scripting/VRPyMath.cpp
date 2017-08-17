@@ -78,6 +78,7 @@ PyMethodDef VRPyVec2f::methods[] = {
     {"dot", (PyCFunction)VRPyVec2f::dot, METH_VARARGS, "Compute the dot product - float dot( Vec3 )" },
     {"cross", (PyCFunction)VRPyVec2f::cross, METH_VARARGS, "Compute the cross product - Vec3 cross( Vec3 )" },
     {"asList", (PyCFunction)VRPyVec2f::asList, METH_NOARGS, "Return as python list - [x,y,z] asList()" },
+    {"distance", (PyCFunction)VRPyVec2f::distance, METH_VARARGS, "Return the distance to another point - float distance([x,y,z])" },
     {NULL}  /* Sentinel */
 };
 
@@ -128,6 +129,12 @@ PyObject* VRPyVec2f::dot(VRPyVec2f* self, PyObject* args) {
     PyObject* v;
     if (!PyArg_ParseTuple(args, "O", &v)) return NULL;
     return PyFloat_FromDouble( self->v.dot( parseVec2dList(v) ) );
+}
+
+PyObject* VRPyVec2f::distance(VRPyVec2f* self, PyObject* args) {
+    PyObject* v;
+    if (!PyArg_ParseTuple(args, "O", &v)) return NULL;
+    return PyFloat_FromDouble( (self->v - parseVec2dList(v)).length() );
 }
 
 PyObject* VRPyVec2f::cross(VRPyVec2f* self, PyObject* args) {
@@ -269,6 +276,7 @@ PyMethodDef VRPyVec3f::methods[] = {
     {"dot", (PyCFunction)VRPyVec3f::dot, METH_VARARGS, "Compute the dot product - float dot( Vec3 )" },
     {"cross", (PyCFunction)VRPyVec3f::cross, METH_VARARGS, "Compute the cross product - Vec3 cross( Vec3 )" },
     {"asList", (PyCFunction)VRPyVec3f::asList, METH_NOARGS, "Return as python list - [x,y,z] asList()" },
+    {"distance", (PyCFunction)VRPyVec3f::distance, METH_VARARGS, "Return the distance to another point - float distance([x,y,z])" },
     {NULL}  /* Sentinel */
 };
 
@@ -319,6 +327,12 @@ PyObject* VRPyVec3f::dot(VRPyVec3f* self, PyObject* args) {
     PyObject* v;
     if (!PyArg_ParseTuple(args, "O", &v)) return NULL;
     return PyFloat_FromDouble( self->v.dot( parseVec3dList(v) ) );
+}
+
+PyObject* VRPyVec3f::distance(VRPyVec3f* self, PyObject* args) {
+    PyObject* v;
+    if (!PyArg_ParseTuple(args, "O", &v)) return NULL;
+    return PyFloat_FromDouble( (self->v - parseVec3dList(v)).length() );
 }
 
 PyObject* VRPyVec3f::cross(VRPyVec3f* self, PyObject* args) {
