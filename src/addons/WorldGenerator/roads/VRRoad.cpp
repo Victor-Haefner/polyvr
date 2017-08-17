@@ -105,7 +105,8 @@ void VRRoad::computeMarkings() {
         for (int li=0; li<Nlanes; li++) {
             auto lane = lanes[li];
             float width = toFloat( lane->get("width")->value );
-            float k = widthSum + mw*0.5;
+            float k = widthSum;
+            if (li == 0) k += mw*0.5;
 
             Vec3d pi = x*k + p;
             nodes.push_back(addNode(pi));
