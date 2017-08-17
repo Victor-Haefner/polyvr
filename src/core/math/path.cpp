@@ -148,95 +148,54 @@ vector<double> path::computeInflectionPoints(int i, int j, float threshold) { //
 void path::approximate(int d) {
     degree = d;
 
-    auto intersect = [&](Vec3d& p1, Vec3d& n1, Vec3d& p2, Vec3d& n2) {
-		Vec3d d = p2-p1;
-		Vec3d n3 = n1.cross(n2);
+    auto intersect = [&](pose& p1, pose& p2) {
+		Vec3d d = p2.pos() - p1.pos();
+		Vec3d n3 = p1.dir().cross(p2.dir());
 		float N3 = n3.dot(n3);
 		if (N3 == 0) N3 = 1.0;
-		float s = d.cross(n2).dot(n1.cross(n2))/N3;
-		return p1 + n1*s;
+		float s = d.cross(p2.dir()).dot(n3)/N3;
+		return p1.pos() + p1.dir()*s;
     };
 
-    auto toQuadratic = [&](int j, Vec3d& p1, Vec3d& p4, Vec3d& n1, Vec3d& n4, Vec3d& pm, Vec3d& p2, Vec3d& p3) {
-        Vec3d nm;
+    auto toQuadratic = [&](int j, pose& p1, pose& p4, pose& pm, pose& p2, pose& p3) {
+        float t = 0.5;
+        pm = getPose(t, j, j+1);
 
-        auto computePoints = [&](int k) {
-            float t = 0.5+0.099*k;
-            pm = getPose(t, j, j+1).pos();
-            //nm = getPose(t, j, j+1).dir();
+        // help points
+        float L = (p1.pos()-p4.pos()).length();
+        Vec3d H1 = p1.pos() + p1.dir()*0.333*L;
+        Vec3d H2 = p4.pos() - p4.dir()*0.333*L;
 
-            // help points
-            float L = (p1-p4).length();
-            Vec3d H1 = p1 + n1*0.333*L;
-            Vec3d H2 = p4 - n4*0.333*L;
+        // At*t*t + B*t*t + C*t + D
+        Vec3d A = p4.pos() - H2*3 + H1*3 - p1.pos();
+        Vec3d B = H2 - H1*2 + p1.pos();
+        Vec3d C = H1 - p1.pos();
+        Vec3d nm = (A*t*t+B*t*2+C)*3; nm.normalize();
+        pm.setDir(nm);
 
-            // At*t*t + B*t*t + C*t + D
-            Vec3d A = p4 - H2*3 + H1*3 - p1;
-            Vec3d B = H2 - H1*2 + p1;
-            Vec3d C = H1 - p1;
-            nm = (A*t*t+B*t*2+C)*3;
-            nm.normalize();
-
-            //cout << "nm " << getPose(t, j, j+1).dir() << "   " << nm << endl;
-
-            p2 = intersect(p1,n1,pm,nm);
-            p3 = intersect(p4,n4,pm,nm);
-        };
-
-        /*vector<float> inflPnts = computeInflectionPoints(j,j+1);
-        if (inflPnts.size() == 0) inflPnts.push_back(0.5);
-        for (float t : inflPnts) {
-            computePoints();
-        }*/
-
-        computePoints(0);
-        for (int k = 1; k<5; k++) { // TODO: replace by computing exact inflection points!
-            /*if ((p2-pm).dot(nm) > 0) { // p2 beyond pm
-                computePoints(-k);
-                continue;
-            }
-            if ((p2-p1).dot(n1) < 0) { // p2 before p1
-                computePoints(-k);
-                cout << "Waring, p2 before p1, recompute pm! " << (p2-p1).dot(n1) << " nm " << nm << " pm " << pm << endl;
-                continue;
-            }
-            if ((p3-pm).dot(nm) < 0) { // p3 before pm
-                computePoints(k);
-                continue;
-            }
-            if ((p3-p4).dot(n4) > 0) { // p3 beyond p4
-                computePoints(k);
-                continue;
-            }
-            break;*/
-        }
-
-		//cout << "toQuadratic  p1:" << p1 << "  n1:" << n1 << "  p2:" << p2 << "  pm:" << pm << "  nm:" << nm << endl;
+        p2.setPos( intersect(p1,pm) );
+        p3.setPos( intersect(p4,pm) );
     };
 
-	auto isLinear = [&](Vec3d& p1, Vec3d& p2, Vec3d& n1, Vec3d& n2) {
-		if (abs(n1.dot(n2)-1.0) > 0.00001) return false;
-		Vec3d d = p2-p1; d.normalize();
-		if (abs(d.dot(n1)-1.0) > 0.00001) return false;
+	auto isLinear = [&](pose& p1, pose& p2) {
+		if (abs(p1.dir().dot(p2.dir())-1.0) > 0.00001) return false;
+		Vec3d d = p2.pos()-p1.pos(); d.normalize();
+		if (abs(d.dot(p1.dir())-1.0) > 0.00001) return false;
 		return true;
 	};
 
     if (degree == 2) {
-        vector<Vec3d> res;
+        vector<pose> res;
 
 		for (uint j=1; j<points.size(); j++) { // p1,p2,pm,p3,p4
-			Vec3d p1 = points[j-1].pos();
-			Vec3d p4 = points[j].pos();
-			Vec3d n1 = points[j-1].dir(); //n1.normalize();
-			Vec3d n4 = points[j].dir(); //n4.normalize();
-			res.push_back(p1);
+			auto p1 = points[j-1];
+			auto p4 = points[j];
+			res.push_back( p1 );
 
-			if (isLinear(p1,p4,n1,n4)) {
-                Vec3d p2 = (p1+p4)*0.5;
-                res.push_back(p2);
-			} else {
-				Vec3d p2,p3,pm;
-				toQuadratic(j-1,p1,p4,n1,n4,pm,p2,p3);
+			if (isLinear(p1,p4)) res.push_back( pose( (p1.pos()+p4.pos())*0.5, p1.dir(), p1.up() ) );
+			else {
+				pose p2,p3,pm;
+				toQuadratic(j-1,p1,p4,pm,p2,p3);
                 res.push_back(p2);
                 res.push_back(pm);
                 res.push_back(p3);
@@ -245,7 +204,7 @@ void path::approximate(int d) {
 		}
 
 		points.clear();
-		for (auto p : res) points.push_back( pose(p) );
+		for (auto p : res) points.push_back(p);
 		update();
     }
 }
@@ -300,7 +259,12 @@ void path::compute(int N) {
             auto& p1 = points[2*i];
             auto& p2 = points[2*i+1];
             auto& p3 = points[2*i+2];
+            auto& c1 = point_colors[i];
+            auto& c2 = point_colors[i+1];
             quadraticBezier(_pts+(N-1)*i, N, p1.pos(), p2.pos(), p3.pos());
+            linearBezier   (_drs+(N-1)*i, N, p1.dir(), p3.dir());
+            linearBezier   (_ups+(N-1)*i, N, p1.up() , p3.up());
+            linearBezier   (_cls+(N-1)*i, N, Vec3d(c1), Vec3d(c2));
         }
     }
 
@@ -473,8 +437,8 @@ bool path::isCurve(int i, int j) { // TODO
 
 bool path::isSinuous(int i, int j) { // TODO
     clampSegment(i, j, points.size());
-    auto iPnts = computeInflectionPoints(i,j);
     if (isStraight(i,j)) return false;
+    auto iPnts = computeInflectionPoints(i,j);
     if (iPnts.size() >= 1) return true;
     return false;
 }

@@ -132,21 +132,26 @@ VRRoadPtr VRRoadNetwork::addRoad( string name, string type, VREntityPtr node1, V
     vector<VREntityPtr> nodes;
     vector<Vec3d> norms;
     if (ip.size() > 0) {
-        p.compute(64);
-        vector<pair<VREntityPtr, Vec3d>> pnts = { make_pair(node1, norm1) };
+        p.compute(16);
+
+        nodes.push_back( node1 ); norms.push_back( norm1 );
+        for (auto t : ip) {
+            auto pnt = p.getPose(t);
+            Vec3d n = pnt.dir(); //n.normalize();
+            if (terrain) terrain->projectTangent(n, pnt.pos());
+            nodes.push_back( addNode(pnt.pos(), true) ); norms.push_back( n );
+        }
+        nodes.push_back( node2 ); norms.push_back( norm2 );
+
+        /*vector<pair<VREntityPtr, Vec3d>> pnts = { make_pair(node1, norm1) };
         for (auto t : ip) {
             auto pnt = p.getPose(t);
             Vec3d n = pnt.dir(); //n.normalize();
             if (terrain) terrain->projectTangent(n, pnt.pos());
             pnts.push_back( make_pair(addNode(pnt.pos(), true), n) );
         }
-        pnts.push_back(make_pair(node2, norm2));
-        for (auto p : pnts) {
-            /*auto pos = p.first->getVec3f("position");
-            ana->addVector(pos, Vec3d(0,2,0), Color3f(1,0,1), "P");
-            ana->addVector(pos, p.second, Color3f(1,1,1), "N");*/
-            nodes.push_back( p.first ); norms.push_back( p.second );
-        }
+        pnts.push_back( make_pair(node2, norm2) );
+        for (auto p : pnts) { nodes.push_back( p.first ); norms.push_back( p.second ); }*/
     } else { nodes = {node1, node2}; norms = {norm1, norm2}; }
 
     // add path
