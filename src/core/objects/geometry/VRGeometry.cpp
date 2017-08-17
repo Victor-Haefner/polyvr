@@ -420,8 +420,10 @@ void VRGeometry::setTexCoords(GeoVectorProperty* Tex, int i, bool fixMapping) {
 }
 
 void VRGeometry::setPositionalTexCoords(float scale, int i, Vec3i format) {
+    if (!mesh || ! mesh->geo) return;
     GeoVectorPropertyRefPtr pos = mesh->geo->getPositions();
     GeoVec3fPropertyRefPtr tex = GeoVec3fProperty::create();
+    if (!pos) return;
     for (uint i=0; i<pos->size(); i++) {
         auto p = Vec3d(pos->getValue<Pnt3f>(i))*scale;
         tex->addValue(Vec3d(p[format[0]], p[format[1]], p[format[2]]));

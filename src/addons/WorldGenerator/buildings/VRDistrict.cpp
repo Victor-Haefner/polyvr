@@ -11,6 +11,8 @@
 #include "core/math/triangulator.h"
 #include "core/scene/VRSceneManager.h"
 
+#define GLSL(shader) #shader
+
 using namespace OSG;
 
 VRDistrict::VRDistrict() : VRObject("District") {}
@@ -30,8 +32,10 @@ void VRDistrict::init() {
     b_mat->setSpecular(Color3f(0.2, 0.2, 0.2)); //light reflection in camera direction
 
     string wdir = VRSceneManager::get()->getOriginalWorkdir();
-    b_mat->readVertexShader(wdir+"/shader/TexturePhong/phong.vp");
-    b_mat->readFragmentShader(wdir+"/shader/TexturePhong/phong_building.fp"); //Fragment Shader
+    //b_mat->readVertexShader(wdir+"/shader/TexturePhong/phong.vp");
+    //b_mat->readFragmentShader(wdir+"/shader/TexturePhong/phong_building.fp"); //Fragment Shader
+    b_mat->setVertexShader(matVShdr, "buildingVS");
+    b_mat->setFragmentShader(matFShdr, "buildingFS");
     b_mat->setMagMinFilter(GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST, 0);
 
     facades = VRGeometry::create("facades");
@@ -46,7 +50,10 @@ void VRDistrict::init() {
 void VRDistrict::addBuilding( VRPolygon p ) {
     if (p.size() < 3) return;
 
+    if (!p.isCCW()) p.reverseOrder();
+
     auto b = VRBuilding::create();
+    b->setWorld(world);
     auto walls = b->addFloor(p, 4);
     auto roof = b->addRoof(p);
 
@@ -54,3 +61,50 @@ void VRDistrict::addBuilding( VRPolygon p ) {
     roofs->merge(roof);
 }
 
+
+string VRDistrict::matVShdr = GLSL(
+varying vec3 vnrm;
+varying vec2 vtc1;
+varying vec2 vtc2;
+attribute vec4 osg_Vertex;
+attribute vec3 osg_Normal;
+attribute vec2 osg_MultiTexCoord0;
+attribute vec2 osg_MultiTexCoord1;
+
+void main( void ) {
+    vnrm = normalize( gl_NormalMatrix * osg_Normal );
+    vtc1 = vec2(osg_MultiTexCoord0);
+    vtc2 = vec2(osg_MultiTexCoord1);
+    gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex;
+}
+);
+
+
+string VRDistrict::matFShdr = GLSL(
+varying vec3 vnrm;
+varying vec2 vtc1;
+varying vec2 vtc2;
+uniform sampler2D tex;
+
+vec4 color;
+vec3 normal;
+
+void applyLightning() {
+	vec3 n = normal;
+	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
+	float NdotL = max(dot( n, light ), 0.0);
+	vec4  ambient = gl_LightSource[0].ambient * color;
+	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;
+	float NdotHV = max(dot(n, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
+	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
+	gl_FragColor = ambient + diffuse + specular;
+}
+
+void main( void ) {
+	normal = vnrm;
+	vec4 tex1 = texture2D(tex, vtc1);
+	vec4 tex2 = texture2D(tex, vtc2);
+	color = mix(tex1, tex2, tex2[3]);
+	applyLightning();
+}
+);

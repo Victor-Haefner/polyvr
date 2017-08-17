@@ -18,11 +18,6 @@
 
 using namespace OSG;
 
-string assetTexMatVShdr;
-string assetTexMatFShdr;
-string assetMatVShdr;
-string assetMatFShdr;
-
 VRWorldGenerator::VRWorldGenerator() : VRTransform("WorldGenerator") {}
 VRWorldGenerator::~VRWorldGenerator() {}
 
@@ -101,6 +96,7 @@ void VRWorldGenerator::init() {
     addChild(nature);
 
     district = VRDistrict::create();
+    district->setWorld( ptr() );
     addChild(district);
 }
 
@@ -227,7 +223,7 @@ void VRWorldGenerator::addOSMMap(string path) {
 
 
 
-// asset material
+// textured asset material
 
 string VRWorldGenerator::assetTexMatVShdr = GLSL(
 varying vec3 vnrm;
@@ -278,7 +274,7 @@ void main( void ) {
 
 
 
-// textured asset material
+// asset material
 
 string VRWorldGenerator::assetMatVShdr = GLSL(
 varying vec3 vnrm;

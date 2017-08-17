@@ -118,10 +118,15 @@ VRRoadPtr VRRoadNetwork::addRoad( string name, string type, VREntityPtr node1, V
     //static VRAnalyticGeometryPtr ana = 0;
     //if (!ana) { ana = VRAnalyticGeometry::create(); addChild(ana); }
 
+    Vec3d p1 = node1->getVec3f("position");
+    Vec3d p2 = node2->getVec3f("position");
+    if (terrain) terrain->projectTangent(norm1, p1);
+    if (terrain) terrain->projectTangent(norm2, p2);
+
     // check for inflection points!
     path p;
-    p.addPoint( pose(node1->getVec3f("position"), norm1) );
-    p.addPoint( pose(node2->getVec3f("position"), norm2) );
+    p.addPoint( pose(p1, norm1) );
+    p.addPoint( pose(p2, norm2) );
     auto ip = p.computeInflectionPoints(0,0,0.2);
 
     vector<VREntityPtr> nodes;
@@ -132,13 +137,14 @@ VRRoadPtr VRRoadNetwork::addRoad( string name, string type, VREntityPtr node1, V
         for (auto t : ip) {
             auto pnt = p.getPose(t);
             Vec3d n = pnt.dir(); //n.normalize();
-            pnts.push_back( make_pair(addNode(pnt.pos()), n) );
+            if (terrain) terrain->projectTangent(n, pnt.pos());
+            pnts.push_back( make_pair(addNode(pnt.pos(), true), n) );
         }
         pnts.push_back(make_pair(node2, norm2));
         for (auto p : pnts) {
-            auto pos = p.first->getVec3f("position");
-            //ana->addVector(pos, Vec3d(0,2,0), Color3f(1,0,1), "P");
-            //ana->addVector(pos, p.second, Color3f(1,1,1), "P");
+            /*auto pos = p.first->getVec3f("position");
+            ana->addVector(pos, Vec3d(0,2,0), Color3f(1,0,1), "P");
+            ana->addVector(pos, p.second, Color3f(1,1,1), "N");*/
             nodes.push_back( p.first ); norms.push_back( p.second );
         }
     } else { nodes = {node1, node2}; norms = {norm1, norm2}; }

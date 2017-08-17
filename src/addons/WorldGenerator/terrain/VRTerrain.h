@@ -52,6 +52,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void elevatePoint( Vec3d& p, float offset = 0 );
         void elevatePose( posePtr p, float offset = 0 );
         void elevateObject( VRTransformPtr p, float offset = 0 );
+        void projectTangent( Vec3d& t, Vec3d p);
 
         void paintHeights(string path);
 };

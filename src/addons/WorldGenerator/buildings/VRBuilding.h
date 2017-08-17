@@ -16,6 +16,7 @@ using namespace std;
 class VRBuilding : public VRWorldModule {
     private:
         float height = 0;
+        float ground = 0;
 
     public:
         VRBuilding();
