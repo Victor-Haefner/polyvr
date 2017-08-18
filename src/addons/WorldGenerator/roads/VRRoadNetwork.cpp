@@ -473,7 +473,7 @@ void VRRoadNetwork::computeSurfaces() {
     };
 
     for (auto way : ways) computeRoadSurface(way);
-    for (auto road : roads) computeRoadSurface(road);
+    //for (auto road : roads) computeRoadSurface(road);
 
     for (auto intersection : intersections) {
         auto iGeo = intersection->createGeometry();

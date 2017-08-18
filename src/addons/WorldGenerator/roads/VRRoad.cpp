@@ -60,7 +60,7 @@ VRGeometryPtr VRRoad::createGeometry() {
 		auto geo = VRStroke::create("road");
 		vector<pathPtr> paths;
 		for (auto p : entity->getAllEntities("path")) {
-            paths.push_back( toPath(p,64) );
+            paths.push_back( toPath(p,32) );
 		}
 		geo->setPaths( paths );
 		geo->strokeProfile(profile, 0, 0);
