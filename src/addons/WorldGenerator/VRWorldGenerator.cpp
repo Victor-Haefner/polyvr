@@ -154,7 +154,8 @@ void VRWorldGenerator::addOSMMap(string path) {
     int i=0;
     for (auto wayItr : osmMap->getWays()) {
         i++;
-        if (i != 105) continue; // 146, 105
+        //if (i != 105 && i != 271 && i != 299) continue; // 146, 105, 271, 298, 299
+        //if (i != 271 && i != 299) continue; // 146, 105, 271, 298, 299
         auto& way = wayItr.second;
         for (auto pID : way->nodes) {
             if (graphNodes.count(pID)) continue;

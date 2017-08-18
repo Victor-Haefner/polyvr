@@ -265,6 +265,7 @@ void VRRoadIntersection::computeMarkings() {
 void VRRoadIntersection::computeLayout() {
     auto node = entity->getEntity("node");
     Vec3d pNode = node->getVec3f("position");
+    int N = roads.size();
 
     // sort roads
     auto compare = [&](VRRoadPtr road1, VRRoadPtr road2) -> bool {
@@ -285,17 +286,35 @@ void VRRoadIntersection::computeLayout() {
         return Vec3d(p1) + n1*s;
     };
 
-    int N = roads.size();
-    for (int r = 0; r<N; r++) { // compute intersection points
-        auto road1 = roads[r];
-        auto road2 = roads[(r+1)%N];
-        auto& data1 = road1->getEdgePoints( node );
-        auto& data2 = road2->getEdgePoints( node );
-        Vec3d Pi = intersect(data1.p2, data1.n, data2.p1, data2.n);
-        data1.p2 = Pi;
-        data2.p1 = Pi;
-        intersectionPoints.push_back(Pi);
-    }
+    auto resolveEdgeIntersections = [&]() {
+        for (int r = 0; r<N; r++) { // compute intersection points
+            auto road1 = roads[r];
+            auto road2 = roads[(r+1)%N];
+            auto& data1 = road1->getEdgePoints( node );
+            auto& data2 = road2->getEdgePoints( node );
+            Vec3d Pi = intersect(data1.p2, data1.n, data2.p1, data2.n);
+            data1.p2 = Pi;
+            data2.p1 = Pi;
+            intersectionPoints.push_back(Pi);
+        }
+    };
+
+    auto resolveSpacialCases = [&]() {
+        if (N == 2) { // special cases for 2 roads
+            auto road1 = roads[0];
+            auto road2 = roads[1];
+            auto& data1 = road1->getEdgePoints( node );
+            auto& data2 = road2->getEdgePoints( node );
+            cout << " N1 " << data1.n << "  N2 " << data2.n << "  Dot " << data1.n.dot(data2.n) << endl;
+            if (data1.n.dot(data2.n) < -0.8) {
+                ; // TODO
+                return true;
+            }
+        }
+        return false;
+    };
+
+    if (!resolveSpacialCases()) resolveEdgeIntersections();
 
     for (auto road : roads) { // compute road front
         auto& data = road->getEdgePoints( node );
