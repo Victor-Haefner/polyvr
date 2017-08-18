@@ -42,8 +42,10 @@ class VRStroke : public VRGeometry {
 
         void addPolygon(VRPolygonPtr p);
 
-        void strokeProfile(vector<Vec3d> profile, bool closed, bool doColor = true, CAP l = NONE, CAP r = NONE);
+        void strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool doColor = true, CAP l = NONE, CAP r = NONE);
         void strokeStrew(VRGeometryPtr geo);
+
+        void convertToRope();
 
         void update();
 };

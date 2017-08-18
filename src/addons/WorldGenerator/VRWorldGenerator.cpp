@@ -130,11 +130,10 @@ void VRWorldGenerator::addOSMMap(string path) {
             if (!graphNodes[nodes[i]].e) graphNodes[nodes[i]].e = roads->addNode(pos(i), true);
         }
 
-        int NlanesRight = has("lanes:forward") ? toInt( way->tags["lanes:forward"] ) : 0;
-        NlanesRight = has("lanes:forwards") ? toInt( way->tags["lanes:forwards"] ) : 0;
+        int NlanesRight = has("lanes:forward") ? toInt( way->tags["lanes:forward"] ) : has("lanes:forwards") ? toInt( way->tags["lanes:forwards"] ) : 0;
         int NlanesLeft = has("lanes:backward") ? toInt( way->tags["lanes:backward"] ) : 0;
         if (NlanesRight == 0 && NlanesLeft == 0) NlanesRight = has("lanes") ? toInt( way->tags["lanes"] ) : 1;
-        //if ( has("lanes:forwards") ) cout << endl << has("lanes") << " hasForw " << has("lanes:forwards") << " hasBack " << has("lanes:backward") << " Nright " << NlanesRight << " Nleft " << NlanesLeft << endl;
+        cout << endl << has("lanes") << " hasForw " << has("lanes:forward") << " hasBack " << has("lanes:backward") << " Nright " << NlanesRight << " Nleft " << NlanesLeft << endl;
 
         for (int i=1; i<nodes.size(); i++) {
             auto road = roads->addRoad("someRoad", tag, node(i-1), node(i), norms[i-1], norms[i], 0);
@@ -155,7 +154,7 @@ void VRWorldGenerator::addOSMMap(string path) {
     int i=0;
     for (auto wayItr : osmMap->getWays()) {
         i++;
-        //if (i != 146) continue; // road with 2 inflection points
+        if (i != 105) continue; // 146, 105
         auto& way = wayItr.second;
         for (auto pID : way->nodes) {
             if (graphNodes.count(pID)) continue;

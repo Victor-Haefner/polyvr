@@ -3,10 +3,22 @@
 #include "core/math/path.h"
 #include "core/math/polygon.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/geometry/VRPhysics.h"
+#include "core/utils/toString.h"
 
 #include <OpenSG/OSGMatrixUtility.h>
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGTriangleIterator.h>
+
+template<> string typeName(const OSG::VRStrokePtr& s) { return "Stroke"; }
+template<> string typeName(const OSG::VRStroke::CAP& s) { return "StrokeCap"; }
+
+template<> int toValue(stringstream& ss, OSG::VRStroke::CAP& c) {
+    string s; ss >> s;
+    if (s == "NONE") c = OSG::VRStroke::NONE;
+    if (s == "ARROW") c = OSG::VRStroke::ARROW;
+    return s.length();
+}
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -22,7 +34,7 @@ vector<pathPtr>& VRStroke::getPaths() { return paths; }
 
 void VRStroke::addPolygon(VRPolygonPtr p) { polygons.push_back(p); }
 
-void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool doColor, CAP l, CAP r) {
+void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool doColor, CAP l, CAP r) {
     mode = 0;
     this->profile = profile;
     this->closed = closed;
@@ -179,6 +191,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool doColor, C
     }
 
     data.apply( ptr() );
+    getMaterial()->setLit(lit);
 }
 
 void VRStroke::strokeStrew(VRGeometryPtr geo) {
@@ -210,6 +223,13 @@ void VRStroke::update() {
         default:
             break;
     }
+}
+
+void VRStroke::convertToRope() {
+    getPhysics()->setDynamic(true);
+    getPhysics()->setShape("Rope");
+    getPhysics()->setSoft(true);
+    getPhysics()->setPhysicalized(true);
 }
 
 OSG_END_NAMESPACE;

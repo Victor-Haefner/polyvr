@@ -398,7 +398,7 @@ VRStrokePtr FNetwork::stroke(Color3f c, float k) {
     profile.push_back(Vec3d(-k*0.5,k,0));
     profile.push_back(Vec3d(k*0.5,k,0));
     profile.push_back(Vec3d(k,0,0));
-    stroke->strokeProfile(profile, true);
+    stroke->strokeProfile(profile, true, true);
     return stroke;
 }
 
