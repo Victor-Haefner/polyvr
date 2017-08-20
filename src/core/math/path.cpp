@@ -109,8 +109,8 @@ vector<double> path::computeInflectionPoints(int i, int j, float threshold) { //
 
         // help points
         double L = (P1.pos() - P2.pos()).length();
-        Vec3d H1 = P1.pos() + P1.dir()*0.333*L;
-        Vec3d H2 = P2.pos() - P2.dir()*0.333*L;
+        Vec3d H1 = P1.pos() + P1.dir()*L/3.0;
+        Vec3d H2 = P2.pos() - P2.dir()*L/3.0;
 
         // At*t*t + B*t*t + C*t + D
         Vec3d A = P2.pos() - H2*3 + H1*3 - P1.pos();
@@ -161,8 +161,8 @@ void path::approximate(int d) {
 
         // help points
         float L = (p1.pos()-p4.pos()).length();
-        Vec3d H1 = p1.pos() + p1.dir()*0.333*L;
-        Vec3d H2 = p4.pos() - p4.dir()*0.333*L;
+        Vec3d H1 = p1.pos() + p1.dir()*L/3.0;
+        Vec3d H2 = p4.pos() - p4.dir()*L/3.0;
 
         // At*t*t + B*t*t + C*t + D
         Vec3d A = p4.pos() - H2*3 + H1*3 - p1.pos();
@@ -277,8 +277,8 @@ void path::compute(int N) {
             auto& c2 = point_colors[i+1];
             Vec3d r = p2.pos() - p1.pos();
             float L = r.length();
-            Vec3d h1 = p1.pos() + p1.dir()*0.333*L;
-            Vec3d h2 = p2.pos() - p2.dir()*0.333*L;
+            Vec3d h1 = p1.pos() + p1.dir()*L/3.0;
+            Vec3d h2 = p2.pos() - p2.dir()*L/3.0;
 
             // berechne die hilfspunkte fuer die directions B'(0.5)
             //  B(t) = (1 - t)^3 * p1 + 3t(1-t)^2 * h1 + 3t^2 (1-t) * h2 + t^3 * p2
@@ -357,8 +357,8 @@ Vec3d path::getPosition(float t, int i, int j, bool fast) {
 
         Vec3d r = p2.pos() - p1.pos();
         float L = r.length();
-        Vec3d h1 = p1.pos() + p1.dir()*0.333*L;
-        Vec3d h2 = p2.pos() - p2.dir()*0.333*L;
+        Vec3d h1 = p1.pos() + p1.dir()*L/3.0;
+        Vec3d h2 = p2.pos() - p2.dir()*L/3.0;
 
         return p1.pos()*(1-t)*(1-t)*(1-t) + h1*3*t*(1-t)*(1-t) + h2*3*t*t*(1-t) + p2.pos()*t*t*t;
     }

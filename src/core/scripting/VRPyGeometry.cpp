@@ -145,6 +145,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"addTriangle", (PyCFunction)VRPyGeometry::addLine, METH_VARARGS, "Add a quad to geometry - addLine( | [i1,i2,i3] )" },
     {"addQuad", (PyCFunction)VRPyGeometry::addQuad, METH_VARARGS, "Add a quad to geometry - addQuad( | [i1,i2,i3,i4] )" },
     {"clear", (PyCFunction)VRPyGeometry::clear, METH_NOARGS, "Clear all geometric data - clear()" },
+    {"size", PyWrap( Geometry, size, "Returns the size of the positions vector", int ) },
     {NULL}  /* Sentinel */
 };
 

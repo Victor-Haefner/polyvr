@@ -91,12 +91,14 @@ VRGeometryPtr VRRoadIntersection::createGeometry() {
     }
     for (auto p : intersectionPoints) poly.addPoint(Vec2d(p[0], p[2]));
     poly = poly.getConvexHull();
+    if (poly.size() <= 2) return 0;
 
     median = poly.getBoundingBox().center();
     poly.translate(-median);
     Triangulator tri;
     tri.add( poly );
     VRGeometryPtr intersection = tri.compute();
+    if (intersection->size() == 0) { cout << "VRRoadIntersection::createGeometry ERROR: no geometry created!\n"; return 0; }
     if (terrain) terrain->elevatePoint(median, roadTerrainOffset); // TODO: elevate each point of the polygon
     intersection->setPose(median, Vec3d(0,1,0), Vec3d(0,0,1));
     intersection->applyTransformation();
@@ -171,6 +173,7 @@ void VRRoadIntersection::computeTrafficLights() { // deprecated
 }
 
 void VRRoadIntersection::computeMarkings() {
+    if (!perimeter) return;
     string name = entity->getName();
 
     auto addLine = [&]( const string& type, Vec3d p1, Vec3d p2, Vec3d n1, Vec3d n2, float w, int dashNumber) {
