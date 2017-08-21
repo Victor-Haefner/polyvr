@@ -32,7 +32,7 @@ void VRAsphalt::setMarkingsColor(Color4f c) {
 
 void VRAsphalt::clearTexture() {
     texGen = VRTextureGenerator::create();
-	texGen->setSize(Vec3i(2048,1024,1), false); // Number of roads, Number of markings per road
+	texGen->setSize(Vec3i(4096,4096,1), false); // Number of roads, Number of markings per road
 	texGen->drawFill(Color4f(0,0,0,1));
     roadData.clear();
     updateTexture();

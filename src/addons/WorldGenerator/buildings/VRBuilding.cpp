@@ -6,7 +6,12 @@
 
 using namespace OSG;
 
-VRBuilding::VRBuilding() {}
+VRBuilding::VRBuilding() {
+    wallType = rand();
+    windowType = rand();
+    doorType = rand();
+}
+
 VRBuilding::~VRBuilding() {}
 
 VRBuildingPtr VRBuilding::create() { return VRBuildingPtr( new VRBuilding() ); }
@@ -44,9 +49,9 @@ VRGeometryPtr VRBuilding::addFloor(VRPolygon polygon, float H) {
         float _N = 1./N;
         float e = 0.01;
 
-        int di = N*float(rand()) / RAND_MAX;
-        int wi = N*float(rand()) / RAND_MAX;
-        int fi = N*float(rand()) / RAND_MAX;
+        int di = N*float(doorType) / RAND_MAX;
+        int wi = N*float(windowType) / RAND_MAX;
+        int fi = N*float(wallType) / RAND_MAX;
 
         float d_tc1 = di * _N + e;
         float d_tc2 = di * _N - e + _N;

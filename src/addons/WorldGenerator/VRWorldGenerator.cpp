@@ -91,6 +91,7 @@ void VRWorldGenerator::init() {
 
     assets = VRObjectManager::create();
     addChild(assets);
+
     nature = VRNature::create();
     nature->setWorld( ptr() );
     addChild(nature);
@@ -110,6 +111,15 @@ void VRWorldGenerator::addOSMMap(string path) {
     };
 
     map<string, Node> graphNodes;
+
+    auto wayToPolygon = [&](OSMWayPtr& way) {
+        auto poly = VRPolygon::create();
+        for (auto ps : way->polygon.get()) {
+            auto p = planet->fromLatLongPosition(ps[1], ps[0], true);
+            poly->addPoint( Vec2d(p[0], p[2]) );
+        }
+        return poly;
+    };
 
     auto addRoad = [&](OSMWayPtr& way, string tag, float Width, bool pedestrian) {
         auto& nodes = way->nodes;
@@ -133,7 +143,7 @@ void VRWorldGenerator::addOSMMap(string path) {
         int NlanesRight = has("lanes:forward") ? toInt( way->tags["lanes:forward"] ) : has("lanes:forwards") ? toInt( way->tags["lanes:forwards"] ) : 0;
         int NlanesLeft = has("lanes:backward") ? toInt( way->tags["lanes:backward"] ) : 0;
         if (NlanesRight == 0 && NlanesLeft == 0) NlanesRight = has("lanes") ? toInt( way->tags["lanes"] ) : 1;
-        cout << endl << has("lanes") << " hasForw " << has("lanes:forward") << " hasBack " << has("lanes:backward") << " Nright " << NlanesRight << " Nleft " << NlanesLeft << endl;
+        //cout << endl << has("lanes") << " hasForw " << has("lanes:forward") << " hasBack " << has("lanes:backward") << " Nright " << NlanesRight << " Nleft " << NlanesLeft << endl;
 
         for (int i=1; i<nodes.size(); i++) {
             auto road = roads->addRoad("someRoad", tag, node(i-1), node(i), norms[i-1], norms[i], 0);
@@ -143,12 +153,11 @@ void VRWorldGenerator::addOSMMap(string path) {
     };
 
     auto addBuilding = [&](OSMWayPtr& way) {
-        VRPolygon poly;
-        for (auto ps : way->polygon.get()) {
-            auto p = planet->fromLatLongPosition(ps[1], ps[0], true);
-            poly.addPoint( Vec2d(p[0], p[2]) );
-        }
-        district->addBuilding( poly );
+        auto has  = [&](const string& tag) { return way->tags.count(tag) > 0; };
+
+        int lvls = 4;
+        if (has("building:levels")) lvls = toInt( way->tags["building:levels"] );
+        district->addBuilding( *wayToPolygon(way), lvls );
     };
 
     int i=0;
@@ -165,17 +174,38 @@ void VRWorldGenerator::addOSMMap(string path) {
             graphNodes[pID] = n;
         }
 
-        //cout << "tags: ";
+        cout << "tags: ";
         for (auto tag : way->tags) {
             if (tag.first == "highway") {
                 if (tag.second == "footway") { addRoad(way, tag.second, 1, true); continue; }
                 addRoad(way, tag.second, 4, false); // default road
+                continue;
             }
 
-            if (tag.first == "building") addBuilding(way);
-            //cout << " " << tag.first << " : " << tag.second;
+            if (tag.first == "building") { addBuilding(way); continue; }
+
+            if (tag.first == "barrier") {
+                if (tag.second == "rail_guard") ; // TODO: port from python prototype
+                continue;
+            }
+
+            if (tag.first == "natural") {
+                if (tag.second == "wood") {
+                    //nature->addGrassPatch( wayToPolygon(way), 0, 1, 1 );
+                }
+                if (tag.second == "grassland") ; // TODO
+                continue;
+            }
+
+            if (tag.first == "leisure") {
+                if (tag.second == "park") {
+                    //nature->addGrassPatch( wayToPolygon(way), 0, 1, 1 );
+                }
+                continue;
+            }
+            cout << " " << tag.first << " : " << tag.second;
         }
-        //cout << endl;
+        cout << endl;
     }
 
 

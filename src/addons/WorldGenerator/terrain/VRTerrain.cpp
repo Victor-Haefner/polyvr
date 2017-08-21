@@ -119,7 +119,8 @@ void VRTerrain::physicalize(bool b) {
 
     double R = resolution*0.94; // Hack, there is a scaling error somewhere, either in the shape or the visualisation
     auto shape = new btHeightfieldTerrainShape(dim[0], dim[1], &(*physicsHeightBuffer)[0], 1, -Hmax, Hmax, 1, PHY_FLOAT, false);
-    shape->setLocalScaling(btVector3(R,1,R));
+    //shape->setLocalScaling(btVector3(R,1,R));
+    shape->setLocalScaling(btVector3(texelSize[0],1,texelSize[1]));
     getPhysics()->setCustomShape( shape );
     getPhysics()->setPhysicalized(true);
 }

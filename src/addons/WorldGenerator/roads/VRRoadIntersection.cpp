@@ -308,7 +308,7 @@ void VRRoadIntersection::computeLayout() {
             auto road2 = roads[1];
             auto& data1 = road1->getEdgePoints( node );
             auto& data2 = road2->getEdgePoints( node );
-            cout << " N1 " << data1.n << "  N2 " << data2.n << "  Dot " << data1.n.dot(data2.n) << endl;
+            //cout << " N1 " << data1.n << "  N2 " << data2.n << "  Dot " << data1.n.dot(data2.n) << endl;
             if (data1.n.dot(data2.n) < -0.8) {
                 ; // TODO
                 return true;
@@ -327,8 +327,10 @@ void VRRoadIntersection::computeLayout() {
         float d1 = (p1-pNode).dot(norm);
         float d2 = (p2-pNode).dot(norm);
         float d = min(d1,d2);
-        data.p1 = p1-norm*(d1-d);
-        data.p2 = p2-norm*(d2-d);
+        d1 = max(0.f,d1-d);
+        d2 = max(0.f,d2-d);
+        data.p1 = p1-norm*(d1);
+        data.p2 = p2-norm*(d2);
 
         Vec3d pm = (data.p1 + data.p2)*0.5; // compute road node
         auto n = addNode(pm);

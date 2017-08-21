@@ -27,7 +27,7 @@ class VRDistrict : public VRObject, public VRWorldModule {
 
         static VRDistrictPtr create();
 
-        void addBuilding( VRPolygon p );
+        void addBuilding( VRPolygon p, int stories );
 };
 
 OSG_END_NAMESPACE;

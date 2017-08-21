@@ -47,17 +47,19 @@ void VRDistrict::init() {
     roofs->setMaterial(b_mat);
 }
 
-void VRDistrict::addBuilding( VRPolygon p ) {
+void VRDistrict::addBuilding( VRPolygon p, int stories ) {
     if (p.size() < 3) return;
 
     if (!p.isCCW()) p.reverseOrder();
 
     auto b = VRBuilding::create();
     b->setWorld(world);
-    auto walls = b->addFloor(p, 4);
+    for (auto i=0; i<stories; i++) {
+        auto walls = b->addFloor(p, 4);
+        facades->merge(walls);
+    }
     auto roof = b->addRoof(p);
 
-    facades->merge(walls);
     roofs->merge(roof);
 }
 

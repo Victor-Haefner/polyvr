@@ -15,6 +15,9 @@ using namespace std;
 
 class VRBuilding : public VRWorldModule {
     private:
+        int wallType = 0;
+        int windowType = 0;
+        int doorType = 0;
         float height = 0;
         float ground = 0;
 
