@@ -73,9 +73,7 @@ void VRRoadNetwork::clear() {
     arrows = VRGeometry::create("arrows");
     arrows->setMaterial(asphaltArrow);
     addChild( arrows );
-    arrows->destroy();
 
-    arrowTemplates.clear();
     for (auto road : roads) road->destroy();
     roads.clear();
     for (auto road : ways) road->destroy();
@@ -152,7 +150,7 @@ VRRoadPtr VRRoadNetwork::addRoad( string name, string type, VREntityPtr node1, V
     vector<VREntityPtr> nodes;
     vector<Vec3d> norms;
     nodes.push_back( node1 ); norms.push_back( norm1 );
-    for (auto t : p.computeInflectionPoints(0,0,0.2)) { // add inflection points
+    for (auto t : p.computeInflectionPoints(0,0,0.2, Vec3i(1,0,1))) { // add inflection points
         auto pnt = p.getPose(t);
         Vec3d n = pnt.dir(); //n.normalize();
         if (terrain) terrain->projectTangent(n, pnt.pos());
@@ -553,6 +551,7 @@ void VRRoadNetwork::compute() {
     computeMarkings();
     computeArrows();
     //computeGreenBelts();
+    updateAsphaltTexture();
 }
 
 

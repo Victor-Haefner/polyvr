@@ -100,7 +100,7 @@ void path::cubicBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1, Vec3d h0, Ve
     }
 }
 
-vector<double> path::computeInflectionPoints(int i, int j, float threshold) { // first and second derivative are parallel
+vector<double> path::computeInflectionPoints(int i, int j, float threshold, Vec3i axis) { // first and second derivative are parallel
     if (j <= i) j = size()-1;
     vector<double> res;
     for (auto k=i+1; k<=j; k++) {
@@ -127,14 +127,14 @@ vector<double> path::computeInflectionPoints(int i, int j, float threshold) { //
         equation ez(0,BxA[2],CxA[2],CxB[2]);
         vector<double> T;
         Vec3d t;
-        for (int k=0; k < ex.solve(t[0],t[1],t[3]) ;k++) T.push_back(t[k]);
-        for (int k=0; k < ey.solve(t[0],t[1],t[3]) ;k++) T.push_back(t[k]);
-        for (int k=0; k < ez.solve(t[0],t[1],t[3]) ;k++) T.push_back(t[k]);
+        if (axis[0]) for (int k=0; k < ex.solve(t[0],t[1],t[3]) ;k++) T.push_back(t[k]);
+        if (axis[1]) for (int k=0; k < ey.solve(t[0],t[1],t[3]) ;k++) T.push_back(t[k]);
+        if (axis[2]) for (int k=0; k < ez.solve(t[0],t[1],t[3]) ;k++) T.push_back(t[k]);
 
         for (auto t : T) {
             Vec3d Vt = (A*t*t+B*t*2+C)*3;
             Vec3d At = (A*t+B)*6;
-            if (t <= 0 || t >= 1) continue;
+            if (t <= threshold || t >= 1-threshold) continue;
             //if (abs(Vt.dot(At)) > 1e-9) continue;
             bool b = true;
             for (auto r : res) if (abs(r-t) < threshold) { b = false; break; }
@@ -156,29 +156,13 @@ void path::approximate(int d) {
     };
 
     auto toQuadratic = [&](int j, pose& p1, pose& p4, pose& pm, pose& p2, pose& p3) {
-        float t = 0.5;
-        pm = getPose(t, j, j+1, false);
 
-        // help points
-        float L = (p1.pos()-p4.pos()).length();
-        Vec3d H1 = p1.pos() + p1.dir()*L/3.0;
-        Vec3d H2 = p4.pos() - p4.dir()*L/3.0;
-
-        // At*t*t + B*t*t + C*t + D
-        Vec3d A = p4.pos() - H2*3 + H1*3 - p1.pos();
-        Vec3d B = H2 - H1*2 + p1.pos();
-        Vec3d C = H1 - p1.pos();
-        Vec3d nm = (A*t*t+B*t*2+C)*3; nm.normalize();
-        pm.setDir(nm);
-
-        p2.setPos( intersect(p1,pm) );
-        p3.setPos( intersect(p4,pm) );
     };
 
 	auto isLinear = [&](pose& p1, pose& p2) {
-		if (abs(p1.dir().dot(p2.dir())-1.0) > 0.00001) return false;
+		if (abs(p1.dir().dot(p2.dir())-1.0) > 1e-5) return false;
 		Vec3d d = p2.pos()-p1.pos(); d.normalize();
-		if (abs(d.dot(p1.dir())-1.0) > 0.00001) return false;
+		if (abs(d.dot(p1.dir())-1.0) > 1e-5) return false;
 		return true;
 	};
 
@@ -192,11 +176,22 @@ void path::approximate(int d) {
 
 			if (isLinear(p1,p4)) res.push_back( pose( (p1.pos()+p4.pos())*0.5, p1.dir(), p1.up() ) );
 			else {
-				pose p2,p3,pm;
-				toQuadratic(j-1,p1,p4,pm,p2,p3);
-                res.push_back(p2);
-                res.push_back(pm);
-                res.push_back(p3);
+                //auto Tvec = computeInflectionPoints(j-1,j,0.01,Vec3i(1,0,1));
+                auto Tvec = computeInflectionPoints(j-1,j,0.01);
+                //auto Tvec = computeInflectionPoints(j-1,j);
+                if (Tvec.size() == 0) Tvec = {0.5};
+
+                vector<pose> poses;
+                poses.push_back(p1);
+                for (auto t : Tvec) poses.push_back( getPose(t, j-1, j, false) );
+                poses.push_back(p4);
+
+                for (int i=1; i<poses.size()-1; i++) {
+                    auto& pm = poses[i];
+                    res.push_back( pose( intersect(poses[i-1],pm) ) );
+                    res.push_back(pm);
+                    if (i == poses.size()-2) res.push_back( pose( intersect(poses[i+1],pm) ) );
+                }
 			}
 			if (j == points.size()-1) res.push_back(p4);
 		}
