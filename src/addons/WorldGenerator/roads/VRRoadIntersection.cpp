@@ -78,32 +78,36 @@ void VRRoadIntersection::computeLanes() {
 	}
 }
 
-VRGeometryPtr VRRoadIntersection::createGeometry() {
-    VRPolygon poly;
+void VRRoadIntersection::computePatch() {
     VREntityPtr node = entity->getEntity("node");
-    if (!node) return 0;
+    if (!node) return;
+    patch = VRPolygon::create();
     for (auto road : roads) {
         auto rNode = getRoadNode(road->getEntity());
         if (!rNode) continue;
         auto& endP = road->getEdgePoints( rNode );
-        poly.addPoint(Vec2d(endP.p1[0], endP.p1[2]));
-        poly.addPoint(Vec2d(endP.p2[0], endP.p2[2]));
+        patch->addPoint(Vec2d(endP.p1[0], endP.p1[2]));
+        patch->addPoint(Vec2d(endP.p2[0], endP.p2[2]));
     }
-    for (auto p : intersectionPoints) poly.addPoint(Vec2d(p[0], p[2]));
-    poly = poly.getConvexHull();
-    if (poly.size() <= 2) return 0;
+    for (auto p : intersectionPoints) patch->addPoint(Vec2d(p[0], p[2]));
+    *patch = patch->getConvexHull();
+    if (patch->size() <= 2) { patch.reset(); return; }
 
-    median = poly.getBoundingBox().center();
-    poly.translate(-median);
+    median = patch->getBoundingBox().center();
+    patch->translate(-median);
+	perimeter = patch->shrink(markingsWidth*0.5);
+    if (terrain) terrain->elevatePoint(median, roadTerrainOffset); // TODO: elevate each point of the polygon
+}
+
+VRGeometryPtr VRRoadIntersection::createGeometry() {
+    if (!patch) return 0;
     Triangulator tri;
-    tri.add( poly );
+    tri.add( *patch );
     VRGeometryPtr intersection = tri.compute();
     if (intersection->size() == 0) { cout << "VRRoadIntersection::createGeometry ERROR: no geometry created!\n"; return 0; }
-    if (terrain) terrain->elevatePoint(median, roadTerrainOffset); // TODO: elevate each point of the polygon
     intersection->setPose(median, Vec3d(0,1,0), Vec3d(0,0,1));
     intersection->applyTransformation();
 	setupTexCoords( intersection, entity );
-	perimeter = poly.shrink(markingsWidth*0.5);
 	addChild(intersection);
 	return intersection;
 }
@@ -366,5 +370,17 @@ void VRRoadIntersection::computeLayout() {
         }
     }
     for (auto path : iPaths) entity->add("path", path->getName());
+
+    computePatch();
+    if (patch) {
+        for (uint i=0; i<roads.size(); i++) { // compute intersection paths
+            auto r = roads[i];
+            auto e = r->getNodeEntry(node);
+            auto n = e->getEntity("node");
+            auto p = n->getVec3f("position");
+            p[1] = median[1];
+            n->setVector("position", toStringVector(p), "Position");
+        }
+    }
 }
 

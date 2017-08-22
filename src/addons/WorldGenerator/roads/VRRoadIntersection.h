@@ -21,6 +21,7 @@ class VRRoadIntersection : public VRRoadBase {
         map<VRRoadPtr, vector<VREntityPtr>> outLanes;
         map<VREntityPtr, vector<VREntityPtr>> nextLanes;
         vector<Vec3d> intersectionPoints;
+        VRPolygonPtr patch;
         VRPolygonPtr perimeter;
         Vec3d median;
 
@@ -33,6 +34,7 @@ class VRRoadIntersection : public VRRoadBase {
         VREntityPtr addTrafficLight( posePtr p, string asset, Vec3d root );
         VRGeometryPtr createGeometry();
 
+        void computePatch();
         void computeLayout();
         void computeLanes();
         void computeMarkings();

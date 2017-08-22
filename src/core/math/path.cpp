@@ -177,8 +177,8 @@ void path::approximate(int d) {
 			if (isLinear(p1,p4)) res.push_back( pose( (p1.pos()+p4.pos())*0.5, p1.dir(), p1.up() ) );
 			else {
                 //auto Tvec = computeInflectionPoints(j-1,j,0.01,Vec3i(1,0,1));
-                auto Tvec = computeInflectionPoints(j-1,j,0.01);
-                //auto Tvec = computeInflectionPoints(j-1,j);
+                //auto Tvec = computeInflectionPoints(j-1,j,0.01);
+                auto Tvec = computeInflectionPoints(j-1,j);
                 if (Tvec.size() == 0) Tvec = {0.5};
 
                 vector<pose> poses;
