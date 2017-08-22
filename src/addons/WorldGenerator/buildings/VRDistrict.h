@@ -28,6 +28,8 @@ class VRDistrict : public VRObject, public VRWorldModule {
         static VRDistrictPtr create();
 
         void addBuilding( VRPolygon p, int stories );
+
+        void clear();
 };
 
 OSG_END_NAMESPACE;

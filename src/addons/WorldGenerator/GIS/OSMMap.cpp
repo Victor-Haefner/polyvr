@@ -59,6 +59,17 @@ OSMWay::OSMWay(xmlpp::Element* el) : OSMBase(el) {
 }
 
 OSMMap::OSMMap(string filepath) {
+    readFile(filepath);
+}
+
+void OSMMap::clear() {
+    bounds->clear();
+    ways.clear();
+    nodes.clear();
+}
+
+void OSMMap::readFile(string path) {
+    filepath = path;
     bounds = Boundingbox::create();
 
     xmlpp::DomParser parser;
@@ -87,6 +98,11 @@ map<string, OSMWayPtr> OSMMap::getWays() { return ways; }
 map<string, OSMNodePtr> OSMMap::getNodes() { return nodes; }
 OSMNodePtr OSMMap::getNode(string id) { return nodes[id]; }
 OSMNodePtr OSMMap::getWay(string id) { return nodes[id]; }
+
+void OSMMap::reload() {
+    clear();
+    readFile(filepath);
+}
 
 void OSMMap::readNode(xmlpp::Element* element) {
     OSMNodePtr node = OSMNodePtr( new OSMNode(element) );

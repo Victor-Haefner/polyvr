@@ -43,6 +43,7 @@ struct OSMWay : OSMBase {
 
 class OSMMap {
     private:
+        string filepath;
         BoundingboxPtr bounds;
         map<string, OSMWayPtr> ways;
         map<string, OSMNodePtr> nodes;
@@ -51,9 +52,14 @@ class OSMMap {
         void readWay(xmlpp::Element* element);
         void readBounds(xmlpp::Element* element);
 
+        void readFile(string path);
+
     public:
         OSMMap(string filepath);
         static OSMMapPtr loadMap(string filepath);
+
+        void clear();
+        void reload();
 
         map<string, OSMWayPtr> getWays();
         map<string, OSMNodePtr> getNodes();

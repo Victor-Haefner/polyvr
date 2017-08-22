@@ -69,6 +69,7 @@ VRGeometryPtr VRRoad::createGeometry() {
 
 	auto geo = strokeGeometry();
 	setupTexCoords( geo, entity );
+	addChild(geo);
 	return geo;
 }
 

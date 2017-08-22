@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="80">
+<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="2063">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.516136 0.516136 0.516136 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0 0 0 1" type="Light" unique="1" visible="1">
-        <Object at="-4.5 4 -1" at_dir="1" base_name="Headlight_beacon" from="-4 5 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
+        <Object at="-4.5 4 -1" at_dir="0" base_name="Headlight_beacon" from="-4 5 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="14.3378 1.2216 12.0731" at_dir="0" base_name="Default" far="1024" fov="1.0472" from="68.6438 78.5814 86.0054" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="1.90849 1.61229 1.68575" at_dir="0" base_name="Default" far="1024" fov="1.0472" from="20.9305 12.0427 21.6341" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" hmdd="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
     <Script base_name="click" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
       <core>
@@ -27,10 +27,20 @@
       <core>
 	import VR
 	
-	VR.init_terrain()
+	r = VR.getRoot().find('Headlight')
+
+	if hasattr(VR, 'woods'): VR.woods.destroy()
+	VR.woods = VR.Nature()
+	r.addChild(VR.woods)
+	
+	VR.size = 300
+	
+	#VR.init_terrain()
 	#VR.init_trees()
-	VR.init_woods()
-	#VR.init_grass()
+	#VR.init_woods()
+	VR.init_grass()
+	
+	VR.woods.computeLODs()
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="2" base_name="trigger" name_space="__global__"/>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" name_suffix="3" base_name="trigger" name_space="__global__"/>
@@ -39,20 +49,14 @@
       <core>
 	import VR, random
 	
-	r = VR.getRoot().find('Headlight')
-
-	if hasattr(VR, 'grass'): VR.grass.destroy()
-	VR.grass = VR.Geometry('grass')
-	r.addChild(VR.grass)
+	S = VR.size
 	
-	# ongoing work
-	"""
-	patch = VR.Polygon()
-	VR.grass = VR.GrassPatch()
-	VR.grass.setSurface(VR.terrain)
-	VR.grass.setPerimeter(patch)
-	VR.grass.grow(1.0)
-	"""
+	polygon = VR.Polygon()
+	polygon.addPoint([-S*0.5, -S*0.5])
+	polygon.addPoint([ S*0.5, -S*0.5])
+	polygon.addPoint([ S*0.5,  S*0.5])
+	polygon.addPoint([-S*0.5,  S*0.5])
+	VR.woods.addGrassPatch(polygon)
 	
 	
 	
@@ -160,11 +164,6 @@
 	import VR
 	from random import random
 	
-	r = VR.getRoot().find('Headlight')
-
-	if hasattr(VR, 'woods'): VR.woods.destroy()
-	VR.woods = VR.Woods()
-	r.addChild(VR.woods)
 		
 	def addTree():
 		t = VR.Tree('tree')
@@ -201,23 +200,22 @@
 	trees = [ addTree() for i in range(5) ]
 	bushes = [ addBush() for i in range(5) ]
 	
-	for i in range(200):
+	for i in range(int(0.02*VR.size*VR.size)):
 		t = trees[int(random()*5)]
-		t.setFrom( randPos(50) )
+		t.setFrom( randPos(VR.size*0.5) )
 		VR.woods.addTree(t)
 	
-	for i in range(2000):
+	for i in range(int(0.1*VR.size*VR.size)):
 		t = bushes[int(random()*5)]
-		t.setFrom( randPos(50) )
+		t.setFrom( randPos(VR.size*0.5) )
 		VR.woods.addTree(t)
 	
 	"""	
 	for t in trees:
-		t.setFrom( randPos(50) )
+		t.setFrom( randPos(VR.size*0.5) )
 		VR.woods.addTree(t)
 	"""
 		
-	VR.woods.computeLODs()
 	
 	
 	

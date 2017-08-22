@@ -29,6 +29,8 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"setOntology", PyWrap( WorldGenerator, setOntology, "Set ontology", void, VROntologyPtr ) },
     {"getMaterial", PyWrap( WorldGenerator, getMaterial, "Get a material by name", VRMaterialPtr, string ) },
     {"addOSMMap", PyWrap( WorldGenerator, addOSMMap, "Add an OpenStreetMap map", void, string ) },
+    {"reloadOSMMap", PyWrap( WorldGenerator, reloadOSMMap, "Reload OSM data", void ) },
+    {"clear", PyWrap( WorldGenerator, clear, "Clear everything", void ) },
     {NULL}  /* Sentinel */
 };
 

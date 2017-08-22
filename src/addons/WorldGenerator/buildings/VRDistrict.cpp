@@ -25,24 +25,21 @@ VRDistrictPtr VRDistrict::create() {
 }
 
 void VRDistrict::init() {
-    b_mat = VRMaterial::create("Buildings");
-    b_mat->setTexture("world/textures/Buildings.png", false);
-    b_mat->setAmbient(Color3f(0.7, 0.7, 0.7)); //light reflection in all directions
-    b_mat->setDiffuse(Color3f(1.0, 1.0, 1.0)); //light from ambient (without lightsource)
-    b_mat->setSpecular(Color3f(0.2, 0.2, 0.2)); //light reflection in camera direction
-
-    string wdir = VRSceneManager::get()->getOriginalWorkdir();
-    //b_mat->readVertexShader(wdir+"/shader/TexturePhong/phong.vp");
-    //b_mat->readFragmentShader(wdir+"/shader/TexturePhong/phong_building.fp"); //Fragment Shader
-    b_mat->setVertexShader(matVShdr, "buildingVS");
-    b_mat->setFragmentShader(matFShdr, "buildingFS");
-    b_mat->setMagMinFilter(GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST, 0);
+    if (!b_mat) {
+        b_mat = VRMaterial::create("Buildings");
+        b_mat->setTexture("world/textures/Buildings.png", false);
+        b_mat->setAmbient(Color3f(0.7, 0.7, 0.7)); //light reflection in all directions
+        b_mat->setDiffuse(Color3f(1.0, 1.0, 1.0)); //light from ambient (without lightsource)
+        b_mat->setSpecular(Color3f(0.2, 0.2, 0.2)); //light reflection in camera direction
+        b_mat->setVertexShader(matVShdr, "buildingVS");
+        b_mat->setFragmentShader(matFShdr, "buildingFS");
+        b_mat->setMagMinFilter(GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST, 0);
+    }
 
     facades = VRGeometry::create("facades");
     roofs = VRGeometry::create("roofs");
     addChild(facades);
     addChild(roofs);
-
     facades->setMaterial(b_mat);
     roofs->setMaterial(b_mat);
 }
@@ -63,6 +60,11 @@ void VRDistrict::addBuilding( VRPolygon p, int stories ) {
     roofs->merge(roof);
 }
 
+void VRDistrict::clear() {
+    facades->destroy();
+    roofs->destroy();
+    init();
+}
 
 string VRDistrict::matVShdr = GLSL(
 varying vec3 vnrm;

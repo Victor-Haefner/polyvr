@@ -56,12 +56,32 @@ GraphPtr VRRoadNetwork::getGraph() { return graph; }
 
 void VRRoadNetwork::clear() {
 	nextRoadID = 0;
+	if (world->getOntology()) world->getOntology()->remEntities("Node");
+	if (world->getOntology()) world->getOntology()->remEntities("NodeEntry");
+	if (world->getOntology()) world->getOntology()->remEntities("Arrow");
+	if (world->getOntology()) world->getOntology()->remEntities("GreenBelt");
+	if (world->getOntology()) world->getOntology()->remEntities("Lane");
+	if (world->getOntology()) world->getOntology()->remEntities("Way");
+	if (world->getOntology()) world->getOntology()->remEntities("Road");
 	if (world->getOntology()) world->getOntology()->remEntities("RoadMarking");
+	if (world->getOntology()) world->getOntology()->remEntities("Path");
+	if (world->getOntology()) world->getOntology()->remEntities("RoadTrack");
+	if (world->getOntology()) world->getOntology()->remEntities("RoadIntersection");
 	if (arrowTexture) arrowTexture = VRTexture::create();
     arrowTemplates.clear();
+    arrows->destroy();
     arrows = VRGeometry::create("arrows");
     arrows->setMaterial(asphaltArrow);
     addChild( arrows );
+    arrows->destroy();
+
+    arrowTemplates.clear();
+    for (auto road : roads) road->destroy();
+    roads.clear();
+    for (auto road : ways) road->destroy();
+    ways.clear();
+    for (auto road : intersections) road->destroy();
+    intersections.clear();
 }
 
 void VRRoadNetwork::updateAsphaltTexture() {
@@ -465,11 +485,10 @@ void VRRoadNetwork::computeSurfaces() {
         auto roadGeo = road->createGeometry();
         roadGeo->setMaterial( asphalt );
         if (!roadGeo) return;
-        roadGeo->hide();
         roadGeo->getPhysics()->setDynamic(false);
         roadGeo->getPhysics()->setShape("Concave");
         roadGeo->getPhysics()->setPhysicalized(true);
-        addChild( roadGeo );
+        //addChild( roadGeo );
     };
 
     for (auto way : ways) computeRoadSurface(way);
@@ -479,8 +498,7 @@ void VRRoadNetwork::computeSurfaces() {
         auto iGeo = intersection->createGeometry();
         if (!iGeo) continue;
         iGeo->setMaterial( asphalt );
-        iGeo->hide();
-        addChild( iGeo );
+        //addChild( iGeo );
     }
 }
 

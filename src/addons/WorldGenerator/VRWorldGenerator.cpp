@@ -103,7 +103,10 @@ void VRWorldGenerator::init() {
 
 void VRWorldGenerator::addOSMMap(string path) {
     osmMap = OSMMap::loadMap(path);
+    processOSMMap();
+}
 
+void VRWorldGenerator::processOSMMap() {
     struct Node {
         OSMNodePtr n;
         VREntityPtr e;
@@ -249,8 +252,18 @@ void VRWorldGenerator::addOSMMap(string path) {
     setMap(t);*/
 }
 
+void VRWorldGenerator::reloadOSMMap() {
+    clear();
+    osmMap->reload();
+    processOSMMap();
+    roads->compute();
+}
 
-
+void VRWorldGenerator::clear() {
+    osmMap->clear();
+    roads->clear();
+    district->clear();
+}
 
 
 // textured asset material

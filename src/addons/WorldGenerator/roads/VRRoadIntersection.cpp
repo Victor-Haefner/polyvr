@@ -104,6 +104,7 @@ VRGeometryPtr VRRoadIntersection::createGeometry() {
     intersection->applyTransformation();
 	setupTexCoords( intersection, entity );
 	perimeter = poly.shrink(markingsWidth*0.5);
+	addChild(intersection);
 	return intersection;
 }
 

@@ -29,6 +29,7 @@ class VRWorldGenerator : public VRTransform {
         static string assetTexMatVShdr;
         static string assetTexMatFShdr;
 
+        void processOSMMap();
         void init();
 
     public:
@@ -43,6 +44,8 @@ class VRWorldGenerator : public VRTransform {
         void addAsset( string name, VRTransformPtr geo );
         void addMaterial( string name, VRMaterialPtr mat );
         void addOSMMap(string path);
+        void reloadOSMMap();
+        void clear();
 
         VROntologyPtr getOntology();
         VRPlanetPtr getPlanet();
