@@ -125,22 +125,42 @@ void VRWorldGenerator::processOSMMap() {
     };
 
     auto addRoad = [&](OSMWayPtr& way, string tag, float Width, bool pedestrian) {
-        auto& nodes = way->nodes;
+        if (way->nodes.size() < 2) return;
+        vector<VREntityPtr> nodes;
         vector<Vec3d> norms;
-        if (nodes.size() < 2) return;
 
-        auto pos  = [&](int i) { return graphNodes[nodes[i]].p; };
-        auto node = [&](int i) { return graphNodes[nodes[i]].e; };
+        auto pos  = [&](int i) { return graphNodes[way->nodes[i]].p; };
+        auto getNode = [&](int i) { return graphNodes[way->nodes[i]].e; };
         auto has  = [&](const string& tag) { return way->tags.count(tag) > 0; };
 
-        for (int i=0; i<nodes.size(); i++) {
-            Vec3d n;
-            if (i == 0) n = pos(1) - pos(0);
-            else if (i == nodes.size()-1) n = pos(nodes.size()-1) - pos(nodes.size()-2);
-            else n = pos(i+1) - pos(i-1);
-            n.normalize();
-            norms.push_back(n);
-            if (!graphNodes[nodes[i]].e) graphNodes[nodes[i]].e = roads->addNode(pos(i), true);
+        auto addPathData = [&](VREntityPtr node, Vec3d norm) {
+            norm.normalize();
+            nodes.push_back(node);
+            norms.push_back(norm);
+        };
+
+        for (uint i=1; i<way->nodes.size(); i++) {
+            auto& n1 = graphNodes[ way->nodes[i-1] ];
+            auto& n2 = graphNodes[ way->nodes[i  ] ];
+            auto& n3 = graphNodes[ way->nodes[(i+1)%way->nodes.size()] ];
+
+            if (i == 1) { // first
+                if (!n1.e) n1.e = roads->addNode(n1.p, true);
+                addPathData(n1.e, n2.p - n1.p);
+            }
+
+            auto node = roads->addNode((n1.p+n2.p)*0.5, true);
+            addPathData(node, n2.p - n1.p);
+
+            if (i == way->nodes.size()-1) { // last
+                if (!n2.e) n2.e = roads->addNode(n2.p, true);
+                addPathData(n2.e, n2.p - n1.p);
+            }
+
+            if (n2.n->Nways > 1 && i != way->nodes.size()-1) { // intersection node, add it!
+                if (!n2.e) n2.e = roads->addNode(n2.p, true);
+                addPathData(n2.e, n3.p - n1.p);
+            }
         }
 
         int NlanesRight = has("lanes:forward") ? toInt( way->tags["lanes:forward"] ) : has("lanes:forwards") ? toInt( way->tags["lanes:forwards"] ) : 0;
@@ -148,8 +168,8 @@ void VRWorldGenerator::processOSMMap() {
         if (NlanesRight == 0 && NlanesLeft == 0) NlanesRight = has("lanes") ? toInt( way->tags["lanes"] ) : 1;
         //cout << endl << has("lanes") << " hasForw " << has("lanes:forward") << " hasBack " << has("lanes:backward") << " Nright " << NlanesRight << " Nleft " << NlanesLeft << endl;
 
-        for (int i=1; i<nodes.size(); i++) {
-            auto road = roads->addRoad("someRoad", tag, node(i-1), node(i), norms[i-1], norms[i], 0);
+        for (uint i=1; i<nodes.size(); i++) {
+            auto road = roads->addRoad("someRoad", tag, nodes[i-1], nodes[i], norms[i-1], norms[i], 0);
             for (int l=0; l < NlanesRight; l++) road->addLane(1, Width, pedestrian);
             for (int l=0; l < NlanesLeft; l++) road->addLane(-1, Width, pedestrian);
         }

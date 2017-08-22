@@ -89,6 +89,7 @@ void OSMMap::readFile(string path) {
         for (auto nID : way.second->nodes) {
             auto n = getNode(nID);
             way.second->polygon.addPoint(Vec2d(n->lon, n->lat));
+            n->Nways++;
         }
     }
 }
