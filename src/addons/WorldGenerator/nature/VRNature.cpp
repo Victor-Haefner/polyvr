@@ -22,6 +22,9 @@
 
 using namespace OSG;
 
+template<> string typeName(const OSG::VRNaturePtr& t) { return "Nature"; }
+template<> string typeName(const OSG::VRTreePtr& t) { return "Tree"; }
+
 VRLodLeaf::VRLodLeaf(string name, Octree* o, int l) : VRTransform(name), oLeaf(o), lvl(l) {}
 VRLodLeaf::~VRLodLeaf() {}
 VRLodLeafPtr VRLodLeaf::ptr() { return static_pointer_cast<VRLodLeaf>( shared_from_this() ); }
@@ -188,10 +191,54 @@ VRTreePtr VRNature::createRandomTree(Vec3d p) {
     int i = rand()%treeTemplates.size();
     auto itr = treeTemplates.begin();
     advance(itr, i);
-    return dynamic_pointer_cast<VRTree>(itr->second->duplicate());
+    auto t = dynamic_pointer_cast<VRTree>(itr->second->duplicate());
+    t->setFrom(p);
+    return t;
 }
 
-void VRNature::remTree(int id) {
+VRTreePtr VRNature::createRandomBush(Vec3d p) {
+    if (bushTemplates.size() == 0) return 0;
+    int i = rand()%bushTemplates.size();
+    auto itr = bushTemplates.begin();
+    advance(itr, i);
+    auto t = dynamic_pointer_cast<VRTree>(itr->second->duplicate());
+    t->setFrom(p);
+    return t;
+}
+
+void VRNature::simpleInit(int treeTypes, int bushTypes) {
+    auto doTree = [&]() {
+		float H = 2+rand()*6.0/RAND_MAX;
+		int Nn = int(H)-1;
+		float r0 = 0.05+rand()*0.15/RAND_MAX;
+		float l0 = H/Nn;
+		auto t = VRTree::create("tree");
+		t->addBranching(Nn,4, 0.2,0.4,H,r0, 0.2,0.4,0.2,0.2);
+		t->addBranching(1,4, 0.2,0.4,0.8*l0,r0*pow(0.3,1), 0.2,0.4,0.2,0.2);
+		t->addBranching(1,4, 0.2,0.4,0.7*l0,r0*pow(0.3,2), 0.2,0.4,0.2,0.2);
+		t->addBranching(1,4, 0.2,0.4,0.6*l0,r0*pow(0.3,3), 0.2,0.4,0.2,0.2);
+		t->addBranching(1,4, 0.2,0.4,0.5*l0,r0*pow(0.3,4), 0.2,0.4,0.2,0.2);
+		t->grow( int(rand()*100.0/RAND_MAX) );
+		t->addLeafs(4, 30);
+		return t;
+    };
+
+    auto doBush = [&]() {
+		auto t = VRTree::create("bush");
+		t->addBranching(1,10, 0.2,0.4,0.1,0.01, 0.2,0.4,0.2,0.2);
+		t->addBranching(1,4, 0.2,0.9,0.3,0.006, 0.2,0.4,0.2,0.2);
+		t->addBranching(1,4, 0.2,0.4,0.2,0.004, 0.2,0.4,0.2,0.2);
+		t->addBranching(1,4, 0.2,0.4,0.2,0.0004, 0.2,0.4,0.2,0.2);
+		t->grow( int(rand()*100.0/RAND_MAX) );
+		t->addLeafs(3, 5, 0.05);
+		return t;
+    };
+
+    for (int i=0; i<treeTypes; i++) addTree( doTree() );
+    for (int i=0; i<bushTypes; i++) addBush( doBush() );
+}
+
+void VRNature::removeTree(int id) {
     if (!treesByID.count(id)) return;
     auto t = treesByID[id];
     auto leaf = remObject(t);
@@ -232,6 +279,8 @@ void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround,
         if (updateLODs) computeLODs(leaf);
         //cout << "  A3 " << timer.stop() - t0 << endl;
 
+        //cout << " VRNature::addGrassPatch " << median << "   " << area->computeArea() << endl;
+
         if (addGround) {
             Triangulator tri;
             tri.add(*area);
@@ -263,6 +312,25 @@ VRTreePtr VRNature::addTree(VRTreePtr t, bool updateLODs, bool addToStore) {
     auto tree = dynamic_pointer_cast<VRTree>( t->duplicate() );
     tree->addAttachment("tree", 0);
     treeTemplates[t->getName()] = t;
+    treeRefs[tree.get()] = t;
+    auto leaf = addObject(tree, p->pos(), 0); // pose contains the world position!
+    treesByID[tree->getID()] = tree;
+
+    auto te = VRObjectManager::Entry::create();
+    te->set( p, t->getName());
+    if (addToStore) treeEntries[tree->getName()] = te;
+    if (updateLODs) computeLODs(leaf);
+    return tree;
+}
+
+VRTreePtr VRNature::addBush(VRTreePtr t, bool updateLODs, bool addToStore) {
+    if (!t) return 0;
+    posePtr p = t->getRelativePose(ptr());
+    if (terrain) terrain->elevatePose(p);
+
+    auto tree = dynamic_pointer_cast<VRTree>( t->duplicate() );
+    tree->addAttachment("tree", 0);
+    bushTemplates[t->getName()] = t;
     treeRefs[tree.get()] = t;
     auto leaf = addObject(tree, p->pos(), 0); // pose contains the world position!
     treesByID[tree->getID()] = tree;

@@ -17,14 +17,6 @@ struct VRPyTree : VRPyBaseT<OSG::VRTree> {
 
 struct VRPyNature : VRPyBaseT<OSG::VRNature> {
     static PyMethodDef methods[];
-
-    static PyObject* addTree(VRPyNature* self, PyObject* args);
-    static PyObject* addGrassPatch(VRPyNature* self, PyObject* args);
-    static PyObject* computeLODs(VRPyNature* self);
-    static PyObject* addCollisionModels(VRPyNature* self);
-    static PyObject* clear(VRPyNature* self);
-    static PyObject* getTree(VRPyNature* self, PyObject* args);
-    static PyObject* removeTree(VRPyNature* self, PyObject* args);
 };
 
 #endif // VRPYTREE_H_INCLUDED

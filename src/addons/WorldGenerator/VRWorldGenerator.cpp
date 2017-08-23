@@ -95,6 +95,7 @@ void VRWorldGenerator::init() {
     nature = VRNature::create();
     nature->setWorld( ptr() );
     addChild(nature);
+    nature->simpleInit(20, 20);
 
     district = VRDistrict::create();
     district->setWorld( ptr() );
@@ -121,7 +122,13 @@ void VRWorldGenerator::processOSMMap() {
             auto p = planet->fromLatLongPosition(ps[1], ps[0], true);
             poly->addPoint( Vec2d(p[0], p[2]) );
         }
+        if (!poly->isCCW()) poly->reverseOrder();
         return poly;
+    };
+
+    auto getDir  = [&](OSMNodePtr n) {
+        float a = planet->toRad( toFloat( n->tags["direction"] ) ); // angle
+        return Vec3d(sin(a), 0, -cos(a));
     };
 
     auto addRoad = [&](OSMWayPtr& way, string tag, float Width, bool pedestrian) {
@@ -132,11 +139,6 @@ void VRWorldGenerator::processOSMMap() {
         //auto pos  = [&](int i) { return graphNodes[way->nodes[i]].p; };
         //auto getNode = [&](int i) { return graphNodes[way->nodes[i]].e; };
         auto has  = [&](const string& tag) { return way->tags.count(tag) > 0; };
-
-        auto dir  = [&](OSMNodePtr n) {
-            float a = planet->toRad( toFloat( n->tags["direction"] ) ); // angle
-            return Vec3d(sin(a), 0, -cos(a));
-        };
 
         auto addPathData = [&](VREntityPtr node, Vec3d norm) {
             norm.normalize();
@@ -151,7 +153,7 @@ void VRWorldGenerator::processOSMMap() {
 
             if (i == 1) { // first
                 if (!n1.e) n1.e = roads->addNode(n1.p, true);
-                addPathData(n1.e, n1.n->tags.count("direction") ? dir(n1.n) : n2.p - n1.p);
+                addPathData(n1.e, n1.n->tags.count("direction") ? getDir(n1.n) : n2.p - n1.p);
             }
 
             //auto node = roads->addNode((n1.p+n2.p)*0.5, true);
@@ -159,10 +161,10 @@ void VRWorldGenerator::processOSMMap() {
 
             if (i == way->nodes.size()-1) { // last
                 if (!n2.e) n2.e = roads->addNode(n2.p, true);
-                addPathData(n2.e, n2.n->tags.count("direction") ? dir(n2.n) : n2.p - n1.p);
+                addPathData(n2.e, n2.n->tags.count("direction") ? getDir(n2.n) : n2.p - n1.p);
             } else if (n2.n->Nways > 1 || true) { // intersection node, add it!
                 if (!n2.e) n2.e = roads->addNode(n2.p, true);
-                addPathData(n2.e, n2.n->tags.count("direction") ? dir(n2.n) : n3.p - n1.p);
+                addPathData(n2.e, n2.n->tags.count("direction") ? getDir(n2.n) : n3.p - n1.p);
             }
         }
 
@@ -225,6 +227,13 @@ void VRWorldGenerator::processOSMMap() {
 
             if (tag.first == "leisure") {
                 if (tag.second == "park") {
+                    //static int b = 0;
+                    //if (b < 3) {
+                        auto poly = wayToPolygon(way);
+                        cout << " addWoods " << poly->computeArea() << endl;
+                        nature->addGrassPatch( poly, 0, 1, 0 );
+                        //b++;
+                    //}
                     //nature->addGrassPatch( wayToPolygon(way), 0, 1, 1 );
                 }
                 continue;
@@ -237,6 +246,8 @@ void VRWorldGenerator::processOSMMap() {
     for (auto nodeItr : osmMap->getNodes()) {
         auto& node = nodeItr.second;
         Vec3d pos = planet->fromLatLongPosition(node->lat, node->lon, true);
+        Vec3d dir = getDir(node);
+        if (terrain) terrain->elevatePoint(pos);
         for (auto tag : node->tags) {
             if (tag.first == "natural") {
                 if (tag.second == "tree") {
@@ -244,6 +255,10 @@ void VRWorldGenerator::processOSMMap() {
                     nature->addTree(t, 0, 0);
                 }
                 continue;
+            }
+            if (tag.first == "traffic_sign:training_ground") {
+                auto a = assets->copy(tag.second, pose::create(pos, dir), false);
+                //cout << " add asset, sign " << tag.second << "  " << a << endl;
             }
         }
     }

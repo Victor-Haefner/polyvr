@@ -291,9 +291,13 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
     // get all grid squares fully inside of polygon
     for (int i=0; i<squares.size(); i++) {
         if (squarePointsMap.count(i)) continue; // intersects polygon, skip
-        auto s = squares[i];
-        if (self->isInside(Vec2d(s)*G)) { // at least one corner in area
-            res.push_back( squareToVRPolygon(s) ); // add square to chunks
+        auto s = Vec2d(squares[i]);
+        if (self->areInside({s*G,s*G+Vec2d(G,0),s*G+Vec2d(G,G),s*G+Vec2d(0,G)})) { // at least one corner in area
+            if (G == 10) cout << " isInside " << s*G << "  " << isInside(s*G) << endl;
+            if (G == 10) cout << " isInside " << s*G+Vec2d(G,0) << "  " << isInside(s*G+Vec2d(G,0)) << endl;
+            if (G == 10) cout << " isInside " << s*G+Vec2d(G,G) << "  " << isInside(s*G+Vec2d(G,G)) << endl;
+            if (G == 10) cout << " isInside " << s*G+Vec2d(0,G) << "  " << isInside(s*G+Vec2d(0,G)) << endl;
+            res.push_back( squareToVRPolygon(squares[i]) ); // add square to chunks
         }
     }
 
@@ -501,18 +505,28 @@ bool onSegment( const Vec2d& p, const Vec2d& p1, const Vec2d& p2 ) {
 bool VRPolygon::isInside(Vec2d p) { // winding number algorithm
     int wn = 0;
     int N = points.size();
+    //cout << "  isInside? " << p << endl;
     for (int i=0; i<N; i++) {
         Vec2d p1 = points[i];
         Vec2d p2 = points[(i+1)%N];
+        if (p1 == p2) continue;
         Vec2d d = p2 - p1;
+        //cout << "   p1 " << p1 << "   p2 " << p2 << "   d " << d << " i1 " << i << " i2 " << (i+1)%N << endl;
+        //if (onSegment(p,p1,p2)) { cout << " onLine " << endl; return true; }
         if (onSegment(p,p1,p2)) return true;
         if (p1[1] <= p[1]) {
-            if (p2[1]  > p[1]) if (isLeft( p1, p2, p) > 0) ++wn;
+            if (p2[1]  > p[1]) if (isLeft( p, p1, p2) > 0) ++wn;
         } else {
-            if (p2[1]  <= p[1]) if (isLeft( p1, p2, p) < 0) --wn;
+            if (p2[1]  <= p[1]) if (isLeft( p, p1, p2) < 0) --wn;
         }
     }
+    //{ cout << " inSides " << wn << endl; return wn; }
     return wn;
+}
+
+bool VRPolygon::areInside(vector<Vec2d> pv) {
+    for (auto p : pv) if (!isInside(p)) return false;
+    return true;
 }
 
 float squareDistToSegment(const Vec2d& p1, const Vec2d& p2, const Vec2d& p) {

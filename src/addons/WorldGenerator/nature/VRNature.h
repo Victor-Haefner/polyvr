@@ -57,6 +57,7 @@ class VRNature : public VRLodTree, public VRWorldModule {
     private:
         map<int, VRTreePtr> treesByID;
         map<string, VRTreePtr> treeTemplates;
+        map<string, VRTreePtr> bushTemplates;
         map<string, shared_ptr<VRObjectManager::Entry> > treeEntries;
         map<VRTree*, VRTreePtr> treeRefs;
         VRGeometryPtr collisionMesh;
@@ -81,15 +82,20 @@ class VRNature : public VRLodTree, public VRWorldModule {
         static VRNaturePtr create(string name = "woods");
         VRNaturePtr ptr();
 
+        void simpleInit(int treeTypes, int bushTypes);
+
         void clear();
         VRTreePtr addTree(VRTreePtr t, bool updateLODs = 0, bool addToStore = true);
+        VRTreePtr addBush(VRTreePtr t, bool updateLODs = 0, bool addToStore = true);
         VRTreePtr getTree(int id);
         VRTreePtr createRandomTree(Vec3d p);
+        VRTreePtr createRandomBush(Vec3d p);
         void addGrassPatch(VRPolygonPtr area, bool updateLODs = 0, bool addGround = 0, bool addKirb = 0);
-        void remTree(int id);
+        void removeTree(int id);
         void computeLODs();
         void computeLODs(VRLodLeafPtr leaf);
         void computeLODs(map<Octree*, VRLodLeafPtr>& leafs);
+
 
         void addCollisionModels();
 };

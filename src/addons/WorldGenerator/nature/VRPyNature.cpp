@@ -9,6 +9,8 @@ using namespace OSG;
 
 template<> PyObject* VRPyTypeCaster::cast(const VRNaturePtr& e) { return VRPyNature::fromSharedPtr(e); }
 template<> bool toValue(PyObject* o, VRNaturePtr& p) { if (!VRPyNature::check(o)) return 0; p = ((VRPyNature*)o)->objPtr; return 1; }
+template<> PyObject* VRPyTypeCaster::cast(const VRTreePtr& e) { return VRPyTree::fromSharedPtr(e); }
+template<> bool toValue(PyObject* o, VRTreePtr& p) { if (!VRPyTree::check(o)) return 0; p = ((VRPyTree*)o)->objPtr; return 1; }
 
 simpleVRPyType(Tree, New_VRObjects_ptr);
 simpleVRPyType(Nature, New_VRObjects_ptr);
@@ -66,59 +68,16 @@ PyObject* VRPyTree::setLeafMaterial(VRPyTree* self, PyObject* args) {
 
 
 PyMethodDef VRPyNature::methods[] = {
-    {"addTree", (PyCFunction)VRPyNature::addTree, METH_VARARGS, "Add a copy of the passed tree to the woods and return the copy - tree addTree( tree | bool updateLODs ) " },
+    {"addTree", PyWrapOpt(Nature, addTree, "Add a copy of the passed tree to the woods and return the copy", "0|1", VRTreePtr, VRTreePtr, bool, bool ) },
     {"addGrassPatch", PyWrapOpt(Nature, addGrassPatch, "Add a grass patch from polygon", "0|0|0", void, VRPolygonPtr, bool, bool, bool) },
-    {"computeLODs", (PyCFunction)VRPyNature::computeLODs, METH_NOARGS, "Compute LODs - computeLODs() " },
-    {"addCollisionModels", (PyCFunction)VRPyNature::addCollisionModels, METH_NOARGS, "Add collision box to trees and bushes - addCollisionModels() " },
-    {"clear", (PyCFunction)VRPyNature::clear, METH_NOARGS, "Clear woods - clear() " },
-    {"getTree", (PyCFunction)VRPyNature::getTree, METH_VARARGS, "Get a tree by id - getTree( int ) " },
-    {"removeTree", (PyCFunction)VRPyNature::removeTree, METH_VARARGS, "Remove a tree by id - removeTree( int ) " },
+    {"computeLODs", PyWrap(Nature, computeLODs, "Compute LODs - computeLODs() ", void ) },
+    {"addCollisionModels", PyWrap(Nature, addCollisionModels, "Add collision box to trees and bushes - addCollisionModels() ", void ) },
+    {"clear", PyWrap(Nature, clear, "Clear woods", void ) },
+    {"getTree", PyWrap(Nature, getTree, "Get a tree by id", VRTreePtr, int ) },
+    {"removeTree", PyWrap(Nature, removeTree, "Remove a tree by id", void, int ) },
+    {"simpleInit", PyWrap(Nature, simpleInit, "Add a few random tree and bush types", void, int, int) },
     {NULL}  /* Sentinel */
 };
-
-PyObject* VRPyNature::addGrassPatch(VRPyNature* self, PyObject* args) {
-    VRPyPolygon* o = 0;
-    int u = 0;
-    if (! PyArg_ParseTuple(args, "O|i", &o, &u)) return NULL;
-    //return VRPyTransform::fromSharedPtr( self->objPtr->addGrassPatch( o->objPtr, u ) );
-    self->objPtr->addGrassPatch( o->objPtr, u );
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyNature::addTree(VRPyNature* self, PyObject* args) {
-    VRPyTree* o = 0;
-    int u = 0;
-    if (! PyArg_ParseTuple(args, "O|i", &o, &u)) return NULL;
-    return VRPyTree::fromSharedPtr( self->objPtr->addTree( o->objPtr, u ) );
-}
-
-PyObject* VRPyNature::removeTree(VRPyNature* self, PyObject* args) {
-    int i = 0;
-    if (! PyArg_ParseTuple(args, "i", &i)) return NULL;
-    self->objPtr->remTree(i);
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyNature::getTree(VRPyNature* self, PyObject* args) {
-    int i = 0;
-    if (! PyArg_ParseTuple(args, "i", &i)) return NULL;
-    return VRPyTree::fromSharedPtr( self->objPtr->getTree(i) );
-}
-
-PyObject* VRPyNature::clear(VRPyNature* self) {
-    self->objPtr->clear();
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyNature::addCollisionModels(VRPyNature* self) {
-    self->objPtr->addCollisionModels();
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyNature::computeLODs(VRPyNature* self) {
-    self->objPtr->computeLODs();
-    Py_RETURN_TRUE;
-}
 
 
 

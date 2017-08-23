@@ -53,6 +53,7 @@ class VRPolygon {
         vector<Vec3d> toSpace(Matrix4d m);
         bool isInside(Vec2d p);
         bool isInside(Vec2d p, float& dist);
+        bool areInside(vector<Vec2d> pv);
 
         string toString();
         pathPtr toPath();
