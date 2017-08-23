@@ -133,30 +133,41 @@ VRRoadPtr VRRoadNetwork::addWay( string name, vector<VREntityPtr> paths, int rID
 }
 
 VRRoadPtr VRRoadNetwork::addRoad( string name, string type, VREntityPtr node1, VREntityPtr node2, Vec3d norm1, Vec3d norm2, int Nlanes ) {
+    return addLongRoad(name, type, {node1, node2}, {norm1, norm2}, Nlanes);
+}
+
+VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityPtr> nodesIn, vector<Vec3d> normalsIn, int Nlanes ) {
     //static VRAnalyticGeometryPtr ana = 0;
     //if (!ana) { ana = VRAnalyticGeometry::create(); addChild(ana); }
 
-    Vec3d p1 = node1->getVec3f("position");
-    Vec3d p2 = node2->getVec3f("position");
-    if (terrain) terrain->projectTangent(norm1, p1);
-    if (terrain) terrain->projectTangent(norm2, p2);
-
-    // check for inflection points!
-    path p;
-    p.addPoint( pose(p1, norm1) );
-    p.addPoint( pose(p2, norm2) );
-    p.compute(16);
-
     vector<VREntityPtr> nodes;
     vector<Vec3d> norms;
-    nodes.push_back( node1 ); norms.push_back( norm1 );
-    for (auto t : p.computeInflectionPoints(0,0,0.2, Vec3i(1,0,1))) { // add inflection points
-        auto pnt = p.getPose(t);
-        Vec3d n = pnt.dir(); //n.normalize();
-        if (terrain) terrain->projectTangent(n, pnt.pos());
-        nodes.push_back( addNode(pnt.pos(), true) ); norms.push_back( n );
+
+    // check for inflection points!
+    for (int i=1; i<nodesIn.size(); i++) {
+        nodes.push_back( nodesIn[i-1] ); norms.push_back( normalsIn[i-1] );
+        Vec3d p1 = nodesIn[i-1]->getVec3f("position");
+        Vec3d p2 = nodesIn[i  ]->getVec3f("position");
+
+        path p;
+        p.addPoint( pose(p1, normalsIn[i-1]) );
+        p.addPoint( pose(p2, normalsIn[i  ]) );
+        p.compute(16);
+
+        for (auto t : p.computeInflectionPoints(0,0,0.2, Vec3i(1,0,1))) { // add inflection points
+            auto pnt = p.getPose(t);
+            Vec3d n = pnt.dir(); //n.normalize();
+            nodes.push_back( addNode(pnt.pos(), true) ); norms.push_back( n );
+        }
     }
-    nodes.push_back( node2 ); norms.push_back( norm2 );
+    nodes.push_back( nodesIn[nodesIn.size()-1] ); norms.push_back( normalsIn[normalsIn.size()-1] );
+
+    if (terrain) {
+        for (int i=0; i<nodesIn.size(); i++) { // project tangents on terrain
+            Vec3d p = nodesIn[i]->getVec3f("position");
+            terrain->projectTangent(normalsIn[i], p);
+        }
+    }
 
     // add path
     int rID = getRoadID();
@@ -503,11 +514,7 @@ void VRRoadNetwork::computeSurfaces() {
 void VRRoadNetwork::computeMarkings() {
     cout << "VRRoadNetwork::computeMarkings\n";
     for (auto way : world->getOntology()->getEntities("Way")) computeTracksLanes(way);
-    for (auto road : ways) {
-        string type = "residential";
-        if (auto t = road->getEntity()->get("type")) type = t->value;
-        if (type != "unclassified" && type != "footway") road->computeMarkings();
-    }
+    for (auto road : ways) road->computeMarkings();
     for (auto intersection : intersections) intersection->computeMarkings();
 }
 

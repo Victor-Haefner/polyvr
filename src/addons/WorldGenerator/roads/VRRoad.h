@@ -36,6 +36,7 @@ class VRRoad : public VRRoadBase {
         VREntityPtr getNodeEntry( VREntityPtr node );
         edgePoint& getEdgePoints( VREntityPtr node );
         void computeMarkings();
+        bool hasMarkings();
 };
 
 OSG_END_NAMESPACE;

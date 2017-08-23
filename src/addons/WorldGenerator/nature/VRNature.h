@@ -84,6 +84,7 @@ class VRNature : public VRLodTree, public VRWorldModule {
         void clear();
         VRTreePtr addTree(VRTreePtr t, bool updateLODs = 0, bool addToStore = true);
         VRTreePtr getTree(int id);
+        VRTreePtr createRandomTree(Vec3d p);
         void addGrassPatch(VRPolygonPtr area, bool updateLODs = 0, bool addGround = 0, bool addKirb = 0);
         void remTree(int id);
         void computeLODs();

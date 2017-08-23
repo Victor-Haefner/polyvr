@@ -23,11 +23,7 @@ class VRPlanet : public VRTransform {
         VRMaterialPtr sphereMat;
 
         VRAnalyticGeometryPtr metaGeo;
-
-        double toRad(double deg);
-        double toDeg(double rad);
         void rebuild();
-
         Vec2i toSID(double north, double east);
 
     public:
@@ -36,6 +32,9 @@ class VRPlanet : public VRTransform {
 
         VRPlanetPtr ptr();
         static VRPlanetPtr create(string name = "planet");
+
+        double toRad(double deg);
+        double toDeg(double rad);
 
         void setParameters( double radius );
         VRWorldGeneratorPtr addSector( double north, double east );

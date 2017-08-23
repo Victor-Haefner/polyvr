@@ -183,6 +183,14 @@ VRTreePtr VRNature::getTree(int id) {
     return 0;
 }
 
+VRTreePtr VRNature::createRandomTree(Vec3d p) {
+    if (treeTemplates.size() == 0) return 0;
+    int i = rand()%treeTemplates.size();
+    auto itr = treeTemplates.begin();
+    advance(itr, i);
+    return dynamic_pointer_cast<VRTree>(itr->second->duplicate());
+}
+
 void VRNature::remTree(int id) {
     if (!treesByID.count(id)) return;
     auto t = treesByID[id];
@@ -248,6 +256,7 @@ void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround,
 }
 
 VRTreePtr VRNature::addTree(VRTreePtr t, bool updateLODs, bool addToStore) {
+    if (!t) return 0;
     posePtr p = t->getRelativePose(ptr());
     if (terrain) terrain->elevatePose(p);
 

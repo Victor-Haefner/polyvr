@@ -54,6 +54,7 @@ class VRRoadNetwork : public VRRoadBase {
         VREntityPtr addGreenBelt( VREntityPtr road, float width );
         VRRoadPtr addWay( string name, vector<VREntityPtr> paths, int rID, string type );
         VRRoadPtr addRoad( string name, string type, VREntityPtr node1, VREntityPtr node2, Vec3d norm1, Vec3d norm2, int Nlanes );
+        VRRoadPtr addLongRoad( string name, string type, vector<VREntityPtr> nodes, vector<Vec3d> normals, int Nlanes );
         void addKirb( VRPolygonPtr, string texture );
 
         void computeLanePaths( VREntityPtr road );

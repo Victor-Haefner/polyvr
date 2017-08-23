@@ -193,6 +193,9 @@ void VRRoadIntersection::computeMarkings() {
 		return m;
     };
 
+    bool hasMarkings = true;
+    for (auto road : roads) if (!road->hasMarkings()) return;
+
     bool isPedestrian = false;
     for (auto road : inLanes) for (auto lane : road.second) { if (lane->getValue<bool>("pedestrian")) isPedestrian = true; break; }
 
@@ -319,7 +322,16 @@ void VRRoadIntersection::computeLayout() {
                 return true;
             }
         }
-        return false;
+
+        // check if roads go into each other
+        Vec3d n1;
+        for (int i=0; i<roads.size(); i++) {
+            auto& data = roads[i]->getEdgePoints( node );
+            if (n1.cross(data.n).squareLength() > 1e-5) return false;
+            n1 = data.n;
+        }
+
+        return true;
     };
 
     if (!resolveSpacialCases()) resolveEdgeIntersections();
@@ -373,14 +385,28 @@ void VRRoadIntersection::computeLayout() {
 
     computePatch();
     if (patch) {
-        for (uint i=0; i<roads.size(); i++) { // compute intersection paths
+        for (uint i=0; i<roads.size(); i++) { // elevate road nodes to median intersection height
             auto r = roads[i];
-            auto e = r->getNodeEntry(node);
-            auto n = e->getEntity("node");
+            auto e1 = r->getNodeEntry(node);
+            auto n = e1->getEntity("node");
+            auto d = e1->getVec3f("direction");
             auto p = n->getVec3f("position");
             p[1] = median[1];
             n->setVector("position", toStringVector(p), "Position");
+
+            // check if any road noe is inside of the intersection!
+            /*auto path = roads[i]->getEntity()->getEntity("path");
+            for (auto e2 : path->getAllEntities("nodes")) {
+                if (e1 == e2) continue;
+                auto n = e2->getEntity("node");
+                auto np = n->getVec3f("position") - median;
+                if (patch->isInside(Vec2d(np[0],np[2]))) {
+                    n->setVector("position", toStringVector(p-d*0.1), "Position");
+                }
+            }*/
         }
     }
+
+
 }
 

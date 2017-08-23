@@ -20,7 +20,7 @@ using namespace OSG;
 VRRoadBase::VRRoadBase(string name) : VRObject(name) {}
 VRRoadBase::~VRRoadBase() {}
 
-vector<string> VRRoadBase::toStringVector(Vec3d& v) {
+vector<string> VRRoadBase::toStringVector(const Vec3d& v) {
     vector<string> res;
     res.push_back( toString(v[0]) );
     res.push_back( toString(v[1]) );

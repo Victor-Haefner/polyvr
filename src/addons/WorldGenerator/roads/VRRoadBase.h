@@ -23,7 +23,7 @@ class VRRoadBase : public VRObject, public VRWorldModule {
 
         pathPtr toPath( VREntityPtr pathEntity, int resolution );
         void setupTexCoords( VRGeometryPtr geo, VREntityPtr way );
-        vector<string> toStringVector(Vec3d& v);
+        vector<string> toStringVector(const Vec3d& v);
 
         VREntityPtr addNode( Vec3d pos, bool elevate = false );
         VREntityPtr addPath( string type, string name, vector<VREntityPtr> nodes, vector<Vec3d> normals );

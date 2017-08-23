@@ -129,9 +129,14 @@ void VRWorldGenerator::processOSMMap() {
         vector<VREntityPtr> nodes;
         vector<Vec3d> norms;
 
-        auto pos  = [&](int i) { return graphNodes[way->nodes[i]].p; };
-        auto getNode = [&](int i) { return graphNodes[way->nodes[i]].e; };
+        //auto pos  = [&](int i) { return graphNodes[way->nodes[i]].p; };
+        //auto getNode = [&](int i) { return graphNodes[way->nodes[i]].e; };
         auto has  = [&](const string& tag) { return way->tags.count(tag) > 0; };
+
+        auto dir  = [&](OSMNodePtr n) {
+            float a = planet->toRad( toFloat( n->tags["direction"] ) ); // angle
+            return Vec3d(sin(a), 0, -cos(a));
+        };
 
         auto addPathData = [&](VREntityPtr node, Vec3d norm) {
             norm.normalize();
@@ -139,27 +144,25 @@ void VRWorldGenerator::processOSMMap() {
             norms.push_back(norm);
         };
 
-        for (uint i=1; i<way->nodes.size(); i++) {
+        for (uint i=1; i<way->nodes.size(); i++) { // TODO: consider using direction tag in OSM
             auto& n1 = graphNodes[ way->nodes[i-1] ];
             auto& n2 = graphNodes[ way->nodes[i  ] ];
             auto& n3 = graphNodes[ way->nodes[(i+1)%way->nodes.size()] ];
 
             if (i == 1) { // first
                 if (!n1.e) n1.e = roads->addNode(n1.p, true);
-                addPathData(n1.e, n2.p - n1.p);
+                addPathData(n1.e, n1.n->tags.count("direction") ? dir(n1.n) : n2.p - n1.p);
             }
 
-            auto node = roads->addNode((n1.p+n2.p)*0.5, true);
-            addPathData(node, n2.p - n1.p);
+            //auto node = roads->addNode((n1.p+n2.p)*0.5, true);
+            //addPathData(node, n2.p - n1.p);
 
             if (i == way->nodes.size()-1) { // last
                 if (!n2.e) n2.e = roads->addNode(n2.p, true);
-                addPathData(n2.e, n2.p - n1.p);
-            }
-
-            if (n2.n->Nways > 1 && i != way->nodes.size()-1) { // intersection node, add it!
+                addPathData(n2.e, n2.n->tags.count("direction") ? dir(n2.n) : n2.p - n1.p);
+            } else if (n2.n->Nways > 1 || true) { // intersection node, add it!
                 if (!n2.e) n2.e = roads->addNode(n2.p, true);
-                addPathData(n2.e, n3.p - n1.p);
+                addPathData(n2.e, n2.n->tags.count("direction") ? dir(n2.n) : n3.p - n1.p);
             }
         }
 
@@ -229,6 +232,20 @@ void VRWorldGenerator::processOSMMap() {
             cout << " " << tag.first << " : " << tag.second;
         }
         cout << endl;
+    }
+
+    for (auto nodeItr : osmMap->getNodes()) {
+        auto& node = nodeItr.second;
+        Vec3d pos = planet->fromLatLongPosition(node->lat, node->lon, true);
+        for (auto tag : node->tags) {
+            if (tag.first == "natural") {
+                if (tag.second == "tree") {
+                    auto t = nature->createRandomTree(pos);
+                    nature->addTree(t, 0, 0);
+                }
+                continue;
+            }
+        }
     }
 
 

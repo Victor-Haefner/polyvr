@@ -34,6 +34,12 @@ VREntityPtr VRRoad::getNodeEntry( VREntityPtr node ) {
     return 0;
 }
 
+bool VRRoad::hasMarkings() {
+    string type = "road";
+    if (auto t = getEntity()->get("type")) type = t->value;
+    return (type != "unclassified" && type != "service" && type != "footway");
+}
+
 VRRoad::edgePoint& VRRoad::getEdgePoints( VREntityPtr node ) {
     if (edgePoints.count(node) == 0) {
         float width = getWidth();
@@ -75,6 +81,7 @@ VRGeometryPtr VRRoad::createGeometry() {
 
 
 void VRRoad::computeMarkings() {
+    if (!hasMarkings()) return;
     float mw = markingsWidth;
 
     // road data
