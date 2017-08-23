@@ -47,7 +47,7 @@ void VRDistrict::init() {
 void VRDistrict::addBuilding( VRPolygon p, int stories ) {
     if (p.size() < 3) return;
 
-    if (!p.isCCW()) p.reverseOrder();
+    if (p.isCCW()) p.reverseOrder();
 
     auto b = VRBuilding::create();
     b->setWorld(world);
