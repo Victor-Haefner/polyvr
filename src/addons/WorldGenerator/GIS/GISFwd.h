@@ -7,6 +7,7 @@ namespace OSG {
     ptrFwd(OSMMap);
     ptrFwd(OSMNode);
     ptrFwd(OSMWay);
+    ptrFwd(OSMRelation);
 }
 
 #endif // OSMFWD_H_INCLUDED

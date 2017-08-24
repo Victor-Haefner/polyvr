@@ -54,10 +54,10 @@ void VRRoadBase::setupTexCoords( VRGeometryPtr geo, VREntityPtr way ) {
 	geo->setTexCoords(tcs, 1); // add another tex coords set
 }
 
-VREntityPtr VRRoadBase::addNode( Vec3d pos, bool elevate ) {
+VREntityPtr VRRoadBase::addNode( Vec3d pos, bool elevate, float elevationOffset ) {
     if (!ontology) return 0; // TODO
     //cout << "VRRoadBase::addNode " << pos;
-    if (terrain && elevate) terrain->elevatePoint(pos, roadTerrainOffset);
+    if (terrain && elevate) terrain->elevatePoint(pos, roadTerrainOffset + elevationOffset);
     //cout << " -> " << pos << endl;
 
     auto node = ontology->addEntity("node", "Node");

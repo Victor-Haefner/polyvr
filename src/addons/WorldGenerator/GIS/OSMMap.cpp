@@ -79,9 +79,11 @@ void OSMMap::readFile(string path) {
     auto nodes = parser.get_document()->get_root_node()->get_children();
     for (auto node : nodes) {
         if (auto element = dynamic_cast<xmlpp::Element*>(node)) {
-            if (element->get_name() == "node") readNode(element);
-            if (element->get_name() == "way") readWay(element);
-            if (element->get_name() == "bounds") readBounds(element);
+            if (element->get_name() == "node") { readNode(element); continue; }
+            if (element->get_name() == "way") { readWay(element); continue; }
+            if (element->get_name() == "bounds") { readBounds(element); continue; }
+            if (element->get_name() == "relation") { readRelation(element); continue; }
+            cout << " OSMMap::readFile, unhandled element: " << element->get_name() << endl;
         }
     }
 
@@ -99,11 +101,7 @@ map<string, OSMWayPtr> OSMMap::getWays() { return ways; }
 map<string, OSMNodePtr> OSMMap::getNodes() { return nodes; }
 OSMNodePtr OSMMap::getNode(string id) { return nodes[id]; }
 OSMNodePtr OSMMap::getWay(string id) { return nodes[id]; }
-
-void OSMMap::reload() {
-    clear();
-    readFile(filepath);
-}
+void OSMMap::reload() { clear(); readFile(filepath); }
 
 void OSMMap::readNode(xmlpp::Element* element) {
     OSMNodePtr node = OSMNodePtr( new OSMNode(element) );

@@ -146,13 +146,15 @@ void VRWorldGenerator::processOSMMap() {
             norms.push_back(norm);
         };
 
+        float height = has("height") && has("embankment") ? toFloat(way->tags["height"]) : 0;
+
         for (uint i=1; i<way->nodes.size(); i++) { // TODO: consider using direction tag in OSM
             auto& n1 = graphNodes[ way->nodes[i-1] ];
             auto& n2 = graphNodes[ way->nodes[i  ] ];
             auto& n3 = graphNodes[ way->nodes[(i+1)%way->nodes.size()] ];
 
             if (i == 1) { // first
-                if (!n1.e) n1.e = roads->addNode(n1.p, true);
+                if (!n1.e) n1.e = roads->addNode(n1.p, true, height);
                 addPathData(n1.e, n1.n->tags.count("direction") ? getDir(n1.n) : n2.p - n1.p);
             }
 
@@ -160,10 +162,10 @@ void VRWorldGenerator::processOSMMap() {
             //addPathData(node, n2.p - n1.p);
 
             if (i == way->nodes.size()-1) { // last
-                if (!n2.e) n2.e = roads->addNode(n2.p, true);
+                if (!n2.e) n2.e = roads->addNode(n2.p, true, height);
                 addPathData(n2.e, n2.n->tags.count("direction") ? getDir(n2.n) : n2.p - n1.p);
             } else if (n2.n->Nways > 1 || true) { // intersection node, add it!
-                if (!n2.e) n2.e = roads->addNode(n2.p, true);
+                if (!n2.e) n2.e = roads->addNode(n2.p, true, height);
                 addPathData(n2.e, n2.n->tags.count("direction") ? getDir(n2.n) : n3.p - n1.p);
             }
         }
@@ -230,7 +232,7 @@ void VRWorldGenerator::processOSMMap() {
                     //static int b = 0;
                     //if (b < 3) {
                         auto poly = wayToPolygon(way);
-                        cout << " addWoods " << poly->computeArea() << endl;
+                        //cout << " addWoods " << poly->computeArea() << endl;
                         nature->addGrassPatch( poly, 0, 1, 0 );
                         //b++;
                     //}

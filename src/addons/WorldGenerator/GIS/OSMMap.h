@@ -42,16 +42,27 @@ struct OSMWay : OSMBase {
     string toString();
 };
 
+struct OSMRelation : OSMBase {
+    map<string, OSMWayPtr> ways;
+    map<string, OSMNodePtr> nodes;
+
+    OSMRelation(string id);
+    OSMRelation(xmlpp::Element* e);
+    string toString();
+};
+
 class OSMMap {
     private:
         string filepath;
         BoundingboxPtr bounds;
         map<string, OSMWayPtr> ways;
         map<string, OSMNodePtr> nodes;
+        map<string, OSMRelationPtr> relations;
 
         void readNode(xmlpp::Element* element);
         void readWay(xmlpp::Element* element);
         void readBounds(xmlpp::Element* element);
+        void readRelation(xmlpp::Element* element);
 
         void readFile(string path);
 
