@@ -21,6 +21,8 @@ struct OSMBase {
     OSMBase(string id);
     OSMBase(xmlpp::Element* e);
     virtual string toString();
+
+    bool hasTag(const string& t);
 };
 
 struct OSMNode : OSMBase {

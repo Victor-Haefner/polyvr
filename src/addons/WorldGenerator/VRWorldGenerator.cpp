@@ -12,6 +12,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/scene/VRObjectManager.h"
 #include "core/utils/toString.h"
+#include "core/math/path.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
 
 #define GLSL(shader) #shader
@@ -126,19 +127,48 @@ void VRWorldGenerator::processOSMMap() {
         return poly;
     };
 
+    auto wayToPath = [&](OSMWayPtr& way, int N) {
+        auto path = path::create();
+        vector<Vec3d> pos;
+        for (auto nID : way->nodes) {
+            auto n = osmMap->getNode(nID);
+            Vec3d p = planet->fromLatLongPosition(n->lat, n->lon, true);
+            p[1] = n->hasTag("height") ? toFloat(n->tags["height"]) : 0;
+            pos.push_back( p );
+            //path->addPoint( pose( p ) );
+        }
+
+        for (int i=1; i<pos.size()-1; i++) {
+            auto p1 = pos[i-1];
+            auto p2 = pos[i];
+            auto p3 = pos[i+1];
+
+            if (i == 1) { // first point
+                Vec3d d = p2-p1; d[1] = 0; d.normalize();
+                path->addPoint( pose( p1, d ) );
+            }
+
+            Vec3d d = p3-p1; d[1] = 0; d.normalize();
+            path->addPoint( pose( p2, d ) );
+
+            if (i == pos.size()-2) { // last point
+                Vec3d d = p3-p2; d[1] = 0; d.normalize();
+                path->addPoint( pose( p3, d ) );
+            }
+        }
+        path->compute(N);
+        return path;
+    };
+
     auto getDir  = [&](OSMNodePtr n) {
         float a = planet->toRad( toFloat( n->tags["direction"] ) ); // angle
         return Vec3d(sin(a), 0, -cos(a));
     };
 
-    auto addRoad = [&](OSMWayPtr& way, string tag, float Width, bool pedestrian) {
+    auto addRoad = [&](OSMWayPtr& way, string tag, float width, bool pedestrian) {
         if (way->nodes.size() < 2) return;
         vector<VREntityPtr> nodes;
         vector<Vec3d> norms;
-
-        //auto pos  = [&](int i) { return graphNodes[way->nodes[i]].p; };
-        //auto getNode = [&](int i) { return graphNodes[way->nodes[i]].e; };
-        auto has  = [&](const string& tag) { return way->tags.count(tag) > 0; };
 
         auto addPathData = [&](VREntityPtr node, Vec3d norm) {
             norm.normalize();
@@ -146,7 +176,8 @@ void VRWorldGenerator::processOSMMap() {
             norms.push_back(norm);
         };
 
-        float height = has("height") && has("embankment") ? toFloat(way->tags["height"]) : 0;
+        float height = way->hasTag("height") && way->hasTag("embankment") ? toFloat(way->tags["height"]) : 0; // deprecated?
+        width = way->hasTag("width") ? toFloat(way->tags["width"]) : width;
 
         for (uint i=1; i<way->nodes.size(); i++) { // TODO: consider using direction tag in OSM
             auto& n1 = graphNodes[ way->nodes[i-1] ];
@@ -170,15 +201,15 @@ void VRWorldGenerator::processOSMMap() {
             }
         }
 
-        int NlanesRight = has("lanes:forward") ? toInt( way->tags["lanes:forward"] ) : has("lanes:forwards") ? toInt( way->tags["lanes:forwards"] ) : 0;
-        int NlanesLeft = has("lanes:backward") ? toInt( way->tags["lanes:backward"] ) : 0;
-        if (NlanesRight == 0 && NlanesLeft == 0) NlanesRight = has("lanes") ? toInt( way->tags["lanes"] ) : 1;
-        //cout << endl << has("lanes") << " hasForw " << has("lanes:forward") << " hasBack " << has("lanes:backward") << " Nright " << NlanesRight << " Nleft " << NlanesLeft << endl;
+        int NlanesRight = way->hasTag("lanes:forward") ? toInt( way->tags["lanes:forward"] ) : way->hasTag("lanes:forwards") ? toInt( way->tags["lanes:forwards"] ) : 0;
+        int NlanesLeft = way->hasTag("lanes:backward") ? toInt( way->tags["lanes:backward"] ) : 0;
+        if (NlanesRight == 0 && NlanesLeft == 0) NlanesRight = way->hasTag("lanes") ? toInt( way->tags["lanes"] ) : 1;
+        //cout << endl << way->hasTag("lanes") << " hasForw " << way->hasTag("lanes:forward") << " hasBack " << way->hasTag("lanes:backward") << " Nright " << NlanesRight << " Nleft " << NlanesLeft << endl;
 
         for (uint i=1; i<nodes.size(); i++) {
             auto road = roads->addRoad("someRoad", tag, nodes[i-1], nodes[i], norms[i-1], norms[i], 0);
-            for (int l=0; l < NlanesRight; l++) road->addLane(1, Width, pedestrian);
-            for (int l=0; l < NlanesLeft; l++) road->addLane(-1, Width, pedestrian);
+            for (int l=0; l < NlanesRight; l++) road->addLane(1, width, pedestrian);
+            for (int l=0; l < NlanesLeft; l++) road->addLane(-1, width, pedestrian);
         }
     };
 
@@ -190,11 +221,18 @@ void VRWorldGenerator::processOSMMap() {
         district->addBuilding( *wayToPolygon(way), lvls );
     };
 
-    int i=0;
-    for (auto wayItr : osmMap->getWays()) {
-        i++;
-        //if (i != 105 && i != 271 && i != 299) continue; // 146, 105, 271, 298, 299
-        //if (i != 271 && i != 299) continue; // 146, 105, 271, 298, 299
+    for (auto relItr : osmMap->getRelations()) {
+        auto& rel = relItr.second;
+        if (rel->hasTag("embankment")) { // expect two parallel ways
+            auto w1 = osmMap->getWay(rel->ways[0]);
+            auto w2 = osmMap->getWay(rel->ways[1]);
+            auto p1 = wayToPath(w1, 8);
+            auto p2 = wayToPath(w2, 8);
+            terrain->addEmbankment(rel->id, p1, p2);
+        }
+    }
+
+    for (auto wayItr : osmMap->getWays()) { // use way->id to filter for debugging!
         auto& way = wayItr.second;
         for (auto pID : way->nodes) {
             if (graphNodes.count(pID)) continue;

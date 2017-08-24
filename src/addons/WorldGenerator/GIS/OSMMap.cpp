@@ -49,6 +49,10 @@ string OSMRelation::toString() {
     return res;
 }
 
+bool OSMBase::hasTag(const string& t) {
+    return tags.count(t) > 0;
+}
+
 OSMNode::OSMNode(xmlpp::Element* el) : OSMBase(el) {
     lat = toFloat(el->get_attribute_value("lat"));
     lon = toFloat(el->get_attribute_value("lon"));

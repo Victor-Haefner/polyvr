@@ -7,6 +7,7 @@ namespace OSG {
 
 ptrFwd( VRWorldGenerator );
 ptrFwd( VRTerrain );
+ptrFwd( VREmbankment );
 ptrFwd( VRPlanet );
 ptrFwd( VRPlantMaterial );
 ptrFwd( VRAsphalt );
@@ -20,7 +21,6 @@ ptrFwd( VRTree );
 ptrFwd( VRGrassPatch );
 ptrFwd( VRNature );
 ptrFwd( VRTrafficSimulation );
-ptrFwd( OSMMap );
 
 }
 

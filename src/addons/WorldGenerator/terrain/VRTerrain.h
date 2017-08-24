@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGVector.h>
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/math/polygon.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 #include "addons/WorldGenerator/VRWorldModule.h"
 
@@ -10,6 +11,20 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class Action;
+
+class VREmbankment {
+    private:
+        pathPtr p1, p2;
+        VRPolygon area;
+
+    public:
+        VREmbankment(pathPtr p1, pathPtr p2);
+        ~VREmbankment();
+        static VREmbankmentPtr create(pathPtr p1, pathPtr p2);
+
+        bool isInside(Vec2d p);
+        float getHeight(Vec2d p);
+};
 
 class VRTerrain : public VRGeometry, public VRWorldModule {
     private:
@@ -26,6 +41,8 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         VRTexturePtr tex;
         VRMaterialPtr mat;
         shared_ptr<vector<float>> physicsHeightBuffer;
+
+        map<string, VREmbankmentPtr> embankments;
 
         void updateTexelSize();
         void setupGeo();
@@ -55,6 +72,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void projectTangent( Vec3d& t, Vec3d p);
 
         void paintHeights(string path);
+        void addEmbankment(string ID, pathPtr p1, pathPtr p2);
 };
 
 OSG_END_NAMESPACE;

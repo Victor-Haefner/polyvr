@@ -12,6 +12,7 @@
 #include "core/math/polygon.h"
 #include "core/math/triangulator.h"
 #include "core/math/pose.h"
+#include "core/math/path.h"
 #include "core/scene/import/GIS/VRGDAL.h"
 #include "addons/WorldGenerator/GIS/OSMMap.h"
 
@@ -21,6 +22,26 @@
 #define GLSL(shader) #shader
 
 using namespace OSG;
+
+
+VREmbankment::VREmbankment(pathPtr p1, pathPtr p2) : p1(p1), p2(p2) {
+    for (auto p : p1->getPoints()) { auto pos = p.pos(); area.addPoint(Vec2d(pos[0],pos[2])); };
+    for (auto p : p2->getPoints()) { auto pos = p.pos(); area.addPoint(Vec2d(pos[0],pos[2])); };
+}
+
+VREmbankment::~VREmbankment() {}
+VREmbankmentPtr VREmbankment::create(pathPtr p1, pathPtr p2) { return VREmbankmentPtr( new VREmbankment(p1,p2) ); }
+
+bool VREmbankment::isInside(Vec2d p) { return area.isInside(p); }
+
+float VREmbankment::getHeight(Vec2d p) {
+    float t1 = p1->getClosestPoint(Vec3d(p[0], 0, p[1]));
+    float t2 = p2->getClosestPoint(Vec3d(p[0], 0, p[1]));
+    Vec3d P1 = p1->getPosition(t1);
+    Vec3d P2 = p2->getPosition(t2);
+    return (P1[1]+P2[1])*0.5;
+}
+
 
 VRTerrain::VRTerrain(string name) : VRGeometry(name) { setupMat(); }
 VRTerrain::~VRTerrain() {}
@@ -222,7 +243,9 @@ float VRTerrain::getHeight(const Vec2d& p) {
 
     u = u*W - 0.5 -i;
     v = v*H - 0.5 -j;
-    return ( h00*(1-u) + h10*u )*(1-v) + ( h01*(1-u) + h11*u )*v;
+    float h = ( h00*(1-u) + h10*u )*(1-v) + ( h01*(1-u) + h11*u )*v;
+    for (auto e : embankments) if (e.second->isInside(p)) h += e.second->getHeight(p);
+    return h;
 }
 
 void VRTerrain::elevateObject(VRTransformPtr t, float offset) { auto p = t->getFrom(); elevatePoint(p, offset); t->setFrom(p); }
@@ -326,7 +349,9 @@ void VRTerrain::paintHeights(string path) {
     mat->setShaderParameter("doHeightTextures", 1);
 }
 
-
+void VRTerrain::addEmbankment(string ID, pathPtr p1, pathPtr p2) {
+    embankments[ID] = VREmbankment::create(p1, p2);
+}
 
 // --------------------------------- shader ------------------------------------
 
