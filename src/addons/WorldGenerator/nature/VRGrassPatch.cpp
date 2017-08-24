@@ -225,6 +225,7 @@ void VRGrassPatch::createLod(VRGeoData& geo, int lvl, Vec3d offset, int ID) {
 
     VRGeoData patch;
     createSpriteLOD(patch, area, lvl, 100.0/lvl);
+    if (!patch.size()) return;
     //for (auto c : chunks) { createSpriteLOD(patch, c, lvl); }
     auto sprites = patch.asGeometry("grassPatch");
 

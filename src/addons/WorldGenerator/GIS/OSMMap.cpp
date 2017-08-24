@@ -13,6 +13,7 @@ using namespace OSG;
 OSMBase::OSMBase(string id) : id(id) {}
 OSMNode::OSMNode(string id, double lat, double lon) : OSMBase(id), lat(lat), lon(lon) {}
 OSMWay::OSMWay(string id) : OSMBase(id) {}
+OSMRelation::OSMRelation(string id) : OSMBase(id) {}
 
 OSMBase::OSMBase(xmlpp::Element* el) {
     id = el->get_attribute_value("id");
@@ -43,6 +44,11 @@ string OSMWay::toString() {
     return res;
 }
 
+string OSMRelation::toString() {
+    string res = OSMBase::toString();
+    return res;
+}
+
 OSMNode::OSMNode(xmlpp::Element* el) : OSMBase(el) {
     lat = toFloat(el->get_attribute_value("lat"));
     lon = toFloat(el->get_attribute_value("lon"));
@@ -51,9 +57,27 @@ OSMNode::OSMNode(xmlpp::Element* el) : OSMBase(el) {
 OSMWay::OSMWay(xmlpp::Element* el) : OSMBase(el) {
     for(xmlpp::Node* n : el->get_children()) {
         if (auto e = dynamic_cast<xmlpp::Element*>(n)) {
+            if (e->get_name() == "tag") continue;
             if (e->get_name() == "nd") {
                 nodes.push_back(e->get_attribute_value("ref"));
+                continue;
             }
+            cout << " OSMWay::OSMWay, unhandled element: " << e->get_name() << endl;
+        }
+    }
+}
+
+OSMRelation::OSMRelation(xmlpp::Element* el) : OSMBase(el) {
+    for(xmlpp::Node* n : el->get_children()) {
+        if (auto e = dynamic_cast<xmlpp::Element*>(n)) {
+            if (e->get_name() == "tag") continue;
+            if (e->get_name() == "member") {
+                string type = e->get_attribute_value("type");
+                if (type == "way") ways.push_back(e->get_attribute_value("ref"));
+                if (type == "node") nodes.push_back(e->get_attribute_value("ref"));
+                continue;
+            }
+            cout << " OSMRelation::OSMRelation, unhandled element: " << e->get_name() << endl;
         }
     }
 }
@@ -99,8 +123,10 @@ void OSMMap::readFile(string path) {
 OSMMapPtr OSMMap::loadMap(string filepath) { return OSMMapPtr( new OSMMap(filepath) ); }
 map<string, OSMWayPtr> OSMMap::getWays() { return ways; }
 map<string, OSMNodePtr> OSMMap::getNodes() { return nodes; }
+map<string, OSMRelationPtr> OSMMap::getRelations() { return relations; }
 OSMNodePtr OSMMap::getNode(string id) { return nodes[id]; }
-OSMNodePtr OSMMap::getWay(string id) { return nodes[id]; }
+OSMWayPtr OSMMap::getWay(string id) { return ways[id]; }
+OSMRelationPtr OSMMap::getRelation(string id) { return relations[id]; }
 void OSMMap::reload() { clear(); readFile(filepath); }
 
 void OSMMap::readNode(xmlpp::Element* element) {
@@ -111,6 +137,11 @@ void OSMMap::readNode(xmlpp::Element* element) {
 void OSMMap::readWay(xmlpp::Element* element) {
     OSMWayPtr way = OSMWayPtr( new OSMWay(element) );
     ways[way->id] = way;
+}
+
+void OSMMap::readRelation(xmlpp::Element* element) {
+    OSMRelationPtr rel = OSMRelationPtr( new OSMRelation(element) );
+    relations[rel->id] = rel;
 }
 
 void OSMMap::readBounds(xmlpp::Element* element) {

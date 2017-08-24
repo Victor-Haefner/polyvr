@@ -43,8 +43,8 @@ struct OSMWay : OSMBase {
 };
 
 struct OSMRelation : OSMBase {
-    map<string, OSMWayPtr> ways;
-    map<string, OSMNodePtr> nodes;
+    vector<string> ways;
+    vector<string> nodes;
 
     OSMRelation(string id);
     OSMRelation(xmlpp::Element* e);
@@ -75,8 +75,10 @@ class OSMMap {
 
         map<string, OSMWayPtr> getWays();
         map<string, OSMNodePtr> getNodes();
+        map<string, OSMRelationPtr> getRelations();
         OSMNodePtr getNode(string id);
-        OSMNodePtr getWay(string id);
+        OSMWayPtr getWay(string id);
+        OSMRelationPtr getRelation(string id);
 };
 
 OSG_END_NAMESPACE;
