@@ -7,15 +7,19 @@ using namespace OSG;
 
 newPyType( Graph , Graph , New_ptr );
 
+template<> PyObject* VRPyTypeCaster::cast(const GraphPtr& e) { return VRPyGraph::fromSharedPtr(e); }
+template<> bool toValue(PyObject* o, GraphPtr& p) { if (!VRPyGraph::check(o)) return 0; p = ((VRPyGraph*)o)->objPtr; return 1; }
+
 PyMethodDef VRPyGraph::methods[] = {
     {"getEdge", (PyCFunction)VRPyGraph::getEdge, METH_VARARGS, "Return the graph edge between n1 and n2 - getEdge( int n1, int n2 )" },
     {"getEdgeID", (PyCFunction)VRPyGraph::getEdgeID, METH_VARARGS, "Return the graph edge ID between n1 and n2 - getEdgeID( int n1, int n2 )" },
     {"getEdges", (PyCFunction)VRPyGraph::getEdges, METH_NOARGS, "Return graph edges - getEdges()" },
     {"getInEdges", (PyCFunction)VRPyGraph::getInEdges, METH_VARARGS, "Return graph edges going in node n - getInEdges( int n )" },
     {"getOutEdges", (PyCFunction)VRPyGraph::getOutEdges, METH_VARARGS, "Return graph edges comming out node n - getOutEdges( int n )" },
+    {"getNodePose", (PyCFunction)VRPyGraph::getNodePose, METH_VARARGS, "Return graph node pose - pose getNodePose( int n )" },
     {"addNode", (PyCFunction)VRPyGraph::addNode, METH_VARARGS, "Add a node at pose p, returns node ID - int addNode( pose p )" },
     {"connect", (PyCFunction)VRPyGraph::connect, METH_VARARGS, "Connect nodes n1 and n2, returns edge ID - int connect( int n1, int n2 )" },
-    {NULL}  /* Sentinel */
+    {NULL} /* Sentinel */
 };
 
 PyObject* convEdge(Graph::edge& e) {
@@ -95,6 +99,13 @@ PyObject* VRPyGraph::connect(VRPyGraph* self, PyObject* args) {
     if (!PyArg_ParseTuple(args, "ii", &i, &j)) return NULL;
     auto ID = self->objPtr->connect(i,j);
     return PyInt_FromLong(ID);
+}
+
+PyObject* VRPyGraph::getNodePose(VRPyGraph* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    int i;
+    if (!PyArg_ParseTuple(args, "i", &i)) return NULL;
+    return VRPyPose::fromObject( self->objPtr->getNode(i).p );
 }
 
 

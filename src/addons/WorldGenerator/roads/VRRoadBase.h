@@ -25,7 +25,7 @@ class VRRoadBase : public VRObject, public VRWorldModule {
         void setupTexCoords( VRGeometryPtr geo, VREntityPtr way );
         vector<string> toStringVector(const Vec3d& v);
 
-        VREntityPtr addNode( Vec3d pos, bool elevate = false, float elevationOffset = 0 );
+        VREntityPtr addNode( int nodeID, Vec3d pos, bool elevate = false, float elevationOffset = 0 );
         VREntityPtr addPath( string type, string name, vector<VREntityPtr> nodes, vector<Vec3d> normals );
         VREntityPtr addLane( int direction, float width, bool pedestrian = false );
         VREntityPtr addArrows( VREntityPtr lane, float t, vector<float> dirs );

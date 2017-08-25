@@ -35,7 +35,7 @@ class VRRoadIntersection : public VRRoadBase {
         VRGeometryPtr createGeometry();
 
         void computePatch();
-        void computeLayout();
+        void computeLayout(GraphPtr graph);
         void computeLanes();
         void computeMarkings();
         void computeTrafficLights();

@@ -134,7 +134,6 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"setPositionalTexCoords2D", (PyCFunction)VRPyGeometry::setPositionalTexCoords2D, METH_VARARGS, "Use the positions as texture coordinates - setPositionalTexCoords2D(float scale, int texID, [i,j] format)" },
     {"genTexCoords", (PyCFunction)VRPyGeometry::genTexCoords, METH_VARARGS, "Generate the texture coordinates - genTexCoords( str mapping, float scale, int channel, Pose )\n\tmapping: ['CUBE', 'SPHERE']" },
     {"readSharedMemory", (PyCFunction)VRPyGeometry::readSharedMemory, METH_VARARGS, "Read the geometry from shared memory buffers - readSharedMemory( str segment, str object )" },
-    {"applyTransformation", (PyCFunction)VRPyGeometry::applyTransformation, METH_VARARGS, "Apply a transformation to the mesh - applyTransformation( pose )" },
     {"setPatchVertices", PyWrap(Geometry, setPatchVertices, "Set patch primitives for tesselation shader", void, int) },
     {"setMeshVisibility", PyWrap(Geometry, setMeshVisibility, "Set mesh visibility", void, bool) },
 
@@ -359,15 +358,6 @@ PyObject* VRPyGeometry::addQuad(VRPyGeometry* self, PyObject *args) {
     if (l) { auto i = parseVec4iList(l); geo.pushQuad( i[0], i[1], i[2], i[3] ); }
     else geo.pushQuad();
     if (toApply) geo.apply(self->objPtr, false);
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyGeometry::applyTransformation(VRPyGeometry* self, PyObject *args) {
-    if (!self->valid()) return NULL;
-    VRPyPose* pose = 0;
-    if (!PyArg_ParseTuple(args, "|O", &pose)) return NULL;
-    if (pose) self->objPtr->applyTransformation( pose->objPtr );
-    else self->objPtr->applyTransformation();
     Py_RETURN_TRUE;
 }
 

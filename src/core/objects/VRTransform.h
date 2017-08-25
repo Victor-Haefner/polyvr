@@ -146,6 +146,8 @@ class VRTransform : public VRObject {
         void set_orientation_mode(int b);
 
         void setFixed(bool b);
+        void applyTransformation(std::shared_ptr<pose> p);
+        void applyTransformation();
 
         //-------------------------------------
 

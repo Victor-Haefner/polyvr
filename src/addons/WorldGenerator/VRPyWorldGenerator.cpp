@@ -36,7 +36,7 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
 
 PyMethodDef VRPyRoadBase::methods[] = {
     {"addLane", PyWrapOpt( RoadBase, addLane, "Add a lane", "0", VREntityPtr, int, float, bool ) },
-    {"addNode", PyWrapOpt( RoadBase, addNode, "Add a node", "1|0", VREntityPtr, Vec3d, bool, float ) },
+    {"addNode", PyWrapOpt( RoadBase, addNode, "Add a node", "1|0", VREntityPtr, int, Vec3d, bool, float ) },
     {"addPath", PyWrap( RoadBase, addPath, "Add a new path", VREntityPtr, string, string, vector<VREntityPtr>, vector<Vec3d> ) },
     {"addArrows", PyWrap( RoadBase, addArrows, "Add a new path", VREntityPtr, VREntityPtr, float, vector<float> ) },
     {NULL}  /* Sentinel */
@@ -65,6 +65,8 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"computeSurfaces", PyWrap( RoadNetwork, computeSurfaces, "Compute the surfaces" , void )},
     {"computeMarkings", PyWrap( RoadNetwork, computeMarkings, "Compute the markings", void ) },
     {"compute", PyWrap( RoadNetwork, compute, "Compute everything", void ) },
+    {"getGraph", PyWrap( RoadNetwork, getGraph, "Get a road ID", GraphPtr ) },
+    {"getGraphEdgeDirections", PyWrap( RoadNetwork, getGraphEdgeDirections, "Get a road ID", vector<Vec3d>, int ) },
     {"getRoadID", PyWrap( RoadNetwork, getRoadID, "Get a road ID", int ) },
     {"getMaterial", PyWrap( RoadNetwork, getMaterial, "Get road material", VRAsphaltPtr ) },
     {"updateAsphaltTexture", PyWrap( RoadNetwork, updateAsphaltTexture, "Update markings and tracks on asphalt texture", void ) },

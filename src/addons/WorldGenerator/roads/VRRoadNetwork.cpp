@@ -40,6 +40,8 @@ VRRoadNetworkPtr VRRoadNetwork::create() {
 }
 
 void VRRoadNetwork::init() {
+    graph = Graph::create();
+
     //tool = VRPathtool::create();
     asphalt = VRAsphalt::create();
     asphaltArrow = VRAsphalt::create();
@@ -53,6 +55,8 @@ void VRRoadNetwork::init() {
 int VRRoadNetwork::getRoadID() { return ++nextRoadID; }
 VRAsphaltPtr VRRoadNetwork::getMaterial() { return asphalt; }
 GraphPtr VRRoadNetwork::getGraph() { return graph; }
+
+vector<Vec3d> VRRoadNetwork::getGraphEdgeDirections(int e) { return graphNormals[e]; }
 
 void VRRoadNetwork::clear() {
 	nextRoadID = 0;
@@ -80,6 +84,12 @@ void VRRoadNetwork::clear() {
     ways.clear();
     for (auto road : intersections) road->destroy();
     intersections.clear();
+}
+
+VREntityPtr VRRoadNetwork::addNode( Vec3d pos, bool elevate, float elevationOffset ) {
+    int nID = graph->addNode();
+    graph->setPosition(nID, pose::create(pos));
+    return VRRoadBase::addNode(nID, pos, elevate, elevationOffset);
 }
 
 void VRRoadNetwork::updateAsphaltTexture() {
@@ -123,6 +133,7 @@ VREntityPtr VRRoadNetwork::addGreenBelt( VREntityPtr road, float width ) {
 VRRoadPtr VRRoadNetwork::addWay( string name, vector<VREntityPtr> paths, int rID, string type ) {
 	auto roadEnt = world->getOntology()->addEntity( name+"Road", type );
 	roadEnt->set("ID", toString(rID));
+	roadEnt->set("name", name);
 	for (auto path : paths) roadEnt->add("path", path->getName());
     auto road = VRRoad::create();
     road->setWorld(world);
@@ -218,6 +229,16 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
             reverse(nodes.begin(), nodes.end());
             reverse(norms.begin(), norms.end());
         }
+
+        for (int i=1; i<nodes.size(); i++) {
+            auto node1 = nodes[i-1]->getValue<int>("graphID");
+            auto node2 = nodes[i]->getValue<int>("graphID");
+            auto norm1 = norms[i-1];
+            auto norm2 = norms[i];
+            int eID = graph->connect(node1, node2);
+            graphNormals[eID] = {norm1, norm2};
+        }
+
         auto lPath = addPath("Path", "lane", nodes, norms);
 		lane->add("path", lPath->getName());
 		widthSum += width;
@@ -431,7 +452,7 @@ void VRRoadNetwork::computeIntersections() {
         addChild(intersection);
         for (auto r : nodeRoads) { intersection->addRoad(r); }
         iEnt->set("node", node->getName());
-        intersection->computeLayout();
+        intersection->computeLayout(graph);
     }
 }
 

@@ -79,6 +79,7 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyObject* animate(VRPyTransform* self, PyObject* args);
     static PyObject* animationStop(VRPyTransform* self);
     static PyObject* getAnimations(VRPyTransform* self);
+    static PyObject* applyTransformation(VRPyTransform* self, PyObject *args);
 };
 
 #endif // VRPyTransform_H_INCLUDED

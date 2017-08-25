@@ -11,6 +11,8 @@
 #include "core/scene/VRAnimationManagerT.h"
 #include "core/scene/VRSpaceWarper.h"
 #include "core/math/pose.h"
+#include "geometry/VRGeometry.h"
+#include "geometry/OSGGeometry.h"
 #include "geometry/VRPhysics.h"
 #include "core/math/path.h"
 #include "core/objects/OSGObject.h"
@@ -843,5 +845,55 @@ Matrix4d toMatrix4d(Matrix4f mf) {
     for (int i=0; i<4; i++) for (int j=0; j<4; j++) md[i][j] = mf[i][j];
     return md;
 }
+
+void VRTransform::applyTransformation(shared_ptr<pose> po) {
+    Matrix4d m0 = po->asMatrix();
+
+    map<GeoVectorPropertyRecPtr, bool> applied;
+
+    auto applyMatrix = [&](OSGGeometryPtr mesh, Matrix4d& m) {
+        auto pos = mesh->geo->getPositions();
+        auto norms = mesh->geo->getNormals();
+        Vec3d n; Pnt3d p;
+        for (uint i=0; i<pos->size(); i++) {
+            p = Pnt3d(pos->getValue<Pnt3f>(i));
+            m.mult(p,p);
+            pos->setValue(p,i);
+        }
+
+        for (uint i=0; i<norms->size(); i++) {
+            n = Vec3d(norms->getValue<Vec3f>(i));
+            m.mult(n,n);
+            norms->setValue(n,i);
+        }
+    };
+
+    auto computeNewMatrix = [&](VRGeometryPtr geo) {
+        //cout << "VRTransform::applyTransformation " << getName() << " pvec " << pos << endl;
+        auto m = geo->getMatrixTo(ptr());
+        m.mult(m0);
+        return m;
+    };
+
+    for (auto obj : getChildren(true, "Geometry", true)) {
+        auto geo = dynamic_pointer_cast<VRGeometry>(obj);
+        auto mesh = geo->getMesh();
+        if (!mesh) continue;
+        if (!mesh->geo) continue;
+        auto pos = mesh->geo->getPositions();
+        if (!pos) continue;
+        if (applied.count(pos)) continue;
+        auto m = computeNewMatrix(geo);
+        applyMatrix(mesh, m);
+    }
+}
+
+void VRTransform::applyTransformation() {
+    applyTransformation(getPose());
+    setMatrix(Matrix4d());
+}
+
+
+
 
 OSG_END_NAMESPACE;

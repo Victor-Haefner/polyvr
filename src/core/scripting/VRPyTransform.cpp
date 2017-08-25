@@ -94,8 +94,18 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setWorldDir", PyWrap(Transform, setWorldDir, "Set the direction in world coordinates", void, Vec3d)  },
     {"setWorldUp", PyWrap(Transform, setWorldUp, "Set the up vector in world coordinates", void, Vec3d)  },
     {"getPoseTo", PyWrap(Transform, getPoseTo, "Get the pose in the coordinate system of another object", posePtr, VRObjectPtr)  },
+    {"applyTransformation", (PyCFunction)VRPyTransform::applyTransformation, METH_VARARGS, "Apply a transformation to the mesh - applyTransformation( pose )" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyTransform::applyTransformation(VRPyTransform* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    VRPyPose* pose = 0;
+    if (!PyArg_ParseTuple(args, "|O", &pose)) return NULL;
+    if (pose) self->objPtr->applyTransformation( pose->objPtr );
+    else self->objPtr->applyTransformation();
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyTransform::setConstraint(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;

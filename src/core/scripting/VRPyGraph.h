@@ -13,6 +13,7 @@ struct VRPyGraph : VRPyBaseT<OSG::Graph> {
     static PyObject* getOutEdges(VRPyGraph* self, PyObject* args);
     static PyObject* addNode(VRPyGraph* self, PyObject* args);
     static PyObject* connect(VRPyGraph* self, PyObject* args);
+    static PyObject* getNodePose(VRPyGraph* self, PyObject* args);
 };
 
 #endif // VRPYGRAPH_H_INCLUDED

@@ -167,6 +167,9 @@ void VRWorldGenerator::processOSMMap() {
 
     auto addRoad = [&](OSMWayPtr& way, string tag, float width, bool pedestrian) {
         if (way->nodes.size() < 2) return;
+        string name = "road";
+        if (way->hasTag("name")) name = way->tags["name"];
+
         vector<VREntityPtr> nodes;
         vector<Vec3d> norms;
 
@@ -207,7 +210,7 @@ void VRWorldGenerator::processOSMMap() {
         //cout << endl << way->hasTag("lanes") << " hasForw " << way->hasTag("lanes:forward") << " hasBack " << way->hasTag("lanes:backward") << " Nright " << NlanesRight << " Nleft " << NlanesLeft << endl;
 
         for (uint i=1; i<nodes.size(); i++) {
-            auto road = roads->addRoad("someRoad", tag, nodes[i-1], nodes[i], norms[i-1], norms[i], 0);
+            auto road = roads->addRoad(name, tag, nodes[i-1], nodes[i], norms[i-1], norms[i], 0);
             for (int l=0; l < NlanesRight; l++) road->addLane(1, width, pedestrian);
             for (int l=0; l < NlanesLeft; l++) road->addLane(-1, width, pedestrian);
         }
@@ -223,7 +226,7 @@ void VRWorldGenerator::processOSMMap() {
 
     for (auto relItr : osmMap->getRelations()) {
         auto& rel = relItr.second;
-        if (rel->hasTag("embankment")) { // expect two parallel ways
+        if (rel->hasTag("embankment") && rel->ways.size() == 2) { // expect two parallel ways
             auto w1 = osmMap->getWay(rel->ways[0]);
             auto w2 = osmMap->getWay(rel->ways[1]);
             auto p1 = wayToPath(w1, 8);
@@ -269,9 +272,9 @@ void VRWorldGenerator::processOSMMap() {
                 if (tag.second == "park") {
                     //static int b = 0;
                     //if (b < 3) {
-                        auto poly = wayToPolygon(way);
+                        //auto poly = wayToPolygon(way);
                         //cout << " addWoods " << poly->computeArea() << endl;
-                        nature->addGrassPatch( poly, 0, 1, 0 );
+                        //nature->addGrassPatch( poly, 0, 1, 0 );
                         //b++;
                     //}
                     //nature->addGrassPatch( wayToPolygon(way), 0, 1, 1 );
@@ -291,8 +294,8 @@ void VRWorldGenerator::processOSMMap() {
         for (auto tag : node->tags) {
             if (tag.first == "natural") {
                 if (tag.second == "tree") {
-                    auto t = nature->createRandomTree(pos);
-                    nature->addTree(t, 0, 0);
+                    //auto t = nature->createRandomTree(pos);
+                    //nature->addTree(t, 0, 0);
                 }
                 continue;
             }

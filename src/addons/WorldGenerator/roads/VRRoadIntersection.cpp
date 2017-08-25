@@ -182,8 +182,8 @@ void VRRoadIntersection::computeMarkings() {
     string name = entity->getName();
 
     auto addLine = [&]( const string& type, Vec3d p1, Vec3d p2, Vec3d n1, Vec3d n2, float w, int dashNumber) {
-		auto node1 = addNode( p1 );
-		auto node2 = addNode( p2 );
+		auto node1 = addNode( 0, p1 );
+		auto node2 = addNode( 0, p2 );
 		auto m = addPath(type, name, {node1, node2}, {n1,n2});
 		m->set("width", toString(w)); //  width in meter
 		if (dashNumber == 0) m->set("style", "solid"); // simple line
@@ -273,7 +273,7 @@ void VRRoadIntersection::computeMarkings() {
     }
 }
 
-void VRRoadIntersection::computeLayout() {
+void VRRoadIntersection::computeLayout(GraphPtr graph) {
     auto node = entity->getEntity("node");
     Vec3d pNode = node->getVec3f("position");
     int N = roads.size();
@@ -350,7 +350,9 @@ void VRRoadIntersection::computeLayout() {
         data.p2 = p2-norm*(d2);
 
         Vec3d pm = (data.p1 + data.p2)*0.5; // compute road node
-        auto n = addNode(pm);
+        int nID = graph->addNode();
+        graph->setPosition(nID, pose::create(pm));
+        auto n = addNode(nID, pm);
         data.entry->set("node", n->getName());
         n->add("paths", data.entry->getName());
         roadFronts.push_back( make_pair(pose(pm, norm), road->getWidth()) );

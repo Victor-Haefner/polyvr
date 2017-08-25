@@ -856,33 +856,6 @@ float VRGeometry::calcSurfaceArea() {
     return 0.5*A;
 }
 
-void VRGeometry::applyTransformation(shared_ptr<pose> po) {
-    Matrix4d m = po->asMatrix();
-    if (!mesh) return;
-    if (!mesh->geo) return;
-    auto pos = mesh->geo->getPositions();
-    if (!pos) return;
-    auto norms = mesh->geo->getNormals();
-    Vec3d n; Pnt3d p;
-
-    for (uint i=0; i<pos->size(); i++) {
-        p = Pnt3d(pos->getValue<Pnt3f>(i));
-        m.mult(p,p);
-        pos->setValue(p,i);
-    };
-
-    for (uint i=0; i<norms->size(); i++) {
-        n = Vec3d(norms->getValue<Vec3f>(i));
-        m.mult(n,n);
-        norms->setValue(n,i);
-    };
-}
-
-void VRGeometry::applyTransformation() {
-    applyTransformation(getPose());
-    setMatrix(Matrix4d());
-}
-
 void VRGeometry::setReference(Reference ref) { source = ref; }
 VRGeometry::Reference VRGeometry::getReference() { return source; }
 

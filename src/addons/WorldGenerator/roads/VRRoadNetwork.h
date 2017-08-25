@@ -20,6 +20,8 @@ class VRRoadNetwork : public VRRoadBase {
         vector<VRRoadIntersectionPtr> intersections;
 
         GraphPtr graph;
+        map<int, vector<Vec3d> > graphNormals;
+
         VRAsphaltPtr asphalt;
         VRAsphaltPtr asphaltArrow;
         VRPathtoolPtr tool;
@@ -47,11 +49,13 @@ class VRRoadNetwork : public VRRoadBase {
         static VRRoadNetworkPtr create();
 
         GraphPtr getGraph();
+        vector<Vec3d> getGraphEdgeDirections(int e);
         void updateAsphaltTexture();
         VRAsphaltPtr getMaterial();
         int getRoadID();
 
         VREntityPtr addGreenBelt( VREntityPtr road, float width );
+        VREntityPtr addNode( Vec3d pos, bool elevate = false, float elevationOffset = 0 );
         VRRoadPtr addWay( string name, vector<VREntityPtr> paths, int rID, string type );
         VRRoadPtr addRoad( string name, string type, VREntityPtr node1, VREntityPtr node2, Vec3d norm1, Vec3d norm2, int Nlanes );
         VRRoadPtr addLongRoad( string name, string type, vector<VREntityPtr> nodes, vector<Vec3d> normals, int Nlanes );
