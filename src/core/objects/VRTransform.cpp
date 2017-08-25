@@ -869,9 +869,10 @@ void VRTransform::applyTransformation(shared_ptr<pose> po) {
     };
 
     auto computeNewMatrix = [&](VRGeometryPtr geo) {
-        //cout << "VRTransform::applyTransformation " << getName() << " pvec " << pos << endl;
         auto m = geo->getMatrixTo(ptr());
-        m.mult(m0);
+        auto mI = m; mI.invert();
+        m.multLeft(m0);
+        m.multLeft(mI);
         return m;
     };
 
@@ -883,6 +884,7 @@ void VRTransform::applyTransformation(shared_ptr<pose> po) {
         auto pos = mesh->geo->getPositions();
         if (!pos) continue;
         if (applied.count(pos)) continue;
+        applied[pos] = true;
         auto m = computeNewMatrix(geo);
         applyMatrix(mesh, m);
     }
