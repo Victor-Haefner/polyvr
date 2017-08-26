@@ -143,7 +143,45 @@ void VRWorldGenerator::processOSMMap() {
                 terrain->elevatePoint(p,p[1]);
                 terrain->projectTangent(d, p);
             }
-            d[1] = 0;
+            //d[1] = 0;
+            d.normalize();
+            path->addPoint( pose( p, d ) );
+        };
+
+        if (pos.size() == 2) {
+            Vec3d d = pos[1] - pos[0];
+            addPnt(pos[0], d);
+            addPnt(pos[1], d);
+        }
+
+        for (int i=1; i<pos.size()-1; i++) {
+            auto& p1 = pos[i-1];
+            auto& p2 = pos[i];
+            auto& p3 = pos[i+1];
+
+            if (i == 1) addPnt(p1, p2-p1);
+            addPnt(p2, p3-p1);
+            if (i == pos.size()-2) addPnt(p3, p3-p2);
+        }
+        path->compute(N);
+        return path;
+    };
+
+    auto embSlopePath = [&](OSMWayPtr& way, int N) {
+        auto path = path::create();
+        vector<Vec3d> pos;
+        for (auto nID : way->nodes) {
+            auto n = osmMap->getNode(nID);
+            Vec3d p = planet->fromLatLongPosition(n->lat, n->lon, true);
+            pos.push_back( p );
+        }
+
+        auto addPnt = [&](Vec3d p, Vec3d d) {
+            if (terrain) {
+                terrain->elevatePoint(p);
+                terrain->projectTangent(d, p);
+            }
+            //d[1] = 0;
             d.normalize();
             path->addPoint( pose( p, d ) );
         };
@@ -186,7 +224,6 @@ void VRWorldGenerator::processOSMMap() {
             norms.push_back(norm);
         };
 
-        float height = way->hasTag("height") && way->hasTag("embankment") ? toFloat(way->tags["height"]) : 0; // deprecated?
         width = way->hasTag("width") ? toFloat(way->tags["width"]) : width;
 
         for (uint i=1; i<way->nodes.size(); i++) { // TODO: consider using direction tag in OSM
@@ -195,7 +232,7 @@ void VRWorldGenerator::processOSMMap() {
             auto& n3 = graphNodes[ way->nodes[(i+1)%way->nodes.size()] ];
 
             if (i == 1) { // first
-                if (!n1.e) n1.e = roads->addNode(n1.p, true, height);
+                if (!n1.e) n1.e = roads->addNode(n1.p, true, 0);
                 addPathData(n1.e, n1.n->tags.count("direction") ? getDir(n1.n) : n2.p - n1.p);
             }
 
@@ -203,10 +240,10 @@ void VRWorldGenerator::processOSMMap() {
             //addPathData(node, n2.p - n1.p);
 
             if (i == way->nodes.size()-1) { // last
-                if (!n2.e) n2.e = roads->addNode(n2.p, true, height);
+                if (!n2.e) n2.e = roads->addNode(n2.p, true, 0);
                 addPathData(n2.e, n2.n->tags.count("direction") ? getDir(n2.n) : n2.p - n1.p);
             } else if (n2.n->Nways > 1 || true) { // intersection node, add it!
-                if (!n2.e) n2.e = roads->addNode(n2.p, true, height);
+                if (!n2.e) n2.e = roads->addNode(n2.p, true, 0);
                 addPathData(n2.e, n2.n->tags.count("direction") ? getDir(n2.n) : n3.p - n1.p);
             }
         }
@@ -216,11 +253,9 @@ void VRWorldGenerator::processOSMMap() {
         if (NlanesRight == 0 && NlanesLeft == 0) NlanesRight = way->hasTag("lanes") ? toInt( way->tags["lanes"] ) : 1;
         //cout << endl << way->hasTag("lanes") << " hasForw " << way->hasTag("lanes:forward") << " hasBack " << way->hasTag("lanes:backward") << " Nright " << NlanesRight << " Nleft " << NlanesLeft << endl;
 
-        for (uint i=1; i<nodes.size(); i++) {
-            auto road = roads->addRoad(name, tag, nodes[i-1], nodes[i], norms[i-1], norms[i], 0);
-            for (int l=0; l < NlanesRight; l++) road->addLane(1, width, pedestrian);
-            for (int l=0; l < NlanesLeft; l++) road->addLane(-1, width, pedestrian);
-        }
+        auto road = roads->addLongRoad(name, tag, nodes, norms, 0);
+        for (int l=0; l < NlanesRight; l++) road->addLane(1, width, pedestrian);
+        for (int l=0; l < NlanesLeft; l++) road->addLane(-1, width, pedestrian);
     };
 
     auto addBuilding = [&](OSMWayPtr& way) {
@@ -238,7 +273,9 @@ void VRWorldGenerator::processOSMMap() {
             auto w2 = osmMap->getWay(rel->ways[1]);
             auto p1 = wayToPath(w1, 8);
             auto p2 = wayToPath(w2, 8);
-            terrain->addEmbankment(rel->id, p1, p2);
+            auto p3 = embSlopePath(w1, 8);
+            auto p4 = embSlopePath(w2, 8);
+            terrain->addEmbankment(rel->id, p1, p2, p3, p4);
         }
     }
 

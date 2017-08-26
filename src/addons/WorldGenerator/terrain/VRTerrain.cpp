@@ -24,22 +24,58 @@
 using namespace OSG;
 
 
-VREmbankment::VREmbankment(pathPtr p1, pathPtr p2) : p1(p1), p2(p2) {
+VREmbankment::VREmbankment(pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4) : p1(p1), p2(p2), p3(p3), p4(p4) {
     for (auto p : p1->getPoints()) { auto pos = p.pos(); area.addPoint(Vec2d(pos[0],pos[2])); };
     for (auto p : p2->getPoints()) { auto pos = p.pos(); area.addPoint(Vec2d(pos[0],pos[2])); };
 }
 
 VREmbankment::~VREmbankment() {}
-VREmbankmentPtr VREmbankment::create(pathPtr p1, pathPtr p2) { return VREmbankmentPtr( new VREmbankment(p1,p2) ); }
+VREmbankmentPtr VREmbankment::create(pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4) { return VREmbankmentPtr( new VREmbankment(p1,p2,p3,p4) ); }
 
 bool VREmbankment::isInside(Vec2d p) { return area.isInside(p); }
 
-float VREmbankment::getHeight(Vec2d p) {
-    float t1 = p1->getClosestPoint(Vec3d(p[0], 0, p[1]));
-    float t2 = p2->getClosestPoint(Vec3d(p[0], 0, p[1]));
-    Vec3d P1 = p1->getPosition(t1);
-    Vec3d P2 = p2->getPosition(t2);
-    return (P1[1]+P2[1])*0.5;
+float VREmbankment::getHeight(Vec2d p) { // TODO: optimize!
+    auto computeHeight = [&](float h) {
+        Vec3d P(p[0], h, p[1]);
+        float t1 = p1->getClosestPoint(P);
+        float t2 = p2->getClosestPoint(P);
+        Vec3d P1 = p1->getPosition(t1);
+        Vec3d P2 = p2->getPosition(t2);
+        float d1 = (P1-P).length();
+        float d2 = (P2-P).length();
+        float t = d2/(d1+d2);
+        return P1[1]*t+P2[1]*(1-t);
+    };
+
+    float h1 = computeHeight(0); // first estimate
+    float h2 = computeHeight(h1); // first estimate
+    return h2;
+}
+
+VRGeometryPtr VREmbankment::createGeometry() {
+    float res = 0.025;
+    int N = round(1.0/res);
+    VRGeoData data;
+    Vec3d u = Vec3d(0,1,0);
+    for (int i=0; i<=N; i++) {
+        auto pos1 = p1->getPosition(i*res);
+        auto pos2 = p2->getPosition(1-i*res);
+        auto pos3 = p3->getPosition(i*res);
+        auto pos4 = p4->getPosition(1-i*res);
+        data.pushVert(pos1, u, Vec2d(pos1[0], pos1[2]));
+        data.pushVert(pos2, u, Vec2d(pos2[0], pos2[2]));
+        data.pushVert(pos3, u, Vec2d(pos3[0], pos3[2]));
+        data.pushVert(pos4, u, Vec2d(pos4[0], pos4[2]));
+        if (i < N) {
+            data.pushQuad(i*4, i*4+1, (i+1)*4+1, (i+1)*4); // top
+            data.pushQuad(i*4, (i+1)*4, (i+1)*4+2, i*4+2); // side1
+            data.pushQuad(i*4+1, i*4+3, (i+1)*4+3, (i+1)*4+1); // side2
+        }
+    }
+
+    auto geo = data.asGeometry("embankment");
+    geo->updateNormals();
+    return geo;
 }
 
 
@@ -349,8 +385,15 @@ void VRTerrain::paintHeights(string path) {
     mat->setShaderParameter("doHeightTextures", 1);
 }
 
-void VRTerrain::addEmbankment(string ID, pathPtr p1, pathPtr p2) {
-    embankments[ID] = VREmbankment::create(p1, p2);
+void VRTerrain::addEmbankment(string ID, pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4) {
+    auto e = VREmbankment::create(p1, p2, p3, p4);
+    auto m = VRMaterial::get("embankment");
+    m->setTexture("world/textures/gravel2.jpg");
+    m->setDiffuse(Color3f(0.5,0.5,0.5));
+    auto g = e->createGeometry();
+    g->setMaterial(m);
+    addChild(g);
+    embankments[ID] = e;
 }
 
 // --------------------------------- shader ------------------------------------

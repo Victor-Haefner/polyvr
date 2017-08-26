@@ -14,16 +14,18 @@ class Action;
 
 class VREmbankment {
     private:
-        pathPtr p1, p2;
+        pathPtr p1, p2, p3, p4;
         VRPolygon area;
 
     public:
-        VREmbankment(pathPtr p1, pathPtr p2);
+        VREmbankment(pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4);
         ~VREmbankment();
-        static VREmbankmentPtr create(pathPtr p1, pathPtr p2);
+        static VREmbankmentPtr create(pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4);
 
         bool isInside(Vec2d p);
         float getHeight(Vec2d p);
+
+        VRGeometryPtr createGeometry();
 };
 
 class VRTerrain : public VRGeometry, public VRWorldModule {
@@ -72,7 +74,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void projectTangent( Vec3d& t, Vec3d p);
 
         void paintHeights(string path);
-        void addEmbankment(string ID, pathPtr p1, pathPtr p2);
+        void addEmbankment(string ID, pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4);
 };
 
 OSG_END_NAMESPACE;
