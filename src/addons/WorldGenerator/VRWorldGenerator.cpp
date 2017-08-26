@@ -139,12 +139,11 @@ void VRWorldGenerator::processOSMMap() {
         }
 
         auto addPnt = [&](Vec3d p, Vec3d d) {
+            //d.normalize(); // TODO: necessary because of projectTangent, can be optimized!
             if (terrain) {
                 terrain->elevatePoint(p,p[1]);
                 terrain->projectTangent(d, p);
-            }
-            //d[1] = 0;
-            d.normalize();
+            } else d.normalize();
             path->addPoint( pose( p, d ) );
         };
 
@@ -289,7 +288,6 @@ void VRWorldGenerator::processOSMMap() {
             graphNodes[pID] = n;
         }
 
-        cout << "tags: ";
         for (auto tag : way->tags) {
             if (tag.first == "highway") {
                 if (tag.second == "footway") { addRoad(way, tag.second, 1, true); continue; }
@@ -301,6 +299,7 @@ void VRWorldGenerator::processOSMMap() {
 
             if (tag.first == "barrier") {
                 if (tag.second == "guard_rail") {
+                    cout << "VRWorldGenerator::processOSMMap guard_rail " << endl;
                     float h = way->hasTag("height") ? toFloat( way->tags["height"] ) : 0.5;
                     roads->addGuardRail( wayToPath(way, 8), h );
                 }
@@ -332,9 +331,7 @@ void VRWorldGenerator::processOSMMap() {
                 }
                 continue;
             }
-            cout << " " << tag.first << " : " << tag.second;
         }
-        cout << endl;
     }
 
     for (auto nodeItr : osmMap->getNodes()) {

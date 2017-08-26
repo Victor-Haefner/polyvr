@@ -289,6 +289,7 @@ void VRTerrain::elevatePose(posePtr p, float offset) { auto P = p->pos(); elevat
 void VRTerrain::elevatePoint(Vec3d& p, float offset) { p[1] = getHeight(Vec2d(p[0], p[2])) + offset; }
 
 void VRTerrain::projectTangent( Vec3d& t, Vec3d p) {
+    t.normalize(); // TODO: to optimize!
     float h1 = getHeight(Vec2d(p[0], p[2]));
     float h2 = getHeight(Vec2d(p[0]+t[0], p[2]+t[2]));
     t[1] = h2-h1;
