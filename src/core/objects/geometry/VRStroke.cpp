@@ -191,7 +191,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
     }
 
     data.apply( ptr() );
-    getMaterial()->setLit(lit);
+    if (auto m = getMaterial()) m->setLit(lit);
 }
 
 void VRStroke::strokeStrew(VRGeometryPtr geo) {

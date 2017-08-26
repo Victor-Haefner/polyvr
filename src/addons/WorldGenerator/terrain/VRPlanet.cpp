@@ -60,12 +60,15 @@ Vec3d VRPlanet::fromLatLongNormal(double north, double east, bool local) {
 }
 
 Vec3d VRPlanet::fromLatLongPosition(double north, double east, bool local) {
-    auto pos = Pnt3d( fromLatLongNormal(north, east, 0) * radius );
+    Vec3d pos;
     if (local) {
-        auto p = fromLatLongPose(originCoords[0], originCoords[1], 0);
+        auto s = fromLatLongSize(originCoords[0]-0.5, originCoords[1]-0.5, originCoords[0]+0.5, originCoords[1]+0.5);
+        pos = Vec3d( (east-originCoords[1])*s[0], 0, -(north-originCoords[0])*s[1]);
+
+        /*auto p = fromLatLongPose(originCoords[0], originCoords[1], 0); // DEPRECATED, numerically unstable!
         p->invert();
-        p->asMatrix().mult(pos, pos);
-    }
+        p->asMatrix().mult(pos, pos);*/
+    } else pos = fromLatLongNormal(north, east, 0) * radius;
     return Vec3d( pos );
 }
 

@@ -138,23 +138,30 @@ void VRWorldGenerator::processOSMMap() {
             //path->addPoint( pose( p ) );
         }
 
+        auto addPnt = [&](Vec3d p, Vec3d d) {
+            if (terrain) {
+                terrain->elevatePoint(p,p[1]);
+                terrain->projectTangent(d, p);
+            }
+            d[1] = 0;
+            d.normalize();
+            path->addPoint( pose( p, d ) );
+        };
+
+        if (pos.size() == 2) {
+            Vec3d d = pos[1] - pos[0];
+            addPnt(pos[0], d);
+            addPnt(pos[1], d);
+        }
+
         for (int i=1; i<pos.size()-1; i++) {
-            auto p1 = pos[i-1];
-            auto p2 = pos[i];
-            auto p3 = pos[i+1];
+            auto& p1 = pos[i-1];
+            auto& p2 = pos[i];
+            auto& p3 = pos[i+1];
 
-            if (i == 1) { // first point
-                Vec3d d = p2-p1; d[1] = 0; d.normalize();
-                path->addPoint( pose( p1, d ) );
-            }
-
-            Vec3d d = p3-p1; d[1] = 0; d.normalize();
-            path->addPoint( pose( p2, d ) );
-
-            if (i == pos.size()-2) { // last point
-                Vec3d d = p3-p2; d[1] = 0; d.normalize();
-                path->addPoint( pose( p3, d ) );
-            }
+            if (i == 1) addPnt(p1, p2-p1);
+            addPnt(p2, p3-p1);
+            if (i == pos.size()-2) addPnt(p3, p3-p2);
         }
         path->compute(N);
         return path;
@@ -256,7 +263,14 @@ void VRWorldGenerator::processOSMMap() {
             if (tag.first == "building") { addBuilding(way); continue; }
 
             if (tag.first == "barrier") {
-                if (tag.second == "rail_guard") ; // TODO: port from python prototype
+                if (tag.second == "guard_rail") {
+                    float h = way->hasTag("height") ? toFloat( way->tags["height"] ) : 0.5;
+                    roads->addGuardRail( wayToPath(way, 8), h );
+                }
+                if (tag.second == "kerb") {
+                    float h = way->hasTag("height") ? toFloat( way->tags["height"] ) : 0.2;
+                    roads->addKirb( wayToPolygon(way), h );
+                }
                 continue;
             }
 
@@ -358,6 +372,7 @@ void VRWorldGenerator::clear() {
     osmMap->clear();
     roads->clear();
     district->clear();
+    assets->clear(false);
 }
 
 

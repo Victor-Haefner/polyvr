@@ -54,8 +54,8 @@ bool OSMBase::hasTag(const string& t) {
 }
 
 OSMNode::OSMNode(xmlpp::Element* el) : OSMBase(el) {
-    lat = toFloat(el->get_attribute_value("lat"));
-    lon = toFloat(el->get_attribute_value("lon"));
+    toValue(el->get_attribute_value("lat"), lat);
+    toValue(el->get_attribute_value("lon"), lon);
 }
 
 OSMWay::OSMWay(xmlpp::Element* el) : OSMBase(el) {

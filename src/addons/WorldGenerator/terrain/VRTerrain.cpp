@@ -244,7 +244,7 @@ float VRTerrain::getHeight(const Vec2d& p) {
     u = u*W - 0.5 -i;
     v = v*H - 0.5 -j;
     float h = ( h00*(1-u) + h10*u )*(1-v) + ( h01*(1-u) + h11*u )*v;
-    for (auto e : embankments) if (e.second->isInside(p)) h += e.second->getHeight(p);
+    for (auto e : embankments) if (e.second->isInside(p)) h = e.second->getHeight(p);
     return h;
 }
 

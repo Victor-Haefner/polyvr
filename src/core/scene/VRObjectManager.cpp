@@ -95,11 +95,11 @@ void VRObjectManager::updateObject(VRTransformPtr t) {
     }
 }
 
-void VRObjectManager::clear() {
+void VRObjectManager::clear(bool clearTemplates) {
     entries.clear();
     instances.clear();
-    templates.clear();
-    templatesByName.clear();
+    if (clearTemplates) templates.clear();
+    if (clearTemplates) templatesByName.clear();
     clearChildren();
 }
 

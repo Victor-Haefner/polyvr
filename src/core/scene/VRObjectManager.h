@@ -46,7 +46,7 @@ class VRObjectManager : public VRObject {
         VRTransformPtr add(VRTransformPtr s); // returns duplicate, first time the object is stored as template
         VRTransformPtr copy(string name, posePtr p, bool addToStore = true); // returns duplicate
         void rem(VRTransformPtr o);
-        void clear();
+        void clear(bool clearTemplates = true);
         void updateObject(VRTransformPtr o);
 };
 
