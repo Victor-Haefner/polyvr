@@ -168,6 +168,7 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
         for (auto t : p.computeInflectionPoints(0,0,0.2, Vec3i(1,0,1))) { // add inflection points
             auto pnt = p.getPose(t);
             Vec3d n = pnt.dir(); //n.normalize();
+            if (terrain) terrain->projectTangent(n, pnt.pos());
             nodes.push_back( addNode(pnt.pos(), true) ); norms.push_back( n );
         }
     }
@@ -179,6 +180,12 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
             terrain->projectTangent(normalsIn[i], p);
         }
     }
+
+    cout << " -- VRRoadNetwork::addLongRoad nodes ";
+    for (int i=0; i<nodes.size(); i++) {
+        cout << "  i " << i << nodes[i]->getName() << " n " << norms[i];
+    }
+    cout << endl;
 
     // add path
     int rID = getRoadID();
