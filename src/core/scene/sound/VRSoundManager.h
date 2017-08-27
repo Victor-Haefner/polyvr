@@ -26,7 +26,7 @@ public:
     static VRSoundManagerPtr get();
     ~VRSoundManager();
 
-    VRSoundPtr setupSound(string path, bool loop = false);
+    VRSoundPtr setupSound(string path, bool loop = false, bool play = false);
     void playPositionalSound(string path, Vec3d vec);
 
     void stopSound(string path);

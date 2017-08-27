@@ -90,7 +90,7 @@ struct VRSoundChannel {
         delete thread;
     }
 
-    void play(VRSoundPtr sound) {
+    void add(VRSoundPtr sound) {
         boost::mutex::scoped_lock lock(mutex);
         current[current.size()] = sound;
     }
@@ -106,10 +106,10 @@ struct VRSoundChannel {
             vector<int> toErase;
             for (auto c : current) {
                 c.second->playFrame();
-                if (c.second->getState() == AL_STOPPED) {
+                /*if (c.second->getState() == AL_STOPPED) {
                     cout << "soundThread " << current.size() << endl;
                     toErase.push_back( c.first );
-                }
+                }*/
             }
 
             for (auto e : toErase) current.erase(e);
@@ -141,7 +141,7 @@ void VRSoundManager::clearSoundMap() {
     sounds.clear();
 }
 
-VRSoundPtr VRSoundManager::setupSound(string path, bool loop) {
+VRSoundPtr VRSoundManager::setupSound(string path, bool loop, bool play) {
     cout << "VRSoundManager::setupSound " << path << " " << loop << endl;
     if (!channel) channel = new VRSoundChannel();
     auto sound = getSound(path);
@@ -149,8 +149,8 @@ VRSoundPtr VRSoundManager::setupSound(string path, bool loop) {
 
     cout << " VRSoundManager::setupSound reset " << endl;
     sound->setLoop(loop);
-    sound->reset();
-    channel->play(sound);
+    if (play) sound->play();
+    channel->add(sound);
     return sound;
 }
 

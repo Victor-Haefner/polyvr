@@ -12,7 +12,9 @@ simpleVRPyType( SoundManager, 0 );
 simpleVRPyType( Sound, New_ptr );
 
 PyMethodDef VRPySound::methods[] = {
-    {"stop", PyWrap(Sound, stop, "Stops a sound", void) },
+    {"play", PyWrap(Sound, play, "Play sound", void) },
+    {"stop", PyWrap(Sound, stop, "Stop sound", void) },
+    {"isRunning", PyWrap(Sound, isRunning, "Check if sound is running", bool) },
     {"synthesize", PyWrap(Sound, synthesize, "synthesize( Ac, wc, pc, Am, wm, pm, T)\t\n A,w,p are the amplitude, frequency and phase, c and m are the carrier sinusoid and modulator sinusoid, T is the packet duration in seconds", void, float, float, float, float, float, float, float) },
     {"synthBuffer", PyWrap(Sound, synthBuffer, "synthBuffer( [[f,A]], [[f,A]], T )\t\n [f,A] frequency/amplitude pairs, interpolate the two spectra, T is the packet duration in seconds", vector<short>, vector<Vec2d>, vector<Vec2d>, float) },
     {"synthSpectrum", PyWrap(Sound, synthSpectrum, "synthSpectrum( [A], int S, float T, float F, bool retBuffer )\t\n A amplitude, S sample rate, T packet duration in seconds, F fade in/out duration in s , specify if you want to return the generated buffer", vector<short>, vector<double>, uint, float, float, bool) },
@@ -22,7 +24,7 @@ PyMethodDef VRPySound::methods[] = {
 };
 
 PyMethodDef VRPySoundManager::methods[] = {
-    {"setupSound", PyWrap(SoundManager, setupSound, "Play sound, filename and lopping are optional", VRSoundPtr, string, bool) },
+    {"setupSound", PyWrapOpt(SoundManager, setupSound, "Play sound, lopping and playing are optional", "0|0", VRSoundPtr, string, bool, bool) },
     {"stopAllSounds", PyWrap(SoundManager, stopAllSounds, "Stops all currently playing sounds.", void) },
     {"setVolume", PyWrap(SoundManager, setVolume, "Set sound volume from 0 to 1", void, float) },
     {NULL}  /* Sentinel */

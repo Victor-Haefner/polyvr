@@ -39,7 +39,6 @@ class VRSound {
         ~VRSound();
         static VRSoundPtr create();
 
-        void stop();
         void setPath(string path);
         void setLoop(bool loop);
         void setPitch(float pitch);
@@ -50,15 +49,18 @@ class VRSound {
         int getState();
         string getPath();
 
+        void play();
+        void stop();
         void close();
         void reset();
         void updateSource();
         bool initiate();
-        void play();
+        void playLocally();
         void playFrame();
 
         int getQueuedBuffer();
         void recycleBuffer();
+        uint getFreeBufferID();
 
         // carrier amplitude, carrier frequency, carrier phase, modulation amplitude, modulation frequency, modulation phase, packet duration
         void synthesize(float Ac = 32760, float wc = 440, float pc = 0, float Am = 0, float wm = 0, float pm = 0, float T = 1);
