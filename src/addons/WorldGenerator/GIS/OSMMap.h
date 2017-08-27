@@ -28,7 +28,7 @@ struct OSMBase {
 struct OSMNode : OSMBase {
     double lat = 0;
     double lon = 0;
-    int Nways = 0;
+    vector<string> ways;
 
     OSMNode(string id, double lat, double lon);
     OSMNode(xmlpp::Element* e);

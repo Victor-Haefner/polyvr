@@ -74,7 +74,7 @@ void VROpening::open() {
 
     if (fkt1) scene->addAnimation<Vec3d>(1, 0, fkt1, Vec3d(0,1,0), Vec3d(-1,0,0), false, false);
     if (fkt2) scene->addAnimation<Vec3d>(1, 0, fkt2, Vec3d(0,1,0), Vec3d(1,0,0), false, false);
-    VRSoundManager::get().playSound(sound);
+    VRSoundManager::get()->setupSound(sound);
 }
 
 void VROpening::close() {
@@ -83,7 +83,7 @@ void VROpening::close() {
 
     if (fkt1) scene->addAnimation<Vec3d>(1, 0, fkt1, Vec3d(-1,0,0), Vec3d(0,1,0), false, false);
     if (fkt2) scene->addAnimation<Vec3d>(1, 0, fkt2, Vec3d(1,0,0), Vec3d(0,1,0), false, false);
-    VRSoundManager::get().playSound(sound);
+    VRSoundManager::get()->setupSound(sound);
 }
 
 void VROpening::toggle(VRDeviceWeakPtr d) {

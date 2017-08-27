@@ -130,30 +130,29 @@ VRSoundManager::~VRSoundManager() {
     if (channel) delete channel;
 }
 
-VRSoundManager& VRSoundManager::get() {
-    static VRSoundManager* instance = 0;
+VRSoundManagerPtr VRSoundManager::get() {
+    static VRSoundManagerPtr instance;
     if (instance && !instance->channel) instance->channel = new VRSoundChannel(); // delay init of channel
-    if (!instance) instance = new VRSoundManager();
-    return *instance;
+    if (!instance) instance = VRSoundManagerPtr( new VRSoundManager() );
+    return instance;
 }
 
 void VRSoundManager::clearSoundMap() {
     sounds.clear();
 }
 
-void VRSoundManager::playSound(string path, bool loop) {
-    cout << "VRSoundManager::playSound " << path << " " << loop << endl;
+VRSoundPtr VRSoundManager::setupSound(string path, bool loop) {
+    cout << "VRSoundManager::setupSound " << path << " " << loop << endl;
     if (!channel) channel = new VRSoundChannel();
     auto sound = getSound(path);
-    if (sound->isRunning()) { cout << "sound is playing, ignoring" << endl; return; }
+    if (sound->isRunning()) { cout << "sound is playing, ignoring" << endl; return sound; }
 
-    cout << " VRSoundManager::playSound reset " << endl;
+    cout << " VRSoundManager::setupSound reset " << endl;
     sound->setLoop(loop);
     sound->reset();
     channel->play(sound);
+    return sound;
 }
-
-void VRSoundManager::play(VRSoundPtr sound) { sound->play(); }
 
 VRSoundPtr VRSoundManager::getSound(string path) {
     if (sounds.count(path) == 0) { // TODO: WORKAROUND
@@ -162,7 +161,7 @@ VRSoundPtr VRSoundManager::getSound(string path) {
     } return sounds[path];
 }
 
-void VRSoundManager::setSoundVolume(float volume) {
+void VRSoundManager::setVolume(float volume) {
     volume = max(volume, 0.f);
     volume = min(volume, 1.f);
     for (auto s : sounds) s.second->setGain(volume);

@@ -180,7 +180,7 @@ void CarSound::play(float rpm) {
 
         sound->recycleBuffer();
         if ( sound->getQueuedBuffer() < 2 ) {
-            sound->synthesizeSpectrum(getSpectrum(rpm), getRes(), duration, fade);
+            sound->synthSpectrum(getSpectrum(rpm), getRes(), duration, fade);
         }
     }
 }

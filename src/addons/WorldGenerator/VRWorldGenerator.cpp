@@ -116,6 +116,7 @@ void VRWorldGenerator::processOSMMap() {
     };
 
     map<string, Node> graphNodes;
+    map<string, VRRoadPtr> osmRoads;
 
     auto wayToPolygon = [&](OSMWayPtr& way) {
         auto poly = VRPolygon::create();
@@ -205,7 +206,8 @@ void VRWorldGenerator::processOSMMap() {
     };
 
     auto getDir  = [&](OSMNodePtr n) {
-        float a = planet->toRad( toFloat( n->tags["direction"] ) ); // angle
+        float a = 0;
+        if (n->hasTag("direction")) a = planet->toRad( toFloat( n->tags["direction"] ) ); // angle
         return Vec3d(sin(a), 0, -cos(a));
     };
 
@@ -217,8 +219,9 @@ void VRWorldGenerator::processOSMMap() {
         vector<VREntityPtr> nodes;
         vector<Vec3d> norms;
 
-        auto addPathData = [&](VREntityPtr node, Vec3d norm) {
-            norm.normalize();
+        auto addPathData = [&](VREntityPtr node, Vec3d pos, Vec3d norm) {
+            if (terrain) terrain->projectTangent(norm, pos);
+            else norm.normalize();
             nodes.push_back(node);
             norms.push_back(norm);
         };
@@ -232,19 +235,12 @@ void VRWorldGenerator::processOSMMap() {
 
             if (i == 1) { // first
                 if (!n1.e) n1.e = roads->addNode(n1.p, true, 0);
-                addPathData(n1.e, n1.n->tags.count("direction") ? getDir(n1.n) : n2.p - n1.p);
+                addPathData(n1.e, n1.p, n1.n->tags.count("direction") ? getDir(n1.n) : n2.p - n1.p);
             }
 
-            //auto node = roads->addNode((n1.p+n2.p)*0.5, true);
-            //addPathData(node, n2.p - n1.p);
-
-            if (i == way->nodes.size()-1) { // last
-                if (!n2.e) n2.e = roads->addNode(n2.p, true, 0);
-                addPathData(n2.e, n2.n->tags.count("direction") ? getDir(n2.n) : n2.p - n1.p);
-            } else if (n2.n->Nways > 1 || true) { // intersection node, add it!
-                if (!n2.e) n2.e = roads->addNode(n2.p, true, 0);
-                addPathData(n2.e, n2.n->tags.count("direction") ? getDir(n2.n) : n3.p - n1.p);
-            }
+            if (!n2.e) n2.e = roads->addNode(n2.p, true, 0);
+            Vec3d n = (i == way->nodes.size()-1) ? n2.p - n1.p : n3.p - n1.p;
+            addPathData(n2.e, n2.p, n2.n->tags.count("direction") ? getDir(n2.n) : n);
         }
 
         int NlanesRight = way->hasTag("lanes:forward") ? toInt( way->tags["lanes:forward"] ) : way->hasTag("lanes:forwards") ? toInt( way->tags["lanes:forwards"] ) : 0;
@@ -255,6 +251,7 @@ void VRWorldGenerator::processOSMMap() {
         auto road = roads->addLongRoad(name, tag, nodes, norms, 0);
         for (int l=0; l < NlanesRight; l++) road->addLane(1, width, pedestrian);
         for (int l=0; l < NlanesLeft; l++) road->addLane(-1, width, pedestrian);
+        osmRoads[way->id] = road;
     };
 
     auto addBuilding = [&](OSMWayPtr& way) {
@@ -348,7 +345,14 @@ void VRWorldGenerator::processOSMMap() {
                 continue;
             }
             if (tag.first == "traffic_sign:training_ground") {
-                auto a = assets->copy(tag.second, pose::create(pos, dir), false);
+                Vec3d p = pos;
+                Vec3d d = dir;
+                if (node->ways.size() == 1 && osmRoads.count(node->ways[0])) { // TODO: on a way, use way informations!
+                    auto road = osmRoads[node->ways[0]];
+                    //dir = road->;
+                }
+                auto a = assets->copy(tag.second, pose::create(p, d), false);
+
                 //cout << " add asset, sign " << tag.second << "  " << a << endl;
             }
         }

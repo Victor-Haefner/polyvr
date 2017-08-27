@@ -52,7 +52,7 @@ void VRBlinds::open() {
     state = OPEN;
 
     scene->addAnimation<float>(3, 0, fkt, float(0.0), float(1.0), false);
-    VRSoundManager::get().playSound(sound);
+    VRSoundManager::get()->setupSound(sound);
 }
 
 void VRBlinds::close() {
@@ -60,7 +60,7 @@ void VRBlinds::close() {
     state = CLOSE;
 
     scene->addAnimation<float>(3, 0, fkt, float(1.0), float(0.0), false);
-    VRSoundManager::get().playSound(sound);
+    VRSoundManager::get()->setupSound(sound);
 }
 
 void VRBlinds::toggle(VRDeviceWeakPtr d) {

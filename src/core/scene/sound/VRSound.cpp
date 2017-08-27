@@ -383,7 +383,7 @@ void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float
     playBuffer(samples, sample_rate);
 }
 
-vector<short> VRSound::synthesizeSpectrum(vector<double> spectrum, uint sample_rate, float duration, float fade_factor, bool returnBuffer) {
+vector<short> VRSound::synthSpectrum(vector<double> spectrum, uint sample_rate, float duration, float fade_factor, bool returnBuffer) {
     if (!initiated) initiate();
 
     /* --- fade in/out curve ---

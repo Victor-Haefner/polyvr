@@ -5,22 +5,30 @@
 
 using namespace OSG;
 
-simpleVRPyType( Sound , New_ptr );
+template<> PyObject* VRPyTypeCaster::cast(const VRSoundPtr& e) { return VRPySound::fromSharedPtr(e); }
+template<> PyObject* VRPyTypeCaster::cast(const VRSoundManagerPtr& e) { return VRPySoundManager::fromSharedPtr(e); }
+
+simpleVRPyType( SoundManager, 0 );
+simpleVRPyType( Sound, New_ptr );
 
 PyMethodDef VRPySound::methods[] = {
-    {"play", (PyCFunction)VRPySound::play, METH_VARARGS, "Play the sound with the filename given as first parameter. \n The second paramater to 1 for loop, to 0 for no loop." },
-    {"stop", (PyCFunction)VRPySound::stop, METH_VARARGS, "Stops a sound - stop(myPath.mp3)" },
-    {"stopAllSounds", (PyCFunction)VRPySound::stopAllSounds, METH_NOARGS, "Stops all currently playing sounds." },
-    {"setVolume", (PyCFunction)VRPySound::setVolume, METH_VARARGS, "Set sound volume - setVolume( float ) \n\tfrom 0.0 to 1.0 (= 100%)" },
-    {"synthesize", (PyCFunction)VRPySound::synthesize, METH_VARARGS, "synthesize( Ac, wc, pc, Am, wm, pm, T)\t\n A,w,p are the amplitude, frequency and phase, c and m are the carrier sinusoid and modulator sinusoid, T is the packet duration in seconds" },
-    {"synthBuffer", (PyCFunction)VRPySound::synthBuffer, METH_VARARGS, "synthBuffer( [[f,A]], [[f,A]], T )\t\n [f,A] frequency/amplitude pairs, interpolate the two spectra, T is the packet duration in seconds" },
-    {"synthSpectrum", (PyCFunction)VRPySound::synthSpectrum, METH_VARARGS, "synthSpectrum( [A], int S, float T, float F, bool retBuffer )\t\n A amplitude, S sample rate, T packet duration in seconds, F fade in/out duration in s , specify if you want to return the generated buffer" },
-    {"getQueuedBuffer", (PyCFunction)VRPySound::getQueuedBuffer, METH_NOARGS, "Get the buffer currently queued - int getQueuedBuffer()" },
-    {"recycleBuffer", (PyCFunction)VRPySound::recycleBuffer, METH_NOARGS, "Recycle unused buffers - recycleBuffer()" },
+    {"stop", PyWrap(Sound, stop, "Stops a sound", void) },
+    {"synthesize", PyWrap(Sound, synthesize, "synthesize( Ac, wc, pc, Am, wm, pm, T)\t\n A,w,p are the amplitude, frequency and phase, c and m are the carrier sinusoid and modulator sinusoid, T is the packet duration in seconds", void, float, float, float, float, float, float, float) },
+    {"synthBuffer", PyWrap(Sound, synthBuffer, "synthBuffer( [[f,A]], [[f,A]], T )\t\n [f,A] frequency/amplitude pairs, interpolate the two spectra, T is the packet duration in seconds", vector<short>, vector<Vec2d>, vector<Vec2d>, float) },
+    {"synthSpectrum", PyWrap(Sound, synthSpectrum, "synthSpectrum( [A], int S, float T, float F, bool retBuffer )\t\n A amplitude, S sample rate, T packet duration in seconds, F fade in/out duration in s , specify if you want to return the generated buffer", vector<short>, vector<double>, uint, float, float, bool) },
+    {"getQueuedBuffer", PyWrap(Sound, getQueuedBuffer, "Get the buffer currently queued", int) },
+    {"recycleBuffer", PyWrap(Sound, recycleBuffer, "Recycle unused buffers", void) },
     {NULL}  /* Sentinel */
 };
 
-PyObject* VRPySound::play(VRPySound* self, PyObject* args) {
+PyMethodDef VRPySoundManager::methods[] = {
+    {"setupSound", PyWrap(SoundManager, setupSound, "Play sound, filename and lopping are optional", VRSoundPtr, string, bool) },
+    {"stopAllSounds", PyWrap(SoundManager, stopAllSounds, "Stops all currently playing sounds.", void) },
+    {"setVolume", PyWrap(SoundManager, setVolume, "Set sound volume from 0 to 1", void, float) },
+    {NULL}  /* Sentinel */
+};
+
+/*PyObject* VRPySound::play(VRPySound* self, PyObject* args) {
     PyObject* path = NULL;
     long loop = 0;
 
@@ -97,4 +105,4 @@ PyObject* VRPySound::setVolume(VRPySound* self, PyObject* args) {
 
     VRSoundManager::get().setSoundVolume(vol);
     Py_RETURN_TRUE;
-}
+}*/

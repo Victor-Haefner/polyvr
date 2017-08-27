@@ -107,6 +107,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyLod>("Lod", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPySprite>("Sprite", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPySound>("Sound", pModVR);
+    sm->registerModule<VRPySoundManager>("SoundManager", pModVR);
     sm->registerModule<VRPySocket>("Socket", pModVR);
     sm->registerModule<VRPyStroke>("Stroke", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyConstraint>("Constraint", pModVR);

@@ -127,7 +127,7 @@ void PolyVR::start(bool runit) {
     else glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
 
     cout << "Init Modules\n";
-    sound_mgr = shared_ptr<VRSoundManager>(&VRSoundManager::get());
+    sound_mgr = VRSoundManager::get();
     setup_mgr = shared_ptr<VRSetupManager>(VRSetupManager::get());
     scene_mgr = shared_ptr<VRSceneManager>(VRSceneManager::get());
     interface = shared_ptr<VRMainInterface>(VRMainInterface::get());

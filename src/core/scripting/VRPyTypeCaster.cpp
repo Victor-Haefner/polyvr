@@ -77,7 +77,8 @@ template<> PyObject* VRPyTypeCaster::cast(const VRTransformPtr& e) { return VRPy
 template<> PyObject* VRPyTypeCaster::cast(const VRGeometryPtr& e) { return VRPyTypeCaster::cast(dynamic_pointer_cast<VRObject>(e)); }
 template<> PyObject* VRPyTypeCaster::cast(const VREntityPtr& e) { return VRPyEntity::fromSharedPtr(e); }
 template<> PyObject* VRPyTypeCaster::cast(const int& i) { return PyInt_FromLong(i); }
-template<> PyObject* VRPyTypeCaster::cast(const float& i) { return PyFloat_FromDouble(i); }
+template<> PyObject* VRPyTypeCaster::cast(const short& s) { return PyInt_FromLong(s); }
+template<> PyObject* VRPyTypeCaster::cast(const float& f) { return PyFloat_FromDouble(f); }
 template<> PyObject* VRPyTypeCaster::cast(const string& s) { return PyString_FromString(s.c_str()); }
 template<> PyObject* VRPyTypeCaster::cast(const bool& b) { if (b) Py_RETURN_TRUE; else Py_RETURN_FALSE; }
 template<> PyObject* VRPyTypeCaster::cast(const Vec2d& b) { return toPyObject(b); }

@@ -10,6 +10,7 @@
 #include "VRPyTypeCaster.h"
 #include "VRPyProgress.h"
 #include "VRPySky.h"
+#include "VRPySound.h"
 
 #include "core/scene/VRAnimationManagerT.h"
 #include "core/scene/import/VRImport.h"
@@ -54,6 +55,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"runTest", (PyCFunction)VRSceneGlobals::runTest, METH_VARARGS, "Run a built-in system test - runTest( string test )" },
 	{"getSceneMaterials", (PyCFunction)VRSceneGlobals::getSceneMaterials, METH_NOARGS, "Get all materials of the scene - getSceneMaterials()" },
 	{"getSky", (PyCFunction)VRSceneGlobals::getSky, METH_NOARGS, "Get sky module" },
+	{"getSoundManager", (PyCFunction)VRSceneGlobals::getSoundManager, METH_NOARGS, "Get sound manager module" },
     {NULL}  /* Sentinel */
 };
 
@@ -61,6 +63,10 @@ PyMethodDef VRSceneGlobals::methods[] = {
 // ==============
 // Python methods
 // ==============
+
+PyObject* VRSceneGlobals::getSoundManager(VRSceneGlobals* self) {
+    return VRPySoundManager::fromSharedPtr( VRSoundManager::get() );
+}
 
 PyObject* VRSceneGlobals::getSky(VRSceneGlobals* self) {
     auto scene = VRScene::getCurrent();

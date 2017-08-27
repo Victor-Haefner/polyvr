@@ -22,19 +22,17 @@ public:
     VRSoundPtr getSound(string path);
     void clearSoundMap(void);
 
-    void play(VRSoundPtr sound);
-
 public:
-    static VRSoundManager& get();
+    static VRSoundManagerPtr get();
     ~VRSoundManager();
 
-    void playSound(string path, bool loop = false);
+    VRSoundPtr setupSound(string path, bool loop = false);
     void playPositionalSound(string path, Vec3d vec);
 
     void stopSound(string path);
     void stopAllSounds(void);
 
-    void setSoundVolume(float volume);
+    void setVolume(float volume);
     void updatePlayerPosition(Vec3d position, Vec3d forward);
 };
 
