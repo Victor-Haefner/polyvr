@@ -116,7 +116,7 @@ void VRWorldGenerator::processOSMMap() {
     };
 
     map<string, Node> graphNodes;
-    map<string, VRRoadPtr> osmRoads;
+    map<string, VRRoadPtr> RoadEntities;
 
     auto wayToPolygon = [&](OSMWayPtr& way) {
         auto poly = VRPolygon::create();
@@ -251,7 +251,7 @@ void VRWorldGenerator::processOSMMap() {
         auto road = roads->addLongRoad(name, tag, nodes, norms, 0);
         for (int l=0; l < NlanesRight; l++) road->addLane(1, width, pedestrian);
         for (int l=0; l < NlanesLeft; l++) road->addLane(-1, width, pedestrian);
-        osmRoads[way->id] = road;
+        RoadEntities[way->id] = road;
     };
 
     auto addBuilding = [&](OSMWayPtr& way) {
@@ -345,15 +345,16 @@ void VRWorldGenerator::processOSMMap() {
                 continue;
             }
             if (tag.first == "traffic_sign:training_ground") {
-                Vec3d p = pos;
-                Vec3d d = dir;
-                if (node->ways.size() == 1 && osmRoads.count(node->ways[0])) { // TODO: on a way, use way informations!
-                    auto road = osmRoads[node->ways[0]];
-                    //dir = road->;
+                auto signEnt = ontology->addEntity("sign", "Sign");
+                signEnt->set("type", tag.second);
+                signEnt->setVec3("position", pos, "Position");
+                signEnt->setVec3("direction", dir, "Direction");
+                for (auto way : node->ways) {
+                    if (!RoadEntities.count(way)) continue;
+                    auto roadEnt = RoadEntities[node->ways[0]]->getEntity();
+                    roadEnt->add("signs",signEnt->getName());
+                    signEnt->set("road",roadEnt->getName());
                 }
-                auto a = assets->copy(tag.second, pose::create(p, d), false);
-
-                //cout << " add asset, sign " << tag.second << "  " << a << endl;
             }
         }
     }

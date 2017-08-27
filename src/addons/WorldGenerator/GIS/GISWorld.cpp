@@ -15,6 +15,7 @@ void GISWorld::setupOntology() {
     VROntologyPtr world = VROntology::create("World");
     VROntology::library["World"] = world;
     world->merge( VROntology::library["Math"] );
+    world->merge( VROntology::library["Object"] );
 
     auto World = world->addConcept("World", "Area");
     auto Country = world->addConcept("Country", "Area");
@@ -43,6 +44,7 @@ void GISWorld::setupOntology() {
     auto ParallelParkingLot = world->addConcept("ParallelParkingLot", "ParkingLot");
     auto PerpendicularParkingLot = world->addConcept("PerpendicularParkingLot", "ParkingLot");
     auto AngledParkingLot = world->addConcept("AngledParkingLot", "ParkingLot");
+    auto Sign = world->addConcept("Sign", "Object");
 
     World->addProperty("ways", WayNetwork);
     WayNetwork->addProperty("ways", Way);
@@ -69,6 +71,10 @@ void GISWorld::setupOntology() {
     Road->addProperty("intersections", RoadIntersection);
     Road->addProperty("buildings", Building);
     Road->addProperty("type", "string");
+    Road->addProperty("signs", Sign);
+    Sign->addProperty("type", "string");
+    Sign->addProperty("direction", "Direction");
+    Sign->addProperty("road", Road);
     RoadIntersection->addProperty("node", "Node");
     RoadIntersection->addProperty("roads", Road);
     Sidewalk->addProperty("kerbs", Kerb);

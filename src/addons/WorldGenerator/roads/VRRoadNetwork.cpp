@@ -157,8 +157,8 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
     // check for inflection points!
     for (int i=1; i<nodesIn.size(); i++) {
         nodes.push_back( nodesIn[i-1] ); norms.push_back( normalsIn[i-1] );
-        Vec3d p1 = nodesIn[i-1]->getVec3f("position");
-        Vec3d p2 = nodesIn[i  ]->getVec3f("position");
+        Vec3d p1 = nodesIn[i-1]->getVec3("position");
+        Vec3d p2 = nodesIn[i  ]->getVec3("position");
 
         path p;
         p.addPoint( pose(p1, normalsIn[i-1]) );
@@ -176,7 +176,7 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
 
     if (terrain) {
         for (int i=0; i<nodesIn.size(); i++) { // project tangents on terrain
-            Vec3d p = nodesIn[i]->getVec3f("position");
+            Vec3d p = nodesIn[i]->getVec3("position");
             terrain->projectTangent(normalsIn[i], p);
         }
     }
@@ -221,8 +221,8 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
         vector<Vec3d> norms;
 
         for (auto entry : pathEnt->getAllEntities("nodes")) { // TODO: it might be more efficient to have this as outer loop
-            Vec3d p = entry->getEntity("node")->getVec3f("position");
-            Vec3d n = entry->getVec3f("direction");
+            Vec3d p = entry->getEntity("node")->getVec3("position");
+            Vec3d n = entry->getVec3("direction");
             Vec3d x = Vec3d(0,1,0).cross(n);
             x.normalize();
             float k = width*0.5 + widthSum ;
@@ -377,6 +377,19 @@ vector<VRRoadPtr> VRRoadNetwork::getNodeRoads(VREntityPtr node) {
     return res;
 }
 
+void VRRoadNetwork::computeSigns() {
+    auto assets = world->getAssetManager();
+    for (auto signEnt : world->getOntology()->getEntities("Sign")) {
+        Vec3d pos = signEnt->getVec3("position");
+        Vec3d dir = signEnt->getVec3("direction");
+        string type = signEnt->getValue<string>("type");
+        auto sign = assets->copy(type, pose::create(pos, dir), false);
+        if (auto roadEnt = signEnt->getEntity("road")) {
+            ;
+        }
+    }
+}
+
 void VRRoadNetwork::computeArrows() {
     for (auto arrow : world->getOntology()->getEntities("Arrow")) {
         float t = toFloat( arrow->get("position")->value );
@@ -455,7 +468,7 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const pose& p) {
 
 
 void VRRoadNetwork::mergeRoads(VREntityPtr node, VRRoadPtr road1, VRRoadPtr road2) {
-    Vec3d pNode = node->getVec3f("position");
+    Vec3d pNode = node->getVec3("position");
 
     auto intersect = [&](const Pnt3d& p1, const Vec3d& n1, const Pnt3d& p2, const Vec3d& n2) -> Vec3d {
         Vec3d d = p2-p1;
@@ -636,6 +649,7 @@ void VRRoadNetwork::compute() {
     computeSurfaces();
     computeMarkings();
     computeArrows();
+    computeSigns();
     //computeGreenBelts();
     updateAsphaltTexture();
 }

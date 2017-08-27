@@ -44,10 +44,10 @@ VRRoad::edgePoint& VRRoad::getEdgePoints( VREntityPtr node ) {
     if (edgePoints.count(node) == 0) {
         float width = getWidth();
         VREntityPtr rEntry = getNodeEntry( node );
-        Vec3d norm = rEntry->getVec3f("direction") * toInt(rEntry->get("sign")->value);
+        Vec3d norm = rEntry->getVec3("direction") * toInt(rEntry->get("sign")->value);
         Vec3d x = Vec3d(0,1,0).cross(norm);
         x.normalize();
-        Vec3d pNode = node->getVec3f("position");
+        Vec3d pNode = node->getVec3("position");
         Vec3d p1 = pNode - x * 0.5 * width; // right
         Vec3d p2 = pNode + x * 0.5 * width; // left
         edgePoints[node] = edgePoint(p1,p2,norm,rEntry);
@@ -94,8 +94,8 @@ void VRRoad::computeMarkings() {
     VREntityPtr nodeEntryOut = pathEnt->getEntity("nodes",1);
     VREntityPtr nodeIn = nodeEntryIn->getEntity("node");
     VREntityPtr nodeOut = nodeEntryOut->getEntity("node");
-    Vec3d normIn = nodeEntryIn->getVec3f("direction");
-    Vec3d normOut = nodeEntryOut->getVec3f("direction");
+    Vec3d normIn = nodeEntryIn->getVec3("direction");
+    Vec3d normOut = nodeEntryOut->getVec3("direction");
 
     float roadWidth = getWidth();
     auto lanes = entity->getAllEntities("lanes");

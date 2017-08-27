@@ -122,6 +122,15 @@ void VREntity::addVector(string name, vector<string> v, string type) {
     }
 }
 
+void VREntity::setVec3(string name, Vec3d v, string type, int pos) {
+    setVector(name, { ::toString(v[0]), ::toString(v[1]), ::toString(v[2]) }, type, pos);
+}
+
+void VREntity::addVec3(string name, Vec3d v, string type) {
+    addVector(name, { ::toString(v[0]), ::toString(v[1]), ::toString(v[2]) }, type);
+}
+
+
 vector<VRPropertyPtr> VREntity::getVector(const string& prop, int i) { // TODO
     vector<VRPropertyPtr> res;
     auto vp = get(prop, i);
@@ -170,7 +179,7 @@ vector<VREntityPtr> VREntity::getAllEntities(const string& prop) {
     return res;
 }
 
-Vec3d VREntity::getVec3f(const string& prop, int i) {
+Vec3d VREntity::getVec3(const string& prop, int i) {
     Vec3d res;
     auto vec = getVector(prop, i);
     int N = vec.size(); N = min(N,3);
@@ -178,7 +187,7 @@ Vec3d VREntity::getVec3f(const string& prop, int i) {
     return res;
 }
 
-vector< Vec3d > VREntity::getAllVec3f(const string& prop) { // TODO
+vector< Vec3d > VREntity::getAllVec3(const string& prop) { // TODO
     vector< Vec3d > res;
     return res;
 }

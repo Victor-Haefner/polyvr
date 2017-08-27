@@ -69,6 +69,7 @@ class VRRoadNetwork : public VRRoadBase {
         void computeSurfaces();
         void computeMarkings();
         void computeArrows();
+        void computeSigns();
         vector<VRPolygonPtr> computeGreenBelts();
 
         void computeTracksLanes(VREntityPtr way);

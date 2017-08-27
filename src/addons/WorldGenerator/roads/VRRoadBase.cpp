@@ -36,8 +36,8 @@ pathPtr VRRoadBase::toPath( VREntityPtr pathEntity, int resolution ) {
 	for (auto& nodeEntry : nodes) {
         auto node = nodeEntry->getEntity("node");
         if (!node) { cout << "Warning in VRRoadBase::toPath, path node is NULL!" << endl; continue; }
-		pos.push_back( node->getVec3f("position") );
-		norms.push_back(  nodeEntry->getVec3f("direction") );
+		pos.push_back( node->getVec3("position") );
+		norms.push_back(  nodeEntry->getVec3("direction") );
 	}
 
 	pathPtr Path = path::create();
