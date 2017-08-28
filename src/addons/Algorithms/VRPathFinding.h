@@ -23,6 +23,8 @@ class VRPathFinding {
 
             bool operator==(const Position& p);
             bool operator<(const Position& p) const;
+
+            string toString();
         };
 
     private:
@@ -32,10 +34,7 @@ class VRPathFinding {
         map<Position, int> closedSet; // set of nodes already evaluated
         map<Position, int> openSet; // set of currently discovered nodes that are not evaluated yet
         map<Position, Position> cameFrom; // key = current step, value=the most efficient previous step
-
-        map<Position, float> gCost; //key = node, value = cost from the start to current node
         map<Position, float> fCost; //key = node, value = estimated cost from the start to end
-        float hCost; //?
 
 
         Vec3d pos(Position& p);

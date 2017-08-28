@@ -1,6 +1,7 @@
 #include "VRPathFinding.h"
 #include "core/math/graph.h"
 #include "core/math/path.h"
+#include "core/utils/toString.h"
 
 #include <OpenSG/OSGVector.h>
 #include <map>
@@ -21,6 +22,8 @@ bool VRPathFinding::Position::operator<(const Position& p) const {
     float k2 = p.nID + p.eID + p.t;
     return k1 < k2;
 }
+
+string VRPathFinding::Position::toString() { return nID < 0 ? "edge "+::toString(eID)+" at "+::toString(t) : "node "+::toString(nID); }
 
 Vec3d VRPathFinding::pos(Position& p) {
     if (p.nID >= 0) {
@@ -97,7 +100,19 @@ vector<VRPathFinding::Position> VRPathFinding::getNeighbors(Position& p) {
 }
 
 vector<VRPathFinding::Position> VRPathFinding::computePath(Position start, Position goal) {
-    if (!valid(start) || !valid(goal)) return vector<Position>();
+    if (!valid(start) || !valid(goal)) {
+        string p = valid(start)?"goal":"start";
+        cout << "VRPathFinding::computePath Error: " << p << " position invalid!" << endl;
+        return vector<Position>();
+    }
+
+    map<Position, float> gCost; //key = node, value = cost from the start to current node
+
+    closedSet.clear();
+    openSet.clear();
+    cameFrom.clear();
+    fCost.clear();
+
     openSet[start] = 1;
     while (!openSet.empty()) {
         Position current = getMinFromOpenSet();
@@ -119,7 +134,7 @@ vector<VRPathFinding::Position> VRPathFinding::computePath(Position start, Posit
             fCost[neighbor] = gCost[neighbor] + getDistance(neighbor, goal); //heuristic_cost_estimate(node, end)
         }
     }
-    cout << "Error openSet is empty" << endl;
+    cout << "VRPathFinding::computePath Error: no route found from " << start.toString() << " to " << goal.toString() << endl;
     return vector<Position>();
 }
 

@@ -19,6 +19,7 @@ PyMethodDef VRPyGraph::methods[] = {
     {"getNodePose", (PyCFunction)VRPyGraph::getNodePose, METH_VARARGS, "Return graph node pose - pose getNodePose( int n )" },
     {"addNode", (PyCFunction)VRPyGraph::addNode, METH_VARARGS, "Add a node at pose p, returns node ID - int addNode( pose p )" },
     {"connect", (PyCFunction)VRPyGraph::connect, METH_VARARGS, "Connect nodes n1 and n2, returns edge ID - int connect( int n1, int n2 )" },
+    //{"getNodeIDs", PyWrap( Graph, getNodeIDs, "Get all node IDs", vector<int> ) },
     {NULL} /* Sentinel */
 };
 
