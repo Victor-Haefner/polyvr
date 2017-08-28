@@ -876,8 +876,9 @@ void VRTransform::applyTransformation(shared_ptr<pose> po) {
         return m;
     };
 
-    for (auto obj : getChildren(true, "Geometry", true)) {
+    for (auto obj : getChildren(true, "", true)) {
         auto geo = dynamic_pointer_cast<VRGeometry>(obj);
+        if (!geo) continue;
         auto mesh = geo->getMesh();
         if (!mesh) continue;
         if (!mesh->geo) continue;

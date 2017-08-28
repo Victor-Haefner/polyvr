@@ -163,13 +163,15 @@ void VRTerrain::physicalize(bool b) {
     if (!tex) return;
     auto dim = tex->getSize();
 
+    float roadTerrainOffset = 0.2; // also defined in vrroadbase.cpp
+
     double Hmax = -1e6;
     physicsHeightBuffer = shared_ptr<vector<float>>( new vector<float>(dim[0]*dim[1]) );
     for (int i = 0; i < dim[0]; i++) {
         for (int j = 0; j < dim[1]; j++) {
             int k = j*dim[0]+i;
             float h = tex->getPixel(Vec3i(i,j,0))[3];
-            (*physicsHeightBuffer)[k] = h;
+            (*physicsHeightBuffer)[k] = h + roadTerrainOffset;
             if (Hmax < h) Hmax = h;
         }
     }

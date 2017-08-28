@@ -311,7 +311,7 @@ vector<VRObjectPtr> VRObject::getChildren(bool recursive, string type, bool incl
     }
 
     vector<VRObjectPtr> res = getChildren(false, type);
-    if (includeSelf && getType() == type) res.push_back( ptr() );
+    if (includeSelf && (getType() == type || type == "")) res.push_back( ptr() );
 
     for (auto c : children) {
         vector<VRObjectPtr> tmp = c->getChildren(true, type);

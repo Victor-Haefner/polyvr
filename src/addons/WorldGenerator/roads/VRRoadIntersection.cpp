@@ -319,9 +319,9 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
             auto& data1 = road1->getEdgePoints( node );
             auto& data2 = road2->getEdgePoints( node );
             //cout << " N1 " << data1.n << "  N2 " << data2.n << "  Dot " << data1.n.dot(data2.n) << endl;
-            if (data1.n.dot(data2.n) < -0.8) {
+            if (data1.n.dot(data2.n) < -0.8) { // nearly parallel, but opposite directions
                 ; // TODO
-                return true;
+                return true; // special case
             }
         }
 
@@ -329,11 +329,11 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
         Vec3d n1;
         for (int i=0; i<roads.size(); i++) {
             auto& data = roads[i]->getEdgePoints( node );
-            if (n1.cross(data.n).squareLength() > 1e-5) return false;
+            if (n1.cross(data.n).squareLength() > 1e-5) return false; // not parallel, no special case, normal intersection
             n1 = data.n;
         }
 
-        return true;
+        return true; // special case
     };
 
     if (!resolveSpacialCases()) resolveEdgeIntersections();
