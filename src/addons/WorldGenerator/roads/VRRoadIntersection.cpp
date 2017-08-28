@@ -1,4 +1,5 @@
 #include "VRRoadIntersection.h"
+#include "VRRoadNetwork.h"
 #include "VRRoad.h"
 #include "../VRWorldGenerator.h"
 #include "../terrain/VRTerrain.h"
@@ -72,6 +73,7 @@ void VRRoadIntersection::computeLanes() {
                     lane->add("path", lPath->getName());
                     nextLanes[laneIn].push_back(lane);
                     nextLanes[lane].push_back(laneOut);
+                    world->getRoadNetwork()->connectGraph(nodes, norms);
                 }
             }
         }

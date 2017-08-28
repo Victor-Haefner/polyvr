@@ -238,18 +238,20 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
         }
 
         for (int i=1; i<nodes.size(); i++) {
-            auto node1 = nodes[i-1]->getValue<int>("graphID");
-            auto node2 = nodes[i]->getValue<int>("graphID");
-            auto norm1 = norms[i-1];
-            auto norm2 = norms[i];
-            int eID = graph->connect(node1, node2);
-            graphNormals[eID] = {norm1, norm2};
+            connectGraph({nodes[i-1], nodes[i]}, {norms[i-1], norms[i]});
         }
 
         auto lPath = addPath("Path", "lane", nodes, norms);
 		lane->add("path", lPath->getName());
 		widthSum += width;
 	}
+}
+
+void VRRoadNetwork::connectGraph(vector<VREntityPtr> nodes, vector<Vec3d> norms) {
+    auto nID1 = nodes[0]->getValue<int>("graphID");
+    auto nID2 = nodes[1]->getValue<int>("graphID");
+    int eID = graph->connect(nID1, nID2);
+    graphNormals[eID] = norms;
 }
 
 void VRRoadNetwork::addGuardRail( pathPtr path, float height ) {

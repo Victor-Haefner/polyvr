@@ -49,6 +49,7 @@ class VRRoadNetwork : public VRRoadBase {
         static VRRoadNetworkPtr create();
 
         GraphPtr getGraph();
+        void connectGraph(vector<VREntityPtr> nodes, vector<Vec3d> norms);
         vector<Vec3d> getGraphEdgeDirections(int e);
         void updateAsphaltTexture();
         VRAsphaltPtr getMaterial();
