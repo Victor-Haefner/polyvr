@@ -18,7 +18,7 @@ using namespace std;
 
 class VRCarDynamics : public VRObject {
     public:
-        struct Wheel {
+        struct Wheel : public VRStorage {
             VRTransformPtr geo;
 
             // suspension parameter
@@ -45,9 +45,12 @@ class VRCarDynamics : public VRObject {
             float throttle = 0;
             float breaking = 0;
             float steering = 0;
+
+            Wheel();
+            static shared_ptr<Wheel> create();
         };
 
-        struct Engine {
+        struct Engine : public VRStorage {
             // engine parameter
             float power = 1000;//this should be engine/velocity dependent
             float breakPower = 70;//this should be engine/velocity dependent
@@ -60,21 +63,32 @@ class VRCarDynamics : public VRObject {
             pathPtr clutchForceCurve;
             bool running = false;
             bool stallingEnabled = false;
+
+            Engine();
+            static shared_ptr<Engine> create();
         };
 
-        struct Chassis {
+        struct Chassis : public VRStorage {
             VRTransformPtr geo;
             vector<VRGeometryPtr> geos;
             btRigidBody* body = 0;
             float mass = 850.0f;
             Vec3d massOffset;
+
+            Chassis();
+            static shared_ptr<Chassis> create();
         };
 
+        typedef shared_ptr<Engine> EnginePtr;
+        typedef shared_ptr<Chassis> ChassisPtr;
+        typedef shared_ptr<Wheel> WheelPtr;
+
     private:
+        EnginePtr engine;
+        ChassisPtr chassis;
+        vector<WheelPtr> wheels;
+
         CarSoundPtr carSound;
-        vector<Wheel> wheels;
-        Engine engine;
-        Chassis chassis;
         VRUpdateCbPtr updateEPtr;
         VRUpdateCbPtr updateWPtr;
 
@@ -102,7 +116,7 @@ class VRCarDynamics : public VRObject {
         void updateWheels();
         void updateEngine();
 
-        void addBTWheel(Wheel& w);
+        void addBTWheel(WheelPtr w);
         btRigidBody* createRigitBody(float mass, const btTransform& startTransform, btCollisionShape* shape);
 
         void updateChassis();

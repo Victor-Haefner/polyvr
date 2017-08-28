@@ -205,7 +205,7 @@ void VRWorldGenerator::processOSMMap() {
         return path;
     };
 
-    auto getDir  = [&](OSMNodePtr n) {
+    auto getDir = [&](OSMNodePtr n) {
         float a = 0;
         if (n->hasTag("direction")) a = planet->toRad( toFloat( n->tags["direction"] ) ); // angle
         return Vec3d(sin(a), 0, -cos(a));

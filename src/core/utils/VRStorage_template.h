@@ -204,15 +204,20 @@ void VRStorage::load_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool
     if (e == 0) return;
     if (under) e = getChild(e, tag);
     if (e == 0) return;
-    for (auto el : getChildren(e)) {
-        VRStoragePtr s = VRStorage::createFromStore(el, false);
-        if (!s) s = T::create();
-        auto c = static_pointer_cast<T>(s);
-        if (!c) continue;
-        if (el->get_name() != s->type) continue;
-
-        c->load(el);
-        v->push_back( c );
+    auto children = getChildren(e);
+    bool doReload = (v->size() == children.size());
+    for (int i=0; i<children.size(); i++) {
+        auto el = children[i];
+        if (doReload) (*v)[i]->load(el);
+        else {
+            VRStoragePtr s = VRStorage::createFromStore(el, false);
+            if (!s) s = T::create();
+            auto c = static_pointer_cast<T>(s);
+            if (!c) continue;
+            if (el->get_name() != s->type) continue;
+            c->load(el);
+            v->push_back( c );
+        }
     }
 }
 
@@ -241,6 +246,7 @@ void VRStorage::load_vec_cb(vector<T>* v, string tag, xmlpp::Element* e) {
     if (e == 0) return;
     e = getChild(e, tag);
     if (e == 0) return;
+    v->clear();
     for (auto el : getChildren(e)) {
         if (el->get_attribute("val") == 0) return;
         T t;
@@ -260,6 +266,7 @@ void VRStorage::load_vec_vec_cb(vector<vector<T>>* v, string tag, xmlpp::Element
     if (e == 0) return;
     e = getChild(e, tag);
     if (e == 0) return;
+    v->clear();
     for (auto el : getChildren(e)) {
         v->push_back(vector<T>());
         vector<T>* vv = &v->at(v->size()-1);
@@ -281,7 +288,7 @@ template<typename T>
 void VRStorage::load_obj_cb(std::shared_ptr<T>* v, string tag, xmlpp::Element* e) {
     e = getChild(e, tag);
     if (!e) return;
-    *v = T::create();
+    if (!*v) *v = T::create();
     (*v)->load(e);
 }
 

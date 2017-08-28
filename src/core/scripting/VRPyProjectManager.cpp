@@ -17,8 +17,8 @@ PyMethodDef VRPyProjectManager::methods[] = {
     {"remItem", (PyCFunction)VRPyProjectManager::remItem, METH_VARARGS, "Remove an item - remItem( obj )" },
     {"getItems", (PyCFunction)VRPyProjectManager::getItems, METH_NOARGS, "Get all items - [items] getItems()" },
     {"new", (PyCFunction)VRPyProjectManager::newp, METH_VARARGS, "New project - new( str path )" },
-    {"save", (PyCFunction)VRPyProjectManager::save, METH_VARARGS, "Save project to file - save( | str path )" },
-    {"load", (PyCFunction)VRPyProjectManager::load, METH_VARARGS, "Load project from file - load( | str path )" },
+    {"save", PyWrapOpt(ProjectManager, save, "Save to file", "", void, string) },
+    {"load", PyWrapOpt(ProjectManager, load, "Load from file", "", void, string) },
     {"setPersistencyLevel", (PyCFunction)VRPyProjectManager::setPersistencyLevel, METH_VARARGS, "Set the3 persistency level of objects to store - setPersistencyLevel( int lvl )" },
     {NULL}  /* Sentinel */
 };
@@ -76,22 +76,6 @@ PyObject* VRPyProjectManager::newp(VRPyProjectManager* self, PyObject* args) {
     const char* p = 0;
     if (! PyArg_ParseTuple(args, "s", (char*)&p)) return NULL;
     if (p) self->objPtr->newProject(p);
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyProjectManager::save(VRPyProjectManager* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    const char* p = 0;
-    if (! PyArg_ParseTuple(args, "|s", (char*)&p)) return NULL;
-    self->objPtr->save(p?p:"");
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyProjectManager::load(VRPyProjectManager* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    const char* p = 0;
-    if (! PyArg_ParseTuple(args, "|s", (char*)&p)) return NULL;
-    self->objPtr->load(p?p:"");
     Py_RETURN_TRUE;
 }
 
