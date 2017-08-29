@@ -256,7 +256,7 @@ void VRNature::removeTree(int id) {
     computeLODs(aLeafs);
 }
 
-void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround, bool addKirb) { // TODO: needs optimizations!
+void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround, bool addKirb, bool onlyEarth) { // TODO: needs optimizations!
     VRTimer timer; timer.start();
     int t0 = timer.stop();
     //cout << "VRNature::addGrassPatch " << t0 << endl;
@@ -265,18 +265,20 @@ void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround,
 
     for (auto area : Area->gridSplit(10.0)) {
         //cout << " sub Area " << i << "  " << timer.stop() - t0 << endl;
+        if (terrain) terrain->elevatePolygon(area, 0.1);
         Vec3d median = area->getBoundingBox().center();
-        if (terrain) terrain->elevatePoint(median); // TODO: elevate each point of the polygon
         area->translate(-median);
         //cout << "  A1 " << timer.stop() - t0 << endl;
-        auto grass = VRGrassPatch::create();
-        grass->addAttachment("grass", 0);
-        grass->setArea(area);
-        //cout << "  A2 " << timer.stop() - t0 << endl;
-        grassPatchRefs[grass.get()] = grass;
-        auto leaf = addObject(grass, median, 0); // pose contains the world position!
-        grass->setWorldPosition(median);
-        if (updateLODs) computeLODs(leaf);
+        if (!onlyEarth) {
+            auto grass = VRGrassPatch::create();
+            grass->addAttachment("grass", 0);
+            grass->setArea(area);
+            //cout << "  A2 " << timer.stop() - t0 << endl;
+            grassPatchRefs[grass.get()] = grass;
+            auto leaf = addObject(grass, median, 0); // pose contains the world position!
+            grass->setWorldPosition(median);
+            if (updateLODs) computeLODs(leaf);
+        }
         //cout << "  A3 " << timer.stop() - t0 << endl;
 
         //cout << " VRNature::addGrassPatch " << median << "   " << area->computeArea() << endl;
@@ -285,8 +287,7 @@ void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround,
             Triangulator tri;
             tri.add(*area);
             auto geo = tri.compute();
-            geo->rotateYonZ();
-            geo->translate(Vec3d(0,0.02,0) + median);
+            geo->translate(median);
             ground->merge(geo);
         }
 

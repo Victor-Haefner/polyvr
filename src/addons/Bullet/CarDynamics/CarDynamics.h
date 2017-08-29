@@ -59,8 +59,11 @@ class VRCarDynamics : public VRObject {
             float rpm = 800;
             float minRpm = 800;
             float maxRpm = 4500;
+            float stallRpm = 480;
+            float friction = 5;
+            float frictionCoefficient = 14;
             map<int,float> gearRatios;
-            pathPtr clutchForceCurve;
+            pathPtr clutchTransmissionCurve;
             bool running = false;
             bool stallingEnabled = false;
 

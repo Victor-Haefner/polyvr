@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="Car" name_space="Scene" loading_time="3693">
+<Scene name_suffix="0" base_name="Car" name_space="Scene" loading_time="1497">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
@@ -85,7 +85,8 @@
 	blue.setDiffuse([0,0,1])
 	wheel.setMaterial(blue)
 	
-	# initial position
+	# mass, max_steering, enginePower, breakPower, massOffset
+	VR.car.setParameter(1000, 500, 100, [0,-1,0])
 	VR.reset(None)
 	
 	
@@ -164,8 +165,6 @@
 	VR.turn_left_signal = 0
 	VR.safety_belt = 0
 	
-	# mass, max_steering, enginePower, breakPower, massOffset
-	VR.car.setParameter(1000, 500, 100, [0,-1,0])
 	VR.car.reset( VR.Pose([0,2,0], [0,0,-1], [0,1,0]) )
 	
 	# balance test

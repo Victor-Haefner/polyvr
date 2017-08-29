@@ -592,8 +592,8 @@ VRPolygon VRPolygon::sort() {
     return radial_sort;
 }
 
-vector<Vec2d> VRPolygon::get() { return points; }
-vector<Vec3d> VRPolygon::get3() { return points3; }
+vector<Vec2d>& VRPolygon::get() { return points; }
+vector<Vec3d>& VRPolygon::get3() { return points3; }
 
 VRPolygon VRPolygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKING UNRELIABLE!!!
     /*auto radial_sort = sort();

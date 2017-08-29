@@ -290,6 +290,15 @@ void VRTerrain::elevateObject(VRTransformPtr t, float offset) { auto p = t->getF
 void VRTerrain::elevatePose(posePtr p, float offset) { auto P = p->pos(); elevatePoint(P, offset); p->setPos(P); }
 void VRTerrain::elevatePoint(Vec3d& p, float offset) { p[1] = getHeight(Vec2d(p[0], p[2])) + offset; }
 
+void VRTerrain::elevatePolygon(VRPolygonPtr poly, float offset) {
+    for (auto p2 : poly->get()) {
+        Vec3d p3(p2[0], 0, p2[1]);
+        elevatePoint(p3, offset);
+        poly->addPoint(p3);
+    }
+    poly->get().clear();
+}
+
 void VRTerrain::projectTangent( Vec3d& t, Vec3d p) {
     t[1] = 0;
     t.normalize(); // TODO: to optimize!

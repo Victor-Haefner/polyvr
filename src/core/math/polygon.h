@@ -36,8 +36,8 @@ class VRPolygon {
         void translate(Vec3d v);
         void scale(Vec3d s);
 
-        vector<Vec2d> get();
-        vector<Vec3d> get3();
+        vector<Vec2d>& get();
+        vector<Vec3d>& get3();
         void set(vector<Vec2d> vec);
         VRPolygon sort();
         VRPolygon getConvexHull();
