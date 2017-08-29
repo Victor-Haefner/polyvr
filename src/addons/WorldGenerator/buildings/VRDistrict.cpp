@@ -51,12 +51,16 @@ void VRDistrict::addBuilding( VRPolygon p, int stories ) {
 
     auto b = VRBuilding::create();
     b->setWorld(world);
+
+    auto walls = b->addFoundation(p, 4);
+    facades->merge(walls);
+
     for (auto i=0; i<stories; i++) {
         auto walls = b->addFloor(p, 4);
         facades->merge(walls);
     }
-    auto roof = b->addRoof(p);
 
+    auto roof = b->addRoof(p);
     roofs->merge(roof);
 }
 

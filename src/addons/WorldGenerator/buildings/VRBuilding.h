@@ -43,6 +43,7 @@ class VRBuilding : public VRWorldModule {
         static Vec2fWithAdjIdx* copyVai(Vec2fWithAdjIdx* vai);
         static void createTriangles(BuildingStructure* bs, vector<Vec2fWithAdjIdx*>* vertices, Vec2fWithAdjIdx* v);*/
 
+        VRGeometryPtr addFoundation(VRPolygon polygon, float H);
         VRGeometryPtr addFloor(VRPolygon polygon, float H);
         VRGeometryPtr addRoof(VRPolygon polygon);
 };
