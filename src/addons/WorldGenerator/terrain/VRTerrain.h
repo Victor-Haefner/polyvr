@@ -67,15 +67,18 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
 
         void projectOSM();
 
-        float getHeight( const Vec2d& p );
+        double getHeight( const Vec2d& p );
         void elevatePoint( Vec3d& p, float offset = 0 );
         void elevatePose( posePtr p, float offset = 0 );
         void elevatePolygon( VRPolygonPtr p, float offset = 0 );
         void elevateObject( VRTransformPtr p, float offset = 0 );
+        void elevateVertices( VRGeometryPtr p, float offset = 0 );
         void projectTangent( Vec3d& t, Vec3d p);
 
         void paintHeights(string path);
         void addEmbankment(string ID, pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4);
+
+        vector<Vec3d> probeHeight( Vec2d p);
 };
 
 OSG_END_NAMESPACE;

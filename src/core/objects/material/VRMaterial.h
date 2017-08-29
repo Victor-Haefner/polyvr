@@ -120,6 +120,8 @@ class VRMaterial : public VRObject {
         void setClipPlane(bool active, Vec4d equation, VRTransformPtr beacon);
         void setStencilBuffer(bool clear, float value, float mask, int func, int opFail, int opZFail, int opPass);
 
+        bool isWireFrame();
+
         Color3f getDiffuse();
         Color3f getSpecular();
         Color3f getAmbient();

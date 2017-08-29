@@ -228,7 +228,7 @@ void VRWorldGenerator::processOSMMap() {
 
         width = way->hasTag("width") ? toFloat(way->tags["width"]) : width;
 
-        for (uint i=1; i<way->nodes.size(); i++) { // TODO: consider using direction tag in OSM
+        for (uint i=1; i<way->nodes.size(); i++) {
             auto& n1 = graphNodes[ way->nodes[i-1] ];
             auto& n2 = graphNodes[ way->nodes[i  ] ];
             auto& n3 = graphNodes[ way->nodes[(i+1)%way->nodes.size()] ];

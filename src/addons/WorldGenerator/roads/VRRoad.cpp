@@ -1,4 +1,5 @@
 #include "VRRoad.h"
+#include "../terrain/VRTerrain.h"
 #include "core/utils/toString.h"
 #include "core/math/path.h"
 #include "core/objects/geometry/VRStroke.h"
@@ -56,7 +57,7 @@ VRRoad::edgePoint& VRRoad::getEdgePoints( VREntityPtr node ) {
 }
 
 VRGeometryPtr VRRoad::createGeometry() {
-	auto strokeGeometry = [&]() {
+    auto strokeGeometry = [&]() {
 	    float width = getWidth();
 		float W = width*0.5;
 		vector<Vec3d> profile;
@@ -70,6 +71,7 @@ VRGeometryPtr VRRoad::createGeometry() {
 		}
 		geo->setPaths( paths );
 		geo->strokeProfile(profile, 0, 0);
+		if (terrain) terrain->elevateVertices(geo, roadTerrainOffset);
 		return geo;
 	};
 

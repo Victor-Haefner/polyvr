@@ -38,8 +38,6 @@ class VRRoadNetwork : public VRRoadBase {
         vector<VREntityPtr> getRoadNodes();
         vector<VRRoadPtr> getNodeRoads(VREntityPtr node);
 
-        void mergeRoads(VREntityPtr node, VRRoadPtr road1, VRRoadPtr road2);
-
         void init();
 
     public:

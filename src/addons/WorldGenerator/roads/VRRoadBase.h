@@ -14,7 +14,7 @@ OSG_BEGIN_NAMESPACE;
 
 class VRRoadBase : public VRObject, public VRWorldModule {
     protected:
-        float roadTerrainOffset = 0.2; // same as terrain physics offset
+        float roadTerrainOffset = 0.02; // same as terrain physics offset
         float markingsWidth = 0.15;
 
     public:

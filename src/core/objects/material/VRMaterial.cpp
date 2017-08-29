@@ -668,6 +668,12 @@ void VRMaterial::setWireFrame(bool b) {
     else setFrontBackModes(GL_FILL, GL_FILL);
 }
 
+bool VRMaterial::isWireFrame() {
+    auto md = mats[activePass];
+    if (md->polygonChunk == 0) return false;
+    return bool(md->polygonChunk->getFrontMode() == GL_LINE && md->polygonChunk->getBackMode() == GL_LINE);
+}
+
 void VRMaterial::setVideo(string vid_path) {
     auto md = mats[activePass];
     if (md->video == 0) md->video = new VRVideo( ptr() );

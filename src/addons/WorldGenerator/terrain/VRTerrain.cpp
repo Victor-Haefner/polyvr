@@ -17,6 +17,8 @@
 #include "addons/WorldGenerator/GIS/OSMMap.h"
 
 #include <OpenSG/OSGIntersectAction.h>
+#include <OpenSG/OSGGeoProperties.h>
+#include <OpenSG/OSGGeometry.h>
 #include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
 
 #define GLSL(shader) #shader
@@ -79,20 +81,24 @@ VRGeometryPtr VREmbankment::createGeometry() {
 }
 
 
-VRTerrain::VRTerrain(string name) : VRGeometry(name) { setupMat(); }
+VRTerrain::VRTerrain(string name) : VRGeometry(name) {}
 VRTerrain::~VRTerrain() {}
-VRTerrainPtr VRTerrain::create(string name) { return VRTerrainPtr( new VRTerrain(name) ); }
+VRTerrainPtr VRTerrain::create(string name) {
+    auto t = VRTerrainPtr( new VRTerrain(name) );
+    t->setupMat();
+    return t;
+}
 
 void VRTerrain::setParameters( Vec2d s, double r, double h ) {
     size = s;
     resolution = r;
     heightScale = h;
     grid = r*64;
-    setupGeo();
     mat->setShaderParameter("resolution", resolution);
     mat->setShaderParameter("heightScale", heightScale);
     mat->setShaderParameter("doHeightTextures", 0);
     updateTexelSize();
+    setupGeo();
 }
 
 void VRTerrain::setMap( VRTexturePtr t, int channel ) {
@@ -113,6 +119,7 @@ void VRTerrain::setMap( VRTexturePtr t, int channel ) {
 	mat->setShaderParameter("channel", channel);
     mat->setTextureParams(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_MODULATE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
     updateTexelSize();
+    setupGeo();
 }
 
 void VRTerrain::updateTexelSize() {
@@ -124,25 +131,28 @@ void VRTerrain::updateTexelSize() {
 }
 
 void VRTerrain::setupGeo() {
-    Vec2i gridN = Vec2i(size*1.0/grid);
+    Vec2i gridN = Vec2i(round(size[0]*1.0/grid-0.5), round(size[1]*1.0/grid-0.5));
     if (gridN[0] < 1) gridN[0] = 1;
     if (gridN[1] < 1) gridN[1] = 1;
     Vec2d gridS = size;
     gridS[0] /= gridN[0];
     gridS[1] /= gridN[1];
-	Vec2d tcChunk = Vec2d(1.0/gridN[0], 1.0/gridN[1]);
+
+    auto texSize = tex->getSize();
+    Vec2d texel = Vec2d( 1.0/texSize[0], 1.0/texSize[1] );
+	Vec2d tcChunk = Vec2d((1.0-texel[0])/gridN[0], (1.0-texel[1])/gridN[1]);
 
 	VRGeoData geo;
     for (int i =0; i < gridN[0]; i++) {
 		double px1 = -size[0]*0.5 + i*gridS[0];
 		double px2 = px1 + gridS[0];
-		double tcx1 = 0 + i*tcChunk[0];
+		double tcx1 = texel[0]*0.5 + i*tcChunk[0];
 		double tcx2 = tcx1 + tcChunk[0];
 
 		for (int j =0; j < gridN[1]; j++) {
 			double py1 = -size[1]*0.5 + j*gridS[1];
 			double py2 = py1 + gridS[1];
-			double tcy1 = 0 + j*tcChunk[1];
+			double tcy1 = texel[1]*0.5 + j*tcChunk[1];
 			double tcy2 = tcy1 + tcChunk[1];
 
 			geo.pushVert(Vec3d(px1,0,py1), Vec3d(0,1,0), Vec2d(tcx1,tcy1));
@@ -159,11 +169,51 @@ void VRTerrain::setupGeo() {
 	setMaterial(mat);
 }
 
+vector<Vec3d> VRTerrain::probeHeight( Vec2d p ) {
+    int W = tex->getSize()[0]-1;
+    int H = tex->getSize()[1]-1;
+
+    auto toUVSpace = [&](Vec2d p) {
+        double u = (p[0]/size[0] + 0.5)*W;
+        double v = (p[1]/size[1] + 0.5)*H;
+        return Vec2d(u,v);
+    };
+
+    auto fromUVSpace = [&](Vec2d uv) {
+        double x = ((uv[0])/W-0.5)*size[0];
+        double z = ((uv[1])/H-0.5)*size[1];
+        return Vec2d(x,z);
+    };
+
+    Vec2d uv = toUVSpace(p); // uv, i and j are tested
+    int i = round(uv[0]-0.5);
+    int j = round(uv[1]-0.5);
+
+    double h00 = tex->getPixel(Vec3i(i,j,0))[3];
+    double h10 = tex->getPixel(Vec3i(i+1,j,0))[3];
+    double h01 = tex->getPixel(Vec3i(i,j+1,0))[3];
+    double h11 = tex->getPixel(Vec3i(i+1,j+1,0))[3];
+
+    double u = uv[0]-i;
+    double v = uv[1]-j;
+    double h = ( h00*(1-u) + h10*u )*(1-v) + ( h01*(1-u) + h11*u )*v;
+
+    Vec2d p0 = fromUVSpace( Vec2d(i,j) );
+    Vec2d p1 = fromUVSpace( Vec2d(i+1,j+1) );
+    cout << " VRTerrain::getHeight " << uv << " " << i << " " << j << " " << W << " " << H << endl;
+
+    return {Vec3d(p[0], h, p[1]),
+            Vec3d(p0[0], h00, p0[1]),
+            Vec3d(p1[0], h10, p0[1]),
+            Vec3d(p0[0], h01, p1[1]),
+            Vec3d(p1[0], h11, p1[1]) };
+}
+
 void VRTerrain::physicalize(bool b) {
     if (!tex) return;
     auto dim = tex->getSize();
 
-    float roadTerrainOffset = 0.2; // also defined in vrroadbase.cpp
+    float roadTerrainOffset = 0.02; // also defined in vrroadbase.cpp
 
     double Hmax = -1e6;
     physicsHeightBuffer = shared_ptr<vector<float>>( new vector<float>(dim[0]*dim[1]) );
@@ -212,17 +262,15 @@ void VRTerrain::setupMat() {
 	}
 
 	mat = VRMaterial::create("terrain");
-	mat->setWireFrame(0);
-	mat->setLineWidth(1);
 	mat->setVertexShader(vertexShader, "terrainVS");
 	mat->setFragmentShader(fragmentShader, "terrainFS");
 	mat->setTessControlShader(tessControlShader, "terrainTCS");
 	mat->setTessEvaluationShader(tessEvaluationShader, "terrainTES");
 	mat->setShaderParameter("resolution", resolution);
 	mat->setShaderParameter("channel", 3);
-    updateTexelSize();
 	mat->setShaderParameter("texelSize", texelSize);
-	mat->setTexture(tex);
+    mat->setZOffset(1,1);
+	setMap(tex);
 }
 
 bool VRTerrain::applyIntersectionAction(Action* action) {
@@ -264,24 +312,34 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
     return true;
 }
 
-float VRTerrain::getHeight(const Vec2d& p) {
-    int W = tex->getSize()[0];
-    int H = tex->getSize()[1];
+double VRTerrain::getHeight(const Vec2d& p) {
+    int W = tex->getSize()[0]-1;
+    int H = tex->getSize()[1]-1;
 
-    float u = p[0]/size[0] + 0.5;
-    float v = p[1]/size[1] + 0.5;
-    int i = floor(u*W - 0.5);
-    int j = floor(v*H - 0.5);
-    //cout << " VRTerrain::getHeight " << u << " " << v << " " << i << " " << j << " " << W << " " << H << endl;
+    auto toUVSpace = [&](Vec2d p) {
+        double u = (p[0]/size[0] + 0.5)*W;
+        double v = (p[1]/size[1] + 0.5)*H;
+        return Vec2d(u,v);
+    };
 
-    float h00 = tex->getPixel(Vec3i(i,j,0))[3];
-    float h10 = tex->getPixel(Vec3i(i+1,j,0))[3];
-    float h01 = tex->getPixel(Vec3i(i,j+1,0))[3];
-    float h11 = tex->getPixel(Vec3i(i+1,j+1,0))[3];
+    auto fromUVSpace = [&](Vec2d uv) {
+        double x = ((uv[0])/W-0.5)*size[0];
+        double z = ((uv[1])/H-0.5)*size[1];
+        return Vec2d(x,z);
+    };
 
-    u = u*W - 0.5 -i;
-    v = v*H - 0.5 -j;
-    float h = ( h00*(1-u) + h10*u )*(1-v) + ( h01*(1-u) + h11*u )*v;
+    Vec2d uv = toUVSpace(p); // uv, i and j are tested
+    int i = round(uv[0]-0.5);
+    int j = round(uv[1]-0.5);
+
+    double h00 = tex->getPixel(Vec3i(i,j,0))[3];
+    double h10 = tex->getPixel(Vec3i(i+1,j,0))[3];
+    double h01 = tex->getPixel(Vec3i(i,j+1,0))[3];
+    double h11 = tex->getPixel(Vec3i(i+1,j+1,0))[3];
+
+    double u = uv[0]-i;
+    double v = uv[1]-j;
+    double h = ( h00*(1-u) + h10*u )*(1-v) + ( h01*(1-u) + h11*u )*v;
     for (auto e : embankments) if (e.second->isInside(p)) h = e.second->getHeight(p);
     return h;
 }
@@ -289,6 +347,17 @@ float VRTerrain::getHeight(const Vec2d& p) {
 void VRTerrain::elevateObject(VRTransformPtr t, float offset) { auto p = t->getFrom(); elevatePoint(p, offset); t->setFrom(p); }
 void VRTerrain::elevatePose(posePtr p, float offset) { auto P = p->pos(); elevatePoint(P, offset); p->setPos(P); }
 void VRTerrain::elevatePoint(Vec3d& p, float offset) { p[1] = getHeight(Vec2d(p[0], p[2])) + offset; }
+
+void VRTerrain::elevateVertices(VRGeometryPtr geo, float offset) {
+    if (!terrain) return;
+    GeoPnt3fPropertyRecPtr pos = (GeoPnt3fProperty*)geo->getMesh()->geo->getPositions();
+    for (int i=0; i<pos->size(); i++) {
+        Pnt3f p;
+        pos->getValue(p, i);
+        p[1] = getHeight(Vec2d(p[0], p[2])) + offset;
+        pos->setValue(p, i);
+    }
+}
 
 void VRTerrain::elevatePolygon(VRPolygonPtr poly, float offset) {
     for (auto p2 : poly->get()) {
@@ -403,6 +472,7 @@ void VRTerrain::addEmbankment(string ID, pathPtr p1, pathPtr p2, pathPtr p3, pat
     auto m = VRMaterial::get("embankment");
     m->setTexture("world/textures/gravel2.jpg");
     m->setDiffuse(Color3f(0.5,0.5,0.5));
+    m->setZOffset(1,1);
     auto g = e->createGeometry();
     g->setMaterial(m);
     addChild(g);

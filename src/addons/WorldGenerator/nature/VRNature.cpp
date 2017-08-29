@@ -265,7 +265,7 @@ void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround,
 
     for (auto area : Area->gridSplit(10.0)) {
         //cout << " sub Area " << i << "  " << timer.stop() - t0 << endl;
-        if (terrain) terrain->elevatePolygon(area, 0.1);
+        if (terrain) terrain->elevatePolygon(area, 0.18);
         Vec3d median = area->getBoundingBox().center();
         area->translate(-median);
         //cout << "  A1 " << timer.stop() - t0 << endl;

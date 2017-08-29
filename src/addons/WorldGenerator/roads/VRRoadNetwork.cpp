@@ -469,54 +469,11 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const pose& p) {
     geo->destroy();
 }
 
-
-void VRRoadNetwork::mergeRoads(VREntityPtr node, VRRoadPtr road1, VRRoadPtr road2) {
-    Vec3d pNode = node->getVec3("position");
-
-    auto intersect = [&](const Pnt3d& p1, const Vec3d& n1, const Pnt3d& p2, const Vec3d& n2) -> Vec3d {
-        Vec3d d = p2-p1;
-        Vec3d n3 = n1.cross(n2);
-        float N3 = n3.dot(n3);
-        if (N3 == 0) N3 = 1.0;
-        float s = d.cross(n2).dot(n1.cross(n2))/N3;
-        return Vec3d(p1) + n1*s;
-    };
-
-    auto& data1 = road1->getEdgePoints( node );
-    auto& data2 = road2->getEdgePoints( node );
-    Vec3d Pi1 = intersect(data1.p2, data1.n, data2.p1, data2.n);
-    Vec3d Pi2 = intersect(data2.p2, data2.n, data1.p1, data1.n);
-    data1.p2 = Pi1;
-    data2.p1 = Pi1;
-    data2.p2 = Pi2;
-    data1.p1 = Pi2;
-    cout << " VRRoadNetwork::mergeRoads " << Pi1 << "   " << Pi2 << endl;
-
-    for (auto road : {road1, road2}) { // compute road front
-        auto& data = road->getEdgePoints( node );
-        Vec3d p1 = data.p1;
-        Vec3d p2 = data.p2;
-        Vec3d norm = data.n;
-        float d1 = abs((p1-pNode).dot(norm));
-        float d2 = abs((p2-pNode).dot(norm));
-        float d = max(d1,d2) + 1;
-        data.p1 = p1-norm*(d-d1);
-        data.p2 = p2-norm*(d-d2);
-
-        Vec3d pm = (data.p1 + data.p2)*0.5; // compute road node
-        auto n = addNode(pm);
-        data.entry->set("node", n->getName());
-        n->add("paths", data.entry->getName());
-    }
-}
-
-
 void VRRoadNetwork::computeIntersections() {
     cout << "VRRoadNetwork::computeIntersections\n";
     for (auto node : getRoadNodes() ) {
         auto nodeRoads = getNodeRoads(node);
         if (nodeRoads.size() <= 1) continue; // ignore ends
-        //if (nodeRoads.size() == 2) { mergeRoads(node, nodeRoads[0], nodeRoads[1]); continue; } // meeting road ends, merge them
         auto iEnt = world->getOntology()->addEntity( "intersectionRoad", "RoadIntersection" );
         iEnt->set("ID", toString(getRoadID()));
         auto intersection = VRRoadIntersection::create();
