@@ -256,7 +256,7 @@ void VRNature::removeTree(int id) {
     computeLODs(aLeafs);
 }
 
-void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround, bool addKirb, bool onlyEarth) { // TODO: needs optimizations!
+void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround, bool onlyEarth) { // TODO: needs optimizations!
     VRTimer timer; timer.start();
     int t0 = timer.stop();
     //cout << "VRNature::addGrassPatch " << t0 << endl;

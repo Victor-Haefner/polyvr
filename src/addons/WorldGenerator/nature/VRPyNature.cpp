@@ -69,7 +69,7 @@ PyObject* VRPyTree::setLeafMaterial(VRPyTree* self, PyObject* args) {
 
 PyMethodDef VRPyNature::methods[] = {
     {"addTree", PyWrapOpt(Nature, addTree, "Add a copy of the passed tree to the woods and return the copy", "0|1", VRTreePtr, VRTreePtr, bool, bool ) },
-    {"addGrassPatch", PyWrapOpt(Nature, addGrassPatch, "Add a grass patch from polygon", "0|0|0|0", void, VRPolygonPtr, bool, bool, bool, bool) },
+    {"addGrassPatch", PyWrapOpt(Nature, addGrassPatch, "Add a grass patch from polygon", "0|0|0|0", void, VRPolygonPtr, bool, bool, bool) },
     {"computeLODs", PyWrap(Nature, computeLODs, "Compute LODs - computeLODs() ", void ) },
     {"addCollisionModels", PyWrap(Nature, addCollisionModels, "Add collision box to trees and bushes - addCollisionModels() ", void ) },
     {"clear", PyWrap(Nature, clear, "Clear woods", void ) },

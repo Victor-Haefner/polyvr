@@ -324,7 +324,7 @@ void VRWorldGenerator::processOSMMap() {
                         //nature->addGrassPatch( poly, 0, 1, 0 );
                         //b++;
                     //}
-                    nature->addGrassPatch( wayToPolygon(way), 0, 1, 1, 1 );
+                    nature->addGrassPatch( wayToPolygon(way), 0, 1, 1);
                 }
                 continue;
             }

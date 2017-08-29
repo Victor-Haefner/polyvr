@@ -307,28 +307,29 @@ void VRRoadNetwork::addGuardRail( pathPtr path, float height ) {
 	addChild(rail);
 }
 
-void VRRoadNetwork::addKirb( VRPolygonPtr p, float h ) {
+void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
     cout << " ------------- VRRoadNetwork::addKirb " << h << endl;
     auto s = VRStroke::create("kirb");
     auto path = path::create();
-    Vec3d median = p->getBoundingBox().center();
-    p->translate(-median);
-    auto points = p->get();
+    if (terrain) terrain->elevatePolygon(perimeter);
+    Vec3d median = perimeter->getBoundingBox().center();
+    perimeter->translate(-median);
+    auto points = perimeter->get3();
     int N = points.size();
 
     for (int i=0; i<N; i++) {
-        Vec2d p1 = points[(i-1)%N];
-        Vec2d p2 = points[i];
-        Vec2d p3 = points[(i+1)%N];
-        Vec2d d1 = p2-p1; d1.normalize();
-        Vec2d d2 = p3-p2; d2.normalize();
-        Vec2d n = d1+d2; n.normalize();
-        Vec2d p21 = p2 - d1*0.01;
-        Vec2d p23 = p2 + d2*0.01;
-        Vec2d p22 = (p21+p23)*0.5;
-        path->addPoint( pose(Vec3d(p21[0],0,p21[1]), Vec3d(d1[0],0,d1[1])) );
-        path->addPoint( pose(Vec3d(p22[0],0,p22[1]), Vec3d( n[0],0, n[1])) );
-        path->addPoint( pose(Vec3d(p23[0],0,p23[1]), Vec3d(d2[0],0,d2[1])) );
+        Vec3d p1 = points[(i-1)%N];
+        Vec3d p2 = points[i];
+        Vec3d p3 = points[(i+1)%N];
+        Vec3d d1 = p2-p1; d1.normalize();
+        Vec3d d2 = p3-p2; d2.normalize();
+        Vec3d n = d1+d2; n.normalize();
+        Vec3d p21 = p2 - d1*0.01;
+        Vec3d p23 = p2 + d2*0.01;
+        Vec3d p22 = (p21+p23)*0.5;
+        path->addPoint( pose(p21, d1) );
+        path->addPoint( pose(p22, n ) );
+        path->addPoint( pose(p23, d2) );
     }
     path->close();
     path->compute(2);
