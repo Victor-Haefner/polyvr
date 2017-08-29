@@ -150,7 +150,7 @@ VRWorldGeneratorPtr VRPlanet::addSector( double north, double east ) {
     generator->setPose( fromLatLongPose(north+0.5*sectorSize, east+0.5*sectorSize) );
 
     Vec2d size = fromLatLongSize(north, east, north+sectorSize, east+sectorSize);
-    generator->getTerrain()->setParameters( size, 10, 1);
+    generator->getTerrain()->setParameters( size, 2, 1);
     return generator;
 }
 

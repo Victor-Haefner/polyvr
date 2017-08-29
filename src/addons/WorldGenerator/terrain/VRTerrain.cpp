@@ -51,7 +51,35 @@ float VREmbankment::getHeight(Vec2d p) { // TODO: optimize!
 
     float h1 = computeHeight(0); // first estimate
     float h2 = computeHeight(h1); // first estimate
-    return h2;
+    float h3 = computeHeight(h2); // first estimate
+    return h3;
+}
+
+vector<Vec3d> VREmbankment::probeHeight(Vec2d p) { // TODO: optimize!
+    vector<Vec3d> res(3);
+
+    auto computeHeight = [&](float h) {
+        Vec3d P(p[0], h, p[1]);
+        float t1 = p1->getClosestPoint(P);
+        float t2 = p2->getClosestPoint(P);
+        Vec3d P1 = p1->getPosition(t1);
+        Vec3d P2 = p2->getPosition(t2);
+        float d1 = (P1-P).length();
+        float d2 = (P2-P).length();
+        float t = d2/(d1+d2);
+        float H = P1[1]*t+P2[1]*(1-t);
+
+        res[0] = Vec3d(p[0], H, p[1]);
+        res[1] = P1;
+        res[2] = P2;
+        return H;
+    };
+
+    float h1 = computeHeight(0); // first estimate
+    float h2 = computeHeight(h1); // first estimate
+    float h3 = computeHeight(h2); // first estimate
+    geo->getMaterial()->setWireFrame(1);
+    return res;
 }
 
 VRGeometryPtr VREmbankment::createGeometry() {
@@ -75,7 +103,7 @@ VRGeometryPtr VREmbankment::createGeometry() {
         }
     }
 
-    auto geo = data.asGeometry("embankment");
+    geo = data.asGeometry("embankment");
     geo->updateNormals();
     return geo;
 }
@@ -125,8 +153,8 @@ void VRTerrain::setMap( VRTexturePtr t, int channel ) {
 void VRTerrain::updateTexelSize() {
     if (!tex) return;
     Vec3i s = tex->getSize();
-    texelSize[0] = size[0]/s[0];
-    texelSize[1] = size[1]/s[1];
+    texelSize[0] = size[0]/(s[0]-1);
+    texelSize[1] = size[1]/(s[1]-1);
 	mat->setShaderParameter("texelSize", texelSize);
 }
 
@@ -200,7 +228,8 @@ vector<Vec3d> VRTerrain::probeHeight( Vec2d p ) {
 
     Vec2d p0 = fromUVSpace( Vec2d(i,j) );
     Vec2d p1 = fromUVSpace( Vec2d(i+1,j+1) );
-    cout << " VRTerrain::getHeight " << uv << " " << i << " " << j << " " << W << " " << H << endl;
+    //cout << " VRTerrain::getHeight " << uv << " " << i << " " << j << " " << W << " " << H << endl;
+    for (auto e : embankments) if (e.second->isInside(p)) return e.second->probeHeight(p);
 
     return {Vec3d(p[0], h, p[1]),
             Vec3d(p0[0], h00, p0[1]),
@@ -213,7 +242,7 @@ void VRTerrain::physicalize(bool b) {
     if (!tex) return;
     auto dim = tex->getSize();
 
-    float roadTerrainOffset = 0.02; // also defined in vrroadbase.cpp
+    float roadTerrainOffset = 0.03; // also defined in vrroadbase.cpp
 
     double Hmax = -1e6;
     physicsHeightBuffer = shared_ptr<vector<float>>( new vector<float>(dim[0]*dim[1]) );
@@ -226,9 +255,9 @@ void VRTerrain::physicalize(bool b) {
         }
     }
 
-    double R = resolution*0.94; // Hack, there is a scaling error somewhere, either in the shape or the visualisation
-    auto shape = new btHeightfieldTerrainShape(dim[0], dim[1], &(*physicsHeightBuffer)[0], 1, -Hmax, Hmax, 1, PHY_FLOAT, false);
+    //double R = resolution*0.94; // Hack, there is a scaling error somewhere, either in the shape or the visualisation
     //shape->setLocalScaling(btVector3(R,1,R));
+    auto shape = new btHeightfieldTerrainShape(dim[0], dim[1], &(*physicsHeightBuffer)[0], 1, -Hmax, Hmax, 1, PHY_FLOAT, false);
     shape->setLocalScaling(btVector3(texelSize[0],1,texelSize[1]));
     getPhysics()->setCustomShape( shape );
     getPhysics()->setPhysicalized(true);
@@ -340,7 +369,12 @@ double VRTerrain::getHeight(const Vec2d& p) {
     double u = uv[0]-i;
     double v = uv[1]-j;
     double h = ( h00*(1-u) + h10*u )*(1-v) + ( h01*(1-u) + h11*u )*v;
-    for (auto e : embankments) if (e.second->isInside(p)) h = e.second->getHeight(p);
+    for (auto e : embankments) {
+        if (e.second->isInside(p)) {
+            double k = e.second->getHeight(p);
+            if (k > h) h = k;
+        }
+    }
     return h;
 }
 

@@ -16,6 +16,7 @@ class VREmbankment {
     private:
         pathPtr p1, p2, p3, p4;
         VRPolygon area;
+        VRGeometryPtr geo;
 
     public:
         VREmbankment(pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4);
@@ -24,6 +25,7 @@ class VREmbankment {
 
         bool isInside(Vec2d p);
         float getHeight(Vec2d p);
+        vector<Vec3d> probeHeight( Vec2d p);
 
         VRGeometryPtr createGeometry();
 };

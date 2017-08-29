@@ -98,6 +98,9 @@ void VRRoadIntersection::computePatch() {
     median = patch->getBoundingBox().center();
     patch->translate(-median);
 	perimeter = patch->shrink(markingsWidth*0.5);
+    patch->translate(median);
+    if (terrain) terrain->elevatePolygon(patch, roadTerrainOffset);
+    patch->translate(-median);
     if (terrain) terrain->elevatePoint(median, roadTerrainOffset); // TODO: elevate each point of the polygon
 }
 
@@ -107,7 +110,8 @@ VRGeometryPtr VRRoadIntersection::createGeometry() {
     tri.add( *patch );
     VRGeometryPtr intersection = tri.compute();
     if (intersection->size() == 0) { cout << "VRRoadIntersection::createGeometry ERROR: no geometry created!\n"; return 0; }
-    intersection->setPose(median, Vec3d(0,1,0), Vec3d(0,0,1));
+    auto p = median; p[1] = 0;
+    intersection->setPose(p, Vec3d(0,0,-1), Vec3d(0,1,0));
     intersection->applyTransformation();
 	setupTexCoords( intersection, entity );
 	addChild(intersection);

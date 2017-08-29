@@ -559,6 +559,9 @@ void VRRoadNetwork::computeSurfaces() {
         auto iGeo = intersection->createGeometry();
         if (!iGeo) continue;
         iGeo->setMaterial( asphalt );
+        iGeo->getPhysics()->setDynamic(false);
+        iGeo->getPhysics()->setShape("Concave");
+        iGeo->getPhysics()->setPhysicalized(true);
         //addChild( iGeo );
     }
 }
