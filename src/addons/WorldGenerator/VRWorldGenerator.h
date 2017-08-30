@@ -30,7 +30,7 @@ class VRWorldGenerator : public VRTransform {
         static string assetTexMatVShdr;
         static string assetTexMatFShdr;
 
-        void processOSMMap();
+        void processOSMMap(double subN = -1, double subE = -1, double subSize = -1);
         void init();
 
     public:
@@ -44,8 +44,8 @@ class VRWorldGenerator : public VRTransform {
         void setPlanet(VRPlanetPtr planet, Vec2d coords);
         void addAsset( string name, VRTransformPtr geo );
         void addMaterial( string name, VRMaterialPtr mat );
-        void addOSMMap(string path);
-        void reloadOSMMap();
+        void addOSMMap(string path, double subN = -1, double subE = -1, double subSize = -1);
+        void reloadOSMMap(double subN = -1, double subE = -1, double subSize = -1);
         void clear();
 
         VROntologyPtr getOntology();

@@ -103,12 +103,12 @@ void VRWorldGenerator::init() {
     addChild(district);
 }
 
-void VRWorldGenerator::addOSMMap(string path) {
+void VRWorldGenerator::addOSMMap(string path, double subN, double subE, double subSize) {
     osmMap = OSMMap::loadMap(path);
-    processOSMMap();
+    processOSMMap(subN, subE, subSize);
 }
 
-void VRWorldGenerator::processOSMMap() {
+void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
     struct Node {
         OSMNodePtr n;
         VREntityPtr e;
@@ -128,7 +128,7 @@ void VRWorldGenerator::processOSMMap() {
         return poly;
     };
 
-    auto wayToPath = [&](OSMWayPtr& way, int N) {
+    auto wayToPath = [&](OSMWayPtr& way, int N) -> pathPtr {
         auto path = path::create();
         vector<Vec3d> pos;
         for (auto nID : way->nodes) {
@@ -148,6 +148,7 @@ void VRWorldGenerator::processOSMMap() {
             path->addPoint( pose( p, d ) );
         };
 
+        if (pos.size() < 2) return 0;
         if (pos.size() == 2) {
             Vec3d d = pos[1] - pos[0];
             addPnt(pos[0], d);
@@ -282,8 +283,18 @@ void VRWorldGenerator::processOSMMap() {
         district->addBuilding( *wayToPolygon(way), lvls );
     };
 
+    auto nodeInSubarea = [&](OSMNodePtr node) {
+        if (!node) return false;
+        if (subSize < 0) return true;
+        //cout << " nodeInSubarea " << node->lon << "  " << subN << "    " << node->lat << "   " << subE << endl;
+        return bool(abs(node->lat-subN) < subSize && abs(node->lon-subE) < subSize);
+    };
+    auto wayInSubarea = [&](OSMWayPtr way) { if (!way) return false; if (subSize < 0) return true; for (auto n : way->nodes) if (!nodeInSubarea(osmMap->getNode(n))) return false; return true; };
+    auto relInSubarea = [&](OSMRelationPtr& rel) { if (!rel) return false; if (subSize < 0) return true; for (auto n : rel->nodes) if (!nodeInSubarea(osmMap->getNode(n))) return false; for (auto w : rel->ways) if (!wayInSubarea(osmMap->getWay(w))) return false; return true; };
+
     for (auto relItr : osmMap->getRelations()) {
         auto& rel = relItr.second;
+        if (!relInSubarea(rel)) continue;
         if (rel->hasTag("embankment") && rel->ways.size() == 2) { // expect two parallel ways
             auto w1 = osmMap->getWay(rel->ways[0]);
             auto w2 = osmMap->getWay(rel->ways[1]);
@@ -297,6 +308,7 @@ void VRWorldGenerator::processOSMMap() {
 
     for (auto wayItr : osmMap->getWays()) { // use way->id to filter for debugging!
         auto& way = wayItr.second;
+        if (!wayInSubarea(way)) continue;
         for (auto pID : way->nodes) {
             if (graphNodes.count(pID)) continue;
             Node n;
@@ -353,6 +365,7 @@ void VRWorldGenerator::processOSMMap() {
 
     for (auto nodeItr : osmMap->getNodes()) {
         auto& node = nodeItr.second;
+        if (!nodeInSubarea(node)) continue;
         Vec3d pos = planet->fromLatLongPosition(node->lat, node->lon, true);
         Vec3d dir = getDir(node);
         if (terrain) terrain->elevatePoint(pos);
@@ -427,10 +440,10 @@ void VRWorldGenerator::processOSMMap() {
     setMap(t);*/
 }
 
-void VRWorldGenerator::reloadOSMMap() {
+void VRWorldGenerator::reloadOSMMap(double subN, double subE, double subSize) {
     clear();
     osmMap->reload();
-    processOSMMap();
+    processOSMMap(subN, subE, subSize);
     roads->compute();
 }
 

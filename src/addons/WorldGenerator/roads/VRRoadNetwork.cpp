@@ -256,6 +256,7 @@ void VRRoadNetwork::connectGraph(vector<VREntityPtr> nodes, vector<Vec3d> norms)
 }
 
 void VRRoadNetwork::addGuardRail( pathPtr path, float height ) {
+    if (!path) return;
 	float poleDist = 1.3;
 	float poleWidth = 0.2;
 
