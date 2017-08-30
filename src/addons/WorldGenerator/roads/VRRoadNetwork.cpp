@@ -191,6 +191,7 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
     int rID = getRoadID();
     auto path = addPath("Path", name, nodes, norms);
     VRRoadPtr road = addWay(name, { path }, rID, "Road");
+    road->setWorld(world);
     road->getEntity()->set("type", type);
     int Nm = Nlanes*0.5;
     for (int i=0; i<Nm; i++) road->addLane(1, 4 );
@@ -248,8 +249,8 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
 }
 
 void VRRoadNetwork::connectGraph(vector<VREntityPtr> nodes, vector<Vec3d> norms) {
-    auto nID1 = nodes[0]->getValue<int>("graphID");
-    auto nID2 = nodes[1]->getValue<int>("graphID");
+    auto nID1 = nodes[0]->getValue<int>("graphID", -1);
+    auto nID2 = nodes[1]->getValue<int>("graphID", -1);
     int eID = graph->connect(nID1, nID2);
     graphNormals[eID] = norms;
 }
@@ -384,7 +385,7 @@ void VRRoadNetwork::computeSigns() {
     for (auto signEnt : world->getOntology()->getEntities("Sign")) {
         Vec3d pos = signEnt->getVec3("position");
         Vec3d dir = signEnt->getVec3("direction");
-        string type = signEnt->getValue<string>("type");
+        string type = signEnt->getValue<string>("type", "");
         auto sign = assets->copy(type, pose::create(pos, dir), false);
         if (auto roadEnt = signEnt->getEntity("road")) {
             ;
@@ -504,7 +505,7 @@ void VRRoadNetwork::computeTracksLanes(VREntityPtr way) {
 
     for (auto lane : way->getAllEntities("lanes")) {
         if (!lane->is_a("Lane")) continue;
-        if (lane->getValue<bool>("pedestrian")) continue;
+        if (lane->getValue<bool>("pedestrian", false)) continue;
         for (auto pathEnt : lane->getAllEntities("path")) {
             auto path = toPath(pathEnt, 2);
             vector<VREntityPtr> nodes;

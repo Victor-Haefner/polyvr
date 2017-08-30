@@ -219,6 +219,10 @@ void VRWorldGenerator::processOSMMap() {
         vector<VREntityPtr> nodes;
         vector<Vec3d> norms;
 
+        auto getInt = [&](string tag, int def) { return way->hasTag(tag) ? toInt( way->tags[tag] ) : def; };
+        auto getFloat = [&](string tag, float def) { return way->hasTag(tag) ? toFloat( way->tags[tag] ) : def; };
+        auto getString = [&](string tag, string def) { return way->hasTag(tag) ? way->tags[tag] : def; };
+
         auto addPathData = [&](VREntityPtr node, Vec3d pos, Vec3d norm) {
             if (terrain) terrain->projectTangent(norm, pos);
             else norm.normalize();
@@ -247,34 +251,34 @@ void VRWorldGenerator::processOSMMap() {
         if (NlanesRight == 0 && NlanesLeft == 0) NlanesRight = way->hasTag("lanes") ? toInt( way->tags["lanes"] ) : 1;
         //cout << endl << way->hasTag("lanes") << " hasForw " << way->hasTag("lanes:forward") << " hasBack " << way->hasTag("lanes:backward") << " Nright " << NlanesRight << " Nleft " << NlanesLeft << endl;
 
-        if (way->hasTag("parking:lane:right")) NlanesRight++;
-        if (way->hasTag("parking:lane:left")) NlanesLeft++;
+        bool hasPLaneR = bool(way->hasTag("parking:lane:right"));
+        bool hasPLaneL = bool(way->hasTag("parking:lane:left"));
 
         // compute parameters for the lanes
         vector<float> widths;
         if (way->hasTag("width:lanes")) {
             auto data = splitString( way->tags["width:lanes"], '|' );
             for (auto d : data) widths.push_back(toFloat(d));
-        } if (way->hasTag("width:lanes:forward") || way->hasTag("width:lanes:backward")) {
+        } else if (way->hasTag("width:lanes:forward") || way->hasTag("width:lanes:backward")) {
             auto dataRight = splitString( way->tags["width:lanes:forward"], '|' );
             auto dataLeft = splitString( way->tags["width:lanes:backward"], '|' );
             for (auto d : dataRight) widths.push_back(toFloat(d));
             for (auto d : dataLeft) widths.push_back(toFloat(d));
-        } else if (way->hasTag("width")) widths = vector<float>( NlanesRight+NlanesLeft, toFloat(way->tags["width"]) );
-        else widths = vector<float>( NlanesRight+NlanesLeft, width );
+        } else if (way->hasTag("width")) widths = vector<float>( NlanesRight+NlanesLeft+hasPLaneR+hasPLaneL, toFloat(way->tags["width"]) );
+        else widths = vector<float>( NlanesRight+NlanesLeft+hasPLaneR+hasPLaneL, width );
 
         // create road and lane entities
         auto road = roads->addLongRoad(name, tag, nodes, norms, 0);
+        if (hasPLaneR) road->addParkingLane(1, widths[NlanesRight], getInt("parking:lane:right:capacity", 0), getString("parking:lane:right", ""));
         for (int l=0; l < NlanesRight; l++) road->addLane(1, widths[NlanesRight-1-l], pedestrian);
-        for (int l=0; l < NlanesLeft; l++) road->addLane(-1, widths[NlanesRight+l], pedestrian);
+        for (int l=0; l < NlanesLeft; l++) road->addLane(-1, widths[NlanesRight+hasPLaneR+l], pedestrian);
+        if (hasPLaneL) road->addParkingLane(-1, widths[NlanesRight+NlanesLeft+hasPLaneR], getInt("parking:lane:left:capacity", 0), getString("parking:lane:left", ""));
         RoadEntities[way->id] = road;
     };
 
     auto addBuilding = [&](OSMWayPtr& way) {
-        auto has  = [&](const string& tag) { return way->tags.count(tag) > 0; };
-
         int lvls = 4;
-        if (has("building:levels")) lvls = toInt( way->tags["building:levels"] );
+        if (way->hasTag("building:levels")) lvls = toInt( way->tags["building:levels"] );
         district->addBuilding( *wayToPolygon(way), lvls );
     };
 
@@ -360,6 +364,7 @@ void VRWorldGenerator::processOSMMap() {
                 }
                 continue;
             }
+
             if (tag.first == "traffic_sign:training_ground") {
                 auto signEnt = ontology->addEntity("sign", "Sign");
                 signEnt->set("type", tag.second);
@@ -370,6 +375,12 @@ void VRWorldGenerator::processOSMMap() {
                     auto roadEnt = RoadEntities[node->ways[0]]->getEntity();
                     roadEnt->add("signs",signEnt->getName());
                     signEnt->set("road",roadEnt->getName());
+                }
+            }
+
+            if (tag.first == "surveillance:type") {
+                if (tag.second == "camera") {
+                    assets->copy("Camera", pose::create(pos, dir), false);
                 }
             }
         }

@@ -31,6 +31,8 @@ class VRRoad : public VRRoadBase {
 
         static VRRoadPtr create();
 
+        void addParkingLane( int direction, float width, int capacity, string type );
+
         float getWidth();
         VRGeometryPtr createGeometry();
         VREntityPtr getNodeEntry( VREntityPtr node );

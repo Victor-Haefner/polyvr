@@ -3,6 +3,7 @@
 #include "core/utils/toString.h"
 #include "core/math/path.h"
 #include "core/objects/geometry/VRStroke.h"
+#include "addons/Semantics/Reasoning/VROntology.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
 #include "addons/Semantics/Reasoning/VREntity.h"
 
@@ -103,6 +104,13 @@ void VRRoad::computeMarkings() {
     auto lanes = entity->getAllEntities("lanes");
     int Nlanes = lanes.size();
 
+    auto add = [&](Vec3d pos, Vec3d n) {
+        if (terrain) terrain->elevatePoint(pos);
+        if (terrain) terrain->projectTangent(n, pos);
+        nodes.push_back(addNode(0, pos));
+        normals.push_back(n);
+    };
+
     // compute markings nodes
     auto path = toPath(pathEnt, 12);
     for (auto point : path->getPoints()) {
@@ -117,19 +125,17 @@ void VRRoad::computeMarkings() {
             float width = toFloat( lane->get("width")->value );
             float k = widthSum;
             if (li == 0) k += mw*0.5;
-
-            nodes.push_back(addNode(0, -x*k + p));
-            normals.push_back(n);
+            add(-x*k + p, n);
             widthSum += width;
         }
-        nodes.push_back(addNode(0, -x*(roadWidth*0.5 - mw*0.5) + p));
-        normals.push_back(n);
+        add(-x*(roadWidth*0.5 - mw*0.5) + p, n);
     }
 
     // markings
+    float Ldash = 2;
     int pathN = path->size();
     float L = path->getLength();
-    string Ndots = toString(int(L*0.5));
+    string Ndots = toString(int(L/Ldash));
     int lastDir = 0;
     for (int li=0; li<Nlanes+1; li++) {
         vector<VREntityPtr> nodes2;
@@ -155,6 +161,14 @@ void VRRoad::computeMarkings() {
         }
     }
 }
+
+void VRRoad::addParkingLane( int direction, float width, int capacity, string type ) {
+	auto l = ontology->addEntity( entity->getName()+"Lane", "ParkingLane");
+	l->set("width", toString(width));
+	l->set("direction", toString(direction));
+	entity->add("lanes", l->getName());
+}
+
 
 
 

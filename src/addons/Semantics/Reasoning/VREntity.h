@@ -44,9 +44,9 @@ struct VREntity : public VROntoID, public VRName {
     vector<VRPropertyPtr> getVector(const string& prop, int i = 0);
     vector< vector<VRPropertyPtr> > getAllVector(const string& prop);
 
-    template<class T> T getValue(const string& prop, int i = 0) {
-        T t;
-        toValue(get(prop, i)->value, t);
+    template<class T> T getValue(const string& prop, T t, int i = 0) {
+        auto P = get(prop, i);
+        if (P) toValue(P->value, t);
         return t;
     }
 

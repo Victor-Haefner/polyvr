@@ -57,14 +57,14 @@ void VRRoadIntersection::computeLanes() {
             int reSignOut = roadEntrySigns[roadOut.first];
             for (int i=0; i<Nin; i++) {
                 auto laneIn = roadIn.second[i];
-                float width = laneIn->getValue<float>("width");
-                bool pedestrianIn = laneIn->getValue<bool>("pedestrian");
+                float width = laneIn->getValue<float>("width", 0.5);
+                bool pedestrianIn = laneIn->getValue<bool>("pedestrian", false);
                 auto nodes1 = laneIn->getEntity("path")->getAllEntities("nodes");
                 VREntityPtr node1 = *nodes1.rbegin();
                 for (int j=0; j<Nout; j++) {
                     if (!checkMatchingLanes(i,j,Nin, Nout, reSignIn, reSignOut)) continue;
                     auto laneOut = roadOut.second[j];
-                    bool pedestrianOut = laneOut->getValue<bool>("pedestrian");
+                    bool pedestrianOut = laneOut->getValue<bool>("pedestrian", false);
                     auto node2 = laneOut->getEntity("path")->getAllEntities("nodes")[0];
                     auto lane = addLane(1, width, pedestrianIn || pedestrianOut);
                     auto nodes = { node1->getEntity("node"), node2->getEntity("node") };
@@ -203,13 +203,13 @@ void VRRoadIntersection::computeMarkings() {
     for (auto road : roads) if (!road->hasMarkings()) return;
 
     bool isPedestrian = false;
-    for (auto road : inLanes) for (auto lane : road.second) { if (lane->getValue<bool>("pedestrian")) isPedestrian = true; break; }
+    for (auto road : inLanes) for (auto lane : road.second) { if (lane->getValue<bool>("pedestrian", false)) isPedestrian = true; break; }
 
     int inCarLanes = 0;
     for (auto road : inLanes) {
         bool pedestrian = false;
         for (auto lane : road.second)
-            for (auto l : nextLanes[lane]) if (l->getValue<bool>("pedestrian")) pedestrian = true;
+            for (auto l : nextLanes[lane]) if (l->getValue<bool>("pedestrian", false)) pedestrian = true;
         inCarLanes += pedestrian?0:1;
     }
 
@@ -218,9 +218,9 @@ void VRRoadIntersection::computeMarkings() {
             for (auto pathEnt : lane->getAllEntities("path")) {
                 auto entry = pathEnt->getEntity("nodes",-1);
                 auto node = entry->getEntity("node");
-                if (lane->getValue<bool>("pedestrian")) continue;
+                if (lane->getValue<bool>("pedestrian", false)) continue;
 
-                float W = lane->getValue<float>("width");
+                float W = lane->getValue<float>("width", 0.5);
                 Vec3d p = node->getVec3("position");
                 Vec3d n = entry->getVec3("direction");
                 Vec3d x = n.cross(Vec3d(0,1,0));
@@ -322,8 +322,9 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
             auto road2 = roads[1];
             auto& data1 = road1->getEdgePoints( node );
             auto& data2 = road2->getEdgePoints( node );
+            bool parallel = bool(data1.n.dot(data2.n) < -0.8);
             //cout << " N1 " << data1.n << "  N2 " << data2.n << "  Dot " << data1.n.dot(data2.n) << endl;
-            if (data1.n.dot(data2.n) < -0.8) { // nearly parallel, but opposite directions
+            if (parallel) { // nearly parallel, but opposite directions
                 ; // TODO
                 return true; // special case
             }
