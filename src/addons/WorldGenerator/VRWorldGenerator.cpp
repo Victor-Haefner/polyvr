@@ -226,8 +226,6 @@ void VRWorldGenerator::processOSMMap() {
             norms.push_back(norm);
         };
 
-        width = way->hasTag("width") ? toFloat(way->tags["width"]) : width;
-
         for (uint i=1; i<way->nodes.size(); i++) {
             auto& n1 = graphNodes[ way->nodes[i-1] ];
             auto& n2 = graphNodes[ way->nodes[i  ] ];
@@ -243,14 +241,32 @@ void VRWorldGenerator::processOSMMap() {
             addPathData(n2.e, n2.p, n2.n->tags.count("direction") ? getDir(n2.n) : n);
         }
 
-        int NlanesRight = way->hasTag("lanes:forward") ? toInt( way->tags["lanes:forward"] ) : way->hasTag("lanes:forwards") ? toInt( way->tags["lanes:forwards"] ) : 0;
+        // compute number of lanes in each direction
+        int NlanesRight = way->hasTag("lanes:forward") ? toInt( way->tags["lanes:forward"] ) : 0;
         int NlanesLeft = way->hasTag("lanes:backward") ? toInt( way->tags["lanes:backward"] ) : 0;
         if (NlanesRight == 0 && NlanesLeft == 0) NlanesRight = way->hasTag("lanes") ? toInt( way->tags["lanes"] ) : 1;
         //cout << endl << way->hasTag("lanes") << " hasForw " << way->hasTag("lanes:forward") << " hasBack " << way->hasTag("lanes:backward") << " Nright " << NlanesRight << " Nleft " << NlanesLeft << endl;
 
+        if (way->hasTag("parking:lane:right")) NlanesRight++;
+        if (way->hasTag("parking:lane:left")) NlanesLeft++;
+
+        // compute parameters for the lanes
+        vector<float> widths;
+        if (way->hasTag("width:lanes")) {
+            auto data = splitString( way->tags["width:lanes"], '|' );
+            for (auto d : data) widths.push_back(toFloat(d));
+        } if (way->hasTag("width:lanes:forward") || way->hasTag("width:lanes:backward")) {
+            auto dataRight = splitString( way->tags["width:lanes:forward"], '|' );
+            auto dataLeft = splitString( way->tags["width:lanes:backward"], '|' );
+            for (auto d : dataRight) widths.push_back(toFloat(d));
+            for (auto d : dataLeft) widths.push_back(toFloat(d));
+        } else if (way->hasTag("width")) widths = vector<float>( NlanesRight+NlanesLeft, toFloat(way->tags["width"]) );
+        else widths = vector<float>( NlanesRight+NlanesLeft, width );
+
+        // create road and lane entities
         auto road = roads->addLongRoad(name, tag, nodes, norms, 0);
-        for (int l=0; l < NlanesRight; l++) road->addLane(1, width, pedestrian);
-        for (int l=0; l < NlanesLeft; l++) road->addLane(-1, width, pedestrian);
+        for (int l=0; l < NlanesRight; l++) road->addLane(1, widths[NlanesRight-1-l], pedestrian);
+        for (int l=0; l < NlanesLeft; l++) road->addLane(-1, widths[NlanesRight+l], pedestrian);
         RoadEntities[way->id] = road;
     };
 
@@ -296,7 +312,7 @@ void VRWorldGenerator::processOSMMap() {
 
             if (tag.first == "barrier") {
                 if (tag.second == "guard_rail") {
-                    cout << "VRWorldGenerator::processOSMMap guard_rail " << endl;
+                    //cout << "VRWorldGenerator::processOSMMap guard_rail " << endl;
                     float h = way->hasTag("height") ? toFloat( way->tags["height"] ) : 0.5;
                     roads->addGuardRail( wayToPath(way, 8), h );
                 }

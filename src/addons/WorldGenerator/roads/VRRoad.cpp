@@ -118,12 +118,11 @@ void VRRoad::computeMarkings() {
             float k = widthSum;
             if (li == 0) k += mw*0.5;
 
-            Vec3d pi = x*k + p;
-            nodes.push_back(addNode(0, pi));
+            nodes.push_back(addNode(0, -x*k + p));
             normals.push_back(n);
             widthSum += width;
         }
-        nodes.push_back(addNode(0, x*(roadWidth*0.5 - mw*0.5) + p));
+        nodes.push_back(addNode(0, -x*(roadWidth*0.5 - mw*0.5) + p));
         normals.push_back(n);
     }
 

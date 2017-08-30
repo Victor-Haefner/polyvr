@@ -181,11 +181,11 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
         }
     }
 
-    cout << " -- VRRoadNetwork::addLongRoad nodes ";
+    /*cout << " -- VRRoadNetwork::addLongRoad nodes ";
     for (int i=0; i<nodes.size(); i++) {
         cout << "  i " << i << nodes[i]->getName() << " n " << norms[i];
     }
-    cout << endl;
+    cout << endl;*/
 
     // add path
     int rID = getRoadID();
@@ -308,7 +308,6 @@ void VRRoadNetwork::addGuardRail( pathPtr path, float height ) {
 }
 
 void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
-    cout << " ------------- VRRoadNetwork::addKirb " << h << endl;
     auto s = VRStroke::create("kirb");
     auto path = path::create();
     if (terrain) terrain->elevatePolygon(perimeter);
