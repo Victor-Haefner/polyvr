@@ -13,7 +13,17 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRRoadIntersection : public VRRoadBase {
+    public:
+        enum IntersectionTYPE {
+            DEFAULT, // normal intersection with a patch to fill
+            CONTINUATION, // one road goes directly into another
+            CONTINUATION_FORK, // a road forks into two roads or two merge into one
+            CONTINUATION_MERGE, // a road forks into two roads or two merge into one
+            UPLINK // a road connects to a middle node of another road
+        };
+
     private:
+        IntersectionTYPE type = DEFAULT;
         VREntityPtr getRoadNode(VREntityPtr roadEnt);
         vector<VRRoadPtr> roads;
         vector<pair<pose, float>> roadFronts;

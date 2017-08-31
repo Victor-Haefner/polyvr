@@ -292,8 +292,6 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
         return (K < 0);
     };
 
-    sort( roads.begin(), roads.end(), compare );
-
     auto intersect = [&](const Pnt3d& p1, const Vec3d& n1, const Pnt3d& p2, const Vec3d& n2) -> Vec3d {
         Vec3d d = p2-p1;
         Vec3d n3 = n1.cross(n2);
@@ -301,6 +299,26 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
         if (N3 == 0) N3 = 1.0;
         float s = d.cross(n2).dot(n3)/N3;
         return Vec3d(p1) + n1*s;
+    };
+
+    auto getRoadConnectionAngle = [&](VRRoadPtr road1, VRRoadPtr road2) {
+        auto& data1 = road1->getEdgePoints( node );
+        auto& data2 = road2->getEdgePoints( node );
+        return data1.n.dot(data2.n);
+        //return data1.n.cross(data2.n);
+    };
+
+    auto resolveIntersectionType = [&]() {
+        if (N == 2) {
+            bool parallel  = bool( getRoadConnectionAngle(roads[0], roads[1]) < -0.8 );
+            if (parallel) type = CONTINUATION;
+        }
+
+        if (N == 3) {
+            bool parallel1 = bool(getRoadConnectionAngle(roads[0], roads[1]) < -0.8);
+            bool parallel2 = bool(getRoadConnectionAngle(roads[1], roads[2]) < -0.8);
+            if (parallel1 && parallel2) type = CONTINUATION_FORK;
+        }
     };
 
     auto resolveEdgeIntersections = [&]() {
@@ -316,106 +334,111 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
         }
     };
 
-    auto resolveSpacialCases = [&]() {
-        if (N == 2) { // special cases for 2 roads
-            auto road1 = roads[0];
-            auto road2 = roads[1];
+    auto elevateRoadNodes = [&]() {
+        if (patch) {
+            for (uint i=0; i<roads.size(); i++) { // elevate road nodes to median intersection height
+                auto r = roads[i];
+                auto e1 = r->getNodeEntry(node);
+                auto n = e1->getEntity("node");
+                auto d = e1->getVec3("direction");
+                auto p = n->getVec3("position");
+                p[1] = median[1];
+                n->setVector("position", toStringVector(p), "Position");
+
+                // check if any road noe is inside of the intersection!
+                /*auto path = roads[i]->getEntity()->getEntity("path");
+                for (auto e2 : path->getAllEntities("nodes")) {
+                    if (e1 == e2) continue;
+                    auto n = e2->getEntity("node");
+                    auto np = n->getVec3f("position") - median;
+                    if (patch->isInside(Vec2d(np[0],np[2]))) {
+                        n->setVector("position", toStringVector(p-d*0.1), "Position");
+                    }
+                }*/
+            }
+        }
+    };
+
+    auto computeRoadFronts = [&]() {
+        for (auto road : roads) { // compute road front
+            auto& data = road->getEdgePoints( node );
+            Vec3d p1 = data.p1;
+            Vec3d p2 = data.p2;
+            Vec3d norm = data.n;
+            float d1 = (p1-pNode).dot(norm);
+            float d2 = (p2-pNode).dot(norm);
+            float d = min(d1,d2);
+            d1 = max(0.f,d1-d);
+            d2 = max(0.f,d2-d);
+            data.p1 = p1-norm*(d1);
+            data.p2 = p2-norm*(d2);
+
+            Vec3d pm = (data.p1 + data.p2)*0.5; // compute road node
+            int nID = graph->addNode();
+            graph->setPosition(nID, pose::create(pm));
+            auto n = addNode(nID, pm);
+            data.entry->set("node", n->getName());
+            n->add("paths", data.entry->getName());
+            roadFronts.push_back( make_pair(pose(pm, norm), road->getWidth()) );
+        }
+    };
+
+    auto computeIntersectionPaths = [&]() {
+        vector<VREntityPtr> iPaths;
+        for (uint i=0; i<roads.size(); i++) { // compute intersection paths
+            auto road1 = roads[i];
+            auto rEntry1 = road1->getNodeEntry(node);
+            if (!rEntry1) continue;
+            int s1 = toInt(rEntry1->get("sign")->value);
+            Vec3d norm1 = rEntry1->getVec3("direction");
             auto& data1 = road1->getEdgePoints( node );
-            auto& data2 = road2->getEdgePoints( node );
-            bool parallel = bool(data1.n.dot(data2.n) < -0.8);
-            //cout << " N1 " << data1.n << "  N2 " << data2.n << "  Dot " << data1.n.dot(data2.n) << endl;
+            VREntityPtr node1 = data1.entry->getEntity("node");
+            if (s1 == 1) {
+                for (uint j=0; j<roads.size(); j++) { // compute intersection paths
+                    auto road2 = roads[j];
+                    if (j == i) continue;
+                    auto rEntry2 = road2->getNodeEntry(node);
+                    if (!rEntry2) continue;
+                    int s2 = toInt(rEntry2->get("sign")->value);
+                    if (s2 != -1) continue;
+                    Vec3d norm2 = rEntry2->getVec3("direction");
+                    auto& data2 = road2->getEdgePoints( node );
+                    VREntityPtr node2 = data2.entry->getEntity("node");
+                    auto pathEnt = addPath("Path", "intersection", {node1, node2}, {norm1, norm2});
+                    iPaths.push_back(pathEnt);
+                }
+            }
+        }
+        for (auto path : iPaths) entity->add("path", path->getName());
+    };
+
+    auto resolveSpacialCases = [&]() {
+        if (type == CONTINUATION) { // special cases for 2 roads
+            bool parallel = bool(getRoadConnectionAngle(roads[0], roads[1]) < -0.8);
             if (parallel) { // nearly parallel, but opposite directions
                 ; // TODO
                 return true; // special case
             }
         }
 
-        // check if roads go into each other
+        //if (type == CONTINUATION_FORK || type == CONTINUATION_MERGE) {
         Vec3d n1;
         for (int i=0; i<roads.size(); i++) {
             auto& data = roads[i]->getEdgePoints( node );
             if (n1.cross(data.n).squareLength() > 1e-5) return false; // not parallel, no special case, normal intersection
             n1 = data.n;
         }
+        //}
 
         return true; // special case
     };
 
-    if (!resolveSpacialCases()) resolveEdgeIntersections();
-
-    for (auto road : roads) { // compute road front
-        auto& data = road->getEdgePoints( node );
-        Vec3d p1 = data.p1;
-        Vec3d p2 = data.p2;
-        Vec3d norm = data.n;
-        float d1 = (p1-pNode).dot(norm);
-        float d2 = (p2-pNode).dot(norm);
-        float d = min(d1,d2);
-        d1 = max(0.f,d1-d);
-        d2 = max(0.f,d2-d);
-        data.p1 = p1-norm*(d1);
-        data.p2 = p2-norm*(d2);
-
-        Vec3d pm = (data.p1 + data.p2)*0.5; // compute road node
-        int nID = graph->addNode();
-        graph->setPosition(nID, pose::create(pm));
-        auto n = addNode(nID, pm);
-        data.entry->set("node", n->getName());
-        n->add("paths", data.entry->getName());
-        roadFronts.push_back( make_pair(pose(pm, norm), road->getWidth()) );
-    }
-
-    vector<VREntityPtr> iPaths;
-    for (uint i=0; i<roads.size(); i++) { // compute intersection paths
-        auto road1 = roads[i];
-        auto rEntry1 = road1->getNodeEntry(node);
-        if (!rEntry1) continue;
-        int s1 = toInt(rEntry1->get("sign")->value);
-        Vec3d norm1 = rEntry1->getVec3("direction");
-        auto& data1 = road1->getEdgePoints( node );
-        VREntityPtr node1 = data1.entry->getEntity("node");
-        if (s1 == 1) {
-            for (uint j=0; j<roads.size(); j++) { // compute intersection paths
-                auto road2 = roads[j];
-                if (j == i) continue;
-                auto rEntry2 = road2->getNodeEntry(node);
-                if (!rEntry2) continue;
-                int s2 = toInt(rEntry2->get("sign")->value);
-                if (s2 != -1) continue;
-                Vec3d norm2 = rEntry2->getVec3("direction");
-                auto& data2 = road2->getEdgePoints( node );
-                VREntityPtr node2 = data2.entry->getEntity("node");
-                auto pathEnt = addPath("Path", "intersection", {node1, node2}, {norm1, norm2});
-                iPaths.push_back(pathEnt);
-            }
-        }
-    }
-    for (auto path : iPaths) entity->add("path", path->getName());
-
+    sort( roads.begin(), roads.end(), compare );            // sort roads by how they are aligned next to each other
+    resolveIntersectionType();
+    if (!resolveSpacialCases()) resolveEdgeIntersections(); //
+    computeRoadFronts();
+    computeIntersectionPaths();
     computePatch();
-    if (patch) {
-        for (uint i=0; i<roads.size(); i++) { // elevate road nodes to median intersection height
-            auto r = roads[i];
-            auto e1 = r->getNodeEntry(node);
-            auto n = e1->getEntity("node");
-            auto d = e1->getVec3("direction");
-            auto p = n->getVec3("position");
-            p[1] = median[1];
-            n->setVector("position", toStringVector(p), "Position");
-
-            // check if any road noe is inside of the intersection!
-            /*auto path = roads[i]->getEntity()->getEntity("path");
-            for (auto e2 : path->getAllEntities("nodes")) {
-                if (e1 == e2) continue;
-                auto n = e2->getEntity("node");
-                auto np = n->getVec3f("position") - median;
-                if (patch->isInside(Vec2d(np[0],np[2]))) {
-                    n->setVector("position", toStringVector(p-d*0.1), "Position");
-                }
-            }*/
-        }
-    }
-
-
+    elevateRoadNodes();
 }
 
