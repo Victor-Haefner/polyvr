@@ -26,7 +26,7 @@
 using namespace OSG;
 
 
-VREmbankment::VREmbankment(pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4) : p1(p1), p2(p2), p3(p3), p4(p4) {
+VREmbankment::VREmbankment(pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4) : VRGeometry("embankment"), p1(p1), p2(p2), p3(p3), p4(p4) {
     for (auto p : p1->getPoints()) { auto pos = p.pos(); area.addPoint(Vec2d(pos[0],pos[2])); };
     for (auto p : p2->getPoints()) { auto pos = p.pos(); area.addPoint(Vec2d(pos[0],pos[2])); };
 }
@@ -78,11 +78,11 @@ vector<Vec3d> VREmbankment::probeHeight(Vec2d p) { // TODO: optimize!
     float h1 = computeHeight(0); // first estimate
     float h2 = computeHeight(h1); // first estimate
     float h3 = computeHeight(h2); // first estimate
-    geo->getMaterial()->setWireFrame(1);
+    getMaterial()->setWireFrame(1);
     return res;
 }
 
-VRGeometryPtr VREmbankment::createGeometry() {
+void VREmbankment::createGeometry() {
     float res = 0.025;
     int N = round(1.0/res);
     VRGeoData data;
@@ -103,9 +103,8 @@ VRGeometryPtr VREmbankment::createGeometry() {
         }
     }
 
-    geo = data.asGeometry("embankment");
-    geo->updateNormals();
-    return geo;
+    data.apply(ptr());
+    updateNormals();
 }
 
 
@@ -115,6 +114,11 @@ VRTerrainPtr VRTerrain::create(string name) {
     auto t = VRTerrainPtr( new VRTerrain(name) );
     t->setupMat();
     return t;
+}
+
+void VRTerrain::clear() {
+    for (auto e : embankments) e.second->destroy();
+    embankments.clear();
 }
 
 void VRTerrain::setParameters( Vec2d s, double r, double h ) {
@@ -507,9 +511,9 @@ void VRTerrain::addEmbankment(string ID, pathPtr p1, pathPtr p2, pathPtr p3, pat
     m->setTexture("world/textures/gravel2.jpg");
     m->setDiffuse(Color3f(0.5,0.5,0.5));
     m->setZOffset(1,1);
-    auto g = e->createGeometry();
-    g->setMaterial(m);
-    addChild(g);
+    e->createGeometry();
+    e->setMaterial(m);
+    addChild(e);
     embankments[ID] = e;
 }
 

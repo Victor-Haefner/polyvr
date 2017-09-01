@@ -18,6 +18,7 @@ class VRRoadNetwork : public VRRoadBase {
         vector<VRRoadPtr> roads;
         vector<VRRoadPtr> ways;
         vector<VRRoadIntersectionPtr> intersections;
+        vector<VRGeometryPtr> assets;
 
         GraphPtr graph;
         map<int, vector<Vec3d> > graphNormals;

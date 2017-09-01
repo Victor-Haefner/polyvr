@@ -263,6 +263,10 @@ void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround,
     int i=0;
     auto ground = VRGeometry::create("ground");
 
+    float a = Area->computeArea();
+    if (a == 0) return;
+    cout << "VRNature::addGrassPatch " << a << endl;
+
     for (auto area : Area->gridSplit(10.0)) {
         //cout << " sub Area " << i << "  " << timer.stop() - t0 << endl;
         if (terrain) terrain->elevatePolygon(area, 0.18);

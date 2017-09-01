@@ -315,9 +315,10 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
         }
 
         if (N == 3) {
-            bool parallel1 = bool(getRoadConnectionAngle(roads[0], roads[1]) < -0.8);
-            bool parallel2 = bool(getRoadConnectionAngle(roads[1], roads[2]) < -0.8);
-            if (parallel1 && parallel2) type = CONTINUATION_FORK;
+            bool parallel01 = bool(getRoadConnectionAngle(roads[0], roads[1]) < -0.99);
+            bool parallel12 = bool(getRoadConnectionAngle(roads[1], roads[2]) < -0.99);
+            bool parallel02 = bool(getRoadConnectionAngle(roads[2], roads[0]) < -0.99);
+            if (parallel01 && parallel12 || parallel01 && parallel02 || parallel12 && parallel02) type = CONTINUATION_FORK;
         }
     };
 
@@ -414,23 +415,25 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
 
     auto resolveSpacialCases = [&]() {
         if (type == CONTINUATION) { // special cases for 2 roads
-            bool parallel = bool(getRoadConnectionAngle(roads[0], roads[1]) < -0.8);
+            /*bool parallel = bool(getRoadConnectionAngle(roads[0], roads[1]) < -0.8);
             if (parallel) { // nearly parallel, but opposite directions
                 ; // TODO
                 return true; // special case
-            }
+            }*/
+            return true;
         }
 
-        //if (type == CONTINUATION_FORK || type == CONTINUATION_MERGE) {
-        Vec3d n1;
-        for (int i=0; i<roads.size(); i++) {
-            auto& data = roads[i]->getEdgePoints( node );
-            if (n1.cross(data.n).squareLength() > 1e-5) return false; // not parallel, no special case, normal intersection
-            n1 = data.n;
+        if (type == CONTINUATION_FORK || type == CONTINUATION_MERGE) {
+            /*Vec3d n1;
+            for (int i=0; i<roads.size(); i++) {
+                auto& data = roads[i]->getEdgePoints( node );
+                if (n1.cross(data.n).squareLength() > 1e-5) return false; // not parallel, no special case, normal intersection
+                n1 = data.n;
+            }*/
+            return true; // special case
         }
-        //}
 
-        return true; // special case
+        return false; // no special case
     };
 
     sort( roads.begin(), roads.end(), compare );            // sort roads by how they are aligned next to each other

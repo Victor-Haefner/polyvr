@@ -84,6 +84,8 @@ void VRRoadNetwork::clear() {
     ways.clear();
     for (auto road : intersections) road->destroy();
     intersections.clear();
+    for (auto a : assets) a->destroy();
+    assets.clear();
 }
 
 VREntityPtr VRRoadNetwork::addNode( Vec3d pos, bool elevate, float elevationOffset ) {
@@ -307,10 +309,10 @@ void VRRoadNetwork::addGuardRail( pathPtr path, float height ) {
 	//for p in poles: rail.merge(p);
 	for (auto p : poles) rail->addChild(p);
 	addChild(rail);
+	assets.push_back(rail);
 }
 
 void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
-    auto s = VRStroke::create("kirb");
     auto path = path::create();
     if (terrain) terrain->elevatePolygon(perimeter);
     Vec3d median = perimeter->getBoundingBox().center();
@@ -334,15 +336,17 @@ void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
     }
     path->close();
     path->compute(2);
-    s->addPath(path);
+    auto kirb = VRStroke::create("kirb");
+    kirb->addPath(path);
 
-    s->strokeProfile({Vec3d(0.0, h, 0), Vec3d(-0.1, h, 0), Vec3d(-0.1, 0, 0)}, 0, 0);
-    addChild(s);
-    s->updateNormals(1);
-    s->setMaterial( world->getMaterial("kirb") );
+    kirb->strokeProfile({Vec3d(0.0, h, 0), Vec3d(-0.1, h, 0), Vec3d(-0.1, 0, 0)}, 0, 0);
+    kirb->updateNormals(1);
+    kirb->setMaterial( world->getMaterial("kirb") );
 
     if (terrain) terrain->elevatePoint(median); // TODO: elevate each point of the polygon
-    s->translate(median);
+    kirb->translate(median);
+    addChild(kirb);
+	assets.push_back(kirb);
 }
 
 vector<VREntityPtr> VRRoadNetwork::getRoadNodes() {
