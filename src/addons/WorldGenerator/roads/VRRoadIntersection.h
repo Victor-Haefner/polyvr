@@ -27,9 +27,10 @@ class VRRoadIntersection : public VRRoadBase {
         VREntityPtr getRoadNode(VREntityPtr roadEnt);
         vector<VRRoadPtr> roads;
         vector<pair<pose, float>> roadFronts;
-        map<VRRoadPtr, vector<VREntityPtr>> inLanes;
-        map<VRRoadPtr, vector<VREntityPtr>> outLanes;
-        map<VREntityPtr, vector<VREntityPtr>> nextLanes;
+        map<VRRoadPtr, vector<VREntityPtr>> inLanes; // all lanes going out of the intersection
+        map<VRRoadPtr, vector<VREntityPtr>> outLanes; // all lanes going in the intersection
+        vector<pair<VREntityPtr, VREntityPtr>> laneMatches; // matches of ingoing lanes with outgoing lanes
+        map<VREntityPtr, vector<VREntityPtr>> nextLanes; // sequences of lanes, for example ingoing -> outgoing, or ingoing -> lane -> outgoing
         vector<Vec3d> intersectionPoints;
         VRPolygonPtr patch;
         VRPolygonPtr perimeter;
