@@ -30,6 +30,13 @@ void VRRoadIntersection::computeLanes() {
 	nextLanes.clear();
 	map< VRRoadPtr, int > roadEntrySigns;
 
+	auto mergeLanes = [](VREntityPtr laneIn, VREntityPtr laneOut) {
+        auto nodes1 = laneIn->getEntity("path")->getAllEntities("nodes");
+        VREntityPtr nodeEnt1 = *nodes1.rbegin();
+        VREntityPtr nodeEnt2 = laneOut->getEntity("path")->getAllEntities("nodes")[0];
+        nodeEnt2->set("node", nodeEnt1->getValue<string>("node", ""));
+	};
+
 	auto getInAndOutLanes = [&]() {
         for (auto road : roads) {
             VREntityPtr roadEntry = road->getNodeEntry(node);
@@ -44,14 +51,24 @@ void VRRoadIntersection::computeLanes() {
         }
 	};
 
-	auto checkMatchingLanes = [&](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut) { // TODO: extend the cases!
-        if (Nin == Nout && i != j && reSignIn != reSignOut) return false;
-        if (Nin == Nout && i != Nout-j-1 && reSignIn == reSignOut) return false;
-        if (Nin == 1 || Nout == 1) return true;
-        return true;
-	};
-
 	auto computeLaneMatches = [&]() {
+	    auto checkDefaultMatch = [](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut) {
+            if (Nin == Nout && i != j && reSignIn != reSignOut) return false;
+            if (Nin == Nout && i != Nout-j-1 && reSignIn == reSignOut) return false;
+            if (Nin == 1 || Nout == 1) return true;
+            return true;
+        };
+
+	    auto checkContinuationMatch = [](int i, int j, int Nin, int Nout) {
+	        if (Nout == Nin && i == j) return true;
+	        if (Nout > Nin && i == Nout-j-1) return true; // TODO
+	        if (Nout < Nin && Nin-i-1 == j) return true; // TODO
+            //if (Nin == Nout && i != j && reSignIn != reSignOut) return false;
+            //if (Nin == Nout && i != Nout-j-1 && reSignIn == reSignOut) return false;
+            //if (Nin == 1 || Nout == 1) return true;
+            return false;
+        };
+
         for (auto roadOut : outLanes) {
             for (auto roadIn : inLanes) {
                 if (roadIn.first == roadOut.first) continue;
@@ -62,16 +79,31 @@ void VRRoadIntersection::computeLanes() {
                 for (int i=0; i<Nin; i++) {
                     auto laneIn = roadIn.second[i];
                     for (int j=0; j<Nout; j++) {
-                        if (!checkMatchingLanes(i,j,Nin, Nout, reSignIn, reSignOut)) continue;
                         auto laneOut = roadOut.second[j];
-                        laneMatches.push_back(make_pair(laneIn, laneOut));
+                        bool match = false;
+                        switch (type) {
+                            case CONTINUATION: match = checkContinuationMatch(i,j,Nin, Nout); break;
+                            //case CONTINUATION_FORK: break;
+                            //case CONTINUATION_MERGE: break;
+                            //case UPLINK: break;
+                            default: match = checkDefaultMatch(i,j,Nin, Nout, reSignIn, reSignOut); break;
+                        }
+                        if (match) laneMatches.push_back(make_pair(laneIn, laneOut));
                     }
                 }
             }
         }
 	};
 
-	auto computeNewLanePaths = [&]() {
+	auto mergeMatchingLanes = [&]() {
+        for (auto match : laneMatches) {
+            auto laneIn = match.first;
+            auto laneOut = match.second;
+            mergeLanes(laneIn, laneOut);
+        }
+	};
+
+	auto bridgeMatchingLanes = [&]() {
         for (auto match : laneMatches) {
             auto laneIn = match.first;
             auto laneOut = match.second;
@@ -96,7 +128,14 @@ void VRRoadIntersection::computeLanes() {
 
     getInAndOutLanes();
     computeLaneMatches();
-    computeNewLanePaths();
+
+    switch (type) {
+        case CONTINUATION: mergeMatchingLanes(); break;
+        //case CONTINUATION_FORK: break;
+        //case CONTINUATION_MERGE: break;
+        //case UPLINK: break;
+        default: bridgeMatchingLanes(); break;
+    }
 }
 
 void VRRoadIntersection::computePatch() {
