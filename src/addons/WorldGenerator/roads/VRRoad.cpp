@@ -62,8 +62,8 @@ VRGeometryPtr VRRoad::createGeometry() {
 	    float width = getWidth();
 		float W = width*0.5;
 		vector<Vec3d> profile;
-		profile.push_back(Vec3d(-W,0,0));
-		profile.push_back(Vec3d(W,0,0));
+		profile.push_back(Vec3d(-W+offset,0,0));
+		profile.push_back(Vec3d(W+offset,0,0));
 
 		auto geo = VRStroke::create("road");
 		vector<pathPtr> paths;
@@ -119,7 +119,7 @@ void VRRoad::computeMarkings() {
         Vec3d x = point.x();
         x.normalize();
 
-        float widthSum = -roadWidth*0.5;
+        float widthSum = -roadWidth*0.5 - offset;
         for (int li=0; li<Nlanes; li++) {
             auto lane = lanes[li];
             float width = toFloat( lane->get("width")->value );
@@ -128,7 +128,7 @@ void VRRoad::computeMarkings() {
             add(-x*k + p, n);
             widthSum += width;
         }
-        add(-x*(roadWidth*0.5 - mw*0.5) + p, n);
+        add(-x*(roadWidth*0.5 - mw*0.5 - offset) + p, n);
     }
 
     // markings
@@ -167,9 +167,10 @@ void VRRoad::addParkingLane( int direction, float width, int capacity, string ty
 	l->set("width", toString(width));
 	l->set("direction", toString(direction));
 	entity->add("lanes", l->getName());
+	l->set("road", entity->getName());
 }
 
-
+void VRRoad::setOffset(float o) { offset = o; }
 
 
 

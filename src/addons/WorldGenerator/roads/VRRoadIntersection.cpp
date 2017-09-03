@@ -30,13 +30,6 @@ void VRRoadIntersection::computeLanes() {
 	nextLanes.clear();
 	map< VRRoadPtr, int > roadEntrySigns;
 
-	auto mergeLanes = [](VREntityPtr laneIn, VREntityPtr laneOut) {
-        auto nodes1 = laneIn->getEntity("path")->getAllEntities("nodes");
-        VREntityPtr nodeEnt1 = *nodes1.rbegin();
-        VREntityPtr nodeEnt2 = laneOut->getEntity("path")->getAllEntities("nodes")[0];
-        nodeEnt2->set("node", nodeEnt1->getValue<string>("node", ""));
-	};
-
 	auto getInAndOutLanes = [&]() {
         for (auto road : roads) {
             VREntityPtr roadEntry = road->getNodeEntry(node);
@@ -96,10 +89,71 @@ void VRRoadIntersection::computeLanes() {
 	};
 
 	auto mergeMatchingLanes = [&]() {
+	    map<VREntityPtr, Vec3d> displacements; // map roads to displace!
+	    map<VREntityPtr, bool> processedLanes; // keep list of already processed lanes
         for (auto match : laneMatches) {
             auto laneIn = match.first;
             auto laneOut = match.second;
-            mergeLanes(laneIn, laneOut);
+            auto roadIn = laneIn->getEntity("road");
+            auto roadOut = laneOut->getEntity("road");
+            int Nin = roadIn->getAllEntities("lanes").size();
+            int Nout = roadOut->getAllEntities("lanes").size();
+            auto nodes1 = laneIn->getEntity("path")->getAllEntities("nodes");
+            VREntityPtr nodeEnt1 = *nodes1.rbegin();
+            VREntityPtr nodeEnt2 = laneOut->getEntity("path")->getAllEntities("nodes")[0];
+            Vec3d X = nodeEnt2->getEntity("node")->getVec3("position") - nodeEnt1->getEntity("node")->getVec3("position");
+            float D = X.length();
+
+            if (Nin >= Nout) {
+                nodeEnt1->set("node", nodeEnt2->getValue<string>("node", ""));
+                if (D > 0) displacements[roadIn] = X;
+            }
+            if (Nin < Nout) {
+                nodeEnt2->set("node", nodeEnt1->getValue<string>("node", ""));
+                if (D > 0) displacements[roadOut] = -X;
+            }
+
+            processedLanes[laneIn] = true;
+            processedLanes[laneOut] = true;
+        }
+
+        if (displacements.size() == 0) return;
+
+        for (int i=0; i<roads.size(); i++) { // shift whole road fronts!
+            auto& road = roads[i];
+            auto& rfront = roadFronts[i];
+            auto rEnt = road->getEntity();
+            if (!displacements.count(rEnt)) continue;
+
+            Vec3d X = displacements[rEnt];
+            road->setOffset(X.dot(rfront.first.x())); // TODO: maybe wrong?
+            //Vec3d X = rfront.first.x() * D; // displacement vector
+            //auto node = getRoadNode( rEnt );
+            //auto p = node->getVec3("position");
+            if (inLanes.count(road)) {
+                for (auto laneIn : inLanes[road]) {
+                    if (processedLanes.count(laneIn)) continue;
+                    auto nodes = laneIn->getEntity("path")->getAllEntities("nodes");
+                    VREntityPtr node = (*nodes.rbegin())->getEntity("node");
+                    auto p = node->getVec3("position");
+                    p += X;
+                    node->setVec3("position", p, "Position");
+                }
+            }
+
+            if (outLanes.count(road)) {
+                for (auto laneOut : outLanes[road]) {
+                    if (processedLanes.count(laneOut)) continue;
+                    VREntityPtr node = laneOut->getEntity("path")->getAllEntities("nodes")[0]->getEntity("node");
+                    auto p = node->getVec3("position");
+                    p += X;
+                    node->setVec3("position", p, "Position");
+                }
+            }
+
+
+            // TODO: get x, orthogonal vector to road front, and shift all lane nodes (not the road node), and add offset to road, used later for offsetting the geometry
+            // TODO: update road graph!!!
         }
 	};
 
@@ -164,6 +218,7 @@ void VRRoadIntersection::computePatch() {
 
 VRGeometryPtr VRRoadIntersection::createGeometry() {
     if (!patch) return 0;
+    if (type != DEFAULT) return 0;
     Triangulator tri;
     tri.add( *patch );
     VRGeometryPtr intersection = tri.compute();

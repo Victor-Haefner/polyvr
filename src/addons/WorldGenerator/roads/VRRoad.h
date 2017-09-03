@@ -23,6 +23,7 @@ class VRRoad : public VRRoadBase {
             edgePoint(Vec3d p1, Vec3d p2, Vec3d n, VREntityPtr e) : p1(p1), p2(p2), n(n), entry(e) {}
         };
 
+        float offset = 0;
         map<VREntityPtr, edgePoint> edgePoints;
 
     public:
@@ -33,6 +34,7 @@ class VRRoad : public VRRoadBase {
 
         void addParkingLane( int direction, float width, int capacity, string type );
 
+        void setOffset(float o);
         float getWidth();
         VRGeometryPtr createGeometry();
         VREntityPtr getNodeEntry( VREntityPtr node );
