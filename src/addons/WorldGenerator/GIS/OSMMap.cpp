@@ -104,9 +104,10 @@ void OSMMap::readFile(string path) {
     try { parser.parse_file(filepath); }
     catch(const exception& ex) { cout << "OSMMap Error: " << ex.what() << endl; return; }
 
-    auto nodes = parser.get_document()->get_root_node()->get_children();
-    for (auto node : nodes) {
-        if (auto element = dynamic_cast<xmlpp::Element*>(node)) {
+    auto data = parser.get_document()->get_root_node()->get_children();
+    for (auto enode : data) {
+        if (auto element = dynamic_cast<xmlpp::Element*>(enode)) {
+            if (element->get_attribute("timestamp")) continue; // change list, ignore
             if (element->get_name() == "node") { readNode(element); continue; }
             if (element->get_name() == "way") { readWay(element); continue; }
             if (element->get_name() == "bounds") { readBounds(element); continue; }

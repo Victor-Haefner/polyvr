@@ -340,24 +340,9 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             }
 
             if (tag.first == "natural") {
-                if (tag.second == "wood") {
-                    //nature->addGrassPatch( wayToPolygon(way), 0, 1, 1 );
-                }
-                if (tag.second == "grassland") ; // TODO
-                continue;
-            }
-
-            if (tag.first == "leisure") {
-                if (tag.second == "park") {
-                    //static int b = 0;
-                    //if (b < 3) {
-                        //auto poly = wayToPolygon(way);
-                        //cout << " addWoods " << poly->computeArea() << endl;
-                        //nature->addGrassPatch( poly, 0, 1, 0 );
-                        //b++;
-                    //}
-                    nature->addGrassPatch( wayToPolygon(way), 0, 1, 1);
-                }
+                //if (tag.second == "woods") nature->addWoods( wayToPolygon(way), 1);
+                if (tag.second == "scrub") nature->addScrub( wayToPolygon(way), 1);
+                //if (tag.second == "grassland") nature->addGrassPatch( wayToPolygon(way), 0, 1, 0);
                 continue;
             }
         }
@@ -371,10 +356,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         if (terrain) terrain->elevatePoint(pos);
         for (auto tag : node->tags) {
             if (tag.first == "natural") {
-                if (tag.second == "tree") {
-                    //auto t = nature->createRandomTree(pos);
-                    //nature->addTree(t, 0, 0);
-                }
+                if (tag.second == "tree") nature->createRandomTree(pos);
                 continue;
             }
 

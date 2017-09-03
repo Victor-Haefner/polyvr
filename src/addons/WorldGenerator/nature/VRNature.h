@@ -85,12 +85,19 @@ class VRNature : public VRLodTree, public VRWorldModule {
         void simpleInit(int treeTypes, int bushTypes);
 
         void clear();
+        void addTreeTemplate(VRTreePtr t);
+        void addBushTemplate(VRTreePtr t);
         VRTreePtr addTree(VRTreePtr t, bool updateLODs = 0, bool addToStore = true);
         VRTreePtr addBush(VRTreePtr t, bool updateLODs = 0, bool addToStore = true);
         VRTreePtr getTree(int id);
+        VRTreePtr createTree(string type, Vec3d p);
+        VRTreePtr createBush(string type, Vec3d p);
         VRTreePtr createRandomTree(Vec3d p);
         VRTreePtr createRandomBush(Vec3d p);
-        void addGrassPatch(VRPolygonPtr area, bool updateLODs = 0, bool addGround = 0, bool onlyEarth = 0);
+
+        void addWoods(VRPolygonPtr area, bool addGround = 0);
+        void addScrub(VRPolygonPtr area, bool addGround = 0);
+        void addGrassPatch(VRPolygonPtr area, bool updateLODs = 0, bool addGround = 0);
         void removeTree(int id);
         void computeLODs();
         void computeLODs(VRLodLeafPtr leaf);

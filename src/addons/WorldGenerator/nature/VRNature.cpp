@@ -186,23 +186,40 @@ VRTreePtr VRNature::getTree(int id) {
     return 0;
 }
 
-VRTreePtr VRNature::createRandomTree(Vec3d p) {
-    if (treeTemplates.size() == 0) return 0;
-    int i = rand()%treeTemplates.size();
-    auto itr = treeTemplates.begin();
+template<typename T>
+string getRandomKey(T& map) {
+    if (map.size() == 0) return "";
+    int i = rand()%map.size();
+    auto itr = map.begin();
     advance(itr, i);
-    auto t = dynamic_pointer_cast<VRTree>(itr->second->duplicate());
+    return itr->first;
+}
+
+VRTreePtr VRNature::createRandomTree(Vec3d p) { return createTree( getRandomKey(treeTemplates), p ); }
+VRTreePtr VRNature::createRandomBush(Vec3d p) { return createBush( getRandomKey(bushTemplates), p ); }
+
+VRTreePtr VRNature::createTree(string type, Vec3d p) {
+    if (!treeTemplates.count(type)) return 0;
+    auto t = dynamic_pointer_cast<VRTree>(treeTemplates[type]->duplicate());
+    if (!t) return 0;
+    t->addAttachment("tree", 0);
+    if (terrain) terrain->elevatePoint(p);
     t->setFrom(p);
+    addObject(t, p, 0);
+    treeRefs[t.get()] = treeTemplates[type];
     return t;
 }
 
-VRTreePtr VRNature::createRandomBush(Vec3d p) {
-    if (bushTemplates.size() == 0) return 0;
-    int i = rand()%bushTemplates.size();
-    auto itr = bushTemplates.begin();
-    advance(itr, i);
-    auto t = dynamic_pointer_cast<VRTree>(itr->second->duplicate());
+VRTreePtr VRNature::createBush(string type, Vec3d p) {
+    cout << " - - - VRNature::createBush " << type << " p " << p << endl;
+    if (!bushTemplates.count(type)) return 0;
+    auto t = dynamic_pointer_cast<VRTree>(bushTemplates[type]->duplicate());
+    if (!t) return 0;
+    t->addAttachment("tree", 0);
+    if (terrain) terrain->elevatePoint(p);
     t->setFrom(p);
+    addObject(t, p, 0);
+    treeRefs[t.get()] = bushTemplates[type];
     return t;
 }
 
@@ -234,9 +251,12 @@ void VRNature::simpleInit(int treeTypes, int bushTypes) {
 		return t;
     };
 
-    for (int i=0; i<treeTypes; i++) addTree( doTree() );
-    for (int i=0; i<bushTypes; i++) addBush( doBush() );
+    for (int i=0; i<treeTypes; i++) addTreeTemplate( doTree() );
+    for (int i=0; i<bushTypes; i++) addBushTemplate( doBush() );
 }
+
+void VRNature::addTreeTemplate(VRTreePtr t) { treeTemplates[t->getName()] = t; }
+void VRNature::addBushTemplate(VRTreePtr t) { bushTemplates[t->getName()] = t; }
 
 void VRNature::removeTree(int id) {
     if (!treesByID.count(id)) return;
@@ -256,7 +276,34 @@ void VRNature::removeTree(int id) {
     computeLODs(aLeafs);
 }
 
-void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround, bool onlyEarth) { // TODO: needs optimizations!
+void VRNature::addScrub(VRPolygonPtr area, bool addGround) {
+    float a = area->computeArea();
+    if (a == 0) return;
+
+    VRTimer timer; timer.start();
+    int t0 = timer.stop();
+
+    if (terrain) terrain->elevatePolygon(area, 0.18);
+    Vec3d median = area->getBoundingBox().center();
+    area->translate(-median);
+    for (auto p : area->getRandomPoints(1)) createRandomBush(median+p);
+
+    if (addGround) {
+        Triangulator tri;
+        tri.add(*area);
+        auto ground = tri.compute();
+        ground->translate(median);
+        VRTextureGenerator tg;
+        tg.addSimpleNoise( Vec3i(128,128,1), true, Color4f(0.85,0.8,0.75,1), Color4f(0.5,0.3,0,1) );
+        auto mat = VRMaterial::create("earth");
+        mat->setTexture(tg.compose());
+        ground->setMaterial(mat);
+        ground->setPositionalTexCoords(1.0, 0, Vec3i(0,2,1));
+        addChild(ground);
+    }
+}
+
+void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround) { // TODO: needs optimizations!
     VRTimer timer; timer.start();
     int t0 = timer.stop();
     //cout << "VRNature::addGrassPatch " << t0 << endl;
@@ -265,7 +312,7 @@ void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround,
 
     float a = Area->computeArea();
     if (a == 0) return;
-    cout << "VRNature::addGrassPatch " << a << endl;
+    //cout << "VRNature::addGrassPatch " << a << endl;
 
     for (auto area : Area->gridSplit(10.0)) {
         //cout << " sub Area " << i << "  " << timer.stop() - t0 << endl;
@@ -273,16 +320,15 @@ void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround,
         Vec3d median = area->getBoundingBox().center();
         area->translate(-median);
         //cout << "  A1 " << timer.stop() - t0 << endl;
-        if (!onlyEarth) {
-            auto grass = VRGrassPatch::create();
-            grass->addAttachment("grass", 0);
-            grass->setArea(area);
-            //cout << "  A2 " << timer.stop() - t0 << endl;
-            grassPatchRefs[grass.get()] = grass;
-            auto leaf = addObject(grass, median, 0); // pose contains the world position!
-            grass->setWorldPosition(median);
-            if (updateLODs) computeLODs(leaf);
-        }
+        auto grass = VRGrassPatch::create();
+        grass->addAttachment("grass", 0);
+        grass->setArea(area);
+        //cout << "  A2 " << timer.stop() - t0 << endl;
+        grassPatchRefs[grass.get()] = grass;
+        auto leaf = addObject(grass, median, 0); // pose contains the world position!
+        grass->setWorldPosition(median);
+        if (updateLODs) computeLODs(leaf);
+
         //cout << "  A3 " << timer.stop() - t0 << endl;
 
         //cout << " VRNature::addGrassPatch " << median << "   " << area->computeArea() << endl;
@@ -309,14 +355,13 @@ void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround,
     }
 }
 
-VRTreePtr VRNature::addTree(VRTreePtr t, bool updateLODs, bool addToStore) {
+VRTreePtr VRNature::addTree(VRTreePtr t, bool updateLODs, bool addToStore) { // TODO: needs refactoring!!
     if (!t) return 0;
     posePtr p = t->getRelativePose(ptr());
     if (terrain) terrain->elevatePose(p);
 
     auto tree = dynamic_pointer_cast<VRTree>( t->duplicate() );
     tree->addAttachment("tree", 0);
-    treeTemplates[t->getName()] = t;
     treeRefs[tree.get()] = t;
     auto leaf = addObject(tree, p->pos(), 0); // pose contains the world position!
     treesByID[tree->getID()] = tree;

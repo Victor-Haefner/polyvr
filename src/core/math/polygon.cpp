@@ -142,14 +142,16 @@ VRPolygonPtr VRPolygon::shrink(float amount) {
 }
 
 vector<Vec3d> VRPolygon::getRandomPoints(float density, float padding) {
-    auto area = shrink(padding);
     vector<Vec3d> res;
+    auto area = shrink(padding);
+    if (!area) return res;
     //for (auto& area : area1->getConvexDecomposition()) {
         auto bb = area->getBoundingBox();
-        int N = density*area->computeArea();
+        int N = ceil(density*area->computeArea());
         for (int i=0; i<N; i++) {
             Vec3d p;
-            do p = bb.getRandomPoint();
+            int c = 0;
+            do { p = bb.getRandomPoint(); c++; if (c > 1e4) { cout << "Warning! VRPolygon::getRandomPoints, no point inside!" << endl; return res; } }
             while( !area->isInside(Vec2d(p[0], p[2])) );
             res.push_back( p );
         }
@@ -505,14 +507,11 @@ bool onSegment( const Vec2d& p, const Vec2d& p1, const Vec2d& p2 ) {
 bool VRPolygon::isInside(Vec2d p) { // winding number algorithm
     int wn = 0;
     int N = points.size();
-    //cout << "  isInside? " << p << endl;
     for (int i=0; i<N; i++) {
         Vec2d p1 = points[i];
         Vec2d p2 = points[(i+1)%N];
         if (p1 == p2) continue;
         Vec2d d = p2 - p1;
-        //cout << "   p1 " << p1 << "   p2 " << p2 << "   d " << d << " i1 " << i << " i2 " << (i+1)%N << endl;
-        //if (onSegment(p,p1,p2)) { cout << " onLine " << endl; return true; }
         if (onSegment(p,p1,p2)) return true;
         if (p1[1] <= p[1]) {
             if (p2[1]  > p[1]) if (isLeft( p, p1, p2) > 0) ++wn;
@@ -520,7 +519,25 @@ bool VRPolygon::isInside(Vec2d p) { // winding number algorithm
             if (p2[1]  <= p[1]) if (isLeft( p, p1, p2) < 0) --wn;
         }
     }
-    //{ cout << " inSides " << wn << endl; return wn; }
+
+    if (N == 0) {
+        N = points3.size();
+        for (int i=0; i<N; i++) {
+            Vec3d p13 = points3[i];
+            Vec3d p23 = points3[(i+1)%N];
+            Vec2d p1 = Vec2d(p13[0], p13[2]);
+            Vec2d p2 = Vec2d(p23[0], p23[2]);
+            if (p1 == p2) continue;
+            Vec2d d = p2 - p1;
+            if (onSegment(p,p1,p2)) return true;
+            if (p1[1] <= p[1]) {
+                if (p2[1]  > p[1]) if (isLeft( p, p1, p2) > 0) ++wn;
+            } else {
+                if (p2[1]  <= p[1]) if (isLeft( p, p1, p2) < 0) --wn;
+            }
+        }
+    }
+
     return wn;
 }
 
@@ -662,11 +679,17 @@ float VRPolygon::getTurn(Vec2d p0, Vec2d p1, Vec2d p2) {
 }
 
 bool VRPolygon::isConvex() {
-    if (size() <= 3) return true;
-
-    for (int i=2; i<size(); i++) {
+    for (int i=2; i<points.size(); i++) {
         if (getTurn(points[i-2], points[i-1], points[i]) >= 0) return false;
     }
+
+    for (int i=2; i<points3.size(); i++) {
+        Vec3d& p0 = points3[i-2];
+        Vec3d& p1 = points3[i-1];
+        Vec3d& p2 = points3[i-0];
+        if (getTurn(Vec2d(p0[0],p0[2]), Vec2d(p1[0],p1[2]), Vec2d(p2[0],p2[2])) >= 0) return false;
+    }
+
     return true;
 }
 
