@@ -183,7 +183,7 @@ void path::approximate(int d) {
 
                 vector<pose> poses;
                 poses.push_back(p1);
-                for (auto t : Tvec) poses.push_back( getPose(t, j-1, j, false) );
+                for (auto t : Tvec) poses.push_back( *getPose(t, j-1, j, false) );
                 poses.push_back(p4);
 
                 for (int i=1; i<poses.size()-1; i++) {
@@ -389,9 +389,9 @@ void path::getOrientation(float t, Vec3d& dir, Vec3d& up, int i, int j, bool fas
     }
 }
 
-pose path::getPose(float t, int i, int j, bool fast) {
+posePtr path::getPose(float t, int i, int j, bool fast) {
     Vec3d d,u; getOrientation(t,d,u,i,j,fast);
-    return pose(getPosition(t,i,j,fast), d, u);
+    return pose::create(getPosition(t,i,j,fast), d, u);
 }
 
 float path::getClosestPoint(Vec3d p) {

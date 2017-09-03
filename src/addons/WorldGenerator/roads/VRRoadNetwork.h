@@ -16,6 +16,7 @@ OSG_BEGIN_NAMESPACE;
 class VRRoadNetwork : public VRRoadBase {
     private:
         vector<VRRoadPtr> roads;
+        map<VREntityPtr, VRRoadPtr> roadsByEntity;
         vector<VRRoadPtr> ways;
         vector<VRRoadIntersectionPtr> intersections;
         vector<VRGeometryPtr> assets;

@@ -81,6 +81,7 @@ void GISWorld::setupOntology() {
     Sign->addProperty("road", Road);
     RoadIntersection->addProperty("node", "Node");
     RoadIntersection->addProperty("roads", Road);
+    RoadIntersection->addProperty("type", "string");
     Sidewalk->addProperty("kerbs", Kerb);
     RoadMarking->addProperty("width", "float");
     RoadMarking->addProperty("style", "string");

@@ -76,8 +76,8 @@ void VRRoadIntersection::computeLanes() {
                         bool match = false;
                         switch (type) {
                             case CONTINUATION: match = checkContinuationMatch(i,j,Nin, Nout); break;
-                            //case CONTINUATION_FORK: break;
-                            //case CONTINUATION_MERGE: break;
+                            //case FORK: break;
+                            //case MERGE: break;
                             //case UPLINK: break;
                             default: match = checkDefaultMatch(i,j,Nin, Nout, reSignIn, reSignOut); break;
                         }
@@ -185,8 +185,8 @@ void VRRoadIntersection::computeLanes() {
 
     switch (type) {
         case CONTINUATION: mergeMatchingLanes(); break;
-        //case CONTINUATION_FORK: break;
-        //case CONTINUATION_MERGE: break;
+        //case FORK: break;
+        //case MERGE: break;
         //case UPLINK: break;
         default: bridgeMatchingLanes(); break;
     }
@@ -422,16 +422,29 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
     };
 
     auto resolveIntersectionType = [&]() {
+        cout << " --- resolveIntersectionType" << N;
+        for (auto r : roads) cout << "  " << r->getEntity()->getName();
+        cout << endl;
+
         if (N == 2) {
             bool parallel  = bool( getRoadConnectionAngle(roads[0], roads[1]) < -0.8 );
             if (parallel) type = CONTINUATION;
         }
 
         if (N == 3) {
-            bool parallel01 = bool(getRoadConnectionAngle(roads[0], roads[1]) < -0.99);
-            bool parallel12 = bool(getRoadConnectionAngle(roads[1], roads[2]) < -0.99);
-            bool parallel02 = bool(getRoadConnectionAngle(roads[2], roads[0]) < -0.99);
-            if (parallel01 && parallel12 || parallel01 && parallel02 || parallel12 && parallel02) type = CONTINUATION_FORK;
+            bool parallel01 = bool(getRoadConnectionAngle(roads[0], roads[1]) < -0.5);
+            bool parallel12 = bool(getRoadConnectionAngle(roads[1], roads[2]) < -0.5);
+            bool parallel02 = bool(getRoadConnectionAngle(roads[2], roads[0]) < -0.5);
+            if (parallel01 && parallel12 || parallel01 && parallel02 || parallel12 && parallel02) type = FORK;
+            type = FORK;
+        }
+
+        auto entity = getEntity();
+        switch (type) {
+            case CONTINUATION: entity->set("type", "continuation"); break;
+            case FORK: entity->set("type", "fork"); break;
+            case MERGE: entity->set("type", "merge"); break;
+            default: entity->set("type", "intersection");
         }
     };
 
@@ -536,7 +549,7 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
             return true;
         }
 
-        if (type == CONTINUATION_FORK || type == CONTINUATION_MERGE) {
+        if (type == FORK || type == MERGE) {
             /*Vec3d n1;
             for (int i=0; i<roads.size(); i++) {
                 auto& data = roads[i]->getEdgePoints( node );

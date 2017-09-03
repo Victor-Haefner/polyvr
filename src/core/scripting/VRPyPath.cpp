@@ -83,7 +83,7 @@ PyObject* VRPyPath::getPose(VRPyPath* self, PyObject *args) {
     int i = 0;
     int j = 0;
     if (! PyArg_ParseTuple(args, "f|ii", &t, &i, &j)) return NULL;
-    return VRPyPose::fromObject( self->objPtr->getPose(t, i, j) );
+    return VRPyPose::fromSharedPtr( self->objPtr->getPose(t, i, j) );
 }
 
 PyObject* VRPyPath::getLength(VRPyPath* self, PyObject *args) {

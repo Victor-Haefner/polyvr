@@ -39,11 +39,11 @@ void VRDriver::update() {
     float L = p_path->getLength();
     float aimingLength = 4.0;//2.0*speed;
 
-    Vec3d p0 = p_path->getPose(t).pos();
+    Vec3d p0 = p_path->getPose(t)->pos();
     t += aimingLength/L; // aim some meter ahead
     clamp(t,0,1);
 
-    auto tpos = p_path->getPose(t).pos(); // get target position
+    auto tpos = p_path->getPose(t)->pos(); // get target position
     //auto tvel = v_path->getPose(t).pos()[1]; // get target velocity
 
     float target_speed = 5; // TODO: get from path

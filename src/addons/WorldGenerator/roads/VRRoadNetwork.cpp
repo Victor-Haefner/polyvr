@@ -169,9 +169,9 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
 
         for (auto t : p.computeInflectionPoints(0,0,0.2, Vec3i(1,0,1))) { // add inflection points
             auto pnt = p.getPose(t);
-            Vec3d n = pnt.dir(); //n.normalize();
-            if (terrain) terrain->projectTangent(n, pnt.pos());
-            nodes.push_back( addNode(pnt.pos(), true) ); norms.push_back( n );
+            Vec3d n = pnt->dir(); //n.normalize();
+            if (terrain) terrain->projectTangent(n, pnt->pos());
+            nodes.push_back( addNode(pnt->pos(), true) ); norms.push_back( n );
         }
     }
     nodes.push_back( nodesIn[nodesIn.size()-1] ); norms.push_back( normalsIn[normalsIn.size()-1] );
@@ -199,6 +199,7 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
     for (int i=0; i<Nm; i++) road->addLane(1, 4 );
     for (int i=0; i<Nlanes-Nm; i++) road->addLane(-1, 4 );
     roads.push_back(road);
+    roadsByEntity[road->getEntity()] = road;
     return road;
 }
 
@@ -284,11 +285,11 @@ void VRRoadNetwork::addGuardRail( pathPtr path, float height ) {
     int N = L / poleDist;
     auto p0 = path->getPose(0);
     auto p1 = path->getPose(1);
-    p0.setPos( p0.pos() + p0.dir()*poleWidth );
-    p1.setPos( p1.pos() - p1.dir()*poleWidth );
-    addPole(p0); // first pole
-    addPole(p1); // last pole
-    for (int i = 0; i< N-1; i++) addPole( path->getPose( (i+1)*1.0/N ) );
+    p0->setPos( p0->pos() + p0->dir()*poleWidth );
+    p1->setPos( p1->pos() - p1->dir()*poleWidth );
+    addPole(*p0); // first pole
+    addPole(*p1); // last pole
+    for (int i = 0; i< N-1; i++) addPole( *path->getPose( (i+1)*1.0/N ) );
 
 	vector<Vec3d> profile;
     profile.push_back(Vec3d(0.0,height-0.5,0));
@@ -385,7 +386,7 @@ vector<VRRoadPtr> VRRoadNetwork::getNodeRoads(VREntityPtr node) {
     return res;
 }
 
-void VRRoadNetwork::computeSigns() {
+void VRRoadNetwork::computeSigns() { // add stop lines
     auto assets = world->getAssetManager();
     for (auto signEnt : world->getOntology()->getEntities("Sign")) {
         Vec3d pos = signEnt->getVec3("position");
@@ -393,7 +394,12 @@ void VRRoadNetwork::computeSigns() {
         string type = signEnt->getValue<string>("type", "");
         auto sign = assets->copy(type, pose::create(pos, dir), false);
         if (auto roadEnt = signEnt->getEntity("road")) {
-            ;
+            auto road = roadsByEntity[roadEnt];// get vrroad from roadent
+            auto pose = road->getRightEdge(pos);
+            auto d = pose->dir(); d[1] = 0; d.normalize();
+            pose->setDir(d);
+            pose->setUp(Vec3d(0,1,0));
+            sign->setPose(pose);
         }
     }
 }
@@ -409,7 +415,7 @@ void VRRoadNetwork::computeArrows() {
         Vec4i drs(999,999,999,999);
         for (uint i=0; i<4 && i < dirs.size(); i++) drs[i] = int(dirs[i]*5/pi)*180/5;
         if (t < 0) t = 1+t; // from the end
-        createArrow(drs, min(int(dirs.size()),4), lpath->getPose(t));
+        createArrow(drs, min(int(dirs.size()),4), *lpath->getPose(t));
     }
 }
 

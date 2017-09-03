@@ -33,7 +33,7 @@ Vec3d VRPathFinding::pos(Position& p) {
 
     if (p.eID >= 0) {
         auto path = paths[p.eID];
-        return path->getPose(p.t).pos();
+        return path->getPose(p.t)->pos();
     }
 
     return Vec3d();

@@ -55,7 +55,7 @@ class path : public VRStorage {
         Vec3d getPosition(float t, int i = 0, int j = 0, bool fast = true);
         void getOrientation(float t, Vec3d& dir, Vec3d& up, int i = 0, int j = 0, bool fast = true);
         Color3f getColor(float t, int i = 0, int j = 0);
-        pose getPose(float t, int i = 0, int j = 0, bool fast = true);
+        posePtr getPose(float t, int i = 0, int j = 0, bool fast = true);
 
         float getClosestPoint(Vec3d p); // return t parameter on path
         float getDistance(Vec3d p);
