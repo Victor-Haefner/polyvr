@@ -345,6 +345,22 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                 //if (tag.second == "grassland") nature->addGrassPatch( wayToPolygon(way), 0, 1, 0);
                 continue;
             }
+
+            if (tag.first == "landuse") { // TODO
+                auto p = wayToPolygon(way);
+
+                /*Triangulator tri;
+                tri.add(*p);
+                auto ground = tri.compute();
+                ground->translate(median);
+                VRTextureGenerator tg;
+                tg.addSimpleNoise( Vec3i(128,128,1), true, Color4f(0.85,0.8,0.75,1), Color4f(0.5,0.3,0,1) );
+                auto mat = VRMaterial::create("earth");
+                mat->setTexture(tg.compose());
+                ground->setMaterial(mat);
+                ground->setPositionalTexCoords(1.0, 0, Vec3i(0,2,1));
+                addChild(ground);*/
+            }
         }
     }
 
