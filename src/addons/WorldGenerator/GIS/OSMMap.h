@@ -40,7 +40,7 @@ struct OSMWay : OSMBase {
     VRPolygon polygon;
 
     OSMWay(string id);
-    OSMWay(xmlpp::Element* e);
+    OSMWay(xmlpp::Element* e, map<string, bool>& invalidIDs);
     string toString();
 };
 
@@ -49,7 +49,7 @@ struct OSMRelation : OSMBase {
     vector<string> nodes;
 
     OSMRelation(string id);
-    OSMRelation(xmlpp::Element* e);
+    OSMRelation(xmlpp::Element* e, map<string, bool>& invalidIDs);
     string toString();
 };
 
@@ -60,11 +60,13 @@ class OSMMap {
         map<string, OSMWayPtr> ways;
         map<string, OSMNodePtr> nodes;
         map<string, OSMRelationPtr> relations;
+        map<string, bool> invalidElements;
 
+        bool isValid(xmlpp::Element* e);
         void readNode(xmlpp::Element* element);
-        void readWay(xmlpp::Element* element);
+        void readWay(xmlpp::Element* element, map<string, bool>& invalidIDs);
         void readBounds(xmlpp::Element* element);
-        void readRelation(xmlpp::Element* element);
+        void readRelation(xmlpp::Element* element, map<string, bool>& invalidIDs);
 
         void readFile(string path);
 

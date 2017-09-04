@@ -58,12 +58,14 @@ OSMNode::OSMNode(xmlpp::Element* el) : OSMBase(el) {
     toValue(el->get_attribute_value("lon"), lon);
 }
 
-OSMWay::OSMWay(xmlpp::Element* el) : OSMBase(el) {
+OSMWay::OSMWay(xmlpp::Element* el, map<string, bool>& invalidIDs) : OSMBase(el) {
     for(xmlpp::Node* n : el->get_children()) {
         if (auto e = dynamic_cast<xmlpp::Element*>(n)) {
             if (e->get_name() == "tag") continue;
             if (e->get_name() == "nd") {
-                nodes.push_back(e->get_attribute_value("ref"));
+                string nID = e->get_attribute_value("ref");
+                if (invalidIDs.count(nID)) continue;
+                nodes.push_back(nID);
                 continue;
             }
             cout << " OSMWay::OSMWay, unhandled element: " << e->get_name() << endl;
@@ -71,14 +73,16 @@ OSMWay::OSMWay(xmlpp::Element* el) : OSMBase(el) {
     }
 }
 
-OSMRelation::OSMRelation(xmlpp::Element* el) : OSMBase(el) {
+OSMRelation::OSMRelation(xmlpp::Element* el, map<string, bool>& invalidIDs) : OSMBase(el) {
     for(xmlpp::Node* n : el->get_children()) {
         if (auto e = dynamic_cast<xmlpp::Element*>(n)) {
             if (e->get_name() == "tag") continue;
             if (e->get_name() == "member") {
                 string type = e->get_attribute_value("type");
-                if (type == "way") ways.push_back(e->get_attribute_value("ref"));
-                if (type == "node") nodes.push_back(e->get_attribute_value("ref"));
+                string eID = e->get_attribute_value("ref");
+                if (invalidIDs.count(eID)) continue;
+                if (type == "way") ways.push_back(eID);
+                if (type == "node") nodes.push_back(eID);
                 continue;
             }
             cout << " OSMRelation::OSMRelation, unhandled element: " << e->get_name() << endl;
@@ -96,6 +100,16 @@ void OSMMap::clear() {
     nodes.clear();
 }
 
+bool OSMMap::isValid(xmlpp::Element* e) {
+    if (e->get_attribute("action")) {
+        if (e->get_attribute_value("action") == "delete") {
+            invalidElements[e->get_attribute_value("id")] = true;
+            return false;
+        }
+    }
+    return true;
+};
+
 void OSMMap::readFile(string path) {
     filepath = path;
     bounds = Boundingbox::create();
@@ -107,18 +121,31 @@ void OSMMap::readFile(string path) {
     auto data = parser.get_document()->get_root_node()->get_children();
     for (auto enode : data) {
         if (auto element = dynamic_cast<xmlpp::Element*>(enode)) {
-            if (element->get_attribute("timestamp")) continue; // change list, ignore
+            if (!isValid(element)) continue;
             if (element->get_name() == "node") { readNode(element); continue; }
-            if (element->get_name() == "way") { readWay(element); continue; }
             if (element->get_name() == "bounds") { readBounds(element); continue; }
-            if (element->get_name() == "relation") { readRelation(element); continue; }
-            cout << " OSMMap::readFile, unhandled element: " << element->get_name() << endl;
+            //cout << " OSMMap::readFile, unhandled element: " << element->get_name() << endl;
+        }
+    }
+    for (auto enode : data) {
+        if (auto element = dynamic_cast<xmlpp::Element*>(enode)) {
+            if (!isValid(element)) continue;
+            if (element->get_name() == "way") { readWay(element, invalidElements); continue; }
+            //cout << " OSMMap::readFile, unhandled element: " << element->get_name() << endl;
+        }
+    }
+    for (auto enode : data) {
+        if (auto element = dynamic_cast<xmlpp::Element*>(enode)) {
+            if (!isValid(element)) continue;
+            if (element->get_name() == "relation") { readRelation(element, invalidElements); continue; }
+            //cout << " OSMMap::readFile, unhandled element: " << element->get_name() << endl;
         }
     }
 
     for (auto way : ways) {
         for (auto nID : way.second->nodes) {
             auto n = getNode(nID);
+            if (!n) { cout << " Error in OSMMap::readFile: no node with ID " << nID << endl; continue; }
             way.second->polygon.addPoint(Vec2d(n->lon, n->lat));
             n->ways.push_back(way.second->id);
         }
@@ -139,13 +166,13 @@ void OSMMap::readNode(xmlpp::Element* element) {
     nodes[node->id] = node;
 }
 
-void OSMMap::readWay(xmlpp::Element* element) {
-    OSMWayPtr way = OSMWayPtr( new OSMWay(element) );
+void OSMMap::readWay(xmlpp::Element* element, map<string, bool>& invalidIDs) {
+    OSMWayPtr way = OSMWayPtr( new OSMWay(element, invalidIDs) );
     ways[way->id] = way;
 }
 
-void OSMMap::readRelation(xmlpp::Element* element) {
-    OSMRelationPtr rel = OSMRelationPtr( new OSMRelation(element) );
+void OSMMap::readRelation(xmlpp::Element* element, map<string, bool>& invalidIDs) {
+    OSMRelationPtr rel = OSMRelationPtr( new OSMRelation(element, invalidIDs) );
     relations[rel->id] = rel;
 }
 

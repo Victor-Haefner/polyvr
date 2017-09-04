@@ -167,7 +167,7 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
         p.addPoint( pose(p2, normalsIn[i  ]) );
         p.compute(16);
 
-        for (auto t : p.computeInflectionPoints(0,0,0.2, Vec3i(1,0,1))) { // add inflection points
+        for (auto t : p.computeInflectionPoints(0, 0, 0.2, 0.1, Vec3i(1,0,1))) { // add inflection points
             auto pnt = p.getPose(t);
             Vec3d n = pnt->dir(); //n.normalize();
             if (terrain) terrain->projectTangent(n, pnt->pos());

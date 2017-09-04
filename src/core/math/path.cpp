@@ -100,7 +100,7 @@ void path::cubicBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1, Vec3d h0, Ve
     }
 }
 
-vector<double> path::computeInflectionPoints(int i, int j, float threshold, Vec3i axis) { // first and second derivative are parallel
+vector<double> path::computeInflectionPoints(int i, int j, float threshold, float accelerationThreshold, Vec3i axis) { // first and second derivative are parallel
     if (j <= i) j = size()-1;
     vector<double> res;
     for (auto k=i+1; k<=j; k++) {
@@ -132,10 +132,12 @@ vector<double> path::computeInflectionPoints(int i, int j, float threshold, Vec3
         if (axis[2]) for (int k=0; k < ez.solve(t[0],t[1],t[3]) ;k++) T.push_back(t[k]);
 
         for (auto t : T) {
-            Vec3d Vt = (A*t*t+B*t*2+C)*3;
-            Vec3d At = (A*t+B)*6;
             if (t <= threshold || t >= 1-threshold) continue;
-            //if (abs(Vt.dot(At)) > 1e-9) continue;
+            if (accelerationThreshold != 0) {
+                //Vec3d Vt = A*t*t*3 + B*t*2 + C;
+                Vec3d At = A*t*6 + B*2;
+                if (At.length() < accelerationThreshold) continue;
+            }
             bool b = true;
             for (auto r : res) if (abs(r-t) < threshold) { b = false; break; }
             if (b) res.push_back(t);
