@@ -99,18 +99,29 @@ void VRRoadIntersection::computeLanes() {
             int Nin = roadIn->getAllEntities("lanes").size();
             int Nout = roadOut->getAllEntities("lanes").size();
             auto nodes1 = laneIn->getEntity("path")->getAllEntities("nodes");
+            auto nodes2 = laneOut->getEntity("path")->getAllEntities("nodes");
             VREntityPtr nodeEnt1 = *nodes1.rbegin();
-            VREntityPtr nodeEnt2 = laneOut->getEntity("path")->getAllEntities("nodes")[0];
+            VREntityPtr nodeEnt2 = nodes2[0];
             Vec3d X = nodeEnt2->getEntity("node")->getVec3("position") - nodeEnt1->getEntity("node")->getVec3("position");
             float D = X.length();
 
             if (Nin >= Nout) {
-                nodeEnt1->set("node", nodeEnt2->getValue<string>("node", ""));
+                auto node1 = nodes1[nodes1.size()-2]->getEntity("node");
+                auto norm1 = nodes1[nodes1.size()-2]->getVec3("direction");
+                auto node2 = nodeEnt2->getEntity("node");
+                auto norm2 = nodeEnt2->getVec3("direction");
+                nodeEnt1->set("node", node2->getName());
                 if (D > 0) displacements[roadIn] = X;
+                world->getRoadNetwork()->connectGraph({node1,node2}, {norm1,norm2});
             }
             if (Nin < Nout) {
-                nodeEnt2->set("node", nodeEnt1->getValue<string>("node", ""));
+                auto node1 = nodeEnt1->getEntity("node");
+                auto norm1 = nodeEnt1->getVec3("direction");
+                auto node2 = nodes2[1]->getEntity("node");
+                auto norm2 = nodes2[1]->getVec3("direction");
+                nodeEnt2->set("node", node1->getName());
                 if (D > 0) displacements[roadOut] = -X;
+                world->getRoadNetwork()->connectGraph({node1,node2}, {norm1,norm2});
             }
 
             processedLanes[laneIn] = true;
