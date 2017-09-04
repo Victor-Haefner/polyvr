@@ -447,7 +447,7 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
             bool parallel12 = bool(getRoadConnectionAngle(roads[1], roads[2]) < -0.5);
             bool parallel02 = bool(getRoadConnectionAngle(roads[2], roads[0]) < -0.5);
             if (parallel01 && parallel12 || parallel01 && parallel02 || parallel12 && parallel02) type = FORK;
-            type = FORK;
+            //type = FORK;
         }
 
         auto entity = getEntity();
