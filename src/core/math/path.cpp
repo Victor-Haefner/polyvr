@@ -180,7 +180,7 @@ void path::approximate(int d) {
 			else {
                 //auto Tvec = computeInflectionPoints(j-1,j,0.01,Vec3i(1,0,1));
                 //auto Tvec = computeInflectionPoints(j-1,j,0.01);
-                auto Tvec = computeInflectionPoints(j-1,j);
+                auto Tvec = computeInflectionPoints(j-1,j,1e-4, 0.1);
                 if (Tvec.size() == 0) Tvec = {0.5};
 
                 vector<pose> poses;

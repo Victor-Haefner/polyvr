@@ -80,9 +80,11 @@ void VRAsphalt::addPath(pathPtr path, int rID, float width, int dashN, float off
     int iNpnts = i;
     i += 2;
 
+    int N0 = path->getPoints().size()*0.5;
     path->approximate(2);
     auto pnts = path->getPoints();
     int N = (pnts.size()-1)*0.5;
+    dashN = (dashN*N0)/N; // fix dashN if approximate generates more points than initially
 
     for (int j = 0; j<N; j++) {// p1,p2,p3
         Vec3d P0 = pnts[2*j].pos();

@@ -211,7 +211,7 @@ VRTreePtr VRNature::createTree(string type, Vec3d p) {
 }
 
 VRTreePtr VRNature::createBush(string type, Vec3d p) {
-    cout << " - - - VRNature::createBush " << type << " p " << p << endl;
+    //cout << " - - - VRNature::createBush " << type << " p " << p << endl;
     if (!bushTemplates.count(type)) return 0;
     auto t = dynamic_pointer_cast<VRTree>(bushTemplates[type]->duplicate());
     if (!t) return 0;
