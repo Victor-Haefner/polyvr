@@ -173,10 +173,11 @@ void VRView::setDecorators() {//set decorators, only if projection true
         float h = proj_size[1];
         Vec3d x = proj_normal.cross(proj_up);
 
-        screenLowerLeft = Pnt3f(proj_center - proj_up*h*(0.5+proj_warp[1]+proj_shear[1]) + x*w*(0.5-proj_warp[0]+proj_shear[0]));
-        screenLowerRight = Pnt3f(proj_center - proj_up*h*(0.5-proj_warp[1]-proj_shear[1]) - x*w*(0.5-proj_warp[0]-proj_shear[0]));
-        screenUpperRight = Pnt3f(proj_center + proj_up*h*(0.5-proj_warp[1]+proj_shear[1]) - x*w*(0.5+proj_warp[0]+proj_shear[0]));
-        screenUpperLeft = Pnt3f(proj_center + proj_up*h*(0.5+proj_warp[1]-proj_shear[1]) + x*w*(0.5+proj_warp[0]-proj_shear[0]));
+        screenLowerLeft = Pnt3f(offset + proj_center - proj_up*h*(0.5+proj_warp[1]+proj_shear[1]) + x*w*(0.5-proj_warp[0]+proj_shear[0]));
+        screenLowerRight = Pnt3f(offset + proj_center - proj_up*h*(0.5-proj_warp[1]-proj_shear[1]) - x*w*(0.5-proj_warp[0]-proj_shear[0]));
+        screenUpperRight = Pnt3f(offset + proj_center + proj_up*h*(0.5-proj_warp[1]+proj_shear[1]) - x*w*(0.5+proj_warp[0]+proj_shear[0]));
+        screenUpperLeft = Pnt3f(offset + proj_center + proj_up*h*(0.5+proj_warp[1]-proj_shear[1]) + x*w*(0.5+proj_warp[0]-proj_shear[0]));
+        if (getUser()) getUser()->setFrom(offset + proj_user);
     } else {
         screenLowerLeft = Pnt3f(-1,-0.6, -1);
         screenLowerRight = Pnt3f(1,-0.6, -1);
@@ -444,6 +445,8 @@ void VRView::setCam() {
 void VRView::setBackground(BackgroundRecPtr bg) { background = bg; update(); }
 void VRView::setWindow(WindowRecPtr win) { window = win; update(); }
 
+void VRView::setOffset(Vec3d o) { offset = o; update(); }
+
 void VRView::setWindow() {
     if (window == 0) return;
     if (lView) window->addPort(lView);
@@ -566,7 +569,6 @@ void VRView::load(xmlpp::Element* node) {
         user = VRSetup::getCurrent()->getTracker(user_name);
     }
 
-    dummy_user->setFrom(proj_user);
     showStats(doStats);
     update();
 }
@@ -595,18 +597,6 @@ Vec2d VRView::getProjectionWarp() { return proj_warp; }
 
 void VRView::setProjectionUser(Vec3d v) {
     proj_user = v; update();
-
-    cout << "VRView::setProjectionUser\n";
-    /*setViewports();
-    setDecorators();
-    setCam();
-    setRoot();*/
-    //setUser();
-    /*setWindow();
-    setBG();
-    swapEyes(eyeinverted);
-    setStereoEyeSeparation(eyeSeparation);
-    setMaterial();*/
 }
 Vec3d VRView::getProjectionUser() { return proj_user; }
 

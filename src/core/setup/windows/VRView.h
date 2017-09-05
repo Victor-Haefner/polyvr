@@ -52,6 +52,8 @@ class VRView : public std::enable_shared_from_this<VRView> {
         //ShearedStereoCameraDecoratorPtr SSCDecoratorLeft;
         //ShearedStereoCameraDecoratorPtr SSCDecoratorRight;
 
+        Vec3d offset;
+
         Vec3d proj_user = Vec3d(0,0,0);
         Vec3d proj_center = Vec3d(0,0,-1);
         Vec3d proj_up = Vec3d(0,1,0);
@@ -115,6 +117,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         void setStereo(bool b);
         void setStereoEyeSeparation(float v);
         void setProjection(bool b);
+        void setOffset(Vec3d);
 
         VRTransformPtr getUser();
         VRCameraPtr getCamera();

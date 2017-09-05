@@ -204,6 +204,12 @@ void VRSetup::printOSG() {
     }
 }
 
+Vec3d VRSetup::getDisplaysOffset() { return globalOffset; }
+void VRSetup::setDisplaysOffset(Vec3d o) {
+    globalOffset = o;
+    for (auto v : getViews()) v->setOffset(o);
+}
+
 void VRSetup::save(string file) {
     xmlpp::Document doc;
     xmlpp::Element* setupN = doc.create_root_node("Setup", "", "VRF"); //name, ns_uri, ns_prefix
@@ -219,6 +225,7 @@ void VRSetup::save(string file) {
     ART::save(trackingARTN);
     VRPN::save(trackingVRPNN);
     network->save(networkN);
+    displayN->set_attribute("globalOffset", toString(globalOffset).c_str());
 
     if (file == "") file = path;
     if (file != "") doc.write_to_file_formatted(file);
@@ -245,6 +252,11 @@ void VRSetup::load(string file) {
     if (deviceN) VRDeviceManager::load(deviceN);
     if (displayN) VRWindowManager::load(displayN);
     if (networkN) network->load(networkN);
+
+    if (displayN && displayN->get_attribute("globalOffset")) {
+        toValue( displayN->get_attribute("globalOffset")->get_value(), globalOffset );
+        setDisplaysOffset(globalOffset);
+    }
 }
 
 OSG_END_NAMESPACE;

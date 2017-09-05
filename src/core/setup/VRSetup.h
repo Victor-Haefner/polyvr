@@ -27,6 +27,7 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         string cfgfile;
         string tracking;
         string path;
+        Vec3d globalOffset;
 
         //map<string, VRScriptPtr> scripts;
 
@@ -81,6 +82,9 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         void load(string file);
 
 
+
+        Vec3d getDisplaysOffset();
+        void setDisplaysOffset(Vec3d o);
 
         void setupLESCCAVELights(VRScenePtr scene); // TODO: temporary until scripts for VRSetup implemented!
 };

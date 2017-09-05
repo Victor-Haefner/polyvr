@@ -1,6 +1,7 @@
 #include "VRWorldGenerator.h"
 #include "GIS/OSMMap.h"
 #include "terrain/VRPlanet.h"
+#include "roads/VRAsphalt.h"
 #include "roads/VRRoad.h"
 #include "roads/VRRoadNetwork.h"
 #include "nature/VRNature.h"
@@ -13,6 +14,7 @@
 #include "core/scene/VRObjectManager.h"
 #include "core/utils/toString.h"
 #include "core/math/path.h"
+#include "core/math/triangulator.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
 
 #define GLSL(shader) #shader
@@ -347,19 +349,17 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             }
 
             if (tag.first == "landuse") { // TODO
-                auto p = wayToPolygon(way);
-
-                /*Triangulator tri;
-                tri.add(*p);
-                auto ground = tri.compute();
-                ground->translate(median);
-                VRTextureGenerator tg;
-                tg.addSimpleNoise( Vec3i(128,128,1), true, Color4f(0.85,0.8,0.75,1), Color4f(0.5,0.3,0,1) );
-                auto mat = VRMaterial::create("earth");
-                mat->setTexture(tg.compose());
-                ground->setMaterial(mat);
-                ground->setPositionalTexCoords(1.0, 0, Vec3i(0,2,1));
-                addChild(ground);*/
+                auto patch = VRGeometry::create("patch");
+                auto poly = wayToPolygon(way);
+                for (auto p : poly->gridSplit(1)) {
+                    if (terrain) terrain->elevatePolygon(p, 0.001);
+                    Triangulator tri;
+                    tri.add(*p);
+                    patch->merge( tri.compute() );
+                }
+                patch->setMaterial(roads->getMaterial());
+                patch->setPositionalTexCoords(1.0, 0, Vec3i(0,2,1));
+                addChild(patch);
             }
         }
     }

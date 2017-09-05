@@ -73,6 +73,7 @@ void VRGuiSetup::closeAllExpander() {
     setExpanderSensitivity("expander24", false);
     setExpanderSensitivity("expander25", false);
     setExpanderSensitivity("expander26", false);
+    setExpanderSensitivity("expander28", false);
 }
 
 void VRGuiSetup::updateObjectData() {
@@ -218,6 +219,14 @@ void VRGuiSetup::updateObjectData() {
             setExpanderSensitivity("expander7", true);
             setTextEntry("entry13", toString(setup->getVRPNPort()));
             setCheckButton("checkbutton25", setup->getVRPNActive());
+        }
+
+        if (selected_name == "Displays") {
+            setExpanderSensitivity("expander28", true);
+            Vec3d o = setup->getDisplaysOffset();
+            setTextEntry("entry29", toString(o[0]));
+            setTextEntry("entry30", toString(o[1]));
+            setTextEntry("entry31", toString(o[2]));
         }
     }
 
@@ -696,7 +705,6 @@ void VRGuiSetup::on_proj_user_edit(Vec3d v) {
 
     VRView* view = (VRView*)selected_object;
     view->setProjectionUser(v);
-    if (view->getUser()) view->getUser()->setFrom(v);
     setToolButtonSensitivity("toolbutton12", true);
 }
 
@@ -800,6 +808,17 @@ void VRGuiSetup::on_art_edit_port() {
     if (!setup) return;
     int p = toInt(getTextEntry("entry39"));
     setup->setARTPort(p);
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_displays_edit_offset() {
+    if (guard) return;
+    auto setup = current_setup.lock();
+    if (!setup) return;
+    float ox = toFloat(getTextEntry("entry29"));
+    float oy = toFloat(getTextEntry("entry30"));
+    float oz = toFloat(getTextEntry("entry31"));
+    setup->setDisplaysOffset(Vec3d(ox,oy,oz));
     setToolButtonSensitivity("toolbutton12", true);
 }
 
@@ -993,6 +1012,9 @@ VRGuiSetup::VRGuiSetup() {
     setEntryCallback("entry48", sigc::mem_fun(*this, &VRGuiSetup::on_art_edit_offset) );
     setEntryCallback("entry62", sigc::mem_fun(*this, &VRGuiSetup::on_art_edit_offset) );
     setEntryCallback("entry63", sigc::mem_fun(*this, &VRGuiSetup::on_art_edit_offset) );
+    setEntryCallback("entry29", sigc::mem_fun(*this, &VRGuiSetup::on_displays_edit_offset) );
+    setEntryCallback("entry30", sigc::mem_fun(*this, &VRGuiSetup::on_displays_edit_offset) );
+    setEntryCallback("entry31", sigc::mem_fun(*this, &VRGuiSetup::on_displays_edit_offset) );
     setEntryCallback("entry8", sigc::mem_fun(*this, &VRGuiSetup::on_haptic_ip_edited) );
     setEntryCallback("entry15", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_edited) );
     setEntryCallback("entry20", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_edited) );

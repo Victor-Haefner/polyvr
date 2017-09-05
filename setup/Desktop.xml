@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Setup>
-  <Displays>
-    <Window active="1" type="2" width="1317" height="848" name="screen" mouse="mouse" keyboard="keyboard">
-      <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0.5 -1" normal="0 0 1" user_pos="0 0 0" up="0 1 0" size="2 1" shear="0 0" warp="0 0" vsize="1317 848" user=""/>
+  <Displays globalOffset="0 0 0">
+    <Window active="1" type="2" width="1317" height="748" name="screen" mouse="mouse" keyboard="keyboard">
+      <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0.5 -1" normal="0 0 1" user_pos="0 0 0" up="0 1 0" size="2 1" shear="0 0" warp="0 0" vsize="1317 748" user=""/>
     </Window>
   </Displays>
   <Devices>
@@ -11,7 +11,7 @@
     <Device base_name="server1" name="server1" name_space="__global__" name_suffix="0" persistency="666" type="server" unique="1"/>
   </Devices>
   <TrackingART active="0" offset="0 0 0" persistency="666" port="5000" up=""/>
-  <TrackingVRPN active="1" persistency="666" port="3883"/>
+  <TrackingVRPN active="1" persistency="666" port="3883" verbose="0"/>
   <Network base_name="Network" name_space="Manager" name_suffix="0" persistency="666" unique="1"/>
   <Scripts/>
 </Setup>
