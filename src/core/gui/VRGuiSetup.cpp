@@ -146,9 +146,7 @@ void VRGuiSetup::updateObjectData() {
         setTextEntry("entry12", toString(view->getEyeSeparation()).c_str());
         setCombobox("combobox18", getListStorePos("user_list", view->getUser()->getName()));
 
-        Vec3d p3 = view->getProjectionUser();
-        if (view->getUser()) p3 = view->getUser()->getFrom();
-        userEntry.set(p3);
+        userEntry.set(view->getProjectionUser());
         centerEntry.set(view->getProjectionCenter());
         normalEntry.set(view->getProjectionNormal());
         upEntry.set(view->getProjectionUp());

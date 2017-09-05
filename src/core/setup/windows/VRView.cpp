@@ -177,7 +177,7 @@ void VRView::setDecorators() {//set decorators, only if projection true
         screenLowerRight = Pnt3f(offset + proj_center - proj_up*h*(0.5-proj_warp[1]-proj_shear[1]) - x*w*(0.5-proj_warp[0]-proj_shear[0]));
         screenUpperRight = Pnt3f(offset + proj_center + proj_up*h*(0.5-proj_warp[1]+proj_shear[1]) - x*w*(0.5+proj_warp[0]+proj_shear[0]));
         screenUpperLeft = Pnt3f(offset + proj_center + proj_up*h*(0.5+proj_warp[1]-proj_shear[1]) + x*w*(0.5+proj_warp[0]-proj_shear[0]));
-        if (getUser()) getUser()->setFrom(offset + proj_user);
+        if (getUser()) getUser()->setFrom(proj_user);
     } else {
         screenLowerLeft = Pnt3f(-1,-0.6, -1);
         screenLowerRight = Pnt3f(1,-0.6, -1);
@@ -595,9 +595,7 @@ Vec2d VRView::getProjectionShear() { return proj_shear; }
 void VRView::setProjectionWarp(Vec2d v) { proj_warp = v; update(); }
 Vec2d VRView::getProjectionWarp() { return proj_warp; }
 
-void VRView::setProjectionUser(Vec3d v) {
-    proj_user = v; update();
-}
+void VRView::setProjectionUser(Vec3d v) { proj_user = v; update(); }
 Vec3d VRView::getProjectionUser() { return proj_user; }
 
 OSG_END_NAMESPACE;
