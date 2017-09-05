@@ -345,7 +345,7 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
     return true;
 }
 
-double VRTerrain::getHeight(const Vec2d& p) {
+double VRTerrain::getHeight(const Vec2d& p, bool useEmbankments) {
     int W = tex->getSize()[0]-1;
     int H = tex->getSize()[1]-1;
 
@@ -373,10 +373,12 @@ double VRTerrain::getHeight(const Vec2d& p) {
     double u = uv[0]-i;
     double v = uv[1]-j;
     double h = ( h00*(1-u) + h10*u )*(1-v) + ( h01*(1-u) + h11*u )*v;
-    for (auto e : embankments) {
-        if (e.second->isInside(p)) {
-            double k = e.second->getHeight(p);
-            if (k > h) h = k;
+    if (useEmbankments) {
+        for (auto e : embankments) {
+            if (e.second->isInside(p)) {
+                double k = e.second->getHeight(p);
+                if (k > h) h = k;
+            }
         }
     }
     return h;
@@ -384,7 +386,7 @@ double VRTerrain::getHeight(const Vec2d& p) {
 
 void VRTerrain::elevateObject(VRTransformPtr t, float offset) { auto p = t->getFrom(); elevatePoint(p, offset); t->setFrom(p); }
 void VRTerrain::elevatePose(posePtr p, float offset) { auto P = p->pos(); elevatePoint(P, offset); p->setPos(P); }
-void VRTerrain::elevatePoint(Vec3d& p, float offset) { p[1] = getHeight(Vec2d(p[0], p[2])) + offset; }
+void VRTerrain::elevatePoint(Vec3d& p, float offset, bool useEmbankments) { p[1] = getHeight(Vec2d(p[0], p[2]), useEmbankments) + offset; }
 
 void VRTerrain::elevateVertices(VRGeometryPtr geo, float offset) {
     if (!terrain) return;
@@ -397,10 +399,10 @@ void VRTerrain::elevateVertices(VRGeometryPtr geo, float offset) {
     }
 }
 
-void VRTerrain::elevatePolygon(VRPolygonPtr poly, float offset) {
+void VRTerrain::elevatePolygon(VRPolygonPtr poly, float offset, bool useEmbankments) {
     for (auto p2 : poly->get()) {
         Vec3d p3(p2[0], 0, p2[1]);
-        elevatePoint(p3, offset);
+        elevatePoint(p3, offset, useEmbankments);
         poly->addPoint(p3);
     }
     poly->get().clear();

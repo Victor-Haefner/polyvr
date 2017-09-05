@@ -352,7 +352,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                 auto patch = VRGeometry::create("patch");
                 auto poly = wayToPolygon(way);
                 for (auto p : poly->gridSplit(1)) {
-                    if (terrain) terrain->elevatePolygon(p, 0.001);
+                    if (terrain) terrain->elevatePolygon(p, 0.03, false);
                     Triangulator tri;
                     tri.add(*p);
                     patch->merge( tri.compute() );

@@ -236,7 +236,7 @@ void VRNature::simpleInit(int treeTypes, int bushTypes) {
 		t->addBranching(1,4, 0.2,0.4,0.6*l0,r0*pow(0.3,3), 0.2,0.4,0.2,0.2);
 		t->addBranching(1,4, 0.2,0.4,0.5*l0,r0*pow(0.3,4), 0.2,0.4,0.2,0.2);
 		t->grow( int(rand()*100.0/RAND_MAX) );
-		t->addLeafs(4, 30);
+		t->addLeafs(4, 20, 0.04);
 		return t;
     };
 
@@ -247,7 +247,7 @@ void VRNature::simpleInit(int treeTypes, int bushTypes) {
 		t->addBranching(1,4, 0.2,0.4,0.2,0.004, 0.2,0.4,0.2,0.2);
 		t->addBranching(1,4, 0.2,0.4,0.2,0.0004, 0.2,0.4,0.2,0.2);
 		t->grow( int(rand()*100.0/RAND_MAX) );
-		t->addLeafs(3, 5, 0.05);
+		t->addLeafs(3, 4, 0.06);
 		return t;
     };
 
