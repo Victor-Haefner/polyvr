@@ -555,7 +555,7 @@ void VRRoadNetwork::computeLanes() {
     cout << "VRRoadNetwork::computeLanes\n";
     for (auto road : world->getOntology()->getEntities("Road")) computeLanePaths(road);
     for (auto intersection : intersections) {
-        intersection->computeLanes();
+        intersection->computeLanes(graph);
         intersection->computeTrafficLights();
     }
 }

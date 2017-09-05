@@ -18,7 +18,7 @@ VRRoadIntersection::~VRRoadIntersection() {}
 
 VRRoadIntersectionPtr VRRoadIntersection::create() { return VRRoadIntersectionPtr( new VRRoadIntersection() ); }
 
-void VRRoadIntersection::computeLanes() {
+void VRRoadIntersection::computeLanes(GraphPtr graph) {
 	VREntityPtr node = entity->getEntity("node");
 	if (!node) { cout << "Warning in VRRoadNetwork::computeIntersectionLanes, intersection node is NULL!" << endl; return; }
 	string iN = entity->getName();
@@ -149,6 +149,7 @@ void VRRoadIntersection::computeLanes() {
                     auto p = node->getVec3("position");
                     p += X;
                     node->setVec3("position", p, "Position");
+                    graph->setPosition(node->getValue<int>("graphID", 0), pose::create(p));
                 }
             }
 
@@ -159,6 +160,7 @@ void VRRoadIntersection::computeLanes() {
                     auto p = node->getVec3("position");
                     p += X;
                     node->setVec3("position", p, "Position");
+                    graph->setPosition(node->getValue<int>("graphID", 0), pose::create(p));
                 }
             }
 

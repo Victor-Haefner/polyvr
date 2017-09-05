@@ -177,6 +177,7 @@ void VRRoad::addParkingLane( int direction, float width, int capacity, string ty
 	l->set("direction", toString(direction));
 	entity->add("lanes", l->getName());
 	l->set("road", entity->getName());
+	l->set("capacity", toString(capacity));
 }
 
 void VRRoad::setOffset(float o) { offset = o; }
