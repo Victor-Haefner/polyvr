@@ -150,8 +150,11 @@ void VRTransform::updateTransformation() {
         disableCore();
     }
 
-    auto sw = VRScene::getCurrent()->getSpaceWarper();
-    if (sw) sw->warp(m);
+    auto scene = VRScene::getCurrent();
+    if (scene) {
+        auto sw = scene->getSpaceWarper();
+        if (sw) sw->warp(m);
+    }
     t->trans->setMatrix(toMatrix4f(m));
 }
 

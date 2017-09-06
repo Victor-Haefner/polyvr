@@ -114,7 +114,7 @@ void VRRoad::computeMarkings() {
     int Nlanes = lanes.size();
 
     auto add = [&](Vec3d pos, Vec3d n) {
-        if (terrain) terrain->elevatePoint(pos);
+        if (terrain) terrain->elevatePoint(pos, 0.06);
         if (terrain) terrain->projectTangent(n, pos);
         nodes.push_back(addNode(0, pos));
         normals.push_back(n);
