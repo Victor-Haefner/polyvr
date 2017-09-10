@@ -3,6 +3,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRPrimitive.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRConstraint.h"
 #include "core/utils/VRVisualLayer.h"
@@ -13,6 +14,7 @@
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <BulletCollision/CollisionShapes/btShapeHull.h>
 #include <BulletCollision/CollisionShapes/btCompoundShape.h>
+#include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
 #include <BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h>
 #include <BulletSoftBody/btSoftBodyHelpers.h>
 #include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
@@ -372,9 +374,14 @@ void VRPhysics::update() {
     scene->physicalize(vr_obj.lock());
     updateConstraints();
 
-    visShape = OSG::VRGeometry::create("phys_shape");
-    updateVisualGeo();
-    scene->getVisualLayer()->addObject(visShape);
+    if (!visShape) {
+        visShape = OSG::VRGeometry::create("phys_shape");
+        auto scene = OSG::VRScene::getCurrent();
+        scene->getVisualLayer()->addObject(visShape);
+    }
+
+    //if (visShape->isVisible())
+    updateVisualGeo(); // TODO: only when the visuallayer toggles, maybe a callback somewhere??
 }
 
 void VRPhysics::setCollisionCallback(CallbackPtr cb) { callback = cb; useCallbacks = true; update(); }
@@ -755,7 +762,30 @@ btCollisionShape* VRPhysics::getHACDShape() {
 
 void VRPhysics::setCustomShape(btCollisionShape* shape) { customShape = shape; physicsShape = "Custom"; }
 
-OSG::VRTransformPtr VRPhysics::getVisualShape() { return visShape; }
+OSG::VRTransformPtr VRPhysics::getVisualShape() {
+    if (!visShape) {
+        visShape = OSG::VRGeometry::create("phys_shape");
+        auto scene = OSG::VRScene::getCurrent();
+        scene->getVisualLayer()->addObject(visShape);
+        updateVisualGeo();
+    }
+    return visShape;
+}
+
+class heightData : public btTriangleCallback {
+    public:
+        ~heightData() {};
+
+        void processTriangle(btVector3* triangle, int partId, int triangleIndex) {
+            //cout << " --- processTriangle v1 " << VRPhysics::toVec3d(triangle[0]) << " v2 " << VRPhysics::toVec3d(triangle[1]) << " v3 " << VRPhysics::toVec3d(triangle[2]) << endl;
+            data.pushVert(VRPhysics::toVec3d(triangle[0]));
+            data.pushVert(VRPhysics::toVec3d(triangle[1]));
+            data.pushVert(VRPhysics::toVec3d(triangle[2]));
+            data.pushTri();
+        }
+
+        OSG::VRGeoData data;
+};
 
 void VRPhysics::updateVisualGeo() {
     auto geo = visShape;
@@ -763,11 +793,13 @@ void VRPhysics::updateVisualGeo() {
     btCollisionShape* shape = getCollisionShape();
     if (!shape) return;
     int stype = shape->getShapeType();
+    if (physicsShape == "Custom") cout << " ---------- VRPhysics::updateVisualGeo " << stype << " " << physicsShape << endl;
 
     // 0 : box
     // 4 : convex
     // 8 : sphere
-    // 21 : concave
+    // 21 : trianglemesh
+    // 24 : heightmap
     // 31 : compound
 
     if (stype == 8) { // sphere
@@ -797,26 +829,63 @@ void VRPhysics::updateVisualGeo() {
 
         int Ni = hull.numIndices();
         int Nv = hull.numVertices();
-        const unsigned int* bt_inds =   hull.getIndexPointer();
+        const unsigned int* bt_inds = hull.getIndexPointer();
         const btVector3* verts = hull.getVertexPointer();
 
-        OSG::GeoPnt3fPropertyRecPtr pos = OSG::GeoPnt3fProperty::create();
-        OSG::GeoVec3fPropertyRecPtr norms = OSG::GeoVec3fProperty::create();
-        OSG::GeoUInt32PropertyRecPtr inds = OSG::GeoUInt32Property::create();
-
-        for (int i=0; i<Ni; i++) inds->addValue( bt_inds[i] );
+        OSG::VRGeoData data;
         for (int i=0; i<Nv; i++) {
             OSG::Vec3d p = VRPhysics::toVec3d(verts[i]);
+            OSG::Vec3d n = p; n.normalize();
             p += CoMOffset;
-            pos->addValue( p );
-            p.normalize();
-            norms->addValue( p );
+            data.pushVert(p,n);
         }
 
-        geo->setType(GL_TRIANGLES);
-        geo->setPositions(pos);
-        geo->setNormals(norms);
-        geo->setIndices(inds);
+        for (int i=0; i<Ni; i+=3) {
+            int i0 = bt_inds[i];
+            int i1 = bt_inds[i+1];
+            int i2 = bt_inds[i+2];
+            data.pushTri(i0,i1,i2);
+        }
+        if (data.size()) data.apply(geo);
+    }
+
+    if (stype == 21) { // trianglemesh, TODO: test it
+        auto tshpe = (btTriangleMesh*)shape;
+        IndexedMeshArray& mesh = tshpe->getIndexedMeshArray();
+        if (mesh.size() == 0) return;
+
+        int Ni = mesh[0].m_numTriangles;
+        int Nv = mesh[0].m_numVertices;
+        unsigned int* bt_inds = (unsigned int*)mesh[0].m_triangleIndexBase;
+        btVector3* verts = (btVector3*)mesh[0].m_vertexBase;
+
+        OSG::VRGeoData data;
+        for (int i=0; i<Nv; i++) {
+            OSG::Vec3d p = VRPhysics::toVec3d(verts[i]);
+            OSG::Vec3d n = p; n.normalize();
+            p += CoMOffset;
+            data.pushVert(p,n);
+        }
+
+        for (int i=0; i<Ni; i+=3) {
+            int i0 = bt_inds[i];
+            int i1 = bt_inds[i+1];
+            int i2 = bt_inds[i+2];
+            data.pushTri(i0,i1,i2);
+        }
+        if (data.size()) data.apply(geo);
+    }
+
+    if (stype == 24) { // heightmap, TODO
+        auto hshpe = dynamic_cast<btHeightfieldTerrainShape*>(shape);
+        float Max = 1e36;
+        btVector3 aabbMin(-Max, -Max, -Max);
+        btVector3 aabbMax(Max, Max, Max);
+
+        heightData hdata;
+        auto scene = OSG::VRScene::getCurrent();
+        hshpe->processAllTriangles(&hdata, aabbMin, aabbMax);
+        hdata.data.apply(geo);
     }
 
     if (stype == 31) { // compound
