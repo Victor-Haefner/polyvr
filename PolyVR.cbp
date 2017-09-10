@@ -825,6 +825,8 @@
 		<Unit filename="src/core/scene/rendering/VRFSAA.h" />
 		<Unit filename="src/core/scene/rendering/VRFXAA.cpp" />
 		<Unit filename="src/core/scene/rendering/VRFXAA.h" />
+		<Unit filename="src/core/scene/rendering/VRFog.cpp" />
+		<Unit filename="src/core/scene/rendering/VRFog.h" />
 		<Unit filename="src/core/scene/rendering/VRHMDDistortion.cpp" />
 		<Unit filename="src/core/scene/rendering/VRHMDDistortion.h" />
 		<Unit filename="src/core/scene/rendering/VRRenderManager.cpp" />

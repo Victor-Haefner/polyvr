@@ -544,6 +544,7 @@ const vec3 light = vec3(-1,-1,-0.5);
 uniform vec2 texelSize;
 uniform int doHeightTextures;
 
+in vec4 pos;
 in float height;
 vec3 norm;
 vec4 color;
@@ -564,9 +565,10 @@ void applyBlinnPhong() {
 	vec4  ambient = gl_LightSource[0].ambient * color;
 	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;
 	float NdotHV = max(dot( norm, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
-	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
+	vec4  specular = 0.25*gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
 	//gl_FragColor = ambient + diffuse + specular;
-	gl_FragColor = diffuse + specular;
+    color = mix(diffuse + specular, vec4(0.5,0.8,1,1), clamp(1e-4*length(pos.xyz), 0.0, 1.0)); // atmospheric effects
+	gl_FragColor = color;
 	gl_FragColor[3] = 1.0;
 	//gl_FragColor = vec4(diffuse.rgb, 1);
 }
@@ -586,6 +588,14 @@ vec3 getNormal() {
 	return n;
 }
 
+void applyBumpMap(vec4 b) {
+    float a = b.g*10;
+    norm += 0.1*vec3(cos(a),0,sin(a));
+    //norm.x += b.r*0.5;
+    //norm.z += (b.g-1.0)*1.0;
+    normalize(norm);
+}
+
 void main( void ) {
 	vec2 tc = gl_TexCoord[0].xy;
 	norm = getNormal();
@@ -597,6 +607,7 @@ void main( void ) {
         vec4 cW3 = texture(texWoods, tc*17);
         vec4 cW4 = texture(texWoods, tc);
         vec4 cW = mix(cW1,mix(cW2,mix(cW3,cW4,0.5),0.5),0.5);
+        applyBumpMap(cW3);
 
         vec4 cG0 = texture(texGravel, tc*10777);
         vec4 cG1 = texture(texGravel, tc*1077);
@@ -608,6 +619,7 @@ void main( void ) {
 	}
 
 	applyBlinnPhong();
+	//gl_FragColor = vec4( norm, 1.0 );
 }
 );
 
@@ -660,6 +672,7 @@ layout( quads ) in;
 in vec3 tcPosition[];
 in vec2 tcTexCoords[];
 out float height;
+out vec4 pos;
 
 uniform float heightScale;
 uniform int channel;
@@ -679,7 +692,8 @@ void main() {
     vec3 tePosition = mix(a, b, v);
     height = heightScale * texture2D(texture, gl_TexCoord[0].xy)[channel];
     tePosition.y = height;
-    gl_Position = gl_ModelViewProjectionMatrix * vec4(tePosition, 1);
+    pos = gl_ModelViewProjectionMatrix * vec4(tePosition, 1);
+    gl_Position = pos;
 }
 );
 
