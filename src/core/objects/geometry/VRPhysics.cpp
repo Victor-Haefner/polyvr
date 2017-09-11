@@ -878,7 +878,8 @@ void VRPhysics::updateVisualGeo() {
     }
 
     if (stype == 24) { // heightmap, TODO
-        auto hshpe = dynamic_cast<btHeightfieldTerrainShape*>(shape);
+        auto hshpe = dynamic_cast<btConcaveShape*>(shape);
+        if (!hshpe) return;
         float Max = 1e36;
         btVector3 aabbMin(-Max, -Max, -Max);
         btVector3 aabbMax(Max, Max, Max);

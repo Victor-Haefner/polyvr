@@ -246,6 +246,9 @@ vector<Vec3d> VRTerrain::probeHeight( Vec2d p ) {
             Vec3d(p1[0], h11, p1[1]) };
 }
 
+VRTexturePtr VRTerrain::getMap() { return tex; }
+Vec2f VRTerrain::getTexelSize() { return texelSize; }
+
 void VRTerrain::btPhysicalize() {
     auto dim = tex->getSize();
     float roadTerrainOffset = 0.03; // also defined in vrroadbase.cpp
@@ -265,6 +268,19 @@ void VRTerrain::btPhysicalize() {
     shape->setLocalScaling(btVector3(texelSize[0],1,texelSize[1]));
     getPhysics()->setCustomShape( shape );
 }
+void VRTerrain::vrPhysicalize() {
+    auto shape = new VRTerrainPhysicsShape( ptr() );
+    getPhysics()->setCustomShape( shape );
+}
+
+void VRTerrain::physicalize(bool b) {
+    if (!tex) return;
+    if (!b) { getPhysics()->setPhysicalized(false); return; }
+
+    //btPhysicalize();
+    vrPhysicalize();
+    getPhysics()->setPhysicalized(true);
+}
 
 Boundingbox VRTerrain::getBoundingBox() {
     Boundingbox bb;
@@ -282,20 +298,6 @@ Boundingbox VRTerrain::getBoundingBox() {
     bb.update( Vec3d( size[0]*0.5, hmax,  size[1]*0.5) );
     bb.update( Vec3d(-size[0]*0.5, hmin, -size[1]*0.5) );
     return bb;
-}
-
-void VRTerrain::vrPhysicalize() {
-    auto shape = new VRTerrainPhysicsShape( ptr() );
-    getPhysics()->setCustomShape( shape );
-}
-
-void VRTerrain::physicalize(bool b) {
-    if (!tex) return;
-    if (!b) { getPhysics()->setPhysicalized(false); return; }
-
-    //btPhysicalize();
-    vrPhysicalize();
-    getPhysics()->setPhysicalized(true);
 }
 
 void VRTerrain::setSimpleNoise() {
