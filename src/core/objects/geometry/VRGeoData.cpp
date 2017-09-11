@@ -293,15 +293,15 @@ void VRGeoData::pushPrim(Primitive p) {
 void VRGeoData::apply(VRGeometryPtr geo, bool check) const {
     if (!geo) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: geometry invalid!" << endl; return; }
     if (!valid() && check) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: data invalid!" << endl; return; }
-    geo->setPositions(data->pos);
-    if (data->lengths->size() > 0) geo->setLengths(data->lengths);
-    if (data->types->size() > 0) geo->setTypes(data->types);
-    if (data->norms->size() > 0) geo->setNormals(data->norms);
-    if (data->indices->size() > 0) geo->setIndices(data->indices);
-    if (data->cols3->size() > 0) geo->setColors(data->cols3);
-    if (data->cols4->size() > 0) geo->setColors(data->cols4);
-    if (data->texs->size() > 0) geo->setTexCoords(data->texs, 0);
-    if (data->texs2->size() > 0) geo->setTexCoords(data->texs2, 1);
+    geo->setPositions( data->pos );
+    geo->setLengths( data->lengths->size() > 0 ? data->lengths : 0 );
+    geo->setTypes( data->types->size() > 0 ? data->types : 0 );
+    geo->setNormals( data->norms->size() > 0 ? data->norms : 0 );
+    geo->setIndices( data->indices->size() > 0 ? data->indices : 0 );
+    geo->setColors( data->cols3->size() > 0 ? data->cols3 : 0 );
+    geo->setColors( data->cols4->size() > 0 ? data->cols4 : 0 );
+    geo->setTexCoords( data->texs->size() > 0 ? data->texs : 0, 0 );
+    geo->setTexCoords( data->texs2->size() > 0 ? data->texs2 : 0, 1 );
 }
 
 void VRGeoData::append(const VRGeoData& geo, const Matrix4d& m) {

@@ -69,7 +69,7 @@ VRScriptPtr VRSetup::getScript(string name) { return scripts[name]; }
 map<string, VRScriptPtr> VRSetup::getScripts() { return scripts; }*/
 
 void setLoadingLights(int dev, int light, float R, float G, float B) {
-    cout << " !!! setLoadingLights " << dev << " " << light << " " << R << " " << G << " " << B << endl;
+    //cout << " !!! setLoadingLights " << dev << " " << light << " " << R << " " << G << " " << B << endl;
     static VRSocket s("cave_lights");
     string data = "device="+toString(dev);
     if (light >= 0) data += "&light="+toString(light);
@@ -78,7 +78,7 @@ void setLoadingLights(int dev, int light, float R, float G, float B) {
 }
 
 void updateLoadingLights(int p) {
-    cout << "updateLoadingLights " << p << endl;
+    //cout << "updateLoadingLights " << p << endl;
     static float lastT = 0;
     if (p == 100) { setLoadingLights(0, -1, 0.5,0.5,0.5); lastT = 0; return; }
 

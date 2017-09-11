@@ -82,6 +82,8 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, Line ray) {
     VRIntersection ins;
     auto tree = wtree.lock();
     if (!tree) return ins;
+    if (!tree->getNode()) return ins;
+    if (!tree->getNode()->node) return ins;
 
     uint now = VRGlobals::CURRENT_FRAME;
 

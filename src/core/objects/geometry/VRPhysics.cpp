@@ -850,8 +850,9 @@ void VRPhysics::updateVisualGeo() {
     }
 
     if (stype == 21) { // trianglemesh, TODO: test it
-        auto tshpe = (btTriangleMesh*)shape;
-        IndexedMeshArray& mesh = tshpe->getIndexedMeshArray();
+        auto tshpe = (btBvhTriangleMeshShape*)shape;
+        auto tmsh = (btTriangleMesh*)tshpe->getMeshInterface();
+        IndexedMeshArray& mesh = tmsh->getIndexedMeshArray();
         if (mesh.size() == 0) return;
 
         int Ni = mesh[0].m_numTriangles;
