@@ -78,7 +78,7 @@ vector<Vec3d> VREmbankment::probeHeight(Vec2d p) { // TODO: optimize!
 
     float h1 = computeHeight(0); // first estimate
     float h2 = computeHeight(h1); // first estimate
-    float h3 = computeHeight(h2); // first estimate
+    computeHeight(h2); // first estimate
     getMaterial()->setWireFrame(1);
     return res;
 }
@@ -388,11 +388,11 @@ double VRTerrain::getHeight(const Vec2d& p, bool useEmbankments) {
         return Vec2d(u,v);
     };
 
-    auto fromUVSpace = [&](Vec2d uv) {
+    /*auto fromUVSpace = [&](Vec2d uv) { // keep for debugging
         double x = ((uv[0])/W-0.5)*size[0];
         double z = ((uv[1])/H-0.5)*size[1];
         return Vec2d(x,z);
-    };
+    };*/
 
     Vec2d uv = toUVSpace(p); // uv, i and j are tested
     int i = round(uv[0]-0.5);
@@ -424,7 +424,7 @@ void VRTerrain::elevatePoint(Vec3d& p, float offset, bool useEmbankments) { p[1]
 void VRTerrain::elevateVertices(VRGeometryPtr geo, float offset) {
     if (!terrain) return;
     GeoPnt3fPropertyRecPtr pos = (GeoPnt3fProperty*)geo->getMesh()->geo->getPositions();
-    for (int i=0; i<pos->size(); i++) {
+    for (uint i=0; i<pos->size(); i++) {
         Pnt3f p;
         pos->getValue(p, i);
         p[1] = getHeight(Vec2d(p[0], p[2])) + offset;
