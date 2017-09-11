@@ -542,6 +542,8 @@
 		<Unit filename="src/addons/WorldGenerator/terrain/VRPyTerrain.h" />
 		<Unit filename="src/addons/WorldGenerator/terrain/VRTerrain.cpp" />
 		<Unit filename="src/addons/WorldGenerator/terrain/VRTerrain.h" />
+		<Unit filename="src/addons/WorldGenerator/terrain/VRTerrainPhysicsShape.cpp" />
+		<Unit filename="src/addons/WorldGenerator/terrain/VRTerrainPhysicsShape.h" />
 		<Unit filename="src/addons/WorldGenerator/traffic/VRTrafficSimulation.cpp" />
 		<Unit filename="src/addons/WorldGenerator/traffic/VRTrafficSimulation.h" />
 		<Unit filename="src/addons/construction/building/VRElectricDevice.cpp" />

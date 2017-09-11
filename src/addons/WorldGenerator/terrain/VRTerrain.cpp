@@ -1,4 +1,5 @@
 #include "VRTerrain.h"
+#include "VRTerrainPhysicsShape.h"
 #include "VRPlanet.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRMaterialT.h"
@@ -110,11 +111,14 @@ void VREmbankment::createGeometry() {
 
 VRTerrain::VRTerrain(string name) : VRGeometry(name) {}
 VRTerrain::~VRTerrain() {}
+
 VRTerrainPtr VRTerrain::create(string name) {
     auto t = VRTerrainPtr( new VRTerrain(name) );
     t->setupMat();
     return t;
 }
+
+VRTerrainPtr VRTerrain::ptr() { return dynamic_pointer_cast<VRTerrain>( shared_from_this() ); }
 
 void VRTerrain::clear() {
     for (auto e : embankments) e.second->destroy();
@@ -242,10 +246,8 @@ vector<Vec3d> VRTerrain::probeHeight( Vec2d p ) {
             Vec3d(p1[0], h11, p1[1]) };
 }
 
-void VRTerrain::physicalize(bool b) {
-    if (!tex) return;
+void VRTerrain::btPhysicalize() {
     auto dim = tex->getSize();
-
     float roadTerrainOffset = 0.03; // also defined in vrroadbase.cpp
 
     double Hmax = -1e6;
@@ -259,11 +261,40 @@ void VRTerrain::physicalize(bool b) {
         }
     }
 
-    //double R = resolution*0.94; // Hack, there is a scaling error somewhere, either in the shape or the visualisation
-    //shape->setLocalScaling(btVector3(R,1,R));
     auto shape = new btHeightfieldTerrainShape(dim[0], dim[1], &(*physicsHeightBuffer)[0], 1, -Hmax, Hmax, 1, PHY_FLOAT, false);
     shape->setLocalScaling(btVector3(texelSize[0],1,texelSize[1]));
     getPhysics()->setCustomShape( shape );
+}
+
+Boundingbox VRTerrain::getBoundingBox() {
+    Boundingbox bb;
+    float hmax = -1e30;
+    float hmin = 1e30;
+
+    for (int i=0; i<tex->getSize()[0]; i++) {
+        for (int j=0; j<tex->getSize()[1]; j++) {
+            auto h = tex->getPixel(Vec3i(i,j,0))[3];
+            if (h < hmin) hmin = h;
+            if (h > hmax) hmax = h;
+        }
+    }
+
+    bb.update( Vec3d( size[0]*0.5, hmax,  size[1]*0.5) );
+    bb.update( Vec3d(-size[0]*0.5, hmin, -size[1]*0.5) );
+    return bb;
+}
+
+void VRTerrain::vrPhysicalize() {
+    auto shape = new VRTerrainPhysicsShape( ptr() );
+    getPhysics()->setCustomShape( shape );
+}
+
+void VRTerrain::physicalize(bool b) {
+    if (!tex) return;
+    if (!b) { getPhysics()->setPhysicalized(false); return; }
+
+    //btPhysicalize();
+    vrPhysicalize();
     getPhysics()->setPhysicalized(true);
 }
 
@@ -567,7 +598,7 @@ void applyBlinnPhong() {
 	float NdotHV = max(dot( norm, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
 	vec4  specular = 0.25*gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
 	//gl_FragColor = ambient + diffuse + specular;
-    color = mix(diffuse + specular, vec4(0.5,0.8,1,1), clamp(1e-4*length(pos.xyz), 0.0, 1.0)); // atmospheric effects
+    color = mix(diffuse + specular, vec4(0.7,0.9,1,1), clamp(1e-4*length(pos.xyz), 0.0, 1.0)); // atmospheric effects
 	gl_FragColor = color;
 	gl_FragColor[3] = 1.0;
 	//gl_FragColor = vec4(diffuse.rgb, 1);

@@ -34,6 +34,7 @@ class pose {
 
         Matrix4d asMatrix() const;
         void invert();
+        Vec3d transform(Vec3d p);
 
         string toString();
 };

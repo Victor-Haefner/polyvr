@@ -51,12 +51,17 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void setupGeo();
         void setupMat();
 
+        void btPhysicalize();
+        void vrPhysicalize();
+
     public:
         VRTerrain(string name);
         ~VRTerrain();
         static VRTerrainPtr create(string name = "terrain");
+        VRTerrainPtr ptr();
 
         void setSimpleNoise();
+        Boundingbox getBoundingBox();
 
         void setParameters( Vec2d size, double resolution, double heightScale );
         void setMap( VRTexturePtr tex, int channel = 3 );

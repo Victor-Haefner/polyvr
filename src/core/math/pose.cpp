@@ -33,6 +33,12 @@ void pose::set(Vec3d p, Vec3d d, Vec3d u) {
     data[2] = u;
 }
 
+Vec3d pose::transform(Vec3d p) {
+    Pnt3d P(p);
+    asMatrix().mult(P,P);
+    return Vec3d(P);
+}
+
 void pose::setPos(Vec3d p) { data[0] = p; }
 void pose::setDir(Vec3d d) { data[1] = d; }
 void pose::setUp(Vec3d u) { data[2] = u; }
