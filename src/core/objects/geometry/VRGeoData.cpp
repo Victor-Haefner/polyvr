@@ -122,6 +122,15 @@ Color4f VRGeoData::getColor(int i) {
     return Color4f();
 }
 
+Color3f VRGeoData::getColor3(int i) {
+    if (int(data->cols3->size()) > i) return data->cols3->getValue(i);
+    if (int(data->cols4->size()) > i) {
+        auto c = data->cols4->getValue(i);
+        return Color3f( c[0], c[1], c[2]);
+    }
+    return Color3f();
+}
+
 int VRGeoData::pushVert(Pnt3d p) { data->pos->addValue(p); return data->pos->size()-1; }
 int VRGeoData::pushVert(Pnt3d p, Vec3d n) { data->norms->addValue(n); return pushVert(p); }
 int VRGeoData::pushVert(Pnt3d p, Vec3d n, Color3f c) { data->cols3->addValue(c); return pushVert(p,n); }
@@ -293,15 +302,18 @@ void VRGeoData::pushPrim(Primitive p) {
 void VRGeoData::apply(VRGeometryPtr geo, bool check) const {
     if (!geo) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: geometry invalid!" << endl; return; }
     if (!valid() && check) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: data invalid!" << endl; return; }
+
     geo->setPositions( data->pos );
     geo->setLengths( data->lengths->size() > 0 ? data->lengths : 0 );
     geo->setTypes( data->types->size() > 0 ? data->types : 0 );
     geo->setNormals( data->norms->size() > 0 ? data->norms : 0 );
     geo->setIndices( data->indices->size() > 0 ? data->indices : 0 );
-    geo->setColors( data->cols3->size() > 0 ? data->cols3 : 0 );
-    geo->setColors( data->cols4->size() > 0 ? data->cols4 : 0 );
     geo->setTexCoords( data->texs->size() > 0 ? data->texs : 0, 0 );
     geo->setTexCoords( data->texs2->size() > 0 ? data->texs2 : 0, 1 );
+
+    GeoVectorProperty* c3 = data->cols3->size() > 0 ? data->cols3 : 0;
+    GeoVectorProperty* c4 = data->cols4->size() > 0 ? data->cols4 : 0;
+    geo->setColors( c3 ? c3 : c4 );
 }
 
 void VRGeoData::append(const VRGeoData& geo, const Matrix4d& m) {
