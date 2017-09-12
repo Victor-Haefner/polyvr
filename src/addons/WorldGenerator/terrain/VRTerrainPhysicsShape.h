@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <OpenSG/OSGConfig.h>
+#include <OpenSG/OSGVector.h>
 #include <BulletCollision/CollisionShapes/btConcaveShape.h>
 
 using namespace std;
@@ -19,15 +20,12 @@ ATTRIBUTE_ALIGNED16(class)  VRTerrainPhysicsShape : public btConcaveShape {
 
         int	m_heightStickWidth;
         int m_heightStickLength;
-        btScalar m_minHeight;
-        btScalar m_maxHeight;
         btScalar m_width;
         btScalar m_length;
-        btScalar m_heightScale;
 
         btVector3 m_localScaling;
-        void quantizeWithClamp(int* out, const btVector3& point) const;
-        void getVertex(int x,int y,btVector3& vertex) const;
+        Vec3i quantizeWithClamp(const btVector3& point) const;
+        btVector3 getVertex(int x, int y) const;
 
     public:
         BT_DECLARE_ALIGNED_ALLOCATOR();

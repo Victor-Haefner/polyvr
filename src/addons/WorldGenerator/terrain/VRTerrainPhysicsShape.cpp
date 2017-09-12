@@ -23,14 +23,11 @@ VRTerrainPhysicsShape::VRTerrainPhysicsShape(VRTerrainPtr terrain) : terrain(ter
 	m_shapeType = TERRAIN_SHAPE_PROXYTYPE;
 	m_heightStickWidth = dim[0];
 	m_heightStickLength = dim[1];
-	m_minHeight = -Hmax;
-	m_maxHeight = Hmax;
 	m_width = (btScalar) (dim[0] - 1);
 	m_length = (btScalar) (dim[1] - 1);
-	m_heightScale = 1;
-	m_localScaling.setValue(btScalar(1.), btScalar(1.), btScalar(1.));
-    m_localAabbMin.setValue(0, m_minHeight, 0);
-    m_localAabbMax.setValue(m_width, m_maxHeight, m_length);
+	m_localScaling.setValue(1,1,1);
+    m_localAabbMin.setValue(0, -Hmax, 0);
+    m_localAabbMax.setValue(m_width, Hmax, m_length);
     /*auto bb = terrain->getBoundingBox();
     m_localAabbMin = VRPhysics::toBtVector3( bb.min() );
     m_localAabbMax = VRPhysics::toBtVector3( bb.max() );
@@ -53,13 +50,16 @@ void VRTerrainPhysicsShape::getAabb(const btTransform& t, btVector3& aabbMin, bt
 
 	aabbMin = center - extent;
 	aabbMax = center + extent;
+	//cout << "VRTerrainPhysicsShape::getAabb " << VRPhysics::toVec3d(halfExtents) << " " << VRPhysics::toVec3d(halfExtents) << endl;
 }
 
 /// this returns the vertex in bullet-local coordinates
-void VRTerrainPhysicsShape::getVertex(int x,int y,btVector3& vertex) const {
+btVector3 VRTerrainPhysicsShape::getVertex(int x, int y) const {
 	btScalar height = terrain->getMap()->getPixel(Vec3i(x,y,0))[3] + 0.03;
-    vertex.setValue( (-m_width/btScalar(2.0)) + x, height - m_localOrigin.getY(), (-m_length/btScalar(2.0)) + y );
+	btVector3 vertex;
+    vertex.setValue( -m_width*0.5 + x, height - m_localOrigin[1], -m_length*0.5 + y );
 	vertex *= m_localScaling;
+	return vertex;
 }
 
 static inline int getQuantized ( btScalar x ) {
@@ -74,14 +74,16 @@ static inline int getQuantized ( btScalar x ) {
   "with clamp" means that we restrict the point to be in the heightfield's
   axis-aligned bounding box.
  */
-void VRTerrainPhysicsShape::quantizeWithClamp(int* out, const btVector3& point) const {
+Vec3i VRTerrainPhysicsShape::quantizeWithClamp(const btVector3& point) const {
 	btVector3 clampedPoint(point);
 	clampedPoint.setMax(m_localAabbMin);
 	clampedPoint.setMin(m_localAabbMax);
 
+	Vec3i out;
 	out[0] = getQuantized(clampedPoint.getX());
 	out[1] = getQuantized(clampedPoint.getY());
 	out[2] = getQuantized(clampedPoint.getZ());
+	return out;
 }
 
 /// process all triangles within the provided axis-aligned bounding box
@@ -93,25 +95,16 @@ void VRTerrainPhysicsShape::quantizeWithClamp(int* out, const btVector3& point) 
  */
 void VRTerrainPhysicsShape::processAllTriangles(btTriangleCallback* callback,const btVector3& aabbMin,const btVector3& aabbMax) const {
 	// scale down the input aabb's so they are in local (non-scaled) coordinates
-	btVector3	localAabbMin = aabbMin*btVector3(1.f/m_localScaling[0],1.f/m_localScaling[1],1.f/m_localScaling[2]);
-	btVector3	localAabbMax = aabbMax*btVector3(1.f/m_localScaling[0],1.f/m_localScaling[1],1.f/m_localScaling[2]);
+	btVector3 localAabbMin = aabbMin*btVector3(1.f/m_localScaling[0],1.f/m_localScaling[1],1.f/m_localScaling[2]);
+	btVector3 localAabbMax = aabbMax*btVector3(1.f/m_localScaling[0],1.f/m_localScaling[1],1.f/m_localScaling[2]);
 
 	// account for local origin
 	localAabbMin += m_localOrigin;
 	localAabbMax += m_localOrigin;
 
 	//quantize the aabbMin and aabbMax, and adjust the start/end ranges
-	int	quantizedAabbMin[3];
-	int	quantizedAabbMax[3];
-	quantizeWithClamp(quantizedAabbMin, localAabbMin);
-	quantizeWithClamp(quantizedAabbMax, localAabbMax);
-
-	// expand the min/max quantized values
-	// this is to catch the case where the input aabb falls between grid points!
-	for (int i = 0; i < 3; ++i) {
-		quantizedAabbMin[i]--;
-		quantizedAabbMax[i]++;
-	}
+	Vec3i quantizedAabbMin = quantizeWithClamp(localAabbMin) - Vec3i(1,1,1);
+	Vec3i quantizedAabbMax = quantizeWithClamp(localAabbMax) + Vec3i(1,1,1);
 
 	int startX=0;
 	int endX=m_heightStickWidth-1;
@@ -127,14 +120,14 @@ void VRTerrainPhysicsShape::processAllTriangles(btTriangleCallback* callback,con
 		for(int x=startX; x<endX; x++) {
 			btVector3 vertices[3];
             //first triangle
-            getVertex(x,j,vertices[0]);
-            getVertex(x,j+1,vertices[1]);
-            getVertex(x+1,j,vertices[2]);
+            vertices[0] = getVertex(x,j);
+            vertices[1] = getVertex(x,j+1);
+            vertices[2] = getVertex(x+1,j);
             callback->processTriangle(vertices,x,j);
             //second triangle
-            getVertex(x+1,j,vertices[0]);
+            vertices[0] = getVertex(x+1,j);
             //getVertex(x,j+1,vertices[1]);
-            getVertex(x+1,j+1,vertices[2]);
+            vertices[2] = getVertex(x+1,j+1);
             callback->processTriangle(vertices,x,j);
 		}
 	}
