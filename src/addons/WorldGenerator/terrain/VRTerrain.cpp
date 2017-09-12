@@ -205,22 +205,23 @@ void VRTerrain::setupGeo() {
 	setMaterial(mat);
 }
 
-vector<Vec3d> VRTerrain::probeHeight( Vec2d p ) {
+Vec2d VRTerrain::toUVSpace(Vec2d p) {
     int W = tex->getSize()[0]-1;
     int H = tex->getSize()[1]-1;
+    double u = (p[0]/size[0] + 0.5)*W;
+    double v = (p[1]/size[1] + 0.5)*H;
+    return Vec2d(u,v);
+};
 
-    auto toUVSpace = [&](Vec2d p) {
-        double u = (p[0]/size[0] + 0.5)*W;
-        double v = (p[1]/size[1] + 0.5)*H;
-        return Vec2d(u,v);
-    };
+Vec2d VRTerrain::fromUVSpace(Vec2d uv) {
+    int W = tex->getSize()[0]-1;
+    int H = tex->getSize()[1]-1;
+    double x = ((uv[0])/W-0.5)*size[0];
+    double z = ((uv[1])/H-0.5)*size[1];
+    return Vec2d(x,z);
+};
 
-    auto fromUVSpace = [&](Vec2d uv) {
-        double x = ((uv[0])/W-0.5)*size[0];
-        double z = ((uv[1])/H-0.5)*size[1];
-        return Vec2d(x,z);
-    };
-
+vector<Vec3d> VRTerrain::probeHeight( Vec2d p ) {
     Vec2d uv = toUVSpace(p); // uv, i and j are tested
     int i = round(uv[0]-0.5);
     int j = round(uv[1]-0.5);
@@ -268,8 +269,9 @@ void VRTerrain::btPhysicalize() {
     shape->setLocalScaling(btVector3(texelSize[0],1,texelSize[1]));
     getPhysics()->setCustomShape( shape );
 }
+
 void VRTerrain::vrPhysicalize() {
-    auto shape = new VRTerrainPhysicsShape( ptr() );
+    auto shape = new VRTerrainPhysicsShape( ptr(), resolution );
     getPhysics()->setCustomShape( shape );
 }
 

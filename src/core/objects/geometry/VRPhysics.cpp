@@ -877,8 +877,8 @@ void VRPhysics::updateVisualGeo() {
         if (data.size()) data.apply(geo);
     }
 
-    if (stype == 24) { // heightmap, TODO
-        auto hshpe = dynamic_cast<btConcaveShape*>(shape);
+    if (stype == 24) { // heightmap, TODO, it works, but takes up way too much memory!
+        /*auto hshpe = dynamic_cast<btConcaveShape*>(shape);
         if (!hshpe) return;
         float Max = 1e36;
         btVector3 aabbMin(-Max, -Max, -Max);
@@ -887,7 +887,7 @@ void VRPhysics::updateVisualGeo() {
         heightData hdata;
         auto scene = OSG::VRScene::getCurrent();
         hshpe->processAllTriangles(&hdata, aabbMin, aabbMax);
-        hdata.data.apply(geo);
+        hdata.data.apply(geo);*/
     }
 
     if (stype == 31) { // compound
@@ -904,7 +904,7 @@ void VRPhysics::updateVisualGeo() {
 
             int Ni = hull.numIndices();
             int Nv = hull.numVertices();
-            const unsigned int* bt_inds =   hull.getIndexPointer();
+            const unsigned int* bt_inds = hull.getIndexPointer();
             const btVector3* verts = hull.getVertexPointer();
 
 

@@ -69,6 +69,9 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         VRTexturePtr getMap();
         Vec2f getTexelSize();
 
+        Vec2d toUVSpace(Vec2d uv);
+        Vec2d fromUVSpace(Vec2d uv);
+
         virtual bool applyIntersectionAction(Action* ia);
 
         void physicalize(bool b);

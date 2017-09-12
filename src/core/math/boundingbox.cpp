@@ -28,6 +28,15 @@ void Boundingbox::update(const Vec3d& v) {
     }
 }
 
+void Boundingbox::clamp(Vec3d& p) const {
+    if (p[0] < bb1[0]) p[0] = bb1[0];
+    if (p[1] < bb1[1]) p[1] = bb1[1];
+    if (p[2] < bb1[2]) p[2] = bb1[2];
+    if (p[0] > bb2[0]) p[0] = bb2[0];
+    if (p[1] > bb2[1]) p[1] = bb2[1];
+    if (p[2] > bb2[2]) p[2] = bb2[2];
+}
+
 void Boundingbox::updateFromGeometry(VRGeometryPtr g) {
     clear();
     auto pos = g->getMesh()->geo->getPositions();

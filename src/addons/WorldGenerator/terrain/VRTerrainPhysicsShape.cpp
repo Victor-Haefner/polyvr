@@ -8,132 +8,82 @@
 
 using namespace OSG;
 
-VRTerrainPhysicsShape::VRTerrainPhysicsShape(VRTerrainPtr terrain) : terrain(terrain) {
-    auto tex = terrain->getMap();
-    auto dim = tex->getSize();
-
-    double Hmax = -1e6;
-    for (int i = 0; i < dim[0]; i++) {
-        for (int j = 0; j < dim[1]; j++) {
-            float h = tex->getPixel(Vec3i(i,j,0))[3];
-            if (Hmax < h) Hmax = h;
-        }
-    }
-
+VRTerrainPhysicsShape::VRTerrainPhysicsShape(VRTerrainPtr terrain, float resolution) : terrain(terrain), resolution(resolution) {
 	m_shapeType = TERRAIN_SHAPE_PROXYTYPE;
-	m_heightStickWidth = dim[0];
-	m_heightStickLength = dim[1];
-	m_width = (btScalar) (dim[0] - 1);
-	m_length = (btScalar) (dim[1] - 1);
-    m_localAabbMin.setValue(0, -Hmax, 0);
-    m_localAabbMax.setValue(m_width, Hmax, m_length);
-    /*auto bb = terrain->getBoundingBox();
-    m_localAabbMin = VRPhysics::toBtVector3( bb.min() );
-    m_localAabbMax = VRPhysics::toBtVector3( bb.max() );
-	m_localOrigin = btVector3(0,0,0);*/
-	m_localOrigin = btScalar(0.5) * (m_localAabbMin + m_localAabbMax);
-
-    auto texelSize = terrain->getTexelSize();
-	m_localScaling.setValue(texelSize[0],1,texelSize[1]);
+    auto tex = terrain->getMap();
+    texelSize = terrain->getTexelSize();
+	texSize = Vec2i( tex->getSize()[0], tex->getSize()[1] );
+	size = Vec2d( (texSize[0]-1) * texelSize[0], (texSize[1]-1) * texelSize[1] );
+    boundingbox = terrain->getBoundingBox();
 }
 
 VRTerrainPhysicsShape::~VRTerrainPhysicsShape() {;}
+void VRTerrainPhysicsShape::calculateLocalInertia(btScalar, btVector3& inertia) const { inertia.setValue(0,0,0); } //moving concave objects not supported
+void VRTerrainPhysicsShape::setLocalScaling(const btVector3& scaling) {}
+const btVector3& VRTerrainPhysicsShape::getLocalScaling() const { return btVector3(1,1,1); }
 
-void VRTerrainPhysicsShape::getAabb(const btTransform& t, btVector3& aabbMin, btVector3& aabbMax) const {
-	btVector3 halfExtents = (m_localAabbMax-m_localAabbMin)* m_localScaling * btScalar(0.5);
-	btVector3 localOrigin(0, 0, 0);
-	btMatrix3x3 abs_b = t.getBasis().absolute();
-	btVector3 center = t.getOrigin();
-    btVector3 extent = halfExtents.dot3(abs_b[0], abs_b[1], abs_b[2]);
-	extent += btVector3(getMargin(),getMargin(),getMargin());
-
-	aabbMin = center - extent;
-	aabbMax = center + extent;
-	//cout << "VRTerrainPhysicsShape::getAabb " << VRPhysics::toVec3d(halfExtents) << " " << VRPhysics::toVec3d(halfExtents) << endl;
+void VRTerrainPhysicsShape::getAabb(const btTransform& t, btVector3& Min, btVector3& Max) const {
+    // TODO: use t!
+    Min = VRPhysics::toBtVector3( boundingbox.min() );
+	Max = VRPhysics::toBtVector3( boundingbox.max() );
 }
 
-/// this returns the vertex in bullet-local coordinates
-btVector3 VRTerrainPhysicsShape::getVertex(int x, int y) const {
-	btScalar height = terrain->getMap()->getPixel(Vec3i(x,y,0))[3] + 0.03;
-	btVector3 vertex;
-    vertex.setValue( -m_width*0.5 + x, height - m_localOrigin[1], -m_length*0.5 + y );
-	vertex *= m_localScaling;
-	return vertex;
-}
+/*Vec2d VRTerrain::toUVSpace(Vec2d p) {
+    int W = tex->getSize()[0]-1;
+    int H = tex->getSize()[1]-1;
+    double u = (p[0]/size[0] + 0.5)*W;
+    double v = (p[1]/size[1] + 0.5)*H;
+    return Vec2d(u,v);
+};
 
-static inline int getQuantized ( btScalar x ) {
-	return (int) x < 0.0 ? x - 0.5 : x + 0.5;
-}
+Vec2d VRTerrain::fromUVSpace(Vec2d uv) {
+    int W = tex->getSize()[0]-1;
+    int H = tex->getSize()[1]-1;
+    double x = ((uv[0])/W-0.5)*size[0];
+    double z = ((uv[1])/H-0.5)*size[1];
+    return Vec2d(x,z);
+};*/
 
-/// given input vector, return quantized version
-/**
-  This routine is basically determining the gridpoint indices for a given
-  input vector, answering the question: "which gridpoint is closest to the
-  provided point?".
-  "with clamp" means that we restrict the point to be in the heightfield's
-  axis-aligned bounding box.
- */
-Vec3i VRTerrainPhysicsShape::quantizeWithClamp(const btVector3& point) const {
-	btVector3 clampedPoint(point);
-	clampedPoint.setMax(m_localAabbMin);
-	clampedPoint.setMin(m_localAabbMax);
+void VRTerrainPhysicsShape::processAllTriangles(btTriangleCallback* callback, const btVector3& aabbMin, const btVector3& aabbMax) const {
+    Vec3d Min = VRPhysics::toVec3d(aabbMin);
+    Vec3d Max = VRPhysics::toVec3d(aabbMax);
+    boundingbox.clamp( Min );
+    boundingbox.clamp( Max );
 
-	Vec3i out;
-	out[0] = getQuantized(clampedPoint.getX());
-	out[1] = getQuantized(clampedPoint.getY());
-	out[2] = getQuantized(clampedPoint.getZ());
-	return out;
-}
+    Vec2d res;
+    res[0] = resolution > 0 ? resolution : texelSize[0];
+    res[1] = resolution > 0 ? resolution : texelSize[1];
 
-/// process all triangles within the provided axis-aligned bounding box
-/**
-  basic algorithm:
-    - convert input aabb to local coordinates (scale down and shift for local origin)
-    - convert input aabb to a range of heightfield grid points (quantize)
-    - iterate over all triangles in that subset of the grid
- */
-void VRTerrainPhysicsShape::processAllTriangles(btTriangleCallback* callback,const btVector3& aabbMin,const btVector3& aabbMax) const {
-	// scale down the input aabb's so they are in local (non-scaled) coordinates
-	btVector3 localAabbMin = aabbMin*btVector3(1.f/m_localScaling[0],1.f/m_localScaling[1],1.f/m_localScaling[2]);
-	btVector3 localAabbMax = aabbMax*btVector3(1.f/m_localScaling[0],1.f/m_localScaling[1],1.f/m_localScaling[2]);
+    auto toSpace = [&](double X, double Y) {
+        double x = (X-0.5)*res[0];
+        double y = (Y-0.5)*res[1];
+        return btVector3( x, terrain->getHeight(Vec2d(x,y)), y );
+    };
 
-	// account for local origin
-	localAabbMin += m_localOrigin;
-	localAabbMax += m_localOrigin;
+	int x0 = round(Min[0]/res[0]);
+	int y0 = round(Min[2]/res[1]);
+	int x1 = round(Max[0]/res[0])+1;
+	int y1 = round(Max[2]/res[1])+1;
 
-	//quantize the aabbMin and aabbMax, and adjust the start/end ranges
-	Vec3i quantizedAabbMin = quantizeWithClamp(localAabbMin) - Vec3i(1,1,1);
-	Vec3i quantizedAabbMax = quantizeWithClamp(localAabbMax) + Vec3i(1,1,1);
+    /*cout << " --- VRTerrainPhysicsShape::processAllTriangles "
+        << Min << " " << Max << "  -> "
+        << Vec2i(x0*res[0], y0*res[1])
+        << " / " << Vec2i(x1*res[0], y1*res[1]) << endl;*/
 
-	int startX=0;
-	int endX=m_heightStickWidth-1;
-	int startJ=0;
-	int endJ=m_heightStickLength-1;
-
-    if (quantizedAabbMin[0]>startX) startX = quantizedAabbMin[0];
-    if (quantizedAabbMax[0]<endX) endX = quantizedAabbMax[0];
-    if (quantizedAabbMin[2]>startJ) startJ = quantizedAabbMin[2];
-    if (quantizedAabbMax[2]<endJ) endJ = quantizedAabbMax[2];
-
-	for(int j=startJ; j<endJ; j++) {
-		for(int x=startX; x<endX; x++) {
+	for (int y=y0; y<y1; y++) {
+		for (int x=x0; x<x1; x++) {
 			btVector3 vertices[3];
-            //first triangle
-            vertices[0] = getVertex(x,j);
-            vertices[1] = getVertex(x,j+1);
-            vertices[2] = getVertex(x+1,j);
-            callback->processTriangle(vertices,x,j);
-            //second triangle
-            vertices[0] = getVertex(x+1,j);
-            vertices[2] = getVertex(x+1,j+1);
-            callback->processTriangle(vertices,x,j);
+            vertices[0] = toSpace(x,y);
+            vertices[1] = toSpace(x,y+1);
+            vertices[2] = toSpace(x+1,y);
+            callback->processTriangle(vertices,x,y);
+            vertices[0] = toSpace(x+1,y);
+            vertices[2] = toSpace(x+1,y+1);
+            callback->processTriangle(vertices,x,y);
 		}
 	}
 }
 
-void VRTerrainPhysicsShape::calculateLocalInertia(btScalar, btVector3& inertia) const { inertia.setValue(0,0,0); } //moving concave objects not supported
-void VRTerrainPhysicsShape::setLocalScaling(const btVector3& scaling) {}
-const btVector3& VRTerrainPhysicsShape::getLocalScaling() const { return btVector3(1,1,1); }
 
 
 
