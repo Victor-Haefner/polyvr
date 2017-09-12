@@ -25,7 +25,6 @@ VRTerrainPhysicsShape::VRTerrainPhysicsShape(VRTerrainPtr terrain) : terrain(ter
 	m_heightStickLength = dim[1];
 	m_width = (btScalar) (dim[0] - 1);
 	m_length = (btScalar) (dim[1] - 1);
-	m_localScaling.setValue(1,1,1);
     m_localAabbMin.setValue(0, -Hmax, 0);
     m_localAabbMax.setValue(m_width, Hmax, m_length);
     /*auto bb = terrain->getBoundingBox();
@@ -35,7 +34,7 @@ VRTerrainPhysicsShape::VRTerrainPhysicsShape(VRTerrainPtr terrain) : terrain(ter
 	m_localOrigin = btScalar(0.5) * (m_localAabbMin + m_localAabbMax);
 
     auto texelSize = terrain->getTexelSize();
-    setLocalScaling(btVector3(texelSize[0],1,texelSize[1]));
+	m_localScaling.setValue(texelSize[0],1,texelSize[1]);
 }
 
 VRTerrainPhysicsShape::~VRTerrainPhysicsShape() {;}
@@ -126,16 +125,15 @@ void VRTerrainPhysicsShape::processAllTriangles(btTriangleCallback* callback,con
             callback->processTriangle(vertices,x,j);
             //second triangle
             vertices[0] = getVertex(x+1,j);
-            //getVertex(x,j+1,vertices[1]);
             vertices[2] = getVertex(x+1,j+1);
             callback->processTriangle(vertices,x,j);
 		}
 	}
 }
 
-void VRTerrainPhysicsShape::calculateLocalInertia(btScalar ,btVector3& inertia) const { inertia.setValue(0,0,0); } //moving concave objects not supported
-void VRTerrainPhysicsShape::setLocalScaling(const btVector3& scaling) { m_localScaling = scaling; }
-const btVector3& VRTerrainPhysicsShape::getLocalScaling() const { return m_localScaling; }
+void VRTerrainPhysicsShape::calculateLocalInertia(btScalar, btVector3& inertia) const { inertia.setValue(0,0,0); } //moving concave objects not supported
+void VRTerrainPhysicsShape::setLocalScaling(const btVector3& scaling) {}
+const btVector3& VRTerrainPhysicsShape::getLocalScaling() const { return btVector3(1,1,1); }
 
 
 
