@@ -70,12 +70,23 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
     if (!data->texs) data->texs = GeoVec2fProperty::create();
     if (!data->texs2) data->texs2 = GeoVec2fProperty::create();
 
-    auto normsIdx = geo->getMesh()->geo->getIndex(Geometry::NormalsIndex);
-    auto posIdx = geo->getMesh()->geo->getIndex(Geometry::PositionsIndex);
-    if (normsIdx != posIdx) { // TODO: fix normals
-        //map<int, int> mapping;
-        cout << "VRGeoData Warning: normals and positions dont share indices!\n";
-    }
+    // TODO: might not be really possible.. ..maybe live with it and check that all algorithms take it into account!
+    /*auto nIdx = geo->getMesh()->geo->getIndex(Geometry::NormalsIndex);
+    auto pIdx = geo->getMesh()->geo->getIndex(Geometry::PositionsIndex);
+    if (nIdx != pIdx) {
+        GeoVec3fPropertyRecPtr norms  = (GeoVec3fProperty*)geo->getMesh()->geo->getNormals();
+        GeoVec3fPropertyRecPtr norms2 = GeoVec3fProperty::create();
+
+        for (uint i=0; i<pIdx->size(); i++) {
+            int pID = pIdx->getValue(i);
+            int nID = nIdx->getValue(i);
+            if (norms2->size() <= pID) norms2->resize(pID+1);
+            norms2->setValue( norms->getValue(nID), pID );
+        }
+
+        geo->setNormals(norms2);
+        geo->getMesh()->geo->setIndex(pIdx, Geometry::NormalsIndex);
+    }*/
 }
 
 VRGeoDataPtr VRGeoData::create() { return VRGeoDataPtr( new VRGeoData() ); }

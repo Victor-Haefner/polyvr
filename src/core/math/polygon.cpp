@@ -454,6 +454,7 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
 
             if ( pA <= 1e-6 && pA > G*G+1e-6 ) continue;
             if ( !allEdgesInPolygon() ) continue;
+            if (p->size() <= 2) continue; // TODO
             res.push_back(p);
         }
     }

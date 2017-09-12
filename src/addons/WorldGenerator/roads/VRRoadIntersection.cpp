@@ -435,9 +435,9 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
     };
 
     auto resolveIntersectionType = [&]() {
-        cout << " --- resolveIntersectionType" << N;
+        /*cout << " --- resolveIntersectionType " << N;
         for (auto r : roads) cout << "  " << r->getEntity()->getName();
-        cout << endl;
+        cout << endl;*/
 
         if (N == 2) {
             bool parallel  = bool( getRoadConnectionAngle(roads[0], roads[1]) < -0.8 );

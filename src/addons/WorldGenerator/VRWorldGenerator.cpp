@@ -351,6 +351,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             if (tag.first == "landuse") { // TODO
                 auto patch = VRGeometry::create("patch");
                 auto poly = wayToPolygon(way);
+                if (poly->size() == 0) continue;
                 for (auto p : poly->gridSplit(1)) {
                     if (terrain) terrain->elevatePolygon(p, 0.03, false);
                     Triangulator tri;
