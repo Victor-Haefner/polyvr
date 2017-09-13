@@ -365,7 +365,6 @@ uint VRSound::getFreeBufferID() {
         return bufid;
     }
 
-    ALint val = -1;
     ALuint bufid;
     alGenBuffers(1, &bufid);
     queuedBuffers += 1;

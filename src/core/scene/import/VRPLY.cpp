@@ -124,7 +124,7 @@ void loadPly(string filename, VRTransformPtr res) {
     if (Type->size() == 0 && Pos->size() > 0) Type->addValue(GL_POINTS);
     if (Length->size() == 0 && Pos->size() > 0) {
         Length->addValue(int(Pos->size()));
-        for (int i=0; i< Pos->size(); i++) Indices->addValue(i);
+        for (uint i=0; i< Pos->size(); i++) Indices->addValue(i);
     }
 
     cout << "\n summary:\n";

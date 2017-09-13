@@ -157,7 +157,7 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
     vector<Vec3d> norms;
 
     // check for inflection points!
-    for (int i=1; i<nodesIn.size(); i++) {
+    for (uint i=1; i<nodesIn.size(); i++) {
         nodes.push_back( nodesIn[i-1] ); norms.push_back( normalsIn[i-1] );
         Vec3d p1 = nodesIn[i-1]->getVec3("position");
         Vec3d p2 = nodesIn[i  ]->getVec3("position");
@@ -177,7 +177,7 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
     nodes.push_back( nodesIn[nodesIn.size()-1] ); norms.push_back( normalsIn[normalsIn.size()-1] );
 
     if (terrain) {
-        for (int i=0; i<nodesIn.size(); i++) { // project tangents on terrain
+        for (uint i=0; i<nodesIn.size(); i++) { // project tangents on terrain
             Vec3d p = nodesIn[i]->getVec3("position");
             terrain->projectTangent(normalsIn[i], p);
         }
@@ -241,7 +241,7 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
             reverse(norms.begin(), norms.end());
         }
 
-        for (int i=1; i<nodes.size(); i++) {
+        for (uint i=1; i<nodes.size(); i++) {
             connectGraph({nodes[i-1], nodes[i]}, {norms[i-1], norms[i]});
         }
 
@@ -280,7 +280,6 @@ void VRRoadNetwork::addGuardRail( pathPtr path, float height ) {
 		poles.push_back(po);
 	};
 
-	float d = 0;
     float L = path->getLength();
     int N = L / poleDist;
     auto p0 = path->getPose(0);

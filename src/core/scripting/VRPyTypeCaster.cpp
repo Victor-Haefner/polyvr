@@ -89,7 +89,7 @@ template<> PyObject* VRPyTypeCaster::cast(const BoundingboxPtr& b) { return VRPy
 
 PyObject* VRPyTypeCaster::pack(const vector<PyObject*>& v) {
     auto l = PyList_New(v.size());
-    for (int i=0; i<v.size(); i++) PyList_SetItem(l,i,v[i]);
+    for (uint i=0; i<v.size(); i++) PyList_SetItem(l,i,v[i]);
     return l;
 }
 

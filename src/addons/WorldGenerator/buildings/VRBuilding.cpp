@@ -41,18 +41,11 @@ VRGeometryPtr VRBuilding::addFoundation(VRPolygon polygon, float H) {
         float low = ground-H;
         float high = low+H;
 
-        // insert a door at a random place (when on level 0 && there is enough room)
-        int doorIndex = -1;
-        if (height == 0 && segN > 2) doorIndex = rand() % segN;
-
         int N = 4;
         float _N = 1./N;
         float e = 0.01;
 
-        int di = N*float(doorType) / RAND_MAX;
-        int wi = N*float(windowType) / RAND_MAX;
         int fi = N*float(wallType) / RAND_MAX;
-
         float f_tc1 = fi * _N + e;
         float f_tc2 = fi * _N - e + _N;
 

@@ -246,7 +246,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
         }
 
         if (concepts.count(object)) {
-            auto& s = stackStatement();
+            stackStatement();
             return 0;
         }
 

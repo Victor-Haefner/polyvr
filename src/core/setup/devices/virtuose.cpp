@@ -98,10 +98,9 @@ void virtuose::setSimulationScales(float translation, float forces)
 }
 
 
-void virtuose::applyForce(Vec3d force, Vec3d torque)
-{
+void virtuose::applyForce(Vec3d force, Vec3d torque) {
     if(vc == 0) return;
-    float f[6] = { force[2], force[0], force[1], torque[2], torque[0], torque[1] };
+    float f[6] = { float(force[2]), float(force[0]), float(force[1]), float(torque[2]), float(torque[0]), float(torque[1]) };
     CHECK( virtAddForce(vc, f) );
 }
 

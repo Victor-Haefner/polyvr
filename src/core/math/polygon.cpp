@@ -136,7 +136,7 @@ VRPolygonPtr VRPolygon::shrink(float amount) {
         newPositions.push_back( intersect(p2+n1*amount, d1, p2+n2*amount, d2) );
     }
 
-    for (uint i=0; i<N; i++) area->points[i] = newPositions[i];
+    for (int i=0; i<N; i++) area->points[i] = newPositions[i];
 
     return area;
 }
@@ -281,9 +281,9 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
     }
 
     // get all grid squares touching each point
-    for (int i=0; i<self->points.size(); i++) {
+    for (uint i=0; i<self->points.size(); i++) {
         auto point = self->points[i];
-        for (int j=0; j<squares.size(); j++) {
+        for (uint j=0; j<squares.size(); j++) {
             auto square = squares[j];
             if (inSquare(point, square)) pointSquaresMap[i].push_back(j);
             if (inSquare(point, square)) squarePointsMap[j].push_back(i);
@@ -291,7 +291,7 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
     }
 
     // get all grid squares fully inside of polygon
-    for (int i=0; i<squares.size(); i++) {
+    for (uint i=0; i<squares.size(); i++) {
         if (squarePointsMap.count(i)) continue; // intersects polygon, skip
         auto s = Vec2d(squares[i]);
         if (self->areInside({s*G,s*G+Vec2d(G,0),s*G+Vec2d(G,G),s*G+Vec2d(0,G)})) { // at least one corner in area
@@ -373,7 +373,7 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
             auto pnt = getSquarePoint(i);
             auto pnt_1 = getSquarePoint(i_1);
 
-            if (i != i_1 && isOnGrid(pnt) && isOnGrid(pnt_1) || i == i_1 || !isOnGrid(pnt)) { // not the first point
+            if ((i != i_1 && isOnGrid(pnt) && isOnGrid(pnt_1)) || i == i_1 || !isOnGrid(pnt)) { // not the first point
                 for (auto k : squarePoints) {
                     if (j == i && k == i+1) {
                         if (verbose) cout << "    found k " << k << " p " << getSquarePoint(k) << endl;
@@ -680,11 +680,11 @@ float VRPolygon::getTurn(Vec2d p0, Vec2d p1, Vec2d p2) {
 }
 
 bool VRPolygon::isConvex() {
-    for (int i=2; i<points.size(); i++) {
+    for (uint i=2; i<points.size(); i++) {
         if (getTurn(points[i-2], points[i-1], points[i]) >= 0) return false;
     }
 
-    for (int i=2; i<points3.size(); i++) {
+    for (uint i=2; i<points3.size(); i++) {
         Vec3d& p0 = points3[i-2];
         Vec3d& p1 = points3[i-1];
         Vec3d& p2 = points3[i-0];
@@ -737,7 +737,7 @@ string VRPolygon::toString() {
 
 pathPtr VRPolygon::toPath() {
     auto res = path::create();
-    for (int i=0; i<points.size(); i++) {
+    for (int i=0; i<int(points.size()); i++) {
         Vec2d& p1 = points[(i-1)%points.size()];
         Vec2d& p2 = points[i];
         Vec2d& p3 = points[(i+1)%points.size()];

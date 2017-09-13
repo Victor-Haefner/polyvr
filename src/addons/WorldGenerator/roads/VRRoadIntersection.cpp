@@ -130,7 +130,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 
         if (displacements.size() == 0) return;
 
-        for (int i=0; i<roads.size(); i++) { // shift whole road fronts!
+        for (uint i=0; i<roads.size(); i++) { // shift whole road fronts!
             auto& road = roads[i];
             auto& rfront = roadFronts[i];
             auto rEnt = road->getEntity();
@@ -325,7 +325,6 @@ void VRRoadIntersection::computeMarkings() {
 		return m;
     };
 
-    bool hasMarkings = true;
     for (auto road : roads) if (!road->hasMarkings()) return;
 
     bool isPedestrian = false;
@@ -393,7 +392,7 @@ void VRRoadIntersection::computeMarkings() {
             return false;
         };
 
-        for (int i=0; i<points.size(); i++) {
+        for (uint i=0; i<points.size(); i++) {
             auto p1 = points[i];
             auto p2 = points[(i+1)%points.size()];
             if (isRoadEdge(p1, p2)) continue;
@@ -448,7 +447,7 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
             bool parallel01 = bool(getRoadConnectionAngle(roads[0], roads[1]) < -0.5);
             bool parallel12 = bool(getRoadConnectionAngle(roads[1], roads[2]) < -0.5);
             bool parallel02 = bool(getRoadConnectionAngle(roads[2], roads[0]) < -0.5);
-            if (parallel01 && parallel12 || parallel01 && parallel02 || parallel12 && parallel02) type = FORK;
+            if ((parallel01 && parallel12) || (parallel01 && parallel02) || (parallel12 && parallel02)) type = FORK;
             //type = FORK;
         }
 
