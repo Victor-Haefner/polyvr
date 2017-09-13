@@ -1,5 +1,6 @@
 #include "path.h"
 #include "core/objects/VRTransform.h"
+#include "core/math/polygon.h"
 #include "core/math/equation.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
@@ -399,8 +400,7 @@ posePtr path::getPose(float t, int i, int j, bool fast) {
 }
 
 float path::getClosestPoint(Vec3d p) {
-    auto positions = getPositions();
-    float dist = 1.0e10;
+    float dist2 = 1.0e20;
     float t_min = 0;
 
     for (uint i=1; i<positions.size(); i++){
@@ -408,38 +408,57 @@ float path::getClosestPoint(Vec3d p) {
         Vec3d p2 = positions[i];
 
         auto d = p2-p1;
-        auto L = d.length();
-        auto t = -(p1-p).dot(d)/L/L;
+        auto L2 = d.squareLength();
+        auto t = -(p1-p).dot(d)/L2;
         auto ps = p1+d*t;
         if (t<0) { ps = p1; t = 0; }
         if (t>1) { ps = p2; t = 1; }
-        float D = (ps-p).length();
-        if (dist > D) {
-            dist = D;
+        float D2 = (ps-p).squareLength();
+        if (dist2 > D2) {
+            dist2 = D2;
             t_min = (float(i-1)+t)/(positions.size()-1);
         }
     }
+
     return t_min;
 }
 
+float path::getDistanceToHull(Vec3d p) {
+    float dist2 = 1.0e20;
+
+    for (uint i=1; i<points.size(); i++){
+        Vec3d p1 = points[i-1].pos();
+        Vec3d p2 = points[i].pos();
+        auto d = p2-p1;
+        auto L2 = d.squareLength();
+        auto t = -(p1-p).dot(d)/L2;
+        auto ps = p1+d*t;
+        if (t<0) ps = p1;
+        if (t>1) ps = p2;
+        float D2 = (ps-p).squareLength();
+        if (dist2 > D2) dist2 = D2;
+    }
+
+    return sqrt(dist2);
+}
+
 float path::getDistance(Vec3d p) {
-    auto positions = getPositions();
-    float dist = 1.0e10;
+    float dist2 = 1.0e20;
 
     for (uint i=1; i<positions.size(); i++){
         Vec3d p1 = positions[i-1];
         Vec3d p2 = positions[i];
-
         auto d = p2-p1;
-        auto L = d.length();
-        auto t = -(p1-p).dot(d)/L/L;
+        auto L2 = d.squareLength();
+        auto t = -(p1-p).dot(d)/L2;
         auto ps = p1+d*t;
         if (t<0) ps = p1;
         if (t>1) ps = p2;
-        float D = (ps-p).length();
-        if (dist > D) dist = D;
+        float D2 = (ps-p).squareLength();
+        if (dist2 > D2) dist2 = D2;
     }
-    return dist;
+
+    return sqrt(dist2);
 }
 
 void path::clear() {

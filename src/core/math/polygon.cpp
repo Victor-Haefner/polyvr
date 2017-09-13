@@ -735,6 +735,11 @@ string VRPolygon::toString() {
     return ss.str();
 }
 
+float VRPolygon::getDistance(Vec3d p) { // TODO
+    float dist2 = 1.0e20;
+    return sqrt(dist2);
+}
+
 pathPtr VRPolygon::toPath() {
     auto res = path::create();
     for (int i=0; i<int(points.size()); i++) {

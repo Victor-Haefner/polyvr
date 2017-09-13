@@ -46,6 +46,7 @@ class VRPolygon {
         vector< VRPolygonPtr > gridSplit(float G);
 
         float computeArea();
+        float getDistance(Vec3d p);
         VRPolygonPtr shrink(float amount);
         Vec3d getRandomPoint();
         vector<Vec3d> getRandomPoints(float density = 10, float padding = 0);

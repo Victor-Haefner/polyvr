@@ -793,7 +793,6 @@ void VRPhysics::updateVisualGeo() {
     btCollisionShape* shape = getCollisionShape();
     if (!shape) return;
     int stype = shape->getShapeType();
-    if (physicsShape == "Custom") cout << " ---------- VRPhysics::updateVisualGeo " << stype << " " << physicsShape << endl;
 
     // 0 : box
     // 4 : convex
