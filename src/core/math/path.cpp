@@ -157,9 +157,9 @@ void path::approximate(int d) {
 		return p1.pos() + p1.dir()*s;
     };
 
-    auto toQuadratic = [&](int j, pose& p1, pose& p4, pose& pm, pose& p2, pose& p3) {
+    /*auto toQuadratic = [&](int j, pose& p1, pose& p4, pose& pm, pose& p2, pose& p3) {
 
-    };
+    };*/
 
 	auto isLinear = [&](pose& p1, pose& p2) {
 		if (abs(p1.dir().dot(p2.dir())-1.0) > 1e-5) return false;
@@ -188,7 +188,7 @@ void path::approximate(int d) {
                 for (auto t : Tvec) poses.push_back( *getPose(t, j-1, j, false) );
                 poses.push_back(p4);
 
-                for (int i=1; i<poses.size()-1; i++) {
+                for (uint i=1; i<poses.size()-1; i++) {
                     auto& pm = poses[i];
                     res.push_back( pose( intersect(poses[i-1],pm) ) );
                     res.push_back(pm);
@@ -359,6 +359,8 @@ Vec3d path::getPosition(float t, int i, int j, bool fast) {
 
         return p1.pos()*(1-t)*(1-t)*(1-t) + h1*3*t*(1-t)*(1-t) + h2*3*t*t*(1-t) + p2.pos()*t*t*t;
     }
+
+    return Vec3d();
 }
 
 Color3f path::getColor(float t, int i, int j) { return Vec3f(interp(colors, t, i, j)); }

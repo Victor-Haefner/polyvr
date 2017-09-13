@@ -280,8 +280,8 @@ void VRNature::addScrub(VRPolygonPtr area, bool addGround) {
     float a = area->computeArea();
     if (a == 0) return;
 
-    VRTimer timer; timer.start();
-    int t0 = timer.stop();
+    //VRTimer timer; timer.start();
+    //int t0 = timer.stop();
 
     if (terrain) terrain->elevatePolygon(area, 0.18);
     Vec3d median = area->getBoundingBox().center();
@@ -304,8 +304,8 @@ void VRNature::addScrub(VRPolygonPtr area, bool addGround) {
 }
 
 void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround) { // TODO: needs optimizations!
-    VRTimer timer; timer.start();
-    int t0 = timer.stop();
+    //VRTimer timer; timer.start();
+    //int t0 = timer.stop();
     //cout << "VRNature::addGrassPatch " << t0 << endl;
     int i=0;
     auto ground = VRGeometry::create("ground");

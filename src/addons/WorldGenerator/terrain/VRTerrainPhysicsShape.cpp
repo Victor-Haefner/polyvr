@@ -57,7 +57,7 @@ void VRTerrainPhysicsShape::processAllTriangles(btTriangleCallback* callback, co
     auto toSpace = [&](double X, double Y) {
         double x = (X-0.5)*res[0];
         double y = (Y-0.5)*res[1];
-        return btVector3( x, terrain->getHeight(Vec2d(x,y)), y );
+        return btVector3( x, terrain->getHeight(Vec2d(x,y), false), y );
     };
 
 	int x0 = round(Min[0]/res[0]);

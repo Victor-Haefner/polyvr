@@ -206,7 +206,7 @@ void VRStorage::load_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool
     if (e == 0) return;
     auto children = getChildren(e);
     bool doReload = (v->size() == children.size());
-    for (int i=0; i<children.size(); i++) {
+    for (uint i=0; i<children.size(); i++) {
         auto el = children[i];
         if (doReload) (*v)[i]->load(el);
         else {

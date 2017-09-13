@@ -230,9 +230,10 @@ void emitQuad(in float offset, in vec4 tc) {
 }
 
 void emitChar(in int d, in float p) {
-    float f = 0.00833;
+    float padding = 0.001;
+    float f = 0.00832; //0.00833
     d -= 32;
-    if (d >= 0) emitQuad(p, vec4(d*f,d*f+f, 0,1));
+    if (d >= 0) emitQuad(p, vec4(padding+d*f, padding+d*f+f, 0, 1));
 }
 
 void emitString(in float str, in float offset) {
