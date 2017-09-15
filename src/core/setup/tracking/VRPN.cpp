@@ -134,9 +134,6 @@ VRPN::VRPN() {
     //auto update_cb = new VRFunction<VRThread*>("VRPN_update", boost::bind(&VRPN::update_t, this, _1));
     //threadID = VRSceneManager::get()->initThread(update_cb, "VRPN", true);
 
-    updatePtr = VRUpdateCb::create("VRPN_update", boost::bind(&VRPN::update, this));
-    VRSceneManager::get()->addUpdateFkt(updatePtr);
-
     vrpn_System_TextPrinter.set_ostream_to_use(NULL);
 
     storeMap("Tracker", &devices);

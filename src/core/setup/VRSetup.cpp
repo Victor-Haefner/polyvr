@@ -119,8 +119,10 @@ void VRSetup::setupLESCCAVELights(VRScenePtr scene) {
 }
 
 void VRSetup::updateTracking() {
+    ART::applyEvents();
+    VRPN::update();
     vive->update();
-    //updateCallbacks();
+    for (auto view : getViews()) view->updateMirror();
 }
 
 VRNetworkPtr VRSetup::getNetwork() { return network; }

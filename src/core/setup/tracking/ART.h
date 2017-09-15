@@ -69,12 +69,13 @@ class ART : public VRStorage {
 
         void updateT( weak_ptr<VRThread>  t); //update thread
         void updateL(); //update
-        void applyEvents(); //main loop update
         void checkNewDevices(int type = -1, int N = 0); //update thread
 
     public:
         ART();
         ~ART();
+
+        void applyEvents(); //main loop update
 
         vector<int> getARTDevices();
         ART_devicePtr getARTDevice(int dev);

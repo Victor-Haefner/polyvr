@@ -57,11 +57,8 @@ void ART_device::update() {
 
 
 ART::ART() {
-    updatePtr  = VRUpdateCb::create("ART_apply", boost::bind(&ART::applyEvents, this));
-    VRSceneManager::get()->addUpdateFkt(updatePtr);
-
     threadFkt = VRFunction< weak_ptr<VRThread> >::create("ART_fetch", boost::bind(&ART::updateT, this, _1));
-    VRSceneManager::get()->initThread(threadFkt, "ART_fetch", true);
+    VRSceneManager::get()->initThread(threadFkt, "ART_fetch", true); // applyEvent is the sync function
 
     on_new_device = VRSignal::create();
 

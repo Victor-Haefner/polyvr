@@ -145,7 +145,9 @@ void VRGuiSetup::updateObjectData() {
         setCheckButton("checkbutton30", view->getMirror());
 
         setTextEntry("entry12", toString(view->getEyeSeparation()).c_str());
-        setCombobox("combobox18", getListStorePos("user_list", view->getUser()->getName()));
+        int uID = getListStorePos("user_list", view->getUser()->getName());
+        setCombobox("combobox18", uID);
+        setCheckButton("checkbutton26", uID != -1);
 
         userEntry.set(view->getProjectionUser());
         centerEntry.set(view->getProjectionCenter());

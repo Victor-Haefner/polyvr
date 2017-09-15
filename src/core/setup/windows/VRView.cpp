@@ -400,6 +400,37 @@ void VRView::setRoot() {
     if (rView) rView->setRoot(nr);
 }
 
+void VRView::setMirror(bool b) { mirror = b; update(); }
+
+void VRView::setMirrorPos(Vec3d p) {
+    mirrorPos = p;
+    auto m = pose(mirrorPos, mirrorNorm).asMatrix();
+    auto mI = m.inverse();
+    mirrorMatrix = mI;
+    mirrorMatrix.mult(Z);
+    mirrorMatrix.mult(m);
+}
+
+void VRView::setMirrorNorm(Vec3d n) {
+    mirrorNorm = n;
+    auto m = pose(mirrorPos, mirrorNorm).asMatrix();
+    auto mI = m.inverse();
+    mirrorMatrix = mI;
+    mirrorMatrix.mult(Z);
+    mirrorMatrix.mult(m);
+}
+
+bool VRView::getMirror() { return mirror; }
+Vec3d VRView::getMirrorPos() { return mirrorPos; }
+Vec3d VRView::getMirrorNorm() { return mirrorNorm; }
+
+void VRView::updateMirror() {
+    if (!mirror || !user) return;
+    auto u = user->getMatrix();
+    u.multLeft(mirrorMatrix); // u' = m*Z*mI*u
+    dummy_user->setMatrix(u);
+}
+
 void VRView::setUser(VRTransformPtr u) {
     user = u;
     user_name = user ? user->getName() : "";
@@ -409,7 +440,7 @@ void VRView::setUser(VRTransformPtr u) {
 void VRView::setUser() {
     if (user == 0 && user_name != "") user = VRSetup::getCurrent()->getTracker(user_name);
 
-    if (user == 0) {
+    if (user == 0 || mirror) {
         if (PCDecoratorLeft) PCDecoratorLeft->setUser(dummy_user->getNode()->node);
         if (PCDecoratorRight) PCDecoratorRight->setUser(dummy_user->getNode()->node);
     } else {
@@ -501,13 +532,6 @@ void VRView::setFotoMode(bool b) {
         if (PCDecoratorRight) PCDecoratorRight->setEyeSeparation(0);
     } else update();
 }
-
-void VRView::setMirror(bool b) { mirror = b; }
-void VRView::setMirrorPos(Vec3d p) { mirrorPos = p; }
-void VRView::setMirrorNorm(Vec3d n) { mirrorNorm = n; }
-bool VRView::getMirror() { return mirror; }
-Vec3d VRView::getMirrorPos() { return mirrorPos; }
-Vec3d VRView::getMirrorNorm() { return mirrorNorm; }
 
 VRTexturePtr VRView::grab() {
     return takeSnapshot();
