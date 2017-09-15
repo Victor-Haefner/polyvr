@@ -672,7 +672,15 @@ void VRGuiSetup::on_toggle_view_user() {
 
     bool b = getCheckButtonState("checkbutton26");
     VRView* view = (VRView*)selected_object;
-    view->setUser(0);
+    if (!b) view->setUser(0);
+    else {
+        VRGuiSetup_UserColumns cols;
+        Gtk::TreeModel::Row row = *getComboboxIter("combobox18");
+        if (auto U = row.get_value(cols.user)) {
+            VRTransformPtr u = ( (VRTransform*)U )->ptr();
+            view->setUser(u);
+        }
+    }
     setToolButtonSensitivity("toolbutton12", true);
 }
 
