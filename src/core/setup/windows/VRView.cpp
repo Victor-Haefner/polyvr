@@ -5,6 +5,7 @@
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGMultiPassMaterial.h>
 
+#include "core/math/pose.h"
 #include "core/utils/VRRate.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRGlobals.h"
@@ -401,20 +402,14 @@ void VRView::setRoot() {
 }
 
 void VRView::setMirror(bool b) { mirror = b; update(); }
+void VRView::setMirrorPos(Vec3d p) { mirrorPos = p; updateMirrorMatrix(); }
+void VRView::setMirrorNorm(Vec3d n) { mirrorNorm = n; updateMirrorMatrix(); }
 
-void VRView::setMirrorPos(Vec3d p) {
-    mirrorPos = p;
+void VRView::updateMirrorMatrix() {
+    Matrix4d Z, mI;
+    Z.setScale(Vec3d(1,1,-1));
     auto m = pose(mirrorPos, mirrorNorm).asMatrix();
-    auto mI = m.inverse();
-    mirrorMatrix = mI;
-    mirrorMatrix.mult(Z);
-    mirrorMatrix.mult(m);
-}
-
-void VRView::setMirrorNorm(Vec3d n) {
-    mirrorNorm = n;
-    auto m = pose(mirrorPos, mirrorNorm).asMatrix();
-    auto mI = m.inverse();
+    m.inverse(mI);
     mirrorMatrix = mI;
     mirrorMatrix.mult(Z);
     mirrorMatrix.mult(m);

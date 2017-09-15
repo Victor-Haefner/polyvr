@@ -70,7 +70,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         bool mirror = false;
         Vec3d mirrorPos = Vec3d(0,0,0);
         Vec3d mirrorNorm = Vec3d(0,0,1);
-        Matrix mirrorMatrix;
+        Matrix4d mirrorMatrix;
 
         //stereo viewports
         ViewportRecPtr lView;//used also for non stereo
@@ -91,6 +91,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         SimpleStatisticsForegroundRecPtr stats = 0;
         GrabForegroundRecPtr grabfg = 0;
 
+        void updateMirrorMatrix();
         void setMaterial();
         void setViewports();
         void setDecorators();
