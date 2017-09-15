@@ -142,6 +142,7 @@ void VRGuiSetup::updateObjectData() {
         setCheckButton("checkbutton9", view->eyesInverted());
         setCheckButton("checkbutton10", view->activeStereo());
         setCheckButton("checkbutton11", view->isProjection());
+        setCheckButton("checkbutton30", view->getMirror());
 
         setTextEntry("entry12", toString(view->getEyeSeparation()).c_str());
         setCombobox("combobox18", getListStorePos("user_list", view->getUser()->getName()));
@@ -154,6 +155,8 @@ void VRGuiSetup::updateObjectData() {
         shearEntry.set(view->getProjectionShear());
         warpEntry.set(view->getProjectionWarp());
         vsizeEntry.set(Vec2d(view->getSize()));
+        mirrorPosEntry.set(view->getMirrorPos());
+        mirrorNormEntry.set(view->getMirrorNorm());
     }
 
     if (selected_type == "vrpn_device") {
@@ -667,8 +670,37 @@ void VRGuiSetup::on_toggle_view_user() {
     if (guard) return;
     if (selected_type != "view") return;
 
+    bool b = getCheckButtonState("checkbutton26");
     VRView* view = (VRView*)selected_object;
     view->setUser(0);
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_toggle_view_mirror() {
+    if (guard) return;
+    if (selected_type != "view") return;
+
+    bool b = getCheckButtonState("checkbutton30");
+    VRView* view = (VRView*)selected_object;
+    view->setMirror(b);
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_view_mirror_pos_edit(Vec3d v) {
+    if (guard) return;
+    if (selected_type != "view") return;
+
+    VRView* view = (VRView*)selected_object;
+    view->setMirrorPos(v);
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_view_mirror_norm_edit(Vec3d v) {
+    if (guard) return;
+    if (selected_type != "view") return;
+
+    VRView* view = (VRView*)selected_object;
+    view->setMirrorNorm(v);
     setToolButtonSensitivity("toolbutton12", true);
 }
 
@@ -988,6 +1020,8 @@ VRGuiSetup::VRGuiSetup() {
     userEntry.init("user_entry", "user", sigc::mem_fun(*this, &VRGuiSetup::on_proj_user_edit));
     normalEntry.init("normal_entry", "normal", sigc::mem_fun(*this, &VRGuiSetup::on_proj_normal_edit));
     upEntry.init("viewup_entry", "up", sigc::mem_fun(*this, &VRGuiSetup::on_proj_up_edit));
+    mirrorPosEntry.init("mirror_pos_entry", "origin", sigc::mem_fun(*this, &VRGuiSetup::on_view_mirror_pos_edit));
+    mirrorNormEntry.init("mirror_norm_entry", "normal", sigc::mem_fun(*this, &VRGuiSetup::on_view_mirror_norm_edit));
     sizeEntry.init2D("size_entry", "size", sigc::mem_fun(*this, &VRGuiSetup::on_proj_size_edit));
     shearEntry.init2D("shear_entry", "shear", sigc::mem_fun(*this, &VRGuiSetup::on_proj_shear_edit));
     warpEntry.init2D("warp_entry", "warp", sigc::mem_fun(*this, &VRGuiSetup::on_proj_warp_edit));
@@ -1054,6 +1088,7 @@ VRGuiSetup::VRGuiSetup() {
     setCheckButtonCallback("checkbutton24", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_art));
     setCheckButtonCallback("checkbutton25", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_vrpn));
     setCheckButtonCallback("checkbutton26", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_view_user));
+    setCheckButtonCallback("checkbutton30", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_view_mirror));
     setCheckButtonCallback("checkbutton4", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_view_stats));
     setCheckButtonCallback("checkbutton37", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_dev_cross));
     setCheckButtonCallback("checkbutton39", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_vrpn_test_server));

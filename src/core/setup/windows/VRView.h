@@ -67,6 +67,10 @@ class VRView : public std::enable_shared_from_this<VRView> {
         Pnt3f screenUpperRight;
         Pnt3f screenUpperLeft;
 
+        bool mirror = false;
+        Vec3d mirrorPos = Vec3d(0,0,0);
+        Vec3d mirrorNorm = Vec3d(0,0,1);
+
         //stereo viewports
         ViewportRecPtr lView;//used also for non stereo
         ViewportRecPtr rView;
@@ -154,6 +158,13 @@ class VRView : public std::enable_shared_from_this<VRView> {
         bool eyesInverted();
         void setActiveStereo(bool b);
         bool activeStereo();
+
+        void setMirror(bool b);
+        bool getMirror();
+        void setMirrorPos(Vec3d p);
+        Vec3d getMirrorPos();
+        void setMirrorNorm(Vec3d n);
+        Vec3d getMirrorNorm();
 
         void update();
         void reset();

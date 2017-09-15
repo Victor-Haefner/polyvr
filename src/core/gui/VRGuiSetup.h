@@ -35,6 +35,8 @@ class VRGuiSetup {
         VRGuiVectorEntry shearEntry;
         VRGuiVectorEntry warpEntry;
         VRGuiVectorEntry vsizeEntry;
+        VRGuiVectorEntry mirrorPosEntry;
+        VRGuiVectorEntry mirrorNormEntry;
 
         VRGuiVectorEntry tVRPNAxisEntry;
         VRGuiVectorEntry rVRPNAxisEntry;
@@ -78,6 +80,7 @@ class VRGuiSetup {
         void on_toggle_view_invert();
         void on_toggle_view_active_stereo();
         void on_toggle_view_user();
+        void on_toggle_view_mirror();
         void on_change_view_user();
         void on_pos_edit();
         void on_eyesep_edit();
@@ -91,6 +94,8 @@ class VRGuiSetup {
         void on_proj_size_edit(Vec2d v);
         void on_proj_shear_edit(Vec2d v);
         void on_proj_warp_edit(Vec2d v);
+        void on_view_mirror_pos_edit(Vec3d v);
+        void on_view_mirror_norm_edit(Vec3d v);
 
         void on_vrpn_edit_port();
         void on_edit_VRPN_tracker_address();

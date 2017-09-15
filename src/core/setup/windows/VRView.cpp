@@ -502,6 +502,13 @@ void VRView::setFotoMode(bool b) {
     } else update();
 }
 
+void VRView::setMirror(bool b) { mirror = b; }
+void VRView::setMirrorPos(Vec3d p) { mirrorPos = p; }
+void VRView::setMirrorNorm(Vec3d n) { mirrorNorm = n; }
+bool VRView::getMirror() { return mirror; }
+Vec3d VRView::getMirrorPos() { return mirrorPos; }
+Vec3d VRView::getMirrorNorm() { return mirrorNorm; }
+
 VRTexturePtr VRView::grab() {
     return takeSnapshot();
 
@@ -545,6 +552,9 @@ void VRView::save(xmlpp::Element* node) {
     node->set_attribute("shear", toString(proj_shear).c_str());
     node->set_attribute("warp", toString(proj_warp).c_str());
     node->set_attribute("vsize", toString(window_size).c_str());
+    node->set_attribute("mirror", toString(mirror).c_str());
+    node->set_attribute("mirrorPos", toString(mirrorPos).c_str());
+    node->set_attribute("mirrorNorm", toString(mirrorNorm).c_str());
     if (user) node->set_attribute("user", user->getName());
     else node->set_attribute("user", user_name);
 }
@@ -564,6 +574,9 @@ void VRView::load(xmlpp::Element* node) {
     if (node->get_attribute("shear")) proj_shear = toValue<Vec2d>(node->get_attribute("shear")->get_value());
     if (node->get_attribute("warp")) proj_warp = toValue<Vec2d>(node->get_attribute("warp")->get_value());
     if (node->get_attribute("vsize")) window_size = toValue<Vec2i>(node->get_attribute("vsize")->get_value());
+    if (node->get_attribute("mirror")) mirror = toValue<bool>(node->get_attribute("mirror")->get_value());
+    if (node->get_attribute("mirrorPos")) mirrorPos = toValue<Vec3d>(node->get_attribute("mirrorPos")->get_value());
+    if (node->get_attribute("mirrorNorm")) mirrorNorm = toValue<Vec3d>(node->get_attribute("mirrorNorm")->get_value());
     if (node->get_attribute("user")) {
         user_name = node->get_attribute("user")->get_value();
         user = VRSetup::getCurrent()->getTracker(user_name);
