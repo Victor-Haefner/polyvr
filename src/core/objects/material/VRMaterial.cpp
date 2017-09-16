@@ -200,8 +200,9 @@ VRMaterial::VRMaterial(string name) : VRObject(name) {
 VRMaterial::~VRMaterial() {}
 
 VRMaterialPtr VRMaterial::ptr() { return static_pointer_cast<VRMaterial>( shared_from_this() ); }
+
 VRMaterialPtr VRMaterial::create(string name) {
-    auto p = shared_ptr<VRMaterial>(new VRMaterial(name) );
+    auto p = VRMaterialPtr(new VRMaterial(name) );
     materials[p->getName()] = p;
     return p;
 }

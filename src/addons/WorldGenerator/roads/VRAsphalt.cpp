@@ -8,6 +8,9 @@
 using namespace OSG;
 
 VRAsphalt::VRAsphalt() : VRMaterial("asphalt") {
+    asphalt_fp = asphalt_fp_head + asphalt_fp_core;
+    asphalt_dfp = asphalt_fp_head + asphalt_dfp_core;
+
     setVertexShader(asphalt_vp, "asphaltVP");
     setFragmentShader(asphalt_fp, "asphaltFP");
     setFragmentShader(asphalt_dfp, "asphaltDFP", true);
@@ -19,7 +22,11 @@ VRAsphalt::VRAsphalt() : VRMaterial("asphalt") {
 
 VRAsphalt::~VRAsphalt() {}
 
-VRAsphaltPtr VRAsphalt::create() { return VRAsphaltPtr( new VRAsphalt() ); }
+VRAsphaltPtr VRAsphalt::create() {
+    auto p = VRAsphaltPtr( new VRAsphalt() );
+    VRMaterial::materials[p->getName()] = p;
+    return p;
+}
 
 void VRAsphalt::setArrowMaterial() {
     setFragmentShader(asphaltArrow_fp, "asphaltArrowFP");
@@ -95,10 +102,16 @@ void VRAsphalt::addPath(pathPtr path, int rID, float width, int dashN, float off
         Vec3d B = (P1 - P0) * 2;
         Vec3d C = P0;
 
+        float k, a, b, c;
+        k = 2.0*A.dot(A);
+        a = 3.0*A.dot(B);
+        b = B.dot(B);
+
         texGen->drawPixel( Vec3i(rID, i+0, 0), Color4f(A[0], A[1], A[2], 1.0) );
         texGen->drawPixel( Vec3i(rID, i+1, 0), Color4f(B[0], B[1], B[2], 1.0) );
         texGen->drawPixel( Vec3i(rID, i+2, 0), Color4f(C[0], C[1], C[2], 1.0) );
-        i += 3;
+        texGen->drawPixel( Vec3i(rID, i+3, 0), Color4f(k, a, b, 1.0) );
+        i += 4;
     }
 
     texGen->drawPixel(Vec3i(rID,iNpnts  ,0), Color4f(i-iNpnts-2,width,dashN,1));
@@ -150,7 +163,10 @@ void main(void) {
 );
 
 
-string VRAsphalt::asphalt_fp =
+string VRAsphalt::asphalt_fp = "";
+string VRAsphalt::asphalt_dfp = "";
+
+string VRAsphalt::asphalt_fp_head =
 "#version 400 compatibility\n"
 "#extension GL_ARB_texture_rectangle : require\n"
 "#extension GL_ARB_texture_rectangle : enable\n"
@@ -165,6 +181,7 @@ const float Inv27 = 1.0/27.0;
 
 vec4 color = vec4(0.0,0.0,0.0,1.0);
 vec4 trackColor = vec4(0.3, 0.3, 0.3, 1.0);
+
 vec4 roadData;
 bool doLine = false;
 bool doTrack = false;
@@ -175,6 +192,23 @@ struct Point {
 	vec3 norm;
 };
 
+const float pi = 3.14159265359;
+const vec3 light = vec3(-1,-1,-0.5);
+const ivec3 off = ivec3(-1,0,1);
+const vec2 size = vec2(1.5,0.0);
+vec2 uv = vec2(0);
+vec3 norm = vec3(0,1,0);
+float noise = 1;
+
+in vec4 position;
+in vec2 tc1; // noise
+flat in int rID;
+
+);
+
+
+string VRAsphalt::asphalt_fp_core =
+GLSL(
 void debugColors(float y) {
 	if (y<=0) color = vec4(1,0,0,1);
 	if (y > 0 && y <= 1.0) color = vec4(0,1,y,1);
@@ -218,18 +252,6 @@ vec3 toWorld(const vec3 p) {
 	mat4 m = inverse(gl_ModelViewMatrix);
 	return vec3(m*vec4(p,1.0));
 }
-
-const float pi = 3.14159265359;
-const vec3 light = vec3(-1,-1,-0.5);
-const ivec3 off = ivec3(-1,0,1);
-const vec2 size = vec2(1.5,0.0);
-vec2 uv = vec2(0);
-vec3 norm = vec3(0,1,0);
-float noise = 1;
-
-in vec4 position;
-in vec2 tc1; // noise
-flat in int rID;
 
 void asphalt() {
 	float g = 0.35+0.2*noise;
@@ -390,27 +412,8 @@ void main(void) {
 );
 
 
-string VRAsphalt::asphalt_dfp =
-"#version 400 compatibility\n"
-"#extension GL_ARB_texture_rectangle : require\n"
-"#extension GL_ARB_texture_rectangle : enable\n"
+string VRAsphalt::asphalt_dfp_core =
 GLSL(
-uniform sampler2D texMarkings;
-uniform sampler2D texMud;
-uniform sampler2D texNoise;
-uniform vec4 cLine;
-
-const float Inv3 = 1.0/3.0;
-const float Inv27 = 1.0/27.0;
-
-vec4 color = vec4(0.0,0.0,0.0,1.0);
-vec4 trackColor = vec4(0.3, 0.3, 0.3, 1.0);
-
-struct Point {
-	vec3 pos;
-	vec3 norm;
-};
-
 void debugColors(float y) {
 	if (y<=0) color = vec4(1,0,0,1);
 	if (y > 0 && y <= 1.0) color = vec4(0,1,y,1);
@@ -454,18 +457,6 @@ vec3 toWorld(const vec3 p) {
 	mat4 m = inverse(gl_ModelViewMatrix);
 	return vec3(m*vec4(p,1.0));
 }
-
-const float pi = 3.14159265359;
-const vec3 light = vec3(-1,-1,-0.5);
-const ivec3 off = ivec3(-1,0,1);
-const vec2 size = vec2(1.5,0.0);
-vec2 uv = vec2(0);
-vec3 norm = vec3(0,1,0);
-float noise = 1;
-
-in vec4 position;
-in vec2 tc1; // noise
-flat in int rID;
 
 void asphalt() {
 	float g = 0.35+0.2*noise;
@@ -617,6 +608,11 @@ void main(void) {
     gl_FragData[2] = color;
 }
 );
+
+
+
+
+
 
 string VRAsphalt::asphaltArrow_fp =
 "#version 400 compatibility\n"

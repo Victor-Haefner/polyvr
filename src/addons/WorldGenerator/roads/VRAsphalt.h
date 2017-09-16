@@ -11,6 +11,11 @@ class VRAsphalt : public VRMaterial {
         static string asphalt_vp;
         static string asphalt_fp;
         static string asphalt_dfp;
+
+        static string asphalt_fp_head;
+        static string asphalt_fp_core;
+        static string asphalt_dfp_core;
+
         static string asphaltArrow_fp;
         static string asphaltArrow_dfp;
 

@@ -404,15 +404,21 @@ void VRScript::execute() {
     }
 
     if (type == "GLSL") {
+        string name = getName();
         for (auto m : VRMaterial::materials) {
             auto mat = m.second.lock();
             if (!mat) continue;
-            if (mat->getVertexScript() == getName()) mat->setVertexScript(getName());
-            if (mat->getFragmentScript() == getName()) mat->setFragmentScript(getName());
-            if (mat->getFragmentScript(true) == getName()) mat->setFragmentScript(getName(), true);
-            if (mat->getGeometryScript() == getName()) mat->setGeometryScript(getName());
-            if (mat->getTessControlScript() == getName()) mat->setTessControlScript(getName());
-            if (mat->getTessEvaluationScript() == getName()) mat->setTessEvaluationScript(getName());
+            if (mat->getVertexScript() == name) mat->setVertexScript(name);
+            if (mat->getFragmentScript() == name) mat->setFragmentScript(name);
+            if (mat->getFragmentScript(true) == name) mat->setFragmentScript(name, true);
+            if (mat->getGeometryScript() == name) mat->setGeometryScript(name);
+            if (mat->getTessControlScript() == name) mat->setTessControlScript(name);
+            if (mat->getTessEvaluationScript() == name) mat->setTessEvaluationScript(name);
+
+            /*cout << "VRScript::execute GLSL " << name << " " << mat->getName() << " " << mat->getFragmentScript() << " "
+                << (mat->getVertexScript() == name) << (mat->getFragmentScript() == name)
+                << (mat->getFragmentScript(true) == name) << (mat->getGeometryScript() == name)
+                << (mat->getTessControlScript() == name) << (mat->getTessEvaluationScript() == name) << endl;*/
         }
     }
 }
