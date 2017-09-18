@@ -219,6 +219,32 @@ vec4 getData(const int x, const int y) {
 	return texelFetch(texMarkings, ivec2(x,y), 0);
 }
 
+vec3 toWorld(const vec3 p) {
+	mat4 m = inverse(gl_ModelViewMatrix);
+	return vec3(m*vec4(p,1.0));
+}
+
+void asphalt() {
+	float g = 0.35+0.2*noise;
+	color = vec4(g,g,g,1.0);
+}
+
+void applyMud() {
+	vec4 c_mud = texture(texMud, uv);
+	color = mix(color, c_mud, smoothstep( 0.3, 0.8, c_mud.a)*0.2 );
+}
+
+void applyLine() {
+	float l = clamp(1.0 - smoothstep(0.0, 0.2, norm.x), 0, 1);
+	color = mix(color, cLine, l );
+}
+
+void applyTrack() {
+	distTrack = 0.5-distTrack;
+	distTrack = clamp(distTrack, 0.0, 1.0);
+	color = mix(color, trackColor, distTrack );
+}
+
 float cuberoot(float x) {
 	return sign(x)*pow(abs(x), Inv3);
 }
@@ -248,38 +274,12 @@ vec4 solveCubic(float a, float b, float c) {
 	return vec4(r1,r2,r3, 3.0);
 }
 
-vec3 toWorld(const vec3 p) {
-	mat4 m = inverse(gl_ModelViewMatrix);
-	return vec3(m*vec4(p,1.0));
-}
-
-void asphalt() {
-	float g = 0.35+0.2*noise;
-	color = vec4(g,g,g,1.0);
-}
-
-void applyMud() {
-	vec4 c_mud = texture(texMud, uv);
-	color = mix(color, c_mud, smoothstep( 0.3, 0.8, c_mud.a)*0.2 );
-}
-
-void applyLine() {
-	float l = clamp(1.0 - smoothstep(0.0, 0.2, norm.x), 0, 1);
-	color = mix(color, cLine, l );
-}
-
-void applyTrack() {
-	distTrack = 0.5-distTrack;
-	distTrack = clamp(distTrack, 0.0, 1.0);
-	color = mix(color, trackColor, distTrack );
-}
-
-vec2 distToQuadBezier( vec3 A, vec3 B, vec3 C, vec3 x ) {
+vec2 distToQuadBezier( vec3 A, vec3 B, vec3 C, vec3 D, vec3 x ) {
 	// Bezier: At2 + Bt + C
 	// Distance: kt3 + a*t2 + b*t + c
-    float k = 2.0*dot(A,A);
-    float a = 3.0*dot(A,B);
-    float b = dot(B,B) + 2.0*dot(A,C-x);
+    float k = D[0];//2.0*dot(A,A);
+    float a = D[1];//3.0*dot(A,B);
+    float b = D[2] + 2.0*dot(A,C-x);//dot(B,B) + 2.0*dot(A,C-x);
     float c = dot(B,C-x);
 
     vec4 res;
@@ -303,6 +303,27 @@ vec2 distToQuadBezier( vec3 A, vec3 B, vec3 C, vec3 x ) {
     return vec2(dmin,tmin);
 }
 
+float squareDistToSegment( vec3 A, vec3 B, vec3 x ) {
+    vec3 d = B-A;
+    float L2 = dot(d,d);
+    float t = -dot(A-x,d)/L2;
+    vec3 ps = A+d*t;
+    if (t<0) ps = A;
+    if (t>1) ps = B;
+    return dot(ps-x,ps-x);
+}
+
+float distToQuadBezierHull( vec3 A, vec3 B, vec3 C, vec3 x ) {
+	vec3 P0 = C;
+	vec3 P1 = (C-A)*0.5;
+	vec3 P2 = A+B+C;
+	float d = 0;
+	float d1 = squareDistToSegment(P0, P1, x);
+	float d2 = squareDistToSegment(P1, P2, x);
+	float d3 = squareDistToSegment(P2, P0, x);
+	return min(min(d1,d2),d3);
+}
+
 float distToPath(const int k, const int roadID, const vec3 pos, const vec4 pathData1, const vec4 pathData2) {
 	int Npoints = int(pathData1.x); // testing
 	float width2 = pathData1.y*0.5;
@@ -312,15 +333,22 @@ float distToPath(const int k, const int roadID, const vec3 pos, const vec4 pathD
 	vec3 A;
 	vec3 B;
 	vec3 C;
-	int Nsegs = (Npoints-1)/2;
+	vec3 D;
+	int Nsegs = int((Npoints-1)*0.5);
 	for (int j=0; j<Nsegs; j++) {
-		A = getData(roadID, k+3*j+1).xyz;
-		B = getData(roadID, k+3*j+2).xyz;
-		C = getData(roadID, k+3*j+3).xyz;
-		vec2 dtmin = distToQuadBezier(A,B,C,pos);
-		if (dtmin.x > offset - width2 && dtmin.x < offset + width2) {
-            if (dashL == 0) return abs(dtmin.x - offset);
-            if (int(dtmin.y*dashL)%2 == 0) return abs(dtmin.x - offset);
+		A = getData(roadID, k+4*j+1).xyz;
+		B = getData(roadID, k+4*j+2).xyz;
+		C = getData(roadID, k+4*j+3).xyz;
+		D = getData(roadID, k+4*j+4).xyz;
+
+
+		float d1 = distToQuadBezierHull(A,B,C,pos);
+		if (d1 < 100) {
+			vec2 dtmin = distToQuadBezier(A,B,C,D,pos);
+			if (dtmin.x > offset - width2 && dtmin.x < offset + width2) {
+		        if (dashL == 0) return abs(dtmin.x - offset);
+		        if (int(dtmin.y*dashL)%2 == 0) return abs(dtmin.x - offset);
+			}
 		}
 	}
 
@@ -375,23 +403,24 @@ void doPaths() {
 		k += Npoints+2;
 	}
 
-	if (!doLine) {
-		int Ntracks = int(roadData.y);
-		for (int i=0; i<Ntracks; i++) {
-			vec4 pathData1 = getData(rID, k);
-            vec4 pathData2 = getData(rID, k+1);
-			float width = pathData1.y;
-			int Npoints = int(pathData1.x);
-			float d = distToPath(k+1, rID, pos, pathData1, pathData2);
-			if (d < 10.0) {
-				doTrack = true;
-				distTrack = min(distTrack,d/width);
-			}
-			k += Npoints+2;
+	if (doLine) { applyLine(); return; }
+
+	return;
+
+	int Ntracks = int(roadData.y);
+	for (int i=0; i<Ntracks; i++) {
+		vec4 pathData1 = getData(rID, k);
+        vec4 pathData2 = getData(rID, k+1);
+		float width = pathData1.y;
+		int Npoints = int(pathData1.x);
+		float d = distToPath(k+1, rID, pos, pathData1, pathData2);
+		if (d < 10.0) {
+			doTrack = true;
+			distTrack = min(distTrack,d/width);
 		}
+		k += Npoints+2;
 	}
 
-	if (doLine) applyLine();
 	if (doTrack) applyTrack();
 }
 
