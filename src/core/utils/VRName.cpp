@@ -10,6 +10,11 @@
 
 using namespace std;
 
+struct VRNamePool {
+    string name;
+    map<int, bool> names; // suffix, name
+    map<int, bool> freed;
+};
 
 VRNameSpace::VRNameSpace(string nspace) : nspace(nspace) {}
 
@@ -39,7 +44,7 @@ string VRNameSpace::compileName(const string& base, const int& suffix) {
     if (suffix > 0) name += separator + toString(suffix);
     if (!nameDict.count(base)) nameDict[base] = VRNamePool();
     auto& pool = nameDict[base];
-    pool.names[suffix] = name;
+    pool.names[suffix] = true;
     if (pool.freed.count(suffix)) pool.freed.erase(suffix);
     return name;
 }
@@ -107,12 +112,12 @@ VRNameSpace* VRName_base::setNameSpace(string s) {
 VRNameSpace* VRName_base::resetNameSpace() { return setNameSpace("__global__"); }
 
 void VRName_base::compileName() {
-    if (!nameSpace) resetNameSpace();
+    if (!nameSpace) setNameSpace(nameSpaceName);
     name = nameSpace->compileName(base_name, name_suffix);
 }
 
 string VRName_base::setName(string name) {
-    if (!nameSpace) resetNameSpace();
+    if (!nameSpace) setNameSpace(nameSpaceName);
     nameSpace->applyFilter(name);
     if (base_name == name && name_suffix == 0) return this->name; // already named like that, return
     nameSpace->removeName(base_name, name_suffix); // check if already named, remove old name from dict

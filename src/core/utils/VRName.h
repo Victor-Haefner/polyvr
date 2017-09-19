@@ -9,11 +9,7 @@ namespace xmlpp{ class Element; }
 
 using namespace std;
 
-struct VRNamePool {
-    string name;
-    map<int, string> names; // suffix, name
-    map<int, bool> freed;
-};
+struct VRNamePool;
 
 struct VRNameSpace {
     string nspace = "__global__";
