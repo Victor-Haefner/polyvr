@@ -11,31 +11,81 @@
 using namespace std;
 
 struct VRNamePool {
-    string name;
-    map<int, bool> names; // suffix, name
-    map<int, bool> freed;
+    list<pair<int,int>> ranges; // ranges of suffixes
+
+    VRNamePool() {
+        ranges.push_back(make_pair(-1,-1));
+    }
+
+    void mergeTest(list<pair<int,int>>::iterator& itr1) {
+        auto itr2 = itr1; itr2++;
+        if (itr2 == ranges.end()) return;
+        if (itr2->first == itr1->second) { // overlap
+            itr1->second = itr2->second;
+            ranges.erase(itr2);
+        }
+        if (itr2->first == itr1->second+1) { // continuity
+            itr1->second = itr2->second;
+            ranges.erase(itr2);
+        }
+    }
+
+    int get() {
+        auto itr1 = ranges.begin();
+        int res = itr1->second+1;
+        itr1->second = res;
+        mergeTest(itr1);
+        return res;
+    }
+
+    void add(int i) {
+        for (auto itr1 = ranges.begin(); itr1 != ranges.end(); itr1++) {
+            if (itr1->first <= i && itr1->second >= i) return; // already present
+            if (itr1->second <= i-1) {
+                auto itr2 = itr1; itr2++;
+                if (itr1->second == i-1) { // extend range at end
+                    itr1->second = i;
+                    mergeTest(itr1);
+                } else if (itr2->first == i+1) {  // extend range at beginning
+                    itr2->first = i;
+                    mergeTest(itr1);
+                } else ranges.insert(++itr1, make_pair(i,i));
+                return;
+            }
+        }
+    }
+
+    void sub(int i) {
+        for (auto itr = ranges.begin(); itr != ranges.end(); itr++) {
+            if (itr->first <= i && itr->second >= i) {
+                if (itr->first == i) { itr->first++; return; }
+                if (itr->second == i) { itr->second--; return; }
+                auto np = make_pair(i+1, itr->second);
+                itr->second = i-1;
+                ranges.insert(++itr, np);
+                return;
+            }
+        }
+    }
+
+    bool has(int i) {
+        for (auto& range : ranges) {
+            if (range.first <= i && range.second >= i) return true;
+        }
+        return false;
+    }
 };
 
 VRNameSpace::VRNameSpace(string nspace) : nspace(nspace) {}
 
 int VRNameSpace::getSuffix(const string& base, const int& hint) {
     auto& pool = nameDict[base];
-    if (hint != -1) if (!pool.names.count(hint)) return hint;
-    int suffix = 0;
-    if (nameDict.count(base)) {
-        if (pool.freed.size() > 0) {
-            suffix = pool.freed.begin()->first;
-            pool.freed.erase(suffix);
-        } else suffix = pool.names.size();
-    }
-    return suffix;
+    if (hint != -1) if (!pool.has(hint)) return hint;
+    return pool.get();
 }
 
 void VRNameSpace::removeName(const string& base, const int& suffix) {
-    if (nameDict.count(base)) {
-        nameDict[base].names.erase(suffix);
-        nameDict[base].freed[suffix] = 0;
-    }
+    if (nameDict.count(base)) nameDict[base].sub(suffix);
 }
 
 string VRNameSpace::compileName(const string& base, const int& suffix) {
@@ -43,9 +93,7 @@ string VRNameSpace::compileName(const string& base, const int& suffix) {
     string name = base;
     if (suffix > 0) name += separator + toString(suffix);
     if (!nameDict.count(base)) nameDict[base] = VRNamePool();
-    auto& pool = nameDict[base];
-    pool.names[suffix] = true;
-    if (pool.freed.count(suffix)) pool.freed.erase(suffix);
+    nameDict[base].add(suffix);
     return name;
 }
 
@@ -57,16 +105,16 @@ void VRNameSpace::applyFilter(string& name) {
     for (char c : filter) replace(name.begin(), name.end(),c,filter_rep);
 }
 
-int VRNameSpace::getNameNumber() {
+int VRNameSpace::getNameNumber() { // TODO: currently the number of ranges!
     int N = 0;
-    for (auto n : nameDict) N += n.second.names.size();
+    for (auto n : nameDict) N += n.second.ranges.size();
     return N;
 }
 
 void VRNameSpace::print() {
     for (auto n : nameDict) {
         cout << "\n " << n.first << flush;
-        for (auto s : n.second.names) cout << "\n  " << s.second << flush;
+        for (auto r : n.second.ranges) cout << "\n  " << r.first << " " << r.second << flush;
     }
 }
 
@@ -146,10 +194,6 @@ string VRName_base::setName(string name) {
 string VRName_base::getName() { return name; }
 string VRName_base::getBaseName() { return base_name; }
 int VRName_base::getNameSuffix() { return name_suffix; }
-
-/*int VRName_base::getBaseNameNumber() { return nmgr.getBaseNameNumber(); }
-int VRName_base::getNameNumber() { return nmgr.getNameNumber(); }
-void VRName_base::printNameDict() { nmgr.print(); }*/
 
 VRName::VRName() {
     store("name_suffix", &name_suffix);
