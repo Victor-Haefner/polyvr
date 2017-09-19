@@ -222,7 +222,7 @@ VRProgressPtr VRScene::getLoadingProgress() { return loadingProgress; }
 
 void VRScene::saveScene(xmlpp::Element* e) {
     if (e == 0) return;
-    VRName::saveName(e);
+    VRName::save(e);
     VRRenderManager::saveUnder(e);
     VRScriptManager::saveUnder(e);
     VRNetworkManager::saveUnder(e);
@@ -242,7 +242,7 @@ void VRScene::loadScene(xmlpp::Element* e) {
     loadingProgressThreadCb = VRFunction< VRThreadWeakPtr >::create( "loading progress thread", boost::bind(&VRScene::updateLoadingProgress, this, _1) );
     loadingProgressThread = VRSceneManager::get()->initThread(loadingProgressThreadCb, "loading progress thread", true, 1);
 
-    VRName::loadName(e);
+    VRName::load(e);
     VRRenderManager::loadChildFrom(e);
     VRScriptManager::loadChildFrom(e);
     VRNetworkManager::loadChildFrom(e);

@@ -18,8 +18,8 @@ VROntologyRule::VROntologyRule(string r, string ac) {
     storeObj("query", query);
     storeObjVec("statements", statements, true);
 
-    setNameSpace("rule");
-    setUniqueName(false);
+    auto ns = setNameSpace("VRRule");
+    ns->setUniqueNames(false);
     setName("rule");
 }
 

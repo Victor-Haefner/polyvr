@@ -75,9 +75,6 @@ class VRSocket : public VRName {
         void initServer(CONNECTION_TYPE t, int _port);
         void sendHTTPGet(string uri);
 
-        void save(xmlpp::Element* e);
-        void load(xmlpp::Element* e);
-
         void setName(string s);
         void setType(string s);
         void setIP(string s);

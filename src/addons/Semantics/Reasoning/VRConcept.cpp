@@ -14,8 +14,9 @@ VRConcept::VRConcept(string name, VROntologyPtr o) {
     //cout << "VRConcept::VRConcept " << name << endl;
     setStorageType("Concept");
     setNameSpace("concept");
-    setSeparator('_');
-    setUniqueName(false);
+    auto ns = setNameSpace("VRConcept");
+    ns->setSeparator('_');
+    ns->setUniqueNames(false);
     setName(name);
     //this->ontology = o;
 

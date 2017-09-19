@@ -52,8 +52,8 @@ void updateArgPtr(VRScript::arg* a) {
 
 VRScript::trig::trig() { setName("trigger"); }
 VRScript::arg::arg(string nspace, string name) {
-    setSeparator('_');
-    setNameSpace(nspace);
+    auto ns = setNameSpace(nspace);
+    ns->setSeparator('_');
     setName(name);
 }
 
@@ -169,8 +169,8 @@ void VRScript::update() {
 
 VRScript::VRScript(string _name) {
     setStorageType("Script");
-    setSeparator('_');
-    setNameSpace("__script__");
+    auto ns = setNameSpace("__script__");
+    ns->setSeparator('_');
     setName(_name);
     cbfkt_sys = VRUpdateCb::create(_name + "_ScriptCallback_sys", boost::bind(&VRScript::execute, this));
     cbfkt_dev = new VRFunction<VRDeviceWeakPtr>(_name + "_ScriptCallback_dev", boost::bind(&VRScript::execute_dev, this, _1));
@@ -486,7 +486,7 @@ void VRScript::save(xmlpp::Element* e) {
         xmlpp::Element* ea = e->add_child("arg");
         ea->set_attribute("type", a->type);
         ea->set_attribute("value", a->val);
-        a->saveName(ea);
+        a->save(ea);
     }
 
     for (auto t : trigs) {
@@ -496,13 +496,13 @@ void VRScript::save(xmlpp::Element* e) {
         ea->set_attribute("state", t->state);
         ea->set_attribute("param", t->param);
         ea->set_attribute("key", toString(t->key));
-        t->saveName(ea);
+        t->save(ea);
     }
 }
 
 void VRScript::load(xmlpp::Element* e) {
     clean();
-    loadName(e);
+    VRName::load(e);
     if (e->get_attribute("core")) core = e->get_attribute("core")->get_value();
     if (e->get_attribute("type")) type = e->get_attribute("type")->get_value();
     if (e->get_attribute("server")) server = e->get_attribute("server")->get_value();
@@ -526,7 +526,7 @@ void VRScript::load(xmlpp::Element* e) {
             a->type = el->get_attribute("type")->get_value();
             a->val  = el->get_attribute("value")->get_value();
             string oname = a->getName();
-            a->loadName(el);
+            a->load(el);
             changeArgName(oname, a->getName());
         }
 
@@ -538,7 +538,7 @@ void VRScript::load(xmlpp::Element* e) {
             t->state = el->get_attribute("state")->get_value();
             t->param = el->get_attribute("param")->get_value();
             t->key = toInt( el->get_attribute("key")->get_value() );
-            t->loadName(el);
+            t->load(el);
             trigs.push_back(t);
 
             if (t->trigger == "on_scene_load" && active) {

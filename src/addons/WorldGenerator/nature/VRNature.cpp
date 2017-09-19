@@ -31,10 +31,10 @@ VRLodLeafPtr VRLodLeaf::ptr() { return static_pointer_cast<VRLodLeaf>( shared_fr
 
 VRLodLeafPtr VRLodLeaf::create(string name, Octree* o, int lvl) {
     auto l = VRLodLeafPtr(new VRLodLeaf(name, o, lvl));
-    l->lod = VRLod::create("lod");
+    l->lod = VRLod::create("natureLod");
     l->lod->setPersistency(0);
     l->addChild(l->lod);
-    auto lvl0 = VRObject::create("lvl");
+    auto lvl0 = VRObject::create("natureLodLvl");
     lvl0->setPersistency(0);
     l->levels.push_back(lvl0);
     l->lod->addChild(lvl0);
@@ -314,6 +314,8 @@ void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround)
     if (a == 0) return;
     //cout << "VRNature::addGrassPatch " << a << endl;
 
+    map<VRLodLeafPtr, bool> toUpdate;
+
     for (auto area : Area->gridSplit(10.0)) {
         //cout << " sub Area " << i << "  " << timer.stop() - t0 << endl;
         if (terrain) terrain->elevatePolygon(area, 0.18);
@@ -327,7 +329,8 @@ void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround)
         grassPatchRefs[grass.get()] = grass;
         auto leaf = addObject(grass, median, 0); // pose contains the world position!
         grass->setWorldPosition(median);
-        if (updateLODs) computeLODs(leaf);
+        toUpdate[leaf] = true;
+
 
         //cout << "  A3 " << timer.stop() - t0 << endl;
 
@@ -343,6 +346,8 @@ void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround)
 
         i++;
     }
+
+    if (updateLODs) for (auto l : toUpdate) computeLODs(l.first);
 
     if (addGround) {
         VRTextureGenerator tg;

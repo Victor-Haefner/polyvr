@@ -9,44 +9,64 @@ namespace xmlpp{ class Element; }
 
 using namespace std;
 
+struct VRNamePool {
+    string name;
+    map<int, string> names; // suffix, name
+    map<int, bool> freed;
+};
+
+struct VRNameSpace {
+    string nspace = "__global__";
+    bool unique = true;
+    char separator = '.';
+    string filter;
+    char filter_rep;
+    map<string, VRNamePool> nameDict; // key is base name
+
+    VRNameSpace(string nspace = "");
+
+    int getSuffix(const string& base, const int& hint = -1);
+    void removeName(const string& base, const int& suffix);
+    string compileName(const string& base, const int& suffix);
+    int getNameNumber();
+    void print();
+    void applyFilter(string& name);
+
+    void setSeparator(char s);
+    void setUniqueNames(bool b);
+    void filterNameChars(string chars, char replacement);
+};
+
 class VRName_base {
     protected:
         string name;
         string base_name;
         int name_suffix = 0;
-        bool unique = true;
-        char separator = '.';
-        string nameSpace = "__global__";
-        string filter;
-        char filter_rep;
+        string nameSpaceName = "__global__";
+        VRNameSpace* nameSpace = 0;
 
     public:
         VRName_base();
         ~VRName_base();
 
-        void compileName();
         string setName(string name);
+        VRNameSpace* setNameSpace(string s);
+        VRNameSpace* resetNameSpace();
+
         string getName();
         string getBaseName();
         int getNameSuffix();
-        void setSeparator(char s);
-        void setNameSpace(string s);
-        void resetNameSpace();
-        void setUniqueName(bool b);
-        void filterNameChars(string chars, char replacement);
+        VRNameSpace* getNameSpace();
 
-        void saveName(xmlpp::Element* e);
-        void loadName(xmlpp::Element* e);
-
-        static int getNameNumber();
-        static int getBaseNameNumber();
-        static void printNameDict();
+        void compileName();
 };
 
 class VRName : public OSG::VRStorage, public VRName_base {
     public:
         VRName();
         ~VRName();
+
+        static void printInternals();
 };
 
 #endif // VRNAME_H_INCLUDED
