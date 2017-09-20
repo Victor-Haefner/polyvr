@@ -317,6 +317,7 @@ void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround)
     map<VRLodLeafPtr, bool> toUpdate;
 
     for (auto area : Area->gridSplit(10.0)) {
+        if (area->isCCW()) area->reverseOrder();
         //cout << " sub Area " << i << "  " << timer.stop() - t0 << endl;
         if (terrain) terrain->elevatePolygon(area, 0.18);
         Vec3d median = area->getBoundingBox().center();
@@ -354,6 +355,7 @@ void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround)
         tg.addSimpleNoise( Vec3i(128,128,1), true, Color4f(0.85,0.8,0.75,1), Color4f(0.5,0.3,0,1) );
         auto mat = VRMaterial::create("earth");
         mat->setTexture(tg.compose());
+        mat->clearTransparency();
         ground->setMaterial(mat);
         ground->setPositionalTexCoords(1.0, 0, Vec3i(0,2,1));
         addChild(ground);

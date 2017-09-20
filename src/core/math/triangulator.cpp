@@ -174,7 +174,7 @@ void Triangulator::tessellate() {
 
     auto toSpace = [&](const vector<Vec2d>& poly) {
         vector<Vec3d> res;
-        for (auto& v : poly) res.push_back(Vec3d(v));
+        for (auto& v : poly) res.push_back(Vec3d(v[0], 0, v[1]));
         return res;
     };
 
