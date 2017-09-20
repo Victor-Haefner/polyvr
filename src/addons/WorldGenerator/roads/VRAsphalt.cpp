@@ -405,8 +405,6 @@ void doPaths() {
 
 	if (doLine) { applyLine(); return; }
 
-	return;
-
 	int Ntracks = int(roadData.y);
 	for (int i=0; i<Ntracks; i++) {
 		vec4 pathData1 = getData(rID, k);
