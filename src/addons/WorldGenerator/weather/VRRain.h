@@ -1,13 +1,15 @@
 #ifndef VRRAIN_H_INCLUDED
 #define VRRAIN_H_INCLUDED
 
-#include "VRParticle.h" //do i need this?
-#include "VREmitter.h"
+#include "addons/Bullet/Particles/VRParticles.h" //do i need this?
+#include "addons/Bullet/Particles/VREmitter.h"
+
+//class VRParticles;
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class VRRain : public VRParticles {
+class VRRain { //: public VRParticles {
     private:
         int lifetime;
         double mass;
@@ -25,7 +27,8 @@ class VRRain : public VRParticles {
         double durationTransition;
         double scaleRain;
 
-        void setScaleRain();
+        void setRainScale();
+        void setupRain();
 
     public:
         VRRain();

@@ -3,15 +3,24 @@
 using namespace OSG;
 
 VRRain::VRRain(){
-    VRParticles.setLifetime(1,0);
+    //VRParticles.setLifetime(1,0);
 }
 VRRain::~VRRain(){
 
 }
 
+void VRRain::setupRain() {
+    //TODO: SETUP RAINCLUSTER HERE
+    Emitter EmRain;
+    //EmRain
+    //
+    //TODO: callback [clouds, light-diffuse, rain]
+    //
+}
+
 void VRRain::startRain() {
     setRainScale();
-    //TODO: callback
+    setupRain();
 }
 
 void VRRain::stopRain() {
@@ -23,7 +32,7 @@ void VRRain::setRain( double durationTransition, double scaleRain ){
         //TODO: error
     }
     else {
-        this->durationTrans = durationTransition;
+        this->durationTransition = durationTransition;
         this->scaleRain = scaleRain;
     }
 }
@@ -36,7 +45,7 @@ void VRRain::setRainScale() {
     lightRain = lightRainStart - scaleRain*0.05;
 }
 
-void overrideParameters( double densityRain, double speedRain, double colorRain, double lightRain ) {
+void VRRain::overrideParameters( double densityRain, double speedRain, double colorRain, double lightRain ) {
     this->densityRain = densityRain;
     this->speedRain = speedRain;
     this->colorRain = colorRain;
