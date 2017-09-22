@@ -1,19 +1,29 @@
 #include "VRRain.h"
+#include <random>
 
 using namespace OSG;
 
-VRRain::VRRain(){
-    //VRParticles.setLifetime(1,0);
-}
-VRRain::~VRRain(){
-
-}
+VRRain::VRRain() {}
+VRRain::~VRRain() {}
 
 void VRRain::setupRain() {
     //TODO: SETUP RAINCLUSTER HERE
-    Emitter EmRain;
-    //EmRain
-    //
+    for (int x=-7; x<7; x++) {
+        for (int y=-7; y<7; y++) {
+            VRParticles rainemitter = VRParticles("rd"+x+y);
+            rainemitter.setLifetime(2,0);
+
+            int range = 600 - 300 + 1;
+            int num = rand() % range + 300;
+
+            Vec3d basevec = Vec3d(x*0.1,num,y*0.1);
+            Vec3d dirvec = Vec3d(0,-1,0);
+            int fromR = 0;
+            int toR = 10;
+            rainemitter.setEmitter(basevec,dirvec,fromR,toR,100,false);
+
+        }
+    }
     //TODO: callback [clouds, light-diffuse, rain]
     //
 }
@@ -24,7 +34,7 @@ void VRRain::startRain() {
 }
 
 void VRRain::stopRain() {
-
+    //TODO: list of raindropemitters, stop/delete them here
 }
 
 void VRRain::setRain( double durationTransition, double scaleRain ){
@@ -53,5 +63,5 @@ void VRRain::overrideParameters( double densityRain, double speedRain, double co
 }
 
 Vec2d VRRain::getRain() {
-    //TODO: return vec of duration, and scale
+    return Vec2d(durationTransition,scaleRain);
 }
