@@ -72,6 +72,9 @@ VRDemos::VRDemos() {
     setToolButtonCallback("toolbutton1", sigc::mem_fun(*this, &VRDemos::on_new_clicked));
     setToolButtonCallback("toolbutton5", sigc::mem_fun(*this, &VRDemos::on_saveas_clicked));
     setToolButtonCallback("toolbutton21", sigc::mem_fun(*this, &VRDemos::on_load_clicked));
+
+    setToolButtonSensitivity("toolbutton4", false); // disable 'save' button on startup
+    setToolButtonSensitivity("toolbutton5", false); // disable 'save as' button on startup
 }
 
 void VRDemos::updatePixmap(demoEntry* e, Gtk::Image* img, int w, int h) {
@@ -230,6 +233,9 @@ void VRDemos::setGuiState(demoEntry* e) {
     if (e) if (e->widget) e->widget->set_sensitive(true);
     if (running) { if (e->imgPlay) e->imgPlay->set(Gtk::Stock::MEDIA_STOP, Gtk::ICON_SIZE_BUTTON); }
     else if (e) { if (e->imgPlay) e->imgPlay->set(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON); }
+
+    setToolButtonSensitivity("toolbutton4", running); // toggle 'save' button availability
+    setToolButtonSensitivity("toolbutton5", running); // toggle 'save as' button availability
 }
 
 void VRDemos::addEntry(string path, string table, bool running) {
