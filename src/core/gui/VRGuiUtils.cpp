@@ -481,19 +481,14 @@ void saveSnapshot(string path) {
     pxb->save(path, "png");
 }
 
-void saveScene(string path) {
+void saveScene(string path, bool saveas) {
     auto scene = OSG::VRScene::getCurrent();
     if (scene == 0) return;
-    //if (path == "") path = scene->getPath();
-    path = scene->getFile();
-
-    if (scene->getFlag("write_protected")) return;
-
+    if (scene->getFlag("write_protected") && !saveas) return;
+    scene->setFlag("write_protected", false);
+    if (path == "") path = scene->getPath();
     OSG::VRSceneLoader::get()->saveScene(path);
-    //string ipath = scene->getWorkdir() + '/'+  scene->getIcon();
-    string ipath = scene->getIcon();
-    saveSnapshot(ipath);
-
+    saveSnapshot( scene->getIcon() );
     OSG::VRGuiSignals::get()->getSignal("onSaveScene")->triggerPtr<OSG::VRDevice>();
 }
 

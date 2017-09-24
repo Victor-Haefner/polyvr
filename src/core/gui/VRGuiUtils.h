@@ -80,7 +80,7 @@ void setColorChooser(string drawable, sigc::slot<bool, GdkEventButton*> sig);
 void setColorChooserColor(string drawable, OSG::Color3f col);
 
 OSG::VRTexturePtr takeSnapshot();
-void saveScene(string path = "");
+void saveScene(string path = "", bool saveas = false);
 
 void showDialog(string d);
 void hideDialog(string d);

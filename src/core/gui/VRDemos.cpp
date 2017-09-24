@@ -333,20 +333,22 @@ void VRDemos::normFileName(string& path) {
 }
 
 void VRDemos::on_diag_save_clicked() { // TODO: check if ending is .pvr
-    string path = VRGuiFile::getRelativePath_toWorkdir();
-    addEntry(path, "favorites_tab", false);
+    string path = VRGuiFile::getPath();
+    saveScene(path, true);
     VRSceneManager::get()->addFavorite(path);
-    saveScene(path);
+    addEntry(path, "favorites_tab", true);
 }
 
 void VRDemos::on_saveas_clicked() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     VRGuiFile::gotoPath( scene->getWorkdir() );
-    VRGuiFile::setFile( scene->getFile() );
     VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRDemos::on_diag_save_clicked) );
     VRGuiFile::clearFilter();
+    VRGuiFile::addFilter("Project", 2, "*.xml", "*.pvr");
+    VRGuiFile::addFilter("All", 1, "*");
     VRGuiFile::open( "Save", Gtk::FILE_CHOOSER_ACTION_SAVE, "Save project as.." );
+    VRGuiFile::setFile( scene->getFile() );
 }
 
 void VRDemos::on_diag_load_clicked() {
