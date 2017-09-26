@@ -357,6 +357,16 @@ void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
     kirb->translate(median);
     addChild(kirb);
 	assets.push_back(kirb);
+
+	// physics
+	auto collisionShape = VRStroke::create("collisionShape");
+	collisionShape->addPath(path);
+	collisionShape->strokeProfile({Vec3d(-0.1, h, 0), Vec3d(-0.1, 0, 0)}, false, true, false);
+    collisionShape->getPhysics()->setDynamic(false);
+    collisionShape->getPhysics()->setShape("Concave");
+    collisionShape->getPhysics()->setPhysicalized(true);
+    collisionShape->setMeshVisibility(false);
+	kirb->addChild(collisionShape); // TODO: merge into bigger collision shape and physicalize at the end!
 }
 
 vector<VREntityPtr> VRRoadNetwork::getRoadNodes() {
