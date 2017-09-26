@@ -2,14 +2,17 @@
 #define VRRAIN_H_INCLUDED
 
 #include "addons/Bullet/Particles/VRParticles.h" //do i need this?
-#include "addons/Bullet/Particles/VREmitter.h"
+
+#include "core/objects/VRTransform.h"
+//#include "addons/Bullet/Particles/VREmitter.h"
+#include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 
 //class VRParticles;
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class VRRain { //: public VRParticles {
+class VRRain : public VRTransform { //: public VRParticles {
     private:
         int lifetime;
         double mass;
@@ -24,8 +27,10 @@ class VRRain { //: public VRParticles {
         double colorRain;
         double lightRain;
 
-        double durationTransition;
-        double scaleRain;
+        double durationTransition = 10;
+        double scaleRain = 10;
+
+
 
         void setRainScale();
         void setupRain();
@@ -33,6 +38,10 @@ class VRRain { //: public VRParticles {
     public:
         VRRain();
         ~VRRain();
+
+        VRRainPtr ptr();
+        static VRRainPtr create(string name = "rain");
+        //static shared_ptr<VRRain> create();
 
         void setRain( double durationTransition, double scaleRain );
         Vec2d getRain();

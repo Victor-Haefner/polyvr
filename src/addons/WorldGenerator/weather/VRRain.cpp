@@ -6,6 +6,9 @@ using namespace OSG;
 VRRain::VRRain() {}
 VRRain::~VRRain() {}
 
+VRRainPtr VRRain::create(string name) { return VRRainPtr( new VRRain() ); }
+//VRRainPtr VRRain::ptr() { return static_pointer_cast<VRRain>( shared_from_this() ); }
+
 void VRRain::setupRain() {
     //TODO: SETUP RAINCLUSTER HERE
     for (int x=-7; x<7; x++) {
