@@ -50,6 +50,9 @@ void VRRoadNetwork::init() {
     arrows = VRGeometry::create("arrows");
     arrows->setMaterial(asphaltArrow);
     addChild( arrows );
+
+    collisionMesh = VRGeometry::create("roadsAssetsCollisionShape");
+    addChild( collisionMesh );
 }
 
 int VRRoadNetwork::getRoadID() { return ++nextRoadID; }
@@ -312,14 +315,10 @@ void VRRoadNetwork::addGuardRail( pathPtr path, float height ) {
 	assets.push_back(rail);
 
 	// physics
-	auto collisionShape = VRStroke::create("collisionShape");
-	collisionShape->setPaths({path});
-	collisionShape->strokeProfile({Vec3d(0,0,0), Vec3d(0,height,0)}, false, true, false);
-    collisionShape->getPhysics()->setDynamic(false);
-    collisionShape->getPhysics()->setShape("Concave");
-    collisionShape->getPhysics()->setPhysicalized(true);
-    collisionShape->setMeshVisibility(false);
-	rail->addChild(collisionShape); // TODO: merge into bigger collision shape and physicalize at the end!
+	auto shape = VRStroke::create("shape");
+	shape->setPaths({path});
+	shape->strokeProfile({Vec3d(0,0,0), Vec3d(0,height,0)}, false, true, false);
+	collisionMesh->merge(shape);
 }
 
 void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
@@ -359,14 +358,17 @@ void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
 	assets.push_back(kirb);
 
 	// physics
-	auto collisionShape = VRStroke::create("collisionShape");
-	collisionShape->addPath(path);
-	collisionShape->strokeProfile({Vec3d(-0.1, h, 0), Vec3d(-0.1, 0, 0)}, false, true, false);
-    collisionShape->getPhysics()->setDynamic(false);
-    collisionShape->getPhysics()->setShape("Concave");
-    collisionShape->getPhysics()->setPhysicalized(true);
-    collisionShape->setMeshVisibility(false);
-	kirb->addChild(collisionShape); // TODO: merge into bigger collision shape and physicalize at the end!
+	auto shape = VRStroke::create("shape");
+	shape->addPath(path);
+	shape->strokeProfile({Vec3d(-0.1, h, 0), Vec3d(-0.1, 0, 0)}, false, true, false);
+	collisionMesh->merge(shape);
+}
+
+void VRRoadNetwork::physicalizeAssets() {
+    collisionMesh->getPhysics()->setDynamic(false);
+    collisionMesh->getPhysics()->setShape("Concave");
+    collisionMesh->getPhysics()->setPhysicalized(true);
+    collisionMesh->setMeshVisibility(false);
 }
 
 vector<VREntityPtr> VRRoadNetwork::getRoadNodes() {
@@ -654,6 +656,7 @@ void VRRoadNetwork::compute() {
     computeSigns();
     //computeGreenBelts();
     updateAsphaltTexture();
+    physicalizeAssets();
 }
 
 

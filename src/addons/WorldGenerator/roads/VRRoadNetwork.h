@@ -33,6 +33,8 @@ class VRRoadNetwork : public VRRoadBase {
         VRTexturePtr arrowTexture;
         map<Vec4i, int> arrowTemplates;
 
+        VRGeometryPtr collisionMesh;
+
 		float trackWidth = 1.6; // TODO
 
         void createArrow(Vec4i dirs, int N, const pose& p);
@@ -71,6 +73,7 @@ class VRRoadNetwork : public VRRoadBase {
         void computeMarkings();
         void computeArrows();
         void computeSigns();
+        void physicalizeAssets();
         vector<VRPolygonPtr> computeGreenBelts();
 
         void computeTracksLanes(VREntityPtr way);
