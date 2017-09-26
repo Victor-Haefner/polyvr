@@ -207,6 +207,7 @@ VRTreePtr VRNature::createTree(string type, Vec3d p) {
     t->setFrom(p);
     addObject(t, p, 0);
     treeRefs[t.get()] = treeTemplates[type];
+    treesByID[t->getID()] = t;
     return t;
 }
 
@@ -220,6 +221,7 @@ VRTreePtr VRNature::createBush(string type, Vec3d p) {
     t->setFrom(p);
     addObject(t, p, 0);
     treeRefs[t.get()] = bushTemplates[type];
+    treesByID[t->getID()] = t;
     return t;
 }
 

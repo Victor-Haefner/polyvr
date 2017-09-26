@@ -310,6 +310,16 @@ void VRRoadNetwork::addGuardRail( pathPtr path, float height ) {
 	for (auto p : poles) rail->addChild(p);
 	addChild(rail);
 	assets.push_back(rail);
+
+	// physics
+	auto collisionShape = VRStroke::create("collisionShape");
+	collisionShape->setPaths({path});
+	collisionShape->strokeProfile({Vec3d(0,0,0), Vec3d(0,height,0)}, false, true, false);
+    collisionShape->getPhysics()->setDynamic(false);
+    collisionShape->getPhysics()->setShape("Concave");
+    collisionShape->getPhysics()->setPhysicalized(true);
+    collisionShape->setMeshVisibility(false);
+	rail->addChild(collisionShape); // TODO: merge into bigger collision shape and physicalize at the end!
 }
 
 void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
