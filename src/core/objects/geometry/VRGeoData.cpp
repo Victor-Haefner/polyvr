@@ -142,6 +142,30 @@ Color3f VRGeoData::getColor3(int i) {
     return Color3f();
 }
 
+string VRGeoData::getDataName(int type) {
+    if (type == 0) return "types";
+    if (type == 1) return "lengths";
+    if (type == 2) return "indices";
+    if (type == 3) return "positions";
+    if (type == 4) return "normals";
+    if (type == 5) return "RGB colors";
+    if (type == 6) return "RGBA colors";
+    if (type == 7) return "texture coords";
+    if (type == 8) return "texture coords 2";
+}
+
+int VRGeoData::getDataSize(int type) {
+    if (type == 0) return data->types->size();
+    if (type == 1) return data->lengths->size();
+    if (type == 2) return data->indices->size();
+    if (type == 3) return data->pos->size();
+    if (type == 4) return data->norms->size();
+    if (type == 5) return data->cols3->size();
+    if (type == 6) return data->cols4->size();
+    if (type == 7) return data->texs->size();
+    if (type == 8) return data->texs2->size();
+}
+
 int VRGeoData::pushVert(Pnt3d p) { data->pos->addValue(p); return data->pos->size()-1; }
 int VRGeoData::pushVert(Pnt3d p, Vec3d n) { data->norms->addValue(n); return pushVert(p); }
 int VRGeoData::pushVert(Pnt3d p, Vec3d n, Color3f c) { data->cols3->addValue(c); return pushVert(p,n); }

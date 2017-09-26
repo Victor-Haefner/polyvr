@@ -552,7 +552,7 @@ void VRNature::addCollisionModels() {
     }
 
     if (collisionMesh) collisionMesh->destroy();
-    collisionMesh = data.asGeometry("treeCollisionMesh");
+    collisionMesh = data.asGeometry("natureCollisionMesh");
     collisionMesh->getPhysics()->setDynamic(false);
     collisionMesh->getPhysics()->setShape("Concave");
     collisionMesh->getPhysics()->setPhysicalized(true);
