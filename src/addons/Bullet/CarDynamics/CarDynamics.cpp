@@ -340,7 +340,9 @@ void VRCarDynamics::update(float t, float b, float s, float c, int g) {
 }
 
 void VRCarDynamics::updateWheel(int w, float t, float b, float s, float c, int g) {
+    if (w < 0 || w >= wheels.size()) return;
     auto wheel = wheels[w];
+    if (!wheel) return;
     wheel->throttle = clamp(t, 0, 1);
     wheel->breaking = clamp(b, 0, 1);
     wheel->clutch = clamp(c, 0, 1);

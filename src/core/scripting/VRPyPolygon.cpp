@@ -19,7 +19,7 @@ PyMethodDef VRPyPolygon::methods[] = {
     {"clear", (PyCFunction)VRPyPolygon::clear, METH_NOARGS, "Clear all points - clear()" },
     {"getRandomPoints", (PyCFunction)VRPyPolygon::getRandomPoints, METH_VARARGS, "Clear all points - getRandomPoints( | float density, float padding)" },
     {"isInside", PyWrap(Polygon, isInside, "Check if point is inside polygon", bool, Vec2d) },
-    {"gridSplit", PyWrap(Polygon, gridSplit, "Split the polygon using a virtual grid layout", vector< VRPolygonPtr >, float) },
+    {"gridSplit", PyWrap(Polygon, gridSplit, "Split the polygon using a virtual grid layout", vector< VRPolygonPtr >, double) },
     {"reverseOrder", PyWrap(Polygon, reverseOrder, "Reverse the order of the points", void) },
     {"translate", PyWrap(Polygon, translate, "Translate all points", void, Vec3d) },
     {NULL}  /* Sentinel */

@@ -39,7 +39,7 @@ VRPolygon fromCGALPolygon(CGALPolygon cp) {
 VRPolygon::VRPolygon() {}
 
 bool VRPolygon::isCCW() {
-    float s = 0;
+    double s = 0;
     auto tmp = points;
     if (!closed && tmp.size() > 0) tmp.push_back(tmp[0]);
     for (uint i=1; i<tmp.size(); i++) {
@@ -110,16 +110,16 @@ void VRPolygon::clear() {
     convex = false;
 }
 
-VRPolygonPtr VRPolygon::shrink(float amount) {
+VRPolygonPtr VRPolygon::shrink(double amount) {
     VRPolygonPtr area = VRPolygon::create();
     *area = *this;
     if (amount == 0) return area;
 
     auto intersect = [](const Vec2d& p1, const Vec2d& n1, const Vec2d& p2, const Vec2d& n2) {
         auto cross = [](const Vec2d& p1, const Vec2d& p2) { return p1[0]*p2[1]-p1[1]*p2[0]; };
-        float k = cross(n1,n2);
+        double k = cross(n1,n2);
         if (k == 0) k = 1.0;
-        float s = cross(p2-p1,n2)/k;
+        double s = cross(p2-p1,n2)/k;
         return p1 + n1*s;
     };
 
@@ -141,7 +141,7 @@ VRPolygonPtr VRPolygon::shrink(float amount) {
     return area;
 }
 
-vector<Vec3d> VRPolygon::getRandomPoints(float density, float padding) {
+vector<Vec3d> VRPolygon::getRandomPoints(double density, double padding) {
     vector<Vec3d> res;
     auto area = shrink(padding);
     if (!area) return res;
@@ -159,13 +159,14 @@ vector<Vec3d> VRPolygon::getRandomPoints(float density, float padding) {
     return res;
 }
 
-vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
+vector< VRPolygonPtr > VRPolygon::gridSplit(double G) {
     //cout << "VRPolygon::gridSplit " << G << endl;
     auto inSquare = [&](Vec2d p, Vec2i s) {
-        if (p[0] < s[0]*G - 1e-6) return false;
-        if (p[1] < s[1]*G - 1e-6) return false;
-        if (p[0] > (s[0]+1)*G + 1e-6) return false;
-        if (p[1] > (s[1]+1)*G + 1e-6) return false;
+        const double eps = 1e-4;
+        if (p[0] < s[0]*G - eps) return false;
+        if (p[1] < s[1]*G - eps) return false;
+        if (p[0] > (s[0]+1)*G + eps) return false;
+        if (p[1] > (s[1]+1)*G + eps) return false;
         return true;
     };
 
@@ -175,6 +176,7 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
         p->addPoint(Vec2d(s[0]+1, s[1])*G);
         p->addPoint(Vec2d(s[0]+1, s[1]+1)*G);
         p->addPoint(Vec2d(s[0]  , s[1]+1)*G);
+        if (p->isCCW()) p->reverseOrder();
         return p;
     };
 
@@ -200,14 +202,14 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
         bb.update(Vec3d(p1[0], 0, p1[1]));
         bb.update(Vec3d(p2[0], 0, p2[1]));
 
-        map<float, Vec2d> iPnts;
-        vector<float> X, Y;
+        map<double, Vec2d> iPnts;
+        vector<double> X, Y;
         for (auto j : getBBGridPnts(bb)) { for (auto i : j.second) X.push_back(i.first*G); break; }
         for (auto j : getBBGridPnts(bb)) Y.push_back(j.first*G);
 
         if (abs(d[1]) > 0) {
             for (auto y : Y) { // intersection with vertical grid lines
-                float t = (y - p1[1]) /d[1];
+                double t = (y - p1[1]) /d[1];
                 if (t <= 0 || t >= 1) continue;
                 iPnts[t] = p1 + d*t;
             }
@@ -215,7 +217,7 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
 
         if (abs(d[0]) > 0) {
             for (auto x : X) { // intersection with horizontal grid lines
-                float t = (x - p1[0]) /d[0];
+                double t = (x - p1[0]) /d[0];
                 if (t <= 0 || t >= 1) continue;
                 iPnts[t] = p1 + d*t;
             }
@@ -295,10 +297,10 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
         if (squarePointsMap.count(i)) continue; // intersects polygon, skip
         auto s = Vec2d(squares[i]);
         if (self->areInside({s*G,s*G+Vec2d(G,0),s*G+Vec2d(G,G),s*G+Vec2d(0,G)})) { // at least one corner in area
-            if (G == 10) cout << " isInside " << s*G << "  " << isInside(s*G) << endl;
+            /*if (G == 10) cout << " isInside " << s*G << "  " << isInside(s*G) << endl;
             if (G == 10) cout << " isInside " << s*G+Vec2d(G,0) << "  " << isInside(s*G+Vec2d(G,0)) << endl;
             if (G == 10) cout << " isInside " << s*G+Vec2d(G,G) << "  " << isInside(s*G+Vec2d(G,G)) << endl;
-            if (G == 10) cout << " isInside " << s*G+Vec2d(0,G) << "  " << isInside(s*G+Vec2d(0,G)) << endl;
+            if (G == 10) cout << " isInside " << s*G+Vec2d(0,G) << "  " << isInside(s*G+Vec2d(0,G)) << endl;*/
             res.push_back( squareToVRPolygon(squares[i]) ); // add square to chunks
         }
     }
@@ -318,11 +320,11 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
         vector<int>& squarePoints = sItr.second;
         if (verbose) cout << "Square: " << squareID << " --------------------------" << endl;
         Vec2d square = Vec2d(squares[squareID]) * G;
-        map<float, int> borderPnts; // key from -pi to pi
+        map<double, int> borderPnts; // key from -pi to pi
         vector<int> processedSquarePoints;
 
         auto compAngle = [&](Vec2d pnt) {
-            float a = atan2(pnt[0]-square[0]-0.5*G, pnt[1]-square[1]-0.5*G); // angle
+            double a = atan2(pnt[0]-square[0]-0.5*G, pnt[1]-square[1]-0.5*G); // angle
             if (verbose) cout << "      compAngle p " << pnt << " a " << a << endl;
             return a;
         };
@@ -333,7 +335,7 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
             else return self->getPoint(i);
         };
 
-        auto getNextBorderPoint = [&](float t, int i_1, int i) {
+        auto getNextBorderPoint = [&](double t, int i_1, int i) {
             int p1 = -5;
             int p2 = -5;
 
@@ -395,7 +397,7 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
         for (int i=-1; i>=-4; i--) {
             auto pnt = cornerPoints[i];
             //if (!self->isInside(pnt)) continue;
-            float a = compAngle(pnt + square);
+            double a = compAngle(pnt + square);
             bool skip = false;
             for (auto A : borderPnts) if (abs(A.first-a) < 1e-6) { skip = true; break; }
             if (skip) continue;
@@ -441,7 +443,7 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(float G) {
                 return true;
             };
 
-            float pA = p->computeArea();
+            double pA = p->computeArea();
 
             if (verbose) {
                 cout << " borderPnts" << endl;
@@ -470,8 +472,8 @@ Vec3d VRPolygon::getRandomPoint() {
     return p;
 }
 
-float VRPolygon::computeArea() {
-    float area = 0;
+double VRPolygon::computeArea() {
+    double area = 0;
     for (uint i=0; i<points.size(); i++) {
         Vec2d p1 = points[i];
         Vec2d p2 = points[(i+1)%points.size()];
@@ -492,14 +494,14 @@ void VRPolygon::close() {
     if (points3.size() > 0) points3.push_back(points3[0]);
 }
 
-float isLeft( const Vec2d& P0, const Vec2d& P1, const Vec2d& P2 ){
+double isLeft( const Vec2d& P0, const Vec2d& P1, const Vec2d& P2 ){
     return ( (P1[0] - P0[0]) * (P2[1] - P0[1]) - (P2[0] -  P0[0]) * (P1[1] - P0[1]) );
 };
 
 bool onSegment( const Vec2d& p, const Vec2d& p1, const Vec2d& p2 ) {
-    float A = p1[0]*(p2[1] - p[1]) + p2[0]*(p[1] - p1[1]) + p[0]*(p1[1] - p2[1]);
+    double A = p1[0]*(p2[1] - p[1]) + p2[0]*(p[1] - p1[1]) + p[0]*(p1[1] - p2[1]);
     if (abs(A) > 1e-6) return false; // check for collinear
-    float d = (p2-p1).dot(p-p1);
+    double d = (p2-p1).dot(p-p1);
     if (d < -1e-6) return false;
     if (d > (p2-p1).squareLength()+1e-6) return false;
     return true;
@@ -547,7 +549,7 @@ bool VRPolygon::areInside(vector<Vec2d> pv) {
     return true;
 }
 
-float squareDistToSegment(const Vec2d& p1, const Vec2d& p2, const Vec2d& p) {
+double squareDistToSegment(const Vec2d& p1, const Vec2d& p2, const Vec2d& p) {
     auto d = p2-p1;
     auto L2 = d.squareLength();
     auto t = -(p1-p).dot(d)/L2;
@@ -557,7 +559,7 @@ float squareDistToSegment(const Vec2d& p1, const Vec2d& p2, const Vec2d& p) {
     return (ps-p).squareLength();
 }
 
-bool VRPolygon::isInside(Vec2d p, float& dist) { // winding number algorithm
+bool VRPolygon::isInside(Vec2d p, double& dist) { // winding number algorithm
     dist = 1e12;
     int wn = 0;
     int N = points.size();
@@ -571,7 +573,7 @@ bool VRPolygon::isInside(Vec2d p, float& dist) { // winding number algorithm
             if (p2[1]  <= p[1]) if (isLeft( p1, p2, p) < 0) --wn;
         }
 
-        float D = squareDistToSegment(p1,p2,p);
+        double D = squareDistToSegment(p1,p2,p);
         if (D < dist) dist = D;
     }
     dist = sqrt(dist);
@@ -619,7 +621,7 @@ VRPolygon VRPolygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKIN
     //cout << " VRPolygon::getConvexHull points " << toString() << endl;
     //cout << " VRPolygon::getConvexHull sort " << radial_sort.toString() << endl;
 
-    auto getTurn = [](Vec2d p0, Vec2d p1, Vec2d p2) -> float {
+    auto getTurn = [](Vec2d p0, Vec2d p1, Vec2d p2) -> double {
         return (p1[0]-p0[0])*(p2[1]-p0[1])-(p1[1]-p0[1])*(p2[0]-p0[0]);
     };
 
@@ -642,7 +644,7 @@ VRPolygon VRPolygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKIN
                 omega.push_back( Pi ); i++;
         }
         Vec2d PT2 = getOmegaSecond();
-        float t = getTurn(PT2, PT1, Pi);
+        double t = getTurn(PT2, PT1, Pi);
         //cout << " ch PT2 " << i << " p " << PT2 << " t " << t << endl;
         if (t > 0) {
             //cout << " ch push " << i << " p " << Pi << endl;
@@ -675,7 +677,7 @@ VRPolygon VRPolygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKIN
     return res;
 }
 
-float VRPolygon::getTurn(Vec2d p0, Vec2d p1, Vec2d p2) {
+double VRPolygon::getTurn(Vec2d p0, Vec2d p1, Vec2d p2) {
     return (p1[0]-p0[0])*(p2[1]-p0[1])-(p1[1]-p0[1])*(p2[0]-p0[0]);
 }
 
@@ -735,8 +737,8 @@ string VRPolygon::toString() {
     return ss.str();
 }
 
-float VRPolygon::getDistance(Vec3d p) { // TODO
-    float dist2 = 1.0e20;
+double VRPolygon::getDistance(Vec3d p) { // TODO
+    double dist2 = 1.0e20;
     return sqrt(dist2);
 }
 
