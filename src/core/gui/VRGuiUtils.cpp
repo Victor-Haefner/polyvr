@@ -18,6 +18,7 @@
 #include <gtkmm/window.h>
 #include <gtkmm/toolbutton.h>
 #include <gtkmm/toggletoolbutton.h>
+#include <gtkmm/radiotoolbutton.h>
 #include <gtkmm/cellrenderercombo.h>
 #include <gtkmm/notebook.h>
 #include <gtkmm/expander.h>
@@ -78,6 +79,12 @@ void setCheckButton(string cb, bool b) {
 
 void setRadioButton(string cb, bool b) {
     Gtk::RadioButton* cbut;
+    VRGuiBuilder()->get_widget(cb, cbut);
+    cbut->set_active(b);
+}
+
+void setRadioToolButton(string cb, bool b) {
+    Gtk::RadioToolButton* cbut;
     VRGuiBuilder()->get_widget(cb, cbut);
     cbut->set_active(b);
 }
@@ -143,6 +150,12 @@ void setRadioButtonCallback(string cb, sigc::slot<void> sig ) {
     rbut->signal_toggled().connect(sig);
 }
 
+void setRadioToolButtonCallback(string cb, sigc::slot<void> sig ) {
+    Gtk::RadioToolButton* rbut;
+    VRGuiBuilder()->get_widget(cb, rbut);
+    rbut->signal_toggled().connect(sig);
+}
+
 bool getCheckButtonState(string b) {
     Gtk::CheckButton* tbut;
     VRGuiBuilder()->get_widget(b, tbut);
@@ -151,6 +164,12 @@ bool getCheckButtonState(string b) {
 
 bool getRadioButtonState(string b) {
     Gtk::RadioButton* tbut;
+    VRGuiBuilder()->get_widget(b, tbut);
+    return tbut->get_active();
+}
+
+bool getRadioToolButtonState(string b) {
+    Gtk::RadioToolButton* tbut;
     VRGuiBuilder()->get_widget(b, tbut);
     return tbut->get_active();
 }

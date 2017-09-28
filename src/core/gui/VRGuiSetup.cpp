@@ -281,6 +281,15 @@ void VRGuiSetup::updateObjectData() {
         setExpanderSensitivity("expander29", true);
         VRScript* script = (VRScript*)selected_object;
         editor->setCore(script->getHead() + script->getCore());
+        auto trigs = script->getTriggers();
+        setRadioToolButton("radiotoolbutton1", true);
+        if (trigs.size() > 0) {
+            auto trig = *trigs.begin();
+            if (trig) {
+                if (trig->trigger == "on_timeout") setRadioToolButton("radiotoolbutton2", true);
+                else setRadioToolButton("radiotoolbutton3", true);
+            }
+        }
     }
 
     guard = false;
@@ -1022,6 +1031,24 @@ void VRGuiSetup::on_script_exec_clicked() {
     scene->triggerScript(script->getName());
 }
 
+void VRGuiSetup::on_script_trigger_switched() {
+    bool noTrigger = getRadioToolButtonState("radiotoolbutton1");
+    bool onFrame = getRadioToolButtonState("radiotoolbutton2");
+    bool onStart = getRadioToolButtonState("radiotoolbutton3");
+
+    VRScriptPtr script = getSelectedScript();
+    if (script == 0) return;
+    on_script_save_clicked();
+    setToolButtonSensitivity("toolbutton12", true);
+
+    for (auto t : script->getTriggers()) script->remTrigger(t->getName());
+    if (noTrigger) return;
+    auto trig = script->addTrigger();
+    script->changeTrigParams(trig->getName(), "0");
+    if (onStart) script->changeTrigger(trig->getName(), "on_scene_load");
+    if (onFrame) script->changeTrigger(trig->getName(), "on_timeout");
+}
+
 shared_ptr<VRGuiEditor> VRGuiSetup::getEditor() { return editor; }
 
 void VRGuiSetup_on_script_changed(GtkTextBuffer* tb, gpointer user_data) {
@@ -1084,6 +1111,10 @@ VRGuiSetup::VRGuiSetup() {
     setToolButtonCallback("toolbutton19", sigc::mem_fun(*this, &VRGuiSetup::on_foto_clicked) );
     setToolButtonCallback("toolbutton27", sigc::mem_fun(*this, &VRGuiSetup::on_script_save_clicked) );
     setToolButtonCallback("toolbutton26", sigc::mem_fun(*this, &VRGuiSetup::on_script_exec_clicked) );
+
+    setRadioToolButtonCallback("radiotoolbutton1", sigc::mem_fun(*this, &VRGuiSetup::on_script_trigger_switched) );
+    setRadioToolButtonCallback("radiotoolbutton2", sigc::mem_fun(*this, &VRGuiSetup::on_script_trigger_switched) );
+    setRadioToolButtonCallback("radiotoolbutton3", sigc::mem_fun(*this, &VRGuiSetup::on_script_trigger_switched) );
 
     centerEntry.init("center_entry", "center", sigc::mem_fun(*this, &VRGuiSetup::on_proj_center_edit));
     userEntry.init("user_entry", "user", sigc::mem_fun(*this, &VRGuiSetup::on_proj_user_edit));

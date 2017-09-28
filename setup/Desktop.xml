@@ -16,9 +16,9 @@
   <Scripts>
     <Script base_name="script" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
-	print 'hi'
-	pass
+	print 'trigger setup script'
 </core>
+      <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="5" persistency="666"/>
     </Script>
     <Script base_name="script" group="no group" name_space="__script__" name_suffix="1" persistency="666" server="server1" type="Python">
       <core>

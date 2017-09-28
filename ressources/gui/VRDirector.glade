@@ -1287,6 +1287,21 @@ cave allocated</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-remove</property>
   </object>
+  <object class="GtkImage" id="image48">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-leave-fullscreen</property>
+  </object>
+  <object class="GtkImage" id="image5">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-remove</property>
+  </object>
+  <object class="GtkImage" id="image50">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-add</property>
+  </object>
   <object class="GtkImage" id="image51">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -1429,21 +1444,6 @@ cave allocated</property>
       <!-- column-name nav_presets -->
       <column type="gchararray"/>
     </columns>
-  </object>
-  <object class="GtkImage" id="image48">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-leave-fullscreen</property>
-  </object>
-  <object class="GtkImage" id="image5">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-remove</property>
-  </object>
-  <object class="GtkImage" id="image50">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-add</property>
   </object>
   <object class="GtkListStore" id="mouse_list">
     <columns>
@@ -5705,11 +5705,27 @@ cave allocated</property>
                                               <object class="GtkRadioToolButton" id="radiotoolbutton1">
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
-                                                <property name="tooltip_markup">Trigger in scene load</property>
+                                                <property name="tooltip_markup">Do not trigger</property>
                                                 <property name="label" translatable="yes">radiotoolbutton1</property>
                                                 <property name="use_underline">True</property>
                                                 <property name="stock_id">gtk-media-pause</property>
                                                 <property name="active">True</property>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="homogeneous">True</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkRadioToolButton" id="radiotoolbutton3">
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="tooltip_markup">Trigger in scene load</property>
+                                                <property name="label" translatable="yes">radiotoolbutton3</property>
+                                                <property name="use_underline">True</property>
+                                                <property name="stock_id">gtk-about</property>
+                                                <property name="active">True</property>
+                                                <property name="group">radiotoolbutton1</property>
                                               </object>
                                               <packing>
                                                 <property name="expand">False</property>
@@ -5724,22 +5740,6 @@ cave allocated</property>
                                                 <property name="label" translatable="yes">radiotoolbutton2</property>
                                                 <property name="use_underline">True</property>
                                                 <property name="stock_id">gtk-refresh</property>
-                                                <property name="active">True</property>
-                                                <property name="group">radiotoolbutton1</property>
-                                              </object>
-                                              <packing>
-                                                <property name="expand">False</property>
-                                                <property name="homogeneous">True</property>
-                                              </packing>
-                                            </child>
-                                            <child>
-                                              <object class="GtkRadioToolButton" id="radiotoolbutton3">
-                                                <property name="visible">True</property>
-                                                <property name="can_focus">False</property>
-                                                <property name="tooltip_markup">Do not trigger</property>
-                                                <property name="label" translatable="yes">radiotoolbutton3</property>
-                                                <property name="use_underline">True</property>
-                                                <property name="stock_id">gtk-about</property>
                                                 <property name="active">True</property>
                                                 <property name="group">radiotoolbutton1</property>
                                               </object>

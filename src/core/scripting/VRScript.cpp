@@ -89,6 +89,7 @@ void VRScript::update() {
     }
 
     auto scene = VRScene::getCurrent();
+    if (!scene) return;
 
     for (auto t : trigs) {
         if (t->trigger == "on_scene_close") {
@@ -449,7 +450,7 @@ void VRScript::enable(bool b) { active = b; }
 bool VRScript::enabled() { return active; }
 
 list<VRScript::trig*> VRScript::getTriggers() { return trigs; }
-void VRScript::addTrigger() { trig* t = new trig(); trigs.push_back(t); }
+VRScript::trig* VRScript::addTrigger() { trig* t = new trig(); trigs.push_back(t); return t; }
 void VRScript::changeTrigger(string name, string trigger) { clean(); if (auto t = getTrig(name)) t->trigger = trigger; update(); }
 void VRScript::changeTrigDev(string name, string dev) { clean(); if (auto t = getTrig(name)) t->dev = dev; update(); }
 void VRScript::changeTrigParams(string name, string params) { clean(); if (auto t = getTrig(name)) t->param = params; update(); }

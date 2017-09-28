@@ -130,7 +130,7 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
         void changeArgType(string name, string _new);
 
         list<trig*> getTriggers();
-        void addTrigger();
+        VRScript::trig* addTrigger();
         void remTrigger(string name);
         void changeTrigger(string name, string trigger);
         void changeTrigDev(string name, string dev);

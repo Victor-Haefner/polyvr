@@ -30,9 +30,12 @@ void setCheckButton(string cb, bool b);
 bool getCheckButtonState(string b);
 void setCheckButtonCallback(string cb, sigc::slot<void> sig );
 bool getRadioButtonState(string b);
+bool getRadioToolButtonState(string b);
 bool getToggleButtonState(string b);
+void setRadioToolButtonCallback(string cb, sigc::slot<void> sig );
 void setRadioButtonCallback(string cb, sigc::slot<void> sig );
 void setRadioButton(string cb, bool b );
+void setRadioToolButton(string cb, bool b );
 void setButtonText(string cb, string txt );
 
 // COMBOBOX

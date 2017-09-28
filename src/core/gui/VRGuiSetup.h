@@ -127,6 +127,7 @@ class VRGuiSetup {
 
         void on_script_save_clicked();
         void on_script_exec_clicked();
+        void on_script_trigger_switched();
 
         void closeAllExpander();
         void updateObjectData();
