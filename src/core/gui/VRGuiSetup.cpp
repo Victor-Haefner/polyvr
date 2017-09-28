@@ -504,10 +504,16 @@ void VRGuiSetup::on_menu_add_network_node() {
 
 void VRGuiSetup::on_menu_add_network_slave() {
     if (selected_type != "node") return;
-
     VRNetworkNode* n = (VRNetworkNode*)selected_object;
     n->add("Slave");
+    updateSetup();
+    setToolButtonSensitivity("toolbutton12", true);
+}
 
+void VRGuiSetup::on_menu_add_script() {
+    auto setup = current_setup.lock();
+    if (!setup) return;
+    setup->addScript("script");
     updateSetup();
     setToolButtonSensitivity("toolbutton12", true);
 }
@@ -1008,6 +1014,7 @@ VRGuiSetup::VRGuiSetup() {
     menu->appendItem("SM_AddVRPNMenu", "VRPN tracker", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_vrpn_tracker) );
     menu->appendItem("SM_AddNetworkMenu", "Node", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_network_node) );
     menu->appendItem("SM_AddNetworkMenu", "Slave", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_network_slave) );
+    menu->appendItem("SM_AddMenu", "Script", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_script) );
 
     Glib::RefPtr<Gtk::ToolButton> tbutton;
     Glib::RefPtr<Gtk::CheckButton> cbutton;
@@ -1151,27 +1158,21 @@ void VRGuiSetup::updateSetup() {
     Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview2"));
     tree_store->clear();
 
-    Gtk::TreeModel::iterator itr;
-    Gtk::TreeModel::iterator itr2;
-    Gtk::TreeStore::Row row;
-
-    Gtk::TreeModel::iterator windows_itr;
-    Gtk::TreeModel::iterator devices_itr;
-    Gtk::TreeModel::iterator art_itr;
-    Gtk::TreeModel::iterator vrpn_itr;
-
     auto network_itr = tree_store->append();
-    windows_itr = tree_store->append();
-    devices_itr = tree_store->append();
-    art_itr = tree_store->append();
-    vrpn_itr = tree_store->append();
+    auto windows_itr = tree_store->append();
+    auto devices_itr = tree_store->append();
+    auto art_itr = tree_store->append();
+    auto vrpn_itr = tree_store->append();
+    auto scripts_itr = tree_store->append();
 
     setTreeRow(tree_store, *network_itr, "Network", "section", 0);
     setTreeRow(tree_store, *windows_itr, "Displays", "section", 0);
     setTreeRow(tree_store, *devices_itr, "Devices", "section", 0);
     setTreeRow(tree_store, *art_itr, "ART", "section", 0);
     setTreeRow(tree_store, *vrpn_itr, "VRPN", "section", 0);
+    setTreeRow(tree_store, *scripts_itr, "Scripts", "section", 0);
 
+    Gtk::TreeStore::Row row;
     Glib::RefPtr<Gtk::ListStore> user_list = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("user_list"));
     user_list->clear();
     row = *user_list->append();
@@ -1191,7 +1192,7 @@ void VRGuiSetup::updateSetup() {
 
     for (auto ditr : setup->getDevices()) {
         VRDevicePtr dev = ditr.second;
-        itr = tree_store->append(devices_itr->children());
+        auto itr = tree_store->append(devices_itr->children());
         setTreeRow(tree_store, *itr, ditr.first.c_str(), dev->getType().c_str(), (gpointer)dev.get());
 
         if (dev->getType() == "mouse") {
@@ -1201,10 +1202,10 @@ void VRGuiSetup::updateSetup() {
     }
 
     for (auto node : setup->getNetwork()->getData() ) {
-        itr = tree_store->append(network_itr->children());
+        auto itr = tree_store->append(network_itr->children());
         setTreeRow(tree_store, *itr, node->getName().c_str(), "node", (gpointer)node.get(), "#000000", "#FFFFFF");
         for (auto slave : node->getData() ) {
-            itr2 = tree_store->append(itr->children());
+            auto itr2 = tree_store->append(itr->children());
             setTreeRow(tree_store, *itr2, slave->getName().c_str(), "slave", (gpointer)slave.get(), "#000000", "#FFFFFF");
         }
     }
@@ -1212,7 +1213,7 @@ void VRGuiSetup::updateSetup() {
     for (auto win : setup->getWindows()) {
         VRWindow* w = win.second.get();
         string name = win.first;
-        itr = tree_store->append(windows_itr->children());
+        auto itr = tree_store->append(windows_itr->children());
         string bg = "#FFFFFF";
         if (w->isActive() == false) bg = "#FFDDDD";
         setTreeRow(tree_store, *itr, name.c_str(), "window", (gpointer)w, "#000000", bg);
@@ -1223,7 +1224,7 @@ void VRGuiSetup::updateSetup() {
             VRViewPtr v = views[i];
             stringstream ss;
             ss << name << i;
-            itr2 = tree_store->append(itr->children());
+            auto itr2 = tree_store->append(itr->children());
             setTreeRow(tree_store, *itr2, ss.str().c_str(), "view", (gpointer)v.get());
         }
     }
@@ -1232,7 +1233,7 @@ void VRGuiSetup::updateSetup() {
     vector<int> vrpnIDs = setup->getVRPNTrackerIDs();
     for (uint i=0; i<vrpnIDs.size(); i++) {
         VRPN_device* t = setup->getVRPNTracker(vrpnIDs[i]).get();
-        itr = tree_store->append(vrpn_itr->children());
+        auto itr = tree_store->append(vrpn_itr->children());
         cout << "vrpn liststore: " << t->getName() << endl;
         setTreeRow(tree_store, *itr, t->getName().c_str(), "vrpn_tracker", (gpointer)t);
     }
@@ -1241,7 +1242,7 @@ void VRGuiSetup::updateSetup() {
     for (int ID : setup->getARTDevices() ) {
         ART_devicePtr dev = setup->getARTDevice(ID);
 
-        itr = tree_store->append(art_itr->children());
+        auto itr = tree_store->append(art_itr->children());
         string name = dev->getName();
         if (dev->dev) name = dev->dev->getName();
         else if (dev->ent) name = dev->ent->getName();
@@ -1252,6 +1253,12 @@ void VRGuiSetup::updateSetup() {
             gtk_list_store_set (user_list->gobj(), row.gobj(), 0, dev->ent->getName().c_str(), -1);
             gtk_list_store_set (user_list->gobj(), row.gobj(), 1, dev->ent.get(), -1);
         }
+    }
+
+    for (auto s : setup->getScripts()) {
+        auto script = s.second.get();
+        auto itr = tree_store->append(scripts_itr->children());
+        setTreeRow(tree_store, *itr, script->getName().c_str(), "script", (gpointer)script);
     }
 
     on_treeview_select();

@@ -51,7 +51,7 @@ VRDemos::VRDemos() {
     initMenu();
 
     for (string path : VRSceneManager::get()->getExamplePaths() ) {
-        demos[path] = new demoEntry();
+        demos[path] = demoEntryPtr( new demoEntry() );
         demos[path]->path = path;
         demos[path]->pxm_path = path.substr(0,path.size()-4) + ".png";
         demos[path]->write_protected = true;
@@ -77,7 +77,7 @@ VRDemos::VRDemos() {
     setToolButtonSensitivity("toolbutton5", false); // disable 'save as' button on startup
 }
 
-void VRDemos::updatePixmap(demoEntry* e, Gtk::Image* img, int w, int h) {
+void VRDemos::updatePixmap(demoEntryPtr e, Gtk::Image* img, int w, int h) {
     if (e == 0) return;
     if (img == 0) return;
     if ( !boost::filesystem::exists( e->pxm_path ) ) return;
@@ -99,7 +99,7 @@ Gtk::Image* VRDemos::loadGTKIcon(Gtk::Image* img, string path, int w, int h) {
     return img;
 }
 
-void VRDemos::setButton(demoEntry* e) {
+void VRDemos::setButton(demoEntryPtr e) {
     Gtk::Settings::get_default()->property_gtk_button_images() = true;
 
     string rpath = VRSceneManager::get()->getOriginalWorkdir();
@@ -151,20 +151,20 @@ void VRDemos::setButton(demoEntry* e) {
     VRGuiSignals::get()->getSignal("onSaveScene")->add( e->uPixmap );
 
     menu->connectWidget("DemoMenu", ebox);
-    ebox->signal_event().connect( sigc::bind<demoEntry*>( sigc::mem_fun(*this, &VRDemos::on_any_event), e) );
+    ebox->signal_event().connect( sigc::bind<demoEntryPtr>( sigc::mem_fun(*this, &VRDemos::on_any_event), e) );
 
-    e->butPlay->signal_clicked().connect( sigc::bind<demoEntry*>( sigc::mem_fun(*this, &VRDemos::toggleDemo), e) );
-    e->butOpts->signal_clicked().connect( sigc::bind<demoEntry*>( sigc::mem_fun(*this, &VRDemos::on_menu_advanced), e) );
-    e->butLock->signal_clicked().connect( sigc::bind<demoEntry*>( sigc::mem_fun(*this, &VRDemos::on_lock_toggle), e) );
+    e->butPlay->signal_clicked().connect( sigc::bind<demoEntryPtr>( sigc::mem_fun(*this, &VRDemos::toggleDemo), e) );
+    e->butOpts->signal_clicked().connect( sigc::bind<demoEntryPtr>( sigc::mem_fun(*this, &VRDemos::on_menu_advanced), e) );
+    e->butLock->signal_clicked().connect( sigc::bind<demoEntryPtr>( sigc::mem_fun(*this, &VRDemos::on_lock_toggle), e) );
     e->widget->show_all();
 }
 
-bool VRDemos::on_any_event(GdkEvent* event, demoEntry* entry) {
+bool VRDemos::on_any_event(GdkEvent* event, demoEntryPtr entry) {
     if (event->type == GDK_BUTTON_PRESS) current_demo = entry;
     return false;
 }
 
-void VRDemos::on_lock_toggle(demoEntry* e) {
+void VRDemos::on_lock_toggle(demoEntryPtr e) {
     e->write_protected = !e->write_protected;
     e->butLock->remove();
     if (e->write_protected) e->butLock->add(*e->imgLock);
@@ -218,13 +218,13 @@ void VRDemos::clearTable(string t) {
     }
 }
 
-void VRDemos::setGuiState(demoEntry* e) {
+void VRDemos::setGuiState(demoEntryPtr e) {
     bool running = (e == 0) ? 0 : e->running;
     setVPanedSensitivity("vpaned1", running);
     setNotebookSensitivity("notebook3", running);
 
     for (auto i : demos) {
-        demoEntry* d = i.second;
+        demoEntryPtr d = i.second;
         if (d->widget) d->widget->set_sensitive(!running);
         if (d->imgPlay) d->imgPlay->set(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON);
         if (d != e) d->running = false;
@@ -241,9 +241,9 @@ void VRDemos::setGuiState(demoEntry* e) {
 void VRDemos::addEntry(string path, string table, bool running) {
     clearTable("favorites_tab");
 
-    demoEntry* e = 0;
+    demoEntryPtr e = 0;
     if (demos.count(path) == 0) {
-        e = new demoEntry();
+        e = demoEntryPtr( new demoEntry() );
         e->path = path;
         demos[path] = e;
         e->running = running;
@@ -261,15 +261,15 @@ void VRDemos::initMenu() {
     menu = new VRGuiContextMenu("DemoMenu");
     menu->appendItem("DemoMenu", "Unpin", sigc::mem_fun(*this, &VRDemos::on_menu_unpin));
     menu->appendItem("DemoMenu", "Delete", sigc::mem_fun(*this, &VRDemos::on_menu_delete));
-    menu->appendItem("DemoMenu", "Advanced..", sigc::bind<demoEntry*>( sigc::mem_fun(*this, &VRDemos::on_menu_advanced), 0));
+    menu->appendItem("DemoMenu", "Advanced..", sigc::bind<demoEntryPtr>( sigc::mem_fun(*this, &VRDemos::on_menu_advanced), 0));
 
     setButtonCallback("button10", sigc::mem_fun(*this, &VRDemos::on_advanced_cancel));
     setButtonCallback("button26", sigc::mem_fun(*this, &VRDemos::on_advanced_start));
 }
 
 void VRDemos::on_menu_delete() {
-    demoEntry* d = current_demo;
-    if (d == 0) return;
+    demoEntryPtr d = current_demo;
+    if (!d) return;
     if (d->write_protected == true) return;
 
     string path = d->path;
@@ -278,15 +278,15 @@ void VRDemos::on_menu_delete() {
 
     clearTable("favorites_tab");
     demos.erase(path);
+    current_demo.reset();
     remove(path.c_str());
-    delete d;
     updateTable("favorites_tab");
     VRSceneManager::get()->remFavorite(path);
 }
 
 void VRDemos::on_menu_unpin() {
-    demoEntry* d = current_demo;
-    if (d == 0) return;
+    demoEntryPtr d = current_demo;
+    if (!d) return;
     if (d->write_protected == true) return;
 
     string path = d->path;
@@ -295,12 +295,12 @@ void VRDemos::on_menu_unpin() {
 
     clearTable("favorites_tab");
     demos.erase(path);
-    delete d;
+    current_demo.reset();
     updateTable("favorites_tab");
     VRSceneManager::get()->remFavorite(path);
 }
 
-void VRDemos::on_menu_advanced(demoEntry* e) {
+void VRDemos::on_menu_advanced(demoEntryPtr e) {
     if (e) current_demo = e;
     setCheckButton("checkbutton34", false);
     setCheckButton("checkbutton36", false);
@@ -416,7 +416,7 @@ void VRDemos::update() {
     }
 }
 
-void VRDemos::toggleDemo(demoEntry* e) {
+void VRDemos::toggleDemo(demoEntryPtr e) {
     bool run = !e->running;
     VRSceneManager::get()->closeScene();
     if (run) VRSceneManager::get()->loadScene(e->path, e->write_protected);

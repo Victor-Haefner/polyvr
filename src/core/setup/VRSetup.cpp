@@ -64,9 +64,9 @@ void VRSetup::showStats(bool b) {
     for (auto v : w->getViews()) v->showStats(b);
 }
 
-/*void VRSetup::addScript(string name) { scripts[name] = VRScript::create(name); }
+VRScriptPtr VRSetup::addScript(string name) { auto s = VRScript::create(name); scripts[s->getName()] = s; return s; }
 VRScriptPtr VRSetup::getScript(string name) { return scripts[name]; }
-map<string, VRScriptPtr> VRSetup::getScripts() { return scripts; }*/
+map<string, VRScriptPtr> VRSetup::getScripts() { return scripts; }
 
 void setLoadingLights(int dev, int light, float R, float G, float B) {
     //cout << " !!! setLoadingLights " << dev << " " << light << " " << R << " " << G << " " << B << endl;
@@ -220,7 +220,7 @@ void VRSetup::save(string file) {
     xmlpp::Element* trackingARTN = setupN->add_child("TrackingART");
     xmlpp::Element* trackingVRPNN = setupN->add_child("TrackingVRPN");
     xmlpp::Element* networkN = setupN->add_child("Network");
-    /*xmlpp::Element* scriptN = */setupN->add_child("Scripts");
+    xmlpp::Element* scriptN = setupN->add_child("Scripts");
 
     VRWindowManager::save(displayN);
     VRDeviceManager::save(deviceN);
@@ -228,6 +228,7 @@ void VRSetup::save(string file) {
     VRPN::save(trackingVRPNN);
     network->save(networkN);
     displayN->set_attribute("globalOffset", toString(globalOffset).c_str());
+    for (auto s : scripts) s.second->saveUnder(scriptN);
 
     if (file == "") file = path;
     if (file != "") doc.write_to_file_formatted(file);
@@ -247,13 +248,18 @@ void VRSetup::load(string file) {
     xmlpp::Element* trackingARTN = getElementChild(setupN, "TrackingART");
     xmlpp::Element* trackingVRPNN = getElementChild(setupN, "TrackingVRPN");
     xmlpp::Element* networkN = getElementChild(setupN, "Network");
-    /*xmlpp::Element* scriptN = */getElementChild(setupN, "Scripts");
+    xmlpp::Element* scriptN = getElementChild(setupN, "Scripts");
 
     if (trackingARTN) ART::load(trackingARTN);
     if (trackingVRPNN) VRPN::load(trackingVRPNN);
     if (deviceN) VRDeviceManager::load(deviceN);
     if (displayN) VRWindowManager::load(displayN);
     if (networkN) network->load(networkN);
+    for (auto el : getChildren(scriptN)) {
+        auto s = VRScript::create("tmp");
+        s->load(el);
+        scripts[s->getName()] = s;
+    }
 
     if (displayN && displayN->get_attribute("globalOffset")) {
         toValue( displayN->get_attribute("globalOffset")->get_value(), globalOffset );

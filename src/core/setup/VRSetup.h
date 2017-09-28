@@ -29,8 +29,6 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         string path;
         Vec3d globalOffset;
 
-        //map<string, VRScriptPtr> scripts;
-
         VRTransformPtr real_root = 0;
         VRTransformPtr user = 0;
         VRCameraPtr setup_cam = 0;
@@ -43,11 +41,10 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         VRToggleCbPtr layer_stats_toggle;
 
         VRNetworkPtr network;
+        map<string, VRScriptPtr> scripts;
 
         void showStats(bool b);
-
         void parseSetup(xmlpp::Element* setup);
-
         void processOptions();
 
         xmlpp::Element* getElementChild(xmlpp::Element* e, string name);
@@ -60,7 +57,6 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         static VRSetupPtr getCurrent();
 
         VRNetworkPtr getNetwork();
-
         VRTransformPtr getUser();
 
         void addObject(VRObjectPtr o);
@@ -70,22 +66,18 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         void setScene( shared_ptr<VRScene> s);
         void showSetup(bool b);
 
-        /*void addScript(string name);
+        VRScriptPtr addScript(string name);
         VRScriptPtr getScript(string name);
-        map<string, VRScriptPtr> getScripts();*/
+        map<string, VRScriptPtr> getScripts();
 
         void printOSG();
-
         void updateTracking();
 
         void save(string file = "");
         void load(string file);
 
-
-
         Vec3d getDisplaysOffset();
         void setDisplaysOffset(Vec3d o);
-
         void setupLESCCAVELights(VRScenePtr scene); // TODO: temporary until scripts for VRSetup implemented!
 };
 

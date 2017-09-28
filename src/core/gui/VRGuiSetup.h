@@ -65,6 +65,7 @@ class VRGuiSetup {
         template<class T> void on_menu_add_device();
         void on_menu_add_network_node();
         void on_menu_add_network_slave();
+        void on_menu_add_script();
         void on_menu_delete();
 
         void on_toggle_display_active();

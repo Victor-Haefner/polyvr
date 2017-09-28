@@ -45,42 +45,44 @@ struct demoEntry {
     VRDeviceCbPtr uPixmap;
 };
 
+ptrFwd(demoEntry);
+
 class VRDemos {
     private:
         string active;
         VRScene* demo = 0;
         VRSignalPtr on_scene_loaded = 0;
         VRSignalPtr on_scene_closing = 0;
-        demoEntry* current_demo = 0;
-        map<string, demoEntry*> demos;
+        demoEntryPtr current_demo = 0;
+        map<string, demoEntryPtr> demos;
         VRGuiContextMenu* menu;
         VRDeviceCbPtr updateCb;
 
-        bool on_any_event(GdkEvent* event, demoEntry* entry);
+        bool on_any_event(GdkEvent* event, demoEntryPtr entry);
         Gtk::Image* loadGTKIcon(Gtk::Image* img, string path, int w, int h);
-        void setButton(demoEntry* e);
+        void setButton(demoEntryPtr e);
 
         void clearTable(string t);
         void updateTable(string t);
 
-        void setGuiState(demoEntry* e);
-        void toggleDemo(demoEntry* e);
+        void setGuiState(demoEntryPtr e);
+        void toggleDemo(demoEntryPtr e);
         void addEntry(string path, string table, bool running);
 
-        void updatePixmap(demoEntry* e, Gtk::Image* img_pxb, int w, int h);
+        void updatePixmap(demoEntryPtr e, Gtk::Image* img_pxb, int w, int h);
         void update();
 
         void normFileName(string& f);
 
         void initMenu();
         void on_menu_delete();
-        void on_menu_advanced(demoEntry* e = 0);
+        void on_menu_advanced(demoEntryPtr e = 0);
         void on_menu_unpin();
 
         void on_advanced_cancel();
         void on_advanced_start();
 
-        void on_lock_toggle(demoEntry* e);
+        void on_lock_toggle(demoEntryPtr e);
 
         void on_diag_new_clicked();
         void on_diag_save_clicked();
