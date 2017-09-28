@@ -515,7 +515,6 @@ void VRGuiScripts::on_name_edited(const Glib::ustring& path, const Glib::ustring
     on_select_script();
 }
 
-
 void VRGuiScripts_on_script_changed(GtkTextBuffer* tb, gpointer user_data) {
     setToolButtonSensitivity("toolbutton7", true);
 
@@ -1133,6 +1132,7 @@ VRGuiScripts::VRGuiScripts() {
     editor->addKeyBinding("find", VRUpdateCb::create("findCb", boost::bind(&VRGuiScripts::on_find_clicked, this)));
     editor->addKeyBinding("save", VRUpdateCb::create("saveCb", boost::bind(&VRGuiScripts::on_save_clicked, this)));
     editor->addKeyBinding("exec", VRUpdateCb::create("execCb", boost::bind(&VRGuiScripts::on_exec_clicked, this)));
+    g_signal_connect(editor->getSourceBuffer(), "changed", G_CALLBACK(VRGuiScripts_on_script_changed), this);
 
     setCellRendererCallback("cellrenderertext13", sigc::mem_fun(*this, &VRGuiScripts::on_name_edited) );
     setCellRendererCallback("cellrenderertext2", sigc::mem_fun(*this, &VRGuiScripts::on_argname_edited) );
