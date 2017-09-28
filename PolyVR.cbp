@@ -562,6 +562,8 @@
 		<Unit filename="src/core/gui/VRGuiConsole.h" />
 		<Unit filename="src/core/gui/VRGuiContextMenu.cpp" />
 		<Unit filename="src/core/gui/VRGuiContextMenu.h" />
+		<Unit filename="src/core/gui/VRGuiEditor.cpp" />
+		<Unit filename="src/core/gui/VRGuiEditor.h" />
 		<Unit filename="src/core/gui/VRGuiFile.cpp" />
 		<Unit filename="src/core/gui/VRGuiFile.h" />
 		<Unit filename="src/core/gui/VRGuiFwd.h" />
