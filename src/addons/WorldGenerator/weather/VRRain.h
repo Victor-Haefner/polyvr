@@ -2,6 +2,7 @@
 #define VRRAIN_H_INCLUDED
 
 #include "addons/Bullet/Particles/VRParticles.h" //do i need this?
+//#include "VRSky.h"
 
 #include "core/objects/VRTransform.h"
 //#include "addons/Bullet/Particles/VREmitter.h"
@@ -17,20 +18,20 @@ class VRRain : public VRTransform { //: public VRParticles {
         int lifetime;
         double mass;
 
-        double densityRainStart = 0.1;
-        double speedRainStart = 0.001;
+        double densityRainStart = 0.1;      //density of clouds at start of transition
+        double speedRainStartX = 0.002;
+        double speedRainStartY = 0.001;
         double colorRainStart = 1;
         double lightRainStart = 1;
 
         double densityRain;
-        double speedRain;
+        double speedRainX;
+        double speedRainY;
         double colorRain;
         double lightRain;
 
         double durationTransition = 10;
         double scaleRain = 10;
-
-
 
         void setRainScale();
         void setupRain();
