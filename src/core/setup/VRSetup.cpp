@@ -153,6 +153,7 @@ void VRSetup::setScene(VRScenePtr scene) {
     setViewBackground(scene->getBackground());
 
     for (auto w : getWindows()) w.second->setContent(true);
+    for (auto s : scripts) scene->addScript(s.second);
 
     //scene->initDevices();
 }
@@ -228,7 +229,10 @@ void VRSetup::save(string file) {
     VRPN::save(trackingVRPNN);
     network->save(networkN);
     displayN->set_attribute("globalOffset", toString(globalOffset).c_str());
-    for (auto s : scripts) s.second->saveUnder(scriptN);
+    for (auto s : scripts) {
+        auto e = s.second->saveUnder(scriptN);
+        s.second->save(e);
+    }
 
     if (file == "") file = path;
     if (file != "") doc.write_to_file_formatted(file);

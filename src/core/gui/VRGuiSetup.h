@@ -5,7 +5,9 @@
 #include "core/utils/VRFunctionFwd.h"
 #include "core/setup/VRSetupFwd.h"
 #include "core/scene/VRSceneFwd.h"
+#include "core/scripting/VRScriptFwd.h"
 #include "VRGuiVectorEntry.h"
+#include "VRGuiEditor.h"
 #include <gtkmm/treeview.h>
 #include <gtkmm/treestore.h>
 
@@ -45,6 +47,8 @@ class VRGuiSetup {
         VRMultiWindow* mwindow;
 	    VRUpdateCbPtr updatePtr;
 	    VRDeviceCbPtr updateSetupCb;
+
+        shared_ptr<VRGuiEditor> editor;
 
         bool guard; // update guard
 
@@ -121,6 +125,9 @@ class VRGuiSetup {
         void on_netslave_edited();
         void on_netslave_start_clicked();
 
+        void on_script_save_clicked();
+        void on_script_exec_clicked();
+
         void closeAllExpander();
         void updateObjectData();
 
@@ -128,6 +135,9 @@ class VRGuiSetup {
 
     public:
         VRGuiSetup();
+
+        VRScriptPtr getSelectedScript();
+        shared_ptr<VRGuiEditor> getEditor();
 
         void updateSetupList();
         void updateSetup();

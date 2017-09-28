@@ -14,7 +14,16 @@
   <TrackingVRPN active="1" persistency="666" port="3883" verbose="0"/>
   <Network base_name="Network" name_space="Manager" name_suffix="0" persistency="666"/>
   <Scripts>
-    <Script base_name="script" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python"/>
-    <Script base_name="script" group="no group" name_space="__script__" name_suffix="1" persistency="666" server="server1" type="Python"/>
+    <Script base_name="script" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	print 'hi'
+	pass
+</core>
+    </Script>
+    <Script base_name="script" group="no group" name_space="__script__" name_suffix="1" persistency="666" server="server1" type="Python">
+      <core>
+	pass
+</core>
+    </Script>
   </Scripts>
 </Setup>

@@ -203,7 +203,7 @@ void VRGuiScripts::on_addSep_clicked() {
 }
 
 void VRGuiScripts::on_save_clicked() {
-    VRScriptPtr script = VRGuiScripts::getSelectedScript();
+    VRScriptPtr script = getSelectedScript();
     if (script == 0) return;
 
     string core = editor->getCore(script->getHeadSize());
@@ -312,8 +312,7 @@ void VRGuiScripts::on_diag_import_select_1() {} // TODO
 void VRGuiScripts::on_diag_import_select_2() {}
 
 void VRGuiScripts::on_exec_clicked() {
-
-    VRScriptPtr script = VRGuiScripts::getSelectedScript();
+    VRScriptPtr script = getSelectedScript();
     if (script == 0) return;
 
     //VRTimer t; t.start();
@@ -536,7 +535,7 @@ void VRGuiScripts_on_script_changed(GtkTextBuffer* tb, gpointer user_data) {
 shared_ptr<VRGuiEditor> VRGuiScripts::getEditor() { return editor; }
 
 void VRGuiScripts::on_argadd_clicked() {
-    VRScriptPtr script = VRGuiScripts::getSelectedScript();
+    VRScriptPtr script = getSelectedScript();
     if (script == 0) return;
 
     script->addArgument();
@@ -545,7 +544,7 @@ void VRGuiScripts::on_argadd_clicked() {
 }
 
 void VRGuiScripts::on_trigadd_clicked() {
-    VRScriptPtr script = VRGuiScripts::getSelectedScript();
+    VRScriptPtr script = getSelectedScript();
     if (script == 0) return;
 
     script->addTrigger();

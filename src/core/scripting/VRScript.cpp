@@ -192,6 +192,7 @@ VRScript::~VRScript() {
 }
 
 VRScriptPtr VRScript::create(string name) { return VRScriptPtr( new VRScript(name) ); }
+VRScriptPtr VRScript::ptr() { return shared_from_this(); }
 
 VRScript::arg* VRScript::addArgument() {
     clean();
@@ -309,6 +310,7 @@ string VRScript::getHead() { return head; }
 string VRScript::getScript() { return head + core; }
 string VRScript::getType() { return type; }
 string VRScript::getServer() { return server; }
+
 int VRScript::getHeadSize() { // number of head lines
     if (type == "Python") return 1;
     return 0;

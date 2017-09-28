@@ -74,6 +74,7 @@ void VRGuiSetup::closeAllExpander() {
     setExpanderSensitivity("expander25", false);
     setExpanderSensitivity("expander26", false);
     setExpanderSensitivity("expander28", false);
+    setExpanderSensitivity("expander29", false);
 }
 
 void VRGuiSetup::updateObjectData() {
@@ -274,6 +275,12 @@ void VRGuiSetup::updateObjectData() {
         if (ct == "Multicast") setRadioButton("radiobutton10", 1);
         if (ct == "SockPipeline") setRadioButton("radiobutton11", 1);
         if (ct == "StreamSock") setRadioButton("radiobutton12", 1);
+    }
+
+    if (selected_type == "script") {
+        setExpanderSensitivity("expander29", true);
+        VRScript* script = (VRScript*)selected_object;
+        editor->setCore(script->getHead() + script->getCore());
     }
 
     guard = false;
@@ -987,6 +994,49 @@ void VRGuiSetup::on_toggle_vrpn_verbose() {
     setup->setVRPNVerbose(b);
 }
 
+VRScriptPtr VRGuiSetup::getSelectedScript() {
+    auto script = (VRScript*)selected_object;
+    return script->ptr();
+}
+
+void VRGuiSetup::on_script_save_clicked() {
+    VRScriptPtr script = getSelectedScript();
+    if (script == 0) return;
+
+    string core = editor->getCore(script->getHeadSize());
+    auto scene = VRScene::getCurrent();
+    if (scene == 0) return;
+    scene->updateScript(script->getName(), core);
+
+    setToolButtonSensitivity("toolbutton27", false);
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_script_exec_clicked() {
+    VRScriptPtr script = getSelectedScript();
+    if (script == 0) return;
+    on_script_save_clicked();
+
+    auto scene = VRScene::getCurrent();
+    if (scene == 0) return;
+    scene->triggerScript(script->getName());
+}
+
+shared_ptr<VRGuiEditor> VRGuiSetup::getEditor() { return editor; }
+
+void VRGuiSetup_on_script_changed(GtkTextBuffer* tb, gpointer user_data) {
+    setToolButtonSensitivity("toolbutton27", true);
+
+    auto gs = (VRGuiSetup*)user_data;
+    VRScriptPtr script = gs->getSelectedScript();
+    if (script == 0) return;
+
+    string core = gs->getEditor()->getCore(script->getHeadSize());
+    auto scene = VRScene::getCurrent();
+    if (scene == 0) return;
+    scene->updateScript(script->getName(), core, false);
+}
+
 // --------------------------
 // ---------Main-------------
 // --------------------------
@@ -1032,6 +1082,8 @@ VRGuiSetup::VRGuiSetup() {
     setToolButtonCallback("toolbutton11", sigc::mem_fun(*this, &VRGuiSetup::on_del_clicked) );
     setToolButtonCallback("toolbutton12", sigc::mem_fun(*this, &VRGuiSetup::on_save_clicked) );
     setToolButtonCallback("toolbutton19", sigc::mem_fun(*this, &VRGuiSetup::on_foto_clicked) );
+    setToolButtonCallback("toolbutton27", sigc::mem_fun(*this, &VRGuiSetup::on_script_save_clicked) );
+    setToolButtonCallback("toolbutton26", sigc::mem_fun(*this, &VRGuiSetup::on_script_exec_clicked) );
 
     centerEntry.init("center_entry", "center", sigc::mem_fun(*this, &VRGuiSetup::on_proj_center_edit));
     userEntry.init("user_entry", "user", sigc::mem_fun(*this, &VRGuiSetup::on_proj_user_edit));
@@ -1113,6 +1165,10 @@ VRGuiSetup::VRGuiSetup() {
     setCheckButtonCallback("checkbutton29", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited));
     setCheckButtonCallback("checkbutton41", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited));
     setCheckButtonCallback("checkbutton42", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited));
+
+
+    editor = shared_ptr<VRGuiEditor>( new VRGuiEditor("scrolledwindow12") );
+    g_signal_connect(editor->getSourceBuffer(), "changed", G_CALLBACK(VRGuiSetup_on_script_changed), this);
 
     // primitive list
     fillStringListstore("prim_list", VRPrimitive::getTypes());
