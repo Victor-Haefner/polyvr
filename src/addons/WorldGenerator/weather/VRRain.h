@@ -30,11 +30,15 @@ class VRRain : public VRTransform { //: public VRParticles {
         double colorRain;
         double lightRain;
 
+        //VRSky rainSky = VRSKy(); need sky from scene
+        //VRLight need Light from scene
+
         double durationTransition = 10;
         double scaleRain = 10;
 
         void setRainScale();
         void setupRain();
+        void clearRain();
 
     public:
         VRRain();
@@ -42,7 +46,6 @@ class VRRain : public VRTransform { //: public VRParticles {
 
         VRRainPtr ptr();
         static VRRainPtr create(string name = "rain");
-        //static shared_ptr<VRRain> create();
 
         void setRain( double durationTransition, double scaleRain );
         Vec2d getRain();

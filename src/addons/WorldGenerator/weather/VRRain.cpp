@@ -7,7 +7,15 @@ VRRain::VRRain() {}
 VRRain::~VRRain() {}
 
 VRRainPtr VRRain::create(string name) { return VRRainPtr( new VRRain() ); }
-//VRRainPtr VRRain::ptr() { return static_pointer_cast<VRRain>( shared_from_this() ); }
+
+void VRRain::startRain() {
+    setRainScale();
+    setupRain();
+}
+
+void VRRain::stopRain() {
+    clearRain();
+}
 
 void VRRain::setupRain() {
     //TODO: SETUP RAINCLUSTER HERE
@@ -36,7 +44,7 @@ void VRRain::setupRain() {
     double colorRainRN = colorRainStart-(colorRainStart-colorRain)*t;
     Vec4d cloudColorRN = Vec4d(colorRain,colorRain,colorRain,1);
 
-    //VRSky.setClouds(densityRainRN,1e-5,3000,cloudSpeedRN,cloudColorRN);
+    //rainSky.setClouds(densityRainRN,1e-5,3000,cloudSpeedRN,cloudColorRN);
 
     double lightRainRN = lightRainStart - (lightRainStart-lightRain)*t;
     Color4f rainColorRN = Color4f(lightRainRN,lightRainRN,lightRainRN,1);
@@ -44,12 +52,7 @@ void VRRain::setupRain() {
     //
 }
 
-void VRRain::startRain() {
-    setRainScale();
-    setupRain();
-}
-
-void VRRain::stopRain() {
+void VRRain::clearRain(){
     //TODO: list of raindropemitters, stop/delete them here
 
     //TODO: callback [clouds, light-diffuse, rain]
@@ -66,7 +69,6 @@ void VRRain::stopRain() {
     double lightRainRN = lightRain + (lightRainStart-lightRain)*t;
     Color4f rainColorRN = Color4f(lightRainRN,lightRainRN,lightRainRN,1);
     //VRLight.setDiffuse(rainColorRN);
-
 }
 
 void VRRain::setRain( double durationTransition, double scaleRain ){
