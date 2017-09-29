@@ -28,7 +28,16 @@ int ART_device::key(int ID, int type) { return ID*1000 + type; }
 
 void ART_device::init() {
     if (type != 1) ent = VRTransform::create("ART_tracker");
-    if (type == 1) {
+
+    if (type == 2) { // finger tracking
+        for (int i=0;i<5;i++) {
+            auto f = VRTransform::create("finger"+toString(i));
+            ent->addChild(f);
+            fingerEnts.push_back(f);
+        }
+    }
+
+    if (type == 1) { // flystick
         dev = VRFlystick::create();
         ent = dev->editBeacon();
 
@@ -46,7 +55,12 @@ void ART_device::init() {
 }
 
 void ART_device::update() {
-    if (ent) ent->setMatrix(m);
+    if (ent) {
+        ent->setMatrix(m);
+        if (fingers.size() == 5 && fingerEnts.size() == 5)
+            for (int i=0;i<5;i++) fingerEnts[i]->setMatrix( fingers[i] );
+    }
+
     if (dev) {
         for (auto j : joysticks) dev->update(j);
         for (auto b : buttons) dev->update(b);
@@ -73,10 +87,7 @@ ART::~ART() {
 }
 
 template<typename dev>
-void ART::getMatrix(dev t, ART_devicePtr d) {
-    if (t.quality <= 0) return;
-
-    Matrix4d& m = d->m;
+void ART::getMatrix(dev t, Matrix4d& m, bool doOffset) { //TODO: its a mess :(
     m[0] = Vec4d(t.rot[0], t.rot[1], t.rot[2], 1); // orientation
     m[1] = Vec4d(t.rot[3], t.rot[4], t.rot[5], 1);
     m[2] = Vec4d(t.rot[6], t.rot[7], t.rot[8], 1);
@@ -85,8 +96,15 @@ void ART::getMatrix(dev t, ART_devicePtr d) {
     m[2] = Vec4d(-t.rot[3], -t.rot[4], -t.rot[5], 1);
 
     m[3] = Vec4d(t.loc[0]*0.001, t.loc[1]*0.001, t.loc[2]*0.001, 1); // position
-    coords::YtoZ(m); // LESC -> TODO: use the up value and others to specify the coordinate system
-    m[3] += Vec4d(d->offset) + Vec4d(offset);
+    coords::YtoZ(m);
+    if (doOffset) m[3] += Vec4d(offset);
+}
+
+template<typename dev>
+void ART::getMatrix(dev t, ART_devicePtr d) {
+    if (t.quality <= 0) return;
+    getMatrix(t, d->m);
+    d->m[3] += Vec4d(d->offset);
 }
 
 void ART::scan(int type, int N) {
@@ -103,22 +121,24 @@ void ART::scan(int type, int N) {
     for (int i=0; i<N; i++) {
         int k = ART_device::key(i,type);
         if (devices.count(k) == 0) continue;
+        auto& dev = devices[k];
 
-        if (type == 0) getMatrix(dtrack->get_body(i), devices[k]);
-        if (type == 1) getMatrix(dtrack->get_flystick(i), devices[k]);
-        if (type == 2) getMatrix(dtrack->get_hand(i), devices[k]);
-        if (type == 3) getMatrix(dtrack->get_meatool(i), devices[k]);
+        if (type == 0) getMatrix(dtrack->get_body(i), dev);
+        if (type == 1) getMatrix(dtrack->get_flystick(i), dev);
+        if (type == 2) getMatrix(dtrack->get_hand(i), dev);
+        if (type == 3) getMatrix(dtrack->get_meatool(i), dev);
 
         if (type == 1) {
             auto fly = dtrack->get_flystick(i);
-            devices[k]->buttons.push_back( vector<int>(fly.button, &fly.button[fly.num_button]) );
-            devices[k]->joysticks.push_back( vector<float>(fly.joystick, &fly.joystick[fly.num_joystick]) );
+            dev->buttons.push_back( vector<int>(fly.button, &fly.button[fly.num_button]) );
+            dev->joysticks.push_back( vector<float>(fly.joystick, &fly.joystick[fly.num_joystick]) );
         }
 
         if (type == 2) {
             auto hand = dtrack->get_hand(i);
             for (int i = 0; i < hand.nfinger; i++) {
-                auto finger = hand.finger[0];
+                auto finger = hand.finger[i];
+                getMatrix(finger, dev->fingers[i], false);
             }
         }
     }

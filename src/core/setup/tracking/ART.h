@@ -22,10 +22,12 @@ class VRThread;
 
 struct ART_device : public VRName {
     Matrix4d m;
+    vector<Matrix4d> fingers = vector<Matrix4d>(5);
     list<vector<int> > buttons;
     list<vector<float> > joysticks;
 
     VRTransformPtr ent = 0;
+    vector<VRTransformPtr> fingerEnts;
     VRFlystickPtr dev = 0;
     Vec3d offset;
     float scale = 1;
@@ -59,8 +61,8 @@ class ART : public VRStorage {
         shared_ptr< VRFunction< weak_ptr<VRThread> > > threadFkt;
         VRSignalPtr on_new_device;
 
-        template<typename dev>
-        void getMatrix(dev t, ART_devicePtr d);
+        template<typename dev> void getMatrix(dev t, Matrix4d& m, bool doOffset = true);
+        template<typename dev> void getMatrix(dev t, ART_devicePtr d);
 
         boost::mutex mutex;
         void scan(int type = -1, int N = 0);
