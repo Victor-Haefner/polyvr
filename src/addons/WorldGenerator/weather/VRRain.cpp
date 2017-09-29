@@ -74,6 +74,7 @@ void VRRain::clearRain(){
 void VRRain::setRain( double durationTransition, double scaleRain ){
     if ( durationTransition<0 || scaleRain<0 || scaleRain>10 ) {
         //TODO: error
+        printf("Input for Duration of Transition must be greater 0, Scale of Rain between 0 and 10");
     }
     else {
         this->durationTransition = durationTransition;
