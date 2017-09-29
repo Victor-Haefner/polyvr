@@ -41,7 +41,7 @@ class VRStage : public VRObject {
         void setActive(bool b);
         bool isActive();
 
-        void setSize( Vec2i size);
+        virtual void setSize( Vec2i size);
         void setTarget(VRMaterialPtr mat, int tid = 0);
         void setCamera(OSGCameraPtr cam);
         void setBackground(BackgroundRecPtr bg);

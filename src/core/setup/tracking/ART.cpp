@@ -114,6 +114,13 @@ void ART::scan(int type, int N) {
             devices[k]->buttons.push_back( vector<int>(fly.button, &fly.button[fly.num_button]) );
             devices[k]->joysticks.push_back( vector<float>(fly.joystick, &fly.joystick[fly.num_joystick]) );
         }
+
+        if (type == 2) {
+            auto hand = dtrack->get_hand(i);
+            for (int i = 0; i < hand.nfinger; i++) {
+                auto finger = hand.finger[0];
+            }
+        }
     }
 }
 
