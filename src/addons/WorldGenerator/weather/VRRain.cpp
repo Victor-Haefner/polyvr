@@ -1,24 +1,87 @@
 #include "VRRain.h"
+#include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRMaterialT.h"
+#include "core/objects/material/VRTextureGenerator.h"
+#include "core/utils/VRFunction.h"
+#include "core/scene/VRScene.h"
+
+#include <math.h>
 #include <random>
+#include <boost/bind.hpp>
+#include <time.h>
+#include <GL/glut.h>
 
 using namespace OSG;
 
-VRRain::VRRain() {}
+VRRain::VRRain() : VRGeometry("Rain") {
+    type = "Rain";
+    string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Rain/";
+    string vScript = resDir + "Rain.vp";
+    string fScript = resDir + "Rain.fp";
+
+    // shader setup
+    mat = VRMaterial::create("Rain");
+    mat->readVertexShader(vScript);
+    mat->readFragmentShader(fScript);
+    setMaterial(mat);
+    setPrimitive("Plane", "2 2 1 1");
+    mat->setLit(false);
+	mat->setDiffuse(Color3f(1));
+    /*
+    setPosition(49.0069, 8.4037); // 49.0069° N, 8.4037° E Karlsruhe
+    setTime(0,12,120,2016);
+    sunFromTime();
+    setClouds(0.1, 1e-5, 3000, Vec2d(.002, .001), Color4f(1,1,1, 1.0));
+	setLuminance(1.75);
+    setVolumeCheck(false, true);
+    */
+    //textureSize = 2048;
+    textureSize = 512;
+	VRTextureGenerator tg;
+	tg.setSize(textureSize, textureSize);
+    tg.add(PERLIN, 1, Color3f(0.9), Color3f(1.0));
+	tg.add(PERLIN, 1.0/2, Color3f(0.8), Color3f(1.0));
+	tg.add(PERLIN, 1.0/4, Color3f(0.7), Color3f(1.0));
+	tg.add(PERLIN, 1.0/8, Color3f(0.6), Color3f(1.0));
+	tg.add(PERLIN, 1.0/16, Color3f(0.4), Color3f(1.0));
+	tg.add(PERLIN, 1.0/32, Color3f(0.2), Color3f(1.0));
+	tg.add(PERLIN, 1.0/64, Color3f(0.1), Color3f(1.0));
+	tg.add(PERLIN, 1.0/128, Color3f(0.1), Color3f(1.0));
+	/*
+	tg.add(PERLIN, 1, Color3f(0.95), Color3f(1.0));
+	tg.add(PERLIN, 1.0/2, Color3f(0.9), Color3f(1.0));
+	tg.add(PERLIN, 1.0/4, Color3f(0.7), Color3f(1.0));
+	tg.add(PERLIN, 1.0/8, Color3f(0.6), Color3f(1.0));
+	tg.add(PERLIN, 1.0/16, Color3f(0.5), Color3f(1.0));
+	tg.add(PERLIN, 1.0/32, Color3f(0.4), Color3f(1.0));
+	tg.add(PERLIN, 1.0/64, Color3f(0.4), Color3f(1.0));
+	tg.add(PERLIN, 1.0/128, Color3f(0.3), Color3f(1.0));
+	tg.add(PERLIN, 1.0/256, Color3f(0.2), Color3f(1.0));
+	*/
+	mat->setTexture(tg.compose(0));
+
+    updatePtr = VRUpdateCb::create("rain update", boost::bind(&VRRain::update, this));
+    VRScene::getCurrent()->addUpdateFkt(updatePtr);
+}
 VRRain::~VRRain() {}
 
 VRRainPtr VRRain::create(string name) { return VRRainPtr( new VRRain() ); }
+VRRainPtr VRRain::ptr() { return static_pointer_cast<VRRain>( shared_from_this() ); }
 
 void VRRain::startRain() {
-    setRainScale();
-    setupRain();
+    //setRainScale();
+    //setupRain();
+    cout << "asdfefas\n";
+    //std::cout << "lul\n";
 }
 
 void VRRain::stopRain() {
-    clearRain();
+    //clearRain();
 }
 
 void VRRain::setupRain() {
     //TODO: SETUP RAINCLUSTER HERE
+    /*
     for (int x=-7; x<7; x++) {
         for (int y=-7; y<7; y++) {
             VRParticles rainemitter = VRParticles("rd"+x+y);
@@ -50,12 +113,14 @@ void VRRain::setupRain() {
     Color4f rainColorRN = Color4f(lightRainRN,lightRainRN,lightRainRN,1);
     //VRLight.setDiffuse(rainColorRN);
     //
+    */
 }
 
 void VRRain::clearRain(){
     //TODO: list of raindropemitters, stop/delete them here
 
     //TODO: callback [clouds, light-diffuse, rain]
+    /*
     double t = 1;
     double densityRainRN = densityRain-(densityRain-densityRainStart)*t;
     double cloudSpeedXRN = speedRainX-(speedRainX-speedRainStartX)*t;
@@ -69,6 +134,7 @@ void VRRain::clearRain(){
     double lightRainRN = lightRain + (lightRainStart-lightRain)*t;
     Color4f rainColorRN = Color4f(lightRainRN,lightRainRN,lightRainRN,1);
     //VRLight.setDiffuse(rainColorRN);
+    */
 }
 
 void VRRain::setRain( double durationTransition, double scaleRain ){
@@ -109,4 +175,33 @@ void VRRain::overrideParameters( double densityRain, double speedRain, double co
 
 Vec2d VRRain::getRain() {
     return Vec2d(durationTransition,scaleRain);
+}
+
+void VRRain::reloadShader() {
+    string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Rain/";
+    mat->readVertexShader(resDir + "Rain.vp");
+    mat->readFragmentShader(resDir + "Rain.fp");
+}
+
+void VRRain::updateRain(float dt) {
+    /*
+    cloudOffset += Vec2f(cloudVel) * dt;
+    cloudOffset[0] = fmod(cloudOffset[0], textureSize);
+    cloudOffset[1] = fmod(cloudOffset[1], textureSize);
+    mat->setShaderParameter<Vec2f>("cloudOffset", cloudOffset);
+    */
+}
+
+void VRRain::update() {
+    if (!isVisible()) return;
+
+    double current = glutGet(GLUT_ELAPSED_TIME)*0.001;
+    float dt = (current - lastTime)*speed;
+    lastTime = current;
+
+    //date.propagate(dt);
+    //sunFromTime();
+    updateRain(dt);
+    //calculateZenithColor();
+
 }

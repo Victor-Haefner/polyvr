@@ -1,10 +1,15 @@
 #ifndef VRRAIN_H_INCLUDED
 #define VRRAIN_H_INCLUDED
 
-#include "addons/Bullet/Particles/VRParticles.h" //do i need this?
+#include "core/objects/VRObjectFwd.h"
+#include "core/scene/VRSceneManager.h"
+#include "core/objects/VRTransform.h"
+
+//#include "addons/Bullet/Particles/VRParticles.h" //do i need this?
 //#include "VRSky.h"
 
-#include "core/objects/VRTransform.h"
+
+#include "core/objects/geometry/VRGeometry.h"
 //#include "addons/Bullet/Particles/VREmitter.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 
@@ -13,10 +18,22 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class VRRain : public VRTransform { //: public VRParticles {
+class VRRain : public VRGeometry { //: public VRParticles {
     private:
-        int lifetime;
-        double mass;
+        //int lifetime;
+        //double mass;
+        struct Position {
+            float latitude = 0;
+            float longitude = 0;
+        };
+
+        float speed = 1; // how quickly time passes
+        Position observerPosition;
+        VRUpdateCbPtr updatePtr;
+        VRMaterialPtr mat;
+
+        uint textureSize;
+        double lastTime = 0;
 
         double densityRainStart = 0.1;      //density of clouds at start of transition
         double speedRainStartX = 0.002;
@@ -40,12 +57,16 @@ class VRRain : public VRTransform { //: public VRParticles {
         void setupRain();
         void clearRain();
 
+        void updateRain(float dt);
+        void update();
+
     public:
         VRRain();
         ~VRRain();
 
         VRRainPtr ptr();
         static VRRainPtr create(string name = "rain");
+        void reloadShader();
 
         void setRain( double durationTransition, double scaleRain );
         Vec2d getRain();
