@@ -114,7 +114,8 @@ void VRAsphalt::addPath(pathPtr path, int rID, float width, int dashN, float off
         i += 4;
     }
 
-    texGen->drawPixel(Vec3i(rID,iNpnts  ,0), Color4f(i-iNpnts-2,width,dashN,1));
+    int Npoints = i-iNpnts-2;
+    texGen->drawPixel(Vec3i(rID,iNpnts  ,0), Color4f(Npoints,width,dashN,1));
     texGen->drawPixel(Vec3i(rID,iNpnts+1,0), Color4f(offset,0,0,1));
     if (texGen->getSize()[0] < rID) cout << "WARNING, texture width not enough! " << rID << "/" << texGen->getSize()[0] << endl;
     if (texGen->getSize()[1] < i) cout << "WARNING, texture height not enough! " << i << "/" << texGen->getSize()[1] << endl;
@@ -325,7 +326,7 @@ float distToQuadBezierHull( vec3 A, vec3 B, vec3 C, vec3 x ) {
 }
 
 float distToPath(const int k, const int roadID, const vec3 pos, const vec4 pathData1, const vec4 pathData2) {
-	int Npoints = int(pathData1.x); // testing
+	int Npoints = int(pathData1.x);
 	float width2 = pathData1.y*0.5;
 	float dashL = pathData1.z;
     float offset = pathData2.x;
@@ -334,7 +335,7 @@ float distToPath(const int k, const int roadID, const vec3 pos, const vec4 pathD
 	vec3 B;
 	vec3 C;
 	vec3 D;
-	int Nsegs = int((Npoints-1)*0.5);
+	int Nsegs = int(Npoints*0.25);
 	for (int j=0; j<Nsegs; j++) {
 		A = getData(roadID, k+4*j+1).xyz;
 		B = getData(roadID, k+4*j+2).xyz;
@@ -397,9 +398,9 @@ void doPaths() {
 		vec4 pathData1 = getData(rID, k);
 		vec4 pathData2 = getData(rID, k+1);
 		int Npoints = int(pathData1.x);
-		distTrack = distToPath(k+1, rID, pos, pathData1, pathData2);
-		doLine = bool(distTrack < 10.0);
-		if (doLine) break;
+        distTrack = distToPath(k+1, rID, pos, pathData1, pathData2);
+        doLine = bool(distTrack < 10.0);
+        if (doLine) break;
 		k += Npoints+2;
 	}
 
