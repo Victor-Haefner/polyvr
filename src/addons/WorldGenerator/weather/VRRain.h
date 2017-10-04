@@ -41,6 +41,8 @@ class VRRain : public VRGeometry { //: public VRParticles {
         // -------------------------------------------------------------------------------------
         VRUpdateCbPtr updatePtr;
         VRMaterialPtr mat;
+        string vScript;
+        string fScript;
 
         // time and location
         double lastTime = 0;
@@ -109,6 +111,7 @@ class VRRain : public VRGeometry { //: public VRParticles {
         // -------------------------------------------------------------------------------------
         static VRRainPtr create();
         VRRainPtr ptr();
+
         void setTime(double second, int hour, int day, int year = 2000); // 0-3600, 0-24, 0-356, x
         void setSpeed(float speed = 1);
         void setClouds(float density, float scale, float height, Vec2d speed, Color4f color);
@@ -120,6 +123,8 @@ class VRRain : public VRGeometry { //: public VRParticles {
         //VRRainPtr ptr();
         //static VRRainPtr create(string name = "rain");
         //void reloadShader();
+
+        void updateRain(float dt);
 
         void setRain( double durationTransition, double scaleRain );
         Vec2d getRain();

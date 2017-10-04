@@ -16,8 +16,8 @@ using namespace OSG;
 VRRain::VRRain() : VRGeometry("Rain") {
     type = "Rain";
     string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Rain/";
-    string vScript = resDir + "Rain.vp";
-    string fScript = resDir + "Rain.fp";
+    vScript = resDir + "Rain.vp";
+    fScript = resDir + "Rain.fp";
 
     // shader setup
     mat = VRMaterial::create("Rain");
@@ -28,11 +28,6 @@ VRRain::VRRain() : VRGeometry("Rain") {
     mat->setLit(false);
 	mat->setDiffuse(Color3f(1));
 
-    setPosition(49.0069, 8.4037); // 49.0069° N, 8.4037° E Karlsruhe
-    setTime(0,12,120,2016);
-    sunFromTime();
-    setClouds(0.1, 1e-5, 3000, Vec2d(.002, .001), Color4f(1,1,1, 1.0));
-	setLuminance(1.75);
     setVolumeCheck(false, true);
 
     //textureSize = 2048;
@@ -47,17 +42,6 @@ VRRain::VRRain() : VRGeometry("Rain") {
 	tg.add(PERLIN, 1.0/32, Color3f(0.2), Color3f(1.0));
 	tg.add(PERLIN, 1.0/64, Color3f(0.1), Color3f(1.0));
 	tg.add(PERLIN, 1.0/128, Color3f(0.1), Color3f(1.0));
-	/*
-	tg.add(PERLIN, 1, Color3f(0.95), Color3f(1.0));
-	tg.add(PERLIN, 1.0/2, Color3f(0.9), Color3f(1.0));
-	tg.add(PERLIN, 1.0/4, Color3f(0.7), Color3f(1.0));
-	tg.add(PERLIN, 1.0/8, Color3f(0.6), Color3f(1.0));
-	tg.add(PERLIN, 1.0/16, Color3f(0.5), Color3f(1.0));
-	tg.add(PERLIN, 1.0/32, Color3f(0.4), Color3f(1.0));
-	tg.add(PERLIN, 1.0/64, Color3f(0.4), Color3f(1.0));
-	tg.add(PERLIN, 1.0/128, Color3f(0.3), Color3f(1.0));
-	tg.add(PERLIN, 1.0/256, Color3f(0.2), Color3f(1.0));
-	*/
 	mat->setTexture(tg.compose(0));
 
     updatePtr = VRUpdateCb::create("rain update", boost::bind(&VRRain::update, this));
@@ -184,6 +168,8 @@ void VRRain::updateRain(float dt) {
     cloudOffset[1] = fmod(cloudOffset[1], textureSize);
     mat->setShaderParameter<Vec2f>("cloudOffset", cloudOffset);
     */
+    mat->readVertexShader(vScript);
+    mat->readFragmentShader(fScript);
 }
 
 // SKY METHODS ---------------------------------------------------------------------------------------------------
