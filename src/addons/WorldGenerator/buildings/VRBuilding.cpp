@@ -141,7 +141,6 @@ VRGeometryPtr VRBuilding::addRoof(VRPolygon polygon) {
     Triangulator t;
     t.add(polygon);
     auto g = t.compute();
-    g->rotateYonZ();
     g->translate(Vec3d(0,ground+height,0));
     g->applyTransformation();
     g->setPositionalTexCoords(1.0, 0, Vec3i(0,2,1));
