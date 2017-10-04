@@ -30,6 +30,7 @@ ptrFwd(VRGroup);
 ptrFwd(VRBillboard);
 ptrFwd(VRStage);
 ptrFwd(VRSky);
+ptrFwd(VRRain); //temp
 
 // other
 ptrFwd(VRBackground);
