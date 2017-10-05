@@ -216,10 +216,19 @@ int path::addPoint( const pose& p, Color3f c ) {
 float path::getLength(int i, int j) {
     float l = 0;
     if (j <= i) j = size()-1;
-    for (int k=i+1; k<j+1; k++) {
-        auto p1 = points[k-1].pos();
-        auto p2 = points[k].pos();
-        l += (p2-p1).length();
+    if (degree == 3) {
+        for (int k=i; k<j; k++) {
+            auto p1 = points[k].pos();
+            auto p2 = points[k+1].pos();
+            l += (p2-p1).length();
+        }
+    }
+    if (degree == 2) {
+        for (int k=i; k<j; k+=2) {
+            auto p1 = points[k].pos();
+            auto p2 = points[k+2].pos();
+            l += (p2-p1).length();
+        }
     }
     return l;
 }

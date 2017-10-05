@@ -32,7 +32,7 @@ class VRAsphalt : public VRMaterial {
 
         VRTexturePtr noiseTexture();
         VRTexturePtr mudTexture();
-        void addPath(pathPtr path, int rID, float width, int dashN, float offset);
+        void addPath(pathPtr path, int rID, float width, float dashL, float offset);
 
     public:
         VRAsphalt();
@@ -44,8 +44,8 @@ class VRAsphalt : public VRMaterial {
 
         void clearTexture();
         void updateTexture();
-        void addTrack(int rID, pathPtr track, float width, int dashN, float offset = 0);
-        void addMarking(int rID, pathPtr marking, float width, int dashN, float offset = 0);
+        void addTrack(int rID, pathPtr track, float width, float dashL, float offset = 0);
+        void addMarking(int rID, pathPtr marking, float width, float dashL, float offset = 0);
 };
 
 OSG_END_NAMESPACE;

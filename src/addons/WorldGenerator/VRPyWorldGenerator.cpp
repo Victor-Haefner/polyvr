@@ -48,8 +48,8 @@ PyMethodDef VRPyRoad::methods[] = {
 };
 
 PyMethodDef VRPyAsphalt::methods[] = {
-    {"addMarking", PyWrapOpt(Asphalt, addMarking, "Add marking", "0|0", void, int, pathPtr, float, int, float ) },
-    {"addTrack", PyWrapOpt(Asphalt, addTrack, "Add track", "0|0", void, int, pathPtr, float, int, float ) },
+    {"addMarking", PyWrapOpt(Asphalt, addMarking, "Add marking", "0|0", void, int, pathPtr, float, float, float ) },
+    {"addTrack", PyWrapOpt(Asphalt, addTrack, "Add track", "0|0", void, int, pathPtr, float, float, float ) },
     {"clearTexture", PyWrap(Asphalt, clearTexture, "Clear internal textures", void ) },
     {"updateTexture", PyWrap(Asphalt, updateTexture, "Update internal textures", void ) },
     {NULL}  /* Sentinel */
