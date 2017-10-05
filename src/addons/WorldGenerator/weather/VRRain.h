@@ -55,6 +55,7 @@ class VRRain : public VRGeometry { //: public VRParticles {
         Vec2d cloudVel;
         Vec2f cloudOffset;
         float cloudDensity;
+        float rainOffset;
         float cloudScale;
         float cloudHeight;
         Color4f cloudColor;

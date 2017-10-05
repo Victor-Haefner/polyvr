@@ -27,6 +27,8 @@ VRRain::VRRain() : VRGeometry("Rain") {
     setPrimitive("Plane", "2 2 1 1");
     mat->setLit(false);
 	mat->setDiffuse(Color3f(1));
+	rainOffset = 0;
+	mat->setShaderParameter<float>("rainOffset", rainOffset);
 
     setVolumeCheck(false, true);
 
@@ -168,6 +170,9 @@ void VRRain::updateRain(float dt) {
     cloudOffset[1] = fmod(cloudOffset[1], textureSize);
     mat->setShaderParameter<Vec2f>("cloudOffset", cloudOffset);
     */
+    //mat->setShaderParameter<Vec2f>("rainOffset", rainOffset);
+    rainOffset += dt;
+    mat->setShaderParameter<float>("rainOffset", rainOffset);
     mat->readVertexShader(vScript);
     mat->readFragmentShader(fScript);
 }
