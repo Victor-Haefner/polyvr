@@ -29,6 +29,7 @@ VRRain::VRRain() : VRGeometry("Rain") {
 	mat->setDiffuse(Color3f(1));
 	rainOffset = 0;
 	mat->setShaderParameter<float>("rainOffset", rainOffset);
+	mat->enableTransparency();
 
     setVolumeCheck(false, true);
 

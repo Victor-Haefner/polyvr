@@ -52,8 +52,8 @@ float getOffset(in float rOffset, in float dropdis,in float D) {
 }
 
 bool isD(float D) {
-	float dropdis = 10/D; // horizontal distance betwen drops
-	float dropdisy = 0.5; // vertical distance betwen drops
+	float dropdis = 2/D; // horizontal distance betwen drops
+	float dropdisy = 0.9; // vertical distance betwen drops
 	float dropsize = getdropsize(gettheta(fragDir),D);
 	float toffset = rainOffset;
 	vec2 noise = vec2(floor(atan( fragDir.x, fragDir.z)*180/M_PI/dropdis),floor((D/tan(gettheta(fragDir))+getOffset(toffset,dropdisy,D))/dropdisy));
@@ -69,7 +69,7 @@ bool isD(float D) {
 vec3 checkrad() {
 	//might as well incorporate into main()
 	if (isD(2) || isD(3.37) || isD(5.27) || isD(10.47)) return vec3(0,0,0.8);
-	//if (isD(2)) return vec3(0,0,0.8);
+	//if (isD(2)) return vec3(0.5,0.5,0.7);
 	else discard;
 }
 
@@ -95,7 +95,7 @@ void main() {
 
 	//vec3 check = checkrad(fragDir.x, fragDir.y, fragDir.z, D0, T0);
 	vec3 check = checkrad();
-	gl_FragColor = vec4(check,1);
+	gl_FragColor = vec4(check,0.2);
 
 	//gl_FragColor = vec4(0,0,0.5, 1.0);
 	//gl_FragColor = vec4(-fragDir, 1.0);

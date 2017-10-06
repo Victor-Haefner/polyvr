@@ -152,6 +152,7 @@ void VRTerrain::setMap( VRTexturePtr t, int channel ) {
         }
     } else tex = t;
     mat->setTexture(tex);
+    mat->clearTransparency();
 	mat->setShaderParameter("channel", channel);
     mat->setTextureParams(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_MODULATE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
     updateTexelSize();
@@ -313,6 +314,7 @@ void VRTerrain::setSimpleNoise() {
     tex = tg.compose(0);
 	auto defaultMat = VRMaterial::get("defaultTerrain");
     defaultMat->setTexture(tex);
+    defaultMat->clearTransparency();
 }
 
 void VRTerrain::setupMat() {
@@ -325,6 +327,7 @@ void VRTerrain::setupMat() {
         tg.drawFill(w);
         tex = tg.compose(0);
         defaultMat->setTexture(tex);
+        defaultMat->clearTransparency();
 	}
 
 	mat = VRMaterial::create("terrain");
@@ -538,6 +541,7 @@ void VRTerrain::paintHeights(string path) {
     mat->setShaderParameter("texWoods", 1);
     mat->setShaderParameter("texGravel", 2);
     mat->setShaderParameter("doHeightTextures", 1);
+    mat->clearTransparency();
 }
 
 void VRTerrain::addEmbankment(string ID, pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4) {
