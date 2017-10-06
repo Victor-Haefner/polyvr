@@ -293,7 +293,9 @@ vec2 distToQuadBezier( vec3 A, vec3 B, vec3 C, vec3 D, vec3 x ) {
         float t = res[i];
         if( t>=0.0 && t <=1.0 ) {
             vec3 pos = A*t*t+B*t+C;
-            float d = distance(pos,x);
+            //float d = distance(pos,x);
+            vec3 D = pos-x; D.y *= 0.02; // minor hack, reduces artifacts when road surface is clamped to terrain
+            float d = length(D);
             if (d < dmin) {
         		dmin = d;
         		tmin = t;
