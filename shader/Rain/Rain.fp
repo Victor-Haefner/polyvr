@@ -37,56 +37,39 @@ float getphi(in float z, in float x, in float y){
 float gettheta(in float z, in float x, in float y){
 	return acos(y/sqrt(z*z + x*x + y*y));
 }
-float getdropsize(in float theta){
+float getdropsize(in float theta,float distance){
+	float dropsize = 0.1;	
+
 	if (theta < M_PI/2){
-		return 0.2*2*theta/M_PI;
+		return dropsize*2*theta/M_PI*2/distance;
 	} else {
 		if (theta > M_PI/2){
-			return 0.2*2*(M_PI-theta)/M_PI;
+			return dropsize*2*(M_PI-theta)/M_PI*2/distance;
 		} else return 0;
 	}
 }
-float getOffset(in float rOffset, in float dropdis) {
-	return mod(rOffset,dropdis);
+float getOffset(in float rOffset, in float dropdis,in float D) {
+	return mod(rOffset,dropdis)*D/5;
+	//return 0;
 }
+bool isD(in float x, in float y, in float z, in float D)
+{
+	float dropdis = 20/D;
+	float dropdisy =4.7123/D;
+	float dropsize = getdropsize(gettheta(z,x,y),D);
+	float toffset = rainOffset;
+	
+	float israindropx = mod(getphi(z,x,y)*180/M_PI,dropdis);
+	float israindropy = mod(D/tan(gettheta(z,x,y))-getOffset(toffset,dropdisy,D),dropdisy);
+
+	if (israindropx < dropsize && israindropy < dropsize ) return true;
+		else return false;
+}
+
 
 vec3 checkrad(in float x, in float y, in float z)
 {
-  	float dropsize = getdropsize(gettheta(z,x,y));
-	float dropdis = 10;
-	float dropdisy = 45;
-	float toffset = rainOffset;  	
-
-
-	float israindrop = mod(getphi(z,x,y)*180/M_PI,dropdis);
-	//float israindropm = mod(getphi(z,-x,-y)*180/M_PI,dropdis);  // + mod(asin(z)*180/M_PI,10.0);
-	float israindroph = mod(gettheta(z,x,y)*180/M_PI-getOffset(toffset,dropdisy),dropdisy);
-	//float israindrophm = mod(gettheta(z,-x,y)*180/M_PI-getOffset(toffset,dropdis),dropdis);
-
-	if (israindrop < dropsize && israindroph < 5*dropsize) {
-		//|| (israindropm < dropsize && israindrophm < 5*dropsize)){			
-		return vec3(0,0,0.8);
-	} else {
-		discard;
-		
-	}
-}
-
-vec3 checkpoint(in float x, in float y, in float z)
-{
-  	float dropsize = 0.5;
-	float dropdis = 10;	//later as uniform?!, make variable as how strong rain is
-  	
-	//TODO: write noise function, to shift initial position of raindrops
-	//x-xnoise, y-ynoise, z-ynoise
-
-	//TODO: update y-value, to shift position of raindrops due to time - simulate falling
-	//y-yshift
-	
-	//use next line if specific 3D-point for location of texture
-	//if( mod(x,dropdis)==0 && mod(y,dropdis)==0 && mod(z,dropdis)==0 ) {
-
-	if( mod(x,dropdis)<dropsize && mod(y,dropdis)<dropsize && mod(z,dropdis)<dropsize ) {
+	if (isD(x,y,z,3) || isD(x,y,z,5) || isD(x,y,z,10)) {		
 		return vec3(0,0,0.8);
 	} else {
 		discard;
