@@ -10,11 +10,11 @@ template<> PyObject* VRPyTypeCaster::cast(const VRRainPtr& e) { return VRPyRain:
 simpleVRPyType(Rain, New_ptr);
 
 PyMethodDef VRPyRain::methods[] = {
-    {"startRain", PyWrap(Rain, startRain, "Starts Rain", void) },
-    {"stopRain", PyWrap(Rain, stopRain, "Stops Rain", void) },
-    {"setRain", PyWrap(Rain, setRain, "Sets Rain Parameters", void, double , double) },
-    {"getRain", PyWrap(Rain, getRain, "Gets Rain Parameters", Vec2d ) },
-    {"overrideParameters", PyWrap(Rain, overrideParameters, "override Parameters", void, double, double, double, double ) },
+    {"start", PyWrap(Rain, start, "Starts Rain", void) },
+    {"stop", PyWrap(Rain, stop, "Stops Rain", void) },
+    {"setScale", PyWrap(Rain, setScale, "Sets Scale", void, double) },
+    {"get", PyWrap(Rain, get, "Gets Rain Parameters", Vec2d ) },
+    {"overrideParameters", PyWrap(Rain, overrideParameters, "override Parameters \n overrideParameters(density, durationTransition, color, light) \n", void, double, double, double, double ) },
     {"updateRain", PyWrap(Rain, updateRain, "update rain", void, float ) },
     {NULL}  /* Sentinel */
 };

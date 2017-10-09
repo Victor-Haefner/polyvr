@@ -11,6 +11,7 @@ vec3 fragDir;
 vec4 color;
 uniform vec2 OSGViewportSize;
 uniform float rainOffset;
+uniform float rainDensity;
 
 float theta;
 
@@ -28,7 +29,7 @@ vec2 planeIntersect(float h){
 }
 
 float hash(vec2 co){
-    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+    	return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
 float gettheta(vec3 d){
@@ -53,13 +54,13 @@ float getOffset(in float rOffset, in float dropdis,in float D) {
 
 bool isD(float D) {
 	float dropdis = 2/D; // horizontal distance betwen drops
-	float dropdisy = 0.9; // vertical distance betwen drops
+	float dropdisy = rainDensity; // vertical distance betwen drops
 	float dropsize = getdropsize(gettheta(fragDir),D);
 	float toffset = rainOffset;
 	vec2 noise = vec2(floor(atan( fragDir.x, fragDir.z)*180/M_PI/dropdis),floor((D/tan(gettheta(fragDir))+getOffset(toffset,dropdisy,D))/dropdisy));
 
 	float israindropx = mod(atan( fragDir.x, fragDir.z)*180/M_PI+hash(noise),dropdis); //phi horizontal in [degree]
-	float israindropy = mod(D/tan(gettheta(fragDir))+getOffset(toffset,dropdisy,D)+hash(noise),dropdisy); //height vertical in [m]
+	float israindropy = mod(D/tan(gettheta(fragDir))+getOffset(toffset,dropdisy,D)+dropdisy*hash(noise),dropdisy); //height vertical in [m]
 
 	if (israindropx < dropsize && israindropy < dropsize ) return true;
 	else return false;
@@ -68,7 +69,7 @@ bool isD(float D) {
 
 vec3 checkrad() {
 	//might as well incorporate into main()
-	if (isD(2) || isD(3.37) || isD(5.27) || isD(10.47)) return vec3(0,0,0.8);
+	if (isD(2) || isD(3) ||isD(5) || isD(8)) return vec3(0,0,0.8);
 	//if (isD(2)) return vec3(0.5,0.5,0.7);
 	else discard;
 }
