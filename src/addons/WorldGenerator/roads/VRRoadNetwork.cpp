@@ -109,18 +109,18 @@ void VRRoadNetwork::updateAsphaltTexture() {
 
 		for (auto marking : markings) {
             auto w = marking->get("width");
-            auto dN = marking->get("dashNumber");
+            auto dL = marking->get("dashLength");
             float width = w ? toFloat( w->value ) : 0;
-            int dashN = dN ? toInt( dN->value ) : 0;
-            asphalt->addMarking(rID, toPath(marking, 4), width, dashN);
+            float dashL = dL ? toInt( dL->value ) : 0;
+            asphalt->addMarking(rID, toPath(marking, 4), width, dashL);
 		}
 
 		for (auto track : tracks) {
             auto w = track->get("width");
-            auto dN = track->get("dashNumber");
+            auto dL = track->get("dashLength");
             float width = w ? toFloat( w->value ) : 0;
-            int dashN = dN ? toInt( dN->value ) : 0;
-            asphalt->addTrack(rID, toPath(track, 4), width, dashN, trackWidth*0.5);
+            float dashL = dL ? toInt( dL->value ) : 0;
+            asphalt->addTrack(rID, toPath(track, 4), width, dashL, trackWidth*0.5);
 		}
 
 		//cout << "VRRoadNetwork::updateTexture, markings and tracks: " << markings.size() << " " << tracks.size() << endl;

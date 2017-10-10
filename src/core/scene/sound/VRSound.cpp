@@ -229,7 +229,6 @@ void VRSound::playFrame() {
 
     int len;
     if (al->state == AL_PLAYING) {
-        cout << " VRSound::playFrame play" << endl;
         if (doUpdate) updateSource();
         auto avrf = av_read_frame(al->context, &al->packet);
         //cout << "play frame " << interrupt << " " << avrf << endl;

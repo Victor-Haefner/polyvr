@@ -177,6 +177,13 @@ int VRGeoData::pushVert(Pnt3d p, Vec3d n, Color4f c, Vec2d t) { data->texs->addV
 int VRGeoData::pushVert(Pnt3d p, Vec3d n, Color3f c, Vec2d t, Vec2d t2) { data->texs2->addValue(t2); return pushVert(p,n,c,t); }
 int VRGeoData::pushVert(Pnt3d p, Vec3d n, Color4f c, Vec2d t, Vec2d t2) { data->texs2->addValue(t2); return pushVert(p,n,c,t); }
 
+int VRGeoData::pushType(int t) { data->types->addValue(t); return data->types->size()-1; }
+int VRGeoData::pushLength(int l) { data->lengths->addValue(l); return data->lengths->size()-1; }
+int VRGeoData::pushIndex(int i) { data->indices->addValue(i); return data->indices->size()-1; }
+int VRGeoData::pushPos(Pnt3d p) { data->pos->addValue(p); return data->pos->size()-1; }
+int VRGeoData::pushNorm(Vec3d n) { data->norms->addValue(n); return data->norms->size()-1; }
+int VRGeoData::pushTexCoord(Vec2d t) { data->texs->addValue(t); return data->texs->size()-1; }
+int VRGeoData::pushTexCoord2(Vec2d t) { data->texs2->addValue(t); return data->texs2->size()-1; }
 int VRGeoData::pushColor(Color3f c) { data->cols3->addValue(c); return data->cols3->size()-1; }
 int VRGeoData::pushColor(Color4f c) { data->cols4->addValue(c); return data->cols4->size()-1; }
 

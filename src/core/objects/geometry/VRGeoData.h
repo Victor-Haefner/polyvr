@@ -54,6 +54,13 @@ class VRGeoData {
         int pushVert(Pnt3d p, Vec3d n, Color3f c, Vec2d t, Vec2d t2);
         int pushVert(Pnt3d p, Vec3d n, Color4f c, Vec2d t, Vec2d t2);
 
+        int pushType(int t);
+        int pushLength(int l);
+        int pushIndex(int i);
+        int pushPos(Pnt3d p);
+        int pushNorm(Vec3d n);
+        int pushTexCoord(Vec2d t);
+        int pushTexCoord2(Vec2d t);
         int pushColor(Color3f c);
         int pushColor(Color4f c);
 

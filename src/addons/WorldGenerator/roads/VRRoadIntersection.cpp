@@ -313,14 +313,14 @@ void VRRoadIntersection::computeMarkings() {
     if (!perimeter) return;
     string name = entity->getName();
 
-    auto addLine = [&]( const string& type, Vec3d p1, Vec3d p2, Vec3d n1, Vec3d n2, float w, int dashNumber) {
+    auto addLine = [&]( const string& type, Vec3d p1, Vec3d p2, Vec3d n1, Vec3d n2, float w, float dashLength) {
 		auto node1 = addNode( 0, p1 );
 		auto node2 = addNode( 0, p2 );
 		auto m = addPath(type, name, {node1, node2}, {n1,n2});
 		m->set("width", toString(w)); //  width in meter
-		if (dashNumber == 0) m->set("style", "solid"); // simple line
+		if (dashLength == 0) m->set("style", "solid"); // simple line
 		m->set("style", "dashed"); // dotted line
-		m->set("dashNumber", toString(dashNumber)); // dotted line
+		m->set("dashLength", toString(dashLength)); // dotted line
 		entity->add("markings", m->getName());
 		return m;
     };

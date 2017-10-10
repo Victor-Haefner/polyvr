@@ -141,10 +141,9 @@ void VRRoad::computeMarkings() {
     }
 
     // markings
-    float Ldash = 2;
+    string dashL = toString(2);
     int pathN = path->size();
-    float L = path->getLength();
-    string Ndots = toString(int(L/Ldash));
+    //float L = path->getLength();
     int lastDir = 0;
     for (int li=0; li<Nlanes+1; li++) {
         vector<VREntityPtr> nodes2;
@@ -164,7 +163,7 @@ void VRRoad::computeMarkings() {
             int direction = toInt( lane->get("direction")->value );
             if (li != 0 && lastDir*direction > 0) {
                 mL->set("style", "dashed");
-                mL->set("dashNumber", Ndots);
+                mL->set("dashLength", dashL);
             }
             lastDir = direction;
         }

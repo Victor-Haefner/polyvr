@@ -87,7 +87,8 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
         arg* getArg(string name);
         trig* getTrig(string name);
         void on_err_link_clicked(errLink link, string s);
-        void pyTraceToConsole();
+        void pyErrPrint(string channel);
+        void printSyntaxError(PyObject *exception, PyObject *value, PyObject *tb);
         void update();
 
     public:

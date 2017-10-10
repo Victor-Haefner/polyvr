@@ -39,7 +39,7 @@ void VRAsphalt::setMarkingsColor(Color4f c) {
 
 void VRAsphalt::clearTexture() {
     texGen = VRTextureGenerator::create();
-	texGen->setSize(Vec3i(4096,8192,1), false); // Number of roads, Number of markings per road
+	texGen->setSize(Vec3i(4096,8192,1), true); // Number of roads, Number of markings per road
 	texGen->drawFill(Color4f(0,0,0,1));
     roadData.clear();
     updateTexture();
@@ -82,16 +82,14 @@ void VRAsphalt::updateTexture() {
     setupTexture(2, mudTex, "texMud");
 }
 
-void VRAsphalt::addPath(pathPtr path, int rID, float width, int dashN, float offset) {
+void VRAsphalt::addPath(pathPtr path, int rID, float width, float dashL, float offset) {
     int& i = roadData[rID].rDataLengths;
     int iNpnts = i;
     i += 2;
 
-    int N0 = path->getPoints().size()*0.5;
     path->approximate(2);
     auto pnts = path->getPoints();
     int N = (pnts.size()-1)*0.5;
-    dashN = (dashN*N0)/N; // fix dashN if approximate generates more points than initially
 
     for (int j = 0; j<N; j++) {// p1,p2,p3
         Vec3d P0 = pnts[2*j].pos();
@@ -107,34 +105,36 @@ void VRAsphalt::addPath(pathPtr path, int rID, float width, int dashN, float off
         a = 3.0*A.dot(B);
         b = B.dot(B);
 
+        float dashS = dashL > 0 ? path->getLength(2*j, 2*j+2)/dashL : 0;
+
         texGen->drawPixel( Vec3i(rID, i+0, 0), Color4f(A[0], A[1], A[2], 1.0) );
         texGen->drawPixel( Vec3i(rID, i+1, 0), Color4f(B[0], B[1], B[2], 1.0) );
         texGen->drawPixel( Vec3i(rID, i+2, 0), Color4f(C[0], C[1], C[2], 1.0) );
-        texGen->drawPixel( Vec3i(rID, i+3, 0), Color4f(k, a, b, 1.0) );
+        texGen->drawPixel( Vec3i(rID, i+3, 0), Color4f(k, a, b, dashS) );
         i += 4;
     }
 
     int Npoints = i-iNpnts-2;
-    texGen->drawPixel(Vec3i(rID,iNpnts  ,0), Color4f(Npoints,width,dashN,1));
+    texGen->drawPixel(Vec3i(rID,iNpnts  ,0), Color4f(Npoints,width,0,1));
     texGen->drawPixel(Vec3i(rID,iNpnts+1,0), Color4f(offset,0,0,1));
     if (texGen->getSize()[0] < rID) cout << "WARNING, texture width not enough! " << rID << "/" << texGen->getSize()[0] << endl;
     if (texGen->getSize()[1] < i) cout << "WARNING, texture height not enough! " << i << "/" << texGen->getSize()[1] << endl;
 }
 
-void VRAsphalt::addMarking(int rID, pathPtr marking, float width, int dashN, float offset) {
+void VRAsphalt::addMarking(int rID, pathPtr marking, float width, float dashL, float offset) {
     if (roadData.count(rID) == 0) roadData[rID] = road();
     auto& rdata = roadData[rID];
     rdata.markingsN++;
     texGen->drawPixel(Vec3i(rID,0,0), Color4f(rdata.markingsN, rdata.tracksN, 0, 1));
-    addPath(marking, rID, width, dashN, offset);
+    addPath(marking, rID, width, dashL, offset);
 }
 
-void VRAsphalt::addTrack(int rID, pathPtr track, float width, int dashN, float offset) {
+void VRAsphalt::addTrack(int rID, pathPtr track, float width, float dashL, float offset) {
     if (roadData.count(rID) == 0) roadData[rID] = road();
     auto& rdata = roadData[rID];
     rdata.tracksN++;
     texGen->drawPixel(Vec3i(rID,0,0), Color4f(rdata.markingsN, rdata.tracksN, 0, 1));
-    addPath(track, rID, width, dashN, offset);
+    addPath(track, rID, width, dashL, offset);
 }
 
 
@@ -293,7 +293,9 @@ vec2 distToQuadBezier( vec3 A, vec3 B, vec3 C, vec3 D, vec3 x ) {
         float t = res[i];
         if( t>=0.0 && t <=1.0 ) {
             vec3 pos = A*t*t+B*t+C;
-            float d = distance(pos,x);
+            //float d = distance(pos,x);
+            vec3 D = pos-x; D.y *= 0.02; // minor hack, reduces artifacts when road surface is clamped to terrain
+            float d = length(D);
             if (d < dmin) {
         		dmin = d;
         		tmin = t;
@@ -328,25 +330,25 @@ float distToQuadBezierHull( vec3 A, vec3 B, vec3 C, vec3 x ) {
 float distToPath(const int k, const int roadID, const vec3 pos, const vec4 pathData1, const vec4 pathData2) {
 	int Npoints = int(pathData1.x);
 	float width2 = pathData1.y*0.5;
-	float dashL = pathData1.z;
     float offset = pathData2.x;
 
-	vec3 A;
-	vec3 B;
-	vec3 C;
-	vec3 D;
+	vec4 A;
+	vec4 B;
+	vec4 C;
+	vec4 D;
 	int Nsegs = int(Npoints*0.25);
 	for (int j=0; j<Nsegs; j++) {
-		A = getData(roadID, k+4*j+1).xyz;
-		B = getData(roadID, k+4*j+2).xyz;
-		C = getData(roadID, k+4*j+3).xyz;
-		D = getData(roadID, k+4*j+4).xyz;
+		A = getData(roadID, k+4*j+1);
+		B = getData(roadID, k+4*j+2);
+		C = getData(roadID, k+4*j+3);
+		D = getData(roadID, k+4*j+4);
 
 
-		float d1 = distToQuadBezierHull(A,B,C,pos);
+		float d1 = distToQuadBezierHull(A.xyz,B.xyz,C.xyz,pos);
 		if (d1 < 100) {
-			vec2 dtmin = distToQuadBezier(A,B,C,D,pos);
+			vec2 dtmin = distToQuadBezier(A.xyz,B.xyz,C.xyz,D.xyz,pos);
 			if (dtmin.x > offset - width2 && dtmin.x < offset + width2) {
+		        float dashL = D.w;
 		        if (dashL == 0) return abs(dtmin.x - offset);
 		        if (int(dtmin.y*dashL)%2 == 0) return abs(dtmin.x - offset);
 			}
