@@ -357,6 +357,14 @@
 		<Unit filename="src/addons/Factory/VRPyMechanism.h" />
 		<Unit filename="src/addons/Factory/VRPyNumberingEngine.h" />
 		<Unit filename="src/addons/Factory/network.h" />
+		<Unit filename="src/addons/LeapMotion/VRHandGeo.cpp" />
+		<Unit filename="src/addons/LeapMotion/VRHandGeo.h" />
+		<Unit filename="src/addons/LeapMotion/VRLeap.cpp" />
+		<Unit filename="src/addons/LeapMotion/VRLeap.h" />
+		<Unit filename="src/addons/LeapMotion/VRPyHandGeo.cpp" />
+		<Unit filename="src/addons/LeapMotion/VRPyHandGeo.h" />
+		<Unit filename="src/addons/LeapMotion/VRPyLeap.cpp" />
+		<Unit filename="src/addons/LeapMotion/VRPyLeap.h" />
 		<Unit filename="src/addons/RealWorld/Altitude.h" />
 		<Unit filename="src/addons/RealWorld/Assets/Asset.cpp" />
 		<Unit filename="src/addons/RealWorld/Assets/Asset.h" />
@@ -654,10 +662,16 @@
 		<Unit filename="src/core/networking/VRSharedMemory.h" />
 		<Unit filename="src/core/networking/VRSocket.cpp" />
 		<Unit filename="src/core/networking/VRSocket.h" />
+		<Unit filename="src/core/networking/VRWebSocket.cpp" />
+		<Unit filename="src/core/networking/VRWebSocket.h" />
 		<Unit filename="src/core/networking/mongoose/mongoose.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/networking/mongoose/mongoose.h" />
+		<Unit filename="src/core/networking/mongoose/mongoose_67.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/networking/mongoose/mongoose_67.h" />
 		<Unit filename="src/core/objects/OSGCamera.cpp" />
 		<Unit filename="src/core/objects/OSGCamera.h" />
 		<Unit filename="src/core/objects/OSGObject.cpp" />
