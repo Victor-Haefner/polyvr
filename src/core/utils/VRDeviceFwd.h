@@ -21,6 +21,8 @@ ptrFwd(ART);
 ptrFwd(ART_device);
 ptrFwd(VRPN);
 ptrFwd(VRPN_device);
+ptrFwd(VRLeap);
+ptrFwd(VRLeapFrame);
 
 }
 

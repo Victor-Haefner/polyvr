@@ -47,7 +47,6 @@ private:
 
     bool isConnected{false};
     bool done{false};
-   // boost::mutex run;
 
 };
 
