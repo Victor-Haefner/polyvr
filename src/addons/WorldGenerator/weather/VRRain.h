@@ -58,7 +58,7 @@ class VRRain : public VRGeometry { //: public VRParticles {
 
         double durationTransition = 10;
         double scale = 0;
-        double scaleRN;
+        double scaleRN = 0;
 
         //void updateRain(float dt);
         //void update();

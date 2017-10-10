@@ -61,24 +61,7 @@ VRRainPtr VRRain::ptr() { return static_pointer_cast<VRRain>( shared_from_this()
 void VRRain::start() {
     //setRainScale();
     //setupRain();
-        //TODO: SETUP RAINCLUSTER HERE
     /*
-    for (int x=-7; x<7; x++) {
-        for (int y=-7; y<7; y++) {
-            VRParticles rainemitter = VRParticles("rd"+x+y);
-            rainemitter.setLifetime(2,0);
-
-            int range = 600 - 300 + 1;
-            int num = rand() % range + 300;
-
-            Vec3d basevec = Vec3d(x*0.1,num,y*0.1);
-            Vec3d dirvec = Vec3d(0,-1,0);
-            int fromR = 0;
-            int toR = 10;
-            rainemitter.setEmitter(basevec,dirvec,fromR,toR,100,false);
-
-        }
-    }
     density = 0.2 * 10/scale;
     mat->setShaderParameter<float>("rainDensity", density)
     //TODO: callback [clouds, light-diffuse, rain]
@@ -99,6 +82,8 @@ void VRRain::start() {
     */
     //setScale(0.3);
     if (scale == 0) setScale(1.3);
+        else setScale(scale);
+    update();
     cout << "VRRain::startRain()\n";
 }
 
@@ -121,7 +106,10 @@ void VRRain::stop() {
     Color4f rainColorRN = Color4f(lightRainRN,lightRainRN,lightRainRN,1);
     //VRLight.setDiffuse(rainColorRN);
     *///clearRain();
-    setScale(0);
+    //setScale(0);
+    scaleRN = 0;
+    density = 0.2 * 10/scaleRN;
+    mat->setShaderParameter<float>("rainDensity", density);
 }
 
 
@@ -133,6 +121,7 @@ void VRRain::setScale( double scale ){
     else {
         //this->durationTransition = durationTransition;
         this->scale = scale;
+        scaleRN = scale;
         density = 0.2 * 10/scale;
         mat->setShaderParameter<float>("rainDensity", density);
     }
