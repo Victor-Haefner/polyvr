@@ -48,18 +48,18 @@ float getdropsize(in float theta,float distance){
 }
 
 float getOffset(in float rOffset, in float dropdis,in float D) {
-	return rOffset*5/100; // mod(rOffset*5/100,dropdis); //mod(rOffset*D/10,dropdis);
+	return rOffset*5/sqrt(D); // mod(rOffset*5/100,dropdis);
 	//return 0;
 }
 
 bool isD(float D) {
-	float dropdis = 2/D; // horizontal distance betwen drops
-	float dropdisy = rainDensity; // vertical distance betwen drops
+	float dropdis = 2/(D*D); // horizontal distance betwen drops
+	float dropdisy = rainDensity*6; // vertical distance betwen drops
 	float dropsize = getdropsize(gettheta(fragDir),D);
 	float toffset = rainOffset;
 	vec2 noise = vec2(floor(atan( fragDir.x, fragDir.z)*180/M_PI/dropdis),floor((D/tan(gettheta(fragDir))+getOffset(toffset,dropdisy,D))/dropdisy));
 
-	float israindropx = mod(atan( fragDir.x, fragDir.z)*180/M_PI+hash(noise),dropdis); //phi horizontal in [degree]
+	float israindropx = mod(atan( fragDir.x, fragDir.z)*180/M_PI+7*hash(noise),dropdis); //phi horizontal in [degree]
 	float israindropy = mod(D/tan(gettheta(fragDir))+getOffset(toffset,dropdisy,D)+dropdisy*hash(noise),dropdisy); //height vertical in [m]
 
 	if (israindropx < dropsize && israindropy < dropsize ) return true;
@@ -69,7 +69,8 @@ bool isD(float D) {
 
 vec3 checkrad() {
 	//might as well incorporate into main()
-	if (isD(2) || isD(3) ||isD(5) || isD(8)) return vec3(0,0,0.8);
+	//if (isD(1) || isD(2) || isD(3) ||isD(5) || isD(8)) return vec3(0,0,0.8);
+	if (isD(1)) return vec3(0,0,0.8);
 	//if (isD(2)) return vec3(0.5,0.5,0.7);
 	else discard;
 }

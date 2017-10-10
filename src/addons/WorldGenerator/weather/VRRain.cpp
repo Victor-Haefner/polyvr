@@ -119,7 +119,6 @@ void VRRain::setScale( double scale ){
         cout << "Input for Scale of Rain between 0 and 10\n";
     }
     else {
-        //this->durationTransition = durationTransition;
         this->scale = scale;
         scaleRN = scale;
         density = 0.2 * 10/scale;
@@ -154,11 +153,8 @@ void VRRain::updateRain(float dt) {
 void VRRain::update() {
     if (!isVisible()) return;
 
-    double current = glutGet(GLUT_ELAPSED_TIME)*0.001; //seconds
-    float dt = (current - lastTime)*0.01; //1/100 of a second
-    lastTime = current;
+    double offset = glutGet(GLUT_ELAPSED_TIME)*0.001; //seconds
 
-    offset += dt;
     mat->setShaderParameter<float>("rainOffset", offset);
     mat->readVertexShader(vScript);
     mat->readFragmentShader(fScript);
