@@ -5,6 +5,11 @@
 #include "VRDevice.h"
 #include <OpenSG/OSGLine.h>
 
+/*
+not compiling? then you are missing a library:
+ sudo apt-get install libmtdev-dev
+*/
+
 #include <mtdev.h>
 
 OSG_BEGIN_NAMESPACE;
