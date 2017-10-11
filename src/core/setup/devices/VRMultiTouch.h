@@ -5,21 +5,33 @@
 #include "VRDevice.h"
 #include <OpenSG/OSGLine.h>
 
+#include <mtdev.h>
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRMultiTouch : public VRDevice {
+    public:
+        struct Touch {
+            int key;
+            Vec3i pos;
+            Touch(int k = -1);
+        };
+
     private:
+        int fd;
+        mtdev dev;
+        VRUpdateCbPtr updatePtr;
         VRCameraWeakPtr cam;
         VRViewWeakPtr view;
         Line ray;
 
-        VRSignalPtr on_to_edge = 0;
-        VRSignalPtr on_from_edge = 0;
-        int onEdge = -1;
-
         void multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut);
         bool calcViewRay(VRCameraPtr pcam, Line &line, float x, float y, int W, int H);
+
+        string device = "/dev/input/event5"; // TODO: make it configurable!
+        map<int, Touch> fingers;
+        int currentTouchID = -1;
 
     public:
         VRMultiTouch();
@@ -27,6 +39,9 @@ class VRMultiTouch : public VRDevice {
 
         static VRMultiTouchPtr create();
         VRMultiTouchPtr ptr();
+
+        void updateDevice();
+        void connectDevice();
 
         void clearSignals();
 
@@ -36,14 +51,9 @@ class VRMultiTouch : public VRDevice {
         void mouse(int button, int state, int x, int y);
         void motion(int x, int y);
 
+        Line getRay();
         void setCamera(VRCameraPtr cam);
         void setViewport(VRViewPtr view);
-
-        Line getRay();
-        VRSignalPtr getToEdgeSignal();
-        VRSignalPtr getFromEdgeSignal();
-
-        void setCursor(string c);
 
         void save(xmlpp::Element* e);
         void load(xmlpp::Element* e);

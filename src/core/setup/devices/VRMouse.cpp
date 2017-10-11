@@ -136,10 +136,11 @@ void VRMouse::updatePosition(int x, int y) {
     auto v = view.lock();
     if (!v) return;
 
-    float rx, ry;
     int w, h;
     w = v->getViewport()->calcPixelWidth();
     h = v->getViewport()->calcPixelHeight();
+
+    float rx, ry;
     v->getViewport()->calcNormalizedCoordinates(rx, ry, x, y);
 
     //cam->getCam()->calcViewRay(ray,x,y,*v->getViewport());

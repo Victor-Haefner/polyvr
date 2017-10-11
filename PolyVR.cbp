@@ -150,6 +150,7 @@
 			<Add option="-lgdal" />
 			<Add option="-lgmp" />
 			<Add option="-lmpfr" />
+			<Add option="-lmtdev" />
 			<Add option="-lSDL" />
 			<Add option="-lmicrohttpd" />
 			<Add option="-lcurl" />

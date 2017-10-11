@@ -11,6 +11,7 @@
 #include "core/utils/VRGlobals.h"
 #include "core/tools/VRText.h"
 #include "core/setup/VRSetup.h"
+#include "core/setup/devices/VRMultiTouch.h"
 #include "core/gui/VRGuiUtils.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/objects/OSGObject.h"
@@ -599,6 +600,11 @@ void VRView::load(xmlpp::Element* node) {
     if (node->get_attribute("user")) {
         user_name = node->get_attribute("user")->get_value();
         user = VRSetup::getCurrent()->getTracker(user_name);
+    }
+
+    if (ID == 0) {
+        auto dev = VRSetup::getCurrent()->getDevice("multitouch"); // TODO, just a test, add mouse and multitouch to views!
+        if (auto mt = dynamic_pointer_cast<VRMultiTouch>(dev)) mt->setViewport(ptr());
     }
 
     showStats(doStats);
