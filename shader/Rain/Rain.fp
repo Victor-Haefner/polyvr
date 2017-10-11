@@ -69,8 +69,8 @@ bool isD(float D) {
 
 vec3 checkrad() {
 	//might as well incorporate into main()
-	//if (isD(1) || isD(2) || isD(3) ||isD(5) || isD(8)) return vec3(0,0,0.8);
-	if (isD(1)) return vec3(0,0,0.8);
+	if (isD(1) || isD(2) || isD(3) ||isD(5) || isD(8)) return vec3(0,0,0.8);
+	//if (isD(1)) return vec3(0,0,0.8);
 	//if (isD(2)) return vec3(0.5,0.5,0.7);
 	else discard;
 }

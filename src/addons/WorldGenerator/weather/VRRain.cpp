@@ -49,6 +49,8 @@ VRRain::VRRain() : VRGeometry("Rain") {
 	tg.add(PERLIN, 1.0/128, Color3f(0.1), Color3f(1.0));
 	mat->setTexture(tg.compose(0));
 
+	//texcam.setFrom(Vec3d(0,100,0));
+
     updatePtr = VRUpdateCb::create("rain update", boost::bind(&VRRain::update, this));
     VRScene::getCurrent()->addUpdateFkt(updatePtr);
     cout << "VRRain::VRRain()\n";

@@ -10,7 +10,7 @@
 //#include "addons/Bullet/Particles/VRParticles.h" //do i need this?
 //#include "VRSky.h"
 
-
+#include "core/objects/VRCamera.h"
 #include "core/objects/geometry/VRGeometry.h"
 //#include "addons/Bullet/Particles/VREmitter.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
@@ -27,12 +27,13 @@ class VRRain : public VRGeometry { //: public VRParticles {
 
         // -------------------------------------------------------------------------------------
         VRUpdateCbPtr updatePtr;
+        VRUpdateCbPtr updatecamPtr;
         VRMaterialPtr mat;
         string vScript;
         string fScript;
         float density = 0;
         float offset = 0;
-
+        //VRCamera texcam = VRCamera("texcam");
         // time and location
         double lastTime = 0;
 
@@ -61,7 +62,6 @@ class VRRain : public VRGeometry { //: public VRParticles {
         double scaleRN = 0;
 
         //void updateRain(float dt);
-        //void update();
 
     public:
         VRRain();
