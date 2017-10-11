@@ -10,7 +10,6 @@
 #include "core/utils/VRVisualLayer.h"
 #include "core/utils/VRProgress.h"
 #include "core/networking/VRPing.h"
-#include "core/setup/devices/VRMouse.h"
 #include "core/setup/tracking/Vive.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
@@ -146,12 +145,9 @@ void VRSetup::setScene(VRScenePtr scene) {
     if (cam == 0) return;
     setViewRoot(scene->getRoot(), -1);
     setViewCamera(cam, -1);
-
-    VRMousePtr mouse = dynamic_pointer_cast<VRMouse>( getDevice("mouse") );
-    if (mouse && cam) mouse->setCamera(cam);
-
     setViewBackground(scene->getBackground());
 
+    for (auto dev : getDevices()) dev.second->setCamera(cam);
     for (auto w : getWindows()) w.second->setContent(true);
     for (auto s : scripts) scene->addScript(s.second);
 
