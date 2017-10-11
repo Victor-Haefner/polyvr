@@ -98,6 +98,10 @@ VRPathtool::VRPathtool() : VRObject("Pathtool") {
     lsmat->setDiffuse(Color3f(0.9,0.1,0.2));
     lsmat->setLineWidth(3);
 
+    arrowTemplate = VRGeometry::create("arrow");
+    arrowTemplate->setPrimitive("Arrow", "2 3 3 1.5 1.2");
+    arrowTemplate->setMaterial(lmat);
+
     storeObj("handle", customHandle);
     storeObj("graph", graph);
     storeMap("paths", &paths, true);
@@ -202,31 +206,30 @@ void VRPathtool::disconnect(int i1, int i2) {
     vecRemVal(knots[i2].in, i1);
 }
 
-void VRPathtool::connect(int i1, int i2, bool handles) {
+void VRPathtool::connect(int i1, int i2, bool handles, bool doArrow) {
     if (i1 == i2) return;
     auto& nodes = graph->getNodes();
     Vec3d d = nodes[i2].p.pos() - nodes[i1].p.pos();
     d.normalize();
-    connect(i1,i2,handles,d,d);
+    connect(i1,i2,handles,doArrow,d,d);
 }
 
-void VRPathtool::connect(int i1, int i2, bool handles, Vec3d n1, Vec3d n2) {
+void VRPathtool::connect(int i1, int i2, bool handles, bool doArrow, Vec3d n1, Vec3d n2) {
     if (i1 == i2) return;
     if (!graph) return;
     if (!graph->connected(i1,i2)) {
         int eID = graph->connect(i1,i2);
         auto& e = graph->getEdge(eID);
-        setGraphEdge(e, handles, n1, n2);
+        setGraphEdge(e, handles, doArrow, n1, n2);
     } else disconnect(i1,i2);
 }
 
-void VRPathtool::setGraphEdge(Graph::edge& e, bool handles) {
+void VRPathtool::setGraphEdge(Graph::edge& e, bool handles, bool doArrow) {
     auto& nodes = graph->getNodes();
-    setGraphEdge(e, handles, nodes[e.from].p.dir(), nodes[e.to].p.dir());
+    setGraphEdge(e, handles, doArrow, nodes[e.from].p.dir(), nodes[e.to].p.dir());
 }
 
-void VRPathtool::setGraphEdge(Graph::edge& e, bool handles, Vec3d n1, Vec3d n2) {
-    return;
+void VRPathtool::setGraphEdge(Graph::edge& e, bool handles, bool doArrow, Vec3d n1, Vec3d n2) {
     auto& nodes = graph->getNodes();
     if (!paths.count(e.ID)) {
         paths[e.ID] = path::create();
@@ -239,6 +242,12 @@ void VRPathtool::setGraphEdge(Graph::edge& e, bool handles, Vec3d n1, Vec3d n2) 
     knots[e.to].in.push_back(e.from);
     updateHandle( knots[e.from].handle.lock() );
     updateHandle( knots[e.to  ].handle.lock() );
+
+    if (doArrow) {
+        auto a = arrowTemplate->duplicate();
+        addChild(a);
+        en->arrow = dynamic_pointer_cast<VRGeometry>(a);
+    }
 }
 
 VRGeometryPtr VRPathtool::setGraphNode(int i) {
@@ -308,9 +317,8 @@ void VRPathtool::updateEntry(entryPtr e) { // update path representation
         line->strokeProfile(profile, 0, 0);
     }
 
-    if (auto l = e->line.lock()) {
-        l->update();
-    }
+    if (auto l = e->line.lock()) l->update();
+    if (auto a = e->arrow.lock()) a->setPose(e->p->getPose(0.5));
 }
 
 void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle belongs to

@@ -75,7 +75,12 @@ bool Graph::hasEdge(int i) { return (i >= 0 && i < int(edgesByID.size())); }
 vector< vector< Graph::edge > >& Graph::getEdges() { return edges; }
 vector< Graph::node >& Graph::getNodes() { return nodes; }
 Graph::node& Graph::getNode(int i) { return nodes[i]; }
-Graph::edge& Graph::getEdge(int i) { Vec2i e = edgesByID[i]; return edges[e[0]][e[1]]; }
+
+Graph::edge& Graph::getEdge(int i) {
+    if (i >= edgesByID.size() || i < 0) return nullEdge;
+    Vec2i e = edgesByID[i];
+    return getEdge(e[0], e[1]);
+}
 
 Graph::edge& Graph::getEdge(int n1, int n2) {
     if (!connected(n1,n2)) return nullEdge;
