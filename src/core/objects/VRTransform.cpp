@@ -809,9 +809,8 @@ void setFromPath(VRTransformWeakPtr trp, pathPtr p, bool redirect, float t) {
 
     Vec3d d,u;
     p->getOrientation(t, d, u);
+    tr->setDir( d );
     tr->setUp( u );
-    if (tr->get_orientation_mode() == VRTransform::OM_DIR) tr->setDir( d );
-    if (tr->get_orientation_mode() == VRTransform::OM_AT) tr->setAt( Vec3d(p->getColor(t)) );
 }
 
 vector<VRAnimCbPtr> animCBs;
