@@ -19,6 +19,7 @@
 #include "VRPyDevice.h"
 #include "VRPyMobile.h"
 #include "VRPyMouse.h"
+#include "VRPyMultiTouch.h"
 #include "VRPyHaptic.h"
 #include "VRPyMath.h"
 
@@ -66,6 +67,7 @@ template<> PyObject* VRPyTypeCaster::cast(const VRDevicePtr& dev) {
 
     string type = dev->getType();
     if (type == "mouse") return VRPyMouse::fromSharedPtr( static_pointer_cast<VRMouse>(dev) );
+    else if (type == "multitouch") return VRPyMultiTouch::fromSharedPtr( static_pointer_cast<VRMultiTouch>(dev) );
     else if (type == "server") return VRPyMobile::fromSharedPtr( static_pointer_cast<VRServer>(dev) );
     else if (type == "haptic") return VRPyHaptic::fromSharedPtr( static_pointer_cast<VRHaptic>(dev) );
     else if (type == "keyboard") return VRPyDevice::fromSharedPtr( dev );

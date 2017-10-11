@@ -14,6 +14,8 @@
 #include "core/setup/devices/VRFlystick.h"
 #include "core/setup/devices/VRHaptic.h"
 #include "core/setup/devices/VRServer.h"
+#include "core/setup/devices/VRMouse.h"
+#include "core/setup/devices/VRMultiTouch.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
@@ -195,6 +197,7 @@ void VRGuiSetup::updateObjectData() {
     }
 
     if (selected_type == "mouse") { device = true; }
+    if (selected_type == "multitouch") { device = true; }
     if (selected_type == "keyboard") { device = true; }
     if (selected_type == "server") { device = true; }
     if (selected_type == "flystick") { device = true; }
@@ -1085,6 +1088,7 @@ VRGuiSetup::VRGuiSetup() {
     menu->appendMenu("SM_AddMenu", "Device", "SM_AddDevMenu");
     menu->appendMenu("SM_AddMenu", "VRPN", "SM_AddVRPNMenu");
     menu->appendItem("SM_AddDevMenu", "Mouse", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRMouse>) );
+    menu->appendItem("SM_AddDevMenu", "MultiTouch", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRMultiTouch>) );
     menu->appendItem("SM_AddDevMenu", "Keyboard", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRKeyboard>) );
     menu->appendItem("SM_AddDevMenu", "Haptic", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRHaptic>) );
     menu->appendItem("SM_AddDevMenu", "Mobile", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRServer>) );

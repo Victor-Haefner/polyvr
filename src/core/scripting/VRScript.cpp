@@ -13,6 +13,7 @@
 #include "core/setup/devices/VRServer.h"
 #include "VRPySocket.h"
 #include "VRPyMouse.h"
+#include "VRPyMultiTouch.h"
 #include "VRPyHaptic.h"
 #include "VRPyMobile.h"
 #include "VRPyBaseT.h"
@@ -218,6 +219,7 @@ PyObject* VRScript::getPyObj(arg* a) {
     else if (a->type == "VRPyLodType") return VRPyLod::fromSharedPtr(((VRLod*)a->ptr)->ptr());
     else if (a->type == "VRPyDeviceType") return VRPyDevice::fromSharedPtr(((VRDevice*)a->ptr)->ptr());
     else if (a->type == "VRPyMouseType") return VRPyMouse::fromSharedPtr(((VRMouse*)a->ptr)->ptr());
+    else if (a->type == "VRPyMultiTouchType") return VRPyMultiTouch::fromSharedPtr(((VRMultiTouch*)a->ptr)->ptr());
     else if (a->type == "VRPyHapticType") return VRPyHaptic::fromSharedPtr(((VRHaptic*)a->ptr)->ptr());
     else if (a->type == "VRPyMobileType") return VRPyMobile::fromSharedPtr(((VRServer*)a->ptr)->ptr());
     //else if (a->type == "VRPySocketType") return VRPySocket::fromSharedPtr(((VRSocket*)a->ptr)->ptr());

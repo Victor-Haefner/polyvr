@@ -919,6 +919,8 @@
 		<Unit filename="src/core/scripting/VRPyMobile.h" />
 		<Unit filename="src/core/scripting/VRPyMouse.cpp" />
 		<Unit filename="src/core/scripting/VRPyMouse.h" />
+		<Unit filename="src/core/scripting/VRPyMultiTouch.cpp" />
+		<Unit filename="src/core/scripting/VRPyMultiTouch.h" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.cpp" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.h" />
 		<Unit filename="src/core/scripting/VRPyNavigator.cpp" />
@@ -1014,6 +1016,8 @@
 		<Unit filename="src/core/setup/devices/VRKeyboard.h" />
 		<Unit filename="src/core/setup/devices/VRMouse.cpp" />
 		<Unit filename="src/core/setup/devices/VRMouse.h" />
+		<Unit filename="src/core/setup/devices/VRMultiTouch.cpp" />
+		<Unit filename="src/core/setup/devices/VRMultiTouch.h" />
 		<Unit filename="src/core/setup/devices/VRServer.cpp" />
 		<Unit filename="src/core/setup/devices/VRServer.h" />
 		<Unit filename="src/core/setup/devices/VRSignal.cpp" />

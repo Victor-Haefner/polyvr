@@ -1,4 +1,4 @@
-#include "VRMouse.h"
+#include "VRMultiTouch.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/setup/VRSetup.h"
@@ -12,21 +12,19 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRMouse::VRMouse() : VRDevice("mouse") {}
-VRMouse::~VRMouse() {}
+VRMultiTouch::VRMultiTouch() : VRDevice("multitouch") {}
+VRMultiTouch::~VRMultiTouch() {}
 
-VRMousePtr VRMouse::create() {
-    auto m = VRMousePtr(new VRMouse());
-    m->on_to_edge = VRSignal::create(m);
-    m->on_from_edge = VRSignal::create(m);
+VRMultiTouchPtr VRMultiTouch::create() {
+    auto m = VRMultiTouchPtr(new VRMultiTouch());
     m->initIntersect(m);
     m->clearSignals();
     return m;
 }
 
-VRMousePtr VRMouse::ptr() { return static_pointer_cast<VRMouse>( shared_from_this() ); }
+VRMultiTouchPtr VRMultiTouch::ptr() { return static_pointer_cast<VRMultiTouch>( shared_from_this() ); }
 
-void VRMouse::setCursor(string c) {
+void VRMultiTouch::setCursor(string c) {
     auto s = VRSetup::getCurrent();
     for (auto w : s->getWindows()) {
         if (!w.second->hasType(2)) continue; // not a gtk window
@@ -35,7 +33,7 @@ void VRMouse::setCursor(string c) {
     }
 }
 
-void VRMouse::clearSignals() {
+void VRMultiTouch::clearSignals() {
     VRDevice::clearSignals();
     addSlider(5);
     addSlider(6);
@@ -47,7 +45,7 @@ void VRMouse::clearSignals() {
     if (on_from_edge) on_from_edge->clear();
 }
 
-void VRMouse::multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut) {
+void VRMultiTouch::multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut) {
     float w = _matrix[0][3] * pntIn[0] +
                   _matrix[1][3] * pntIn[1] +
                   _matrix[2][3] * pntIn[2] +
@@ -98,9 +96,9 @@ void VRMouse::multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut) {
     }
 }
 
-bool VRMouse::calcViewRay(VRCameraPtr cam, Line &line, float x, float y, int W, int H) {
+bool VRMultiTouch::calcViewRay(VRCameraPtr cam, Line &line, float x, float y, int W, int H) {
     if (!cam) return false;
-    if(W <= 0 || H <= 0) return false;
+    if (W <= 0 || H <= 0) return false;
 
     Matrix proj, projtrans, view;
 
@@ -126,11 +124,11 @@ bool VRMouse::calcViewRay(VRCameraPtr cam, Line &line, float x, float y, int W, 
     return true;
 }
 
-VRSignalPtr VRMouse::getToEdgeSignal() { return on_to_edge; }
-VRSignalPtr VRMouse::getFromEdgeSignal() { return on_from_edge; }
+VRSignalPtr VRMultiTouch::getToEdgeSignal() { return on_to_edge; }
+VRSignalPtr VRMultiTouch::getFromEdgeSignal() { return on_from_edge; }
 
 //3d object to emulate a hand in VRSpace
-void VRMouse::updatePosition(int x, int y) {
+void VRMultiTouch::updatePosition(int x, int y) {
     auto cam = this->cam.lock();
     if (!cam) return;
     auto v = view.lock();
@@ -165,7 +163,7 @@ void VRMouse::updatePosition(int x, int y) {
     onEdge = side;
 }
 
-void VRMouse::mouse(int button, int state, int x, int y) {
+void VRMultiTouch::mouse(int button, int state, int x, int y) {
     float _x, _y;
     auto sv = view.lock();
     if (!sv) return;
@@ -180,7 +178,7 @@ void VRMouse::mouse(int button, int state, int x, int y) {
     else change_button(button,true);
 }
 
-void VRMouse::motion(int x, int y) {
+void VRMultiTouch::motion(int x, int y) {
     auto sv = view.lock();
     if (!sv) return;
 
@@ -193,16 +191,16 @@ void VRMouse::motion(int x, int y) {
     updatePosition(x,y);
 }
 
-void VRMouse::setCamera(VRCameraPtr cam) { this->cam = cam; }
-void VRMouse::setViewport(VRViewPtr view) { this->view = view; }
+void VRMultiTouch::setCamera(VRCameraPtr cam) { this->cam = cam; }
+void VRMultiTouch::setViewport(VRViewPtr view) { this->view = view; }
 
-Line VRMouse::getRay() { return ray; }
+Line VRMultiTouch::getRay() { return ray; }
 
-void VRMouse::save(xmlpp::Element* e) {
+void VRMultiTouch::save(xmlpp::Element* e) {
     VRDevice::save(e);
 }
 
-void VRMouse::load(xmlpp::Element* e) {
+void VRMultiTouch::load(xmlpp::Element* e) {
     VRDevice::load(e);
 }
 

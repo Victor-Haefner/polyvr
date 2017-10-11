@@ -24,6 +24,7 @@
 #include "VRPyConstraint.h"
 #include "VRPyHaptic.h"
 #include "VRPyMouse.h"
+#include "VRPyMultiTouch.h"
 #include "VRPyMobile.h"
 #include "VRPyBaseT.h"
 #include "VRPyMaterial.h"
@@ -118,6 +119,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyHaptic>("Haptic", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyMobile>("Mobile", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyMouse>("Mouse", pModVR, VRPyDevice::typeRef);
+    sm->registerModule<VRPyMultiTouch>("MultiTouch", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyAnimation>("Animation", pModVR);
     sm->registerModule<VRPyPose>("Pose", pModVR);
     sm->registerModule<VRPyPath>("Path", pModVR);
