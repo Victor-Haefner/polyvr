@@ -43,6 +43,7 @@ Graph::Graph() {
 Graph::~Graph() {}
 
 int Graph::connect(int i, int j, CONNECTION c) {
+    if (i < 0 || j < 0) return -1;
     //if (i >= int(nodes.size()) || j >= int(nodes.size())) return edge;
     while (i >= int(edges.size())) edges.push_back( vector<edge>() );
     edges[i].push_back(edge(i,j,c,edgesByID.size()));

@@ -9,6 +9,9 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRProcessPtr& o) { return "Process"; }
+template<> string typeName(const VRProcessNodePtr& o) { return "ProcessNode"; }
+
 void VRProcess::Diagram::update(int i, bool changed) { processnodes[i]->update(nodes[i], changed); }
 void VRProcess::Diagram::remNode(int i) { Graph::remNode(i); processnodes.erase(i); }
 void VRProcess::Diagram::clear() { Graph::clear(); processnodes.clear(); }
@@ -124,7 +127,7 @@ void VRProcess::update() {
         for (auto state : query(q_States)) {
             string label;
             if (auto l = state->get("hasModelComponentLable") ) label = l->value;
-            int nID = addAction(label, behaviorDiagram)->ID;
+            int nID = addAction(label, sID)->ID;
             if (auto ID = state->get("hasModelComponentID") ) nodes[ID->value] = nID;
         }
 
@@ -167,7 +170,9 @@ VRProcessNodePtr VRProcess::addMessage(string name, int i, int j, DiagramPtr dia
     return m;
 }
 
-VRProcessNodePtr VRProcess::addAction(string name, DiagramPtr diag) {
+VRProcessNodePtr VRProcess::addAction(string name, int sID) {
+    if (!behaviorDiagrams.count(sID)) return 0;
+    auto diag = behaviorDiagrams[sID];
     if (!diag) return 0;
     auto aID = diag->addNode();
     auto a = VRProcessNode::create(name, ACTION, aID);
