@@ -98,7 +98,7 @@ class VRGeometry : public VRTransform {
 
         int getLastMeshChange();
 
-        void genTexCoords(string mapping = "CUBE", float scale = 1, int channel = 0, std::shared_ptr<pose> p = 0);
+        void genTexCoords(string mapping = "CUBE", float scale = 1, int channel = 0, PosePtr p = 0);
 
         void showGeometricData(string type, bool b);
         float calcSurfaceArea();

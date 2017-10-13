@@ -149,7 +149,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                     auto p = node->getVec3("position");
                     p += X;
                     node->setVec3("position", p, "Position");
-                    graph->setPosition(node->getValue<int>("graphID", 0), pose::create(p));
+                    graph->setPosition(node->getValue<int>("graphID", 0), Pose::create(p));
                 }
             }
 
@@ -160,7 +160,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                     auto p = node->getVec3("position");
                     p += X;
                     node->setVec3("position", p, "Position");
-                    graph->setPosition(node->getValue<int>("graphID", 0), pose::create(p));
+                    graph->setPosition(node->getValue<int>("graphID", 0), Pose::create(p));
                 }
             }
 
@@ -271,7 +271,7 @@ void VRRoadIntersection::addRoad(VRRoadPtr road) {
     entity->add("roads", road->getEntity()->getName());
 }
 
-VREntityPtr VRRoadIntersection::addTrafficLight( posePtr p, string asset, Vec3d root) {
+VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d root) {
     float R = 0.05;
     if (auto geo = world->getAssetManager()->copy(asset, p)) {
         addChild(geo);
@@ -514,11 +514,11 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
 
             Vec3d pm = (data.p1 + data.p2)*0.5; // compute road node
             int nID = graph->addNode();
-            graph->setPosition(nID, pose::create(pm));
+            graph->setPosition(nID, Pose::create(pm));
             auto n = addNode(nID, pm);
             data.entry->set("node", n->getName());
             n->add("paths", data.entry->getName());
-            roadFronts.push_back( make_pair(pose(pm, norm), road->getWidth()) );
+            roadFronts.push_back( make_pair(Pose(pm, norm), road->getWidth()) );
         }
     };
 

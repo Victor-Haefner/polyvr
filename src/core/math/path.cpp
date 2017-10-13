@@ -149,7 +149,7 @@ vector<double> path::computeInflectionPoints(int i, int j, float threshold, floa
 }
 
 void path::approximate(int d) {
-    auto intersect = [&](pose& p1, pose& p2) {
+    auto intersect = [&](Pose& p1, Pose& p2) {
 		Vec3d d = p2.pos() - p1.pos();
 		Vec3d n3 = p1.dir().cross(p2.dir());
 		float N3 = n3.dot(n3);
@@ -158,11 +158,11 @@ void path::approximate(int d) {
 		return p1.pos() + p1.dir()*s;
     };
 
-    /*auto toQuadratic = [&](int j, pose& p1, pose& p4, pose& pm, pose& p2, pose& p3) {
+    /*auto toQuadratic = [&](int j, Pose& p1, Pose& p4, Pose& pm, Pose& p2, Pose& p3) {
 
     };*/
 
-	auto isLinear = [&](pose& p1, pose& p2) {
+	auto isLinear = [&](Pose& p1, Pose& p2) {
 		if (abs(p1.dir().dot(p2.dir())-1.0) > 1e-5) return false;
 		Vec3d d = p2.pos()-p1.pos(); d.normalize();
 		if (abs(d.dot(p1.dir())-1.0) > 1e-5) return false;
@@ -170,30 +170,30 @@ void path::approximate(int d) {
 	};
 
     if (d == 2) {
-        vector<pose> res;
+        vector<Pose> res;
 
 		for (uint j=1; j<points.size(); j++) { // p1,p2,pm,p3,p4
 			auto p1 = points[j-1];
 			auto p4 = points[j];
 			res.push_back( p1 );
 
-			if (isLinear(p1,p4)) res.push_back( pose( (p1.pos()+p4.pos())*0.5, p1.dir(), p1.up() ) );
+			if (isLinear(p1,p4)) res.push_back( Pose( (p1.pos()+p4.pos())*0.5, p1.dir(), p1.up() ) );
 			else {
                 //auto Tvec = computeInflectionPoints(j-1,j,0.01,Vec3i(1,0,1));
                 //auto Tvec = computeInflectionPoints(j-1,j,0.01);
                 auto Tvec = computeInflectionPoints(j-1,j,1e-4, 0.1);
                 if (Tvec.size() == 0) Tvec = {0.5};
 
-                vector<pose> poses;
+                vector<Pose> poses;
                 poses.push_back(p1);
                 for (auto t : Tvec) poses.push_back( *getPose(t, j-1, j, false) );
                 poses.push_back(p4);
 
                 for (uint i=1; i<poses.size()-1; i++) {
                     auto& pm = poses[i];
-                    res.push_back( pose( intersect(poses[i-1],pm) ) );
+                    res.push_back( Pose( intersect(poses[i-1],pm) ) );
                     res.push_back(pm);
-                    if (i == poses.size()-2) res.push_back( pose( intersect(poses[i+1],pm) ) );
+                    if (i == poses.size()-2) res.push_back( Pose( intersect(poses[i+1],pm) ) );
                 }
 			}
 			if (j == points.size()-1) res.push_back(p4);
@@ -207,7 +207,7 @@ void path::approximate(int d) {
     update();
 }
 
-int path::addPoint( const pose& p, Color3f c ) {
+int path::addPoint( const Pose& p, Color3f c ) {
     points.push_back(p);
     point_colors.push_back(c);
     return size() - 1;
@@ -233,14 +233,14 @@ float path::getLength(int i, int j) {
     return l;
 }
 
-void path::setPoint(int i, const pose& p, Color3f c ) {
+void path::setPoint(int i, const Pose& p, Color3f c ) {
     if (i < 0 || i >= size()) return;
     points[i] = p;
     point_colors[i] = c;
 }
 
-vector<pose> path::getPoints() { return points; }
-pose& path::getPoint(int i) { return points[i]; }
+vector<Pose> path::getPoints() { return points; }
+Pose& path::getPoint(int i) { return points[i]; }
 int path::size() { return points.size(); }
 
 void path::compute(int N) {
@@ -315,10 +315,10 @@ vector<Vec3d> path::getDirections() { return directions; }
 vector<Vec3d> path::getUpvectors() { return up_vectors; }
 vector<Vec3d> path::getColors() { return colors; }
 
-vector<pose> path::getPoses() {
-    vector<pose> res;
+vector<Pose> path::getPoses() {
+    vector<Pose> res;
     for (uint i=0; i<positions.size(); i++) {
-        res.push_back( pose(positions[i], directions[i], up_vectors[i]) );
+        res.push_back( Pose(positions[i], directions[i], up_vectors[i]) );
     }
     return res;
 }
@@ -409,9 +409,9 @@ void path::getOrientation(float t, Vec3d& dir, Vec3d& up, int i, int j, bool fas
     }
 }
 
-posePtr path::getPose(float t, int i, int j, bool fast) {
+PosePtr path::getPose(float t, int i, int j, bool fast) {
     Vec3d d,u; getOrientation(t,d,u,i,j,fast);
-    return pose::create(getPosition(t,i,j,fast), d, u);
+    return Pose::create(getPosition(t,i,j,fast), d, u);
 }
 
 float path::getClosestPoint(Vec3d p) {

@@ -19,7 +19,7 @@ class VRBRepEdge : public VRBRepUtils {
         vector<double> knots;
         Vec3d n, EBeg, EEnd;
         double radius;
-        posePtr center;
+        PosePtr center;
         float a1,a2;
         int deg;
         bool fullCircle = false;

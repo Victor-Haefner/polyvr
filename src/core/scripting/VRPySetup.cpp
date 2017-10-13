@@ -67,7 +67,7 @@ PyObject* VRPyView::getSize(VRPyView* self) {
 PyObject* VRPyView::getPose(VRPyView* self) {
     if (!self->valid()) return NULL;
     auto v = self->objPtr;
-    return VRPyPose::fromObject( pose(v->getProjectionCenter(), v->getProjectionNormal(), v->getProjectionUp()) );
+    return VRPyPose::fromObject( Pose(v->getProjectionCenter(), v->getProjectionNormal(), v->getProjectionUp()) );
 }
 
 PyObject* VRPyView::setPose(VRPyView* self, PyObject* args) {

@@ -409,7 +409,7 @@ void VRView::setMirrorNorm(Vec3d n) { mirrorNorm = n; updateMirrorMatrix(); }
 void VRView::updateMirrorMatrix() {
     Matrix4d Z, mI;
     Z.setScale(Vec3d(1,1,-1));
-    auto m = pose(mirrorPos, mirrorNorm).asMatrix();
+    auto m = Pose(mirrorPos, mirrorNorm).asMatrix();
     m.inverse(mI);
     mirrorMatrix = mI;
     mirrorMatrix.mult(Z);

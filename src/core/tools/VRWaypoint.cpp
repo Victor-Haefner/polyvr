@@ -29,9 +29,9 @@ void VRWaypoint::setup() {
     setMaterial(m);
 }
 
-void VRWaypoint::set(posePtr p) { Pose = p; updateGeo(); }
+void VRWaypoint::set(PosePtr p) { Pose = p; updateGeo(); }
 void VRWaypoint::set(VRTransformPtr t) { Pose = t->getWorldPose(); at = t->getAt(); updateGeo(); }
-posePtr VRWaypoint::get() { return Pose; }
+PosePtr VRWaypoint::get() { return Pose; }
 
 void VRWaypoint::apply(VRTransformPtr t) {
     t->setWorldPosition(Pose->pos());
@@ -39,7 +39,7 @@ void VRWaypoint::apply(VRTransformPtr t) {
     t->setAt(at);
 }
 
-void VRWaypoint::setFloorPlane(posePtr p) { Floor = p; updateGeo(); }
+void VRWaypoint::setFloorPlane(PosePtr p) { Floor = p; updateGeo(); }
 void VRWaypoint::setSize(float s) { size = s; updateGeo(); }
 
 void VRWaypoint::updateGeo() {
@@ -62,6 +62,6 @@ void VRWaypoint::updateGeo() {
     dir -= dir.dot(Floor->up())*Floor->up();
 
     // apply pose
-    auto p = pose::create(pos, dir, Floor->up());
+    auto p = Pose::create(pos, dir, Floor->up());
     setWorldPose(p);
 }

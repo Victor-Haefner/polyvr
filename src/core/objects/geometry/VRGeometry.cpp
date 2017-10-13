@@ -575,7 +575,7 @@ VRGeometryPtr VRGeometry::separateSelection(VRSelectionPtr sel) {
     return geo;
 }
 
-void VRGeometry::genTexCoords(string mapping, float scale, int channel, shared_ptr<pose> uvp) {
+void VRGeometry::genTexCoords(string mapping, float scale, int channel, shared_ptr<Pose> uvp) {
     GeoVec2fPropertyRecPtr tex = GeoVec2fProperty::create();
     Matrix4d uvp_inv;
     if (uvp) uvp_inv = uvp->asMatrix();

@@ -7,18 +7,17 @@ simpleVRPyType(Leap, New_ptr);
 simpleVRPyType(LeapFrame, 0);
 
 PyMethodDef VRPyLeapFrame::methods[] = {
-        {NULL} /* Sentinel */
+    {NULL} /* Sentinel */
 };
 
 PyMethodDef VRPyLeap::methods[] = {
-        {"registerFrameCallback", (PyCFunction) VRPyLeap::registerFrameCallback, METH_VARARGS, "Add description"},
-        {"setPose",               (PyCFunction) VRPyLeap::setPose,               METH_VARARGS, "Add description"},
-        {"open",                  (PyCFunction) VRPyLeap::open,                  METH_VARARGS, "Add description"},
-        {"__del__",               (PyCFunction) VRPyLeap::__del__,             METH_VARARGS, "Add description"},
-        {NULL} /* Sentinel */
+    {"registerFrameCallback", (PyCFunction) VRPyLeap::registerFrameCallback, METH_VARARGS, "Add description"},
+    {"setPose",               (PyCFunction) VRPyLeap::setPose,               METH_VARARGS, "Add description"},
+    {"open",                  PyWrapOpt(Leap, open, "Connect to device", "localhost|6437", bool, string, int) },
+    {NULL} /* Sentinel */
 };
 
-PyObject* VRPyLeap::open(VRPyLeap* self, PyObject* args) {
+/*PyObject* VRPyLeap::open(VRPyLeap* self, PyObject* args) {
     if (!self->valid()) return NULL;
     const char* host = 0;
     int port = 0;
@@ -29,7 +28,7 @@ PyObject* VRPyLeap::open(VRPyLeap* self, PyObject* args) {
     } else self->objPtr->open();
 
     Py_RETURN_TRUE;
-}
+}*/
 
 PyObject* VRPyLeap::setPose(VRPyLeap* self, PyObject* args) {
     if (!self->valid()) return NULL;

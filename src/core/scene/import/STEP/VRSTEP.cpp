@@ -896,18 +896,18 @@ Vec3d toVec3d(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
     return Vec3d();
 }
 
-posePtr toPose(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
+PosePtr toPose(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
     auto I = instances[i];
     if (I.type == "Axis2_Placement_3d") {
         Vec3d p = toVec3d( I.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances);
         Vec3d d = toVec3d( I.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances);
         Vec3d u = toVec3d( I.get<2, STEPentity*, STEPentity*, STEPentity*>(), instances);
         //d[2] *= -1;
-        return pose::create(p,d,u);
-        //return pose(p,d,u);
+        return Pose::create(p,d,u);
+        //return Pose(p,d,u);
     }
     cout << "toPose FAILED with instance type " << I.type << endl;
-    return pose::create();
+    return Pose::create();
 }
 
 struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
@@ -1170,7 +1170,7 @@ class VRSTEPProductStructure {
             string name;
             string parent;
             string child;
-            posePtr p;
+            PosePtr p;
 
             string toString() {
                 string s = "link n: " + name + " p: " + parent + " c: " + child;

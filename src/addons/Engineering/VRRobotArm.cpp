@@ -117,7 +117,7 @@ void VRRobotArm::setAngles(vector<float> angles) {
     applyAngles(); // TODO: animate from current pose
 }
 
-posePtr VRRobotArm::getPose() {
+PosePtr VRRobotArm::getPose() {
     Vec3d dir = parts[5]->getWorldDirection();
     Vec3d up = parts[5]->getWorldUp();
 
@@ -134,10 +134,10 @@ posePtr VRRobotArm::getPose() {
     ageo->setVector(4, Vec3d(0,0,0), p, Color3f(0,0,0), "p");
     p -= dir*lengths[3];
 
-    return pose::create(p, dir, up);
+    return Pose::create(p, dir, up);
 }
 
-void VRRobotArm::moveTo(posePtr p2) {
+void VRRobotArm::moveTo(PosePtr p2) {
     stop();
     auto p1 = getPose();
 
@@ -161,7 +161,7 @@ void VRRobotArm::moveOnPath(float t0, float t1, bool loop) {
     Vec3d p,d,u;
     p = robotPath->getPosition(t0);
     robotPath->getOrientation(t0,d,u);
-    moveTo( pose::create(p,d,u) );
+    moveTo( Pose::create(p,d,u) );
     addJob( job(robotPath, t0, t1, robotPath->size(), loop) );
 }
 

@@ -167,7 +167,7 @@ class VRCarDynamics : public VRObject {
         void update(float throttle, float Break, float steering, float clutch = 0, int gear = 1);
         void updateWheel(int wheel, float throttle, float Break, float steering, float clutch = 0, int gear = 1);
 
-        void reset(const pose& p);
+        void reset(const Pose& p);
         float getSpeed();
         float getAcceleration();
         void setIgnition(bool b);

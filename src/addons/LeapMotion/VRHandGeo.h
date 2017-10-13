@@ -31,8 +31,7 @@ private:
     vector<vector<VRGeometryPtr>> bones;
     vector<VRGeometryPtr> directions;
     VRGeometryPtr pinch;
-    HandPtr handData{nullptr};
-
+    VRLeapFrame::HandPtr handData;
 };
 
 OSG_END_NAMESPACE;

@@ -12,7 +12,7 @@ using namespace std;
 
 class VRPolygonSelection : public VRSelection {
     private:
-        pose origin;
+        Pose origin;
         frustum selection;
         frustum convex_hull;
         vector<frustum> convex_decomposition;
@@ -31,7 +31,7 @@ class VRPolygonSelection : public VRSelection {
 
         static shared_ptr<VRPolygonSelection> create();
 
-        void setOrigin(pose orig);
+        void setOrigin(Pose orig);
         void addEdge(Vec3d dir);
         void close(VRObjectPtr world);
 

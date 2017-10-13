@@ -37,7 +37,7 @@ class VRRoadNetwork : public VRRoadBase {
 
 		float trackWidth = 1.6; // TODO
 
-        void createArrow(Vec4i dirs, int N, const pose& p);
+        void createArrow(Vec4i dirs, int N, const Pose& p);
 
         vector<VREntityPtr> getRoadNodes();
         vector<VRRoadPtr> getNodeRoads(VREntityPtr node);

@@ -42,7 +42,7 @@ bool VRRoad::hasMarkings() {
     return (type != "unclassified" && type != "service" && type != "footway");
 }
 
-posePtr VRRoad::getRightEdge(Vec3d pos) {
+PosePtr VRRoad::getRightEdge(Vec3d pos) {
     auto path = toPath(getEntity()->getEntity("path"), 16);
     float t = path->getClosestPoint(pos); // get nearest road path position to pos
     auto pose = path->getPose(t);

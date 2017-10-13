@@ -358,8 +358,8 @@ void VRCarDynamics::setParameter(float mass, float enginePower, float breakPower
     //TODO: pass it
     if (!engine->clutchTransmissionCurve) engine->clutchTransmissionCurve = path::create();
     engine->clutchTransmissionCurve->clear();
-    engine->clutchTransmissionCurve->addPoint( pose(Vec3d(0,1,0), Vec3d(1,0,0)));
-    engine->clutchTransmissionCurve->addPoint( pose(Vec3d(1,0,0), Vec3d(1,0,0)));
+    engine->clutchTransmissionCurve->addPoint( Pose(Vec3d(0,1,0), Vec3d(1,0,0)));
+    engine->clutchTransmissionCurve->addPoint( Pose(Vec3d(1,0,0), Vec3d(1,0,0)));
     engine->clutchTransmissionCurve->compute(32);
 
 	engine->gearRatios.clear();
@@ -397,7 +397,7 @@ boost::recursive_mutex& VRCarDynamics::mtx() {
     };
 }
 
-void VRCarDynamics::reset(const pose& p) {
+void VRCarDynamics::reset(const Pose& p) {
     PLock lock(mtx());
     setIgnition(false);
 	btTransform t;

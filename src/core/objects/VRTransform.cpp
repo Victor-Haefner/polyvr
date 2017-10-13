@@ -307,7 +307,7 @@ Matrix4d VRTransform::getRelativeMatrix(VRObjectPtr o, bool parentOnly) {
     return m;
 }
 
-posePtr VRTransform::getRelativePose(VRObjectPtr o, bool parentOnly) { return pose::create( getRelativeMatrix(o,parentOnly) ); }
+PosePtr VRTransform::getRelativePose(VRObjectPtr o, bool parentOnly) { return Pose::create( getRelativeMatrix(o,parentOnly) ); }
 
 /** Returns the world Matrix4d **/
 void VRTransform::getWorldMatrix(Matrix4d& M, bool parentOnly) {
@@ -383,7 +383,7 @@ VRTransformPtr VRTransform::getParentTransform(VRObjectPtr o) {
     return static_pointer_cast<VRTransform>(o);
 }
 
-void VRTransform::setRelativePose(posePtr p, VRObjectPtr o) {
+void VRTransform::setRelativePose(PosePtr p, VRObjectPtr o) {
     Matrix4d m = p->asMatrix();
     Matrix4d wm = getMatrixTo(o);
     wm.invert();
@@ -494,7 +494,7 @@ void VRTransform::setDir(Vec3d dir) {
 int VRTransform::get_orientation_mode() { return orientation_mode; }
 void VRTransform::set_orientation_mode(int b) { orientation_mode = b; }
 
-/** Set the orientation of the object with the at && up vectors **/
+/** Set the orientation of the object with the at and up vectors **/
 void VRTransform::setOrientation(Vec3d at, Vec3d up) {
     if (isNan(at) || isNan(up)) return;
     _at = at;
@@ -502,7 +502,7 @@ void VRTransform::setOrientation(Vec3d at, Vec3d up) {
     reg_change();
 }
 
-/** Set the pose of the object with the from, at && up vectors **/
+/** Set the pose of the object with the from, at and up vectors **/
 void VRTransform::setPose(Vec3d from, Vec3d dir, Vec3d up) {
     if (isNan(from) || isNan(dir) || isNan(up)) return;
     _from = from;
@@ -510,14 +510,15 @@ void VRTransform::setPose(Vec3d from, Vec3d dir, Vec3d up) {
     setDir(dir);
 }
 
-void VRTransform::setPose(posePtr p) { setPose(p->pos(), p->dir(), p->up()); }
-posePtr VRTransform::getPose() { return pose::create(Vec3d(_from), Vec3d(_dir), Vec3d(_up)); }
-posePtr VRTransform::getWorldPose() { return pose::create( getWorldMatrix() ); }
-void VRTransform::setWorldPose(posePtr p) { setWorldMatrix(p->asMatrix()); }
+void VRTransform::setPose(const Pose& p) { setPose(p.pos(), p.dir(), p.up()); }
+void VRTransform::setPose(PosePtr p) { setPose(p->pos(), p->dir(), p->up()); }
+PosePtr VRTransform::getPose() { return Pose::create(Vec3d(_from), Vec3d(_dir), Vec3d(_up)); }
+PosePtr VRTransform::getWorldPose() { return Pose::create( getWorldMatrix() ); }
+void VRTransform::setWorldPose(PosePtr p) { setWorldMatrix(p->asMatrix()); }
 
-posePtr VRTransform::getPoseTo(VRObjectPtr o) {
+PosePtr VRTransform::getPoseTo(VRObjectPtr o) {
     auto m = getMatrixTo(o);
-    return pose::create(m);
+    return Pose::create(m);
 }
 
 /** Set the local Matrix4d **/
@@ -848,7 +849,7 @@ Matrix4d toMatrix4d(Matrix4f mf) {
     return md;
 }
 
-void VRTransform::applyTransformation(shared_ptr<pose> po) {
+void VRTransform::applyTransformation(PosePtr po) {
     Matrix4d m0 = po->asMatrix();
 
     map<GeoVectorPropertyRecPtr, bool> applied;

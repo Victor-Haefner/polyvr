@@ -338,8 +338,8 @@ void VRNavigator::focus(VRDeviceWeakPtr _dev) {
 
     Vec3d z;
     path* p = new path();
-    p->addPoint( pose(target->getAt(), z));
-    p->addPoint( pose(ins.point.subZero(), z));
+    p->addPoint( Pose(target->getAt(), z));
+    p->addPoint( Pose(ins.point.subZero(), z));
     p->compute(20);
 
     focus_fkt = VRFunction<float>::create("TransAnim", boost::bind(animPathAt, VRTransformWeakPtr(target), p, _1));

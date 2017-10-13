@@ -19,7 +19,7 @@ VRPolygonSelection::VRPolygonSelection() {
 
 shared_ptr<VRPolygonSelection> VRPolygonSelection::create() { return shared_ptr<VRPolygonSelection>( new VRPolygonSelection() ); }
 
-void VRPolygonSelection::setOrigin(pose orig) {
+void VRPolygonSelection::setOrigin(Pose orig) {
     selection.setPose(orig);
     origin = orig;
 }

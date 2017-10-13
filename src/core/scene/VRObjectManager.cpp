@@ -18,7 +18,7 @@ VRObjectManager::Entry::~Entry() {}
 
 shared_ptr<VRObjectManager::Entry> VRObjectManager::Entry::create(string name) { return shared_ptr<Entry>(new Entry(name)); }
 
-void VRObjectManager::Entry::set(posePtr p, string t) {
+void VRObjectManager::Entry::set(PosePtr p, string t) {
     pos = p;
     type = t;
 }
@@ -45,7 +45,7 @@ void VRObjectManager::setup() {
     }
 }
 
-VRTransformPtr VRObjectManager::copy(string name, posePtr p, bool addToStore) {
+VRTransformPtr VRObjectManager::copy(string name, PosePtr p, bool addToStore) {
     auto t = getTemplate(name);
     if (!t) return 0;
     auto dupe = dynamic_pointer_cast<VRTransform>( t->duplicate() );

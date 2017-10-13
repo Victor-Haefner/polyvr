@@ -95,9 +95,9 @@ class VRTransform : public VRObject {
         Vec3d getAt();
         Vec3d getUp();
         Vec3d getScale();
-        posePtr getPose();
-        posePtr getPoseTo(VRObjectPtr o);
-        posePtr getWorldPose();
+        PosePtr getPose();
+        PosePtr getPoseTo(VRObjectPtr o);
+        PosePtr getWorldPose();
         Vec3d getEuler();
         void getMatrix(Matrix4d& _m);
         Matrix4d getMatrix();
@@ -113,7 +113,8 @@ class VRTransform : public VRObject {
         void setScale(Vec3d s);
         void setOrientation(Vec3d at, Vec3d up);
         void setEuler(Vec3d euler);
-        void setPose(posePtr p);
+        void setPose(const Pose& p);
+        void setPose(PosePtr p);
         void setPose(Vec3d from, Vec3d dir, Vec3d up);
         virtual void setMatrix(Matrix4d m);
 
@@ -123,7 +124,7 @@ class VRTransform : public VRObject {
         Vec3d getWorldDirection(bool parentOnly = false);
         Vec3d getWorldUp(bool parentOnly = false);
 
-        void setWorldPose(posePtr p);
+        void setWorldPose(PosePtr p);
         void setWorldMatrix(Matrix4d _m);
         void setWorldPosition(Vec3d pos);
         void setWorldOrientation(Vec3d dir, Vec3d up);
@@ -132,7 +133,7 @@ class VRTransform : public VRObject {
 
         void getRelativeMatrix(Matrix4d& m, VRObjectPtr o, bool parentOnly = false);
         Matrix4d getRelativeMatrix(VRObjectPtr o, bool parentOnly = false);
-        posePtr getRelativePose(VRObjectPtr o, bool parentOnly = false);
+        PosePtr getRelativePose(VRObjectPtr o, bool parentOnly = false);
         Vec3d getRelativePosition(VRObjectPtr o, bool parentOnly = false);
         Vec3d getRelativeDirection(VRObjectPtr o, bool parentOnly = false);
         Vec3d getRelativeUp(VRObjectPtr o, bool parentOnly = false);
@@ -140,13 +141,13 @@ class VRTransform : public VRObject {
         void setRelativePosition(Vec3d pos, VRObjectPtr o);
         void setRelativeDir(Vec3d pos, VRObjectPtr o);
         void setRelativeUp(Vec3d pos, VRObjectPtr o);
-        void setRelativePose(posePtr p, VRObjectPtr o);
+        void setRelativePose(PosePtr p, VRObjectPtr o);
 
         int get_orientation_mode();
         void set_orientation_mode(int b);
 
         void setFixed(bool b);
-        void applyTransformation(std::shared_ptr<pose> p);
+        void applyTransformation(PosePtr p);
         void applyTransformation();
 
         //-------------------------------------

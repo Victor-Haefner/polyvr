@@ -420,7 +420,7 @@ double VRTerrain::getHeight(const Vec2d& p, bool useEmbankments) {
 }
 
 void VRTerrain::elevateObject(VRTransformPtr t, float offset) { auto p = t->getFrom(); elevatePoint(p, offset); t->setFrom(p); }
-void VRTerrain::elevatePose(posePtr p, float offset) { auto P = p->pos(); elevatePoint(P, offset); p->setPos(P); }
+void VRTerrain::elevatePose(PosePtr p, float offset) { auto P = p->pos(); elevatePoint(P, offset); p->setPos(P); }
 void VRTerrain::elevatePoint(Vec3d& p, float offset, bool useEmbankments) { p[1] = getHeight(Vec2d(p[0], p[2]), useEmbankments) + offset; }
 
 void VRTerrain::elevateVertices(VRGeometryPtr geo, float offset) {

@@ -80,7 +80,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
 
         double getHeight( const Vec2d& p, bool useEmbankments = true );
         void elevatePoint( Vec3d& p, float offset = 0, bool useEmbankments = true );
-        void elevatePose( posePtr p, float offset = 0 );
+        void elevatePose( PosePtr p, float offset = 0 );
         void elevatePolygon( VRPolygonPtr p, float offset = 0, bool useEmbankments = true );
         void elevateObject( VRTransformPtr p, float offset = 0 );
         void elevateVertices( VRGeometryPtr p, float offset = 0 );

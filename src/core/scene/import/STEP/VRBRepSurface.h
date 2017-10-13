@@ -14,7 +14,7 @@ OSG_BEGIN_NAMESPACE;
 class VRBRepSurface : public VRBRepUtils {
     public:
         vector<VRBRepBound> bounds;
-        posePtr trans;
+        PosePtr trans;
         double R = 1;
 
         field<Vec3d> cpoints;

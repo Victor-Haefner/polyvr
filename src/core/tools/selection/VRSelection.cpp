@@ -209,8 +209,8 @@ Matrix4d VRSelection::computeEigenvectors(Matrix4d m) {
     return res;
 }
 
-pose VRSelection::computePCA() {
-    pose res;
+Pose VRSelection::computePCA() {
+    Pose res;
     Matrix4d cov = computeCovMatrix();
     Matrix4d ev  = computeEigenvectors(cov);
 
@@ -224,7 +224,7 @@ pose VRSelection::computePCA() {
     return res;
 }
 
-void VRSelection::selectPlane(pose p, float threshold) {
+void VRSelection::selectPlane(Pose p, float threshold) {
     Vec3d N = p.up();
     Plane plane( Vec3f(N), Pnt3f(p.pos()) );
 

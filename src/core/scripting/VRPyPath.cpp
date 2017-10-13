@@ -169,8 +169,8 @@ PyObject* VRPyPath::set(VRPyPath* self, PyObject* args) {
     OSG::Vec3d uv1(0,1,0), uv2(0,1,0);
     if (u1) uv1 = parseVec3dList(u1);
     if (u2) uv2 = parseVec3dList(u2);
-    self->objPtr->addPoint( pose(parseVec3dList(p1), parseVec3dList(n1), uv1));
-    self->objPtr->addPoint( pose(parseVec3dList(p2), parseVec3dList(n2), uv2));
+    self->objPtr->addPoint( Pose(parseVec3dList(p1), parseVec3dList(n1), uv1));
+    self->objPtr->addPoint( Pose(parseVec3dList(p2), parseVec3dList(n2), uv2));
     self->objPtr->compute(i);
     Py_RETURN_TRUE;
 }
@@ -198,7 +198,7 @@ PyObject* VRPyPath::addPoint(VRPyPath* self, PyObject* args) {
     c = _c ? parseVec3dList(_c) : OSG::Vec3d(0,0,0);
     u = _u ? parseVec3dList(_u) : OSG::Vec3d(0,1,0);
 
-    self->objPtr->addPoint( pose(p,n,u), OSG::Vec3f(c) );
+    self->objPtr->addPoint( Pose(p,n,u), OSG::Vec3f(c) );
     Py_RETURN_TRUE;
 }
 

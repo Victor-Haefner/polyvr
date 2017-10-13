@@ -366,7 +366,7 @@ void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround)
 
 VRTreePtr VRNature::addTree(VRTreePtr t, bool updateLODs, bool addToStore) { // TODO: needs refactoring!!
     if (!t) return 0;
-    posePtr p = t->getRelativePose(ptr());
+    PosePtr p = t->getRelativePose(ptr());
     if (terrain) terrain->elevatePose(p);
 
     auto tree = dynamic_pointer_cast<VRTree>( t->duplicate() );
@@ -384,7 +384,7 @@ VRTreePtr VRNature::addTree(VRTreePtr t, bool updateLODs, bool addToStore) { // 
 
 VRTreePtr VRNature::addBush(VRTreePtr t, bool updateLODs, bool addToStore) {
     if (!t) return 0;
-    posePtr p = t->getRelativePose(ptr());
+    PosePtr p = t->getRelativePose(ptr());
     if (terrain) terrain->elevatePose(p);
 
     auto tree = dynamic_pointer_cast<VRTree>( t->duplicate() );
