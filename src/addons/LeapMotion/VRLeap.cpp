@@ -114,13 +114,20 @@ void VRLeap::newFrame(Json::Value json) {
         else frame->setRightHand(hand);
     }
 
-    for (auto& cb : frameCallbacks) {
-        cb(frame);
+    for (uint i = 0; i < json["pointables"].size(); ++i) { // Get the pencils, TODO
+        ;
     }
+
+    /*printf("\n");
+        for( Json::Value::const_iterator itr = json.begin() ; itr != json.end() ; itr++ ) {
+            cout << " JSON " << itr.key() << " " << itr->size() << endl;
+        }*/
+
+
+    for (auto& cb : frameCallbacks) cb(frame);
 }
 
 bool VRLeap::resetConnection() {
-
     bool result = true;
 
     string url = "ws://" + host + ":" + to_string(port) + "/v6.json";
