@@ -409,8 +409,10 @@ void VRNature::computeLODsThread(VRThreadWeakPtr tw) {
     //MapManager::job j = jobs.front(); jobs.pop_front();
 
     VRThreadPtr t = tw.lock();
+    cout << "  +++ VRNature::computeLODsThread -> syncFromThread" << endl;
     t->syncFromMain();
     computeLODs(leafs);
+    cout << "  +++ VRNature::computeLODsThread -> syncToMain" << endl;
     t->syncToMain();
 }
 

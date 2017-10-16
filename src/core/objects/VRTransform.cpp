@@ -47,6 +47,8 @@ VRTransform::VRTransform(string name) : VRObject(name) {
     storeObj("constraint", constraint);
 
     regStorageSetupFkt( VRUpdateCb::create("transform_update", boost::bind(&VRTransform::setup, this)) );
+
+    if (name == "trunk") cout << " ---  VRTransform::VRTransform of " << getName() << "(" << this << "): t->trans is " << t->trans << endl;
 }
 
 VRTransform::~VRTransform() {
@@ -55,11 +57,7 @@ VRTransform::~VRTransform() {
 }
 
 VRTransformPtr VRTransform::ptr() { return static_pointer_cast<VRTransform>( shared_from_this() ); }
-VRTransformPtr VRTransform::create(string name) {
-    auto ptr = shared_ptr<VRTransform>(new VRTransform(name) );
-    //ptr->physics = new VRPhysics( ptr );
-    return ptr;
-}
+VRTransformPtr VRTransform::create(string name) { return VRTransformPtr(new VRTransform(name) ); }
 
 VRObjectPtr VRTransform::copy(vector<VRObjectPtr> children) {
     VRTransformPtr geo = VRTransform::create(getBaseName());
@@ -90,18 +88,55 @@ bool MatrixLookAt(Matrix4d &result, Pnt3d from, Pnt3d at, Vec3d up) {
     return MatrixLookDir(result, from, dir, up);
 }
 
+bool isIdentity(const Matrix4d& m) {
+    static Matrix4d r;
+    static bool mSet = false;
+    if (!mSet) { mSet = true; r.setIdentity(); }
+    return (m == r);
+}
+
 void VRTransform::computeMatrix4d() {
-    Matrix4d mm;
-    if (orientation_mode == OM_AT) MatrixLookAt(mm, _from, _at, _up);
-    if (orientation_mode == OM_DIR) MatrixLookDir(mm, _from, -_dir, _up);
+    Matrix4d m;
+    if (orientation_mode == OM_AT) MatrixLookAt(m, _from, _at, _up);
+    if (orientation_mode == OM_DIR) MatrixLookDir(m, _from, -_dir, _up);
 
     if (_scale != Vec3d(1,1,1)) {
         Matrix4d ms;
         ms.setScale(_scale);
-        mm.mult(ms);
+        m.mult(ms);
     }
 
-    dm->write(mm);
+    dm->write(m);
+    updateTransformation();
+}
+
+void VRTransform::updateTransformation() {
+    Matrix4d m;
+    dm->read(m);
+
+    if (!t->trans) {
+        cout << "Error in VRTransform::updateTransformation of " << getName() << "(" << this << "): t->trans is invalid! (" << t->trans << ")" << endl;
+        return;
+    }
+    if (getBaseName() == "trunk") cout << "   >>> VRTransform::updateTransformation of " << getName() << "(" << this << "): t->trans is invalid! (" << t->trans << ")" << endl;
+
+    bool isI = isIdentity(m);
+    if (identity && !isI) {
+        identity = false;
+        enableCore();
+    }
+
+    if (!identity && isI) {
+        identity = true;
+        disableCore();
+    }
+
+    auto scene = VRScene::getCurrent();
+    if (scene) {
+        auto sw = scene->getSpaceWarper();
+        if (sw) sw->warp(m);
+    }
+    t->trans->setMatrix(toMatrix4f(m));
 }
 
 void VRTransform::setIdentity() {
@@ -126,44 +161,9 @@ void VRTransform::updatePhysics() {
     physics->resetForces();
 }
 
-bool isIdentity(const Matrix4d& m) {
-    static Matrix4d r;
-    static bool mSet = false;
-    if (!mSet) { mSet = true; r.setIdentity(); }
-    return (m == r);
-}
-
-void VRTransform::updateTransformation() {
-    Matrix4d m;
-    dm->read(m);
-
-    if (!t->trans) return;
-
-    bool isI = isIdentity(m);
-    if (identity && !isI) {
-        identity = false;
-        enableCore();
-    }
-
-    if (!identity && isI) {
-        identity = true;
-        disableCore();
-    }
-
-    auto scene = VRScene::getCurrent();
-    if (scene) {
-        auto sw = scene->getSpaceWarper();
-        if (sw) sw->warp(m);
-    }
-    t->trans->setMatrix(toMatrix4f(m));
-}
-
 void VRTransform::reg_change() {
-    if (change == false) {
-        if (fixed) changedObjects.push_back( ptr() );
-        change = true;
-        change_time_stamp = VRGlobals::CURRENT_FRAME;
-    }
+    change_time_stamp = VRGlobals::CURRENT_FRAME;
+    updateChange();
 }
 
 void VRTransform::printInformation() { Matrix4d m; getMatrix(m); cout << " pos " << m[3]; }
@@ -740,7 +740,7 @@ void VRTransform::printPos() {
 
 /** Print the positions of all the subtree **/
 void VRTransform::printTransformationTree(int indent) {
-    if(indent == 0) cout << "\nPrint Transformation Tree : ";
+    if (indent == 0) cout << "\nPrint Transformation Tree : ";
 
     cout << "\n";
     for (int i=0;i<indent;i++) cout << "  ";

@@ -63,13 +63,10 @@ class VRTransform : public VRObject {
         //read Matrix4d from doublebuffer && apply it to transformation
         //should be called from the main thread only
         void updateTransformation();
-
         void reg_change();
-
         bool checkWorldChange();
 
         void printInformation();
-
         void initCoords();
         void initTranslator();
 

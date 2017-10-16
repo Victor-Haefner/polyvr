@@ -12,6 +12,7 @@ void VRObjectGroupManager::addGroup(string group) {
 }
 
 void VRObjectGroupManager::updateObjects() {
+    return;
     //cout << "VRObjectGroupManager updateObjects " << VRTransform::changedObjects.size() << " " << VRTransform::dynamicObjects.size() << endl;
 
     //update the Transform changelists
