@@ -60,7 +60,7 @@ VRPhysicsManager::VRPhysicsManager() {
 
 
     updatePhysObjectsFkt = VRUpdateCb::create("Physics object update", boost::bind(&VRPhysicsManager::updatePhysObjects, this));
-    updatePhysicsFkt = VRFunction< VRThreadWeakPtr >::create("Physics update", boost::bind(&VRPhysicsManager::updatePhysics, this, _1));
+    updatePhysicsFkt = VRThreadCb::create("Physics update", boost::bind(&VRPhysicsManager::updatePhysics, this, _1));
 
     physics_visual_layer = VRVisualLayer::getLayer("Physics", "physics.png", 1);
 

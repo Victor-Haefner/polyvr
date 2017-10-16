@@ -8,6 +8,7 @@
 #include "core/objects/geometry/VRConstraint.h"
 #include "core/utils/VRVisualLayer.h"
 #include "core/utils/VRTimer.h"
+#include "core/utils/VRRate.h"
 
 #include <OpenSG/OSGTriangleIterator.h>
 #include <btBulletDynamicsCommon.h>
@@ -931,6 +932,7 @@ void VRPhysics::updateVisualGeo() {
 
 void VRPhysics::updateTransformation(OSG::VRTransformWeakPtr t) {
     Lock lock(VRPhysics_mtx());
+    //static VRRate FPS; int fps = FPS.getRate(); cout << "VRPhysics::updateTransformation " << fps << endl;
     auto bt = fromVRTransform(t, scale, CoMOffset);
     if (body) { body->setWorldTransform(bt); body->activate(); }
     if (ghost_body) { ghost_body->setWorldTransform(bt); ghost_body->activate(); }

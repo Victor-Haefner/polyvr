@@ -8,6 +8,7 @@
 #include "core/utils/VRUndoInterfaceT.h"
 #include "core/utils/VRDoublebuffer.h"
 #include "core/utils/VRGlobals.h"
+#include "core/utils/VRRate.h"
 #include "core/scene/VRAnimationManagerT.h"
 #include "core/scene/VRSpaceWarper.h"
 #include "core/math/pose.h"
@@ -132,19 +133,11 @@ void VRTransform::setIdentity() {
     setMatrix(Matrix4d());
 }
 
-//read Matrix4d from doublebuffer && apply it to transformation
-//should be called from the main thread only
-void VRTransform::updatePhysics() {
-    //update bullets transform
+void VRTransform::updatePhysics() { //should be called from the main thread only
     if (physics == 0) return;
     if (noBlt && !held) { noBlt = false; return; }
     if (!physics->isPhysicalized()) return;
 
-    /*Matrix4d m;
-    dm->read(m);
-    Matrix4d pm;
-    getWorldMatrix(pm, true);
-    pm.mult(m);*/
     physics->updateTransformation( ptr() );
     physics->pause();
     physics->resetForces();
@@ -711,7 +704,7 @@ void VRTransform::printTransformationTree(int indent) {
         }
     }
 
-    if(indent == 0) cout << "\n";
+    if (indent == 0) cout << "\n";
 }
 
 void VRTransform::setConstraint(VRConstraintPtr c) { constraint = c; }
