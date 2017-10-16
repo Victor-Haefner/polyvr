@@ -422,6 +422,10 @@ string toString(STEPentity* e) {
     return toString(e->StepFileId());
 }
 
+string toString(SDAI_Select* s) {
+    return " SDAI_Select - to be implemented! ";
+}
+
 template<typename T>
 string toString(vector<T>& v) {
     string s = string("vector of size ") + toString( v.size() ) + " data:";
