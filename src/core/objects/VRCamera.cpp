@@ -27,7 +27,6 @@ VRMaterialPtr getCamGeoMat() {
 
 VRCamera::VRCamera(string name) : VRTransform(name) {
     type = "Camera";
-    cam_invert_z = true;
 
     PerspectiveCameraMTRecPtr pcam = PerspectiveCamera::create();
     cam = OSGCamera::create( pcam );

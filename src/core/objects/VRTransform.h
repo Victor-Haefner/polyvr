@@ -14,7 +14,6 @@ class VRPhysics;
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class doubleBuffer;
 class path;
 class VRAnimation;
 
@@ -27,7 +26,7 @@ class VRTransform : public VRObject {
         };
 
     protected:
-        doubleBuffer* dm = 0;
+        Matrix4d matrix;
         OSGTransformPtr t;
         bool noBlt = false;
         VRPhysics* physics = 0;
@@ -35,9 +34,6 @@ class VRTransform : public VRObject {
 
         unsigned int change_time_stamp = 0;
         unsigned int wchange_time_stamp = 0;
-        bool change = false;
-        bool fixed = true;
-        bool cam_invert_z = false;
         bool identity = true;
         int orientation_mode = OM_DIR;
 
@@ -84,8 +80,6 @@ class VRTransform : public VRObject {
 
         uint getLastChange();
         bool changedNow();
-        doubleBuffer* getBuffer();
-        // Local && world transformation setter && getter
 
         Vec3d getFrom();
         Vec3d getDir();
@@ -143,7 +137,6 @@ class VRTransform : public VRObject {
         int get_orientation_mode();
         void set_orientation_mode(int b);
 
-        void setFixed(bool b);
         void applyTransformation(PosePtr p);
         void applyTransformation();
 

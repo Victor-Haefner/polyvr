@@ -32,7 +32,6 @@ VRScene::VRScene() {
     setFlag("write_protected", false);
 
     //scene update functions
-    addUpdateFkt(updateObjectsFkt, 1000);
     addUpdateFkt(updateAnimationsFkt);
     addUpdateFkt(updatePhysObjectsFkt);
 
@@ -64,7 +63,6 @@ VRScene::VRScene() {
 VRScene::~VRScene() {
     //kill physics thread
     VRThreadManager::stopThread(physicsThreadID);
-    updateObjects();
     root->destroy();
     VRGroup::clearGroups();
     VRLightBeacon::getAll().clear();

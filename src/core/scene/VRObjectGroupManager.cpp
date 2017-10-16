@@ -3,36 +3,14 @@
 #include "core/objects/VRTransform.h"
 #include "core/utils/VRFunction.h"
 
-OSG_BEGIN_NAMESPACE;
+using namespace OSG;
 using namespace std;
 
+VRObjectGroupManager::VRObjectGroupManager() {}
 
 void VRObjectGroupManager::addGroup(string group) {
     groups[group] = list<VRGroupPtr>();
 }
-
-void VRObjectGroupManager::updateObjects() {
-    return;
-    //cout << "VRObjectGroupManager updateObjects " << VRTransform::changedObjects.size() << " " << VRTransform::dynamicObjects.size() << endl;
-
-    //update the Transform changelists
-    for ( auto t : VRTransform::changedObjects ) {
-        if (auto sp = t.lock()) sp->updateChange();
-    }
-    VRTransform::changedObjects.clear();
-
-    //update the dynamic objects
-    for ( auto t : VRTransform::dynamicObjects ) {
-        if (auto sp = t.lock()) sp->updateChange();
-        // TODO: else: remove the t from dynamicObjects
-    }
-}
-
-VRObjectGroupManager::VRObjectGroupManager() {
-    updateObjectsFkt = VRUpdateCb::create("ObjectManagerUpdate", boost::bind(&VRObjectGroupManager::updateObjects, this));
-}
-
-//GROUPS------------------------
 
 void VRObjectGroupManager::addToGroup(VRGroupPtr obj, string group) {
     if (!groups.count(group)) addGroup(group);
@@ -49,5 +27,3 @@ vector<string> VRObjectGroupManager::getGroupList() {
     for (auto g : groups) grps.push_back(g.first);
     return grps;
 }
-
-OSG_END_NAMESPACE;
