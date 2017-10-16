@@ -400,6 +400,11 @@ void VRGeometry::updateNormals(bool face) {
     else calcVertexNormals(mesh->geo);
 }
 
+void VRGeometry::flipNormals() {
+    VRGeoData data(ptr());
+    for (int i=0; i<data.getDataSize(4); i++) data.setNorm( i, - data.getNormal(i) );
+}
+
 int VRGeometry::getLastMeshChange() { return lastMeshChange; }
 
 void VRGeometry::setTypes(GeoIntegralProperty* types) { if (!meshSet) setMesh(); mesh->geo->setTypes(types); }

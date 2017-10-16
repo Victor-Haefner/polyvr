@@ -152,6 +152,7 @@ string VRGeoData::getDataName(int type) {
     if (type == 6) return "RGBA colors";
     if (type == 7) return "texture coords";
     if (type == 8) return "texture coords 2";
+    return "";
 }
 
 int VRGeoData::getDataSize(int type) {
@@ -164,6 +165,7 @@ int VRGeoData::getDataSize(int type) {
     if (type == 6) return data->cols4->size();
     if (type == 7) return data->texs->size();
     if (type == 8) return data->texs2->size();
+    return 0;
 }
 
 int VRGeoData::pushVert(Pnt3d p) { data->pos->addValue(p); return data->pos->size()-1; }
@@ -197,6 +199,16 @@ bool VRGeoData::setVert(int i, Pnt3d p, Vec3d n, Color3f c, Vec2d t) { if (size(
 bool VRGeoData::setVert(int i, Pnt3d p, Vec3d n, Color4f c, Vec2d t) { if (size() > i) data->texs->setValue(t,i); else return 0; return setVert(i,p,n,c); }
 bool VRGeoData::setVert(int i, Pnt3d p, Vec3d n, Color3f c, Vec2d t, Vec2d t2) { if (size() > i) data->texs2->setValue(t2,i); else return 0; return setVert(i,p,n,c,t); }
 bool VRGeoData::setVert(int i, Pnt3d p, Vec3d n, Color4f c, Vec2d t, Vec2d t2) { if (size() > i) data->texs2->setValue(t2,i); else return 0; return setVert(i,p,n,c,t); }
+
+bool VRGeoData::setType(int i, int t) { if (data->types->size() > i) data->types->setValue(t,i); else return 0; return 1; }
+bool VRGeoData::setLength(int i, int l) { if (data->lengths->size() > i) data->lengths->setValue(l,i); else return 0; return 1; }
+bool VRGeoData::setIndex(int i, int I) { if (data->indices->size() > i) data->indices->setValue(I,i); else return 0; return 1; }
+bool VRGeoData::setPos(int i, Pnt3d p) { if (data->pos->size() > i) data->pos->setValue(p,i); else return 0; return 1; }
+bool VRGeoData::setNorm(int i, Vec3d n) { if (data->norms->size() > i) data->norms->setValue(n,i); else return 0; return 1; }
+bool VRGeoData::setTexCoord(int i, Vec2d t) { if (data->texs->size() > i) data->texs->setValue(t,i); else return 0; return 1; }
+bool VRGeoData::setTexCoord2(int i, Vec2d t) { if (data->texs2->size() > i) data->texs2->setValue(t,i); else return 0; return 1; }
+bool VRGeoData::setColor(int i, Color3f c) { if (data->cols3->size() > i) data->cols3->setValue(c,i); else return 0; return 1; }
+bool VRGeoData::setColor(int i, Color4f c) { if (data->cols4->size() > i) data->cols4->setValue(c,i); else return 0; return 1; }
 
 void VRGeoData::pushQuad(Vec3d p, Vec3d n, Vec3d u, Vec2d s, bool addInds) {
     Vec3d x = -n.cross(u); x.normalize();

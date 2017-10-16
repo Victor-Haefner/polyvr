@@ -348,7 +348,7 @@ void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
     auto kirb = VRStroke::create("kirb");
     kirb->addPath(path);
 
-    kirb->strokeProfile({Vec3d(0.0, h, 0), Vec3d(-0.1, h, 0), Vec3d(-0.1, 0, 0)}, 0, 0);
+    kirb->strokeProfile({Vec3d(0.0, h, 0), Vec3d(-0.1, h, 0), Vec3d(-0.1, 0, 0)}, 0, 1, 0);
     kirb->updateNormals(1);
     kirb->setMaterial( world->getMaterial("kirb") );
 

@@ -413,11 +413,6 @@ void VRScript::printSyntaxError(PyObject *exception, PyObject *value, PyObject *
         VRGuiManager::get()->getConsole( "Syntax" )->write( m, style, link );
     };
 
-    auto printObj = [&]( PyObject* o) {
-        auto e = string(PyString_AsString( PyObject_Str(o) )) + "\n";
-        print(e);
-    };
-
     int err = 0;
     Py_INCREF(value);
     if (Py_FlushLine()) PyErr_Clear();
@@ -428,7 +423,6 @@ void VRScript::printSyntaxError(PyObject *exception, PyObject *value, PyObject *
         int lineno, offset;
         if (!parse_syntax_error(value, &message, &filename, &lineno, &offset, &text)) PyErr_Clear();
         else {
-            char buf[10];
             string fn = filename ? filename : "<string>";
             errLink eLink(fn, lineno, 0);
             auto fkt = VRFunction<string>::create("search_link", boost::bind(&VRScript::on_err_link_clicked, this, eLink, _1) );
@@ -441,42 +435,6 @@ void VRScript::printSyntaxError(PyObject *exception, PyObject *value, PyObject *
             if (PyErr_Occurred()) err = -1;
         }
     }
-
-    /*if (err) {
-        // Don't do anything else
-    } else if (PyExceptionClass_Check(exception)) {
-        PyObject* moduleName;
-        char* className = PyExceptionClass_Name(exception);
-        if (className != NULL) {
-            char *dot = strrchr(className, '.');
-            if (dot != NULL) className = dot+1;
-        }
-
-        moduleName = PyObject_GetAttrString(exception, "__module__");
-        if (moduleName == NULL) print("<unknown>");
-        else {
-            char* modstr = PyString_AsString(moduleName);
-            if (modstr && strcmp(modstr, "exceptions")) {
-                print(modstr);
-                print(".");
-                err = 1;
-            }
-            Py_DECREF(moduleName);
-        }
-        if (err == 0) {
-            if (className == NULL) print("<unknown>");
-            else print(className);
-            err = 1;
-        }
-    } else { printObj(exception); err = 1; }
-
-    if (err == 0 && (value != Py_None)) {
-        PyObject *s = PyObject_Str(value);
-        if (s == NULL) err = -1;
-        else if (!PyString_Check(s) || PyString_GET_SIZE(s) != 0) { print(": "); err = 1; }
-        if (err == 0) { printObj(s); err = 1; }
-        Py_XDECREF(s);
-    }*/
 
     Py_DECREF(value);
     PyErr_Clear();
