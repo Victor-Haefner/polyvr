@@ -63,6 +63,7 @@ class VRRobotArm {
         void move();
         void pause();
         void stop();
+        bool isMoving();
 
         void moveTo(PosePtr p);
         void setAngles(vector<float> angles);
