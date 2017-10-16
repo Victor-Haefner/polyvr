@@ -77,9 +77,9 @@ void VRDefShading::init() {
     dsStage->setGBufferProgram(NULL);
 
     // ambient shader
-    ShaderProgramRecPtr      vpAmbient = ShaderProgram::createVertexShader  ();
-    ShaderProgramRecPtr      fpAmbient = ShaderProgram::createFragmentShader();
-    ShaderProgramChunkRecPtr shAmbient = ShaderProgramChunk::create();
+    ShaderProgramMTRecPtr      vpAmbient = ShaderProgram::createVertexShader  ();
+    ShaderProgramMTRecPtr      fpAmbient = ShaderProgram::createFragmentShader();
+    ShaderProgramChunkMTRecPtr shAmbient = ShaderProgramChunk::create();
     vpAmbient->readProgram(dsAmbientVPFile.c_str());
     fpAmbient->readProgram(dsAmbientFPFile.c_str());
     fpAmbient->addUniformVariable<Int32>("texBufNorm", 1);
@@ -89,7 +89,7 @@ void VRDefShading::init() {
 
     // fbo -> TODO
     /*FrameBufferObjectRefPtr fbo = FrameBufferObject::create();
-    ImageRecPtr img = Image::create();
+    ImageMTRecPtr img = Image::create();
     tex = TextureObjChunk::create();
     TextureBufferRefPtr texBuf = TextureBuffer::create();
     RenderBufferRefPtr depthBuf = RenderBuffer::create();
@@ -117,9 +117,9 @@ int VRDefShading::addBuffer(int pformat, int ptype) {
 }
 
 void VRDefShading::reload() {
-    ShaderProgramRecPtr      vpAmbient = ShaderProgram::createVertexShader  ();
-    ShaderProgramRecPtr      fpAmbient = ShaderProgram::createFragmentShader();
-    ShaderProgramChunkRecPtr shAmbient = ShaderProgramChunk::create();
+    ShaderProgramMTRecPtr      vpAmbient = ShaderProgram::createVertexShader  ();
+    ShaderProgramMTRecPtr      fpAmbient = ShaderProgram::createFragmentShader();
+    ShaderProgramChunkMTRecPtr shAmbient = ShaderProgramChunk::create();
     vpAmbient->readProgram(dsAmbientVPFile.c_str());
     fpAmbient->readProgram(dsAmbientFPFile.c_str());
     fpAmbient->addUniformVariable<Int32>("texBufNorm", 1);

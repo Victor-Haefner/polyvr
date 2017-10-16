@@ -136,7 +136,7 @@ void VRWindowManager::pauseRendering(bool b) { rendering_paused = b; }
 void VRWindowManager::getWindowSize(string name, int& width, int& height) {
     if (!checkWin(name)) return;
 
-    WindowRecPtr win = windows[name]->getOSGWindow();
+    WindowMTRecPtr win = windows[name]->getOSGWindow();
     width = win->getWidth();
     height = win->getHeight();
 }

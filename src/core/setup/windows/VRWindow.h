@@ -21,7 +21,7 @@ class VRWindow : public std::enable_shared_from_this<VRWindow>, public VRName {
         bool active = false;
         bool content = false;
         int type = -1;
-        WindowRecPtr _win;
+        WindowMTRecPtr _win;
         RenderActionRefPtr ract;
         vector<VRViewWeakPtr> views;
 
@@ -61,7 +61,7 @@ class VRWindow : public std::enable_shared_from_this<VRWindow>, public VRName {
         void setKeyboard(VRKeyboardPtr m);
         VRKeyboardPtr getKeyboard();
 
-        WindowRecPtr getOSGWindow();
+        WindowMTRecPtr getOSGWindow();
         void addView(VRViewPtr view);
         void remView(VRViewPtr view);
         vector<VRViewPtr> getViews();

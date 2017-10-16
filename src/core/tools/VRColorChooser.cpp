@@ -34,7 +34,7 @@ Color3f VRColorChooser::colFromUV(Vec2d tc) {
 }
 
 void VRColorChooser::updateTexture() {
-    ImageRecPtr img = Image::create();
+    ImageMTRecPtr img = Image::create();
     int s = 128;
 
     Color3f c = getColor();

@@ -171,7 +171,7 @@ void VRMouse::mouse(int button, int state, int x, int y) {
     auto sv = view.lock();
     if (!sv) return;
 
-    ViewportRecPtr v = sv->getViewport();
+    ViewportMTRecPtr v = sv->getViewport();
     v->calcNormalizedCoordinates(_x, _y, x, y);
     change_slider(5,_x);
     change_slider(6,_y);
@@ -186,7 +186,7 @@ void VRMouse::motion(int x, int y) {
     if (!sv) return;
 
     float _x, _y;
-    ViewportRecPtr v = sv->getViewport();
+    ViewportMTRecPtr v = sv->getViewport();
     v->calcNormalizedCoordinates(_x, _y, x, y);
     change_slider(5,_x);
     change_slider(6,_y);

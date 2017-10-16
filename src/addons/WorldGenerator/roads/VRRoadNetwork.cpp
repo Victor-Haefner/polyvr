@@ -494,7 +494,7 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p) {
         asphaltArrow->setShaderParameter("NArrowTex", (int)arrowTemplates.size());
     }
 
-    GeoVec4fPropertyRecPtr cols = GeoVec4fProperty::create();
+    GeoVec4fPropertyMTRecPtr cols = GeoVec4fProperty::create();
     Vec4d color = Vec4d((arrowTemplates[dirs]-1)*0.001, 0, 0);
     for (int i=0; i<4; i++) cols->addValue(color);
 

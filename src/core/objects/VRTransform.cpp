@@ -178,8 +178,8 @@ void VRTransform::initCoords() {
     coords->node->setTravMask(0);
     addChild(coords);
     GeometryMTRecPtr geo = dynamic_cast<Geometry*>(coords->node->getCore());
-    ChunkMaterialRecPtr mat = ChunkMaterial::create();
-    DepthChunkRecPtr depthChunk = DepthChunk::create();
+    ChunkMaterialMTRecPtr mat = ChunkMaterial::create();
+    DepthChunkMTRecPtr depthChunk = DepthChunk::create();
     depthChunk->setFunc( GL_ALWAYS );
     mat->addChunk(depthChunk);
     mat->setSortKey(100);// render last
@@ -207,9 +207,9 @@ void VRTransform::initTranslator() { // TODO
     "   gl_Position.z = -0.1;"
     "}";*/
 
-    ChunkMaterialRecPtr mat = ChunkMaterial::create();
+    ChunkMaterialMTRecPtr mat = ChunkMaterial::create();
     mat->setSortKey(100);// render last
-    SimpleSHLChunkRecPtr shader_chunk = SimpleSHLChunk::create();
+    SimpleSHLChunkMTRecPtr shader_chunk = SimpleSHLChunk::create();
     shader_chunk->setVertexProgram(shdr_vp.c_str());
     //shader_chunk->setVertexProgram(shdr_fp.c_str());
     mat->addChunk(shader_chunk);
@@ -852,7 +852,7 @@ Matrix4d toMatrix4d(Matrix4f mf) {
 void VRTransform::applyTransformation(PosePtr po) {
     Matrix4d m0 = po->asMatrix();
 
-    map<GeoVectorPropertyRecPtr, bool> applied;
+    map<GeoVectorPropertyMTRecPtr, bool> applied;
 
     auto applyMatrix = [&](OSGGeometryPtr mesh, Matrix4d& m) {
         auto pos = mesh->geo->getPositions();

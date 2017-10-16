@@ -48,7 +48,7 @@ pathPtr VRRoadBase::toPath( VREntityPtr pathEntity, int resolution ) {
 
 void VRRoadBase::setupTexCoords( VRGeometryPtr geo, VREntityPtr way ) {
 	int rID = toInt( way->get("ID")->value );
-	GeoVec2fPropertyRecPtr tcs = GeoVec2fProperty::create();
+	GeoVec2fPropertyMTRecPtr tcs = GeoVec2fProperty::create();
 	for (int i=0; i<geo->size(); i++) tcs->addValue(Vec2d(rID, 0));
 	geo->setPositionalTexCoords2D(1.0, 0, Vec2i(0,2)); // positional tex coords
 	geo->setTexCoords(tcs, 1); // add another tex coords set

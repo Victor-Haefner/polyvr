@@ -210,13 +210,13 @@ void VRGeometry::setPrimitive(string primitive, string args) {
 void VRGeometry::create(int type, vector<Vec3d> pos, vector<Vec3d> norms, vector<int> inds, vector<Vec2d> texs) {
     bool doTex = (texs.size() == pos.size());
 
-    GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
-    GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
-    GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyRecPtr      Norms = GeoVec3fProperty::create();
-    GeoUInt32PropertyRecPtr     Indices = GeoUInt32Property::create();
-    SimpleMaterialRecPtr        Mat = SimpleMaterial::create();
-    GeoVec2fPropertyRecPtr      Tex = 0;
+    GeoUInt8PropertyMTRecPtr      Type = GeoUInt8Property::create();
+    GeoUInt32PropertyMTRecPtr     Length = GeoUInt32Property::create();
+    GeoPnt3fPropertyMTRecPtr      Pos = GeoPnt3fProperty::create();
+    GeoVec3fPropertyMTRecPtr      Norms = GeoVec3fProperty::create();
+    GeoUInt32PropertyMTRecPtr     Indices = GeoUInt32Property::create();
+    SimpleMaterialMTRecPtr        Mat = SimpleMaterial::create();
+    GeoVec2fPropertyMTRecPtr      Tex = 0;
     if (doTex) Tex = GeoVec2fProperty::create();
 
 
@@ -238,7 +238,7 @@ void VRGeometry::create(int type, vector<Vec3d> pos, vector<Vec3d> norms, vector
     Mat->setAmbient(Color3f(0.4, 0.4, 0.2));
     Mat->setSpecular(Color3f(0.1, 0.1, 0.1));
 
-    GeometryRecPtr geo = Geometry::create();
+    GeometryMTRecPtr geo = Geometry::create();
     geo->setTypes(Type);
     geo->setLengths(Length);
     geo->setIndices(Indices);
@@ -275,7 +275,7 @@ void VRGeometry::setColor(string c) {
 
 void VRGeometry::setType(int t) {
     if (!meshSet) setMesh();
-    GeoUInt8PropertyRecPtr Type = GeoUInt8Property::create();
+    GeoUInt8PropertyMTRecPtr Type = GeoUInt8Property::create();
     Type->addValue(t);
     setTypes(Type);
 }
@@ -298,13 +298,13 @@ void calcFaceNormals(GeometryMTRecPtr geo) {
         return;
     }
 
-    GeoUInt32PropertyRecPtr newIndex = GeoUInt32Property::create();
-    GeoVec3fPropertyRecPtr newNormals = GeoVec3fProperty::create();
+    GeoUInt32PropertyMTRecPtr newIndex = GeoUInt32Property::create();
+    GeoVec3fPropertyMTRecPtr newNormals = GeoVec3fProperty::create();
     Vec3f normal;
 
     FaceIterator faceIter = geo->beginFaces();
-    GeoIntegralPropertyRecPtr oldPosIndex = geo->getIndex(Geometry::PositionsIndex);
-    GeoIntegralPropertyRecPtr oldNormsIndex = geo->getIndex(Geometry::NormalsIndex);
+    GeoIntegralPropertyMTRecPtr oldPosIndex = geo->getIndex(Geometry::PositionsIndex);
+    GeoIntegralPropertyMTRecPtr oldNormsIndex = geo->getIndex(Geometry::NormalsIndex);
 
     auto calcNormal = [&](FaceIterator& f) {
         Vec3f normal;
@@ -452,7 +452,7 @@ void VRGeometry::setIndices(GeoIntegralProperty* Indices, bool doLengths) {
     if (!meshSet) setMesh();
     if (Indices->size() == 0) setMesh(0);
     if (!mesh->geo->getLengths() || doLengths) {
-        GeoUInt32PropertyRecPtr Length = GeoUInt32Property::create();
+        GeoUInt32PropertyMTRecPtr Length = GeoUInt32Property::create();
         Length->addValue(Indices->size());
         mesh->geo->setLengths(Length);
     }
@@ -581,7 +581,7 @@ VRGeometryPtr VRGeometry::separateSelection(VRSelectionPtr sel) {
 }
 
 void VRGeometry::genTexCoords(string mapping, float scale, int channel, shared_ptr<Pose> uvp) {
-    GeoVec2fPropertyRecPtr tex = GeoVec2fProperty::create();
+    GeoVec2fPropertyMTRecPtr tex = GeoVec2fProperty::create();
     Matrix4d uvp_inv;
     if (uvp) uvp_inv = uvp->asMatrix();
     if (uvp) uvp_inv.invert();
@@ -650,11 +650,11 @@ void VRGeometry::decimate(float f) {
         collapse_normals[in[1]] = n;
 	}
 
-	GeoPnt3fPropertyRecPtr positions = GeoPnt3fProperty::create();
-	GeoUInt32PropertyRecPtr indices = GeoUInt32Property::create();
-	GeoVec3fPropertyRecPtr normals = GeoVec3fProperty::create();
+	GeoPnt3fPropertyMTRecPtr positions = GeoPnt3fProperty::create();
+	GeoUInt32PropertyMTRecPtr indices = GeoUInt32Property::create();
+	GeoVec3fPropertyMTRecPtr normals = GeoVec3fProperty::create();
 
-	GeoUInt32PropertyRecPtr idx = dynamic_cast<GeoUInt32Property*>(mesh->getIndices());
+	GeoUInt32PropertyMTRecPtr idx = dynamic_cast<GeoUInt32Property*>(mesh->getIndices());
 	for (uint i=0; i<idx->size(); i++) {
         cout << "   VRGeometry::decimate " << i << " " << idx->getValue(i) << endl;
 	}
@@ -706,7 +706,7 @@ void VRGeometry::decimate(float f) {
 	setNormals(normals);
 	setType(GL_TRIANGLES);
 
-	GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
+	GeoUInt32PropertyMTRecPtr lengths = GeoUInt32Property::create();
 	lengths->addValue(indices->size());
 	setLengths(lengths);
 
@@ -720,11 +720,11 @@ void VRGeometry::removeDoubles(float minAngle) {// TODO: use angle
 
 void VRGeometry::setRandomColors() {
     if (!mesh->geo) return;
-    GeoPnt3fPropertyRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->geo->getPositions());
+    GeoPnt3fPropertyMTRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->geo->getPositions());
     if (!pos) return;
 	int N = pos->size();
 
-	GeoVec4fPropertyRecPtr cols = GeoVec4fProperty::create();
+	GeoVec4fPropertyMTRecPtr cols = GeoVec4fProperty::create();
 	for (int i=0; i<N; i++) {
         Color4f c; c.setRandom();
         cols->addValue( c );
@@ -735,7 +735,7 @@ void VRGeometry::setRandomColors() {
 /** Returns the geometric center of the mesh **/
 Vec3d VRGeometry::getGeometricCenter() {
     if (!meshSet) return Vec3d(0,0,0);
-    GeoPnt3fPropertyRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->geo->getPositions());
+    GeoPnt3fPropertyMTRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->geo->getPositions());
 
     Vec3d center = Vec3d(0,0,0);
     for (uint i=0;i<pos->size();i++)
@@ -749,7 +749,7 @@ Vec3d VRGeometry::getGeometricCenter() {
 /** Returns the average of all normals of the mesh (not normalized, can be zero) **/
 Vec3d VRGeometry::getAverageNormal() {
     if (!meshSet) return Vec3d(0,1,0);
-    GeoVec3fPropertyRecPtr norms = dynamic_cast<GeoVec3fProperty*>(mesh->geo->getNormals());
+    GeoVec3fPropertyMTRecPtr norms = dynamic_cast<GeoVec3fProperty*>(mesh->geo->getNormals());
 
     Vec3d normal = Vec3d(0,0,0);
     for (uint i=0;i<norms->size();i++) {
@@ -767,7 +767,7 @@ void VRGeometry::influence(vector<Vec3d> pnts, vector<Vec3d> values, int power, 
     inp.setValues(values);
     if (color_code > 0) {
         if (mesh->geo->getColors() == 0) {
-            GeoVec4fPropertyRecPtr cols = GeoVec4fProperty::create();
+            GeoVec4fPropertyMTRecPtr cols = GeoVec4fProperty::create();
             cols->resize(mesh->geo->getPositions()->size());
             setColors(cols);
             fixColorMapping();
@@ -783,7 +783,7 @@ void VRGeometry::setPatchVertices(int n) { if (!meshSet) return; mesh->geo->setP
 float VRGeometry::getMax(int axis) {
     if (!meshSet) return 0;
     if (axis != 0 && axis != 1 && axis != 2) return 0;
-    GeoPnt3fPropertyRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->geo->getPositions());
+    GeoPnt3fPropertyMTRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->geo->getPositions());
 
     float max = pos->getValue(0)[axis];
     for (uint i=0;i<pos->size();i++) {
@@ -797,7 +797,7 @@ float VRGeometry::getMax(int axis) {
 float VRGeometry::getMin(int axis) {
     if (!meshSet) return 0;
     if (axis != 0 && axis != 1 && axis != 2) return 0;
-    GeoPnt3fPropertyRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->geo->getPositions());
+    GeoPnt3fPropertyMTRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->geo->getPositions());
 
     float min = pos->getValue(0)[axis];
     for (uint i=0;i<pos->size();i++) {
@@ -831,7 +831,7 @@ void VRGeometry::setMaterial(VRMaterialPtr mat) {
     mesh->geo->setMaterial(mat->getMaterial()->mat);
 }
 
-/*void VRGeometry::setMaterial(MaterialRecPtr mat) {
+/*void VRGeometry::setMaterial(MaterialMTRecPtr mat) {
     if (!meshSet) return;
     if (mat == 0) return;
 
@@ -871,16 +871,16 @@ void VRGeometry::showGeometricData(string type, bool b) {
     dataLayer[type] = geo;
     addChild(geo);
 
-    GeoColor3fPropertyRecPtr cols = GeoColor3fProperty::create();
-    GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
-    GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
+    GeoColor3fPropertyMTRecPtr cols = GeoColor3fProperty::create();
+    GeoPnt3fPropertyMTRecPtr pos = GeoPnt3fProperty::create();
+    GeoUInt32PropertyMTRecPtr inds = GeoUInt32Property::create();
 
     Pnt3d p;
     Vec3d n;
 
     if (type == "Normals") {
-        GeoVectorPropertyRecPtr g_norms = mesh->geo->getNormals();
-        GeoVectorPropertyRecPtr g_pos = mesh->geo->getPositions();
+        GeoVectorPropertyMTRecPtr g_norms = mesh->geo->getNormals();
+        GeoVectorPropertyMTRecPtr g_pos = mesh->geo->getPositions();
         for (uint i=0; i<g_norms->size(); i++) {
             p = Pnt3d(g_pos->getValue<Pnt3f>(i));
             n = Vec3d(g_norms->getValue<Vec3f>(i));
@@ -955,12 +955,12 @@ void VRGeometry::readSharedMemory(string segment, string object) {
     auto sm_inds = sm.getVector<int>(object+"_inds");
     auto sm_cols = sm.getVector<float>(object+"_cols");
 
-    GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
-    GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
-    GeoUInt32PropertyRecPtr types = GeoUInt32Property::create();
-    GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
-    GeoVec4fPropertyRecPtr cols = GeoVec4fProperty::create();
+    GeoPnt3fPropertyMTRecPtr pos = GeoPnt3fProperty::create();
+    GeoVec3fPropertyMTRecPtr norms = GeoVec3fProperty::create();
+    GeoUInt32PropertyMTRecPtr inds = GeoUInt32Property::create();
+    GeoUInt32PropertyMTRecPtr types = GeoUInt32Property::create();
+    GeoUInt32PropertyMTRecPtr lengths = GeoUInt32Property::create();
+    GeoVec4fPropertyMTRecPtr cols = GeoVec4fProperty::create();
 
     cout << "SM mesh read: " << sm_types.size() << " " << sm_lengths.size() << " " << sm_pos.size() << " " << sm_norms.size() << " " << sm_inds.size() << " " << sm_cols.size() << endl;
 

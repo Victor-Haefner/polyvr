@@ -503,6 +503,7 @@ void VRNature::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
         VRGeoData geoTrunk;
         VRGeoData geoGrass;
 
+        cout << "VRNature::computeLODs " << lvl << endl;
         if (doTrees) for (auto t : trees[leaf.get()]) {
             if (treeRefs.count(t) == 0) continue;
             auto tRef = treeRefs[t];

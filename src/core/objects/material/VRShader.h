@@ -14,10 +14,10 @@ OSG_BEGIN_NAMESPACE;
 
 class VRShader {
     private:
-        ShaderProgramChunkRecPtr shader_chunk;
-        ShaderProgramRecPtr vProgram;
-        ShaderProgramRecPtr fProgram;
-        ShaderProgramRecPtr gProgram;
+        ShaderProgramChunkMTRecPtr shader_chunk;
+        ShaderProgramMTRecPtr vProgram;
+        ShaderProgramMTRecPtr fProgram;
+        ShaderProgramMTRecPtr gProgram;
 
         static string vs_program;
         static string fs_program;
@@ -26,9 +26,9 @@ class VRShader {
         string getFromFile(string path);
 
     public:
-        VRShader(ChunkMaterialRecPtr mat);
+        VRShader(ChunkMaterialMTRecPtr mat);
 
-        ShaderProgramChunkRecPtr getShader();
+        ShaderProgramChunkMTRecPtr getShader();
 
         void setVertexProgram(string path);
         void setFragmentProgram(string path);

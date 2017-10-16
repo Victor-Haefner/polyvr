@@ -8,15 +8,15 @@
 using namespace OSG;
 
 struct VRGeoData::Data {
-    GeoUInt8PropertyRecPtr types;
-    GeoUInt32PropertyRecPtr lengths;
-    GeoUInt32PropertyRecPtr indices;
-    GeoPnt3fPropertyRecPtr pos;
-    GeoVec3fPropertyRecPtr norms;
-    GeoVec3fPropertyRecPtr cols3;
-    GeoVec4fPropertyRecPtr cols4;
-    GeoVec2fPropertyRecPtr texs;
-    GeoVec2fPropertyRecPtr texs2;
+    GeoUInt8PropertyMTRecPtr types;
+    GeoUInt32PropertyMTRecPtr lengths;
+    GeoUInt32PropertyMTRecPtr indices;
+    GeoPnt3fPropertyMTRecPtr pos;
+    GeoVec3fPropertyMTRecPtr norms;
+    GeoVec3fPropertyMTRecPtr cols3;
+    GeoVec4fPropertyMTRecPtr cols4;
+    GeoVec2fPropertyMTRecPtr texs;
+    GeoVec2fPropertyMTRecPtr texs2;
 
     int lastPrim = -1;
 
@@ -74,8 +74,8 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
     /*auto nIdx = geo->getMesh()->geo->getIndex(Geometry::NormalsIndex);
     auto pIdx = geo->getMesh()->geo->getIndex(Geometry::PositionsIndex);
     if (nIdx != pIdx) {
-        GeoVec3fPropertyRecPtr norms  = (GeoVec3fProperty*)geo->getMesh()->geo->getNormals();
-        GeoVec3fPropertyRecPtr norms2 = GeoVec3fProperty::create();
+        GeoVec3fPropertyMTRecPtr norms  = (GeoVec3fProperty*)geo->getMesh()->geo->getNormals();
+        GeoVec3fPropertyMTRecPtr norms2 = GeoVec3fProperty::create();
 
         for (uint i=0; i<pIdx->size(); i++) {
             int pID = pIdx->getValue(i);

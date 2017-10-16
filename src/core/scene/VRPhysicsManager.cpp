@@ -191,9 +191,9 @@ void VRPhysicsManager::updatePhysObjects() {
             btSoftBody::tNodeArray&   nodes(patch->m_nodes);
             btSoftBody::tFaceArray&   faces(patch->m_faces);
             btSoftBody::tLinkArray&   links(patch->m_links);
-            GeoPnt3fPropertyRecPtr visualpos = GeoPnt3fProperty::create();
-            GeoUInt32PropertyRecPtr visualinds = GeoUInt32Property::create();
-            GeoVec3fPropertyRecPtr visualnorms = GeoVec3fProperty::create();
+            GeoPnt3fPropertyMTRecPtr visualpos = GeoPnt3fProperty::create();
+            GeoUInt32PropertyMTRecPtr visualinds = GeoUInt32Property::create();
+            GeoVec3fPropertyMTRecPtr visualnorms = GeoVec3fProperty::create();
 
             for (int i = 0; i<nodes.size(); i++) { //go through the nodes and copy positions to mesh positionarray
                     Vec3d p = VRPhysics::toVec3d(nodes[i].m_x);
@@ -214,8 +214,8 @@ void VRPhysicsManager::updatePhysObjects() {
                 visualinds->addValue(indices[1]);
                 visualinds->addValue(indices[2]);
            }
-            GeoUInt32PropertyRecPtr vtypes = GeoUInt32Property::create();
-            GeoUInt32PropertyRecPtr vlens = GeoUInt32Property::create();
+            GeoUInt32PropertyMTRecPtr vtypes = GeoUInt32Property::create();
+            GeoUInt32PropertyMTRecPtr vlens = GeoUInt32Property::create();
             vtypes->addValue(GL_TRIANGLES);
             vlens->addValue(faces.size());
             vtypes->addValue(GL_LINES);
@@ -228,9 +228,9 @@ void VRPhysicsManager::updatePhysObjects() {
 
             if(geo->getPrimitive()->getType() == "Plane") { //only for plane soft bodies : directly apply nodes to vertices of geometry model
                 //VRPlane* prim = (VRPlane*)geo->getPrimitive();
-                GeoPnt3fPropertyRecPtr positions = GeoPnt3fProperty::create();
-                GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
-                GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
+                GeoPnt3fPropertyMTRecPtr positions = GeoPnt3fProperty::create();
+                GeoVec3fPropertyMTRecPtr norms = GeoVec3fProperty::create();
+                GeoUInt32PropertyMTRecPtr inds = GeoUInt32Property::create();
                 for (int i = 0; i<nodes.size(); i++) { //go through the nodes and copy positions to mesh positionarray
                     Vec3d p = VRPhysics::toVec3d(nodes[i].m_x);
                     positions->addValue(p);

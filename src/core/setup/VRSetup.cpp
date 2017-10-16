@@ -191,7 +191,7 @@ void VRSetup::printOSG() {
     string name = "Unnamed";
     for (auto win : getWindows()) {
         VRWindowPtr w = win.second;
-        WindowRecPtr osgw = w->getOSGWindow();
+        WindowMTRecPtr osgw = w->getOSGWindow();
         cout << "Window " << win.first << " " << osgw->getTypeName() << endl;
         int N = osgw->getMFPort()->size();
 

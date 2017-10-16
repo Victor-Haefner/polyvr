@@ -100,10 +100,10 @@ void VRPolygonSelection::updateShape(frustum f) {
     if (bbox && !bbox->empty()) near = dir.dot( bbox->center() - p0 ) - bbox->radius();
     if (bbox && !bbox->empty()) far = dir.dot( bbox->center() - p0 ) + bbox->radius();
 
-    GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
-    GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
-    GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
-    GeoUInt32PropertyRecPtr types = GeoUInt32Property::create();
+    GeoPnt3fPropertyMTRecPtr pos = GeoPnt3fProperty::create();
+    GeoUInt32PropertyMTRecPtr inds = GeoUInt32Property::create();
+    GeoUInt32PropertyMTRecPtr lengths = GeoUInt32Property::create();
+    GeoUInt32PropertyMTRecPtr types = GeoUInt32Property::create();
 
     for (auto e : f.getEdges()) {
         pos->addValue(p0+e*near);
