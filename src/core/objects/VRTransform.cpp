@@ -145,6 +145,7 @@ void VRTransform::updatePhysics() { //should be called from the main thread only
 
 void VRTransform::reg_change() {
     change_time_stamp = VRGlobals::CURRENT_FRAME;
+    noBlt = true;
     updateChange();
 }
 
