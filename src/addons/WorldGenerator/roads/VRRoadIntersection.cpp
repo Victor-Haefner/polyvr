@@ -310,6 +310,7 @@ void VRRoadIntersection::computeTrafficLights() { // deprecated
 }
 
 void VRRoadIntersection::computeMarkings() {
+    return;
     if (!perimeter) return;
     string name = entity->getName();
 

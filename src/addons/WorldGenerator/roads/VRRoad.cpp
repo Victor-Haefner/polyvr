@@ -134,6 +134,7 @@ void VRRoad::computeMarkings() {
             float width = toFloat( lane->get("width")->value );
             float k = widthSum;
             if (li == 0) k += mw*0.5;
+            else if (lanes[li-1]->is_a("ParkingLane")) k += mw*0.5;
             add(-x*k + p, n);
             widthSum += width;
         }
@@ -141,10 +142,9 @@ void VRRoad::computeMarkings() {
     }
 
     // markings
-    string dashL = toString(2);
     int pathN = path->size();
-    //float L = path->getLength();
     int lastDir = 0;
+
     for (int li=0; li<Nlanes+1; li++) {
         vector<VREntityPtr> nodes2;
         vector<Vec3d> normals2;
@@ -160,12 +160,38 @@ void VRRoad::computeMarkings() {
         if (li != Nlanes) {
             auto lane = lanes[li];
             if (!lane->is_a("Lane")) { lastDir = 0; continue; }
+
+            // dotted lines between parallel lanes
             int direction = toInt( lane->get("direction")->value );
             if (li != 0 && lastDir*direction > 0) {
                 mL->set("style", "dashed");
-                mL->set("dashLength", dashL);
+                mL->set("dashLength", "2");
             }
             lastDir = direction;
+
+            // parking lanes
+            if (li > 0) if (lanes[li-1]->is_a("ParkingLane")) mL->set("dashLength", "1");
+
+            if (lane->is_a("ParkingLane")) {
+                auto linePath = toPath(mL, 12);
+                int N = lane->getValue<int>("capacity", -1);
+                float W = lane->getValue<float>("width", 0);
+                for (int si = 0; si < N+1; si++) {
+                    auto pose = linePath->getPose(si*1.0/N);
+                    auto n = -pose->x();
+                    n.normalize();
+                    auto p1 = pose->pos();
+                    if (si == 0) p1 += pose->dir()*mw*0.5;
+                    if (si == N) p1 -= pose->dir()*mw*0.5;
+                    auto p2 = p1 + n*W;
+
+                    auto mL = addPath("RoadMarking", name, { addNode(0,p1), addNode(0,p2) }, {n,n} );
+                    mL->set("width", toString(mw));
+                    entity->add("markings", mL->getName());
+                    mL->set("style", "solid");
+                    mL->set("dashLength", "0");
+                }
+            }
         }
     }
 }

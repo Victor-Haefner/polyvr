@@ -154,6 +154,7 @@ void VRTerrain::setMap( VRTexturePtr t, int channel ) {
     mat->setTexture(tex);
 	mat->setShaderParameter("channel", channel);
     mat->setTextureParams(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_MODULATE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+    mat->clearTransparency();
     updateTexelSize();
     setupGeo();
 }
