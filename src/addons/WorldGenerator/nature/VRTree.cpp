@@ -404,7 +404,6 @@ void VRTree::setLeafMaterial(VRMaterialPtr mat) {
 }
 
 void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3d offset, int ID) {
-    cout << "VRTree::createHullLeafLod " << lvl << " " << ID << " " << offset << endl;
     Matrix4d Offset;
     Offset.setTranslate(offset); // TODO, use tree transformation rotation?
 
