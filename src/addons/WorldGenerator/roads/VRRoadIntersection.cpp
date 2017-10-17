@@ -216,6 +216,7 @@ void VRRoadIntersection::computePatch() {
         patch->addPoint(Vec2d(endP.p1[0], endP.p1[2]));
         patch->addPoint(Vec2d(endP.p2[0], endP.p2[2]));
     }
+    if (patch->computeArea() < 1e-6) { patch.reset(); return; }
     for (auto p : intersectionPoints) patch->addPoint(Vec2d(p[0], p[2]));
     *patch = patch->getConvexHull();
     if (patch->size() <= 2) { patch.reset(); return; }
@@ -310,7 +311,6 @@ void VRRoadIntersection::computeTrafficLights() { // deprecated
 }
 
 void VRRoadIntersection::computeMarkings() {
-    return;
     if (!perimeter) return;
     string name = entity->getName();
 
