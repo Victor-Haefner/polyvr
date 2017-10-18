@@ -16,14 +16,14 @@ VRMeasurePtr VRMeasure::create(string name) {
     return ptr;
 }
 
-void VRMeasure::setPoint(int i, posePtr p) {
+void VRMeasure::setPoint(int i, PosePtr p) {
     if (i == 0) P1 = *p;
     if (i == 1) P2 = *p;
     if (i == 2) P3 = *p;
     update();
 }
 
-void VRMeasure::rollPoints(posePtr p) {
+void VRMeasure::rollPoints(PosePtr p) {
     P1 = P2;
     P2 = P3;
     P3 = *p;

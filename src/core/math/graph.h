@@ -21,7 +21,7 @@ class Graph : public VRStorage {
         };
 
         struct node {
-            pose p;
+            Pose p;
             Boundingbox box;
         };
 
@@ -66,8 +66,8 @@ class Graph : public VRStorage {
         int getNEdges();
         int size();
         bool connected(int i1, int i2);
-        void setPosition(int i, posePtr v);
-        posePtr getPosition(int i);
+        void setPosition(int i, PosePtr v);
+        PosePtr getPosition(int i);
 
         bool hasNode(int i);
         bool hasEdge(int i);

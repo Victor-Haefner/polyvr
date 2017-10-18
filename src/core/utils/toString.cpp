@@ -90,11 +90,11 @@ template<> string toString(const Vec4i& v) {
     return ss.str();
 }
 
-template<> string toString(const posePtr& po) {
+template<> string toString(const PosePtr& po) {
     return toString(po->pos()) + " " + toString(po->dir()) + " " + toString(po->up());
 }
 
-template<> string toString(const pose& po) {
+template<> string toString(const Pose& po) {
     return toString(po.pos()) + " " + toString(po.dir()) + " " + toString(po.up());
 }
 
@@ -180,7 +180,7 @@ template<> int toValue(stringstream& ss, Color4f& v) {
     return bool(ss >> v[3]);
 }
 
-template<> int toValue(stringstream& ss, pose& po) {
+template<> int toValue(stringstream& ss, Pose& po) {
     Vec3d p,d,u;
     toValue(ss, p);
     toValue(ss, d);
@@ -189,13 +189,13 @@ template<> int toValue(stringstream& ss, pose& po) {
     return b;
 }
 
-template<> int toValue(stringstream& ss, posePtr& po) {
+template<> int toValue(stringstream& ss, PosePtr& po) {
     Vec3d p,d,u;
     toValue(ss, p);
     toValue(ss, d);
     bool b = toValue(ss, u);
     if (po) po->set(p,d,u);
-    else po = pose::create(p,d,u);
+    else po = Pose::create(p,d,u);
     return b;
 }
 

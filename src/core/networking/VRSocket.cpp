@@ -253,6 +253,11 @@ VRSocket::VRSocket(string name) {
     setNameSpace("Sockets");
     setName(name);
     http_serv = new HTTPServer();
+
+    store("type", &type);
+    store("port", &port);
+    store("ip", &IP);
+    store("signal", &signal);
 }
 
 VRSocket::~VRSocket() {
@@ -470,26 +475,6 @@ void VRSocket::initServer(CONNECTION_TYPE t, int _port) {
     if (t == TCP) socketThread = VRFunction<VRThreadWeakPtr>::create("TCPSocket", boost::bind(&VRSocket::scanTCP, this, _1));
     run = true;
     threadID = VRSceneManager::get()->initThread(socketThread, "socket", true);
-}
-
-
-void VRSocket::save(xmlpp::Element* e) {
-    saveName(e);
-    e->set_attribute("type", type);
-    stringstream ss; ss << port;
-    e->set_attribute("port", ss.str());
-    e->set_attribute("ip", IP);
-    //e->set_attribute("callback", callback);
-    e->set_attribute("signal", signal);
-}
-
-void VRSocket::load(xmlpp::Element* e) {
-    loadName(e);
-    if (auto t = e->get_attribute("type")) setType( t->get_value() );
-    if (auto t = e->get_attribute("port")) setPort( toInt(t->get_value().c_str()) );
-    if (auto t = e->get_attribute("ip")) setIP( t->get_value() );
-    //setCallback( e->get_attribute("callback")->get_value() );
-    if (auto t = e->get_attribute("signal")) setSignal( t->get_value() );
 }
 
 void VRSocket::update() {

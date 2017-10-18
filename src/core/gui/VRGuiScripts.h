@@ -7,6 +7,7 @@
 #include <gtkmm/liststore.h>
 #include <gtkmm/textbuffer.h>
 #include "core/scene/VRSceneManager.h"
+#include "VRGuiEditor.h"
 #include "VRGuiSignals.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/scripting/VRScriptFwd.h"
@@ -28,10 +29,6 @@ class VRGuiScripts {
             group();
         };
 
-        struct page {
-            int line = 0;
-        };
-
         struct searchResult {
             string scriptName;
             int line;
@@ -39,13 +36,14 @@ class VRGuiScripts {
             searchResult(string s, int l, int c);
         };
 
-        GtkWidget* editor;
-        bool doPerf = false;
-        bool trigger_cbs = true;
-        _GtkSourceLanguage* python = 0;
-        _GtkSourceLanguage* web = 0;
-        _GtkSourceLanguage* glsl = 0;
+        struct page {
+            int line = 0;
+        };
+
+        shared_ptr<VRGuiEditor> editor;
         map<VRScript*, page> pages;
+        bool trigger_cbs = true;
+        bool doPerf = false;
 	    VRUpdateCbPtr updatePtr;
 	    VRDeviceCbPtr sceneChangedCb;
 
@@ -55,13 +53,10 @@ class VRGuiScripts {
         Glib::RefPtr<Gtk::ListStore> import_liststore1;
         Glib::RefPtr<Gtk::ListStore> import_liststore2;
         map<string, VRScriptPtr> import_scripts;
-        Glib::RefPtr<Gtk::TextBuffer> editorBuffer;
+        vector<pair<VRScriptPtr,Gtk::TreeIter>> scriptRows;
 
         string docs_filter;
         map<int, group> groups;
-        vector<pair<VRScriptPtr,Gtk::TreeIter>> scriptRows;
-        map<string, Glib::RefPtr<Gtk::TextTag>> editorStyles;
-        map<string, bool> styleStates;
 
         void initEditor();
         void printViewerLanguages();
@@ -95,9 +90,6 @@ class VRGuiScripts {
         void on_trigadd_clicked();
         void on_trigrem_clicked();
 
-        bool on_editor_shortkey( GdkEventKey* e );
-        void addStyle( string style, string fg, string bg, bool italiq, bool bold, bool underlined );
-
         void updateDocumentation();
         void on_select_help();
         void on_help_clicked();
@@ -128,10 +120,9 @@ class VRGuiScripts {
 
         void updateList();
         VRScriptPtr getSelectedScript();
-        string get_editor_core(int i);
         void focusScript(string name, int line, int column);
-        void highlightStrings(string s, string c);
         void update();
+        shared_ptr<VRGuiEditor> getEditor();
 };
 
 OSG_END_NAMESPACE

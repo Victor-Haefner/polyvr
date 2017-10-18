@@ -14,6 +14,8 @@
 #include "core/setup/devices/VRFlystick.h"
 #include "core/setup/devices/VRHaptic.h"
 #include "core/setup/devices/VRServer.h"
+#include "core/setup/devices/VRMouse.h"
+#include "core/setup/devices/VRMultiTouch.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
@@ -74,6 +76,7 @@ void VRGuiSetup::closeAllExpander() {
     setExpanderSensitivity("expander25", false);
     setExpanderSensitivity("expander26", false);
     setExpanderSensitivity("expander28", false);
+    setExpanderSensitivity("expander29", false);
 }
 
 void VRGuiSetup::updateObjectData() {
@@ -142,9 +145,12 @@ void VRGuiSetup::updateObjectData() {
         setCheckButton("checkbutton9", view->eyesInverted());
         setCheckButton("checkbutton10", view->activeStereo());
         setCheckButton("checkbutton11", view->isProjection());
+        setCheckButton("checkbutton30", view->getMirror());
 
         setTextEntry("entry12", toString(view->getEyeSeparation()).c_str());
-        setCombobox("combobox18", getListStorePos("user_list", view->getUser()->getName()));
+        int uID = getListStorePos("user_list", view->getUser()->getName());
+        setCombobox("combobox18", uID);
+        setCheckButton("checkbutton26", uID != -1);
 
         userEntry.set(view->getProjectionUser());
         centerEntry.set(view->getProjectionCenter());
@@ -154,6 +160,8 @@ void VRGuiSetup::updateObjectData() {
         shearEntry.set(view->getProjectionShear());
         warpEntry.set(view->getProjectionWarp());
         vsizeEntry.set(Vec2d(view->getSize()));
+        mirrorPosEntry.set(view->getMirrorPos());
+        mirrorNormEntry.set(view->getMirrorNorm());
     }
 
     if (selected_type == "vrpn_device") {
@@ -189,6 +197,7 @@ void VRGuiSetup::updateObjectData() {
     }
 
     if (selected_type == "mouse") { device = true; }
+    if (selected_type == "multitouch") { device = true; }
     if (selected_type == "keyboard") { device = true; }
     if (selected_type == "server") { device = true; }
     if (selected_type == "flystick") { device = true; }
@@ -269,6 +278,21 @@ void VRGuiSetup::updateObjectData() {
         if (ct == "Multicast") setRadioButton("radiobutton10", 1);
         if (ct == "SockPipeline") setRadioButton("radiobutton11", 1);
         if (ct == "StreamSock") setRadioButton("radiobutton12", 1);
+    }
+
+    if (selected_type == "script") {
+        setExpanderSensitivity("expander29", true);
+        VRScript* script = (VRScript*)selected_object;
+        editor->setCore(script->getHead() + script->getCore());
+        auto trigs = script->getTriggers();
+        setRadioToolButton("radiotoolbutton1", true);
+        if (trigs.size() > 0) {
+            auto trig = *trigs.begin();
+            if (trig) {
+                if (trig->trigger == "on_timeout") setRadioToolButton("radiotoolbutton2", true);
+                else setRadioToolButton("radiotoolbutton3", true);
+            }
+        }
     }
 
     guard = false;
@@ -499,10 +523,16 @@ void VRGuiSetup::on_menu_add_network_node() {
 
 void VRGuiSetup::on_menu_add_network_slave() {
     if (selected_type != "node") return;
-
     VRNetworkNode* n = (VRNetworkNode*)selected_object;
     n->add("Slave");
+    updateSetup();
+    setToolButtonSensitivity("toolbutton12", true);
+}
 
+void VRGuiSetup::on_menu_add_script() {
+    auto setup = current_setup.lock();
+    if (!setup) return;
+    setup->addScript("script");
     updateSetup();
     setToolButtonSensitivity("toolbutton12", true);
 }
@@ -667,8 +697,45 @@ void VRGuiSetup::on_toggle_view_user() {
     if (guard) return;
     if (selected_type != "view") return;
 
+    bool b = getCheckButtonState("checkbutton26");
     VRView* view = (VRView*)selected_object;
-    view->setUser(0);
+    if (!b) view->setUser(0);
+    else {
+        VRGuiSetup_UserColumns cols;
+        Gtk::TreeModel::Row row = *getComboboxIter("combobox18");
+        if (auto U = row.get_value(cols.user)) {
+            VRTransformPtr u = ( (VRTransform*)U )->ptr();
+            view->setUser(u);
+        }
+    }
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_toggle_view_mirror() {
+    if (guard) return;
+    if (selected_type != "view") return;
+
+    bool b = getCheckButtonState("checkbutton30");
+    VRView* view = (VRView*)selected_object;
+    view->setMirror(b);
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_view_mirror_pos_edit(Vec3d v) {
+    if (guard) return;
+    if (selected_type != "view") return;
+
+    VRView* view = (VRView*)selected_object;
+    view->setMirrorPos(v);
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_view_mirror_norm_edit(Vec3d v) {
+    if (guard) return;
+    if (selected_type != "view") return;
+
+    VRView* view = (VRView*)selected_object;
+    view->setMirrorNorm(v);
     setToolButtonSensitivity("toolbutton12", true);
 }
 
@@ -939,6 +1006,67 @@ void VRGuiSetup::on_toggle_vrpn_verbose() {
     setup->setVRPNVerbose(b);
 }
 
+VRScriptPtr VRGuiSetup::getSelectedScript() {
+    auto script = (VRScript*)selected_object;
+    return script->ptr();
+}
+
+void VRGuiSetup::on_script_save_clicked() {
+    VRScriptPtr script = getSelectedScript();
+    if (script == 0) return;
+
+    string core = editor->getCore(script->getHeadSize());
+    auto scene = VRScene::getCurrent();
+    if (scene == 0) return;
+    scene->updateScript(script->getName(), core);
+
+    setToolButtonSensitivity("toolbutton27", false);
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_script_exec_clicked() {
+    VRScriptPtr script = getSelectedScript();
+    if (script == 0) return;
+    on_script_save_clicked();
+
+    auto scene = VRScene::getCurrent();
+    if (scene == 0) return;
+    scene->triggerScript(script->getName());
+}
+
+void VRGuiSetup::on_script_trigger_switched() {
+    bool noTrigger = getRadioToolButtonState("radiotoolbutton1");
+    bool onFrame = getRadioToolButtonState("radiotoolbutton2");
+    bool onStart = getRadioToolButtonState("radiotoolbutton3");
+
+    VRScriptPtr script = getSelectedScript();
+    if (script == 0) return;
+    on_script_save_clicked();
+    setToolButtonSensitivity("toolbutton12", true);
+
+    for (auto t : script->getTriggers()) script->remTrigger(t->getName());
+    if (noTrigger) return;
+    auto trig = script->addTrigger();
+    script->changeTrigParams(trig->getName(), "0");
+    if (onStart) script->changeTrigger(trig->getName(), "on_scene_load");
+    if (onFrame) script->changeTrigger(trig->getName(), "on_timeout");
+}
+
+shared_ptr<VRGuiEditor> VRGuiSetup::getEditor() { return editor; }
+
+void VRGuiSetup_on_script_changed(GtkTextBuffer* tb, gpointer user_data) {
+    setToolButtonSensitivity("toolbutton27", true);
+
+    auto gs = (VRGuiSetup*)user_data;
+    VRScriptPtr script = gs->getSelectedScript();
+    if (script == 0) return;
+
+    string core = gs->getEditor()->getCore(script->getHeadSize());
+    auto scene = VRScene::getCurrent();
+    if (scene == 0) return;
+    scene->updateScript(script->getName(), core, false);
+}
+
 // --------------------------
 // ---------Main-------------
 // --------------------------
@@ -960,12 +1088,14 @@ VRGuiSetup::VRGuiSetup() {
     menu->appendMenu("SM_AddMenu", "Device", "SM_AddDevMenu");
     menu->appendMenu("SM_AddMenu", "VRPN", "SM_AddVRPNMenu");
     menu->appendItem("SM_AddDevMenu", "Mouse", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRMouse>) );
+    menu->appendItem("SM_AddDevMenu", "MultiTouch", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRMultiTouch>) );
     menu->appendItem("SM_AddDevMenu", "Keyboard", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRKeyboard>) );
     menu->appendItem("SM_AddDevMenu", "Haptic", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRHaptic>) );
     menu->appendItem("SM_AddDevMenu", "Mobile", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRServer>) );
     menu->appendItem("SM_AddVRPNMenu", "VRPN tracker", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_vrpn_tracker) );
     menu->appendItem("SM_AddNetworkMenu", "Node", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_network_node) );
     menu->appendItem("SM_AddNetworkMenu", "Slave", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_network_slave) );
+    menu->appendItem("SM_AddMenu", "Script", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_script) );
 
     Glib::RefPtr<Gtk::ToolButton> tbutton;
     Glib::RefPtr<Gtk::CheckButton> cbutton;
@@ -983,11 +1113,19 @@ VRGuiSetup::VRGuiSetup() {
     setToolButtonCallback("toolbutton11", sigc::mem_fun(*this, &VRGuiSetup::on_del_clicked) );
     setToolButtonCallback("toolbutton12", sigc::mem_fun(*this, &VRGuiSetup::on_save_clicked) );
     setToolButtonCallback("toolbutton19", sigc::mem_fun(*this, &VRGuiSetup::on_foto_clicked) );
+    setToolButtonCallback("toolbutton27", sigc::mem_fun(*this, &VRGuiSetup::on_script_save_clicked) );
+    setToolButtonCallback("toolbutton26", sigc::mem_fun(*this, &VRGuiSetup::on_script_exec_clicked) );
+
+    setRadioToolButtonCallback("radiotoolbutton1", sigc::mem_fun(*this, &VRGuiSetup::on_script_trigger_switched) );
+    setRadioToolButtonCallback("radiotoolbutton2", sigc::mem_fun(*this, &VRGuiSetup::on_script_trigger_switched) );
+    setRadioToolButtonCallback("radiotoolbutton3", sigc::mem_fun(*this, &VRGuiSetup::on_script_trigger_switched) );
 
     centerEntry.init("center_entry", "center", sigc::mem_fun(*this, &VRGuiSetup::on_proj_center_edit));
     userEntry.init("user_entry", "user", sigc::mem_fun(*this, &VRGuiSetup::on_proj_user_edit));
     normalEntry.init("normal_entry", "normal", sigc::mem_fun(*this, &VRGuiSetup::on_proj_normal_edit));
     upEntry.init("viewup_entry", "up", sigc::mem_fun(*this, &VRGuiSetup::on_proj_up_edit));
+    mirrorPosEntry.init("mirror_pos_entry", "origin", sigc::mem_fun(*this, &VRGuiSetup::on_view_mirror_pos_edit));
+    mirrorNormEntry.init("mirror_norm_entry", "normal", sigc::mem_fun(*this, &VRGuiSetup::on_view_mirror_norm_edit));
     sizeEntry.init2D("size_entry", "size", sigc::mem_fun(*this, &VRGuiSetup::on_proj_size_edit));
     shearEntry.init2D("shear_entry", "shear", sigc::mem_fun(*this, &VRGuiSetup::on_proj_shear_edit));
     warpEntry.init2D("warp_entry", "warp", sigc::mem_fun(*this, &VRGuiSetup::on_proj_warp_edit));
@@ -1054,6 +1192,7 @@ VRGuiSetup::VRGuiSetup() {
     setCheckButtonCallback("checkbutton24", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_art));
     setCheckButtonCallback("checkbutton25", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_vrpn));
     setCheckButtonCallback("checkbutton26", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_view_user));
+    setCheckButtonCallback("checkbutton30", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_view_mirror));
     setCheckButtonCallback("checkbutton4", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_view_stats));
     setCheckButtonCallback("checkbutton37", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_dev_cross));
     setCheckButtonCallback("checkbutton39", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_vrpn_test_server));
@@ -1061,6 +1200,10 @@ VRGuiSetup::VRGuiSetup() {
     setCheckButtonCallback("checkbutton29", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited));
     setCheckButtonCallback("checkbutton41", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited));
     setCheckButtonCallback("checkbutton42", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited));
+
+
+    editor = shared_ptr<VRGuiEditor>( new VRGuiEditor("scrolledwindow12") );
+    g_signal_connect(editor->getSourceBuffer(), "changed", G_CALLBACK(VRGuiSetup_on_script_changed), this);
 
     // primitive list
     fillStringListstore("prim_list", VRPrimitive::getTypes());
@@ -1106,27 +1249,21 @@ void VRGuiSetup::updateSetup() {
     Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview2"));
     tree_store->clear();
 
-    Gtk::TreeModel::iterator itr;
-    Gtk::TreeModel::iterator itr2;
-    Gtk::TreeStore::Row row;
-
-    Gtk::TreeModel::iterator windows_itr;
-    Gtk::TreeModel::iterator devices_itr;
-    Gtk::TreeModel::iterator art_itr;
-    Gtk::TreeModel::iterator vrpn_itr;
-
     auto network_itr = tree_store->append();
-    windows_itr = tree_store->append();
-    devices_itr = tree_store->append();
-    art_itr = tree_store->append();
-    vrpn_itr = tree_store->append();
+    auto windows_itr = tree_store->append();
+    auto devices_itr = tree_store->append();
+    auto art_itr = tree_store->append();
+    auto vrpn_itr = tree_store->append();
+    auto scripts_itr = tree_store->append();
 
     setTreeRow(tree_store, *network_itr, "Network", "section", 0);
     setTreeRow(tree_store, *windows_itr, "Displays", "section", 0);
     setTreeRow(tree_store, *devices_itr, "Devices", "section", 0);
     setTreeRow(tree_store, *art_itr, "ART", "section", 0);
     setTreeRow(tree_store, *vrpn_itr, "VRPN", "section", 0);
+    setTreeRow(tree_store, *scripts_itr, "Scripts", "section", 0);
 
+    Gtk::TreeStore::Row row;
     Glib::RefPtr<Gtk::ListStore> user_list = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("user_list"));
     user_list->clear();
     row = *user_list->append();
@@ -1146,7 +1283,7 @@ void VRGuiSetup::updateSetup() {
 
     for (auto ditr : setup->getDevices()) {
         VRDevicePtr dev = ditr.second;
-        itr = tree_store->append(devices_itr->children());
+        auto itr = tree_store->append(devices_itr->children());
         setTreeRow(tree_store, *itr, ditr.first.c_str(), dev->getType().c_str(), (gpointer)dev.get());
 
         if (dev->getType() == "mouse") {
@@ -1156,10 +1293,10 @@ void VRGuiSetup::updateSetup() {
     }
 
     for (auto node : setup->getNetwork()->getData() ) {
-        itr = tree_store->append(network_itr->children());
+        auto itr = tree_store->append(network_itr->children());
         setTreeRow(tree_store, *itr, node->getName().c_str(), "node", (gpointer)node.get(), "#000000", "#FFFFFF");
         for (auto slave : node->getData() ) {
-            itr2 = tree_store->append(itr->children());
+            auto itr2 = tree_store->append(itr->children());
             setTreeRow(tree_store, *itr2, slave->getName().c_str(), "slave", (gpointer)slave.get(), "#000000", "#FFFFFF");
         }
     }
@@ -1167,7 +1304,7 @@ void VRGuiSetup::updateSetup() {
     for (auto win : setup->getWindows()) {
         VRWindow* w = win.second.get();
         string name = win.first;
-        itr = tree_store->append(windows_itr->children());
+        auto itr = tree_store->append(windows_itr->children());
         string bg = "#FFFFFF";
         if (w->isActive() == false) bg = "#FFDDDD";
         setTreeRow(tree_store, *itr, name.c_str(), "window", (gpointer)w, "#000000", bg);
@@ -1178,7 +1315,7 @@ void VRGuiSetup::updateSetup() {
             VRViewPtr v = views[i];
             stringstream ss;
             ss << name << i;
-            itr2 = tree_store->append(itr->children());
+            auto itr2 = tree_store->append(itr->children());
             setTreeRow(tree_store, *itr2, ss.str().c_str(), "view", (gpointer)v.get());
         }
     }
@@ -1187,7 +1324,7 @@ void VRGuiSetup::updateSetup() {
     vector<int> vrpnIDs = setup->getVRPNTrackerIDs();
     for (uint i=0; i<vrpnIDs.size(); i++) {
         VRPN_device* t = setup->getVRPNTracker(vrpnIDs[i]).get();
-        itr = tree_store->append(vrpn_itr->children());
+        auto itr = tree_store->append(vrpn_itr->children());
         cout << "vrpn liststore: " << t->getName() << endl;
         setTreeRow(tree_store, *itr, t->getName().c_str(), "vrpn_tracker", (gpointer)t);
     }
@@ -1196,7 +1333,7 @@ void VRGuiSetup::updateSetup() {
     for (int ID : setup->getARTDevices() ) {
         ART_devicePtr dev = setup->getARTDevice(ID);
 
-        itr = tree_store->append(art_itr->children());
+        auto itr = tree_store->append(art_itr->children());
         string name = dev->getName();
         if (dev->dev) name = dev->dev->getName();
         else if (dev->ent) name = dev->ent->getName();
@@ -1207,6 +1344,12 @@ void VRGuiSetup::updateSetup() {
             gtk_list_store_set (user_list->gobj(), row.gobj(), 0, dev->ent->getName().c_str(), -1);
             gtk_list_store_set (user_list->gobj(), row.gobj(), 1, dev->ent.get(), -1);
         }
+    }
+
+    for (auto s : setup->getScripts()) {
+        auto script = s.second.get();
+        auto itr = tree_store->append(scripts_itr->children());
+        setTreeRow(tree_store, *itr, script->getName().c_str(), "script", (gpointer)script);
     }
 
     on_treeview_select();

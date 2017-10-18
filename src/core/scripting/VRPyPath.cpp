@@ -25,6 +25,7 @@ PyMethodDef VRPyPath::methods[] = {
     {"getSize", (PyCFunction)VRPyPath::getSize, METH_NOARGS, "Return the number of path nodes - int getSize()" },
     {"getLength", (PyCFunction)VRPyPath::getLength, METH_VARARGS, "Return the approximated path length - float getLength( | int i, int j )" },
     {"getDistance", (PyCFunction)VRPyPath::getDistance, METH_VARARGS, "Return the distance from point to path - float getDistance( [x,y,z] )" },
+    {"getDistanceToHull", (PyCFunction)VRPyPath::getDistanceToHull, METH_VARARGS, "Return the distance from point to path hull - float getDistanceToHull( [x,y,z] )" },
     {"getClosestPoint", (PyCFunction)VRPyPath::getClosestPoint, METH_VARARGS, "Return the closest point on path in path coordinate t - float getClosestPoint( [x,y,z] ) Return value from 0 (path start) to 1 (path end)" },
     {"approximate", (PyCFunction)VRPyPath::approximate, METH_VARARGS, "Convert the cubic bezier spline in a quadratic or linear one (currently only quadratic) - approximate(int degree)" },
     {"isStraight", (PyCFunction)VRPyPath::isStraight, METH_VARARGS, "Check if the path is straight between point i and j - bool isStraight( | int i, int j )" },
@@ -67,6 +68,12 @@ PyObject* VRPyPath::getDistance(VRPyPath* self, PyObject *args) {
     if (!self->valid()) return NULL;
     auto p = parseVec3d( args );
     return PyFloat_FromDouble( self->objPtr->getDistance(p) );
+}
+
+PyObject* VRPyPath::getDistanceToHull(VRPyPath* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    auto p = parseVec3d( args );
+    return PyFloat_FromDouble( self->objPtr->getDistanceToHull(p) );
 }
 
 PyObject* VRPyPath::approximate(VRPyPath* self, PyObject *args) {
@@ -162,8 +169,8 @@ PyObject* VRPyPath::set(VRPyPath* self, PyObject* args) {
     OSG::Vec3d uv1(0,1,0), uv2(0,1,0);
     if (u1) uv1 = parseVec3dList(u1);
     if (u2) uv2 = parseVec3dList(u2);
-    self->objPtr->addPoint( pose(parseVec3dList(p1), parseVec3dList(n1), uv1));
-    self->objPtr->addPoint( pose(parseVec3dList(p2), parseVec3dList(n2), uv2));
+    self->objPtr->addPoint( Pose(parseVec3dList(p1), parseVec3dList(n1), uv1));
+    self->objPtr->addPoint( Pose(parseVec3dList(p2), parseVec3dList(n2), uv2));
     self->objPtr->compute(i);
     Py_RETURN_TRUE;
 }
@@ -191,7 +198,7 @@ PyObject* VRPyPath::addPoint(VRPyPath* self, PyObject* args) {
     c = _c ? parseVec3dList(_c) : OSG::Vec3d(0,0,0);
     u = _u ? parseVec3dList(_u) : OSG::Vec3d(0,1,0);
 
-    self->objPtr->addPoint( pose(p,n,u), OSG::Vec3f(c) );
+    self->objPtr->addPoint( Pose(p,n,u), OSG::Vec3f(c) );
     Py_RETURN_TRUE;
 }
 

@@ -20,7 +20,7 @@ namespace xmlpp{ class Element; }
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRScript : public VRName {
+class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
     public:
         struct arg : public VRName {
             string type = "NoneType";
@@ -61,7 +61,7 @@ class VRScript : public VRName {
         };
 
     private:
-        string core;
+        string core = "\tpass";
         string head;
         string type = "Python";
         string server = "server1";
@@ -87,7 +87,8 @@ class VRScript : public VRName {
         arg* getArg(string name);
         trig* getTrig(string name);
         void on_err_link_clicked(errLink link, string s);
-        void pyTraceToConsole();
+        void pyErrPrint(string channel);
+        void printSyntaxError(PyObject *exception, PyObject *value, PyObject *tb);
         void update();
 
     public:
@@ -95,6 +96,7 @@ class VRScript : public VRName {
         virtual ~VRScript();
 
         static VRScriptPtr create(string name = "Script");
+        VRScriptPtr ptr();
 
         void clean();
 
@@ -129,7 +131,7 @@ class VRScript : public VRName {
         void changeArgType(string name, string _new);
 
         list<trig*> getTriggers();
-        void addTrigger();
+        VRScript::trig* addTrigger();
         void remTrigger(string name);
         void changeTrigger(string name, string trigger);
         void changeTrigDev(string name, string dev);

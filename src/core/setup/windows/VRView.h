@@ -42,10 +42,10 @@ class VRView : public std::enable_shared_from_this<VRView> {
         bool eyeinverted = false;
 
         //stereo decorator
-        ProjectionCameraDecoratorRecPtr PCDecoratorLeft;
-        ProjectionCameraDecoratorRecPtr PCDecoratorRight;
+        ProjectionCameraDecoratorMTRecPtr PCDecoratorLeft;
+        ProjectionCameraDecoratorMTRecPtr PCDecoratorRight;
 
-        WindowRecPtr window;
+        WindowMTRecPtr window;
         VRRenderStudioPtr renderingL;
         VRRenderStudioPtr renderingR;
 
@@ -67,12 +67,17 @@ class VRView : public std::enable_shared_from_this<VRView> {
         Pnt3f screenUpperRight;
         Pnt3f screenUpperLeft;
 
+        bool mirror = false;
+        Vec3d mirrorPos = Vec3d(0,0,0);
+        Vec3d mirrorNorm = Vec3d(0,0,1);
+        Matrix4d mirrorMatrix;
+
         //stereo viewports
-        ViewportRecPtr lView;//used also for non stereo
-        ViewportRecPtr rView;
+        ViewportMTRecPtr lView;//used also for non stereo
+        ViewportMTRecPtr rView;
         //active stereo
-        StereoBufferViewportRecPtr lView_act;
-        StereoBufferViewportRecPtr rView_act;
+        StereoBufferViewportMTRecPtr lView_act;
+        StereoBufferViewportMTRecPtr rView_act;
 
         //headtracking user
         VRObjectPtr view_root;
@@ -82,10 +87,11 @@ class VRView : public std::enable_shared_from_this<VRView> {
         string user_name;
         VRCameraPtr cam;
 
-        BackgroundRecPtr background;
-        SimpleStatisticsForegroundRecPtr stats = 0;
-        GrabForegroundRecPtr grabfg = 0;
+        BackgroundMTRecPtr background;
+        SimpleStatisticsForegroundMTRecPtr stats = 0;
+        GrabForegroundMTRecPtr grabfg = 0;
 
+        void updateMirrorMatrix();
         void setMaterial();
         void setViewports();
         void setDecorators();
@@ -112,8 +118,8 @@ class VRView : public std::enable_shared_from_this<VRView> {
         void setRoot(VRObjectPtr root, VRTransformPtr _real);
         void setUser(VRTransformPtr u);
         void setCamera(VRCameraPtr c);
-        void setBackground(BackgroundRecPtr bg);
-        void setWindow(WindowRecPtr win);
+        void setBackground(BackgroundMTRecPtr bg);
+        void setWindow(WindowMTRecPtr win);
         void setStereo(bool b);
         void setStereoEyeSeparation(float v);
         void setProjection(bool b);
@@ -146,7 +152,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         Vec4d getPosition();
         void setPosition(Vec4d pos);
 
-        ViewportRecPtr getViewport();
+        ViewportMTRecPtr getViewport();
         VRRenderStudioPtr getRenderingL();
         VRRenderStudioPtr getRenderingR();
 
@@ -154,6 +160,14 @@ class VRView : public std::enable_shared_from_this<VRView> {
         bool eyesInverted();
         void setActiveStereo(bool b);
         bool activeStereo();
+
+        void setMirror(bool b);
+        bool getMirror();
+        void setMirrorPos(Vec3d p);
+        Vec3d getMirrorPos();
+        void setMirrorNorm(Vec3d n);
+        Vec3d getMirrorNorm();
+        void updateMirror();
 
         void update();
         void reset();

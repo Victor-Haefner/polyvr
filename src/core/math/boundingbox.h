@@ -38,6 +38,8 @@ class Boundingbox {
         bool isInside(Vec3d p) const;
         bool intersectedBy(Line l);
 
+        void clamp(Vec3d& p) const;
+
         Vec3d getRandomPoint();
 };
 

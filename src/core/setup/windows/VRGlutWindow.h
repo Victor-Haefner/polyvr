@@ -10,7 +10,7 @@ using namespace std;
 
 class VRGlutWindow : public VRWindow {
     private:
-        GLUTWindowRecPtr win;
+        GLUTWindowMTRecPtr win;
         int winID;
 
     public:

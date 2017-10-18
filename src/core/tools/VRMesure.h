@@ -15,7 +15,7 @@ class VRScene;
 
 class VRMeasure : public VRAnalyticGeometry {
     private:
-        pose P1,P2,P3;
+        Pose P1,P2,P3;
 
         void update();
 
@@ -25,8 +25,8 @@ class VRMeasure : public VRAnalyticGeometry {
         static VRMeasurePtr create(string name = "measure");
         VRMeasurePtr ptr();
 
-        void setPoint(int i, posePtr p);
-        void rollPoints(posePtr p);
+        void setPoint(int i, PosePtr p);
+        void rollPoints(PosePtr p);
 };
 
 OSG_END_NAMESPACE;

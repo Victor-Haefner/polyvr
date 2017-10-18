@@ -1,5 +1,6 @@
 #include "path.h"
 #include "core/objects/VRTransform.h"
+#include "core/math/polygon.h"
 #include "core/math/equation.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
@@ -148,7 +149,7 @@ vector<double> path::computeInflectionPoints(int i, int j, float threshold, floa
 }
 
 void path::approximate(int d) {
-    auto intersect = [&](pose& p1, pose& p2) {
+    auto intersect = [&](Pose& p1, Pose& p2) {
 		Vec3d d = p2.pos() - p1.pos();
 		Vec3d n3 = p1.dir().cross(p2.dir());
 		float N3 = n3.dot(n3);
@@ -157,11 +158,11 @@ void path::approximate(int d) {
 		return p1.pos() + p1.dir()*s;
     };
 
-    auto toQuadratic = [&](int j, pose& p1, pose& p4, pose& pm, pose& p2, pose& p3) {
+    /*auto toQuadratic = [&](int j, Pose& p1, Pose& p4, Pose& pm, Pose& p2, Pose& p3) {
 
-    };
+    };*/
 
-	auto isLinear = [&](pose& p1, pose& p2) {
+	auto isLinear = [&](Pose& p1, Pose& p2) {
 		if (abs(p1.dir().dot(p2.dir())-1.0) > 1e-5) return false;
 		Vec3d d = p2.pos()-p1.pos(); d.normalize();
 		if (abs(d.dot(p1.dir())-1.0) > 1e-5) return false;
@@ -169,30 +170,30 @@ void path::approximate(int d) {
 	};
 
     if (d == 2) {
-        vector<pose> res;
+        vector<Pose> res;
 
 		for (uint j=1; j<points.size(); j++) { // p1,p2,pm,p3,p4
 			auto p1 = points[j-1];
 			auto p4 = points[j];
 			res.push_back( p1 );
 
-			if (isLinear(p1,p4)) res.push_back( pose( (p1.pos()+p4.pos())*0.5, p1.dir(), p1.up() ) );
+			if (isLinear(p1,p4)) res.push_back( Pose( (p1.pos()+p4.pos())*0.5, p1.dir(), p1.up() ) );
 			else {
                 //auto Tvec = computeInflectionPoints(j-1,j,0.01,Vec3i(1,0,1));
                 //auto Tvec = computeInflectionPoints(j-1,j,0.01);
                 auto Tvec = computeInflectionPoints(j-1,j,1e-4, 0.1);
                 if (Tvec.size() == 0) Tvec = {0.5};
 
-                vector<pose> poses;
+                vector<Pose> poses;
                 poses.push_back(p1);
                 for (auto t : Tvec) poses.push_back( *getPose(t, j-1, j, false) );
                 poses.push_back(p4);
 
-                for (int i=1; i<poses.size()-1; i++) {
+                for (uint i=1; i<poses.size()-1; i++) {
                     auto& pm = poses[i];
-                    res.push_back( pose( intersect(poses[i-1],pm) ) );
+                    res.push_back( Pose( intersect(poses[i-1],pm) ) );
                     res.push_back(pm);
-                    if (i == poses.size()-2) res.push_back( pose( intersect(poses[i+1],pm) ) );
+                    if (i == poses.size()-2) res.push_back( Pose( intersect(poses[i+1],pm) ) );
                 }
 			}
 			if (j == points.size()-1) res.push_back(p4);
@@ -206,7 +207,7 @@ void path::approximate(int d) {
     update();
 }
 
-int path::addPoint( const pose& p, Color3f c ) {
+int path::addPoint( const Pose& p, Color3f c ) {
     points.push_back(p);
     point_colors.push_back(c);
     return size() - 1;
@@ -215,22 +216,31 @@ int path::addPoint( const pose& p, Color3f c ) {
 float path::getLength(int i, int j) {
     float l = 0;
     if (j <= i) j = size()-1;
-    for (int k=i+1; k<j+1; k++) {
-        auto p1 = points[k-1].pos();
-        auto p2 = points[k].pos();
-        l += (p2-p1).length();
+    if (degree == 3) {
+        for (int k=i; k<j; k++) {
+            auto p1 = points[k].pos();
+            auto p2 = points[k+1].pos();
+            l += (p2-p1).length();
+        }
+    }
+    if (degree == 2) {
+        for (int k=i; k<j; k+=2) {
+            auto p1 = points[k].pos();
+            auto p2 = points[k+2].pos();
+            l += (p2-p1).length();
+        }
     }
     return l;
 }
 
-void path::setPoint(int i, const pose& p, Color3f c ) {
+void path::setPoint(int i, const Pose& p, Color3f c ) {
     if (i < 0 || i >= size()) return;
     points[i] = p;
     point_colors[i] = c;
 }
 
-vector<pose> path::getPoints() { return points; }
-pose& path::getPoint(int i) { return points[i]; }
+vector<Pose> path::getPoints() { return points; }
+Pose& path::getPoint(int i) { return points[i]; }
 int path::size() { return points.size(); }
 
 void path::compute(int N) {
@@ -282,8 +292,14 @@ void path::compute(int N) {
             // B'(t) = -3(1-t)^2 * p1 + 3(1-t)^2 *  h1 - 6t(1-t) *    h1 - 3t^2 * h2 + 6t(1-t) * h2 + 3t^2 * p2
             //       = (1-t^2) * (3h1-3p1) + 2t*(1-t) * (3h2-3h1) + t^2 * (3p2-3h2)
             //       = (1-t^2) * d1*L + 2t*(1-t) * (3r - d1*L - d2*L) + t^2 * d2*L
-            Vec3d n = r*3.0/L-p1.dir()-p2.dir();
-            Vec3d u = (p1.up()+p2.up())*0.5;
+            //Vec3d n = L < 1e-4 ? Vec3d() : r*3.0/L;
+            //n -= p1.dir() + p2.dir();
+            //Vec3d n = (p1.dir() - p2.dir())*L*0.25 + r*1.5;
+            Vec3d n;
+            if (L > 1e-4) n = -p1.pos()*9*0.25 + (h1+h2+p2.pos())*3*0.25;
+            else n = (p1.dir() + p2.dir())*0.5;
+            n.normalize();
+            Vec3d u = (p1.up() + p2.up())*0.5;
             u.normalize();
 
             cubicBezier    (_pts+(N-1)*i, N, p1.pos(), p2.pos(), h1, h2);
@@ -299,10 +315,10 @@ vector<Vec3d> path::getDirections() { return directions; }
 vector<Vec3d> path::getUpvectors() { return up_vectors; }
 vector<Vec3d> path::getColors() { return colors; }
 
-vector<pose> path::getPoses() {
-    vector<pose> res;
+vector<Pose> path::getPoses() {
+    vector<Pose> res;
     for (uint i=0; i<positions.size(); i++) {
-        res.push_back( pose(positions[i], directions[i], up_vectors[i]) );
+        res.push_back( Pose(positions[i], directions[i], up_vectors[i]) );
     }
     return res;
 }
@@ -359,6 +375,8 @@ Vec3d path::getPosition(float t, int i, int j, bool fast) {
 
         return p1.pos()*(1-t)*(1-t)*(1-t) + h1*3*t*(1-t)*(1-t) + h2*3*t*t*(1-t) + p2.pos()*t*t*t;
     }
+
+    return Vec3d();
 }
 
 Color3f path::getColor(float t, int i, int j) { return Vec3f(interp(colors, t, i, j)); }
@@ -391,14 +409,13 @@ void path::getOrientation(float t, Vec3d& dir, Vec3d& up, int i, int j, bool fas
     }
 }
 
-posePtr path::getPose(float t, int i, int j, bool fast) {
+PosePtr path::getPose(float t, int i, int j, bool fast) {
     Vec3d d,u; getOrientation(t,d,u,i,j,fast);
-    return pose::create(getPosition(t,i,j,fast), d, u);
+    return Pose::create(getPosition(t,i,j,fast), d, u);
 }
 
 float path::getClosestPoint(Vec3d p) {
-    auto positions = getPositions();
-    float dist = 1.0e10;
+    float dist2 = 1.0e20;
     float t_min = 0;
 
     for (uint i=1; i<positions.size(); i++){
@@ -406,38 +423,57 @@ float path::getClosestPoint(Vec3d p) {
         Vec3d p2 = positions[i];
 
         auto d = p2-p1;
-        auto L = d.length();
-        auto t = -(p1-p).dot(d)/L/L;
+        auto L2 = d.squareLength();
+        auto t = -(p1-p).dot(d)/L2;
         auto ps = p1+d*t;
         if (t<0) { ps = p1; t = 0; }
         if (t>1) { ps = p2; t = 1; }
-        float D = (ps-p).length();
-        if (dist > D) {
-            dist = D;
+        float D2 = (ps-p).squareLength();
+        if (dist2 > D2) {
+            dist2 = D2;
             t_min = (float(i-1)+t)/(positions.size()-1);
         }
     }
+
     return t_min;
 }
 
+float path::getDistanceToHull(Vec3d p) {
+    float dist2 = 1.0e20;
+
+    for (uint i=1; i<points.size(); i++){
+        Vec3d p1 = points[i-1].pos();
+        Vec3d p2 = points[i].pos();
+        auto d = p2-p1;
+        auto L2 = d.squareLength();
+        auto t = -(p1-p).dot(d)/L2;
+        auto ps = p1+d*t;
+        if (t<0) ps = p1;
+        if (t>1) ps = p2;
+        float D2 = (ps-p).squareLength();
+        if (dist2 > D2) dist2 = D2;
+    }
+
+    return sqrt(dist2);
+}
+
 float path::getDistance(Vec3d p) {
-    auto positions = getPositions();
-    float dist = 1.0e10;
+    float dist2 = 1.0e20;
 
     for (uint i=1; i<positions.size(); i++){
         Vec3d p1 = positions[i-1];
         Vec3d p2 = positions[i];
-
         auto d = p2-p1;
-        auto L = d.length();
-        auto t = -(p1-p).dot(d)/L/L;
+        auto L2 = d.squareLength();
+        auto t = -(p1-p).dot(d)/L2;
         auto ps = p1+d*t;
         if (t<0) ps = p1;
         if (t>1) ps = p2;
-        float D = (ps-p).length();
-        if (dist > D) dist = D;
+        float D2 = (ps-p).squareLength();
+        if (dist2 > D2) dist2 = D2;
     }
-    return dist;
+
+    return sqrt(dist2);
 }
 
 void path::clear() {

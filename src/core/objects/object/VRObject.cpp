@@ -152,7 +152,7 @@ vector<VRObjectPtr> VRObject::getLinks() {
 void VRObject::addLink(VRObjectPtr obj) {
     if (osg->links.count(obj.get())) return;
 
-    VisitSubTreeRecPtr visitor = VisitSubTree::create();
+    VisitSubTreeMTRecPtr visitor = VisitSubTree::create();
     visitor->setSubTreeRoot(obj->getNode()->node);
     NodeMTRecPtr visit_node = makeNodeFor(visitor);
     addChild(OSGObject::create(visit_node));

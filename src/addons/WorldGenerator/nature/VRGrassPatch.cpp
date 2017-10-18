@@ -56,10 +56,12 @@ void VRGrassPatch::initLOD() {
             lodI->setPersistency(0);
             lod->addChild(lodI);
         }
-        lod->addDistance(4);
-        lod->addDistance(6);
 
-        for (int i=0; i<3; i++) createGrass(a, i, 1-i/5.0, i/3.0, lod);
+        createGrass(a, 0, 1, 0, lod);
+        lod->addDistance(2);
+        createGrass(a, 1, 0.5, 0.5, lod);
+        lod->addDistance(4);
+        createGrass(a, 2, 0, 1, lod);
     }
 }
 
@@ -183,6 +185,7 @@ void VRGrassPatch::setupGrassStage() {
     grass->setMaterial(matGrassUnlit);
 
     texRenderer = VRTextureRenderer::create("grassRenderer");
+    texRenderer->setBackground(Color3f(0,0.8,0));
     texRenderer->setPersistency(0);
     auto cam = VRCamera::create("grassCam", false);
     auto light = VRLight::create("grassLight");

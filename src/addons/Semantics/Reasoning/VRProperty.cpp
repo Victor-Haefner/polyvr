@@ -6,9 +6,9 @@ using namespace OSG;
 
 VRProperty::VRProperty(string name, string t) {
     setStorageType("Property");
-    setNameSpace("property");
-    setSeparator('_');
-    setUniqueName(false);
+    auto ns = setNameSpace("VRProperty");
+    ns->setSeparator('_');
+    ns->setUniqueNames(false);
     setName(name);
     type = t;
 

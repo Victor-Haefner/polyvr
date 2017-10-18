@@ -147,7 +147,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                 terrain->elevatePoint(p,p[1]);
                 terrain->projectTangent(d, p);
             } else d.normalize();
-            path->addPoint( pose( p, d ) );
+            path->addPoint( Pose( p, d ) );
         };
 
         if (pos.size() < 2) return 0;
@@ -157,7 +157,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             addPnt(pos[1], d);
         }
 
-        for (int i=1; i<pos.size()-1; i++) {
+        for (uint i=1; i<pos.size()-1; i++) {
             auto& p1 = pos[i-1];
             auto& p2 = pos[i];
             auto& p3 = pos[i+1];
@@ -186,7 +186,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             }
             //d[1] = 0;
             d.normalize();
-            path->addPoint( pose( p, d ) );
+            path->addPoint( Pose( p, d ) );
         };
 
         if (pos.size() == 2) {
@@ -195,7 +195,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             addPnt(pos[1], d);
         }
 
-        for (int i=1; i<pos.size()-1; i++) {
+        for (uint i=1; i<pos.size()-1; i++) {
             auto& p1 = pos[i-1];
             auto& p2 = pos[i];
             auto& p3 = pos[i+1];
@@ -223,7 +223,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         vector<Vec3d> norms;
 
         auto getInt = [&](string tag, int def) { return way->hasTag(tag) ? toInt( way->tags[tag] ) : def; };
-        auto getFloat = [&](string tag, float def) { return way->hasTag(tag) ? toFloat( way->tags[tag] ) : def; };
+        //auto getFloat = [&](string tag, float def) { return way->hasTag(tag) ? toFloat( way->tags[tag] ) : def; };
         auto getString = [&](string tag, string def) { return way->hasTag(tag) ? way->tags[tag] : def; };
 
         auto addPathData = [&](VREntityPtr node, Vec3d pos, Vec3d norm) {
@@ -351,6 +351,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             if (tag.first == "landuse") { // TODO
                 auto patch = VRGeometry::create("patch");
                 auto poly = wayToPolygon(way);
+                if (poly->size() == 0) continue;
                 for (auto p : poly->gridSplit(1)) {
                     if (terrain) terrain->elevatePolygon(p, 0.03, false);
                     Triangulator tri;
@@ -391,7 +392,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 
             if (tag.first == "surveillance:type") {
                 if (tag.second == "camera") {
-                    assets->copy("Camera", pose::create(pos, dir), false);
+                    assets->copy("Camera", Pose::create(pos, dir), false);
                 }
             }
         }

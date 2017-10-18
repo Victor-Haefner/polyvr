@@ -150,6 +150,7 @@
 			<Add option="-lgdal" />
 			<Add option="-lgmp" />
 			<Add option="-lmpfr" />
+			<Add option="-lmtdev" />
 			<Add option="-lSDL" />
 			<Add option="-lmicrohttpd" />
 			<Add option="-lcurl" />
@@ -357,6 +358,14 @@
 		<Unit filename="src/addons/Factory/VRPyMechanism.h" />
 		<Unit filename="src/addons/Factory/VRPyNumberingEngine.h" />
 		<Unit filename="src/addons/Factory/network.h" />
+		<Unit filename="src/addons/LeapMotion/VRHandGeo.cpp" />
+		<Unit filename="src/addons/LeapMotion/VRHandGeo.h" />
+		<Unit filename="src/addons/LeapMotion/VRLeap.cpp" />
+		<Unit filename="src/addons/LeapMotion/VRLeap.h" />
+		<Unit filename="src/addons/LeapMotion/VRPyHandGeo.cpp" />
+		<Unit filename="src/addons/LeapMotion/VRPyHandGeo.h" />
+		<Unit filename="src/addons/LeapMotion/VRPyLeap.cpp" />
+		<Unit filename="src/addons/LeapMotion/VRPyLeap.h" />
 		<Unit filename="src/addons/RealWorld/Altitude.h" />
 		<Unit filename="src/addons/RealWorld/Assets/Asset.cpp" />
 		<Unit filename="src/addons/RealWorld/Assets/Asset.h" />
@@ -459,6 +468,8 @@
 		<Unit filename="src/addons/Semantics/Reasoning/VRConcept.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VREntity.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VREntity.h" />
+		<Unit filename="src/addons/Semantics/Reasoning/VROWLExport.cpp" />
+		<Unit filename="src/addons/Semantics/Reasoning/VROWLExport.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROWLImport.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROWLImport.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntology.cpp" />
@@ -566,6 +577,8 @@
 		<Unit filename="src/core/gui/VRGuiConsole.h" />
 		<Unit filename="src/core/gui/VRGuiContextMenu.cpp" />
 		<Unit filename="src/core/gui/VRGuiContextMenu.h" />
+		<Unit filename="src/core/gui/VRGuiEditor.cpp" />
+		<Unit filename="src/core/gui/VRGuiEditor.h" />
 		<Unit filename="src/core/gui/VRGuiFile.cpp" />
 		<Unit filename="src/core/gui/VRGuiFile.h" />
 		<Unit filename="src/core/gui/VRGuiFwd.h" />
@@ -656,10 +669,16 @@
 		<Unit filename="src/core/networking/VRSharedMemory.h" />
 		<Unit filename="src/core/networking/VRSocket.cpp" />
 		<Unit filename="src/core/networking/VRSocket.h" />
+		<Unit filename="src/core/networking/VRWebSocket.cpp" />
+		<Unit filename="src/core/networking/VRWebSocket.h" />
 		<Unit filename="src/core/networking/mongoose/mongoose.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/networking/mongoose/mongoose.h" />
+		<Unit filename="src/core/networking/mongoose/mongoose_67.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/networking/mongoose/mongoose_67.h" />
 		<Unit filename="src/core/objects/OSGCamera.cpp" />
 		<Unit filename="src/core/objects/OSGCamera.h" />
 		<Unit filename="src/core/objects/OSGObject.cpp" />
@@ -905,6 +924,8 @@
 		<Unit filename="src/core/scripting/VRPyMobile.h" />
 		<Unit filename="src/core/scripting/VRPyMouse.cpp" />
 		<Unit filename="src/core/scripting/VRPyMouse.h" />
+		<Unit filename="src/core/scripting/VRPyMultiTouch.cpp" />
+		<Unit filename="src/core/scripting/VRPyMultiTouch.h" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.cpp" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.h" />
 		<Unit filename="src/core/scripting/VRPyNavigator.cpp" />
@@ -1000,6 +1021,8 @@
 		<Unit filename="src/core/setup/devices/VRKeyboard.h" />
 		<Unit filename="src/core/setup/devices/VRMouse.cpp" />
 		<Unit filename="src/core/setup/devices/VRMouse.h" />
+		<Unit filename="src/core/setup/devices/VRMultiTouch.cpp" />
+		<Unit filename="src/core/setup/devices/VRMultiTouch.h" />
 		<Unit filename="src/core/setup/devices/VRServer.cpp" />
 		<Unit filename="src/core/setup/devices/VRServer.h" />
 		<Unit filename="src/core/setup/devices/VRSignal.cpp" />

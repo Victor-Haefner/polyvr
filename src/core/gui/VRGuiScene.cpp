@@ -13,14 +13,15 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "core/scene/VRSceneLoader.h"
-#include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/VRLightBeacon.h"
 #include "core/objects/VRCamera.h"
 #include "core/objects/VRGroup.h"
 #include "core/objects/VRLod.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRPrimitive.h"
 #include "core/objects/geometry/VRConstraint.h"
 #include "core/scene/VRScene.h"
@@ -141,7 +142,7 @@ void setTransform(VRTransformPtr e) {
 }
 
 void setGeometry(VRGeometryPtr g) {
-    //setExpanderSensitivity("expander11", true);
+    setExpanderSensitivity("expander11", true);
     setExpanderSensitivity("expander14", true);
     setExpanderSensitivity("expander16", true);
     VRMaterialPtr mat = g->getMaterial();
@@ -154,9 +155,7 @@ void setGeometry(VRGeometryPtr g) {
         _cs = mat->getSpecular();
         _ca = mat->getAmbient();
         lit = mat->isLit();
-    } else {
-        setLabel("label60", "NONE");
-    }
+    } else setLabel("label60", "NONE");
 
     setColorChooserColor("mat_diffuse", _cd);
     setColorChooserColor("mat_specular", _cs);
@@ -168,19 +167,11 @@ void setGeometry(VRGeometryPtr g) {
 
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("primitive_opts"));
     store->clear();
-    string file, obj;
     stringstream params;
     params << g->getReference().parameter;
 
-    setTextEntry("entry36", "");
-    setTextEntry("entry37", "");
-
     switch (g->getReference().type) {
         case VRGeometry::FILE:
-            params >> file;
-            params >> obj;
-            setTextEntry("entry36", file);
-            setTextEntry("entry37", obj);
             break;
         case VRGeometry::CODE:
             break;
@@ -196,6 +187,20 @@ void setGeometry(VRGeometryPtr g) {
                 gtk_list_store_set (store->gobj(), row.gobj(), 1, val.c_str(), -1);
             }
             break;
+    }
+
+    auto appendGeoData = [](Glib::RefPtr<Gtk::ListStore>& store, string name, int N) {
+        Gtk::ListStore::Row row = *store->append();
+        gtk_list_store_set (store->gobj(), row.gobj(), 0, name.c_str(), -1);
+        gtk_list_store_set (store->gobj(), row.gobj(), 1, N, -1);
+    };
+
+    VRGeoData data(g);
+    store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("geodata"));
+    store->clear();
+    for (int i=0; i<=8; i++) {
+        int N = data.getDataSize(i);
+        if (N) appendGeoData(store, data.getDataName(i), N);
     }
 }
 
@@ -551,7 +556,7 @@ void VRGuiScene::on_focus_clicked() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
     auto scene = VRScene::getCurrent();
-    if (scene) scene->getActiveCamera()->focus( obj );
+    if (scene) scene->getActiveCamera()->focusObject( obj );
 }
 
 void VRGuiScene::on_identity_clicked() {
@@ -1062,6 +1067,12 @@ void VRGuiScene::on_cam_far_changed() {
     string f = getTextEntry("entry7");
     obj->setFar(toFloat(f));
 }
+
+void VRGuiScene::on_change_cam_proj() {
+    if(!trigger_cbs) return;
+    VRCameraPtr obj = static_pointer_cast<VRCamera>( getSelected() );
+    obj->setType(getComboboxI("combobox23"));
+}
 // ----------------------------------------------
 
 // ------------- light -----------------------
@@ -1299,6 +1310,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     setCheckButtonCallback("checkbutton35", sigc::mem_fun(*this, &VRGuiScene::on_lod_decimate_changed) );
 
     setComboboxCallback("combobox14", sigc::mem_fun(*this, &VRGuiScene::on_change_group));
+    setComboboxCallback("combobox23", sigc::mem_fun(*this, &VRGuiScene::on_change_cam_proj));
     //setComboboxCallback("combobox19", on_change_CSG_operation);
     setComboboxCallback("combobox21", sigc::mem_fun(*this, &VRGuiScene::on_change_primitive));
     setComboboxCallback("combobox2", sigc::mem_fun(*this, &VRGuiScene::on_change_light_type) );

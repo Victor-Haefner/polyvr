@@ -75,11 +75,11 @@ Vec3d VRPlanet::fromLatLongPosition(double north, double east, bool local) {
 Vec3d VRPlanet::fromLatLongEast(double north, double east, bool local) { return fromLatLongNormal(0, east+90, local); }
 Vec3d VRPlanet::fromLatLongNorth(double north, double east, bool local) { return fromLatLongNormal(north+90, east, local); }
 
-posePtr VRPlanet::fromLatLongPose(double north, double east, bool local) {
+PosePtr VRPlanet::fromLatLongPose(double north, double east, bool local) {
     Vec3d f = fromLatLongPosition(north, east, local);
     Vec3d d = fromLatLongNorth(north, east, local);
     Vec3d u = fromLatLongNormal(north, east, local);
-    return pose::create(f,d,u);
+    return Pose::create(f,d,u);
 }
 
 Vec2d VRPlanet::fromLatLongSize(double north1, double east1, double north2, double east2) {

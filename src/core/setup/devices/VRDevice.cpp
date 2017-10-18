@@ -25,6 +25,8 @@ VRDevicePtr VRDevice::create(string type) {
 
 VRDevicePtr VRDevice::ptr() { return static_pointer_cast<VRDevice>( shared_from_this() ); }
 
+void VRDevice::setCamera(VRCameraPtr cam) {}
+
 VRSignalPtr VRDevice::signalExist(int key, int state) {
     stringstream ss;
     ss << "on_" << name << "_" << key << "_" << state;

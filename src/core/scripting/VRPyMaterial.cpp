@@ -72,10 +72,10 @@ PyObject* VRPyMaterial::setFrontBackModes(VRPyMaterial* self, PyObject* args) {
 	const char* s1 = "GL_FILL";
 	const char* s2 = "GL_FILL";
     if (! PyArg_ParseTuple(args, "s|s", &s1, &s2)) return NULL;
-    cout << "setFrontBackModes " << s1 << " " << s2 << endl;
+    //cout << "setFrontBackModes " << s1 << " " << s2 << endl;
     int m1 = toGLConst(string(s1));
     int m2 = toGLConst(string(s2));
-    cout << "setFrontBackModes " << m1 << " " << m2 << endl;
+    //cout << "setFrontBackModes " << m1 << " " << m2 << endl;
 	self->objPtr->setFrontBackModes(m1, m2);
 	Py_RETURN_TRUE;
 }

@@ -22,6 +22,7 @@ struct VRPyPath : VRPyBaseT<OSG::path> {
     static PyObject* getLength(VRPyPath* self, PyObject *args);
     static PyObject* getPose(VRPyPath* self, PyObject *args);
     static PyObject* getDistance(VRPyPath* self, PyObject *args);
+    static PyObject* getDistanceToHull(VRPyPath* self, PyObject *args);
     static PyObject* getClosestPoint(VRPyPath* self, PyObject *args);
     static PyObject* approximate(VRPyPath* self, PyObject *args);
     static PyObject* isStraight(VRPyPath* self, PyObject *args);

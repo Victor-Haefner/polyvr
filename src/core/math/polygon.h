@@ -16,7 +16,7 @@ class VRPolygon {
         bool convex = false;
         bool closed = false;
 
-        float getTurn(Vec2d p0, Vec2d p1, Vec2d p2);
+        double getTurn(Vec2d p0, Vec2d p1, Vec2d p2);
 
     public:
         VRPolygon();
@@ -43,16 +43,17 @@ class VRPolygon {
         VRPolygon getConvexHull();
         Boundingbox getBoundingBox();
         vector< VRPolygon > getConvexDecomposition();
-        vector< VRPolygonPtr > gridSplit(float G);
+        vector< VRPolygonPtr > gridSplit(double G);
 
-        float computeArea();
-        VRPolygonPtr shrink(float amount);
+        double computeArea();
+        double getDistance(Vec3d p);
+        VRPolygonPtr shrink(double amount);
         Vec3d getRandomPoint();
-        vector<Vec3d> getRandomPoints(float density = 10, float padding = 0);
+        vector<Vec3d> getRandomPoints(double density = 10, double padding = 0);
 
         vector<Vec3d> toSpace(Matrix4d m);
         bool isInside(Vec2d p);
-        bool isInside(Vec2d p, float& dist);
+        bool isInside(Vec2d p, double& dist);
         bool areInside(vector<Vec2d> pv);
 
         string toString();

@@ -5,7 +5,9 @@
 #include "core/utils/VRFunctionFwd.h"
 #include "core/setup/VRSetupFwd.h"
 #include "core/scene/VRSceneFwd.h"
+#include "core/scripting/VRScriptFwd.h"
 #include "VRGuiVectorEntry.h"
+#include "VRGuiEditor.h"
 #include <gtkmm/treeview.h>
 #include <gtkmm/treestore.h>
 
@@ -35,6 +37,8 @@ class VRGuiSetup {
         VRGuiVectorEntry shearEntry;
         VRGuiVectorEntry warpEntry;
         VRGuiVectorEntry vsizeEntry;
+        VRGuiVectorEntry mirrorPosEntry;
+        VRGuiVectorEntry mirrorNormEntry;
 
         VRGuiVectorEntry tVRPNAxisEntry;
         VRGuiVectorEntry rVRPNAxisEntry;
@@ -43,6 +47,8 @@ class VRGuiSetup {
         VRMultiWindow* mwindow;
 	    VRUpdateCbPtr updatePtr;
 	    VRDeviceCbPtr updateSetupCb;
+
+        shared_ptr<VRGuiEditor> editor;
 
         bool guard; // update guard
 
@@ -63,6 +69,7 @@ class VRGuiSetup {
         template<class T> void on_menu_add_device();
         void on_menu_add_network_node();
         void on_menu_add_network_slave();
+        void on_menu_add_script();
         void on_menu_delete();
 
         void on_toggle_display_active();
@@ -78,6 +85,7 @@ class VRGuiSetup {
         void on_toggle_view_invert();
         void on_toggle_view_active_stereo();
         void on_toggle_view_user();
+        void on_toggle_view_mirror();
         void on_change_view_user();
         void on_pos_edit();
         void on_eyesep_edit();
@@ -91,6 +99,8 @@ class VRGuiSetup {
         void on_proj_size_edit(Vec2d v);
         void on_proj_shear_edit(Vec2d v);
         void on_proj_warp_edit(Vec2d v);
+        void on_view_mirror_pos_edit(Vec3d v);
+        void on_view_mirror_norm_edit(Vec3d v);
 
         void on_vrpn_edit_port();
         void on_edit_VRPN_tracker_address();
@@ -115,6 +125,10 @@ class VRGuiSetup {
         void on_netslave_edited();
         void on_netslave_start_clicked();
 
+        void on_script_save_clicked();
+        void on_script_exec_clicked();
+        void on_script_trigger_switched();
+
         void closeAllExpander();
         void updateObjectData();
 
@@ -122,6 +136,9 @@ class VRGuiSetup {
 
     public:
         VRGuiSetup();
+
+        VRScriptPtr getSelectedScript();
+        shared_ptr<VRGuiEditor> getEditor();
 
         void updateSetupList();
         void updateSetup();

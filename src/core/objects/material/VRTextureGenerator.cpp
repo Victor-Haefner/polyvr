@@ -219,8 +219,8 @@ template<typename T>
 void VRTextureGenerator::applyPath(T* data, pathPtr p, Color4f c, float w) {
     auto poses = p->getPoses();
     for (uint i=1; i<poses.size(); i++) {
-        pose& p1 = poses[i-1];
-        pose& p2 = poses[i];
+        Pose& p1 = poses[i-1];
+        Pose& p2 = poses[i];
 
         Vec2d A1 = Vec2d(p1.pos()-p1.x()*w*0.5);
         Vec2d B1 = Vec2d(p1.pos()+p1.x()*w*0.5);
@@ -247,7 +247,7 @@ void VRTextureGenerator::applyPolygon(T* data, VRPolygonPtr p, Color4f c, float 
     for (int j=A[1]; j<B[1]; j++) {
         for (int i=A[0]; i<B[0]; i++) {
             Vec2d pos = Vec2d(float(i)/width, float(j)/height);
-            float d;
+            double d;
             if (p->isInside(pos, d)) {
                 for (int k=0; k<depth; k++) applyPixel(data, clamp(Vec3i(i,j,k)), c);
             } /*else if (d < texelSize) { // TODO: finish antialiasing feature

@@ -26,6 +26,7 @@ class VRLodLeaf : public VRTransform {
         void addLevel(float dist);
         void add(VRObjectPtr obj, int lvl);
         void set(VRObjectPtr obj, int lvl);
+        void reset();
 
         Octree* getOLeaf();
         int getLevel();
@@ -69,6 +70,9 @@ class VRNature : public VRLodTree, public VRWorldModule {
         VRMaterialPtr leafMat2;
         VRMaterialPtr grassMat;
 
+        VRThreadCbPtr worker;
+        void computeLODsThread(VRThreadWeakPtr t);
+
         void computeFirstLevel();
         void computeSecondLevel();
 
@@ -99,7 +103,7 @@ class VRNature : public VRLodTree, public VRWorldModule {
         void addScrub(VRPolygonPtr area, bool addGround = 0);
         void addGrassPatch(VRPolygonPtr area, bool updateLODs = 0, bool addGround = 0);
         void removeTree(int id);
-        void computeLODs();
+        void computeAllLODs(bool threaded = false);
         void computeLODs(VRLodLeafPtr leaf);
         void computeLODs(map<Octree*, VRLodLeafPtr>& leafs);
 

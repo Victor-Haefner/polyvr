@@ -18,6 +18,7 @@
 #include <gtkmm/window.h>
 #include <gtkmm/toolbutton.h>
 #include <gtkmm/toggletoolbutton.h>
+#include <gtkmm/radiotoolbutton.h>
 #include <gtkmm/cellrenderercombo.h>
 #include <gtkmm/notebook.h>
 #include <gtkmm/expander.h>
@@ -78,6 +79,12 @@ void setCheckButton(string cb, bool b) {
 
 void setRadioButton(string cb, bool b) {
     Gtk::RadioButton* cbut;
+    VRGuiBuilder()->get_widget(cb, cbut);
+    cbut->set_active(b);
+}
+
+void setRadioToolButton(string cb, bool b) {
+    Gtk::RadioToolButton* cbut;
     VRGuiBuilder()->get_widget(cb, cbut);
     cbut->set_active(b);
 }
@@ -143,6 +150,12 @@ void setRadioButtonCallback(string cb, sigc::slot<void> sig ) {
     rbut->signal_toggled().connect(sig);
 }
 
+void setRadioToolButtonCallback(string cb, sigc::slot<void> sig ) {
+    Gtk::RadioToolButton* rbut;
+    VRGuiBuilder()->get_widget(cb, rbut);
+    rbut->signal_toggled().connect(sig);
+}
+
 bool getCheckButtonState(string b) {
     Gtk::CheckButton* tbut;
     VRGuiBuilder()->get_widget(b, tbut);
@@ -151,6 +164,12 @@ bool getCheckButtonState(string b) {
 
 bool getRadioButtonState(string b) {
     Gtk::RadioButton* tbut;
+    VRGuiBuilder()->get_widget(b, tbut);
+    return tbut->get_active();
+}
+
+bool getRadioToolButtonState(string b) {
+    Gtk::RadioToolButton* tbut;
     VRGuiBuilder()->get_widget(b, tbut);
     return tbut->get_active();
 }
@@ -463,7 +482,7 @@ OSG::VRTexturePtr takeSnapshot() {
     Glib::RefPtr<Gdk::Image> img = Glib::wrap( gdk_drawable_get_image(src->gobj(), 0, 0, w, h) );
     Glib::RefPtr<Gdk::Pixbuf> pxb = Glib::wrap( gdk_pixbuf_get_from_image(NULL, img->gobj(), src->get_colormap()->gobj(), 0,0,0,0,w,h) );
 
-    OSG::ImageRecPtr res = OSG::Image::create();
+    OSG::ImageMTRecPtr res = OSG::Image::create();
     //Image::set(pixFormat, width, height, depth, mipmapcount, framecount, framedelay, data, type, aloc, sidecount);
     res->set(OSG::Image::OSG_RGB_PF, w, h, 1, 0, 1, 0, (const unsigned char*)pxb->get_pixels(), OSG::Image::OSG_UINT8_IMAGEDATA, true, 1);
     return OSG::VRTexture::create(res);
@@ -481,19 +500,14 @@ void saveSnapshot(string path) {
     pxb->save(path, "png");
 }
 
-void saveScene(string path) {
+void saveScene(string path, bool saveas) {
     auto scene = OSG::VRScene::getCurrent();
     if (scene == 0) return;
-    //if (path == "") path = scene->getPath();
-    path = scene->getFile();
-
-    if (scene->getFlag("write_protected")) return;
-
+    if (scene->getFlag("write_protected") && !saveas) return;
+    scene->setFlag("write_protected", false);
+    if (path == "") path = scene->getPath();
     OSG::VRSceneLoader::get()->saveScene(path);
-    //string ipath = scene->getWorkdir() + '/'+  scene->getIcon();
-    string ipath = scene->getIcon();
-    saveSnapshot(ipath);
-
+    saveSnapshot( scene->getIcon() );
     OSG::VRGuiSignals::get()->getSignal("onSaveScene")->triggerPtr<OSG::VRDevice>();
 }
 

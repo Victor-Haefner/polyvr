@@ -16,14 +16,14 @@ using namespace std;
 class VRObjectManager : public VRObject {
     public:
         struct Entry : public VRName {
-            posePtr pos;
+            PosePtr pos;
             string type;
 
             Entry(string name = "");
             ~Entry();
 
             static shared_ptr<Entry> create(string name = "");
-            void set(posePtr p, string t);
+            void set(PosePtr p, string t);
         };
 
     private:
@@ -44,7 +44,7 @@ class VRObjectManager : public VRObject {
         vector<VRTransformPtr> getCatalog();
 
         VRTransformPtr add(VRTransformPtr s); // returns duplicate, first time the object is stored as template
-        VRTransformPtr copy(string name, posePtr p, bool addToStore = true); // returns duplicate
+        VRTransformPtr copy(string name, PosePtr p, bool addToStore = true); // returns duplicate
         void rem(VRTransformPtr o);
         void clear(bool clearTemplates = true);
         void updateObject(VRTransformPtr o);

@@ -33,7 +33,7 @@ vector<string> CSGGeometry::getOperations() {
 CSGGeometry::CSGGeometry(string name) : VRGeometry(name) {
 	oct = new Octree(thresholdL);
 	type = "CSGGeometry";
-	dm->read(oldWorldTrans);
+	setMatrix(oldWorldTrans);
 	polyhedron = new CGAL::Polyhedron();
 
 	store("op", &operation);

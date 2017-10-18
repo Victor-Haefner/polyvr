@@ -26,14 +26,14 @@ class VRBackgroundBase {
         SolidBackgroundRecPtr sbg;
         TextureBackgroundRecPtr tbg;
         VRSkyPtr sky;
-        vector<ImageRecPtr> skyImgs;
+        vector<ImageMTRecPtr> skyImgs;
 
         int type;
         string path;
         string format;
         Color3f color;
 
-        TextureObjChunkRecPtr createSkyTexture();
+        TextureObjChunkMTRecPtr createSkyTexture();
         void updateSkyTextures();
         void initSky();
 
@@ -41,10 +41,10 @@ class VRBackgroundBase {
         void initImg();
 };
 
-TextureObjChunkRecPtr VRBackgroundBase::createSkyTexture() {
-    ImageRecPtr image = Image::create();
+TextureObjChunkMTRecPtr VRBackgroundBase::createSkyTexture() {
+    ImageMTRecPtr image = Image::create();
     skyImgs.push_back(image);
-    TextureObjChunkRecPtr chunk = TextureObjChunk::create();
+    TextureObjChunkMTRecPtr chunk = TextureObjChunk::create();
 
     chunk->setImage(image);
     chunk->setMinFilter( GL_LINEAR_MIPMAP_LINEAR );

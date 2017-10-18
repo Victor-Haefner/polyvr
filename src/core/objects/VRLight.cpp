@@ -185,7 +185,7 @@ void VRLight::setShadows(bool b) {
     if (!ssme) setupShadowEngines();
     shadows = b;
 
-    auto setShadowEngine = [&](OSGCorePtr l, ShadowMapEngineRecPtr e) {
+    auto setShadowEngine = [&](OSGCorePtr l, ShadowMapEngineMTRecPtr e) {
         dynamic_pointer_cast<Light>(l->core)->setLightEngine(e);
     };
 

@@ -1,7 +1,7 @@
 #ifndef VRTEXTURERENDERER_H_INCLUDED
 #define VRTEXTURERENDERER_H_INCLUDED
 
-#include <OpenSG/OSGConfig.h>
+#include <OpenSG/OSGColor.h>
 #include "core/objects/VRObjectFwd.h"
 #include "core/tools/VRToolsFwd.h"
 #include "core/objects/object/VRObject.h"
@@ -26,6 +26,7 @@ class VRTextureRenderer : public VRObject {
         static VRTextureRendererPtr create(string name = "textureRenderer");
 
         void setup(VRCameraPtr cam, int width, int height, bool alpha = false);
+        void setBackground(Color3f c);
 
         void setActive(bool b);
         VRMaterialPtr getMaterial();

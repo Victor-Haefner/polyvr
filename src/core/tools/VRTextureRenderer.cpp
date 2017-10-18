@@ -127,6 +127,14 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
 VRTextureRenderer::~VRTextureRenderer() { delete data; }
 VRTextureRendererPtr VRTextureRenderer::create(string name) { return VRTextureRendererPtr( new VRTextureRenderer(name) ); }
 
+void VRTextureRenderer::setBackground(Color3f c) {
+    SolidBackgroundMTRecPtr bg = SolidBackground::create();
+    bg->setAlpha(0);
+    bg->setColor(c);
+    mat->enableTransparency();
+    data->stage->setBackground( bg );
+}
+
 void VRTextureRenderer::setup(VRCameraPtr c, int width, int height, bool alpha) {
     cam = c;
     data->fboWidth = width;
@@ -147,24 +155,19 @@ void VRTextureRenderer::setActive(bool b) {
 }
 
 VRTexturePtr VRTextureRenderer::renderOnce() {
-    auto scene = VRScene::getCurrent();
+    //auto scene = VRScene::getCurrent();
 
     RenderActionRefPtr ract = RenderAction::create();
-    PassiveWindowRecPtr win = PassiveWindow::create();
-    ViewportRecPtr view = Viewport::create();
-    SolidBackgroundRecPtr bg = SolidBackground::create();
-    bg->setAlpha(0);
-    mat->enableTransparency();
-    data->stage->setBackground(bg);
+    PassiveWindowMTRecPtr win = PassiveWindow::create();
+    ViewportMTRecPtr view = Viewport::create();
 
     win->addPort(view);
     view->setRoot(getNode()->node);
     view->setCamera(cam->getCam()->cam);
-    view->setBackground(scene->getBackground());
+    view->setBackground(data->stage->getBackground());
     win->render(ract);
-    data->stage->setBackground(scene->getBackground());
 
-    ImageRecPtr img = Image::create();
+    ImageMTRecPtr img = Image::create();
     img->set( data->fboTexImg );
     return VRTexture::create( img );
 }

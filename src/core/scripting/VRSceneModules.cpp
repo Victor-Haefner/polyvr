@@ -24,6 +24,7 @@
 #include "VRPyConstraint.h"
 #include "VRPyHaptic.h"
 #include "VRPyMouse.h"
+#include "VRPyMultiTouch.h"
 #include "VRPyMobile.h"
 #include "VRPyBaseT.h"
 #include "VRPyMaterial.h"
@@ -92,6 +93,8 @@
 #include "addons/RealWorld/traffic/VRPyTrafficSimulation.h"
 #include "addons/SimViDekont/VRPySimViDekont.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
+#include "addons/LeapMotion/VRPyHandGeo.h"
+#include "addons/LeapMotion/VRPyLeap.h"
 
 using namespace OSG;
 
@@ -117,6 +120,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyHaptic>("Haptic", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyMobile>("Mobile", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyMouse>("Mouse", pModVR, VRPyDevice::typeRef);
+    sm->registerModule<VRPyMultiTouch>("MultiTouch", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyAnimation>("Animation", pModVR);
     sm->registerModule<VRPyPose>("Pose", pModVR);
     sm->registerModule<VRPyPath>("Path", pModVR);
@@ -189,6 +193,10 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyConcept>("Concept", pModVR);
     sm->registerModule<VRPyEntity>("Entity", pModVR);
     sm->registerModule<VRPyReasoner>("Reasoner", pModVR);
+
+    sm->registerModule<VRPyHandGeo>("HandGeo", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPyLeap>("Leap", pModVR, VRPyDevice::typeRef);
+    sm->registerModule<VRPyLeapFrame>("LeapFrame", pModVR);
 
 #ifndef _WIN32
 	sm->registerModule<VRPyCSG>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
