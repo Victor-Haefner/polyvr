@@ -85,7 +85,6 @@ void VRRain::start() {
     //setScale(0.3);
     if (scale == 0) setScale(1.3);
         else setScale(scale);
-    update();
     cout << "VRRain::startRain()\n";
 }
 

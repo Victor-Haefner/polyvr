@@ -35,6 +35,8 @@ struct VRTextureRenderer::Data {
     FrameBufferObjectRefPtr fbo;
     TextureObjChunkRefPtr   fboTex;
     ImageRefPtr             fboTexImg;
+    TextureObjChunkRefPtr   fboDTex;
+    ImageRefPtr             fboDTexImg;
     SimpleStageRefPtr stage;
 };
 OSG_END_NAMESPACE;
@@ -61,28 +63,48 @@ void VRTextureRenderer::test() {
 VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     data = new Data();
 
-    // FBO
     data->fboTex = TextureObjChunk::create();
-    TextureBufferRefPtr texBuf = TextureBuffer::create();
-    RenderBufferRefPtr depthBuf = RenderBuffer::create();
-    data->fbo = FrameBufferObject::create();
-
     data->fboTexImg = Image::create();
     data->fboTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
     data->fboTex->setImage(data->fboTexImg);
+    TextureBufferRefPtr texBuf = TextureBuffer::create();
     texBuf->setTexture(data->fboTex);
+
+    data->fboDTexImg = Image::create();
+    data->fboDTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
+    data->fboDTex = TextureObjChunk::create();
+    data->fboDTex->setImage(data->fboDTexImg);
+    data->fboDTex->setMinFilter(GL_NEAREST);
+    data->fboDTex->setMagFilter(GL_NEAREST);
+    data->fboDTex->setWrapS(GL_CLAMP_TO_EDGE);
+    data->fboDTex->setWrapT(GL_CLAMP_TO_EDGE);
+    data->fboDTex->setExternalFormat(GL_DEPTH_COMPONENT);
+    data->fboDTex->setInternalFormat(GL_DEPTH_COMPONENT32);
+    data->fboDTex->setCompareMode(GL_NONE);
+    data->fboDTex->setCompareFunc(GL_LEQUAL);
+    data->fboDTex->setDepthMode(GL_INTENSITY);
+    TextureBufferRefPtr texDBuf = TextureBuffer::create();
+    texDBuf->setTexture(data->fboDTex);
+
+    RenderBufferRefPtr depthBuf = RenderBuffer::create();
     depthBuf->setInternalFormat(GL_DEPTH_COMPONENT24);
 
+    data->fbo = FrameBufferObject::create();
     data->fbo->setColorAttachment(texBuf, 0);
-    data->fbo->setDepthAttachment(depthBuf);
+    data->fbo->setDepthAttachment(texDBuf);
+    data->fbo->editMFDrawBuffers()->push_back(GL_DEPTH_ATTACHMENT_EXT);
     data->fbo->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
     data->fbo->setWidth (data->fboWidth );
     data->fbo->setHeight(data->fboHeight);
     data->fbo->setPostProcessOnDeactivate(true);
     texBuf->setReadBack(true);
+    texDBuf->setReadBack(true);
 
     mat = VRMaterial::create("VRTextureRenderer");
-    mat->setTexture(data->fboTex);
+    mat->setTexture(data->fboTex, 0);
+    mat->setTexture(data->fboDTex, 1);
+    //mat->setShaderParameter<int>("tex0", 0); // TODO: will fail because shader not yet defined..
+    //mat->setShaderParameter<int>("tex1", 1);
 
     auto scene = VRScene::getCurrent();
 
