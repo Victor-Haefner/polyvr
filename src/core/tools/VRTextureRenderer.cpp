@@ -98,7 +98,7 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     data->fbo = FrameBufferObject::create();
     data->fbo->setColorAttachment(texBuf, 0);
     //data->fbo->setColorAttachment(texDBuf, 1);
-    data->fbo->setDepthAttachment(texDBuf); //HERE depthBuf/texDBuf
+    data->fbo->setDepthAttachment(depthBuf); //HERE depthBuf/texDBuf
     data->fbo->editMFDrawBuffers()->push_back(GL_DEPTH_ATTACHMENT_EXT);
     data->fbo->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
     data->fbo->setWidth (data->fboWidth );
