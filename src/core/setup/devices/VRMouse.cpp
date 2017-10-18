@@ -122,6 +122,11 @@ bool VRMouse::calcViewRay(VRCameraPtr cam, Line &line, float x, float y, int W, 
     Vec3f dir = at - from;
     dir.normalize();
 
+    if (cam->getType() == 1) { // hack for ortho cam, TODO: not working :(
+        from[2] = 0;
+    }
+
+    //cout << "VRMouse::calcViewRay xy " << Vec2i(x,y) << " from " << from << " at " << at << " dir " << dir << endl;
     line.setValue(from, dir);
     return true;
 }

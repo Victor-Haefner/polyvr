@@ -556,7 +556,7 @@ void VRGuiScene::on_focus_clicked() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
     auto scene = VRScene::getCurrent();
-    if (scene) scene->getActiveCamera()->focus( obj );
+    if (scene) scene->getActiveCamera()->focusObject( obj );
 }
 
 void VRGuiScene::on_identity_clicked() {
@@ -1067,6 +1067,12 @@ void VRGuiScene::on_cam_far_changed() {
     string f = getTextEntry("entry7");
     obj->setFar(toFloat(f));
 }
+
+void VRGuiScene::on_change_cam_proj() {
+    if(!trigger_cbs) return;
+    VRCameraPtr obj = static_pointer_cast<VRCamera>( getSelected() );
+    obj->setType(getComboboxI("combobox23"));
+}
 // ----------------------------------------------
 
 // ------------- light -----------------------
@@ -1304,6 +1310,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     setCheckButtonCallback("checkbutton35", sigc::mem_fun(*this, &VRGuiScene::on_lod_decimate_changed) );
 
     setComboboxCallback("combobox14", sigc::mem_fun(*this, &VRGuiScene::on_change_group));
+    setComboboxCallback("combobox23", sigc::mem_fun(*this, &VRGuiScene::on_change_cam_proj));
     //setComboboxCallback("combobox19", on_change_CSG_operation);
     setComboboxCallback("combobox21", sigc::mem_fun(*this, &VRGuiScene::on_change_primitive));
     setComboboxCallback("combobox2", sigc::mem_fun(*this, &VRGuiScene::on_change_light_type) );

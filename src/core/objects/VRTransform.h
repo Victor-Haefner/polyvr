@@ -96,10 +96,10 @@ class VRTransform : public VRObject {
         Matrix4d getRotationMatrix();
 
         void setIdentity();
-        void setFrom(Vec3d pos);
-        void setAt(Vec3d at);
-        void setUp(Vec3d up);
-        void setDir(Vec3d dir);
+        virtual void setFrom(Vec3d pos);
+        virtual void setAt(Vec3d at);
+        virtual void setUp(Vec3d up);
+        virtual void setDir(Vec3d dir);
         void setScale(float s);
         void setScale(Vec3d s);
         void setOrientation(Vec3d at, Vec3d up);

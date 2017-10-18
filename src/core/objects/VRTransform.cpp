@@ -589,8 +589,7 @@ void VRTransform::translate(Vec3d v) {
 /** translate the object by changing the from in direction of the at vector **/
 void VRTransform::zoom(float d) {
     if (isNan(d)) return;
-    _from += _dir*d;
-    _dir = _at - _from;
+    setFrom(_from + _dir*d);
     reg_change();
 }
 

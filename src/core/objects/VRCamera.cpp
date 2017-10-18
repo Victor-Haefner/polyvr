@@ -12,6 +12,7 @@
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGMultiPassMaterial.h>
 #include <OpenSG/OSGPerspectiveCamera.h>
+#include <OpenSG/OSGOrthographicCamera.h>
 #include <libxml++/nodes/element.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -27,18 +28,17 @@ VRMaterialPtr getCamGeoMat() {
 
 VRCamera::VRCamera(string name) : VRTransform(name) {
     type = "Camera";
-
-    PerspectiveCameraMTRecPtr pcam = PerspectiveCamera::create();
-    cam = OSGCamera::create( pcam );
-    pcam->setBeacon(getNode()->node);
-    setFov(osgDegree2Rad(60));
+    fov = osgDegree2Rad(60);
+    setup(false);
 
     store("accept_root", &doAcceptRoot);
     store("near", &nearClipPlaneCoeff);
     store("far", &farClipPlaneCoeff);
     store("aspect", &aspect);
     store("fov", &fov);
-    regStorageSetupFkt( VRUpdateCb::create("camera_update", boost::bind(&VRCamera::setup, this)) );
+    store("orthoSize", &orthoSize);
+    store("type", &type);
+    regStorageSetupFkt( VRUpdateCb::create("camera_update", boost::bind(&VRCamera::setup, this, true)) );
 
     // cam geo
     TransformMTRecPtr trans = Transform::create();
@@ -74,13 +74,59 @@ VRCameraPtr VRCamera::create(string name, bool reg) {
     return p;
 }
 
-void VRCamera::setup() {
-    cout << "VRCamera::setup\n";
-    PerspectiveCameraMTRecPtr pcam = dynamic_pointer_cast<PerspectiveCamera>(cam->cam);
-    pcam->setAspect(aspect);
-    pcam->setFov(fov);
-    pcam->setNear(parallaxD * nearClipPlaneCoeff);
-    pcam->setFar(parallaxD * farClipPlaneCoeff);
+void VRCamera::setType(int type) { camType = type; setup(); }
+int VRCamera::getType() { return camType; }
+
+void VRCamera::updateOrthSize() {
+    if (camType == ORTHOGRAPHIC) {
+        orthoSize = (getAt()-getFrom()).length();
+        setup();
+    }
+}
+
+void VRCamera::setMatrix(Matrix4d m) { VRTransform::setMatrix(m); updateOrthSize(); }
+void VRCamera::setAt(Vec3d m) { VRTransform::setAt(m); updateOrthSize(); }
+void VRCamera::setFrom(Vec3d m) { VRTransform::setFrom(m); updateOrthSize(); }
+
+void VRCamera::setup(bool reg) {
+    PerspectiveCameraMTRecPtr pcam;
+    OrthographicCameraMTRecPtr ocam;
+    if (cam) pcam = dynamic_pointer_cast<PerspectiveCamera>(cam->cam);
+    if (cam) ocam = dynamic_pointer_cast<OrthographicCamera>(cam->cam);
+
+    if (!pcam && camType == PERSPECTIVE) {
+        cout << " VRCamera::setup switch to perp " << reg << endl;
+        pcam = PerspectiveCamera::create();
+        cam = OSGCamera::create( pcam );
+        pcam->setBeacon(getNode()->node);
+        if (reg) VRScene::getCurrent()->setActiveCamera(getName());
+    }
+
+    if (!ocam && camType == ORTHOGRAPHIC) {
+        cout << " VRCamera::setup switch to orth " << reg << endl;
+        ocam = OrthographicCamera::create();
+        cam = OSGCamera::create( ocam );
+        ocam->setBeacon(getNode()->node);
+        if (reg) {
+            VRScene::getCurrent()->setActiveCamera(getName());
+            updateOrthSize();
+        }
+    }
+
+    if (pcam) {
+        pcam->setAspect(aspect);
+        pcam->setFov(fov);
+        pcam->setNear(parallaxD * nearClipPlaneCoeff);
+        pcam->setFar(parallaxD * farClipPlaneCoeff);
+    }
+
+    if (ocam) {
+        ocam->setAspect(aspect);
+        ocam->setVerticalSize(orthoSize);
+        ocam->setHorizontalSize(aspect*orthoSize);
+        ocam->setNear(parallaxD * nearClipPlaneCoeff);
+        ocam->setFar(parallaxD * farClipPlaneCoeff);
+    }
 }
 
 void VRCamera::activate() {
@@ -107,10 +153,12 @@ float VRCamera::getAspect() { return aspect; }
 float VRCamera::getFov() { return fov; }
 float VRCamera::getNear() { return nearClipPlaneCoeff; }
 float VRCamera::getFar() { return farClipPlaneCoeff; }
+float VRCamera::getOrthoSize() { return orthoSize; }
 void VRCamera::setAspect(float a) { aspect = a; setup(); }
 void VRCamera::setFov(float f) { fov = f; setup(); }
 void VRCamera::setNear(float a) { nearClipPlaneCoeff = a; setup(); }
 void VRCamera::setFar(float f) { farClipPlaneCoeff = f; setup(); }
+void VRCamera::setOrthoSize(float f) { orthoSize = f; setup(); }
 void VRCamera::setProjection(string p) {
     if (p == "perspective"); // TODO
     if (p == "orthographic"); // TODO
@@ -123,16 +171,14 @@ vector<string> VRCamera::getProjectionTypes() {
     return proj;
 }
 
-void VRCamera::focus(Vec3d p) {
-    setAt(p);
-}
+void VRCamera::focusPoint(Vec3d p) { setAt(p); }
 
-void VRCamera::focus(VRObjectPtr t) {
+void VRCamera::focusObject(VRObjectPtr t) {
     auto bb = t->getBoundingbox();
     Vec3d c = bb->center();
 
     Vec3d d = getDir();
-    focus(c);
+    focusPoint(c);
 
     Vec3d dp = getDir();
     if (dp.length() > 1e-4) d = dp; // only use new dir if it is valid
