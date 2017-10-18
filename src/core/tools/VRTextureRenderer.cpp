@@ -33,6 +33,7 @@ struct VRTextureRenderer::Data {
     int fboWidth = 256;
     int fboHeight = 256;
     FrameBufferObjectRefPtr fbo;
+    FrameBufferObjectRefPtr fboD;
     TextureObjChunkRefPtr   fboTex;
     ImageRefPtr             fboTexImg;
     TextureObjChunkRefPtr   fboDTex;
@@ -67,6 +68,11 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     data->fboTexImg = Image::create();
     data->fboTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
     data->fboTex->setImage(data->fboTexImg);
+    data->fboTex->setMinFilter(GL_NEAREST);
+    data->fboTex->setMagFilter(GL_NEAREST);
+    data->fboTex->setWrapS(GL_CLAMP_TO_EDGE);
+    data->fboTex->setWrapT(GL_CLAMP_TO_EDGE);
+
     TextureBufferRefPtr texBuf = TextureBuffer::create();
     texBuf->setTexture(data->fboTex);
 
@@ -79,7 +85,7 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     data->fboDTex->setWrapS(GL_CLAMP_TO_EDGE);
     data->fboDTex->setWrapT(GL_CLAMP_TO_EDGE);
     data->fboDTex->setExternalFormat(GL_DEPTH_COMPONENT);
-    data->fboDTex->setInternalFormat(GL_DEPTH_COMPONENT32);
+    data->fboDTex->setInternalFormat(GL_DEPTH_COMPONENT32); //24/32
     data->fboDTex->setCompareMode(GL_NONE);
     data->fboDTex->setCompareFunc(GL_LEQUAL);
     data->fboDTex->setDepthMode(GL_INTENSITY);
@@ -91,7 +97,8 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
 
     data->fbo = FrameBufferObject::create();
     data->fbo->setColorAttachment(texBuf, 0);
-    data->fbo->setDepthAttachment(texDBuf);
+    //data->fbo->setColorAttachment(texDBuf, 1);
+    data->fbo->setDepthAttachment(texDBuf); //HERE depthBuf/texDBuf
     data->fbo->editMFDrawBuffers()->push_back(GL_DEPTH_ATTACHMENT_EXT);
     data->fbo->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
     data->fbo->setWidth (data->fboWidth );
