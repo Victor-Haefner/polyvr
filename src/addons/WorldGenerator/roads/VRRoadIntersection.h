@@ -22,11 +22,17 @@ class VRRoadIntersection : public VRRoadBase {
             UPLINK // a road connects to a middle node of another road
         };
 
+        struct RoadFront {
+            Pose pose;
+            int dir = 1;
+            float width = 0;
+        };
+
     private:
         IntersectionTYPE type = DEFAULT;
         VREntityPtr getRoadNode(VREntityPtr roadEnt);
         vector<VRRoadPtr> roads;
-        vector<pair<Pose, float>> roadFronts;
+        vector<RoadFront> roadFronts;
         map<VRRoadPtr, vector<VREntityPtr>> inLanes; // all lanes going out of the intersection
         map<VRRoadPtr, vector<VREntityPtr>> outLanes; // all lanes going in the intersection
         vector<pair<VREntityPtr, VREntityPtr>> laneMatches; // matches of ingoing lanes with outgoing lanes

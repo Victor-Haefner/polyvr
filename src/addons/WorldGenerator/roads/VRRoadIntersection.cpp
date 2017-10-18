@@ -135,12 +135,9 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             auto& rfront = roadFronts[i];
             auto rEnt = road->getEntity();
             if (!displacements.count(rEnt)) continue;
-
             Vec3d X = displacements[rEnt];
-            road->setOffset(X.dot(rfront.first.x())); // TODO: maybe wrong?
-            //Vec3d X = rfront.first.x() * D; // displacement vector
-            //auto node = getRoadNode( rEnt );
-            //auto p = node->getVec3("position");
+            road->setOffset(X.dot(rfront.pose.x())*rfront.dir);
+
             if (inLanes.count(road)) {
                 for (auto laneIn : inLanes[road]) {
                     if (processedLanes.count(laneIn)) continue;
@@ -164,9 +161,6 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 }
             }
 
-
-            // TODO: get x, orthogonal vector to road front, and shift all lane nodes (not the road node), and add offset to road, used later for offsetting the geometry
-            // TODO: update road graph!!!
         }
 	};
 
@@ -386,9 +380,8 @@ void VRRoadIntersection::computeMarkings() {
         auto isRoadEdge = [&](const Vec3d& p1, const Vec3d& p2) {
             auto pm = (p1+p2)*0.5;
             for (auto rf : roadFronts) {
-                float L = (pm-rf.first.pos()).squareLength();
-                if (L < rf.second*rf.second*0.1) return true; // ignore road edges
-                //cout << pm << "  " << rf.first.pos() << "  " << sqrt(L) << "  " << rf.second << endl;
+                float L = (pm-rf.pose.pos()).squareLength();
+                if (L < rf.width*rf.width*0.1) return true; // ignore road edges
             }
             return false;
         };
@@ -519,7 +512,10 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
             auto n = addNode(nID, pm);
             data.entry->set("node", n->getName());
             n->add("paths", data.entry->getName());
-            roadFronts.push_back( make_pair(Pose(pm, norm), road->getWidth()) );
+
+            auto rd = data.entry->getVec3("direction");
+            RoadFront rf; rf.pose = Pose(pm, norm); rf.width = road->getWidth(); rf.dir = round(rd.dot(norm));
+            roadFronts.push_back(rf);
         }
     };
 
