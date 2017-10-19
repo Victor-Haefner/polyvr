@@ -6,6 +6,7 @@
 #include "roads/VRAsphalt.h"
 #include "roads/VRRoadNetwork.h"
 #include "roads/VRRoad.h"
+#include "roads/VRRoadIntersection.h"
 
 struct VRPyWorldGenerator : VRPyBaseT<OSG::VRWorldGenerator> {
     static PyMethodDef methods[];
@@ -16,6 +17,10 @@ struct VRPyRoadBase : VRPyBaseT<OSG::VRRoadBase> {
 };
 
 struct VRPyRoad : VRPyBaseT<OSG::VRRoad> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyRoadIntersection : VRPyBaseT<OSG::VRRoadIntersection> {
     static PyMethodDef methods[];
 };
 

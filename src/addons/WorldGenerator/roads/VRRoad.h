@@ -42,6 +42,8 @@ class VRRoad : public VRRoadBase {
         void computeMarkings();
         bool hasMarkings();
         PosePtr getRightEdge(Vec3d pos);
+
+        vector<VREntityPtr> getNextRoads();
 };
 
 OSG_END_NAMESPACE;

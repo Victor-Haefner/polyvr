@@ -207,6 +207,44 @@ void VRRoad::addParkingLane( int direction, float width, int capacity, string ty
 
 void VRRoad::setOffset(float o) { offset = o; }
 
+vector<VREntityPtr> VRRoad::getNextRoads() {
+	auto getNextPaths = [](VREntityPtr path) {
+		auto nes = path->getAllEntities("nodes");
+		auto ne = nes[nes.size()-1];
+		auto n = ne->getEntity("node");
+		auto paths = n->getAllEntities("paths");
+		vector<VREntityPtr> res;
+		for (auto e : paths) {
+            if (e->getName() == ne->getName()) continue;
+            res.push_back(e->getEntity("path"));
+		}
+		return res;
+	};
 
+	auto getAdjascendRoads = [](VREntityPtr road) {
+		vector<VREntityPtr> res;
+		for (auto i : road->getAllEntities("intersections")) {
+            for (r : i->getAllEntities("roads")) {
+                if (r->getName() == road->getName()) continue;
+                res.push_back(r);
+            }
+		}
+		return res;
+	};
+
+	auto road = entity;
+    auto path = road->getEntity("path");
+    vector<VREntityPtr> res;
+    for (auto aroad : getAdjascendRoads(road)) {
+        auto rpName = aroad->getEntity("path")->getName();
+        for (auto p1 : getNextPaths(path)) {
+            if (p1->getName() == rpName) res.push_back(aroad);
+            for (auto p2 : getNextPaths(p1)) {
+                if (p2->getName() == rpName) res.push_back(aroad);
+            }
+        }
+    }
+    return res;
+}
 
 

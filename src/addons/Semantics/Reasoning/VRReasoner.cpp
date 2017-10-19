@@ -260,8 +260,11 @@ bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
     if (statement->verb == "q") {
         if (statement->terms.size() == 0) { print("Warning: failed to apply " + statement->toString() + ", empty query!"); return false; }
         string x = statement->terms[0].var->value;
+        if (!context->vars.count(x)) return false;
         VariablePtr v = context->vars[x];
+        if (!v) return false;
         for (auto e : v->entities) {
+            if (!v->evaluations.count(e.first)) continue;
             auto& eval = v->evaluations[e.first];
             if (eval.state == Evaluation::VALID) context->results.push_back(e.second);
         }

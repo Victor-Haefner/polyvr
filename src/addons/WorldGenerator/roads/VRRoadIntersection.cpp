@@ -264,6 +264,7 @@ VREntityPtr VRRoadIntersection::getRoadNode(VREntityPtr roadEnt) {
 void VRRoadIntersection::addRoad(VRRoadPtr road) {
     roads.push_back(road);
     entity->add("roads", road->getEntity()->getName());
+    road->getEntity()->add("intersections", entity->getName());
 }
 
 VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d root) {

@@ -614,6 +614,9 @@ void VRRoadNetwork::computeMarkings() {
     for (auto intersection : intersections) intersection->computeMarkings();
 }
 
+vector<VRRoadPtr> VRRoadNetwork::getRoads() { return roads; }
+vector<VRRoadIntersectionPtr> VRRoadNetwork::getIntersections() { return intersections; }
+
 vector<VRPolygonPtr> VRRoadNetwork::computeGreenBelts() {
     cout << "VRRoadNetwork::computeGreenBelts\n";
     vector<VRPolygonPtr> areas;

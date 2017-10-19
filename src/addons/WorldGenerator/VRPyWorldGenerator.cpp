@@ -10,6 +10,7 @@
 using namespace OSG;
 
 template<> PyObject* VRPyTypeCaster::cast(const VRRoadPtr& e) { return VRPyRoad::fromSharedPtr(e); }
+template<> PyObject* VRPyTypeCaster::cast(const VRRoadIntersectionPtr& e) { return VRPyRoadIntersection::fromSharedPtr(e); }
 template<> PyObject* VRPyTypeCaster::cast(const VRRoadNetworkPtr& e) { return VRPyRoadNetwork::fromSharedPtr(e); }
 template<> PyObject* VRPyTypeCaster::cast(const VRWorldGeneratorPtr& e) { return VRPyWorldGenerator::fromSharedPtr(e); }
 template<> PyObject* VRPyTypeCaster::cast(const VRAsphaltPtr& e) { return VRPyAsphalt::fromSharedPtr(e); }
@@ -17,6 +18,7 @@ template<> PyObject* VRPyTypeCaster::cast(const VRAsphaltPtr& e) { return VRPyAs
 simpleVRPyType(WorldGenerator, New_ptr );
 simpleVRPyType(RoadBase, 0);
 simpleVRPyType(Road, New_ptr);
+simpleVRPyType(RoadIntersection, New_ptr);
 simpleVRPyType(RoadNetwork, New_ptr);
 simpleVRPyType(Asphalt, New_ptr);
 
@@ -44,6 +46,11 @@ PyMethodDef VRPyRoadBase::methods[] = {
 };
 
 PyMethodDef VRPyRoad::methods[] = {
+    {"getNextRoads", PyWrap( Road, getNextRoads, "Get the next roads", vector<VREntityPtr> ) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyRoadIntersection::methods[] = {
     {NULL}  /* Sentinel */
 };
 
@@ -73,6 +80,8 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"updateAsphaltTexture", PyWrap( RoadNetwork, updateAsphaltTexture, "Update markings and tracks on asphalt texture", void ) },
     {"computeGreenBelts", PyWrap( RoadNetwork, computeGreenBelts, "Compute green belt areas", vector<VRPolygonPtr> ) },
     {"clear", PyWrap( RoadNetwork, clear, "Clear all data", void ) },
+    {"getRoads", PyWrap( RoadNetwork, getRoads, "Return all roads", vector<VRRoadPtr> ) },
+    {"getIntersections", PyWrap( RoadNetwork, getIntersections, "Return all intersections", vector<VRRoadIntersectionPtr> ) },
     {NULL}  /* Sentinel */
 };
 
