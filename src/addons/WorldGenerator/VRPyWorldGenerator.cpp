@@ -46,7 +46,6 @@ PyMethodDef VRPyRoadBase::methods[] = {
 };
 
 PyMethodDef VRPyRoad::methods[] = {
-    {"getNextRoads", PyWrap( Road, getNextRoads, "Get the next roads", vector<VREntityPtr> ) },
     {NULL}  /* Sentinel */
 };
 
@@ -82,6 +81,8 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"clear", PyWrap( RoadNetwork, clear, "Clear all data", void ) },
     {"getRoads", PyWrap( RoadNetwork, getRoads, "Return all roads", vector<VRRoadPtr> ) },
     {"getIntersections", PyWrap( RoadNetwork, getIntersections, "Return all intersections", vector<VRRoadIntersectionPtr> ) },
+    {"getPreviousRoads", PyWrap( RoadNetwork, getPreviousRoads, "Get the previous roads", vector<VREntityPtr>, VREntityPtr ) },
+    {"getNextRoads", PyWrap( RoadNetwork, getNextRoads, "Get the next roads", vector<VREntityPtr>, VREntityPtr ) },
     {NULL}  /* Sentinel */
 };
 

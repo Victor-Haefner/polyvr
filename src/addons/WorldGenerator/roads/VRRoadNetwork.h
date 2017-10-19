@@ -59,6 +59,8 @@ class VRRoadNetwork : public VRRoadBase {
 
         vector<VRRoadPtr> getRoads();
         vector<VRRoadIntersectionPtr> getIntersections();
+        vector<VREntityPtr> getPreviousRoads(VREntityPtr road);
+        vector<VREntityPtr> getNextRoads(VREntityPtr road);
 
         VREntityPtr addGreenBelt( VREntityPtr road, float width );
         VREntityPtr addNode( Vec3d pos, bool elevate = false, float elevationOffset = 0 );

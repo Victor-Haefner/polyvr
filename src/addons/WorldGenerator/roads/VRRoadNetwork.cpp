@@ -662,6 +662,82 @@ void VRRoadNetwork::compute() {
     physicalizeAssets();
 }
 
+vector<VREntityPtr> VRRoadNetwork::getPreviousRoads(VREntityPtr road) {
+	auto getPreviousPaths = [](VREntityPtr path) {
+		auto nes = path->getAllEntities("nodes");
+		auto ne = nes[0];
+		auto n = ne->getEntity("node");
+		auto paths = n->getAllEntities("paths");
+		vector<VREntityPtr> res;
+		for (auto e : paths) {
+            if (e->getName() == ne->getName()) continue;
+            res.push_back(e->getEntity("path"));
+		}
+		return res;
+	};
 
+	auto getAdjascendRoads = [](VREntityPtr road) {
+		vector<VREntityPtr> res;
+		for (auto i : road->getAllEntities("intersections")) {
+            for (auto r : i->getAllEntities("roads")) {
+                if (r->getName() == road->getName()) continue;
+                res.push_back(r);
+            }
+		}
+		return res;
+	};
+
+    auto path = road->getEntity("path");
+    vector<VREntityPtr> res;
+    for (auto aroad : getAdjascendRoads(road)) {
+        auto rpName = aroad->getEntity("path")->getName();
+        for (auto p1 : getPreviousPaths(path)) {
+            if (p1->getName() == rpName) res.push_back(aroad);
+            for (auto p2 : getPreviousPaths(p1)) {
+                if (p2->getName() == rpName) res.push_back(aroad);
+            }
+        }
+    }
+    return res;
+}
+
+vector<VREntityPtr> VRRoadNetwork::getNextRoads(VREntityPtr road) {
+	auto getNextPaths = [](VREntityPtr path) {
+		auto nes = path->getAllEntities("nodes");
+		auto ne = nes[nes.size()-1];
+		auto n = ne->getEntity("node");
+		auto paths = n->getAllEntities("paths");
+		vector<VREntityPtr> res;
+		for (auto e : paths) {
+            if (e->getName() == ne->getName()) continue;
+            res.push_back(e->getEntity("path"));
+		}
+		return res;
+	};
+
+	auto getAdjascendRoads = [](VREntityPtr road) {
+		vector<VREntityPtr> res;
+		for (auto i : road->getAllEntities("intersections")) {
+            for (auto r : i->getAllEntities("roads")) {
+                if (r->getName() == road->getName()) continue;
+                res.push_back(r);
+            }
+		}
+		return res;
+	};
+
+    auto path = road->getEntity("path");
+    vector<VREntityPtr> res;
+    for (auto aroad : getAdjascendRoads(road)) {
+        auto rpName = aroad->getEntity("path")->getName();
+        for (auto p1 : getNextPaths(path)) {
+            if (p1->getName() == rpName) res.push_back(aroad);
+            for (auto p2 : getNextPaths(p1)) {
+                if (p2->getName() == rpName) res.push_back(aroad);
+            }
+        }
+    }
+    return res;
+}
 
 
