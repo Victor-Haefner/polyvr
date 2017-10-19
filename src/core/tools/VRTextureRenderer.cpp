@@ -33,7 +33,6 @@ struct VRTextureRenderer::Data {
     int fboWidth = 256;
     int fboHeight = 256;
     FrameBufferObjectRefPtr fbo;
-    FrameBufferObjectRefPtr fboD;
     TextureObjChunkRefPtr   fboTex;
     ImageRefPtr             fboTexImg;
     TextureObjChunkRefPtr   fboDTex;
@@ -85,7 +84,7 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     data->fboDTex->setWrapS(GL_CLAMP_TO_EDGE);
     data->fboDTex->setWrapT(GL_CLAMP_TO_EDGE);
     data->fboDTex->setExternalFormat(GL_DEPTH_COMPONENT);
-    data->fboDTex->setInternalFormat(GL_DEPTH_COMPONENT32); //24/32
+    data->fboDTex->setInternalFormat(GL_DEPTH_COMPONENT24); //24/32
     data->fboDTex->setCompareMode(GL_NONE);
     data->fboDTex->setCompareFunc(GL_LEQUAL);
     data->fboDTex->setDepthMode(GL_INTENSITY);
@@ -98,12 +97,13 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     data->fbo = FrameBufferObject::create();
     data->fbo->setColorAttachment(texBuf, 0);
     //data->fbo->setColorAttachment(texDBuf, 1);
-    data->fbo->setDepthAttachment(depthBuf); //HERE depthBuf/texDBuf
+    data->fbo->setDepthAttachment(texDBuf); //HERE depthBuf/texDBuf
     data->fbo->editMFDrawBuffers()->push_back(GL_DEPTH_ATTACHMENT_EXT);
     data->fbo->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
     data->fbo->setWidth (data->fboWidth );
     data->fbo->setHeight(data->fboHeight);
     data->fbo->setPostProcessOnDeactivate(true);
+
     texBuf->setReadBack(true);
     texDBuf->setReadBack(true);
 
@@ -141,8 +141,14 @@ void VRTextureRenderer::setup(VRCameraPtr c, int width, int height, bool alpha) 
     data->fboHeight = height;
     data->fbo->setWidth (data->fboWidth );
     data->fbo->setHeight(data->fboHeight);
-    if (alpha) data->fboTexImg->set(Image::OSG_RGBA_PF, data->fboWidth, data->fboHeight);
-    else data->fboTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
+    if (alpha) {
+        data->fboTexImg->set(Image::OSG_RGBA_PF, data->fboWidth, data->fboHeight);
+        data->fboDTexImg->set(Image::OSG_RGBA_PF, data->fboWidth, data->fboHeight);
+    }
+    else {
+        data->fboTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
+        data->fboDTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
+    }
     data->stage->setCamera(cam->getCam()->cam);
 }
 
