@@ -169,3 +169,5 @@ void VRRobotArm::toggleGrab() { setGrab(1-grab); }
 
 void VRRobotArm::setPath(pathPtr p) { robotPath = p; }
 pathPtr VRRobotArm::getPath() { return robotPath; }
+
+bool VRRobotArm::isMoving(){return anim->isActive(); }
