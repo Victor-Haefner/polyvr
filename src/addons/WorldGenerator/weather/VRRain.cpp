@@ -31,6 +31,7 @@ VRRain::VRRain() : VRGeometry("Rain") {
 	density = 0;
 	mat->setShaderParameter<float>("rainOffset", offset);
 	mat->setShaderParameter<float>("rainDensity", density);
+	mat->setShaderParameter<float>("camH", camH);
 	mat->enableTransparency();
 
     setVolumeCheck(false, true);
@@ -125,6 +126,13 @@ void VRRain::setScale( double scale ){
         density = 0.2 * 10/scale;
         mat->setShaderParameter<float>("rainDensity", density);
     }
+}
+
+void VRRain::setDepthMat(VRMaterialPtr matmat){
+    this->mat = matmat;
+    mat->readVertexShader(vScript);
+    mat->readFragmentShader(fScript);
+    //mat->setShaderParameter
 }
 
 

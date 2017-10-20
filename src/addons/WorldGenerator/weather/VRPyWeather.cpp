@@ -13,6 +13,7 @@ PyMethodDef VRPyRain::methods[] = {
     {"start", PyWrap(Rain, start, "Starts Rain", void) },
     {"stop", PyWrap(Rain, stop, "Stops Rain", void) },
     {"setScale", PyWrap(Rain, setScale, "Sets Scale", void, double) },
+    {"setDepthMat", PyWrap(Rain, setDepthMat, "setDepthMat", void, VRMaterialPtr) },
     {"get", PyWrap(Rain, get, "Gets Rain Parameters", Vec2d ) },
     {"overrideParameters", PyWrap(Rain, overrideParameters, "override Parameters \n overrideParameters(density, durationTransition, color, light) \n", void, double, double, double, double ) },
     {"updateRain", PyWrap(Rain, updateRain, "update rain", void, float ) },

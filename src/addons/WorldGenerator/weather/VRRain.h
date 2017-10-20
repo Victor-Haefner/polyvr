@@ -29,10 +29,12 @@ class VRRain : public VRGeometry { //: public VRParticles {
         VRUpdateCbPtr updatePtr;
         VRUpdateCbPtr updatecamPtr;
         VRMaterialPtr mat;
+        VRMaterialPtr matTex;
         string vScript;
         string fScript;
         float density = 0;
         float offset = 0;
+        float camH = 40;
         //VRCamera texcam = VRCamera("texcam");
         // time and location
         double lastTime = 0;
@@ -82,6 +84,7 @@ class VRRain : public VRGeometry { //: public VRParticles {
         void updateRain(float dt);
 
         void setScale( double scale );
+        void setDepthMat(VRMaterialPtr matmat);
         Vec2d get();
 
         void start();

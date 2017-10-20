@@ -13,6 +13,11 @@ uniform vec2 OSGViewportSize;
 uniform float rainOffset;
 uniform float rainDensity;
 
+uniform sampler2D tex0;
+uniform sampler2D tex1;
+
+uniform float camH;
+
 float theta;
 
 void computeDirection() {
@@ -35,6 +40,21 @@ float hash(vec2 co){
 float gettheta(vec3 d){
 	//return acos(d.y/length(d));
 	return acos(d.y);
+}
+
+float getThetaReal(float D){ 				//-----ANGLE between z-axis and obstruction, which blocks rain-----
+	float phi = atan(fragDir.x,fragDir.z);
+	vec2 texPos = vec2(0.5-sin(phi)*D,0.5+cos(phi)*D);	//texture positions
+	vec4 texC = texture2D(tex1,texPos); 			//RGB value of pixel
+	float disCam = texC.r * (512-0.1);			//distance to cam above	
+	float thetaReal = atan(D,camH-disCam);
+	//return thetaReal;
+	
+	vec2 test = vec2(0.5,0.5);
+	texC = texture2D(tex1,texPos);
+	disCam = texC.r * (512-0.1);
+	if (disCam <= 40) return 0;
+	else return 100;
 }
 
 float getdropsize(in float theta,float distance){
@@ -70,8 +90,8 @@ bool isD(float D) {
 vec3 checkrad() {
 	//might as well incorporate into main()
 	if (atan( fragDir.x, fragDir.z)*180/M_PI<1 && atan( fragDir.x, fragDir.z)*180/M_PI>-1 && gettheta(fragDir)>M_PI/2) return vec3(1,1,1); 
-	if (isD(1) || isD(2) || isD(3) ||isD(5) || isD(8)) return vec3(0,0,0.8);
-	//if (isD(8)) return vec3(0,0,0.8);
+	//if (isD(1) || isD(2) || isD(3) ||isD(5) || isD(8)) return vec3(0,0,0.8);
+	if (isD(2)&&getThetaReal(2)>gettheta(fragDir)) return vec3(0,0,0.8);
 	//if (isD(20)) return vec3(0.5,0.5,0.7);
 	else discard;
 }
