@@ -292,12 +292,12 @@ void path::compute(int N) {
             // B'(t) = -3(1-t)^2 * p1 + 3(1-t)^2 *  h1 - 6t(1-t) *    h1 - 3t^2 * h2 + 6t(1-t) * h2 + 3t^2 * p2
             //       = (1-t^2) * (3h1-3p1) + 2t*(1-t) * (3h2-3h1) + t^2 * (3p2-3h2)
             //       = (1-t^2) * d1*L + 2t*(1-t) * (3r - d1*L - d2*L) + t^2 * d2*L
-            //Vec3d n = L < 1e-4 ? Vec3d() : r*3.0/L;
-            //n -= p1.dir() + p2.dir();
+            Vec3d n = L < 1e-4 ? Vec3d() : r*3.0/L;
+            n -= p1.dir() + p2.dir();
             //Vec3d n = (p1.dir() - p2.dir())*L*0.25 + r*1.5;
-            Vec3d n;
-            if (L > 1e-4) n = -p1.pos()*9*0.25 + (h1+h2+p2.pos())*3*0.25;
-            else n = (p1.dir() + p2.dir())*0.5;
+            //Vec3d n;
+            //if (L > 1e-4) n = -p1.pos()*9*0.25 + (h1+h2+p2.pos())*3*0.25;
+            //else n = (p1.dir() + p2.dir())*0.5;
             n.normalize();
             Vec3d u = (p1.up() + p2.up())*0.5;
             u.normalize();

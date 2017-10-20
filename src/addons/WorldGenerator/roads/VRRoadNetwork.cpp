@@ -546,6 +546,7 @@ void VRRoadNetwork::computeTracksLanes(VREntityPtr way) {
 
     for (auto lane : way->getAllEntities("lanes")) {
         if (!lane->is_a("Lane")) continue;
+        if (lane->is_a("ParkingLane")) continue;
         if (lane->getValue<bool>("pedestrian", false)) continue;
         for (auto pathEnt : lane->getAllEntities("path")) {
             auto path = toPath(pathEnt, 2);
