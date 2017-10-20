@@ -155,6 +155,7 @@ void path::approximate(int d) {
 		float N3 = n3.dot(n3);
 		if (N3 == 0) N3 = 1.0;
 		float s = d.cross(p2.dir()).dot(n3)/N3;
+		if (s <= 0) return (p1.pos() + p2.pos())*0.5;
 		return p1.pos() + p1.dir()*s;
     };
 
@@ -177,12 +178,19 @@ void path::approximate(int d) {
 			auto p4 = points[j];
 			res.push_back( p1 );
 
-			if (isLinear(p1,p4)) res.push_back( Pose( (p1.pos()+p4.pos())*0.5, p1.dir(), p1.up() ) );
+			/*if (isLinear(p1,p4)) res.push_back( Pose( (p1.pos()+p4.pos())*0.5, p1.dir(), p1.up() ) );
 			else {
                 //auto Tvec = computeInflectionPoints(j-1,j,0.01,Vec3i(1,0,1));
                 //auto Tvec = computeInflectionPoints(j-1,j,0.01);
-                auto Tvec = computeInflectionPoints(j-1,j,1e-4, 0.1);
+                //auto Tvec = computeInflectionPoints(j-1,j,1e-6, 0.01);
+                //auto Tvec = computeInflectionPoints(j-1,j,1e-4, 0.1, Vec3i(1,0,1));
+                auto Tvec = computeInflectionPoints(j-1,j,1e-6,1e-6);
                 if (Tvec.size() == 0) Tvec = {0.5};
+                else {
+                    cout << " Tvec: ";
+                    for (auto t : Tvec) cout << t << " ";
+                    cout << endl;
+                }
 
                 vector<Pose> poses;
                 poses.push_back(p1);
@@ -196,6 +204,30 @@ void path::approximate(int d) {
                     if (i == poses.size()-2) res.push_back( Pose( intersect(poses[i+1],pm) ) );
                 }
 			}
+			if (j == points.size()-1) res.push_back(p4);*/
+
+			// compute all inflection points and store in poses!
+            //auto Tvec = computeInflectionPoints(j-1,j,1e-6,1e-6);
+            auto Tvec = computeInflectionPoints(j-1,j,0.1,0.1);
+            if (Tvec.size() == 0) Tvec = {0.5};
+            vector<Pose> poses;
+            poses.push_back(p1);
+            for (auto t : Tvec) poses.push_back( *getPose(t, j-1, j, false) );
+            poses.push_back(p4);
+
+            for (uint i=1; i<poses.size()-1; i++) {
+                auto& p0 = poses[i-1];
+                auto& pm = poses[i];
+                if (isLinear(p0,pm)) res.push_back( Pose( (p0.pos()+pm.pos())*0.5, pm.dir(), pm.up() ) );
+                else res.push_back( Pose( intersect(p0,pm) ) );
+                res.push_back(pm);
+                if (i == poses.size()-2) {
+                    auto& p2 = poses[i+1];
+                    if (isLinear(pm,p2)) res.push_back( Pose( (pm.pos()+p2.pos())*0.5, pm.dir(), pm.up() ) );
+                    else res.push_back( Pose( intersect(pm,p2) ) );
+                }
+            }
+
 			if (j == points.size()-1) res.push_back(p4);
 		}
 
