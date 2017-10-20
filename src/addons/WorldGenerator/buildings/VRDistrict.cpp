@@ -2,6 +2,7 @@
 
 #include "VRBuilding.h"
 #include "addons/WorldGenerator/GIS/OSMMap.h"
+#include "addons/Semantics/Reasoning/VROntology.h"
 #include "core/objects/material/VRShader.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRPhysics.h"
@@ -36,6 +37,8 @@ void VRDistrict::init() {
         b_mat->setMagMinFilter(GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST, 0);
     }
 
+    if (facades) facades->destroy();
+    if (roofs) roofs->destroy();
     facades = VRGeometry::create("facades");
     roofs = VRGeometry::create("roofs");
     addChild(facades);
@@ -44,29 +47,66 @@ void VRDistrict::init() {
     roofs->setMaterial(b_mat);
 }
 
-void VRDistrict::addBuilding( VRPolygon p, int stories ) {
+void VRDistrict::addBuilding( VRPolygon p, int stories, string housenumber, string street ) {
     if (p.size() < 3) return;
-
     if (p.isCCW()) p.reverseOrder();
-
     auto b = VRBuilding::create();
+    string ID = street+housenumber;
+    if (ID == "" || buildings.count(ID)) {
+        static int i = 0; i++;
+        ID = "__placeholder__"+toString(i);
+    }
+    buildings[ID] = b;
     b->setWorld(world);
 
-    auto walls = b->addFoundation(p, 4);
-    facades->merge(walls);
+    b->addFoundation(p, 4);
+    for (auto i=0; i<stories; i++) b->addFloor(p, 4);
+    b->addRoof(p);
+    b->computeGeometry(facades, roofs);
 
-    for (auto i=0; i<stories; i++) {
-        auto walls = b->addFloor(p, 4);
-        facades->merge(walls);
+    auto bEnt = ontology->addEntity("building", "Building");
+    bEnt->set("streetName", street);
+    bEnt->set("houseNumber", housenumber);
+
+    auto toStringVector = [](const Vec3d& v) {
+        vector<string> res;
+        res.push_back( toString(v[0]) );
+        res.push_back( toString(v[1]) );
+        res.push_back( toString(v[2]) );
+        return res;
+    };
+
+    auto area = ontology->addEntity("area", "Area");
+    auto perimeter = ontology->addEntity("perimeter", "Path");
+    for (auto pnt : p.get()) {
+        auto node = ontology->addEntity("node", "Node");
+        node->setVector("position", toStringVector(Vec3d(pnt[0],0,pnt[1])), "Position");
+		auto nodeEntry = ontology->addEntity(name+"Entry", "NodeEntry");
+		nodeEntry->set("path", perimeter->getName());
+		nodeEntry->set("node", node->getName());
+		nodeEntry->set("sign", "0");
+		nodeEntry->setVector("direction", toStringVector(Vec3d()), "Direction");
+		node->add("paths", nodeEntry->getName());
+		perimeter->add("nodes", nodeEntry->getName());
     }
+    area->set("borders", perimeter->getName());
+    bEnt->set("area", area->getName());
+}
 
-    auto roof = b->addRoof(p);
-    roofs->merge(roof);
+void VRDistrict::computeGeometry() {
+    init();
+    for (auto b : buildings) b.second->computeGeometry(facades, roofs);
+}
+
+void VRDistrict::remBuilding( string street, string housenumber ) {
+    string ID = street+housenumber;
+    if (!buildings.count(ID)) cout << "VRDistrict::remBuilding, Warning: building unknown with address '" << street << " " << housenumber << "'\n";
+    buildings.erase(ID);
+    computeGeometry();
 }
 
 void VRDistrict::clear() {
-    facades->destroy();
-    roofs->destroy();
+    buildings.clear();
     init();
 }
 

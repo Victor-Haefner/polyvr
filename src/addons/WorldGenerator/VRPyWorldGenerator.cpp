@@ -12,6 +12,7 @@ using namespace OSG;
 template<> PyObject* VRPyTypeCaster::cast(const VRRoadPtr& e) { return VRPyRoad::fromSharedPtr(e); }
 template<> PyObject* VRPyTypeCaster::cast(const VRRoadIntersectionPtr& e) { return VRPyRoadIntersection::fromSharedPtr(e); }
 template<> PyObject* VRPyTypeCaster::cast(const VRRoadNetworkPtr& e) { return VRPyRoadNetwork::fromSharedPtr(e); }
+template<> PyObject* VRPyTypeCaster::cast(const VRDistrictPtr& e) { return VRPyDistrict::fromSharedPtr(e); }
 template<> PyObject* VRPyTypeCaster::cast(const VRWorldGeneratorPtr& e) { return VRPyWorldGenerator::fromSharedPtr(e); }
 template<> PyObject* VRPyTypeCaster::cast(const VRAsphaltPtr& e) { return VRPyAsphalt::fromSharedPtr(e); }
 
@@ -20,6 +21,7 @@ simpleVRPyType(RoadBase, 0);
 simpleVRPyType(Road, New_ptr);
 simpleVRPyType(RoadIntersection, New_ptr);
 simpleVRPyType(RoadNetwork, New_ptr);
+simpleVRPyType(District, New_ptr);
 simpleVRPyType(Asphalt, New_ptr);
 
 PyMethodDef VRPyWorldGenerator::methods[] = {
@@ -28,6 +30,7 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"getRoadNetwork", PyWrap( WorldGenerator, getRoadNetwork, "Access road network", VRRoadNetworkPtr ) },
     {"getNature", PyWrap( WorldGenerator, getNature, "Access nature module", VRNaturePtr ) },
     {"getTerrain", PyWrap( WorldGenerator, getTerrain, "Access the terrain", VRTerrainPtr ) },
+    {"getDistrict", PyWrap( WorldGenerator, getDistrict, "Access the district module", VRDistrictPtr ) },
     {"setOntology", PyWrap( WorldGenerator, setOntology, "Set ontology", void, VROntologyPtr ) },
     {"addMaterial", PyWrap( WorldGenerator, addMaterial, "Add a named material", void, string, VRMaterialPtr ) },
     {"getMaterial", PyWrap( WorldGenerator, getMaterial, "Get a material by name", VRMaterialPtr, string ) },
@@ -50,6 +53,11 @@ PyMethodDef VRPyRoad::methods[] = {
 };
 
 PyMethodDef VRPyRoadIntersection::methods[] = {
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyDistrict::methods[] = {
+    {"remBuilding", PyWrap( District, remBuilding, "Remove a building by address", void, string, string ) },
     {NULL}  /* Sentinel */
 };
 

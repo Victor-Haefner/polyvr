@@ -87,6 +87,9 @@ void GISWorld::setupOntology() {
     RoadMarking->addProperty("style", "string");
     RoadMarking->addProperty("dashLength", "float");
     RoadTrack->addProperty("width", "float");
+    Building->addProperty("houseNumber", "string");
+    Building->addProperty("streetName", "string");
+    Building->addProperty("area", "Area");
 
     auto Plant = world->addConcept("Plant");
     auto Tree = world->addConcept("Tree", "Plant");

@@ -222,6 +222,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyRoad>("Road", pModWorldGenerator, VRPyRoadBase::typeRef, "WorldGenerator");
     sm->registerModule<VRPyRoadIntersection>("RoadIntersection", pModWorldGenerator, VRPyRoadBase::typeRef, "WorldGenerator");
     sm->registerModule<VRPyRoadNetwork>("RoadNetwork", pModWorldGenerator, VRPyRoadBase::typeRef, "WorldGenerator");
+    sm->registerModule<VRPyDistrict>("District", pModWorldGenerator, 0, "WorldGenerator");
     PyModule_AddObject(pModVR, "WorldGenerator", pModWorldGenerator);
 
     PyObject* pModFactory = Py_InitModule3("Factory", VRSceneGlobals::methods, "VR factory module");

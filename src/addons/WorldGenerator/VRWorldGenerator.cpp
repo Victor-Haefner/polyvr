@@ -37,6 +37,7 @@ void VRWorldGenerator::setOntology(VROntologyPtr o) {
     terrain->setWorld( ptr() );
     roads->setWorld( ptr() );
     nature->setWorld( ptr() );
+    district->setWorld( ptr() );
 }
 
 void VRWorldGenerator::setPlanet(VRPlanetPtr p, Vec2d c) {
@@ -45,6 +46,7 @@ void VRWorldGenerator::setPlanet(VRPlanetPtr p, Vec2d c) {
     terrain->setWorld( ptr() );
     roads->setWorld( ptr() );
     nature->setWorld( ptr() );
+    district->setWorld( ptr() );
 }
 
 VROntologyPtr VRWorldGenerator::getOntology() { return ontology; }
@@ -53,6 +55,7 @@ VRObjectManagerPtr VRWorldGenerator::getAssetManager() { return assets; }
 VRTerrainPtr VRWorldGenerator::getTerrain() { return terrain; }
 VRNaturePtr VRWorldGenerator::getNature() { return nature; }
 VRPlanetPtr VRWorldGenerator::getPlanet() { return planet; }
+VRDistrictPtr VRWorldGenerator::getDistrict() { return district; }
 
 void VRWorldGenerator::addMaterial( string name, VRMaterialPtr mat ) { materials[name] = mat; }
 void VRWorldGenerator::addAsset( string name, VRTransformPtr geo ) {
@@ -281,8 +284,12 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 
     auto addBuilding = [&](OSMWayPtr& way) {
         int lvls = 4;
+        string housenumber = "";
+        string street = "";
         if (way->hasTag("building:levels")) lvls = toInt( way->tags["building:levels"] );
-        district->addBuilding( *wayToPolygon(way), lvls );
+        if (way->hasTag("addr:housenumber")) housenumber = way->tags["addr:housenumber"];
+        if (way->hasTag("addr:street")) street = way->tags["addr:street"];
+        district->addBuilding( *wayToPolygon(way), lvls, housenumber, street );
     };
 
     auto nodeInSubarea = [&](OSMNodePtr node) {
