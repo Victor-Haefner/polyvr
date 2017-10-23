@@ -10,8 +10,6 @@ in vec4 osg_Vertex;
 in vec3 osg_Normal;
 in vec2 osg_MultiTexCoord0;
 
-uniform int c1; // test input
-
 void main() {
 	miN = transpose(gl_NormalMatrix);
 	miP = inverse(gl_ProjectionMatrix);

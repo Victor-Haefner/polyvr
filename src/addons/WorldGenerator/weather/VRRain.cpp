@@ -129,7 +129,7 @@ void VRRain::setScale( double scale ){
 }
 
 void VRRain::setDepthMat(VRMaterialPtr matmat){
-    this->mat = matmat;
+    //this->mat = matmat;
     mat->readVertexShader(vScript);
     mat->readFragmentShader(fScript);
     //mat->setShaderParameter
