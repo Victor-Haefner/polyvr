@@ -36,14 +36,14 @@ void VRRobotArm::setLengths(vector<float> lengths) { this->lengths = lengths; }
 vector<float> VRRobotArm::getAngles() { return angles; }
 
 void VRRobotArm::applyAngles() {
-    cout << "applyAngles";
+    //cout << "applyAngles";
     for (int i=0; i<N; i++) {
         Vec3d euler;
         euler[axis[i]] = angle_directions[i]*angles[i] + angle_offsets[i]*Pi;
-        cout << " " << euler[axis[i]];
+        //cout << " " << euler[axis[i]];
         parts[i]->setEuler(euler);
     }
-    cout << endl;
+    //cout << endl;
 }
 
 float clamp(float f) { return f<-1 ? -1 : f>1 ? 1 : f; }
@@ -132,7 +132,7 @@ PosePtr VRRobotArm::getPose() {
     Vec3d p( L*cos(d)*sin(f), L*sin(d), L*cos(d)*cos(f));
     p[1] += lengths[0]; // base
     ageo->setVector(4, Vec3d(0,0,0), p, Color3f(0,0,0), "p");
-    p -= dir*lengths[3];
+    p += dir*lengths[3];
 
     return Pose::create(p, dir, up);
 }
@@ -140,6 +140,8 @@ PosePtr VRRobotArm::getPose() {
 void VRRobotArm::moveTo(PosePtr p2) {
     stop();
     auto p1 = getPose();
+
+    //cout << "VRRobotArm::moveTo " << p1->toString() << "   ->   " << p2->toString() << endl;
 
     animPath->clear();
     animPath->addPoint( *p1 );
