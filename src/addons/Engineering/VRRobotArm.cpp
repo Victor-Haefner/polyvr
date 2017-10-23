@@ -91,14 +91,15 @@ void VRRobotArm::animOnPath(float t) {
     anim->setDuration(job.d);
 
     t += job.t0;
-    if (t >= job.t1 and !job.loop) { job_queue.pop_front(); anim->start(0); return; }
-    if (t >= job.t1 and job.loop) { anim->start(0); return; }
+    if (t >= job.t1 && !job.loop) { job_queue.pop_front(); anim->start(0); return; }
+    if (t >= job.t1 && job.loop) { anim->start(0); return; }
 
-    Vec3d pos, dir, up;
-    job.p->getOrientation(t, dir, up);
-    pos = job.p->getPosition(t);
-    calcReverseKinematics(pos, dir, up);
+    auto pose = job.p->getPose(t);
+    calcReverseKinematics(pose->pos(), pose->dir(), pose->up());
     applyAngles();
+
+    // endeffector
+    parts[6]->setWorldOrientation(-pose->dir(), pose->up());
 }
 
 void VRRobotArm::addJob(job j) {
@@ -119,8 +120,8 @@ void VRRobotArm::setAngles(vector<float> angles) {
 }
 
 PosePtr VRRobotArm::getPose() {
-    Vec3d dir = -parts[5]->getWorldDirection();
-    Vec3d up = parts[5]->getWorldUp();
+    auto pose = parts[6]->getWorldPose();
+    pose->setDir(-pose->dir());
 
     float r1 = lengths[1];
     float r2 = lengths[2];
@@ -133,9 +134,10 @@ PosePtr VRRobotArm::getPose() {
     Vec3d p( L*cos(d)*sin(f), L*sin(d), L*cos(d)*cos(f));
     p[1] += lengths[0]; // base
     ageo->setVector(4, Vec3d(0,0,0), p, Color3f(0,0,0), "p");
-    p += dir*lengths[3];
+    p += pose->dir()*lengths[3];
 
-    return Pose::create(p, dir, up);
+    pose->setPos(p);
+    return pose;
 }
 
 void VRRobotArm::moveTo(PosePtr p2) {
@@ -143,7 +145,7 @@ void VRRobotArm::moveTo(PosePtr p2) {
     auto p1 = getPose();
 
     //p1->setUp(-p1->up());
-    p1->setUp(Vec3d(0,1,0));
+    //p1->setUp(Vec3d(0,1,0));
 
     //cout << "VRRobotArm::moveTo " << p1->toString() << "   ->   " << p2->toString() << endl;
 
@@ -158,8 +160,8 @@ void VRRobotArm::moveTo(PosePtr p2) {
 void VRRobotArm::setGrab(float g) {
     float l = lengths[4]*g;
     Vec3d p; p[0] = l;
-    parts[5]->setFrom(p);
-    parts[6]->setFrom(-p);
+    parts[7]->setFrom(p);
+    parts[8]->setFrom(-p);
     grab = g;
 }
 
