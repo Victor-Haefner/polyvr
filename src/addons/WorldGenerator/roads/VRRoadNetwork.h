@@ -21,6 +21,9 @@ class VRRoadNetwork : public VRRoadBase {
         vector<VRRoadIntersectionPtr> intersections;
         vector<VRGeometryPtr> assets;
 
+        vector<VRTunnelPtr> tunnels;
+        vector<VRBridgePtr> bridges;
+
         GraphPtr graph;
         map<int, vector<Vec3d> > graphNormals;
 
@@ -67,6 +70,9 @@ class VRRoadNetwork : public VRRoadBase {
         VRRoadPtr addWay( string name, vector<VREntityPtr> paths, int rID, string type );
         VRRoadPtr addRoad( string name, string type, VREntityPtr node1, VREntityPtr node2, Vec3d norm1, Vec3d norm2, int Nlanes );
         VRRoadPtr addLongRoad( string name, string type, vector<VREntityPtr> nodes, vector<Vec3d> normals, int Nlanes );
+
+        VRTunnelPtr addTunnel(VRRoadPtr road);
+        VRBridgePtr addBridge(VRRoadPtr road);
 
         void addKirb( VRPolygonPtr p, float height );
         void addGuardRail( pathPtr p, float height );

@@ -218,7 +218,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
     };
 
     auto addTunnel = [&](OSMWayPtr& way, VRRoadPtr road) {
-        //roads->addTunnel(road);
+        roads->addTunnel(road);
     };
 
     auto addBridge = [&](OSMWayPtr& way, VRRoadPtr road) {

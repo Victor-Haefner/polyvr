@@ -1,6 +1,8 @@
 #include "VRRoadNetwork.h"
 #include "VRRoad.h"
 #include "VRRoadIntersection.h"
+#include "VRTunnel.h"
+#include "VRBridge.h"
 #include "../terrain/VRTerrain.h"
 #include "../VRWorldGenerator.h"
 #include "VRAsphalt.h"
@@ -528,6 +530,9 @@ void VRRoadNetwork::computeIntersections() {
     }
 }
 
+VRTunnelPtr VRRoadNetwork::addTunnel(VRRoadPtr road) { auto t = VRTunnel::create(road); addChild(t); tunnels.push_back(t); return t; }
+VRBridgePtr VRRoadNetwork::addBridge(VRRoadPtr road) { auto b = VRBridge::create(road); addChild(b); bridges.push_back(b); return b; }
+
 void VRRoadNetwork::computeTracksLanes(VREntityPtr way) {
     auto getBulge = [&](vector<Pose>& points, uint i, Vec3d& x) -> float {
         if (points.size() < 2) return 0;
@@ -605,6 +610,14 @@ void VRRoadNetwork::computeSurfaces() {
         iGeo->getPhysics()->setShape("Concave");
         iGeo->getPhysics()->setPhysicalized(true);
         //addChild( iGeo );
+    }
+
+    for (auto tunnel : tunnels) {
+        tunnel->createGeometry();
+    }
+
+    for (auto bridge : bridges) {
+        bridge->createGeometry();
     }
 }
 
