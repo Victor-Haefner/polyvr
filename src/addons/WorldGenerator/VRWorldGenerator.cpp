@@ -217,6 +217,14 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         return Vec3d(sin(a), 0, -cos(a));
     };
 
+    auto addTunnel = [&](OSMWayPtr& way, VRRoadPtr road) {
+        roads->addTunnel(road);
+    };
+
+    auto addBridge = [&](OSMWayPtr& way, VRRoadPtr road) {
+        ;
+    };
+
     auto addRoad = [&](OSMWayPtr& way, string tag, float width, bool pedestrian) {
         if (way->nodes.size() < 2) return;
         string name = "road";
@@ -280,6 +288,10 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         for (int l=0; l < NlanesLeft; l++) road->addLane(-1, widths[NlanesRight+hasPLaneR+l], pedestrian);
         if (hasPLaneL) road->addParkingLane(-1, widths[NlanesRight+NlanesLeft+hasPLaneR], getInt("parking:lane:left:capacity", 0), getString("parking:lane:left", ""));
         RoadEntities[way->id] = road;
+
+        // check for tunnels and bridges
+        if (way->hasTag("tunnel")) addTunnel(way, road);
+        if (way->hasTag("bridge")) addBridge(way, road);
     };
 
     auto addBuilding = [&](OSMWayPtr& way) {

@@ -539,6 +539,8 @@
 		<Unit filename="src/addons/WorldGenerator/nature/VRTree.h" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRAsphalt.cpp" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRAsphalt.h" />
+		<Unit filename="src/addons/WorldGenerator/roads/VRBridge.cpp" />
+		<Unit filename="src/addons/WorldGenerator/roads/VRBridge.h" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoad.cpp" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoad.h" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoadBase.cpp" />
@@ -547,6 +549,8 @@
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoadIntersection.h" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoadNetwork.cpp" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoadNetwork.h" />
+		<Unit filename="src/addons/WorldGenerator/roads/VRTunnel.cpp" />
+		<Unit filename="src/addons/WorldGenerator/roads/VRTunnel.h" />
 		<Unit filename="src/addons/WorldGenerator/terrain/VRPlanet.cpp" />
 		<Unit filename="src/addons/WorldGenerator/terrain/VRPlanet.h" />
 		<Unit filename="src/addons/WorldGenerator/terrain/VRPyTerrain.cpp" />

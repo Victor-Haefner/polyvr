@@ -14,6 +14,8 @@ ptrFwd( VRAsphalt );
 ptrFwd( VRRoad );
 ptrFwd( VRRoadNetwork );
 ptrFwd( VRRoadIntersection );
+ptrFwd( VRTunnel );
+ptrFwd( VRBridge );
 ptrFwd( VRDistrict );
 ptrFwd( VRBuilding );
 ptrFwd( VRTerrain );
