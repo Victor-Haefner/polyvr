@@ -1037,6 +1037,8 @@
 		<Unit filename="src/core/setup/tracking/DTrack.cpp" />
 		<Unit filename="src/core/setup/tracking/DTrack.h" />
 		<Unit filename="src/core/setup/tracking/Kinect.h" />
+		<Unit filename="src/core/setup/tracking/OptiTrack.cpp" />
+		<Unit filename="src/core/setup/tracking/OptiTrack.h" />
 		<Unit filename="src/core/setup/tracking/VRPN.cpp" />
 		<Unit filename="src/core/setup/tracking/VRPN.h" />
 		<Unit filename="src/core/setup/tracking/Vive.cpp" />
