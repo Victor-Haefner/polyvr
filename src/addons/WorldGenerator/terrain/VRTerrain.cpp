@@ -125,7 +125,7 @@ void VRTerrain::clear() {
     embankments.clear();
 }
 
-void VRTerrain::setParameters( Vec2d s, double r, double h ) {
+void VRTerrain::setParameters( Vec2d s, double r, double h, float w ) {
     size = s;
     resolution = r;
     heightScale = h;
@@ -133,8 +133,13 @@ void VRTerrain::setParameters( Vec2d s, double r, double h ) {
     mat->setShaderParameter("resolution", resolution);
     mat->setShaderParameter("heightScale", heightScale);
     mat->setShaderParameter("doHeightTextures", 0);
+    mat->setShaderParameter("waterLevel", w);
     updateTexelSize();
     setupGeo();
+}
+
+void VRTerrain::setWaterLevel(float w) {
+    mat->setShaderParameter("waterLevel", w);
 }
 
 void VRTerrain::setMap( VRTexturePtr t, int channel ) {
@@ -579,6 +584,7 @@ const ivec3 off = ivec3(-1,0,1);
 const vec3 light = vec3(-1,-1,-0.5);
 uniform vec2 texelSize;
 uniform int doHeightTextures;
+uniform float waterLevel;
 
 in vec4 pos;
 in float height;
@@ -643,7 +649,7 @@ void main( void ) {
         vec4 cW3 = texture(texWoods, tc*17);
         vec4 cW4 = texture(texWoods, tc);
         vec4 cW = mix(cW1,mix(cW2,mix(cW3,cW4,0.5),0.5),0.5);
-        applyBumpMap(cW3);
+        //applyBumpMap(cW3);
 
         vec4 cG0 = texture(texGravel, tc*10777);
         vec4 cG1 = texture(texGravel, tc*1077);
@@ -652,6 +658,7 @@ void main( void ) {
         vec4 cG4 = texture(texGravel, tc);
         vec4 cG = mix(cG0,mix(cG1,mix(cG2,mix(cG3,cG4,0.5),0.5),0.5),0.5);
         color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
+        if (height < waterLevel) color = vec4(0.2,0.4,1,1);
 	}
 
 	applyBlinnPhong();

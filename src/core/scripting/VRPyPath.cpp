@@ -6,7 +6,7 @@ using namespace OSG;
 
 newPyType( path, Path, New_ptr);
 
-template<> PyObject* VRPyTypeCaster::cast(const pathPtr& e) { return VRPyPath::fromSharedPtr(e); }
+template<> PyObject* VRPyTypeCaster::cast(const pathPtr& e) { return e ? VRPyPath::fromSharedPtr(e) : NULL; }
 template<> bool toValue(PyObject* o, pathPtr& p) { if (!VRPyPath::check(o)) return 0; p = ((VRPyPath*)o)->objPtr; return 1; }
 
 PyMethodDef VRPyPath::methods[] = {

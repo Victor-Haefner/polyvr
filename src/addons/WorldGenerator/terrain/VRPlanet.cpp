@@ -134,12 +134,12 @@ void VRPlanet::rebuild() {
     // init meta geo
     if (!metaGeo) {
         metaGeo = VRAnalyticGeometry::create("PlanetMetaData");
-        metaGeo->setLabelParams(0.1, true, true, Color4f(1,1,1,1), Color4f(1,0,0,1));
+        metaGeo->setLabelParams(0.02, true, true, Color4f(0.5,0.1,0,1), Color4f(1,1,0.5,1));
         origin->addChild(metaGeo);
     }
 }
 
-void VRPlanet::setParameters( double r ) { radius = r; rebuild(); }
+void VRPlanet::setParameters( double r, double s ) { radius = r; sectorSize = s; rebuild(); }
 
 VRWorldGeneratorPtr VRPlanet::addSector( double north, double east ) {
     auto generator = VRWorldGenerator::create();
@@ -162,11 +162,11 @@ VRWorldGeneratorPtr VRPlanet::getSector( double north, double east ) {
 
 VRMaterialPtr VRPlanet::getMaterial() { return sphereMat; }
 
-int VRPlanet::addPin( string label, double north, double east ) {
+int VRPlanet::addPin( string label, double north, double east, double length ) {
     Vec3d n = fromLatLongNormal(north, east);
     Vec3d p = fromLatLongPosition(north, east);
     static int ID = -1; ID++;//metaGeo->getNewID(); // TODO
-    metaGeo->setVector(ID, Vec3d(p), Vec3d(n)*10000, Color3f(1,0,0), label);
+    metaGeo->setVector(ID, Vec3d(p), Vec3d(n)*length, Color3f(1,1,0.5), label);
     return ID;
 }
 
