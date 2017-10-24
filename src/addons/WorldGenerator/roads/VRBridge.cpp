@@ -1,7 +1,8 @@
 #include "VRBridge.h"
 
+using namespace OSG;
 
 VRBridge::VRBridge() {}
 VRBridge::~VRBridge() {}
 
-VRTunnelPtr VRBridge::create() { return VRTunnelPtr(new VRBridge()); }
+VRBridgePtr VRBridge::create() { return VRBridgePtr(new VRBridge()); }

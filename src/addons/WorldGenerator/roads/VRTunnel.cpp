@@ -1,5 +1,6 @@
 #include "VRTunnel.h"
 
+using namespace OSG;
 
 VRTunnel::VRTunnel() {}
 VRTunnel::~VRTunnel() {}
