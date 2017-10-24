@@ -19,7 +19,7 @@ uniform sampler2D tex;
 uniform float camH;
 
 float theta;
-float dropsize = 0.1;
+float dropsize = 0.15; //0.1;
 
 void computeDirection() {
 	fragDir = normalize( miN * (miP * pos).xyz );
@@ -45,13 +45,15 @@ float gettheta(vec3 d){
 
 bool obstruction(float D){
 	float phi = -atan(fragDir.x,fragDir.z);
-		
 	vec2 texPos = vec2(0.5+sin(phi)*D/(camH),0.5+cos(phi)*D/(camH));	//texture positions
+	//if (phi >= 2) return true;	
+	//if (texPos.x>0.52 && texPos.y>0.52) return true;
 	vec4 texC = texture2D(tex,texPos); 			//RGB value of pixel
 	float disCam = texC.r * (512-0.1);			//distance to cam above	
+	//if (disCam <= 60) return true;
 	float thetaReal = atan(D,camH-disCam-0.1);
 	
-	if (thetaReal < M_PI/2) return true;	
+	//if (gettheta(fragDir) > 9/10*M_PI) return false;	
 
 	if (thetaReal < gettheta(fragDir)) return true;
 	return false;
@@ -71,9 +73,18 @@ float getOffset(in float rOffset, in float dropdis,in float D) {
 }
 
 void computeDepth(vec3 position) {
-	vec4 pp = gl_ProjectionMatrix * vec4(position, 1);
+	vec4 pp = vec4(position, 1);
 	float d = pp.z / pp.w;
 	gl_FragDepth = d*0.5 + 0.5;
+}
+
+void worldCoords(float D){
+	mat4 m = inverse(gl_ModelViewMatrix);
+	vec3 PCam = (m*vec4(0,0,0,1)).xyz;
+	float relX = D*sin(atan( fragDir.x, fragDir.z)); //relative to cam pos
+	float relY = 1/(D*tan(gettheta(fragDir)));
+	float relZ = -D*cos(atan( fragDir.x, fragDir.z));
+	vec3 world = vec3(PCam.x-relX,PCam.y-relY,PCam.z-relZ);
 }
 
 bool isD(float D) {
@@ -85,12 +96,22 @@ bool isD(float D) {
 
 	float israindropx = mod(atan( fragDir.x, fragDir.z)*180/M_PI+7*hash(noise),dropdis); //phi horizontal in [degree]
 	float israindropy = mod(D/tan(gettheta(fragDir))+getOffset(toffset,dropdisy,D)+dropdisy*hash(noise),dropdisy); //height vertical in [m]
-	float x = D*sin(atan( fragDir.x, fragDir.z));
-	float y = D*cos(atan( fragDir.x, fragDir.z));
-	float z = - D*sin(gettheta(fragDir));
-	computeDepth(vec3(x,y,z));
+	
+
+	float computeZ=sin(gettheta(fragDir)+M_PI/2);
+	//if (atan( fragDir.x, fragDir.z) < 0) realZ = D*cos(-atan( fragDir.x, fragDir.z));
+	if (D == 1) gl_FragDepth = 0.91;
+	if (D == 2) gl_FragDepth = 0.92;
+	if (D == 3) gl_FragDepth = 0.96;	
+	if (D == 5) gl_FragDepth = 0.98;
+	if (D == 8) gl_FragDepth = 0.99;
+
+
+	//computeDepth(vec3(0,0,0.92));
+	//gl_FragDepth = 0.96; //gl_FragDepth = 0.9;
+	//gl_FragDepth = 0.9124*tan(gettheta(fragDir));
 //- D/(512-0.1)*sin(gettheta(fragDir)))
-	if (gettheta(fragDir)>0.3 && israindropx < dropsize && israindropy < dropsize && !obstruction(D)) return true;
+	if (gettheta(fragDir)>0.3 && israindropx < dropsize && israindropy < dropsize && !obstruction(D)) return true; //&& !obstruction(D)
 	else return false;
 
 	return true;
@@ -98,23 +119,27 @@ bool isD(float D) {
 
 
 vec3 checkrad() {
+	//0-Degree Pointer
+	if (atan( fragDir.x, fragDir.z)*180/M_PI<1 && atan( fragDir.x, fragDir.z)*180/M_PI>-1 && gettheta(fragDir)>M_PI/2) return vec3(1,1,1);	
+
 	//might as well incorporate into main()
 
 	vec3 color = vec3(0,0,0.8);
+	/*
 	if (obstruction(1)) color = mix(color,vec3(1,0,0),0.5);	
 	if (obstruction(2)) color = mix(color,vec3(0,1,0),0.5);
 	if (obstruction(3)) color = mix(color,vec3(0,0,1),0.5);
 	if (obstruction(5)) color = mix(color,vec3(1,1,0),0.5);
 	if (obstruction(8)) color = mix(color,vec3(0,1,1),0.5);
-
-	//if (obstruction(1)) return vec3(1,0,0);	
-	//if (obstruction(2)) return vec3(0,1,0);
-	//if (obstruction(3)) return vec3(0,0,1);
-	//if (obstruction(5)) return vec3(1,1,0);
-	//if (obstruction(8)) return vec3(0,1,1);
-
-	
-	//if (atan( fragDir.x, fragDir.z)*180/M_PI<1 && atan( fragDir.x, fragDir.z)*180/M_PI>-2 && gettheta(fragDir)>M_PI/2) return vec3(1,1,1); 
+	*/
+	/*
+	if (obstruction(1)) return vec3(1,0,0);	
+	if (obstruction(2)) return vec3(0,1,0);
+	if (obstruction(3)) return vec3(0,0,1);
+	if (obstruction(5)) return vec3(1,1,0);
+	if (obstruction(8)) return vec3(0,1,1);
+	*/
+	 
 	if (isD(1) || isD(2) || isD(3) ||isD(5) || isD(8)) return color;
 	//if (isD(2)) return vec3(0,0,0.8);
 	//if (isD(20)) return vec3(0.5,0.5,0.7);
