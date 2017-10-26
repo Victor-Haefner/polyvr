@@ -73,6 +73,7 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"addGreenBelt", PyWrap( RoadNetwork, addGreenBelt, "Add a green lane", VREntityPtr, VREntityPtr, float ) },
     {"addWay", PyWrap( RoadNetwork, addWay, "Add a way", VRRoadPtr, string, vector<VREntityPtr>, int, string ) },
     {"addRoad", PyWrap( RoadNetwork, addRoad, "Add a road", VRRoadPtr, string, string, VREntityPtr, VREntityPtr, Vec3d, Vec3d, int ) },
+    {"addLongRoad", PyWrap( RoadNetwork, addLongRoad, "Add a long road", VRRoadPtr, string, string, vector<VREntityPtr>, vector<Vec3d>, int ) },
     {"addKirb", PyWrap( RoadNetwork, addKirb, "Add a kirb, polygon, texture", void, VRPolygonPtr, float ) },
     {"computeLanePaths", PyWrap( RoadNetwork, computeLanePaths, "Compute the path of each lane of a road", void, VREntityPtr ) },
     {"computeIntersections", PyWrap( RoadNetwork, computeIntersections, "Compute the intersections", void ) },

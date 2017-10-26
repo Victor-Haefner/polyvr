@@ -158,6 +158,11 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
     //static VRAnalyticGeometryPtr ana = 0;
     //if (!ana) { ana = VRAnalyticGeometry::create(); addChild(ana); }
 
+    if (nodesIn.size() != normalsIn.size()) {
+        cout << "Warning in VRRoadNetwork::addLongRoad: ignore road '" << name << "', nodes and normals vector sizes mismatch!" << endl;
+        return 0;
+    }
+
     vector<VREntityPtr> nodes;
     vector<Vec3d> norms;
 

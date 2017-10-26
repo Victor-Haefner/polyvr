@@ -479,7 +479,7 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
                 p[1] = median[1];
                 n->setVector("position", toStringVector(p), "Position");
 
-                // check if any road noe is inside of the intersection!
+                // check if any road node is inside of the intersection!
                 /*auto path = roads[i]->getEntity()->getEntity("path");
                 for (auto e2 : path->getAllEntities("nodes")) {
                     if (e1 == e2) continue;
