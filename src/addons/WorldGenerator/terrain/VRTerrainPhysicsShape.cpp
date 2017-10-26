@@ -20,7 +20,7 @@ VRTerrainPhysicsShape::VRTerrainPhysicsShape(VRTerrainPtr terrain, float resolut
 VRTerrainPhysicsShape::~VRTerrainPhysicsShape() {;}
 void VRTerrainPhysicsShape::calculateLocalInertia(btScalar, btVector3& inertia) const { inertia.setValue(0,0,0); } //moving concave objects not supported
 void VRTerrainPhysicsShape::setLocalScaling(const btVector3& scaling) {}
-const btVector3& VRTerrainPhysicsShape::getLocalScaling() const { return btVector3(1,1,1); }
+const btVector3& VRTerrainPhysicsShape::getLocalScaling() const { return scale; }
 
 void VRTerrainPhysicsShape::getAabb(const btTransform& t, btVector3& Min, btVector3& Max) const {
     // TODO: use t!

@@ -20,8 +20,8 @@ using namespace std;
 
 class VRGtkWindow : public VRWindow {
     private:
-        Gtk::DrawingArea* drawArea;
-        GtkWidget* widget;
+        Gtk::DrawingArea* drawArea = 0;
+        GtkWidget* widget = 0;
         PassiveWindowMTRecPtr win;
         bool initialExpose = true;
 
