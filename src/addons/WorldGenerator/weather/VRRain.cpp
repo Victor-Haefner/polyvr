@@ -1,7 +1,8 @@
 #include "VRRain.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRMaterialT.h"
-#include "core/objects/material/VRTextureGenerator.h"
+//#include "core/objects/material/VRTextureGenerator.h"
+#include "core/tools/VRTextureRenderer.h"
 #include "core/utils/VRFunction.h"
 #include "core/scene/VRScene.h"
 
@@ -19,6 +20,7 @@ VRRain::VRRain() : VRGeometry("Rain") {
     vScript = resDir + "Rain.vp";
     fScript = resDir + "Rain.fp";
 
+    //auto sky = VRSky::create();
     // shader setup
     mat = VRMaterial::create("Rain");
     mat->readVertexShader(vScript);
@@ -36,21 +38,26 @@ VRRain::VRRain() : VRGeometry("Rain") {
 
     setVolumeCheck(false, true);
 
-    //textureSize = 2048;
+    //TexRenderer setup
     textureSize = 512;
-	VRTextureGenerator tg;
-	tg.setSize(textureSize, textureSize);
-    tg.add(PERLIN, 1, Color3f(0.9), Color3f(1.0));
-	tg.add(PERLIN, 1.0/2, Color3f(0.8), Color3f(1.0));
-	tg.add(PERLIN, 1.0/4, Color3f(0.7), Color3f(1.0));
-	tg.add(PERLIN, 1.0/8, Color3f(0.6), Color3f(1.0));
-	tg.add(PERLIN, 1.0/16, Color3f(0.4), Color3f(1.0));
-	tg.add(PERLIN, 1.0/32, Color3f(0.2), Color3f(1.0));
-	tg.add(PERLIN, 1.0/64, Color3f(0.1), Color3f(1.0));
-	tg.add(PERLIN, 1.0/128, Color3f(0.1), Color3f(1.0));
-	mat->setTexture(tg.compose(0));
+    auto camDef = VRScene::getCurrent()->getActiveCamera();
+    auto camTex = VRCamera::create("camTex");
+    auto tr = VRTextureRenderer::create("tr");
+    camTex->setType(1);
+    camDef->activate();
+    tr->setup(camTex,512,512);
 
-	//texcam.setFrom(Vec3d(0,100,0));
+    //TODO: FIND LIGHT IN SCENEGRAPH
+    //TODO: ADDLINK LIGHT
+    /*
+    VRTextureGenerator tg;
+	tg.setSize(textureSize, textureSize);
+    */
+    Vec3d tmp = camDef->getFrom();
+    camDef->setFrom(Vec3d(tmp[0],tmp[1]+40,tmp[2]));
+
+    mat->setTexture(tr->getMaterial()->getTexture(1));
+    mat->setShaderParameter<float>("tex", 1);
 
     updatePtr = VRUpdateCb::create("rain update", boost::bind(&VRRain::update, this));
     VRScene::getCurrent()->addUpdateFkt(updatePtr);
@@ -84,7 +91,7 @@ void VRRain::start() {
     //
     */
     //setScale(0.3);
-    if (scale == 0) setScale(1.3);
+    if (scale == 0) setScale(3);
         else setScale(scale);
     cout << "VRRain::startRain()\n";
 }
@@ -114,7 +121,6 @@ void VRRain::stop() {
     mat->setShaderParameter<float>("rainDensity", density);
 }
 
-
 void VRRain::setScale( double scale ){
     if ( scale<0 || scale>10 ) {
         //TODO: error
@@ -128,14 +134,6 @@ void VRRain::setScale( double scale ){
     }
 }
 
-void VRRain::setDepthMat(VRMaterialPtr matmat){
-    //this->mat = matmat;
-    mat->readVertexShader(vScript);
-    mat->readFragmentShader(fScript);
-    //mat->setShaderParameter
-}
-
-
 void VRRain::overrideParameters( double density, double durationTransition, double color, double light ) {
     this->density = density;
     mat->setShaderParameter<float>("rainDensity", density);
@@ -143,20 +141,6 @@ void VRRain::overrideParameters( double density, double durationTransition, doub
 
 Vec2d VRRain::get() {
     return Vec2d(density,scale);
-}
-
-void VRRain::updateRain(float dt) {
-    /*
-    cloudOffset += Vec2f(cloudVel) * dt;
-    cloudOffset[0] = fmod(cloudOffset[0], textureSize);
-    cloudOffset[1] = fmod(cloudOffset[1], textureSize);
-    mat->setShaderParameter<Vec2f>("cloudOffset", cloudOffset);
-    */
-    //mat->setShaderParameter<Vec2f>("rainOffset", rainOffset);
-    offset += dt;
-    mat->setShaderParameter<float>("rainOffset", offset);
-    mat->readVertexShader(vScript);
-    mat->readFragmentShader(fScript);
 }
 
 void VRRain::update() {
@@ -167,11 +151,21 @@ void VRRain::update() {
     mat->setShaderParameter<float>("rainOffset", offset);
     mat->readVertexShader(vScript);
     mat->readFragmentShader(fScript);
+
+    //Vec3d tmp = camDef->getFrom();
+    //camTex->setFrom(Vec3d(tmp[0],tmp[1]+40,tmp[2]));
+    //camTex->setAt(tmp);
+    //camTex->setUp(Vec3d(0,0,1));
 }
 
 void VRRain::reloadShader() {
+    //sky->setClouds(1, 1e-5, 3000, Vec2d(0.004,0.004),Color4f(0.3,0.3,0.3,1));
+    //sky.setClouds(float density, float scale, float height, Vec2d speed, Color4f color);
+
+    /*
     string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Rain/";
     mat->readVertexShader(resDir + "Rain.vp");
     mat->readFragmentShader(resDir + "Rain.fp");
+    */
 }
 

@@ -114,8 +114,8 @@ bool isD(float D) {
 		
 	if (D == 1) gl_FragDepth = 0.8;
 	if (D == 2) gl_FragDepth = 0.95;
-	if (D == 3) gl_FragDepth = 0.95;	
-	if (D == 5) gl_FragDepth = 0.98;
+	if (D == 3) gl_FragDepth = 0.98;	
+	if (D == 5) gl_FragDepth = 0.99;
 	if (D == 8) gl_FragDepth = 0.99;
 	
 	//gl_FragDepth = 0.9124*tan(gettheta(fragDir));
