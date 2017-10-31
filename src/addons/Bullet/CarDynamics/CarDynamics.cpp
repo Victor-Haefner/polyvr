@@ -299,6 +299,8 @@ void VRCarDynamics::updateEngine() {
 
         float eForce = computeEngineForceOnWheel( wheel, deltaRPM, coupling, clampedThrottle );
         if (abs(eBreak) > abs(eForce)) eForce = 0;
+        else eBreak = 0;
+        if (abs(eForce) < 0.1 && abs(speed) < 0.1) eBreak = 5; // rolling friction when stopped
         updateWheel(wheel, eForce, eBreak);// apply force
     }
 
