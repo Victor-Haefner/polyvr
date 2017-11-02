@@ -5,7 +5,6 @@
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/utils/VRFunctionFwd.h"
 
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -27,7 +26,6 @@ class VRHaptic : public VRDevice {
         int fps_change = 0;
         /** fps stable flag. 1=stable, 0=not stable**/
         int fps_stable = 1;
-
 
         void on_scene_changed(VRDeviceWeakPtr dev);
 
@@ -58,6 +56,8 @@ class VRHaptic : public VRDevice {
 
         void setType(string IP);
         string getType();
+
+        static void runTest1();
 };
 
 OSG_END_NAMESPACE;

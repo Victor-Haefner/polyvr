@@ -48,7 +48,7 @@ void VRSharedMemory::test() {
     VRSharedMemory sm(segment);
     float* data = sm.addObject<float>(object);
     *data = 5.6;
-    float res = sm.getObject<float>(object);
+    auto res = sm.getObject<float>(object);
     cout << "data " << res << endl;
 
     // vector example
