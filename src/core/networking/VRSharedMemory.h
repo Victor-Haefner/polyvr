@@ -91,10 +91,8 @@ class VRSharedMemory {
                 boost::interprocess::managed_shared_memory seg(boost::interprocess::open_only, segment->name.c_str());
                 auto data = seg.find<T>(name.c_str());
                 if (data.first) {
-                    cout << "setObject -> set " << name << endl;
                     *data.first = t;
                 } else {
-                    cout << "setObject -> addObject " << name << endl;
                     auto o = addObject<T>(name);
                     *o = t;
                 }

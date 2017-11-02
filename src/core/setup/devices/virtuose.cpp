@@ -81,6 +81,7 @@ string GetEnv( const string & var ) {
 }
 
 void virtuose::connect(string IP,float pTimeStep) { // TODO
+    commandType = COMMAND_TYPE_VIRTMECH;
     if (!connected()) return;
     //disconnect();
     //VRPing ping;
@@ -253,7 +254,7 @@ void virtuose::updateVirtMechPre() {
 
 	bool shifting = interface.getObject<bool>("shifting", false);
 
-	if(commandType == COMMAND_TYPE_VIRTMECH) {
+	if (commandType == COMMAND_TYPE_VIRTMECH) {
         if (!isAttached) { // TODO
             //virtGetPosition(vc, position);
 			//auto a = virtSetPosition(vc, position);
@@ -264,7 +265,7 @@ void virtuose::updateVirtMechPre() {
             // apply position&speed to the haptic
             VRPhysics* phBase = (base == 0) ? 0 : base->getPhysics();
             fillPosition(this->attached->getPhysics(), targetPosition.data, phBase);
-            fillSpeed(this->attached->getPhysics(),targetSpeed.data,phBase);
+            fillSpeed(this->attached->getPhysics(), targetSpeed.data, phBase);
             interface.setObject<Vec7>("targetPosition", targetPosition);
             interface.setObject<Vec6>("targetSpeed", targetSpeed);
 
@@ -288,21 +289,26 @@ void virtuose::updateVirtMechPost() {
 	float force[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
 
 	bool shifting = interface.getObject<bool>("shifting", false);
-	if (commandType == COMMAND_TYPE_VIRTMECH) {
+    bool doPhysUpdate = interface.getObject<bool>("doPhysUpdate");
+	if (commandType == COMMAND_TYPE_VIRTMECH && !shifting && doPhysUpdate) {
 		if (isAttached && interface.hasObject<Vec6>("forces")) {
 			//get force applied by human on the haptic
-            auto forces = interface.getObject<Vec6>("forces").data;
+            Vec6 forces = interface.getObject<Vec6>("forces");
 			//CHECK(virtGetForce(vc, force));
-            //position +1, +2, +0
-			Vec3d frc = Vec3d(force[1], force[2], force[0]);
+
+            auto& f = forces.data;
+			Vec3d frc = Vec3d( f[1], f[2], f[0] ); // position +1 +2 +0
+			Vec3d trqu = Vec3d( f[4], f[5], f[3] ); // rotation +4 +5 +3    (x-Achse am haptik: force[4])(y-Achse am haptik: force[5])(z-Achse am haptik: force[3])
+			//Vec3d frc = Vec3d( f[2], f[0], f[1] ); // position +1 +2 +0
+			//Vec3d trqu = Vec3d( f[3], f[4], f[5] ); // rotation +4 +5 +3    (x-Achse am haptik: force[4])(y-Achse am haptik: force[5])(z-Achse am haptik: force[3])
 			totalForce = frc;
-			//rotation +4 +5 +3    (x-Achse am haptik: force[4])(y-Achse am haptik: force[5])(z-Achse am haptik: force[3])
-			Vec3d trqu = Vec3d( force[4], force[5], force[3]);
 			//apply force on the object
-            //avoiding build-ups
-            //if( (pPos.length() < 0.1f) && (sPos.length() < 0.5f) &&  (sRot.length() < 0.5f)) { // TODO
-               attached->getPhysics()->addForce(frc);
-               attached->getPhysics()->addTorque(trqu);
+            //cout << "forces "; print(forces, 6);
+            cout << "forces " << frc.length() << " " << trqu.length() << " " << endl;
+            //if( frc.length() > 0.1f && trqu.length() < 0.5f ) {
+            //if( frc.length() < 0.1f) {
+            attached->getPhysics()->addForce(frc);
+            attached->getPhysics()->addTorque(trqu);
             //}
         }
     }
