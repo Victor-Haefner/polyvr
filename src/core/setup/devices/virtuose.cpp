@@ -58,11 +58,14 @@ virtuose::virtuose() : interface("virtuose") {
     path += "/src/core/setup/devices/virtuose/bin/Debug/virtuose";
     deamon = popen(path.c_str(), "w");
     if (!deamon) { cout << " failed to open virtuose deamon" << endl; return; }
-
+    cout << "\nstarted haptic device deamon" << endl;
     interface.addObject<Vec6>("targetForces");
 }
 
-virtuose::~virtuose() { disconnect(); }
+virtuose::~virtuose() {
+    cout << "virtuose::~virtuose\n";
+    disconnect();
+}
 
 bool virtuose::connected() { return interface.hasObject<Vec7>("position"); }
 
@@ -163,7 +166,7 @@ Matrix4d virtuose::getPose() {
 void virtuose::setBase(VRTransformPtr tBase) { base = tBase; }
 
 void virtuose::attachTransform(VRTransformPtr trans) {
-    if(!connected()) return;
+    //if(!connected()) return;
     isAttached = true;
     attached = trans;
     VRPhysics* o = trans->getPhysics();
@@ -176,7 +179,6 @@ void virtuose::attachTransform(VRTransformPtr trans) {
     interface.setObject<Vec9>("inertia", inertia);
     interface.setObject<float>("mass", o->getMass());
     interface.setObject<bool>("doAttach", true);
-    cout << "\n VR has doAttach " << interface.hasObject<bool>("doAttach") << endl;
     //CHECK(virtAttachVO(vc, o->getMass(), inertia));
 }
 

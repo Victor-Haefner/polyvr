@@ -25,14 +25,21 @@ class SharedMemory {
             this->segment->name = segment;
             this->init = init;
             if (!init) return;
-            shared_memory_object::remove(segment.c_str());
-            this->segment->memory = managed_shared_memory(create_only, segment.c_str(), 65536);
+            cout << "Init SharedMemory segment " << segment << endl;
+            this->segment->memory = managed_shared_memory(open_or_create, segment.c_str(), 65536);
+            int U = getObject<int>("__users__")+1;
+            setObject<int>("__users__", U);
             unlock();
         }
 
         ~SharedMemory() {
             if (!init) return;
-            shared_memory_object::remove(segment->name.c_str());
+            int U = getObject<int>("__users__")-1;
+            setObject<int>("__users__", U);
+            if (U == 0) {
+                cout << "Remove SharedMemory segment " << segment->name << endl;
+                shared_memory_object::remove(segment->name.c_str());
+            }
         }
 
         void* getPtr(string h) {
@@ -162,19 +169,9 @@ class SharedMemory {
         }
 };
 
-SharedMemory interface("virtuose");
-
-struct Vec9 {
-    float data[9] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
-};
-
-struct Vec7 {
-    float data[7] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f};
-};
-
-struct Vec6 {
-    float data[6] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
-};
+struct Vec9 { float data[9] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f}; };
+struct Vec7 { float data[7] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f}; };
+struct Vec6 { float data[6] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f}; };
 
 template <typename T>
 void print(const T& t, int N) {
@@ -184,10 +181,15 @@ void print(const T& t, int N) {
 }
 
 int main() {
+    SharedMemory interface("virtuose", true);
     interface.addObject<Vec7>("position");
     interface.setObject<bool>("run", true);
     auto vc = virtOpen("172.22.151.200");
-    //cout << " error code 2: " << virtGetErrorMessage(2) << endl;
+    if (!vc) {
+        cout << "starting virtuose deamon failed, no connection to device!\n";
+        return 0;
+        //cout << " error code 2: " << virtGetErrorMessage(2) << endl;
+    }
 
     Vec7 identity;
 
@@ -226,11 +228,13 @@ int main() {
 
         if (interface.hasObject<Vec6>("targetForces")) {
             auto forces = interface.getObject<Vec6>("targetForces");
+            //print(forces, 6);
             virtAddForce(vc, forces.data);
         }
 
         //cout << "\nattached " << attached << " hasTargetSpeed " << interface.hasObject<Vec6>("targetSpeed") << " targetPosition " << interface.hasObject<Vec7>("targetPosition");
         if (attached && interface.hasObject<Vec6>("targetSpeed") && interface.hasObject<Vec7>("targetPosition")) {
+            cout << "update haptic deamon attachment\n" << endl;
             auto targetSpeed = interface.getObject<Vec6>("targetSpeed");
             auto targetPosition = interface.getObject<Vec7>("targetPosition");
             float tmpPos[7];

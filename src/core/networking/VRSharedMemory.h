@@ -93,7 +93,6 @@ class VRSharedMemory {
                 if (data.first) {
                     cout << "setObject -> set " << name << endl;
                     *data.first = t;
-                    unlock();
                 } else {
                     cout << "setObject -> addObject " << name << endl;
                     auto o = addObject<T>(name);
@@ -111,6 +110,7 @@ class VRSharedMemory {
                 auto data = seg.find<T>(name.c_str());
                 if (data.first) { unlock(); return true; }
             } catch(boost::interprocess::interprocess_exception e) {}
+            //} catch(boost::interprocess::interprocess_exception e) { cout << "SharedMemory::hasObject " << name << " failed with: " << e.what() << endl; }
             unlock();
             return false;
         }
