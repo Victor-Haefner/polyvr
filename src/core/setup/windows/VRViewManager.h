@@ -28,7 +28,7 @@ class VRViewManager {
         void setViewCamera(VRCameraPtr c, int i);
         void setViewRoot(VRObjectPtr root, int i);
         void setViewUser(VRTransformPtr user, int i);
-        void setViewBackground(BackgroundRecPtr bg, int i = -1);
+        void setViewBackground(BackgroundMTRecPtr bg, int i = -1);
 
         void updateViews();
         void showViewStats(int i, bool b);

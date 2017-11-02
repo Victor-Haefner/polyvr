@@ -8,12 +8,12 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRGeoData;
-class pose;
+class Pose;
 
 class StreetLamp : public Asset {
     public:
         static void make();
-        static void add(const pose& p, VRGeoData* geo);
+        static void add(const Pose& p, VRGeoData* geo);
 };
 
 OSG_END_NAMESPACE;

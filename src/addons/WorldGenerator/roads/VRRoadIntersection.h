@@ -22,19 +22,31 @@ class VRRoadIntersection : public VRRoadBase {
             UPLINK // a road connects to a middle node of another road
         };
 
+        struct RoadFront {
+            VRRoadPtr road;
+            Pose pose;
+            int dir = 1;
+            float width = 0;
+            vector<VREntityPtr> inLanes; // all lanes going in of the intersection
+            vector<VREntityPtr> outLanes; // all lanes going out of the intersection
+        };
+
     private:
-        IntersectionTYPE type = DEFAULT;
         VREntityPtr getRoadNode(VREntityPtr roadEnt);
-        vector<VRRoadPtr> roads;
-        vector<pair<pose, float>> roadFronts;
-        map<VRRoadPtr, vector<VREntityPtr>> inLanes; // all lanes going out of the intersection
-        map<VRRoadPtr, vector<VREntityPtr>> outLanes; // all lanes going in the intersection
-        vector<pair<VREntityPtr, VREntityPtr>> laneMatches; // matches of ingoing lanes with outgoing lanes
-        map<VREntityPtr, vector<VREntityPtr>> nextLanes; // sequences of lanes, for example ingoing -> outgoing, or ingoing -> lane -> outgoing
-        vector<Vec3d> intersectionPoints;
+
+        IntersectionTYPE type = DEFAULT;
         VRPolygonPtr patch;
         VRPolygonPtr perimeter;
         Vec3d median;
+
+        vector<shared_ptr<RoadFront>> roadFronts;
+        /*vector<VRRoadPtr> roads;
+        map<VRRoadPtr, vector<VREntityPtr>> inLanes; // all lanes going in of the intersection
+        map<VRRoadPtr, vector<VREntityPtr>> outLanes; // all lanes going out the intersection*/
+
+        vector<Vec3d> intersectionPoints;
+        vector<pair<VREntityPtr, VREntityPtr>> laneMatches; // matches of ingoing lanes with outgoing lanes
+        map<VREntityPtr, vector<VREntityPtr>> nextLanes; // sequences of lanes, for example ingoing -> outgoing, or ingoing -> lane -> outgoing
 
     public:
         VRRoadIntersection();
@@ -42,7 +54,7 @@ class VRRoadIntersection : public VRRoadBase {
 
         static VRRoadIntersectionPtr create();
 
-        VREntityPtr addTrafficLight( posePtr p, string asset, Vec3d root );
+        VREntityPtr addTrafficLight( PosePtr p, string asset, Vec3d root );
         VRGeometryPtr createGeometry();
 
         void computePatch();

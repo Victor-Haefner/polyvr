@@ -7,6 +7,7 @@
 
 #include "VRDevice.h"
 #include "VRMouse.h"
+#include "VRMultiTouch.h"
 #include "VRKeyboard.h"
 #include "VRFlystick.h"
 #include "VRHaptic.h"
@@ -105,6 +106,12 @@ void VRDeviceManager::load(xmlpp::Element* node) {
 
         if (type == "mouse") {
             VRMousePtr m = VRMouse::create();
+            m->load(el);
+            dev = m;
+        }
+
+        if (type == "multitouch") {
+            VRMultiTouchPtr m = VRMultiTouch::create();
             m->load(el);
             dev = m;
         }

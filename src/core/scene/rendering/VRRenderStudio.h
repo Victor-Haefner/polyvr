@@ -78,7 +78,7 @@ class VRRenderStudio : public VRStorage {
 
         void setScene(VRObjectPtr root);
         void setCamera(OSGCameraPtr cam);
-        void setBackground(BackgroundRecPtr bg);
+        void setBackground(BackgroundMTRecPtr bg);
         void resize(Vec2i s);
         void setEye(EYE e);
 

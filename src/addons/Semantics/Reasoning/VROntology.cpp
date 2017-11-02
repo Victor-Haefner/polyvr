@@ -2,6 +2,7 @@
 #include "VRReasoner.h"
 #include "VRProperty.h"
 #include "VROWLImport.h"
+#include "VROWLExport.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/scene/VRScene.h"
@@ -275,11 +276,15 @@ string VROntology::toString() {
     return res;
 }
 
-void VROntology::open(string path) {
-    if (!boost::filesystem::exists(path)) WARN("WARNING in VROntology::open, " + path + " not found!");
-
+void VROntology::openOWL(string path) {
+    if (!boost::filesystem::exists(path)) WARN("WARNING in VROntology::openOWL, " + path + " not found!");
     VROWLImport importer;
-    importer.load(shared_from_this(), path);
+    importer.read(shared_from_this(), path);
+}
+
+void VROntology::saveOWL(string path) {
+    VROWLExport exporter;
+    exporter.write(shared_from_this(), path);
 }
 
 void VROntology::addModule(string mod) {

@@ -93,7 +93,7 @@ PyMethodDef VRPyTransform::methods[] = {
 
     {"setWorldDir", PyWrap(Transform, setWorldDir, "Set the direction in world coordinates", void, Vec3d)  },
     {"setWorldUp", PyWrap(Transform, setWorldUp, "Set the up vector in world coordinates", void, Vec3d)  },
-    {"getPoseTo", PyWrap(Transform, getPoseTo, "Get the pose in the coordinate system of another object", posePtr, VRObjectPtr)  },
+    {"getPoseTo", PyWrap(Transform, getPoseTo, "Get the pose in the coordinate system of another object", PosePtr, VRObjectPtr)  },
     {"applyTransformation", (PyCFunction)VRPyTransform::applyTransformation, METH_VARARGS, "Apply a transformation to the mesh - applyTransformation( pose )" },
     {NULL}  /* Sentinel */
 };
@@ -331,7 +331,7 @@ PyObject* VRPyTransform::setWPose(VRPyTransform* self, PyObject* args) {
 
     PyObject *fl, *dl, *ul;
     if (! PyArg_ParseTuple(args, "OOO", &fl, &dl, &ul)) return NULL;
-    self->objPtr->setWorldPose( pose::create(parseVec3dList(fl), parseVec3dList(dl), parseVec3dList(ul)) );
+    self->objPtr->setWorldPose( Pose::create(parseVec3dList(fl), parseVec3dList(dl), parseVec3dList(ul)) );
     Py_RETURN_TRUE;
 }
 

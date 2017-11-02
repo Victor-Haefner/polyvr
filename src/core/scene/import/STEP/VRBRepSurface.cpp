@@ -471,8 +471,8 @@ VRGeometryPtr VRBRepSurface::build(string type) {
             nMesh.apply(g);
 
             // project the points back into 3D space
-            GeoVectorPropertyRecPtr pos = gg->geo->getPositions();
-            GeoVectorPropertyRecPtr norms = gg->geo->getNormals();
+            GeoVectorPropertyMTRecPtr pos = gg->geo->getPositions();
+            GeoVectorPropertyMTRecPtr norms = gg->geo->getNormals();
             if (pos) {
                 for (uint i=0; i<pos->size(); i++) {
                     Pnt3d p = Pnt3d(pos->getValue<Pnt3f>(i));
@@ -613,8 +613,8 @@ VRGeometryPtr VRBRepSurface::build(string type) {
             nMesh.apply(g);
 
             // project the points back into 3D space
-            GeoVectorPropertyRecPtr pos = gg->getPositions();
-            GeoVectorPropertyRecPtr norms = gg->getNormals();
+            GeoVectorPropertyMTRecPtr pos = gg->getPositions();
+            GeoVectorPropertyMTRecPtr norms = gg->getNormals();
             if (pos) {
                 for (int i=0; i<pos->size(); i++) {
                     Pnt3d p = pos->getValue<Pnt3f>(i);
@@ -710,9 +710,9 @@ VRGeometryPtr VRBRepSurface::build(string type) {
 
     // wireframe
     auto geo = VRGeometry::create("face");
-    GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
-    GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
+    GeoPnt3fPropertyMTRecPtr pos = GeoPnt3fProperty::create();
+    GeoVec3fPropertyMTRecPtr norms = GeoVec3fProperty::create();
+    GeoUInt32PropertyMTRecPtr inds = GeoUInt32Property::create();
 
     for (auto b : bounds) {
         for (uint i=0; i<b.points.size(); i+=2) {

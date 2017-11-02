@@ -500,7 +500,7 @@ PyObject* VRPyGeometry::setTypes(VRPyGeometry* self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "O", &typeList)) return NULL;
 
     VRGeometryPtr geo = (VRGeometryPtr) self->objPtr;
-    GeoUInt8PropertyRecPtr types = GeoUInt8Property::create();
+    GeoUInt8PropertyMTRecPtr types = GeoUInt8Property::create();
 
 	for (int i = 0; i < pySize(typeList); i++) {
 		PyObject* pyType = PyList_GetItem(typeList, i);
@@ -531,23 +531,23 @@ PyObject* VRPyGeometry::setPositions(VRPyGeometry* self, PyObject *args) {
     PyObject* vec;
     if (! PyArg_ParseTuple(args, "O", &vec)) return NULL;
 
-	GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
+	GeoPnt3fPropertyMTRecPtr pos = GeoPnt3fProperty::create();
 
     int ld = getListDepth(vec);
     string tname = vec->ob_type->tp_name;
 
     if (ld == 1) {
-        if (tname == "numpy.ndarray") feed1D3np<GeoPnt3fPropertyRecPtr, Pnt3d>(vec, pos);
-        else feed1D3<GeoPnt3fPropertyRecPtr, Pnt3d>(vec, pos);
+        if (tname == "numpy.ndarray") feed1D3np<GeoPnt3fPropertyMTRecPtr, Pnt3d>(vec, pos);
+        else feed1D3<GeoPnt3fPropertyMTRecPtr, Pnt3d>(vec, pos);
     } else if (ld == 2) {
-        if (tname == "numpy.ndarray") feed2Dnp<GeoPnt3fPropertyRecPtr, Pnt3d>(vec, pos);
-        else feed2D<GeoPnt3fPropertyRecPtr, Pnt3d>(vec, pos);
+        if (tname == "numpy.ndarray") feed2Dnp<GeoPnt3fPropertyMTRecPtr, Pnt3d>(vec, pos);
+        else feed2D<GeoPnt3fPropertyMTRecPtr, Pnt3d>(vec, pos);
     } else if (ld == 3) {
         for(Py_ssize_t i = 0; i < PyList_Size(vec); i++) {
             PyObject* vecList = PyList_GetItem(vec, i);
             string tname = vecList->ob_type->tp_name;
-            if (tname == "numpy.ndarray") feed2Dnp<GeoPnt3fPropertyRecPtr, Pnt3d>(vecList, pos);
-            else feed2D<GeoPnt3fPropertyRecPtr, Pnt3d>(vecList, pos);
+            if (tname == "numpy.ndarray") feed2Dnp<GeoPnt3fPropertyMTRecPtr, Pnt3d>(vecList, pos);
+            else feed2D<GeoPnt3fPropertyMTRecPtr, Pnt3d>(vecList, pos);
         }
     } else {
         string e = "VRPyGeometry::setPositions - bad argument, ld is " + toString(ld);
@@ -564,16 +564,16 @@ PyObject* VRPyGeometry::setNormals(VRPyGeometry* self, PyObject *args) {
     PyObject* vec;
     if (! PyArg_ParseTuple(args, "O", &vec)) return NULL;
 
-    GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
+    GeoVec3fPropertyMTRecPtr norms = GeoVec3fProperty::create();
     string tname = vec->ob_type->tp_name;
     int ld = getListDepth(vec);
 
     if (ld == 1) {
-        if (tname == "numpy.ndarray") feed1D3np<GeoVec3fPropertyRecPtr, Vec3d>( vec, norms);
-        else feed1D3<GeoVec3fPropertyRecPtr, Vec3d>( vec, norms);
+        if (tname == "numpy.ndarray") feed1D3np<GeoVec3fPropertyMTRecPtr, Vec3d>( vec, norms);
+        else feed1D3<GeoVec3fPropertyMTRecPtr, Vec3d>( vec, norms);
     } else if (ld == 2) {
-        if (tname == "numpy.ndarray") feed2Dnp<GeoVec3fPropertyRecPtr, Vec3d>( vec, norms);
-        else feed2D<GeoVec3fPropertyRecPtr, Vec3d>( vec, norms);
+        if (tname == "numpy.ndarray") feed2Dnp<GeoVec3fPropertyMTRecPtr, Vec3d>( vec, norms);
+        else feed2D<GeoVec3fPropertyMTRecPtr, Vec3d>( vec, norms);
     } else {
         string e = "VRPyGeometry::setNormals - bad argument, ld is " + toString(ld);
         PyErr_SetString(err, e.c_str());
@@ -590,10 +590,10 @@ PyObject* VRPyGeometry::setColors(VRPyGeometry* self, PyObject *args) {
     if (! PyArg_ParseTuple(args, "O", &vec)) return NULL;
     VRGeometryPtr geo = (VRGeometryPtr) self->objPtr;
 
-    GeoVec4fPropertyRecPtr cols = GeoVec4fProperty::create();
+    GeoVec4fPropertyMTRecPtr cols = GeoVec4fProperty::create();
     string tname = vec->ob_type->tp_name;
-    if (tname == "numpy.ndarray") feed2Dnp<GeoVec4fPropertyRecPtr, Vec4d>( vec, cols);
-    else feed2D<GeoVec4fPropertyRecPtr, Vec4d>( vec, cols);
+    if (tname == "numpy.ndarray") feed2Dnp<GeoVec4fPropertyMTRecPtr, Vec4d>( vec, cols);
+    else feed2D<GeoVec4fPropertyMTRecPtr, Vec4d>( vec, cols);
 
     geo->setColors(cols, true);
     Py_RETURN_TRUE;
@@ -605,8 +605,8 @@ PyObject* VRPyGeometry::setLengths(VRPyGeometry* self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "O", &vec)) return NULL;
     VRGeometryPtr geo = (VRGeometryPtr) self->objPtr;
 
-    GeoUInt32PropertyRecPtr lens = GeoUInt32Property::create();
-    feed1D<GeoUInt32PropertyRecPtr>(vec, lens);
+    GeoUInt32PropertyMTRecPtr lens = GeoUInt32Property::create();
+    feed1D<GeoUInt32PropertyMTRecPtr>(vec, lens);
     geo->setLengths(lens);
 
     Py_RETURN_TRUE;
@@ -617,19 +617,19 @@ PyObject* VRPyGeometry::setIndices(VRPyGeometry* self, PyObject *args) {
     PyObject* vec;
     if (! PyArg_ParseTuple(args, "O", &vec)) return NULL;
 
-    GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
+    GeoUInt32PropertyMTRecPtr inds = GeoUInt32Property::create();
     string tname = vec->ob_type->tp_name;
 
     int ld = getListDepth(vec);
     if (ld == 1) {
-        if (tname == "numpy.ndarray") feed1Dnp<GeoUInt32PropertyRecPtr>( vec, inds);
-        else feed1D<GeoUInt32PropertyRecPtr>( vec, inds );
+        if (tname == "numpy.ndarray") feed1Dnp<GeoUInt32PropertyMTRecPtr>( vec, inds);
+        else feed1D<GeoUInt32PropertyMTRecPtr>( vec, inds );
         self->objPtr->setIndices(inds, true);
     } else if (ld == 2) {
-        GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
+        GeoUInt32PropertyMTRecPtr lengths = GeoUInt32Property::create();
         for(Py_ssize_t i = 0; i < PyList_Size(vec); i++) {
             PyObject* vecList = PyList_GetItem(vec, i);
-            feed1D<GeoUInt32PropertyRecPtr>( vecList, inds );
+            feed1D<GeoUInt32PropertyMTRecPtr>( vecList, inds );
             lengths->addValue(PyList_Size(vecList));
         }
         self->objPtr->setIndices(inds);
@@ -651,14 +651,14 @@ PyObject* VRPyGeometry::setTexCoords(VRPyGeometry* self, PyObject *args) {
     int vN = pySize(PyList_GetItem(vec,0));
 
     if (vN == 2) {
-        GeoVec2fPropertyRecPtr tc = GeoVec2fProperty::create();
-        feed2D<GeoVec2fPropertyRecPtr, Vec2d>(vec, tc);
+        GeoVec2fPropertyMTRecPtr tc = GeoVec2fProperty::create();
+        feed2D<GeoVec2fPropertyMTRecPtr, Vec2d>(vec, tc);
         self->objPtr->setTexCoords(tc, channel, doIndexFix);
     }
 
     if (vN == 3) {
-        GeoVec3fPropertyRecPtr tc = GeoVec3fProperty::create();
-        feed2D<GeoVec3fPropertyRecPtr, Vec3d>(vec, tc);
+        GeoVec3fPropertyMTRecPtr tc = GeoVec3fProperty::create();
+        feed2D<GeoVec3fPropertyMTRecPtr, Vec3d>(vec, tc);
         self->objPtr->setTexCoords(tc, channel, doIndexFix);
     }
 

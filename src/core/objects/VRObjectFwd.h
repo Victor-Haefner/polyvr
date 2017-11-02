@@ -49,6 +49,7 @@ ptrFwd(VRTree);
 ptrFwd(CSGGeometry);
 ptrFwd(VRMillingWorkPiece);
 ptrFwd(VRMillingCuttingToolProfile);
+ptrFwd(VRHandGeo)
 
 }
 

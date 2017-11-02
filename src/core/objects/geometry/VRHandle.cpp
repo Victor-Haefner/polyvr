@@ -34,7 +34,7 @@ void VRHandle::configure(VRAnimCbPtr cb, TYPE t, Vec3d n, float s, bool symmetri
     }
 }
 
-void VRHandle::set(posePtr p, float v) {
+void VRHandle::set(PosePtr p, float v) {
     value = v;
     origin = p;
 
@@ -50,7 +50,7 @@ void VRHandle::set(posePtr p, float v) {
 }
 
 Vec3d VRHandle::getAxis() { return axis; }
-posePtr VRHandle::getOrigin() { return origin; }
+PosePtr VRHandle::getOrigin() { return origin; }
 
 void VRHandle::updateHandle() {
     if (!paramCb) return;

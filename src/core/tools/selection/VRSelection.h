@@ -51,9 +51,9 @@ class VRSelection {
         Vec3d computeCentroid();
         Matrix4d computeCovMatrix();
         Matrix4d computeEigenvectors(Matrix4d m);
-        pose computePCA();
+        Pose computePCA();
 
-        void selectPlane(pose plane, float threshold);
+        void selectPlane(Pose plane, float threshold);
 };
 
 OSG_END_NAMESPACE;

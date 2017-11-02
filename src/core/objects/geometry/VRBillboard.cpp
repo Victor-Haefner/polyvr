@@ -42,7 +42,7 @@ void VRBillboard::updateBBTexture() {
 }
 
 void VRBillboard::updateSize() {
-    GeoPnt3fPropertyRecPtr pos = dynamic_cast<GeoPnt3fProperty *>(BBplane->getPositions());
+    GeoPnt3fPropertyMTRecPtr pos = dynamic_cast<GeoPnt3fProperty *>(BBplane->getPositions());
 
     for (unsigned int i=0;i<pos->size();i++) {
         auto tmp = pos->getValue(i);

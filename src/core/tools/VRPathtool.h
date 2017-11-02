@@ -60,6 +60,7 @@ class VRPathtool : public VRObject {
             vector<VRGeometryWeakPtr> handles;
             VRStrokeWeakPtr line;
             VRObjectWeakPtr anchor;
+            VRGeometryWeakPtr arrow;
 
             entry(VRObjectPtr anchor);
             void addHandle(VRGeometryPtr h, int i);
@@ -86,6 +87,7 @@ class VRPathtool : public VRObject {
         map<int, option > options;
         vector<VRGeometryWeakPtr> handles;
         vector<VRGeometryWeakPtr> controlhandles;
+        VRGeometryPtr arrowTemplate;
 
         map<path*, entryPtr> pathToEntry;
         map<VRGeometry*, vector<entryPtr> > handleToEntries; // map handle geometries to the entries
@@ -111,8 +113,8 @@ class VRPathtool : public VRObject {
         void updateDevs();
 
         VRGeometryPtr setGraphNode(int i);
-        void setGraphEdge(Graph::edge& e, bool handles = false);
-        void setGraphEdge(Graph::edge& e, bool handles, Vec3d n1, Vec3d n2);
+        void setGraphEdge(Graph::edge& e, bool handles = false, bool doArrow = false);
+        void setGraphEdge(Graph::edge& e, bool handles, bool doArrow, Vec3d n1, Vec3d n2);
         void projectHandle(VRGeometryPtr handle, VRDevicePtr dev);
 
     public:
@@ -126,11 +128,11 @@ class VRPathtool : public VRObject {
         void setProjectionGeometry(VRObjectPtr obj);
 
         void setGraph(GraphPtr g, bool doClear = true);
-        int addNode(posePtr p);
+        int addNode(PosePtr p);
         void remNode(int i);
         int getNodeID(VRObjectPtr o);
-        void connect(int i1, int i2, bool handles = true);
-        void connect(int i1, int i2, bool handles, Vec3d n1, Vec3d n2);
+        void connect(int i1, int i2, bool handles = true, bool doArrow = false);
+        void connect(int i1, int i2, bool handles, bool doArrow, Vec3d n1, Vec3d n2);
         void disconnect(int i1, int i2);
 
         pathPtr newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution = 10, bool doCHandles = false);

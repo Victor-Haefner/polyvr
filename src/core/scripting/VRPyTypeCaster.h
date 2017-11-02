@@ -26,7 +26,10 @@ class VRPyTypeCaster {
         template<typename T>
         static PyObject* cast(const vector<T>& vt) {
             vector<PyObject*> l;
-            for (auto t : vt) l.push_back(cast<T>(t));
+            for (auto t : vt) {
+                PyObject* o = cast<T>(t);
+                if (o) l.push_back(o);
+            }
             return pack(l);
         }
 };

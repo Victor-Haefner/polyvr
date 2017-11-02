@@ -30,18 +30,18 @@ void StreetLamp::make() {
 	};
 
 	auto p1 = path::create();
-	p1->addPoint( pose(Vec3d(0,0,0)));
-	p1->addPoint( pose(Vec3d(0,0,-2)));
+	p1->addPoint( Pose(Vec3d(0,0,0)));
+	p1->addPoint( Pose(Vec3d(0,0,-2)));
 	p1->compute(2);
 
 	auto p2 = path::create();
-	p2->addPoint( pose(Vec3d(0,0,-2)));
-	p2->addPoint( pose(Vec3d(0,0,-4)));
+	p2->addPoint( Pose(Vec3d(0,0,-2)));
+	p2->addPoint( Pose(Vec3d(0,0,-4)));
 	p2->compute(2);
 
 	auto p3 = path::create();
-	p3->addPoint( pose(Vec3d(0,0,-4)));
-	p3->addPoint( pose(Vec3d(1,0,-5), Vec3d(2,0,-1)));
+	p3->addPoint( Pose(Vec3d(0,0,-4)));
+	p3->addPoint( Pose(Vec3d(1,0,-5), Vec3d(2,0,-1)));
 	p3->compute(5);
 
 	addPart(0.1, p1);
@@ -59,7 +59,7 @@ void StreetLamp::make() {
     assets["streetlamp"] = g;
 }
 
-void StreetLamp::add(const pose& p, VRGeoData* geo) {
+void StreetLamp::add(const Pose& p, VRGeoData* geo) {
     string name = "streetlamp";
     if (!assets.count(name)) make();
     if (!assets.count(name)) return;

@@ -139,7 +139,7 @@ void VRBlinds::create() {
 }
 
 void VRBlinds::interpolate(float t) {
-    GeoPnt3fPropertyRecPtr pos;
+    GeoPnt3fPropertyMTRecPtr pos;
     for (uint i=0; i<bl_pos_open.size(); i++)
         pos->addValue( (bl_pos_open[i]-bl_pos_closed[i])*t );
     blend_geo->setPositions(pos);

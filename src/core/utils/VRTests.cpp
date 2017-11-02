@@ -13,7 +13,7 @@
 using namespace OSG;
 
 void listActiveMaterials() {
-    map<Material*, MaterialRecPtr> materials;
+    map<Material*, MaterialMTRecPtr> materials;
 
     auto root = VRScene::getCurrent()->getRoot();
     auto geos = root->getChildren(true, "Geometry");
@@ -24,7 +24,7 @@ void listActiveMaterials() {
         if (!m) continue;
         GeometryMTRecPtr geo = m->geo;
         if (!geo) continue;
-        MaterialRecPtr mat = geo->getMaterial();
+        MaterialMTRecPtr mat = geo->getMaterial();
         if (!mat) continue;
         materials[mat.get()] = mat;
     }

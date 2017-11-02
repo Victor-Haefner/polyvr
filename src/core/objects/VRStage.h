@@ -16,7 +16,7 @@ using namespace std;
 class VRStage : public VRObject {
     private:
         VRMaterialPtr target;
-        ImageRecPtr fboImg;
+        ImageMTRecPtr fboImg;
         TextureObjChunkRefPtr fboTex;
         FrameBufferObjectRefPtr fbo;
         SimpleStageRefPtr stage;
@@ -44,7 +44,7 @@ class VRStage : public VRObject {
         virtual void setSize( Vec2i size);
         void setTarget(VRMaterialPtr mat, int tid = 0);
         void setCamera(OSGCameraPtr cam);
-        void setBackground(BackgroundRecPtr bg);
+        void setBackground(BackgroundMTRecPtr bg);
         void update();
 };
 

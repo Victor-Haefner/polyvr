@@ -72,7 +72,7 @@ class VRMillingWorkPiece : public VRGeometry {
     private:
         Vec3i gridSize;
         int updateCount = 0;
-        posePtr toolPose;
+        PosePtr toolPose;
         VRTransformWeakPtr tool;
         VRUpdateCbPtr uFkt;
         int levelsPerGeometry = 12; // can be overridden

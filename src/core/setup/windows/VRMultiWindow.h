@@ -13,7 +13,7 @@ class VRMultiWindow : public VRWindow {
     private:
         vector<string> servers;
         string connection_type ="Multicast";
-        MultiDisplayWindowRecPtr win;
+        MultiDisplayWindowMTRecPtr win;
         int Nx = 1;
         int Ny = 1;
         int state = INITIALIZING;

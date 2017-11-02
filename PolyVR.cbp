@@ -150,6 +150,7 @@
 			<Add option="-lgdal" />
 			<Add option="-lgmp" />
 			<Add option="-lmpfr" />
+			<Add option="-lmtdev" />
 			<Add option="-lSDL" />
 			<Add option="-lmicrohttpd" />
 			<Add option="-lcurl" />
@@ -357,6 +358,14 @@
 		<Unit filename="src/addons/Factory/VRPyMechanism.h" />
 		<Unit filename="src/addons/Factory/VRPyNumberingEngine.h" />
 		<Unit filename="src/addons/Factory/network.h" />
+		<Unit filename="src/addons/LeapMotion/VRHandGeo.cpp" />
+		<Unit filename="src/addons/LeapMotion/VRHandGeo.h" />
+		<Unit filename="src/addons/LeapMotion/VRLeap.cpp" />
+		<Unit filename="src/addons/LeapMotion/VRLeap.h" />
+		<Unit filename="src/addons/LeapMotion/VRPyHandGeo.cpp" />
+		<Unit filename="src/addons/LeapMotion/VRPyHandGeo.h" />
+		<Unit filename="src/addons/LeapMotion/VRPyLeap.cpp" />
+		<Unit filename="src/addons/LeapMotion/VRPyLeap.h" />
 		<Unit filename="src/addons/RealWorld/Altitude.h" />
 		<Unit filename="src/addons/RealWorld/Assets/Asset.cpp" />
 		<Unit filename="src/addons/RealWorld/Assets/Asset.h" />
@@ -459,6 +468,8 @@
 		<Unit filename="src/addons/Semantics/Reasoning/VRConcept.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VREntity.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VREntity.h" />
+		<Unit filename="src/addons/Semantics/Reasoning/VROWLExport.cpp" />
+		<Unit filename="src/addons/Semantics/Reasoning/VROWLExport.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROWLImport.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROWLImport.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntology.cpp" />
@@ -528,6 +539,8 @@
 		<Unit filename="src/addons/WorldGenerator/nature/VRTree.h" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRAsphalt.cpp" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRAsphalt.h" />
+		<Unit filename="src/addons/WorldGenerator/roads/VRBridge.cpp" />
+		<Unit filename="src/addons/WorldGenerator/roads/VRBridge.h" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoad.cpp" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoad.h" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoadBase.cpp" />
@@ -536,6 +549,8 @@
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoadIntersection.h" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoadNetwork.cpp" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoadNetwork.h" />
+		<Unit filename="src/addons/WorldGenerator/roads/VRTunnel.cpp" />
+		<Unit filename="src/addons/WorldGenerator/roads/VRTunnel.h" />
 		<Unit filename="src/addons/WorldGenerator/terrain/VRPlanet.cpp" />
 		<Unit filename="src/addons/WorldGenerator/terrain/VRPlanet.h" />
 		<Unit filename="src/addons/WorldGenerator/terrain/VRPyTerrain.cpp" />
@@ -654,10 +669,16 @@
 		<Unit filename="src/core/networking/VRSharedMemory.h" />
 		<Unit filename="src/core/networking/VRSocket.cpp" />
 		<Unit filename="src/core/networking/VRSocket.h" />
+		<Unit filename="src/core/networking/VRWebSocket.cpp" />
+		<Unit filename="src/core/networking/VRWebSocket.h" />
 		<Unit filename="src/core/networking/mongoose/mongoose.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/networking/mongoose/mongoose.h" />
+		<Unit filename="src/core/networking/mongoose/mongoose_67.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/networking/mongoose/mongoose_67.h" />
 		<Unit filename="src/core/objects/OSGCamera.cpp" />
 		<Unit filename="src/core/objects/OSGCamera.h" />
 		<Unit filename="src/core/objects/OSGObject.cpp" />
@@ -905,6 +926,8 @@
 		<Unit filename="src/core/scripting/VRPyMobile.h" />
 		<Unit filename="src/core/scripting/VRPyMouse.cpp" />
 		<Unit filename="src/core/scripting/VRPyMouse.h" />
+		<Unit filename="src/core/scripting/VRPyMultiTouch.cpp" />
+		<Unit filename="src/core/scripting/VRPyMultiTouch.h" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.cpp" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.h" />
 		<Unit filename="src/core/scripting/VRPyNavigator.cpp" />
@@ -1000,6 +1023,8 @@
 		<Unit filename="src/core/setup/devices/VRKeyboard.h" />
 		<Unit filename="src/core/setup/devices/VRMouse.cpp" />
 		<Unit filename="src/core/setup/devices/VRMouse.h" />
+		<Unit filename="src/core/setup/devices/VRMultiTouch.cpp" />
+		<Unit filename="src/core/setup/devices/VRMultiTouch.h" />
 		<Unit filename="src/core/setup/devices/VRServer.cpp" />
 		<Unit filename="src/core/setup/devices/VRServer.h" />
 		<Unit filename="src/core/setup/devices/VRSignal.cpp" />
@@ -1012,6 +1037,8 @@
 		<Unit filename="src/core/setup/tracking/DTrack.cpp" />
 		<Unit filename="src/core/setup/tracking/DTrack.h" />
 		<Unit filename="src/core/setup/tracking/Kinect.h" />
+		<Unit filename="src/core/setup/tracking/OptiTrack.cpp" />
+		<Unit filename="src/core/setup/tracking/OptiTrack.h" />
 		<Unit filename="src/core/setup/tracking/VRPN.cpp" />
 		<Unit filename="src/core/setup/tracking/VRPN.h" />
 		<Unit filename="src/core/setup/tracking/Vive.cpp" />

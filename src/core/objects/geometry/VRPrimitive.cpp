@@ -212,12 +212,12 @@ GeometryMTRecPtr VRArrow::make() {
 }
 
 GeometryMTRecPtr VRScrewThread::make() {
-    GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
-    GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
-    GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyRecPtr      Norms = GeoVec3fProperty::create();
-    GeoUInt32PropertyRecPtr     Indices = GeoUInt32Property::create();
-    SimpleMaterialRecPtr        Mat = SimpleMaterial::create();
+    GeoUInt8PropertyMTRecPtr      Type = GeoUInt8Property::create();
+    GeoUInt32PropertyMTRecPtr     Length = GeoUInt32Property::create();
+    GeoPnt3fPropertyMTRecPtr      Pos = GeoPnt3fProperty::create();
+    GeoVec3fPropertyMTRecPtr      Norms = GeoVec3fProperty::create();
+    GeoUInt32PropertyMTRecPtr     Indices = GeoUInt32Property::create();
+    SimpleMaterialMTRecPtr        Mat = SimpleMaterial::create();
 
     int rN = Nsegments;
 
@@ -274,12 +274,12 @@ GeometryMTRecPtr VRScrewThread::make() {
     return geo;
 }
 GeometryMTRecPtr VRGear::make() {
-    GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
-    GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
-    GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyRecPtr      Norms = GeoVec3fProperty::create();
-    GeoUInt32PropertyRecPtr     Indices = GeoUInt32Property::create();
-    SimpleMaterialRecPtr        Mat = SimpleMaterial::create();
+    GeoUInt8PropertyMTRecPtr      Type = GeoUInt8Property::create();
+    GeoUInt32PropertyMTRecPtr     Length = GeoUInt32Property::create();
+    GeoPnt3fPropertyMTRecPtr      Pos = GeoPnt3fProperty::create();
+    GeoVec3fPropertyMTRecPtr      Norms = GeoVec3fProperty::create();
+    GeoUInt32PropertyMTRecPtr     Indices = GeoUInt32Property::create();
+    SimpleMaterialMTRecPtr        Mat = SimpleMaterial::create();
 
     float r0 = hole;
     float r1 = radius();

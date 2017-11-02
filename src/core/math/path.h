@@ -12,7 +12,7 @@ using namespace std;
 
 class path : public VRStorage {
     private:
-        vector<pose> points;
+        vector<Pose> points;
         vector<Color3f> point_colors;
 
         int degree = 3;
@@ -37,11 +37,11 @@ class path : public VRStorage {
 
         static shared_ptr<path> create();
 
-        int addPoint( const pose& p, Color3f c = Color3f() );
-        void setPoint(int i, const pose& p, Color3f c = Color3f() );
-        pose& getPoint(int i);
+        int addPoint( const Pose& p, Color3f c = Color3f() );
+        void setPoint(int i, const Pose& p, Color3f c = Color3f() );
+        Pose& getPoint(int i);
         Color3f getPointColor(int i);
-        vector<pose> getPoints();
+        vector<Pose> getPoints();
 
         void invert();
         void close();
@@ -51,11 +51,11 @@ class path : public VRStorage {
         vector<Vec3d> getDirections();
         vector<Vec3d> getUpvectors();
         vector<Vec3d> getColors();
-        vector<pose> getPoses();
+        vector<Pose> getPoses();
         Vec3d getPosition(float t, int i = 0, int j = 0, bool fast = true);
         void getOrientation(float t, Vec3d& dir, Vec3d& up, int i = 0, int j = 0, bool fast = true);
         Color3f getColor(float t, int i = 0, int j = 0);
-        posePtr getPose(float t, int i = 0, int j = 0, bool fast = true);
+        PosePtr getPose(float t, int i = 0, int j = 0, bool fast = true);
 
         float getClosestPoint(Vec3d p); // return t parameter on path
         float getDistance(Vec3d p);

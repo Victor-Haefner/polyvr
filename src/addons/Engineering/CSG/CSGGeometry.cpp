@@ -31,18 +31,25 @@ vector<string> CSGGeometry::getOperations() {
 }
 
 CSGGeometry::CSGGeometry(string name) : VRGeometry(name) {
-	oct = new Octree(thresholdL);
-	type = "CSGGeometry";
-	dm->read(oldWorldTrans);
-	polyhedron = new CGAL::Polyhedron();
-
 	store("op", &operation);
 }
 
 CSGGeometry::~CSGGeometry() {}
 
 CSGGeometryPtr CSGGeometry::ptr() { return static_pointer_cast<CSGGeometry>( shared_from_this() ); }
-CSGGeometryPtr CSGGeometry::create(string name) { return shared_ptr<CSGGeometry>(new CSGGeometry(name) ); }
+
+CSGGeometryPtr CSGGeometry::create(string name) {
+    auto c = shared_ptr<CSGGeometry>(new CSGGeometry(name) );
+    c->init();
+    return c;
+}
+
+void CSGGeometry::init() {
+	oct = new Octree(thresholdL);
+	type = "CSGGeometry";
+	setMatrix(oldWorldTrans);
+	polyhedron = new CGAL::Polyhedron();
+}
 
 void CSGGeometry::setCSGGeometry(CGAL::Polyhedron *p) {
 	if (!p->is_valid()) return;

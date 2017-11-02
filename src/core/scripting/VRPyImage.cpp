@@ -9,6 +9,7 @@
 
 using namespace OSG;
 
+template<> PyObject* VRPyTypeCaster::cast(const VRTexturePtr& e) { return VRPyImage::fromSharedPtr(e); }
 template<> bool toValue(PyObject* o, VRTexturePtr& v) { if (!VRPyImage::check(o)) return 0; v = ((VRPyImage*)o)->objPtr; return 1; }
 
 template<> PyTypeObject VRPyBaseT<VRTexture>::type = {

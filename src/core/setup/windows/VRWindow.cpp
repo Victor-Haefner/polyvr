@@ -28,7 +28,7 @@ VRWindow::~VRWindow() {
 VRWindowPtr VRWindow::create() { return VRWindowPtr(new VRWindow()); }
 VRWindowPtr VRWindow::ptr() { return shared_from_this(); }
 
-WindowRecPtr VRWindow::getOSGWindow() { return _win; }
+WindowMTRecPtr VRWindow::getOSGWindow() { return _win; }
 
 void VRWindow::addView(VRViewPtr view) {
     views.push_back(view);

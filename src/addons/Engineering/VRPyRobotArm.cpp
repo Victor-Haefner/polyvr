@@ -14,7 +14,7 @@ PyMethodDef VRPyRobotArm::methods[] = {
     {"setAngleDirections", PyWrap(RobotArm, setAngleDirections, "Set angles rotation direction - setAngleDirections([1/-1])", void, vector<int> ) },
     {"setAxis", PyWrap(RobotArm, setAxis, "Set rotation axis for each part - setAxis([int a])\n a: 0 = 'x', 1 = 'y', 2 = 'z'", void, vector<int> ) },
     {"setLengths", PyWrap(RobotArm, setLengths, "Set kinematic lengths between joints - setLengths([base_height, upper_arm length, forearm length, grab position])", void, vector<float> ) },
-    {"moveTo", PyWrap(RobotArm, moveTo, "Move the end effector to a certain position - moveTo([x,y,z])", void, posePtr ) },
+    {"moveTo", PyWrap(RobotArm, moveTo, "Move the end effector to a certain position - moveTo([x,y,z])", void, PosePtr ) },
     {"setGrab", PyWrap(RobotArm, setGrab, "Set grab state - setGrab(float d)\n d: 0 is closed, 1 is open", void, float ) },
     {"toggleGrab", PyWrap(RobotArm, toggleGrab, "Toggle the grab - toggleGrab()", void ) },
     {"setAngles", PyWrap(RobotArm, setAngles, "Set joint angles - setAngles( angles )", void, vector<float> ) },
@@ -24,5 +24,6 @@ PyMethodDef VRPyRobotArm::methods[] = {
     {"setPath", PyWrap(RobotArm, setPath, "Set robot path - setPath()", void, pathPtr ) },
     {"getPath", PyWrap(RobotArm, getPath, "Get robot path - getPath()", pathPtr ) },
     {"moveOnPath", PyWrapOpt(RobotArm, moveOnPath, "Move robot on internal path - moveOnPath(float t0, float t1, bool loop)", "0", void, float, float, bool) },
+    {"isMoving", PyWrap(RobotArm, isMoving, "Get animation status - isMoving()", bool) },
     {NULL}  /* Sentinel */
 };

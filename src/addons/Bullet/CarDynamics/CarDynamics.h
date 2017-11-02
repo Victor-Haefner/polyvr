@@ -27,18 +27,20 @@ class VRCarDynamics : public VRObject {
             Vec3d direction = Vec3d(0, -1, 0);
             Vec3d axle = Vec3d(-1, 0, 0);
             float suspensionRestLength = 0.6;
-            float suspensionStiffness = 20.f;
-            float suspensionDamping = 2.3f;
-            float suspensionCompression = 4.4f;
-            float rollInfluence = 0.1f;//1.0f;
+            float suspensionStiffness = 20;
+            float suspensionDamping = 2.3;
+            float suspensionCompression = 4.4;
+            //float rollInfluence = 0.1;//1.0;
+            float rollInfluence = 1.0;
             float maxSteer = 0.3;
             bool isSteered = false;
             bool isDriven = false;
 
             // wheel parameter
-            float friction = 1000;//BT_LARGE_FLOAT;
-            float radius = .4f;
-            float width = 0.4f;
+            //float friction = 1000;//BT_LARGE_FLOAT;
+            float friction = 0.8;//BT_LARGE_FLOAT;
+            float radius = 0.4;
+            float width = 0.4;
 
             // user inputs
             int gear = 0;
@@ -167,7 +169,7 @@ class VRCarDynamics : public VRObject {
         void update(float throttle, float Break, float steering, float clutch = 0, int gear = 1);
         void updateWheel(int wheel, float throttle, float Break, float steering, float clutch = 0, int gear = 1);
 
-        void reset(const pose& p);
+        void reset(const Pose& p);
         float getSpeed();
         float getAcceleration();
         void setIgnition(bool b);

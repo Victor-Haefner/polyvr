@@ -151,7 +151,7 @@ bool VRConstraint::hasTConstraint() { return tConMode != NONE; }
 bool VRConstraint::hasRConstraint() { return rConMode != NONE; }
 bool VRConstraint::hasConstraint() { return rConMode != NONE || tConMode != NONE; }
 
-void VRConstraint::setActive(bool b, VRTransformPtr obj) { active = b; if (b) obj->getWorldMatrix(Reference); obj->setFixed(!b); prepare(); }
+void VRConstraint::setActive(bool b, VRTransformPtr obj) { active = b; if (b) obj->getWorldMatrix(Reference); prepare(); }
 bool VRConstraint::isActive() { return active; }
 
 OSG_END_NAMESPACE;

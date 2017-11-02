@@ -75,6 +75,16 @@ class VRGeoData {
         bool setVert(int i, Pnt3d p, Vec3d n, Color3f c, Vec2d t, Vec2d t2);
         bool setVert(int i, Pnt3d p, Vec3d n, Color4f c, Vec2d t, Vec2d t2);
 
+        bool setType(int i, int t);
+        bool setLength(int i, int l);
+        bool setIndex(int i, int I);
+        bool setPos(int i, Pnt3d p);
+        bool setNorm(int i, Vec3d n);
+        bool setTexCoord(int i, Vec2d t);
+        bool setTexCoord2(int i, Vec2d t);
+        bool setColor(int i, Color3f c);
+        bool setColor(int i, Color4f c);
+
         int pushVert(const VRGeoData& other, int i);
         int pushVert(const VRGeoData& other, int i, Matrix4d m);
 
