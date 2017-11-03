@@ -18,9 +18,9 @@ VRSharedMemory::VRSharedMemory(string segment, bool init) {
     cout << "Init SharedMemory segment " << segment << endl;
     shared_memory_object::remove(segment.c_str());
     this->segment->memory = managed_shared_memory(open_or_create, segment.c_str(), 65536);
-    int U = getObject<int>("__users__");
-    setObject<int>("__users__", U+1);
     unlock();
+    int U = getObject<int>("__users__", 0);
+    setObject<int>("__users__", U+1);
 }
 
 VRSharedMemory::~VRSharedMemory() {

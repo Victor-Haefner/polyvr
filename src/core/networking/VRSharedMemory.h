@@ -45,10 +45,10 @@ class VRSharedMemory {
         }
 
         template<class T>
-        T* addObject(const string& name) {
-            lock();
+        T* addObject(const string& name, bool doLock = true) {
+            if (doLock) lock();
             T* data = segment->memory.construct<T>(name.c_str())();
-            unlock();
+            if (doLock) unlock();
             return data;
         }
 
@@ -93,7 +93,7 @@ class VRSharedMemory {
                 if (data.first) {
                     *data.first = t;
                 } else {
-                    auto o = addObject<T>(name);
+                    auto o = addObject<T>(name, false);
                     *o = t;
                 }
             } catch(boost::interprocess::interprocess_exception e) { cout << "SharedMemory::getObject failed with: " << e.what() << endl; }
