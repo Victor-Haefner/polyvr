@@ -13,6 +13,10 @@
 
 using namespace OSG;
 
+
+VRRoadIntersection::RoadFront::RoadFront(VRRoadPtr road) : road(road) {}
+
+
 VRRoadIntersection::VRRoadIntersection() : VRRoadBase("RoadIntersection") {}
 VRRoadIntersection::~VRRoadIntersection() {}
 
@@ -259,8 +263,7 @@ VREntityPtr VRRoadIntersection::getRoadNode(VREntityPtr roadEnt) {
 }
 
 void VRRoadIntersection::addRoad(VRRoadPtr road) {
-    auto roadFront = shared_ptr<RoadFront>( new RoadFront() );
-    roadFront->road = road;
+    auto roadFront = shared_ptr<RoadFront>( new RoadFront(road) );
     roadFronts.push_back(roadFront);
     entity->add("roads", road->getEntity()->getName());
     road->getEntity()->add("intersections", entity->getName());

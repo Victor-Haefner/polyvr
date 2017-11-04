@@ -41,6 +41,8 @@ VRRoadNetworkPtr VRRoadNetwork::create() {
     return rn;
 }
 
+VRRoadNetworkPtr VRRoadNetwork::ptr() { return dynamic_pointer_cast<VRRoadNetwork>(shared_from_this()); }
+
 void VRRoadNetwork::init() {
     graph = Graph::create();
 
@@ -160,6 +162,11 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
 
     if (nodesIn.size() != normalsIn.size()) {
         cout << "Warning in VRRoadNetwork::addLongRoad: ignore road '" << name << "', nodes and normals vector sizes mismatch!" << endl;
+        return 0;
+    }
+
+    if (nodesIn.size() <= 1) {
+        cout << "Warning in VRRoadNetwork::addLongRoad: ignore road '" << name << "', not enough nodes: " << nodesIn.size() << endl;
         return 0;
     }
 
@@ -378,7 +385,7 @@ void VRRoadNetwork::physicalizeAssets() {
     collisionMesh->setMeshVisibility(false);
 }
 
-vector<VREntityPtr> VRRoadNetwork::getRoadNodes() {
+vector<VREntityPtr> VRRoadNetwork::getRoadNodes() { // all nodes from all paths from all roads
     //auto nodes = ontology->process("q(n):Node(n);Road(r);has(r.path.nodes,n)");
     map<int, VREntityPtr> nodes;
     for (auto road : roads) {
@@ -391,26 +398,6 @@ vector<VREntityPtr> VRRoadNetwork::getRoadNodes() {
     }
     vector<VREntityPtr> res;
     for (auto ni : nodes) res.push_back(ni.second);
-    return res;
-}
-
-vector<VRRoadPtr> VRRoadNetwork::getNodeRoads(VREntityPtr node) {
-    vector<VREntityPtr> nEntries;
-    for (auto nE : node->getAllEntities("paths")) nEntries.push_back( nE );
-
-    vector<VRRoadPtr> res; //= ontology->process("q(r):Node("+node->getName()+");Road(r);has(r.path.nodes,"+node->getName()+")");
-    for (auto road : roads) {
-        bool added = false;
-        for (auto rp : road->getEntity()->getAllEntities("path")) {
-            for (auto rnE : rp->getAllEntities("nodes")) {
-                for (auto nE : nEntries) {
-                    if (nE == rnE) { res.push_back(road); added = true; break; }
-                }
-                if (added) break;
-            }
-            if (added) break;
-        }
-    }
     return res;
 }
 
@@ -518,9 +505,40 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p) {
     geo->destroy();
 }
 
+vector<VRRoadPtr> VRRoadNetwork::getNodeRoads(VREntityPtr node) {
+    vector<VREntityPtr> nPaths;
+    for (auto nE : node->getAllEntities("paths")) {
+        auto path = nE->getEntity("path");
+        nPaths.push_back( path );
+    }
+
+    vector<VRRoadPtr> res; //= ontology->process("q(r):Node("+node->getName()+");Road(r);has(r.path.nodes,"+node->getName()+")");
+    for (auto road : roads) {
+        bool added = false;
+        for (auto rpath : road->getEntity()->getAllEntities("path")) {
+            for (auto npath : nPaths) {
+                if (rpath == npath) { res.push_back(road); added = true; break; }
+            }
+            if (added) break;
+        }
+    }
+    return res;
+}
+
 void VRRoadNetwork::computeIntersections() {
     cout << "VRRoadNetwork::computeIntersections\n";
-    for (auto node : getRoadNodes() ) {
+    vector<VRRoadPtr> newRoads;
+    for (auto road : roads) {
+        for (auto r : road->splitAtIntersections(ptr())) newRoads.push_back(r);
+    }
+    for (auto r : newRoads) {
+        roads.push_back(r);
+        ways.push_back(r);
+        roadsByEntity[r->getEntity()] = r;
+        addChild(r);
+    }
+
+    for (auto node : getRoadNodes()) {
         auto nodeRoads = getNodeRoads(node);
         if (nodeRoads.size() <= 1) continue; // ignore ends
         auto iEnt = world->getOntology()->addEntity( "intersectionRoad", "RoadIntersection" );
@@ -597,8 +615,8 @@ void VRRoadNetwork::computeSurfaces() {
     cout << "VRRoadNetwork::computeSurfaces\n";
     auto computeRoadSurface = [&](VRRoadPtr road) {
         auto roadGeo = road->createGeometry();
-        roadGeo->setMaterial( asphalt );
         if (!roadGeo) return;
+        roadGeo->setMaterial( asphalt );
         roadGeo->getPhysics()->setDynamic(false);
         roadGeo->getPhysics()->setShape("Concave");
         roadGeo->getPhysics()->setPhysicalized(true);

@@ -1,4 +1,5 @@
 #include "VRRoad.h"
+#include "VRRoadNetwork.h"
 #include "../terrain/VRTerrain.h"
 #include "core/utils/toString.h"
 #include "core/math/path.h"
@@ -66,8 +67,61 @@ VRRoad::edgePoint& VRRoad::getEdgePoints( VREntityPtr node ) {
     return edgePoints[node];
 }
 
+vector<VRRoadPtr> VRRoad::splitAtIntersections(VRRoadNetworkPtr network) { // TODO: refactor the code a bit
+    vector<VRRoadPtr> roads;
+    auto e = getEntity();
+    auto path = e->getEntity("path");
+    auto nodes = path->getAllEntities("nodes");
+    for (int i=1; i<nodes.size()-1; i++) {
+        auto node = nodes[i]->getEntity("node");
+        int N = node->getAllEntities("paths").size();
+        if (N <= 1) continue;
+
+        // shorten old road path and add nodes to new road path
+        auto npath = path->copy();
+        path->clear("nodes");
+        npath->clear("nodes");
+        for (int j=0; j<=i; j++) {
+            path->add("nodes", nodes[j]->getName());
+        }
+        nodes[i]->set("sign", "1"); // last node of old path
+
+        auto ne = nodes[i]->copy(); // new node entry
+        ne->set("sign", "-1"); // first node of new path
+        npath->add("nodes", ne->getName());
+        ne->set("path", npath->getName());
+        ne->getEntity("node")->add("paths", ne->getName());
+        for (int j=i+1; j<nodes.size(); j++) {
+            npath->add("nodes", nodes[j]->getName());
+            nodes[j]->set("path", npath->getName());
+        }
+
+        // copy road
+        int rID = network->getRoadID();
+        auto r = create();
+        auto re = e->copy();
+        re->set("path", npath->getName());
+        re->set("ID", toString(rID));
+        r->setEntity(re);
+        r->ontology = ontology;
+        roads.push_back(r);
+
+        re->clear("lanes");
+        for (auto l : e->getAllEntities("lanes")) {
+            auto lc = l->copy();
+            lc->set("road", re->getName());
+            re->add("lanes", lc->getName());
+        }
+
+        auto splits = r->splitAtIntersections(network);
+        for (auto s : splits) roads.push_back(s);
+        break;
+    }
+    return roads;
+}
+
 VRGeometryPtr VRRoad::createGeometry() {
-    auto strokeGeometry = [&]() {
+    auto strokeGeometry = [&]() -> VRGeometryPtr {
 	    float width = getWidth();
 		float W = width*0.5;
 		vector<Vec3d> profile;
@@ -81,11 +135,13 @@ VRGeometryPtr VRRoad::createGeometry() {
 		}
 		geo->setPaths( paths );
 		geo->strokeProfile(profile, 0, 0);
+		if (!geo->getMesh()) return 0;
 		if (terrain) terrain->elevateVertices(geo, roadTerrainOffset);
 		return geo;
 	};
 
 	auto geo = strokeGeometry();
+	if (!geo) return 0;
 	setupTexCoords( geo, entity );
 	addChild(geo);
 	return geo;

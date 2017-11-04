@@ -20,6 +20,7 @@ struct VREntity : public VROntoID, public VRName {
     VREntity(string name, VROntologyPtr o, VRConceptPtr c = 0);
 
     static VREntityPtr create(string name = "none", VROntologyPtr o = 0, VRConceptPtr c = 0);
+    VREntityPtr copy();
     void addConcept(VRConceptPtr c);
     vector<VRConceptPtr> getConcepts();
     vector<string> getConceptNames();

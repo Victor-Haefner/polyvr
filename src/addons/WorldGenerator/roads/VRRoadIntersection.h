@@ -29,6 +29,8 @@ class VRRoadIntersection : public VRRoadBase {
             float width = 0;
             vector<VREntityPtr> inLanes; // all lanes going in of the intersection
             vector<VREntityPtr> outLanes; // all lanes going out of the intersection
+
+            RoadFront(VRRoadPtr road);
         };
 
     private:
