@@ -27,45 +27,53 @@ class VRRain : public VRGeometry { //: public VRParticles {
 
         // -------------------------------------------------------------------------------------
         VRUpdateCbPtr updatePtr;
+        VRAnimCbPtr rainAnimationCb;
         VRMaterialPtr mat;
         VRMaterialPtr matTex;
         //VRTextureRendererPtr tr;
 
         VRCameraPtr camDef;
         VRCameraPtr camTex;
-        VRSkyPtr sky;
+        //VRSkyPtr sky;
         string vScript;
         string fScript;
-        float density = 0;
         float offset = 0;
         float camH = 40;
         //
         // time and location
-        double lastTime = 0;
+        float lastTime = 0;
+        bool isRaining = false;
 
         // clouds
         uint textureSize;
 
         void update();
+        void startRainCallback(float t);
+        void stopRainCallback(float t);
+        void updateScale(float scaleNow);
         // -------------------------------------------------------------------------------------
+        float rainDensity;
 
-        double densityStart = 0.1;      //density of clouds at start of transition
-        double speedStartX = 0.002;
-        double speedStartY = 0.001;
-        double colorStart = 1;
-        double lightStart = 1;
+        float densityStart = 0.1;      //density of clouds at start of transition
+        float speedStartX = 0.002;
+        float speedStartY = 0.001;
+        float colorStart = 1;
+        float lightStart = 1;
 
-        double speedX;
-        double speedY;
-        double color;
-        double light;
+        float density;
+        float speedX;
+        float speedY;
+        float color;
+        float light;
+
+        float tnow = 0;
 
         //VRSky rainSky = VRSKy(); need sky from scene
         //VRLight need Light from scene
 
-        double durationTransition = 10;
-        double scale = 0;
-        double scaleRN = 0;
+        float durationTransition = 10;
+        float scale = 0;
+        float scaleRN = 0;
 
         //void updateRain(float dt);
 
@@ -81,13 +89,13 @@ class VRRain : public VRGeometry { //: public VRParticles {
         void reloadShader();
         // -------------------------------------------------------------------------------------
 
-        void setScale( double scale );
+        void setScale( float scale );
         Vec2d get();
 
         void start();
         void stop();
 
-        void overrideParameters( double density, double speed, double color, double light );
+        void overrideParameters( float density, float speed, float color, float light );
 };
 
 OSG_END_NAMESPACE;

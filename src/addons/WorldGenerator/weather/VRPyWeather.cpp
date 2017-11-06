@@ -12,9 +12,9 @@ simpleVRPyType(Rain, New_ptr);
 PyMethodDef VRPyRain::methods[] = {
     {"start", PyWrap(Rain, start, "Starts Rain", void) },
     {"stop", PyWrap(Rain, stop, "Stops Rain", void) },
-    {"setScale", PyWrap(Rain, setScale, "Sets Scale", void, double) },
+    {"setScale", PyWrap(Rain, setScale, "Sets Scale", void, float) },
     {"get", PyWrap(Rain, get, "Gets Rain Parameters", Vec2d ) },
-    {"overrideParameters", PyWrap(Rain, overrideParameters, "override Parameters \n overrideParameters(density, durationTransition, color, light) \n", void, double, double, double, double ) },
+    {"overrideParameters", PyWrap(Rain, overrideParameters, "override Parameters \n overrideParameters(density, durationTransition, color, light) \n", void, float, float, float, float ) },
     {"reloadShader", PyWrap(Rain, reloadShader, "reloadShader", void) },
     {NULL}  /* Sentinel */
 };

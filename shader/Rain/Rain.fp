@@ -120,7 +120,7 @@ bool isD(float D) {
 	
 	//gl_FragDepth = 0.9124*tan(gettheta(fragDir));
 //- D/(512-0.1)*sin(gettheta(fragDir)))
-	if (gettheta(fragDir)>0.3 && israindropx < dropsize && israindropy < dropsize && !obstruction(D)) return true;
+	if (gettheta(fragDir)>0.3 && israindropx < dropsize && israindropy < dropsize) return true; // && !obstruction(D)
 	else return false;
 
 	return true;
@@ -134,6 +134,7 @@ vec3 checkrad() {
 	//might as well incorporate into main()
 
 	vec3 color = vec3(0,0,0.8);
+	//return color; //TESTING BLUE SCREEN
 	/*
 	if (obstruction(1)) color = mix(color,vec3(1,0,0),0.5);	
 	if (obstruction(2)) color = mix(color,vec3(0,1,0),0.5);
