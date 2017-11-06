@@ -197,6 +197,7 @@ void VRScene::update() {
     //root->getNode()->getVolume().getBounds( min, max );
     ThreadManagerUpdate();
     updateCallbacks();
+    VRTransform::updateConstraints();
 }
 
 void VRScene::updateLoadingProgress(VRThreadWeakPtr t) {

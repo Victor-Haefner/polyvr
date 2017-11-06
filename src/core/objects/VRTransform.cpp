@@ -707,12 +707,24 @@ void VRTransform::printTransformationTree(int indent) {
     if (indent == 0) cout << "\n";
 }
 
-void VRTransform::setConstraint(VRConstraintPtr c) { constraint = c; }
+map<VRTransform*, VRTransformWeakPtr> constrainedObjects;
+
+void VRTransform::updateConstraints() { // global updater
+    for (auto wc : constrainedObjects) if (auto c = wc.second.lock()) c->apply_constraints();
+}
+
+void VRTransform::setConstraint(VRConstraintPtr c) {
+    constraint = c;
+    if (c) constrainedObjects[this] = ptr();
+    else constrainedObjects.erase(this);
+}
+
 VRConstraintPtr VRTransform::getConstraint() { return constraint; }
 
 /** enable constraints on the object, 0 leaves the DOF free, 1 restricts it **/
 void VRTransform::apply_constraints() {
     if (!constraint) return;
+    if (!checkWorldChange()) return; // TODO: not working!
     constraint->apply(ptr());
 }
 
@@ -734,7 +746,7 @@ VRPhysics* VRTransform::getPhysics() {
 
 /** Update the object OSG transformation **/
 void VRTransform::updateChange() {
-    if (checkWorldChange()) apply_constraints();
+    apply_constraints();
     if (held) updatePhysics();
     //if (checkWorldChange()) updatePhysics();
 
