@@ -222,13 +222,20 @@ bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
         auto& left = statement->terms[0];
         auto& right = statement->terms[1];
 
+        bool lim = left.isMathExpression();
+        bool rim = right.isMathExpression();
+        string lmv, rmv;
+        if (lim) lmv = left.computeExpression(context);
+        if (rim) rmv = right.computeExpression(context);
+        if (lim) print("  left term " + left.str + " is math expression! -> " + lmv, GREEN);
+        if (rim) print("  right term " + right.str + " is math expression! -> " + rmv, GREEN);
+
         if (left.path.size() > 1) {
             for (auto eL : left.var->entities) {
                 for (auto eR : right.var->entities) {
                     string vR = "";
-                    if (right.isMathExpression()) {
-                        vR = right.computeExpression(context);
-                    } else {
+                    if (rim) vR = rmv;
+                    else {
                         vector<string> valR = right.path.getValue( eR.second );
                         if (valR.size() > 0) vR = valR[0];
                     }
@@ -238,7 +245,7 @@ bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
                 }
             }
         } else {
-            left.var->value = right.var->value;
+            left.var->value = rim ? rmv : right.var->value;
             print("  set " + left.str + " to " + right.str + " -> " + toString(left.var->value), GREEN);
         }
         statement->state = 1;

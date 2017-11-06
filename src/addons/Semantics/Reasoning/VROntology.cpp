@@ -86,12 +86,14 @@ VRConceptPtr VROntology::getConcept(string name) {
     }
     //cout << "found " << p->name << " " << p->ID << endl;
     //if (!p) cout << "Warning: concept " << name << " not found in ontology " << getName() << endl;
-    if (recentConcepts.size() > 10) { // too big, remove random element
-        auto it = recentConcepts.begin();
-        advance(it, rand() % recentConcepts.size());
-        recentConcepts.erase(it);
+    if (p) {
+        if (recentConcepts.size() > 10) { // too big, remove random element
+            auto it = recentConcepts.begin();
+            advance(it, rand() % recentConcepts.size());
+            recentConcepts.erase(it);
+        }
+        recentConcepts[name] = p;
     }
-    recentConcepts[name] = p;
     return p;
 }
 
