@@ -139,7 +139,6 @@ void VRTransform::updatePhysics() { //should be called from the main thread only
     if (!physics->isPhysicalized()) return;
 
     physics->updateTransformation( ptr() );
-    physics->pause();
     physics->resetForces();
 }
 
@@ -750,6 +749,13 @@ void VRTransform::updateFromBullet() {
 
 void VRTransform::setNoBltFlag() { noBlt = true; }
 
+void VRTransform::resolvePhysics() {
+    if (!physics) return;
+    if (physics->isGhost()) { updatePhysics(); return; }
+    if (physics->isDynamic() && !held) { updateFromBullet(); return; }
+    physics->updateTransformation( ptr() );
+}
+
 VRPhysics* VRTransform::getPhysics() {
     if (physics == 0) physics = new VRPhysics( ptr() );
     return physics;
@@ -759,8 +765,6 @@ VRPhysics* VRTransform::getPhysics() {
 void VRTransform::updateChange() {
     apply_constraints();
     if (held) updatePhysics();
-    //if (checkWorldChange()) updatePhysics();
-
     computeMatrix4d();
     updateTransformation();
     updatePhysics();

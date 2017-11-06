@@ -181,6 +181,7 @@ class VRTransform : public VRObject {
 
         /** Set the physics object **/
         VRPhysics* getPhysics();
+        void resolvePhysics();
         void updateFromBullet();
 
         /** Do not update the transform in the physics context for the next frame **/
