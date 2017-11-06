@@ -325,6 +325,13 @@ Vec3d VRTransform::getWorldUp(bool parentOnly) {
     return Vec3d(m[1]);
 }
 
+
+void VRTransform::updateTransform(VRTransformPtr t) {
+    if (!t) return;
+    if (t->getLastChange() < getLastChange()) return;
+    setMatrix(t->getMatrix()); // TODO: may need world matrix here
+}
+
 /** Set the world Matrix4d of the object **/
 void VRTransform::setWorldMatrix(Matrix4d m) {
     if (isNan(m)) return;
@@ -459,6 +466,7 @@ void VRTransform::setOrientation(Vec3d at, Vec3d up) {
 /** Set the pose of the object with the from, at and up vectors **/
 void VRTransform::setPose(Vec3d from, Vec3d dir, Vec3d up) {
     if (isNan(from) || isNan(dir) || isNan(up)) return;
+    if (from == _from && dir == _dir && up == _up) return;
     _from = from;
     _up = up;
     setDir(dir);
@@ -710,7 +718,9 @@ void VRTransform::printTransformationTree(int indent) {
 map<VRTransform*, VRTransformWeakPtr> constrainedObjects;
 
 void VRTransform::updateConstraints() { // global updater
-    for (auto wc : constrainedObjects) if (auto c = wc.second.lock()) c->apply_constraints();
+    for (auto wc : constrainedObjects) {
+        if (auto c = wc.second.lock()) c->updateChange();
+    }
 }
 
 void VRTransform::setConstraint(VRConstraintPtr c) {
@@ -725,6 +735,7 @@ VRConstraintPtr VRTransform::getConstraint() { return constraint; }
 void VRTransform::apply_constraints() {
     if (!constraint) return;
     if (!checkWorldChange()) return; // TODO: not working!
+    computeMatrix4d(); // update matrix!
     constraint->apply(ptr());
 }
 

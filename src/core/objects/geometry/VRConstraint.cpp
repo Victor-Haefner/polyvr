@@ -51,12 +51,9 @@ VRConstraintPtr VRConstraint::duplicate() {
 }
 
 void VRConstraint::apply(VRTransformPtr obj) {
-    //cout << "VRConstraint::apply on obj: " << obj->getName() << " rm " << rConMode << " tm " << tConMode << endl;
     if (!hasConstraint() || !active) return;
-    cout << " A1 " << endl;
     auto now = VRGlobals::CURRENT_FRAME;
     if (apply_time_stamp == now) return;
-    cout << " A2 " << endl;
     apply_time_stamp = now;
 
     VRTransformPtr ref = Referential.lock();
@@ -120,7 +117,6 @@ void VRConstraint::setReference(Matrix4d m) { Reference = m; prepare(); }
 void VRConstraint::setReferential(VRTransformPtr t) { Referential = t; }
 
 void VRConstraint::setTConstraint(Vec3d trans, int mode, bool local) {
-    cout << "VRConstraint::setTConstraint on obj: " << mode << endl;
     tConstraint = trans;
     if (tConstraint.length() > 1e-4 && mode != POINT) tConstraint.normalize();
     tConMode = mode;
@@ -128,7 +124,6 @@ void VRConstraint::setTConstraint(Vec3d trans, int mode, bool local) {
 }
 
 void VRConstraint::setRConstraint(Vec3d rot, int mode, bool local) {
-    cout << "VRConstraint::setRConstraint on obj: " << mode << endl;
     rConstraint = rot;
     if (rConstraint.length() > 1e-4 && mode != POINT) rConstraint.normalize();
     rConMode = mode;
