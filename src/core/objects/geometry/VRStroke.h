@@ -38,7 +38,7 @@ class VRStroke : public VRGeometry {
         void setPath(pathPtr p);
         void addPath(pathPtr p);
         void setPaths(vector<pathPtr> p);
-        vector<pathPtr>& getPaths();
+        vector<pathPtr> getPaths();
 
         void addPolygon(VRPolygonPtr p);
 

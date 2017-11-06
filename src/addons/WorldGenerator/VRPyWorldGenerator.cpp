@@ -10,14 +10,18 @@
 using namespace OSG;
 
 template<> PyObject* VRPyTypeCaster::cast(const VRRoadPtr& e) { return VRPyRoad::fromSharedPtr(e); }
+template<> PyObject* VRPyTypeCaster::cast(const VRRoadIntersectionPtr& e) { return VRPyRoadIntersection::fromSharedPtr(e); }
 template<> PyObject* VRPyTypeCaster::cast(const VRRoadNetworkPtr& e) { return VRPyRoadNetwork::fromSharedPtr(e); }
+template<> PyObject* VRPyTypeCaster::cast(const VRDistrictPtr& e) { return VRPyDistrict::fromSharedPtr(e); }
 template<> PyObject* VRPyTypeCaster::cast(const VRWorldGeneratorPtr& e) { return VRPyWorldGenerator::fromSharedPtr(e); }
 template<> PyObject* VRPyTypeCaster::cast(const VRAsphaltPtr& e) { return VRPyAsphalt::fromSharedPtr(e); }
 
 simpleVRPyType(WorldGenerator, New_ptr );
 simpleVRPyType(RoadBase, 0);
 simpleVRPyType(Road, New_ptr);
+simpleVRPyType(RoadIntersection, New_ptr);
 simpleVRPyType(RoadNetwork, New_ptr);
+simpleVRPyType(District, New_ptr);
 simpleVRPyType(Asphalt, New_ptr);
 
 PyMethodDef VRPyWorldGenerator::methods[] = {
@@ -26,6 +30,7 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"getRoadNetwork", PyWrap( WorldGenerator, getRoadNetwork, "Access road network", VRRoadNetworkPtr ) },
     {"getNature", PyWrap( WorldGenerator, getNature, "Access nature module", VRNaturePtr ) },
     {"getTerrain", PyWrap( WorldGenerator, getTerrain, "Access the terrain", VRTerrainPtr ) },
+    {"getDistrict", PyWrap( WorldGenerator, getDistrict, "Access the district module", VRDistrictPtr ) },
     {"setOntology", PyWrap( WorldGenerator, setOntology, "Set ontology", void, VROntologyPtr ) },
     {"addMaterial", PyWrap( WorldGenerator, addMaterial, "Add a named material", void, string, VRMaterialPtr ) },
     {"getMaterial", PyWrap( WorldGenerator, getMaterial, "Get a material by name", VRMaterialPtr, string ) },
@@ -47,6 +52,15 @@ PyMethodDef VRPyRoad::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+PyMethodDef VRPyRoadIntersection::methods[] = {
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyDistrict::methods[] = {
+    {"remBuilding", PyWrap( District, remBuilding, "Remove a building by address", void, string, string ) },
+    {NULL}  /* Sentinel */
+};
+
 PyMethodDef VRPyAsphalt::methods[] = {
     {"addMarking", PyWrapOpt(Asphalt, addMarking, "Add marking", "0|0", void, int, pathPtr, float, float, float ) },
     {"addTrack", PyWrapOpt(Asphalt, addTrack, "Add track", "0|0", void, int, pathPtr, float, float, float ) },
@@ -59,6 +73,7 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"addGreenBelt", PyWrap( RoadNetwork, addGreenBelt, "Add a green lane", VREntityPtr, VREntityPtr, float ) },
     {"addWay", PyWrap( RoadNetwork, addWay, "Add a way", VRRoadPtr, string, vector<VREntityPtr>, int, string ) },
     {"addRoad", PyWrap( RoadNetwork, addRoad, "Add a road", VRRoadPtr, string, string, VREntityPtr, VREntityPtr, Vec3d, Vec3d, int ) },
+    {"addLongRoad", PyWrap( RoadNetwork, addLongRoad, "Add a long road", VRRoadPtr, string, string, vector<VREntityPtr>, vector<Vec3d>, int ) },
     {"addKirb", PyWrap( RoadNetwork, addKirb, "Add a kirb, polygon, texture", void, VRPolygonPtr, float ) },
     {"computeLanePaths", PyWrap( RoadNetwork, computeLanePaths, "Compute the path of each lane of a road", void, VREntityPtr ) },
     {"computeIntersections", PyWrap( RoadNetwork, computeIntersections, "Compute the intersections", void ) },
@@ -73,6 +88,10 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"updateAsphaltTexture", PyWrap( RoadNetwork, updateAsphaltTexture, "Update markings and tracks on asphalt texture", void ) },
     {"computeGreenBelts", PyWrap( RoadNetwork, computeGreenBelts, "Compute green belt areas", vector<VRPolygonPtr> ) },
     {"clear", PyWrap( RoadNetwork, clear, "Clear all data", void ) },
+    {"getRoads", PyWrap( RoadNetwork, getRoads, "Return all roads", vector<VRRoadPtr> ) },
+    {"getIntersections", PyWrap( RoadNetwork, getIntersections, "Return all intersections", vector<VRRoadIntersectionPtr> ) },
+    {"getPreviousRoads", PyWrap( RoadNetwork, getPreviousRoads, "Get the previous roads", vector<VREntityPtr>, VREntityPtr ) },
+    {"getNextRoads", PyWrap( RoadNetwork, getNextRoads, "Get the next roads", vector<VREntityPtr>, VREntityPtr ) },
     {NULL}  /* Sentinel */
 };
 

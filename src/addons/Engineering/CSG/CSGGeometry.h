@@ -38,6 +38,8 @@ class CSGGeometry : public VRGeometry {
         CSGGeometry(string name);
         virtual ~CSGGeometry();
 
+        void init();
+
         static CSGGeometryPtr create(string name = "csgGeometry");
         CSGGeometryPtr ptr();
 

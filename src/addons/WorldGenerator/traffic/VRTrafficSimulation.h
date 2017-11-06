@@ -35,6 +35,8 @@ class VRTrafficSimulation : public VRObject {
         vector<VRGeometryPtr> models;
         map<int, vector<trafficLight> > trafficLights;
 
+        VRUpdateCbPtr updateCb;
+
     public:
         VRTrafficSimulation();
         ~VRTrafficSimulation();
@@ -43,7 +45,7 @@ class VRTrafficSimulation : public VRObject {
 
         void setRoadNetwork(VRRoadNetworkPtr roads);
 
-        void updateModel();
+        void updateSimulation();
 
         void doTimeStep();
 };

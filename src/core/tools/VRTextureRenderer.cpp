@@ -35,7 +35,12 @@ struct VRTextureRenderer::Data {
     FrameBufferObjectRefPtr fbo;
     TextureObjChunkRefPtr   fboTex;
     ImageRefPtr             fboTexImg;
-    SimpleStageRefPtr stage;
+    SimpleStageRefPtr       stage;
+
+    // render once ressources
+    RenderActionRefPtr ract;
+    PassiveWindowMTRecPtr win;
+    ViewportMTRecPtr view;
 };
 OSG_END_NAMESPACE;
 
@@ -126,18 +131,18 @@ void VRTextureRenderer::setActive(bool b) {
 }
 
 VRTexturePtr VRTextureRenderer::renderOnce() {
-    //auto scene = VRScene::getCurrent();
+    if (!data->ract) {
+        data->ract = RenderAction::create();
+        data->win = PassiveWindow::create();
+        data->view = Viewport::create();
 
-    RenderActionRefPtr ract = RenderAction::create();
-    PassiveWindowMTRecPtr win = PassiveWindow::create();
-    ViewportMTRecPtr view = Viewport::create();
+        data->win->addPort(data->view);
+        data->view->setRoot(getNode()->node);
+        data->view->setCamera(cam->getCam()->cam);
+        data->view->setBackground(data->stage->getBackground());
+    }
 
-    win->addPort(view);
-    view->setRoot(getNode()->node);
-    view->setCamera(cam->getCam()->cam);
-    view->setBackground(data->stage->getBackground());
-    win->render(ract);
-
+    data->win->render(data->ract);
     ImageMTRecPtr img = Image::create();
     img->set( data->fboTexImg );
     return VRTexture::create( img );

@@ -153,9 +153,7 @@ void PolyVR::startTestScene(OSGObjectPtr n) {
 void PolyVR::checkProcessesAndSockets() { // TODO!!
     VRSharedMemory sm("PolyVR_System");// check for running PolyVR process
     int i = sm.getObject<int>("identifier");
-    if (i) {
-        cout << "Error: A PolyVR is allready running!\n";
-    }
+    if (i) cout << "Error: A PolyVR instance is allready running!\n";
 }
 
 
