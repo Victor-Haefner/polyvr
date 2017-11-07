@@ -1,173 +1,16 @@
 #include "virtuoseAPI.h"
+#include "../../../networking/VRSharedMemory.h"
 
 #include <iostream>
 #include <unistd.h>
+
+using namespace std;
 
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
 #include <boost/interprocess/sync/named_mutex.hpp>
 
-using namespace std;
 using namespace boost::interprocess;
-
-class SharedMemory {
-    private:
-        struct Segment {
-            string name;
-            managed_shared_memory memory;
-        };
-        Segment* segment = 0;
-        bool init = false;
-
-    public:
-        SharedMemory(string segment, bool init = true) {
-            this->segment = new Segment();
-            this->segment->name = segment;
-            this->init = init;
-            if (!init) return;
-            cout << "Init SharedMemory segment " << segment << endl;
-            this->segment->memory = managed_shared_memory(open_or_create, segment.c_str(), 65536);
-            int U = getObject<int>("__users__")+1;
-            setObject<int>("__users__", U);
-            unlock();
-        }
-
-        ~SharedMemory() {
-            if (!init) return;
-            int U = getObject<int>("__users__")-1;
-            setObject<int>("__users__", U);
-            if (U == 0) {
-                cout << "Remove SharedMemory segment " << segment->name << endl;
-                shared_memory_object::remove(segment->name.c_str());
-            }
-        }
-
-        void* getPtr(string h) {
-            managed_shared_memory seg(open_only, segment->name.c_str());
-            managed_shared_memory::handle_t handle = 0;
-            stringstream ss; ss << h; ss >> handle;
-            return seg.get_address_from_handle(handle);
-        }
-
-        string getHandle(void* data) {
-            managed_shared_memory seg(open_only, segment->name.c_str());
-            managed_shared_memory::handle_t handle = seg.get_handle_from_address(data);
-            stringstream ss; ss << handle;
-            return ss.str();
-        }
-
-        void lock() {
-            try {
-                named_mutex mtx{ open_or_create, (segment->name+"_mtx").c_str() };
-                mtx.lock();
-            } catch(interprocess_exception e) { cout << "SharedMemory::lock failed with: " << e.what() << endl; }
-        }
-
-        void unlock() {
-            try {
-                named_mutex mtx{ open_or_create, (segment->name+"_mtx").c_str() };
-                mtx.unlock();
-            } catch(interprocess_exception e) { cout << "SharedMemory::unlock failed with: " << e.what() << endl; }
-        }
-
-        template<class T>
-        T* addObject(string name) {
-            lock();
-            T* data = segment->memory.construct<T>(name.c_str())();
-            unlock();
-            return data;
-        }
-
-        template<class T>
-        T getObject(string name, T t) {
-            lock();
-            try {
-                managed_shared_memory seg(open_only, segment->name.c_str());
-                auto data = seg.find<T>(name.c_str());
-                if (data.first) {
-                    T res = *data.first;
-                    unlock();
-                    return res;
-                }
-            } catch(interprocess_exception e) { cout << "SharedMemory::getObject failed with: " << e.what() << endl; }
-            unlock();
-            return t;
-        }
-
-        template<class T>
-        T getObject(string name) {
-            lock();
-            try {
-                managed_shared_memory seg(open_only, segment->name.c_str());
-                auto data = seg.find<T>(name.c_str());
-                if (data.first) {
-                    T res = *data.first;
-                    unlock();
-                    return res;
-                }
-            } catch(interprocess_exception e) { cout << "SharedMemory::getObject failed with: " << e.what() << endl; }
-            unlock();
-            return T();
-        }
-
-        template<class T>
-        void setObject(string name, T t) {
-            lock();
-            try {
-                managed_shared_memory seg(open_only, segment->name.c_str());
-                auto data = seg.find<T>(name.c_str());
-                if (data.first) {
-                    *data.first = t;
-                    unlock();
-                } else {
-                    auto o = addObject<T>(name);
-                    *o = t;
-                }
-            } catch(interprocess_exception e) { cout << "SharedMemory::getObject failed with: " << e.what() << endl; }
-            unlock();
-        }
-
-        template<class T>
-        bool hasObject(const string& name) {
-            lock();
-            try {
-                boost::interprocess::managed_shared_memory seg(boost::interprocess::open_only, segment->name.c_str());
-                auto data = seg.find<T>(name.c_str());
-                if (data.first) { unlock(); return true; }
-            } catch(boost::interprocess::interprocess_exception e) {}
-            unlock();
-            return false;
-        }
-
-        template<class T> vector<T, boost::interprocess::allocator<T, managed_shared_memory::segment_manager> >*
-        addVector(string name) {
-            using memal = boost::interprocess::allocator<T, managed_shared_memory::segment_manager>;
-            using memvec = vector<T, memal>;
-            const memal alloc_inst(segment->memory.get_segment_manager());
-            return segment->memory.construct<memvec>(name.c_str())(alloc_inst);
-        }
-
-        template<class T> vector<T>
-        getVector(string name) {
-            using memal = boost::interprocess::allocator<T, managed_shared_memory::segment_manager>;
-            using memvec = vector<T, memal>;
-            vector<T> vres;
-
-            lock();
-            try {
-                managed_shared_memory seg(open_only, segment->name.c_str());
-                auto data = seg.find<memvec>(name.c_str());
-                memvec* res = data.first;
-                if (res) {
-                    vres.reserve(res->size());
-                    copy(res->begin(),res->end(),back_inserter(vres));
-                }
-            } catch(interprocess_exception e) { cout << "getVector failed with: " << e.what() << endl; }
-            unlock();
-
-            return vres;
-        }
-};
 
 struct Vec9 { float data[9] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f}; };
 struct Vec7 { float data[7] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f}; };
@@ -183,7 +26,7 @@ void print(const T& t, int N) {
 
 class Device {
     private:
-        SharedMemory interface;
+        VRSharedMemory interface;
         VirtContext vc;
 
         Vec7 identity;
@@ -194,7 +37,7 @@ class Device {
         bool run = true;
         bool shifting = true;
 
-        void updateVariables() {
+        void updateVirtuoseState() {
             interface.lock();
             run = interface.getObject<bool>("run", false);
             virtGetAvatarPosition(vc, position.data);
@@ -209,7 +52,7 @@ class Device {
             interface.unlock();
         }
 
-        void applyForces() {
+        void applyVirtuoseForces() {
             /*if (interface.hasObject<Vec6>("targetForces")) {
                 auto forces = interface.getObject<Vec6>("targetForces");
                 //print(forces, 6);
@@ -217,7 +60,7 @@ class Device {
             }*/
         }
 
-        void updateAttached() {
+        void applyVirtuosePose() {
             //cout << "\nattached " << attached << " hasTargetSpeed " << interface.hasObject<Vec6>("targetSpeed") << " targetPosition " << interface.hasObject<Vec7>("targetPosition");
             if (attached && interface.hasObject<Vec6>("targetSpeed") && interface.hasObject<Vec7>("targetPosition")) {
                 auto targetSpeed = interface.getObject<Vec6>("targetSpeed");
@@ -264,7 +107,7 @@ class Device {
         }
 
     public:
-        Device() : interface("virtuose", true) {
+        Device() : interface("virtuose", true, false) {
             interface.addObject<Vec7>("position");
             interface.setObject<bool>("run", true);
 
@@ -295,10 +138,10 @@ class Device {
 
         void start() {
             do {
-                updateVariables();
+                updateVirtuoseState();
                 if (!shifting) {
-                    applyForces();
-                    updateAttached();
+                    applyVirtuoseForces();
+                    applyVirtuosePose();
                     transmitForces();
                     handleCommands();
                 }

@@ -3,20 +3,20 @@
 #include <boost/interprocess/managed_shared_memory.hpp>
 //#include <boost/interprocess/containers/vector.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
+//#include <boost/interprocess/sync/spin/interprocess_barrier.hpp>
 #include <cstdlib>
 
 #include <OpenSG/OSGMatrix.h>
 
-using namespace OSG;
 using namespace boost::interprocess;
 
-VRSharedMemory::VRSharedMemory(string segment, bool init) {
+VRSharedMemory::VRSharedMemory(string segment, bool init, bool remove) {
     this->segment = new Segment();
     this->segment->name = segment;
     this->init = init;
     if (!init) return;
     cout << "Init SharedMemory segment " << segment << endl;
-    shared_memory_object::remove(segment.c_str());
+    if (remove) shared_memory_object::remove(segment.c_str());
     this->segment->memory = managed_shared_memory(open_or_create, segment.c_str(), 65536);
     unlock();
     int U = getObject<int>("__users__", 0);

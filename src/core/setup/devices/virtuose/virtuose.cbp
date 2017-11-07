@@ -47,6 +47,8 @@
 			<Add directory="./" />
 			<Add directory="/usr/lib/virtuose" />
 		</Linker>
+		<Unit filename="../../../networking/VRSharedMemory.cpp" />
+		<Unit filename="../../../networking/VRSharedMemory.h" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<envvars />

@@ -10,7 +10,6 @@
 #include <boost/interprocess/sync/named_mutex.hpp>
 
 using namespace std;
-OSG_BEGIN_NAMESPACE;
 
 class VRSharedMemory {
     private:
@@ -22,7 +21,7 @@ class VRSharedMemory {
         bool init = false;
 
     public:
-        VRSharedMemory(string segment, bool init = true);
+        VRSharedMemory(string segment, bool init = true, bool remove = true);
         ~VRSharedMemory();
 
         void* getPtr(string handle);
@@ -151,7 +150,5 @@ class VRSharedMemory {
 
         static void test();
 };
-
-OSG_END_NAMESPACE;
 
 #endif // VRSHAREDMEMORY_H_INCLUDED
