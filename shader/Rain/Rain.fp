@@ -42,6 +42,7 @@ float gettheta(vec3 d){
 	return acos(d.y);
 }
 
+/** OBSTRUCTION RETURNS TRUE, IF RAIN IS BLOCKED **/
 bool obstruction(float D){
 	float phi = -atan(fragDir.x,fragDir.z);
 	vec2 texPos = vec2(0.5+sin(phi)*D/(camH),0.5+cos(phi)*D/(camH));	//texture positions
@@ -49,6 +50,8 @@ bool obstruction(float D){
 	float disCam = texC.r * (512-0.1);			//distance to cam above	
 	float thetaReal = atan(D,camH-disCam-0.1);
 	
+	if (texC.x==0) return false;
+	//else return true;
 	if (thetaReal < gettheta(fragDir)) return true;
 	return false;
 }

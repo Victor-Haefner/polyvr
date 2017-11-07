@@ -30,15 +30,17 @@ class VRRain : public VRGeometry { //: public VRParticles {
         VRAnimCbPtr rainAnimationCb;
         VRMaterialPtr mat;
         VRMaterialPtr matTex;
+        VRLightPtr lightMain;
         //VRTextureRendererPtr tr;
 
-        VRCameraPtr camDef;
         VRCameraPtr camTex;
+        VRTextureRendererPtr texRenderer;
         //VRSkyPtr sky;
         string vScript;
         string fScript;
         float offset = 0;
         float camH = 40;
+        float rainDensity = 0;
         //
         // time and location
         float lastTime = 0;
@@ -52,8 +54,6 @@ class VRRain : public VRGeometry { //: public VRParticles {
         void stopRainCallback(float t);
         void updateScale(float scaleNow);
         // -------------------------------------------------------------------------------------
-        float rainDensity;
-
         float densityStart = 0.1;      //density of clouds at start of transition
         float speedStartX = 0.002;
         float speedStartY = 0.001;
