@@ -120,7 +120,7 @@ bool isD(float D) {
 	
 	//gl_FragDepth = 0.9124*tan(gettheta(fragDir));
 //- D/(512-0.1)*sin(gettheta(fragDir)))
-	if (gettheta(fragDir)>0.3 && israindropx < dropsize && israindropy < dropsize) return true; // && !obstruction(D)
+	if (gettheta(fragDir)>0.3 && israindropx < dropsize && israindropy < dropsize && !obstruction(D)) return true; // && !obstruction(D)
 	else return false;
 
 	return true;

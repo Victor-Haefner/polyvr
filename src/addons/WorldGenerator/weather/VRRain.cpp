@@ -46,7 +46,7 @@ VRRain::VRRain() : VRGeometry("Rain") {
     //TexRenderer setup
     textureSize = 512;
     auto camDef = VRScene::getCurrent()->getActiveCamera();
-    auto camTex = VRCamera::create("camTex", false);
+    auto camTex = VRCamera::create("camTex");
     auto tr = VRTextureRenderer::create("tr");
     auto lightF = VRLight::create("camLight");
     auto lightBeacon = VRLightBeacon::create("camLightBeacon");
@@ -75,6 +75,7 @@ VRRain::VRRain() : VRGeometry("Rain") {
 
     Vec3d tmp = camDef->getFrom();
     camTex->setFrom(Vec3d(tmp[0],tmp[1]+40,tmp[2]));
+    camTex->setUp(Vec3d(0,0,1));
     cout << tmp << endl;
 
     mat->setTexture(tr->getMaterial()->getTexture(1));
@@ -198,7 +199,12 @@ void VRRain::reloadShader() {
     auto tmpasdf = VRScene::getCurrent()->getActiveCamera()->getFrom();
     cout << tmpasdf << endl;
     cout << tmpasdf[0] << " " << tmpasdf[1]+40 << " "<< tmpasdf[2] << endl;
-
+    auto tmp = camTex->getFrom();
+    cout << tmp << endl;
+    //camTex->setFrom(Vec3d(0,0,0));
+    auto camDef = VRScene::getCurrent()->getActiveCamera();
+    camDef->setFrom(Vec3d(0,40,0));
+    //VRScene::getCurrent()->getActiveCamera()->setFrom(Vec3d(0,0,0));
     //camTex->setPose( tmpasdf, Vec3d(0,1,0) ,Vec3d(0,0,1) );
     //camTex->updateChange();
     //camTex->setUp(Vec3d(0,0,1));
