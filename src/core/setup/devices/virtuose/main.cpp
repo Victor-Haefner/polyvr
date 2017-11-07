@@ -6,12 +6,6 @@
 
 using namespace std;
 
-#include <boost/interprocess/managed_shared_memory.hpp>
-#include <boost/interprocess/allocators/allocator.hpp>
-#include <boost/interprocess/sync/named_mutex.hpp>
-
-using namespace boost::interprocess;
-
 struct Vec9 { float data[9] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f}; };
 struct Vec7 { float data[7] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f}; };
 struct Vec6 { float data[6] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f}; };

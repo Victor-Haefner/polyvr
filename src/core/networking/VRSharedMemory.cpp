@@ -3,12 +3,33 @@
 #include <boost/interprocess/managed_shared_memory.hpp>
 //#include <boost/interprocess/containers/vector.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
-//#include <boost/interprocess/sync/spin/interprocess_barrier.hpp>
 #include <cstdlib>
 
 #include <OpenSG/OSGMatrix.h>
 
 using namespace boost::interprocess;
+
+VRSharedMemory::Barrier::Barrier(string name, int count) :
+    threshold(count), count(count), generation(0),
+    mutex( boost::interprocess::open_or_create, (name+"_mtx").c_str() ),
+    condition( boost::interprocess::open_or_create, (name+"_cnd").c_str() ) {}
+
+VRSharedMemory::Barrier::~Barrier() {}
+
+void VRSharedMemory::Barrier::wait() {
+    scoped_lock<named_mutex> lock(mutex);
+    int gen = generation;
+
+    if (--count == 0) {
+      generation++;
+      count = threshold;
+      condition.notify_all();
+      return;
+    }
+
+    while (gen == generation) { condition.wait(lock); }
+    return;
+}
 
 VRSharedMemory::VRSharedMemory(string segment, bool init, bool remove) {
     this->segment = new Segment();

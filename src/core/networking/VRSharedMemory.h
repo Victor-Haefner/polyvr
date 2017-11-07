@@ -8,6 +8,7 @@
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
 #include <boost/interprocess/sync/named_mutex.hpp>
+#include <boost/interprocess/sync/named_condition.hpp>
 
 using namespace std;
 
@@ -17,6 +18,19 @@ class VRSharedMemory {
             string name;
             boost::interprocess::managed_shared_memory memory;
         };
+
+        struct Barrier {
+            int threshold = 0;
+            int count = 0;
+            int generation = 0;
+            boost::interprocess::named_mutex mutex;
+            boost::interprocess::named_condition condition;
+
+            Barrier(string name, int count);
+            ~Barrier();
+            void wait();
+        };
+
         Segment* segment = 0;
         bool init = false;
 
@@ -41,6 +55,24 @@ class VRSharedMemory {
                 boost::interprocess::named_mutex mtx{boost::interprocess::open_or_create, (segment->name+"_mtx").c_str()};
                 mtx.unlock();
             } catch(boost::interprocess::interprocess_exception e) { cout << "VRSharedMemory::unlock failed with: " << e.what() << endl; }
+        }
+
+        void addBarrier(string name, int count) {
+            lock();
+            segment->memory.construct<Barrier>(name.c_str())(name, count);
+            unlock();
+        }
+
+        void waitAt(string name) {
+            lock();
+            Barrier* b = 0;
+            try {
+                boost::interprocess::managed_shared_memory seg(boost::interprocess::open_only, segment->name.c_str());
+                auto data = seg.find<Barrier>(name.c_str());
+                b = data.first;
+            } catch(boost::interprocess::interprocess_exception e) { cout << "SharedMemory::getObject failed with: " << e.what() << endl; }
+            if (b) b->wait();
+            unlock();
         }
 
         template<class T>
