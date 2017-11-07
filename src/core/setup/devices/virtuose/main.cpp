@@ -23,9 +23,12 @@ class Device {
         VRSharedMemory interface;
         VirtContext vc;
 
-        Vec7 identity;
+        Vec7 identity7;
+        Vec6 identity6;
         Vec6 forces;
         Vec7 position;
+        Vec7 targetPosition;
+        Vec6 targetSpeed;
 
         bool attached = false;
         bool run = true;
@@ -57,8 +60,8 @@ class Device {
         void applyVirtuosePose() {
             //cout << "\nattached " << attached << " hasTargetSpeed " << interface.hasObject<Vec6>("targetSpeed") << " targetPosition " << interface.hasObject<Vec7>("targetPosition");
             if (attached && interface.hasObject<Vec6>("targetSpeed") && interface.hasObject<Vec7>("targetPosition")) {
-                auto targetSpeed = interface.getObject<Vec6>("targetSpeed");
-                auto targetPosition = interface.getObject<Vec7>("targetPosition");
+                targetSpeed = interface.getObject<Vec6>("targetSpeed");
+                targetPosition = interface.getObject<Vec7>("targetPosition");
                 float tmpPos[7];
                 virtGetPosition(vc, tmpPos);
                 for(int i = 0; i < 7 ; i++) tmpPos[i] = targetPosition.data[i] - tmpPos[i];
@@ -75,6 +78,11 @@ class Device {
                 bool doPhysUpdate = ( Lp < 0.1 && Ls < 0.5 && Lt < 0.5 );
                 interface.setObject<bool>("doPhysUpdate", doPhysUpdate);
             }
+        }
+
+        void resolveShiftingState() {
+            virtSetPosition(vc, targetPosition.data);
+            virtSetSpeed(vc, identity6.data);
         }
 
         void transmitForces() {
@@ -105,7 +113,6 @@ class Device {
             interface.addObject<Vec7>("position");
             interface.setObject<bool>("run", true);
 
-
             vc = virtOpen("172.22.151.200");
             if (!vc) {
                 cout << "starting virtuose deamon failed, no connection to device!\n";
@@ -113,13 +120,12 @@ class Device {
                 //cout << " error code 2: " << virtGetErrorMessage(2) << endl;
             }
 
-
             virtSetIndexingMode(vc, INDEXING_ALL_FORCE_FEEDBACK_INHIBITION);
             virtSetSpeedFactor(vc, 1);
             virtSetForceFactor(vc, 1);
             virtSetTimeStep(vc, 0.02);
-            virtSetBaseFrame(vc, identity.data);
-            virtSetObservationFrame(vc, identity.data);
+            virtSetBaseFrame(vc, identity7.data);
+            virtSetObservationFrame(vc, identity7.data);
             virtSetCommandType(vc, COMMAND_TYPE_VIRTMECH);
             virtSetDebugFlags(vc, DEBUG_SERVO|DEBUG_LOOP);
             virtEnableForceFeedback(vc, 1);
@@ -130,25 +136,30 @@ class Device {
             virtAttachQSVO(vc, K, B);
         }
 
-        void start() {
-            do {
-                updateVirtuoseState();
-                if (!shifting) {
-                    //interface.waitAt("barrier1");
-                    applyVirtuoseForces();
-                    applyVirtuosePose();
-                    transmitForces();
-                    handleCommands();
-                }
-                usleep(2000);
-            } while (run);
-        }
-
         ~Device() {
+            cout << " ->> virtuose deamon stopped <<- \n";
             virtSetPowerOn(vc, 0);
             virtDetachVO(vc);
             virtStopLoop(vc);
             virtClose(vc);
+        }
+
+        void start() {
+            do {
+                updateVirtuoseState();
+                if (!shifting) {
+                    interface.waitAt("barrier1");
+                    interface.waitAt("barrier1");
+                    applyVirtuoseForces();
+                    applyVirtuosePose();
+                    interface.waitAt("barrier2");
+                    transmitForces();
+                    interface.waitAt("barrier2");
+                    handleCommands();
+                } else resolveShiftingState();
+                //usleep(2000);
+                usleep(1);
+            } while (run);
         }
 };
 

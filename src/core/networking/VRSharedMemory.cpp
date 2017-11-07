@@ -2,34 +2,33 @@
 
 #include <boost/interprocess/managed_shared_memory.hpp>
 //#include <boost/interprocess/containers/vector.hpp>
+//#include <boost/interprocess/containers/string.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
+#include <boost/interprocess/sync/named_condition.hpp>
+#include <boost/interprocess/sync/interprocess_semaphore.hpp>
 #include <cstdlib>
 
 #include <OpenSG/OSGMatrix.h>
 
 using namespace boost::interprocess;
 
-VRSharedMemory::Barrier::Barrier(string name, int count) :
-    threshold(count), count(count), generation(0),
-    mutex( boost::interprocess::open_or_create, (name+"_mtx").c_str() ),
-    condition( boost::interprocess::open_or_create, (name+"_cnd").c_str() ) {}
+struct Barrier {
+    int threshold = 0;
+    int count = 0;
+    boost::interprocess::interprocess_mutex mutex;
+    boost::interprocess::interprocess_condition condition;
 
-VRSharedMemory::Barrier::~Barrier() {}
+    Barrier(string name, int count) : threshold(count), count(count) {}
+    ~Barrier() {}
 
-void VRSharedMemory::Barrier::wait() {
-    scoped_lock<named_mutex> lock(mutex);
-    int gen = generation;
-
-    if (--count == 0) {
-        generation++;
-        count = threshold;
-        condition.notify_all();
-        return;
+    void wait() {
+        scoped_lock<interprocess_mutex> lock(mutex);
+        if (--count == 0) {
+            count = threshold;
+            condition.notify_all();
+        } else condition.wait(lock);
     }
-
-    while (gen == generation) { condition.wait(lock); }
-    return;
-}
+};
 
 VRSharedMemory::VRSharedMemory(string segment, bool init, bool remove) :
     mtx( boost::interprocess::open_or_create, (segment+"_mtx").c_str() ) {
@@ -38,11 +37,11 @@ VRSharedMemory::VRSharedMemory(string segment, bool init, bool remove) :
     this->segment->name = segment;
     this->init = init;
     if (!init) return;
-    cout << "Init SharedMemory segment " << segment << endl;
     if (remove) shared_memory_object::remove(segment.c_str());
     this->segment->memory = managed_shared_memory(open_or_create, segment.c_str(), 65536);
     unlock();
     int U = getObject<int>("__users__", 0);
+    cout << "Init SharedMemory segment " << segment << ", user: " << U << endl;
     setObject<int>("__users__", U+1);
 }
 
@@ -54,6 +53,42 @@ VRSharedMemory::~VRSharedMemory() {
         cout << "Remove SharedMemory segment " << segment->name << endl;
         shared_memory_object::remove(segment->name.c_str());
     }
+}
+
+
+void VRSharedMemory::lock() {
+    try { mtx.lock(); }
+    catch(interprocess_exception e) { cout << "VRSharedMemory::lock failed with: " << e.what() << endl; }
+}
+
+void VRSharedMemory::unlock() {
+    try { mtx.unlock(); }
+    catch(interprocess_exception e) { cout << "VRSharedMemory::unlock failed with: " << e.what() << endl; }
+}
+
+struct TestInt {
+    int threshold = 0;
+    int count = 0;
+    int generation = 0;
+    string name = "testint";
+
+    TestInt(string n, int i) : count(i) { ; }
+    ~TestInt() {}
+};
+
+void VRSharedMemory::addBarrier(string name, int count) {
+    lock();
+    segment->memory.construct<Barrier>(name.c_str())(name, count);
+    unlock();
+}
+
+void VRSharedMemory::waitAt(string name) {
+    lock();
+    try {
+        auto data = segment->memory.find<Barrier>(name.c_str());
+        if (data.first) data.first->wait();
+    } catch(interprocess_exception e) { cout << "SharedMemory::getObject failed with: " << e.what() << endl; }
+    unlock();
 }
 
 void* VRSharedMemory::getPtr(string h) {

@@ -55,6 +55,8 @@ void print(const T& t, int N) {
 
 virtuose::virtuose() : interface("virtuose") {
     interface.addBarrier("barrier1", 2);
+    interface.addBarrier("barrier2", 2);
+    //interface.addBarrier("barrier3", 2);
     interface.addObject<Vec6>("targetForces");
     string path = VRSceneManager::get()->getOriginalWorkdir();
     path += "/src/core/setup/devices/virtuose/bin/Debug/virtuose";
@@ -247,6 +249,8 @@ OSG::Vec3i virtuose::getButtonStates() { // TODO
     return buttons;
 }
 
+bool sync = false;
+
 void virtuose::updateVirtMechPre() {
 	if (!connected()) return;
 
@@ -254,6 +258,7 @@ void virtuose::updateVirtMechPre() {
 	float speed[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
 
 	bool shifting = interface.getObject<bool>("shifting", false);
+    if (shifting) return;
 
 	if (commandType == COMMAND_TYPE_VIRTMECH) {
         if (!isAttached) { // TODO
@@ -264,12 +269,16 @@ void virtuose::updateVirtMechPre() {
             //cout << "virtuose::updateVirtMechPre set zero speed and position! " << a << " " << b << endl;
 		} else {
             // apply position&speed to the haptic
-            //interface.waitAt("barrier1");
             VRPhysics* phBase = (base == 0) ? 0 : base->getPhysics();
             fillPosition(this->attached->getPhysics(), targetPosition.data, phBase);
             fillSpeed(this->attached->getPhysics(), targetSpeed.data, phBase);
+
+            interface.waitAt("barrier1");
             interface.setObject<Vec7>("targetPosition", targetPosition);
             interface.setObject<Vec6>("targetSpeed", targetSpeed);
+            interface.waitAt("barrier1");
+
+            sync = true;
 
             /*if (shifting) { // TODO
                 CHECK(virtGetArticularPositionOfAdditionalAxe(vc,&gripperPosition));
@@ -292,26 +301,25 @@ void virtuose::updateVirtMechPost() {
 
 	bool shifting = interface.getObject<bool>("shifting", false);
     bool doPhysUpdate = interface.getObject<bool>("doPhysUpdate");
-	if (commandType == COMMAND_TYPE_VIRTMECH && !shifting && doPhysUpdate) {
-		if (isAttached && interface.hasObject<Vec6>("forces")) {
-			//get force applied by human on the haptic
-            Vec6 forces = interface.getObject<Vec6>("forces");
-			//CHECK(virtGetForce(vc, force));
 
+    if (isAttached) attached->getPhysics()->pause(shifting);
+    if (shifting) return;
+
+    interface.waitAt("barrier2");
+    interface.waitAt("barrier2");
+
+    if (!doPhysUpdate) return;
+
+	if (commandType == COMMAND_TYPE_VIRTMECH) {
+		if (isAttached && interface.hasObject<Vec6>("forces")) {
+
+            Vec6 forces = interface.getObject<Vec6>("forces"); //get force applied by human on the haptic
             auto& f = forces.data;
 			Vec3d frc = Vec3d( f[1], f[2], f[0] ); // position +1 +2 +0
 			Vec3d trqu = Vec3d( f[4], f[5], f[3] ); // rotation +4 +5 +3    (x-Achse am haptik: force[4])(y-Achse am haptik: force[5])(z-Achse am haptik: force[3])
-			//Vec3d frc = Vec3d( f[2], f[0], f[1] ); // position +1 +2 +0
-			//Vec3d trqu = Vec3d( f[3], f[4], f[5] ); // rotation +4 +5 +3    (x-Achse am haptik: force[4])(y-Achse am haptik: force[5])(z-Achse am haptik: force[3])
 			totalForce = frc;
-			//apply force on the object
-            //cout << "forces "; print(forces, 6);
-            cout << "forces " << frc.length() << " " << trqu.length() << " " << endl;
-            //if( frc.length() > 0.1f && trqu.length() < 0.5f ) {
-            //if( frc.length() < 0.1f) {
             attached->getPhysics()->addForce(frc);
             attached->getPhysics()->addTorque(trqu);
-            //}
         }
     }
 }
