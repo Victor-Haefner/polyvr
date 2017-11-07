@@ -21,17 +21,19 @@ void VRSharedMemory::Barrier::wait() {
     int gen = generation;
 
     if (--count == 0) {
-      generation++;
-      count = threshold;
-      condition.notify_all();
-      return;
+        generation++;
+        count = threshold;
+        condition.notify_all();
+        return;
     }
 
     while (gen == generation) { condition.wait(lock); }
     return;
 }
 
-VRSharedMemory::VRSharedMemory(string segment, bool init, bool remove) {
+VRSharedMemory::VRSharedMemory(string segment, bool init, bool remove) :
+    mtx( boost::interprocess::open_or_create, (segment+"_mtx").c_str() ) {
+
     this->segment = new Segment();
     this->segment->name = segment;
     this->init = init;

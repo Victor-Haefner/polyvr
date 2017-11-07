@@ -54,12 +54,13 @@ void print(const T& t, int N) {
 }
 
 virtuose::virtuose() : interface("virtuose") {
+    interface.addBarrier("barrier1", 2);
+    interface.addObject<Vec6>("targetForces");
     string path = VRSceneManager::get()->getOriginalWorkdir();
     path += "/src/core/setup/devices/virtuose/bin/Debug/virtuose";
     deamon = popen(path.c_str(), "w");
     if (!deamon) { cout << " failed to open virtuose deamon" << endl; return; }
     cout << "\nstarted haptic device deamon" << endl;
-    interface.addObject<Vec6>("targetForces");
 }
 
 virtuose::~virtuose() {
@@ -263,6 +264,7 @@ void virtuose::updateVirtMechPre() {
             //cout << "virtuose::updateVirtMechPre set zero speed and position! " << a << " " << b << endl;
 		} else {
             // apply position&speed to the haptic
+            //interface.waitAt("barrier1");
             VRPhysics* phBase = (base == 0) ? 0 : base->getPhysics();
             fillPosition(this->attached->getPhysics(), targetPosition.data, phBase);
             fillSpeed(this->attached->getPhysics(), targetSpeed.data, phBase);

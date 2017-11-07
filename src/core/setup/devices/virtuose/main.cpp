@@ -134,6 +134,7 @@ class Device {
             do {
                 updateVirtuoseState();
                 if (!shifting) {
+                    //interface.waitAt("barrier1");
                     applyVirtuoseForces();
                     applyVirtuosePose();
                     transmitForces();

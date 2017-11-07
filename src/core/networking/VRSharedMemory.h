@@ -32,6 +32,7 @@ class VRSharedMemory {
         };
 
         Segment* segment = 0;
+        boost::interprocess::named_mutex mtx;
         bool init = false;
 
     public:
@@ -44,17 +45,13 @@ class VRSharedMemory {
         bool hasObject(const string& name);
 
         void lock() {
-            try {
-                boost::interprocess::named_mutex mtx{boost::interprocess::open_or_create, (segment->name+"_mtx").c_str()};
-                mtx.lock();
-            } catch(boost::interprocess::interprocess_exception e) { cout << "VRSharedMemory::lock failed with: " << e.what() << endl; }
+            try { mtx.lock(); }
+            catch(boost::interprocess::interprocess_exception e) { cout << "VRSharedMemory::lock failed with: " << e.what() << endl; }
         }
 
         void unlock() {
-            try {
-                boost::interprocess::named_mutex mtx{boost::interprocess::open_or_create, (segment->name+"_mtx").c_str()};
-                mtx.unlock();
-            } catch(boost::interprocess::interprocess_exception e) { cout << "VRSharedMemory::unlock failed with: " << e.what() << endl; }
+            try { mtx.unlock(); }
+            catch(boost::interprocess::interprocess_exception e) { cout << "VRSharedMemory::unlock failed with: " << e.what() << endl; }
         }
 
         void addBarrier(string name, int count) {
