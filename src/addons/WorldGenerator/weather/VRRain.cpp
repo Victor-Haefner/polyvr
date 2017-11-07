@@ -7,6 +7,10 @@
 #include "core/utils/VRFunction.h"
 #include "core/scene/VRScene.h"
 
+#include "core/objects/VRCamera.h"
+#include "core/objects/VRLight.h"
+#include "core/objects/VRLightBeacon.h"
+
 #include <math.h>
 #include <random>
 #include <boost/bind.hpp>
@@ -42,11 +46,20 @@ VRRain::VRRain() : VRGeometry("Rain") {
     //TexRenderer setup
     textureSize = 512;
     auto camDef = VRScene::getCurrent()->getActiveCamera();
-    auto camTex = VRCamera::create("camTex");
+    auto camTex = VRCamera::create("camTex", false);
     auto tr = VRTextureRenderer::create("tr");
+    auto lightF = VRLight::create("camLight");
+    auto lightBeacon = VRLightBeacon::create("camLightBeacon");
+    tr->addChild(lightF);
+    lightF->addChild(camTex);
+    camTex->addChild(lightBeacon);
+
+    lightF->setBeacon(lightBeacon);
+	lightBeacon->setPose(Vec3d(), Vec3d(0.5,-1,-1), Vec3d(0,0,1));
+
     camTex->setType(1);
     camDef->activate();
-    tr->setup(camTex,512,512);
+    tr->setup(camTex,512,512, true);
 
     density = densityStart;
     speedX = speedStartX;
@@ -54,13 +67,15 @@ VRRain::VRRain() : VRGeometry("Rain") {
     color = colorStart;
     light = lightStart;
     //TODO: FIND LIGHT IN SCENEGRAPH
+
+    //auto lightF =
+    //lightF->addChild(camTex);
+    tr->addLink(lightF);
     //TODO: ADDLINK LIGHT
-    /*
-    VRTextureGenerator tg;
-	tg.setSize(textureSize, textureSize);
-    */
+
     Vec3d tmp = camDef->getFrom();
     camTex->setFrom(Vec3d(tmp[0],tmp[1]+40,tmp[2]));
+    cout << tmp << endl;
 
     mat->setTexture(tr->getMaterial()->getTexture(1));
     mat->setShaderParameter<float>("tex", 1);
@@ -88,6 +103,7 @@ void VRRain::start() {
         isRaining = true;
         cout << "VRRain::startRain()\n";
     }
+    else cout << "it's already raining" << endl;
 }
 
 void VRRain::startRainCallback(float t) {
@@ -97,7 +113,7 @@ void VRRain::startRainCallback(float t) {
 	//cl=1-0.4*t
 	//VR.find('light').setDiffuse([cl,cl,cl,0])
 	if (tnow != floor(t*10)) {
-        cout << "Raincallback Start:" << tnow << " - " << floor(t*10) << " - " << scale*floor(t*10)/10 << endl;
+        cout << "Raincallback Start: " << tnow << " - " << floor(t*10) << " - " << scale*floor(t*10)/10;
         updateScale(scale*floor(t*10)/10);
 	}
 	tnow = floor(t*10);
@@ -112,6 +128,7 @@ void VRRain::stop() {
         rainAnimation->start();
         isRaining = false;
     }
+    else cout << "currently not raining" << endl;
     //scaleRN = 0;
     //float rainDensity = 0.2 * 10/scaleRN;
     //mat->setShaderParameter<float>("rainDensity", rainDensity);
@@ -156,7 +173,7 @@ void VRRain::updateScale( float scaleNow ){
     scaleRN = scaleNow;
     float rainDensity = 0.2 * 10/scaleRN;
     mat->setShaderParameter<float>("rainDensity", rainDensity);
-    cout << rainDensity << endl;
+    cout << " " << rainDensity << endl;
     //reloadshader();
 }
 
@@ -178,7 +195,13 @@ void VRRain::update() {
 }
 
 void VRRain::reloadShader() {
-    Vec3d tmpasdf = camDef->getFrom();
+    auto tmpasdf = VRScene::getCurrent()->getActiveCamera()->getFrom();
+    cout << tmpasdf << endl;
+    cout << tmpasdf[0] << " " << tmpasdf[1]+40 << " "<< tmpasdf[2] << endl;
+
+    //camTex->setPose( tmpasdf, Vec3d(0,1,0) ,Vec3d(0,0,1) );
+    //camTex->updateChange();
+    //camTex->setUp(Vec3d(0,0,1));
     //camTex->setFrom(Vec3d(tmp[0],tmp[1]+40,tmp[2]));
     //camTex->setAt(tmp);
     //camTex->setUp(Vec3d(0,0,1));
