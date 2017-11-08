@@ -157,23 +157,7 @@ void VRPhysicsManager::dropPhysicsUpdateFunction(VRUpdateCbPtr fkt, bool after) 
 void VRPhysicsManager::updatePhysObjects() {
     MLock lock(mtx);
     VRGlobals::PHYSICS_FRAME_RATE.fps = fps;
-
-    for (auto o : OSGobjs) {
-        if (auto so = o.second.lock()) {
-            if (so->getPhysics()->isGhost()) so->updatePhysics();
-        }
-    }
-
-    for (int j=dynamicsWorld->getNumCollisionObjects()-1; j>=0 ;j--) {
-        btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[j];
-        body = btRigidBody::upcast(obj);
-        if (body && OSGobjs.count(body) == 1) { // TODO: refactor this!
-            auto o = OSGobjs[body].lock();
-            if (!o) continue;
-            if (o->getPhysics()->isDynamic()) o->updateFromBullet();
-            else o->getPhysics()->updateTransformation(o);
-        }
-    }
+    for (auto o : OSGobjs) if (auto so = o.second.lock()) so->resolvePhysics();
 
     //the soft bodies
     btSoftBodyArray arr = dynamicsWorld->getSoftBodyArray();

@@ -2,6 +2,13 @@
 #include "core/utils/toString.h"
 #include <stack>
 
+namespace OSG {
+    template<> Expression::ValueBase* Expression::Value<Vec3d>::compL(Expression::ValueBase* n) { return 0; }
+    template<> Expression::ValueBase* Expression::Value<Vec3d>::compLE(Expression::ValueBase* n) { return 0; }
+    template<> Expression::ValueBase* Expression::Value<Vec3d>::compG(Expression::ValueBase* n) { return 0; }
+    template<> Expression::ValueBase* Expression::Value<Vec3d>::compGE(Expression::ValueBase* n) { return 0; }
+}
+
 using namespace OSG;
 
 Expression::ValueBase::~ValueBase() {}
@@ -40,6 +47,37 @@ Expression::ValueBase* Expression::Value<T>::div(Expression::ValueBase* n) {
 }
 
 
+template<typename T>
+Expression::ValueBase* Expression::Value<T>::compE(Expression::ValueBase* n) {
+    if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value == v2->value);
+    return 0;
+}
+
+template<typename T>
+Expression::ValueBase* Expression::Value<T>::compL(Expression::ValueBase* n) {
+    if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value < v2->value);
+    return 0;
+}
+
+template<typename T>
+Expression::ValueBase* Expression::Value<T>::compLE(Expression::ValueBase* n) {
+    if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value <= v2->value);
+    return 0;
+}
+
+template<typename T>
+Expression::ValueBase* Expression::Value<T>::compG(Expression::ValueBase* n) {
+    if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value > v2->value);
+    return 0;
+}
+
+template<typename T>
+Expression::ValueBase* Expression::Value<T>::compGE(Expression::ValueBase* n) {
+    if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value >= v2->value);
+    return 0;
+}
+
+
 
 Expression::Node::Node(string s) : param(s) {;}
 Expression::Node::~Node() { if (value) delete value; }
@@ -74,12 +112,18 @@ void Expression::Node::compute() { // compute value based on left and right valu
     if (op == '-') value = left->value->sub(right->value);
     if (op == '*') value = left->value->mult(right->value);
     if (op == '/') value = left->value->div(right->value);
+    if (op == '=') value = left->value->compE(right->value);
+    if (op == '<') value = left->value->compL(right->value);
+    //if (op == '<') value = left->value->compLE(right->value); // TODO
+    if (op == '>') value = left->value->compG(right->value);
+    //if (op == '>') value = left->value->compGE(right->value); // TODO
 }
 
 
 bool Expression::isMathToken(char c) {
     if (c == '+' || c == '-' || c == '*' || c == '/') return true;
     if (c == '(' || c == ')') return true;
+    if (c == '<' || c == '>'|| c == '=') return true;
     return false;
 }
 
@@ -181,6 +225,9 @@ Expression::Expression(string s) {
     OperatorHierarchy['/'] = 5;
     OperatorHierarchy['('] = 2;
     OperatorHierarchy[')'] = 2;
+    OperatorHierarchy['<'] = 1;
+    OperatorHierarchy['>'] = 1;
+    OperatorHierarchy['='] = 1;
 }
 
 Expression::~Expression() {}

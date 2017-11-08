@@ -24,5 +24,6 @@ PyMethodDef VRPyRobotArm::methods[] = {
     {"setPath", PyWrap(RobotArm, setPath, "Set robot path - setPath()", void, pathPtr ) },
     {"getPath", PyWrap(RobotArm, getPath, "Get robot path - getPath()", pathPtr ) },
     {"moveOnPath", PyWrapOpt(RobotArm, moveOnPath, "Move robot on internal path - moveOnPath(float t0, float t1, bool loop)", "0", void, float, float, bool) },
+    {"isMoving", PyWrap(RobotArm, isMoving, "Get animation status - isMoving()", bool) },
     {NULL}  /* Sentinel */
 };

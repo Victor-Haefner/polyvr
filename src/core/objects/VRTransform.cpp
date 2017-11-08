@@ -139,7 +139,6 @@ void VRTransform::updatePhysics() { //should be called from the main thread only
     if (!physics->isPhysicalized()) return;
 
     physics->updateTransformation( ptr() );
-    physics->pause();
     physics->resetForces();
 }
 
@@ -325,6 +324,13 @@ Vec3d VRTransform::getWorldUp(bool parentOnly) {
     return Vec3d(m[1]);
 }
 
+
+void VRTransform::updateTransform(VRTransformPtr t) {
+    if (!t) return;
+    if (t->getLastChange() < getLastChange()) return;
+    setMatrix(t->getMatrix()); // TODO: may need world matrix here
+}
+
 /** Set the world Matrix4d of the object **/
 void VRTransform::setWorldMatrix(Matrix4d m) {
     if (isNan(m)) return;
@@ -459,6 +465,7 @@ void VRTransform::setOrientation(Vec3d at, Vec3d up) {
 /** Set the pose of the object with the from, at and up vectors **/
 void VRTransform::setPose(Vec3d from, Vec3d dir, Vec3d up) {
     if (isNan(from) || isNan(dir) || isNan(up)) return;
+    if (from == _from && dir == _dir && up == _up) return;
     _from = from;
     _up = up;
     setDir(dir);
@@ -707,12 +714,27 @@ void VRTransform::printTransformationTree(int indent) {
     if (indent == 0) cout << "\n";
 }
 
-void VRTransform::setConstraint(VRConstraintPtr c) { constraint = c; }
+map<VRTransform*, VRTransformWeakPtr> constrainedObjects;
+
+void VRTransform::updateConstraints() { // global updater
+    for (auto wc : constrainedObjects) {
+        if (auto c = wc.second.lock()) c->updateChange();
+    }
+}
+
+void VRTransform::setConstraint(VRConstraintPtr c) {
+    constraint = c;
+    if (c) constrainedObjects[this] = ptr();
+    else constrainedObjects.erase(this);
+}
+
 VRConstraintPtr VRTransform::getConstraint() { return constraint; }
 
 /** enable constraints on the object, 0 leaves the DOF free, 1 restricts it **/
 void VRTransform::apply_constraints() {
     if (!constraint) return;
+    if (!checkWorldChange()) return; // TODO: not working!
+    computeMatrix4d(); // update matrix!
     constraint->apply(ptr());
 }
 
@@ -727,6 +749,13 @@ void VRTransform::updateFromBullet() {
 
 void VRTransform::setNoBltFlag() { noBlt = true; }
 
+void VRTransform::resolvePhysics() {
+    if (!physics) return;
+    if (physics->isGhost()) { updatePhysics(); return; }
+    if (physics->isDynamic() && !held) { updateFromBullet(); return; }
+    physics->updateTransformation( ptr() );
+}
+
 VRPhysics* VRTransform::getPhysics() {
     if (physics == 0) physics = new VRPhysics( ptr() );
     return physics;
@@ -734,10 +763,8 @@ VRPhysics* VRTransform::getPhysics() {
 
 /** Update the object OSG transformation **/
 void VRTransform::updateChange() {
-    if (checkWorldChange()) apply_constraints();
+    apply_constraints();
     if (held) updatePhysics();
-    //if (checkWorldChange()) updatePhysics();
-
     computeMatrix4d();
     updateTransformation();
     updatePhysics();

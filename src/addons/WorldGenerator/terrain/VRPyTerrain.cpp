@@ -10,7 +10,8 @@ simpleVRPyType(Terrain, New_VRObjects_ptr);
 simpleVRPyType(Planet, New_VRObjects_ptr);
 
 PyMethodDef VRPyTerrain::methods[] = {
-    {"setParameters", PyWrapOpt(Terrain, setParameters, "Set the terrain parameters, size, resolution and height scale", "1", void, Vec2d, double, double ) },
+    {"setParameters", PyWrapOpt(Terrain, setParameters, "Set the terrain parameters, size, resolution, height scale, water level", "1|0", void, Vec2d, double, double, float ) },
+    {"setWaterLevel", PyWrap(Terrain, setWaterLevel, "Set the water level", void, float ) },
     {"loadMap", PyWrapOpt(Terrain, loadMap, "Load height map", "3", void, string, int ) },
     {"setMap", PyWrapOpt(Terrain, setMap, "Set height map", "3", void, VRTexturePtr, int ) },
     {"physicalize", PyWrap(Terrain, physicalize, "Physicalize terrain", void, bool ) },
@@ -28,8 +29,8 @@ PyMethodDef VRPyPlanet::methods[] = {
     {"addSector", PyWrap(Planet, addSector, "Add sector to planet", VRWorldGeneratorPtr, double, double ) },
     {"getSector", PyWrap(Planet, getSector, "Return sector at N E", VRWorldGeneratorPtr, double, double ) },
     {"getMaterial", PyWrap(Planet, getMaterial, "Get planet material", VRMaterialPtr ) },
-    {"setParameters", PyWrap(Planet, setParameters, "Set planet parameters: radius", void, double ) },
-    {"addPin", PyWrap(Planet, addPin, "Add a pin: label, north, east", int, string, double, double) },
+    {"setParameters", PyWrapOpt(Planet, setParameters, "Set planet parameters: radius, sector size", "0.1", void, double, double ) },
+    {"addPin", PyWrapOpt(Planet, addPin, "Add a pin: label, north, east, length", "10000", int, string, double, double, double) },
     {"remPin", PyWrap(Planet, remPin, "Remove a pin: ID", void, int) },
     {"fromLatLongPosition", PyWrapOpt(Planet, fromLatLongPosition, "Get Position on planet based on lat and long", "0", Vec3d, double, double, bool) },
     {"localize", PyWrap(Planet, localize, "Center the planet origin on a sector", void, double, double) },

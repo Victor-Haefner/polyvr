@@ -100,7 +100,7 @@ void VRAvatar::setBeacon(VRTransformPtr b) {
 }
 
 void VRAvatar::updateBeacon() {
-    if (tmpContainer) deviceRoot->setMatrix(tmpContainer->getMatrix()); // TODO: may need world matrix here
+    deviceRoot->updateTransform(tmpContainer);
 }
 
 OSG_END_NAMESPACE;

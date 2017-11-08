@@ -234,7 +234,7 @@ void VRCarDynamics::updateWheel( WheelPtr wheel, float eForce, float eBreak ) {
 }
 
 float VRCarDynamics::computeCoupling( WheelPtr wheel ) {
-    if (type == SIMPLE) return 1;
+    if (type == SIMPLE) return (wheel->gear != 0);
     float clutchTransmission = 1;
     if (engine->clutchTransmissionCurve) clutchTransmission = engine->clutchTransmissionCurve->getPosition(wheel->clutch)[1];
     return (wheel->gear != 0)*clutchTransmission;
@@ -299,6 +299,8 @@ void VRCarDynamics::updateEngine() {
 
         float eForce = computeEngineForceOnWheel( wheel, deltaRPM, coupling, clampedThrottle );
         if (abs(eBreak) > abs(eForce)) eForce = 0;
+        else eBreak = 0;
+        if (abs(eForce) < 0.1 && abs(coupling) < 0.1) eBreak = max(eBreak, 5.f); // rolling friction when stopped
         updateWheel(wheel, eForce, eBreak);// apply force
     }
 

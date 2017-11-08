@@ -151,7 +151,7 @@ class VRPhysics : public OSG::VRStorage {
 
         vector<VRCollision> getCollisions();
 
-        void updateTransformation(OSG::VRTransformWeakPtr t);
+        void updateTransformation(OSG::VRTransformPtr t);
         OSG::Matrix4d getTransformation();
         btTransform getTransform();
         void setTransformation(btTransform t);
@@ -183,7 +183,7 @@ class VRPhysics : public OSG::VRStorage {
         static vector<string> getPhysicsShapes();
         static btTransform fromMatrix(OSG::Matrix4d m, OSG::Vec3d& scale, OSG::Vec3d mc);
         static btTransform fromMatrix(OSG::Matrix4d m, OSG::Vec3d mc);
-        static btTransform fromVRTransform(OSG::VRTransformWeakPtr t, OSG::Vec3d& scale, OSG::Vec3d mc);
+        static btTransform fromVRTransform(OSG::VRTransformPtr t, OSG::Vec3d& scale, OSG::Vec3d mc);
         static OSG::Matrix4d fromBTTransform(const btTransform t);
         static OSG::Matrix4d fromBTTransform(const btTransform t, OSG::Vec3d& scale, OSG::Vec3d mc);
 

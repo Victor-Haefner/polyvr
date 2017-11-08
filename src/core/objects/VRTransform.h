@@ -96,6 +96,7 @@ class VRTransform : public VRObject {
         Matrix4d getRotationMatrix();
 
         void setIdentity();
+        void updateTransform(VRTransformPtr t);
         virtual void setFrom(Vec3d pos);
         virtual void setAt(Vec3d at);
         virtual void setUp(Vec3d up);
@@ -176,9 +177,11 @@ class VRTransform : public VRObject {
 
         /** enable constraints on the object when dragged, 0 leaves the dof free, 1 restricts it **/
         void apply_constraints();
+        static void updateConstraints();
 
         /** Set the physics object **/
         VRPhysics* getPhysics();
+        void resolvePhysics();
         void updateFromBullet();
 
         /** Do not update the transform in the physics context for the next frame **/

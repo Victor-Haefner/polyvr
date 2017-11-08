@@ -132,8 +132,7 @@ OSG::Vec3d VRPhysics::getForce() { Lock lock(VRPhysics_mtx()); return toVec3d(co
 OSG::Vec3d VRPhysics::getTorque() { Lock lock(VRPhysics_mtx()); return toVec3d(constantTorque); }
 
 void VRPhysics::prepareStep() {
-    if(soft) return;
-    if(body == 0) return;
+    if (soft || !body) return;
     auto f = constantForce;
     auto t = constantTorque;
     for (auto j : forceJob) { f += toBtVector3(j); forceJob2.push_back(j); }
@@ -350,7 +349,7 @@ void VRPhysics::update() {
     if (useCallbacks) gContactAddedCallback = customContactAddedCallback;
     if (shape == 0) { cout << "ERROR: physics shape unknown: " << physicsShape << endl; return; }
 
-    motionState = new btDefaultMotionState( fromVRTransform( vr_obj, scale, CoMOffset ) );
+    motionState = new btDefaultMotionState( fromVRTransform( vr_obj.lock(), scale, CoMOffset ) );
 
     if (_mass != 0) shape->calculateLocalInertia(_mass, inertiaVector);
 
@@ -930,18 +929,18 @@ void VRPhysics::updateVisualGeo() {
     geo->setMaterial(mat);
 }
 
-void VRPhysics::updateTransformation(OSG::VRTransformWeakPtr t) {
+void VRPhysics::updateTransformation(OSG::VRTransformPtr trans) {
     Lock lock(VRPhysics_mtx());
     //static VRRate FPS; int fps = FPS.getRate(); cout << "VRPhysics::updateTransformation " << fps << endl;
-    auto bt = fromVRTransform(t, scale, CoMOffset);
+    auto bt = fromVRTransform(trans, scale, CoMOffset);
     if (body) { body->setWorldTransform(bt); body->activate(); }
     if (ghost_body) { ghost_body->setWorldTransform(bt); ghost_body->activate(); }
     if (visShape && visShape->isVisible()) visShape->setWorldMatrix( getTransformation() );
 }
 
-btTransform VRPhysics::fromVRTransform(OSG::VRTransformWeakPtr t, OSG::Vec3d& scale, OSG::Vec3d mc) {
-    OSG::Matrix4d m;
-    if (auto sp = t.lock()) m = sp->getWorldMatrix();
+btTransform VRPhysics::fromVRTransform(OSG::VRTransformPtr trans, OSG::Vec3d& scale, OSG::Vec3d mc) {
+    if (!trans) return fromMatrix(OSG::Matrix4d(),scale,mc);
+    OSG::Matrix4d m = trans->getWorldMatrix();
     return fromMatrix(m,scale,mc);
 }
 
@@ -989,7 +988,6 @@ OSG::Matrix4d VRPhysics::fromBTTransform(const btTransform t) {
 }
 
 void VRPhysics::pause(bool b) {
-    return;
     if (body == 0) return;
     if (dynamic == !b) return;
     setDynamic(!b);

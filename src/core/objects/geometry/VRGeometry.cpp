@@ -450,6 +450,7 @@ void VRGeometry::setPositionalTexCoords2D(float scale, int i, Vec2i format) {
 
 void VRGeometry::setIndices(GeoIntegralProperty* Indices, bool doLengths) {
     if (!meshSet) setMesh();
+    if (!Indices) { setMesh(0); return; }
     if (Indices->size() == 0) setMesh(0);
     if (!mesh->geo->getLengths() || doLengths) {
         GeoUInt32PropertyMTRecPtr Length = GeoUInt32Property::create();
