@@ -30,14 +30,18 @@ class VRRain : public VRGeometry { //: public VRParticles {
         VRAnimCbPtr rainAnimationCb;
         VRMaterialPtr mat;
         VRMaterialPtr matTex;
+        VRMaterialPtr renderMat;
         VRLightPtr lightMain;
         //VRTextureRendererPtr tr;
 
         VRCameraPtr camTex;
         VRTextureRendererPtr texRenderer;
+        VRGeometryPtr cube;
         //VRSkyPtr sky;
         string vScript;
         string fScript;
+        string vScriptTex;
+        string fScriptTex;
         float offset = 0;
         float camH = 40;
         float rainDensity = 0;

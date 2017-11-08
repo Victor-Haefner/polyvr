@@ -24,6 +24,8 @@ VRRain::VRRain() : VRGeometry("Rain") {
     string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Rain/";
     vScript = resDir + "Rain.vp";
     fScript = resDir + "Rain.fp";
+    vScriptTex = resDir + "RainTex.vp";
+    fScriptTex = resDir + "RainTex.fp";
 
     // shader setup
     mat = VRMaterial::create("Rain");
@@ -42,26 +44,40 @@ VRRain::VRRain() : VRGeometry("Rain") {
 
     //TexRenderer setup
     textureSize = 512;
-    auto camDef = VRScene::getCurrent()->getActiveCamera();
-    camTex = VRCamera::create("camTex");
-    camTex->setType(1);
-    camTex->setFrom(Vec3d(0,100,0));
-    camTex->setAt(Vec3d(0,60,0));
-    camDef->activate();
+
 
     texRenderer = VRTextureRenderer::create("rainTexRenderer");
     //VRScene::getCurrent()->getRoot()->addChild(texRenderer);
 
     auto lightF = VRScene::getCurrent()->getRoot()->find("light");
-    //lightF->addChild(camTex);
-    //lightF->addChild(texRenderer);
+    auto camDef = VRScene::getCurrent()->getActiveCamera();
+    camTex = VRCamera::create("camTex");
+    camTex->setType(1);
+
+    camTex->setFrom(Vec3d(0,100,0));
+    camTex->setAt(Vec3d(0,60,0));
+    camDef->activate();
 
     texRenderer->setup(camTex,512,512, false);
+    //lightF->addChild(camTex);
     texRenderer->addLink(lightF);
 
-    //mat->setTexture(texSide);
-    mat->setTexture(texRenderer->getMaterial()->getTexture(1));
+    renderMat = texRenderer->getMaterial();
+    renderMat->readVertexShader(vScriptTex);
+    renderMat->readFragmentShader(fScriptTex);
+    renderMat->setShaderParameter<float>("tex0", 0);
+    renderMat->setShaderParameter<float>("tex1", 1);
+
+    mat->setTexture(renderMat->getTexture(1));
+    //mat->setTexture(texRenderer->getMaterial()->getTexture(1));
     mat->setShaderParameter<float>("tex", 1);
+
+    cube = VRGeometry::create("cubeRainTex");
+    cube->setPrimitive("Box 50 50 50 1 1 1");
+	cube->setPose(Vec3d(0,-150,0),Vec3d(1,0,0),Vec3d(0,1,0));
+	cube->setMaterial(renderMat);
+	cube->setPickable(1);
+	lightF->addChild(cube);
 
     updatePtr = VRUpdateCb::create("rain update", boost::bind(&VRRain::update, this));
     VRScene::getCurrent()->addUpdateFkt(updatePtr);
