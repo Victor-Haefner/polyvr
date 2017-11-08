@@ -89,7 +89,7 @@ class VRRain : public VRGeometry { //: public VRParticles {
         static VRRainPtr create();
         VRRainPtr ptr();
 
-
+        VRTextureRendererPtr getRenderer();
         void reloadShader();
         // -------------------------------------------------------------------------------------
 

@@ -47,9 +47,33 @@ VRRain::VRRain() : VRGeometry("Rain") {
 
 
     texRenderer = VRTextureRenderer::create("rainTexRenderer");
-    //VRScene::getCurrent()->getRoot()->addChild(texRenderer);
+    auto scene = VRScene::getCurrent();
+    scene->getRoot()->addChild(texRenderer);
+    auto lightF = scene->getRoot()->find("light");
 
-    auto lightF = VRScene::getCurrent()->getRoot()->find("light");
+    camTex = VRCamera::create("camTex");
+    lightF->addChild(camTex);
+    camTex->setType(1);
+    texRenderer->setup(camTex,512,512);
+    camTex->setFrom(Vec3d(0,100,0));
+    camTex->setAt(Vec3d(0,1,-1));
+    texRenderer->addLink(lightF);
+
+    /*
+    renderMat = texRenderer->getMaterial();
+    renderMat->readVertexShader(vScriptTex);
+    renderMat->readFragmentShader(fScriptTex);
+    renderMat->setShaderParameter<float>("tex0", 0);
+    renderMat->setShaderParameter<float>("tex1", 1);
+
+    mat->setTexture(renderMat->getTexture(1));
+    mat->setShaderParameter<float>("tex", 1);
+
+    cube = VRGeometry::create("cubeRainTex");
+	cube->setMaterial(renderMat);
+	lightF->addChild(cube);
+    */
+    /*auto lightF = VRScene::getCurrent()->getRoot()->find("light");
     auto camDef = VRScene::getCurrent()->getActiveCamera();
     camTex = VRCamera::create("camTex");
     camTex->setType(1);
@@ -72,21 +96,23 @@ VRRain::VRRain() : VRGeometry("Rain") {
     //mat->setTexture(texRenderer->getMaterial()->getTexture(1));
     mat->setShaderParameter<float>("tex", 1);
 
+
     cube = VRGeometry::create("cubeRainTex");
     cube->setPrimitive("Box 50 50 50 1 1 1");
 	cube->setPose(Vec3d(0,-150,0),Vec3d(1,0,0),Vec3d(0,1,0));
 	cube->setMaterial(renderMat);
 	cube->setPickable(1);
 	lightF->addChild(cube);
+	*/
 
-    updatePtr = VRUpdateCb::create("rain update", boost::bind(&VRRain::update, this));
-    VRScene::getCurrent()->addUpdateFkt(updatePtr);
-
-    density = densityStart;
+	density = densityStart;
     speedX = speedStartX;
     speedY = speedStartY;
     color = colorStart;
     light = lightStart;
+
+    updatePtr = VRUpdateCb::create("rain update", boost::bind(&VRRain::update, this));
+    VRScene::getCurrent()->addUpdateFkt(updatePtr);
 
     cout << "VRRain::VRRain()\n";
 }
@@ -94,6 +120,8 @@ VRRain::~VRRain() {}
 
 VRRainPtr VRRain::create() { return VRRainPtr( new VRRain() ); }
 VRRainPtr VRRain::ptr() { return static_pointer_cast<VRRain>( shared_from_this() ); }
+
+VRTextureRendererPtr VRRain::getRenderer() { return texRenderer; }
 
 void VRRain::start() {
     if (!isRaining) {
@@ -189,11 +217,11 @@ void VRRain::update() {
     double offset = glutGet(GLUT_ELAPSED_TIME)*0.001; //seconds
 
     //auto VRCameraPtr camDef = VRScene::getCurrent()->getRoot()->find("Default");
-    auto camDef = VRScene::getCurrent()->getActiveCamera();
+    /*auto camDef = VRScene::getCurrent()->getActiveCamera();
     auto defCamPos = camDef->getFrom();
     camTex->setFrom(Vec3d(defCamPos[0],defCamPos[1]+40,defCamPos[2]));
     camTex->setAt(Vec3d(defCamPos[0],defCamPos[1],defCamPos[2]));
-    camTex->setUp(Vec3d(0,0,1));
+    camTex->setUp(Vec3d(0,0,1));*/
 
     mat->setShaderParameter<float>("rainOffset", offset);
     mat->readVertexShader(vScript);
