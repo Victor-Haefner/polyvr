@@ -330,10 +330,11 @@ void VRRoadIntersection::computeMarkings() {
 
     int inCarLanes = 0;
     for (auto roadFront : roadFronts) {
-        bool pedestrian = false;
-        for (auto lane : roadFront->inLanes)
+        for (auto lane : roadFront->inLanes) {
+            bool pedestrian = false;
             for (auto l : nextLanes[lane]) if (l->getValue<bool>("pedestrian", false)) pedestrian = true;
-        inCarLanes += pedestrian?0:1;
+            inCarLanes += pedestrian?0:1;
+        }
     }
 
     for (auto roadFront : roadFronts) {
