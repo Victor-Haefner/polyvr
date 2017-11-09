@@ -137,21 +137,7 @@ vec3 checkrad() {
 	//might as well incorporate into main()
 
 	vec3 color = vec3(0,0,0.8);
-	//return color; //TESTING BLUE SCREEN
-	/*
-	if (obstruction(1)) color = mix(color,vec3(1,0,0),0.5);	
-	if (obstruction(2)) color = mix(color,vec3(0,1,0),0.5);
-	if (obstruction(3)) color = mix(color,vec3(0,0,1),0.5);
-	if (obstruction(5)) color = mix(color,vec3(1,1,0),0.5);
-	if (obstruction(8)) color = mix(color,vec3(0,1,1),0.5);
-	*/
-	/*
-	if (obstruction(1)) return vec3(1,0,0);	
-	if (obstruction(2)) return vec3(0,1,0);
-	if (obstruction(3)) return vec3(0,0,1);
-	if (obstruction(5)) return vec3(1,1,0);
-	if (obstruction(8)) return vec3(0,1,1);
-	*/
+
 	 
 	if (isD(1) || isD(2) || isD(3) ||isD(5) || isD(8)) return color;
 	//if (isD(2)) return color;

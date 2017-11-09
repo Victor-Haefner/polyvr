@@ -90,6 +90,7 @@ class VRRain : public VRGeometry { //: public VRParticles {
         VRRainPtr ptr();
 
         VRTextureRendererPtr getRenderer();
+        VRMaterialPtr getTexMat();
         void reloadShader();
         // -------------------------------------------------------------------------------------
 
