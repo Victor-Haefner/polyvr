@@ -103,6 +103,21 @@ Vec2d VRPlanet::fromLatLongSize(double north1, double east1, double north2, doub
     return Vec2d(abs(u),abs(v));
 }
 
+Vec2d VRPlanet::fromPosLatLong(Pnt3d p, bool local) { // TODO: increase resolution by enhancing getWorldMatrix
+    if (local) {
+        auto m = origin->getWorldMatrix();
+        m.invert();
+        m.mult(p,p);
+    }
+
+    Vec3d n = Vec3d(p);
+    n.normalize();
+    double cT = n[1];
+    double north = toDeg(acos(cT));
+    double east = toDeg(atan2(-n[2], n[0]));
+    return Vec2d(-north+90, east);
+}
+
 void VRPlanet::rebuild() {
     // sphere material
     if (!sphereMat) {

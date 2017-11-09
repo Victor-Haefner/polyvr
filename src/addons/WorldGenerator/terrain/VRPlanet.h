@@ -49,6 +49,8 @@ class VRPlanet : public VRTransform {
         Vec2d fromLatLongSize(double north1, double east1, double north2, double east2);
         PosePtr fromLatLongPose(double north, double east, bool local = false);
 
+        Vec2d fromPosLatLong(Pnt3d p, bool local = false);
+
         void localize(double north, double east);
 
         VRMaterialPtr getMaterial();

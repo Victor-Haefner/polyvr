@@ -33,6 +33,7 @@ PyMethodDef VRPyPlanet::methods[] = {
     {"addPin", PyWrapOpt(Planet, addPin, "Add a pin: label, north, east, length", "10000", int, string, double, double, double) },
     {"remPin", PyWrap(Planet, remPin, "Remove a pin: ID", void, int) },
     {"fromLatLongPosition", PyWrapOpt(Planet, fromLatLongPosition, "Get Position on planet based on lat and long", "0", Vec3d, double, double, bool) },
+    {"fromPosLatLong", PyWrapOpt(Planet, fromPosLatLong, "Convert space position to lat and long", "0", Vec2d, Pnt3d, bool) },
     {"localize", PyWrap(Planet, localize, "Center the planet origin on a sector", void, double, double) },
     {NULL}  /* Sentinel */
 };
