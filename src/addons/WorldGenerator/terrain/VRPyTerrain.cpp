@@ -22,6 +22,7 @@ PyMethodDef VRPyTerrain::methods[] = {
     {"elevatePoint", PyCastWrap(Terrain, elevatePoint, "Elevate a point", void, Vec3d, float ) },
     {"elevatePose", PyWrapOpt(Terrain, elevatePose, "Elevate a pose", "0", void, PosePtr, float ) },
     {"elevateObject", PyWrapOpt(Terrain, elevateObject, "Elevate an Object onto the terrain", "0", void, VRTransformPtr, float ) },
+    {"flatten", PyWrap(Terrain, flatten, "Flatten the area inside a perimeter", void, vector<Vec2d>, float ) },
     {NULL}  /* Sentinel */
 };
 

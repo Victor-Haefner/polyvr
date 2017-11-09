@@ -87,6 +87,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void elevateVertices( VRGeometryPtr p, float offset = 0 );
         void projectTangent( Vec3d& t, Vec3d p);
 
+        void flatten(vector<Vec2d> perimeter, float h);
         void paintHeights(string path);
         void addEmbankment(string ID, pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4);
 
