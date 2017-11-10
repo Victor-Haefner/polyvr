@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="virtuose" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/virtuose" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/virtuose" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-std=c++11" />
+			<Add directory="/usr/include/virtuose" />
+		</Compiler>
+		<Linker>
+			<Add option="-lboost_system" />
+			<Add option="-lboost_thread" />
+			<Add option="-lboost_program_options" />
+			<Add option="-lboost_serialization" />
+			<Add option="-lboost_filesystem" />
+			<Add option="-lrt" />
+			<Add option="-lvirtuose" />
+			<Add option="-ldl" />
+			<Add option="-lm" />
+			<Add option="-lpthread" />
+			<Add directory="./" />
+			<Add directory="/usr/lib/virtuose" />
+		</Linker>
+		<Unit filename="../../../networking/VRSharedMemory.cpp" />
+		<Unit filename="../../../networking/VRSharedMemory.h" />
+		<Unit filename="main.cpp" />
+		<Extensions>
+			<envvars />
+			<code_completion />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

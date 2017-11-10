@@ -59,11 +59,11 @@ void VRLeap::newFrame(Json::Value json) {
         auto hand = make_shared<VRLeapFrame::Hand>();
         // Setup new hand
         auto pos = newHand["palmPosition"];
-        hand->pose[0] = Vec3d(pos[0].asFloat() * 0.001f, pos[1].asFloat() * 0.001f, pos[2].asFloat() * 0.001f);
+        hand->pose.setPos( Vec3d(pos[0].asFloat(), pos[1].asFloat(), pos[2].asFloat())* 0.001f );
         auto dir = newHand["direction"];
-        hand->pose[1] = Vec3d(dir[0].asFloat(), dir[1].asFloat(), dir[2].asFloat());
+        hand->pose.setDir( Vec3d(dir[0].asFloat(), dir[1].asFloat(), dir[2].asFloat()) );
         auto normal = newHand["palmNormal"];
-        hand->pose[2] = Vec3d(normal[0].asFloat(), normal[1].asFloat(), normal[2].asFloat());
+        hand->pose.setUp( Vec3d(normal[0].asFloat(), normal[1].asFloat(), normal[2].asFloat()) );
 
         hand->pinchStrength = newHand["pinchStrength"].asFloat();
         hand->grabStrength = newHand["grabStrength"].asFloat();
@@ -86,18 +86,17 @@ void VRLeap::newFrame(Json::Value json) {
                                           pointable["btipPosition"]};
 
             for (auto& jnt : joints) {
-                hand->joints[type].push_back(
-                        Vec3d(jnt[0].asFloat() * 0.001f, jnt[1].asFloat() * 0.001f, jnt[2].asFloat() * 0.001f));
+                hand->joints[type].push_back( Vec3d(jnt[0].asFloat(), jnt[1].asFloat(), jnt[2].asFloat()) * 0.001f);
             }
 
             // Setup joint poses
             Json::Value bases = pointable["bases"];
 
             for (auto& bases_ : bases) {
-                vector<Vec3d> current(3);
-                for (int b = 0; b < 3; ++b) {
-                    current[b] = Vec3d(bases_[b][0].asFloat(), bases_[b][1].asFloat(), bases_[b][2].asFloat());
-                }
+                Pose current;
+                current.setPos( Vec3d(bases_[0][0].asFloat(), bases_[0][1].asFloat(), bases_[0][2].asFloat()) );
+                current.setDir( Vec3d(bases_[1][0].asFloat(), bases_[1][1].asFloat(), bases_[1][2].asFloat()) );
+                current.setUp ( Vec3d(bases_[2][0].asFloat(), bases_[2][1].asFloat(), bases_[2][2].asFloat()) );
                 hand->bases[type].push_back(current);
             }
 
@@ -115,13 +114,20 @@ void VRLeap::newFrame(Json::Value json) {
         else frame->setRightHand(hand);
     }
 
-    for (auto& cb : frameCallbacks) {
-        cb(frame);
+    for (uint i = 0; i < json["pointables"].size(); ++i) { // Get the pencils, TODO
+        ;
     }
+
+    /*printf("\n");
+        for( Json::Value::const_iterator itr = json.begin() ; itr != json.end() ; itr++ ) {
+            cout << " JSON " << itr.key() << " " << itr->size() << endl;
+        }*/
+
+
+    for (auto& cb : frameCallbacks) cb(frame);
 }
 
 bool VRLeap::resetConnection() {
-
     bool result = true;
 
     string url = "ws://" + host + ":" + to_string(port) + "/v6.json";
@@ -136,9 +142,7 @@ bool VRLeap::resetConnection() {
 }
 
 void VRLeap::setPose(Vec3d pos, Vec3d dir, Vec3d up) {
-
     MatrixLookDir(transformation, pos, dir, up);
-
     transformed = true;
 }
 
@@ -151,11 +155,8 @@ VRLeapFramePtr VRLeapFrame::create() {
 }
 
 HandPtr VRLeapFrame::getLeftHand() { return leftHand; }
-
 HandPtr VRLeapFrame::getRightHand() { return rightHand; }
-
 void VRLeapFrame::setLeftHand(std::shared_ptr<Hand> hand) { leftHand = hand; }
-
 void VRLeapFrame::setRightHand(std::shared_ptr<Hand> hand) { rightHand = hand; }
 
 HandPtr VRLeapFrame::Hand::clone() {
@@ -177,21 +178,21 @@ void VRLeapFrame::Hand::transform(Matrix4d transformation) {
 
     cerr << "VRLeapFrame::Hand::transform not yet implemented." << endl;
 
-    for (auto& p : pose) {
+    /*for (auto& p : pose) {
         //TODO: transform poses
         pose[0] = transformation * pose[0];
         cout << p << endl;
-    }
-    cout << endl;
+    }*/
+    cout << pose.asMatrix() << endl;
 
     for (int i = 0; i < 5; ++i) {
         for (auto& j : joints[i]) {
             // TODO: transform joints
         }
         for (auto& b: bases[i]) {
-            for (auto& p : b) {
+            /*for (auto& p : b) {
                 // TODO: transform bases
-            }
+            }*/
         }
         // TODO: transform directions
     }

@@ -14,7 +14,6 @@ class VRPhysics;
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class doubleBuffer;
 class path;
 class VRAnimation;
 
@@ -27,7 +26,7 @@ class VRTransform : public VRObject {
         };
 
     protected:
-        doubleBuffer* dm = 0;
+        Matrix4d matrix;
         OSGTransformPtr t;
         bool noBlt = false;
         VRPhysics* physics = 0;
@@ -35,9 +34,6 @@ class VRTransform : public VRObject {
 
         unsigned int change_time_stamp = 0;
         unsigned int wchange_time_stamp = 0;
-        bool change = false;
-        bool fixed = true;
-        bool cam_invert_z = false;
         bool identity = true;
         int orientation_mode = OM_DIR;
 
@@ -63,13 +59,10 @@ class VRTransform : public VRObject {
         //read Matrix4d from doublebuffer && apply it to transformation
         //should be called from the main thread only
         void updateTransformation();
-
         void reg_change();
-
         bool checkWorldChange();
 
         void printInformation();
-
         void initCoords();
         void initTranslator();
 
@@ -87,17 +80,15 @@ class VRTransform : public VRObject {
 
         uint getLastChange();
         bool changedNow();
-        doubleBuffer* getBuffer();
-        // Local && world transformation setter && getter
 
         Vec3d getFrom();
         Vec3d getDir();
         Vec3d getAt();
         Vec3d getUp();
         Vec3d getScale();
-        posePtr getPose();
-        posePtr getPoseTo(VRObjectPtr o);
-        posePtr getWorldPose();
+        PosePtr getPose();
+        PosePtr getPoseTo(VRObjectPtr o);
+        PosePtr getWorldPose();
         Vec3d getEuler();
         void getMatrix(Matrix4d& _m);
         Matrix4d getMatrix();
@@ -105,15 +96,17 @@ class VRTransform : public VRObject {
         Matrix4d getRotationMatrix();
 
         void setIdentity();
-        void setFrom(Vec3d pos);
-        void setAt(Vec3d at);
-        void setUp(Vec3d up);
-        void setDir(Vec3d dir);
+        void updateTransform(VRTransformPtr t);
+        virtual void setFrom(Vec3d pos);
+        virtual void setAt(Vec3d at);
+        virtual void setUp(Vec3d up);
+        virtual void setDir(Vec3d dir);
         void setScale(float s);
         void setScale(Vec3d s);
         void setOrientation(Vec3d at, Vec3d up);
         void setEuler(Vec3d euler);
-        void setPose(posePtr p);
+        void setPose(const Pose& p);
+        void setPose(PosePtr p);
         void setPose(Vec3d from, Vec3d dir, Vec3d up);
         virtual void setMatrix(Matrix4d m);
 
@@ -123,7 +116,7 @@ class VRTransform : public VRObject {
         Vec3d getWorldDirection(bool parentOnly = false);
         Vec3d getWorldUp(bool parentOnly = false);
 
-        void setWorldPose(posePtr p);
+        void setWorldPose(PosePtr p);
         void setWorldMatrix(Matrix4d _m);
         void setWorldPosition(Vec3d pos);
         void setWorldOrientation(Vec3d dir, Vec3d up);
@@ -132,7 +125,7 @@ class VRTransform : public VRObject {
 
         void getRelativeMatrix(Matrix4d& m, VRObjectPtr o, bool parentOnly = false);
         Matrix4d getRelativeMatrix(VRObjectPtr o, bool parentOnly = false);
-        posePtr getRelativePose(VRObjectPtr o, bool parentOnly = false);
+        PosePtr getRelativePose(VRObjectPtr o, bool parentOnly = false);
         Vec3d getRelativePosition(VRObjectPtr o, bool parentOnly = false);
         Vec3d getRelativeDirection(VRObjectPtr o, bool parentOnly = false);
         Vec3d getRelativeUp(VRObjectPtr o, bool parentOnly = false);
@@ -140,13 +133,12 @@ class VRTransform : public VRObject {
         void setRelativePosition(Vec3d pos, VRObjectPtr o);
         void setRelativeDir(Vec3d pos, VRObjectPtr o);
         void setRelativeUp(Vec3d pos, VRObjectPtr o);
-        void setRelativePose(posePtr p, VRObjectPtr o);
+        void setRelativePose(PosePtr p, VRObjectPtr o);
 
         int get_orientation_mode();
         void set_orientation_mode(int b);
 
-        void setFixed(bool b);
-        void applyTransformation(std::shared_ptr<pose> p);
+        void applyTransformation(PosePtr p);
         void applyTransformation();
 
         //-------------------------------------
@@ -185,9 +177,11 @@ class VRTransform : public VRObject {
 
         /** enable constraints on the object when dragged, 0 leaves the dof free, 1 restricts it **/
         void apply_constraints();
+        static void updateConstraints();
 
         /** Set the physics object **/
         VRPhysics* getPhysics();
+        void resolvePhysics();
         void updateFromBullet();
 
         /** Do not update the transform in the physics context for the next frame **/

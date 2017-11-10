@@ -186,7 +186,7 @@ void loadPly(string filename, VRTransformPtr res) {
     if (format == "ble") {
         cout << " PLY is binary, headerEnd is at: " << headerEnd << endl;
         file.close();
-        file = ifstream(filename.c_str(), ios::binary);
+        file.open(filename.c_str(), ios::binary);
         file.seekg(headerEnd);
     }
 

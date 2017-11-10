@@ -21,6 +21,9 @@ class VRRoadNetwork : public VRRoadBase {
         vector<VRRoadIntersectionPtr> intersections;
         vector<VRGeometryPtr> assets;
 
+        vector<VRTunnelPtr> tunnels;
+        vector<VRBridgePtr> bridges;
+
         GraphPtr graph;
         map<int, vector<Vec3d> > graphNormals;
 
@@ -37,7 +40,7 @@ class VRRoadNetwork : public VRRoadBase {
 
 		float trackWidth = 1.6; // TODO
 
-        void createArrow(Vec4i dirs, int N, const pose& p);
+        void createArrow(Vec4i dirs, int N, const Pose& p);
 
         vector<VREntityPtr> getRoadNodes();
         vector<VRRoadPtr> getNodeRoads(VREntityPtr node);
@@ -49,6 +52,7 @@ class VRRoadNetwork : public VRRoadBase {
         ~VRRoadNetwork();
 
         static VRRoadNetworkPtr create();
+        VRRoadNetworkPtr ptr();
 
         GraphPtr getGraph();
         void connectGraph(vector<VREntityPtr> nodes, vector<Vec3d> norms);
@@ -57,11 +61,19 @@ class VRRoadNetwork : public VRRoadBase {
         VRAsphaltPtr getMaterial();
         int getRoadID();
 
+        vector<VRRoadPtr> getRoads();
+        vector<VRRoadIntersectionPtr> getIntersections();
+        vector<VREntityPtr> getPreviousRoads(VREntityPtr road);
+        vector<VREntityPtr> getNextRoads(VREntityPtr road);
+
         VREntityPtr addGreenBelt( VREntityPtr road, float width );
         VREntityPtr addNode( Vec3d pos, bool elevate = false, float elevationOffset = 0 );
         VRRoadPtr addWay( string name, vector<VREntityPtr> paths, int rID, string type );
         VRRoadPtr addRoad( string name, string type, VREntityPtr node1, VREntityPtr node2, Vec3d norm1, Vec3d norm2, int Nlanes );
         VRRoadPtr addLongRoad( string name, string type, vector<VREntityPtr> nodes, vector<Vec3d> normals, int Nlanes );
+
+        VRTunnelPtr addTunnel(VRRoadPtr road);
+        VRBridgePtr addBridge(VRRoadPtr road);
 
         void addKirb( VRPolygonPtr p, float height );
         void addGuardRail( pathPtr p, float height );

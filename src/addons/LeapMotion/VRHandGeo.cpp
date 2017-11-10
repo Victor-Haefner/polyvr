@@ -43,7 +43,7 @@ void VRHandGeo::updateChange() {
     if (handData && isVisible()) {
 
         // Palm
-        setPose(handData->pose[0], handData->pose[1], handData->pose[2]);
+        setPose(handData->pose);
 
         // Bones
         for (int i = 0; i < 5; ++i) {
@@ -59,19 +59,19 @@ void VRHandGeo::updateChange() {
             // The thumb does not have a base metacarpal bone and therefore contains a valid, zero length bone at that location.
             if (l0 > 0) {
                 bones[i][0]->setMesh(OSGGeometry::create(makeCylinderGeo(l0, 0.0075, 4, true, true, true)));
-                bones[i][0]->setWorldPose(pose::create(p0, handData->bases[i][0][1], handData->bases[i][0][2]));
+                bones[i][0]->setWorldPose(Pose::create(p0, handData->bases[i][0].dir(), handData->bases[i][0].up()));
             } else {
                 bones[i][0]->hide();
             }
 
             bones[i][1]->setMesh(OSGGeometry::create(makeCylinderGeo(l1, 0.0075, 4, true, true, true)));
-            bones[i][1]->setWorldPose(pose::create(p1, handData->bases[i][1][1], handData->bases[i][1][2]));
+            bones[i][1]->setWorldPose(Pose::create(p1, handData->bases[i][1].dir(), handData->bases[i][1].up()));
 
             bones[i][2]->setMesh(OSGGeometry::create(makeCylinderGeo(l2, 0.0075, 4, true, true, true)));
-            bones[i][2]->setWorldPose(pose::create(p2, handData->bases[i][2][1], handData->bases[i][2][2]));
+            bones[i][2]->setWorldPose(Pose::create(p2, handData->bases[i][2].dir(), handData->bases[i][2].up()));
 
             bones[i][3]->setMesh(OSGGeometry::create(makeCylinderGeo(l3, 0.0075, 4, true, true, true)));
-            bones[i][3]->setWorldPose(pose::create(p3, handData->bases[i][3][1], handData->bases[i][3][2]));
+            bones[i][3]->setWorldPose(Pose::create(p3, handData->bases[i][3].dir(), handData->bases[i][3].up()));
         }
 
         // Directions
@@ -80,7 +80,7 @@ void VRHandGeo::updateChange() {
                 Vec3d d = handData->directions[i];
                 directions[i]->setWorldPosition(handData->joints[i][4] + (0.1 * d));
                 directions[i]->setWorldDir(handData->directions[i]);
-                directions[i]->setWorldUp(handData->bases[i][1][2]);
+                directions[i]->setWorldUp(handData->bases[i][1].up());
                 if (!directions[i]->isVisible()) { directions[i]->show(); }
             } else {
                 if (directions[i]->isVisible()) { directions[i]->hide(); }

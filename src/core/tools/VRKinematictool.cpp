@@ -65,7 +65,7 @@ void VRJointTool::clear() {
     ageo->hide();
 }
 
-int VRJointTool::append(VRTransformPtr t, posePtr p) {
+int VRJointTool::append(VRTransformPtr t, PosePtr p) {
     if (lastAppended) {
         obj1 = t;
         obj1_name = t->getName();

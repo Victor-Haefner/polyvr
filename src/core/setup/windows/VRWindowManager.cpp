@@ -119,9 +119,13 @@ VRWindowPtr VRWindowManager::addMultiWindow(string name) {
 
 VRWindowPtr VRWindowManager::addGtkWindow(string name, string glarea) {
     cout << " add Gtk window " << name << endl;
+    //gdk_error_trap_push();
+    //if (gdk_error_trap_pop()) cout << "    ---- AAA1 ------ " << endl;
+
     Gtk::DrawingArea* drawArea = 0;
     VRGuiBuilder()->get_widget(glarea, drawArea); // TODO: create new glarea, add flag to editor area window!
     VRGtkWindowPtr win = VRGtkWindow::create(drawArea);
+
     editorWindow = win;
     win->setName(name);
     win->setAction(ract);
@@ -136,7 +140,7 @@ void VRWindowManager::pauseRendering(bool b) { rendering_paused = b; }
 void VRWindowManager::getWindowSize(string name, int& width, int& height) {
     if (!checkWin(name)) return;
 
-    WindowRecPtr win = windows[name]->getOSGWindow();
+    WindowMTRecPtr win = windows[name]->getOSGWindow();
     width = win->getWidth();
     height = win->getHeight();
 }
@@ -226,12 +230,8 @@ void VRWindowManager::save(xmlpp::Element* node) {
 }
 
 void VRWindowManager::load(xmlpp::Element* node) {
-    //e->get_attribute("from")->get_value();
-    xmlpp::Node::NodeList nl = node->get_children();
-    xmlpp::Node::NodeList::iterator itr;
-    for (itr = nl.begin(); itr != nl.end(); itr++) {
-        xmlpp::Node* n = *itr;
-
+    cout << "start loading windows\n";
+    for (auto n : node->get_children()) {
         xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
         if (!el) continue;
 

@@ -32,7 +32,8 @@
 	    leftHand.update(frame)
 	
 	leap_0 = VR.Leap()
-	leap_0.open('localhost', 6437)
+	#leap_0.open('172.17.0.2', 51000) # docker leap
+	leap_0.open('localhost', 6437) # local leap
 
 	leap_0.setPose([0,-1,0], [0,0,1], [0,1,0])
 	

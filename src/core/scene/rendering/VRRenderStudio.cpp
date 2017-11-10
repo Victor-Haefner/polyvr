@@ -236,7 +236,7 @@ void VRRenderStudio::setCamera(OSGCameraPtr cam) {
     this->cam = cam;
 }
 
-void VRRenderStudio::setBackground(BackgroundRecPtr bg) {
+void VRRenderStudio::setBackground(BackgroundMTRecPtr bg) {
     //if (defShading) defShading->setBackground(bg);
     //if (defSSAO) defSSAO->setBackground(bg);
     //if (defBlur) defBlur->setBackground(bg);

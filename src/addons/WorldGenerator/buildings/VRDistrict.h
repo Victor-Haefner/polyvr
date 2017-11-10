@@ -15,10 +15,12 @@ class VRDistrict : public VRObject, public VRWorldModule {
         static string matVShdr;
         static string matFShdr;
 
+        map<string, VRBuildingPtr> buildings;
         VRGeometryPtr facades;
         VRGeometryPtr roofs;
         VRMaterialPtr b_mat;
 
+        void computeGeometry();
         void init();
 
     public:
@@ -27,7 +29,8 @@ class VRDistrict : public VRObject, public VRWorldModule {
 
         static VRDistrictPtr create();
 
-        void addBuilding( VRPolygon p, int stories );
+        void addBuilding( VRPolygon p, int stories, string housenumber, string street );
+        void remBuilding( string street, string housenumber );
 
         void clear();
 };

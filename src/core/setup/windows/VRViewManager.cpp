@@ -57,7 +57,7 @@ void VRViewManager::setViewUser(VRTransformPtr user, int i) { // not used
     else if(i == -1) for (auto v : views) v.second->setUser(user);
 }
 
-void VRViewManager::setViewBackground(BackgroundRecPtr bg, int i) {
+void VRViewManager::setViewBackground(BackgroundMTRecPtr bg, int i) {
     if (checkView(i)) views[i]->setBackground(bg);
     else if(i == -1) for (auto v : views) v.second->setBackground(bg);
 }

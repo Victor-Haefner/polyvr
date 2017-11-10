@@ -125,7 +125,7 @@ void VRTerrain::clear() {
     embankments.clear();
 }
 
-void VRTerrain::setParameters( Vec2d s, double r, double h ) {
+void VRTerrain::setParameters( Vec2d s, double r, double h, float w ) {
     size = s;
     resolution = r;
     heightScale = h;
@@ -133,8 +133,13 @@ void VRTerrain::setParameters( Vec2d s, double r, double h ) {
     mat->setShaderParameter("resolution", resolution);
     mat->setShaderParameter("heightScale", heightScale);
     mat->setShaderParameter("doHeightTextures", 0);
+    mat->setShaderParameter("waterLevel", w);
     updateTexelSize();
     setupGeo();
+}
+
+void VRTerrain::setWaterLevel(float w) {
+    mat->setShaderParameter("waterLevel", w);
 }
 
 void VRTerrain::setMap( VRTexturePtr t, int channel ) {
@@ -154,6 +159,7 @@ void VRTerrain::setMap( VRTexturePtr t, int channel ) {
     mat->setTexture(tex);
 	mat->setShaderParameter("channel", channel);
     mat->setTextureParams(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_MODULATE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+    mat->clearTransparency();
     updateTexelSize();
     setupGeo();
 }
@@ -420,12 +426,12 @@ double VRTerrain::getHeight(const Vec2d& p, bool useEmbankments) {
 }
 
 void VRTerrain::elevateObject(VRTransformPtr t, float offset) { auto p = t->getFrom(); elevatePoint(p, offset); t->setFrom(p); }
-void VRTerrain::elevatePose(posePtr p, float offset) { auto P = p->pos(); elevatePoint(P, offset); p->setPos(P); }
+void VRTerrain::elevatePose(PosePtr p, float offset) { auto P = p->pos(); elevatePoint(P, offset); p->setPos(P); }
 void VRTerrain::elevatePoint(Vec3d& p, float offset, bool useEmbankments) { p[1] = getHeight(Vec2d(p[0], p[2]), useEmbankments) + offset; }
 
 void VRTerrain::elevateVertices(VRGeometryPtr geo, float offset) {
-    if (!terrain) return;
-    GeoPnt3fPropertyRecPtr pos = (GeoPnt3fProperty*)geo->getMesh()->geo->getPositions();
+    if (!terrain || !geo || !geo->getMesh() || !geo->getMesh()->geo) return;
+    GeoPnt3fPropertyMTRecPtr pos = (GeoPnt3fProperty*)geo->getMesh()->geo->getPositions();
     for (uint i=0; i<pos->size(); i++) {
         Pnt3f p;
         pos->getValue(p, i);
@@ -456,6 +462,28 @@ void VRTerrain::loadMap( string path, int channel ) {
     cout << "   ----------- VRTerrain::loadMap " << path << " " << channel << endl ;
     auto tex = loadGeoRasterData(path);
     setMap(tex, channel);
+}
+
+void VRTerrain::flatten(vector<Vec2d> perimeter, float h) {
+    if (!tex) return;
+    VRPolygonPtr poly = VRPolygon::create();
+    for (auto p : perimeter) poly->addPoint(p);
+    poly->scale( Vec3d(1.0/size[0], 1, 1.0/size[1]) );
+    poly->translate( Vec3d(0.5,0,0.5) );
+
+    auto dim = tex->getSize();
+    for (int i = 0; i < dim[0]; i++) {
+        for (int j = 0; j < dim[1]; j++) {
+            auto pix = Vec2d(i*1.0/(dim[0]-1), j*1.0/(dim[1]-1));
+            if (poly->isInside(pix)) {
+                Vec3i pixK = Vec3i(i,j,0);
+                Color4f col = tex->getPixel(pixK);
+                col[3] = h;
+                tex->setPixel(pixK, col);
+            }
+        }
+    }
+    setMap(tex);
 }
 
 void VRTerrain::projectOSM() {
@@ -578,6 +606,7 @@ const ivec3 off = ivec3(-1,0,1);
 const vec3 light = vec3(-1,-1,-0.5);
 uniform vec2 texelSize;
 uniform int doHeightTextures;
+uniform float waterLevel;
 
 in vec4 pos;
 in float height;
@@ -642,7 +671,7 @@ void main( void ) {
         vec4 cW3 = texture(texWoods, tc*17);
         vec4 cW4 = texture(texWoods, tc);
         vec4 cW = mix(cW1,mix(cW2,mix(cW3,cW4,0.5),0.5),0.5);
-        applyBumpMap(cW3);
+        //applyBumpMap(cW3);
 
         vec4 cG0 = texture(texGravel, tc*10777);
         vec4 cG1 = texture(texGravel, tc*1077);
@@ -651,6 +680,7 @@ void main( void ) {
         vec4 cG4 = texture(texGravel, tc);
         vec4 cG = mix(cG0,mix(cG1,mix(cG2,mix(cG3,cG4,0.5),0.5),0.5),0.5);
         color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
+        if (height < waterLevel) color = vec4(0.2,0.4,1,1);
 	}
 
 	applyBlinnPhong();

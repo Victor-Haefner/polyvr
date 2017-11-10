@@ -54,6 +54,7 @@ class VRWorldGenerator : public VRTransform {
         VRObjectManagerPtr getAssetManager();
         VRNaturePtr getNature();
         VRTerrainPtr getTerrain();
+        VRDistrictPtr getDistrict();
         VRMaterialPtr getMaterial(string name);
 };
 

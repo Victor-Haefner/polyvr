@@ -1,6 +1,8 @@
 #include "VRRoadNetwork.h"
 #include "VRRoad.h"
 #include "VRRoadIntersection.h"
+#include "VRTunnel.h"
+#include "VRBridge.h"
 #include "../terrain/VRTerrain.h"
 #include "../VRWorldGenerator.h"
 #include "VRAsphalt.h"
@@ -38,6 +40,8 @@ VRRoadNetworkPtr VRRoadNetwork::create() {
     rn->init();
     return rn;
 }
+
+VRRoadNetworkPtr VRRoadNetwork::ptr() { return dynamic_pointer_cast<VRRoadNetwork>(shared_from_this()); }
 
 void VRRoadNetwork::init() {
     graph = Graph::create();
@@ -93,7 +97,7 @@ void VRRoadNetwork::clear() {
 
 VREntityPtr VRRoadNetwork::addNode( Vec3d pos, bool elevate, float elevationOffset ) {
     int nID = graph->addNode();
-    graph->setPosition(nID, pose::create(pos));
+    graph->setPosition(nID, Pose::create(pos));
     return VRRoadBase::addNode(nID, pos, elevate, elevationOffset);
 }
 
@@ -156,6 +160,16 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
     //static VRAnalyticGeometryPtr ana = 0;
     //if (!ana) { ana = VRAnalyticGeometry::create(); addChild(ana); }
 
+    if (nodesIn.size() != normalsIn.size()) {
+        cout << "Warning in VRRoadNetwork::addLongRoad: ignore road '" << name << "', nodes and normals vector sizes mismatch!" << endl;
+        return 0;
+    }
+
+    if (nodesIn.size() <= 1) {
+        cout << "Warning in VRRoadNetwork::addLongRoad: ignore road '" << name << "', not enough nodes: " << nodesIn.size() << endl;
+        return 0;
+    }
+
     vector<VREntityPtr> nodes;
     vector<Vec3d> norms;
 
@@ -166,8 +180,8 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
         Vec3d p2 = nodesIn[i  ]->getVec3("position");
 
         path p;
-        p.addPoint( pose(p1, normalsIn[i-1]) );
-        p.addPoint( pose(p2, normalsIn[i  ]) );
+        p.addPoint( Pose(p1, normalsIn[i-1]) );
+        p.addPoint( Pose(p2, normalsIn[i  ]) );
         p.compute(16);
 
         for (auto t : p.computeInflectionPoints(0, 0, 0.2, 0.1, Vec3i(1,0,1))) { // add inflection points
@@ -272,7 +286,7 @@ void VRRoadNetwork::addGuardRail( pathPtr path, float height ) {
     pole->setMaterial( world->getMaterial("guardrail") );
 
 	vector<VRGeometryPtr> poles;
-	auto addPole = [&](const pose& p) {
+	auto addPole = [&](const Pose& p) {
 	    Vec3d pos = p.pos();
 	    Vec3d n = p.dir();
 		pos[1] += height*0.5-0.11;
@@ -339,16 +353,16 @@ void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
         Vec3d p21 = p2 - d1*0.01;
         Vec3d p23 = p2 + d2*0.01;
         Vec3d p22 = (p21+p23)*0.5;
-        path->addPoint( pose(p21, d1) );
-        path->addPoint( pose(p22, n ) );
-        path->addPoint( pose(p23, d2) );
+        path->addPoint( Pose(p21, d1) );
+        path->addPoint( Pose(p22, n ) );
+        path->addPoint( Pose(p23, d2) );
     }
     path->close();
     path->compute(2);
     auto kirb = VRStroke::create("kirb");
     kirb->addPath(path);
 
-    kirb->strokeProfile({Vec3d(0.0, h, 0), Vec3d(-0.1, h, 0), Vec3d(-0.1, 0, 0)}, 0, 0);
+    kirb->strokeProfile({Vec3d(0.0, h, 0), Vec3d(-0.1, h, 0), Vec3d(-0.1, 0, 0)}, 0, 1, 0);
     kirb->updateNormals(1);
     kirb->setMaterial( world->getMaterial("kirb") );
 
@@ -371,7 +385,7 @@ void VRRoadNetwork::physicalizeAssets() {
     collisionMesh->setMeshVisibility(false);
 }
 
-vector<VREntityPtr> VRRoadNetwork::getRoadNodes() {
+vector<VREntityPtr> VRRoadNetwork::getRoadNodes() { // all nodes from all paths from all roads
     //auto nodes = ontology->process("q(n):Node(n);Road(r);has(r.path.nodes,n)");
     map<int, VREntityPtr> nodes;
     for (auto road : roads) {
@@ -387,33 +401,14 @@ vector<VREntityPtr> VRRoadNetwork::getRoadNodes() {
     return res;
 }
 
-vector<VRRoadPtr> VRRoadNetwork::getNodeRoads(VREntityPtr node) {
-    vector<VREntityPtr> nEntries;
-    for (auto nE : node->getAllEntities("paths")) nEntries.push_back( nE );
-
-    vector<VRRoadPtr> res; //= ontology->process("q(r):Node("+node->getName()+");Road(r);has(r.path.nodes,"+node->getName()+")");
-    for (auto road : roads) {
-        bool added = false;
-        for (auto rp : road->getEntity()->getAllEntities("path")) {
-            for (auto rnE : rp->getAllEntities("nodes")) {
-                for (auto nE : nEntries) {
-                    if (nE == rnE) { res.push_back(road); added = true; break; }
-                }
-                if (added) break;
-            }
-            if (added) break;
-        }
-    }
-    return res;
-}
-
 void VRRoadNetwork::computeSigns() { // add stop lines
     auto assets = world->getAssetManager();
     for (auto signEnt : world->getOntology()->getEntities("Sign")) {
         Vec3d pos = signEnt->getVec3("position");
         Vec3d dir = signEnt->getVec3("direction");
         string type = signEnt->getValue<string>("type", "");
-        auto sign = assets->copy(type, pose::create(pos, dir), false);
+        auto sign = assets->copy(type, Pose::create(pos, dir), false);
+        if (!sign) continue;
         if (auto roadEnt = signEnt->getEntity("road")) {
             auto road = roadsByEntity[roadEnt];// get vrroad from roadent
             auto pose = road->getRightEdge(pos);
@@ -449,7 +444,7 @@ void VRRoadNetwork::computeArrows() {
     }
 }
 
-void VRRoadNetwork::createArrow(Vec4i dirs, int N, const pose& p) {
+void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p) {
     if (N == 0) return;
 
     //if (arrowTemplates.size() > 20) { cout << "VRRoadNetwork::createArrow, Warning! arrowTexture too big!\n"; return; }
@@ -469,9 +464,9 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const pose& p) {
             Vec3d d03 = Vec3d(0.5,0.5,0); // rotation point
 
             auto apath = path::create();
-            apath->addPoint( pose(Vec3d(0.5,1.0,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
-            apath->addPoint( pose(Vec3d(0.5,0.8,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
-            apath->addPoint( pose(d03+dir*0.31, dir, Vec3d(0,0,1)) );
+            apath->addPoint( Pose(Vec3d(0.5,1.0,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
+            apath->addPoint( Pose(Vec3d(0.5,0.8,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
+            apath->addPoint( Pose(d03+dir*0.31, dir, Vec3d(0,0,1)) );
             apath->compute(12);
             tg.drawPath(apath, Color4f(1,1,1,1), 0.1);
 
@@ -494,14 +489,14 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const pose& p) {
         asphaltArrow->setShaderParameter("NArrowTex", (int)arrowTemplates.size());
     }
 
-    GeoVec4fPropertyRecPtr cols = GeoVec4fProperty::create();
+    GeoVec4fPropertyMTRecPtr cols = GeoVec4fProperty::create();
     Vec4d color = Vec4d((arrowTemplates[dirs]-1)*0.001, 0, 0);
     for (int i=0; i<4; i++) cols->addValue(color);
 
     VRGeoData gdata;
     gdata.pushQuad(Vec3d(0,0.02,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(2,2), true);
     auto geo = gdata.asGeometry("arrow");
-    geo->setPose( pose::create(p) );
+    geo->setPose( Pose::create(p) );
     geo->applyTransformation();
     geo->setColors(cols);
     geo->setPositionalTexCoords2D(1.0, 1, Vec2i(0,2));
@@ -510,9 +505,40 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const pose& p) {
     geo->destroy();
 }
 
+vector<VRRoadPtr> VRRoadNetwork::getNodeRoads(VREntityPtr node) {
+    vector<VREntityPtr> nPaths;
+    for (auto nE : node->getAllEntities("paths")) {
+        auto path = nE->getEntity("path");
+        nPaths.push_back( path );
+    }
+
+    vector<VRRoadPtr> res; //= ontology->process("q(r):Node("+node->getName()+");Road(r);has(r.path.nodes,"+node->getName()+")");
+    for (auto road : roads) {
+        bool added = false;
+        for (auto rpath : road->getEntity()->getAllEntities("path")) {
+            for (auto npath : nPaths) {
+                if (rpath == npath) { res.push_back(road); added = true; break; }
+            }
+            if (added) break;
+        }
+    }
+    return res;
+}
+
 void VRRoadNetwork::computeIntersections() {
     cout << "VRRoadNetwork::computeIntersections\n";
-    for (auto node : getRoadNodes() ) {
+    vector<VRRoadPtr> newRoads;
+    for (auto road : roads) {
+        for (auto r : road->splitAtIntersections(ptr())) newRoads.push_back(r);
+    }
+    for (auto r : newRoads) {
+        roads.push_back(r);
+        ways.push_back(r);
+        roadsByEntity[r->getEntity()] = r;
+        addChild(r);
+    }
+
+    for (auto node : getRoadNodes()) {
         auto nodeRoads = getNodeRoads(node);
         if (nodeRoads.size() <= 1) continue; // ignore ends
         auto iEnt = world->getOntology()->addEntity( "intersectionRoad", "RoadIntersection" );
@@ -528,8 +554,11 @@ void VRRoadNetwork::computeIntersections() {
     }
 }
 
+VRTunnelPtr VRRoadNetwork::addTunnel(VRRoadPtr road) { auto t = VRTunnel::create(road); addChild(t); tunnels.push_back(t); return t; }
+VRBridgePtr VRRoadNetwork::addBridge(VRRoadPtr road) { auto b = VRBridge::create(road); addChild(b); bridges.push_back(b); return b; }
+
 void VRRoadNetwork::computeTracksLanes(VREntityPtr way) {
-    auto getBulge = [&](vector<pose>& points, uint i, Vec3d& x) -> float {
+    auto getBulge = [&](vector<Pose>& points, uint i, Vec3d& x) -> float {
         if (points.size() < 2) return 0;
         if (i == 0) return 0;
         if (i == points.size()-1) return 0;
@@ -546,6 +575,7 @@ void VRRoadNetwork::computeTracksLanes(VREntityPtr way) {
 
     for (auto lane : way->getAllEntities("lanes")) {
         if (!lane->is_a("Lane")) continue;
+        if (lane->is_a("ParkingLane")) continue;
         if (lane->getValue<bool>("pedestrian", false)) continue;
         for (auto pathEnt : lane->getAllEntities("path")) {
             auto path = toPath(pathEnt, 2);
@@ -585,8 +615,8 @@ void VRRoadNetwork::computeSurfaces() {
     cout << "VRRoadNetwork::computeSurfaces\n";
     auto computeRoadSurface = [&](VRRoadPtr road) {
         auto roadGeo = road->createGeometry();
-        roadGeo->setMaterial( asphalt );
         if (!roadGeo) return;
+        roadGeo->setMaterial( asphalt );
         roadGeo->getPhysics()->setDynamic(false);
         roadGeo->getPhysics()->setShape("Concave");
         roadGeo->getPhysics()->setPhysicalized(true);
@@ -605,6 +635,14 @@ void VRRoadNetwork::computeSurfaces() {
         iGeo->getPhysics()->setPhysicalized(true);
         //addChild( iGeo );
     }
+
+    for (auto tunnel : tunnels) {
+        tunnel->createGeometry();
+    }
+
+    for (auto bridge : bridges) {
+        bridge->createGeometry();
+    }
 }
 
 void VRRoadNetwork::computeMarkings() {
@@ -613,6 +651,9 @@ void VRRoadNetwork::computeMarkings() {
     for (auto road : ways) road->computeMarkings();
     for (auto intersection : intersections) intersection->computeMarkings();
 }
+
+vector<VRRoadPtr> VRRoadNetwork::getRoads() { return roads; }
+vector<VRRoadIntersectionPtr> VRRoadNetwork::getIntersections() { return intersections; }
 
 vector<VRPolygonPtr> VRRoadNetwork::computeGreenBelts() {
     cout << "VRRoadNetwork::computeGreenBelts\n";
@@ -659,6 +700,82 @@ void VRRoadNetwork::compute() {
     physicalizeAssets();
 }
 
+vector<VREntityPtr> VRRoadNetwork::getPreviousRoads(VREntityPtr road) {
+	auto getPreviousPaths = [](VREntityPtr path) {
+		auto nes = path->getAllEntities("nodes");
+		auto ne = nes[0];
+		auto n = ne->getEntity("node");
+		auto paths = n->getAllEntities("paths");
+		vector<VREntityPtr> res;
+		for (auto e : paths) {
+            if (e->getName() == ne->getName()) continue;
+            res.push_back(e->getEntity("path"));
+		}
+		return res;
+	};
 
+	auto getAdjascendRoads = [](VREntityPtr road) {
+		vector<VREntityPtr> res;
+		for (auto i : road->getAllEntities("intersections")) {
+            for (auto r : i->getAllEntities("roads")) {
+                if (r->getName() == road->getName()) continue;
+                res.push_back(r);
+            }
+		}
+		return res;
+	};
+
+    auto path = road->getEntity("path");
+    vector<VREntityPtr> res;
+    for (auto aroad : getAdjascendRoads(road)) {
+        auto rpName = aroad->getEntity("path")->getName();
+        for (auto p1 : getPreviousPaths(path)) {
+            if (p1->getName() == rpName) res.push_back(aroad);
+            for (auto p2 : getPreviousPaths(p1)) {
+                if (p2->getName() == rpName) res.push_back(aroad);
+            }
+        }
+    }
+    return res;
+}
+
+vector<VREntityPtr> VRRoadNetwork::getNextRoads(VREntityPtr road) {
+	auto getNextPaths = [](VREntityPtr path) {
+		auto nes = path->getAllEntities("nodes");
+		auto ne = nes[nes.size()-1];
+		auto n = ne->getEntity("node");
+		auto paths = n->getAllEntities("paths");
+		vector<VREntityPtr> res;
+		for (auto e : paths) {
+            if (e->getName() == ne->getName()) continue;
+            res.push_back(e->getEntity("path"));
+		}
+		return res;
+	};
+
+	auto getAdjascendRoads = [](VREntityPtr road) {
+		vector<VREntityPtr> res;
+		for (auto i : road->getAllEntities("intersections")) {
+            for (auto r : i->getAllEntities("roads")) {
+                if (r->getName() == road->getName()) continue;
+                res.push_back(r);
+            }
+		}
+		return res;
+	};
+
+    auto path = road->getEntity("path");
+    vector<VREntityPtr> res;
+    for (auto aroad : getAdjascendRoads(road)) {
+        auto rpName = aroad->getEntity("path")->getName();
+        for (auto p1 : getNextPaths(path)) {
+            if (p1->getName() == rpName) res.push_back(aroad);
+            for (auto p2 : getNextPaths(p1)) {
+                if (p2->getName() == rpName) res.push_back(aroad);
+            }
+        }
+    }
+    return res;
+}
 
 

@@ -30,7 +30,7 @@ VRStrokePtr VRStroke::ptr() { return static_pointer_cast<VRStroke>( shared_from_
 void VRStroke::addPath(pathPtr p) { paths.push_back(p); }
 void VRStroke::setPath(pathPtr p) { paths.clear(); addPath(p); }
 void VRStroke::setPaths(vector<pathPtr> p) { paths = p; }
-vector<pathPtr>& VRStroke::getPaths() { return paths; }
+vector<pathPtr> VRStroke::getPaths() { return paths; }
 
 void VRStroke::addPolygon(VRPolygonPtr p) { polygons.push_back(p); }
 

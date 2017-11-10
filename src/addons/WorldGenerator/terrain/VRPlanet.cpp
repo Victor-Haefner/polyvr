@@ -75,11 +75,11 @@ Vec3d VRPlanet::fromLatLongPosition(double north, double east, bool local) {
 Vec3d VRPlanet::fromLatLongEast(double north, double east, bool local) { return fromLatLongNormal(0, east+90, local); }
 Vec3d VRPlanet::fromLatLongNorth(double north, double east, bool local) { return fromLatLongNormal(north+90, east, local); }
 
-posePtr VRPlanet::fromLatLongPose(double north, double east, bool local) {
+PosePtr VRPlanet::fromLatLongPose(double north, double east, bool local) {
     Vec3d f = fromLatLongPosition(north, east, local);
     Vec3d d = fromLatLongNorth(north, east, local);
     Vec3d u = fromLatLongNormal(north, east, local);
-    return pose::create(f,d,u);
+    return Pose::create(f,d,u);
 }
 
 Vec2d VRPlanet::fromLatLongSize(double north1, double east1, double north2, double east2) {
@@ -101,6 +101,21 @@ Vec2d VRPlanet::fromLatLongSize(double north1, double east1, double north2, doub
     metaGeo->setVector(103, Vec3d(p1), Vec3d(dirNorth*v), Color3f(0,1,1), "S");
     */
     return Vec2d(abs(u),abs(v));
+}
+
+Vec2d VRPlanet::fromPosLatLong(Pnt3d p, bool local) { // TODO: increase resolution by enhancing getWorldMatrix
+    if (local) {
+        auto m = origin->getWorldMatrix();
+        m.invert();
+        m.mult(p,p);
+    }
+
+    Vec3d n = Vec3d(p);
+    n.normalize();
+    double cT = n[1];
+    double north = toDeg(acos(cT));
+    double east = toDeg(atan2(-n[2], n[0]));
+    return Vec2d(-north+90, east);
 }
 
 void VRPlanet::rebuild() {
@@ -134,12 +149,12 @@ void VRPlanet::rebuild() {
     // init meta geo
     if (!metaGeo) {
         metaGeo = VRAnalyticGeometry::create("PlanetMetaData");
-        metaGeo->setLabelParams(0.1, true, true, Color4f(1,1,1,1), Color4f(1,0,0,1));
+        metaGeo->setLabelParams(0.02, true, true, Color4f(0.5,0.1,0,1), Color4f(1,1,0.5,1));
         origin->addChild(metaGeo);
     }
 }
 
-void VRPlanet::setParameters( double r ) { radius = r; rebuild(); }
+void VRPlanet::setParameters( double r, double s ) { radius = r; sectorSize = s; rebuild(); }
 
 VRWorldGeneratorPtr VRPlanet::addSector( double north, double east ) {
     auto generator = VRWorldGenerator::create();
@@ -162,11 +177,11 @@ VRWorldGeneratorPtr VRPlanet::getSector( double north, double east ) {
 
 VRMaterialPtr VRPlanet::getMaterial() { return sphereMat; }
 
-int VRPlanet::addPin( string label, double north, double east ) {
+int VRPlanet::addPin( string label, double north, double east, double length ) {
     Vec3d n = fromLatLongNormal(north, east);
     Vec3d p = fromLatLongPosition(north, east);
     static int ID = -1; ID++;//metaGeo->getNewID(); // TODO
-    metaGeo->setVector(ID, Vec3d(p), Vec3d(n)*10000, Color3f(1,0,0), label);
+    metaGeo->setVector(ID, Vec3d(p), Vec3d(n)*length, Color3f(1,1,0.5), label);
     return ID;
 }
 

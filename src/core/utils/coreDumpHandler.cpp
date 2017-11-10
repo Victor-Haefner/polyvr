@@ -45,6 +45,7 @@ void enableCoreDump(bool b) {
     signal(SIGSEGV, &coreDump);
     signal(SIGFPE, &coreDump);
     signal(SIGABRT, &coreDump);
+    signal(SIGTRAP, &coreDump);
 
     /*signal(SIGHUP, &coreDump);
     signal(SIGINT, &coreDump);

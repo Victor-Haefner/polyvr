@@ -42,7 +42,7 @@ void VRStage::initStage() {
     stage->setBackground(bg);
 }
 
-void VRStage::setBackground(BackgroundRecPtr bg) { stage->setBackground(bg); }
+void VRStage::setBackground(BackgroundMTRecPtr bg) { stage->setBackground(bg); }
 
 void VRStage::initFBO() {
     fbo = FrameBufferObject::create();

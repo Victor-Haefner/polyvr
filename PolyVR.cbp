@@ -468,6 +468,8 @@
 		<Unit filename="src/addons/Semantics/Reasoning/VRConcept.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VREntity.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VREntity.h" />
+		<Unit filename="src/addons/Semantics/Reasoning/VROWLExport.cpp" />
+		<Unit filename="src/addons/Semantics/Reasoning/VROWLExport.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROWLImport.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROWLImport.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntology.cpp" />
@@ -537,6 +539,8 @@
 		<Unit filename="src/addons/WorldGenerator/nature/VRTree.h" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRAsphalt.cpp" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRAsphalt.h" />
+		<Unit filename="src/addons/WorldGenerator/roads/VRBridge.cpp" />
+		<Unit filename="src/addons/WorldGenerator/roads/VRBridge.h" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoad.cpp" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoad.h" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoadBase.cpp" />
@@ -545,6 +549,8 @@
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoadIntersection.h" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoadNetwork.cpp" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoadNetwork.h" />
+		<Unit filename="src/addons/WorldGenerator/roads/VRTunnel.cpp" />
+		<Unit filename="src/addons/WorldGenerator/roads/VRTunnel.h" />
 		<Unit filename="src/addons/WorldGenerator/terrain/VRPlanet.cpp" />
 		<Unit filename="src/addons/WorldGenerator/terrain/VRPlanet.h" />
 		<Unit filename="src/addons/WorldGenerator/terrain/VRPyTerrain.cpp" />
@@ -1031,6 +1037,8 @@
 		<Unit filename="src/core/setup/tracking/DTrack.cpp" />
 		<Unit filename="src/core/setup/tracking/DTrack.h" />
 		<Unit filename="src/core/setup/tracking/Kinect.h" />
+		<Unit filename="src/core/setup/tracking/OptiTrack.cpp" />
+		<Unit filename="src/core/setup/tracking/OptiTrack.h" />
 		<Unit filename="src/core/setup/tracking/VRPN.cpp" />
 		<Unit filename="src/core/setup/tracking/VRPN.h" />
 		<Unit filename="src/core/setup/tracking/Vive.cpp" />

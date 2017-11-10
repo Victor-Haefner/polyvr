@@ -54,8 +54,8 @@ void VRSelector::update() {
     if (!subselection->getMesh()->geo->getPositions()) return;
     int N = subselection->getMesh()->geo->getPositions()->size();
 
-    GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
-    GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
+    GeoUInt32PropertyMTRecPtr inds = GeoUInt32Property::create();
+    GeoUInt32PropertyMTRecPtr lengths = GeoUInt32Property::create();
     lengths->addValue(N);
     for (int i=0; i<N; i++) inds->addValue(i);
 

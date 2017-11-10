@@ -48,7 +48,6 @@ struct VRPyEntity : VRPyBaseT<OSG::VREntity> {
 
 struct VRPyOntology : VRPyBaseT<OSG::VROntology> {
     static PyMethodDef methods[];
-    static PyObject* open(VRPyOntology* self, PyObject* args);
     static PyObject* toString(VRPyOntology* self);
     static PyObject* getConcept(VRPyOntology* self, PyObject* args);
     static PyObject* getConcepts(VRPyOntology* self);

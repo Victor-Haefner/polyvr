@@ -16,11 +16,11 @@ vector<Vec3d> tmpVertices;
 
 struct Triangulator::GeoData {
     // geo data
-    GeoUInt8PropertyRecPtr types;
-    GeoUInt32PropertyRecPtr lengths;
-    GeoUInt32PropertyRecPtr indices;
-    GeoPnt3fPropertyRecPtr pos;
-    GeoVec3fPropertyRecPtr norms;
+    GeoUInt8PropertyMTRecPtr types;
+    GeoUInt32PropertyMTRecPtr lengths;
+    GeoUInt32PropertyMTRecPtr indices;
+    GeoPnt3fPropertyMTRecPtr pos;
+    GeoVec3fPropertyMTRecPtr norms;
 
     // tmp vars
     int current_primitive = -1;

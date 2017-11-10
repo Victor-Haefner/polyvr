@@ -43,6 +43,7 @@ Graph::Graph() {
 Graph::~Graph() {}
 
 int Graph::connect(int i, int j, CONNECTION c) {
+    if (i < 0 || j < 0) return -1;
     //if (i >= int(nodes.size()) || j >= int(nodes.size())) return edge;
     while (i >= int(edges.size())) edges.push_back( vector<edge>() );
     edges[i].push_back(edge(i,j,c,edgesByID.size()));
@@ -100,13 +101,13 @@ int Graph::getNEdges() {
     return N;
 }
 
-void Graph::setPosition(int i, posePtr p) {
+void Graph::setPosition(int i, PosePtr p) {
     if (!p || i >= int(nodes.size()) || i < 0) return;
     nodes[i].p = *p;
     update(i, true);
 }
 
-posePtr Graph::getPosition(int i) { auto p = pose::create(); *p = nodes[i].p; return p; }
+PosePtr Graph::getPosition(int i) { auto p = Pose::create(); *p = nodes[i].p; return p; }
 
 int Graph::addNode() { nodes.push_back(node()); return nodes.size()-1; }
 void Graph::clear() { nodes.clear(); edges.clear(); }

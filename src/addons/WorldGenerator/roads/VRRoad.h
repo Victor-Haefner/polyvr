@@ -41,7 +41,8 @@ class VRRoad : public VRRoadBase {
         edgePoint& getEdgePoints( VREntityPtr node );
         void computeMarkings();
         bool hasMarkings();
-        posePtr getRightEdge(Vec3d pos);
+        PosePtr getRightEdge(Vec3d pos);
+        vector<VRRoadPtr> splitAtIntersections(VRRoadNetworkPtr network);
 };
 
 OSG_END_NAMESPACE;

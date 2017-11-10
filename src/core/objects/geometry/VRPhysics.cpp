@@ -8,6 +8,7 @@
 #include "core/objects/geometry/VRConstraint.h"
 #include "core/utils/VRVisualLayer.h"
 #include "core/utils/VRTimer.h"
+#include "core/utils/VRRate.h"
 
 #include <OpenSG/OSGTriangleIterator.h>
 #include <btBulletDynamicsCommon.h>
@@ -131,8 +132,7 @@ OSG::Vec3d VRPhysics::getForce() { Lock lock(VRPhysics_mtx()); return toVec3d(co
 OSG::Vec3d VRPhysics::getTorque() { Lock lock(VRPhysics_mtx()); return toVec3d(constantTorque); }
 
 void VRPhysics::prepareStep() {
-    if(soft) return;
-    if(body == 0) return;
+    if (soft || !body) return;
     auto f = constantForce;
     auto t = constantTorque;
     for (auto j : forceJob) { f += toBtVector3(j); forceJob2.push_back(j); }
@@ -349,7 +349,7 @@ void VRPhysics::update() {
     if (useCallbacks) gContactAddedCallback = customContactAddedCallback;
     if (shape == 0) { cout << "ERROR: physics shape unknown: " << physicsShape << endl; return; }
 
-    motionState = new btDefaultMotionState( fromVRTransform( vr_obj, scale, CoMOffset ) );
+    motionState = new btDefaultMotionState( fromVRTransform( vr_obj.lock(), scale, CoMOffset ) );
 
     if (_mass != 0) shape->calculateLocalInertia(_mass, inertiaVector);
 
@@ -405,7 +405,7 @@ btSoftBody* VRPhysics::createCloth() {
     //float h = prim->height;
     //float w = prim->width;
 
-    OSG::GeoVectorPropertyRecPtr positions = geo->getMesh()->geo->getPositions();
+    OSG::GeoVectorPropertyMTRecPtr positions = geo->getMesh()->geo->getPositions();
     vector<btVector3> vertices;
     vector<btScalar> masses;
 
@@ -484,7 +484,7 @@ btCollisionShape* VRPhysics::getBoxShape() {
 
     for (auto geo : getGeometries()) {
         if (!geo) continue;
-        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->geo->getPositions();
+        OSG::GeoVectorPropertyMTRecPtr pos = geo->getMesh()->geo->getPositions();
         if (!pos) continue;
 		for (unsigned int i = 0; i<pos->size(); i++) {
             OSG::Vec3d p;
@@ -512,7 +512,7 @@ btCollisionShape* VRPhysics::getSphereShape() {
 
     /*for (auto _g : geos ) { // get geometric center // makes no sense as you would have to change the center of the shape..
         OSG::VRGeometryPtr geo = (OSG::VRGeometryPtr)_g;
-        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->geo->getPositions();
+        OSG::GeoVectorPropertyMTRecPtr pos = geo->getMesh()->geo->getPositions();
         N += pos->size();
         for (unsigned int i=0; i<pos->size(); i++) {
             pos->getValue(p,i);
@@ -524,7 +524,7 @@ btCollisionShape* VRPhysics::getSphereShape() {
 
     for (auto geo : getGeometries()) {
         if (!geo) continue;
-        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->geo->getPositions();
+        OSG::GeoVectorPropertyMTRecPtr pos = geo->getMesh()->geo->getPositions();
 		for (unsigned int i = 0; i<pos->size(); i++) {
             pos->getValue(p,i);
             //r2 = max( r2, (p-center).squareLength() );
@@ -549,7 +549,7 @@ btCollisionShape* VRPhysics::getConvexShape(OSG::Vec3d& mc) {
     for (auto geo : getGeometries()) {
         if (!geo) continue;
         if (geo->getMesh()->geo == 0) continue;
-        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->geo->getPositions();
+        OSG::GeoVectorPropertyMTRecPtr pos = geo->getMesh()->geo->getPositions();
         if (pos == 0) continue;
 
         if (geo != obj) {
@@ -620,7 +620,7 @@ btCollisionShape* VRPhysics::getCompoundShape() {
     for (auto geo : getGeometries()) {
         if (!geo) continue;
         if (geo->getMesh()->geo == 0) continue;
-        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->geo->getPositions();
+        OSG::GeoVectorPropertyMTRecPtr pos = geo->getMesh()->geo->getPositions();
         if (pos == 0) continue;
 
         if (geo != obj) {
@@ -679,7 +679,7 @@ btCollisionShape* VRPhysics::getHACDShape() {
     std::vector< HACD::Vec3<HACD::Real> > points;
     std::vector< HACD::Vec3<long> > triangles;
 
-    OSG::GeoVectorPropertyRecPtr positions = obj->getMesh()->geo->getPositions();
+    OSG::GeoVectorPropertyMTRecPtr positions = obj->getMesh()->geo->getPositions();
     OSG::Pnt3d p;
     for(uint i = 0; i < positions->size();i++) {
         positions->getValue(p,i);
@@ -891,9 +891,9 @@ void VRPhysics::updateVisualGeo() {
 
     if (stype == 31) { // compound
         btCompoundShape* cpshape = (btCompoundShape*)shape;
-        OSG::GeoPnt3fPropertyRecPtr pos = OSG::GeoPnt3fProperty::create();
-        OSG::GeoVec3fPropertyRecPtr norms = OSG::GeoVec3fProperty::create();
-        OSG::GeoUInt32PropertyRecPtr inds = OSG::GeoUInt32Property::create();
+        OSG::GeoPnt3fPropertyMTRecPtr pos = OSG::GeoPnt3fProperty::create();
+        OSG::GeoVec3fPropertyMTRecPtr norms = OSG::GeoVec3fProperty::create();
+        OSG::GeoUInt32PropertyMTRecPtr inds = OSG::GeoUInt32Property::create();
 
         int NIoffset = 0;
         for (int j = 0; j < cpshape->getNumChildShapes(); j++) {
@@ -929,17 +929,18 @@ void VRPhysics::updateVisualGeo() {
     geo->setMaterial(mat);
 }
 
-void VRPhysics::updateTransformation(OSG::VRTransformWeakPtr t) {
+void VRPhysics::updateTransformation(OSG::VRTransformPtr trans) {
     Lock lock(VRPhysics_mtx());
-    auto bt = fromVRTransform(t, scale, CoMOffset);
+    //static VRRate FPS; int fps = FPS.getRate(); cout << "VRPhysics::updateTransformation " << fps << endl;
+    auto bt = fromVRTransform(trans, scale, CoMOffset);
     if (body) { body->setWorldTransform(bt); body->activate(); }
     if (ghost_body) { ghost_body->setWorldTransform(bt); ghost_body->activate(); }
     if (visShape && visShape->isVisible()) visShape->setWorldMatrix( getTransformation() );
 }
 
-btTransform VRPhysics::fromVRTransform(OSG::VRTransformWeakPtr t, OSG::Vec3d& scale, OSG::Vec3d mc) {
-    OSG::Matrix4d m;
-    if (auto sp = t.lock()) m = sp->getWorldMatrix();
+btTransform VRPhysics::fromVRTransform(OSG::VRTransformPtr trans, OSG::Vec3d& scale, OSG::Vec3d mc) {
+    if (!trans) return fromMatrix(OSG::Matrix4d(),scale,mc);
+    OSG::Matrix4d m = trans->getWorldMatrix();
     return fromMatrix(m,scale,mc);
 }
 
@@ -987,7 +988,6 @@ OSG::Matrix4d VRPhysics::fromBTTransform(const btTransform t) {
 }
 
 void VRPhysics::pause(bool b) {
-    return;
     if (body == 0) return;
     if (dynamic == !b) return;
     setDynamic(!b);

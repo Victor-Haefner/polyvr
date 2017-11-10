@@ -8,24 +8,23 @@
 #include <boost/bind.hpp>
 #include "core/utils/VRProfiler.h"
 #include <time.h>
+#include <OpenSG/OSGQuaternion.h>
 
 
 #define FPS_WATCHDOG_TOLERANCE_EPSILON 0.3
 #define FPS_WATCHDOG_COOLDOWNFRAMES 1000
 
-OSG_BEGIN_NAMESPACE;
 using namespace std;
+using namespace OSG;
 
 VRHaptic::VRHaptic() : VRDevice("haptic") {
     v = new virtuose();
-    v->disconnect();
-    setIP("172.22.151.200");
 
     updatePtr = VRUpdateCb::create( "Haptic object update", boost::bind(&VRHaptic::applyTransformation, this, editBeacon()) );
     VRSceneManager::get()->addUpdateFkt(updatePtr);
 
-    timestepWatchdog = VRUpdateCb::create( "Haptic Timestep Watchdog", boost::bind(&VRHaptic::updateHapticTimestep, this, editBeacon()) );
-    VRScene::getCurrent()->addUpdateFkt(timestepWatchdog);
+    //timestepWatchdog = VRUpdateCb::create( "Haptic Timestep Watchdog", boost::bind(&VRHaptic::updateHapticTimestep, this, editBeacon()) );
+    //VRSceneManager::get()->addUpdateFkt(timestepWatchdog);
 
     auto fkt = new VRFunction<VRDeviceWeakPtr>( "Haptic on scene changed", boost::bind(&VRHaptic::on_scene_changed, this, _1) );
     VRSceneManager::get()->getSignal_on_scene_load()->add(fkt);
@@ -41,7 +40,7 @@ VRHaptic::~VRHaptic() {
 }
 
 VRHapticPtr VRHaptic::create() {
-    auto d = VRHapticPtr(new VRHaptic());
+    auto d = VRHapticPtr( new VRHaptic() );
     d->initIntersect(d);
     return d;
 }
@@ -49,7 +48,6 @@ VRHapticPtr VRHaptic::create() {
 VRHapticPtr VRHaptic::ptr() { return static_pointer_cast<VRHaptic>( shared_from_this() ); }
 
 void VRHaptic::on_scene_changed(VRDeviceWeakPtr dev) {
-
     VRScene::getCurrent()->dropPhysicsUpdateFunction(updateFktPre,false);
     VRScene::getCurrent()->dropPhysicsUpdateFunction(updateFktPost,true);
     //disconnect
@@ -62,12 +60,10 @@ void VRHaptic::on_scene_changed(VRDeviceWeakPtr dev) {
     VRScene::getCurrent()->addPhysicsUpdateFunction(updateFktPre,false);
     VRScene::getCurrent()->addPhysicsUpdateFunction(updateFktPost,true);
 
-    //reconnect
-    setIP("172.22.151.200");
-
+    setIP("172.22.151.200"); //reconnect
 }
 
-void VRHaptic::applyTransformation(VRTransformPtr t) { // TODO: rotation
+void VRHaptic::applyTransformation(VRTransformPtr t) {
     if (!v->connected()) return;
     t->setMatrix(v->getPose());
 }
@@ -126,9 +122,28 @@ void VRHaptic::updateHapticPre(VRTransformPtr t) { // TODO: rotation
 }
 
 void VRHaptic::updateHapticPost(VRTransformPtr t) { // TODO: rotation
+    //cout << " VRHaptic::updateHapticPost " << v->connected() << endl;
      if (!v->connected()) return;
    //COMMAND_MODE_VIRTMECH
     updateVirtMechPost();
+}
+
+void VRHaptic::updateVirtMechPre() {
+    v->updateVirtMechPre();
+}
+
+void VRHaptic::updateVirtMechPost() {
+    v->updateVirtMechPost();
+    OSG::Vec3i states = v->getButtonStates();
+
+    for (int i=0; i<3; i++) {
+        if (states[i] != button_states[i]) {
+            // leads to unexpected behaviour: (virtual obj is set to origin immediately)
+            // hangs ..
+            //change_button(i, states[i]);
+            //button_states[i] = states[i];
+        }
+    }
 }
 
 void VRHaptic::setForce(Vec3d force, Vec3d torque) { v->applyForce(force, torque); }
@@ -137,33 +152,27 @@ void VRHaptic::setSimulationScales(float scale, float forces) { v->setSimulation
 void VRHaptic::attachTransform(VRTransformPtr trans) {v->attachTransform(trans);}
 void VRHaptic::setBase(VRTransformPtr trans) {v->setBase(trans);}
 void VRHaptic::detachTransform() {v->detachTransform();}
-void VRHaptic::updateVirtMechPre() {
-    v->updateVirtMechPre();
-}
-void VRHaptic::updateVirtMechPost() {
-    v->updateVirtMechPost();
-    OSG::Vec3i states = v->getButtonStates();
-
-    //cout << "updateVirtMech b states " << states << endl;
-
-    for (int i=0; i<3; i++) {
-        if (states[i] != button_states[i]) {
-            //cout << "updateVirtMech trigger " << i << " " << states[i] << endl;
-
-            // leads to unexpected behaviour: (virtual obj is set to origin immediately)
-            //change_button(i, states[i]);
-            //button_states[i] = states[i];
-        }
-    }
-}
-Vec3i VRHaptic::getButtonStates() {return (v->getButtonStates());}
-
-
+Vec3i VRHaptic::getButtonStates() { return (v->getButtonStates()); }
 
 void VRHaptic::setIP(string IP) { this->IP = IP; v->connect(IP,1.0f/(float)VRGlobals::PHYSICS_FRAME_RATE.fps);}
-string VRHaptic::getIP() { return IP; }
-
 void VRHaptic::setType(string type) { this->type = type; } // TODO: use type for configuration
+string VRHaptic::getIP() { return IP; }
 string VRHaptic::getType() { return type; }
 
-OSG_END_NAMESPACE;
+void VRHaptic::runTest1() {
+    cout << " --- run haptic test 1 --- " << endl;
+    auto vc = virtOpen("172.22.151.200");
+    virtClose(vc);
+    /*v = new virtuose();
+    v->disconnect();
+    setIP("172.22.151.200");
+
+    updatePtr = VRUpdateCb::create( "Haptic object update", boost::bind(&VRHaptic::applyTransformation, this, editBeacon()) );
+    VRSceneManager::get()->addUpdateFkt(updatePtr);
+
+    on_scene_changed(0);*/
+}
+
+
+
+

@@ -50,6 +50,10 @@ template<> bool toValue(PyObject* o, Color4f& v) { if (!PyVec_Check(o, 4, 'f')) 
 template<> bool toValue(PyObject* o, Vec2d& v) { if (!PyVec_Check(o, 2, 'f')) return 0; v = VRPyBase::parseVec2dList(o); return 1; }
 template<> bool toValue(PyObject* o, Vec3d& v) { if (!PyVec_Check(o, 3, 'f')) return 0; v = VRPyBase::parseVec3dList(o); return 1; }
 template<> bool toValue(PyObject* o, Vec4d& v) { if (!PyVec_Check(o, 4, 'f')) return 0; v = VRPyBase::parseVec4dList(o); return 1; }
+template<> bool toValue(PyObject* o, Pnt2d& v) { if (!PyVec_Check(o, 2, 'f')) return 0; v = Pnt2d( VRPyBase::parseVec2dList(o) ); return 1; }
+template<> bool toValue(PyObject* o, Pnt3d& v) { if (!PyVec_Check(o, 3, 'f')) return 0; v = Pnt3d( VRPyBase::parseVec3dList(o) ); return 1; }
+template<> bool toValue(PyObject* o, Pnt4d& v) { if (!PyVec_Check(o, 4, 'f')) return 0; v = Pnt4d( VRPyBase::parseVec4dList(o) ); return 1; }
+template<> bool toValue(PyObject* o, Vec2i& v) { if (!PyVec_Check(o, 2, 'i')) return 0; v = VRPyBase::parseVec2iList(o); return 1; }
 template<> bool toValue(PyObject* o, Vec3i& v) { if (!PyVec_Check(o, 3, 'i')) return 0; v = VRPyBase::parseVec3iList(o); return 1; }
 template<> bool toValue(PyObject* o, Vec4i& v) { if (!PyVec_Check(o, 4, 'i')) return 0; v = VRPyBase::parseVec4iList(o); return 1; }
 

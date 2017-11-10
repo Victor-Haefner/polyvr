@@ -1,6 +1,7 @@
 setup/*
 examples/*.png
 examples/core
+examples/.local*
 *~
 *.depend
 *.layout

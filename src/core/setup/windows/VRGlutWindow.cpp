@@ -19,7 +19,7 @@ VRGlutWindow::VRGlutWindow() {
     type = 1;
 
     cout << "\nGlut: New Window\n";
-    GLUTWindowRecPtr win = GLUTWindow::create();
+    GLUTWindowMTRecPtr win = GLUTWindow::create();
     _win = win;
 
     glutInitWindowSize(width, height);

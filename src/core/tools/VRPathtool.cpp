@@ -141,7 +141,7 @@ void VRPathtool::setGraph(GraphPtr g, bool doClear) {
     }
 }
 
-int VRPathtool::addNode(posePtr p) {
+int VRPathtool::addNode(PosePtr p) {
     auto tmp = VRTransform::create("tmp");
     tmp->setPose(p);
     p = tmp->getRelativePose(ptr());
@@ -233,8 +233,8 @@ void VRPathtool::setGraphEdge(Graph::edge& e, bool handles, bool doArrow, Vec3d 
     auto& nodes = graph->getNodes();
     if (!paths.count(e.ID)) {
         paths[e.ID] = path::create();
-        paths[e.ID]->addPoint( pose(nodes[e.from].p.pos(), n1));
-        paths[e.ID]->addPoint( pose(nodes[e.to].p.pos(), n2));
+        paths[e.ID]->addPoint( Pose(nodes[e.from].p.pos(), n1));
+        paths[e.ID]->addPoint( Pose(nodes[e.to].p.pos(), n2));
     }
     auto en = newEntry( paths[e.ID], option(10, handles), e.ID, 0 );
     setupHandles(en, knots[e.from].handle.lock(), knots[e.to].handle.lock());
@@ -332,7 +332,7 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
 
         for (auto e : handleToEntries[key]) {
             auto op = e->p->getPoint(e->points[key]);
-            e->p->setPoint( e->points[key], pose(p->pos(), op.dir(), p->up()));
+            e->p->setPoint( e->points[key], Pose(p->pos(), op.dir(), p->up()));
             updateEntry(e);
         }
 
@@ -363,7 +363,7 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
                     h->setRelativeDir(dir, ptr());
                     for (auto e : handleToEntries[key]) {
                         auto op = e->p->getPoint(e->points[key]);
-                        e->p->setPoint( e->points[key], pose(op.pos(), dir, op.up()));
+                        e->p->setPoint( e->points[key], Pose(op.pos(), dir, op.up()));
                         updateEntry(e);
                     }
                 }
@@ -385,7 +385,7 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
         Vec3d d = p->pos() - pg->getWorldPosition();
         auto e = handleToEntries[key][0]; // should only be one entry at most!
         auto op = e->p->getPoint(e->points[key]);
-        e->p->setPoint( e->points[key], pose(op.pos(), d, op.up()));
+        e->p->setPoint( e->points[key], Pose(op.pos(), d, op.up()));
         updateEntry(e);
     }
 }
@@ -398,7 +398,7 @@ void VRPathtool::projectHandle(VRGeometryPtr handle, VRDevicePtr dev) { // proje
         //Vec3d d = handle->getRelativeDirection(ptr());
         d -= d.dot(ins.normal)*ins.normal;
         //handle->setRelativePose( pose::create(Vec3d(ins.point), d, ins.normal), ptr() );
-        handle->setWorldPose( pose::create(Vec3d(ins.point), d, ins.normal) );
+        handle->setWorldPose( Pose::create(Vec3d(ins.point), d, ins.normal) );
     }
 }
 
@@ -431,7 +431,7 @@ void VRPathtool::setupHandles(entryPtr e, VRGeometryPtr ha, VRGeometryPtr he) {
         if (i == 0) h = ha;
         if (i == N-1) h = he;
         if (!h) h = newHandle();
-        h->setPose( pose::create(point) );
+        h->setPose( Pose::create(point) );
 
         if (opt.useControlHandles && i > 0)   h1 = newControlHandle(h, point.pos() + point.dir());
         if (opt.useControlHandles && i < N-1) h2 = newControlHandle(h, point.pos() + point.dir());
@@ -551,7 +551,7 @@ VRGeometryPtr VRPathtool::extrude(VRDevicePtr dev, pathPtr p) {
     }
 
     auto e = pathToEntry[p.get()];
-    e->p->addPoint( pose(Vec3d(0,0,-1), Vec3d(1,0,0)));
+    e->p->addPoint( Pose(Vec3d(0,0,-1), Vec3d(1,0,0)));
 
     VRGeometryPtr h = newHandle();
     handleToEntries[h.get()].push_back(e);
@@ -561,7 +561,7 @@ VRGeometryPtr VRPathtool::extrude(VRDevicePtr dev, pathPtr p) {
     e->anchor.lock()->addChild(h);
     if (dev) {
         dev->drag(h, dev->getBeacon());
-        h->setPose( pose::create(Vec3d(0,0,-1)) );
+        h->setPose( Pose::create(Vec3d(0,0,-1)) );
     }
 
     updateHandle(h);

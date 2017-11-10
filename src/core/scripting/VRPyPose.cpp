@@ -3,10 +3,10 @@
 
 using namespace OSG;
 
-template<> PyObject* VRPyTypeCaster::cast(const posePtr& e) { return VRPyPose::fromSharedPtr(e); }
-template<> bool toValue(PyObject* o, posePtr& p) { if (!VRPyPose::check(o)) return 0; p = ((VRPyPose*)o)->objPtr; return 1; }
+template<> PyObject* VRPyTypeCaster::cast(const PosePtr& e) { return VRPyPose::fromSharedPtr(e); }
+template<> bool toValue(PyObject* o, PosePtr& p) { if (!VRPyPose::check(o)) return 0; p = ((VRPyPose*)o)->objPtr; return 1; }
 
-template<> PyTypeObject VRPyBaseT<pose>::type = {
+template<> PyTypeObject VRPyBaseT<Pose>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
     "VR.Pose",             /*tp_name*/
@@ -67,7 +67,7 @@ PyObject* VRPyPose::invert(VRPyPose *self) {
 PyObject* VRPyPose::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     PyObject *p, *d, *u;
     if (! PyArg_ParseTuple(args, "OOO", &p, &d, &u)) return NULL;
-    return allocPtr( type, OSG::pose::create( parseVec3dList(p), parseVec3dList(d), parseVec3dList(u) ) );
+    return allocPtr( type, OSG::Pose::create( parseVec3dList(p), parseVec3dList(d), parseVec3dList(u) ) );
 }
 
 PyObject* VRPyPose::set(VRPyPose* self, PyObject* args) {

@@ -2,6 +2,7 @@
 #include "VRReasoner.h"
 #include "VRProperty.h"
 #include "VROWLImport.h"
+#include "VROWLExport.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/scene/VRScene.h"
@@ -85,12 +86,14 @@ VRConceptPtr VROntology::getConcept(string name) {
     }
     //cout << "found " << p->name << " " << p->ID << endl;
     //if (!p) cout << "Warning: concept " << name << " not found in ontology " << getName() << endl;
-    if (recentConcepts.size() > 10) { // too big, remove random element
-        auto it = recentConcepts.begin();
-        advance(it, rand() % recentConcepts.size());
-        recentConcepts.erase(it);
+    if (p) {
+        if (recentConcepts.size() > 10) { // too big, remove random element
+            auto it = recentConcepts.begin();
+            advance(it, rand() % recentConcepts.size());
+            recentConcepts.erase(it);
+        }
+        recentConcepts[name] = p;
     }
-    recentConcepts[name] = p;
     return p;
 }
 
@@ -275,11 +278,15 @@ string VROntology::toString() {
     return res;
 }
 
-void VROntology::open(string path) {
-    if (!boost::filesystem::exists(path)) WARN("WARNING in VROntology::open, " + path + " not found!");
-
+void VROntology::openOWL(string path) {
+    if (!boost::filesystem::exists(path)) WARN("WARNING in VROntology::openOWL, " + path + " not found!");
     VROWLImport importer;
-    importer.load(shared_from_this(), path);
+    importer.read(shared_from_this(), path);
+}
+
+void VROntology::saveOWL(string path) {
+    VROWLExport exporter;
+    exporter.write(shared_from_this(), path);
 }
 
 void VROntology::addModule(string mod) {

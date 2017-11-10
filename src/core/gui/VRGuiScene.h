@@ -54,6 +54,7 @@ class VRGuiScene {
         void on_cam_fov_changed();
         void on_cam_near_changed();
         void on_cam_far_changed();
+        void on_change_cam_proj();
         // ----------------------------------------------
 
         // ------------- material -----------------------

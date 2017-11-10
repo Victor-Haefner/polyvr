@@ -37,6 +37,7 @@ void VRWorldGenerator::setOntology(VROntologyPtr o) {
     terrain->setWorld( ptr() );
     roads->setWorld( ptr() );
     nature->setWorld( ptr() );
+    district->setWorld( ptr() );
 }
 
 void VRWorldGenerator::setPlanet(VRPlanetPtr p, Vec2d c) {
@@ -45,6 +46,7 @@ void VRWorldGenerator::setPlanet(VRPlanetPtr p, Vec2d c) {
     terrain->setWorld( ptr() );
     roads->setWorld( ptr() );
     nature->setWorld( ptr() );
+    district->setWorld( ptr() );
 }
 
 VROntologyPtr VRWorldGenerator::getOntology() { return ontology; }
@@ -53,6 +55,7 @@ VRObjectManagerPtr VRWorldGenerator::getAssetManager() { return assets; }
 VRTerrainPtr VRWorldGenerator::getTerrain() { return terrain; }
 VRNaturePtr VRWorldGenerator::getNature() { return nature; }
 VRPlanetPtr VRWorldGenerator::getPlanet() { return planet; }
+VRDistrictPtr VRWorldGenerator::getDistrict() { return district; }
 
 void VRWorldGenerator::addMaterial( string name, VRMaterialPtr mat ) { materials[name] = mat; }
 void VRWorldGenerator::addAsset( string name, VRTransformPtr geo ) {
@@ -147,7 +150,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                 terrain->elevatePoint(p,p[1]);
                 terrain->projectTangent(d, p);
             } else d.normalize();
-            path->addPoint( pose( p, d ) );
+            path->addPoint( Pose( p, d ) );
         };
 
         if (pos.size() < 2) return 0;
@@ -186,7 +189,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             }
             //d[1] = 0;
             d.normalize();
-            path->addPoint( pose( p, d ) );
+            path->addPoint( Pose( p, d ) );
         };
 
         if (pos.size() == 2) {
@@ -212,6 +215,14 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         float a = 0;
         if (n->hasTag("direction")) a = planet->toRad( toFloat( n->tags["direction"] ) ); // angle
         return Vec3d(sin(a), 0, -cos(a));
+    };
+
+    auto addTunnel = [&](OSMWayPtr& way, VRRoadPtr road) {
+        roads->addTunnel(road);
+    };
+
+    auto addBridge = [&](OSMWayPtr& way, VRRoadPtr road) {
+        ;
     };
 
     auto addRoad = [&](OSMWayPtr& way, string tag, float width, bool pedestrian) {
@@ -277,12 +288,20 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         for (int l=0; l < NlanesLeft; l++) road->addLane(-1, widths[NlanesRight+hasPLaneR+l], pedestrian);
         if (hasPLaneL) road->addParkingLane(-1, widths[NlanesRight+NlanesLeft+hasPLaneR], getInt("parking:lane:left:capacity", 0), getString("parking:lane:left", ""));
         RoadEntities[way->id] = road;
+
+        // check for tunnels and bridges
+        if (way->hasTag("tunnel")) addTunnel(way, road);
+        if (way->hasTag("bridge")) addBridge(way, road);
     };
 
     auto addBuilding = [&](OSMWayPtr& way) {
         int lvls = 4;
+        string housenumber = "";
+        string street = "";
         if (way->hasTag("building:levels")) lvls = toInt( way->tags["building:levels"] );
-        district->addBuilding( *wayToPolygon(way), lvls );
+        if (way->hasTag("addr:housenumber")) housenumber = way->tags["addr:housenumber"];
+        if (way->hasTag("addr:street")) street = way->tags["addr:street"];
+        district->addBuilding( *wayToPolygon(way), lvls, housenumber, street );
     };
 
     auto nodeInSubarea = [&](OSMNodePtr node) {
@@ -392,7 +411,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 
             if (tag.first == "surveillance:type") {
                 if (tag.second == "camera") {
-                    assets->copy("Camera", pose::create(pos, dir), false);
+                    assets->copy("Camera", Pose::create(pos, dir), false);
                 }
             }
         }

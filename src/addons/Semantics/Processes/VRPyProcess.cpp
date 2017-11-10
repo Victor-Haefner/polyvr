@@ -8,6 +8,9 @@
 
 using namespace OSG;
 
+template<> bool toValue(PyObject* o, VRProcessNodePtr& v) { if (!VRPyProcessNode::check(o)) return 0; v = ((VRPyProcessNode*)o)->objPtr; return 1; }
+template<> PyObject* VRPyTypeCaster::cast(const VRProcessNodePtr& e) { return VRPyProcessNode::fromSharedPtr(e); }
+
 simpleVRPyType(Process, New_named_ptr);
 simpleVRPyType(ProcessNode, 0);
 simpleVRPyType(ProcessLayout, New_VRObjects_ptr);
@@ -20,6 +23,7 @@ PyMethodDef VRPyProcess::methods[] = {
     {"getBehaviorDiagram", (PyCFunction)VRPyProcess::getBehaviorDiagram, METH_VARARGS, "Return subject behavior diagram - getBehaviorDiagram( int ID )" },
     {"getSubjects", (PyCFunction)VRPyProcess::getSubjects, METH_NOARGS, "Return subjects - [ProcessNode] getSubjects()" },
     {"addSubject", (PyCFunction)VRPyProcess::addSubject, METH_VARARGS, "Add a new subject - ProcessNode addSubject( name )" },
+    {"addAction", PyWrap(Process, addAction, "Add a new action to subject, by ID", VRProcessNodePtr, string, int ) },
     {"addMessage", (PyCFunction)VRPyProcess::addMessage, METH_VARARGS, "Add a new message between subjects or actions i and j - ProcessNode addMessage( name, int i, int j )" },
     {NULL}  /* Sentinel */
 };
@@ -86,7 +90,7 @@ PyMethodDef VRPyProcessLayout::methods[] = {
     {"getElement", (PyCFunction)VRPyProcessLayout::getElement, METH_VARARGS, "Return element by ID - obj getElement( int ID )" },
     {"getElementID", (PyCFunction)VRPyProcessLayout::getElementID, METH_VARARGS, "Return element ID - ID getElementID( VRObjectPtr geo )" },
     {"getProcessNode", (PyCFunction)VRPyProcessLayout::getProcessNode, METH_VARARGS, "Return process node by ID - process node getElementID( int i )" },
-    {"addElement", (PyCFunction)VRPyProcessLayout::addElement, METH_VARARGS, "Add process element - obj addElement( process node )" },
+    {"addElement", PyWrap(ProcessLayout, addElement, "Add process element", VRObjectPtr, VRProcessNodePtr) },
     {"selectElement", (PyCFunction)VRPyProcessLayout::selectElement, METH_VARARGS, "Select a node geometry by changing its appearance - obj selectElement( geometry )" },
     {"setElementName", (PyCFunction)VRPyProcessLayout::setElementName, METH_VARARGS, "Change the name of a node - obj setElementName( int i, string s )" },
     {NULL}  /* Sentinel */
@@ -136,13 +140,6 @@ PyObject* VRPyProcessLayout::getElementID(VRPyProcessLayout* self, PyObject* arg
     VRPyGeometry* p = 0;
     if (!PyArg_ParseTuple(args, "O", &p)) return NULL;
     return PyInt_FromLong( self->objPtr->getElementID( p->objPtr ) );
-}
-
-PyObject* VRPyProcessLayout::addElement(VRPyProcessLayout* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    VRPyProcessNode* p = 0;
-    if (!PyArg_ParseTuple(args, "O", &p)) return NULL;
-    return VRPyTypeCaster::cast( self->objPtr->addElement( p->objPtr ) );
 }
 
 

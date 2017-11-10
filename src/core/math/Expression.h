@@ -18,6 +18,11 @@ class Expression {
             virtual ValueBase* sub(ValueBase* n) = 0;
             virtual ValueBase* mult(ValueBase* n) = 0;
             virtual ValueBase* div(ValueBase* n) = 0;
+            virtual ValueBase* compE(ValueBase* n) = 0;
+            virtual ValueBase* compL(ValueBase* n) = 0;
+            virtual ValueBase* compLE(ValueBase* n) = 0;
+            virtual ValueBase* compG(ValueBase* n) = 0;
+            virtual ValueBase* compGE(ValueBase* n) = 0;
         };
 
         template<typename T> struct Value : ValueBase {
@@ -31,6 +36,11 @@ class Expression {
             ValueBase* sub(ValueBase* n);
             ValueBase* mult(ValueBase* n);
             ValueBase* div(ValueBase* n);
+            ValueBase* compE(ValueBase* n);
+            ValueBase* compL(ValueBase* n);
+            ValueBase* compLE(ValueBase* n);
+            ValueBase* compG(ValueBase* n);
+            ValueBase* compGE(ValueBase* n);
         };
 
         //ValueBase* add(Value<Vec3d>* v1, Value<Vec3d>* v2) { return new Value<T>(v1->value + v2->value); }
