@@ -18,19 +18,12 @@ uniform sampler2D tex;
 uniform float camH;
 
 float theta;
-float dropsize = 0.1; //0.1;
+
+//** DROPSIZE CAN BE CHANGED HERE **/
+float dropsize = 0.1; 
 
 void computeDirection() {
 	fragDir = normalize( miN * (miP * pos).xyz );
-}
-
-// returns the x-z coordinates on plane y = h
-// at which the ray fragDir intersects
-vec2 planeIntersect(float h){
-	vec2 pt = vec2(0.);
-	// r = h / cos \phi
-	pt = - h * fragDir.xz / fragDir.y ;
-	return pt;
 }
 
 float hash(vec2 co){
@@ -38,7 +31,6 @@ float hash(vec2 co){
 }
 
 float gettheta(vec3 d){
-	//return acos(d.y/length(d));
 	return acos(d.y);
 }
 
@@ -46,8 +38,8 @@ float gettheta(vec3 d){
 bool obstruction(float D){
 	float phi = -atan(fragDir.x,fragDir.z);
 	vec2 texPos = vec2(0.5+sin(phi)*D/(camH),0.5+cos(phi)*D/(camH));	//texture positions
-	vec4 texC = texture2D(tex,texPos); 			//RGB value of pixel
-	float disCam = texC.r * (512-0.1);			//distance to cam above	
+	vec4 texC = texture2D(tex,texPos); 					//RGB value of pixel
+	float disCam = texC.r * (512-0.1);					//distance to cam above	
 	float thetaReal = atan(D,camH-disCam-0.1);
 	
 	if (texC.x==0) return false;
@@ -100,7 +92,7 @@ vec3 worldCoords(float D){
 }
 
 bool isD(float D) {
-	float dropdis = 2/(D*D); // horizontal distance between drops
+	float dropdis = 2/(D*D); 	// horizontal distance between drops
 	float dropdisy = rainDensity*6; // vertical distance between drops
 	float dropsize = getdropsize(gettheta(fragDir),D);
 	float toffset = rainOffset;
@@ -120,10 +112,11 @@ bool isD(float D) {
 	if (D == 3) gl_FragDepth = 0.98;	
 	if (D == 5) gl_FragDepth = 0.99;
 	if (D == 8) gl_FragDepth = 0.99;
+	if (D > 8) gl_FragDepth = 0.993;
 	
-	//gl_FragDepth = 0.9124*tan(gettheta(fragDir));
-//- D/(512-0.1)*sin(gettheta(fragDir)))
-	if (gettheta(fragDir)>0.3 && israindropx < dropsize && israindropy < dropsize && !obstruction(D)) return true; // && !obstruction(D)
+		//gl_FragDepth = 0.9124*tan(gettheta(fragDir));
+		//- D/(512-0.1)*sin(gettheta(fragDir)))
+	if (gettheta(fragDir)>0.3 && israindropx < dropsize && israindropy < dropsize && !obstruction(D)) return true;
 	else return false;
 
 	return true;
@@ -134,13 +127,9 @@ vec3 checkrad() {
 	//0-Degree Pointer
 	//if (atan( fragDir.x, fragDir.z)*180/M_PI<1 && atan( fragDir.x, fragDir.z)*180/M_PI>-1 && gettheta(fragDir)>M_PI/2) return vec3(1,1,1);	
 
-	//might as well incorporate into main()
-
 	vec3 color = vec3(0,0,0.8);
 
-	 
 	if (isD(1) || isD(2) || isD(3) ||isD(5) || isD(8)) return color;
-	//if (isD(2)) return color;
 	else discard;
 }
 
@@ -167,7 +156,6 @@ void main() {
 	vec3 check = checkrad();
 	 
 	gl_FragColor = vec4(check,0.2);
-	//computeDepth(vec3(0,0,-2));
 }
 
 
