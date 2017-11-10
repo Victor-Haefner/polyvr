@@ -27,7 +27,7 @@ VRRain::VRRain() : VRGeometry("Rain") {
     vScriptTex = resDir + "RainTex.vp";
     fScriptTex = resDir + "RainTex.fp";
 
-    // shader setup
+    //Shader setup
     mat = VRMaterial::create("Rain");
     mat->readVertexShader(vScript);
     mat->readFragmentShader(fScript);
@@ -93,13 +93,14 @@ VRRain::~VRRain() {}
 VRRainPtr VRRain::create() { return VRRainPtr( new VRRain() ); }
 VRRainPtr VRRain::ptr() { return static_pointer_cast<VRRain>( shared_from_this() ); }
 
+float VRRain::get() { return scale; }
 VRTextureRendererPtr VRRain::getRenderer() { return texRenderer; }
 VRMaterialPtr VRRain::getTexMat() { return renderMat; }
 
 void VRRain::start() {
     if (!isRaining) {
         if (scale == 0) setScale(3);
-            else setScale(scale);
+        else setScale(scale);
 
         auto rainAnimation = VRAnimation::create("startRain");
         rainAnimationCb = VRAnimCb::create("rain update", boost::bind(&VRRain::startRainCallback, this, _1));
@@ -114,15 +115,14 @@ void VRRain::start() {
 
 void VRRain::startRainCallback(float t) {
     auto sky = VRScene::getCurrent()->getSky();
-    //lightMain = VRScene::getCurrent()->getRoot()->find("light");
-
     sky->setClouds(densityStart+(density-densityStart)*t, 1e-5, 3000, Vec2d(speedStartX+(speedX-speedStartX)*t, speedStartY+(speedX-speedStartY)*t), Color4f(colorStart-(colorStart-color)*t,colorStart-(colorStart-color)*t,colorStart-(colorStart-color)*t,1));
-	//float cl = 1-0.4*t;
+
+	//IDEA: MAYBE CHANGE LIGHT SETTINGS OF SCENE
+	//lightMain = VRScene::getCurrent()->getRoot()->find("light");
+    //float cl = 1-0.4*t;
 	//lightMain->setDiffuse(Color4f(cl,cl,cl,0));
-	if (tnow != floor(t*10)) {
-        cout << "Raincallback Start: " << tnow << " - " << floor(t*10) << " - " << scale*floor(t*10)/10;
-        updateScale(scale*floor(t*10)/10);
-	}
+
+	if (tnow != floor(t*10)) updateScale(scale*floor(t*10)/10);
 	tnow = floor(t*10);
 }
 
@@ -140,10 +140,10 @@ void VRRain::stop() {
 
 void VRRain::stopRainCallback(float t) {
     auto sky = VRScene::getCurrent()->getSky();
-    //lightMain = VRScene::getCurrent()->getRoot()->find("light");
-
     sky->setClouds(density-(density-densityStart)*t, 1e-5, 3000, Vec2d(speedX-(speedX-speedStartX)*t, speedX-(speedX-speedStartY)*t), Color4f(color+(colorStart-color)*t,color+(colorStart-color)*t,color+(colorStart-color)*t,1));
-	//float cl = 0.6+0.4*t;
+
+    //lightMain = VRScene::getCurrent()->getRoot()->find("light");
+    //float cl = 0.6+0.4*t;
 	//lightMain->setDiffuse(Color4f(cl,cl,cl,0));
 	if (tnow != floor(t*10)) updateScale(scale-scale*floor(t*10)/10);
     tnow = floor(t*10);
@@ -152,7 +152,7 @@ void VRRain::stopRainCallback(float t) {
 void VRRain::setScale( float scale ){
     if ( scale<0 || scale>10 ) {
         //TODO: error
-        cout << "Input for Scale of Rain between 0 and 10\n";
+        cout << "Input for Scale of Rain should be between 0 and 10" << endl;
     }
     else {
         this->scale = scale;
@@ -164,12 +164,16 @@ void VRRain::setScale( float scale ){
     }
 }
 
-void VRRain::overrideParameters( float rainDensity, float durationTransition, float color, float light ) {
+void VRRain::overrideParameters( float durationTransition, float rainDensity, float density, float speedX, float speedY, float color, float light ) {
+    this->durationTransition = durationTransition;
     this->rainDensity = rainDensity;
+    this->density = density;
+    this->speedX = speedX;
+    this->speedY = speedY;
+    this->color = color;
+    this->light = light;
     mat->setShaderParameter<float>("rainDensity", rainDensity);
 }
-
-Vec2d VRRain::get() { return Vec2d(rainDensity,scale); }
 
 void VRRain::updateScale( float scaleNow ){
     scaleRN = scaleNow;
@@ -195,21 +199,8 @@ void VRRain::update() {
     mat->readFragmentShader(fScript);
 }
 
-void VRRain::reloadShader() {
-    auto camDef = VRScene::getCurrent()->getActiveCamera();
-    auto defCamPos = camDef->getFrom();
-    camTex->setFrom(Vec3d(defCamPos[0],defCamPos[1]+40,defCamPos[2]));
-    camTex->setAt(Vec3d(defCamPos[0],defCamPos[1],defCamPos[2]));
-    camTex->setUp(Vec3d(0,0,1));
-
-
-
+void VRRain::doTestFunction() {
     auto tmp = camTex->getFrom();
     cout << tmp << endl;
-    /*
-    string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Rain/";
-    mat->readVertexShader(resDir + "Rain.vp");
-    mat->readFragmentShader(resDir + "Rain.fp");
-    */
 }
 
