@@ -53,21 +53,21 @@ void VRMultiTouch::updateDevice() {
 	string txt;
 	//while (!mtdev_idle(&dev, fd, 15000)) { // while the device has not been inactive for fifteen seconds */
 		while (mtdev_get(&dev, fd, &ev, 1) > 0) {
-            /*switch(ev.type) {
+            switch(ev.type) {
             case 0:
                 // seems uninteresting, ev.code and ev.value always 0
 //                fprintf(stderr, "%01d : %d, %d\n", ev.type, ev.code, ev.value);
                 break;
             case 1:
-//                fprintf(stderr, "Touch %s", ev.value == 1? "start": "end");
+                fprintf(stderr, "Touch %s\n", ev.value == 1? "start": "end");
                 break;
             case 3:
-                fprintf(stderr, "    %01d : %d, %d\n", ev.type, ev.code, ev.value);
+//                fprintf(stderr, "    %01d : %d, %d\n", ev.type, ev.code, ev.value);
                 break;
             default:
-                fprintf(stderr, "Unmanaged mt event type: %02d\n", ev.type);
+//                fprintf(stderr, "Unmanaged mt event type: %02d\n", ev.type);
                 break;
-            }*/
+            }
             if (ev.type == 3) {
                 switch (ev.code) {
                 case 0:
@@ -116,15 +116,13 @@ void VRMultiTouch::updateDevice() {
                     //cout << txt << " : " << ev.value << endl;
                     for (auto f : fingers) {
                         if (f.second.pos[2] == 0) continue;
-                        //cout << " finger: ID " << f.second.key << " pos " << f.second.pos << endl;
+                        cout << " finger: ID " << f.second.key << " pos " << f.second.pos << endl;
                     }
                 }
                 if (ev.code == 52) {
                     cout << ev.code << " : " << ev.value << endl;
                 }
             }
-
-            //if (ev.type != 0 && ev.type != 3) print_event(&ev);
 		}
 	//}
 }
