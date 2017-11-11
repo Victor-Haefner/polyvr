@@ -32,7 +32,6 @@ struct VRSnappingEngine::Rule {
 
     Vec3d local(Vec3d p) {
         if (csys) {
-            cout << "AAA " << csys->getName() << endl;
             C = csys->getWorldMatrix();
             C.invert();
             Pnt3d pL;
@@ -183,8 +182,7 @@ void VRSnappingEngine::update() {
                     Matrix4d maW = m; maW.mult(maL);
                     Vec3d pa = Vec3d(maW[3]);
 
-                    /*if (r->csys && anchors.count(r->csys)) {
-                        cout << "A1 " << anchors[r->csys].size() << endl;
+                    if (r->csys && anchors.count(r->csys)) {
                         for (auto a : anchors[r->csys]) {
                             Vec3d pa2 = a->getFrom();
                             if (!r->inRange(pa+pa2, dmin)) continue;
@@ -192,18 +190,15 @@ void VRSnappingEngine::update() {
                             r->snap(m);
                             maL.invert();
                             m.mult(maL);
-                            event->set(obj, r->csys, m, dev.second, 1);
-                            break;
+                            mmin = m;
                         }
-                    } else {*/
+                    } else {
                         if (!r->inRange(pa, dmin)) continue;
                         r->snap(m);
                         maL.invert();
                         m.mult(maL);
                         mmin = m;
-                        //event->set(obj, r->csys, m, dev.second, 1);
-                    //}
-                    //break;
+                    }
                 }
             } else {
                 if (!r->inRange(p, dmin)) continue;
