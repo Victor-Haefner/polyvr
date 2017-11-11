@@ -32,6 +32,7 @@ struct VRSnappingEngine::Rule {
 
     Vec3d local(Vec3d p) {
         if (csys) {
+            cout << "AAA " << csys->getName() << endl;
             C = csys->getWorldMatrix();
             C.invert();
             Pnt3d pL;
@@ -61,7 +62,12 @@ struct VRSnappingEngine::Rule {
         }
     }
 
-    bool inRange(float d) { return (d <= distance); }
+    bool inRange(Vec3d pa, double& dmin) {
+        Vec3d paL = local( pa );
+        Vec3d psnap = getSnapPoint(pa);
+        float D = (psnap-paL).length(); // check distance
+        return (D <= distance && D < dmin);
+    }
 };
 
 VRSnappingEngine::VRSnappingEngine() {
@@ -162,6 +168,9 @@ void VRSnappingEngine::update() {
         bool lastEvent = event->snap;
         event->snap = 0;
 
+        double dmin = 1e9;
+        Matrix4d mmin;
+
         for (auto ri : rules) {
             Rule* r = ri.second;
             if (r->csys == obj) continue;
@@ -171,22 +180,30 @@ void VRSnappingEngine::update() {
                     Matrix4d maL = a->getMatrix();
                     Matrix4d maW = m; maW.mult(maL);
                     Vec3d pa = Vec3d(maW[3]);
-                    Vec3d paL = r->local( Vec3d(maW[3]) );
-                    Vec3d psnap = r->getSnapPoint(pa);
-                    float D = (psnap-paL).length(); // check distance
-                    //cout << "dist " << D << " " << pa[1] << " " << paL[1] << " " << psnap[1] << endl;
-                    if (!r->inRange(D)) continue;
 
-                    r->snap(m);
-                    maL.invert();
-                    m.mult(maL);
-                    event->set(obj, r->csys, m, dev.second, 1);
+                    /*if (r->csys && anchors.count(r->csys)) {
+                        cout << "A1 " << anchors[r->csys].size() << endl;
+                        for (auto a : anchors[r->csys]) {
+                            Vec3d pa2 = a->getFrom();
+                            if (!r->inRange(pa+pa2, dmin)) continue;
+                            r->snapP += pa2;
+                            r->snap(m);
+                            maL.invert();
+                            m.mult(maL);
+                            event->set(obj, r->csys, m, dev.second, 1);
+                            break;
+                        }
+                    } else {*/
+                        if (!r->inRange(pa, dmin)) continue;
+                        r->snap(m);
+                        maL.invert();
+                        m.mult(maL);
+                        event->set(obj, r->csys, m, dev.second, 1);
+                    //}
                     break;
                 }
             } else {
-                Vec3d p2 = r->getSnapPoint(p);
-                float D = (p2-p).length(); // check distance
-                if (!r->inRange(D)) continue;
+                if (!r->inRange(p, dmin)) continue;
                 r->snap(m);
                 event->set(obj, r->csys, m, dev.second, 1);
             }
