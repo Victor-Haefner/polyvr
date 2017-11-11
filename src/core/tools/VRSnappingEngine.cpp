@@ -66,7 +66,9 @@ struct VRSnappingEngine::Rule {
         Vec3d paL = local( pa );
         Vec3d psnap = getSnapPoint(pa);
         float D = (psnap-paL).length(); // check distance
-        return (D <= distance && D < dmin);
+        bool b = (D <= distance && D < dmin);
+        if (b) dmin = D;
+        return b;
     }
 };
 
@@ -198,16 +200,20 @@ void VRSnappingEngine::update() {
                         r->snap(m);
                         maL.invert();
                         m.mult(maL);
-                        event->set(obj, r->csys, m, dev.second, 1);
+                        mmin = m;
+                        //event->set(obj, r->csys, m, dev.second, 1);
                     //}
-                    break;
+                    //break;
                 }
             } else {
                 if (!r->inRange(p, dmin)) continue;
                 r->snap(m);
-                event->set(obj, r->csys, m, dev.second, 1);
+                mmin = m;
             }
+
+            event->set(obj, r->csys, mmin, dev.second, 1);
         }
+
 
         obj->setWorldMatrix(m);
         if (lastEvent != event->snap) {
