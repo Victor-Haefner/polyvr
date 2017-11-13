@@ -287,6 +287,7 @@ void VRTerrain::physicalize(bool b) {
 
     //btPhysicalize();
     vrPhysicalize();
+    getPhysics()->setFriction(0.8);
     getPhysics()->setPhysicalized(true);
 }
 
