@@ -126,7 +126,7 @@ VRGeometryPtr VRConstructionKit::addObjectAnchor(VRTransformPtr t, int a, Vec3d 
     anc->show();
     anc->switchParent(t);
     snapping->addObjectAnchor(t, anc);
-    snapping->addRule(VRSnappingEngine::POINT, VRSnappingEngine::POINT, Line(Pnt3f(pos), Vec3f(0,0,0)), Line(Pnt3f(0,1,0), Vec3f(1,0,0)), radius, 1, t );
+    snapping->addRule(VRSnappingEngine::POINT, VRSnappingEngine::POINT, Line(Pnt3f(0,0,0), Vec3f(0,0,0)), Line(Pnt3f(0,1,0), Vec3f(1,0,0)), radius, 1, t );
     return anc;
 }
 

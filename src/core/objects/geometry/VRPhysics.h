@@ -54,8 +54,8 @@ class VRPhysics : public OSG::VRStorage {
         btDefaultMotionState* motionState = 0;
         btSoftRigidDynamicsWorld* world = 0;
         int activation_mode = 0;
-        int collisionGroup = 0;
-        int collisionMask = 0;
+        int collisionGroup = 1;
+        int collisionMask = 1;
         bool physicalized = false;
         bool dynamic = false;
         bool ghost = false;
@@ -63,10 +63,11 @@ class VRPhysics : public OSG::VRStorage {
         bool physTree = true;
         bool useCallbacks = false;
         float mass = 1.0;
-        float collisionMargin = 0.3;
+        float friction = 0.5;
+        float collisionMargin = 0.04;
         float linDamping = 0;
         float angDamping = 0;
-        btVector3 gravity;
+        btVector3 gravity = btVector3(0,-10,0);
         CallbackPtr callback;
 
         vector<OSG::Vec3d> torqueJob;
@@ -77,18 +78,18 @@ class VRPhysics : public OSG::VRStorage {
         string comType = "geometric";
         OSG::Vec3d CoMOffset; // center of mass offset
         OSG::Vec3d CoMOffset_custom; // center of mass offset
-        string physicsShape;
+        string physicsShape = "Convex";
         map<VRPhysics*, VRPhysicsJoint*> joints ;
         map<VRPhysics*, VRPhysicsJoint*> joints2;
 
         /** total force & torque added by addForce() or addTorque() in this frame **/
-        btVector3 constantForce;
-        btVector3 constantTorque;
+        btVector3 constantForce = btVector3(0,0,0);
+        btVector3 constantTorque = btVector3(0,0,0);
 
         OSG::VRTransformWeakPtr vr_obj;
         OSG::VRGeometryPtr visShape;
         OSG::VRConstraintPtr constraint = 0;
-        OSG::Vec3d scale;
+        OSG::Vec3d scale = OSG::Vec3d(1,1,1);
 
         vector<OSG::VRGeometryPtr> getGeometries();
 
@@ -141,6 +142,9 @@ class VRPhysics : public OSG::VRStorage {
         void setMass(float m);
         float getMass();
         void setGravity(OSG::Vec3d v);
+
+        void setFriction(float f);
+        float getFriction();
 
         void setCollisionMargin(float m);
         void setCollisionGroup(int g);

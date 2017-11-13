@@ -288,6 +288,7 @@ void VRTerrain::physicalize(bool b) {
 
     //btPhysicalize();
     vrPhysicalize();
+    getPhysics()->setFriction(0.8);
     getPhysics()->setPhysicalized(true);
 }
 
@@ -465,6 +466,28 @@ void VRTerrain::loadMap( string path, int channel ) {
     cout << "   ----------- VRTerrain::loadMap " << path << " " << channel << endl ;
     auto tex = loadGeoRasterData(path);
     setMap(tex, channel);
+}
+
+void VRTerrain::flatten(vector<Vec2d> perimeter, float h) {
+    if (!tex) return;
+    VRPolygonPtr poly = VRPolygon::create();
+    for (auto p : perimeter) poly->addPoint(p);
+    poly->scale( Vec3d(1.0/size[0], 1, 1.0/size[1]) );
+    poly->translate( Vec3d(0.5,0,0.5) );
+
+    auto dim = tex->getSize();
+    for (int i = 0; i < dim[0]; i++) {
+        for (int j = 0; j < dim[1]; j++) {
+            auto pix = Vec2d(i*1.0/(dim[0]-1), j*1.0/(dim[1]-1));
+            if (poly->isInside(pix)) {
+                Vec3i pixK = Vec3i(i,j,0);
+                Color4f col = tex->getPixel(pixK);
+                col[3] = h;
+                tex->setPixel(pixK, col);
+            }
+        }
+    }
+    setMap(tex);
 }
 
 void VRTerrain::projectOSM() {
