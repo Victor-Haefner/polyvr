@@ -170,7 +170,7 @@ void VRSnappingEngine::update() {
         event->snap = 0;
 
         double dmin = 1e9;
-        Matrix4d mmin;
+        Matrix4d mmin = m;
 
         for (auto ri : rules) {
             Rule* r = ri.second;
@@ -181,36 +181,45 @@ void VRSnappingEngine::update() {
                     Matrix4d maL = a->getMatrix();
                     Matrix4d maW = m; maW.mult(maL);
                     Vec3d pa = Vec3d(maW[3]);
+                    maL.invert();
 
-                    if (r->csys && anchors.count(r->csys)) {
+                    if (r->csys && anchors.count(r->csys)) { // TODO: not working yet!
+                        Matrix4d m2 = r->csys->getWorldMatrix();
                         for (auto a : anchors[r->csys]) {
-                            Vec3d pa2 = a->getFrom();
+                            Matrix4d ma2L = a->getMatrix();
+                            //Matrix4d ma2W = m; ma2W.mult(maL);
+                            //Vec3d pa2 = Vec3d(ma2W[3]);
+                            Vec3d pa2 = Vec3d(ma2L[3]);
                             if (!r->inRange(pa+pa2, dmin)) continue;
+
                             r->snapP += pa2;
-                            r->snap(m);
-                            maL.invert();
-                            m.mult(maL);
-                            mmin = m;
+                            Matrix4d mm = m;
+                            r->snap(mm);
+                            mm.mult(maL);
+                            //ma2L.invert();
+                            //mm.mult(ma2L);
+                            //cout << "snap to " << Vec3d(m[3]) << "  p2 " << pa2 << endl;
+                            mmin = mm;
                         }
                     } else {
                         if (!r->inRange(pa, dmin)) continue;
-                        r->snap(m);
-                        maL.invert();
-                        m.mult(maL);
-                        mmin = m;
+                        Matrix4d mm = m;
+                        r->snap(mm);
+                        mm.mult(maL);
+                        mmin = mm;
                     }
                 }
             } else {
                 if (!r->inRange(p, dmin)) continue;
-                r->snap(m);
-                mmin = m;
+                Matrix4d mm = m;
+                r->snap(mm);
+                mmin = mm;
             }
 
             event->set(obj, r->csys, mmin, dev.second, 1);
         }
 
-
-        obj->setWorldMatrix(m);
+        obj->setWorldMatrix(mmin);
         if (lastEvent != event->snap) {
             if (event->snap) snapSignal->trigger<EventSnap>(event);
             else if (obj == event->o1) snapSignal->trigger<EventSnap>(event);
