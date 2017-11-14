@@ -38,7 +38,7 @@ class VRCarDynamics : public VRObject {
 
             // wheel parameter
             //float friction = 1000;//BT_LARGE_FLOAT;
-            float friction = 0.8;//BT_LARGE_FLOAT;
+            float friction = 0.8;//BT_LARGE_FLOAT; 0.8
             float radius = 0.4;
             float width = 0.4;
 
@@ -121,6 +121,8 @@ class VRCarDynamics : public VRObject {
         float acceleration = 0;
         float s_measurement = 0;
         double a_measurement_t = 0;
+        float eBreaks = 0;
+        float eForces = 0;
 
         float clamp(float v, float m1, float m2);
         float rescale(float v, float m1, float m2);
@@ -159,6 +161,8 @@ class VRCarDynamics : public VRObject {
         float getSteering();
         int getGear();
         int getRPM();
+        float geteForce();
+        float geteBreak();
 
         void addWheel(VRGeometryPtr geo, Vec3d p, float radius, float width, float maxSteering = 0, bool steered = false, bool driven = false);
         void setChassisGeo(VRTransformPtr geo, bool doPhys = 1);

@@ -298,9 +298,15 @@ void VRCarDynamics::updateEngine() {
         if (engine->rpm < engine->stallRpm) setIgnition(false);
 
         float eForce = computeEngineForceOnWheel( wheel, deltaRPM, coupling, clampedThrottle );
+        /*
         if (abs(eBreak) > abs(eForce)) eForce = 0;
         else eBreak = 0;
         if (abs(eForce) < 0.1 && abs(coupling) < 0.1) eBreak = max(eBreak, 5.f); // rolling friction when stopped
+        */
+        if (eBreak <= 5) eBreak = 5;
+        //cout << eForce << " - " << eBreak << endl;
+        eForces = eForce;
+        eBreaks = eBreak;
         updateWheel(wheel, eForce, eBreak);// apply force
     }
 
@@ -336,6 +342,8 @@ float VRCarDynamics::getBreaking() { return wheels.size() > 0 ? wheels[0]->break
 float VRCarDynamics::getSteering() { return wheels.size() > 0 ? wheels[0]->steering : 0; }
 int VRCarDynamics::getGear() { return wheels.size() > 0 ? wheels[0]->gear : 0; }
 int VRCarDynamics::getRPM() { return engine->rpm; }
+float VRCarDynamics::geteForce() { return eForces; }
+float VRCarDynamics::geteBreak() { return eBreaks; }
 
 void VRCarDynamics::update(float t, float b, float s, float c, int g) {
     for (uint i=0; i<wheels.size(); i++) updateWheel(i, t, b, s, c, g);
@@ -359,9 +367,11 @@ void VRCarDynamics::setParameter(float mass, float enginePower, float breakPower
 
     //TODO: pass it
     if (!engine->clutchTransmissionCurve) engine->clutchTransmissionCurve = path::create();
-    engine->clutchTransmissionCurve->clear();
+    engine->clutchTransmissionCurve->clear();/*
     engine->clutchTransmissionCurve->addPoint( Pose(Vec3d(0,1,0), Vec3d(1,0,0)));
-    engine->clutchTransmissionCurve->addPoint( Pose(Vec3d(1,0,0), Vec3d(1,0,0)));
+    engine->clutchTransmissionCurve->addPoint( Pose(Vec3d(1,0,0), Vec3d(1,0,0)));*/
+    engine->clutchTransmissionCurve->addPoint( Pose(Vec3d(0,1,0), Vec3d(1,-1,0)));
+    engine->clutchTransmissionCurve->addPoint( Pose(Vec3d(1,0,0), Vec3d(1,-1,0)));
     engine->clutchTransmissionCurve->compute(32);
 
 	engine->gearRatios.clear();

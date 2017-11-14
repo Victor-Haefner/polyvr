@@ -30,6 +30,8 @@ PyMethodDef VRPyCarDynamics::methods[] = {
     {"getChassis", (PyCFunction)VRPyCarDynamics::getChassis, METH_NOARGS, "Get car chassis" },
     {"getWheels", (PyCFunction)VRPyCarDynamics::getWheels, METH_NOARGS, "Get car wheels" },
     {"getRPM", (PyCFunction)VRPyCarDynamics::getRPM, METH_NOARGS, "Get car RPM" },
+    {"geteForce", (PyCFunction)VRPyCarDynamics::geteForce, METH_NOARGS, "geteForce" },
+    {"geteBreak", (PyCFunction)VRPyCarDynamics::geteBreak, METH_NOARGS, "geteBreak" },
     {"isRunning", (PyCFunction)VRPyCarDynamics::isRunning, METH_NOARGS, "Is car engine running - bool isRunning()" },
     {"getGear", (PyCFunction)VRPyCarDynamics::getGear, METH_NOARGS, "Get car gear" },
     {"setIgnition", (PyCFunction)VRPyCarDynamics::setIgnition, METH_VARARGS, "Set ignition - setIgnition(bool)" },
@@ -89,6 +91,15 @@ PyObject* VRPyCarDynamics::getWheels(VRPyCarDynamics* self) {
 
 PyObject* VRPyCarDynamics::getRPM(VRPyCarDynamics* self) {
     return PyInt_FromLong(self->objPtr->getRPM());
+}
+
+//----------------------------------------------------------------------------------------------
+PyObject* VRPyCarDynamics::geteForce(VRPyCarDynamics* self) {
+    return PyFloat_FromDouble(self->objPtr->geteForce());
+}
+
+PyObject* VRPyCarDynamics::geteBreak(VRPyCarDynamics* self) {
+    return PyFloat_FromDouble(self->objPtr->geteBreak());
 }
 
 PyObject* VRPyCarDynamics::isRunning(VRPyCarDynamics* self) {
