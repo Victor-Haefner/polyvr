@@ -100,6 +100,7 @@ using namespace OSG;
 void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyObject>("Object", pModVR, VRPyStorage::typeRef);
     sm->registerModule<VRPyTransform>("Transform", pModVR, VRPyObject::typeRef);
+    sm->registerModule<VRPyCollision>("Collision", pModVR);
     sm->registerModule<VRPyGeometry>("Geometry", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyMaterial>("Material", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTextureGenerator>("TextureGenerator", pModVR);
