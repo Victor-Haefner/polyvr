@@ -18,7 +18,9 @@
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGNode.h>
 #include <GL/glut.h>
-
+#include <boost/filesystem.hpp>
+#include <unistd.h>
+#include <termios.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -137,7 +139,7 @@ void PolyVR::start(bool runit) {
 
     //string app = options->getOption<string>("application");
     //if (app != "") VRSceneManager::get()->loadScene(app);
-
+    boost::filesystem::remove("setup/.startup"); // remove startup failsafe
     if (runit) run();
 }
 
@@ -150,10 +152,58 @@ void PolyVR::startTestScene(OSGObjectPtr n) {
     run();
 }
 
-void PolyVR::checkProcessesAndSockets() { // TODO!!
+string createTimeStamp() {
+    time_t _tm =time(NULL );
+    struct tm * curtime = localtime ( &_tm );
+    return asctime(curtime);
+}
+
+char getch() {
+        char buf = 0;
+        struct termios old = {0};
+        if (tcgetattr(0, &old) < 0)
+                perror("tcsetattr()");
+        old.c_lflag &= ~ICANON;
+        old.c_lflag &= ~ECHO;
+        old.c_cc[VMIN] = 1;
+        old.c_cc[VTIME] = 0;
+        if (tcsetattr(0, TCSANOW, &old) < 0)
+                perror("tcsetattr ICANON");
+        if (read(0, &buf, 1) < 0)
+                perror ("read()");
+        old.c_lflag |= ICANON;
+        old.c_lflag |= ECHO;
+        if (tcsetattr(0, TCSADRAIN, &old) < 0)
+                perror ("tcsetattr ~ICANON");
+        return (buf);
+}
+
+void PolyVR::checkProcessesAndSockets() {
+    // check for failed startup
+    string timestamp;
+    ifstream f1("setup/.startup"); getline(f1,timestamp); f1.close();
+    if (timestamp != "") {
+        bool handling_bad_startup = true;
+        cout << "Warning! a previously failed startup has been detected that occurred at " << timestamp << endl;
+        do {
+            cout << "\n\tChoose on of the following options to proceed:" << endl;
+            cout << "\t1) resume startup" << endl;
+            cout << "\t2) reset to default hardware setup" << endl;
+            char c = getch();
+            //char c = cin.get();
+            if (c == '1') { cout << "\t\tresuming startup now..\n" << endl; break; }
+            if (c == '2') { cout << "\t\tremoving local setup config 'setup/.local'" << endl; boost::filesystem::remove("setup/.local"); }
+        } while (handling_bad_startup);
+    }
+
+    // store startup tmp file, removed after successful startup
+    timestamp = createTimeStamp();
+    ofstream f("setup/.startup"); f.write(timestamp.c_str(), timestamp.size()); f.close();
+
+    // TODO!!
     VRSharedMemory sm("PolyVR_System");// check for running PolyVR process
     int i = sm.getObject<int>("identifier");
-    if (i) cout << "Error: A PolyVR instance is allready running!\n";
+    if (i) cout << "Error: A PolyVR instance is already running!\n";
 }
 
 
