@@ -185,6 +185,9 @@ void PolyVR::checkProcessesAndSockets() {
     if (timestamp != "") {
         bool handling_bad_startup = true;
         cout << "Warning! a previously failed startup has been detected that occurred at " << timestamp << endl;
+        cout << "Hints: " << endl;
+        cout << " - In some instances a corruption of the x server can prevent the creation of the GL context.. " << endl;
+        cout << "     -> restart your system" << endl;
         do {
             cout << "\n\tChoose on of the following options to proceed:" << endl;
             cout << "\t1) resume startup" << endl;
