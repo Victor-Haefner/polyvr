@@ -23,7 +23,10 @@ using namespace std;
 
 VRMultiTouch::Touch::Touch(int k) : key(k) {}
 
-VRMultiTouch::VRMultiTouch() : VRDevice("multitouch") { connectDevice(); }
+VRMultiTouch::VRMultiTouch() : VRDevice("multitouch") {
+    connectDevice();
+    fingers[0] = Touch(0);
+}
 
 VRMultiTouch::~VRMultiTouch() {
     mtdev_close(&dev);
@@ -52,78 +55,94 @@ void VRMultiTouch::updateDevice() {
 	struct input_event ev;
 	string txt;
 	//while (!mtdev_idle(&dev, fd, 15000)) { // while the device has not been inactive for fifteen seconds */
-		while (mtdev_get(&dev, fd, &ev, 1) > 0) {
-            switch(ev.type) {
+    while (mtdev_get(&dev, fd, &ev, 1) > 0) {
+        // Recorded event types (ev.type):
+        // 0: Unsure what it does, but seems uninteresting, ev.code and ev.value are always 0
+        // 1: Only signals start (ev.value==1) and end (ev.value==0) of touch events
+        // 3: This is the interesting part. Contains all touch and multitouch events.
+        //    ev.code contains the type of touch event
+
+        if (ev.type == 3) {
+            switch (ev.code) {
             case 0:
-                // seems uninteresting, ev.code and ev.value always 0
-//                fprintf(stderr, "%01d : %d, %d\n", ev.type, ev.code, ev.value);
+                // only for single touch, 53 has same info and more
+                txt = "ABS_X";
                 break;
             case 1:
-                fprintf(stderr, "Touch %s\n", ev.value == 1? "start": "end");
+                // only for single touch, 54 has same info and more
+                txt = " ABS_Y";
                 break;
-            case 3:
-//                fprintf(stderr, "    %01d : %d, %d\n", ev.type, ev.code, ev.value);
+            case 47:
+                txt = "ABS_MT_SLOT";
+                if (!fingers.count(ev.value)) fingers[ev.value] = Touch(ev.value);
+                currentTouchID = ev.value;
+
+                cout << "SLOT: " << ev.value;
+                break;
+            case 48:
+                txt = "ABS_MT_TOUCH_MAJOR";
+                break;
+            case 49:
+                txt = "ABS_MT_TOUCH_MINOR";
+                break;
+            case 52:
+                txt = "ABS_MT_ORIENTATION";
+                break;
+            case 53:
+                txt = " ABS_MT_POSITION_X";
+                if (currentTouchID == -1) return;
+                fingers[currentTouchID].pos[0] = ev.value;
+                updatePosition(fingers[currentTouchID].pos[0], fingers[currentTouchID].pos[1]);
+
+                if ( fingers[currentTouchID].eventState >= 0) {
+                        fingers[currentTouchID].eventState++;
+                }
+                if ( fingers[currentTouchID].eventState == 2) {
+                        mouse(0,fingers[currentTouchID].pos[2], fingers[currentTouchID].pos[0], fingers[currentTouchID].pos[1]);
+                }
+                break;
+            case 54:
+                txt = "  ABS_MT_POSITION_Y";
+                if (currentTouchID == -1) return;
+                fingers[currentTouchID].pos[1] = ev.value;
+                updatePosition(fingers[currentTouchID].pos[0], fingers[currentTouchID].pos[1]);
+
+                if ( fingers[currentTouchID].eventState >= 0) {
+                        fingers[currentTouchID].eventState++;
+                }
+                if ( fingers[currentTouchID].eventState == 2) {
+                        mouse(0,fingers[currentTouchID].pos[2], fingers[currentTouchID].pos[0], fingers[currentTouchID].pos[1]);
+                }
+                break;
+            case 57:
+                txt = "ABS_MT_TRACKING_ID";
+                // if (currentTouchID == -1) return;
+
+                // Finger is "released" as in not present on the touch surface anymore
+                if (ev.value == -1) {
+                    fingers[currentTouchID].pos[2] = 0;
+                    mouse(0,fingers[currentTouchID].pos[2], fingers[currentTouchID].pos[0], fingers[currentTouchID].pos[1]);
+                }
+                // New touch event.
+                else {
+                    fingers[currentTouchID].pos[2] = 1;
+                    fingers[currentTouchID].eventState = 0;
+                }
                 break;
             default:
-//                fprintf(stderr, "Unmanaged mt event type: %02d\n", ev.type);
-                break;
+                txt = "ERROR: UNKNOWN EVENT CODE";
             }
-            if (ev.type == 3) {
-                switch (ev.code) {
-                case 0:
-                    txt = "ABS_X";
-                    break;
-                case 1:
-                    txt = " ABS_Y";
-                    break;
-                case 47:
-                    txt = "ABS_MT_SLOT";
-                    if (!fingers.count(ev.value)) fingers[ev.value] = Touch(ev.value);
-                    currentTouchID = ev.value;
-                    break;
-                case 48:
-                    txt = "ABS_MT_TOUCH_MAJOR";
-                    break;
-                case 49:
-                    txt = "ABS_MT_TOUCH_MINOR";
-                    break;
-                case 52:
-                    txt = "52";
-                    break;
-                case 53:
-                    txt = "ABS_MT_POSITION_X";
-                    if (currentTouchID == -1) return;
-                    fingers[currentTouchID].pos[0] = ev.value;
-                    updatePosition(fingers[currentTouchID].pos[0], fingers[currentTouchID].pos[1]);
-                    break;
-                case 54:
-                    txt = " ABS_MT_POSITION_Y";
-                    if (currentTouchID == -1) return;
-                    fingers[currentTouchID].pos[1] = ev.value;
-                    updatePosition(fingers[currentTouchID].pos[0], fingers[currentTouchID].pos[1]);
-                    break;
-                case 57:
-                    txt = "ABS_MT_TRACKING_ID";
-                    if (currentTouchID == -1) return;
-                    fingers[currentTouchID].pos[2] = (ev.value == -1) ? 0 : 1;
-                    mouse(0,fingers[currentTouchID].pos[2], fingers[currentTouchID].pos[0], fingers[currentTouchID].pos[1]);
-                    break;
-                default:
-                    txt = "err";
-                    cout << "UNKNOWN CODE " << ev.code << " : " << ev.value << endl;
-                }
-                if (ev.code == 53 || ev.code == 54 || ev.code == 57) {
-                    //cout << txt << " : " << ev.value << endl;
+
+
+            if (ev.code == 53 || ev.code == 54 || ev.code == 57 ) {
+                cout << " " << txt << " : " << ev.value << endl;
                     for (auto f : fingers) {
                         if (f.second.pos[2] == 0) continue;
-                        cout << " finger: ID " << f.second.key << " pos " << f.second.pos << endl;
+                        cout << " Finger: ID " << f.second.key << " pos " << f.second.pos << endl;
                     }
-                }
-                if (ev.code == 52) {
-                    cout << ev.code << " : " << ev.value << endl;
-                }
             }
-		}
+        }
+    }
 	//}
 }
 
@@ -137,6 +156,7 @@ void VRMultiTouch::connectDevice() {
 
     updatePtr = VRUpdateCb::create( "MultiTouch_update", boost::bind(&VRMultiTouch::updateDevice, this) );
     VRSceneManager::get()->addUpdateFkt(updatePtr);
+    cout << "VRMultiTouch::connectDevice successfully connected to device " << device << endl;
 }
 
 void VRMultiTouch::clearSignals() {
@@ -243,7 +263,7 @@ void VRMultiTouch::updatePosition(int x, int y) {
     rx =  (x/28430.0 - 0.5 )*2; // 65535.0
     ry = -(y/16000.0 - 0.5 )*2;
 
-    cout << " multitouch x y " << Vec2i(x,y) << " rx ry " << Vec2f(rx,ry) << " w h " << Vec2i(w,h) << endl;
+//    cout << "  Update MT x y (" << Vec2i(x,y) << "), rx ry (" << Vec2f(rx,ry) << "(, w h (" << Vec2i(w,h) << ")" << endl;
 
     //cam->getCam()->calcViewRay(ray,x,y,*v->getViewport());
     calcViewRay(cam, ray, rx,ry,w,h);
@@ -255,14 +275,15 @@ void VRMultiTouch::mouse(int button, int state, int x, int y) {
     auto sv = view.lock();
     if (!sv) return;
 
-    ViewportMTRecPtr v = sv->getViewport();
+    /*ViewportMTRecPtr v = sv->getViewport(); // TODO
     v->calcNormalizedCoordinates(_x, _y, x, y);
     change_slider(5,_x);
-    change_slider(6,_y);
+    change_slider(6,_y);*/
 
     updatePosition(x,y);
-    if (state) change_button(button,false);
-    else change_button(button,true);
+
+    change_button(button, state);
+    fingers[currentTouchID].eventState = -1;
 }
 
 void VRMultiTouch::motion(int x, int y) {

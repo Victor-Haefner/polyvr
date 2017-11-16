@@ -20,6 +20,7 @@ class VRMultiTouch : public VRDevice {
         struct Touch {
             int key;
             Vec3i pos;
+            int eventState = -1;
             Touch(int k = -1);
         };
 
@@ -34,9 +35,10 @@ class VRMultiTouch : public VRDevice {
         void multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut);
         bool calcViewRay(VRCameraPtr pcam, Line &line, float x, float y, int W, int H);
 
-        string device = "/dev/input/event5"; // TODO: make it configurable!
+        // TO DO: The number of the event has to be verified on each execution
+        string device = "/dev/input/event26"; // TODO: make it configurable!
         map<int, Touch> fingers;
-        int currentTouchID = -1;
+        int currentTouchID = 0;
 
     public:
         VRMultiTouch();
