@@ -1,0 +1,25 @@
+#version 400 compatibility
+
+out vec3 N;
+out vec3 v;
+out vec2 tc;
+
+out vec4 pos;
+out mat3 miN;
+out mat4 miP;
+
+in vec4 osg_Vertex;
+in vec3 osg_Normal;
+in vec2 osg_MultiTexCoord0;
+
+void main(void) {
+   miN = transpose(gl_NormalMatrix);
+   miP = inverse(gl_ProjectionMatrix);
+   pos = osg_Vertex * 0.5;
+
+   v = vec3(gl_ModelViewMatrix * osg_Vertex);
+   N = normalize(gl_NormalMatrix * osg_Normal);
+   tc = osg_MultiTexCoord0.xy;
+   gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex;
+   //gl_Position = osg_Vertex;
+}

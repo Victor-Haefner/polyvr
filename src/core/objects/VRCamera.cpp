@@ -108,7 +108,7 @@ void VRCamera::setup(bool reg) {
         cam = OSGCamera::create( ocam );
         ocam->setBeacon(getNode()->node);
         if (reg) {
-            VRScene::getCurrent()->setActiveCamera(getName());
+            //VRScene::getCurrent()->setActiveCamera(getName());
             updateOrthSize();
         }
     }

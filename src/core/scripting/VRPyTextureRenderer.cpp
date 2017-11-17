@@ -5,6 +5,9 @@
 
 using namespace OSG;
 
+template<> bool toValue(PyObject* o, VRTextureRendererPtr& v) { if (!VRPyTextureRenderer::check(o)) return 0; v = ((VRPyTextureRenderer*)o)->objPtr; return 1; }
+template<> PyObject* VRPyTypeCaster::cast(const VRTextureRendererPtr& e) { return VRPyTextureRenderer::fromSharedPtr(e); }
+
 simpleVRPyType(TextureRenderer, New_VRObjects_ptr);
 
 PyMethodDef VRPyTextureRenderer::methods[] = {

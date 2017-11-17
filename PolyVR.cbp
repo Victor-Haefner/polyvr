@@ -561,6 +561,10 @@
 		<Unit filename="src/addons/WorldGenerator/terrain/VRTerrainPhysicsShape.h" />
 		<Unit filename="src/addons/WorldGenerator/traffic/VRTrafficSimulation.cpp" />
 		<Unit filename="src/addons/WorldGenerator/traffic/VRTrafficSimulation.h" />
+		<Unit filename="src/addons/WorldGenerator/weather/VRPyWeather.cpp" />
+		<Unit filename="src/addons/WorldGenerator/weather/VRPyWeather.h" />
+		<Unit filename="src/addons/WorldGenerator/weather/VRRain.cpp" />
+		<Unit filename="src/addons/WorldGenerator/weather/VRRain.h" />
 		<Unit filename="src/addons/construction/building/VRElectricDevice.cpp" />
 		<Unit filename="src/addons/construction/building/VRElectricDevice.h" />
 		<Unit filename="src/addons/construction/building/VROpening.cpp" />
@@ -798,9 +802,7 @@
 		<Unit filename="src/core/scene/import/E57/LASReader.cpp" />
 		<Unit filename="src/core/scene/import/E57/LASReader.h" />
 		<Unit filename="src/core/scene/import/E57/basictypes.h" />
-		<Unit filename="src/core/scene/import/E57/config.h.in" />
 		<Unit filename="src/core/scene/import/E57/constants.h" />
-		<Unit filename="src/core/scene/import/E57/e57.ico" />
 		<Unit filename="src/core/scene/import/E57/e57_v0_6.rnc" />
 		<Unit filename="src/core/scene/import/E57/gnss_error.h" />
 		<Unit filename="src/core/scene/import/E57/inc/E57Foundation.h" />
