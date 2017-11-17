@@ -8,6 +8,7 @@
 #include <gtk/gtkgl.h>
 
 #include "../devices/VRKeyboard.h"
+#include "../devices/VRMouse.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/VROptions.h"
 #include "core/utils/VRGlobals.h"

@@ -75,7 +75,7 @@ void VRMultiTouch::updateDevice() {
             case 47:
                 txt = "ABS_MT_SLOT";
                 if (!fingers.count(ev.value)) fingers[ev.value] = Touch(ev.value);
-                currentTouchID = ev.value;
+                currentFingerID = ev.value;
 
                 cout << "SLOT: " << ev.value;
                 break;
@@ -90,28 +90,28 @@ void VRMultiTouch::updateDevice() {
                 break;
             case 53:
                 txt = " ABS_MT_POSITION_X";
-                if (currentTouchID == -1) return;
-                fingers[currentTouchID].pos[0] = ev.value;
-                updatePosition(fingers[currentTouchID].pos[0], fingers[currentTouchID].pos[1]);
+                if (currentFingerID == -1) return;
+                fingers[currentFingerID].pos[0] = ev.value;
+                updatePosition(fingers[currentFingerID].pos[0], fingers[currentFingerID].pos[1]);
 
-                if ( fingers[currentTouchID].eventState >= 0) {
-                        fingers[currentTouchID].eventState++;
+                if ( fingers[currentFingerID].eventState >= 0) {
+                        fingers[currentFingerID].eventState++;
                 }
-                if ( fingers[currentTouchID].eventState == 2) {
-                        mouse(0,fingers[currentTouchID].pos[2], fingers[currentTouchID].pos[0], fingers[currentTouchID].pos[1]);
+                if ( fingers[currentFingerID].eventState == 2) {
+                        mouse(currentFingerID,fingers[currentFingerID].pos[2], fingers[currentFingerID].pos[0], fingers[currentFingerID].pos[1]);
                 }
                 break;
             case 54:
                 txt = "  ABS_MT_POSITION_Y";
-                if (currentTouchID == -1) return;
-                fingers[currentTouchID].pos[1] = ev.value;
-                updatePosition(fingers[currentTouchID].pos[0], fingers[currentTouchID].pos[1]);
+                if (currentFingerID == -1) return;
+                fingers[currentFingerID].pos[1] = ev.value;
+                updatePosition(fingers[currentFingerID].pos[0], fingers[currentFingerID].pos[1]);
 
-                if ( fingers[currentTouchID].eventState >= 0) {
-                        fingers[currentTouchID].eventState++;
+                if ( fingers[currentFingerID].eventState >= 0) {
+                        fingers[currentFingerID].eventState++;
                 }
-                if ( fingers[currentTouchID].eventState == 2) {
-                        mouse(0,fingers[currentTouchID].pos[2], fingers[currentTouchID].pos[0], fingers[currentTouchID].pos[1]);
+                if ( fingers[currentFingerID].eventState == 2) {
+                        mouse(currentFingerID,fingers[currentFingerID].pos[2], fingers[currentFingerID].pos[0], fingers[currentFingerID].pos[1]);
                 }
                 break;
             case 57:
@@ -120,13 +120,13 @@ void VRMultiTouch::updateDevice() {
 
                 // Finger is "released" as in not present on the touch surface anymore
                 if (ev.value == -1) {
-                    fingers[currentTouchID].pos[2] = 0;
-                    mouse(0,fingers[currentTouchID].pos[2], fingers[currentTouchID].pos[0], fingers[currentTouchID].pos[1]);
+                    fingers[currentFingerID].pos[2] = 0;
+                    mouse(currentFingerID,fingers[currentFingerID].pos[2], fingers[currentFingerID].pos[0], fingers[currentFingerID].pos[1]);
                 }
                 // New touch event.
                 else {
-                    fingers[currentTouchID].pos[2] = 1;
-                    fingers[currentTouchID].eventState = 0;
+                    fingers[currentFingerID].pos[2] = 1;
+                    fingers[currentFingerID].eventState = 0;
                 }
                 break;
             default:
@@ -247,60 +247,54 @@ bool VRMultiTouch::calcViewRay(VRCameraPtr cam, Line &line, float x, float y, in
     return true;
 }
 
+bool VRMultiTouch::rescale(float& v, float m1, float m2) {
+    v = ( v-m1 ) / (m2-m1)*2 -1;
+    return (v >= -1 && v <= 1);
+}
+
 //3d object to emulate a hand in VRSpace
 void VRMultiTouch::updatePosition(int x, int y) {
     auto cam = this->cam.lock();
     if (!cam) return;
-    auto v = view.lock();
-    if (!v) return;
 
-    int w, h;
-    w = v->getViewport()->calcPixelWidth();
-    h = v->getViewport()->calcPixelHeight();
+    auto win = window.lock();
+    if (!win) return;
 
-    float rx, ry;
-    //v->getViewport()->calcNormalizedCoordinates(rx, ry, x, y);
-    rx =  (x/28430.0 - 0.5 )*2; // 65535.0
-    ry = -(y/16000.0 - 0.5 )*2;
+    for (auto v : win->getViews()) {
+        int w, h;
+        w = v->getViewport()->calcPixelWidth();
+        h = v->getViewport()->calcPixelHeight();
 
-//    cout << "  Update MT x y (" << Vec2i(x,y) << "), rx ry (" << Vec2f(rx,ry) << "(, w h (" << Vec2i(w,h) << ")" << endl;
+        float rx, ry;
+        //v->getViewport()->calcNormalizedCoordinates(rx, ry, x, y);
+        rx =  (x/28430.0 - 0.5 )*2; // 65535.0
+        ry = -(y/16000.0 - 0.5 )*2;
 
-    //cam->getCam()->calcViewRay(ray,x,y,*v->getViewport());
-    calcViewRay(cam, ray, rx,ry,w,h);
-    editBeacon()->setDir(Vec3d(ray.getDirection()));
+        Vec4d box = v->getPosition()*2-Vec4d(1,1,1,1);
+        cout << "rx: " << rx << " ry: " << ry << " box: " << box << endl;
+        auto tmp = box[1];
+        box[1] = -box[3];
+        box[3] = -tmp;
+
+        bool inside = rescale(rx, box[0], box[2]) && rescale(ry, box[1], box[3]);
+        if (inside) {
+            //cam->getCam()->calcViewRay(ray,x,y,*v->getViewport());
+            calcViewRay(cam, ray, rx,ry,w,h);
+            getBeacon()->setDir(Vec3d(ray.getDirection()));
+            cout << "  Update MT x y (" << Vec2i(x,y) << "), rx ry (" << Vec2f(rx,ry) << "), w h (" << Vec2i(w,h) << ") dir " << getBeacon()->getDir() << endl;
+            break;
+        }
+    }
 }
 
 void VRMultiTouch::mouse(int button, int state, int x, int y) {
-    float _x, _y;
-    auto sv = view.lock();
-    if (!sv) return;
-
-    /*ViewportMTRecPtr v = sv->getViewport(); // TODO
-    v->calcNormalizedCoordinates(_x, _y, x, y);
-    change_slider(5,_x);
-    change_slider(6,_y);*/
-
     updatePosition(x,y);
-
     change_button(button, state);
-    fingers[currentTouchID].eventState = -1;
-}
-
-void VRMultiTouch::motion(int x, int y) {
-    auto sv = view.lock();
-    if (!sv) return;
-
-    float _x, _y;
-    ViewportMTRecPtr v = sv->getViewport();
-    v->calcNormalizedCoordinates(_x, _y, x, y);
-    change_slider(5,_x);
-    change_slider(6,_y);
-
-    updatePosition(x,y);
+    fingers[currentFingerID].eventState = -1;
 }
 
 void VRMultiTouch::setCamera(VRCameraPtr cam) { this->cam = cam; }
-void VRMultiTouch::setViewport(VRViewPtr view) { this->view = view; }
+void VRMultiTouch::setWindow(VRWindowPtr win) { this->window = win; }
 
 Line VRMultiTouch::getRay() { return ray; }
 

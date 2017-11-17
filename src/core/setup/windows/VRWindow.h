@@ -4,9 +4,8 @@
 #include <OpenSG/OSGWindow.h>
 #include <OpenSG/OSGRenderAction.h>
 
-
-#include "../devices/VRMouse.h"
-#include "../devices/VRKeyboard.h"
+#include "core/setup/VRSetupFwd.h"
+#include "core/utils/VRDeviceFwd.h"
 #include "core/utils/VRName.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -26,6 +25,7 @@ class VRWindow : public std::enable_shared_from_this<VRWindow>, public VRName {
         vector<VRViewWeakPtr> views;
 
         VRMousePtr mouse = 0;
+        VRMultiTouchPtr multitouch = 0;
         VRKeyboardPtr keyboard = 0;
         int width = 640;
         int height = 480;
@@ -56,7 +56,9 @@ class VRWindow : public std::enable_shared_from_this<VRWindow>, public VRName {
         void setContent(bool b);
 
         void setMouse(VRMousePtr m);
+        void setMultitouch(VRMultiTouchPtr m);
         VRMousePtr getMouse();
+        VRMultiTouchPtr getMultitouch();
 
         void setKeyboard(VRKeyboardPtr m);
         VRKeyboardPtr getKeyboard();

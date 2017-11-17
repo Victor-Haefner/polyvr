@@ -1,4 +1,5 @@
 #include "VRMultiWindow.h"
+#include "VRView.h"
 #include <OpenSG/OSGRemoteAspect.h>
 #include <OpenSG/OSGFieldContainerFactory.h>
 #include <OpenSG/OSGNameAttachment.h>

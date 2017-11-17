@@ -29,16 +29,19 @@ class VRMultiTouch : public VRDevice {
         mtdev dev;
         VRUpdateCbPtr updatePtr;
         VRCameraWeakPtr cam;
-        VRViewWeakPtr view;
+        VRWindowWeakPtr window;
         Line ray;
 
         void multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut);
         bool calcViewRay(VRCameraPtr pcam, Line &line, float x, float y, int W, int H);
 
         // TO DO: The number of the event has to be verified on each execution
-        string device = "/dev/input/event26"; // TODO: make it configurable!
+        string device = "/dev/input/event25"; // TODO: make it configurable!
         map<int, Touch> fingers;
-        int currentTouchID = 0;
+        int currentFingerID = 0;
+
+        float clamp(float v, float m1, float m2);
+        bool rescale(float& v, float m1, float m2);
 
     public:
         VRMultiTouch();
@@ -49,18 +52,15 @@ class VRMultiTouch : public VRDevice {
 
         void updateDevice();
         void connectDevice();
-
         void clearSignals();
 
         //3d object to emulate a hand in VRSpace
         void updatePosition(int x, int y);
-
         void mouse(int button, int state, int x, int y);
-        void motion(int x, int y);
 
         Line getRay();
         void setCamera(VRCameraPtr cam);
-        void setViewport(VRViewPtr view);
+        void setWindow(VRWindowPtr win);
 
         void save(xmlpp::Element* e);
         void load(xmlpp::Element* e);
