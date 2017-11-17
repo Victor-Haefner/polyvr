@@ -53,6 +53,7 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
     data->lengths = (GeoUInt32Property*)geo->getMesh()->geo->getLengths();
     data->indices = (GeoUInt32Property*)geo->getMesh()->geo->getIndices();
     data->pos = (GeoPnt3fProperty*)geo->getMesh()->geo->getPositions();
+
     data->norms = (GeoVec3fProperty*)geo->getMesh()->geo->getNormals();
     data->texs = (GeoVec2fProperty*)geo->getMesh()->geo->getTexCoords();
     data->texs2 = (GeoVec2fProperty*)geo->getMesh()->geo->getTexCoords1();
@@ -355,15 +356,15 @@ void VRGeoData::pushPrim(Primitive p) {
 
 void VRGeoData::apply(VRGeometryPtr geo, bool check) const {
     if (!geo) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: geometry invalid!" << endl; return; }
-    if (!valid() && check) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: data invalid!" << endl; return; }
+    if (check && !valid()) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: data invalid!" << endl; return; }
 
     geo->setPositions( data->pos );
     geo->setLengths( data->lengths->size() > 0 ? data->lengths : 0 );
     geo->setTypes( data->types->size() > 0 ? data->types : 0 );
     geo->setNormals( data->norms->size() > 0 ? data->norms : 0 );
-    geo->setIndices( data->indices->size() > 0 ? data->indices : 0 );
     geo->setTexCoords( data->texs->size() > 0 ? data->texs : 0, 0 );
     geo->setTexCoords( data->texs2->size() > 0 ? data->texs2 : 0, 1 );
+    if (data->indices->size() > 0) geo->setIndices( data->indices ); // passing 0 here will reset the mesh!
 
     GeoVectorProperty* c3 = data->cols3->size() > 0 ? data->cols3 : 0;
     GeoVectorProperty* c4 = data->cols4->size() > 0 ? data->cols4 : 0;

@@ -9,11 +9,11 @@
 #include "core/utils/VRFunctionFwd.h"
 #include "core/math/VRMathFwd.h"
 
-class VRPhysics;
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class VRCollision;
+class VRPhysics;
 class path;
 class VRAnimation;
 
@@ -183,6 +183,8 @@ class VRTransform : public VRObject {
         VRPhysics* getPhysics();
         void resolvePhysics();
         void updateFromBullet();
+
+        vector<VRCollision> getCollisions();
 
         /** Do not update the transform in the physics context for the next frame **/
         void setNoBltFlag();

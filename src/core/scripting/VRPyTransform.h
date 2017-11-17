@@ -3,6 +3,11 @@
 
 #include "VRPyObject.h"
 #include "core/objects/VRTransform.h"
+#include "core/objects/geometry/VRPhysics.h"
+
+struct VRPyCollision : VRPyBaseT<OSG::VRCollision> {
+    static PyMethodDef methods[];
+};
 
 struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyMethodDef methods[];

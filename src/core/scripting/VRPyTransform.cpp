@@ -13,9 +13,21 @@
 
 using namespace OSG;
 
+simpleVRPyType(Collision, 0);
 simpleVRPyType(Transform, New_VRObjects_ptr);
 
+template<> PyObject* VRPyTypeCaster::cast(const VRCollision& e) { return VRPyCollision::fromObject(e); }
 template<> bool toValue(PyObject* o, VRTransformPtr& v) { if (!VRPyTransform::check(o)) return 0; v = ((VRPyTransform*)o)->objPtr; return 1; }
+
+PyMethodDef VRPyCollision::methods[] = {
+    {"getPos1", PyWrap(Collision, getPos1, "Get the first collision point", Vec3d)  },
+    {"getPos2", PyWrap(Collision, getPos2, "Get the second collision point", Vec3d)  },
+    {"getNorm", PyWrap(Collision, getNorm, "Get collision normal vector", Vec3d)  },
+    {"getDistance", PyWrap(Collision, getDistance, "Get the distance between collision points", float)  },
+    {"getObj1", PyWrap(Collision, getObj1, "Get the first collision object", VRTransformPtr)  },
+    {"getObj2", PyWrap(Collision, getObj2, "Get the second collision object", VRTransformPtr)  },
+    {NULL}  /* Sentinel */
+};
 
 PyMethodDef VRPyTransform::methods[] = {
     {"setIdentity", (PyCFunction)VRPyTransform::setIdentity, METH_NOARGS, "Reset transformation to identity" },
@@ -64,7 +76,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setCollisionGroup", (PyCFunction)VRPyTransform::setCollisionGroup, METH_VARARGS, "Set the collision group of the physics object - setCollisionGroup(int g)\n\t g can be from 0 to 8" },
     {"setCollisionMask", (PyCFunction)VRPyTransform::setCollisionMask, METH_VARARGS, "Set the collision mask of the physics object - setCollisionMask(int g)\n\t g can be from 0 to 8 and it is the group to collide with" },
     {"setCollisionShape", (PyCFunction)VRPyTransform::setCollisionShape, METH_VARARGS, "Set the collision shape of the physics object, see physicalize - setCollisionShape( str shape, float param )" },
-    {"getCollisions", (PyCFunction)VRPyTransform::getCollisions, METH_NOARGS, "Return the current collisions with other objects" },
+    {"getCollisions", PyWrap(Transform, getCollisions, "Return the current collisions with other objects", vector<VRCollision> ) },
     {"applyImpulse", (PyCFunction)VRPyTransform::applyImpulse, METH_VARARGS, "Apply impulse on the physics object" },
     {"applyTorqueImpulse", (PyCFunction)VRPyTransform::applyTorqueImpulse, METH_VARARGS, "Apply torque impulse on the physics object" },
     {"applyForce", (PyCFunction)VRPyTransform::applyForce, METH_VARARGS, "Apply force on the physics object (e.g. obj.applyForce(1.0,0.0,0.0) )" },
@@ -177,7 +189,7 @@ PyObject* VRPyTransform::applyChange(VRPyTransform* self) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyTransform::getCollisions(VRPyTransform* self) {
+/*PyObject* VRPyTransform::getCollisions(VRPyTransform* self) {
     if (!self->valid()) return NULL;
     auto cols = self->objPtr->getPhysics()->getCollisions();
     PyObject* res = PyList_New(cols.size());
@@ -191,7 +203,7 @@ PyObject* VRPyTransform::getCollisions(VRPyTransform* self) {
         i++;
     }
     return res;
-}
+}*/
 
 PyObject* VRPyTransform::setGhost(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;

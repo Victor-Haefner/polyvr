@@ -150,6 +150,9 @@ void OSMMap::readFile(string path) {
             n->ways.push_back(way.second->id);
         }
     }
+
+    cout << "OSMMap::readFile path " << path << endl;
+    cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
 }
 
 OSMMapPtr OSMMap::loadMap(string filepath) { return OSMMapPtr( new OSMMap(filepath) ); }

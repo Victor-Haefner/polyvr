@@ -761,6 +761,11 @@ VRPhysics* VRTransform::getPhysics() {
     return physics;
 }
 
+vector<VRCollision> VRTransform::getCollisions() {
+    if (physics == 0) return vector<VRCollision>();
+    return physics->getCollisions();
+}
+
 /** Update the object OSG transformation **/
 void VRTransform::updateChange() {
     apply_constraints();
