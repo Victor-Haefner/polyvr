@@ -127,7 +127,7 @@ void VRMultiTouch::updateDevice() {
                 if (!fingers.count(ev.value)) fingers[ev.value] = Touch(ev.value);
                 currentFingerID = ev.value;
 
-                cout << "SLOT: " << ev.value;
+                //cout << "SLOT: " << ev.value;
                 break;
             case 48:
                 txt = "ABS_MT_TOUCH_MAJOR";
@@ -185,10 +185,10 @@ void VRMultiTouch::updateDevice() {
 
 
             if (ev.code == 53 || ev.code == 54 || ev.code == 57 ) {
-                cout << " " << txt << " : " << ev.value << endl;
+                //cout << " " << txt << " : " << ev.value << endl;
                     for (auto f : fingers) {
                         if (f.second.pos[2] == 0) continue;
-                        cout << " Finger: ID " << f.second.key << " pos " << f.second.pos << endl;
+                        //cout << " Finger: ID " << f.second.key << " pos " << f.second.pos << endl;
                     }
             }
         }
@@ -207,7 +207,15 @@ void VRMultiTouch::disconnectDevice() {
 
 void VRMultiTouch::connectDevice() {
     devID = "";
-    for (int i=0; i<devices.size(); i++) if (devices[i] == device) { devID = deviceIDs[i]; break; };
+    vector<int> IDs;
+    for (int i=0; i<devices.size(); i++) {
+        if (devices[i] == device) IDs.push_back( toInt(deviceIDs[i]) );
+    }
+    if (IDs.size() == 0) return;
+
+    int ID = IDs[0];
+    for (auto id : IDs) ID = min(id,ID);
+    devID = toString(ID);
     if (devID == "") return;
 
     string props = execCmd("/usr/bin/xinput", "xinput", "list-props", devID.c_str());
@@ -324,10 +332,9 @@ bool VRMultiTouch::rescale(float& v, float m1, float m2) {
 //3d object to emulate a hand in VRSpace
 void VRMultiTouch::updatePosition(int x, int y) {
     auto cam = this->cam.lock();
-    if (!cam) return;
-
     auto win = window.lock();
-    if (!win) return;
+    if (!cam) { cout << "Warning: VRMultiTouch::updatePosition, no camera defined!" << endl; return; }
+    if (!win) { cout << "Warning: VRMultiTouch::updatePosition, no window defined!" << endl; return; }
 
     for (auto v : win->getViews()) {
         int w, h;
@@ -335,22 +342,20 @@ void VRMultiTouch::updatePosition(int x, int y) {
         h = v->getViewport()->calcPixelHeight();
 
         float rx, ry;
-        //v->getViewport()->calcNormalizedCoordinates(rx, ry, x, y);
         rx =  (x/28430.0 - 0.5 )*2; // 65535.0
         ry = -(y/16000.0 - 0.5 )*2;
 
-        Vec4d box = v->getPosition()*2-Vec4d(1,1,1,1);
-        cout << "rx: " << rx << " ry: " << ry << " box: " << box << endl;
+        Vec4d box = v->getPosition()*2 - Vec4d(1,1,1,1);
         auto tmp = box[1];
         box[1] = -box[3];
         box[3] = -tmp;
 
         bool inside = rescale(rx, box[0], box[2]) && rescale(ry, box[1], box[3]);
         if (inside) {
-            //cam->getCam()->calcViewRay(ray,x,y,*v->getViewport());
+            //cam->getCam()->cam->calcViewRay(ray,x,y,*v->getViewport());
             calcViewRay(cam, ray, rx,ry,w,h);
             getBeacon()->setDir(Vec3d(ray.getDirection()));
-            cout << "  Update MT x y (" << Vec2i(x,y) << "), rx ry (" << Vec2f(rx,ry) << "), w h (" << Vec2i(w,h) << ") dir " << getBeacon()->getDir() << endl;
+            //cout << "  Update MT x y (" << Vec2i(x,y) << "), rx ry (" << Vec2f(rx,ry) << "), w h (" << Vec2i(w,h) << ") dir " << getBeacon()->getDir() << endl;
             break;
         }
     }
