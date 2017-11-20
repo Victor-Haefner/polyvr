@@ -78,6 +78,7 @@ void VRGuiSetup::closeAllExpander() {
     setExpanderSensitivity("expander26", false);
     setExpanderSensitivity("expander28", false);
     setExpanderSensitivity("expander29", false);
+    setExpanderSensitivity("expander30", false);
 }
 
 void VRGuiSetup::updateObjectData() {
@@ -196,6 +197,12 @@ void VRGuiSetup::updateObjectData() {
         VRHaptic* t = (VRHaptic*)selected_object;
         setTextEntry("entry8", t->getIP());
         setCombobox("combobox25", getListStorePos("liststore8", t->getType()) );
+    }
+
+    if (selected_type == "multitouch") {
+        setExpanderSensitivity("expander30", true);
+        VRMultiTouch* t = (VRMultiTouch*)selected_object;
+        setCombobox("combobox12", getListStorePos("liststore11", t->getDevice()) );
     }
 
     if (selected_type == "mouse") { device = true; }
@@ -983,6 +990,13 @@ void VRGuiSetup::on_change_haptic_type() {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
+void VRGuiSetup::on_mt_device_changed() {
+    if (guard) return;
+    VRMultiTouch* dev = (VRMultiTouch*)selected_object;
+    dev->setDevice(getComboboxText("combobox12"));
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
 void VRGuiSetup::on_toggle_dev_cross() {
     if (guard) return;
 
@@ -1171,12 +1185,13 @@ VRGuiSetup::VRGuiSetup() {
     setRadioButtonCallback("radiobutton12", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited));
 
     setComboboxCallback("combobox6", sigc::mem_fun(*this, &VRGuiSetup::on_setup_changed) );
+    setComboboxCallback("combobox12", sigc::mem_fun(*this, &VRGuiSetup::on_mt_device_changed) );
     setComboboxCallback("combobox13", sigc::mem_fun(*this, &VRGuiSetup::on_window_device_changed) );
     setComboboxCallback("combobox18", sigc::mem_fun(*this, &VRGuiSetup::on_change_view_user) );
     setComboboxCallback("combobox25", sigc::mem_fun(*this, &VRGuiSetup::on_change_haptic_type) );
 
-    const char *haptic_types[] = {"Virtuose 6D Desktop", "Virtuose 6D35-45", "Virtuose 6D40-40", "INCA 6D"};
-    fillStringListstore("liststore8", vector<string>(haptic_types, end(haptic_types)) );
+    fillStringListstore("liststore8", {"Virtuose 6D Desktop", "Virtuose 6D35-45", "Virtuose 6D40-40", "INCA 6D"} );
+    fillStringListstore("liststore11", VRMultiTouch::getDevices() );
 
     tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview2"));
     tree_view->signal_cursor_changed().connect( sigc::mem_fun(*this, &VRGuiSetup::on_treeview_select) );

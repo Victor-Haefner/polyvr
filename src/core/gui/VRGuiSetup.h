@@ -116,6 +116,7 @@ class VRGuiSetup {
         void on_vrpn_trans_axis_edit(Vec3d v);
         void on_vrpn_rot_axis_edit(Vec3d v);
 
+        void on_mt_device_changed();
         void on_haptic_ip_edited();
         void on_change_haptic_type();
         void on_toggle_dev_cross();

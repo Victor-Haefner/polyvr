@@ -11,6 +11,7 @@
 #include <OpenSG/OSGPerspectiveCamera.h>
 
 #include <mtdev.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -24,14 +25,16 @@ using namespace std;
 VRMultiTouch::Touch::Touch(int k) : key(k) {}
 
 VRMultiTouch::VRMultiTouch() : VRDevice("multitouch") {
-    connectDevice();
     fingers[0] = Touch(0);
+
+    store("device", &device);
+    store("input", &input);
+
+    regStorageSetupFkt( VRUpdateCb::create("connect mt device", boost::bind(&VRMultiTouch::connectDevice, this)) );
 }
 
 VRMultiTouch::~VRMultiTouch() {
-    mtdev_close(&dev);
-	ioctl(fd, EVIOCGRAB, 0);
-	close(fd);
+    disconnectDevice();
 }
 
 VRMultiTouchPtr VRMultiTouch::create() {
@@ -42,6 +45,53 @@ VRMultiTouchPtr VRMultiTouch::create() {
 }
 
 VRMultiTouchPtr VRMultiTouch::ptr() { return static_pointer_cast<VRMultiTouch>( shared_from_this() ); }
+
+#define die(e) do { fprintf(stderr, "%s\n", e); exit(EXIT_FAILURE); } while (0);
+
+#include <cstdarg>
+
+template <typename ...Args>
+string execCmd(Args&&... args) {
+    int link[2];
+    if (pipe(link) == -1) die("pipe");
+    pid_t pid = fork();
+    if (pid == -1) die("fork");
+
+    if (pid == 0) {
+        dup2 (link[1], STDOUT_FILENO);
+        close(link[0]);
+        close(link[1]);
+        execl( args..., (char*)0 );
+        die("execl");
+        return 0;
+    }
+
+    string result;
+    close(link[1]);
+    char foo[32768];
+    size_t N = read(link[0], foo, sizeof(foo));
+    result = string(foo, N);
+    wait();
+    return result;
+}
+
+vector<string> VRMultiTouch::devices = vector<string>();
+vector<string> VRMultiTouch::deviceIDs = vector<string>();
+
+vector<string> VRMultiTouch::getDevices() {
+    devices = splitString(execCmd("/usr/bin/xinput", "xinput", "list", "--name-only"), '\n');
+    deviceIDs = splitString(execCmd("/usr/bin/xinput", "xinput", "list", "--id-only"), '\n');
+    return devices;
+}
+
+string VRMultiTouch::getDevice() { return device; }
+string VRMultiTouch::getInput() { return input; }
+
+void VRMultiTouch::setDevice(string devName) {
+    disconnectDevice();
+    device = devName;
+    connectDevice();
+}
 
 static void print_event(const struct input_event *ev) {
 	static const mstime_t ms = 1000;
@@ -146,17 +196,36 @@ void VRMultiTouch::updateDevice() {
 	//}
 }
 
+void VRMultiTouch::disconnectDevice() {
+    if (devID != "") {
+        execCmd("/usr/bin/xinput", "xinput", "enable", devID.c_str());
+        mtdev_close(&dev);
+        ioctl(fd, EVIOCGRAB, 0);
+        close(fd);
+    }
+}
+
 void VRMultiTouch::connectDevice() {
-    fd = open(device.c_str(), O_RDONLY | O_NONBLOCK);
-	if (fd < 0) { cout << "VRMultiTouch::connectDevice Error: could not open device\n"; return; }
-	if (ioctl(fd, EVIOCGRAB, 1)) { cout << "VRMultiTouch::connectDevice Error: could not grab device\n"; return; }
+    devID = "";
+    for (int i=0; i<devices.size(); i++) if (devices[i] == device) { devID = deviceIDs[i]; break; };
+    if (devID == "") return;
+
+    string props = execCmd("/usr/bin/xinput", "xinput", "list-props", devID.c_str());
+    auto eventPos = props.find("/dev/input/event");
+    input = "";
+    for (; props[eventPos+1] != '\n'; eventPos++) input += props[eventPos];
+    execCmd("/usr/bin/xinput", "xinput", "disable", devID.c_str());
+
+    fd = open(input.c_str(), O_RDONLY | O_NONBLOCK);
+	if (fd < 0) { cout << "VRMultiTouch::connectDevice Error: could not open device " << input << endl; return; }
+	if (ioctl(fd, EVIOCGRAB, 1)) { cout << "VRMultiTouch::connectDevice Error: could not grab device " << input << endl; return; }
 
 	int ret = mtdev_open(&dev, fd);
-	if (ret) { cout << "VRMultiTouch::connectDevice Error: could not open device: " << ret << endl; return; }
+	if (ret) { cout << "VRMultiTouch::connectDevice Error: could not open device: " << input << endl; return; }
 
     updatePtr = VRUpdateCb::create( "MultiTouch_update", boost::bind(&VRMultiTouch::updateDevice, this) );
     VRSceneManager::get()->addUpdateFkt(updatePtr);
-    cout << "VRMultiTouch::connectDevice successfully connected to device " << device << endl;
+    cout << "VRMultiTouch::connectDevice successfully connected to device " << input << endl;
 }
 
 void VRMultiTouch::clearSignals() {
@@ -298,12 +367,5 @@ void VRMultiTouch::setWindow(VRWindowPtr win) { this->window = win; }
 
 Line VRMultiTouch::getRay() { return ray; }
 
-void VRMultiTouch::save(xmlpp::Element* e) {
-    VRDevice::save(e);
-}
-
-void VRMultiTouch::load(xmlpp::Element* e) {
-    VRDevice::load(e);
-}
 
 OSG_END_NAMESPACE;

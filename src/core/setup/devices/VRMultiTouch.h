@@ -32,11 +32,15 @@ class VRMultiTouch : public VRDevice {
         VRWindowWeakPtr window;
         Line ray;
 
+        static vector<string> devices;
+        static vector<string> deviceIDs;
+
         void multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut);
         bool calcViewRay(VRCameraPtr pcam, Line &line, float x, float y, int W, int H);
 
-        // TO DO: The number of the event has to be verified on each execution
-        string device = "/dev/input/event25"; // TODO: make it configurable!
+        string device;
+        string input;
+        string devID;
         map<int, Touch> fingers;
         int currentFingerID = 0;
 
@@ -50,8 +54,14 @@ class VRMultiTouch : public VRDevice {
         static VRMultiTouchPtr create();
         VRMultiTouchPtr ptr();
 
+        static vector<string> getDevices();
+        string getDevice();
+        string getInput();
+        void setDevice(string dev);
+
         void updateDevice();
         void connectDevice();
+        void disconnectDevice();
         void clearSignals();
 
         //3d object to emulate a hand in VRSpace
@@ -61,9 +71,6 @@ class VRMultiTouch : public VRDevice {
         Line getRay();
         void setCamera(VRCameraPtr cam);
         void setWindow(VRWindowPtr win);
-
-        void save(xmlpp::Element* e);
-        void load(xmlpp::Element* e);
 };
 
 OSG_END_NAMESPACE;
