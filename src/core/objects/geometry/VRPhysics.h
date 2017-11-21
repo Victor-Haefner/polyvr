@@ -1,6 +1,7 @@
 #ifndef VRTRANSFORM_PHYSICS_EXT_H_INCLUDED
 #define VRTRANSFORM_PHYSICS_EXT_H_INCLUDED
 
+#include "addons/Bullet/VRPhysicsFwd.h"
 #include "core/utils/VRStorage.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/objects/VRObjectFwd.h"

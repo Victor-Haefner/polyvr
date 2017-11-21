@@ -75,6 +75,8 @@ class VRRobotArm {
         void moveOnPath(float t0, float t1, bool loop = false);
 };
 
+typedef shared_ptr<VRRobotArm> VRRobotArmPtr;
+
 OSG_END_NAMESPACE;
 
 #endif // VRROBOTARM_H_INCLUDED

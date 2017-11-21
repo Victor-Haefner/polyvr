@@ -52,6 +52,8 @@ class RealWorld : public VRObject {
         OSMMapPtr getMap(string posStr);
 };
 
+typedef std::shared_ptr<RealWorld> RealWorldPtr;
+
 OSG_END_NAMESPACE;
 
 #endif // REALWORLD_H

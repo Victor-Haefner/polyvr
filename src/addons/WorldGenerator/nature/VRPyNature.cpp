@@ -7,11 +7,6 @@
 
 using namespace OSG;
 
-template<> PyObject* VRPyTypeCaster::cast(const VRNaturePtr& e) { return VRPyNature::fromSharedPtr(e); }
-template<> bool toValue(PyObject* o, VRNaturePtr& p) { if (!VRPyNature::check(o)) return 0; p = ((VRPyNature*)o)->objPtr; return 1; }
-template<> PyObject* VRPyTypeCaster::cast(const VRTreePtr& e) { return VRPyTree::fromSharedPtr(e); }
-template<> bool toValue(PyObject* o, VRTreePtr& p) { if (!VRPyTree::check(o)) return 0; p = ((VRPyTree*)o)->objPtr; return 1; }
-
 simpleVRPyType(Tree, New_VRObjects_ptr);
 simpleVRPyType(Nature, New_VRObjects_ptr);
 

@@ -4,6 +4,7 @@
 #include <OpenSG/OSGColor.h>
 #include "core/utils/VRDeviceFwd.h"
 #include "core/objects/VRObjectFwd.h"
+#include "VRToolsFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -24,7 +25,7 @@ class VRColorChooser {
     public:
         VRColorChooser();
         ~VRColorChooser();
-        static shared_ptr<VRColorChooser> create();
+        static VRColorChooserPtr create();
 
         void setColor(Color3f c);
         Color3f getColor();

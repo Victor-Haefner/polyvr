@@ -6,6 +6,7 @@
 
 namespace OSG {
     typedef VRRenderManager VRRendering;
+    typedef VRRenderManagerPtr VRRenderingPtr;
 }
 
 struct VRPyRendering : VRPyBaseT<OSG::VRRendering> {

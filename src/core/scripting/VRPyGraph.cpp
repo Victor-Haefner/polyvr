@@ -7,9 +7,6 @@ using namespace OSG;
 
 newPyType( Graph , Graph , New_ptr );
 
-template<> PyObject* VRPyTypeCaster::cast(const GraphPtr& e) { return VRPyGraph::fromSharedPtr(e); }
-template<> bool toValue(PyObject* o, GraphPtr& p) { if (!VRPyGraph::check(o)) return 0; p = ((VRPyGraph*)o)->objPtr; return 1; }
-
 PyMethodDef VRPyGraph::methods[] = {
     {"getEdge", (PyCFunction)VRPyGraph::getEdge, METH_VARARGS, "Return the graph edge between n1 and n2 - getEdge( int n1, int n2 )" },
     {"getEdgeID", (PyCFunction)VRPyGraph::getEdgeID, METH_VARARGS, "Return the graph edge ID between n1 and n2 - getEdgeID( int n1, int n2 )" },

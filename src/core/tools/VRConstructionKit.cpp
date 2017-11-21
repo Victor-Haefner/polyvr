@@ -25,7 +25,7 @@ VRConstructionKit::VRConstructionKit() {
 
 VRConstructionKit::~VRConstructionKit() {}
 
-shared_ptr<VRConstructionKit> VRConstructionKit::create() { return shared_ptr<VRConstructionKit>(new VRConstructionKit()); }
+VRConstructionKitPtr VRConstructionKit::create() { return VRConstructionKitPtr(new VRConstructionKit()); }
 
 void VRConstructionKit::clear() {
     objects.clear();
@@ -33,8 +33,8 @@ void VRConstructionKit::clear() {
     snapping->clear();
 }
 
-shared_ptr<VRSnappingEngine> VRConstructionKit::getSnappingEngine() { return snapping; }
-shared_ptr<VRSelector> VRConstructionKit::getSelector() { return selector; }
+VRSnappingEnginePtr VRConstructionKit::getSnappingEngine() { return snapping; }
+VRSelectorPtr VRConstructionKit::getSelector() { return selector; }
 
 vector<VRObjectPtr> VRConstructionKit::getObjects() {
     vector<VRObjectPtr> res;

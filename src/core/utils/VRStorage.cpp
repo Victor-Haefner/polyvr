@@ -5,6 +5,8 @@
 #include <libxml++/nodes/element.h>
 #include <boost/bind.hpp>
 
+template<> string typeName(const OSG::VRStoragePtr& o) { return "Storage"; }
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 

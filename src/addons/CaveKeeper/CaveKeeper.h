@@ -72,6 +72,8 @@ class CaveKeeper : public BlockWorld {
         void place(VRDevicePtr dev, string s, VRTransformPtr geo);
 };
 
+typedef shared_ptr<CaveKeeper> CaveKeeperPtr;
+
 OSG_END_NAMESPACE
 
 #endif // CAVEKEEPER_H_INCLUDED

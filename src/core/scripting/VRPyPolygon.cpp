@@ -5,9 +5,6 @@ using namespace OSG;
 
 newPyType(VRPolygon, Polygon, New_ptr);
 
-template<> PyObject* VRPyTypeCaster::cast(const VRPolygonPtr& e) { return VRPyPolygon::fromSharedPtr(e); }
-template<> bool toValue(PyObject* o, VRPolygonPtr& v) { if (!VRPyPolygon::check(o)) return 0; v = ((VRPyPolygon*)o)->objPtr; return 1; }
-
 PyMethodDef VRPyPolygon::methods[] = {
     {"addPoint", (PyCFunction)VRPyPolygon::addPoint, METH_VARARGS, "Add a point - addPoint([x,y])" },
     {"getPoint", (PyCFunction)VRPyPolygon::getPoint, METH_VARARGS, "Get a point - [x,y] getPoint( int i )" },

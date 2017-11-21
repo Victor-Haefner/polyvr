@@ -1,4 +1,8 @@
 #include "VRPyDevice.h"
+#include "VRPyMobile.h"
+#include "VRPyMouse.h"
+#include "VRPyMultiTouch.h"
+#include "VRPyHaptic.h"
 #include "VRPyTransform.h"
 #include "VRPyGeometry.h"
 #include "VRPySprite.h"
@@ -41,6 +45,17 @@ PyMethodDef VRPyDevice::methods[] = {
     {"trigger", (PyCFunction)VRPyDevice::trigger, METH_VARARGS, "Trigger signal - trigger(int key, int state)" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyDevice::fromSharedPtr(VRDevicePtr dev) {
+    string type = dev->getType();
+    if (type == "mouse") return VRPyMouse::fromSharedPtr( static_pointer_cast<VRMouse>(dev) );
+    else if (type == "multitouch") return VRPyMultiTouch::fromSharedPtr( static_pointer_cast<VRMultiTouch>(dev) );
+    else if (type == "server") return VRPyMobile::fromSharedPtr( static_pointer_cast<VRServer>(dev) );
+    else if (type == "haptic") return VRPyHaptic::fromSharedPtr( static_pointer_cast<VRHaptic>(dev) );
+    else if (type == "keyboard") return VRPyBaseT<VRDevice>::fromSharedPtr( dev );
+    cout << "\nERROR in VRPyTypeCaster::cast device: " << type << " not handled!\n";
+    return VRPyBaseT<VRDevice>::fromSharedPtr(dev);
+}
 
 PyObject* VRPyDevice::addSignal(VRPyDevice* self, PyObject *args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::setSpeed, Object is invalid"); return NULL; }

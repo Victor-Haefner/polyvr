@@ -6,6 +6,7 @@
 #include <vector>
 #include <OpenSG/OSGVector.h>
 #include "../VRWorldModule.h"
+#include "../VRWorldGeneratorFwd.h"
 #include "core/objects/object/VRObject.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
 

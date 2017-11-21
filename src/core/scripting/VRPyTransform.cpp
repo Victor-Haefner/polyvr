@@ -17,7 +17,6 @@ simpleVRPyType(Collision, 0);
 simpleVRPyType(Transform, New_VRObjects_ptr);
 
 template<> PyObject* VRPyTypeCaster::cast(const VRCollision& e) { return VRPyCollision::fromObject(e); }
-template<> bool toValue(PyObject* o, VRTransformPtr& v) { if (!VRPyTransform::check(o)) return 0; v = ((VRPyTransform*)o)->objPtr; return 1; }
 
 PyMethodDef VRPyCollision::methods[] = {
     {"getPos1", PyWrap(Collision, getPos1, "Get the first collision point", Vec3d)  },
@@ -109,6 +108,10 @@ PyMethodDef VRPyTransform::methods[] = {
     {"applyTransformation", (PyCFunction)VRPyTransform::applyTransformation, METH_VARARGS, "Apply a transformation to the mesh - applyTransformation( pose )" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyTransform::fromSharedPtr(VRTransformPtr obj) {
+    return VRPyTypeCaster::cast(dynamic_pointer_cast<VRObject>(obj));
+}
 
 PyObject* VRPyTransform::applyTransformation(VRPyTransform* self, PyObject *args) {
     if (!self->valid()) return NULL;

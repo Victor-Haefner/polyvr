@@ -6,6 +6,8 @@
 #include <OpenSG/OSGColor.h>
 #include <map>
 #include "core/objects/VRObjectFwd.h"
+#include "VRToolsFwd.h"
+#include "selection/VRSelectionFwd.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -15,8 +17,8 @@ class VRSelector;
 
 class VRConstructionKit {
     private:
-        shared_ptr<VRSnappingEngine> snapping;
-        shared_ptr<VRSelector> selector;
+        VRSnappingEnginePtr snapping;
+        VRSelectorPtr selector;
         VRObjectPtr root;
 
         map<int, VRGeometryPtr> anchors;
@@ -27,12 +29,12 @@ class VRConstructionKit {
     public:
         VRConstructionKit();
         ~VRConstructionKit();
-        static shared_ptr<VRConstructionKit> create();
+        static VRConstructionKitPtr create();
 
         void clear();
 
-        shared_ptr<VRSnappingEngine> getSnappingEngine();
-        shared_ptr<VRSelector> getSelector();
+        VRSnappingEnginePtr getSnappingEngine();
+        VRSelectorPtr getSelector();
         vector<VRObjectPtr> getObjects();
 
         int addAnchorType(float size, Color3f color);

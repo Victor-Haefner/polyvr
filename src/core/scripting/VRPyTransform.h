@@ -12,6 +12,8 @@ struct VRPyCollision : VRPyBaseT<OSG::VRCollision> {
 struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyMethodDef methods[];
 
+    static PyObject* fromSharedPtr(OSG::VRTransformPtr obj);
+
     static PyObject* setIdentity(VRPyTransform* self);
     static PyObject* translate(VRPyTransform* self, PyObject* args);
     static PyObject* move(VRPyTransform* self, PyObject* args);

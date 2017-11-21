@@ -408,6 +408,8 @@ class TrafficSimulation {
 
 /// @}
 
+typedef std::shared_ptr<TrafficSimulation> TrafficSimulationPtr;
+
 OSG_END_NAMESPACE;
 
 #endif

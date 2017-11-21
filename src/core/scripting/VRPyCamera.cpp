@@ -4,9 +4,6 @@
 
 using namespace OSG;
 
-template<> bool toValue(PyObject* o, VRCameraPtr& v) { if (!VRPyCamera::check(o)) return 0; v = ((VRPyCamera*)o)->objPtr; return 1; }
-template<> PyObject* VRPyTypeCaster::cast(const VRCameraPtr& e) { return VRPyCamera::fromSharedPtr(e); }
-
 simpleVRPyType(Camera, New_VRObjects_ptr);
 
 PyMethodDef VRPyCamera::methods[] = {

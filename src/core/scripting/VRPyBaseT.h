@@ -19,6 +19,17 @@ template<> PyTypeObject VRPyBaseT< X >::type = { \
     0,0,0,0,0,0,0, \
     (initproc)init, 0, \
     NEWfkt, \
+}; \
+\
+template <> \
+bool toValue(PyObject* o, std::shared_ptr<X>& v) { \
+    if (!VRPy ## Y::check(o)) return 0; \
+    v = ((VRPy ## Y*)o)->objPtr; return 1; \
+}; \
+\
+template<> \
+PyObject* VRPyTypeCaster::cast(const std::shared_ptr<X>& e) { \
+    return VRPy ## Y::fromSharedPtr(e); \
 };
 
 #define simpleVRPyType( X, NEWfkt ) newPyType( VR ## X , X , NEWfkt )

@@ -12,6 +12,7 @@ namespace OSG {
 
 ptrFwd(VRSignal);
 ptrFwd(VRDevice);
+ptrFwd(VRIntersection);
 ptrFwd(VRFlystick);
 ptrFwd(VRMouse);
 ptrFwd(VRMultiTouch);

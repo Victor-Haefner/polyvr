@@ -5,8 +5,6 @@
 
 using namespace OSG;
 
-template<> PyObject* VRPyTypeCaster::cast(const VRRainPtr& e) { return VRPyRain::fromSharedPtr(e); }
-
 simpleVRPyType(Rain, New_ptr);
 
 PyMethodDef VRPyRain::methods[] = {

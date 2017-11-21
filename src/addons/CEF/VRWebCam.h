@@ -21,6 +21,8 @@ class VRWebCam : public VRSprite {
         void connect(string uri, int res, float ratio);
 };
 
+typedef shared_ptr<VRWebCam> VRWebCamPtr;
+
 OSG_END_NAMESPACE;
 
 #endif // VRWEBCAM_H_INCLUDED

@@ -6,9 +6,6 @@ using namespace OSG;
 
 newPyType( path, Path, New_ptr);
 
-template<> PyObject* VRPyTypeCaster::cast(const pathPtr& e) { return e ? VRPyPath::fromSharedPtr(e) : NULL; }
-template<> bool toValue(PyObject* o, pathPtr& p) { if (!VRPyPath::check(o)) return 0; p = ((VRPyPath*)o)->objPtr; return 1; }
-
 PyMethodDef VRPyPath::methods[] = {
     {"set", (PyCFunction)VRPyPath::set, METH_VARARGS, "Set the path - set(start pos, start dir, end pos, end dir, steps) \n\tset(start pos, start dir, start up, end pos, end dir, end up, steps)" },
     {"invert", (PyCFunction)VRPyPath::invert, METH_NOARGS, "Invert start && end point of path" },
