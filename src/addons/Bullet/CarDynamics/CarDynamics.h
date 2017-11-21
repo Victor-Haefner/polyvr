@@ -56,17 +56,19 @@ class VRCarDynamics : public VRObject {
         struct Engine : public VRStorage {
             // engine parameter
             float power = 1000;//this should be engine/velocity dependent
-            float breakPower = 70;//this should be engine/velocity dependent
-            float maxForce = 10000;//this should be engine/velocity dependent
+            float breakPower = 7000;//this should be engine/velocity dependent
+            float maxForce = 350;//this should be engine/velocity dependent
             float maxBreakingForce = 100;
             float rpm = 800;
             float minRpm = 800;
+            float maxTorqueRPM = 1700;
             float maxRpm = 4500;
             float stallRpm = 480;
             float friction = 5;
             float frictionCoefficient = 14;
             map<int,float> gearRatios;
             pathPtr clutchTransmissionCurve;
+            pathPtr torqueCurve;
             bool running = false;
 
             Engine();
