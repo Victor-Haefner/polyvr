@@ -295,9 +295,13 @@ float VRCarDynamics::computeThrottleTransmission( float clampedThrottle ) {
     return torque * throttleTransmissionFkt * (engine->maxRpm - engine->rpm) * clampedThrottle * engine->running;
 }
 
-float VRCarDynamics::computeBreakTransmission() {
-    float breakimpact = wheel->breaking * 3; //parameters to stop engine if breaks are being used
-    return 0.f; //Impact of break-forces on engineRPM
+float VRCarDynamics::computeBreakTransmission( WheelPtr wheel, float coupling, float clampedThrottle ) {
+    float a = 11.5741; //[m/s²] max breaking deceleration
+    double time = glutGet(GLUT_ELAPSED_TIME)*0.001;
+    double dt = time-a_measurement_t;
+    float aRPM = a * 60 / (wheel->radius * 2 * Pi);
+    float breakImpact = wheel->breaking * aRPM * dt * coupling; //parameters to stop engine if breaks are being used
+    return breakImpact; //Impact of break-forces on engineRPM
 }
 
 float VRCarDynamics::computeEngineForceOnWheel( WheelPtr wheel, float deltaRPM, float coupling, float clampedThrottle ) {
@@ -342,14 +346,14 @@ void VRCarDynamics::updateEngine() {
         float clampedThrottle = rescale(wheel->throttle, 0.1, 0.9); // stretch throttle range
         float gearRPM = computeWheelGearRPM(wheel);
         float throttleImpactOnRPM = computeThrottleTransmission( clampedThrottle );
-        float breakImpactOnRPM = computeBreakTransmission();
+        float breakImpactOnRPM = computeBreakTransmission( wheel, coupling, clampedThrottle );
         if (abs(gearRPM) > engine->maxRpm) coupling = 0;
         //engine->power = engine->rpm/6; //testing
 
         // compute breaking
         float deltaRPM = ( abs(gearRPM) - engine->rpm ) * coupling;
         float engineFriction = computeEngineFriction( deltaRPM, clampedThrottle );
-        float eBreak = wheel->breaking*engine->breakPower + max(engineFriction, 0.f);
+        float eBreak = wheel->breaking*engine->breakPower*100 + max(engineFriction, 0.f);
         //engineFriction = 80;
         updateEngineRPM(deltaRPM, throttleImpactOnRPM, breakImpactOnRPM, engineFriction);
         if (engine->rpm < engine->stallRpm) setIgnition(false);
