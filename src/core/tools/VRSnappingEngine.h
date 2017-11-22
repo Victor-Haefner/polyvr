@@ -50,10 +50,14 @@ class VRSnappingEngine {
             }
         };
 
+        typedef VRFunction<EventSnap> VRSnapCb;
+        typedef shared_ptr<VRSnapCb> VRSnapCbPtr;
+
     private:
         map<int, Rule*> rules; // snapping rules, translation and orientation
         map<VRTransformPtr, Matrix4d> objects; // map objects to reference matrix
         map<VRTransformPtr, vector<VRTransformPtr> > anchors; // object anchors
+        vector<VRSnapCbPtr> callbacks; // object anchors
         Octree* positions = 0; // objects by positions
         VRGeometryPtr hintGeo = 0;
         VRUpdateCbPtr updatePtr;
@@ -75,6 +79,8 @@ class VRSnappingEngine {
         void clear();
 
         Type typeFromStr(string t);
+
+        void addCallback(VRSnapCbPtr cb);
 
         int addRule(Type t, Type o, Line pt, Line po, float d, float w = 1, VRTransformPtr l = 0);
         void remRule(int i);
