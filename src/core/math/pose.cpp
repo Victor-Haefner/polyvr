@@ -39,6 +39,14 @@ Vec3d Pose::transform(Vec3d p) {
     return Vec3d(P);
 }
 
+Vec3d Pose::transformInv(Vec3d p) {
+    Pnt3d P(p);
+    auto m = asMatrix();
+    m.invert();
+    m.mult(P,P);
+    return Vec3d(P);
+}
+
 void Pose::setPos(Vec3d p) { data[0] = p; }
 void Pose::setDir(Vec3d d) { data[1] = d; }
 void Pose::setUp(Vec3d u) { data[2] = u; }

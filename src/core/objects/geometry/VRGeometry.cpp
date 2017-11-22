@@ -47,6 +47,10 @@ void setGeometryAttachment(Geometry* g, VRGeometry* geo) {
     geoAttachmentMap[g] = geo;
 }
 
+void remGeometryAttachment(Geometry* g) {
+    if (g) if (geoAttachmentMap.count(g)) geoAttachmentMap.erase(g);
+}
+
 VRGeometry::Reference::Reference(int t, string p) {
     type = t;
     parameter = p;
@@ -157,7 +161,9 @@ VRGeometry::VRGeometry(string name, bool hidden) : VRTransform(name) {
     if (hidden) setPersistency(0);
 }
 
-VRGeometry::~VRGeometry() {}
+VRGeometry::~VRGeometry() {
+    if (mesh) remGeometryAttachment(mesh->geo);
+}
 
 VRGeometryPtr VRGeometry::create(string name) { auto g = VRGeometryPtr(new VRGeometry(name) ); g->setMesh(); return g; }
 VRGeometryPtr VRGeometry::create(string name, bool hidden) { auto g = VRGeometryPtr(new VRGeometry(name, hidden) ); g->setMesh(); return g; }
@@ -172,6 +178,7 @@ VRGeometryPtr VRGeometry::ptr() { return static_pointer_cast<VRGeometry>( shared
 /** Set the geometry mesh (OSG geometry core) **/
 void VRGeometry::setMesh(OSGGeometryPtr g, Reference ref, bool keep_material) {
     if (g->geo == 0) return;
+    if (mesh) remGeometryAttachment(mesh->geo);
     if (mesh_node && mesh_node->node && getNode() && getNode()->node) getNode()->node->subChild(mesh_node->node);
 
     setGeometryAttachment(g->geo, this);

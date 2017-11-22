@@ -15,7 +15,7 @@ template<> string typeName(const OSG::VRStroke::CAP& s) { return "StrokeCap"; }
 
 template<> int toValue(stringstream& ss, OSG::VRStroke::CAP& c) {
     string s; ss >> s;
-    if (s == "NONE") c = OSG::VRStroke::NONE;
+    c = OSG::VRStroke::NONE;
     if (s == "ARROW") c = OSG::VRStroke::ARROW;
     return s.length();
 }
@@ -224,6 +224,9 @@ void VRStroke::update() {
             break;
     }
 }
+
+vector<Vec3d> VRStroke::getProfile() { return profile; }
+pathPtr VRStroke::getPath() { return paths[0]; }
 
 void VRStroke::convertToRope() {
     getPhysics()->setDynamic(true);

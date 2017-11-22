@@ -6,6 +6,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRConstraint.h"
+#include "core/objects/geometry/VRStroke.h"
 #include "core/utils/VRVisualLayer.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/VRRate.h"
@@ -315,16 +316,13 @@ void VRPhysics::update() {
 
     if (!physicalized) return;
 
-
     btVector3 inertiaVector(0,0,0);
     float _mass = mass;
     if (!dynamic) _mass = 0;
 
-
-
-    if(soft) {
-        if(physicsShape == "Cloth") soft_body = createCloth();
-        if(physicsShape == "Rope") soft_body = createRope();
+    if (soft) {
+        if (physicsShape == "Cloth") soft_body = createCloth();
+        if (physicsShape == "Rope") soft_body = createRope();
         if (soft_body == 0) { return; }
         soft_body->setActivationState(activation_mode);
         world->addSoftBody(soft_body,collisionGroup, collisionMask);
@@ -392,8 +390,7 @@ btSoftBody* VRPhysics::createCloth() {
     if ( geo->getPrimitive()->getType() != "Plane") { cout << "VRPhysics::createCloth only works on Plane primitives" << endl; return 0; }
 
     OSG::Matrix4d m = geo->getMatrix();//get Transformation
-    geo->setOrientation(OSG::Vec3d(0,0,-1),OSG::Vec3d(0,1,0));//set orientation to identity. ugly solution.
-    geo->setWorldPosition(OSG::Vec3d(0.0,0.0,0.0));
+    geo->setIdentity();
     btSoftBodyWorldInfo* info = OSG::VRScene::getCurrent()->getSoftBodyWorldInfo();
 
     VRPlane* prim = (VRPlane*)geo->getPrimitive();
@@ -420,35 +417,85 @@ btSoftBody* VRPhysics::createCloth() {
 
 
     //nx is segments in polyvr, but we need resolution ( #vertices in x direction) so nx+1 and <= nx
-#define IDX(_x_,_y_)    ((_y_)*(nx+1)+(_x_))
+    #define IDX(_x_,_y_)    ((_y_)*(nx+1)+(_x_))
     /* Create links and faces */
-   for(int iy=0;iy<=ny;++iy) {
-       for(int ix=0;ix<=nx;++ix) {
-           const int       idx=IDX(ix,iy);
-           const bool      mdx=(ix+1)<=nx;
-           const bool      mdy=(iy+1)<=ny;
-           if(mdx) ret->appendLink(idx,IDX(ix+1,iy));
-           if(mdy) ret->appendLink(idx,IDX(ix,iy+1));
-           if(mdx&&mdy) {
-               if((ix+iy)&1) {
-                   ret->appendFace(IDX(ix,iy),IDX(ix+1,iy),IDX(ix+1,iy+1));
-                   ret->appendFace(IDX(ix,iy),IDX(ix+1,iy+1),IDX(ix,iy+1));
-                   ret->appendLink(IDX(ix,iy),IDX(ix+1,iy+1));
-               } else {
-                   ret->appendFace(IDX(ix,iy+1),IDX(ix,iy),IDX(ix+1,iy));
-                   ret->appendFace(IDX(ix,iy+1),IDX(ix+1,iy),IDX(ix+1,iy+1));
-                   ret->appendLink(IDX(ix+1,iy),IDX(ix,iy+1));
-               }
-           }
-       }
-   }
-#undef IDX
+    for(int iy=0;iy<=ny;++iy) {
+        for(int ix=0;ix<=nx;++ix) {
+            const int       idx=IDX(ix,iy);
+            const bool      mdx=(ix+1)<=nx;
+            const bool      mdy=(iy+1)<=ny;
+            if(mdx) ret->appendLink(idx,IDX(ix+1,iy));
+            if(mdy) ret->appendLink(idx,IDX(ix,iy+1));
+            if(mdx&&mdy) {
+                if((ix+iy)&1) {
+                    ret->appendFace(IDX(ix,iy),IDX(ix+1,iy),IDX(ix+1,iy+1));
+                    ret->appendFace(IDX(ix,iy),IDX(ix+1,iy+1),IDX(ix,iy+1));
+                    ret->appendLink(IDX(ix,iy),IDX(ix+1,iy+1));
+                } else {
+                    ret->appendFace(IDX(ix,iy+1),IDX(ix,iy),IDX(ix+1,iy));
+                    ret->appendFace(IDX(ix,iy+1),IDX(ix+1,iy),IDX(ix+1,iy+1));
+                    ret->appendLink(IDX(ix+1,iy),IDX(ix,iy+1));
+                }
+            }
+        }
+    }
+    #undef IDX
 
-    return ret;//return the first and only plane....
+    return ret;
 }
 
-btSoftBody* VRPhysics::createRope() {
-   return 0;
+btSoftBody* VRPhysics::createRope() { // TODO
+    auto obj = vr_obj.lock();
+    if (!obj) return 0;
+
+    OSG::VRStrokePtr geo = dynamic_pointer_cast<OSG::VRStroke>(obj);
+    if ( !geo ) { cout << "VRPhysics::createCloth only works on stroke geometries" << endl; return 0; }
+
+    OSG::Matrix4d m = geo->getMatrix();//get Transformation
+    geo->setIdentity();
+    btSoftBodyWorldInfo* info = OSG::VRScene::getCurrent()->getSoftBodyWorldInfo();
+
+    auto profile = geo->getProfile();
+    auto path = geo->getPath();
+
+    OSG::GeoVectorPropertyMTRecPtr positions = geo->getMesh()->geo->getPositions();
+    vector<btVector3> vertices;
+    vector<btScalar> masses;
+
+    OSG::Pnt3d p;
+    for (uint i = 0; i < positions->size();i++) { //add all vertices
+        positions->getValue(p,i);
+        m.mult(p,p);
+        vertices.push_back( toBtVector3(OSG::Vec3d(p)) );
+        masses.push_back(5.0);
+    }
+
+    btSoftBody* ret = new btSoftBody(info, (int)positions->size(), &vertices[0], &masses[0]);
+
+    /*#define IDX(_x_,_y_)    ((_y_)*(nx+1)+(_x_))
+    for(int iy=0;iy<=ny;++iy) {
+        for(int ix=0;ix<=nx;++ix) {
+            const int       idx=IDX(ix,iy);
+            const bool      mdx=(ix+1)<=nx;
+            const bool      mdy=(iy+1)<=ny;
+            if(mdx) ret->appendLink(idx,IDX(ix+1,iy));
+            if(mdy) ret->appendLink(idx,IDX(ix,iy+1));
+            if(mdx&&mdy) {
+                if((ix+iy)&1) {
+                    ret->appendFace(IDX(ix,iy),IDX(ix+1,iy),IDX(ix+1,iy+1));
+                    ret->appendFace(IDX(ix,iy),IDX(ix+1,iy+1),IDX(ix,iy+1));
+                    ret->appendLink(IDX(ix,iy),IDX(ix+1,iy+1));
+                } else {
+                    ret->appendFace(IDX(ix,iy+1),IDX(ix,iy),IDX(ix+1,iy));
+                    ret->appendFace(IDX(ix,iy+1),IDX(ix+1,iy),IDX(ix+1,iy+1));
+                    ret->appendLink(IDX(ix+1,iy),IDX(ix,iy+1));
+                }
+            }
+        }
+    }
+    #undef IDX*/
+
+    return ret;
 }
 
 void VRPhysics::physicalizeTree(bool b) { physTree = b; cout << "VRPhysics::physicalizeTree " << physTree << endl; update(); }
