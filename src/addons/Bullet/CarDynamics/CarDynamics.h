@@ -134,7 +134,8 @@ class VRCarDynamics : public VRObject {
         float computeEngineForceOnWheel( WheelPtr wheel, float deltaRPM, float coupling, float clampedThrottle );
         float computeEngineFriction( float deltaRPM, float clampedThrottle );
         float computeThrottleTransmission( float clampedThrottle );
-        void updateEngineRPM( float deltaRPM, float throttleImpactOnRPM, float engineFriction );
+        float computeBreakTransmission();
+        void updateEngineRPM( float deltaRPM, float throttleImpactOnRPM, float breakImpactOnRPM, float engineFriction );
         void updateWheel( WheelPtr wheel, float eForce, float eBreak );
 
         boost::recursive_mutex& mtx();

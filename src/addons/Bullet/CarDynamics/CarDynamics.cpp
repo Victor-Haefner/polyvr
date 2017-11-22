@@ -295,6 +295,11 @@ float VRCarDynamics::computeThrottleTransmission( float clampedThrottle ) {
     return torque * throttleTransmissionFkt * (engine->maxRpm - engine->rpm) * clampedThrottle * engine->running;
 }
 
+float VRCarDynamics::computeBreakTransmission() {
+    float breakimpact = wheel->breaking * 3; //parameters to stop engine if breaks are being used
+    return 0.f; //Impact of break-forces on engineRPM
+}
+
 float VRCarDynamics::computeEngineForceOnWheel( WheelPtr wheel, float deltaRPM, float coupling, float clampedThrottle ) {
     float gearTransmission = engine->gearRatios[wheel->gear];
     /*--TODO: CHANGE BEHAVIOUR OF ENGINE THROTTLE--*/
@@ -318,9 +323,9 @@ float VRCarDynamics::computeEngineFriction( float deltaRPM, float clampedThrottl
     return engineFriction;
 }
 
-void VRCarDynamics::updateEngineRPM( float deltaRPM, float throttleImpactOnRPM, float engineFriction ) {
+void VRCarDynamics::updateEngineRPM( float deltaRPM, float throttleImpactOnRPM, float breakImpactOnRPM, float engineFriction ) {
     engine->rpm += throttleImpactOnRPM;
-    engine->rpm -= engine->frictionCoefficient * engineFriction;
+    engine->rpm -= engine->frictionCoefficient * engineFriction + breakImpactOnRPM;
     if (type != SIMPLE) {
         engine->rpm += 0.1 * deltaRPM;
     }
@@ -337,6 +342,7 @@ void VRCarDynamics::updateEngine() {
         float clampedThrottle = rescale(wheel->throttle, 0.1, 0.9); // stretch throttle range
         float gearRPM = computeWheelGearRPM(wheel);
         float throttleImpactOnRPM = computeThrottleTransmission( clampedThrottle );
+        float breakImpactOnRPM = computeBreakTransmission();
         if (abs(gearRPM) > engine->maxRpm) coupling = 0;
         //engine->power = engine->rpm/6; //testing
 
@@ -345,7 +351,7 @@ void VRCarDynamics::updateEngine() {
         float engineFriction = computeEngineFriction( deltaRPM, clampedThrottle );
         float eBreak = wheel->breaking*engine->breakPower + max(engineFriction, 0.f);
         //engineFriction = 80;
-        updateEngineRPM(deltaRPM, throttleImpactOnRPM, engineFriction);
+        updateEngineRPM(deltaRPM, throttleImpactOnRPM, breakImpactOnRPM, engineFriction);
         if (engine->rpm < engine->stallRpm) setIgnition(false);
 
         float eForce = computeEngineForceOnWheel( wheel, deltaRPM, coupling, clampedThrottle );
