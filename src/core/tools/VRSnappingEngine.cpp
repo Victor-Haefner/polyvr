@@ -249,8 +249,10 @@ void VRSnappingEngine::update() {
 
         if (event->snap) obj->setWorldMatrix(event->m);
         if (lastEvent != event->snap || lastEventID != event->snapID) {
-            snapSignal->trigger<EventSnap>(event);
-            for (auto cb : callbacks) (*cb)(*event);
+            if (event->o1 == obj) {
+                snapSignal->trigger<EventSnap>(event);
+                for (auto cb : callbacks) (*cb)(*event);
+            }
         }
     }
 
