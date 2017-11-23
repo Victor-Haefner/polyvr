@@ -25,4 +25,6 @@ PyObject* VRPyPose::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     return allocPtr( type, OSG::Pose::create( parseVec3dList(p), parseVec3dList(d), parseVec3dList(u) ) );
 }
 
-
+PyObject* VRPyPose::fromMatrix(OSG::Matrix4d m) {
+    return fromObject(Pose(m));
+}

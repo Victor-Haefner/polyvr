@@ -98,6 +98,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setCenterOfMass", (PyCFunction)VRPyTransform::setCenterOfMass, METH_VARARGS, "Set a custom center of mass - setCenterOfMass([x,y,z])"  },
     {"drag", (PyCFunction)VRPyTransform::drag, METH_VARARGS, "Drag this object by new parent - drag(new parent)"  },
     {"drop", (PyCFunction)VRPyTransform::drop, METH_NOARGS, "Drop this object, if held, to old parent - drop()"  },
+    {"rebaseDrag", PyWrap( Transform, rebaseDrag, "Rebase drag, use instead of switchParent", void, VRObjectPtr ) },
     {"castRay", (PyCFunction)VRPyTransform::castRay, METH_VARARGS, "Cast a ray and return the intersection - intersection castRay(obj, dir)"  },
     {"getDragParent", (PyCFunction)VRPyTransform::getDragParent, METH_NOARGS, "Get the parent before the drag started - obj getDragParent()"  },
     {"lastChanged", (PyCFunction)VRPyTransform::lastChanged, METH_NOARGS, "Return the frame when the last change occured - lastChanged()"  },

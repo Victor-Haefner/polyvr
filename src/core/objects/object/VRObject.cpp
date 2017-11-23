@@ -228,7 +228,7 @@ void VRObject::addChild(OSGObjectPtr n) {
 }
 
 void VRObject::addChild(VRObjectPtr child, bool osg, int place) {
-    if (child == 0) return;
+    if (child == 0 || child == ptr()) return;
     if (child->getParent() != 0) { child->switchParent(ptr(), place); return; }
 
     if (osg) addChild(child->osg);
@@ -244,6 +244,7 @@ int VRObject::getChildIndex() { return childIndex;}
 
 void VRObject::subChild(OSGObjectPtr n) { osg->node->subChild(n->node); }
 void VRObject::subChild(VRObjectPtr child, bool doOsg) {
+    if (child == ptr()) return;
     if (doOsg) osg->node->subChild(child->osg->node);
 
     int target = findChild(child);
@@ -256,6 +257,7 @@ void VRObject::subChild(VRObjectPtr child, bool doOsg) {
 
 void VRObject::switchParent(VRObjectPtr new_p, int place) {
     if (destroyed) return;
+    if (new_p == ptr()) return;
     if (new_p == 0) { cout << "\nERROR : new parent is 0!\n"; return; }
 
     if (getParent() == 0) { new_p->addChild(ptr(), true, place); return; }

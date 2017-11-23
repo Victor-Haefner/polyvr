@@ -1,6 +1,7 @@
 #include "VRPySnappingEngine.h"
 #include "VRPyTransform.h"
 #include "VRPyDevice.h"
+#include "VRPyPose.h"
 #include "VRPyBaseT.h"
 
 using namespace OSG;
@@ -32,12 +33,13 @@ template<> bool toValue(PyObject* o, VRSnappingEngine::VRSnapCbPtr& e) {
 }
 
 template<> PyObject* VRPyTypeCaster::cast(const VRSnappingEngine::EventSnap& e) {
-    auto res = PyTuple_New(5);
+    auto res = PyTuple_New(6);
     PyTuple_SetItem(res, 0, PyInt_FromLong(e.snap));
-    PyTuple_SetItem(res, 1, VRPyTransform::fromSharedPtr(e.o1));
-    PyTuple_SetItem(res, 2, VRPyTransform::fromSharedPtr(e.o2));
-    //PyTuple_SetItem(res, 3, ); // TODO: Matrix4d e.m;
-    PyTuple_SetItem(res, 4, VRPyDevice::fromSharedPtr(e.dev));
+    PyTuple_SetItem(res, 1, PyInt_FromLong(e.snapID));
+    PyTuple_SetItem(res, 2, VRPyTransform::fromSharedPtr(e.o1));
+    PyTuple_SetItem(res, 3, VRPyTransform::fromSharedPtr(e.o2));
+    PyTuple_SetItem(res, 4, VRPyPose::fromMatrix(e.m));
+    PyTuple_SetItem(res, 5, VRPyDevice::fromSharedPtr(e.dev));
     return res;
 }
 

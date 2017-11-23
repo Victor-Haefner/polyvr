@@ -41,12 +41,13 @@ class VRSnappingEngine {
 
         struct EventSnap {
             int snap = 0;
+            int snapID = 0;
             VRTransformPtr o1 = 0;
             VRTransformPtr o2 = 0;
             Matrix4d m;
             VRDevicePtr dev = 0;
-            void set(VRTransformPtr O1, VRTransformPtr O2, Matrix4d M, VRDevicePtr DEV, int Snap) {
-                o1 = O1; o2 = O2; m = M; dev = DEV; snap = Snap;
+            void set(VRTransformPtr O1, VRTransformPtr O2, Matrix4d M, VRDevicePtr DEV, int Snap, int SnapID) {
+                o1 = O1; o2 = O2; m = M; dev = DEV; snap = Snap; snapID = SnapID;
             }
         };
 

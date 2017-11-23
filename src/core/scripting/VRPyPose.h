@@ -8,6 +8,8 @@ struct VRPyPose : VRPyBaseT<OSG::Pose> {
     static PyMethodDef methods[];
 
     static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
+
+    static PyObject* fromMatrix(OSG::Matrix4d);
 };
 
 #endif // VRPYPOSE_H_INCLUDED

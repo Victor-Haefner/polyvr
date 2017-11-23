@@ -193,10 +193,11 @@ void VRSnappingEngine::update() {
         Vec3d p = Vec3d(m[3]);
 
         bool lastEvent = event->snap;
+        int lastEventID = event->snapID;
         event->snap = 0;
+        int snapID = -1;
 
         double dmin = 1e9;
-        Matrix4d mmin = m;
 
         for (auto ri : rules) {
             Rule* r = ri.second;
@@ -216,6 +217,7 @@ void VRSnappingEngine::update() {
                             //Matrix4d ma2W = m; ma2W.mult(maL);
                             //Vec3d pa2 = Vec3d(ma2W[3]);
                             Vec3d pa2 = Vec3d(ma2L[3]);
+                            snapID++;
                             if (!r->inRange(pa+pa2, dmin)) continue;
 
                             r->snapP += pa2;
@@ -224,33 +226,31 @@ void VRSnappingEngine::update() {
                             mm.mult(maL);
                             //ma2L.invert();
                             //mm.mult(ma2L);
-                            //cout << "snap to " << Vec3d(m[3]) << "  p2 " << pa2 << endl;
-                            mmin = mm;
+                            event->set(obj, r->csys, mm, dev.second, 1, snapID);
                         }
                     } else {
+                        snapID++;
                         if (!r->inRange(pa, dmin)) continue;
                         Matrix4d mm = m;
                         r->snap(mm);
                         mm.mult(maL);
-                        mmin = mm;
+                        event->set(obj, r->csys, mm, dev.second, 1, snapID);
                     }
                 }
             } else {
+                snapID++;
                 if (!r->inRange(p, dmin)) continue;
                 Matrix4d mm = m;
                 r->snap(mm);
-                mmin = mm;
+                event->set(obj, r->csys, mm, dev.second, 1, snapID);
             }
 
-            event->set(obj, r->csys, mmin, dev.second, 1);
         }
 
-        obj->setWorldMatrix(mmin);
-        if (lastEvent != event->snap) {
-            if (event->snap || obj == event->o1) {
-                snapSignal->trigger<EventSnap>(event);
-                for (auto cb : callbacks) (*cb)(*event);
-            }
+        if (event->snap) obj->setWorldMatrix(event->m);
+        if (lastEvent != event->snap || lastEventID != event->snapID) {
+            snapSignal->trigger<EventSnap>(event);
+            for (auto cb : callbacks) (*cb)(*event);
         }
     }
 
