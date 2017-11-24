@@ -89,6 +89,7 @@ class VRSocket : public VRName {
         void addHTTPCallback(string path, VRServerCbPtr cb);
         void remHTTPCallback(string path);
 
+        int openWebSocket(string address);
         void answerWebSocket(int id, string msg);
 
         string getType();

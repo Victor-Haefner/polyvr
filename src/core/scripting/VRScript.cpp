@@ -42,7 +42,7 @@ void updateArgPtr(VRScript::arg* a) {
         a->ptr = (void*)scene->getSocket(a->val);
         return;
     }
-    if (t == "VRPyDeviceType" || t == "VRPyMouseType" || t == "VRPyHapticType" || t == "VRPyMobileType") {
+    if (t == "VRPyDeviceType" || t == "VRPyMouseType" || t == "VRPyHapticType" || t == "VRPyServerType") {
         a->ptr = (void*)setup->getDevice(a->val).get();
         return;
     }
@@ -221,7 +221,7 @@ PyObject* VRScript::getPyObj(arg* a) {
     else if (a->type == "VRPyMouseType") return VRPyMouse::fromSharedPtr(((VRMouse*)a->ptr)->ptr());
     else if (a->type == "VRPyMultiTouchType") return VRPyMultiTouch::fromSharedPtr(((VRMultiTouch*)a->ptr)->ptr());
     else if (a->type == "VRPyHapticType") return VRPyHaptic::fromSharedPtr(((VRHaptic*)a->ptr)->ptr());
-    else if (a->type == "VRPyMobileType") return VRPyMobile::fromSharedPtr(((VRServer*)a->ptr)->ptr());
+    else if (a->type == "VRPyServerType") return VRPyServer::fromSharedPtr(((VRServer*)a->ptr)->ptr());
     //else if (a->type == "VRPySocketType") return VRPySocket::fromSharedPtr(((VRSocket*)a->ptr)->ptr());
     else { cout << "\ngetPyObj ERROR: " << a->type << " unknown!\n"; Py_RETURN_NONE; }
 }
@@ -582,7 +582,7 @@ void VRScript::execute_dev(VRDeviceWeakPtr _dev) {
 
     devArg->type = "VRPyDeviceType";
     if (dev->getType() == "haptic") devArg->type = "VRPyHapticType";
-    if (dev->getType() == "server") devArg->type = "VRPyMobileType";
+    if (dev->getType() == "server") devArg->type = "VRPyServerType";
     devArg->val = dev->getName();
     devArg->ptr = dev.get();
     execute();

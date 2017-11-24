@@ -119,7 +119,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyDevice>("Device", pModVR);
     sm->registerModule<VRPyIntersection>("Intersection", pModVR);
     sm->registerModule<VRPyHaptic>("Haptic", pModVR, VRPyDevice::typeRef);
-    sm->registerModule<VRPyMobile>("Mobile", pModVR, VRPyDevice::typeRef);
+    sm->registerModule<VRPyServer>("Mobile", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyMouse>("Mouse", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyMultiTouch>("MultiTouch", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyAnimation>("Animation", pModVR);

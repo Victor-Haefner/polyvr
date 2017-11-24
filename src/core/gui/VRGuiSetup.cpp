@@ -1107,7 +1107,7 @@ VRGuiSetup::VRGuiSetup() {
     menu->appendItem("SM_AddDevMenu", "MultiTouch", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRMultiTouch>) );
     menu->appendItem("SM_AddDevMenu", "Keyboard", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRKeyboard>) );
     menu->appendItem("SM_AddDevMenu", "Haptic", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRHaptic>) );
-    menu->appendItem("SM_AddDevMenu", "Mobile", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRServer>) );
+    menu->appendItem("SM_AddDevMenu", "Server", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRServer>) );
     menu->appendItem("SM_AddVRPNMenu", "VRPN tracker", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_vrpn_tracker) );
     menu->appendItem("SM_AddNetworkMenu", "Node", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_network_node) );
     menu->appendItem("SM_AddNetworkMenu", "Slave", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_network_slave) );
