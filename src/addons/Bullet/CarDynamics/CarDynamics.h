@@ -57,8 +57,8 @@ class VRCarDynamics : public VRObject {
             // engine parameter
             float power = 1000;//this should be engine/velocity dependent
             float breakPower = 7000;//this should be engine/velocity dependent
-            float maxForce = 350;//this should be engine/velocity dependent
-            float maxBreakingForce = 100;
+            float maxForce = 250;//this should be engine/velocity dependent
+            float maxBreakingForce = 150;
             float rpm = 800;
             float minRpm = 800;
             float maxTorqueRPM = 1700;
@@ -79,7 +79,7 @@ class VRCarDynamics : public VRObject {
             VRTransformPtr geo;
             vector<VRGeometryPtr> geos;
             btRigidBody* body = 0;
-            float mass = 850.0f;
+            float mass = 1400.0f;//f850.0f;
             Vec3d massOffset;
 
             Chassis();
@@ -128,13 +128,16 @@ class VRCarDynamics : public VRObject {
 
         float clamp(float v, float m1, float m2);
         float rescale(float v, float m1, float m2);
+        float sgnum(float f) ;
 
         float computeCoupling( WheelPtr wheel );
         float computeWheelGearRPM( WheelPtr wheel );
+        float throttleBooster( float clampedThrottle );
         float computeEngineForceOnWheel( WheelPtr wheel, float deltaRPM, float coupling, float clampedThrottle );
         float computeEngineFriction( float deltaRPM, float coupling, float clampedThrottle );
         float computeThrottleTransmission( float clampedThrottle );
         float computeBreakTransmission( WheelPtr wheel, float coupling, float clampedThrottle );
+        float computeEngineBreak( float coupling, float clampedThrottle );
         void updateEngineRPM( float gearRPM, float deltaRPM, float throttleImpactOnRPM, float breakImpactOnRPM, float engineFriction, float coupling );
         void updateWheel( WheelPtr wheel, float eForce, float eBreak );
 

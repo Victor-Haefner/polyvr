@@ -133,7 +133,7 @@ void VRCarDynamics::addBTWheel(WheelPtr wheel) {
     btWheel.m_suspensionStiffness = wheel->suspensionStiffness;
     btWheel.m_wheelsDampingRelaxation = wheel->suspensionDamping;
     btWheel.m_wheelsDampingCompression = wheel->suspensionCompression;
-    btWheel.m_frictionSlip = wheel->friction-0.2; //Felix: changed to -0.2
+    btWheel.m_frictionSlip = wheel->friction-0.2; //Felix: changed to -parameter
     btWheel.m_rollInfluence = wheel->rollInfluence;
 }
 
@@ -221,6 +221,9 @@ float VRCarDynamics::rescale(float v, float m1, float m2) {
     return ( clamp(v,m1,m2)-m1 ) / (m2-m1);
 }
 
+float VRCarDynamics::sgnum(float f) {
+    return (f > 0) - (f < 0);
+}
 void VRCarDynamics::setType(TYPE t) { type = t; }
 
 void VRCarDynamics::updateWheel( WheelPtr wheel, float eForce, float eBreak ) {
@@ -238,48 +241,15 @@ float VRCarDynamics::computeCoupling( WheelPtr wheel ) {
     if (type == SIMPLE) return (wheel->gear != 0);
     float clutchTransmission = 1;
     if (engine->clutchTransmissionCurve) clutchTransmission = engine->clutchTransmissionCurve->getPosition(wheel->clutch)[1];
-    cout << (wheel->gear != 0)*clutchTransmission << endl;
+    cout << "clutchTransmission" << (wheel->gear != 0)*clutchTransmission << endl;
     return (wheel->gear != 0)*clutchTransmission;
 }
 
 //---------------------------------------------------------------------------------------------------
-/*
-float VRCarDynamics::computeClutch(){
-    float clutchTransmission = 1;
-    if (engine->clutchTransmissionCurve) clutchTransmission = engine->clutchTransmissionCurve->getPosition(wheel->clutch)[1];
-    return clutchTransmission;
-}
-
-float VRCarDynamics::computeThrottle(){
-    float clampedThrottle = rescale(wheel->throttle, 0.1, 0.9);
-    return clampedTrottle;
-}
-
-void VRCarDynamics::computeEngineForce(float clampedThrottle){
-    engine->throttledForce = clampedThrottle * engine->maxForce;
-    engine->outputForce = 5; //need to model forces hindering engine
-}
-
-void VRCarDynamics::computeImpactOnRPM(){
-    //falls kupplung drin, kraft negativ auf RPM
-    if (engine->rpm < 800) {}
-    //muss nachregeln
-    //throttle miteinbeziehen
-}
-
-void VRCarDynamics::updateEngineRPM(){
-    engine->rpm += impactOnRPM;
-    if (type != SIMPLE) {
-        engine->rpm += 0.1 * deltaRPM;
-    }
-}
-
-float VRCarDynamics::computeEngineForceOnWheel( WheelPtr wheel, float deltaRPM, float clutchTransmission, float clampedThrottle ) {
-    float gearTransmission = engine->gearRatios[wheel->gear];
-
-    return clutchTransmission * engine->outputForce * gearTransmission * engine->running;
-}*/
-//---------------------------------------------------------------------------------------------------
+float VRCarDynamics::throttleBooster( float clampedThrottle ){
+    if ( engine->rpm < (engine->minRpm-100) ) return 1 - ( (engine->rpm - engine->stallRpm)/(engine->minRpm - engine->stallRpm) );
+    else return clampedThrottle;
+} //if engine needs more power
 
 float VRCarDynamics::computeWheelGearRPM( WheelPtr wheel ) {
     float gearTransmission = engine->gearRatios[wheel->gear];
@@ -315,7 +285,7 @@ float VRCarDynamics::computeEngineForceOnWheel( WheelPtr wheel, float deltaRPM, 
         //if (engine->rpm<800) engineF = (1 + (800 - engine->rpm)/800) * 0.15;
         clampedThrottle = clamp(clampedThrottle + engineF, 0, 1); // try to keep the minRPM
     }
-    cout << clampedThrottle << endl;
+    cout << "clampedThrottle in with engineF: " <<clampedThrottle << endl;
     float torque = engine->torqueCurve->getPosition(engine->rpm)[1]*engine->maxForce;
     return clampedThrottle * torque * coupling * gearTransmission * engine->running;
     //return clampedThrottle * engine->power * coupling * gearTransmission * engine->running;
@@ -327,9 +297,14 @@ float VRCarDynamics::computeEngineFriction( float deltaRPM, float coupling, floa
     float eRPMrange = engine->maxRpm - engine->minRpm;
     float engineFriction = (engine->rpm - engine->minRpm) / eRPMrange * max((deltaRPM*0.003 + 1)*engine->friction, 0.0) * (1.0 - clampedThrottle); //0.001
     if (!engine->running) engineFriction = engine->rpm / engine->minRpm; // engine is not running, blocks everything
-    engineFriction += engine->rpm / engine->maxRpm * 2.5; //if (engine->rpm<800 && engine->running)
+    engineFriction += engine->rpm / engine->maxRpm * 1.7; //if (engine->rpm<800 && engine->running)
     //if (coupling>0.7 && clampedThrottle<0.6) engineFriction += engine->rpm / engine->maxRpm * 2.6;
     return engineFriction;
+}
+
+float VRCarDynamics::computeEngineBreak( float coupling, float clampedThrottle ) {
+    if (clampedThrottle<0.05) return coupling * engine->rpm / engine->maxRpm * 20;
+    return 0;
 }
 
 void VRCarDynamics::updateEngineRPM( float gearRPM, float deltaRPM, float throttleImpactOnRPM, float breakImpactOnRPM, float engineFriction, float coupling ) {
@@ -339,7 +314,6 @@ void VRCarDynamics::updateEngineRPM( float gearRPM, float deltaRPM, float thrott
     if (type != SIMPLE) {
         engine->rpm += 0.1 * deltaRPM;
     }
-
 }
 
 void VRCarDynamics::updateEngine() {
@@ -352,7 +326,8 @@ void VRCarDynamics::updateEngine() {
         float coupling = computeCoupling(wheel); // 0 -> 1
         float clampedThrottle = rescale(wheel->throttle, 0.1, 0.9); // stretch throttle range
         if (clampedThrottle<0.05) clampedThrottle = 0.05;
-        if (engine->rpm>800 && clampedThrottle<0.06 || (wheel->breaking>0.2&&coupling>0.7)) clampedThrottle = 0;
+        clampedThrottle = throttleBooster(clampedThrottle);
+        if (engine->rpm > engine->minRpm && clampedThrottle<0.06 || (wheel->breaking>0.2&&coupling>0.7)) clampedThrottle = 0;
         float gearRPM = computeWheelGearRPM(wheel);
         float throttleImpactOnRPM = computeThrottleTransmission( clampedThrottle );
         float breakImpactOnRPM = computeBreakTransmission( wheel, coupling, clampedThrottle );
@@ -360,9 +335,10 @@ void VRCarDynamics::updateEngine() {
         //engine->power = engine->rpm/6; //testing
 
         // compute breaking
+        //sgnum(engine->gearRatios[wheel->gear])
         float deltaRPM = ( abs(gearRPM) - engine->rpm ) * coupling;
         float engineFriction = computeEngineFriction( deltaRPM, coupling, clampedThrottle );
-        float eBreak = wheel->breaking*engine->breakPower;// + max(engineFriction, 0.f);
+        float eBreak = wheel->breaking*engine->breakPower + computeEngineBreak( coupling, clampedThrottle );// + max(engineFriction, 0.f);
         //engineFriction = 80;
         updateEngineRPM(gearRPM, deltaRPM, throttleImpactOnRPM, breakImpactOnRPM, engineFriction, coupling);
         if (engine->rpm < engine->stallRpm) setIgnition(false);
@@ -373,7 +349,12 @@ void VRCarDynamics::updateEngine() {
         else eBreak = 0; *//*
         if (abs(eForce) < 0.1 && abs(coupling) < 0.1) eBreak = max(eBreak, 5.f); // rolling friction when stopped
         */
-        if (eBreak <= 5) eBreak = 5;
+        cout << "eforce: " << eForce << endl;
+        if (eBreak > 6) eForce = 0;
+        if (eBreak > abs(eForce)) eForce = 0;
+        if (eBreak <= 5) eBreak = 5; //maybe if v <0.3km/h imitate start friction
+        cout << "ebreak: " << eBreak << endl;
+        cout << "eforce nach kappen: " << eForce << endl;
         //cout << eForce << " - " << eBreak << endl;
         eForces = eForce;
         eBreaks = eBreak;
