@@ -157,7 +157,7 @@ class HTTPServer {
 };
 
 static void server_answer_to_connection_m(struct mg_connection *conn, int ev, void *ev_data) {
-    VRLog::setTag("net",1);
+    //VRLog::setTag("net",1);
     bool v = VRLog::tag("net");
     if (v) {
         if (ev == MG_EV_CONNECT) { VRLog::log("net", "MG_EV_CONNECT\n"); return; }
