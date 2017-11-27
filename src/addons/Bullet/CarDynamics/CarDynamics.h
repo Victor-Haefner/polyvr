@@ -133,7 +133,7 @@ class VRCarDynamics : public VRObject {
         float computeCoupling( WheelPtr wheel );
         float computeWheelGearRPM( WheelPtr wheel );
         float throttleBooster( float clampedThrottle );
-        float computeEngineForceOnWheel( WheelPtr wheel, float deltaRPM, float coupling, float clampedThrottle );
+        float computeEngineForceOnWheel( WheelPtr wheel, float gearRPM, float deltaRPM, float coupling, float clampedThrottle );
         float computeEngineFriction( float deltaRPM, float coupling, float clampedThrottle );
         float computeThrottleTransmission( float clampedThrottle );
         float computeBreakTransmission( WheelPtr wheel, float coupling, float clampedThrottle );
