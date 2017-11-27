@@ -478,7 +478,8 @@ void VRScript::pyErrPrint(string channel) {
             Line l;
             l.fkt = VRFunction<string>::create("search_link", boost::bind(&VRScript::on_err_link_clicked, this, eLink, _1) );
             //l.line = "Line "+toString(line)+" in "+funcname+" in script "+filename;
-            l.line = "Script "+filename+", line "+toString(line)+", in "+funcname;
+            l.line = "Script "+filename+", line "+toString(line);
+            if (filename != funcname) l.line += ", in "+funcname;
             lines.push_front(l);
             frame = frame->f_back;
         }
