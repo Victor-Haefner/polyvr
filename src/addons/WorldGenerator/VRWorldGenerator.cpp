@@ -123,6 +123,11 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
     map<string, Node> graphNodes;
     map<string, VRRoadPtr> RoadEntities;
 
+    auto startswith = [](const string& a, const string& b) -> bool {
+        if (a.size() < b.size()) return false;
+        return a.compare(0, b.length(), b) == 0;
+    };
+
     auto wayToPolygon = [&](OSMWayPtr& way) {
         auto poly = VRPolygon::create();
         for (auto ps : way->polygon.get()) {
@@ -396,9 +401,12 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                 continue;
             }
 
-            if (tag.first == "traffic_sign:training_ground") {
+            //if (tag.first == "traffic_sign:training_ground") {
+            if (startswith(tag.first, "traffic_sign:") || tag.first == "traffic_sign") {
                 auto signEnt = ontology->addEntity("sign", "Sign");
-                signEnt->set("type", tag.second);
+                if ((tag.second == "yes" || tag.second == "custom") && node->tags.count("name")) {
+                    signEnt->set("type", node->tags["name"]);
+                } else signEnt->set("type", tag.second);
                 signEnt->setVec3("position", pos, "Position");
                 signEnt->setVec3("direction", dir, "Direction");
                 for (auto way : node->ways) {
@@ -407,6 +415,8 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                     roadEnt->add("signs",signEnt->getName());
                     signEnt->set("road",roadEnt->getName());
                 }
+                //string type = signEnt->getValue<string>("type", "AAA");
+                //cout << "add OSM sign: " << tag.first << "  " << type << " " << endl;
             }
 
             if (tag.first == "surveillance:type") {

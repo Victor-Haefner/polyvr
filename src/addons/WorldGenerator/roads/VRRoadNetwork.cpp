@@ -408,8 +408,9 @@ void VRRoadNetwork::computeSigns() { // add stop lines
         Vec3d dir = signEnt->getVec3("direction");
         string type = signEnt->getValue<string>("type", "");
         auto sign = assets->copy(type, Pose::create(pos, dir), false);
-        if (!sign) continue;
-        if (auto roadEnt = signEnt->getEntity("road")) {
+        if (!sign) {
+            ;
+        } else if (auto roadEnt = signEnt->getEntity("road")) {
             auto road = roadsByEntity[roadEnt];// get vrroad from roadent
             auto pose = road->getRightEdge(pos);
             auto d = pose->dir(); d[1] = 0; d.normalize();
