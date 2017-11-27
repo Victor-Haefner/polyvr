@@ -3,7 +3,7 @@
 #include <OpenSG/OSGConfig.h>
 #include <core/utils/VRName.h>
 #include <boost/thread/thread.hpp>
-#include "mongoose/mongoose_67.h"
+#include "mongoose/mongoose.h"
 #include <jsoncpp/json/json.h>
 
 OSG_BEGIN_NAMESPACE

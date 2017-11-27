@@ -1,6 +1,6 @@
 #include "VRSocket.h"
 #include "VRPing.h"
-#include "mongoose/mongoose_67.h"
+#include "mongoose/mongoose.h"
 #include "core/objects/object/VRObject.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"

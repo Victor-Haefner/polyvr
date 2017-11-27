@@ -681,9 +681,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/networking/mongoose/mongoose.h" />
-		<Unit filename="src/core/networking/mongoose/mongoose_67.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/networking/mongoose/mongoose_67.h" />
 		<Unit filename="src/core/objects/OSGCamera.cpp" />
 		<Unit filename="src/core/objects/OSGCamera.h" />
