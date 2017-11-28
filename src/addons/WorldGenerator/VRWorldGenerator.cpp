@@ -409,14 +409,13 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                 } else signEnt->set("type", tag.second);
                 signEnt->setVec3("position", pos, "Position");
                 signEnt->setVec3("direction", dir, "Direction");
+                //cout << "add OSM sign: " << tag.first << "  " << signEnt->getValue<string>("type", "") << endl;
                 for (auto way : node->ways) {
                     if (!RoadEntities.count(way)) continue;
                     auto roadEnt = RoadEntities[node->ways[0]]->getEntity();
                     roadEnt->add("signs",signEnt->getName());
                     signEnt->set("road",roadEnt->getName());
                 }
-                //string type = signEnt->getValue<string>("type", "AAA");
-                //cout << "add OSM sign: " << tag.first << "  " << type << " " << endl;
             }
 
             if (tag.first == "surveillance:type") {

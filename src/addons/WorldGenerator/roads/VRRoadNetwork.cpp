@@ -22,6 +22,7 @@
 #include "core/tools/VRAnalyticGeometry.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/material/VRTexture.h"
+#include "core/tools/VRText.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRTimer.h"
 
@@ -401,20 +402,49 @@ vector<VREntityPtr> VRRoadNetwork::getRoadNodes() { // all nodes from all paths 
     return res;
 }
 
-void VRRoadNetwork::computeSigns() { // add stop lines
+Vec2i replaceChar(string& txt, char c1, char c2) {
+    Vec2i N;
+    int k = 0;
+    for (int i=0; i<txt.size(); i++)
+        if (txt[i] == c1) {
+            txt[i] = c2;
+            N[1]++;
+
+            N[0] = max(N[0],i-k);
+            k = i;
+        }
+    N[0] = max(N[0],int(txt.size())-1-k);
+    return N;
+}
+
+void VRRoadNetwork::computeSigns() {
     auto assets = world->getAssetManager();
     for (auto signEnt : world->getOntology()->getEntities("Sign")) {
         Vec3d pos = signEnt->getVec3("position");
         Vec3d dir = signEnt->getVec3("direction");
         string type = signEnt->getValue<string>("type", "");
+        //cout << " sign: " << type << endl;
         auto sign = assets->copy(type, Pose::create(pos, dir), false);
         if (!sign) {
-            ;
-        } else if (auto roadEnt = signEnt->getEntity("road")) {
+            sign = assets->copy("Sign", Pose::create(pos, dir), false);
+            if (sign) { // TODO: add label
+                auto surface = dynamic_pointer_cast<VRGeometry>( sign->findAll("Sign")[3] );
+                surface->makeUnique();
+                Vec2i N = replaceChar(type, ' ', '\n');
+                auto tex = VRText::get()->create(type, "MONO 20", 20*N[0], 10*N[0]*N[1], Color4f(0,0,0,1), Color4f(1,1,1,1));
+                auto m = VRMaterial::create("sign");
+                m->setTexture(tex);
+                surface->setMaterial(m);
+            }
+        }
+        if (!sign) continue;
+
+        //cout << " sign: " << type << " road: " << signEnt->getEntity("road") << endl;
+        if (auto roadEnt = signEnt->getEntity("road")) {
             auto road = roadsByEntity[roadEnt];// get vrroad from roadent
             auto pose = road->getRightEdge(pos);
             auto d = pose->dir(); d[1] = 0; d.normalize();
-            pose->setDir(d);
+            pose->setDir(-d); // sign looks against road direction
             pose->setUp(Vec3d(0,1,0));
             sign->setPose(pose);
 
