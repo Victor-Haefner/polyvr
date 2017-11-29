@@ -15,6 +15,13 @@ if (Np < N-Ndp ) { \
     return false; \
 }
 
+#define CW_CHECK_SIZE_U(N) \
+int Np = params.size(); \
+if (Np != N) { \
+    VRCallbackWrapperBase::err = "Function needs another number of arguments ("+toString( Np )+" given)"; \
+    return false; \
+}
+
 #define CW_GET_VALUE(i,T,t,N) \
 T t; \
 if (i < params.size()) { \
@@ -79,7 +86,8 @@ struct VRCallbackWrapperT<P, U, R (T::*)(Args...)> : public VRCallbackWrapper<P>
 
     template<class O, class A>
     bool call(T* obj, const vector<P>& params, R& r, const vector<string>& defaultParams) {
-        CW_CHECK_SIZE(1);
+        if () { CW_CHECK_SIZE(1); }
+        else { CW_CHECK_SIZE_U(); } // allow for special constructions like Vec3
         CW_GET_VALUE(0,A,a,1);
         r = (obj->*callback)( a ); return true;
     }
