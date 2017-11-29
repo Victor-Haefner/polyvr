@@ -2,6 +2,7 @@
 #include "VRSetupManager.h"
 #include "VRNetwork.h"
 #include "windows/VRWindow.h"
+#include "windows/VRView.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/setup/windows/VRGtkWindow.h"

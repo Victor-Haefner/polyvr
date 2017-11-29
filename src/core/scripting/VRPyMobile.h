@@ -4,10 +4,8 @@
 #include "VRPyBase.h"
 #include "core/setup/devices/VRServer.h"
 
-struct VRPyMobile : VRPyBaseT<OSG::VRServer> {
+struct VRPyServer : VRPyBaseT<OSG::VRServer> {
     static PyMethodDef methods[];
-
-    static PyObject* answer(VRPyMobile* self, PyObject* args);
 };
 
 #endif // VRPYMOBILE_H_INCLUDED

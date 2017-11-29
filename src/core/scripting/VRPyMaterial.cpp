@@ -9,9 +9,6 @@
 
 using namespace OSG;
 
-template<> bool toValue(PyObject* o, VRMaterialPtr& v) { if (!VRPyMaterial::check(o)) return 0; v = ((VRPyMaterial*)o)->objPtr; return 1; }
-template<> PyObject* VRPyTypeCaster::cast(const VRMaterialPtr& e) { return VRPyMaterial::fromSharedPtr(e); }
-
 simpleVRPyType(Material, New_VRObjects_ptr);
 
 PyMethodDef VRPyMaterial::methods[] = {

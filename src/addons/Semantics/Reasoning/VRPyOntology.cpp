@@ -17,9 +17,6 @@ simpleVRPyType(Property, 0);
 simpleVRPyType(OntologyRule, 0);
 simpleVRPyType(Reasoner, New_ptr);
 
-template<> bool toValue(PyObject* o, VREntityPtr& v) { if (!VRPyEntity::check(o)) return 0; v = ((VRPyEntity*)o)->objPtr; return 1; }
-template<> bool toValue(PyObject* o, VROntologyPtr& v) { if (!VRPyOntology::check(o)) return 0; v = ((VRPyOntology*)o)->objPtr; return 1; }
-
 // --------------------- Property --------------------
 
 PyMethodDef VRPyProperty::methods[] = {

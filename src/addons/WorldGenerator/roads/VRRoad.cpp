@@ -8,6 +8,8 @@
 #include "addons/Semantics/Reasoning/VRProperty.h"
 #include "addons/Semantics/Reasoning/VREntity.h"
 
+#include "addons/RealWorld/Assets/StreetLamp.h"
+
 using namespace OSG;
 
 VRRoad::VRRoad() : VRRoadBase("Road") {}

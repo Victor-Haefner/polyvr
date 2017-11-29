@@ -20,6 +20,7 @@ class VRMultiTouch : public VRDevice {
         struct Touch {
             int key;
             Vec3i pos;
+            int eventState = -1;
             Touch(int k = -1);
         };
 
@@ -28,15 +29,23 @@ class VRMultiTouch : public VRDevice {
         mtdev dev;
         VRUpdateCbPtr updatePtr;
         VRCameraWeakPtr cam;
-        VRViewWeakPtr view;
+        VRWindowWeakPtr window;
         Line ray;
+
+        static vector<string> devices;
+        static vector<string> deviceIDs;
 
         void multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut);
         bool calcViewRay(VRCameraPtr pcam, Line &line, float x, float y, int W, int H);
 
-        string device = "/dev/input/event5"; // TODO: make it configurable!
+        string device;
+        string input;
+        string devID;
         map<int, Touch> fingers;
-        int currentTouchID = -1;
+        int currentFingerID = 0;
+
+        float clamp(float v, float m1, float m2);
+        bool rescale(float& v, float m1, float m2);
 
     public:
         VRMultiTouch();
@@ -45,23 +54,23 @@ class VRMultiTouch : public VRDevice {
         static VRMultiTouchPtr create();
         VRMultiTouchPtr ptr();
 
+        static vector<string> getDevices();
+        string getDevice();
+        string getInput();
+        void setDevice(string dev);
+
         void updateDevice();
         void connectDevice();
-
+        void disconnectDevice();
         void clearSignals();
 
         //3d object to emulate a hand in VRSpace
         void updatePosition(int x, int y);
-
         void mouse(int button, int state, int x, int y);
-        void motion(int x, int y);
 
         Line getRay();
         void setCamera(VRCameraPtr cam);
-        void setViewport(VRViewPtr view);
-
-        void save(xmlpp::Element* e);
-        void load(xmlpp::Element* e);
+        void setWindow(VRWindowPtr win);
 };
 
 OSG_END_NAMESPACE;

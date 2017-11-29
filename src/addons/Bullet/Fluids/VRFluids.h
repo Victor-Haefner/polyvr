@@ -73,6 +73,8 @@ class VRFluids : public VRParticles {
         void updateDerivedValues();
 };
 
+typedef shared_ptr<VRFluids> VRFluidsPtr;
+
 OSG_END_NAMESPACE;
 
 #endif // VRFLUIDS_H_INCLUDED

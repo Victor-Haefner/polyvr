@@ -7,7 +7,8 @@
 struct VRPyGeometry : VRPyBaseT<OSG::VRGeometry> {
     static PyMethodDef methods[];
 
-    // wrapped methods
+    static PyObject* fromSharedPtr(OSG::VRGeometryPtr obj);
+
     static PyObject* setType(VRPyGeometry* self, PyObject *args);
     static PyObject* setTypes(VRPyGeometry* self, PyObject *args);
     static PyObject* setPositions(VRPyGeometry* self, PyObject *args);

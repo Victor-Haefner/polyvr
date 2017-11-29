@@ -77,9 +77,6 @@ class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, p
 
         void setSpeed(Vec2d s);
         Vec2d getSpeed();
-
-        //virtual void save(xmlpp::Element* node);
-        //virtual void load(xmlpp::Element* node);
 };
 
 

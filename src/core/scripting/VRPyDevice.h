@@ -7,6 +7,8 @@
 struct VRPyDevice : VRPyBaseT<OSG::VRDevice> {
     static PyMethodDef methods[];
 
+    static PyObject* fromSharedPtr(OSG::VRDevicePtr dev);
+
     static PyObject* getName(VRPyDevice* self);
     static PyObject* destroy(VRPyDevice* self);
     static PyObject* getBeacon(VRPyDevice* self);

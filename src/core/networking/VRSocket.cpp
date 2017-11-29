@@ -63,7 +63,8 @@ void server_answer_job(HTTP_args* args) {
     delete args;
 }
 
-static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_event ev);
+static void server_answer_to_connection_m(struct mg_connection *conn, int ev, void *ev_data);
+static struct mg_serve_http_opts s_http_server_opts;
 
 class HTTPServer {
     private:
@@ -72,7 +73,10 @@ class HTTPServer {
     public:
         //server----------------------------------------------------------------
         //struct MHD_Daemon* server = 0;
-        struct mg_server* server = 0;
+        struct mg_mgr* server = 0;
+        struct mg_bind_opts bind_opts;
+        struct mg_connection *nc;
+        const char *err_str;
         int threadID = 0;
         HTTP_args* data = 0;
 
@@ -89,15 +93,22 @@ class HTTPServer {
         }
 
         void loop(VRThreadWeakPtr wt) {
-            if (server) mg_poll_server(server, 100);
-            if (auto t = wt.lock())
-                if (t->control_flag == false) return;
+            if (server) mg_mgr_poll(server, 100);
+            if (auto t = wt.lock()) if (t->control_flag == false) return;
         }
 
         void initServer(VRHTTP_cb* fkt, int port) {
             data->cb = fkt;
-            server = mg_create_server(data, server_answer_to_connection_m);
-            mg_set_option(server, "listening_port", toString(port).c_str());
+            server = new mg_mgr();
+            mg_mgr_init(server, data);
+            //server = mg_create_server(data, server_answer_to_connection_m);
+            memset(&bind_opts, 0, sizeof(bind_opts));
+            bind_opts.error_string = &err_str;
+            nc = mg_bind_opt(server, toString(port).c_str(), server_answer_to_connection_m, bind_opts);
+            mg_set_protocol_http_websocket(nc);
+            //s_http_server_opts.document_root = ".";
+            s_http_server_opts.enable_directory_listing = "yes";
+            //mg_set_option(server, "listening_port", toString(port).c_str());
 
             serverThread = VRFunction<VRThreadWeakPtr>::create("mongoose loop", boost::bind(&HTTPServer::loop, this, _1));
             threadID = VRSceneManager::get()->initThread(serverThread, "mongoose", true);
@@ -126,53 +137,87 @@ class HTTPServer {
         }
 
         void close() {
-            //if (server) MHD_stop_daemon(server);
             if (server) {
                 VRSceneManager::get()->stopThread(threadID);
-                mg_destroy_server(&server);
+                mg_mgr_free(server);
+                delete server;
             }
             server = 0;
         }
 
         void websocket_send(int id, string message) {
-            if (websockets.count(id)) mg_websocket_write(websockets[id], 1, message.c_str(), message.size());
-            //return N == 4 && !memcmp(conn->content, "exit", 4) ? MG_FALSE : MG_TRUE;
+            if (websockets.count(id)) mg_send_websocket_frame(websockets[id], WEBSOCKET_OP_TEXT, message.c_str(), message.size());
+        }
+
+        int websocket_open(string address) {
+            int newID = websockets.size();
+            websockets[newID] = mg_connect_ws(server, server_answer_to_connection_m, address.c_str(), NULL, NULL);
+            return newID;
         }
 };
 
-static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_event ev) {
+static void server_answer_to_connection_m(struct mg_connection *conn, int ev, void *ev_data) {
+    //VRLog::setTag("net",1);
     bool v = VRLog::tag("net");
     if (v) {
-        if (ev == MG_CONNECT) { VRLog::log("net", "EV CONNECT\n"); return MG_FALSE; }
-        if (ev == MG_REPLY) { VRLog::log("net", "EV REPLY\n"); return MG_FALSE; }
-        if (ev == MG_RECV) { VRLog::log("net", "EV RECV\n"); return MG_FALSE; }
-        if (ev == MG_WS_HANDSHAKE) { VRLog::log("net", "EV WS CONNECT\n"); return MG_FALSE; }
-        if (ev == MG_WS_CONNECT) { VRLog::log("net", "EV WS CONNECT\n"); return MG_FALSE; }
-        if (ev == MG_HTTP_ERROR) { VRLog::log("net", "EV ERROR\n"); return MG_FALSE; }
+        if (ev == MG_EV_CONNECT) { VRLog::log("net", "MG_EV_CONNECT\n"); return; }
+        if (ev == MG_EV_RECV) { VRLog::log("net", "MG_EV_RECV\n"); return; }
+        if (ev == MG_EV_WEBSOCKET_HANDSHAKE_DONE) { VRLog::log("net", "MG_EV_WEBSOCKET_HANDSHAKE_DONE\n"); return; }
+        if (ev == MG_EV_POLL) { return; }
+        if (ev == MG_EV_ACCEPT) { VRLog::log("net", "MG_EV_ACCEPT\n"); return; }
+        if (ev == MG_EV_SEND) { VRLog::log("net", "MG_EV_SEND\n"); return; }
+        if (ev == MG_EV_TIMER) { VRLog::log("net", "MG_EV_TIMER\n"); return; }
     }
 
-    if (ev == MG_CLOSE) {
-        HTTP_args* sad = (HTTP_args*) conn->server_param;
+    HTTP_args* sad = (HTTP_args*) conn->mgr->user_data;
+
+    if (ev == MG_EV_CLOSE) {
+        VRLog::log("net", "MG_EV_CLOSE\n");
+        //HTTP_args* sad = (HTTP_args*) conn->mgr_data;
         if (sad->serv->websocket_ids.count(conn)) {
             int wsid = sad->serv->websocket_ids[conn];
             sad->serv->websockets.erase(wsid);
             sad->serv->websocket_ids.erase(conn);
         }
+        return;
     }
 
-    if (ev == MG_AUTH) return MG_TRUE;
+    if (ev == MG_EV_WEBSOCKET_FRAME) {
+        VRLog::log("net", "MG_EV_WEBSOCKET_FRAME\n");
+        //HTTP_args* sad = (HTTP_args*) conn->mgr_data;
+        sad->websocket = true;
 
-    if (ev == MG_REQUEST) {
-        HTTP_args* sad = (HTTP_args*) conn->server_param;
-        sad->websocket = conn->is_websocket;
+        sad->path = "";
+        sad->params->clear();
 
-        string method_s(conn->request_method);//GET, POST, ...
-        string section(conn->uri+1); //path
+        if (v) VRLog::log("net", "Websocket connection\n");
+        if (v) sad->print();
+
+        struct websocket_message* wm = (struct websocket_message*) ev_data;
+        sad->ws_data = string(reinterpret_cast<char const*>(wm->data), wm->size);
+
+        int wslid = sad->serv->websocket_ids.size();
+        if (!sad->serv->websocket_ids.count(conn)) { sad->serv->websocket_ids[conn] = wslid; sad->serv->websockets[wslid] = conn; }
+        sad->ws_id = sad->serv->websocket_ids[conn];
+
+        auto fkt = VRUpdateCb::create("HTTP_answer_job", boost::bind(server_answer_job, sad->copy()));
+        VRSceneManager::get()->queueJob(fkt);
+        return;
+    }
+
+    if (ev == MG_EV_HTTP_REQUEST) {
+        VRLog::log("net", "MG_EV_HTTP_REQUEST\n");
+        //HTTP_args* sad = (HTTP_args*) conn->mgr_data;
+        sad->websocket = false;
+
+        struct http_message *hm = (struct http_message *)ev_data;
+        string method_s(hm->method.p, hm->method.len);//GET, POST, ...
+        string section(hm->uri.p+1, hm->uri.len-1); //path
         sad->path = section;
         sad->params->clear();
 
         string params;
-        if(conn->query_string) params = string(conn->query_string);
+        if (hm->query_string.p) params = string(hm->query_string.p, hm->query_string.len);
         for (auto pp : splitString(params, '&')) {
             vector<string> d = splitString(pp, '=');
             if (d.size() != 2) continue;
@@ -182,49 +227,41 @@ static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_eve
         if (v) VRLog::log("net", "HTTP Request\n");
         if (v) sad->print();
 
-        //--- websockets ------
-        if (conn->is_websocket) {
-            if (v) VRLog::log("net", "Websocket connection\n");
-            int N = conn->content_len;
-            sad->ws_data.assign(conn->content, N);
-
-            static int wslid = 0;
-            if (!sad->serv->websocket_ids.count(conn)) { wslid++; sad->serv->websocket_ids[conn] = wslid; sad->serv->websockets[wslid] = conn; }
-            sad->ws_id = sad->serv->websocket_ids[conn];
-
-            auto fkt = VRUpdateCb::create("HTTP_answer_job", boost::bind(server_answer_job, sad->copy()));
-            VRSceneManager::get()->queueJob(fkt);
-            return MG_TRUE;
-        }
+        auto sendString = [&](string data) {
+            mg_send_head(conn, 200, data.size(), "Transfer-Encoding: chunked");
+            mg_send_http_chunk(conn, data.c_str(), data.size());
+            mg_send_http_chunk(conn, "", 0);
+        };
 
         //--- respond to client ------
         if (sad->path == "") {
             if (v) VRLog::log("net", "Send empty string\n");
-            mg_send_data(conn, "", 0);
+            sendString("");
         }
 
         if (sad->path != "") {
             if (sad->pages->count(sad->path)) { // return local site
                 string spage = (*sad->pages)[sad->path];
-                mg_send_data(conn, spage.c_str(), spage.size());
+                sendString(spage);
                 if (v) VRLog::log("net", "Send local site\n");
             } else if(sad->callbacks->count(sad->path)) { // return callback
                 VRServerCbPtr cb = (*sad->callbacks)[sad->path].lock();
                 if (cb) {
                     string res = (*cb)(*sad->params);
-                    mg_send_data(conn, res.c_str(), res.size());
+                    sendString(res);
                     if (v) VRLog::log("net", "Send callback response\n");
                 }
             } else { // return ressources
                 if (!boost::filesystem::exists( sad->path )) {
                     if (v) VRLog::wrn("net", "Did not find ressource: " + sad->path + "\n");
                     if (v) VRLog::log("net", "Send empty string\n");
-                    mg_send_data(conn, "", 0);
+                    sendString("");
                 }
                 else {
-                    if (v) VRLog::log("net", "Send ressource\n");
-                    mg_send_file(conn, sad->path.c_str(), NULL);
-                    return MG_MORE;
+                    if (v) VRLog::log("net", "Serve ressource\n");
+                    mg_serve_http(conn, hm, s_http_server_opts);
+                    // mg_http_serve_file
+                    return;
                 }
             }
         }
@@ -232,10 +269,10 @@ static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_eve
         //--- process request --------
         auto fkt = VRUpdateCb::create("HTTP_answer_job", boost::bind(server_answer_job, sad->copy()));
         VRSceneManager::get()->queueJob(fkt);
-        return MG_TRUE;
+        return;
     }
 
-    return MG_FALSE;
+    VRLog::log("net", "unhandled event: " + toString(ev));
 }
 
 
@@ -269,6 +306,11 @@ VRSocket::~VRSocket() {
 }
 
 std::shared_ptr<VRSocket> VRSocket::create(string name) { return std::shared_ptr<VRSocket>(new VRSocket(name)); }
+
+int VRSocket::openWebSocket(string address) {
+    if (http_serv) return http_serv->websocket_open(address);
+    return -1;
+}
 
 void VRSocket::answerWebSocket(int id, string msg) {
     if (http_serv) http_serv->websocket_send(id, msg);

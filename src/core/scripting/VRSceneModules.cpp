@@ -101,6 +101,7 @@ using namespace OSG;
 void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyObject>("Object", pModVR, VRPyStorage::typeRef);
     sm->registerModule<VRPyTransform>("Transform", pModVR, VRPyObject::typeRef);
+    sm->registerModule<VRPyCollision>("Collision", pModVR);
     sm->registerModule<VRPyGeometry>("Geometry", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyMaterial>("Material", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTextureGenerator>("TextureGenerator", pModVR);
@@ -118,7 +119,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyDevice>("Device", pModVR);
     sm->registerModule<VRPyIntersection>("Intersection", pModVR);
     sm->registerModule<VRPyHaptic>("Haptic", pModVR, VRPyDevice::typeRef);
-    sm->registerModule<VRPyMobile>("Mobile", pModVR, VRPyDevice::typeRef);
+    sm->registerModule<VRPyServer>("Mobile", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyMouse>("Mouse", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyMultiTouch>("MultiTouch", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyAnimation>("Animation", pModVR);

@@ -9,13 +9,6 @@
 
 using namespace OSG;
 
-template<> PyObject* VRPyTypeCaster::cast(const VRRoadPtr& e) { return VRPyRoad::fromSharedPtr(e); }
-template<> PyObject* VRPyTypeCaster::cast(const VRRoadIntersectionPtr& e) { return VRPyRoadIntersection::fromSharedPtr(e); }
-template<> PyObject* VRPyTypeCaster::cast(const VRRoadNetworkPtr& e) { return VRPyRoadNetwork::fromSharedPtr(e); }
-template<> PyObject* VRPyTypeCaster::cast(const VRDistrictPtr& e) { return VRPyDistrict::fromSharedPtr(e); }
-template<> PyObject* VRPyTypeCaster::cast(const VRWorldGeneratorPtr& e) { return VRPyWorldGenerator::fromSharedPtr(e); }
-template<> PyObject* VRPyTypeCaster::cast(const VRAsphaltPtr& e) { return VRPyAsphalt::fromSharedPtr(e); }
-
 simpleVRPyType(WorldGenerator, New_ptr );
 simpleVRPyType(RoadBase, 0);
 simpleVRPyType(Road, New_ptr);

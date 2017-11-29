@@ -5,9 +5,6 @@
 
 using namespace OSG;
 
-template<> PyObject* VRPyTypeCaster::cast(const VRSoundPtr& e) { return VRPySound::fromSharedPtr(e); }
-template<> PyObject* VRPyTypeCaster::cast(const VRSoundManagerPtr& e) { return VRPySoundManager::fromSharedPtr(e); }
-
 simpleVRPyType( SoundManager, 0 );
 simpleVRPyType( Sound, New_ptr );
 

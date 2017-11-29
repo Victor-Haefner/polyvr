@@ -4,6 +4,7 @@
 #include <string.h>
 #include <memory>
 #include <OpenSG/OSGConfig.h>
+#include "VRNetworkingFwd.h"
 #include "core/utils/VRName.h"
 #include "core/utils/VRDeviceFwd.h"
 #include "core/utils/VRFunctionFwd.h"
@@ -61,8 +62,8 @@ class VRSocket : public VRName {
 
         void handle(string s);
 
-        void scanUnix(std::weak_ptr<VRThread> t);
-        void scanTCP(std::weak_ptr<VRThread> t);
+        void scanUnix(VRThreadWeakPtr t);
+        void scanTCP(VRThreadWeakPtr t);
         void scanHTTP();
 
         void update();
@@ -70,7 +71,7 @@ class VRSocket : public VRName {
     public:
         VRSocket(string name = "socket");
         virtual ~VRSocket();
-        static std::shared_ptr<VRSocket> create(string name = "socket");
+        static VRSocketPtr create(string name = "socket");
 
         void initServer(CONNECTION_TYPE t, int _port);
         void sendHTTPGet(string uri);
@@ -88,6 +89,7 @@ class VRSocket : public VRName {
         void addHTTPCallback(string path, VRServerCbPtr cb);
         void remHTTPCallback(string path);
 
+        int openWebSocket(string address);
         void answerWebSocket(int id, string msg);
 
         string getType();

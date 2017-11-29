@@ -171,6 +171,8 @@ class VRMechanism {
         VRGeometryPtr addChain(float w, vector<VRGeometryPtr> geos, string dirs);
 };
 
+typedef shared_ptr<VRMechanism> VRMechanismPtr;
+
 OSG_END_NAMESPACE;
 
 #endif // VRMECHANISM_H_INCLUDED

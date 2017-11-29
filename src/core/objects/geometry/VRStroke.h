@@ -37,6 +37,7 @@ class VRStroke : public VRGeometry {
 
         void setPath(pathPtr p);
         void addPath(pathPtr p);
+        pathPtr getPath();
         void setPaths(vector<pathPtr> p);
         vector<pathPtr> getPaths();
 
@@ -44,6 +45,8 @@ class VRStroke : public VRGeometry {
 
         void strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool doColor = true, CAP l = NONE, CAP r = NONE);
         void strokeStrew(VRGeometryPtr geo);
+
+        vector<Vec3d> getProfile();
 
         void convertToRope();
 

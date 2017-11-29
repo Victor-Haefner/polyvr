@@ -88,8 +88,15 @@ D " - " #R " " #F "( " FOR_EACH( __VA_ARGS__ ) " )"
 */
 
 #define PyWrap2(X, Y, D, R, ...) \
+(PyCFunction)proxyWrap<VRPy ## X, R (OSG::X::*)( __VA_ARGS__ ), &OSG::X::Y, VRCallbackWrapperParams<MACRO_GET_STR( "" )> >::exec , METH_VARARGS, PyWrapDoku(Y,D,R,__VA_ARGS__)
+
+#define PyCastWrap2(X, Y, D, R, ...) \
 (PyCFunction)proxyWrap<VRPy ## X, R (OSG::X::*)( __VA_ARGS__ ), (R (OSG::X::*)( __VA_ARGS__ )) &OSG::X::Y, VRCallbackWrapperParams<MACRO_GET_STR( "" )> >::exec , METH_VARARGS, PyWrapDoku(Y,D,R,__VA_ARGS__)
 
+/*
+#define PyWrap2(X, Y, D, R, ...) \
+(PyCFunction)proxyWrap<VRPy ## X, R (OSG::X::*)( __VA_ARGS__ ), (R (OSG::X::*)( __VA_ARGS__ )) &OSG::X::Y, VRCallbackWrapperParams<MACRO_GET_STR( "" )> >::exec , METH_VARARGS, PyWrapDoku(Y,D,R,__VA_ARGS__)
+*/
 
 // pass optional parameters S as a single string, will all arguments separated by '|'
 

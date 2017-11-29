@@ -56,6 +56,7 @@ template<> bool toValue(PyObject* o, Pnt4d& v) { if (!PyVec_Check(o, 4, 'f')) re
 template<> bool toValue(PyObject* o, Vec2i& v) { if (!PyVec_Check(o, 2, 'i')) return 0; v = VRPyBase::parseVec2iList(o); return 1; }
 template<> bool toValue(PyObject* o, Vec3i& v) { if (!PyVec_Check(o, 3, 'i')) return 0; v = VRPyBase::parseVec3iList(o); return 1; }
 template<> bool toValue(PyObject* o, Vec4i& v) { if (!PyVec_Check(o, 4, 'i')) return 0; v = VRPyBase::parseVec4iList(o); return 1; }
+template<> bool toValue(PyObject* o, Line& l) { if (!PyVec_Check(o, 6, 'f')) return 0; l = VRPyBase::PyToLine(o); return 1; }
 
 
 

@@ -8,9 +8,6 @@
 
 using namespace OSG;
 
-template<> bool toValue(PyObject* o, VRProcessNodePtr& v) { if (!VRPyProcessNode::check(o)) return 0; v = ((VRPyProcessNode*)o)->objPtr; return 1; }
-template<> PyObject* VRPyTypeCaster::cast(const VRProcessNodePtr& e) { return VRPyProcessNode::fromSharedPtr(e); }
-
 simpleVRPyType(Process, New_named_ptr);
 simpleVRPyType(ProcessNode, 0);
 simpleVRPyType(ProcessLayout, New_VRObjects_ptr);

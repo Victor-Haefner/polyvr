@@ -182,9 +182,9 @@ void VRWindowManager::updateWindows() {
         barrier->enter(VRWindow::active_window_count+1);
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
         barrier->enter(VRWindow::active_window_count+1);
+        Thread::getCurrentChangeList()->clear();
     }
 
-    Thread::getCurrentChangeList()->clear();
     if (scene) scene->blockScriptThreads();
 }
 

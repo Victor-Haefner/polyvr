@@ -124,6 +124,7 @@ template<> string typeName(const Vec2i& t) { return "Vec2i"; }
 template<> string typeName(const Vec3i& t) { return "Vec3i"; }
 template<> string typeName(const Color3f& t) { return "Vec3d"; }
 template<> string typeName(const Color4f& t) { return "Vec4d"; }
+template<> string typeName(const Line& t) { return "Line"; }
 template<> string typeName(const VRAnimCbPtr& t) { return "void callback(float)"; }
 template<> string typeName(const Boundingbox& t) { return "Boundingbox"; }
 
@@ -208,6 +209,14 @@ template<> int toValue(stringstream& ss, Color4f& v) {
     ss >> v[1];
     ss >> v[2];
     return bool(ss >> v[3]);
+}
+
+template<> int toValue(stringstream& ss, Line& l) {
+    Vec3d p,d;
+    toValue(ss, p);
+    bool b = toValue(ss, d);
+    l = Line(Pnt3f(p),Vec3f(d));
+    return b;
 }
 
 template<> int toValue(stringstream& ss, Pose& po) {

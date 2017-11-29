@@ -4,8 +4,6 @@
 
 using namespace OSG;
 
-template<> PyObject* VRPyTypeCaster::cast(const VRTerrainPtr& e) { return VRPyTerrain::fromSharedPtr(e); }
-
 simpleVRPyType(Terrain, New_VRObjects_ptr);
 simpleVRPyType(Planet, New_VRObjects_ptr);
 

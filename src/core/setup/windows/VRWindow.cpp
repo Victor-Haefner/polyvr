@@ -1,4 +1,7 @@
 #include "VRWindow.h"
+#include "core/setup/devices/VRMultiTouch.h"
+#include "core/setup/devices/VRMouse.h"
+#include "core/setup/devices/VRKeyboard.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/rendering/VRRenderStudio.h"
 #include "core/setup/VRSetup.h"
@@ -94,6 +97,8 @@ void VRWindow::setContent(bool b) { content = b; }
 
 void VRWindow::setMouse(VRMousePtr m) { mouse = m; }
 VRMousePtr VRWindow::getMouse() { return mouse; }
+void VRWindow::setMultitouch(VRMultiTouchPtr m) { multitouch = m; }
+VRMultiTouchPtr VRWindow::getMultitouch() { return multitouch; }
 
 void VRWindow::setKeyboard(VRKeyboardPtr k) { keyboard = k; }
 VRKeyboardPtr VRWindow::getKeyboard() { return keyboard; }
@@ -105,6 +110,7 @@ void VRWindow::save(xmlpp::Element* node) {
     node->set_attribute("height", toString(height).c_str());
     node->set_attribute("name", getName().c_str());
     if (mouse) node->set_attribute("mouse", mouse->getName().c_str());
+    else if (multitouch) node->set_attribute("mouse", multitouch->getName().c_str());
     else node->set_attribute("mouse", "None");
     if (keyboard) node->set_attribute("keyboard", keyboard->getName().c_str());
     else node->set_attribute("keyboard", "None");
@@ -139,8 +145,11 @@ void VRWindow::load(xmlpp::Element* node) {
 
     string _mouse = node->get_attribute("mouse")->get_value();
     if (_mouse != "None") {
-        mouse = dynamic_pointer_cast<VRMouse>( VRSetup::getCurrent()->getDevice(_mouse) );
+        auto dev = VRSetup::getCurrent()->getDevice(_mouse);
+        mouse = dynamic_pointer_cast<VRMouse>( dev );
+        multitouch = dynamic_pointer_cast<VRMultiTouch>(dev);
         if (views.size() > 0 && mouse) if (auto v = views[0].lock()) mouse->setViewport(v);
+        if (multitouch) multitouch->setWindow(ptr());
     }
 
     if (node->get_attribute("keyboard") != 0) {

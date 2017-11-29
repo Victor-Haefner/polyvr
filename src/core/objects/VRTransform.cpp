@@ -654,8 +654,12 @@ void VRTransform::drop() {
 }
 
 void VRTransform::rebaseDrag(VRObjectPtr new_parent) {
+    if (new_parent == 0 || new_parent == ptr()) return;
+    //cout << "VRTransform::rebaseDrag " << new_parent->getName() << " " << getName() << endl;
     if (!held) { switchParent(new_parent); return; }
+    if (new_parent->hasAncestor(ptr())) return;
     old_parent = new_parent;
+    old_child_id = 0;
 }
 
 bool VRTransform::isDragged() { return held; }
@@ -759,6 +763,11 @@ void VRTransform::resolvePhysics() {
 VRPhysics* VRTransform::getPhysics() {
     if (physics == 0) physics = new VRPhysics( ptr() );
     return physics;
+}
+
+vector<VRCollision> VRTransform::getCollisions() {
+    if (physics == 0) return vector<VRCollision>();
+    return physics->getCollisions();
 }
 
 /** Update the object OSG transformation **/

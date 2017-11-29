@@ -657,12 +657,14 @@
 		<Unit filename="src/core/math/pose.h" />
 		<Unit filename="src/core/math/triangulator.cpp" />
 		<Unit filename="src/core/math/triangulator.h" />
+		<Unit filename="src/core/navigation/VRNavigationFwd.h" />
 		<Unit filename="src/core/navigation/VRNavigator.cpp" />
 		<Unit filename="src/core/navigation/VRNavigator.h" />
 		<Unit filename="src/core/networking/VRMainInterface.cpp" />
 		<Unit filename="src/core/networking/VRMainInterface.h" />
 		<Unit filename="src/core/networking/VRNetworkManager.cpp" />
 		<Unit filename="src/core/networking/VRNetworkManager.h" />
+		<Unit filename="src/core/networking/VRNetworkingFwd.h" />
 		<Unit filename="src/core/networking/VRPing.cpp" />
 		<Unit filename="src/core/networking/VRPing.h" />
 		<Unit filename="src/core/networking/VRProtocol.cpp" />
@@ -679,9 +681,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/networking/mongoose/mongoose.h" />
-		<Unit filename="src/core/networking/mongoose/mongoose_67.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/networking/mongoose/mongoose_67.h" />
 		<Unit filename="src/core/objects/OSGCamera.cpp" />
 		<Unit filename="src/core/objects/OSGCamera.h" />

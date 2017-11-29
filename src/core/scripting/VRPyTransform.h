@@ -3,9 +3,16 @@
 
 #include "VRPyObject.h"
 #include "core/objects/VRTransform.h"
+#include "core/objects/geometry/VRPhysics.h"
+
+struct VRPyCollision : VRPyBaseT<OSG::VRCollision> {
+    static PyMethodDef methods[];
+};
 
 struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyMethodDef methods[];
+
+    static PyObject* fromSharedPtr(OSG::VRTransformPtr obj);
 
     static PyObject* setIdentity(VRPyTransform* self);
     static PyObject* translate(VRPyTransform* self, PyObject* args);
