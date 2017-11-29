@@ -13,11 +13,11 @@ simpleVRPyType(Material, New_VRObjects_ptr);
 
 PyMethodDef VRPyMaterial::methods[] = {
     {"getAmbient", PyWrap(Material, getAmbient, "Returns the ambient color", Color3f ) },
-    {"setAmbient", PyWrap(Material, setAmbient, "Sets the ambient color", void, Color3f ) },
+    {"setAmbient", PyWrapPack(Material, setAmbient, "Sets the ambient color", void, Color3f ) },
     {"getDiffuse", PyWrap(Material, getDiffuse, "Returns the diffuse color", Color3f ) },
-    {"setDiffuse", PyWrap(Material, setDiffuse, "Sets the diffuse color", void, Color3f ) },
+    {"setDiffuse", PyWrapPack(Material, setDiffuse, "Sets the diffuse color", void, Color3f ) },
     {"getSpecular", PyWrap(Material, getSpecular, "Returns the specular color", Color3f ) },
-    {"setSpecular", PyWrap(Material, setSpecular, "Sets the specular color", void, Color3f ) },
+    {"setSpecular", PyWrapPack(Material, setSpecular, "Sets the specular color", void, Color3f ) },
     {"getTransparency", (PyCFunction)VRPyMaterial::getTransparency, METH_NOARGS, "Returns the transparency - f getTransparency()" },
     {"setTransparency", (PyCFunction)VRPyMaterial::setTransparency, METH_VARARGS, "Sets the transparency - setTransparency(f)" },
     {"setDepthTest", (PyCFunction)VRPyMaterial::setDepthTest, METH_VARARGS, "Sets the depth test function - setDepthTest(f)\t\n'GL_ALWAYS'" },
