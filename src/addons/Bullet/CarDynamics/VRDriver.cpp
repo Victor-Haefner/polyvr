@@ -74,7 +74,7 @@ void VRDriver::update() {
     car->update(throttle, breaking, steering);
 }
 
-void VRDriver::followPath(pathPtr p, pathPtr v) {
+void VRDriver::followPath(PathPtr p, PathPtr v) {
     p_path = p;
     v_path = v;
     active = true;

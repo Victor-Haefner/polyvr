@@ -10,8 +10,8 @@ using namespace OSG;
 
 VRRobotArm::VRRobotArm() {
     angles.resize(N,0);
-    animPath = path::create();
-    robotPath = path::create();
+    animPath = Path::create();
+    robotPath = Path::create();
     anim = VRAnimation::create("animOnPath");
     ageo = VRAnalyticGeometry::create();
     ageo->setLabelParams(0.03);
@@ -172,7 +172,7 @@ void VRRobotArm::moveOnPath(float t0, float t1, bool loop) {
 
 void VRRobotArm::toggleGrab() { setGrab(1-grab); }
 
-void VRRobotArm::setPath(pathPtr p) { robotPath = p; }
-pathPtr VRRobotArm::getPath() { return robotPath; }
+void VRRobotArm::setPath(PathPtr p) { robotPath = p; }
+PathPtr VRRobotArm::getPath() { return robotPath; }
 
 bool VRRobotArm::isMoving(){return anim->isActive(); }

@@ -31,6 +31,7 @@ template<> bool toValue(PyObject* o, VRAnimCbPtr& v) {
 }
 
 bool PyVec_Check(PyObject* o, int N, char type) {
+    if (N == 2 && type == 'f') if (VRPyVec2f::check(o)) return true;
     if (N == 3 && type == 'f') if (VRPyVec3f::check(o)) return true;
     if (!PyList_Check(o)) return false;
     if (PyList_GET_SIZE(o) != N) return false;

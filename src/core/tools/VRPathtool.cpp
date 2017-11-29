@@ -232,7 +232,7 @@ void VRPathtool::setGraphEdge(Graph::edge& e, bool handles, bool doArrow) {
 void VRPathtool::setGraphEdge(Graph::edge& e, bool handles, bool doArrow, Vec3d n1, Vec3d n2) {
     auto& nodes = graph->getNodes();
     if (!paths.count(e.ID)) {
-        paths[e.ID] = path::create();
+        paths[e.ID] = Path::create();
         paths[e.ID]->addPoint( Pose(nodes[e.from].p.pos(), n1));
         paths[e.ID]->addPoint( Pose(nodes[e.to].p.pos(), n2));
     }
@@ -413,7 +413,7 @@ void VRPathtool::updateDevs() { // update when something is dragged
     }
 }
 
-VRPathtool::entryPtr VRPathtool::newEntry(pathPtr p, option o, int eID, VRObjectPtr anchor) {
+VRPathtool::entryPtr VRPathtool::newEntry(PathPtr p, option o, int eID, VRObjectPtr anchor) {
     auto e = entryPtr( new entry( anchor ? anchor : ptr() ) );
     e->p = p;
     e->edge = eID;
@@ -443,7 +443,7 @@ void VRPathtool::setupHandles(entryPtr e, VRGeometryPtr ha, VRGeometryPtr he) {
     }
 }
 
-void VRPathtool::addPath(pathPtr p, VRObjectPtr anchor, VRGeometryPtr ha, VRGeometryPtr he, bool handles) {
+void VRPathtool::addPath(PathPtr p, VRObjectPtr anchor, VRGeometryPtr ha, VRGeometryPtr he, bool handles) {
     auto e = newEntry( p, option(10, handles), -options.size(), anchor );
     setupHandles(e, ha, he);
 }
@@ -459,8 +459,8 @@ void VRPathtool::entry::addHandle(VRGeometryPtr h, int i) {
     if (auto a = anchor.lock()) a->addChild(h);
 }
 
-pathPtr VRPathtool::newPath( VRDevicePtr dev, VRObjectPtr anchor, int resolution, bool doCHandles ) { // deprecated?
-    auto e = newEntry( path::create(), option(resolution, doCHandles), -options.size(), anchor );
+PathPtr VRPathtool::newPath( VRDevicePtr dev, VRObjectPtr anchor, int resolution, bool doCHandles ) { // deprecated?
+    auto e = newEntry( Path::create(), option(resolution, doCHandles), -options.size(), anchor );
     extrude(0,e->p);
     extrude(dev,e->p);
     return e->p;
@@ -507,8 +507,8 @@ VRGeometryPtr VRPathtool::getHandle(int ID) {
     return knots[ID].handle.lock();
 }
 
-vector<pathPtr> VRPathtool::getPaths(VRGeometryPtr h) {
-    vector<pathPtr> res;
+vector<PathPtr> VRPathtool::getPaths(VRGeometryPtr h) {
+    vector<PathPtr> res;
     if (!h) for (auto p : pathToEntry) res.push_back(p.second->p);
     else if (handleToEntries.count(h.get())) {
         auto& ev = handleToEntries[h.get()];
@@ -517,7 +517,7 @@ vector<pathPtr> VRPathtool::getPaths(VRGeometryPtr h) {
     return res;
 }
 
-pathPtr VRPathtool::getPath(VRGeometryPtr h1, VRGeometryPtr h2) {
+PathPtr VRPathtool::getPath(VRGeometryPtr h1, VRGeometryPtr h2) {
     if (!handleToEntries.count(h1.get()) || !handleToEntries.count(h2.get())) return 0;
     for (auto& e1 : handleToEntries[h1.get()]) {
         for (auto& e2 : handleToEntries[h2.get()]) {
@@ -527,7 +527,7 @@ pathPtr VRPathtool::getPath(VRGeometryPtr h1, VRGeometryPtr h2) {
     return 0;
 }
 
-vector<VRGeometryPtr> VRPathtool::getHandles(pathPtr p) {
+vector<VRGeometryPtr> VRPathtool::getHandles(PathPtr p) {
     vector<VRGeometryPtr> res;
     if (p == 0) for (auto h : handles) res.push_back(h.lock());
     else {
@@ -539,12 +539,12 @@ vector<VRGeometryPtr> VRPathtool::getHandles(pathPtr p) {
     return res;
 }
 
-VRStrokePtr VRPathtool::getStroke(pathPtr p) {
+VRStrokePtr VRPathtool::getStroke(PathPtr p) {
     if (pathToEntry.count(p.get()) == 0) return 0;
     return pathToEntry[p.get()]->line.lock();
 }
 
-VRGeometryPtr VRPathtool::extrude(VRDevicePtr dev, pathPtr p) {
+VRGeometryPtr VRPathtool::extrude(VRDevicePtr dev, PathPtr p) {
     if (pathToEntry.count(p.get()) == 0) {
         cout << "Warning: VRPathtool::extrude, path " << p << " unknown\n";
         return 0;
@@ -572,7 +572,7 @@ void VRPathtool::setHandleGeometry(VRGeometryPtr geo) {
     customHandle = static_pointer_cast<VRGeometry>( geo->duplicate() );
 }
 
-void VRPathtool::clear(pathPtr p) {
+void VRPathtool::clear(PathPtr p) {
     if (!p) {
         pathToEntry.clear();
         paths.clear();
@@ -607,7 +607,7 @@ void VRPathtool::clear(pathPtr p) {
     pathToEntry.erase(p.get());
 }
 
-void VRPathtool::remPath(pathPtr p) {
+void VRPathtool::remPath(PathPtr p) {
     if (pathToEntry.count(p.get()) == 0) return;
     auto e = pathToEntry[p.get()];
 
@@ -635,7 +635,7 @@ void VRPathtool::select(VRGeometryPtr h) {
     manip->manipulate(h);
 }
 
-void VRPathtool::select(pathPtr p) {
+void VRPathtool::select(PathPtr p) {
     if (selectedPath) getStroke(selectedPath)->setMaterial(lmat);
     selectedPath = p;
     getStroke(selectedPath)->setMaterial(lsmat);

@@ -1,9 +1,12 @@
 #include "VRDevice.h"
 #include "VRSignal.h"
+#include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/scene/VRSceneManager.h"
 #include <libxml++/nodes/element.h>
 #include <boost/bind.hpp>
+
+template<> string typeName(const OSG::VRDevicePtr& t) { return "Device"; }
 
 OSG_BEGIN_NAMESPACE;
 
@@ -162,5 +165,10 @@ void VRDevice::printMap() {
 
 void VRDevice::setSpeed(Vec2d s) { speed = s; }
 Vec2d VRDevice::getSpeed() { return speed; }
+
+Pnt3d VRDevice::getIntersectionPoint() { return getLastIntersection().point; }
+Vec3i VRDevice::getIntersectionTriangle() { return getLastIntersection().triangleVertices; }
+Vec3d VRDevice::getIntersectionNormal() { return getLastIntersection().normal; }
+Vec2d VRDevice::getIntersectionUV() { return getLastIntersection().texel; }
 
 OSG_END_NAMESPACE;

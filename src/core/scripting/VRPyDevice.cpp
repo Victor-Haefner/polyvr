@@ -29,10 +29,10 @@ PyMethodDef VRPyDevice::methods[] = {
     {"setDnD", (PyCFunction)VRPyDevice::setDnD, METH_VARARGS, "Set drag && drop." },
     {"intersect", (PyCFunction)VRPyDevice::intersect, METH_VARARGS, "Intersects the scene - bool intersect( | obj scene, bool force )\n  Returns True if intersected something, else False.\n\t if force set True, ignores cached intersections" },
     {"getIntersected", (PyCFunction)VRPyDevice::getIntersected, METH_NOARGS, "Get device intersected object." },
-    {"getIntersection", (PyCFunction)VRPyDevice::getIntersection, METH_NOARGS, "Get device intersection point." },
-    {"getIntersectionNormal", (PyCFunction)VRPyDevice::getIntersectionNormal, METH_NOARGS, "Get normal at intersection point." },
-    {"getIntersectionUV", (PyCFunction)VRPyDevice::getIntersectionUV, METH_NOARGS, "Get uv at intersection point." },
-    {"getIntersectionTriangle", (PyCFunction)VRPyDevice::getIntersectionTriangle, METH_NOARGS, "Get triangle at intersection point - i,j,k dev.getIntersectionTriangle()" },
+    {"getIntersection", PyWrap(Device, getIntersectionPoint, "Get device intersection point", Pnt3d ) },
+    {"getIntersectionNormal", PyWrap(Device, getIntersectionNormal, "Get normal at intersection point", Vec3d ) },
+    {"getIntersectionUV", PyWrap(Device, getIntersectionUV, "Get uv at intersection point", Vec2d ) },
+    {"getIntersectionTriangle", PyWrap(Device, getIntersectionTriangle, "Get triangle at intersection point", Vec3i ) },
     {"addIntersection", (PyCFunction)VRPyDevice::addIntersection, METH_VARARGS, "Add device intersection node." },
     {"remIntersection", (PyCFunction)VRPyDevice::remIntersection, METH_VARARGS, "Remove device intersection node." },
     {"getDragged", (PyCFunction)VRPyDevice::getDragged, METH_NOARGS, "Get dragged object." },
@@ -40,7 +40,7 @@ PyMethodDef VRPyDevice::methods[] = {
     {"drag", (PyCFunction)VRPyDevice::drag, METH_VARARGS, "Start to drag an object - drag(obj)" },
     {"drop", (PyCFunction)VRPyDevice::drop, METH_NOARGS, "Drop any object - drop()" },
     {"setSpeed", (PyCFunction)VRPyDevice::setSpeed, METH_VARARGS, "Set the navigation speed of the device - setSpeed(float sx, float sy)" },
-    {"getSpeed", (PyCFunction)VRPyDevice::getSpeed, METH_NOARGS, "Get the navigation speed of the device - float getSpeed()" },
+    {"getSpeed", PyWrap(Device, getSpeed, "Get the navigation speed of the device", Vec2d ) },
     {"addSignal", (PyCFunction)VRPyDevice::addSignal, METH_VARARGS, "Add a new signal - addSignal(int key, int state)" },
     {"trigger", (PyCFunction)VRPyDevice::trigger, METH_VARARGS, "Trigger signal - trigger(int key, int state)" },
     {NULL}  /* Sentinel */
@@ -77,11 +77,6 @@ PyObject* VRPyDevice::setSpeed(VRPyDevice* self, PyObject *args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::setSpeed, Object is invalid"); return NULL; }
     self->objPtr->setSpeed( parseVec2f(args) );
     Py_RETURN_TRUE;
-}
-
-PyObject* VRPyDevice::getSpeed(VRPyDevice* self) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getSpeed, Object is invalid"); return NULL; }
-    return toPyTuple( self->objPtr->getSpeed() );
 }
 
 PyObject* VRPyDevice::intersect(VRPyDevice* self, PyObject *args) {
@@ -191,30 +186,6 @@ PyObject* VRPyDevice::setDnD(VRPyDevice* self, PyObject *args) {
 PyObject* VRPyDevice::getIntersected(VRPyDevice* self) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getIntersected, Object is invalid"); return NULL; }
     return VRPyTypeCaster::cast(self->objPtr->getLastIntersection().object.lock());
-}
-
-PyObject* VRPyDevice::getIntersection(VRPyDevice* self) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getIntersection, Object is invalid"); return NULL; }
-    OSG::Pnt3d v = self->objPtr->getLastIntersection().point;
-    return toPyTuple( OSG::Vec3d(v) );
-}
-
-PyObject* VRPyDevice::getIntersectionTriangle(VRPyDevice* self) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getIntersectionTriangle, Object is invalid"); return NULL; }
-    OSG::Vec3i v = self->objPtr->getLastIntersection().triangleVertices;
-    return toPyTuple(v);
-}
-
-PyObject* VRPyDevice::getIntersectionNormal(VRPyDevice* self) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getIntersectionNormal, Object is invalid"); return NULL; }
-    OSG::Vec3d v = self->objPtr->getLastIntersection().normal;
-    return toPyTuple(v);
-}
-
-PyObject* VRPyDevice::getIntersectionUV(VRPyDevice* self) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getIntersectionUV, Object is invalid"); return NULL; }
-    OSG::Vec2d v = self->objPtr->getLastIntersection().texel;
-    return toPyTuple(v);
 }
 
 PyObject* VRPyDevice::addIntersection(VRPyDevice* self, PyObject *args) {

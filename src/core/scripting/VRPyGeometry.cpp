@@ -13,6 +13,7 @@
 #include "VRPyTypeCaster.h"
 #include "VRPyPose.h"
 #include "VRPyBoundingbox.h"
+#include "VRPyMath.h"
 
 #define NO_IMPORT_ARRAY
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
@@ -651,7 +652,7 @@ PyObject* VRPyGeometry::getPositions(VRPyGeometry* self) {
     for (uint i=0; i<pos->size(); i++) {
         Vec3d v;
         pos->getValue(v,i);
-        PyObject* pv = toPyTuple(v);
+        PyObject* pv = toPyObject(v);
         // append to list
         PyList_SetItem(res, i, pv);
     }
@@ -704,7 +705,7 @@ PyObject* VRPyGeometry::getNormals(VRPyGeometry* self) {
     for (uint i=0; i<pos->size(); i++) {
         Vec3d v;
         pos->getValue(v,i);
-        PyObject* pv = toPyTuple(v);
+        PyObject* pv = toPyObject(v);
         PyList_SetItem(res, i, pv);
     }
 
@@ -722,7 +723,7 @@ PyObject* VRPyGeometry::getColors(VRPyGeometry* self) {
     for (uint i=0; i<pos->size(); i++) {
         Vec3d v;
         pos->getValue(v,i);
-        PyObject* pv = toPyTuple(v);
+        PyObject* pv = toPyObject(v);
         PyList_SetItem(res, i, pv);
     }
 
@@ -758,7 +759,7 @@ PyObject* VRPyGeometry::getTexCoords(VRPyGeometry* self) {
     for (unsigned int i=0; i<tc->size(); i++) {
         Vec2d v;
         tc->getValue(v,i);
-        PyObject* pv = toPyTuple(v);
+        PyObject* pv = toPyObject(v);
         PyList_SetItem(res, i, pv);
     }
 

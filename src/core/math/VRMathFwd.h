@@ -10,7 +10,7 @@
 namespace OSG {
 
 ptrFwd(Boundingbox);
-ptrFwd(path);
+ptrFwd(Path);
 ptrFwd(Pose);
 ptrFwd(VRPolygon);
 ptrFwd(Graph);

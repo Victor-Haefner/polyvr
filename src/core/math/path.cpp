@@ -8,9 +8,9 @@
 using namespace std;
 using namespace OSG;
 
-template<> string typeName(const pathPtr& p) { return "Path"; }
+template<> string typeName(const PathPtr& p) { return "Path"; }
 
-path::path(int d) : degree(d) {
+Path::Path(int d) : degree(d) {
     storeVec("points", points);
     storeVec("point_colors", point_colors);
     store("degree", &degree);
@@ -19,11 +19,11 @@ path::path(int d) : degree(d) {
     store("closed", &closed);
 }
 
-path::~path() {}
+Path::~Path() {}
 
-shared_ptr<path> path::create() { return shared_ptr<path>(new path()); }
+PathPtr Path::create() { return PathPtr(new Path()); }
 
-Vec3d path::projectInPlane(Vec3d v, Vec3d n, bool keep_length) {
+Vec3d Path::projectInPlane(Vec3d v, Vec3d n, bool keep_length) {
     n.normalize();
     float l;
     if (keep_length) l = v.length();
@@ -33,7 +33,7 @@ Vec3d path::projectInPlane(Vec3d v, Vec3d n, bool keep_length) {
     return v;
 }
 
-void path::linearBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1) {
+void Path::linearBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1) {
     if (container == 0) container = new Vec3d[N];
 
     //berechne schritte
@@ -45,7 +45,7 @@ void path::linearBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1) {
     for (int i=1;i<N-1;i++) container[i] = container[i-1]+DEL;
 }
 
-void path::quadraticBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1, Vec3d p2) {
+void Path::quadraticBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1, Vec3d p2) {
     if (container == 0) container = new Vec3d[N];
 
     //schrittweite
@@ -72,7 +72,7 @@ void path::quadraticBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1, Vec3d p2
     }
 }
 
-void path::cubicBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1, Vec3d h0, Vec3d h1) {
+void Path::cubicBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1, Vec3d h0, Vec3d h1) {
     if (container == 0) container = new Vec3d[N];
 
     //schrittweite
@@ -101,7 +101,7 @@ void path::cubicBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1, Vec3d h0, Ve
     }
 }
 
-vector<double> path::computeInflectionPoints(int i, int j, float threshold, float accelerationThreshold, Vec3i axis) { // first and second derivative are parallel
+vector<double> Path::computeInflectionPoints(int i, int j, float threshold, float accelerationThreshold, Vec3i axis) { // first and second derivative are parallel
     if (j <= i) j = size()-1;
     vector<double> res;
     for (auto k=i+1; k<=j; k++) {
@@ -148,7 +148,7 @@ vector<double> path::computeInflectionPoints(int i, int j, float threshold, floa
     return res;
 }
 
-void path::approximate(int d) {
+void Path::approximate(int d) {
     auto intersect = [&](Pose& p1, Pose& p2) {
 		Vec3d d = p2.pos() - p1.pos();
 		Vec3d n3 = p1.dir().cross(p2.dir());
@@ -239,13 +239,13 @@ void path::approximate(int d) {
     update();
 }
 
-int path::addPoint( const Pose& p, Color3f c ) {
+int Path::addPoint( const Pose& p, Color3f c ) {
     points.push_back(p);
     point_colors.push_back(c);
     return size() - 1;
 }
 
-float path::getLength(int i, int j) {
+float Path::getLength(int i, int j) {
     float l = 0;
     if (j <= i) j = size()-1;
     if (degree == 3) {
@@ -265,17 +265,17 @@ float path::getLength(int i, int j) {
     return l;
 }
 
-void path::setPoint(int i, const Pose& p, Color3f c ) {
+void Path::setPoint(int i, const Pose& p, Color3f c ) {
     if (i < 0 || i >= size()) return;
     points[i] = p;
     point_colors[i] = c;
 }
 
-vector<Pose> path::getPoints() { return points; }
-Pose& path::getPoint(int i) { return points[i]; }
-int path::size() { return points.size(); }
+vector<Pose> Path::getPoints() { return points; }
+Pose& Path::getPoint(int i) { return points[i]; }
+int Path::size() { return points.size(); }
 
-void path::compute(int N) {
+void Path::compute(int N) {
     if (points.size() <= 1) return;
     iterations = N;
 
@@ -342,12 +342,12 @@ void path::compute(int N) {
     }
 }
 
-vector<Vec3d> path::getPositions() { return positions; }
-vector<Vec3d> path::getDirections() { return directions; }
-vector<Vec3d> path::getUpvectors() { return up_vectors; }
-vector<Vec3d> path::getColors() { return colors; }
+vector<Vec3d> Path::getPositions() { return positions; }
+vector<Vec3d> Path::getDirections() { return directions; }
+vector<Vec3d> Path::getUpvectors() { return up_vectors; }
+vector<Vec3d> Path::getColors() { return colors; }
 
-vector<Pose> path::getPoses() {
+vector<Pose> Path::getPoses() {
     vector<Pose> res;
     for (uint i=0; i<positions.size(); i++) {
         res.push_back( Pose(positions[i], directions[i], up_vectors[i]) );
@@ -355,18 +355,18 @@ vector<Pose> path::getPoses() {
     return res;
 }
 
-void path::invert() { direction *= -1; }
-void path::update() { compute(iterations); }
+void Path::invert() { direction *= -1; }
+void Path::update() { compute(iterations); }
 
-void path::close() {
+void Path::close() {
     if (points.size() <= 1) return;
     points.push_back( points[0] );
     closed = true;
 }
 
-bool path::isClosed() { return closed; }
+bool Path::isClosed() { return closed; }
 
-Vec3d path::interp(vector<Vec3d>& vec, float t, int i, int j) {
+Vec3d Path::interp(vector<Vec3d>& vec, float t, int i, int j) {
     if (t <= 0) t = 0; if (t >= 1) t = 1; // clamp t
     if (direction == -1) t = 1-t;
 
@@ -386,7 +386,7 @@ Vec3d path::interp(vector<Vec3d>& vec, float t, int i, int j) {
     return vec[i+ti]*(1-x) + vec[i+ti+1]*x;
 }
 
-Vec3d path::getPosition(float t, int i, int j, bool fast) {
+Vec3d Path::getPosition(float t, int i, int j, bool fast) {
     if (fast) return interp(positions, t, i, j);
 
     if (degree == 2) {
@@ -411,9 +411,9 @@ Vec3d path::getPosition(float t, int i, int j, bool fast) {
     return Vec3d();
 }
 
-Color3f path::getColor(float t, int i, int j) { return Vec3f(interp(colors, t, i, j)); }
+Color3f Path::getColor(float t, int i, int j) { return Vec3f(interp(colors, t, i, j)); }
 
-void path::getOrientation(float t, Vec3d& dir, Vec3d& up, int i, int j, bool fast) {
+void Path::getOrientation(float t, Vec3d& dir, Vec3d& up, int i, int j, bool fast) {
     if (fast) {
         dir = interp(directions, t, i, j)*direction;
         up  = interp(up_vectors, t, i, j);
@@ -441,12 +441,12 @@ void path::getOrientation(float t, Vec3d& dir, Vec3d& up, int i, int j, bool fas
     }
 }
 
-PosePtr path::getPose(float t, int i, int j, bool fast) {
+PosePtr Path::getPose(float t, int i, int j, bool fast) {
     Vec3d d,u; getOrientation(t,d,u,i,j,fast);
     return Pose::create(getPosition(t,i,j,fast), d, u);
 }
 
-float path::getClosestPoint(Vec3d p) {
+float Path::getClosestPoint(Vec3d p) {
     float dist2 = 1.0e20;
     float t_min = 0;
 
@@ -470,7 +470,7 @@ float path::getClosestPoint(Vec3d p) {
     return t_min;
 }
 
-float path::getDistanceToHull(Vec3d p) {
+float Path::getDistanceToHull(Vec3d p) {
     float dist2 = 1.0e20;
 
     for (uint i=1; i<points.size(); i++){
@@ -489,7 +489,7 @@ float path::getDistanceToHull(Vec3d p) {
     return sqrt(dist2);
 }
 
-float path::getDistance(Vec3d p) {
+float Path::getDistance(Vec3d p) {
     float dist2 = 1.0e20;
 
     for (uint i=1; i<positions.size(); i++){
@@ -508,7 +508,7 @@ float path::getDistance(Vec3d p) {
     return sqrt(dist2);
 }
 
-void path::clear() {
+void Path::clear() {
     points.clear();
     positions.clear();
     directions.clear();
@@ -521,7 +521,7 @@ void clampSegment(int& i, int& j, int N) {
     if (j <= i || j >= N) j = N-1;
 }
 
-bool path::isStraight(int i, int j) {
+bool Path::isStraight(int i, int j) {
     clampSegment(i, j, points.size());
     Vec3d p1 = points[i].pos();
     Vec3d d1 = points[i].dir();
@@ -534,7 +534,7 @@ bool path::isStraight(int i, int j) {
     return abs(d.dot(d1)) > 0.999 && abs(d.dot(d2)) > 0.999;
 }
 
-bool path::isCurve(int i, int j) { // TODO
+bool Path::isCurve(int i, int j) { // TODO
     clampSegment(i, j, points.size());
     if (isStraight(i,j)) return false;
     auto iPnts = computeInflectionPoints(i,j);
@@ -542,7 +542,7 @@ bool path::isCurve(int i, int j) { // TODO
     return false;
 }
 
-bool path::isSinuous(int i, int j) { // TODO
+bool Path::isSinuous(int i, int j) { // TODO
     clampSegment(i, j, points.size());
     if (isStraight(i,j)) return false;
     auto iPnts = computeInflectionPoints(i,j);

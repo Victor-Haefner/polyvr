@@ -12,10 +12,10 @@ template<> bool toValue(PyObject* o, VRStroke::CAP& v) { if (!PyString_Check(o))
 simpleVRPyType(Stroke, New_VRObjects_ptr);
 
 PyMethodDef VRPyStroke::methods[] = {
-    {"setPath", PyWrap( Stroke, setPath, "Set a single path", void, pathPtr ) },
-    {"addPath", PyWrap( Stroke, addPath, "Add a path", void, pathPtr ) },
-    {"setPaths", PyWrap( Stroke, setPaths, "Set a list of paths", void, vector<pathPtr> ) },
-    {"getPaths", PyWrap( Stroke, getPaths, "Get the list of paths", vector<pathPtr> ) },
+    {"setPath", PyWrap( Stroke, setPath, "Set a single path", void, PathPtr ) },
+    {"addPath", PyWrap( Stroke, addPath, "Add a path", void, PathPtr ) },
+    {"setPaths", PyWrap( Stroke, setPaths, "Set a list of paths", void, vector<PathPtr> ) },
+    {"getPaths", PyWrap( Stroke, getPaths, "Get the list of paths", vector<PathPtr> ) },
     {"strokeProfile", PyWrapOpt( Stroke, strokeProfile, "Stroke along path using a profile", "1|0|0", void, vector<Vec3d>, bool, bool, bool, VRStroke::CAP, VRStroke::CAP) },
     {"strokeStrew", PyWrap( Stroke, strokeStrew, "Stew objects along path", void, VRGeometryPtr ) },
     {"update", PyWrap( Stroke, update, "Update stroke", void ) },

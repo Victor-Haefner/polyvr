@@ -57,7 +57,7 @@ class VRPolygon {
         bool areInside(vector<Vec2d> pv);
 
         string toString();
-        pathPtr toPath();
+        PathPtr toPath();
         static void runTest();
 };
 

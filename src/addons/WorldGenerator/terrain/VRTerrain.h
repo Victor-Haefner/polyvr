@@ -14,13 +14,13 @@ class Action;
 
 class VREmbankment : public VRGeometry{
     private:
-        pathPtr p1, p2, p3, p4;
+        PathPtr p1, p2, p3, p4;
         VRPolygon area;
 
     public:
-        VREmbankment(pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4);
+        VREmbankment(PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4);
         ~VREmbankment();
-        static VREmbankmentPtr create(pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4);
+        static VREmbankmentPtr create(PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4);
 
         bool isInside(Vec2d p);
         float getHeight(Vec2d p);
@@ -89,7 +89,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
 
         void flatten(vector<Vec2d> perimeter, float h);
         void paintHeights(string path);
-        void addEmbankment(string ID, pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4);
+        void addEmbankment(string ID, PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4);
 
         vector<Vec3d> probeHeight( Vec2d p);
 

@@ -163,7 +163,7 @@ PyObject* VRPyPathtool::getHandles(VRPyPathtool* self, PyObject* args) {
 
     VRPyPath* p = 0;
     if (! PyArg_ParseTuple(args, "|O:getHandles", &p)) return NULL;
-    pathPtr pa = 0;
+    PathPtr pa = 0;
     if (p) pa = p->objPtr;
 
     vector<VRGeometryPtr> objs = self->objPtr->getHandles(pa);

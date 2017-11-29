@@ -2,6 +2,7 @@
 #include "core/scripting/VRPyBaseT.h"
 #include "core/scripting/VRPyGeometry.h"
 
+using namespace OSG;
 
 template<> PyTypeObject VRPyBaseT<OSG::VRMolecule>::type = {
     PyObject_HEAD_INIT(NULL)
@@ -55,7 +56,7 @@ PyMethodDef VRPyMolecule::methods[] = {
     {"rotateBond", (PyCFunction)VRPyMolecule::rotateBond, METH_VARARGS, "Rotate the bond between atom a && b - rotateBond(int aID, int bID, float a)" },
     {"changeBond", (PyCFunction)VRPyMolecule::changeBond, METH_VARARGS, "Change the bond type between atom a && b to type t- changeBond(int aID, int bID, int t)" },
     {"remAtom", (PyCFunction)VRPyMolecule::remAtom, METH_VARARGS, "Remove an atom by ID" },
-    {"getAtomPosition", (PyCFunction)VRPyMolecule::getAtomPosition, METH_VARARGS, "Returns the position of the atom by ID - getAtomPosition(int ID)" },
+    {"getAtomPosition", PyWrap(Molecule, getAtomPosition, "Returns the position of the atom by ID", Vec3d, int ) },
     {NULL}  /* Sentinel */
 };
 
@@ -70,15 +71,6 @@ PyObject* VRPyMolecule::remAtom(VRPyMolecule* self, PyObject* args) {
     self->objPtr->remAtom( parseInt(args) );
     self->objPtr->updateGeo();
     Py_RETURN_TRUE;
-}
-
-PyObject* VRPyMolecule::getAtomPosition(VRPyMolecule* self, PyObject* args) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMolecule::getAtomPosition - Object is invalid"); return NULL; }
-    OSG::VRAtom* a = self->objPtr->getAtom( parseInt(args) );
-    if (a == 0) return toPyTuple( OSG::Vec3d(0,0,0) );
-    auto m = self->objPtr->getWorldMatrix();
-    m.mult( a->getTransformation() );
-    return toPyTuple( OSG::Vec3d(m[3]) );
 }
 
 PyObject* VRPyMolecule::setRandom(VRPyMolecule* self, PyObject* args) {

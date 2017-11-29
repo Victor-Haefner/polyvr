@@ -138,8 +138,8 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         return poly;
     };
 
-    auto wayToPath = [&](OSMWayPtr& way, int N) -> pathPtr {
-        auto path = path::create();
+    auto wayToPath = [&](OSMWayPtr& way, int N) -> PathPtr {
+        auto path = Path::create();
         vector<Vec3d> pos;
         for (auto nID : way->nodes) {
             auto n = osmMap->getNode(nID);
@@ -179,7 +179,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
     };
 
     auto embSlopePath = [&](OSMWayPtr& way, int N) {
-        auto path = path::create();
+        auto path = Path::create();
         vector<Vec3d> pos;
         for (auto nID : way->nodes) {
             auto n = osmMap->getNode(nID);

@@ -108,6 +108,7 @@ class VRMolecule : public VRGeometry {
         string getDefinition();
 
         VRAtom* getAtom(int ID);
+        Vec3d getAtomPosition(int ID);
 
         void setLocalOrigin(int ID);
 
