@@ -147,10 +147,29 @@ void feed2D(PyObject* o, T& vec) {
     Py_ssize_t N = PyList_Size(o);
 
     for (Py_ssize_t i=0; i<N; i++) {
-        pi = PyList_GetItem(o, i);
+        pi = PyList_GetItem(o,i);
         for (Py_ssize_t j=0; j<PyList_Size(pi); j++) {
             pj = PyList_GetItem(pi, j);
             tmp[j] = PyFloat_AsDouble(pj);
+        }
+        vec->push_back(tmp);
+    }
+}
+
+template<>
+void feed2D<GeoPnt3fPropertyMTRecPtr, Pnt3d>(PyObject* o, GeoPnt3fPropertyMTRecPtr& vec) {
+    PyObject *pi, *pj;
+    Pnt3d tmp;
+    Py_ssize_t N = PyList_Size(o);
+
+    for (Py_ssize_t i=0; i<N; i++) {
+        pi = PyList_GetItem(o,i);
+        if (VRPyVec3f::check(pi)) tmp = Pnt3d(((VRPyVec3f*)pi)->v);
+        else {
+            for (Py_ssize_t j=0; j<PyList_Size(pi); j++) {
+                pj = PyList_GetItem(pi, j);
+                tmp[j] = PyFloat_AsDouble(pj);
+            }
         }
         vec->push_back(tmp);
     }
@@ -556,7 +575,7 @@ PyObject* VRPyGeometry::setColors(VRPyGeometry* self, PyObject *args) {
     GeoVec4fPropertyMTRecPtr cols = GeoVec4fProperty::create();
     string tname = vec->ob_type->tp_name;
     if (tname == "numpy.ndarray") feed2Dnp<GeoVec4fPropertyMTRecPtr, Vec4d>( vec, cols);
-    else feed2D<GeoVec4fPropertyMTRecPtr, Vec4d>( vec, cols);
+    else feed2D<GeoVec4fPropertyMTRecPtr, Color4f>( vec, cols);
 
     geo->setColors(cols, true);
     Py_RETURN_TRUE;
