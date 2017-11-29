@@ -11,10 +11,16 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRAvatar {
+    public:
+        struct Beacon {
+            VRTransformPtr tmpContainer;
+            VRTransformPtr beacon;
+            map<string, VRObjectPtr> avatars;
+        };
+
     private:
         VRTransformPtr deviceRoot = 0;
-        VRTransformPtr tmpContainer = 0;
-        map<string, VRObjectPtr> avatars;
+        vector<Beacon> beacons;
 
         VRObjectPtr initRay();
         VRObjectPtr initCone();
@@ -33,12 +39,15 @@ class VRAvatar {
         void enableAvatar(string avatar);
         void disableAvatar(string avatar);
 
-        VRTransformPtr getBeacon();
-        VRTransformPtr editBeacon();
-        void setBeacon(VRTransformPtr b);
-        void updateBeacon();
+        Beacon addBeacon();
+        VRTransformPtr getBeacon(int i);
+        VRTransformPtr editBeacon(int i);
+        void setBeacon(VRTransformPtr b, int i);
+        void updateBeacons();
 };
 
 OSG_END_NAMESPACE;
 
 #endif // VRAVATAR_H_INCLUDED
+
+// TODO: adjust class for vector<Beacon>, multiple beacons

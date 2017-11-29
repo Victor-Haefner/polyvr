@@ -102,10 +102,17 @@ bool VRMouse::calcViewRay(VRCameraPtr cam, Line &line, float x, float y, int W, 
     if (!cam) return false;
     if(W <= 0 || H <= 0) return false;
 
-    Matrix proj, projtrans, view;
+    auto v = view.lock();
+    Matrix proj, projtrans;
 
-    cam->getCam()->cam->getProjection(proj, W, H);
-    cam->getCam()->cam->getProjectionTranslation(projtrans, W, H);
+    if (v && v->getCameraDecoratorLeft()) {
+        auto c = v->getCameraDecoratorLeft();
+        c->getProjection(proj, W, H);
+        c->getProjectionTranslation(projtrans, W, H);
+    } else {
+        cam->getCam()->cam->getProjection(proj, W, H);
+        cam->getCam()->cam->getProjectionTranslation(projtrans, W, H);
+    }
 
     Matrix wctocc;
     wctocc.mult(proj);
@@ -118,6 +125,7 @@ bool VRMouse::calcViewRay(VRCameraPtr cam, Line &line, float x, float y, int W, 
     Pnt3f from, at;
     multFull(cctowc, Pnt3f(x, y, 0), from); // -1
     multFull(cctowc, Pnt3f(x, y, 1), at ); // 0.1
+    if (v && v->getCameraDecoratorLeft()) from += Vec3f(v->getProjectionUser());
 
     Vec3f dir = at - from;
     dir.normalize();
@@ -151,6 +159,7 @@ void VRMouse::updatePosition(int x, int y) {
     //cam->getCam()->calcViewRay(ray,x,y,*v->getViewport());
     calcViewRay(cam, ray, rx,ry,w,h);
     editBeacon()->setDir(Vec3d(ray.getDirection()));
+    editBeacon()->setFrom(Vec3d(ray.getPosition()));
 
     int side = -1;
     if (rx > 0.95) side = 0;
