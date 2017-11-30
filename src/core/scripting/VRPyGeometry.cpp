@@ -119,6 +119,7 @@ int getListDepth(PyObject* o) {
         PyArrayObject* a = (PyArrayObject*)o;
         return PyArray_NDIM(a);
 	}
+	if (tname == "VR.Math.Vec3") return 1;
 	return 0;
 }
 
@@ -142,51 +143,20 @@ void feed2Dnp(PyObject* o, T& vec) { // numpy version
 
 template<class T, class t>
 void feed2D(PyObject* o, T& vec) {
-    PyObject *pi, *pj;
     t tmp;
-    Py_ssize_t N = PyList_Size(o);
-
-    for (Py_ssize_t i=0; i<N; i++) {
-        pi = PyList_GetItem(o,i);
-        for (Py_ssize_t j=0; j<PyList_Size(pi); j++) {
-            pj = PyList_GetItem(pi, j);
-            tmp[j] = PyFloat_AsDouble(pj);
-        }
-        vec->push_back(tmp);
-    }
-}
-
-template<>
-void feed2D<GeoPnt3fPropertyMTRecPtr, Pnt3d>(PyObject* o, GeoPnt3fPropertyMTRecPtr& vec) {
-    PyObject *pi, *pj;
-    Pnt3d tmp;
-    Py_ssize_t N = PyList_Size(o);
-
-    for (Py_ssize_t i=0; i<N; i++) {
-        pi = PyList_GetItem(o,i);
-        if (VRPyVec3f::check(pi)) tmp = Pnt3d(((VRPyVec3f*)pi)->v);
-        else {
-            for (Py_ssize_t j=0; j<PyList_Size(pi); j++) {
-                pj = PyList_GetItem(pi, j);
-                tmp[j] = PyFloat_AsDouble(pj);
-            }
-        }
+    PyObject* pi = 0;
+    for (Py_ssize_t i=0; i<PyList_Size(o); i++) {
+        toValue(PyList_GetItem(o,i), tmp);
         vec->push_back(tmp);
     }
 }
 
 template<class T, class t>
 void feed2D_v2(PyObject* o, T& vec) {
-    PyObject *pi, *pj;
     t tmp;
-    Py_ssize_t N = PyList_Size(o);
-
-    for (Py_ssize_t i=0; i<N; i++) {
-        pi = PyList_GetItem(o, i);
-        for (Py_ssize_t j=0; j<PyList_Size(pi); j++) {
-            pj = PyList_GetItem(pi, j);
-            tmp[j] = PyFloat_AsDouble(pj);
-        }
+    PyObject* pi = 0;
+    for (Py_ssize_t i=0; i<PyList_Size(o); i++) {
+        toValue(PyList_GetItem(o,i), tmp);
         vec.push_back(tmp);
     }
 }

@@ -331,7 +331,10 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
         if (graph && handleToNode.count(key)) graph->setPosition( handleToNode[key], p );
 
         for (auto e : handleToEntries[key]) {
-            auto op = e->p->getPoint(e->points[key]);
+            if (!e || !e->p || e->points.count(key) == 0) continue;
+            auto pnt = e->points[key];
+            if (e->p->size() <= pnt) continue;
+            auto op = e->p->getPoint(pnt);
             e->p->setPoint( e->points[key], Pose(p->pos(), op.dir(), p->up()));
             updateEntry(e);
         }
@@ -556,9 +559,10 @@ VRGeometryPtr VRPathtool::extrude(VRDevicePtr dev, PathPtr p) {
     VRGeometryPtr h = newHandle();
     handleToEntries[h.get()].push_back(e);
     handles.push_back(h);
-    e->points[h.get()] = e->points.size()-1;
+    e->points[h.get()] = e->p->size()-1;
     e->handles.push_back(h);
     e->anchor.lock()->addChild(h);
+
     if (dev) {
         dev->drag(h, dev->getBeacon());
         h->setPose( Pose::create(Vec3d(0,0,-1)) );
