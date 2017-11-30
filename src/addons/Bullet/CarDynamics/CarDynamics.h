@@ -127,10 +127,10 @@ class VRCarDynamics : public VRObject {
         float eForces = 0;
 
         float minThrottle = 0.05;
+        bool throttleDamperBool=false;
 
         float clamp(float v, float m1, float m2);
         float rescale(float v, float m1, float m2);
-        float sgnum(float f) ;
 
         float computeCoupling( WheelPtr wheel );
         float computeWheelGearRPM( WheelPtr wheel );
