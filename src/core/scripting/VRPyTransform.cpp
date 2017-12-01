@@ -47,6 +47,8 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getWorldUp", (PyCFunction)VRPyTransform::getWorldUp, METH_NOARGS, "Return the object's up vector" },
     {"getScale", (PyCFunction)VRPyTransform::getScale, METH_NOARGS, "Return the object's scale vector" },
     {"getEuler", (PyCFunction)VRPyTransform::getEuler, METH_NOARGS, "Return the object's euler angles - [X,Y,Z] getEuler()" },
+    {"setMatrix", PyWrap(Transform, setMatrix, "Set the object's matrix", void, Matrix4d ) },
+    {"setWorldMatrix", PyWrap(Transform, setWorldMatrix, "Set the object's world matrix", void, Matrix4d ) },
     {"setWorldFrom", (PyCFunction)VRPyTransform::setWFrom, METH_VARARGS, "Set the object's world position" },
     {"setWorldOrientation", (PyCFunction)VRPyTransform::setWOrientation, METH_VARARGS, "Set the object's world direction" },
     {"setPose", (PyCFunction)VRPyTransform::setPose, METH_VARARGS, "Set the object's pose - setPose(pose)\n\tsetPose(pos, dir, up)" },

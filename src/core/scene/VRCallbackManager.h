@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <map>
+#include <vector>
 #include <list>
 #include <memory>
 #include "core/utils/VRFunctionFwd.h"
@@ -27,7 +28,7 @@ class VRCallbackManager {
         };
 
         bool updateListsChanged;
-        map<VRUpdateCb*, job> jobFktPtrs;
+        vector<job> jobFktPtrs;
         map<int, list<timeoutFkt>* > timeoutFktPtrs;
         map<int, list<VRUpdateCbWeakPtr>* > updateFktPtrs;
         map<int, list<VRUpdateCbWeakPtr>* >::reverse_iterator fktPtr_list_itr;
