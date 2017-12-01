@@ -742,8 +742,8 @@ double VRPolygon::getDistance(Vec3d p) { // TODO
     return sqrt(dist2);
 }
 
-pathPtr VRPolygon::toPath() {
-    auto res = path::create();
+PathPtr VRPolygon::toPath() {
+    auto res = Path::create();
     for (int i=0; i<int(points.size()); i++) {
         Vec2d& p1 = points[(i-1)%points.size()];
         Vec2d& p2 = points[i];

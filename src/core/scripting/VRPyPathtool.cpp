@@ -17,7 +17,7 @@ simpleVRPyType(Pathtool, New_ptr);
 PyMethodDef VRPyPathtool::methods[] = {
     {"newPath", (PyCFunction)VRPyPathtool::newPath, METH_VARARGS, "Add a new path - path newPath(device, anchor | int resolution, bool doControlHandles )" },
     {"remPath", (PyCFunction)VRPyPathtool::remPath, METH_VARARGS, "Remove a path - remPath(path)" },
-    {"extrude", (PyCFunction)VRPyPathtool::extrude, METH_VARARGS, "Extrude a path - handle extrude(device, path)" },
+    {"extrude", PyWrap(Pathtool, extrude, "Extrude a path", VRGeometryPtr, VRDevicePtr, PathPtr) },
     {"addPath", (PyCFunction)VRPyPathtool::addPath, METH_VARARGS, "Add a path and add resulting stroke to object - addPath(path, object)" },
     {"select", (PyCFunction)VRPyPathtool::select, METH_VARARGS, "Select handle - select(handle)" },
     {"deselect", (PyCFunction)VRPyPathtool::deselect, METH_NOARGS, "Deselect anything previously selected - deselect()" },
@@ -163,7 +163,7 @@ PyObject* VRPyPathtool::getHandles(VRPyPathtool* self, PyObject* args) {
 
     VRPyPath* p = 0;
     if (! PyArg_ParseTuple(args, "|O:getHandles", &p)) return NULL;
-    pathPtr pa = 0;
+    PathPtr pa = 0;
     if (p) pa = p->objPtr;
 
     vector<VRGeometryPtr> objs = self->objPtr->getHandles(pa);
@@ -226,14 +226,5 @@ PyObject* VRPyPathtool::remPath(VRPyPathtool* self, PyObject* args) {
     VRPyPath* p = (VRPyPath*)parseObject(args);
     self->objPtr->remPath( p->objPtr );
     Py_RETURN_TRUE;
-}
-
-PyObject* VRPyPathtool::extrude(VRPyPathtool* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    VRPyDevice* dev; VRPyPath* p;
-    if (! PyArg_ParseTuple(args, "OO:extrude", &dev, &p)) return NULL;
-    VRDevicePtr d = 0;
-    if (!isNone((PyObject*)dev)) d = dev->objPtr;
-    return VRPyGeometry::fromSharedPtr( self->objPtr->extrude( d, p->objPtr) );
 }
 

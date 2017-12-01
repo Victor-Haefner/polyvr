@@ -54,7 +54,7 @@ VRTransformPtr FObject::getTransformation() {
 void FObject::setType(FObject::Type t) { type = t; }
 FObject::Type FObject::getType() { return type; }
 
-bool FObject::move(OSG::pathPtr p, float dx) {
+bool FObject::move(OSG::PathPtr p, float dx) {
     VRTransformPtr trans = getTransformation();
     if (trans == 0) return true;
 
@@ -166,14 +166,14 @@ void FPath::add(shared_ptr<FNode> n) {
     update();
 }
 
-OSG::pathPtr FPath::getPath(shared_ptr<FNode> n) { return paths[n.get()]; }
+OSG::PathPtr FPath::getPath(shared_ptr<FNode> n) { return paths[n.get()]; }
 
 void FPath::update() {
     paths.clear();
     for (unsigned int i=1; i<nodes.size(); i++) {
         auto n0 = nodes[i-1];
         auto n1 = nodes[i];
-        auto p = path::create();
+        auto p = Path::create();
         p->addPoint(*n0->getTransform()->getWorldPose());
         p->addPoint(*n1->getTransform()->getWorldPose());
         p->compute(12);
@@ -376,13 +376,13 @@ vector<shared_ptr<FNode>> FNetwork::getNodes() {
 }
 
 VRStrokePtr FNetwork::stroke(Color3f c, float k) {
-    vector<pathPtr> paths;
+    vector<PathPtr> paths;
     for (auto n1 : nodes) {
         auto p1 = n1.second->getTransform()->getWorldPose();
         map<int, shared_ptr<FNode>>::iterator itr2;
         for (auto n2 : n1.second->getOutgoing()) {
             auto p2 = n2.second->getTransform()->getWorldPose();
-            pathPtr p = path::create();
+            PathPtr p = Path::create();
             p->addPoint( *p1, c );
             p->addPoint( *p2, c );
             p->compute(20);

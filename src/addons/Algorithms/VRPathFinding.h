@@ -29,7 +29,7 @@ class VRPathFinding {
 
     private:
         GraphPtr graph;
-        vector<pathPtr> paths;
+        vector<PathPtr> paths;
 
         map<Position, int> closedSet; // set of nodes already evaluated
         map<Position, int> openSet; // set of currently discovered nodes that are not evaluated yet
@@ -53,7 +53,7 @@ class VRPathFinding {
         static VRPathFindingPtr create();
 
         void setGraph(GraphPtr g);
-        void setPaths(vector<pathPtr> p);
+        void setPaths(vector<PathPtr> p);
         vector<Position> computePath(Position start, Position goal);
 };
 

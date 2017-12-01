@@ -3,6 +3,8 @@
 
 using namespace OSG;
 
+template<> PyObject* VRPyTypeCaster::cast(const Pose& p) { return VRPyPose::fromObject(p); }
+
 simplePyType( Pose, VRPyPose::New );
 
 PyMethodDef VRPyPose::methods[] = {

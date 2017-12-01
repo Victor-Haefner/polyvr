@@ -23,6 +23,7 @@ template<> PyTypeObject VRPyBaseT< X >::type = { \
 \
 template <> \
 bool toValue(PyObject* o, std::shared_ptr<X>& v) { \
+    if (VRPyBase::isNone(o)) { v = 0; return 1; } \
     if (!VRPy ## Y::check(o)) return 0; \
     v = ((VRPy ## Y*)o)->objPtr; return 1; \
 }; \

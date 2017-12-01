@@ -26,6 +26,7 @@ int VRProfiler::regStart(string name) {
 
 void VRProfiler::regStop(int ID) {
     if (ID < 0) return;
+    if (!current || !current->calls.count(ID)) return;
     boost::mutex::scoped_lock lock(mutex);
     current->calls[ID].t1 = getTime();
 }

@@ -316,7 +316,7 @@ void VRNavigator::orbit2D(VRDeviceWeakPtr _dev) {
     target->zoom(x);
 }
 
-void animPathAt(VRTransformWeakPtr trp, path* p, float t) {
+void animPathAt(VRTransformWeakPtr trp, PathPtr p, float t) {
     auto tr = trp.lock();
     if (!tr) return;
     tr->setAt( p->getPosition(t) );
@@ -337,7 +337,7 @@ void VRNavigator::focus(VRDeviceWeakPtr _dev) {
     if (!ins.hit) return;
 
     Vec3d z;
-    path* p = new path();
+    auto p = Path::create();
     p->addPoint( Pose(target->getAt(), z));
     p->addPoint( Pose(ins.point.subZero(), z));
     p->compute(20);

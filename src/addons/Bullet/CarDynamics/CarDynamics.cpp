@@ -428,7 +428,7 @@ void VRCarDynamics::setParameter(float mass, float enginePower, float breakPower
     engine->breakPower = breakPower;
 
     //TODO: pass it
-    if (!engine->clutchTransmissionCurve) engine->clutchTransmissionCurve = path::create();
+    if (!engine->clutchTransmissionCurve) engine->clutchTransmissionCurve = Path::create();
     engine->clutchTransmissionCurve->clear();
     engine->clutchTransmissionCurve->addPoint( Pose(Vec3d(0,1,0), Vec3d(1,0,0)));
     engine->clutchTransmissionCurve->addPoint( Pose(Vec3d(1,0,0), Vec3d(1,0,0)));

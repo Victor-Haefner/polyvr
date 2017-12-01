@@ -783,7 +783,7 @@ void VRTransform::setup() {
     setAt(_at);
 }
 
-void setFromPath(VRTransformWeakPtr trp, pathPtr p, bool redirect, float t) {
+void setFromPath(VRTransformWeakPtr trp, PathPtr p, bool redirect, float t) {
     auto tr = trp.lock();
     if (!tr) return;
     tr->setFrom( p->getPosition(t) );
@@ -804,7 +804,7 @@ vector<VRAnimationPtr> VRTransform::getAnimations() {
     return res;
 }
 
-VRAnimationPtr VRTransform::startPathAnimation(pathPtr p, float time, float offset, bool redirect, bool loop) {
+VRAnimationPtr VRTransform::startPathAnimation(PathPtr p, float time, float offset, bool redirect, bool loop) {
     pathAnimPtr = VRAnimCb::create("TransAnim", boost::bind(setFromPath, VRTransformWeakPtr(ptr()), p, redirect, _1));
     animCBs.push_back(pathAnimPtr);
     auto a = VRScene::getCurrent()->addAnimation<float>(time, offset, pathAnimPtr, 0.f, 1.f, loop);addAnimation(a);

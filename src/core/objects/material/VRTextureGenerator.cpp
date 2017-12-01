@@ -78,7 +78,7 @@ void VRTextureGenerator::drawLine(Vec3d p1, Vec3d p2, Color4f c, float w) {
     layers.push_back(l);
 }
 
-void VRTextureGenerator::drawPath(pathPtr p, Color4f c, float w) {
+void VRTextureGenerator::drawPath(PathPtr p, Color4f c, float w) {
     Layer l;
     l.type = PATH;
     l.p = p;
@@ -216,7 +216,7 @@ void VRTextureGenerator::applyLine(T* data, Vec3d p1, Vec3d p2, Color4f c, float
 }
 
 template<typename T>
-void VRTextureGenerator::applyPath(T* data, pathPtr p, Color4f c, float w) {
+void VRTextureGenerator::applyPath(T* data, PathPtr p, Color4f c, float w) {
     auto poses = p->getPoses();
     for (uint i=1; i<poses.size(); i++) {
         Pose& p1 = poses[i-1];

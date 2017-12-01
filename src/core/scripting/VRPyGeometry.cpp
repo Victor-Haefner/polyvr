@@ -13,6 +13,7 @@
 #include "VRPyTypeCaster.h"
 #include "VRPyPose.h"
 #include "VRPyBoundingbox.h"
+#include "VRPyMath.h"
 
 #define NO_IMPORT_ARRAY
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
@@ -118,6 +119,7 @@ int getListDepth(PyObject* o) {
         PyArrayObject* a = (PyArrayObject*)o;
         return PyArray_NDIM(a);
 	}
+	if (tname == "VR.Math.Vec3") return 1;
 	return 0;
 }
 
@@ -141,32 +143,20 @@ void feed2Dnp(PyObject* o, T& vec) { // numpy version
 
 template<class T, class t>
 void feed2D(PyObject* o, T& vec) {
-    PyObject *pi, *pj;
     t tmp;
-    Py_ssize_t N = PyList_Size(o);
-
-    for (Py_ssize_t i=0; i<N; i++) {
-        pi = PyList_GetItem(o, i);
-        for (Py_ssize_t j=0; j<PyList_Size(pi); j++) {
-            pj = PyList_GetItem(pi, j);
-            tmp[j] = PyFloat_AsDouble(pj);
-        }
+    PyObject* pi = 0;
+    for (Py_ssize_t i=0; i<PyList_Size(o); i++) {
+        toValue(PyList_GetItem(o,i), tmp);
         vec->push_back(tmp);
     }
 }
 
 template<class T, class t>
 void feed2D_v2(PyObject* o, T& vec) {
-    PyObject *pi, *pj;
     t tmp;
-    Py_ssize_t N = PyList_Size(o);
-
-    for (Py_ssize_t i=0; i<N; i++) {
-        pi = PyList_GetItem(o, i);
-        for (Py_ssize_t j=0; j<PyList_Size(pi); j++) {
-            pj = PyList_GetItem(pi, j);
-            tmp[j] = PyFloat_AsDouble(pj);
-        }
+    PyObject* pi = 0;
+    for (Py_ssize_t i=0; i<PyList_Size(o); i++) {
+        toValue(PyList_GetItem(o,i), tmp);
         vec.push_back(tmp);
     }
 }
@@ -555,7 +545,7 @@ PyObject* VRPyGeometry::setColors(VRPyGeometry* self, PyObject *args) {
     GeoVec4fPropertyMTRecPtr cols = GeoVec4fProperty::create();
     string tname = vec->ob_type->tp_name;
     if (tname == "numpy.ndarray") feed2Dnp<GeoVec4fPropertyMTRecPtr, Vec4d>( vec, cols);
-    else feed2D<GeoVec4fPropertyMTRecPtr, Vec4d>( vec, cols);
+    else feed2D<GeoVec4fPropertyMTRecPtr, Color4f>( vec, cols);
 
     geo->setColors(cols, true);
     Py_RETURN_TRUE;
@@ -651,7 +641,7 @@ PyObject* VRPyGeometry::getPositions(VRPyGeometry* self) {
     for (uint i=0; i<pos->size(); i++) {
         Vec3d v;
         pos->getValue(v,i);
-        PyObject* pv = toPyTuple(v);
+        PyObject* pv = toPyObject(v);
         // append to list
         PyList_SetItem(res, i, pv);
     }
@@ -704,7 +694,7 @@ PyObject* VRPyGeometry::getNormals(VRPyGeometry* self) {
     for (uint i=0; i<pos->size(); i++) {
         Vec3d v;
         pos->getValue(v,i);
-        PyObject* pv = toPyTuple(v);
+        PyObject* pv = toPyObject(v);
         PyList_SetItem(res, i, pv);
     }
 
@@ -722,7 +712,7 @@ PyObject* VRPyGeometry::getColors(VRPyGeometry* self) {
     for (uint i=0; i<pos->size(); i++) {
         Vec3d v;
         pos->getValue(v,i);
-        PyObject* pv = toPyTuple(v);
+        PyObject* pv = toPyObject(v);
         PyList_SetItem(res, i, pv);
     }
 
@@ -758,7 +748,7 @@ PyObject* VRPyGeometry::getTexCoords(VRPyGeometry* self) {
     for (unsigned int i=0; i<tc->size(); i++) {
         Vec2d v;
         tc->getValue(v,i);
-        PyObject* pv = toPyTuple(v);
+        PyObject* pv = toPyObject(v);
         PyList_SetItem(res, i, pv);
     }
 

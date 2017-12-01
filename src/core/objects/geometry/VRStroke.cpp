@@ -27,10 +27,10 @@ VRStroke::VRStroke(string name) : VRGeometry(name) { }
 VRStrokePtr VRStroke::create(string name) { return shared_ptr<VRStroke>(new VRStroke(name) ); }
 VRStrokePtr VRStroke::ptr() { return static_pointer_cast<VRStroke>( shared_from_this() ); }
 
-void VRStroke::addPath(pathPtr p) { paths.push_back(p); }
-void VRStroke::setPath(pathPtr p) { paths.clear(); addPath(p); }
-void VRStroke::setPaths(vector<pathPtr> p) { paths = p; }
-vector<pathPtr> VRStroke::getPaths() { return paths; }
+void VRStroke::addPath(PathPtr p) { paths.push_back(p); }
+void VRStroke::setPath(PathPtr p) { paths.clear(); addPath(p); }
+void VRStroke::setPaths(vector<PathPtr> p) { paths = p; }
+vector<PathPtr> VRStroke::getPaths() { return paths; }
 
 void VRStroke::addPolygon(VRPolygonPtr p) { polygons.push_back(p); }
 
@@ -226,7 +226,7 @@ void VRStroke::update() {
 }
 
 vector<Vec3d> VRStroke::getProfile() { return profile; }
-pathPtr VRStroke::getPath() { return paths[0]; }
+PathPtr VRStroke::getPath() { return paths[0]; }
 
 void VRStroke::convertToRope() {
     getPhysics()->setDynamic(true);

@@ -5,6 +5,7 @@
 #include "VRPyPath.h"
 #include "VRPyIntersection.h"
 #include "VRPyTypeCaster.h"
+#include "VRPyMath.h"
 #include "VRPyBaseT.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRConstraint.h"
@@ -268,47 +269,47 @@ PyObject* VRPyTransform::rotateAround(VRPyTransform* self, PyObject* args) {
 
 PyObject* VRPyTransform::getEuler(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    return toPyTuple(self->objPtr->getEuler());
+    return toPyObject(self->objPtr->getEuler());
 }
 
 PyObject* VRPyTransform::getFrom(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    return toPyTuple(self->objPtr->getFrom());
+    return toPyObject(self->objPtr->getFrom());
 }
 
 PyObject* VRPyTransform::getWFrom(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    return toPyTuple(self->objPtr->getWorldPosition());
+    return toPyObject(self->objPtr->getWorldPosition());
 }
 
 PyObject* VRPyTransform::getAt(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    return toPyTuple(self->objPtr->getAt());
+    return toPyObject(self->objPtr->getAt());
 }
 
 PyObject* VRPyTransform::getDir(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    return toPyTuple(self->objPtr->getDir());
+    return toPyObject(self->objPtr->getDir());
 }
 
 PyObject* VRPyTransform::getWorldDir(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    return toPyTuple(self->objPtr->getWorldDirection());
+    return toPyObject(self->objPtr->getWorldDirection());
 }
 
 PyObject* VRPyTransform::getWorldUp(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    return toPyTuple(self->objPtr->getWorldUp());
+    return toPyObject(self->objPtr->getWorldUp());
 }
 
 PyObject* VRPyTransform::getUp(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    return toPyTuple(self->objPtr->getUp());
+    return toPyObject(self->objPtr->getUp());
 }
 
 PyObject* VRPyTransform::getScale(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    return toPyTuple(self->objPtr->getScale());
+    return toPyObject(self->objPtr->getScale());
 }
 
 PyObject* VRPyTransform::getPose(VRPyTransform* self) {
@@ -585,13 +586,13 @@ PyObject* VRPyTransform::applyConstantTorque(VRPyTransform* self, PyObject *args
 PyObject* VRPyTransform::getForce(VRPyTransform* self) {
     if (!self->valid()) return NULL;
     OSG::Vec3d i = self->objPtr->getPhysics()->getForce();
-     return toPyTuple(i);
+    return toPyObject(i);
 }
 
 PyObject* VRPyTransform::getTorque(VRPyTransform* self) {
     if (!self->valid()) return NULL;
     OSG::Vec3d i = self->objPtr->getPhysics()->getTorque();
-    return toPyTuple(i);
+    return toPyObject(i);
 }
 
 PyObject* VRPyTransform::setGravity(VRPyTransform* self, PyObject *args) {
@@ -640,7 +641,7 @@ PyObject* VRPyTransform::getConstraintAngleWith(VRPyTransform* self, PyObject *a
     }
 
     //Py_RETURN_TRUE;
-    return toPyTuple(a);
+    return toPyObject(a);
 }
 
 PyObject* VRPyTransform::deletePhysicsConstraints(VRPyTransform* self, PyObject *args) {

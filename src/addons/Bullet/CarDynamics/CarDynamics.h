@@ -67,6 +67,7 @@ class VRCarDynamics : public VRObject {
             float friction = 5;
             float frictionCoefficient = 14;
             map<int,float> gearRatios;
+          
             pathPtr clutchTransmissionCurve;
             pathPtr torqueCurve;
             bool running = false;

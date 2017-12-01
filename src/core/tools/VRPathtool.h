@@ -55,7 +55,7 @@ class VRPathtool : public VRObject {
     public:
         struct entry {
             int edge = 0;
-            pathPtr p = 0;
+            PathPtr p = 0;
             map<VRGeometry*, int> points;
             vector<VRGeometryWeakPtr> handles;
             VRStrokeWeakPtr line;
@@ -83,17 +83,17 @@ class VRPathtool : public VRObject {
 
     private:
         GraphPtr graph;
-        map<int, pathPtr> paths;
+        map<int, PathPtr> paths;
         map<int, option > options;
         vector<VRGeometryWeakPtr> handles;
         vector<VRGeometryWeakPtr> controlhandles;
         VRGeometryPtr arrowTemplate;
 
-        map<path*, entryPtr> pathToEntry;
+        map<Path*, entryPtr> pathToEntry;
         map<VRGeometry*, vector<entryPtr> > handleToEntries; // map handle geometries to the entries
         map<VRGeometry*, int> handleToNode;
         map<int, knot> knots; // maps graph node ids to pathtool knots
-        pathPtr selectedPath = 0;
+        PathPtr selectedPath = 0;
 
         VRMaterialPtr lmat;
         VRMaterialPtr lsmat;
@@ -106,7 +106,7 @@ class VRPathtool : public VRObject {
         VRGeometryPtr customHandle;
         VRGeometryPtr newControlHandle(VRGeometryPtr handle, Vec3d n);
         VRGeometryPtr newHandle();
-        entryPtr newEntry(pathPtr p, option o, int eID, VRObjectPtr anchor = 0);
+        entryPtr newEntry(PathPtr p, option o, int eID, VRObjectPtr anchor = 0);
         void setupHandles(entryPtr p, VRGeometryPtr ha, VRGeometryPtr he);
         void updateHandle(VRGeometryPtr handle);
         void updateEntry(entryPtr e);
@@ -135,25 +135,25 @@ class VRPathtool : public VRObject {
         void connect(int i1, int i2, bool handles, bool doArrow, Vec3d n1, Vec3d n2);
         void disconnect(int i1, int i2);
 
-        pathPtr newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution = 10, bool doCHandles = false);
-        VRGeometryPtr extrude(VRDevicePtr dev, pathPtr p);
-        void remPath(pathPtr p);
+        PathPtr newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution = 10, bool doCHandles = false);
+        VRGeometryPtr extrude(VRDevicePtr dev, PathPtr p);
+        void remPath(PathPtr p);
 
-        void addPath(pathPtr p, VRObjectPtr anchor = 0, VRGeometryPtr ha = 0, VRGeometryPtr he = 0, bool handles = true);
+        void addPath(PathPtr p, VRObjectPtr anchor = 0, VRGeometryPtr ha = 0, VRGeometryPtr he = 0, bool handles = true);
         void setVisuals(bool handles, bool lines);
         void setHandleGeometry(VRGeometryPtr geo);
-        void clear(pathPtr p = 0);
+        void clear(PathPtr p = 0);
 
-        vector<pathPtr> getPaths(VRGeometryPtr h = 0);
-        pathPtr getPath(VRGeometryPtr h1, VRGeometryPtr h2);
+        vector<PathPtr> getPaths(VRGeometryPtr h = 0);
+        PathPtr getPath(VRGeometryPtr h1, VRGeometryPtr h2);
         VRGeometryPtr getHandle(int ID);
-        vector<VRGeometryPtr> getHandles(pathPtr p);
-        VRStrokePtr getStroke(pathPtr p);
+        vector<VRGeometryPtr> getHandles(PathPtr p);
+        VRStrokePtr getStroke(PathPtr p);
 
         VRMaterialPtr getPathMaterial();
 
         void select(VRGeometryPtr handle);
-        void select(pathPtr p);
+        void select(PathPtr p);
         void deselect();
         void update();
 };

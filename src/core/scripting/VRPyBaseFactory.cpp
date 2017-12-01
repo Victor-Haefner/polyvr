@@ -31,6 +31,7 @@ template<> bool toValue(PyObject* o, VRAnimCbPtr& v) {
 }
 
 bool PyVec_Check(PyObject* o, int N, char type) {
+    if (N == 2 && type == 'f') if (VRPyVec2f::check(o)) return true;
     if (N == 3 && type == 'f') if (VRPyVec3f::check(o)) return true;
     if (!PyList_Check(o)) return false;
     if (PyList_GET_SIZE(o) != N) return false;
@@ -46,7 +47,12 @@ bool PyVec_Check(PyObject* o, int N, char type) {
 }
 
 template<> bool toValue(PyObject* o, Color3f& v) { if (!PyVec_Check(o, 3, 'f')) return 0; v = Vec3f(VRPyBase::parseVec3dList(o)); return 1; }
-template<> bool toValue(PyObject* o, Color4f& v) { if (!PyVec_Check(o, 4, 'f')) return 0; v = Vec4f(VRPyBase::parseVec4dList(o)); return 1; }
+template<> bool toValue(PyObject* o, Color4f& v) {
+    if (PyVec_Check(o, 4, 'f')) { v = Vec4f(VRPyBase::parseVec4dList(o)); return 1; }
+    if (PyVec_Check(o, 3, 'f')) { v = Vec4f(VRPyBase::parseVec3dList(o)); return 1; }
+    return 0;
+}
+
 template<> bool toValue(PyObject* o, Vec2d& v) { if (!PyVec_Check(o, 2, 'f')) return 0; v = VRPyBase::parseVec2dList(o); return 1; }
 template<> bool toValue(PyObject* o, Vec3d& v) { if (!PyVec_Check(o, 3, 'f')) return 0; v = VRPyBase::parseVec3dList(o); return 1; }
 template<> bool toValue(PyObject* o, Vec4d& v) { if (!PyVec_Check(o, 4, 'f')) return 0; v = VRPyBase::parseVec4dList(o); return 1; }

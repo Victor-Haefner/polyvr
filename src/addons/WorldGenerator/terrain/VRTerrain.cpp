@@ -27,13 +27,13 @@
 using namespace OSG;
 
 
-VREmbankment::VREmbankment(pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4) : VRGeometry("embankment"), p1(p1), p2(p2), p3(p3), p4(p4) {
+VREmbankment::VREmbankment(PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4) : VRGeometry("embankment"), p1(p1), p2(p2), p3(p3), p4(p4) {
     for (auto p : p1->getPoints()) { auto pos = p.pos(); area.addPoint(Vec2d(pos[0],pos[2])); };
     for (auto p : p2->getPoints()) { auto pos = p.pos(); area.addPoint(Vec2d(pos[0],pos[2])); };
 }
 
 VREmbankment::~VREmbankment() {}
-VREmbankmentPtr VREmbankment::create(pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4) { return VREmbankmentPtr( new VREmbankment(p1,p2,p3,p4) ); }
+VREmbankmentPtr VREmbankment::create(PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4) { return VREmbankmentPtr( new VREmbankment(p1,p2,p3,p4) ); }
 
 bool VREmbankment::isInside(Vec2d p) { return area.isInside(p); }
 
@@ -575,7 +575,7 @@ void VRTerrain::paintHeights(string path) {
     mat->clearTransparency();
 }
 
-void VRTerrain::addEmbankment(string ID, pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4) {
+void VRTerrain::addEmbankment(string ID, PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4) {
     auto e = VREmbankment::create(p1, p2, p3, p4);
     auto m = VRMaterial::get("embankment");
     m->setTexture("world/textures/gravel2.jpg");

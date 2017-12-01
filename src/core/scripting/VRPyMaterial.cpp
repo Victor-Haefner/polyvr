@@ -12,12 +12,12 @@ using namespace OSG;
 simpleVRPyType(Material, New_VRObjects_ptr);
 
 PyMethodDef VRPyMaterial::methods[] = {
-    {"getAmbient", (PyCFunction)VRPyMaterial::getAmbient, METH_NOARGS, "Returns the ambient color - [f,f,f] getAmbient()" },
-    {"setAmbient", (PyCFunction)VRPyMaterial::setAmbient, METH_VARARGS, "Sets the ambient color - setAmbient([f,f,f])" },
-    {"getDiffuse", (PyCFunction)VRPyMaterial::getDiffuse, METH_NOARGS, "Returns the diffuse color - [f,f,f] getDiffuse()" },
-    {"setDiffuse", (PyCFunction)VRPyMaterial::setDiffuse, METH_VARARGS, "Sets the diffuse color - setDiffuse([f,f,f])" },
-    {"getSpecular", (PyCFunction)VRPyMaterial::getSpecular, METH_NOARGS, "Returns the specular color - [f,f,f] getSpecular()" },
-    {"setSpecular", (PyCFunction)VRPyMaterial::setSpecular, METH_VARARGS, "Sets the specular color - setSpecular([f,f,f])" },
+    {"getAmbient", PyWrap(Material, getAmbient, "Returns the ambient color", Color3f ) },
+    {"setAmbient", PyWrapPack(Material, setAmbient, "Sets the ambient color", void, Color3f ) },
+    {"getDiffuse", PyWrap(Material, getDiffuse, "Returns the diffuse color", Color3f ) },
+    {"setDiffuse", PyWrapPack(Material, setDiffuse, "Sets the diffuse color", void, Color3f ) },
+    {"getSpecular", PyWrap(Material, getSpecular, "Returns the specular color", Color3f ) },
+    {"setSpecular", PyWrapPack(Material, setSpecular, "Sets the specular color", void, Color3f ) },
     {"getTransparency", (PyCFunction)VRPyMaterial::getTransparency, METH_NOARGS, "Returns the transparency - f getTransparency()" },
     {"setTransparency", (PyCFunction)VRPyMaterial::setTransparency, METH_VARARGS, "Sets the transparency - setTransparency(f)" },
     {"setDepthTest", (PyCFunction)VRPyMaterial::setDepthTest, METH_VARARGS, "Sets the depth test function - setDepthTest(f)\t\n'GL_ALWAYS'" },
@@ -272,33 +272,6 @@ PyObject* VRPyMaterial::setTessEvaluationProgram(VRPyMaterial* self, PyObject* a
 	Py_RETURN_TRUE;
 }
 
-PyObject* VRPyMaterial::getAmbient(VRPyMaterial* self) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::getAmbient, C obj is invalid"); return NULL; }
-    return toPyTuple(Vec3d(self->objPtr->getAmbient()));
-}
-
-PyObject* VRPyMaterial::setAmbient(VRPyMaterial* self, PyObject* args) {
-	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setAmbient, C obj is invalid"); return NULL; }
-	self->objPtr->setAmbient(Vec3f(parseVec3d(args)));
-	Py_RETURN_TRUE;
-}
-
-PyObject* VRPyMaterial::getDiffuse(VRPyMaterial* self) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::getDiffuse, C obj is invalid"); return NULL; }
-    return toPyTuple(Vec3d(self->objPtr->getDiffuse()));
-}
-
-PyObject* VRPyMaterial::setDiffuse(VRPyMaterial* self, PyObject* args) {
-	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setDiffuse, C obj is invalid"); return NULL; }
-	self->objPtr->setDiffuse(Vec3f(parseVec3d(args)));
-	Py_RETURN_TRUE;
-}
-
-PyObject* VRPyMaterial::getSpecular(VRPyMaterial* self) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::getSpecular, C obj is invalid"); return NULL; }
-    return toPyTuple(Vec3d(self->objPtr->getSpecular()));
-}
-
 PyObject* VRPyMaterial::setTransparency(VRPyMaterial* self, PyObject* args) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setTransparency, C obj is invalid"); return NULL; }
 	self->objPtr->setTransparency(parseFloat(args));
@@ -319,12 +292,6 @@ PyObject* VRPyMaterial::setShininess(VRPyMaterial* self, PyObject* args) {
 PyObject* VRPyMaterial::getShininess(VRPyMaterial* self) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::getShininess, C obj is invalid"); return NULL; }
     return PyFloat_FromDouble(self->objPtr->getShininess());
-}
-
-PyObject* VRPyMaterial::setSpecular(VRPyMaterial* self, PyObject* args) {
-	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setSpecular, C obj is invalid"); return NULL; }
-	self->objPtr->setSpecular(Vec3f(parseVec3d(args)));
-	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::setPointSize(VRPyMaterial* self, PyObject* args) {

@@ -690,6 +690,14 @@ VRAtom* VRMolecule::getAtom(int ID) {
     return 0;
 }
 
+Vec3d VRMolecule::getAtomPosition(int ID) {
+    VRAtom* a = getAtom( ID );
+    if (a == 0) return Vec3d(0,0,0);
+    auto m = getWorldMatrix();
+    m.mult( a->getTransformation() );
+    return Vec3d(m[3]);
+}
+
 string VRMolecule::a_fp =
 "#version 120\n"
 GLSL(

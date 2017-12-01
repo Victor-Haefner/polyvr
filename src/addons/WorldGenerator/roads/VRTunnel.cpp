@@ -14,7 +14,7 @@ VRGeometryPtr VRTunnel::createGeometry() {
     cout << " --- VRTunnel::createGeometry --- " << endl;
     auto geo = VRStroke::create("tunnel");
 
-    vector<pathPtr> paths;
+    vector<PathPtr> paths;
     for (auto p : road->getEntity()->getAllEntities("path")) {
         paths.push_back( toPath(p,32) );
     }
