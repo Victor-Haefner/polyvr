@@ -260,7 +260,7 @@ float VRCarDynamics::throttleDamper( float pedalThrottle ){
         throttleDamperBool=false;
         return pedalThrottle;
     }
-
+    return pedalThrottle;
 }
 
 //--if engine needs more power and rpm drop below minRpm, boosts throttle slightly, can be ajusted to make clutch more easy/hard

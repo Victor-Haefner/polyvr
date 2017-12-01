@@ -71,6 +71,7 @@ class VRCarDynamics : public VRObject {
             PathPtr clutchTransmissionCurve;
             PathPtr torqueCurve;
             PathPtr breakCurve;
+
             bool running = false;
 
             Engine();
