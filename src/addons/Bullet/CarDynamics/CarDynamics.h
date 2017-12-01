@@ -38,7 +38,7 @@ class VRCarDynamics : public VRObject {
 
             // wheel parameter
             //float friction = 1000;//BT_LARGE_FLOAT;
-            float friction = 0.8;//BT_LARGE_FLOAT;
+            float friction = 1;//BT_LARGE_FLOAT; 0.8
             float radius = 0.4;
             float width = 0.4;
 
@@ -56,17 +56,22 @@ class VRCarDynamics : public VRObject {
         struct Engine : public VRStorage {
             // engine parameter
             float power = 1000;//this should be engine/velocity dependent
-            float breakPower = 70;//this should be engine/velocity dependent
-            float maxForce = 10000;//this should be engine/velocity dependent
-            float maxBreakingForce = 100;
+            float breakPower = 7000;//this should be engine/velocity dependent
+            float maxForce = 250;//this should be engine/velocity dependent
+            float maxBreakingForce = 150;
             float rpm = 800;
             float minRpm = 800;
+            float maxTorqueRPM = 1700;
             float maxRpm = 4500;
             float stallRpm = 480;
             float friction = 5;
             float frictionCoefficient = 14;
             map<int,float> gearRatios;
+
             PathPtr clutchTransmissionCurve;
+            PathPtr torqueCurve;
+            PathPtr breakCurve;
+
             bool running = false;
 
             Engine();
@@ -77,7 +82,7 @@ class VRCarDynamics : public VRObject {
             VRTransformPtr geo;
             vector<VRGeometryPtr> geos;
             btRigidBody* body = 0;
-            float mass = 850.0f;
+            float mass = 1400.0f;//f850.0f;
             Vec3d massOffset;
 
             Chassis();
@@ -121,16 +126,26 @@ class VRCarDynamics : public VRObject {
         float acceleration = 0;
         float s_measurement = 0;
         double a_measurement_t = 0;
+        float eBreaks = 0;
+        float eForces = 0;
+
+        float minThrottle = 0.05;
+        bool throttleDamperBool=false;
 
         float clamp(float v, float m1, float m2);
         float rescale(float v, float m1, float m2);
 
         float computeCoupling( WheelPtr wheel );
         float computeWheelGearRPM( WheelPtr wheel );
-        float computeEngineForceOnWheel( WheelPtr wheel, float deltaRPM, float coupling, float clampedThrottle );
-        float computeEngineFriction( float deltaRPM, float clampedThrottle );
+        float throttleDamper( float pedalThrottle );
+        float throttleBooster( float clampedThrottle );
+        float computeEngineForceOnWheel( WheelPtr wheel, float gearRPM, float deltaRPM, float coupling, float clampedThrottle );
+        float computeAirResistence( float vehicleVelocity );
+        float computeEngineFriction( float deltaRPM, float coupling, float clampedThrottle );
         float computeThrottleTransmission( float clampedThrottle );
-        void updateEngineRPM( float deltaRPM, float throttleImpactOnRPM, float engineFriction );
+        float computeBreakTransmission( WheelPtr wheel, float coupling, float clampedThrottle );
+        float computeEngineBreak( float coupling, float clampedThrottle );
+        void updateEngineRPM( float gearRPM, float deltaRPM, float throttleImpactOnRPM, float breakImpactOnRPM, float engineFriction, float coupling );
         void updateWheel( WheelPtr wheel, float eForce, float eBreak );
 
         boost::recursive_mutex& mtx();
@@ -159,6 +174,8 @@ class VRCarDynamics : public VRObject {
         float getSteering();
         int getGear();
         int getRPM();
+        float geteForce();
+        float geteBreak();
 
         void addWheel(VRGeometryPtr geo, Vec3d p, float radius, float width, float maxSteering = 0, bool steered = false, bool driven = false);
         void setChassisGeo(VRTransformPtr geo, bool doPhys = 1);
