@@ -260,7 +260,7 @@ float VRCarDynamics::throttleDamper( float pedalThrottle ){
         throttleDamperBool=false;
         return pedalThrottle;
     }
-
+    return pedalThrottle;
 }
 
 //--if engine needs more power and rpm drop below minRpm, boosts throttle slightly, can be ajusted to make clutch more easy/hard
@@ -448,7 +448,7 @@ void VRCarDynamics::setParameter(float mass, float enginePower, float breakPower
 	engine->maxRpm = 6000;
 
     float maxTorqueRPM = engine->minRpm+(engine->maxRpm-engine->minRpm)*0.18;
-    if (!engine->torqueCurve) engine->torqueCurve = path::create();
+    if (!engine->torqueCurve) engine->torqueCurve = Path::create();
     engine->torqueCurve->clear();
     engine->torqueCurve->addPoint( Pose(Vec3d(engine->stallRpm,0.5,0), Vec3d(0.5,1,0)));
     engine->torqueCurve->addPoint( Pose(Vec3d(engine->minRpm,0.75,0), Vec3d(1,0.5,0)));
