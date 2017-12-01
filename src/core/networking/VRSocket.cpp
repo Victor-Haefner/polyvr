@@ -146,12 +146,14 @@ class HTTPServer {
         }
 
         void websocket_send(int id, string message) {
-            if (websockets.count(id)) mg_send_websocket_frame(websockets[id], WEBSOCKET_OP_TEXT, message.c_str(), message.size());
+            if (websockets.count(id) && websockets[id]) mg_send_websocket_frame(websockets[id], WEBSOCKET_OP_TEXT, message.c_str(), message.size());
         }
 
         int websocket_open(string address) {
             int newID = websockets.size();
-            websockets[newID] = mg_connect_ws(server, server_answer_to_connection_m, address.c_str(), NULL, NULL);
+            auto c = mg_connect_ws(server, server_answer_to_connection_m, address.c_str(), NULL, NULL);
+            if (c) websockets[newID] = c;
+            else newID = -1;
             return newID;
         }
 };
