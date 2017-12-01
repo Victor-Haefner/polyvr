@@ -38,7 +38,7 @@ class VRCarDynamics : public VRObject {
 
             // wheel parameter
             //float friction = 1000;//BT_LARGE_FLOAT;
-            float friction = 0.8;//BT_LARGE_FLOAT; 0.8
+            float friction = 1;//BT_LARGE_FLOAT; 0.8
             float radius = 0.4;
             float width = 0.4;
 
@@ -70,6 +70,8 @@ class VRCarDynamics : public VRObject {
 
             PathPtr clutchTransmissionCurve;
             PathPtr torqueCurve;
+            PathPtr breakCurve;
+
             bool running = false;
 
             Engine();

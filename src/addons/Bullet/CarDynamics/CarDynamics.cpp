@@ -133,7 +133,7 @@ void VRCarDynamics::addBTWheel(WheelPtr wheel) {
     btWheel.m_suspensionStiffness = wheel->suspensionStiffness;
     btWheel.m_wheelsDampingRelaxation = wheel->suspensionDamping;
     btWheel.m_wheelsDampingCompression = wheel->suspensionCompression;
-    btWheel.m_frictionSlip = wheel->friction-0.2; //changed to -parameter
+    btWheel.m_frictionSlip = wheel->friction; //changed to -parameter
     btWheel.m_rollInfluence = wheel->rollInfluence;
 }
 
@@ -265,7 +265,7 @@ float VRCarDynamics::throttleDamper( float pedalThrottle ){
 
 //--if engine needs more power and rpm drop below minRpm, boosts throttle slightly, can be ajusted to make clutch more easy/hard
 float VRCarDynamics::throttleBooster( float clampedThrottle ){
-    if ( engine->rpm < (engine->minRpm-100) ) return 0.3 * ( 1 - ((engine->rpm - engine->stallRpm)/(engine->minRpm - engine->stallRpm)) );
+    if ( engine->rpm < (engine->minRpm-100) && clampedThrottle<=0.3) return 0.3 * ( 1 - ((engine->rpm - engine->stallRpm)/(engine->minRpm - engine->stallRpm)) );
     else return clampedThrottle;
 }
 
@@ -356,13 +356,13 @@ void VRCarDynamics::updateEngine() {
         if ((lhs >= 0 && rhs <=0) || (lhs<0 && rhs>0)) deltaRPM = ( -abs(gearRPM) - engine->rpm ) * coupling;   //deltaRPM for rolling rolling forwards + reverse gear, or backwards + positive gear
 
         float engineFriction = computeEngineFriction( deltaRPM, coupling, clampedThrottle );
-        float eBreak = wheel->breaking*engine->breakPower + computeEngineBreak( coupling, clampedThrottle );
-       updateEngineRPM(gearRPM, deltaRPM, throttleImpactOnRPM, breakImpactOnRPM, engineFriction, coupling);
+        float eBreak = engine->breakCurve->getPosition(wheel->breaking)[1]*engine->breakPower + computeEngineBreak( coupling, clampedThrottle );//wheel->breaking*engine->breakPower + computeEngineBreak( coupling, clampedThrottle );
+        updateEngineRPM(gearRPM, deltaRPM, throttleImpactOnRPM, breakImpactOnRPM, engineFriction, coupling);
         if (engine->rpm < engine->stallRpm) setIgnition(false);
 
         float eForce = computeEngineForceOnWheel( wheel, gearRPM, deltaRPM, coupling, clampedThrottle ) - computeAirResistence(vehicle->getCurrentSpeedKmHour());
 
-        if (eBreak > 6) eForce = 0; //circumvents weirds bullet behaviour if both break and engine are applied
+        if (eBreak > 6) eForce = 0; //circumvents weird bullet behaviour if both break and engine are applied
         if (eBreak > abs(eForce)) eForce = 0;
         if (eBreak <= 5) eBreak = 5;
 
@@ -455,6 +455,13 @@ void VRCarDynamics::setParameter(float mass, float enginePower, float breakPower
     engine->torqueCurve->addPoint( Pose(Vec3d(engine->maxTorqueRPM,1,0), Vec3d(1,0,0)));
     engine->torqueCurve->addPoint( Pose(Vec3d(engine->maxRpm,0.5,0), Vec3d(1,-0.5,0)));
     engine->torqueCurve->compute(32);
+
+    if (!engine->breakCurve) engine->breakCurve = Path::create();
+    engine->breakCurve->clear();
+    engine->breakCurve->addPoint( Pose(Vec3d(0,0,0), Vec3d(1,0,0)));
+    engine->breakCurve->addPoint( Pose(Vec3d(0.6,0.3,0), Vec3d(1,1,0)));
+    engine->breakCurve->addPoint( Pose(Vec3d(1,1,0), Vec3d(0,1,0)));
+    engine->breakCurve->compute(32);
 
 	// update physics
 	if (!chassis->geo) return;
