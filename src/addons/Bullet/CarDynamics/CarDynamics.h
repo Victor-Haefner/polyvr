@@ -85,6 +85,8 @@ class VRCarDynamics : public VRObject {
             float mass = 1400.0f;//f850.0f;
             Vec3d massOffset;
 
+            float airMaxForce = 200;
+
             Chassis();
             static shared_ptr<Chassis> create();
         };
@@ -129,7 +131,7 @@ class VRCarDynamics : public VRObject {
         float eBreaks = 0;
         float eForces = 0;
 
-        float minThrottle = 0.05;
+        float minThrottle = 0.07;
         bool throttleDamperBool=false;
 
         float clamp(float v, float m1, float m2);
