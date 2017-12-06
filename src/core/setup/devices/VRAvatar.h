@@ -4,6 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 #include <string>
 #include <map>
+#include <vector>
 
 #include "core/objects/VRObjectFwd.h"
 
@@ -19,6 +20,7 @@ class VRAvatar {
         };
 
     private:
+        string deviceName;
         VRTransformPtr deviceRoot = 0;
         vector<Beacon> beacons;
 
@@ -26,28 +28,31 @@ class VRAvatar {
         VRObjectPtr initCone();
         VRObjectPtr initBroadRay();
 
-        void addAll();
-        void hideAll();
+        void addAll(int i);
+        void hideAll(int i);
 
     protected:
         VRAvatar(string name);
         ~VRAvatar();
 
-        void addAvatar(VRObjectPtr geo);
+        void addAvatar(VRObjectPtr geo, int i);
 
     public:
+        void enableAvatar(string avatar, int i);
         void enableAvatar(string avatar);
+        void disableAvatar(string avatar, int i);
         void disableAvatar(string avatar);
 
-        Beacon addBeacon();
+        void addBeacon();
         VRTransformPtr getBeacon(int i);
+        VRTransformPtr getBeacon();
         VRTransformPtr editBeacon(int i);
+        VRTransformPtr editBeacon();
         void setBeacon(VRTransformPtr b, int i);
+        void setBeacon(VRTransformPtr b);
         void updateBeacons();
 };
 
 OSG_END_NAMESPACE;
 
 #endif // VRAVATAR_H_INCLUDED
-
-// TODO: adjust class for vector<Beacon>, multiple beacons

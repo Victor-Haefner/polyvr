@@ -37,7 +37,7 @@ void VRDeviceManager::clearSignals() { for (auto dev : devices) dev.second->clea
 void VRDeviceManager::setDeviceRoot(VRTransformPtr root) { device_root = root; }
 
 void VRDeviceManager::updateDevices() {
-    for (auto itr : devices) itr.second->updateBeacon();
+    for (auto itr : devices) itr.second->updateBeacons();
 }
 
 void VRDeviceManager::addDevice(VRDevicePtr dev) {
