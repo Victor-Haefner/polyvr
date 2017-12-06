@@ -1,10 +1,11 @@
 #include "VRPyPath.h"
 #include "VRPyBaseT.h"
 #include "VRPyPose.h"
+#include "VRPyMath.h"
 
 using namespace OSG;
 
-newPyType( path, Path, New_ptr);
+simplePyType( Path, New_ptr);
 
 PyMethodDef VRPyPath::methods[] = {
     {"set", (PyCFunction)VRPyPath::set, METH_VARARGS, "Set the path - set(start pos, start dir, end pos, end dir, steps) \n\tset(start pos, start dir, start up, end pos, end dir, end up, steps)" },
@@ -13,7 +14,7 @@ PyMethodDef VRPyPath::methods[] = {
     {"update", (PyCFunction)VRPyPath::update, METH_NOARGS, "Update path" },
     {"addPoint", (PyCFunction)VRPyPath::addPoint, METH_VARARGS, "Add a point to the path - int addPoint( | vec3 pos, vec3 dir, vec3 col, vec3 up)" },
     {"getPose", (PyCFunction)VRPyPath::getPose, METH_VARARGS, "Return the pose at the path length t, t on the interval between point i and j - pose getPose( float t | int i, int j)" },
-    {"getPoints", (PyCFunction)VRPyPath::getPoints, METH_NOARGS, "Return a list of the path points - [pos, dir, col, up] getPoints()" },
+    {"getPoints", PyWrap2(Path, getPoints, "Return a list of the path points", vector<Pose> ) },
     {"close", (PyCFunction)VRPyPath::close, METH_NOARGS, "Close the path - close()" },
     {"getPositions", (PyCFunction)VRPyPath::getPositions, METH_NOARGS, "Return the positions from the computed path - [[x,y,z]] getPositions()" },
     {"getDirections", (PyCFunction)VRPyPath::getDirections, METH_NOARGS, "Return the directions from the computed path - [[x,y,z]] getDirections()" },
@@ -103,7 +104,7 @@ PyObject* VRPyPath::getSize(VRPyPath* self) {
     return PyInt_FromLong( self->objPtr->size() );
 }
 
-PyObject* VRPyPath::getPoints(VRPyPath* self) {
+/*PyObject* VRPyPath::getPoints(VRPyPath* self) {
 	if (!self->valid()) return NULL;
     auto pnts = self->objPtr->getPoints();
     if (pnts.size() == 0) return PyList_New(0);
@@ -116,14 +117,14 @@ PyObject* VRPyPath::getPoints(VRPyPath* self) {
         PyList_SetItem(res, i, pnt);
     }
     return res;
-}
+}*/
 
 PyObject* VRPyPath::getPositions(VRPyPath* self) {
 	if (!self->valid()) return NULL;
     auto pos = self->objPtr->getPositions();
     if (pos.size() == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos.size());
-    for (uint i=0; i<pos.size(); i++) PyList_SetItem(res, i, toPyTuple(pos[i]));
+    for (uint i=0; i<pos.size(); i++) PyList_SetItem(res, i, toPyObject(pos[i]));
     return res;
 }
 
@@ -132,7 +133,7 @@ PyObject* VRPyPath::getDirections(VRPyPath* self) {
     auto pos = self->objPtr->getDirections();
     if (pos.size() == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos.size());
-    for (uint i=0; i<pos.size(); i++) PyList_SetItem(res, i, toPyTuple(pos[i]));
+    for (uint i=0; i<pos.size(); i++) PyList_SetItem(res, i, toPyObject(pos[i]));
     return res;
 }
 
@@ -141,7 +142,7 @@ PyObject* VRPyPath::getUpVectors(VRPyPath* self) {
     auto pos = self->objPtr->getUpvectors();
     if (pos.size() == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos.size());
-    for (uint i=0; i<pos.size(); i++) PyList_SetItem(res, i, toPyTuple(pos[i]));
+    for (uint i=0; i<pos.size(); i++) PyList_SetItem(res, i, toPyObject(pos[i]));
     return res;
 }
 
@@ -150,7 +151,7 @@ PyObject* VRPyPath::getColors(VRPyPath* self) {
     auto pos = self->objPtr->getColors();
     if (pos.size() == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos.size());
-    for (uint i=0; i<pos.size(); i++) PyList_SetItem(res, i, toPyTuple(pos[i]));
+    for (uint i=0; i<pos.size(); i++) PyList_SetItem(res, i, toPyObject(pos[i]));
     return res;
 }
 

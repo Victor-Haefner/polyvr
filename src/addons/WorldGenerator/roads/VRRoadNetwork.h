@@ -76,7 +76,7 @@ class VRRoadNetwork : public VRRoadBase {
         VRBridgePtr addBridge(VRRoadPtr road);
 
         void addKirb( VRPolygonPtr p, float height );
-        void addGuardRail( pathPtr p, float height );
+        void addGuardRail( PathPtr p, float height );
 
         void computeLanePaths( VREntityPtr road );
         void computeIntersections();

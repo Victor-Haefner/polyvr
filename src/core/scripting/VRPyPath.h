@@ -4,7 +4,7 @@
 #include "core/math/path.h"
 #include "core/scripting/VRPyBase.h"
 
-struct VRPyPath : VRPyBaseT<OSG::path> {
+struct VRPyPath : VRPyBaseT<OSG::Path> {
     static PyMethodDef methods[];
 
     static PyObject* set(VRPyPath* self, PyObject *args);

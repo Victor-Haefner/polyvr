@@ -14,7 +14,7 @@ PyMethodDef VRPyMillingMachine::methods[] = {
     {"setGeometry", (PyCFunction)VRPyMillingMachine::setGeometry, METH_VARARGS, "Set the geometries - setGeometry( [objX, objY, objZ, endEffector] )" },
     {"update", (PyCFunction)VRPyMillingMachine::update, METH_NOARGS, "Update the machine visualisation - update()" },
     {"setPosition", (PyCFunction)VRPyMillingMachine::setPosition, METH_VARARGS, "Set the position of the machine - setPosition( [x,y,z] )" },
-    {"getPosition", (PyCFunction)VRPyMillingMachine::setPosition, METH_NOARGS, "Get the position of the machine - [x,y,z] getPosition()" },
+    {"getPosition", PyWrap(MillingMachine, getPosition, "Get the position of the machine", Vec3d ) },
     {"state", (PyCFunction)VRPyMillingMachine::state, METH_NOARGS, "Get the state of the machine" },
     {"mode", (PyCFunction)VRPyMillingMachine::mode, METH_NOARGS, "Get the mode of the machine" },
     {NULL}  /* Sentinel */
@@ -23,11 +23,6 @@ PyMethodDef VRPyMillingMachine::methods[] = {
 PyObject* VRPyMillingMachine::connected(VRPyMillingMachine* self) {
     if (!self->valid()) return NULL;
     return PyBool_FromLong( self->objPtr->connected() );
-}
-
-PyObject* VRPyMillingMachine::getPosition(VRPyMillingMachine* self) {
-    if (!self->valid()) return NULL;
-    return toPyTuple( self->objPtr->getPosition() );
 }
 
 PyObject* VRPyMillingMachine::state(VRPyMillingMachine* self) {

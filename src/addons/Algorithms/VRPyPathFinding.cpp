@@ -25,7 +25,7 @@ PyObject* VRPyPathFinding::setGraph(VRPyPathFinding* self, PyObject* args) {
 PyObject* VRPyPathFinding::setPaths(VRPyPathFinding* self, PyObject* args) {
     if (!self->valid()) return NULL;
     vector<PyObject*> pypaths = parseList(args);
-    vector<pathPtr> paths;
+    vector<PathPtr> paths;
     for (auto p : pypaths) paths.push_back( ((VRPyPath*)p)->objPtr );
     self->objPtr->setPaths( paths );
     Py_RETURN_TRUE;

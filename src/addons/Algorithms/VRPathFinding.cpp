@@ -46,7 +46,7 @@ VRPathFinding::~VRPathFinding() {}
 VRPathFindingPtr VRPathFinding::create() { return VRPathFindingPtr( new VRPathFinding() ); }
 
 void VRPathFinding::setGraph(GraphPtr g) { graph = g; }
-void VRPathFinding::setPaths(vector<pathPtr> p) { paths = p; }
+void VRPathFinding::setPaths(vector<PathPtr> p) { paths = p; }
 
 float VRPathFinding::getDistance(Position n1, Position n2) {
     return (pos(n2) - pos(n1)).length(); // ? C++

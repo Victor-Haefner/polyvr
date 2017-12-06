@@ -56,6 +56,7 @@ struct VRPyBase {
     static OSG::Vec2i parseVec2iList(PyObject *li);
     static OSG::Vec3i parseVec3iList(PyObject *li);
     static OSG::Vec4i parseVec4iList(PyObject *li);
+    static OSG::Matrix4d parseMatrixList(PyObject *li);
     static OSG::Line PyToLine(PyObject *li);
 
     static PyObject* toPyTuple(const OSG::Vec2d& v);

@@ -131,7 +131,7 @@ VRGeometryPtr VRRoad::createGeometry() {
 		profile.push_back(Vec3d(W+offset,0,0));
 
 		auto geo = VRStroke::create("road");
-		vector<pathPtr> paths;
+		vector<PathPtr> paths;
 		for (auto p : entity->getAllEntities("path")) {
             paths.push_back( toPath(p,32) );
 		}

@@ -22,7 +22,7 @@ class VRRoadBase : public VRObject, public VRWorldModule {
         VRRoadBase(string name);
         ~VRRoadBase();
 
-        pathPtr toPath( VREntityPtr pathEntity, int resolution );
+        PathPtr toPath( VREntityPtr pathEntity, int resolution );
         void setupTexCoords( VRGeometryPtr geo, VREntityPtr way );
         vector<string> toStringVector(const Vec3d& v);
 

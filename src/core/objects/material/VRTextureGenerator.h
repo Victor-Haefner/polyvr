@@ -33,7 +33,7 @@ class VRTextureGenerator {
             Color3f c31,c32;
             Color4f c41,c42;
             Vec3i p1;
-            pathPtr p;
+            PathPtr p;
             VRPolygonPtr pgon;
             int Nchannels = 3;
         };
@@ -45,7 +45,7 @@ class VRTextureGenerator {
         void applyPixel(Color4f* data, Vec3i p, Color4f c);
         template<typename T> void applyFill(T* data, Color4f c);
         template<typename T> void applyLine(T* data, Vec3d p1, Vec3d p2, Color4f c, float width);
-        template<typename T> void applyPath(T* data, pathPtr p, Color4f c, float width);
+        template<typename T> void applyPath(T* data, PathPtr p, Color4f c, float width);
         template<typename T> void applyPolygon(T* data, VRPolygonPtr p, Color4f c, float height);
 
         bool inBox(Pnt3d& p, Vec3d& s);
@@ -69,7 +69,7 @@ class VRTextureGenerator {
         void drawFill(Color4f c);
         void drawPixel(Vec3i p, Color4f c);
         void drawLine(Vec3d p1, Vec3d p2, Color4f c, float width);
-        void drawPath(pathPtr p, Color4f c, float width);
+        void drawPath(PathPtr p, Color4f c, float width);
         void drawPolygon(VRPolygonPtr p, Color4f c, float height = 0);
 
         void clearStage();

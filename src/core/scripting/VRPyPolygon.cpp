@@ -1,4 +1,5 @@
 #include "VRPyPolygon.h"
+#include "VRPyMath.h"
 #include "VRPyBaseT.h"
 
 using namespace OSG;
@@ -39,7 +40,7 @@ PyObject* VRPyPolygon::getPoint(VRPyPolygon* self, PyObject* args) {
     if (!self->valid()) return NULL;
     int i = 0;
     if (! PyArg_ParseTuple(args, "i", &i)) return NULL;
-    return toPyTuple( self->objPtr->getPoint(i) );
+    return toPyObject( self->objPtr->getPoint(i) );
 }
 
 PyObject* VRPyPolygon::getRandomPoints(VRPyPolygon* self, PyObject* args) {
@@ -49,7 +50,7 @@ PyObject* VRPyPolygon::getRandomPoints(VRPyPolygon* self, PyObject* args) {
     if (! PyArg_ParseTuple(args, "|ff", &d, &p)) return NULL;
     auto vec = self->objPtr->getRandomPoints(d,p);
     PyObject* res = PyList_New(vec.size());
-    for (uint i=0; i<vec.size(); i++) PyList_SetItem(res, i, toPyTuple(vec[i]));
+    for (uint i=0; i<vec.size(); i++) PyList_SetItem(res, i, toPyObject(vec[i]));
     return res;
 }
 
@@ -57,7 +58,7 @@ PyObject* VRPyPolygon::getPoints(VRPyPolygon* self) {
     if (!self->valid()) return NULL;
     auto vec = self->objPtr->get();
     PyObject* res = PyList_New(vec.size());
-    for (uint i=0; i<vec.size(); i++) PyList_SetItem(res, i, toPyTuple(vec[i]));
+    for (uint i=0; i<vec.size(); i++) PyList_SetItem(res, i, toPyObject(vec[i]));
     return res;
 }
 

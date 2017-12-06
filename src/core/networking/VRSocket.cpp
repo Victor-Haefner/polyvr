@@ -58,6 +58,7 @@ void server_answer_job(HTTP_args* args) {
         stringstream ss; ss << "server_answer_job: " << args->cb << endl;
         VRLog::log("net", ss.str());
     }
+    cout << " ---- server_answer_job: " << args->ws_data << endl;
     //args->print();
     if (args->cb) (*args->cb)(args);
     delete args;
@@ -146,12 +147,14 @@ class HTTPServer {
         }
 
         void websocket_send(int id, string message) {
-            if (websockets.count(id)) mg_send_websocket_frame(websockets[id], WEBSOCKET_OP_TEXT, message.c_str(), message.size());
+            if (websockets.count(id) && websockets[id]) mg_send_websocket_frame(websockets[id], WEBSOCKET_OP_TEXT, message.c_str(), message.size());
         }
 
         int websocket_open(string address) {
             int newID = websockets.size();
-            websockets[newID] = mg_connect_ws(server, server_answer_to_connection_m, address.c_str(), NULL, NULL);
+            auto c = mg_connect_ws(server, server_answer_to_connection_m, address.c_str(), NULL, NULL);
+            if (c) websockets[newID] = c;
+            else newID = -1;
             return newID;
         }
 };
@@ -195,6 +198,7 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
 
         struct websocket_message* wm = (struct websocket_message*) ev_data;
         sad->ws_data = string(reinterpret_cast<char const*>(wm->data), wm->size);
+        cout << " --- got ws message: " << sad->ws_data << endl;
 
         int wslid = sad->serv->websocket_ids.size();
         if (!sad->serv->websocket_ids.count(conn)) { sad->serv->websocket_ids[conn] = wslid; sad->serv->websockets[wslid] = conn; }

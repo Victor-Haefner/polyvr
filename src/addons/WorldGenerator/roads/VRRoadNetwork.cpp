@@ -180,7 +180,7 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
         Vec3d p1 = nodesIn[i-1]->getVec3("position");
         Vec3d p2 = nodesIn[i  ]->getVec3("position");
 
-        path p;
+        Path p;
         p.addPoint( Pose(p1, normalsIn[i-1]) );
         p.addPoint( Pose(p2, normalsIn[i  ]) );
         p.compute(16);
@@ -276,7 +276,7 @@ void VRRoadNetwork::connectGraph(vector<VREntityPtr> nodes, vector<Vec3d> norms)
     graphNormals[eID] = norms;
 }
 
-void VRRoadNetwork::addGuardRail( pathPtr path, float height ) {
+void VRRoadNetwork::addGuardRail( PathPtr path, float height ) {
     if (!path) return;
 	float poleDist = 1.3;
 	float poleWidth = 0.2;
@@ -337,7 +337,7 @@ void VRRoadNetwork::addGuardRail( pathPtr path, float height ) {
 }
 
 void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
-    auto path = path::create();
+    auto path = Path::create();
     if (terrain) terrain->elevatePolygon(perimeter);
     Vec3d median = perimeter->getBoundingBox().center();
     perimeter->translate(-median);
@@ -494,7 +494,7 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p) {
             Vec2f d02 = Vec2f(0.5,0.5); // rotation point
             Vec3d d03 = Vec3d(0.5,0.5,0); // rotation point
 
-            auto apath = path::create();
+            auto apath = Path::create();
             apath->addPoint( Pose(Vec3d(0.5,1.0,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
             apath->addPoint( Pose(Vec3d(0.5,0.8,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
             apath->addPoint( Pose(d03+dir*0.31, dir, Vec3d(0,0,1)) );

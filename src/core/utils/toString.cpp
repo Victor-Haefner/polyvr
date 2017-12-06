@@ -122,6 +122,7 @@ template<> string typeName(const Vec3d& t) { return "Vec3d"; }
 template<> string typeName(const Vec4d& t) { return "Vec4d"; }
 template<> string typeName(const Vec2i& t) { return "Vec2i"; }
 template<> string typeName(const Vec3i& t) { return "Vec3i"; }
+template<> string typeName(const Matrix4d& t) { return "Matrix"; }
 template<> string typeName(const Color3f& t) { return "Vec3d"; }
 template<> string typeName(const Color4f& t) { return "Vec4d"; }
 template<> string typeName(const Line& t) { return "Line"; }
@@ -217,6 +218,16 @@ template<> int toValue(stringstream& ss, Line& l) {
     bool b = toValue(ss, d);
     l = Line(Pnt3f(p),Vec3f(d));
     return b;
+}
+
+template<> int toValue(stringstream& ss, Matrix4d& m) {
+    Vec4d a,b,c,d;
+    toValue(ss, a);
+    toValue(ss, b);
+    toValue(ss, c);
+    bool r = toValue(ss, d);
+    m = Matrix4d(a,b,c,d);
+    return r;
 }
 
 template<> int toValue(stringstream& ss, Pose& po) {
