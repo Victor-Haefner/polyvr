@@ -66,6 +66,7 @@ class VRCarDynamics : public VRObject {
             float stallRpm = 480;
             float friction = 5;
             float frictionCoefficient = 14;
+            float minThrottle = 0.07;
             map<int,float> gearRatios;
 
             PathPtr clutchTransmissionCurve;
@@ -85,7 +86,7 @@ class VRCarDynamics : public VRObject {
             float mass = 1400.0f;//f850.0f;
             Vec3d massOffset;
 
-            float airMaxForce = 200;
+            float airMaxForce = 500;
 
             Chassis();
             static shared_ptr<Chassis> create();
@@ -131,15 +132,12 @@ class VRCarDynamics : public VRObject {
         float eBreaks = 0;
         float eForces = 0;
 
-        float minThrottle = 0.07;
-        bool throttleDamperBool=false;
-
         float clamp(float v, float m1, float m2);
         float rescale(float v, float m1, float m2);
+        float strech(float v, float m1);
 
         float computeCoupling( WheelPtr wheel );
         float computeWheelGearRPM( WheelPtr wheel );
-        float throttleDamper( float pedalThrottle );
         float throttleBooster( float clampedThrottle );
         float computeEngineForceOnWheel( WheelPtr wheel, float gearRPM, float deltaRPM, float coupling, float clampedThrottle );
         float computeAirResistence( float vehicleVelocity );
