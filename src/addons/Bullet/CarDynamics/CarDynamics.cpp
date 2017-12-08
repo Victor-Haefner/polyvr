@@ -249,7 +249,7 @@ float VRCarDynamics::computeCoupling( WheelPtr wheel ) {
 
 //--if engine needs more power and rpm drop below minRpm, boosts throttle slightly, can be ajusted to make clutch more easy/hard
 float VRCarDynamics::throttleBooster( float clampedThrottle ){
-    if ( engine->rpm < (engine->minRpm-100) && clampedThrottle<=0.3) return 0.3 * ( 1 - ((engine->rpm - engine->stallRpm)/(engine->minRpm - engine->stallRpm)) );
+    if ( engine->rpm < (engine->minRpm-30) && clampedThrottle<=0.3) return engine->minThrottle + 0.25 * ( 1 - ((engine->rpm - engine->stallRpm)/(engine->minRpm - engine->stallRpm)) );
     else return clampedThrottle;
 }
 
@@ -263,7 +263,7 @@ float VRCarDynamics::computeWheelGearRPM( WheelPtr wheel ) {
 float VRCarDynamics::computeThrottleTransmission( float clampedThrottle ) {
     float throttleTransmissionFkt = 1e-4;
     float torque = engine->torqueCurve->getPosition(engine->rpm)[1]*engine->maxForce;
-    return torque * throttleTransmissionFkt * 500 * clampedThrottle * engine->running; //5000 used to be engine->maxRpm - engine->rpm
+    return torque * throttleTransmissionFkt * 5000 * clampedThrottle * engine->running; //5000 used to be engine->maxRpm - engine->rpm
 }
 
 float VRCarDynamics::computeBreakTransmission( WheelPtr wheel, float coupling, float clampedThrottle ) {
@@ -277,11 +277,12 @@ float VRCarDynamics::computeBreakTransmission( WheelPtr wheel, float coupling, f
 
 float VRCarDynamics::computeEngineForceOnWheel( WheelPtr wheel, float gearRPM, float deltaRPM, float coupling, float clampedThrottle ) {
     float gearTransmission = engine->gearRatios[wheel->gear];
+    /*
     if (type != SIMPLE) {
         float engineF = max( -deltaRPM*0.003f, 0.f);
         if (gearRPM < 0) engineF = 0;
         clampedThrottle = clamp(clampedThrottle + engineF, 0, 1); // try to keep the minRPM
-    }
+    }*/
     float torque = engine->torqueCurve->getPosition(engine->rpm)[1]*engine->maxForce;
     return clampedThrottle * torque * coupling * gearTransmission * engine->running;
 }
@@ -302,7 +303,7 @@ float VRCarDynamics::computeEngineFriction( float deltaRPM, float coupling, floa
 }
 
 float VRCarDynamics::computeEngineBreak( float coupling, float clampedThrottle ) {
-    return coupling * engine->rpm / engine->maxRpm * 40;
+    return coupling * engine->rpm / engine->maxRpm * 150;
 }
 
 void VRCarDynamics::updateEngineRPM( float gearRPM, float deltaRPM, float throttleImpactOnRPM, float breakImpactOnRPM, float engineFriction, float coupling ) {
@@ -319,7 +320,6 @@ void VRCarDynamics::updateEngine() {
     if (!vehicle) return;
     if (!wheels.size()) return;
     PLock lock(mtx());
-    checkWheather();
 
     for (uint i=0; i<wheels.size(); i++) {
         auto wheel = wheels[i];
@@ -342,7 +342,7 @@ void VRCarDynamics::updateEngine() {
 
         // compute breaking
         float torque = engine->torqueCurve->getPosition(engine->rpm)[1]*engine->maxForce;
-        power = engine->rpm*torque;
+        engine->power = engine->rpm*torque;
         float deltaRPM = 0;
         float lhs = vehicle->getCurrentSpeedKmHour();
         float rhs = engine->gearRatios[wheel->gear];
@@ -351,19 +351,22 @@ void VRCarDynamics::updateEngine() {
 
         float engineFriction = computeEngineFriction( deltaRPM, coupling, clampedThrottle );
         float eBreak = 0;//wheel->breaking*engine->breakPower + computeEngineBreak( coupling, clampedThrottle );
+        float wBreak = engine->breakCurve->getPosition(wheel->breaking)[1]*engine->breakPower;
         updateEngineRPM(gearRPM, deltaRPM, throttleImpactOnRPM, breakImpactOnRPM, engineFriction, coupling); //only needed during clutch
 
         if (engine->rpm < engine->stallRpm) setIgnition(false);
-        if (engine->rpm > engine->maxRpm*1.2) setIgnition(false);
+        //if (engine->rpm > engine->maxRpm*1.2) setIgnition(false);
 
         float forcePart = computeEngineForceOnWheel( wheel, gearRPM, deltaRPM, coupling, clampedThrottle );
-        float breakPart = computeAirResistence(vehicle->getCurrentSpeedKmHour()) + computeEngineBreak( coupling, clampedThrottle ) + engine->breakCurve->getPosition(wheel->breaking)[1]*engine->breakPower + 5;
+        float breakPart = computeAirResistence(vehicle->getCurrentSpeedKmHour()) + computeEngineBreak( coupling, clampedThrottle ) + 30;
         if (forcePart<0) breakPart = -breakPart;
         float eForce = forcePart - breakPart;
         cout << "clThrottle: " << clampedThrottle << endl;
-        if (abs(breakPart)>abs(forcePart)) {eBreak += abs(eForce); eForce = 0;}
+        eBreak += wBreak;
+        if (abs(breakPart)>abs(forcePart)) {eBreak += abs(eForce)/5; eForce = 0;}
+        //else eBreak += wBreak + 5;
 
-        //if (eBreak > 6) eForce = 0; //circumvents weird bullet behaviour if both break and engine are applied
+        if (vehicle->getCurrentSpeedKmHour() < 10 && eBreak > 10) eForce = 0; //circumvents weird bullet behaviour if both break and engine are applied
         //if (eBreak > abs(eForce)) eForce = 0;
         //if (eBreak <= 5) eBreak = 5;
         cout << "forcePart: " << forcePart << " breakPart: " << breakPart << endl;
@@ -441,22 +444,22 @@ void VRCarDynamics::setParameter(float mass, float enginePower, float breakPower
 	engine->gearRatios[-1] = -3.5;
 	engine->gearRatios[0] = 0;
 	engine->gearRatios[1] = 3.5;
-	engine->gearRatios[2] = 1.5;
-	engine->gearRatios[3] = 0.95;
-	engine->gearRatios[4] = 0.75;
-	engine->gearRatios[5] = 0.63;
-	engine->gearRatios[6] = 0.5;
-	for (int i=-1; i<=6; i++) engine->gearRatios[i] *= 3.5*1.6;
+	engine->gearRatios[2] = 2.0; //1.5;
+	engine->gearRatios[3] = 1.44; //0.95;
+	engine->gearRatios[4] = 1.13; //0.75;
+	engine->gearRatios[5] = 0.9; //0.63;
+	engine->gearRatios[6] = 0.7; //0.5;
+	for (int i=-1; i<=6; i++) engine->gearRatios[i] *= 4.0;
 	engine->minRpm = 800;
 	engine->maxRpm = 6000;
 
     float maxTorqueRPM = engine->minRpm+(engine->maxRpm-engine->minRpm)*0.70;
     if (!engine->torqueCurve) engine->torqueCurve = Path::create();
     engine->torqueCurve->clear();
-    engine->torqueCurve->addPoint( Pose(Vec3d(engine->stallRpm,0.5,0), Vec3d(0.5,1,0)));
-    engine->torqueCurve->addPoint( Pose(Vec3d(engine->minRpm,0.75,0), Vec3d(1,0.5,0)));
+    engine->torqueCurve->addPoint( Pose(Vec3d(engine->stallRpm,0.8,0), Vec3d(0.5,1,0)));
+    engine->torqueCurve->addPoint( Pose(Vec3d(engine->minRpm,0.92,0), Vec3d(1,0.5,0)));
     engine->torqueCurve->addPoint( Pose(Vec3d(engine->maxTorqueRPM,1,0), Vec3d(1,0,0)));
-    engine->torqueCurve->addPoint( Pose(Vec3d(engine->maxRpm,0.75,0), Vec3d(1,-0.5,0)));
+    engine->torqueCurve->addPoint( Pose(Vec3d(engine->maxRpm,0.8,0), Vec3d(1,-0.5,0)));
     engine->torqueCurve->compute(32);
 
     if (!engine->breakCurve) engine->breakCurve = Path::create();
