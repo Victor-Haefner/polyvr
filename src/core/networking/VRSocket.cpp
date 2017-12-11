@@ -58,7 +58,7 @@ void server_answer_job(HTTP_args* args) {
         stringstream ss; ss << "server_answer_job: " << args->cb << endl;
         VRLog::log("net", ss.str());
     }
-    cout << " ---- server_answer_job: " << args->ws_data << endl;
+    //cout << " ---- server_answer_job: " << args->ws_data << endl;
     //args->print();
     if (args->cb) (*args->cb)(args);
     delete args;
