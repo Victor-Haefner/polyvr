@@ -205,10 +205,10 @@ void VRCarDynamics::addWheel(VRGeometryPtr geo, Vec3d p, float radius, float wid
 
 void VRCarDynamics::setupSimpleWheels(VRTransformPtr geo, float x, float fZ, float rZ, float h, float r, float w, float ms) {
     // create four simple wheels
-    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3d( x, h, fZ), r, w, ms, true, false); // front steered
-    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3d(-x, h, fZ), r, w, ms, true, false); // front steered
-    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3d( x, h, rZ), r, w, 0, false, true); // back driven
-    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3d(-x, h, rZ), r, w, 0, false, true); // back driven
+    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3d( x, h, fZ), r, w, ms, true, true); // front steered + back driven
+    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3d(-x, h, fZ), r, w, ms, true, true); // front steered + back driven
+    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3d( x, h, rZ), r, w, 0, false, false);
+    addWheel(static_pointer_cast<VRGeometry>( geo->duplicate() ), Vec3d(-x, h, rZ), r, w, 0, false, false);
 }
 
 float VRCarDynamics::clamp(float v, float m1, float m2) {
@@ -228,15 +228,10 @@ float VRCarDynamics::strech(float v, float m1) {
 void VRCarDynamics::setType(TYPE t) { type = t; }
 
 void VRCarDynamics::updateWheel( WheelPtr wheel, float eForce, float eBreak ) {
-    if (wheel->isDriven) {
-        vehicle->applyEngineForce(eForce, wheel->ID);
-        vehicle->setBrake(eBreak, wheel->ID);
-    }
+    vehicle->setBrake(eBreak, wheel->ID);
 
-    if (wheel->isSteered) {
-        vehicle->setSteeringValue(wheel->steering*wheel->maxSteer, wheel->ID);
-        vehicle->setBrake(eBreak, wheel->ID);
-    }
+    if (wheel->isDriven) vehicle->applyEngineForce(eForce, wheel->ID);
+    if (wheel->isSteered) vehicle->setSteeringValue(wheel->steering*wheel->maxSteer, wheel->ID);
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------
@@ -369,7 +364,6 @@ void VRCarDynamics::updateEngine() {
         eBreak += wBreak;
         if (abs(breakPart)>abs(forcePart)) {eBreak += abs(eForce)/5; eForce = 0;}
         //else eBreak += wBreak + 5;
-        if (abs(forcePart)>800 && abs(eBreak)< 40) {eForce = forcePart; eBreak = 0; wBreak = 0;}
         //if (vehicle->getCurrentSpeedKmHour() < 10 && eBreak > 10) eForce = 0; //circumvents weird bullet behaviour if both break and engine are applied
         //if (wBreak > 5) eForce = 0;
         if (wBreak > 80) eBreak = 1000;
