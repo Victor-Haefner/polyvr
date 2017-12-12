@@ -58,7 +58,7 @@ class VRCarDynamics : public VRObject {
             float power = 1000;//this should be engine/velocity dependent
             float breakPower = 7000;//this should be engine/velocity dependent
             float maxForce = 250;//this should be engine/velocity dependent
-            float maxBreakingForce = 150;
+            float maxBreakingForce = 100;
             float rpm = 800;
             float minRpm = 800;
             float maxTorqueRPM = 1700;
@@ -86,7 +86,8 @@ class VRCarDynamics : public VRObject {
             float mass = 1400.0f;//f850.0f;
             Vec3d massOffset;
 
-            float airMaxForce = 500;
+            float cw = 0.28;
+            float airA = 2;
 
             Chassis();
             static shared_ptr<Chassis> create();
@@ -131,6 +132,8 @@ class VRCarDynamics : public VRObject {
         double a_measurement_t = 0;
         float eBreaks = 0;
         float eForces = 0;
+
+        float rhoAir = 1.2;
 
         float clamp(float v, float m1, float m2);
         float rescale(float v, float m1, float m2);
