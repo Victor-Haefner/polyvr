@@ -428,8 +428,9 @@ void VRTransform::setWorldUp(Vec3d up) {
 void VRTransform::setWorldAt(Vec3d at) {
     Matrix4d wm = getWorldMatrix(true);
     wm.invert();
-    wm.mult(at,at);
-    setAt(at);
+    Pnt3d a = Pnt3d(at);
+    wm.mult(a,a);
+    setAt(Vec3d(a));
 }
 
 //local pose setter--------------------
