@@ -58,7 +58,7 @@ class VRCarDynamics : public VRObject {
             float power = 1000;//this should be engine/velocity dependent
             float breakPower = 7000;//this should be engine/velocity dependent
             float maxForce = 250;//this should be engine/velocity dependent
-            float maxBreakingForce = 100;
+            float maxBreakingForce = 90;
             float rpm = 800;
             float minRpm = 800;
             float maxTorqueRPM = 1700;
@@ -66,7 +66,7 @@ class VRCarDynamics : public VRObject {
             float stallRpm = 480;
             float friction = 5;
             float frictionCoefficient = 14;
-            float minThrottle = 0.07;
+            float minThrottle = 0.01;
             map<int,float> gearRatios;
 
             PathPtr clutchTransmissionCurve;
@@ -142,6 +142,7 @@ class VRCarDynamics : public VRObject {
         float computeCoupling( WheelPtr wheel );
         float computeWheelGearRPM( WheelPtr wheel );
         float throttleBooster( float clampedThrottle );
+        float computeThrottle( float pedalPos );
         float computeEngineForceOnWheel( WheelPtr wheel, float gearRPM, float deltaRPM, float coupling, float clampedThrottle );
         float computeAirResistence( float vehicleVelocity );
         float computeEngineFriction( float gear,  float deltaRPM, float coupling, float clampedThrottle );
