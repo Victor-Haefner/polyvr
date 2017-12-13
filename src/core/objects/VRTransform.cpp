@@ -324,6 +324,14 @@ Vec3d VRTransform::getWorldUp(bool parentOnly) {
     return Vec3d(m[1]);
 }
 
+Vec3d VRTransform::getWorldAt(bool parentOnly) {
+    Matrix4d m;
+    getWorldMatrix(m, true);
+    Pnt3d a = Pnt3d(getAt());
+    m.mult(a,a);
+    return Vec3d(a);
+}
+
 
 void VRTransform::updateTransform(VRTransformPtr t) {
     if (!t) return;
@@ -415,6 +423,13 @@ void VRTransform::setWorldUp(Vec3d up) {
     wm.invert();
     wm.mult(up,up);
     setUp(up);
+}
+
+void VRTransform::setWorldAt(Vec3d at) {
+    Matrix4d wm = getWorldMatrix(true);
+    wm.invert();
+    wm.mult(at,at);
+    setAt(at);
 }
 
 //local pose setter--------------------

@@ -9,6 +9,7 @@
 #include "DTrack.h"
 #include "core/setup/devices/VRFlystick.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/VRGlobals.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
 #include "core/math/coordinates.h"
@@ -170,7 +171,7 @@ void ART::update_setup() {
     auto r = setup->getRoot();
     for (auto d : devices) {
         auto b = d.second->ent;
-        if (b->getParent() != r) r->addChild(b);
+        if (b && b->getParent() != r) r->addChild(b);
     }
 }
 
@@ -200,6 +201,7 @@ void ART::checkNewDevices(int type, int N) {
 }
 
 void ART::applyEvents() {
+    //if (VRGlobals::CURRENT_FRAME < 10) return;
     boost::mutex::scoped_lock lock(mutex);
     checkNewDevices();
     for (auto d : devices) d.second->update();
