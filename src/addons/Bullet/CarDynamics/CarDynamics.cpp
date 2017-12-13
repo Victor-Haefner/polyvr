@@ -376,7 +376,7 @@ void VRCarDynamics::updateEngine() {
         cout << "clThrottle: " << clampedThrottle << " gearR " << engine->gearRatios[wheel->gear] << endl;
         eBreak += wBreak;
         if (vehicle->getCurrentSpeedKmHour() < 50 && eForce < 700) eBreak += 1.8;
-        if (abs(breakPart)>abs(forcePart)) {eBreak += abs(eForce)/100 + 4.2; eForce = 0;}
+        if (abs(breakPart)>abs(forcePart)) {eBreak += abs(eForce)/100 + 2.8; eForce = 0;}
 
         if (wBreak > 50) eForce = 0;
         if (eForce > 0) eBreak = 2*eBreak; //compensate BulletBehaviour 2xBrakes missing if engineForce being applied
