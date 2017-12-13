@@ -58,7 +58,7 @@ void server_answer_job(HTTP_args* args) {
         stringstream ss; ss << "server_answer_job: " << args->cb << endl;
         VRLog::log("net", ss.str());
     }
-    cout << " ---- server_answer_job: " << args->ws_data << endl;
+    //cout << " ---- server_answer_job: " << args->ws_data << endl;
     //args->print();
     if (args->cb) (*args->cb)(args);
     delete args;
@@ -186,19 +186,15 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
     }
 
     if (ev == MG_EV_WEBSOCKET_FRAME) {
-        VRLog::log("net", "MG_EV_WEBSOCKET_FRAME\n");
-        //HTTP_args* sad = (HTTP_args*) conn->mgr_data;
         sad->websocket = true;
-
         sad->path = "";
         sad->params->clear();
 
-        if (v) VRLog::log("net", "Websocket connection\n");
+        VRLog::log("net", "MG_EV_WEBSOCKET_FRAME\n");
         if (v) sad->print();
 
         struct websocket_message* wm = (struct websocket_message*) ev_data;
         sad->ws_data = string(reinterpret_cast<char const*>(wm->data), wm->size);
-        cout << " --- got ws message: " << sad->ws_data << endl;
 
         int wslid = sad->serv->websocket_ids.size();
         if (!sad->serv->websocket_ids.count(conn)) { sad->serv->websocket_ids[conn] = wslid; sad->serv->websockets[wslid] = conn; }

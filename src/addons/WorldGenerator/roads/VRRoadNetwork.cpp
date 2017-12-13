@@ -298,15 +298,20 @@ void VRRoadNetwork::addGuardRail( PathPtr path, float height ) {
 		poles.push_back(po);
 	};
 
-    float L = path->getLength();
-    int N = L / poleDist;
     auto p0 = path->getPose(0);
     auto p1 = path->getPose(1);
     p0->setPos( p0->pos() + p0->dir()*poleWidth );
     p1->setPos( p1->pos() - p1->dir()*poleWidth );
     addPole(*p0); // first pole
     addPole(*p1); // last pole
-    for (int i = 0; i< N-1; i++) addPole( *path->getPose( (i+1)*1.0/N ) );
+
+    for (int j=0; j<path->size()-1; j++) {
+        float L = path->getLength(j, j+1);
+        int N = L / poleDist;
+        int N2 = N;
+        if (j == path->size()-2) N2--;
+        for (int i = 0; i<N2; i++) addPole( *path->getPose( (i+1)*1.0/N, j, j+1 ) );
+    }
 
 	vector<Vec3d> profile;
     profile.push_back(Vec3d(0.0,height-0.5,0));
