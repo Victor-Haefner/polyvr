@@ -115,6 +115,7 @@ class VRTransform : public VRObject {
         Vec3d getWorldPosition(bool parentOnly = false);
         Vec3d getWorldDirection(bool parentOnly = false);
         Vec3d getWorldUp(bool parentOnly = false);
+        Vec3d getWorldAt(bool parentOnly = false);
 
         void setWorldPose(PosePtr p);
         void setWorldMatrix(Matrix4d _m);
@@ -122,6 +123,7 @@ class VRTransform : public VRObject {
         void setWorldOrientation(Vec3d dir, Vec3d up);
         void setWorldDir(Vec3d dir);
         void setWorldUp(Vec3d up);
+        void setWorldAt(Vec3d at);
 
         void getRelativeMatrix(Matrix4d& m, VRObjectPtr o, bool parentOnly = false);
         Matrix4d getRelativeMatrix(VRObjectPtr o, bool parentOnly = false);

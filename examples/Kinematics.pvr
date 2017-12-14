@@ -18,8 +18,7 @@
       <core>
 	import VR
 	
-	if hasattr(VR, 'pendel'):
-		VR.pendel.destroy()
+	if hasattr(VR, 'pendel'): VR.pendel.destroy()
 	VR.pendel = VR.Object('pendel')
 	root.addChild(VR.pendel)
 	pendel = VR.pendel
@@ -52,26 +51,11 @@
 	pendel.addChild(z3)
 	pendel.addChild(s)
 	
-	ld = 0.1
-	ad = 0.5
-	z1.setDamping(ld,ad)
-	z2.setDamping(ld,ad)
-	z3.setDamping(ld,ad)
-	s.setDamping(ld,ad)
-	
-	VR.setPhysicsActive(0)
-	
-	a.physicalize(True, False)
-	z1.physicalize(True, True)
-	z2.physicalize(True, True)
-	z3.physicalize(True, True)
-	s.physicalize(True, True)
-	
 	def setupJoint(a,b,d1,d2):
 		c = VR.Constraint()
 		c.free([3,4,5])
-		c.setOffsetA(VR.Pose([0,-d1,0],[0,0,-1],[0,1,0]))
-		c.setOffsetB(VR.Pose([0,d2,0],[0,0,-1],[0,1,0]))
+		c.setLocalOffsetA(0,-d1,0,0,0,0)
+		c.setLocalOffsetB(0,d2,0,0,0,0)
 		cs = VR.Constraint()
 		a.attach(b, c, cs)
 	
@@ -80,8 +64,6 @@
 	setupJoint(z2, z3, 0.2, 0.2)
 	setupJoint(z3, s, 0.2, 0)
 	
-	VR.setPhysicsActive(1)
-	
 	
 	
 	
@@ -89,6 +71,14 @@
 </core>
       <arg type="VRPyObjectType" value="Headlight" base_name="root" name_space="Init" name_suffix="0" persistency="666"/>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="test" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	a = VR.find('anchor')
+	a.getConstraint()
+</core>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>

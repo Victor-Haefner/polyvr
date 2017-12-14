@@ -39,7 +39,7 @@ class VRServer : public VRDevice {
         void addWebSite(string uri, string website);
         void updateClients(string uri);
 
-        int openWebSocket(string address);
+        int openWebSocket(string address, string protocols);
         void answerWebSocket(int id, string msg);
 };
 

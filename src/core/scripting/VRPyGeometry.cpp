@@ -61,6 +61,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"getIndices", (PyCFunction)VRPyGeometry::getIndices, METH_NOARGS, "get geometry indices" },
     {"getTexCoords", (PyCFunction)VRPyGeometry::getTexCoords, METH_NOARGS, "get geometry texture coordinates" },
     {"getMaterial", (PyCFunction)VRPyGeometry::getMaterial, METH_NOARGS, "get material" },
+    {"getGeometricCenter", PyWrap(Geometry, getGeometricCenter, "Get geometric center", Vec3d ) },
     {"merge", (PyCFunction)VRPyGeometry::merge, METH_VARARGS, "Merge another geometry into this one - merge( geo )" },
     {"remove", (PyCFunction)VRPyGeometry::remove, METH_VARARGS, "Remove a part of the geometry - remove( Selection s )" },
     {"copy", (PyCFunction)VRPyGeometry::copy, METH_VARARGS, "Copy a part of the geometry - geo copy( Selection s )" },
@@ -144,7 +145,6 @@ void feed2Dnp(PyObject* o, T& vec) { // numpy version
 template<class T, class t>
 void feed2D(PyObject* o, T& vec) {
     t tmp;
-    PyObject* pi = 0;
     for (Py_ssize_t i=0; i<PyList_Size(o); i++) {
         toValue(PyList_GetItem(o,i), tmp);
         vec->push_back(tmp);
@@ -154,7 +154,6 @@ void feed2D(PyObject* o, T& vec) {
 template<class T, class t>
 void feed2D_v2(PyObject* o, T& vec) {
     t tmp;
-    PyObject* pi = 0;
     for (Py_ssize_t i=0; i<PyList_Size(o); i++) {
         toValue(PyList_GetItem(o,i), tmp);
         vec.push_back(tmp);

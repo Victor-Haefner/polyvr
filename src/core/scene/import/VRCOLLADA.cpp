@@ -534,9 +534,9 @@ VRTransformPtr buildLinks(klink l, VRObjectPtr objects, map<string, VRConstraint
 
     for (auto a : l.attachments) {
         VRConstraintPtr c = constraints[a.second.joint];
-        Matrix4d ref;
-        ref.setTranslate(a.second.translate);
-        c->setReferenceA(ref);
+        Matrix4d m;
+        m.setTranslate(a.second.translate);
+        c->setReferenceA(Pose::create(m));
         //c->setReferenceB(ref);
 
         for (auto cl : a.second.links) {

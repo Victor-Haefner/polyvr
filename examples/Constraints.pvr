@@ -33,7 +33,7 @@
 	
 	box.setPickable(1)
 	c = VR.Constraint()
-	c.setReference(box)
+	c.setReference(box.getPose())
 	c.setTranslationConstraint([0,1,0], 'PLANE', 0)
 	c.setRotationConstraint([0,0,0], 'POINT', 0)
 	box.setConstraint(c)

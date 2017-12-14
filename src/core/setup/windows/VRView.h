@@ -10,6 +10,7 @@
 #include "core/objects/VRObjectFwd.h"
 #include "core/setup/VRSetupFwd.h"
 #include "core/scene/rendering/VRRenderManager.h"
+#include "core/math/VRMathFwd.h"
 
 namespace xmlpp{ class Element; }
 
@@ -127,6 +128,8 @@ class VRView : public std::enable_shared_from_this<VRView> {
 
         VRTransformPtr getUser();
         VRCameraPtr getCamera();
+        ProjectionCameraDecoratorMTRecPtr getCameraDecoratorLeft();
+        ProjectionCameraDecoratorMTRecPtr getCameraDecoratorRight();
         bool isStereo();
         float getEyeSeparation();
         bool isProjection();
@@ -151,6 +154,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
 
         Vec4d getPosition();
         void setPosition(Vec4d pos);
+        PosePtr getPose();
 
         ViewportMTRecPtr getViewport();
         VRRenderStudioPtr getRenderingL();

@@ -4,6 +4,7 @@
 #include "core/setup/windows/VRView.h"
 #include "VRDevice.h"
 #include <OpenSG/OSGLine.h>
+#include "core/math/pose.h"
 
 /*
 not compiling? then you are missing a library:
@@ -36,7 +37,7 @@ class VRMultiTouch : public VRDevice {
         static vector<string> deviceIDs;
 
         void multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut);
-        bool calcViewRay(VRCameraPtr pcam, Line &line, float x, float y, int W, int H);
+        bool calcViewRay(VRCameraPtr pcam, VRViewPtr view, Line &line, float x, float y, int W, int H);
 
         string device;
         string input;

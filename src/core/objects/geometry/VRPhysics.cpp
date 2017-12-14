@@ -10,6 +10,7 @@
 #include "core/utils/VRVisualLayer.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/VRRate.h"
+#include "core/math/pose.h"
 
 #include <OpenSG/OSGTriangleIterator.h>
 #include <btBulletDynamicsCommon.h>
@@ -1203,8 +1204,8 @@ void VRPhysics::updateConstraint(VRPhysics* p) {
     localB.setIdentity();
 
     //Constraint.getReferenceFrameInB
-    localA = fromMatrix( c->getReferenceA(), -CoMOffset );
-    localB = p->fromMatrix( c->getReferenceB(), -p->CoMOffset );
+    localA = fromMatrix( c->getReferenceA()->asMatrix(), -CoMOffset );
+    localB = p->fromMatrix( c->getReferenceB()->asMatrix(), -p->CoMOffset );
 
     // TODO: possible bug - p is not valid, may have been deleted!
 

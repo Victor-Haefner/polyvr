@@ -1,6 +1,7 @@
 #include "VRScene.h"
 #include "core/setup/devices/VRFlystick.h"
 #include "core/setup/devices/VRMouse.h"
+#include "core/setup/devices/VRMultiTouch.h"
 #include "core/setup/devices/VRKeyboard.h"
 #include "core/setup/devices/VRHaptic.h"
 #include "core/setup/devices/VRServer.h"
@@ -156,6 +157,7 @@ void VRScene::setActiveCamera(string camname) {
     if (cam == 0) return;
 
     VRMousePtr mouse = dynamic_pointer_cast<VRMouse>( setup->getDevice("mouse") );
+    VRMultiTouchPtr multitouch = dynamic_pointer_cast<VRMultiTouch>( setup->getDevice("multitouch") );
     VRFlystickPtr flystick = dynamic_pointer_cast<VRFlystick>( setup->getDevice("flystick") );
     VRDevicePtr razer = setup->getDevice("vrpn_device");
     VRServerPtr server1 = dynamic_pointer_cast<VRServer>( setup->getDevice("server1") );
@@ -163,6 +165,11 @@ void VRScene::setActiveCamera(string camname) {
     if (mouse) {
         mouse->setTarget(cam);
         mouse->setCamera(cam);
+    }
+
+    if (multitouch) {
+        multitouch->setTarget(cam);
+        multitouch->setCamera(cam);
     }
 
     if (flystick) flystick->setTarget(cam);
