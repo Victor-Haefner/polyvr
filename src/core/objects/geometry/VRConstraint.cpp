@@ -2,11 +2,15 @@
 #include "core/objects/VRTransform.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/VRGlobals.h"
+#include "core/utils/toString.h"
+#include "core/math/pose.h"
 
 #include <OpenSG/OSGQuaternion.h>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRConstraint::TCMode& o) { return "Constraint mode"; }
+template<> int toValue(stringstream& s, VRConstraint::TCMode& t) { return 0; } // TODO
 
 VRConstraint::VRConstraint() {
     local = false;
@@ -35,10 +39,13 @@ void VRConstraint::setMax(int i, float f) { max[i] = f; }
 float VRConstraint::getMin(int i) { return min[i]; }
 float VRConstraint::getMax(int i) { return max[i]; }
 
-void VRConstraint::setReferenceA(Matrix4d m) { refMatrixA = m; };
-void VRConstraint::setReferenceB(Matrix4d m) { refMatrixB = m; refMatrixB.inverse(refMatrixBI); };
-Matrix4d VRConstraint::getReferenceA() { return refMatrixA; };
-Matrix4d VRConstraint::getReferenceB() { return refMatrixB; };
+void VRConstraint::lock(vector<int> dofs) { for (int dof : dofs) setMinMax(dof,0,0); }
+void VRConstraint::free(vector<int> dofs) { for (int dof : dofs) setMinMax(dof,1,-1); }
+
+void VRConstraint::setReferenceA(PosePtr p) { refMatrixA = p->asMatrix(); };
+void VRConstraint::setReferenceB(PosePtr p) { refMatrixB = p->asMatrix(); refMatrixB.inverse(refMatrixBI); };
+PosePtr VRConstraint::getReferenceA() { return Pose::create(refMatrixA); };
+PosePtr VRConstraint::getReferenceB() { return Pose::create(refMatrixB); };
 
 void VRConstraint::lockRotation() {
     setRConstraint(Vec3d(0,0,0), VRConstraint::POINT);
@@ -113,17 +120,17 @@ void VRConstraint::apply(VRTransformPtr obj) {
 }
 
 
-void VRConstraint::setReference(Matrix4d m) { Reference = m; prepare(); }
+void VRConstraint::setReference(PosePtr p) { Reference = p->asMatrix(); prepare(); }
 void VRConstraint::setReferential(VRTransformPtr t) { Referential = t; }
 
-void VRConstraint::setTConstraint(Vec3d trans, int mode, bool local) {
+void VRConstraint::setTConstraint(Vec3d trans, TCMode mode, bool local) {
     tConstraint = trans;
     if (tConstraint.length() > 1e-4 && mode != POINT) tConstraint.normalize();
     tConMode = mode;
     localTC = local;
 }
 
-void VRConstraint::setRConstraint(Vec3d rot, int mode, bool local) {
+void VRConstraint::setRConstraint(Vec3d rot, TCMode mode, bool local) {
     rConstraint = rot;
     if (rConstraint.length() > 1e-4 && mode != POINT) rConstraint.normalize();
     rConMode = mode;
@@ -142,8 +149,8 @@ void VRConstraint::prepare() {
     refRebased.inverse(refRebasedI);
 }
 
-bool VRConstraint::getTMode() { return tConMode; }
-bool VRConstraint::getRMode() { return rConMode; }
+VRConstraint::TCMode VRConstraint::getTMode() { return TCMode(tConMode); }
+VRConstraint::TCMode VRConstraint::getRMode() { return TCMode(rConMode); }
 Vec3d VRConstraint::getTConstraint() { return tConstraint; }
 Vec3d VRConstraint::getRConstraint() { return rConstraint; }
 
@@ -154,4 +161,3 @@ bool VRConstraint::hasConstraint() { return rConMode != NONE || tConMode != NONE
 void VRConstraint::setActive(bool b, VRTransformPtr obj) { active = b; if (b) obj->getWorldMatrix(Reference); prepare(); }
 bool VRConstraint::isActive() { return active; }
 
-OSG_END_NAMESPACE;

@@ -145,7 +145,6 @@ void feed2Dnp(PyObject* o, T& vec) { // numpy version
 template<class T, class t>
 void feed2D(PyObject* o, T& vec) {
     t tmp;
-    PyObject* pi = 0;
     for (Py_ssize_t i=0; i<PyList_Size(o); i++) {
         toValue(PyList_GetItem(o,i), tmp);
         vec->push_back(tmp);
@@ -155,7 +154,6 @@ void feed2D(PyObject* o, T& vec) {
 template<class T, class t>
 void feed2D_v2(PyObject* o, T& vec) {
     t tmp;
-    PyObject* pi = 0;
     for (Py_ssize_t i=0; i<PyList_Size(o); i++) {
         toValue(PyList_GetItem(o,i), tmp);
         vec.push_back(tmp);

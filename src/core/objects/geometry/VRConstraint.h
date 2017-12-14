@@ -4,6 +4,7 @@
 #include <OpenSG/OSGMatrix.h>
 #include "core/utils/VRStorage.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/math/VRMathFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -62,14 +63,16 @@ class VRConstraint : public VRStorage {
         void setMinMax(int i, float f1, float f2);
         void setMin(int i, float f);
         void setMax(int i, float f);
+        void lock(vector<int> dofs);
+        void free(vector<int> dofs);
 
         float getMin(int i);
         float getMax(int i);
 
-        void setReferenceA(Matrix4d m);
-        void setReferenceB(Matrix4d m);
-        Matrix4d getReferenceA();
-        Matrix4d getReferenceB();
+        void setReferenceA(PosePtr p);
+        void setReferenceB(PosePtr p);
+        PosePtr getReferenceA();
+        PosePtr getReferenceB();
 
         void lockRotation();
 
@@ -77,12 +80,12 @@ class VRConstraint : public VRStorage {
 
 
         // TODO: refactor old VRTransform stuff
-        void setReference(Matrix4d m);
+        void setReference(PosePtr m);
         void setReferential(VRTransformPtr ref);
-        void setTConstraint(Vec3d trans, int mode, bool local = false);
-        void setRConstraint(Vec3d rot, int mode, bool local = false);
-        bool getRMode();
-        bool getTMode();
+        void setTConstraint(Vec3d trans, TCMode mode, bool local = false);
+        void setRConstraint(Vec3d rot, TCMode mode, bool local = false);
+        TCMode getRMode();
+        TCMode getTMode();
         Vec3d getTConstraint();
         Vec3d getRConstraint();
         bool hasTConstraint();

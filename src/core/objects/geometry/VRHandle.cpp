@@ -45,7 +45,7 @@ void VRHandle::set(PosePtr p, float v) {
     if (constraint == LINEAR) {
         translate( axis*value*scale );
         c->setActive(1, ptr());
-        c->setReference(getMatrix());
+        c->setReference(getPose());
     }
 }
 

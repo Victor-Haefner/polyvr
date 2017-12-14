@@ -275,8 +275,10 @@ void VRNavigator::fly_walk(VRDeviceWeakPtr _dev) {
     VRTransformPtr target = dev->getTarget();
     VRTransformPtr flystick = dev->getBeacon();
     if (target == 0 || flystick == 0) return;
+    if (target->getParent() == 0 ) return;
 
-    Vec3d dir = flystick->getWorldDirection();
+    Vec3d dir = flystick->getPoseTo(target->getParent())->dir();
+    //Vec3d dir = flystick->getDir();
     dir.normalize();
 
     Vec2d speed = dev->getSpeed();
@@ -319,7 +321,7 @@ void VRNavigator::orbit2D(VRDeviceWeakPtr _dev) {
 void animPathAt(VRTransformWeakPtr trp, PathPtr p, float t) {
     auto tr = trp.lock();
     if (!tr) return;
-    tr->setAt( p->getPosition(t) );
+    tr->setWorldAt( p->getPosition(t) );
 }
 
 void VRNavigator::focus(VRDeviceWeakPtr _dev) {
@@ -333,12 +335,11 @@ void VRNavigator::focus(VRDeviceWeakPtr _dev) {
     if (devBeacon == 0) return;
 
     VRIntersection ins = dev->intersect(target->getRoot());
-
     if (!ins.hit) return;
 
     Vec3d z;
     auto p = Path::create();
-    p->addPoint( Pose(target->getAt(), z));
+    p->addPoint( Pose(target->getWorldAt(), z));
     p->addPoint( Pose(ins.point.subZero(), z));
     p->compute(20);
 

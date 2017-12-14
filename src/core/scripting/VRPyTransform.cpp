@@ -45,12 +45,15 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getWorldFrom", (PyCFunction)VRPyTransform::getWFrom, METH_NOARGS, "Return the object's world position" },
     {"getWorldDir", (PyCFunction)VRPyTransform::getWorldDir, METH_NOARGS, "Return the object's dir vector" },
     {"getWorldUp", (PyCFunction)VRPyTransform::getWorldUp, METH_NOARGS, "Return the object's up vector" },
+    {"getWorldAt", PyWrapOpt(Transform, getWorldAt, "Return the object's at vector", "0", Vec3d, bool ) },
     {"getScale", (PyCFunction)VRPyTransform::getScale, METH_NOARGS, "Return the object's scale vector" },
     {"getEuler", (PyCFunction)VRPyTransform::getEuler, METH_NOARGS, "Return the object's euler angles - [X,Y,Z] getEuler()" },
     {"setMatrix", PyWrap(Transform, setMatrix, "Set the object's matrix", void, Matrix4d ) },
     {"setWorldMatrix", PyWrap(Transform, setWorldMatrix, "Set the object's world matrix", void, Matrix4d ) },
     {"setWorldFrom", (PyCFunction)VRPyTransform::setWFrom, METH_VARARGS, "Set the object's world position" },
     {"setWorldOrientation", (PyCFunction)VRPyTransform::setWOrientation, METH_VARARGS, "Set the object's world direction" },
+    {"setWorldUp", PyWrap(Transform, setWorldUp, "Set the object's up vector", void, Vec3d ) },
+    {"setWorldAt", PyWrap(Transform, setWorldAt, "Set the object's at vector", void, Vec3d ) },
     {"setPose", (PyCFunction)VRPyTransform::setPose, METH_VARARGS, "Set the object's pose - setPose(pose)\n\tsetPose(pos, dir, up)" },
     {"setWorldPose", (PyCFunction)VRPyTransform::setWPose, METH_VARARGS, "Set the object's pose - setWorldPose(pose)\n\tsetPose(pos, dir, up)" },
     {"setPosition", (PyCFunction)VRPyTransform::setFrom, METH_VARARGS, "Set the object's from vector" },
@@ -463,8 +466,6 @@ PyObject* VRPyTransform::physicalize(VRPyTransform* self, PyObject *args) {
     Py_RETURN_TRUE;
 }
 
-
-
 PyObject* VRPyTransform::setPhysicsConstraintTo(VRPyTransform* self, PyObject *args) {
     if (!self->valid()) return NULL;
     //if this is soft, the args have to be: RigidBody other, int nodeIndex, vec3 localpivot, bool ignoreCollision, float influence
@@ -481,6 +482,7 @@ PyObject* VRPyTransform::setPhysicsConstraintTo(VRPyTransform* self, PyObject *a
         VRPyTransform *t; VRPyConstraint *c; VRPyConstraint *cs;
         if (! PyArg_ParseTuple(args, "OOO", &t, &c, &cs)) return NULL;
         self->objPtr->getPhysics()->setConstraint( t->objPtr->getPhysics(), c->objPtr, cs->objPtr );
+        self->objPtr->setConstraint(c->objPtr);
     }
     Py_RETURN_TRUE;
 }

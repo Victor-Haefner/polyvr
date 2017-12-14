@@ -167,7 +167,7 @@ VRTransformPtr VRSetup::getRoot() { return real_root; }
 VRTransformPtr VRSetup::getTracker(string t) {
     for (int ID : getARTDevices()) {
         ART_devicePtr dev = getARTDevice(ID);
-        if (dev->ent->getName() == t) return dev->ent;
+        if (dev->ent && dev->ent->getName() == t) return dev->ent;
     }
 
     for (int ID : getVRPNTrackerIDs()) {
