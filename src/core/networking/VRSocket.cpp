@@ -150,9 +150,9 @@ class HTTPServer {
             if (websockets.count(id) && websockets[id]) mg_send_websocket_frame(websockets[id], WEBSOCKET_OP_TEXT, message.c_str(), message.size());
         }
 
-        int websocket_open(string address) {
+        int websocket_open(string address, string protocols) {
             int newID = websockets.size();
-            auto c = mg_connect_ws(server, server_answer_to_connection_m, address.c_str(), NULL, NULL);
+            auto c = mg_connect_ws(server, server_answer_to_connection_m, address.c_str(), protocols.c_str(), NULL);
             if (c) websockets[newID] = c;
             else newID = -1;
             return newID;
@@ -165,11 +165,12 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
     if (v) {
         if (ev == MG_EV_CONNECT) { VRLog::log("net", "MG_EV_CONNECT\n"); return; }
         if (ev == MG_EV_RECV) { VRLog::log("net", "MG_EV_RECV\n"); return; }
-        if (ev == MG_EV_WEBSOCKET_HANDSHAKE_DONE) { VRLog::log("net", "MG_EV_WEBSOCKET_HANDSHAKE_DONE\n"); return; }
         if (ev == MG_EV_POLL) { return; }
         if (ev == MG_EV_ACCEPT) { VRLog::log("net", "MG_EV_ACCEPT\n"); return; }
         if (ev == MG_EV_SEND) { VRLog::log("net", "MG_EV_SEND\n"); return; }
         if (ev == MG_EV_TIMER) { VRLog::log("net", "MG_EV_TIMER\n"); return; }
+        if (ev == MG_EV_WEBSOCKET_HANDSHAKE_DONE) { VRLog::log("net", "MG_EV_WEBSOCKET_HANDSHAKE_DONE\n"); return; }
+        if (ev == MG_EV_WEBSOCKET_CONTROL_FRAME) { VRLog::log("net", "MG_EV_WEBSOCKET_CONTROL_FRAME\n"); return; }
     }
 
     HTTP_args* sad = (HTTP_args*) conn->mgr->user_data;
@@ -307,8 +308,8 @@ VRSocket::~VRSocket() {
 
 std::shared_ptr<VRSocket> VRSocket::create(string name) { return std::shared_ptr<VRSocket>(new VRSocket(name)); }
 
-int VRSocket::openWebSocket(string address) {
-    if (http_serv) return http_serv->websocket_open(address);
+int VRSocket::openWebSocket(string address, string protocols) {
+    if (http_serv) return http_serv->websocket_open(address, protocols);
     return -1;
 }
 
