@@ -46,6 +46,7 @@ VRRain::VRRain() : VRGeometry("Rain") {
     textureSize = 512;
 
     auto camDef = VRScene::getCurrent()->getActiveCamera();
+    oldCamTex = camDef;
 
     texRenderer = VRTextureRenderer::create("rainTexRenderer");
     texRenderer-> setPersistency(0);
@@ -188,6 +189,8 @@ void VRRain::update() {
     double offset = glutGet(GLUT_ELAPSED_TIME)*0.001; //seconds
 
     auto camDef = VRScene::getCurrent()->getActiveCamera();
+    if (camDef = camTex) camDef = oldCamTex;
+    else oldCamTex = camDef;
     auto defCamPos = camDef->getFrom();
     camTex->setFrom(defCamPos);
     camTex->translate(Vec3d(0,40,0));

@@ -22,6 +22,7 @@ class VRRain : public VRGeometry {
         VRLightPtr lightMain;
 
         VRCameraPtr camTex;
+        VRCameraPtr oldCamTex;
         VRTextureRendererPtr texRenderer;
         VRGeometryPtr cube;
 
