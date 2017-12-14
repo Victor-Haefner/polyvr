@@ -605,8 +605,14 @@ void VRView::load(xmlpp::Element* node) {
     update();
 }
 
+PosePtr VRView::getPose() {
+    return Pose::create(proj_center, proj_normal, proj_up);
+}
+
 VRTransformPtr VRView::getUser() { if (user) return user; else return dummy_user; }
 VRCameraPtr VRView::getCamera() { return cam; }
+ProjectionCameraDecoratorMTRecPtr VRView::getCameraDecoratorLeft() { return PCDecoratorLeft; }
+ProjectionCameraDecoratorMTRecPtr VRView::getCameraDecoratorRight() { return PCDecoratorRight; }
 ViewportMTRecPtr VRView::getViewport() { return lView; }
 float VRView::getEyeSeparation() { return eyeSeparation; }
 bool VRView::isStereo() { return stereo; }

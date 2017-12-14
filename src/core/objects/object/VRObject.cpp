@@ -284,6 +284,14 @@ VRObjectPtr VRObject::getChild(int i) {
     return children[i];
 }
 
+bool VRObject::hasDescendant(VRObjectPtr obj) { return obj->hasAncestor(ptr()); }
+
+bool VRObject::hasAncestor(VRObjectPtr a) {
+    if (ptr() == a || getParent() == a) return true;
+    if (getParent()) return getParent()->hasAncestor(a);
+    return false;
+}
+
 /** Returns the parent of ptr() object **/
 VRObjectPtr VRObject::getParent() { return parent.lock(); }
 
@@ -407,13 +415,6 @@ bool VRObject::hasGraphChanged() {
     if (graphChanged == VRGlobals::CURRENT_FRAME) return true;
     if (getParent() == 0) return false;
     return getParent()->hasGraphChanged();
-}
-
-bool VRObject::hasAncestor(VRObjectPtr a) {
-    if (ptr() == a) return true;
-    if (getParent() == a) return true;
-    if (getParent() != 0) return getParent()->hasAncestor(a);
-    else return false;
 }
 
 /** Returns the Boundingbox of the OSG Node */

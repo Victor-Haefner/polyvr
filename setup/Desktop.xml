@@ -8,7 +8,6 @@
   <Devices>
     <Device base_name="keyboard" name="keyboard" name_space="__global__" name_suffix="0" persistency="666" type="keyboard"/>
     <Device base_name="mouse" name="mouse" name_space="__global__" name_suffix="0" persistency="666" type="mouse"/>
-    <Device base_name="multitouch" device="PQLabs EN652052703" input="/dev/input/event25&quot;&#10;&#9;Evdev" name="multitouch" name_space="__global__" name_suffix="0" persistency="666" type="multitouch"/>
     <Device base_name="server1" name="server1" name_space="__global__" name_suffix="0" persistency="666" type="server"/>
   </Devices>
   <TrackingART active="0" offset="0 0 0" persistency="666" port="5000" up=""/>

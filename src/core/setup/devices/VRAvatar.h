@@ -4,6 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 #include <string>
 #include <map>
+#include <vector>
 
 #include "core/objects/VRObjectFwd.h"
 
@@ -11,32 +12,45 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRAvatar {
+    public:
+        struct Beacon {
+            VRTransformPtr tmpContainer;
+            VRTransformPtr beacon;
+            map<string, VRObjectPtr> avatars;
+        };
+
     private:
+        string deviceName;
         VRTransformPtr deviceRoot = 0;
-        VRTransformPtr tmpContainer = 0;
-        map<string, VRObjectPtr> avatars;
+        vector<Beacon> beacons;
 
         VRObjectPtr initRay();
         VRObjectPtr initCone();
         VRObjectPtr initBroadRay();
 
-        void addAll();
-        void hideAll();
+        void addAll(int i);
+        void hideAll(int i);
 
     protected:
         VRAvatar(string name);
         ~VRAvatar();
 
-        void addAvatar(VRObjectPtr geo);
+        void addAvatar(VRObjectPtr geo, int i);
 
     public:
+        void enableAvatar(string avatar, int i);
         void enableAvatar(string avatar);
+        void disableAvatar(string avatar, int i);
         void disableAvatar(string avatar);
 
+        void addBeacon();
+        VRTransformPtr getBeacon(int i);
         VRTransformPtr getBeacon();
+        VRTransformPtr editBeacon(int i);
         VRTransformPtr editBeacon();
+        void setBeacon(VRTransformPtr b, int i);
         void setBeacon(VRTransformPtr b);
-        void updateBeacon();
+        void updateBeacons();
 };
 
 OSG_END_NAMESPACE;

@@ -53,6 +53,7 @@ PyObject* VRPyDevice::fromSharedPtr(VRDevicePtr dev) {
     else if (type == "server") return VRPyServer::fromSharedPtr( static_pointer_cast<VRServer>(dev) );
     else if (type == "haptic") return VRPyHaptic::fromSharedPtr( static_pointer_cast<VRHaptic>(dev) );
     else if (type == "keyboard") return VRPyBaseT<VRDevice>::fromSharedPtr( dev );
+    else if (type == "flystick") return VRPyBaseT<VRDevice>::fromSharedPtr( dev );
     cout << "\nERROR in VRPyTypeCaster::cast device: " << type << " not handled!\n";
     return VRPyBaseT<VRDevice>::fromSharedPtr(dev);
 }

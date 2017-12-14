@@ -122,6 +122,15 @@ OSG::Vec4d VRPyBase::parseVec4dList(PyObject *li) {
     return OSG::Vec4d(x,y,z,w);
 }
 
+OSG::Matrix4d VRPyBase::parseMatrixList(PyObject *li) {
+    if (li == 0) return OSG::Matrix4d();
+    vector<PyObject*> lis = pyListToVector(li);
+    if (lis.size() != 16) return OSG::Matrix4d();
+    float d[16];
+    for (int i=0; i<16; i++) d[i] = PyFloat_AsDouble(lis[i]);
+    return OSG::Matrix4d(d[0], d[1], d[2], d[3], d[4], d[5],d[6],d[7],d[8], d[9],d[10], d[11], d[12], d[13],d[14], d[15]);
+}
+
 OSG::Vec2d VRPyBase::parseVec2f(PyObject *args) {
     if (pySize(args) == 1) return parseVec2dList( parseObject(args) );
 
