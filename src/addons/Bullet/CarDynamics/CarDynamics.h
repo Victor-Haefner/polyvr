@@ -105,6 +105,7 @@ class VRCarDynamics : public VRObject {
         typedef shared_ptr<Wheel> WheelPtr;
 
     private:
+        bool debugCarDyn = false;
         int type = SIMPLE;
         EnginePtr engine;
         ChassisPtr chassis;
