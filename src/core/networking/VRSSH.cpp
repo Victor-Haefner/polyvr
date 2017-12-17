@@ -166,8 +166,10 @@ string VRSSHSession::exec_cmd(string cmd, bool read) {
     if (rc < 0) return lastError(64);
     rc = libssh2_channel_close(channel);
     if (rc < 0) return lastError(65);
+    int exisStatus = libssh2_channel_get_exit_status(channel);
     libssh2_channel_free(channel);
-    return "ok";
+    if (exisStatus == 0) return "ok";
+    else return string("failed with: ") + toString(exisStatus);
 }
 
 void VRSSHSession::distrib_key() {

@@ -127,9 +127,13 @@ void VRNetworkSlave::update() {} // TODO: compute stats
 
 void VRNetworkSlave::start() {
     if (!node) return;
-    string path = VRSceneManager::get()->getOriginalWorkdir() + "/src/cluster/start";
+    string path = VRSceneManager::get()->getOriginalWorkdir() + "/src/cluster/";
+
+    if (!boost::filesystem::exists(path + "VRServer")) { stat = "no slave exec. VRServer in src/cluster/"; return; }
+
     string disp = "export DISPLAY=\"" + display + "\" && ";
     string pipes = " > /dev/null 2> /dev/null < /dev/null &";
+    //string pipes = " > /dev/null 2> /dev/null < /dev/null"; // TODO: without & it returns the correct exit code, but it also makes the app stuck!
     string args;
     if (!fullscreen) args += " -w";
     if (active_stereo) args += " -A";
@@ -137,7 +141,7 @@ void VRNetworkSlave::start() {
     if (connection_type == "SockPipeline") args += " -p " + node->getAddress() + ":" + toString(port);
     if (connection_type == "StreamSock") args += " " + node->getAddress() + ":" + toString(port);
 
-    stat = node->execCmd(disp + path + args + pipes, false);
+    stat = node->execCmd(disp + path + "start" + args + pipes, false);
     update();
 }
 
