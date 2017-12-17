@@ -48,7 +48,7 @@ PyObject* proxyWrap<allowPacking, sT, R (T::*)(Args...), mf, O>::exec(sT* self, 
     size_t Nargs = sizeof...(Args); // try packing parameter into a list
     if (params.size() >= 2 && params.size() <= 4 && Nargs == 1 && allowPacking) {
         PyObject* res = PyList_New(params.size());
-        for (int i=0; i<params.size(); i++) PyList_SetItem(res, i, params[i]);
+        for (uint i=0; i<params.size(); i++) PyList_SetItem(res, i, params[i]);
         params = { res };
     }
 
