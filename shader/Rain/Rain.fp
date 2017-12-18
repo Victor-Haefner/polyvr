@@ -42,10 +42,21 @@ bool obstruction(float D){
 	float disCam = texC.r * (512-0.1);					//distance to cam above	
 	float thetaReal = atan(D,camH-disCam-0.1);
 	
-	if (texC.x==0) return false;
+	//if (texC.x==0) return false;
 	//else return true;
+	//if (thetaReal < 3.1) return true;
 	if (thetaReal < gettheta(fragDir)) return true;
 	return false;
+}
+
+vec3 debugObstruction(){
+	vec3 color = vec3(1,0,0);
+	if (atan( fragDir.x, fragDir.z)*180/M_PI<1 && atan( fragDir.x, fragDir.z)*180/M_PI>-1 && gettheta(fragDir)>M_PI/2) return vec3(1,1,1);	
+	if (atan( fragDir.x, fragDir.z)*180/M_PI<91 && atan( fragDir.x, fragDir.z)*180/M_PI>89 && gettheta(fragDir)>M_PI/2) return vec3(0,0,1);	
+	if ((atan( fragDir.x, fragDir.z)*180/M_PI<-179 || atan( fragDir.x, fragDir.z)*180/M_PI>179) && gettheta(fragDir)>M_PI/2) return vec3(0,0,1);	
+	if (atan( fragDir.x, fragDir.z)*180/M_PI<-89 && atan( fragDir.x, fragDir.z)*180/M_PI>-91 && gettheta(fragDir)>M_PI/2) return vec3(0,1,1);	
+	if (obstruction(1)) color = vec3(0,1,0);	
+	return color;
 }
 
 float getdropsize(in float theta,float distance){
@@ -153,9 +164,9 @@ void main() {
 	vec3 D0 = normalize( P0-PCam );
 	//if (dot(D0,fragDir) < 0.9999 && dot(D0,fragDir) > 0.999) discard;
 
-	vec3 check = checkrad();
-	 
-	gl_FragColor = vec4(check,0.2);
+	//vec3 check = checkrad();
+	gl_FragColor = vec4(debugObstruction(),0.3);
+	//gl_FragColor = vec4(check,0.2);
 }
 
 
