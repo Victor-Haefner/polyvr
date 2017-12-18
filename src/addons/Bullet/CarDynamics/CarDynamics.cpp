@@ -314,8 +314,8 @@ float VRCarDynamics::computeEngineFriction( float gear, float deltaRPM, float co
 }
 
 float VRCarDynamics::computeEngineBreak(float gearRatio, float coupling ) {
-    //if (abs(gearRatio)>10) return 5 * coupling * 100;
-    //if (abs(gearRatio)<10) return coupling * 100;
+    if (abs(gearRatio)>10) return 5 * coupling * 100;
+    if (abs(gearRatio)<10) return coupling * 100;
     return 0;
     return abs(gearRatio) * coupling *100; //abs(gearRatio) * coupling * engine->rpm / engine->maxRpm * 200;
 }
