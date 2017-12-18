@@ -201,7 +201,7 @@ void VRRain::update() {
     else oldCamTex = camDef;
     //if (camDef->getName() == "car") oldCamTex = camDef;
     if (debugRain) cout << "oldcam: " << oldCamTex->getName() << endl;
-    auto defCamPos = camDef->getFrom();
+    auto defCamPos = camDef->getWorldPosition();//camDef->getFrom();
     camTex->setFrom(defCamPos);
     camTex->translate(Vec3d(0,40,0));
     camTex->setAt(defCamPos);
