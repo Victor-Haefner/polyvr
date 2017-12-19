@@ -14,7 +14,7 @@ PyMethodDef VRPyRain::methods[] = {
     {"get", PyWrap(Rain, get, "Gets Scale", float ) },
     {"overrideParameters", PyWrap(Rain, overrideParameters, "7 parameters: tTransition, densRain, densCL, vX, vY, clCL, light \n\t", void, float, float, float, float, float, float, float ) },
     //{"doTestFunction", PyWrap(Rain, doTestFunction, "doTestFunction", void) },
-    //{"getRenderer", PyWrap(Rain, getRenderer, "Get renderer", VRTextureRendererPtr) },
+    {"getRenderer", PyWrap(Rain, getRenderer, "Get renderer", VRTextureRendererPtr) },
     //{"getTexMat", PyWrap(Rain, getTexMat, "getTexMat", VRMaterialPtr) },
     {NULL}  /* Sentinel */
 };

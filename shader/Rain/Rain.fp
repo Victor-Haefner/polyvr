@@ -55,7 +55,10 @@ vec3 debugObstruction(){
 	if (atan( fragDir.x, fragDir.z)*180/M_PI<91 && atan( fragDir.x, fragDir.z)*180/M_PI>89 && gettheta(fragDir)>M_PI/2) return vec3(0,0,1);	
 	if ((atan( fragDir.x, fragDir.z)*180/M_PI<-179 || atan( fragDir.x, fragDir.z)*180/M_PI>179) && gettheta(fragDir)>M_PI/2) return vec3(0,0,1);	
 	if (atan( fragDir.x, fragDir.z)*180/M_PI<-89 && atan( fragDir.x, fragDir.z)*180/M_PI>-91 && gettheta(fragDir)>M_PI/2) return vec3(0,1,1);	
-	if (obstruction(1)) color = vec3(0,1,0);	
+	if (obstruction(1)) color = vec3(0,1,0);
+	//if (obstruction(2)) color = vec3(0,1,1);
+	//if (obstruction(5)) color = vec3(0,0,1);
+	//if (obstruction(8)) color = vec3(0,0,1);	
 	return color;
 }
 
@@ -138,7 +141,7 @@ vec3 checkrad() {
 	//0-Degree Pointer
 	//if (atan( fragDir.x, fragDir.z)*180/M_PI<1 && atan( fragDir.x, fragDir.z)*180/M_PI>-1 && gettheta(fragDir)>M_PI/2) return vec3(1,1,1);	
 
-	vec3 color = vec3(0,0,0.8);
+	vec3 color = vec3(0.4,0.4,0.7);
 
 	if (isD(1) || isD(2) || isD(3) ||isD(5) || isD(8)) return color;
 	else discard;
@@ -164,9 +167,9 @@ void main() {
 	vec3 D0 = normalize( P0-PCam );
 	//if (dot(D0,fragDir) < 0.9999 && dot(D0,fragDir) > 0.999) discard;
 
-	//vec3 check = checkrad();
-	gl_FragColor = vec4(debugObstruction(),0.3);
-	//gl_FragColor = vec4(check,0.2);
+	vec3 check = checkrad();
+	//gl_FragColor = vec4(debugObstruction(),0.3); //DebugMode
+	gl_FragColor = vec4(check,0.2);
 }
 
 
