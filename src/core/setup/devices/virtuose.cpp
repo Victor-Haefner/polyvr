@@ -3,6 +3,7 @@
 #include <OpenSG/OSGQuaternion.h>
 #include "core/networking/VRPing.h"
 #include "core/scene/VRSceneManager.h"
+#include <boost/filesystem.hpp>
 
 #define CHECK(x) { \
     int result = (x); \
@@ -58,9 +59,9 @@ virtuose::virtuose() : interface("virtuose") {
     interface.addBarrier("barrier2", 2);
     //interface.addBarrier("barrier3", 2);
     interface.addObject<Vec6>("targetForces");
-    string path = VRSceneManager::get()->getOriginalWorkdir();
-    path += "/src/core/setup/devices/virtuose/bin/Debug/virtuose";
-    deamon = popen(path.c_str(), "w");
+    deamonPath = VRSceneManager::get()->getOriginalWorkdir();
+    deamonPath += "/src/core/setup/devices/virtuose/bin/Debug/virtuose";
+    deamon = popen(deamonPath.c_str(), "w");
     if (!deamon) { cout << " failed to open virtuose deamon" << endl; return; }
     cout << "\nstarted haptic device deamon" << endl;
 }
@@ -71,6 +72,16 @@ virtuose::~virtuose() {
 }
 
 bool virtuose::connected() { return interface.hasObject<Vec7>("position"); }
+
+string virtuose::getDeamonState() {
+    if (connected()) return "running";
+    if (!boost::filesystem::exists(deamonPath)) return "not compiled";
+    return "not running";
+}
+
+string virtuose::getDeviceState() {
+    return "not connected";
+}
 
 void virtuose::enableForceFeedback(bool enable) {
     if(!connected()) return;

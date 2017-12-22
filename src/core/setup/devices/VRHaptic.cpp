@@ -60,7 +60,7 @@ void VRHaptic::on_scene_changed(VRDeviceWeakPtr dev) {
     VRScene::getCurrent()->addPhysicsUpdateFunction(updateFktPre,false);
     VRScene::getCurrent()->addPhysicsUpdateFunction(updateFktPost,true);
 
-    setIP("172.22.151.200"); //reconnect
+    setIP(IP); //reconnect
 }
 
 void VRHaptic::applyTransformation(VRTransformPtr t) {
@@ -158,6 +158,13 @@ void VRHaptic::setIP(string IP) { this->IP = IP; v->connect(IP,1.0f/(float)VRGlo
 void VRHaptic::setType(string type) { this->type = type; } // TODO: use type for configuration
 string VRHaptic::getIP() { return IP; }
 string VRHaptic::getType() { return type; }
+
+string VRHaptic::getDeamonState() { return v->getDeamonState(); }
+string VRHaptic::getDeviceState() { return v->getDeviceState(); }
+
+vector<string> VRHaptic::getDevTypes() {
+    return {"Virtuose 6D Desktop", "Virtuose 6D35-45", "Virtuose 6D40-40", "INCA 6D"};
+}
 
 void VRHaptic::runTest1() {
     cout << " --- run haptic test 1 --- " << endl;

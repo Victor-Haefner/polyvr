@@ -197,6 +197,8 @@ void VRGuiSetup::updateObjectData() {
         VRHaptic* t = (VRHaptic*)selected_object;
         setTextEntry("entry8", t->getIP());
         setCombobox("combobox25", getListStorePos("liststore8", t->getType()) );
+        setLabel("label64", t->getDeamonState());
+        setLabel("label66", t->getDeviceState());
     }
 
     if (selected_type == "multitouch") {
@@ -1196,7 +1198,7 @@ VRGuiSetup::VRGuiSetup() {
     setComboboxCallback("combobox18", sigc::mem_fun(*this, &VRGuiSetup::on_change_view_user) );
     setComboboxCallback("combobox25", sigc::mem_fun(*this, &VRGuiSetup::on_change_haptic_type) );
 
-    fillStringListstore("liststore8", {"Virtuose 6D Desktop", "Virtuose 6D35-45", "Virtuose 6D40-40", "INCA 6D"} );
+    fillStringListstore("liststore8", VRHaptic::getDevTypes() );
     fillStringListstore("liststore11", VRMultiTouch::getDevices() );
 
     tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview2"));
