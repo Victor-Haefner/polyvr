@@ -4,7 +4,6 @@
 #include "core/networking/VRPing.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/system/VRSystem.h"
-#include <boost/filesystem.hpp>
 
 #define CHECK(x) { \
     int result = (x); \
@@ -62,13 +61,13 @@ virtuose::virtuose() : interface("virtuose") {
     interface.addObject<Vec6>("targetForces");
     string projectPath = VRSceneManager::get()->getOriginalWorkdir() + "/src/core/setup/devices/virtuose/";
     deamonPath = projectPath+"bin/Debug/virtuose";
-    if (!boost::filesystem::exists(deamonPath)) deamonPath = projectPath+"bin/Release/virtuose";
+    if (!exists(deamonPath)) deamonPath = projectPath+"bin/Release/virtuose";
 
-    if (!boost::filesystem::exists(deamonPath)) {
+    if (!exists(deamonPath)) {
         compileCodeblocksProject(projectPath + "virtuose.cbp"); // not working :(
     }
 
-    if (!boost::filesystem::exists(deamonPath)) return;
+    if (!exists(deamonPath)) return;
 
     deamon = popen(deamonPath.c_str(), "w");
     if (!deamon) { cout << " failed to open virtuose deamon" << endl; return; }
@@ -84,7 +83,7 @@ bool virtuose::connected() { return interface.hasObject<Vec7>("position"); }
 
 string virtuose::getDeamonState() {
     if (connected() && deamon) return "running";
-    if (!boost::filesystem::exists(deamonPath)) return "not compiled";
+    if (!exists(deamonPath)) return "not compiled";
     return "not running";
 }
 

@@ -5,8 +5,7 @@
 #include "core/gui/VRGuiUtils.h"
 
 #include "core/scene/VRSceneManager.h"
-
-#include <boost/filesystem.hpp>
+#include "core/utils/system/VRSystem.h"
 
 using namespace OSG;
 
@@ -129,7 +128,7 @@ void VRNetworkSlave::start() {
     if (!node) return;
     string path = VRSceneManager::get()->getOriginalWorkdir() + "/src/cluster/";
 
-    if (!boost::filesystem::exists(path + "VRServer")) { stat = "no slave exec. VRServer in src/cluster/"; return; }
+    if (!exists(path + "VRServer")) { stat = "no slave exec. VRServer in src/cluster/"; return; }
 
     string disp = "export DISPLAY=\"" + display + "\" && ";
     string pipes = " > /dev/null 2> /dev/null < /dev/null &";

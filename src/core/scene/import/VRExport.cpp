@@ -4,7 +4,6 @@
 //#include "VRSTEP.h"
 
 #include <OpenSG/OSGSceneFileHandler.h>
-#include <boost/filesystem.hpp>
 #include "core/objects/object/VRObject.h"
 #include "core/objects/OSGObject.h"
 #include "core/objects/geometry/VRGeometry.h"

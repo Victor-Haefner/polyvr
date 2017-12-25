@@ -7,6 +7,7 @@
 #include "core/setup/devices/VRDevice.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRLogger.h"
+#include "core/utils/system/VRSystem.h"
 
 #include <algorithm>
 #ifndef WIN32
@@ -14,7 +15,6 @@
 #endif
 #include <stdint.h>
 #include <libxml++/nodes/element.h>
-#include <boost/filesystem.hpp>
 #include <boost/bind.hpp>
 
 OSG_BEGIN_NAMESPACE
@@ -253,7 +253,7 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
                     if (v) VRLog::log("net", "Send callback response\n");
                 }
             } else { // return ressources
-                if (!boost::filesystem::exists( sad->path )) {
+                if (!exists( sad->path )) {
                     if (v) VRLog::wrn("net", "Did not find ressource: " + sad->path + "\n");
                     if (v) VRLog::log("net", "Send empty string\n");
                     sendString("");
