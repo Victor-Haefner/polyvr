@@ -174,7 +174,7 @@ string VRGuiFile::getRelativePath_toWorkdir() {
     return make_relative( b, a ).string();
 }
 
-bool VRGuiFile::exists(string path) { return exists(path); }
+bool VRGuiFile::exists(string path) { return boost::filesystem::exists(path); }
 bool VRGuiFile::isDir(string path) { return boost::filesystem::is_directory(path); }
 bool VRGuiFile::isFile(string path) {
     bool b = boost::filesystem::is_regular_file( boost::filesystem::path(path) );

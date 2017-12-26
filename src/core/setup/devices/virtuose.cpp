@@ -92,7 +92,7 @@ string virtuose::getDeviceState() {
 }
 
 void virtuose::enableForceFeedback(bool enable) {
-    if(!connected()) return;
+    if (!connected()) return;
     int i = (enable ? 1 : 0);
     //CHECK(virtEnableForceFeedback(vc,i)); // TODO
 }
