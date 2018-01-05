@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="-0.166039 0.149824 0.0120522" at_dir="0" base_name="Default" far="250" fov="1.0472" from="2.29227 1.40568 -2.03781" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.0150324 -0.0264561 0.49" at_dir="0" base_name="Default" far="250" fov="1.0472" from="2.19324 1.26068 -2.86911" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <constraint persistency="666"/>
           </Object>
@@ -19,8 +19,7 @@
 	import VR
 	
 	if hasattr(VR, 'pendel'): VR.pendel.destroy()
-	VR.pendel = VR.Object('pendel')
-	root.addChild(VR.pendel)
+	VR.pendel = VR.Object('pendel', 'Headlight')
 	pendel = VR.pendel
 	
 	a = VR.Geometry("anchor")
@@ -70,8 +69,34 @@
 	
 	
 </core>
-      <arg type="VRPyObjectType" value="Headlight" base_name="root" name_space="Init" name_suffix="0" persistency="666"/>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="InitHinge" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	if hasattr(VR, 'hinge'): VR.hinge.destroy()
+	VR.hinge = VR.Object('hinge', 'Headlight')
+	
+	def addPrimitive(name, params, pose):
+		g = VR.Geometry(name)
+		g.setPrimitive(params)
+		g.setPose(pose)
+		g.setPickable(True)
+		VR.hinge.addChild(g)
+		return g
+		
+	A = addPrimitive('A', 'Box 0.4 0.1 0.02 1 1 1', VR.Pose([0,0,0.5],[0,0,-1],[0,1,0]))
+	B = addPrimitive('B', 'Box 0.4 0.1 0.02 1 1 1', VR.Pose([0.05,0.1,0.52],[0,0,-1],[1,1,0]))
+	
+	c = VR.Constraint()
+	c.free([5])
+	c.setOffsetA( VR.Pose([-0.2,0,0], [0,0,-1], [0,1,0]) )
+	c.setOffsetB( VR.Pose([-0.2,0,0.02], [0,0,-1], [0,1,0]) )
+	cs = VR.Constraint()
+	A.attach(B, c, cs)
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
     </Script>
     <Script base_name="test" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>

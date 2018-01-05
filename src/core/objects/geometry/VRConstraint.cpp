@@ -44,7 +44,7 @@ void VRConstraint::free(vector<int> dofs) { for (int dof : dofs) setMinMax(dof,1
 
 void VRConstraint::setReferenceA(PosePtr p) { refMatrixA = p->asMatrix(); refMatrixA.inverse(refMatrixAI); };
 void VRConstraint::setReferenceB(PosePtr p) { refMatrixB = p->asMatrix(); refMatrixB.inverse(refMatrixBI); };
-void VRConstraint::setReference(PosePtr p) { setReferenceB(p); }
+void VRConstraint::setReference(PosePtr p) { setReferenceA(p); }
 PosePtr VRConstraint::getReferenceA() { return Pose::create(refMatrixA); };
 PosePtr VRConstraint::getReferenceB() { return Pose::create(refMatrixB); };
 
@@ -112,8 +112,8 @@ void VRConstraint::apply(VRTransformPtr obj, VRObjectPtr parent) {
 
     if (local) parent = obj->getParent(true);
     Matrix4d t = obj->getMatrixTo(parent);
-    t.multLeft(refMatrixBI);
-    t.multLeft(refMatrixA);
+    t.mult(refMatrixB);
+    t.mult(refMatrixAI);
 
     cout << "VRConstraint::apply " << obj->getName();
     if (parent) cout << " p: " << parent->getName();
@@ -127,15 +127,27 @@ void VRConstraint::apply(VRTransformPtr obj, VRObjectPtr parent) {
     }
 
     Vec3d angles = VRTransform::computeEulerAngles(t);
+    Vec3d angleDiff;
     for (int i=3; i<6; i++) { // rotation
         if (min[i] > max[i]) continue; // free
-        if (min[i] > angles[i-3]) angles[i-3] = min[i]; // lower bound
-        if (max[i] < angles[i-3]) angles[i-3] = max[i]; // upper bound
+        if (min[i] > angles[i-3]) angleDiff[i-3] = min[i] - angles[i-3]; // lower bound
+        if (max[i] < angles[i-3]) angleDiff[i-3] = max[i] - angles[i-3]; // upper bound
     }
-    VRTransform::applyEulerAngles(t, angles);
+    //VRTransform::applyEulerAngles(t, angles + angleDiff);
+    Matrix4d R1, R2;
+    VRTransform::applyEulerAngles(R1, angles);
+    VRTransform::applyEulerAngles(R2, angles+angleDiff);
+    R1.invert();
 
-    t.multLeft(refMatrixAI);
-    t.multLeft(refMatrixB);
+    cout << " T:    " << Vec3d(t[3]) << endl;
+    t.mult(refMatrixA);
+    cout << " A  -> " << Vec3d(t[3]) << " ( " << VRTransform::computeEulerAngles(refMatrixA) << " ) " << endl;
+    t.mult(R1);
+    cout << " RI -> " << Vec3d(t[3]) << " ( " << VRTransform::computeEulerAngles(R1) << " ) " << endl;
+    t.mult(refMatrixBI);
+    cout << " BI -> " << Vec3d(t[3]) << " ( " << VRTransform::computeEulerAngles(refMatrixBI) << " ) " << endl;
+    t.mult(R2);
+    cout << " R  -> " << Vec3d(t[3]) << " ( " << VRTransform::computeEulerAngles(R2) << " ) " << endl;
     obj->setMatrixTo(t, parent);
 }
 
