@@ -111,7 +111,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         int getChildIndex();
         VRObjectPtr getChild(int i);
         vector<VRObjectPtr> getChildren(bool recursive = false, string type = "", bool includeSelf = false);
-        VRObjectPtr getParent();
+        VRObjectPtr getParent(bool checkForDrag = false);
         size_t getChildrenCount();
         void clearChildren();
 

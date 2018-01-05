@@ -413,7 +413,7 @@ PyObject* VRPyTransform::setPointConstraints(VRPyTransform* self, PyObject* args
     OSG::Vec3d v = parseVec3d(args);
     auto c = self->objPtr->getConstraint();
     c->setTConstraint(v, OSG::VRConstraint::POINT);
-    c->setActive(true, self->objPtr);
+    c->setActive(true);
     Py_RETURN_TRUE;
 }
 
@@ -422,7 +422,7 @@ PyObject* VRPyTransform::setPlaneConstraints(VRPyTransform* self, PyObject* args
     OSG::Vec3d v = parseVec3d(args);
     auto c = self->objPtr->getConstraint();
     c->setTConstraint(v, OSG::VRConstraint::PLANE);
-    c->setActive(true, self->objPtr);
+    c->setActive(true);
     Py_RETURN_TRUE;
 }
 
@@ -431,7 +431,7 @@ PyObject* VRPyTransform::setAxisConstraints(VRPyTransform* self, PyObject* args)
     OSG::Vec3d v = parseVec3d(args);
     auto c = self->objPtr->getConstraint();
     c->setTConstraint(v, OSG::VRConstraint::LINE);
-    c->setActive(true, self->objPtr);
+    c->setActive(true);
     Py_RETURN_TRUE;
 }
 
@@ -440,7 +440,7 @@ PyObject* VRPyTransform::setRotationConstraints(VRPyTransform* self, PyObject* a
     OSG::Vec3d v = parseVec3d(args);
     auto c = self->objPtr->getConstraint();
     c->setRConstraint(self->objPtr->getWorldPosition(), OSG::VRConstraint::POINT);
-    c->setActive(true, self->objPtr);
+    c->setActive(true);
     Py_RETURN_TRUE;
 }
 
@@ -483,7 +483,7 @@ PyObject* VRPyTransform::setPhysicsConstraintTo(VRPyTransform* self, PyObject *a
         VRPyTransform *t; VRPyConstraint *c; VRPyConstraint *cs;
         if (! PyArg_ParseTuple(args, "OOO", &t, &c, &cs)) return NULL;
         self->objPtr->getPhysics()->setConstraint( t->objPtr->getPhysics(), c->objPtr, cs->objPtr );
-        self->objPtr->setConstraint(c->objPtr);
+        t->objPtr->attach(self->objPtr, c->objPtr);
     }
     Py_RETURN_TRUE;
 }
