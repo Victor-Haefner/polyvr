@@ -9,21 +9,21 @@ using namespace OSG;
 
 ModuleTraffic::ModuleTraffic() : BaseModule("ModuleTraffic", false, false) {
     auto mc = RealWorld::get()->getCoordinator();
-    this->simulation = new TrafficSimulation(mc);
+    this->simulation = new OldTrafficSimulation(mc);
 }
 
 ModuleTraffic::~ModuleTraffic() {
     delete simulation;
 }
 
-TrafficSimulation* ModuleTraffic::getTrafficSimulation() {
+OldTrafficSimulation* ModuleTraffic::getTrafficSimulation() {
     return simulation;
 }
 
 void ModuleTraffic::loadBbox(MapGrid::Box bbox) {
     auto osmMap = RealWorld::get()->getMap(bbox.str);
     if (!osmMap) return;
-    threadFkt = VRFunction<VRThreadWeakPtr>::create("trafficAddMap", boost::bind(&TrafficSimulation::addMap, simulation, osmMap));
+    threadFkt = VRFunction<VRThreadWeakPtr>::create("trafficAddMap", boost::bind(&OldTrafficSimulation::addMap, simulation, osmMap));
     VRSceneManager::get()->initThread(threadFkt, "trafficAddMap", false);
 }
 
@@ -38,6 +38,6 @@ void ModuleTraffic::physicalize(bool b) {
     return;
 }
 
-TrafficSimulation* ModuleTraffic::getSimulation() {
+OldTrafficSimulation* ModuleTraffic::getSimulation() {
     return simulation;
 }

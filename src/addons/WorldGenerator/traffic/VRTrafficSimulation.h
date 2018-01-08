@@ -22,6 +22,8 @@ class VRTrafficSimulation : public VRObject {
     private:
         struct vehicle {
             Graph::position pos;
+            VRTransformPtr t;
+            VRObjectPtr mesh;
 
             vehicle(Graph::position p);
             ~vehicle();
@@ -43,7 +45,7 @@ class VRTrafficSimulation : public VRObject {
         VRRoadNetworkPtr roadNetwork;
         map<int, road> roads;
         vector<vehicle> vehicles;
-        vector<VRGeometryPtr> models;
+        vector<VRObjectPtr> models;
         map<int, vector<trafficLight> > trafficLights;
 
         VRUpdateCbPtr updateCb;
@@ -56,11 +58,12 @@ class VRTrafficSimulation : public VRObject {
 
         void setRoadNetwork(VRRoadNetworkPtr roads);
         void updateSimulation();
-        void doTimeStep();
 
         void addVehicle(int roadID, int type);
         void addVehicles(int roadID, float density, int type);
         void setTraffic(float density, int type);
+
+        void addVehicleModel(VRObjectPtr mesh);
 };
 
 OSG_END_NAMESPACE;
