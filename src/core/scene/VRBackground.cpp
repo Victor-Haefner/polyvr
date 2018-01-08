@@ -7,12 +7,11 @@
 #include <OpenSG/OSGSolidBackground.h>
 #include <OpenSG/OSGImage.h>
 
-#include <boost/filesystem.hpp>
-
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/objects/geometry/VRSky.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -57,7 +56,7 @@ TextureObjChunkMTRecPtr VRBackgroundBase::createSkyTexture() {
 }
 
 string normPath(string p) {
-    if (boost::filesystem::exists(p)) return boost::filesystem::canonical(p).string();
+    if (exists(p)) return canonical(p);
     return p;
 }
 

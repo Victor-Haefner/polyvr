@@ -1,13 +1,12 @@
 #include "VROWLExport.h"
 #include "VROntology.h"
+#include "core/utils/system/VRSystem.h"
 
 #include <libxml++/libxml++.h>
 #include <libxml++/nodes/element.h>
-#include <boost/filesystem.hpp>
 #include <iostream>
 
 using namespace OSG;
-namespace fs = boost::filesystem;
 
 
 VROWLExport::VROWLExport() {}
@@ -99,7 +98,7 @@ void VROWLExport::write(VROntologyPtr o, string path) {
     writeRules();
     writeInstances();
 
-    if (fs::exists(path)) path = fs::canonical(path).string();
+    if (exists(path)) path = canonical(path);
     cout << "VROWLExport::write to " << path << endl;
     doc.write_to_file_formatted(path);
 }

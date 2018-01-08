@@ -27,6 +27,7 @@
 #include "core/utils/VRProgress.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/scene/VRScene.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -100,7 +101,7 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
     }
 
     // check file path
-    if (!boost::filesystem::exists(path)) { cout << "VRImport::load " << path << " not found!" << endl; return 0; }
+    if (!exists(path)) { cout << "VRImport::load " << path << " not found!" << endl; return 0; }
 
     VRTransformPtr res = VRTransform::create("proxy");
     if (!thread) {

@@ -16,8 +16,6 @@ class VRGuiContextMenu;
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRMultiWindow;
-
 class VRGuiSetup {
     private:
         Gtk::TreeModel::Row selected_row;
@@ -43,8 +41,9 @@ class VRGuiSetup {
         VRGuiVectorEntry tVRPNAxisEntry;
         VRGuiVectorEntry rVRPNAxisEntry;
 
-        VRGuiContextMenu* menu;
-        VRMultiWindow* mwindow;
+        VRGuiContextMenu* menu = 0;
+        VRWindow* window = 0;
+        VRMultiWindow* mwindow = 0;
 	    VRUpdateCbPtr updatePtr;
 	    VRDeviceCbPtr updateSetupCb;
 

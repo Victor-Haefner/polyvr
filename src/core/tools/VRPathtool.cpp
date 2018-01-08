@@ -34,7 +34,7 @@ VRManipulator::VRManipulator() { setup(); }
 void VRManipulator::handle(VRGeometryPtr g) {
     if (sel == 0) return;
     auto c = sel->getConstraint();
-    c->setActive(true, sel);
+    c->setActive(true);
 
     if (g == gTX || g == gTY || g == gTZ || g == gRX || g == gRY || g == gRZ) { // lock everything
         c->setTConstraint(Vec3d(0,0,0), VRConstraint::LINE);

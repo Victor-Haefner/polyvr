@@ -293,7 +293,10 @@ bool VRObject::hasAncestor(VRObjectPtr a) {
 }
 
 /** Returns the parent of ptr() object **/
-VRObjectPtr VRObject::getParent() { return parent.lock(); }
+VRObjectPtr VRObject::getParent(bool checkForDrag) {
+    if (checkForDrag && held) return old_parent.lock();
+    return parent.lock();
+}
 
 VRObjectPtr VRObject::getAtPath(string path) {
     vector<int> pvec;

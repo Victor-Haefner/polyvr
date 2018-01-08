@@ -32,6 +32,8 @@ class virtuose {
 
     private:
         FILE* deamon = 0;
+        string deamonPath;
+
         Vec6 targetForces;
         Vec7 targetPosition;
         Vec6 targetSpeed;
@@ -63,6 +65,8 @@ class virtuose {
         bool connected();
         void connect(string IP,float timestep = 0.002f);
         void disconnect();
+        string getDeamonState();
+        string getDeviceState();
 
         void setSimulationScales(float translation, float forces);
 

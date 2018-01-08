@@ -3,6 +3,7 @@
 #include <OpenSG/OSGQuaternion.h>
 #include "core/networking/VRPing.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/utils/system/VRSystem.h"
 
 #define CHECK(x) { \
     int result = (x); \
@@ -58,9 +59,17 @@ virtuose::virtuose() : interface("virtuose") {
     interface.addBarrier("barrier2", 2);
     //interface.addBarrier("barrier3", 2);
     interface.addObject<Vec6>("targetForces");
-    string path = VRSceneManager::get()->getOriginalWorkdir();
-    path += "/src/core/setup/devices/virtuose/bin/Debug/virtuose";
-    deamon = popen(path.c_str(), "w");
+    string projectPath = VRSceneManager::get()->getOriginalWorkdir() + "/src/core/setup/devices/virtuose/";
+    deamonPath = projectPath+"bin/Debug/virtuose";
+    if (!exists(deamonPath)) deamonPath = projectPath+"bin/Release/virtuose";
+
+    if (!exists(deamonPath)) {
+        compileCodeblocksProject(projectPath + "virtuose.cbp"); // not working :(
+    }
+
+    if (!exists(deamonPath)) return;
+
+    deamon = popen(deamonPath.c_str(), "w");
     if (!deamon) { cout << " failed to open virtuose deamon" << endl; return; }
     cout << "\nstarted haptic device deamon" << endl;
 }
@@ -72,8 +81,18 @@ virtuose::~virtuose() {
 
 bool virtuose::connected() { return interface.hasObject<Vec7>("position"); }
 
+string virtuose::getDeamonState() {
+    if (connected() && deamon) return "running";
+    if (!exists(deamonPath)) return "not compiled";
+    return "not running";
+}
+
+string virtuose::getDeviceState() {
+    return "not connected";
+}
+
 void virtuose::enableForceFeedback(bool enable) {
-    if(!connected()) return;
+    if (!connected()) return;
     int i = (enable ? 1 : 0);
     //CHECK(virtEnableForceFeedback(vc,i)); // TODO
 }

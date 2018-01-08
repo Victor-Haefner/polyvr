@@ -1,13 +1,12 @@
 #include "VRSSH.h"
 #include "core/gui/VRGuiUtils.h"
+#include "core/utils/toString.h"
+#include "core/utils/system/VRSystem.h"
 
-#include <boost/filesystem.hpp>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
-#include "core/utils/toString.h"
 
 #ifndef INADDR_NONE
 #define INADDR_NONE (in_addr_t)-1
@@ -116,9 +115,8 @@ string VRSSHSession::auth_user() {
 
 bool VRSSHSession::hasLocalKey() {
     string kf = getenv("HOME") + keyFolder;
-    if (!boost::filesystem::exists(kf))
-        boost::filesystem::create_directory(kf);
-    return boost::filesystem::exists(kf+privKeyPath);
+    if (!exists(kf)) makedir(kf);
+    return exists(kf+privKeyPath);
 }
 
 string VRSSHSession::checkLocalKeyPair() { // TODO
@@ -166,8 +164,10 @@ string VRSSHSession::exec_cmd(string cmd, bool read) {
     if (rc < 0) return lastError(64);
     rc = libssh2_channel_close(channel);
     if (rc < 0) return lastError(65);
+    int exisStatus = libssh2_channel_get_exit_status(channel);
     libssh2_channel_free(channel);
-    return "ok";
+    if (exisStatus == 0) return "ok";
+    else return string("failed with: ") + toString(exisStatus);
 }
 
 void VRSSHSession::distrib_key() {

@@ -226,6 +226,15 @@ Matrix4d VRTransform::getMatrixTo(VRObjectPtr obj, bool parentOnly) {
     return m1;
 }
 
+void VRTransform::setMatrixTo(Matrix4d m, VRObjectPtr obj) {
+    VRTransformPtr ent = getParentTransform(obj);
+    if (!ent) { setWorldMatrix(m); return; }
+
+    Matrix4d m1 = ent->getWorldMatrix();
+    m1.mult(m);
+    setWorldMatrix(m1);
+}
+
 bool VRTransform::checkWorldChange() {
     if (frame == 0) { frame = 1; return true; }
     if (VRGlobals::CURRENT_FRAME == change_time_stamp) return true;
@@ -349,6 +358,7 @@ void VRTransform::setWorldMatrix(Matrix4d m) {
 }
 
 VRTransformPtr VRTransform::getParentTransform(VRObjectPtr o) {
+    if (!o) return 0;
     o = o->hasAncestorWithTag("transform");
     return static_pointer_cast<VRTransform>(o);
 }
@@ -534,26 +544,32 @@ void VRTransform::setScale(Vec3d s) {
 void VRTransform::setEuler(Vec3d e) {
     if (isNan(e)) return;
     _euler = e;
-    Vec3d s = Vec3d(sin(e[0]), sin(e[1]), sin(e[2]));
-    Vec3d c = Vec3d(cos(e[0]), cos(e[1]), cos(e[2]));
-
-    Vec3d d = Vec3d( -c[0]*c[2]*s[1]-s[0]*s[2], -c[0]*s[1]*s[2]+s[0]*c[2], -c[0]*c[1]);
-    Vec3d u = Vec3d( s[0]*s[1]*c[2]-s[2]*c[0], s[0]*s[1]*s[2]+c[2]*c[0], c[1]*s[0]);
-
-    setDir( d );
-    setUp( u );
-    reg_change();
+    auto m = getMatrix();
+    applyEulerAngles(m, e);
+    setMatrix(m);
 }
 
 Vec3d VRTransform::getScale() { return _scale; }
 Vec3d VRTransform::getEuler() {
     //return _euler;
-    auto m = getMatrix();
+    return computeEulerAngles( getMatrix() );
+}
+
+Vec3d VRTransform::computeEulerAngles(const Matrix4d& m) {
     Vec3d a;
     a[0] = atan2( m[1][2], m[2][2]);
     a[1] = atan2(-m[0][2], sqrt(m[1][2]*m[1][2] + m[2][2]*m[2][2]));
     a[2] = atan2( m[0][1], m[0][0]);
     return a;
+}
+
+void VRTransform::applyEulerAngles(Matrix4d& t, Vec3d e) {
+    Pnt3d p = Pnt3d(t[3]);
+    Vec3d s = Vec3d(sin(e[0]), sin(e[1]), sin(e[2]));
+    Vec3d c = Vec3d(cos(e[0]), cos(e[1]), cos(e[2]));
+    Vec3d d = Vec3d( c[0]*c[2]*s[1]+s[0]*s[2], c[0]*s[1]*s[2]-s[0]*c[2], c[0]*c[1]);
+    Vec3d u = Vec3d( s[0]*s[1]*c[2]-s[2]*c[0], s[0]*s[1]*s[2]+c[2]*c[0], c[1]*s[0]);
+    MatrixLookDir(t, p, d, u);
 }
 
 void VRTransform::rotate(float a, Vec3d v) {//rotate around axis
@@ -748,14 +764,26 @@ void VRTransform::setConstraint(VRConstraintPtr c) {
     else constrainedObjects.erase(this);
 }
 
+void VRTransform::attach(VRObjectPtr a, VRConstraintPtr c) {
+    if (!c) { constrainedObjects.erase(this); return; }
+    constrainedObjects[this] = ptr();
+    joints[a.get()] = make_pair(c, VRObjectWeakPtr(a));
+    c->setActive(true);
+}
+
 VRConstraintPtr VRTransform::getConstraint() { return constraint; }
 
 /** enable constraints on the object, 0 leaves the DOF free, 1 restricts it **/
-void VRTransform::apply_constraints() {
-    if (!constraint) return;
-    if (!checkWorldChange()) return; // TODO: not working!
+void VRTransform::apply_constraints() { // TODO: check efficiency
+    if (!constraint && joints.size() == 0) return;
+    if (!checkWorldChange()) return;
     computeMatrix4d(); // update matrix!
-    constraint->apply(ptr());
+
+    if (constraint) constraint->apply(ptr());
+    for (auto joint : joints) {
+        auto p = joint.second.second.lock();
+        if (p) joint.second.first->apply(ptr(), p);
+    }
 }
 
 void VRTransform::updateFromBullet() {
