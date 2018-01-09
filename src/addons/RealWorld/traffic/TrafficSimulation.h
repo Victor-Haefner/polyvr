@@ -1,5 +1,5 @@
-#ifndef TRAFFICSIMULATION_H
-#define TRAFFICSIMULATION_H
+#ifndef OldTrafficSimulation_H
+#define OldTrafficSimulation_H
 
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRFunctionFwd.h"
@@ -27,7 +27,7 @@ class MapCoordinator;
  *       most of its method are quite slow.
  * @todo The drawing code is missing completely.
  */
-class TrafficSimulation {
+class OldTrafficSimulation {
     private:
         VRThreadCbPtr threadFkt;
 
@@ -258,12 +258,12 @@ class TrafficSimulation {
          * @param mapCoordinator A MapCoordinator used to convert GPS-coordinates to pixels.
          * @param host The name of the host the traffic simulation server is running on. The port number can be appended as "address:port".
          */
-        TrafficSimulation(MapCoordinator *mapCoordinator, const string& host = "localhost:5550");
+        OldTrafficSimulation(MapCoordinator *mapCoordinator, const string& host = "localhost:5550");
 
         /**
          * The destructor.
          */
-        ~TrafficSimulation();
+        ~OldTrafficSimulation();
 
         /**
          * Sets the server to connect to.
@@ -408,7 +408,7 @@ class TrafficSimulation {
 
 /// @}
 
-typedef std::shared_ptr<TrafficSimulation> TrafficSimulationPtr;
+typedef std::shared_ptr<OldTrafficSimulation> OldTrafficSimulationPtr;
 
 OSG_END_NAMESPACE;
 

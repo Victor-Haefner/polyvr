@@ -19,32 +19,52 @@
 using namespace OSG;
 
 
-VRTrafficSimulation::vehicle::vehicle(Graph::position p) : pos(p) {}
+VRTrafficSimulation::vehicle::vehicle(Graph::position p) : pos(p) {
+    t = VRTransform::create("t");
+}
+
 VRTrafficSimulation::vehicle::~vehicle() {}
 
 
 VRTrafficSimulation::VRTrafficSimulation() : VRObject("TrafficSimulation") {
     updateCb = VRUpdateCb::create( "traffic", boost::bind(&VRTrafficSimulation::updateSimulation, this) );
     VRScene::getCurrent()->addUpdateFkt(updateCb);
+
+    auto box = VRGeometry::create("boxCar");
+    box->setPrimitive("Box", "2 1.5 4 1 1 1");
+    addVehicleModel(box);
 }
 
 VRTrafficSimulation::~VRTrafficSimulation() {}
 
 VRTrafficSimulationPtr VRTrafficSimulation::create() { return VRTrafficSimulationPtr( new VRTrafficSimulation() ); }
 
-void VRTrafficSimulation::setRoadNetwork(VRRoadNetworkPtr rds) { roadNetwork = rds; }
-
-void VRTrafficSimulation::updateSimulation() {
-    ;
+void VRTrafficSimulation::setRoadNetwork(VRRoadNetworkPtr rds) {
+    roadNetwork = rds;
+    roads.clear();
+    auto g = roadNetwork->getGraph();
+    for (int i = 0; i < g->getNEdges(); i++) roads[i] = road();
 }
 
-void VRTrafficSimulation::doTimeStep() {
-    ;
+void VRTrafficSimulation::updateSimulation() {
+    for (int i=0; i<roads.size(); i++) {
+        auto road = roads[i];
+        for (auto& vehicle : road.vehicles) {
+            vehicle.pos.pos += 0.1;
+            if (vehicle.pos.pos > 1) vehicle.pos.pos = 0;
+            auto p = roadNetwork->getPosition(vehicle.pos);
+            vehicle.t->setPose(p);
+        }
+    }
 }
 
 void VRTrafficSimulation::addVehicle(int roadID, int type) {
     auto road = roads[roadID];
-    road.vehicles.push_back( vehicle( Graph::position(roadID, 0.0) ) );
+    auto v = vehicle( Graph::position(roadID, 0.0) );
+    v.mesh = models[0]->duplicate();
+    v.t->addChild(v.mesh);
+    addChild(v.t);
+    road.vehicles.push_back( v );
 }
 
 void VRTrafficSimulation::addVehicles(int roadID, float density, int type) {
@@ -61,6 +81,9 @@ void VRTrafficSimulation::setTraffic(float density, int type) {
     for (auto road : roads) addVehicles(road.first, density, type);
 }
 
+void VRTrafficSimulation::addVehicleModel(VRObjectPtr mesh) {
+    models.push_back( mesh->duplicate() );
+}
 
 
 

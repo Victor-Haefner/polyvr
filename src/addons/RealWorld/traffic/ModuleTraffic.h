@@ -10,21 +10,21 @@ using namespace std;
 
 class ModuleTraffic: public BaseModule {
     private:
-        TrafficSimulation* simulation;
+        OldTrafficSimulation* simulation;
         VRThreadCbPtr threadFkt;
 
     public:
         ModuleTraffic();
         ~ModuleTraffic();
 
-        TrafficSimulation *getTrafficSimulation();
+        OldTrafficSimulation *getTrafficSimulation();
 
         virtual void loadBbox(MapGrid::Box bbox);
         virtual void unloadBbox(MapGrid::Box bbox);
 
         void physicalize(bool b);
 
-        TrafficSimulation *getSimulation();
+        OldTrafficSimulation *getSimulation();
 };
 
 OSG_END_NAMESPACE;

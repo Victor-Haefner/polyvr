@@ -54,6 +54,14 @@ PosePtr VRRoad::getRightEdge(Vec3d pos) {
     return pose;
 }
 
+PosePtr VRRoad::getPosition(float t) {
+    vector<PathPtr> paths;
+    for (auto p : entity->getAllEntities("path")) {
+        paths.push_back( toPath(p,32) );
+    }
+    return paths[0]->getPose(t);
+}
+
 VRRoad::edgePoint& VRRoad::getEdgePoints( VREntityPtr node ) {
     if (edgePoints.count(node) == 0) {
         float width = getWidth();

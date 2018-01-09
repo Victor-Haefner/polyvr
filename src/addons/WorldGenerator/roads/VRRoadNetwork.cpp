@@ -33,6 +33,8 @@ const double pi = 2*acos(0.0);
 
 using namespace OSG;
 
+template<> string typeName(const VRRoadNetworkPtr& o) { return "RoadNetwork"; }
+
 VRRoadNetwork::VRRoadNetwork() : VRRoadBase("RoadNetwork") {}
 VRRoadNetwork::~VRRoadNetwork() {}
 
@@ -63,6 +65,11 @@ void VRRoadNetwork::init() {
 int VRRoadNetwork::getRoadID() { return ++nextRoadID; }
 VRAsphaltPtr VRRoadNetwork::getMaterial() { return asphalt; }
 GraphPtr VRRoadNetwork::getGraph() { return graph; }
+
+PosePtr VRRoadNetwork::getPosition(Graph::position p) {
+    auto r = roads[p.edge];
+    return r->getPosition(p.pos);
+}
 
 vector<Vec3d> VRRoadNetwork::getGraphEdgeDirections(int e) { return graphNormals[e]; }
 
