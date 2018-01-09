@@ -45,6 +45,7 @@ bool obstruction(float D){
 	//if (texC.x==0) return false;
 	//else return true;
 	//if (thetaReal < 3.1) return true;
+	if (thetaReal > 3) return true;
 	if (thetaReal < gettheta(fragDir)) return true;
 	return false;
 }
