@@ -18,7 +18,6 @@
 #include <gtkmm/filechooser.h>
 #include <string>
 #include <iostream>
-#include <boost/filesystem.hpp>
 #include <boost/bind.hpp>
 
 #include "core/scene/VRSceneLoader.h"
@@ -26,6 +25,7 @@
 #include "core/scene/VRScene.h"
 #include "core/scene/import/VRImport.h"
 #include "core/setup/devices/VRSignal.h"
+#include "core/utils/system/VRSystem.h"
 #include "VRGuiUtils.h"
 #include "VRGuiSignals.h"
 #include "VRGuiFile.h"
@@ -80,7 +80,7 @@ VRDemos::VRDemos() {
 void VRDemos::updatePixmap(demoEntryPtr e, Gtk::Image* img, int w, int h) {
     if (e == 0) return;
     if (img == 0) return;
-    if ( !boost::filesystem::exists( e->pxm_path ) ) return;
+    if ( !exists( e->pxm_path ) ) return;
     try {
         Glib::RefPtr<Gdk::Pixbuf> pxb = Gdk::Pixbuf::create_from_file (e->pxm_path);
         img->set(pxb);
@@ -89,7 +89,7 @@ void VRDemos::updatePixmap(demoEntryPtr e, Gtk::Image* img, int w, int h) {
 }
 
 Gtk::Image* VRDemos::loadGTKIcon(Gtk::Image* img, string path, int w, int h) {
-    if ( !boost::filesystem::exists( path ) ) {
+    if ( !exists( path ) ) {
         cout << "Warning (loadGTKIcon): " << path << " not found!" << endl;
         return img;
     }

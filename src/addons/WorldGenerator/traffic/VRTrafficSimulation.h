@@ -12,13 +12,26 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRTrafficSimulation : public VRObject {
-    private:
-        struct node {
-            float density = 0;
+    public:
+        enum VEHICLE {
+            CAR = 0,
+            SCOOTER = 1,
+            BYCICLE = 2
         };
 
+    private:
         struct vehicle {
             Graph::position pos;
+            VRTransformPtr t;
+            VRObjectPtr mesh;
+
+            vehicle(Graph::position p);
+            ~vehicle();
+        };
+
+        struct road {
+            float density = 0;
+            vector<vehicle> vehicles;
         };
 
         struct trafficLight {
@@ -29,10 +42,10 @@ class VRTrafficSimulation : public VRObject {
             void updateModel();
         };
 
-        VRRoadNetworkPtr roads;
-        map<int, node> nodes;
+        VRRoadNetworkPtr roadNetwork;
+        map<int, road> roads;
         vector<vehicle> vehicles;
-        vector<VRGeometryPtr> models;
+        vector<VRObjectPtr> models;
         map<int, vector<trafficLight> > trafficLights;
 
         VRUpdateCbPtr updateCb;
@@ -44,10 +57,13 @@ class VRTrafficSimulation : public VRObject {
         static VRTrafficSimulationPtr create();
 
         void setRoadNetwork(VRRoadNetworkPtr roads);
-
         void updateSimulation();
 
-        void doTimeStep();
+        void addVehicle(int roadID, int type);
+        void addVehicles(int roadID, float density, int type);
+        void setTraffic(float density, int type);
+
+        void addVehicleModel(VRObjectPtr mesh);
 };
 
 OSG_END_NAMESPACE;

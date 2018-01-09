@@ -14,8 +14,8 @@ class VRTransform;
 class VRHaptic : public VRDevice {
     private:
         virtuose* v;
-        string IP;
-        string type;
+        string IP = "172.22.151.200";
+        string type = "Virtuose 6D35-45";
         VRUpdateCbPtr updateFktPre;
         VRUpdateCbPtr updateFktPost;
         Vec3i button_states;
@@ -51,12 +51,16 @@ class VRHaptic : public VRDevice {
         void updateVirtMechPre();
         void updateVirtMechPost();
         Vec3i getButtonStates();
-        void setIP(string IP);
-        string getIP();
 
-        void setType(string IP);
+        void setIP(string IP);
+        void setType(string type);
+        string getIP();
         string getType();
 
+        string getDeamonState();
+        string getDeviceState();
+
+        static vector<string> getDevTypes();
         static void runTest1();
 };
 

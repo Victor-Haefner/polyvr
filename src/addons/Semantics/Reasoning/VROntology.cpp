@@ -5,12 +5,12 @@
 #include "VROWLExport.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSemanticManager.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 #include <iostream>
-#include <boost/filesystem.hpp>
 
 #define WARN(x) \
 VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
@@ -279,7 +279,7 @@ string VROntology::toString() {
 }
 
 void VROntology::openOWL(string path) {
-    if (!boost::filesystem::exists(path)) WARN("WARNING in VROntology::openOWL, " + path + " not found!");
+    if (!exists(path)) WARN("WARNING in VROntology::openOWL, " + path + " not found!");
     VROWLImport importer;
     importer.read(shared_from_this(), path);
 }

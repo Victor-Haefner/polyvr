@@ -17,6 +17,8 @@ simpleVRPyType(RoadNetwork, New_ptr);
 simpleVRPyType(District, New_ptr);
 simpleVRPyType(Asphalt, New_ptr);
 
+
+
 PyMethodDef VRPyWorldGenerator::methods[] = {
     {"addAsset", PyWrap( WorldGenerator, addAsset, "Add an asset template", void, string, VRTransformPtr ) },
     {"getAssetManager", PyWrap( WorldGenerator, getAssetManager, "Get the asset manager", VRObjectManagerPtr ) },

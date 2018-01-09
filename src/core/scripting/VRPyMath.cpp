@@ -206,7 +206,7 @@ PyObject* VRPyVec2f::getSlice(PyObject* self, long ilow, long ihigh) {
     if (ihigh > 2) ihigh = 2;
 
     Vec2d v2;
-    if (0 <= ilow < ihigh <= 2) {
+    if (0 <= ilow && ihigh <= 2 && ilow < ihigh) {
         for (int i=ilow; i < ihigh; i++) v2[i] = ((VRPyVec2f*)self)->v[i];
     } else v2 = ((VRPyVec2f*)self)->v;
     return toPyObject(v2);
@@ -415,7 +415,7 @@ PyObject* VRPyVec3f::getSlice(PyObject* self, long ilow, long ihigh) {
     if (ihigh > 3) ihigh = 3;
 
     Vec3d v2;
-    if (0 <= ilow < ihigh <= 3) {
+    if (0 <= ilow && ihigh <= 3 && ilow < ihigh) {
         for (int i=ilow; i < ihigh; i++) v2[i] = ((VRPyVec3f*)self)->v[i];
     } else v2 = ((VRPyVec3f*)self)->v;
     return toPyObject(v2);

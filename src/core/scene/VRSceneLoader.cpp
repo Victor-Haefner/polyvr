@@ -14,6 +14,7 @@
 #include "VRScene.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/VRStorage_template.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/navigation/VRNavigator.h"
 #include "core/objects/VRLod.h"
 #include "addons/construction/building/VROpening.h"
@@ -32,7 +33,6 @@
 #include <stdio.h>
 #include <fstream>
 #include <unistd.h>
-#include <boost/filesystem.hpp>
 
 #include "import/VRImport.h"
 
@@ -77,7 +77,7 @@ VRSceneLoader* VRSceneLoader::get() {
 }
 
 void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
-    if (boost::filesystem::exists(file)) file = boost::filesystem::canonical(file).string();
+    if (exists(file)) file = canonical(file);
     cout << " save " << file << endl;
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;

@@ -1,4 +1,5 @@
 #include "RealWorld.h"
+#include "core/utils/system/VRSystem.h"
 
 #include <math.h>
 
@@ -6,7 +7,6 @@
 #include <curl/curl.h>
 #include <iostream>
 #include <fstream>
-#include <boost/filesystem.hpp>
 
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRSceneLoader.h"
@@ -56,7 +56,7 @@ RealWorld* RealWorld::get() { return singelton; }
 MapCoordinator* RealWorld::getCoordinator() { return mapCoordinator; }
 MapManager* RealWorld::getManager() { return mapManager; }
 World* RealWorld::getWorld() { return world; }
-TrafficSimulation* RealWorld::getTrafficSimulation() { return trafficSimulation; }
+OldTrafficSimulation* RealWorld::getTrafficSimulation() { return trafficSimulation; }
 
 void RealWorld::update(Vec3d pos) { if (mapManager) mapManager->updatePosition( Vec2d(pos[0], pos[2]) ); }
 void RealWorld::configure(string var, string val) { options[var] = val; }
@@ -68,7 +68,7 @@ OSMMapPtr RealWorld::getMap(string posStr) {
     string chunkspath = RealWorld::getOption("CHUNKS_PATH");
     if (*chunkspath.rbegin() != '/') chunkspath += "/";
     string filename = chunkspath+"map-"+posStr+".osm";
-    if ( !boost::filesystem::exists(filename) ) { cout << "OSMMapDB Error: no file " << filename << endl; return 0; }
+    if ( !exists(filename) ) { cout << "OSMMapDB Error: no file " << filename << endl; return 0; }
 
     maps[posStr] = OSMMap::loadMap(filename);
     return maps[posStr];

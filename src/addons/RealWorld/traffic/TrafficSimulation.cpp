@@ -31,7 +31,7 @@ vector<string> split(const string& str, char at = '|') {
     return ret;
 }
 
-Value TrafficSimulation::convertNode(OSMNodePtr node) {
+Value OldTrafficSimulation::convertNode(OSMNodePtr node) {
         Value value;
 
         value["id"] = boost::lexical_cast<Json::Value::UInt64>(node->id.c_str());
@@ -48,7 +48,7 @@ Value TrafficSimulation::convertNode(OSMNodePtr node) {
         return value;
 }
 
-Value TrafficSimulation::convertStreet(OSMWayPtr street) {
+Value OldTrafficSimulation::convertStreet(OSMWayPtr street) {
 
     Value value;
     value["id"] = boost::lexical_cast<Json::Value::UInt64>(street->id.c_str());
@@ -302,7 +302,7 @@ Value TrafficSimulation::convertStreet(OSMWayPtr street) {
     return value;
 }
 
-void TrafficSimulation::communicationThread(VRThreadWeakPtr t) {
+void OldTrafficSimulation::communicationThread(VRThreadWeakPtr t) {
 
     lock_guard<mutex> guardThread(communicationThreadMutex);
 
@@ -325,7 +325,7 @@ void TrafficSimulation::communicationThread(VRThreadWeakPtr t) {
     if (errorMessage("retrieving viewarea data", tmp)) return;
 }
 
-bool TrafficSimulation::errorMessage(const string& action, const Value& value) {
+bool OldTrafficSimulation::errorMessage(const string& action, const Value& value) {
 
     if (value["error"].isNull()) {
         noConnection = false;
@@ -333,11 +333,11 @@ bool TrafficSimulation::errorMessage(const string& action, const Value& value) {
     } else {
         if (value["error"].asString() == "COULD_NOT_SEND") {
             if (!noConnection) {
-                cerr << "TrafficSimulation: Error while " << action << ": COULD_NOT_SEND\n > " << value["error_message"].asString() << "\n";
+                cerr << "OldTrafficSimulation: Error while " << action << ": COULD_NOT_SEND\n > " << value["error_message"].asString() << "\n";
                 noConnection = true;
             }
         } else {
-            cerr << "TrafficSimulation: Error while " << action << ": " << value["error"].asString() << "\n > " << value["error_message"].asString() << "\n";
+            cerr << "OldTrafficSimulation: Error while " << action << ": " << value["error"].asString() << "\n > " << value["error_message"].asString() << "\n";
             noConnection = false;
         }
         return true;
@@ -345,7 +345,7 @@ bool TrafficSimulation::errorMessage(const string& action, const Value& value) {
 }
 
 
-TrafficSimulation::TrafficSimulation(MapCoordinator *mapCoordinator, const string& host)
+OldTrafficSimulation::OldTrafficSimulation(MapCoordinator *mapCoordinator, const string& host)
     : driverVehicleRadius(5.0), loadedMaps(), collisionHandler(NULL), client(host), mapCoordinator(mapCoordinator), viewDistance(200), player(NULL), playerCreated(false),
       communicationThreadId(-1), networkDataMutex(), receivedData(), dataToSend(), meshes(), vehicles(), lightBulbs(), noConnection(false), communicationThreadMutex() {
 
@@ -367,7 +367,7 @@ TrafficSimulation::TrafficSimulation(MapCoordinator *mapCoordinator, const strin
     a_green->setLit(false);
 }
 
-TrafficSimulation::~TrafficSimulation() {
+OldTrafficSimulation::~OldTrafficSimulation() {
 
     // Stop the server
     Value value;
@@ -387,14 +387,14 @@ TrafficSimulation::~TrafficSimulation() {
     }
 }
 
-void TrafficSimulation::setServer(const string& host) {
+void OldTrafficSimulation::setServer(const string& host) {
     client.setServer(host);
     set<OSMMapPtr> tmp; // Retransmit the already loaded maps
     tmp.swap(loadedMaps);
     for (auto m : tmp) addMap(m);
 }
 
-void TrafficSimulation::addMap(OSMMapPtr map) {
+void OldTrafficSimulation::addMap(OSMMapPtr map) {
     if (loadedMaps.count(map) > 0) return; // Check if the map is loaded. If it already is, abort
     loadedMaps.insert(map); // Insert map into set
 
@@ -459,7 +459,7 @@ void TrafficSimulation::addMap(OSMMapPtr map) {
     errorMessage("adding map", value);
 }
 
-void TrafficSimulation::removeMap(OSMMapPtr map) {
+void OldTrafficSimulation::removeMap(OSMMapPtr map) {
     if (loadedMaps.count(map) == 0) return; // Check if the map is loaded. If not, abort
     loadedMaps.erase(map); // Remove map from set
 
@@ -474,7 +474,7 @@ void TrafficSimulation::removeMap(OSMMapPtr map) {
     errorMessage("removing streets", value);
 }
 
-void TrafficSimulation::setDrawingDistance(const double distance) {
+void OldTrafficSimulation::setDrawingDistance(const double distance) {
     if (playerCreated) {
 
         Value value;
@@ -497,9 +497,9 @@ void TrafficSimulation::setDrawingDistance(const double distance) {
     } else viewDistance = distance;
 }
 
-void TrafficSimulation::setTrafficDensity(const double density) {
+void OldTrafficSimulation::setTrafficDensity(const double density) {
 
-    //OSG::VRFunction<VRThread*>* func = new OSG::VRFunction<OSG::VRThread*>("trafficSetTrafficDensity", boost::bind(&TrafficSimulation::setTrafficDensity, self->obj, b));
+    //OSG::VRFunction<VRThread*>* func = new OSG::VRFunction<OSG::VRThread*>("trafficSetTrafficDensity", boost::bind(&OldTrafficSimulation::setTrafficDensity, self->obj, b));
     //OSG::VRSceneManager::get()->initThread(func, "trafficSetTrafficDensity", false);
 
     Value value;
@@ -508,11 +508,11 @@ void TrafficSimulation::setTrafficDensity(const double density) {
     errorMessage("setting the traffic density", value);
 }
 
-void TrafficSimulation::addVehicleType(const unsigned int id, const double probability, const double collisionRadius, const double maxSpeed, const double maxAcceleration, const double maxRoration, VRTransformPtr model) {
+void OldTrafficSimulation::addVehicleType(const unsigned int id, const double probability, const double collisionRadius, const double maxSpeed, const double maxAcceleration, const double maxRoration, VRTransformPtr model) {
 
 
     //void addVehicleType(const unsigned int id, const double probability, const double collisionRadius, const double maxSpeed, const double maxAcceleration, const double maxRoration);
-    //OSG::VRFunction<VRThread*>* func = new OSG::VRFunction<VRThread*>("trafficAddVehicleType", boost::bind(&TrafficSimulation::addVehicleType, self->obj, id, prob, radius, speed, acc, rot, static_pointer_cast<VRGeometry>(geo->obj));
+    //OSG::VRFunction<VRThread*>* func = new OSG::VRFunction<VRThread*>("trafficAddVehicleType", boost::bind(&OldTrafficSimulation::addVehicleType, self->obj, id, prob, radius, speed, acc, rot, static_pointer_cast<VRGeometry>(geo->obj));
     //OSG::VRSceneManager::get()->initThread(func, "trafficAddVehicleType", false);
 
 
@@ -539,7 +539,7 @@ void TrafficSimulation::addVehicleType(const unsigned int id, const double proba
     errorMessage("adding a vehicle type", value);
 }
 
-void TrafficSimulation::addDriverType(const unsigned int id, const double probability, const double lawlessness, const double cautiousness) {
+void OldTrafficSimulation::addDriverType(const unsigned int id, const double probability, const double lawlessness, const double cautiousness) {
     Value value, type;
     type["id"]           = id;
     type["probability"]  = probability;
@@ -552,9 +552,9 @@ void TrafficSimulation::addDriverType(const unsigned int id, const double probab
     errorMessage("adding a driver type", value);
 }
 
-void TrafficSimulation::start() {
+void OldTrafficSimulation::start() {
     if (communicationThreadId < 0) {
-        threadFkt = VRFunction<VRThreadWeakPtr>::create("trafficCommunicationThread", boost::bind(&TrafficSimulation::communicationThread, this, _1));
+        threadFkt = VRFunction<VRThreadWeakPtr>::create("trafficCommunicationThread", boost::bind(&OldTrafficSimulation::communicationThread, this, _1));
         communicationThreadId = VRScene::getCurrent()->initThread(threadFkt, "trafficCommunicationThread", true);
     }
 
@@ -565,7 +565,7 @@ void TrafficSimulation::start() {
     errorMessage("starting the simulation", value);
 }
 
-void TrafficSimulation::pause() {
+void OldTrafficSimulation::pause() {
     if (communicationThreadId > 0) {
         VRScene::getCurrent()->stopThread(communicationThreadId);
         communicationThreadId = -1;
@@ -577,11 +577,11 @@ void TrafficSimulation::pause() {
     errorMessage("stopping the simulation", value);
 }
 
-bool TrafficSimulation::isRunning() {
+bool OldTrafficSimulation::isRunning() {
     return (client.getSimulatorState() == client.RUNNING);
 }
 
-void TrafficSimulation::tick() { update(); }
+void OldTrafficSimulation::tick() { update(); }
 
 Vec3d toVec3d(Json::Value val) { // TODO
     Vec3d v;
@@ -594,7 +594,7 @@ Vec3d toVec3d(Json::Value val) { // TODO
     return v;
 }
 
-void TrafficSimulation::update() {
+void OldTrafficSimulation::update() {
 
     networkDataMutex.lock();
 
@@ -661,7 +661,7 @@ void TrafficSimulation::update() {
                  || !vehicleIter["dAngle"][0].isConvertibleTo(realValue)
                  || !vehicleIter["dAngle"][1].isConvertibleTo(realValue)
                  || !vehicleIter["dAngle"][2].isConvertibleTo(realValue)) {
-                    cout << "TrafficSimulation: Warning: Received invalid vehicle data.\n";
+                    cout << "OldTrafficSimulation: Warning: Received invalid vehicle data.\n";
                     continue;
                 }
 
@@ -670,14 +670,14 @@ void TrafficSimulation::update() {
                 if (vehicles.count(ID) == 0) { // The vehicle is new, create it
                     if (!vehicleIter["vehicle"].isConvertibleTo(uintValue)
                      || !vehicleIter["driver"].isConvertibleTo(uintValue)) {
-                        cout << "TrafficSimulation: Warning: Received invalid vehicle data.\n";
+                        cout << "OldTrafficSimulation: Warning: Received invalid vehicle data.\n";
                         continue;
                     }
 
                     uint vID = vehicleIter["vehicle"].asUInt();
                     if (meshes.count(vID) == 0) {
                         // If it is bigger than 500 it is our user-controlled vehicle
-                        if (vID < 500) cout << "TrafficSimulation: Warning: Received unknown vehicle type " << vID << ".\n";
+                        if (vID < 500) cout << "OldTrafficSimulation: Warning: Received unknown vehicle type " << vID << ".\n";
                         continue;
                     }
 
@@ -781,7 +781,7 @@ void TrafficSimulation::update() {
                  || !lightpost["to"].isConvertibleTo(uintValue)
                  ||  lightpost["state"].isNull()
                  || !lightpost["state"].isArray()) {
-                    cout << "TrafficSimulation: Warning: Received invalid light post data.\n";
+                    cout << "OldTrafficSimulation: Warning: Received invalid light post data.\n";
                     continue;
                 }
 
@@ -895,11 +895,11 @@ void TrafficSimulation::update() {
 
 }
 
-void TrafficSimulation::setCollisionHandler(bool (*handler) (Vehicle& a, Vehicle& b)) {
+void OldTrafficSimulation::setCollisionHandler(bool (*handler) (Vehicle& a, Vehicle& b)) {
     collisionHandler = handler;
 }
 
-void TrafficSimulation::setVehiclePosition(const unsigned int id, const OSG::Vec3d& pos, const OSG::Vec3d& orientation) {
+void OldTrafficSimulation::setVehiclePosition(const unsigned int id, const OSG::Vec3d& pos, const OSG::Vec3d& orientation) {
     // Move the vehicle
     Value vehicle;
     vehicle["id"] = id;
@@ -923,14 +923,14 @@ void TrafficSimulation::setVehiclePosition(const unsigned int id, const OSG::Vec
     errorMessage("moving a vehicle", value);
 }
 
-void TrafficSimulation::setSimulationSpeed(const double speed) {
+void OldTrafficSimulation::setSimulationSpeed(const double speed) {
     Value value;
     value["simulationSpeed"] = speed;
     value = client.sendData(value);
     errorMessage("setting the simulation speed", value);
 }
 
-void TrafficSimulation::setPlayerTransform(VRTransformPtr transform) {
+void OldTrafficSimulation::setPlayerTransform(VRTransformPtr transform) {
     player = transform;
 
     if (player != NULL && !playerCreated) {

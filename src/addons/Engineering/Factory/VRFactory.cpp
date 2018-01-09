@@ -10,7 +10,6 @@
 
 #include <iostream>
 #include <fstream>
-#include <boost/filesystem.hpp>
 
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <OpenSG/OSGGeoProperties.h>
