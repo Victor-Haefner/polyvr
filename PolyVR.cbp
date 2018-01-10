@@ -301,6 +301,8 @@
 		<Unit filename="src/addons/Engineering/CSG/PolyhedronBuilder.h" />
 		<Unit filename="src/addons/Engineering/CSG/VRPyCSG.cpp" />
 		<Unit filename="src/addons/Engineering/CSG/VRPyCSG.h" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRCrystal.cpp" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRCrystal.h" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRMolecule.cpp" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRMolecule.h" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRPyMolecule.cpp" />
@@ -340,6 +342,7 @@
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingMachine.h" />
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingWorkPiece.cpp" />
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingWorkPiece.h" />
+		<Unit filename="src/addons/Engineering/VREngineeringFwd.h" />
 		<Unit filename="src/addons/Engineering/VRNumberingEngine.cpp" />
 		<Unit filename="src/addons/Engineering/VRNumberingEngine.h" />
 		<Unit filename="src/addons/Engineering/VRProfile.cpp" />
