@@ -184,7 +184,7 @@ class VRTransform : public VRObject {
         /** enable constraints on the object when dragged, 0 leaves the dof free, 1 restricts it **/
         void apply_constraints();
         static void updateConstraints();
-        void attach(VRObjectPtr a, VRConstraintPtr c);
+        void attach(VRTransformPtr a, VRConstraintPtr c);
 
         /** Set the physics object **/
         VRPhysics* getPhysics();

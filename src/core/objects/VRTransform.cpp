@@ -754,7 +754,7 @@ map<VRTransform*, VRTransformWeakPtr> constrainedObjects;
 
 void VRTransform::updateConstraints() { // global updater
     for (auto wc : constrainedObjects) {
-        if (auto c = wc.second.lock()) c->updateChange();
+        if (VRTransformPtr obj = wc.second.lock()) obj->updateChange();
     }
 }
 
@@ -764,11 +764,15 @@ void VRTransform::setConstraint(VRConstraintPtr c) {
     else constrainedObjects.erase(this);
 }
 
-void VRTransform::attach(VRObjectPtr a, VRConstraintPtr c) {
+void VRTransform::attach(VRTransformPtr a, VRConstraintPtr c) {
+    //if (!c) { constrainedObjects.erase(a.get()); return; }
+    //constrainedObjects[a.get()] = a;
+    //joints[this] = make_pair(c, VRObjectWeakPtr(ptr()));
     if (!c) { constrainedObjects.erase(this); return; }
     constrainedObjects[this] = ptr();
     joints[a.get()] = make_pair(c, VRObjectWeakPtr(a));
     c->setActive(true);
+    cout << "VRTransform::attach " << a->getName() << " to " << getName() << endl;
 }
 
 VRConstraintPtr VRTransform::getConstraint() { return constraint; }
@@ -781,8 +785,9 @@ void VRTransform::apply_constraints() { // TODO: check efficiency
 
     if (constraint) constraint->apply(ptr());
     for (auto joint : joints) {
-        auto p = joint.second.second.lock();
-        if (p) joint.second.first->apply(ptr(), p);
+        VRObjectPtr parent = joint.second.second.lock();
+        if (parent) joint.second.first->apply(ptr(), parent);
+        if (parent) cout << "VRTransform::apply_constraints to " << getName() << " with parent: " << parent->getName() << endl;
     }
 }
 
