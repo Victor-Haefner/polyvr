@@ -483,8 +483,8 @@ PyObject* VRPyTransform::setPhysicsConstraintTo(VRPyTransform* self, PyObject *a
         VRPyTransform *t; VRPyConstraint *c; VRPyConstraint *cs;
         if (! PyArg_ParseTuple(args, "OOO", &t, &c, &cs)) return NULL;
         self->objPtr->getPhysics()->setConstraint( t->objPtr->getPhysics(), c->objPtr, cs->objPtr );
-        t->objPtr->attach(self->objPtr, c->objPtr);
-        //self->objPtr->attach(t->objPtr, c->objPtr);
+        //t->objPtr->attach(self->objPtr, c->objPtr);
+        self->objPtr->attach(t->objPtr, c->objPtr);
     }
     Py_RETURN_TRUE;
 }

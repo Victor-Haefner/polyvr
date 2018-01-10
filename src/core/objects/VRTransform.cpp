@@ -764,30 +764,34 @@ void VRTransform::setConstraint(VRConstraintPtr c) {
     else constrainedObjects.erase(this);
 }
 
-void VRTransform::attach(VRTransformPtr a, VRConstraintPtr c) {
-    //if (!c) { constrainedObjects.erase(a.get()); return; }
-    //constrainedObjects[a.get()] = a;
-    //joints[this] = make_pair(c, VRObjectWeakPtr(ptr()));
-    if (!c) { constrainedObjects.erase(this); return; }
-    constrainedObjects[this] = ptr();
-    joints[a.get()] = make_pair(c, VRObjectWeakPtr(a));
+void VRTransform::attach(VRTransformPtr b, VRConstraintPtr c) {
+    VRTransformPtr a = ptr();
+    if (!c) { constrainedObjects.erase(b.get()); return; }
+    constrainedObjects[b.get()] = b;
+    a->bJoints[b.get()] = make_pair(c, VRTransformWeakPtr(b)); // children
+    b->aJoints[a.get()] = make_pair(c, VRTransformWeakPtr(a)); // parents
     c->setActive(true);
-    cout << "VRTransform::attach " << a->getName() << " to " << getName() << endl;
+    //cout << "VRTransform::attach " << b->getName() << " to " << a->getName() << endl;
 }
 
 VRConstraintPtr VRTransform::getConstraint() { return constraint; }
 
 /** enable constraints on the object, 0 leaves the DOF free, 1 restricts it **/
-void VRTransform::apply_constraints() { // TODO: check efficiency
-    if (!constraint && joints.size() == 0) return;
-    if (!checkWorldChange()) return;
+void VRTransform::apply_constraints(bool force) { // TODO: check efficiency
+    if (!constraint && aJoints.size() == 0) return;
+    if (!checkWorldChange() && !force) return;
     computeMatrix4d(); // update matrix!
 
     if (constraint) constraint->apply(ptr());
-    for (auto joint : joints) {
-        VRObjectPtr parent = joint.second.second.lock();
+    for (auto joint : aJoints) {
+        VRTransformPtr parent = joint.second.second.lock();
         if (parent) joint.second.first->apply(ptr(), parent);
-        if (parent) cout << "VRTransform::apply_constraints to " << getName() << " with parent: " << parent->getName() << endl;
+        //if (parent) cout << "VRTransform::apply_constraints to " << getName() << " with parent: " << parent->getName() << endl;
+    }
+
+    for (auto joint : bJoints) {
+        VRTransformPtr child = joint.second.second.lock();
+        if (child) child->apply_constraints(true);
     }
 }
 
