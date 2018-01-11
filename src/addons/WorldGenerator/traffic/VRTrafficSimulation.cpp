@@ -47,12 +47,15 @@ void VRTrafficSimulation::setRoadNetwork(VRRoadNetworkPtr rds) {
 }
 
 void VRTrafficSimulation::updateSimulation() {
+    cout << "VRTrafficSimulation::updateSimulation " << roads.size() << endl;
     for (int i=0; i<roads.size(); i++) {
         auto road = roads[i];
+        if (i == 0) cout << " VRTrafficSimulation::updateSimulation road0 " << road.vehicles.size() << endl;
         for (auto& vehicle : road.vehicles) {
             vehicle.pos.pos += 0.1;
             if (vehicle.pos.pos > 1) vehicle.pos.pos = 0;
             auto p = roadNetwork->getPosition(vehicle.pos);
+            if (i == 0) cout << "  VRTrafficSimulation::updateSimulation road0 " << p->pos() << endl;
             vehicle.t->setPose(p);
         }
     }

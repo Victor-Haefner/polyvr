@@ -205,7 +205,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 	sm->registerModule<VRPyCSG>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
 	sm->registerModule<VRPyRealWorld>("RealWorld", pModVR, VRPyObject::typeRef);
 	sm->registerModule<VRPyOldTrafficSimulation>("OldTrafficSimulation", pModVR);
-	sm->registerModule<VRPyTrafficSimulation>("TrafficSimulation", pModVR);
+	sm->registerModule<VRPyTrafficSimulation>("TrafficSimulation", pModVR, VRPyObject::typeRef);
 	sm->registerModule<VRPySimViDekont>("SimViDekont", pModVR);
 #endif
 
