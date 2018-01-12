@@ -498,7 +498,7 @@ void VRTransform::setPose(Vec3d from, Vec3d dir, Vec3d up) {
 }
 
 void VRTransform::setPose(const Pose& p) { setPose(p.pos(), p.dir(), p.up()); }
-void VRTransform::setPose(PosePtr p) { setPose(p->pos(), p->dir(), p->up()); }
+void VRTransform::setPose(PosePtr p) { if (p) setPose(p->pos(), p->dir(), p->up()); }
 PosePtr VRTransform::getPose() { return Pose::create(Vec3d(_from), Vec3d(_dir), Vec3d(_up)); }
 PosePtr VRTransform::getWorldPose() { return Pose::create( getWorldMatrix() ); }
 void VRTransform::setWorldPose(PosePtr p) { setWorldMatrix(p->asMatrix()); }
