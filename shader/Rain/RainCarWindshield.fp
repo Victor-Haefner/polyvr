@@ -19,17 +19,16 @@ void computeDirection() {
 	fragDir = normalize( miN * (miP * pos).xyz );
 }
 
-float hash(vec2 co){
+float hash(vec2 co) {
     	return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
-float gettheta(vec3 d){
+float gettheta(vec3 d) {
 	return acos(d.y);
 }
 
-void computeDepth(vec3 position) {
-	vec4 pp = vec4(position, 1);
-	float d = pp.z / pp.w;
+void computeDepth(vec4 position) {
+	float d = position.z / position.w;
 	gl_FragDepth = d*0.5 + 0.5;
 }
 
@@ -55,7 +54,7 @@ void main() {
 	vec3 check = vec3(1,0,0);
 	ccDepth(256);	
 	//discard;
-	//computeDepth((gl_ModelViewMatrix*(vec4(P0,1))).xyz);
+	computeDepth(gl_ModelViewProjectionMatrix*vec4(P0,1));
 	gl_FragColor = gl_FragColor + vec4(check,0.6);
 }
 
