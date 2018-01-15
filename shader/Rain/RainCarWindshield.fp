@@ -27,6 +27,17 @@ float gettheta(vec3 d){
 	return acos(d.y);
 }
 
+void computeDepth(vec3 position) {
+	vec4 pp = vec4(position, 1);
+	float d = pp.z / pp.w;
+	gl_FragDepth = d*0.5 + 0.5;
+}
+
+void ccDepth(float D) {
+	//float dd = (D/(256-0.1));
+	gl_FragDepth = 0.998;//dd*0.5 + 0.5;
+}
+
 void main() {
 	computeDirection();
 
@@ -35,13 +46,17 @@ void main() {
 
 	mat4 m = inverse(gl_ModelViewMatrix);
 	vec3 PCam = (m*vec4(0,0,0,1)).xyz;
-	vec3 P0 = vec3(0,100,0);
+	vec3 P0 = vec3(0,10,0);
 	vec3 T0 = P0-PCam;
 	vec3 D0 = normalize( P0-PCam );
-	if (dot(D0,fragDir) < 0.9999 && dot(D0,fragDir) > 0.999) discard;
+	//if (dot(D0,fragDir) < 0.9999 && dot(D0,fragDir) > 0.999) discard;
+	if (dot(D0,fragDir) < 0.9999 && dot(D0,fragDir) > -10) discard;
 
 	vec3 check = vec3(1,0,0);
-	gl_FragColor = vec4(check,0.3);
+	ccDepth(256);	
+	//discard;
+	//computeDepth((gl_ModelViewMatrix*(vec4(P0,1))).xyz);
+	gl_FragColor = gl_FragColor + vec4(check,0.6);
 }
 
 
