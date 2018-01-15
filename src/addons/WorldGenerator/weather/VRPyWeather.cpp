@@ -6,7 +6,7 @@
 using namespace OSG;
 
 simpleVRPyType(Rain, New_ptr);
-simpleVRPyType(VRRainCarWindshield, New_ptr);
+simpleVRPyType(RainCarWindshield, New_ptr);
 
 PyMethodDef VRPyRain::methods[] = {
     {"start", PyWrap(Rain, start, "Starts Rain", void) },
@@ -19,9 +19,9 @@ PyMethodDef VRPyRain::methods[] = {
     //{"getTexMat", PyWrap(Rain, getTexMat, "getTexMat", VRMaterialPtr) },
     {NULL}  /* Sentinel */
 };
-/*
+
 PyMethodDef VRPyRainCarWindshield::methods[] = {
-    {"doTestFunction", PyWrap(RainCarWindshield, doTestFunction, "do Test Function", void) },
+    {"doTestFunction", PyWrap(RainCarWindshield, doTestFunction, "do Test Function", void ,void) },
     {NULL}  /* Sentinel */
-//};
+};
 
