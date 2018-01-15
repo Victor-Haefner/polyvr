@@ -91,7 +91,6 @@
 #include "addons/WorldGenerator/traffic/VRPyTrafficSimulation.h"
 #include "addons/Engineering/CSG/VRPyCSG.h"
 #include "addons/RealWorld/VRPyRealWorld.h"
-#include "addons/RealWorld/traffic/VRPyTrafficSimulation.h"
 #include "addons/SimViDekont/VRPySimViDekont.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
 #include "addons/LeapMotion/VRPyHandGeo.h"

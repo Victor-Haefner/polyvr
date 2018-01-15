@@ -3,7 +3,6 @@
 
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRFunctionFwd.h"
-#include "JsonClient.h"
 
 #include <set>
 #include <map>
@@ -119,7 +118,7 @@ class OldTrafficSimulation {
         /**
          * The collision radius of the user controlled vehicle.
          */
-        double driverVehicleRadius;
+        double driverVehicleRadius = 0.5;
 
         /**
          * Set of pointers to currently loaded maps.
@@ -135,21 +134,11 @@ class OldTrafficSimulation {
         bool (*collisionHandler) (Vehicle& a, Vehicle& b);
 
         /**
-         * Handles the network connection to the server.
-         */
-        JsonClient client;
-
-        /**
-         * The MapCoordinator used to convert GPS-coordinates to pixels.
-         */
-        MapCoordinator *mapCoordinator;
-
-        /**
          * The maximum distance to draw vehicle in.
          * This attribute is only needed once if the drawing distance is
          * set before the driver position is specified.
          */
-        double viewDistance;
+        double viewDistance = 200;
 
         /**
          * The VRTransform that describes the position of the player vehicle.
@@ -160,28 +149,7 @@ class OldTrafficSimulation {
          * Whether the vehicle of the player && the viewarea around it has
          * been created inside the simulation.
          */
-        bool playerCreated;
-
-        /**
-         * The ID of the communication thread.
-         * Needed to stop the thread when destroying this object.
-         */
-        int communicationThreadId;
-
-        /**
-         * A mutex to block access to the data that is transfered to && from the network.
-         */
-        mutex networkDataMutex;
-
-        /**
-         * The JSON-data that has been received by the last query for the view area.
-         */
-        Value receivedData;
-
-        /**
-         * The data that will be send to the server shortly.
-         */
-        Value dataToSend;
+        bool playerCreated = false;
 
         /**
          * A map to store the meshes for the vehicle types.
@@ -199,53 +167,6 @@ class OldTrafficSimulation {
          */
         vector<VRGeometryPtr> lightBulbs;
 
-        /**
-         * A flag to suppress constant error output if there is no connection.
-         */
-        bool noConnection;
-
-        /**
-         Keeps some vehicle geometry on stock since it can not be created in the thread.
-         */
-        //map<unsigned int, vector<VRGeometryPtr> > geometryCache;
-
-        /**
-         * Converts an OSM node to a JSON representation.
-         * @param node The node to convert
-         * @return A JSON value that contains data from the node.
-         */
-        Value convertNode(OSMNodePtr node);
-
-        /**
-         * Converts an OSM street to a JSON representation.
-         * @param street The street to convert
-         * @return A JSON value that contains data from the street.
-         */
-        Value convertStreet(OSMWayPtr street);
-
-        /**
-         A helper method to fetch the data from the server.
-         Will be called repetitive while the simulator is running.
-         */
-        void communicationThread(std::weak_ptr<VRThread> t);
-
-        /**
-         * A mutex that will be locked if the communication thread is running.
-         * Is used to have a join() functionality for the threads.
-         */
-        mutex communicationThreadMutex;
-
-        /**
-         * Prints an error message if an error occurred.
-         * Checks the given \c Value if it contains an error message.
-         * If it does, a warning will be printed.
-         * @param action The action which has been done. Will be printed in the error
-         *     message as "... error while doing <action> ... ".
-         * @param value The result from the server to check.
-         * @return \c true if an error occurred, \c false otherwise.
-         */
-        bool errorMessage(const string& action, const Value& value);
-
     public:
 
         /// @name Construction && initialization
@@ -258,7 +179,7 @@ class OldTrafficSimulation {
          * @param mapCoordinator A MapCoordinator used to convert GPS-coordinates to pixels.
          * @param host The name of the host the traffic simulation server is running on. The port number can be appended as "address:port".
          */
-        OldTrafficSimulation(MapCoordinator *mapCoordinator, const string& host = "localhost:5550");
+        OldTrafficSimulation();
 
         /**
          * The destructor.
@@ -270,19 +191,6 @@ class OldTrafficSimulation {
          * @param host The name of the host the traffic simulation server is running on. The port number can be appended as "address:port".
          */
         void setServer(const string& host);
-
-        /**
-         * Adds a map consisting of streets that should be simulated.
-         * @param map The map to simulate.
-         */
-        void addMap(OSMMapPtr map);
-
-        /**
-         * Removes a map from the simulator.
-         * All vehicles on this map will be deleted && no further vehicles will drive on these streets.
-         * @param map The map to delete.
-         */
-        void removeMap(OSMMapPtr map);
 
         /**
          * Sets the distance vehicles can have to the player && still be drawn.
