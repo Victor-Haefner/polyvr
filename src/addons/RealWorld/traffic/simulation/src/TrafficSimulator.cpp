@@ -1,37 +1,7 @@
 #include "TrafficSimulator.h"
 
-#include <fstream>
-#include <boost/thread.hpp>
-
-#ifdef FILE_LOADING
-void fileLoaderThread(NetworkInterface* network, Value v) {
-
-    StyledWriter w;
-    Value res = network->handlePostRequest(v);
-    if (!res.isNull())
-        cout << "Error while loading from file: " << w.write(res);
-}
-#endif
-
-TrafficSimulator::TrafficSimulator()
-    : roadSystem(), microsimulator(&roadSystem), mesosimulator(&roadSystem), network(), state(PAUSE) {
-
-    network.start();
-
-#ifdef FILE_LOADING
-    ifstream file("postLog.json");
-    string str;
-    getline(file, str);
-    Reader r;
-    Value v;
-    while (!str.empty()) {
-        if (r.parse(str, v))
-            boost::thread a(&fileLoaderThread, &network, v);
-        else
-            cout << "Error parsing file line.\n";
-        getline(file, str);
-    }
-#endif
+TrafficSimulator::TrafficSimulator() : roadSystem(), microsimulator(&roadSystem), mesosimulator(&roadSystem), state(PAUSE) {
+    ;
 }
 
 void TrafficSimulator::setState(const STATE newState) {
@@ -54,12 +24,10 @@ RoadSystem* TrafficSimulator::getRoadSystem() {
 }
 
 void TrafficSimulator::mainLoop() {
-
         cout << "Simulator has started main loop.\n";
         while (state != STOP) {
             ptime loopStart = timer.getTime();
             timer.tick();
-            network.applyChanges(this);
             if (state != PAUSE) {
                 roadSystem.tick();
                 mesosimulator.tick();

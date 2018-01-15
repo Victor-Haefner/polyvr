@@ -460,7 +460,7 @@ NodeLogic* NodeLogicTrafficLight::makeNodeLogic(const RoadSystem *roadSystem, co
     return minTrafficLight;
 }
 
-Vec2f NodeLogicTrafficLight::getPosition() const {
+Vec2d NodeLogicTrafficLight::getPosition() const {
     return center;
 }
 

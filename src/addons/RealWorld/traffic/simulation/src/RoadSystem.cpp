@@ -89,7 +89,7 @@ void RoadSystem::fillSourceStreets() {
 
                     // Check if inside a view area. If it is, remove it and abort
                     for (vector<ViewArea*>::iterator iter = viewAreas.begin(); iter != viewAreas.end(); ++iter) {
-                        if (calcDistance(toVec2f(newVehicle->getPosition()), (*iter)->position) < (*iter)->radius + VEHICLE_LENGTH) {
+                        if (calcDistance(toVec2d(newVehicle->getPosition()), (*iter)->position) < (*iter)->radius + VEHICLE_LENGTH) {
                             street->removeVehicle(newVehicle->getId(), newVehicle->getLaneNumber());
                             removeVehicle(newVehicle->getId());
                             i = vehiclesToAdd; // Break vehicle-add loop
@@ -142,7 +142,7 @@ void RoadSystem::fillSourceStreets() {
     }
 }
 
-RoadSystem::ViewArea::ViewArea(const ID id, const Vec2f pos, const double radius)
+RoadSystem::ViewArea::ViewArea(const ID id, const Vec2d pos, const double radius)
     : id(id), radius(radius), position(pos) {
 }
 
@@ -200,8 +200,8 @@ void RoadSystem::tick() {
 
     // Update positions of viewareas bound to vehicles
     for (map<ViewArea*, ID>::iterator areaIter = viewAreasVehicles.begin(); areaIter != viewAreasVehicles.end(); ++areaIter) {
-        Vec3f vehiclePos = vehicles[areaIter->second]->getPosition();
-        areaIter->first->position = Vec2f(vehiclePos[0], vehiclePos[2]);
+        Vec3d vehiclePos = vehicles[areaIter->second]->getPosition();
+        areaIter->first->position = Vec2d(vehiclePos[0], vehiclePos[2]);
     }
 
     // Update micro-flags of streets
@@ -302,7 +302,7 @@ double RoadSystem::getTrafficDensity() const {
     return trafficDensity;
 }
 
-bool RoadSystem::addNode(const ID id, const Vec2f& pos, const Node::FEATURE features) {
+bool RoadSystem::addNode(const ID id, const Vec2d& pos, const Node::FEATURE features) {
 
     if (nodes.count(id) > 0)
         return false;
@@ -637,7 +637,7 @@ const map<ID, DriverType*>* RoadSystem::getDriverTypes() const {
     return &driverTypes;
 }
 
-bool RoadSystem::addVehicle(const ID id, const Vec3f pos, const double radius) {
+bool RoadSystem::addVehicle(const ID id, const Vec3d pos, const double radius) {
 
     if (vehicles.count(id) > 0)
         return false;
@@ -647,7 +647,7 @@ bool RoadSystem::addVehicle(const ID id, const Vec3f pos, const double radius) {
     vt->setRadius(radius);
     vehicleTypes.insert(make_pair(500 + id, vt));
 
-    Vehicle *v = new Vehicle(id, pos, Quaternion(0, 1, 0, 0));
+    Vehicle *v = new Vehicle(id, pos, Quaterniond(0, 1, 0, 0));
     v->setController(-1);
     v->setVehicleType(500 + id);
     vehicles.insert(make_pair(id, v));
@@ -700,7 +700,7 @@ ID RoadSystem::getUnusedVehicleId() {
     return maxVehicleId++;
 }
 
-bool RoadSystem::addViewarea(const ID id, const Vec2f pos, const double radius) {
+bool RoadSystem::addViewarea(const ID id, const Vec2d pos, const double radius) {
 
     // Check if the id already is in use
     for (unsigned int i = 0; i < viewAreas.size(); ++i) {
@@ -733,13 +733,13 @@ bool RoadSystem::addViewarea(const ID id, const ID vehicle, const double radius)
     if (v == NULL)
         return false;
 
-    ViewArea *a = new ViewArea(id, Vec2f(v->getPosition()[0], v->getPosition()[2]), radius);
+    ViewArea *a = new ViewArea(id, Vec2d(v->getPosition()[0], v->getPosition()[2]), radius);
     viewAreas.push_back(a);
     viewAreasVehicles.insert(make_pair(a, vehicle));
     return true;
 }
 
-bool RoadSystem::moveViewarea(const ID id, const Vec2f pos) {
+bool RoadSystem::moveViewarea(const ID id, const Vec2d pos) {
 
     for (unsigned int i = 0; i < viewAreas.size(); ++i) {
         if (viewAreas[i]->id == id) {

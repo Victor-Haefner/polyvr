@@ -111,7 +111,7 @@ vector<ID> calculateRoute(const RoadSystem *roadSystem, const ID from, const ID 
     predecessors[start] = from;
 
     // The position of the end node
-    Vec2f endPosition = roadSystem->getNode(end)->getPosition();
+    Vec2d endPosition = roadSystem->getNode(end)->getPosition();
 
     do {
         ID currentNode;
@@ -244,7 +244,7 @@ ID getRandomDestinationNode(const RoadSystem *roadSystem, const ID from, const I
     // === After this point, the "start" node means the node that has been found === //
 
     // Run through the road system until there is no further street that leads away from start or the distance is reached
-    const Vec2f startPosition = roadSystem->getNode(start)->getPosition();
+    const Vec2d startPosition = roadSystem->getNode(start)->getPosition();
     allowedAngle = 45; // now constant
     double currentDistance = calcDistance(startPosition, roadSystem->getNode(currentNode)->getPosition());
 
@@ -258,7 +258,7 @@ ID getRandomDestinationNode(const RoadSystem *roadSystem, const ID from, const I
             return currentNode;
         }
 
-        Vec2f currentPosition = roadSystem->getNode(currentNode)->getPosition();
+        Vec2d currentPosition = roadSystem->getNode(currentNode)->getPosition();
 
         // Search for a matching node
         size_t rNode = rand() % neighborNodes.size();
@@ -268,7 +268,7 @@ ID getRandomDestinationNode(const RoadSystem *roadSystem, const ID from, const I
         do {
 
             // Calculate the angle to the neighbor node
-            Vec2f neighborPosition = roadSystem->getNode(neighborNodes[neighborI].first)->getPosition();
+            Vec2d neighborPosition = roadSystem->getNode(neighborNodes[neighborI].first)->getPosition();
             double deltaAngle = calcAngle(neighborPosition - currentPosition) - currentAngle;
 
             if (deltaAngle > allowedAngle && deltaAngle < 360 - allowedAngle) {
@@ -303,7 +303,7 @@ ID getRandomDestinationNode(const RoadSystem *roadSystem, const ID from, const I
     return currentNode;
 }
 
-double getNearestVehicleDistance(const RoadSystem *roadSystem, const Vec2f& position, const Street *street, const double maxDistance) {
+double getNearestVehicleDistance(const RoadSystem *roadSystem, const Vec2d& position, const Street *street, const double maxDistance) {
 
     double minimalDistance = maxDistance;
 

@@ -12,7 +12,7 @@ bool Node::connectionComparator(const Connection& lhs, const Connection& rhs) {
     return lhs.degree < rhs.degree;
 }
 
-Node::Node(const RoadSystem *roadSystem, const ID id, const Vec2f position, const FEATURE features)
+Node::Node(const RoadSystem *roadSystem, const ID id, const Vec2d position, const FEATURE features)
     : id(id), pos(position), streetIds(), connections(&connectionComparator), logic(NULL), features(features), roadSystem(roadSystem), reservationId(0) {
 }
 
@@ -36,7 +36,7 @@ NodeLogic* Node::getNodeLogic() const {
     return logic;
 }
 
-Vec2f Node::getPosition() const {
+Vec2d Node::getPosition() const {
     return pos;
 }
 
@@ -65,7 +65,7 @@ bool Node::addStreet(const Street* street) {
             if (nodeI > 0) {
                 Connection con;
                 con.node = (*nodes)[nodeI - 1];
-                Vec2f prevNodePos = roadSystem->getNode(con.node)->getPosition();
+                Vec2d prevNodePos = roadSystem->getNode(con.node)->getPosition();
                 con.degree = calcAngle(prevNodePos - pos);
                 con.street = street->getId();
                 con.flags = (street->getLaneCount(1)?Connection::INCOMING:0) | (street->getLaneCount(-1)?Connection::OUTGOING:0) | Connection::FORWARD;
@@ -74,7 +74,7 @@ bool Node::addStreet(const Street* street) {
             if (nodeI < nodes->size() - 1) {
                 Connection con;
                 con.node = (*nodes)[nodeI + 1];
-                Vec2f prevNodePos = roadSystem->getNode(con.node)->getPosition();
+                Vec2d prevNodePos = roadSystem->getNode(con.node)->getPosition();
                 con.degree = calcAngle(prevNodePos - pos);
                 con.street = street->getId();
                 con.flags = (street->getLaneCount(-1)?Connection::INCOMING:0) | (street->getLaneCount(1)?Connection::OUTGOING:0);

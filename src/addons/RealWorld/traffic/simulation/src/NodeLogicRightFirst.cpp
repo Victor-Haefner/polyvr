@@ -168,7 +168,7 @@ NodeLogic* NodeLogicRightFirst::makeNodeLogic(const RoadSystem *roadSystem, cons
     return l;
 }
 
-Vec2f NodeLogicRightFirst::getPosition() const {
+Vec2d NodeLogicRightFirst::getPosition() const {
     return roadSystem->getNode(nodeId)->getPosition();
 }
 

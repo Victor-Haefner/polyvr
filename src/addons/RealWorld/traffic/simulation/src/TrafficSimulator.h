@@ -4,7 +4,6 @@
 #include "RoadSystem.h"
 #include "Microsimulator.h"
 #include "Mesosimulator.h"
-#include "NetworkInterface.h"
 
 /**
  Main class of the traffic simulator.
@@ -39,10 +38,6 @@ class TrafficSimulator {
 
         /// The simulator for meso-streets.
         Mesosimulator mesosimulator;
-
-        /// The interface to the network.
-        /// Uses JSON/HTTP on port 5550.
-        NetworkInterface network;
 
         /// The current state of the simulator.
         STATE state;
