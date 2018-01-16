@@ -18,7 +18,7 @@ PyMethodDef VRPyTrafficSimulation::methods[] = {
 
 using namespace OSG;
 
-simplePyType(OldTrafficSimulation, New_toZero);
+simplePyType(OldTrafficSimulation, New_ptr);
 
 PyMethodDef VRPyOldTrafficSimulation::methods[] = {
     {"init", (PyCFunction)VRPyOldTrafficSimulation::init, METH_VARARGS, "Gets simulator handle" },

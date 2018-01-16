@@ -12,7 +12,7 @@
 
 using namespace OSG;
 
-OldTrafficSimulation::OldTrafficSimulation() : collisionHandler(NULL), meshes(), vehicles(), lightBulbs() {
+OldTrafficSimulation::OldTrafficSimulation() : VRObject("trafficSim"), collisionHandler(NULL), meshes(), vehicles(), lightBulbs() {
     // Add a dummy model for unknown vehicle types
     VRGeometryPtr geo = VRGeometry::create("vehicle_type_unknown");
     geo->setPersistency(0);
@@ -36,6 +36,8 @@ OldTrafficSimulation::~OldTrafficSimulation() {
     player = 0;
     playerCreated = false;
 }
+
+OldTrafficSimulationPtr OldTrafficSimulation::create() { return OldTrafficSimulationPtr( new OldTrafficSimulation() ); }
 
 void OldTrafficSimulation::setDrawingDistance(const double distance) {
     viewDistance = distance;
@@ -67,10 +69,8 @@ void OldTrafficSimulation::addDriverType(const unsigned int id, const double pro
 }
 
 void OldTrafficSimulation::start() {
-    /*if (communicationThreadId < 0) {
-        threadFkt = VRFunction<VRThreadWeakPtr>::create("trafficCommunicationThread", boost::bind(&OldTrafficSimulation::communicationThread, this, _1));
-        communicationThreadId = VRScene::getCurrent()->initThread(threadFkt, "trafficCommunicationThread", true);
-    }*/
+    updateCb = VRUpdateCb::create("trafficSim", boost::bind(&OldTrafficSimulation::tick, this));
+    VRScene::getCurrent()->addUpdateFkt(updateCb);
 }
 
 void OldTrafficSimulation::pause() {
@@ -86,15 +86,11 @@ bool OldTrafficSimulation::isRunning() {
 }
 
 void OldTrafficSimulation::tick() {
-    /*networkDataMutex.lock();
-
     // Update the position of the player to be send to the server
-    if (player != NULL) {
-
+    /*if (player != NULL) {
         // Move the vehicle
         Value vehicle;
         vehicle["id"] = 0;
-
         Value pos;
 
         Vec3d worldPosition = player->getFrom();
@@ -368,11 +364,9 @@ void OldTrafficSimulation::tick() {
                 lightBulbs.pop_back();
             }
         }
-    }
+    }*/
 
-    networkDataMutex.unlock();
-
-        // Advance the vehicles a bit
+    // Advance the vehicles a bit
     //cout << "Update " << vehicles.size() << " vehicles\n";
     for (auto v : vehicles) {
         Vec3d p = v.second.pos;
@@ -381,7 +375,7 @@ void OldTrafficSimulation::tick() {
         v.second.model->setDir(v.second.pos - v.second.orientation);
         v.second.pos += v.second.deltaPos;
         v.second.orientation += v.second.deltaOrientation;
-    }*/
+    }
 
     sim.tick();
 }

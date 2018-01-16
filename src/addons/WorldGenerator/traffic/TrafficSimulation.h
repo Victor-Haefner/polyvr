@@ -1,6 +1,7 @@
 #ifndef OldTrafficSimulation_H
 #define OldTrafficSimulation_H
 
+#include "core/objects/object/VRObject.h"
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "TrafficSimulator.h"
@@ -14,9 +15,9 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class OldTrafficSimulation {
+class OldTrafficSimulation : public VRObject {
     private:
-        VRThreadCbPtr threadFkt;
+        VRUpdateCbPtr updateCb;
         TrafficSimulator sim;
 
     public:
@@ -64,6 +65,8 @@ class OldTrafficSimulation {
     public:
         OldTrafficSimulation();
         ~OldTrafficSimulation();
+
+        static OldTrafficSimulationPtr create();
 
         void setDrawingDistance(double distance = 200); // The maximal distance to draw vehicles
         void setTrafficDensity(double density = 10); // density will vary based on street type, number of vehicles on 100m norm-street
