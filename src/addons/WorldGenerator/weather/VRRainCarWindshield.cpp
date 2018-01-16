@@ -25,8 +25,6 @@ VRRainCarWindshield::VRRainCarWindshield() : VRGeometry("RainCarWindshield") {
     string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Rain/";
     vScript = resDir + "RainCarWindshield.vp";
     fScript = resDir + "RainCarWindshield.fp";
-    vScriptTex = resDir + "RainTex.vp";
-    fScriptTex = resDir + "RainTex.fp";
 
     //Shader setup
     mat = VRMaterial::create("RainCarWindshield");
@@ -59,6 +57,16 @@ float VRRainCarWindshield::get() { return scale; }
 void VRRainCarWindshield::update() {
     if (!isVisible()) return;
 
+    /** need to get car position and direction from car */
+    mat->setShaderParameter<Vec3f>("origin", origin);
+    mat->setShaderParameter<Vec3f>("carDir", carDir);
+    mat->setShaderParameter<Vec3f>("posOffset", posOffset);
+
+    tnow = glutGet(GLUT_ELAPSED_TIME)*0.001; //seconds
+    tdelta = tnow-tlast;
+    tlast = tnow;
+    mat->setShaderParameter<float>("tnow", tnow);
+    mat->setShaderParameter<float>("offset", tdelta);
     mat->readVertexShader(vScript);
     mat->readFragmentShader(fScript);
 }

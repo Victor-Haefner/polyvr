@@ -12,8 +12,12 @@ vec4 color;
 bool debugB = false;
 
 uniform vec2 OSGViewportSize;
-uniform float rainOffset;
+uniform float tnow;
+uniform float offset;
 uniform float rainDensity;
+uniform vec3 origin;
+uniform vec3 carDir;
+uniform vec3 posOffset;
 
 void computeDirection() {
 	fragDir = normalize( miN * (miP * pos).xyz );
@@ -32,30 +36,31 @@ void computeDepth(vec4 position) {
 	gl_FragDepth = d*0.5 + 0.5;
 }
 
-void ccDepth(float D) {
-	//float dd = (D/(256-0.1));
-	gl_FragDepth = 0.998;//dd*0.5 + 0.5;
-}
-
 void main() {
 	computeDirection();
+	
+	if (fragDir.y < -0.999) discard;
 
 	// \theta is angle of fragDir to vertical axis
 	//theta = acos(fragDir.y);
 
 	mat4 m = inverse(gl_ModelViewMatrix);
 	vec3 PCam = (m*vec4(0,0,0,1)).xyz;
-	vec3 P0 = vec3(0,10,0);
-	vec3 T0 = P0-PCam;
+	vec3 P0 = vec3(-10,1,0);
+	//vec3 T0 = P0-PCam;
 	vec3 D0 = normalize( P0-PCam );
 	//if (dot(D0,fragDir) < 0.9999 && dot(D0,fragDir) > 0.999) discard;
-	if (dot(D0,fragDir) < 0.9999 && dot(D0,fragDir) > -10) discard;
+	computeDepth(gl_ModelViewProjectionMatrix*vec4(P0,1));	
+	
+	
+	
+	vec3 check = vec3(0.1,0.1,0.1);
+	if (mod(tnow,5)<0.2) {
+		if (dot(D0,fragDir) > 0.9999) check = vec3(0,0,1);
+	}
 
-	vec3 check = vec3(1,0,0);
-	ccDepth(256);	
-	//discard;
-	computeDepth(gl_ModelViewProjectionMatrix*vec4(P0,1));
-	gl_FragColor = gl_FragColor + vec4(check,0.6);
+	//computeDepth(gl_ModelViewProjectionMatrix*vec4(P0,1));
+	gl_FragColor = vec4(check,0.3);
 }
 
 

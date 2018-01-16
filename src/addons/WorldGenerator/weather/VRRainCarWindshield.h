@@ -29,8 +29,8 @@ class VRRainCarWindshield : public VRGeometry {
 
         string vScript;
         string fScript;
-        string vScriptTex;
-        string fScriptTex;
+        //string vScriptTex;
+        //string fScriptTex;
         float offset = 0;
         float camH = 40;
         float rainDensity = 0;
@@ -51,17 +51,20 @@ class VRRainCarWindshield : public VRGeometry {
         float colorStart = 1;
         float lightStart = 1;
 
+        float scale;
         float density;
         float speedX;
         float speedY;
         float color;
         float light;
 
-        float tnow = 0;
+        double tnow = 0;
+        double tlast = 0;
+        double tdelta = 0;
 
-        float durationTransition = 10;  //t in seconds
-        float scale = 0;
-        float scaleRN = 0;
+        Vec3f origin;
+        Vec3f carDir;
+        Vec3f posOffset;
 
     public:
         VRRainCarWindshield();
