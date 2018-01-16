@@ -35,6 +35,10 @@ VRRainCarWindshield::VRRainCarWindshield() : VRGeometry("RainCarWindshield") {
     mat->setLit(false);
 	mat->setDiffuse(Color3f(1));
 	mat->enableTransparency();
+    //parameter temp setup
+    carOrigin = Vec3f(0,0,0);
+    carDir = Vec3f(1,0,0);
+    posOffset = Vec3f(-10,0,0);
 
     setVolumeCheck(false, true);
 
@@ -58,7 +62,7 @@ void VRRainCarWindshield::update() {
     if (!isVisible()) return;
 
     /** need to get car position and direction from car */
-    mat->setShaderParameter<Vec3f>("origin", origin);
+    mat->setShaderParameter<Vec3f>("carOrigin", carOrigin);
     mat->setShaderParameter<Vec3f>("carDir", carDir);
     mat->setShaderParameter<Vec3f>("posOffset", posOffset);
 

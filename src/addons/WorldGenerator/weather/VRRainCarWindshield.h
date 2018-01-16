@@ -62,7 +62,7 @@ class VRRainCarWindshield : public VRGeometry {
         double tlast = 0;
         double tdelta = 0;
 
-        Vec3f origin;
+        Vec3f carOrigin;
         Vec3f carDir;
         Vec3f posOffset;
 
