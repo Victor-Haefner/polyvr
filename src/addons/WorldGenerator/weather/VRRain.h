@@ -15,6 +15,7 @@ OSG_BEGIN_NAMESPACE;
 
 class VRRain : public VRGeometry {
     private:
+        bool debugRain = false;
         VRUpdateCbPtr updatePtr;
         VRAnimCbPtr rainAnimationCb;
         VRMaterialPtr mat;
@@ -22,6 +23,7 @@ class VRRain : public VRGeometry {
         VRLightPtr lightMain;
 
         VRCameraPtr camTex;
+        VRCameraPtr oldCamTex;
         VRTextureRendererPtr texRenderer;
         VRGeometryPtr cube;
 

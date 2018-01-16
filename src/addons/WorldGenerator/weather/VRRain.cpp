@@ -19,6 +19,13 @@
 
 using namespace OSG;
 
+/*	Python usage example:
+    VR.rain = VR.Rain()
+	VR.rain.setScale(3)
+	VR.scene.addChild(VR.rain)
+	VR.rain.start()
+*/
+
 VRRain::VRRain() : VRGeometry("Rain") {
     type = "Rain";
     string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Rain/";
@@ -46,6 +53,7 @@ VRRain::VRRain() : VRGeometry("Rain") {
     textureSize = 512;
 
     auto camDef = VRScene::getCurrent()->getActiveCamera();
+    oldCamTex = camDef;
 
     texRenderer = VRTextureRenderer::create("rainTexRenderer");
     texRenderer-> setPersistency(0);
@@ -53,7 +61,7 @@ VRRain::VRRain() : VRGeometry("Rain") {
     scene->getRoot()->addChild(texRenderer);
     auto lightF = scene->getRoot()->find("light");
 
-    camTex = VRCamera::create("camRainTexure");
+    camTex = VRCamera::create("camRainTexture");
     camTex-> setPersistency(0);
     lightF->addChild(camTex);
     camTex->setType(1);
@@ -188,11 +196,18 @@ void VRRain::update() {
     double offset = glutGet(GLUT_ELAPSED_TIME)*0.001; //seconds
 
     auto camDef = VRScene::getCurrent()->getActiveCamera();
-    auto defCamPos = camDef->getFrom();
+    if (debugRain) cout << "defcam: " << camDef->getName() << endl;
+    if (camDef == camTex) camDef = oldCamTex;
+    else oldCamTex = camDef;
+    //if (camDef->getName() == "car") oldCamTex = camDef;
+    if (debugRain) cout << "oldcam: " << oldCamTex->getName() << endl;
+    auto defCamPos = camDef->getWorldPosition();//camDef->getFrom();
     camTex->setFrom(defCamPos);
     camTex->translate(Vec3d(0,40,0));
     camTex->setAt(defCamPos);
     camTex->setUp(Vec3d(0,0,1));
+    if (debugRain) cout << "camdeffrom: " << camDef->getFrom() << endl;
+    if (debugRain) cout << "camtexfrom: " << camTex->getFrom() << endl;
 
     mat->setShaderParameter<float>("rainOffset", offset);
     mat->readVertexShader(vScript);
