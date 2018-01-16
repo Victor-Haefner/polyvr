@@ -4,6 +4,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/utils/toString.h"
 #include "TrafficSimulation.h"
+#include "RoadSystem.h"
 #include "addons/WorldGenerator/GIS/OSMMap.h"
 
 #include <boost/bind.hpp>
@@ -11,14 +12,12 @@
 
 using namespace OSG;
 
-OldTrafficSimulation::OldTrafficSimulation() : loadedMaps(), collisionHandler(NULL), meshes(), vehicles(), lightBulbs() {
-
+OldTrafficSimulation::OldTrafficSimulation() : collisionHandler(NULL), meshes(), vehicles(), lightBulbs() {
     // Add a dummy model for unknown vehicle types
     VRGeometryPtr geo = VRGeometry::create("vehicle_type_unknown");
     geo->setPersistency(0);
     geo->setPrimitive("Box", "1 1 2 1 1 1");
     meshes[404] = geo;
-
 
     a_red = VRMaterial::create("a_red");
     a_orange = VRMaterial::create("a_orange");
@@ -29,6 +28,8 @@ OldTrafficSimulation::OldTrafficSimulation() : loadedMaps(), collisionHandler(NU
     a_red->setLit(false);
     a_orange->setLit(false);
     a_green->setLit(false);
+
+	timer.setTimeScale(1);
 }
 
 OldTrafficSimulation::~OldTrafficSimulation() {
@@ -81,12 +82,10 @@ void OldTrafficSimulation::pause() {
 
 bool OldTrafficSimulation::isRunning() {
     //return (client.getSimulatorState() == client.RUNNING);
+    return false;
 }
 
-void OldTrafficSimulation::tick() { update(); }
-
-void OldTrafficSimulation::update() {
-
+void OldTrafficSimulation::tick() {
     /*networkDataMutex.lock();
 
     // Update the position of the player to be send to the server
@@ -384,6 +383,7 @@ void OldTrafficSimulation::update() {
         v.second.orientation += v.second.deltaOrientation;
     }*/
 
+    sim.tick();
 }
 
 void OldTrafficSimulation::setCollisionHandler(bool (*handler) (Vehicle& a, Vehicle& b)) {
@@ -447,6 +447,32 @@ void OldTrafficSimulation::setPlayerTransform(VRTransformPtr transform) {
         playerCreated = false;
     }*/
 }
+
+#include "addons/WorldGenerator/roads/VRRoadNetwork.h"
+
+void OldTrafficSimulation::constructRoadSystem(VRRoadNetworkPtr net) {
+    auto rs = sim.getRoadSystem();
+    auto g = net->getGraph();
+    auto nodes = g->getNodes();
+    auto edges = g->getEdges();
+
+    for (int i=0; i<nodes.size(); i++) {
+        auto& node = nodes[i];
+        Vec3d p = node.p.pos();
+        rs->addNode(i, Vec2d(p[0], p[2]));
+    }
+
+    for (auto edgeVec : edges) {
+        for (auto edge : edgeVec) {
+            rs->createStreet(edge.ID, {edge.from, edge.to});
+        }
+    }
+}
+
+
+
+
+
 
 
 

@@ -81,7 +81,7 @@ void VRTrafficSimulation::addVehicles(int roadID, float density, int type) {
     for (int i=0; i<N; i++) addVehicle(roadID, type);
 }
 
-void VRTrafficSimulation::setTraffic(float density, int type) {
+void VRTrafficSimulation::setTrafficDensity(float density, int type) {
     for (auto road : roads) addVehicles(road.first, density, type);
 }
 

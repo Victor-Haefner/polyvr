@@ -358,7 +358,9 @@ Street* RoadSystem::createStreet(const ID id, const vector<ID>& nodeIds) {
             return NULL;
     }
 
-    return new Street(this, id, nodeIds);
+    auto street = new Street(this, id, nodeIds);
+    addStreet(street);
+    return street;
 }
 
 

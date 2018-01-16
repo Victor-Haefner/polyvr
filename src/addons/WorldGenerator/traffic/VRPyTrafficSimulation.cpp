@@ -8,7 +8,7 @@ simpleVRPyType(TrafficSimulation, New_ptr);
 
 PyMethodDef VRPyTrafficSimulation::methods[] = {
     {"setRoadNetwork", PyWrap( TrafficSimulation, setRoadNetwork, "Set road network", void, VRRoadNetworkPtr ) },
-    {"setTraffic", PyWrap( TrafficSimulation, setTraffic, "Set overall traffic", void, float, int ) },
+    {"setTrafficDensity", PyWrap( TrafficSimulation, setTrafficDensity, "Set overall traffic", void, float, int ) },
     {NULL}  /* Sentinel */
 };
 
@@ -33,6 +33,7 @@ PyMethodDef VRPyOldTrafficSimulation::methods[] = {
     {"setVehiclePosition", (PyCFunction)VRPyOldTrafficSimulation::setVehiclePosition, METH_VARARGS, "Sets the position of a vehicle" },
     {"setPlayerTransform", (PyCFunction)VRPyOldTrafficSimulation::setPlayerTransform, METH_VARARGS, "Sets the player-vehicle" },
     {"tick", (PyCFunction)VRPyOldTrafficSimulation::tick, METH_VARARGS, "Ticks" },
+    {"constructRoadSystem", PyWrap2( OldTrafficSimulation, constructRoadSystem, "feed road network", void, VRRoadNetworkPtr ) },
     {NULL}  /* Sentinel */
 };
 

@@ -579,8 +579,6 @@
 		<Unit filename="src/addons/WorldGenerator/traffic/Routing.h" />
 		<Unit filename="src/addons/WorldGenerator/traffic/Street.cpp" />
 		<Unit filename="src/addons/WorldGenerator/traffic/Street.h" />
-		<Unit filename="src/addons/WorldGenerator/traffic/Traffic.cpp" />
-		<Unit filename="src/addons/WorldGenerator/traffic/Traffic.h" />
 		<Unit filename="src/addons/WorldGenerator/traffic/TrafficSimulation.cpp" />
 		<Unit filename="src/addons/WorldGenerator/traffic/TrafficSimulation.h" />
 		<Unit filename="src/addons/WorldGenerator/traffic/TrafficSimulator.cpp" />
