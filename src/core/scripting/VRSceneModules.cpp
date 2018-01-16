@@ -91,7 +91,6 @@
 #include "addons/WorldGenerator/traffic/VRPyTrafficSimulation.h"
 #include "addons/Engineering/CSG/VRPyCSG.h"
 #include "addons/RealWorld/VRPyRealWorld.h"
-#include "addons/RealWorld/traffic/VRPyTrafficSimulation.h"
 #include "addons/SimViDekont/VRPySimViDekont.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
 #include "addons/LeapMotion/VRPyHandGeo.h"
@@ -206,7 +205,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 	sm->registerModule<VRPyCSG>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
 	sm->registerModule<VRPyRealWorld>("RealWorld", pModVR, VRPyObject::typeRef);
 	sm->registerModule<VRPyOldTrafficSimulation>("OldTrafficSimulation", pModVR);
-	sm->registerModule<VRPyTrafficSimulation>("TrafficSimulation", pModVR);
+	sm->registerModule<VRPyTrafficSimulation>("TrafficSimulation", pModVR, VRPyObject::typeRef);
 	sm->registerModule<VRPySimViDekont>("SimViDekont", pModVR);
 #endif
 

@@ -23,6 +23,7 @@ ptrFwd( VRTerrain );
 ptrFwd( VRTree );
 ptrFwd( VRGrassPatch );
 ptrFwd( VRNature );
+ptrFwd( OldTrafficSimulation );
 ptrFwd( VRTrafficSimulation );
 ptrFwd( VRRain );
 ptrFwd( VRRainCarWindshield );

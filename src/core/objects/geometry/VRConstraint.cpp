@@ -115,9 +115,9 @@ void VRConstraint::apply(VRTransformPtr obj, VRObjectPtr parent) {
     t.mult(refMatrixB);
     t.mult(refMatrixAI);
 
-    cout << "VRConstraint::apply " << obj->getName();
-    if (parent) cout << " p: " << parent->getName();
-    cout << " Mt: " << refMatrixB[3] << " l: " << local << endl;
+    //cout << "VRConstraint::apply " << obj->getName();
+    //if (parent) cout << " p: " << parent->getName();
+    //cout << " Mt: " << refMatrixB[3] << " l: " << local << endl;
     //cout << "VRConstraint::apply " << obj->getName() << " t " << min[0] << "/" << max[0] << " , " << min[1] << "/" << max[1] << " , " << min[2] << "/" << max[2] << endl;
 
     for (int i=0; i<3; i++) { // translation
@@ -139,15 +139,15 @@ void VRConstraint::apply(VRTransformPtr obj, VRObjectPtr parent) {
     VRTransform::applyEulerAngles(R2, angles+angleDiff);
     R1.invert();
 
-    cout << " T:    " << Vec3d(t[3]) << endl;
+    //cout << " T:    " << Vec3d(t[3]) << endl;
     t.mult(refMatrixA);
-    cout << " A  -> " << Vec3d(t[3]) << " ( " << VRTransform::computeEulerAngles(refMatrixA) << " ) " << endl;
+    //cout << " A  -> " << Vec3d(t[3]) << " ( " << VRTransform::computeEulerAngles(refMatrixA) << " ) " << endl;
     t.mult(R1);
-    cout << " RI -> " << Vec3d(t[3]) << " ( " << VRTransform::computeEulerAngles(R1) << " ) " << endl;
+    //cout << " RI -> " << Vec3d(t[3]) << " ( " << VRTransform::computeEulerAngles(R1) << " ) " << endl;
     t.mult(refMatrixBI);
-    cout << " BI -> " << Vec3d(t[3]) << " ( " << VRTransform::computeEulerAngles(refMatrixBI) << " ) " << endl;
+    //cout << " BI -> " << Vec3d(t[3]) << " ( " << VRTransform::computeEulerAngles(refMatrixBI) << " ) " << endl;
     t.mult(R2);
-    cout << " R  -> " << Vec3d(t[3]) << " ( " << VRTransform::computeEulerAngles(R2) << " ) " << endl;
+    //cout << " R  -> " << Vec3d(t[3]) << " ( " << VRTransform::computeEulerAngles(R2) << " ) " << endl;
     obj->setMatrixTo(t, parent);
 }
 

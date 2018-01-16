@@ -4,6 +4,7 @@
 #include <string>
 #include <OpenSG/OSGGeometry.h>
 #include "core/objects/geometry/VRGeometry.h"
+#include "addons/Engineering/VREngineeringFwd.h"
 
 namespace CGAL { class Polyhedron; }
 

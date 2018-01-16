@@ -470,7 +470,7 @@ PyObject* VRPyTransform::physicalize(VRPyTransform* self, PyObject *args) {
 PyObject* VRPyTransform::setPhysicsConstraintTo(VRPyTransform* self, PyObject *args) {
     if (!self->valid()) return NULL;
     //if this is soft, the args have to be: RigidBody other, int nodeIndex, vec3 localpivot, bool ignoreCollision, float influence
-    VRPyTransform *t;
+    VRPyTransform* t;
     if(self->objPtr->getPhysics()->isSoft()) {
         int nodeIndex;
         int ignoreCollision;
@@ -483,7 +483,8 @@ PyObject* VRPyTransform::setPhysicsConstraintTo(VRPyTransform* self, PyObject *a
         VRPyTransform *t; VRPyConstraint *c; VRPyConstraint *cs;
         if (! PyArg_ParseTuple(args, "OOO", &t, &c, &cs)) return NULL;
         self->objPtr->getPhysics()->setConstraint( t->objPtr->getPhysics(), c->objPtr, cs->objPtr );
-        t->objPtr->attach(self->objPtr, c->objPtr);
+        //t->objPtr->attach(self->objPtr, c->objPtr);
+        self->objPtr->attach(t->objPtr, c->objPtr);
     }
     Py_RETURN_TRUE;
 }

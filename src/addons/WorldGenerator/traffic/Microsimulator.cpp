@@ -55,7 +55,7 @@ void Microsimulator::handleVehicle(Vehicle *vehicle, bool moveOnly) {
         // Only for better readability
         const ID reachedNodeId = route->at(1);
 
-        const Vec2f positionNearReachedNode = currentStreet->getRelativeNodePosition(reachedNodeId, vehicle->getLaneNumber());
+        const Vec2d positionNearReachedNode = currentStreet->getRelativeNodePosition(reachedNodeId, vehicle->getLaneNumber());
 
         // Check if it is a left-turn. In that case, drive past the node to simulate a big turning
         const Node *nextNode = roadSystem->getNode(route->at(2));
@@ -117,24 +117,24 @@ void Microsimulator::handleVehicle(Vehicle *vehicle, bool moveOnly) {
     const VehicleType *type = roadSystem->getVehicleType(vehicle->getVehicleType());
 
     // Calculate new rotation
-    const Vec3f dest = toVec3f(vehicle->getCurrentDestination());
-    const Vec3f& pos  = vehicle->getPosition();
+    const Vec3d dest = toVec3d(vehicle->getCurrentDestination());
+    const Vec3d& pos  = vehicle->getPosition();
 
     // Calculate rotation needed to aim at destination
-    Vec3f a(1, 0, 0);
+    Vec3d a(1, 0, 0);
     vehicle->getOrientation().multVec(a,a);
-    Vec3f b(Vec3f(dest - pos));
-    Quaternion neededRotation(a, b);
+    Vec3d b(Vec3d(dest - pos));
+    Quaterniond neededRotation(a, b);
 
-    float angle; // Seems to be in the range [0, Pi]
-    Vec3f axis;
+    double angle; // Seems to be in the range [0, Pi]
+    Vec3d axis;
     neededRotation.getValueAsAxisRad(axis, angle);
 
     // Fix against strange behavior of quaternion
     if (axis[1] < 0)
-        axis = Vec3f(0, -1, 0);
+        axis = Vec3d(0, -1, 0);
     else
-        axis = Vec3f(0, 1, 0);
+        axis = Vec3d(0, 1, 0);
 
     // If the angle is quite small, do nothing
     if (angle > 0.001) {
@@ -149,7 +149,7 @@ void Microsimulator::handleVehicle(Vehicle *vehicle, bool moveOnly) {
             angle = M_PI - (type->getMaxRotation() / 360 * M_PI);
         }
 
-        neededRotation = Quaternion(axis, angle);
+        neededRotation = Quaterniond(axis, angle);
 
         vehicle->setCurrentRotation(neededRotation);
     }
@@ -201,7 +201,7 @@ void Microsimulator::handleVehicle(Vehicle *vehicle, bool moveOnly) {
 
 
     // Move vehicle forward
-    Vec3f movement(vehicle->getCurrentSpeed() * kmhToUnits, 0, 0);
+    Vec3d movement(vehicle->getCurrentSpeed() * kmhToUnits, 0, 0);
     vehicle->getOrientation().multVec(movement, movement);
 
     vehicle->setPosition(vehicle->getPosition() + movement);
@@ -210,7 +210,7 @@ void Microsimulator::handleVehicle(Vehicle *vehicle, bool moveOnly) {
     // Store future movement of vehicle
     // One step more to ease collision avoidance
 
-    movement = Vec3f((vehicle->getCurrentSpeed() + 1) * kmhToUnits, 0, 0);
+    movement = Vec3d((vehicle->getCurrentSpeed() + 1) * kmhToUnits, 0, 0);
     vehicle->getOrientation().multVec(movement, movement);
     vehicle->setFuturePosition(vehicle->getPosition() + movement);
 }
@@ -333,7 +333,7 @@ int Microsimulator::selectNextLaneNumber(const Vehicle *vehicle, const Street *o
     // Check if the start of the lane is empty
     for (set< pair<double, size_t> >::iterator setIter = lanes.begin(); setIter != lanes.end();) {
 
-        Vec2f laneStartPosition = otherStreet->getRelativeNodePosition(route->at(1), setIter->second);
+        Vec2d laneStartPosition = otherStreet->getRelativeNodePosition(route->at(1), setIter->second);
 
         // Iterate over the vehicles on this lane
         const set<ID> *vehicles = otherStreet->getLaneVehicles(setIter->second);
@@ -449,10 +449,6 @@ int Microsimulator::findOptimalLaneNumber(Vehicle *vehicle, const Street *street
 
 pair<double, Microsimulator::SPEEDCHANGE> Microsimulator::calculateOptimalSpeed(Vehicle *vehicle) const {
 
-#ifdef WITH_GUI
-    vehicle->speedInfluences = "\n";
-#endif // WITH_GUI
-
     const VehicleType *type  = roadSystem->getVehicleType(vehicle->getVehicleType());
     const DriverType *driver = roadSystem->getDriverType(vehicle->getDriverType());
     const Street *street = roadSystem->getStreet(vehicle->getStreetId());
@@ -462,20 +458,14 @@ pair<double, Microsimulator::SPEEDCHANGE> Microsimulator::calculateOptimalSpeed(
     SPEEDCHANGE reason = REASON_VEHICLELIMIT;
 
     // Reduce speed in sharp turns
-    float angle;
-    Vec3f axis;
+    double angle;
+    Vec3d axis;
     vehicle->getCurrentRotation().getValueAsAxisRad(axis, angle);
     // Transfer angle to degree
     angle = angle * 180 / M_PI;
     if (angle > type->getMaxRotation() / 4) {
-#ifdef WITH_GUI
-        vehicle->speedInfluences += "    turningReduction from "  + boost::lexical_cast<string>(newSpeed);
-#endif // WITH_GUI
         // A turn of 90 degree is allowed with 30 km/h
         newSpeed = min(newSpeed, max(10.0, 10.0 * (type->getMaxRotation() / angle)) * kmhToUnits);
-#ifdef WITH_GUI
-        vehicle->speedInfluences += " to "  + boost::lexical_cast<string>(newSpeed) + " at " + boost::lexical_cast<string>(angle) + " degree\n";
-#endif // WITH_GUI
     }
 
     // Maximal speed of the street
@@ -529,8 +519,8 @@ pair<double, Microsimulator::SPEEDCHANGE> Microsimulator::calculateOptimalSpeed(
 
 
 
-    Vec2f p = toVec2f(vehicle->getPosition());
-    Vec2f r = ((toVec2f(vehicle->getFuturePosition()) + vehicle->getCurrentDestination()) / 2) - toVec2f(vehicle->getPosition()) * 100; // *100 results in a 10-second line
+    Vec2d p = toVec2d(vehicle->getPosition());
+    Vec2d r = ((toVec2d(vehicle->getFuturePosition()) + vehicle->getCurrentDestination()) / 2) - toVec2d(vehicle->getPosition()) * 100; // *100 results in a 10-second line
 
 
     set<pair<double, Vehicle*> > nearVehicles;
@@ -542,24 +532,14 @@ pair<double, Microsimulator::SPEEDCHANGE> Microsimulator::calculateOptimalSpeed(
 
     Vehicle *nearestBlockingVehicle = NULL;
 
-#ifdef WITH_GUI
-    vehicle->nearVehicles.clear();
-    for (set<pair<double, Vehicle*> >::iterator vehicleIter = nearVehicles.begin(); vehicleIter != nearVehicles.end(); ++vehicleIter)
-        vehicle->nearVehicles.insert(make_pair(vehicleIter->first, vehicleIter->second->getId()));
-#endif
-
     int nDone = 0;
     for (set<pair<double, Vehicle*> >::iterator vehicleIter = nearVehicles.begin(); vehicleIter != nearVehicles.end(); ++vehicleIter) {
 
         // Only check the nearest ones
-        if (nDone > 10 && vehicleIter->first > vehicle->getCurrentSpeed() + (vehicle->getId() % 50))
-            break;
+        if (nDone > 10 && vehicleIter->first > vehicle->getCurrentSpeed() + (vehicle->getId() % 50)) break;
         ++nDone;
 
         if (vehicleIter->second->getWaitingFor().count(vehicle->getId()) > 0 && vehicleIter->second->getCurrentSpeed() == 0) {
-#ifdef WITH_GUI
-            vehicle->speedInfluences += "    ignoring "  + boost::lexical_cast<string>(vehicleIter->second->getId()) + "\n";
-#endif // WITH_GUI
             continue;
         }
 
@@ -570,8 +550,8 @@ pair<double, Microsimulator::SPEEDCHANGE> Microsimulator::calculateOptimalSpeed(
         double radius = type->getRadius();
         double otherRadius = roadSystem->getVehicleType(vehicleIter->second->getVehicleType())->getRadius();
 
-        double deltaAngle = 360 - (int)(calcAngle(toVec2f(vehicle->getFuturePosition() - vehicle->getPosition()))
-                                  - calcAngle(toVec2f(vehicleIter->second->getPosition() - vehicle->getPosition())) + 720) % 360;
+        double deltaAngle = 360 - (int)(calcAngle(toVec2d(vehicle->getFuturePosition() - vehicle->getPosition()))
+                                  - calcAngle(toVec2d(vehicleIter->second->getPosition() - vehicle->getPosition())) + 720) % 360;
 
 
         // Calculate distance to future course of this vehicle
@@ -587,10 +567,10 @@ pair<double, Microsimulator::SPEEDCHANGE> Microsimulator::calculateOptimalSpeed(
 
 
         // Calculate time until collision
-        Vec2f q = toVec2f(vehicleIter->second->getPosition());
-        Vec2f s = toVec2f(vehicleIter->second->getFuturePosition() - vehicleIter->second->getPosition()) * 100;
+        Vec2d q = toVec2d(vehicleIter->second->getPosition());
+        Vec2d s = toVec2d(vehicleIter->second->getFuturePosition() - vehicleIter->second->getPosition()) * 100;
 
-        Vec2f qp = q - p;
+        Vec2d qp = q - p;
 
         // Position on course of current vehicle
         double t = (qp[0] * s[1] - qp[1] * s[0]) / (r[0] * s[1] - r[1] * s[0]);
@@ -600,22 +580,14 @@ pair<double, Microsimulator::SPEEDCHANGE> Microsimulator::calculateOptimalSpeed(
 
 
         // Calculate the angle between the driving directions
-        int deltaDirections = (int)(calcAngle(toVec2f(vehicle->getFuturePosition() - vehicle->getPosition())) - calcAngle(toVec2f(vehicleIter->second->getFuturePosition() - vehicleIter->second->getPosition())) + 720) % 180;
+        int deltaDirections = (int)(calcAngle(toVec2d(vehicle->getFuturePosition() - vehicle->getPosition())) - calcAngle(toVec2d(vehicleIter->second->getFuturePosition() - vehicleIter->second->getPosition())) + 720) % 180;
         if (deltaDirections > 90) deltaDirections = 180 - deltaDirections;
 
         // If they are driving (nearly) parallel, reduce the radius
         if ((deltaDirections < 15) && distanceToRoute > radius) {
-            const double oldDist = distance;
             distance += radius + otherRadius - 2 * 1.25; // 2.5m is the maximal allowed vehicle-width
-#ifdef WITH_GUI
-            vehicle->speedInfluences += "    applied parallel reduction of "  + boost::lexical_cast<string>(distance - oldDist) + " for vehicle #" + boost::lexical_cast<string>(vehicleIter->second->getId()) + "\n";
-#endif // WITH_GUI
         } else if (deltaDirections > 80 && deltaDirections < 100) {
-            const double oldDist = distance;
             distance += radius - 1.25; // 2.5m is the maximal allowed vehicle-width
-#ifdef WITH_GUI
-            vehicle->speedInfluences += "    applied orthogonal reduction of "  + boost::lexical_cast<string>(distance - oldDist) + " for vehicle #" + boost::lexical_cast<string>(vehicleIter->second->getId()) + "\n";
-#endif // WITH_GUI
         }
 
 
@@ -626,49 +598,26 @@ pair<double, Microsimulator::SPEEDCHANGE> Microsimulator::calculateOptimalSpeed(
         else
             distanceCollisionPoint -= type->getRadius() + otherRadius;
 
-#ifdef WITH_GUI
-vehicle->speedInfluences += "  Vehicle #" + boost::lexical_cast<string>(vehicleIter->second->getId()) + ":"
-    + "\n    dist=" + boost::lexical_cast<string>(distance)
-    + "\n    distanceCollisionPoint=" + boost::lexical_cast<string>(distanceCollisionPoint)
-    + "\n    t=" + boost::lexical_cast<string>(t) + " u=" + boost::lexical_cast<string>(u)
-    + "\n    distanceToRoute=" + boost::lexical_cast<string>(distanceToRoute)
-    + "\n    deltaDirections=" + boost::lexical_cast<string>(deltaDirections)
-    + "\n    deltaAngle=" + boost::lexical_cast<string>(deltaAngle)
-    + "\n";
-#endif // WITH_GUI
-
 
         // Cheating block-crasher. Cheating since it drives through other vehicles
         if (vehicleIter->second->getCurrentSpeed() == 0 && vehicleIter->second->getState() & Vehicle::BLOCKED
             && ((deltaAngle > 60 && deltaAngle < 290) || vehicleIter->second->getWaitingFor().count(vehicle->getId()))) {
-#ifdef WITH_GUI
-            vehicle->speedInfluences += "      ignoreCheat\n";
-#endif // WITH_GUI
             continue;
         }
 
         // Other vehicle is standing still outside of our course => ignore
         if (vehicleIter->second->getCurrentSpeed() == 0 && distanceToRoute > radius + otherRadius) {
-#ifdef WITH_GUI
-            vehicle->speedInfluences += "      standing still\n";
-#endif // WITH_GUI
             continue;
         }
 
         // Other vehicle is standing still outside of our course => ignore
         else if (vehicleIter->second->getCurrentSpeed() == 0 && (deltaDirections > 60) && distanceToRoute > radius / 2 + otherRadius) {
-#ifdef WITH_GUI
-            vehicle->speedInfluences += "      orthogonal\n";
-#endif // WITH_GUI
             continue;
         }
 
         // Is driving parallel so we don't have to care about it
         // A width of 2.5m is the maximal allowed width of a vehicle in Germany, so 3m should be enough
         else if (deltaDirections < 10 && distanceToRoute > 3) {
-#ifdef WITH_GUI
-            vehicle->speedInfluences += "      parallel\n";
-#endif // WITH_GUI
             continue;
         }
 
@@ -677,10 +626,6 @@ vehicle->speedInfluences += "  Vehicle #" + boost::lexical_cast<string>(vehicleI
             (deltaAngle > 30 && deltaAngle < 360 - 30) &&
             vehicleIter->second->getState() & Vehicle::BLOCKED &&
             vehicleIter->second->getCurrentSpeed() < 10) {
-
-#ifdef WITH_GUI
-            vehicle->speedInfluences += "      ignore "  + boost::lexical_cast<string>(vehicleIter->second->getId()) + "\n";
-#endif // WITH_GUI
             continue;
         }
 
@@ -695,9 +640,6 @@ vehicle->speedInfluences += "  Vehicle #" + boost::lexical_cast<string>(vehicleI
 
             if (vehicleIter->second->getWaitingFor().count(vehicle->getId()) == 0)
                 vehicle->getWaitingFor().insert(vehicleIter->second->getId());
-#ifdef WITH_GUI
-                    vehicle->speedInfluences += "      collision with " + boost::lexical_cast<string>(vehicleIter->second->getId()) + "\n";
-#endif // WITH_GUI
 
             roadSystem->addCollision(vehicle->getId(), vehicleIter->second->getId());
             vehicle->setState(vehicle->getState() | Vehicle::COLLIDING);
@@ -712,10 +654,6 @@ vehicle->speedInfluences += "  Vehicle #" + boost::lexical_cast<string>(vehicleI
             minStopDistance = min(minStopDistance, distance);
             if (vehicleIter->second->getWaitingFor().count(vehicle->getId()) == 0)
                 vehicle->getWaitingFor().insert(vehicleIter->second->getId());
-#ifdef WITH_GUI
-                    vehicle->speedInfluences += "      near collision with "  + boost::lexical_cast<string>(vehicleIter->second->getId()) + "\n";
-                    vehicle->speedInfluences += "      goAwayAngle: " + boost::lexical_cast<string>(M_PI - deltaAngle * M_PI / 360) + "\n";
-#endif // WITH_GUI
                 vehicle->getWaitingFor().insert(vehicleIter->second->getId());
         }
 
@@ -723,9 +661,6 @@ vehicle->speedInfluences += "  Vehicle #" + boost::lexical_cast<string>(vehicleI
         if (vehicleIter->second->getCurrentSpeed() == 0) {
             // Skip this vehicle if far enough away
             if (distanceToRoute > type->getRadius() / 2 + otherRadius) {
-#ifdef WITH_GUI
-                vehicle->speedInfluences += "      notOnRouteStopped " + boost::lexical_cast<string>(vehicleIter->second->getId()) + "\n";
-#endif // WITH_GUI
                 continue;
             }
         }
@@ -740,25 +675,15 @@ vehicle->speedInfluences += "  Vehicle #" + boost::lexical_cast<string>(vehicleI
 
 
         if (u < 0 && deltaAngle > 45  && deltaAngle < 360 - 45 && distance > type->getRadius() * 2 + otherRadius * 2) {
-#ifdef WITH_GUI
-            vehicle->speedInfluences += "      ignoreUlessthan0 "  + boost::lexical_cast<string>(vehicleIter->second->getId()) + "\n";
-#endif // WITH_GUI
             continue;
         }
 
 
         if (t < u && deltaAngle > 30 && deltaAngle < 360 - 30) {
-#ifdef WITH_GUI
-            vehicle->speedInfluences += "      ignoreNearer1 "  + boost::lexical_cast<string>(vehicleIter->second->getId()) + "\n";
-#endif // WITH_GUI
             continue;
         }
 
         if ((distance < type->getRadius() || distanceCollisionPoint < type->getRadius()) && distance >= futureDistance) {
-
-#ifdef WITH_GUI
-            vehicle->speedInfluences += "      stop " + boost::lexical_cast<string>(vehicleIter->second->getId()) + "\n";
-#endif // WITH_GUI
             // Stop
             newSpeed = 0;
             reason = REASON_OTHERVEHICLES;
@@ -769,18 +694,12 @@ vehicle->speedInfluences += "  Vehicle #" + boost::lexical_cast<string>(vehicleI
         }
 
         if (t < u && deltaAngle > 30 && deltaAngle < 360 - 30) {
-#ifdef WITH_GUI
-            vehicle->speedInfluences += "      ignoreNearer2 "  + boost::lexical_cast<string>(vehicleIter->second->getId()) + "\n";
-#endif // WITH_GUI
             continue;
         }
 
         if (distanceCollisionPoint < distStop) {
             // Brake
             if (10 < newSpeed) {
-#ifdef WITH_GUI
-                vehicle->speedInfluences += "      brake "  + boost::lexical_cast<string>(vehicleIter->second->getId()) + "\n";
-#endif // WITH_GUI
                 newSpeed = 10;
                 reason = REASON_OTHERVEHICLES;
                 nearestBlockingVehicle = vehicleIter->second;;
@@ -791,9 +710,6 @@ vehicle->speedInfluences += "  Vehicle #" + boost::lexical_cast<string>(vehicleI
             // Reduce own speed to a bit slower than the speed of the nearest vehicle
             double possibleSpeed = max(10.0, 0.8 * max(vehicleIter->second->getCurrentSpeed(), vehicle->getCurrentSpeed())) * kmhToUnits;
             if (possibleSpeed < newSpeed) {
-#ifdef WITH_GUI
-                vehicle->speedInfluences += "      slow "  + boost::lexical_cast<string>(vehicleIter->second->getId()) + "\n";
-#endif // WITH_GUI
                 newSpeed = possibleSpeed;
                 reason = REASON_OTHERVEHICLES;
                 nearestBlockingVehicle = vehicleIter->second;
@@ -804,9 +720,6 @@ vehicle->speedInfluences += "  Vehicle #" + boost::lexical_cast<string>(vehicleI
             // Hold the speed
             double possibleSpeed = max(10.0, max(vehicleIter->second->getCurrentSpeed(), 0.8 * vehicle->getCurrentSpeed())) * kmhToUnits;
             if (possibleSpeed < newSpeed) {
-#ifdef WITH_GUI
-                vehicle->speedInfluences += "      hold "  + boost::lexical_cast<string>(vehicleIter->second->getId()) + "\n";
-#endif // WITH_GUI
                 newSpeed = possibleSpeed;
                 reason = REASON_OTHERVEHICLES;
                 nearestBlockingVehicle = vehicleIter->second;
@@ -817,9 +730,6 @@ vehicle->speedInfluences += "  Vehicle #" + boost::lexical_cast<string>(vehicleI
             // Speedup a bit
             double possibleSpeed = max(vehicleIter->second->getCurrentSpeed() * 1.5, 10.0) * kmhToUnits;
             if (possibleSpeed < newSpeed) {
-#ifdef WITH_GUI
-                vehicle->speedInfluences += "      approach "  + boost::lexical_cast<string>(vehicleIter->second->getId()) + "\n";
-#endif // WITH_GUI
                 newSpeed = possibleSpeed;
                 reason = REASON_OTHERVEHICLES;
                 nearestBlockingVehicle = vehicleIter->second;
@@ -843,17 +753,11 @@ vehicle->speedInfluences += "  Vehicle #" + boost::lexical_cast<string>(vehicleI
             // We would stop on the crossing. Stop a bit earlier
             if (nextNodeDistance - CROSSROAD_RADIUS - type->getRadius() < distStop) {
 
-#ifdef WITH_GUI
-                vehicle->speedInfluences += "    stop before crossroad\n";
-#endif // WITH_GUI
                 // Stop
                 newSpeed = 0;
             } else if (nextNodeDistance - CROSSROAD_RADIUS * 2 - type->getRadius() < distStop) {
                 // Brake
                 if (10 < newSpeed) {
-#ifdef WITH_GUI
-                    vehicle->speedInfluences += "    brake before crossroad\n";
-#endif // WITH_GUI
                     newSpeed = 10;
                 }
             }
@@ -879,8 +783,8 @@ vehicle->speedInfluences += "  Vehicle #" + boost::lexical_cast<string>(vehicleI
         if (calcDistance(vehicle->getPosition(), nearestBlockingVehicle->getFuturePosition()) < calcDistance(vehicle->getPosition(), nearestBlockingVehicle->getPosition())) {
             vehicle->setBlockedForTicks(vehicle->getBlockedForTicks() + 1);
         } else {
-            double ownAngle = calcAngle(toVec2f(vehicle->getFuturePosition() - vehicle->getPosition()));
-            double otherAngle = calcAngle(toVec2f(nearestBlockingVehicle->getFuturePosition() - nearestBlockingVehicle->getPosition()));
+            double ownAngle = calcAngle(toVec2d(vehicle->getFuturePosition() - vehicle->getPosition()));
+            double otherAngle = calcAngle(toVec2d(nearestBlockingVehicle->getFuturePosition() - nearestBlockingVehicle->getPosition()));
             double delta = ownAngle - otherAngle;
             if (delta < -45 || delta > 45)
                 vehicle->setBlockedForTicks(vehicle->getBlockedForTicks() + 1);
@@ -904,7 +808,7 @@ double Microsimulator::findFirstBlockingNode(Vehicle *vehicle, const double minD
     // If the route is empty, abort
     const deque<ID> *route = vehicle->getRoute();
 
-    Vec2f lastPosition = toVec2f(vehicle->getPosition());
+    Vec2d lastPosition = toVec2d(vehicle->getPosition());
     pair<ID, int> lastStreet(vehicle->getStreetId(), vehicle->getLaneNumber());
     double distance = 0;
 
@@ -952,12 +856,12 @@ set<pair<double, Vehicle*> > Microsimulator::findNearVehicles(Vehicle *vehicle, 
 
     const Street *street = roadSystem->getStreet(vehicle->getStreetId());
 
-    size_t nearestNodeIndex = street->getNearestNodeIndices(toVec2f(vehicle->getPosition())).first;
+    size_t nearestNodeIndex = street->getNearestNodeIndices(toVec2d(vehicle->getPosition())).first;
 
     const int direction = (vehicle->getLaneNumber() > 0) ? 1 : -1;
 
     // Get the orientation of this vehicle
-    const double ownAngle = calcAngle(toVec2f(vehicle->getFuturePosition()) - toVec2f(vehicle->getPosition()));
+    const double ownAngle = calcAngle(toVec2d(vehicle->getFuturePosition()) - toVec2d(vehicle->getPosition()));
 
     const double allowedAngleSameLane = 95;
     const double allowedAngleOtherLane = 95;
@@ -977,7 +881,7 @@ set<pair<double, Vehicle*> > Microsimulator::findNearVehicles(Vehicle *vehicle, 
                 Vehicle *otherVehicle = roadSystem->getVehicle(*vehicleIter);
 
                 // Only check vehicle in front of us
-                int deltaAngle = (int)(calcAngle(toVec2f(otherVehicle->getPosition() - vehicle->getPosition())) - ownAngle + 360) % 360;
+                int deltaAngle = (int)(calcAngle(toVec2d(otherVehicle->getPosition() - vehicle->getPosition())) - ownAngle + 360) % 360;
 
 
                     if (deltaAngle < 360 - allowedAngleSameLane && deltaAngle > allowedAngleSameLane)
@@ -1029,7 +933,7 @@ set<pair<double, Vehicle*> > Microsimulator::findNearVehicles(Vehicle *vehicle, 
                         Vehicle *otherVehicle = roadSystem->getVehicle(*vehicleIter);
 
                         // Only check vehicle in front of us
-                        int deltaAngle = (int)(calcAngle(toVec2f(otherVehicle->getPosition() - vehicle->getPosition())) - ownAngle + 360) % 360;
+                        int deltaAngle = (int)(calcAngle(toVec2d(otherVehicle->getPosition() - vehicle->getPosition())) - ownAngle + 360) % 360;
 
                         if (deltaAngle < 360 - allowedAngleOtherLane && deltaAngle > allowedAngleOtherLane)
                             continue;
@@ -1052,7 +956,7 @@ set<pair<double, Vehicle*> > Microsimulator::findNearVehicles(Vehicle *vehicle, 
         Vehicle *otherVehicle = roadSystem->getVehicle(*streetlessIter);
 
         // Only check vehicle in front of us
-        int deltaAngle = (int)(calcAngle(toVec2f(otherVehicle->getPosition() - vehicle->getPosition())) - ownAngle + 360) % 360;
+        int deltaAngle = (int)(calcAngle(toVec2d(otherVehicle->getPosition() - vehicle->getPosition())) - ownAngle + 360) % 360;
 
         if (deltaAngle < 360 - allowedAngleOtherLane && deltaAngle > allowedAngleOtherLane)
             continue;

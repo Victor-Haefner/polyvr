@@ -42,8 +42,8 @@ Street::Street(RoadSystem *roadSystem, const ID id, const vector<ID>& nodeIds)
 
     assert(nodes.size() >= 2 && "A street needs to have at least 2 nodes.");
 
-    Vec2f oldPos;
-    Vec2f newPos = roadSystem->getNode(nodes[0])->getPosition();
+    Vec2d oldPos;
+    Vec2d newPos = roadSystem->getNode(nodes[0])->getPosition();
     // Fist node has obviously distance 0 to the beginning
     // Use 0.001 instead of 0 to avoid div0 crashes
     nodeDistances.push_back(0.001);
@@ -351,7 +351,7 @@ multiset< pair<ptime, ID> >* Street::getLaneArrivalTimes(const int direction) {
         return &backward.arrivalTimes;
 }
 
-Vec2f Street::getRelativeNodePosition(const ID nodeId, const int lane) const {
+Vec2d Street::getRelativeNodePosition(const ID nodeId, const int lane) const {
 
     // Find the node in the list
     unsigned int idPos = getNodeIndex(nodeId);
@@ -361,12 +361,12 @@ Vec2f Street::getRelativeNodePosition(const ID nodeId, const int lane) const {
         if (!nodes.empty())
             return roadSystem->getNode(nodes[0])->getPosition();
         else
-            return Vec2f(0,0);
+            return Vec2d(0,0);
     }
 
     // Get the neighbor-nodes and calculate the gradient between them
     // One of these checks will be true since the street has at least two nodes
-    Vec2f posPrev, posNext;
+    Vec2d posPrev, posNext;
     if (idPos > 0)
         posPrev = roadSystem->getNode(nodes[idPos - 1])->getPosition();
     else
@@ -376,26 +376,26 @@ Vec2f Street::getRelativeNodePosition(const ID nodeId, const int lane) const {
     else
         posNext = roadSystem->getNode(nodes[idPos])->getPosition();
 
-    Vec2f gradiant(posNext - posPrev);
+    Vec2d gradiant(posNext - posPrev);
 
     // Calculate normal to the gradient
-    Vec2f normal(gradiant[1], -gradiant[0]);
+    Vec2d normal(gradiant[1], -gradiant[0]);
     normal.normalize();
 
     // Based on the normal and the lane count, add an offset to the node position
-    Vec2f posNode = roadSystem->getNode(nodeId)->getPosition();
+    Vec2d posNode = roadSystem->getNode(nodeId)->getPosition();
     double offset = lane;
     // Reduce the hole in the middle of the street
     if (offset > 0) offset -= 0.3; else offset += 0.3;
     // Center streets
     offset -= (double)(forward.flags.size() - backward.flags.size()) / 2;
     offset *= roadSystem->getLaneWidth();
-    Vec2f ret(posNode[0] - normal[0] * offset, posNode[1] - normal[1] * offset);
+    Vec2d ret(posNode[0] - normal[0] * offset, posNode[1] - normal[1] * offset);
     return ret;
 
 }
 
-Vec2f Street::getPositionOnLane(const int lane, const double offset) const {
+Vec2d Street::getPositionOnLane(const int lane, const double offset) const {
 
     if (offset <= 0)
         return getRelativeNodePosition(nodes.front(), lane);
@@ -409,8 +409,8 @@ Vec2f Street::getPositionOnLane(const int lane, const double offset) const {
         if (offset <= nodeDistances[i]) {
             // Interpolate on the part and return the position
             const double percentage = (offset - nodeDistances[i - 1]) / (nodeDistances[i] - nodeDistances[i - 1]);
-            Vec2f last = getRelativeNodePosition(nodes[i - 1], lane);
-            Vec2f next = getRelativeNodePosition(nodes[i], lane);
+            Vec2d last = getRelativeNodePosition(nodes[i - 1], lane);
+            Vec2d next = getRelativeNodePosition(nodes[i], lane);
 
             return last * percentage + next * (1 - percentage);
         }
@@ -420,14 +420,14 @@ Vec2f Street::getPositionOnLane(const int lane, const double offset) const {
     return getRelativeNodePosition(nodes.back(), lane);
 }
 
-pair<size_t, size_t> Street::getNearestNodeIndices(const Vec2f& position) const {
+pair<size_t, size_t> Street::getNearestNodeIndices(const Vec2d& position) const {
 
     pair<size_t, size_t> nearestNodes;
     pair<double, double> minDistances(numeric_limits<double>::max(), numeric_limits<double>::max());
 
     for (unsigned int i = 0; i < nodes.size(); i++) {
 
-        Vec2f nodePos = roadSystem->getNode(nodes[i])->getPosition();
+        Vec2d nodePos = roadSystem->getNode(nodes[i])->getPosition();
         double distance = calcDistance(nodePos, position);
         if (distance < minDistances.first) {
             nearestNodes.second = nearestNodes.first;
@@ -559,7 +559,7 @@ Vehicle* Street::createRandomVehicle(const int direction, const double offset) {
             // Check rest of the street
             for (double offset = rOffset; offset < getLength(); offset += VEHICLE_LENGTH) {
                 // Iterate over vehicles on lane and check distances
-                Vec2f pos = getPositionOnLane(lane, offset);
+                Vec2d pos = getPositionOnLane(lane, offset);
 
                 double minDistance = getNearestVehicleDistance(roadSystem, pos, this, 3 * VEHICLE_LENGTH);
 
@@ -582,20 +582,20 @@ Vehicle* Street::createRandomVehicle(const int direction, const double offset) {
                         swap(prevNodeI, nextNodeI);
 
 
-                    Vec2f dest = getRelativeNodePosition(nodes[nextNodeI], lane);
+                    Vec2d dest = getRelativeNodePosition(nodes[nextNodeI], lane);
 
 
-                    Vec2f vec = dest - pos;
-                    if (vec == Vec2f(0, 0)) {
-                        vec = Vec2f(1, 0);
-                        dest = Vec2f(dest[0] + 0.01, dest[1]);
+                    Vec2d vec = dest - pos;
+                    if (vec == Vec2d(0, 0)) {
+                        vec = Vec2d(1, 0);
+                        dest = Vec2d(dest[0] + 0.01, dest[1]);
                     }
 
-                    Quaternion rotation(Vec3f(1, 0, 0), Vec3f(vec[0], 0, vec[1]));
+                    Quaterniond rotation(Vec3d(1, 0, 0), Vec3d(vec[0], 0, vec[1]));
 
 
                     // Create a new vehicle
-                    Vehicle *v = new Vehicle(roadSystem->getUnusedVehicleId(), Vec3f(pos[0], 0, pos[1]), rotation);
+                    Vehicle *v = new Vehicle(roadSystem->getUnusedVehicleId(), Vec3d(pos[0], 0, pos[1]), rotation);
                     v->setController(0);
                     v->setStreet(getId(), lane);
                     v->setCurrentDestination(dest);
@@ -814,7 +814,7 @@ bool Street::changeVehicleLane(Vehicle *vehicle, const int newLane) {
         offset = nodeOffset + distanceVehicleNode - changingRange;
     }
 
-    Vec2f newDest = getPositionOnLane(newLane, offset);
+    Vec2d newDest = getPositionOnLane(newLane, offset);
     vehicle->setCurrentDestination(newDest);
 
     vehicle->setStreet(id, newLane);
@@ -861,8 +861,8 @@ Vehicle* Street::transferVehicle(Street *destStreet, const ID node, const int de
 
             // Assign new street to vehicle
             vehicle->setStreet(destStreet->getId(), destLane);
-            Vec2f oldDest = destStreet->getRelativeNodePosition(vehicle->getRoute()->at(0), destLane);
-            Vec2f newDest = destStreet->getRelativeNodePosition(vehicle->getRoute()->at(1), destLane);
+            Vec2d oldDest = destStreet->getRelativeNodePosition(vehicle->getRoute()->at(0), destLane);
+            Vec2d newDest = destStreet->getRelativeNodePosition(vehicle->getRoute()->at(1), destLane);
             vehicle->setCurrentDestination(oldDest * 0.9 + newDest * 0.1);
 
             // Assign vehicle to new street
@@ -916,7 +916,7 @@ bool Street::transferVehicle(Street *destStreet, const ID node, const int destLa
         // Check if there is space
 
         // Calculate the position of the vehicle if it would be added
-        Vec2f newPos = destStreet->getRelativeNodePosition(node, destLane);
+        Vec2d newPos = destStreet->getRelativeNodePosition(node, destLane);
 
         double minDistance = getNearestVehicleDistance(roadSystem, newPos, this, 3 * VEHICLE_LENGTH);
 
@@ -936,24 +936,24 @@ bool Street::transferVehicle(Street *destStreet, const ID node, const int destLa
             }
 
 
-            Vec2f dest = destStreet->getRelativeNodePosition(destStreet->nodes[nextNodeI], destLane);
+            Vec2d dest = destStreet->getRelativeNodePosition(destStreet->nodes[nextNodeI], destLane);
 
-            Vec2f vec = dest - newPos;
-            if (vec == Vec2f(0, 0)) {
-                vec = Vec2f(1, 0);
-                dest = Vec2f(dest[0] + 0.01, dest[1]);
+            Vec2d vec = dest - newPos;
+            if (vec == Vec2d(0, 0)) {
+                vec = Vec2d(1, 0);
+                dest = Vec2d(dest[0] + 0.01, dest[1]);
             }
 
-            Quaternion rotation(Vec3f(1, 0, 0), Vec3f(vec[0], 0, vec[1]));
+            Quaterniond rotation(Vec3d(1, 0, 0), Vec3d(vec[0], 0, vec[1]));
 
             // Create a new vehicle
-            Vehicle *v = new Vehicle(roadSystem->getUnusedVehicleId(), Vec3f(newPos[0], 0, newPos[1]), rotation);
+            Vehicle *v = new Vehicle(roadSystem->getUnusedVehicleId(), Vec3d(newPos[0], 0, newPos[1]), rotation);
             v->setController(0);
             v->setStreet(destStreet->getId(), destLane);
             v->getRoute()->push_back(node);
             v->getRoute()->push_back(destStreet->nodes[nextNodeI]);
-            Vec2f oldDest = destStreet->getRelativeNodePosition(node, destLane);
-            Vec2f newDest = destStreet->getRelativeNodePosition(destStreet->nodes[nextNodeI], destLane);
+            Vec2d oldDest = destStreet->getRelativeNodePosition(node, destLane);
+            Vec2d newDest = destStreet->getRelativeNodePosition(destStreet->nodes[nextNodeI], destLane);
             v->setCurrentDestination(oldDest * 0.9 + newDest * 0.1);
             v->setCurrentSpeed(0);
             v->setVehicleType(roadSystem->getRandomVehicleType());

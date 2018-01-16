@@ -61,7 +61,7 @@ class VRTrafficSimulation : public VRObject {
 
         void addVehicle(int roadID, int type);
         void addVehicles(int roadID, float density, int type);
-        void setTraffic(float density, int type);
+        void setTrafficDensity(float density, int type);
 
         void addVehicleModel(VRObjectPtr mesh);
 };
