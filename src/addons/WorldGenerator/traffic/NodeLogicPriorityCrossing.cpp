@@ -166,7 +166,7 @@ NodeLogic* NodeLogicPriorityCrossing::makeNodeLogic(const RoadSystem *roadSystem
     return l;
 }
 
-Vec2f NodeLogicPriorityCrossing::getPosition() const {
+Vec2d NodeLogicPriorityCrossing::getPosition() const {
     return roadSystem->getNode(nodeId)->getPosition();
 }
 

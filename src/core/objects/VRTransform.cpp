@@ -498,7 +498,7 @@ void VRTransform::setPose(Vec3d from, Vec3d dir, Vec3d up) {
 }
 
 void VRTransform::setPose(const Pose& p) { setPose(p.pos(), p.dir(), p.up()); }
-void VRTransform::setPose(PosePtr p) { setPose(p->pos(), p->dir(), p->up()); }
+void VRTransform::setPose(PosePtr p) { if (p) setPose(p->pos(), p->dir(), p->up()); }
 PosePtr VRTransform::getPose() { return Pose::create(Vec3d(_from), Vec3d(_dir), Vec3d(_up)); }
 PosePtr VRTransform::getWorldPose() { return Pose::create( getWorldMatrix() ); }
 void VRTransform::setWorldPose(PosePtr p) { setWorldMatrix(p->asMatrix()); }
@@ -754,7 +754,7 @@ map<VRTransform*, VRTransformWeakPtr> constrainedObjects;
 
 void VRTransform::updateConstraints() { // global updater
     for (auto wc : constrainedObjects) {
-        if (auto c = wc.second.lock()) c->updateChange();
+        if (VRTransformPtr obj = wc.second.lock()) obj->updateChange();
     }
 }
 
@@ -764,25 +764,34 @@ void VRTransform::setConstraint(VRConstraintPtr c) {
     else constrainedObjects.erase(this);
 }
 
-void VRTransform::attach(VRObjectPtr a, VRConstraintPtr c) {
-    if (!c) { constrainedObjects.erase(this); return; }
-    constrainedObjects[this] = ptr();
-    joints[a.get()] = make_pair(c, VRObjectWeakPtr(a));
+void VRTransform::attach(VRTransformPtr b, VRConstraintPtr c) {
+    VRTransformPtr a = ptr();
+    if (!c) { constrainedObjects.erase(b.get()); return; }
+    constrainedObjects[b.get()] = b;
+    a->bJoints[b.get()] = make_pair(c, VRTransformWeakPtr(b)); // children
+    b->aJoints[a.get()] = make_pair(c, VRTransformWeakPtr(a)); // parents
     c->setActive(true);
+    //cout << "VRTransform::attach " << b->getName() << " to " << a->getName() << endl;
 }
 
 VRConstraintPtr VRTransform::getConstraint() { return constraint; }
 
 /** enable constraints on the object, 0 leaves the DOF free, 1 restricts it **/
-void VRTransform::apply_constraints() { // TODO: check efficiency
-    if (!constraint && joints.size() == 0) return;
-    if (!checkWorldChange()) return;
+void VRTransform::apply_constraints(bool force) { // TODO: check efficiency
+    if (!constraint && aJoints.size() == 0) return;
+    if (!checkWorldChange() && !force) return;
     computeMatrix4d(); // update matrix!
 
     if (constraint) constraint->apply(ptr());
-    for (auto joint : joints) {
-        auto p = joint.second.second.lock();
-        if (p) joint.second.first->apply(ptr(), p);
+    for (auto joint : aJoints) {
+        VRTransformPtr parent = joint.second.second.lock();
+        if (parent) joint.second.first->apply(ptr(), parent);
+        //if (parent) cout << "VRTransform::apply_constraints to " << getName() << " with parent: " << parent->getName() << endl;
+    }
+
+    for (auto joint : bJoints) {
+        VRTransformPtr child = joint.second.second.lock();
+        if (child) child->apply_constraints(true);
     }
 }
 

@@ -38,14 +38,6 @@ class Vehicle {
         /// The vehicle has collided with an other vehicle.
         static const STATE CRASHED      = 1 << 7;
 
-#ifdef WITH_GUI
-        /// A string with information about the calculation of the current speed.
-        string speedInfluences;
-
-        /// A set of vehicles that are near this vehicles && are regarded for collision avoidance.
-        set<pair<double, ID> > nearVehicles;
-#endif // WITH_GUI
-
     private:
 
         /// The id of this vehicle.

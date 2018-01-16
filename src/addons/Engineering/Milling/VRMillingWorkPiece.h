@@ -8,6 +8,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/math/Octree.h"
 #include "VRMillingCuttingToolProfile.h"
+#include "addons/Engineering/VREngineeringFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 

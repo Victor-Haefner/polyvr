@@ -45,11 +45,7 @@ ptrFwd(VRLodTree);
 ptrFwd(VRMetaBalls);
 ptrFwd(VRBlinds);
 ptrFwd(VROpening);
-ptrFwd(VRMolecule);
 ptrFwd(VRTree);
-ptrFwd(CSGGeometry);
-ptrFwd(VRMillingWorkPiece);
-ptrFwd(VRMillingCuttingToolProfile);
 ptrFwd(VRHandGeo)
 
 }

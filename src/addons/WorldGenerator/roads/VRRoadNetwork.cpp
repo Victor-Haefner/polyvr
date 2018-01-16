@@ -66,7 +66,8 @@ int VRRoadNetwork::getRoadID() { return ++nextRoadID; }
 VRAsphaltPtr VRRoadNetwork::getMaterial() { return asphalt; }
 GraphPtr VRRoadNetwork::getGraph() { return graph; }
 
-PosePtr VRRoadNetwork::getPosition(Graph::position p) {
+PosePtr VRRoadNetwork::getPosition(Graph::position p) { // TODO
+    if (p.edge < 0 || p.edge >= roads.size()) return 0;
     auto r = roads[p.edge];
     return r->getPosition(p.pos);
 }

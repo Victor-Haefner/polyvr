@@ -47,19 +47,23 @@ void VRTrafficSimulation::setRoadNetwork(VRRoadNetworkPtr rds) {
 }
 
 void VRTrafficSimulation::updateSimulation() {
+    cout << "VRTrafficSimulation::updateSimulation " << roads.size() << endl;
     for (int i=0; i<roads.size(); i++) {
-        auto road = roads[i];
+        auto& road = roads[i];
+        if (i == 0) cout << " VRTrafficSimulation::updateSimulation road0 " << road.vehicles.size() << endl;
         for (auto& vehicle : road.vehicles) {
-            vehicle.pos.pos += 0.1;
+            vehicle.pos.pos += 0.01;
             if (vehicle.pos.pos > 1) vehicle.pos.pos = 0;
             auto p = roadNetwork->getPosition(vehicle.pos);
+            if (i == 0) cout << "  VRTrafficSimulation::updateSimulation road0 " << vehicle.pos.pos << " " << vehicle.pos.edge << "  " << p->pos() << endl;
             vehicle.t->setPose(p);
         }
     }
 }
 
 void VRTrafficSimulation::addVehicle(int roadID, int type) {
-    auto road = roads[roadID];
+    //if () cout << "VRTrafficSimulation::updateSimulation " << roads.size() << endl;
+    auto& road = roads[roadID];
     auto v = vehicle( Graph::position(roadID, 0.0) );
     v.mesh = models[0]->duplicate();
     v.t->addChild(v.mesh);
@@ -77,7 +81,7 @@ void VRTrafficSimulation::addVehicles(int roadID, float density, int type) {
     for (int i=0; i<N; i++) addVehicle(roadID, type);
 }
 
-void VRTrafficSimulation::setTraffic(float density, int type) {
+void VRTrafficSimulation::setTrafficDensity(float density, int type) {
     for (auto road : roads) addVehicles(road.first, density, type);
 }
 

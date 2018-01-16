@@ -3,17 +3,17 @@
 #include <boost/lexical_cast.hpp>
 using boost::lexical_cast;
 
-Vehicle::Vehicle(const ID id, const Vec3f& position, const Quaternion& orientation)
+Vehicle::Vehicle(const ID id, const Vec3d& position, const Quaterniond& orientation)
     : id(id), driverType(404), vehicleType(404), controller(-1), position(position),
-      futurePosition(position + Vec3f(1, 0, 0)), orientation(orientation), currentSpeed(0),
+      futurePosition(position + Vec3d(1, 0, 0)), orientation(orientation), currentSpeed(0),
       desiredSpeed(0), currentRotation(), route(), streetId(0), lane(0), currentDestination(),
       state(0), blockedForTicks(0), waitingFor() {
 
 }
 
-Vehicle::Vehicle(const ID id, const Vec3f& position, const Quaternion& orientation, const ID vehicleType, const ID driverType)
+Vehicle::Vehicle(const ID id, const Vec3d& position, const Quaterniond& orientation, const ID vehicleType, const ID driverType)
     : id(id), driverType(driverType), vehicleType(vehicleType), controller(0), position(position),
-      futurePosition(position + Vec3f(1, 0, 0)), orientation(orientation), currentSpeed(0),
+      futurePosition(position + Vec3d(1, 0, 0)), orientation(orientation), currentSpeed(0),
       desiredSpeed(0), currentRotation(), route(), streetId(0), lane(0), currentDestination(),
       state(0), blockedForTicks(0), waitingFor() {
 
@@ -48,27 +48,27 @@ int Vehicle::getController() const {
     return controller;
 }
 
-void Vehicle::setPosition(const Vec3f& pos) {
+void Vehicle::setPosition(const Vec3d& pos) {
     position = pos;
 }
 
-const Vec3f& Vehicle::getPosition() const {
+const Vec3d& Vehicle::getPosition() const {
     return position;
 }
 
-void Vehicle::setFuturePosition(const Vec3f& futurePos) {
+void Vehicle::setFuturePosition(const Vec3d& futurePos) {
     futurePosition = futurePos;
 }
 
-const Vec3f& Vehicle::getFuturePosition() const {
+const Vec3d& Vehicle::getFuturePosition() const {
     return futurePosition;
 }
 
-void Vehicle::setOrientation(const Quaternion& orientation) {
+void Vehicle::setOrientation(const Quaterniond& orientation) {
     this->orientation = orientation;
 }
 
-const Quaternion& Vehicle::getOrientation() const {
+const Quaterniond& Vehicle::getOrientation() const {
     return orientation;
 }
 
@@ -90,11 +90,11 @@ double Vehicle::getDesiredSpeed() const {
     return desiredSpeed;
 }
 
-void Vehicle::setCurrentRotation(const Quaternion& rotation) {
+void Vehicle::setCurrentRotation(const Quaterniond& rotation) {
     currentRotation = rotation;
 }
 
-const Quaternion& Vehicle::getCurrentRotation() const {
+const Quaterniond& Vehicle::getCurrentRotation() const {
     return currentRotation;
 }
 
@@ -115,13 +115,13 @@ int Vehicle::getLaneNumber() const {
     return lane;
 }
 
-void Vehicle::setCurrentDestination(const Vec2f& dest) {
+void Vehicle::setCurrentDestination(const Vec2d& dest) {
     // Add a small random offset
-    Vec2f offset((rand() % 10) / 10, (rand() % 10) / 10);
+    Vec2d offset((rand() % 10) / 10, (rand() % 10) / 10);
     currentDestination = dest + offset;
 }
 
-Vec2f Vehicle::getCurrentDestination() const {
+Vec2d Vehicle::getCurrentDestination() const {
     return currentDestination;
 }
 
@@ -182,14 +182,7 @@ string Vehicle::toString(const bool extendedOutput) const {
         str += " " + lexical_cast<string>(*waitingIter);
 
     str += ((extendedOutput)?"\n  ":"; ");
-
     str += "blockedForTicks=" + lexical_cast<string>(blockedForTicks) + ((extendedOutput)?"\n  ":"; ");
-
-#ifdef WITH_GUI
-        if (extendedOutput)
-            str += "speedInfluences=" + speedInfluences + "\n";
-#endif
-
     str += ((extendedOutput)?"":"]");
 
     return str;

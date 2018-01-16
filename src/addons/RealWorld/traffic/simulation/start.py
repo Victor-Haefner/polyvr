@@ -1,2 +1,0 @@
-import Traffic
-Traffic.start()
