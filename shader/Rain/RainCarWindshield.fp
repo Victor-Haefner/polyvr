@@ -59,7 +59,8 @@ void main() {
 	
 	
 	
-	vec4 check = vec4(0.1,0.1,0.1,0.3);
+	vec4 check = vec4(0.1,0.1,0.1,0.4);
+	//gl_FragDepth = 0.9;
 	if (mod(tnow,1)<0.02) {
 		if (dot(D0,fragDir) > 0.999) check = vec4(0,0,1,1);
 	}
