@@ -46,6 +46,16 @@ VRRainCarWindshield::VRRainCarWindshield() : VRGeometry("RainCarWindshield") {
     scene->getRoot()->addChild(texRenderer);
     auto lightF = scene->getRoot()->find("light");
 
+    //auto tmp = scene->getRoot()->find("cubeWindshield");
+    cubeWindshield = VRGeometry::create("cubeWindshield");
+    cubeWindshield->setPrimitive("Box 2 0.01 1 1 1");
+    cubeWindshield->setPose(Vec3d(0,1,0),Vec3d(1,0,0),Vec3d(0,1,0));
+    cubeWindshield->setPickable(1);
+    cubeWindshield-> setPersistency(0);
+    scene->getRoot()->addChild(cubeWindshield);
+    //cubeWindshield = tmp;
+    cout << cubeWindshield->getFrom() << " from " << cubeWindshield->getDir() << endl;
+
     updatePtr = VRUpdateCb::create("VRRainCarWindshield update", boost::bind(&VRRainCarWindshield::update, this));
     VRScene::getCurrent()->addUpdateFkt(updatePtr);
 

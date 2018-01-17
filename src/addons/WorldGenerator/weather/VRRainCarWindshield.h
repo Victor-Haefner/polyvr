@@ -27,6 +27,8 @@ class VRRainCarWindshield : public VRGeometry {
         VRTextureRendererPtr texRenderer;
         VRGeometryPtr cube;
 
+        VRGeometryPtr cubeWindshield;
+
         string vScript;
         string fScript;
         //string vScriptTex;

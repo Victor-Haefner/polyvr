@@ -37,45 +37,64 @@ void computeDepth(vec4 position) {
 	gl_FragDepth = d*0.5 + 0.5;
 }
 
+float computeDropSize() {
+	float dropsize = 1;
+	dropsize = 0.99998;
+	return dropsize;
+}
+
+vec4 drawDot(vec3 P0, vec4 check) {
+	mat4 m = inverse(gl_ModelViewMatrix);
+	vec3 PCam = (m*vec4(0,0,0,1)).xyz;
+	vec3 D0 = normalize( P0-PCam );
+
+	if (mod(tnow,1)<0.02) {
+		computeDepth(gl_ModelViewProjectionMatrix*vec4(P0,1));
+		if (dot(D0,fragDir) > computeDropSize()) check = vec4(0,0,1,1);
+	}
+	if (mod(tnow,1)>0.02 && mod(tnow,1)<0.2) {
+		computeDepth(gl_ModelViewProjectionMatrix*vec4(P0,1));
+		if (dot(D0,fragDir) > computeDropSize()) check = vec4(0,0,1,0.2);
+	}
+	return check;
+}
+
+vec4 drawCenter(vec3 P0, vec4 check) {
+	mat4 m = inverse(gl_ModelViewMatrix);
+	vec3 PCam = (m*vec4(0,0,0,1)).xyz;	
+	vec3 D0 = normalize( P0-PCam );
+
+	if (dot(D0,fragDir) > 0.9994) { 
+		check = vec4(1,0,0,1);
+		computeDepth(gl_ModelViewProjectionMatrix*vec4(P0,1));
+	}
+	return check;
+}
+
 void main() {
 	computeDirection();
 	vec3 posOffsets = vec3(0.3,0.7,0);
 	pWindshield = carOrigin + posOffsets;
 	
 	if (fragDir.y < -0.999) discard;
+	vec4 check = vec4(0,0,0,0);	
 
-	// \theta is angle of fragDir to vertical axis
-	//theta = acos(fragDir.y);
-
-	mat4 m = inverse(gl_ModelViewMatrix);
-	vec3 PCam = (m*vec4(0,0,0,1)).xyz;
-	//vec3 P0 = vec3(-10,1,0);
+	check = drawDot(pWindshield, check);
+	check = drawDot(pWindshield + vec3(0,0,0.2),check);
+	check = drawDot(pWindshield + vec3(0,0,0.4),check);
+	check = drawDot(pWindshield + vec3(0,0,0.6),check);
+	check = drawDot(pWindshield + vec3(0,0,0.8),check);
+	check = drawDot(pWindshield + vec3(0,0,1),check);
+	check = drawDot(pWindshield + vec3(0,0.2,0),check);
+	check = drawDot(pWindshield + vec3(0,0.2,0.2),check);
+	check = drawDot(pWindshield + vec3(0,0.2,0.4),check);
+	check = drawDot(pWindshield + vec3(0,0.2,0.6),check);
+	check = drawDot(pWindshield + vec3(0,0.2,0.8),check);
+	check = drawDot(pWindshield + vec3(0,0.2,1),check);
+	check = drawCenter(vec3(0,0,0), check);
 	
-	vec3 P0 = pWindshield;
-	//vec3 T0 = P0-PCam;
-	vec3 D0 = normalize( P0-PCam );
-	//if (dot(D0,fragDir) < 0.9999 && dot(D0,fragDir) > 0.999) discard;
-	computeDepth(gl_ModelViewProjectionMatrix*vec4(P0,1));	
-	
-	
-	
-	vec4 check = vec4(0.1,0.1,0.1,0.4);
-	//gl_FragDepth = 0.9;
-	if (mod(tnow,1)<0.02) {
-		if (dot(D0,fragDir) > 0.999) check = vec4(0,0,1,1);
-	}
-	if (mod(tnow,1)>0.02 && mod(tnow,1)<0.2) {
-		if (dot(D0,fragDir) > 0.999) check = vec4(0,0,1,0.2);
-	}
-
-	vec3 Po0 = vec3(0,0,0);
-	vec3 Do0 = normalize( Po0-PCam );
-	if (dot(Do0,fragDir) > 0.999) { 
-		check = vec4(1,0,0,1);
-		computeDepth(gl_ModelViewProjectionMatrix*vec4(Po0,1));
-	}
-
 	//computeDepth(gl_ModelViewProjectionMatrix*vec4(P0,1));
+	if (check == vec4(0,0,0,0)) discard;	
 	gl_FragColor = check;
 }
 
