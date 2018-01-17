@@ -8,7 +8,7 @@
 
 using namespace std;
 
-class Node;
+class RSNode;
 class RoadSystem;
 
 /**
@@ -90,7 +90,7 @@ class NodeLogic {
          @param node The id of the Node the street has been added to.
          @param street The id of Street that has been added.
          */
-        virtual void addStreet(const Node* node, const Street* street) = 0;
+        virtual void addStreet(const RSNode* node, const Street* street) = 0;
 
         /**
          Should be called if a street is removed from a connected node.
@@ -99,7 +99,7 @@ class NodeLogic {
          @param node The id of the Node the street has been removed from.
          @param street The id of Street that has been removed.
          */
-        virtual void removeStreet(const Node* node, const Street* street) = 0;
+        virtual void removeStreet(const RSNode* node, const Street* street) = 0;
 
         /**
          Checks whether a vehicle is allowed to enter the crossroad.
@@ -115,7 +115,7 @@ class NodeLogic {
          */
         // The distance is used to avoid the effect that all vehicles stop
         // at the middle of the crossroad since that is the position of the node.
-        virtual int canEnter(const Node* node, const ID streetId, const int lane, const ID nextStreetId, const int nextLane) const = 0;
+        virtual int canEnter(const RSNode* node, const ID streetId, const int lane, const ID nextStreetId, const int nextLane) const = 0;
 
         /**
          Writes some information about this object into a string.

@@ -39,7 +39,7 @@ set<ID> getConnectedNodes(const RoadSystem *roadSystem, const ID startNode, cons
         resultNodes.insert(nodeId);
 
         // Get a pointer to the node object
-        Node *currentNode = roadSystem->getNode(nodeId);
+        RSNode *currentNode = roadSystem->getNode(nodeId);
 
         // Add the neighbor-nodes from all streets going through this node
         const vector<ID> streets = currentNode->getStreetIds();
@@ -133,7 +133,7 @@ vector<ID> calculateRoute(const RoadSystem *roadSystem, const ID from, const ID 
 
         // Add all successors
 
-        const Node *currentNodePtr = roadSystem->getNode(currentNode);
+        const RSNode *currentNodePtr = roadSystem->getNode(currentNode);
 
 
         vector< pair<ID, ID> > nextNodes = currentNodePtr->getNextNodes(predecessors[currentNode]);
@@ -329,7 +329,7 @@ double getNearestVehicleDistance(const RoadSystem *roadSystem, const Vec2d& posi
     // Search vehicles on connected streets
     for (size_t index = 0; index < street->getNodeIds()->size(); ++index) {
 
-        const Node *node = roadSystem->getNode(street->getNodeIds()->operator[](index));
+        const RSNode *node = roadSystem->getNode(street->getNodeIds()->operator[](index));
 
         // Ignore if too far
         // Use the doubled distance since the street might loop back

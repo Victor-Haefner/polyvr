@@ -19,12 +19,12 @@ void Microsimulator::handleVehicle(Vehicle *vehicle, bool moveOnly) {
     Street *currentStreet = roadSystem->getStreet(vehicle->getStreetId());
 
     // Remove old node reservations
-    Node *lastNode = roadSystem->getNode(route->at(0));
+    RSNode *lastNode = roadSystem->getNode(route->at(0));
     if (lastNode->getReservation() == vehicle->getId()) {
         lastNode->setReservation(0);
     }
 
-    Node *reachedNode = roadSystem->getNode(route->at(1));
+    RSNode *reachedNode = roadSystem->getNode(route->at(1));
     if (reachedNode->getReservation() == vehicle->getId()) {
         if(vehicle->getState() & (Vehicle::BLOCKED | Vehicle::WAITING) && vehicle->getCurrentSpeed() < 5)
             reachedNode->setReservation(0);
@@ -58,7 +58,7 @@ void Microsimulator::handleVehicle(Vehicle *vehicle, bool moveOnly) {
         const Vec2d positionNearReachedNode = currentStreet->getRelativeNodePosition(reachedNodeId, vehicle->getLaneNumber());
 
         // Check if it is a left-turn. In that case, drive past the node to simulate a big turning
-        const Node *nextNode = roadSystem->getNode(route->at(2));
+        const RSNode *nextNode = roadSystem->getNode(route->at(2));
         int turningAngle = (int)(calcAngle(nextNode->getPosition() - lastNode->getPosition()) - calcAngle(positionNearReachedNode - lastNode->getPosition()) + 720) % 360;
         const bool leftTurn = turningAngle > 175;
 
@@ -269,7 +269,7 @@ int Microsimulator::selectNextLaneNumber(const Vehicle *vehicle, const Street *o
     size_t laneCount = otherStreet->getLaneCount(otherDirection);
 
     // If the next street has the same amount of lanes and is the only other street at this node, stay on the current lane
-    const Node *reachedNode = roadSystem->getNode(route->at(1));
+    const RSNode *reachedNode = roadSystem->getNode(route->at(1));
     if (reachedNode->getStreetIds().size() <= 2) {
         if (ownStreet->getLaneCount(ownDirection) == laneCount) {
             if (ownDirection == otherDirection)
@@ -738,7 +738,7 @@ pair<double, Microsimulator::SPEEDCHANGE> Microsimulator::calculateOptimalSpeed(
         }
     } // end for(nearVehicles)
 
-    Node *nextNode = roadSystem->getNode(vehicle->getRoute()->at(1));
+    RSNode *nextNode = roadSystem->getNode(vehicle->getRoute()->at(1));
     // If a node logic exists, it is probably a crossroad and not only a some position-node
     if (nextNode->getNodeLogic() != NULL) {
         double nextNodeDistance = calcDistance(nextNode->getPosition(), vehicle->getPosition());
@@ -815,7 +815,7 @@ double Microsimulator::findFirstBlockingNode(Vehicle *vehicle, const double minD
     // Iterate over the rest of the route
     for (size_t routeIndex = 1; routeIndex < route->size() - 1; ++routeIndex) {
 
-        const Node *currentNode = roadSystem->getNode(route->at(routeIndex));
+        const RSNode *currentNode = roadSystem->getNode(route->at(routeIndex));
         // Calculate and add the distance
         distance += calcDistance(lastPosition, currentNode->getPosition());
 
@@ -900,7 +900,7 @@ set<pair<double, Vehicle*> > Microsimulator::findNearVehicles(Vehicle *vehicle, 
     // Add vehicles on connected streets
     for (size_t index = nearestNodeIndex + 1; index > 0 && index <= street->getNodeIds()->size(); index += direction) {
 
-        const Node *node = roadSystem->getNode(street->getNodeIds()->operator[](index - 1));
+        const RSNode *node = roadSystem->getNode(street->getNodeIds()->operator[](index - 1));
 
         double maxDistanceFromNode = maxDistance - calcDistance(vehicle->getPosition(), node->getPosition());
 

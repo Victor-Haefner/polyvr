@@ -10,7 +10,7 @@ using boost::lexical_cast;
 #include "Node.h"
 #include "RoadSystem.h"
 
-bool NodeLogicRightFirst::getStreetHasIncomming(Street *street, const int direction, const Node *node) const {
+bool NodeLogicRightFirst::getStreetHasIncomming(Street *street, const int direction, const RSNode *node) const {
 
     if (street->getIsMicro()) {
 
@@ -60,7 +60,7 @@ void NodeLogicRightFirst::tick() {
     // Nothing to do
 }
 
-int NodeLogicRightFirst::canEnter(const Node* node, const ID streetId, const int lane, const ID nextStreetId, const int nextLane) const {
+int NodeLogicRightFirst::canEnter(const RSNode* node, const ID streetId, const int lane, const ID nextStreetId, const int nextLane) const {
 
     // Speed up processing if only one street is connected (that is the most common case)
     // Actually, not. If there is only one street, there should be no NodeLogicRightFirst.
@@ -71,12 +71,12 @@ int NodeLogicRightFirst::canEnter(const Node* node, const ID streetId, const int
     const int nextDirection = (nextLane > 0) ? 1 : -1;
 
     // Find the Connection matching the given parameters
-    set<Node::Connection>::reverse_iterator incoming = node->connections.rbegin();
+    set<RSNode::Connection>::reverse_iterator incoming = node->connections.rbegin();
 
     for (; incoming != node->connections.rend(); ++incoming) {
-        if (incoming->street == streetId && incoming->flags & Node::Connection::INCOMING
-            && ((incoming->flags & Node::Connection::FORWARD && lane > 0)
-                || (!(incoming->flags & Node::Connection::FORWARD) && lane < 0)))
+        if (incoming->street == streetId && incoming->flags & RSNode::Connection::INCOMING
+            && ((incoming->flags & RSNode::Connection::FORWARD && lane > 0)
+                || (!(incoming->flags & RSNode::Connection::FORWARD) && lane < 0)))
             break;
     }
     // If not found, allow entering and hope for the best
@@ -85,7 +85,7 @@ int NodeLogicRightFirst::canEnter(const Node* node, const ID streetId, const int
 
     // Find the next incoming node on the right of this one
     // Connections right of this connection should be reached later by the iterator
-    set<Node::Connection>::reverse_iterator rightIncoming = incoming;
+    set<RSNode::Connection>::reverse_iterator rightIncoming = incoming;
     ++rightIncoming;
 
     // Whether an all-streets-have-incoming cycle should be broken (10% chance)
@@ -106,7 +106,7 @@ int NodeLogicRightFirst::canEnter(const Node* node, const ID streetId, const int
         if (int(incoming->degree - rightIncoming->degree + 720) % 360 > 170)
             return 0;
 
-        const int direction = (rightIncoming->flags & Node::Connection::FORWARD) ? 1 : -1;
+        const int direction = (rightIncoming->flags & RSNode::Connection::FORWARD) ? 1 : -1;
 
         // If this is the street the vehicle wants to drive into, allow it since turning right is always allowed
         if (rightIncoming->street == nextStreetId && -1 * direction == nextDirection) {
@@ -114,7 +114,7 @@ int NodeLogicRightFirst::canEnter(const Node* node, const ID streetId, const int
         }
 
         // If it is an other street and incoming, we found a street
-        if (rightIncoming->flags & Node::Connection::INCOMING) {
+        if (rightIncoming->flags & RSNode::Connection::INCOMING) {
 
             // Find the first vehicle on the lane and calculate the time until arrival
             Street *street = roadSystem->getStreet(rightIncoming->street);
@@ -145,11 +145,11 @@ int NodeLogicRightFirst::canEnter(const Node* node, const ID streetId, const int
         }
 
         // If it is an other street and incoming, we found a street
-        if (rightIncoming->flags & Node::Connection::INCOMING) {
+        if (rightIncoming->flags & RSNode::Connection::INCOMING) {
 
             // Find the first vehicle on the lane and calculate the time until arrival
             Street *street = roadSystem->getStreet(rightIncoming->street);
-            int direction = (rightIncoming->flags & Node::Connection::FORWARD) ? 1 : -1;
+            int direction = (rightIncoming->flags & RSNode::Connection::FORWARD) ? 1 : -1;
 
             // If there is no vehicle coming, we have no cycle and can simply wait
             if (!getStreetHasIncomming(street, direction, node))
@@ -162,7 +162,7 @@ int NodeLogicRightFirst::canEnter(const Node* node, const ID streetId, const int
     }
 
 NodeLogic* NodeLogicRightFirst::makeNodeLogic(const RoadSystem *roadSystem, const ID nodeId) {
-    Node *node = roadSystem->getNode(nodeId);
+    RSNode *node = roadSystem->getNode(nodeId);
     NodeLogic *l = new NodeLogicRightFirst(roadSystem, nodeId);
     node->setNodeLogic(l);
     return l;
@@ -172,11 +172,11 @@ Vec2d NodeLogicRightFirst::getPosition() const {
     return roadSystem->getNode(nodeId)->getPosition();
 }
 
-void NodeLogicRightFirst::addStreet(const Node*, const Street*) {
+void NodeLogicRightFirst::addStreet(const RSNode*, const Street*) {
 
 }
 
-void NodeLogicRightFirst::removeStreet(const Node*, const Street*) {
+void NodeLogicRightFirst::removeStreet(const RSNode*, const Street*) {
 
 }
 

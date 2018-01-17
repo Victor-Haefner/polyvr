@@ -11,6 +11,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRObjectManager.h"
+#include "core/objects/geometry/VRGeoData.h"
 #include "addons/Semantics/Reasoning/VREntity.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
 
@@ -59,6 +60,8 @@ void VRTrafficSimulation::updateSimulation() {
             vehicle.t->setPose(p);
         }
     }
+
+    updateDensityVisual();
 }
 
 void VRTrafficSimulation::addVehicle(int roadID, int type) {
@@ -89,6 +92,21 @@ void VRTrafficSimulation::addVehicleModel(VRObjectPtr mesh) {
     models.push_back( mesh->duplicate() );
 }
 
+void VRTrafficSimulation::updateDensityVisual() { // TODO
+    if (!flowGeo) {
+        flowGeo = VRGeometry::create("trafficFlow");
+        addChild(flowGeo);
+    }
+
+    VRGeoData geo(flowGeo);
+    /*if (geo.size() != nodes)
+
+    geo.pushVert(Pnt3d(-1,0,-1));
+    geo.pushVert(Pnt3d( 1,0,-1));
+    geo.pushVert(Pnt3d( 1,0, 1));
+    geo.pushVert(Pnt3d(-1,0, 1));
+    geo.pushQuad();*/
+}
 
 
 

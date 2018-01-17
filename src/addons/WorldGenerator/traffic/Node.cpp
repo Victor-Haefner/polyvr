@@ -8,39 +8,39 @@ using boost::lexical_cast;
 #include "Street.h"
 #include "RoadSystem.h"
 
-bool Node::connectionComparator(const Connection& lhs, const Connection& rhs) {
+bool RSNode::connectionComparator(const Connection& lhs, const Connection& rhs) {
     return lhs.degree < rhs.degree;
 }
 
-Node::Node(const RoadSystem *roadSystem, const ID id, const Vec2d position, const FEATURE features)
+RSNode::RSNode(const RoadSystem *roadSystem, const ID id, const Vec2d position, const FEATURE features)
     : id(id), pos(position), streetIds(), connections(&connectionComparator), logic(NULL), features(features), roadSystem(roadSystem), reservationId(0) {
 }
 
-ID Node::getId() const {
+ID RSNode::getId() const {
     return id;
 }
 
-void Node::setFeatures(FEATURE features) {
+void RSNode::setFeatures(FEATURE features) {
     this->features = features;
 }
 
-Node::FEATURE Node::getFeatures() const {
+RSNode::FEATURE RSNode::getFeatures() const {
     return features;
 }
 
-void Node::setNodeLogic(NodeLogic* logic) {
+void RSNode::setNodeLogic(NodeLogic* logic) {
     this->logic = logic;
 }
 
-NodeLogic* Node::getNodeLogic() const {
+NodeLogic* RSNode::getNodeLogic() const {
     return logic;
 }
 
-Vec2d Node::getPosition() const {
+Vec2d RSNode::getPosition() const {
     return pos;
 }
 
-bool Node::addStreet(const Street* street) {
+bool RSNode::addStreet(const Street* street) {
 
     // If the given street is not yet known, add it and add it to the connection-list, too
     for (vector<ID>::iterator iter = streetIds.begin(); iter != streetIds.end(); ++iter) {
@@ -90,14 +90,11 @@ bool Node::addStreet(const Street* street) {
 
     // Add the street
     streetIds.push_back(street->getId());
-
-    if (logic != NULL)
-        logic->addStreet(this, street);
-
+    if (logic != NULL) logic->addStreet(this, street);
     return true;
 }
 
-void Node::removeStreet(const Street* street) {
+void RSNode::removeStreet(const Street* street) {
 
     if (logic != NULL)
         logic->removeStreet(this, street);
@@ -124,11 +121,11 @@ void Node::removeStreet(const Street* street) {
     }
 }
 
-const vector<ID>& Node::getStreetIds() const {
+const vector<ID>& RSNode::getStreetIds() const {
     return streetIds;
 }
 
-int Node::canEnter(const ID streetId, const int lane, const ID nextStreetId, const int nextLane) const {
+int RSNode::canEnter(const ID streetId, const int lane, const ID nextStreetId, const int nextLane) const {
 
     // If we are changing street to a meso-street, check if there is any space left
     if (streetId != nextStreetId) {
@@ -161,7 +158,7 @@ int Node::canEnter(const ID streetId, const int lane, const ID nextStreetId, con
         return logic->canEnter(this, streetId, lane, nextStreetId, nextLane);
 }
 
-string Node::toString(const bool extendedOutput) const {
+string RSNode::toString(const bool extendedOutput) const {
 
     string str = string("Node #") + lexical_cast<string>(id) + ((extendedOutput)?"\n  ":" [")
         + "pos=" + lexical_cast<string>(pos[0]) + " / " + lexical_cast<string>(pos[1]) + ((extendedOutput)?"\n  ":"; ")
@@ -182,7 +179,7 @@ string Node::toString(const bool extendedOutput) const {
     return str;
 }
 
-vector< pair<ID, int> > Node::calculatePossibleStreets(const Street *street, const int direction) const {
+vector< pair<ID, int> > RSNode::calculatePossibleStreets(const Street *street, const int direction) const {
 
     // Quite similar to calculatePossibleLanes()
     // (Well, actually it is adapted copy&paste)
@@ -238,7 +235,7 @@ vector< pair<ID, int> > Node::calculatePossibleStreets(const Street *street, con
     return result;
 }
 
-pair<ID, int> Node::findNextStreet(const ID nextNode) const {
+pair<ID, int> RSNode::findNextStreet(const ID nextNode) const {
 
     // Find the connection with the node
     multiset<Connection>::iterator connectionIter = connections.begin();
@@ -250,7 +247,7 @@ pair<ID, int> Node::findNextStreet(const ID nextNode) const {
     return make_pair(0, 0);
 }
 
-ID Node::getNextNode(const ID street, const int direction) const {
+ID RSNode::getNextNode(const ID street, const int direction) const {
 
     // Find the connection with the street and direction
     multiset<Connection>::iterator connectionIter = connections.begin();
@@ -264,7 +261,7 @@ ID Node::getNextNode(const ID street, const int direction) const {
     return 42;
 }
 
-vector< pair<ID, ID> > Node::getNextNodes(const ID nodeComingFrom) const {
+vector< pair<ID, ID> > RSNode::getNextNodes(const ID nodeComingFrom) const {
 
     // The same as calculatePossibleStreets() but returning the nodes instead of the streets
     vector< pair<ID, ID> > result;
@@ -322,7 +319,7 @@ vector< pair<ID, ID> > Node::getNextNodes(const ID nodeComingFrom) const {
     return result;
 }
 
-set<int> Node::calculatePossibleLanes(const ID street, const int direction, const ID nextNode) const {
+set<int> RSNode::calculatePossibleLanes(const ID street, const int direction, const ID nextNode) const {
 
     set<int> result;
 
@@ -404,10 +401,10 @@ set<int> Node::calculatePossibleLanes(const ID street, const int direction, cons
     return result;
 }
 
-void Node::setReservation(const ID newReservation) {
+void RSNode::setReservation(const ID newReservation) {
     reservationId = newReservation;
 }
 
-ID Node::getReservation() const {
+ID RSNode::getReservation() const {
     return reservationId;
 }

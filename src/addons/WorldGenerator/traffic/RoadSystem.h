@@ -28,7 +28,7 @@ class RoadSystem {
         Street::TYPE defaultType;
         double trafficDensity;
 
-        map<ID, Node*> nodes;
+        map<ID, RSNode*> nodes;
         map<ID, Street*> streets;
         map<ID, VehicleType*> vehicleTypes; // default is 404, the range [500-800] is reserved for client-controlled vehicles
         map<ID, DriverType*> driverTypes; // 404 is the default type
@@ -66,11 +66,11 @@ class RoadSystem {
         void setTrafficDensity(const double density); // number of vehicles on a 100 meter long main road
         double getTrafficDensity() const;
 
-        bool addNode(const ID id, const Vec2d& pos, const Node::FEATURE features = Node::NONE);
+        bool addNode(const ID id, const Vec2d& pos, const RSNode::FEATURE features = RSNode::NONE);
         bool removeNode(const ID id, const bool removeStreets = false);
         bool hasNode(const ID id) const;
-        Node* getNode(const ID id) const;
-        const map<ID, Node*>* getNodes() const;
+        RSNode* getNode(const ID id) const;
+        const map<ID, RSNode*>* getNodes() const;
 
         Street* createStreet(const ID id, const vector<ID>& nodeIds);
         bool addStreet(Street *street);

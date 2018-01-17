@@ -17,7 +17,7 @@ void RoadSystem::findSourceStreets() {
         if (streetIter->second->getLaneCount(1) == 0 || streetIter->second->getLaneCount(-1) > 0)
             continue;
         // If it is, check if its first node is unconnected.
-        const Node *node = nodes[streetIter->second->getNodeIds()->front()];
+        const RSNode *node = nodes[streetIter->second->getNodeIds()->front()];
         if (node->getStreetIds().size() == 1) {
             sumSourceStreetProbabilities += sqrt(streetIter->second->getRoutingCost());
             // sqrt(cost) to avoid that all traffic is on big streets
@@ -29,7 +29,7 @@ void RoadSystem::findSourceStreets() {
     if (sourceStreets.empty()) {
         for (map<ID, Street*>::const_iterator streetIter = streets.begin(); streetIter != streets.end(); ++streetIter) {
             // If it is, check if its first node is unconnected.
-            const Node *node = nodes[streetIter->second->getNodeIds()->front()];
+            const RSNode *node = nodes[streetIter->second->getNodeIds()->front()];
             if (node->getStreetIds().size() == 1) {
                 sumSourceStreetProbabilities += sqrt(streetIter->second->getRoutingCost());
                 sourceStreets.push_back(make_pair(streetIter->first, streetIter->second->getRoutingCost()));
@@ -184,7 +184,7 @@ RoadSystem::~RoadSystem() {
         delete iter->second;
     streets.clear();
 
-    for (map<ID, Node*>::iterator iter = nodes.begin(); iter != nodes.end(); ++iter)
+    for (map<ID, RSNode*>::iterator iter = nodes.begin(); iter != nodes.end(); ++iter)
         delete iter->second;
     nodes.clear();
 }
@@ -216,7 +216,7 @@ void RoadSystem::tick() {
     // For each view area, check the distances to all nodes
     // If the distance is smaller than their radius, set the micro-flag for all adjacent streets to true
     for (vector<ViewArea*>::const_iterator areaIter = viewAreas.begin(); areaIter != viewAreas.end(); ++areaIter) {
-        for (map<ID, Node*>::const_iterator nodeIter = nodes.begin(); nodeIter != nodes.end(); ++nodeIter) {
+        for (map<ID, RSNode*>::const_iterator nodeIter = nodes.begin(); nodeIter != nodes.end(); ++nodeIter) {
             if (calcDistance(nodeIter->second->getPosition(), (*areaIter)->position) < (*areaIter)->radius) {
                 for (vector<ID>::const_iterator streetIdIter = nodeIter->second->getStreetIds().begin();
                      streetIdIter != nodeIter->second->getStreetIds().end();
@@ -271,28 +271,16 @@ Street::TYPE RoadSystem::getDefaultType() const {
 }
 
 void RoadSystem::setTrafficDensity(const double density) {
-
-    // This could probably also (and maybe prettier?) be implemented
-    // by setting the offmapVehicleCount appropriately
-
     double oldDensity = trafficDensity;
 
-    if (density < 0)
-        trafficDensity = 0;
-    else
-        trafficDensity = density;
+    if (density < 0) trafficDensity = 0;
+    else trafficDensity = density;
 
     // Apply new density if not equal to the old one
     if (abs(oldDensity - trafficDensity) < 0.001) {
-
-        // Apply the density to all streets in meso mode.
-        // This way the vehicles around the client will not disappear
-        // immediately but over time it will become empty.
-        // Of course this does not set an exact value but it will be good enough
-
-        for (map<ID, Street*>::iterator iter = streets.begin(); iter != streets.end(); ++iter) {
-            if (!iter->second->getIsMicro()) {
-                iter->second->applyTrafficDensity(trafficDensity);
+        for (auto street : streets) {
+            if (!street.second->getIsMicro()) {
+                street.second->applyTrafficDensity(trafficDensity);
             }
         }
     }
@@ -302,19 +290,19 @@ double RoadSystem::getTrafficDensity() const {
     return trafficDensity;
 }
 
-bool RoadSystem::addNode(const ID id, const Vec2d& pos, const Node::FEATURE features) {
+bool RoadSystem::addNode(const ID id, const Vec2d& pos, const RSNode::FEATURE features) {
 
     if (nodes.count(id) > 0)
         return false;
 
-    Node* node = new Node(this, id, pos, features);
+    RSNode* node = new RSNode(this, id, pos, features);
     nodes.insert(make_pair(id, node));
 
     return true;
 }
 
 bool RoadSystem::removeNode(const ID id, const bool removeStreets) {
-    map<ID, Node*>::iterator iter = nodes.find(id);
+    map<ID, RSNode*>::iterator iter = nodes.find(id);
     if (iter == nodes.end())
         return false;
 
@@ -332,8 +320,8 @@ bool RoadSystem::hasNode(const ID id) const {
     return nodes.count(id) != 0;
 }
 
-Node* RoadSystem::getNode(const ID id) const {
-    map<ID, Node*>::const_iterator iter = nodes.find(id);
+RSNode* RoadSystem::getNode(const ID id) const {
+    map<ID, RSNode*>::const_iterator iter = nodes.find(id);
     if (iter == nodes.end()) {
         cout << "FATAL ERROR: Request for non-existing node with id " << id << ".\n";
         return NULL;
@@ -341,7 +329,7 @@ Node* RoadSystem::getNode(const ID id) const {
         return iter->second;
 }
 
-const map<ID, Node*>* RoadSystem::getNodes() const {
+const map<ID, RSNode*>* RoadSystem::getNodes() const {
     return &nodes;
 }
 
@@ -386,7 +374,7 @@ bool RoadSystem::addStreet(Street *street) {
         if (nodes[*iter]->getNodeLogic() == NULL) {
 
             // If it has traffic lights, make a traffic light out of it
-            if (nodes[*iter]->getFeatures() & Node::TRAFFICLIGHTS)
+            if (nodes[*iter]->getFeatures() & RSNode::TRAFFICLIGHTS)
                 nodeLogics.insert(NodeLogicTrafficLight::makeNodeLogic(this, *iter));
 
             // When more than 2 Streets now, it always is a crossroad
@@ -640,9 +628,7 @@ const map<ID, DriverType*>* RoadSystem::getDriverTypes() const {
 }
 
 bool RoadSystem::addVehicle(const ID id, const Vec3d pos, const double radius) {
-
-    if (vehicles.count(id) > 0)
-        return false;
+    if (vehicles.count(id) > 0) return false;
 
     // Create a vehicle type to store the radius
     VehicleType *vt = new VehicleType(id);
@@ -658,16 +644,12 @@ bool RoadSystem::addVehicle(const ID id, const Vec3d pos, const double radius) {
 
 
 bool RoadSystem::addVehicle(Vehicle *vehicle) {
-
-    if (vehicles.count(vehicle->getId()) > 0)
-        return false;
-
+    if (vehicles.count(vehicle->getId()) > 0) return false;
     vehicles.insert(make_pair(vehicle->getId(), vehicle));
     return true;
 }
 
 bool RoadSystem::removeVehicle(const ID id) {
-
     map<ID, Vehicle*>::iterator iter = vehicles.find(id);
     if (iter == vehicles.end())
         return false;
@@ -685,13 +667,11 @@ bool RoadSystem::removeVehicle(const ID id) {
 }
 
 Vehicle* RoadSystem::getVehicle(const ID id) const {
-
     map<ID, Vehicle*>::const_iterator iter = vehicles.find(id);
     if (iter == vehicles.end()) {
         cout << "FATAL ERROR: Request for non-existing vehicle with id " << id << ".\n";
         return NULL;
-    } else
-        return iter->second;
+    } else return iter->second;
 }
 
 const map<ID, Vehicle*>* RoadSystem::getVehicles() const {

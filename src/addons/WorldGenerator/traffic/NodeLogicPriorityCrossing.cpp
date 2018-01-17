@@ -10,7 +10,7 @@ using boost::lexical_cast;
 #include "Node.h"
 #include "RoadSystem.h"
 
-bool NodeLogicPriorityCrossing::getStreetHasIncomming(Street *street, const int direction, const Node *node) const {
+bool NodeLogicPriorityCrossing::getStreetHasIncomming(Street *street, const int direction, const RSNode *node) const {
 
     if (street->getIsMicro()) {
 
@@ -45,7 +45,7 @@ void NodeLogicPriorityCrossing::tick() {
     // Nothing to do
 }
 
-int NodeLogicPriorityCrossing::canEnter(const Node* node, const ID streetId, const int lane, const ID nextStreetId, const int nextLane) const {
+int NodeLogicPriorityCrossing::canEnter(const RSNode* node, const ID streetId, const int lane, const ID nextStreetId, const int nextLane) const {
 
     // Speed up processing if only one street is connected (that is the most common case)
     if (node->getStreetIds().size() <= 1)
@@ -58,12 +58,12 @@ int NodeLogicPriorityCrossing::canEnter(const Node* node, const ID streetId, con
     Street::TYPE ourType = roadSystem->getStreet(streetId)->getType();
 
     // Find the Connection matching the given parameters
-    set<Node::Connection>::reverse_iterator incoming = node->connections.rbegin();
+    set<RSNode::Connection>::reverse_iterator incoming = node->connections.rbegin();
 
     for (; incoming != node->connections.rend(); ++incoming) {
-        if (incoming->street == streetId && incoming->flags & Node::Connection::INCOMING
-            && ((incoming->flags & Node::Connection::FORWARD && lane > 0)
-                || (!(incoming->flags & Node::Connection::FORWARD) && lane < 0)))
+        if (incoming->street == streetId && incoming->flags & RSNode::Connection::INCOMING
+            && ((incoming->flags & RSNode::Connection::FORWARD && lane > 0)
+                || (!(incoming->flags & RSNode::Connection::FORWARD) && lane < 0)))
             break;
     }
     // If not found, allow entering and hope for the best
@@ -72,7 +72,7 @@ int NodeLogicPriorityCrossing::canEnter(const Node* node, const ID streetId, con
 
     // Find the next incoming node on the right of this one
     // Connections right of this connection should be reached later by the iterator
-    set<Node::Connection>::reverse_iterator rightIncoming = incoming;
+    set<RSNode::Connection>::reverse_iterator rightIncoming = incoming;
     ++rightIncoming;
 
     // Whether a all-streets-incoming cycle should be broken (5% chance)
@@ -89,10 +89,10 @@ int NodeLogicPriorityCrossing::canEnter(const Node* node, const ID streetId, con
         }
 
         // If it is an other street and incoming, we found a street
-        if (rightIncoming->flags & Node::Connection::INCOMING) {
+        if (rightIncoming->flags & RSNode::Connection::INCOMING) {
 
             Street *street = roadSystem->getStreet(rightIncoming->street);
-            const int direction = (rightIncoming->flags & Node::Connection::FORWARD) ? 1 : -1;
+            const int direction = (rightIncoming->flags & RSNode::Connection::FORWARD) ? 1 : -1;
 
             // If the street (is smaller) or (it is the same type and angle <= 170°), check for incoming vehicles
 
@@ -143,11 +143,11 @@ int NodeLogicPriorityCrossing::canEnter(const Node* node, const ID streetId, con
         }
 
         // If it is an other street and incoming, we found a street
-        if (rightIncoming->flags & Node::Connection::INCOMING) {
+        if (rightIncoming->flags & RSNode::Connection::INCOMING) {
 
             // Find the first vehicle on the lane and calculate the time until arrival
             Street *street = roadSystem->getStreet(rightIncoming->street);
-            int direction = (rightIncoming->flags & Node::Connection::FORWARD) ? 1 : -1;
+            int direction = (rightIncoming->flags & RSNode::Connection::FORWARD) ? 1 : -1;
 
             // If there is no vehicle coming, we have no cycle and can simply wait
             if (!getStreetHasIncomming(street, direction, node))
@@ -160,7 +160,7 @@ int NodeLogicPriorityCrossing::canEnter(const Node* node, const ID streetId, con
 }
 
 NodeLogic* NodeLogicPriorityCrossing::makeNodeLogic(const RoadSystem *roadSystem, const ID nodeId) {
-    Node *node = roadSystem->getNode(nodeId);
+    RSNode *node = roadSystem->getNode(nodeId);
     NodeLogic *l = new NodeLogicPriorityCrossing(roadSystem, nodeId);
     node->setNodeLogic(l);
     return l;
@@ -170,11 +170,11 @@ Vec2d NodeLogicPriorityCrossing::getPosition() const {
     return roadSystem->getNode(nodeId)->getPosition();
 }
 
-void NodeLogicPriorityCrossing::addStreet(const Node*, const Street*) {
+void NodeLogicPriorityCrossing::addStreet(const RSNode*, const Street*) {
 
 }
 
-void NodeLogicPriorityCrossing::removeStreet(const Node*, const Street*) {
+void NodeLogicPriorityCrossing::removeStreet(const RSNode*, const Street*) {
 
 }
 

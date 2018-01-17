@@ -1,6 +1,7 @@
 #ifndef NODELOGICPRIORITYCROSSING_H
 #define NODELOGICPRIORITYCROSSING_H
 
+#include "Node.h"
 #include "NodeLogic.h"
 
 class RoadSystem;
@@ -39,7 +40,7 @@ class NodeLogicPriorityCrossing : public NodeLogic {
          @param node The node to arrive at.
          @return \c True if a vehicle is approaching, \c false otherwise.
          */
-        bool getStreetHasIncomming(Street *street, const int direction, const Node *node) const;
+        bool getStreetHasIncomming(Street *street, const int direction, const RSNode *node) const;
 
     public:
         /**
@@ -55,9 +56,9 @@ class NodeLogicPriorityCrossing : public NodeLogic {
         virtual ~NodeLogicPriorityCrossing() { };
         virtual void tick();
         virtual Vec2d getPosition() const;
-        virtual void addStreet(const Node* node, const Street* street);
-        virtual void removeStreet(const Node* node, const Street* street);
-        virtual int canEnter(const Node* node, const ID streetId, const int lane, const ID nextStreetId, const int nextLane) const;
+        virtual void addStreet(const RSNode* node, const Street* street);
+        virtual void removeStreet(const RSNode* node, const Street* street);
+        virtual int canEnter(const RSNode* node, const ID streetId, const int lane, const ID nextStreetId, const int nextLane) const;
         virtual string toString(const bool extendedOutput) const;
 };
 

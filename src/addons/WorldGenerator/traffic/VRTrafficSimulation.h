@@ -32,6 +32,7 @@ class VRTrafficSimulation : public VRObject {
         struct road {
             float density = 0;
             vector<vehicle> vehicles;
+            VRRoadPtr r;
         };
 
         struct trafficLight {
@@ -42,6 +43,12 @@ class VRTrafficSimulation : public VRObject {
             void updateModel();
         };
 
+        struct intersection {
+            float density = 0;
+            vector<road> roads;
+            vector<vehicle> vehicles;
+        };
+
         VRRoadNetworkPtr roadNetwork;
         map<int, road> roads;
         vector<vehicle> vehicles;
@@ -49,6 +56,7 @@ class VRTrafficSimulation : public VRObject {
         map<int, vector<trafficLight> > trafficLights;
 
         VRUpdateCbPtr updateCb;
+        VRGeometryPtr flowGeo;
 
     public:
         VRTrafficSimulation();
@@ -58,6 +66,7 @@ class VRTrafficSimulation : public VRObject {
 
         void setRoadNetwork(VRRoadNetworkPtr roads);
         void updateSimulation();
+        void updateDensityVisual();
 
         void addVehicle(int roadID, int type);
         void addVehicles(int roadID, float density, int type);

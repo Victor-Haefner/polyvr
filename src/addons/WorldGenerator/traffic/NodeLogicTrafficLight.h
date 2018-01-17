@@ -105,7 +105,7 @@ class NodeLogicTrafficLight : public NodeLogic {
          Adds a node to this traffic light.
          @param node A pointer to the node to add.
          */
-        void addNode(const Node *node);
+        void addNode(const RSNode *node);
 
         /**
          Creates the LightPost data structure for a node/street combination.
@@ -113,7 +113,7 @@ class NodeLogicTrafficLight : public NodeLogic {
          @param street A pointer to the street.
          @return \c True if a post has been added, \c false if it already existed.
          */
-        bool createLightPost(const Node* node, const Street* street);
+        bool createLightPost(const RSNode* node, const Street* street);
 
         /**
          Removes the LightPost of a node/street combination.
@@ -121,7 +121,7 @@ class NodeLogicTrafficLight : public NodeLogic {
          @param street A pointer to the street.
          @return \c True if a post has been removed, \c false if there has be no matching post.
          */
-        bool removeLightPost(const Node* node, const Street* street);
+        bool removeLightPost(const RSNode* node, const Street* street);
 
         /**
          Rebuilds the light phases of all nodes.
@@ -137,7 +137,7 @@ class NodeLogicTrafficLight : public NodeLogic {
          @param node The first node with a traffic light.
          @param radius The search radius for merging with other nodes.
          */
-        NodeLogicTrafficLight(const RoadSystem *roadSystem, const Node *node, const double radius);
+        NodeLogicTrafficLight(const RoadSystem *roadSystem, const RSNode *node, const double radius);
 
     public:
         /**
@@ -153,9 +153,9 @@ class NodeLogicTrafficLight : public NodeLogic {
         virtual ~NodeLogicTrafficLight() { };
         virtual void tick();
         virtual Vec2d getPosition() const;
-        virtual void addStreet(const Node* node, const Street* street);
-        virtual void removeStreet(const Node* node, const Street* street);
-        virtual int canEnter(const Node* node, const ID streetId, const int lane, const ID nextStreetId, const int nextLane) const;
+        virtual void addStreet(const RSNode* node, const Street* street);
+        virtual void removeStreet(const RSNode* node, const Street* street);
+        virtual int canEnter(const RSNode* node, const ID streetId, const int lane, const ID nextStreetId, const int nextLane) const;
         virtual string toString(const bool extendedOutput) const;
 
         /**

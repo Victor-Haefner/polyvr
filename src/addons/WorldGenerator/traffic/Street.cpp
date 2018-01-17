@@ -148,7 +148,7 @@ void Street::setMicro(const bool micro) {
 
         // Remove all reservations
         for (size_t i = 0; i < nodes.size(); ++i) {
-            Node *node = roadSystem->getNode(nodes[i]);
+            RSNode *node = roadSystem->getNode(nodes[i]);
             node->setReservation(0);
         }
     }
@@ -457,115 +457,69 @@ pair<size_t, size_t> Street::getNearestNodeIndices(const Vec2d& position) const 
 }
 
 void Street::applyTrafficDensity(const double density) {
-
     const double densityForType = (density / 20) * ((double)getType() / 100);
 
-    // Do this for both directions
-    for (int direction = -1; direction <= 1; direction += 2) {
+    for (int direction = -1; direction <= 1; direction += 2) { // Do this for both directions
+        if (getLaneCount(direction) == 0) continue; // If there are no lanes, skip this direction
+        const double shouldBeVehicleCount = densityForType * getLaneMaxVehicleCount(direction); // Calculate current and new density
 
-        // If there are no lanes, skip this direction
-        if (getLaneCount(direction) == 0)
-            continue;
-
-        // Calculate current and new density
-        const double shouldBeVehicleCount = densityForType * getLaneMaxVehicleCount(direction);
-
-        // While the amount is not matching, adapt it
-        // Add vehicles if not full
-        while (getLaneVehicleCount(direction) < shouldBeVehicleCount) {
-            // Add vehicle with random arrival time
-            createRandomVehicle(direction);
+        while (getLaneVehicleCount(direction) < shouldBeVehicleCount) { // Add vehicles if not full
+            createRandomVehicle(direction); // Add vehicle with random arrival time
         }
 
-        // Remove vehicles if too full
-        while (getLaneVehicleCount(direction) > shouldBeVehicleCount) {
+        while (getLaneVehicleCount(direction) > shouldBeVehicleCount) { // Remove vehicles if too full
             removeRandomVehicle(direction);
         }
     }
 }
 
 Vehicle* Street::createRandomVehicle(const int direction, const double offset) {
+    if (getLaneVehicleCount(direction) >= getLaneMaxVehicleCount(direction)) return 0; // If the street is full, abort
+    if (getLaneCount(direction) == 0) return 0; // If there are no lanes abort, too
 
-    // If the street is full, abort
-    if (getLaneVehicleCount(direction) >= getLaneMaxVehicleCount(direction))
-        return NULL;
-
-    // If there are no lanes abort, too
-    if (getLaneCount(direction) == 0)
-        return NULL;
-
-    if (!getIsMicro()) {
-
-        // Short case first: In the meso case, just add it somewhere
-
+    if (!getIsMicro()) { // Short case first: In the meso case, just add it somewhere
 
         // The first node that can be chosen, depending on the given offset
         size_t minNodeI = 0;
-        while (nodeDistances[minNodeI] < offset)
-            ++minNodeI;
-        if (direction > 0 && minNodeI > 0)
-            --minNodeI;
+        while (nodeDistances[minNodeI] < offset) ++minNodeI;
+        if (direction > 0 && minNodeI > 0) --minNodeI;
 
         // Select a (nearly) random start node for the vehicle
         size_t startNodeI;
         if (minNodeI < nodes.size() - 1) {
-
             startNodeI = (rand() % (nodes.size() - 1 - minNodeI)) + minNodeI;
-            // Avoid the problem that the vehicle starts at the last node in its direction
-            if (direction < 0)
-                ++startNodeI;
-        } else
-            startNodeI = nodes.size() - 1;
+            if (direction < 0) ++startNodeI; // Avoid the problem that the vehicle starts at the last node in its direction
+        } else startNodeI = nodes.size() - 1;
 
-        // Get the next interesting node in driving direction as destination
-        size_t destNodeI = getNextInterestingNode(startNodeI, direction);
 
-        // Get the distance between them
-        double distance = nodeDistances[destNodeI] - nodeDistances[startNodeI];
-        // If driving into the backward-direction, keep the distance positive
-        if (distance < 0)
-            distance *= -1;
-
-        // Calculate the time needed to travel between the nodes
-        time_duration travelTime = seconds(getLaneTravelTime(direction).total_seconds() * (distance / getLength())) + seconds(1);
-
-        // Take a random part of it
-        travelTime = seconds(rand() % travelTime.total_seconds());
-
-        // Add the data to the arrival-list
-        getLaneArrivalTimes(direction)->insert(make_pair(timer.getTime() + travelTime, nodes[destNodeI]));
-
-        // Done, but meso always returns NULL
-        return NULL;
+        size_t destNodeI = getNextInterestingNode(startNodeI, direction); // Get the next interesting node in driving direction as destination
+        double distance = abs(nodeDistances[destNodeI] - nodeDistances[startNodeI]); // Get the distance between them
+        time_duration travelTime = seconds(getLaneTravelTime(direction).total_seconds() * (distance / getLength())) + seconds(1); // Calculate the time needed to travel between the nodes
+        travelTime = seconds(rand() % travelTime.total_seconds()); // Take a random part of it
+        getLaneArrivalTimes(direction)->insert(make_pair(timer.getTime() + travelTime, nodes[destNodeI])); // Add the data to the arrival-list
+        return 0;
 
     } else {
 
         // Pick a random lane
         int rLane = 1;
-        if (getLaneCount(direction) > 1) {
-            rLane = rand() % getLaneCount(direction) + 1;
-        }
+        if (getLaneCount(direction) > 1) rLane = rand() % getLaneCount(direction) + 1;
         int lane = rLane * (direction / abs(direction));
-        do {
-            // Check if there is space somewhere
+
+        do { // Check if there is space somewhere
 
             // Pick a random position
             double rOffset = rand() % static_cast<int>(getLength());
-            if (offset >= 0)
-                rOffset = offset;
+            if (offset >= 0) rOffset = offset;
             if (rOffset == 0 && direction < 0) rOffset = 0.001;
             if (rOffset == getLength() && direction > 0) rOffset = getLength() - 0.001;
 
             // Check rest of the street
-            for (double offset = rOffset; offset < getLength(); offset += VEHICLE_LENGTH) {
-                // Iterate over vehicles on lane and check distances
+            for (double offset = rOffset; offset < getLength(); offset += VEHICLE_LENGTH) { // Iterate over vehicles on lane and check distances
                 Vec2d pos = getPositionOnLane(lane, offset);
-
                 double minDistance = getNearestVehicleDistance(roadSystem, pos, this, 3 * VEHICLE_LENGTH);
 
                 if (minDistance > 1.5 * VEHICLE_LENGTH) {
-
-
                     size_t prevNodeI, nextNodeI;
 
                     for (unsigned int i = 1; i < nodes.size(); i++) {
@@ -578,13 +532,9 @@ Vehicle* Street::createRandomVehicle(const int direction, const double offset) {
                         }
                     }
 
-                    if (direction < 0)
-                        swap(prevNodeI, nextNodeI);
-
+                    if (direction < 0) swap(prevNodeI, nextNodeI);
 
                     Vec2d dest = getRelativeNodePosition(nodes[nextNodeI], lane);
-
-
                     Vec2d vec = dest - pos;
                     if (vec == Vec2d(0, 0)) {
                         vec = Vec2d(1, 0);
@@ -592,7 +542,6 @@ Vehicle* Street::createRandomVehicle(const int direction, const double offset) {
                     }
 
                     Quaterniond rotation(Vec3d(1, 0, 0), Vec3d(vec[0], 0, vec[1]));
-
 
                     // Create a new vehicle
                     Vehicle *v = new Vehicle(roadSystem->getUnusedVehicleId(), Vec3d(pos[0], 0, pos[1]), rotation);
@@ -605,41 +554,31 @@ Vehicle* Street::createRandomVehicle(const int direction, const double offset) {
                     v->setVehicleType(roadSystem->getRandomVehicleType());
                     v->setDriverType(roadSystem->getRandomDriverType());
 
-                    if (!roadSystem->addVehicle(v)) {
-                        delete v;
-                        return NULL;
-                    }
-
-                    if (lane > 0)
-                        forward.cars[lane - 1].insert(v->getId());
-                    else
-                        backward.cars[(-1 * lane) - 1].insert(v->getId());
-
+                    if (!roadSystem->addVehicle(v)) { delete v; return 0; }
+                    if (lane > 0) forward.cars[lane - 1].insert(v->getId());
+                    else backward.cars[(-1 * lane) - 1].insert(v->getId());
                     return v;
                 }
             } // End offset iteration
+
             if (getLaneCount(direction) > 1) {
                 // Increase the lane to one further outside
                 if (lane > 0) {
                     ++lane;
-                    if (lane > (int)getLaneCount(1))
-                        lane = 1;
+                    if (lane > (int)getLaneCount(1)) lane = 1;
                 } else if (lane < 0) {
                     --lane;
-                    if (lane < -1 * (int)getLaneCount(-1))
-                        lane = -1;
+                    if (lane < -1 * (int)getLaneCount(-1)) lane = -1;
                 }
             }
         } while (lane != rLane * (direction / abs(direction)));
         // No space found
-        return NULL;
+        return 0;
     }
 }
 
 bool Street::removeRandomVehicle(const int direction) {
-
-    if (getLaneArrivalTimes(direction)->empty())
-        return false;
+    if (getLaneArrivalTimes(direction)->empty()) return false;
 
     if (!getIsMicro()) {
 
@@ -796,10 +735,8 @@ bool Street::changeVehicleLane(Vehicle *vehicle, const int newLane) {
 
     // Update reference to vehicle
     removeVehicle(vehicle->getId(), vehicle->getLaneNumber());
-    if (newLane > 0)
-        forward.cars[newLane - 1].insert(vehicle->getId());
-    else if (newLane < 0)
-        backward.cars[(-1 * newLane) - 1].insert(vehicle->getId());
+    if (newLane > 0) forward.cars[newLane - 1].insert(vehicle->getId());
+    else if (newLane < 0) backward.cars[(-1 * newLane) - 1].insert(vehicle->getId());
 
     // Calculate offset of vehicle on the street
     double nodeOffset = nodeDistances[getNodeIndex(vehicle->getRoute()->at(1))];
@@ -816,9 +753,7 @@ bool Street::changeVehicleLane(Vehicle *vehicle, const int newLane) {
 
     Vec2d newDest = getPositionOnLane(newLane, offset);
     vehicle->setCurrentDestination(newDest);
-
     vehicle->setStreet(id, newLane);
-
     return true;
 }
 
@@ -874,14 +809,11 @@ Vehicle* Street::transferVehicle(Street *destStreet, const ID node, const int de
             return vehicle;
 
         }
-    } else {
-        // Destination street is in meso mode
+    } else { // Destination street is in meso mode
 
         // Remove all traces of the micro-vehicle
-        if (vehicle->getLaneNumber() > 0)
-            forward.cars[vehicle->getLaneNumber() - 1].erase(vehicle->getId());
-        else if (vehicle->getLaneNumber() < 0)
-            backward.cars[(-1 * vehicle->getLaneNumber()) - 1].erase(vehicle->getId());
+        if (vehicle->getLaneNumber() > 0) forward.cars[vehicle->getLaneNumber() - 1].erase(vehicle->getId());
+        else if (vehicle->getLaneNumber() < 0) backward.cars[(-1 * vehicle->getLaneNumber()) - 1].erase(vehicle->getId());
         roadSystem->removeVehicle(vehicle->getId());
 
         // Get the next crossing into the direction of the vehicle
@@ -959,22 +891,14 @@ bool Street::transferVehicle(Street *destStreet, const ID node, const int destLa
             v->setVehicleType(roadSystem->getRandomVehicleType());
             v->setDriverType(roadSystem->getRandomDriverType());
 
-            if (!roadSystem->addVehicle(v)) {
-                delete v;
-                return false;
-            }
-
-            if (destLane > 0)
-                destStreet->forward.cars[destLane - 1].insert(v->getId());
-            else
-                destStreet->backward.cars[-1 * destLane - 1].insert(v->getId());
-
+            if (!roadSystem->addVehicle(v)) { delete v; return false; }
+            if (destLane > 0) destStreet->forward.cars[destLane - 1].insert(v->getId());
+            else destStreet->backward.cars[-1 * destLane - 1].insert(v->getId());
             return true;
         }
 
         // No gap found
         return false;
-
     } else {
         // Destination street is in meso mode
 

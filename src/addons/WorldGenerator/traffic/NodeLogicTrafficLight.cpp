@@ -48,11 +48,10 @@ size_t NodeLogicTrafficLight::getLightPost(const ID node, const ID facing) const
     return position;
 }
 
-void NodeLogicTrafficLight::addNode(const Node *node) {
+void NodeLogicTrafficLight::addNode(const RSNode *node) {
 
     // If node is already registered ignore it
-    if (trafficLights.count(node->getId()))
-        return;
+    if (trafficLights.count(node->getId())) return;
 
     // Move center to the middle of the nodes
     center = (center * trafficLights.size() + node->getPosition()) / (trafficLights.size() + 1);
@@ -81,7 +80,7 @@ void NodeLogicTrafficLight::addNode(const Node *node) {
     rebuildLightPhases();
 }
 
-bool NodeLogicTrafficLight::createLightPost(const Node* node, const Street* street) {
+bool NodeLogicTrafficLight::createLightPost(const RSNode* node, const Street* street) {
 
     size_t index = getLightPost(node->getId(), street->getId());
     if (index < lightPosts.size())
@@ -92,8 +91,8 @@ bool NodeLogicTrafficLight::createLightPost(const Node* node, const Street* stre
     double distNodeCrossroad = calcDistance(node->getPosition(), center);
 
     // Search the street inside the Connections
-    for (multiset<Node::Connection>::iterator iter = node->connections.begin(); iter != node->connections.end(); ++iter) {
-        if (iter->street == street->getId() && iter->flags & Node::Connection::INCOMING) {
+    for (multiset<RSNode::Connection>::iterator iter = node->connections.begin(); iter != node->connections.end(); ++iter) {
+        if (iter->street == street->getId() && iter->flags & RSNode::Connection::INCOMING) {
 
             // If the next node is further away than the calling node, we have found our connection.
             // Not that we care about the connection as such, but through it we can get the next node in its
@@ -106,7 +105,7 @@ bool NodeLogicTrafficLight::createLightPost(const Node* node, const Street* stre
                 post.street = iter->street;
                 post.facing = iter->node;
 
-                if (iter->flags & Node::Connection::FORWARD) {
+                if (iter->flags & RSNode::Connection::FORWARD) {
                     post.direction = 1;
                     for (unsigned int laneI = 1; laneI <= street->getLaneCount(1); ++laneI)
                         post.laneStates.push_back(RED);
@@ -123,7 +122,7 @@ bool NodeLogicTrafficLight::createLightPost(const Node* node, const Street* stre
     return true;
 }
 
-bool NodeLogicTrafficLight::removeLightPost(const Node* node, const Street* street) {
+bool NodeLogicTrafficLight::removeLightPost(const RSNode* node, const Street* street) {
 
     size_t index = getLightPost(node->getId(), street->getId());
     if (index < lightPosts.size())
@@ -347,7 +346,7 @@ void NodeLogicTrafficLight::rebuildLightPhases() {
     applyPhase();
 }
 
-NodeLogicTrafficLight::NodeLogicTrafficLight(const RoadSystem *roadSystem, const Node *node, const double radius)
+NodeLogicTrafficLight::NodeLogicTrafficLight(const RoadSystem *roadSystem, const RSNode *node, const double radius)
     : NodeLogic(TRAFFIC_LIGHT), roadSystem(roadSystem), center(node->getPosition()), radius(radius), trafficLights() {
 
     trafficLights.insert(node->getId());
@@ -376,7 +375,7 @@ void NodeLogicTrafficLight::tick() {
 
 }
 
-int NodeLogicTrafficLight::canEnter(const Node* node, const ID streetId, const int lane, const ID, const int) const {
+int NodeLogicTrafficLight::canEnter(const RSNode* node, const ID streetId, const int lane, const ID, const int) const {
 
     int direction = (lane < 0) ? -1 : 1;
 
@@ -404,7 +403,7 @@ NodeLogic* NodeLogicTrafficLight::makeNodeLogic(const RoadSystem *roadSystem, co
     // add this traffic light to the logic of the other one.
     // If none is found, create a new logic and return it.
 
-    Node *nodePtr = roadSystem->getNode(nodeId);
+    RSNode *nodePtr = roadSystem->getNode(nodeId);
 
     // Set maximal search distance based on street types and lane counts
 
@@ -464,14 +463,14 @@ Vec2d NodeLogicTrafficLight::getPosition() const {
     return center;
 }
 
-void NodeLogicTrafficLight::addStreet(const Node* node, const Street* street) {
+void NodeLogicTrafficLight::addStreet(const RSNode* node, const Street* street) {
 
     if (createLightPost(node, street))
         rebuildLightPhases();
 
 }
 
-void NodeLogicTrafficLight::removeStreet(const Node* node, const Street* street) {
+void NodeLogicTrafficLight::removeStreet(const RSNode* node, const Street* street) {
 
     if (removeLightPost(node, street))
         rebuildLightPhases();

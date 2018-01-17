@@ -86,6 +86,7 @@ class OldTrafficSimulation : public VRObject {
         void update();
         void tick();
         void updateScene();
+        void updateViewAreas();
 
         void setCollisionHandler(bool (*handler) (Vehicle& a, Vehicle& b));
         void setVehiclePosition(const unsigned int id, const Vec3d& pos, const Vec3d& orientation);

@@ -5,10 +5,13 @@
 #include "core/utils/toString.h"
 #include "TrafficSimulation.h"
 #include "RoadSystem.h"
+#include "NodeLogic.h"
+#include "NodeLogicTrafficLight.h"
 #include "addons/WorldGenerator/GIS/OSMMap.h"
 
 #include <boost/bind.hpp>
 #include <boost/thread/locks.hpp>
+#include <tuple>
 
 using namespace OSG;
 
@@ -44,7 +47,7 @@ void OldTrafficSimulation::setDrawingDistance(const double distance) {
 }
 
 void OldTrafficSimulation::setTrafficDensity(const double density) {
-    ;
+    sim.getRoadSystem()->setTrafficDensity(density);
 }
 
 void OldTrafficSimulation::addVehicleType(const unsigned int id, const double probability, const double collisionRadius, const double maxSpeed, const double maxAcceleration, const double maxRoration, VRTransformPtr model) {
@@ -68,6 +71,108 @@ void OldTrafficSimulation::addDriverType(const unsigned int id, const double pro
     ;
 }
 
+void OldTrafficSimulation::updateViewAreas() {
+    RoadSystem* roadSystem = sim.getRoadSystem();
+    const RoadSystem::ViewArea* viewArea = roadSystem->getViewarea(0);
+
+    // Iterate over all vehicles and add all vehicles to the output
+    // that are within viewArea->radius of viewArea->position
+    cout << "system vehicles: " << roadSystem->getVehicles()->size() << endl;
+    for (auto vehicle : *roadSystem->getVehicles()) {
+        int ID = vehicle.second->getId();
+        float d = calcDistance(viewArea->position, vehicle.second->getPosition());
+        if (d > viewArea->radius) vehicles.erase(ID);
+        else {
+            Vehicle v;
+            v.id = ID;
+            v.vehicleTypeId = vehicle.second->getVehicleType();
+            v.driverTypeId = vehicle.second->getDriverType();
+
+            if (meshes.count(v.vehicleTypeId) == 0) v.vehicleTypeId = 404;
+            v.model = static_pointer_cast<VRTransform>( meshes[v.vehicleTypeId]->duplicate(true) );
+            v.model->setPersistency(0);
+            vehicles.insert(make_pair(v.id, v));
+        }
+
+        /*Value v;
+        v["id"] = vehicle.second->getId();
+        v["vehicle"] = vehicle.second->getVehicleType();
+        v["driver"] = vehicle.second->getDriverType();
+        v["pos"][0] = vehicle.second->getPosition()[0];
+        v["pos"][1] = vehicle.second->getPosition()[1];
+        v["pos"][2] = vehicle.second->getPosition()[2];
+        v["angle"][0] = vehicle.second->getFuturePosition()[0];
+        v["angle"][1] = vehicle.second->getFuturePosition()[1];
+        v["angle"][2] = vehicle.second->getFuturePosition()[2];
+        v["dPos"][0] = vehicle.second->getFuturePosition()[0] - vehicle.second->getPosition()[0];
+        v["dPos"][1] = vehicle.second->getFuturePosition()[1] - vehicle.second->getPosition()[1];
+        v["dPos"][2] = vehicle.second->getFuturePosition()[2] - vehicle.second->getPosition()[2];
+        v["dAngle"][0] = vehicle.second->getFuturePosition()[0] - vehicle.second->getPosition()[0];
+        v["dAngle"][1] = vehicle.second->getFuturePosition()[1] - vehicle.second->getPosition()[1];
+        v["dAngle"][2] = vehicle.second->getFuturePosition()[2] - vehicle.second->getPosition()[2];
+
+        Vehicle::STATE state = vehicle.second->getState();
+        if (state & Vehicle::TURN_LEFT) v["state"].append("leftIndicator");
+        if (state & Vehicle::TURN_RIGHT) v["state"].append("leftIndicator");
+        if (state & Vehicle::BRAKING) v["state"].append("braking");
+        if (state & Vehicle::COLLIDING) v["state"].append("collision");
+        if (state & Vehicle::CRASHED) v["state"].append("crashed");
+
+        for (set< pair<ID, ID> >::iterator iter2 = roadSystem->getCollisions()->begin(); iter2 != roadSystem->getCollisions()->end(); ++iter2) {
+            if (iter2->first == vehicle.second->getId()) v["colliding"].append(iter2->second);
+            else if (iter2->second == vehicle.second->getId()) v["colliding"].append(iter2->first);
+        }
+
+        result["vehicles"].append(v); // Append vehicle to list*/
+    }
+
+    // Add the traffic lights
+    for (auto logic : *roadSystem->getNodeLogics()) {
+        if (logic->getType() != NodeLogic::TRAFFIC_LIGHT) continue;
+
+        NodeLogicTrafficLight* trafficLight = static_cast<NodeLogicTrafficLight*>(logic);
+        if (calcDistance(viewArea->position, trafficLight->getPosition()) > viewArea->radius) continue;
+
+        // Add the traffic light
+        for (auto light : trafficLight->getTrafficLights()) {
+            const vector<NodeLogicTrafficLight::LightPost>& posts = trafficLight->getLightPostState(light);
+            for (vector<NodeLogicTrafficLight::LightPost>::const_iterator post = posts.begin(); post != posts.end(); ++post) {
+                /*Value postValue;
+                postValue["at"] = post->node;
+                postValue["facing"] = post->facing;
+                postValue["street"] = post->street;
+
+                bool error = false;
+                for(vector<NodeLogicTrafficLight::STATE>::const_iterator state = post->laneStates.begin(); state != post->laneStates.end(); ++state) {
+                    switch (*state) {
+                        case NodeLogicTrafficLight::RED:
+                            postValue["state"].append("red");
+                            break;
+                        case NodeLogicTrafficLight::GREEN:
+                            postValue["state"].append("green");
+                            break;
+                        case NodeLogicTrafficLight::AMBER:
+                            postValue["state"].append("amber");
+                            break;
+                        case NodeLogicTrafficLight::RED_AMBER:
+                            postValue["state"].append("redamber");
+                            break;
+                        default:
+                            error = true;
+                            break;
+                    }
+                }
+
+                if (!error) result["trafficlights"].append(postValue);*/
+            }
+
+        }
+
+    }
+
+    //roadSystem->clearCollisions();
+}
+
 void OldTrafficSimulation::start() {
     updateCb = VRUpdateCb::create("trafficSim", boost::bind(&OldTrafficSimulation::tick, this));
     VRScene::getCurrent()->addUpdateFkt(updateCb);
@@ -86,170 +191,24 @@ bool OldTrafficSimulation::isRunning() {
 }
 
 void OldTrafficSimulation::tick() {
-    // Update the position of the player to be send to the server
-    /*if (player != NULL) {
-        // Move the vehicle
-        Value vehicle;
-        vehicle["id"] = 0;
-        Value pos;
+    updateViewAreas();
 
-        Vec3d worldPosition = player->getFrom();
-        pos[0u] = worldPosition[0];
-        pos[1]  = worldPosition[1];
-        pos[2]  = worldPosition[2];
-        vehicle["pos"] = pos;
+    vector<int> remV;
+    vector<tuple<int, Vec3d, double>> addV;
+    vector<tuple<int, Vec3d, Quaterniond>> movV;
+    vector<tuple<int, int, int>> relV;
+    vector<int> colV;
+    vector<int> remA;
+    vector<tuple<int, double, Vec2d>> addA;
+    vector<tuple<int, Vec2d>> movA;
 
-        // Pack as the requested array entry
-        dataToSend["moveVehicles"][0] = vehicle;
+    if (player != NULL) { // Update the position of the player
+        Vec3d pos = player->getFrom();
+        movV.push_back(tuple<int, Vec3d, Quaterniond>(0, pos, Quaterniond()));
     }
 
-    if (!receivedData.isNull()) {
-        //cout << "Received data\n";
 
-        // New data received per network. Update the positions of vehicles && the states of traffic lights
-
-        // A set which contains the IDs of the currently existing vehicles.
-        // If data for one of those is received, the entry in the set will be removed.
-        // All vehicles that are in the set after the loop finished are no longer in the
-        // area && can be deleted.
-        set<uint> vehicleIDs;
-        for (auto iter : vehicles) vehicleIDs.insert(iter.first);
-
-        if (!receivedData["vehicles"].isNull() && receivedData["vehicles"].isArray()) {
-            // Update the vehicles
-
-            //cout << "Received vehicles " << receivedData["vehicles"].size();
-
-            // A set for possible collisions
-            // Add them all to the set && resolve them later on to avoid doubled checks
-            set< pair<unsigned int, unsigned int> > collisions;
-
-            // Sleeps for 10ms each tick, but the send deltas are for one second
-            // Use only a part of them to avoid moving too fast
-            static const float partDelta = 10 / 1000;
-
-            for (auto vehicleIter : receivedData["vehicles"]) {
-                // Check if the values have valid types
-                if (!vehicleIter["id"].isConvertibleTo(uintValue)
-                 || !vehicleIter["pos"].isConvertibleTo(arrayValue)
-                 || !vehicleIter["pos"][0].isConvertibleTo(realValue)
-                 || !vehicleIter["pos"][1].isConvertibleTo(realValue)
-                 || !vehicleIter["pos"][2].isConvertibleTo(realValue)
-                 || !vehicleIter["dPos"].isConvertibleTo(arrayValue)
-                 || !vehicleIter["dPos"][0].isConvertibleTo(realValue)
-                 || !vehicleIter["dPos"][1].isConvertibleTo(realValue)
-                 || !vehicleIter["dPos"][2].isConvertibleTo(realValue)
-                 || !vehicleIter["angle"].isConvertibleTo(arrayValue)
-                 || !vehicleIter["angle"][0].isConvertibleTo(realValue)
-                 || !vehicleIter["angle"][1].isConvertibleTo(realValue)
-                 || !vehicleIter["angle"][2].isConvertibleTo(realValue)
-                 || !vehicleIter["dAngle"].isConvertibleTo(arrayValue)
-                 || !vehicleIter["dAngle"][0].isConvertibleTo(realValue)
-                 || !vehicleIter["dAngle"][1].isConvertibleTo(realValue)
-                 || !vehicleIter["dAngle"][2].isConvertibleTo(realValue)) {
-                    cout << "OldTrafficSimulation: Warning: Received invalid vehicle data.\n";
-                    continue;
-                }
-
-                uint ID = vehicleIter["id"].asUInt();
-
-                if (vehicles.count(ID) == 0) { // The vehicle is new, create it
-                    if (!vehicleIter["vehicle"].isConvertibleTo(uintValue)
-                     || !vehicleIter["driver"].isConvertibleTo(uintValue)) {
-                        cout << "OldTrafficSimulation: Warning: Received invalid vehicle data.\n";
-                        continue;
-                    }
-
-                    uint vID = vehicleIter["vehicle"].asUInt();
-                    if (meshes.count(vID) == 0) {
-                        // If it is bigger than 500 it is our user-controlled vehicle
-                        if (vID < 500) cout << "OldTrafficSimulation: Warning: Received unknown vehicle type " << vID << ".\n";
-                        continue;
-                    }
-
-                    Vehicle v;
-
-                    v.id = ID;
-                    v.vehicleTypeId = vID;
-                    v.driverTypeId = vehicleIter["driver"].asUInt();
-
-                    if (meshes.count(v.vehicleTypeId) == 0) v.vehicleTypeId = 404;
-                    v.model = static_pointer_cast<VRTransform>( meshes[v.vehicleTypeId]->duplicate(true) );
-                    v.model->setPersistency(0);
-
-                    // Add it to the map
-                    vehicles.insert(make_pair(v.id, v));
-
-                } else vehicleIDs.erase(ID); // Already (and still) exists, remove its ID from the vehicle-id-set
-
-                // Now the vehicle exists, update its position && state
-
-                Vehicle& v = vehicles[ID];
-
-                //v.pos = toVec3d(vehicleIter["pos"]);
-                v.pos = Vec3d(vehicleIter["pos"][0].asFloat(), vehicleIter["pos"][1].asFloat(), vehicleIter["pos"][2].asFloat());
-                v.deltaPos = Vec3d(vehicleIter["dPos"][0].asFloat(), vehicleIter["dPos"][1].asFloat(), vehicleIter["dPos"][2].asFloat());
-                v.deltaPos *= partDelta;
-                v.orientation = Vec3d(vehicleIter["angle"][0].asFloat(), vehicleIter["angle"][1].asFloat(), vehicleIter["angle"][2].asFloat());
-                v.deltaOrientation = Vec3d(vehicleIter["dAngle"][0].asFloat(), vehicleIter["dAngle"][1].asFloat(), vehicleIter["dAngle"][2].asFloat());
-                v.deltaOrientation *= partDelta;
-
-                if (!vehicleIter["state"].isNull() && vehicleIter["state"].isArray()) {
-                    v.state = Vehicle::NONE;
-
-                    for (auto state : vehicleIter["state"]) {
-                        if (!state.isConvertibleTo(stringValue)) continue;
-
-                        if(state.asString() == "rightIndicator") {
-                            v.state |= Vehicle::RIGHT_INDICATOR;
-                        } else if(state.asString() == "leftIndicator") {
-                            v.state |= Vehicle::LEFT_INDICATOR;
-                        } else if(state.asString() == "accelerating") {
-                            v.state |= Vehicle::ACCELERATING;
-                        } else if(state.asString() == "braking") {
-                            v.state |= Vehicle::BRAKING;
-                        } else if(state.asString() == "waiting") {
-                            v.state |= Vehicle::WAITING;
-                        } else if(state.asString() == "blocked") {
-                            v.state |= Vehicle::BLOCKED;
-                        } else if(state.asString() == "collision") {
-                            v.state |= Vehicle::COLLIDED;
-                        }
-                    }
-                }
-
-                if (!vehicleIter["colliding"].isNull() && vehicleIter["colliding"].isArray()) {
-                    for (auto collisionIter : vehicleIter["colliding"]) {
-                        if (!collisionIter.isConvertibleTo(uintValue)) continue;
-
-                        uint other = collisionIter.asUInt();
-                        if (other < v.id) collisions.insert(make_pair(other, v.id));
-                        else collisions.insert(make_pair(v.id, other));
-                    }
-                }
-            } // End vehicle iteration
-
-            // Okay, all vehicles are updated now
-
-            // Resolve collisions
-            if (collisionHandler != NULL) {
-                for (auto c : collisions) {
-                    if (collisionHandler(vehicles[c.first], vehicles[c.second])) {
-                        dataToSend["collision"].append(c.first);
-                        dataToSend["collision"].append(c.second);
-                    }
-                }
-            }
-
-        } // End vehicle updates
-
-        // Remove vehicles which are no longer on the map
-        for (auto v : vehicleIDs) {
-            vehicles[v].model->destroy();
-            vehicles.erase(v);
-        }
-
-
+    /*
         // Get traffic light updates
         if (!receivedData["trafficlights"].isNull() && receivedData["trafficlights"].isArray()) {
 
@@ -367,7 +326,7 @@ void OldTrafficSimulation::tick() {
     }*/
 
     // Advance the vehicles a bit
-    //cout << "Update " << vehicles.size() << " vehicles\n";
+    cout << "Update " << vehicles.size() << " vehicles\n";
     for (auto v : vehicles) {
         Vec3d p = v.second.pos;
         p[1] = 0;//TODO: get right street height
@@ -378,7 +337,104 @@ void OldTrafficSimulation::tick() {
     }
 
     sim.tick();
+
+    RoadSystem* roadSystem = sim.getRoadSystem();
+
+    for (auto v : remV) roadSystem->removeVehicle(v);
+    for (auto v : addV) {
+        int id = get<0>(v);
+        Vec3d pos = get<1>(v);
+        double radius = get<2>(v);
+
+        roadSystem->addVehicle(id, pos, radius);
+        roadSystem->getFreeVehicles()->insert(id);
+    }
+
+    for (auto v : movV) { // Move client controlled vehicles
+        int id = get<0>(v);
+        Vec3d pos = get<1>(v);
+        Quaterniond angle = get<2>(v);
+
+        auto vehicle = roadSystem->getVehicle(id);
+        vehicle->setPosition(pos);
+        vehicle->setOrientation(angle);
+    }
+
+    for (auto v : relV) {
+        int id = get<0>(v);
+        int driverType = get<1>(v);
+        int vehicleType = get<2>(v);
+
+        // Try to find it
+        auto vehicle = roadSystem->getVehicle(id);
+        vehicle->setController(0);
+        roadSystem->getFreeVehicles()->erase(vehicle->getId());
+
+        // Find the nearest node and set it as destination
+        RSNode* minNode = NULL;
+        double minDistance = numeric_limits<double>::max();
+        for (auto nodeIter = roadSystem->getNodes()->begin(); nodeIter != roadSystem->getNodes()->end(); ++nodeIter) {
+            double dist = calcDistance(vehicle->getPosition(), nodeIter->second->getPosition());
+            if (dist < minDistance) {
+                minDistance = dist;
+                minNode = nodeIter->second;
+            }
+        }
+
+        Street* street = roadSystem->getStreet(minNode->getStreetIds()[rand() % minNode->getStreetIds().size()]);
+
+        // Find out on which side of the street we are
+        // "Evil" hack: Get the lane-offset at the node and look which one is nearer to our position
+        int lane = street->getLaneCount(1);
+        Vec2d destPosition = street->getRelativeNodePosition(minNode->getId(), lane);
+        if (calcDistance(destPosition, vehicle->getPosition()) > minDistance) { // Wrong side
+            lane = street->getLaneCount(-1);
+            destPosition = street->getRelativeNodePosition(minNode->getId(), lane);
+        }
+
+        vehicle->setCurrentDestination(destPosition);
+        vehicle->setStreet(street->getId(), lane);
+        int minNodeI = street->getNodeIndex(minNode->getId());
+        int prevNode;
+        if (lane < 0) {
+            if (minNodeI > 0) prevNode = (*(street->getNodeIds()))[minNodeI - 1];
+            else prevNode = (*(street->getNodeIds()))[minNodeI + 1];
+        } else /* lane > 0 */ {
+            if (minNodeI < street->getNodeIds()->size() - 1) prevNode = (*(street->getNodeIds()))[minNodeI + 1];
+            else prevNode = (*(street->getNodeIds()))[minNodeI - 1];
+        }
+
+        vehicle->getRoute()->push_back(prevNode);
+        vehicle->getRoute()->push_back(minNode->getId());
+        vehicle->setDriverType(driverType);
+        vehicle->setVehicleType(vehicleType);
+    }
+
+    for (auto id : colV) { // Handle crashed vehicles
+        auto v = roadSystem->getVehicle(id);
+        if (v != NULL) if (v->getController() >= 0) v->setController(180 + (rand() % 360));
+    }
+
+    for (auto id : remA) { // Remove viewarea
+        roadSystem->removeViewarea(id);
+    }
+
+    for (auto a : addA) { // Add viewarea
+        int id = get<0>(a);
+        double size = get<1>(a);
+        if (size < 0) size = 0;
+        Vec2d pos = get<2>(a);
+        roadSystem->addViewarea(id, pos, size);
+    }
+
+    for (auto a : movA) { // Move a viewarea
+        int id = get<0>(a);
+        Vec2d pos = get<1>(a);
+        roadSystem->moveViewarea(id, pos);
+    }
+
 }
+
 
 void OldTrafficSimulation::setCollisionHandler(bool (*handler) (Vehicle& a, Vehicle& b)) {
     collisionHandler = handler;
@@ -389,7 +445,7 @@ void OldTrafficSimulation::setVehiclePosition(const unsigned int id, const OSG::
 }
 
 void OldTrafficSimulation::setSimulationSpeed(const double speed) {
-    ;
+    if (speed > 0) timer.setTimeScale(speed);
 }
 
 void OldTrafficSimulation::setPlayerTransform(VRTransformPtr transform) {

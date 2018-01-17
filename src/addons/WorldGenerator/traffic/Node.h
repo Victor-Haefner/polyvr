@@ -18,7 +18,7 @@ using namespace std;
  Represents a point in the road system.
  This point might have an abitrary number of streets connected to it.
  */
-class Node {
+class RSNode {
 
     public:
         /// The features a node might have.
@@ -101,7 +101,7 @@ class Node {
          @param position The position of the node.
          @param features (Optional) features at this position.
          */
-        Node(const RoadSystem *roadSystem, const ID id, const Vec2d position, const FEATURE features = NONE);
+        RSNode(const RoadSystem *roadSystem, const ID id, const Vec2d position, const FEATURE features = NONE);
 
         /**
          Returns the id of this node.
