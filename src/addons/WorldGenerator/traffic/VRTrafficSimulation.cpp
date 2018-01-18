@@ -9,9 +9,10 @@
 #include "core/math/graph.h"
 #include "core/math/triangulator.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/material/VRMaterial.h"
+#include "core/objects/geometry/VRGeoData.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRObjectManager.h"
-#include "core/objects/geometry/VRGeoData.h"
 #include "addons/Semantics/Reasoning/VREntity.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
 
@@ -20,11 +21,11 @@
 using namespace OSG;
 
 
-VRTrafficSimulation::vehicle::vehicle(Graph::position p) : pos(p) {
+VRTrafficSimulation::Vehicle::Vehicle(Graph::position p) : pos(p) {
     t = VRTransform::create("t");
 }
 
-VRTrafficSimulation::vehicle::~vehicle() {}
+VRTrafficSimulation::Vehicle::~Vehicle() {}
 
 
 VRTrafficSimulation::VRTrafficSimulation() : VRObject("TrafficSimulation") {
@@ -45,18 +46,32 @@ void VRTrafficSimulation::setRoadNetwork(VRRoadNetworkPtr rds) {
     roads.clear();
     auto g = roadNetwork->getGraph();
     for (int i = 0; i < g->getNEdges(); i++) roads[i] = road();
+    updateDensityVisual(true);
 }
 
 void VRTrafficSimulation::updateSimulation() {
-    cout << "VRTrafficSimulation::updateSimulation " << roads.size() << endl;
+    auto g = roadNetwork->getGraph();
+
+    auto propagateVehicle = [&](Vehicle& vehicle) {
+        auto& gp = vehicle.pos;
+        gp.pos += 0.005;
+        if (gp.pos > 1) {
+            gp.pos -= 1;
+            auto& edge = g->getEdge(gp.edge);
+            auto edges = g->getNextEdges(edge);
+            if (edges.size() > 0) gp.edge = edges[0].ID;
+            else {
+                for (auto eV : g->getEdges()) for (auto e : eV) if (g->getPrevEdges(e).size() == 0) gp.edge = e.ID;
+            }
+        }
+    };
+
+
     for (int i=0; i<roads.size(); i++) {
         auto& road = roads[i];
-        if (i == 0) cout << " VRTrafficSimulation::updateSimulation road0 " << road.vehicles.size() << endl;
         for (auto& vehicle : road.vehicles) {
-            vehicle.pos.pos += 0.01;
-            if (vehicle.pos.pos > 1) vehicle.pos.pos = 0;
+            propagateVehicle(vehicle);
             auto p = roadNetwork->getPosition(vehicle.pos);
-            if (i == 0) cout << "  VRTrafficSimulation::updateSimulation road0 " << vehicle.pos.pos << " " << vehicle.pos.edge << "  " << p->pos() << endl;
             vehicle.t->setPose(p);
         }
     }
@@ -67,7 +82,7 @@ void VRTrafficSimulation::updateSimulation() {
 void VRTrafficSimulation::addVehicle(int roadID, int type) {
     //if () cout << "VRTrafficSimulation::updateSimulation " << roads.size() << endl;
     auto& road = roads[roadID];
-    auto v = vehicle( Graph::position(roadID, 0.0) );
+    auto v = Vehicle( Graph::position(roadID, 0.0) );
     v.mesh = models[0]->duplicate();
     v.t->addChild(v.mesh);
     addChild(v.t);
@@ -92,20 +107,29 @@ void VRTrafficSimulation::addVehicleModel(VRObjectPtr mesh) {
     models.push_back( mesh->duplicate() );
 }
 
-void VRTrafficSimulation::updateDensityVisual() { // TODO
+void VRTrafficSimulation::updateDensityVisual(bool remesh) {
     if (!flowGeo) {
         flowGeo = VRGeometry::create("trafficFlow");
         addChild(flowGeo);
+
+        auto mat = VRMaterial::create("trafficFlow");
+        mat->setLit(0);
+        mat->setLineWidth(5);
+        flowGeo->setMaterial(mat);
     }
 
-    VRGeoData geo(flowGeo);
-    /*if (geo.size() != nodes)
+    if (roadNetwork && remesh) {
+        VRGeoData geo;
+        float h = 2;
+        auto g = roadNetwork->getGraph();
+        for (auto n : g->getNodes()) geo.pushVert( n.p.pos() + Vec3d(0,h,0) );
+        for (auto eV : g->getEdges()) for (auto e : eV) geo.pushLine(e.from, e.to);
+        geo.apply(flowGeo);
+    }
 
-    geo.pushVert(Pnt3d(-1,0,-1));
-    geo.pushVert(Pnt3d( 1,0,-1));
-    geo.pushVert(Pnt3d( 1,0, 1));
-    geo.pushVert(Pnt3d(-1,0, 1));
-    geo.pushQuad();*/
+    if (flowGeo->size() > 0) { // TODO
+        //for (auto road)
+    }
 }
 
 
