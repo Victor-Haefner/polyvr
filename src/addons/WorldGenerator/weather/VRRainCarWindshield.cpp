@@ -95,7 +95,7 @@ void VRRainCarWindshield::update() {
 
     Vec3d windshieldPos = geoWindshield->getWorldPosition();
     Vec3d windshieldDir = geoWindshield->getDir();
-    Vec3d windshieldUp = geoWindshield->getUp();
+    Vec3d windshieldUp = geoWindshield->getWorldUp();
     mat->setShaderParameter<Vec3f>("windshieldPos", convertV3dToV3f(windshieldPos));
     mat->setShaderParameter<Vec3f>("windshieldDir", convertV3dToV3f(windshieldDir));
     mat->setShaderParameter<Vec3f>("windshieldUp", convertV3dToV3f(windshieldUp));

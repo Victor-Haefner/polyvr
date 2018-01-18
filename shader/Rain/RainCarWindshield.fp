@@ -9,6 +9,8 @@ in mat3 miN;
 in mat4 miP;
 vec3 fragDir;
 vec3 PCam;
+vec3 axU;
+vec3 axV;
 vec4 color;
 bool debugB = false;
 
@@ -48,18 +50,16 @@ void computeDepth(vec4 position) {
 
 float computeDropSize() {
 	float dropsize = 1;
-	dropsize = 0.99998;
+	//dropsize = 0.99998;
+	dropsize = 0.9998;
 	return dropsize;
 }
 
 vec3 computeDropOnWS() {
 	float x = dot((windshieldPos - PCam),windshieldUp)/(dot(fragDir,windshieldUp));
 	vec3 p = x * fragDir + PCam;
+	computeDepth(gl_ModelViewProjectionMatrix*vec4(p,1));
 	return p;
-}
-
-float computeDistance(vec3 l, vec3 r) {
-	return sqrt((r.x-l.x)*(r.x-l.x)+(r.y-l.y)*(r.y-l.y)+(r.z-l.z)*(r.z-l.z));
 }
 
 vec4 drawDot(vec3 P0, vec4 check) {
@@ -76,6 +76,19 @@ vec4 drawDot(vec3 P0, vec4 check) {
 	return check;
 }
 
+vec3 localToWorld(vec2 inVec) {
+	vec3 outVec;
+	outVec = windshieldPos + axU*inVec.x + axV*inVec.y;
+	return outVec;
+}
+
+vec2 worldToLocal(vec3 inV) {
+	vec2 outV;
+	outV.x = dot((inV-windshieldPos),axU);
+	outV.y = dot((inV-windshieldPos),axV);
+	return outV;
+}
+
 vec4 drawCenter(vec3 P0, vec4 check) {	
 	vec3 D0 = normalize( P0-PCam );
 
@@ -89,11 +102,12 @@ vec4 drawCenter(vec3 P0, vec4 check) {
 void main() {
 	computeDirection();
 	computePCam();
-	vec3 posOffsets = vec3(0.3,0.7,0);
+	axU = cross(windshieldDir,windshieldUp);
+	axV = windshieldDir;
 	
 	if (fragDir.y < -0.999) discard;
 	vec4 check = vec4(0,0,0,0);	
-
+	/*
 	check = drawDot(windshieldPos, check);
 	check = drawDot(windshieldPos + windshieldDir*0.2,check);
 	check = drawDot(windshieldPos + windshieldDir*0.4,check);
@@ -105,8 +119,14 @@ void main() {
 	check = drawDot(windshieldPos + windshieldUp*(-0.2),check);
 	check = drawDot(windshieldPos + windshieldUp*(-0.4),check);
 	check = drawCenter(vec3(0,0,0), check);
+	*/
+	//if(distance(windshieldPos,computeDropOnWS()) < 1.5) check = vec4(1,0,0,0.8);
+	check = drawDot(localToWorld(vec2(0,0)),check);
+	check = drawDot(localToWorld(vec2(0,0.5)),check);
+	check = drawDot(localToWorld(vec2(1,0)),check);
+	check = drawDot(localToWorld(vec2(1,0.5)),check);
+
 	
-	if(computeDistance(windshieldPos,computeDropOnWS()) < 1) check = vec4(1,0,0,0.8);
 
 	//computeDepth(gl_ModelViewProjectionMatrix*vec4(P0,1));
 	if (check == vec4(0,0,0,0)) discard;	
