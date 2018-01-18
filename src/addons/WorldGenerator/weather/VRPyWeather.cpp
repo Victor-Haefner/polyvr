@@ -22,6 +22,7 @@ PyMethodDef VRPyRain::methods[] = {
 
 PyMethodDef VRPyRainCarWindshield::methods[] = {
     {"doTestFunction", PyWrap(RainCarWindshield, doTestFunction, "do Test Function", void ,void) },
+    {"setWindshield", PyWrap(RainCarWindshield, setWindshield, "setWindshield", void, VRGeometryPtr) },
     {NULL}  /* Sentinel */
 };
 

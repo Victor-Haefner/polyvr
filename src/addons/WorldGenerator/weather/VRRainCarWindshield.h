@@ -27,7 +27,7 @@ class VRRainCarWindshield : public VRGeometry {
         VRTextureRendererPtr texRenderer;
         VRGeometryPtr cube;
 
-        VRGeometryPtr cubeWindshield;
+        VRGeometryPtr geoWindshield;
 
         string vScript;
         string fScript;
@@ -45,6 +45,8 @@ class VRRainCarWindshield : public VRGeometry {
         void startRainCallback(float t);
         void stopRainCallback(float t);
         void updateScale(float scaleNow);
+
+        Vec3f convertV3dToV3f(Vec3d in);
 
         //inital cloud parameters
         float densityStart = 0.1;
@@ -67,6 +69,7 @@ class VRRainCarWindshield : public VRGeometry {
         Vec3f carOrigin;
         Vec3f carDir;
         Vec3f posOffset;
+        //Vec3d windshieldDir;
 
     public:
         VRRainCarWindshield();
@@ -76,6 +79,7 @@ class VRRainCarWindshield : public VRGeometry {
         VRRainCarWindshieldPtr ptr();
 
         float get();
+        void setWindshield(VRGeometryPtr geoWindshield);
 
         void doTestFunction();
 

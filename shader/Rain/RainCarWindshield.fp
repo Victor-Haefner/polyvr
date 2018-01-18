@@ -8,7 +8,7 @@ in vec2 tcs;
 in mat3 miN;
 in mat4 miP;
 vec3 fragDir;
-vec3 pWindshield; //point in plane of windshield
+vec3 PCam;
 vec4 color;
 bool debugB = false;
 
@@ -19,6 +19,10 @@ uniform float rainDensity;
 uniform vec3 carOrigin;
 uniform vec3 carDir;
 uniform vec3 posOffset;
+
+uniform vec3 windshieldPos;
+uniform vec3 windshieldDir;
+uniform vec3 windshieldUp;
 
 void computeDirection() {
 	fragDir = normalize( miN * (miP * pos).xyz );
@@ -32,6 +36,11 @@ float gettheta(vec3 d) {
 	return acos(d.y);
 }
 
+void computePCam() {
+	mat4 m = inverse(gl_ModelViewMatrix);
+	PCam = (m*vec4(0,0,0,1)).xyz;
+}
+
 void computeDepth(vec4 position) {
 	float d = position.z / position.w;
 	gl_FragDepth = d*0.5 + 0.5;
@@ -43,9 +52,17 @@ float computeDropSize() {
 	return dropsize;
 }
 
+vec3 computeDropOnWS() {
+	float x = dot((windshieldPos - PCam),windshieldUp)/(dot(fragDir,windshieldUp));
+	vec3 p = x * fragDir + PCam;
+	return p;
+}
+
+float computeDistance(vec3 l, vec3 r) {
+	return sqrt((r.x-l.x)*(r.x-l.x)+(r.y-l.y)*(r.y-l.y)+(r.z-l.z)*(r.z-l.z));
+}
+
 vec4 drawDot(vec3 P0, vec4 check) {
-	mat4 m = inverse(gl_ModelViewMatrix);
-	vec3 PCam = (m*vec4(0,0,0,1)).xyz;
 	vec3 D0 = normalize( P0-PCam );
 
 	if (mod(tnow,1)<0.02) {
@@ -59,9 +76,7 @@ vec4 drawDot(vec3 P0, vec4 check) {
 	return check;
 }
 
-vec4 drawCenter(vec3 P0, vec4 check) {
-	mat4 m = inverse(gl_ModelViewMatrix);
-	vec3 PCam = (m*vec4(0,0,0,1)).xyz;	
+vec4 drawCenter(vec3 P0, vec4 check) {	
 	vec3 D0 = normalize( P0-PCam );
 
 	if (dot(D0,fragDir) > 0.9994) { 
@@ -73,26 +88,26 @@ vec4 drawCenter(vec3 P0, vec4 check) {
 
 void main() {
 	computeDirection();
+	computePCam();
 	vec3 posOffsets = vec3(0.3,0.7,0);
-	pWindshield = carOrigin + posOffsets;
 	
 	if (fragDir.y < -0.999) discard;
 	vec4 check = vec4(0,0,0,0);	
 
-	check = drawDot(pWindshield, check);
-	check = drawDot(pWindshield + vec3(0,0,0.2),check);
-	check = drawDot(pWindshield + vec3(0,0,0.4),check);
-	check = drawDot(pWindshield + vec3(0,0,0.6),check);
-	check = drawDot(pWindshield + vec3(0,0,0.8),check);
-	check = drawDot(pWindshield + vec3(0,0,1),check);
-	check = drawDot(pWindshield + vec3(0,0.2,0),check);
-	check = drawDot(pWindshield + vec3(0,0.2,0.2),check);
-	check = drawDot(pWindshield + vec3(0,0.2,0.4),check);
-	check = drawDot(pWindshield + vec3(0,0.2,0.6),check);
-	check = drawDot(pWindshield + vec3(0,0.2,0.8),check);
-	check = drawDot(pWindshield + vec3(0,0.2,1),check);
+	check = drawDot(windshieldPos, check);
+	check = drawDot(windshieldPos + windshieldDir*0.2,check);
+	check = drawDot(windshieldPos + windshieldDir*0.4,check);
+	check = drawDot(windshieldPos + windshieldDir*(-0.2),check);
+	check = drawDot(windshieldPos + windshieldDir*(-0.4),check);
+
+	check = drawDot(windshieldPos + windshieldUp*0.2,check);
+	check = drawDot(windshieldPos + windshieldUp*0.4,check);
+	check = drawDot(windshieldPos + windshieldUp*(-0.2),check);
+	check = drawDot(windshieldPos + windshieldUp*(-0.4),check);
 	check = drawCenter(vec3(0,0,0), check);
 	
+	if(computeDistance(windshieldPos,computeDropOnWS()) < 1) check = vec4(1,0,0,0.8);
+
 	//computeDepth(gl_ModelViewProjectionMatrix*vec4(P0,1));
 	if (check == vec4(0,0,0,0)) discard;	
 	gl_FragColor = check;
