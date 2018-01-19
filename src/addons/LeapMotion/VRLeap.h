@@ -51,6 +51,7 @@ class VRLeapFrame : public std::enable_shared_from_this<VRLeapFrame> {
 
     public:
         static VRLeapFramePtr create();
+        VRLeapFramePtr ptr();
 
         HandPtr getLeftHand();
         HandPtr getRightHand();
@@ -66,7 +67,7 @@ class VRLeap : public VRDevice {
     private:
         vector<std::function<void(VRLeapFramePtr)>> frameCallbacks;
 
-        string host;
+        string host = "localhost";
         int port = 6437;
         VRWebSocket webSocket;
         bool transformed{false};
@@ -93,7 +94,11 @@ class VRLeap : public VRDevice {
         int getPort();
         void setPort(int newPort);
 
+        string getAddress();
+        void setAddress(string a);
+
         void registerFrameCallback(std::function<void(VRLeapFramePtr)> func);
+        void clearFrameCallbacks();
         void setPose(Vec3d pos, Vec3d dir, Vec3d up);
 };
 

@@ -1,5 +1,6 @@
 #include <core/utils/VRFunction.h>
 #include <core/scene/VRScene.h>
+#include "core/scene/VRSceneManager.h"
 #include "VRWebSocket.h"
 
 OSG_BEGIN_NAMESPACE
@@ -24,9 +25,8 @@ bool VRWebSocket::open(string url) {
     }
 
     if (threadId < 0) {
-        threadFkt = VRFunction<VRThreadWeakPtr>::create("webSocketPollThread",
-                                                        boost::bind(&VRWebSocket::poll, this, _1));
-        threadId = VRScene::getCurrent()->initThread(threadFkt, "webSocketPollThread", false);
+        threadFkt = VRThreadCb::create("webSocketPollThread", boost::bind(&VRWebSocket::poll, this, _1));
+        threadId = VRSceneManager::get()->initThread(threadFkt, "webSocketPollThread", false);
     }
 
     return true;

@@ -1,5 +1,6 @@
 #include "VRLeap.h"
 #include "core/objects/VRTransform.h"
+#include "core/utils/toString.h"
 #include <OpenSG/OSGQuaternion.h>
 
 OSG_BEGIN_NAMESPACE ;
@@ -45,9 +46,14 @@ void VRLeap::setPort(int newPort) {
     resetConnection();
 }
 
+string VRLeap::getAddress() { return host + ":" + to_string(port); }
+void VRLeap::setAddress(string a) { host = splitString(a, ':')[0]; port = toInt(splitString(a, ':')[1]); resetConnection(); }
+
 void VRLeap::registerFrameCallback(function<void(VRLeapFramePtr)> func) {
     frameCallbacks.push_back(func);
 }
+
+void VRLeap::clearFrameCallbacks() { frameCallbacks.clear(); }
 
 void VRLeap::newFrame(Json::Value json) {
 
@@ -131,11 +137,11 @@ bool VRLeap::resetConnection() {
     bool result = true;
 
     string url = "ws://" + host + ":" + to_string(port) + "/v6.json";
-    cout << "Connecting to Leap at " << url << endl;
-    result &= webSocket.open(url);
+    cout << "Connecting to Leap "+getName()+" at " << url << endl;
+    result = webSocket.open(url);
 
     if (result) {
-        result &= webSocket.sendMessage("{\"background\": true}");
+        result = webSocket.sendMessage("{\"background\": true}");
     }
 
     return result;
@@ -173,6 +179,8 @@ HandPtr VRLeapFrame::Hand::clone() {
 
     return copy;
 }
+
+VRLeapFramePtr VRLeapFrame::ptr() { return static_pointer_cast<VRLeapFrame>( shared_from_this() ); }
 
 void VRLeapFrame::Hand::transform(Matrix4d transformation) {
 

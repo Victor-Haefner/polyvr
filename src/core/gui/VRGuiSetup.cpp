@@ -21,6 +21,7 @@
 #include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRManager.cpp"
+#include "addons/LeapMotion/VRLeap.h"
 #include <gtkmm/builder.h>
 #include <gtkmm/liststore.h>
 #include <gtkmm/treestore.h>
@@ -79,6 +80,7 @@ void VRGuiSetup::closeAllExpander() {
     setExpanderSensitivity("expander28", false);
     setExpanderSensitivity("expander29", false);
     setExpanderSensitivity("expander30", false);
+    setExpanderSensitivity("expander31", false);
 }
 
 void VRGuiSetup::updateObjectData() {
@@ -205,11 +207,18 @@ void VRGuiSetup::updateObjectData() {
         setCombobox("combobox12", getListStorePos("liststore11", t->getDevice()) );
     }
 
+    if (selected_type == "leap") {
+        setExpanderSensitivity("expander31", true);
+        VRLeap* t = (VRLeap*)selected_object;
+        setTextEntry("entry28", t->getAddress());
+    }
+
     if (selected_type == "mouse") { device = true; }
     if (selected_type == "multitouch") { device = true; }
     if (selected_type == "keyboard") { device = true; }
     if (selected_type == "server") { device = true; }
     if (selected_type == "flystick") { device = true; }
+    if (selected_type == "leap") { device = true; }
 
     auto setup = current_setup.lock();
     if (selected_type == "vrpn_device" || selected_type == "vrpn_tracker") {
@@ -983,6 +992,13 @@ void VRGuiSetup::on_haptic_ip_edited() {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
+void VRGuiSetup::on_leap_host_edited() {
+    if (guard) return;
+    VRLeap* dev = (VRLeap*)selected_object;
+    dev->setAddress(getTextEntry("entry28"));
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
 void VRGuiSetup::on_change_haptic_type() {
     if (guard) return;
     VRHaptic* dev = (VRHaptic*)selected_object;
@@ -1105,6 +1121,7 @@ VRGuiSetup::VRGuiSetup() {
     menu->appendMenu("SM_AddMenu", "VRPN", "SM_AddVRPNMenu");
     menu->appendItem("SM_AddDevMenu", "Mouse", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRMouse>) );
     menu->appendItem("SM_AddDevMenu", "MultiTouch", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRMultiTouch>) );
+    menu->appendItem("SM_AddDevMenu", "Leap", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRLeap>) );
     menu->appendItem("SM_AddDevMenu", "Keyboard", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRKeyboard>) );
     menu->appendItem("SM_AddDevMenu", "Haptic", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRHaptic>) );
     menu->appendItem("SM_AddDevMenu", "Server", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRServer>) );
@@ -1168,6 +1185,7 @@ VRGuiSetup::VRGuiSetup() {
     setEntryCallback("entry30", sigc::mem_fun(*this, &VRGuiSetup::on_displays_edit_offset) );
     setEntryCallback("entry31", sigc::mem_fun(*this, &VRGuiSetup::on_displays_edit_offset) );
     setEntryCallback("entry8", sigc::mem_fun(*this, &VRGuiSetup::on_haptic_ip_edited) );
+    setEntryCallback("entry28", sigc::mem_fun(*this, &VRGuiSetup::on_leap_host_edited) );
     setEntryCallback("entry15", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_edited) );
     setEntryCallback("entry20", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_edited) );
     setEntryCallback("entry19", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited) );

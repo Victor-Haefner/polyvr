@@ -43,7 +43,9 @@ void VRHandGeo::updateChange() {
     if (handData && isVisible()) {
 
         // Palm
-        setPose(handData->pose);
+        auto p = handData->pose;
+        cout << p.toString() << endl;
+        //setPose(p);
 
         // Bones
         for (int i = 0; i < 5; ++i) {
@@ -73,7 +75,7 @@ void VRHandGeo::updateChange() {
             bones[i][3]->setMesh(OSGGeometry::create(makeCylinderGeo(l3, 0.0075, 4, true, true, true)));
             bones[i][3]->setWorldPose(Pose::create(p3, handData->bases[i][3].dir(), handData->bases[i][3].up()));
         }
-
+/*
         // Directions
         for (int i = 0; i < 5; ++i) {
             if (handData->extended[i]) {
@@ -94,13 +96,18 @@ void VRHandGeo::updateChange() {
         } else {
             if (pinch->isVisible()) pinch->hide();
         }
+*/
     }
+
+
     mutex.unlock();
-    VRTransform::updateChange();
+   // VRTransform::updateChange();
 }
 
 void VRHandGeo::update(VRLeapFramePtr frame) {
-    boost::mutex::scoped_lock lock(mutex);
+
+    //boost::mutex::scoped_lock lock(mutex);
+    mutex.lock();
 
     if (isLeft) {
         handData = frame->getLeftHand();
@@ -110,12 +117,13 @@ void VRHandGeo::update(VRLeapFramePtr frame) {
     if (!handData) {
         if (visible) {
             visible = false;
-            reg_change();
         }
     } else {
         if (!visible) visible = true;
-        reg_change();
     }
+
+    mutex.unlock();
+    reg_change();
 }
 
 void VRHandGeo::setLeft() { isLeft = true; }
