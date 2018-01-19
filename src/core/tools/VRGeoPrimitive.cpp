@@ -49,7 +49,7 @@ void VRGeoPrimitive::select(bool b) {
     for (auto h : handles) h->setVisible(b);
 
     if (!selector) return;
-    if (b) selector->select(ptr(), false); // TODO: does not play nice with params_geo!!
+    if (b) selector->select(ptr(), false, false); // TODO: does not play nice with params_geo!!
     else selector->clear();
 }
 
