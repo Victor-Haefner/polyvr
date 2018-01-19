@@ -10,6 +10,7 @@
 #include "core/networking/VRSharedMemory.h"
 #include "core/utils/VROptions.h"
 #include "core/utils/VRGlobals.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/sound/VRSoundManager.h"
 #include "core/objects/material/VRMaterial.h"
@@ -18,7 +19,6 @@
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGNode.h>
 #include <GL/glut.h>
-#include <boost/filesystem.hpp>
 #include <unistd.h>
 #include <termios.h>
 
@@ -139,7 +139,7 @@ void PolyVR::start(bool runit) {
 
     //string app = options->getOption<string>("application");
     //if (app != "") VRSceneManager::get()->loadScene(app);
-    boost::filesystem::remove("setup/.startup"); // remove startup failsafe
+    removeFile("setup/.startup"); // remove startup failsafe
     if (runit) run();
 }
 
@@ -195,7 +195,7 @@ void PolyVR::checkProcessesAndSockets() {
             char c = getch();
             //char c = cin.get();
             if (c == '1') { cout << "\t\tresuming startup now..\n" << endl; break; }
-            if (c == '2') { cout << "\t\tremoving local setup config 'setup/.local'" << endl; boost::filesystem::remove("setup/.local"); }
+            if (c == '2') { cout << "\t\tremoving local setup config 'setup/.local'" << endl; removeFile("setup/.local"); }
         } while (handling_bad_startup);
     }
 

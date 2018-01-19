@@ -206,7 +206,7 @@ PyObject* VRPyVec2f::getSlice(PyObject* self, long ilow, long ihigh) {
     if (ihigh > 2) ihigh = 2;
 
     Vec2d v2;
-    if (0 <= ilow < ihigh <= 2) {
+    if (0 <= ilow && ihigh <= 2 && ilow < ihigh) {
         for (int i=ilow; i < ihigh; i++) v2[i] = ((VRPyVec2f*)self)->v[i];
     } else v2 = ((VRPyVec2f*)self)->v;
     return toPyObject(v2);
@@ -398,11 +398,19 @@ Py_ssize_t VRPyVec3f::len(PyObject* self) {
 }
 
 PyObject* VRPyVec3f::getItem(PyObject* self, Py_ssize_t i) {
+    if (i < 0 || i > 2) {
+        setErr("Index i not in range [0-2] ("+toString(int(i))+")");
+        return NULL;
+    }
     Vec3d v = ((VRPyVec3f*)self)->v;
     return PyFloat_FromDouble(v[i]);
 }
 
 int VRPyVec3f::setItem(PyObject* self, Py_ssize_t i, PyObject* val) {
+    if (i < 0 || i > 2) {
+        setErr("Index i not in range [0-2] ("+toString(int(i))+")");
+        return NULL;
+    }
     Vec3d& v = ((VRPyVec3f*)self)->v;
     v[i] = PyFloat_AsDouble(val);
     return 0;
@@ -415,7 +423,7 @@ PyObject* VRPyVec3f::getSlice(PyObject* self, long ilow, long ihigh) {
     if (ihigh > 3) ihigh = 3;
 
     Vec3d v2;
-    if (0 <= ilow < ihigh <= 3) {
+    if (0 <= ilow && ihigh <= 3 && ilow < ihigh) {
         for (int i=ilow; i < ihigh; i++) v2[i] = ((VRPyVec3f*)self)->v[i];
     } else v2 = ((VRPyVec3f*)self)->v;
     return toPyObject(v2);

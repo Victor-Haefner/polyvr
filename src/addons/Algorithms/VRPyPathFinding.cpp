@@ -37,7 +37,7 @@ PyObject* VRPyPathFinding::computePath(VRPyPathFinding* self, PyObject* args) {
     float t1 = -1;
     float t2 = -1;
     if (PyArg_ParseTuple(args, "ii", &i, &j));
-    else if (PyArg_ParseTuple(args, "ifi", &i, &t1, &j)); // TODO: this dows not work for strange reasons!
+    else if (PyArg_ParseTuple(args, "ifi", &i, &t1, &j)); // TODO: this does not work for strange reasons!
     else if (PyArg_ParseTuple(args, "iif", &i, &j, &t2));
     else if (PyArg_ParseTuple(args, "ifif", &i, &t1, &j, &t2));
     else return NULL;

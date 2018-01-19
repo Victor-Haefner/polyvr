@@ -33,6 +33,8 @@ const double pi = 2*acos(0.0);
 
 using namespace OSG;
 
+template<> string typeName(const VRRoadNetworkPtr& o) { return "RoadNetwork"; }
+
 VRRoadNetwork::VRRoadNetwork() : VRRoadBase("RoadNetwork") {}
 VRRoadNetwork::~VRRoadNetwork() {}
 
@@ -94,12 +96,6 @@ void VRRoadNetwork::clear() {
     intersections.clear();
     for (auto a : assets) a->destroy();
     assets.clear();
-}
-
-VREntityPtr VRRoadNetwork::addNode( Vec3d pos, bool elevate, float elevationOffset ) {
-    int nID = graph->addNode();
-    graph->setPosition(nID, Pose::create(pos));
-    return VRRoadBase::addNode(nID, pos, elevate, elevationOffset);
 }
 
 void VRRoadNetwork::updateAsphaltTexture() {
@@ -260,20 +256,13 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
         }
 
         for (uint i=1; i<nodes.size(); i++) {
-            connectGraph({nodes[i-1], nodes[i]}, {norms[i-1], norms[i]});
+            connectGraph({nodes[i-1], nodes[i]}, {norms[i-1], norms[i]}, lane);
         }
 
         auto lPath = addPath("Path", "lane", nodes, norms);
 		lane->add("path", lPath->getName());
 		widthSum += width;
 	}
-}
-
-void VRRoadNetwork::connectGraph(vector<VREntityPtr> nodes, vector<Vec3d> norms) {
-    auto nID1 = nodes[0]->getValue<int>("graphID", -1);
-    auto nID2 = nodes[1]->getValue<int>("graphID", -1);
-    int eID = graph->connect(nID1, nID2);
-    graphNormals[eID] = norms;
 }
 
 void VRRoadNetwork::addGuardRail( PathPtr path, float height ) {
@@ -813,5 +802,81 @@ vector<VREntityPtr> VRRoadNetwork::getNextRoads(VREntityPtr road) {
     }
     return res;
 }
+
+VREntityPtr VRRoadNetwork::addNode( Vec3d pos, bool elevate, float elevationOffset ) {
+    int nID = graph->addNode();
+    graph->setPosition(nID, Pose::create(pos));
+    return VRRoadBase::addNode(nID, pos, elevate, elevationOffset);
+}
+
+void VRRoadNetwork::connectGraph(vector<VREntityPtr> nodes, vector<Vec3d> norms, VREntityPtr entity) {
+    auto nID1 = nodes[0]->getValue<int>("graphID", -1);
+    auto nID2 = nodes[1]->getValue<int>("graphID", -1);
+    int eID = graph->connect(nID1, nID2);
+    graphNormals[eID] = norms;
+    graphEdgeEntities[eID] = entity;
+}
+
+
+PosePtr VRRoadNetwork::getPosition(Graph::position p) { // TODO
+    int eID = p.edge;
+    auto edge = graph->getEdge(eID);
+    int n1 = edge.from;
+    int n2 = edge.to;
+
+    auto eNorms = graphNormals[eID];
+    auto lane = graphEdgeEntities[eID];
+    auto nodes = lane->getEntity("path")->getAllEntities("nodes");
+
+    Vec3d node1;
+    Vec3d node2;
+
+    for (auto nE : nodes) {
+        auto n = nE->getEntity("node");
+        if (n->getValue<int>("graphID", 0) == n1) node1 = n->getVec3("position");
+        if (n->getValue<int>("graphID", 0) == n2) node2 = n->getVec3("position");
+    }
+
+    Path path;
+    path.addPoint( Pose(node1, eNorms[0]) );
+    path.addPoint( Pose(node2, eNorms[1]) );
+    return path.getPose(p.pos, 0, 1, false);
+}
+
+VREntityPtr VRRoadNetwork::addRoute(vector<int> nodeIDs) { // nodeIDs as computed from pathFinding
+    vector<VREntityPtr> nodes;
+    vector<Vec3d> norms;
+
+    for (int i=0; i<nodeIDs.size()-1; i++) {
+        int n1 = nodeIDs[i];
+        int n2 = nodeIDs[i+1];
+        int eID = graph->getEdgeID(n1, n2);
+
+        auto eNorms = graphNormals[eID];
+        auto lane = graphEdgeEntities[eID];
+        auto nodes = lane->getEntity("path")->getAllEntities("nodes");
+
+        VREntityPtr node1 = 0;
+        VREntityPtr node2 = 0;
+
+        for (auto nE : nodes) {
+            auto n = nE->getEntity("node");
+            if (n->getValue<int>("graphID", 0) == n1) node1 = n;
+            if (n->getValue<int>("graphID", 0) == n2) node2 = n;
+        }
+
+        if (i == 0) {
+            nodes.push_back(node1);
+            norms.push_back(eNorms[0]);
+        }
+
+        nodes.push_back(node2);
+        norms.push_back(eNorms[1]);
+    }
+
+    return addPath("Path", "route", nodes, norms);
+}
+
+
 
 

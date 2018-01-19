@@ -9,6 +9,8 @@ in mat3 miN;
 in mat4 miP;
 vec3 fragDir;
 vec4 color;
+bool debugB = false;
+
 uniform vec2 OSGViewportSize;
 uniform float rainOffset;
 uniform float rainDensity;
@@ -42,10 +44,26 @@ bool obstruction(float D){
 	float disCam = texC.r * (512-0.1);					//distance to cam above	
 	float thetaReal = atan(D,camH-disCam-0.1);
 	
-	if (texC.x==0) return false;
+	//if (texC.x==0) return false;
 	//else return true;
+	//if (thetaReal < 3.1) return true;
+	//if (thetaReal > 3) return true; //seems like for certain viewing angles, thetaReal suddenly is PI (180deg)
+	//if (disCam > 80) return true;	
 	if (thetaReal < gettheta(fragDir)) return true;
 	return false;
+}
+
+vec3 debugObstruction(){
+	vec3 color = vec3(1,0,0);
+	if (atan( fragDir.x, fragDir.z)*180/M_PI<1 && atan( fragDir.x, fragDir.z)*180/M_PI>-1 && gettheta(fragDir)>M_PI/2) return vec3(1,1,1);	
+	if (atan( fragDir.x, fragDir.z)*180/M_PI<91 && atan( fragDir.x, fragDir.z)*180/M_PI>89 && gettheta(fragDir)>M_PI/2) return vec3(0,0,1);	
+	if ((atan( fragDir.x, fragDir.z)*180/M_PI<-179 || atan( fragDir.x, fragDir.z)*180/M_PI>179) && gettheta(fragDir)>M_PI/2) return vec3(0,0,1);	
+	if (atan( fragDir.x, fragDir.z)*180/M_PI<-89 && atan( fragDir.x, fragDir.z)*180/M_PI>-91 && gettheta(fragDir)>M_PI/2) return vec3(0,1,1);	
+	if (obstruction(1)) color = vec3(0,1,0);
+	//if (obstruction(2)) color = vec3(0,1,1);
+	//if (obstruction(5)) color = vec3(0,0,1);
+	//if (obstruction(8)) color = vec3(0,0,1);	
+	return color;
 }
 
 float getdropsize(in float theta,float distance){
@@ -91,6 +109,7 @@ vec3 worldCoords(float D){
 	return world;
 }
 
+//** computes whether there should be raindrops at certain distance D **/
 bool isD(float D) {
 	float dropdis = 2/(D*D); 	// horizontal distance between drops
 	float dropdisy = rainDensity*6; // vertical distance between drops
@@ -124,10 +143,15 @@ bool isD(float D) {
 
 
 vec3 checkrad() {
-	//0-Degree Pointer
-	//if (atan( fragDir.x, fragDir.z)*180/M_PI<1 && atan( fragDir.x, fragDir.z)*180/M_PI>-1 && gettheta(fragDir)>M_PI/2) return vec3(1,1,1);	
-
-	vec3 color = vec3(0,0,0.8);
+	//DEBUGGING POINTERS -- RAIN OCCLUSION ONLY WORKS BETWEEN GREEN POINTERS
+	if (debugB) {
+		if (atan( fragDir.x, fragDir.z)*180/M_PI>-1 && atan( fragDir.x, fragDir.z)*180/M_PI<1 && gettheta(fragDir)>M_PI/2) return vec3(1,1,1);	
+		if (atan( fragDir.x, fragDir.z)*180/M_PI>-68 && atan( fragDir.x, fragDir.z)*180/M_PI<-66 && gettheta(fragDir)>M_PI/2) return vec3(0,1,0);	
+		if (atan( fragDir.x, fragDir.z)*180/M_PI>-113 && atan( fragDir.x, fragDir.z)*180/M_PI<-110 && gettheta(fragDir)>M_PI/2) return vec3(1,0,0);	
+		if (atan( fragDir.x, fragDir.z)*180/M_PI>-158 && atan( fragDir.x, fragDir.z)*180/M_PI<-156 && gettheta(fragDir)>M_PI/2) return vec3(0,1,0);	
+		if (atan( fragDir.x, fragDir.z)*180/M_PI>-180 && atan( fragDir.x, fragDir.z)*180/M_PI<-179 && gettheta(fragDir)>M_PI/2) return vec3(0,1,1);	
+	}
+	vec3 color = vec3(0.3,0.3,0.7);
 
 	if (isD(1) || isD(2) || isD(3) ||isD(5) || isD(8)) return color;
 	else discard;
@@ -139,13 +163,6 @@ void main() {
 	// \theta is angle of fragDir to zenith
 	theta = acos(fragDir.y);
 
-	// vertical line for testing
-	//if (fragDir.x < 0.01 && fragDir.x > 0) gl_FragColor = vec4(0,0,0,1);
-	//gl_FragColor = vec4(fragDir.yxz, 1.0);
-
-	//if (theta < 0.5*M_PI) discard;
-	//if (fragDir.y < 0) discard;
-
 	mat4 m = inverse(gl_ModelViewMatrix);
 	vec3 PCam = (m*vec4(0,0,0,1)).xyz;
 	vec3 P0 = vec3(0,100,0);
@@ -154,7 +171,7 @@ void main() {
 	//if (dot(D0,fragDir) < 0.9999 && dot(D0,fragDir) > 0.999) discard;
 
 	vec3 check = checkrad();
-	 
+	//gl_FragColor = vec4(debugObstruction(),0.3); //DebugMode
 	gl_FragColor = vec4(check,0.2);
 }
 

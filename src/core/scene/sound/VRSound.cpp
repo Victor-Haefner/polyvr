@@ -216,8 +216,9 @@ bool VRSound::initiate() {
 }
 
 void VRSound::playFrame() {
+    //cout << "VRSound::playFrame " << interrupt << " " << this << " playing: " << (al->state == AL_PLAYING) << " N buffer: " << getQueuedBuffer() << endl;
+
     if (al->state == AL_INITIAL) {
-        cout << " VRSound::playFrame reset sound" << endl;
         if (!initiated) initiate();
         if (!al->context) { cout << "VRSound::playFrame Warning: no context" << endl; return; }
         al->frame = avcodec_alloc_frame();
@@ -227,11 +228,14 @@ void VRSound::playFrame() {
         interrupt = false;
     }
 
-    int len;
     if (al->state == AL_PLAYING) {
+        if (getQueuedBuffer() > 5) {
+            recycleBuffer();
+            return;
+        }
+
         if (doUpdate) updateSource();
         auto avrf = av_read_frame(al->context, &al->packet);
-        //cout << "play frame " << interrupt << " " << avrf << endl;
         if (interrupt || avrf < 0) {
             if (al->packet.data) {
                 //cout << "  free packet" << endl;
@@ -249,7 +253,7 @@ void VRSound::playFrame() {
             if (interrupt) { cout << "interrupt sound\n"; break; }
 
             int finishedFrame = 0;
-            len = avcodec_decode_audio4(al->codec, al->frame, &finishedFrame, &al->packet);
+            int len = avcodec_decode_audio4(al->codec, al->frame, &finishedFrame, &al->packet);
             if (len < 0) { cout << "decoding error\n"; break; }
 
             if (finishedFrame) {

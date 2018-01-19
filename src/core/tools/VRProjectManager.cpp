@@ -2,7 +2,7 @@
 
 #include "core/utils/VRStorage.h"
 #include "core/utils/VRStorage_template.h"
-#include <boost/filesystem.hpp>
+#include "core/utils/system/VRSystem.h"
 #include <libxml++/libxml++.h>
 #include <libxml++/nodes/element.h>
 #include <iostream>
@@ -10,7 +10,6 @@
 
 using namespace OSG;
 using namespace std;
-namespace fs = boost::filesystem;
 
 VRProjectManager::VRProjectManager() : VRObject("ProjectManager") {
     storage.storeMap("settings", settings);
@@ -49,7 +48,7 @@ void VRProjectManager::newProject(string path) {
 
 void VRProjectManager::save(string path) {
     if (path == "") path = getName();
-    if (fs::exists(path)) path = fs::canonical(path).string();
+    if (exists(path)) path = canonical(path);
     cout << "VRProjectManager::save " << path << endl;
 
     xmlpp::Document doc;
@@ -66,9 +65,9 @@ void VRProjectManager::save(string path) {
 
 void VRProjectManager::load(string path) {
     if (path == "") path = getName();
-    if (fs::exists(path)) {
+    if (exists(path)) {
         setName(path);
-        path = fs::canonical(path).string();
+        path = canonical(path);
     } else return;
     cout << "VRProjectManager::load " << path << endl;
 

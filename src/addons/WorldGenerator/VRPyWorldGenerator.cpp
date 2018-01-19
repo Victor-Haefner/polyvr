@@ -17,6 +17,8 @@ simpleVRPyType(RoadNetwork, New_ptr);
 simpleVRPyType(District, New_ptr);
 simpleVRPyType(Asphalt, New_ptr);
 
+
+
 PyMethodDef VRPyWorldGenerator::methods[] = {
     {"addAsset", PyWrap( WorldGenerator, addAsset, "Add an asset template", void, string, VRTransformPtr ) },
     {"getAssetManager", PyWrap( WorldGenerator, getAssetManager, "Get the asset manager", VRObjectManagerPtr ) },
@@ -85,8 +87,12 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"getIntersections", PyWrap( RoadNetwork, getIntersections, "Return all intersections", vector<VRRoadIntersectionPtr> ) },
     {"getPreviousRoads", PyWrap( RoadNetwork, getPreviousRoads, "Get the previous roads", vector<VREntityPtr>, VREntityPtr ) },
     {"getNextRoads", PyWrap( RoadNetwork, getNextRoads, "Get the next roads", vector<VREntityPtr>, VREntityPtr ) },
+    {"addRoute", PyWrap( RoadNetwork, addRoute, "Add route path entity from graph node IDs", VREntityPtr, vector<int> ) },
     {NULL}  /* Sentinel */
 };
+
+
+
 
 
 

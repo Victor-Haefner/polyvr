@@ -141,7 +141,7 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     //w->setPickable(1);
     //w->getConstraint()->setTConstraint(Vec3d(0,1,0), VRConstraint::PLANE);
     w->getConstraint()->lockRotation();
-    w->getConstraint()->setActive(true, w);
+    w->getConstraint()->setActive(true);
     //w->getConstraint()->setReferential( dynamic_pointer_cast<VRTransform>(ptr()) );
     addChild(w);
     n->widget = w;

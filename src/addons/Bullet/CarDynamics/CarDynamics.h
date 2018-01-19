@@ -58,7 +58,7 @@ class VRCarDynamics : public VRObject {
             float power = 1000;//this should be engine/velocity dependent
             float breakPower = 7000;//this should be engine/velocity dependent
             float maxForce = 250;//this should be engine/velocity dependent
-            float maxBreakingForce = 150;
+            float maxBreakingForce = 90;
             float rpm = 800;
             float minRpm = 800;
             float maxTorqueRPM = 1700;
@@ -66,6 +66,7 @@ class VRCarDynamics : public VRObject {
             float stallRpm = 480;
             float friction = 5;
             float frictionCoefficient = 14;
+            float minThrottle = 0.01;
             map<int,float> gearRatios;
 
             PathPtr clutchTransmissionCurve;
@@ -85,6 +86,9 @@ class VRCarDynamics : public VRObject {
             float mass = 1400.0f;//f850.0f;
             Vec3d massOffset;
 
+            float cw = 0.28;
+            float airA = 2;
+
             Chassis();
             static shared_ptr<Chassis> create();
         };
@@ -101,6 +105,7 @@ class VRCarDynamics : public VRObject {
         typedef shared_ptr<Wheel> WheelPtr;
 
     private:
+        bool debugCarDyn = false;
         int type = SIMPLE;
         EnginePtr engine;
         ChassisPtr chassis;
@@ -129,22 +134,22 @@ class VRCarDynamics : public VRObject {
         float eBreaks = 0;
         float eForces = 0;
 
-        float minThrottle = 0.05;
-        bool throttleDamperBool=false;
+        float rhoAir = 1.2;
 
         float clamp(float v, float m1, float m2);
         float rescale(float v, float m1, float m2);
+        float strech(float v, float m1);
 
         float computeCoupling( WheelPtr wheel );
         float computeWheelGearRPM( WheelPtr wheel );
-        float throttleDamper( float pedalThrottle );
         float throttleBooster( float clampedThrottle );
+        float computeThrottle( float pedalPos );
         float computeEngineForceOnWheel( WheelPtr wheel, float gearRPM, float deltaRPM, float coupling, float clampedThrottle );
         float computeAirResistence( float vehicleVelocity );
-        float computeEngineFriction( float deltaRPM, float coupling, float clampedThrottle );
+        float computeEngineFriction( float gear,  float deltaRPM, float coupling, float clampedThrottle );
         float computeThrottleTransmission( float clampedThrottle );
         float computeBreakTransmission( WheelPtr wheel, float coupling, float clampedThrottle );
-        float computeEngineBreak( float coupling, float clampedThrottle );
+        float computeEngineBreak( float gearRatio,  float coupling );
         void updateEngineRPM( float gearRPM, float deltaRPM, float throttleImpactOnRPM, float breakImpactOnRPM, float engineFriction, float coupling );
         void updateWheel( WheelPtr wheel, float eForce, float eBreak );
 

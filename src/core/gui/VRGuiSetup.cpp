@@ -199,6 +199,8 @@ void VRGuiSetup::updateObjectData() {
         VRHaptic* t = (VRHaptic*)selected_object;
         setTextEntry("entry8", t->getIP());
         setCombobox("combobox25", getListStorePos("liststore8", t->getType()) );
+        setLabel("label64", t->getDeamonState());
+        setLabel("label66", t->getDeviceState());
     }
 
     if (selected_type == "multitouch") {
@@ -400,12 +402,18 @@ void VRGuiSetup::on_treeview_select() {
     VRGuiSetup_ModelColumns cols;
     selected_row = *iter;
 
+    selected_object = 0;
     selected_name = selected_row.get_value(cols.name);
     selected_type = selected_row.get_value(cols.type);
     selected_object = selected_row.get_value(cols.obj);
 
-    if (selected_type == "window") mwindow = (VRMultiWindow*) selected_object;
-    else mwindow = 0;
+    //cout << "SELECT " << selected_name << " of type " << selected_type << endl;
+
+    window = mwindow = 0;
+    if (selected_type == "window") {
+        window = (VRWindow*)selected_object;
+        mwindow = (VRMultiWindow*)selected_object;
+    }
 
     Gtk::TreePath path(iter);
     path.up();
@@ -1208,7 +1216,7 @@ VRGuiSetup::VRGuiSetup() {
     setComboboxCallback("combobox18", sigc::mem_fun(*this, &VRGuiSetup::on_change_view_user) );
     setComboboxCallback("combobox25", sigc::mem_fun(*this, &VRGuiSetup::on_change_haptic_type) );
 
-    fillStringListstore("liststore8", {"Virtuose 6D Desktop", "Virtuose 6D35-45", "Virtuose 6D40-40", "INCA 6D"} );
+    fillStringListstore("liststore8", VRHaptic::getDevTypes() );
     fillStringListstore("liststore11", VRMultiTouch::getDevices() );
 
     tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview2"));
@@ -1269,12 +1277,11 @@ void VRGuiSetup::on_setup_changed() {
 }
 
 void VRGuiSetup::on_window_device_changed() {
-    if (guard || !selected_object) return;
+    if (guard || !window) return;
     string name = getComboboxText("combobox13");
     auto dev = VRSetup::getCurrent()->getDevice(name);
-    VRWindow* win = (VRWindow*)selected_object;
-    win->setMouse( dynamic_pointer_cast<VRMouse>(dev) );
-    win->setMultitouch( dynamic_pointer_cast<VRMultiTouch>(dev) );
+    window->setMouse( dynamic_pointer_cast<VRMouse>(dev) );
+    window->setMultitouch( dynamic_pointer_cast<VRMultiTouch>(dev) );
 }
 
 void VRGuiSetup::setTreeRow(Glib::RefPtr<Gtk::TreeStore> tree_store, Gtk::TreeStore::Row row, string name, string type, gpointer ptr, string fg, string bg) {
@@ -1286,7 +1293,7 @@ void VRGuiSetup::setTreeRow(Glib::RefPtr<Gtk::TreeStore> tree_store, Gtk::TreeSt
 }
 
 void VRGuiSetup::updateStatus() {
-    if (mwindow != 0) setLabel("win_state", mwindow->getStateString());
+    if (mwindow) setLabel("win_state", mwindow->getStateString());
 }
 
 void VRGuiSetup::updateSetup() {

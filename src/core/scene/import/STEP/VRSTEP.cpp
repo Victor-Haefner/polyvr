@@ -10,7 +10,7 @@
 #include <memory>
 #include <algorithm>
 #include <boost/bind.hpp>
-#include <boost/filesystem.hpp>
+#include "core/utils/system/VRSystem.h"
 
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
@@ -41,7 +41,7 @@ using namespace OSG;
 VRGuiTreeExplorerPtr explorer;
 
 void VRSTEP::loadT(string file, STEPfilePtr sfile, bool* done) {
-    if (boost::filesystem::exists(file)) file = boost::filesystem::canonical(file).string();
+    if (exists(file)) file = canonical(file);
     sfile->ReadExchangeFile(file);
     registry->ResetSchemas();
     registry->ResetEntities();

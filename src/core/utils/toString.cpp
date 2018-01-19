@@ -10,13 +10,15 @@
 
 using namespace OSG;
 
-vector<string> splitString(string s, char c) {
+vector<string> splitString(const string& s, char c) {
     stringstream ss(s);
     string token;
     vector<string> res;
     while (std::getline(ss, token, c)) res.push_back(token);
     return res;
 }
+
+string subString(const string& s, int beg, int len) { return s.substr(beg, len); }
 
 typedef void* voidPtr;
 

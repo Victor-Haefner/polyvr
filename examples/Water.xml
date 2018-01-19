@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.294688 0.787463 -0.0876844" at_dir="0" base_name="Default" far="250" fov="1.0472" from="3.08941 2.02269 -2.36235" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.294688 0.787463 -0.0876844" at_dir="0" base_name="Default" far="250" fov="1.0472" from="2.56709 4.3126 -0.0401191" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
@@ -133,6 +133,16 @@
 	
 	def doMaterial():
 		m = VR.Material('fluid')
+		
+		"""
+		m.setLit(0)
+		m.setVertexProgram('particle_vp')
+		m.setFragmentProgram('particle_opaque_fp')
+		m.setGeometryProgram('particle_gp')
+		m.setDepthTest('GL_ALWAYS')
+		m.addPass()
+		"""
+		
 		m.setLit(0)
 		m.setVertexProgram('particle_vp')
 		m.setFragmentProgram('particle_fp')
@@ -211,10 +221,8 @@ varying vec4 pos;
 
 void main( void ) {
 	vec4 c = vec4(1);
-	//c.x = gl_FragCoord.z;
 	c.x = pos.z/pos.w;
 	c.x = c.x*0.5 + 0.5;
-	//c.y = gl_FragCoord.w;
 	gl_FragColor = c;
 }
 </core>
@@ -225,12 +233,23 @@ void main( void ) {
 
 varying vec4 Color;
 varying vec2 texCoord;
+varying vec4 pos;
+&#13;
+#define mP gl_ProjectionMatrix
+
+void computeDepth() {&#13;
+	vec4 pp = mP * pos;
+	//vec4 pp = pos;&#13;
+	float d = pp.z / pp.w;&#13;
+	gl_FragDepth = d*0.5 + 0.5;&#13;
+}
 
 void main( void ) {
 	vec4 c = vec4(0.0);	
 	float r = sqrt(texCoord[0]*texCoord[0]+texCoord[1]*texCoord[1]);
 	c.a = max(1.0-r,0.0)*0.3;
 	gl_FragColor = c;
+	computeDepth();
 }
 </core>
     </Script>
@@ -286,6 +305,30 @@ void main() {
 }
 </core>
     </Script>
+    <Script base_name="particle_opaque_fp" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+#version 120
+
+varying vec4 Color;
+varying vec2 texCoord;
+varying vec4 pos;
+&#13;
+#define mP gl_ProjectionMatrix
+
+void computeDepth() {&#13;
+	vec4 pp = mP * pos;
+	//vec4 pp = pos;&#13;
+	float d = pp.z / pp.w;&#13;
+	gl_FragDepth = d*0.5 + 0.5;&#13;
+}
+
+void main( void ) {
+	vec4 c = vec4(1.0);	
+	gl_FragColor = c;
+	computeDepth();
+}
+</core>
+    </Script>
     <Script base_name="particle_vp" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
       <core>
 #version 120
@@ -331,6 +374,8 @@ void main(void) {
 	float R = water.a;
 	if (R &gt; 0.84) discard;
 	gl_FragDepth = depth.x;//depth.y;
+	
+	
     
     //if (tc.x &lt; 0.5) gl_FragColor = depth;
     //else 
