@@ -8,6 +8,7 @@
 #include "core/math/polygon.h"
 #include "core/math/graph.h"
 #include "core/math/triangulator.h"
+#include "core/math/Octree.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRGeoData.h"
@@ -45,37 +46,87 @@ void VRTrafficSimulation::setRoadNetwork(VRRoadNetworkPtr rds) {
     roadNetwork = rds;
     roads.clear();
     auto g = roadNetwork->getGraph();
-    for (int i = 0; i < g->getNEdges(); i++) roads[i] = road();
-    updateDensityVisual(true);
+    for (int i = 0; i < g->getNEdges(); i++) {
+        roads[i] = road();
+        auto& e = g->getEdge(i);
+        Vec3d p1 = g->getNode(e.from).p.pos();
+        Vec3d p2 = g->getNode(e.to).p.pos();
+        roads[i].length = (p2-p1).length();
+    }
+
+    seedEdges.clear();
+    for (auto eV : g->getEdges()) {
+        for (auto e : eV) {
+            if (g->getPrevEdges(e).size() == 0) seedEdges.push_back( e.ID );
+        }
+    }
+
+    //updateDensityVisual(true);
 }
+
+template<class T>
+T randomChoice(vector<T> vec) {
+    return vec[ round((float(random())/RAND_MAX) * (vec.size()-1)) ];
+}
+
+/**
+
+TODO:
+
+- avoid other vehicles
+    - AFTER the new positions
+    - check for collisions
+    - resolve collisions
+
+*/
 
 void VRTrafficSimulation::updateSimulation() {
     auto g = roadNetwork->getGraph();
 
-    auto propagateVehicle = [&](Vehicle& vehicle) {
+    auto propagateVehicle = [&](Vehicle& vehicle, float d) {
         auto& gp = vehicle.pos;
-        gp.pos += 0.005;
+        gp.pos += d;
         if (gp.pos > 1) {
             gp.pos -= 1;
             auto& edge = g->getEdge(gp.edge);
             auto edges = g->getNextEdges(edge);
-            if (edges.size() > 0) gp.edge = edges[0].ID;
-            else {
-                for (auto eV : g->getEdges()) for (auto e : eV) if (g->getPrevEdges(e).size() == 0) gp.edge = e.ID;
+            if (edges.size() > 0) gp.edge = randomChoice(edges).ID;
+            else gp.edge = randomChoice(seedEdges);
+        }
+    };
+
+    auto propagateVehicles = [&]() {
+        for (auto& road : roads) {
+            for (auto& vehicle : road.second.vehicles) {
+                float d = vehicle.speed/road.second.length;
+                propagateVehicle(vehicle, d);
+                auto p = roadNetwork->getPosition(vehicle.pos);
+                vehicle.t->setPose(p);
             }
         }
     };
 
-
-    for (int i=0; i<roads.size(); i++) {
-        auto& road = roads[i];
-        for (auto& vehicle : road.vehicles) {
-            propagateVehicle(vehicle);
-            auto p = roadNetwork->getPosition(vehicle.pos);
-            vehicle.t->setPose(p);
+    auto resolveCollisions = [&]() {
+        float R = 2;
+        Octree space(2);
+        for (auto& road : roads) { // fill octree
+            for (auto& vehicle : road.second.vehicles) {
+                auto pos = vehicle.t->getFrom();
+                space.add(pos, &vehicle);
+            }
         }
-    }
+        for (auto& road : roads) { // do range searches
+            for (auto& vehicle : road.second.vehicles) {
+                auto pos = vehicle.t->getFrom();
+                auto res = space.radiusSearch(pos, R);
+                if (res.size() >= 1) vehicle.t->setScale(Vec3d(1,1,1));
+                else vehicle.t->setScale(Vec3d(2,2,2));
+            }
+        }
+    };
 
+    propagateVehicles();
+    resolveCollisions();
     updateDensityVisual();
 }
 

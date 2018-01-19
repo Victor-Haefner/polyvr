@@ -24,6 +24,7 @@ class VRTrafficSimulation : public VRObject {
             Graph::position pos;
             VRTransformPtr t;
             VRObjectPtr mesh;
+            float speed = 0.05;
 
             Vehicle(Graph::position p);
             ~Vehicle();
@@ -52,6 +53,7 @@ class VRTrafficSimulation : public VRObject {
 
         VRRoadNetworkPtr roadNetwork;
         map<int, road> roads;
+        vector<int> seedEdges;
         vector<Vehicle> vehicles;
         vector<VRObjectPtr> models;
         map<int, vector<trafficLight> > trafficLights;
