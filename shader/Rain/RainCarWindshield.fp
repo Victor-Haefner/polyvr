@@ -99,6 +99,63 @@ vec4 drawCenter(vec3 P0, vec4 check) {
 	return check;
 }
 
+vec2 locateDrop() {
+	vec3 worldVec = computeDropOnWS();
+	vec2 uv = worldToLocal(worldVec);
+	float off = 0; //0.3 * hash(uv);
+
+	float disBD = 0.2;
+	float limitValue = 0.001;
+	if (mod(uv.x + off,disBD) < limitValue && mod(uv.y,disBD) < limitValue && distance(windshieldPos,worldVec) < 1.5) return uv;
+	return vec2(-10,-10);
+}
+
+bool isDrop() {
+	vec3 worldVec = computeDropOnWS();
+	vec2 uv = worldToLocal(worldVec);
+	float off = 0; //0.3 * hash(uv);
+
+	float disBD = 0.2;
+	float limitValue = 0.1;
+	
+	//TODO: set offset in dependence of TIME, floor offset in dependence of wiper, drops should stay displayed until wiper clears (mod)
+	
+	if (distance(localToWorld(vec2(0,0)),worldVec) < limitValue) return true;
+	return false;
+}
+
+bool timer() {
+	vec3 worldVec = computeDropOnWS();
+	vec2 uv = worldToLocal(worldVec);
+	float off = 0;//0.5*hash(uv);
+	if (mod(tnow + off,1)<0.2) return true;
+	return false;
+}
+
+bool draw() {
+	vec3 worldVec = computeDropOnWS();
+	vec2 uv = worldToLocal(worldVec);
+	if (distance(windshieldPos,worldVec)>1.5) return false;
+	/*float frequency = 1;
+	float hsIn1 = floor(frequency*tnow);
+	float hsIn2 = floor(frequency*tnow)+0.3;
+
+	float hs1 = hash(vec2(hsIn1,hsIn2));
+	float hs2 = hash(vec2(hsIn2,hsIn1));
+	vec2 offset = vec2(hs1,hs2);
+	vec2 point = vec2(0,0) + offset;*/
+	vec2 point = vec2(0,0);
+	if (distance(uv,point)<0.04) return true;
+	return false;
+}
+
+void trackTime() {
+	float t = tnow/10; // tnow/durationWiper later
+	float tWiper = mod(t,1);
+	float tCounter = floor(tWiper); //offset for drops
+	float tDrop = mod(tWiper,1);
+}
+
 void main() {
 	computeDirection();
 	computePCam();
@@ -121,10 +178,14 @@ void main() {
 	check = drawCenter(vec3(0,0,0), check);
 	*/
 	//if(distance(windshieldPos,computeDropOnWS()) < 1.5) check = vec4(1,0,0,0.8);
-	check = drawDot(localToWorld(vec2(0,0)),check);
+	/*check = drawDot(localToWorld(vec2(0,0)),check);
 	check = drawDot(localToWorld(vec2(0,0.5)),check);
 	check = drawDot(localToWorld(vec2(1,0)),check);
 	check = drawDot(localToWorld(vec2(1,0.5)),check);
+	*/
+	if (isDrop()) check = vec4(1,1,0,0.1);
+	//if (draw(vec2(0,0))) check = vec4(1,0,1,0.6);
+	//if (draw()) check = vec4(1,0,1,0.6);
 
 	
 
