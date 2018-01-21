@@ -69,23 +69,23 @@ T randomChoice(vector<T> vec) {
     return vec[ round((float(random())/RAND_MAX) * (vec.size()-1)) ];
 }
 
-/**
-
-TODO:
-
-- avoid other vehicles
-    - AFTER the new positions
-    - check for collisions
-    - resolve collisions
-
-*/
-
 void VRTrafficSimulation::updateSimulation() {
     auto g = roadNetwork->getGraph();
+    Octree space(2);
+
+    auto fillOctree = [&]() {
+        for (auto& road : roads) { // fill octree
+            for (auto& vehicle : road.second.vehicles) {
+                auto pos = vehicle.t->getFrom();
+                space.add(pos, &vehicle);
+            }
+        }
+    };
 
     auto propagateVehicle = [&](Vehicle& vehicle, float d) {
         auto& gp = vehicle.pos;
         gp.pos += d;
+
         if (gp.pos > 1) {
             gp.pos -= 1;
             auto& edge = g->getEdge(gp.edge);
@@ -93,40 +93,73 @@ void VRTrafficSimulation::updateSimulation() {
             if (edges.size() > 0) gp.edge = randomChoice(edges).ID;
             else gp.edge = randomChoice(seedEdges);
         }
+
+        auto p = roadNetwork->getPosition(vehicle.pos);
+        vehicle.lastMove = p->pos() - vehicle.t->getFrom();
+        vehicle.t->setPose(p);
+    };
+
+    auto inFront = [&](PosePtr p1, PosePtr p2, Vec3d lastMove) -> bool {
+        Vec3d D = p2->pos() - p1->pos();
+        float L = D.length();
+        Vec3d Dn = D/L;
+
+        lastMove.normalize();
+        float d = Dn.dot(lastMove);
+        Vec3d x = lastMove.cross(Vec3d(0,1,0));
+        float r = abs( Dn.dot(x) );
+
+        return d > 0 && L < 5 && r < 0.2;
+    };
+
+    auto commingRight = [&](PosePtr p1, PosePtr p2) -> bool {
+        return false;
+
+        Vec3d D = p2->pos() - p1->pos();
+        float L = D.length();
+        Vec3d Dn = D/L;
+        float d = Dn.dot(p2->dir());
+        float r1 = -Dn.dot(p2->x());
+        float r2 = -p2->dir().dot( p1->x() );
+        return d > 0.5 && r1 > 0.5 && r2 < -0.5;
     };
 
     auto propagateVehicles = [&]() {
         for (auto& road : roads) {
             for (auto& vehicle : road.second.vehicles) {
                 float d = vehicle.speed/road.second.length;
-                propagateVehicle(vehicle, d);
-                auto p = roadNetwork->getPosition(vehicle.pos);
-                vehicle.t->setPose(p);
+
+                // check if road ahead is free
+                auto pose = vehicle.t->getPose();
+                auto res = space.radiusSearch(pose->pos(), 5);
+                bool wait = false;
+                for (auto vv : res) {
+                    auto v = (Vehicle*)vv;
+                    auto p = v->t->getPose();
+                    if (inFront(pose, p, vehicle.lastMove)) wait = true;
+                    else if (commingRight(pose, p)) wait = true;
+                }
+
+                if (!wait) propagateVehicle(vehicle, d);
             }
         }
     };
 
-    auto resolveCollisions = [&]() {
+    /*auto resolveCollisions = [&]() {
         float R = 2;
-        Octree space(2);
-        for (auto& road : roads) { // fill octree
-            for (auto& vehicle : road.second.vehicles) {
-                auto pos = vehicle.t->getFrom();
-                space.add(pos, &vehicle);
-            }
-        }
         for (auto& road : roads) { // do range searches
             for (auto& vehicle : road.second.vehicles) {
                 auto pos = vehicle.t->getFrom();
                 auto res = space.radiusSearch(pos, R);
-                if (res.size() >= 1) vehicle.t->setScale(Vec3d(1,1,1));
+                if (res.size() <= 1) vehicle.t->setScale(Vec3d(1,1,1));
                 else vehicle.t->setScale(Vec3d(2,2,2));
             }
         }
-    };
+    };*/
 
+    fillOctree();
     propagateVehicles();
-    resolveCollisions();
+    //resolveCollisions();
     updateDensityVisual();
 }
 

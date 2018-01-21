@@ -24,7 +24,8 @@ class VRTrafficSimulation : public VRObject {
             Graph::position pos;
             VRTransformPtr t;
             VRObjectPtr mesh;
-            float speed = 0.05;
+            float speed = 0.15;
+            Vec3d lastMove = Vec3d(0,0,0);
 
             Vehicle(Graph::position p);
             ~Vehicle();

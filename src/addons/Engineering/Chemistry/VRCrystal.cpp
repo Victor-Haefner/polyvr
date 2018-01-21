@@ -99,7 +99,7 @@ void VRCrystal::loadCell(string path) { // CIF data parser!
     vector<Vec3d> positions;
     for (string data : positionData["symmetry_equiv_pos_as_xyz"]) {
         Vec3d pos;
-        auto posData = splitString( subString(data, 1, data.size()-1), ' ');
+        auto posData = splitString( subString(data, 1, data.size()-1), ',');
         for (int i=0; i<3; i++) {
             ;
             pos[0] = toFloat( posData[0] );
