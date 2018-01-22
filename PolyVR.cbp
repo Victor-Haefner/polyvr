@@ -533,6 +533,8 @@
 		<Unit filename="src/addons/WorldGenerator/terrain/VRTerrainPhysicsShape.h" />
 		<Unit filename="src/addons/WorldGenerator/traffic/VRPyTrafficSimulation.cpp" />
 		<Unit filename="src/addons/WorldGenerator/traffic/VRPyTrafficSimulation.h" />
+		<Unit filename="src/addons/WorldGenerator/traffic/VRTrafficLights.cpp" />
+		<Unit filename="src/addons/WorldGenerator/traffic/VRTrafficLights.h" />
 		<Unit filename="src/addons/WorldGenerator/traffic/VRTrafficSimulation.cpp" />
 		<Unit filename="src/addons/WorldGenerator/traffic/VRTrafficSimulation.h" />
 		<Unit filename="src/addons/WorldGenerator/traffic/setup.sh" />
