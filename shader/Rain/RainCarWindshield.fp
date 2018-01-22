@@ -99,15 +99,34 @@ vec4 drawCenter(vec3 P0, vec4 check) {
 	return check;
 }
 
-vec2 locateDrop() {
+vec4 locateDrop() {
 	vec3 worldVec = computeDropOnWS();
 	vec2 uv = worldToLocal(worldVec);
 	float off = 0; //0.3 * hash(uv);
 
-	float disBD = 0.2;
-	float limitValue = 0.001;
-	if (mod(uv.x + off,disBD) < limitValue && mod(uv.y,disBD) < limitValue && distance(windshieldPos,worldVec) < 1.5) return uv;
-	return vec2(-10,-10);
+	float disBD = 0.02;
+	float limitValue = 0.02;
+	//bool timeCheck;
+
+	float hsIn1 = floor(uv.x*50);
+	float hsIn2 = floor(uv.y*50);
+
+	float hs1 = hash(vec2(hsIn1,hsIn2));
+	float hs2 = hash(vec2(hsIn2,hsIn1));
+	vec2 offset = vec2(hs1,hs2);
+	float asdf = (floor(mod(tnow,10))); 
+	if (mod(uv.x,disBD) < limitValue && mod(uv.y,disBD) < limitValue && distance(windshieldPos,worldVec) < 4) { 
+		
+		/*if (mod(tnow,20)<10) {
+			if(uv.y>0.3*mod(tnow,10)-1.5) return uv;
+		}
+		else {
+			if(uv.y>1.5-0.3*mod(tnow,10)) return uv;
+		}*/
+		//if ((uv.x+8)*hs2 < mod(0.1*mod(0.29*tnow,10),0.5)*3 || (uv.x+8)*hs2<0.2+mod(tnow,0.5)) return uv;
+		if ((uv.x+8)*hs2 < mod(0.1*mod(0.29*tnow,10),0.5)*3) return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
+	}
+	return vec4(-10,-10,0,0);
 }
 
 bool isDrop() {
@@ -119,7 +138,8 @@ bool isDrop() {
 	float limitValue = 0.1;
 	
 	//TODO: set offset in dependence of TIME, floor offset in dependence of wiper, drops should stay displayed until wiper clears (mod)
-	
+	float timeValue;
+	if (mod(tnow,1) < 0.001) timeValue = mod(tnow,1);
 	if (distance(localToWorld(vec2(0,0)),worldVec) < limitValue) return true;
 	return false;
 }
@@ -132,10 +152,10 @@ bool timer() {
 	return false;
 }
 
-bool draw() {
+bool draw(vec2 point) {
 	vec3 worldVec = computeDropOnWS();
 	vec2 uv = worldToLocal(worldVec);
-	if (distance(windshieldPos,worldVec)>1.5) return false;
+	if (distance(windshieldPos,worldVec)>2) return false;
 	/*float frequency = 1;
 	float hsIn1 = floor(frequency*tnow);
 	float hsIn2 = floor(frequency*tnow)+0.3;
@@ -144,14 +164,14 @@ bool draw() {
 	float hs2 = hash(vec2(hsIn2,hsIn1));
 	vec2 offset = vec2(hs1,hs2);
 	vec2 point = vec2(0,0) + offset;*/
-	vec2 point = vec2(0,0);
+	//vec2 point = vec2(0,0);
 	if (distance(uv,point)<0.04) return true;
 	return false;
 }
 
 void trackTime() {
-	float t = tnow/10; // tnow/durationWiper later
-	float tWiper = mod(t,1);
+	float t = tnow/5; // tnow/durationWiper later
+	float tWiper = mod(tnow,5);
 	float tCounter = floor(tWiper); //offset for drops
 	float tDrop = mod(tWiper,1);
 }
@@ -183,7 +203,16 @@ void main() {
 	check = drawDot(localToWorld(vec2(1,0)),check);
 	check = drawDot(localToWorld(vec2(1,0.5)),check);
 	*/
-	if (isDrop()) check = vec4(1,1,0,0.1);
+	//if (isDrop()) check = vec4(1,1,0,0.1);
+	
+
+	//if (draw(locateDrop())) check = vec4(0.3,0.3,0.4,0.2);
+	if (draw(locateDrop().xy)) {
+		float dist = distance(locateDrop().zw,vec2(0.5,0.5));
+		float alph = smoothstep(0.4,1.4,1-dist);
+		check = vec4(0,1,1,alph);
+	}
+
 	//if (draw(vec2(0,0))) check = vec4(1,0,1,0.6);
 	//if (draw()) check = vec4(1,0,1,0.6);
 
