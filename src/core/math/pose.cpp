@@ -54,7 +54,7 @@ void Pose::setUp(Vec3d u) { data[2] = u; }
 Vec3d Pose::pos() const { return data.size() > 0 ? data[0] : Vec3d(); }
 Vec3d Pose::dir() const { return data.size() > 1 ? data[1] : Vec3d(); }
 Vec3d Pose::up() const { return data.size() > 2 ? data[2] : Vec3d(); }
-Vec3d Pose::x() const { return data.size() > 2 ? data[1].cross(data[2]) : Vec3d(); }
+Vec3d Pose::x() const { return data.size() > 2 ? data[1].cross(data[2]) : Vec3d(); } // vector to the right
 
 Matrix4d Pose::asMatrix() const {
     Matrix4d m;
