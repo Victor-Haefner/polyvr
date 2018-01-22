@@ -7,6 +7,7 @@
 #include <map>
 #include "core/objects/VRObjectFwd.h"
 #include "VRToolsFwd.h"
+#include "VRSnappingEngine.h"
 #include "selection/VRSelectionFwd.h"
 
 using namespace std;
@@ -20,17 +21,20 @@ class VRConstructionKit {
         VRSnappingEnginePtr snapping;
         VRSelectorPtr selector;
         VRObjectPtr root;
+        bool doConstruction = true;
 
         map<int, VRGeometryPtr> anchors;
         map<VRTransform*, VRTransformPtr> objects;
 
         int ID();
+        void on_snap(VRSnappingEngine::EventSnap* e);
 
     public:
         VRConstructionKit();
         ~VRConstructionKit();
         static VRConstructionKitPtr create();
 
+        void toggleConstruction(bool active);
         void clear();
 
         VRSnappingEnginePtr getSnappingEngine();
