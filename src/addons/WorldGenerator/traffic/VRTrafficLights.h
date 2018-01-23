@@ -11,26 +11,31 @@ OSG_BEGIN_NAMESPACE;
 
 class VRTrafficLight : public VRTransform {
     private:
-        VRRoadPtr road;
-        VRTrafficLightsPtr system;
+        VREntityPtr lane;
+        VRTrafficLightsWeakPtr system;
+        string state = "green";
 
     public:
-        VRTrafficLight(VRRoadPtr road, VRTrafficLightsPtr system);
+        VRTrafficLight(VREntityPtr lane, VRTrafficLightsPtr system);
         ~VRTrafficLight();
 
-        static VRTrafficLightPtr create(VRRoadPtr road, VRTrafficLightsPtr system);
+        static VRTrafficLightPtr create(VREntityPtr lane, VRTrafficLightsPtr system);
+        VRTrafficLightsPtr getSystem();
 };
 
 class VRTrafficLights {
     private:
         vector<VRTrafficLightPtr> lights;
-        VRRoadIntersectionPtr intersection;
+        string group;
 
     public:
-        VRTrafficLights(VRRoadIntersectionPtr intersection);
+        VRTrafficLights(string group);
         ~VRTrafficLights();
 
-        static VRTrafficLightsPtr create(VRRoadIntersectionPtr intersection);
+        static VRTrafficLightsPtr create(string group);
+
+        void addLight(VRTrafficLightPtr light);
+        void setLight(VRTrafficLightPtr light, string state);
 };
 
 OSG_END_NAMESPACE;
