@@ -23,8 +23,9 @@ ptrFwd( VRTerrain );
 ptrFwd( VRTree );
 ptrFwd( VRGrassPatch );
 ptrFwd( VRNature );
-ptrFwd( OldTrafficSimulation );
 ptrFwd( VRTrafficSimulation );
+ptrFwd( VRTrafficLight );
+ptrFwd( VRTrafficLights );
 ptrFwd( VRRain );
 
 }

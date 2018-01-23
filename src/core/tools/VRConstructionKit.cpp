@@ -1,5 +1,4 @@
 #include "VRConstructionKit.h"
-#include "VRSnappingEngine.h"
 #include "selection/VRSelector.h"
 
 #include <boost/bind.hpp>
@@ -13,13 +12,11 @@
 
 OSG_BEGIN_NAMESPACE;
 
-void VRConstructionKit_on_snap(VRConstructionKit* kit, VRSnappingEngine::EventSnap* e);
-
 VRConstructionKit::VRConstructionKit() {
     snapping = VRSnappingEngine::create();
     selector = VRSelector::create();
 
-    auto fkt = new VRFunction<VRSnappingEngine::EventSnap*>("on_snap_callback", boost::bind(VRConstructionKit_on_snap, this, _1));
+    auto fkt = new VRFunction<VRSnappingEngine::EventSnap*>("on_snap_callback", boost::bind(&VRConstructionKit::on_snap, this, _1));
     snapping->getSignalSnap()->add(fkt);
 }
 
@@ -42,8 +39,9 @@ vector<VRObjectPtr> VRConstructionKit::getObjects() {
     return res;
 }
 
-void VRConstructionKit_on_snap(VRConstructionKit* kit, VRSnappingEngine::EventSnap* e) {
-    if (e->snap == 0) { kit->breakup(e->o1); return; }
+void VRConstructionKit::on_snap(VRSnappingEngine::EventSnap* e) {
+    if (!doConstruction) return;
+    if (e->snap == 0) { breakup(e->o1); return; }
 
     if (e->o1 == 0 || e->o2 == 0) return;
     VRObjectPtr p1 = e->o1->getDragParent();
@@ -79,6 +77,7 @@ int VRConstructionKit::ID() {
 }
 
 void VRConstructionKit::breakup(VRTransformPtr obj) {
+    if (!doConstruction) return;
     if (obj == 0) return;
 
     auto p = obj->getParent();
@@ -107,6 +106,10 @@ int VRConstructionKit::addAnchorType(float size, Color3f color) {
     int id = ID();
     anchors[id] = g;
     return id;
+}
+
+void VRConstructionKit::toggleConstruction(bool active) {
+    doConstruction = active;
 }
 
 void VRConstructionKit::addObject(VRTransformPtr t) {
