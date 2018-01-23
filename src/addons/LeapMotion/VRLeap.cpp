@@ -120,7 +120,7 @@ void VRLeap::newFrame(Json::Value json) {
         else frame->setRightHand(hand);
     }
 
-    for (uint i = 0; i < json["pointables"].size(); ++i) { // Get the pencils, TODO
+    for (uint i = 0; i < json["pointables"].size(); ++i) { // Get the tools, TODO
         ;
     }
 
