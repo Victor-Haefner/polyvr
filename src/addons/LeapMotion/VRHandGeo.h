@@ -19,6 +19,8 @@ public:
 
     void updateChange();
 
+    void connectToLeap(VRLeapPtr leap);
+
 private:
 
     VRHandGeo(string name);

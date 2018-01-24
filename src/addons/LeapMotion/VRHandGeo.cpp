@@ -35,6 +35,14 @@ VRHandGeoPtr VRHandGeo::create(string name) {
     return ptr;
 }
 
+void VRHandGeo::connectToLeap(VRLeapPtr leap) {
+    function<void(VRLeapFramePtr)> cb = [this](VRLeapFramePtr frame) {
+        update(frame);
+    };
+    leap->registerFrameCallback(cb);
+}
+
+
 void VRHandGeo::updateChange() {
     mutex.lock();
 
@@ -105,6 +113,8 @@ void VRHandGeo::updateChange() {
 }
 
 void VRHandGeo::update(VRLeapFramePtr frame) {
+
+    cout << "update" << endl;
 
     //boost::mutex::scoped_lock lock(mutex);
     mutex.lock();
