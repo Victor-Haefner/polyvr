@@ -1,6 +1,7 @@
 #include "VRLeap.h"
 #include "core/objects/VRTransform.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRStorage_template.h"
 #include <OpenSG/OSGQuaternion.h>
 
 OSG_BEGIN_NAMESPACE ;
@@ -14,8 +15,10 @@ VRLeap::VRLeap() : VRDevice("leap") {
 
     webSocket.registerJsonCallback(cb);
 
-    store("leap_host", &host);
-    store("leap_port", &port);
+    store("host", &host);
+    store("port", &port);
+    store("serial", &serial);
+    store("transformation", &transformation);
 
     reconnect();
 }
@@ -53,6 +56,12 @@ void VRLeap::registerFrameCallback(function<void(VRLeapFramePtr)> func) {
 void VRLeap::clearFrameCallbacks() { frameCallbacks.clear(); }
 
 void VRLeap::newFrame(Json::Value json) {
+
+    if (serial.empty()) {
+        if (json.isMember("event")) {
+            serial = json["event"]["state"]["id"].asString();
+        }
+    }
 
     VRLeapFramePtr frame = VRLeapFrame::create();
 
@@ -117,22 +126,70 @@ void VRLeap::newFrame(Json::Value json) {
         else frame->setRightHand(hand);
     }
 
-    for (uint i = 0; i < json["pointables"].size(); ++i) { // Get the tools, TODO
-        ;
+    for (uint i = 0; i < json["pointables"].size(); ++i) { // Get the tools
+        auto pointable = json["pointables"][i];
+
+        if (!pointable["tool"].asBool()) continue;
+
+        auto pen = make_shared<VRLeapFrame::Pen>();
+
+        auto tipPosition = pointable["stabilizedTipPosition"];
+        pen->tipPosition = Vec3d(tipPosition[0].asFloat(), tipPosition[1].asFloat(), tipPosition[2].asFloat()) * 0.001;
+
+        auto direction = pointable["direction"];
+        pen->direction = Vec3d(direction[0].asFloat(), direction[1].asFloat(), direction[2].asFloat());
+
+        pen->length = pointable["length"].asFloat();
+        pen->width = pointable["width"].asFloat();
+
+        frame->insertPen(pen);
+    }
+
+    if (calibrate) {
+        Pose pose;
+        vector<PenPtr> pens = frame->getPens();
+        if (pens.size() == 2) {
+            pose = computeCalibPose(pens);
+            setPose(pose);
+        }
     }
 
     for (auto& cb : frameCallbacks) cb(frame);
+}
+
+Pose VRLeap::computeCalibPose(vector<PenPtr>& pens) {
+    Pose result;
+    if (pens.size() != 2) { return result; }
+
+    Vec3d pos0 = pens[0]->tipPosition;
+    Vec3d pos1 = pens[1]->tipPosition;
+    Vec3d dir0 = pens[0]->direction;
+    Vec3d dir1 = pens[1]->direction;
+
+    Vec3d position = ((pos0 - 0.15 * dir0) + (pos1 - 0.15 * dir1)) / 2.0;
+    Vec3d direction = pos1 - pos0;
+    direction.normalize();
+    Vec3d normal = (position - pos0).cross(direction);
+    normal.normalize();
+
+    result.set(position, direction, normal);
+
+    return result;
 }
 
 string VRLeap::getConnectionStatus() {
     return connectionStatus;
 }
 
+string VRLeap::getSerial() {
+    return serial;
+}
+
 bool VRLeap::reconnect() {
     bool result = true;
 
     string url = "ws://" + host + ":" + to_string(port) + "/v6.json";
-    cout << "Connecting to Leap "+getName()+" at " << url << endl;
+    cout << "Connecting to Leap " + getName() + " at " << url << endl;
 
     result = webSocket.open(url);
 
@@ -146,9 +203,27 @@ bool VRLeap::reconnect() {
     return result;
 }
 
-void VRLeap::setPose(Vec3d pos, Vec3d dir, Vec3d up) {
-    MatrixLookDir(transformation, pos, dir, up);
+void VRLeap::setPose(Pose pose) {
+    transformation = pose.asMatrix();
     transformed = true;
+}
+
+void VRLeap::setPose(Vec3d pos, Vec3d dir, Vec3d up) {
+    transformation = Pose(pos, dir, up).asMatrix();
+    transformed = true;
+}
+
+Matrix4d VRLeap::getTransformation() {
+    return transformation;
+}
+
+void VRLeap::startCalibration() {
+    calibrate = true;
+}
+
+void VRLeap::stopCalibration() {
+    calibrate = false;
+    cout << "found transformation:\n" << transformation << endl;
 }
 
 
@@ -161,8 +236,11 @@ VRLeapFramePtr VRLeapFrame::create() {
 
 HandPtr VRLeapFrame::getLeftHand() { return leftHand; }
 HandPtr VRLeapFrame::getRightHand() { return rightHand; }
-void VRLeapFrame::setLeftHand(std::shared_ptr<Hand> hand) { leftHand = hand; }
-void VRLeapFrame::setRightHand(std::shared_ptr<Hand> hand) { rightHand = hand; }
+void VRLeapFrame::setLeftHand(HandPtr hand) { leftHand = hand; }
+void VRLeapFrame::setRightHand(HandPtr hand) { rightHand = hand; }
+
+void VRLeapFrame::insertPen(PenPtr pen) { pens.push_back(pen); }
+vector<PenPtr> VRLeapFrame::getPens() { return pens; }
 
 HandPtr VRLeapFrame::Hand::clone() {
     auto copy = make_shared<VRLeapFrame::Hand>();
@@ -204,6 +282,8 @@ void VRLeapFrame::Hand::transform(Matrix4d transformation) {
         // TODO: transform directions
     }
 }
+
+
 
 
 OSG_END_NAMESPACE;
