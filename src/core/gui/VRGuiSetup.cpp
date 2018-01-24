@@ -213,6 +213,7 @@ void VRGuiSetup::updateObjectData() {
         setExpanderSensitivity("expander31", true);
         VRLeap* t = (VRLeap*)selected_object;
         setTextEntry("entry28", t->getAddress());
+        setLabel("label157", t->getConnectionStatus());
     }
 
     if (selected_type == "mouse") { device = true; }
@@ -1004,6 +1005,8 @@ void VRGuiSetup::on_leap_host_edited() {
     if (guard) return;
     VRLeap* dev = (VRLeap*)selected_object;
     dev->setAddress(getTextEntry("entry28"));
+    dev->reconnect();
+    setLabel("label157", dev->getConnectionStatus());
     setToolButtonSensitivity("toolbutton12", true);
 }
 

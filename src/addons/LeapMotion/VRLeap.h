@@ -67,13 +67,15 @@ class VRLeap : public VRDevice {
     private:
         vector<std::function<void(VRLeapFramePtr)>> frameCallbacks;
 
-        string host = "localhost";
-        int port = 6437;
+        string host{"localhost"};
+        int port{6437};
+        string connectionStatus{"not connected"};
+
         VRWebSocket webSocket;
         bool transformed{false};
         Matrix4d transformation;
 
-        bool resetConnection();
+
         void newFrame(Json::Value json);
 
     public:
@@ -87,12 +89,13 @@ class VRLeap : public VRDevice {
 
         static VRLeapPtr create();
 
-        bool open(string host = "localhost", int port = 6437);
+        bool reconnect();
 
         string getHost();
         void setHost(string newHost);
         int getPort();
         void setPort(int newPort);
+        string getConnectionStatus();
 
         string getAddress();
         void setAddress(string a);

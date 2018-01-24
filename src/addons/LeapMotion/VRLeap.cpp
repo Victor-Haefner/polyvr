@@ -13,17 +13,16 @@ VRLeap::VRLeap() : VRDevice("leap") {
     };
 
     webSocket.registerJsonCallback(cb);
+
+    store("leap_host", &host);
+    store("leap_port", &port);
+
+    reconnect();
 }
 
 VRLeapPtr VRLeap::create() {
     auto d = VRLeapPtr(new VRLeap());
     return d;
-}
-
-bool VRLeap::open(string host, int port) {
-    this->host = host;
-    this->port = port;
-    return resetConnection();
 }
 
 string VRLeap::getHost() {
@@ -33,7 +32,6 @@ string VRLeap::getHost() {
 void VRLeap::setHost(string newHost) {
     if (newHost == host) return;
     host = newHost;
-    resetConnection();
 }
 
 int VRLeap::getPort() {
@@ -43,11 +41,10 @@ int VRLeap::getPort() {
 void VRLeap::setPort(int newPort) {
     if (newPort == port) return;
     port = newPort;
-    resetConnection();
 }
 
 string VRLeap::getAddress() { return host + ":" + to_string(port); }
-void VRLeap::setAddress(string a) { host = splitString(a, ':')[0]; port = toInt(splitString(a, ':')[1]); resetConnection(); }
+void VRLeap::setAddress(string a) { host = splitString(a, ':')[0]; port = toInt(splitString(a, ':')[1]); }
 
 void VRLeap::registerFrameCallback(function<void(VRLeapFramePtr)> func) {
     frameCallbacks.push_back(func);
@@ -124,24 +121,26 @@ void VRLeap::newFrame(Json::Value json) {
         ;
     }
 
-    /*printf("\n");
-        for( Json::Value::const_iterator itr = json.begin() ; itr != json.end() ; itr++ ) {
-            cout << " JSON " << itr.key() << " " << itr->size() << endl;
-        }*/
-
-
     for (auto& cb : frameCallbacks) cb(frame);
 }
 
-bool VRLeap::resetConnection() {
+string VRLeap::getConnectionStatus() {
+    return connectionStatus;
+}
+
+bool VRLeap::reconnect() {
     bool result = true;
 
     string url = "ws://" + host + ":" + to_string(port) + "/v6.json";
     cout << "Connecting to Leap "+getName()+" at " << url << endl;
+
     result = webSocket.open(url);
 
     if (result) {
         result = webSocket.sendMessage("{\"background\": true}");
+        connectionStatus = "connected to " + getAddress();
+    } else {
+        connectionStatus = "connection error (daemon running?)";
     }
 
     return result;
