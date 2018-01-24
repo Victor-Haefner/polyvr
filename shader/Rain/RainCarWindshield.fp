@@ -104,12 +104,12 @@ vec4 locateDrop() {
 	vec2 uv = worldToLocal(worldVec);
 	float off = 0; //0.3 * hash(uv);
 
-	float disBD = 0.02;
-	float limitValue = 0.02;
+	float disBD = 0.5;
+	float limitValue = disBD;
 	//bool timeCheck;
 
-	float hsIn1 = floor(uv.x*50);
-	float hsIn2 = floor(uv.y*50);
+	float hsIn1 = floor(uv.x/disBD);
+	float hsIn2 = floor(uv.y/disBD);
 
 	float hs1 = hash(vec2(hsIn1,hsIn2));
 	float hs2 = hash(vec2(hsIn2,hsIn1));
@@ -124,7 +124,20 @@ vec4 locateDrop() {
 			if(uv.y>1.5-0.3*mod(tnow,10)) return uv;
 		}*/
 		//if ((uv.x+8)*hs2 < mod(0.1*mod(0.29*tnow,10),0.5)*3 || (uv.x+8)*hs2<0.2+mod(tnow,0.5)) return uv;
-		if ((uv.x+8)*hs2 < mod(0.1*mod(0.29*tnow,10),0.5)*3) return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
+		return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
+		//if ((uv.x+8)*hs2 < mod(0.1*0.5*(tnow),0.2)*2) return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
+		//if ((uv.x+8)*hs2 < 0.3) return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
+		/*
+		if (mod(0.5*(tnow),4)<2){
+			if ((uv.x+8)*hs2 < mod(0.1*mod(0.5*(tnow+0.2*uv.x-2),2),0.5)*3) return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
+		}
+		if (mod(0.5*(tnow),4)>=2){
+			if ((uv.x+8)*hs2 < mod(0.1*mod(0.5*(tnow-0.2*uv.x-2),2),0.5)*3) return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
+		}*/		
+		//if ((uv.x+8)*hs2 < mod(0.1*mod(0.5*(tnow-0.4*(uv.x+2)),2),0.5)*3) return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
+		//if ((uv.x+8)*hs2 < mod(0.1*mod(0.5*(tnow+0.5*(uv.x+0.5)),1),0.5)*3) return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
+		//if ((uv.x+8)*hs2 < mod(0.1*mod(0.4*(tnow-(uv.x+0.5)),5),0.5)*3) return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
+		
 	}
 	return vec4(-10,-10,0,0);
 }
@@ -176,6 +189,24 @@ void trackTime() {
 	float tDrop = mod(tWiper,1);
 }
 
+vec4 drawWiper() {
+	vec3 worldVec = computeDropOnWS();
+	vec2 uv = worldToLocal(worldVec);
+	if (uv.x>-1.51 && uv.x<-1.4 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
+	if (uv.x>1.4 && uv.x<1.51 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
+	if (uv.y>-0.8 && uv.y<-0.6 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
+	if (uv.y>0.6 && uv.y<0.8 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
+	
+	float xoff = 0.25;
+	float yoff = -0.8;
+	float xoff2 = -1.;
+	float yoff2 = -0.8;
+	if ((uv.x-xoff2)*(uv.x-xoff2)+(uv.y-yoff2)*(uv.y-yoff2)<1.2 && (uv.x-xoff2)*(uv.x-xoff2)+(uv.y-yoff2)*(uv.y-yoff2)>0.05) return vec4(0,0,0,0.3);
+	
+	if ((uv.x-xoff)*(uv.x-xoff)+(uv.y-yoff)*(uv.y-yoff)<1.2 && (uv.x-xoff)*(uv.x-xoff)+(uv.y-yoff)*(uv.y-yoff)>0.05) return vec4(0,0,0,0.4);
+	return vec4(0,0,0,0);
+}
+
 void main() {
 	computeDirection();
 	computePCam();
@@ -212,6 +243,7 @@ void main() {
 		float alph = smoothstep(0.4,1.4,1-dist);
 		check = vec4(0,1,1,alph);
 	}
+	check = drawWiper();
 
 	//if (draw(vec2(0,0))) check = vec4(1,0,1,0.6);
 	//if (draw()) check = vec4(1,0,1,0.6);
