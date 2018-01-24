@@ -17,6 +17,8 @@ class VRLeapFrame : public std::enable_shared_from_this<VRLeapFrame> {
             Vec3d direction;
             float length;
             float width;
+
+            void transform(Matrix4d transformation);
         };
 
         struct Hand {

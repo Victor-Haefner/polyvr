@@ -57,9 +57,12 @@ void VRLeap::clearFrameCallbacks() { frameCallbacks.clear(); }
 
 void VRLeap::newFrame(Json::Value json) {
 
+    // json format: https://developer.leapmotion.com/documentation/v2/cpp/supplements/Leap_JSON.html?proglang=cpp
+
     if (serial.empty()) {
         if (json.isMember("event")) {
             serial = json["event"]["state"]["id"].asString();
+            return;
         }
     }
 
@@ -118,7 +121,7 @@ void VRLeap::newFrame(Json::Value json) {
             hand->directions[type] = Vec3d(direction[0].asFloat(), direction[1].asFloat(), direction[2].asFloat());
         }
 
-        if (transformed || true) {
+        if (transformed) {
             hand->transform(transformation);
         }
 
@@ -141,6 +144,8 @@ void VRLeap::newFrame(Json::Value json) {
 
         pen->length = pointable["length"].asFloat();
         pen->width = pointable["width"].asFloat();
+
+        if (transformed && !calibrate) { pen->transform(transformation); }
 
         frame->insertPen(pen);
     }
@@ -209,8 +214,7 @@ void VRLeap::setPose(Pose pose) {
 }
 
 void VRLeap::setPose(Vec3d pos, Vec3d dir, Vec3d up) {
-    transformation = Pose(pos, dir, up).asMatrix();
-    transformed = true;
+    setPose(Pose(pos, dir, up));
 }
 
 Matrix4d VRLeap::getTransformation() {
@@ -223,7 +227,6 @@ void VRLeap::startCalibration() {
 
 void VRLeap::stopCalibration() {
     calibrate = false;
-    cout << "found transformation:\n" << transformation << endl;
 }
 
 
@@ -261,28 +264,41 @@ VRLeapFramePtr VRLeapFrame::ptr() { return static_pointer_cast<VRLeapFrame>( sha
 
 void VRLeapFrame::Hand::transform(Matrix4d transformation) {
 
-    cerr << "VRLeapFrame::Hand::transform not yet implemented." << endl;
+    Matrix4d dirTransformation = transformation;
+    dirTransformation.invert();
+    dirTransformation.transpose();
 
-    /*for (auto& p : pose) {
-        //TODO: transform poses
-        pose[0] = transformation * pose[0];
-        cout << p << endl;
-    }*/
-    cout << pose.asMatrix() << endl;
+    // transform pose
+    pose.set(transformation*pose.pos(), dirTransformation*pose.dir(), dirTransformation*pose.up());
 
-    for (int i = 0; i < 5; ++i) {
-        for (auto& j : joints[i]) {
-            // TODO: transform joints
-        }
-        for (auto& b: bases[i]) {
-            /*for (auto& p : b) {
-                // TODO: transform bases
-            }*/
-        }
-        // TODO: transform directions
+    // transform joint positions
+    for (auto& finger : joints) {
+        for (auto& j : finger) { j = transformation * j; }
     }
+
+    // transform basis vectors for each bone
+    for (auto& finger : bases) {
+        for (auto& bone : finger) {
+            bone.set(transformation*bone.pos(), dirTransformation*bone.dir(), dirTransformation*bone.up());
+        }
+    }
+
+    // transform directions
+    for (auto& dir : directions) {
+        dir = dirTransformation * dir;
+    }
+
 }
 
+void VRLeapFrame::Pen::transform(Matrix4d transformation) {
+    tipPosition = transformation * tipPosition;
+
+    Matrix4d dirTransformation = transformation;
+    dirTransformation.invert();
+    dirTransformation.transpose();
+
+    direction = dirTransformation * direction;
+}
 
 
 
