@@ -117,6 +117,8 @@ class VRGuiSetup {
 
         void on_mt_device_changed();
         void on_leap_host_edited();
+        void on_leap_startcalib_clicked();
+        void on_leap_stopcalib_clicked();
         void on_haptic_ip_edited();
         void on_change_haptic_type();
         void on_toggle_dev_cross();

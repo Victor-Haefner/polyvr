@@ -12,19 +12,11 @@ class VRLeapFrame : public std::enable_shared_from_this<VRLeapFrame> {
         ptrFwd(Pen);
 
         struct Pen {
-            Pose pose; // pos, dir, normal
-            vector<vector<Vec3d>> joints; // joint positions of each finger, 0 is thumb -> 4 is pinky
-            vector<vector<Pose>> bases; // 3 basis vectors for each bone, in index order, wrist to tip
-            vector<bool> extended; // True, if the finger is a pointing, or extended, posture
-            vector<Vec3d> directions; // direction is expressed as a unit vector pointing in the same direction as the tip
-            float pinchStrength;
-            float grabStrength;
-            float confidence;
 
-            Pen() : joints(5), bases(5), extended(5), directions(5) { }
-            PenPtr clone();
-
-            void transform(Matrix4d transformation);
+            Vec3d tipPosition;
+            Vec3d direction;
+            float length;
+            float width;
         };
 
         struct Hand {
@@ -48,6 +40,7 @@ class VRLeapFrame : public std::enable_shared_from_this<VRLeapFrame> {
 
         HandPtr rightHand;
         HandPtr leftHand;
+        vector<PenPtr> pens;
 
     public:
         static VRLeapFramePtr create();
@@ -58,6 +51,9 @@ class VRLeapFrame : public std::enable_shared_from_this<VRLeapFrame> {
 
         void setLeftHand(HandPtr hand);
         void setRightHand(HandPtr hand);
+
+        void insertPen(PenPtr pen);
+        vector<PenPtr> getPens();
 };
 
 typedef VRLeapFrame::HandPtr HandPtr;
@@ -74,9 +70,11 @@ class VRLeap : public VRDevice {
         VRWebSocket webSocket;
         bool transformed{false};
         Matrix4d transformation;
-
+        bool calibrate{false};
+        string serial;
 
         void newFrame(Json::Value json);
+        Pose computeCalibPose(vector<PenPtr>& pens);
 
     public:
         VRLeap();
@@ -96,13 +94,19 @@ class VRLeap : public VRDevice {
         int getPort();
         void setPort(int newPort);
         string getConnectionStatus();
+        string getSerial();
 
         string getAddress();
         void setAddress(string a);
 
         void registerFrameCallback(std::function<void(VRLeapFramePtr)> func);
         void clearFrameCallbacks();
+        void setPose(Pose pose);
         void setPose(Vec3d pos, Vec3d dir, Vec3d up);
+        Matrix4d getTransformation();
+
+        void startCalibration();
+        void stopCalibration();
 };
 
 OSG_END_NAMESPACE;

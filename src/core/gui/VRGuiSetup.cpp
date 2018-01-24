@@ -214,6 +214,7 @@ void VRGuiSetup::updateObjectData() {
         VRLeap* t = (VRLeap*)selected_object;
         setTextEntry("entry28", t->getAddress());
         setLabel("label157", t->getConnectionStatus());
+        setLabel("label159", t->getSerial());
     }
 
     if (selected_type == "mouse") { device = true; }
@@ -1007,6 +1008,26 @@ void VRGuiSetup::on_leap_host_edited() {
     dev->setAddress(getTextEntry("entry28"));
     dev->reconnect();
     setLabel("label157", dev->getConnectionStatus());
+    setLabel("label159", dev->getSerial());
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_leap_startcalib_clicked() {
+    if (guard) return;
+    VRLeap* dev = (VRLeap*)selected_object;
+    dev->startCalibration();
+    setButtonSensitivity("button34", false);
+    setButtonSensitivity("button35", true);
+}
+void VRGuiSetup::on_leap_stopcalib_clicked() {
+    if (guard) return;
+    VRLeap* dev = (VRLeap*)selected_object;
+    dev->stopCalibration();
+    setButtonSensitivity("button34", true);
+    setButtonSensitivity("button35", false);
+    stringstream t;
+    t << dev->getTransformation();
+    setLabel("label161", t.str());
     setToolButtonSensitivity("toolbutton12", true);
 }
 
@@ -1205,6 +1226,8 @@ VRGuiSetup::VRGuiSetup() {
     setButtonCallback("button6", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_key_clicked) );
     setButtonCallback("button1", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_start_clicked) );
     setButtonCallback("button30", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_stopall_clicked) );
+    setButtonCallback("button34", sigc::mem_fun(*this, &VRGuiSetup::on_leap_startcalib_clicked) );
+    setButtonCallback("button35", sigc::mem_fun(*this, &VRGuiSetup::on_leap_stopcalib_clicked) );
 
     setRadioButtonCallback("radiobutton6", sigc::mem_fun(*this, &VRGuiSetup::on_server_ct_toggled) );
     setRadioButtonCallback("radiobutton7", sigc::mem_fun(*this, &VRGuiSetup::on_server_ct_toggled) );

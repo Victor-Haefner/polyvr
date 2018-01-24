@@ -37,6 +37,7 @@ void setRadioButtonCallback(string cb, sigc::slot<void> sig );
 void setRadioButton(string cb, bool b );
 void setRadioToolButton(string cb, bool b );
 void setButtonText(string cb, string txt );
+void setButtonSensitivity(string b, bool s );
 
 // COMBOBOX
 void setComboboxCallback(string b, sigc::slot<void> sig);
