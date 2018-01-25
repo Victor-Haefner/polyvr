@@ -17,8 +17,6 @@ public:
 
     void setRight();
 
-   // void updateChange();
-
     void connectToLeap(VRLeapPtr leap);
 
 private:

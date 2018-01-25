@@ -6,7 +6,7 @@
         <Object at="0.5 -1 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
           <constraint persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="0 0 -1" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.0989372 0.526578 0.807927" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0 0 -0.45" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.0530686 0.302951 0.501527" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <constraint persistency="666"/>
         </Object>
       </Object>
@@ -158,18 +158,6 @@
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="114" base_name="trigger" name_space="__global__" name_suffix="5" persistency="666"/>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="7" persistency="666"/>
     </Script>
-    <Script base_name="leapUpdate" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
-      <core>
-	import VR
-	
-	if hasattr(VR, 'hands'):
-		print "update"
-		hand = VR.hands[0]
-		hand.update(frame)
-		
-</core>
-      <arg type="VRPyLeapFrameType" value="0" base_name="frame" name_space="leapUpdate" name_suffix="0" persistency="666"/>
-    </Script>
     <Script base_name="switchCubes" group="cubeAnim" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
@@ -296,30 +284,24 @@
 	
 	server = VR.find('server1')
 	
-	leap = VR.find('leap')
-	#leap.clearFrameCallbacks()
-	#leap.registerFrameCallback(VR.leapUpdate)
-	
 	ID = server.openWebSocket('ws://localhost:5005', 'tracking-protocol')
 	print 'connect to head tracking:', ID
 	
-	#ID = server.openWebSocket('ws://localhost:6437/v6.json')
-	#server.answer(ID, '{\"background\": true}')
-	#print 'connect to leap tracking:', ID
+	leap = VR.find('leap')
 	
-	#if hasattr(VR, 'hands'): VR.hands.destroy()
-	#VR.hand = VR.Geometry('hand', 'light')
-	#VR.hand.setPrimitive('Box 0.1 0.02 0.15 1 1 1')
-	#hand = VR.HandGeo('hand')
-	#VR.find('light').addChild(hand)
+	hand_left = VR.HandGeo('hand_left')
+	hand_left.setLeft()
+	hand_left.connectToLeap(leap)
+	VR.find('Default').addChild(hand_left)
 	
-	#VR.hands = [hand]
-	
-	handGeo = VR.HandGeo('handgeo')
-	handGeo.connectToLeap(leap)
-	VR.find('light').addChild(handGeo)
-	
-	VR.leap = [leap, handGeo]
+	hand_right = VR.HandGeo('hand_right')
+	hand_right.setRight()
+	hand_right.connectToLeap(leap) 
+	VR.find('Default').addChild(hand_right)
+	 	
+	 	
+	VR.leap = [leap, hand_left, hand_right]
+
 	
 
 </core>
@@ -356,24 +338,6 @@
 		applyHead(setup.getView(2), positions[1], False, [-0.357,0,0.2])
 		applyHead(setup.getView(1), positions[2], True, [0.357,0,-0.2])
 		applyHead(setup.getView(0), positions[3], True, [-0.357,0,-0.2])
-		
-	#else: # leap tracking
-	#	data = json.loads( dev.getMessage() )
-	#	#print data
-	#	hands = data['hands']
-	#
-	#	if len(hands) == 0: return
-	#	hand = hands[0]
-	#
-	#	s = hand['grabStrength']
-	#	d = hand['direction']
-	#	u = hand['palmNormal']
-	#	p = hand['stabilizedPalmPosition']
-	#
-	#	p = Vec3(p)*0.001
-	#
-	#	VR.hand.setPose(p,d,u)
-	#	#print p
 		
 </core>
       <trig type="on_device" dev="server1" state="Released" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="8" persistency="666"/>
