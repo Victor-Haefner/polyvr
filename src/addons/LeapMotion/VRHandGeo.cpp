@@ -2,6 +2,7 @@
 #include <core/objects/geometry/OSGGeometry.h>
 #include <core/math/pose.h>
 #include <OpenSG/OSGSimpleGeometry.h>
+#include <thread>
 
 using namespace OSG;
 
@@ -44,6 +45,7 @@ void VRHandGeo::connectToLeap(VRLeapPtr leap) {
 
 
 void VRHandGeo::updateChange() {
+
     mutex.lock();
 
     if (visible != isVisible()) { toggleVisible(); }
@@ -51,9 +53,7 @@ void VRHandGeo::updateChange() {
     if (handData && isVisible()) {
 
         // Palm
-        auto p = handData->pose;
-        cout << p.toString() << endl;
-        //setPose(p);
+        setPose(handData->pose);
 
         // Bones
         for (int i = 0; i < 5; ++i) {
@@ -114,8 +114,6 @@ void VRHandGeo::updateChange() {
 
 void VRHandGeo::update(VRLeapFramePtr frame) {
 
-    cout << "update" << endl;
-
     //boost::mutex::scoped_lock lock(mutex);
     mutex.lock();
 
@@ -133,7 +131,7 @@ void VRHandGeo::update(VRLeapFramePtr frame) {
     }
 
     mutex.unlock();
-    reg_change();
+    //reg_change();
 }
 
 void VRHandGeo::setLeft() { isLeft = true; }

@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene base_name="BobbingCubes" name_space="Scene" name_suffix="0" persistency="666">
+  <Objects>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object at="0.5 -1 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+          <constraint persistency="666"/>
+        </Object>
+        <Object accept_root="1" aspect="1" at="0 0 -1" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.0989372 0.526578 0.807927" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <constraint persistency="666"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="animateCube" group="cubeAnim" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	pose = cube.getPose()
+	cPos = pose.pos()
+	cDir = pose.dir()
+	zStart = cDir[2]
+	cUp = pose.up()
+	
+	path = VR.Path()
+	# position, direction, color, up-vector
+	path.addPoint(cPos, cDir, [0,0,0], cUp)
+	path.addPoint([cPos[0],cPos[1]-0.7,cPos[2]], cDir, [0,0,0], cUp)
+	
+	cDir = [cDir[0]+zStart,cDir[1],cDir[2]]
+	path.addPoint([cPos[0],cPos[1]-0.9,cPos[2]], cDir, [0,0,0], cUp)
+	
+	cDir = [cDir[0],cDir[1],cDir[2]-zStart]
+	path.addPoint([cPos[0],cPos[1]-1,cPos[2]], cDir, [0,0,0], cUp)
+	
+	cDir = [cDir[0],cDir[1],cDir[2]-zStart]
+	path.addPoint([cPos[0],cPos[1]-0.9,cPos[2]], cDir, [0,0,0], cUp)
+	
+	cDir = [cDir[0]-zStart,cDir[1],cDir[2]]
+	path.addPoint([cPos[0],cPos[1]-0.7,cPos[2]], cDir, [0,0,0], cUp)
+	
+	path.addPoint(cPos, cDir, [cDir[0],cDir[1],cDir[2]+2], cUp)
+	path.compute(2)
+	
+	cube.animate(path, 0.5, 0, True)
+</core>
+      <arg type="VRPyObjectType" value="0" base_name="cube" name_space="animateCube" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="click" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	
+	key = dev.getKey()
+	
+	print dev.getName() + "["+ str(key) +"]: " + ("Pressed" if dev.getKeyState(key) else "Released")
+	#print "Position: " + str(dev.getBeacon().getDir())
+	
+	if dev.intersect():
+		target = dev.getIntersected()
+		if target not in VR.boxes: return
+	
+		if dev.getState(): # Button is pressed
+			#if (not key in VR.target or VR.target[key] is None or VR.target[key].getName() != target.getName()):
+			VR.target[key] = target
+			print "VR-target[" + str(key) + "] changed."
+			#target.setColor('blue')
+			
+		else: # Button is released
+			if VR.target[key] is None: return
+	
+			if VR.target[key].getName() == target.getName():
+				VR.animateCube(target)
+				newMat = VR.greenMat if target.getMaterial() == VR.redMat else VR.redMat
+				target.setMaterial(newMat)
+				#target.rotate(0,1,0,0.1)
+			else:
+				VR.switchCubes(VR.target[key], target)
+			
+			VR.target[key] = None
+</core>
+      <trig type="on_device" dev="mouse" state="Released" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="5" persistency="666"/>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="6" persistency="666"/>
+      <trig type="on_device" dev="multitouch" state="Released" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="7" persistency="666"/>
+      <trig type="on_device" dev="multitouch" state="Pressed" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="9" persistency="666"/>
+    </Script>
+    <Script base_name="click2" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	return
+	
+	if dev.intersect():
+		if not hasattr(VR, 'color'): VR.color = 'red'
+		if VR.color == 'red': VR.color = 'green'
+		else: VR.color = 'red'
+	
+		target = dev.getIntersected()
+		#newMat = VR.greenMat if target.getMaterial() == VR.redMat else VR.redMat
+		#target.setMaterial(newMat)
+		target.setColor(VR.color)
+		target.rotate(0,1,0,0.1)
+</core>
+    </Script>
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	# Debugging
+	#VR.find("multitouch_av_ray").setVisible(True)
+
+	if hasattr(VR, 'Scene'): VR.Scene.destroy()
+	VR.Scene = VR.Object('Scene', 'light')
+	VR.find('light').addChild(VR.Scene)
+	
+	# Set camera up
+	#VR.find("Default").setPose([7,12,10],[0,-1,-0.6],[0,1,0])
+	#VR.find("Default").setPose([0,1,0],[0,0,-1],[0,1,0]) # works
+	VR.find("Default").setPose([0,0,0],[0,0,-1],[0,1,0])
+	#VR.find("Default").setIdentity()
+	
+	VR.target = {}
+	VR.boxes = []
+	
+	VR.redMat = VR.Material("RedBox")
+	VR.redMat.setAmbient([0.09,0.03,0.01])
+	VR.redMat.setDiffuse([0.9,0.3,0.1])
+	VR.redMat.setSpecular([0.99,0.8,0.7])
+	
+	VR.greenMat = VR.Material("GreenBox")
+	VR.greenMat.setAmbient([0.03,0.09,0.01])
+	VR.greenMat.setDiffuse([0.3,0.9,0.1])
+	VR.greenMat.setSpecular([0.8,0.99,0.7])
+	
+	Nx = 3
+	Ny = 4
+	d = 0.05
+	
+	for i in range(Nx):
+		for j in range(Ny):
+			box = VR.Geometry("Box"+str(i)+","+str(j))
+			w = 0.02*(1+j)
+			h = 0.02*(1+i)
+			#box.setPrimitive("Box 0.1 0.1 0.1 1 1 1")
+			box.setPrimitive("Box "+str(w)+" 0.1 "+str(h)+" 1 1 1")
+			box.setPosition([d*(2*j-Ny+0.5),0,d*(2*i-Nx)])
+			box.setMaterial(VR.redMat)
+			#box.setPickable(True)
+			VR.Scene.addChild(box)
+			VR.boxes.append(box)
+			
+	VR.trackingInit()
+	
+	
+</core>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="114" base_name="trigger" name_space="__global__" name_suffix="5" persistency="666"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="7" persistency="666"/>
+    </Script>
+    <Script base_name="leapUpdate" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	if hasattr(VR, 'hands'):
+		print "update"
+		hand = VR.hands[0]
+		hand.update(frame)
+		
+</core>
+      <arg type="VRPyLeapFrameType" value="0" base_name="frame" name_space="leapUpdate" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="switchCubes" group="cubeAnim" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	import math
+	
+	pose1 = cube1.getPose()
+	pos1 = pose1.pos()
+	dir1 = pose1.dir()
+
+	pose2 = cube2.getPose()
+	pos2 = pose2.pos()
+	dir2 = pose2.dir()
+	
+	up = [0,1,0]
+	col = [0,0,0]
+	
+	xDist = pos2[0] - pos1[0]
+	zDist = pos2[2] - pos1[2]
+	dist = math.sqrt(xDist**2 + zDist**2)
+	
+	pos1a = [pos1[0]*0.75+pos2[0]*0.25, 4.5, pos1[2]*0.75+pos2[2]*0.25]
+	pos1b = [(pos1[0]+pos2[0])*0.5, 6, (pos1[2]+pos2[2])*0.5]
+	pos1c = [pos1[0]*0.25+pos2[0]*0.75, 4.5, pos1[2]*0.25+pos2[2]*0.75]
+	path1 = VR.Path()
+	# position, direction, color, up-vector
+	path1.addPoint(pos1, [0,1,0], col, up)
+	#path1.addPoint(pos1a, dir1, col, up)
+	path1.addPoint(pos1b, [xDist/dist,0,zDist/dist], col, up)
+	#path1.addPoint(pos1c, dir1, col, up)
+	path1.addPoint(pos2, [0,-1,0], col, up)
+	path1.compute(20)
+	
+	pos2a = [pos1[0]*0.25+pos2[0]*0.75, -2.5, pos1[2]*0.25+pos2[2]*0.75]
+	pos2b = [(pos1[0]+pos2[0])*0.5, -4, (pos1[2]+pos2[2])*0.5]
+	pos2c = [pos1[0]*0.75+pos2[0]*0.25, -2.5, pos1[2]*0.75+pos2[2]*0.25]
+	path2 = VR.Path()
+	# position, direction, color, up-vector
+	path2.addPoint(pos2, [0,-1,0], col, up)
+	#pos2h = [(pos1[0]+pos2[0])/2.0, -2, (pos1[2]+pos2[2])/2.0]
+	#path2.addPoint(pos2h, dir2, col, up)
+	#path2.addPoint(pos2a, dir1, col, up)
+	path2.addPoint(pos2b, [-xDist/dist,0,-zDist/dist], col, up)
+	#path2.addPoint(pos2c, dir1, col, up)
+	path2.addPoint(pos1, [0,1,0], col, up)
+	path2.compute(20)
+	#print path2.getPositions()
+	
+	cube1.animate(path1, 1, 0, False)
+	#cube1.setPosition(pos2)
+	cube2.animate(path2, 1, 0, False)
+	#cube2.setPosition(pos1)
+</core>
+      <arg type="VRPyObjectType" value="0" base_name="cube1" name_space="switchCubes" name_suffix="0" persistency="666"/>
+      <arg type="VRPyObjectType" value="0" base_name="cube2" name_space="switchCubes" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="switchCubes2" group="cubeAnim" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	import math
+	
+	pose1 = cube1.getPose()
+	pos1 = pose1.pos()
+	dir1 = pose1.dir()
+
+	pose2 = cube2.getPose()
+	pos2 = pose2.pos()
+	dir2 = pose2.dir()
+	
+	up = [0,1,0]
+	col = [0,0,0]
+	
+	xDist = pos2[0] - pos1[0]
+	zDist = pos2[2] - pos1[2]
+	dist = math.sqrt(xDist**2 + zDist**2)
+	
+	path1 = VR.Path()
+	# position, direction, color, up-vector
+	path1.addPoint(pos1, [0,1,0], col, up)
+	path1.addPoint([pos1[0], 4, pos1[2]], [0,1,0], col, up)
+	
+	#dir1a = [,0,]
+	path1.addPoint([pos1[0], 4, pos1[2]], dir1a, col, up)
+	
+	pos1b = [(pos1[0]+pos2[0])*0.5 + zDist/dist * 2,
+			4,
+			(pos1[2]+pos2[2])*0.5 + xDist/dist * 2]		
+	path1.addPoint(pos1b, dir1, col, up)
+
+	
+	path1.addPoint([pos2[0], 4, pos2[2]], dir1, col, up)
+	#path1.addPoint([pos2[0], 4, pos2[2]], dir1, col, up)
+	path1.addPoint(pos2, dir1, col, up)
+	path1.compute(4)
+	
+	
+	path2 = VR.Path()
+	# position, direction, color, up-vector
+	path2.addPoint(pos2, dir2, col, up)
+	path2.addPoint([pos2[0], 4, pos2[2]], dir2, col, up)
+	#path2.addPoint([pos2[0], 4, pos2[2]], dir2, col, up)
+	
+	pos2b = [(pos1[0]+pos2[0])*0.5 - zDist/dist * 2,
+			4,
+			(pos1[2]+pos2[2])*0.5 - xDist/dist * 2]		
+	path2.addPoint(pos2b, dir2, col, up)
+	
+	path2.addPoint([pos1[0], 4, pos1[2]], dir2, col, up)
+	#path2.addPoint([pos1[0], 4, pos1[2]], dir2, col, up)
+	path2.addPoint(pos1, dir2, col, up)
+	path2.compute(2)
+
+
+	cube1.animate(path1, 1, 0, True)
+	#cube1.setPosition(pos2)
+	cube2.animate(path2, 1, 0, True)
+	#cube2.setPosition(pos1)
+</core>
+      <arg type="VRPyObjectType" value="0" base_name="cube1" name_space="switchCubes2" name_suffix="0" persistency="666"/>
+      <arg type="VRPyObjectType" value="0" base_name="cube2" name_space="switchCubes2" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="trackingInit" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	server = VR.find('server1')
+	
+	leap = VR.find('leap')
+	#leap.clearFrameCallbacks()
+	#leap.registerFrameCallback(VR.leapUpdate)
+	
+	ID = server.openWebSocket('ws://localhost:5005', 'tracking-protocol')
+	print 'connect to head tracking:', ID
+	
+	#ID = server.openWebSocket('ws://localhost:6437/v6.json')
+	#server.answer(ID, '{\"background\": true}')
+	#print 'connect to leap tracking:', ID
+	
+	#if hasattr(VR, 'hands'): VR.hands.destroy()
+	#VR.hand = VR.Geometry('hand', 'light')
+	#VR.hand.setPrimitive('Box 0.1 0.02 0.15 1 1 1')
+	#hand = VR.HandGeo('hand')
+	#VR.find('light').addChild(hand)
+	
+	#VR.hands = [hand]
+	
+	handGeo = VR.HandGeo('handgeo')
+	handGeo.connectToLeap(leap)
+	VR.find('light').addChild(handGeo)
+	
+	VR.leap = [leap, handGeo]
+	
+
+</core>
+    </Script>
+    <Script base_name="trackingUpdate" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR, json
+	from VR.Math import Vec3
+	
+	m = dev.getMessage()
+			
+	def applyHead(v, p, inverted, p0):
+		if p[0] == 0: return
+		
+		if inverted: 
+			p = (Vec3([p[1], p[2], -p[0]])) - p0
+			p = [-p[0], p[1], -p[2]]
+		else:
+			p = (Vec3([p[1], p[2], -p[0]])) - p0
+			
+		v.getUser().setFrom(p)
+		#print p[0]-0.357
+		#print p[2]-0.2
+		#print p[0] - v.getPose().pos()[0]
+	
+	if m.startswith('{ "positions"'): # head tracking
+		data = json.loads( dev.getMessage() )
+		setup = VR.getSetup()
+		user = VR.getRoot().findAll('view_user')
+		positions = [ p['position'] for p in data['positions'] ]
+		
+		#print 'heads', positions
+		applyHead(setup.getView(3), positions[0], False, [0.357,0,0.2])
+		applyHead(setup.getView(2), positions[1], False, [-0.357,0,0.2])
+		applyHead(setup.getView(1), positions[2], True, [0.357,0,-0.2])
+		applyHead(setup.getView(0), positions[3], True, [-0.357,0,-0.2])
+		
+	#else: # leap tracking
+	#	data = json.loads( dev.getMessage() )
+	#	#print data
+	#	hands = data['hands']
+	#
+	#	if len(hands) == 0: return
+	#	hand = hands[0]
+	#
+	#	s = hand['grabStrength']
+	#	d = hand['direction']
+	#	u = hand['palmNormal']
+	#	p = hand['stabilizedPalmPosition']
+	#
+	#	p = Vec3(p)*0.001
+	#
+	#	VR.hand.setPose(p,d,u)
+	#	#print p
+		
+</core>
+      <trig type="on_device" dev="server1" state="Released" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="8" persistency="666"/>
+    </Script>
+  </Scripts>
+  <Sockets persistency="666"/>
+  <Background color="0.739269 0.842603 1" format=".png" path="" persistency="666" type="0"/>
+  <Navigation active="Orbit" persistency="666"/>
+  <Materials persistency="666"/>
+  <Semantics persistency="666"/>
+</Scene>
