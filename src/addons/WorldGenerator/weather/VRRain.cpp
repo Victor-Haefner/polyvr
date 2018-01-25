@@ -102,6 +102,7 @@ VRRainPtr VRRain::create() { return VRRainPtr( new VRRain() ); }
 VRRainPtr VRRain::ptr() { return static_pointer_cast<VRRain>( shared_from_this() ); }
 
 float VRRain::get() { return scale; }
+bool VRRain::getIsRaining() { return isRaining; }
 VRTextureRendererPtr VRRain::getRenderer() { return texRenderer; }
 VRMaterialPtr VRRain::getTexMat() { return renderMat; }
 

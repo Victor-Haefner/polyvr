@@ -79,6 +79,7 @@ class VRRain : public VRGeometry {
 
         void start();
         void stop();
+        bool getIsRaining();
 
         void overrideParameters( float durationTransition, float rainDensity, float density, float speedX, float speedY, float color, float light );
 };

@@ -13,6 +13,8 @@ vec3 axU;
 vec3 axV;
 vec4 color;
 bool debugB = false;
+float sizeX = 2;
+float sizeY = 1;
 
 uniform vec2 OSGViewportSize;
 uniform float tnow;
@@ -21,6 +23,8 @@ uniform float rainDensity;
 uniform vec3 carOrigin;
 uniform vec3 carDir;
 uniform vec3 posOffset;
+
+uniform bool isRaining;
 
 uniform vec3 windshieldPos;
 uniform vec3 windshieldDir;
@@ -102,42 +106,24 @@ vec4 drawCenter(vec3 P0, vec4 check) {
 vec4 locateDrop() {
 	vec3 worldVec = computeDropOnWS();
 	vec2 uv = worldToLocal(worldVec);
-	float off = 0; //0.3 * hash(uv);
 
-	float disBD = 0.5;
+	float scale = 20;
+
+	float disBD = 0.08;
 	float limitValue = disBD;
-	//bool timeCheck;
 
-	float hsIn1 = floor(uv.x/disBD);
+	float hsIn1 = floor(uv.x/disBD) + 50*floor((tnow+1.8)/4);
 	float hsIn2 = floor(uv.y/disBD);
 
 	float hs1 = hash(vec2(hsIn1,hsIn2));
 	float hs2 = hash(vec2(hsIn2,hsIn1));
 	vec2 offset = vec2(hs1,hs2);
+	
 	float asdf = (floor(mod(tnow,10))); 
 	if (mod(uv.x,disBD) < limitValue && mod(uv.y,disBD) < limitValue && distance(windshieldPos,worldVec) < 4) { 
-		
-		/*if (mod(tnow,20)<10) {
-			if(uv.y>0.3*mod(tnow,10)-1.5) return uv;
+		if ((uv.x+8)*hs2 < mod(0.1*mod(0.5*(tnow+0.2*uv.x-2),2),0.5)*scale){ 
+			return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
 		}
-		else {
-			if(uv.y>1.5-0.3*mod(tnow,10)) return uv;
-		}*/
-		//if ((uv.x+8)*hs2 < mod(0.1*mod(0.29*tnow,10),0.5)*3 || (uv.x+8)*hs2<0.2+mod(tnow,0.5)) return uv;
-		return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
-		//if ((uv.x+8)*hs2 < mod(0.1*0.5*(tnow),0.2)*2) return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
-		//if ((uv.x+8)*hs2 < 0.3) return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
-		/*
-		if (mod(0.5*(tnow),4)<2){
-			if ((uv.x+8)*hs2 < mod(0.1*mod(0.5*(tnow+0.2*uv.x-2),2),0.5)*3) return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
-		}
-		if (mod(0.5*(tnow),4)>=2){
-			if ((uv.x+8)*hs2 < mod(0.1*mod(0.5*(tnow-0.2*uv.x-2),2),0.5)*3) return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
-		}*/		
-		//if ((uv.x+8)*hs2 < mod(0.1*mod(0.5*(tnow-0.4*(uv.x+2)),2),0.5)*3) return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
-		//if ((uv.x+8)*hs2 < mod(0.1*mod(0.5*(tnow+0.5*(uv.x+0.5)),1),0.5)*3) return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
-		//if ((uv.x+8)*hs2 < mod(0.1*mod(0.4*(tnow-(uv.x+0.5)),5),0.5)*3) return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
-		
 	}
 	return vec4(-10,-10,0,0);
 }
@@ -168,17 +154,11 @@ bool timer() {
 bool draw(vec2 point) {
 	vec3 worldVec = computeDropOnWS();
 	vec2 uv = worldToLocal(worldVec);
+	
+	float hash = 1/10*hash(vec2(floor(tnow),floor(tnow)));
 	if (distance(windshieldPos,worldVec)>2) return false;
-	/*float frequency = 1;
-	float hsIn1 = floor(frequency*tnow);
-	float hsIn2 = floor(frequency*tnow)+0.3;
-
-	float hs1 = hash(vec2(hsIn1,hsIn2));
-	float hs2 = hash(vec2(hsIn2,hsIn1));
-	vec2 offset = vec2(hs1,hs2);
-	vec2 point = vec2(0,0) + offset;*/
-	//vec2 point = vec2(0,0);
-	if (distance(uv,point)<0.04) return true;
+	
+	if (distance(uv,point)<0.03+hash) return true;
 	return false;
 }
 
@@ -189,22 +169,39 @@ void trackTime() {
 	float tDrop = mod(tWiper,1);
 }
 
-vec4 drawWiper() {
+bool newRain() {
 	vec3 worldVec = computeDropOnWS();
 	vec2 uv = worldToLocal(worldVec);
-	if (uv.x>-1.51 && uv.x<-1.4 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
-	if (uv.x>1.4 && uv.x<1.51 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
-	if (uv.y>-0.8 && uv.y<-0.6 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
-	if (uv.y>0.6 && uv.y<0.8 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
+	
+	float toffset = 0;// uv.x+uv.y;
+	float x = 10;
+	float y = 10;
+	//if (mod(uv.x,0.4)<0.3) x=uv.x;
+	if (mod(tnow+toffset,5)<1.5) return draw(vec2(0,0));
+	return false;
+}
+
+vec4 drawWiper(vec4 check) {
+	vec3 worldVec = computeDropOnWS();
+	vec2 uv = worldToLocal(worldVec);
+	if (uv.x<-1.4 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
+	if (uv.x>1.4 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
+	if (uv.y<-0.6 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
+	if (uv.y>0.6 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
 	
 	float xoff = 0.25;
 	float yoff = -0.8;
 	float xoff2 = -1.;
 	float yoff2 = -0.8;
-	if ((uv.x-xoff2)*(uv.x-xoff2)+(uv.y-yoff2)*(uv.y-yoff2)<1.2 && (uv.x-xoff2)*(uv.x-xoff2)+(uv.y-yoff2)*(uv.y-yoff2)>0.05) return vec4(0,0,0,0.3);
+	if (mod(tnow,4)>2 && mod(tnow,4)<4) {
+	//if ((uv.x-xoff2)*(uv.x-xoff2)+(uv.y-yoff2)*(uv.y-yoff2)<1.2 && (uv.x-xoff2)*(uv.x-xoff2)+(uv.y-yoff2)*(uv.y-yoff2)>0.05) return vec4(0,0,0,0);
+	//if ((uv.x-xoff)*(uv.x-xoff)+(uv.y-yoff)*(uv.y-yoff)<1.2 && (uv.x-xoff)*(uv.x-xoff)+(uv.y-yoff)*(uv.y-yoff)>0.05) return vec4(0,0,0,0);
 	
-	if ((uv.x-xoff)*(uv.x-xoff)+(uv.y-yoff)*(uv.y-yoff)<1.2 && (uv.x-xoff)*(uv.x-xoff)+(uv.y-yoff)*(uv.y-yoff)>0.05) return vec4(0,0,0,0.4);
-	return vec4(0,0,0,0);
+	}
+	else {
+	
+	}
+	return check;
 }
 
 void main() {
@@ -215,35 +212,15 @@ void main() {
 	
 	if (fragDir.y < -0.999) discard;
 	vec4 check = vec4(0,0,0,0);	
-	/*
-	check = drawDot(windshieldPos, check);
-	check = drawDot(windshieldPos + windshieldDir*0.2,check);
-	check = drawDot(windshieldPos + windshieldDir*0.4,check);
-	check = drawDot(windshieldPos + windshieldDir*(-0.2),check);
-	check = drawDot(windshieldPos + windshieldDir*(-0.4),check);
-
-	check = drawDot(windshieldPos + windshieldUp*0.2,check);
-	check = drawDot(windshieldPos + windshieldUp*0.4,check);
-	check = drawDot(windshieldPos + windshieldUp*(-0.2),check);
-	check = drawDot(windshieldPos + windshieldUp*(-0.4),check);
-	check = drawCenter(vec3(0,0,0), check);
-	*/
-	//if(distance(windshieldPos,computeDropOnWS()) < 1.5) check = vec4(1,0,0,0.8);
-	/*check = drawDot(localToWorld(vec2(0,0)),check);
-	check = drawDot(localToWorld(vec2(0,0.5)),check);
-	check = drawDot(localToWorld(vec2(1,0)),check);
-	check = drawDot(localToWorld(vec2(1,0.5)),check);
-	*/
-	//if (isDrop()) check = vec4(1,1,0,0.1);
-	
-
-	//if (draw(locateDrop())) check = vec4(0.3,0.3,0.4,0.2);
+	if (!isRaining) discard;
 	if (draw(locateDrop().xy)) {
 		float dist = distance(locateDrop().zw,vec2(0.5,0.5));
 		float alph = smoothstep(0.4,1.4,1-dist);
-		check = vec4(0,1,1,alph);
+		check = vec4(0.2,0.2,0.3,alph/2);
 	}
-	check = drawWiper();
+
+	//if (newRain()) check = vec4(1,1,1,1);
+	//check = drawWiper(check);
 
 	//if (draw(vec2(0,0))) check = vec4(1,0,1,0.6);
 	//if (draw()) check = vec4(1,0,1,0.6);

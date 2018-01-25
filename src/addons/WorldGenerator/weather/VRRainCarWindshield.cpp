@@ -20,6 +20,14 @@
 
 using namespace OSG;
 
+/* Python usage example:
+def initRainyWindshield():
+	VR.rcShield = VR.RainCarWindshield()
+	windshield = VR.find('windshield') #Geometry
+	VR.rcShield.setWindshield(windshield)
+	VR.scene.addChild(VR.rcShield)
+*/
+
 VRRainCarWindshield::VRRainCarWindshield() : VRGeometry("RainCarWindshield") {
     type = "RainCarWindshield";
     string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Rain/";
@@ -105,6 +113,8 @@ void VRRainCarWindshield::doTestFunction() {
     string tmp = "asdf ";
     Vec3d wPos = geoWindshield->getWorldPosition();
     Vec3d wDir = geoWindshield->getDir();
+    isRaining=!isRaining;
+    mat->setShaderParameter<bool>("isRaining", isRaining);
     cout << tmp << wPos << " " << wDir << endl;
 }
 
