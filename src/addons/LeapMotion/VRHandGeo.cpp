@@ -1,5 +1,7 @@
 #include "VRHandGeo.h"
 #include <core/objects/geometry/OSGGeometry.h>
+#include <core/utils/VRFunction.h>
+#include <core/scene/VRScene.h>
 #include <core/math/pose.h>
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <thread>
@@ -7,7 +9,7 @@
 using namespace OSG;
 
 VRHandGeo::VRHandGeo(string name) : VRGeometry(name), bones(5) {
-    setPrimitive("Sphere", "0.01 2"); // palm geometry
+    //setPrimitive("Box", "0.05 0.01 0.06 1 1 1"); // palm geometry
     for (int i = 0; i < 5; ++i) {
         for (int j = 0; j < 4; ++j) {
             VRGeometryPtr geo = VRGeometry::create(name + "_bone_" + to_string(i) + "_" + to_string(j));
@@ -19,6 +21,9 @@ VRHandGeo::VRHandGeo(string name) : VRGeometry(name), bones(5) {
     }
     pinch = VRGeometry::create(name + "_pinch", true);
     pinch->setPrimitive("Sphere", "0.025 2");
+
+    updateCb = VRUpdateCb::create("handgeo_update", boost::bind(&VRHandGeo::updateHandGeo, this));
+    VRScene::getCurrent()->addUpdateFkt(updateCb);
 }
 
 VRHandGeoPtr VRHandGeo::create(string name) {
@@ -31,7 +36,7 @@ VRHandGeoPtr VRHandGeo::create(string name) {
 //    for (auto& d : ptr->directions) {
 //        ptr->addChild(d);
 //    }
-    ptr->addChild(ptr->pinch);
+   // ptr->addChild(ptr->pinch);
     ptr->hide();
     return ptr;
 }
@@ -44,9 +49,9 @@ void VRHandGeo::connectToLeap(VRLeapPtr leap) {
 }
 
 
-void VRHandGeo::updateChange() {
+void VRHandGeo::updateHandGeo() {
 
-    mutex.lock();
+    boost::mutex::scoped_lock lock(mutex);
 
     if (visible != isVisible()) { toggleVisible(); }
 
@@ -106,16 +111,11 @@ void VRHandGeo::updateChange() {
         }
 */
     }
-
-
-    mutex.unlock();
-   // VRTransform::updateChange();
 }
 
 void VRHandGeo::update(VRLeapFramePtr frame) {
 
-    //boost::mutex::scoped_lock lock(mutex);
-    mutex.lock();
+    boost::mutex::scoped_lock lock(mutex);
 
     if (isLeft) {
         handData = frame->getLeftHand();
@@ -130,8 +130,6 @@ void VRHandGeo::update(VRLeapFramePtr frame) {
         if (!visible) visible = true;
     }
 
-    mutex.unlock();
-    //reg_change();
 }
 
 void VRHandGeo::setLeft() { isLeft = true; }

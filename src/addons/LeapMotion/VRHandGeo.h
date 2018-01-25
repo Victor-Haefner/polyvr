@@ -17,13 +17,17 @@ public:
 
     void setRight();
 
-    void updateChange();
+   // void updateChange();
 
     void connectToLeap(VRLeapPtr leap);
 
 private:
 
     VRHandGeo(string name);
+
+    void updateHandGeo();
+
+    VRUpdateCbPtr updateCb;
 
     boost::mutex mutex;
     bool isLeft{false};
