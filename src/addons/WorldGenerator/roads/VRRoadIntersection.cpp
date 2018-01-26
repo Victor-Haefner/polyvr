@@ -118,7 +118,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto norm2 = nodeEnt2->getVec3("direction");
                 nodeEnt1->set("node", node2->getName());
                 if (D > 0) displacements[roadIn] = X;
-                world->getRoadNetwork()->connectGraph({node1,node2}, {norm1,norm2});
+                world->getRoadNetwork()->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
             }
             if (Nin < Nout) {
                 auto node1 = nodeEnt1->getEntity("node");
@@ -127,7 +127,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto norm2 = nodes2[1]->getVec3("direction");
                 nodeEnt2->set("node", node1->getName());
                 if (D > 0) displacements[roadOut] = -X;
-                world->getRoadNetwork()->connectGraph({node1,node2}, {norm1,norm2});
+                world->getRoadNetwork()->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
             }
 
             processedLanes[laneIn] = true;
@@ -183,7 +183,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             lane->add("path", lPath->getName());
             nextLanes[laneIn].push_back(lane);
             nextLanes[lane].push_back(laneOut);
-            world->getRoadNetwork()->connectGraph(nodes, norms);
+            world->getRoadNetwork()->connectGraph(nodes, norms, lane);
         }
 	};
 

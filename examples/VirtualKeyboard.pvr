@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene base_name="graphtool" name_space="Scene" name_suffix="0" persistency="666">
+  <Objects>
+    <Object base_name="Root" name_space="__global__" name_suffix="2" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.354833 0.354833 0.354833 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object at="0.6 -0.5 0.8" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+          <constraint persistency="666"/>
+        </Object>
+        <Object accept_root="1" aspect="1" at="-0.0503397 -0.0904348 0" at_dir="0" base_name="Default" far="3000" fov="1.0472" from="-0.640033 0.0866849 3.54174" name_space="__global__" name_suffix="0" near="1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <constraint persistency="666"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="cssMain" group="gui" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
+      <core>
+body {
+    background-color: white;
+	color: #555555;
+	margin: 0;
+	font-size:5vw;
+	text-align:center;
+}
+
+h1 {
+    color: darkblue;
+    font-size: 4vw;
+    text-align:center;
+}
+
+input {
+	width: 16vw;
+	font-size:4vw;
+}
+
+button {
+	font-size:4vw;
+	color: #555555;
+}
+</core>
+    </Script>
+    <Script base_name="gui_handler" group="gui" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR, os, math
+	m = dev.getMessage().split(' ')
+	
+	print 'received:', m
+		
+	if m[0] == 'keyboard':
+		data = ' '.join(m[2:])
+		if m[1] == 'changed':
+			if VR.gui_current_input:
+				site = VR.gui_current_input[0]
+				inpt = VR.gui_current_input[1]
+				VR.gui_send(site, 'setInput '+inpt+' '+data)
+	
+	if m[0] == 'entry':
+		if m[1] == 'focus':
+			VR.gui_current_input = (m[2], m[3])
+			VR.gui_send('keyboard', 'set '+' '.join(m[4:]))
+			VR.guiKeyboard.show()
+	
+	if m[0] == 'register':
+		VR.gui_clients[m[1]] = dev.getKey()
+		
+		
+		
+		
+		
+		
+</core>
+      <trig type="on_device" dev="server1" state="Released" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
+    </Script>
+    <Script base_name="gui_send" group="gui" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	if not hasattr(VR, 'gui_clients'): return
+	
+	if client in VR.gui_clients:
+		print 'send:',msg,'to',client
+		ID = VR.gui_clients[client]
+		VR.find('server1').answer(ID, msg)
+	#else:
+	#	print 'could not send', msg, 'to', client
+</core>
+      <arg type="NoneType" value="None" base_name="client" name_space="gui_send" name_suffix="0" persistency="666"/>
+      <arg type="NoneType" value="None" base_name="msg" name_space="gui_send" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="gui_site_keyboard" group="gui" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
+      <core>
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+	&lt;meta charset="utf-8"&gt;
+	&lt;title&gt;Virtual Keyboard&lt;/title&gt;
+
+	&lt;link href="JSKeyboard/jquery-ui.min.css" rel="stylesheet"&gt;
+	&lt;script src="JSKeyboard/jquery-latest.min.js"&gt;&lt;/script&gt;
+	&lt;script src="JSKeyboard/jquery-ui.min.js"&gt;&lt;/script&gt;
+	&lt;link href="JSKeyboard/keyboard.css" rel="stylesheet"&gt;
+	&lt;script src="JSKeyboard/jquery.keyboard.js"&gt;&lt;/script&gt;
+
+	&lt;style type="text/css"&gt;
+		body {
+			margin: 1px;
+		}
+		
+		.ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default, .ui-button {
+			background: #EFEFFA;
+			color: #555;
+		}
+		
+		.ui-state-default:hover, .ui-widget-content .ui-state-default:hover, .ui-widget-header .ui-state-default:hover, .ui-button:hover {
+			background: #FAFAFF;
+			color: #333;
+		}
+		
+		.ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button {
+			font-size: 4vw;
+		}
+		
+		.ui-widget-content {
+			#border: none;
+			background: #FFF;
+			color: #333;
+		}
+		
+		.ui-keyboard {
+			#border: 0px solid #666;
+			position: block;
+			width: 97vw;
+			height: 94vh;
+			padding: 1vw;
+		}
+		
+		.buttonAction {
+		}
+	&lt;/style&gt;
+	
+	&lt;script&gt;
+		function setupKB() { 
+			$('#keyboard').keyboard({
+
+				display: {
+					'bksp'   :  "\u2190",
+					'accept' : 'return',
+					'normal' : 'abc',
+					'meta1'  : '123',
+					'meta2'  : '{[+'
+				},
+
+				caretToEnd: true,
+				ignoreEsc: true,
+				usePreview: false,
+				resetDefault: true,
+				stayOpen: true,
+				position: false,
+				reposition: false,
+				alwaysOpen: true,
+				layout: 'custom',
+				customLayout: {
+					'normal': [
+						'q w e r t z u i o p {bksp}',
+						'a s d f g h j k l {enter}',
+						'{s} y x c v b n m , . {s}',
+						'{meta1} {space} {meta2} {accept}'
+					],
+					'shift': [
+						'Q W E R T Z U I O P {bksp}',
+						'A S D F G H J K L {enter}',
+						'{s} Y X C V B N M ! ? {s}',
+						'{meta1} {space} {meta2} {accept}'
+					],
+					'meta1': [
+						'1 2 3 4 5 6 7 8 9 0 {bksp}',
+						'- / : ; ( ) \u20ac &amp; @ {enter}',
+						'{meta2} . , ? ! \' " {meta2}',
+						'{normal} {space} {normal} {accept}'
+					],
+					'meta2': [
+						'[ ] { } # % ^ * + = {bksp}',
+						'_ \\ | ~ &lt; &gt; $ \u00a3 \u00a5 {enter}',
+						'{meta1} . , ? ! \' " {meta1}',
+						'{normal} {space} {normal} {accept}'
+					]
+				}
+
+			});
+		}
+		
+		function setupOnChange() {
+			$('.ui-keyboard-input').bind('keyboardChange', function(e, keyboard, el) {
+			  var keyboard = $('#keyboard').getkeyboard();
+			  setTimeout(function() {send('keyboard changed '+keyboard.preview.value);},50);
+			});	
+		}
+	
+		function handle(m) {
+			data = m.split(" ");
+			if (data[0] == "set") {
+				var keyboard = $('#keyboard').getkeyboard();
+				//keyboard.close();
+				keyboard.preview.value = data.slice(1).join(' ');
+				keyboard.reveal();
+			}
+		};
+	
+		var websocket = new WebSocket('ws://'+location.hostname+':5500');
+		websocket.onmessage = function(m) { if (m.data) handle(m.data); };	
+		function send(m) { websocket.send(m); };
+		websocket.onopen = function() { 
+			send('register keyboard');
+			setupKB();
+			setupOnChange();
+		};		
+	&lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+    &lt;!--textarea id="ipad" onchange="send('keyboard '+this.value)"&gt;&lt;/textarea--&gt;
+    &lt;input id="keyboard" type="search" onchange="send('keyboard return '+this.value)"&gt;
+&lt;/body&gt;
+
+&lt;/html&gt;
+
+
+
+
+</core>
+    </Script>
+    <Script base_name="gui_site_viewer" group="gui" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
+      <core>
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+	&lt;link rel="stylesheet" href="gui/font-awesome-4.5.0/css/font-awesome.min.css"&gt;
+	&lt;link rel="stylesheet" href="cssMain"&gt;
+
+	&lt;style type="text/css"&gt;
+		body {
+			overflow:hidden;
+		}
+		
+		textarea {
+			width:90vw;
+			height:70vh;
+			overflow:hidden;
+		}
+		
+	&lt;/style&gt;
+	
+	&lt;script&gt;
+
+	function setLabel(lbl, val) {
+		document.getElementById(lbl).innerHTML = val;
+	}
+	
+	function setInput(inp, val) {
+		document.getElementById(inp).value = val;
+	}
+  
+	function handle(m) {
+		data = m.split(" ");
+		if (data.length &gt; 0) {
+			if (data[0] == "setInput") {
+				setInput(data[1], data.slice(2).join(" "));
+				inp = document.getElementById(data[1]);
+				sendInput(inp,10);
+			}
+		}
+	};
+	
+	function initNumInput(input) {
+		input.onKeyUp = function(event) {
+			event.preventDefault();
+			if (event.keyCode == 13) eval(input.getAttribute('data-cb'));
+		}
+		input.addEventListener("keyup", input.onKeyUp, true);
+	}
+	
+	function initTexInput(input) {
+		input.onFocus = function(event) {
+			//event.preventDefault();
+			send("entry focus viewer "+input.id+" "+input.value);
+		}
+		input.addEventListener("focus", input.onFocus, true);
+	}
+	
+	function initInputs() {
+		var inputs = document.getElementsByClassName("numIn");
+		for (var i = 0; i &lt; inputs.length; i++) initNumInput(inputs[i]);
+		
+		var inputs = document.getElementsByClassName("texIn");
+		for (var i = 0; i &lt; inputs.length; i++) initTexInput(inputs[i]);
+	}
+	
+	var websocket = new WebSocket('ws://'+location.hostname+':5500');
+	websocket.onmessage = function(m) { if (m.data) handle(m.data); };	
+	function send(m){ websocket.send(m); };
+	function sendInput(i,T){ setTimeout(function() {websocket.send('rename '+i.value);},T); };
+	websocket.onopen = function() { 
+		send('register viewer');
+		initInputs();
+	};
+	&lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+    &lt;div&gt;
+		&lt;h1&gt;Select editor and type something!&lt;/h1&gt;
+		&lt;textarea id='editor' class='texIn'&gt;&lt;/textarea&gt;
+	&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+
+
+
+
+</core>
+    </Script>
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	if hasattr(VR, 'scene'): VR.scene.destroy()
+	VR.scene = VR.Object('scene', 'light')
+	
+	VR.gui_clients = {}
+	
+	VR.viewer = VR.Sprite('layers')
+	VR.viewer.addTag('gui')
+	VR.viewer.setSize(2,1)
+	VR.viewer.setPose([0,0,0], [0,0,1], [0,-1,0])
+	VR.viewer.webOpen('http://localhost:5500/gui_site_viewer', 256, 2)
+	VR.viewer.getMaterial().clearTransparency()
+	VR.scene.addChild(VR.viewer)
+	
+	# keyboard
+	VR.guiKeyboard = VR.Sprite('keyboard')
+	VR.guiKeyboard.addTag('gui')
+	VR.guiKeyboard.setSize(2,1)
+	VR.guiKeyboard.setPose([0,-1,0.5], [0,1,1], [0,-1,0])
+	VR.guiKeyboard.webOpen('http://localhost:5500/gui_site_keyboard', 512, 2)
+	VR.guiKeyboard.getMaterial().enableTransparency()
+	VR.scene.addChild(VR.guiKeyboard)
+	
+	VR.gui_current_input = None
+	
+	
+	
+	
+	
+	
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
+    </Script>
+  </Scripts>
+  <Sockets persistency="666"/>
+  <Background color="1 1 1" format=".png" path="" persistency="666" type="0"/>
+  <Navigation active="FlyWalk" persistency="666"/>
+  <Materials persistency="666"/>
+  <Semantics persistency="666">
+    <Ontology base_name="/home/victor/Projects/Dimension/data/Beispielprozess/2016-09-01" flag="custom" name_space="Ontology" name_suffix="2" persistency="666">
+      <Thing base_name="Thing" name_space="concept" name_suffix="0" persistency="666">
+        <Properties>
+          <Property base_name="hasAbstractVisualRepresentation" name_space="property" name_suffix="0" persistency="666" type="" value="" ID="2993"/>
+          <Property base_name="hasConnectionWith" name_space="property" name_suffix="0" persistency="666" type="" value="" ID="2998"/>
+          <Property base_name="hasMessageTypeConstraint" name_space="property" name_suffix="0" persistency="666" type="MessageTypeConstraint" value="" ID="3014"/>
+          <Property base_name="hasMetaContent" name_space="property" name_suffix="0" persistency="666" type="MetaContent" value="" ID="3015"/>
+          <Property base_name="hasPoint2D" name_space="property" name_suffix="0" persistency="666" type="" value="" ID="3022"/>
+          <Property base_name="hasPoint3D" name_space="property" name_suffix="0" persistency="666" type="" value="" ID="3023"/>
+          <Property base_name="hasRoleMember" name_space="property" name_suffix="0" persistency="666" type="Actor" value="" ID="3024"/>
+          <Property base_name="hasSenderConstraint" name_space="property" name_suffix="0" persistency="666" type="SenderConstraint" value="" ID="3025"/>
+          <Property base_name="hasSenderTypeConstraint" name_space="property" name_suffix="0" persistency="666" type="SenderTypeConstraint" value="" ID="3026"/>
+          <Property base_name="hasVisualRepresentation" name_space="property" name_suffix="0" persistency="666" type="" value="" ID="3035"/>
+          <Property base_name="layerMechanismProperty" name_space="property" name_suffix="0" persistency="666" type="" value="" ID="3048"/>
+          <Property base_name="receiver" name_space="property" name_suffix="0" persistency="666" type="ActiveProcessComponent" value="" ID="3051"/>
+          <Property base_name="references" name_space="property" name_suffix="0" persistency="666" type="PASSProcessModelElement" value="" ID="3052"/>
+          <Property base_name="scriptRole" name_space="property" name_suffix="0" persistency="666" type="" value="" ID="3055"/>
+          <Property base_name="sender" name_space="property" name_suffix="0" persistency="666" type="ActiveProcessComponent" value="" ID="3056"/>
+        </Properties>
+      </Thing>
+    </Ontology>
+    <Ontology base_name="Actuator" flag="custom" name_space="Ontology" name_suffix="0" persistency="666">
+      <Thing base_name="Thing" name_space="concept" name_suffix="0" persistency="666">
+        <Properties>
+          <Property base_name="hasAbstractVisualRepresentation" name_space="property" name_suffix="0" persistency="666" type="" value="" ID="2993"/>
+          <Property base_name="hasConnectionWith" name_space="property" name_suffix="0" persistency="666" type="" value="" ID="2998"/>
+          <Property base_name="hasMessageTypeConstraint" name_space="property" name_suffix="0" persistency="666" type="MessageTypeConstraint" value="" ID="3014"/>
+          <Property base_name="hasMetaContent" name_space="property" name_suffix="0" persistency="666" type="MetaContent" value="" ID="3015"/>
+          <Property base_name="hasPoint2D" name_space="property" name_suffix="0" persistency="666" type="" value="" ID="3022"/>
+          <Property base_name="hasPoint3D" name_space="property" name_suffix="0" persistency="666" type="" value="" ID="3023"/>
+          <Property base_name="hasRoleMember" name_space="property" name_suffix="0" persistency="666" type="Actor" value="" ID="3024"/>
+          <Property base_name="hasSenderConstraint" name_space="property" name_suffix="0" persistency="666" type="SenderConstraint" value="" ID="3025"/>
+          <Property base_name="hasSenderTypeConstraint" name_space="property" name_suffix="0" persistency="666" type="SenderTypeConstraint" value="" ID="3026"/>
+          <Property base_name="hasVisualRepresentation" name_space="property" name_suffix="0" persistency="666" type="" value="" ID="3035"/>
+          <Property base_name="layerMechanismProperty" name_space="property" name_suffix="0" persistency="666" type="" value="" ID="3048"/>
+          <Property base_name="receiver" name_space="property" name_suffix="0" persistency="666" type="ActiveProcessComponent" value="" ID="3051"/>
+          <Property base_name="references" name_space="property" name_suffix="0" persistency="666" type="PASSProcessModelElement" value="" ID="3052"/>
+          <Property base_name="scriptRole" name_space="property" name_suffix="0" persistency="666" type="" value="" ID="3055"/>
+          <Property base_name="sender" name_space="property" name_suffix="0" persistency="666" type="ActiveProcessComponent" value="" ID="3056"/>
+        </Properties>
+      </Thing>
+    </Ontology>
+  </Semantics>
+</Scene>

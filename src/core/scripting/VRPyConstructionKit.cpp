@@ -19,6 +19,7 @@ PyMethodDef VRPyConstructionKit::methods[] = {
     {"addObject", (PyCFunction)VRPyConstructionKit::addObject, METH_VARARGS, "Get internal selector - addObject(obj)" },
     {"remObject", (PyCFunction)VRPyConstructionKit::remObject, METH_VARARGS, "Get internal selector - remObject(obj)" },
     {"breakup", (PyCFunction)VRPyConstructionKit::breakup, METH_VARARGS, "Split an object from the system - breakup(obj)" },
+    {"toggleConstruction", PyWrap( ConstructionKit, toggleConstruction, "Toggle construction mode", void, bool ) },
     {NULL}  /* Sentinel */
 };
 

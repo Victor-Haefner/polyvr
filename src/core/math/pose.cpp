@@ -47,6 +47,9 @@ Vec3d Pose::transformInv(Vec3d p) {
     return Vec3d(P);
 }
 
+PosePtr Pose::multLeft(PosePtr p) { auto m1 = asMatrix(); auto m2 = p->asMatrix(); m1.multLeft(m2); return Pose::create(m1); }
+PosePtr Pose::multRight(PosePtr p) { auto m1 = asMatrix(); auto m2 = p->asMatrix(); m1.mult(m2); return Pose::create(m1); }
+
 void Pose::setPos(Vec3d p) { data[0] = p; }
 void Pose::setDir(Vec3d d) { data[1] = d; }
 void Pose::setUp(Vec3d u) { data[2] = u; }
@@ -54,7 +57,7 @@ void Pose::setUp(Vec3d u) { data[2] = u; }
 Vec3d Pose::pos() const { return data.size() > 0 ? data[0] : Vec3d(); }
 Vec3d Pose::dir() const { return data.size() > 1 ? data[1] : Vec3d(); }
 Vec3d Pose::up() const { return data.size() > 2 ? data[2] : Vec3d(); }
-Vec3d Pose::x() const { return data.size() > 2 ? data[1].cross(data[2]) : Vec3d(); }
+Vec3d Pose::x() const { return data.size() > 2 ? data[1].cross(data[2]) : Vec3d(); } // vector to the right
 
 Matrix4d Pose::asMatrix() const {
     Matrix4d m;

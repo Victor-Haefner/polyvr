@@ -201,13 +201,10 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyLeap>("Leap", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyLeapFrame>("LeapFrame", pModVR);
 
-#ifndef _WIN32
 	sm->registerModule<VRPyCSG>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
 	sm->registerModule<VRPyRealWorld>("RealWorld", pModVR, VRPyObject::typeRef);
-	sm->registerModule<VRPyOldTrafficSimulation>("OldTrafficSimulation", pModVR);
 	sm->registerModule<VRPyTrafficSimulation>("TrafficSimulation", pModVR, VRPyObject::typeRef);
 	sm->registerModule<VRPySimViDekont>("SimViDekont", pModVR);
-#endif
 
     PyObject* pModMath = Py_InitModule3("VR.Math", VRSceneGlobals::methods, "VR math module");
     sm->registerModule<VRPyVec2f>("Vec2", pModMath, 0, "Math");

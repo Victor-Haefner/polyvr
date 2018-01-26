@@ -17,6 +17,8 @@ PyMethodDef VRPyPose::methods[] = {
     {"set", PyWrap2(Pose, set, "Set the pose", void, Vec3d, Vec3d, Vec3d ) },
     {"mult", PyWrap2(Pose, transform, "Transform a vector", Vec3d, Vec3d ) },
     {"multInv", PyWrap2(Pose, transformInv, "Transform back a vector", Vec3d, Vec3d ) },
+    {"multLeft", PyWrap2(Pose, multLeft, "Transform back a vector", PosePtr, PosePtr ) },
+    {"multRight", PyWrap2(Pose, multRight, "Transform back a vector", PosePtr, PosePtr ) },
     {"invert", PyWrap2(Pose, invert, "Invert pose", void ) },
     {NULL}  /* Sentinel */
 };
