@@ -112,7 +112,7 @@ vec4 locateDrop() {
 	float disBD = 0.08;
 	float limitValue = disBD;
 
-	float hsIn1 = floor(uv.x/disBD) + 50*floor((tnow+1.8)/4);
+	float hsIn1 = floor(uv.x/disBD) + 50*floor((tnow+1.9)/4);
 	float hsIn2 = floor(uv.y/disBD);
 
 	float hs1 = hash(vec2(hsIn1,hsIn2));
