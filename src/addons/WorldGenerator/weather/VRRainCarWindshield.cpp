@@ -102,7 +102,7 @@ void VRRainCarWindshield::update() {
     mat->readFragmentShader(fScript);
 
     Vec3d windshieldPos = geoWindshield->getWorldPosition();
-    Vec3d windshieldDir = geoWindshield->getDir();
+    Vec3d windshieldDir = geoWindshield->getWorldDirection();
     Vec3d windshieldUp = geoWindshield->getWorldUp();
     mat->setShaderParameter<Vec3f>("windshieldPos", convertV3dToV3f(windshieldPos));
     mat->setShaderParameter<Vec3f>("windshieldDir", convertV3dToV3f(windshieldDir));
@@ -112,7 +112,7 @@ void VRRainCarWindshield::update() {
 void VRRainCarWindshield::doTestFunction() {
     string tmp = "asdf ";
     Vec3d wPos = geoWindshield->getWorldPosition();
-    Vec3d wDir = geoWindshield->getDir();
+    Vec3d wDir = geoWindshield->getWorldDirection();
     isRaining=!isRaining;
     mat->setShaderParameter<bool>("isRaining", isRaining);
     cout << tmp << wPos << " " << wDir << endl;
