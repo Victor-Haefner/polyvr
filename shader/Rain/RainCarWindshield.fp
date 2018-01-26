@@ -15,6 +15,7 @@ vec4 color;
 bool debugB = false;
 float sizeX = 2;
 float sizeY = 1;
+float scale = 10;
 
 uniform vec2 OSGViewportSize;
 uniform float tnow;
@@ -106,8 +107,6 @@ vec4 drawCenter(vec3 P0, vec4 check) {
 vec4 locateDrop() {
 	vec3 worldVec = computeDropOnWS();
 	vec2 uv = worldToLocal(worldVec);
-
-	float scale = 20;
 
 	float disBD = 0.08;
 	float limitValue = disBD;
