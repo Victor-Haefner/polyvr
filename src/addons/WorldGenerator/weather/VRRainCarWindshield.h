@@ -17,13 +17,8 @@ class VRRainCarWindshield : public VRGeometry {
     private:
         bool debugRain = false;
         VRUpdateCbPtr updatePtr;
-        VRAnimCbPtr rainAnimationCb;
         VRMaterialPtr mat;
-        VRMaterialPtr renderMat;
-        VRLightPtr lightMain;
 
-        VRCameraPtr camTex;
-        VRCameraPtr oldCamTex;
         VRTextureRendererPtr texRenderer;
         VRGeometryPtr cube;
 
@@ -31,45 +26,20 @@ class VRRainCarWindshield : public VRGeometry {
 
         string vScript;
         string fScript;
-        //string vScriptTex;
-        //string fScriptTex;
-        float offset = 0;
-        float camH = 40;
-        float rainDensity = 0;
 
         bool isRaining = false;
 
         uint textureSize;
 
         void update();
-        void startRainCallback(float t);
-        void stopRainCallback(float t);
-        void updateScale(float scaleNow);
 
         Vec3f convertV3dToV3f(Vec3d in);
 
-        //inital cloud parameters
-        float densityStart = 0.1;
-        float speedStartX = 0.002;
-        float speedStartY = 0.001;
-        float colorStart = 1;
-        float lightStart = 1;
-
-        float scale;
-        float density;
-        float speedX;
-        float speedY;
-        float color;
-        float light;
+        float scale = 10;
 
         double tnow = 0;
         double tlast = 0;
         double tdelta = 0;
-
-        Vec3f carOrigin;
-        Vec3f carDir;
-        Vec3f posOffset;
-        //Vec3d windshieldDir;
 
     public:
         VRRainCarWindshield();
@@ -80,8 +50,11 @@ class VRRainCarWindshield : public VRGeometry {
 
         float get();
         void setWindshield(VRGeometryPtr geoWindshield);
+        void setScale(float scale);
 
         void doTestFunction();
+        void start();
+        void stop();
 
 };
 

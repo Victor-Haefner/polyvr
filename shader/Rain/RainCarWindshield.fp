@@ -15,7 +15,8 @@ vec4 color;
 bool debugB = false;
 float sizeX = 2;
 float sizeY = 1;
-float scale = 10;
+
+uniform float scale;
 
 uniform vec2 OSGViewportSize;
 uniform float tnow;

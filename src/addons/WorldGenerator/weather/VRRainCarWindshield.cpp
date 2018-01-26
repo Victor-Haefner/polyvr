@@ -43,16 +43,14 @@ VRRainCarWindshield::VRRainCarWindshield() : VRGeometry("RainCarWindshield") {
     mat->setLit(false);
 	mat->setDiffuse(Color3f(1));
 	mat->enableTransparency();
-    //parameter temp setup
-    carOrigin = Vec3f(0,0,0);
-    carDir = Vec3f(1,0,0);
-    posOffset = Vec3f(-10,0,0);
 
     setVolumeCheck(false, true);
 
     auto scene = VRScene::getCurrent();
     scene->getRoot()->addChild(texRenderer);
     auto lightF = scene->getRoot()->find("light");
+
+    mat->setShaderParameter<float>("scale", scale);
 
     updatePtr = VRUpdateCb::create("VRRainCarWindshield update", boost::bind(&VRRainCarWindshield::update, this));
     VRScene::getCurrent()->addUpdateFkt(updatePtr);
@@ -75,10 +73,10 @@ VRRainCarWindshieldPtr VRRainCarWindshield::ptr() { return static_pointer_cast<V
 
 float VRRainCarWindshield::get() { return scale; }
 
-/*void VRRainCarWindshield::setDir(Vec3d windshieldDir) {
-    //cout << cubeWindshield->getFrom() << " from " << cubeWindshield->getDir() << endl;
-    this windshieldDir = windshieldDir;
-}*/
+void VRRainCarWindshield::setScale(float scale) {
+    this->scale = scale;
+    mat->setShaderParameter<float>("scale", scale);
+}
 
 void VRRainCarWindshield::setWindshield(VRGeometryPtr geoWindshield) {
     //cout << cubeWindshield->getFrom() << " from " << cubeWindshield->getDir() << endl;
@@ -87,11 +85,6 @@ void VRRainCarWindshield::setWindshield(VRGeometryPtr geoWindshield) {
 
 void VRRainCarWindshield::update() {
     if (!isVisible()) return;
-
-    /** need to get car position and direction from car */
-    mat->setShaderParameter<Vec3f>("carOrigin", carOrigin);
-    mat->setShaderParameter<Vec3f>("carDir", carDir);
-    mat->setShaderParameter<Vec3f>("posOffset", posOffset);
 
     tnow = glutGet(GLUT_ELAPSED_TIME)*0.001; //seconds
     tdelta = tnow-tlast;
@@ -110,12 +103,24 @@ void VRRainCarWindshield::update() {
 }
 
 void VRRainCarWindshield::doTestFunction() {
-    string tmp = "asdf ";
+    string tmp = "VRRainCarWindshield::doTestFunction() ";
     Vec3d wPos = geoWindshield->getWorldPosition();
     Vec3d wDir = geoWindshield->getWorldDirection();
     isRaining=!isRaining;
     mat->setShaderParameter<bool>("isRaining", isRaining);
     cout << tmp << wPos << " " << wDir << endl;
+}
+
+void VRRainCarWindshield::start() {
+    isRaining = true;
+    mat->setShaderParameter<bool>("isRaining", isRaining);
+    cout << "VRRainCarWindshield::start()" << endl;
+}
+
+void VRRainCarWindshield::stop() {
+    isRaining= false;
+    mat->setShaderParameter<bool>("isRaining", isRaining);
+    cout << "VRRainCarWindshield::stop()" << endl;
 }
 
 
