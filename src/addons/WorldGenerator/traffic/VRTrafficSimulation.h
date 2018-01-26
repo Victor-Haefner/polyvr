@@ -76,7 +76,7 @@ class VRTrafficSimulation : public VRObject {
         void addVehicles(int roadID, float density, int type);
         void setTrafficDensity(float density, int type);
 
-        void addVehicleModel(VRObjectPtr mesh);
+        int addVehicleModel(VRObjectPtr mesh);
 };
 
 OSG_END_NAMESPACE;

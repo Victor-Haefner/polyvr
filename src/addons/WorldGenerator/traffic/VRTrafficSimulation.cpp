@@ -70,6 +70,7 @@ T randomChoice(vector<T> vec) {
 }
 
 void VRTrafficSimulation::updateSimulation() {
+    if (!roadNetwork) return;
     auto g = roadNetwork->getGraph();
     Octree space(2);
 
@@ -168,7 +169,7 @@ void VRTrafficSimulation::addVehicle(int roadID, int type) {
     //if () cout << "VRTrafficSimulation::updateSimulation " << roads.size() << endl;
     auto& road = roads[roadID];
     auto v = Vehicle( Graph::position(roadID, 0.0) );
-    v.mesh = models[0]->duplicate();
+    v.mesh = models[type]->duplicate();
 
     //if (VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(v.mesh) ) g->makeUnique(); // only for debugging!!
     //v.t->setPickable(true);
@@ -192,8 +193,9 @@ void VRTrafficSimulation::setTrafficDensity(float density, int type) {
     for (auto road : roads) addVehicles(road.first, density, type);
 }
 
-void VRTrafficSimulation::addVehicleModel(VRObjectPtr mesh) {
+int VRTrafficSimulation::addVehicleModel(VRObjectPtr mesh) {
     models.push_back( mesh->duplicate() );
+    return models.size()-1;
 }
 
 void VRTrafficSimulation::updateDensityVisual(bool remesh) {
