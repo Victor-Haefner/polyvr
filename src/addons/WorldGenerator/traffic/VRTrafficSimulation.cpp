@@ -5,6 +5,7 @@
 #include "../terrain/VRTerrain.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/VRGlobals.h"
 #include "core/math/polygon.h"
 #include "core/math/graph.h"
 #include "core/math/triangulator.h"
@@ -83,6 +84,15 @@ void VRTrafficSimulation::updateSimulation() {
         }
     };
 
+    auto resetVehicle = [&](Vehicle& vehicle) {
+        auto& gp = vehicle.pos;
+        gp.edge = randomChoice(seedEdges);
+        gp.pos = 0;
+        vehicle.lastMoveTS = VRGlobals::CURRENT_FRAME;
+        auto p = roadNetwork->getPosition(vehicle.pos);
+        vehicle.t->setPose(p);
+    };
+
     auto propagateVehicle = [&](Vehicle& vehicle, float d) {
         auto& gp = vehicle.pos;
         gp.pos += d;
@@ -92,12 +102,13 @@ void VRTrafficSimulation::updateSimulation() {
             auto& edge = g->getEdge(gp.edge);
             auto edges = g->getNextEdges(edge);
             if (edges.size() > 0) gp.edge = randomChoice(edges).ID;
-            else gp.edge = randomChoice(seedEdges);
+            else resetVehicle(vehicle);
         }
 
         auto p = roadNetwork->getPosition(vehicle.pos);
         vehicle.lastMove = p->pos() - vehicle.t->getFrom();
         vehicle.t->setPose(p);
+        vehicle.lastMoveTS = VRGlobals::CURRENT_FRAME;
     };
 
     auto inFront = [&](PosePtr p1, PosePtr p2, Vec3d lastMove) -> bool {
@@ -155,6 +166,10 @@ void VRTrafficSimulation::updateSimulation() {
                 }*/
 
                 if (state == 0) propagateVehicle(vehicle, d);
+                else {
+                    cout << " " << vehicle.lastMoveTS << "  " << VRGlobals::CURRENT_FRAME - vehicle.lastMoveTS << endl;
+                    if (VRGlobals::CURRENT_FRAME - vehicle.lastMoveTS > 200 ) resetVehicle(vehicle);
+                }
             }
         }
     };
@@ -163,6 +178,12 @@ void VRTrafficSimulation::updateSimulation() {
     propagateVehicles();
     //resolveCollisions();
     updateDensityVisual();
+}
+
+void VRTrafficSimulation::addUser(VRTransformPtr t) {
+    auto v = Vehicle( Graph::position(0, 0.0) );
+    v.t = t;
+    users.push_back( v );
 }
 
 void VRTrafficSimulation::addVehicle(int roadID, int type) {
