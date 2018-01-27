@@ -159,6 +159,13 @@ void VRTrafficSimulation::updateSimulation() {
                     if (state > 0) break;
                 }
 
+                for (auto& v : users) {
+                    auto p = v.t->getPose();
+                    if (inFront(pose, p, vehicle.lastMove)) state = 1;
+                    else if (commingRight(pose, p, vehicle.lastMove)) state = 2;
+                    if (state > 0) break;
+                }
+
                 /*if (auto g = dynamic_pointer_cast<VRGeometry>(vehicle.mesh)) { // only for debugging!!
                     if (state == 0) g->setColor("white");
                     if (state == 1) g->setColor("blue");
