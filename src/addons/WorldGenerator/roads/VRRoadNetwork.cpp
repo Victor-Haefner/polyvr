@@ -4,6 +4,7 @@
 #include "VRTunnel.h"
 #include "VRBridge.h"
 #include "../terrain/VRTerrain.h"
+#include "../traffic/VRTrafficLights.h"
 #include "../VRWorldGenerator.h"
 #include "VRAsphalt.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
@@ -172,7 +173,8 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
 
     // check for inflection points!
     for (uint i=1; i<nodesIn.size(); i++) {
-        nodes.push_back( nodesIn[i-1] ); norms.push_back( normalsIn[i-1] );
+        nodes.push_back( nodesIn[i-1] );
+        norms.push_back( normalsIn[i-1] );
         Vec3d p1 = nodesIn[i-1]->getVec3("position");
         Vec3d p2 = nodesIn[i  ]->getVec3("position");
 
@@ -188,7 +190,8 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
             nodes.push_back( addNode(pnt->pos(), true) ); norms.push_back( n );
         }
     }
-    nodes.push_back( nodesIn[nodesIn.size()-1] ); norms.push_back( normalsIn[normalsIn.size()-1] );
+    nodes.push_back( nodesIn[nodesIn.size()-1] );
+    norms.push_back( normalsIn[normalsIn.size()-1] );
 
     if (terrain) {
         for (uint i=0; i<nodesIn.size(); i++) { // project tangents on terrain
@@ -215,6 +218,19 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
     roads.push_back(road);
     roadsByEntity[road->getEntity()] = road;
     return road;
+}
+
+VRTrafficLightPtr VRRoadNetwork::addTrafficLight( string name, VREntityPtr lane, VREntityPtr laneNode, string group ) {
+    // TODO
+    //  - get road at node
+    //  - add traffic light to semantic layer
+
+	auto lE = world->getOntology()->addEntity( name, "TrafficLight");
+
+    VRTrafficLightsPtr system;
+    if (group != "") system = VRTrafficLights::create(group);
+    auto l = VRTrafficLight::create(lane, system);
+    return l;
 }
 
 void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {

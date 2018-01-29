@@ -5,6 +5,7 @@
 #include "../terrain/VRTerrain.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/VRGlobals.h"
 #include "core/math/polygon.h"
 #include "core/math/graph.h"
 #include "core/math/triangulator.h"
@@ -70,6 +71,7 @@ T randomChoice(vector<T> vec) {
 }
 
 void VRTrafficSimulation::updateSimulation() {
+    if (!roadNetwork) return;
     auto g = roadNetwork->getGraph();
     Octree space(2);
 
@@ -82,6 +84,15 @@ void VRTrafficSimulation::updateSimulation() {
         }
     };
 
+    auto resetVehicle = [&](Vehicle& vehicle) {
+        auto& gp = vehicle.pos;
+        gp.edge = randomChoice(seedEdges);
+        gp.pos = 0;
+        vehicle.lastMoveTS = VRGlobals::CURRENT_FRAME;
+        auto p = roadNetwork->getPosition(vehicle.pos);
+        vehicle.t->setPose(p);
+    };
+
     auto propagateVehicle = [&](Vehicle& vehicle, float d) {
         auto& gp = vehicle.pos;
         gp.pos += d;
@@ -91,12 +102,13 @@ void VRTrafficSimulation::updateSimulation() {
             auto& edge = g->getEdge(gp.edge);
             auto edges = g->getNextEdges(edge);
             if (edges.size() > 0) gp.edge = randomChoice(edges).ID;
-            else gp.edge = randomChoice(seedEdges);
+            else resetVehicle(vehicle);
         }
 
         auto p = roadNetwork->getPosition(vehicle.pos);
         vehicle.lastMove = p->pos() - vehicle.t->getFrom();
         vehicle.t->setPose(p);
+        vehicle.lastMoveTS = VRGlobals::CURRENT_FRAME;
     };
 
     auto inFront = [&](PosePtr p1, PosePtr p2, Vec3d lastMove) -> bool {
@@ -147,6 +159,13 @@ void VRTrafficSimulation::updateSimulation() {
                     if (state > 0) break;
                 }
 
+                for (auto& v : users) {
+                    auto p = v.t->getPose();
+                    if (inFront(pose, p, vehicle.lastMove)) state = 1;
+                    else if (commingRight(pose, p, vehicle.lastMove)) state = 2;
+                    if (state > 0) break;
+                }
+
                 /*if (auto g = dynamic_pointer_cast<VRGeometry>(vehicle.mesh)) { // only for debugging!!
                     if (state == 0) g->setColor("white");
                     if (state == 1) g->setColor("blue");
@@ -154,6 +173,10 @@ void VRTrafficSimulation::updateSimulation() {
                 }*/
 
                 if (state == 0) propagateVehicle(vehicle, d);
+                else {
+                    cout << " " << vehicle.lastMoveTS << "  " << VRGlobals::CURRENT_FRAME - vehicle.lastMoveTS << endl;
+                    if (VRGlobals::CURRENT_FRAME - vehicle.lastMoveTS > 200 ) resetVehicle(vehicle);
+                }
             }
         }
     };
@@ -164,11 +187,17 @@ void VRTrafficSimulation::updateSimulation() {
     updateDensityVisual();
 }
 
+void VRTrafficSimulation::addUser(VRTransformPtr t) {
+    auto v = Vehicle( Graph::position(0, 0.0) );
+    v.t = t;
+    users.push_back( v );
+}
+
 void VRTrafficSimulation::addVehicle(int roadID, int type) {
     //if () cout << "VRTrafficSimulation::updateSimulation " << roads.size() << endl;
     auto& road = roads[roadID];
     auto v = Vehicle( Graph::position(roadID, 0.0) );
-    v.mesh = models[0]->duplicate();
+    v.mesh = models[type]->duplicate();
 
     //if (VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(v.mesh) ) g->makeUnique(); // only for debugging!!
     //v.t->setPickable(true);
@@ -192,8 +221,9 @@ void VRTrafficSimulation::setTrafficDensity(float density, int type) {
     for (auto road : roads) addVehicles(road.first, density, type);
 }
 
-void VRTrafficSimulation::addVehicleModel(VRObjectPtr mesh) {
+int VRTrafficSimulation::addVehicleModel(VRObjectPtr mesh) {
     models.push_back( mesh->duplicate() );
+    return models.size()-1;
 }
 
 void VRTrafficSimulation::updateDensityVisual(bool remesh) {

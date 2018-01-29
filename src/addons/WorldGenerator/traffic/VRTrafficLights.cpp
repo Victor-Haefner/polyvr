@@ -2,13 +2,13 @@
 
 using namespace OSG;
 
-VRTrafficLight::VRTrafficLight(VRRoadPtr road, VRTrafficLightsPtr system) : VRTransform("bridge"), road(road), system(system) {}
+VRTrafficLight::VRTrafficLight(VREntityPtr lane, VRTrafficLightsPtr system) : VRTransform("bridge"), lane(lane), system(system) {}
 VRTrafficLight::~VRTrafficLight() {}
 
-VRTrafficLightPtr VRTrafficLight::create(VRRoadPtr road, VRTrafficLightsPtr system) { return VRTrafficLightPtr(new VRTrafficLight(road, system)); }
+VRTrafficLightPtr VRTrafficLight::create(VREntityPtr lane, VRTrafficLightsPtr system) { return VRTrafficLightPtr(new VRTrafficLight(lane, system)); }
 
 
-VRTrafficLights::VRTrafficLights(VRRoadIntersectionPtr intersection) : intersection(intersection) {}
+VRTrafficLights::VRTrafficLights(string group) : group(group) {}
 VRTrafficLights::~VRTrafficLights() {}
 
-VRTrafficLightsPtr VRTrafficLights::create(VRRoadIntersectionPtr intersection) { return VRTrafficLightsPtr(new VRTrafficLights(intersection)); }
+VRTrafficLightsPtr VRTrafficLights::create(string group) { return VRTrafficLightsPtr(new VRTrafficLights(group)); }

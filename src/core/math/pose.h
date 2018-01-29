@@ -37,6 +37,9 @@ class Pose {
         Vec3d transform(Vec3d p);
         Vec3d transformInv(Vec3d p);
 
+        PosePtr multLeft(PosePtr p);
+        PosePtr multRight(PosePtr p);
+
         string toString();
 };
 
