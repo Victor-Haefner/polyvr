@@ -56,6 +56,7 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
     data->norms = (GeoVec3fProperty*)geo->getMesh()->geo->getNormals();
     data->texs = (GeoVec2fProperty*)geo->getMesh()->geo->getTexCoords();
     data->texs2 = (GeoVec2fProperty*)geo->getMesh()->geo->getTexCoords1();
+    if (data->types && data->types->size() > 0) data->lastPrim = data->types->getValue( data->types->size()-1 );
     auto cols = geo->getMesh()->geo->getColors();
     int Nc = data->getColorChannels(cols);
     if (Nc == 3) data->cols3 = (GeoVec3fProperty*)cols;
