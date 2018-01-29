@@ -36,29 +36,34 @@ VRLeapFramePtr VRLeapFrame::ptr() { return static_pointer_cast<VRLeapFrame>( sha
 
 void VRLeapFrame::Hand::transform(Matrix4d transformation) {
 
+    Pose t(transformation);
+
+
     Matrix4d dirTransformation = transformation;
     dirTransformation.invert();
     dirTransformation.transpose();
 
+    Pose t2(dirTransformation);
+
     // transform pose
-    pose.set(transformation*pose.pos(), dirTransformation*pose.dir(), dirTransformation*pose.up());
+    //pose.set(transformation*pose.pos(), dirTransformation*pose.dir(), dirTransformation*pose.up());
 
     // transform joint positions
     for (auto& finger : joints) {
-        for (auto& j : finger) { j = transformation * j; }
+        for (auto& j : finger) { j = t.transform(j); }
     }
 
     // transform basis vectors for each bone
     for (auto& finger : bases) {
         for (auto& bone : finger) {
-            bone.set(transformation*bone.pos(), dirTransformation*bone.dir(), dirTransformation*bone.up());
+            bone.set(t.transform(bone.pos()), t2.transform(bone.dir()), t2.transform(bone.up()));
         }
     }
 
     // transform directions
-    for (auto& dir : directions) {
-        dir = dirTransformation * dir;
-    }
+//    for (auto& dir : directions) {
+//        dir = dirTransformation * dir;
+//    }
 
 }
 

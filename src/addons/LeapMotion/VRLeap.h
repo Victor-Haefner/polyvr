@@ -20,6 +20,7 @@ class VRLeap : public VRDevice {
         VRWebSocket webSocket;
         bool transformed{false};
         Matrix4d transformation;
+        Pose transformation_;
         bool calibrate{false};
         string serial;
 

@@ -57,11 +57,12 @@ void VRLeap::newFrame(Json::Value json) {
 
     // json format: https://developer.leapmotion.com/documentation/v2/cpp/supplements/Leap_JSON.html?proglang=cpp
 
-    if (serial.empty()) {
-        if (json.isMember("event")) {
+    if (json.isMember("event")) { // second frame
+        if (transformation != Matrix4d::identity()) { transformed = true; }
+        if (serial.empty()) {
             serial = json["event"]["state"]["id"].asString();
-            return;
         }
+        return;
     }
 
     VRLeapFramePtr frame = VRLeapFrame::create();
@@ -170,12 +171,14 @@ Pose VRLeap::computeCalibPose(vector<PenPtr>& pens) {
     Vec3d dir1 = pens[1]->direction;
 
     Vec3d position = ((pos0 - 0.15 * dir0) + (pos1 - 0.15 * dir1)) / 2.0;
-    Vec3d direction = pos1 - pos0;
-    direction.normalize();
-    Vec3d normal = (position - pos0).cross(direction);
-    normal.normalize();
+    Vec3d tmpDir1 = pos1 - pos0; tmpDir1.normalize();
+    Vec3d tmpDir2 = position - pos0; tmpDir2.normalize();
+
+    Vec3d direction =  tmpDir2.cross(tmpDir1);
+    Vec3d normal = direction.cross(tmpDir1);
 
     result.set(position, direction, normal);
+    result.invert();
 
     return result;
 }
@@ -208,6 +211,7 @@ bool VRLeap::reconnect() {
 
 void VRLeap::setPose(Pose pose) {
     transformation = pose.asMatrix();
+    transformation_ = pose;
     transformed = true;
 }
 
