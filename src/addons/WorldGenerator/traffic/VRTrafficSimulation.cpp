@@ -82,7 +82,7 @@ void VRTrafficSimulation::updateSimulation() {
     auto g = roadNetwork->getGraph();
     Octree space(2);
     map<int, vector<pair<Vehicle, int>>> toChangeRoad;
-    float userRadius = 100; // x meter radius around users
+    float userRadius = 150; // x meter radius around users
 
     auto fillOctree = [&]() {
         for (auto& road : roads) { // fill octree
@@ -125,7 +125,7 @@ void VRTrafficSimulation::updateSimulation() {
                     float D2 = (ep2-p).length();
 
                     if (D1 > userRadius && D2 > userRadius) continue; // outside
-                    if (D1 > userRadius || D2 > userRadius) newSeedRoads.push_back( e.ID ); // on edge
+                    if (D1 > userRadius*0.5 || D2 > userRadius*0.5) newSeedRoads.push_back( e.ID ); // on edge
                     newNearRoads.push_back( e.ID ); // inside or on edge
                 }
             }
@@ -147,10 +147,8 @@ void VRTrafficSimulation::updateSimulation() {
         }
 
         for (auto roadID : seedRoads) {
-            //auto& road = roads[roadID];
-            //addVehicles(roadID, road.density, 1); // TODO: density 0 ???
-            //addVehicles(roadID, 1.0, 1);
-            addVehicles(roadID, 0.3, 1);
+            auto& road = roads[roadID];
+            addVehicles(roadID, road.density, 1); // TODO: pass a vehicle type!!
         }
     };
 
@@ -258,7 +256,6 @@ void VRTrafficSimulation::updateSimulation() {
                 else {
                     auto& road2 = roads[v.second];
                     road2.vehicles.push_back(v.first);
-                    if (road2.vehicles.size() > 20) cout << road2.vehicles.size() << endl;
                 }
             }
         }
