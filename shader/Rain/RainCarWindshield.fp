@@ -13,20 +13,16 @@ vec3 axU;
 vec3 axV;
 vec4 color;
 bool debugB = false;
-float sizeX = 2;
-float sizeY = 1;
 
 uniform float scale;
 
 uniform vec2 OSGViewportSize;
 uniform float tnow;
 uniform float offset;
-uniform float rainDensity;
-uniform vec3 carOrigin;
-uniform vec3 carDir;
-uniform vec3 posOffset;
 
 uniform bool isRaining;
+bool isWiping = false;
+float wiperSpeed = 0.5;
 
 uniform vec3 windshieldPos;
 uniform vec3 windshieldDir;
@@ -54,18 +50,114 @@ void computeDepth(vec4 position) {
 	gl_FragDepth = d*0.5 + 0.5;
 }
 
-float computeDropSize() {
-	float dropsize = 1;
-	//dropsize = 0.99998;
-	dropsize = 0.9998;
-	return dropsize;
-}
-
 vec3 computeDropOnWS() {
 	float x = dot((windshieldPos - PCam),windshieldUp)/(dot(fragDir,windshieldUp));
 	vec3 p = x * fragDir + PCam;
 	computeDepth(gl_ModelViewProjectionMatrix*vec4(p,1));
 	return p;
+}
+
+vec3 localToWorld(vec2 inVec) {
+	vec3 outVec;
+	outVec = windshieldPos + axU*inVec.x + axV*inVec.y;
+	return outVec;
+}
+
+vec2 worldToLocal(vec3 inV) {
+	vec2 outV;
+	outV.x = dot((inV-windshieldPos),axU);
+	outV.y = dot((inV-windshieldPos),axV);
+	return outV;
+}
+
+vec4 locateDrop() { //locate drop, if wipers active
+	vec3 worldVec = computeDropOnWS();
+	vec2 uv = worldToLocal(worldVec);
+
+	float disBD = 0.08;
+	float limitValue = disBD;
+
+	float hsIn1 = floor(uv.x/disBD) + 50*floor((tnow+1.9)/4);
+	float hsIn2 = floor(uv.y/disBD);
+
+	float hs1 = hash(vec2(hsIn1,hsIn2));
+	float hs2 = hash(vec2(hsIn2,hsIn1));
+	vec2 offset = vec2(hs1,hs2);
+	
+	if (mod(uv.x,disBD) < limitValue && mod(uv.y,disBD) < limitValue && distance(windshieldPos,worldVec) < 4) { 
+		if ((uv.x+8)*hs2 < mod(0.1*mod(0.5*(tnow+0.2*uv.x-2),2),0.5)*scale){ 
+			return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
+		}
+	}
+	return vec4(-10,-10,0,0);
+}
+
+vec4 locateContDrop() {	//locate continuuos drop, if wipers non active
+	vec3 worldVec = computeDropOnWS();
+	vec2 uv = worldToLocal(worldVec);
+	
+	float disBD = 0.08;
+	float limitValue = disBD;
+
+	float hsIn1 = floor(uv.x/disBD);// + 50*floor((tnow+1.9)/4);
+	float hsIn2 = floor(uv.y/disBD);
+
+	float hs1 = hash(vec2(hsIn1,hsIn2));
+	float hs2 = hash(vec2(hsIn2,hsIn1));
+	vec2 offset = vec2(hs1,hs2);
+	
+	if (mod(uv.x,disBD) < limitValue && mod(uv.y,disBD) < limitValue && distance(windshieldPos,worldVec) < 4) { 
+		if ((uv.x+8)*hs2 < 5){ 
+			return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
+		}
+	}
+	return vec4(-10,-10,0,0);
+}
+
+bool draw(vec2 point) {
+	vec3 worldVec = computeDropOnWS();
+	vec2 uv = worldToLocal(worldVec);
+	
+	float hash = 1/10*hash(vec2(floor(tnow),floor(tnow)));
+	if (distance(windshieldPos,worldVec)>2) return false;
+	
+	if (distance(uv,point)<0.03+hash) return true;
+	return false;
+}
+
+void main() {
+	computeDirection();
+	computePCam();
+	axU = cross(windshieldDir,windshieldUp);
+	axV = windshieldDir;
+	
+	if (fragDir.y < -0.999) discard; //not sure if needed, but previous experiences showed conflicts with RAIN-MODULE's heightcam 
+	vec4 check = vec4(0,0,0,0);	
+	if (!isRaining) discard;
+	if (!isWiping && draw(locateContDrop().xy)) {
+		float dist = distance(locateDrop().zw,vec2(0.5,0.5));
+		float alph = smoothstep(0.4,1.4,1-dist);
+		check = vec4(1,0.2,0.3,1.5*alph);
+		//check = vec4(0.2,0.2,0.3,0.7*alph);
+	}
+	if (isWiping && draw(locateDrop().xy)) {
+		float dist = distance(locateDrop().zw,vec2(0.5,0.5));
+		float alph = smoothstep(0.4,1.4,1-dist);
+		check = vec4(0.2,0.2,0.3,0.7*alph);
+	}
+
+	if (check == vec4(0,0,0,0)) discard;	
+	gl_FragColor = check;
+}
+
+/** NOT NEEDED RIGHT NOW */
+/*
+
+float computeDropSize() {
+	float dropsize = 1;
+	//dropsize = 0.99998;
+	dropsize = 0.9998;
+	return dropsize;
 }
 
 vec4 drawDot(vec3 P0, vec4 check) {
@@ -82,19 +174,6 @@ vec4 drawDot(vec3 P0, vec4 check) {
 	return check;
 }
 
-vec3 localToWorld(vec2 inVec) {
-	vec3 outVec;
-	outVec = windshieldPos + axU*inVec.x + axV*inVec.y;
-	return outVec;
-}
-
-vec2 worldToLocal(vec3 inV) {
-	vec2 outV;
-	outV.x = dot((inV-windshieldPos),axU);
-	outV.y = dot((inV-windshieldPos),axV);
-	return outV;
-}
-
 vec4 drawCenter(vec3 P0, vec4 check) {	
 	vec3 D0 = normalize( P0-PCam );
 
@@ -105,27 +184,12 @@ vec4 drawCenter(vec3 P0, vec4 check) {
 	return check;
 }
 
-vec4 locateDrop() {
+bool timer() {
 	vec3 worldVec = computeDropOnWS();
 	vec2 uv = worldToLocal(worldVec);
-
-	float disBD = 0.08;
-	float limitValue = disBD;
-
-	float hsIn1 = floor(uv.x/disBD) + 50*floor((tnow+1.9)/4);
-	float hsIn2 = floor(uv.y/disBD);
-
-	float hs1 = hash(vec2(hsIn1,hsIn2));
-	float hs2 = hash(vec2(hsIn2,hsIn1));
-	vec2 offset = vec2(hs1,hs2);
-	
-	float asdf = (floor(mod(tnow,10))); 
-	if (mod(uv.x,disBD) < limitValue && mod(uv.y,disBD) < limitValue && distance(windshieldPos,worldVec) < 4) { 
-		if ((uv.x+8)*hs2 < mod(0.1*mod(0.5*(tnow+0.2*uv.x-2),2),0.5)*scale){ 
-			return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
-		}
-	}
-	return vec4(-10,-10,0,0);
+	float off = 0;//0.5*hash(uv);
+	if (mod(tnow + off,1)<0.2) return true;
+	return false;
 }
 
 bool isDrop() {
@@ -140,25 +204,6 @@ bool isDrop() {
 	float timeValue;
 	if (mod(tnow,1) < 0.001) timeValue = mod(tnow,1);
 	if (distance(localToWorld(vec2(0,0)),worldVec) < limitValue) return true;
-	return false;
-}
-
-bool timer() {
-	vec3 worldVec = computeDropOnWS();
-	vec2 uv = worldToLocal(worldVec);
-	float off = 0;//0.5*hash(uv);
-	if (mod(tnow + off,1)<0.2) return true;
-	return false;
-}
-
-bool draw(vec2 point) {
-	vec3 worldVec = computeDropOnWS();
-	vec2 uv = worldToLocal(worldVec);
-	
-	float hash = 1/10*hash(vec2(floor(tnow),floor(tnow)));
-	if (distance(windshieldPos,worldVec)>2) return false;
-	
-	if (distance(uv,point)<0.03+hash) return true;
 	return false;
 }
 
@@ -203,34 +248,7 @@ vec4 drawWiper(vec4 check) {
 	}
 	return check;
 }
-
-void main() {
-	computeDirection();
-	computePCam();
-	axU = cross(windshieldDir,windshieldUp);
-	axV = windshieldDir;
-	
-	if (fragDir.y < -0.999) discard;
-	vec4 check = vec4(0,0,0,0);	
-	if (!isRaining) discard;
-	if (draw(locateDrop().xy)) {
-		float dist = distance(locateDrop().zw,vec2(0.5,0.5));
-		float alph = smoothstep(0.4,1.4,1-dist);
-		check = vec4(0.2,0.2,0.3,alph/2);
-	}
-
-	//if (newRain()) check = vec4(1,1,1,1);
-	//check = drawWiper(check);
-
-	//if (draw(vec2(0,0))) check = vec4(1,0,1,0.6);
-	//if (draw()) check = vec4(1,0,1,0.6);
-
-	
-
-	//computeDepth(gl_ModelViewProjectionMatrix*vec4(P0,1));
-	if (check == vec4(0,0,0,0)) discard;	
-	gl_FragColor = check;
-}
+*/
 
 
 
