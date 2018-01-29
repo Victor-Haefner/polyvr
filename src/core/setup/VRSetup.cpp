@@ -2,6 +2,7 @@
 #include "VRSetupManager.h"
 #include "VRNetwork.h"
 #include "windows/VRWindow.h"
+#include "windows/VRView.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/setup/windows/VRGtkWindow.h"
@@ -166,7 +167,7 @@ VRTransformPtr VRSetup::getRoot() { return real_root; }
 VRTransformPtr VRSetup::getTracker(string t) {
     for (int ID : getARTDevices()) {
         ART_devicePtr dev = getARTDevice(ID);
-        if (dev->ent->getName() == t) return dev->ent;
+        if (dev->ent && dev->ent->getName() == t) return dev->ent;
     }
 
     for (int ID : getVRPNTrackerIDs()) {
@@ -191,7 +192,7 @@ void VRSetup::printOSG() {
     string name = "Unnamed";
     for (auto win : getWindows()) {
         VRWindowPtr w = win.second;
-        WindowRecPtr osgw = w->getOSGWindow();
+        WindowMTRecPtr osgw = w->getOSGWindow();
         cout << "Window " << win.first << " " << osgw->getTypeName() << endl;
         int N = osgw->getMFPort()->size();
 

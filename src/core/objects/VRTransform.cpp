@@ -8,6 +8,7 @@
 #include "core/utils/VRUndoInterfaceT.h"
 #include "core/utils/VRDoublebuffer.h"
 #include "core/utils/VRGlobals.h"
+#include "core/utils/VRRate.h"
 #include "core/scene/VRAnimationManagerT.h"
 #include "core/scene/VRSpaceWarper.h"
 #include "core/math/pose.h"
@@ -31,7 +32,6 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRTransform::VRTransform(string name) : VRObject(name) {
-    dm = new doubleBuffer;
     t = OSGTransform::create( Transform::create() );
     constraint = VRConstraint::create();
     setCore(OSGCore::create(t->trans), "Transform");
@@ -51,15 +51,10 @@ VRTransform::VRTransform(string name) : VRObject(name) {
 
 VRTransform::~VRTransform() {
     if (physics) { delete physics; }
-    delete dm;
 }
 
 VRTransformPtr VRTransform::ptr() { return static_pointer_cast<VRTransform>( shared_from_this() ); }
-VRTransformPtr VRTransform::create(string name) {
-    auto ptr = shared_ptr<VRTransform>(new VRTransform(name) );
-    //ptr->physics = new VRPhysics( ptr );
-    return ptr;
-}
+VRTransformPtr VRTransform::create(string name) { return VRTransformPtr(new VRTransform(name) ); }
 
 VRObjectPtr VRTransform::copy(vector<VRObjectPtr> children) {
     VRTransformPtr geo = VRTransform::create(getBaseName());
@@ -90,42 +85,6 @@ bool MatrixLookAt(Matrix4d &result, Pnt3d from, Pnt3d at, Vec3d up) {
     return MatrixLookDir(result, from, dir, up);
 }
 
-void VRTransform::computeMatrix4d() {
-    Matrix4d mm;
-    if (orientation_mode == OM_AT) MatrixLookAt(mm, _from, _at, _up);
-    if (orientation_mode == OM_DIR) MatrixLookDir(mm, _from, -_dir, _up);
-
-    if (_scale != Vec3d(1,1,1)) {
-        Matrix4d ms;
-        ms.setScale(_scale);
-        mm.mult(ms);
-    }
-
-    dm->write(mm);
-}
-
-void VRTransform::setIdentity() {
-    setMatrix(Matrix4d());
-}
-
-//read Matrix4d from doublebuffer && apply it to transformation
-//should be called from the main thread only
-void VRTransform::updatePhysics() {
-    //update bullets transform
-    if (physics == 0) return;
-    if (noBlt && !held) { noBlt = false; return; }
-    if (!physics->isPhysicalized()) return;
-
-    /*Matrix4d m;
-    dm->read(m);
-    Matrix4d pm;
-    getWorldMatrix(pm, true);
-    pm.mult(m);*/
-    physics->updateTransformation( ptr() );
-    physics->pause();
-    physics->resetForces();
-}
-
 bool isIdentity(const Matrix4d& m) {
     static Matrix4d r;
     static bool mSet = false;
@@ -133,13 +92,30 @@ bool isIdentity(const Matrix4d& m) {
     return (m == r);
 }
 
+void VRTransform::computeMatrix4d() {
+    if (orientation_mode == OM_AT) MatrixLookAt(matrix, _from, _at, _up);
+    if (orientation_mode == OM_DIR) MatrixLookDir(matrix, _from, -_dir, _up);
+
+    if (_scale != Vec3d(1,1,1)) {
+        Matrix4d ms;
+        ms.setScale(_scale);
+        matrix.mult(ms);
+    }
+
+    auto scene = VRScene::getCurrent();
+    if (scene) {
+        auto sw = scene->getSpaceWarper();
+        if (sw) sw->warp(matrix);
+    }
+}
+
 void VRTransform::updateTransformation() {
-    Matrix4d m;
-    dm->read(m);
+    if (!t->trans) {
+        cout << "Error in VRTransform::updateTransformation of " << getName() << "(" << this << "): t->trans is invalid! (" << t->trans << ")" << endl;
+        return;
+    }
 
-    if (!t->trans) return;
-
-    bool isI = isIdentity(m);
+    bool isI = isIdentity(matrix);
     if (identity && !isI) {
         identity = false;
         enableCore();
@@ -150,20 +126,26 @@ void VRTransform::updateTransformation() {
         disableCore();
     }
 
-    auto scene = VRScene::getCurrent();
-    if (scene) {
-        auto sw = scene->getSpaceWarper();
-        if (sw) sw->warp(m);
-    }
-    t->trans->setMatrix(toMatrix4f(m));
+    t->trans->setMatrix(toMatrix4f(matrix));
+}
+
+void VRTransform::setIdentity() {
+    setMatrix(Matrix4d());
+}
+
+void VRTransform::updatePhysics() { //should be called from the main thread only
+    if (physics == 0) return;
+    if (noBlt && !held) { noBlt = false; return; }
+    if (!physics->isPhysicalized()) return;
+
+    physics->updateTransformation( ptr() );
+    physics->resetForces();
 }
 
 void VRTransform::reg_change() {
-    if (change == false) {
-        if (fixed) changedObjects.push_back( ptr() );
-        change = true;
-        change_time_stamp = VRGlobals::CURRENT_FRAME;
-    }
+    change_time_stamp = VRGlobals::CURRENT_FRAME;
+    noBlt = true;
+    updateChange();
 }
 
 void VRTransform::printInformation() { Matrix4d m; getMatrix(m); cout << " pos " << m[3]; }
@@ -178,8 +160,8 @@ void VRTransform::initCoords() {
     coords->node->setTravMask(0);
     addChild(coords);
     GeometryMTRecPtr geo = dynamic_cast<Geometry*>(coords->node->getCore());
-    ChunkMaterialRecPtr mat = ChunkMaterial::create();
-    DepthChunkRecPtr depthChunk = DepthChunk::create();
+    ChunkMaterialMTRecPtr mat = ChunkMaterial::create();
+    DepthChunkMTRecPtr depthChunk = DepthChunk::create();
     depthChunk->setFunc( GL_ALWAYS );
     mat->addChunk(depthChunk);
     mat->setSortKey(100);// render last
@@ -207,9 +189,9 @@ void VRTransform::initTranslator() { // TODO
     "   gl_Position.z = -0.1;"
     "}";*/
 
-    ChunkMaterialRecPtr mat = ChunkMaterial::create();
+    ChunkMaterialMTRecPtr mat = ChunkMaterial::create();
     mat->setSortKey(100);// render last
-    SimpleSHLChunkRecPtr shader_chunk = SimpleSHLChunk::create();
+    SimpleSHLChunkMTRecPtr shader_chunk = SimpleSHLChunk::create();
     shader_chunk->setVertexProgram(shdr_vp.c_str());
     //shader_chunk->setVertexProgram(shdr_fp.c_str());
     mat->addChunk(shader_chunk);
@@ -221,21 +203,8 @@ Vec3d VRTransform::getFrom() { return Vec3d(_from); }
 Vec3d VRTransform::getDir() { return Vec3d(_dir); }
 Vec3d VRTransform::getAt() { return Vec3d(_at); }
 Vec3d VRTransform::getUp() { return Vec3d(_up); }
-
-/** Returns the local Matrix4d **/
-void VRTransform::getMatrix(Matrix4d& _m) {
-    if(change) {
-        computeMatrix4d();
-        updateTransformation();
-    }
-    dm->read(_m);
-}
-
-Matrix4d VRTransform::getMatrix() {
-    Matrix4d m;
-    getMatrix(m);
-    return m;
-}
+void VRTransform::getMatrix(Matrix4d& _m) { _m = matrix; }
+Matrix4d VRTransform::getMatrix() { return matrix; }
 
 Matrix4d VRTransform::getRotationMatrix() {
     Matrix4d m;
@@ -257,9 +226,18 @@ Matrix4d VRTransform::getMatrixTo(VRObjectPtr obj, bool parentOnly) {
     return m1;
 }
 
+void VRTransform::setMatrixTo(Matrix4d m, VRObjectPtr obj) {
+    VRTransformPtr ent = getParentTransform(obj);
+    if (!ent) { setWorldMatrix(m); return; }
+
+    Matrix4d m1 = ent->getWorldMatrix();
+    m1.mult(m);
+    setWorldMatrix(m1);
+}
+
 bool VRTransform::checkWorldChange() {
     if (frame == 0) { frame = 1; return true; }
-    if (change) return true;
+    if (VRGlobals::CURRENT_FRAME == change_time_stamp) return true;
     if (VRGlobals::CURRENT_FRAME == wchange_time_stamp) return true;
     if (hasGraphChanged()) return true;
 
@@ -355,18 +333,19 @@ Vec3d VRTransform::getWorldUp(bool parentOnly) {
     return Vec3d(m[1]);
 }
 
-/** Set the object fixed or not **/
-void VRTransform::setFixed(bool b) {
-    if (b == fixed) return;
-    fixed = b;
-    VRTransformPtr This = ptr();
+Vec3d VRTransform::getWorldAt(bool parentOnly) {
+    Matrix4d m;
+    getWorldMatrix(m, true);
+    Pnt3d a = Pnt3d(getAt());
+    m.mult(a,a);
+    return Vec3d(a);
+}
 
-    dynamicObjects.remove_if([This](VRTransformWeakPtr p2){
-        auto sp = p2.lock();
-        return (This && sp) ? This == sp : false;
-    });
 
-    if (!b) dynamicObjects.push_back(This);
+void VRTransform::updateTransform(VRTransformPtr t) {
+    if (!t) return;
+    if (t->getLastChange() < getLastChange()) return;
+    setMatrix(t->getMatrix()); // TODO: may need world matrix here
 }
 
 /** Set the world Matrix4d of the object **/
@@ -379,6 +358,7 @@ void VRTransform::setWorldMatrix(Matrix4d m) {
 }
 
 VRTransformPtr VRTransform::getParentTransform(VRObjectPtr o) {
+    if (!o) return 0;
     o = o->hasAncestorWithTag("transform");
     return static_pointer_cast<VRTransform>(o);
 }
@@ -455,7 +435,13 @@ void VRTransform::setWorldUp(Vec3d up) {
     setUp(up);
 }
 
-doubleBuffer* VRTransform::getBuffer() { return dm; }
+void VRTransform::setWorldAt(Vec3d at) {
+    Matrix4d wm = getWorldMatrix(true);
+    wm.invert();
+    Pnt3d a = Pnt3d(at);
+    wm.mult(a,a);
+    setAt(Vec3d(a));
+}
 
 //local pose setter--------------------
 /** Set the from vector **/
@@ -505,13 +491,14 @@ void VRTransform::setOrientation(Vec3d at, Vec3d up) {
 /** Set the pose of the object with the from, at and up vectors **/
 void VRTransform::setPose(Vec3d from, Vec3d dir, Vec3d up) {
     if (isNan(from) || isNan(dir) || isNan(up)) return;
+    if (from == _from && dir == _dir && up == _up) return;
     _from = from;
     _up = up;
     setDir(dir);
 }
 
 void VRTransform::setPose(const Pose& p) { setPose(p.pos(), p.dir(), p.up()); }
-void VRTransform::setPose(PosePtr p) { setPose(p->pos(), p->dir(), p->up()); }
+void VRTransform::setPose(PosePtr p) { if (p) setPose(p->pos(), p->dir(), p->up()); }
 PosePtr VRTransform::getPose() { return Pose::create(Vec3d(_from), Vec3d(_dir), Vec3d(_up)); }
 PosePtr VRTransform::getWorldPose() { return Pose::create( getWorldMatrix() ); }
 void VRTransform::setWorldPose(PosePtr p) { setWorldMatrix(p->asMatrix()); }
@@ -557,26 +544,32 @@ void VRTransform::setScale(Vec3d s) {
 void VRTransform::setEuler(Vec3d e) {
     if (isNan(e)) return;
     _euler = e;
-    Vec3d s = Vec3d(sin(e[0]), sin(e[1]), sin(e[2]));
-    Vec3d c = Vec3d(cos(e[0]), cos(e[1]), cos(e[2]));
-
-    Vec3d d = Vec3d( -c[0]*c[2]*s[1]-s[0]*s[2], -c[0]*s[1]*s[2]+s[0]*c[2], -c[0]*c[1]);
-    Vec3d u = Vec3d( s[0]*s[1]*c[2]-s[2]*c[0], s[0]*s[1]*s[2]+c[2]*c[0], c[1]*s[0]);
-
-    setDir( d );
-    setUp( u );
-    reg_change();
+    auto m = getMatrix();
+    applyEulerAngles(m, e);
+    setMatrix(m);
 }
 
 Vec3d VRTransform::getScale() { return _scale; }
 Vec3d VRTransform::getEuler() {
     //return _euler;
-    auto m = getMatrix();
+    return computeEulerAngles( getMatrix() );
+}
+
+Vec3d VRTransform::computeEulerAngles(const Matrix4d& m) {
     Vec3d a;
     a[0] = atan2( m[1][2], m[2][2]);
     a[1] = atan2(-m[0][2], sqrt(m[1][2]*m[1][2] + m[2][2]*m[2][2]));
     a[2] = atan2( m[0][1], m[0][0]);
     return a;
+}
+
+void VRTransform::applyEulerAngles(Matrix4d& t, Vec3d e) {
+    Pnt3d p = Pnt3d(t[3]);
+    Vec3d s = Vec3d(sin(e[0]), sin(e[1]), sin(e[2]));
+    Vec3d c = Vec3d(cos(e[0]), cos(e[1]), cos(e[2]));
+    Vec3d d = Vec3d( c[0]*c[2]*s[1]+s[0]*s[2], c[0]*s[1]*s[2]-s[0]*c[2], c[0]*c[1]);
+    Vec3d u = Vec3d( s[0]*s[1]*c[2]-s[2]*c[0], s[0]*s[1]*s[2]+c[2]*c[0], c[1]*s[0]);
+    MatrixLookDir(t, p, d, u);
 }
 
 void VRTransform::rotate(float a, Vec3d v) {//rotate around axis
@@ -635,8 +628,7 @@ void VRTransform::translate(Vec3d v) {
 /** translate the object by changing the from in direction of the at vector **/
 void VRTransform::zoom(float d) {
     if (isNan(d)) return;
-    _from += _dir*d;
-    _dir = _at - _from;
+    setFrom(_from + _dir*d);
     reg_change();
 }
 
@@ -654,7 +646,6 @@ void VRTransform::drag(VRTransformPtr new_parent) {
     held = true;
     if (auto p = getParent()) old_parent = p;
     old_child_id = getChildIndex();
-    setFixed(false);
 
     //showTranslator(true); //TODO
 
@@ -678,9 +669,6 @@ void VRTransform::drop() {
     if (!held) return;
     held = false;
 
-    bool dyn = constraint ? constraint->hasConstraint() : false;
-    setFixed(!dyn);
-
     Matrix4d wm, m1, m2;
     getWorldMatrix(wm);
     m1 = getMatrix();
@@ -698,8 +686,12 @@ void VRTransform::drop() {
 }
 
 void VRTransform::rebaseDrag(VRObjectPtr new_parent) {
+    if (new_parent == 0 || new_parent == ptr()) return;
+    //cout << "VRTransform::rebaseDrag " << new_parent->getName() << " " << getName() << endl;
     if (!held) { switchParent(new_parent); return; }
+    if (new_parent->hasAncestor(ptr())) return;
     old_parent = new_parent;
+    old_child_id = 0;
 }
 
 bool VRTransform::isDragged() { return held; }
@@ -740,7 +732,7 @@ void VRTransform::printPos() {
 
 /** Print the positions of all the subtree **/
 void VRTransform::printTransformationTree(int indent) {
-    if(indent == 0) cout << "\nPrint Transformation Tree : ";
+    if (indent == 0) cout << "\nPrint Transformation Tree : ";
 
     cout << "\n";
     for (int i=0;i<indent;i++) cout << "  ";
@@ -755,16 +747,52 @@ void VRTransform::printTransformationTree(int indent) {
         }
     }
 
-    if(indent == 0) cout << "\n";
+    if (indent == 0) cout << "\n";
 }
 
-void VRTransform::setConstraint(VRConstraintPtr c) { constraint = c; }
+map<VRTransform*, VRTransformWeakPtr> constrainedObjects;
+
+void VRTransform::updateConstraints() { // global updater
+    for (auto wc : constrainedObjects) {
+        if (VRTransformPtr obj = wc.second.lock()) obj->updateChange();
+    }
+}
+
+void VRTransform::setConstraint(VRConstraintPtr c) {
+    constraint = c;
+    if (c) constrainedObjects[this] = ptr();
+    else constrainedObjects.erase(this);
+}
+
+void VRTransform::attach(VRTransformPtr b, VRConstraintPtr c) {
+    VRTransformPtr a = ptr();
+    if (!c) { constrainedObjects.erase(b.get()); return; }
+    constrainedObjects[b.get()] = b;
+    a->bJoints[b.get()] = make_pair(c, VRTransformWeakPtr(b)); // children
+    b->aJoints[a.get()] = make_pair(c, VRTransformWeakPtr(a)); // parents
+    c->setActive(true);
+    //cout << "VRTransform::attach " << b->getName() << " to " << a->getName() << endl;
+}
+
 VRConstraintPtr VRTransform::getConstraint() { return constraint; }
 
 /** enable constraints on the object, 0 leaves the DOF free, 1 restricts it **/
-void VRTransform::apply_constraints() {
-    if (!constraint) return;
-    constraint->apply(ptr());
+void VRTransform::apply_constraints(bool force) { // TODO: check efficiency
+    if (!constraint && aJoints.size() == 0) return;
+    if (!checkWorldChange() && !force) return;
+    computeMatrix4d(); // update matrix!
+
+    if (constraint) constraint->apply(ptr());
+    for (auto joint : aJoints) {
+        VRTransformPtr parent = joint.second.second.lock();
+        if (parent) joint.second.first->apply(ptr(), parent);
+        //if (parent) cout << "VRTransform::apply_constraints to " << getName() << " with parent: " << parent->getName() << endl;
+    }
+
+    for (auto joint : bJoints) {
+        VRTransformPtr child = joint.second.second.lock();
+        if (child) child->apply_constraints(true);
+    }
 }
 
 void VRTransform::updateFromBullet() {
@@ -778,31 +806,37 @@ void VRTransform::updateFromBullet() {
 
 void VRTransform::setNoBltFlag() { noBlt = true; }
 
+void VRTransform::resolvePhysics() {
+    if (!physics) return;
+    if (physics->isGhost()) { updatePhysics(); return; }
+    if (physics->isDynamic() && !held) { updateFromBullet(); return; }
+    physics->updateTransformation( ptr() );
+}
+
 VRPhysics* VRTransform::getPhysics() {
     if (physics == 0) physics = new VRPhysics( ptr() );
     return physics;
 }
 
+vector<VRCollision> VRTransform::getCollisions() {
+    if (physics == 0) return vector<VRCollision>();
+    return physics->getCollisions();
+}
+
 /** Update the object OSG transformation **/
 void VRTransform::updateChange() {
-    if (checkWorldChange()) apply_constraints();
+    apply_constraints();
     if (held) updatePhysics();
-    //if (checkWorldChange()) updatePhysics();
-
-    if (!change) return;
     computeMatrix4d();
     updateTransformation();
     updatePhysics();
-    change = false;
 }
 
 void VRTransform::setup() {
-    change = true;
-    setAt(Vec3d(_at));
-    updateChange();
+    setAt(_at);
 }
 
-void setFromPath(VRTransformWeakPtr trp, pathPtr p, bool redirect, float t) {
+void setFromPath(VRTransformWeakPtr trp, PathPtr p, bool redirect, float t) {
     auto tr = trp.lock();
     if (!tr) return;
     tr->setFrom( p->getPosition(t) );
@@ -823,7 +857,7 @@ vector<VRAnimationPtr> VRTransform::getAnimations() {
     return res;
 }
 
-VRAnimationPtr VRTransform::startPathAnimation(pathPtr p, float time, float offset, bool redirect, bool loop) {
+VRAnimationPtr VRTransform::startPathAnimation(PathPtr p, float time, float offset, bool redirect, bool loop) {
     pathAnimPtr = VRAnimCb::create("TransAnim", boost::bind(setFromPath, VRTransformWeakPtr(ptr()), p, redirect, _1));
     animCBs.push_back(pathAnimPtr);
     auto a = VRScene::getCurrent()->addAnimation<float>(time, offset, pathAnimPtr, 0.f, 1.f, loop);addAnimation(a);
@@ -852,7 +886,7 @@ Matrix4d toMatrix4d(Matrix4f mf) {
 void VRTransform::applyTransformation(PosePtr po) {
     Matrix4d m0 = po->asMatrix();
 
-    map<GeoVectorPropertyRecPtr, bool> applied;
+    map<GeoVectorPropertyMTRecPtr, bool> applied;
 
     auto applyMatrix = [&](OSGGeometryPtr mesh, Matrix4d& m) {
         auto pos = mesh->geo->getPositions();

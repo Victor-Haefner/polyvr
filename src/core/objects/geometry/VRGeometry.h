@@ -95,6 +95,7 @@ class VRGeometry : public VRTransform {
         VRGeometryPtr separateSelection(VRSelectionPtr sel);
         void fixColorMapping();
         void updateNormals(bool face = false);
+        void flipNormals();
 
         int getLastMeshChange();
 

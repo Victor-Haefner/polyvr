@@ -27,11 +27,10 @@ class btRigidBody;
 class btCollisionShape;
 class btCollisionObject;
 
-class VRPhysics;
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class VRPhysics;
 class VRGeometry;
 class VRTransform;
 class VRVisualLayer;

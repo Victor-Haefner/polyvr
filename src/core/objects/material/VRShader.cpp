@@ -11,7 +11,7 @@ string VRShader::getFromFile(string path) {
     return str;
 }
 
-VRShader::VRShader(ChunkMaterialRecPtr mat) {
+VRShader::VRShader(ChunkMaterialMTRecPtr mat) {
     shader_chunk = ShaderProgramChunk::create();
     mat->addChunk(shader_chunk);
 
@@ -26,7 +26,7 @@ VRShader::VRShader(ChunkMaterialRecPtr mat) {
     vProgram->addOSGVariable("OSGViewportSize");
 }
 
-ShaderProgramChunkRecPtr VRShader::getShader() { return shader_chunk; }
+ShaderProgramChunkMTRecPtr VRShader::getShader() { return shader_chunk; }
 
 void VRShader::setVertexProgram(string path) { vProgram->setProgram(getFromFile(path).c_str()); }
 void VRShader::setFragmentProgram(string path) { fProgram->setProgram(getFromFile(path).c_str()); }

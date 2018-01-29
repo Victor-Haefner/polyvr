@@ -39,13 +39,13 @@ void VRHandle::set(PosePtr p, float v) {
     origin = p;
 
     auto c = getConstraint();
-    c->setActive(0, ptr());
+    c->setActive(false);
     setPose( origin );
 
     if (constraint == LINEAR) {
         translate( axis*value*scale );
-        c->setActive(1, ptr());
-        c->setReference(getMatrix());
+        c->setActive(1);
+        c->setReference(getPose());
     }
 }
 

@@ -37,6 +37,7 @@ void VRWorldGenerator::setOntology(VROntologyPtr o) {
     terrain->setWorld( ptr() );
     roads->setWorld( ptr() );
     nature->setWorld( ptr() );
+    district->setWorld( ptr() );
 }
 
 void VRWorldGenerator::setPlanet(VRPlanetPtr p, Vec2d c) {
@@ -45,6 +46,7 @@ void VRWorldGenerator::setPlanet(VRPlanetPtr p, Vec2d c) {
     terrain->setWorld( ptr() );
     roads->setWorld( ptr() );
     nature->setWorld( ptr() );
+    district->setWorld( ptr() );
 }
 
 VROntologyPtr VRWorldGenerator::getOntology() { return ontology; }
@@ -53,6 +55,7 @@ VRObjectManagerPtr VRWorldGenerator::getAssetManager() { return assets; }
 VRTerrainPtr VRWorldGenerator::getTerrain() { return terrain; }
 VRNaturePtr VRWorldGenerator::getNature() { return nature; }
 VRPlanetPtr VRWorldGenerator::getPlanet() { return planet; }
+VRDistrictPtr VRWorldGenerator::getDistrict() { return district; }
 
 void VRWorldGenerator::addMaterial( string name, VRMaterialPtr mat ) { materials[name] = mat; }
 void VRWorldGenerator::addAsset( string name, VRTransformPtr geo ) {
@@ -120,6 +123,11 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
     map<string, Node> graphNodes;
     map<string, VRRoadPtr> RoadEntities;
 
+    auto startswith = [](const string& a, const string& b) -> bool {
+        if (a.size() < b.size()) return false;
+        return a.compare(0, b.length(), b) == 0;
+    };
+
     auto wayToPolygon = [&](OSMWayPtr& way) {
         auto poly = VRPolygon::create();
         for (auto ps : way->polygon.get()) {
@@ -130,8 +138,8 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         return poly;
     };
 
-    auto wayToPath = [&](OSMWayPtr& way, int N) -> pathPtr {
-        auto path = path::create();
+    auto wayToPath = [&](OSMWayPtr& way, int N) -> PathPtr {
+        auto path = Path::create();
         vector<Vec3d> pos;
         for (auto nID : way->nodes) {
             auto n = osmMap->getNode(nID);
@@ -171,7 +179,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
     };
 
     auto embSlopePath = [&](OSMWayPtr& way, int N) {
-        auto path = path::create();
+        auto path = Path::create();
         vector<Vec3d> pos;
         for (auto nID : way->nodes) {
             auto n = osmMap->getNode(nID);
@@ -212,6 +220,14 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         float a = 0;
         if (n->hasTag("direction")) a = planet->toRad( toFloat( n->tags["direction"] ) ); // angle
         return Vec3d(sin(a), 0, -cos(a));
+    };
+
+    auto addTunnel = [&](OSMWayPtr& way, VRRoadPtr road) {
+        roads->addTunnel(road);
+    };
+
+    auto addBridge = [&](OSMWayPtr& way, VRRoadPtr road) {
+        ;
     };
 
     auto addRoad = [&](OSMWayPtr& way, string tag, float width, bool pedestrian) {
@@ -277,12 +293,20 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         for (int l=0; l < NlanesLeft; l++) road->addLane(-1, widths[NlanesRight+hasPLaneR+l], pedestrian);
         if (hasPLaneL) road->addParkingLane(-1, widths[NlanesRight+NlanesLeft+hasPLaneR], getInt("parking:lane:left:capacity", 0), getString("parking:lane:left", ""));
         RoadEntities[way->id] = road;
+
+        // check for tunnels and bridges
+        if (way->hasTag("tunnel")) addTunnel(way, road);
+        if (way->hasTag("bridge")) addBridge(way, road);
     };
 
     auto addBuilding = [&](OSMWayPtr& way) {
         int lvls = 4;
+        string housenumber = "";
+        string street = "";
         if (way->hasTag("building:levels")) lvls = toInt( way->tags["building:levels"] );
-        district->addBuilding( *wayToPolygon(way), lvls );
+        if (way->hasTag("addr:housenumber")) housenumber = way->tags["addr:housenumber"];
+        if (way->hasTag("addr:street")) street = way->tags["addr:street"];
+        district->addBuilding( *wayToPolygon(way), lvls, housenumber, street );
     };
 
     auto nodeInSubarea = [&](OSMNodePtr node) {
@@ -377,11 +401,15 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                 continue;
             }
 
-            if (tag.first == "traffic_sign:training_ground") {
+            //if (tag.first == "traffic_sign:training_ground") {
+            if (startswith(tag.first, "traffic_sign:") || tag.first == "traffic_sign") {
                 auto signEnt = ontology->addEntity("sign", "Sign");
-                signEnt->set("type", tag.second);
+                if ((tag.second == "yes" || tag.second == "custom") && node->tags.count("name")) {
+                    signEnt->set("type", node->tags["name"]);
+                } else signEnt->set("type", tag.second);
                 signEnt->setVec3("position", pos, "Position");
                 signEnt->setVec3("direction", dir, "Direction");
+                //cout << "add OSM sign: " << tag.first << "  " << signEnt->getValue<string>("type", "") << endl;
                 for (auto way : node->ways) {
                     if (!RoadEntities.count(way)) continue;
                     auto roadEnt = RoadEntities[node->ways[0]]->getEntity();

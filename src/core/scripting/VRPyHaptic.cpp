@@ -1,6 +1,7 @@
 #include "VRPyHaptic.h"
 #include "VRPyDevice.h"
 #include "VRPyBaseT.h"
+#include "VRPyMath.h"
 
 #include "VRPyTransform.h"
 
@@ -43,7 +44,7 @@ PyObject* VRPyHaptic::getButtonStates(VRPyHaptic* self) {
 PyObject* VRPyHaptic::getForce(VRPyHaptic* self) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyHaptic::getForce - objPtrect is invalid"); return NULL; }
     OSG::Vec3d force = self->objPtr->getForce();
-    return toPyTuple(force);
+    return toPyObject(force);
 }
 
 PyObject* VRPyHaptic::attachTransform(VRPyHaptic* self, PyObject* args) {

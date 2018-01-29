@@ -5,6 +5,7 @@
 #include "VRPyPath.h"
 #include "VRPyIntersection.h"
 #include "VRPyTypeCaster.h"
+#include "VRPyMath.h"
 #include "VRPyBaseT.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRConstraint.h"
@@ -13,9 +14,20 @@
 
 using namespace OSG;
 
+simpleVRPyType(Collision, 0);
 simpleVRPyType(Transform, New_VRObjects_ptr);
 
-template<> bool toValue(PyObject* o, VRTransformPtr& v) { if (!VRPyTransform::check(o)) return 0; v = ((VRPyTransform*)o)->objPtr; return 1; }
+template<> PyObject* VRPyTypeCaster::cast(const VRCollision& e) { return VRPyCollision::fromObject(e); }
+
+PyMethodDef VRPyCollision::methods[] = {
+    {"getPos1", PyWrap(Collision, getPos1, "Get the first collision point", Vec3d)  },
+    {"getPos2", PyWrap(Collision, getPos2, "Get the second collision point", Vec3d)  },
+    {"getNorm", PyWrap(Collision, getNorm, "Get collision normal vector", Vec3d)  },
+    {"getDistance", PyWrap(Collision, getDistance, "Get the distance between collision points", float)  },
+    {"getObj1", PyWrap(Collision, getObj1, "Get the first collision object", VRTransformPtr)  },
+    {"getObj2", PyWrap(Collision, getObj2, "Get the second collision object", VRTransformPtr)  },
+    {NULL}  /* Sentinel */
+};
 
 PyMethodDef VRPyTransform::methods[] = {
     {"setIdentity", (PyCFunction)VRPyTransform::setIdentity, METH_NOARGS, "Reset transformation to identity" },
@@ -33,10 +45,15 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getWorldFrom", (PyCFunction)VRPyTransform::getWFrom, METH_NOARGS, "Return the object's world position" },
     {"getWorldDir", (PyCFunction)VRPyTransform::getWorldDir, METH_NOARGS, "Return the object's dir vector" },
     {"getWorldUp", (PyCFunction)VRPyTransform::getWorldUp, METH_NOARGS, "Return the object's up vector" },
+    {"getWorldAt", PyWrapOpt(Transform, getWorldAt, "Return the object's at vector", "0", Vec3d, bool ) },
     {"getScale", (PyCFunction)VRPyTransform::getScale, METH_NOARGS, "Return the object's scale vector" },
     {"getEuler", (PyCFunction)VRPyTransform::getEuler, METH_NOARGS, "Return the object's euler angles - [X,Y,Z] getEuler()" },
+    {"setMatrix", PyWrap(Transform, setMatrix, "Set the object's matrix", void, Matrix4d ) },
+    {"setWorldMatrix", PyWrap(Transform, setWorldMatrix, "Set the object's world matrix", void, Matrix4d ) },
     {"setWorldFrom", (PyCFunction)VRPyTransform::setWFrom, METH_VARARGS, "Set the object's world position" },
     {"setWorldOrientation", (PyCFunction)VRPyTransform::setWOrientation, METH_VARARGS, "Set the object's world direction" },
+    {"setWorldUp", PyWrap(Transform, setWorldUp, "Set the object's up vector", void, Vec3d ) },
+    {"setWorldAt", PyWrap(Transform, setWorldAt, "Set the object's at vector", void, Vec3d ) },
     {"setPose", (PyCFunction)VRPyTransform::setPose, METH_VARARGS, "Set the object's pose - setPose(pose)\n\tsetPose(pos, dir, up)" },
     {"setWorldPose", (PyCFunction)VRPyTransform::setWPose, METH_VARARGS, "Set the object's pose - setWorldPose(pose)\n\tsetPose(pos, dir, up)" },
     {"setPosition", (PyCFunction)VRPyTransform::setFrom, METH_VARARGS, "Set the object's from vector" },
@@ -64,7 +81,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setCollisionGroup", (PyCFunction)VRPyTransform::setCollisionGroup, METH_VARARGS, "Set the collision group of the physics object - setCollisionGroup(int g)\n\t g can be from 0 to 8" },
     {"setCollisionMask", (PyCFunction)VRPyTransform::setCollisionMask, METH_VARARGS, "Set the collision mask of the physics object - setCollisionMask(int g)\n\t g can be from 0 to 8 and it is the group to collide with" },
     {"setCollisionShape", (PyCFunction)VRPyTransform::setCollisionShape, METH_VARARGS, "Set the collision shape of the physics object, see physicalize - setCollisionShape( str shape, float param )" },
-    {"getCollisions", (PyCFunction)VRPyTransform::getCollisions, METH_NOARGS, "Return the current collisions with other objects" },
+    {"getCollisions", PyWrap(Transform, getCollisions, "Return the current collisions with other objects", vector<VRCollision> ) },
     {"applyImpulse", (PyCFunction)VRPyTransform::applyImpulse, METH_VARARGS, "Apply impulse on the physics object" },
     {"applyTorqueImpulse", (PyCFunction)VRPyTransform::applyTorqueImpulse, METH_VARARGS, "Apply torque impulse on the physics object" },
     {"applyForce", (PyCFunction)VRPyTransform::applyForce, METH_VARARGS, "Apply force on the physics object (e.g. obj.applyForce(1.0,0.0,0.0) )" },
@@ -87,6 +104,8 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setCenterOfMass", (PyCFunction)VRPyTransform::setCenterOfMass, METH_VARARGS, "Set a custom center of mass - setCenterOfMass([x,y,z])"  },
     {"drag", (PyCFunction)VRPyTransform::drag, METH_VARARGS, "Drag this object by new parent - drag(new parent)"  },
     {"drop", (PyCFunction)VRPyTransform::drop, METH_NOARGS, "Drop this object, if held, to old parent - drop()"  },
+    {"rebaseDrag", PyWrap( Transform, rebaseDrag, "Rebase drag, use instead of switchParent", void, VRObjectPtr ) },
+    {"isDragged", PyWrap( Transform, isDragged, "Check if transform is beeing dragged", bool ) },
     {"castRay", (PyCFunction)VRPyTransform::castRay, METH_VARARGS, "Cast a ray and return the intersection - intersection castRay(obj, dir)"  },
     {"getDragParent", (PyCFunction)VRPyTransform::getDragParent, METH_NOARGS, "Get the parent before the drag started - obj getDragParent()"  },
     {"lastChanged", (PyCFunction)VRPyTransform::lastChanged, METH_NOARGS, "Return the frame when the last change occured - lastChanged()"  },
@@ -97,6 +116,10 @@ PyMethodDef VRPyTransform::methods[] = {
     {"applyTransformation", (PyCFunction)VRPyTransform::applyTransformation, METH_VARARGS, "Apply a transformation to the mesh - applyTransformation( pose )" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyTransform::fromSharedPtr(VRTransformPtr obj) {
+    return VRPyTypeCaster::cast(dynamic_pointer_cast<VRObject>(obj));
+}
 
 PyObject* VRPyTransform::applyTransformation(VRPyTransform* self, PyObject *args) {
     if (!self->valid()) return NULL;
@@ -177,7 +200,7 @@ PyObject* VRPyTransform::applyChange(VRPyTransform* self) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyTransform::getCollisions(VRPyTransform* self) {
+/*PyObject* VRPyTransform::getCollisions(VRPyTransform* self) {
     if (!self->valid()) return NULL;
     auto cols = self->objPtr->getPhysics()->getCollisions();
     PyObject* res = PyList_New(cols.size());
@@ -191,7 +214,7 @@ PyObject* VRPyTransform::getCollisions(VRPyTransform* self) {
         i++;
     }
     return res;
-}
+}*/
 
 PyObject* VRPyTransform::setGhost(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
@@ -252,47 +275,47 @@ PyObject* VRPyTransform::rotateAround(VRPyTransform* self, PyObject* args) {
 
 PyObject* VRPyTransform::getEuler(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    return toPyTuple(self->objPtr->getEuler());
+    return toPyObject(self->objPtr->getEuler());
 }
 
 PyObject* VRPyTransform::getFrom(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    return toPyTuple(self->objPtr->getFrom());
+    return toPyObject(self->objPtr->getFrom());
 }
 
 PyObject* VRPyTransform::getWFrom(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    return toPyTuple(self->objPtr->getWorldPosition());
+    return toPyObject(self->objPtr->getWorldPosition());
 }
 
 PyObject* VRPyTransform::getAt(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    return toPyTuple(self->objPtr->getAt());
+    return toPyObject(self->objPtr->getAt());
 }
 
 PyObject* VRPyTransform::getDir(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    return toPyTuple(self->objPtr->getDir());
+    return toPyObject(self->objPtr->getDir());
 }
 
 PyObject* VRPyTransform::getWorldDir(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    return toPyTuple(self->objPtr->getWorldDirection());
+    return toPyObject(self->objPtr->getWorldDirection());
 }
 
 PyObject* VRPyTransform::getWorldUp(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    return toPyTuple(self->objPtr->getWorldUp());
+    return toPyObject(self->objPtr->getWorldUp());
 }
 
 PyObject* VRPyTransform::getUp(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    return toPyTuple(self->objPtr->getUp());
+    return toPyObject(self->objPtr->getUp());
 }
 
 PyObject* VRPyTransform::getScale(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    return toPyTuple(self->objPtr->getScale());
+    return toPyObject(self->objPtr->getScale());
 }
 
 PyObject* VRPyTransform::getPose(VRPyTransform* self) {
@@ -390,7 +413,7 @@ PyObject* VRPyTransform::setPointConstraints(VRPyTransform* self, PyObject* args
     OSG::Vec3d v = parseVec3d(args);
     auto c = self->objPtr->getConstraint();
     c->setTConstraint(v, OSG::VRConstraint::POINT);
-    c->setActive(true, self->objPtr);
+    c->setActive(true);
     Py_RETURN_TRUE;
 }
 
@@ -399,7 +422,7 @@ PyObject* VRPyTransform::setPlaneConstraints(VRPyTransform* self, PyObject* args
     OSG::Vec3d v = parseVec3d(args);
     auto c = self->objPtr->getConstraint();
     c->setTConstraint(v, OSG::VRConstraint::PLANE);
-    c->setActive(true, self->objPtr);
+    c->setActive(true);
     Py_RETURN_TRUE;
 }
 
@@ -408,7 +431,7 @@ PyObject* VRPyTransform::setAxisConstraints(VRPyTransform* self, PyObject* args)
     OSG::Vec3d v = parseVec3d(args);
     auto c = self->objPtr->getConstraint();
     c->setTConstraint(v, OSG::VRConstraint::LINE);
-    c->setActive(true, self->objPtr);
+    c->setActive(true);
     Py_RETURN_TRUE;
 }
 
@@ -417,7 +440,7 @@ PyObject* VRPyTransform::setRotationConstraints(VRPyTransform* self, PyObject* a
     OSG::Vec3d v = parseVec3d(args);
     auto c = self->objPtr->getConstraint();
     c->setRConstraint(self->objPtr->getWorldPosition(), OSG::VRConstraint::POINT);
-    c->setActive(true, self->objPtr);
+    c->setActive(true);
     Py_RETURN_TRUE;
 }
 
@@ -444,12 +467,10 @@ PyObject* VRPyTransform::physicalize(VRPyTransform* self, PyObject *args) {
     Py_RETURN_TRUE;
 }
 
-
-
 PyObject* VRPyTransform::setPhysicsConstraintTo(VRPyTransform* self, PyObject *args) {
     if (!self->valid()) return NULL;
     //if this is soft, the args have to be: RigidBody other, int nodeIndex, vec3 localpivot, bool ignoreCollision, float influence
-    VRPyTransform *t;
+    VRPyTransform* t;
     if(self->objPtr->getPhysics()->isSoft()) {
         int nodeIndex;
         int ignoreCollision;
@@ -462,6 +483,8 @@ PyObject* VRPyTransform::setPhysicsConstraintTo(VRPyTransform* self, PyObject *a
         VRPyTransform *t; VRPyConstraint *c; VRPyConstraint *cs;
         if (! PyArg_ParseTuple(args, "OOO", &t, &c, &cs)) return NULL;
         self->objPtr->getPhysics()->setConstraint( t->objPtr->getPhysics(), c->objPtr, cs->objPtr );
+        //t->objPtr->attach(self->objPtr, c->objPtr);
+        self->objPtr->attach(t->objPtr, c->objPtr);
     }
     Py_RETURN_TRUE;
 }
@@ -569,13 +592,13 @@ PyObject* VRPyTransform::applyConstantTorque(VRPyTransform* self, PyObject *args
 PyObject* VRPyTransform::getForce(VRPyTransform* self) {
     if (!self->valid()) return NULL;
     OSG::Vec3d i = self->objPtr->getPhysics()->getForce();
-     return toPyTuple(i);
+    return toPyObject(i);
 }
 
 PyObject* VRPyTransform::getTorque(VRPyTransform* self) {
     if (!self->valid()) return NULL;
     OSG::Vec3d i = self->objPtr->getPhysics()->getTorque();
-    return toPyTuple(i);
+    return toPyObject(i);
 }
 
 PyObject* VRPyTransform::setGravity(VRPyTransform* self, PyObject *args) {
@@ -624,7 +647,7 @@ PyObject* VRPyTransform::getConstraintAngleWith(VRPyTransform* self, PyObject *a
     }
 
     //Py_RETURN_TRUE;
-    return toPyTuple(a);
+    return toPyObject(a);
 }
 
 PyObject* VRPyTransform::deletePhysicsConstraints(VRPyTransform* self, PyObject *args) {

@@ -2,156 +2,141 @@
 #include "core/objects/VRTransform.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/VRGlobals.h"
+#include "core/utils/toString.h"
+#include "core/math/pose.h"
 
 #include <OpenSG/OSGQuaternion.h>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRConstraint::TCMode& o) { return "Constraint mode"; }
+template<> int toValue(stringstream& s, VRConstraint::TCMode& t) { return 0; } // TODO
 
 VRConstraint::VRConstraint() {
     local = false;
     for (int i=0; i<6; i++) { min[i] = 0.0; max[i] = 0.0; }
 
-    store("cT", &tConstraint);
-    store("cR", &rConstraint);
-    store("cT_mode", &tConMode);
-    store("cR_mode", &rConMode);
-    store("cT_local", &localTC);
-    store("cR_local", &localRC);
-    store("active", &active);
+    //store("min", &min);
+    //store("max", &max);
+    //store("refMatrixA", &refMatrixA);
+    //store("refMatrixB", &refMatrixB);
+    //store("active", &active);
 }
 
 VRConstraint::~VRConstraint() {;}
 
 VRConstraintPtr VRConstraint::create() { return VRConstraintPtr( new VRConstraint() ); }
+VRConstraintPtr VRConstraint::duplicate() { auto c = create(); *c = *this; return c; }
 
 void VRConstraint::setLocal(bool b) { local = b; }
+void VRConstraint::setActive(bool b) { active = b; }
 bool VRConstraint::isLocal() { return local; }
+bool VRConstraint::isActive() { return active; }
 
 void VRConstraint::setMinMax(int i, float f1, float f2) { min[i] = f1; max[i] = f2; }
 void VRConstraint::setMin(int i, float f) { min[i] = f; }
 void VRConstraint::setMax(int i, float f) { max[i] = f; }
-
 float VRConstraint::getMin(int i) { return min[i]; }
 float VRConstraint::getMax(int i) { return max[i]; }
 
-void VRConstraint::setReferenceA(Matrix4d m) { refMatrixA = m; };
-void VRConstraint::setReferenceB(Matrix4d m) { refMatrixB = m; refMatrixB.inverse(refMatrixBI); };
-Matrix4d VRConstraint::getReferenceA() { return refMatrixA; };
-Matrix4d VRConstraint::getReferenceB() { return refMatrixB; };
+void VRConstraint::lock(vector<int> dofs) { for (int dof : dofs) setMinMax(dof,0,0); setActive(true); }
+void VRConstraint::free(vector<int> dofs) { for (int dof : dofs) setMinMax(dof,1,-1); }
 
-void VRConstraint::lockRotation() {
-    setRConstraint(Vec3d(0,0,0), VRConstraint::POINT);
+void VRConstraint::setReferenceA(PosePtr p) { refMatrixA = p->asMatrix(); refMatrixA.inverse(refMatrixAI); };
+void VRConstraint::setReferenceB(PosePtr p) { refMatrixB = p->asMatrix(); refMatrixB.inverse(refMatrixBI); };
+void VRConstraint::setReference(PosePtr p) { setReferenceA(p); }
+PosePtr VRConstraint::getReferenceA() { return Pose::create(refMatrixA); };
+PosePtr VRConstraint::getReferenceB() { return Pose::create(refMatrixB); };
+
+void VRConstraint::lockRotation() { setRConstraint(Vec3d(0,0,0), VRConstraint::POINT); }
+
+void VRConstraint::setReferential(VRTransformPtr t) { Referential = t; }
+
+void VRConstraint::setTConstraint(Vec3d params, TCMode mode, bool local) {
+    if (params.length() > 1e-4 && mode != POINT) params.normalize();
+    this->local = local;
+    active = true;
+
+    if (mode == POINT) {
+        setMinMax(0, params[0], params[0]);
+        setMinMax(1, params[1], params[1]);
+        setMinMax(2, params[2], params[2]);
+    }
+
+    if (mode == LINE) {
+        auto p = Vec3d(refMatrixB[3]);
+        lock({0,1});
+        free({2});
+        setReferenceB( Pose::create(p, params) ); // TODO: will not work for vertical line!
+    }
+
+    if (mode == PLANE) {
+        auto p = Vec3d(refMatrixB[3]);
+        lock({1});
+        free({0,2});
+        setReferenceB( Pose::create(p, Vec3d(1,0,0), params) ); // TODO: will not work for plane with x as normal!
+    }
 }
 
-VRConstraintPtr VRConstraint::duplicate() {
-    auto c = create();
-    *c = *this;
-    return c;
+void VRConstraint::setRConstraint(Vec3d params, TCMode mode, bool local) {
+    if (params.length() > 1e-4 && mode != POINT) params.normalize();
+    this->local = local;
+    active = true;
+
+    if (mode == POINT) {
+        setMinMax(3, params[0], params[0]);
+        setMinMax(4, params[1], params[1]);
+        setMinMax(5, params[2], params[2]);
+    }
+
+    if (mode == LINE) {
+        auto p = Vec3d(refMatrixB[3]);
+        lock({3,4});
+        free({5});
+        setReferenceB( Pose::create(p, params) ); // TODO: will not work for vertical line!
+    }
+
+    if (mode == PLANE) {
+        auto p = Vec3d(refMatrixB[3]);
+        lock({4});
+        free({3,5});
+        setReferenceB( Pose::create(p, Vec3d(1,0,0), params) ); // TODO: will not work for plane with x as normal!
+    }
 }
 
-void VRConstraint::apply(VRTransformPtr obj) {
-    if (!hasConstraint() || !active) return;
+void VRConstraint::apply(VRTransformPtr obj, VRObjectPtr parent) {
+    if (!active) return;
     auto now = VRGlobals::CURRENT_FRAME;
     if (apply_time_stamp == now) return;
     apply_time_stamp = now;
 
-    VRTransformPtr ref = Referential.lock();
+    if (local) parent = obj->getParent(true);
+    Matrix4d J = obj->getMatrixTo(parent);
+    J.mult(refMatrixB);
+    J.multLeft(refMatrixAI);
 
-    Matrix4d t, tr, tri, t0i;
-    Matrix4d t0 = Reference;
-    if (localTC) t = obj->getMatrix();
-    else t = obj->getWorldMatrix();
-
-    if (ref) {
-        tr = ref->getWorldMatrix();
-        tr.inverse(tri);
-        t.multLeft(tri);
+    for (int i=0; i<3; i++) { // translation
+        if (min[i] > max[i]) continue; // free
+        if (min[i] > J[3][i]) J[3][i] = min[i]; // lower bound
+        if (max[i] < J[3][i]) J[3][i] = max[i]; // upper bound
     }
 
-    //rotation
-    if (rConMode != NONE) {
-        if (rConMode == POINT) { for (int i=0;i<3;i++) t[i] = t0[i]; } // TODO: add RConstraint as offset to referential and reference
-
-        if (rConMode == LINE) {
-            t.multLeft(rotRebase);
-            t.mult(refRebasedI);
-            float a = atan2(-t[2][1], t[2][2]);
-            t.setRotate( Quaterniond(Vec3d(1,0,0), a) );
-            t.mult(refRebased);
-            t.multLeft(rotRebaseI);
-        }
-
-        if (rConMode == PLANE); // TODO
+    Vec3d angles = VRTransform::computeEulerAngles(J);
+    Vec3d angleDiff;
+    for (int i=3; i<6; i++) { // rotation
+        if (min[i] > max[i]) continue; // free
+        if (min[i] > angles[i-3]) angleDiff[i-3] = min[i] - angles[i-3]; // lower bound
+        if (max[i] < angles[i-3]) angleDiff[i-3] = max[i] - angles[i-3]; // upper bound
     }
+    VRTransform::applyEulerAngles(J, angles + angleDiff);
 
-    //translation
-    if (tConMode != NONE) {
-        if (tConMode == PLANE) {
-            float d = Vec3d(t[3] - t0[3]).dot(tConstraint);
-            for (int i=0; i<3; i++) t[3][i] -= d*tConstraint[i];
-        }
-
-        if (tConMode == LINE) {
-            Vec3d d = Vec3d(t[3] - t0[3]);
-            d = d.dot(tConstraint)*tConstraint;
-            //cout << "t0 " << t0[3] << " t " << t[3] << " a " << tConstraint << " d " << d << endl;
-            for (int i=0; i<3; i++) t[3][i] = t0[3][i] + d[i];
-        }
-
-        if (tConMode == POINT) {
-            for (int i=0; i<3; i++) t[3][i] = tConstraint[i];
-        }
-    }
-
-    t.multLeft(refMatrixB);
-    t.mult(refMatrixBI);
-
-    if (ref) t.multLeft(tr);
-    if (localTC) obj->setMatrix(t);
-    else obj->setWorldMatrix(t);
+    J.multLeft(refMatrixA);
+    J.mult(refMatrixBI);
+    obj->setMatrixTo(J, parent);
 }
 
 
-void VRConstraint::setReference(Matrix4d m) { Reference = m; prepare(); }
-void VRConstraint::setReferential(VRTransformPtr t) { Referential = t; }
 
-void VRConstraint::setTConstraint(Vec3d trans, int mode, bool local) {
-    tConstraint = trans;
-    if (tConstraint.length() > 1e-4 && mode != POINT) tConstraint.normalize();
-    tConMode = mode;
-    localTC = local;
-}
 
-void VRConstraint::setRConstraint(Vec3d rot, int mode, bool local) {
-    rConstraint = rot;
-    if (rConstraint.length() > 1e-4 && mode != POINT) rConstraint.normalize();
-    rConMode = mode;
-    localRC = local;
 
-    Quaterniond q(Vec3d(0, -rot[2], -rot[1]), -acos(rot[0]));
-    rotRebase.setIdentity();
-    rotRebase.setRotate(q);
-    rotRebase.inverse(rotRebaseI);
-    prepare();
-}
 
-void VRConstraint::prepare() {
-    refRebased = Reference;
-    refRebased.multLeft(rotRebase);
-    refRebased.inverse(refRebasedI);
-}
-
-bool VRConstraint::getTMode() { return tConMode; }
-bool VRConstraint::getRMode() { return rConMode; }
-Vec3d VRConstraint::getTConstraint() { return tConstraint; }
-Vec3d VRConstraint::getRConstraint() { return rConstraint; }
-
-bool VRConstraint::hasTConstraint() { return tConMode != NONE; }
-bool VRConstraint::hasRConstraint() { return rConMode != NONE; }
-bool VRConstraint::hasConstraint() { return rConMode != NONE || tConMode != NONE; }
-
-void VRConstraint::setActive(bool b, VRTransformPtr obj) { active = b; if (b) obj->getWorldMatrix(Reference); obj->setFixed(!b); prepare(); }
-bool VRConstraint::isActive() { return active; }
-
-OSG_END_NAMESPACE;

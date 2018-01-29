@@ -10,12 +10,6 @@ struct VRPyStorage : public VRPyBaseT<OSG::VRStorage> {
 
 struct VRPyProjectManager : public VRPyBaseT<OSG::VRProjectManager> {
     static PyMethodDef methods[];
-
-    static PyObject* addItem(VRPyProjectManager* self, PyObject* args);
-    static PyObject* remItem(VRPyProjectManager* self, PyObject* args);
-    static PyObject* getItems(VRPyProjectManager* self);
-    static PyObject* newp(VRPyProjectManager* self, PyObject* args);
-    static PyObject* setPersistencyLevel(VRPyProjectManager* self, PyObject* args);
 };
 
 #endif // VRPYPROJECTMANAGER_H_INCLUDED

@@ -23,10 +23,12 @@ struct VRNamePool {
         if (itr2->first == itr1->second) { // overlap
             itr1->second = itr2->second;
             ranges.erase(itr2);
+            return;
         }
         if (itr2->first == itr1->second+1) { // continuity
             itr1->second = itr2->second;
             ranges.erase(itr2);
+            return;
         }
     }
 
@@ -79,6 +81,7 @@ struct VRNamePool {
 VRNameSpace::VRNameSpace(string nspace) : nspace(nspace) {}
 
 int VRNameSpace::getSuffix(const string& base, const int& hint) {
+    if (!nameDict.count(base)) nameDict[base] = VRNamePool();
     auto& pool = nameDict[base];
     if (hint != -1) if (!pool.has(hint)) return hint;
     return pool.get();

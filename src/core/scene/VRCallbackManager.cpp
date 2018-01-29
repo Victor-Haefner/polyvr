@@ -21,7 +21,7 @@ VRCallbackManager::~VRCallbackManager() {
 void VRCallbackManager::queueJob(VRUpdateCbPtr f, int priority, int delay) {
     PLock lock(mtx);
     updateListsChanged = true;
-    jobFktPtrs[f.get()] = job(f,priority,delay);
+    jobFktPtrs.push_back( job(f,priority,delay) );
 }
 
 void VRCallbackManager::addUpdateFkt(VRUpdateCbWeakPtr f, int priority) {
@@ -108,17 +108,17 @@ void VRCallbackManager::updateCallbacks() {
         if ( auto scb = cb.lock()) (*scb)();
     }
 
-    map<VRUpdateCb* , job> delayedJobs;
+    vector<job> delayedJobs;
     for (auto j : jobFktPtrs) {
-        if (j.second.delay > 0) {
-            j.second.delay--;
-            delayedJobs[j.first] = j.second;
+        if (j.delay > 0) {
+            j.delay--;
+            delayedJobs.push_back(j);
             continue;
         }
 
-        if (j.second.ptr) {
-            string name = j.second.ptr->getName();
-            (*j.second.ptr)();
+        if (j.ptr) {
+            string name = j.ptr->getName();
+            (*j.ptr)();
         }
     }
     jobFktPtrs = delayedJobs;

@@ -33,9 +33,9 @@ class VRDefShading {
             //NodeMTRecPtr               lightN;
             //NodeMTRecPtr               beaconN;
 
-            ShaderProgramRecPtr      lightVP;
-            ShaderProgramRecPtr      lightFP;
-            ShaderProgramChunkRecPtr lightSH;
+            ShaderProgramMTRecPtr      lightVP;
+            ShaderProgramMTRecPtr      lightFP;
+            ShaderProgramChunkMTRecPtr lightSH;
         };
 
         string dsGBufferVPFile, dsGBufferFPFile;
@@ -47,7 +47,7 @@ class VRDefShading {
 
         TextureObjChunkRefPtr fboTex;
         NodeMTRecPtr dsStageN;
-        DeferredShadingStageRecPtr dsStage;
+        DeferredShadingStageMTRecPtr dsStage;
         map<int, LightInfo> lightInfos;
         int shadowMapWidth;
         int shadowMapHeight;
@@ -77,7 +77,7 @@ class VRDefShading {
         TextureObjChunkRefPtr getTarget();
 
         void setDSCamera(OSGCameraPtr cam);
-        //void setDSCamera(ProjectionCameraDecoratorRecPtr cam);
+        //void setDSCamera(ProjectionCameraDecoratorMTRecPtr cam);
         void addDSLight(VRLightPtr light);
         void updateLight(VRLightPtr l);
         void subLight(int ID);

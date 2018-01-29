@@ -25,6 +25,9 @@ struct VRIntersection {
     Vec2d texel;
     int triangle;
     Vec3i triangleVertices;
+
+    VRObjectPtr getIntersected();
+    Pnt3d getIntersection();
 };
 
 class VRIntersect {

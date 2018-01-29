@@ -21,8 +21,9 @@ PyMethodDef VRPyRobotArm::methods[] = {
     {"getAngles", PyWrap(RobotArm, getAngles, "Get joint angles - getAngles()", vector<float> ) },
     //{"getForwardKinematics", PyWrap(RobotArm, getForwardKinematics, "Get end effector pose from angles - p,d,u getForwardKinematics( angles )") },
     //{"getBackwardKinematics", PyWrap(RobotArm, getBackwardKinematics, "Get angles from end effector pose - angles getBackwardKinematics( p,d,u )") },
-    {"setPath", PyWrap(RobotArm, setPath, "Set robot path - setPath()", void, pathPtr ) },
-    {"getPath", PyWrap(RobotArm, getPath, "Get robot path - getPath()", pathPtr ) },
+    {"setPath", PyWrap(RobotArm, setPath, "Set robot path - setPath()", void, PathPtr ) },
+    {"getPath", PyWrap(RobotArm, getPath, "Get robot path - getPath()", PathPtr ) },
     {"moveOnPath", PyWrapOpt(RobotArm, moveOnPath, "Move robot on internal path - moveOnPath(float t0, float t1, bool loop)", "0", void, float, float, bool) },
+    {"isMoving", PyWrap(RobotArm, isMoving, "Get animation status - isMoving()", bool) },
     {NULL}  /* Sentinel */
 };

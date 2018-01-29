@@ -13,19 +13,19 @@ using namespace std;
 class VRRobotArm {
     private:
         struct job {
-            pathPtr p = 0;
+            PathPtr p = 0;
             float t0 = 0;
             float t1 = 1;
             bool loop = false;
             float d = 1;
-            job(pathPtr p, float t0 = 0, float t1 = 1, float d = 1, bool loop = false) : p(p), t0(t0), t1(t1), loop(loop), d(d) {;}
+            job(PathPtr p, float t0 = 0, float t1 = 1, float d = 1, bool loop = false) : p(p), t0(t0), t1(t1), loop(loop), d(d) {;}
         };
 
         VRAnalyticGeometryPtr ageo = 0;
         VRAnimationPtr anim = 0;
         VRAnimCbPtr animPtr;
-        pathPtr animPath = 0;
-        pathPtr robotPath = 0;
+        PathPtr animPath = 0;
+        PathPtr robotPath = 0;
 
         list<job> job_queue;
 
@@ -63,16 +63,19 @@ class VRRobotArm {
         void move();
         void pause();
         void stop();
+        bool isMoving();
 
         void moveTo(PosePtr p);
         void setAngles(vector<float> angles);
         void setGrab(float g);
         void toggleGrab();
 
-        void setPath(pathPtr p);
-        pathPtr getPath();
+        void setPath(PathPtr p);
+        PathPtr getPath();
         void moveOnPath(float t0, float t1, bool loop = false);
 };
+
+typedef shared_ptr<VRRobotArm> VRRobotArmPtr;
 
 OSG_END_NAMESPACE;
 

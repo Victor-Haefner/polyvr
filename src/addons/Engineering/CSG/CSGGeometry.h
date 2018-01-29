@@ -4,6 +4,7 @@
 #include <string>
 #include <OpenSG/OSGGeometry.h>
 #include "core/objects/geometry/VRGeometry.h"
+#include "addons/Engineering/VREngineeringFwd.h"
 
 namespace CGAL { class Polyhedron; }
 
@@ -37,6 +38,8 @@ class CSGGeometry : public VRGeometry {
     public:
         CSGGeometry(string name);
         virtual ~CSGGeometry();
+
+        void init();
 
         static CSGGeometryPtr create(string name = "csgGeometry");
         CSGGeometryPtr ptr();

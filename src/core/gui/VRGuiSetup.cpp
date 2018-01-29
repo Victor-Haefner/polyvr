@@ -11,6 +11,7 @@
 #include "core/setup/windows/VRMultiWindow.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRPrimitive.h"
+#include "core/setup/devices/VRKeyboard.h"
 #include "core/setup/devices/VRFlystick.h"
 #include "core/setup/devices/VRHaptic.h"
 #include "core/setup/devices/VRServer.h"
@@ -77,6 +78,7 @@ void VRGuiSetup::closeAllExpander() {
     setExpanderSensitivity("expander26", false);
     setExpanderSensitivity("expander28", false);
     setExpanderSensitivity("expander29", false);
+    setExpanderSensitivity("expander30", false);
 }
 
 void VRGuiSetup::updateObjectData() {
@@ -127,6 +129,7 @@ void VRGuiSetup::updateObjectData() {
         // mouse
         string name = "None";
         if (win->getMouse()) name = win->getMouse()->getName();
+        if (win->getMultitouch()) name = win->getMultitouch()->getName();
         setCombobox("combobox13", getListStorePos("mouse_list", name));
     }
 
@@ -194,6 +197,14 @@ void VRGuiSetup::updateObjectData() {
         VRHaptic* t = (VRHaptic*)selected_object;
         setTextEntry("entry8", t->getIP());
         setCombobox("combobox25", getListStorePos("liststore8", t->getType()) );
+        setLabel("label64", t->getDeamonState());
+        setLabel("label66", t->getDeviceState());
+    }
+
+    if (selected_type == "multitouch") {
+        setExpanderSensitivity("expander30", true);
+        VRMultiTouch* t = (VRMultiTouch*)selected_object;
+        setCombobox("combobox12", getListStorePos("liststore11", t->getDevice()) );
     }
 
     if (selected_type == "mouse") { device = true; }
@@ -382,12 +393,18 @@ void VRGuiSetup::on_treeview_select() {
     VRGuiSetup_ModelColumns cols;
     selected_row = *iter;
 
+    selected_object = 0;
     selected_name = selected_row.get_value(cols.name);
     selected_type = selected_row.get_value(cols.type);
     selected_object = selected_row.get_value(cols.obj);
 
-    if (selected_type == "window") mwindow = (VRMultiWindow*) selected_object;
-    else mwindow = 0;
+    //cout << "SELECT " << selected_name << " of type " << selected_type << endl;
+
+    window = mwindow = 0;
+    if (selected_type == "window") {
+        window = (VRWindow*)selected_object;
+        mwindow = (VRMultiWindow*)selected_object;
+    }
 
     Gtk::TreePath path(iter);
     path.up();
@@ -981,6 +998,13 @@ void VRGuiSetup::on_change_haptic_type() {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
+void VRGuiSetup::on_mt_device_changed() {
+    if (guard) return;
+    VRMultiTouch* dev = (VRMultiTouch*)selected_object;
+    dev->setDevice(getComboboxText("combobox12"));
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
 void VRGuiSetup::on_toggle_dev_cross() {
     if (guard) return;
 
@@ -1091,7 +1115,7 @@ VRGuiSetup::VRGuiSetup() {
     menu->appendItem("SM_AddDevMenu", "MultiTouch", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRMultiTouch>) );
     menu->appendItem("SM_AddDevMenu", "Keyboard", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRKeyboard>) );
     menu->appendItem("SM_AddDevMenu", "Haptic", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRHaptic>) );
-    menu->appendItem("SM_AddDevMenu", "Mobile", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRServer>) );
+    menu->appendItem("SM_AddDevMenu", "Server", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRServer>) );
     menu->appendItem("SM_AddVRPNMenu", "VRPN tracker", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_vrpn_tracker) );
     menu->appendItem("SM_AddNetworkMenu", "Node", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_network_node) );
     menu->appendItem("SM_AddNetworkMenu", "Slave", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_network_slave) );
@@ -1169,11 +1193,13 @@ VRGuiSetup::VRGuiSetup() {
     setRadioButtonCallback("radiobutton12", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited));
 
     setComboboxCallback("combobox6", sigc::mem_fun(*this, &VRGuiSetup::on_setup_changed) );
+    setComboboxCallback("combobox12", sigc::mem_fun(*this, &VRGuiSetup::on_mt_device_changed) );
+    setComboboxCallback("combobox13", sigc::mem_fun(*this, &VRGuiSetup::on_window_device_changed) );
     setComboboxCallback("combobox18", sigc::mem_fun(*this, &VRGuiSetup::on_change_view_user) );
     setComboboxCallback("combobox25", sigc::mem_fun(*this, &VRGuiSetup::on_change_haptic_type) );
 
-    const char *haptic_types[] = {"Virtuose 6D Desktop", "Virtuose 6D35-45", "Virtuose 6D40-40", "INCA 6D"};
-    fillStringListstore("liststore8", vector<string>(haptic_types, end(haptic_types)) );
+    fillStringListstore("liststore8", VRHaptic::getDevTypes() );
+    fillStringListstore("liststore11", VRMultiTouch::getDevices() );
 
     tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview2"));
     tree_view->signal_cursor_changed().connect( sigc::mem_fun(*this, &VRGuiSetup::on_treeview_select) );
@@ -1232,6 +1258,14 @@ void VRGuiSetup::on_setup_changed() {
     current_setup.lock()->getSignal_on_new_art_device()->add(updateSetupCb); // TODO: where to put this? NOT in updateSetup() !!!
 }
 
+void VRGuiSetup::on_window_device_changed() {
+    if (guard || !window) return;
+    string name = getComboboxText("combobox13");
+    auto dev = VRSetup::getCurrent()->getDevice(name);
+    window->setMouse( dynamic_pointer_cast<VRMouse>(dev) );
+    window->setMultitouch( dynamic_pointer_cast<VRMultiTouch>(dev) );
+}
+
 void VRGuiSetup::setTreeRow(Glib::RefPtr<Gtk::TreeStore> tree_store, Gtk::TreeStore::Row row, string name, string type, gpointer ptr, string fg, string bg) {
     gtk_tree_store_set (tree_store->gobj(), row.gobj(), 0, name.c_str(), -1);
     gtk_tree_store_set (tree_store->gobj(), row.gobj(), 1, type.c_str(), -1);
@@ -1241,7 +1275,7 @@ void VRGuiSetup::setTreeRow(Glib::RefPtr<Gtk::TreeStore> tree_store, Gtk::TreeSt
 }
 
 void VRGuiSetup::updateStatus() {
-    if (mwindow != 0) setLabel("win_state", mwindow->getStateString());
+    if (mwindow) setLabel("win_state", mwindow->getStateString());
 }
 
 void VRGuiSetup::updateSetup() {
@@ -1287,6 +1321,11 @@ void VRGuiSetup::updateSetup() {
         setTreeRow(tree_store, *itr, ditr.first.c_str(), dev->getType().c_str(), (gpointer)dev.get());
 
         if (dev->getType() == "mouse") {
+            row = *mouse_list->append();
+            gtk_list_store_set (mouse_list->gobj(), row.gobj(), 0, dev->getName().c_str(), -1);
+        }
+
+        if (dev->getType() == "multitouch") {
             row = *mouse_list->append();
             gtk_list_store_set (mouse_list->gobj(), row.gobj(), 0, dev->getName().c_str(), -1);
         }

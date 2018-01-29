@@ -82,7 +82,7 @@ void VRAsphalt::updateTexture() {
     setupTexture(2, mudTex, "texMud");
 }
 
-void VRAsphalt::addPath(pathPtr path, int rID, float width, float dashL, float offset) {
+void VRAsphalt::addPath(PathPtr path, int rID, float width, float dashL, float offset) {
     int& i = roadData[rID].rDataLengths;
     int iNpnts = i;
     i += 2;
@@ -121,7 +121,7 @@ void VRAsphalt::addPath(pathPtr path, int rID, float width, float dashL, float o
     if (texGen->getSize()[1] < i) cout << "WARNING, texture height not enough! " << i << "/" << texGen->getSize()[1] << endl;
 }
 
-void VRAsphalt::addMarking(int rID, pathPtr marking, float width, float dashL, float offset) {
+void VRAsphalt::addMarking(int rID, PathPtr marking, float width, float dashL, float offset) {
     if (roadData.count(rID) == 0) roadData[rID] = road();
     auto& rdata = roadData[rID];
     rdata.markingsN++;
@@ -129,7 +129,7 @@ void VRAsphalt::addMarking(int rID, pathPtr marking, float width, float dashL, f
     addPath(marking, rID, width, dashL, offset);
 }
 
-void VRAsphalt::addTrack(int rID, pathPtr track, float width, float dashL, float offset) {
+void VRAsphalt::addTrack(int rID, PathPtr track, float width, float dashL, float offset) {
     if (roadData.count(rID) == 0) roadData[rID] = road();
     auto& rdata = roadData[rID];
     rdata.tracksN++;

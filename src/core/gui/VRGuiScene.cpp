@@ -103,23 +103,23 @@ void setTransform(VRTransformPtr e) {
     Vec3d d = e->getDir();
     Vec3d s = e->getScale();
 
-    auto c = e->getConstraint();
+    /*auto c = e->getConstraint();
     Vec3d tc = c->getTConstraint();
-    Vec3d rc = c->getRConstraint();
+    Vec3d rc = c->getRConstraint();*/
 
     posEntry.set(f);
     atEntry.set(a);
     dirEntry.set(d);
     upEntry.set(u);
     scaleEntry.set(s);
-    ctEntry.set(tc);
+    //ctEntry.set(tc);
 
     atEntry.setFontColor(Vec3d(0, 0, 0));
     dirEntry.setFontColor(Vec3d(0, 0, 0));
     if (e->get_orientation_mode())  atEntry.setFontColor(Vec3d(0.6, 0.6, 0.6));
     else                            dirEntry.setFontColor(Vec3d(0.6, 0.6, 0.6));
 
-    bool doTc = c->hasTConstraint();
+    /*bool doTc = c->hasTConstraint();
     bool doRc = c->hasRConstraint();
 
     setCheckButton("checkbutton18", rc[0]);
@@ -130,7 +130,7 @@ void setTransform(VRTransformPtr e) {
     setCheckButton("checkbutton22", doRc);
 
     setRadioButton("radiobutton1", !c->getTMode());
-    setRadioButton("radiobutton2", c->getTMode());
+    setRadioButton("radiobutton2", c->getTMode());*/
 
     if (e->getPhysics()) {
         setCheckButton("checkbutton13", e->getPhysics()->isPhysicalized());
@@ -556,7 +556,7 @@ void VRGuiScene::on_focus_clicked() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
     auto scene = VRScene::getCurrent();
-    if (scene) scene->getActiveCamera()->focus( obj );
+    if (scene) scene->getActiveCamera()->focusObject( obj );
 }
 
 void VRGuiScene::on_identity_clicked() {
@@ -569,7 +569,7 @@ void VRGuiScene::on_identity_clicked() {
 void on_edit_T_constraint(Vec3d v) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
-    obj->getConstraint()->setTConstraint(v, obj->getConstraint()->getTMode());
+    //obj->getConstraint()->setTConstraint(v, obj->getConstraint()->getTMode());
 }
 
 void VRGuiScene::on_toggle_T_constraint() {
@@ -578,7 +578,7 @@ void VRGuiScene::on_toggle_T_constraint() {
 
     bool bT = getCheckButtonState("checkbutton21");
     bool bR = getCheckButtonState("checkbutton22");
-    obj->getConstraint()->setActive(bT || bR, obj);
+    obj->getConstraint()->setActive(bT || bR);
 }
 
 void VRGuiScene::on_toggle_R_constraint() {
@@ -587,7 +587,7 @@ void VRGuiScene::on_toggle_R_constraint() {
 
     bool bT = getCheckButtonState("checkbutton21");
     bool bR = getCheckButtonState("checkbutton22");
-    obj->getConstraint()->setActive(bT || bR, obj);
+    obj->getConstraint()->setActive(bT || bR);
 }
 
 void VRGuiScene::on_toggle_rc() {
@@ -599,7 +599,7 @@ void VRGuiScene::on_toggle_rc() {
     if (getCheckButtonState("checkbutton19") ) rc[1] = 1;
     if (getCheckButtonState("checkbutton20") ) rc[2] = 1;
 
-    obj->getConstraint()->setRConstraint(rc, obj->getConstraint()->getRMode());
+    //obj->getConstraint()->setRConstraint(rc, obj->getConstraint()->getRMode());
 }
 
 // geometry
@@ -964,7 +964,7 @@ void VRGuiScene::on_toggle_T_constraint_mode() {
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
     bool plane = getRadioButtonState("radiobutton2");
-    obj->getConstraint()->setTConstraint( obj->getConstraint()->getTConstraint(), plane? OSG::VRConstraint::PLANE : OSG::VRConstraint::LINE);
+    //obj->getConstraint()->setTConstraint( obj->getConstraint()->getTConstraint(), plane? OSG::VRConstraint::PLANE : OSG::VRConstraint::LINE);
 }
 
 void VRGuiScene::on_toggle_phys() {
@@ -1066,6 +1066,12 @@ void VRGuiScene::on_cam_far_changed() {
     VRCameraPtr obj = static_pointer_cast<VRCamera>( getSelected() );
     string f = getTextEntry("entry7");
     obj->setFar(toFloat(f));
+}
+
+void VRGuiScene::on_change_cam_proj() {
+    if(!trigger_cbs) return;
+    VRCameraPtr obj = static_pointer_cast<VRCamera>( getSelected() );
+    obj->setType(getComboboxI("combobox23"));
 }
 // ----------------------------------------------
 
@@ -1304,6 +1310,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     setCheckButtonCallback("checkbutton35", sigc::mem_fun(*this, &VRGuiScene::on_lod_decimate_changed) );
 
     setComboboxCallback("combobox14", sigc::mem_fun(*this, &VRGuiScene::on_change_group));
+    setComboboxCallback("combobox23", sigc::mem_fun(*this, &VRGuiScene::on_change_cam_proj));
     //setComboboxCallback("combobox19", on_change_CSG_operation);
     setComboboxCallback("combobox21", sigc::mem_fun(*this, &VRGuiScene::on_change_primitive));
     setComboboxCallback("combobox2", sigc::mem_fun(*this, &VRGuiScene::on_change_light_type) );

@@ -48,6 +48,8 @@ class VRMillingMachine {
         void update();
 };
 
+typedef shared_ptr<VRMillingMachine> VRMillingMachinePtr;
+
 OSG_END_NAMESPACE;
 
 #endif // VRMILLINGMACHINE_H_INCLUDED

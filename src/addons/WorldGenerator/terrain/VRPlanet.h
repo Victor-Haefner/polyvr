@@ -36,10 +36,10 @@ class VRPlanet : public VRTransform {
         double toRad(double deg);
         double toDeg(double rad);
 
-        void setParameters( double radius );
+        void setParameters( double radius, double sectorSize = 0.1 );
         VRWorldGeneratorPtr addSector( double north, double east );
         VRWorldGeneratorPtr getSector( double north, double east );
-        int addPin( string label, double north, double east );
+        int addPin( string label, double north, double east, double length = 10000 );
         void remPin( int pin );
 
         Vec3d fromLatLongEast(double north, double east, bool local = false);
@@ -48,6 +48,8 @@ class VRPlanet : public VRTransform {
         Vec3d fromLatLongPosition(double north, double east, bool local = false);
         Vec2d fromLatLongSize(double north1, double east1, double north2, double east2);
         PosePtr fromLatLongPose(double north, double east, bool local = false);
+
+        Vec2d fromPosLatLong(Pnt3d p, bool local = false);
 
         void localize(double north, double east);
 

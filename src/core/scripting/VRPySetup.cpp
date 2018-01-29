@@ -5,6 +5,7 @@
 #include "core/scripting/VRPyPose.h"
 #include "core/scripting/VRPyImage.h"
 #include "core/scripting/VRPyCamera.h"
+#include "core/scripting/VRPyMath.h"
 
 using namespace OSG;
 
@@ -61,7 +62,7 @@ PyObject* VRPyView::setSize(VRPyView* self, PyObject* args) {
 
 PyObject* VRPyView::getSize(VRPyView* self) {
     if (!self->valid()) return NULL;
-    return toPyTuple( self->objPtr->getProjectionSize() );
+    return toPyObject( self->objPtr->getProjectionSize() );
 }
 
 PyObject* VRPyView::getPose(VRPyView* self) {

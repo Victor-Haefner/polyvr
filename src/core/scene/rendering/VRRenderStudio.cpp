@@ -5,6 +5,7 @@
 #include "core/setup/windows/VRView.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/VRStage.h"
@@ -16,7 +17,6 @@
 #include "VRFXAA.h"
 
 #include <OpenSG/OSGRenderAction.h>
-#include <boost/filesystem.hpp>
 #include <OpenSG/OSGProjectionCameraDecorator.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -85,9 +85,9 @@ void VRRenderStudio::setStageShader(string name, string VPpath, string FPpath, b
         auto mat = stages[name]->getMaterial();
         mat->setLit(false);
 
-        if ( boost::filesystem::exists( VPpath ) ) mat->readVertexShader(VPpath);
+        if ( exists( VPpath ) ) mat->readVertexShader(VPpath);
         else mat->setVertexScript(VPpath);
-        if ( boost::filesystem::exists( FPpath ) ) mat->readFragmentShader(FPpath, doDeferred);
+        if ( exists( FPpath ) ) mat->readFragmentShader(FPpath, doDeferred);
         else mat->setFragmentScript(FPpath, doDeferred);
 
         if (doDeferred) {
@@ -236,7 +236,7 @@ void VRRenderStudio::setCamera(OSGCameraPtr cam) {
     this->cam = cam;
 }
 
-void VRRenderStudio::setBackground(BackgroundRecPtr bg) {
+void VRRenderStudio::setBackground(BackgroundMTRecPtr bg) {
     //if (defShading) defShading->setBackground(bg);
     //if (defSSAO) defSSAO->setBackground(bg);
     //if (defBlur) defBlur->setBackground(bg);

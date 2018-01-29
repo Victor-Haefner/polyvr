@@ -10,13 +10,15 @@
 
 using namespace OSG;
 
-vector<string> splitString(string s, char c) {
+vector<string> splitString(const string& s, char c) {
     stringstream ss(s);
     string token;
     vector<string> res;
     while (std::getline(ss, token, c)) res.push_back(token);
     return res;
 }
+
+string subString(const string& s, int beg, int len) { return s.substr(beg, len); }
 
 typedef void* voidPtr;
 
@@ -52,13 +54,15 @@ template<> string toString(const Vec3d& v) {
     return ss.str();
 }
 
-template<> string toString(const Pnt3d& v) { return toString(Vec3d(v)); }
-
 template<> string toString(const Vec4d& v) {
     stringstream ss;
     ss << v[0] << " " << v[1] << " " << v[2] << " " << v[3];
     return ss.str();
 }
+
+template<> string toString(const Pnt2d& v) { return toString(Vec2d(v)); }
+template<> string toString(const Pnt3d& v) { return toString(Vec3d(v)); }
+template<> string toString(const Pnt4d& v) { return toString(Vec4d(v)); }
 
 template<> string toString(const Color3f& v) {
     stringstream ss;
@@ -112,13 +116,18 @@ template<> string typeName(const unsigned int& t) { return "int"; }
 template<> string typeName(const float& t) { return "float"; }
 template<> string typeName(const double& t) { return "double"; }
 template<> string typeName(const bool& t) { return "bool"; }
+template<> string typeName(const Pnt2d& t) { return "Pnt2d"; }
+template<> string typeName(const Pnt3d& t) { return "Pnt3d"; }
+template<> string typeName(const Pnt4d& t) { return "Pnt4d"; }
 template<> string typeName(const Vec2d& t) { return "Vec2d"; }
 template<> string typeName(const Vec3d& t) { return "Vec3d"; }
 template<> string typeName(const Vec4d& t) { return "Vec4d"; }
 template<> string typeName(const Vec2i& t) { return "Vec2i"; }
 template<> string typeName(const Vec3i& t) { return "Vec3i"; }
+template<> string typeName(const Matrix4d& t) { return "Matrix"; }
 template<> string typeName(const Color3f& t) { return "Vec3d"; }
 template<> string typeName(const Color4f& t) { return "Vec4d"; }
+template<> string typeName(const Line& t) { return "Line"; }
 template<> string typeName(const VRAnimCbPtr& t) { return "void callback(float)"; }
 template<> string typeName(const Boundingbox& t) { return "Boundingbox"; }
 
@@ -156,6 +165,24 @@ template<> int toValue(stringstream& ss, Vec4d& v) {
     return bool(ss >> v[3]);
 }
 
+template<> int toValue(stringstream& ss, Pnt2d& v) {
+    ss >> v[0];
+    return bool(ss >> v[1]);
+}
+
+template<> int toValue(stringstream& ss, Pnt3d& v) {
+    ss >> v[0];
+    ss >> v[1];
+    return bool(ss >> v[2]);
+}
+
+template<> int toValue(stringstream& ss, Pnt4d& v) {
+    ss >> v[0];
+    ss >> v[1];
+    ss >> v[2];
+    return bool(ss >> v[3]);
+}
+
 template<> int toValue(stringstream& ss, Vec2i& v) {
     ss >> v[0];
     return bool(ss >> v[1]);
@@ -165,6 +192,13 @@ template<> int toValue(stringstream& ss, Vec3i& v) {
     ss >> v[0];
     ss >> v[1];
     return bool(ss >> v[2]);
+}
+
+template<> int toValue(stringstream& ss, Vec4i& v) {
+    ss >> v[0];
+    ss >> v[1];
+    ss >> v[2];
+    return bool(ss >> v[3]);
 }
 
 template<> int toValue(stringstream& ss, Color3f& v) {
@@ -178,6 +212,24 @@ template<> int toValue(stringstream& ss, Color4f& v) {
     ss >> v[1];
     ss >> v[2];
     return bool(ss >> v[3]);
+}
+
+template<> int toValue(stringstream& ss, Line& l) {
+    Vec3d p,d;
+    toValue(ss, p);
+    bool b = toValue(ss, d);
+    l = Line(Pnt3f(p),Vec3f(d));
+    return b;
+}
+
+template<> int toValue(stringstream& ss, Matrix4d& m) {
+    Vec4d a,b,c,d;
+    toValue(ss, a);
+    toValue(ss, b);
+    toValue(ss, c);
+    bool r = toValue(ss, d);
+    m = Matrix4d(a,b,c,d);
+    return r;
 }
 
 template<> int toValue(stringstream& ss, Pose& po) {

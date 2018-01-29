@@ -1,6 +1,7 @@
 #include "VRScene.h"
 #include "core/setup/devices/VRFlystick.h"
 #include "core/setup/devices/VRMouse.h"
+#include "core/setup/devices/VRMultiTouch.h"
 #include "core/setup/devices/VRKeyboard.h"
 #include "core/setup/devices/VRHaptic.h"
 #include "core/setup/devices/VRServer.h"
@@ -32,7 +33,6 @@ VRScene::VRScene() {
     setFlag("write_protected", false);
 
     //scene update functions
-    addUpdateFkt(updateObjectsFkt, 1000);
     addUpdateFkt(updateAnimationsFkt);
     addUpdateFkt(updatePhysObjectsFkt);
 
@@ -64,7 +64,6 @@ VRScene::VRScene() {
 VRScene::~VRScene() {
     //kill physics thread
     VRThreadManager::stopThread(physicsThreadID);
-    updateObjects();
     root->destroy();
     VRGroup::clearGroups();
     VRLightBeacon::getAll().clear();
@@ -158,6 +157,7 @@ void VRScene::setActiveCamera(string camname) {
     if (cam == 0) return;
 
     VRMousePtr mouse = dynamic_pointer_cast<VRMouse>( setup->getDevice("mouse") );
+    VRMultiTouchPtr multitouch = dynamic_pointer_cast<VRMultiTouch>( setup->getDevice("multitouch") );
     VRFlystickPtr flystick = dynamic_pointer_cast<VRFlystick>( setup->getDevice("flystick") );
     VRDevicePtr razer = setup->getDevice("vrpn_device");
     VRServerPtr server1 = dynamic_pointer_cast<VRServer>( setup->getDevice("server1") );
@@ -165,6 +165,11 @@ void VRScene::setActiveCamera(string camname) {
     if (mouse) {
         mouse->setTarget(cam);
         mouse->setCamera(cam);
+    }
+
+    if (multitouch) {
+        multitouch->setTarget(cam);
+        multitouch->setCamera(cam);
     }
 
     if (flystick) flystick->setTarget(cam);
@@ -199,6 +204,7 @@ void VRScene::update() {
     //root->getNode()->getVolume().getBounds( min, max );
     ThreadManagerUpdate();
     updateCallbacks();
+    VRTransform::updateConstraints();
 }
 
 void VRScene::updateLoadingProgress(VRThreadWeakPtr t) {
@@ -220,6 +226,24 @@ void VRScene::recLoadingTime() {
 
 VRProgressPtr VRScene::getLoadingProgress() { return loadingProgress; }
 
+bool exists(string p) {
+    struct stat st;
+    return (stat(p.c_str(),&st) == 0);
+}
+
+void mkDir(string path) {
+    if (!exists(path)) mkdir(path.c_str(), ACCESSPERMS);
+}
+
+void mkPath(string path) {
+    auto dirs = splitString(path, '/');
+    path = "";
+    for (int i=1; i<dirs.size(); i++) {
+        path += "/"+dirs[i];
+        mkDir(path);
+    }
+}
+
 void VRScene::saveScene(xmlpp::Element* e) {
     if (e == 0) return;
     VRName::save(e);
@@ -231,13 +255,24 @@ void VRScene::saveScene(xmlpp::Element* e) {
     VRMaterialManager::saveUnder(e);
     semanticManager->saveUnder(e);
 
-    e->set_attribute("loading_time", toString(loadingTime));
+    string d = getWorkdir() + "/.local_"+getName();
+    if (!exists(d)) mkPath(d);
+    ofstream stats(d+"/stats");
+    string lt = toString(loadingTime);
+    stats.write( lt.c_str(), lt.size() );
+    stats.close();
 }
 
 void VRScene::loadScene(xmlpp::Element* e) {
     if (e == 0) return;
 
-    if (e->get_attribute("loading_time")) loadingTime = toInt(e->get_attribute("loading_time")->get_value());
+    string d = getWorkdir() + "/.local_"+getName()+"/stats";
+    if (exists(d)) {
+        ifstream stats(d);
+        stats >> loadingTime;
+        stats.close();
+    }
+
     loadingTimer.start();
     loadingProgressThreadCb = VRFunction< VRThreadWeakPtr >::create( "loading progress thread", boost::bind(&VRScene::updateLoadingProgress, this, _1) );
     loadingProgressThread = VRSceneManager::get()->initThread(loadingProgressThreadCb, "loading progress thread", true, 1);

@@ -17,6 +17,8 @@ using namespace OSG;
 map<string, PeriodicTableEntry> PeriodicTable;
 map<string, vector<Matrix4d> > AtomicStructures;
 
+template<> string typeName(const VRMoleculePtr& m) { return "Molecule"; }
+
 void initAtomicTables() { // TODO: set colors
 	PeriodicTable["H"] = PeriodicTableEntry(1, 0.37, Vec3d(1,1,1));
 	PeriodicTable["He"] = PeriodicTableEntry(8, 0.5, Vec3d(1,0,1));
@@ -264,21 +266,21 @@ VRMoleculePtr VRMolecule::create(string name) {
 
 VRMoleculePtr VRMolecule::ptr() { return static_pointer_cast<VRMolecule>( shared_from_this() ); }
 
-void VRMolecule::addAtom(string a, int t) {
-    VRAtom* at = new VRAtom(a, getID());
-    atoms[at->getID()] = at;
-    addAtom(at, t);
+VRAtom* VRMolecule::addAtom(string a) {
+    VRAtom* atm = new VRAtom(a, getID());
+    atoms[atm->getID()] = atm;
+    return atm;
 }
 
-void VRMolecule::addAtom(VRAtom* b, int bType, bool extra) {
+void VRMolecule::connectAtom(VRAtom* b, int bType, bool extra) {
     for (auto a : atoms) if (a.second->append(b, bType, extra)) break;
 }
 
-void VRMolecule::addAtom(int ID, int t) {
+void VRMolecule::connectAtom(int ID, int t) {
     if (atoms.count(ID) == 0) return;
     VRAtom* at = atoms[ID];
     if (at->full) return;
-    addAtom(at, t, true);
+    connectAtom(at, t, true);
 }
 
 void VRMolecule::remAtom(int ID) {
@@ -440,8 +442,11 @@ void VRMolecule::set(string definition) {
     for (uint i=0; i<mol.size(); i+=2) {
         string a = mol[i+1];
         int b = toInt(mol[i]);
-        if (isNumber(a[0])) addAtom(toInt(a), b);
-        else addAtom(a,b);
+        if (isNumber(a[0])) connectAtom(toInt(a), b);
+        else {
+            auto atm = addAtom(a);
+            connectAtom(atm, b);
+        }
     }
 
     for (auto a : atoms) a.second->computePositions();
@@ -688,6 +693,14 @@ void VRMolecule::updateLabels() {
 VRAtom* VRMolecule::getAtom(int ID) {
     if (atoms.count(ID) != 0) return atoms[ID];
     return 0;
+}
+
+Vec3d VRMolecule::getAtomPosition(int ID) {
+    VRAtom* a = getAtom( ID );
+    if (a == 0) return Vec3d(0,0,0);
+    auto m = getWorldMatrix();
+    m.mult( a->getTransformation() );
+    return Vec3d(m[3]);
 }
 
 string VRMolecule::a_fp =

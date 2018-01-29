@@ -11,7 +11,6 @@
 #include "core/utils/VRGlobals.h"
 #include "core/tools/VRText.h"
 #include "core/setup/VRSetup.h"
-#include "core/setup/devices/VRMultiTouch.h"
 #include "core/gui/VRGuiUtils.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/objects/OSGObject.h"
@@ -39,7 +38,7 @@ bool onBox(int i, int j, int c) {
 string VRView::getName() { return name; }
 
 void VRView::setMaterial() {
-    ImageRecPtr img = Image::create();
+    ImageMTRecPtr img = Image::create();
 
     Vec3d bg  = Vec3d(0.5, 0.7, 0.95);
     Vec3d c1  = Vec3d(0.5, 0.7, 0.95);
@@ -104,8 +103,8 @@ void VRView::setViewports() {//create && set size of viewports
     if (p[1] > p[3]) p[1] = p[3]-0.01;
 
     //active, stereo
-    lView_act = active_stereo ? StereoBufferViewportRecPtr(StereoBufferViewport::create()) : 0;
-    rView_act = active_stereo ? StereoBufferViewportRecPtr(StereoBufferViewport::create()) : 0;
+    lView_act = active_stereo ? StereoBufferViewportMTRecPtr(StereoBufferViewport::create()) : 0;
+    rView_act = active_stereo ? StereoBufferViewportMTRecPtr(StereoBufferViewport::create()) : 0;
 
     //no stereo
     if (!stereo && !active_stereo) {
@@ -191,7 +190,7 @@ void VRView::setDecorators() {//set decorators, only if projection true
     //cout << "setDecorator screen: LL " << screenLowerLeft << " LR " << screenLowerRight << " UR " << screenUpperRight << " UL " << screenUpperLeft << " " << endl;
 
     GeometryMTRecPtr geo = dynamic_cast<Geometry*>(viewGeo->getCore());
-    GeoVectorPropertyRecPtr pos = geo->getPositions();
+    GeoVectorPropertyMTRecPtr pos = geo->getPositions();
 
     pos->setValue(screenLowerLeft, 0);
     pos->setValue(screenLowerRight, 1);
@@ -244,7 +243,7 @@ void VRView::setDecorators() {//set decorators, only if projection true
 VRView::VRView(string name) {
     this->name = name;
 
-    SolidBackgroundRecPtr sbg = SolidBackground::create();
+    SolidBackgroundMTRecPtr sbg = SolidBackground::create();
     sbg->setColor(Color3f(0.7, 0.7, 0.7));
     background = sbg;
 
@@ -469,8 +468,8 @@ void VRView::setCam() {
     if (renderingR && PCDecoratorRight) renderingR->setCamera( OSGCamera::create(PCDecoratorRight) );
 }
 
-void VRView::setBackground(BackgroundRecPtr bg) { background = bg; update(); }
-void VRView::setWindow(WindowRecPtr win) { window = win; update(); }
+void VRView::setBackground(BackgroundMTRecPtr bg) { background = bg; update(); }
+void VRView::setWindow(WindowMTRecPtr win) { window = win; update(); }
 
 void VRView::setOffset(Vec3d o) { offset = o; update(); }
 
@@ -534,7 +533,7 @@ VRTexturePtr VRView::grab() {
 
     /*if (grabfg == 0) {
         grabfg = GrabForeground::create();
-        ImageRecPtr img = Image::create();
+        ImageMTRecPtr img = Image::create();
         grabfg->setImage(img);
         grabfg->setActive(false);
         if (lView) lView->editMFForegrounds()->push_back(grabfg);
@@ -602,18 +601,19 @@ void VRView::load(xmlpp::Element* node) {
         user = VRSetup::getCurrent()->getTracker(user_name);
     }
 
-    if (ID == 0) {
-        auto dev = VRSetup::getCurrent()->getDevice("multitouch"); // TODO, just a test, add mouse and multitouch to views!
-        if (auto mt = dynamic_pointer_cast<VRMultiTouch>(dev)) mt->setViewport(ptr());
-    }
-
     showStats(doStats);
     update();
 }
 
+PosePtr VRView::getPose() {
+    return Pose::create(proj_center, proj_normal, proj_up);
+}
+
 VRTransformPtr VRView::getUser() { if (user) return user; else return dummy_user; }
 VRCameraPtr VRView::getCamera() { return cam; }
-ViewportRecPtr VRView::getViewport() { return lView; }
+ProjectionCameraDecoratorMTRecPtr VRView::getCameraDecoratorLeft() { return PCDecoratorLeft; }
+ProjectionCameraDecoratorMTRecPtr VRView::getCameraDecoratorRight() { return PCDecoratorRight; }
+ViewportMTRecPtr VRView::getViewport() { return lView; }
 float VRView::getEyeSeparation() { return eyeSeparation; }
 bool VRView::isStereo() { return stereo; }
 

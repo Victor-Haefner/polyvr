@@ -3,6 +3,7 @@
 #include "VRGrassPatch.h"
 #include "../terrain/VRTerrain.h"
 
+#include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/objects/object/VRObject.h"
 #include "core/objects/geometry/VRGeometry.h"
@@ -58,6 +59,8 @@ void VRLodLeaf::set(VRObjectPtr obj, int lvl) {
     levels[lvl]->clearChildren();
     if (obj) levels[lvl]->addChild(obj);
 }
+
+void VRLodLeaf::reset() { set(0,1); }
 
 Octree* VRLodLeaf::getOLeaf() { return oLeaf; }
 int VRLodLeaf::getLevel() { return lvl; }
@@ -178,7 +181,7 @@ void VRNature::setup() {
         tree->setPose(t.second->pos);
         addTree(tree, 0, false);
     }
-    computeLODs();
+    computeAllLODs();
 }
 
 VRTreePtr VRNature::getTree(int id) {
@@ -401,7 +404,23 @@ VRTreePtr VRNature::addBush(VRTreePtr t, bool updateLODs, bool addToStore) {
     return tree;
 }
 
-void VRNature::computeLODs() { computeLODs(leafs); }
+void VRNature::computeLODsThread(VRThreadWeakPtr tw) {
+    //if (jobs.size() == 0) { sleep(1); return; } // start as loop
+    //MapManager::job j = jobs.front(); jobs.pop_front();
+
+    VRThreadPtr t = tw.lock();
+    t->syncFromMain();
+    computeLODs(leafs);
+    t->syncToMain();
+}
+
+void VRNature::computeAllLODs(bool threaded) {
+    if (!threaded) { computeLODs(leafs); return; }
+
+    auto scene = VRScene::getCurrent();
+    worker = VRThreadCb::create( "nature lods", boost::bind(&VRNature::computeLODsThread, this, _1) );
+    scene->initThread(worker, "nature lods", false, 1);
+}
 
 void VRNature::computeLODs(VRLodLeafPtr leaf) {
     auto oLeafs = leaf->getOLeaf()->getAncestry();
@@ -469,7 +488,7 @@ void VRNature::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
     // create layer node geometries
     for (auto l : leafs) {
         auto& leaf = l.second;
-        leaf->set( 0, 1 );
+        leaf->reset();
         int lvl = leaf->getLevel();
         if (lvl == 0) continue;
         bool doTrees = (trees.count(leaf.get()) >= 0);

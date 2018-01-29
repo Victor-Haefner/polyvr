@@ -5,5 +5,4 @@ int main(int argc, char **argv) {
 	pvr->init(argc,argv);
     pvr->start();
     pvr->shutdown();
-	return 0;
 }

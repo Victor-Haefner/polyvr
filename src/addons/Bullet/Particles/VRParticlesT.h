@@ -4,6 +4,9 @@
 #include "core/utils/VRFunctionFwd.h"
 #include "core/objects/material/VRMaterial.h"
 
+#include "core/objects/geometry/OSGGeometry.h"
+#include <OpenSG/OSGGeometry.h>
+
 typedef boost::recursive_mutex::scoped_lock BLock;
 
 OSG_BEGIN_NAMESPACE;
@@ -49,6 +52,8 @@ void VRParticles::resetParticles(int amount) {
         setColors(colors);
         setIndices(inds);
         setMaterial(mat);
+
+        getMesh()->geo->setDlistCache(false);
     }
 
     printf("VRParticles::resetParticles(amount=%i) -- done\n", amount);

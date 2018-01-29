@@ -54,8 +54,8 @@ void VRSelector::update() {
     if (!subselection->getMesh()->geo->getPositions()) return;
     int N = subselection->getMesh()->geo->getPositions()->size();
 
-    GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
-    GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
+    GeoUInt32PropertyMTRecPtr inds = GeoUInt32Property::create();
+    GeoUInt32PropertyMTRecPtr lengths = GeoUInt32Property::create();
     lengths->addValue(N);
     for (int i=0; i<N; i++) inds->addValue(i);
 
@@ -115,9 +115,15 @@ void VRSelector::setBorder(int width, bool smooth) {
     update();
 }
 
-void VRSelector::select(VRObjectPtr obj, bool recursive) {
-    clear();
-    selection->apply(obj, true, recursive);
+void VRSelector::select(VRObjectPtr obj, bool append, bool recursive) {
+    if (!append) {
+        clear();
+        selection->apply(obj, true, recursive);
+    } else {
+        auto s = VRSelection::create();
+        s->apply(obj, true, recursive);
+        selection->append(s);
+    }
     update();
 }
 

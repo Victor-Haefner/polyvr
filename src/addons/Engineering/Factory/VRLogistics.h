@@ -20,7 +20,7 @@ class FTransporter;
 class FLogistics;
 
 using namespace std;
-namespace OSG{ class VRTransform; class VRStroke; class VRSprite; class path; }
+namespace OSG{ class VRTransform; class VRStroke; class VRSprite; class Path; }
 
 class FID {
     private:
@@ -54,7 +54,7 @@ class FObject : public FID {
 
         void setTransformation(OSG::VRTransformPtr t);
         OSG::VRTransformPtr getTransformation();
-        bool move(OSG::pathPtr p, float dx);
+        bool move(OSG::PathPtr p, float dx);
 
         void setMetaData(std::string s);
 
@@ -106,14 +106,14 @@ class FNode : public FID, public std::enable_shared_from_this<FNode> {
 class FPath : public FID {
     private:
         std::vector<shared_ptr<FNode>> nodes;
-        std::map<FNode*, OSG::pathPtr> paths;
+        std::map<FNode*, OSG::PathPtr> paths;
 
     public:
         FPath();
         void set(shared_ptr<FNode> n1, shared_ptr<FNode> n2);
         void add(shared_ptr<FNode> n);
         std::vector<shared_ptr<FNode>>& get();
-        shared_ptr<OSG::path> getPath(shared_ptr<FNode>);
+        shared_ptr<OSG::Path> getPath(shared_ptr<FNode>);
         void update();
 };
 

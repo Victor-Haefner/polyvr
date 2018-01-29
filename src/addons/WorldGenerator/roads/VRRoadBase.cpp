@@ -28,7 +28,7 @@ vector<string> VRRoadBase::toStringVector(const Vec3d& v) {
     return res;
 }
 
-pathPtr VRRoadBase::toPath( VREntityPtr pathEntity, int resolution ) {
+PathPtr VRRoadBase::toPath( VREntityPtr pathEntity, int resolution ) {
     if (!pathEntity) return 0;
 	vector<Vec3d> pos;
 	vector<Vec3d> norms;
@@ -40,7 +40,7 @@ pathPtr VRRoadBase::toPath( VREntityPtr pathEntity, int resolution ) {
 		norms.push_back(  nodeEntry->getVec3("direction") );
 	}
 
-	pathPtr Path = path::create();
+	PathPtr Path = Path::create();
 	for (uint i=0; i<pos.size(); i++) Path->addPoint(Pose(pos[i], norms[i]));
 	Path->compute(resolution);
 	return Path;
@@ -48,7 +48,7 @@ pathPtr VRRoadBase::toPath( VREntityPtr pathEntity, int resolution ) {
 
 void VRRoadBase::setupTexCoords( VRGeometryPtr geo, VREntityPtr way ) {
 	int rID = toInt( way->get("ID")->value );
-	GeoVec2fPropertyRecPtr tcs = GeoVec2fProperty::create();
+	GeoVec2fPropertyMTRecPtr tcs = GeoVec2fProperty::create();
 	for (int i=0; i<geo->size(); i++) tcs->addValue(Vec2d(rID, 0));
 	geo->setPositionalTexCoords2D(1.0, 0, Vec2i(0,2)); // positional tex coords
 	geo->setTexCoords(tcs, 1); // add another tex coords set
@@ -127,7 +127,7 @@ VREntityPtr VRRoadBase::addArrows( VREntityPtr lane, float t, vector<float> dirs
 }
 
 VRGeometryPtr VRRoadBase::addPole( Vec3d P1, Vec3d P4, float radius ) {
-    auto p = path::create();
+    auto p = Path::create();
     Color3f gray(0.4,0.4,0.4);
     Vec3d Y(0,1,0);
     Vec3d pN = Vec3d(0,0,1); // normal of the plane where the pole lies in

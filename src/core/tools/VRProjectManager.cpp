@@ -1,7 +1,8 @@
 #include "VRProjectManager.h"
 
 #include "core/utils/VRStorage.h"
-#include <boost/filesystem.hpp>
+#include "core/utils/VRStorage_template.h"
+#include "core/utils/system/VRSystem.h"
 #include <libxml++/libxml++.h>
 #include <libxml++/nodes/element.h>
 #include <iostream>
@@ -9,9 +10,11 @@
 
 using namespace OSG;
 using namespace std;
-namespace fs = boost::filesystem;
 
-VRProjectManager::VRProjectManager() : VRObject("ProjectManager") {}
+VRProjectManager::VRProjectManager() : VRObject("ProjectManager") {
+    storage.storeMap("settings", settings);
+}
+
 VRProjectManager::~VRProjectManager() {}
 
 VRProjectManagerPtr VRProjectManager::create() { return shared_ptr<VRProjectManager>(new VRProjectManager()); }
@@ -20,7 +23,7 @@ void VRProjectManager::addItem(VRStoragePtr s, string mode) {
     if (!s) return;
     if (mode == "RELOAD") vault_reload.push_back(s);
     if (mode == "REBUILD") vault_rebuild.push_back(s);
-    s->store("pmMode", mode);
+    s->store("pmMode", &mode);
 }
 
 void VRProjectManager::remItem(VRStoragePtr s) {
@@ -28,6 +31,9 @@ void VRProjectManager::remItem(VRStoragePtr s) {
     vault_reload.erase(std::remove(vault_reload.begin(), vault_reload.end(), s), vault_reload.end());
     vault_rebuild.erase(std::remove(vault_rebuild.begin(), vault_rebuild.end(), s), vault_rebuild.end());
 }
+
+void VRProjectManager::setSetting(string s, string v) { settings[s] = v; }
+string VRProjectManager::getSetting(string s) { return settings[s]; }
 
 vector<VRStoragePtr> VRProjectManager::getItems() {
     vector<VRStoragePtr> res;
@@ -42,11 +48,13 @@ void VRProjectManager::newProject(string path) {
 
 void VRProjectManager::save(string path) {
     if (path == "") path = getName();
-    if (fs::exists(path)) path = fs::canonical(path).string();
+    if (exists(path)) path = canonical(path);
     cout << "VRProjectManager::save " << path << endl;
 
     xmlpp::Document doc;
     xmlpp::Element* root = doc.create_root_node("Project", "", "VRP"); // name, ns_uri, ns_prefix
+    storage.save(root);
+
     for (auto v : vault_reload) {
         cout << "VRProjectManager::save " << v << " " << persistencyLvl << endl;
         v->saveUnder(root, persistencyLvl);
@@ -57,9 +65,9 @@ void VRProjectManager::save(string path) {
 
 void VRProjectManager::load(string path) {
     if (path == "") path = getName();
-    if (fs::exists(path)) {
+    if (exists(path)) {
         setName(path);
-        path = fs::canonical(path).string();
+        path = canonical(path);
     } else return;
     cout << "VRProjectManager::load " << path << endl;
 
@@ -67,6 +75,7 @@ void VRProjectManager::load(string path) {
     parser.set_validate(false);
     parser.parse_file(path.c_str());
     xmlpp::Element* root = dynamic_cast<xmlpp::Element*>(parser.get_document()->get_root_node());
+    storage.load(root);
 
     vault_rebuild.clear();
     uint i=0;

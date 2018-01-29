@@ -16,7 +16,7 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class TrafficSimulation;
+class OldTrafficSimulation;
 class MapCoordinator;
 class World;
 class MapManager;
@@ -27,7 +27,7 @@ class RealWorld : public VRObject {
         World* world = 0;
         MapManager* mapManager = 0;
         map<string, OSMMapPtr> maps;
-        TrafficSimulation* trafficSimulation = 0; // Needed for script access
+        OldTrafficSimulation* trafficSimulation = 0; // Needed for script access
         static map<string, string> options;
         static Altitude altitude; // constructor runs once, single instance
         static RealWorld* singelton;
@@ -45,12 +45,14 @@ class RealWorld : public VRObject {
         static string getOption(string var);
         void update(OSG::Vec3d pos);
 
-        TrafficSimulation* getTrafficSimulation();
+        OldTrafficSimulation* getTrafficSimulation();
         MapCoordinator* getCoordinator();
         MapManager* getManager();
         World* getWorld();
         OSMMapPtr getMap(string posStr);
 };
+
+typedef std::shared_ptr<RealWorld> RealWorldPtr;
 
 OSG_END_NAMESPACE;
 

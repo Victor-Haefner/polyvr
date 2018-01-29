@@ -9,12 +9,11 @@
 #include "core/utils/VRFunctionFwd.h"
 #include "core/math/VRMathFwd.h"
 
-class VRPhysics;
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class doubleBuffer;
+class VRCollision;
+class VRPhysics;
 class path;
 class VRAnimation;
 
@@ -27,7 +26,7 @@ class VRTransform : public VRObject {
         };
 
     protected:
-        doubleBuffer* dm = 0;
+        Matrix4d matrix;
         OSGTransformPtr t;
         bool noBlt = false;
         VRPhysics* physics = 0;
@@ -35,9 +34,6 @@ class VRTransform : public VRObject {
 
         unsigned int change_time_stamp = 0;
         unsigned int wchange_time_stamp = 0;
-        bool change = false;
-        bool fixed = true;
-        bool cam_invert_z = false;
         bool identity = true;
         int orientation_mode = OM_DIR;
 
@@ -53,6 +49,8 @@ class VRTransform : public VRObject {
         int frame = 0;
         Matrix4d WorldTransformation;
         VRConstraintPtr constraint;
+        map<VRTransform*, pair<VRConstraintPtr, VRTransformWeakPtr> > aJoints;
+        map<VRTransform*, pair<VRConstraintPtr, VRTransformWeakPtr> > bJoints;
 
         Matrix4d old_transformation; //drag n drop
 
@@ -63,13 +61,10 @@ class VRTransform : public VRObject {
         //read Matrix4d from doublebuffer && apply it to transformation
         //should be called from the main thread only
         void updateTransformation();
-
         void reg_change();
-
         bool checkWorldChange();
 
         void printInformation();
-
         void initCoords();
         void initTranslator();
 
@@ -81,14 +76,14 @@ class VRTransform : public VRObject {
         VRTransformPtr ptr();
 
         static VRTransformPtr getParentTransform(VRObjectPtr o);
+        static Vec3d computeEulerAngles(const Matrix4d& t);
+        static void applyEulerAngles(Matrix4d& t, Vec3d angles);
 
         static list< VRTransformWeakPtr > changedObjects;
         static list< VRTransformWeakPtr > dynamicObjects;
 
         uint getLastChange();
         bool changedNow();
-        doubleBuffer* getBuffer();
-        // Local && world transformation setter && getter
 
         Vec3d getFrom();
         Vec3d getDir();
@@ -105,10 +100,11 @@ class VRTransform : public VRObject {
         Matrix4d getRotationMatrix();
 
         void setIdentity();
-        void setFrom(Vec3d pos);
-        void setAt(Vec3d at);
-        void setUp(Vec3d up);
-        void setDir(Vec3d dir);
+        void updateTransform(VRTransformPtr t);
+        virtual void setFrom(Vec3d pos);
+        virtual void setAt(Vec3d at);
+        virtual void setUp(Vec3d up);
+        virtual void setDir(Vec3d dir);
         void setScale(float s);
         void setScale(Vec3d s);
         void setOrientation(Vec3d at, Vec3d up);
@@ -117,12 +113,14 @@ class VRTransform : public VRObject {
         void setPose(PosePtr p);
         void setPose(Vec3d from, Vec3d dir, Vec3d up);
         virtual void setMatrix(Matrix4d m);
+        void setMatrixTo(Matrix4d m, VRObjectPtr o);
 
         void getWorldMatrix(Matrix4d& _m, bool parentOnly = false);
         Matrix4d getWorldMatrix(bool parentOnly = false);
         Vec3d getWorldPosition(bool parentOnly = false);
         Vec3d getWorldDirection(bool parentOnly = false);
         Vec3d getWorldUp(bool parentOnly = false);
+        Vec3d getWorldAt(bool parentOnly = false);
 
         void setWorldPose(PosePtr p);
         void setWorldMatrix(Matrix4d _m);
@@ -130,6 +128,7 @@ class VRTransform : public VRObject {
         void setWorldOrientation(Vec3d dir, Vec3d up);
         void setWorldDir(Vec3d dir);
         void setWorldUp(Vec3d up);
+        void setWorldAt(Vec3d at);
 
         void getRelativeMatrix(Matrix4d& m, VRObjectPtr o, bool parentOnly = false);
         Matrix4d getRelativeMatrix(VRObjectPtr o, bool parentOnly = false);
@@ -146,7 +145,6 @@ class VRTransform : public VRObject {
         int get_orientation_mode();
         void set_orientation_mode(int b);
 
-        void setFixed(bool b);
         void applyTransformation(PosePtr p);
         void applyTransformation();
 
@@ -175,7 +173,7 @@ class VRTransform : public VRObject {
         map<string, VRAnimationPtr> animations;
         void addAnimation(VRAnimationPtr animation);
         vector<VRAnimationPtr> getAnimations();
-        VRAnimationPtr startPathAnimation(pathPtr p, float time, float offset, bool redirect = true, bool loop = false);
+        VRAnimationPtr startPathAnimation(PathPtr p, float time, float offset, bool redirect = true, bool loop = false);
         void stopAnimation();
 
         void printPos(); // Print the position of the object in local && world coords
@@ -185,11 +183,16 @@ class VRTransform : public VRObject {
         VRConstraintPtr getConstraint();
 
         /** enable constraints on the object when dragged, 0 leaves the dof free, 1 restricts it **/
-        void apply_constraints();
+        void apply_constraints(bool force = false);
+        static void updateConstraints();
+        void attach(VRTransformPtr a, VRConstraintPtr c);
 
         /** Set the physics object **/
         VRPhysics* getPhysics();
+        void resolvePhysics();
         void updateFromBullet();
+
+        vector<VRCollision> getCollisions();
 
         /** Do not update the transform in the physics context for the next frame **/
         void setNoBltFlag();

@@ -7,11 +7,6 @@
 
 using namespace OSG;
 
-template<> PyObject* VRPyTypeCaster::cast(const VRNaturePtr& e) { return VRPyNature::fromSharedPtr(e); }
-template<> bool toValue(PyObject* o, VRNaturePtr& p) { if (!VRPyNature::check(o)) return 0; p = ((VRPyNature*)o)->objPtr; return 1; }
-template<> PyObject* VRPyTypeCaster::cast(const VRTreePtr& e) { return VRPyTree::fromSharedPtr(e); }
-template<> bool toValue(PyObject* o, VRTreePtr& p) { if (!VRPyTree::check(o)) return 0; p = ((VRPyTree*)o)->objPtr; return 1; }
-
 simpleVRPyType(Tree, New_VRObjects_ptr);
 simpleVRPyType(Nature, New_VRObjects_ptr);
 
@@ -70,12 +65,13 @@ PyObject* VRPyTree::setLeafMaterial(VRPyTree* self, PyObject* args) {
 PyMethodDef VRPyNature::methods[] = {
     {"addTree", PyWrapOpt(Nature, addTree, "Add a copy of the passed tree to the woods and return the copy", "0|1", VRTreePtr, VRTreePtr, bool, bool ) },
     {"addGrassPatch", PyWrapOpt(Nature, addGrassPatch, "Add a grass patch from polygon", "0|0|0", void, VRPolygonPtr, bool, bool) },
-    {"computeLODs", PyWrap(Nature, computeLODs, "Compute LODs - computeLODs() ", void ) },
+    {"computeLODs", PyWrapOpt(Nature, computeAllLODs, "Compute LODs - computeLODs() ", "0", void, bool ) },
     {"addCollisionModels", PyWrap(Nature, addCollisionModels, "Add collision box to trees and bushes - addCollisionModels() ", void ) },
     {"clear", PyWrap(Nature, clear, "Clear woods", void ) },
     {"getTree", PyWrap(Nature, getTree, "Get a tree by id", VRTreePtr, int ) },
     {"removeTree", PyWrap(Nature, removeTree, "Remove a tree by id", void, int ) },
     {"simpleInit", PyWrap(Nature, simpleInit, "Add a few random tree and bush types", void, int, int) },
+    {"createRandomTree", PyWrap(Nature, createRandomTree, "create a random tree", VRTreePtr, Vec3d) },
     {NULL}  /* Sentinel */
 };
 

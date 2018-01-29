@@ -11,9 +11,12 @@ ptrFwd( VREmbankment );
 ptrFwd( VRPlanet );
 ptrFwd( VRPlantMaterial );
 ptrFwd( VRAsphalt );
+ptrFwd( VRRoadBase );
 ptrFwd( VRRoad );
 ptrFwd( VRRoadNetwork );
 ptrFwd( VRRoadIntersection );
+ptrFwd( VRTunnel );
+ptrFwd( VRBridge );
 ptrFwd( VRDistrict );
 ptrFwd( VRBuilding );
 ptrFwd( VRTerrain );
@@ -21,6 +24,9 @@ ptrFwd( VRTree );
 ptrFwd( VRGrassPatch );
 ptrFwd( VRNature );
 ptrFwd( VRTrafficSimulation );
+ptrFwd( VRTrafficLight );
+ptrFwd( VRTrafficLights );
+ptrFwd( VRRain );
 
 }
 

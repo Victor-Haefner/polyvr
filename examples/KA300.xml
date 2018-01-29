@@ -1,36 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="KA300" name_space="Scene">
+<Scene base_name="KA300" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
-    <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
-      <Object name_suffix="0" base_name="L1" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="L1_beacon" diffuse="0.774197 0.774197 0.774197 1" lightType="directional" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="L2" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="L2_beacon" diffuse="1 1 1 1" lightType="directional" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-          <Object name_suffix="0" base_name="Karlsruhe" name_space="__global__" type="Geometry" pickable="0" visible="1" from="-1.87274 0.835229 0" at="-1.87274 0.835229 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="2" sourceparam="../ressources/misc/Karlsruhe300.dae Plane0"/>
-          <Object name_suffix="0" base_name="L2_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="-0.2 -0.2 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="L2"/>
-          <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="-1.9943 4.34345 19.1667" at="0.455133 0.900688 0.00590563" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472"/>
-          <Object name_suffix="0" base_name="L1_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0.2 0.2 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="L1"/>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="L1" beacon="L1_beacon" diffuse="0.774197 0.774197 0.774197 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object ambient="0.3 0.3 0.3 1" base_name="L2" beacon="L2_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+          <Object at="-0.2 -0.2 -1" at_dir="0" base_name="L2_beacon" from="0 0 0" light="L2" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+          </Object>
+          <Object accept_root="1" aspect="1" at="0.455133 0.900688 0.00590563" at_dir="0" base_name="Default" far="250" fov="1.0472" from="2.43095 -0.674166 15.092" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+            <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+          </Object>
+          <Object at="0.2 0.2 -1" at_dir="0" base_name="L1_beacon" from="0 0 0" light="L1" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+          </Object>
         </Object>
       </Object>
     </Object>
   </Objects>
-  <Rendering frustum_culling="1" occlusion_culling="0" two_sided="1"/>
-  <Scripts>
-    <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
+  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	import math
 	import random
-
-	m = ka.getMaterial()
+	
+	print 'init'
+	
+	ka = VR.loadGeometry('../ressources/misc/Karlsruhe300.dae', parent = 'L1')
+	
+	g = ka.getChild(0).getChild(0)
+	g.setFrom([1,0,0])
+	m = g.getMaterial()
 	
 	d = 1.0
 	a = 0.8
 	m.setDiffuse(d,d,d)
 	m.setAmbient(a,a,a)
 	
-	if not hasattr(VR, 'fan'):
-		VR.fan = VR.Geometry('fan')
-		ka.addChild(VR.fan)
-		print 'init'
+	VR.fan = VR.Geometry('fan')
+	ka.addChild(VR.fan)
 		
 	N = 64
 	pos = []
@@ -83,20 +92,19 @@
 	
 	
 </core>
-      <arg type="VRPyGeometryType" value="Karlsruhe" name_suffix="0" base_name="ka" name_space="init"/>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
     </Script>
-    <Script name_suffix="0" base_name="update" name_space="__script__" type="Python" mobile="">
+    <Script base_name="update" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	import random
+	
 	
 	if not hasattr(VR, 'fan'):
 		return
 	
 	f = VR.fan
 	pos = f.getPositions()
-	
 	s = 1.15
 	
 	for i in range(len(pos)):
@@ -106,11 +114,12 @@
 		
 	f.setPositions(pos)
 </core>
-      <trig type="on_timeout" dev="" state="Pressed" param="100" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
+      <trig type="on_timeout" dev="" state="Pressed" param="100" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
     </Script>
   </Scripts>
-  <Sockets/>
-  <Background color="1 1 1" path="" type="0"/>
-  <Navigation active="Orbit"/>
-  <Materials/>
+  <Sockets persistency="666"/>
+  <Background color="1 1 1" format=".png" path="" persistency="666" type="0"/>
+  <Navigation active="Orbit" persistency="666"/>
+  <Materials persistency="666"/>
+  <Semantics persistency="666"/>
 </Scene>

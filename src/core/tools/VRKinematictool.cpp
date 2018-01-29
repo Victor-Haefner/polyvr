@@ -141,11 +141,11 @@ void VRJointTool::updateVis() {
 
     auto c = o2->getConstraint();
     c->setReferential(o1);
-    c->setReferenceB(L);
+    c->setReferenceB(Pose::create(L));
     c->setRConstraint(ad3, VRConstraint::LINE);
     //c->setTConstraint(lp.pos(), VRConstraint::POINT);
     c->setTConstraint(Vec3d(0,0,0), VRConstraint::POINT);
-    c->setActive(active, o2);
+    c->setActive(active);
 }
 
 /**

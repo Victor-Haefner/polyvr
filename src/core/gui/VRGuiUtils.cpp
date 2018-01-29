@@ -482,7 +482,7 @@ OSG::VRTexturePtr takeSnapshot() {
     Glib::RefPtr<Gdk::Image> img = Glib::wrap( gdk_drawable_get_image(src->gobj(), 0, 0, w, h) );
     Glib::RefPtr<Gdk::Pixbuf> pxb = Glib::wrap( gdk_pixbuf_get_from_image(NULL, img->gobj(), src->get_colormap()->gobj(), 0,0,0,0,w,h) );
 
-    OSG::ImageRecPtr res = OSG::Image::create();
+    OSG::ImageMTRecPtr res = OSG::Image::create();
     //Image::set(pixFormat, width, height, depth, mipmapcount, framecount, framedelay, data, type, aloc, sidecount);
     res->set(OSG::Image::OSG_RGB_PF, w, h, 1, 0, 1, 0, (const unsigned char*)pxb->get_pixels(), OSG::Image::OSG_UINT8_IMAGEDATA, true, 1);
     return OSG::VRTexture::create(res);

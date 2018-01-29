@@ -6,8 +6,11 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRConstraint.h"
+#include "core/objects/geometry/VRStroke.h"
 #include "core/utils/VRVisualLayer.h"
 #include "core/utils/VRTimer.h"
+#include "core/utils/VRRate.h"
+#include "core/math/pose.h"
 
 #include <OpenSG/OSGTriangleIterator.h>
 #include <btBulletDynamicsCommon.h>
@@ -37,7 +40,9 @@ sudo apt-get install libbullet-extras-dev
 
 */
 
-typedef boost::recursive_mutex::scoped_lock Lock;
+using namespace OSG;
+
+typedef boost::recursive_mutex::scoped_lock PLock;
 
 boost::recursive_mutex& VRPhysics_mtx() {
     auto scene = OSG::VRScene::getCurrent();
@@ -68,39 +73,29 @@ struct VRPhysicsJoint {
     }
 };
 
+VRCollision::VRCollision() {}
+VRCollision::~VRCollision() {}
+
+Vec3d VRCollision::getPos1() { return pos1; }
+Vec3d VRCollision::getPos2() { return pos2; }
+Vec3d VRCollision::getNorm() { return norm; }
+float VRCollision::getDistance() { return distance; }
+VRTransformPtr VRCollision::getObj1() { return obj1.lock(); }
+VRTransformPtr VRCollision::getObj2() { return obj2.lock(); }
+
 VRPhysics::VRPhysics(OSG::VRTransformWeakPtr t) {
     vr_obj = t;
-    world = 0;
-    body = 0;
-    shape = 0;
-    motionState = 0;
-    mass = 1.0;
-    scale = OSG::Vec3d(1,1,1);
-    collisionMargin = 0.04;
-    physicalized = false;
-    dynamic = false;
-    physicsShape = "Convex";
     activation_mode = ACTIVE_TAG;
-
-    gravity = btVector3(0,-10,0);
-    constantForce = btVector3(0,0,0);
-    constantTorque = btVector3(0,0,0);
-
-    soft_body = 0;
-    soft = false;
-
-    collisionGroup = 1;
-    collisionMask = 1;
 }
 
 VRPhysics::~VRPhysics() {
-    Lock lock(VRPhysics_mtx());
+    PLock lock(VRPhysics_mtx());
     clear();
 }
 
-btRigidBody* VRPhysics::getRigidBody() { Lock lock(VRPhysics_mtx()); return body; }
-btPairCachingGhostObject* VRPhysics::getGhostBody() { Lock lock(VRPhysics_mtx()); return ghost_body; }
-btCollisionShape* VRPhysics::getCollisionShape() { Lock lock(VRPhysics_mtx()); return shape; }
+btRigidBody* VRPhysics::getRigidBody() { PLock lock(VRPhysics_mtx()); return body; }
+btPairCachingGhostObject* VRPhysics::getGhostBody() { PLock lock(VRPhysics_mtx()); return ghost_body; }
+btCollisionShape* VRPhysics::getCollisionShape() { PLock lock(VRPhysics_mtx()); return shape; }
 
 OSG::Vec3d VRPhysics::toVec3d(btVector3 v) { return OSG::Vec3d(v[0], v[1], v[2]); }
 btVector3 VRPhysics::toBtVector3(OSG::Vec3d v) { return btVector3(v[0], v[1], v[2]); }
@@ -113,6 +108,8 @@ void VRPhysics::setDynamic(bool b) { dynamic = b; update(); }
 bool VRPhysics::isDynamic() { return dynamic; }
 void VRPhysics::setMass(float m) { mass = m; update(); }
 float VRPhysics::getMass() { return mass; }
+void VRPhysics::setFriction(float f) { friction = f; update(); }
+float VRPhysics::getFriction() { return friction; }
 void VRPhysics::setGravity(OSG::Vec3d v) { gravity = toBtVector3(v); update(); }
 void VRPhysics::setCollisionMargin(float m) { collisionMargin = m; update(); }
 float VRPhysics::getCollisionMargin() { return collisionMargin; }
@@ -127,12 +124,11 @@ bool VRPhysics::isGhost() { return ghost; }
 void VRPhysics::setSoft(bool b) { soft = b; update(); }
 bool VRPhysics::isSoft() { return soft; }
 void VRPhysics::setDamping(float lin, float ang) { linDamping = lin; angDamping = ang; update(); }
-OSG::Vec3d VRPhysics::getForce() { Lock lock(VRPhysics_mtx()); return toVec3d(constantForce); }
-OSG::Vec3d VRPhysics::getTorque() { Lock lock(VRPhysics_mtx()); return toVec3d(constantTorque); }
+OSG::Vec3d VRPhysics::getForce() { PLock lock(VRPhysics_mtx()); return toVec3d(constantForce); }
+OSG::Vec3d VRPhysics::getTorque() { PLock lock(VRPhysics_mtx()); return toVec3d(constantTorque); }
 
 void VRPhysics::prepareStep() {
-    if(soft) return;
-    if(body == 0) return;
+    if (soft || !body) return;
     auto f = constantForce;
     auto t = constantTorque;
     for (auto j : forceJob) { f += toBtVector3(j); forceJob2.push_back(j); }
@@ -144,30 +140,30 @@ void VRPhysics::prepareStep() {
 }
 
 btCollisionObject* VRPhysics::getCollisionObject() {
-     Lock lock(VRPhysics_mtx());
+     PLock lock(VRPhysics_mtx());
      if(ghost) return (btCollisionObject*)ghost_body;
      if(soft)  return (btCollisionObject*)soft_body;
      else return body;
 }
 
 vector<VRCollision> VRPhysics::getCollisions() {
-    Lock lock(VRPhysics_mtx());
+    PLock lock(VRPhysics_mtx());
     vector<VRCollision> res;
     if (!physicalized) return res;
     if (!ghost) {
         int numManifolds = world->getDispatcher()->getNumManifolds();
         for (int i=0;i<numManifolds;i++) {
-            btPersistentManifold* contactManifold =  world->getDispatcher()->getManifoldByIndexInternal(i);
-            //btCollisionObject* obA = (btCollisionObject*)(contactManifold->getBody0());
-            //btCollisionObject* obB = (btCollisionObject*)(contactManifold->getBody1());
+            btPersistentManifold* manifold =  world->getDispatcher()->getManifoldByIndexInternal(i);
+            auto otherBody = manifold->getBody0() == body ? manifold->getBody1() : manifold->getBody0();
+            auto otherObj = ((VRPhysics*)otherBody->getUserPointer())->vr_obj;
 
-            int numContacts = contactManifold->getNumContacts();
+            int numContacts = manifold->getNumContacts();
             for (int j=0;j<numContacts;j++) {
-                btManifoldPoint& pt = contactManifold->getContactPoint(j);
+                btManifoldPoint& pt = manifold->getContactPoint(j);
                 if (pt.getDistance()<0.f) {
                     VRCollision c;
                     c.obj1 = vr_obj;
-                    // c.obj2 = // TODO
+                    c.obj2 = otherObj;
                     c.pos1 = toVec3d( pt.getPositionWorldOnA() );
                     c.pos2 = toVec3d( pt.getPositionWorldOnB() );
                     c.norm = toVec3d( pt.m_normalWorldOnB );
@@ -191,19 +187,21 @@ vector<VRCollision> VRPhysics::getCollisions() {
 
         //unless we manually perform collision detection on this pair, the contacts are in the dynamics world paircache:
         btBroadphasePair* collisionPair = world->getPairCache()->findPair(pair.m_pProxy0,pair.m_pProxy1);
-        if (!collisionPair)
-            continue;
-
-        if (collisionPair->m_algorithm)
-            collisionPair->m_algorithm->getAllContactManifolds(manifoldArray);
+        if (!collisionPair) continue;
+        if (collisionPair->m_algorithm) collisionPair->m_algorithm->getAllContactManifolds(manifoldArray);
 
         for (int j=0;j<manifoldArray.size();j++) {
             btPersistentManifold* manifold = manifoldArray[j];
+            auto otherBody = manifold->getBody0() == ghost_body ? manifold->getBody1() : manifold->getBody0();
+            auto otherObj = ((VRPhysics*)otherBody->getUserPointer())->vr_obj;
+
             btScalar directionSign = manifold->getBody0() == ghost_body ? btScalar(-1.0) : btScalar(1.0);
             for (int p=0;p<manifold->getNumContacts();p++) {
-                const btManifoldPoint&pt = manifold->getContactPoint(p);
+                const btManifoldPoint& pt = manifold->getContactPoint(p);
                 if (pt.getDistance()<0.f) {
                     VRCollision c;
+                    c.obj1 = vr_obj;
+                    c.obj2 = otherObj;
                     c.pos1 = toVec3d( pt.getPositionWorldOnA() );
                     c.pos2 = toVec3d( pt.getPositionWorldOnB() );
                     c.norm = toVec3d( pt.m_normalWorldOnB*directionSign );
@@ -314,21 +312,18 @@ void VRPhysics::update() {
     if (world == 0) world = scene->bltWorld();
     if (world == 0) return;
 
-    Lock lock(VRPhysics_mtx());
+    PLock lock(VRPhysics_mtx());
     clear();
 
     if (!physicalized) return;
-
 
     btVector3 inertiaVector(0,0,0);
     float _mass = mass;
     if (!dynamic) _mass = 0;
 
-
-
-    if(soft) {
-        if(physicsShape == "Cloth") soft_body = createCloth();
-        if(physicsShape == "Rope") soft_body = createRope();
+    if (soft) {
+        if (physicsShape == "Cloth") soft_body = createCloth();
+        if (physicsShape == "Rope") soft_body = createRope();
         if (soft_body == 0) { return; }
         soft_body->setActivationState(activation_mode);
         world->addSoftBody(soft_body,collisionGroup, collisionMask);
@@ -349,7 +344,7 @@ void VRPhysics::update() {
     if (useCallbacks) gContactAddedCallback = customContactAddedCallback;
     if (shape == 0) { cout << "ERROR: physics shape unknown: " << physicsShape << endl; return; }
 
-    motionState = new btDefaultMotionState( fromVRTransform( vr_obj, scale, CoMOffset ) );
+    motionState = new btDefaultMotionState( fromVRTransform( vr_obj.lock(), scale, CoMOffset ) );
 
     if (_mass != 0) shape->calculateLocalInertia(_mass, inertiaVector);
 
@@ -368,6 +363,7 @@ void VRPhysics::update() {
         body->setDamping(btScalar(linDamping),btScalar(angDamping));
         world->addRigidBody(body, collisionGroup, collisionMask);
         body->setGravity(gravity);
+        body->setFriction(friction);
         body->setUserPointer(this);
     }
 
@@ -395,8 +391,7 @@ btSoftBody* VRPhysics::createCloth() {
     if ( geo->getPrimitive()->getType() != "Plane") { cout << "VRPhysics::createCloth only works on Plane primitives" << endl; return 0; }
 
     OSG::Matrix4d m = geo->getMatrix();//get Transformation
-    geo->setOrientation(OSG::Vec3d(0,0,-1),OSG::Vec3d(0,1,0));//set orientation to identity. ugly solution.
-    geo->setWorldPosition(OSG::Vec3d(0.0,0.0,0.0));
+    geo->setIdentity();
     btSoftBodyWorldInfo* info = OSG::VRScene::getCurrent()->getSoftBodyWorldInfo();
 
     VRPlane* prim = (VRPlane*)geo->getPrimitive();
@@ -405,7 +400,7 @@ btSoftBody* VRPhysics::createCloth() {
     //float h = prim->height;
     //float w = prim->width;
 
-    OSG::GeoVectorPropertyRecPtr positions = geo->getMesh()->geo->getPositions();
+    OSG::GeoVectorPropertyMTRecPtr positions = geo->getMesh()->geo->getPositions();
     vector<btVector3> vertices;
     vector<btScalar> masses;
 
@@ -423,35 +418,85 @@ btSoftBody* VRPhysics::createCloth() {
 
 
     //nx is segments in polyvr, but we need resolution ( #vertices in x direction) so nx+1 and <= nx
-#define IDX(_x_,_y_)    ((_y_)*(nx+1)+(_x_))
+    #define IDX(_x_,_y_)    ((_y_)*(nx+1)+(_x_))
     /* Create links and faces */
-   for(int iy=0;iy<=ny;++iy) {
-       for(int ix=0;ix<=nx;++ix) {
-           const int       idx=IDX(ix,iy);
-           const bool      mdx=(ix+1)<=nx;
-           const bool      mdy=(iy+1)<=ny;
-           if(mdx) ret->appendLink(idx,IDX(ix+1,iy));
-           if(mdy) ret->appendLink(idx,IDX(ix,iy+1));
-           if(mdx&&mdy) {
-               if((ix+iy)&1) {
-                   ret->appendFace(IDX(ix,iy),IDX(ix+1,iy),IDX(ix+1,iy+1));
-                   ret->appendFace(IDX(ix,iy),IDX(ix+1,iy+1),IDX(ix,iy+1));
-                   ret->appendLink(IDX(ix,iy),IDX(ix+1,iy+1));
-               } else {
-                   ret->appendFace(IDX(ix,iy+1),IDX(ix,iy),IDX(ix+1,iy));
-                   ret->appendFace(IDX(ix,iy+1),IDX(ix+1,iy),IDX(ix+1,iy+1));
-                   ret->appendLink(IDX(ix+1,iy),IDX(ix,iy+1));
-               }
-           }
-       }
-   }
-#undef IDX
+    for(int iy=0;iy<=ny;++iy) {
+        for(int ix=0;ix<=nx;++ix) {
+            const int       idx=IDX(ix,iy);
+            const bool      mdx=(ix+1)<=nx;
+            const bool      mdy=(iy+1)<=ny;
+            if(mdx) ret->appendLink(idx,IDX(ix+1,iy));
+            if(mdy) ret->appendLink(idx,IDX(ix,iy+1));
+            if(mdx&&mdy) {
+                if((ix+iy)&1) {
+                    ret->appendFace(IDX(ix,iy),IDX(ix+1,iy),IDX(ix+1,iy+1));
+                    ret->appendFace(IDX(ix,iy),IDX(ix+1,iy+1),IDX(ix,iy+1));
+                    ret->appendLink(IDX(ix,iy),IDX(ix+1,iy+1));
+                } else {
+                    ret->appendFace(IDX(ix,iy+1),IDX(ix,iy),IDX(ix+1,iy));
+                    ret->appendFace(IDX(ix,iy+1),IDX(ix+1,iy),IDX(ix+1,iy+1));
+                    ret->appendLink(IDX(ix+1,iy),IDX(ix,iy+1));
+                }
+            }
+        }
+    }
+    #undef IDX
 
-    return ret;//return the first and only plane....
+    return ret;
 }
 
-btSoftBody* VRPhysics::createRope() {
-   return 0;
+btSoftBody* VRPhysics::createRope() { // TODO
+    auto obj = vr_obj.lock();
+    if (!obj) return 0;
+
+    OSG::VRStrokePtr geo = dynamic_pointer_cast<OSG::VRStroke>(obj);
+    if ( !geo ) { cout << "VRPhysics::createCloth only works on stroke geometries" << endl; return 0; }
+
+    OSG::Matrix4d m = geo->getMatrix();//get Transformation
+    geo->setIdentity();
+    btSoftBodyWorldInfo* info = OSG::VRScene::getCurrent()->getSoftBodyWorldInfo();
+
+    auto profile = geo->getProfile();
+    auto path = geo->getPath();
+
+    OSG::GeoVectorPropertyMTRecPtr positions = geo->getMesh()->geo->getPositions();
+    vector<btVector3> vertices;
+    vector<btScalar> masses;
+
+    OSG::Pnt3d p;
+    for (uint i = 0; i < positions->size();i++) { //add all vertices
+        positions->getValue(p,i);
+        m.mult(p,p);
+        vertices.push_back( toBtVector3(OSG::Vec3d(p)) );
+        masses.push_back(5.0);
+    }
+
+    btSoftBody* ret = new btSoftBody(info, (int)positions->size(), &vertices[0], &masses[0]);
+
+    /*#define IDX(_x_,_y_)    ((_y_)*(nx+1)+(_x_))
+    for(int iy=0;iy<=ny;++iy) {
+        for(int ix=0;ix<=nx;++ix) {
+            const int       idx=IDX(ix,iy);
+            const bool      mdx=(ix+1)<=nx;
+            const bool      mdy=(iy+1)<=ny;
+            if(mdx) ret->appendLink(idx,IDX(ix+1,iy));
+            if(mdy) ret->appendLink(idx,IDX(ix,iy+1));
+            if(mdx&&mdy) {
+                if((ix+iy)&1) {
+                    ret->appendFace(IDX(ix,iy),IDX(ix+1,iy),IDX(ix+1,iy+1));
+                    ret->appendFace(IDX(ix,iy),IDX(ix+1,iy+1),IDX(ix,iy+1));
+                    ret->appendLink(IDX(ix,iy),IDX(ix+1,iy+1));
+                } else {
+                    ret->appendFace(IDX(ix,iy+1),IDX(ix,iy),IDX(ix+1,iy));
+                    ret->appendFace(IDX(ix,iy+1),IDX(ix+1,iy),IDX(ix+1,iy+1));
+                    ret->appendLink(IDX(ix+1,iy),IDX(ix,iy+1));
+                }
+            }
+        }
+    }
+    #undef IDX*/
+
+    return ret;
 }
 
 void VRPhysics::physicalizeTree(bool b) { physTree = b; cout << "VRPhysics::physicalizeTree " << physTree << endl; update(); }
@@ -484,7 +529,7 @@ btCollisionShape* VRPhysics::getBoxShape() {
 
     for (auto geo : getGeometries()) {
         if (!geo) continue;
-        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->geo->getPositions();
+        OSG::GeoVectorPropertyMTRecPtr pos = geo->getMesh()->geo->getPositions();
         if (!pos) continue;
 		for (unsigned int i = 0; i<pos->size(); i++) {
             OSG::Vec3d p;
@@ -512,7 +557,7 @@ btCollisionShape* VRPhysics::getSphereShape() {
 
     /*for (auto _g : geos ) { // get geometric center // makes no sense as you would have to change the center of the shape..
         OSG::VRGeometryPtr geo = (OSG::VRGeometryPtr)_g;
-        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->geo->getPositions();
+        OSG::GeoVectorPropertyMTRecPtr pos = geo->getMesh()->geo->getPositions();
         N += pos->size();
         for (unsigned int i=0; i<pos->size(); i++) {
             pos->getValue(p,i);
@@ -524,7 +569,7 @@ btCollisionShape* VRPhysics::getSphereShape() {
 
     for (auto geo : getGeometries()) {
         if (!geo) continue;
-        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->geo->getPositions();
+        OSG::GeoVectorPropertyMTRecPtr pos = geo->getMesh()->geo->getPositions();
 		for (unsigned int i = 0; i<pos->size(); i++) {
             pos->getValue(p,i);
             //r2 = max( r2, (p-center).squareLength() );
@@ -549,7 +594,7 @@ btCollisionShape* VRPhysics::getConvexShape(OSG::Vec3d& mc) {
     for (auto geo : getGeometries()) {
         if (!geo) continue;
         if (geo->getMesh()->geo == 0) continue;
-        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->geo->getPositions();
+        OSG::GeoVectorPropertyMTRecPtr pos = geo->getMesh()->geo->getPositions();
         if (pos == 0) continue;
 
         if (geo != obj) {
@@ -620,7 +665,7 @@ btCollisionShape* VRPhysics::getCompoundShape() {
     for (auto geo : getGeometries()) {
         if (!geo) continue;
         if (geo->getMesh()->geo == 0) continue;
-        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->geo->getPositions();
+        OSG::GeoVectorPropertyMTRecPtr pos = geo->getMesh()->geo->getPositions();
         if (pos == 0) continue;
 
         if (geo != obj) {
@@ -679,7 +724,7 @@ btCollisionShape* VRPhysics::getHACDShape() {
     std::vector< HACD::Vec3<HACD::Real> > points;
     std::vector< HACD::Vec3<long> > triangles;
 
-    OSG::GeoVectorPropertyRecPtr positions = obj->getMesh()->geo->getPositions();
+    OSG::GeoVectorPropertyMTRecPtr positions = obj->getMesh()->geo->getPositions();
     OSG::Pnt3d p;
     for(uint i = 0; i < positions->size();i++) {
         positions->getValue(p,i);
@@ -891,9 +936,9 @@ void VRPhysics::updateVisualGeo() {
 
     if (stype == 31) { // compound
         btCompoundShape* cpshape = (btCompoundShape*)shape;
-        OSG::GeoPnt3fPropertyRecPtr pos = OSG::GeoPnt3fProperty::create();
-        OSG::GeoVec3fPropertyRecPtr norms = OSG::GeoVec3fProperty::create();
-        OSG::GeoUInt32PropertyRecPtr inds = OSG::GeoUInt32Property::create();
+        OSG::GeoPnt3fPropertyMTRecPtr pos = OSG::GeoPnt3fProperty::create();
+        OSG::GeoVec3fPropertyMTRecPtr norms = OSG::GeoVec3fProperty::create();
+        OSG::GeoUInt32PropertyMTRecPtr inds = OSG::GeoUInt32Property::create();
 
         int NIoffset = 0;
         for (int j = 0; j < cpshape->getNumChildShapes(); j++) {
@@ -929,17 +974,18 @@ void VRPhysics::updateVisualGeo() {
     geo->setMaterial(mat);
 }
 
-void VRPhysics::updateTransformation(OSG::VRTransformWeakPtr t) {
-    Lock lock(VRPhysics_mtx());
-    auto bt = fromVRTransform(t, scale, CoMOffset);
+void VRPhysics::updateTransformation(OSG::VRTransformPtr trans) {
+    PLock lock(VRPhysics_mtx());
+    //static VRRate FPS; int fps = FPS.getRate(); cout << "VRPhysics::updateTransformation " << fps << endl;
+    auto bt = fromVRTransform(trans, scale, CoMOffset);
     if (body) { body->setWorldTransform(bt); body->activate(); }
     if (ghost_body) { ghost_body->setWorldTransform(bt); ghost_body->activate(); }
     if (visShape && visShape->isVisible()) visShape->setWorldMatrix( getTransformation() );
 }
 
-btTransform VRPhysics::fromVRTransform(OSG::VRTransformWeakPtr t, OSG::Vec3d& scale, OSG::Vec3d mc) {
-    OSG::Matrix4d m;
-    if (auto sp = t.lock()) m = sp->getWorldMatrix();
+btTransform VRPhysics::fromVRTransform(OSG::VRTransformPtr trans, OSG::Vec3d& scale, OSG::Vec3d mc) {
+    if (!trans) return fromMatrix(OSG::Matrix4d(),scale,mc);
+    OSG::Matrix4d m = trans->getWorldMatrix();
     return fromMatrix(m,scale,mc);
 }
 
@@ -987,7 +1033,6 @@ OSG::Matrix4d VRPhysics::fromBTTransform(const btTransform t) {
 }
 
 void VRPhysics::pause(bool b) {
-    return;
     if (body == 0) return;
     if (dynamic == !b) return;
     setDynamic(!b);
@@ -995,7 +1040,7 @@ void VRPhysics::pause(bool b) {
 
 void VRPhysics::resetForces() {
     if (body == 0) return;
-    Lock lock(VRPhysics_mtx());
+    PLock lock(VRPhysics_mtx());
     body->setAngularVelocity(btVector3(0,0,0));
     body->setLinearVelocity(btVector3(0,0,0));
     body->clearForces();
@@ -1006,7 +1051,7 @@ void VRPhysics::resetForces() {
 void VRPhysics::applyImpulse(OSG::Vec3d i) {
     if (body == 0) return;
     if (mass == 0) return;
-    Lock lock(VRPhysics_mtx());
+    PLock lock(VRPhysics_mtx());
     i *= 1.0/mass;
     body->setLinearVelocity(toBtVector3(i));
 }
@@ -1014,29 +1059,29 @@ void VRPhysics::applyImpulse(OSG::Vec3d i) {
 void VRPhysics::applyTorqueImpulse(OSG::Vec3d i) {
     if (body == 0) return;
     if (mass == 0) return;
-    Lock lock(VRPhysics_mtx());
+    PLock lock(VRPhysics_mtx());
     //body->setAngularVelocity(btVector3(i[0]/mass, i[1]/mass, i[2]/mass));
     body->applyTorqueImpulse(toBtVector3(i));
 }
 
 void VRPhysics::addForce(OSG::Vec3d i) {
    if (body == 0 || mass == 0) return;
-   Lock lock(VRPhysics_mtx());
+   PLock lock(VRPhysics_mtx());
    forceJob.push_back(i);
 }
 
 void VRPhysics::addTorque(OSG::Vec3d i) {
    if (body == 0 || mass == 0) return;
-   Lock lock(VRPhysics_mtx());
+   PLock lock(VRPhysics_mtx());
    torqueJob.push_back(i);
 }
 
-void VRPhysics::addConstantForce(OSG::Vec3d i) { Lock lock(VRPhysics_mtx()); constantForce = toBtVector3(i); cout << constantForce << "\n"; }
-void VRPhysics::addConstantTorque(OSG::Vec3d i) { Lock lock(VRPhysics_mtx()); constantTorque = toBtVector3(i); }
+void VRPhysics::addConstantForce(OSG::Vec3d i) { PLock lock(VRPhysics_mtx()); constantForce = toBtVector3(i); cout << constantForce << "\n"; }
+void VRPhysics::addConstantTorque(OSG::Vec3d i) { PLock lock(VRPhysics_mtx()); constantTorque = toBtVector3(i); }
 
 OSG::Vec3d VRPhysics::getLinearVelocity() {
      if (body == 0) return OSG::Vec3d (0.0f,0.0f,0.0f);
-     Lock lock(VRPhysics_mtx());
+     PLock lock(VRPhysics_mtx());
      btVector3 tmp = body->getLinearVelocity();
      OSG::Vec3d result = OSG::Vec3d ( tmp.getX(), tmp.getY(), tmp.getZ());
      return result;
@@ -1044,7 +1089,7 @@ OSG::Vec3d VRPhysics::getLinearVelocity() {
 
 OSG::Vec3d VRPhysics::getAngularVelocity() {
      if (body == 0) return OSG::Vec3d (0.0f,0.0f,0.0f);
-     Lock lock(VRPhysics_mtx());
+     PLock lock(VRPhysics_mtx());
      btVector3 tmp = body->getAngularVelocity();
      //btVector3 tmp2 = body->getInterpolationAngularVelocity();
      //cout<<"\n "<<"\n "<< (float)tmp.getX() << "    " <<(float)tmp.getY() <<  "    " <<(float)tmp.getZ() << "\n ";
@@ -1058,14 +1103,14 @@ btTransform VRPhysics::getTransform() {
     if (body == 0) return btTransform();
     btTransform t;
 
-    Lock lock(VRPhysics_mtx());
+    PLock lock(VRPhysics_mtx());
     return body->getWorldTransform();
 }
 
 OSG::Matrix4d VRPhysics::getTransformation() {
     if (body == 0 && soft_body == 0 && ghost_body == 0) return OSG::Matrix4d();
     btTransform t;
-    Lock lock(VRPhysics_mtx());
+    PLock lock(VRPhysics_mtx());
 
     if (body) t = body->getWorldTransform();
     else if (ghost_body) t = ghost_body->getWorldTransform();
@@ -1083,7 +1128,7 @@ OSG::Matrix4d VRPhysics::getTransformation() {
 
 btMatrix3x3 VRPhysics::getInertiaTensor() {
     if (body == 0) return btMatrix3x3();
-    Lock lock(VRPhysics_mtx());
+    PLock lock(VRPhysics_mtx());
     body->updateInertiaTensor();
     btMatrix3x3 m = body->getInvInertiaTensorWorld();
     return m.inverse();
@@ -1091,13 +1136,13 @@ btMatrix3x3 VRPhysics::getInertiaTensor() {
 
 void VRPhysics::setTransformation(btTransform t) {
     if (body == 0) return;
-    Lock lock(VRPhysics_mtx());
+    PLock lock(VRPhysics_mtx());
     body->setWorldTransform(t);
 }
 
 float VRPhysics::getConstraintAngle(VRPhysics* to, int axis) {
     float ret = 0.0;
-    Lock lock(VRPhysics_mtx());
+    PLock lock(VRPhysics_mtx());
     if(body) {
         VRPhysicsJoint* joint = joints[to];
         if(joint) {
@@ -1110,7 +1155,7 @@ float VRPhysics::getConstraintAngle(VRPhysics* to, int axis) {
 void VRPhysics::deleteConstraints(VRPhysics* with) {
     VRPhysicsJoint* joint = joints[with];
     if(joint != 0) {
-        Lock lock(VRPhysics_mtx());
+        PLock lock(VRPhysics_mtx());
         world->removeConstraint(joint->btJoint);
     }
 }
@@ -1118,14 +1163,14 @@ void VRPhysics::deleteConstraints(VRPhysics* with) {
 void VRPhysics::setConstraint(VRPhysics* p,int nodeIndex,OSG::Vec3d localPivot,bool ignoreCollision,float influence) {
     if(soft_body==0) return;
     if(p->body == 0) return;
-    Lock lock(VRPhysics_mtx());
+    PLock lock(VRPhysics_mtx());
     soft_body->appendAnchor(nodeIndex,p->body,toBtVector3(localPivot),!ignoreCollision,influence);
 }
 
 void VRPhysics::setConstraint(VRPhysics* p, OSG::VRConstraintPtr c, OSG::VRConstraintPtr cs) {
     if (body == 0) return;
     if (p->body == 0) return;
-    Lock lock(VRPhysics_mtx());
+    PLock lock(VRPhysics_mtx());
 
     if (joints.count(p) == 0) joints[p] = new VRPhysicsJoint(p, c, cs);
     else {
@@ -1145,7 +1190,7 @@ void VRPhysics::updateConstraint(VRPhysics* p) {
     OSG::VRConstraintPtr c = joint->constraint;
     if (c == 0) return;
 
-    Lock lock(VRPhysics_mtx());
+    PLock lock(VRPhysics_mtx());
     if (joint->btJoint != 0) {
         world->removeConstraint(joint->btJoint);
         delete joint->btJoint;
@@ -1159,8 +1204,8 @@ void VRPhysics::updateConstraint(VRPhysics* p) {
     localB.setIdentity();
 
     //Constraint.getReferenceFrameInB
-    localA = fromMatrix( c->getReferenceA(), -CoMOffset );
-    localB = p->fromMatrix( c->getReferenceB(), -p->CoMOffset );
+    localA = fromMatrix( c->getReferenceA()->asMatrix(), -CoMOffset );
+    localB = p->fromMatrix( c->getReferenceB()->asMatrix(), -p->CoMOffset );
 
     // TODO: possible bug - p is not valid, may have been deleted!
 

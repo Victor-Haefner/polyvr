@@ -3,6 +3,7 @@
 uniform int grid;
 uniform int isRightEye;
 uniform vec2 OSGViewportSize;
+uniform vec2 OSGFragCoord;
 
 bool inRect(vec2 p, vec2 mi, vec2 ma) {
     if (p[0] < mi[0] || p[1] < mi[1]) return false;
@@ -32,6 +33,9 @@ vec4 drawR(vec2 p, vec2 mi, vec2 ma, vec4 fg, vec4 bg) {
 void main(void) {
     ivec2 s = ivec2(OSGViewportSize.xy);
     ivec2 p = ivec2(gl_FragCoord.xy);
+    if (p[0] >= s[0]) p[0] -= s[0];
+    if (p[1] >= s[1]) p[1] -= s[1];
+    //ivec2 p = ivec2(OSGFragCoord.xy);
 
     //if (p.x > s.x*0.5) p.x = s.x-p.x;
     //if (p.y > s.y*0.5) p.y = s.y-p.y;
@@ -62,5 +66,7 @@ void main(void) {
     }
 
     gl_FragColor = c;
+    //gl_FragColor = vec4(abs(s[0]-3840.0*0.5), abs(s[1]-2160.0*0.5), 0, 1);
+    //gl_FragColor = vec4(abs(p[0]/float(s[0])), abs(p[1]/float(s[1])), 0, 1);
 }
 

@@ -1,6 +1,7 @@
 setup/*
 examples/*.png
 examples/core
+examples/.local*
 *~
 *.depend
 *.layout
@@ -20,3 +21,4 @@ examples/tmp_pics/
 extras/python/Leap/*.pyc
 extras/python/Myo/*.pyc
 examples/vals*.dat
+*blend1

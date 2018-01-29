@@ -12,13 +12,32 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRTrafficSimulation : public VRObject {
-    private:
-        struct node {
-            float density = 0;
+    public:
+        enum VEHICLE {
+            CAR = 0,
+            SCOOTER = 1,
+            BYCICLE = 2
         };
 
-        struct vehicle {
+    private:
+        struct Vehicle {
+            VRTransformPtr t;
+            VRObjectPtr mesh;
+
             Graph::position pos;
+            float speed = 0.15;
+            Vec3d lastMove = Vec3d(0,0,0);
+            int lastMoveTS = 0;
+
+            Vehicle(Graph::position p);
+            ~Vehicle();
+        };
+
+        struct road {
+            float density = 0;
+            float length = 0;
+            vector<Vehicle> vehicles;
+            VRRoadPtr r;
         };
 
         struct trafficLight {
@@ -29,11 +48,21 @@ class VRTrafficSimulation : public VRObject {
             void updateModel();
         };
 
-        VRRoadNetworkPtr roads;
-        map<int, node> nodes;
-        vector<vehicle> vehicles;
-        vector<VRGeometryPtr> models;
+        struct intersection {
+            float density = 0;
+            vector<road> roads;
+            vector<Vehicle> vehicles;
+        };
+
+        VRRoadNetworkPtr roadNetwork;
+        map<int, road> roads;
+        vector<int> seedEdges;
+        vector<Vehicle> users;
+        vector<VRObjectPtr> models;
         map<int, vector<trafficLight> > trafficLights;
+
+        VRUpdateCbPtr updateCb;
+        VRGeometryPtr flowGeo;
 
     public:
         VRTrafficSimulation();
@@ -42,10 +71,16 @@ class VRTrafficSimulation : public VRObject {
         static VRTrafficSimulationPtr create();
 
         void setRoadNetwork(VRRoadNetworkPtr roads);
+        void updateSimulation();
+        void updateDensityVisual(bool remesh = false);
 
-        void updateModel();
+        void addUser(VRTransformPtr t);
 
-        void doTimeStep();
+        void addVehicle(int roadID, int type);
+        void addVehicles(int roadID, float density, int type);
+        void setTrafficDensity(float density, int type);
+
+        int addVehicleModel(VRObjectPtr mesh);
 };
 
 OSG_END_NAMESPACE;

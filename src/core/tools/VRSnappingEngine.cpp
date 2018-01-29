@@ -5,10 +5,34 @@
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRScene.h"
 #include "core/math/Octree.h"
+#include "core/utils/toString.h"
 #include "core/utils/VRDoublebuffer.h"
 #include "core/setup/devices/VRSignalT.h"
 
-OSG_BEGIN_NAMESPACE;
+using namespace OSG;
+
+template<> string typeName(const VRSnappingEngine::PRESET& o) { return "VRSnappingEngine::PRESET"; }
+template<> string typeName(const VRSnappingEngine::Type& o) { return "VRSnappingEngine::Type"; }
+template<> string typeName(const VRSnappingEngine::VRSnapCbPtr& o) { return "VRSnappingEngine::VRSnapCbPtr"; }
+
+template<> int toValue(stringstream& ss, VRSnappingEngine::PRESET& e) {
+    string s = ss.str();
+    if (s == "SIMPLE_ALIGNMENT") { e = VRSnappingEngine::SIMPLE_ALIGNMENT; return true; }
+    if (s == "SNAP_BACK") { e = VRSnappingEngine::SNAP_BACK; return true; }
+    return false;
+}
+
+template<> int toValue(stringstream& ss, VRSnappingEngine::Type& e) {
+    string s = ss.str();
+    if (s == "NONE") { e = VRSnappingEngine::NONE; return true; }
+    if (s == "POINT") { e = VRSnappingEngine::POINT; return true; }
+    if (s == "LINE") { e = VRSnappingEngine::LINE; return true; }
+    if (s == "PLANE") { e = VRSnappingEngine::PLANE; return true; }
+    if (s == "POINT_LOCAL") { e = VRSnappingEngine::POINT_LOCAL; return true; }
+    if (s == "LINE_LOCAL") { e = VRSnappingEngine::LINE_LOCAL; return true; }
+    if (s == "PLANE_LOCAL") { e = VRSnappingEngine::PLANE_LOCAL; return true; }
+    return false;
+}
 
 struct VRSnappingEngine::Rule {
     unsigned long long ID = 0;
@@ -61,7 +85,14 @@ struct VRSnappingEngine::Rule {
         }
     }
 
-    bool inRange(float d) { return (d <= distance); }
+    bool inRange(Vec3d pa, double& dmin) {
+        Vec3d paL = local( pa );
+        Vec3d psnap = getSnapPoint(pa);
+        float D = (psnap-paL).length(); // check distance
+        bool b = (D <= distance && D < dmin);
+        if (b) dmin = D;
+        return b;
+    }
 };
 
 VRSnappingEngine::VRSnappingEngine() {
@@ -80,6 +111,8 @@ VRSnappingEngine::~VRSnappingEngine() {
 }
 
 shared_ptr<VRSnappingEngine> VRSnappingEngine::create() { return shared_ptr<VRSnappingEngine>(new VRSnappingEngine()); }
+
+void VRSnappingEngine::addCallback(VRSnapCbPtr cb) { callbacks.push_back(cb); }
 
 void VRSnappingEngine::clear() {
     anchors.clear();
@@ -160,7 +193,11 @@ void VRSnappingEngine::update() {
         Vec3d p = Vec3d(m[3]);
 
         bool lastEvent = event->snap;
+        int lastEventID = event->snapID;
         event->snap = 0;
+        int snapID = -1;
+
+        double dmin = 1e9;
 
         for (auto ri : rules) {
             Rule* r = ri.second;
@@ -171,31 +208,51 @@ void VRSnappingEngine::update() {
                     Matrix4d maL = a->getMatrix();
                     Matrix4d maW = m; maW.mult(maL);
                     Vec3d pa = Vec3d(maW[3]);
-                    Vec3d paL = r->local( Vec3d(maW[3]) );
-                    Vec3d psnap = r->getSnapPoint(pa);
-                    float D = (psnap-paL).length(); // check distance
-                    //cout << "dist " << D << " " << pa[1] << " " << paL[1] << " " << psnap[1] << endl;
-                    if (!r->inRange(D)) continue;
-
-                    r->snap(m);
                     maL.invert();
-                    m.mult(maL);
-                    event->set(obj, r->csys, m, dev.second, 1);
-                    break;
+
+                    if (r->csys && anchors.count(r->csys)) { // TODO: not working yet!
+                        Matrix4d m2 = r->csys->getWorldMatrix();
+                        for (auto a : anchors[r->csys]) {
+                            Matrix4d ma2L = a->getMatrix();
+                            //Matrix4d ma2W = m; ma2W.mult(maL);
+                            //Vec3d pa2 = Vec3d(ma2W[3]);
+                            Vec3d pa2 = Vec3d(ma2L[3]);
+                            snapID++;
+                            if (!r->inRange(pa+pa2, dmin)) continue;
+
+                            r->snapP += pa2;
+                            Matrix4d mm = m;
+                            r->snap(mm);
+                            mm.mult(maL);
+                            //ma2L.invert();
+                            //mm.mult(ma2L);
+                            event->set(obj, r->csys, mm, dev.second, 1, snapID);
+                        }
+                    } else {
+                        snapID++;
+                        if (!r->inRange(pa, dmin)) continue;
+                        Matrix4d mm = m;
+                        r->snap(mm);
+                        mm.mult(maL);
+                        event->set(obj, r->csys, mm, dev.second, 1, snapID);
+                    }
                 }
             } else {
-                Vec3d p2 = r->getSnapPoint(p);
-                float D = (p2-p).length(); // check distance
-                if (!r->inRange(D)) continue;
-                r->snap(m);
-                event->set(obj, r->csys, m, dev.second, 1);
+                snapID++;
+                if (!r->inRange(p, dmin)) continue;
+                Matrix4d mm = m;
+                r->snap(mm);
+                event->set(obj, r->csys, mm, dev.second, 1, snapID);
             }
+
         }
 
-        obj->setWorldMatrix(m);
-        if (lastEvent != event->snap) {
-            if (event->snap) snapSignal->trigger<EventSnap>(event);
-            else if (obj == event->o1) snapSignal->trigger<EventSnap>(event);
+        if (event->snap) obj->setWorldMatrix(event->m);
+        if (lastEvent != event->snap || lastEventID != event->snapID) {
+            if (event->o1 == obj) {
+                snapSignal->trigger<EventSnap>(event);
+                for (auto cb : callbacks) (*cb)(*event);
+            }
         }
     }
 
@@ -227,4 +284,5 @@ void VRSnappingEngine::setPreset(PRESET preset) {
     }
 }
 
-OSG_END_NAMESPACE;
+
+

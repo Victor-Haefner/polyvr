@@ -17,9 +17,6 @@ simpleVRPyType(Property, 0);
 simpleVRPyType(OntologyRule, 0);
 simpleVRPyType(Reasoner, New_ptr);
 
-template<> bool toValue(PyObject* o, VREntityPtr& v) { if (!VRPyEntity::check(o)) return 0; v = ((VRPyEntity*)o)->objPtr; return 1; }
-template<> bool toValue(PyObject* o, VROntologyPtr& v) { if (!VRPyOntology::check(o)) return 0; v = ((VRPyOntology*)o)->objPtr; return 1; }
-
 // --------------------- Property --------------------
 
 PyMethodDef VRPyProperty::methods[] = {
@@ -286,13 +283,14 @@ PyObject* VRPyEntity::getProperties(VRPyEntity* self, PyObject* args) {
 // --------------------- Ontology --------------------
 
 PyMethodDef VRPyOntology::methods[] = {
-    {"open", (PyCFunction)VRPyOntology::open, METH_VARARGS, "Open OWL file - open( str path )" },
+    {"open", PyWrap(Ontology, openOWL, "Open OWL file", void, string) },
+    {"save", PyWrap(Ontology, saveOWL, "Write to OWL file", void, string) },
     {"toString", (PyCFunction)VRPyOntology::toString, METH_NOARGS, "Return the full ontology as string - str toString()" },
     {"getConcept", (PyCFunction)VRPyOntology::getConcept, METH_VARARGS, "Return a concept by name - concept getConcept( str name )\n\tThe first concept is named 'Thing'" },
     {"getConcepts", (PyCFunction)VRPyOntology::getConcepts, METH_NOARGS, "Return all concepts - [concept] getConcepts()" },
     {"getEntities", (PyCFunction)VRPyOntology::getEntities, METH_VARARGS, "Return all entities by concept name - [entity] getEntities( str concept )" },
     {"addConcept", (PyCFunction)VRPyOntology::addConcept, METH_VARARGS, "Add a new concept - concept addConcept( str concept, str parent = "", dict properties {str:str} )" },
-    {"addEntity", (PyCFunction)VRPyOntology::addEntity, METH_VARARGS, "Add a new entity - entity addEntity( str name, str concept )" },
+    {"addEntity", PyWrap(Ontology, addEntity, "Add a new entity, str name, str concept", VREntityPtr, string, string) },
     {"getEntity", (PyCFunction)VRPyOntology::getEntity, METH_VARARGS, "Get an entity by name - entity getEntity( str name )" },
     {"remEntity", (PyCFunction)VRPyOntology::remEntity, METH_VARARGS, "Remove an entity by name - remEntity( str name )" },
     {"remEntities", (PyCFunction)VRPyOntology::remEntities, METH_VARARGS, "Remove all entity from concept - remEntities( str concept )" },
@@ -403,13 +401,6 @@ PyObject* VRPyOntology::addConcept(VRPyOntology* self, PyObject* args) {
 
 PyObject* VRPyOntology::toString(VRPyOntology* self) {
     return PyString_FromString( self->objPtr->toString().c_str() );
-}
-
-PyObject* VRPyOntology::open(VRPyOntology* self, PyObject* args) {
-    const char* path = 0;
-    if (! PyArg_ParseTuple(args, "s:open", &path)) return NULL;
-    self->objPtr->open(path);
-    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyOntology::getConcept(VRPyOntology* self, PyObject* args) {

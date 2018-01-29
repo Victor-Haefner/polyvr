@@ -27,6 +27,7 @@
 #include "core/utils/VRProgress.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/scene/VRScene.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -41,16 +42,13 @@ VRImport* VRImport::get() {
 }
 
 void VRImport::fixEmptyNames(NodeMTRecPtr o, map<string, bool>& m, string parentName, int iChild) {
-    if (!OSG::getName(o)) {
-        stringstream ss; ss << parentName << "_" << iChild;
-        OSG::setName(o, ss.str());
-    }
+    if (!OSG::getName(o)) OSG::setName(o, parentName);
 
     // make unique
     string name = getName(o);
     string orig = name;
     for (int i=0; m.count(name); i++) {
-        stringstream ss; ss << orig << i;
+        stringstream ss; ss << orig << "." << i;
         name = ss.str();
     }
     setName(o, name.c_str());
@@ -78,7 +76,8 @@ void VRImport::osgLoad(string path, VRObjectPtr res) {
     if (n == 0) return;
     map<string, bool> m;
     fixEmptyNames(n,m);
-    res->addChild( OSGConstruct(n, res, path, path) );
+    auto obj = OSGConstruct(n, res, path, path);
+    if (obj) res->addChild( obj );
 }
 
 int fileSize(string path) {
@@ -102,7 +101,7 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
     }
 
     // check file path
-    if (!boost::filesystem::exists(path)) { cout << "VRImport::load " << path << " not found!" << endl; return 0; }
+    if (!exists(path)) { cout << "VRImport::load " << path << " not found!" << endl; return 0; }
 
     VRTransformPtr res = VRTransform::create("proxy");
     if (!thread) {
@@ -182,7 +181,6 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
     NodeCoreMTRecPtr core = n->getCore();
     string t_name = core->getTypeName();
 
-
     if (getName(n)) name = getName(n);
     else name = "Unnamed";
     if (name == "") name = "NAN";
@@ -204,8 +202,10 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
             tmp->addChild(tmp_gr);
         }
 
-        for (uint i=0;i<n->getNChildren();i++)
-            tmp_gr->addChild(OSGConstruct(n->getChild(i), parent, name, geoTransName));
+        for (uint i=0;i<n->getNChildren();i++) {
+            auto obj = OSGConstruct(n->getChild(i), parent, name, geoTransName);
+            if (obj) tmp_gr->addChild(obj);
+        }
 
         return tmp;
     }
@@ -249,10 +249,13 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
     }
 
     else if (t_name == "Geometry") {
+        auto osgGeo = dynamic_cast<Geometry*>(n->getCore());
+        if (!osgGeo->getPositions()) return 0;
+        if (osgGeo->getPositions()->size() == 0) return 0;
         tmp_g = VRGeometry::create(name);
         if (geoTrans) {
             tmp_g->addAttachment("collada_name", geoTransName);
-            tmp_g->setMatrix(toMatrix4d(dynamic_cast<Transform *>(geoTrans)->getMatrix()));
+            tmp_g->setMatrix(toMatrix4d(dynamic_cast<Transform*>(geoTrans)->getMatrix()));
             geoTrans = 0;
             geoTransName = "";
         }
@@ -260,7 +263,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
         VRGeometry::Reference ref;
         ref.type = VRGeometry::FILE;
         ref.parameter = repSpaces(currentFile) + " " + repSpaces( tmp_g->getBaseName() );
-        tmp_g->setMesh( OSGGeometry::create( dynamic_cast<Geometry *>(n->getCore()) ), ref, true);
+        tmp_g->setMesh( OSGGeometry::create( osgGeo ), ref, true);
         tmp = tmp_g;
     }
 
@@ -269,8 +272,10 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
         tmp->setCore(OSGCore::create(core), t_name);
     }
 
-    for (uint i=0;i<n->getNChildren();i++)
-        tmp->addChild(OSGConstruct(n->getChild(i), tmp, name, currentFile, geoTrans, geoTransName));
+    for (uint i=0;i<n->getNChildren();i++) {
+        auto obj = OSGConstruct(n->getChild(i), tmp, name, currentFile, geoTrans, geoTransName);
+        if (obj) tmp->addChild(obj);
+    }
 
     return tmp;
 }

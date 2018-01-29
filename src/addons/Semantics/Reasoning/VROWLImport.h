@@ -105,7 +105,7 @@ class VROWLImport {
     public:
         VROWLImport();
 
-        void load(VROntologyPtr o, string path);
+        void read(VROntologyPtr o, string path);
         void processTriple(raptor_statement* rs);
 };
 

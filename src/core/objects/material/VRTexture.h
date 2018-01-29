@@ -4,6 +4,7 @@
 #include <OpenSG/OSGSField.h>
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGColor.h>
+#include <OpenSG/OSGImage.h>
 
 #include "core/objects/object/VRObject.h"
 #include "core/objects/VRObjectFwd.h"
@@ -11,31 +12,29 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class Image; OSG_GEN_CONTAINERPTR(Image);
-
 class VRTexture : public std::enable_shared_from_this<VRTexture> {
     private:
-        ImageRecPtr img;
+        ImageMTRecPtr img;
         int internal_format = 0;
 
         void clampToImage(Vec3i& p);
 
     public:
         VRTexture();
-        VRTexture(ImageRecPtr img);
+        VRTexture(ImageMTRecPtr img);
         ~VRTexture();
 
         static VRTexturePtr create();
-        static VRTexturePtr create(ImageRecPtr img);
+        static VRTexturePtr create(ImageMTRecPtr img);
         VRTexturePtr ptr();
 
-        void setImage(ImageRecPtr img);
+        void setImage(ImageMTRecPtr img);
         void setInternalFormat(int ipf);
         int getInternalFormat();
         size_t getByteSize();
         int getPixelByteN();
         int getPixelByteSize();
-        ImageRecPtr getImage();
+        ImageMTRecPtr getImage();
 
         void read(string path);
         void write(string path);

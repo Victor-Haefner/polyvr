@@ -16,8 +16,6 @@ class VRGuiContextMenu;
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRMultiWindow;
-
 class VRGuiSetup {
     private:
         Gtk::TreeModel::Row selected_row;
@@ -43,8 +41,9 @@ class VRGuiSetup {
         VRGuiVectorEntry tVRPNAxisEntry;
         VRGuiVectorEntry rVRPNAxisEntry;
 
-        VRGuiContextMenu* menu;
-        VRMultiWindow* mwindow;
+        VRGuiContextMenu* menu = 0;
+        VRWindow* window = 0;
+        VRMultiWindow* mwindow = 0;
 	    VRUpdateCbPtr updatePtr;
 	    VRDeviceCbPtr updateSetupCb;
 
@@ -72,6 +71,7 @@ class VRGuiSetup {
         void on_menu_add_script();
         void on_menu_delete();
 
+        void on_window_device_changed();
         void on_toggle_display_active();
         void on_toggle_display_multi();
         void on_servern_edit();
@@ -115,6 +115,7 @@ class VRGuiSetup {
         void on_vrpn_trans_axis_edit(Vec3d v);
         void on_vrpn_rot_axis_edit(Vec3d v);
 
+        void on_mt_device_changed();
         void on_haptic_ip_edited();
         void on_change_haptic_type();
         void on_toggle_dev_cross();
