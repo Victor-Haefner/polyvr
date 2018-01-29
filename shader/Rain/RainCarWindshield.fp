@@ -107,8 +107,15 @@ vec4 locateContDrop() {	//locate continuuos drop, if wipers non active
 	vec2 offset = vec2(hs1,hs2);
 	
 	if (mod(uv.x,disBD) < limitValue && mod(uv.y,disBD) < limitValue && distance(windshieldPos,worldVec) < 4) { 
-		if ((uv.x+8)*hs2 < 5){ 
-			return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
+		float asd = (-uv.y+8)*hs2;
+		if (mod(tnow,8)<4) {
+			if (asd < mod(tnow,8)*0.6+2 && asd > (mod(tnow,8)-1)*0.6+1-0.01*scale){ 
+				return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
+			}
+		} else {
+			if (asd < (8-mod(tnow,8))*0.6+2 && asd > ((8-mod(tnow,8))-1)*0.6+1-0.01*scale){ 
+				return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
+			}
 		}
 	}
 	return vec4(-10,-10,0,0);
@@ -135,10 +142,9 @@ void main() {
 	vec4 check = vec4(0,0,0,0);	
 	if (!isRaining) discard;
 	if (!isWiping && draw(locateContDrop().xy)) {
-		float dist = distance(locateDrop().zw,vec2(0.5,0.5));
+		float dist = distance(locateContDrop().zw,vec2(0.5,0.5));
 		float alph = smoothstep(0.4,1.4,1-dist);
-		check = vec4(1,0.2,0.3,1.5*alph);
-		//check = vec4(0.2,0.2,0.3,0.7*alph);
+		check = vec4(0.2,0.2,0.3,0.7*alph);
 	}
 	if (isWiping && draw(locateDrop().xy)) {
 		float dist = distance(locateDrop().zw,vec2(0.5,0.5));
