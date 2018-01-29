@@ -21,8 +21,8 @@ uniform float tnow;
 uniform float offset;
 
 uniform bool isRaining;
-bool isWiping = false;
-float wiperSpeed = 0.5;
+uniform bool isWiping;
+uniform float wiperSpeed = 0.5;
 
 uniform vec3 windshieldPos;
 uniform vec3 windshieldDir;
@@ -99,7 +99,7 @@ vec4 locateContDrop() {	//locate continuuos drop, if wipers non active
 	float disBD = 0.08;
 	float limitValue = disBD;
 
-	float hsIn1 = floor(uv.x/disBD);// + 50*floor((tnow+1.9)/4);
+	float hsIn1 = floor(uv.x/disBD) + 50*floor((tnow)/400);
 	float hsIn2 = floor(uv.y/disBD);
 
 	float hs1 = hash(vec2(hsIn1,hsIn2));
@@ -109,11 +109,11 @@ vec4 locateContDrop() {	//locate continuuos drop, if wipers non active
 	if (mod(uv.x,disBD) < limitValue && mod(uv.y,disBD) < limitValue && distance(windshieldPos,worldVec) < 4) { 
 		float asd = (-uv.y+8)*hs2;
 		if (mod(tnow,8)<4) {
-			if (asd < mod(tnow,8)*0.6+2 && asd > (mod(tnow,8)-1)*0.6+1-0.01*scale){ 
+			if (asd < mod(tnow,8)*0.6+2 && asd > (mod(tnow,8)-1)*0.6+2.3-0.3*scale){ 
 				return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
 			}
 		} else {
-			if (asd < (8-mod(tnow,8))*0.6+2 && asd > ((8-mod(tnow,8))-1)*0.6+1-0.01*scale){ 
+			if (asd < (8-mod(tnow,8))*0.6+2 && asd > ((8-mod(tnow,8))-1)*0.6+2.3-0.3*scale){ 
 				return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
 			}
 		}

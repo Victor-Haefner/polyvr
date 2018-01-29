@@ -28,6 +28,9 @@ class VRRainCarWindshield : public VRGeometry {
         string fScript;
 
         bool isRaining = false;
+        bool isWiping = false;
+
+        float wiperSpeed = 0.5;
 
         uint textureSize;
 
@@ -51,6 +54,7 @@ class VRRainCarWindshield : public VRGeometry {
         float get();
         void setWindshield(VRGeometryPtr geoWindshield);
         void setScale(float scale);
+        void setWipers(bool isWiping, float wiperSpeed);
 
         void doTestFunction();
         void start();

@@ -123,4 +123,12 @@ void VRRainCarWindshield::stop() {
     cout << "VRRainCarWindshield::stop()" << endl;
 }
 
+void VRRainCarWindshield::setWipers(bool isWiping, float wiperSpeed) {
+    this->isWiping = isWiping;
+    this->wiperSpeed = wiperSpeed;
+    mat->setShaderParameter<bool>("isWiping", isWiping);
+    mat->setShaderParameter<float>("wiperSpeed", wiperSpeed);
+    cout << "VRRainCarWindshield::setWipers()" << endl;
+}
+
 
