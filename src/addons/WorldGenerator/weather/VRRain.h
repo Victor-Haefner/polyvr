@@ -74,7 +74,7 @@ class VRRain : public VRGeometry {
         VRTextureRendererPtr getRenderer();
         VRMaterialPtr getTexMat();
 
-        void setScale( float scale );
+        void setScale( bool liveChange , float scale );
         void doTestFunction();
 
         void start();
