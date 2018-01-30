@@ -170,6 +170,7 @@ void VRRain::setScale( float scale ){
         speedY = 0.004+scale*0.0001;
         color = 0.5-scale*0.02;
         light = 0.4;
+        updateScale(scale);
     }
 }
 

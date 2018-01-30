@@ -13,6 +13,7 @@ vec3 axU;
 vec3 axV;
 vec4 color;
 bool debugB = false;
+float disBD = 0.04;
 
 uniform float scale;
 
@@ -34,10 +35,6 @@ void computeDirection() {
 
 float hash(vec2 co) {
     	return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-}
-
-float gettheta(vec3 d) {
-	return acos(d.y);
 }
 
 void computePCam() {
@@ -70,11 +67,14 @@ vec2 worldToLocal(vec3 inV) {
 	return outV;
 }
 
+vec2 genDropOffset(vec2 seed) {
+	return vec2(hash(seed.xy),hash(seed.yx))*disBD*2;
+}
+
 vec4 locateDrop() { //locate drop, if wipers active
 	vec3 worldVec = computeDropOnWS();
 	vec2 uv = worldToLocal(worldVec);
 
-	float disBD = 0.08;
 	float limitValue = disBD;
 
 	float hsIn1 = floor(uv.x/disBD) + 50*floor((tnow+1.9)/4);
@@ -84,11 +84,15 @@ vec4 locateDrop() { //locate drop, if wipers active
 	float hs2 = hash(vec2(hsIn2,hsIn1));
 	vec2 offset = vec2(hs1,hs2);
 	
-	if (mod(uv.x,disBD) < limitValue && mod(uv.y,disBD) < limitValue && distance(windshieldPos,worldVec) < 4) { 
-		if ((uv.x+8)*hs2 < mod(0.1*mod(0.5*(tnow+0.2*uv.x-2),2),0.5)*scale){ 
+	//if (mod(uv.x,disBD) < limitValue && mod(uv.y,disBD) < limitValue && distance(windshieldPos,worldVec) < 4) { 
+		if ((uv.x+8)*hs1 < mod(0.1*mod(0.5*(tnow+0.2*uv.x-2),2),0.5)*4*scale) {
+			vec2 seed = vec2( floor(uv.x/disBD), floor(uv.y/disBD) );
+			vec2 offset = genDropOffset(seed);
+			offset = vec2(disBD, disBD)*0.25;
+			//uv += offset;
 			return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
 		}
-	}
+	//}
 	return vec4(-10,-10,0,0);
 }
 
@@ -96,7 +100,6 @@ vec4 locateContDrop() {	//locate continuuos drop, if wipers non active
 	vec3 worldVec = computeDropOnWS();
 	vec2 uv = worldToLocal(worldVec);
 	
-	float disBD = 0.08;
 	float limitValue = disBD;
 
 	float hsIn1 = floor(uv.x/disBD) + 50*floor((tnow)/400);
@@ -106,18 +109,18 @@ vec4 locateContDrop() {	//locate continuuos drop, if wipers non active
 	float hs2 = hash(vec2(hsIn2,hsIn1));
 	vec2 offset = vec2(hs1,hs2);
 	
-	if (mod(uv.x,disBD) < limitValue && mod(uv.y,disBD) < limitValue && distance(windshieldPos,worldVec) < 4) { 
+	//if (mod(uv.x,disBD) < limitValue && mod(uv.y,disBD) < limitValue && distance(windshieldPos,worldVec) < 4) { 
 		float asd = (-uv.y+8)*hs2;
 		if (mod(tnow,8)<4) {
-			if (asd < mod(tnow,8)*0.6+2 && asd > (mod(tnow,8)-1)*0.6+2.3-0.3*scale){ 
+			if (asd < mod(tnow,8)*0.6+2 && asd > (mod(tnow,8)-1)*0.6+2.3-0.1*scale){ 
 				return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
 			}
 		} else {
-			if (asd < (8-mod(tnow,8))*0.6+2 && asd > ((8-mod(tnow,8))-1)*0.6+2.3-0.3*scale){ 
+			if (asd < (8-mod(tnow,8))*0.6+2 && asd > ((8-mod(tnow,8))-1)*0.6+2.3-0.1*scale){ 
 				return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
 			}
 		}
-	}
+	//}
 	return vec4(-10,-10,0,0);
 }
 
@@ -132,6 +135,19 @@ bool draw(vec2 point) {
 	return false;
 }
 
+vec4 returnColor(vec4 drop) {
+	vec4 dropColor = vec4(0,0,0,0);
+	float dir = dot(drop.zw-vec2(0.5,0.5), vec2(0,1));
+	float dist = distance(drop.zw,vec2(0.5,0.5));
+	float alph = smoothstep(0.5,0.9,1-dist)*(0.5-dist*1.5*dir);
+	vec4 check1 = vec4(0.2,0.2,0.3,0.7*alph);
+	vec4 check2 = vec4(1,1,1,0.7*alph);
+	dropColor = mix(check1, check2, -dir*8*dist);
+
+	if (debugB) dropColor = vec4(0.6,0,0,0.9*alph);
+	return dropColor;
+}
+
 void main() {
 	computeDirection();
 	computePCam();
@@ -139,21 +155,19 @@ void main() {
 	axV = windshieldDir;
 	
 	if (fragDir.y < -0.999) discard; //not sure if needed, but previous experiences showed conflicts with RAIN-MODULE's heightcam 
-	vec4 check = vec4(0,0,0,0);	
+	vec4 dropColor = vec4(0,0,0,0);	
 	if (!isRaining) discard;
 	if (!isWiping && draw(locateContDrop().xy)) {
-		float dist = distance(locateContDrop().zw,vec2(0.5,0.5));
-		float alph = smoothstep(0.4,1.4,1-dist);
-		check = vec4(0.2,0.2,0.3,0.7*alph);
+		vec4 drop = locateContDrop();
+		dropColor = returnColor(drop);
 	}
 	if (isWiping && draw(locateDrop().xy)) {
-		float dist = distance(locateDrop().zw,vec2(0.5,0.5));
-		float alph = smoothstep(0.4,1.4,1-dist);
-		check = vec4(0.2,0.2,0.3,0.7*alph);
+		vec4 drop = locateDrop();
+		dropColor = returnColor(drop);
 	}
 
-	if (check == vec4(0,0,0,0)) discard;	
-	gl_FragColor = check;
+	if (dropColor == vec4(0,0,0,0)) discard;	
+	gl_FragColor = dropColor;
 }
 
 /** NOT NEEDED RIGHT NOW */
