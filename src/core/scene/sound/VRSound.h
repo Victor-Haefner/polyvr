@@ -66,6 +66,9 @@ class VRSound {
         void synthesize(float Ac = 32760, float wc = 440, float pc = 0, float Am = 0, float wm = 0, float pm = 0, float T = 1);
         vector<short> synthSpectrum(vector<double> spectrum, uint samples, float duration, float fade_factor, bool returnBuffer = false);
         vector<short> synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, float T = 1);
+        vector<short> synthBufferForChannel(vector<Vec2d> freqs1, vector<Vec2d> freqs2, int channel, float T = 1);
+        void synthBufferOnChannels(vector<vector<Vec2d>> freqs1, vector<vector<Vec2d>> freqs2, float T = 1);
+
         vector<short> test(vector<Vec2d> freqs1, vector<Vec2d> freqs2, float T = 1);
 
 };
