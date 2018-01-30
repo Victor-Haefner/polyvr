@@ -73,7 +73,7 @@ VRRainCarWindshieldPtr VRRainCarWindshield::ptr() { return static_pointer_cast<V
 
 float VRRainCarWindshield::get() { return scale; }
 
-void VRRainCarWindshield::setScale(float scale) {
+void VRRainCarWindshield::setScale(bool liveChange, float scale) {
     this->scale = scale;
     mat->setShaderParameter<float>("scale", scale);
 }
