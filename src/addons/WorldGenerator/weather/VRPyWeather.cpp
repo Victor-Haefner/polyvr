@@ -1,11 +1,12 @@
 #include "VRPyWeather.h"
-//#include "VRRain.h"
+
 #include "core/scripting/VRPyBaseT.h"
 #include "core/scripting/VRPyBaseFactory.h"
 
 using namespace OSG;
 
 simpleVRPyType(Rain, New_ptr);
+simpleVRPyType(RainCarWindshield, New_ptr);
 
 PyMethodDef VRPyRain::methods[] = {
     {"start", PyWrap(Rain, start, "Starts Rain", void) },
@@ -18,3 +19,14 @@ PyMethodDef VRPyRain::methods[] = {
     //{"getTexMat", PyWrap(Rain, getTexMat, "getTexMat", VRMaterialPtr) },
     {NULL}  /* Sentinel */
 };
+
+PyMethodDef VRPyRainCarWindshield::methods[] = {
+    {"doTestFunction", PyWrap(RainCarWindshield, doTestFunction, "do Test Function", void ,void) },
+    {"setWindshield", PyWrap(RainCarWindshield, setWindshield, "setWindshield", void, VRGeometryPtr) },
+    {"setScale", PyWrap(RainCarWindshield, setScale, "sets scale", void, float) },
+    {"setWipers", PyWrap(RainCarWindshield, setWipers, "setWipers", void, bool, float) },
+    {"start", PyWrap(RainCarWindshield, start, "starts rain on Windshield", void, void) },
+    {"stop", PyWrap(RainCarWindshield, stop, "stops rain on Windshield", void, void) },
+    {NULL}  /* Sentinel */
+};
+
