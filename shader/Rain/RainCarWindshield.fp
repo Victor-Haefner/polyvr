@@ -110,7 +110,8 @@ vec4 locateContDrop() {	//locate continuuos drop, if wipers non active
 	vec2 offset = vec2(hs1,hs2);
 	
 	//if (mod(uv.x,disBD) < limitValue && mod(uv.y,disBD) < limitValue && distance(windshieldPos,worldVec) < 4) { 
-		float asd = (-uv.y+8)*hs2;
+		//uv += offset;
+		float asd = (-uv.y+6)*hs2;
 		if (mod(tnow,8)<4) {
 			if (asd < mod(tnow,8)*0.6+2 && asd > (mod(tnow,8)-1)*0.6+2.3-0.1*scale){ 
 				return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
