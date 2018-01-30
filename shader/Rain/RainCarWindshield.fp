@@ -13,7 +13,7 @@ vec3 axU;
 vec3 axV;
 vec4 color;
 bool debugB = false;
-float disBD = 0.04;
+float disBD = 0.12;
 
 uniform float scale;
 
@@ -68,14 +68,12 @@ vec2 worldToLocal(vec3 inV) {
 }
 
 vec2 genDropOffset(vec2 seed) {
-	return vec2(hash(seed.xy),hash(seed.yx))*disBD*2;
+	return vec2(hash(seed.xy),hash(seed.yx))*disBD;
 }
 
 vec4 locateDrop() { //locate drop, if wipers active
 	vec3 worldVec = computeDropOnWS();
 	vec2 uv = worldToLocal(worldVec);
-
-	float limitValue = disBD;
 
 	float hsIn1 = floor(uv.x/disBD) + 50*floor((tnow+1.9)/4);
 	float hsIn2 = floor(uv.y/disBD);
@@ -84,69 +82,66 @@ vec4 locateDrop() { //locate drop, if wipers active
 	float hs2 = hash(vec2(hsIn2,hsIn1));
 	vec2 offset = vec2(hs1,hs2);
 	
-	//if (mod(uv.x,disBD) < limitValue && mod(uv.y,disBD) < limitValue && distance(windshieldPos,worldVec) < 4) { 
-		if ((uv.x+8)*hs1 < mod(0.1*mod(0.5*(tnow+0.2*uv.x-2),2),0.5)*4*scale) {
-			vec2 seed = vec2( floor(uv.x/disBD), floor(uv.y/disBD) );
-			vec2 offset = genDropOffset(seed);
-			offset = vec2(disBD, disBD)*0.25;
-			//uv += offset;
-			return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
-		}
-	//}
+	if ((uv.x+8)*hs1 < mod(0.1*mod(0.5*(tnow+0.2*uv.x-2),2),0.5)*4*scale) {
+		vec2 seed = vec2( floor(uv.x/disBD), floor(uv.y/disBD) );
+		vec2 offset = genDropOffset(seed);
+		offset = vec2(disBD, disBD)*0.25;
+		//uv += offset;
+		return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
+	}
+
 	return vec4(-10,-10,0,0);
 }
 
-vec4 locateContDrop() {	//locate continuuos drop, if wipers non active
+vec4 locateContDrop(float inputScale) {	//locate continuuos drop, if wipers non active
 	vec3 worldVec = computeDropOnWS();
 	vec2 uv = worldToLocal(worldVec);
 	
-	float limitValue = disBD;
+	if (distance(uv,vec2(0,0)) > 2) return vec4(-10,-10,0,0); 
+	
+	vec2 seed = vec2( floor(uv.x/disBD), floor(uv.y/disBD) );
+	vec2 offset = genDropOffset(seed);
+	offset = 0.5*offset;
+	if (offset.x > disBD/2) offset.x = disBD/2-0.02;
+	if (offset.y > disBD/2) offset.y = disBD/2-0.02;
+	uv -=vec2(0.5,0.5);	
+	uv += offset;
 
 	float hsIn1 = floor(uv.x/disBD) + 50*floor((tnow)/400);
 	float hsIn2 = floor(uv.y/disBD);
 
 	float hs1 = hash(vec2(hsIn1,hsIn2));
-	float hs2 = hash(vec2(hsIn2,hsIn1));
-	vec2 offset = vec2(hs1,hs2);
 	
-	//if (mod(uv.x,disBD) < limitValue && mod(uv.y,disBD) < limitValue && distance(windshieldPos,worldVec) < 4) { 
-		//uv += offset;
-		float asd = (-uv.y+6)*hs2;
-		if (mod(tnow,8)<4) {
-			if (asd < mod(tnow,8)*0.6+2 && asd > (mod(tnow,8)-1)*0.6+2.3-0.1*scale){ 
-				return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
-			}
-		} else {
-			if (asd < (8-mod(tnow,8))*0.6+2 && asd > ((8-mod(tnow,8))-1)*0.6+2.3-0.1*scale){ 
-				return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
-			}
+	//return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
+	float asd = (-uv.y+6)*hs1;
+	if (mod(tnow,8)<4) {
+		if (asd < mod(tnow,8)*0.6+2 && asd > (mod(tnow,8)-1)*0.6+2.3){ 
+			return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
 		}
-	//}
+	} else {
+		if (asd < (8-mod(tnow,8))*0.6+2 && asd > ((8-mod(tnow,8))-1)*0.6+2.3){ 
+			return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
+		}
+	}
 	return vec4(-10,-10,0,0);
-}
-
-bool draw(vec2 point) {
-	vec3 worldVec = computeDropOnWS();
-	vec2 uv = worldToLocal(worldVec);
-	
-	float hash = 1/10*hash(vec2(floor(tnow),floor(tnow)));
-	if (distance(windshieldPos,worldVec)>2) return false;
-	
-	if (distance(uv,point)<0.03+hash) return true;
-	return false;
 }
 
 vec4 returnColor(vec4 drop) {
 	vec4 dropColor = vec4(0,0,0,0);
 	float dir = dot(drop.zw-vec2(0.5,0.5), vec2(0,1));
-	float dist = distance(drop.zw,vec2(0.5,0.5));
-	float alph = smoothstep(0.5,0.9,1-dist)*(0.5-dist*1.5*dir);
+	float dist = distance(drop.zw,vec2(0.5,0.5))*4;
+	float alph = smoothstep(0.5,0.7,1-dist)*(0.5-dist*1.5*dir);
 	vec4 check1 = vec4(0.2,0.2,0.3,0.7*alph);
-	vec4 check2 = vec4(1,1,1,0.7*alph);
+	vec4 check2 = vec4(1,1,1,0.8*alph);
 	dropColor = mix(check1, check2, -dir*8*dist);
 
 	if (debugB) dropColor = vec4(0.6,0,0,0.9*alph);
 	return dropColor;
+}
+
+vec4 orc(vec4 inCl1, vec4 inCl2) { //OverRideColor
+	if (inCl2.x == -10) return inCl1;
+	return inCl1;
 }
 
 void main() {
@@ -158,11 +153,14 @@ void main() {
 	if (fragDir.y < -0.999) discard; //not sure if needed, but previous experiences showed conflicts with RAIN-MODULE's heightcam 
 	vec4 dropColor = vec4(0,0,0,0);	
 	if (!isRaining) discard;
-	if (!isWiping && draw(locateContDrop().xy)) {
-		vec4 drop = locateContDrop();
+	if (!isWiping) {
+		vec4 drop = locateContDrop(1);
+		/*for (int i=2;i<2;++i) {
+			drop = orc(drop,locateContDrop(i));
+		}*/
 		dropColor = returnColor(drop);
 	}
-	if (isWiping && draw(locateDrop().xy)) {
+	if (isWiping) {
 		vec4 drop = locateDrop();
 		dropColor = returnColor(drop);
 	}
