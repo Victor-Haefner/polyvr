@@ -21,19 +21,26 @@ class VRTrafficSimulation : public VRObject {
 
     private:
         struct Vehicle {
-            Graph::position pos;
             VRTransformPtr t;
             VRObjectPtr mesh;
+
+            Graph::position pos;
             float speed = 0.15;
             Vec3d lastMove = Vec3d(0,0,0);
+            int lastMoveTS = 0;
 
             Vehicle(Graph::position p);
             ~Vehicle();
+
+            void destroy();
+
+            bool operator==(const Vehicle& v);
         };
 
         struct road {
             float density = 0;
             float length = 0;
+            bool macro = true;
             vector<Vehicle> vehicles;
             VRRoadPtr r;
         };
@@ -54,8 +61,9 @@ class VRTrafficSimulation : public VRObject {
 
         VRRoadNetworkPtr roadNetwork;
         map<int, road> roads;
-        vector<int> seedEdges;
-        vector<Vehicle> vehicles;
+        vector<int> seedRoads;
+        vector<int> nearRoads;
+        vector<Vehicle> users;
         vector<VRObjectPtr> models;
         map<int, vector<trafficLight> > trafficLights;
 
@@ -72,11 +80,13 @@ class VRTrafficSimulation : public VRObject {
         void updateSimulation();
         void updateDensityVisual(bool remesh = false);
 
+        void addUser(VRTransformPtr t);
+
         void addVehicle(int roadID, int type);
         void addVehicles(int roadID, float density, int type);
         void setTrafficDensity(float density, int type);
 
-        void addVehicleModel(VRObjectPtr mesh);
+        int addVehicleModel(VRObjectPtr mesh);
 };
 
 OSG_END_NAMESPACE;

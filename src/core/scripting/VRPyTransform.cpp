@@ -70,6 +70,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setConstraint", (PyCFunction)VRPyTransform::setConstraint, METH_VARARGS, "Set the constraints object - setConstraint( constraint )" },
     {"getConstraint", (PyCFunction)VRPyTransform::getConstraint, METH_NOARGS, "Get the constraints object - constraint getConstraint()" },
     {"physicalize", (PyCFunction)VRPyTransform::physicalize, METH_VARARGS, "physicalize subtree - physicalize( bool physicalized , bool dynamic , str shape, float shape param )\n\tshape can be: ['Box', 'Sphere', 'Convex', 'Concave', 'ConvexDecomposed']" },
+    {"setConvexDecompositionParameters", PyWrap(Transform, setConvexDecompositionParameters, "Set parameters for the convex decomposition, set before physicalize", void, float, float, float, float, float, bool, bool, bool ) },
     {"setGhost", (PyCFunction)VRPyTransform::setGhost, METH_VARARGS, "Set the physics object to be a ghost object - setGhost(bool)" },
     {"attach", (PyCFunction)VRPyTransform::setPhysicsConstraintTo, METH_VARARGS,
         "create a constraint between this object and another - \n"
