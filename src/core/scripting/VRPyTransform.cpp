@@ -480,9 +480,13 @@ PyObject* VRPyTransform::setPhysicsConstraintTo(VRPyTransform* self, PyObject *a
         self->objPtr->getPhysics()->setConstraint(t->objPtr->getPhysics(), nodeIndex, parseVec3dList(localPiv), ignoreCollision, influence);
     }
     else {
-        VRPyTransform *t; VRPyConstraint *c; VRPyConstraint *cs;
-        if (! PyArg_ParseTuple(args, "OOO", &t, &c, &cs)) return NULL;
-        self->objPtr->getPhysics()->setConstraint( t->objPtr->getPhysics(), c->objPtr, cs->objPtr );
+        VRPyTransform* t;
+        VRPyConstraint* c;
+        VRPyConstraint* cs = 0;
+        if (! PyArg_ParseTuple(args, "OO|O", &t, &c, &cs)) return NULL;
+        VRConstraintPtr csc = 0;
+        if (cs) csc = cs->objPtr;
+        self->objPtr->getPhysics()->setConstraint( t->objPtr->getPhysics(), c->objPtr, csc );
         //t->objPtr->attach(self->objPtr, c->objPtr);
         self->objPtr->attach(t->objPtr, c->objPtr);
     }
