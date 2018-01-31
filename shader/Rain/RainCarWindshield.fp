@@ -14,8 +14,10 @@ vec3 axV;
 vec4 color;
 bool debugB = false;
 float disBD = 0.04;
+float radius = 0.3;
 
 uniform float scale;
+uniform int pass;
 
 uniform vec2 OSGViewportSize;
 uniform float tnow;
@@ -67,29 +69,47 @@ vec2 worldToLocal(vec3 inV) {
 	return outV;
 }
 
-vec2 genDropOffset(vec2 seed) {
-	return vec2(hash(seed.xy),hash(seed.yx))*disBD*2;
+vec2 genDropOffset(vec2 uv, float disBD, float maxDispl) {
+	vec2 seed = vec2( floor(uv.x/disBD), floor(uv.y/disBD) );
+	vec2 o = vec2(hash(seed.xy),hash(seed.yx));
+	o = normalize(o)*disBD*2;
+	o.x = clamp(o.x, -maxDispl, maxDispl);
+	o.y = clamp(o.y, -maxDispl, maxDispl);
+	return o;
+}
+
+vec2 genPattern1Offset(vec2 uv) {
+	float X = floor(uv.x/disBD);
+	float K = mod(X,2);
+	vec2 disp = vec2(0.3,0.0)*disBD;
+	if (K > 0.5) disp *= -1;
+	return disp;
+}
+
+vec2 genPattern2Offset(vec2 uv) {
+	float X = floor(uv.x/disBD);
+	float Y = floor(uv.y/disBD);
+	//float a = Y*X*50*disBD;
+	float a = hash(vec2(X, Y))*7;
+	if (pass == 1) a = hash(vec2(Y, X))*21;
+	return vec2(cos(a), sin(a))*disBD*radius;
 }
 
 vec4 locateDrop() { //locate drop, if wipers active
 	vec3 worldVec = computeDropOnWS();
-	vec2 uv = worldToLocal(worldVec);
+	vec2 uv = worldToLocal(worldVec) + vec2(0.5,0.5)*disBD*pass;
+	uv += genPattern2Offset(uv);
 
 	float limitValue = disBD;
-
 	float hsIn1 = floor(uv.x/disBD) + 50*floor((tnow+1.9)/4);
 	float hsIn2 = floor(uv.y/disBD);
-
 	float hs1 = hash(vec2(hsIn1,hsIn2));
 	float hs2 = hash(vec2(hsIn2,hsIn1));
-	vec2 offset = vec2(hs1,hs2);
 	
 	//if (mod(uv.x,disBD) < limitValue && mod(uv.y,disBD) < limitValue && distance(windshieldPos,worldVec) < 4) { 
 		if ((uv.x+8)*hs1 < mod(0.1*mod(0.5*(tnow+0.2*uv.x-2),2),0.5)*4*scale) {
-			vec2 seed = vec2( floor(uv.x/disBD), floor(uv.y/disBD) );
-			vec2 offset = genDropOffset(seed);
-			offset = vec2(disBD, disBD)*0.25;
-			//uv += offset;
+			vec2 disp = genDropOffset(uv, disBD, 0.2);
+			//uv += disp;
 			return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
 		}
 	//}
@@ -98,20 +118,19 @@ vec4 locateDrop() { //locate drop, if wipers active
 
 vec4 locateContDrop() {	//locate continuuos drop, if wipers non active
 	vec3 worldVec = computeDropOnWS();
-	vec2 uv = worldToLocal(worldVec);
-	
+	vec2 uv = worldToLocal(worldVec) + vec2(0.5,0.5)*disBD*pass;
 	float limitValue = disBD;
-
 	float hsIn1 = floor(uv.x/disBD) + 50*floor((tnow)/400);
 	float hsIn2 = floor(uv.y/disBD);
-
 	float hs1 = hash(vec2(hsIn1,hsIn2));
 	float hs2 = hash(vec2(hsIn2,hsIn1));
-	vec2 offset = vec2(hs1,hs2);
 	
 	//if (mod(uv.x,disBD) < limitValue && mod(uv.y,disBD) < limitValue && distance(windshieldPos,worldVec) < 4) { 
 		//uv += offset;
+		//uv += genDropOffset(uv, disBD, 0.5*disBD);
+		uv += genPattern2Offset(uv);
 		float asd = (-uv.y+6)*hs2;
+		//return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
 		if (mod(tnow,8)<4) {
 			if (asd < mod(tnow,8)*0.6+2 && asd > (mod(tnow,8)-1)*0.6+2.3-0.1*scale){ 
 				return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
@@ -138,18 +157,25 @@ bool draw(vec2 point) {
 
 vec4 returnColor(vec4 drop) {
 	vec4 dropColor = vec4(0,0,0,0);
-	float dir = dot(drop.zw-vec2(0.5,0.5), vec2(0,1));
+	float dir = dot(drop.zw-vec2(0.5,0.5), vec2(0,1+radius));
 	float dist = distance(drop.zw,vec2(0.5,0.5));
-	float alph = smoothstep(0.5,0.9,1-dist)*(0.5-dist*1.5*dir);
+	//float alph = dist*abs(dir);
+	//float alph = smoothstep(1.0-radius+(radius-0.1)*(1-scale*0.1),0.9,1-dist)*(0.5-dist*1.5*dir);
+	float alph = smoothstep(1.0-radius,0.95,1-dist)*(0.5-dist*1.5*dir);
 	vec4 check1 = vec4(0.2,0.2,0.3,0.7*alph);
 	vec4 check2 = vec4(1,1,1,0.7*alph);
-	dropColor = mix(check1, check2, -dir*8*dist);
+	dropColor = mix(check1, check2, -dir*32*dist);
+	//dropColor = vec4(dir,dir,dir,1);
 
 	if (debugB) dropColor = vec4(0.6,0,0,0.9*alph);
 	return dropColor;
 }
 
 void main() {
+	if (scale < 0.01) discard;
+	radius *= scale*0.1;
+	radius = clamp(radius, 0.0501, 0.3);
+
 	computeDirection();
 	computePCam();
 	axU = cross(windshieldDir,windshieldUp);

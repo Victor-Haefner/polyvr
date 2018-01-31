@@ -40,9 +40,11 @@ class VRRainCarWindshield : public VRGeometry {
 
         float scale = 10;
 
-        double tnow = 0;
+        float tnow = 0;
         double tlast = 0;
-        double tdelta = 0;
+        float tdelta = 0;
+
+        template<typename T> void setShaderParameter(string name, T t);
 
     public:
         VRRainCarWindshield();

@@ -43,6 +43,17 @@ VRRainCarWindshield::VRRainCarWindshield() : VRGeometry("RainCarWindshield") {
     mat->setLit(false);
 	mat->setDiffuse(Color3f(1));
 	mat->enableTransparency();
+    mat->setShaderParameter("pass", 0);
+
+	mat->addPass();
+    mat->readVertexShader(vScript);
+    mat->readFragmentShader(fScript);
+    setMaterial(mat);
+    setPrimitive("Plane", "2 2 1 1");
+    mat->setLit(false);
+	mat->setDiffuse(Color3f(1));
+	mat->enableTransparency();
+    mat->setShaderParameter("pass", 1);
 
     setVolumeCheck(false, true);
 
@@ -50,7 +61,7 @@ VRRainCarWindshield::VRRainCarWindshield() : VRGeometry("RainCarWindshield") {
     scene->getRoot()->addChild(texRenderer);
     auto lightF = scene->getRoot()->find("light");
 
-    mat->setShaderParameter<float>("scale", scale);
+    setScale(scale);
 
     updatePtr = VRUpdateCb::create("VRRainCarWindshield update", boost::bind(&VRRainCarWindshield::update, this));
     VRScene::getCurrent()->addUpdateFkt(updatePtr);
@@ -73,9 +84,17 @@ VRRainCarWindshieldPtr VRRainCarWindshield::ptr() { return static_pointer_cast<V
 
 float VRRainCarWindshield::get() { return scale; }
 
+template<typename T>
+void VRRainCarWindshield::setShaderParameter(string name, T t) {
+    mat->setActivePass(0);
+    mat->setShaderParameter<T>(name, t);
+    mat->setActivePass(1);
+    mat->setShaderParameter<T>(name, t);
+}
+
 void VRRainCarWindshield::setScale(float scale) {
     this->scale = scale;
-    mat->setShaderParameter<float>("scale", scale);
+    setShaderParameter("scale", scale);
 }
 
 void VRRainCarWindshield::setWindshield(VRGeometryPtr geoWindshield) {
@@ -89,17 +108,23 @@ void VRRainCarWindshield::update() {
     tnow = glutGet(GLUT_ELAPSED_TIME)*0.001; //seconds
     tdelta = tnow-tlast;
     tlast = tnow;
-    mat->setShaderParameter<float>("tnow", tnow);
-    mat->setShaderParameter<float>("offset", tdelta);
-    mat->readVertexShader(vScript);
-    mat->readFragmentShader(fScript);
 
     Vec3d windshieldPos = geoWindshield->getWorldPosition();
     Vec3d windshieldDir = geoWindshield->getWorldDirection();
     Vec3d windshieldUp = geoWindshield->getWorldUp();
-    mat->setShaderParameter<Vec3f>("windshieldPos", convertV3dToV3f(windshieldPos));
-    mat->setShaderParameter<Vec3f>("windshieldDir", convertV3dToV3f(windshieldDir));
-    mat->setShaderParameter<Vec3f>("windshieldUp", convertV3dToV3f(windshieldUp));
+
+    mat->setActivePass(0);
+    mat->readVertexShader(vScript);
+    mat->readFragmentShader(fScript);
+    mat->setActivePass(1);
+    mat->readVertexShader(vScript);
+    mat->readFragmentShader(fScript);
+
+    setShaderParameter("tnow", tnow);
+    setShaderParameter("offset", tdelta);
+    setShaderParameter("windshieldPos", convertV3dToV3f(windshieldPos));
+    setShaderParameter("windshieldDir", convertV3dToV3f(windshieldDir));
+    setShaderParameter("windshieldUp", convertV3dToV3f(windshieldUp));
 }
 
 void VRRainCarWindshield::doTestFunction() {
@@ -107,27 +132,27 @@ void VRRainCarWindshield::doTestFunction() {
     Vec3d wPos = geoWindshield->getWorldPosition();
     Vec3d wDir = geoWindshield->getWorldDirection();
     isRaining=!isRaining;
-    mat->setShaderParameter<bool>("isRaining", isRaining);
+    setShaderParameter("isRaining", isRaining);
     cout << tmp << wPos << " " << wDir << endl;
 }
 
 void VRRainCarWindshield::start() {
     isRaining = true;
-    mat->setShaderParameter<bool>("isRaining", isRaining);
+    setShaderParameter("isRaining", isRaining);
     cout << "VRRainCarWindshield::start()" << endl;
 }
 
 void VRRainCarWindshield::stop() {
     isRaining= false;
-    mat->setShaderParameter<bool>("isRaining", isRaining);
+    setShaderParameter("isRaining", isRaining);
     cout << "VRRainCarWindshield::stop()" << endl;
 }
 
 void VRRainCarWindshield::setWipers(bool isWiping, float wiperSpeed) {
     this->isWiping = isWiping;
     this->wiperSpeed = wiperSpeed;
-    mat->setShaderParameter<bool>("isWiping", isWiping);
-    mat->setShaderParameter<float>("wiperSpeed", wiperSpeed);
+    setShaderParameter("isWiping", isWiping);
+    setShaderParameter("wiperSpeed", wiperSpeed);
     cout << "VRRainCarWindshield::setWipers()" << endl;
 }
 
