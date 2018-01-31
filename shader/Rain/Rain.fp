@@ -152,6 +152,8 @@ vec3 checkrad() {
 		if (atan( fragDir.x, fragDir.z)*180/M_PI>-180 && atan( fragDir.x, fragDir.z)*180/M_PI<-179 && gettheta(fragDir)>M_PI/2) return vec3(0,1,1);	
 	}
 	vec3 color = vec3(0.3,0.3,0.7);
+	
+	if (debugB) color = vec3(1.,0.,0.);
 
 	if (isD(1) || isD(2) || isD(3) ||isD(5) || isD(8)) return color;
 	else discard;

@@ -128,7 +128,7 @@ void VRNetworkSlave::start() {
     if (!node) return;
     string path = VRSceneManager::get()->getOriginalWorkdir() + "/src/cluster/";
 
-    if (!exists(path + "VRServer")) { stat = "no slave exec. VRServer in src/cluster/"; return; }
+    //if (!exists(path + "VRServer")) { stat = "no slave exec. VRServer in src/cluster/"; return; } // TODO: check on remote!
 
     string disp = "export DISPLAY=\"" + display + "\" && ";
     string pipes = " > /dev/null 2> /dev/null < /dev/null &";
