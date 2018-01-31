@@ -33,10 +33,10 @@ VRHandGeoPtr VRHandGeo::create(string name) {
             ptr->addChild(b);
         }
     }
-//    for (auto& d : ptr->directions) {
-//        ptr->addChild(d);
-//    }
-   // ptr->addChild(ptr->pinch);
+    for (auto& d : ptr->directions) {
+        ptr->addChild(d);
+    }
+
     ptr->hide();
     return ptr;
 }
@@ -88,7 +88,7 @@ void VRHandGeo::updateHandGeo() {
             bones[i][3]->setMesh(OSGGeometry::create(makeCylinderGeo(l3, 0.0075, 4, true, true, true)));
             bones[i][3]->setWorldPose(Pose::create(p3, handData->bases[i][3].dir(), handData->bases[i][3].up()));
         }
-/*
+
         // Directions
         for (int i = 0; i < 5; ++i) {
             if (handData->extended[i]) {
@@ -102,14 +102,7 @@ void VRHandGeo::updateHandGeo() {
             }
         }
 
-        // Pinch
-        if (handData->pinchStrength > 0.98f) {
-            pinch->setWorldPosition(handData->joints[0][4]); // thumb tip
-            if (!pinch->isVisible()) pinch->show();
-        } else {
-            if (pinch->isVisible()) pinch->hide();
-        }
-*/
+
     }
 }
 

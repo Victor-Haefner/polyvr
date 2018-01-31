@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/setup/devices/VRDevice.h"
-#include "core/networking/VRWebSocket.h"
+#include <core/setup/devices/VRDevice.h>
+#include <core/networking/VRWebSocket.h>
 
 #include "VRLeapFrame.h"
 
@@ -19,13 +19,16 @@ class VRLeap : public VRDevice {
 
         VRWebSocket webSocket;
         bool transformed{false};
-        Matrix4d transformation;
-        Pose transformation_;
+        Pose transformation;
         bool calibrate{false};
         string serial;
 
         void newFrame(Json::Value json);
+        void updateHandFromJson(Json::Value& handData, Json::Value& pointableData, HandPtr hand);
         Pose computeCalibPose(vector<PenPtr>& pens);
+
+    protected:
+        void dragCB(VRTransformWeakPtr wcaster, VRObjectWeakPtr wtree, VRDeviceWeakPtr dev = VRDevicePtr(0)) override;
 
     public:
         VRLeap();
@@ -54,10 +57,13 @@ class VRLeap : public VRDevice {
         void clearFrameCallbacks();
         void setPose(Pose pose);
         void setPose(Vec3d pos, Vec3d dir, Vec3d up);
-        Matrix4d getTransformation();
+        Pose getTransformation();
 
         void startCalibration();
         void stopCalibration();
+
+        void clearSignals();
+
 };
 
 OSG_END_NAMESPACE;

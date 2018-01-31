@@ -17,7 +17,7 @@ class VRLeapFrame : public std::enable_shared_from_this<VRLeapFrame> {
             float length;
             float width;
 
-            void transform(Matrix4d transformation);
+            void transform(Pose transformation);
         };
 
         struct Hand {
@@ -33,7 +33,7 @@ class VRLeapFrame : public std::enable_shared_from_this<VRLeapFrame> {
             Hand() : joints(5), bases(5), extended(5), directions(5) { }
             HandPtr clone();
 
-            void transform(Matrix4d transformation);
+            void transform(Pose transformation);
         };
 
     private:

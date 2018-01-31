@@ -34,47 +34,45 @@ HandPtr VRLeapFrame::Hand::clone() {
 
 VRLeapFramePtr VRLeapFrame::ptr() { return static_pointer_cast<VRLeapFrame>( shared_from_this() ); }
 
-void VRLeapFrame::Hand::transform(Matrix4d transformation) {
-
-    Pose t(transformation);
-
-
-    Matrix4d dirTransformation = transformation;
+Pose getDirTransform(Pose transformation) {
+    Matrix4d dirTransformation = transformation.asMatrix();
     dirTransformation.invert();
     dirTransformation.transpose();
+    Pose dirTransform(dirTransformation);
+    return dirTransform;
+}
 
-    Pose t2(dirTransformation);
+void VRLeapFrame::Hand::transform(Pose transformation) {
+
+    Pose dirTransform = getDirTransform(transformation);
 
     // transform pose
-    //pose.set(transformation*pose.pos(), dirTransformation*pose.dir(), dirTransformation*pose.up());
+    pose.set(transformation.transform(pose.pos()), dirTransform.transform(pose.dir()), dirTransform.transform(pose.up()));
 
     // transform joint positions
     for (auto& finger : joints) {
-        for (auto& j : finger) { j = t.transform(j); }
+        for (auto& j : finger) { j = transformation.transform(j); }
     }
 
     // transform basis vectors for each bone
     for (auto& finger : bases) {
         for (auto& bone : finger) {
-            bone.set(t.transform(bone.pos()), t2.transform(bone.dir()), t2.transform(bone.up()));
+            bone.set(transformation.transform(bone.pos()), dirTransform.transform(bone.dir()), dirTransform.transform(bone.up()));
         }
     }
 
     // transform directions
-//    for (auto& dir : directions) {
-//        dir = dirTransformation * dir;
-//    }
+    for (auto& dir : directions) {
+        dirTransform.transform(dir);
+    }
 
 }
 
-void VRLeapFrame::Pen::transform(Matrix4d transformation) {
-    tipPosition = transformation * tipPosition;
+void VRLeapFrame::Pen::transform(Pose transformation) {
+    transformation.transform(tipPosition);
 
-    Matrix4d dirTransformation = transformation;
-    dirTransformation.invert();
-    dirTransformation.transpose();
-
-    direction = dirTransformation * direction;
+    Pose dirTransform = getDirTransform(transformation);
+    dirTransform.transform(direction);
 }
 
 

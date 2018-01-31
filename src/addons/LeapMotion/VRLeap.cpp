@@ -1,11 +1,18 @@
 #include "VRLeap.h"
-#include "core/objects/VRTransform.h"
-#include "core/utils/toString.h"
-#include "core/utils/VRStorage_template.h"
+#include <core/objects/VRTransform.h>
+#include <core/utils/toString.h>
+#include <core/utils/VRStorage_template.h>
+#include <core/setup/devices/VRSignal.h>
+#include <core/objects/OSGObject.h>
+#include <core/utils/VRGlobals.h>
+#include <core/math/boundingbox.h>
+
 
 OSG_BEGIN_NAMESPACE ;
 
 VRLeap::VRLeap() : VRDevice("leap") {
+
+    for (int i = 0; i < 9; ++i) { addBeacon(); }
 
     auto cb = [&](Json::Value msg) {
         newFrame(msg);
@@ -23,6 +30,8 @@ VRLeap::VRLeap() : VRDevice("leap") {
 
 VRLeapPtr VRLeap::create() {
     auto d = VRLeapPtr(new VRLeap());
+    d->initIntersect(d);
+    d->clearSignals();
     return d;
 }
 
@@ -53,40 +62,24 @@ void VRLeap::registerFrameCallback(function<void(VRLeapFramePtr)> func) {
 
 void VRLeap::clearFrameCallbacks() { frameCallbacks.clear(); }
 
-void VRLeap::newFrame(Json::Value json) {
 
-    // json format: https://developer.leapmotion.com/documentation/v2/cpp/supplements/Leap_JSON.html?proglang=cpp
+void VRLeap::updateHandFromJson(Json::Value& handData, Json::Value& pointableData, HandPtr hand) {
 
-    if (json.isMember("event")) { // second frame
-        if (transformation != Matrix4d::identity()) { transformed = true; }
-        if (serial.empty()) {
-            serial = json["event"]["state"]["id"].asString();
-        }
-        return;
-    }
-
-    VRLeapFramePtr frame = VRLeapFrame::create();
-
-    for (uint i = 0; i < json["hands"].size(); ++i) { // Get the hands
-        auto newHand = json["hands"][i];
-
-        auto hand = make_shared<VRLeapFrame::Hand>();
-        // Setup new hand
-        auto pos = newHand["palmPosition"];
+        auto pos = handData["palmPosition"];
         hand->pose.setPos( Vec3d(pos[0].asFloat(), pos[1].asFloat(), pos[2].asFloat())* 0.001f );
-        auto dir = newHand["direction"];
+        auto dir = handData["direction"];
         hand->pose.setDir( Vec3d(dir[0].asFloat(), dir[1].asFloat(), dir[2].asFloat()) );
-        auto normal = newHand["palmNormal"];
+        auto normal = handData["palmNormal"];
         hand->pose.setUp( Vec3d(normal[0].asFloat(), normal[1].asFloat(), normal[2].asFloat()) );
 
-        hand->pinchStrength = newHand["pinchStrength"].asFloat();
-        hand->grabStrength = newHand["grabStrength"].asFloat();
-        hand->confidence = newHand["confidence"].asFloat();
+        hand->pinchStrength = handData["pinchStrength"].asFloat();
+        hand->grabStrength = handData["grabStrength"].asFloat();
+        hand->confidence = handData["confidence"].asFloat();
 
-        int id = newHand["id"].asInt();
+        int id = handData["id"].asInt();
 
-        for (uint j = 0; j < json["pointables"].size(); ++j) { // Get the corresponding fingers
-            auto pointable = json["pointables"][j];
+        for (uint j = 0; j < pointableData.size(); ++j) { // Get the corresponding fingers
+            auto pointable = pointableData[j];
 
             if (pointable["handId"].asInt() != id) continue;
 
@@ -109,7 +102,7 @@ void VRLeap::newFrame(Json::Value json) {
             for (auto& bases_ : bases) {
                 Pose current;
                 current.setPos( Vec3d(bases_[0][0].asFloat(), bases_[0][1].asFloat(), bases_[0][2].asFloat()) );
-                current.setDir( Vec3d(bases_[1][0].asFloat(), bases_[1][1].asFloat(), bases_[1][2].asFloat()) );
+                current.setDir ( Vec3d(bases_[1][0].asFloat(), bases_[1][1].asFloat(), bases_[1][2].asFloat()) );
                 current.setUp ( Vec3d(bases_[2][0].asFloat(), bases_[2][1].asFloat(), bases_[2][2].asFloat()) );
                 hand->bases[type].push_back(current);
             }
@@ -119,16 +112,74 @@ void VRLeap::newFrame(Json::Value json) {
             auto direction = pointable["direction"];
             hand->directions[type] = Vec3d(direction[0].asFloat(), direction[1].asFloat(), direction[2].asFloat());
         }
+}
+
+void VRLeap::newFrame(Json::Value json) {
+
+    // json format: https://developer.leapmotion.com/documentation/v2/cpp/supplements/Leap_JSON.html?proglang=cpp
+
+    if (json.isMember("event")) { // second frame
+        if (transformation.asMatrix() != Matrix4d::identity()) { transformed = true; }
+        if (serial.empty()) {
+            serial = json["event"]["state"]["id"].asString();
+        }
+        return;
+    }
+
+    VRLeapFramePtr frame = VRLeapFrame::create();
+    vector<HandPtr> hands(2, nullptr);
+
+    for (uint i = 0; i < json["hands"].size(); ++i) { // Get the hands
+
+        auto newHand = json["hands"][i];
+        auto hand = make_shared<VRLeapFrame::Hand>();
+
+        // Setup new hand
+        updateHandFromJson(newHand, json["pointables"], hand);
 
         if (transformed) {
             hand->transform(transformation);
         }
 
-        if (newHand["type"].asString() == "left") frame->setLeftHand(hand);
-        else frame->setRightHand(hand);
+        bool left = (newHand["type"].asString() == "left");
+
+        if (left)   hands[0] = hand;
+        else        hands[1] = hand;
     }
 
-    for (uint i = 0; i < json["pointables"].size(); ++i) { // Get the tools
+    for (int i = 0; i < 2; ++i) {
+        HandPtr hand = hands[i];
+
+        int btn = i; // drag button 0 for left, 1 for right hand
+        if (hand) {
+
+            // set hands of frame
+            if (i)  frame->setRightHand(hand);
+            else    frame->setLeftHand(hand);
+
+            // update beacons
+            int b = i * 5; // left start at 0, right start at 5
+            for (int j = 0; j < hand->directions.size(); ++j) {
+                //Pose p(hand->joints[j][4], hand->bases[j].back().dir(), hand->bases[j].back().up());
+                Pose p(hand->joints[j][4]);
+                editBeacon(b)->setMatrix(p.asMatrix());
+                b++;
+            }
+
+            // update buttons
+            int state = (hand->pinchStrength > 0.8) ? 1 : 0;
+            if (BStates[btn] != state || BStates.count(btn) == 0) {
+                change_button(btn, state);
+            }
+
+        } else { // hand is not there, make it drop if needed
+            if (BStates[btn] != 0) {
+                change_button(btn, 0);
+            }
+        }
+    }
+
+    for (uint i = 0; i < json["pointables"].size(); ++i) { // Get the tools/pens
         auto pointable = json["pointables"][i];
 
         if (!pointable["tool"].asBool()) continue;
@@ -144,6 +195,7 @@ void VRLeap::newFrame(Json::Value json) {
         pen->length = pointable["length"].asFloat();
         pen->width = pointable["width"].asFloat();
 
+        // only transform when not currently calibrating
         if (transformed && !calibrate) { pen->transform(transformation); }
 
         frame->insertPen(pen);
@@ -209,9 +261,70 @@ bool VRLeap::reconnect() {
     return result;
 }
 
+void VRLeap::clearSignals() {
+    VRDevice::clearSignals();
+
+    // left
+    addSignal( 0, 0)->add( getDrop() );
+    addSignal( 0, 1)->add( addDrag( getBeacon(0) ) );
+
+    // right
+    addSignal( 1, 0)->add( getDrop() );
+    addSignal( 1, 1)->add( addDrag( getBeacon(5) ) );
+}
+
+VRIntersection findInside(VRObjectWeakPtr wtree, Vec3d point) {
+
+    VRIntersection ins;
+    auto tree = wtree.lock();
+    if (!tree) return ins;
+    if (!tree->getNode()) return ins;
+    if (!tree->getNode()->node) return ins;
+
+    uint now = VRGlobals::CURRENT_FRAME;
+
+    vector<VRObjectPtr> children = tree->getChildren(true, "Geometry");
+
+    VRObjectPtr insideObject = nullptr;
+    for (auto o : children) {
+        auto bb = o->getBoundingbox();
+        if (bb->isInside(point)) {
+                insideObject = o;
+                break;
+        }
+    }
+
+    if (insideObject) {
+        ins.hit = true;
+        ins.time = now;
+        ins.object = insideObject;
+        ins.name = insideObject->getName();
+    }
+
+    return ins;
+}
+
+void VRLeap::dragCB(VRTransformWeakPtr wcaster, VRObjectWeakPtr wtree, VRDeviceWeakPtr dev) {
+
+    vector<VRObjectPtr> trees;
+    if (auto sp = wtree.lock()) trees.push_back(sp);
+    else for (auto grp : dynTrees) {
+        for (auto swp : grp.second) if (auto sp = swp.second.lock()) trees.push_back(sp);
+    }
+
+    VRIntersection ins;
+    auto caster = wcaster.lock();
+
+    for (auto t : trees) {
+        ins = findInside(t, caster->getFrom());
+        if (ins.hit) break;
+    }
+
+    drag(ins.object, caster);
+}
+
 void VRLeap::setPose(Pose pose) {
-    transformation = pose.asMatrix();
-    transformation_ = pose;
+    transformation = pose;
     transformed = true;
 }
 
@@ -219,7 +332,7 @@ void VRLeap::setPose(Vec3d pos, Vec3d dir, Vec3d up) {
     setPose(Pose(pos, dir, up));
 }
 
-Matrix4d VRLeap::getTransformation() {
+Pose VRLeap::getTransformation() {
     return transformation;
 }
 

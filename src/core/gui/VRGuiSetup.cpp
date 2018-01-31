@@ -214,7 +214,7 @@ void VRGuiSetup::updateObjectData() {
         VRLeap* t = (VRLeap*)selected_object;
         setTextEntry("entry28", t->getAddress());
         stringstream s;
-        s << t->getTransformation();
+        s << t->getTransformation().asMatrix();
         setLabel("label161", s.str());
         setLabel("label157", t->getConnectionStatus());
         setLabel("label159", t->getSerial());
@@ -1029,7 +1029,7 @@ void VRGuiSetup::on_leap_stopcalib_clicked() {
     setButtonSensitivity("button34", true);
     setButtonSensitivity("button35", false);
     stringstream t;
-    t << dev->getTransformation();
+    t << dev->getTransformation().asMatrix();
     setLabel("label161", t.str());
     setToolButtonSensitivity("toolbutton12", true);
 }
