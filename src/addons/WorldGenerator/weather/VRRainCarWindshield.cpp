@@ -94,7 +94,9 @@ void VRRainCarWindshield::setShaderParameter(string name, T t) {
 
 void VRRainCarWindshield::setScale(bool liveChange, float scale) {
     this->scale = scale;
-    setShaderParameter("scale", scale);
+    if (liveChange){
+        setShaderParameter("scale", scale);
+    }
 }
 
 void VRRainCarWindshield::setWindshield(VRGeometryPtr geoWindshield) {
