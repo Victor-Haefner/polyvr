@@ -15,6 +15,7 @@ class VRWebSocket : public VRName {
 
         bool open(string url);
         bool close();
+        bool isConnected();
 
         bool sendMessage(string message);
         void registerStringCallback(std::function<void(string)> func);
@@ -37,8 +38,8 @@ class VRWebSocket : public VRName {
 
         Json::Reader reader;
 
-        bool isConnected{false};
-        bool done{false};
+        int connectionStatus{-1}; // -1 unset, 0 error, 1 ok
+        bool done{true};
 };
 
 OSG_END_NAMESPACE
