@@ -16,12 +16,15 @@ class VRLeap : public VRDevice {
         string host{"localhost"};
         int port{6437};
         string connectionStatus{"not connected"};
-
         VRWebSocket webSocket;
+
         bool transformed{false};
         Pose transformation;
         bool calibrate{false};
         string serial;
+
+        float dragThreshold{0.8f};
+        float dropThreshold{0.5f};
 
         void newFrame(Json::Value json);
         void updateHandFromJson(Json::Value& handData, Json::Value& pointableData, HandPtr hand);

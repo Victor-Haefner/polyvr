@@ -22,7 +22,7 @@ VRLeap::VRLeap() : VRDevice("leap") {
 
     store("host", &host);
     store("port", &port);
-    store("serial", &serial);
+    //store("serial", &serial);
     store("transformation", &transformation);
 
     reconnect();
@@ -150,7 +150,7 @@ void VRLeap::newFrame(Json::Value json) {
     for (int i = 0; i < 2; ++i) {
         HandPtr hand = hands[i];
 
-        int btn = i; // drag button 0 for left, 1 for right hand
+        int dnd_btn = i; // drag button 0 for left, 1 for right hand
         if (hand) {
 
             // set hands of frame
@@ -160,21 +160,25 @@ void VRLeap::newFrame(Json::Value json) {
             // update beacons
             int b = i * 5; // left start at 0, right start at 5
             for (int j = 0; j < hand->directions.size(); ++j) {
-                //Pose p(hand->joints[j][4], hand->bases[j].back().dir(), hand->bases[j].back().up());
-                Pose p(hand->joints[j][4]);
-                editBeacon(b)->setMatrix(p.asMatrix());
+                //PosePtr p = Pose::create(hand->joints[j][4], hand->bases[j].back().dir(), hand->bases[j].back().up());
+                PosePtr p = Pose::create(hand->joints[j][4]);
+                //Pose p(hand->joints[j][4]);
+                //editBeacon(b)->setWorldPose(p);
+                editBeacon(b)->setPose(p);
                 b++;
             }
 
             // update buttons
-            int state = (hand->pinchStrength > 0.8) ? 1 : 0;
-            if (BStates[btn] != state || BStates.count(btn) == 0) {
-                change_button(btn, state);
+            int dnd_state;
+            if (BStates[dnd_btn]) dnd_state = (hand->pinchStrength < dropThreshold) ? 0 : 1;
+            else                  dnd_state = (hand->pinchStrength > dragThreshold) ? 1 : 0;
+            if (BStates[dnd_btn] != dnd_state || BStates.count(dnd_btn) == 0) {
+                change_button(dnd_btn, dnd_state);
             }
 
         } else { // hand is not there, make it drop if needed
-            if (BStates[btn] != 0) {
-                change_button(btn, 0);
+            if (BStates[dnd_btn] != 0) {
+                change_button(dnd_btn, 0);
             }
         }
     }
@@ -247,7 +251,6 @@ bool VRLeap::reconnect() {
     bool result = true;
 
     string url = "ws://" + host + ":" + to_string(port) + "/v6.json";
-    cout << "Connecting to Leap " + getName() + " at " << url << endl;
 
     result = webSocket.open(url);
 
