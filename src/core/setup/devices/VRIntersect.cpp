@@ -188,6 +188,8 @@ void VRIntersect::drag(VRObjectWeakPtr wobj, VRTransformWeakPtr wcaster) {
     if (obj == 0) return;
     if (!obj->hasTag("transform")) return;
 
+    cout << "DRAGGING " << obj->getName() << endl;
+
     auto dobj = static_pointer_cast<VRTransform>(obj);
     dragged = dobj;
     dobj->drag(caster);
@@ -201,6 +203,7 @@ void VRIntersect::drag(VRObjectWeakPtr wobj, VRTransformWeakPtr wcaster) {
 void VRIntersect::drop(VRDeviceWeakPtr dev) {
     auto d = getDraggedObject();
     if (d) {
+        cout << "DROPPING " << d->getName() << endl;
         d->drop();
         dropSignal->triggerPtr<VRDevice>();
         drop_time = VRGlobals::CURRENT_FRAME;
