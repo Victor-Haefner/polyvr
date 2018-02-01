@@ -26,6 +26,7 @@ uniform float offset;
 uniform bool isRaining;
 uniform bool isWiping;
 uniform float wiperSpeed = 0.5;
+uniform float tWiperstart;
 
 uniform vec3 windshieldPos;
 uniform vec3 windshieldDir;
@@ -95,9 +96,18 @@ vec2 genPattern2Offset(vec2 uv) {
 	return vec2(cos(a), sin(a))*disBD*radius;
 }
 
+bool calcTime(vec2 uv) {
+	float X = floor(uv.x/disBD);
+	float Y = floor(uv.y/disBD);
+	float twiper = tnow-6;
+	float tmp = tnow-twiper;
+	if (tmp>5) return true;
+}
+
 vec4 locateDrop() { //locate drop, if wipers active
 	vec3 worldVec = computeDropOnWS();
 	vec2 uv = worldToLocal(worldVec) + vec2(0.5,0.5)*disBD*pass;
+	vec2 uvUnchanged = uv;
 	uv += genPattern2Offset(uv);
 
 	float limitValue = disBD;
@@ -105,13 +115,9 @@ vec4 locateDrop() { //locate drop, if wipers active
 	float hsIn1 = floor(uv.x/disBD) + 50*floor((tnow+1.9)/4);
 	float hsIn2 = floor(uv.y/disBD);
 	float hs1 = hash(vec2(hsIn1,hsIn2));
-	float hs2 = hash(vec2(hsIn2,hsIn1));
 	
-	if ((uv.x+8)*hs1 < mod(0.1*mod(0.5*(tnow+0.2*uv.x-2),2),0.5)*4*scale) {
-		vec2 disp = genDropOffset(uv, disBD, 0.2);
-		//uv += disp;
-		return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
-	}
+	if (calcTime(uvUnchanged)) return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
+	
 	return vec4(-10,-10,0,0);
 }
 
@@ -128,7 +134,7 @@ vec4 locateContDrop(float inputScale) {	//locate continuuos drop, if wipers non 
 	//uv += genDropOffset(uv, disBD, 0.5*disBD);
 	uv += genPattern2Offset(uv);
 	float asd = (-uv.y+6)*hs2;
-	//return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
+	return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
 	if (mod(tnow,8)<4) {
 		if (asd < mod(tnow,8)*0.6+2 && asd > (mod(tnow,8)-1)*0.6+2.3-0.1*scale){ 
 			return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
@@ -177,9 +183,6 @@ void main() {
 	if (!isRaining) discard;
 	if (!isWiping) {
 		vec4 drop = locateContDrop(1);
-		/*for (int i=2;i<2;++i) {
-			drop = orc(drop,locateContDrop(i));
-		}*/
 		dropColor = returnColor(drop);
 	}
 	if (isWiping) {
