@@ -717,6 +717,17 @@ class MyConvexDecomposition : public ConvexDecomposition::ConvexDecompInterface 
         }
 };
 
+void VRPhysics::setConvexDecompositionParameters(float cw, float vw, float nc, float nv, float c, bool aedp, bool andp, bool afp) {
+    compacityWeight = cw;
+    volumeWeight = vw;
+    NClusters = nc;
+    NVerticesPerCH = nv;
+    concavity = c;
+    addExtraDistPoints = aedp;
+    addNeighboursDistPoints = andp;
+    addFacesPoints = afp;
+}
+
 btCollisionShape* VRPhysics::getHACDShape() {
     OSG::VRGeometryPtr obj = dynamic_pointer_cast<OSG::VRGeometry>( vr_obj.lock() );
     if (!obj) { cout << "Warning in getHACDShape: not a geometry!"; return 0; }
@@ -742,14 +753,14 @@ btCollisionShape* VRPhysics::getHACDShape() {
     myHACD.SetNPoints(points.size());
     myHACD.SetTriangles(&triangles[0]);
     myHACD.SetNTriangles(triangles.size());
-    myHACD.SetCompacityWeight(0.1);
-    myHACD.SetVolumeWeight(0.0);
-    myHACD.SetNClusters(2);                       // minimum number of clusters
-    myHACD.SetNVerticesPerCH(100);                // max of 100 vertices per convex-hull
-    myHACD.SetConcavity(100);                     // maximum concavity
-    myHACD.SetAddExtraDistPoints(false);
-    myHACD.SetAddNeighboursDistPoints(false);
-    myHACD.SetAddFacesPoints(false);
+    myHACD.SetCompacityWeight(compacityWeight);
+    myHACD.SetVolumeWeight(volumeWeight);
+    myHACD.SetNClusters(NClusters);                       // minimum number of clusters
+    myHACD.SetNVerticesPerCH(NVerticesPerCH);                // max of 100 vertices per convex-hull
+    myHACD.SetConcavity(concavity);                     // maximum concavity
+    myHACD.SetAddExtraDistPoints(addExtraDistPoints);
+    myHACD.SetAddNeighboursDistPoints(addNeighboursDistPoints);
+    myHACD.SetAddFacesPoints(addFacesPoints);
 
     // Idee: split geometries into chunks? -> holes may be a problem!
     // pack this into thread

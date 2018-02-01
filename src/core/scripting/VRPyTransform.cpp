@@ -70,6 +70,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setConstraint", (PyCFunction)VRPyTransform::setConstraint, METH_VARARGS, "Set the constraints object - setConstraint( constraint )" },
     {"getConstraint", (PyCFunction)VRPyTransform::getConstraint, METH_NOARGS, "Get the constraints object - constraint getConstraint()" },
     {"physicalize", (PyCFunction)VRPyTransform::physicalize, METH_VARARGS, "physicalize subtree - physicalize( bool physicalized , bool dynamic , str shape, float shape param )\n\tshape can be: ['Box', 'Sphere', 'Convex', 'Concave', 'ConvexDecomposed']" },
+    {"setConvexDecompositionParameters", PyWrap(Transform, setConvexDecompositionParameters, "Set parameters for the convex decomposition, set before physicalize", void, float, float, float, float, float, bool, bool, bool ) },
     {"setGhost", (PyCFunction)VRPyTransform::setGhost, METH_VARARGS, "Set the physics object to be a ghost object - setGhost(bool)" },
     {"attach", (PyCFunction)VRPyTransform::setPhysicsConstraintTo, METH_VARARGS,
         "create a constraint between this object and another - \n"
@@ -480,9 +481,13 @@ PyObject* VRPyTransform::setPhysicsConstraintTo(VRPyTransform* self, PyObject *a
         self->objPtr->getPhysics()->setConstraint(t->objPtr->getPhysics(), nodeIndex, parseVec3dList(localPiv), ignoreCollision, influence);
     }
     else {
-        VRPyTransform *t; VRPyConstraint *c; VRPyConstraint *cs;
-        if (! PyArg_ParseTuple(args, "OOO", &t, &c, &cs)) return NULL;
-        self->objPtr->getPhysics()->setConstraint( t->objPtr->getPhysics(), c->objPtr, cs->objPtr );
+        VRPyTransform* t;
+        VRPyConstraint* c;
+        VRPyConstraint* cs = 0;
+        if (! PyArg_ParseTuple(args, "OO|O", &t, &c, &cs)) return NULL;
+        VRConstraintPtr csc = 0;
+        if (cs) csc = cs->objPtr;
+        self->objPtr->getPhysics()->setConstraint( t->objPtr->getPhysics(), c->objPtr, csc );
         //t->objPtr->attach(self->objPtr, c->objPtr);
         self->objPtr->attach(t->objPtr, c->objPtr);
     }

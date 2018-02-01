@@ -191,6 +191,7 @@ class VRTransform : public VRObject {
         VRPhysics* getPhysics();
         void resolvePhysics();
         void updateFromBullet();
+        void setConvexDecompositionParameters(float cw, float vw, float nc, float nv, float c, bool aedp, bool andp, bool afp);
 
         vector<VRCollision> getCollisions();
 

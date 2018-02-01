@@ -544,6 +544,8 @@
 		<Unit filename="src/addons/WorldGenerator/weather/VRPyWeather.h" />
 		<Unit filename="src/addons/WorldGenerator/weather/VRRain.cpp" />
 		<Unit filename="src/addons/WorldGenerator/weather/VRRain.h" />
+		<Unit filename="src/addons/WorldGenerator/weather/VRRainCarWindshield.cpp" />
+		<Unit filename="src/addons/WorldGenerator/weather/VRRainCarWindshield.h" />
 		<Unit filename="src/addons/construction/building/VRElectricDevice.cpp" />
 		<Unit filename="src/addons/construction/building/VRElectricDevice.h" />
 		<Unit filename="src/addons/construction/building/VROpening.cpp" />

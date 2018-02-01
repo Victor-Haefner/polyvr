@@ -84,6 +84,16 @@ class VRPhysics : public VRStorage {
         btVector3 gravity = btVector3(0,-10,0);
         CallbackPtr callback;
 
+        // convex decomposition parameters
+        float compacityWeight = 0.1;
+        float volumeWeight = 0.0;
+        float NClusters = 2;
+        float NVerticesPerCH = 100;
+        float concavity = 100;
+        bool addExtraDistPoints = false;
+        bool addNeighboursDistPoints = false;
+        bool addFacesPoints = false;
+
         vector<Vec3d> torqueJob;
         vector<Vec3d> forceJob;
         vector<Vec3d> torqueJob2;
@@ -137,6 +147,7 @@ class VRPhysics : public VRStorage {
         void setCustomShape(btCollisionShape* shape);
         string getShape();
         VRTransformPtr getVisualShape();
+        void setConvexDecompositionParameters(float cw, float vw, float nc, float nv, float c, bool aedp, bool andp, bool afp);
 
         void setPhysicalized(bool b);
         bool isPhysicalized();

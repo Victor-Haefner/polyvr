@@ -125,8 +125,11 @@ void VRConstraint::apply(VRTransformPtr obj, VRObjectPtr parent) {
     Vec3d angleDiff;
     for (int i=3; i<6; i++) { // rotation
         if (min[i] > max[i]) continue; // free
-        if (min[i] > angles[i-3]) angleDiff[i-3] = min[i] - angles[i-3]; // lower bound
-        if (max[i] < angles[i-3]) angleDiff[i-3] = max[i] - angles[i-3]; // upper bound
+        float a = angles[i-3];
+        float d1 = min[i]-a; while(d1 > Pi) d1 -= 2*Pi; while(d1 < -Pi) d1 += 2*Pi;
+        float d2 = max[i]-a; while(d2 > Pi) d2 -= 2*Pi; while(d2 < -Pi) d2 += 2*Pi;
+        if (d1 > 0 && abs(d1) <= abs(d2)) angleDiff[i-3] = d1; // lower bound
+        if (d2 < 0 && abs(d2) <= abs(d1)) angleDiff[i-3] = d2; // upper bound
     }
     VRTransform::applyEulerAngles(J, angles + angleDiff);
 

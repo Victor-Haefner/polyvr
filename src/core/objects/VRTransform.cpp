@@ -823,6 +823,10 @@ vector<VRCollision> VRTransform::getCollisions() {
     return physics->getCollisions();
 }
 
+void VRTransform::setConvexDecompositionParameters(float cw, float vw, float nc, float nv, float c, bool aedp, bool andp, bool afp) {
+    getPhysics()->setConvexDecompositionParameters(cw, vw, nc, nv, c, aedp, andp, afp);
+}
+
 /** Update the object OSG transformation **/
 void VRTransform::updateChange() {
     apply_constraints();

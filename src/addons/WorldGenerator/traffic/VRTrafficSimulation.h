@@ -31,11 +31,16 @@ class VRTrafficSimulation : public VRObject {
 
             Vehicle(Graph::position p);
             ~Vehicle();
+
+            void destroy();
+
+            bool operator==(const Vehicle& v);
         };
 
         struct road {
             float density = 0;
             float length = 0;
+            bool macro = true;
             vector<Vehicle> vehicles;
             VRRoadPtr r;
         };
@@ -56,7 +61,8 @@ class VRTrafficSimulation : public VRObject {
 
         VRRoadNetworkPtr roadNetwork;
         map<int, road> roads;
-        vector<int> seedEdges;
+        vector<int> seedRoads;
+        vector<int> nearRoads;
         vector<Vehicle> users;
         vector<VRObjectPtr> models;
         map<int, vector<trafficLight> > trafficLights;

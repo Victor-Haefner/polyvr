@@ -102,6 +102,7 @@ VRRainPtr VRRain::create() { return VRRainPtr( new VRRain() ); }
 VRRainPtr VRRain::ptr() { return static_pointer_cast<VRRain>( shared_from_this() ); }
 
 float VRRain::get() { return scale; }
+bool VRRain::getIsRaining() { return isRaining; }
 VRTextureRendererPtr VRRain::getRenderer() { return texRenderer; }
 VRMaterialPtr VRRain::getTexMat() { return renderMat; }
 
@@ -169,6 +170,7 @@ void VRRain::setScale( float scale ){
         speedY = 0.004+scale*0.0001;
         color = 0.5-scale*0.02;
         light = 0.4;
+        updateScale(scale);
     }
 }
 
