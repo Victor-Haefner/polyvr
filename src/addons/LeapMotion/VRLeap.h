@@ -62,7 +62,7 @@ class VRLeap : public VRDevice {
         void clearFrameCallbacks();
         void setPose(Pose pose);
         void setPose(Vec3d pos, Vec3d dir, Vec3d up);
-        Pose getTransformation();
+        Pose getPose() const;
 
         void startCalibration();
         void stopCalibration();

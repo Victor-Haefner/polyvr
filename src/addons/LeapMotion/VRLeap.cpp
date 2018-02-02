@@ -341,7 +341,7 @@ void VRLeap::setPose(Vec3d pos, Vec3d dir, Vec3d up) {
     setPose(Pose(pos, dir, up));
 }
 
-Pose VRLeap::getTransformation() {
+Pose VRLeap::getPose() const {
     return transformation;
 }
 

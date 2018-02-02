@@ -37,6 +37,7 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+
 class VRGuiSetup_ModelColumns : public Gtk::TreeModelColumnRecord {
     public:
         VRGuiSetup_ModelColumns() { add(name); add(type); add(obj); }
@@ -213,11 +214,12 @@ void VRGuiSetup::updateObjectData() {
         setExpanderSensitivity("expander31", true);
         VRLeap* t = (VRLeap*)selected_object;
         setTextEntry("entry28", t->getAddress());
-        stringstream s;
-        s << t->getTransformation().asMatrix();
-        setLabel("label161", s.str());
         setLabel("label157", t->getConnectionStatus());
         setLabel("label159", t->getSerial());
+        Pose p = t->getPose();
+        leapPosEntry.set(p.pos());
+        leapUpEntry.set(p.up());
+        leapDirEntry.set(p.dir());
     }
 
     if (selected_type == "mouse") { device = true; }
@@ -1028,9 +1030,37 @@ void VRGuiSetup::on_leap_stopcalib_clicked() {
     dev->stopCalibration();
     setButtonSensitivity("button34", true);
     setButtonSensitivity("button35", false);
-    stringstream t;
-    t << dev->getTransformation().asMatrix();
-    setLabel("label161", t.str());
+    Pose p = dev->getPose();
+    leapPosEntry.set(p.pos());
+    leapUpEntry.set(p.up());
+    leapDirEntry.set(p.dir());
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_leap_pos_edit(Vec3d v) {
+    if (guard) return;
+    VRLeap* dev = (VRLeap*)selected_object;
+    Pose p = dev->getPose();
+    p.setPos(v);
+    dev->setPose(p);
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_leap_up_edit(Vec3d v) {
+    if (guard) return;
+    VRLeap* dev = (VRLeap*)selected_object;
+    Pose p = dev->getPose();
+    p.setUp(v);
+    dev->setPose(p);
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_leap_dir_edit(Vec3d v) {
+    if (guard) return;
+    VRLeap* dev = (VRLeap*)selected_object;
+    Pose p = dev->getPose();
+    p.setDir(v);
+    dev->setPose(p);
     setToolButtonSensitivity("toolbutton12", true);
 }
 
@@ -1201,6 +1231,10 @@ VRGuiSetup::VRGuiSetup() {
 
     tVRPNAxisEntry.init("tvrpn_entry", "", sigc::mem_fun(*this, &VRGuiSetup::on_vrpn_trans_axis_edit));
     rVRPNAxisEntry.init("rvrpn_entry", "", sigc::mem_fun(*this, &VRGuiSetup::on_vrpn_rot_axis_edit));
+
+    leapPosEntry.init("leap_pos_entry", "from", sigc::mem_fun(*this, &VRGuiSetup::on_leap_pos_edit));
+    leapUpEntry.init("leap_up_entry", "up", sigc::mem_fun(*this, &VRGuiSetup::on_leap_up_edit));
+    leapDirEntry.init("leap_dir_entry", "dir", sigc::mem_fun(*this, &VRGuiSetup::on_leap_dir_edit));
 
     setEntryCallback("entry50", sigc::mem_fun(*this, &VRGuiSetup::on_edit_VRPN_tracker_address) );
     setEntryCallback("entry52", sigc::mem_fun(*this, &VRGuiSetup::on_pos_edit) );
