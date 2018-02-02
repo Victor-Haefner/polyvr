@@ -41,6 +41,8 @@ class VRRainCarWindshield : public VRGeometry {
         float scale = 10;
 
         float tnow = 0;
+        float tWiperstart = 0;
+        float durationWiper = 30;
         double tlast = 0;
         float tdelta = 0;
 

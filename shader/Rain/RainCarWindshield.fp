@@ -25,8 +25,9 @@ uniform float offset;
 
 uniform bool isRaining;
 uniform bool isWiping;
-uniform float wiperSpeed = 0.5;
+uniform float wiperSpeed;
 uniform float tWiperstart;
+uniform float durationWiper;
 
 uniform vec3 windshieldPos;
 uniform vec3 windshieldDir;
@@ -96,17 +97,41 @@ vec2 genPattern2Offset(vec2 uv) {
 	return vec2(cos(a), sin(a))*disBD*radius;
 }
 
+vec2 angles() {
+	float period = durationWiper/(wiperSpeed);
+	float time = (tnow-tWiperstart)/period;
+	float angA = 0;
+	float angB = 0;	
+	if (time<0.5) {
+		angA = 2*  90/180*M_PI * time;
+		angB = 4.188*time;//2* 180/180*M_PI * time; 
+	} 
+	if (time>0.5) {
+		angA = 2*  90/180*M_PI-2*  90/180*M_PI * time;
+		angB = 4.188-4.188*time;//2* 180/180*M_PI-2* 180/180*M_PI * time;
+	}
+	return vec2(angA,angB);
+}
+
 bool calcTime(vec2 uv) {
-	float X = floor(uv.x/disBD);
-	float Y = floor(uv.y/disBD);
-	float twiper = tnow-6;
-	float tmp = tnow-twiper;
-	if (tmp>5) return true;
+	float xA = -floor((uv.x-0.6)/disBD);
+	float yA = floor(uv.y/disBD);
+	float xB = -floor(uv.x/disBD);
+	float yB = floor(uv.y/disBD);
+	if (distance(uv,vec2(0.5,0))<0.5 && atan(yA,xA)-angles().x<0.0) return false;
+	if (distance(uv,vec2(0,0))<0.5 && atan(yB,xB)-angles().y<0.0) return false;
+
+	float timefunction = tWiperstart;
+	float localWiperTime = (tWiperstart);
+	//if (tnow - localWiperTime>0.1) return true;
+	return true;
+	return false;
 }
 
 vec4 locateDrop() { //locate drop, if wipers active
 	vec3 worldVec = computeDropOnWS();
 	vec2 uv = worldToLocal(worldVec) + vec2(0.5,0.5)*disBD*pass;
+	if(distance(uv,vec2(0,0))>1.5) return vec4(-10,-10,0,0);
 	vec2 uvUnchanged = uv;
 	uv += genPattern2Offset(uv);
 
@@ -168,40 +193,12 @@ vec4 orc(vec4 inCl1, vec4 inCl2) { //OverRideColor
 	return inCl1;
 }
 
-void main() {
-	if (scale < 0.01) discard;
-	radius *= scale*0.1;
-	radius = clamp(radius, 0.0501, 0.3);
-
-	computeDirection();
-	computePCam();
-	axU = cross(windshieldDir,windshieldUp);
-	axV = windshieldDir;
-	
-	if (fragDir.y < -0.999) discard; //not sure if needed, but previous experiences showed conflicts with RAIN-MODULE's heightcam 
-	vec4 dropColor = vec4(0,0,0,0);	
-	if (!isRaining) discard;
-	if (!isWiping) {
-		vec4 drop = locateContDrop(1);
-		dropColor = returnColor(drop);
-	}
-	if (isWiping) {
-		vec4 drop = locateDrop();
-		dropColor = returnColor(drop);
-	}
-
-	if (dropColor == vec4(0,0,0,0)) discard;	
-	gl_FragColor = dropColor;
-}
-
-/** NOT NEEDED RIGHT NOW */
-/*
 vec4 drawWiper(vec4 check) {
 	vec3 worldVec = computeDropOnWS();
 	vec2 uv = worldToLocal(worldVec);
-	if (uv.x<-1.4 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
-	if (uv.x>1.4 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
-	if (uv.y<-0.6 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
+	if (uv.x<-0.7 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
+	if (uv.x>0.7 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
+	if (uv.y<-0.3 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
 	if (uv.y>0.6 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
 	
 	float xoff = 0.25;
@@ -218,7 +215,31 @@ vec4 drawWiper(vec4 check) {
 	}
 	return check;
 }
-*/
+
+void main() {
+	if (scale < 0.01) discard;
+	radius *= scale*0.1;
+	radius = clamp(radius, 0.0501, 0.3);
+
+	computeDirection();
+	computePCam();
+	axU = cross(windshieldDir,windshieldUp);
+	axV = windshieldDir;
+	
+	if (fragDir.y < -0.999) discard; //not sure if needed, but previous experiences showed conflicts with RAIN-MODULE's heightcam 
+	vec4 dropColor = vec4(0,0,0,0);	
+	if (!isRaining) discard;
+	vec4 drop = locateDrop();
+	dropColor = returnColor(drop);
+	dropColor = drawWiper(dropColor);
+	
+	if (dropColor == vec4(0,0,0,0)) discard;	
+	gl_FragColor = dropColor;
+}
+
+/** NOT NEEDED RIGHT NOW */
+
+
 
 
 
