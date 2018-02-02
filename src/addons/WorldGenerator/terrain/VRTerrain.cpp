@@ -372,11 +372,12 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
 
     Vec3f norm(0,1,0); // TODO
     int N = 1000;
-    double step = 10; // TODO
+    double step = 10;
     int dir = 1;
     for (int i = 0; i < N; i++) {
         p = p - d*step*dir; // walk
         double l = distToSurface(p);
+        if (i == 0) step = abs(l);
         if (l > 0 && l < 0.03) {
             Real32 t = p0.dist( p );
             ia->setHit(t, ia->getActNode(), 0, norm, -1);
@@ -587,6 +588,8 @@ void VRTerrain::addEmbankment(string ID, PathPtr p1, PathPtr p2, PathPtr p3, Pat
     embankments[ID] = e;
 }
 
+Vec2d VRTerrain::getSize() { return size; }
+
 // --------------------------------- shader ------------------------------------
 
 string VRTerrain::vertexShader =
@@ -636,8 +639,7 @@ void applyBlinnPhong() {
 	float NdotHV = max(dot( norm, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
 	vec4  specular = 0.25*gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
 	//gl_FragColor = ambient + diffuse + specular;
-    color = mix(diffuse + specular, vec4(0.7,0.9,1,1), clamp(1e-4*length(pos.xyz), 0.0, 1.0)); // atmospheric effects
-	gl_FragColor = color;
+    gl_FragColor = mix(diffuse + specular, vec4(0.7,0.9,1,1), clamp(1e-4*length(pos.xyz), 0.0, 1.0)); // atmospheric effects
 	gl_FragColor[3] = 1.0;
 	//gl_FragColor = vec4(diffuse.rgb, 1);
 }

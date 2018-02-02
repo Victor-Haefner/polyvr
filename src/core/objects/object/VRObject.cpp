@@ -292,6 +292,10 @@ bool VRObject::hasAncestor(VRObjectPtr a) {
     return false;
 }
 
+bool VRObject::shareAncestry(VRObjectPtr obj) {
+    return getRoot() == obj->getRoot();
+}
+
 /** Returns the parent of ptr() object **/
 VRObjectPtr VRObject::getParent(bool checkForDrag) {
     if (checkForDrag && held) return old_parent.lock();

@@ -69,6 +69,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void loadMap( string path, int channel = 3 );
         VRTexturePtr getMap();
         Vec2f getTexelSize();
+        Vec2d getSize();
 
         Vec2d toUVSpace(Vec2d uv);
         Vec2d fromUVSpace(Vec2d uv);

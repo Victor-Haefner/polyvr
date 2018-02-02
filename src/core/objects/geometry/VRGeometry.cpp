@@ -494,9 +494,8 @@ void VRGeometry::merge(VRGeometryPtr geo) {
     if (!geo->mesh->geo) return;
     if (!meshSet) setMesh();
 
-    Matrix4d M = getWorldMatrix();
-    M.invert();
-    M.mult( geo->getWorldMatrix() );
+    Matrix4d M;
+    if (shareAncestry(geo)) M = getMatrixTo(geo);
 
     VRGeoData self(ptr());
     VRGeoData other(geo);

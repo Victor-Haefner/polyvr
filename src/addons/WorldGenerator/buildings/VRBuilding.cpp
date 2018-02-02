@@ -2,6 +2,7 @@
 #include "../terrain/VRTerrain.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/math/triangulator.h"
 
 using namespace OSG;
@@ -161,6 +162,10 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs) {
     g->translate(Vec3d(0,ground+height,0));
     g->applyTransformation();
     g->setPositionalTexCoords(1.0, 0, Vec3i(0,2,1));
+
     roofs->merge(g);
+
+    cout << "VRBuilding::computeGeometry p0 " << roof.getPoint(0) << " g0 " << g->getMesh()->geo->getPositions()->getValue<Pnt3f>(0);
+    cout << "  ->  " << roofs->getMesh()->geo->getPositions()->getValue<Pnt3f>(0) << endl;
 }
 
