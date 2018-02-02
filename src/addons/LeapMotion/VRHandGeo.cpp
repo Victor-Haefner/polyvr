@@ -4,7 +4,6 @@
 #include <core/scene/VRScene.h>
 #include <core/math/pose.h>
 #include <OpenSG/OSGSimpleGeometry.h>
-#include <thread>
 
 using namespace OSG;
 

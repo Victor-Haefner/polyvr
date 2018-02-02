@@ -17,6 +17,7 @@ class VRLeap : public VRDevice {
         int port{6437};
         string connectionStatus{"not connected"};
         VRWebSocket webSocket;
+        boost::mutex mutex;
 
         bool transformed{false};
         Pose transformation;
@@ -28,6 +29,7 @@ class VRLeap : public VRDevice {
 
         void newFrame(Json::Value json);
         void updateHandFromJson(Json::Value& handData, Json::Value& pointableData, HandPtr hand);
+        void updateSceneData(vector<HandPtr> hands);
         Pose computeCalibPose(vector<PenPtr>& pens);
 
     protected:
