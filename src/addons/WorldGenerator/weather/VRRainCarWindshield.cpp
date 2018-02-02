@@ -61,7 +61,7 @@ VRRainCarWindshield::VRRainCarWindshield() : VRGeometry("RainCarWindshield") {
     scene->getRoot()->addChild(texRenderer);
     auto lightF = scene->getRoot()->find("light");
 
-    setScale(scale);
+    setScale(false, scale);
 
     updatePtr = VRUpdateCb::create("VRRainCarWindshield update", boost::bind(&VRRainCarWindshield::update, this));
     VRScene::getCurrent()->addUpdateFkt(updatePtr);
@@ -92,9 +92,11 @@ void VRRainCarWindshield::setShaderParameter(string name, T t) {
     mat->setShaderParameter<T>(name, t);
 }
 
-void VRRainCarWindshield::setScale(float scale) {
+void VRRainCarWindshield::setScale(bool liveChange, float scale) {
     this->scale = scale;
-    setShaderParameter("scale", scale);
+    if (liveChange){
+        setShaderParameter("scale", scale);
+    }
 }
 
 void VRRainCarWindshield::setWindshield(VRGeometryPtr geoWindshield) {

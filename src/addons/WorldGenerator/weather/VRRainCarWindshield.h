@@ -55,7 +55,7 @@ class VRRainCarWindshield : public VRGeometry {
 
         float get();
         void setWindshield(VRGeometryPtr geoWindshield);
-        void setScale(float scale);
+        void setScale(bool liveChange, float scale);
         void setWipers(bool isWiping, float wiperSpeed);
 
         void doTestFunction();
