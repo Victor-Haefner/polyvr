@@ -314,7 +314,7 @@ void VRPathtool::updateEntry(entryPtr e) { // update path representation
         vector<Vec3d> profile;
         profile.push_back(Vec3d());
         line->addPath(e->p);
-        line->strokeProfile(profile, 0, 0);
+        line->strokeProfile(profile, 0, 0, 0);
     }
 
     if (auto l = e->line.lock()) l->update();
