@@ -39,7 +39,7 @@ void VRConstraint::setMax(int i, float f) { max[i] = f; }
 float VRConstraint::getMin(int i) { return min[i]; }
 float VRConstraint::getMax(int i) { return max[i]; }
 
-void VRConstraint::lock(vector<int> dofs) { for (int dof : dofs) setMinMax(dof,0,0); setActive(true); }
+void VRConstraint::lock(vector<int> dofs, float v) { for (int dof : dofs) setMinMax(dof,v,v); setActive(true); }
 void VRConstraint::free(vector<int> dofs) { for (int dof : dofs) setMinMax(dof,1,-1); }
 
 void VRConstraint::setReferenceA(PosePtr p) { refMatrixA = p->asMatrix(); refMatrixA.inverse(refMatrixAI); };
@@ -48,7 +48,7 @@ void VRConstraint::setReference(PosePtr p) { setReferenceA(p); }
 PosePtr VRConstraint::getReferenceA() { return Pose::create(refMatrixA); };
 PosePtr VRConstraint::getReferenceB() { return Pose::create(refMatrixB); };
 
-void VRConstraint::lockRotation() { setRConstraint(Vec3d(0,0,0), VRConstraint::POINT); }
+void VRConstraint::lockRotation() { lock({3,4,5}); }
 
 void VRConstraint::setReferential(VRTransformPtr t) { Referential = t; }
 
@@ -111,6 +111,7 @@ void VRConstraint::apply(VRTransformPtr obj, VRObjectPtr parent) {
     apply_time_stamp = now;
 
     if (local) parent = obj->getParent(true);
+    if (auto r = Referential.lock()) parent = r;
     Matrix4d J = obj->getMatrixTo(parent);
     J.mult(refMatrixB);
     J.multLeft(refMatrixAI);
