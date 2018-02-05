@@ -72,6 +72,7 @@ class VRDemos {
         void updatePixmap(demoEntryPtr e, Gtk::Image* img_pxb, int w, int h);
         void update();
 
+        void writeGitignore(string path);
         string getFolderName(string path);
         string getFileName(string path);
         void normFileName(string& f);

@@ -384,12 +384,22 @@ void VRDemos::on_load_clicked() {
     VRGuiFile::open( "Load", Gtk::FILE_CHOOSER_ACTION_OPEN, "Load project" );
 }
 
+void VRDemos::writeGitignore(string path) {
+    auto f = ofstream(path);
+    f << ".local_*" << endl;
+    f << "core" << endl;
+    f << "*.blend1" << endl;
+    f << "*~" << endl;
+}
+
 void VRDemos::on_diag_new_clicked() {
     //string path = VRGuiFile::getRelativePath_toOrigin();
     string path = VRGuiFile::getPath();
     if (path == "") return;
     normFileName(path);
     VRSceneManager::get()->newScene(path);
+    string gitIgnorePath = getFolderName(path) + "/.gitignore";
+    if (!exists(gitIgnorePath)) writeGitignore(gitIgnorePath);
     addEntry(path, "favorites_tab", true);
     VRSceneManager::get()->addFavorite(path);
     saveScene(path);
@@ -398,7 +408,7 @@ void VRDemos::on_diag_new_clicked() {
 void VRDemos::on_new_clicked() {
     VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRDemos::on_diag_new_clicked) );
     VRGuiFile::gotoPath( g_get_home_dir() );
-    VRGuiFile::setFile( "myApp.xml" );
+    VRGuiFile::setFile( "myApp.pvr" );
     VRGuiFile::clearFilter();
     VRGuiFile::open( "Create", Gtk::FILE_CHOOSER_ACTION_SAVE, "Create new project" );
 }
