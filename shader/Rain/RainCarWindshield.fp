@@ -104,23 +104,58 @@ vec2 angles() {
 	float angB = 0;	
 	if (time<0.5) {
 		angA = 2*  90/180*M_PI * time;
-		angB = 4.188*time;//2* 180/180*M_PI * time; 
+		angB = 5.236*time;//2* 150/180*M_PI * time; 
 	} 
 	if (time>0.5) {
 		angA = 2*  90/180*M_PI-2*  90/180*M_PI * time;
-		angB = 4.188-4.188*time;//2* 180/180*M_PI-2* 180/180*M_PI * time;
+		angB = 5.236-5.236*time;//2* 150/180*M_PI-2* 150/180*M_PI * time;
 	}
 	return vec2(angA,angB);
 }
 
+float calcDeltaTime(float angle, int whichWiper) {
+	float period = durationWiper/(wiperSpeed);
+	float time = (tnow-tWiperstart)/period;
+	float timeWiperLocal;
+	if (whichWiper == 0) {
+		if (time<0.5) {
+			timeWiperLocal = angle/3.1416;
+		} 
+		if (time>0.5) {
+			timeWiperLocal = -(angle-3.1416)/3.1416;
+		}
+	}
+	if (whichWiper == 1) {
+		if (time<0.5) {
+			timeWiperLocal = angle/4.8; 
+		} 
+		if (time>0.5) {
+			timeWiperLocal = -(angle-4.8)/4.8; 
+		}	
+	}	
+	return timeWiperLocal*period;
+}
+
 bool calcTime(vec2 uv) {
 	float xA = -floor((uv.x-0.6)/disBD);
-	float yA = floor(uv.y/disBD);
+	float yA = floor((uv.y)/disBD);
 	float xB = -floor(uv.x/disBD);
-	float yB = floor(uv.y/disBD);
-	if (distance(uv,vec2(0.5,0))<0.5 && atan(yA,xA)-angles().x<0.0) return false;
-	if (distance(uv,vec2(0,0))<0.5 && atan(yB,xB)-angles().y<0.0) return false;
-
+	float yB = floor((uv.y)/disBD);
+	float tLocal = tnow;// + hash(vec2(xB,yB));
+	//if (distance(uv,vec2(0.5,0))>0.05 && distance(uv,vec2(0.5,0))<0.5 && atan(yA,xA)-angles().x<0.0) return false;
+	//if (distance(uv,vec2(0,0))>0.05 && distance(uv,vec2(0,0))<0.5 && atan(yB,xB)-angles().y<0.0) return false;
+	
+	float t = 3;
+	//if (distance(uv,vec2(0.5,0))<0.5 && tnow-tWiperstart-calcDeltaTime(atan(yA,xA),0)>0.00 && tnow-tWiperstart-calcDeltaTime(atan(yA,xA),0)<0.1) return false;
+	//if (distance(uv,vec2(0,0))<0.5 && tnow-tWiperstart-calcDeltaTime(atan(yB,xB),1)>0.00 && tnow-tWiperstart-calcDeltaTime(atan(yB,xB),1)<0.1) return false;
+	//if (tnow-tWiperstart-calcDeltaTime(atan(yA,xA),0)>0) return true;
+	if (distance(uv,vec2(0,0))>0.5 || uv.y<0) return true; 
+	if (tLocal-tWiperstart-calcDeltaTime(atan(yB,xB),1)<0) return true;
+	//if (distance(uv,vec2(0.5,0))<0.5 && tnow-tWiperstart-calcDeltaTime(atan(yA,xA),0)>0 && tnow-tWiperstart-calcDeltaTime(atan(yA,xA),0)<2) return true;
+	//if (distance(uv,vec2(0,0))<0.5 && tnow-tWiperstart-calcDeltaTime(atan(yB,xB),1)>0 && tnow-tWiperstart-calcDeltaTime(atan(yB,xB),1)<2) return true;
+	
+	return false;
+	
 	float timefunction = tWiperstart;
 	float localWiperTime = (tWiperstart);
 	//if (tnow - localWiperTime>0.1) return true;
