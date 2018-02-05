@@ -149,12 +149,13 @@ bool calcTime(vec2 uv) {
 	//if (distance(uv,vec2(0.5,0))<0.5 && tnow-tWiperstart-calcDeltaTime(atan(yA,xA),0)>0.00 && tnow-tWiperstart-calcDeltaTime(atan(yA,xA),0)<0.1) return false;
 	//if (distance(uv,vec2(0,0))<0.5 && tnow-tWiperstart-calcDeltaTime(atan(yB,xB),1)>0.00 && tnow-tWiperstart-calcDeltaTime(atan(yB,xB),1)<0.1) return false;
 	//if (tnow-tWiperstart-calcDeltaTime(atan(yA,xA),0)>0) return true;
-	if (distance(uv,vec2(0,0))>0.5 || uv.y<0) return true; 
-	if (tLocal-tWiperstart-calcDeltaTime(atan(yB,xB),1)<0) return true;
+	if (distance(uv,vec2(0,0))>0.5 || uv.y<0) return true;
+	if (atan(yB,xB)>2.4) return true; 
+	if (tLocal-tWiperstart-calcDeltaTime(atan(yB,xB),1)>-0.01&&tLocal-tWiperstart-calcDeltaTime(atan(yB,xB),1)<0) return false;
 	//if (distance(uv,vec2(0.5,0))<0.5 && tnow-tWiperstart-calcDeltaTime(atan(yA,xA),0)>0 && tnow-tWiperstart-calcDeltaTime(atan(yA,xA),0)<2) return true;
 	//if (distance(uv,vec2(0,0))<0.5 && tnow-tWiperstart-calcDeltaTime(atan(yB,xB),1)>0 && tnow-tWiperstart-calcDeltaTime(atan(yB,xB),1)<2) return true;
 	
-	return false;
+	return true;
 	
 	float timefunction = tWiperstart;
 	float localWiperTime = (tWiperstart);
