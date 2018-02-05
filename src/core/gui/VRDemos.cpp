@@ -53,7 +53,9 @@ VRDemos::VRDemos() {
     for (string path : VRSceneManager::get()->getExamplePaths() ) {
         demos[path] = demoEntryPtr( new demoEntry() );
         demos[path]->path = path;
-        demos[path]->pxm_path = path.substr(0,path.size()-4) + ".png";
+        string filename = getFileName(path);
+        string foldername = getFolderName(path);
+        demos[path]->pxm_path = foldername + "/.local_" + filename.substr(0,filename.size()-4) + "/snapshot.png";
         demos[path]->write_protected = true;
         demos[path]->favorite = false;
         demos[path]->table = "examples_tab";
@@ -248,7 +250,9 @@ void VRDemos::addEntry(string path, string table, bool running) {
         demos[path] = e;
         e->running = running;
         e->table = table;
-        e->pxm_path = path.substr(0,path.size()-4)+".png";
+        string filename = getFileName(path);
+        string foldername = getFolderName(path);
+        e->pxm_path = foldername + "/.local_" + filename.substr(0,filename.size()-4) + "/snapshot.png";
         setButton(e);
     } else e = demos[path];
 
@@ -324,6 +328,18 @@ void VRDemos::on_advanced_start() {
 
     auto scene = VRScene::getCurrent();
     if (no_scripts && scene) scene->pauseScripts(true);
+}
+
+string VRDemos::getFolderName(string path) {
+    size_t sp = path.rfind('/');
+    if (sp == string::npos) return "";
+    return path.substr(0, sp);
+}
+
+string VRDemos::getFileName(string path) {
+    size_t sp = path.rfind('/');
+    if (sp == string::npos) return path;
+    return path.substr(sp+1, path.size());
 }
 
 void VRDemos::normFileName(string& path) {
