@@ -875,8 +875,11 @@ void VRGuiScripts::on_doc_filter_edited() {
 // script search dialog
 
 void VRGuiScripts::on_find_clicked() {
-    setCheckButton("checkbutton12", false);
+    setCheckButton("checkbutton12", true);
     setEntrySensitivity("entry11", false);
+    string txt = editor->getSelection();
+    setTextEntry("entry10", txt);
+    focusEntry("entry10");
     showDialog("find_dialog");
 }
 
@@ -930,6 +933,7 @@ void VRGuiScripts::on_find_diag_find_clicked() {
     bool sa = getCheckButtonState("checkbutton38");
     //bool rep = getCheckButtonState("checkbutton12");
     string search = getTextEntry("entry10");
+    if (search == "") return;
     hideDialog("find_dialog");
 
     VRScriptPtr s = getSelectedScript();
@@ -1132,6 +1136,8 @@ VRGuiScripts::VRGuiScripts() {
     editor->addKeyBinding("save", VRUpdateCb::create("saveCb", boost::bind(&VRGuiScripts::on_save_clicked, this)));
     editor->addKeyBinding("exec", VRUpdateCb::create("execCb", boost::bind(&VRGuiScripts::on_exec_clicked, this)));
     g_signal_connect(editor->getSourceBuffer(), "changed", G_CALLBACK(VRGuiScripts_on_script_changed), this);
+
+    setEntryCallback("entry10", sigc::mem_fun(*this, &VRGuiScripts::on_find_diag_find_clicked), false, false);
 
     setCellRendererCallback("cellrenderertext13", sigc::mem_fun(*this, &VRGuiScripts::on_name_edited) );
     setCellRendererCallback("cellrenderertext2", sigc::mem_fun(*this, &VRGuiScripts::on_argname_edited) );
