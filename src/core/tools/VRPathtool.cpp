@@ -274,10 +274,12 @@ void VRPathtool::update() { // call in script to have smooth knots
 
             Vec3d pos = h->getRelativePosition(ptr());
             Vec3d dir;
-            for (auto k : knot.second.out) if (hPositions.count(k)) dir += pos - hPositions[k];
-            for (auto k : knot.second.in) if (hPositions.count(k)) dir += hPositions[k] - pos;
-            dir.normalize();
-            h->setRelativeDir(dir, ptr());
+            for (auto k : knot.second.in) if (hPositions.count(k)) dir += pos - hPositions[k];
+            for (auto k : knot.second.out) if (hPositions.count(k)) dir += hPositions[k] - pos;
+            if (dir.squareLength() > 1e-6) {
+                dir.normalize();
+                h->setRelativeDir(dir, ptr());
+            }
         }
     }
 
