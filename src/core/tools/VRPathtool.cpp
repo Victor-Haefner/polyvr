@@ -361,15 +361,17 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
                 Vec3d dir;
                 for (auto k : knots[ID].in ) dir += pos - getPos(k);
                 for (auto k : knots[ID].out) dir += getPos(k) - pos;
-                dir.normalize();
-                auto h = knots[ID].handle.lock();
-                auto key = h.get();
-                if (h) {
-                    h->setRelativeDir(dir, ptr());
-                    for (auto e : handleToEntries[key]) {
-                        auto op = e->p->getPoint(e->points[key]);
-                        e->p->setPoint( e->points[key], Pose(op.pos(), dir, op.up()));
-                        updateEntry(e);
+                if (dir.squareLength() > 1e-6) {
+                    dir.normalize();
+                    auto h = knots[ID].handle.lock();
+                    auto key = h.get();
+                    if (h) {
+                        h->setRelativeDir(dir, ptr());
+                        for (auto e : handleToEntries[key]) {
+                            auto op = e->p->getPoint(e->points[key]);
+                            e->p->setPoint( e->points[key], Pose(op.pos(), dir, op.up()));
+                            updateEntry(e);
+                        }
                     }
                 }
             };
