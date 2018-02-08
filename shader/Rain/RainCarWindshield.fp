@@ -97,6 +97,7 @@ vec2 genPattern2Offset(vec2 uv) {
 	return vec2(cos(a), sin(a))*disBD*radius;
 }
 
+//calcs angles of wipers A and B in dependence of current time - [90|120] maxDegree
 vec2 angles() {
 	float period = durationWiper/(wiperSpeed);
 	float time = (tnow-tWiperstart)/period;
@@ -104,11 +105,11 @@ vec2 angles() {
 	float angB = 0;	
 	if (time<0.5) {
 		angA = 2*  90/180*M_PI * time;
-		angB = 4.8*time;//2* 150/180*M_PI * time; 
+		angB = 4.8*time; 
 	} 
 	if (time>0.5) {
 		angA = 2*  90/180*M_PI-2*  90/180*M_PI * time;
-		angB = 4.8-4.8*time;//2* 150/180*M_PI-2* 150/180*M_PI * time;
+		angB = 4.8-4.8*time;
 	}
 	return vec2(angA,angB);
 }
@@ -168,35 +169,21 @@ bool calcTime(vec2 uv) {
 	float yA = floor((uv.y)/disBD);
 	float xB = -floor(uv.x/disBD);
 	float yB = floor((uv.y)/disBD);
-	float tLocal = tnow;// + hash(vec2(xB,yB));
 	float hashTime = hash(vec2(xB,yB));
-	if (atan(yB,xB)<0 || atan(yB,xB)>4.8/2 || distance(uv,vec2(0,0))>0.5) return true;
-	if (hashTime*0.3*scale > calcLocalDeltaTime(atan(yB,xB), angles().y, 1)) return false;
-	return true;
-	//if (distance(uv,vec2(0.5,0))>0.05 && distance(uv,vec2(0.5,0))<0.5 && atan(yA,xA)-angles().x<0.0) return false;
-	//if (distance(uv,vec2(0,0))>0.05 && distance(uv,vec2(0,0))<0.5 && atan(yB,xB)-angles().y<0.0) return false;
+
+	bool ctrlAbounds = (atan(yA,xA)<0 || atan(yA,xA)>3.1416/2 || distance(uv,vec2(0+0.6,0))>0.5);
+	bool ctrlAwiper = (hashTime*20/scale+0.04/scale > calcLocalDeltaTime(atan(yA,xA), angles().x, 0));
+	bool ctrlBbounds = (atan(yB,xB)<0 || atan(yB,xB)>4.8/2 || distance(uv,vec2(0,0))>0.5);
+	bool ctrlBwiper = (hashTime*20/scale+0.04/scale > calcLocalDeltaTime(atan(yB,xB), angles().y, 1));
 	
-	float t = 3;
-	//if (distance(uv,vec2(0.5,0))<0.5 && tnow-tWiperstart-calcDeltaTime(atan(yA,xA),0)>0.00 && tnow-tWiperstart-calcDeltaTime(atan(yA,xA),0)<0.1) return false;
-	//if (distance(uv,vec2(0,0))<0.5 && tnow-tWiperstart-calcDeltaTime(atan(yB,xB),1)>0.00 && tnow-tWiperstart-calcDeltaTime(atan(yB,xB),1)<0.1) return false;
-	//if (tnow-tWiperstart-calcDeltaTime(atan(yA,xA),0)>0) return true;
-	if (distance(uv,vec2(0,0))>0.5 || uv.y<0) return true;
-	if (atan(yB,xB)>2.4) return true; 
-	if (tLocal-tWiperstart-calcDeltaTime(atan(yB,xB),1)>-0.05&&tLocal-tWiperstart-calcDeltaTime(atan(yB,xB),1)<0) return false;
-	//if (tLocal-tWiperstart-calcDeltaTime(atan(yA,xA),1)>-0.05&&tLocal-tWiperstart-calcDeltaTime(atan(yA,yA),1)<0) return false;
-	//if (distance(uv,vec2(0.5,0))<0.5 && tnow-tWiperstart-calcDeltaTime(atan(yA,xA),0)>0 && tnow-tWiperstart-calcDeltaTime(atan(yA,xA),0)<2) return true;
-	//if (distance(uv,vec2(0,0))<0.5 && tnow-tWiperstart-calcDeltaTime(atan(yB,xB),1)>0 && tnow-tWiperstart-calcDeltaTime(atan(yB,xB),1)<2) return true;
-	
+	if (ctrlAbounds) return true;
+	if (ctrlAwiper) return false;
+	if (ctrlBbounds) return true;
+	if (ctrlBwiper) return false;
 	return true;
-	
-	float timefunction = tWiperstart;
-	float localWiperTime = (tWiperstart);
-	//if (tnow - localWiperTime>0.1) return true;
-	return true;
-	return false;
 }
 
-vec4 locateDrop() { //locate drop, if wipers active
+vec4 locateDrop() {
 	vec3 worldVec = computeDropOnWS();
 	vec2 uv = worldToLocal(worldVec) + vec2(0.5,0.5)*disBD*pass;
 	if(distance(uv,vec2(0,0))>1.5) return vec4(-10,-10,0,0);
