@@ -16,6 +16,21 @@ VRStorage::VRStorage() {
     store("persistency", &persistency);
 }
 
+VRStorage::~VRStorage() {
+    //cout << "~VRStorage" << endl;
+}
+
+string VRStorage::getDescription() {
+    string d = "[";
+    bool comma = false;
+    for (auto s : storage) {
+        if (comma) d += ", ";
+        comma = true;
+        d += "\""+s.first+"\"";
+    }
+    return d+"]";
+}
+
 void VRStorage::setPersistency(int p) { persistency = p; }
 int VRStorage::getPersistency() { return persistency; }
 void VRStorage::regStorageSetupFkt(VRUpdateCbPtr u) { f_setup.push_back(u); }

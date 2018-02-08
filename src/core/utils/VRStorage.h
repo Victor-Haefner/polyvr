@@ -93,6 +93,7 @@ class VRStorage {
 
     public:
         VRStorage();
+        ~VRStorage();
 
         virtual void save(xmlpp::Element* e, int p = 0);
         virtual void load(xmlpp::Element* e);
@@ -106,6 +107,8 @@ class VRStorage {
         void setPersistency(int p);
         int getPersistency();
         void setOverrideCallbacks(bool b);
+
+        string getDescription();
 };
 
 OSG_END_NAMESPACE;

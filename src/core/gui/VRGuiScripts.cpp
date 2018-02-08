@@ -875,7 +875,7 @@ void VRGuiScripts::on_doc_filter_edited() {
 // script search dialog
 
 void VRGuiScripts::on_find_clicked() {
-    setCheckButton("checkbutton12", true);
+    setCheckButton("checkbutton38", true);
     setEntrySensitivity("entry11", false);
     string txt = editor->getSelection();
     setTextEntry("entry10", txt);

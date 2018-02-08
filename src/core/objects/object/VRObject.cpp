@@ -44,6 +44,7 @@ VRObject::VRObject(string _name) {
 }
 
 VRObject::~VRObject() {
+    //cout << " ~VRObject " << getName() << endl;
     NodeMTRecPtr p;
     if (osg->node) p = osg->node->getParent();
     if (p) p->subChild(osg->node);
