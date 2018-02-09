@@ -11,6 +11,7 @@ vec3 fragDir;
 vec3 PCam;
 vec3 axU;
 vec3 axV;
+vec3 worldVec;
 vec4 color;
 bool debugB = false;
 float disBD = 0.04;
@@ -80,17 +81,17 @@ vec2 genDropOffset(vec2 uv, float disBD, float maxDispl) {
 	return o;
 }
 
-vec2 genPattern1Offset(vec2 uv) {
-	float X = floor(uv.x/disBD);
+vec2 genPattern1Offset(vec2 uvC) {
+	float X = floor(uvC.x/disBD);
 	float K = mod(X,2);
 	vec2 disp = vec2(0.3,0.0)*disBD;
 	if (K > 0.5) disp *= -1;
 	return disp;
 }
 
-vec2 genPattern2Offset(vec2 uv) {
-	float X = floor(uv.x/disBD);
-	float Y = floor(uv.y/disBD);
+vec2 genPattern2Offset(vec2 uvC) {
+	float X = floor(uvC.x/disBD);
+	float Y = floor(uvC.y/disBD);
 	//float a = Y*X*50*disBD;
 	float a = hash(vec2(X, Y))*7;
 	if (pass == 1) a = hash(vec2(Y, X))*21;
@@ -165,23 +166,22 @@ float calcLocalDeltaTime(float alpha, float phi, int whichWiper) {
 }
 
 bool calcTime(vec2 uvC) {
-	vec3 worldVec = computeDropOnWS();
-	vec2 uv = worldToLocal(worldVec);
-	
+	vec2 uvG = worldToLocal(worldVec);
 	float xAC = -floor((uvC.x-0.6)/disBD);
 	float yAC = floor((uvC.y)/disBD);
 	float xBC = -floor(uvC.x/disBD);
 	float yBC = floor((uvC.y)/disBD);
-	float xA = -(uv.x-0.6);
-	float yA = uv.y;
-	float xB = -(uv.x);
-	float yB = uv.y;
-	float hashTime = hash(vec2(xBC,yBC));
-	if (hashTime<0.1) hashTime=0.2;
 
-	bool ctrlAbounds = (atan(yA,xA)>0 && atan(yA,xA)<3.1416/2 && distance(uv,vec2(0+0.6,0))<0.5);
+	float xA = -(uvG.x-0.6);
+	float yA = uvG.y;
+	float xB = -(uvG.x);
+	float yB = uvG.y;
+	float hashTime = hash(vec2(xBC,yBC));
+	if (hashTime<0.1) hashTime=0.1;
+
+	bool ctrlAbounds = (atan(yA,xA)>0 && atan(yA,xA)<3.1416/2 && distance(uvG,vec2(0+0.6,0))<0.5);
 	bool ctrlAWiper = (hashTime*20/scale > calcLocalDeltaTime(atan(yA,xA), angles().x, 0));
-	bool ctrlBbounds = (atan(yB,xB)>0 && atan(yB,xB)<4.8/2 && distance(uv,vec2(0,0))<0.5);
+	bool ctrlBbounds = (atan(yB,xB)>0 && atan(yB,xB)<4.8/2 && distance(uvG,vec2(0,0))<0.5);
 	bool ctrlBWiper = (hashTime*20/scale > calcLocalDeltaTime(atan(yB,xB), angles().y, 1));
 	
 	if (ctrlAbounds) if (ctrlAWiper) return false;
@@ -190,21 +190,18 @@ bool calcTime(vec2 uvC) {
 }
 
 bool drawWipers(){
-	vec3 worldVec = computeDropOnWS();
-	vec2 uv = worldToLocal(worldVec);
+	vec2 uvG = worldToLocal(worldVec);
+	float xA = -(uvG.x-0.6);
+	float yA = uvG.y;
+	float xB = -(uvG.x);
+	float yB = uvG.y;
 	
-	float xA = -(uv.x-0.6);
-	float yA = uv.y;
-	float xB = -(uv.x);
-	float yB = uv.y;
-	
-	if (distance(uv,vec2(0+0.6,0))<0.5) if ((atan(yA,xA)-angles().x>0.0) && (atan(yA,xA)-angles().x<0.01)) return true; 
-	if (distance(uv,vec2(0,0))<0.5) if ((atan(yB,xB)-angles().y>0.0) && (atan(yB,xB)-angles().y<0.01)) return true;
+	if (distance(uvG,vec2(0+0.6,0))<0.5) if ((atan(yA,xA)-angles().x>0.0) && (atan(yA,xA)-angles().x<0.01)) return true; 
+	if (distance(uvG,vec2(0,0))<0.5) if ((atan(yB,xB)-angles().y>0.0) && (atan(yB,xB)-angles().y<0.01)) return true;
 	return false;
 }
 
 vec4 locateDrop() {
-	vec3 worldVec = computeDropOnWS();
 	vec2 uv = worldToLocal(worldVec) + vec2(0.5,0.5)*disBD*pass*3.54;
 	if(distance(uv,vec2(0,0))>1.5) return vec4(-10,-10,0,0);
 	vec2 uvUnchanged = uv;
@@ -237,31 +234,18 @@ vec4 returnColor(vec4 drop) {
 	return dropColor;
 }
 
-vec4 orc(vec4 inCl1, vec4 inCl2) { //OverRideColor
+//OverRideColor
+vec4 orc(vec4 inCl1, vec4 inCl2) { 
 	if (inCl2.x == -10) return inCl1;
 	return inCl1;
 }
 
 vec4 drawBorder(vec4 check) {
-	vec3 worldVec = computeDropOnWS();
-	vec2 uv = worldToLocal(worldVec);
-	if (uv.x<-0.7 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
-	if (uv.x>0.7 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
-	if (uv.y<-0.3 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
-	if (uv.y>0.6 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
-	
-	float xoff = 0.25;
-	float yoff = -0.8;
-	float xoff2 = -1.;
-	float yoff2 = -0.8;
-	if (mod(tnow,4)>2 && mod(tnow,4)<4) {
-	//if ((uv.x-xoff2)*(uv.x-xoff2)+(uv.y-yoff2)*(uv.y-yoff2)<1.2 && (uv.x-xoff2)*(uv.x-xoff2)+(uv.y-yoff2)*(uv.y-yoff2)>0.05) return vec4(0,0,0,0);
-	//if ((uv.x-xoff)*(uv.x-xoff)+(uv.y-yoff)*(uv.y-yoff)<1.2 && (uv.x-xoff)*(uv.x-xoff)+(uv.y-yoff)*(uv.y-yoff)>0.05) return vec4(0,0,0,0);
-	
-	}
-	else {
-	
-	}
+	vec2 uvG = worldToLocal(worldVec);
+	if (uvG.x<-0.7 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
+	if (uvG.x>0.7 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
+	if (uvG.y<-0.3 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
+	if (uvG.y>0.6 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
 	return check;
 }
 
@@ -272,6 +256,7 @@ void main() {
 
 	computeDirection();
 	computePCam();
+	worldVec = computeDropOnWS();
 	axU = cross(windshieldDir,windshieldUp);
 	axV = windshieldDir;
 	
