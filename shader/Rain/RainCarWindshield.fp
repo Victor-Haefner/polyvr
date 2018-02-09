@@ -164,28 +164,48 @@ float calcLocalDeltaTime(float alpha, float phi, int whichWiper) {
 	return deltaTime;
 }
 
-bool calcTime(vec2 uv) {
-	float xA = -floor((uv.x-0.6)/disBD);
-	float yA = floor((uv.y)/disBD);
-	float xB = -floor(uv.x/disBD);
-	float yB = floor((uv.y)/disBD);
-	float hashTime = hash(vec2(xB,yB));
-
-	bool ctrlAbounds = (atan(yA,xA)<0 || atan(yA,xA)>3.1416/2 || distance(uv,vec2(0+0.6,0))>0.5);
-	bool ctrlAwiper = (hashTime*20/scale+0.04/scale > calcLocalDeltaTime(atan(yA,xA), angles().x, 0));
-	bool ctrlBbounds = (atan(yB,xB)<0 || atan(yB,xB)>4.8/2 || distance(uv,vec2(0,0))>0.5);
-	bool ctrlBwiper = (hashTime*20/scale+0.04/scale > calcLocalDeltaTime(atan(yB,xB), angles().y, 1));
+bool calcTime(vec2 uvC) {
+	vec3 worldVec = computeDropOnWS();
+	vec2 uv = worldToLocal(worldVec);
 	
-	if (ctrlAbounds) return true;
-	if (ctrlAwiper) return false;
-	if (ctrlBbounds) return true;
-	if (ctrlBwiper) return false;
+	float xAC = -floor((uvC.x-0.6)/disBD);
+	float yAC = floor((uvC.y)/disBD);
+	float xBC = -floor(uvC.x/disBD);
+	float yBC = floor((uvC.y)/disBD);
+	float xA = -(uv.x-0.6);
+	float yA = uv.y;
+	float xB = -(uv.x);
+	float yB = uv.y;
+	float hashTime = hash(vec2(xBC,yBC));
+	if (hashTime<0.1) hashTime=0.2;
+
+	bool ctrlAbounds = (atan(yA,xA)>0 && atan(yA,xA)<3.1416/2 && distance(uv,vec2(0+0.6,0))<0.5);
+	bool ctrlAWiper = (hashTime*20/scale > calcLocalDeltaTime(atan(yA,xA), angles().x, 0));
+	bool ctrlBbounds = (atan(yB,xB)>0 && atan(yB,xB)<4.8/2 && distance(uv,vec2(0,0))<0.5);
+	bool ctrlBWiper = (hashTime*20/scale > calcLocalDeltaTime(atan(yB,xB), angles().y, 1));
+	
+	if (ctrlAbounds) if (ctrlAWiper) return false;
+	if (ctrlBbounds) if (ctrlBWiper) return false;
 	return true;
+}
+
+bool drawWipers(){
+	vec3 worldVec = computeDropOnWS();
+	vec2 uv = worldToLocal(worldVec);
+	
+	float xA = -(uv.x-0.6);
+	float yA = uv.y;
+	float xB = -(uv.x);
+	float yB = uv.y;
+	
+	if (distance(uv,vec2(0+0.6,0))<0.5) if ((atan(yA,xA)-angles().x>0.0) && (atan(yA,xA)-angles().x<0.01)) return true; 
+	if (distance(uv,vec2(0,0))<0.5) if ((atan(yB,xB)-angles().y>0.0) && (atan(yB,xB)-angles().y<0.01)) return true;
+	return false;
 }
 
 vec4 locateDrop() {
 	vec3 worldVec = computeDropOnWS();
-	vec2 uv = worldToLocal(worldVec) + vec2(0.5,0.5)*disBD*pass;
+	vec2 uv = worldToLocal(worldVec) + vec2(0.5,0.5)*disBD*pass*3.54;
 	if(distance(uv,vec2(0,0))>1.5) return vec4(-10,-10,0,0);
 	vec2 uvUnchanged = uv;
 	uv += genPattern2Offset(uv);
@@ -198,32 +218,6 @@ vec4 locateDrop() {
 	
 	if (calcTime(uvUnchanged)) return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
 	
-	return vec4(-10,-10,0,0);
-}
-
-vec4 locateContDrop(float inputScale) {	//locate continuuos drop, if wipers non active
-	vec3 worldVec = computeDropOnWS();
-	vec2 uv = worldToLocal(worldVec) + vec2(0.5,0.5)*disBD*pass;
-	float limitValue = disBD;
-	float hsIn1 = floor(uv.x/disBD) + 50*floor((tnow)/400);
-	float hsIn2 = floor(uv.y/disBD);
-	float hs1 = hash(vec2(hsIn1,hsIn2));
-	float hs2 = hash(vec2(hsIn2,hsIn1));
-	
-	//uv += offset;
-	//uv += genDropOffset(uv, disBD, 0.5*disBD);
-	uv += genPattern2Offset(uv);
-	float asd = (-uv.y+6)*hs2;
-	return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
-	if (mod(tnow,8)<4) {
-		if (asd < mod(tnow,8)*0.6+2 && asd > (mod(tnow,8)-1)*0.6+2.3-0.1*scale){ 
-			return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
-		}
-	} else {
-		if (asd < (8-mod(tnow,8))*0.6+2 && asd > ((8-mod(tnow,8))-1)*0.6+2.3-0.1*scale){ 
-			return vec4(uv.x,uv.y,mod(uv.x,disBD)/disBD,mod(uv.y,disBD)/disBD);
-		}
-	}
 	return vec4(-10,-10,0,0);
 }
 
@@ -248,7 +242,7 @@ vec4 orc(vec4 inCl1, vec4 inCl2) { //OverRideColor
 	return inCl1;
 }
 
-vec4 drawWiper(vec4 check) {
+vec4 drawBorder(vec4 check) {
 	vec3 worldVec = computeDropOnWS();
 	vec2 uv = worldToLocal(worldVec);
 	if (uv.x<-0.7 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
@@ -286,7 +280,8 @@ void main() {
 	if (!isRaining) discard;
 	vec4 drop = locateDrop();
 	dropColor = returnColor(drop);
-	dropColor = drawWiper(dropColor);
+	//dropColor = drawBorder(dropColor);
+	if (drawWipers()) dropColor=vec4(0,0,0,1);
 	
 	if (dropColor == vec4(0,0,0,0)) discard;	
 	gl_FragColor = dropColor;
