@@ -30,7 +30,7 @@ class VRRainCarWindshield : public VRGeometry {
         bool isRaining = false;
         bool isWiping = false;
 
-        float wiperSpeed = 0.5;
+        float wiperSpeed = 0;
 
         uint textureSize;
 
@@ -42,7 +42,7 @@ class VRRainCarWindshield : public VRGeometry {
 
         float tnow = 0;
         float tWiperstart = 0;
-        float durationWiper = 30;
+        float durationWiper = 10;
         double tlast = 0;
         float tdelta = 0;
 

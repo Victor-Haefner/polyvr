@@ -139,7 +139,8 @@ float calcDeltaTime(float angle, int whichWiper) {
 }
 
 //calcs time the wiper travels to angle, from 0
-float calcTravelTime(float angle, int whichWiper) { 	float period = durationWiper/wiperSpeed;
+float calcTravelTime(float angle, int whichWiper) { 	
+	float period = durationWiper/wiperSpeed;
 	float travelTime;
 	if (whichWiper == 0) {
 		travelTime = angle/3.1416 * period;	
@@ -197,7 +198,7 @@ bool drawWipers(){
 	float yB = uvG.y;
 	
 	if (distance(uvG,vec2(0+0.6,0))<0.5) if ((atan(yA,xA)-angles().x>0.0) && (atan(yA,xA)-angles().x<0.01)) return true; 
-	if (distance(uvG,vec2(0,0))<0.5) if ((atan(yB,xB)-angles().y>0.0) && (atan(yB,xB)-angles().y<0.01)) return true;
+	if (distance(uvG,vec2(0,0))<0.5) if ((atan(yB,xB)-angles().y>0.0) && (atan(yB,xB)-angles().y<0.02)) return true;
 	return false;
 }
 
