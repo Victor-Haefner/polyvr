@@ -72,10 +72,11 @@ void VRAsphalt::updateTexture() {
         setShaderParameter(var, unit);
     };
 
-    VRTimer t; t.start();
-    auto paths = texGen->compose(0);
-    if (!noiseTex) noiseTex = noiseTexture();
-    if (!mudTex) mudTex = mudTexture();
+    VRTimer t; t.start(); // TODO: increase PERLIN performance!
+    //cout << "VRAsphalt::updateTexture performance:\n";
+    auto paths = texGen->compose(0); //cout << " paths: " << t.stop() << endl;
+    if (!noiseTex) noiseTex = noiseTexture(); //cout << " noiseTexture: " << t.stop() << endl;
+    if (!mudTex) mudTex = mudTexture(); //cout << " mudTexture: " << t.stop() << endl;
 
     setupTexture(0, paths, "texMarkings");
     setupTexture(1, noiseTex, "texNoise");

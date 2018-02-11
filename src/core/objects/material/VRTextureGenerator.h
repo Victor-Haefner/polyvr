@@ -43,7 +43,8 @@ class VRTextureGenerator {
 
         void applyPixel(Color3f* data, Vec3i p, Color4f c);
         void applyPixel(Color4f* data, Vec3i p, Color4f c);
-        template<typename T> void applyFill(T* data, Color4f c);
+        void applyFill(Color3f* data, Color4f c); // fill does not use template, too slow!
+        void applyFill(Color4f* data, Color4f c);
         template<typename T> void applyLine(T* data, Vec3d p1, Vec3d p2, Color4f c, float width);
         template<typename T> void applyPath(T* data, PathPtr p, Color4f c, float width);
         template<typename T> void applyPolygon(T* data, VRPolygonPtr p, Color4f c, float height);

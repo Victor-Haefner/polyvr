@@ -96,15 +96,17 @@ void VRTextureGenerator::drawPolygon(VRPolygonPtr p, Color4f c, float h) {
     layers.push_back(l);
 }
 
-template<typename T>
-void VRTextureGenerator::applyFill(T* data, Color4f c) {
-    for (int k=0; k<depth; k++) {
-        for (int j=0; j<height; j++) {
-            for (int i=0; i<width; i++) {
-                applyPixel(data, Vec3i(i,j,k), c);
-            }
-        }
-    }
+void VRTextureGenerator::applyFill(Color4f* data, Color4f c) {
+    int N = depth*height*width;
+    fill(data, data+N, c);
+}
+
+void VRTextureGenerator::applyFill(Color3f* data, Color4f c) {
+    int N = depth*height*width;
+    Color3f c3 = Color3f(c[0], c[1], c[2]);
+    fill(data, data+N, c3);
+    //Color3f c3 = Color3f(c[0], c[1], c[2])*c[3];
+    //for (int i=0; i<N; i++) data[i] = c3 + data[i]*(1.0-c[3]);
 }
 
 bool VRTextureGenerator::inBox(Pnt3d& p, Vec3d& s) {
@@ -268,10 +270,15 @@ VRTexturePtr VRTextureGenerator::compose(int seed) { // TODO: optimise!
     srand(seed);
     Vec3i dims(width, height, depth);
 
-    Color3f* data3 = new Color3f[width*height*depth];
-    Color4f* data4 = new Color4f[width*height*depth];
-    for (int i=0; i<width*height*depth; i++) data3[i] = Color3f(1,1,1);
-    for (int i=0; i<width*height*depth; i++) data4[i] = Color4f(1,1,1,1);
+    Color3f* data3 = 0;
+    Color4f* data4 = 0;
+    size_t N = width*height*depth;
+    if (hasAlpha)   data4 = new Color4f[N];
+    else            data3 = new Color3f[N];
+    if (layers.size() == 0 || layers[0].type != FILL) {
+        if (hasAlpha)   fill(data4, data4+N, Color4f(1,1,1,1));
+        else            fill(data3, data3+N, Color3f(1,1,1));
+    }
     for (auto l : layers) {
         if (!hasAlpha) {
             if (l.type == BRICKS) VRBricks::apply(data3, dims, l.amount, l.c31, l.c32);
@@ -295,10 +302,10 @@ VRTexturePtr VRTextureGenerator::compose(int seed) { // TODO: optimise!
 
     img = VRTexture::create();
     auto format = hasAlpha ? OSG::Image::OSG_RGBA_PF : OSG::Image::OSG_RGB_PF;
-    if (hasAlpha) img->getImage()->set(format, width, height, depth, 0, 1, 0.0, (const uint8_t*)data4, OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
-    else       img->getImage()->set(format, width, height, depth, 0, 1, 0.0, (const uint8_t*)data3, OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
-    delete[] data3;
-    delete[] data4;
+    if (hasAlpha)   img->getImage()->set(format, width, height, depth, 0, 1, 0.0, (const uint8_t*)data4, OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    else            img->getImage()->set(format, width, height, depth, 0, 1, 0.0, (const uint8_t*)data3, OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    if (hasAlpha)   delete[] data4;
+    else            delete[] data3;
     return img;
 }
 
