@@ -53,6 +53,9 @@ PyMethodDef VRPyRoadIntersection::methods[] = {
 
 PyMethodDef VRPyDistrict::methods[] = {
     {"remBuilding", PyWrap( District, remBuilding, "Remove a building by address", void, string, string ) },
+    {"addBuilding", PyWrapOpt( District, addBuilding, "Add a building, outline, stories, housenumber, streetname", "|", void, VRPolygonPtr, int, string, string ) },
+    {"setTexture", PyWrap( District, setTexture, "Set the building texture", void, string ) },
+    {"clear", PyWrap( District, clear, "Clear all buildings", void ) },
     {NULL}  /* Sentinel */
 };
 

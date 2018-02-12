@@ -47,9 +47,13 @@ void VRDistrict::init() {
     roofs->setMaterial(b_mat);
 }
 
-void VRDistrict::addBuilding( VRPolygon p, int stories, string housenumber, string street ) {
-    if (p.size() < 3) return;
-    if (p.isCCW()) p.reverseOrder();
+void VRDistrict::setTexture(string path) {
+    b_mat->setTexture(path, false);
+}
+
+void VRDistrict::addBuilding( VRPolygonPtr p, int stories, string housenumber, string street ) {
+    if (p->size() < 3) return;
+    if (p->isCCW()) p->reverseOrder();
     auto b = VRBuilding::create();
     string ID = street+housenumber;
     if (ID == "" || buildings.count(ID)) {
@@ -59,9 +63,9 @@ void VRDistrict::addBuilding( VRPolygon p, int stories, string housenumber, stri
     buildings[ID] = b;
     b->setWorld(world.lock());
 
-    b->addFoundation(p, 4);
-    for (auto i=0; i<stories; i++) b->addFloor(p, 4);
-    b->addRoof(p);
+    b->addFoundation(*p, 4);
+    for (auto i=0; i<stories; i++) b->addFloor(*p, 4);
+    b->addRoof(*p);
     b->computeGeometry(facades, roofs);
 
     auto o = ontology.lock();
@@ -79,7 +83,7 @@ void VRDistrict::addBuilding( VRPolygon p, int stories, string housenumber, stri
 
     auto area = o->addEntity("area", "Area");
     auto perimeter = o->addEntity("perimeter", "Path");
-    for (auto pnt : p.get()) {
+    for (auto pnt : p->get()) {
         auto node = o->addEntity("node", "Node");
         node->setVector("position", toStringVector(Vec3d(pnt[0],0,pnt[1])), "Position");
 		auto nodeEntry = o->addEntity(name+"Entry", "NodeEntry");
