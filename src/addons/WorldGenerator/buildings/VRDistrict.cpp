@@ -57,14 +57,15 @@ void VRDistrict::addBuilding( VRPolygon p, int stories, string housenumber, stri
         ID = "__placeholder__"+toString(i);
     }
     buildings[ID] = b;
-    b->setWorld(world);
+    b->setWorld(world.lock());
 
     b->addFoundation(p, 4);
     for (auto i=0; i<stories; i++) b->addFloor(p, 4);
     b->addRoof(p);
     b->computeGeometry(facades, roofs);
 
-    auto bEnt = ontology->addEntity("building", "Building");
+    auto o = ontology.lock();
+    auto bEnt = o->addEntity("building", "Building");
     bEnt->set("streetName", street);
     bEnt->set("houseNumber", housenumber);
 
@@ -76,12 +77,12 @@ void VRDistrict::addBuilding( VRPolygon p, int stories, string housenumber, stri
         return res;
     };
 
-    auto area = ontology->addEntity("area", "Area");
-    auto perimeter = ontology->addEntity("perimeter", "Path");
+    auto area = o->addEntity("area", "Area");
+    auto perimeter = o->addEntity("perimeter", "Path");
     for (auto pnt : p.get()) {
-        auto node = ontology->addEntity("node", "Node");
+        auto node = o->addEntity("node", "Node");
         node->setVector("position", toStringVector(Vec3d(pnt[0],0,pnt[1])), "Position");
-		auto nodeEntry = ontology->addEntity(name+"Entry", "NodeEntry");
+		auto nodeEntry = o->addEntity(name+"Entry", "NodeEntry");
 		nodeEntry->set("path", perimeter->getName());
 		nodeEntry->set("node", node->getName());
 		nodeEntry->set("sign", "0");

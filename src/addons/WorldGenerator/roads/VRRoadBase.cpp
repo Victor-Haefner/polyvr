@@ -1,4 +1,5 @@
 #include "VRRoadBase.h"
+#include "VRRoadNetwork.h"
 #include "../VRWorldGenerator.h"
 #include "../terrain/VRTerrain.h"
 #include "core/utils/toString.h"
@@ -55,12 +56,15 @@ void VRRoadBase::setupTexCoords( VRGeometryPtr geo, VREntityPtr way ) {
 }
 
 VREntityPtr VRRoadBase::addNode( int nodeID, Vec3d pos, bool elevate, float elevationOffset ) {
-    if (!ontology) return 0; // TODO
+    auto o = ontology.lock();
+    auto t = terrain.lock();
+    if (!o) return 0; // TODO
     //cout << "VRRoadBase::addNode " << pos;
-    if (terrain && elevate) terrain->elevatePoint(pos, roadTerrainOffset + elevationOffset);
+    auto roads = world.lock()->getRoadNetwork();
+    if (t && elevate) t->elevatePoint(pos, roads->getTerrainOffset() + elevationOffset);
     //cout << " -> " << pos << endl;
 
-    auto node = ontology->addEntity("node", "Node");
+    auto node = o->addEntity("node", "Node");
     //return 0;
 	node->setVector("position", toStringVector(pos), "Position");
     node->set("graphID", toString(nodeID) );
@@ -75,7 +79,8 @@ VREntityPtr VRRoadBase::addNode( int nodeID, Vec3d pos, bool elevate, float elev
 }
 
 VREntityPtr VRRoadBase::addLane( int direction, float width, bool pedestrian ) {
-	auto l = ontology->addEntity( entity->getName()+"Lane", "Lane");
+    auto o = ontology.lock();
+	auto l = o->addEntity( entity->getName()+"Lane", "Lane");
 	l->set("width", toString(width));
 	l->set("direction", toString(direction));
 	l->set("pedestrian", toString(pedestrian));
@@ -85,7 +90,8 @@ VREntityPtr VRRoadBase::addLane( int direction, float width, bool pedestrian ) {
 }
 
 VREntityPtr VRRoadBase::addPath( string type, string name, vector<VREntityPtr> nodes, vector<Vec3d> normals ) {
-    auto path = ontology->addEntity(name+"Path", type);
+    auto o = ontology.lock();
+    auto path = o->addEntity(name+"Path", type);
 	//VREntityPtr lastNode;
 	Vec3d nL;
 	int N = nodes.size();
@@ -94,7 +100,7 @@ VREntityPtr VRRoadBase::addPath( string type, string name, vector<VREntityPtr> n
         auto node = nodes[i];
         if (!node) { cout << "Warning in VRRoadBase::addPath, NULL node!" << endl; continue; }
         auto norm = normals[i];
-		auto nodeEntry = ontology->addEntity(name+"Entry", "NodeEntry");
+		auto nodeEntry = o->addEntity(name+"Entry", "NodeEntry");
 		nodeEntry->set("path", path->getName());
 		nodeEntry->set("node", node->getName());
 		nodeEntry->set("sign", "0");
@@ -118,7 +124,8 @@ VREntityPtr VRRoadBase::addPath( string type, string name, vector<VREntityPtr> n
 }
 
 VREntityPtr VRRoadBase::addArrows( VREntityPtr lane, float t, vector<float> dirs ) {
-    auto arrow = world->getOntology()->addEntity("laneArrow", "Arrow");
+    auto o = ontology.lock();
+    auto arrow = o->addEntity("laneArrow", "Arrow");
     lane->add("arrows", arrow->getName());
     arrow->set("position", toString(t));
     arrow->set("lane", lane->getName());
@@ -127,6 +134,7 @@ VREntityPtr VRRoadBase::addArrows( VREntityPtr lane, float t, vector<float> dirs
 }
 
 VRGeometryPtr VRRoadBase::addPole( Vec3d P1, Vec3d P4, float radius ) {
+    auto w = world.lock();
     auto p = Path::create();
     Color3f gray(0.4,0.4,0.4);
     Vec3d Y(0,1,0);
@@ -164,6 +172,6 @@ VRGeometryPtr VRRoadBase::addPole( Vec3d P1, Vec3d P4, float radius ) {
     auto s = VRStroke::create("pole");
     s->setPath(p);
     s->strokeProfile(profile, true, true);
-    s->setMaterial( world->getMaterial("phong") );
+    s->setMaterial( w->getMaterial("phong") );
     return s;
 }

@@ -435,7 +435,8 @@ void VRTerrain::elevatePose(PosePtr p, float offset) { auto P = p->pos(); elevat
 void VRTerrain::elevatePoint(Vec3d& p, float offset, bool useEmbankments) { p[1] = getHeight(Vec2d(p[0], p[2]), useEmbankments) + offset; }
 
 void VRTerrain::elevateVertices(VRGeometryPtr geo, float offset) {
-    if (!terrain || !geo || !geo->getMesh() || !geo->getMesh()->geo) return;
+    auto t = terrain.lock();
+    if (!t || !geo || !geo->getMesh() || !geo->getMesh()->geo) return;
     GeoPnt3fPropertyMTRecPtr pos = (GeoPnt3fProperty*)geo->getMesh()->geo->getPositions();
     for (uint i=0; i<pos->size(); i++) {
         Pnt3f p;

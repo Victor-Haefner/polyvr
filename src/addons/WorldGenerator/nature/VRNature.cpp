@@ -206,7 +206,7 @@ VRTreePtr VRNature::createTree(string type, Vec3d p) {
     auto t = dynamic_pointer_cast<VRTree>(treeTemplates[type]->duplicate());
     if (!t) return 0;
     t->addAttachment("tree", 0);
-    if (terrain) terrain->elevatePoint(p);
+    if (auto t = terrain.lock()) t->elevatePoint(p);
     t->setFrom(p);
     addObject(t, p, 0);
     treeRefs[t.get()] = treeTemplates[type];
@@ -220,7 +220,7 @@ VRTreePtr VRNature::createBush(string type, Vec3d p) {
     auto t = dynamic_pointer_cast<VRTree>(bushTemplates[type]->duplicate());
     if (!t) return 0;
     t->addAttachment("tree", 0);
-    if (terrain) terrain->elevatePoint(p);
+    if (auto t = terrain.lock()) t->elevatePoint(p);
     t->setFrom(p);
     addObject(t, p, 0);
     treeRefs[t.get()] = bushTemplates[type];
@@ -288,7 +288,7 @@ void VRNature::addScrub(VRPolygonPtr area, bool addGround) {
     //VRTimer timer; timer.start();
     //int t0 = timer.stop();
 
-    if (terrain) terrain->elevatePolygon(area, 0.18);
+    if (auto t = terrain.lock()) t->elevatePolygon(area, 0.18);
     Vec3d median = area->getBoundingBox().center();
     area->translate(-median);
     for (auto p : area->getRandomPoints(1)) createRandomBush(median+p);
@@ -324,7 +324,7 @@ void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround)
     for (auto area : Area->gridSplit(10.0)) {
         if (area->isCCW()) area->reverseOrder();
         //cout << " sub Area " << i << "  " << timer.stop() - t0 << endl;
-        if (terrain) terrain->elevatePolygon(area, 0.18);
+        if (auto t = terrain.lock()) t->elevatePolygon(area, 0.18);
         Vec3d median = area->getBoundingBox().center();
         area->translate(-median);
         //cout << "  A1 " << timer.stop() - t0 << endl;
@@ -370,7 +370,7 @@ void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround)
 VRTreePtr VRNature::addTree(VRTreePtr t, bool updateLODs, bool addToStore) { // TODO: needs refactoring!!
     if (!t) return 0;
     PosePtr p = t->getRelativePose(ptr());
-    if (terrain) terrain->elevatePose(p);
+    if (auto t = terrain.lock()) t->elevatePose(p);
 
     auto tree = dynamic_pointer_cast<VRTree>( t->duplicate() );
     tree->addAttachment("tree", 0);
@@ -388,7 +388,7 @@ VRTreePtr VRNature::addTree(VRTreePtr t, bool updateLODs, bool addToStore) { // 
 VRTreePtr VRNature::addBush(VRTreePtr t, bool updateLODs, bool addToStore) {
     if (!t) return 0;
     PosePtr p = t->getRelativePose(ptr());
-    if (terrain) terrain->elevatePose(p);
+    if (auto t = terrain.lock()) t->elevatePose(p);
 
     auto tree = dynamic_pointer_cast<VRTree>( t->duplicate() );
     tree->addAttachment("tree", 0);

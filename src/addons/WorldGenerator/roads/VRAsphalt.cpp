@@ -101,7 +101,7 @@ void VRAsphalt::addPath(PathPtr path, int rID, float width, float dashL, float o
         Vec3d B = (P1 - P0) * 2;
         Vec3d C = P0;
 
-        float k, a, b, c;
+        float k, a, b;
         k = 2.0*A.dot(A);
         a = 3.0*A.dot(B);
         b = B.dot(B);

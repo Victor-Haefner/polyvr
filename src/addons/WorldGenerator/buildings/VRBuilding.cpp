@@ -18,18 +18,20 @@ VRBuilding::~VRBuilding() {}
 VRBuildingPtr VRBuilding::create() { return VRBuildingPtr( new VRBuilding() ); }
 
 void VRBuilding::addFoundation(VRPolygon polygon, float H) {
-    if (terrain && ground == 0) {
+    auto t = terrain.lock();
+    if (t && ground == 0) {
         Vec3d median = polygon.getBoundingBox().center();
-        terrain->elevatePoint(median);
+        t->elevatePoint(median);
         ground = median[1];
     }
     foundations.push_back( make_pair(H, polygon) );
 }
 
 void VRBuilding::addFloor(VRPolygon polygon, float H) {
-    if (terrain && ground == 0) {
+    auto t = terrain.lock();
+    if (t && ground == 0) {
         Vec3d median = polygon.getBoundingBox().center();
-        terrain->elevatePoint(median);
+        t->elevatePoint(median);
         ground = median[1];
     }
     stories.push_back( make_pair(H, polygon) );

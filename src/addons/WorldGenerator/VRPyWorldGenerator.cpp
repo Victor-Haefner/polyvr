@@ -88,6 +88,7 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"getPreviousRoads", PyWrap( RoadNetwork, getPreviousRoads, "Get the previous roads", vector<VREntityPtr>, VREntityPtr ) },
     {"getNextRoads", PyWrap( RoadNetwork, getNextRoads, "Get the next roads", vector<VREntityPtr>, VREntityPtr ) },
     {"addRoute", PyWrap( RoadNetwork, addRoute, "Add route path entity from graph node IDs", VREntityPtr, vector<int> ) },
+    {"setTerrainOffset", PyWrap( RoadNetwork, setTerrainOffset, "Set road to terrain offset", void, float ) },
     {NULL}  /* Sentinel */
 };
 

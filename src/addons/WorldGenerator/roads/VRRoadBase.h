@@ -14,10 +14,6 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRRoadBase : public VRObject, public VRWorldModule {
-    protected:
-        float roadTerrainOffset = 0.06; // same as terrain physics offset
-        float markingsWidth = 0.15;
-
     public:
         VRRoadBase(string name);
         ~VRRoadBase();
