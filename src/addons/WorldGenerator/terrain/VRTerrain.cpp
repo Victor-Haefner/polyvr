@@ -568,9 +568,9 @@ void VRTerrain::projectOSM() {
     setMap(t);*/
 }
 
-void VRTerrain::paintHeights(string path) {
-    mat->setTexture(path, 0, 1);
-    mat->setTexture("world/textures/gravel2.jpg", 0, 2);
+void VRTerrain::paintHeights(string woods, string gravel) {
+    mat->setTexture(woods, 0, 1);
+    mat->setTexture(gravel, 0, 2);
     mat->setShaderParameter("texWoods", 1);
     mat->setShaderParameter("texGravel", 2);
     mat->setShaderParameter("doHeightTextures", 1);

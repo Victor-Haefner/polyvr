@@ -214,7 +214,6 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
     int rID = getRoadID();
     auto path = addPath("Path", name, nodes, norms);
     VRRoadPtr road = addWay(name, { path }, rID, "Road");
-    road->setWorld(world.lock());
     road->getEntity()->set("type", type);
     int Nm = Nlanes*0.5;
     for (int i=0; i<Nm; i++) road->addLane(1, 4 );

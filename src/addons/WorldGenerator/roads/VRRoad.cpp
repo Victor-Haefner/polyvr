@@ -110,6 +110,7 @@ vector<VRRoadPtr> VRRoad::splitAtIntersections(VRRoadNetworkPtr network) { // TO
         // copy road
         int rID = network->getRoadID();
         auto r = create();
+        r->setWorld(world.lock());
         auto re = e->copy();
         re->set("path", npath->getName());
         re->set("ID", toString(rID));
@@ -132,7 +133,10 @@ vector<VRRoadPtr> VRRoad::splitAtIntersections(VRRoadNetworkPtr network) { // TO
 }
 
 VRGeometryPtr VRRoad::createGeometry() {
-    auto roads = world.lock()->getRoadNetwork();
+    auto w = world.lock();
+    if (!w) return 0;
+    auto roads = w->getRoadNetwork();
+    if (!roads) return 0;
 
     auto strokeGeometry = [&]() -> VRGeometryPtr {
 	    float width = getWidth();
@@ -163,7 +167,10 @@ VRGeometryPtr VRRoad::createGeometry() {
 
 void VRRoad::computeMarkings() {
     if (!hasMarkings()) return;
-    auto roads = world.lock()->getRoadNetwork();
+    auto w = world.lock();
+    if (!w) return;
+    auto roads = w->getRoadNetwork();
+    if (!roads) return;
     float mw = roads->getMarkingsWidth();
 
     // road data
