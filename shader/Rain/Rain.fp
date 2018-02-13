@@ -79,9 +79,8 @@ float getOffset(in float rOffset, in float dropdis,in float D) {
 	//return 0;
 }
 
-void computeDepth(vec3 position) {
-	vec4 pp = vec4(position, 1);
-	float d = pp.z / pp.w;
+void computeDepth(vec4 position) {
+	float d = position.z / position.w;
 	gl_FragDepth = d*0.5 + 0.5;
 }
 
@@ -105,7 +104,6 @@ vec3 worldCoords(float D){
 	float relY = 1/(D*tan(gettheta(fragDir)));
 	float relZ = -D*cos(atan( fragDir.x, fragDir.z));
 	vec3 world = vec3(PCam.x-relX,PCam.y-relY,PCam.z-relZ);
-	//vec3 world = vec3(-relX,-relY,-relZ);	
 	return world;
 }
 
@@ -132,9 +130,8 @@ bool isD(float D) {
 	if (D == 5) gl_FragDepth = 0.99;
 	if (D == 8) gl_FragDepth = 0.99;
 	if (D > 8) gl_FragDepth = 0.993;
-	
-		//gl_FragDepth = 0.9124*tan(gettheta(fragDir));
-		//- D/(512-0.1)*sin(gettheta(fragDir)))
+	//computeDepth(gl_ModelViewProjectionMatrix*vec4(worldCoords(D),1));
+
 	if (gettheta(fragDir)>0.3 && israindropx < dropsize && israindropy < dropsize && !obstruction(D)) return true;
 	else return false;
 
@@ -155,7 +152,7 @@ vec3 checkrad() {
 	
 	if (debugB) color = vec3(1.,0.,0.);
 
-	if (isD(1) || isD(2) || isD(3) ||isD(5) || isD(8)) return color;
+	if (isD(2) || isD(3) ||isD(5) || isD(8)) return color;
 	else discard;
 }
 
