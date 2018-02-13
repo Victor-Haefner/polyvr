@@ -151,6 +151,7 @@ void applyLightning() {
 	float NdotHV = max(dot(n, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
 	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
 	gl_FragColor = ambient + diffuse + specular;
+	//gl_FragColor = vec4(n*NdotL, 1.0);
 }
 
 void main( void ) {

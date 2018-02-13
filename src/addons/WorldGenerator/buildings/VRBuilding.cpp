@@ -162,7 +162,9 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs) {
     auto g = t.compute();
     g->translate(Vec3d(0,ground+height,0));
     g->applyTransformation();
-    g->setPositionalTexCoords(1.0, 0, Vec3i(0,2,1));
+    g->updateNormals();
+    g->setPositionalTexCoords2D(0.1,0,Vec2i(0,2));
+    g->setPositionalTexCoords2D(0.05,1,Vec2i(0,2));
     roofs->merge(g);
 }
 
