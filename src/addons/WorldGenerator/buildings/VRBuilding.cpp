@@ -11,6 +11,7 @@ VRBuilding::VRBuilding() {
     wallType = rand();
     windowType = rand();
     doorType = rand();
+    roofType = rand();
 }
 
 VRBuilding::~VRBuilding() {}
@@ -67,21 +68,21 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs) {
 
             int N = 4;
             float _N = 1./N;
-            float e = 0.01;
 
             int fi = N*float(wallType) / RAND_MAX;
-            float f_tc1 = fi * _N + e;
-            float f_tc2 = fi * _N - e + _N;
+            float f_tc1 = fi * _N;
+            float f_tc2 = (fi+1) * _N;
 
             for (int i=0; i<segN; i++) {
                 Vec2d w1 = pos1 + (wallDir * (i*wall_segment));
                 Vec2d w2 = pos1 + (wallDir * ((i+1)*wall_segment));
                 Vec2d wallVector = w2-w1;
                 Vec3d n = Vec3d(-wallVector[1], 0, wallVector[0]);
-                geo.pushVert(Vec3d(w1[0], low, w1[1]), n, Vec2d(f_tc1, e), Vec2d(0, 0.25+e));
-                geo.pushVert(Vec3d(w2[0], low, w2[1]), n, Vec2d(f_tc2, e), Vec2d(0, 0.25+e));
-                geo.pushVert(Vec3d(w2[0], high, w2[1]), n, Vec2d(f_tc2, 0.25-e), Vec2d(0, 0.5-e));
-                geo.pushVert(Vec3d(w1[0], high, w1[1]), n, Vec2d(f_tc1, 0.25-e), Vec2d(0, 0.5-e));
+                Color4f c = Color4f(f_tc1, 0, 0, 0.25);
+                geo.pushVert(Vec3d(w1[0], low, w1[1]), n, c, Vec2d(f_tc1, 0), Vec2d(0, 0.25));
+                geo.pushVert(Vec3d(w2[0], low, w2[1]), n, c, Vec2d(f_tc2, 0), Vec2d(0, 0.25));
+                geo.pushVert(Vec3d(w2[0], high, w2[1]), n, c, Vec2d(f_tc2, 0.25), Vec2d(0, 0.5));
+                geo.pushVert(Vec3d(w1[0], high, w1[1]), n, c, Vec2d(f_tc1, 0.25), Vec2d(0, 0.5));
                 geo.pushQuad();
             }
         }
@@ -116,18 +117,17 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs) {
 
             int N = 4;
             float _N = 1./N;
-            float e = 0.01;
 
             int di = N*float(doorType) / RAND_MAX;
             int wi = N*float(windowType) / RAND_MAX;
             int fi = N*float(wallType) / RAND_MAX;
 
-            float d_tc1 = di * _N + e;
-            float d_tc2 = di * _N - e + _N;
-            float w_tc1 = wi * _N + e;
-            float w_tc2 = wi * _N - e + _N;
-            float f_tc1 = fi * _N + e;
-            float f_tc2 = fi * _N - e + _N;
+            float d_tc1 = di * _N;
+            float d_tc2 = di * _N + _N;
+            float w_tc1 = wi * _N;
+            float w_tc2 = wi * _N + _N;
+            float f_tc1 = fi * _N;
+            float f_tc2 = fi * _N + _N;
 
             for (int i=0; i<segN; i++) {
                 Vec2d w1 = pos1 + (wallDir * (i*wall_segment));
@@ -137,16 +137,18 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs) {
                 Vec3d n = Vec3d(-wallVector[1], 0, wallVector[0]);
 
                 if (i == doorIndex) { // door
-                    geo.pushVert(Vec3d(w1[0], low, w1[1]), n, Vec2d(f_tc1, e), Vec2d(d_tc1, 0.5+e));
-                    geo.pushVert(Vec3d(w2[0], low, w2[1]), n, Vec2d(f_tc2, e), Vec2d(d_tc2, 0.5+e));
-                    geo.pushVert(Vec3d(w2[0], high, w2[1]), n, Vec2d(f_tc2, 0.25-e), Vec2d(d_tc2, 0.75-e));
-                    geo.pushVert(Vec3d(w1[0], high, w1[1]), n, Vec2d(f_tc1, 0.25-e), Vec2d(d_tc1, 0.75-e));
+                    Color4f c = Color4f(f_tc1, 0, d_tc1, 0.5);
+                    geo.pushVert(Vec3d(w1[0], low, w1[1]), n, c, Vec2d(f_tc1, 0), Vec2d(d_tc1, 0.5));
+                    geo.pushVert(Vec3d(w2[0], low, w2[1]), n, c, Vec2d(f_tc2, 0), Vec2d(d_tc2, 0.5));
+                    geo.pushVert(Vec3d(w2[0], high, w2[1]), n, c, Vec2d(f_tc2, 0.25), Vec2d(d_tc2, 0.75));
+                    geo.pushVert(Vec3d(w1[0], high, w1[1]), n, c, Vec2d(f_tc1, 0.25), Vec2d(d_tc1, 0.75));
                     geo.pushQuad();
                 } else { // window
-                    geo.pushVert(Vec3d(w1[0], low, w1[1]), n, Vec2d(f_tc1, e), Vec2d(w_tc1, 0.25+e));
-                    geo.pushVert(Vec3d(w2[0], low, w2[1]), n, Vec2d(f_tc2, e), Vec2d(w_tc2, 0.25+e));
-                    geo.pushVert(Vec3d(w2[0], high, w2[1]), n, Vec2d(f_tc2, 0.25-e), Vec2d(w_tc2, 0.5-e));
-                    geo.pushVert(Vec3d(w1[0], high, w1[1]), n, Vec2d(f_tc1, 0.25-e), Vec2d(w_tc1, 0.5-e));
+                    Color4f c = Color4f(f_tc1, 0, w_tc1, 0.25);
+                    geo.pushVert(Vec3d(w1[0], low, w1[1]), n, c, Vec2d(f_tc1, 0), Vec2d(w_tc1, 0.25));
+                    geo.pushVert(Vec3d(w2[0], low, w2[1]), n, c, Vec2d(f_tc2, 0), Vec2d(w_tc2, 0.25));
+                    geo.pushVert(Vec3d(w2[0], high, w2[1]), n, c, Vec2d(f_tc2, 0.25), Vec2d(w_tc2, 0.5));
+                    geo.pushVert(Vec3d(w1[0], high, w1[1]), n, c, Vec2d(f_tc1, 0.25), Vec2d(w_tc1, 0.5));
                     geo.pushQuad();
                 }
 
@@ -156,6 +158,12 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs) {
         walls->merge( geo.asGeometry("facade") );
     }
 
+
+    int N = 4;
+    float _N = 1./N;
+    int ri = N*float(roofType) / RAND_MAX;
+    float r_tc1 = ri * _N;
+
     // roof
     Triangulator t;
     t.add(roof);
@@ -163,8 +171,16 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs) {
     g->translate(Vec3d(0,ground+height,0));
     g->applyTransformation();
     g->updateNormals();
-    g->setPositionalTexCoords2D(0.1,0,Vec2i(0,2));
+    g->setPositionalTexCoords2D(0.05,0,Vec2i(0,2));
     g->setPositionalTexCoords2D(0.05,1,Vec2i(0,2));
+    VRGeoData data(g);
+    data.addVertexColors(Color4f(r_tc1, 0.75, r_tc1, 0.75));
     roofs->merge(g);
 }
+
+
+
+
+
+
 

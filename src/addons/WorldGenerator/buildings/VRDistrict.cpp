@@ -34,6 +34,7 @@ void VRDistrict::init() {
         b_mat->setSpecular(Color3f(0.2, 0.2, 0.2)); //light reflection in camera direction
         b_mat->setVertexShader(matVShdr, "buildingVS");
         b_mat->setFragmentShader(matFShdr, "buildingFS");
+        b_mat->setShaderParameter("chunkSize", Vec2f(0.25, 0.25));
         b_mat->setMagMinFilter(GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST, 0);
     }
 
@@ -117,17 +118,20 @@ void VRDistrict::clear() {
 
 string VRDistrict::matVShdr = GLSL(
 varying vec3 vnrm;
-varying vec2 vtc1;
+varying vec4 vtc1;
 varying vec2 vtc2;
+varying vec2 vtc3;
 attribute vec4 osg_Vertex;
 attribute vec3 osg_Normal;
+attribute vec4 osg_Color;
 attribute vec2 osg_MultiTexCoord0;
 attribute vec2 osg_MultiTexCoord1;
 
 void main( void ) {
     vnrm = normalize( gl_NormalMatrix * osg_Normal );
-    vtc1 = vec2(osg_MultiTexCoord0);
-    vtc2 = vec2(osg_MultiTexCoord1);
+    vtc1 = osg_Color.xyzw;
+    vtc2 = vec2(osg_MultiTexCoord0);
+    vtc3 = vec2(osg_MultiTexCoord1);
     gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex;
 }
 );
@@ -135,10 +139,13 @@ void main( void ) {
 
 string VRDistrict::matFShdr = GLSL(
 varying vec3 vnrm;
-varying vec2 vtc1;
+varying vec4 vtc1;
 varying vec2 vtc2;
+varying vec2 vtc3;
 uniform sampler2D tex;
+uniform vec2 chunkSize;
 
+float padding = 0.05;
 vec4 color;
 vec3 normal;
 
@@ -154,11 +161,33 @@ void applyLightning() {
 	//gl_FragColor = vec4(n*NdotL, 1.0);
 }
 
+vec2 modTC(vec2 tc) {
+	vec2 res = tc.xy/chunkSize.xy;
+	res -= floor(res.xy);
+	res.xy *= chunkSize.xy;
+	res.xy *= 1.0-2.0*padding; // TODO: there are still some artifacts!
+	res.xy += padding*chunkSize.xy;
+	return res;
+}
+
 void main( void ) {
 	normal = vnrm;
-	vec4 tex1 = texture2D(tex, vtc1);
-	vec4 tex2 = texture2D(tex, vtc2);
+	vec4 tex1 = texture2D(tex, modTC(vtc2) + vtc1.xy);
+	vec4 tex2 = texture2D(tex, modTC(vtc3) + vtc1.zw);
 	color = mix(tex1, tex2, tex2[3]);
 	applyLightning();
 }
 );
+
+
+
+
+
+
+
+
+
+
+
+
+

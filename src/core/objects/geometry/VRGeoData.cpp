@@ -571,5 +571,17 @@ void VRGeoData::addVertexColors(Color3f c) {
     }
 }
 
+void VRGeoData::addVertexColors(Color4f c) {
+    int N = size();
+    auto& cols = data->cols4;
+    if (cols->size() == 0) {
+        for (int i=0; i<N; i++) cols->addValue(c);
+    }
+    if (geo) {
+        geo->fixColorMapping();
+        geo->getMesh()->geo->setColors(cols);
+    }
+}
+
 
 
