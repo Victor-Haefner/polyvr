@@ -205,6 +205,7 @@ bool drawWipers(){
 vec4 locateDrop() {
 	vec2 uv = worldToLocal(worldVec) + vec2(0.5,0.5)*disBD*pass*3.54;
 	if(distance(uv,vec2(0,0))>1.5) return vec4(-10,-10,0,0);
+	uv= uv + vec2(0,1)*tnow/20*(1+0.2*pass+0.2*scale); //TODO: INSERT INERTIA DRIVEN OFFSET TO SIMULATE RAIN MOVEMENT ON GLASS
 	vec2 uvUnchanged = uv;
 	uv += genPattern2Offset(uv);
 
@@ -226,12 +227,13 @@ vec4 returnColor(vec4 drop) {
 	//float alph = dist*abs(dir);
 	//float alph = smoothstep(1.0-radius+(radius-0.1)*(1-scale*0.1),0.9,1-dist)*(0.5-dist*1.5*dir);
 	float alph = smoothstep(1.0-radius,0.95,1-dist)*(0.5-dist*1.5*dir);
+	if (debugB) alph = 1;	
 	vec4 check1 = vec4(0.2,0.2,0.3,0.7*alph);
 	vec4 check2 = vec4(1,1,1,0.7*alph);
 	dropColor = mix(check1, check2, -dir*32*dist);
 	//dropColor = vec4(dir,dir,dir,1);
 
-	if (debugB) dropColor = vec4(0.6,0,0,0.9*alph);
+	//if (debugB) dropColor = vec4(0.6,0,0,0.9*alph);
 	return dropColor;
 }
 
@@ -245,7 +247,7 @@ vec4 drawBorder(vec4 check) {
 	vec2 uvG = worldToLocal(worldVec);
 	if (uvG.x<-0.7 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
 	if (uvG.x>0.7 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
-	if (uvG.y<-0.3 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
+	if (uvG.y<-0.1 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
 	if (uvG.y>0.6 && distance(windshieldPos,worldVec) < 1.5) return vec4(0,0,0,1);
 	return check;
 }
@@ -270,6 +272,7 @@ void main() {
 	if (drawWipers()) dropColor=vec4(0,0,0,1);
 	
 	if (dropColor == vec4(0,0,0,0)) discard;	
+	if (dropColor.w < 0.2) discard;	
 	gl_FragColor = dropColor;
 }
 
