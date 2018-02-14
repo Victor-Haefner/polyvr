@@ -33,6 +33,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
     private:
         static string vertexShader;
         static string fragmentShader;
+        static string fragmentShaderDeferred;
         static string tessControlShader;
         static string tessEvaluationShader;
 

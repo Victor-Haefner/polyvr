@@ -342,6 +342,7 @@ void VRTerrain::setupMat() {
 	mat = VRMaterial::create("terrain");
 	mat->setVertexShader(vertexShader, "terrainVS");
 	mat->setFragmentShader(fragmentShader, "terrainFS");
+	mat->setFragmentShader(fragmentShaderDeferred, "terrainFSD", true);
 	mat->setTessControlShader(tessControlShader, "terrainTCS");
 	mat->setTessEvaluationShader(tessEvaluationShader, "terrainTES");
 	mat->setShaderParameter("resolution", resolution);
@@ -618,6 +619,7 @@ uniform int doHeightTextures;
 uniform float waterLevel;
 
 in vec4 pos;
+in vec4 vertex;
 in float height;
 vec3 norm;
 vec4 color;
@@ -696,6 +698,86 @@ void main( void ) {
 }
 );
 
+string VRTerrain::fragmentShaderDeferred =
+"#version 400 compatibility\n"
+GLSL(
+uniform sampler2D tex;
+uniform sampler2D texWoods;
+uniform sampler2D texGravel;
+const ivec3 off = ivec3(-1,0,1);
+const vec3 light = vec3(-1,-1,-0.5);
+uniform vec2 texelSize;
+uniform int doHeightTextures;
+uniform float waterLevel;
+
+in vec4 vertex;
+in vec4 pos;
+in float height;
+vec3 norm;
+vec4 color;
+
+vec3 mixColor(vec3 c1, vec3 c2, float t) {
+	t = clamp(t, 0.0, 1.0);
+	return mix(c1, c2, t);
+}
+
+vec3 getColor() {
+	return texture2D(tex, gl_TexCoord[0].xy).rgb;
+}
+
+vec3 getNormal() {
+	vec2 tc = gl_TexCoord[0].xy;
+    float s11 = texture(tex, tc).a;
+    float s01 = textureOffset(tex, tc, off.xy).a;
+    float s21 = textureOffset(tex, tc, off.zy).a;
+    float s10 = textureOffset(tex, tc, off.yx).a;
+    float s12 = textureOffset(tex, tc, off.yz).a;
+
+    vec2 r2 = 2.0*texelSize;
+    vec3 va = normalize(vec3(r2.x,s21-s01,0));
+    vec3 vb = normalize(vec3(   0,s12-s10,r2.y));
+    vec3 n = cross(vb,va);
+	return n;
+}
+
+void applyBumpMap(vec4 b) {
+    float a = b.g*10;
+    norm += 0.1*vec3(cos(a),0,sin(a));
+    //norm.x += b.r*0.5;
+    //norm.z += (b.g-1.0)*1.0;
+    normalize(norm);
+}
+
+void main( void ) {
+	vec2 tc = gl_TexCoord[0].xy;
+	norm = getNormal();
+
+	if (doHeightTextures == 0) color = vec4(getColor(),1.0);
+	else {
+        vec4 cW1 = texture(texWoods, tc*1077);
+        vec4 cW2 = texture(texWoods, tc*107);
+        vec4 cW3 = texture(texWoods, tc*17);
+        vec4 cW4 = texture(texWoods, tc);
+        vec4 cW = mix(cW1,mix(cW2,mix(cW3,cW4,0.5),0.5),0.5);
+        //applyBumpMap(cW3);
+
+        vec4 cG0 = texture(texGravel, tc*10777);
+        vec4 cG1 = texture(texGravel, tc*1077);
+        vec4 cG2 = texture(texGravel, tc*107);
+        vec4 cG3 = texture(texGravel, tc*17);
+        vec4 cG4 = texture(texGravel, tc);
+        vec4 cG = mix(cG0,mix(cG1,mix(cG2,mix(cG3,cG4,0.5),0.5),0.5),0.5);
+        color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
+        if (height < waterLevel) color = vec4(0.2,0.4,1,1);
+	}
+
+	norm = normalize( gl_NormalMatrix * norm );
+    gl_FragData[0] = vec4(vertex.xyz/vertex.w, 1.0);
+    gl_FragData[1] = vec4(norm, 1);
+    gl_FragData[2] = color;
+}
+);
+
 string VRTerrain::tessControlShader =
 "#version 400 compatibility\n"
 "#extension GL_ARB_tessellation_shader : enable\n"
@@ -746,6 +828,7 @@ in vec3 tcPosition[];
 in vec2 tcTexCoords[];
 out float height;
 out vec4 pos;
+out vec4 vertex;
 
 uniform float heightScale;
 uniform int channel;
@@ -766,6 +849,7 @@ void main() {
     height = heightScale * texture2D(texture, gl_TexCoord[0].xy)[channel];
     tePosition.y = height;
     pos = gl_ModelViewProjectionMatrix * vec4(tePosition, 1);
+    vertex = gl_ModelViewMatrix * vec4(tePosition, 1);
     gl_Position = pos;
 }
 );
