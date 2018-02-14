@@ -145,7 +145,7 @@ varying vec2 vtc3;
 uniform sampler2D tex;
 uniform vec2 chunkSize;
 
-float padding = 0.05;
+float padding = 0.025; // 0.05
 vec4 color;
 vec3 normal;
 
@@ -165,17 +165,35 @@ vec2 modTC(vec2 tc) {
 	vec2 res = tc.xy/chunkSize.xy;
 	res -= floor(res.xy);
 	res.xy *= chunkSize.xy;
-	res.xy *= 1.0-2.0*padding; // TODO: there are still some artifacts!
+	res.xy *= 1.0-2.0*padding;
 	res.xy += padding*chunkSize.xy;
+	if (res.x < padding*chunkSize.x) res.x = padding*chunkSize.x;
+	if (res.x > (1.0-padding)*chunkSize.x) res.x = (1.0-padding)*chunkSize.x;
+	if (res.y < padding*chunkSize.y) res.y = padding*chunkSize.y;
+	if (res.y > (1.0-padding)*chunkSize.y) res.y = (1.0-padding)*chunkSize.y;
 	return res;
+}
+
+float alphaFix(vec2 uv, float a) {
+    vec2 p = 2.0*padding*chunkSize;
+	if (uv.x < p.x)               return 0.0;
+	if (uv.x > chunkSize.x - p.x) return 0.0;
+	if (uv.y < p.y)               return 0.0;
+	if (uv.y > chunkSize.y - p.y) return 0.0;
+	return a;
 }
 
 void main( void ) {
 	normal = vnrm;
-	vec4 tex1 = texture2D(tex, modTC(vtc2) + vtc1.xy);
-	vec4 tex2 = texture2D(tex, modTC(vtc3) + vtc1.zw);
+	vec2 uv1 = modTC(vtc2);
+	vec2 uv2 = modTC(vtc3);
+	vec4 tex1 = texture2D(tex, uv1 + vtc1.xy);
+	vec4 tex2 = texture2D(tex, uv2 + vtc1.zw);
+	tex2[3] = alphaFix(uv2, tex2[3]);
 	color = mix(tex1, tex2, tex2[3]);
 	applyLightning();
+
+	//gl_FragColor = vec4(tex2.a, 1-uv2.x*4, 0, 1.0);
 }
 );
 
