@@ -34,6 +34,7 @@ void VRDistrict::init() {
         b_mat->setSpecular(Color3f(0.2, 0.2, 0.2)); //light reflection in camera direction
         b_mat->setVertexShader(matVShdr, "buildingVS");
         b_mat->setFragmentShader(matFShdr, "buildingFS");
+        b_mat->setFragmentShader(matFDShdr, "buildingFS", true);
         b_mat->setShaderParameter("chunkSize", Vec2f(0.25, 0.25));
         b_mat->setMagMinFilter(GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST, 0);
     }
@@ -117,6 +118,7 @@ void VRDistrict::clear() {
 }
 
 string VRDistrict::matVShdr = GLSL(
+varying vec4 vertex;
 varying vec3 vnrm;
 varying vec4 vtc1;
 varying vec2 vtc2;
@@ -132,12 +134,14 @@ void main( void ) {
     vtc1 = osg_Color.xyzw;
     vtc2 = vec2(osg_MultiTexCoord0);
     vtc3 = vec2(osg_MultiTexCoord1);
+    vertex = gl_ModelViewMatrix * osg_Vertex;
     gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex;
 }
 );
 
 
 string VRDistrict::matFShdr = GLSL(
+varying vec4 vertex;
 varying vec3 vnrm;
 varying vec4 vtc1;
 varying vec2 vtc2;
@@ -192,8 +196,56 @@ void main( void ) {
 	tex2[3] = alphaFix(uv2, tex2[3]);
 	color = mix(tex1, tex2, tex2[3]);
 	applyLightning();
+}
+);
 
-	//gl_FragColor = vec4(tex2.a, 1-uv2.x*4, 0, 1.0);
+string VRDistrict::matFDShdr = GLSL(
+varying vec4 vertex;
+varying vec3 vnrm;
+varying vec4 vtc1;
+varying vec2 vtc2;
+varying vec2 vtc3;
+uniform sampler2D tex;
+uniform vec2 chunkSize;
+
+float padding = 0.025; // 0.05
+vec4 color;
+vec3 normal;
+
+vec2 modTC(vec2 tc) {
+	vec2 res = tc.xy/chunkSize.xy;
+	res -= floor(res.xy);
+	res.xy *= chunkSize.xy;
+	res.xy *= 1.0-2.0*padding;
+	res.xy += padding*chunkSize.xy;
+	if (res.x < padding*chunkSize.x) res.x = padding*chunkSize.x;
+	if (res.x > (1.0-padding)*chunkSize.x) res.x = (1.0-padding)*chunkSize.x;
+	if (res.y < padding*chunkSize.y) res.y = padding*chunkSize.y;
+	if (res.y > (1.0-padding)*chunkSize.y) res.y = (1.0-padding)*chunkSize.y;
+	return res;
+}
+
+float alphaFix(vec2 uv, float a) {
+    vec2 p = 2.0*padding*chunkSize;
+	if (uv.x < p.x)               return 0.0;
+	if (uv.x > chunkSize.x - p.x) return 0.0;
+	if (uv.y < p.y)               return 0.0;
+	if (uv.y > chunkSize.y - p.y) return 0.0;
+	return a;
+}
+
+void main( void ) {
+	normal = vnrm;
+	vec2 uv1 = modTC(vtc2);
+	vec2 uv2 = modTC(vtc3);
+	vec4 tex1 = texture2D(tex, uv1 + vtc1.xy);
+	vec4 tex2 = texture2D(tex, uv2 + vtc1.zw);
+	tex2[3] = alphaFix(uv2, tex2[3]);
+	color = mix(tex1, tex2, tex2[3]);
+
+    gl_FragData[0] = vec4(vertex.xyz/vertex.w, 1.0);
+    gl_FragData[1] = vec4(normal, 1);
+    gl_FragData[2] = color;
 }
 );
 

@@ -14,6 +14,7 @@ class VRDistrict : public VRObject, public VRWorldModule {
     private:
         static string matVShdr;
         static string matFShdr;
+        static string matFDShdr;
 
         map<string, VRBuildingPtr> buildings;
         VRGeometryPtr facades;
