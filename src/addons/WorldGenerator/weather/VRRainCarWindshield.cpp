@@ -113,6 +113,10 @@ void VRRainCarWindshield::update() {
     tlast = tnow;
 
     if (isWiping && tnow-durationWiper/wiperSpeed>tWiperstart) tWiperstart=tnow;
+    if (!isWiping && wiperSpeed>0 && tnow-durationWiper/wiperSpeed>tWiperstart) {
+            wiperSpeed=0;
+            setShaderParameter("wiperSpeed", wiperSpeed);
+    }
 
     Vec3d windshieldPos = geoWindshield->getWorldPosition();
     Vec3d windshieldDir = geoWindshield->getWorldDirection();
@@ -157,8 +161,8 @@ void VRRainCarWindshield::stop() {
 
 void VRRainCarWindshield::setWipers(bool isWiping, float wiperSpeed) {
     this->isWiping = isWiping;
-    this->wiperSpeed = wiperSpeed;
-    setShaderParameter("wiperSpeed", wiperSpeed);
+    if (isWiping) this->wiperSpeed = wiperSpeed;
+    if (isWiping) setShaderParameter("wiperSpeed", wiperSpeed);
     cout << "VRRainCarWindshield::setWipers(" << isWiping <<","<< wiperSpeed << ")" << endl;
 }
 
