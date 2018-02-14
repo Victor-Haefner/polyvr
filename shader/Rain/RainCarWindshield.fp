@@ -109,7 +109,7 @@ vec2 angles() {
 		angA = 2*  90/180*M_PI * time;
 		angB = 4.8*time; 
 	} 
-	if (time>0.5) {
+	if (time>=0.5) {
 		angA = 2*  90/180*M_PI-2*  90/180*M_PI * time;
 		angB = 4.8-4.8*time;
 	}
