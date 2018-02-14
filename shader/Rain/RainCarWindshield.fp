@@ -14,6 +14,7 @@ vec3 axV;
 vec3 worldVec;
 vec4 color;
 bool debugB = false;
+bool moveB = true;
 float disBD = 0.04;
 float radius = 0.3;
 
@@ -95,7 +96,7 @@ vec2 genPattern2Offset(vec2 uvC) {
 	//float a = Y*X*50*disBD;
 	float a = hash(vec2(X, Y))*7;
 	if (pass == 1) a = hash(vec2(Y, X))*21;
-	return vec2(cos(a), sin(a))*disBD*radius;
+	return vec2(cos(a), sin(a))*disBD*radius/scale*10;
 }
 
 //calcs angles of wipers A and B in dependence of current time - [90|120] maxDegree
@@ -181,9 +182,9 @@ bool calcTime(vec2 uvC) {
 	if (hashTime<0.1) hashTime=0.1;
 
 	bool ctrlAbounds = (atan(yA,xA)>0 && atan(yA,xA)<3.1416/2 && distance(uvG,vec2(0+0.6,0))<0.5);
-	bool ctrlAWiper = (hashTime*20/scale > calcLocalDeltaTime(atan(yA,xA), angles().x, 0));
+	bool ctrlAWiper = (hashTime*25/(scale+3) > calcLocalDeltaTime(atan(yA,xA), angles().x, 0));
 	bool ctrlBbounds = (atan(yB,xB)>0 && atan(yB,xB)<4.8/2 && distance(uvG,vec2(0,0))<0.5);
-	bool ctrlBWiper = (hashTime*20/scale > calcLocalDeltaTime(atan(yB,xB), angles().y, 1));
+	bool ctrlBWiper = (hashTime*25/(scale+3) > calcLocalDeltaTime(atan(yB,xB), angles().y, 1));
 	
 	if (ctrlAbounds) if (ctrlAWiper) return false;
 	if (ctrlBbounds) if (ctrlBWiper) return false;
@@ -205,7 +206,7 @@ bool drawWipers(){
 vec4 locateDrop() {
 	vec2 uv = worldToLocal(worldVec) + vec2(0.5,0.5)*disBD*pass*3.54;
 	if(distance(uv,vec2(0,0))>1.5) return vec4(-10,-10,0,0);
-	uv= uv + vec2(0,1)*tnow/20*(1+0.2*pass+0.2*scale); //TODO: INSERT INERTIA DRIVEN OFFSET TO SIMULATE RAIN MOVEMENT ON GLASS
+	if (moveB) uv= uv + vec2(0,1)*tnow/20*(1+0.2*pass+0.2*scale); //TODO: INSERT INERTIA DRIVEN OFFSET TO SIMULATE RAIN MOVEMENT ON GLASS
 	vec2 uvUnchanged = uv;
 	uv += genPattern2Offset(uv);
 
@@ -221,12 +222,18 @@ vec4 locateDrop() {
 }
 
 vec4 returnColor(vec4 drop) {
+	float xC = -floor(drop.x/disBD);
+	float yC = floor((drop.y)/disBD);
+	float hashValue = hash(vec2(xC*0.2437,yC*0.2437)); //same seed would be all same size due to calctime algorithm
+	float radiusC = radius*(0.3+0.7*hashValue);
+	if (radiusC<0.4*radius) radiusC=radius;
+	if (radiusC<0.05) radiusC=0.06;
 	vec4 dropColor = vec4(0,0,0,0);
-	float dir = dot(drop.zw-vec2(0.5,0.5), vec2(0,1+radius));
+	float dir = dot(drop.zw-vec2(0.5,0.5), vec2(0,1+radiusC));
 	float dist = distance(drop.zw,vec2(0.5,0.5));
 	//float alph = dist*abs(dir);
 	//float alph = smoothstep(1.0-radius+(radius-0.1)*(1-scale*0.1),0.9,1-dist)*(0.5-dist*1.5*dir);
-	float alph = smoothstep(1.0-radius,0.95,1-dist)*(0.5-dist*1.5*dir);
+	float alph = smoothstep(1.0-radiusC,0.95,1-dist)*(0.5-dist*1.5*dir);
 	if (debugB) alph = 1;	
 	vec4 check1 = vec4(0.2,0.2,0.3,0.7*alph);
 	vec4 check2 = vec4(1,1,1,0.7*alph);
