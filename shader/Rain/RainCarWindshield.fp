@@ -234,8 +234,9 @@ vec4 returnColor(vec4 drop) {
 	//float alph = dist*abs(dir);
 	//float alph = smoothstep(1.0-radius+(radius-0.1)*(1-scale*0.1),0.9,1-dist)*(0.5-dist*1.5*dir);
 	float alph = smoothstep(1.0-radiusC,0.95,1-dist)*(0.5-dist*1.5*dir);
-	if (debugB) alph = 1;	
-	vec4 check1 = vec4(0.2,0.2,0.3,0.7*alph);
+	if (debugB) alph = 1;
+	float cl = 0.2 + 0.8/(scale+3);	
+	vec4 check1 = vec4(cl,cl,cl+0.1,0.7*alph);
 	vec4 check2 = vec4(1,1,1,0.7*alph);
 	dropColor = mix(check1, check2, -dir*32*dist);
 	//dropColor = vec4(dir,dir,dir,1);
