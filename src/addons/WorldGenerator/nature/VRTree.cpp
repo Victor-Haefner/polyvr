@@ -522,14 +522,21 @@ void VRTree::createHullTrunkLod(VRGeoData& geo, int lvl, Vec3d offset, int ID) {
         Hull.pushQuad(i1[3],i1[0],i2[0],i2[3]);
     };
 
+    auto pushCross = [&](Vec4i i1, Vec4i i2) {
+        Hull.pushQuad(i1[0],i1[2],i2[2],i2[0]);
+        Hull.pushQuad(i1[1],i1[3],i2[3],i2[1]);
+    };
+
     int Nlvl = 3;
-    if (lvl > 2) Nlvl = 2;
-    if (lvl > 3) Nlvl = 1;
+    if (lvl >= 2) Nlvl = 2;
+    if (lvl >= 3) Nlvl = 1;
+    if (lvl >= 4) Nlvl = 0;
     for (segment* s : branches) {
         if (s->lvl > Nlvl) continue;
         auto i0 = pushRing(s->p1, s->radii[0]);
         auto i1 = pushRing(s->p2, s->radii[1]);
-        pushBox(i0,i1);
+        if (Nlvl <= 1) pushCross(i0,i1);
+        else pushBox(i0,i1);
     }
 
     truncLodCache[lvl] = Hull.asGeometry("truncLodCache");
