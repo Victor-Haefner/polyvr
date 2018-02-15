@@ -15,7 +15,9 @@ vec3 worldVec;
 vec4 color;
 bool debugB = false;
 bool moveB = true;
-float disBD = 0.04;
+//float disBD = 0.04;
+//float radius = 0.3;
+float disBD = 0.06;
 float radius = 0.3;
 
 uniform float scale;
@@ -206,7 +208,7 @@ bool drawWipers(){
 vec4 locateDrop() {
 	vec2 uv = worldToLocal(worldVec) + vec2(0.5,0.5)*disBD*pass*3.54;
 	if(distance(uv,vec2(0,0))>1.5) return vec4(-10,-10,0,0);
-	if (moveB) uv= uv + vec2(0,1)*tnow/20*(1+0.2*pass+0.2*scale); //TODO: INSERT INERTIA DRIVEN OFFSET TO SIMULATE RAIN MOVEMENT ON GLASS
+	if (moveB) uv= uv + -0.1*vec2(0,1)*tnow/20*(1+0.2*pass+0.2*scale); //TODO: INSERT INERTIA DRIVEN OFFSET TO SIMULATE RAIN MOVEMENT ON GLASS
 	vec2 uvUnchanged = uv;
 	uv += genPattern2Offset(uv);
 
@@ -225,8 +227,19 @@ vec4 returnColor(vec4 drop) {
 	float xC = -floor(drop.x/disBD);
 	float yC = floor((drop.y)/disBD);
 	float hashValue = hash(vec2(xC*0.2437,yC*0.2437)); //same seed would be all same size due to calctime algorithm
-	float radiusC = radius*(0.3+0.7*hashValue);
-	if (radiusC<0.4*radius) radiusC=radius;
+	float xB = drop.z-0.5;
+	float yB = drop.w-0.5;
+	float segments = 12*(0.5+0.3*hashValue);
+	float factor = 360/segments;
+	float noiseScale = 0.5;
+	float phiD = atan(yB,xB)*180/M_PI; //in degrees
+	float angleD = floor(phiD/factor)*factor; 
+	float fr = fract(phiD/factor);	
+	vec2 ang1 = vec2(cos(angleD),sin(angleD));
+	vec2 ang2 = vec2(cos((angleD+factor)),sin((angleD+factor)));
+	float hashRadius = mix(hash(ang1),hash(ang2),smoothstep(0,1,fr));
+	float radiusC = radius*(0.3+0.7*hashValue*(0.3+1*hashRadius));
+	if (radiusC<0.4*radius) radiusC=radius*(0.3+(hashRadius));
 	if (radiusC<0.05) radiusC=0.06;
 	vec4 dropColor = vec4(0,0,0,0);
 	float dir = dot(drop.zw-vec2(0.5,0.5), vec2(0,1+radiusC));
@@ -238,7 +251,7 @@ vec4 returnColor(vec4 drop) {
 	float cl = 0.2 + 0.8/(scale+3);	
 	vec4 check1 = vec4(cl,cl,cl+0.1,0.7*alph);
 	vec4 check2 = vec4(1,1,1,0.7*alph);
-	dropColor = mix(check1, check2, -dir*32*dist);
+	dropColor = mix(check1, check2, -dir*32*dist*0.5/radiusC);
 	//dropColor = vec4(dir,dir,dir,1);
 
 	//if (debugB) dropColor = vec4(0.6,0,0,0.9*alph);
