@@ -35,6 +35,7 @@ VRHandGeoPtr VRHandGeo::create(string name) {
 }
 
 void VRHandGeo::connectToLeap(VRLeapPtr leap) {
+    if (!leap) return;
     function<void(VRLeapFramePtr)> cb = [this](VRLeapFramePtr frame) {
         update(frame);
     };
