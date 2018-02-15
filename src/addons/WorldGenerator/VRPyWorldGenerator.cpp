@@ -32,6 +32,7 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"addOSMMap", PyWrapOpt( WorldGenerator, addOSMMap, "Add an OpenStreetMap map", "-1|-1|-1", void, string, double, double, double ) },
     {"reloadOSMMap", PyWrapOpt( WorldGenerator, reloadOSMMap, "Reload OSM data", "-1|-1|-1", void, double, double, double ) },
     {"clear", PyWrap( WorldGenerator, clear, "Clear everything", void ) },
+    {"getStats", PyWrap( WorldGenerator, getStats, "Return stats as string", string ) },
     {NULL}  /* Sentinel */
 };
 

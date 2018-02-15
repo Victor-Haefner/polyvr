@@ -443,6 +443,12 @@ void VRWorldGenerator::clear() {
     nature->clear();
 }
 
+string VRWorldGenerator::getStats() {
+    string res;
+    res += "world generator stats:\n";
+    res += "  OSM map: " + toString(osmMap->getMemoryConsumption()) + " mb\n";
+    return res;
+}
 
 // textured asset material
 
