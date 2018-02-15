@@ -106,6 +106,8 @@ class VRRoadNetwork : public VRRoadBase {
         void compute();
 
         void test1();
+
+        double getMemoryConsumption();
 };
 
 OSG_END_NAMESPACE;
