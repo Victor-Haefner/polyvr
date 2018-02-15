@@ -24,7 +24,6 @@ HandPtr VRLeapFrame::Hand::clone() {
     copy->joints = joints;
     copy->bases = bases;
     copy->extended = extended;
-    copy->directions = directions;
     copy->pinchStrength = pinchStrength;
     copy->grabStrength = grabStrength;
     copy->confidence = confidence;
@@ -47,7 +46,7 @@ void VRLeapFrame::Hand::transform(Pose transformation) {
     Pose dirTransform = getDirTransform(transformation);
 
     // transform pose
-    pose.set(transformation.transform(pose.pos()), dirTransform.transform(pose.dir()), dirTransform.transform(pose.up()));
+    pose->set(transformation.transform(pose->pos()), dirTransform.transform(pose->dir()), dirTransform.transform(pose->up()));
 
     // transform joint positions
     for (auto& finger : joints) {
@@ -59,11 +58,6 @@ void VRLeapFrame::Hand::transform(Pose transformation) {
         for (auto& bone : finger) {
             bone.set(transformation.transform(bone.pos()), dirTransform.transform(bone.dir()), dirTransform.transform(bone.up()));
         }
-    }
-
-    // transform directions
-    for (auto& dir : directions) {
-        dirTransform.transform(dir);
     }
 
 }

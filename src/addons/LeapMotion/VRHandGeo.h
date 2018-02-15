@@ -33,7 +33,6 @@ private:
     bool visible{false};
 
     vector<vector<VRGeometryPtr>> bones;
-    vector<VRGeometryPtr> directions;
     VRGeometryPtr pinch;
     VRLeapFrame::HandPtr handData;
 };

@@ -44,6 +44,7 @@ class VRAvatar {
         void disableAvatar(string avatar);
 
         void addBeacon();
+        VRTransformPtr getBeaconRoot();
         VRTransformPtr getBeacon(int i);
         VRTransformPtr getBeacon();
         VRTransformPtr editBeacon(int i);

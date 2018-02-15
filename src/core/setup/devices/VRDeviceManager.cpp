@@ -43,7 +43,7 @@ void VRDeviceManager::updateDevices() {
 
 void VRDeviceManager::addDevice(VRDevicePtr dev) {
     devices[dev->getName()] = dev;
-    dev->getBeacon()->switchParent(device_root);
+    dev->getBeaconRoot()->switchParent(device_root);
     //dev->getCross()->switchParent(device_root); //TODO: add crosses as marker with a marker engine!
 }
 

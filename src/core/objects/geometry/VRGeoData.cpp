@@ -49,19 +49,22 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
     if (!geo) { reset(); return; }
 
     this->geo = geo;
-    data->types = (GeoUInt8Property*)geo->getMesh()->geo->getTypes();
-    data->lengths = (GeoUInt32Property*)geo->getMesh()->geo->getLengths();
-    data->indices = (GeoUInt32Property*)geo->getMesh()->geo->getIndices();
-    data->pos = (GeoPnt3fProperty*)geo->getMesh()->geo->getPositions();
+    if (geo->getMesh() && geo->getMesh()->geo) {
+        data->types = (GeoUInt8Property*)geo->getMesh()->geo->getTypes();
+        data->lengths = (GeoUInt32Property*)geo->getMesh()->geo->getLengths();
+        data->indices = (GeoUInt32Property*)geo->getMesh()->geo->getIndices();
+        data->pos = (GeoPnt3fProperty*)geo->getMesh()->geo->getPositions();
 
-    data->norms = (GeoVec3fProperty*)geo->getMesh()->geo->getNormals();
-    data->texs = (GeoVec2fProperty*)geo->getMesh()->geo->getTexCoords();
-    data->texs2 = (GeoVec2fProperty*)geo->getMesh()->geo->getTexCoords1();
+        data->norms = (GeoVec3fProperty*)geo->getMesh()->geo->getNormals();
+        data->texs = (GeoVec2fProperty*)geo->getMesh()->geo->getTexCoords();
+        data->texs2 = (GeoVec2fProperty*)geo->getMesh()->geo->getTexCoords1();
+        auto cols = geo->getMesh()->geo->getColors();
+        int Nc = data->getColorChannels(cols);
+        if (Nc == 3) data->cols3 = (GeoVec3fProperty*)cols;
+        if (Nc == 4) data->cols4 = (GeoVec4fProperty*)cols;
+    }
+
     if (data->types && data->types->size() > 0) data->lastPrim = data->types->getValue( data->types->size()-1 );
-    auto cols = geo->getMesh()->geo->getColors();
-    int Nc = data->getColorChannels(cols);
-    if (Nc == 3) data->cols3 = (GeoVec3fProperty*)cols;
-    if (Nc == 4) data->cols4 = (GeoVec4fProperty*)cols;
     if (!data->types) data->types = GeoUInt8Property::create();
     if (!data->lengths) data->lengths = GeoUInt32Property::create();
     if (!data->indices) data->indices = GeoUInt32Property::create();

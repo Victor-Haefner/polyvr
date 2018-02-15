@@ -3,6 +3,8 @@
 #include <core/setup/devices/VRDevice.h>
 #include <core/networking/VRWebSocket.h>
 
+#include <boost/thread/recursive_mutex.hpp>
+
 #include "VRLeapFrame.h"
 
 
@@ -17,7 +19,7 @@ class VRLeap : public VRDevice {
         int port{6437};
         string connectionStatus{"not connected"};
         VRWebSocket webSocket;
-        boost::mutex mutex;
+        boost::recursive_mutex mutex;
 
         bool transformed{false};
         Pose transformation;
@@ -25,11 +27,12 @@ class VRLeap : public VRDevice {
         string serial;
 
         float dragThreshold{0.8f};
-        float dropThreshold{0.5f};
+        float dropThreshold{0.6f};
 
         void newFrame(Json::Value json);
         void updateHandFromJson(Json::Value& handData, Json::Value& pointableData, HandPtr hand);
         void updateSceneData(vector<HandPtr> hands);
+        VRTransformPtr getBeaconChild(int i);
         Pose computeCalibPose(vector<PenPtr>& pens);
 
     protected:

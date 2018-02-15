@@ -13,7 +13,18 @@ OSG_BEGIN_NAMESPACE ;
 
 VRLeap::VRLeap() : VRDevice("leap") {
 
-    for (int i = 0; i < 9; ++i) { addBeacon(); }
+    // left hand beacons
+    for (int i = 1; i <= 5; ++i) {
+            addBeacon();
+            getBeacon(i)->switchParent(getBeacon(0));
+    }
+
+    // right hand beacons
+    addBeacon(); // right root
+    for (int i = 7; i <= 11; ++i) {
+            addBeacon();
+            getBeacon(i)->switchParent(getBeacon(6));
+    }
 
     auto cb = [&](Json::Value msg) {
         newFrame(msg);
@@ -32,6 +43,7 @@ VRLeapPtr VRLeap::create() {
     auto d = VRLeapPtr(new VRLeap());
     d->initIntersect(d);
     d->clearSignals();
+
     return d;
 }
 
@@ -66,11 +78,11 @@ void VRLeap::clearFrameCallbacks() { frameCallbacks.clear(); }
 void VRLeap::updateHandFromJson(Json::Value& handData, Json::Value& pointableData, HandPtr hand) {
 
         auto pos = handData["palmPosition"];
-        hand->pose.setPos( Vec3d(pos[0].asFloat(), pos[1].asFloat(), pos[2].asFloat())* 0.001f );
+        hand->pose->setPos( Vec3d(pos[0].asFloat(), pos[1].asFloat(), pos[2].asFloat())* 0.001f );
         auto dir = handData["direction"];
-        hand->pose.setDir( Vec3d(dir[0].asFloat(), dir[1].asFloat(), dir[2].asFloat()) );
+        hand->pose->setDir( Vec3d(dir[0].asFloat(), dir[1].asFloat(), dir[2].asFloat()) );
         auto normal = handData["palmNormal"];
-        hand->pose.setUp( Vec3d(normal[0].asFloat(), normal[1].asFloat(), normal[2].asFloat()) );
+        hand->pose->setUp( Vec3d(normal[0].asFloat(), normal[1].asFloat(), normal[2].asFloat()) );
 
         hand->pinchStrength = handData["pinchStrength"].asFloat();
         hand->grabStrength = handData["grabStrength"].asFloat();
@@ -107,16 +119,23 @@ void VRLeap::updateHandFromJson(Json::Value& handData, Json::Value& pointableDat
                 hand->bases[type].push_back(current);
             }
 
-            // Setup extension and direction
+            // Setup extension
             hand->extended[type] = pointable["extended"].asBool();
-            auto direction = pointable["direction"];
-            hand->directions[type] = Vec3d(direction[0].asFloat(), direction[1].asFloat(), direction[2].asFloat());
         }
+}
+
+VRTransformPtr VRLeap::getBeaconChild(int i) {
+    boost::recursive_mutex::scoped_lock lock(mutex);
+    cout << static_pointer_cast<VRTransform>( getBeacon()->getChild(i) )->getFrom() << endl;
+    return static_pointer_cast<VRTransform>( getBeacon()->getChild(i) );
 }
 
 void VRLeap::updateSceneData(vector<HandPtr> hands) {
 
-    boost::mutex::scoped_lock lock(mutex);
+    boost::recursive_mutex::scoped_lock lock(mutex);
+
+    // beaconRoot->Setup->Camera
+    auto parent = getBeaconRoot()->getParent()->getParent();
 
     for (int i = 0; i < 2; ++i) {
 
@@ -126,11 +145,14 @@ void VRLeap::updateSceneData(vector<HandPtr> hands) {
         if (hand) {
 
             // update beacons
-            int b = i * 5; // left start at 0, right start at 5
-            for (size_t j = 0; j < hand->directions.size(); ++j) {
+            int rootIdx = i * 6;
+            getBeacon(rootIdx)->setRelativePose(hand->pose, parent);
+          //  editBeacon(rootIdx)->setPose(hand->pose);
+
+            int b = i * 5;
+            for (size_t j = 0; j < hand->bases.size(); ++j) {
                 PosePtr p = Pose::create(hand->joints[j][4], hand->bases[j].back().dir(), hand->bases[j].back().up());
-                //PosePtr p = Pose::create(hand->joints[j][4]);
-                editBeacon(b)->setPose(p);
+                getBeacon(rootIdx+j+1)->setRelativePose(p, parent);
                 b++;
             }
 
@@ -273,13 +295,24 @@ bool VRLeap::reconnect() {
 void VRLeap::clearSignals() {
     VRDevice::clearSignals();
 
+    /**
+    * drag left:  0
+    * drag right: 1
+    *
+    * tap left:   2 (TODO)
+    * tap right:  3
+    *
+    * beacons left: 1-5 (root: 0)
+    * beacons right: 7-11 (root: 6)
+    */
+
     // left
     addSignal( 0, 0)->add( getDrop() );
-    addSignal( 0, 1)->add( addDrag( getBeacon(0) ) );
+    addSignal( 0, 1)->add( addDrag( getBeacon(1) ) );
 
     // right
     addSignal( 1, 0)->add( getDrop() );
-    addSignal( 1, 1)->add( addDrag( getBeacon(5) ) );
+    addSignal( 1, 1)->add( addDrag( getBeacon(7) ) );
 }
 
 VRIntersection findInside(VRObjectWeakPtr wtree, Vec3d point) {
@@ -325,7 +358,7 @@ void VRLeap::dragCB(VRTransformWeakPtr wcaster, VRObjectWeakPtr wtree, VRDeviceW
     auto caster = wcaster.lock();
 
     for (auto t : trees) {
-        ins = findInside(t, caster->getFrom());
+        ins = findInside(t, caster->getWorldPosition());
         if (ins.hit) break;
     }
 
@@ -334,6 +367,7 @@ void VRLeap::dragCB(VRTransformWeakPtr wcaster, VRObjectWeakPtr wtree, VRDeviceW
 
 void VRLeap::setPose(Pose pose) {
     transformation = pose;
+    getBeaconRoot()->setPose(pose);
     transformed = true;
 }
 
