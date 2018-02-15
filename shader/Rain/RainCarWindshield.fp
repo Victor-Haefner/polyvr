@@ -227,20 +227,22 @@ vec4 returnColor(vec4 drop) {
 	float xC = -floor(drop.x/disBD);
 	float yC = floor((drop.y)/disBD);
 	float hashValue = hash(vec2(xC*0.2437,yC*0.2437)); //same seed would be all same size due to calctime algorithm
-	float xB = drop.z-0.5;
-	float yB = drop.w-0.5;
-	float segments = 12*(0.5+0.3*hashValue);
+	float xB = drop.z-0.25;
+	float yB = drop.w-0.25;
+	float segments = 30*(0.3+0.7*hashValue);
 	float factor = 360/segments;
 	float noiseScale = 0.5;
 	float phiD = atan(yB,xB)*180/M_PI; //in degrees
 	float angleD = floor(phiD/factor)*factor; 
 	float fr = fract(phiD/factor);	
-	vec2 ang1 = vec2(cos(angleD),sin(angleD));
-	vec2 ang2 = vec2(cos((angleD+factor)),sin((angleD+factor)));
-	float hashRadius = mix(hash(ang1),hash(ang2),smoothstep(0,1,fr));
-	float radiusC = radius*(0.3+0.7*hashValue*(0.3+1*hashRadius));
+	vec2 ang1 = vec2(cos(angleD*M_PI/180),sin(angleD*M_PI/180));
+	vec2 ang2 = vec2(cos((angleD*M_PI/180+factor*M_PI/180)),sin((angleD*M_PI/180+factor*M_PI/180)));
+	float hashRadius = mix(1.4*hash(ang1),1.4*hash(ang2),smoothstep(0,1,fr));
+	float radiusC = radius*(0.3+0.7*hashValue*(0.3+0.8*hashRadius));
+	
+	//TODO: clever algprithm so drops don't get calculated too small
 	if (radiusC<0.4*radius) radiusC=radius*(0.3+(hashRadius));
-	if (radiusC<0.05) radiusC=0.06;
+	if (radiusC<0.05) radiusC=0.06;	
 	vec4 dropColor = vec4(0,0,0,0);
 	float dir = dot(drop.zw-vec2(0.5,0.5), vec2(0,1+radiusC));
 	float dist = distance(drop.zw,vec2(0.5,0.5));
