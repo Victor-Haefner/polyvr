@@ -44,6 +44,7 @@ VRObject::VRObject(string _name) {
 }
 
 VRObject::~VRObject() {
+    //cout << " ~VRObject " << getName() << endl;
     NodeMTRecPtr p;
     if (osg->node) p = osg->node->getParent();
     if (p) p->subChild(osg->node);
@@ -290,6 +291,10 @@ bool VRObject::hasAncestor(VRObjectPtr a) {
     if (ptr() == a || getParent() == a) return true;
     if (getParent()) return getParent()->hasAncestor(a);
     return false;
+}
+
+bool VRObject::shareAncestry(VRObjectPtr obj) {
+    return getRoot() == obj->getRoot();
 }
 
 /** Returns the parent of ptr() object **/

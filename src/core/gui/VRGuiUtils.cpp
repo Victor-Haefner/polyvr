@@ -204,6 +204,12 @@ void selectTreestoreRow(string treeview, Gtk::TreeModel::iterator itr) {
     tree_view->grab_focus();
 }
 
+void focusEntry(string e) {
+    Gtk::Entry* en;
+    VRGuiBuilder()->get_widget(e, en);
+    en->grab_focus();
+}
+
 void focusTreeView(string treeview) {
     Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object(treeview));
     tree_view->grab_focus();
@@ -214,13 +220,13 @@ bool entryFocusProxy(GdkEventFocus* e, sigc::slot<void> sig) {
     return true;
 }
 
-void setEntryCallback(string e, sigc::slot<void> sig, bool onEveryChange) {
+void setEntryCallback(string e, sigc::slot<void> sig, bool onEveryChange, bool onFocusOut, bool onActivate) {
     Gtk::Entry* en;
     VRGuiBuilder()->get_widget(e, en);
     if (onEveryChange) en->signal_changed().connect(sig);
     else {
-        en->signal_activate().connect(sig);
-        en->signal_focus_out_event().connect( sigc::bind(&entryFocusProxy, sig) );
+        if (onActivate) en->signal_activate().connect(sig);
+        if (onFocusOut) en->signal_focus_out_event().connect( sigc::bind(&entryFocusProxy, sig) );
     }
 }
 

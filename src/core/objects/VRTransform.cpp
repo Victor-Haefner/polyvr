@@ -774,7 +774,7 @@ void VRTransform::attach(VRTransformPtr b, VRConstraintPtr c) {
     //cout << "VRTransform::attach " << b->getName() << " to " << a->getName() << endl;
 }
 
-VRConstraintPtr VRTransform::getConstraint() { return constraint; }
+VRConstraintPtr VRTransform::getConstraint() { setConstraint(constraint); return constraint; }
 
 /** enable constraints on the object, 0 leaves the DOF free, 1 restricts it **/
 void VRTransform::apply_constraints(bool force) { // TODO: check efficiency

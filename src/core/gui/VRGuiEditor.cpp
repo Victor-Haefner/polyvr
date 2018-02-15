@@ -131,6 +131,8 @@ bool VRGuiEditor::on_editor_shortkey( GdkEventKey* e ) {
     return false;
 }
 
+string VRGuiEditor::getSelection() { return selection; }
+
 void VRGuiEditor::addStyle( string style, string fg, string bg, bool italic, bool bold, bool underlined ) {
     auto tag = editorBuffer->create_tag();
     tag->set_property("foreground", fg);
@@ -201,6 +203,11 @@ void VRGuiEditor::highlightStrings(string search, string style) {
     }
 }
 
+void VRGuiEditor::setSelection(string s) {
+    selection = s;
+    highlightStrings(selection, "asSelected");
+}
+
 bool VRGuiEditor_on_editor_select(GtkWidget* widget, GdkEvent* event, VRGuiEditor* self) {
     GdkEventButton* event_btn = (GdkEventButton*)event;
 
@@ -213,14 +220,15 @@ bool VRGuiEditor_on_editor_select(GtkWidget* widget, GdkEvent* event, VRGuiEdito
         if ( gtk_text_buffer_get_selection_bounds(buffer, &A, &B) ) {
             selection = gtk_text_buffer_get_text(buffer, &A, &B, true);
         }
-        self->highlightStrings(selection?selection:"", "asSelected");
+        self->setSelection(selection?selection:"");
         return false;
     }
 
-    if (event->type == GDK_KEY_RELEASE || event->type == GDK_BUTTON_RELEASE) { // remove highlights on any key or button
-        self->highlightStrings("", "asSelected");
+    if (event->type == GDK_KEY_RELEASE || event->type == GDK_BUTTON_RELEASE) { // remove selection on any key or button
+        self->setSelection("");
         return false;
     }
+
     return false;
 }
 

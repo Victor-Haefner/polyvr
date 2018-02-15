@@ -34,11 +34,25 @@ void VRPlanet::localize(double north, double east) {
     p->invert();
     origin->setPose(p);
 
-    auto s = getSector(north, east);
+    lod->hide(); // TODO: work around due to problems with intersection action!!
+
+    for (auto s : sectors) {
+        auto sector = s.second;
+        Vec2i p = s.first;
+        addChild(sector);
+        sector->setIdentity();
+        Vec2d size = sector->getTerrain()->getSize();
+        float X = p[1]*sectorSize-east;
+        float Y = p[0]*sectorSize-north;
+        cout << "VRPlanet::localize " << X << " " << X*size[0] << endl;
+        sector->translate(Vec3d(X*size[0]/sectorSize, 0, Y*size[1]/sectorSize));
+    }
+
+    /*auto s = getSector(north, east);
     if (s) {
         s->setIdentity();
         addChild(s);
-    } else cout << "Warning: VRPlanet::localize, no sector found at location " << Vec2d(north, east) << " !\n";
+    } else cout << "Warning: VRPlanet::localize, no sector found at location " << Vec2d(north, east) << " !\n";*/
 }
 
 Vec2i VRPlanet::toSID(double north, double east) {

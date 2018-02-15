@@ -51,7 +51,7 @@ class VRConstraint : public VRStorage {
         float getMin(int i);
         float getMax(int i);
 
-        void lock(vector<int> dofs);
+        void lock(vector<int> dofs, float v = 0);
         void free(vector<int> dofs);
         void lockRotation();
 

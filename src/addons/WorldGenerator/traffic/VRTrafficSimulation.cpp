@@ -30,6 +30,7 @@ void erase(vector<T>& v, const T& t) {
 
 VRTrafficSimulation::Vehicle::Vehicle(Graph::position p) : pos(p) {
     t = VRTransform::create("t");
+    speed = speed*(1.0+0.2*0.01*(rand()%100));
 }
 
 VRTrafficSimulation::Vehicle::~Vehicle() {}

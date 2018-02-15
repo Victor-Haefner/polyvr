@@ -25,7 +25,7 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"getPaths", (PyCFunction)VRPyPathtool::getPaths, METH_VARARGS, "Return all paths or paths connected to handle - [path] getPaths( | handle )" },
     {"getPath", (PyCFunction)VRPyPathtool::getPath, METH_VARARGS, "Return path between handles h1 and h2 - [path] getPath( handle h1, handle h2 )" },
     {"getHandle", (PyCFunction)VRPyPathtool::getHandle, METH_VARARGS, "Return a handle by node ID - handle getHandle( int ID )" },
-    {"getHandles", (PyCFunction)VRPyPathtool::getHandles, METH_VARARGS, "Return a list of paths handles - [handle] getHandles(path)" },
+    {"getHandles", PyWrap(Pathtool, getHandles, "Return a list of paths handles", vector<VRGeometryPtr>, PathPtr ) },
     {"getStroke", (PyCFunction)VRPyPathtool::getStroke, METH_VARARGS, "Return the stroke object - stroke getStroke(path)" },
     {"update", (PyCFunction)VRPyPathtool::update, METH_NOARGS, "Update the tool - update()" },
     {"clear", (PyCFunction)VRPyPathtool::clear, METH_VARARGS, "Clear all path nodes - clear(path)" },
@@ -158,13 +158,15 @@ PyObject* VRPyPathtool::getStroke(VRPyPathtool* self, PyObject* args) {
     return VRPyStroke::fromSharedPtr( self->objPtr->getStroke(p->objPtr) );
 }
 
-PyObject* VRPyPathtool::getHandles(VRPyPathtool* self, PyObject* args) {
+/*PyObject* VRPyPathtool::getHandles(VRPyPathtool* self, PyObject* args) {
     if (!self->valid()) return NULL;
 
     VRPyPath* p = 0;
     if (! PyArg_ParseTuple(args, "|O:getHandles", &p)) return NULL;
     PathPtr pa = 0;
-    if (p) pa = p->objPtr;
+    if (p) {
+        pa = p->objPtr;
+    }
 
     vector<VRGeometryPtr> objs = self->objPtr->getHandles(pa);
 
@@ -174,7 +176,7 @@ PyObject* VRPyPathtool::getHandles(VRPyPathtool* self, PyObject* args) {
     }
 
     return li;
-}
+}*/
 
 PyObject* VRPyPathtool::setVisuals(VRPyPathtool* self, PyObject* args) {
     if (!self->valid()) return NULL;

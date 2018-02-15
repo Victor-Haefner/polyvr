@@ -34,6 +34,8 @@ void VRDistrict::init() {
         b_mat->setSpecular(Color3f(0.2, 0.2, 0.2)); //light reflection in camera direction
         b_mat->setVertexShader(matVShdr, "buildingVS");
         b_mat->setFragmentShader(matFShdr, "buildingFS");
+        b_mat->setFragmentShader(matFDShdr, "buildingFS", true);
+        b_mat->setShaderParameter("chunkSize", Vec2f(0.25, 0.25));
         b_mat->setMagMinFilter(GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST, 0);
     }
 
@@ -47,9 +49,13 @@ void VRDistrict::init() {
     roofs->setMaterial(b_mat);
 }
 
-void VRDistrict::addBuilding( VRPolygon p, int stories, string housenumber, string street ) {
-    if (p.size() < 3) return;
-    if (p.isCCW()) p.reverseOrder();
+void VRDistrict::setTexture(string path) {
+    b_mat->setTexture(path, false);
+}
+
+void VRDistrict::addBuilding( VRPolygonPtr p, int stories, string housenumber, string street ) {
+    if (p->size() < 3) return;
+    if (p->isCCW()) p->reverseOrder();
     auto b = VRBuilding::create();
     string ID = street+housenumber;
     if (ID == "" || buildings.count(ID)) {
@@ -57,14 +63,15 @@ void VRDistrict::addBuilding( VRPolygon p, int stories, string housenumber, stri
         ID = "__placeholder__"+toString(i);
     }
     buildings[ID] = b;
-    b->setWorld(world);
+    b->setWorld(world.lock());
 
-    b->addFoundation(p, 4);
-    for (auto i=0; i<stories; i++) b->addFloor(p, 4);
-    b->addRoof(p);
+    b->addFoundation(*p, 4);
+    for (auto i=0; i<stories; i++) b->addFloor(*p, 4);
+    b->addRoof(*p);
     b->computeGeometry(facades, roofs);
 
-    auto bEnt = ontology->addEntity("building", "Building");
+    auto o = ontology.lock();
+    auto bEnt = o->addEntity("building", "Building");
     bEnt->set("streetName", street);
     bEnt->set("houseNumber", housenumber);
 
@@ -76,12 +83,12 @@ void VRDistrict::addBuilding( VRPolygon p, int stories, string housenumber, stri
         return res;
     };
 
-    auto area = ontology->addEntity("area", "Area");
-    auto perimeter = ontology->addEntity("perimeter", "Path");
-    for (auto pnt : p.get()) {
-        auto node = ontology->addEntity("node", "Node");
+    auto area = o->addEntity("area", "Area");
+    auto perimeter = o->addEntity("perimeter", "Path");
+    for (auto pnt : p->get()) {
+        auto node = o->addEntity("node", "Node");
         node->setVector("position", toStringVector(Vec3d(pnt[0],0,pnt[1])), "Position");
-		auto nodeEntry = ontology->addEntity(name+"Entry", "NodeEntry");
+		auto nodeEntry = o->addEntity(name+"Entry", "NodeEntry");
 		nodeEntry->set("path", perimeter->getName());
 		nodeEntry->set("node", node->getName());
 		nodeEntry->set("sign", "0");
@@ -111,29 +118,38 @@ void VRDistrict::clear() {
 }
 
 string VRDistrict::matVShdr = GLSL(
+varying vec4 vertex;
 varying vec3 vnrm;
-varying vec2 vtc1;
+varying vec4 vtc1;
 varying vec2 vtc2;
+varying vec2 vtc3;
 attribute vec4 osg_Vertex;
 attribute vec3 osg_Normal;
+attribute vec4 osg_Color;
 attribute vec2 osg_MultiTexCoord0;
 attribute vec2 osg_MultiTexCoord1;
 
 void main( void ) {
     vnrm = normalize( gl_NormalMatrix * osg_Normal );
-    vtc1 = vec2(osg_MultiTexCoord0);
-    vtc2 = vec2(osg_MultiTexCoord1);
+    vtc1 = osg_Color.xyzw;
+    vtc2 = vec2(osg_MultiTexCoord0);
+    vtc3 = vec2(osg_MultiTexCoord1);
+    vertex = gl_ModelViewMatrix * osg_Vertex;
     gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex;
 }
 );
 
 
 string VRDistrict::matFShdr = GLSL(
+varying vec4 vertex;
 varying vec3 vnrm;
-varying vec2 vtc1;
+varying vec4 vtc1;
 varying vec2 vtc2;
+varying vec2 vtc3;
 uniform sampler2D tex;
+uniform vec2 chunkSize;
 
+float padding = 0.025; // 0.05
 vec4 color;
 vec3 normal;
 
@@ -146,13 +162,102 @@ void applyLightning() {
 	float NdotHV = max(dot(n, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
 	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
 	gl_FragColor = ambient + diffuse + specular;
+	//gl_FragColor = vec4(n*NdotL, 1.0);
+}
+
+vec2 modTC(vec2 tc) {
+	vec2 res = tc.xy/chunkSize.xy;
+	res -= floor(res.xy);
+	res.xy *= chunkSize.xy;
+	res.xy *= 1.0-2.0*padding;
+	res.xy += padding*chunkSize.xy;
+	if (res.x < padding*chunkSize.x) res.x = padding*chunkSize.x;
+	if (res.x > (1.0-padding)*chunkSize.x) res.x = (1.0-padding)*chunkSize.x;
+	if (res.y < padding*chunkSize.y) res.y = padding*chunkSize.y;
+	if (res.y > (1.0-padding)*chunkSize.y) res.y = (1.0-padding)*chunkSize.y;
+	return res;
+}
+
+float alphaFix(vec2 uv, float a) {
+    vec2 p = 2.0*padding*chunkSize;
+	if (uv.x < p.x)               return 0.0;
+	if (uv.x > chunkSize.x - p.x) return 0.0;
+	if (uv.y < p.y)               return 0.0;
+	if (uv.y > chunkSize.y - p.y) return 0.0;
+	return a;
 }
 
 void main( void ) {
 	normal = vnrm;
-	vec4 tex1 = texture2D(tex, vtc1);
-	vec4 tex2 = texture2D(tex, vtc2);
+	vec2 uv1 = modTC(vtc2);
+	vec2 uv2 = modTC(vtc3);
+	vec4 tex1 = texture2D(tex, uv1 + vtc1.xy);
+	vec4 tex2 = texture2D(tex, uv2 + vtc1.zw);
+	tex2[3] = alphaFix(uv2, tex2[3]);
 	color = mix(tex1, tex2, tex2[3]);
 	applyLightning();
 }
 );
+
+string VRDistrict::matFDShdr = GLSL(
+varying vec4 vertex;
+varying vec3 vnrm;
+varying vec4 vtc1;
+varying vec2 vtc2;
+varying vec2 vtc3;
+uniform sampler2D tex;
+uniform vec2 chunkSize;
+
+float padding = 0.025; // 0.05
+vec4 color;
+vec3 normal;
+
+vec2 modTC(vec2 tc) {
+	vec2 res = tc.xy/chunkSize.xy;
+	res -= floor(res.xy);
+	res.xy *= chunkSize.xy;
+	res.xy *= 1.0-2.0*padding;
+	res.xy += padding*chunkSize.xy;
+	if (res.x < padding*chunkSize.x) res.x = padding*chunkSize.x;
+	if (res.x > (1.0-padding)*chunkSize.x) res.x = (1.0-padding)*chunkSize.x;
+	if (res.y < padding*chunkSize.y) res.y = padding*chunkSize.y;
+	if (res.y > (1.0-padding)*chunkSize.y) res.y = (1.0-padding)*chunkSize.y;
+	return res;
+}
+
+float alphaFix(vec2 uv, float a) {
+    vec2 p = 2.0*padding*chunkSize;
+	if (uv.x < p.x)               return 0.0;
+	if (uv.x > chunkSize.x - p.x) return 0.0;
+	if (uv.y < p.y)               return 0.0;
+	if (uv.y > chunkSize.y - p.y) return 0.0;
+	return a;
+}
+
+void main( void ) {
+	normal = vnrm;
+	vec2 uv1 = modTC(vtc2);
+	vec2 uv2 = modTC(vtc3);
+	vec4 tex1 = texture2D(tex, uv1 + vtc1.xy);
+	vec4 tex2 = texture2D(tex, uv2 + vtc1.zw);
+	tex2[3] = alphaFix(uv2, tex2[3]);
+	color = mix(tex1, tex2, tex2[3]);
+
+    gl_FragData[0] = vec4(vertex.xyz/vertex.w, 1.0);
+    gl_FragData[1] = vec4(normal, 1);
+    gl_FragData[2] = color;
+}
+);
+
+
+
+
+
+
+
+
+
+
+
+
+

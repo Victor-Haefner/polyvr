@@ -23,6 +23,7 @@ class VRStroke : public VRGeometry {
         vector<Vec3d> profile;
         bool closed = false;
         bool doColor = true;
+        bool lit = true;
 
         CAP cap_beg = NONE;
         CAP cap_end = NONE;

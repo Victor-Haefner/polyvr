@@ -13,10 +13,10 @@ OSG_BEGIN_NAMESPACE;
 
 class VRWorldModule {
     protected:
-        VRWorldGeneratorPtr world;
-        VRPlanetPtr planet;
-        VRTerrainPtr terrain;
-        VROntologyPtr ontology;
+        VRWorldGeneratorWeakPtr world;
+        VRPlanetWeakPtr planet;
+        VRTerrainWeakPtr terrain;
+        VROntologyWeakPtr ontology;
 
     public:
         VRWorldModule();

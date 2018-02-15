@@ -155,6 +155,30 @@ void OSMMap::readFile(string path) {
     cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
 }
 
+
+template <class Key, class Value>
+unsigned long mapSize(const std::map<Key,Value> &map){
+    unsigned long size = sizeof(map);
+    for(typename std::map<Key,Value>::const_iterator it = map.begin(); it != map.end(); ++it){
+        size += it->first.capacity();
+        size += sizeof(it->second);
+    }
+    return size;
+}
+
+double OSMMap::getMemoryConsumption() {
+    double res = 0;
+
+    res += filepath.capacity();
+    res += sizeof(*bounds);
+    res += mapSize(ways);
+    res += mapSize(nodes);
+    res += mapSize(relations);
+    res += mapSize(invalidElements);
+
+    return res/1048576.0;
+}
+
 OSMMapPtr OSMMap::loadMap(string filepath) { return OSMMapPtr( new OSMMap(filepath) ); }
 map<string, OSMWayPtr> OSMMap::getWays() { return ways; }
 map<string, OSMNodePtr> OSMMap::getNodes() { return nodes; }

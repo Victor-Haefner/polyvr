@@ -200,7 +200,6 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     li.lightSH->addShader(li.lightVP);
     li.lightSH->addShader(li.lightFP);
 
-    li.dsID = dsStage->editMFLights()->size();
     dsStage->editMFLights       ()->push_back(li.light  );
     dsStage->editMFLightPrograms()->push_back(li.lightSH);
     lightInfos[ID] = li;
@@ -222,8 +221,9 @@ void VRDefShading::updateLight(VRLightPtr l) {
     if (shadows) li.shadowType = defaultShadowType;
     else li.shadowType = ST_NONE;
 
+    auto lItr = dsStage->editMFLights()->find(li.light);
     li.light = l->getLightCore();
-    dsStage->editMFLights()->replace(li.dsID, li.light);
+    dsStage->editMFLights()->replace(lItr, li.light);
     dsStage->editMFLightPrograms();
     string vpFile = getLightVPFile(li.lightType);
     string fpFile = getLightFPFile(li.lightType, li.shadowType);
@@ -257,12 +257,12 @@ const std::string& VRDefShading::getLightFPFile(LightTypeE lightType, ShadowType
 void VRDefShading::subLight(int ID) {
     if (!lightInfos.count(ID)) return;
     auto& li = lightInfos[ID];
-    int lightIdx = li.dsID;
-    OSG_ASSERT(lightIdx < lightInfos.size());
-    OSG_ASSERT(lightIdx < dsStage->getMFLights()->size());
-    OSG_ASSERT(lightIdx < dsStage->getMFLightPrograms()->size());
-    dsStage->editMFLights()->erase(lightIdx);
-    dsStage->editMFLightPrograms()->erase(lightIdx);
+    auto lItr = dsStage->editMFLights()->find(li.light);
+    auto lpItr = dsStage->editMFLightPrograms()->find(li.lightSH);
+    //OSG_ASSERT(lightIdx < dsStage->getMFLights()->size());
+    //OSG_ASSERT(lightIdx < dsStage->getMFLightPrograms()->size());
+    dsStage->editMFLights()->erase(lItr);
+    dsStage->editMFLightPrograms()->erase(lpItr);
     lightInfos.erase(ID);
 }
 

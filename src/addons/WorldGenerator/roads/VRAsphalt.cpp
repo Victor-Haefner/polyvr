@@ -72,10 +72,11 @@ void VRAsphalt::updateTexture() {
         setShaderParameter(var, unit);
     };
 
-    VRTimer t; t.start();
-    auto paths = texGen->compose(0);
-    if (!noiseTex) noiseTex = noiseTexture();
-    if (!mudTex) mudTex = mudTexture();
+    VRTimer t; t.start(); // TODO: increase PERLIN performance!
+    //cout << "VRAsphalt::updateTexture performance:\n";
+    auto paths = texGen->compose(0); //cout << " paths: " << t.stop() << endl;
+    if (!noiseTex) noiseTex = noiseTexture(); //cout << " noiseTexture: " << t.stop() << endl;
+    if (!mudTex) mudTex = mudTexture(); //cout << " mudTexture: " << t.stop() << endl;
 
     setupTexture(0, paths, "texMarkings");
     setupTexture(1, noiseTex, "texNoise");
@@ -100,7 +101,7 @@ void VRAsphalt::addPath(PathPtr path, int rID, float width, float dashL, float o
         Vec3d B = (P1 - P0) * 2;
         Vec3d C = P0;
 
-        float k, a, b, c;
+        float k, a, b;
         k = 2.0*A.dot(A);
         a = 3.0*A.dot(B);
         b = B.dot(B);
@@ -205,11 +206,6 @@ in vec4 position;
 in vec2 tc1; // noise
 flat in int rID;
 
-);
-
-
-string VRAsphalt::asphalt_fp_core =
-GLSL(
 void debugColors(float y) {
 	if (y<=0) color = vec4(1,0,0,1);
 	if (y > 0 && y <= 1.0) color = vec4(0,1,y,1);
@@ -380,17 +376,6 @@ void computeDepth() {
 	gl_FragDepth = d*0.5 + 0.5;
 }
 
-void applyBlinnPhong() {
-	vec3 n = normalize( gl_NormalMatrix * norm );
-	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
-	float NdotL = max(dot( n, light ), 0.0);
-	vec4  ambient = gl_LightSource[0].ambient * color;
-	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;
-	float NdotHV = max(dot(norm, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
-	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
-	gl_FragColor = ambient + diffuse + specular;
-}
-
 void doPaths() {
     vec3 pos = toWorld(position.xyz);
 	int k = 1;
@@ -425,6 +410,22 @@ void doPaths() {
 	if (doTrack) applyTrack();
 }
 
+);
+
+
+string VRAsphalt::asphalt_fp_core =
+GLSL(
+void applyBlinnPhong() {
+	vec3 n = normalize( gl_NormalMatrix * norm );
+	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
+	float NdotL = max(dot( n, light ), 0.0);
+	vec4  ambient = gl_LightSource[0].ambient * color;
+	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;
+	float NdotHV = max(dot(norm, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
+	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
+	gl_FragColor = ambient + diffuse + specular;
+}
+
 void main(void) {
 	uv = tc1.xy;
 	roadData = getData(rID, 0);
@@ -433,9 +434,6 @@ void main(void) {
 	asphalt();
 	doPaths();
 	applyMud();
-	//color = texture(texMarkings, uv);
-	//color = texture(texMud, uv);
-	//color = texture(texNoise, uv);
     computeDepth();
     applyBlinnPhong();
 }
@@ -444,195 +442,16 @@ void main(void) {
 
 string VRAsphalt::asphalt_dfp_core =
 GLSL(
-void debugColors(float y) {
-	if (y<=0) color = vec4(1,0,0,1);
-	if (y > 0 && y <= 1.0) color = vec4(0,1,y,1);
-	if (y > 1) color = vec4(1,1,y*0.1,1);
-}
-
-vec4 getData(const int x, const int y) {
-	return texelFetch(texMarkings, ivec2(x,y), 0);
-}
-
-float cuberoot(float x) {
-	return sign(x)*pow(abs(x), Inv3);
-}
-
-// t3 + a t2 + b t + c
-vec4 solveCubic(float a, float b, float c) {
-	// compute depressed equation t3 + pt + q = 0
-	float p = b - a*a*Inv3;
-	double q = (2.0*a*a*a - 9.0*b*a) *Inv27 + c;
-	float p3 = p*p*p;
-	double d = q*q*0.25 + p3 *Inv27;
-	float o = - a*Inv3;
-
-	if (d >= 0.0) { // Single solution
-		float u = cuberoot(float(-q*0.5 + sqrt(d)));
-		float v = cuberoot(float(-q*0.5 - sqrt(d)));
-		float r = o + u + v;
-		return vec4(r, 0.0, 0.0, 1.0);
-	}
-
-	float u = 2.0*sqrt(-p*Inv3);
-	float v = acos(3.0*float(q)/u/p)*Inv3;
-	float r1 = o + u*cos(v);
-	//float r2 = o + u*cos(v-2.0*3.14159265359*Inv3);
-	float r3 = o + u*cos(v-4.0*3.14159265359*Inv3);
-	float r2 = -r1-r3;
-	return vec4(r1,r2,r3, 3.0);
-}
-
-vec3 toWorld(const vec3 p) {
-	mat4 m = inverse(gl_ModelViewMatrix);
-	return vec3(m*vec4(p,1.0));
-}
-
-void asphalt() {
-	float g = 0.35+0.2*noise;
-	color = vec4(g,g,g,1.0);
-}
-
-void applyMud() {
-	vec4 c_mud = texture(texMud, uv);
-	color = mix(color, c_mud, smoothstep( 0.3, 0.8, c_mud.a)*0.2 );
-}
-
-void applyLine() {
-	float l = clamp(1.0 - smoothstep(0.0, 0.2, norm.x), 0, 1);
-	color = mix(color, cLine, l );
-}
-
-void applyTrack(float d) {
-	d = 0.5-d;
-	d = clamp(d, 0.0, 1.0);
-	color = mix(color, trackColor, d );
-}
-
-vec2 distToQuadBezier( vec3 A, vec3 B, vec3 C, vec3 x ) {
-	// Bezier: At2 + Bt + C
-	// Distance: kt3 + a*t2 + b*t + c
-    float k = 2.0*dot(A,A);
-    float a = 3.0*dot(A,B);
-    float b = dot(B,B) + 2.0*dot(A,C-x);
-    float c = dot(B,C-x);
-
-    vec4 res;
-    if (abs(k) <= 0.001) res = vec4(-c/b,0,0,1); // path is a line
-	else res = solveCubic( a/k, b/k, c/k);
-
-    float tmin = 1e20;
-    float dmin = 1e20;
-    for( int i=0; i<int(res[3]); i++ ) {
-        float t = res[i];
-        if( t>=0.0 && t <=1.0 ) {
-            vec3 pos = A*t*t+B*t+C;
-            float d = distance(pos,x);
-            if (d < dmin) {
-        		dmin = d;
-        		tmin = t;
-            }
-        }
-    }
-    return vec2(dmin,tmin);
-}
-
-float distToPath(const int k, const int roadID, const vec3 pos, const vec4 pathData) {
-	int Npoints = int(pathData.x); // testing
-	float width2 = pathData.y*0.5;
-	float dashL = pathData.z;
-
-	vec3 A;
-	vec3 B;
-	vec3 C;
-	int Nsegs = (Npoints-1)/2;
-	for (int j=0; j<Nsegs; j++) {
-		A = getData(roadID, k+3*j+1).xyz;
-		B = getData(roadID, k+3*j+2).xyz;
-		C = getData(roadID, k+3*j+3).xyz;
-		vec2 dtmin = distToQuadBezier(A,B,C,pos);
-		if (dtmin.x < width2 && dashL == 0) return dtmin.x;
-		if (dtmin.x < width2 && int(dtmin.y*dashL)%2 == 0) return dtmin.x;
-	}
-
-	return 20.0;
-}
-
-void computeNormal() {
-	vec2 tc = tc1*2;
-    float s11 = texture(texNoise, tc).r;
-    float s01 = textureOffset(texNoise, tc, off.xy).r;
-    float s21 = textureOffset(texNoise, tc, off.zy).r;
-    float s10 = textureOffset(texNoise, tc, off.yx).r;
-    float s12 = textureOffset(texNoise, tc, off.yz).r;
-
-    vec3 va = normalize(vec3(size.y,s21-s01,size.x));
-    vec3 vb = normalize(vec3(size.x,s12-s10,size.y));
-	norm = normalize( cross(va,vb) );
-}
-
-void computeDepth(bool doLine, bool doTrack) {
-	vec4 o = vec4(0,0,0,0);
-	if (doLine) o = vec4(0,0.02,0.02,0);
-	if (doTrack) o = vec4(0,0.01,0.01,0);
-	vec4 pp = gl_ProjectionMatrix * (position + o);
-	float d = pp.z / pp.w;
-	gl_FragDepth = d*0.5 + 0.5;
-}
-
 void main(void) {
-    vec3 pos = toWorld(position.xyz);
-
-	int roadID = rID;
 	uv = tc1.xy;
-	vec4 roadData = getData(roadID, 0);
-
+	roadData = getData(rID, 0);
 	noise = texture(texNoise, uv*0.2).r;
 	computeNormal();
 	asphalt();
-
-	int k = 1;
-	float dist = 1.0;
-	int Nlines = int(roadData.x);
-	bool doLine = false;
-	bool doTrack = false;
-
-	for (int i=0; i<Nlines; i++) {
-		vec4 pathData = getData(roadID, k);
-		float width = pathData.y;
-		int Npoints = int(pathData.x);
-		dist = distToPath(k, roadID, pos, pathData);
-		doLine = bool(dist < 10.0);
-		if (doLine) break;
-		k += Npoints+1;
-	}
-
-	if (!doLine) {
-		int Ntracks = int(roadData.y);
-		for (int i=0; i<Ntracks; i++) {
-			vec4 pathData = getData(roadID, k);
-			float width = pathData.y;
-			int Npoints = int(pathData.x);
-			float d = distToPath(k, roadID, pos, pathData);
-			if (d < 10.0) {
-				doTrack = true;
-				dist = min(dist,d/width);
-			}
-			k += Npoints+1;
-		}
-	}
-
-	if (doLine) applyLine();
-	if (doTrack) applyTrack(dist);
-
+	doPaths();
 	applyMud();
-	//color = texture(texMarkings, uv);
-	//color = texture(texMud, uv);
-	//color = texture(texNoise, uv);
-
-	norm = gl_NormalMatrix * norm;
-    computeDepth(doLine,doTrack);
-
+    computeDepth();
+	norm = normalize( gl_NormalMatrix * norm );
     gl_FragData[0] = vec4(position.xyz/position.w, 1.0);
     gl_FragData[1] = vec4(norm, 1);
     gl_FragData[2] = color;

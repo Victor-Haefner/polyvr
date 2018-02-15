@@ -38,6 +38,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
     mode = 0;
     this->profile = profile;
     this->closed = closed;
+    this->lit = lit;
     this->doColor = doColor;
     cap_beg = l;
     cap_end = r;
@@ -215,7 +216,7 @@ void VRStroke::strokeStrew(VRGeometryPtr geo) {
 void VRStroke::update() {
     switch (mode) {
         case 0:
-            strokeProfile(profile, closed, doColor);
+            strokeProfile(profile, closed, lit, doColor, cap_beg, cap_end);
             break;
         case 1:
             strokeStrew(strewGeo);
