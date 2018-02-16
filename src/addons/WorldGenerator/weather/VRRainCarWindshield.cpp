@@ -78,6 +78,27 @@ Vec3f VRRainCarWindshield::convertV3dToV3f(Vec3d in) {
     out[2] = (float)in[2];
     return out;
 }
+Vec2f VRRainCarWindshield::convertV2dToV2f(Vec2d in) {
+    Vec2f out;
+    out[0] = (float)in[0];
+    out[1] = (float)in[1];
+    return out;
+}
+float VRRainCarWindshield::vecLength(Vec3d in) {
+    double a = in[0];
+    double b = in[1];
+    double c = in[2];
+    return (float)sqrt(a*a+b*b+c*c);
+}
+float dotPro(Vec3d a, Vec3d b){
+    return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+}
+
+Vec3d crossPro(Vec3d a, Vec3d b){
+    return Vec3d(a[2]*b[3]-a[3]*b[2],
+                 a[3]*b[1]-a[1]*b[3],
+                 a[1]*b[2]-a[2]*b[1]);
+}
 
 
 VRRainCarWindshieldPtr VRRainCarWindshield::create() { return VRRainCarWindshieldPtr( new VRRainCarWindshield() ); }
@@ -103,6 +124,15 @@ void VRRainCarWindshield::setScale(bool liveChange, float scale) {
 void VRRainCarWindshield::setWindshield(VRGeometryPtr geoWindshield) {
     //cout << cubeWindshield->getFrom() << " from " << cubeWindshield->getDir() << endl;
     this->geoWindshield = geoWindshield;
+    lastWorldPosition = geoWindshield->getWorldPosition();
+}
+
+Vec2f VRRainCarWindshield::calcAccComp(Vec3d accelerationVec,Vec3d windshieldDir,Vec3d windshieldUp){
+    Vec2f out;
+    out = Vec2f(0,-1);
+    //out[0] = -dotPro(crossPro(windshieldDir,windshieldUp),accelerationVec);
+    //out[1] = dotPro(windshieldDir,accelerationVec);
+    return out*0.01;
 }
 
 void VRRainCarWindshield::update() {
@@ -121,7 +151,22 @@ void VRRainCarWindshield::update() {
     Vec3d windshieldPos = geoWindshield->getWorldPosition();
     Vec3d windshieldDir = geoWindshield->getWorldDirection();
     Vec3d windshieldUp = geoWindshield->getWorldUp();
-
+    Vec3d velocityVec = (lastWorldPosition - windshieldPos)/tdelta; // [m/s]
+    Vec3d accelerationVec = (lastVelocityVec - velocityVec)/tdelta;
+    lastWorldPosition = windshieldPos;
+    lastVelocityVec = velocityVec;
+    float multiplier = 0.001;
+    Vec2f accelerationComponent = calcAccComp(accelerationVec,windshieldDir,windshieldUp);
+    Vec2f mapOffset0=oldMapOffset0 + multiplier*accelerationComponent*vecLength(velocityVec)*tdelta;
+    Vec2f mapOffset1=oldMapOffset1 + multiplier*accelerationComponent*vecLength(velocityVec)*tdelta*1.2;
+    oldMapOffset0=mapOffset0;
+    oldMapOffset1=mapOffset1;
+    if (oldMapOffset0[0]>400||oldMapOffset0[1]>400) {
+        oldMapOffset0=Vec2f(0,0);
+    }
+    if (oldMapOffset1[0]>400||oldMapOffset1[1]>400) {
+        oldMapOffset1=Vec2f(0,0);
+    }
     mat->setActivePass(0);
     mat->readVertexShader(vScript);
     mat->readFragmentShader(fScript);
@@ -136,6 +181,10 @@ void VRRainCarWindshield::update() {
     setShaderParameter("windshieldPos", convertV3dToV3f(windshieldPos));
     setShaderParameter("windshieldDir", convertV3dToV3f(windshieldDir));
     setShaderParameter("windshieldUp", convertV3dToV3f(windshieldUp));
+    setShaderParameter("velocityVec", convertV3dToV3f(velocityVec));
+    setShaderParameter("accelerationVec", convertV3dToV3f(accelerationVec));
+    setShaderParameter("mapOffset0", mapOffset0);
+    setShaderParameter("mapOffset1", mapOffset1);
 }
 
 void VRRainCarWindshield::doTestFunction() {

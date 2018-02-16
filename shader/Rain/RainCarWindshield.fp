@@ -17,7 +17,7 @@ bool debugB = false;
 bool moveB = true;
 //float disBD = 0.04;
 //float radius = 0.3;
-float disBD = 0.06;
+float disBD = 0.03;
 float radius = 0.3;
 
 uniform float scale;
@@ -36,6 +36,10 @@ uniform float durationWiper;
 uniform vec3 windshieldPos;
 uniform vec3 windshieldDir;
 uniform vec3 windshieldUp;
+uniform vec3 velocityVec;
+uniform vec3 accelerationVec;
+uniform vec2 mapOffset0;
+uniform vec2 mapOffset1;
 
 void computeDirection() {
 	fragDir = normalize( miN * (miP * pos).xyz );
@@ -181,7 +185,7 @@ bool calcTime(vec2 uvC) {
 	float xB = -(uvG.x);
 	float yB = uvG.y;
 	float hashTime = hash(vec2(xBC,yBC));
-	if (hashTime<0.1) hashTime=0.1;
+	if (hashTime<0.05) hashTime=0.05;
 
 	bool ctrlAbounds = (atan(yA,xA)>0 && atan(yA,xA)<3.1416/2 && distance(uvG,vec2(0+0.6,0))<0.5);
 	bool ctrlAWiper = (hashTime*25/(scale+3) > calcLocalDeltaTime(atan(yA,xA), angles().x, 0));
@@ -208,7 +212,9 @@ bool drawWipers(){
 vec4 locateDrop() {
 	vec2 uv = worldToLocal(worldVec) + vec2(0.5,0.5)*disBD*pass*3.54;
 	if(distance(uv,vec2(0,0))>1.5) return vec4(-10,-10,0,0);
-	if (moveB) uv= uv + -0.1*vec2(0,1)*tnow/20*(1+0.2*pass+0.2*scale); //TODO: INSERT INERTIA DRIVEN OFFSET TO SIMULATE RAIN MOVEMENT ON GLASS
+	if(pass<0.5) uv= uv + mapOffset0;
+	if(pass>0.5) uv= uv + mapOffset1;
+	// + 0.01*vec2(0,1)*tnow/20*(1+0.2*pass+0.2*scale); //TODO: INSERT INERTIA DRIVEN OFFSET TO SIMULATE RAIN MOVEMENT ON GLASS
 	vec2 uvUnchanged = uv;
 	uv += genPattern2Offset(uv);
 
@@ -227,22 +233,19 @@ vec4 returnColor(vec4 drop) {
 	float xC = -floor(drop.x/disBD);
 	float yC = floor((drop.y)/disBD);
 	float hashValue = hash(vec2(xC*0.2437,yC*0.2437)); //same seed would be all same size due to calctime algorithm
-	float xB = drop.z-0.25;
-	float yB = drop.w-0.25;
-	float segments = 30*(0.3+0.7*hashValue);
+	float xB = drop.z-0.5;
+	float yB = drop.w-0.5;
+	float segments = 15*(0.8+0.2*hashValue);
 	float factor = 360/segments;
 	float noiseScale = 0.5;
 	float phiD = atan(yB,xB)*180/M_PI; //in degrees
 	float angleD = floor(phiD/factor)*factor; 
-	float fr = fract(phiD/factor);	
+	float fr = fract(mod(phiD,factor)/factor);	
 	vec2 ang1 = vec2(cos(angleD*M_PI/180),sin(angleD*M_PI/180));
-	vec2 ang2 = vec2(cos((angleD*M_PI/180+factor*M_PI/180)),sin((angleD*M_PI/180+factor*M_PI/180)));
-	float hashRadius = mix(1.4*hash(ang1),1.4*hash(ang2),smoothstep(0,1,fr));
-	float radiusC = radius*(0.3+0.7*hashValue*(0.3+0.8*hashRadius));
-	
-	//TODO: clever algprithm so drops don't get calculated too small
-	if (radiusC<0.4*radius) radiusC=radius*(0.3+(hashRadius));
-	if (radiusC<0.05) radiusC=0.06;	
+	vec2 ang2 = vec2(cos(((angleD+factor)*M_PI/180)),sin(((angleD+factor)*M_PI/180)));
+	float hashRadius = mix(hash(ang1),hash(ang2),smoothstep(0,1,fr));
+	float radiusC = radius*(0.4+0.6*hashValue*(1+0.7*hashRadius) + 0.1*hashRadius);
+	if (scale<4.4) radiusC = radius;		
 	vec4 dropColor = vec4(0,0,0,0);
 	float dir = dot(drop.zw-vec2(0.5,0.5), vec2(0,1+radiusC));
 	float dist = distance(drop.zw,vec2(0.5,0.5));
@@ -295,7 +298,7 @@ void main() {
 	if (drawWipers()) dropColor=vec4(0,0,0,1);
 	
 	if (dropColor == vec4(0,0,0,0)) discard;	
-	if (dropColor.w < 0.2) discard;	
+	if (dropColor.w < 0.1) discard;	
 	gl_FragColor = dropColor;
 }
 

@@ -37,6 +37,9 @@ class VRRainCarWindshield : public VRGeometry {
         void update();
 
         Vec3f convertV3dToV3f(Vec3d in);
+        Vec2f convertV2dToV2f(Vec2d in);
+        float vecLength(Vec3d in);
+        Vec2f calcAccComp(Vec3d accelerationVec,Vec3d windshieldDir,Vec3d windshieldUp);
 
         float scale = 10;
 
@@ -45,6 +48,10 @@ class VRRainCarWindshield : public VRGeometry {
         float durationWiper = 10;
         double tlast = 0;
         float tdelta = 0;
+        Vec3d lastWorldPosition = Vec3d(0,0,0);
+        Vec3d lastVelocityVec = Vec3d(0,0,0);
+        Vec2f oldMapOffset0 = Vec2f(0,0);
+        Vec2f oldMapOffset1 = Vec2f(0,0);
 
         template<typename T> void setShaderParameter(string name, T t);
 
