@@ -83,6 +83,8 @@ class OSMMap {
         OSMNodePtr getNode(string id);
         OSMWayPtr getWay(string id);
         OSMRelationPtr getRelation(string id);
+
+        double getMemoryConsumption();
 };
 
 OSG_END_NAMESPACE;

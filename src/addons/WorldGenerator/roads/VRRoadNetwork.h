@@ -40,6 +40,8 @@ class VRRoadNetwork : public VRRoadBase {
         VRGeometryPtr collisionMesh;
 
 		float trackWidth = 1.6; // TODO
+        float roadTerrainOffset = 0.06; // same as terrain physics offset
+        float markingsWidth = 0.15;
 
         void createArrow(Vec4i dirs, int N, const Pose& p);
 
@@ -54,6 +56,11 @@ class VRRoadNetwork : public VRRoadBase {
 
         static VRRoadNetworkPtr create();
         VRRoadNetworkPtr ptr();
+
+        void setTerrainOffset(float o);
+        void setMarkingsWidth(float w);
+        float getTerrainOffset();
+        float getMarkingsWidth();
 
         GraphPtr getGraph();
         void connectGraph(vector<VREntityPtr> nodes, vector<Vec3d> norms, VREntityPtr entity);
@@ -99,6 +106,8 @@ class VRRoadNetwork : public VRRoadBase {
         void compute();
 
         void test1();
+
+        double getMemoryConsumption();
 };
 
 OSG_END_NAMESPACE;

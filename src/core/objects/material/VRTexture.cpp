@@ -219,4 +219,3 @@ Vec3i VRTexture::getSize() {
 
 
 
-

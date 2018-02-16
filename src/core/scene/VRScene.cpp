@@ -110,7 +110,7 @@ string VRScene::getPath() { return path; }
 string VRScene::getFileName() {
     return getFile().substr(0,getFile().size()-4);
 }
-string VRScene::getIcon() { return getFileName() + ".png"; }
+string VRScene::getIcon() { return ".local_" + getFileName() + "/snapshot.png"; }
 string VRScene::getFile() {
     int n = path.find_last_of("\\/");
     if (n == -1) return path;
@@ -255,7 +255,7 @@ void VRScene::saveScene(xmlpp::Element* e) {
     VRMaterialManager::saveUnder(e);
     semanticManager->saveUnder(e);
 
-    string d = getWorkdir() + "/.local_"+getName();
+    string d = getWorkdir() + "/.local_"+getFileName();
     if (!exists(d)) mkPath(d);
     ofstream stats(d+"/stats");
     string lt = toString(loadingTime);
@@ -266,7 +266,7 @@ void VRScene::saveScene(xmlpp::Element* e) {
 void VRScene::loadScene(xmlpp::Element* e) {
     if (e == 0) return;
 
-    string d = getWorkdir() + "/.local_"+getName()+"/stats";
+    string d = getWorkdir() + "/.local_"+getFileName()+"/stats";
     if (exists(d)) {
         ifstream stats(d);
         stats >> loadingTime;

@@ -12,6 +12,7 @@ class VRProjectManager : public VRObject {
     private:
         VRStorage storage;
         map<string, string> settings;
+        map<VRStorage*, string> modesMap;
         vector<VRStoragePtr> vault_reload;
         vector<VRStoragePtr> vault_rebuild;
         int persistencyLvl = 0;

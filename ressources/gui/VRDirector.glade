@@ -2390,6 +2390,12 @@ cave allocated</property>
                                 <child>
                                   <placeholder/>
                                 </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                               </object>
                             </child>
                           </object>
@@ -2421,6 +2427,12 @@ cave allocated</property>
                                 <property name="can_focus">False</property>
                                 <property name="n_columns">2</property>
                                 <property name="homogeneous">True</property>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                                 <child>
                                   <placeholder/>
                                 </child>
@@ -4737,7 +4749,7 @@ cave allocated</property>
                                               </object>
                                             </child>
                                             <child type="label">
-                                              <object class="GtkFixed" id="fixed69">
+                                              <object class="GtkFixed" id="fixed72">
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
                                               </object>
@@ -8702,7 +8714,7 @@ to add distances</property>
                                               <object class="GtkTable" id="table23">
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
-                                                <property name="n_rows">6</property>
+                                                <property name="n_rows">7</property>
                                                 <property name="n_columns">3</property>
                                                 <child>
                                                   <object class="GtkLabel" id="label58">
@@ -8812,32 +8824,11 @@ to add distances</property>
                                                   <object class="GtkCheckButton" id="checkbutton5">
                                                     <property name="label" translatable="yes">Texture:</property>
                                                     <property name="visible">True</property>
-                                                    <property name="sensitive">False</property>
                                                     <property name="can_focus">True</property>
                                                     <property name="receives_default">False</property>
                                                     <property name="draw_indicator">True</property>
                                                   </object>
                                                   <packing>
-                                                    <property name="top_attach">5</property>
-                                                    <property name="bottom_attach">6</property>
-                                                    <property name="x_options">GTK_FILL</property>
-                                                  </packing>
-                                                </child>
-                                                <child>
-                                                  <object class="GtkEntry" id="entry38">
-                                                    <property name="visible">True</property>
-                                                    <property name="sensitive">False</property>
-                                                    <property name="can_focus">True</property>
-                                                    <property name="invisible_char">•</property>
-                                                    <property name="invisible_char_set">True</property>
-                                                    <property name="primary_icon_activatable">False</property>
-                                                    <property name="secondary_icon_activatable">False</property>
-                                                    <property name="primary_icon_sensitive">True</property>
-                                                    <property name="secondary_icon_sensitive">True</property>
-                                                  </object>
-                                                  <packing>
-                                                    <property name="left_attach">1</property>
-                                                    <property name="right_attach">2</property>
                                                     <property name="top_attach">5</property>
                                                     <property name="bottom_attach">6</property>
                                                     <property name="x_options">GTK_FILL</property>
@@ -8852,7 +8843,7 @@ to add distances</property>
                                                     <property name="left_attach">2</property>
                                                     <property name="right_attach">3</property>
                                                     <property name="top_attach">1</property>
-                                                    <property name="bottom_attach">6</property>
+                                                    <property name="bottom_attach">7</property>
                                                   </packing>
                                                 </child>
                                                 <child>
@@ -8904,6 +8895,73 @@ to add distances</property>
                                                     <property name="x_options"/>
                                                     <property name="y_options"/>
                                                     <property name="y_padding">3</property>
+                                                  </packing>
+                                                </child>
+                                                <child>
+                                                  <object class="GtkFixed" id="fixed69">
+                                                    <property name="visible">True</property>
+                                                    <property name="can_focus">False</property>
+                                                  </object>
+                                                  <packing>
+                                                    <property name="left_attach">1</property>
+                                                    <property name="right_attach">2</property>
+                                                    <property name="top_attach">5</property>
+                                                    <property name="bottom_attach">6</property>
+                                                    <property name="x_options">GTK_FILL</property>
+                                                    <property name="y_options">GTK_FILL</property>
+                                                  </packing>
+                                                </child>
+                                                <child>
+                                                  <object class="GtkTable" id="table44">
+                                                    <property name="visible">True</property>
+                                                    <property name="can_focus">False</property>
+                                                    <property name="n_rows">2</property>
+                                                    <property name="n_columns">2</property>
+                                                    <child>
+                                                      <object class="GtkLabel" id="label155">
+                                                        <property name="visible">True</property>
+                                                        <property name="can_focus">False</property>
+                                                        <property name="label" translatable="yes">Size:</property>
+                                                      </object>
+                                                    </child>
+                                                    <child>
+                                                      <object class="GtkLabel" id="label156">
+                                                        <property name="visible">True</property>
+                                                        <property name="can_focus">False</property>
+                                                        <property name="label" translatable="yes">Channels:</property>
+                                                      </object>
+                                                      <packing>
+                                                        <property name="top_attach">1</property>
+                                                        <property name="bottom_attach">2</property>
+                                                      </packing>
+                                                    </child>
+                                                    <child>
+                                                      <object class="GtkLabel" id="label157">
+                                                        <property name="visible">True</property>
+                                                        <property name="can_focus">False</property>
+                                                      </object>
+                                                      <packing>
+                                                        <property name="left_attach">1</property>
+                                                        <property name="right_attach">2</property>
+                                                        <property name="top_attach">1</property>
+                                                        <property name="bottom_attach">2</property>
+                                                      </packing>
+                                                    </child>
+                                                    <child>
+                                                      <object class="GtkLabel" id="label158">
+                                                        <property name="visible">True</property>
+                                                        <property name="can_focus">False</property>
+                                                      </object>
+                                                      <packing>
+                                                        <property name="left_attach">1</property>
+                                                        <property name="right_attach">2</property>
+                                                      </packing>
+                                                    </child>
+                                                  </object>
+                                                  <packing>
+                                                    <property name="right_attach">2</property>
+                                                    <property name="top_attach">6</property>
+                                                    <property name="bottom_attach">7</property>
                                                   </packing>
                                                 </child>
                                               </object>

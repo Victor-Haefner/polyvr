@@ -23,6 +23,10 @@ VRRoadIntersection::~VRRoadIntersection() {}
 VRRoadIntersectionPtr VRRoadIntersection::create() { return VRRoadIntersectionPtr( new VRRoadIntersection() ); }
 
 void VRRoadIntersection::computeLanes(GraphPtr graph) {
+    auto w = world.lock();
+    if (!w) return;
+    auto roads = w->getRoadNetwork();
+
 	VREntityPtr node = entity->getEntity("node");
 	if (!node) { cout << "Warning in VRRoadNetwork::computeIntersectionLanes, intersection node is NULL!" << endl; return; }
 	string iN = entity->getName();
@@ -118,7 +122,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto norm2 = nodeEnt2->getVec3("direction");
                 nodeEnt1->set("node", node2->getName());
                 if (D > 0) displacements[roadIn] = X;
-                world->getRoadNetwork()->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
+                roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
             }
             if (Nin < Nout) {
                 auto node1 = nodeEnt1->getEntity("node");
@@ -127,7 +131,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto norm2 = nodes2[1]->getVec3("direction");
                 nodeEnt2->set("node", node1->getName());
                 if (D > 0) displacements[roadOut] = -X;
-                world->getRoadNetwork()->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
+                roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
             }
 
             processedLanes[laneIn] = true;
@@ -183,7 +187,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             lane->add("path", lPath->getName());
             nextLanes[laneIn].push_back(lane);
             nextLanes[lane].push_back(laneOut);
-            world->getRoadNetwork()->connectGraph(nodes, norms, lane);
+            roads->connectGraph(nodes, norms, lane);
         }
 	};
 
@@ -200,6 +204,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 }
 
 void VRRoadIntersection::computePatch() {
+    auto roads = world.lock()->getRoadNetwork();
     VREntityPtr node = entity->getEntity("node");
     if (!node) return;
     patch = VRPolygon::create();
@@ -218,11 +223,11 @@ void VRRoadIntersection::computePatch() {
 
     median = patch->getBoundingBox().center();
     patch->translate(-median);
-	perimeter = patch->shrink(markingsWidth*0.5);
+	perimeter = patch->shrink(roads->getMarkingsWidth()*0.5);
     patch->translate(median);
-    if (terrain) terrain->elevatePolygon(patch, roadTerrainOffset);
+    if (auto t = terrain.lock()) t->elevatePolygon(patch, roads->getTerrainOffset());
     patch->translate(-median);
-    if (terrain) terrain->elevatePoint(median, roadTerrainOffset); // TODO: elevate each point of the polygon
+    if (auto t = terrain.lock()) t->elevatePoint(median, roads->getTerrainOffset()); // TODO: elevate each point of the polygon
 }
 
 VRGeometryPtr VRRoadIntersection::createGeometry() {
@@ -271,7 +276,7 @@ void VRRoadIntersection::addRoad(VRRoadPtr road) {
 
 VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d root) {
     float R = 0.05;
-    if (auto geo = world->getAssetManager()->copy(asset, p)) {
+    if (auto geo = world.lock()->getAssetManager()->copy(asset, p)) {
         addChild(geo);
         geo->move(R);
     }
@@ -310,6 +315,10 @@ void VRRoadIntersection::computeTrafficLights() { // deprecated
 void VRRoadIntersection::computeMarkings() {
     if (!perimeter) return;
     string name = entity->getName();
+
+    auto roads = world.lock()->getRoadNetwork();
+    float markingsWidth = roads->getMarkingsWidth();
+    float markingsWidthHalf = 0.5*markingsWidth;
 
     auto addLine = [&]( const string& type, Vec3d p1, Vec3d p2, Vec3d n1, Vec3d n2, float w, float dashLength) {
 		auto node1 = addNode( 0, p1 );
@@ -395,8 +404,8 @@ void VRRoadIntersection::computeMarkings() {
             auto p2 = points[(i+1)%points.size()];
             if (isRoadEdge(p1, p2)) continue;
             Vec3d n = p2-p1; n.normalize();
-            p1 -= n*markingsWidth*0.5;
-            p2 += n*markingsWidth*0.5;
+            p1 -= n*markingsWidthHalf;
+            p2 += n*markingsWidthHalf;
             addLine( "RoadMarking", p1, p2, n, n, markingsWidth, 0);
         }
     }

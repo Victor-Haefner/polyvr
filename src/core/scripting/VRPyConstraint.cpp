@@ -21,8 +21,9 @@ template<> bool toValue(PyObject* o, VRConstraint::TCMode& v) {
 PyMethodDef VRPyConstraint::methods[] = {
     {"constrain", PyWrap(Constraint, setMinMax, "Set the constraint range of one of the six degrees of freedom", void, int, float, float ) },
     {"setLocal", PyWrap(Constraint, setLocal, "Set the local flag of the constraints", void, bool ) },
-    {"lock", PyWrap(Constraint, lock, "Lock a list of DoFs", void, vector<int> ) },
+    {"lock", PyWrapOpt(Constraint, lock, "Lock a list of DoFs", "0", void, vector<int>, float ) },
     {"free", PyWrap(Constraint, free, "Free a list of DoFs", void, vector<int> ) },
+    {"lockRotation", PyWrap(Constraint, lockRotation, "Lock the rotation", void ) },
     {"setReference", PyWrap(Constraint, setReference, "Set the reference matrix, setReference( transform )", void, PosePtr ) },
     {"setReferential", PyWrap(Constraint, setReferential, "Set the local referential, setReferential( transform )", void, VRTransformPtr ) },
     {"setOffsetA", PyWrap(Constraint, setReferenceA, "Set the offset in A", void, PosePtr ) },

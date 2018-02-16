@@ -1,5 +1,6 @@
 #include "VRRoad.h"
 #include "VRRoadNetwork.h"
+#include "../VRWorldGenerator.h"
 #include "../terrain/VRTerrain.h"
 #include "core/utils/toString.h"
 #include "core/math/path.h"
@@ -109,6 +110,7 @@ vector<VRRoadPtr> VRRoad::splitAtIntersections(VRRoadNetworkPtr network) { // TO
         // copy road
         int rID = network->getRoadID();
         auto r = create();
+        r->setWorld(world.lock());
         auto re = e->copy();
         re->set("path", npath->getName());
         re->set("ID", toString(rID));
@@ -131,6 +133,11 @@ vector<VRRoadPtr> VRRoad::splitAtIntersections(VRRoadNetworkPtr network) { // TO
 }
 
 VRGeometryPtr VRRoad::createGeometry() {
+    auto w = world.lock();
+    if (!w) return 0;
+    auto roads = w->getRoadNetwork();
+    if (!roads) return 0;
+
     auto strokeGeometry = [&]() -> VRGeometryPtr {
 	    float width = getWidth();
 		float W = width*0.5;
@@ -146,7 +153,7 @@ VRGeometryPtr VRRoad::createGeometry() {
 		geo->setPaths( paths );
 		geo->strokeProfile(profile, 0, 0);
 		if (!geo->getMesh()) return 0;
-		if (terrain) terrain->elevateVertices(geo, roadTerrainOffset);
+		if (auto t = terrain.lock()) t->elevateVertices(geo, roads->getTerrainOffset());
 		return geo;
 	};
 
@@ -160,7 +167,11 @@ VRGeometryPtr VRRoad::createGeometry() {
 
 void VRRoad::computeMarkings() {
     if (!hasMarkings()) return;
-    float mw = markingsWidth;
+    auto w = world.lock();
+    if (!w) return;
+    auto roads = w->getRoadNetwork();
+    if (!roads) return;
+    float mw = roads->getMarkingsWidth();
 
     // road data
     vector<VREntityPtr> nodes;
@@ -180,8 +191,8 @@ void VRRoad::computeMarkings() {
     int Nlanes = lanes.size();
 
     auto add = [&](Vec3d pos, Vec3d n) {
-        if (terrain) terrain->elevatePoint(pos, 0.06);
-        if (terrain) terrain->projectTangent(n, pos);
+        if (auto t = terrain.lock()) t->elevatePoint(pos, 0.06);
+        if (auto t = terrain.lock()) t->projectTangent(n, pos);
         nodes.push_back(addNode(0, pos));
         normals.push_back(n);
     };
@@ -263,12 +274,14 @@ void VRRoad::computeMarkings() {
 }
 
 void VRRoad::addParkingLane( int direction, float width, int capacity, string type ) {
-	auto l = ontology->addEntity( entity->getName()+"Lane", "ParkingLane");
-	l->set("width", toString(width));
-	l->set("direction", toString(direction));
-	entity->add("lanes", l->getName());
-	l->set("road", entity->getName());
-	l->set("capacity", toString(capacity));
+    if (auto o = ontology.lock()) {
+        auto l = o->addEntity( entity->getName()+"Lane", "ParkingLane");
+        l->set("width", toString(width));
+        l->set("direction", toString(direction));
+        entity->add("lanes", l->getName());
+        l->set("road", entity->getName());
+        l->set("capacity", toString(capacity));
+    }
 }
 
 void VRRoad::setOffset(float o) { offset = o; }

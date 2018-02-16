@@ -179,11 +179,13 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyNature>("Nature", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTerrain>("Terrain", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyRain>("Rain", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPyRainCarWindshield>("RainCarWindshield", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyPlanet>("Planet", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyMillingMachine>("MillingMachine", pModVR);
     sm->registerModule<VRPyMillingWorkPiece>("MillingWorkPiece", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyMillingCuttingToolProfile>("MillingCuttingToolProfile", pModVR);
     sm->registerModule<VRPyMolecule>("Molecule", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPyCrystal>("Crystal", pModVR, VRPyMolecule::typeRef);
     sm->registerModule<VRPyRobotArm>("RobotArm", pModVR);
     sm->registerModule<VRPyOntology>("Ontology", pModVR);
     sm->registerModule<VRPyProcess>("Process", pModVR);

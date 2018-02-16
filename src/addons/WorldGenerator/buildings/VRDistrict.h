@@ -14,6 +14,7 @@ class VRDistrict : public VRObject, public VRWorldModule {
     private:
         static string matVShdr;
         static string matFShdr;
+        static string matFDShdr;
 
         map<string, VRBuildingPtr> buildings;
         VRGeometryPtr facades;
@@ -29,7 +30,9 @@ class VRDistrict : public VRObject, public VRWorldModule {
 
         static VRDistrictPtr create();
 
-        void addBuilding( VRPolygon p, int stories, string housenumber, string street );
+        void setTexture(string path);
+
+        void addBuilding( VRPolygonPtr p, int stories, string housenumber, string street );
         void remBuilding( string street, string housenumber );
 
         void clear();

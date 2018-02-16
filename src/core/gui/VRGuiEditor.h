@@ -21,6 +21,7 @@ class VRGuiEditor {
         _GtkSourceLanguage* glsl = 0;
 	    map<string, VRUpdateCbPtr> keyBindings;
 
+	    string selection;
         Glib::RefPtr<Gtk::TextBuffer> editorBuffer;
 
         map<string, Glib::RefPtr<Gtk::TextTag>> editorStyles;
@@ -41,6 +42,8 @@ class VRGuiEditor {
         void setLanguage(string lang);
         void grabFocus();
         void setCursor(int line, int column);
+        void setSelection(string s);
+        string getSelection();
         _GtkSourceBuffer* getSourceBuffer();
 };
 

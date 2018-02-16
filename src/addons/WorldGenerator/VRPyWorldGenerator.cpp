@@ -32,6 +32,7 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"addOSMMap", PyWrapOpt( WorldGenerator, addOSMMap, "Add an OpenStreetMap map", "-1|-1|-1", void, string, double, double, double ) },
     {"reloadOSMMap", PyWrapOpt( WorldGenerator, reloadOSMMap, "Reload OSM data", "-1|-1|-1", void, double, double, double ) },
     {"clear", PyWrap( WorldGenerator, clear, "Clear everything", void ) },
+    {"getStats", PyWrap( WorldGenerator, getStats, "Return stats as string", string ) },
     {NULL}  /* Sentinel */
 };
 
@@ -53,6 +54,9 @@ PyMethodDef VRPyRoadIntersection::methods[] = {
 
 PyMethodDef VRPyDistrict::methods[] = {
     {"remBuilding", PyWrap( District, remBuilding, "Remove a building by address", void, string, string ) },
+    {"addBuilding", PyWrapOpt( District, addBuilding, "Add a building, outline, stories, housenumber, streetname", "|", void, VRPolygonPtr, int, string, string ) },
+    {"setTexture", PyWrap( District, setTexture, "Set the building texture", void, string ) },
+    {"clear", PyWrap( District, clear, "Clear all buildings", void ) },
     {NULL}  /* Sentinel */
 };
 
@@ -88,6 +92,7 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"getPreviousRoads", PyWrap( RoadNetwork, getPreviousRoads, "Get the previous roads", vector<VREntityPtr>, VREntityPtr ) },
     {"getNextRoads", PyWrap( RoadNetwork, getNextRoads, "Get the next roads", vector<VREntityPtr>, VREntityPtr ) },
     {"addRoute", PyWrap( RoadNetwork, addRoute, "Add route path entity from graph node IDs", VREntityPtr, vector<int> ) },
+    {"setTerrainOffset", PyWrap( RoadNetwork, setTerrainOffset, "Set road to terrain offset", void, float ) },
     {NULL}  /* Sentinel */
 };
 

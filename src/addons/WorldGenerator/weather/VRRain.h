@@ -74,11 +74,12 @@ class VRRain : public VRGeometry {
         VRTextureRendererPtr getRenderer();
         VRMaterialPtr getTexMat();
 
-        void setScale( float scale );
+        void setScale( bool liveChange , float scale );
         void doTestFunction();
 
         void start();
         void stop();
+        bool getIsRaining();
 
         void overrideParameters( float durationTransition, float rainDensity, float density, float speedX, float speedY, float color, float light );
 };

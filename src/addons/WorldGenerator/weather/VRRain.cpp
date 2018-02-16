@@ -21,7 +21,7 @@ using namespace OSG;
 
 /*	Python usage example:
     VR.rain = VR.Rain()
-	VR.rain.setScale(3)
+	VR.rain.setScale(False, 3)
 	VR.scene.addChild(VR.rain)
 	VR.rain.start()
 */
@@ -102,13 +102,14 @@ VRRainPtr VRRain::create() { return VRRainPtr( new VRRain() ); }
 VRRainPtr VRRain::ptr() { return static_pointer_cast<VRRain>( shared_from_this() ); }
 
 float VRRain::get() { return scale; }
+bool VRRain::getIsRaining() { return isRaining; }
 VRTextureRendererPtr VRRain::getRenderer() { return texRenderer; }
 VRMaterialPtr VRRain::getTexMat() { return renderMat; }
 
 void VRRain::start() {
     if (!isRaining) {
-        if (scale == 0) setScale(3);
-        else setScale(scale);
+        if (scale == 0) setScale(false, 3);
+        else setScale(false, scale);
 
         auto rainAnimation = VRAnimation::create("startRain");
         rainAnimationCb = VRAnimCb::create("rain update", boost::bind(&VRRain::startRainCallback, this, _1));
@@ -157,7 +158,7 @@ void VRRain::stopRainCallback(float t) {
     tnow = floor(t*10);
 }
 
-void VRRain::setScale( float scale ){
+void VRRain::setScale( bool liveChange, float scale){
     if ( scale<0 || scale>10 ) {
         //TODO: error
         cout << "Input for Scale of Rain should be between 0 and 10" << endl;
@@ -169,6 +170,11 @@ void VRRain::setScale( float scale ){
         speedY = 0.004+scale*0.0001;
         color = 0.5-scale*0.02;
         light = 0.4;
+        if (liveChange) {
+            updateScale(scale);
+            auto sky = VRScene::getCurrent()->getSky();
+            sky->setClouds(density, 1e-5, 3000, Vec2d(speedX, speedY), Color4f(color,color,color,1));
+        }
     }
 }
 
