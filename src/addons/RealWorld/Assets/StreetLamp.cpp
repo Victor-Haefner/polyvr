@@ -11,7 +11,7 @@ using namespace OSG;
 
 void StreetLamp::make() {
 	auto lamp = VRTransform::create("lamp");
-	lamp->setPose(Vec3d(0,0,0), Vec3d(0,1,0), Vec3d(0,0,1));
+	lamp->setOrientation(Vec3d(0,1,0), Vec3d(0,0,1));
 
 	auto addPart = [&](float r, PathPtr p) {
 		int N = 6;
@@ -49,7 +49,7 @@ void StreetLamp::make() {
 	addPart(0.04, p3);
 
     VRTransformPtr obj = VRImport::get()->load( "world/assets/lamps/streetlamp1.2.dae", 0, 1);
-    obj->setPose(Vec3d(1,0,-5.08), Vec3d(1,0,2.5), Vec3d(0,0,-1));
+    obj->setPose(Pose::create(Vec3d(1,0,-5.08), Vec3d(1,0,2.5), Vec3d(0,0,-1)));
     obj->setScale(Vec3d(0.07,0.07,0.07));
     lamp->addChild(obj);
 

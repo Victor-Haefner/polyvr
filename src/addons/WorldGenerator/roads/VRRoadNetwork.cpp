@@ -303,7 +303,7 @@ void VRRoadNetwork::addGuardRail( PathPtr path, float height ) {
 		Vec3d x = -n.cross(Vec3d(0,1,0));
 		x.normalize();
 		auto po = dynamic_pointer_cast<VRGeometry>( pole->duplicate() );
-		po->setPose(x*0.011+pos,n,Vec3d(0,1,0));
+		po->setTransform(x*0.011+pos,n,Vec3d(0,1,0));
 		poles.push_back(po);
 	};
 

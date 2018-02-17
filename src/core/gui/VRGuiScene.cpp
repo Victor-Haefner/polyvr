@@ -577,7 +577,7 @@ void VRGuiScene::on_focus_clicked() {
 void VRGuiScene::on_identity_clicked() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
-    obj->setPose(Vec3d(0,0,0), Vec3d(0,0,-1), Vec3d(0,1,0));
+    obj->setIdentity();
     updateObjectForms();
 }
 

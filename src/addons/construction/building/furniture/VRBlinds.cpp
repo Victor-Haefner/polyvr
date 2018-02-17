@@ -2,6 +2,7 @@
 
 #include "core/scene/sound/VRSoundManager.h"
 #include "core/scene/VRAnimationManagerT.h"
+#include "core/math/pose.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include <OpenSG/OSGGeoProperties.h>
@@ -128,7 +129,7 @@ void VRBlinds::create() {
     m.mult(pos, pos);
     m.mult(norm, norm);
 
-    blend_geo->setPose(pos, norm, Vec3d(0,1,0));
+    blend_geo->setPose( Pose::create(pos, norm) );
     scene->add(blend_geo);
 
     auto mat = VRMaterial::create("blinds");

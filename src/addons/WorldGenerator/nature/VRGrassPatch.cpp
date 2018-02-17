@@ -198,10 +198,10 @@ void VRGrassPatch::setupGrassStage() {
     light->setBeacon(lightBeacon);
     light->addChild(grass);
     light->setType("directional");
-	lightBeacon->setPose(Vec3d(), Vec3d(0.5,-1,-1), Vec3d(0,0,1));
+	lightBeacon->setOrientation(Vec3d(0.5,-1,-1), Vec3d(0,0,1));
 	texRenderer->setup(cam, 512, 512, true);
 
-    cam->setPose(Vec3d(0,0,-2), Vec3d(0,0,1), Vec3d(0,1,0)); // side
+    cam->setTransform(Vec3d(0,0,-2), Vec3d(0,0,1)); // side
     cam->updateChange();
     auto texSide = texRenderer->renderOnce();
     matGrassSide->setTexture(texSide);

@@ -21,7 +21,7 @@ PyMethodDef VRPyProjectManager::methods[] = {
     {"newProject", PyWrap(ProjectManager, newProject, "New project", void, string ) },
     {"save", PyWrapOpt(ProjectManager, save, "Save to file", "", void, string ) },
     {"load", PyWrapOpt(ProjectManager, load, "Load from file", "", void, string ) },
-    {"setPersistencyLevel", PyWrap(ProjectManager, setPersistencyLevel, "Set the persistency level of objects to store", void, int ) },
+    {"setPersistencyLevel", PyWrap(ProjectManager, setPersistencyLevel, "Set the persistency level of objects to store, set lower than the persistency of objects to be stored", void, int ) },
     {NULL}  /* Sentinel */
 };
 

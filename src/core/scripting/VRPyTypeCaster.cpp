@@ -57,6 +57,7 @@ template<> PyObject* VRPyTypeCaster::cast(const VRObjectPtr& obj) {
 }
 
 template<> PyObject* VRPyTypeCaster::cast(const int& i) { return PyInt_FromLong(i); }
+template<> PyObject* VRPyTypeCaster::cast(const uint& i) { return PyInt_FromLong(i); }
 template<> PyObject* VRPyTypeCaster::cast(const short& s) { return PyInt_FromLong(s); }
 template<> PyObject* VRPyTypeCaster::cast(const float& f) { return PyFloat_FromDouble(f); }
 template<> PyObject* VRPyTypeCaster::cast(const string& s) { return PyString_FromString(s.c_str()); }
@@ -68,6 +69,7 @@ template<> PyObject* VRPyTypeCaster::cast(const Pnt3d& b) { return toPyObject(Ve
 template<> PyObject* VRPyTypeCaster::cast(const Vec3i& b) { return VRPyBase::toPyTuple(b); }
 template<> PyObject* VRPyTypeCaster::cast(const Color3f& b) { return VRPyBase::toPyTuple(Vec3d(b)); }
 template<> PyObject* VRPyTypeCaster::cast(const Color4f& b) { return VRPyBase::toPyTuple(Vec4d(b)); }
+//template<> PyObject* VRPyTypeCaster::cast(const Line& b) {}
 template<> PyObject* VRPyTypeCaster::cast(const Boundingbox& b) { return VRPyBoundingbox::fromObject(b); }
 
 PyObject* VRPyTypeCaster::pack(const vector<PyObject*>& v) {

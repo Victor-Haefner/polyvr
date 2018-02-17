@@ -122,7 +122,7 @@ void VRJointTool::updateVis() {
     } else ageo->hide();
 
     float D = (ad1.cross(ad3)).squareLength();
-    if (D > 0) setPose(ap3, ad1, ad3);
+    if (D > 0) setTransform(ap3, ad1, ad3);
     else setFrom(ap3);
     m = getMatrix(); m.invert();
     ageo->setMatrix(m);

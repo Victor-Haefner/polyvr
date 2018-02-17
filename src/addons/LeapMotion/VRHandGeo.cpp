@@ -43,7 +43,7 @@ void VRHandGeo::updateChange() {
     if (handData && isVisible()) {
 
         // Palm
-        setPose(handData->pose);
+        setPose2(handData->pose);
 
         // Bones
         for (int i = 0; i < 5; ++i) {
