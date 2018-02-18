@@ -41,7 +41,7 @@ float VRConstraint::getMin(int i) { return min[i]; }
 float VRConstraint::getMax(int i) { return max[i]; }
 
 void VRConstraint::lock(vector<int> dofs, float v) { for (int dof : dofs) setMinMax(dof,v,v); setActive(true); }
-void VRConstraint::free(vector<int> dofs) { for (int dof : dofs) setMinMax(dof,1,-1); }
+void VRConstraint::free(vector<int> dofs) { for (int dof : dofs) setMinMax(dof,1,-1); setActive(true); }
 
 void VRConstraint::setReferenceA(PosePtr p) { refMatrixA = p->asMatrix(); refMatrixA.inverse(refMatrixAI); };
 void VRConstraint::setReferenceB(PosePtr p) { refMatrixB = p->asMatrix(); refMatrixB.inverse(refMatrixBI); };
@@ -65,17 +65,21 @@ void VRConstraint::setTConstraint(Vec3d params, TCMode mode, bool local) {
     }
 
     if (mode == LINE) {
-        auto p = Vec3d(refMatrixB[3]);
+        auto p = Vec3d(refMatrixA[3]);
         lock({0,1});
         free({2});
-        setReferenceB( Pose::create(p, params) ); // TODO: will not work for vertical line!
+        auto po = Pose::create(p, params);
+        po->makeUpOrthogonal();
+        setReferenceA( po );
     }
 
     if (mode == PLANE) {
-        auto p = Vec3d(refMatrixB[3]);
+        auto p = Vec3d(refMatrixA[3]);
         lock({1});
         free({0,2});
-        setReferenceB( Pose::create(p, Vec3d(1,0,0), params) ); // TODO: will not work for plane with x as normal!
+        auto po = Pose::create(p, Vec3d(1,0,0), params);
+        po->makeDirOrthogonal();
+        setReferenceA( po ); // TODO: will not work for plane with x as normal!
     }
 }
 
