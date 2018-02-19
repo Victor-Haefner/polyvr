@@ -84,20 +84,10 @@ Vec2f VRRainCarWindshield::convertV2dToV2f(Vec2d in) {
     out[1] = (float)in[1];
     return out;
 }
-float VRRainCarWindshield::vecLength(Vec3d in) {
-    double a = in[0];
-    double b = in[1];
-    double c = in[2];
-    return (float)sqrt(a*a+b*b+c*c);
-}
-float dotPro(Vec3d a, Vec3d b){
-    return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
-}
-
-Vec3d crossPro(Vec3d a, Vec3d b){
-    return Vec3d(a[2]*b[3]-a[3]*b[2],
-                 a[3]*b[1]-a[1]*b[3],
-                 a[1]*b[2]-a[2]*b[1]);
+float signum(float in) {
+    if (in<0) return -1;
+    if (in>0) return 1;
+    return 0;
 }
 
 
@@ -130,9 +120,11 @@ void VRRainCarWindshield::setWindshield(VRGeometryPtr geoWindshield) {
 Vec2f VRRainCarWindshield::calcAccComp(Vec3d accelerationVec,Vec3d windshieldDir,Vec3d windshieldUp){
     Vec2f out;
     out = Vec2f(0,-1);
-    //out[0] = -dotPro(crossPro(windshieldDir,windshieldUp),accelerationVec);
-    //out[1] = dotPro(windshieldDir,accelerationVec);
-    return out*0.01;
+    out[0] = (windshieldDir.cross(windshieldUp)).dot(accelerationVec);
+    out[1] = windshieldDir.dot(accelerationVec);
+    float l = out.length();
+    out[1] = 0;
+    return out/l;
 }
 
 void VRRainCarWindshield::update() {
@@ -156,11 +148,14 @@ void VRRainCarWindshield::update() {
     lastWorldPosition = windshieldPos;
     lastVelocityVec = velocityVec;
     float multiplier = 0.001;
+    float multiplierAcc = 0.0001;
     Vec2f accelerationComponent = calcAccComp(accelerationVec,windshieldDir,windshieldUp);
-    Vec2f mapOffset0=oldMapOffset0 + multiplier*accelerationComponent*vecLength(velocityVec)*tdelta;
-    Vec2f mapOffset1=oldMapOffset1 + multiplier*accelerationComponent*vecLength(velocityVec)*tdelta*1.2;
+    Vec2f mapOffset0=oldMapOffset0 +  Vec2f(0,1)*multiplierAcc + Vec2f(0,-1)*multiplier*velocityVec.length()*tdelta;
+    Vec2f mapOffset1=oldMapOffset1 + (Vec2f(0,1)*multiplierAcc + Vec2f(0,-1)*multiplier*velocityVec.length()*tdelta)*1.2;
+    //multiplierAcc*(accelerationComponent+oldAccelerationComponent)*4 +
     oldMapOffset0=mapOffset0;
     oldMapOffset1=mapOffset1;
+    oldAccelerationComponent = accelerationComponent;
     if (oldMapOffset0[0]>400||oldMapOffset0[1]>400) {
         oldMapOffset0=Vec2f(0,0);
     }
