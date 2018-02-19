@@ -8,6 +8,12 @@ using namespace OSG;
 simpleVRPyType(Storage, 0);
 simpleVRPyType(ProjectManager, New_ptr);
 
+PyObject* VRPyStorage::fromSharedPtr(VRStoragePtr sto) {
+    auto obj = dynamic_pointer_cast<VRObject>(sto);
+    if (obj) return VRPyTypeCaster::cast(obj);
+    return VRPyBaseT<VRStorage>::fromSharedPtr(sto);
+}
+
 PyMethodDef VRPyStorage::methods[] = {
     {NULL}  /* Sentinel */
 };
