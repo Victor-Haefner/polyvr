@@ -79,7 +79,7 @@ void VRConstraint::setTConstraint(Vec3d params, TCMode mode, bool local) {
         free({0,2});
         auto po = Pose::create(p, Vec3d(1,0,0), params);
         po->makeDirOrthogonal();
-        setReferenceA( po ); // TODO: will not work for plane with x as normal!
+        setReferenceA( po );
     }
 }
 
@@ -95,17 +95,21 @@ void VRConstraint::setRConstraint(Vec3d params, TCMode mode, bool local) {
     }
 
     if (mode == LINE) {
-        auto p = Vec3d(refMatrixB[3]);
+        auto p = Vec3d(refMatrixA[3]);
         lock({3,4});
         free({5});
-        setReferenceB( Pose::create(p, params) ); // TODO: will not work for vertical line!
+        auto po = Pose::create(p, params);
+        po->makeUpOrthogonal();
+        setReferenceA( po );
     }
 
     if (mode == PLANE) {
-        auto p = Vec3d(refMatrixB[3]);
+        auto p = Vec3d(refMatrixA[3]);
         lock({4});
         free({3,5});
-        setReferenceB( Pose::create(p, Vec3d(1,0,0), params) ); // TODO: will not work for plane with x as normal!
+        auto po = Pose::create(p, Vec3d(1,0,0), params);
+        po->makeDirOrthogonal();
+        setReferenceA( po );
     }
 }
 
