@@ -1134,6 +1134,7 @@
 		<Unit filename="src/core/utils/system/VRSystem.h" />
 		<Unit filename="src/core/utils/toString.cpp" />
 		<Unit filename="src/core/utils/toString.h" />
+		<Unit filename="src/core/utils/toStringBis.h" />
 		<Unit filename="src/main.cpp" />
 		<Extensions>
 			<code_completion />
