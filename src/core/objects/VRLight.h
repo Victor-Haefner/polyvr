@@ -30,7 +30,8 @@ class VRLight : public VRObject {
 
         string lightType = "point";
         string beacon_name;
-        string photometricMap;
+        string photometricMapPath;
+        VRTexturePtr photometricMap;
         int shadowMapRes = 2048;
         Color4f lightDiffuse;
         Color4f lightAmbient;
@@ -85,7 +86,9 @@ class VRLight : public VRObject {
         void setDirectionallight();
         void setPhotometriclight();
 
-        void setPhotometricMap(string path);
+        void setPhotometricMap(VRTexturePtr tex);
+        void loadPhotometricMap(string path);
+        VRTexturePtr getPhotometricMap();
 
         LightMTRecPtr getLightCore();
         string getLightType();
