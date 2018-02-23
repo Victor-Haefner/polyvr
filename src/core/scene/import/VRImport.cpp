@@ -242,10 +242,11 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
         }
     }
 
-    else if (t_name == "MaterialGroup") {
-        tmp_m = VRMaterial::create(name);
+    else if (t_name == "MaterialGroup") { // highly inefficient! is there a reason to support this??
+        tmp = parent;
+        /*tmp_m = VRMaterial::create(name);
         tmp = tmp_m;
-        tmp->setCore(OSGCore::create(core), "Material");
+        tmp->setCore(OSGCore::create(core), "Material");*/
     }
 
     else if (t_name == "Geometry") {

@@ -89,10 +89,6 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         VRObjectPtr find(OSGObjectPtr n, string indent = " ");
         static void printOSGTree(OSGObjectPtr o, string indent = "");
 
-        bool hasDescendant(VRObjectPtr obj);
-        bool hasAncestor(VRObjectPtr obj);
-        VRObjectPtr findPickableAncestor();
-
         void setTravMask(int i);
         void setVolume(const Boundingbox& box);
         void setVolumeCheck(bool b, bool recursive = false);
@@ -114,6 +110,11 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         VRObjectPtr getParent(bool checkForDrag = false);
         size_t getChildrenCount();
         void clearChildren();
+
+        bool hasDescendant(VRObjectPtr obj);
+        bool hasAncestor(VRObjectPtr obj);
+        bool shareAncestry(VRObjectPtr obj);
+        VRObjectPtr findPickableAncestor();
 
         vector<VRObjectPtr> getObjectListByType( string _type );
         void getObjectListByType( string _type, vector<VRObjectPtr>& list );

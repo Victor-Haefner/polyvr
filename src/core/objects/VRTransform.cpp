@@ -488,8 +488,7 @@ void VRTransform::setOrientation(Vec3d at, Vec3d up) {
     reg_change();
 }
 
-/** Set the pose of the object with the from, at and up vectors **/
-void VRTransform::setPose(Vec3d from, Vec3d dir, Vec3d up) {
+void VRTransform::setTransform(Vec3d from, Vec3d dir, Vec3d up) {
     if (isNan(from) || isNan(dir) || isNan(up)) return;
     if (from == _from && dir == _dir && up == _up) return;
     _from = from;
@@ -497,8 +496,8 @@ void VRTransform::setPose(Vec3d from, Vec3d dir, Vec3d up) {
     setDir(dir);
 }
 
-void VRTransform::setPose(const Pose& p) { setPose(p.pos(), p.dir(), p.up()); }
-void VRTransform::setPose(PosePtr p) { if (p) setPose(p->pos(), p->dir(), p->up()); }
+void VRTransform::setPose(PosePtr p) { if (p) setTransform(p->pos(), p->dir(), p->up()); }
+void VRTransform::setPose2(const Pose& p) { setTransform(p.pos(), p.dir(), p.up()); }
 PosePtr VRTransform::getPose() { return Pose::create(Vec3d(_from), Vec3d(_dir), Vec3d(_up)); }
 PosePtr VRTransform::getWorldPose() { return Pose::create( getWorldMatrix() ); }
 void VRTransform::setWorldPose(PosePtr p) { setWorldMatrix(p->asMatrix()); }
@@ -520,7 +519,7 @@ void VRTransform::setMatrix(Matrix4d m) {
     float s2 = m[1].length();
     float s3 = m[2].length();
 
-    setPose(Vec3d(m[3]), Vec3d(-m[2])*1.0/s3, Vec3d(m[1])*1.0/s2);
+    setTransform(Vec3d(m[3]), Vec3d(-m[2])*1.0/s3, Vec3d(m[1])*1.0/s2);
     setScale(Vec3d(s1,s2,s3));
 }
 //-------------------------------------
@@ -698,7 +697,7 @@ bool VRTransform::isDragged() { return held; }
 VRObjectPtr VRTransform::getDragParent() { return old_parent.lock(); }
 
 /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
-Line VRTransform::castRay(VRObjectPtr obj, Vec3d dir) {
+Line VRTransform::castRay(VRObjectPtr obj, Vec3d dir) { // TODO: check what this is doing exactly and simplify!
     Matrix4d m = getWorldMatrix();
     if (obj) obj = obj->getParent();
 
@@ -719,6 +718,12 @@ Line VRTransform::castRay(VRObjectPtr obj, Vec3d dir) {
     Line ray;
     ray.setValue(Pnt3f(p0), Vec3f(dir));
     return ray;
+}
+
+VRIntersection VRTransform::intersect(VRObjectPtr obj, Vec3d dir) {
+    auto line = castRay(obj, dir);
+    VRIntersect in;
+    return in.intersect(obj, line);
 }
 
 /** Print the position of the object in local && world coords **/
@@ -764,17 +769,22 @@ void VRTransform::setConstraint(VRConstraintPtr c) {
     else constrainedObjects.erase(this);
 }
 
-void VRTransform::attach(VRTransformPtr b, VRConstraintPtr c) {
+void VRTransform::attach(VRTransformPtr b, VRConstraintPtr c, VRConstraintPtr cs) {
     VRTransformPtr a = ptr();
     if (!c) { constrainedObjects.erase(b.get()); return; }
     constrainedObjects[b.get()] = b;
     a->bJoints[b.get()] = make_pair(c, VRTransformWeakPtr(b)); // children
     b->aJoints[a.get()] = make_pair(c, VRTransformWeakPtr(a)); // parents
     c->setActive(true);
+    if (auto p = getPhysics()) p->setConstraint( b->getPhysics(), c, cs );
     //cout << "VRTransform::attach " << b->getName() << " to " << a->getName() << endl;
 }
 
-VRConstraintPtr VRTransform::getConstraint() { return constraint; }
+void VRTransform::detachJoint(VRTransformPtr b) { // TODO, remove joints
+    if (auto p = getPhysics()) p->deleteConstraints(b->getPhysics());
+}
+
+VRConstraintPtr VRTransform::getConstraint() { setConstraint(constraint); return constraint; }
 
 /** enable constraints on the object, 0 leaves the DOF free, 1 restricts it **/
 void VRTransform::apply_constraints(bool force) { // TODO: check efficiency
@@ -861,7 +871,7 @@ vector<VRAnimationPtr> VRTransform::getAnimations() {
     return res;
 }
 
-VRAnimationPtr VRTransform::startPathAnimation(PathPtr p, float time, float offset, bool redirect, bool loop) {
+VRAnimationPtr VRTransform::animate(PathPtr p, float time, float offset, bool redirect, bool loop) {
     pathAnimPtr = VRAnimCb::create("TransAnim", boost::bind(setFromPath, VRTransformWeakPtr(ptr()), p, redirect, _1));
     animCBs.push_back(pathAnimPtr);
     auto a = VRScene::getCurrent()->addAnimation<float>(time, offset, pathAnimPtr, 0.f, 1.f, loop);addAnimation(a);
@@ -937,7 +947,61 @@ void VRTransform::applyTransformation() {
     setMatrix(Matrix4d());
 }
 
+Vec3d VRTransform::getConstraintAngleWith(VRTransformPtr t, bool rotationOrPosition) {
+    Vec3d a;
+    if (auto p = getPhysics()) {
+        auto p2 = t->getPhysics();
+        if (!rotationOrPosition) {
+            a[0] = p->getConstraintAngle(p2,0);
+            a[1] = p->getConstraintAngle(p2,1);
+            a[2] = p->getConstraintAngle(p2,2);
+        } else {
+            a[0] = p->getConstraintAngle(p2,3);
+            a[1] = p->getConstraintAngle(p2,4);
+            a[2] = p->getConstraintAngle(p2,5);
+        }
+    }
+    return a;
+}
 
+void VRTransform::physicalize(bool b, bool dynamic, string shape, float param) {
+    if (auto p = getPhysics()) {
+        p->setDynamic(dynamic);
+        p->setShape(shape, param);
+        p->setPhysicalized(b);
+    }
+}
+
+void VRTransform::setCollisionGroup(vector<int> gv) {
+    int g = 0;
+    for (auto gi : gv) g = g | int( pow(2,gi) );
+    if (auto p = getPhysics()) p->setCollisionGroup(g);
+}
+
+void VRTransform::setCollisionMask(vector<int> gv) {
+    int g = 0;
+    for (auto gi : gv) g = g | int( pow(2,gi) );
+    if (auto p = getPhysics()) p->setCollisionMask(g);
+}
+
+void VRTransform::setPhysicalizeTree(bool b) { if (auto p = getPhysics()) p->physicalizeTree(b); }
+void VRTransform::setMass(float m) { if (auto p = getPhysics()) p->setMass(m); }
+void VRTransform::setCollisionMargin(float m) { if (auto p = getPhysics()) p->setCollisionMargin(m); }
+void VRTransform::setCollisionShape(string s, float f) { if (auto p = getPhysics()) p->setShape(s, f); }
+void VRTransform::setPhysicsActivationMode(int m) { if (auto p = getPhysics()) p->setActivationMode(m); }
+void VRTransform::applyImpulse(Vec3d i) { if (auto p = getPhysics()) p->applyImpulse(i); }
+void VRTransform::applyTorqueImpulse(Vec3d i) { if (auto p = getPhysics()) p->applyTorqueImpulse(i); }
+void VRTransform::applyForce(Vec3d f) { if (auto p = getPhysics()) p->addForce(f); }
+void VRTransform::applyConstantForce(Vec3d f) { if (auto p = getPhysics()) p->addConstantForce(f); }
+void VRTransform::applyTorque(Vec3d f) { if (auto p = getPhysics()) p->addTorque(f); }
+void VRTransform::applyConstantTorque(Vec3d f) { if (auto p = getPhysics()) p->addConstantTorque(f); }
+void VRTransform::setGravity(Vec3d g) { if (auto p = getPhysics()) p->setGravity(g); }
+void VRTransform::setCenterOfMass(Vec3d g) { if (auto p = getPhysics()) p->setCenterOfMass(g); }
+void VRTransform::setGhost(bool g) { if (auto p = getPhysics()) p->setGhost(g); }
+void VRTransform::setDamping(float ld, float ad) { if (auto p = getPhysics()) p->setDamping(ld, ad); }
+
+Vec3d VRTransform::getForce() { if (auto p = getPhysics()) return p->getForce(); else return Vec3d(); }
+Vec3d VRTransform::getTorque() { if (auto p = getPhysics()) return p->getTorque(); else return Vec3d(); }
 
 
 OSG_END_NAMESPACE;

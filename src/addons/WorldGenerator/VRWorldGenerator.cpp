@@ -306,7 +306,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         if (way->hasTag("building:levels")) lvls = toInt( way->tags["building:levels"] );
         if (way->hasTag("addr:housenumber")) housenumber = way->tags["addr:housenumber"];
         if (way->hasTag("addr:street")) street = way->tags["addr:street"];
-        district->addBuilding( *wayToPolygon(way), lvls, housenumber, street );
+        district->addBuilding( wayToPolygon(way), lvls, housenumber, street );
     };
 
     auto nodeInSubarea = [&](OSMNodePtr node) {
@@ -425,46 +425,6 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             }
         }
     }
-
-
-    // -------------------- project OSM polygons on texture
-    /*auto dim = tex->getSize();
-    VRTextureGenerator tg;
-    tg.setSize(dim, true);
-
-    //for (auto tag : polygons) cout << "polygon tag: " << tag.first << endl;
-
-    auto drawPolygons = [&](string tag, Color4f col) {
-        if (!polygons.count(tag)) {
-            //cout << "\ndrawPolygons: tag '" << tag << "' not found!" << endl;
-            return;
-        }
-
-        for (auto p : polygons[tag]) {
-            p->scale( Vec3d(1.0/size[0], 1, 1.0/size[1]) );
-            p->translate( Vec3d(0.5,0,0.5) );
-            tg.drawPolygon( p, col );
-        }
-    };
-
-    drawPolygons("natural", Color4f(0,1,0,1));
-    drawPolygons("water", Color4f(0.2,0.4,1,1));
-    drawPolygons("industrial", Color4f(0.2,0.2,0.2,1));
-    VRTexturePtr t = tg.compose(0);
-
-    // ----------------------- combine OSM texture with heightmap
-    for (int i = 0; i < dim[0]; i++) {
-        for (int j = 0; j < dim[1]; j++) {
-            Vec3i pixK = Vec3i(i,j,0);
-            double h = tex->getPixel(pixK)[3];
-            auto pix = Vec2d(i*1.0/(dim[0]-1), j*1.0/(dim[1]-1));
-            //if (tgPolygon->isInside(pix)) h = 14;
-            Color4f col = t->getPixel(pixK);
-            col[3] = h;
-            t->setPixel(pixK, col);
-        }
-    }
-    setMap(t);*/
 }
 
 void VRWorldGenerator::reloadOSMMap(double subN, double subE, double subSize) {
@@ -483,6 +443,13 @@ void VRWorldGenerator::clear() {
     nature->clear();
 }
 
+string VRWorldGenerator::getStats() {
+    string res;
+    res += "world generator stats:\n";
+    res += " OSM map: " + toString(osmMap->getMemoryConsumption()) + " mb\n";
+    res += " Road network: " + toString(roads->getMemoryConsumption()) + " mb\n";
+    return res;
+}
 
 // textured asset material
 

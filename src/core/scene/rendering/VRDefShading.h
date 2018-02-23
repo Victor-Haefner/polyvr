@@ -21,7 +21,8 @@ class VRDefShading {
         enum LightTypeE {
             Directional,
             Point,
-            Spot
+            Spot,
+            Photometric
         };
 
         struct LightInfo {
@@ -29,7 +30,6 @@ class VRDefShading {
             LightTypeE lightType;
             ShadowTypeE shadowType;
             LightMTRecPtr light;
-            int dsID = 0;
             //NodeMTRecPtr               lightN;
             //NodeMTRecPtr               beaconN;
 
@@ -42,6 +42,7 @@ class VRDefShading {
         string dsAmbientVPFile, dsAmbientFPFile;
         string dsDirLightVPFile, dsDirLightFPFile, dsDirLightShadowFPFile;
         string dsPointLightVPFile, dsPointLightFPFile, dsPointLightShadowFPFile;
+        string dsPhotometricLightVPFile, dsPhotometricLightFPFile, dsPhotometricLightShadowFPFile;
         string dsSpotLightVPFile, dsSpotLightFPFile, dsSpotLightShadowFPFile;
         string dsUnknownFile = "unknownFile";
 

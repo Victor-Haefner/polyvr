@@ -56,6 +56,8 @@ class VRWorldGenerator : public VRTransform {
         VRTerrainPtr getTerrain();
         VRDistrictPtr getDistrict();
         VRMaterialPtr getMaterial(string name);
+
+        string getStats();
 };
 
 OSG_END_NAMESPACE;

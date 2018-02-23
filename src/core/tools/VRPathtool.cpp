@@ -274,10 +274,12 @@ void VRPathtool::update() { // call in script to have smooth knots
 
             Vec3d pos = h->getRelativePosition(ptr());
             Vec3d dir;
-            for (auto k : knot.second.out) if (hPositions.count(k)) dir += pos - hPositions[k];
-            for (auto k : knot.second.in) if (hPositions.count(k)) dir += hPositions[k] - pos;
-            dir.normalize();
-            h->setRelativeDir(dir, ptr());
+            for (auto k : knot.second.in) if (hPositions.count(k)) dir += pos - hPositions[k];
+            for (auto k : knot.second.out) if (hPositions.count(k)) dir += hPositions[k] - pos;
+            if (dir.squareLength() > 1e-6) {
+                dir.normalize();
+                h->setRelativeDir(dir, ptr());
+            }
         }
     }
 
@@ -314,7 +316,7 @@ void VRPathtool::updateEntry(entryPtr e) { // update path representation
         vector<Vec3d> profile;
         profile.push_back(Vec3d());
         line->addPath(e->p);
-        line->strokeProfile(profile, 0, 0);
+        line->strokeProfile(profile, 0, 0, 0);
     }
 
     if (auto l = e->line.lock()) l->update();
@@ -359,15 +361,17 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
                 Vec3d dir;
                 for (auto k : knots[ID].in ) dir += pos - getPos(k);
                 for (auto k : knots[ID].out) dir += getPos(k) - pos;
-                dir.normalize();
-                auto h = knots[ID].handle.lock();
-                auto key = h.get();
-                if (h) {
-                    h->setRelativeDir(dir, ptr());
-                    for (auto e : handleToEntries[key]) {
-                        auto op = e->p->getPoint(e->points[key]);
-                        e->p->setPoint( e->points[key], Pose(op.pos(), dir, op.up()));
-                        updateEntry(e);
+                if (dir.squareLength() > 1e-6) {
+                    dir.normalize();
+                    auto h = knots[ID].handle.lock();
+                    auto key = h.get();
+                    if (h) {
+                        h->setRelativeDir(dir, ptr());
+                        for (auto e : handleToEntries[key]) {
+                            auto op = e->p->getPoint(e->points[key]);
+                            e->p->setPoint( e->points[key], Pose(op.pos(), dir, op.up()));
+                            updateEntry(e);
+                        }
                     }
                 }
             };

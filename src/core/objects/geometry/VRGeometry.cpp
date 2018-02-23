@@ -447,7 +447,7 @@ void VRGeometry::setPositionalTexCoords2D(float scale, int i, Vec2i format) {
     if (!mesh || !mesh->geo) return;
     GeoVectorPropertyRefPtr pos = mesh->geo->getPositions();
     if (!pos) return;
-    GeoVec3fPropertyRefPtr tex = GeoVec3fProperty::create();
+    GeoVec2fPropertyRefPtr tex = GeoVec2fProperty::create();
     for (uint i=0; i<pos->size(); i++) {
         auto p = Vec3d(pos->getValue<Pnt3f>(i))*scale;
         tex->addValue(Vec2d(p[format[0]], p[format[1]]));
@@ -494,9 +494,8 @@ void VRGeometry::merge(VRGeometryPtr geo) {
     if (!geo->mesh->geo) return;
     if (!meshSet) setMesh();
 
-    Matrix4d M = getWorldMatrix();
-    M.invert();
-    M.mult( geo->getWorldMatrix() );
+    Matrix4d M;
+    if (shareAncestry(geo)) M = getMatrixTo(geo);
 
     VRGeoData self(ptr());
     VRGeoData other(geo);

@@ -19,6 +19,7 @@
 #include "core/objects/VRGroup.h"
 #include "core/objects/VRLod.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRTexture.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
@@ -141,20 +142,18 @@ void setTransform(VRTransformPtr e) {
     }
 }
 
-void setGeometry(VRGeometryPtr g) {
-    setExpanderSensitivity("expander11", true);
-    setExpanderSensitivity("expander14", true);
-    setExpanderSensitivity("expander16", true);
-    VRMaterialPtr mat = g->getMaterial();
-
+void setMaterial(VRMaterialPtr mat) {
     bool lit = false;
     Color3f _cd, _cs, _ca;
+    VRTexturePtr tex;
+
     if (mat) {
         setLabel("label60", mat->getName());
         _cd = mat->getDiffuse();
         _cs = mat->getSpecular();
         _ca = mat->getAmbient();
         lit = mat->isLit();
+        tex = mat->getTexture();
     } else setLabel("label60", "NONE");
 
     setColorChooserColor("mat_diffuse", _cd);
@@ -162,6 +161,22 @@ void setGeometry(VRGeometryPtr g) {
     setColorChooserColor("mat_ambient", _ca);
 
     setCheckButton("checkbutton3", lit);
+    setCheckButton("checkbutton5", bool(tex));
+    setTableSensitivity("table44", bool(tex));
+
+    if (tex) {
+        setLabel("label158", toString(tex->getSize()) + " (" + toString(tex->getByteSize()/1048576.0) + " mb)");
+        setLabel("label157", toString(tex->getChannels()));
+    }
+}
+
+void setGeometry(VRGeometryPtr g) {
+    setExpanderSensitivity("expander11", true);
+    setExpanderSensitivity("expander14", true);
+    setExpanderSensitivity("expander16", true);
+    VRMaterialPtr mat = g->getMaterial();
+    setMaterial(mat);
+
     setCheckButton("checkbutton28", false);
     setCombobox("combobox21", -1);
 
@@ -562,7 +577,7 @@ void VRGuiScene::on_focus_clicked() {
 void VRGuiScene::on_identity_clicked() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
-    obj->setPose(Vec3d(0,0,0), Vec3d(0,0,-1), Vec3d(0,1,0));
+    obj->setIdentity();
     updateObjectForms();
 }
 

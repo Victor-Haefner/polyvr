@@ -313,6 +313,7 @@ PyObject* VRPyVec3f::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 
 PyObject* VRPyVec3f::Print(PyObject* self) {
     string s = "[" + toString(((VRPyVec3f*)self)->v) + "]";
+    std::replace( s.begin(), s.end(), ' ', ',');
     return PyString_FromString( s.c_str() );
 }
 

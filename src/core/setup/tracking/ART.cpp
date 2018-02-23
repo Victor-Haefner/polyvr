@@ -81,6 +81,7 @@ ART::ART() {
     store("port", &port);
     store("offset", &offset);
     store("up", &up);
+    store("axis", &axis);
 }
 
 ART::~ART() {
@@ -88,16 +89,26 @@ ART::~ART() {
 }
 
 template<typename dev>
-void ART::getMatrix(dev t, Matrix4d& m, bool doOffset) { //TODO: its a mess :(
-    m[0] = Vec4d(t.rot[0], t.rot[1], t.rot[2], 1); // orientation
-    m[1] = Vec4d(t.rot[3], t.rot[4], t.rot[5], 1);
-    m[2] = Vec4d(t.rot[6], t.rot[7], t.rot[8], 1);
+void ART::getMatrix(dev t, Matrix4d& m, bool doOffset) {
+    cout << "ART::getMatrix " << axis << endl;
 
-    m[1] = Vec4d(t.rot[6], t.rot[7], t.rot[8], 1); // test
-    m[2] = Vec4d(-t.rot[3], -t.rot[4], -t.rot[5], 1);
+    int X = abs(axis[0]);
+    int Y = abs(axis[1]);
+    int Z = abs(axis[2]);
 
-    m[3] = Vec4d(t.loc[0]*0.001, t.loc[1]*0.001, t.loc[2]*0.001, 1); // position
-    coords::YtoZ(m);
+    int Sx = axis[0] >= 0 ? 1 : -1;
+    int Sy = axis[1] >= 0 ? 1 : -1;
+    int Sz = axis[2] >= 0 ? 1 : -1;
+
+    m[X] = Vec4d(Sx*t.rot[0], Sx*t.rot[1], Sx*t.rot[2], 0); // orientation
+    m[Y] = Vec4d(Sy*t.rot[3], Sy*t.rot[4], Sy*t.rot[5], 0);
+    m[Z] = Vec4d(Sz*t.rot[6], Sz*t.rot[7], Sz*t.rot[8], 0);
+
+    //m[1] = Vec4d(t.rot[6], t.rot[7], t.rot[8], 1); // test
+    //m[2] = Vec4d(-t.rot[3], -t.rot[4], -t.rot[5], 1);
+
+    m[3] = Vec4d(t.loc[X]*0.001, t.loc[Y]*0.001, t.loc[Z]*0.001, 1); // position
+    //coords::YtoZ(m);
     if (doOffset) m[3] += Vec4d(offset);
 }
 
@@ -215,6 +226,8 @@ vector<int> ART::getARTDevices() {
 
 ART_devicePtr ART::getARTDevice(int dev) { return devices[dev]; }
 
+void ART::setARTAxis(Vec3i a) { axis = a; }
+Vec3i ART::getARTAxis() { return axis; }
 void ART::setARTActive(bool b) { active = b; }
 bool ART::getARTActive() { return active; }
 

@@ -95,16 +95,20 @@ CIFdata parseCIFfile(string path) {
 
 void VRCrystal::loadCell(string path) { // CIF data parser!
     auto cellData = parseCIFfile(path);
-    auto& positionData = cellData.blocks[1];
-    vector<Vec3d> positions;
-    for (string data : positionData["symmetry_equiv_pos_as_xyz"]) {
-        Vec3d pos;
-        auto posData = splitString( subString(data, 1, data.size()-1), ',');
-        for (int i=0; i<3; i++) {
-            ;
-            pos[0] = toFloat( posData[0] );
+    if (cellData.blocks.size() > 1) {
+        auto& positionData = cellData.blocks[1];
+        vector<Vec3d> positions;
+        if (positionData.count("symmetry_equiv_pos_as_xyz")) {
+            for (string data : positionData["symmetry_equiv_pos_as_xyz"]) {
+                Vec3d pos;
+                auto posData = splitString( subString(data, 1, data.size()-1), ',');
+                for (int i=0; i<3; i++) {
+                    ;
+                    pos[0] = toFloat( posData[0] );
+                }
+                positions.push_back(pos);
+            }
         }
-        positions.push_back(pos);
     }
 }
 

@@ -59,6 +59,9 @@ void VRDefShading::init() {
     dsPointLightVPFile = resDir + "DSPointLight.vp.glsl";
     dsPointLightFPFile = resDir + "DSPointLight.fp.glsl";
     dsPointLightShadowFPFile = resDir + "DSPointLightShadow.fp.glsl";
+    dsPhotometricLightVPFile = resDir + "DSPointLight.vp.glsl";
+    dsPhotometricLightFPFile = resDir + "DSPhotometricLight.fp.glsl";
+    dsPhotometricLightShadowFPFile = resDir + "DSPhotometricLightShadow.fp.glsl";
     dsSpotLightVPFile = resDir + "DSSpotLight.vp.glsl";
     dsSpotLightFPFile = resDir + "DSSpotLight.fp.glsl";
     dsSpotLightShadowFPFile = resDir + "DSSpotLightShadow.fp.glsl";
@@ -200,7 +203,6 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     li.lightSH->addShader(li.lightVP);
     li.lightSH->addShader(li.lightFP);
 
-    li.dsID = dsStage->editMFLights()->size();
     dsStage->editMFLights       ()->push_back(li.light  );
     dsStage->editMFLightPrograms()->push_back(li.lightSH);
     lightInfos[ID] = li;
@@ -219,11 +221,13 @@ void VRDefShading::updateLight(VRLightPtr l) {
     li.lightType = Point;
     if (type == "directional") li.lightType = Directional;
     if (type == "spot") li.lightType = Spot;
+    if (type == "photometric") li.lightType = Photometric;
     if (shadows) li.shadowType = defaultShadowType;
     else li.shadowType = ST_NONE;
 
+    auto lItr = dsStage->editMFLights()->find(li.light);
     li.light = l->getLightCore();
-    dsStage->editMFLights()->replace(li.dsID, li.light);
+    dsStage->editMFLights()->replace(lItr, li.light);
     dsStage->editMFLightPrograms();
     string vpFile = getLightVPFile(li.lightType);
     string fpFile = getLightFPFile(li.lightType, li.shadowType);
@@ -236,9 +240,10 @@ TextureObjChunkRefPtr VRDefShading::getTarget() { return fboTex; }
 // file containing vertex shader code for the light type
 const std::string& VRDefShading::getLightVPFile(LightTypeE lightType) {
     switch(lightType) {
-        case LightEngine::Directional: return dsDirLightVPFile;
-        case LightEngine::Point: return dsPointLightVPFile;
-        case LightEngine::Spot: return dsSpotLightVPFile;
+        case Directional: return dsDirLightVPFile;
+        case Point: return dsPointLightVPFile;
+        case Spot: return dsSpotLightVPFile;
+        case Photometric: return dsPhotometricLightVPFile;
         default: return dsUnknownFile;
     }
 }
@@ -250,6 +255,7 @@ const std::string& VRDefShading::getLightFPFile(LightTypeE lightType, ShadowType
         case Directional: return ds ? dsDirLightShadowFPFile : dsDirLightFPFile;
         case Point: return ds ? dsPointLightShadowFPFile : dsPointLightFPFile;
         case Spot: return ds ? dsSpotLightShadowFPFile : dsSpotLightFPFile;
+        case Photometric: return ds ? dsPhotometricLightShadowFPFile : dsPhotometricLightFPFile;
         default: return dsUnknownFile;
     }
 }
@@ -257,12 +263,12 @@ const std::string& VRDefShading::getLightFPFile(LightTypeE lightType, ShadowType
 void VRDefShading::subLight(int ID) {
     if (!lightInfos.count(ID)) return;
     auto& li = lightInfos[ID];
-    int lightIdx = li.dsID;
-    OSG_ASSERT(lightIdx < lightInfos.size());
-    OSG_ASSERT(lightIdx < dsStage->getMFLights()->size());
-    OSG_ASSERT(lightIdx < dsStage->getMFLightPrograms()->size());
-    dsStage->editMFLights()->erase(lightIdx);
-    dsStage->editMFLightPrograms()->erase(lightIdx);
+    auto lItr = dsStage->editMFLights()->find(li.light);
+    auto lpItr = dsStage->editMFLightPrograms()->find(li.lightSH);
+    //OSG_ASSERT(lightIdx < dsStage->getMFLights()->size());
+    //OSG_ASSERT(lightIdx < dsStage->getMFLightPrograms()->size());
+    dsStage->editMFLights()->erase(lItr);
+    dsStage->editMFLightPrograms()->erase(lpItr);
     lightInfos.erase(ID);
 }
 

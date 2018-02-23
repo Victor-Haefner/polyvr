@@ -33,6 +33,8 @@ bool VRPyBase::isList(PyObject* o) { return PyList_Check(o); }
 bool VRPyBase::isTuple(PyObject* o) { return PyTuple_Check(o); }
 
 int VRPyBase::pySize(PyObject* v) {
+    if (VRPyVec2f::check(v)) return 2;
+    if (VRPyVec3f::check(v)) return 3;
     if (isList(v)) return PyList_Size(v);
     if (isTuple(v)) return PyTuple_Size(v);
     return 0;

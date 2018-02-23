@@ -120,6 +120,7 @@ void VRRobotArm::setAngles(vector<float> angles) {
 }
 
 PosePtr VRRobotArm::getPose() {
+    if (parts.size() < 7) return 0;
     auto pose = parts[6]->getWorldPose();
     pose->setDir(-pose->dir());
 
@@ -143,6 +144,7 @@ PosePtr VRRobotArm::getPose() {
 void VRRobotArm::moveTo(PosePtr p2) {
     stop();
     auto p1 = getPose();
+    if (!p1) return;
 
     //p1->setUp(-p1->up());
     //p1->setUp(Vec3d(0,1,0));

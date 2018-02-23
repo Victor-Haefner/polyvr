@@ -23,13 +23,15 @@ void VRProjectManager::addItem(VRStoragePtr s, string mode) {
     if (!s) return;
     if (mode == "RELOAD") vault_reload.push_back(s);
     if (mode == "REBUILD") vault_rebuild.push_back(s);
-    s->store("pmMode", &mode);
+    modesMap[s.get()] = mode;
+    s->store("pmMode", &modesMap[s.get()]);
 }
 
 void VRProjectManager::remItem(VRStoragePtr s) {
     if (!s) return;
     vault_reload.erase(std::remove(vault_reload.begin(), vault_reload.end(), s), vault_reload.end());
     vault_rebuild.erase(std::remove(vault_rebuild.begin(), vault_rebuild.end(), s), vault_rebuild.end());
+    if (modesMap.count(s.get())) modesMap.erase(s.get());
 }
 
 void VRProjectManager::setSetting(string s, string v) { settings[s] = v; }
@@ -44,21 +46,19 @@ vector<VRStoragePtr> VRProjectManager::getItems() {
 void VRProjectManager::newProject(string path) {
     setName(path);
     vault_rebuild.clear();
+    modesMap.clear();
 }
 
 void VRProjectManager::save(string path) {
     if (path == "") path = getName();
     if (exists(path)) path = canonical(path);
-    cout << "VRProjectManager::save " << path << endl;
+    cout << "VRProjectManager::save " << path << " (" << toString(vault_reload.size()) << " + " << toString(vault_rebuild.size()) << " objects)" << endl;
 
     xmlpp::Document doc;
     xmlpp::Element* root = doc.create_root_node("Project", "", "VRP"); // name, ns_uri, ns_prefix
     storage.save(root);
 
-    for (auto v : vault_reload) {
-        cout << "VRProjectManager::save " << v << " " << persistencyLvl << endl;
-        v->saveUnder(root, persistencyLvl);
-    }
+    for (auto v : vault_reload) v->saveUnder(root, persistencyLvl);
     for (auto v : vault_rebuild) v->saveUnder(root, persistencyLvl);
     doc.write_to_file_formatted(path);
 }

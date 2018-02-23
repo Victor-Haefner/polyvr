@@ -9,6 +9,7 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRConstraintPtr& t) { return "Constraint"; }
 template<> string typeName(const VRConstraint::TCMode& o) { return "Constraint mode"; }
 template<> int toValue(stringstream& s, VRConstraint::TCMode& t) { return 0; } // TODO
 
@@ -39,8 +40,8 @@ void VRConstraint::setMax(int i, float f) { max[i] = f; }
 float VRConstraint::getMin(int i) { return min[i]; }
 float VRConstraint::getMax(int i) { return max[i]; }
 
-void VRConstraint::lock(vector<int> dofs) { for (int dof : dofs) setMinMax(dof,0,0); setActive(true); }
-void VRConstraint::free(vector<int> dofs) { for (int dof : dofs) setMinMax(dof,1,-1); }
+void VRConstraint::lock(vector<int> dofs, float v) { for (int dof : dofs) setMinMax(dof,v,v); setActive(true); }
+void VRConstraint::free(vector<int> dofs) { for (int dof : dofs) setMinMax(dof,1,-1); setActive(true); }
 
 void VRConstraint::setReferenceA(PosePtr p) { refMatrixA = p->asMatrix(); refMatrixA.inverse(refMatrixAI); };
 void VRConstraint::setReferenceB(PosePtr p) { refMatrixB = p->asMatrix(); refMatrixB.inverse(refMatrixBI); };
@@ -48,7 +49,7 @@ void VRConstraint::setReference(PosePtr p) { setReferenceA(p); }
 PosePtr VRConstraint::getReferenceA() { return Pose::create(refMatrixA); };
 PosePtr VRConstraint::getReferenceB() { return Pose::create(refMatrixB); };
 
-void VRConstraint::lockRotation() { setRConstraint(Vec3d(0,0,0), VRConstraint::POINT); }
+void VRConstraint::lockRotation() { lock({3,4,5}); }
 
 void VRConstraint::setReferential(VRTransformPtr t) { Referential = t; }
 
@@ -64,17 +65,21 @@ void VRConstraint::setTConstraint(Vec3d params, TCMode mode, bool local) {
     }
 
     if (mode == LINE) {
-        auto p = Vec3d(refMatrixB[3]);
+        auto p = Vec3d(refMatrixA[3]);
         lock({0,1});
         free({2});
-        setReferenceB( Pose::create(p, params) ); // TODO: will not work for vertical line!
+        auto po = Pose::create(p, params);
+        po->makeUpOrthogonal();
+        setReferenceA( po );
     }
 
     if (mode == PLANE) {
-        auto p = Vec3d(refMatrixB[3]);
+        auto p = Vec3d(refMatrixA[3]);
         lock({1});
         free({0,2});
-        setReferenceB( Pose::create(p, Vec3d(1,0,0), params) ); // TODO: will not work for plane with x as normal!
+        auto po = Pose::create(p, Vec3d(1,0,0), params);
+        po->makeDirOrthogonal();
+        setReferenceA( po );
     }
 }
 
@@ -90,17 +95,21 @@ void VRConstraint::setRConstraint(Vec3d params, TCMode mode, bool local) {
     }
 
     if (mode == LINE) {
-        auto p = Vec3d(refMatrixB[3]);
+        auto p = Vec3d(refMatrixA[3]);
         lock({3,4});
         free({5});
-        setReferenceB( Pose::create(p, params) ); // TODO: will not work for vertical line!
+        auto po = Pose::create(p, params);
+        po->makeUpOrthogonal();
+        setReferenceA( po );
     }
 
     if (mode == PLANE) {
-        auto p = Vec3d(refMatrixB[3]);
+        auto p = Vec3d(refMatrixA[3]);
         lock({4});
         free({3,5});
-        setReferenceB( Pose::create(p, Vec3d(1,0,0), params) ); // TODO: will not work for plane with x as normal!
+        auto po = Pose::create(p, Vec3d(1,0,0), params);
+        po->makeDirOrthogonal();
+        setReferenceA( po );
     }
 }
 
@@ -111,6 +120,7 @@ void VRConstraint::apply(VRTransformPtr obj, VRObjectPtr parent) {
     apply_time_stamp = now;
 
     if (local) parent = obj->getParent(true);
+    if (auto r = Referential.lock()) parent = r;
     Matrix4d J = obj->getMatrixTo(parent);
     J.mult(refMatrixB);
     J.multLeft(refMatrixAI);
@@ -125,8 +135,11 @@ void VRConstraint::apply(VRTransformPtr obj, VRObjectPtr parent) {
     Vec3d angleDiff;
     for (int i=3; i<6; i++) { // rotation
         if (min[i] > max[i]) continue; // free
-        if (min[i] > angles[i-3]) angleDiff[i-3] = min[i] - angles[i-3]; // lower bound
-        if (max[i] < angles[i-3]) angleDiff[i-3] = max[i] - angles[i-3]; // upper bound
+        float a = angles[i-3];
+        float d1 = min[i]-a; while(d1 > Pi) d1 -= 2*Pi; while(d1 < -Pi) d1 += 2*Pi;
+        float d2 = max[i]-a; while(d2 > Pi) d2 -= 2*Pi; while(d2 < -Pi) d2 += 2*Pi;
+        if (d1 > 0 && abs(d1) <= abs(d2)) angleDiff[i-3] = d1; // lower bound
+        if (d2 < 0 && abs(d2) <= abs(d1)) angleDiff[i-3] = d2; // upper bound
     }
     VRTransform::applyEulerAngles(J, angles + angleDiff);
 

@@ -186,7 +186,6 @@ void VRGuiSetup::updateObjectData() {
 
     if (selected_type == "art_device") {
         setExpanderSensitivity("expander5", true);
-        setExpanderSensitivity("expander6", true);
         ART_device* t = (ART_device*)selected_object;
         setTextEntry("entry40", toString(t->ID));
     }
@@ -227,10 +226,8 @@ void VRGuiSetup::updateObjectData() {
             setTextEntry("entry39", toString(setup->getARTPort()));
             setCheckButton("checkbutton24", setup->getARTActive());
 
-            Vec3d o = setup->getARTOffset();
-            setTextEntry("entry48", toString(o[0]));
-            setTextEntry("entry62", toString(o[1]));
-            setTextEntry("entry63", toString(o[2]));
+            artOffset.set(setup->getARTOffset());
+            artAxis.set(Vec3d(setup->getARTAxis()));
         }
 
         if (selected_name == "VRPN") {
@@ -904,14 +901,19 @@ void VRGuiSetup::on_displays_edit_offset() {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
-void VRGuiSetup::on_art_edit_offset() {
+void VRGuiSetup::on_art_edit_offset(Vec3d v) {
     if (guard) return;
     auto setup = current_setup.lock();
     if (!setup) return;
-    float ox = toFloat(getTextEntry("entry48"));
-    float oy = toFloat(getTextEntry("entry62"));
-    float oz = toFloat(getTextEntry("entry63"));
-    setup->setARTOffset(Vec3d(ox,oy,oz));
+    setup->setARTOffset(v);
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_art_edit_axis(Vec3d v) {
+    if (guard) return;
+    auto setup = current_setup.lock();
+    if (!setup) return;
+    setup->setARTAxis(Vec3i(round(v[0]), round(v[1]), round(v[2])));
     setToolButtonSensitivity("toolbutton12", true);
 }
 
@@ -1144,6 +1146,9 @@ VRGuiSetup::VRGuiSetup() {
     setRadioToolButtonCallback("radiotoolbutton2", sigc::mem_fun(*this, &VRGuiSetup::on_script_trigger_switched) );
     setRadioToolButtonCallback("radiotoolbutton3", sigc::mem_fun(*this, &VRGuiSetup::on_script_trigger_switched) );
 
+    artAxis.init("art_axis", "Axis", sigc::mem_fun(*this, &VRGuiSetup::on_art_edit_axis));
+    artOffset.init("art_offset", "Offset", sigc::mem_fun(*this, &VRGuiSetup::on_art_edit_offset));
+
     centerEntry.init("center_entry", "center", sigc::mem_fun(*this, &VRGuiSetup::on_proj_center_edit));
     userEntry.init("user_entry", "user", sigc::mem_fun(*this, &VRGuiSetup::on_proj_user_edit));
     normalEntry.init("normal_entry", "normal", sigc::mem_fun(*this, &VRGuiSetup::on_proj_normal_edit));
@@ -1169,9 +1174,6 @@ VRGuiSetup::VRGuiSetup() {
     setEntryCallback("entry34", sigc::mem_fun(*this, &VRGuiSetup::on_servern_edit) );
     setEntryCallback("entry39", sigc::mem_fun(*this, &VRGuiSetup::on_art_edit_port) );
     setEntryCallback("entry40", sigc::mem_fun(*this, &VRGuiSetup::on_art_edit_id) );
-    setEntryCallback("entry48", sigc::mem_fun(*this, &VRGuiSetup::on_art_edit_offset) );
-    setEntryCallback("entry62", sigc::mem_fun(*this, &VRGuiSetup::on_art_edit_offset) );
-    setEntryCallback("entry63", sigc::mem_fun(*this, &VRGuiSetup::on_art_edit_offset) );
     setEntryCallback("entry29", sigc::mem_fun(*this, &VRGuiSetup::on_displays_edit_offset) );
     setEntryCallback("entry30", sigc::mem_fun(*this, &VRGuiSetup::on_displays_edit_offset) );
     setEntryCallback("entry31", sigc::mem_fun(*this, &VRGuiSetup::on_displays_edit_offset) );

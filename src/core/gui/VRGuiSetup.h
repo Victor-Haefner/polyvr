@@ -27,6 +27,8 @@ class VRGuiSetup {
         VRSetupWeakPtr current_setup;
         VRSceneWeakPtr current_scene;
 
+        VRGuiVectorEntry artAxis;
+        VRGuiVectorEntry artOffset;
         VRGuiVectorEntry centerEntry;
         VRGuiVectorEntry userEntry;
         VRGuiVectorEntry normalEntry;
@@ -108,7 +110,8 @@ class VRGuiSetup {
         void on_toggle_art();
         void on_art_edit_port();
         void on_art_edit_id();
-        void on_art_edit_offset();
+        void on_art_edit_axis(Vec3d v);
+        void on_art_edit_offset(Vec3d v);
 
         void on_toggle_vrpn_verbose();
         void on_toggle_vrpn_test_server();

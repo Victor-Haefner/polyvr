@@ -27,10 +27,10 @@ void VRHandle::configure(VRAnimCbPtr cb, TYPE t, Vec3d n, float s, bool symmetri
     constraint = t;
     scale = s;
     auto c = getConstraint();
-    if (t == LINEAR) { // TODO: need local constraints!
-        c->setTConstraint(n, VRConstraint::LINE);
-        c->setRConstraint(Vec3d(0,1,0), VRConstraint::POINT);
+    if (t == LINEAR) {
+        c->lockRotation();
         c->setReferential( dynamic_pointer_cast<VRTransform>(getParent()) );
+        c->setTConstraint(n, VRConstraint::LINE);
     }
 }
 
@@ -44,8 +44,9 @@ void VRHandle::set(PosePtr p, float v) {
 
     if (constraint == LINEAR) {
         translate( axis*value*scale );
-        c->setActive(1);
         c->setReference(getPose());
+        c->setTConstraint(axis, VRConstraint::LINE);
+        c->setActive(true);
     }
 }
 

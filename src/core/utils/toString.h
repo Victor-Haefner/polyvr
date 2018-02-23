@@ -21,7 +21,6 @@ template<typename T> string typeName(const vector<T>& t) { return "list of "+typ
 
 template<typename T> int toValue(stringstream& s, T& t);
 template<typename T> int toValue(string s, T& t) { stringstream ss(s); return toValue(ss,t); }
-template<typename T> int toValue(string s, std::shared_ptr<T>& t) { t = 0; return true; }
 template<typename T> int toValue(string s, vector<T>& t) { return true; }
 template<class T>    T   toValue(string s) { T t; toValue(s,t); return t; }
 

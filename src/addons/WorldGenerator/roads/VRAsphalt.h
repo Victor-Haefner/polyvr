@@ -27,6 +27,7 @@ class VRAsphalt : public VRMaterial {
 
         map<int, road> roadData;
         VRTextureGeneratorPtr texGen;
+        VRTexturePtr pathTex;
         VRTexturePtr noiseTex;
         VRTexturePtr mudTex;
 
@@ -46,6 +47,8 @@ class VRAsphalt : public VRMaterial {
         void updateTexture();
         void addTrack(int rID, PathPtr track, float width, float dashL, float offset = 0);
         void addMarking(int rID, PathPtr marking, float width, float dashL, float offset = 0);
+
+        double getMemoryConsumption();
 };
 
 OSG_END_NAMESPACE;

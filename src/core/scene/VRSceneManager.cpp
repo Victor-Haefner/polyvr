@@ -4,6 +4,7 @@
 #include "core/setup/windows/VRWindow.h"
 #include "core/utils/VRRate.h"
 #include "core/utils/VRProfiler.h"
+#include "core/utils/coreDumpHandler.h"
 #include "VRScene.h"
 #include "core/objects/VRCamera.h"
 #include "core/objects/VRLight.h"
@@ -88,6 +89,7 @@ void VRSceneManager::setWorkdir(string path) {
 	if (path == "") return;
 	if (exists(path)) path = canonical(path);
 	boost::filesystem::current_path(path);
+	clearDumpFiles();
 }
 
 void VRSceneManager::newEmptyScene(string path) {

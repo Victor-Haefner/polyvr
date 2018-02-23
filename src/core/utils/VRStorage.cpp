@@ -16,6 +16,21 @@ VRStorage::VRStorage() {
     store("persistency", &persistency);
 }
 
+VRStorage::~VRStorage() {
+    //cout << "~VRStorage" << endl;
+}
+
+string VRStorage::getDescription() {
+    string d = "[";
+    bool first = true;
+    for (auto s : storage) {
+        if (!first) d += ", ";
+        first = false;
+        d += "\""+s.first+"\"";
+    }
+    return d+"]";
+}
+
 void VRStorage::setPersistency(int p) { persistency = p; }
 int VRStorage::getPersistency() { return persistency; }
 void VRStorage::regStorageSetupFkt(VRUpdateCbPtr u) { f_setup.push_back(u); }
@@ -61,6 +76,7 @@ xmlpp::Element* VRStorage::saveUnder(xmlpp::Element* e, int p, string t) {
     string tag = type;
     if (t != "") tag = t;
     if (e == 0) return 0;
+    //cout << "saveUnder " << t << " (" << p << "," << persistency << ") " << (persistency <= p) << " " << getDescription() << endl;
     if (persistency <= p) return 0;
     e = e->add_child(tag);
     save(e, p);

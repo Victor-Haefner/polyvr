@@ -51,6 +51,7 @@ class ART : public VRStorage {
         bool active = false;
         int port = 5000;
         int current_port = -1;
+        Vec3i axis = Vec3i(0,1,2);
         Vec3d offset;
         string up;
 
@@ -83,13 +84,13 @@ class ART : public VRStorage {
         ART_devicePtr getARTDevice(int dev);
 
         void setARTActive(bool b);
-        bool getARTActive();
-
         void setARTPort(int port);
-        int getARTPort();
-
         void setARTOffset(Vec3d o);
+        void setARTAxis(Vec3i a);
+        bool getARTActive();
+        int getARTPort();
         Vec3d getARTOffset();
+        Vec3i getARTAxis();
 
         void startTestStream();
 
