@@ -2,17 +2,17 @@
 <Scene base_name="PathsAndStrokes" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
-      <Object ambient="0.3 0.3 0.3 1" base_name="l1" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object ambient="0.3 0.3 0.3 1" base_name="l2" beacon="l2_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="l1" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object ambient="0.3 0.3 0.3 1" base_name="l2" beacon="l2_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
           <Object at="0.2 0.2 1" at_dir="0" base_name="l2_beacon" from="0 0 0" light="l2" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
-            <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+            <constraint persistency="666"/>
           </Object>
           <Object base_name="strokes" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1"/>
-          <Object accept_root="1" aspect="1" at="0 0 0" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-0.574773 0.34644 0.74136" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
-            <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+          <Object accept_root="1" aspect="1" at="0 0 0" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-4.37114e-08 0 1" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+            <constraint persistency="666"/>
           </Object>
-          <Object at="-0.0333533 0.224366 -0.705655" at_dir="1" base_name="Box" from="-0.269485 0.156189 0.263671" name_space="__global__" name_suffix="0" persistency="666" pickable="1" scale="1 1 1" sourceparam="Box 0.2 0.2 0.2 1 1 1" sourcetype="3" type="Geometry" up="-0.16587 0.985723 0.0289244" visible="1">
-            <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+          <Object at="-0.310487 0.0668307 -0.982637" at_dir="1" base_name="Box" from="-0.156228 0.0334393 0.00482929" name_space="__global__" name_suffix="0" persistency="666" pickable="1" scale="1 1 1" sourceparam="Box 0.2 0.2 0.2 1 1 1" sourcetype="3" type="Geometry" up="-0.00169453 0.999418 0.0340603" visible="1">
+            <constraint persistency="666"/>
           </Object>
         </Object>
       </Object>
@@ -57,7 +57,7 @@
 	
 	cam = VR.getRoot().find('Default')
 	cam.setIdentity()
-	cam.setFrom(0,0,1)
+	cam.setFrom([0,0,1])
 	pencil.setIdentity()
 </core>
       <arg type="VRPyGeometryType" value="Box" base_name="pencil" name_space="init" name_suffix="0" persistency="666"/>

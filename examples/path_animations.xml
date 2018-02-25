@@ -1,19 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="anim_test" name_space="Scene">
+<Scene base_name="anim_test" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
-    <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
-      <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="5.51655 7.28088 7.2527" at="1.43435 0.775959 0.547542" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
-          <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="1.43435 0.775959 0.547542" at_dir="0" base_name="Default" far="250" fov="1.0472" from="5.51655 7.28088 7.2527" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <constraint persistency="666"/>
+          </Object>
+          <constraint persistency="666"/>
         </Object>
-        <Object name_suffix="0" base_name="Torus" name_space="__global__" type="Geometry" pickable="0" visible="1" from="2.5 0 0" at="2.5 0 1.2" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="3" sourceparam="Torus 0.5 1 32 32"/>
-        <Object name_suffix="0" base_name="Teapot" name_space="__global__" type="Geometry" pickable="0" visible="1" from="-2.5 0 0" at="-2.5 -1 0" up="0 0 1" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="3" sourceparam="Teapot 10 0.7"/>
+        <Object at="2.5 0 1.2" at_dir="1" base_name="Torus" from="2.5 0 0" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" sourceparam="Torus 0.5 1 32 32" sourcetype="3" type="Geometry" up="0 1 0" visible="1">
+          <constraint persistency="666"/>
+        </Object>
+        <Object at="-2.5 1 0" at_dir="1" base_name="Teapot" from="-2.5 0 0" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" sourceparam="Teapot 10 0.7" sourcetype="3" type="Geometry" up="1 0 0" visible="1">
+          <constraint persistency="666"/>
+        </Object>
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
-  <Scripts>
-    <Script name_suffix="0" base_name="callback_animate" name_space="__script__" type="Python" mobile="">
+  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="callback_animate" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -40,10 +47,10 @@
 	a.start()
 	
 </core>
-      <arg type="VRPyGeometryType" value="Torus" name_suffix="0" base_name="torus" name_space="callback_animate"/>
-      <trig type="on_device" dev="mouse" state="Pressed" param="" key="2" name_suffix="2" base_name="trigger" name_space="__global__"/>
+      <arg type="VRPyGeometryType" value="Torus" base_name="torus" name_space="callback_animate" name_suffix="0" persistency="666"/>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="2" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
     </Script>
-    <Script name_suffix="0" base_name="path_animate" name_space="__script__" type="Python" mobile="">
+    <Script base_name="path_animate" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -57,14 +64,15 @@
 	teapot.animate(VR.p1, 2, 0, True)
 	VR.p1.invert()
 </core>
-      <arg type="VRPyGeometryType" value="Teapot" name_suffix="0" base_name="teapot" name_space="path_animate"/>
-      <arg type="VRPyGeometryType" value="Torus" name_suffix="0" base_name="torus" name_space="path_animate"/>
-      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
+      <arg type="VRPyGeometryType" value="Teapot" base_name="teapot" name_space="path_animate" name_suffix="0" persistency="666"/>
+      <arg type="VRPyGeometryType" value="Torus" base_name="torus" name_space="path_animate" name_suffix="0" persistency="666"/>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
     </Script>
   </Scripts>
-  <Sockets/>
-  <Background color="0.6 0.6 0.6" format=".png" path="" type="0"/>
-  <Navigation active="Orbit"/>
-  <Materials/>
+  <Sockets persistency="666"/>
+  <Background color="0.6 0.6 0.6" format=".png" path="" persistency="666" type="0"/>
+  <Navigation active="Orbit" persistency="666"/>
+  <Materials persistency="666"/>
+  <Semantics persistency="666"/>
 </Scene>

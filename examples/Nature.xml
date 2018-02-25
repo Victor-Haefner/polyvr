@@ -2,11 +2,11 @@
 <Scene base_name="nature" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
-      <Object ambient="0.516136 0.516136 0.516136 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0 0 0 1" type="Light" visible="1">
+      <Object ambient="0.516136 0.516136 0.516136 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0 0 0 1" type="Light" visible="1">
         <Object at="-4.5 4 -1" at_dir="0" base_name="Headlight_beacon" from="-4 5 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
           <constraint persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="-0.395315 0.301169 -0.511722" at_dir="0" base_name="Default" far="1024" fov="1.0472" from="6.29849 6.62739 7.83844" name_space="__global__" name_suffix="0" near="0.01" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.395315 0.301169 -0.511722" at_dir="0" base_name="Default" far="1024" fov="1.0472" from="1.59347 2.28197 1.88969" name_space="__global__" name_suffix="0" near="0.01" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <constraint persistency="666"/>
         </Object>
       </Object>

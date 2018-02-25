@@ -1,5 +1,6 @@
 #include "VRConstraint.h"
 #include "core/objects/VRTransform.h"
+#include "core/objects/geometry/VRPhysics.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/VRGlobals.h"
 #include "core/utils/toString.h"
@@ -114,7 +115,7 @@ void VRConstraint::setRConstraint(Vec3d params, TCMode mode, bool local) {
 }
 
 void VRConstraint::apply(VRTransformPtr obj, VRObjectPtr parent) {
-    if (!active) return;
+    if (!active || obj->getPhysics()->isPhysicalized()) return;
     auto now = VRGlobals::CURRENT_FRAME;
     if (apply_time_stamp == now) return;
     apply_time_stamp = now;

@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="Shadows" name_space="Scene" loading_time="340">
+<Scene base_name="Shadows" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
-    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
-      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="spot" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="1" shadowColor="0.1 0.1 0.1 1" shadowMapRes="1024" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
-        <Object at="0 0 0" at_dir="0" base_name="Headlight_beacon" from="5.71788 6 1.81821" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
-          <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="spot" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="1" shadowColor="0.1 0.1 0.1 1" shadowMapRes="1024" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object at="0 0 0" at_dir="0" base_name="Headlight_beacon" from="3.30988 6 5.00447" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+          <constraint persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="0.930565 0.500001 -1.33326" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-4.93554 8.09938 7.06044" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
-          <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+        <Object accept_root="1" aspect="1" at="0.930565 0.500001 -1.33326" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-4.93554 8.09938 7.06044" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <constraint persistency="666"/>
         </Object>
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="1" frustum_culling="1" hmdd="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Rendering deferred_rendering="1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
-    <Script base_name="init" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" mobile="">
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 		
@@ -37,12 +37,12 @@
 	addPrim('box', 'Box 1 1 1 1 1 1', [-2,2,-2])
 	addPrim('gear', 'Gear 0.1 0.3 0.1 32 0.05 0', [2,2,-2])
 	pot = addPrim('teapot', 'Teapot 3 0.3', [2,2,2])
-	pot.setPose([2,1.7,2], [0,-1,0], [0,0,1])
+	pot.setTransform([2,1.7,2], [0,-1,0], [0,0,1])
 	
 </core>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
     </Script>
-    <Script base_name="rotLight" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" mobile="">
+    <Script base_name="rotLight" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR, math
 	
@@ -64,7 +64,7 @@
 	b.setAt([0,0,0])
 	
 </core>
-      <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
+      <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>
