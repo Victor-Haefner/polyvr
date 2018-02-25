@@ -519,6 +519,112 @@ vector<short> VRSound::synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, f
     return vector<short>();
 }
 
+vector<short> VRSound::synthBufferForChannel(vector<Vec2d> freqs1, vector<Vec2d> freqs2, int channel, float duration) {
+    /*
+        this creates synthetic sound samples based on two vectors of frequencies
+        the channel is required for separation of the different static phasors
+        the duration determines how long these samples will be
+
+        this is based on the work done in synthBuffer
+    */
+
+    if (!initiated) initiate();
+    // play sound
+    int sample_rate = 22050;
+    size_t buf_size = duration * sample_rate;
+    vector<short> samples(buf_size);
+    double Ni = 1.0/freqs1.size();
+    double T = 2*Pi/sample_rate;
+    static map<int,map<int,complex<double>>> phasors;
+
+    if (!phasors.count(channel)) {
+        phasors[channel] = map<int,complex<double>>();
+    }
+
+    for (uint i=0; i<buf_size; i++) {
+        double k = double(i)/(buf_size-1);
+        samples[i] = 0;
+        for (uint j=0; j<freqs1.size(); j++) {
+            double A = freqs1[j][1]*(1.0-k) + freqs2[j][1]*k;
+            double f = freqs1[j][0]*(1.0-k) + freqs2[j][0]*k;
+
+            if (!phasors[channel].count(j)) {
+                phasors[channel][j] = complex<double>(1,0);
+            }
+            phasors[channel][j] *= exp( complex<double>(0,T*f) );
+            samples[i] += A*Ni*phasors[channel][j].imag();
+        }
+    }
+    return samples;
+}
+
+void VRSound::synthBufferOnChannels(vector<vector<Vec2d>> freqs1, vector<vector<Vec2d>> freqs2, float duration) {
+    /*
+        this expects two vectors of input vectors consisting of <frequency, amplitude> tuples
+        the vectors should contain a vector with input data for every channel
+        the duration determines how long the generated sound samples will be played on the audio buffer
+    */
+    int num_channels = freqs1.size();
+    if (num_channels != freqs2.size()) {
+        cout << "synthBufferOnChannels - sizes don't match - freqs1 = " << num_channels << " freqs2 = " << freqs2.size() << endl;
+        return;
+    }
+
+    // vector to generate all synth buffers into
+    vector<vector<short>> synth_buffer(num_channels);
+
+    // generate a new buffer with size for all buffers * amount of channels
+    int sample_rate = 22050;
+    size_t buffer_size = duration * sample_rate;
+    vector<short> buffer(buffer_size * num_channels);
+
+    // generate synth buffers for every channel and store them for later use
+    for (int channel = 0; channel < num_channels; channel++) {
+        synth_buffer[channel] = synthBufferForChannel(freqs1[channel], freqs2[channel], channel, duration);
+    }
+
+    /*
+      create one big buffer composed of every synth buffer
+      elements have to be in the order of the real audio channels
+      element 0 is the first frame on the first channel
+      element 1 the first frame on the second channel
+      element 8 is the second frame on the first channel
+    */
+    for (int i = 0; i < buffer_size; i++) {
+        for (int channel = 0; channel < num_channels; channel++) {
+            buffer[num_channels * i + channel] = synth_buffer[channel][i];
+        }
+    }
+
+    // try to determine the amount of channels and their respective mapping inside OpenAL
+    // play mono as default because that should output sound on every channel
+    ALenum format;
+    switch (num_channels) {
+        case 1:
+            format = AL_FORMAT_MONO16;
+            break;
+        case 2:
+            format = AL_FORMAT_STEREO16;
+            break;
+        case 6:
+            format = AL_FORMAT_51CHN16;
+            break;
+        case 8:
+            format = AL_FORMAT_71CHN16;
+            break;
+        default:
+            format = AL_FORMAT_MONO16;
+    }
+
+    // actually put the samples on the audio buffer and play it
+    ALint val = -1;
+    ALuint buf = getFreeBufferID();
+    alBufferData(buf, format, &buffer[0], buffer.size()*sizeof(short), sample_rate);
+    ALCHECK( alSourceQueueBuffers(source, 1, &buf));
+    ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
+    if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
+}
+
 int VRSound::getQueuedBuffer() { return queuedBuffers; }
 
 void VRSound::recycleBuffer() {
