@@ -95,6 +95,7 @@ template<> string toString(const Vec4i& v) {
 }
 
 template<> string toString(const PosePtr& po) {
+    if (!po) return "";
     return toString(po->pos()) + " " + toString(po->dir()) + " " + toString(po->up());
 }
 

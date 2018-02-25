@@ -35,9 +35,7 @@ template<> PyObject* VRPyTypeCaster::cast(const VRObjectPtr& obj) {
     else if (type == "Transform") return VRPyBaseT<VRTransform>::fromSharedPtr( static_pointer_cast<VRTransform>(obj) );
     else if (type == "Object") return VRPyObject::fromSharedPtr( static_pointer_cast<VRObject>(obj) );
     else if (type == "Sprite") return VRPySprite::fromSharedPtr( static_pointer_cast<VRSprite>(obj) );
-#ifndef _WIN32
     else if (type == "CSGGeometry") return VRPyCSG::fromSharedPtr( static_pointer_cast<CSGGeometry>(obj) );
-#endif
     else if (type == "Sprite") return VRPySprite::fromSharedPtr( static_pointer_cast<VRSprite>(obj) );
     else if (type == "Material") return VRPyMaterial::fromSharedPtr( static_pointer_cast<VRMaterial>(obj) );
     else if (type == "Lod") return VRPyLod::fromSharedPtr( static_pointer_cast<VRLod>(obj) );
@@ -49,7 +47,7 @@ template<> PyObject* VRPyTypeCaster::cast(const VRObjectPtr& obj) {
     else if (type == "TextureRenderer") return VRPyTextureRenderer::fromSharedPtr( static_pointer_cast<VRTextureRenderer>(obj) );
     else if (type == "Waypoint") return VRPyWaypoint::fromSharedPtr( static_pointer_cast<VRWaypoint>(obj) );
     else if (type == "JointTool") return VRPyJointTool::fromSharedPtr( static_pointer_cast<VRJointTool>(obj) );
-    else if (type == "Handle") return VRPyGeometry::fromSharedPtr( static_pointer_cast<VRGeometry>(obj) ); // TODO
+    else if (type == "Handle") return VRPyBaseT<VRGeometry>::fromSharedPtr( static_pointer_cast<VRGeometry>(obj) ); // TODO
     else if (type == "GeoPrimitive") return VRPyGeoPrimitive::fromSharedPtr( static_pointer_cast<VRGeoPrimitive>(obj) );
     cout << "\nERROR in VRPyTypeCaster::cast object: " << type << " not handled!\n";
 
@@ -57,6 +55,7 @@ template<> PyObject* VRPyTypeCaster::cast(const VRObjectPtr& obj) {
 }
 
 template<> PyObject* VRPyTypeCaster::cast(const int& i) { return PyInt_FromLong(i); }
+template<> PyObject* VRPyTypeCaster::cast(const uint& i) { return PyInt_FromLong(i); }
 template<> PyObject* VRPyTypeCaster::cast(const short& s) { return PyInt_FromLong(s); }
 template<> PyObject* VRPyTypeCaster::cast(const float& f) { return PyFloat_FromDouble(f); }
 template<> PyObject* VRPyTypeCaster::cast(const string& s) { return PyString_FromString(s.c_str()); }
@@ -68,6 +67,7 @@ template<> PyObject* VRPyTypeCaster::cast(const Pnt3d& b) { return toPyObject(Ve
 template<> PyObject* VRPyTypeCaster::cast(const Vec3i& b) { return VRPyBase::toPyTuple(b); }
 template<> PyObject* VRPyTypeCaster::cast(const Color3f& b) { return VRPyBase::toPyTuple(Vec3d(b)); }
 template<> PyObject* VRPyTypeCaster::cast(const Color4f& b) { return VRPyBase::toPyTuple(Vec4d(b)); }
+//template<> PyObject* VRPyTypeCaster::cast(const Line& b) {}
 template<> PyObject* VRPyTypeCaster::cast(const Boundingbox& b) { return VRPyBoundingbox::fromObject(b); }
 
 PyObject* VRPyTypeCaster::pack(const vector<PyObject*>& v) {

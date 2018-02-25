@@ -59,6 +59,9 @@ void VRDefShading::init() {
     dsPointLightVPFile = resDir + "DSPointLight.vp.glsl";
     dsPointLightFPFile = resDir + "DSPointLight.fp.glsl";
     dsPointLightShadowFPFile = resDir + "DSPointLightShadow.fp.glsl";
+    dsPhotometricLightVPFile = resDir + "DSPointLight.vp.glsl";
+    dsPhotometricLightFPFile = resDir + "DSPhotometricLight.fp.glsl";
+    dsPhotometricLightShadowFPFile = resDir + "DSPhotometricLightShadow.fp.glsl";
     dsSpotLightVPFile = resDir + "DSSpotLight.vp.glsl";
     dsSpotLightFPFile = resDir + "DSSpotLight.fp.glsl";
     dsSpotLightShadowFPFile = resDir + "DSSpotLightShadow.fp.glsl";
@@ -218,6 +221,7 @@ void VRDefShading::updateLight(VRLightPtr l) {
     li.lightType = Point;
     if (type == "directional") li.lightType = Directional;
     if (type == "spot") li.lightType = Spot;
+    if (type == "photometric") li.lightType = Photometric;
     if (shadows) li.shadowType = defaultShadowType;
     else li.shadowType = ST_NONE;
 
@@ -236,9 +240,10 @@ TextureObjChunkRefPtr VRDefShading::getTarget() { return fboTex; }
 // file containing vertex shader code for the light type
 const std::string& VRDefShading::getLightVPFile(LightTypeE lightType) {
     switch(lightType) {
-        case LightEngine::Directional: return dsDirLightVPFile;
-        case LightEngine::Point: return dsPointLightVPFile;
-        case LightEngine::Spot: return dsSpotLightVPFile;
+        case Directional: return dsDirLightVPFile;
+        case Point: return dsPointLightVPFile;
+        case Spot: return dsSpotLightVPFile;
+        case Photometric: return dsPhotometricLightVPFile;
         default: return dsUnknownFile;
     }
 }
@@ -250,6 +255,7 @@ const std::string& VRDefShading::getLightFPFile(LightTypeE lightType, ShadowType
         case Directional: return ds ? dsDirLightShadowFPFile : dsDirLightFPFile;
         case Point: return ds ? dsPointLightShadowFPFile : dsPointLightFPFile;
         case Spot: return ds ? dsSpotLightShadowFPFile : dsSpotLightFPFile;
+        case Photometric: return ds ? dsPhotometricLightShadowFPFile : dsPhotometricLightFPFile;
         default: return dsUnknownFile;
     }
 }

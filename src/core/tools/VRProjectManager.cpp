@@ -52,7 +52,7 @@ void VRProjectManager::newProject(string path) {
 void VRProjectManager::save(string path) {
     if (path == "") path = getName();
     if (exists(path)) path = canonical(path);
-    cout << "VRProjectManager::save " << path << endl;
+    cout << "VRProjectManager::save " << path << " (" << toString(vault_reload.size()) << " + " << toString(vault_rebuild.size()) << " objects)" << endl;
 
     xmlpp::Document doc;
     xmlpp::Element* root = doc.create_root_node("Project", "", "VRP"); // name, ns_uri, ns_prefix

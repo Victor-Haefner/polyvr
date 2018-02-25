@@ -157,17 +157,26 @@ void OSMMap::readFile(string path) {
 
 
 template <class Key, class Value>
-unsigned long mapSize(const std::map<Key,Value> &map){
-    unsigned long size = sizeof(map);
-    for(typename std::map<Key,Value>::const_iterator it = map.begin(); it != map.end(); ++it){
+unsigned long mapSize(const map<Key,Value> &map){
+    unsigned long size = 0;
+    for(auto it = map.begin(); it != map.end(); ++it){
         size += it->first.capacity();
         size += sizeof(it->second);
     }
     return size;
 }
 
+template <class Value>
+unsigned long vecSize(const std::vector<Value> &vec){
+    unsigned long size = 0;
+    for(auto it = vec.begin(); it != vec.end(); ++it){
+        size += it->capacity();
+    }
+    return size;
+}
+
 double OSMMap::getMemoryConsumption() {
-    double res = 0;
+    double res = sizeof(*this);
 
     res += filepath.capacity();
     res += sizeof(*bounds);
@@ -175,6 +184,10 @@ double OSMMap::getMemoryConsumption() {
     res += mapSize(nodes);
     res += mapSize(relations);
     res += mapSize(invalidElements);
+
+    for (auto& w : ways) if (w.second) res += mapSize(w.second->tags) + vecSize(w.second->nodes);
+    for (auto& n : nodes) if (n.second) res += mapSize(n.second->tags) + vecSize(n.second->ways);
+    for (auto& r : relations) if (r.second) res += mapSize(r.second->tags) + vecSize(r.second->ways) + vecSize(r.second->nodes);
 
     return res/1048576.0;
 }

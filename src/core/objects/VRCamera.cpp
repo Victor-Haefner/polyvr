@@ -15,6 +15,8 @@
 #include <OpenSG/OSGOrthographicCamera.h>
 #include <libxml++/nodes/element.h>
 
+template<> string typeName(const OSG::VRCameraPtr& t) { return "Camera"; }
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 

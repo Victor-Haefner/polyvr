@@ -446,7 +446,8 @@ void VRWorldGenerator::clear() {
 string VRWorldGenerator::getStats() {
     string res;
     res += "world generator stats:\n";
-    res += "  OSM map: " + toString(osmMap->getMemoryConsumption()) + " mb\n";
+    res += " OSM map: " + toString(osmMap->getMemoryConsumption()) + " mb\n";
+    res += " Road network: " + toString(roads->getMemoryConsumption()) + " mb\n";
     return res;
 }
 

@@ -22,10 +22,10 @@ VRStorage::~VRStorage() {
 
 string VRStorage::getDescription() {
     string d = "[";
-    bool comma = false;
+    bool first = true;
     for (auto s : storage) {
-        if (comma) d += ", ";
-        comma = true;
+        if (!first) d += ", ";
+        first = false;
         d += "\""+s.first+"\"";
     }
     return d+"]";
@@ -76,6 +76,7 @@ xmlpp::Element* VRStorage::saveUnder(xmlpp::Element* e, int p, string t) {
     string tag = type;
     if (t != "") tag = t;
     if (e == 0) return 0;
+    //cout << "saveUnder " << t << " (" << p << "," << persistency << ") " << (persistency <= p) << " " << getDescription() << endl;
     if (persistency <= p) return 0;
     e = e->add_child(tag);
     save(e, p);

@@ -26,6 +26,8 @@ class Pose {
         void setPos(Vec3d p);
         void setDir(Vec3d d);
         void setUp(Vec3d u);
+        void makeUpOrthogonal();
+        void makeDirOrthogonal();
 
         Vec3d pos() const;
         Vec3d dir() const;

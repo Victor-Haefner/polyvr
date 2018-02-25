@@ -1,5 +1,6 @@
 #include "VRAsphalt.h"
 #include "core/objects/material/VRTextureGenerator.h"
+#include "core/objects/material/VRTexture.h"
 #include "core/math/path.h"
 #include "core/utils/VRTimer.h"
 
@@ -39,7 +40,8 @@ void VRAsphalt::setMarkingsColor(Color4f c) {
 
 void VRAsphalt::clearTexture() {
     texGen = VRTextureGenerator::create();
-	texGen->setSize(Vec3i(4096,8192,1), true); // Number of roads, Number of markings per road
+	//texGen->setSize(Vec3i(4096,8192,1), true); // Number of roads, Number of markings per road
+	texGen->setSize(Vec3i(4096,1600,1), true); // Number of roads, Number of markings per road
 	texGen->drawFill(Color4f(0,0,0,1));
     roadData.clear();
     updateTexture();
@@ -74,11 +76,11 @@ void VRAsphalt::updateTexture() {
 
     VRTimer t; t.start(); // TODO: increase PERLIN performance!
     //cout << "VRAsphalt::updateTexture performance:\n";
-    auto paths = texGen->compose(0); //cout << " paths: " << t.stop() << endl;
+    pathTex = texGen->compose(0); //cout << " paths: " << t.stop() << endl;
     if (!noiseTex) noiseTex = noiseTexture(); //cout << " noiseTexture: " << t.stop() << endl;
     if (!mudTex) mudTex = mudTexture(); //cout << " mudTexture: " << t.stop() << endl;
 
-    setupTexture(0, paths, "texMarkings");
+    setupTexture(0, pathTex, "texMarkings");
     setupTexture(1, noiseTex, "texNoise");
     setupTexture(2, mudTex, "texMud");
 }
@@ -136,6 +138,15 @@ void VRAsphalt::addTrack(int rID, PathPtr track, float width, float dashL, float
     rdata.tracksN++;
     texGen->drawPixel(Vec3i(rID,0,0), Color4f(rdata.markingsN, rdata.tracksN, 0, 1));
     addPath(track, rID, width, dashL, offset);
+}
+
+double VRAsphalt::getMemoryConsumption() {
+    double res = sizeof(*this);
+    res += pathTex->getByteSize();
+    res += noiseTex->getByteSize();
+    res += mudTex->getByteSize();
+    //res += texGen->getMemoryConsumption();
+    return res;
 }
 
 

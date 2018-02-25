@@ -238,7 +238,7 @@ VRGeometryPtr VRRoadIntersection::createGeometry() {
     VRGeometryPtr intersection = tri.compute();
     if (intersection->size() == 0) { cout << "VRRoadIntersection::createGeometry ERROR: no geometry created!\n"; return 0; }
     auto p = median; p[1] = 0;
-    intersection->setPose(p, Vec3d(0,0,-1), Vec3d(0,1,0));
+    intersection->setFrom(p);
     intersection->applyTransformation();
 	setupTexCoords( intersection, entity );
 	addChild(intersection);

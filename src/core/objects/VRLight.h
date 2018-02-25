@@ -20,6 +20,7 @@ class VRLight : public VRObject {
         OSGCorePtr d_light;
         OSGCorePtr p_light;
         OSGCorePtr s_light;
+        OSGCorePtr ph_light;
         VRLightBeaconWeakPtr beacon;
         VRShadowEngineRecPtr ssme;
         //SimpleShadowMapEngineRefPtr ssme;
@@ -29,6 +30,8 @@ class VRLight : public VRObject {
 
         string lightType = "point";
         string beacon_name;
+        string photometricMapPath;
+        VRTexturePtr photometricMap;
         int shadowMapRes = 2048;
         Color4f lightDiffuse;
         Color4f lightAmbient;
@@ -58,18 +61,18 @@ class VRLight : public VRObject {
         void setDeferred(bool b);
 
         void setDiffuse(Color4f c);
-        Color4f getDiffuse();
         void setAmbient(Color4f c);
-        Color4f getAmbient();
         void setSpecular(Color4f c);
+        Color4f getDiffuse();
+        Color4f getAmbient();
         Color4f getSpecular();
 
         void setShadowParams(bool b, int res, Color4f c);
         void setShadows(bool b);
         bool getShadows();
         void setShadowColor(Color4f c);
-        Color4f getShadowColor();
         void setShadowMapRes(int t);
+        Color4f getShadowColor();
         int getShadowMapRes();
 
         VRLightBeaconWeakPtr getBeacon();
@@ -81,6 +84,11 @@ class VRLight : public VRObject {
         void setPointlight();
         void setSpotlight();
         void setDirectionallight();
+        void setPhotometriclight();
+
+        void setPhotometricMap(VRTexturePtr tex);
+        void loadPhotometricMap(string path);
+        VRTexturePtr getPhotometricMap();
 
         LightMTRecPtr getLightCore();
         string getLightType();

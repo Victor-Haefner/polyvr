@@ -6,6 +6,8 @@
 
 struct VRPyStorage : public VRPyBaseT<OSG::VRStorage> {
     static PyMethodDef methods[];
+
+    static PyObject* fromSharedPtr(OSG::VRStoragePtr obj);
 };
 
 struct VRPyProjectManager : public VRPyBaseT<OSG::VRProjectManager> {

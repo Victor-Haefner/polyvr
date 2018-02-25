@@ -86,6 +86,35 @@ bool Pose::operator != (const Pose& other) const {
     return asMatrix() != other.asMatrix();
 }
 
+void Pose::makeUpOrthogonal() {
+    Vec3d X = x();
+    Vec3d u = up();
+    Vec3d d = dir();
+
+    if (X.squareLength() > 1e-2) u = X.cross(d);
+    else {
+        if      (abs(d[2]) > abs(d[0]) && abs(d[2]) > abs(d[1])) u = Vec3d( d[0], d[2],-d[1]);
+        else if (abs(d[1]) > abs(d[0]) && abs(d[1]) > abs(d[2])) u = Vec3d( d[0],-d[2], d[1]);
+        else if (abs(d[0]) > abs(d[1]) && abs(d[0]) > abs(d[2])) u = Vec3d(-d[1], d[0], d[2]);
+    }
+
+    setUp(u);
+}
+
+void Pose::makeDirOrthogonal() {
+    Vec3d X = x();
+    Vec3d u = up();
+    Vec3d d = dir();
+
+    if (X.squareLength() > 1e-2) d = u.cross(X);
+    else {
+        if      (abs(u[2]) > abs(u[0]) && abs(u[2]) > abs(u[1])) d = Vec3d( u[0],-u[2], u[1]);
+        else if (abs(u[1]) > abs(u[0]) && abs(u[1]) > abs(u[2])) d = Vec3d( u[0], u[2],-u[1]);
+        else if (abs(u[0]) > abs(u[1]) && abs(u[0]) > abs(u[2])) d = Vec3d(-u[1], u[0], u[2]);
+    }
+
+    setDir(d);
+}
 
 
 

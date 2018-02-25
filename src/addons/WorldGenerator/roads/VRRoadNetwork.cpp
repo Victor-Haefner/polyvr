@@ -303,7 +303,7 @@ void VRRoadNetwork::addGuardRail( PathPtr path, float height ) {
 		Vec3d x = -n.cross(Vec3d(0,1,0));
 		x.normalize();
 		auto po = dynamic_pointer_cast<VRGeometry>( pole->duplicate() );
-		po->setPose(x*0.011+pos,n,Vec3d(0,1,0));
+		po->setTransform(x*0.011+pos,n,Vec3d(0,1,0));
 		poles.push_back(po);
 	};
 
@@ -580,6 +580,7 @@ void VRRoadNetwork::computeIntersections() {
     for (auto road : roads) {
         for (auto r : road->splitAtIntersections(ptr())) newRoads.push_back(r);
     }
+
     for (auto r : newRoads) {
         roads.push_back(r);
         ways.push_back(r);
@@ -908,6 +909,57 @@ VREntityPtr VRRoadNetwork::addRoute(vector<int> nodeIDs) { // nodeIDs as compute
 
     return addPath("Path", "route", nodes, norms);
 }
+
+
+
+template <class Key, class Value>
+unsigned long mapSize(const map<Key,Value> &map){
+    unsigned long size = 0;
+    for(auto it = map.begin(); it != map.end(); ++it){
+        size += sizeof(it->first);
+        size += sizeof(it->second);
+    }
+    return size;
+}
+
+/*
+vector<VRRoadPtr> roads;
+vector<VRRoadPtr> ways;
+vector<VRRoadIntersectionPtr> intersections;
+vector<VRGeometryPtr> assets;
+vector<VRTunnelPtr> tunnels;
+vector<VRBridgePtr> bridges;
+
+map<int, vector<Vec3d> > graphNormals;
+map<int, VREntityPtr> graphEdgeEntities;
+map<VREntityPtr, VRRoadPtr> roadsByEntity;
+map<Vec4i, int> arrowTemplates;
+
+GraphPtr graph;
+VRPathtoolPtr tool;
+VRAsphaltPtr asphalt;
+VRAsphaltPtr asphaltArrow;
+VRTexturePtr arrowTexture;
+VRGeometryPtr arrows;
+VRGeometryPtr collisionMesh;
+*/
+
+double VRRoadNetwork::getMemoryConsumption() {
+    double res = sizeof(*this);
+
+    res += mapSize(graphNormals);
+    res += mapSize(graphEdgeEntities);
+    res += mapSize(roadsByEntity);
+    res += mapSize(arrowTemplates);
+
+    //for (auto& w : ways) if (w) res += w->getMemoryConsumption();
+
+    res += asphalt->getMemoryConsumption();
+    res += asphaltArrow->getMemoryConsumption();
+
+    return res/1048576.0;
+}
+
 
 
 
