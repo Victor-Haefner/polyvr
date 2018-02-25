@@ -22,7 +22,7 @@ class VRLeap : public VRDevice {
         boost::recursive_mutex mutex;
 
         bool transformed{false};
-        Pose transformation;
+        PosePtr transformation;
         bool calibrate{false};
         string serial;
 
@@ -33,7 +33,7 @@ class VRLeap : public VRDevice {
         void updateHandFromJson(Json::Value& handData, Json::Value& pointableData, HandPtr hand);
         void updateSceneData(vector<HandPtr> hands);
         VRTransformPtr getBeaconChild(int i);
-        Pose computeCalibPose(vector<PenPtr>& pens);
+        PosePtr computeCalibPose(vector<PenPtr>& pens);
 
     protected:
         void dragCB(VRTransformWeakPtr wcaster, VRObjectWeakPtr wtree, VRDeviceWeakPtr dev = VRDevicePtr(0)) override;
@@ -63,9 +63,8 @@ class VRLeap : public VRDevice {
 
         void registerFrameCallback(std::function<void(VRLeapFramePtr)> func);
         void clearFrameCallbacks();
-        void setPose(Pose pose);
-        void setPose(Vec3d pos, Vec3d dir, Vec3d up);
-        Pose getPose() const;
+        void setPose(PosePtr pose);
+        PosePtr getPose() const;
 
         void startCalibration();
         void stopCalibration();

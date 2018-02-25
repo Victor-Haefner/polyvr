@@ -1,7 +1,9 @@
 #include "VRLeapFrame.h"
+#include "core/utils/toString.h"
 #include "core/objects/VRTransform.h"
 
-OSG_BEGIN_NAMESPACE ;
+using namespace OSG;
+template<> string typeName(const VRLeapFramePtr& o) { return "LeapFrame"; }
 
 
 VRLeapFramePtr VRLeapFrame::create() {
@@ -71,4 +73,3 @@ void VRLeapFrame::Pen::transform(Pose transformation) {
 
 
 
-OSG_END_NAMESPACE;

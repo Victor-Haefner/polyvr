@@ -8,10 +8,12 @@
 #include <core/math/boundingbox.h>
 #include <core/scene/VRScene.h>
 
+using namespace OSG;
 
-OSG_BEGIN_NAMESPACE ;
+template<> string typeName(const VRLeapPtr& o) { return "Leap"; }
 
 VRLeap::VRLeap() : VRDevice("leap") {
+    transformation = Pose::create();
 
     // left hand beacons
     for (int i = 1; i <= 5; ++i) {
@@ -177,7 +179,7 @@ void VRLeap::newFrame(Json::Value json) {
     // json format: https://developer.leapmotion.com/documentation/v2/cpp/supplements/Leap_JSON.html?proglang=cpp
 
     if (json.isMember("event")) { // second frame
-        if (transformation.asMatrix() != Matrix4d::identity()) { transformed = true; }
+        if (transformation->asMatrix() != Matrix4d::identity()) { transformed = true; }
         if (serial.empty()) {
             serial = json["event"]["state"]["id"].asString();
         }
@@ -196,7 +198,7 @@ void VRLeap::newFrame(Json::Value json) {
         updateHandFromJson(newHand, json["pointables"], hand);
 
         if (transformed) {
-            hand->transform(transformation);
+            hand->transform(*transformation);
         }
 
         bool left = (newHand["type"].asString() == "left");
@@ -228,16 +230,15 @@ void VRLeap::newFrame(Json::Value json) {
         pen->width = pointable["width"].asFloat();
 
         // only transform when not currently calibrating
-        if (transformed && !calibrate) { pen->transform(transformation); }
+        if (transformed && !calibrate) { pen->transform(*transformation); }
 
         frame->insertPen(pen);
     }
 
     if (calibrate) {
-        Pose pose;
         vector<PenPtr> pens = frame->getPens();
         if (pens.size() == 2) {
-            pose = computeCalibPose(pens);
+            auto pose = computeCalibPose(pens);
             setPose(pose);
         }
     }
@@ -245,8 +246,8 @@ void VRLeap::newFrame(Json::Value json) {
     for (auto& cb : frameCallbacks) cb(frame);
 }
 
-Pose VRLeap::computeCalibPose(vector<PenPtr>& pens) {
-    Pose result;
+PosePtr VRLeap::computeCalibPose(vector<PenPtr>& pens) {
+    PosePtr result = Pose::create();
     if (pens.size() != 2) { return result; }
 
     Vec3d pos0 = pens[0]->tipPosition;
@@ -261,9 +262,8 @@ Pose VRLeap::computeCalibPose(vector<PenPtr>& pens) {
     Vec3d direction =  tmpDir2.cross(tmpDir1);
     Vec3d normal = direction.cross(tmpDir1);
 
-    result.set(position, direction, normal);
-    result.invert();
-
+    result->set(position, direction, normal);
+    result->invert();
     return result;
 }
 
@@ -365,17 +365,13 @@ void VRLeap::dragCB(VRTransformWeakPtr wcaster, VRObjectWeakPtr wtree, VRDeviceW
     drag(ins.object, caster);
 }
 
-void VRLeap::setPose(Pose pose) {
+void VRLeap::setPose(PosePtr pose) {
     transformation = pose;
-    getBeaconRoot()->setPose2(pose);
+    getBeaconRoot()->setPose(pose);
     transformed = true;
 }
 
-void VRLeap::setPose(Vec3d pos, Vec3d dir, Vec3d up) {
-    setPose(Pose(pos, dir, up));
-}
-
-Pose VRLeap::getPose() const {
+PosePtr VRLeap::getPose() const {
     return transformation;
 }
 
@@ -386,6 +382,3 @@ void VRLeap::startCalibration() {
 void VRLeap::stopCalibration() {
     calibrate = false;
 }
-
-
-OSG_END_NAMESPACE;

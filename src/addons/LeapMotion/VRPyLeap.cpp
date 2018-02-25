@@ -11,26 +11,12 @@ PyMethodDef VRPyLeapFrame::methods[] = {
 };
 
 PyMethodDef VRPyLeap::methods[] = {
-    {"registerFrameCallback", (PyCFunction) VRPyLeap::registerFrameCallback, METH_VARARGS, "Add description"},
-    {"clearFrameCallbacks",   (PyCFunction) VRPyLeap::clearFrameCallbacks,   METH_VARARGS, "Add description"},
-    {"setPose",               (PyCFunction) VRPyLeap::setPose,               METH_VARARGS, "Add description"},
+    {"registerFrameCallback", (PyCFunction)VRPyLeap::registerFrameCallback, METH_VARARGS, "Add description" },
+    {"clearFrameCallbacks",   PyWrap(Leap, clearFrameCallbacks,   "Add description", void ) },
+    {"setPose",               PyWrap(Leap, setPose,               "Add description", void, PosePtr ) },
+    {"open",                  PyWrap(Leap, setAddress,               "Add description", void, string ) },
     {NULL} /* Sentinel */
 };
-
-PyObject* VRPyLeap::setPose(VRPyLeap* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-
-    PyObject *fl, *dl, *ul;
-    if (! PyArg_ParseTuple(args, "OOO", &fl, &dl, &ul)) return NULL;
-    self->objPtr->setPose( parseVec3dList(fl), parseVec3dList(dl), parseVec3dList(ul));
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyLeap::clearFrameCallbacks(VRPyLeap* self) {
-    if (!self->valid()) return NULL;
-    self->objPtr->clearFrameCallbacks();
-    Py_RETURN_TRUE;
-}
 
 PyObject* VRPyLeap::registerFrameCallback(VRPyLeap* self, PyObject* args) {
     if (!self->valid()) return NULL;

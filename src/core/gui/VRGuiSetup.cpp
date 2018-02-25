@@ -215,10 +215,10 @@ void VRGuiSetup::updateObjectData() {
         setTextEntry("entry28", t->getAddress());
         setLabel("label157", t->getConnectionStatus());
         setLabel("label159", t->getSerial());
-        Pose p = t->getPose();
-        leapPosEntry.set(p.pos());
-        leapUpEntry.set(p.up());
-        leapDirEntry.set(p.dir());
+        auto p = t->getPose();
+        leapPosEntry.set(p->pos());
+        leapUpEntry.set(p->up());
+        leapDirEntry.set(p->dir());
     }
 
     if (selected_type == "mouse") { device = true; }
@@ -1032,18 +1032,18 @@ void VRGuiSetup::on_leap_stopcalib_clicked() {
     dev->stopCalibration();
     setButtonSensitivity("button34", true);
     setButtonSensitivity("button35", false);
-    Pose p = dev->getPose();
-    leapPosEntry.set(p.pos());
-    leapUpEntry.set(p.up());
-    leapDirEntry.set(p.dir());
+    auto p = dev->getPose();
+    leapPosEntry.set(p->pos());
+    leapUpEntry.set(p->up());
+    leapDirEntry.set(p->dir());
     setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_leap_pos_edit(Vec3d v) {
     if (guard) return;
     VRLeap* dev = (VRLeap*)selected_object;
-    Pose p = dev->getPose();
-    p.setPos(v);
+    auto p = dev->getPose();
+    p->setPos(v);
     dev->setPose(p);
     setToolButtonSensitivity("toolbutton12", true);
 }
@@ -1051,8 +1051,8 @@ void VRGuiSetup::on_leap_pos_edit(Vec3d v) {
 void VRGuiSetup::on_leap_up_edit(Vec3d v) {
     if (guard) return;
     VRLeap* dev = (VRLeap*)selected_object;
-    Pose p = dev->getPose();
-    p.setUp(v);
+    auto p = dev->getPose();
+    p->setUp(v);
     dev->setPose(p);
     setToolButtonSensitivity("toolbutton12", true);
 }
@@ -1060,8 +1060,8 @@ void VRGuiSetup::on_leap_up_edit(Vec3d v) {
 void VRGuiSetup::on_leap_dir_edit(Vec3d v) {
     if (guard) return;
     VRLeap* dev = (VRLeap*)selected_object;
-    Pose p = dev->getPose();
-    p.setDir(v);
+    auto p = dev->getPose();
+    p->setDir(v);
     dev->setPose(p);
     setToolButtonSensitivity("toolbutton12", true);
 }
