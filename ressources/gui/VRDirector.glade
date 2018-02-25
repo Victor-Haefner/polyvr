@@ -4619,7 +4619,7 @@ cave allocated</property>
                                           </packing>
                                         </child>
                                         <child>
-                                          <object class="GtkFrame" id="frame31">
+                                          <object class="GtkFrame" id="frame35">
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
                                             <property name="label_xalign">0</property>
@@ -4647,7 +4647,7 @@ cave allocated</property>
                                           </packing>
                                         </child>
                                         <child>
-                                          <object class="GtkFrame" id="frame32">
+                                          <object class="GtkFrame" id="frame36">
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
                                             <property name="label_xalign">0</property>
@@ -5069,7 +5069,7 @@ cave allocated</property>
                                           </packing>
                                         </child>
                                         <child>
-                                          <object class="GtkFixed" id="fixed69">
+                                          <object class="GtkFixed" id="fixed77">
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
                                           </object>
@@ -5141,7 +5141,7 @@ cave allocated</property>
                                           </packing>
                                         </child>
                                         <child>
-                                          <object class="GtkFixed" id="fixed70">
+                                          <object class="GtkFixed" id="fixed71">
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
                                           </object>
@@ -5205,7 +5205,7 @@ cave allocated</property>
                                               </object>
                                             </child>
                                             <child type="label">
-                                              <object class="GtkFixed" id="fixed72">
+                                              <object class="GtkFixed" id="fixed75">
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
                                               </object>
@@ -5990,7 +5990,7 @@ cave allocated</property>
                                               </object>
                                             </child>
                                             <child type="label">
-                                              <object class="GtkFixed" id="fixed71">
+                                              <object class="GtkFixed" id="fixed76">
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
                                               </object>
@@ -9065,20 +9065,20 @@ to add distances</property>
                                                   </packing>
                                                 </child>
                                                 <child>
-                                                  <object class="GtkTable" id="table44">
+                                                  <object class="GtkTable" id="table46">
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">False</property>
                                                     <property name="n_rows">2</property>
                                                     <property name="n_columns">2</property>
                                                     <child>
-                                                      <object class="GtkLabel" id="label155">
+                                                      <object class="GtkLabel" id="label165">
                                                         <property name="visible">True</property>
                                                         <property name="can_focus">False</property>
                                                         <property name="label" translatable="yes">Size:</property>
                                                       </object>
                                                     </child>
                                                     <child>
-                                                      <object class="GtkLabel" id="label156">
+                                                      <object class="GtkLabel" id="label166">
                                                         <property name="visible">True</property>
                                                         <property name="can_focus">False</property>
                                                         <property name="label" translatable="yes">Channels:</property>
@@ -9089,7 +9089,7 @@ to add distances</property>
                                                       </packing>
                                                     </child>
                                                     <child>
-                                                      <object class="GtkLabel" id="label157">
+                                                      <object class="GtkLabel" id="label167">
                                                         <property name="visible">True</property>
                                                         <property name="can_focus">False</property>
                                                       </object>
@@ -9101,7 +9101,7 @@ to add distances</property>
                                                       </packing>
                                                     </child>
                                                     <child>
-                                                      <object class="GtkLabel" id="label158">
+                                                      <object class="GtkLabel" id="label168">
                                                         <property name="visible">True</property>
                                                         <property name="can_focus">False</property>
                                                       </object>

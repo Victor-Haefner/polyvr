@@ -136,6 +136,10 @@ void VRDefShading::reload() {
         li.second.lightVP->readProgram(vpFile.c_str());
         li.second.lightFP->readProgram(fpFile.c_str());
         li.second.lightFP->addUniformVariable<Int32>("channel", channel);
+        if (li.second.lightType == Photometric) {
+
+            li.second.lightFP->addUniformVariable<Int32>("texPhotometricMap", 4);
+        }
     }
 }
 
@@ -189,10 +193,10 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     else li.shadowType = ST_NONE;
 
     li.light = light;
-    int t = 1;
-    if (type == "directional") t = 2;
-    if (type == "spot") t = 3;
-    li.lightType = LightTypeE(t);
+    li.lightType = Point;
+    if (type == "directional") li.lightType = Directional;
+    if (type == "spot") li.lightType = Spot;
+    if (type == "photometric") li.lightType = Photometric;
 
     li.lightFP->addUniformVariable<Int32>("texBufPos",  0);
     li.lightFP->addUniformVariable<Int32>("texBufNorm", 1);

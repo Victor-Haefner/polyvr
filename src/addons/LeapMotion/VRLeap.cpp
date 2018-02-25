@@ -367,7 +367,7 @@ void VRLeap::dragCB(VRTransformWeakPtr wcaster, VRObjectWeakPtr wtree, VRDeviceW
 
 void VRLeap::setPose(Pose pose) {
     transformation = pose;
-    getBeaconRoot()->setPose(pose);
+    getBeaconRoot()->setPose2(pose);
     transformed = true;
 }
 
