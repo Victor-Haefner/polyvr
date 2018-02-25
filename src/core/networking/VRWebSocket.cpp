@@ -1,5 +1,6 @@
 #include <core/utils/VRFunction.h>
 #include <core/scene/VRScene.h>
+#include "core/scene/VRSceneManager.h"
 #include "VRWebSocket.h"
 
 OSG_BEGIN_NAMESPACE
@@ -8,7 +9,7 @@ using namespace std;
 
 VRWebSocket::VRWebSocket(string name) : VRName() {
     setName(name);
-    mg_mgr_init(&mgr, (void*) this);
+    threadFkt = VRThreadCb::create("webSocketPollThread", boost::bind(&VRWebSocket::poll, this, _1));
 }
 
 VRWebSocket::~VRWebSocket() {
@@ -17,19 +18,24 @@ VRWebSocket::~VRWebSocket() {
 }
 
 bool VRWebSocket::open(string url) {
+
+    close();
+
+    mg_mgr_init(&mgr, (void*) this);
+
     connection = mg_connect_ws(&mgr, eventHandler, url.c_str(), NULL, NULL);
     if (connection == nullptr) {
         cerr << "Cannot connect to " << url << endl;
         return false;
     }
 
-    if (threadId < 0) {
-        threadFkt = VRFunction<VRThreadWeakPtr>::create("webSocketPollThread",
-                                                        boost::bind(&VRWebSocket::poll, this, _1));
-        threadId = VRScene::getCurrent()->initThread(threadFkt, "webSocketPollThread", false);
-    }
+    done = false;
+    if (threadId < 0) threadId = VRSceneManager::get()->initThread(threadFkt, "webSocketPollThread", false);
 
-    return true;
+    cout << "Connecting to " << url << " ";
+    while (connectionStatus < 0) { usleep(10000); }
+
+    return connectionStatus;
 }
 
 void VRWebSocket::poll(VRThreadWeakPtr t) {
@@ -37,21 +43,30 @@ void VRWebSocket::poll(VRThreadWeakPtr t) {
         mg_mgr_poll(&mgr, 30);
     }
     mg_mgr_free(&mgr);
+    threadId = -1;
 }
 
 bool VRWebSocket::close() {
-    cout << "Closing socket" << endl;
-    if (connection) {
+    if (isConnected()) {
+        cout << "Closing socket" << endl;
         mg_send_websocket_frame(connection, WEBSOCKET_OP_CLOSE, nullptr, 0);
+        while (connectionStatus != -1) { usleep(10000); }
         return true;
+    } else {
+        done = true;
+        connectionStatus = -1;
+        return false;
     }
+}
 
+bool VRWebSocket::isConnected() {
+    if (connectionStatus == 1) return true;
     return false;
 }
 
 bool VRWebSocket::sendMessage(string message) {
 
-    if (connection) {
+    if (isConnected()) {
         mg_send_websocket_frame(connection, WEBSOCKET_OP_TEXT, message.c_str(), message.length());
         return true;
     } else {
@@ -88,12 +103,14 @@ void VRWebSocket::eventHandler(struct mg_connection* nc, int ev, void* ev_data) 
             int status = *((int*) ev_data);
             if (status != 0) {
                 printf("-- Connection error: %d\n", status);
+                object->connectionStatus = 0;
+                object->done = true;
             }
             break;
         }
         case MG_EV_WEBSOCKET_HANDSHAKE_DONE: {
             printf("-- Connected\n");
-            object->isConnected = true;
+            object->connectionStatus = 1;
             break;
         }
         case MG_EV_WEBSOCKET_FRAME: {
@@ -102,7 +119,10 @@ void VRWebSocket::eventHandler(struct mg_connection* nc, int ev, void* ev_data) 
             break;
         }
         case MG_EV_CLOSE: {
-            if (object->isConnected) printf("-- Disconnected\n");
+            if (object->isConnected()) {
+                printf("-- Disconnected\n");
+                object->connectionStatus = -1;
+            }
             object->done = true;
             break;
         }

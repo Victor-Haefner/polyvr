@@ -78,6 +78,14 @@ void Pose::invert() {
     set(Vec3d(m[3]), Vec3d(-m[2]), Vec3d(m[1]));
 }
 
+bool Pose::operator == (const Pose& other) const {
+    return asMatrix() == other.asMatrix();
+}
+
+bool Pose::operator != (const Pose& other) const {
+    return asMatrix() != other.asMatrix();
+}
+
 void Pose::makeUpOrthogonal() {
     Vec3d X = x();
     Vec3d u = up();

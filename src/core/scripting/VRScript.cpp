@@ -17,6 +17,7 @@
 #include "VRPyHaptic.h"
 #include "VRPyMobile.h"
 #include "VRPyBaseT.h"
+#include "addons/LeapMotion/VRPyLeap.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/toString.h"
 #include "core/setup/VRSetup.h"
@@ -34,7 +35,7 @@ void updateArgPtr(VRScript::arg* a) {
     auto scene = VRScene::getCurrent();
     VRSetupPtr setup = VRSetup::getCurrent();
 
-    if (t == "VRPyObjectType" || t == "VRPyGeometryType" || t == "VRPyTransformType" || t == "VRPyLightType" || t == "VRPyLodType") {
+    if (t == "VRPyObjectType" || t == "VRPyGeometryType" || t == "VRPyTransformType" || t == "VRPyLightType" || t == "VRPyLodType" || t == "VRPyLeapFrameType") {
         a->ptr = (void*)scene->get(a->val).get();
         return;
     }
@@ -222,6 +223,7 @@ PyObject* VRScript::getPyObj(arg* a) {
     else if (a->type == "VRPyMultiTouchType") return VRPyMultiTouch::fromSharedPtr(((VRMultiTouch*)a->ptr)->ptr());
     else if (a->type == "VRPyHapticType") return VRPyHaptic::fromSharedPtr(((VRHaptic*)a->ptr)->ptr());
     else if (a->type == "VRPyServerType") return VRPyServer::fromSharedPtr(((VRServer*)a->ptr)->ptr());
+    else if (a->type == "VRPyLeapFrameType") return VRPyLeapFrame::fromSharedPtr(((VRLeapFrame*)a->ptr)->ptr());
     //else if (a->type == "VRPySocketType") return VRPySocket::fromSharedPtr(((VRSocket*)a->ptr)->ptr());
     else { cout << "\ngetPyObj ERROR: " << a->type << " unknown!\n"; Py_RETURN_NONE; }
 }

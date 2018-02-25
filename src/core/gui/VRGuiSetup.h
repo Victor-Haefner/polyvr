@@ -43,6 +43,10 @@ class VRGuiSetup {
         VRGuiVectorEntry tVRPNAxisEntry;
         VRGuiVectorEntry rVRPNAxisEntry;
 
+        VRGuiVectorEntry leapPosEntry;
+        VRGuiVectorEntry leapDirEntry;
+        VRGuiVectorEntry leapUpEntry;
+
         VRGuiContextMenu* menu = 0;
         VRWindow* window = 0;
         VRMultiWindow* mwindow = 0;
@@ -119,6 +123,13 @@ class VRGuiSetup {
         void on_vrpn_rot_axis_edit(Vec3d v);
 
         void on_mt_device_changed();
+        void on_leap_host_edited();
+        void on_leap_startcalib_clicked();
+        void on_leap_stopcalib_clicked();
+        void on_leap_pos_edit(Vec3d v);
+        void on_leap_up_edit(Vec3d v);
+        void on_leap_dir_edit(Vec3d v);
+
         void on_haptic_ip_edited();
         void on_change_haptic_type();
         void on_toggle_dev_cross();

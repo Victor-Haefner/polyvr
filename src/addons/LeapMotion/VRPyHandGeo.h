@@ -9,4 +9,5 @@ struct VRPyHandGeo : VRPyBaseT<OSG::VRHandGeo> {
     static PyObject* update(VRPyHandGeo* self, PyObject* args);
     static PyObject* setLeft(VRPyHandGeo* self);
     static PyObject* setRight(VRPyHandGeo* self);
+    static PyObject* connectToLeap(VRPyHandGeo* self, PyObject* args);
 };

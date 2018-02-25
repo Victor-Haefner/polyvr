@@ -12,23 +12,10 @@ PyMethodDef VRPyLeapFrame::methods[] = {
 
 PyMethodDef VRPyLeap::methods[] = {
     {"registerFrameCallback", (PyCFunction) VRPyLeap::registerFrameCallback, METH_VARARGS, "Add description"},
+    {"clearFrameCallbacks",   (PyCFunction) VRPyLeap::clearFrameCallbacks,   METH_VARARGS, "Add description"},
     {"setPose",               (PyCFunction) VRPyLeap::setPose,               METH_VARARGS, "Add description"},
-    {"open",                  PyWrapOpt(Leap, open, "Connect to device", "localhost|6437", bool, string, int) },
     {NULL} /* Sentinel */
 };
-
-/*PyObject* VRPyLeap::open(VRPyLeap* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    const char* host = 0;
-    int port = 0;
-    if (!PyArg_ParseTuple(args, "|si:open", (char*) &host, &port)) return NULL; // TODO
-    if (host) {
-        if (port) self->objPtr->open(host, port);
-        else self->objPtr->open(host);
-    } else self->objPtr->open();
-
-    Py_RETURN_TRUE;
-}*/
 
 PyObject* VRPyLeap::setPose(VRPyLeap* self, PyObject* args) {
     if (!self->valid()) return NULL;
@@ -36,6 +23,12 @@ PyObject* VRPyLeap::setPose(VRPyLeap* self, PyObject* args) {
     PyObject *fl, *dl, *ul;
     if (! PyArg_ParseTuple(args, "OOO", &fl, &dl, &ul)) return NULL;
     self->objPtr->setPose( parseVec3dList(fl), parseVec3dList(dl), parseVec3dList(ul));
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyLeap::clearFrameCallbacks(VRPyLeap* self) {
+    if (!self->valid()) return NULL;
+    self->objPtr->clearFrameCallbacks();
     Py_RETURN_TRUE;
 }
 
