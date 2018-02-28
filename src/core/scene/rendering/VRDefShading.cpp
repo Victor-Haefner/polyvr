@@ -4,6 +4,7 @@
 #include <OpenSG/OSGDirectionalLight.h>
 #include <OpenSG/OSGPointLight.h>
 #include <OpenSG/OSGSpotLight.h>
+#include <OpenSG/OSGTextureObjChunk.h>
 #include <OpenSG/OSGImage.h>
 
 #include <OpenSG/OSGImageForeground.h>
@@ -24,14 +25,18 @@
 #include <OpenSG/OSGRenderBuffer.h>
 
 #include "core/utils/VROptions.h"
+#include "core/utils/VRFunction.h"
+#include "core/math/pose.h"
 #include "core/objects/object/OSGCore.h"
 #include "core/objects/VRLight.h"
+#include "core/objects/VRLightBeacon.h"
 #include "core/objects/VRCamera.h"
 #include "core/objects/OSGCamera.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/setup/windows/VRView.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -125,7 +130,6 @@ void VRDefShading::reload() {
     ShaderProgramChunkMTRecPtr shAmbient = ShaderProgramChunk::create();
     vpAmbient->readProgram(dsAmbientVPFile.c_str());
     fpAmbient->readProgram(dsAmbientFPFile.c_str());
-    fpAmbient->addUniformVariable<Int32>("texBufNorm", 1);
     shAmbient->addShader(vpAmbient);
     shAmbient->addShader(fpAmbient);
     dsStage->setAmbientProgram(shAmbient);
@@ -135,7 +139,7 @@ void VRDefShading::reload() {
         string fpFile = getLightFPFile(li.second.lightType, li.second.shadowType);
         li.second.lightVP->readProgram(vpFile.c_str());
         li.second.lightFP->readProgram(fpFile.c_str());
-        li.second.lightFP->addUniformVariable<Int32>("channel", channel);
+        li.second.lightFP->updateUniformVariable<Int32>("channel", channel);
     }
 }
 
@@ -189,22 +193,34 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     else li.shadowType = ST_NONE;
 
     li.light = light;
-    int t = 1;
-    if (type == "directional") t = 2;
-    if (type == "spot") t = 3;
-    li.lightType = LightTypeE(t);
+    li.lightType = Point;
+    if (type == "directional") li.lightType = Directional;
+    if (type == "spot") li.lightType = Spot;
+    if (type == "photometric") li.lightType = Photometric;
 
     li.lightFP->addUniformVariable<Int32>("texBufPos",  0);
     li.lightFP->addUniformVariable<Int32>("texBufNorm", 1);
     li.lightFP->addUniformVariable<Int32>("texBufDiff", 2);
     li.lightFP->addUniformVariable<Int32>("texBufAmb",  3);
+    li.lightFP->addUniformVariable<Int32>("texPhotometricMap", 4);
     li.lightFP->addUniformVariable<float>("shadowColor", shadowColor);
+    li.lightFP->addUniformVariable<Vec3f>("lightUpVS", Vec3f(0,1,0));
+    li.lightFP->addUniformVariable<Vec3f>("lightDirectionVS", Vec3f(0,0,-1));
 
     li.lightSH->addShader(li.lightVP);
     li.lightSH->addShader(li.lightFP);
+    li.texChunk = TextureObjChunk::create();
 
-    dsStage->editMFLights       ()->push_back(li.light  );
-    dsStage->editMFLightPrograms()->push_back(li.lightSH);
+    dsStage->editMFLights         ()->push_back(li.light  );
+    dsStage->editMFLightPrograms  ()->push_back(li.lightSH);
+    dsStage->editMFPhotometricMaps()->push_back(li.texChunk);
+
+    auto tex = vrl->getPhotometricMap();
+    if (tex) {
+        li.texChunk->setImage(tex->getImage());
+        li.texChunk->setInternalFormat(tex->getInternalFormat());
+    }
+
     lightInfos[ID] = li;
 
     string vpFile = getLightVPFile(li.lightType);
@@ -233,6 +249,18 @@ void VRDefShading::updateLight(VRLightPtr l) {
     string fpFile = getLightFPFile(li.lightType, li.shadowType);
     li.lightVP->readProgram(vpFile.c_str());
     li.lightFP->readProgram(fpFile.c_str());
+
+    if (auto b = l->getBeacon()) {
+        auto p = b->getWorldPose();
+        li.lightFP->updateUniformVariable<Vec3f>("lightUpVS", Vec3f(p->up()));
+        li.lightFP->updateUniformVariable<Vec3f>("lightDirectionVS", Vec3f(p->dir()));
+    }
+
+    auto tex = l->getPhotometricMap();
+    if (tex) {
+        dsStage->editMFPhotometricMaps();
+        li.texChunk->setImage(tex->getImage());
+    }
 }
 
 TextureObjChunkRefPtr VRDefShading::getTarget() { return fboTex; }
@@ -265,10 +293,12 @@ void VRDefShading::subLight(int ID) {
     auto& li = lightInfos[ID];
     auto lItr = dsStage->editMFLights()->find(li.light);
     auto lpItr = dsStage->editMFLightPrograms()->find(li.lightSH);
+    auto pmItr = dsStage->editMFPhotometricMaps()->find(li.texChunk);
     //OSG_ASSERT(lightIdx < dsStage->getMFLights()->size());
     //OSG_ASSERT(lightIdx < dsStage->getMFLightPrograms()->size());
     dsStage->editMFLights()->erase(lItr);
     dsStage->editMFLightPrograms()->erase(lpItr);
+    dsStage->editMFPhotometricMaps()->erase(pmItr);
     lightInfos.erase(ID);
 }
 

@@ -30,6 +30,7 @@ class VRDefShading {
             LightTypeE lightType;
             ShadowTypeE shadowType;
             LightMTRecPtr light;
+            TextureObjChunkMTRecPtr texChunk;
             //NodeMTRecPtr               lightN;
             //NodeMTRecPtr               beaconN;
 
@@ -78,7 +79,6 @@ class VRDefShading {
         TextureObjChunkRefPtr getTarget();
 
         void setDSCamera(OSGCameraPtr cam);
-        //void setDSCamera(ProjectionCameraDecoratorMTRecPtr cam);
         void addDSLight(VRLightPtr light);
         void updateLight(VRLightPtr l);
         void subLight(int ID);
