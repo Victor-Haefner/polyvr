@@ -111,6 +111,12 @@ template<> string toString(const Line& l) {
     return toString(Pnt3d(l.getPosition())) + " " + toString(Vec3d(l.getDirection()));
 }
 
+template<> string toString(const Matrix4d& m) {
+    stringstream ss;
+    ss << toString(m[0]) << " " << toString(m[1]) << " " << toString(m[2]) << " " << toString(m[3]);
+    return ss.str();
+}
+
 template<> string typeName(const string& t) { return "string"; }
 template<> string typeName(const int& t) { return "int"; }
 template<> string typeName(const unsigned int& t) { return "int"; }
@@ -263,6 +269,5 @@ template<> int toValue(stringstream& ss, Boundingbox& box) {
     if (c) box.clear();
     return B;
 }
-
 
 

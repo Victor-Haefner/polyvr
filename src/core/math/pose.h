@@ -14,6 +14,7 @@ class Pose {
 
     public:
         Pose();
+        Pose(const Matrix& m);
         Pose(const Matrix4d& m);
         Pose(const Pose& p);
         Pose(Vec3d p, Vec3d d = Vec3d(0,0,-1), Vec3d u = Vec3d(0,1,0));
@@ -43,6 +44,9 @@ class Pose {
         PosePtr multRight(PosePtr p);
 
         string toString();
+
+        bool operator == (const Pose& other) const;
+        bool operator != (const Pose& other) const;
 };
 
 OSG_END_NAMESPACE;

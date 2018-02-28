@@ -238,7 +238,7 @@ void setLight(VRLightPtr l) {
     setTextEntry("entry46", toString(a[2]));
 
     string bname = "NONE";
-    auto beacon = l->getBeacon().lock();
+    auto beacon = l->getBeacon();
     if (beacon) bname = beacon->getName();
     setButtonText("button27", bname);
 

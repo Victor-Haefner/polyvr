@@ -44,6 +44,7 @@ class VRCamera : public VRTransform {
         void activate();
 
         OSGCameraPtr getCam();
+        void setCam(OSGCameraPtr c);
 
         void setAcceptRoot(bool b);
         bool getAcceptRoot();

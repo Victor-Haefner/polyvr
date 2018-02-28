@@ -898,8 +898,8 @@ Matrix4d toMatrix4d(Matrix4f mf) {
 }
 
 void VRTransform::applyTransformation(PosePtr po) {
+    if (!po) po = getPose();
     Matrix4d m0 = po->asMatrix();
-
     map<GeoVectorPropertyMTRecPtr, bool> applied;
 
     auto applyMatrix = [&](OSGGeometryPtr mesh, Matrix4d& m) {
@@ -940,11 +940,8 @@ void VRTransform::applyTransformation(PosePtr po) {
         auto m = computeNewMatrix(geo);
         applyMatrix(mesh, m);
     }
-}
 
-void VRTransform::applyTransformation() {
-    applyTransformation(getPose());
-    setMatrix(Matrix4d());
+    setIdentity();
 }
 
 Vec3d VRTransform::getConstraintAngleWith(VRTransformPtr t, bool rotationOrPosition) {

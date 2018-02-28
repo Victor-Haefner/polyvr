@@ -6,6 +6,7 @@
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/setup/VRSetup.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -79,6 +80,7 @@ VRAvatar::VRAvatar(string name) {
     cout << "Device Name: " << this->deviceName << endl;
     deviceRoot = VRTransform::create(name + "_beacons");
     deviceRoot->setPersistency(0);
+
     addBeacon();
 }
 
@@ -112,6 +114,10 @@ void VRAvatar::addBeacon() {
     deviceRoot->addChild(beacons[id].beacon);
 
     //return beacons.back();
+}
+
+VRTransformPtr VRAvatar::getBeaconRoot() {
+    return deviceRoot;
 }
 
 VRTransformPtr VRAvatar::getBeacon(int i) { return beacons[i].beacon; }

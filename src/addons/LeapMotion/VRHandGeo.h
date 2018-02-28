@@ -17,11 +17,15 @@ public:
 
     void setRight();
 
-    void updateChange();
+    void connectToLeap(VRLeapPtr leap);
 
 private:
 
     VRHandGeo(string name);
+
+    void updateHandGeo();
+
+    VRUpdateCbPtr updateCb;
 
     boost::mutex mutex;
     bool isLeft{false};
@@ -29,7 +33,6 @@ private:
     bool visible{false};
 
     vector<vector<VRGeometryPtr>> bones;
-    vector<VRGeometryPtr> directions;
     VRGeometryPtr pinch;
     VRLeapFrame::HandPtr handData;
 };

@@ -409,8 +409,8 @@ void VRMultiTouch::updatePosition(int x, int y) {
 
     for (auto v : win->getViews()) {
         int w, h;
-        w = v->getViewport()->calcPixelWidth();
-        h = v->getViewport()->calcPixelHeight();
+        w = v->getViewportL()->calcPixelWidth();
+        h = v->getViewportL()->calcPixelHeight();
 
         float rx, ry;
         rx =  (x/28430.0 - 0.5 )*2; // 65535.0

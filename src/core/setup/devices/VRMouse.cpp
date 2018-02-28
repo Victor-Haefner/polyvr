@@ -150,11 +150,11 @@ void VRMouse::updatePosition(int x, int y) {
     if (!v) return;
 
     int w, h;
-    w = v->getViewport()->calcPixelWidth();
-    h = v->getViewport()->calcPixelHeight();
+    w = v->getViewportL()->calcPixelWidth();
+    h = v->getViewportL()->calcPixelHeight();
 
     float rx, ry;
-    v->getViewport()->calcNormalizedCoordinates(rx, ry, x, y);
+    v->getViewportL()->calcNormalizedCoordinates(rx, ry, x, y);
 
     //cam->getCam()->calcViewRay(ray,x,y,*v->getViewport());
     calcViewRay(cam, ray, rx,ry,w,h);
@@ -185,7 +185,7 @@ void VRMouse::mouse(int button, int state, int x, int y) {
     auto sv = view.lock();
     if (!sv) return;
 
-    ViewportMTRecPtr v = sv->getViewport();
+    ViewportMTRecPtr v = sv->getViewportL();
     v->calcNormalizedCoordinates(_x, _y, x, y);
     change_slider(5,_x);
     change_slider(6,_y);
@@ -200,7 +200,7 @@ void VRMouse::motion(int x, int y) {
     if (!sv) return;
 
     float _x, _y;
-    ViewportMTRecPtr v = sv->getViewport();
+    ViewportMTRecPtr v = sv->getViewportL();
     v->calcNormalizedCoordinates(_x, _y, x, y);
     change_slider(5,_x);
     change_slider(6,_y);

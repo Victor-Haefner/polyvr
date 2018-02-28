@@ -453,6 +453,10 @@ void VRView::setCamera(VRCameraPtr c) {
 void VRView::setCam() {
     if (cam == 0) return;
 
+    auto wrap = [](ProjectionCameraDecoratorMTRecPtr d) {
+        return OSGCamera::create(d);
+    };
+
     if (lView && PCDecoratorLeft == 0) lView->setCamera(cam->getCam()->cam);
     if (rView && PCDecoratorRight == 0) rView->setCamera(cam->getCam()->cam);
 
@@ -462,10 +466,10 @@ void VRView::setCam() {
     if (lView && PCDecoratorLeft) lView->setCamera(PCDecoratorLeft);
     if (rView && PCDecoratorRight) rView->setCamera(PCDecoratorRight);
 
-    if (renderingL) renderingL->setCamera(cam->getCam());
-    if (renderingR) renderingR->setCamera(cam->getCam());
-    if (renderingL && PCDecoratorLeft) renderingL->setCamera( OSGCamera::create(PCDecoratorLeft) );
-    if (renderingR && PCDecoratorRight) renderingR->setCamera( OSGCamera::create(PCDecoratorRight) );
+    if (renderingL && PCDecoratorLeft) renderingL->setCamera( wrap(PCDecoratorLeft) );
+    else if (renderingL) renderingL->setCamera(cam->getCam());
+    if (renderingR && PCDecoratorRight) renderingR->setCamera( wrap(PCDecoratorRight) );
+    else if (renderingR) renderingR->setCamera(cam->getCam());
 }
 
 void VRView::setBackground(BackgroundMTRecPtr bg) { background = bg; update(); }
@@ -613,7 +617,8 @@ VRTransformPtr VRView::getUser() { if (user) return user; else return dummy_user
 VRCameraPtr VRView::getCamera() { return cam; }
 ProjectionCameraDecoratorMTRecPtr VRView::getCameraDecoratorLeft() { return PCDecoratorLeft; }
 ProjectionCameraDecoratorMTRecPtr VRView::getCameraDecoratorRight() { return PCDecoratorRight; }
-ViewportMTRecPtr VRView::getViewport() { return lView; }
+ViewportMTRecPtr VRView::getViewportL() { return lView; }
+ViewportMTRecPtr VRView::getViewportR() { return rView; }
 float VRView::getEyeSeparation() { return eyeSeparation; }
 bool VRView::isStereo() { return stereo; }
 

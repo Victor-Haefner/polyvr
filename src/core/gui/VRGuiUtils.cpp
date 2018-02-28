@@ -254,6 +254,12 @@ void setButtonText(string b, string txt ) {
     bu->set_label(txt);
 }
 
+void setButtonSensitivity(string b, bool s ) {
+    Gtk::Button* bu;
+    VRGuiBuilder()->get_widget(b, bu);
+    bu->set_sensitive(s);
+}
+
 void setSliderCallback(string s, sigc::slot< bool,int,double > sig) {
     Gtk::HScale* hs;
     VRGuiBuilder()->get_widget(s, hs);

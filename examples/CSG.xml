@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene base_name="CSG" name_space="Scene" name_suffix="0" persistency="666" loading_time="82">
+<Scene base_name="CSG" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
-      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="-0.0281699 0.0840961 0.170446" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-0.795912 0.276627 2.08463" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.0281699 0.0840961 0.170446" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-0.751816 0.530903 2.05917" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
-            <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+            <constraint persistency="666"/>
           </Object>
-          <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+          <constraint persistency="666"/>
         </Object>
       </Object>
     </Object>
@@ -127,15 +127,15 @@
 	elif primitive == 'cube':
 		sample = VR.Geometry('cube')
 		sample.setPrimitive('Box 0.4 0.4 0.4 1 1 1')
-		sample.setFrom(.5, 0, 0)
+		sample.setFrom([0.5, 0, 0])
 	elif primitive == 'cylinder':
 		sample = VR.Geometry('cylinder')
 		sample.setPrimitive('Cylinder 0.2 0.2 16 1 1 1')
-		sample.setFrom(1, 0, 0)
+		sample.setFrom([1, 0, 0])
 	elif primitive == 'torus':
 		sample = VR.Geometry('torus')
 		sample.setPrimitive('Torus 0.1 0.2 16 16')
-		sample.setFrom(-.6, 0, 0)
+		sample.setFrom([-0.6, 0, 0])
 	else:
 		print "Error: unknown primitive type:", primitive
 		return None
@@ -288,22 +288,16 @@
 			self.menuOpen = True
 			
 			self.sprite.show()
-			if self.menuRoot:
-				self.sprite.setFrom(VR.menuPos[0],
-									VR.menuPos[1],
-									VR.menuPos[2])
-			else:
-				self.sprite.setFrom(self.parent.sprite.getFrom()[0],
-									self.parent.sprite.getFrom()[1],
-									self.parent.sprite.getFrom()[2])
+			if self.menuRoot: self.sprite.setFrom(VR.menuPos)
+			else: self.sprite.setFrom(self.parent.sprite.getFrom())
 			
 			# TODO Caculate dir -&gt; cam
-			self.sprite.setDir(0, 0, -1)
+			self.sprite.setDir([0, 0, -1])
 			scale = 0.2
 			ref = self.sprite.getFrom()
 			for i, c in enumerate(self.children):
-				c.sprite.setFrom(ref[0], ref[1] - scale * (i+1), ref[2])
-				c.sprite.setDir(0, 0, -1)
+				c.sprite.setFrom([ref[0], ref[1] - scale * (i+1), ref[2]])
+				c.sprite.setDir([0, 0, -1])
 				c.sprite.show()
 		
 		def hide(self):
@@ -372,8 +366,8 @@
 	msgSpr.setMaterial(VR.Material('mode'))
 	msgSpr.setText("select")
 	msgSpr.setSize(0.1 * len("select"), 0.13)
-	msgSpr.setFrom(0.5,0.5,-1)
-	msgSpr.setDir(0,0,-1)
+	msgSpr.setFrom([0.5,0.5,-1])
+	msgSpr.setDir([0,0,-1])
 	VR.modeSpr = msgSpr
 	VR.camera.addChild(msgSpr)
 	
@@ -415,9 +409,9 @@
 	msgSpr = VR.Sprite("notification")
 	msgSpr.setText(msg)
 	msgSpr.setSize(0.2 * len(msg), 1)
-	msgSpr.setFrom(0, 0, -3)
+	msgSpr.setFrom([0, 0, -3])
 	at = VR.camera.getDir()
-	msgSpr.setDir(at[0], at[1], at[2])
+	msgSpr.setDir(at)
 	VR.notification = msgSpr
 	VR.camera.addChild(msgSpr)
 	

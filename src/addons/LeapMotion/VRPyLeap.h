@@ -11,7 +11,4 @@ struct VRPyLeap : VRPyBaseT<OSG::VRLeap> {
     static PyMethodDef methods[];
 
     static PyObject* registerFrameCallback(VRPyLeap* self, PyObject* args);
-    static PyObject* setPose(VRPyLeap* self, PyObject* args);
-    //static PyObject* open(VRPyLeap* self, PyObject* args);
-
 };
