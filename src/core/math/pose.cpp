@@ -10,7 +10,16 @@ template<> string typeName(const PosePtr& p) { return "Pose"; }
 Pose::Pose() { set(Vec3d(), Vec3d(0,0,-1), Vec3d(0,1,0)); }
 Pose::Pose(const Pose& p) { *this = p; }
 Pose::Pose(Vec3d p, Vec3d d, Vec3d u) { set(p,d,u); }
+
 Pose::Pose(const Matrix4d& m) {
+    if (isNan(m)) return;
+    //float s1 = m[0].length();
+    float s2 = m[1].length();
+    float s3 = m[2].length();
+    set(Vec3d(m[3]), Vec3d(-m[2])*1.0/s3, Vec3d(m[1])*1.0/s2);
+}
+
+Pose::Pose(const Matrix& m) {
     if (isNan(m)) return;
     //float s1 = m[0].length();
     float s2 = m[1].length();
