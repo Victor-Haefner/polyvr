@@ -215,6 +215,8 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     dsStage->editMFLightPrograms  ()->push_back(li.lightSH);
     dsStage->editMFPhotometricMaps()->push_back(li.texChunk);
 
+    /* Not compiling? execute the install script int the polyvr folder! */
+
     auto tex = vrl->getPhotometricMap();
     if (tex) {
         li.texChunk->setImage(tex->getImage());
