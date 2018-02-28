@@ -41,6 +41,7 @@ PyMethodDef VRPyView::methods[] = {
     {"grab", (PyCFunction)VRPyView::grab, METH_NOARGS, "Get the current visual as texture - tex grab()" },
     {"setCamera", (PyCFunction)VRPyView::setCamera, METH_VARARGS, "Set the camera of the view - setCamera( cam )" },
     {"getName", (PyCFunction)VRPyView::getName, METH_NOARGS, "Get the name of the view - getName()" },
+    {"getUser", PyWrap(View, getUser, "Get the name of the view - getName()", VRTransformPtr ) },
     {NULL}  /* Sentinel */
 };
 

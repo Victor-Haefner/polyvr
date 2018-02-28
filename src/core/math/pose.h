@@ -44,6 +44,9 @@ class Pose {
         PosePtr multRight(PosePtr p);
 
         string toString();
+
+        bool operator == (const Pose& other) const;
+        bool operator != (const Pose& other) const;
 };
 
 OSG_END_NAMESPACE;

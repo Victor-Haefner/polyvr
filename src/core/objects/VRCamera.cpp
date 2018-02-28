@@ -76,6 +76,8 @@ VRCameraPtr VRCamera::create(string name, bool reg) {
     return p;
 }
 
+void VRCamera::setCam(OSGCameraPtr c) { cam = c; } // warning: setup() will override this!
+
 void VRCamera::setType(int type) { camType = type; setup(); }
 int VRCamera::getType() { return camType; }
 

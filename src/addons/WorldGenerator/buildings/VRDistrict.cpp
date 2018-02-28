@@ -9,6 +9,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/utils/toString.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/math/triangulator.h"
 #include "core/scene/VRSceneManager.h"
 
@@ -28,7 +29,8 @@ VRDistrictPtr VRDistrict::create() {
 void VRDistrict::init() {
     if (!b_mat) {
         b_mat = VRMaterial::create("Buildings");
-        b_mat->setTexture("world/textures/Buildings.png", false);
+        string tex = "world/textures/Buildings.png";
+        if (exists(tex)) b_mat->setTexture(tex, false);
         b_mat->setAmbient(Color3f(0.7, 0.7, 0.7)); //light reflection in all directions
         b_mat->setDiffuse(Color3f(1.0, 1.0, 1.0)); //light from ambient (without lightsource)
         b_mat->setSpecular(Color3f(0.2, 0.2, 0.2)); //light reflection in camera direction

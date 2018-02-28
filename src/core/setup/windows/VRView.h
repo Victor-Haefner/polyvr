@@ -156,7 +156,8 @@ class VRView : public std::enable_shared_from_this<VRView> {
         void setPosition(Vec4d pos);
         PosePtr getPose();
 
-        ViewportMTRecPtr getViewport();
+        ViewportMTRecPtr getViewportL();
+        ViewportMTRecPtr getViewportR();
         VRRenderStudioPtr getRenderingL();
         VRRenderStudioPtr getRenderingR();
 

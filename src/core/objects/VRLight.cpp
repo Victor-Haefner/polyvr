@@ -28,7 +28,7 @@ VRLight::VRLight(string name) : VRObject(name) {
     DirectionalLightMTRecPtr d_light = DirectionalLight::create();
     PointLightMTRecPtr p_light = PointLight::create();
     SpotLightMTRecPtr s_light = SpotLight::create();
-    PointLightMTRecPtr ph_light = PointLight::create();
+    SpotLightMTRecPtr ph_light = SpotLight::create();
 
     this->d_light = OSGCore::create(d_light);
     this->p_light = OSGCore::create(p_light);
@@ -40,6 +40,10 @@ VRLight::VRLight(string name) : VRObject(name) {
     s_light->setDirection(Vec3f(0,0,-1));
     s_light->setSpotCutOff(Pi/6.f);
     s_light->setSpotExponent(3.f);
+
+    ph_light->setDirection(Vec3f(0,0,-1));
+    ph_light->setSpotCutOff(Pi/6.f);
+    ph_light->setSpotExponent(3.f);
 
     setCore(OSGCore::create(p_light), "Light");
     attenuation = Vec3d(p_light->getConstantAttenuation(), p_light->getLinearAttenuation(), p_light->getQuadraticAttenuation());
@@ -74,6 +78,7 @@ VRLight::~VRLight() {
 VRLightPtr VRLight::ptr() { return static_pointer_cast<VRLight>( shared_from_this() ); }
 VRLightPtr VRLight::create(string name) {
     auto l = shared_ptr<VRLight>(new VRLight(name) );
+    cout << "VRLight::create " << l << " " << l->getName() << endl;
     VRScene::getCurrent()->addLight(l);
     return l;
 }
@@ -244,7 +249,7 @@ void VRLight::setAttenuation(Vec3d a) {
     dynamic_pointer_cast<Light>(d_light->core)->setLinearAttenuation(a[1]);
     dynamic_pointer_cast<Light>(d_light->core)->setQuadraticAttenuation(a[2]);
     dynamic_pointer_cast<PointLight>(p_light->core)->setAttenuation(a[0], a[1], a[2]);
-    dynamic_pointer_cast<PointLight>(ph_light->core)->setAttenuation(a[0], a[1], a[2]);
+    dynamic_pointer_cast<SpotLight>(ph_light->core)->setAttenuation(a[0], a[1], a[2]);
     dynamic_pointer_cast<SpotLight>(s_light->core)->setAttenuation(a[0], a[1], a[2]);
 }
 
@@ -312,7 +317,7 @@ vector<string> VRLight::getTypeParameter(string type) {
 
 // IDEE: licht sucht ob beacon schon da ist, danach sucht beacon ob licht schon da ist.. je nachdem wer wann erstellt wird..
 
-VRLightBeaconWeakPtr VRLight::getBeacon() { return beacon; }
+VRLightBeaconPtr VRLight::getBeacon() { return beacon.lock(); }
 
 void VRLight::setPointlight() { switchCore(p_light); updateDeferredLight(); }
 void VRLight::setSpotlight() { switchCore(s_light); updateDeferredLight(); }
@@ -326,7 +331,7 @@ void VRLight::updateDeferredLight() {
     VRScene::getCurrent()->updateLight( ptr() );
 }
 
-void VRLight::setPhotometricMap(VRTexturePtr tex) { photometricMap = tex; }
+void VRLight::setPhotometricMap(VRTexturePtr tex) { photometricMap = tex; updateDeferredLight(); }
 VRTexturePtr VRLight::getPhotometricMap() { return photometricMap; }
 
 void VRLight::loadPhotometricMap(string path) { // ies files
@@ -362,20 +367,20 @@ void VRLight::loadPhotometricMap(string path) { // ies files
 
     auto rescale = [&](vector<float>& data, int Nv, int Nh, int N2v, int N2h, float scale) {
         vector<float> result(N2v*N2v);
-        int k = 0;
         for (int i = 0; i < N2v; i++) {
-            for (int j = 0; j < N2h; j++, k++) {
+            for (int j = 0; j < N2h; j++) {
                 float gi = acos(1-2*i/(N2v-1))/Pi;
                 float gj = acos(1-2*j/(N2h-1))/Pi;
 
                 float f = sample2D(gj, gi, data, Nv, Nh) * scale;
+                int k = i*N2h+j;
                 result[k] = f;
             }
         }
         return result;
     };
 
-    auto parseFile = [&]() {
+    auto parseFile = [&](int Nv, int Nh, int& aNv, int& aNh) {
         ifstream file(path);
         string data((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
         auto lines = splitString(data, '\n');
@@ -383,12 +388,12 @@ void VRLight::loadPhotometricMap(string path) { // ies files
 
         // read parameters
         auto params = splitString( lines[9] );
-        int aNv = toInt(params[3]); // number of vertical angles
-        int aNh = toInt(params[4]); // number of horizontal angles
+        aNv = toInt(params[3]); // number of vertical angles
+        aNh = toInt(params[4]); // number of horizontal angles
         int N = aNv*aNh;
         float lmScale = toFloat(params[2]); // candela multiplier
 
-        cout << "photometricMapPath " << lines[9] << endl;
+        //cout << "photometricMapPath " << lines[9] << endl;
 
         // read data
         string dataChunk;
@@ -402,15 +407,42 @@ void VRLight::loadPhotometricMap(string path) { // ies files
         for (int i=0; i<aNh; i++) ss >> aPhi[i];
         for (int i=0; i<N; i++) ss >> candela[i];
 
-        return rescale(candela, aNv, aNh, 64, 64, lmScale);
+        return candela;
+        //return rescale(candela, aNv, aNh, Nv, Nh, lmScale*0.05);
     };
 
+    int Nv = 64;
+    int Nh = 64;
+    int aNv = 0;
+    int aNh = 0;
+
     photometricMapPath = path;
-    auto candela = parseFile();
+    if (path == "") return;
+    auto candela = parseFile(Nv, Nh, aNv, aNh);
+
+    Nv = aNv;
+    Nh = aNh;
+
+    float cMax = 0;
+    for (auto& c : candela) if (c > cMax) cMax = c;
+    for (auto& c : candela) c /= cMax;
+
+    for (int i=0; i<Nv; i++) {
+        for (int j=0; j<Nh; j++) {
+            int k = i*Nh+j;
+            cout << " " << candela[k];
+        }
+        cout << endl;
+    }
     auto tex = VRTexture::create();
+    //tex->read("imgres.png");
+    //tex->read("checkers.jpg");
+
     tex->setInternalFormat(GL_ALPHA32F_ARB); // important for unclamped float
     auto img = tex->getImage();
-    img->set( Image::OSG_A_PF, 64, 64, 1, 1, 1, 0, (const uint8_t*)&candela[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    img->set( Image::OSG_A_PF, Nv, Nh, 1, 1, 1, 0, (const uint8_t*)&candela[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    cout << " setPhotometricMap img " << img << " " << path << endl;
+
     setPhotometricMap(tex);
 }
 

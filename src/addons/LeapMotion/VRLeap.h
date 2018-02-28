@@ -1,79 +1,42 @@
 #pragma once
 
-#include "core/setup/devices/VRDevice.h"
-#include "core/networking/VRWebSocket.h"
-#include "core/math/pose.h"
+#include <core/setup/devices/VRDevice.h>
+#include <core/networking/VRWebSocket.h>
+
+#include <boost/thread/recursive_mutex.hpp>
+
+#include "VRLeapFrame.h"
+
 
 OSG_BEGIN_NAMESPACE;
 
-class VRLeapFrame : public std::enable_shared_from_this<VRLeapFrame> {
-    public:
-        ptrFwd(Hand);
-        ptrFwd(Pen);
-
-        struct Pen {
-            Pose pose; // pos, dir, normal
-            vector<vector<Vec3d>> joints; // joint positions of each finger, 0 is thumb -> 4 is pinky
-            vector<vector<Pose>> bases; // 3 basis vectors for each bone, in index order, wrist to tip
-            vector<bool> extended; // True, if the finger is a pointing, or extended, posture
-            vector<Vec3d> directions; // direction is expressed as a unit vector pointing in the same direction as the tip
-            float pinchStrength;
-            float grabStrength;
-            float confidence;
-
-            Pen() : joints(5), bases(5), extended(5), directions(5) { }
-            PenPtr clone();
-
-            void transform(Matrix4d transformation);
-        };
-
-        struct Hand {
-            Pose pose; // pos, dir, normal
-            vector<vector<Vec3d>> joints; // joint positions of each finger, 0 is thumb -> 4 is pinky
-            vector<vector<Pose>> bases; // 3 basis vectors for each bone, in index order, wrist to tip
-            vector<bool> extended; // True, if the finger is a pointing, or extended, posture
-            vector<Vec3d> directions; // direction is expressed as a unit vector pointing in the same direction as the tip
-            float pinchStrength;
-            float grabStrength;
-            float confidence;
-
-            Hand() : joints(5), bases(5), extended(5), directions(5) { }
-            HandPtr clone();
-
-            void transform(Matrix4d transformation);
-        };
-
-    private:
-        VRLeapFrame() {}
-
-        HandPtr rightHand;
-        HandPtr leftHand;
-
-    public:
-        static VRLeapFramePtr create();
-
-        HandPtr getLeftHand();
-        HandPtr getRightHand();
-
-        void setLeftHand(HandPtr hand);
-        void setRightHand(HandPtr hand);
-};
-
-typedef VRLeapFrame::HandPtr HandPtr;
-typedef VRLeapFrame::PenPtr PenPtr;
 
 class VRLeap : public VRDevice {
     private:
         vector<std::function<void(VRLeapFramePtr)>> frameCallbacks;
 
-        string host;
-        int port = 6437;
+        string host{"localhost"};
+        int port{6437};
+        string connectionStatus{"not connected"};
         VRWebSocket webSocket;
-        bool transformed{false};
-        Matrix4d transformation;
+        boost::recursive_mutex mutex;
 
-        bool resetConnection();
+        bool transformed{false};
+        PosePtr transformation;
+        bool calibrate{false};
+        string serial;
+
+        float dragThreshold{0.8f};
+        float dropThreshold{0.6f};
+
         void newFrame(Json::Value json);
+        void updateHandFromJson(Json::Value& handData, Json::Value& pointableData, HandPtr hand);
+        void updateSceneData(vector<HandPtr> hands);
+        VRTransformPtr getBeaconChild(int i);
+        PosePtr computeCalibPose(vector<PenPtr>& pens);
+
+    protected:
+        void dragCB(VRTransformWeakPtr wcaster, VRObjectWeakPtr wtree, VRDeviceWeakPtr dev = VRDevicePtr(0)) override;
 
     public:
         VRLeap();
@@ -86,15 +49,28 @@ class VRLeap : public VRDevice {
 
         static VRLeapPtr create();
 
-        bool open(string host = "localhost", int port = 6437);
+        bool reconnect();
 
         string getHost();
         void setHost(string newHost);
         int getPort();
         void setPort(int newPort);
+        string getConnectionStatus();
+        string getSerial();
+
+        string getAddress();
+        void setAddress(string a);
 
         void registerFrameCallback(std::function<void(VRLeapFramePtr)> func);
-        void setPose(Vec3d pos, Vec3d dir, Vec3d up);
+        void clearFrameCallbacks();
+        void setPose(PosePtr pose);
+        PosePtr getPose() const;
+
+        void startCalibration();
+        void stopCalibration();
+
+        void clearSignals();
+
 };
 
 OSG_END_NAMESPACE;

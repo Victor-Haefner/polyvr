@@ -21,6 +21,7 @@
 #include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRManager.cpp"
+#include "addons/LeapMotion/VRLeap.h"
 #include <gtkmm/builder.h>
 #include <gtkmm/liststore.h>
 #include <gtkmm/treestore.h>
@@ -35,6 +36,7 @@
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+
 
 class VRGuiSetup_ModelColumns : public Gtk::TreeModelColumnRecord {
     public:
@@ -79,6 +81,7 @@ void VRGuiSetup::closeAllExpander() {
     setExpanderSensitivity("expander28", false);
     setExpanderSensitivity("expander29", false);
     setExpanderSensitivity("expander30", false);
+    setExpanderSensitivity("expander31", false);
 }
 
 void VRGuiSetup::updateObjectData() {
@@ -206,11 +209,24 @@ void VRGuiSetup::updateObjectData() {
         setCombobox("combobox12", getListStorePos("liststore11", t->getDevice()) );
     }
 
+    if (selected_type == "leap") {
+        setExpanderSensitivity("expander31", true);
+        VRLeap* t = (VRLeap*)selected_object;
+        setTextEntry("entry28", t->getAddress());
+        setLabel("label157", t->getConnectionStatus());
+        setLabel("label159", t->getSerial());
+        auto p = t->getPose();
+        leapPosEntry.set(p->pos());
+        leapUpEntry.set(p->up());
+        leapDirEntry.set(p->dir());
+    }
+
     if (selected_type == "mouse") { device = true; }
     if (selected_type == "multitouch") { device = true; }
     if (selected_type == "keyboard") { device = true; }
     if (selected_type == "server") { device = true; }
     if (selected_type == "flystick") { device = true; }
+    if (selected_type == "leap") { device = true; }
 
     auto setup = current_setup.lock();
     if (selected_type == "vrpn_device" || selected_type == "vrpn_tracker") {
@@ -993,6 +1009,63 @@ void VRGuiSetup::on_haptic_ip_edited() {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
+void VRGuiSetup::on_leap_host_edited() {
+    if (guard) return;
+    VRLeap* dev = (VRLeap*)selected_object;
+    dev->setAddress(getTextEntry("entry28"));
+    dev->reconnect();
+    setLabel("label157", dev->getConnectionStatus());
+    setLabel("label159", dev->getSerial());
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_leap_startcalib_clicked() {
+    if (guard) return;
+    VRLeap* dev = (VRLeap*)selected_object;
+    dev->startCalibration();
+    setButtonSensitivity("button34", false);
+    setButtonSensitivity("button35", true);
+}
+void VRGuiSetup::on_leap_stopcalib_clicked() {
+    if (guard) return;
+    VRLeap* dev = (VRLeap*)selected_object;
+    dev->stopCalibration();
+    setButtonSensitivity("button34", true);
+    setButtonSensitivity("button35", false);
+    auto p = dev->getPose();
+    leapPosEntry.set(p->pos());
+    leapUpEntry.set(p->up());
+    leapDirEntry.set(p->dir());
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_leap_pos_edit(Vec3d v) {
+    if (guard) return;
+    VRLeap* dev = (VRLeap*)selected_object;
+    auto p = dev->getPose();
+    p->setPos(v);
+    dev->setPose(p);
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_leap_up_edit(Vec3d v) {
+    if (guard) return;
+    VRLeap* dev = (VRLeap*)selected_object;
+    auto p = dev->getPose();
+    p->setUp(v);
+    dev->setPose(p);
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_leap_dir_edit(Vec3d v) {
+    if (guard) return;
+    VRLeap* dev = (VRLeap*)selected_object;
+    auto p = dev->getPose();
+    p->setDir(v);
+    dev->setPose(p);
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
 void VRGuiSetup::on_change_haptic_type() {
     if (guard) return;
     VRHaptic* dev = (VRHaptic*)selected_object;
@@ -1115,6 +1188,7 @@ VRGuiSetup::VRGuiSetup() {
     menu->appendMenu("SM_AddMenu", "VRPN", "SM_AddVRPNMenu");
     menu->appendItem("SM_AddDevMenu", "Mouse", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRMouse>) );
     menu->appendItem("SM_AddDevMenu", "MultiTouch", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRMultiTouch>) );
+    menu->appendItem("SM_AddDevMenu", "Leap", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRLeap>) );
     menu->appendItem("SM_AddDevMenu", "Keyboard", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRKeyboard>) );
     menu->appendItem("SM_AddDevMenu", "Haptic", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRHaptic>) );
     menu->appendItem("SM_AddDevMenu", "Server", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRServer>) );
@@ -1163,6 +1237,10 @@ VRGuiSetup::VRGuiSetup() {
     tVRPNAxisEntry.init("tvrpn_entry", "", sigc::mem_fun(*this, &VRGuiSetup::on_vrpn_trans_axis_edit));
     rVRPNAxisEntry.init("rvrpn_entry", "", sigc::mem_fun(*this, &VRGuiSetup::on_vrpn_rot_axis_edit));
 
+    leapPosEntry.init("leap_pos_entry", "from", sigc::mem_fun(*this, &VRGuiSetup::on_leap_pos_edit));
+    leapUpEntry.init("leap_up_entry", "up", sigc::mem_fun(*this, &VRGuiSetup::on_leap_up_edit));
+    leapDirEntry.init("leap_dir_entry", "dir", sigc::mem_fun(*this, &VRGuiSetup::on_leap_dir_edit));
+
     setEntryCallback("entry50", sigc::mem_fun(*this, &VRGuiSetup::on_edit_VRPN_tracker_address) );
     setEntryCallback("entry52", sigc::mem_fun(*this, &VRGuiSetup::on_pos_edit) );
     setEntryCallback("entry53", sigc::mem_fun(*this, &VRGuiSetup::on_pos_edit) );
@@ -1178,6 +1256,7 @@ VRGuiSetup::VRGuiSetup() {
     setEntryCallback("entry30", sigc::mem_fun(*this, &VRGuiSetup::on_displays_edit_offset) );
     setEntryCallback("entry31", sigc::mem_fun(*this, &VRGuiSetup::on_displays_edit_offset) );
     setEntryCallback("entry8", sigc::mem_fun(*this, &VRGuiSetup::on_haptic_ip_edited) );
+    setEntryCallback("entry28", sigc::mem_fun(*this, &VRGuiSetup::on_leap_host_edited) );
     setEntryCallback("entry15", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_edited) );
     setEntryCallback("entry20", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_edited) );
     setEntryCallback("entry19", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited) );
@@ -1186,6 +1265,8 @@ VRGuiSetup::VRGuiSetup() {
     setButtonCallback("button6", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_key_clicked) );
     setButtonCallback("button1", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_start_clicked) );
     setButtonCallback("button30", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_stopall_clicked) );
+    setButtonCallback("button34", sigc::mem_fun(*this, &VRGuiSetup::on_leap_startcalib_clicked) );
+    setButtonCallback("button35", sigc::mem_fun(*this, &VRGuiSetup::on_leap_stopcalib_clicked) );
 
     setRadioButtonCallback("radiobutton6", sigc::mem_fun(*this, &VRGuiSetup::on_server_ct_toggled) );
     setRadioButtonCallback("radiobutton7", sigc::mem_fun(*this, &VRGuiSetup::on_server_ct_toggled) );

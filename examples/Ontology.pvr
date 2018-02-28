@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="Ontology" name_space="Scene" loading_time="262">
+<Scene base_name="Ontology" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
-    <Object base_name="Root" name_space="__global__" name_suffix="2" persistency="666" pickable="0" type="Object" unique="1" visible="1">
-      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="1" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
-        <Object at="-0.5 -1 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
-          <Object base_name="None" name_space="__global__" name_suffix="3" persistency="666" pickable="0" type="Object" unique="1" visible="1"/>
-          <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+    <Object base_name="Root" name_space="__global__" name_suffix="2" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="1" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object at="-0.5 -1 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+          <Object base_name="None" name_space="__global__" name_suffix="3" persistency="666" pickable="0" type="Object" visible="1"/>
+          <constraint persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="-0.378234 0.0500002 0.122089" at_dir="0" base_name="Default" far="512" fov="1.0472" from="6.1126 5.78482 -2.54972" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
-          <Object base_name="None" name_space="__global__" name_suffix="4" persistency="666" pickable="0" type="Object" unique="1" visible="1"/>
-          <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+        <Object accept_root="1" aspect="1" at="-0.378234 0.0500002 0.122089" at_dir="0" base_name="Default" far="512" fov="1.0472" from="6.1126 5.78482 -2.54972" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <Object base_name="None" name_space="__global__" name_suffix="4" persistency="666" pickable="0" type="Object" visible="1"/>
+          <constraint persistency="666"/>
         </Object>
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" hmdd="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
-    <Script base_name="classify" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1">
+    <Script base_name="classify" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -44,10 +44,10 @@
 			
 	#print onto.toString()
 </core>
-      <arg type="NoneType" value="None" name_suffix="0" base_name="onto" name_space="classify"/>
-      <arg type="NoneType" value="None" name_suffix="0" base_name="scene" name_space="classify"/>
+      <arg type="NoneType" value="None" base_name="onto" name_space="classify" name_suffix="0" persistency="666"/>
+      <arg type="NoneType" value="None" base_name="scene" name_space="classify" name_suffix="0" persistency="666"/>
     </Script>
-    <Script base_name="init" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1">
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -82,7 +82,7 @@
 		def addTable(p):
 			table = VR.Geometry('Table:table')
 			table.setPrimitive('Box 1 1 1 1 1 1')
-			table.translate(0,0.5,0)
+			table.translate([0,0.5,0])
 			table.applyTransformation()
 			table.setFrom(p)
 			VR.scene.addChild(table)
@@ -90,7 +90,7 @@
 		def addChair(p):
 			chair = VR.Geometry('Chair:chair')
 			chair.setPrimitive('Box 0.5 0.5 0.5 1 1 1')
-			chair.translate(0,0.25,0)
+			chair.translate([0,0.25,0])
 			chair.applyTransformation()
 			chair.setFrom(p)
 			VR.scene.addChild(chair)
@@ -116,10 +116,10 @@
 	
 	
 </core>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
-      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" name_suffix="1" base_name="trigger" name_space="__global__"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
     </Script>
-    <Script base_name="testQueries" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1">
+    <Script base_name="testQueries" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -147,49 +147,11 @@
   <Navigation active="Orbit" persistency="666"/>
   <Materials persistency="666"/>
   <Semantics persistency="666">
-    <Ontology base_name="Test" flag="custom" name_space="Ontology" name_suffix="0" persistency="666" unique="1">
-      <Thing base_name="Thing" name_space="concept" name_suffix="0" persistency="666" unique="0">
-        <Children>
-          <Concept base_name="jgfhf" name_space="concept" name_suffix="0" persistency="666" unique="0" ID="197">
-            <Properties>
-              <Property base_name="state" name_space="property" name_suffix="0" persistency="666" type="int" unique="0" value="" ID="102"/>
-            </Properties>
-          </Concept>
-        </Children>
-      </Thing>
-      <Thing base_name="Thing" name_space="concept" name_suffix="0" persistency="666" unique="0">
-        <Children>
-          <Concept base_name="jgfhf" name_space="concept" name_suffix="0" persistency="666" unique="0" ID="197">
-            <Properties>
-              <Property base_name="state" name_space="property" name_suffix="0" persistency="666" type="int" unique="0" value="" ID="102"/>
-            </Properties>
-          </Concept>
-        </Children>
-      </Thing>
+    <Ontology base_name="Test" flag="custom" name_space="Ontology" name_suffix="0" persistency="666">
+      <Thing base_name="Thing" name_space="concept" name_suffix="0" persistency="666"/>
     </Ontology>
-    <Ontology base_name="new_concept_1" flag="custom" name_space="Ontology" name_suffix="0" persistency="666" unique="1">
-      <Thing base_name="Thing" name_space="concept" name_suffix="0" persistency="666" unique="0">
-        <Children>
-          <Concept base_name="Thing_derived" name_space="concept" name_suffix="0" persistency="666" unique="0" ID="201">
-            <Properties>
-              <Property base_name="new_property_1" name_space="property" name_suffix="0" persistency="666" type="aaa" unique="0" value="" ID="243"/>
-              <Property base_name="new_property_2" name_space="property" name_suffix="0" persistency="666" type="bb" unique="0" value="" ID="244"/>
-              <Property base_name="new_property_3" name_space="property" name_suffix="0" persistency="666" type="akls" unique="0" value="" ID="245"/>
-            </Properties>
-          </Concept>
-        </Children>
-      </Thing>
-      <Thing base_name="Thing" name_space="concept" name_suffix="0" persistency="666" unique="0">
-        <Children>
-          <Concept base_name="Thing_derived" name_space="concept" name_suffix="0" persistency="666" unique="0" ID="201">
-            <Properties>
-              <Property base_name="new_property_1" name_space="property" name_suffix="0" persistency="666" type="aaa" unique="0" value="" ID="243"/>
-              <Property base_name="new_property_2" name_space="property" name_suffix="0" persistency="666" type="bb" unique="0" value="" ID="244"/>
-              <Property base_name="new_property_3" name_space="property" name_suffix="0" persistency="666" type="akls" unique="0" value="" ID="245"/>
-            </Properties>
-          </Concept>
-        </Children>
-      </Thing>
+    <Ontology base_name="new_concept_1" flag="custom" name_space="Ontology" name_suffix="0" persistency="666">
+      <Thing base_name="Thing" name_space="concept" name_suffix="0" persistency="666"/>
     </Ontology>
   </Semantics>
 </Scene>

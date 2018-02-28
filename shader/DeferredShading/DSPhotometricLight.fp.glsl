@@ -1,4 +1,4 @@
-#version 120
+#version 400 compatibility
 
 #extension GL_ARB_texture_rectangle : require
 #extension GL_ARB_texture_rectangle : enable
@@ -11,8 +11,34 @@ uniform sampler2D     texPhotometricMap;
 uniform vec2          vpOffset;
 uniform int           channel;
 
-vec3 lightUpVS = vec3(0,1,0); // TODO: pass
-vec3 lightDirectionVS = vec3(0,0,-1); // TODO: pass
+uniform vec3 lightUp;
+vec3 lightDirection;
+
+vec2 lookup;
+
+void calcLightParams() {
+	lightDirection = gl_LightSource[0].spotDirection;
+}
+
+float getPhotometricIntensity(vec3 vertex, vec3 light, vec3 normal) {
+	calcLightParams();
+
+	vec3 lightVector = vertex - light;
+	lightVector = normalize( lightVector );
+	float cosLight = -dot( normal, lightVector); 		// diffusion factor
+
+	float dotV = dot( lightUp, lightVector ); 			// angle with up vector
+	lightVector -= lightUp * dotV;				// project light vector in dir plane
+	lightVector = normalize( lightVector );
+	float dotH = dot( lightDirection, lightVector );
+
+	//apply intensity map				
+	vec2 tc = vec2(0,0);
+	tc.y = dotH*0.5 + 0.5; //phi
+	tc.x = dotV*0.5 + 0.5; //theta
+
+	return texture2D( texPhotometricMap, tc ).a;
+}
 
 // compute point light INDEX for fragment at POS with normal NORM
 // and diffuse material color MDIFF
@@ -35,24 +61,16 @@ vec4 computePointLight(int index, float amb, vec3 pos, vec3 norm, vec4 mDiff) {
         //color = amb*gl_LightSource[index].ambient + distAtt * NdotL * mDiff * gl_LightSource[index].diffuse;
     }
 
-    float dotV = dot( lightUpVS, lightDir );
-    float dotH = dot( lightDirectionVS, lightDir );
-
-    //apply intensity map				
-    vec2 tc;
-    tc.y = dotH*0.5 + 0.5; //phi
-    tc.x = dotV*0.5 + 0.5; //theta
-    float intensity = texture2D( texPhotometricMap, tc ).r; // TODO
-
-
-    //if (intensity > 1e-3) return vec4(1,0,0,1);
-
+    //return vec4(gl_LightSource[index].position.xyz,1);
+    float intensity = getPhotometricIntensity(pos, gl_LightSource[index].position.xyz, norm);
+    color.rgb *= intensity;
+    //color.rgb = vec3(intensity);
     return color;
 }
 
 // DS pass
 void main(void) {
-    vec2 lookup = gl_FragCoord.xy - vpOffset;
+    lookup = gl_FragCoord.xy - vpOffset;
     vec4 norm   = texture2DRect(texBufNorm, lookup);
     bool isLit  = (norm.w > 0);
 

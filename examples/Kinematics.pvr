@@ -2,7 +2,7 @@
 <Scene base_name="Physics" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
-      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
         <Object accept_root="1" aspect="1" at="-0.0150324 -0.0264561 0.49" at_dir="0" base_name="Default" far="250" fov="1.0472" from="3.73028 1.61072 1.54313" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <constraint persistency="666"/>
@@ -34,16 +34,16 @@
 	z3.setPrimitive('Cylinder 0.4 0.03 16 1 1 1')
 	s.setPrimitive('Cone 0.2 0.2 64 1 1')
 	
-	a.translate(0,1.35,0)
-	z1.translate(0,1.1,0)
-	z2.translate(0,0.7,0)
-	z3.translate(0,0.3,0)
+	a.translate([0,1.35,0])
+	z1.translate([0,1.1,0])
+	z2.translate([0,0.7,0])
+	z3.translate([0,0.3,0])
 	
 	for o in [a,z1,z2,z3,s]: o.setPickable(True)
 	
-	s.translate(0,-0.1,0)
+	s.translate([0,-0.1,0])
 	s.applyTransformation(s.getPose())
-	s.translate(0,0.2,0)
+	s.translate([0,0.2,0])
 	
 	pendel.addChild(a)
 	pendel.addChild(z1)
