@@ -398,7 +398,7 @@ void VRLight::loadPhotometricMap(string path) { // ies files
         // read data
         string dataChunk;
         for (int i=11; i<lines.size(); i++) dataChunk += lines[i] + " ";
-        auto ss = stringstream(dataChunk);
+        stringstream ss(dataChunk);
 
         vector<float> aTheta(aNv, 0);
         vector<float> aPhi(aNh, 0);
