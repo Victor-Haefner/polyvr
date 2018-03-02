@@ -50,12 +50,9 @@ void VRGuiNet_updateList() {
     // update script list
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("Sockets"));
     store->clear();
-
-    map<string, VRSocket*> sockets = scene->getSockets();
-    map<string, VRSocket*>::iterator itr;
-    for (itr = sockets.begin(); itr != sockets.end(); itr++) {
+    for (auto s : scene->getSockets()) {
+        VRSocketPtr socket = s.second;
         Gtk::ListStore::Row row = *store->append();
-        VRSocket* socket = itr->second;
         gtk_list_store_set(store->gobj(), row.gobj(), 0, socket->getType().c_str(), -1);
         gtk_list_store_set(store->gobj(), row.gobj(), 1, socket->getPort(), -1);
         gtk_list_store_set(store->gobj(), row.gobj(), 2, socket->getIP().c_str(), -1);
@@ -70,7 +67,7 @@ void VRGuiNet_updateList() {
 void VRGuiNet::on_new_clicked() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    VRSocket* socket = scene->getSocket(5000);
+    VRSocketPtr socket = scene->getSocket(5000);
     if (socket == 0) return;
 
     socket->setType("tcpip send");

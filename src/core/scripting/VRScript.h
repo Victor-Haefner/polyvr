@@ -40,7 +40,7 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
             string state = "Pressed";
             string param;
             VRSignalPtr sig = 0;
-            VRSocket* soc = 0;
+            VRSocketPtr soc = 0;
             arg* a = 0;
 
             trig();

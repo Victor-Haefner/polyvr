@@ -40,7 +40,7 @@ void updateArgPtr(VRScript::arg* a) {
         return;
     }
     if (t == "VRPySocketType") {
-        a->ptr = (void*)scene->getSocket(a->val);
+        a->ptr = (void*)scene->getSocket(a->val).get();
         return;
     }
     if (t == "VRPyDeviceType" || t == "VRPyMouseType" || t == "VRPyHapticType" || t == "VRPyServerType") {

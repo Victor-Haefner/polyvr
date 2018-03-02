@@ -18,6 +18,7 @@ ptrFwd(VRRenderStudio);
 ptrFwd(VRScene);
 ptrFwd(VRThread);
 ptrFwd(VRSpaceWarper);
+ptrFwd(VRScenegraphInterface);
 
 }
 

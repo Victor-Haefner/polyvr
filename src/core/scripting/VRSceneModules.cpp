@@ -60,6 +60,7 @@
 #include "VRPyUndoManager.h"
 #include "VRPyObjectManager.h"
 #include "VRPySky.h"
+#include "VRPyScenegraphInterface.h"
 
 #include "addons/Character/VRPyCharacter.h"
 #include "addons/Algorithms/VRPyGraphLayout.h"
@@ -151,6 +152,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyNavPreset>("NavPreset", pModVR);
     sm->registerModule<VRPyRendering>("Rendering", pModVR);
     sm->registerModule<VRPySky>("Sky", pModVR, VRPyStorage::typeRef);
+    sm->registerModule<VRPyScenegraphInterface>("ScenegraphInterface", pModVR, VRPyObject::typeRef);
 
     sm->registerModule<VRPyProgress>("Progress", pModVR);
     sm->registerModule<VRPyUndoManager>("UndoManager", pModVR);

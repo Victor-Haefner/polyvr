@@ -825,6 +825,8 @@
 		<Unit filename="src/core/scene/import/VRSTEP.h" />
 		<Unit filename="src/core/scene/import/VRVTK.cpp" />
 		<Unit filename="src/core/scene/import/VRVTK.h" />
+		<Unit filename="src/core/scene/interfaces/VRScenegraphInterface.cpp" />
+		<Unit filename="src/core/scene/interfaces/VRScenegraphInterface.h" />
 		<Unit filename="src/core/scene/rendering/VRDefShading.cpp" />
 		<Unit filename="src/core/scene/rendering/VRDefShading.h" />
 		<Unit filename="src/core/scene/rendering/VRDeferredRenderStage.cpp" />
@@ -938,6 +940,8 @@
 		<Unit filename="src/core/scripting/VRPyRecorder.h" />
 		<Unit filename="src/core/scripting/VRPyRendering.cpp" />
 		<Unit filename="src/core/scripting/VRPyRendering.h" />
+		<Unit filename="src/core/scripting/VRPyScenegraphInterface.cpp" />
+		<Unit filename="src/core/scripting/VRPyScenegraphInterface.h" />
 		<Unit filename="src/core/scripting/VRPySelection.cpp" />
 		<Unit filename="src/core/scripting/VRPySelection.h" />
 		<Unit filename="src/core/scripting/VRPySelector.cpp" />
