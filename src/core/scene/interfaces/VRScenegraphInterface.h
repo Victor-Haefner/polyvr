@@ -18,6 +18,10 @@ class VRScenegraphInterface : public VRObject {
         VRSocketPtr socket;
         VRFunction<void*>* cb = 0;
 
+        map<string, VRMaterialPtr> materials;
+        map<string, VRGeometryPtr> meshes;
+        map<string, VRTransformPtr> transforms;
+
         void resetWebsocket();
         void ws_callback(void* args);
 
@@ -29,8 +33,10 @@ class VRScenegraphInterface : public VRObject {
         VRScenegraphInterfacePtr ptr();
 
         void clear();
-
         void setPort(int p);
+        void handle(string msg);
+
+        void loadStream(string path);
 };
 
 OSG_END_NAMESPACE;

@@ -59,7 +59,7 @@ void VRGuiNet_updateList() {
         gtk_list_store_set(store->gobj(), row.gobj(), 3, socket->getCallback().c_str(), -1);
         gtk_list_store_set(store->gobj(), row.gobj(), 4, socket->getSignal()->getName().c_str(), -1);
         gtk_list_store_set(store->gobj(), row.gobj(), 5, socket->getName().c_str(), -1);
-        gtk_list_store_set(store->gobj(), row.gobj(), 6, socket, -1);
+        gtk_list_store_set(store->gobj(), row.gobj(), 6, socket.get(), -1);
         gtk_list_store_set(store->gobj(), row.gobj(), 7, socket->isClient(), -1);
     }
 }
