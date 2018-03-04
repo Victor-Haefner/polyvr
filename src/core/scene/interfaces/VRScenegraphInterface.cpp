@@ -169,7 +169,10 @@ void VRScenegraphInterface::handle(string msg) {
 		if (m[1] == "material") {
 			string mat = m[3];
 			if (mat == "") mat = "__default__";
-            if (geo && materials.count(mat)) geo->setMaterial( materials[mat] );
+            if (geo && materials.count(mat)) {
+                geo->setMaterial( materials[mat] );
+                cout << "set material " << mat << " to " << geo->getName() << endl;
+            }
 		}
 
 		if (m[1] == "visible") {
@@ -180,6 +183,7 @@ void VRScenegraphInterface::handle(string msg) {
             if (name == "") name = "__default__";
             if (materials.count(name)) {
                 // format: [red, green, blue, ambient, diffuse, specular, shininess, transparency, emission]
+                replace( m[3].begin(), m[3].end(), ',', '.');
                 auto matData = parseVec<float>(m[3]);
                 Color3f rgb = Color3f(matData[0], matData[1], matData[2]); // r,g,b = mat[:3]
                 Color3f ads = Color3f(matData[3], matData[4], matData[5]); // a,d,s = mat[3:6]
