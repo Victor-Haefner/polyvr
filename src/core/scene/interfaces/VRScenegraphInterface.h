@@ -19,6 +19,7 @@ class VRScenegraphInterface : public VRObject {
         VRFunction<void*>* cb = 0;
 
         map<string, VRMaterialPtr> materials;
+        map<string, VRObjectPtr> objects;
         map<string, VRGeometryPtr> meshes;
         map<string, VRTransformPtr> transforms;
 
