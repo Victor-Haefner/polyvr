@@ -203,6 +203,11 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     if (type == "spot") li.lightType = LightEngine::Spot;
     if (type == "photometric") li.lightType = LightEngine::Photometric;
 
+    /**
+    Not compiling? execute (with sudo!) the install script int the polyvr folder!
+    sudo ./install
+    */
+
     li.lightFP->addUniformVariable<Int32>("texBufPos",  0);
     li.lightFP->addUniformVariable<Int32>("texBufNorm", 1);
     li.lightFP->addUniformVariable<Int32>("texBufDiff", 2);
@@ -221,11 +226,6 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     dsStage->editMFLights         ()->push_back(li.light  );
     dsStage->editMFLightPrograms  ()->push_back(li.lightSH);
     dsStage->editMFPhotometricMaps()->push_back(li.texChunk);
-
-    /**
-    Not compiling? execute (with sudo!) the install script int the polyvr folder!
-    sudo ./install
-    */
 
     auto tex = vrl->getPhotometricMap();
     if (tex) {
