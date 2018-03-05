@@ -66,23 +66,24 @@ void VRHandGeo::updateHandGeo() {
             float l3 = (handData->joints[i][3] - handData->joints[i][4]).length();
 
             // The thumb does not have a base metacarpal bone and therefore contains a valid, zero length bone at that location.
+            // TODO: maybe better with "if (i > 0 || l0 > 0)" to only allow zero length bone on thumb?
             if (l0 > 0) {
-                bones[i][0]->setMesh(OSGGeometry::create(makeCylinderGeo(l0, 0.0075, 4, true, true, true)));
+                bones[i][0]->setMesh(OSGGeometry::create(makeCylinderGeo(l0, 0.0075, 8, true, true, true)));
                 auto p = Pose::create(p0, handData->bases[i][0].dir(), handData->bases[i][0].up());
                 bones[i][0]->setRelativePose(p, getParent());
             } else {
                 bones[i][0]->hide();
             }
 
-            bones[i][1]->setMesh(OSGGeometry::create(makeCylinderGeo(l1, 0.0075, 4, true, true, true)));
+            bones[i][1]->setMesh(OSGGeometry::create(makeCylinderGeo(l1, 0.0075, 8, true, true, true)));
             auto p = Pose::create(p1, handData->bases[i][1].dir(), handData->bases[i][1].up());
             bones[i][1]->setRelativePose(p, getParent());
 
-            bones[i][2]->setMesh(OSGGeometry::create(makeCylinderGeo(l2, 0.0075, 4, true, true, true)));
+            bones[i][2]->setMesh(OSGGeometry::create(makeCylinderGeo(l2, 0.0075, 8, true, true, true)));
             p = Pose::create(p2, handData->bases[i][2].dir(), handData->bases[i][2].up());
             bones[i][2]->setRelativePose(p, getParent());
 
-            bones[i][3]->setMesh(OSGGeometry::create(makeCylinderGeo(l3, 0.0075, 4, true, true, true)));
+            bones[i][3]->setMesh(OSGGeometry::create(makeCylinderGeo(l3, 0.0075, 8, true, true, true)));
             p = Pose::create(p3, handData->bases[i][3].dir(), handData->bases[i][3].up());
             bones[i][3]->setRelativePose(p, getParent());
         }

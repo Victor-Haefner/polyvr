@@ -27,7 +27,7 @@ class VRLeapFrame : public std::enable_shared_from_this<VRLeapFrame> {
             vector<bool> extended; // True, if the finger is a pointing, or extended, posture
             float pinchStrength;
             float grabStrength;
-            float confidence;
+            float confidence; //"How well the internal hand model fits the observed data." - see Leap Documentation
 
             Hand() : pose(Pose::create()), joints(5), bases(5), extended(5) { }
             HandPtr clone();
