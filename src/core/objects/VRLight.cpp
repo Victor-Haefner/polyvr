@@ -441,7 +441,6 @@ void VRLight::loadPhotometricMap(string path) { // ies files
     tex->setInternalFormat(GL_ALPHA32F_ARB); // important for unclamped float
     auto img = tex->getImage();
     img->set( Image::OSG_A_PF, Nv, Nh, 1, 1, 1, 0, (const uint8_t*)&candela[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
-    cout << " setPhotometricMap img " << img << " " << path << endl;
 
     setPhotometricMap(tex);
 }

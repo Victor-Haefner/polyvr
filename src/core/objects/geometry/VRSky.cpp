@@ -275,6 +275,7 @@ void VRSky::reloadShader() {
     string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Sky/";
     mat->readVertexShader(resDir + "Sky.vp");
     mat->readFragmentShader(resDir + "Sky.fp");
+    //mat->readFragmentShader(resDir + "Sky.dfp", true);
 }
 
 

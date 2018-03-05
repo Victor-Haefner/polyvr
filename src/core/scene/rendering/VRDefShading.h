@@ -5,10 +5,13 @@
 #include <OpenSG/OSGShaderShadowMapEngine.h>
 #include <OpenSG/OSGTrapezoidalShadowMapEngine.h>
 #include <OpenSG/OSGImage.h>
+#include <OpenSG/OSGLightEngine.h>
 #include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+
+typedef LightEngine::LightTypeE LightTypeE;
 
 class VRDefShading {
     private:
@@ -16,13 +19,6 @@ class VRDefShading {
             ST_NONE      = 0,
             ST_STANDARD  = 1,
             ST_TRAPEZOID = 2
-        };
-
-        enum LightTypeE {
-            Directional,
-            Point,
-            Spot,
-            Photometric
         };
 
         struct LightInfo {

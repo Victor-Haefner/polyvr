@@ -88,5 +88,11 @@ void main(void) {
 	if (channel == 2) color = vec4(norm.xyz, 1.0);
 	if (channel == 3) color = vec4(color.xyz, 1.0);
         gl_FragColor = color;
+	//gl_FragColor = texture2D( texPhotometricMap, lookup*0.01 );
     }
 }
+
+
+
+
+
