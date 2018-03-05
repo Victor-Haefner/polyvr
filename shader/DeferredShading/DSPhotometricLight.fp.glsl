@@ -10,6 +10,7 @@ uniform sampler2DRect texBufDiff;
 uniform sampler2D     texPhotometricMap;
 uniform vec2          vpOffset;
 uniform int           channel;
+uniform int           isFirstLamp;
 
 uniform vec3 lightUp;
 vec3 lightDirection;
@@ -80,13 +81,14 @@ void main(void) {
         vec3  pos    = posAmb.xyz;
         vec4  color  = texture2DRect(texBufDiff, lookup);
 
-	if (channel == 0) {
-		if (isLit) color = computePointLight(0, posAmb.w, pos, norm.xyz, color);
-		else color = vec4(color.xyz, 1.0);
+	if (channel == 0 && isLit) color = computePointLight(0, posAmb.w, pos, norm.xyz, color);
+	else if (isFirstLamp == 1) {
+		if (channel == 0) color = vec4(color.xyz, 1.0);
+		if (channel == 1) color = vec4(posAmb.xyz, 1.0);
+		if (channel == 2) color = vec4(norm.xyz, 1.0);
+		if (channel == 3) color = vec4(color.xyz, 1.0);
 	}
-	if (channel == 1) color = vec4(posAmb.xyz, 1.0);
-	if (channel == 2) color = vec4(norm.xyz, 1.0);
-	if (channel == 3) color = vec4(color.xyz, 1.0);
+	else color = vec4(0);
         gl_FragColor = color;
 	//gl_FragColor = texture2D( texPhotometricMap, lookup*0.01 );
     }

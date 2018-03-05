@@ -140,6 +140,11 @@ void VRDefShading::reload() {
         li.second.lightVP->readProgram(vpFile.c_str());
         li.second.lightFP->readProgram(fpFile.c_str());
         li.second.lightFP->updateUniformVariable<Int32>("channel", channel);
+        li.second.lightFP->updateUniformVariable<Int32>("isFirstLamp", 0);
+    }
+
+    if (lightInfos.size() > 0) {
+        lightInfos.rbegin()->second.lightFP->updateUniformVariable<Int32>("isFirstLamp", 1);
     }
 }
 
@@ -207,6 +212,7 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     li.lightFP->addUniformVariable<Vec3f>("lightUpVS", Vec3f(0,1,0));
     li.lightFP->addUniformVariable<Vec3f>("lightDirectionVS", Vec3f(0,0,-1));
     li.lightFP->addUniformVariable<Int32>("channel", 0);
+    li.lightFP->addUniformVariable<Int32>("isFirstLamp", 1);
 
     li.lightSH->addShader(li.lightVP);
     li.lightSH->addShader(li.lightFP);
@@ -227,6 +233,9 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
         li.texChunk->setInternalFormat(tex->getInternalFormat());
     }
 
+    if (lightInfos.size() > 0) {
+        lightInfos.rbegin()->second.lightFP->updateUniformVariable<Int32>("isFirstLamp", 0);
+    }
     lightInfos[ID] = li;
 
     string vpFile = getLightVPFile(li.lightType);

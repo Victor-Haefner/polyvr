@@ -40,14 +40,10 @@ double VRSky::Date::getDay() { // returns time since 12:00 at 1-1-2000
 
 VRSky::VRSky() : VRGeometry("Sky") {
     type = "Sky";
-    string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Sky/";
-    string vScript = resDir + "Sky.vp";
-    string fScript = resDir + "Sky.fp";
 
     // shader setup
     mat = VRMaterial::create("Sky");
-    mat->readVertexShader(vScript);
-    mat->readFragmentShader(fScript);
+    reloadShader();
     setMaterial(mat);
     setPrimitive("Plane", "2 2 1 1");
     mat->setLit(false);
@@ -105,7 +101,6 @@ void VRSky::update() {
     sunFromTime();
     updateClouds(dt);
     calculateZenithColor();
-
 }
 
 void VRSky::setSpeed(float s) { speed = s; }
@@ -141,9 +136,7 @@ void VRSky::setPosition(float latitude, float longitude) {
     observerPosition.longitude = longitude;
 }
 
-void VRSky::setCloudVel(float x, float z) {
-    cloudVel = Vec2d(x, z);
-}
+void VRSky::setCloudVel(float x, float z) { cloudVel = Vec2d(x, z); }
 
 void VRSky::updateClouds(float dt) {
     cloudOffset += Vec2f(cloudVel) * dt;
@@ -272,12 +265,12 @@ void VRSky::setLuminance(float t) {
 }
 
 void VRSky::reloadShader() {
+    cout << "VRSky::reloadShader" << endl;
     string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Sky/";
     mat->readVertexShader(resDir + "Sky.vp");
     mat->readFragmentShader(resDir + "Sky.fp");
-    //mat->readFragmentShader(resDir + "Sky.dfp", true);
+    mat->readFragmentShader(resDir + "Sky.dfp", true);
+    mat->updateDeferredShader();
 }
-
-
 
 

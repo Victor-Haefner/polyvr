@@ -427,13 +427,13 @@ void VRLight::loadPhotometricMap(string path) { // ies files
     for (auto& c : candela) if (c > cMax) cMax = c;
     for (auto& c : candela) c /= cMax;
 
-    for (int i=0; i<Nv; i++) {
+    /*for (int i=0; i<Nv; i++) {
         for (int j=0; j<Nh; j++) {
             int k = i*Nh+j;
             cout << " " << candela[k];
         }
         cout << endl;
-    }
+    }*/
     auto tex = VRTexture::create();
     //tex->read("imgres.png");
     //tex->read("checkers.jpg");
