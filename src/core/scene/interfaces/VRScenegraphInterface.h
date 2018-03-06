@@ -7,6 +7,7 @@
 #include "core/objects/object/VRObject.h"
 #include "core/scene/VRSceneFwd.h"
 #include "core/networking/VRNetworkingFwd.h"
+#include "core/tools/selection/VRSelectionFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -14,7 +15,9 @@ using namespace std;
 class VRScenegraphInterface : public VRObject {
     private:
         int port = 5555;
+        int clientID = 0;
 
+        VRSelectorPtr selector;
         VRSocketPtr socket;
         VRFunction<void*>* cb = 0;
 
@@ -33,6 +36,7 @@ class VRScenegraphInterface : public VRObject {
         static VRScenegraphInterfacePtr create(string name = "ScenegraphInterface");
         VRScenegraphInterfacePtr ptr();
 
+        void select(VRObjectPtr obj);
         void clear();
         void setPort(int p);
         void handle(string msg);

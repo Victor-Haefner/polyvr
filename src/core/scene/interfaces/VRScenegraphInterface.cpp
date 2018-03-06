@@ -6,6 +6,7 @@
 #include "core/utils/toString.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/tools/selection/VRSelector.h"
 
 #include <boost/bind.hpp>
 #include <OpenSG/OSGMatrix.h>
@@ -16,6 +17,7 @@ using namespace OSG;
 
 VRScenegraphInterface::VRScenegraphInterface(string name) : VRObject(name) {
     resetWebsocket();
+    selector = VRSelector::create();
 }
 
 VRScenegraphInterface::~VRScenegraphInterface() {}
@@ -42,11 +44,16 @@ void VRScenegraphInterface::resetWebsocket() {
     socket->setType("http receive");
 }
 
+void VRScenegraphInterface::select(VRObjectPtr obj) {
+    selector->select(obj, false);
+    socket->answerWebSocket(clientID, "selection|" + obj->getName());
+}
+
 void VRScenegraphInterface::ws_callback(void* _args) {
 	HTTP_args* args = (HTTP_args*)_args;
     if (!args->websocket) return;
 
-    int ID = args->ws_id;
+    clientID = args->ws_id;
     string msg = args->ws_data;
     if (args->ws_data.size() == 0) return;
     handle(msg);
