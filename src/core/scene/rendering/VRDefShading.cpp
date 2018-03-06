@@ -201,7 +201,7 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     li.lightType = LightEngine::Point;
     if (type == "directional") li.lightType = LightEngine::Directional;
     if (type == "spot") li.lightType = LightEngine::Spot;
-    //if (type == "photometric") li.lightType = LightEngine::Photometric;
+    if (type == "photometric") li.lightType = LightEngine::Photometric;
 
     /**
     Not compiling? execute (with sudo!) the install script int the polyvr folder!
@@ -252,7 +252,7 @@ void VRDefShading::updateLight(VRLightPtr l) {
     li.lightType = LightEngine::Point;
     if (type == "directional") li.lightType = LightEngine::Directional;
     if (type == "spot") li.lightType = LightEngine::Spot;
-    //if (type == "photometric") li.lightType = LightEngine::Photometric;
+    if (type == "photometric") li.lightType = LightEngine::Photometric;
     if (shadows) li.shadowType = defaultShadowType;
     else li.shadowType = ST_NONE;
 
@@ -286,7 +286,7 @@ const std::string& VRDefShading::getLightVPFile(LightTypeE lightType) {
         case LightEngine::Directional: return dsDirLightVPFile;
         case LightEngine::Point: return dsPointLightVPFile;
         case LightEngine::Spot: return dsSpotLightVPFile;
-        //case LightEngine::Photometric: return dsPhotometricLightVPFile;
+        case LightEngine::Photometric: return dsPhotometricLightVPFile;
         default: return dsUnknownFile;
     }
 }
@@ -298,7 +298,7 @@ const std::string& VRDefShading::getLightFPFile(LightTypeE lightType, ShadowType
         case LightEngine::Directional: return ds ? dsDirLightShadowFPFile : dsDirLightFPFile;
         case LightEngine::Point: return ds ? dsPointLightShadowFPFile : dsPointLightFPFile;
         case LightEngine::Spot: return ds ? dsSpotLightShadowFPFile : dsSpotLightFPFile;
-        //case LightEngine::Photometric: return ds ? dsPhotometricLightShadowFPFile : dsPhotometricLightFPFile;
+        case LightEngine::Photometric: return ds ? dsPhotometricLightShadowFPFile : dsPhotometricLightFPFile;
         default: return dsUnknownFile;
     }
 }

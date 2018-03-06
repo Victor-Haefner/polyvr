@@ -281,9 +281,11 @@ void VRGuiSetup::updateObjectData() {
         VRNetworkNode* n = (VRNetworkNode*)selected_object;
         setTextEntry("entry15", n->getAddress());
         setTextEntry("entry20", n->getUser());
+        setTextEntry("entry32", n->getSlavePath());
         setLabel("label130", n->getStatNode());
         setLabel("label129", n->getStatSSH());
         setLabel("label126", n->getStatSSHkey());
+        setLabel("label161", n->getStatPath());
     }
 
     if (selected_type == "slave") {
@@ -964,7 +966,7 @@ void VRGuiSetup::on_edit_VRPN_tracker_address() {
 void VRGuiSetup::on_netnode_edited() {
     if (guard) return;
     VRNetworkNode* n = (VRNetworkNode*)selected_object;
-    n->set(getTextEntry("entry15"), getTextEntry("entry20"));
+    n->set(getTextEntry("entry15"), getTextEntry("entry20"), getTextEntry("entry32"));
     setToolButtonSensitivity("toolbutton12", true);
     updateObjectData();
 }
@@ -1259,6 +1261,7 @@ VRGuiSetup::VRGuiSetup() {
     setEntryCallback("entry28", sigc::mem_fun(*this, &VRGuiSetup::on_leap_host_edited) );
     setEntryCallback("entry15", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_edited) );
     setEntryCallback("entry20", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_edited) );
+    setEntryCallback("entry32", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_edited) );
     setEntryCallback("entry19", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited) );
     setEntryCallback("entry22", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited) );
 
