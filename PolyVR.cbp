@@ -552,12 +552,12 @@
 		<Unit filename="src/addons/construction/building/VROpening.h" />
 		<Unit filename="src/addons/construction/building/furniture/VRBlinds.cpp" />
 		<Unit filename="src/addons/construction/building/furniture/VRBlinds.h" />
-		<Unit filename="src/core/gui/VRCodeCompletion.cpp" />
-		<Unit filename="src/core/gui/VRCodeCompletion.h" />
 		<Unit filename="src/core/gui/VRDemos.cpp" />
 		<Unit filename="src/core/gui/VRDemos.h" />
 		<Unit filename="src/core/gui/VRGuiBits.cpp" />
 		<Unit filename="src/core/gui/VRGuiBits.h" />
+		<Unit filename="src/core/gui/VRGuiCodeCompletion.cpp" />
+		<Unit filename="src/core/gui/VRGuiCodeCompletion.h" />
 		<Unit filename="src/core/gui/VRGuiConsole.cpp" />
 		<Unit filename="src/core/gui/VRGuiConsole.h" />
 		<Unit filename="src/core/gui/VRGuiContextMenu.cpp" />
@@ -868,6 +868,8 @@
 		<Unit filename="src/core/scripting/VRPyCamera.h" />
 		<Unit filename="src/core/scripting/VRPyClipPlane.cpp" />
 		<Unit filename="src/core/scripting/VRPyClipPlane.h" />
+		<Unit filename="src/core/scripting/VRPyCodeCompletion.cpp" />
+		<Unit filename="src/core/scripting/VRPyCodeCompletion.h" />
 		<Unit filename="src/core/scripting/VRPyColorChooser.cpp" />
 		<Unit filename="src/core/scripting/VRPyColorChooser.h" />
 		<Unit filename="src/core/scripting/VRPyConstraint.cpp" />
