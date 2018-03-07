@@ -24,7 +24,8 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         PyObject* pModBase;
         PyObject* pModVR;
         map<int, VRThreadCbPtr> pyThreads;
-        map<string, map<string, PyTypeObject*> > modules;
+        map<string, PyObject*> modules;
+        map<string, map<string, PyTypeObject*> > moduleTypes;
         map<string, VRScriptPtr> scripts;
         map<string, VRSignalPtr> triggers;
         PyThreadState* pyThreadState = 0;
@@ -64,7 +65,11 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         string getPyVRDescription(string mod, string type);
         string getPyVRMethodDoc(string mod, string type, string method);
 
+        PyObject* getPyModule(string name);
+
         void redirectPyOutput(string pyOutput, string console);
+
+        PyObject* newModule(string name, PyMethodDef* methods, string doc);
 
         template<class T>
         void registerModule(string mod, PyObject* parent, PyTypeObject* base = 0, string mod_parent = "VR");

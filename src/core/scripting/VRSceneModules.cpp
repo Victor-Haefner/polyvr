@@ -209,19 +209,19 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 	sm->registerModule<VRPyTrafficSimulation>("TrafficSimulation", pModVR, VRPyObject::typeRef);
 	sm->registerModule<VRPySimViDekont>("SimViDekont", pModVR);
 
-    PyObject* pModMath = Py_InitModule3("VR.Math", VRSceneGlobals::methods, "VR math module");
+    PyObject* pModMath = sm->newModule("VR.Math", VRSceneGlobals::methods, "VR math module");
     sm->registerModule<VRPyVec2f>("Vec2", pModMath, 0, "Math");
     sm->registerModule<VRPyVec3f>("Vec3", pModMath, 0, "Math");
     sm->registerModule<VRPyLine>("Line", pModMath, 0, "Math");
     PyModule_AddObject(pModVR, "Math", pModMath);
 
-    PyObject* pModSetup = Py_InitModule3("Setup", VRSceneGlobals::methods, "VR setup module");
+    PyObject* pModSetup = sm->newModule("Setup", VRSceneGlobals::methods, "VR setup module");
     sm->registerModule<VRPySetup>("Setup", pModSetup, 0, "Setup");
     sm->registerModule<VRPyView>("View", pModSetup, 0, "Setup");
     sm->registerModule<VRPyWindow>("Window", pModSetup, 0, "Setup");
     PyModule_AddObject(pModVR, "Setup", pModSetup);
 
-    PyObject* pModWorldGenerator = Py_InitModule3("VR.WorldGenerator", VRSceneGlobals::methods, "VR world generator module");
+    PyObject* pModWorldGenerator = sm->newModule("VR.WorldGenerator", VRSceneGlobals::methods, "VR world generator module");
     sm->registerModule<VRPyWorldGenerator>("WorldGenerator", pModWorldGenerator, VRPyTransform::typeRef, "WorldGenerator");
     sm->registerModule<VRPyAsphalt>("Asphalt", pModWorldGenerator, VRPyMaterial::typeRef, "WorldGenerator");
     sm->registerModule<VRPyRoadBase>("RoadBase", pModWorldGenerator, VRPyObject::typeRef, "WorldGenerator");
@@ -231,7 +231,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyDistrict>("District", pModWorldGenerator, 0, "WorldGenerator");
     PyModule_AddObject(pModVR, "WorldGenerator", pModWorldGenerator);
 
-    PyObject* pModFactory = Py_InitModule3("Factory", VRSceneGlobals::methods, "VR factory module");
+    PyObject* pModFactory = sm->newModule("Factory", VRSceneGlobals::methods, "VR factory module");
     sm->registerModule<FPyNode>("Node", pModFactory, 0, "Factory");
     sm->registerModule<FPyNetwork>("Network", pModFactory, 0, "Factory");
     sm->registerModule<FPyPath>("FPath", pModFactory, 0, "Factory");

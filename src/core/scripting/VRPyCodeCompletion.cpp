@@ -10,44 +10,71 @@ using namespace std;
 VRPyCodeCompletion::VRPyCodeCompletion() {}
 VRPyCodeCompletion::~VRPyCodeCompletion() {}
 
-void VRPyCodeCompletion::initVRModMap() {
-    vrModMap.clear();
-    auto scene = OSG::VRScene::getCurrent();
-    if (scene == 0) return;
-    for ( auto mod : scene->getPyVRModules() ) {
-        if (mod != "VR") vrModMap["VR"].push_back(mod);
-        for ( auto t : scene->getPyVRTypes(mod) ) {
-            if (t == "globals") {
-                for (auto m : scene->getPyVRMethods(mod,t)) vrModMap[mod].push_back(m);
-                continue;
-            }
+PyObject* VRPyCodeCompletion::resolvePath(vector<string>& path) { // TODO
+    string mod = "VR";
+    string member = "";
+    int N = path.size();
+    if (N >= 2) mod = path[N-2];
+    return getObject(mod);
+}
 
-            vrModMap[mod].push_back(t);
-            //for (auto m : scene->getPyVRMethods(mod,t)) vrModMap[mod].push_back(m);
-        }
+PyObject* VRPyCodeCompletion::getObject(string name) { // TODO
+    if (objects.count(name)) return objects[name];
+    auto scene = OSG::VRScene::getCurrent();
+    if (!scene) return 0;
+    auto mod = scene->getPyModule(name);
+    if (mod) objects[name] = mod;
+    return mod;
+}
+
+vector<string> VRPyCodeCompletion::getMembers(PyObject* obj) {
+    vector<string> res;
+    if (!obj) return res;
+    if (members.count(obj)) return members[obj];
+
+    PyObject* dict = PyModule_GetDict(obj);
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+
+    while (PyDict_Next(dict, &pos, &key, &value)) {
+        string name = PyString_AsString(key);
+        if (startsWith(name, "__")) continue;
+        res.push_back(name);
     }
-    vrModMapInitiated = true;
+
+    sort (res.begin(), res.end());
+    members[obj] = res;
+    return res;
+}
+
+bool VRPyCodeCompletion::startsWith(const string& a, const string& b) {
+    return a.substr(0, b.size()) == b;
 }
 
 vector<string> VRPyCodeCompletion::getSuggestions(string input) {
-    auto startsWith = [](string s, string sw) { return s.substr(0, sw.size()) == sw; };
-
-    string mod = "VR";
     vector<string> res;
-	if (input.size() <= 0 || !startsWith(input, "VR.")) return res;
+	if (input.size() <= 2) return res;
 
-    auto psplit = splitString(input, '.');
-    if (input[input.size()-1] == '.') psplit.push_back("");
-    if (psplit.size() > 1) input = psplit[psplit.size()-1];
-    if (psplit.size() > 2) mod = psplit[psplit.size()-2];
+    auto path = splitString(input, '.');
+    if (input[input.size()-1] == '.') path.push_back("");
+    int N = path.size();
+    if (N == 0) return res;
 
-	if (!vrModMapInitiated) initVRModMap();
-    if (!vrModMap.count(mod)) return res;
-    for (auto d : vrModMap[mod]) {
-        if (startsWith(d, input)) res.push_back(d);
+    PyObject* obj = resolvePath(path);
+	if (!obj) return res;
+
+    string guess = path[N-1];
+    for (auto m : getMembers(obj)) {
+        if (startsWith(m, guess)) res.push_back(m);
     }
-
     return res;
 }
+
+/**
+
+TODO:
+- get the py object at the path end (the one before the last '.')
+
+*/
 
 

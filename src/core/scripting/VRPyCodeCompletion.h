@@ -3,15 +3,20 @@
 
 #include <map>
 #include <vector>
+#include "VRPyBase.h"
 
 using namespace std;
 
 class VRPyCodeCompletion {
     private:
-        bool vrModMapInitiated = false;
-        map<string, vector<string> > vrModMap;
+        map<PyObject*, vector<string>> members;
+        map<string, PyObject*> objects;
 
-        void initVRModMap();
+        bool startsWith(const string& a, const string& b);
+
+        PyObject* getObject(string);
+        PyObject* resolvePath(vector<string>& path);
+        vector<string> getMembers(PyObject* obj);
 
 	public:
         VRPyCodeCompletion();
