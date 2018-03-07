@@ -26,7 +26,7 @@ VRScriptManager::VRScriptManager() {
 }
 
 VRScriptManager::~VRScriptManager() {
-    //cout << "VRScriptManager destroyed\n";
+    cout << "VRScriptManager destroyed\n";
     blockScriptThreads();
     scripts.clear();
     if (PyErr_Occurred() != NULL) PyErr_Print();

@@ -53,7 +53,7 @@ class VRGuiScripts {
         Glib::RefPtr<Gtk::ListStore> import_liststore1;
         Glib::RefPtr<Gtk::ListStore> import_liststore2;
         map<string, VRScriptPtr> import_scripts;
-        vector<pair<VRScriptPtr,Gtk::TreeIter>> scriptRows;
+        vector<pair<VRScriptWeakPtr,Gtk::TreeIter>> scriptRows;
 
         string docs_filter;
         map<int, group> groups;

@@ -31,8 +31,6 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 using namespace Gtk;
 
-VRScriptPtr lastSelectedScript = 0;
-
 class VRGuiScripts_ModelColumns : public Gtk::TreeModelColumnRecord {
     public:
         VRGuiScripts_ModelColumns() { add(script); add(fg); add(bg); add(time); add(tfg); add(tbg); add(icon); add(Nfound); add(type); }
@@ -93,7 +91,6 @@ VRScriptPtr VRGuiScripts::getSelectedScript() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return 0;
     VRScriptPtr script = scene->getScript(name);
-    lastSelectedScript = script;
 
     return script;
 }
@@ -362,9 +359,6 @@ void VRGuiScripts::on_del_clicked() {
 }
 
 void VRGuiScripts::on_select_script() { // selected a script
-    //auto adjustment = Glib::RefPtr<Gtk::ScrolledWindow>::cast_static(VRGuiBuilder()->get_object("scrolledwindow4"))->get_vadjustment();
-    //if (lastSelectedScript) pages[lastSelectedScript.get()].line = adjustment->get_value();
-
     VRScriptPtr script = VRGuiScripts::getSelectedScript();
     if (script == 0) {
         setToolButtonSensitivity("toolbutton8", false);
@@ -1018,7 +1012,7 @@ void VRGuiScripts::on_scene_changed() {
 void VRGuiScripts::update() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    for (auto r : scriptRows) setScriptListRow(r.second, r.first, true);
+    for (auto r : scriptRows) setScriptListRow(r.second, r.first.lock(), true);
 }
 
 void VRGuiScripts::updateList() {
