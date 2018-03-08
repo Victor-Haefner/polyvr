@@ -38,6 +38,7 @@ VRTrafficSimulation::Vehicle::~Vehicle() {}
 void VRTrafficSimulation::Vehicle::destroy() {
     if (t) t->destroy();
     t = 0;
+    cout << "VRTrafficSimulation::Vehicle::destroy" << endl;
 }
 
 bool VRTrafficSimulation::Vehicle::operator==(const Vehicle& v) {
@@ -81,7 +82,7 @@ T randomChoice(vector<T> vec) {
 void VRTrafficSimulation::updateSimulation() {
     if (!roadNetwork) return;
     auto g = roadNetwork->getGraph();
-    Octree space(2);
+    auto space = Octree::create(2);
     map<int, vector<pair<Vehicle, int>>> toChangeRoad;
     float userRadius = 150; // x meter radius around users
 
@@ -89,7 +90,7 @@ void VRTrafficSimulation::updateSimulation() {
         for (auto& road : roads) { // fill octree
             for (auto& vehicle : road.second.vehicles) {
                 auto pos = vehicle.t->getFrom();
-                space.add(pos, &vehicle);
+                space->add(pos, &vehicle);
             }
         }
     };
@@ -207,6 +208,7 @@ void VRTrafficSimulation::updateSimulation() {
     };
 
     auto propagateVehicles = [&]() {
+        int N = 0;
         for (auto& road : roads) {
             for (auto& vehicle : road.second.vehicles) {
                 if (!vehicle.t) continue;
@@ -214,7 +216,7 @@ void VRTrafficSimulation::updateSimulation() {
 
                 // check if road ahead is free
                 auto pose = vehicle.t->getPose();
-                auto res = space.radiusSearch(pose->pos(), 5);
+                auto res = space->radiusSearch(pose->pos(), 5);
                 int state = 0;
                 for (auto vv : res) {
                     auto v = (Vehicle*)vv;
@@ -244,8 +246,10 @@ void VRTrafficSimulation::updateSimulation() {
                 else if (VRGlobals::CURRENT_FRAME - vehicle.lastMoveTS > 200 ) {
                     toChangeRoad[road.first].push_back( make_pair(vehicle, -1) );
                 }
+                N++; // count vehicles!
             }
         }
+        //cout << "propagateVehicles, updated " << N << " vehicles" << endl;
     };
 
     auto resolveRoadChanges = [&]() {
@@ -266,7 +270,7 @@ void VRTrafficSimulation::updateSimulation() {
     fillOctree();
     propagateVehicles();
     //resolveCollisions();
-    updateDensityVisual();
+    //updateDensityVisual();
     resolveRoadChanges();
 }
 

@@ -20,7 +20,7 @@ class CSGGeometry : public VRGeometry {
         Matrix4d oldWorldTrans;
         float thresholdL = 1e-4;
         float thresholdA = 1e-8;
-        Octree* oct = 0;
+        OctreePtr oct;
 
     protected:
         void applyTransform(CGAL::Polyhedron* p, Matrix4d m);

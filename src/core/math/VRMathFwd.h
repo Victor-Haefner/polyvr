@@ -14,6 +14,7 @@ ptrFwd(Path);
 ptrFwd(Pose);
 ptrFwd(VRPolygon);
 ptrFwd(Graph);
+ptrFwd(OctreeNode);
 ptrFwd(Octree);
 ptrFwd(Triangulator);
 

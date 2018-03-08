@@ -12,57 +12,88 @@ using namespace std;
 
 OSG_BEGIN_NAMESPACE
 
-class Octree {
+class OctreeNode : public std::enable_shared_from_this<OctreeNode> {
     private:
         float resolution = 0.1;
         float size = 10;
 
         Vec3d center;
 
-        Octree* parent = 0;
-        Octree* children[8] = {0,0,0,0,0,0,0,0};
+        OctreeWeakPtr tree;
+        OctreeNodeWeakPtr parent;
+        OctreeNodePtr children[8];
 
         vector<void*> data;
         vector<Vec3d> points;
 
-        void destroy(Octree* guard);
+    public:
+        OctreeNode(OctreePtr tree, float resolution, float size = 10);
+        ~OctreeNode();
+
+        static OctreeNodePtr create(OctreePtr tree, float resolution, float size = 10);
+        OctreeNodePtr ptr();
+
+        OctreeNodePtr getParent();
+        vector<OctreeNodePtr> getAncestry();
+        void set(OctreeNodePtr node, Vec3d p, void* data);
+        float getSize();
+        Vec3d getCenter();
+        Vec3d getLocalCenter();
+
+        OctreeNodePtr add(Vec3d p, void* data, int targetLevel = -1, int currentLevel = 0, bool checkPosition = true);
+        OctreeNodePtr get(Vec3d p);
+
+        void remData(void* data);
+        //void clear();
+
+        vector<OctreeNodePtr> getChildren();
+        vector<OctreeNodePtr> getSubtree();
+        vector<OctreeNodePtr> getPathTo(Vec3d p);
+
+        vector<void*> getData();
+        vector<void*> getAllData();
+
+        //void destroy(OctreeNodePtr guard);
         void findInSphere(Vec3d p, float r, vector<void*>& res);
         void findInBox(const Boundingbox& b, vector<void*>& res);
         int getOctant(Vec3d p);
         bool inBox(Vec3d p, Vec3d c, float size);
 
-    public:
+        void print(int indent = 0);
+        string toString(int indent = 0);
+};
+
+class Octree : public std::enable_shared_from_this<Octree> {
+    private:
+        float resolution = 0.1;
+        OctreeNodePtr root;
+
         Octree(float resolution, float size = 10);
+
+    public:
         ~Octree();
-
         static OctreePtr create(float resolution, float size = 10);
+        OctreePtr ptr();
 
-        Octree* getParent();
-        vector<Octree*> getAncestry();
-        Octree* getRoot();
-        Octree* add(Vec3d p, void* data, int targetLevel = -1, int currentLevel = 0, bool checkPosition = true);
+        OctreeNodePtr getRoot();
         void addBox(const Boundingbox& b, void* data, int targetLevel = -1, bool checkPosition = true);
-        void set(Octree* node, Vec3d p, void* data);
-        Octree* get(Vec3d p);
+        OctreeNodePtr add(Vec3d p, void* data, int targetLevel = -1, int currentLevel = 0, bool checkPosition = true);
+        OctreeNodePtr get(Vec3d p);
+
         float getSize();
-        Vec3d getCenter();
-        Vec3d getLocalCenter();
-
-        void remData(void* data);
         void clear();
+        void updateRoot();
 
-        vector<Octree*> getChildren();
-        vector<Octree*> getSubtree();
-        vector<Octree*> getPathTo(Vec3d p);
+        template<class T>
+        void delContent() {
+            for (void* o : getAllData()) delete (T*)o;
+        }
 
-        vector<void*> getData();
         vector<void*> getAllData();
         vector<void*> radiusSearch(Vec3d p, float r);
         vector<void*> boxSearch(const Boundingbox& b);
 
         void test();
-        void print(int indent = 0);
-        string toString(int indent = 0);
 };
 
 OSG_END_NAMESPACE

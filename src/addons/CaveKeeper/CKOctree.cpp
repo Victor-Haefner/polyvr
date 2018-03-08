@@ -147,7 +147,7 @@ int CKOctree::signof(float f) {
 }
 
 CKOctree::CKOctree() {
-	lightTree = new Octree(1);
+	lightTree = Octree::create(1);
 }
 
 CKOctree::element* CKOctree::add(Vec3i _p) {
