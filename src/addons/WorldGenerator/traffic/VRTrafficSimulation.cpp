@@ -38,7 +38,6 @@ VRTrafficSimulation::Vehicle::~Vehicle() {}
 void VRTrafficSimulation::Vehicle::destroy() {
     if (t) t->destroy();
     t = 0;
-    cout << "VRTrafficSimulation::Vehicle::destroy" << endl;
 }
 
 bool VRTrafficSimulation::Vehicle::operator==(const Vehicle& v) {
