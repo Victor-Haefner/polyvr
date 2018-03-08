@@ -16,6 +16,9 @@ PyObject* VRPyCodeCompletion::resolvePath(vector<string>& path) { // TODO
     int N = path.size();
     if (N >= 2) mod = path[N-2];
     return getObject(mod);
+
+    string objPath;
+    for (int i=0; i<path.size()-1; i++) objPath += path[i] + "."; // TODO
 }
 
 PyObject* VRPyCodeCompletion::getObject(string name) { // TODO

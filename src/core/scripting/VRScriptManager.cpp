@@ -208,8 +208,10 @@ void VRScriptManager::initPyModules() {
 }
 
 PyObject* VRScriptManager::newModule(string name, PyMethodDef* methods, string doc) {
-    PyObject* m = Py_InitModule3(name.c_str(), methods, doc.c_str());
+    string name2 = "VR."+name;
+    PyObject* m = Py_InitModule3(name2.c_str(), methods, doc.c_str());
     modules[name] = m;
+    PyModule_AddObject(pModVR, name.c_str(), m);
     return m;
 }
 
