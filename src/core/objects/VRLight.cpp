@@ -380,14 +380,24 @@ void VRLight::loadPhotometricMap(string path) { // ies files
         return result;
     };
 
+    auto startswith = [](const string& a, const string& b) -> bool {
+        if (a.size() < b.size()) return false;
+        return a.compare(0, b.length(), b) == 0;
+    };
+
     auto parseFile = [&](int Nv, int Nh, int& aNv, int& aNh) {
         ifstream file(path);
         string data((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
         auto lines = splitString(data, '\n');
         if (lines.size() < 10) return vector<float>();
 
+        // read version
+        int paramLineN = 9;
+        if (startswith(lines[0], "IESNA:LM-63-2002")) paramLineN = 10;
+
         // read parameters
-        auto params = splitString( lines[9] );
+        auto params = splitString( lines[paramLineN] );
+        if (params.size() < 5) { cout << "Error, VRLight::loadPhotometricMap::parseFile failed, wrong number of parameters, " << lines[paramLineN] << endl; return vector<float>(); }
         aNv = toInt(params[3]); // number of vertical angles
         aNh = toInt(params[4]); // number of horizontal angles
         int N = aNv*aNh;
@@ -397,7 +407,7 @@ void VRLight::loadPhotometricMap(string path) { // ies files
 
         // read data
         string dataChunk;
-        for (int i=11; i<lines.size(); i++) dataChunk += lines[i] + " ";
+        for (int i=paramLineN+2; i<lines.size(); i++) dataChunk += lines[i] + " ";
         stringstream ss(dataChunk);
 
         vector<float> aTheta(aNv, 0);
@@ -416,9 +426,10 @@ void VRLight::loadPhotometricMap(string path) { // ies files
     int aNv = 0;
     int aNh = 0;
 
-    photometricMapPath = path;
     if (path == "") return;
     auto candela = parseFile(Nv, Nh, aNv, aNh);
+    if (candela.size() == 0) { cout << "Error, VRLight::loadPhotometricMap failed" << endl; return; }
+    photometricMapPath = path;
 
     Nv = aNv;
     Nh = aNh;
