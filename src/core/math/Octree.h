@@ -12,7 +12,7 @@ using namespace std;
 
 OSG_BEGIN_NAMESPACE
 
-class OctreeNode : public std::enable_shared_from_this<OctreeNode> {
+class OctreeNode {
     private:
         float resolution = 0.1;
         float size = 10;
@@ -20,8 +20,8 @@ class OctreeNode : public std::enable_shared_from_this<OctreeNode> {
         Vec3d center;
 
         OctreeWeakPtr tree;
-        OctreeNodeWeakPtr parent;
-        OctreeNodePtr children[8];
+        OctreeNode* parent = 0;
+        OctreeNode* children[8] = {0,0,0,0,0,0,0,0};
 
         vector<void*> data;
         vector<Vec3d> points;
@@ -30,30 +30,27 @@ class OctreeNode : public std::enable_shared_from_this<OctreeNode> {
         OctreeNode(OctreePtr tree, float resolution, float size = 10);
         ~OctreeNode();
 
-        static OctreeNodePtr create(OctreePtr tree, float resolution, float size = 10);
-        OctreeNodePtr ptr();
-
-        OctreeNodePtr getParent();
-        vector<OctreeNodePtr> getAncestry();
-        void set(OctreeNodePtr node, Vec3d p, void* data);
+        OctreeNode* getParent();
+        vector<OctreeNode*> getAncestry();
+        void set(OctreeNode* node, Vec3d p, void* data);
         float getSize();
         Vec3d getCenter();
         Vec3d getLocalCenter();
 
-        OctreeNodePtr add(Vec3d p, void* data, int targetLevel = -1, int currentLevel = 0, bool checkPosition = true);
-        OctreeNodePtr get(Vec3d p);
+        OctreeNode* add(Vec3d p, void* data, int targetLevel = -1, int currentLevel = 0, bool checkPosition = true);
+        OctreeNode* get(Vec3d p);
 
         void remData(void* data);
         //void clear();
 
-        vector<OctreeNodePtr> getChildren();
-        vector<OctreeNodePtr> getSubtree();
-        vector<OctreeNodePtr> getPathTo(Vec3d p);
+        vector<OctreeNode*> getChildren();
+        vector<OctreeNode*> getSubtree();
+        vector<OctreeNode*> getPathTo(Vec3d p);
 
         vector<void*> getData();
         vector<void*> getAllData();
 
-        //void destroy(OctreeNodePtr guard);
+        //void destroy(OctreeNode* guard);
         void findInSphere(Vec3d p, float r, vector<void*>& res);
         void findInBox(const Boundingbox& b, vector<void*>& res);
         int getOctant(Vec3d p);
@@ -66,7 +63,8 @@ class OctreeNode : public std::enable_shared_from_this<OctreeNode> {
 class Octree : public std::enable_shared_from_this<Octree> {
     private:
         float resolution = 0.1;
-        OctreeNodePtr root;
+        float firstSize = 10;
+        OctreeNode* root = 0;
 
         Octree(float resolution, float size = 10);
 
@@ -75,10 +73,10 @@ class Octree : public std::enable_shared_from_this<Octree> {
         static OctreePtr create(float resolution, float size = 10);
         OctreePtr ptr();
 
-        OctreeNodePtr getRoot();
+        OctreeNode* getRoot();
         void addBox(const Boundingbox& b, void* data, int targetLevel = -1, bool checkPosition = true);
-        OctreeNodePtr add(Vec3d p, void* data, int targetLevel = -1, int currentLevel = 0, bool checkPosition = true);
-        OctreeNodePtr get(Vec3d p);
+        OctreeNode* add(Vec3d p, void* data, int targetLevel = -1, int currentLevel = 0, bool checkPosition = true);
+        OctreeNode* get(Vec3d p);
 
         float getSize();
         void clear();

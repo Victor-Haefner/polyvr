@@ -10,17 +10,19 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class OctreeNode;
+
 class VRLodLeaf : public VRTransform {
     private:
-        OctreeNodePtr oLeaf = 0;
+        OctreeNode* oLeaf = 0;
         int lvl = 0;
         VRLodPtr lod;
         vector<VRObjectPtr> levels;
 
     public:
-        VRLodLeaf(string name, OctreeNodePtr o, int lvl);
+        VRLodLeaf(string name, OctreeNode* o, int lvl);
         ~VRLodLeaf();
-        static VRLodLeafPtr create(string name, OctreeNodePtr o, int lvl);
+        static VRLodLeafPtr create(string name, OctreeNode* o, int lvl);
         VRLodLeafPtr ptr();
 
         void addLevel(float dist);
@@ -28,7 +30,7 @@ class VRLodLeaf : public VRTransform {
         void set(VRObjectPtr obj, int lvl);
         void reset();
 
-        OctreeNodePtr getOLeaf();
+        OctreeNode* getOLeaf();
         int getLevel();
 };
 
@@ -39,7 +41,7 @@ class VRLodTree : public VRObject {
         map<OctreeNode*, VRLodLeafPtr> leafs;
         map<int, vector<VRTransformPtr> > objects;
 
-        VRLodLeafPtr addLeaf(OctreeNodePtr o, int lvl);
+        VRLodLeafPtr addLeaf(OctreeNode* o, int lvl);
 
     public:
         VRLodTree(string name, float size = 10);

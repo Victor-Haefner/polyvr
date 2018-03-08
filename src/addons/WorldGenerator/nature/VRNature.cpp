@@ -26,11 +26,11 @@ using namespace OSG;
 template<> string typeName(const OSG::VRNaturePtr& t) { return "Nature"; }
 template<> string typeName(const OSG::VRTreePtr& t) { return "Tree"; }
 
-VRLodLeaf::VRLodLeaf(string name, OctreeNodePtr o, int l) : VRTransform(name), oLeaf(o), lvl(l) {}
+VRLodLeaf::VRLodLeaf(string name, OctreeNode* o, int l) : VRTransform(name), oLeaf(o), lvl(l) {}
 VRLodLeaf::~VRLodLeaf() {}
 VRLodLeafPtr VRLodLeaf::ptr() { return static_pointer_cast<VRLodLeaf>( shared_from_this() ); }
 
-VRLodLeafPtr VRLodLeaf::create(string name, OctreeNodePtr o, int lvl) {
+VRLodLeafPtr VRLodLeaf::create(string name, OctreeNode* o, int lvl) {
     auto l = VRLodLeafPtr(new VRLodLeaf(name, o, lvl));
     l->lod = VRLod::create("natureLod");
     l->lod->setPersistency(0);
@@ -62,7 +62,7 @@ void VRLodLeaf::set(VRObjectPtr obj, int lvl) {
 
 void VRLodLeaf::reset() { set(0,1); }
 
-OctreeNodePtr VRLodLeaf::getOLeaf() { return oLeaf; }
+OctreeNode* VRLodLeaf::getOLeaf() { return oLeaf; }
 int VRLodLeaf::getLevel() { return lvl; }
 
 // --------------------------------------------------------------------------------------------------
@@ -88,19 +88,19 @@ vector<VRLodLeafPtr> VRLodTree::getSubTree(VRLodLeafPtr l) {
     vector<VRLodLeafPtr> res;
     if (!l->getOLeaf()) return res;
     for (auto o : l->getOLeaf()->getSubtree()) {
-        if (!leafs.count(o.get())) continue;
-        res.push_back(leafs[o.get()]);
+        if (!leafs.count(o)) continue;
+        res.push_back(leafs[o]);
     }
     return res;
 }
 
-VRLodLeafPtr VRLodTree::addLeaf(OctreeNodePtr o, int lvl) {
-    if (leafs.count(o.get())) return leafs[o.get()];
+VRLodLeafPtr VRLodTree::addLeaf(OctreeNode* o, int lvl) {
+    if (leafs.count(o)) return leafs[o];
     auto l = VRLodLeaf::create("lodLeaf", o, lvl);
     l->setPersistency(0);
     if (lvl > 0) l->addLevel( o->getSize()*5 );
     l->setFrom(o->getLocalCenter());
-    leafs[o.get()] = l;
+    leafs[o] = l;
 
     /**
     add lod leaf to tree, handle following cases:
@@ -123,8 +123,8 @@ VRLodLeafPtr VRLodTree::addLeaf(OctreeNodePtr o, int lvl) {
 
     VRLodLeafPtr oldRootLeaf = 0;
     if (auto p = o->getParent()) {
-        if (!leafs.count(p.get())) addLeaf(p, lvl+1);
-        leafs[p.get()]->add(l,0);
+        if (!leafs.count(p)) addLeaf(p, lvl+1);
+        leafs[p]->add(l,0);
     } else {
         if (rootLeaf) oldRootLeaf = rootLeaf;
         rootLeaf = l;
@@ -133,8 +133,8 @@ VRLodLeafPtr VRLodTree::addLeaf(OctreeNodePtr o, int lvl) {
 
     if (oldRootLeaf) { // TODO: find pl
         auto p = oldRootLeaf->getOLeaf()->getParent();
-        if (!leafs.count(p.get())) addLeaf(p, lvl+1);
-        leafs[p.get()]->add(oldRootLeaf,0);
+        if (!leafs.count(p)) addLeaf(p, lvl+1);
+        leafs[p]->add(oldRootLeaf,0);
         oldRootLeaf->setFrom( oldRootLeaf->getOLeaf()->getLocalCenter() );
     }
 
@@ -157,9 +157,9 @@ VRLodLeafPtr VRLodTree::addObject(VRTransformPtr obj, Vec3d p, int lvl) {
 
 VRLodLeafPtr VRLodTree::remObject(VRTransformPtr obj) { // TODO, finish it!
     if (!octree) return 0;
-    OctreeNodePtr o = octree->get( obj->getWorldPosition() );
+    OctreeNode* o = octree->get( obj->getWorldPosition() );
     o->remData(obj.get());
-    return leafs[o.get()];
+    return leafs[o];
 }
 
 // --------------------------------------------------------------------------------------------------
@@ -275,8 +275,8 @@ void VRNature::removeTree(int id) {
     auto oLeafs = leaf->getOLeaf()->getAncestry();
     map<OctreeNode*, VRLodLeafPtr> aLeafs;
     for (auto o : oLeafs) {
-        if (leafs.count(o.get()) == 0) continue;
-        aLeafs[o.get()] = leafs[o.get()];
+        if (leafs.count(o) == 0) continue;
+        aLeafs[o] = leafs[o];
     }
     computeLODs(aLeafs);
 }
@@ -426,8 +426,8 @@ void VRNature::computeLODs(VRLodLeafPtr leaf) {
     auto oLeafs = leaf->getOLeaf()->getAncestry();
     map<OctreeNode*, VRLodLeafPtr> aLeafs;
     for (auto o : oLeafs) {
-        if (leafs.count(o.get()) == 0) continue;
-        aLeafs[o.get()] = leafs[o.get()];
+        if (leafs.count(o) == 0) continue;
+        aLeafs[o] = leafs[o];
     }
     computeLODs(aLeafs);
 }
