@@ -16,11 +16,11 @@ vector<Vec3d> tmpVertices;
 
 struct Triangulator::GeoData {
     // geo data
-    GeoUInt8PropertyRecPtr types;
-    GeoUInt32PropertyRecPtr lengths;
-    GeoUInt32PropertyRecPtr indices;
-    GeoPnt3fPropertyRecPtr pos;
-    GeoVec3fPropertyRecPtr norms;
+    GeoUInt8PropertyMTRecPtr types;
+    GeoUInt32PropertyMTRecPtr lengths;
+    GeoUInt32PropertyMTRecPtr indices;
+    GeoPnt3fPropertyMTRecPtr pos;
+    GeoVec3fPropertyMTRecPtr norms;
 
     // tmp vars
     int current_primitive = -1;
@@ -174,7 +174,7 @@ void Triangulator::tessellate() {
 
     auto toSpace = [&](const vector<Vec2d>& poly) {
         vector<Vec3d> res;
-        for (auto& v : poly) res.push_back(Vec3d(v));
+        for (auto& v : poly) res.push_back(Vec3d(v[0], 0, v[1]));
         return res;
     };
 

@@ -6,6 +6,7 @@
 #include <vector>
 #include <OpenSG/OSGVector.h>
 #include "../VRWorldModule.h"
+#include "../VRWorldGeneratorFwd.h"
 #include "core/objects/object/VRObject.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
 
@@ -13,15 +14,11 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRRoadBase : public VRObject, public VRWorldModule {
-    protected:
-        float roadTerrainOffset = 0.06; // same as terrain physics offset
-        float markingsWidth = 0.15;
-
     public:
         VRRoadBase(string name);
         ~VRRoadBase();
 
-        pathPtr toPath( VREntityPtr pathEntity, int resolution );
+        PathPtr toPath( VREntityPtr pathEntity, int resolution );
         void setupTexCoords( VRGeometryPtr geo, VREntityPtr way );
         vector<string> toStringVector(const Vec3d& v);
 

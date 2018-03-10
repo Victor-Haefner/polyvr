@@ -49,7 +49,7 @@ void VRGeoPrimitive::select(bool b) {
     for (auto h : handles) h->setVisible(b);
 
     if (!selector) return;
-    if (b) selector->select(ptr(), false); // TODO: does not play nice with params_geo!!
+    if (b) selector->select(ptr(), false, false); // TODO: does not play nice with params_geo!!
     else selector->clear();
 }
 
@@ -126,7 +126,7 @@ void VRGeoPrimitive::setupHandles() {
         if (n == "Length") h->configure(cb, VRHandle::LINEAR, Vec3d(0,0,1), 1, true);
 
         float v = toFloat(param);
-        h->set( pose::create(), v );
+        h->set( Pose::create(), v );
         string lbl = h->getBaseName() + " " + toString( v*1000, 4 ) + " mm";
         auto a = h->getAxis();
         auto o = h->getOrigin()->pos();

@@ -6,6 +6,7 @@
 #include <OpenSG/OSGVector.h>
 #include "core/objects/VRObjectFwd.h"
 #include "core/scene/VRSceneFwd.h"
+#include "core/setup/windows/VRView.h"
 #include "core/utils/VRStorage.h"
 #include "VRDeferredRenderStage.h"
 
@@ -78,7 +79,7 @@ class VRRenderStudio : public VRStorage {
 
         void setScene(VRObjectPtr root);
         void setCamera(OSGCameraPtr cam);
-        void setBackground(BackgroundRecPtr bg);
+        void setBackground(BackgroundMTRecPtr bg);
         void resize(Vec2i s);
         void setEye(EYE e);
 

@@ -22,10 +22,12 @@ class VRThread;
 
 struct ART_device : public VRName {
     Matrix4d m;
+    vector<Matrix4d> fingers = vector<Matrix4d>(5);
     list<vector<int> > buttons;
     list<vector<float> > joysticks;
 
     VRTransformPtr ent = 0;
+    vector<VRTransformPtr> fingerEnts;
     VRFlystickPtr dev = 0;
     Vec3d offset;
     float scale = 1;
@@ -49,6 +51,7 @@ class ART : public VRStorage {
         bool active = false;
         int port = 5000;
         int current_port = -1;
+        Vec3i axis = Vec3i(0,1,2);
         Vec3d offset;
         string up;
 
@@ -59,8 +62,8 @@ class ART : public VRStorage {
         shared_ptr< VRFunction< weak_ptr<VRThread> > > threadFkt;
         VRSignalPtr on_new_device;
 
-        template<typename dev>
-        void getMatrix(dev t, ART_devicePtr d);
+        template<typename dev> void getMatrix(dev t, Matrix4d& m, bool doOffset = true);
+        template<typename dev> void getMatrix(dev t, ART_devicePtr d);
 
         boost::mutex mutex;
         void scan(int type = -1, int N = 0);
@@ -69,24 +72,25 @@ class ART : public VRStorage {
 
         void updateT( weak_ptr<VRThread>  t); //update thread
         void updateL(); //update
-        void applyEvents(); //main loop update
         void checkNewDevices(int type = -1, int N = 0); //update thread
 
     public:
         ART();
         ~ART();
 
+        void applyEvents(); //main loop update
+
         vector<int> getARTDevices();
         ART_devicePtr getARTDevice(int dev);
 
         void setARTActive(bool b);
-        bool getARTActive();
-
         void setARTPort(int port);
-        int getARTPort();
-
         void setARTOffset(Vec3d o);
+        void setARTAxis(Vec3i a);
+        bool getARTActive();
+        int getARTPort();
         Vec3d getARTOffset();
+        Vec3i getARTAxis();
 
         void startTestStream();
 

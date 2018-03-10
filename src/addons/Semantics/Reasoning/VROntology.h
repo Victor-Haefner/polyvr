@@ -70,7 +70,8 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
 
     vector<VROntologyRulePtr> getRules();
 
-    void open(string path);
+    void openOWL(string path);
+    void saveOWL(string path);
     void addModule(string mod);
     string toString();
 

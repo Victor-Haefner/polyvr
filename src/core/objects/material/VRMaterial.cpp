@@ -14,6 +14,7 @@
 #include "core/scripting/VRScript.h"
 #include "VRVideo.h"
 #include "core/tools/VRQRCode.h"
+#include "core/utils/system/VRSystem.h"
 
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGMaterialGroup.h>
@@ -40,7 +41,6 @@
 #include <OpenSG/OSGMaterialChunk.h>
 
 #include <libxml++/nodes/element.h>
-#include <boost/filesystem.hpp>
 #include <GL/glext.h>
 #include <GL/glx.h>
 
@@ -200,8 +200,9 @@ VRMaterial::VRMaterial(string name) : VRObject(name) {
 VRMaterial::~VRMaterial() {}
 
 VRMaterialPtr VRMaterial::ptr() { return static_pointer_cast<VRMaterial>( shared_from_this() ); }
+
 VRMaterialPtr VRMaterial::create(string name) {
-    auto p = shared_ptr<VRMaterial>(new VRMaterial(name) );
+    auto p = VRMaterialPtr(new VRMaterial(name) );
     materials[p->getName()] = p;
     return p;
 }
@@ -526,8 +527,7 @@ void VRMaterial::setTextureWrapping(int wrapS, int wrapT, int unit) {
 }
 
 void VRMaterial::setTexture(string img_path, bool alpha, int unit) { // TODO: improve with texture map
-    if (boost::filesystem::exists(img_path))
-        img_path = boost::filesystem::canonical(img_path).string();
+    if (exists(img_path)) img_path = canonical(img_path);
     /*auto md = mats[activePass];
     if (md->texture == 0) md->texture = VRTexture::create();
     md->texture->getImage()->read(img_path.c_str());

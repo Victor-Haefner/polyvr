@@ -7,7 +7,7 @@ frustum::frustum() {}
 void frustum::runTest() {
     frustum f;
 
-    f.setPose( pose(Vec3d(0,0,0), Vec3d(0,0,-1), Vec3d(0,1,0)) );
+    f.setPose(Pose());
     f.setNearFar(Vec2d(0.1,10));
     f.addEdge(Vec3d(-1,0,-1));
     f.addEdge(Vec3d(0,1,-1));
@@ -20,8 +20,8 @@ void frustum::runTest() {
     for (auto f : res) cout << "convex " << f.toString() << endl;
 }
 
-void frustum::setPose(pose trans) { this->trans = trans; }
-pose frustum::getPose() { return trans; }
+void frustum::setPose(Pose trans) { this->trans = trans; }
+Pose frustum::getPose() { return trans; }
 void frustum::addEdge(Vec3d dir) { directions.push_back(dir); }
 void frustum::setNearFar(Vec2d nf) { near_far = nf; }
 void frustum::close() { if (directions.size() > 0) directions.push_back(directions[0]); }
@@ -43,7 +43,7 @@ void frustum::computeProfile() {
     if (!profile.isCCW()) profile.reverseOrder();
 }
 
-frustum frustum::fromProfile(VRPolygon p, pose t) {
+frustum frustum::fromProfile(VRPolygon p, Pose t) {
     frustum res;
     res.setPose(t);
     auto prof3D = p.toSpace( t.asMatrix() );

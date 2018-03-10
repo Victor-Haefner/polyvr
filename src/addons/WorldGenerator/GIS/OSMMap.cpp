@@ -150,6 +150,46 @@ void OSMMap::readFile(string path) {
             n->ways.push_back(way.second->id);
         }
     }
+
+    cout << "OSMMap::readFile path " << path << endl;
+    cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
+}
+
+
+template <class Key, class Value>
+unsigned long mapSize(const map<Key,Value> &map){
+    unsigned long size = 0;
+    for(auto it = map.begin(); it != map.end(); ++it){
+        size += it->first.capacity();
+        size += sizeof(it->second);
+    }
+    return size;
+}
+
+template <class Value>
+unsigned long vecSize(const std::vector<Value> &vec){
+    unsigned long size = 0;
+    for(auto it = vec.begin(); it != vec.end(); ++it){
+        size += it->capacity();
+    }
+    return size;
+}
+
+double OSMMap::getMemoryConsumption() {
+    double res = sizeof(*this);
+
+    res += filepath.capacity();
+    res += sizeof(*bounds);
+    res += mapSize(ways);
+    res += mapSize(nodes);
+    res += mapSize(relations);
+    res += mapSize(invalidElements);
+
+    for (auto& w : ways) if (w.second) res += mapSize(w.second->tags) + vecSize(w.second->nodes);
+    for (auto& n : nodes) if (n.second) res += mapSize(n.second->tags) + vecSize(n.second->ways);
+    for (auto& r : relations) if (r.second) res += mapSize(r.second->tags) + vecSize(r.second->ways) + vecSize(r.second->nodes);
+
+    return res/1048576.0;
 }
 
 OSMMapPtr OSMMap::loadMap(string filepath) { return OSMMapPtr( new OSMMap(filepath) ); }

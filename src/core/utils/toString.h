@@ -8,7 +8,8 @@
 
 using namespace std;
 
-vector<string> splitString(string s, char c = ' ');
+vector<string> splitString(const string& s, char c = ' ');
+string subString(const string& s, int beg, int len);
 
 template<typename T>
 string toString(const T& s);
@@ -17,10 +18,10 @@ string toString(const float& f, int d = -1);
 
 template<typename T> string typeName(const T& t);
 template<typename T> string typeName(const vector<T>& t) { return "list of "+typeName<T>(T()); }
+template<typename T> string typeName(const vector<vector<T>>& t) { return "list of "+typeName<T>(T()); }
 
 template<typename T> int toValue(stringstream& s, T& t);
 template<typename T> int toValue(string s, T& t) { stringstream ss(s); return toValue(ss,t); }
-template<typename T> int toValue(string s, std::shared_ptr<T>& t) { t = 0; return true; }
 template<typename T> int toValue(string s, vector<T>& t) { return true; }
 template<class T>    T   toValue(string s) { T t; toValue(s,t); return t; }
 

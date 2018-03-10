@@ -20,9 +20,9 @@ using namespace std;
 
 class VRGtkWindow : public VRWindow {
     private:
-        Gtk::DrawingArea* drawArea;
-        GtkWidget* widget;
-        PassiveWindowRecPtr win;
+        Gtk::DrawingArea* drawArea = 0;
+        GtkWidget* widget = 0;
+        PassiveWindowMTRecPtr win;
         bool initialExpose = true;
 
         vector<sigc::connection> signals;
@@ -42,7 +42,7 @@ class VRGtkWindow : public VRWindow {
         static VRGtkWindowPtr create(Gtk::DrawingArea* da);
         VRGtkWindowPtr ptr();
 
-        PassiveWindowRecPtr getOSGWindow();
+        PassiveWindowMTRecPtr getOSGWindow();
         void render(bool fromThread = false);
         void clear(Color3f c);
 

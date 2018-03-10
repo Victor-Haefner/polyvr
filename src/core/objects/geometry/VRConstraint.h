@@ -4,6 +4,7 @@
 #include <OpenSG/OSGMatrix.h>
 #include "core/utils/VRStorage.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/math/VRMathFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -18,33 +19,19 @@ class VRConstraint : public VRStorage {
         };
 
     private:
-        bool active = 1;
+        bool active = 0;
         bool local = 0;
         Matrix4d refMatrixA;
         Matrix4d refMatrixB;
+        Matrix4d refMatrixAI;
         Matrix4d refMatrixBI;
 
         float min[6];
         float max[6];
 
-        // precomputed ressources
-        Matrix4d rotRebase;
-        Matrix4d rotRebaseI;
-        Matrix4d refRebased;
-        Matrix4d refRebasedI;
-
-        void prepare();
-
     public:    // TODO: refactor old VRTransform stuff
         unsigned int apply_time_stamp = 0;
-        Matrix4d Reference;
         VRTransformWeakPtr Referential;
-        bool localTC = false;
-        bool localRC = false;
-        int tConMode = NONE;
-        int rConMode = NONE;
-        Vec3d tConstraint = Vec3d(0,1,0);
-        Vec3d rConstraint = Vec3d(0,1,0);
 
     public:
         VRConstraint();
@@ -53,41 +40,34 @@ class VRConstraint : public VRStorage {
         static VRConstraintPtr create();
         VRConstraintPtr duplicate();
 
-        void setActive(bool b, VRTransformPtr obj);
-        bool isActive();
-
+        void setActive(bool b);
         void setLocal(bool b);
+        bool isActive();
         bool isLocal();
 
         void setMinMax(int i, float f1, float f2);
         void setMin(int i, float f);
         void setMax(int i, float f);
-
         float getMin(int i);
         float getMax(int i);
 
-        void setReferenceA(Matrix4d m);
-        void setReferenceB(Matrix4d m);
-        Matrix4d getReferenceA();
-        Matrix4d getReferenceB();
-
+        void lock(vector<int> dofs, float v = 0);
+        void free(vector<int> dofs);
         void lockRotation();
 
-        void apply(VRTransformPtr t);
+        void setReferenceA(PosePtr p);
+        void setReferenceB(PosePtr p);
+        PosePtr getReferenceA();
+        PosePtr getReferenceB();
+
+        void apply(VRTransformPtr obj, VRObjectPtr parent = 0);
 
 
         // TODO: refactor old VRTransform stuff
-        void setReference(Matrix4d m);
+        void setReference(PosePtr m);
         void setReferential(VRTransformPtr ref);
-        void setTConstraint(Vec3d trans, int mode, bool local = false);
-        void setRConstraint(Vec3d rot, int mode, bool local = false);
-        bool getRMode();
-        bool getTMode();
-        Vec3d getTConstraint();
-        Vec3d getRConstraint();
-        bool hasTConstraint();
-        bool hasRConstraint();
-        bool hasConstraint();
+        void setTConstraint(Vec3d trans, TCMode mode, bool local = false);
+        void setRConstraint(Vec3d rot, TCMode mode, bool local = false);
 };
 
 OSG_END_NAMESPACE;

@@ -13,7 +13,7 @@ using namespace std;
 
 class VRNetworkManager : public VRStorage {
     private:
-        map<string, VRSocket*> sockets;
+        map<string, VRSocketPtr> sockets;
 
         void test();
 
@@ -24,12 +24,12 @@ class VRNetworkManager : public VRStorage {
         VRNetworkManager();
         ~VRNetworkManager();
 
-        VRSocket* getSocket(int port);
+        VRSocketPtr getSocket(int port);
         void remSocket(string name);
         string changeSocketName(string name, string new_name);
 
-        VRSocket* getSocket(string name);
-        map<string, VRSocket*> getSockets();
+        VRSocketPtr getSocket(string name);
+        map<string, VRSocketPtr> getSockets();
 };
 
 OSG_END_NAMESPACE

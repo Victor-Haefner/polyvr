@@ -44,6 +44,7 @@ VRObject::VRObject(string _name) {
 }
 
 VRObject::~VRObject() {
+    //cout << " ~VRObject " << getName() << endl;
     NodeMTRecPtr p;
     if (osg->node) p = osg->node->getParent();
     if (p) p->subChild(osg->node);
@@ -152,7 +153,7 @@ vector<VRObjectPtr> VRObject::getLinks() {
 void VRObject::addLink(VRObjectPtr obj) {
     if (osg->links.count(obj.get())) return;
 
-    VisitSubTreeRecPtr visitor = VisitSubTree::create();
+    VisitSubTreeMTRecPtr visitor = VisitSubTree::create();
     visitor->setSubTreeRoot(obj->getNode()->node);
     NodeMTRecPtr visit_node = makeNodeFor(visitor);
     addChild(OSGObject::create(visit_node));
@@ -228,7 +229,7 @@ void VRObject::addChild(OSGObjectPtr n) {
 }
 
 void VRObject::addChild(VRObjectPtr child, bool osg, int place) {
-    if (child == 0) return;
+    if (child == 0 || child == ptr()) return;
     if (child->getParent() != 0) { child->switchParent(ptr(), place); return; }
 
     if (osg) addChild(child->osg);
@@ -244,6 +245,7 @@ int VRObject::getChildIndex() { return childIndex;}
 
 void VRObject::subChild(OSGObjectPtr n) { osg->node->subChild(n->node); }
 void VRObject::subChild(VRObjectPtr child, bool doOsg) {
+    if (child == ptr()) return;
     if (doOsg) osg->node->subChild(child->osg->node);
 
     int target = findChild(child);
@@ -256,6 +258,7 @@ void VRObject::subChild(VRObjectPtr child, bool doOsg) {
 
 void VRObject::switchParent(VRObjectPtr new_p, int place) {
     if (destroyed) return;
+    if (new_p == ptr()) return;
     if (new_p == 0) { cout << "\nERROR : new parent is 0!\n"; return; }
 
     if (getParent() == 0) { new_p->addChild(ptr(), true, place); return; }
@@ -282,8 +285,23 @@ VRObjectPtr VRObject::getChild(int i) {
     return children[i];
 }
 
+bool VRObject::hasDescendant(VRObjectPtr obj) { return obj->hasAncestor(ptr()); }
+
+bool VRObject::hasAncestor(VRObjectPtr a) {
+    if (ptr() == a || getParent() == a) return true;
+    if (getParent()) return getParent()->hasAncestor(a);
+    return false;
+}
+
+bool VRObject::shareAncestry(VRObjectPtr obj) {
+    return getRoot() == obj->getRoot();
+}
+
 /** Returns the parent of ptr() object **/
-VRObjectPtr VRObject::getParent() { return parent.lock(); }
+VRObjectPtr VRObject::getParent(bool checkForDrag) {
+    if (checkForDrag && held) return old_parent.lock();
+    return parent.lock();
+}
 
 VRObjectPtr VRObject::getAtPath(string path) {
     vector<int> pvec;
@@ -405,13 +423,6 @@ bool VRObject::hasGraphChanged() {
     if (graphChanged == VRGlobals::CURRENT_FRAME) return true;
     if (getParent() == 0) return false;
     return getParent()->hasGraphChanged();
-}
-
-bool VRObject::hasAncestor(VRObjectPtr a) {
-    if (ptr() == a) return true;
-    if (getParent() == a) return true;
-    if (getParent() != 0) return getParent()->hasAncestor(a);
-    else return false;
 }
 
 /** Returns the Boundingbox of the OSG Node */

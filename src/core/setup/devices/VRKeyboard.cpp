@@ -4,8 +4,7 @@
 #include <OpenSG/OSGBaseInitFunctions.h>
 #include <gdk/gdkevents.h>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
 
 void osg_Exit() { osgExit(); exit(0); }
 void VRKeyboard::keyboard(unsigned int k, bool pressed, int x, int y) { change_button(k,pressed); }
@@ -25,4 +24,3 @@ VRKeyboardPtr VRKeyboard::ptr() { return static_pointer_cast<VRKeyboard>( shared
 void VRKeyboard::setGtkEvent(_GdkEventKey* event) { gdk_event = event; }
 _GdkEventKey* VRKeyboard::getGtkEvent() { return gdk_event; }
 
-OSG_END_NAMESPACE;

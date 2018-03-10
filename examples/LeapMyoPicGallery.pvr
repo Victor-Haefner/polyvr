@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="LeapMyoPicGallery" name_space="Scene" loading_time="80">
+<Scene base_name="LeapMyoPicGallery" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
-    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
-      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
-        <Object accept_root="1" aspect="1" at="-0.32989 0.0378165 -0.886817" at_dir="0" base_name="Default" far="512" fov="1.0472" from="2.0095 0.0593848 3.97031" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
-          <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
-            <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.32989 0.0378165 -0.886817" at_dir="0" base_name="Default" far="512" fov="1.0472" from="2.0095 0.0593848 3.97031" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <constraint persistency="666"/>
           </Object>
-          <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+          <constraint persistency="666"/>
         </Object>
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" hmdd="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
-    <Script base_name="devInitLeap" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
+    <Script base_name="devInitLeap" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 
 	"""
@@ -234,7 +234,7 @@
 	VR.leapThread = VR.startThread(listen)
 </core>
     </Script>
-    <Script base_name="devInitMyo" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
+    <Script base_name="devInitMyo" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 
 	"""
@@ -331,7 +331,7 @@
 	
 </core>
     </Script>
-    <Script base_name="devStopThreads" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
+    <Script base_name="devStopThreads" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -343,9 +343,9 @@
 		VR.myoThreadControl = False
 		VR.joinThread(VR.myoThread)
 </core>
-      <trig type="on_scene_close" dev="" state="Pressed" param="" key="0" name_suffix="2" base_name="trigger" name_space="__global__"/>
+      <trig type="on_scene_close" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
     </Script>
-    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -357,9 +357,9 @@
 	VR.updateGallery(paths)
 	VR.moveGallery(2,0)
 </core>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
     </Script>
-    <Script base_name="keyboardNav" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
+    <Script base_name="keyboardNav" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -397,9 +397,9 @@
 		a.setCallback(zoomOut)
 		a.start()
 </core>
-      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="-1" name_suffix="0" base_name="trigger" name_space="__global__"/>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
     </Script>
-    <Script base_name="moveGallery" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
+    <Script base_name="moveGallery" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR, math
 	
@@ -412,21 +412,18 @@
 		a = 2*i*math.pi/N + a0
 		c = math.cos(a)
 		s = math.sin(a)
-		img.setPose([R*c,0,R*s], [c,0,s], [0,1,0])
+		img.setTransform([R*c,0,R*s], [c,0,s], [0,1,0])
 </core>
-      <arg type="float" value="2" name_suffix="0" base_name="R" name_space="moveGallery"/>
-      <arg type="float" value="0.1" name_suffix="0" base_name="a0" name_space="moveGallery"/>
+      <arg type="float" value="2" base_name="R" name_space="moveGallery" name_suffix="0" persistency="666"/>
+      <arg type="float" value="0.1" base_name="a0" name_space="moveGallery" name_suffix="0" persistency="666"/>
     </Script>
-    <Script base_name="queryImages" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
+    <Script base_name="queryImages" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	# missing module?
 	# sudo apt-get install python-bs4 python-requests
 	
 	from bs4 import BeautifulSoup
-	import requests
-	import re
-	import urllib2
-	import os
+	import re, os, urllib2
 
 
 	def get_soup(url,header):
@@ -455,9 +452,9 @@
 	  
 	return paths
 </core>
-      <arg type="str" value="bla" name_suffix="0" base_name="query" name_space="queryImages"/>
+      <arg type="str" value="bla" base_name="query" name_space="queryImages" name_suffix="0" persistency="666"/>
     </Script>
-    <Script base_name="updateGallery" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
+    <Script base_name="updateGallery" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR, math
 	
@@ -479,10 +476,10 @@
 		c = math.cos(a)
 		s = math.sin(a)
 		
-		sprite.setPose([c,0,s], [c,0,s], [0,1,0])
+		sprite.setTransform([c,0,s], [c,0,s], [0,1,0])
 		VR.images.addChild(sprite)
 </core>
-      <arg type="NoneType" value="None" name_suffix="0" base_name="images" name_space="updateGallery"/>
+      <arg type="NoneType" value="None" base_name="images" name_space="updateGallery" name_suffix="0" persistency="666"/>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>

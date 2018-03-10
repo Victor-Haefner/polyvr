@@ -62,12 +62,12 @@ class VRPN : public VRStorage {
 
         //update thread
         void update_t(VRThread* thread);
-        void update();
 
     public:
         VRPN();
         ~VRPN();
 
+        void update();
         void addVRPNTracker(int ID, string addr, Vec3d offset, float scale);
         void delVRPNTracker(VRPN_devicePtr t);
 

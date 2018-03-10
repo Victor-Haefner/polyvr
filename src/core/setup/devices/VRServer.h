@@ -2,6 +2,7 @@
 #define VRMOBILE_H_INCLUDED
 
 #include "VRDevice.h"
+#include "core/networking/VRNetworkingFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -11,7 +12,7 @@ class VRSocket;
 class VRServer : public VRDevice {
     private:
         int port = 5500;
-        VRSocket* soc = 0;
+        VRSocketPtr soc = 0;
         VRFunction<void*>* cb = 0;
 
         map<string, string> websites;
@@ -39,6 +40,7 @@ class VRServer : public VRDevice {
         void addWebSite(string uri, string website);
         void updateClients(string uri);
 
+        int openWebSocket(string address, string protocols);
         void answerWebSocket(int id, string msg);
 };
 

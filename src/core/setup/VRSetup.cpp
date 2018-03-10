@@ -2,6 +2,7 @@
 #include "VRSetupManager.h"
 #include "VRNetwork.h"
 #include "windows/VRWindow.h"
+#include "windows/VRView.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/setup/windows/VRGtkWindow.h"
@@ -10,7 +11,6 @@
 #include "core/utils/VRVisualLayer.h"
 #include "core/utils/VRProgress.h"
 #include "core/networking/VRPing.h"
-#include "core/setup/devices/VRMouse.h"
 #include "core/setup/tracking/Vive.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
@@ -64,12 +64,12 @@ void VRSetup::showStats(bool b) {
     for (auto v : w->getViews()) v->showStats(b);
 }
 
-/*void VRSetup::addScript(string name) { scripts[name] = VRScript::create(name); }
+VRScriptPtr VRSetup::addScript(string name) { auto s = VRScript::create(name); scripts[s->getName()] = s; return s; }
 VRScriptPtr VRSetup::getScript(string name) { return scripts[name]; }
-map<string, VRScriptPtr> VRSetup::getScripts() { return scripts; }*/
+map<string, VRScriptPtr> VRSetup::getScripts() { return scripts; }
 
 void setLoadingLights(int dev, int light, float R, float G, float B) {
-    cout << " !!! setLoadingLights " << dev << " " << light << " " << R << " " << G << " " << B << endl;
+    //cout << " !!! setLoadingLights " << dev << " " << light << " " << R << " " << G << " " << B << endl;
     static VRSocket s("cave_lights");
     string data = "device="+toString(dev);
     if (light >= 0) data += "&light="+toString(light);
@@ -78,7 +78,7 @@ void setLoadingLights(int dev, int light, float R, float G, float B) {
 }
 
 void updateLoadingLights(int p) {
-    cout << "updateLoadingLights " << p << endl;
+    //cout << "updateLoadingLights " << p << endl;
     static float lastT = 0;
     if (p == 100) { setLoadingLights(0, -1, 0.5,0.5,0.5); lastT = 0; return; }
 
@@ -119,8 +119,10 @@ void VRSetup::setupLESCCAVELights(VRScenePtr scene) {
 }
 
 void VRSetup::updateTracking() {
+    ART::applyEvents();
+    VRPN::update();
     vive->update();
-    //updateCallbacks();
+    for (auto view : getViews()) view->updateMirror();
 }
 
 VRNetworkPtr VRSetup::getNetwork() { return network; }
@@ -144,13 +146,11 @@ void VRSetup::setScene(VRScenePtr scene) {
     if (cam == 0) return;
     setViewRoot(scene->getRoot(), -1);
     setViewCamera(cam, -1);
-
-    VRMousePtr mouse = dynamic_pointer_cast<VRMouse>( getDevice("mouse") );
-    if (mouse && cam) mouse->setCamera(cam);
-
     setViewBackground(scene->getBackground());
 
+    for (auto dev : getDevices()) dev.second->setCamera(cam);
     for (auto w : getWindows()) w.second->setContent(true);
+    for (auto s : scripts) scene->addScript(s.second);
 
     //scene->initDevices();
 }
@@ -167,7 +167,7 @@ VRTransformPtr VRSetup::getRoot() { return real_root; }
 VRTransformPtr VRSetup::getTracker(string t) {
     for (int ID : getARTDevices()) {
         ART_devicePtr dev = getARTDevice(ID);
-        if (dev->ent->getName() == t) return dev->ent;
+        if (dev->ent && dev->ent->getName() == t) return dev->ent;
     }
 
     for (int ID : getVRPNTrackerIDs()) {
@@ -192,7 +192,7 @@ void VRSetup::printOSG() {
     string name = "Unnamed";
     for (auto win : getWindows()) {
         VRWindowPtr w = win.second;
-        WindowRecPtr osgw = w->getOSGWindow();
+        WindowMTRecPtr osgw = w->getOSGWindow();
         cout << "Window " << win.first << " " << osgw->getTypeName() << endl;
         int N = osgw->getMFPort()->size();
 
@@ -218,7 +218,7 @@ void VRSetup::save(string file) {
     xmlpp::Element* trackingARTN = setupN->add_child("TrackingART");
     xmlpp::Element* trackingVRPNN = setupN->add_child("TrackingVRPN");
     xmlpp::Element* networkN = setupN->add_child("Network");
-    /*xmlpp::Element* scriptN = */setupN->add_child("Scripts");
+    xmlpp::Element* scriptN = setupN->add_child("Scripts");
 
     VRWindowManager::save(displayN);
     VRDeviceManager::save(deviceN);
@@ -226,6 +226,10 @@ void VRSetup::save(string file) {
     VRPN::save(trackingVRPNN);
     network->save(networkN);
     displayN->set_attribute("globalOffset", toString(globalOffset).c_str());
+    for (auto s : scripts) {
+        auto e = s.second->saveUnder(scriptN);
+        s.second->save(e);
+    }
 
     if (file == "") file = path;
     if (file != "") doc.write_to_file_formatted(file);
@@ -245,13 +249,18 @@ void VRSetup::load(string file) {
     xmlpp::Element* trackingARTN = getElementChild(setupN, "TrackingART");
     xmlpp::Element* trackingVRPNN = getElementChild(setupN, "TrackingVRPN");
     xmlpp::Element* networkN = getElementChild(setupN, "Network");
-    /*xmlpp::Element* scriptN = */getElementChild(setupN, "Scripts");
+    xmlpp::Element* scriptN = getElementChild(setupN, "Scripts");
 
     if (trackingARTN) ART::load(trackingARTN);
     if (trackingVRPNN) VRPN::load(trackingVRPNN);
     if (deviceN) VRDeviceManager::load(deviceN);
     if (displayN) VRWindowManager::load(displayN);
     if (networkN) network->load(networkN);
+    for (auto el : getChildren(scriptN)) {
+        auto s = VRScript::create("tmp");
+        s->load(el);
+        scripts[s->getName()] = s;
+    }
 
     if (displayN && displayN->get_attribute("globalOffset")) {
         toValue( displayN->get_attribute("globalOffset")->get_value(), globalOffset );

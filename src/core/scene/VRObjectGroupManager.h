@@ -15,10 +15,7 @@ using namespace std;
 class VRObjectGroupManager {
     protected:
         map<string, list<VRGroupPtr> > groups;
-        VRUpdateCbPtr updateObjectsFkt;
-
         void addGroup(string group);
-        void updateObjects();
 
     public:
         VRObjectGroupManager();

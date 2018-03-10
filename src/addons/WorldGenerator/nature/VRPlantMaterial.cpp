@@ -88,7 +88,8 @@ string VRPlantMaterial::fShrdEnd = GLSL(
 void main( void ) {
 	normal = vnrm;
 	color = texture2D(tex,vtcs);
-	if (color.a < 0.3) discard;
+	if (color.a < 0.9) discard;
+	color.a = 1.0;
 	applyLightning();
 }
 );

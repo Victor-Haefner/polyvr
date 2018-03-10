@@ -34,8 +34,9 @@ class VRStorage {
 
         template<class T> static void typeFactoryCb(VRStoragePtr& s);
 
-        void save_str_cb(string t, string tag, xmlpp::Element* e);
-        void load_str_cb(string t, string tag, xmlpp::Element* e);
+        void save_strstr_map_cb(map<string, string>* t, string tag, xmlpp::Element* e);
+        void load_strstr_map_cb(map<string, string>* t, string tag, xmlpp::Element* e);
+
         template<typename T> void save_cb(T* t, string tag, xmlpp::Element* e);
         template<typename T> void save_on_cb(T* t, string tag, xmlpp::Element* e);
         template<typename T> void load_cb(T* t, string tag, xmlpp::Element* e);
@@ -66,7 +67,7 @@ class VRStorage {
 
     public:
 
-        void store(string tag, string val);
+        void storeMap(string tag, map<string, string>& m);
         template<typename T> void store(string tag, T* t);
         template<typename T> void storeVec(string tag, vector<T>& v);
         template<typename T> void storeVecVec(string tag, vector<vector<T>>& v);
@@ -92,6 +93,7 @@ class VRStorage {
 
     public:
         VRStorage();
+        ~VRStorage();
 
         virtual void save(xmlpp::Element* e, int p = 0);
         virtual void load(xmlpp::Element* e);
@@ -105,6 +107,8 @@ class VRStorage {
         void setPersistency(int p);
         int getPersistency();
         void setOverrideCallbacks(bool b);
+
+        string getDescription();
 };
 
 OSG_END_NAMESPACE;

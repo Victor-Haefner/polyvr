@@ -1,4 +1,5 @@
 #include "VRTerrain.h"
+#include "VRTerrainPhysicsShape.h"
 #include "VRPlanet.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRMaterialT.h"
@@ -26,13 +27,13 @@
 using namespace OSG;
 
 
-VREmbankment::VREmbankment(pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4) : VRGeometry("embankment"), p1(p1), p2(p2), p3(p3), p4(p4) {
+VREmbankment::VREmbankment(PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4) : VRGeometry("embankment"), p1(p1), p2(p2), p3(p3), p4(p4) {
     for (auto p : p1->getPoints()) { auto pos = p.pos(); area.addPoint(Vec2d(pos[0],pos[2])); };
     for (auto p : p2->getPoints()) { auto pos = p.pos(); area.addPoint(Vec2d(pos[0],pos[2])); };
 }
 
 VREmbankment::~VREmbankment() {}
-VREmbankmentPtr VREmbankment::create(pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4) { return VREmbankmentPtr( new VREmbankment(p1,p2,p3,p4) ); }
+VREmbankmentPtr VREmbankment::create(PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4) { return VREmbankmentPtr( new VREmbankment(p1,p2,p3,p4) ); }
 
 bool VREmbankment::isInside(Vec2d p) { return area.isInside(p); }
 
@@ -77,7 +78,7 @@ vector<Vec3d> VREmbankment::probeHeight(Vec2d p) { // TODO: optimize!
 
     float h1 = computeHeight(0); // first estimate
     float h2 = computeHeight(h1); // first estimate
-    float h3 = computeHeight(h2); // first estimate
+    computeHeight(h2); // first estimate
     getMaterial()->setWireFrame(1);
     return res;
 }
@@ -110,18 +111,21 @@ void VREmbankment::createGeometry() {
 
 VRTerrain::VRTerrain(string name) : VRGeometry(name) {}
 VRTerrain::~VRTerrain() {}
+
 VRTerrainPtr VRTerrain::create(string name) {
     auto t = VRTerrainPtr( new VRTerrain(name) );
     t->setupMat();
     return t;
 }
 
+VRTerrainPtr VRTerrain::ptr() { return dynamic_pointer_cast<VRTerrain>( shared_from_this() ); }
+
 void VRTerrain::clear() {
     for (auto e : embankments) e.second->destroy();
     embankments.clear();
 }
 
-void VRTerrain::setParameters( Vec2d s, double r, double h ) {
+void VRTerrain::setParameters( Vec2d s, double r, double h, float w ) {
     size = s;
     resolution = r;
     heightScale = h;
@@ -129,8 +133,13 @@ void VRTerrain::setParameters( Vec2d s, double r, double h ) {
     mat->setShaderParameter("resolution", resolution);
     mat->setShaderParameter("heightScale", heightScale);
     mat->setShaderParameter("doHeightTextures", 0);
+    mat->setShaderParameter("waterLevel", w);
     updateTexelSize();
     setupGeo();
+}
+
+void VRTerrain::setWaterLevel(float w) {
+    mat->setShaderParameter("waterLevel", w);
 }
 
 void VRTerrain::setMap( VRTexturePtr t, int channel ) {
@@ -148,8 +157,10 @@ void VRTerrain::setMap( VRTexturePtr t, int channel ) {
         }
     } else tex = t;
     mat->setTexture(tex);
+    mat->clearTransparency();
 	mat->setShaderParameter("channel", channel);
     mat->setTextureParams(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_MODULATE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+    mat->clearTransparency();
     updateTexelSize();
     setupGeo();
 }
@@ -201,22 +212,23 @@ void VRTerrain::setupGeo() {
 	setMaterial(mat);
 }
 
-vector<Vec3d> VRTerrain::probeHeight( Vec2d p ) {
+Vec2d VRTerrain::toUVSpace(Vec2d p) {
     int W = tex->getSize()[0]-1;
     int H = tex->getSize()[1]-1;
+    double u = (p[0]/size[0] + 0.5)*W;
+    double v = (p[1]/size[1] + 0.5)*H;
+    return Vec2d(u,v);
+};
 
-    auto toUVSpace = [&](Vec2d p) {
-        double u = (p[0]/size[0] + 0.5)*W;
-        double v = (p[1]/size[1] + 0.5)*H;
-        return Vec2d(u,v);
-    };
+Vec2d VRTerrain::fromUVSpace(Vec2d uv) {
+    int W = tex->getSize()[0]-1;
+    int H = tex->getSize()[1]-1;
+    double x = ((uv[0])/W-0.5)*size[0];
+    double z = ((uv[1])/H-0.5)*size[1];
+    return Vec2d(x,z);
+};
 
-    auto fromUVSpace = [&](Vec2d uv) {
-        double x = ((uv[0])/W-0.5)*size[0];
-        double z = ((uv[1])/H-0.5)*size[1];
-        return Vec2d(x,z);
-    };
-
+vector<Vec3d> VRTerrain::probeHeight( Vec2d p ) {
     Vec2d uv = toUVSpace(p); // uv, i and j are tested
     int i = round(uv[0]-0.5);
     int j = round(uv[1]-0.5);
@@ -242,10 +254,11 @@ vector<Vec3d> VRTerrain::probeHeight( Vec2d p ) {
             Vec3d(p1[0], h11, p1[1]) };
 }
 
-void VRTerrain::physicalize(bool b) {
-    if (!tex) return;
-    auto dim = tex->getSize();
+VRTexturePtr VRTerrain::getMap() { return tex; }
+Vec2f VRTerrain::getTexelSize() { return texelSize; }
 
+void VRTerrain::btPhysicalize() {
+    auto dim = tex->getSize();
     float roadTerrainOffset = 0.03; // also defined in vrroadbase.cpp
 
     double Hmax = -1e6;
@@ -259,12 +272,42 @@ void VRTerrain::physicalize(bool b) {
         }
     }
 
-    //double R = resolution*0.94; // Hack, there is a scaling error somewhere, either in the shape or the visualisation
-    //shape->setLocalScaling(btVector3(R,1,R));
     auto shape = new btHeightfieldTerrainShape(dim[0], dim[1], &(*physicsHeightBuffer)[0], 1, -Hmax, Hmax, 1, PHY_FLOAT, false);
     shape->setLocalScaling(btVector3(texelSize[0],1,texelSize[1]));
     getPhysics()->setCustomShape( shape );
+}
+
+void VRTerrain::vrPhysicalize() {
+    auto shape = new VRTerrainPhysicsShape( ptr(), resolution );
+    getPhysics()->setCustomShape( shape );
+}
+
+void VRTerrain::physicalize(bool b) {
+    if (!tex) return;
+    if (!b) { getPhysics()->setPhysicalized(false); return; }
+
+    //btPhysicalize();
+    vrPhysicalize();
+    getPhysics()->setFriction(0.8);
     getPhysics()->setPhysicalized(true);
+}
+
+Boundingbox VRTerrain::getBoundingBox() {
+    Boundingbox bb;
+    float hmax = -1e30;
+    float hmin = 1e30;
+
+    for (int i=0; i<tex->getSize()[0]; i++) {
+        for (int j=0; j<tex->getSize()[1]; j++) {
+            auto h = tex->getPixel(Vec3i(i,j,0))[3];
+            if (h < hmin) hmin = h;
+            if (h > hmax) hmax = h;
+        }
+    }
+
+    bb.update( Vec3d( size[0]*0.5, hmax,  size[1]*0.5) );
+    bb.update( Vec3d(-size[0]*0.5, hmin, -size[1]*0.5) );
+    return bb;
 }
 
 void VRTerrain::setSimpleNoise() {
@@ -280,6 +323,7 @@ void VRTerrain::setSimpleNoise() {
     tex = tg.compose(0);
 	auto defaultMat = VRMaterial::get("defaultTerrain");
     defaultMat->setTexture(tex);
+    defaultMat->clearTransparency();
 }
 
 void VRTerrain::setupMat() {
@@ -292,11 +336,13 @@ void VRTerrain::setupMat() {
         tg.drawFill(w);
         tex = tg.compose(0);
         defaultMat->setTexture(tex);
+        defaultMat->clearTransparency();
 	}
 
 	mat = VRMaterial::create("terrain");
 	mat->setVertexShader(vertexShader, "terrainVS");
 	mat->setFragmentShader(fragmentShader, "terrainFS");
+	mat->setFragmentShader(fragmentShaderDeferred, "terrainFSD", true);
 	mat->setTessControlShader(tessControlShader, "terrainTCS");
 	mat->setTessEvaluationShader(tessEvaluationShader, "terrainTES");
 	mat->setShaderParameter("resolution", resolution);
@@ -327,11 +373,12 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
 
     Vec3f norm(0,1,0); // TODO
     int N = 1000;
-    double step = 10; // TODO
+    double step = 10;
     int dir = 1;
     for (int i = 0; i < N; i++) {
         p = p - d*step*dir; // walk
         double l = distToSurface(p);
+        if (i == 0) step = abs(l);
         if (l > 0 && l < 0.03) {
             Real32 t = p0.dist( p );
             ia->setHit(t, ia->getActNode(), 0, norm, -1);
@@ -355,11 +402,11 @@ double VRTerrain::getHeight(const Vec2d& p, bool useEmbankments) {
         return Vec2d(u,v);
     };
 
-    auto fromUVSpace = [&](Vec2d uv) {
+    /*auto fromUVSpace = [&](Vec2d uv) { // keep for debugging
         double x = ((uv[0])/W-0.5)*size[0];
         double z = ((uv[1])/H-0.5)*size[1];
         return Vec2d(x,z);
-    };
+    };*/
 
     Vec2d uv = toUVSpace(p); // uv, i and j are tested
     int i = round(uv[0]-0.5);
@@ -385,13 +432,14 @@ double VRTerrain::getHeight(const Vec2d& p, bool useEmbankments) {
 }
 
 void VRTerrain::elevateObject(VRTransformPtr t, float offset) { auto p = t->getFrom(); elevatePoint(p, offset); t->setFrom(p); }
-void VRTerrain::elevatePose(posePtr p, float offset) { auto P = p->pos(); elevatePoint(P, offset); p->setPos(P); }
+void VRTerrain::elevatePose(PosePtr p, float offset) { auto P = p->pos(); elevatePoint(P, offset); p->setPos(P); }
 void VRTerrain::elevatePoint(Vec3d& p, float offset, bool useEmbankments) { p[1] = getHeight(Vec2d(p[0], p[2]), useEmbankments) + offset; }
 
 void VRTerrain::elevateVertices(VRGeometryPtr geo, float offset) {
-    if (!terrain) return;
-    GeoPnt3fPropertyRecPtr pos = (GeoPnt3fProperty*)geo->getMesh()->geo->getPositions();
-    for (int i=0; i<pos->size(); i++) {
+    auto t = terrain.lock();
+    if (!t || !geo || !geo->getMesh() || !geo->getMesh()->geo) return;
+    GeoPnt3fPropertyMTRecPtr pos = (GeoPnt3fProperty*)geo->getMesh()->geo->getPositions();
+    for (uint i=0; i<pos->size(); i++) {
         Pnt3f p;
         pos->getValue(p, i);
         p[1] = getHeight(Vec2d(p[0], p[2])) + offset;
@@ -421,6 +469,28 @@ void VRTerrain::loadMap( string path, int channel ) {
     cout << "   ----------- VRTerrain::loadMap " << path << " " << channel << endl ;
     auto tex = loadGeoRasterData(path);
     setMap(tex, channel);
+}
+
+void VRTerrain::flatten(vector<Vec2d> perimeter, float h) {
+    if (!tex) return;
+    VRPolygonPtr poly = VRPolygon::create();
+    for (auto p : perimeter) poly->addPoint(p);
+    poly->scale( Vec3d(1.0/size[0], 1, 1.0/size[1]) );
+    poly->translate( Vec3d(0.5,0,0.5) );
+
+    auto dim = tex->getSize();
+    for (int i = 0; i < dim[0]; i++) {
+        for (int j = 0; j < dim[1]; j++) {
+            auto pix = Vec2d(i*1.0/(dim[0]-1), j*1.0/(dim[1]-1));
+            if (poly->isInside(pix)) {
+                Vec3i pixK = Vec3i(i,j,0);
+                Color4f col = tex->getPixel(pixK);
+                col[3] = h;
+                tex->setPixel(pixK, col);
+            }
+        }
+    }
+    setMap(tex);
 }
 
 void VRTerrain::projectOSM() {
@@ -499,15 +569,16 @@ void VRTerrain::projectOSM() {
     setMap(t);*/
 }
 
-void VRTerrain::paintHeights(string path) {
-    mat->setTexture(path, 0, 1);
-    mat->setTexture("world/textures/gravel2.jpg", 0, 2);
+void VRTerrain::paintHeights(string woods, string gravel) {
+    mat->setTexture(woods, 0, 1);
+    mat->setTexture(gravel, 0, 2);
     mat->setShaderParameter("texWoods", 1);
     mat->setShaderParameter("texGravel", 2);
     mat->setShaderParameter("doHeightTextures", 1);
+    mat->clearTransparency();
 }
 
-void VRTerrain::addEmbankment(string ID, pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4) {
+void VRTerrain::addEmbankment(string ID, PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4) {
     auto e = VREmbankment::create(p1, p2, p3, p4);
     auto m = VRMaterial::get("embankment");
     m->setTexture("world/textures/gravel2.jpg");
@@ -518,6 +589,8 @@ void VRTerrain::addEmbankment(string ID, pathPtr p1, pathPtr p2, pathPtr p3, pat
     addChild(e);
     embankments[ID] = e;
 }
+
+Vec2d VRTerrain::getSize() { return size; }
 
 // --------------------------------- shader ------------------------------------
 
@@ -543,7 +616,10 @@ const ivec3 off = ivec3(-1,0,1);
 const vec3 light = vec3(-1,-1,-0.5);
 uniform vec2 texelSize;
 uniform int doHeightTextures;
+uniform float waterLevel;
 
+in vec4 pos;
+in vec4 vertex;
 in float height;
 vec3 norm;
 vec4 color;
@@ -564,9 +640,9 @@ void applyBlinnPhong() {
 	vec4  ambient = gl_LightSource[0].ambient * color;
 	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;
 	float NdotHV = max(dot( norm, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
-	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
+	vec4  specular = 0.25*gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
 	//gl_FragColor = ambient + diffuse + specular;
-	gl_FragColor = diffuse + specular;
+    gl_FragColor = mix(diffuse + specular, vec4(0.7,0.9,1,1), clamp(1e-4*length(pos.xyz), 0.0, 1.0)); // atmospheric effects
 	gl_FragColor[3] = 1.0;
 	//gl_FragColor = vec4(diffuse.rgb, 1);
 }
@@ -586,6 +662,14 @@ vec3 getNormal() {
 	return n;
 }
 
+void applyBumpMap(vec4 b) {
+    float a = b.g*10;
+    norm += 0.1*vec3(cos(a),0,sin(a));
+    //norm.x += b.r*0.5;
+    //norm.z += (b.g-1.0)*1.0;
+    normalize(norm);
+}
+
 void main( void ) {
 	vec2 tc = gl_TexCoord[0].xy;
 	norm = getNormal();
@@ -597,6 +681,7 @@ void main( void ) {
         vec4 cW3 = texture(texWoods, tc*17);
         vec4 cW4 = texture(texWoods, tc);
         vec4 cW = mix(cW1,mix(cW2,mix(cW3,cW4,0.5),0.5),0.5);
+        //applyBumpMap(cW3);
 
         vec4 cG0 = texture(texGravel, tc*10777);
         vec4 cG1 = texture(texGravel, tc*1077);
@@ -605,9 +690,91 @@ void main( void ) {
         vec4 cG4 = texture(texGravel, tc);
         vec4 cG = mix(cG0,mix(cG1,mix(cG2,mix(cG3,cG4,0.5),0.5),0.5),0.5);
         color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
+        if (height < waterLevel) color = vec4(0.2,0.4,1,1);
 	}
 
 	applyBlinnPhong();
+	//gl_FragColor = vec4( norm, 1.0 );
+}
+);
+
+string VRTerrain::fragmentShaderDeferred =
+"#version 400 compatibility\n"
+GLSL(
+uniform sampler2D tex;
+uniform sampler2D texWoods;
+uniform sampler2D texGravel;
+const ivec3 off = ivec3(-1,0,1);
+const vec3 light = vec3(-1,-1,-0.5);
+uniform vec2 texelSize;
+uniform int doHeightTextures;
+uniform float waterLevel;
+
+in vec4 vertex;
+in vec4 pos;
+in float height;
+vec3 norm;
+vec4 color;
+
+vec3 mixColor(vec3 c1, vec3 c2, float t) {
+	t = clamp(t, 0.0, 1.0);
+	return mix(c1, c2, t);
+}
+
+vec3 getColor() {
+	return texture2D(tex, gl_TexCoord[0].xy).rgb;
+}
+
+vec3 getNormal() {
+	vec2 tc = gl_TexCoord[0].xy;
+    float s11 = texture(tex, tc).a;
+    float s01 = textureOffset(tex, tc, off.xy).a;
+    float s21 = textureOffset(tex, tc, off.zy).a;
+    float s10 = textureOffset(tex, tc, off.yx).a;
+    float s12 = textureOffset(tex, tc, off.yz).a;
+
+    vec2 r2 = 2.0*texelSize;
+    vec3 va = normalize(vec3(r2.x,s21-s01,0));
+    vec3 vb = normalize(vec3(   0,s12-s10,r2.y));
+    vec3 n = cross(vb,va);
+	return n;
+}
+
+void applyBumpMap(vec4 b) {
+    float a = b.g*10;
+    norm += 0.1*vec3(cos(a),0,sin(a));
+    //norm.x += b.r*0.5;
+    //norm.z += (b.g-1.0)*1.0;
+    normalize(norm);
+}
+
+void main( void ) {
+	vec2 tc = gl_TexCoord[0].xy;
+	norm = getNormal();
+
+	if (doHeightTextures == 0) color = vec4(getColor(),1.0);
+	else {
+        vec4 cW1 = texture(texWoods, tc*1077);
+        vec4 cW2 = texture(texWoods, tc*107);
+        vec4 cW3 = texture(texWoods, tc*17);
+        vec4 cW4 = texture(texWoods, tc);
+        vec4 cW = mix(cW1,mix(cW2,mix(cW3,cW4,0.5),0.5),0.5);
+        //applyBumpMap(cW3);
+
+        vec4 cG0 = texture(texGravel, tc*10777);
+        vec4 cG1 = texture(texGravel, tc*1077);
+        vec4 cG2 = texture(texGravel, tc*107);
+        vec4 cG3 = texture(texGravel, tc*17);
+        vec4 cG4 = texture(texGravel, tc);
+        vec4 cG = mix(cG0,mix(cG1,mix(cG2,mix(cG3,cG4,0.5),0.5),0.5),0.5);
+        color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
+        if (height < waterLevel) color = vec4(0.2,0.4,1,1);
+	}
+
+	norm = normalize( gl_NormalMatrix * norm );
+    gl_FragData[0] = vec4(vertex.xyz/vertex.w, 1.0);
+    gl_FragData[1] = vec4(norm, 1);
+    gl_FragData[2] = color;
 }
 );
 
@@ -660,6 +827,8 @@ layout( quads ) in;
 in vec3 tcPosition[];
 in vec2 tcTexCoords[];
 out float height;
+out vec4 pos;
+out vec4 vertex;
 
 uniform float heightScale;
 uniform int channel;
@@ -679,7 +848,9 @@ void main() {
     vec3 tePosition = mix(a, b, v);
     height = heightScale * texture2D(texture, gl_TexCoord[0].xy)[channel];
     tePosition.y = height;
-    gl_Position = gl_ModelViewProjectionMatrix * vec4(tePosition, 1);
+    pos = gl_ModelViewProjectionMatrix * vec4(tePosition, 1);
+    vertex = gl_ModelViewMatrix * vec4(tePosition, 1);
+    gl_Position = pos;
 }
 );
 

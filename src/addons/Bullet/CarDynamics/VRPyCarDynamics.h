@@ -24,6 +24,8 @@ struct VRPyCarDynamics : VRPyBaseT<OSG::VRCarDynamics> {
     static PyObject* getBreaking(VRPyCarDynamics* self);
     static PyObject* getClutch(VRPyCarDynamics* self);
     static PyObject* getRPM(VRPyCarDynamics* self);
+    static PyObject* geteForce(VRPyCarDynamics* self);
+    static PyObject* geteBreak(VRPyCarDynamics* self);
     static PyObject* getGear(VRPyCarDynamics* self);
     static PyObject* isRunning(VRPyCarDynamics* self);
     static PyObject* setIgnition(VRPyCarDynamics* self, PyObject* args);
@@ -34,6 +36,7 @@ struct VRPyCarDynamics : VRPyBaseT<OSG::VRCarDynamics> {
     static PyObject* carSoundIsLoaded(VRPyCarDynamics* self);
 
     static PyObject* setFade(VRPyCarDynamics* self, PyObject* args);
+    static PyObject* setType(VRPyCarDynamics* self, PyObject* args);
 };
 
 struct VRPyDriver : VRPyBaseT<OSG::VRDriver> {

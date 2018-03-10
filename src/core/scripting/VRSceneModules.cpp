@@ -24,6 +24,7 @@
 #include "VRPyConstraint.h"
 #include "VRPyHaptic.h"
 #include "VRPyMouse.h"
+#include "VRPyMultiTouch.h"
 #include "VRPyMobile.h"
 #include "VRPyBaseT.h"
 #include "VRPyMaterial.h"
@@ -59,6 +60,7 @@
 #include "VRPyUndoManager.h"
 #include "VRPyObjectManager.h"
 #include "VRPySky.h"
+#include "VRPyScenegraphInterface.h"
 
 #include "addons/Character/VRPyCharacter.h"
 #include "addons/Algorithms/VRPyGraphLayout.h"
@@ -86,17 +88,21 @@
 #include "addons/WorldGenerator/VRPyWorldGenerator.h"
 #include "addons/WorldGenerator/nature/VRPyNature.h"
 #include "addons/WorldGenerator/terrain/VRPyTerrain.h"
+#include "addons/WorldGenerator/weather/VRPyWeather.h"
+#include "addons/WorldGenerator/traffic/VRPyTrafficSimulation.h"
 #include "addons/Engineering/CSG/VRPyCSG.h"
 #include "addons/RealWorld/VRPyRealWorld.h"
-#include "addons/RealWorld/traffic/VRPyTrafficSimulation.h"
 #include "addons/SimViDekont/VRPySimViDekont.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
+#include "addons/LeapMotion/VRPyHandGeo.h"
+#include "addons/LeapMotion/VRPyLeap.h"
 
 using namespace OSG;
 
 void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyObject>("Object", pModVR, VRPyStorage::typeRef);
     sm->registerModule<VRPyTransform>("Transform", pModVR, VRPyObject::typeRef);
+    sm->registerModule<VRPyCollision>("Collision", pModVR);
     sm->registerModule<VRPyGeometry>("Geometry", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyMaterial>("Material", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTextureGenerator>("TextureGenerator", pModVR);
@@ -114,8 +120,10 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyDevice>("Device", pModVR);
     sm->registerModule<VRPyIntersection>("Intersection", pModVR);
     sm->registerModule<VRPyHaptic>("Haptic", pModVR, VRPyDevice::typeRef);
-    sm->registerModule<VRPyMobile>("Mobile", pModVR, VRPyDevice::typeRef);
+    sm->registerModule<VRPyServer>("Mobile", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyMouse>("Mouse", pModVR, VRPyDevice::typeRef);
+    sm->registerModule<VRPyMultiTouch>("MultiTouch", pModVR, VRPyDevice::typeRef);
+    sm->registerModule<VRPyServer>("Server", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyAnimation>("Animation", pModVR);
     sm->registerModule<VRPyPose>("Pose", pModVR);
     sm->registerModule<VRPyPath>("Path", pModVR);
@@ -144,6 +152,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyNavPreset>("NavPreset", pModVR);
     sm->registerModule<VRPyRendering>("Rendering", pModVR);
     sm->registerModule<VRPySky>("Sky", pModVR, VRPyStorage::typeRef);
+    sm->registerModule<VRPyScenegraphInterface>("ScenegraphInterface", pModVR, VRPyObject::typeRef);
 
     sm->registerModule<VRPyProgress>("Progress", pModVR);
     sm->registerModule<VRPyUndoManager>("UndoManager", pModVR);
@@ -171,11 +180,14 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyTree>("Tree", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyNature>("Nature", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTerrain>("Terrain", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPyRain>("Rain", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPyRainCarWindshield>("RainCarWindshield", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyPlanet>("Planet", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyMillingMachine>("MillingMachine", pModVR);
     sm->registerModule<VRPyMillingWorkPiece>("MillingWorkPiece", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyMillingCuttingToolProfile>("MillingCuttingToolProfile", pModVR);
     sm->registerModule<VRPyMolecule>("Molecule", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPyCrystal>("Crystal", pModVR, VRPyMolecule::typeRef);
     sm->registerModule<VRPyRobotArm>("RobotArm", pModVR);
     sm->registerModule<VRPyOntology>("Ontology", pModVR);
     sm->registerModule<VRPyProcess>("Process", pModVR);
@@ -188,34 +200,35 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyEntity>("Entity", pModVR);
     sm->registerModule<VRPyReasoner>("Reasoner", pModVR);
 
-#ifndef _WIN32
+    sm->registerModule<VRPyHandGeo>("HandGeo", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPyLeap>("Leap", pModVR, VRPyDevice::typeRef);
+    sm->registerModule<VRPyLeapFrame>("LeapFrame", pModVR);
+
 	sm->registerModule<VRPyCSG>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
 	sm->registerModule<VRPyRealWorld>("RealWorld", pModVR, VRPyObject::typeRef);
-	sm->registerModule<VRPyTrafficSimulation>("TrafficSimulation", pModVR);
+	sm->registerModule<VRPyTrafficSimulation>("TrafficSimulation", pModVR, VRPyObject::typeRef);
 	sm->registerModule<VRPySimViDekont>("SimViDekont", pModVR);
-#endif
 
-    PyObject* pModMath = Py_InitModule3("VR.Math", VRSceneGlobals::methods, "VR math module");
+    PyObject* pModMath = sm->newModule("Math", VRSceneGlobals::methods, "VR math module");
     sm->registerModule<VRPyVec2f>("Vec2", pModMath, 0, "Math");
     sm->registerModule<VRPyVec3f>("Vec3", pModMath, 0, "Math");
     sm->registerModule<VRPyLine>("Line", pModMath, 0, "Math");
-    PyModule_AddObject(pModVR, "Math", pModMath);
 
-    PyObject* pModSetup = Py_InitModule3("Setup", VRSceneGlobals::methods, "VR setup module");
+    PyObject* pModSetup = sm->newModule("Setup", VRSceneGlobals::methods, "VR setup module");
     sm->registerModule<VRPySetup>("Setup", pModSetup, 0, "Setup");
     sm->registerModule<VRPyView>("View", pModSetup, 0, "Setup");
     sm->registerModule<VRPyWindow>("Window", pModSetup, 0, "Setup");
-    PyModule_AddObject(pModVR, "Setup", pModSetup);
 
-    PyObject* pModWorldGenerator = Py_InitModule3("VR.WorldGenerator", VRSceneGlobals::methods, "VR world generator module");
+    PyObject* pModWorldGenerator = sm->newModule("WorldGenerator", VRSceneGlobals::methods, "VR world generator module");
     sm->registerModule<VRPyWorldGenerator>("WorldGenerator", pModWorldGenerator, VRPyTransform::typeRef, "WorldGenerator");
     sm->registerModule<VRPyAsphalt>("Asphalt", pModWorldGenerator, VRPyMaterial::typeRef, "WorldGenerator");
     sm->registerModule<VRPyRoadBase>("RoadBase", pModWorldGenerator, VRPyObject::typeRef, "WorldGenerator");
     sm->registerModule<VRPyRoad>("Road", pModWorldGenerator, VRPyRoadBase::typeRef, "WorldGenerator");
+    sm->registerModule<VRPyRoadIntersection>("RoadIntersection", pModWorldGenerator, VRPyRoadBase::typeRef, "WorldGenerator");
     sm->registerModule<VRPyRoadNetwork>("RoadNetwork", pModWorldGenerator, VRPyRoadBase::typeRef, "WorldGenerator");
-    PyModule_AddObject(pModVR, "WorldGenerator", pModWorldGenerator);
+    sm->registerModule<VRPyDistrict>("District", pModWorldGenerator, 0, "WorldGenerator");
 
-    PyObject* pModFactory = Py_InitModule3("Factory", VRSceneGlobals::methods, "VR factory module");
+    PyObject* pModFactory = sm->newModule("Factory", VRSceneGlobals::methods, "VR factory module");
     sm->registerModule<FPyNode>("Node", pModFactory, 0, "Factory");
     sm->registerModule<FPyNetwork>("Network", pModFactory, 0, "Factory");
     sm->registerModule<FPyPath>("FPath", pModFactory, 0, "Factory");
@@ -226,7 +239,6 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyFactory>("Factory", pModFactory, 0, "Factory");
     sm->registerModule<VRPyProduction>("Production", pModFactory, 0, "Factory");
     sm->registerModule<VRPyAMLLoader>("AMLLoader", pModFactory, 0, "Factory");
-    PyModule_AddObject(pModVR, "Factory", pModFactory);
 }
 
 

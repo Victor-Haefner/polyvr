@@ -136,7 +136,7 @@ void ModuleTerrain::addTerrain(string texture, string key, string value, int hei
 void ModuleTerrain::addTerrain(Terrain* ter, VRGeoData* gdTerrain, int height){
     //create && fill vector a with VRPolygon corners
     Vector2dVector a;
-    bool first = true;
+    //bool first = true;
     /*for (Vec2d corner : ter->getCorners()) {
         if (first) { first=false; continue;} //first && last corners are equal, so ignoring first one
          a.push_back( Vector2d(corner[0], corner[1]));

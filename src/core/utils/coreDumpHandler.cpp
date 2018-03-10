@@ -30,11 +30,18 @@ extern "C" void coreDump(int sig) {
 }
 #endif
 
+void clearDumpFiles() {
+    remove(dumpFile); // in /tmp
+
+    string file = boost::filesystem::current_path().string()+"/core";
+    remove(file.c_str()); // in current folder
+}
+
 void enableCoreDump(bool b) {
     if (!b) return;
 #ifndef _WIN32
     // remove possible core file
-    remove(dumpFile);
+    clearDumpFiles();
 
     // Enable core dumps
     struct rlimit corelim;
@@ -45,6 +52,8 @@ void enableCoreDump(bool b) {
     signal(SIGSEGV, &coreDump);
     signal(SIGFPE, &coreDump);
     signal(SIGABRT, &coreDump);
+    signal(SIGTRAP, &coreDump);
+    signal(SIGBUS, &coreDump);
 
     /*signal(SIGHUP, &coreDump);
     signal(SIGINT, &coreDump);
@@ -52,7 +61,6 @@ void enableCoreDump(bool b) {
     signal(SIGILL, &coreDump);
     signal(SIGTRAP, &coreDump);
     signal(SIGABRT, &coreDump);
-    signal(SIGBUS, &coreDump);
     signal(SIGFPE, &coreDump);
     signal(SIGKILL, &coreDump);
     signal(SIGUSR1, &coreDump);

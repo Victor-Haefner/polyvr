@@ -1,5 +1,4 @@
 #include "VRConstructionKit.h"
-#include "VRSnappingEngine.h"
 #include "selection/VRSelector.h"
 
 #include <boost/bind.hpp>
@@ -13,19 +12,17 @@
 
 OSG_BEGIN_NAMESPACE;
 
-void VRConstructionKit_on_snap(VRConstructionKit* kit, VRSnappingEngine::EventSnap* e);
-
 VRConstructionKit::VRConstructionKit() {
     snapping = VRSnappingEngine::create();
     selector = VRSelector::create();
 
-    auto fkt = new VRFunction<VRSnappingEngine::EventSnap*>("on_snap_callback", boost::bind(VRConstructionKit_on_snap, this, _1));
+    auto fkt = new VRFunction<VRSnappingEngine::EventSnap*>("on_snap_callback", boost::bind(&VRConstructionKit::on_snap, this, _1));
     snapping->getSignalSnap()->add(fkt);
 }
 
 VRConstructionKit::~VRConstructionKit() {}
 
-shared_ptr<VRConstructionKit> VRConstructionKit::create() { return shared_ptr<VRConstructionKit>(new VRConstructionKit()); }
+VRConstructionKitPtr VRConstructionKit::create() { return VRConstructionKitPtr(new VRConstructionKit()); }
 
 void VRConstructionKit::clear() {
     objects.clear();
@@ -33,8 +30,8 @@ void VRConstructionKit::clear() {
     snapping->clear();
 }
 
-shared_ptr<VRSnappingEngine> VRConstructionKit::getSnappingEngine() { return snapping; }
-shared_ptr<VRSelector> VRConstructionKit::getSelector() { return selector; }
+VRSnappingEnginePtr VRConstructionKit::getSnappingEngine() { return snapping; }
+VRSelectorPtr VRConstructionKit::getSelector() { return selector; }
 
 vector<VRObjectPtr> VRConstructionKit::getObjects() {
     vector<VRObjectPtr> res;
@@ -42,8 +39,9 @@ vector<VRObjectPtr> VRConstructionKit::getObjects() {
     return res;
 }
 
-void VRConstructionKit_on_snap(VRConstructionKit* kit, VRSnappingEngine::EventSnap* e) {
-    if (e->snap == 0) { kit->breakup(e->o1); return; }
+void VRConstructionKit::on_snap(VRSnappingEngine::EventSnap* e) {
+    if (!doConstruction) return;
+    if (e->snap == 0) { breakup(e->o1); return; }
 
     if (e->o1 == 0 || e->o2 == 0) return;
     VRObjectPtr p1 = e->o1->getDragParent();
@@ -79,6 +77,7 @@ int VRConstructionKit::ID() {
 }
 
 void VRConstructionKit::breakup(VRTransformPtr obj) {
+    if (!doConstruction) return;
     if (obj == 0) return;
 
     auto p = obj->getParent();
@@ -109,6 +108,10 @@ int VRConstructionKit::addAnchorType(float size, Color3f color) {
     return id;
 }
 
+void VRConstructionKit::toggleConstruction(bool active) {
+    doConstruction = active;
+}
+
 void VRConstructionKit::addObject(VRTransformPtr t) {
     objects[t.get()] = t;
     snapping->addObject(t);
@@ -122,11 +125,11 @@ void VRConstructionKit::remObject(VRTransformPtr t) {
 VRGeometryPtr VRConstructionKit::addObjectAnchor(VRTransformPtr t, int a, Vec3d pos, float radius) {
     if (!anchors.count(a)) return 0;
     VRGeometryPtr anc = static_pointer_cast<VRGeometry>(anchors[a]->duplicate());
-    anc->setPose(pos, Vec3d(0,1,0), Vec3d(1,0,0));
+    anc->setTransform(pos, Vec3d(0,1,0), Vec3d(1,0,0));
     anc->show();
     anc->switchParent(t);
     snapping->addObjectAnchor(t, anc);
-    snapping->addRule(VRSnappingEngine::POINT, VRSnappingEngine::POINT, Line(Pnt3f(pos), Vec3f(0,0,0)), Line(Pnt3f(0,1,0), Vec3f(1,0,0)), radius, 1, t );
+    snapping->addRule(VRSnappingEngine::POINT, VRSnappingEngine::POINT, Line(Pnt3f(0,0,0), Vec3f(0,0,0)), Line(Pnt3f(0,1,0), Vec3f(1,0,0)), radius, 1, t );
     return anc;
 }
 

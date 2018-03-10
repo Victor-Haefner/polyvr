@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="sorting" name_space="Scene" loading_time="471">
+<Scene base_name="sorting" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
-    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
-      <Object ambient="0.387091 0.387091 0.387091 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0 0 0 1" type="Light" unique="1" visible="1">
-        <Object at="-0.5 -1 -0.3" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
-          <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.387091 0.387091 0.387091 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0 0 0 1" type="Light" visible="1">
+        <Object at="-0.5 -1 -0.3" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+          <constraint persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="2.75 1.72391 0.071064" at_dir="0" base_name="Default" far="512" fov="1.0472" from="10.0781 4.3056 3.57062" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
-          <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+        <Object accept_root="1" aspect="1" at="2.75 1.72391 0.071064" at_dir="0" base_name="Default" far="512" fov="1.0472" from="10.5706 4.47909 3.80579" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <constraint persistency="666"/>
         </Object>
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" hmdd="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
-    <Script base_name="init" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -34,10 +34,10 @@
 	
 	print VR.ontology.toString()
 </core>
-      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" name_suffix="0" base_name="trigger" name_space="__global__"/>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
     </Script>
-    <Script base_name="initBins" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
+    <Script base_name="initBins" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -64,7 +64,7 @@
 	makeBin([9,0.5,1.1])
 </core>
     </Script>
-    <Script base_name="initBumpers" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
+    <Script base_name="initBumpers" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -85,15 +85,15 @@
 		case = VR.Geometry('case')
 		case.setPrimitive('Box 0.2 0.2 0.6 1 1 1')
 		case.setMaterial(gray2)
-		case.setFrom(0,0.7,0)
+		case.setFrom([0,0.7,0])
 		rod = VR.Geometry('case')
 		rod.setPrimitive('Box 0.1 0.1 0.6 1 1 1')
 		rod.setMaterial(gray1)
-		rod.setFrom(0,0.7,0.1)
+		rod.setFrom([0,0.7,0.1])
 		head = VR.Geometry('case')
 		head.setPrimitive('Box 0.4 0.15 0.1 1 1 1')
 		head.setMaterial(red)
-		head.setFrom(0,0,0.3)
+		head.setFrom([0,0,0.3])
 		rod.addChild(head)
 		bumper.addChild(rod)
 		bumper.addChild(case)
@@ -110,7 +110,7 @@
 	makeBumper([8.7,0.5,-1.1])
 </core>
     </Script>
-    <Script base_name="initConveyorBelt" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
+    <Script base_name="initConveyorBelt" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -135,12 +135,12 @@
 	for i in range(109):
 		roll = VR.Geometry('roll')
 		roll.setPrimitive('Cylinder 0.9 0.1 12 1 1 1')
-		roll.setPose([i*0.2-10.8,0.05,0], [0,-1,0], [0,0,1])
+		roll.setTransform([i*0.2-10.8,0.05,0], [0,-1,0], [0,0,1])
 		roll.setMaterial(gray1)
 		belt.addChild(roll)
 </core>
     </Script>
-    <Script base_name="initFloor" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
+    <Script base_name="initFloor" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -154,7 +154,7 @@
 	VR.scene.addChild(floor)
 </core>
     </Script>
-    <Script base_name="initPackets" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
+    <Script base_name="initPackets" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -178,7 +178,7 @@
 		
 </core>
     </Script>
-    <Script base_name="initPanel" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
+    <Script base_name="initPanel" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -193,12 +193,12 @@
 	
 	screen = VR.Sprite('panel')
 	screen.setSize(0.9,0.9)
-	screen.setPose([0.11,0.5,0], [1,0,0], [0,-1,0])
+	screen.setTransform([0.11,0.5,0], [1,0,0], [0,-1,0])
 	screen.webOpen('http://localhost:5500/pannel_site', 512,1.0)
 	panel.addChild(screen)
 </core>
     </Script>
-    <Script base_name="initScanner" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
+    <Script base_name="initScanner" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -232,7 +232,7 @@
 	scanner.addChild(lamp)
 </core>
     </Script>
-    <Script base_name="makeLamp" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
+    <Script base_name="makeLamp" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -257,7 +257,7 @@
 	return lamp
 </core>
     </Script>
-    <Script base_name="pannel_handler" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
+    <Script base_name="pannel_handler" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -297,9 +297,9 @@
 		
 	#print VR.ontology.toString()
 </core>
-      <trig type="on_device" dev="server1" state="Released" param="" key="-1" name_suffix="2" base_name="trigger" name_space="__global__"/>
+      <trig type="on_device" dev="server1" state="Released" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
     </Script>
-    <Script base_name="pannel_site" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="HTML" server="server1" group="no group">
+    <Script base_name="pannel_site" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
       <core>
 &lt;!DOCTYPE html&gt;
 &lt;html&gt;
@@ -340,7 +340,7 @@
 &lt;/html&gt;
 </core>
     </Script>
-    <Script base_name="semantics_init" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
+    <Script base_name="semantics_init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -365,20 +365,22 @@
 	VR.ontology.addRule('doTimestep(t):Machine(m);doWork(m,t)')
 	VR.ontology.addRule('doWork(c,t):ConveyorBelt(c);Object(o);has(c,o);is(o.position,o.position+c.direction*c.speed)')
 	
-	ebelt = VR.ontology.addEntity('belt', 'ConveyorBelt', {'running':'false','powered':'false'})		
+	ebelt = VR.ontology.addEntity('belt', 'ConveyorBelt')
+	ebelt.set('running', 'false')		
+	ebelt.set('powered', 'false')		
 		
 	print VR.ontology
 </core>
     </Script>
-    <Script base_name="semantics_update" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
+    <Script base_name="semantics_update" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
 	#VR.ontology.process('q(c):Change(c);doTimestep(1)')
 </core>
-      <trig type="on_timeout" dev="" state="Pressed" param="1000" key="0" name_suffix="3" base_name="trigger" name_space="__global__"/>
+      <trig type="on_timeout" dev="" state="Pressed" param="1000" key="0" base_name="trigger" name_space="__global__" name_suffix="3" persistency="666"/>
     </Script>
-    <Script base_name="test" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
+    <Script base_name="test" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	

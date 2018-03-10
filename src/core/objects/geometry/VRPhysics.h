@@ -1,6 +1,7 @@
 #ifndef VRTRANSFORM_PHYSICS_EXT_H_INCLUDED
 #define VRTRANSFORM_PHYSICS_EXT_H_INCLUDED
 
+#include "addons/Bullet/VRPhysicsFwd.h"
 #include "core/utils/VRStorage.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/objects/VRObjectFwd.h"
@@ -18,20 +19,33 @@ class btCollisionObject;
 class btManifoldPoint;
 class btCollisionObjectWrapper;
 
-using namespace std;
-
 struct VRPhysicsJoint;
 
-struct VRCollision {
-    OSG::Vec3d pos1;
-    OSG::Vec3d pos2;
-    OSG::Vec3d norm;
-    float distance;
-    OSG::VRTransformWeakPtr obj1;
-    OSG::VRTransformWeakPtr obj2;
+using namespace std;
+OSG_BEGIN_NAMESPACE;
+
+class VRCollision {
+    public:
+        Vec3d pos1;
+        Vec3d pos2;
+        Vec3d norm;
+        float distance;
+        VRTransformWeakPtr obj1;
+        VRTransformWeakPtr obj2;
+
+    public:
+        VRCollision();
+        ~VRCollision();
+
+        Vec3d getPos1();
+        Vec3d getPos2();
+        Vec3d getNorm();
+        float getDistance();
+        VRTransformPtr getObj1();
+        VRTransformPtr getObj2();
 };
 
-class VRPhysics : public OSG::VRStorage {
+class VRPhysics : public VRStorage {
     public:
         struct btCollision {
             btManifoldPoint* cp;
@@ -54,8 +68,8 @@ class VRPhysics : public OSG::VRStorage {
         btDefaultMotionState* motionState = 0;
         btSoftRigidDynamicsWorld* world = 0;
         int activation_mode = 0;
-        int collisionGroup = 0;
-        int collisionMask = 0;
+        int collisionGroup = 1;
+        int collisionMask = 1;
         bool physicalized = false;
         bool dynamic = false;
         bool ghost = false;
@@ -63,38 +77,49 @@ class VRPhysics : public OSG::VRStorage {
         bool physTree = true;
         bool useCallbacks = false;
         float mass = 1.0;
-        float collisionMargin = 0.3;
+        float friction = 0.5;
+        float collisionMargin = 0.04;
         float linDamping = 0;
         float angDamping = 0;
-        btVector3 gravity;
+        btVector3 gravity = btVector3(0,-10,0);
         CallbackPtr callback;
 
-        vector<OSG::Vec3d> torqueJob;
-        vector<OSG::Vec3d> forceJob;
-        vector<OSG::Vec3d> torqueJob2;
-        vector<OSG::Vec3d> forceJob2;
+        // convex decomposition parameters
+        float compacityWeight = 0.1;
+        float volumeWeight = 0.0;
+        float NClusters = 2;
+        float NVerticesPerCH = 100;
+        float concavity = 100;
+        bool addExtraDistPoints = false;
+        bool addNeighboursDistPoints = false;
+        bool addFacesPoints = false;
+
+        vector<Vec3d> torqueJob;
+        vector<Vec3d> forceJob;
+        vector<Vec3d> torqueJob2;
+        vector<Vec3d> forceJob2;
 
         string comType = "geometric";
-        OSG::Vec3d CoMOffset; // center of mass offset
-        OSG::Vec3d CoMOffset_custom; // center of mass offset
-        string physicsShape;
+        Vec3d CoMOffset; // center of mass offset
+        Vec3d CoMOffset_custom; // center of mass offset
+        string physicsShape = "Convex";
         map<VRPhysics*, VRPhysicsJoint*> joints ;
         map<VRPhysics*, VRPhysicsJoint*> joints2;
 
         /** total force & torque added by addForce() or addTorque() in this frame **/
-        btVector3 constantForce;
-        btVector3 constantTorque;
+        btVector3 constantForce = btVector3(0,0,0);
+        btVector3 constantTorque = btVector3(0,0,0);
 
-        OSG::VRTransformWeakPtr vr_obj;
-        OSG::VRGeometryPtr visShape;
-        OSG::VRConstraintPtr constraint = 0;
-        OSG::Vec3d scale;
+        VRTransformWeakPtr vr_obj;
+        VRGeometryPtr visShape;
+        VRConstraintPtr constraint = 0;
+        Vec3d scale = Vec3d(1,1,1);
 
-        vector<OSG::VRGeometryPtr> getGeometries();
+        vector<VRGeometryPtr> getGeometries();
 
         btCollisionShape* getBoxShape();
         btCollisionShape* getSphereShape();
-        btCollisionShape* getConvexShape(OSG::Vec3d& mc);
+        btCollisionShape* getConvexShape(Vec3d& mc);
         btCollisionShape* getConcaveShape();
         btCollisionShape* getCompoundShape();
         btCollisionShape* getHACDShape();
@@ -108,7 +133,7 @@ class VRPhysics : public OSG::VRStorage {
         void updateVisualGeo();
 
     public:
-        VRPhysics(OSG::VRTransformWeakPtr t);
+        VRPhysics(VRTransformWeakPtr t);
         virtual ~VRPhysics();
 
         void prepareStep();
@@ -121,7 +146,8 @@ class VRPhysics : public OSG::VRStorage {
         void setShape(string s, float param = -1);
         void setCustomShape(btCollisionShape* shape);
         string getShape();
-        OSG::VRTransformPtr getVisualShape();
+        VRTransformPtr getVisualShape();
+        void setConvexDecompositionParameters(float cw, float vw, float nc, float nv, float c, bool aedp, bool andp, bool afp);
 
         void setPhysicalized(bool b);
         bool isPhysicalized();
@@ -140,7 +166,10 @@ class VRPhysics : public OSG::VRStorage {
 
         void setMass(float m);
         float getMass();
-        void setGravity(OSG::Vec3d v);
+        void setGravity(Vec3d v);
+
+        void setFriction(float f);
+        float getFriction();
 
         void setCollisionMargin(float m);
         void setCollisionGroup(int g);
@@ -151,53 +180,55 @@ class VRPhysics : public OSG::VRStorage {
 
         vector<VRCollision> getCollisions();
 
-        void updateTransformation(OSG::VRTransformWeakPtr t);
-        OSG::Matrix4d getTransformation();
+        void updateTransformation(VRTransformPtr t);
+        Matrix4d getTransformation();
         btTransform getTransform();
         void setTransformation(btTransform t);
 
         void pause(bool b = true);
         void resetForces();
-        void applyImpulse(OSG::Vec3d i);
-        void applyTorqueImpulse(OSG::Vec3d i);
+        void applyImpulse(Vec3d i);
+        void applyTorqueImpulse(Vec3d i);
         /** requests a force, which is handled in the physics thread later**/
-        void addForce(OSG::Vec3d i);
-        void addTorque(OSG::Vec3d i);
+        void addForce(Vec3d i);
+        void addTorque(Vec3d i);
 
-        void addConstantForce(OSG::Vec3d i);
-        void addConstantTorque(OSG::Vec3d i);
+        void addConstantForce(Vec3d i);
+        void addConstantTorque(Vec3d i);
         float getConstraintAngle(VRPhysics *to, int axis);
         void deleteConstraints(VRPhysics* with);
         /**get the requested total force in this frame **/
-        OSG::Vec3d getForce();
+        Vec3d getForce();
         /** get requested total torque**/
-        OSG::Vec3d getTorque();
+        Vec3d getTorque();
 
-        OSG::Vec3d getLinearVelocity();
-        OSG::Vec3d getAngularVelocity();
+        Vec3d getLinearVelocity();
+        Vec3d getAngularVelocity();
         btMatrix3x3 getInertiaTensor();
         void setDamping(float lin,float ang);
 
-        void setCenterOfMass(OSG::Vec3d com);
+        void setCenterOfMass(Vec3d com);
 
         static vector<string> getPhysicsShapes();
-        static btTransform fromMatrix(OSG::Matrix4d m, OSG::Vec3d& scale, OSG::Vec3d mc);
-        static btTransform fromMatrix(OSG::Matrix4d m, OSG::Vec3d mc);
-        static btTransform fromVRTransform(OSG::VRTransformWeakPtr t, OSG::Vec3d& scale, OSG::Vec3d mc);
-        static OSG::Matrix4d fromBTTransform(const btTransform t);
-        static OSG::Matrix4d fromBTTransform(const btTransform t, OSG::Vec3d& scale, OSG::Vec3d mc);
+        static btTransform fromMatrix(Matrix4d m, Vec3d& scale, Vec3d mc);
+        static btTransform fromMatrix(Matrix4d m, Vec3d mc);
+        static btTransform fromVRTransform(VRTransformPtr t, Vec3d& scale, Vec3d mc);
+        static Matrix4d fromBTTransform(const btTransform t);
+        static Matrix4d fromBTTransform(const btTransform t, Vec3d& scale, Vec3d mc);
 
-        static btVector3 toBtVector3(OSG::Vec3d);
-        static OSG::Vec3d toVec3d(btVector3);
+        static btVector3 toBtVector3(Vec3d);
+        static Vec3d toVec3d(btVector3);
 
 
-        void setConstraint(VRPhysics* p, OSG::VRConstraintPtr c, OSG::VRConstraintPtr cs); //for Rigid to Rigid
-        void setConstraint(VRPhysics* p, int nodeIndex,OSG::Vec3d localPivot,bool ignoreCollision,float influence);//for Soft to Rigid
+        void setConstraint(VRPhysics* p, VRConstraintPtr c, VRConstraintPtr cs); //for Rigid to Rigid
+        void setConstraint(VRPhysics* p, int nodeIndex,Vec3d localPivot,bool ignoreCollision,float influence);//for Soft to Rigid
 
         void updateConstraint(VRPhysics* p);
         void updateConstraints();
 
         void triggerCallbacks(btManifoldPoint* cp, const btCollisionObjectWrapper* obj1, const btCollisionObjectWrapper* obj2 );
 };
+
+OSG_END_NAMESPACE;
 
 #endif // VRTRANSFORM_PHYSICS_EXT_H_INCLUDED

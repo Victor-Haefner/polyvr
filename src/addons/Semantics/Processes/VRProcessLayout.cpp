@@ -85,6 +85,16 @@ void pushSubjectBox(VRGeoData& geo, int N, float h) {
     pushLabelFace(geo, N,s,s,h, Vec3d(0,0,-1), Vec3d(0,1,0));
 }
 
+void pushActionBox(VRGeoData& geo, int N, float h) {
+    float s = 0.5 * N + 0.5;
+    pushLabelFace(geo, N,s,s,h, Vec3d(0,-1,0), Vec3d(0,0,1));
+    pushLabelFace(geo, N,s,s,h, Vec3d(0,1,0), Vec3d(0,0,1));
+    pushLabelFace(geo, N,s,s,h, Vec3d(1,0,0), Vec3d(0,1,0));
+    pushLabelFace(geo, N,s,s,h, Vec3d(-1,0,0), Vec3d(0,1,0));
+    pushLabelFace(geo, N,s,s,h, Vec3d(0,0,1), Vec3d(0,1,0));
+    pushLabelFace(geo, N,s,s,h, Vec3d(0,0,-1), Vec3d(0,1,0));
+}
+
 void pushMsgBox(VRGeoData& geo, int N, float h) {
     float s = 0.5 * N + 0.5;
     Vec4i q1 = pushRectVerts(geo, -s, s, -h, h, Vec3d(0,-1,0), Vec3d(0,0,1), h);
@@ -104,6 +114,7 @@ void pushMsgBox(VRGeoData& geo, int N, float h) {
 VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     Color4f fg, bg;
     if (n->type == SUBJECT) { fg = Color4f(0,0,0,1); bg = Color4f(0.8,0.9,1,1); }
+    if (n->type == ACTION) { fg = Color4f(0,0,0,1); bg = Color4f(1,0.9,0.8,1); }
     if (n->type == MESSAGE) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,0,1); }
 
     int wrapN = 12;
@@ -119,17 +130,17 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     VRGeoData geo;
 
     if (n->type == SUBJECT) pushSubjectBox(geo, wrapN, lineN*height*0.5);
+    if (n->type == ACTION) pushActionBox(geo, wrapN, lineN*height*0.5);
     if (n->type == MESSAGE) pushMsgBox(geo, wrapN, lineN*height*0.5);
 
     auto w = geo.asGeometry("ProcessElement");
-    if (n->type == SUBJECT) w->addAttachment("subject", 0);
-    if (n->type == MESSAGE) w->addAttachment("message", 0);
+    if (n->type == SUBJECT) w->addTag("subject");
+    if (n->type == ACTION) w->addTag("action");
+    if (n->type == MESSAGE) w->addTag("message");
     w->setMaterial(mat);
-    //w->setPickable(1);
-    //w->getConstraint()->setTConstraint(Vec3d(0,1,0), VRConstraint::PLANE);
-    w->getConstraint()->lockRotation();
-    w->getConstraint()->setActive(true, w);
-    //w->getConstraint()->setReferential( dynamic_pointer_cast<VRTransform>(ptr()) );
+    w->getConstraint()->setTConstraint(Vec3d(0,1,0), VRConstraint::PLANE);
+    w->getConstraint()->setReferential(ptr());
+    w->getConstraint()->setActive(true);
     addChild(w);
     n->widget = w;
     return w;

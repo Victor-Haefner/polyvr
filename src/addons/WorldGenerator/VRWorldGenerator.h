@@ -54,7 +54,10 @@ class VRWorldGenerator : public VRTransform {
         VRObjectManagerPtr getAssetManager();
         VRNaturePtr getNature();
         VRTerrainPtr getTerrain();
+        VRDistrictPtr getDistrict();
         VRMaterialPtr getMaterial(string name);
+
+        string getStats();
 };
 
 OSG_END_NAMESPACE;

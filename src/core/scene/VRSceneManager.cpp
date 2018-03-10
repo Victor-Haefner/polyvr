@@ -4,6 +4,7 @@
 #include "core/setup/windows/VRWindow.h"
 #include "core/utils/VRRate.h"
 #include "core/utils/VRProfiler.h"
+#include "core/utils/coreDumpHandler.h"
 #include "VRScene.h"
 #include "core/objects/VRCamera.h"
 #include "core/objects/VRLight.h"
@@ -18,6 +19,7 @@
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <gtkmm/main.h>
 #include <GL/glut.h>
+#include "core/utils/system/VRSystem.h"
 #include <boost/filesystem.hpp>
 
 typedef boost::recursive_mutex::scoped_lock PLock;
@@ -50,8 +52,8 @@ VRSceneManager* VRSceneManager::get() {
 }
 
 void VRSceneManager::loadScene(string path, bool write_protected) {
-    if (!boost::filesystem::exists(path)) { cout << "loadScene " << path << " not found" << endl; return; }
-    path = boost::filesystem::canonical(path).string();
+    if (!exists(path)) { cout << "loadScene " << path << " not found" << endl; return; }
+    path = canonical(path);
     if (current) if (current->getPath() == path) return;
     cout << "loadScene " << path << endl;
 
@@ -85,9 +87,9 @@ void VRSceneManager::closeScene() {
 
 void VRSceneManager::setWorkdir(string path) {
 	if (path == "") return;
-	if (boost::filesystem::exists(path))
-		path = boost::filesystem::canonical(path).string();
+	if (exists(path)) path = canonical(path);
 	boost::filesystem::current_path(path);
+	clearDumpFiles();
 }
 
 void VRSceneManager::newEmptyScene(string path) {
@@ -101,7 +103,7 @@ void VRSceneManager::newEmptyScene(string path) {
 }
 
 void VRSceneManager::newScene(string path) {
-    if (boost::filesystem::exists(path)) path = boost::filesystem::canonical(path).string();
+    if (exists(path)) path = canonical(path);
     newEmptyScene(path);
 
     VRLightPtr headlight = VRLight::create("light");
@@ -167,7 +169,7 @@ void VRSceneManager::searchExercisesAndFavorites() {
 		string ending = file.substr(N - 4, N - 1);
 		if (ending != ".xml" && ending != ".pvr") continue;
 
-		string path = boost::filesystem::canonical("examples/" + file).string();
+		string path = canonical("examples/" + file);
 		example_paths.push_back(path);
 	}
 
@@ -179,7 +181,7 @@ void VRSceneManager::searchExercisesAndFavorites() {
     while ( getline (file,line) ) {
         ifstream f(line.c_str());
         if (!f.good()) continue;
-		line = boost::filesystem::canonical(line).string();
+		line = canonical(line);
         favorite_paths.push_back(line);
     }
     file.close();

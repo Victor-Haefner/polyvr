@@ -17,7 +17,7 @@ simpleVRPyType(Pathtool, New_ptr);
 PyMethodDef VRPyPathtool::methods[] = {
     {"newPath", (PyCFunction)VRPyPathtool::newPath, METH_VARARGS, "Add a new path - path newPath(device, anchor | int resolution, bool doControlHandles )" },
     {"remPath", (PyCFunction)VRPyPathtool::remPath, METH_VARARGS, "Remove a path - remPath(path)" },
-    {"extrude", (PyCFunction)VRPyPathtool::extrude, METH_VARARGS, "Extrude a path - handle extrude(device, path)" },
+    {"extrude", PyWrap(Pathtool, extrude, "Extrude a path", VRGeometryPtr, VRDevicePtr, PathPtr) },
     {"addPath", (PyCFunction)VRPyPathtool::addPath, METH_VARARGS, "Add a path and add resulting stroke to object - addPath(path, object)" },
     {"select", (PyCFunction)VRPyPathtool::select, METH_VARARGS, "Select handle - select(handle)" },
     {"deselect", (PyCFunction)VRPyPathtool::deselect, METH_NOARGS, "Deselect anything previously selected - deselect()" },
@@ -25,7 +25,7 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"getPaths", (PyCFunction)VRPyPathtool::getPaths, METH_VARARGS, "Return all paths or paths connected to handle - [path] getPaths( | handle )" },
     {"getPath", (PyCFunction)VRPyPathtool::getPath, METH_VARARGS, "Return path between handles h1 and h2 - [path] getPath( handle h1, handle h2 )" },
     {"getHandle", (PyCFunction)VRPyPathtool::getHandle, METH_VARARGS, "Return a handle by node ID - handle getHandle( int ID )" },
-    {"getHandles", (PyCFunction)VRPyPathtool::getHandles, METH_VARARGS, "Return a list of paths handles - [handle] getHandles(path)" },
+    {"getHandles", PyWrap(Pathtool, getHandles, "Return a list of paths handles", vector<VRGeometryPtr>, PathPtr ) },
     {"getStroke", (PyCFunction)VRPyPathtool::getStroke, METH_VARARGS, "Return the stroke object - stroke getStroke(path)" },
     {"update", (PyCFunction)VRPyPathtool::update, METH_NOARGS, "Update the tool - update()" },
     {"clear", (PyCFunction)VRPyPathtool::clear, METH_VARARGS, "Clear all path nodes - clear(path)" },
@@ -34,8 +34,8 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"setGraph", (PyCFunction)VRPyPathtool::setGraph, METH_VARARGS, "Setup from graph - setGraph( graph )" },
     {"addNode", (PyCFunction)VRPyPathtool::addNode, METH_VARARGS, "Add node - int addNode( pose )" },
     {"removeNode", (PyCFunction)VRPyPathtool::removeNode, METH_VARARGS, "Remove node by id - removeNode( int )" },
-    {"getNodeID", (PyCFunction)VRPyPathtool::getNodeID, METH_VARARGS, "Return node ID from handle - getNodeID( handle )" },
-    {"connect", (PyCFunction)VRPyPathtool::connect, METH_VARARGS, "Connect two nodes by id, using optional normals - connect( id1, id2 | n1, n2, doHandles)" },
+    {"getNodeID", PyWrap(Pathtool, getNodeID, "Return node ID from handle", int, VRObjectPtr) },
+    {"connect", (PyCFunction)VRPyPathtool::connect, METH_VARARGS, "Connect two nodes by id, using optional normals - connect( id1, id2 | n1, n2, doHandles, addArrow)" },
     {"disconnect", (PyCFunction)VRPyPathtool::disconnect, METH_VARARGS, "Disconnect two nodes - disconnect( id1, id2 )" },
     {"setProjectionGeometry", (PyCFunction)VRPyPathtool::setProjectionGeometry, METH_VARARGS, "Set an object to project handles onto - setProjectionGeometry( object )" },
     {NULL}  /* Sentinel */
@@ -47,13 +47,6 @@ PyObject* VRPyPathtool::setProjectionGeometry(VRPyPathtool* self, PyObject* args
     if (! PyArg_ParseTuple(args, "O:setProjectionGeometry", &g)) return NULL;
     self->objPtr->setProjectionGeometry( g->objPtr );
     Py_RETURN_TRUE;
-}
-
-PyObject* VRPyPathtool::getNodeID(VRPyPathtool* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    VRPyObject* g = 0;
-    if (! PyArg_ParseTuple(args, "O:getNodeID", &g)) return NULL;
-    return PyInt_FromLong( self->objPtr->getNodeID( g->objPtr ) );
 }
 
 PyObject* VRPyPathtool::setGraph(VRPyPathtool* self, PyObject* args) {
@@ -78,10 +71,11 @@ PyObject* VRPyPathtool::connect(VRPyPathtool* self, PyObject* args) {
     int i1 = 0;
     int i2 = 0;
     int doHandles = 1;
+    int addArrow = 0;
     PyObject* n1 = 0;
     PyObject* n2 = 0;
-    if (! PyArg_ParseTuple(args, "ii|OOi:connect", &i1, &i2, &n1, &n2, &doHandles)) return NULL;
-    if (n1 && n2) self->objPtr->connect( i1, i2, doHandles, parseVec3dList(n1), parseVec3dList(n2) );
+    if (! PyArg_ParseTuple(args, "ii|OOii:connect", &i1, &i2, &n1, &n2, &doHandles, &addArrow)) return NULL;
+    if (n1 && n2) self->objPtr->connect( i1, i2, doHandles, addArrow, parseVec3dList(n1), parseVec3dList(n2) );
     else self->objPtr->connect( i1, i2 );
     Py_RETURN_TRUE;
 }
@@ -164,13 +158,15 @@ PyObject* VRPyPathtool::getStroke(VRPyPathtool* self, PyObject* args) {
     return VRPyStroke::fromSharedPtr( self->objPtr->getStroke(p->objPtr) );
 }
 
-PyObject* VRPyPathtool::getHandles(VRPyPathtool* self, PyObject* args) {
+/*PyObject* VRPyPathtool::getHandles(VRPyPathtool* self, PyObject* args) {
     if (!self->valid()) return NULL;
 
     VRPyPath* p = 0;
     if (! PyArg_ParseTuple(args, "|O:getHandles", &p)) return NULL;
-    pathPtr pa = 0;
-    if (p) pa = p->objPtr;
+    PathPtr pa = 0;
+    if (p) {
+        pa = p->objPtr;
+    }
 
     vector<VRGeometryPtr> objs = self->objPtr->getHandles(pa);
 
@@ -180,7 +176,7 @@ PyObject* VRPyPathtool::getHandles(VRPyPathtool* self, PyObject* args) {
     }
 
     return li;
-}
+}*/
 
 PyObject* VRPyPathtool::setVisuals(VRPyPathtool* self, PyObject* args) {
     if (!self->valid()) return NULL;
@@ -232,14 +228,5 @@ PyObject* VRPyPathtool::remPath(VRPyPathtool* self, PyObject* args) {
     VRPyPath* p = (VRPyPath*)parseObject(args);
     self->objPtr->remPath( p->objPtr );
     Py_RETURN_TRUE;
-}
-
-PyObject* VRPyPathtool::extrude(VRPyPathtool* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    VRPyDevice* dev; VRPyPath* p;
-    if (! PyArg_ParseTuple(args, "OO:extrude", &dev, &p)) return NULL;
-    VRDevicePtr d = 0;
-    if (!isNone((PyObject*)dev)) d = dev->objPtr;
-    return VRPyGeometry::fromSharedPtr( self->objPtr->extrude( d, p->objPtr) );
 }
 

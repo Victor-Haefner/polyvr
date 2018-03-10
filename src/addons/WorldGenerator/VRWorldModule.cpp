@@ -8,7 +8,7 @@ VRWorldModule::~VRWorldModule() {}
 
 void VRWorldModule::setWorld(VRWorldGeneratorPtr w) {
     world = w;
-    planet = world->getPlanet();
-    terrain = world->getTerrain();
-    ontology = world->getOntology();
+    planet = w->getPlanet();
+    terrain = w->getTerrain();
+    ontology = w->getOntology();
 }

@@ -46,6 +46,7 @@ void GISWorld::setupOntology() {
     auto PerpendicularParkingLot = world->addConcept("PerpendicularParkingLot", "ParkingLot");
     auto AngledParkingLot = world->addConcept("AngledParkingLot", "ParkingLot");
     auto Sign = world->addConcept("Sign", "Object");
+    auto TrafficLight = world->addConcept("TrafficLight", "Object");
 
     World->addProperty("ways", WayNetwork);
     WayNetwork->addProperty("ways", Way);
@@ -85,8 +86,12 @@ void GISWorld::setupOntology() {
     Sidewalk->addProperty("kerbs", Kerb);
     RoadMarking->addProperty("width", "float");
     RoadMarking->addProperty("style", "string");
-    RoadMarking->addProperty("dashNumber", "int");
+    RoadMarking->addProperty("dashLength", "float");
     RoadTrack->addProperty("width", "float");
+    Building->addProperty("houseNumber", "string");
+    Building->addProperty("streetName", "string");
+    Building->addProperty("area", "Area");
+    TrafficLight->addProperty("state", "string");
 
     auto Plant = world->addConcept("Plant");
     auto Tree = world->addConcept("Tree", "Plant");

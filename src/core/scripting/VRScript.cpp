@@ -13,9 +13,11 @@
 #include "core/setup/devices/VRServer.h"
 #include "VRPySocket.h"
 #include "VRPyMouse.h"
+#include "VRPyMultiTouch.h"
 #include "VRPyHaptic.h"
 #include "VRPyMobile.h"
 #include "VRPyBaseT.h"
+#include "addons/LeapMotion/VRPyLeap.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/toString.h"
 #include "core/setup/VRSetup.h"
@@ -23,24 +25,25 @@
 #include <libxml++/nodes/element.h>
 #include <libxml++/nodes/textnode.h>
 #include <frameobject.h>
+#include <pyerrors.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-void updateArgPtr(VRScript::arg* a) {
+void updateArgPtr(VRScript::argPtr a) {
     string t = a->type;
     auto scene = VRScene::getCurrent();
     VRSetupPtr setup = VRSetup::getCurrent();
 
-    if (t == "VRPyObjectType" || t == "VRPyGeometryType" || t == "VRPyTransformType" || t == "VRPyLightType" || t == "VRPyLodType") {
+    if (t == "VRPyObjectType" || t == "VRPyGeometryType" || t == "VRPyTransformType" || t == "VRPyLightType" || t == "VRPyLodType" || t == "VRPyLeapFrameType") {
         a->ptr = (void*)scene->get(a->val).get();
         return;
     }
     if (t == "VRPySocketType") {
-        a->ptr = (void*)scene->getSocket(a->val);
+        a->ptr = (void*)scene->getSocket(a->val).get();
         return;
     }
-    if (t == "VRPyDeviceType" || t == "VRPyMouseType" || t == "VRPyHapticType" || t == "VRPyMobileType") {
+    if (t == "VRPyDeviceType" || t == "VRPyMouseType" || t == "VRPyHapticType" || t == "VRPyServerType") {
         a->ptr = (void*)setup->getDevice(a->val).get();
         return;
     }
@@ -52,13 +55,16 @@ void updateArgPtr(VRScript::arg* a) {
 
 VRScript::trig::trig() { setName("trigger"); }
 VRScript::arg::arg(string nspace, string name) {
-    setSeparator('_');
-    setNameSpace(nspace);
+    auto ns = setNameSpace(nspace);
+    ns->setSeparator('_');
     setName(name);
 }
 
 VRScript::trig::~trig() {}
 VRScript::arg::~arg() {}
+
+VRScript::trigPtr VRScript::trig::create() { return VRScript::trigPtr( new trig() ); }
+VRScript::argPtr VRScript::arg::create(string nspace, string name) { return VRScript::argPtr( new arg(nspace, name) ); }
 
 void VRScript::clean() {
     if ( auto setup = VRSetup::getCurrent() ) {
@@ -68,8 +74,8 @@ void VRScript::clean() {
 
     auto scene = VRScene::getCurrent();
 
-    if (devArg) { delete devArg; devArg = 0; }
-    if (socArg) { delete socArg; socArg = 0; }
+    if (devArg) devArg = 0;
+    if (socArg) socArg = 0;
 
     for (auto t : trigs) {
         if (t->soc) t->soc->unsetCallbacks();
@@ -89,6 +95,7 @@ void VRScript::update() {
     }
 
     auto scene = VRScene::getCurrent();
+    if (!scene) return;
 
     for (auto t : trigs) {
         if (t->trigger == "on_scene_close") {
@@ -124,7 +131,7 @@ void VRScript::update() {
             }
 
             // add dev argument
-            if (!devArg) devArg = new arg(VRName::getName(), "dev");
+            if (!devArg) devArg = arg::create(VRName::getName(), "dev");
             devArg->type = "VRPyDeviceType";
             devArg->val = "";
             devArg->trig = true;
@@ -138,7 +145,7 @@ void VRScript::update() {
             t->soc->setTCPCallback(cbfkt_soc);
 
             // add msg argument
-            if (!socArg) socArg = new arg(VRName::getName(), "msg");
+            if (!socArg) socArg = arg::create(VRName::getName(), "msg");
             socArg->type = "str";
             socArg->val = "";
             t->a = socArg;
@@ -169,8 +176,8 @@ void VRScript::update() {
 
 VRScript::VRScript(string _name) {
     setStorageType("Script");
-    setSeparator('_');
-    setNameSpace("__script__");
+    auto ns = setNameSpace("__script__");
+    ns->setSeparator('_');
     setName(_name);
     cbfkt_sys = VRUpdateCb::create(_name + "_ScriptCallback_sys", boost::bind(&VRScript::execute, this));
     cbfkt_dev = new VRFunction<VRDeviceWeakPtr>(_name + "_ScriptCallback_dev", boost::bind(&VRScript::execute_dev, this, _1));
@@ -183,25 +190,24 @@ VRScript::VRScript(string _name) {
 }
 
 VRScript::~VRScript() {
+    //cout << "VRScript::~VRScript " << getName() << endl;
     for (auto t : trigs) {
         if (t->trigger == "on_scene_close") VRSceneManager::get()->getSignal_on_scene_close()->sub(cbfkt_sys);
     }
-
-    for (auto a : args) delete a;
-    for (auto t : trigs) delete t;
 }
 
 VRScriptPtr VRScript::create(string name) { return VRScriptPtr( new VRScript(name) ); }
+VRScriptPtr VRScript::ptr() { return shared_from_this(); }
 
-VRScript::arg* VRScript::addArgument() {
+VRScript::argPtr VRScript::addArgument() {
     clean();
-    arg* a = new arg(VRName::getName());
+    argPtr a = arg::create(VRName::getName());
     args.push_back(a);
     update();
     return a;
 }
 
-PyObject* VRScript::getPyObj(arg* a) {
+PyObject* VRScript::getPyObj(argPtr a) {
     updateArgPtr(a);
     if (a->type == "int") return Py_BuildValue("i", toInt(a->val.c_str()));
     else if (a->type == "float") return Py_BuildValue("f", toFloat(a->val.c_str()));
@@ -215,23 +221,21 @@ PyObject* VRScript::getPyObj(arg* a) {
     else if (a->type == "VRPyLodType") return VRPyLod::fromSharedPtr(((VRLod*)a->ptr)->ptr());
     else if (a->type == "VRPyDeviceType") return VRPyDevice::fromSharedPtr(((VRDevice*)a->ptr)->ptr());
     else if (a->type == "VRPyMouseType") return VRPyMouse::fromSharedPtr(((VRMouse*)a->ptr)->ptr());
+    else if (a->type == "VRPyMultiTouchType") return VRPyMultiTouch::fromSharedPtr(((VRMultiTouch*)a->ptr)->ptr());
     else if (a->type == "VRPyHapticType") return VRPyHaptic::fromSharedPtr(((VRHaptic*)a->ptr)->ptr());
-    else if (a->type == "VRPyMobileType") return VRPyMobile::fromSharedPtr(((VRServer*)a->ptr)->ptr());
+    else if (a->type == "VRPyServerType") return VRPyServer::fromSharedPtr(((VRServer*)a->ptr)->ptr());
+    else if (a->type == "VRPyLeapFrameType") return VRPyLeapFrame::fromSharedPtr(((VRLeapFrame*)a->ptr)->ptr());
     //else if (a->type == "VRPySocketType") return VRPySocket::fromSharedPtr(((VRSocket*)a->ptr)->ptr());
     else { cout << "\ngetPyObj ERROR: " << a->type << " unknown!\n"; Py_RETURN_NONE; }
 }
 
-VRScript::arg* VRScript::getArg(string name) {
-    for (auto a : args) {
-        if (a->getName() == name) return a;
-    }
+VRScript::argPtr VRScript::getArg(string name) {
+    for (auto a : args) if (a->getName() == name) return a;
     return 0;
 }
 
-VRScript::trig* VRScript::getTrig(string name) {
-    for (auto t : trigs) {
-        if (t->getName() == name) return t;
-    }
+VRScript::trigPtr VRScript::getTrig(string name) {
+    for (auto t : trigs) if (t->getName() == name) return t;
     return 0;
 }
 
@@ -290,7 +294,7 @@ VRScript::Search VRScript::find(string s) {
     return search;
 }
 
-list<VRScript::arg*> VRScript::getArguments(bool withInternals) {
+list<VRScript::argPtr> VRScript::getArguments(bool withInternals) {
     if (withInternals && socArg) ;
     auto tmp = args;
     if (socArg) tmp.push_front(socArg);
@@ -309,6 +313,7 @@ string VRScript::getHead() { return head; }
 string VRScript::getScript() { return head + core; }
 string VRScript::getType() { return type; }
 string VRScript::getServer() { return server; }
+
 int VRScript::getHeadSize() { // number of head lines
     if (type == "Python") return 1;
     return 0;
@@ -321,9 +326,124 @@ void VRScript::on_err_link_clicked(errLink link, string s) {
 
 VRScript::errLink::errLink(string f, int l, int c) : filename(f), line(l), column(c) {}
 
-void VRScript::pyTraceToConsole() { // get py trace
+
+int parse_syntax_error(PyObject *err, PyObject **message, char **filename, int *lineno, int *offset, char **text) {
+    long hold;
+    PyObject *v;
+
+    /* old style errors */
+    if (PyTuple_Check(err)) return PyArg_ParseTuple(err, "O(ziiz)", message, filename, lineno, offset, text);
+
+    /* new style errors.  `err' is an instance */
+    if (! (v = PyObject_GetAttrString(err, "msg"))) goto finally;
+    *message = v;
+
+    if (!(v = PyObject_GetAttrString(err, "filename"))) goto finally;
+    if (v == Py_None) *filename = NULL;
+    else if (! (*filename = PyString_AsString(v))) goto finally;
+
+    Py_DECREF(v);
+    if (!(v = PyObject_GetAttrString(err, "lineno"))) goto finally;
+    hold = PyInt_AsLong(v);
+    Py_DECREF(v);
+    v = NULL;
+    if (hold < 0 && PyErr_Occurred()) goto finally;
+    *lineno = (int)hold;
+
+    if (!(v = PyObject_GetAttrString(err, "offset"))) goto finally;
+    if (v == Py_None) {
+        *offset = -1;
+        Py_DECREF(v);
+        v = NULL;
+    } else {
+        hold = PyInt_AsLong(v);
+        Py_DECREF(v);
+        v = NULL;
+        if (hold < 0 && PyErr_Occurred())
+            goto finally;
+        *offset = (int)hold;
+    }
+
+    if (!(v = PyObject_GetAttrString(err, "text"))) goto finally;
+    if (v == Py_None) *text = NULL;
+    else if (! (*text = PyString_AsString(v))) goto finally;
+    Py_DECREF(v);
+    return 1;
+
+finally:
+    Py_XDECREF(v);
+    return 0;
+}
+
+void print_error_text(int offset, char *text) {
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
-        VRGuiManager::get()->getConsole( "Errors" )->write( m, style, link );
+        VRGuiManager::get()->getConsole( "Syntax" )->write( m, style, link );
+    };
+
+    char *nl;
+    if (offset >= 0) {
+        if (offset > 0 && offset == strlen(text) && text[offset - 1] == '\n') offset--;
+        for (;;) {
+            nl = strchr(text, '\n');
+            if (nl == NULL || nl-text >= offset) break;
+            offset -= (int)(nl+1-text);
+            text = nl+1;
+        }
+        while (*text == ' ' || *text == '\t') {
+            text++;
+            offset--;
+        }
+    }
+    print("    ");
+    print(text);
+    if (*text == '\0' || text[strlen(text)-1] != '\n') print("\n");
+    if (offset == -1) return;
+    print("    ");
+    offset--;
+    while (offset > 0) {
+        print(" ");
+        offset--;
+    }
+    print("^\n");
+}
+
+void VRScript::printSyntaxError(PyObject *exception, PyObject *value, PyObject *tb) {
+    auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
+        VRGuiManager::get()->getConsole( "Syntax" )->write( m, style, link );
+    };
+
+    int err = 0;
+    Py_INCREF(value);
+    if (Py_FlushLine()) PyErr_Clear();
+    fflush(stdout);
+    if (err == 0 && PyObject_HasAttrString(value, "print_file_and_line")) {
+        PyObject *message;
+        char *filename, *text;
+        int lineno, offset;
+        if (!parse_syntax_error(value, &message, &filename, &lineno, &offset, &text)) PyErr_Clear();
+        else {
+            string fn = filename ? filename : "<string>";
+            errLink eLink(fn, lineno, 0);
+            auto fkt = VRFunction<string>::create("search_link", boost::bind(&VRScript::on_err_link_clicked, this, eLink, _1) );
+            print("  ");
+            print("Script \"" + fn + "\", line " + toString(lineno), "redLink", fkt);
+            print("\n");
+            if (text != NULL) print_error_text(offset, text);
+            Py_DECREF(value);
+            value = message;
+            if (PyErr_Occurred()) err = -1;
+        }
+    }
+
+    Py_DECREF(value);
+    PyErr_Clear();
+}
+
+void VRScript::pyErrPrint(string channel) {
+    if (!PyErr_Occurred()) return;
+
+    auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
+        VRGuiManager::get()->getConsole( channel )->write( m, style, link );
     };
 
     auto getTracebackFrame = [](PyTracebackObject* tb, vector<PyFrameObject*>& frames) {
@@ -339,31 +459,63 @@ void VRScript::pyTraceToConsole() { // get py trace
         return frames;
     };
 
-    VRGuiManager::get()->getConsole( "Errors" )->addStyle( "redLink", "#ff3311", "#ffffff", false, false, true );
-    PyThreadState* tstate = PyThreadState_GET();
+    VRGuiManager::get()->getConsole( channel )->addStyle( "redLink", "#ff3311", "#ffffff", false, false, true );
 
+    struct Line {
+        shared_ptr<VRFunction<string>> fkt;
+        string line;
+    };
+    list<Line> lines;
+
+    PyThreadState* tstate = PyThreadState_GET();
     for (auto frame : getThreadStateFrames(tstate)) {
         while (frame) {
             int line = PyCode_Addr2Line(frame->f_code, frame->f_lasti);
             string filename = PyString_AsString(frame->f_code->co_filename);
             string funcname = PyString_AsString(frame->f_code->co_name);
             errLink eLink(filename, line, 0);
-            auto fkt = VRFunction<string>::create("search_link", boost::bind(&VRScript::on_err_link_clicked, this, eLink, _1) );
-            print( "Line "+toString(line)+" in "+funcname+" in script "+filename, "redLink", fkt );
-            print( "\n" );
+            Line l;
+            l.fkt = VRFunction<string>::create("search_link", boost::bind(&VRScript::on_err_link_clicked, this, eLink, _1) );
+            //l.line = "Line "+toString(line)+" in "+funcname+" in script "+filename;
+            l.line = "Script "+filename+", line "+toString(line);
+            if (filename != funcname) l.line += ", in "+funcname;
+            lines.push_front(l);
             frame = frame->f_back;
         }
     }
+
+    if (lines.size() > 0) { // print trace back
+        print( "Traceback (most recent call last):\n" );
+        for (auto l : lines) {
+            print( "  " );
+            print( l.line, "redLink", l.fkt );
+            print( "\n" );
+        }
+    }
+
+    // print error
+    PyObject *exception, *v, *tb;
+    PyErr_Fetch(&exception, &v, &tb);
+    if (exception == NULL) return;
+    PyErr_NormalizeException(&exception, &v, &tb);
+    if (exception == NULL) return;
+
+    printSyntaxError(exception, v, tb);
+
+    if (v != NULL && v != Py_None) print( string(PyString_AsString( PyObject_Str(v) )) + "\n");
+    Py_XDECREF(exception);
+    Py_XDECREF(v);
+    Py_XDECREF(tb);
+    PyErr_Clear();
 }
 
 void VRScript::compile( PyObject* pGlobal, PyObject* pModVR ) {
-    VRScene::getCurrent()->redirectPyOutput("stderr", "Syntax");
+    setFunction( 0 );
     PyObject* pCode = Py_CompileString(getScript().c_str(), getName().c_str(), Py_file_input);
-    if (!pCode) { if (PyErr_Occurred()) PyErr_Print(); return; }
-    VRScene::getCurrent()->redirectPyOutput("stderr", "Errors");
+    if (!pCode) { pyErrPrint("Syntax"); return; }
     PyObject* pValue = PyEval_EvalCode((PyCodeObject*)pCode, pGlobal, PyModule_GetDict(pModVR));
-    if (!pValue) { pyTraceToConsole(); if (PyErr_Occurred()) PyErr_Print(); return; }
-    if (PyErr_Occurred()) PyErr_Print();
+    pyErrPrint("Errors");
+    if (!pValue) return;
     Py_DECREF(pCode);
     Py_DECREF(pValue);
     setFunction( PyObject_GetAttrString(pModVR, name.c_str()) );
@@ -374,7 +526,7 @@ void VRScript::execute() {
         if (!isInitScript && VRGlobals::CURRENT_FRAME <= loadingFrame + 2) return;
         if (fkt == 0 || !active) return;
         PyGILState_STATE gstate = PyGILState_Ensure();
-        if (PyErr_Occurred()) PyErr_Print();
+        pyErrPrint( "Errors" );
 
         VRTimer timer; timer.start();
         auto args = getArguments(true);
@@ -388,13 +540,13 @@ void VRScript::execute() {
         }
 
         auto res = PyObject_CallObject(fkt, pArgs);
-        if (!res) { pyTraceToConsole(); PyErr_Print(); return; }
+        pyErrPrint("Errors");
+        if (!res) return;
 
         execution_time = timer.stop();
 
         Py_XDECREF(pArgs);
-
-        if (PyErr_Occurred()) PyErr_Print();
+        pyErrPrint("Errors");
         PyGILState_Release(gstate);
     }
 
@@ -404,15 +556,21 @@ void VRScript::execute() {
     }
 
     if (type == "GLSL") {
+        string name = getName();
         for (auto m : VRMaterial::materials) {
             auto mat = m.second.lock();
             if (!mat) continue;
-            if (mat->getVertexScript() == getName()) mat->setVertexScript(getName());
-            if (mat->getFragmentScript() == getName()) mat->setFragmentScript(getName());
-            if (mat->getFragmentScript(true) == getName()) mat->setFragmentScript(getName(), true);
-            if (mat->getGeometryScript() == getName()) mat->setGeometryScript(getName());
-            if (mat->getTessControlScript() == getName()) mat->setTessControlScript(getName());
-            if (mat->getTessEvaluationScript() == getName()) mat->setTessEvaluationScript(getName());
+            if (mat->getVertexScript() == name) mat->setVertexScript(name);
+            if (mat->getFragmentScript() == name) mat->setFragmentScript(name);
+            if (mat->getFragmentScript(true) == name) mat->setFragmentScript(name, true);
+            if (mat->getGeometryScript() == name) mat->setGeometryScript(name);
+            if (mat->getTessControlScript() == name) mat->setTessControlScript(name);
+            if (mat->getTessEvaluationScript() == name) mat->setTessEvaluationScript(name);
+
+            /*cout << "VRScript::execute GLSL " << name << " " << mat->getName() << " " << mat->getFragmentScript() << " "
+                << (mat->getVertexScript() == name) << (mat->getFragmentScript() == name)
+                << (mat->getFragmentScript(true) == name) << (mat->getGeometryScript() == name)
+                << (mat->getTessControlScript() == name) << (mat->getTessEvaluationScript() == name) << endl;*/
         }
     }
 }
@@ -424,7 +582,7 @@ void VRScript::execute_dev(VRDeviceWeakPtr _dev) {
 
     devArg->type = "VRPyDeviceType";
     if (dev->getType() == "haptic") devArg->type = "VRPyHapticType";
-    if (dev->getType() == "server") devArg->type = "VRPyMobileType";
+    if (dev->getType() == "server") devArg->type = "VRPyServerType";
     devArg->val = dev->getName();
     devArg->ptr = dev.get();
     execute();
@@ -440,8 +598,8 @@ void VRScript::execute_soc(string s) {
 void VRScript::enable(bool b) { active = b; }
 bool VRScript::enabled() { return active; }
 
-list<VRScript::trig*> VRScript::getTriggers() { return trigs; }
-void VRScript::addTrigger() { trig* t = new trig(); trigs.push_back(t); }
+list<VRScript::trigPtr> VRScript::getTriggers() { return trigs; }
+VRScript::trigPtr VRScript::addTrigger() { auto t = trig::create(); trigs.push_back(t); return t; }
 void VRScript::changeTrigger(string name, string trigger) { clean(); if (auto t = getTrig(name)) t->trigger = trigger; update(); }
 void VRScript::changeTrigDev(string name, string dev) { clean(); if (auto t = getTrig(name)) t->dev = dev; update(); }
 void VRScript::changeTrigParams(string name, string params) { clean(); if (auto t = getTrig(name)) t->param = params; update(); }
@@ -452,7 +610,6 @@ void VRScript::remTrigger(string name) {
     if (auto t = getTrig(name)) {
         clean();
         trigs.remove(t);
-        delete t;
         update();
     }
 }
@@ -463,7 +620,6 @@ void VRScript::remArgument(string name) {
     if (auto a = getArg(name)) {
         clean();
         args.remove(a);
-        delete a;
         update();
     }
 }
@@ -480,7 +636,7 @@ void VRScript::save(xmlpp::Element* e) {
         xmlpp::Element* ea = e->add_child("arg");
         ea->set_attribute("type", a->type);
         ea->set_attribute("value", a->val);
-        a->saveName(ea);
+        a->save(ea);
     }
 
     for (auto t : trigs) {
@@ -490,13 +646,13 @@ void VRScript::save(xmlpp::Element* e) {
         ea->set_attribute("state", t->state);
         ea->set_attribute("param", t->param);
         ea->set_attribute("key", toString(t->key));
-        t->saveName(ea);
+        t->save(ea);
     }
 }
 
 void VRScript::load(xmlpp::Element* e) {
     clean();
-    loadName(e);
+    VRName::load(e);
     if (e->get_attribute("core")) core = e->get_attribute("core")->get_value();
     if (e->get_attribute("type")) type = e->get_attribute("type")->get_value();
     if (e->get_attribute("server")) server = e->get_attribute("server")->get_value();
@@ -516,23 +672,23 @@ void VRScript::load(xmlpp::Element* e) {
         }
 
         if (name == "arg") {
-            arg* a = addArgument();
+            argPtr a = addArgument();
             a->type = el->get_attribute("type")->get_value();
             a->val  = el->get_attribute("value")->get_value();
             string oname = a->getName();
-            a->loadName(el);
+            a->load(el);
             changeArgName(oname, a->getName());
         }
 
         if (name == "trig") {
-            trig* t = new trig();
+            trigPtr t = trig::create();
             t->trigger = el->get_attribute("type")->get_value();
             t->dev = el->get_attribute("dev")->get_value();
             if (t->dev == "mobile") t->dev = "server1"; // Temp fix for old scenes after changing default server name!
             t->state = el->get_attribute("state")->get_value();
             t->param = el->get_attribute("param")->get_value();
             t->key = toInt( el->get_attribute("key")->get_value() );
-            t->loadName(el);
+            t->load(el);
             trigs.push_back(t);
 
             if (t->trigger == "on_scene_load" && active) {

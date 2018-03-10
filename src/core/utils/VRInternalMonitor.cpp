@@ -7,8 +7,8 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-void nameDictSize(string& s) { s = toString(VRName::getBaseNameNumber()); }
-void nameBaseDictSize(string& s) { s = toString(VRName::getNameNumber()); }
+void nameDictSize(string& s) { /*s = toString(VRName::getBaseNameNumber());*/ }
+void nameBaseDictSize(string& s) { /*s = toString(VRName::getNameNumber());*/ }
 void dynObjctsSize(string& s) { s = toString((int)VRTransform::dynamicObjects.size()); }
 void chgObjctsSize(string& s) { s = toString((int)VRTransform::changedObjects.size()); }
 

@@ -30,6 +30,8 @@ PyMethodDef VRPyCarDynamics::methods[] = {
     {"getChassis", (PyCFunction)VRPyCarDynamics::getChassis, METH_NOARGS, "Get car chassis" },
     {"getWheels", (PyCFunction)VRPyCarDynamics::getWheels, METH_NOARGS, "Get car wheels" },
     {"getRPM", (PyCFunction)VRPyCarDynamics::getRPM, METH_NOARGS, "Get car RPM" },
+    {"geteForce", (PyCFunction)VRPyCarDynamics::geteForce, METH_NOARGS, "geteForce" },
+    {"geteBreak", (PyCFunction)VRPyCarDynamics::geteBreak, METH_NOARGS, "geteBreak" },
     {"isRunning", (PyCFunction)VRPyCarDynamics::isRunning, METH_NOARGS, "Is car engine running - bool isRunning()" },
     {"getGear", (PyCFunction)VRPyCarDynamics::getGear, METH_NOARGS, "Get car gear" },
     {"setIgnition", (PyCFunction)VRPyCarDynamics::setIgnition, METH_VARARGS, "Set ignition - setIgnition(bool)" },
@@ -38,6 +40,7 @@ PyMethodDef VRPyCarDynamics::methods[] = {
     {"getCarSound", (PyCFunction)VRPyCarDynamics::getCarSound, METH_NOARGS, "Get car sound - getCarSound()" },
     {"carSoundIsLoaded", (PyCFunction)VRPyCarDynamics::carSoundIsLoaded, METH_NOARGS, "Query if audio data has been loaded - carSoundIsLoaded()" },
     {"setFade", (PyCFunction)VRPyCarDynamics::setFade, METH_VARARGS, "Set car sound fade - setFade( flt fade, flt duration )" },
+    {"setType", (PyCFunction)VRPyCarDynamics::setType, METH_VARARGS, "Set car sound fade - setType( int type )\n\ttype can be 0 (simple), 1 (automatic), 2 (semiautomatic), 3 (manual)" },
     {NULL}  /* Sentinel */
 };
 
@@ -63,6 +66,13 @@ PyObject* VRPyCarDynamics::carSoundIsLoaded(VRPyCarDynamics* self) {
     return PyInt_FromLong(self->objPtr->getCarSound()->isLoaded());
 }
 
+PyObject* VRPyCarDynamics::setType(VRPyCarDynamics* self, PyObject* args) {
+    int t;
+    if (! PyArg_ParseTuple(args, "i", &t)) return NULL;
+    self->objPtr->setType( OSG::VRCarDynamics::TYPE(t) );
+    Py_RETURN_TRUE;
+}
+
 PyObject* VRPyCarDynamics::setFade(VRPyCarDynamics* self, PyObject* args) {
     float f, d;
     if (! PyArg_ParseTuple(args, "ff", &d, &f)) return NULL;
@@ -81,6 +91,15 @@ PyObject* VRPyCarDynamics::getWheels(VRPyCarDynamics* self) {
 
 PyObject* VRPyCarDynamics::getRPM(VRPyCarDynamics* self) {
     return PyInt_FromLong(self->objPtr->getRPM());
+}
+
+//----------------------------------------------------------------------------------------------
+PyObject* VRPyCarDynamics::geteForce(VRPyCarDynamics* self) {
+    return PyFloat_FromDouble(self->objPtr->geteForce());
+}
+
+PyObject* VRPyCarDynamics::geteBreak(VRPyCarDynamics* self) {
+    return PyFloat_FromDouble(self->objPtr->geteBreak());
 }
 
 PyObject* VRPyCarDynamics::isRunning(VRPyCarDynamics* self) {
@@ -155,10 +174,9 @@ PyObject* VRPyCarDynamics::setupSimpleWheels(VRPyCarDynamics* self, PyObject* ar
 
 PyObject* VRPyCarDynamics::setParameter(VRPyCarDynamics* self, PyObject* args) {
     float m, e, b;
-    int s = 0;
     PyObject* mOffset = 0;
-    if (! PyArg_ParseTuple(args, "fff|Oi", &m, &e, &b, &mOffset, &s)) return NULL;
-	self->objPtr->setParameter(m,e,b,parseVec3dList(mOffset),s);
+    if (! PyArg_ParseTuple(args, "fff|O", &m, &e, &b, &mOffset)) return NULL;
+	self->objPtr->setParameter(m,e,b,parseVec3dList(mOffset));
 	Py_RETURN_TRUE;
 }
 

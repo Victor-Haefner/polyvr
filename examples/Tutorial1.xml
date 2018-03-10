@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="Tutorial1" name_space="Scene" loading_time="136">
+<Scene base_name="Tutorial1" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
-    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
-      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
-        <Object accept_root="1" aspect="1" at="4.33788 3.8722 0.128584" at_dir="0" base_name="Default" far="512" fov="1.0472" from="12.1353 11.091 9.28939" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
-          <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
-            <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="4.33788 3.8722 0.128584" at_dir="0" base_name="Default" far="512" fov="1.0472" from="16.1049 14.4876 11.6505" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <constraint persistency="666"/>
           </Object>
-          <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+          <constraint persistency="666"/>
         </Object>
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" hmdd="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
-    <Script base_name="Answer_init" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
+    <Script base_name="Answer_init" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR, math
 	
@@ -37,13 +37,13 @@
 	ground.setEditMode(0)
 	ground.setFrom([0,-1,0])
 	ground.setPhysicalizeTree(0)
-	ground.physicalize(1,0,1)
+	ground.physicalize(1,0,'Concave')
 	VR.factory.addChild(ground)
 	
 	# truck wheel
 	wheel = VR.Geometry('wheel')
 	wheel.setPrimitive('Cylinder 0.1 0.3 16 1 1 1')
-	wheel.rotate(0,0,1, math.pi*0.5)
+	wheel.rotate(math.pi*0.5, [0,0,1])
 	wheel.applyTransformation()
 	
 	# truck chassis
@@ -54,7 +54,7 @@
 	VR.truck = VR.CarDynamics('truck')
 	VR.truck.setChassis(chassis)
 	VR.truck.setParameter(850, 0.3, 1000, 70)
-	VR.truck.setupSimpleWheels(wheel, 0.7, 1.0, -1.0, -0.1, 0.1, 0.3)
+	VR.truck.setupSimpleWheels(wheel, 0.7, 1.0, -1.0, -0.1, 0.1, 0.3, 0.4)
 	VR.factory.addChild( VR.truck )
 	p = VR.Pose([5,1,0], [0,0,-1], [0,1,0])
 	VR.truck.reset(p)
@@ -66,12 +66,12 @@
 	d2 = VR.Geometry('d2')
 	d1.setPrimitive('Box 1.5 1.5 2 1 1 1')
 	d2.setPrimitive('Cylinder 1.4 1 32 1 1 1')
-	d2.setPose([0,1,0.2],[0,1,0],[1,0,0])
+	d2.setTransform([0,1,0.2],[0,1,0],[1,0,0])
 	dish.addChild(d1)
 	dish.addChild(d2)
 	dish.setOperation('subtract')
 	dish.setEditMode(0)	
-	dish.setFrom(0,1,0)
+	dish.setFrom([0,1,0])
 	chassis.addChild(dish)
 	dish.setMass(0.01)
 	dish.physicalize(1,0,'ConvexDecomposed', 0)
@@ -87,10 +87,10 @@
 			for k in range(5):
 				b = block.duplicate()
 				VR.factory.addChild(b)
-				b.setFrom(i*W-0.7, k*0.3 + 0, j*W-0.7)
+				b.setFrom([i*W-0.7, k*0.3 + 0, j*W-0.7])
 				b.setPhysicsActivationMode(4)
 				b.setPickable(1)
-				b.physicalize(1,1,0)
+				b.physicalize(1,1,'Convex')
 			
 	# crane support
 	support1 = VR.Geometry('support')
@@ -125,19 +125,19 @@
 		c2 = VR.Geometry('c2')
 		c1.setPrimitive('Box 1 1 0.5 1 1 1')
 		c2.setPrimitive('Box 0.9 1 0.9 1 1 1')
-		c1.translate(0,-0.1,-0.25*s)	
+		c1.translate([0,-0.1,-0.25*s])	
 		side.addChild(c1)
 		side.addChild(c2)
 		side.setOperation('subtract')
 		side.setEditMode(0)
 		side.setPhysicalizeTree(0)
-		side.physicalize(1,0,1)
+		side.physicalize(1,0,'Concave')
 		return side
 	
 	VR.crane = VR.Transform('crane')
 	VR.crane.addChild( craneSide(1) )	
 	VR.crane.addChild( craneSide(-1) )
-	VR.crane.setFrom(0,-1,0)
+	VR.crane.setFrom([0,-1,0])
 	
 	axisY.addChild(VR.crane)
 	axisX.addChild(axisY)
@@ -151,9 +151,9 @@
 	
 	
 </core>
-      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" name_suffix="1" base_name="trigger" name_space="__global__"/>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
     </Script>
-    <Script base_name="Answer_keyboard" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
+    <Script base_name="Answer_keyboard" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -212,9 +212,9 @@
 		VR.crane.getChild(0).rotate(1,0,0, -sr)
 		VR.crane.getChild(1).rotate(1,0,0, sr)
 </core>
-      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="-1" name_suffix="2" base_name="trigger" name_space="__global__"/>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
     </Script>
-    <Script base_name="Answer_mouse" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
+    <Script base_name="Answer_mouse" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR, math
 	
@@ -291,9 +291,9 @@
 					
 					
 </core>
-      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
     </Script>
-    <Script base_name="Hints" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML" unique="1">
+    <Script base_name="Hints" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
       <core>
 
 Simple primitives:
@@ -344,7 +344,7 @@ CarDynamics:
 	car.reset([5,1,0])
 </core>
     </Script>
-    <Script base_name="Task" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML" unique="1">
+    <Script base_name="Task" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
       <core>
 The aim of this tutorial is to build the following scene:
 	1) A dump truck
@@ -377,7 +377,7 @@ Roadmap:
 	3.2) Add mouse interaction for truck dish animation
 </core>
     </Script>
-    <Script base_name="Tutorial_init" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
+    <Script base_name="Tutorial_init" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -386,12 +386,12 @@ Roadmap:
 	VR.getRoot().find('light').addChild(VR.factory)
 </core>
     </Script>
-    <Script base_name="Tutorial_keyboard" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
+    <Script base_name="Tutorial_keyboard" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	pass
 </core>
     </Script>
-    <Script base_name="Tutorial_mouse" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
+    <Script base_name="Tutorial_mouse" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	pass
 </core>

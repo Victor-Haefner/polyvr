@@ -93,12 +93,12 @@ inline void VRFluids::updateSPH(int from, int to) {
         BLock lock(mtx());
 
         // clear and fill octree
-        ocparticles.clear();
+        ocparticles->clear();
         for (int i=from; i < to; i++) {
             if (particles[i]->isActive == true) {
                 p = (SphParticle*) particles[i];
                 btVector3 p_origin = p->body->getWorldTransform().getOrigin();
-                ocparticles.add(Vec3d(p_origin[0],p_origin[1],p_origin[2]),p);
+                ocparticles->add(Vec3d(p_origin[0],p_origin[1],p_origin[2]),p);
             }
         }
 
@@ -172,7 +172,7 @@ inline void VRFluids::sph_calc_properties(SphParticle* p) {
     btVector3 p_origin = p->body->getWorldTransform().getOrigin();
     //float p_speed = p->body->getLinearVelocity().length2();
 
-    p->neighbors = ocparticles.radiusSearch(Vec3d(p_origin[0],p_origin[1],p_origin[2]),p->sphArea);
+    p->neighbors = ocparticles->radiusSearch(Vec3d(p_origin[0],p_origin[1],p_origin[2]),p->sphArea);
     auto it = p->neighbors.begin();
 
     while (it != p->neighbors.end()) {

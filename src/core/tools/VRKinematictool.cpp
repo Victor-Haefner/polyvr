@@ -46,7 +46,7 @@ VRJointTool::~VRJointTool() {
 
 VRJointToolPtr VRJointTool::ptr() { return static_pointer_cast<VRJointTool>( shared_from_this() ); }
 VRJointToolPtr VRJointTool::create(string name) {
-    auto ptr = shared_ptr<VRJointTool>(new VRJointTool(name) );
+    auto ptr = VRJointToolPtr(new VRJointTool(name) );
     ptr->addChild(ptr->ageo);
     ptr->ageo->init();
     return ptr;
@@ -55,7 +55,7 @@ VRJointToolPtr VRJointTool::create(string name) {
 void VRJointTool::delayed_setup() {
     obj1 = dynamic_pointer_cast<VRTransform>( getRoot()->find(obj1_name) );
     obj2 = dynamic_pointer_cast<VRTransform>( getRoot()->find(obj2_name) );
-    updateVis();
+    updateConstraint();
 }
 
 void VRJointTool::clear() {
@@ -65,7 +65,7 @@ void VRJointTool::clear() {
     ageo->hide();
 }
 
-int VRJointTool::append(VRTransformPtr t, posePtr p) {
+int VRJointTool::append(VRTransformPtr t, PosePtr p) {
     if (lastAppended) {
         obj1 = t;
         obj1_name = t->getName();
@@ -77,17 +77,19 @@ int VRJointTool::append(VRTransformPtr t, posePtr p) {
     }
 
     lastAppended = !lastAppended;
-    updateVis();
+    updateConstraint();
     return lastAppended ? 2 : 1;
 }
 
-void VRJointTool::setActive(bool b) { active = b; updateVis(); }
-void VRJointTool::select(bool b) { selected = b; updateVis(); }
+void VRJointTool::setActive(bool b) { active = b; updateConstraint(); }
+void VRJointTool::select(bool b) { selected = b; updateConstraint(); }
 
-void VRJointTool::updateVis() {
+void VRJointTool::updateConstraint() {
     Color3f r(1,0,0);
     Color3f g(0,1,0);
     Color3f y(1,1,0);
+
+    if (!anchor1 || !anchor2) return;
 
     Vec3d ad1 = anchor1->dir();
     Vec3d ad2 = anchor2->dir();
@@ -114,6 +116,9 @@ void VRJointTool::updateVis() {
     VRTransformPtr o1 = obj1.lock();
     VRTransformPtr o2 = obj2.lock();
 
+
+    // place joint viz
+
     if (selected) {
         ageo->show();
         if (o1) ageo->setVector(0, ap1, ad1, g, "p1");
@@ -122,7 +127,7 @@ void VRJointTool::updateVis() {
     } else ageo->hide();
 
     float D = (ad1.cross(ad3)).squareLength();
-    if (D > 0) setPose(ap3, ad1, ad3);
+    if (D > 0) setTransform(ap3, ad1, ad3);
     else setFrom(ap3);
     m = getMatrix(); m.invert();
     ageo->setMatrix(m);
@@ -130,22 +135,32 @@ void VRJointTool::updateVis() {
     auto mat = getMaterial();
     mat->setDiffuse(Color3f(1,0,0));
     if (o1 && !o2) mat->setDiffuse(Color3f(1,0.8,0));
-
     if (!o1 || !o2 || o1 == o2) return;
     mat->setDiffuse(Color3f(0,1,0));
 
-    Matrix4d L; L.setTranslate(ap3);
+
+    // compute constraint
+    auto Pj = Pose::create(ap3, ad3);
+    Pj->makeUpOrthogonal();
+    auto J = Pj->asMatrix();
+
+    // offset in A
     Matrix4d A = o1->getWorldMatrix();
     A.invert();
-    A.mult(L);
+    A.mult(J);
+
+    // offset in B
+    Matrix4d B = o2->getWorldMatrix();
+    B.invert();
+    B.mult(J);
 
     auto c = o2->getConstraint();
     c->setReferential(o1);
-    c->setReferenceB(L);
-    c->setRConstraint(ad3, VRConstraint::LINE);
-    //c->setTConstraint(lp.pos(), VRConstraint::POINT);
-    c->setTConstraint(Vec3d(0,0,0), VRConstraint::POINT);
-    c->setActive(active, o2);
+    c->setReferenceA(Pose::create(A));
+    c->setReferenceB(Pose::create(B));
+    c->lock({0,1,2, 3,4});
+    c->free({5});
+    c->setActive(active);
 }
 
 /**

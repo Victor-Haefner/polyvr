@@ -38,7 +38,10 @@ class VRGeoData {
         Pnt3d getPosition(int i);
         Vec3d getNormal(int i);
         Color4f getColor(int i);
+        Color3f getColor3(int i);
         int getNIndices();
+        string getDataName(int type);
+        int getDataSize(int type);
 
         int pushVert(Pnt3d p);
         int pushVert(Pnt3d p, Vec3d n);
@@ -51,6 +54,13 @@ class VRGeoData {
         int pushVert(Pnt3d p, Vec3d n, Color3f c, Vec2d t, Vec2d t2);
         int pushVert(Pnt3d p, Vec3d n, Color4f c, Vec2d t, Vec2d t2);
 
+        int pushType(int t);
+        int pushLength(int l);
+        int pushIndex(int i);
+        int pushPos(Pnt3d p);
+        int pushNorm(Vec3d n);
+        int pushTexCoord(Vec2d t);
+        int pushTexCoord2(Vec2d t);
         int pushColor(Color3f c);
         int pushColor(Color4f c);
 
@@ -64,6 +74,16 @@ class VRGeoData {
         bool setVert(int i, Pnt3d p, Vec3d n, Color4f c, Vec2d t);
         bool setVert(int i, Pnt3d p, Vec3d n, Color3f c, Vec2d t, Vec2d t2);
         bool setVert(int i, Pnt3d p, Vec3d n, Color4f c, Vec2d t, Vec2d t2);
+
+        bool setType(int i, int t);
+        bool setLength(int i, int l);
+        bool setIndex(int i, int I);
+        bool setPos(int i, Pnt3d p);
+        bool setNorm(int i, Vec3d n);
+        bool setTexCoord(int i, Vec2d t);
+        bool setTexCoord2(int i, Vec2d t);
+        bool setColor(int i, Color3f c);
+        bool setColor(int i, Color4f c);
 
         int pushVert(const VRGeoData& other, int i);
         int pushVert(const VRGeoData& other, int i, Matrix4d m);
@@ -142,6 +162,7 @@ class VRGeoData {
         PrimItr cend() const;
 
         void addVertexColors(Color3f c);
+        void addVertexColors(Color4f c);
 
         string status();
         void test_copy(VRGeoData& g);

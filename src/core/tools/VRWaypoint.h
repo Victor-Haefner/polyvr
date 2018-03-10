@@ -9,8 +9,8 @@ OSG_BEGIN_NAMESPACE;
 
 class VRWaypoint : public VRGeometry {
     private:
-        posePtr Pose;
-        posePtr Floor;
+        PosePtr pose;
+        PosePtr floor;
         Vec3d at;
         float size;
 
@@ -23,13 +23,13 @@ class VRWaypoint : public VRGeometry {
         static VRWaypointPtr create(string name = "None");
         VRWaypointPtr ptr();
 
-        void set(posePtr p);
+        void set(PosePtr p);
         void set(VRTransformPtr t);
         void apply(VRTransformPtr t);
-        posePtr get();
+        PosePtr get();
 
         void setSize(float s);
-        void setFloorPlane(posePtr p);
+        void setFloorPlane(PosePtr p);
 };
 
 OSG_END_NAMESPACE;

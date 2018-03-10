@@ -8,6 +8,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/math/Octree.h"
 #include "VRMillingCuttingToolProfile.h"
+#include "addons/Engineering/VREngineeringFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 
@@ -72,7 +73,7 @@ class VRMillingWorkPiece : public VRGeometry {
     private:
         Vec3i gridSize;
         int updateCount = 0;
-        posePtr toolPose;
+        PosePtr toolPose;
         VRTransformWeakPtr tool;
         VRUpdateCbPtr uFkt;
         int levelsPerGeometry = 12; // can be overridden

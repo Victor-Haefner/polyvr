@@ -6,12 +6,11 @@
 #include <OpenSG/OSGLine.h>
 #include <string.h>
 
+#include "core/math/VRMathFwd.h"
 #include "core/utils/VRFunction.h"
 
 OSG_BEGIN_NAMESPACE
 using namespace std;
-
-class Octree;
 
 class CKOctree {
     public:
@@ -60,7 +59,7 @@ class CKOctree {
         };
 
     private:
-		Octree* lightTree = 0;
+		OctreePtr lightTree;
         map<int,element*> elements;
         element* root = 0;
         int N = 0;

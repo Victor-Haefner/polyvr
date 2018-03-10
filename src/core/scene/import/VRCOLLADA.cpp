@@ -215,7 +215,7 @@ void printAll(const AnimationLibrary& library) {
 
 
 
-void setPose(OSG::VRTransformPtr o, int i, pathPtr p, float t) {// object, axis, new axis values
+void setPose(OSG::VRTransformPtr o, int i, PathPtr p, float t) {// object, axis, new axis values
     if (i < 0 || i > 2) { return; }
     Vec3d f = o->getFrom();
     if(p) f[i] = p->getPosition(t)[1];
@@ -223,7 +223,7 @@ void setPose(OSG::VRTransformPtr o, int i, pathPtr p, float t) {// object, axis,
     o->setFrom(f);
 }
 
-void setRot(OSG::VRTransformPtr o, int i, pathPtr p, float t) {
+void setRot(OSG::VRTransformPtr o, int i, PathPtr p, float t) {
     if (i < 0 || i > 2) { return; }
     Vec3d f = o->getEuler();
     if(p) f[i] = p->getPosition(t)[1];
@@ -231,7 +231,7 @@ void setRot(OSG::VRTransformPtr o, int i, pathPtr p, float t) {
     o->setEuler(f);
 }
 
-void setScale(OSG::VRTransformPtr o, int i, pathPtr p, float t) {
+void setScale(OSG::VRTransformPtr o, int i, PathPtr p, float t) {
     if (i < 0 || i > 2) { return; }
     Vec3d f = o->getScale();
     if(p) f[i] = p->getPosition(t)[1];
@@ -310,9 +310,9 @@ void buildAnimations(AnimationLibrary& lib, VRObjectPtr objects) {
         VRAnimCbPtr fkt;
         bool bezier = false;
 
-        pathPtr p = 0;
+        PathPtr p = 0;
 
-        void (*callback)(OSG::VRTransformPtr o, int i, pathPtr p, float t) = 0;
+        void (*callback)(OSG::VRTransformPtr o, int i, PathPtr p, float t) = 0;
         if (a.second.channel.type == "rotation") callback = setRot;
         if (a.second.channel.type == "location") callback = setPose;
         if (a.second.channel.type == "scale") callback = setScale;
@@ -332,11 +332,11 @@ void buildAnimations(AnimationLibrary& lib, VRObjectPtr objects) {
             Vec3f end(inputValues[i+1], outputValues[i+1], 0);
             float duration = end[0] - start[0];
             if (bezier) {
-                p = path::create();
+                p = Path::create();
                 Vec3f h0 = Vec3f(outtangentValues[2*i], outtangentValues[2*i+1], 0) - start;
                 Vec3f h1 = Vec3f(intangentValues[2*i+2], intangentValues[2*i+1+2], 0) - end;
-                p->addPoint( pose(Vec3d(start), Vec3d(h0)) );
-                p->addPoint( pose(Vec3d(end), Vec3d(h1)) );
+                p->addPoint( Pose(Vec3d(start), Vec3d(h0)) );
+                p->addPoint( Pose(Vec3d(end), Vec3d(h1)) );
                 p->compute(80);
             }
             bool loop = false;
@@ -534,9 +534,9 @@ VRTransformPtr buildLinks(klink l, VRObjectPtr objects, map<string, VRConstraint
 
     for (auto a : l.attachments) {
         VRConstraintPtr c = constraints[a.second.joint];
-        Matrix4d ref;
-        ref.setTranslate(a.second.translate);
-        c->setReferenceA(ref);
+        Matrix4d m;
+        m.setTranslate(a.second.translate);
+        c->setReferenceA(Pose::create(m));
         //c->setReferenceB(ref);
 
         for (auto cl : a.second.links) {

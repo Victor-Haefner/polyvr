@@ -9,18 +9,18 @@ using namespace OSG;
 template<> string typeName(const VRTexturePtr& t) { return "Texture"; }
 
 VRTexture::VRTexture() { img = Image::create(); }
-VRTexture::VRTexture(ImageRecPtr img) { this->img = img; }
+VRTexture::VRTexture(ImageMTRecPtr img) { this->img = img; }
 VRTexture::~VRTexture() {}
 
 VRTexturePtr VRTexture::create() { return shared_ptr<VRTexture>(new VRTexture() ); }
-VRTexturePtr VRTexture::create(ImageRecPtr img) { return shared_ptr<VRTexture>(new VRTexture(img) ); }
+VRTexturePtr VRTexture::create(ImageMTRecPtr img) { return shared_ptr<VRTexture>(new VRTexture(img) ); }
 VRTexturePtr VRTexture::ptr() { return shared_from_this(); }
 
 
-void VRTexture::setImage(ImageRecPtr img) { this->img = img; }
+void VRTexture::setImage(ImageMTRecPtr img) { this->img = img; }
 void VRTexture::setInternalFormat(int ipf) { internal_format = ipf; }
 int VRTexture::getInternalFormat() { return internal_format; }
-ImageRecPtr VRTexture::getImage() { return img; }
+ImageMTRecPtr VRTexture::getImage() { return img; }
 
 void VRTexture::read(string path) {
     if (!img->read(path.c_str())) cout << " VRTexture::read failed!" << endl;
@@ -58,7 +58,7 @@ void VRTexture::paste(VRTexturePtr other, Vec3i offset) {
 
 void VRTexture::resize(Vec3i size, Vec3i offset) {
     auto tmp = VRTexture::create(img);
-    ImageRecPtr nimg = Image::create();
+    ImageMTRecPtr nimg = Image::create();
     nimg->set(img->getPixelFormat(), size[0], size[1], size[2],
               img->getMipMapCount(), img->getFrameCount(), img->getFrameDelay(),
               0, img->getDataType(), true, img->getSideCount());
@@ -216,7 +216,6 @@ Vec3i VRTexture::getSize() {
     int d = img->getDepth();
     return Vec3i(w,h,d);
 }
-
 
 
 

@@ -1,4 +1,5 @@
 #include "VRMultiWindow.h"
+#include "VRView.h"
 #include <OpenSG/OSGRemoteAspect.h>
 #include <OpenSG/OSGFieldContainerFactory.h>
 #include <OpenSG/OSGNameAttachment.h>
@@ -81,6 +82,7 @@ void VRMultiWindow::initialize() {
 
     ClusterWindow::ConnectionCB cb = boost::bind(&VRMultiWindow::init_win, this, _1, _2, _3);
     win->initAsync(cb);
+    cout << endl << " render once " << endl;
     if (state == CONNECTED) win->render(ract);
     cout << " done " << getStateString() << endl;
 }

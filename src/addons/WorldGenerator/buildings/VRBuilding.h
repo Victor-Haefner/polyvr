@@ -18,8 +18,13 @@ class VRBuilding : public VRWorldModule {
         int wallType = 0;
         int windowType = 0;
         int doorType = 0;
+        int roofType = 0;
         float height = 0;
         float ground = 0;
+
+        VRPolygon roof;
+        vector<pair<float,VRPolygon>> foundations;
+        vector<pair<float,VRPolygon>> stories;
 
     public:
         VRBuilding();
@@ -43,9 +48,11 @@ class VRBuilding : public VRWorldModule {
         static Vec2fWithAdjIdx* copyVai(Vec2fWithAdjIdx* vai);
         static void createTriangles(BuildingStructure* bs, vector<Vec2fWithAdjIdx*>* vertices, Vec2fWithAdjIdx* v);*/
 
-        VRGeometryPtr addFoundation(VRPolygon polygon, float H);
-        VRGeometryPtr addFloor(VRPolygon polygon, float H);
-        VRGeometryPtr addRoof(VRPolygon polygon);
+        void addFoundation(VRPolygon polygon, float H);
+        void addFloor(VRPolygon polygon, float H);
+        void addRoof(VRPolygon polygon);
+
+        void computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs);
 };
 
 OSG_END_NAMESPACE;

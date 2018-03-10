@@ -10,7 +10,7 @@
 #include <memory>
 #include <algorithm>
 #include <boost/bind.hpp>
-#include <boost/filesystem.hpp>
+#include "core/utils/system/VRSystem.h"
 
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
@@ -41,7 +41,7 @@ using namespace OSG;
 VRGuiTreeExplorerPtr explorer;
 
 void VRSTEP::loadT(string file, STEPfilePtr sfile, bool* done) {
-    if (boost::filesystem::exists(file)) file = boost::filesystem::canonical(file).string();
+    if (exists(file)) file = canonical(file);
     sfile->ReadExchangeFile(file);
     registry->ResetSchemas();
     registry->ResetEntities();
@@ -420,6 +420,10 @@ STEPentity* VRSTEP::getSelectEntity(SDAI_Select* s) {
 
 string toString(STEPentity* e) {
     return toString(e->StepFileId());
+}
+
+string toString(SDAI_Select* s) {
+    return " SDAI_Select - to be implemented! ";
 }
 
 template<typename T>
@@ -896,18 +900,18 @@ Vec3d toVec3d(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
     return Vec3d();
 }
 
-posePtr toPose(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
+PosePtr toPose(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
     auto I = instances[i];
     if (I.type == "Axis2_Placement_3d") {
         Vec3d p = toVec3d( I.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances);
         Vec3d d = toVec3d( I.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances);
         Vec3d u = toVec3d( I.get<2, STEPentity*, STEPentity*, STEPentity*>(), instances);
         //d[2] *= -1;
-        return pose::create(p,d,u);
-        //return pose(p,d,u);
+        return Pose::create(p,d,u);
+        //return Pose(p,d,u);
     }
     cout << "toPose FAILED with instance type " << I.type << endl;
-    return pose::create();
+    return Pose::create();
 }
 
 struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
@@ -1170,7 +1174,7 @@ class VRSTEPProductStructure {
             string name;
             string parent;
             string child;
-            posePtr p;
+            PosePtr p;
 
             string toString() {
                 string s = "link n: " + name + " p: " + parent + " c: " + child;

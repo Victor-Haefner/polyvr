@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="CSG" name_space="Scene">
+<Scene base_name="CSG" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
-    <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
-      <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="-0.795912 0.276627 2.08463" at="-0.0281699 0.0840961 0.170446" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
-          <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.0281699 0.0840961 0.170446" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-0.751816 0.530903 2.05917" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <constraint persistency="666"/>
+          </Object>
+          <constraint persistency="666"/>
         </Object>
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
-  <Scripts>
-    <Script name_suffix="0" base_name="click" name_space="__script__" type="Python" mobile="">
+  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="click" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 
@@ -43,10 +46,10 @@
 		if VR.clickAction == "delete": VR.cmdCsg('del', dev, '')
 		
 </core>
-      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" name_suffix="5" base_name="trigger" name_space="__global__"/>
-      <trig type="none" dev="flystick" state="Pressed" param="" key="0" name_suffix="6" base_name="trigger" name_space="__global__"/>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="5" persistency="666"/>
+      <trig type="none" dev="flystick" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="6" persistency="666"/>
     </Script>
-    <Script name_suffix="0" base_name="cmdCsg" name_space="__script__" type="Python" mobile="">
+    <Script base_name="cmdCsg" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	intersected = None
@@ -108,11 +111,11 @@
 		VR.cmdCsg('close', None, '')
 	
 </core>
-      <arg type="str" value="" name_suffix="0" base_name="cmd" name_space="cmdCsg"/>
-      <arg type="VRPyDeviceType" value="0" name_suffix="0" base_name="dev" name_space="cmdCsg"/>
-      <arg type="str" value="" name_suffix="0" base_name="operation" name_space="cmdCsg"/>
+      <arg type="str" value="" base_name="cmd" name_space="cmdCsg" name_suffix="0" persistency="666"/>
+      <arg type="VRPyDeviceType" value="0" base_name="dev" name_space="cmdCsg" name_suffix="0" persistency="666"/>
+      <arg type="str" value="" base_name="operation" name_space="cmdCsg" name_suffix="0" persistency="666"/>
     </Script>
-    <Script name_suffix="0" base_name="createSample" name_space="__script__" type="Python" mobile="">
+    <Script base_name="createSample" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -124,15 +127,15 @@
 	elif primitive == 'cube':
 		sample = VR.Geometry('cube')
 		sample.setPrimitive('Box 0.4 0.4 0.4 1 1 1')
-		sample.setFrom(.5, 0, 0)
+		sample.setFrom([0.5, 0, 0])
 	elif primitive == 'cylinder':
 		sample = VR.Geometry('cylinder')
 		sample.setPrimitive('Cylinder 0.2 0.2 16 1 1 1')
-		sample.setFrom(1, 0, 0)
+		sample.setFrom([1, 0, 0])
 	elif primitive == 'torus':
 		sample = VR.Geometry('torus')
 		sample.setPrimitive('Torus 0.1 0.2 16 16')
-		sample.setFrom(-.6, 0, 0)
+		sample.setFrom([-0.6, 0, 0])
 	else:
 		print "Error: unknown primitive type:", primitive
 		return None
@@ -144,9 +147,9 @@
 	return sample
 
 </core>
-      <arg type="str" value="0" name_suffix="0" base_name="primitive" name_space="createSample"/>
+      <arg type="str" value="0" base_name="primitive" name_space="createSample" name_suffix="0" persistency="666"/>
     </Script>
-    <Script name_suffix="0" base_name="drawTree" name_space="__script__" type="Python" mobile="">
+    <Script base_name="drawTree" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -208,7 +211,7 @@
 	
 </core>
     </Script>
-    <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 
@@ -232,13 +235,13 @@
 	VR.initMenu()
 
 </core>
-      <arg type="VRPyTransformType" value="Default" name_suffix="0" base_name="camera" name_space="init"/>
-      <arg type="NoneType" value="csg root" name_suffix="0" base_name="csgRoot" name_space="init"/>
-      <arg type="VRPyTransformType" value="Headlight" name_suffix="1" base_name="root" name_space="init"/>
-      <arg type="NoneType" value="sample root" name_suffix="0" base_name="sampleRoot" name_space="init"/>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
+      <arg type="VRPyTransformType" value="Default" base_name="camera" name_space="init" name_suffix="0" persistency="666"/>
+      <arg type="NoneType" value="csg root" base_name="csgRoot" name_space="init" name_suffix="0" persistency="666"/>
+      <arg type="VRPyTransformType" value="Headlight" base_name="root" name_space="init" name_suffix="1" persistency="666"/>
+      <arg type="NoneType" value="sample root" base_name="sampleRoot" name_space="init" name_suffix="0" persistency="666"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
     </Script>
-    <Script name_suffix="0" base_name="initMenu" name_space="__script__" type="Python" mobile="">
+    <Script base_name="initMenu" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	import math
@@ -285,22 +288,16 @@
 			self.menuOpen = True
 			
 			self.sprite.show()
-			if self.menuRoot:
-				self.sprite.setFrom(VR.menuPos[0],
-									VR.menuPos[1],
-									VR.menuPos[2])
-			else:
-				self.sprite.setFrom(self.parent.sprite.getFrom()[0],
-									self.parent.sprite.getFrom()[1],
-									self.parent.sprite.getFrom()[2])
+			if self.menuRoot: self.sprite.setFrom(VR.menuPos)
+			else: self.sprite.setFrom(self.parent.sprite.getFrom())
 			
 			# TODO Caculate dir -&gt; cam
-			self.sprite.setDir(0, 0, -1)
+			self.sprite.setDir([0, 0, -1])
 			scale = 0.2
 			ref = self.sprite.getFrom()
 			for i, c in enumerate(self.children):
-				c.sprite.setFrom(ref[0], ref[1] - scale * (i+1), ref[2])
-				c.sprite.setDir(0, 0, -1)
+				c.sprite.setFrom([ref[0], ref[1] - scale * (i+1), ref[2]])
+				c.sprite.setDir([0, 0, -1])
 				c.sprite.show()
 		
 		def hide(self):
@@ -369,14 +366,14 @@
 	msgSpr.setMaterial(VR.Material('mode'))
 	msgSpr.setText("select")
 	msgSpr.setSize(0.1 * len("select"), 0.13)
-	msgSpr.setFrom(0.5,0.5,-1)
-	msgSpr.setDir(0,0,-1)
+	msgSpr.setFrom([0.5,0.5,-1])
+	msgSpr.setDir([0,0,-1])
 	VR.modeSpr = msgSpr
 	VR.camera.addChild(msgSpr)
 	
 </core>
     </Script>
-    <Script name_suffix="0" base_name="initScene" name_space="__script__" type="Python" mobile="">
+    <Script base_name="initScene" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -398,7 +395,7 @@
 	
 </core>
     </Script>
-    <Script name_suffix="0" base_name="showNotification" name_space="__script__" type="Python" mobile="">
+    <Script base_name="showNotification" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	if not msg:
 		return
@@ -412,9 +409,9 @@
 	msgSpr = VR.Sprite("notification")
 	msgSpr.setText(msg)
 	msgSpr.setSize(0.2 * len(msg), 1)
-	msgSpr.setFrom(0, 0, -3)
+	msgSpr.setFrom([0, 0, -3])
 	at = VR.camera.getDir()
-	msgSpr.setDir(at[0], at[1], at[2])
+	msgSpr.setDir(at)
 	VR.notification = msgSpr
 	VR.camera.addChild(msgSpr)
 	
@@ -423,11 +420,12 @@
 	msgSpr.destroy()
 	
 </core>
-      <arg type="str" value="0" name_suffix="0" base_name="msg" name_space="showNotification"/>
+      <arg type="str" value="0" base_name="msg" name_space="showNotification" name_suffix="0" persistency="666"/>
     </Script>
   </Scripts>
-  <Sockets/>
-  <Background color="0.40322 0.40322 0.40322" format=".png" path="data/common/skybox/sky/Sky" type="0"/>
-  <Navigation active="Orbit"/>
-  <Materials/>
+  <Sockets persistency="666"/>
+  <Background color="0.40322 0.40322 0.40322" format=".png" path="data/common/skybox/sky/Sky" persistency="666" type="0"/>
+  <Navigation active="Orbit" persistency="666"/>
+  <Materials persistency="666"/>
+  <Semantics persistency="666"/>
 </Scene>

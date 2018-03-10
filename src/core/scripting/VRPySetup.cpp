@@ -5,6 +5,7 @@
 #include "core/scripting/VRPyPose.h"
 #include "core/scripting/VRPyImage.h"
 #include "core/scripting/VRPyCamera.h"
+#include "core/scripting/VRPyMath.h"
 
 using namespace OSG;
 
@@ -40,6 +41,7 @@ PyMethodDef VRPyView::methods[] = {
     {"grab", (PyCFunction)VRPyView::grab, METH_NOARGS, "Get the current visual as texture - tex grab()" },
     {"setCamera", (PyCFunction)VRPyView::setCamera, METH_VARARGS, "Set the camera of the view - setCamera( cam )" },
     {"getName", (PyCFunction)VRPyView::getName, METH_NOARGS, "Get the name of the view - getName()" },
+    {"getUser", PyWrap(View, getUser, "Get the name of the view - getName()", VRTransformPtr ) },
     {NULL}  /* Sentinel */
 };
 
@@ -61,13 +63,13 @@ PyObject* VRPyView::setSize(VRPyView* self, PyObject* args) {
 
 PyObject* VRPyView::getSize(VRPyView* self) {
     if (!self->valid()) return NULL;
-    return toPyTuple( self->objPtr->getProjectionSize() );
+    return toPyObject( self->objPtr->getProjectionSize() );
 }
 
 PyObject* VRPyView::getPose(VRPyView* self) {
     if (!self->valid()) return NULL;
     auto v = self->objPtr;
-    return VRPyPose::fromObject( pose(v->getProjectionCenter(), v->getProjectionNormal(), v->getProjectionUp()) );
+    return VRPyPose::fromObject( Pose(v->getProjectionCenter(), v->getProjectionNormal(), v->getProjectionUp()) );
 }
 
 PyObject* VRPyView::setPose(VRPyView* self, PyObject* args) {

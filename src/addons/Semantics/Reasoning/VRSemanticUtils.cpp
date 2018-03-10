@@ -139,7 +139,7 @@ bool Variable::is(VariablePtr other, VPath& path1, VPath& path2) {
         bool res = false;
         for (auto e : other->entities) {
             vector<string> val2 = path2.getValue(e.second);
-            //for (auto v : val2) cout << " var2 value: " << v << endl;
+            //for (auto v : val2) cout << "  var2 value: " << v << endl;
             auto r = hasSameVal(val1, val2);
             if (!r) evaluations[e.first].state = Evaluation::INVALID;
             if (r) res = true;
@@ -150,7 +150,7 @@ bool Variable::is(VariablePtr other, VPath& path1, VPath& path2) {
         return false;
     };
 
-    //cout << "Variable::is " << toString() << " at path " << p1.toString() << " =?= " << other->toString() << " at path " << p2.toString() << endl;
+    //cout << "Variable::is " << toString() << " at path " << path1.toString() << " =?= " << other->toString() << " at path " << path2.toString() << endl;
     bool res = false;
     for (auto e : entities) {
         vector<string> val1 = path1.getValue(e.second);
@@ -202,29 +202,47 @@ vector<string> VPath::getValue(VREntityPtr e) {
 
     if (size() == 1) { res.push_back( e->getName() ); return res; }
 
+    auto getSubSet = [&](string& m, int& k) {
+        auto s1 = splitString(m,'[');
+        if (s1.size() != 2) return false;
+        m = s1[0];
+        k = toInt( splitString(s1[1],']')[0] );
+        return true;
+    };
+
     auto getEntityProperties = [&](VREntityPtr e, string m) {
+        int k = 0;
+        bool doSubset = getSubSet(m, k);
         vector<VRPropertyPtr> res;
         auto prop = e->getProperty(m);
         if (!prop) return res;
         if (!e->properties.count(prop->getName())) return res;
         for (auto p : e->properties[prop->getName()]) res.push_back(p);
-        return res;
+        if (!doSubset) return res;
+        if (k < 0) k+=res.size();
+        return vector<VRPropertyPtr>({ res[k] });
     };
 
-    if (size() == 2) {
-        for (auto p : getEntityProperties(e,nodes[1])) res.push_back(p->value);
-        return res;
-    }
-
-    if (size() == 3) {
-        for (auto p : getEntityProperties(e,nodes[1])) {
-            auto e2 = onto->getEntity(p->value);
-            if (!e2) continue;
-            for (auto p : getEntityProperties(e2,nodes[2])) res.push_back(p->value);
+    function<void(VREntityPtr,int,string)> traversePath = [&](VREntityPtr e, int i,string padding) -> void {
+        if (i == size()-1) { // finish
+            //if (size() > 3) cout << padding << " traversePath finish " << i << " for " << nodes[i] << endl;
+            for (auto p : getEntityProperties(e,nodes[i])) {
+                //if (size() > 3) cout << padding << "  traversePath found " << p->value << endl;
+                res.push_back(p->value);
+            }
+        } else { // traverse
+            //if (size() > 3) cout << padding << " traversePath continue " << i << " for " << nodes[i] << endl;
+            for (auto p : getEntityProperties(e,nodes[i])) {
+                //if (size() > 3) cout << padding << "  traversePath " << i << " p " << p->value << endl;
+                auto e2 = onto->getEntity(p->value);
+                if (!e2) continue;
+                traversePath(e2,i+1,padding+"  ");
+            }
         }
-        return res;
-    }
+    };
 
+    //if (size() > 3) cout << "VPath::getValue " << toString() << endl;
+    traversePath(e,1,"");
     return res;
 }
 

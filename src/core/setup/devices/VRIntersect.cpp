@@ -15,6 +15,11 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+
+VRObjectPtr VRIntersection::getIntersected() { return object.lock(); }
+Pnt3d VRIntersection::getIntersection() { return point; }
+
+
 Vec2d VRIntersect_computeTexel(VRIntersection& ins, NodeMTRecPtr node) {
     if (!ins.hit) return Vec2d(0,0);
     if (node == 0) return Vec2d(0,0);
@@ -82,6 +87,8 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, Line ray) {
     VRIntersection ins;
     auto tree = wtree.lock();
     if (!tree) return ins;
+    if (!tree->getNode()) return ins;
+    if (!tree->getNode()->node) return ins;
 
     uint now = VRGlobals::CURRENT_FRAME;
 
@@ -281,10 +288,8 @@ void VRIntersect::remDynTree(VRObjectPtr o) {
 
 VRObjectPtr VRIntersect::getCross() { return cross; }//needs to be optimized for multiple scenes
 VRDeviceCbPtr VRIntersect::getDrop() { return drop_fkt; }
-//Pnt3d VRIntersect::getHitPoint() { return hitPoint; }
-//Vec2d VRIntersect::getHitTexel() { return hitTexel; }
-//VRObjectPtr VRIntersect::getHitObject() { return obj; }
 
 VRIntersection VRIntersect::getLastIntersection() { return lastIntersection; }
+
 
 OSG_END_NAMESPACE;

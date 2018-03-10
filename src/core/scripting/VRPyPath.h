@@ -4,7 +4,7 @@
 #include "core/math/path.h"
 #include "core/scripting/VRPyBase.h"
 
-struct VRPyPath : VRPyBaseT<OSG::path> {
+struct VRPyPath : VRPyBaseT<OSG::Path> {
     static PyMethodDef methods[];
 
     static PyObject* set(VRPyPath* self, PyObject *args);
@@ -22,6 +22,7 @@ struct VRPyPath : VRPyBaseT<OSG::path> {
     static PyObject* getLength(VRPyPath* self, PyObject *args);
     static PyObject* getPose(VRPyPath* self, PyObject *args);
     static PyObject* getDistance(VRPyPath* self, PyObject *args);
+    static PyObject* getDistanceToHull(VRPyPath* self, PyObject *args);
     static PyObject* getClosestPoint(VRPyPath* self, PyObject *args);
     static PyObject* approximate(VRPyPath* self, PyObject *args);
     static PyObject* isStraight(VRPyPath* self, PyObject *args);

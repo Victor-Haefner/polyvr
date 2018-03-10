@@ -15,7 +15,7 @@ template<> string typeName(const OSG::VRStroke::CAP& s) { return "StrokeCap"; }
 
 template<> int toValue(stringstream& ss, OSG::VRStroke::CAP& c) {
     string s; ss >> s;
-    if (s == "NONE") c = OSG::VRStroke::NONE;
+    c = OSG::VRStroke::NONE;
     if (s == "ARROW") c = OSG::VRStroke::ARROW;
     return s.length();
 }
@@ -27,10 +27,10 @@ VRStroke::VRStroke(string name) : VRGeometry(name) { }
 VRStrokePtr VRStroke::create(string name) { return shared_ptr<VRStroke>(new VRStroke(name) ); }
 VRStrokePtr VRStroke::ptr() { return static_pointer_cast<VRStroke>( shared_from_this() ); }
 
-void VRStroke::addPath(pathPtr p) { paths.push_back(p); }
-void VRStroke::setPath(pathPtr p) { paths.clear(); addPath(p); }
-void VRStroke::setPaths(vector<pathPtr> p) { paths = p; }
-vector<pathPtr>& VRStroke::getPaths() { return paths; }
+void VRStroke::addPath(PathPtr p) { paths.push_back(p); }
+void VRStroke::setPath(PathPtr p) { paths.clear(); addPath(p); }
+void VRStroke::setPaths(vector<PathPtr> p) { paths = p; }
+vector<PathPtr> VRStroke::getPaths() { return paths; }
 
 void VRStroke::addPolygon(VRPolygonPtr p) { polygons.push_back(p); }
 
@@ -38,6 +38,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
     mode = 0;
     this->profile = profile;
     this->closed = closed;
+    this->lit = lit;
     this->doColor = doColor;
     cap_beg = l;
     cap_end = r;
@@ -55,11 +56,11 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
 
     float Lp = 0;
     vector<Vec2d> tcs(1);
-    for (int i=1; i<profile.size(); i++) {
+    for (uint i=1; i<profile.size(); i++) {
         Lp += (profile[i]-profile[i-1]).length();
         tcs.push_back( Vec2d(0,Lp) );
     }
-    for (int i=1; i<profile.size(); i++) tcs[i] /= Lp;
+    for (uint i=1; i<profile.size(); i++) tcs[i] /= Lp;
 
     clearChildren();
     for (auto path : paths) {
@@ -88,7 +89,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
             bool endArrow2 = (j == pnts.size()-1) && (cap_end == ARROW);
 
             // add new profile points and normals
-            for (int i=0; i<profile.size(); i++) {
+            for (uint i=0; i<profile.size(); i++) {
                 Vec3d pos = profile[i];
                 Vec2d tc = tcs[i];
                 tc[0] = l;
@@ -215,7 +216,7 @@ void VRStroke::strokeStrew(VRGeometryPtr geo) {
 void VRStroke::update() {
     switch (mode) {
         case 0:
-            strokeProfile(profile, closed, doColor);
+            strokeProfile(profile, closed, lit, doColor, cap_beg, cap_end);
             break;
         case 1:
             strokeStrew(strewGeo);
@@ -224,6 +225,9 @@ void VRStroke::update() {
             break;
     }
 }
+
+vector<Vec3d> VRStroke::getProfile() { return profile; }
+PathPtr VRStroke::getPath() { return paths[0]; }
 
 void VRStroke::convertToRope() {
     getPhysics()->setDynamic(true);

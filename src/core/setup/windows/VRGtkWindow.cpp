@@ -8,6 +8,7 @@
 #include <gtk/gtkgl.h>
 
 #include "../devices/VRKeyboard.h"
+#include "../devices/VRMouse.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/VROptions.h"
 #include "core/utils/VRGlobals.h"
@@ -23,7 +24,7 @@ VRGtkWindow::VRGtkWindow(Gtk::DrawingArea* da) {
     type = 2;
     drawArea = da;
     widget = (GtkWidget*)drawArea->gobj();
-    if(gtk_widget_get_realized(widget)) cout << "Warning: glarea is realized!\n";
+    if (gtk_widget_get_realized(widget)) cout << "Warning: glarea is realized!\n";
 
     auto mode = (GdkGLConfigMode)(GDK_GL_MODE_RGB | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL);
     if (VROptions::get()->getOption<bool>("active_stereo"))
@@ -45,10 +46,11 @@ VRGtkWindow::VRGtkWindow(Gtk::DrawingArea* da) {
     _win = win;
     win->setSize(width, height);
 
-    signals.push_back( drawArea->signal_scroll_event().connect(sigc::mem_fun(*this, &VRGtkWindow::on_scroll)) );
     signals.push_back( drawArea->signal_realize().connect(sigc::mem_fun(*this, &VRGtkWindow::on_realize)) );
     signals.push_back( drawArea->signal_expose_event().connect(sigc::mem_fun(*this, &VRGtkWindow::on_expose)) );
     signals.push_back( drawArea->signal_size_allocate().connect(sigc::mem_fun(*this, &VRGtkWindow::on_resize)) );
+
+    signals.push_back( drawArea->signal_scroll_event().connect(sigc::mem_fun(*this, &VRGtkWindow::on_scroll)) );
     signals.push_back( drawArea->signal_button_press_event().connect(sigc::mem_fun(*this, &VRGtkWindow::on_button)) );
     signals.push_back( drawArea->signal_button_release_event().connect(sigc::mem_fun(*this, &VRGtkWindow::on_button)) );
     signals.push_back( drawArea->signal_motion_notify_event().connect(sigc::mem_fun(*this, &VRGtkWindow::on_motion)) );
@@ -244,8 +246,8 @@ void VRGtkWindow::on_resize(Gtk::Allocation& allocation) {
 
 void VRGtkWindow::on_realize() {
     initialExpose = true;
-    GdkGLContext *glcontext = gtk_widget_get_gl_context (widget);
-    GdkGLDrawable *gldrawable = gtk_widget_get_gl_drawable (widget);
+    GdkGLContext* glcontext = gtk_widget_get_gl_context (widget);   // TODO: rare x error on startup!!
+    GdkGLDrawable* gldrawable = gtk_widget_get_gl_drawable (widget);
     gdk_gl_drawable_gl_begin(gldrawable, glcontext);
     win->init();
     win->resize(widget->allocation.width,widget->allocation.height);
@@ -260,8 +262,8 @@ void printGLversion() {
 
 bool VRGtkWindow::on_expose(GdkEventExpose* event) {
     if (initialExpose) {
-        GdkGLContext *glcontext = gtk_widget_get_gl_context (widget);
-        GdkGLDrawable *gldrawable = gtk_widget_get_gl_drawable (widget);
+        GdkGLContext* glcontext = gtk_widget_get_gl_context (widget);   // TODO: rare x error on startup!!
+        GdkGLDrawable* gldrawable = gtk_widget_get_gl_drawable (widget);
         gdk_gl_drawable_gl_begin(gldrawable, glcontext);
         glClearColor(0.2, 0.2, 0.2, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);

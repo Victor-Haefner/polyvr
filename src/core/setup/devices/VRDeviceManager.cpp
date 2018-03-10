@@ -7,10 +7,12 @@
 
 #include "VRDevice.h"
 #include "VRMouse.h"
+#include "VRMultiTouch.h"
 #include "VRKeyboard.h"
 #include "VRFlystick.h"
 #include "VRHaptic.h"
 #include "VRServer.h"
+#include "addons/LeapMotion/VRLeap.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -36,12 +38,12 @@ void VRDeviceManager::clearSignals() { for (auto dev : devices) dev.second->clea
 void VRDeviceManager::setDeviceRoot(VRTransformPtr root) { device_root = root; }
 
 void VRDeviceManager::updateDevices() {
-    for (auto itr : devices) itr.second->updateBeacon();
+    for (auto itr : devices) itr.second->updateBeacons();
 }
 
 void VRDeviceManager::addDevice(VRDevicePtr dev) {
     devices[dev->getName()] = dev;
-    dev->getBeacon()->switchParent(device_root);
+    dev->getBeaconRoot()->switchParent(device_root);
     //dev->getCross()->switchParent(device_root); //TODO: add crosses as marker with a marker engine!
 }
 
@@ -105,6 +107,18 @@ void VRDeviceManager::load(xmlpp::Element* node) {
 
         if (type == "mouse") {
             VRMousePtr m = VRMouse::create();
+            m->load(el);
+            dev = m;
+        }
+
+        if (type == "multitouch") {
+            VRMultiTouchPtr m = VRMultiTouch::create();
+            m->load(el);
+            dev = m;
+        }
+
+        if (type == "leap") {
+            VRLeapPtr m = VRLeap::create();
             m->load(el);
             dev = m;
         }

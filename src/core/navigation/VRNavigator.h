@@ -11,7 +11,7 @@
 #include "core/utils/VRDeviceFwd.h"
 #include "core/utils/VRStorage.h"
 #include "core/utils/VRName.h"
-#include "core/tools/VRToolsFwd.h"
+#include "VRNavigationFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

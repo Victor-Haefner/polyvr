@@ -1,12 +1,7 @@
 #ifndef VRTOOLSFWD_H_INCLUDED
 #define VRTOOLSFWD_H_INCLUDED
 
-#include <memory>
-
-#define ptrFwd( X ) \
-class X; \
-typedef std::shared_ptr<X> X ## Ptr; \
-typedef std::weak_ptr<X> X ## WeakPtr;
+#include "core/utils/VRFwdDeclTemplate.h"
 
 namespace OSG {
 
@@ -14,6 +9,7 @@ ptrFwd(VRAnimation);
 ptrFwd(VRAnnotationEngine);
 ptrFwd(VRAnalyticGeometry);
 ptrFwd(VRClipPlane);
+ptrFwd(VRColorChooser);
 ptrFwd(VRMenu);
 ptrFwd(VRWaypoint);
 ptrFwd(VRMeasure);
@@ -28,7 +24,8 @@ ptrFwd(VRUndoAtom);
 ptrFwd(VRUndo);
 ptrFwd(VRRecorder);
 ptrFwd(VRPathtool);
-ptrFwd(VRNavPreset);
+ptrFwd(VRSnappingEngine);
+ptrFwd(VRConstructionKit);
 
 }
 

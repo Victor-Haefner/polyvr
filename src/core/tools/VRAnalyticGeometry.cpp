@@ -59,9 +59,9 @@ void VRAnalyticGeometry::init() {
 
     // lines
     if (vectorLinesGeometry) {
-        GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
-        GeoVec3fPropertyRecPtr cols = GeoVec3fProperty::create();
-        GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
+        GeoPnt3fPropertyMTRecPtr pos = GeoPnt3fProperty::create();
+        GeoVec3fPropertyMTRecPtr cols = GeoVec3fProperty::create();
+        GeoUInt32PropertyMTRecPtr lengths = GeoUInt32Property::create();
         lengths->addValue(0);
 
         vectorLinesGeometry->setType(GL_LINES);
@@ -72,9 +72,9 @@ void VRAnalyticGeometry::init() {
 
     // ends
     if (vectorEndsGeometry) {
-        GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
-        GeoVec3fPropertyRecPtr cols = GeoVec3fProperty::create();
-        GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
+        GeoPnt3fPropertyMTRecPtr pos = GeoPnt3fProperty::create();
+        GeoVec3fPropertyMTRecPtr cols = GeoVec3fProperty::create();
+        GeoUInt32PropertyMTRecPtr lengths = GeoUInt32Property::create();
         lengths->addValue(0);
 
         vectorEndsGeometry->setType(GL_POINTS);
@@ -85,12 +85,12 @@ void VRAnalyticGeometry::init() {
 
     // circles
     if (circlesGeometry) {
-        GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
-        GeoVec3fPropertyRecPtr cols = GeoVec3fProperty::create();
-        GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
+        GeoPnt3fPropertyMTRecPtr pos = GeoPnt3fProperty::create();
+        GeoVec3fPropertyMTRecPtr cols = GeoVec3fProperty::create();
+        GeoUInt32PropertyMTRecPtr lengths = GeoUInt32Property::create();
         lengths->addValue(0);
-        GeoVec2fPropertyRecPtr tcs = GeoVec2fProperty::create();
-        GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
+        GeoVec2fPropertyMTRecPtr tcs = GeoVec2fProperty::create();
+        GeoVec3fPropertyMTRecPtr norms = GeoVec3fProperty::create();
 
         circlesGeometry->setType(GL_QUADS);
         circlesGeometry->setPositions(pos);

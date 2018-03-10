@@ -67,7 +67,7 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
 
         VRProcessNodePtr addSubject(string name);
         VRProcessNodePtr addMessage(string name, int i, int j, DiagramPtr diag = 0);
-        VRProcessNodePtr addAction(string name, DiagramPtr diag);
+        VRProcessNodePtr addAction(string name, int sID);
 };
 
 OSG_END_NAMESPACE;

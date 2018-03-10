@@ -23,10 +23,10 @@ VREntity::VREntity(string name, VROntologyPtr o, VRConceptPtr c) {
 
     setStorageType("Entity");
     storeObjNames("concepts", &concepts, &conceptNames);
-    filterNameChars(".,",'_');
 
-    setNameSpace("entity");
-    setSeparator('_');
+    auto ns = setNameSpace("VREntity");
+    ns->filterNameChars(".,",'_');
+    ns->setSeparator('_');
     setName(name);
 }
 
@@ -192,6 +192,19 @@ vector< Vec3d > VREntity::getAllVec3(const string& prop) { // TODO
     return res;
 }
 
+VREntityPtr VREntity::copy() {
+    auto o = ontology.lock();
+    auto e = create(getBaseName(), o);
+    o->addEntity(e);
+    for (auto wc : concepts) if (auto c = wc.lock()) e->addConcept(c);
+    e->conceptNames = conceptNames;
+    for (auto pv : properties) {
+        e->properties[pv.first] = vector<VRPropertyPtr>();
+        for (auto p : pv.second) e->properties[pv.first].push_back(p->copy());
+    }
+    map<string, vector<VRPropertyPtr> > properties;
+    return e;
+}
 
 string VREntity::toString() {
     string data = "Entity " + name + " of type (";

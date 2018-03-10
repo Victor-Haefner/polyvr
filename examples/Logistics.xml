@@ -1,20 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="Logistics" name_space="Scene" loading_time="2035">
+<Scene base_name="Logistics" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
-    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
-      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
-        <Object accept_root="1" aspect="1" at="-0.888848 1.03602 -3.97527" at_dir="0" base_name="Default" far="250" fov="1.0472" from="0.0940232 1.78921 -4.83933" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
-          <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
-            <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="0.992312 0 -1.71714" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-3.60428 11.2655 -10.6827" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <constraint persistency="666"/>
           </Object>
-          <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+          <constraint persistency="666"/>
         </Object>
       </Object>
     </Object>
   </Objects>
   <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
-    <Script base_name="initLogistics" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	if hasattr(VR, 'scene'): VR.scene.destroy()
+	VR.scene = VR.Object('scene', 'Headlight')
+	
+	VR.initMaterials()
+	VR.initScene()
+	VR.initLogistics()
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="7" persistency="666"/>
+    </Script>
+    <Script base_name="initLogistics" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -24,6 +37,7 @@
 	
 	if not hasattr(VR, 'ptool'):
 		VR.ptool = VR.Pathtool()
+		VR.ptool.getPathMaterial().setDiffuse([0,1,0])
 	
 		VR.paths = [4,4,10] # min 2
 		for i,N in enumerate(VR.paths):
@@ -33,46 +47,46 @@
 			
 	if len(VR.paths) &gt;= 1:
 		handles = VR.ptool.getHandles(VR.paths[0])
-		handles[0].setFrom(8, 1, 1)
-		handles[1].setFrom(7, 1, 3)
-		handles[1].setDir(-1,0,0)
-		handles[2].setFrom(4, 1, 3)
-		handles[2].setDir(-1,0,0)
-		handles[3].setFrom(4, 3, 5)
+		handles[0].setFrom([8, 1, 1])
+		handles[1].setFrom([7, 1, 3])
+		handles[1].setDir([-1,0,0])
+		handles[2].setFrom([4, 1, 3])
+		handles[2].setDir([-1,0,0])
+		handles[3].setFrom([4, 3, 5])
 	
 	if len(VR.paths) &gt;= 2:
 		handles = VR.ptool.getHandles(VR.paths[1])
-		handles[0].setFrom(8, 1, -1)
-		handles[0].setDir(0,0,-1)
-		handles[1].setFrom(6, 1, -2)
-		handles[1].setDir(-1,0,0)
-		handles[2].setFrom(4, 1, -2)
-		handles[2].setDir(-1,0,0)
-		handles[3].setFrom(4, 0.3, -3)
-		handles[3].setDir(0,0,-1)
+		handles[0].setFrom([8, 1, -1])
+		handles[0].setDir([0,0,-1])
+		handles[1].setFrom([6, 1, -2])
+		handles[1].setDir([-1,0,0])
+		handles[2].setFrom([4, 1, -2])
+		handles[2].setDir([-1,0,0])
+		handles[3].setFrom([4, 0.3, -3])
+		handles[3].setDir([0,0,-1])
 		
 	if len(VR.paths) &gt;= 3:
 		handles = VR.ptool.getHandles(VR.paths[2])
-		handles[0].setFrom(7, 1, -6)
-		handles[0].setDir(0,0,-1)
-		handles[1].setFrom(6, 1, -6)
-		handles[1].setDir(-1,0,0)
-		handles[2].setFrom(5, 2, -6)
-		handles[2].setDir(-1,0,0)
-		handles[3].setFrom(3, 2, -6)
-		handles[3].setDir(-1,0,0)
-		handles[4].setFrom(2, 1, -6)
-		handles[4].setDir(-1,0,0)
-		handles[5].setFrom(1, 1, -8)
-		handles[5].setDir(-1,0,0)
-		handles[6].setFrom(0, 1, -8)
-		handles[6].setDir(-1,0,0)
-		handles[7].setFrom(-1, 1, -4)
-		handles[7].setDir(0,0,1)
-		handles[8].setFrom(-2, 2, -3)
-		handles[8].setDir(-1,0,0)
-		handles[9].setFrom(-3, 2, -3)
-		handles[9].setDir(-1,0,0)
+		handles[0].setFrom([7, 1, -6])
+		handles[0].setDir([0,0,-1])
+		handles[1].setFrom([6, 1, -6])
+		handles[1].setDir([-1,0,0])
+		handles[2].setFrom([5, 2, -6])
+		handles[2].setDir([-1,0,0])
+		handles[3].setFrom([3, 2, -6])
+		handles[3].setDir([-1,0,0])
+		handles[4].setFrom([2, 1, -6])
+		handles[4].setDir([-1,0,0])
+		handles[5].setFrom([1, 1, -8])
+		handles[5].setDir([-1,0,0])
+		handles[6].setFrom([0, 1, -8])
+		handles[6].setDir([-1,0,0])
+		handles[7].setFrom([-1, 1, -4])
+		handles[7].setDir([0,0,1])
+		handles[8].setFrom([-2, 2, -3])
+		handles[8].setDir([-1,0,0])
+		handles[9].setFrom([-3, 2, -3])
+		handles[9].setDir([-1,0,0])
 	
 	VR.ptool.update()
 	
@@ -115,91 +129,90 @@
 		t.setSpeed(speed)
 </core>
     </Script>
-    <Script base_name="initScene" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
+    <Script base_name="initMaterials" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
-	# materials
-	
-	mbricks = VR.Material('mbricks')
+	# bricks
+	VR.mat_bricks = VR.Material('bricks')
 	tg = VR.TextureGenerator()
 	tg.setSize([50,50,50])
 	cp = 0.95
 	tg.add('Perlin', 1, [cp,cp,cp], [1,1,1])
 	tg.add('Perlin', 1.0/4, [cp,cp,cp], [1,1,1])
 	tg.add('Bricks', 1, [0.4,0.4,0.4], [1,1,1])
-	mbricks.setTexture(tg.compose(0))
+	VR.mat_bricks.setTexture(tg.compose(0))
 	
-	mcarboard = VR.Material('mcarboard')
+	# cardboard
+	VR.mat_cardboard = VR.Material('cardboard')
 	tg = VR.TextureGenerator()
 	tg.setSize([50,50,50])
 	tg.add('Perlin', 1, [0.5,0.3,0.1], [0.6,0.4,0.1])
 	tg.add('Perlin', 1.0/4, [0.5,0.3,0.1], [0.7,0.6,0.2])
-	mcarboard.setTexture(tg.compose(0))
+	VR.mat_cardboard.setTexture(tg.compose(0))
 	
+	# metal
 	def setMetalic(mat, a,d,sp,sh):
 		mat.setDiffuse([d,d,d])
 		mat.setSpecular([sp,sp,sp])
 		mat.setAmbient([a,a,a])
-		mat.setShininess(128*sh)
-	mchrome = VR.Material('mchrome')
-	setMetalic(mchrome, 0.25, 0.4, 0.77, 0.6)
+		mat.setShininess(128*sh)	
+	
+	VR.mat_metal = VR.Material('metal')
+	setMetalic(VR.mat_metal, 0.25, 0.4, 0.77, 0.6)
 	tg = VR.TextureGenerator()
 	tg.setSize([50,50,50])
 	cp = 0.6
 	tg.add('Perlin', 1.0/2, [cp,cp,cp], [1,1,1])
 	tg.add('Perlin', 1.0/8, [cp,cp,cp], [1,1,1])
-	mchrome.setTexture(tg.compose(0))
-	mchrome.addPass()
-	setMetalic(mchrome, 0.25, 0.9, 1, 0.6)
-	mchrome.setTexture(tg.compose(1))
-	mchrome.setTextureType('SphereEnv')
-	mchrome.setTransparency(0.4)
+	VR.mat_metal.setTexture(tg.compose(0))
+	
+	VR.mat_metal.addPass()
+	setMetalic(VR.mat_metal, 0.25, 0.9, 1, 0.6)
+	VR.mat_metal.setTexture(tg.compose(1))
+	VR.mat_metal.setTextureType('SphereEnv')
+	VR.mat_metal.setTransparency(0.4)
+		
+	
+	
+	
+</core>
+    </Script>
+    <Script base_name="initScene" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
 	
 	# geometries
-	
-	floor = VR.Geometry('floor')
-	floor.setPrimitive('Plane 20 20 20 20')
-	floor.setMaterial(mbricks)
+	def makeObject(name, params, pose):
+		obj = VR.Geometry(name)
+		obj.setPose(pose)
+		obj.setPrimitive(params)
+		VR.scene.addChild(obj)
+		return obj
+		
+	floor = makeObject('floor', 'Plane 20 20 20 20', VR.Pose([0,0,0], [0,1,0], [1,0,0]))
+	floor.setMaterial(VR.mat_bricks)
 	floor.setTexCoords(floor.getPositions())
-	floor.setPose([0,0,0], [0,1,0], [1,0,0])
-	root = VR.getRoot().find('Headlight')
-	root.addChild(floor)
 	
-	VR.cardbox = VR.Geometry('cardbox')
-	VR.cardbox.setPrimitive('Box 1 1 1 1')
-	VR.cardbox.setMaterial(mcarboard)
+	VR.cardbox = makeObject('floor', 'Box 1 1 1 1', VR.Pose([0,0,0], [0,0,-1], [0,1,0]))
+	VR.cardbox.setMaterial(VR.mat_cardboard)
 	VR.cardbox.hide()
 	
-	t1 = VR.Geometry('t1')
-	t2 = VR.Geometry('t2')
-	t1.setPrimitive('Box 0.15 0.05 0.3 1 1 1')
-	t2.setPrimitive('Box 0.12 0.1 0.2 1 1 1')
-	#t2.setPrimitive('Gear 0.1 0.3 0.1 32 0.3 0')
-	t2.setFrom(0,0.05,0.02)
+	t1 = makeObject('t1', 'Box 0.15 0.05 0.3 1 1 1', VR.Pose([0,0,0], [0,0,-1], [0,1,0]))
+	t2 = makeObject('t2', 'Box 0.12 0.1 0.2 1 1 1', VR.Pose([0,0.05,0.02], [0,0,-1], [0,1,0]))
 	VR.product = VR.CSGGeometry('product')
 	VR.product.addChild(t1)
 	VR.product.addChild(t2)
 	VR.product.setOperation('subtract')
-	root.addChild(VR.product)
+	VR.scene.addChild(VR.product)
 	VR.product.setEditMode(0)
-	VR.product.setMaterial(mchrome)
+	VR.product.setMaterial(VR.mat_metal)
 	VR.product.setTexCoords(VR.product.getPositions())
 	VR.product.hide()
-	
-	test = VR.product.duplicate()
 		
 </core>
     </Script>
-    <Script base_name="init" group="no group" name_space="__script__" name_suffix="1" persistency="666" server="server1" type="Python" unique="1">
-      <core>
-	import VR
-	VR.initScene()
-	VR.initLogistics()
-</core>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="7" base_name="trigger" name_space="__global__"/>
-    </Script>
-    <Script base_name="logistics_update" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
+    <Script base_name="logistics_update" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	if hasattr(VR, 'log'):
@@ -211,44 +224,7 @@
 			if c[1].isFull():
 				c[1].clear()
 </core>
-      <trig type="on_timeout" dev="" state="Pressed" param="50" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
-    </Script>
-    <Script base_name="mat_Chrome" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python" unique="1">
-      <core>
-	import VR
-	
-	#if hasattr(VR, 'chrome'):
-	#	return VR.chrome
-	
-	#http://devernay.free.fr/cours/opengl/materials.html
-	
-	def setMetalic(mat, a,d,sp,sh):
-		mat.setDiffuse([d,d,d])
-		mat.setSpecular([sp,sp,sp])
-		mat.setAmbient([a,a,a])
-		mat.setShininess(128*sh)	
-	
-	VR.chrome = VR.Material('Chrome')
-	setMetalic(VR.chrome, 0.25, 0.4, 0.77, 0.6) #chrome
-	#VR.chrome.setDiffuse([d,d,d])
-	
-	tg = VR.TextureGenerator()
-	tg.setSize(50,50,50)
-	cp = 0.6
-	
-	tg.add('Perlin', 1.0/2, [cp,cp,cp], [1,1,1])
-	tg.add('Perlin', 1.0/8, [cp,cp,cp], [1,1,1])
-	VR.chrome.setTexture(tg.compose(0))
-	#return VR.chrome
-	
-	VR.chrome.addPass()
-	setMetalic(VR.chrome, 0.25, 0.9, 1, 0.6)
-	VR.chrome.setTexture('metal5.jpg')
-	VR.chrome.setTextureType('SphereEnv')
-	VR.chrome.setTransparency(0.4)
-	
-	return VR.chrome
-</core>
+      <trig type="on_timeout" dev="" state="Pressed" param="50" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>

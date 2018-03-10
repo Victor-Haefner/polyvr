@@ -10,6 +10,9 @@ OSG_BEGIN_NAMESPACE;
 
 class VRProjectManager : public VRObject {
     private:
+        VRStorage storage;
+        map<string, string> settings;
+        map<VRStorage*, string> modesMap;
         vector<VRStoragePtr> vault_reload;
         vector<VRStoragePtr> vault_rebuild;
         int persistencyLvl = 0;
@@ -19,6 +22,8 @@ class VRProjectManager : public VRObject {
         ~VRProjectManager();
         static VRProjectManagerPtr create();
 
+        void setSetting(string s, string v);
+        string getSetting(string s);
         void addItem(VRStoragePtr s, string mode);
         void remItem(VRStoragePtr s);
         vector<VRStoragePtr> getItems();

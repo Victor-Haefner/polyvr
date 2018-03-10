@@ -5,8 +5,7 @@
 #include "core/gui/VRGuiUtils.h"
 
 #include "core/scene/VRSceneManager.h"
-
-#include <boost/filesystem.hpp>
+#include "core/utils/system/VRSystem.h"
 
 using namespace OSG;
 
@@ -24,8 +23,11 @@ VRNetworkNode::VRNetworkNode(string name) : VRManager("NetworkNode") {
     setNameSpace("NetworkNode");
     setName(name);
 
+    slavePath = VRSceneManager::get()->getOriginalWorkdir() + "/src/cluster/start";
+
     store("address", &address);
     store("user", &user);
+    store("slavePath", &slavePath);
     regStorageSetupFkt( VRUpdateCb::create("network_node_update", boost::bind(&VRNetworkNode::update, this)) );
     regStorageSetupFkt( VRUpdateCb::create("network_node_update2", boost::bind(&VRNetworkNode::initSlaves, this)) );
 }
@@ -37,17 +39,21 @@ VRNetworkNodePtr VRNetworkNode::ptr() { return static_pointer_cast<VRNetworkNode
 
 string VRNetworkNode::getAddress() { return address; }
 string VRNetworkNode::getUser() { return user; }
+string VRNetworkNode::getSlavePath() { return slavePath; }
 
 void VRNetworkNode::setAddress(string s) { address = s; update(); }
 void VRNetworkNode::setUser(string s) { user = s; update(); }
+void VRNetworkNode::setSlavePath(string s) { slavePath = s; update(); }
 
 string VRNetworkNode::getStatNode() { return stat_node; }
 string VRNetworkNode::getStatSSH() { return stat_ssh; }
 string VRNetworkNode::getStatSSHkey() { return stat_ssh_key; }
+string VRNetworkNode::getStatPath() { return stat_path; }
 
-void VRNetworkNode::set(string a, string u) {
+void VRNetworkNode::set(string a, string u, string p) {
     address = a;
     user = u;
+    slavePath = p;
     update();
 }
 
@@ -91,6 +97,7 @@ void VRNetworkNode::update() {
     stat_node = "ok";
     stat_ssh = "";
     stat_ssh_key = "";
+    stat_path = "";
 
     VRPing p;
     if ( !p.start(address, "22", 1) ) { stat_node = "ping failed"; return; }
@@ -98,9 +105,15 @@ void VRNetworkNode::update() {
     auto ssh = VRSSHSession::open(address, user);
     stat_ssh = ssh->getStat();
     stat_ssh_key = ssh->getKeyStat();
+
+    string res = execCmd("ls "+slavePath, true);
+    bool b = res.substr(0, slavePath.size()) == slavePath;
+    if (b) stat_path = "ok";
+    else stat_path = "not found";
 }
 
 string VRNetworkNode::execCmd(string cmd, bool read) {
+    if (stat_node != "ok" || stat_ssh != "ok") return "";
     auto ssh = VRSSHSession::open(address, user);
     return ssh->exec_cmd(cmd, read);
 }
@@ -127,9 +140,11 @@ void VRNetworkSlave::update() {} // TODO: compute stats
 
 void VRNetworkSlave::start() {
     if (!node) return;
-    string path = VRSceneManager::get()->getOriginalWorkdir() + "/src/cluster/start";
+    //if (!exists(path + "VRServer")) { stat = "no slave exec. VRServer in src/cluster/"; return; } // TODO: check on remote!
+
     string disp = "export DISPLAY=\"" + display + "\" && ";
     string pipes = " > /dev/null 2> /dev/null < /dev/null &";
+    //string pipes = " > /dev/null 2> /dev/null < /dev/null"; // TODO: without & it returns the correct exit code, but it also makes the app stuck!
     string args;
     if (!fullscreen) args += " -w";
     if (active_stereo) args += " -A";
@@ -137,7 +152,7 @@ void VRNetworkSlave::start() {
     if (connection_type == "SockPipeline") args += " -p " + node->getAddress() + ":" + toString(port);
     if (connection_type == "StreamSock") args += " " + node->getAddress() + ":" + toString(port);
 
-    stat = node->execCmd(disp + path + args + pipes, false);
+    stat = node->execCmd(disp + node->getSlavePath() + args + pipes, false);
     update();
 }
 

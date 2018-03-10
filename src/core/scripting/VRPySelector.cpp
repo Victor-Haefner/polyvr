@@ -11,7 +11,7 @@ simpleVRPyType(Selector, New_ptr);
 PyMethodDef VRPySelector::methods[] = {
     {"setColor", (PyCFunction)VRPySelector::setColor, METH_VARARGS, "Set the color of the selection - setColor([f,f,f])" },
     {"deselect", (PyCFunction)VRPySelector::clear, METH_VARARGS, "Deselect object - deselect()" },
-    {"select", (PyCFunction)VRPySelector::select, METH_VARARGS, "Select object - select( obj )" },
+    {"select", PyWrapOpt(Selector, select, "Select object - select( obj, add, recursive )", "0|1", void, VRObjectPtr, bool, bool ) },
     {"update", (PyCFunction)VRPySelector::update, METH_NOARGS, "Update selection visualisation - update()" },
     {"set", (PyCFunction)VRPySelector::set, METH_VARARGS, "Set selection - set( selection )" },
     {"add", (PyCFunction)VRPySelector::add, METH_VARARGS, "Add to selection - add( selection )" },

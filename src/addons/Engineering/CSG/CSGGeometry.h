@@ -4,6 +4,7 @@
 #include <string>
 #include <OpenSG/OSGGeometry.h>
 #include "core/objects/geometry/VRGeometry.h"
+#include "addons/Engineering/VREngineeringFwd.h"
 
 namespace CGAL { class Polyhedron; }
 
@@ -19,7 +20,7 @@ class CSGGeometry : public VRGeometry {
         Matrix4d oldWorldTrans;
         float thresholdL = 1e-4;
         float thresholdA = 1e-8;
-        Octree* oct = 0;
+        OctreePtr oct;
 
     protected:
         void applyTransform(CGAL::Polyhedron* p, Matrix4d m);
@@ -37,6 +38,8 @@ class CSGGeometry : public VRGeometry {
     public:
         CSGGeometry(string name);
         virtual ~CSGGeometry();
+
+        void init();
 
         static CSGGeometryPtr create(string name = "csgGeometry");
         CSGGeometryPtr ptr();

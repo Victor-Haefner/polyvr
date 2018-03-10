@@ -18,8 +18,9 @@ Glib::RefPtr<Gtk::Builder> VRGuiBuilder(bool standalone = false);
 void setLabel(string l, string txt);
 void setTextEntry(string entry, string text);
 string getTextEntry(string entry);
-void setEntryCallback(string e, sigc::slot<void> sig, bool onEveryChange = false);
+void setEntryCallback(string e, sigc::slot<void> sig, bool onEveryChange = false, bool onFocusOut = true, bool onActivate = true);
 void setEntrySensitivity(string e, bool b);
+void focusEntry(string e);
 
 // BUTTONS
 void setButtonCallback(string b, sigc::slot<void> sig );
@@ -30,10 +31,14 @@ void setCheckButton(string cb, bool b);
 bool getCheckButtonState(string b);
 void setCheckButtonCallback(string cb, sigc::slot<void> sig );
 bool getRadioButtonState(string b);
+bool getRadioToolButtonState(string b);
 bool getToggleButtonState(string b);
+void setRadioToolButtonCallback(string cb, sigc::slot<void> sig );
 void setRadioButtonCallback(string cb, sigc::slot<void> sig );
 void setRadioButton(string cb, bool b );
+void setRadioToolButton(string cb, bool b );
 void setButtonText(string cb, string txt );
+void setButtonSensitivity(string b, bool s );
 
 // COMBOBOX
 void setComboboxCallback(string b, sigc::slot<void> sig);
@@ -80,7 +85,7 @@ void setColorChooser(string drawable, sigc::slot<bool, GdkEventButton*> sig);
 void setColorChooserColor(string drawable, OSG::Color3f col);
 
 OSG::VRTexturePtr takeSnapshot();
-void saveScene(string path = "");
+void saveScene(string path = "", bool saveas = false);
 
 void showDialog(string d);
 void hideDialog(string d);

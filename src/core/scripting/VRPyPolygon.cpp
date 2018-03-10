@@ -1,12 +1,10 @@
 #include "VRPyPolygon.h"
+#include "VRPyMath.h"
 #include "VRPyBaseT.h"
 
 using namespace OSG;
 
 newPyType(VRPolygon, Polygon, New_ptr);
-
-template<> PyObject* VRPyTypeCaster::cast(const VRPolygonPtr& e) { return VRPyPolygon::fromSharedPtr(e); }
-template<> bool toValue(PyObject* o, VRPolygonPtr& v) { if (!VRPyPolygon::check(o)) return 0; v = ((VRPyPolygon*)o)->objPtr; return 1; }
 
 PyMethodDef VRPyPolygon::methods[] = {
     {"addPoint", (PyCFunction)VRPyPolygon::addPoint, METH_VARARGS, "Add a point - addPoint([x,y])" },
@@ -19,7 +17,7 @@ PyMethodDef VRPyPolygon::methods[] = {
     {"clear", (PyCFunction)VRPyPolygon::clear, METH_NOARGS, "Clear all points - clear()" },
     {"getRandomPoints", (PyCFunction)VRPyPolygon::getRandomPoints, METH_VARARGS, "Clear all points - getRandomPoints( | float density, float padding)" },
     {"isInside", PyWrap(Polygon, isInside, "Check if point is inside polygon", bool, Vec2d) },
-    {"gridSplit", PyWrap(Polygon, gridSplit, "Split the polygon using a virtual grid layout", vector< VRPolygonPtr >, float) },
+    {"gridSplit", PyWrap(Polygon, gridSplit, "Split the polygon using a virtual grid layout", vector< VRPolygonPtr >, double) },
     {"reverseOrder", PyWrap(Polygon, reverseOrder, "Reverse the order of the points", void) },
     {"translate", PyWrap(Polygon, translate, "Translate all points", void, Vec3d) },
     {NULL}  /* Sentinel */
@@ -42,7 +40,7 @@ PyObject* VRPyPolygon::getPoint(VRPyPolygon* self, PyObject* args) {
     if (!self->valid()) return NULL;
     int i = 0;
     if (! PyArg_ParseTuple(args, "i", &i)) return NULL;
-    return toPyTuple( self->objPtr->getPoint(i) );
+    return toPyObject( self->objPtr->getPoint(i) );
 }
 
 PyObject* VRPyPolygon::getRandomPoints(VRPyPolygon* self, PyObject* args) {
@@ -52,7 +50,7 @@ PyObject* VRPyPolygon::getRandomPoints(VRPyPolygon* self, PyObject* args) {
     if (! PyArg_ParseTuple(args, "|ff", &d, &p)) return NULL;
     auto vec = self->objPtr->getRandomPoints(d,p);
     PyObject* res = PyList_New(vec.size());
-    for (uint i=0; i<vec.size(); i++) PyList_SetItem(res, i, toPyTuple(vec[i]));
+    for (uint i=0; i<vec.size(); i++) PyList_SetItem(res, i, toPyObject(vec[i]));
     return res;
 }
 
@@ -60,7 +58,7 @@ PyObject* VRPyPolygon::getPoints(VRPyPolygon* self) {
     if (!self->valid()) return NULL;
     auto vec = self->objPtr->get();
     PyObject* res = PyList_New(vec.size());
-    for (uint i=0; i<vec.size(); i++) PyList_SetItem(res, i, toPyTuple(vec[i]));
+    for (uint i=0; i<vec.size(); i++) PyList_SetItem(res, i, toPyObject(vec[i]));
     return res;
 }
 

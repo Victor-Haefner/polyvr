@@ -5,10 +5,13 @@
 #include <OpenSG/OSGShaderShadowMapEngine.h>
 #include <OpenSG/OSGTrapezoidalShadowMapEngine.h>
 #include <OpenSG/OSGImage.h>
+#include <OpenSG/OSGLightEngine.h>
 #include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+
+typedef LightEngine::LightTypeE LightTypeE;
 
 class VRDefShading {
     private:
@@ -18,36 +21,31 @@ class VRDefShading {
             ST_TRAPEZOID = 2
         };
 
-        enum LightTypeE {
-            Directional,
-            Point,
-            Spot
-        };
-
         struct LightInfo {
             VRLightWeakPtr vrlight;
             LightTypeE lightType;
             ShadowTypeE shadowType;
             LightMTRecPtr light;
-            int dsID = 0;
+            TextureObjChunkMTRecPtr texChunk;
             //NodeMTRecPtr               lightN;
             //NodeMTRecPtr               beaconN;
 
-            ShaderProgramRecPtr      lightVP;
-            ShaderProgramRecPtr      lightFP;
-            ShaderProgramChunkRecPtr lightSH;
+            ShaderProgramMTRecPtr      lightVP;
+            ShaderProgramMTRecPtr      lightFP;
+            ShaderProgramChunkMTRecPtr lightSH;
         };
 
         string dsGBufferVPFile, dsGBufferFPFile;
         string dsAmbientVPFile, dsAmbientFPFile;
         string dsDirLightVPFile, dsDirLightFPFile, dsDirLightShadowFPFile;
         string dsPointLightVPFile, dsPointLightFPFile, dsPointLightShadowFPFile;
+        string dsPhotometricLightVPFile, dsPhotometricLightFPFile, dsPhotometricLightShadowFPFile;
         string dsSpotLightVPFile, dsSpotLightFPFile, dsSpotLightShadowFPFile;
         string dsUnknownFile = "unknownFile";
 
         TextureObjChunkRefPtr fboTex;
         NodeMTRecPtr dsStageN;
-        DeferredShadingStageRecPtr dsStage;
+        DeferredShadingStageMTRecPtr dsStage;
         map<int, LightInfo> lightInfos;
         int shadowMapWidth;
         int shadowMapHeight;
@@ -77,7 +75,6 @@ class VRDefShading {
         TextureObjChunkRefPtr getTarget();
 
         void setDSCamera(OSGCameraPtr cam);
-        //void setDSCamera(ProjectionCameraDecoratorRecPtr cam);
         void addDSLight(VRLightPtr light);
         void updateLight(VRLightPtr l);
         void subLight(int ID);

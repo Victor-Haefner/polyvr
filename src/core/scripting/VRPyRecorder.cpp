@@ -2,6 +2,7 @@
 #include "VRPyBaseT.h"
 #include "VRPyTransform.h"
 #include "VRPyImage.h"
+#include "VRPyMath.h"
 
 using namespace OSG;
 
@@ -37,10 +38,10 @@ PyObject* VRPyRecorder::get(VRPyRecorder* self, PyObject* args) {
     return VRPyImage::fromSharedPtr( self->objPtr->get(i) );
 }
 
-PyObject* VRPyRecorder::getFrom(VRPyRecorder* self, PyObject* args) { return toPyTuple(self->objPtr->getFrom( parseInt(args) ) ); }
-PyObject* VRPyRecorder::getDir(VRPyRecorder* self, PyObject* args) { return toPyTuple(self->objPtr->getDir( parseInt(args) ) ); }
-PyObject* VRPyRecorder::getAt(VRPyRecorder* self, PyObject* args) { return toPyTuple(self->objPtr->getAt( parseInt(args) ) ); }
-PyObject* VRPyRecorder::getUp(VRPyRecorder* self, PyObject* args) { return toPyTuple(self->objPtr->getUp( parseInt(args) ) ); }
+PyObject* VRPyRecorder::getFrom(VRPyRecorder* self, PyObject* args) { return toPyObject(self->objPtr->getFrom( parseInt(args) ) ); }
+PyObject* VRPyRecorder::getDir(VRPyRecorder* self, PyObject* args) { return toPyObject(self->objPtr->getDir( parseInt(args) ) ); }
+PyObject* VRPyRecorder::getAt(VRPyRecorder* self, PyObject* args) { return toPyObject(self->objPtr->getAt( parseInt(args) ) ); }
+PyObject* VRPyRecorder::getUp(VRPyRecorder* self, PyObject* args) { return toPyObject(self->objPtr->getUp( parseInt(args) ) ); }
 
 PyObject* VRPyRecorder::setMaxFrames(VRPyRecorder* self, PyObject* args) {
     if (self->objPtr) self->objPtr->setMaxFrames( parseInt(args) );

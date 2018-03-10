@@ -9,9 +9,6 @@ using namespace OSG;
 
 simpleVRPyType(ObjectManager, New_VRObjects_ptr);
 
-template<> PyObject* VRPyTypeCaster::cast(const VRObjectManagerPtr& e) { return VRPyObjectManager::fromSharedPtr(e); }
-template<> bool toValue(PyObject* o, VRObjectManagerPtr& v) { if (!VRPyObjectManager::check(o)) return 0; v = ((VRPyObjectManager*)o)->objPtr; return 1; }
-
 PyMethodDef VRPyObjectManager::methods[] = {
     {"add", (PyCFunction)VRPyObjectManager::add, METH_VARARGS, "Add a copy of the passed object to the managed object pool and return it - obj add( obj ) " },
     {"copy", (PyCFunction)VRPyObjectManager::copy, METH_VARARGS, "Add a copy of the passed object to the managed object pool and return it - obj copy( str, pose ) " },

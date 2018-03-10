@@ -14,13 +14,13 @@ class Action;
 
 class VREmbankment : public VRGeometry{
     private:
-        pathPtr p1, p2, p3, p4;
+        PathPtr p1, p2, p3, p4;
         VRPolygon area;
 
     public:
-        VREmbankment(pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4);
+        VREmbankment(PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4);
         ~VREmbankment();
-        static VREmbankmentPtr create(pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4);
+        static VREmbankmentPtr create(PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4);
 
         bool isInside(Vec2d p);
         float getHeight(Vec2d p);
@@ -33,6 +33,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
     private:
         static string vertexShader;
         static string fragmentShader;
+        static string fragmentShaderDeferred;
         static string tessControlShader;
         static string tessEvaluationShader;
 
@@ -51,16 +52,28 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void setupGeo();
         void setupMat();
 
+        void btPhysicalize();
+        void vrPhysicalize();
+
     public:
         VRTerrain(string name);
         ~VRTerrain();
         static VRTerrainPtr create(string name = "terrain");
+        VRTerrainPtr ptr();
 
         void setSimpleNoise();
+        Boundingbox getBoundingBox();
 
-        void setParameters( Vec2d size, double resolution, double heightScale );
+        void setParameters( Vec2d size, double resolution, double heightScale, float w = 0 );
+        void setWaterLevel(float w);
         void setMap( VRTexturePtr tex, int channel = 3 );
         void loadMap( string path, int channel = 3 );
+        VRTexturePtr getMap();
+        Vec2f getTexelSize();
+        Vec2d getSize();
+
+        Vec2d toUVSpace(Vec2d uv);
+        Vec2d fromUVSpace(Vec2d uv);
 
         virtual bool applyIntersectionAction(Action* ia);
 
@@ -70,14 +83,15 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
 
         double getHeight( const Vec2d& p, bool useEmbankments = true );
         void elevatePoint( Vec3d& p, float offset = 0, bool useEmbankments = true );
-        void elevatePose( posePtr p, float offset = 0 );
+        void elevatePose( PosePtr p, float offset = 0 );
         void elevatePolygon( VRPolygonPtr p, float offset = 0, bool useEmbankments = true );
         void elevateObject( VRTransformPtr p, float offset = 0 );
         void elevateVertices( VRGeometryPtr p, float offset = 0 );
         void projectTangent( Vec3d& t, Vec3d p);
 
-        void paintHeights(string path);
-        void addEmbankment(string ID, pathPtr p1, pathPtr p2, pathPtr p3, pathPtr p4);
+        void flatten(vector<Vec2d> perimeter, float h);
+        void paintHeights(string woods, string gravel);
+        void addEmbankment(string ID, PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4);
 
         vector<Vec3d> probeHeight( Vec2d p);
 

@@ -246,7 +246,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
         }
 
         if (concepts.count(object)) {
-            auto& s = stackStatement();
+            stackStatement();
             return 0;
         }
 
@@ -443,8 +443,8 @@ void VROWLImport::processTriple(raptor_statement* rs) {
     objects[s.subject][s.object] = s.predicate;
 }
 
-void VROWLImport::load(VROntologyPtr o, string path) {
-    cout << "VROWLImport::load " << path << endl;
+void VROWLImport::read(VROntologyPtr o, string path) {
+    cout << "VROWLImport::read " << path << endl;
     clear();
     onto = o;
     cout << "  Prepare raptor" << endl;

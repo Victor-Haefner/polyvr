@@ -10,12 +10,12 @@
 
 OSG_BEGIN_NAMESPACE
 
-Octree::Octree(float res, float s) : resolution(res), size(s) {}
-Octree::~Octree() {}
+OctreeNode::OctreeNode(OctreePtr tree, float res, float s) : resolution(res), size(s) { this->tree = tree; }
+OctreeNode::~OctreeNode() {
+    for (auto c : children) if (c) delete c;
+}
 
-OctreePtr Octree::create(float resolution, float size) { return OctreePtr( new Octree(resolution, size) ); }
-
-int Octree::getOctant(Vec3d p) {
+int OctreeNode::getOctant(Vec3d p) {
     Vec3d rp = p - center;
 
     int o = 0;
@@ -33,36 +33,24 @@ Vec3d lvljumpCenter(float s2, Vec3d rp) {
     return c;
 }
 
-bool Octree::inBox(Vec3d p, Vec3d c, float size) {
+bool OctreeNode::inBox(Vec3d p, Vec3d c, float size) {
     if (abs(2*p[0] - 2*c[0]) > size) return false;
     if (abs(2*p[1] - 2*c[1]) > size) return false;
     if (abs(2*p[2] - 2*c[2]) > size) return false;
     return true;
 }
 
-void Octree::addBox(const Boundingbox& b, void* d, int targetLevel, bool checkPosition) {
-    const Vec3d min = b.min();
-    const Vec3d max = b.max();
-    add(min, d, targetLevel, 0, checkPosition);
-    add(Vec3d(max[0],min[1],min[2]), d, targetLevel, 0, checkPosition);
-    add(Vec3d(max[0],min[1],max[2]), d, targetLevel, 0, checkPosition);
-    add(Vec3d(min[0],min[1],max[2]), d, targetLevel, 0, checkPosition);
-    add(max, d, targetLevel, 0, checkPosition);
-    add(Vec3d(max[0],max[1],min[2]), d, targetLevel, 0, checkPosition);
-    add(Vec3d(min[0],max[1],min[2]), d, targetLevel, 0, checkPosition);
-    add(Vec3d(min[0],max[1],max[2]), d, targetLevel, 0, checkPosition);
-}
-
-Octree* Octree::add(Vec3d p, void* d, int targetLevel, int currentLevel, bool checkPosition) {
+OctreeNode* OctreeNode::add(Vec3d p, void* d, int targetLevel, int currentLevel, bool checkPosition) {
     Vec3d rp = p - center;
 
     if ( !inBox(p, center, size) && checkPosition ) { // not in node
         if (parent == 0) { // no parent, create it
-            parent = new Octree(resolution, 2*size);
+            parent = new OctreeNode(tree.lock(), resolution, 2*size);
             Vec3d c = center + lvljumpCenter(size*0.5, rp);
             parent->center = c;
             int o = parent->getOctant(center);
             parent->children[o] = this;
+            tree.lock()->updateRoot();
         }
         return parent->add(p, d, targetLevel, currentLevel+1, true); // go a level up
     }
@@ -70,7 +58,7 @@ Octree* Octree::add(Vec3d p, void* d, int targetLevel, int currentLevel, bool ch
     if (size > resolution && (currentLevel != targetLevel || targetLevel == -1)) {
         int o = getOctant(p);
         if (children[o] == 0) {
-            children[o] = new Octree(resolution, size*0.5);
+            children[o] = new OctreeNode(tree.lock(), resolution, size*0.5);
             Vec3d c = center + lvljumpCenter(size*0.25, rp);
             children[o]->center = c;
             children[o]->parent = this;
@@ -83,35 +71,36 @@ Octree* Octree::add(Vec3d p, void* d, int targetLevel, int currentLevel, bool ch
     return this;
 }
 
-void Octree::set(Octree* node, Vec3d p, void* d) { node->data.clear(); node->points.clear(); node->data.push_back(d); node->points.push_back(p); }
+void OctreeNode::set(OctreeNode* node, Vec3d p, void* d) { node->data.clear(); node->points.clear(); node->data.push_back(d); node->points.push_back(p); }
 
-vector<Octree*> Octree::getAncestry() {
-    vector<Octree*> res;
+vector<OctreeNode*> OctreeNode::getAncestry() {
+    vector<OctreeNode*> res;
     auto p = parent;
     while (p) { res.push_back(p); p = p->parent; }
     return res;
 }
 
-Octree* Octree::get(Vec3d p) {
+OctreeNode* OctreeNode::get(Vec3d p) {
     if ( !inBox(p, center, size) ) {
-        return parent == 0 ? 0 : parent->get(p);
+        if (parent) return parent->get(p);
+        else return 0;
     }
 
     if (size > resolution) {
         int o = getOctant(p);
-        if (children[o] == 0) return this;
+        if (!children[o]) return this;
         return children[o]->get(p);
     }
 
     return this;
 }
 
-vector<Octree*> Octree::getChildren() {
-    return vector<Octree*>(children, children+8);
+vector<OctreeNode*> OctreeNode::getChildren() {
+    return vector<OctreeNode*>(children, children+8);
 }
 
-vector<Octree*> Octree::getPathTo(Vec3d p) {
-    vector<Octree*> res;
+vector<OctreeNode*> OctreeNode::getPathTo(Vec3d p) {
+    vector<OctreeNode*> res;
     auto o = get(p);
     if (!o) return res;
 
@@ -124,7 +113,7 @@ vector<Octree*> Octree::getPathTo(Vec3d p) {
     return res;
 }
 
-void gatherSubtree(Octree* o, vector<Octree*>& res) {
+void gatherSubtree(OctreeNode* o, vector<OctreeNode*>& res) {
     for (auto c : o->getChildren()) {
         if (c) {
             res.push_back(c);
@@ -133,43 +122,25 @@ void gatherSubtree(Octree* o, vector<Octree*>& res) {
     }
 }
 
-vector<Octree*> Octree::getSubtree() {
-    vector<Octree*> res;
+vector<OctreeNode*> OctreeNode::getSubtree() {
+    vector<OctreeNode*> res;
     gatherSubtree(this, res);
     return res;
 }
 
-Vec3d Octree::getCenter() { return center; }
-Vec3d Octree::getLocalCenter() { return parent ? center - parent->center : center; }
-
-void Octree::destroy(Octree* guard) {
-    for (int i=0; i<8; i++) {
-        if (children[i] != 0) children[i]->destroy(guard);
-        children[i] = 0;
-    }
-
-    if (guard != this) delete this;
-    else {
-        data.clear();
-        parent = 0;
-    }
+Vec3d OctreeNode::getCenter() { return center; }
+Vec3d OctreeNode::getLocalCenter() {
+    if (parent) return center - parent->center;
+    else return center;
 }
 
-void Octree::remData(void* d) {
+void OctreeNode::remData(void* d) {
     data.erase(std::remove(data.begin(), data.end(), d), data.end());
 }
 
-void Octree::clear() { getRoot()->destroy(this); }
+OctreeNode* OctreeNode::getParent() { return parent; }
 
-Octree* Octree::getRoot() {
-    Octree* o = this;
-    while (o->parent != 0) o = o->parent;
-    return o;
-}
-
-Octree* Octree::getParent() { return parent; }
-
-float Octree::getSize() { return size; }
+float OctreeNode::getSize() { return size; }
 
 // sphere center, box center, sphere radius, box size
 bool sphere_box_intersect(Vec3d Ps, Vec3d Pb, float Rs, float Sb)  {
@@ -187,7 +158,7 @@ bool sphere_box_intersect(Vec3d Ps, Vec3d Pb, float Rs, float Sb)  {
     return dmin <= r2;
 }
 
-void Octree::findInSphere(Vec3d p, float r, vector<void*>& res) { // TODO: optimize!!
+void OctreeNode::findInSphere(Vec3d p, float r, vector<void*>& res) { // TODO: optimize!!
     if (!sphere_box_intersect(p, center, r, size)) return;
 
     float r2 = r*r;
@@ -215,7 +186,7 @@ bool box_box_intersect(Vec3d min, Vec3d max, Vec3d Bpos, float Sb)  {
     return (abs(diff[0]) <= ABdiag[0]) && (abs(diff[1]) <= ABdiag[1]) && (abs(diff[2]) <= ABdiag[2]);
 }
 
-void Octree::findInBox(const Boundingbox& b, vector<void*>& res) { // TODO: optimize!!
+void OctreeNode::findInBox(const Boundingbox& b, vector<void*>& res) { // TODO: optimize!!
     if (!box_box_intersect(b.min(), b.max(), center, size)) return;
 
     for (unsigned int i=0; i<data.size(); i++) {
@@ -227,19 +198,7 @@ void Octree::findInBox(const Boundingbox& b, vector<void*>& res) { // TODO: opti
     }
 }
 
-vector<void*> Octree::radiusSearch(Vec3d p, float r) {
-    vector<void*> res;
-    getRoot()->findInSphere(p, r, res);
-    return res;
-}
-
-vector<void*> Octree::boxSearch(const Boundingbox& b) {
-    vector<void*> res;
-    getRoot()->findInBox(b, res);
-    return res;
-}
-
-string Octree::toString(int indent) {
+string OctreeNode::toString(int indent) {
     auto pToStr = [](void* p) {
         const void * address = static_cast<const void*>(p);
         std::stringstream ss;
@@ -255,11 +214,73 @@ string Octree::toString(int indent) {
     return res;
 }
 
-void Octree::print(int indent) {
+void OctreeNode::print(int indent) {
     cout << toString(indent) << flush;
     for (int i=0; i<8; i++) {
         if (children[i] != 0) children[i]->print(indent+1);
     }
+}
+
+vector<void*> OctreeNode::getData() { return data; }
+
+vector<void*> OctreeNode::getAllData() {
+    vector<void*> res;
+    for (auto c : getSubtree()) {
+        auto d = c->getData();
+        res.insert(res.end(), d.begin(), d.end());
+    }
+    return res;
+}
+
+
+Octree::Octree(float res, float s) : resolution(res), firstSize(s) {}
+Octree::~Octree() { if (root) delete root; }
+
+OctreePtr Octree::create(float resolution, float size) {
+    auto o = OctreePtr( new Octree(resolution, size) );
+    o->clear();
+    return o;
+}
+
+OctreePtr Octree::ptr() { return shared_from_this(); }
+
+float Octree::getSize() { return root->getSize(); }
+void Octree::clear() { if (root) delete root; root = new OctreeNode(ptr(), resolution, firstSize); }
+
+OctreeNode* Octree::get(Vec3d p) { return root->get(p); }
+
+OctreeNode* Octree::add(Vec3d p, void* data, int targetLevel, int currentLevel, bool checkPosition) {
+    return getRoot()->add(p, data, targetLevel, currentLevel, checkPosition);
+}
+
+void Octree::addBox(const Boundingbox& b, void* d, int targetLevel, bool checkPosition) {
+    const Vec3d min = b.min();
+    const Vec3d max = b.max();
+    add(min, d, targetLevel, 0, checkPosition);
+    add(Vec3d(max[0],min[1],min[2]), d, targetLevel, 0, checkPosition);
+    add(Vec3d(max[0],min[1],max[2]), d, targetLevel, 0, checkPosition);
+    add(Vec3d(min[0],min[1],max[2]), d, targetLevel, 0, checkPosition);
+    add(max, d, targetLevel, 0, checkPosition);
+    add(Vec3d(max[0],max[1],min[2]), d, targetLevel, 0, checkPosition);
+    add(Vec3d(min[0],max[1],min[2]), d, targetLevel, 0, checkPosition);
+    add(Vec3d(min[0],max[1],max[2]), d, targetLevel, 0, checkPosition);
+}
+
+OctreeNode* Octree::getRoot() { return root; }
+void Octree::updateRoot() { while (auto p = root->getParent()) root = p; }
+
+vector<void*> Octree::getAllData() { return getRoot()->getAllData(); }
+
+vector<void*> Octree::radiusSearch(Vec3d p, float r) {
+    vector<void*> res;
+    getRoot()->findInSphere(p, r, res);
+    return res;
+}
+
+vector<void*> Octree::boxSearch(const Boundingbox& b) {
+    vector<void*> res;
+    getRoot()->findInBox(b, res);
+    return res;
 }
 
 void Octree::test() {
@@ -304,7 +325,7 @@ void Octree::test() {
     // validate results
 
     if (radSearchRes_brute.size() != radSearchRes_tree.size()) {
-        cout << "\nOctree test failed: result vector has wrong length " << radSearchRes_brute.size() << " " << radSearchRes_tree.size() << " !";
+        cout << "\nOctreeNode test failed: result vector has wrong length " << radSearchRes_brute.size() << " " << radSearchRes_tree.size() << " !";
         return;
     }
 
@@ -313,23 +334,14 @@ void Octree::test() {
 
     for (unsigned int i=0; i<radSearchRes_brute.size(); i++) {
         if (radSearchRes_tree[i] != radSearchRes_brute[i]) {
-            cout << "\nOctree test failed: mismatching test data!" << radSearchRes_tree[i] << "  " << radSearchRes_brute[i];
+            cout << "\nOctreeNode test failed: mismatching test data!" << radSearchRes_tree[i] << "  " << radSearchRes_brute[i];
             return;
         }
     }
 
-    cout << "\nOctree test passed with " << radSearchRes_tree.size() << " found Vec3fs!\n";
+    cout << "\nOctreeNode test passed with " << radSearchRes_tree.size() << " found Vec3fs!\n";
 }
 
-vector<void*> Octree::getData() { return data; }
 
-vector<void*> Octree::getAllData() {
-    vector<void*> res;
-    for (auto c : getSubtree()) {
-        auto d = c->getData();
-        res.insert(res.end(), d.begin(), d.end());
-    }
-    return res;
-}
 
 OSG_END_NAMESPACE

@@ -2,6 +2,7 @@
 #define VRMOLECULE_H_INCLUDED
 
 #include "core/objects/geometry/VRGeometry.h"
+#include "addons/Engineering/VREngineeringFwd.h"
 
 class VRNumberingEngine;
 
@@ -86,9 +87,10 @@ class VRMolecule : public VRGeometry {
         static string b_fp;
         static string b_gp;
 
-		void addAtom(VRAtom* b, int bType, bool extra = false);
-		void addAtom(string a, int b);
-		void addAtom(int a, int b);
+    protected:
+		VRAtom* addAtom(string a);
+		void connectAtom(VRAtom* b, int bType, bool extra = false);
+		void connectAtom(int a, int b);
 		void updateLabels();
 		void updateCoords();
 
@@ -108,6 +110,7 @@ class VRMolecule : public VRGeometry {
         string getDefinition();
 
         VRAtom* getAtom(int ID);
+        Vec3d getAtomPosition(int ID);
 
         void setLocalOrigin(int ID);
 

@@ -9,6 +9,7 @@
 #include "DTrack.h"
 #include "core/setup/devices/VRFlystick.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/VRGlobals.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
 #include "core/math/coordinates.h"
@@ -28,7 +29,16 @@ int ART_device::key(int ID, int type) { return ID*1000 + type; }
 
 void ART_device::init() {
     if (type != 1) ent = VRTransform::create("ART_tracker");
-    if (type == 1) {
+
+    if (type == 2) { // finger tracking
+        for (int i=0;i<5;i++) {
+            auto f = VRTransform::create("finger"+toString(i));
+            ent->addChild(f);
+            fingerEnts.push_back(f);
+        }
+    }
+
+    if (type == 1) { // flystick
         dev = VRFlystick::create();
         ent = dev->editBeacon();
 
@@ -46,7 +56,12 @@ void ART_device::init() {
 }
 
 void ART_device::update() {
-    if (ent) ent->setMatrix(m);
+    if (ent) {
+        ent->setMatrix(m);
+        if (fingers.size() == 5 && fingerEnts.size() == 5)
+            for (int i=0;i<5;i++) fingerEnts[i]->setMatrix( fingers[i] );
+    }
+
     if (dev) {
         for (auto j : joysticks) dev->update(j);
         for (auto b : buttons) dev->update(b);
@@ -57,11 +72,8 @@ void ART_device::update() {
 
 
 ART::ART() {
-    updatePtr  = VRUpdateCb::create("ART_apply", boost::bind(&ART::applyEvents, this));
-    VRSceneManager::get()->addUpdateFkt(updatePtr);
-
     threadFkt = VRFunction< weak_ptr<VRThread> >::create("ART_fetch", boost::bind(&ART::updateT, this, _1));
-    VRSceneManager::get()->initThread(threadFkt, "ART_fetch", true);
+    VRSceneManager::get()->initThread(threadFkt, "ART_fetch", true); // applyEvent is the sync function
 
     on_new_device = VRSignal::create();
 
@@ -69,6 +81,7 @@ ART::ART() {
     store("port", &port);
     store("offset", &offset);
     store("up", &up);
+    store("axis", &axis);
 }
 
 ART::~ART() {
@@ -76,20 +89,29 @@ ART::~ART() {
 }
 
 template<typename dev>
+void ART::getMatrix(dev t, Matrix4d& m, bool doOffset) {
+    int X = abs(axis[0]);
+    int Y = abs(axis[1]);
+    int Z = abs(axis[2]);
+
+    int Sx = axis[0] >= 0 ? 1 : -1;
+    int Sy = axis[1] >= 0 ? 1 : -1;
+    int Sz = axis[2] >= 0 ? 1 : -1;
+
+    m[X] = Vec4d(Sx*t.rot[0+X], Sy*t.rot[0+Y], Sz*t.rot[0+Z], 0) * Sy*Sz; // orientation
+    m[Y] = Vec4d(Sx*t.rot[3+X], Sy*t.rot[3+Y], Sz*t.rot[3+Z], 0) * Sx*Sz;
+    m[Z] = Vec4d(Sx*t.rot[6+X], Sy*t.rot[6+Y], Sz*t.rot[6+Z], 0) * Sx*Sy;
+
+    const float k = 0.001;
+    m[3] = Vec4d(t.loc[X]*Sx*k, t.loc[Y]*Sy*k, t.loc[Z]*Sz*k, 1); // position
+    if (doOffset) m[3] += Vec4d(offset);
+}
+
+template<typename dev>
 void ART::getMatrix(dev t, ART_devicePtr d) {
     if (t.quality <= 0) return;
-
-    Matrix4d& m = d->m;
-    m[0] = Vec4d(t.rot[0], t.rot[1], t.rot[2], 1); // orientation
-    m[1] = Vec4d(t.rot[3], t.rot[4], t.rot[5], 1);
-    m[2] = Vec4d(t.rot[6], t.rot[7], t.rot[8], 1);
-
-    m[1] = Vec4d(t.rot[6], t.rot[7], t.rot[8], 1); // test
-    m[2] = Vec4d(-t.rot[3], -t.rot[4], -t.rot[5], 1);
-
-    m[3] = Vec4d(t.loc[0]*0.001, t.loc[1]*0.001, t.loc[2]*0.001, 1); // position
-    coords::YtoZ(m); // LESC -> TODO: use the up value and others to specify the coordinate system
-    m[3] += Vec4d(d->offset) + Vec4d(offset);
+    getMatrix(t, d->m);
+    d->m[3] += Vec4d(d->offset);
 }
 
 void ART::scan(int type, int N) {
@@ -106,16 +128,25 @@ void ART::scan(int type, int N) {
     for (int i=0; i<N; i++) {
         int k = ART_device::key(i,type);
         if (devices.count(k) == 0) continue;
+        auto& dev = devices[k];
 
-        if (type == 0) getMatrix(dtrack->get_body(i), devices[k]);
-        if (type == 1) getMatrix(dtrack->get_flystick(i), devices[k]);
-        if (type == 2) getMatrix(dtrack->get_hand(i), devices[k]);
-        if (type == 3) getMatrix(dtrack->get_meatool(i), devices[k]);
+        if (type == 0) getMatrix(dtrack->get_body(i), dev);
+        if (type == 1) getMatrix(dtrack->get_flystick(i), dev);
+        if (type == 2) getMatrix(dtrack->get_hand(i), dev);
+        if (type == 3) getMatrix(dtrack->get_meatool(i), dev);
 
         if (type == 1) {
             auto fly = dtrack->get_flystick(i);
-            devices[k]->buttons.push_back( vector<int>(fly.button, &fly.button[fly.num_button]) );
-            devices[k]->joysticks.push_back( vector<float>(fly.joystick, &fly.joystick[fly.num_joystick]) );
+            dev->buttons.push_back( vector<int>(fly.button, &fly.button[fly.num_button]) );
+            dev->joysticks.push_back( vector<float>(fly.joystick, &fly.joystick[fly.num_joystick]) );
+        }
+
+        if (type == 2) {
+            auto hand = dtrack->get_hand(i);
+            for (int i = 0; i < hand.nfinger; i++) {
+                auto finger = hand.finger[i];
+                getMatrix(finger, dev->fingers[i], false);
+            }
         }
     }
 }
@@ -146,7 +177,7 @@ void ART::update_setup() {
     auto r = setup->getRoot();
     for (auto d : devices) {
         auto b = d.second->ent;
-        if (b->getParent() != r) r->addChild(b);
+        if (b && b->getParent() != r) r->addChild(b);
     }
 }
 
@@ -176,6 +207,7 @@ void ART::checkNewDevices(int type, int N) {
 }
 
 void ART::applyEvents() {
+    //if (VRGlobals::CURRENT_FRAME < 10) return;
     boost::mutex::scoped_lock lock(mutex);
     checkNewDevices();
     for (auto d : devices) d.second->update();
@@ -189,6 +221,8 @@ vector<int> ART::getARTDevices() {
 
 ART_devicePtr ART::getARTDevice(int dev) { return devices[dev]; }
 
+void ART::setARTAxis(Vec3i a) { axis = a; }
+Vec3i ART::getARTAxis() { return axis; }
 void ART::setARTActive(bool b) { active = b; }
 bool ART::getARTActive() { return active; }
 

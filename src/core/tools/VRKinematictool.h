@@ -18,15 +18,15 @@ class VRJointTool : public VRGeometry {
         VRTransformWeakPtr obj2;
         string obj1_name;
         string obj2_name;
-        posePtr anchor1;
-        posePtr anchor2;
+        PosePtr anchor1;
+        PosePtr anchor2;
         bool selected = true;
         bool active = true;
         bool lastAppended = true;
         VRAnalyticGeometryPtr ageo;
 
         void delayed_setup();
-        void updateVis();
+        void updateConstraint();
 
     public:
         VRJointTool(string name);
@@ -35,7 +35,7 @@ class VRJointTool : public VRGeometry {
         static VRJointToolPtr create(string name = "None");
         VRJointToolPtr ptr();
 
-        int append(VRTransformPtr t, posePtr p);
+        int append(VRTransformPtr t, PosePtr p);
         void setActive(bool b = true);
         void select(bool b = true);
         void clear();

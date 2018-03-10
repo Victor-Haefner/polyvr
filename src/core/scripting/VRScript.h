@@ -20,7 +20,7 @@ namespace xmlpp{ class Element; }
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRScript : public VRName {
+class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
     public:
         struct arg : public VRName {
             string type = "NoneType";
@@ -31,6 +31,8 @@ class VRScript : public VRName {
 
             arg(string nspace, string name = "arg");
             virtual ~arg();
+
+            static shared_ptr<arg> create(string nspace, string name = "arg");
         };
 
         struct trig : public VRName {
@@ -40,11 +42,13 @@ class VRScript : public VRName {
             string state = "Pressed";
             string param;
             VRSignalPtr sig = 0;
-            VRSocket* soc = 0;
-            arg* a = 0;
+            VRSocketPtr soc = 0;
+            shared_ptr<arg> a = 0;
 
             trig();
             virtual ~trig();
+
+            static shared_ptr<trig> create();
         };
 
         struct Search {
@@ -60,34 +64,38 @@ class VRScript : public VRName {
             errLink(string f, int l, int c);
         };
 
+        typedef shared_ptr<arg> argPtr;
+        typedef shared_ptr<trig> trigPtr;
+
     private:
-        string core;
+        string core = "\tpass";
         string head;
         string type = "Python";
         string server = "server1";
         string group = "no group";
         PyObject* fkt = 0;
         PyObject* pargs = 0;
-        arg* devArg = 0;
-        arg* socArg = 0;
-        list<arg*> args;
-        list<trig*> trigs;
+        argPtr devArg = 0;
+        argPtr socArg = 0;
+        list<argPtr> args;
+        list<trigPtr> trigs;
         bool active = true;
         float execution_time = -1;
         Search search;
         static VRGlobals::Int loadingFrame;
         bool isInitScript = false;
 
-        PyObject* getPyObj(arg* a);
+        PyObject* getPyObj(argPtr a);
 
         VRUpdateCbPtr cbfkt_sys;
         VRFunction<VRDeviceWeakPtr>* cbfkt_dev;
         VRFunction<string>* cbfkt_soc;
 
-        arg* getArg(string name);
-        trig* getTrig(string name);
+        argPtr getArg(string name);
+        trigPtr getTrig(string name);
         void on_err_link_clicked(errLink link, string s);
-        void pyTraceToConsole();
+        void pyErrPrint(string channel);
+        void printSyntaxError(PyObject* exception, PyObject* value, PyObject* tb);
         void update();
 
     public:
@@ -95,6 +103,7 @@ class VRScript : public VRName {
         virtual ~VRScript();
 
         static VRScriptPtr create(string name = "Script");
+        VRScriptPtr ptr();
 
         void clean();
 
@@ -120,16 +129,16 @@ class VRScript : public VRName {
 
         float getExecutionTime();
 
-        arg* addArgument();
+        argPtr addArgument();
         void remArgument(string name);
-        list<arg*> getArguments(bool withInternals = false);
+        list<argPtr> getArguments(bool withInternals = false);
 
         void changeArgName(string name, string _new);
         void changeArgValue(string name, string _new);
         void changeArgType(string name, string _new);
 
-        list<trig*> getTriggers();
-        void addTrigger();
+        list<trigPtr> getTriggers();
+        trigPtr addTrigger();
         void remTrigger(string name);
         void changeTrigger(string name, string trigger);
         void changeTrigDev(string name, string dev);

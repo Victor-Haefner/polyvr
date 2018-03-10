@@ -5,6 +5,8 @@
 #include <libxml++/nodes/element.h>
 #include <boost/bind.hpp>
 
+template<> string typeName(const OSG::VRStoragePtr& o) { return "Storage"; }
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -14,6 +16,21 @@ VRStorage::VRStorage() {
     store("persistency", &persistency);
 }
 
+VRStorage::~VRStorage() {
+    //cout << "~VRStorage" << endl;
+}
+
+string VRStorage::getDescription() {
+    string d = "[";
+    bool first = true;
+    for (auto s : storage) {
+        if (!first) d += ", ";
+        first = false;
+        d += "\""+s.first+"\"";
+    }
+    return d+"]";
+}
+
 void VRStorage::setPersistency(int p) { persistency = p; }
 int VRStorage::getPersistency() { return persistency; }
 void VRStorage::regStorageSetupFkt(VRUpdateCbPtr u) { f_setup.push_back(u); }
@@ -21,13 +38,29 @@ void VRStorage::regStorageSetupAfterFkt(VRUpdateCbPtr u) { f_setup_after.push_ba
 void VRStorage::regStorageSetupBeforeFkt(VRUpdateCbPtr u) { f_setup_before.push_back(u); }
 void VRStorage::setStorageType(string t) { type = t; }
 
-void VRStorage::load_str_cb(string t, string tag, xmlpp::Element* e) {}
-void VRStorage::save_str_cb(string t, string tag, xmlpp::Element* e) { e->set_attribute(tag, t); }
+void VRStorage::load_strstr_map_cb(map<string, string>* m, string tag, xmlpp::Element* e) {
+    e = getChild(e, tag);
+    if (!e) return;
+    for (auto el : getChildren(e)) {
+        string name = el->get_name();
+        string val = el->get_child_text()->get_content();
+        (*m)[name] = val;
+    }
+}
 
-void VRStorage::store(string tag, string val) {
+void VRStorage::save_strstr_map_cb(map<string, string>* m, string tag, xmlpp::Element* e) {
+    if (m->size() == 0) return;
+    e = e->add_child(tag);
+    for (auto t : *m) {
+        auto e2 = e->add_child(t.first);
+        e2->set_child_text(t.second);
+    }
+}
+
+void VRStorage::storeMap(string tag, map<string, string>& m) {
     VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_str_cb, this, val, tag, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_str_cb, this, val, tag, _1 ) );
+    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_strstr_map_cb, this, &m, tag, _1 ) );
+    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_strstr_map_cb, this, &m, tag, _1 ) );
     storage[tag] = b;
 }
 
@@ -43,6 +76,7 @@ xmlpp::Element* VRStorage::saveUnder(xmlpp::Element* e, int p, string t) {
     string tag = type;
     if (t != "") tag = t;
     if (e == 0) return 0;
+    //cout << "saveUnder " << t << " (" << p << "," << persistency << ") " << (persistency <= p) << " " << getDescription() << endl;
     if (persistency <= p) return 0;
     e = e->add_child(tag);
     save(e, p);

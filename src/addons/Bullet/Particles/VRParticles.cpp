@@ -3,14 +3,11 @@
 #include "VRParticle.h"
 #include "VREmitter.h"
 #include "core/objects/material/VRMaterial.h"
-#include "core/objects/geometry/OSGGeometry.h"
 #include "core/scene/VRScene.h"
 
 #include <cmath> /* cbrtf() */
 #include <btBulletDynamicsCommon.h>
 #include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
-
-#include <OpenSG/OSGGeometry.h>
 
 typedef boost::recursive_mutex::scoped_lock BLock;
 
@@ -26,10 +23,10 @@ boost::recursive_mutex& VRParticles::mtx() {
     };
 }
 
-VRParticles::VRParticles(string name, bool spawnParticles) : VRGeometry(name), ocparticles(0.1) {
+VRParticles::VRParticles(string name, bool spawnParticles) : VRGeometry(name) {
+    ocparticles = Octree::create(0.1);
     if (spawnParticles) resetParticles<Particle>();
     setVolumeCheck(false);
-    getMesh()->geo->setDlistCache(false);
 }
 
 VRParticles::~VRParticles() {

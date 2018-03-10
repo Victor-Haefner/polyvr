@@ -98,13 +98,21 @@ void VRMouse::multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut) {
     }
 }
 
-bool VRMouse::calcViewRay(VRCameraPtr cam, Line &line, float x, float y, int W, int H){
+bool VRMouse::calcViewRay(VRCameraPtr cam, Line &line, float x, float y, int W, int H) {
+    if (!cam) return false;
     if(W <= 0 || H <= 0) return false;
 
-    Matrix proj, projtrans, view;
+    auto v = view.lock();
+    Matrix proj, projtrans;
 
-    cam->getCam()->cam->getProjection(proj, W, H);
-    cam->getCam()->cam->getProjectionTranslation(projtrans, W, H);
+    if (v && v->getCameraDecoratorLeft()) {
+        auto c = v->getCameraDecoratorLeft();
+        c->getProjection(proj, W, H);
+        c->getProjectionTranslation(projtrans, W, H);
+    } else {
+        cam->getCam()->cam->getProjection(proj, W, H);
+        cam->getCam()->cam->getProjectionTranslation(projtrans, W, H);
+    }
 
     Matrix wctocc;
     wctocc.mult(proj);
@@ -117,10 +125,16 @@ bool VRMouse::calcViewRay(VRCameraPtr cam, Line &line, float x, float y, int W, 
     Pnt3f from, at;
     multFull(cctowc, Pnt3f(x, y, 0), from); // -1
     multFull(cctowc, Pnt3f(x, y, 1), at ); // 0.1
+    if (v && v->getCameraDecoratorLeft()) from += Vec3f(v->getProjectionUser());
 
     Vec3f dir = at - from;
     dir.normalize();
 
+    if (cam->getType() == 1) { // hack for ortho cam, TODO: not working :(
+        from[2] = 0;
+    }
+
+    //cout << "VRMouse::calcViewRay xy " << Vec2i(x,y) << " from " << from << " at " << at << " dir " << dir << endl;
     line.setValue(from, dir);
     return true;
 }
@@ -135,15 +149,17 @@ void VRMouse::updatePosition(int x, int y) {
     auto v = view.lock();
     if (!v) return;
 
-    float rx, ry;
     int w, h;
-    w = v->getViewport()->calcPixelWidth();
-    h = v->getViewport()->calcPixelHeight();
-    v->getViewport()->calcNormalizedCoordinates(rx, ry, x, y);
+    w = v->getViewportL()->calcPixelWidth();
+    h = v->getViewportL()->calcPixelHeight();
+
+    float rx, ry;
+    v->getViewportL()->calcNormalizedCoordinates(rx, ry, x, y);
 
     //cam->getCam()->calcViewRay(ray,x,y,*v->getViewport());
     calcViewRay(cam, ray, rx,ry,w,h);
     editBeacon()->setDir(Vec3d(ray.getDirection()));
+    editBeacon()->setFrom(Vec3d(ray.getPosition()));
 
     int side = -1;
     if (rx > 0.95) side = 0;
@@ -169,7 +185,7 @@ void VRMouse::mouse(int button, int state, int x, int y) {
     auto sv = view.lock();
     if (!sv) return;
 
-    ViewportRecPtr v = sv->getViewport();
+    ViewportMTRecPtr v = sv->getViewportL();
     v->calcNormalizedCoordinates(_x, _y, x, y);
     change_slider(5,_x);
     change_slider(6,_y);
@@ -184,7 +200,7 @@ void VRMouse::motion(int x, int y) {
     if (!sv) return;
 
     float _x, _y;
-    ViewportRecPtr v = sv->getViewport();
+    ViewportMTRecPtr v = sv->getViewportL();
     v->calcNormalizedCoordinates(_x, _y, x, y);
     change_slider(5,_x);
     change_slider(6,_y);

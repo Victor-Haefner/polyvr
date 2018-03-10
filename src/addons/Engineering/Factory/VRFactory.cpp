@@ -10,7 +10,6 @@
 
 #include <iostream>
 #include <fstream>
-#include <boost/filesystem.hpp>
 
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <OpenSG/OSGGeoProperties.h>
@@ -33,10 +32,10 @@ string repSpaces(string s) {
 struct Geo {
     int Np = 0;
     int Nn = 0;
-    GeoVectorPropertyRecPtr pos = 0;
-    GeoVectorPropertyRecPtr norms = 0;
-    GeoIntegralPropertyRefPtr inds_p = 0;
-    GeoIntegralPropertyRefPtr inds_n = 0;
+    GeoVectorPropertyMTRecPtr pos = 0;
+    GeoVectorPropertyMTRecPtr norms = 0;
+    GeoIntegralPropertyMTRecPtr inds_p = 0;
+    GeoIntegralPropertyMTRecPtr inds_n = 0;
     VRGeometryPtr geo = 0;
 
     Vec3d vmin, vmax;
@@ -229,7 +228,7 @@ bool VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res
         g.finalize();
         res->addChild(g.geo);
 
-        GeoUInt32PropertyRecPtr Length = GeoUInt32Property::create();
+        GeoUInt32PropertyMTRecPtr Length = GeoUInt32Property::create();
         Length->addValue(g.geo->getMesh()->geo->getIndices()->size());
         g.geo->setLengths(Length);
     }

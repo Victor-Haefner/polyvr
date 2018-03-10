@@ -11,19 +11,19 @@ using namespace std;
 
 class frustum {
     private:
-        pose trans;
+        Pose trans;
         vector<Vec3d> directions;
         VRPolygon profile;
         bool convex = false;
         Vec2d near_far;
 
         void computeProfile();
-        frustum fromProfile(VRPolygon p, pose t);
+        frustum fromProfile(VRPolygon p, Pose t);
 
     public:
         frustum();
-        void setPose(pose trans);
-        pose getPose();
+        void setPose(Pose trans);
+        Pose getPose();
         void setNearFar(Vec2d near_far);
         void addEdge(Vec3d dir);
         void close();

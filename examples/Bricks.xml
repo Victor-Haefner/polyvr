@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="Bricks" name_space="Scene">
+<Scene base_name="Bricks" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
-    <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
-      <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="18.2848 24.3417 2.14507" at="17.55 24.4027 2.15786" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
-          <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="17.8036 24.3013 2.10903" at_dir="0" base_name="Default" far="250" fov="1.0472" from="18.2848 24.3417 2.14507" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <constraint persistency="666"/>
+          </Object>
+          <constraint persistency="666"/>
         </Object>
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" two_sided="1"/>
-  <Scripts>
-    <Script name_suffix="0" base_name="gui" name_space="__script__" type="HTML" mobile="mobile">
+  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="gui" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
       <core>
 &lt;!DOCTYPE html&gt;
 &lt;html&gt;
@@ -165,7 +168,7 @@
 &lt;/body&gt;&lt;/html&gt;
 </core>
     </Script>
-    <Script name_suffix="0" base_name="handler" name_space="__script__" type="Python" mobile="">
+    <Script base_name="handler" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -201,8 +204,8 @@
 		g.setPickable(1)
 		r.addChild(g)
 		idev.drag(g)
-		g.setFrom(0,0,-0.5)
-		idev.getDragGhost().setFrom(0,0,-0.5)
+		g.setFrom([0,0,-0.5])
+		idev.getDragGhost().setFrom([0,0,-0.5])
 		
 		h = dims[1]*0.5
 		VR.kit.addObject(g)
@@ -215,17 +218,17 @@
 				VR.kit.addObjectAnchor(g, VR.a1_ID, [x,-h,y], s*0.3)
 		
 </core>
-      <arg type="VRPyDeviceType" value="flystick" name_suffix="0" base_name="flystick" name_space="handler"/>
-      <arg type="VRPyDeviceType" value="mouse" name_suffix="0" base_name="mouse" name_space="handler"/>
-      <trig type="on_device" dev="mobile" state="Released" param="" key="-1" name_suffix="1" base_name="trigger" name_space="__global__"/>
+      <arg type="VRPyDeviceType" value="flystick" base_name="flystick" name_space="handler" name_suffix="0" persistency="666"/>
+      <arg type="VRPyDeviceType" value="mouse" base_name="mouse" name_space="handler" name_suffix="0" persistency="666"/>
+      <trig type="on_device" dev="server1" state="Released" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
     </Script>
-    <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
 	gui = VR.Geometry('gui')
 	gui.setPrimitive('Plane 0.5 0.65 1 1')
-	gui.setPose([-0.5,0,-1], [0,0,1], [0,-1,0])
+	gui.setTransform([-0.5,0,-1], [0,0,1], [0,-1,0])
 	l = VR.getRoot().find('Default')
 	l.addChild(gui)
 	
@@ -244,12 +247,12 @@
 	site.addKeyboard(keyboard)
 	VR.site = site
 </core>
-      <arg type="VRPyDeviceType" value="flystick" name_suffix="0" base_name="flystick" name_space="init"/>
-      <arg type="VRPyDeviceType" value="keyboard" name_suffix="0" base_name="keyboard" name_space="init"/>
-      <arg type="VRPyDeviceType" value="mouse" name_suffix="0" base_name="mouse" name_space="init"/>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
+      <arg type="VRPyDeviceType" value="flystick" base_name="flystick" name_space="init" name_suffix="0" persistency="666"/>
+      <arg type="VRPyDeviceType" value="keyboard" base_name="keyboard" name_space="init" name_suffix="0" persistency="666"/>
+      <arg type="VRPyDeviceType" value="mouse" base_name="mouse" name_space="init" name_suffix="0" persistency="666"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
     </Script>
-    <Script name_suffix="0" base_name="kit_break" name_space="__script__" type="Python" mobile="">
+    <Script base_name="kit_break" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -259,10 +262,10 @@
 	dev.drag(i)
 	
 </core>
-      <trig type="on_device" dev="mouse" state="Pressed" param="" key="2" name_suffix="2" base_name="trigger" name_space="__global__"/>
-      <trig type="on_device" dev="flystick" state="Pressed" param="" key="3" name_suffix="3" base_name="trigger" name_space="__global__"/>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="2" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
+      <trig type="on_device" dev="flystick" state="Pressed" param="" key="3" base_name="trigger" name_space="__global__" name_suffix="3" persistency="666"/>
     </Script>
-    <Script name_suffix="0" base_name="shdr_f" name_space="__script__" type="GLSL" mobile="">
+    <Script base_name="shdr_f" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
       <core>
 varying vec3 norm;
 varying vec3 pos;
@@ -284,7 +287,7 @@ void main() {
 }
 </core>
     </Script>
-    <Script name_suffix="0" base_name="shdr_v" name_space="__script__" type="GLSL" mobile="">
+    <Script base_name="shdr_v" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
       <core>
 varying vec3 norm;
 varying vec3 pos;
@@ -296,7 +299,7 @@ attribute vec3 osg_Normal;
 void main() {
     gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex;
     norm = osg_Normal;
-    pos = 10*(osg_Vertex+abs(osg_Vertex));
+    pos = 10.0*(osg_Vertex+abs(osg_Vertex)).xyz;
     
     &#13;
     light = gl_LightSource[0].position.xyz - gl_Position.xyz;
@@ -306,8 +309,9 @@ void main() {
 </core>
     </Script>
   </Scripts>
-  <Sockets/>
-  <Background color="0.6 0.6 0.6" format=".png" path="" type="0"/>
-  <Navigation active="FlyWalk"/>
-  <Materials/>
+  <Sockets persistency="666"/>
+  <Background color="0.6 0.6 0.6" format=".png" path="" persistency="666" type="0"/>
+  <Navigation active="FlyWalk" persistency="666"/>
+  <Materials persistency="666"/>
+  <Semantics persistency="666"/>
 </Scene>

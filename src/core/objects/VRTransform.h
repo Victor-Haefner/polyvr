@@ -8,13 +8,13 @@
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/math/VRMathFwd.h"
-
-class VRPhysics;
+#include "core/setup/devices/VRIntersect.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class doubleBuffer;
+class VRCollision;
+class VRPhysics;
 class path;
 class VRAnimation;
 
@@ -27,7 +27,7 @@ class VRTransform : public VRObject {
         };
 
     protected:
-        doubleBuffer* dm = 0;
+        Matrix4d matrix;
         OSGTransformPtr t;
         bool noBlt = false;
         VRPhysics* physics = 0;
@@ -35,9 +35,6 @@ class VRTransform : public VRObject {
 
         unsigned int change_time_stamp = 0;
         unsigned int wchange_time_stamp = 0;
-        bool change = false;
-        bool fixed = true;
-        bool cam_invert_z = false;
         bool identity = true;
         int orientation_mode = OM_DIR;
 
@@ -53,6 +50,8 @@ class VRTransform : public VRObject {
         int frame = 0;
         Matrix4d WorldTransformation;
         VRConstraintPtr constraint;
+        map<VRTransform*, pair<VRConstraintPtr, VRTransformWeakPtr> > aJoints;
+        map<VRTransform*, pair<VRConstraintPtr, VRTransformWeakPtr> > bJoints;
 
         Matrix4d old_transformation; //drag n drop
 
@@ -63,13 +62,10 @@ class VRTransform : public VRObject {
         //read Matrix4d from doublebuffer && apply it to transformation
         //should be called from the main thread only
         void updateTransformation();
-
         void reg_change();
-
         bool checkWorldChange();
 
         void printInformation();
-
         void initCoords();
         void initTranslator();
 
@@ -81,23 +77,23 @@ class VRTransform : public VRObject {
         VRTransformPtr ptr();
 
         static VRTransformPtr getParentTransform(VRObjectPtr o);
+        static Vec3d computeEulerAngles(const Matrix4d& t);
+        static void applyEulerAngles(Matrix4d& t, Vec3d angles);
 
         static list< VRTransformWeakPtr > changedObjects;
         static list< VRTransformWeakPtr > dynamicObjects;
 
         uint getLastChange();
         bool changedNow();
-        doubleBuffer* getBuffer();
-        // Local && world transformation setter && getter
 
         Vec3d getFrom();
         Vec3d getDir();
         Vec3d getAt();
         Vec3d getUp();
         Vec3d getScale();
-        posePtr getPose();
-        posePtr getPoseTo(VRObjectPtr o);
-        posePtr getWorldPose();
+        PosePtr getPose();
+        PosePtr getPoseTo(VRObjectPtr o);
+        PosePtr getWorldPose();
         Vec3d getEuler();
         void getMatrix(Matrix4d& _m);
         Matrix4d getMatrix();
@@ -105,34 +101,39 @@ class VRTransform : public VRObject {
         Matrix4d getRotationMatrix();
 
         void setIdentity();
-        void setFrom(Vec3d pos);
-        void setAt(Vec3d at);
-        void setUp(Vec3d up);
-        void setDir(Vec3d dir);
+        void updateTransform(VRTransformPtr t);
+        virtual void setFrom(Vec3d pos);
+        virtual void setAt(Vec3d at);
+        virtual void setUp(Vec3d up);
+        virtual void setDir(Vec3d dir);
         void setScale(float s);
         void setScale(Vec3d s);
         void setOrientation(Vec3d at, Vec3d up);
         void setEuler(Vec3d euler);
-        void setPose(posePtr p);
-        void setPose(Vec3d from, Vec3d dir, Vec3d up);
+        void setTransform(Vec3d p, Vec3d d = Vec3d(0,0,-1), Vec3d u = Vec3d(0,1,0));
+        void setPose2(const Pose& p);
+        void setPose(PosePtr p);
         virtual void setMatrix(Matrix4d m);
+        void setMatrixTo(Matrix4d m, VRObjectPtr o);
 
         void getWorldMatrix(Matrix4d& _m, bool parentOnly = false);
         Matrix4d getWorldMatrix(bool parentOnly = false);
         Vec3d getWorldPosition(bool parentOnly = false);
         Vec3d getWorldDirection(bool parentOnly = false);
         Vec3d getWorldUp(bool parentOnly = false);
+        Vec3d getWorldAt(bool parentOnly = false);
 
-        void setWorldPose(posePtr p);
+        void setWorldPose(PosePtr p);
         void setWorldMatrix(Matrix4d _m);
         void setWorldPosition(Vec3d pos);
         void setWorldOrientation(Vec3d dir, Vec3d up);
         void setWorldDir(Vec3d dir);
         void setWorldUp(Vec3d up);
+        void setWorldAt(Vec3d at);
 
         void getRelativeMatrix(Matrix4d& m, VRObjectPtr o, bool parentOnly = false);
         Matrix4d getRelativeMatrix(VRObjectPtr o, bool parentOnly = false);
-        posePtr getRelativePose(VRObjectPtr o, bool parentOnly = false);
+        PosePtr getRelativePose(VRObjectPtr o, bool parentOnly = false);
         Vec3d getRelativePosition(VRObjectPtr o, bool parentOnly = false);
         Vec3d getRelativeDirection(VRObjectPtr o, bool parentOnly = false);
         Vec3d getRelativeUp(VRObjectPtr o, bool parentOnly = false);
@@ -140,14 +141,12 @@ class VRTransform : public VRObject {
         void setRelativePosition(Vec3d pos, VRObjectPtr o);
         void setRelativeDir(Vec3d pos, VRObjectPtr o);
         void setRelativeUp(Vec3d pos, VRObjectPtr o);
-        void setRelativePose(posePtr p, VRObjectPtr o);
+        void setRelativePose(PosePtr p, VRObjectPtr o);
 
         int get_orientation_mode();
         void set_orientation_mode(int b);
 
-        void setFixed(bool b);
-        void applyTransformation(std::shared_ptr<pose> p);
-        void applyTransformation();
+        void applyTransformation(PosePtr p = 0);
 
         //-------------------------------------
 
@@ -170,11 +169,12 @@ class VRTransform : public VRObject {
 
         /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
         Line castRay(VRObjectPtr obj = 0, Vec3d dir = Vec3d(0,0,-1));
+        VRIntersection intersect(VRObjectPtr obj, Vec3d dir = Vec3d(0,0,-1));
 
         map<string, VRAnimationPtr> animations;
         void addAnimation(VRAnimationPtr animation);
         vector<VRAnimationPtr> getAnimations();
-        VRAnimationPtr startPathAnimation(pathPtr p, float time, float offset, bool redirect = true, bool loop = false);
+        VRAnimationPtr animate(PathPtr p, float time, float offset, bool redirect = true, bool loop = false);
         void stopAnimation();
 
         void printPos(); // Print the position of the object in local && world coords
@@ -184,11 +184,19 @@ class VRTransform : public VRObject {
         VRConstraintPtr getConstraint();
 
         /** enable constraints on the object when dragged, 0 leaves the dof free, 1 restricts it **/
-        void apply_constraints();
+        void apply_constraints(bool force = false);
+        static void updateConstraints();
+        void attach(VRTransformPtr a, VRConstraintPtr c, VRConstraintPtr s);
+        void detachJoint(VRTransformPtr a);
+        Vec3d getConstraintAngleWith(VRTransformPtr t, bool rotationOrPosition);
 
         /** Set the physics object **/
         VRPhysics* getPhysics();
+        void resolvePhysics();
         void updateFromBullet();
+        void setConvexDecompositionParameters(float cw, float vw, float nc, float nv, float c, bool aedp, bool andp, bool afp);
+
+        vector<VRCollision> getCollisions();
 
         /** Do not update the transform in the physics context for the next frame **/
         void setNoBltFlag();
@@ -196,6 +204,28 @@ class VRTransform : public VRObject {
         /** Update the object OSG transformation **/
         virtual void updateChange();
         void setup();
+
+        void physicalize(bool b, bool dynamic, string shape, float param = 0);
+        void setPhysicalizeTree(bool b);
+        void setCollisionGroup(vector<int> gv);
+        void setCollisionMask(vector<int> gv);
+        void setMass(float m);
+        void setCollisionMargin(float m);
+        void setCollisionShape(string s, float p);
+        void setPhysicsActivationMode(int m);
+        void applyImpulse(Vec3d i);
+        void applyTorqueImpulse(Vec3d i);
+        void applyForce(Vec3d f);
+        void applyConstantForce(Vec3d f);
+        void applyTorque(Vec3d f);
+        void applyConstantTorque(Vec3d f);
+        void setGravity(Vec3d g);
+        void setCenterOfMass(Vec3d g);
+        void setGhost(bool g);
+        void setDamping(float ld, float ad);
+
+        Vec3d getForce();
+        Vec3d getTorque();
         void updatePhysics();
 };
 

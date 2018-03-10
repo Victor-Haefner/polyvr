@@ -1,13 +1,12 @@
 #include "VRSSH.h"
 #include "core/gui/VRGuiUtils.h"
+#include "core/utils/toString.h"
+#include "core/utils/system/VRSystem.h"
 
-#include <boost/filesystem.hpp>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
-#include "core/utils/toString.h"
 
 #ifndef INADDR_NONE
 #define INADDR_NONE (in_addr_t)-1
@@ -116,9 +115,8 @@ string VRSSHSession::auth_user() {
 
 bool VRSSHSession::hasLocalKey() {
     string kf = getenv("HOME") + keyFolder;
-    if (!boost::filesystem::exists(kf))
-        boost::filesystem::create_directory(kf);
-    return boost::filesystem::exists(kf+privKeyPath);
+    if (!exists(kf)) makedir(kf);
+    return exists(kf+privKeyPath);
 }
 
 string VRSSHSession::checkLocalKeyPair() { // TODO
@@ -151,23 +149,24 @@ string VRSSHSession::exec_cmd(string cmd, bool read) {
     if (rc) return lastError(61);
 
     if (read) {
+        string res;
         char buffer[256];
         do {
             rc = libssh2_channel_read(channel, buffer, sizeof(buffer) );
-            if( rc > 0 ) {
-                for( int i=0; i < rc; ++i ) fputc( buffer[i], stderr);
-                fprintf(stderr, "\n");
-            } else if( rc != LIBSSH2_ERROR_EAGAIN ) return lastError(62);
+            res += string(buffer, rc);
         } while (rc > 0);
         if (rc < 0) return lastError(63);
+        return res;
     }
 
     rc = libssh2_channel_send_eof(channel);
     if (rc < 0) return lastError(64);
     rc = libssh2_channel_close(channel);
     if (rc < 0) return lastError(65);
+    int exisStatus = libssh2_channel_get_exit_status(channel);
     libssh2_channel_free(channel);
-    return "ok";
+    if (exisStatus == 0) return "ok";
+    else return string("failed with: ") + toString(exisStatus);
 }
 
 void VRSSHSession::distrib_key() {
