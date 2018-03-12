@@ -23,6 +23,7 @@ class Graph : public VRStorage {
         struct node {
             Pose p;
             Boundingbox box;
+            int ID = -1;
 
             vector<int> inEdges;
             vector<int> outEdges;
@@ -58,14 +59,19 @@ class Graph : public VRStorage {
 
         static shared_ptr< Graph > create() { return shared_ptr< Graph >(new Graph()); }
 
-        int connect(int i, int j, CONNECTION c = SIMPLE);
+        int connect(int i, int j, int c = SIMPLE);
         void disconnect(int i, int j);
         node& getNode(int i);
         edge& getEdge(int e);
         edge& getEdge(int n1, int n2);
+        edge getEdgeCopy(int n1, int n2);
         int getEdgeID(int n1, int n2);
         vector< node >& getNodes();
+        vector< node > getNodesCopy();
         vector< vector<edge> >& getEdges();
+        vector< edge > getEdgesCopy();
+        vector< edge > getInEdges(int n);
+        vector< edge > getOutEdges(int n);
         int getNEdges();
         int size();
         bool connected(int i1, int i2);
@@ -79,7 +85,7 @@ class Graph : public VRStorage {
         vector<edge> getPrevEdges(edge& e);
         vector<edge> getNextEdges(edge& e);
 
-        virtual int addNode();
+        virtual int addNode(PosePtr p = 0);
         virtual void remNode(int i);
         virtual void update(int i, bool changed);
         virtual void clear();
