@@ -3,6 +3,14 @@
 #extension GL_ARB_texture_rectangle : require
 #extension GL_ARB_texture_rectangle : enable
 
+// DS input buffers
+uniform sampler2DRect texBufPos;
+uniform sampler2DRect texBufNorm;
+uniform sampler2DRect texBufDiff;
+uniform vec2          vpOffset;
+uniform vec3          lightPosition;
+uniform int           channel;
+
 // compute point light INDEX for fragment at POS with normal NORM
 // and diffuse material color MDIFF
 vec4 computePointLight(int index, float amb, vec3 pos, vec3 norm, vec4 mDiff) {
@@ -27,13 +35,6 @@ vec4 computePointLight(int index, float amb, vec3 pos, vec3 norm, vec4 mDiff) {
     return color;
 }
 
-// DS input buffers
-uniform sampler2DRect texBufPos;
-uniform sampler2DRect texBufNorm;
-uniform sampler2DRect texBufDiff;
-uniform vec2          vpOffset;
-uniform int           channel;
-
 // DS pass
 void main(void) {
     vec2 lookup = gl_FragCoord.xy - vpOffset;
@@ -53,6 +54,7 @@ void main(void) {
 	if (channel == 1) color = vec4(posAmb.xyz, 1.0);
 	if (channel == 2) color = vec4(norm.xyz, 1.0);
 	if (channel == 3) color = vec4(color.xyz, 1.0);
+	if (channel == 4) color = vec4(posAmb.w, posAmb.w, posAmb.w, 1.0);
         gl_FragColor = color;
     }
 }

@@ -106,6 +106,7 @@ class HTTPServer {
             memset(&bind_opts, 0, sizeof(bind_opts));
             bind_opts.error_string = &err_str;
             nc = mg_bind_opt(server, toString(port).c_str(), server_answer_to_connection_m, bind_opts);
+            if (!nc) { cout << "Warning in initServer: could not bind to " << server << ":" << port << endl; return; }
             mg_set_protocol_http_websocket(nc);
             //s_http_server_opts.document_root = ".";
             s_http_server_opts.enable_directory_listing = "yes";

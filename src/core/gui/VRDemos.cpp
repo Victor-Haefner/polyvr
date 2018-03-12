@@ -385,7 +385,7 @@ void VRDemos::on_load_clicked() {
 }
 
 void VRDemos::writeGitignore(string path) {
-    auto f = ofstream(path);
+    ofstream f(path);
     f << ".local_*" << endl;
     f << "core" << endl;
     f << "*.blend1" << endl;

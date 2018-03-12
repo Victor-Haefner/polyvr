@@ -97,7 +97,7 @@ struct VRSnappingEngine::Rule {
 
 VRSnappingEngine::VRSnappingEngine() {
     hintGeo = VRGeometry::create("snapping_engine_hint");
-    positions = new Octree(0.1);
+    positions = Octree::create(0.1);
     event = new EventSnap();
     snapSignal = VRSignal::create();
 

@@ -61,10 +61,12 @@ class VRNetworkNode : public VRManager<VRNetworkSlave>, public std::enable_share
     private:
         string address = "localhost";
         string user = "user";
+        string slavePath = "";
 
         string stat_node = "none";
         string stat_ssh = "none";
         string stat_ssh_key = "none";
+        string stat_path = "none";
 
         void initSlaves();
         void update();
@@ -80,13 +82,16 @@ class VRNetworkNode : public VRManager<VRNetworkSlave>, public std::enable_share
 
         string getAddress();
         string getUser();
+        string getSlavePath();
         string getStatNode();
         string getStatSSH();
         string getStatSSHkey();
+        string getStatPath();
 
         void setAddress(string);
         void setUser(string);
-        void set(string a, string u);
+        void setSlavePath(string);
+        void set(string a, string u, string p);
 
         void distributeKey();
         string execCmd(string cmd, bool read = true);

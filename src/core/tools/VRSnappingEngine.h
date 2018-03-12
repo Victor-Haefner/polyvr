@@ -9,15 +9,14 @@
 #include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRDeviceFwd.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/math/VRMathFwd.h"
 
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class Octree;
 class VRSignal;
 class VRDevice;
-
 
 class VRSnappingEngine {
     private:
@@ -59,7 +58,7 @@ class VRSnappingEngine {
         map<VRTransformPtr, Matrix4d> objects; // map objects to reference matrix
         map<VRTransformPtr, vector<VRTransformPtr> > anchors; // object anchors
         vector<VRSnapCbPtr> callbacks; // object anchors
-        Octree* positions = 0; // objects by positions
+        OctreePtr positions = 0; // objects by positions
         VRGeometryPtr hintGeo = 0;
         VRUpdateCbPtr updatePtr;
 

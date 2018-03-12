@@ -552,12 +552,12 @@
 		<Unit filename="src/addons/construction/building/VROpening.h" />
 		<Unit filename="src/addons/construction/building/furniture/VRBlinds.cpp" />
 		<Unit filename="src/addons/construction/building/furniture/VRBlinds.h" />
-		<Unit filename="src/core/gui/VRCodeCompletion.cpp" />
-		<Unit filename="src/core/gui/VRCodeCompletion.h" />
 		<Unit filename="src/core/gui/VRDemos.cpp" />
 		<Unit filename="src/core/gui/VRDemos.h" />
 		<Unit filename="src/core/gui/VRGuiBits.cpp" />
 		<Unit filename="src/core/gui/VRGuiBits.h" />
+		<Unit filename="src/core/gui/VRGuiCodeCompletion.cpp" />
+		<Unit filename="src/core/gui/VRGuiCodeCompletion.h" />
 		<Unit filename="src/core/gui/VRGuiConsole.cpp" />
 		<Unit filename="src/core/gui/VRGuiConsole.h" />
 		<Unit filename="src/core/gui/VRGuiContextMenu.cpp" />
@@ -825,6 +825,8 @@
 		<Unit filename="src/core/scene/import/VRSTEP.h" />
 		<Unit filename="src/core/scene/import/VRVTK.cpp" />
 		<Unit filename="src/core/scene/import/VRVTK.h" />
+		<Unit filename="src/core/scene/interfaces/VRScenegraphInterface.cpp" />
+		<Unit filename="src/core/scene/interfaces/VRScenegraphInterface.h" />
 		<Unit filename="src/core/scene/rendering/VRDefShading.cpp" />
 		<Unit filename="src/core/scene/rendering/VRDefShading.h" />
 		<Unit filename="src/core/scene/rendering/VRDeferredRenderStage.cpp" />
@@ -866,6 +868,8 @@
 		<Unit filename="src/core/scripting/VRPyCamera.h" />
 		<Unit filename="src/core/scripting/VRPyClipPlane.cpp" />
 		<Unit filename="src/core/scripting/VRPyClipPlane.h" />
+		<Unit filename="src/core/scripting/VRPyCodeCompletion.cpp" />
+		<Unit filename="src/core/scripting/VRPyCodeCompletion.h" />
 		<Unit filename="src/core/scripting/VRPyColorChooser.cpp" />
 		<Unit filename="src/core/scripting/VRPyColorChooser.h" />
 		<Unit filename="src/core/scripting/VRPyConstraint.cpp" />
@@ -938,6 +942,8 @@
 		<Unit filename="src/core/scripting/VRPyRecorder.h" />
 		<Unit filename="src/core/scripting/VRPyRendering.cpp" />
 		<Unit filename="src/core/scripting/VRPyRendering.h" />
+		<Unit filename="src/core/scripting/VRPyScenegraphInterface.cpp" />
+		<Unit filename="src/core/scripting/VRPyScenegraphInterface.h" />
 		<Unit filename="src/core/scripting/VRPySelection.cpp" />
 		<Unit filename="src/core/scripting/VRPySelection.h" />
 		<Unit filename="src/core/scripting/VRPySelector.cpp" />

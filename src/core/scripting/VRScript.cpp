@@ -30,7 +30,7 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-void updateArgPtr(VRScript::arg* a) {
+void updateArgPtr(VRScript::argPtr a) {
     string t = a->type;
     auto scene = VRScene::getCurrent();
     VRSetupPtr setup = VRSetup::getCurrent();
@@ -40,7 +40,7 @@ void updateArgPtr(VRScript::arg* a) {
         return;
     }
     if (t == "VRPySocketType") {
-        a->ptr = (void*)scene->getSocket(a->val);
+        a->ptr = (void*)scene->getSocket(a->val).get();
         return;
     }
     if (t == "VRPyDeviceType" || t == "VRPyMouseType" || t == "VRPyHapticType" || t == "VRPyServerType") {
@@ -63,6 +63,9 @@ VRScript::arg::arg(string nspace, string name) {
 VRScript::trig::~trig() {}
 VRScript::arg::~arg() {}
 
+VRScript::trigPtr VRScript::trig::create() { return VRScript::trigPtr( new trig() ); }
+VRScript::argPtr VRScript::arg::create(string nspace, string name) { return VRScript::argPtr( new arg(nspace, name) ); }
+
 void VRScript::clean() {
     if ( auto setup = VRSetup::getCurrent() ) {
         VRServerPtr mob = dynamic_pointer_cast<VRServer>( setup->getDevice(server) );
@@ -71,8 +74,8 @@ void VRScript::clean() {
 
     auto scene = VRScene::getCurrent();
 
-    if (devArg) { delete devArg; devArg = 0; }
-    if (socArg) { delete socArg; socArg = 0; }
+    if (devArg) devArg = 0;
+    if (socArg) socArg = 0;
 
     for (auto t : trigs) {
         if (t->soc) t->soc->unsetCallbacks();
@@ -128,7 +131,7 @@ void VRScript::update() {
             }
 
             // add dev argument
-            if (!devArg) devArg = new arg(VRName::getName(), "dev");
+            if (!devArg) devArg = arg::create(VRName::getName(), "dev");
             devArg->type = "VRPyDeviceType";
             devArg->val = "";
             devArg->trig = true;
@@ -142,7 +145,7 @@ void VRScript::update() {
             t->soc->setTCPCallback(cbfkt_soc);
 
             // add msg argument
-            if (!socArg) socArg = new arg(VRName::getName(), "msg");
+            if (!socArg) socArg = arg::create(VRName::getName(), "msg");
             socArg->type = "str";
             socArg->val = "";
             t->a = socArg;
@@ -187,26 +190,24 @@ VRScript::VRScript(string _name) {
 }
 
 VRScript::~VRScript() {
+    //cout << "VRScript::~VRScript " << getName() << endl;
     for (auto t : trigs) {
         if (t->trigger == "on_scene_close") VRSceneManager::get()->getSignal_on_scene_close()->sub(cbfkt_sys);
     }
-
-    for (auto a : args) delete a;
-    for (auto t : trigs) delete t;
 }
 
 VRScriptPtr VRScript::create(string name) { return VRScriptPtr( new VRScript(name) ); }
 VRScriptPtr VRScript::ptr() { return shared_from_this(); }
 
-VRScript::arg* VRScript::addArgument() {
+VRScript::argPtr VRScript::addArgument() {
     clean();
-    arg* a = new arg(VRName::getName());
+    argPtr a = arg::create(VRName::getName());
     args.push_back(a);
     update();
     return a;
 }
 
-PyObject* VRScript::getPyObj(arg* a) {
+PyObject* VRScript::getPyObj(argPtr a) {
     updateArgPtr(a);
     if (a->type == "int") return Py_BuildValue("i", toInt(a->val.c_str()));
     else if (a->type == "float") return Py_BuildValue("f", toFloat(a->val.c_str()));
@@ -228,17 +229,13 @@ PyObject* VRScript::getPyObj(arg* a) {
     else { cout << "\ngetPyObj ERROR: " << a->type << " unknown!\n"; Py_RETURN_NONE; }
 }
 
-VRScript::arg* VRScript::getArg(string name) {
-    for (auto a : args) {
-        if (a->getName() == name) return a;
-    }
+VRScript::argPtr VRScript::getArg(string name) {
+    for (auto a : args) if (a->getName() == name) return a;
     return 0;
 }
 
-VRScript::trig* VRScript::getTrig(string name) {
-    for (auto t : trigs) {
-        if (t->getName() == name) return t;
-    }
+VRScript::trigPtr VRScript::getTrig(string name) {
+    for (auto t : trigs) if (t->getName() == name) return t;
     return 0;
 }
 
@@ -297,7 +294,7 @@ VRScript::Search VRScript::find(string s) {
     return search;
 }
 
-list<VRScript::arg*> VRScript::getArguments(bool withInternals) {
+list<VRScript::argPtr> VRScript::getArguments(bool withInternals) {
     if (withInternals && socArg) ;
     auto tmp = args;
     if (socArg) tmp.push_front(socArg);
@@ -601,8 +598,8 @@ void VRScript::execute_soc(string s) {
 void VRScript::enable(bool b) { active = b; }
 bool VRScript::enabled() { return active; }
 
-list<VRScript::trig*> VRScript::getTriggers() { return trigs; }
-VRScript::trig* VRScript::addTrigger() { trig* t = new trig(); trigs.push_back(t); return t; }
+list<VRScript::trigPtr> VRScript::getTriggers() { return trigs; }
+VRScript::trigPtr VRScript::addTrigger() { auto t = trig::create(); trigs.push_back(t); return t; }
 void VRScript::changeTrigger(string name, string trigger) { clean(); if (auto t = getTrig(name)) t->trigger = trigger; update(); }
 void VRScript::changeTrigDev(string name, string dev) { clean(); if (auto t = getTrig(name)) t->dev = dev; update(); }
 void VRScript::changeTrigParams(string name, string params) { clean(); if (auto t = getTrig(name)) t->param = params; update(); }
@@ -613,7 +610,6 @@ void VRScript::remTrigger(string name) {
     if (auto t = getTrig(name)) {
         clean();
         trigs.remove(t);
-        delete t;
         update();
     }
 }
@@ -624,7 +620,6 @@ void VRScript::remArgument(string name) {
     if (auto a = getArg(name)) {
         clean();
         args.remove(a);
-        delete a;
         update();
     }
 }
@@ -677,7 +672,7 @@ void VRScript::load(xmlpp::Element* e) {
         }
 
         if (name == "arg") {
-            arg* a = addArgument();
+            argPtr a = addArgument();
             a->type = el->get_attribute("type")->get_value();
             a->val  = el->get_attribute("value")->get_value();
             string oname = a->getName();
@@ -686,7 +681,7 @@ void VRScript::load(xmlpp::Element* e) {
         }
 
         if (name == "trig") {
-            trig* t = new trig();
+            trigPtr t = trig::create();
             t->trigger = el->get_attribute("type")->get_value();
             t->dev = el->get_attribute("dev")->get_value();
             if (t->dev == "mobile") t->dev = "server1"; // Temp fix for old scenes after changing default server name!

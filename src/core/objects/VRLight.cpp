@@ -380,14 +380,24 @@ void VRLight::loadPhotometricMap(string path) { // ies files
         return result;
     };
 
+    auto startswith = [](const string& a, const string& b) -> bool {
+        if (a.size() < b.size()) return false;
+        return a.compare(0, b.length(), b) == 0;
+    };
+
     auto parseFile = [&](int Nv, int Nh, int& aNv, int& aNh) {
         ifstream file(path);
         string data((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
         auto lines = splitString(data, '\n');
         if (lines.size() < 10) return vector<float>();
 
+        // read version
+        int paramLineN = 9;
+        if (startswith(lines[0], "IESNA:LM-63-2002")) paramLineN = 10;
+
         // read parameters
-        auto params = splitString( lines[9] );
+        auto params = splitString( lines[paramLineN] );
+        if (params.size() < 5) { cout << "Error, VRLight::loadPhotometricMap::parseFile failed, wrong number of parameters, " << lines[paramLineN] << endl; return vector<float>(); }
         aNv = toInt(params[3]); // number of vertical angles
         aNh = toInt(params[4]); // number of horizontal angles
         int N = aNv*aNh;
@@ -397,8 +407,8 @@ void VRLight::loadPhotometricMap(string path) { // ies files
 
         // read data
         string dataChunk;
-        for (int i=11; i<lines.size(); i++) dataChunk += lines[i] + " ";
-        auto ss = stringstream(dataChunk);
+        for (int i=paramLineN+2; i<lines.size(); i++) dataChunk += lines[i] + " ";
+        stringstream ss(dataChunk);
 
         vector<float> aTheta(aNv, 0);
         vector<float> aPhi(aNh, 0);
@@ -416,9 +426,10 @@ void VRLight::loadPhotometricMap(string path) { // ies files
     int aNv = 0;
     int aNh = 0;
 
-    photometricMapPath = path;
     if (path == "") return;
     auto candela = parseFile(Nv, Nh, aNv, aNh);
+    if (candela.size() == 0) { cout << "Error, VRLight::loadPhotometricMap failed" << endl; return; }
+    photometricMapPath = path;
 
     Nv = aNv;
     Nh = aNh;
@@ -427,13 +438,13 @@ void VRLight::loadPhotometricMap(string path) { // ies files
     for (auto& c : candela) if (c > cMax) cMax = c;
     for (auto& c : candela) c /= cMax;
 
-    for (int i=0; i<Nv; i++) {
+    /*for (int i=0; i<Nv; i++) {
         for (int j=0; j<Nh; j++) {
             int k = i*Nh+j;
             cout << " " << candela[k];
         }
         cout << endl;
-    }
+    }*/
     auto tex = VRTexture::create();
     //tex->read("imgres.png");
     //tex->read("checkers.jpg");
@@ -441,7 +452,6 @@ void VRLight::loadPhotometricMap(string path) { // ies files
     tex->setInternalFormat(GL_ALPHA32F_ARB); // important for unclamped float
     auto img = tex->getImage();
     img->set( Image::OSG_A_PF, Nv, Nh, 1, 1, 1, 0, (const uint8_t*)&candela[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
-    cout << " setPhotometricMap img " << img << " " << path << endl;
 
     setPhotometricMap(tex);
 }

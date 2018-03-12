@@ -26,14 +26,14 @@ void VRSegmentation::removeDuplicates(VRGeometryPtr geo) {
 	size_t curIndex = 0;
 	float threshold = 1e-4;
 	size_t NLM = numeric_limits<size_t>::max();
-	Octree oct(threshold);
+	auto oct = Octree::create(threshold);
 
 	TriangleIterator it(geo->getMesh()->geo);
 	for (; !it.isAtEnd() ;++it) {
         vector<size_t> IDs(3);
         for (int i=0; i<3; i++) {
             auto p = it.getPosition(i);
-            vector<void*> resultData = oct.radiusSearch(Vec3d(p), threshold);
+            vector<void*> resultData = oct->radiusSearch(Vec3d(p), threshold);
             if (resultData.size() > 0) IDs[i] = *(size_t*)resultData.at(0);
             else IDs[i] = NLM;
         }
@@ -47,7 +47,7 @@ void VRSegmentation::removeDuplicates(VRGeometryPtr geo) {
 				IDs[i] = curIndex;
 				size_t *curIndexPtr = new size_t;
 				*curIndexPtr = curIndex;
-				oct.add(Vec3d(p), curIndexPtr);
+				oct->add(Vec3d(p), curIndexPtr);
 				curIndex++;
 			}
 		}
@@ -65,8 +65,7 @@ void VRSegmentation::removeDuplicates(VRGeometryPtr geo) {
 	geo->setLengths(lengths);
 
 	calcVertexNormals(geo->getMesh()->geo);
-
-	for (void* o : oct.getData()) delete (size_t*)o; // Cleanup
+	oct->delContent<size_t>();
 }
 
 
@@ -243,7 +242,7 @@ struct Accumulator_grid : public Accumulator {
 };
 
 struct Accumulator_octree : public Accumulator {
-    Octree* octree;
+    OctreePtr octree;
     int Da, Dr;
     float Ra, Rr, Dp;
 
@@ -253,15 +252,13 @@ struct Accumulator_octree : public Accumulator {
         Ra = Pi/Da;
         Rr = 5.0/Dr;
         Dp = 0.05*Rr;
-        octree = new Octree(Rr);
+        octree = Octree::create(Rr);
     }
 
-    ~Accumulator_octree() {
-        delete octree;
-    }
+    ~Accumulator_octree() {}
 
     float getWeight(Vec3d p) {
-        Octree* t = octree->get(p);
+        auto t = octree->get(p);
         vector<void*> data = t->getData();
         if (data.size() == 0) return 0;
         Bin* bin = (Bin*)data[0];
@@ -270,7 +267,7 @@ struct Accumulator_octree : public Accumulator {
 
     void pushPoint(Pnt3d p, Vec3d n) {
         float w = 0;
-        Octree* t = octree->get(p.subZero());
+        auto t = octree->get(p.subZero());
         vector<void*> data = t->getData();
         if (data.size() > 0) {
             Bin* bin = (Bin*)data[0];

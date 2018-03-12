@@ -26,11 +26,11 @@ using namespace OSG;
 template<> string typeName(const OSG::VRNaturePtr& t) { return "Nature"; }
 template<> string typeName(const OSG::VRTreePtr& t) { return "Tree"; }
 
-VRLodLeaf::VRLodLeaf(string name, Octree* o, int l) : VRTransform(name), oLeaf(o), lvl(l) {}
+VRLodLeaf::VRLodLeaf(string name, OctreeNode* o, int l) : VRTransform(name), oLeaf(o), lvl(l) {}
 VRLodLeaf::~VRLodLeaf() {}
 VRLodLeafPtr VRLodLeaf::ptr() { return static_pointer_cast<VRLodLeaf>( shared_from_this() ); }
 
-VRLodLeafPtr VRLodLeaf::create(string name, Octree* o, int lvl) {
+VRLodLeafPtr VRLodLeaf::create(string name, OctreeNode* o, int lvl) {
     auto l = VRLodLeafPtr(new VRLodLeaf(name, o, lvl));
     l->lod = VRLod::create("natureLod");
     l->lod->setPersistency(0);
@@ -62,7 +62,7 @@ void VRLodLeaf::set(VRObjectPtr obj, int lvl) {
 
 void VRLodLeaf::reset() { set(0,1); }
 
-Octree* VRLodLeaf::getOLeaf() { return oLeaf; }
+OctreeNode* VRLodLeaf::getOLeaf() { return oLeaf; }
 int VRLodLeaf::getLevel() { return lvl; }
 
 // --------------------------------------------------------------------------------------------------
@@ -94,7 +94,7 @@ vector<VRLodLeafPtr> VRLodTree::getSubTree(VRLodLeafPtr l) {
     return res;
 }
 
-VRLodLeafPtr VRLodTree::addLeaf(Octree* o, int lvl) {
+VRLodLeafPtr VRLodTree::addLeaf(OctreeNode* o, int lvl) {
     if (leafs.count(o)) return leafs[o];
     auto l = VRLodLeaf::create("lodLeaf", o, lvl);
     l->setPersistency(0);
@@ -142,7 +142,7 @@ VRLodLeafPtr VRLodTree::addLeaf(Octree* o, int lvl) {
 }
 
 VRLodLeafPtr VRLodTree::addObject(VRTransformPtr obj, Vec3d p, int lvl) {
-    if (leafs.size() == 0) addLeaf(octree.get(), 0);
+    if (leafs.size() == 0) addLeaf(octree->getRoot(), 0);
     if (!octree) return 0;
     objects[lvl].push_back(obj);
     auto oLeaf = octree->add(p, obj.get(), lvl, 0, true);
@@ -157,7 +157,7 @@ VRLodLeafPtr VRLodTree::addObject(VRTransformPtr obj, Vec3d p, int lvl) {
 
 VRLodLeafPtr VRLodTree::remObject(VRTransformPtr obj) { // TODO, finish it!
     if (!octree) return 0;
-    Octree* o = octree->get( obj->getWorldPosition() );
+    OctreeNode* o = octree->get( obj->getWorldPosition() );
     o->remData(obj.get());
     return leafs[o];
 }
@@ -273,7 +273,7 @@ void VRNature::removeTree(int id) {
     t->destroy();
 
     auto oLeafs = leaf->getOLeaf()->getAncestry();
-    map<Octree*, VRLodLeafPtr> aLeafs;
+    map<OctreeNode*, VRLodLeafPtr> aLeafs;
     for (auto o : oLeafs) {
         if (leafs.count(o) == 0) continue;
         aLeafs[o] = leafs[o];
@@ -424,7 +424,7 @@ void VRNature::computeAllLODs(bool threaded) {
 
 void VRNature::computeLODs(VRLodLeafPtr leaf) {
     auto oLeafs = leaf->getOLeaf()->getAncestry();
-    map<Octree*, VRLodLeafPtr> aLeafs;
+    map<OctreeNode*, VRLodLeafPtr> aLeafs;
     for (auto o : oLeafs) {
         if (leafs.count(o) == 0) continue;
         aLeafs[o] = leafs[o];
@@ -432,7 +432,7 @@ void VRNature::computeLODs(VRLodLeafPtr leaf) {
     computeLODs(aLeafs);
 }
 
-void VRNature::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
+void VRNature::computeLODs(map<OctreeNode*, VRLodLeafPtr>& leafs) {
     auto simpleLeafMat = [](bool doAlpha) {
         auto m = VRMaterial::create("simpleLeafMat");
         m->setPointSize(3);

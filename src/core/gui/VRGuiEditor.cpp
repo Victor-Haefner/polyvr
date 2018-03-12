@@ -1,6 +1,6 @@
 #include "VRGuiEditor.h"
 #include "VRGuiUtils.h"
-#include "VRCodeCompletion.h"
+#include "VRGuiCodeCompletion.h"
 #include "core/scripting/VRScript.h"
 #include "core/utils/VRFunction.h"
 
@@ -277,7 +277,7 @@ VRGuiEditor::VRGuiEditor(string window) {
     gtk_widget_modify_font (editor, font_desc);
     gtk_widget_show_all(editor);
 
-    auto provider = vr_code_completion_new();
+    auto provider = VRGuiCodeCompletionNew();
     auto completion = gtk_source_view_get_completion(GTK_SOURCE_VIEW(editor));
     GError* error = 0;
     gtk_source_completion_add_provider(completion, GTK_SOURCE_COMPLETION_PROVIDER(provider), &error);

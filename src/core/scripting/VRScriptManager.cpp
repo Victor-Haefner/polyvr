@@ -26,7 +26,7 @@ VRScriptManager::VRScriptManager() {
 }
 
 VRScriptManager::~VRScriptManager() {
-    //cout << "VRScriptManager destroyed\n";
+    cout << "VRScriptManager destroyed\n";
     blockScriptThreads();
     scripts.clear();
     if (PyErr_Occurred() != NULL) PyErr_Print();
@@ -207,34 +207,48 @@ void VRScriptManager::initPyModules() {
     );
 }
 
+PyObject* VRScriptManager::newModule(string name, PyMethodDef* methods, string doc) {
+    string name2 = "VR."+name;
+    PyObject* m = Py_InitModule3(name2.c_str(), methods, doc.c_str());
+    modules[name] = m;
+    PyModule_AddObject(pModVR, name.c_str(), m);
+    return m;
+}
+
+PyObject* VRScriptManager::getPyModule(string name) {
+    if (name == "VR") return pModVR;
+    if (modules.count(name)) return modules[name];
+    return 0;
+}
+
 vector<string> VRScriptManager::getPyVRModules() {
     vector<string> res;
     res.push_back("VR");
-    for (auto m : modules) if (m.first != "VR") res.push_back(m.first);
+    for (auto m : moduleTypes) if (m.first != "VR") res.push_back(m.first);
     sort (res.begin()+1, res.end());
     return res;
 }
 
 vector<string> VRScriptManager::getPyVRTypes(string mod) {
     vector<string> res;
-    if (modules.count(mod) == 0) { cout << "Module " << mod << " not found\n"; return res; }
+    if (moduleTypes.count(mod) == 0) { cout << "Module " << mod << " not found\n"; return res; }
     res.push_back("globals");
-    for (auto m : modules[mod]) res.push_back(m.first);
+    for (auto m : moduleTypes[mod]) res.push_back(m.first);
     sort (res.begin()+1, res.end());
     return res;
 }
 
 string VRScriptManager::getPyVRDescription(string mod, string type) {
     if (type == "globals") return "";
-    if (modules.count(mod) == 0) { cout << "Module " << mod << " not found\n"; return ""; }
-    if (modules[mod].count(type) == 0) { cout << "Method " << type << " not found\n"; return ""; }
-    return modules[mod][type]->tp_doc;
+    if (moduleTypes.count(mod) == 0) { cout << "Module " << mod << " not found\n"; return ""; }
+    if (moduleTypes[mod].count(type) == 0) { cout << "Method " << type << " not found\n"; return ""; }
+    return moduleTypes[mod][type]->tp_doc;
 }
 
 vector<string> VRScriptManager::getPyVRMethods(string mod, string type) {
     vector<string> res;
-    if (modules.count(mod) == 0) { cout << "Module " << mod << " not found\n"; return res; }
-    if (modules[mod].count(type) == 0 && type != "globals") { cout << "Method " << type << " not found\n"; return res; }
+    if (moduleTypes.count(mod) == 0) { cout << "Module " << mod << " not found\n"; return res; }
+    if (moduleTypes[mod].count(type) == 0 && type != "globals") { cout << "Method " << type << " not found\n"; return res; }
     PyObject* dict = PyModule_GetDict(pModVR);
     PyObject *key, *value;
     Py_ssize_t pos = 0;
@@ -251,7 +265,7 @@ vector<string> VRScriptManager::getPyVRMethods(string mod, string type) {
         return res;
     }
 
-    dict = modules[mod][type]->tp_dict;
+    dict = moduleTypes[mod][type]->tp_dict;
     pos = 0;
     while (PyDict_Next(dict, &pos, &key, &value)) {
         string name = PyString_AsString(key);
@@ -264,8 +278,8 @@ vector<string> VRScriptManager::getPyVRMethods(string mod, string type) {
 }
 
 string VRScriptManager::getPyVRMethodDoc(string mod, string type, string method) {
-    if (modules.count(mod) == 0) { cout << "Module " << mod << " not found\n"; return ""; }
-    if (modules[mod].count(type) == 0 && type != "globals") { cout << "Method " << type << " not found\n"; return ""; }
+    if (moduleTypes.count(mod) == 0) { cout << "Module " << mod << " not found\n"; return ""; }
+    if (moduleTypes[mod].count(type) == 0 && type != "globals") { cout << "Method " << type << " not found\n"; return ""; }
     string res;
 
     PyObject* dict = PyModule_GetDict(pModVR);
@@ -284,7 +298,7 @@ string VRScriptManager::getPyVRMethodDoc(string mod, string type, string method)
     }
 
     pos = 0;
-    dict = modules[mod][type]->tp_dict;
+    dict = moduleTypes[mod][type]->tp_dict;
     while (PyDict_Next(dict, &pos, &key, &meth)) {
         string name = PyString_AsString(key);
         if (method != name) continue;

@@ -90,8 +90,6 @@ ART::~ART() {
 
 template<typename dev>
 void ART::getMatrix(dev t, Matrix4d& m, bool doOffset) {
-    cout << "ART::getMatrix " << axis << endl;
-
     int X = abs(axis[0]);
     int Y = abs(axis[1]);
     int Z = abs(axis[2]);
@@ -100,15 +98,12 @@ void ART::getMatrix(dev t, Matrix4d& m, bool doOffset) {
     int Sy = axis[1] >= 0 ? 1 : -1;
     int Sz = axis[2] >= 0 ? 1 : -1;
 
-    m[X] = Vec4d(Sx*t.rot[0], Sx*t.rot[1], Sx*t.rot[2], 0); // orientation
-    m[Y] = Vec4d(Sy*t.rot[3], Sy*t.rot[4], Sy*t.rot[5], 0);
-    m[Z] = Vec4d(Sz*t.rot[6], Sz*t.rot[7], Sz*t.rot[8], 0);
+    m[X] = Vec4d(Sx*t.rot[0+X], Sy*t.rot[0+Y], Sz*t.rot[0+Z], 0) * Sy*Sz; // orientation
+    m[Y] = Vec4d(Sx*t.rot[3+X], Sy*t.rot[3+Y], Sz*t.rot[3+Z], 0) * Sx*Sz;
+    m[Z] = Vec4d(Sx*t.rot[6+X], Sy*t.rot[6+Y], Sz*t.rot[6+Z], 0) * Sx*Sy;
 
-    //m[1] = Vec4d(t.rot[6], t.rot[7], t.rot[8], 1); // test
-    //m[2] = Vec4d(-t.rot[3], -t.rot[4], -t.rot[5], 1);
-
-    m[3] = Vec4d(t.loc[X]*0.001, t.loc[Y]*0.001, t.loc[Z]*0.001, 1); // position
-    //coords::YtoZ(m);
+    const float k = 0.001;
+    m[3] = Vec4d(t.loc[X]*Sx*k, t.loc[Y]*Sy*k, t.loc[Z]*Sz*k, 1); // position
     if (doOffset) m[3] += Vec4d(offset);
 }
 
