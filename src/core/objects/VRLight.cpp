@@ -6,7 +6,7 @@
 #include "core/objects/OSGObject.h"
 #include "core/objects/object/OSGCore.h"
 #include "VRLightBeacon.h"
-#include "VRShadowEngine.h"
+//#include "VRShadowEngine.h"
 
 #include <OpenSG/OSGNode.h>
 #include <OpenSG/OSGShadowStage.h>
@@ -162,9 +162,8 @@ void VRLight::setDeferred(bool b) {
 }
 
 void VRLight::setupShadowEngines() {
-    //ssme = static_pointer_cast<VRShadowEngine>( VRShadowEngine::create() );
-    ssme = VRShadowEngine::create();
-    //ssme = SimpleShadowMapEngine::create();
+    //ssme = VRShadowEngine::create();
+    ssme = SimpleShadowMapEngine::create();
     gsme = ShaderShadowMapEngine::create();
     ptsme = TrapezoidalShadowMapEngine::create();
     stsme = TrapezoidalShadowMapEngine::create();

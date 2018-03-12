@@ -22,8 +22,8 @@ class VRLight : public VRObject {
         OSGCorePtr s_light;
         OSGCorePtr ph_light;
         VRLightBeaconWeakPtr beacon;
-        VRShadowEngineRecPtr ssme;
-        //SimpleShadowMapEngineRefPtr ssme;
+        //VRShadowEngineRecPtr ssme;
+        SimpleShadowMapEngineRefPtr ssme;
         ShaderShadowMapEngineRefPtr gsme;
         TrapezoidalShadowMapEngineRefPtr ptsme;
         TrapezoidalShadowMapEngineRefPtr stsme;
