@@ -112,9 +112,9 @@ void VRLight::setType(string type) {
 }
 
 void VRLight::setShadowParams(bool b, int res, Color4f c) {
-    setShadows(b);
     setShadowMapRes(res);
     setShadowColor(c);
+    setShadows(b);
 }
 
 void VRLight::setBeacon(VRLightBeaconPtr b) {
@@ -328,6 +328,10 @@ string VRLight::getLightType() { return lightType; };
 
 void VRLight::updateDeferredLight() {
     VRScene::getCurrent()->updateLight( ptr() );
+}
+
+void VRLight::reloadDeferredSystem() {
+    updateDeferredLight();
 }
 
 void VRLight::setPhotometricMap(VRTexturePtr tex) { photometricMap = tex; updateDeferredLight(); }

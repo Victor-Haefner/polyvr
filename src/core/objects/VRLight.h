@@ -59,6 +59,7 @@ class VRLight : public VRObject {
 
         void setType(string type);
         void setDeferred(bool b);
+        void reloadDeferredSystem();
 
         void setDiffuse(Color4f c);
         void setAmbient(Color4f c);
