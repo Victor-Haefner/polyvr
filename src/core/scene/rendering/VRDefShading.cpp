@@ -245,6 +245,8 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
 }
 
 void VRDefShading::updateLight(VRLightPtr l) {
+    int ID = l->getID();
+    if (lightInfos.count(ID) == 0) return;
     auto& li = lightInfos[l->getID()];
     string type = l->getLightType();
     bool shadows = l->getShadows();

@@ -78,8 +78,8 @@ VRLight::~VRLight() {
 VRLightPtr VRLight::ptr() { return static_pointer_cast<VRLight>( shared_from_this() ); }
 VRLightPtr VRLight::create(string name) {
     auto l = shared_ptr<VRLight>(new VRLight(name) );
-    cout << "VRLight::create " << l << " " << l->getName() << endl;
     VRScene::getCurrent()->addLight(l);
+    cout << "VRLight::create " << l << " " << l->getName() << " deferred " << l->deferred << endl;
     return l;
 }
 
@@ -112,6 +112,7 @@ void VRLight::setType(string type) {
 }
 
 void VRLight::setShadowParams(bool b, int res, Color4f c) {
+    cout << "VRLight::setShadowParams " << deferred << endl;
     setShadowMapRes(res);
     setShadowColor(c);
     setShadows(b);
@@ -204,6 +205,7 @@ void VRLight::setShadows(bool b) {
     };
 
     if (b) {
+        cout << "VRLight::setShadows " << deferred << endl;
         if (!deferred) setShadowEngine(d_light, ssme);
         if (!deferred) setShadowEngine(p_light, ssme);
         if (!deferred) setShadowEngine(s_light, ssme);

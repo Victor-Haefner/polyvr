@@ -75,6 +75,7 @@ class VRRenderManager : public VRStorage {
         void setFXAA(bool b);
 
         void update();
+        void reloadStageShaders();
 };
 
 OSG_END_NAMESPACE;

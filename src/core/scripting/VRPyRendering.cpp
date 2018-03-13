@@ -15,5 +15,7 @@ PyMethodDef VRPyRendering::methods[] = {
     {"addStageBuffer", PyWrap(Rendering, addStageBuffer, "Add additional render buffer - id addStageBuffer( str stage, pixel_format, pixel_type )\r\tpixel_format can be 'RGB' or 'RGBA', pixel_type can be 'UINT8', 'UINT16', 'UINT32', 'FLOAT32', ... ", int, string, int, int ) },
     {"setStageParameter", PyWrap(Rendering, setStageParameter, "Set shader parameter of stage - setStageParameter( str stage, str var, int val )", void, string, string, int ) },
     {"setStageTexture", PyWrap(Rendering, setStageTexture, "Set stage material texture - setStageTexture( str stage, texture, int unit, str mag, str min )", void, string, VRTexturePtr, int, int, int ) },
+    {"setDeferredShading", PyWrap(Rendering, setDeferredShading, "Toggle deferred shading", void, bool ) },
+    {"reloadStageShaders", PyWrap(Rendering, reloadStageShaders, "Reload shaders of rendering stages", void ) },
     {NULL}  /* Sentinel */
 };
