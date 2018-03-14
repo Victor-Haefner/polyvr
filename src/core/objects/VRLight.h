@@ -22,8 +22,8 @@ class VRLight : public VRObject {
         OSGCorePtr s_light;
         OSGCorePtr ph_light;
         VRLightBeaconWeakPtr beacon;
-        VRShadowEngineRecPtr ssme;
-        //SimpleShadowMapEngineRefPtr ssme;
+        //VRShadowEngineRecPtr ssme;
+        SimpleShadowMapEngineRefPtr ssme;
         ShaderShadowMapEngineRefPtr gsme;
         TrapezoidalShadowMapEngineRefPtr ptsme;
         TrapezoidalShadowMapEngineRefPtr stsme;
@@ -59,6 +59,7 @@ class VRLight : public VRObject {
 
         void setType(string type);
         void setDeferred(bool b);
+        void reloadDeferredSystem();
 
         void setDiffuse(Color4f c);
         void setAmbient(Color4f c);

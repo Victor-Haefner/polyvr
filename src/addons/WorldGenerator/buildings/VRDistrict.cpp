@@ -67,8 +67,8 @@ void VRDistrict::addBuilding( VRPolygonPtr p, int stories, string housenumber, s
     buildings[ID] = b;
     b->setWorld(world.lock());
 
-    b->addFoundation(*p, 4);
-    for (auto i=0; i<stories; i++) b->addFloor(*p, 4);
+    b->addFoundation(*p, 2.5);
+    for (auto i=0; i<stories; i++) b->addFloor(*p, 2.5);
     b->addRoof(*p);
     b->computeGeometry(facades, roofs);
 

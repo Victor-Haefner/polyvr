@@ -11,6 +11,7 @@
 #include "VRPyProgress.h"
 #include "VRPySky.h"
 #include "VRPySound.h"
+#include "VRPyMaterial.h"
 
 #include "core/scene/VRAnimationManagerT.h"
 #include "core/scene/import/VRImport.h"
@@ -75,11 +76,12 @@ PyObject* VRSceneGlobals::getSky(VRSceneGlobals* self) {
 
 PyObject* VRSceneGlobals::getSceneMaterials(VRSceneGlobals* self) {
     auto scene = VRScene::getCurrent();
+    auto res = PyList_New(0);
     if (scene) {
-        auto mats = VRMaterial::getAll(); // TODO
-
+        auto mats = VRMaterial::getAll();
+        for (auto m : mats) PyList_Append(res, VRPyMaterial::fromSharedPtr(m));
     }
-    Py_RETURN_TRUE;
+    return res;
 }
 
 PyObject* VRSceneGlobals::setPhysicsActive(VRSceneGlobals* self, PyObject *args) {

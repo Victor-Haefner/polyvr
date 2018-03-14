@@ -45,7 +45,7 @@ CSGGeometryPtr CSGGeometry::create(string name) {
 }
 
 void CSGGeometry::init() {
-	oct = new Octree(thresholdL);
+	oct = Octree::create(thresholdL);
 	type = "CSGGeometry";
 	setMatrix(oldWorldTrans);
 	polyhedron = new CGAL::Polyhedron();

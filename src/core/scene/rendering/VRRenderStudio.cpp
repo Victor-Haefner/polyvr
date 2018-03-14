@@ -168,6 +168,10 @@ void VRRenderStudio::reset() {
     clearLights();
 }
 
+void VRRenderStudio::reloadStageShaders() {
+    for (auto s : stages) s.second->getRendering()->reload();
+}
+
 void VRRenderStudio::initDSProxy(VRMaterialPtr mat) {
     string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
     mat->setLit(false);

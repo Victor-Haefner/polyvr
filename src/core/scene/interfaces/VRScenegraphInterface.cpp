@@ -6,6 +6,7 @@
 #include "core/utils/toString.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/tools/selection/VRSelector.h"
 
 #include <boost/bind.hpp>
 #include <OpenSG/OSGMatrix.h>
@@ -16,6 +17,7 @@ using namespace OSG;
 
 VRScenegraphInterface::VRScenegraphInterface(string name) : VRObject(name) {
     resetWebsocket();
+    selector = VRSelector::create();
 }
 
 VRScenegraphInterface::~VRScenegraphInterface() {}
@@ -42,11 +44,16 @@ void VRScenegraphInterface::resetWebsocket() {
     socket->setType("http receive");
 }
 
+void VRScenegraphInterface::select(VRObjectPtr obj) {
+    selector->select(obj, false);
+    socket->answerWebSocket(clientID, "selection|" + obj->getName());
+}
+
 void VRScenegraphInterface::ws_callback(void* _args) {
 	HTTP_args* args = (HTTP_args*)_args;
     if (!args->websocket) return;
 
-    int ID = args->ws_id;
+    clientID = args->ws_id;
     string msg = args->ws_data;
     if (args->ws_data.size() == 0) return;
     handle(msg);
@@ -126,7 +133,7 @@ void VRScenegraphInterface::handle(string msg) {
 		if (m[1] == "transform") {
 			if (trans) {
                 replace( m[3].begin(), m[3].end(), ',', '.');
-                trans->setMatrix(toMatrix(parseVec<double>(m[3])));
+                trans->setWorldMatrix(toMatrix(parseVec<double>(m[3])));
 			}
 		}
 
@@ -210,6 +217,7 @@ void VRScenegraphInterface::handle(string msg) {
 	if (m[0] == "new") {
 		string obj = m[2];
 		VRObjectPtr o;
+		if (m[1] == "Object") o = VRObject::create(obj);
 		if (m[1] == "Transform") { auto t = VRTransform::create(obj); transforms[obj] = t; o = t; }
 		if (m[1] == "Geometry") { auto g = VRGeometry::create(obj); g->setMeshVisibility(0); transforms[obj] = g; meshes[obj] = g; o = g; }
 		if (m[1] == "Material") {
@@ -217,10 +225,12 @@ void VRScenegraphInterface::handle(string msg) {
 			materials[obj] = VRMaterial::create(obj);
 		}
 
+		objects[obj] = o;
+
 		if (!o) { cout << "bad type:" << m[1] << endl; return; }
 
 		VRObjectPtr p;
-		if (transforms.count(m[3])) p = transforms[m[3]];
+		if (objects.count(m[3])) p = objects[m[3]];
 		if (!p) p = ptr();
 		p->addChild(o);
 		cout << "created new object:" << m[2] << endl;

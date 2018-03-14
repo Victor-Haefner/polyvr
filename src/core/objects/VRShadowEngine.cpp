@@ -575,16 +575,9 @@ void VRShadowEngine::doFinalPass(Light         *pLight,
     biasMatrix.setScale(0.5);
     biasMatrix.setTranslate(0.5,0.5,0.5);
 
-    MatrixCamera *pCam = dynamic_cast<MatrixCamera *>(
-        pEngineData->getCamera());
-
-    pCam->getProjection(projectionMatrix,
-                        this->getWidth (),
-                        this->getHeight());
-
-    pCam->getViewing   (viewMatrix,
-                        this->getWidth (),
-                        this->getHeight());
+    MatrixCamera *pCam = dynamic_cast<MatrixCamera *>(pEngineData->getCamera());
+    pCam->getProjection(projectionMatrix, this->getWidth (), this->getHeight());
+    pCam->getViewing(viewMatrix, this->getWidth (), this->getHeight());
 
     Matrix textureMatrix = biasMatrix;
     textureMatrix.mult(projectionMatrix);

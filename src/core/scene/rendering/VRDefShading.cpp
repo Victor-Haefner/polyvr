@@ -140,6 +140,11 @@ void VRDefShading::reload() {
         li.second.lightVP->readProgram(vpFile.c_str());
         li.second.lightFP->readProgram(fpFile.c_str());
         li.second.lightFP->updateUniformVariable<Int32>("channel", channel);
+        li.second.lightFP->updateUniformVariable<Int32>("isFirstLamp", 0);
+    }
+
+    if (lightInfos.size() > 0) {
+        lightInfos.rbegin()->second.lightFP->updateUniformVariable<Int32>("isFirstLamp", 1);
     }
 }
 
@@ -193,10 +198,15 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     else li.shadowType = ST_NONE;
 
     li.light = light;
-    li.lightType = Point;
-    if (type == "directional") li.lightType = Directional;
-    if (type == "spot") li.lightType = Spot;
-    if (type == "photometric") li.lightType = Photometric;
+    li.lightType = LightEngine::Point;
+    if (type == "directional") li.lightType = LightEngine::Directional;
+    if (type == "spot") li.lightType = LightEngine::Spot;
+    if (type == "photometric") li.lightType = LightEngine::Photometric;
+
+    /**
+    Not compiling? execute (with sudo!) the install script int the polyvr folder!
+    sudo ./install
+    */
 
     li.lightFP->addUniformVariable<Int32>("texBufPos",  0);
     li.lightFP->addUniformVariable<Int32>("texBufNorm", 1);
@@ -206,6 +216,8 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     li.lightFP->addUniformVariable<float>("shadowColor", shadowColor);
     li.lightFP->addUniformVariable<Vec3f>("lightUpVS", Vec3f(0,1,0));
     li.lightFP->addUniformVariable<Vec3f>("lightDirectionVS", Vec3f(0,0,-1));
+    li.lightFP->addUniformVariable<Int32>("channel", 0);
+    li.lightFP->addUniformVariable<Int32>("isFirstLamp", 1);
 
     li.lightSH->addShader(li.lightVP);
     li.lightSH->addShader(li.lightFP);
@@ -215,17 +227,15 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     dsStage->editMFLightPrograms  ()->push_back(li.lightSH);
     dsStage->editMFPhotometricMaps()->push_back(li.texChunk);
 
-    /**
-    Not compiling? execute (with sudo!) the install script int the polyvr folder!
-    sudo ./install
-    */
-
     auto tex = vrl->getPhotometricMap();
     if (tex) {
         li.texChunk->setImage(tex->getImage());
         li.texChunk->setInternalFormat(tex->getInternalFormat());
     }
 
+    if (lightInfos.size() > 0) {
+        lightInfos.rbegin()->second.lightFP->updateUniformVariable<Int32>("isFirstLamp", 0);
+    }
     lightInfos[ID] = li;
 
     string vpFile = getLightVPFile(li.lightType);
@@ -235,14 +245,16 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
 }
 
 void VRDefShading::updateLight(VRLightPtr l) {
+    int ID = l->getID();
+    if (lightInfos.count(ID) == 0) return;
     auto& li = lightInfos[l->getID()];
     string type = l->getLightType();
     bool shadows = l->getShadows();
 
-    li.lightType = Point;
-    if (type == "directional") li.lightType = Directional;
-    if (type == "spot") li.lightType = Spot;
-    if (type == "photometric") li.lightType = Photometric;
+    li.lightType = LightEngine::Point;
+    if (type == "directional") li.lightType = LightEngine::Directional;
+    if (type == "spot") li.lightType = LightEngine::Spot;
+    if (type == "photometric") li.lightType = LightEngine::Photometric;
     if (shadows) li.shadowType = defaultShadowType;
     else li.shadowType = ST_NONE;
 
@@ -273,10 +285,10 @@ TextureObjChunkRefPtr VRDefShading::getTarget() { return fboTex; }
 // file containing vertex shader code for the light type
 const std::string& VRDefShading::getLightVPFile(LightTypeE lightType) {
     switch(lightType) {
-        case Directional: return dsDirLightVPFile;
-        case Point: return dsPointLightVPFile;
-        case Spot: return dsSpotLightVPFile;
-        case Photometric: return dsPhotometricLightVPFile;
+        case LightEngine::Directional: return dsDirLightVPFile;
+        case LightEngine::Point: return dsPointLightVPFile;
+        case LightEngine::Spot: return dsSpotLightVPFile;
+        case LightEngine::Photometric: return dsPhotometricLightVPFile;
         default: return dsUnknownFile;
     }
 }
@@ -285,10 +297,10 @@ const std::string& VRDefShading::getLightVPFile(LightTypeE lightType) {
 const std::string& VRDefShading::getLightFPFile(LightTypeE lightType, ShadowTypeE shadowType) {
     bool ds = (shadowType != ST_NONE);
     switch(lightType) {
-        case Directional: return ds ? dsDirLightShadowFPFile : dsDirLightFPFile;
-        case Point: return ds ? dsPointLightShadowFPFile : dsPointLightFPFile;
-        case Spot: return ds ? dsSpotLightShadowFPFile : dsSpotLightFPFile;
-        case Photometric: return ds ? dsPhotometricLightShadowFPFile : dsPhotometricLightFPFile;
+        case LightEngine::Directional: return ds ? dsDirLightShadowFPFile : dsDirLightFPFile;
+        case LightEngine::Point: return ds ? dsPointLightShadowFPFile : dsPointLightFPFile;
+        case LightEngine::Spot: return ds ? dsSpotLightShadowFPFile : dsSpotLightFPFile;
+        case LightEngine::Photometric: return ds ? dsPhotometricLightShadowFPFile : dsPhotometricLightFPFile;
         default: return dsUnknownFile;
     }
 }
@@ -299,8 +311,6 @@ void VRDefShading::subLight(int ID) {
     auto lItr = dsStage->editMFLights()->find(li.light);
     auto lpItr = dsStage->editMFLightPrograms()->find(li.lightSH);
     auto pmItr = dsStage->editMFPhotometricMaps()->find(li.texChunk);
-    //OSG_ASSERT(lightIdx < dsStage->getMFLights()->size());
-    //OSG_ASSERT(lightIdx < dsStage->getMFLightPrograms()->size());
     dsStage->editMFLights()->erase(lItr);
     dsStage->editMFLightPrograms()->erase(lpItr);
     dsStage->editMFPhotometricMaps()->erase(pmItr);

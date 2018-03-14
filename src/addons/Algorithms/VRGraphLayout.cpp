@@ -69,12 +69,12 @@ void VRGraphLayout::applySprings(float eps, float v) {
 void VRGraphLayout::applyOccupancy(float eps, float v) {
     if (!graph) return;
     auto& nodes = graph->getNodes();
-    Octree o(10*eps);
+    auto o = Octree::create(10*eps);
 
     for (unsigned long i=0; i<nodes.size(); i++) {
         if ( isFlag(i, INACTIVE) ) continue;
         auto& n = nodes[i];
-        o.addBox( n.box, (void*)i );
+        o->addBox( n.box, (void*)i );
     }
 
     for (uint i=0; i<nodes.size(); i++) {
@@ -83,7 +83,7 @@ void VRGraphLayout::applyOccupancy(float eps, float v) {
         Vec3d pn = n.box.center();
 
         Vec3d D;
-        for (auto& on2 : o.boxSearch(n.box) ) {
+        for (auto& on2 : o->boxSearch(n.box) ) {
             uint j = (long)on2;
             if (i == j) continue; // no self interaction
 

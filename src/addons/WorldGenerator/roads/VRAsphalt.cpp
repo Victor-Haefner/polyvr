@@ -366,7 +366,7 @@ float distToPath(const int k, const int roadID, const vec3 pos, const vec4 pathD
 }
 
 void computeNormal() {
-	vec2 tc = tc1*2;
+	/*vec2 tc = tc1*2;
     float s11 = texture(texNoise, tc).r;
     float s01 = textureOffset(texNoise, tc, off.xy).r;
     float s21 = textureOffset(texNoise, tc, off.zy).r;
@@ -375,7 +375,8 @@ void computeNormal() {
 
     vec3 va = normalize(vec3(size.y,s21-s01,size.x));
     vec3 vb = normalize(vec3(size.x,s12-s10,size.y));
-	norm = normalize( cross(va,vb) );
+	norm = normalize( cross(va,vb) );*/
+	norm = vec3(0,1,0);
 }
 
 void computeDepth() {

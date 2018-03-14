@@ -121,9 +121,8 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryMTRecPtr geometry, Matrix4d 
 	}
 
 	// Cleanup
-	for (void* o : oct->getData()) delete (size_t*)o;
-	delete oct;
-	oct = new Octree(thresholdL);
+	oct->delContent<size_t>();
+	oct = Octree::create(thresholdL);
 
 	// Construct the polyhedron from raw data
     success = true;

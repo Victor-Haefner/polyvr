@@ -6,7 +6,7 @@
 #include "core/objects/OSGObject.h"
 #include "core/objects/object/OSGCore.h"
 #include "VRLightBeacon.h"
-#include "VRShadowEngine.h"
+//#include "VRShadowEngine.h"
 
 #include <OpenSG/OSGNode.h>
 #include <OpenSG/OSGShadowStage.h>
@@ -78,8 +78,8 @@ VRLight::~VRLight() {
 VRLightPtr VRLight::ptr() { return static_pointer_cast<VRLight>( shared_from_this() ); }
 VRLightPtr VRLight::create(string name) {
     auto l = shared_ptr<VRLight>(new VRLight(name) );
-    cout << "VRLight::create " << l << " " << l->getName() << endl;
     VRScene::getCurrent()->addLight(l);
+    cout << "VRLight::create " << l << " " << l->getName() << " deferred " << l->deferred << endl;
     return l;
 }
 
@@ -112,9 +112,10 @@ void VRLight::setType(string type) {
 }
 
 void VRLight::setShadowParams(bool b, int res, Color4f c) {
-    setShadows(b);
+    cout << "VRLight::setShadowParams " << deferred << endl;
     setShadowMapRes(res);
     setShadowColor(c);
+    setShadows(b);
 }
 
 void VRLight::setBeacon(VRLightBeaconPtr b) {
@@ -162,9 +163,8 @@ void VRLight::setDeferred(bool b) {
 }
 
 void VRLight::setupShadowEngines() {
-    //ssme = static_pointer_cast<VRShadowEngine>( VRShadowEngine::create() );
-    ssme = VRShadowEngine::create();
-    //ssme = SimpleShadowMapEngine::create();
+    //ssme = VRShadowEngine::create();
+    ssme = SimpleShadowMapEngine::create();
     gsme = ShaderShadowMapEngine::create();
     ptsme = TrapezoidalShadowMapEngine::create();
     stsme = TrapezoidalShadowMapEngine::create();
@@ -205,6 +205,7 @@ void VRLight::setShadows(bool b) {
     };
 
     if (b) {
+        cout << "VRLight::setShadows " << deferred << endl;
         if (!deferred) setShadowEngine(d_light, ssme);
         if (!deferred) setShadowEngine(p_light, ssme);
         if (!deferred) setShadowEngine(s_light, ssme);
@@ -331,6 +332,10 @@ void VRLight::updateDeferredLight() {
     VRScene::getCurrent()->updateLight( ptr() );
 }
 
+void VRLight::reloadDeferredSystem() {
+    updateDeferredLight();
+}
+
 void VRLight::setPhotometricMap(VRTexturePtr tex) { photometricMap = tex; updateDeferredLight(); }
 VRTexturePtr VRLight::getPhotometricMap() { return photometricMap; }
 
@@ -380,14 +385,24 @@ void VRLight::loadPhotometricMap(string path) { // ies files
         return result;
     };
 
+    auto startswith = [](const string& a, const string& b) -> bool {
+        if (a.size() < b.size()) return false;
+        return a.compare(0, b.length(), b) == 0;
+    };
+
     auto parseFile = [&](int Nv, int Nh, int& aNv, int& aNh) {
         ifstream file(path);
         string data((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
         auto lines = splitString(data, '\n');
         if (lines.size() < 10) return vector<float>();
 
+        // read version
+        int paramLineN = 9;
+        if (startswith(lines[0], "IESNA:LM-63-2002")) paramLineN = 10;
+
         // read parameters
-        auto params = splitString( lines[9] );
+        auto params = splitString( lines[paramLineN] );
+        if (params.size() < 5) { cout << "Error, VRLight::loadPhotometricMap::parseFile failed, wrong number of parameters, " << lines[paramLineN] << endl; return vector<float>(); }
         aNv = toInt(params[3]); // number of vertical angles
         aNh = toInt(params[4]); // number of horizontal angles
         int N = aNv*aNh;
@@ -397,7 +412,7 @@ void VRLight::loadPhotometricMap(string path) { // ies files
 
         // read data
         string dataChunk;
-        for (int i=11; i<lines.size(); i++) dataChunk += lines[i] + " ";
+        for (int i=paramLineN+2; i<lines.size(); i++) dataChunk += lines[i] + " ";
         stringstream ss(dataChunk);
 
         vector<float> aTheta(aNv, 0);
@@ -416,9 +431,10 @@ void VRLight::loadPhotometricMap(string path) { // ies files
     int aNv = 0;
     int aNh = 0;
 
-    photometricMapPath = path;
     if (path == "") return;
     auto candela = parseFile(Nv, Nh, aNv, aNh);
+    if (candela.size() == 0) { cout << "Error, VRLight::loadPhotometricMap failed" << endl; return; }
+    photometricMapPath = path;
 
     Nv = aNv;
     Nh = aNh;
@@ -427,13 +443,13 @@ void VRLight::loadPhotometricMap(string path) { // ies files
     for (auto& c : candela) if (c > cMax) cMax = c;
     for (auto& c : candela) c /= cMax;
 
-    for (int i=0; i<Nv; i++) {
+    /*for (int i=0; i<Nv; i++) {
         for (int j=0; j<Nh; j++) {
             int k = i*Nh+j;
             cout << " " << candela[k];
         }
         cout << endl;
-    }
+    }*/
     auto tex = VRTexture::create();
     //tex->read("imgres.png");
     //tex->read("checkers.jpg");
@@ -441,7 +457,6 @@ void VRLight::loadPhotometricMap(string path) { // ies files
     tex->setInternalFormat(GL_ALPHA32F_ARB); // important for unclamped float
     auto img = tex->getImage();
     img->set( Image::OSG_A_PF, Nv, Nh, 1, 1, 1, 0, (const uint8_t*)&candela[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
-    cout << " setPhotometricMap img " << img << " " << path << endl;
 
     setPhotometricMap(tex);
 }

@@ -2,7 +2,7 @@
 <Scene base_name="LocalShadows" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
-      <Object accept_root="1" aspect="1" at="-0.215871 0.5 0.739006" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-6.53916 12.4398 8.91746" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+      <Object accept_root="1" aspect="1" at="0.556796 0.5 -0.395505" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-4.59844 5.66713 4.21549" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
         <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
           <constraint persistency="666"/>
         </Object>
@@ -10,7 +10,7 @@
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Rendering deferred_rendering="1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
     <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
@@ -19,10 +19,11 @@
 	if hasattr(VR, 'scene'): VR.scene.destroy()
 	VR.scene = VR.Object('scene', 'Root')
 	
-	light = VR.Light('sun', 'scene')
+	light = VR.Light('sun')
+	VR.scene.addChild(light)
 	beacon = VR.LightBeacon('sunBeacon', light.getName())
 	light.setBeacon(beacon)
-	beacon.setTransform([0,0,0], [0, -1, -0.5], [1,0,0])
+	beacon.setTransform([0,10,0], [0, -1, -0.5], [1,0,0])
 	
 	VR.ground = VR.Geometry('ground', light.getName())
 	VR.ground.setPrimitive('Box 100 1 100 1 1 1')
@@ -36,15 +37,22 @@
 	gear = VR.Geometry('gear', light.getName())
 	gear.setPrimitive('Gear 0.1 0.1 0.01 121 0.03 0.2')
 	
-	for x in [-4,-2,0,2,4]:
-		for y in [-4,-2,0,2,4]:
-			g = gear.duplicate()
-			g.setFrom([x,2,y])
-			light.addChild(g)
+	def addGear(x,y):
+		g = gear.duplicate()
+		g.setFrom([x,2,y])
+		light.addChild(g)
+		return g
+		
+	
+	g = addGear(0,0)
+	
+	#for x in [-4,-2,0,2,4]:
+	#	for y in [-4,-2,0,2,4]:
+	#		g = addGear(x,y)
 	
 	
-	light.setType('directional')
-	light.setShadowParams(True, 2048, [1,0,0,1])
+	light.setType('point')
+	light.setShadowParams(True, 2048, [1,1,1,1])
 	
 	m = VR.Material('test')
 	m.setVertexProgram('shadowVP')

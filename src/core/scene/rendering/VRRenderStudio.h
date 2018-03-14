@@ -102,6 +102,7 @@ class VRRenderStudio : public VRStorage {
         void setHMDDeye(float e);
 
         void update();
+        void reloadStageShaders();
 };
 
 OSG_END_NAMESPACE;

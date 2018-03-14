@@ -42,11 +42,11 @@ Graph::Graph() {
 
 Graph::~Graph() {}
 
-int Graph::connect(int i, int j, CONNECTION c) {
+int Graph::connect(int i, int j, int c) {
     if (i < 0 || j < 0) return -1;
     //if (i >= int(nodes.size()) || j >= int(nodes.size())) return edge;
     while (i >= int(edges.size())) edges.push_back( vector<edge>() );
-    auto e = edge(i,j,c,edgesByID.size());
+    auto e = edge(i,j,CONNECTION(c),edgesByID.size());
     edges[i].push_back(e);
     edgesByID.push_back(Vec2i(i,j));
     getNode(i).outEdges.push_back(e.ID);
@@ -73,6 +73,30 @@ void Graph::disconnect(int i, int j) {
     erase( getNode(i).outEdges, edge.from );
     erase( getNode(j).outEdges, edge.to );
     erase( edgesByID, Vec2i(i,j) );
+}
+
+vector< Graph::edge > Graph::getInEdges(int i) {
+    vector< edge > res;
+    auto edges = getEdges();
+    for (auto& n : edges) {
+        for (auto& e : n) {
+            if (e.to != i) continue;
+            res.push_back(e);
+        }
+    }
+    return res;
+}
+
+vector< Graph::edge > Graph::getOutEdges(int i) {
+    vector< edge > res;
+    auto edges = getEdges();
+    for (auto& n : edges) {
+        for (auto& e : n) {
+            if (e.from != i) continue;
+            res.push_back(e);
+        }
+    }
+    return res;
 }
 
 vector<Graph::edge> Graph::getPrevEdges(edge& e) {
@@ -115,6 +139,14 @@ Graph::edge& Graph::getEdge(int n1, int n2) {
     return nullEdge;
 }
 
+Graph::edge Graph::getEdgeCopy(int n1, int n2) { return getEdge(n1, n2); }
+vector< Graph::node > Graph::getNodesCopy() { return getNodes(); }
+vector<Graph::edge> Graph::getEdgesCopy() {
+    vector<Graph::edge> res;
+    for (auto& n : edges) for (auto& e : n) res.push_back(e);
+    return res;
+}
+
 int Graph::getEdgeID(int n1, int n2) {
     if (!connected(n1,n2)) return -1;
     for (auto& e : edges[n1]) if (e.to == n2) return e.ID;
@@ -135,7 +167,13 @@ void Graph::setPosition(int i, PosePtr p) {
 
 PosePtr Graph::getPosition(int i) { auto p = Pose::create(); *p = nodes[i].p; return p; }
 
-int Graph::addNode() { nodes.push_back(node()); return nodes.size()-1; }
+int Graph::addNode(PosePtr p) {
+    nodes.push_back(node());
+    int i = nodes.size()-1;
+    getNode(i).ID = i;
+    if (p) setPosition(i, p);
+    return i;
+}
 void Graph::clear() { nodes.clear(); edges.clear(); }
 void Graph::update(int i, bool changed) {}
 void Graph::remNode(int i) { nodes.erase(nodes.begin() + i); }

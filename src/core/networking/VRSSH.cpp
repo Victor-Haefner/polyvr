@@ -149,15 +149,14 @@ string VRSSHSession::exec_cmd(string cmd, bool read) {
     if (rc) return lastError(61);
 
     if (read) {
+        string res;
         char buffer[256];
         do {
             rc = libssh2_channel_read(channel, buffer, sizeof(buffer) );
-            if( rc > 0 ) {
-                for( int i=0; i < rc; ++i ) fputc( buffer[i], stderr);
-                fprintf(stderr, "\n");
-            } else if( rc != LIBSSH2_ERROR_EAGAIN ) return lastError(62);
+            res += string(buffer, rc);
         } while (rc > 0);
         if (rc < 0) return lastError(63);
+        return res;
     }
 
     rc = libssh2_channel_send_eof(channel);

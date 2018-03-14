@@ -2,109 +2,36 @@
 #include "VRPyTransform.h"
 #include "VRPyBaseT.h"
 #include "VRPyPose.h"
+#include "VRPyTypeCaster.h"
 
 using namespace OSG;
 
 newPyType( Graph , Graph , New_ptr );
 
-PyMethodDef VRPyGraph::methods[] = {
-    {"getEdge", (PyCFunction)VRPyGraph::getEdge, METH_VARARGS, "Return the graph edge between n1 and n2 - getEdge( int n1, int n2 )" },
-    {"getEdgeID", (PyCFunction)VRPyGraph::getEdgeID, METH_VARARGS, "Return the graph edge ID between n1 and n2 - getEdgeID( int n1, int n2 )" },
-    {"getEdges", (PyCFunction)VRPyGraph::getEdges, METH_NOARGS, "Return graph edges - getEdges()" },
-    {"getInEdges", (PyCFunction)VRPyGraph::getInEdges, METH_VARARGS, "Return graph edges going in node n - getInEdges( int n )" },
-    {"getOutEdges", (PyCFunction)VRPyGraph::getOutEdges, METH_VARARGS, "Return graph edges comming out node n - getOutEdges( int n )" },
-    {"getNodePose", (PyCFunction)VRPyGraph::getNodePose, METH_VARARGS, "Return graph node pose - pose getNodePose( int n )" },
-    {"addNode", (PyCFunction)VRPyGraph::addNode, METH_VARARGS, "Add a node at pose p, returns node ID - int addNode( pose p )" },
-    {"connect", (PyCFunction)VRPyGraph::connect, METH_VARARGS, "Connect nodes n1 and n2, returns edge ID - int connect( int n1, int n2 )" },
-    //{"getNodeIDs", PyWrap( Graph, getNodeIDs, "Get all node IDs", vector<int> ) },
-    {NULL} /* Sentinel */
-};
-
-PyObject* convEdge(Graph::edge& e) {
+template<> PyObject* VRPyTypeCaster::cast(const Graph::edge& e) {
     PyObject* epy = PyTuple_New(2);
     PyTuple_SetItem(epy, 0, PyInt_FromLong(e.from));
     PyTuple_SetItem(epy, 1, PyInt_FromLong(e.to));
     return epy;
 }
 
-PyObject* VRPyGraph::getEdges(VRPyGraph* self) {
-    if (!self->valid()) return NULL;
-    PyObject* res = PyList_New(0);
-    auto edges = self->objPtr->getEdges();
-    for (auto& n : edges) {
-        for (auto& e : n) PyList_Append(res, convEdge(e));
-    }
-    return res;
+template<> PyObject* VRPyTypeCaster::cast(const Graph::node& n) {
+    return PyInt_FromLong(n.ID);
 }
 
-PyObject* VRPyGraph::getEdgeID(VRPyGraph* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    int n1, n2;
-    if (!PyArg_ParseTuple(args, "ii", &n1, &n2)) return NULL;
-    auto eID = self->objPtr->getEdgeID(n1,n2);
-    return PyInt_FromLong(eID);
-}
-
-PyObject* VRPyGraph::getEdge(VRPyGraph* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    int n1, n2;
-    if (!PyArg_ParseTuple(args, "ii", &n1, &n2)) return NULL;
-    auto e = self->objPtr->getEdge(n1,n2);
-    return convEdge(e);
-}
-
-PyObject* VRPyGraph::getInEdges(VRPyGraph* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    int i = -1;
-    if (!PyArg_ParseTuple(args, "i", &i)) return NULL;
-
-    PyObject* res = PyList_New(0);
-    auto edges = self->objPtr->getEdges();
-    for (auto& n : edges) {
-        for (auto& e : n) {
-            if (e.to != i) continue;
-            PyList_Append(res, convEdge(e));
-        }
-    }
-    return res;
-}
-
-PyObject* VRPyGraph::getOutEdges(VRPyGraph* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    int i = -1;
-    if (!PyArg_ParseTuple(args, "i", &i)) return NULL;
-
-    PyObject* res = PyList_New(0);
-    auto edges = self->objPtr->getEdges();
-    if (i<0 || i >= int(edges.size())) return res;
-    auto& n = edges[i];
-    for (auto& e : n) PyList_Append(res, convEdge(e));
-    return res;
-}
-
-PyObject* VRPyGraph::addNode(VRPyGraph* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    VRPyPose* p;
-    if (!PyArg_ParseTuple(args, "O", &p)) return NULL;
-    auto ID = self->objPtr->addNode();
-    self->objPtr->setPosition(ID, p->objPtr);
-    return PyInt_FromLong(ID);
-}
-
-PyObject* VRPyGraph::connect(VRPyGraph* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    int i, j;
-    if (!PyArg_ParseTuple(args, "ii", &i, &j)) return NULL;
-    auto ID = self->objPtr->connect(i,j);
-    return PyInt_FromLong(ID);
-}
-
-PyObject* VRPyGraph::getNodePose(VRPyGraph* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    int i;
-    if (!PyArg_ParseTuple(args, "i", &i)) return NULL;
-    return VRPyPose::fromObject( self->objPtr->getNode(i).p );
-}
+PyMethodDef VRPyGraph::methods[] = {
+    {"getEdge", PyWrap2(Graph, getEdgeCopy, "Return the graph edge between n1 and n2", Graph::edge, int, int ) },
+    {"getEdgeID", PyWrap2(Graph, getEdgeID, "Return the graph edge ID between n1 and n2", int, int, int ) },
+    {"getEdges", PyWrap2(Graph, getEdgesCopy, "Return graph edges", vector<Graph::edge> ) },
+    {"getInEdges", PyWrap2(Graph, getInEdges, "Return graph edges going in from node n", vector<Graph::edge>, int ) },
+    {"getOutEdges", PyWrap2(Graph, getOutEdges, "Return graph edges going out from node n", vector<Graph::edge>, int ) },
+    {"getNodePose", PyWrap2(Graph, getPosition, "Return graph node pose", PosePtr, int ) },
+    {"addNode", PyWrap2(Graph, addNode, "Add a node at pose p, returns node ID", int, PosePtr ) },
+    {"connect", PyWrapOpt2(Graph, connect, "Connect nodes n1 and n2, returns edge ID", "0", int, int, int, int ) },
+    {"disconnect", PyWrap2(Graph, disconnect, "Disconnect nodes n1 and n2", void, int, int ) },
+    {"getNodes", PyWrap2( Graph, getNodesCopy, "Get all node IDs", vector<Graph::node> ) },
+    {NULL} /* Sentinel */
+};
 
 
 
