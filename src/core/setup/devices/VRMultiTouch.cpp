@@ -166,8 +166,6 @@ void VRMultiTouch::updateDevice() {
                 break;
             case 57:
                 txt = "ABS_MT_TRACKING_ID";
-                // if (currentTouchID == -1) return;
-
                 // Finger is "released" as in not present on the touch surface anymore
                 if (ev.value == -1) {
                     fingers[currentFingerID].pos[2] = 0;
@@ -251,11 +249,6 @@ void VRMultiTouch::multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut) 
                   _matrix[2][3] * pntIn[2] +
                   _matrix[3][3];
 
-    /*if (w <1) {
-        fstream file("dump.txt", fstream::out | fstream::app);
-        file << w << endl;
-        file.close();
-    }*/
 
     if(w == TypeTraits<float>::getZeroElement())
     {
@@ -297,17 +290,21 @@ void VRMultiTouch::multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut) 
 }
 
 /**
-
+* TODO: Duplicate code with VRMouse. Push Method to super class or use Interface?
 */
 bool VRMultiTouch::calcViewRay(VRCameraPtr cam, VRViewPtr view, Line &line, float x, float y, int W, int H) {
     if (!cam) return false;
-    if (W <= 0 || H <= 0) return false;
+    if(W <= 0 || H <= 0) return false;
 
     Matrix proj, projtrans;
-
-    cam->getCam()->cam->getProjection(proj, W, H);
-    cam->getCam()->cam->getProjectionTranslation(projtrans, W, H);
-
+    if (view && view->getCameraDecoratorLeft()) {
+        auto c = view->getCameraDecoratorLeft();
+        c->getProjection(proj, W, H);
+        c->getProjectionTranslation(projtrans, W, H);
+    } else {
+        cam->getCam()->cam->getProjection(proj, W, H);
+        cam->getCam()->cam->getProjectionTranslation(projtrans, W, H);
+    }
 
     Matrix wctocc;
     wctocc.mult(proj);
@@ -316,80 +313,18 @@ bool VRMultiTouch::calcViewRay(VRCameraPtr cam, VRViewPtr view, Line &line, floa
     Matrix cctowc;
     cctowc.invertFrom(wctocc);
 
-    if (view->isProjection()) {
-            // VRView::setDecorators() setzt projection um
-//        // Calculate ray transformations based on projection
-//
-//        Vec3d projUp = view->getProjectionUp();
-        // projDir = user - center?
-        // projPos = center? or user?
-//
-//        Vec2f coords = Vec2f(x,y);
-//
-//        Pose p = Pose(pos,dir, up);
-//
-//        // p = Pose(pos, dir, up)
-//        // X = Vec2f(x,y)
-//        // X' = p.transform(X);
-
-//        cout << "Up:     " << view->getProjectionUp() << endl;
-//        cout << "Normal: " << view->getProjectionNormal() << endl;
-//        cout << "Center: " << view->getProjectionCenter() << endl;
-//        cout << "User:   " << view->getProjectionUser() << endl;
-//        cout << "Size:   " << view->getProjectionSize() << endl;
-//        cout << "Shear:  " << view->getProjectionShear() << endl;
-//        cout << "Warp:   " << view->getProjectionWarp() << endl << endl;
-
-        Vec3d projPos = view->getProjectionCenter();
-        Vec3d projDir = view->getProjectionUser() - view->getProjectionCenter();
-        Vec3d projUp = view->getProjectionUp();
-
-        Vec3f xy(x, y, 0.0);
-
-        Matrix4d result;
-
-        projDir.normalize();
-        Vec3d right = projUp.cross(projDir);
-
-        if (right.dot(right) >= TypeTraits<Real32>::getDefaultEps()) {
-            right.normalize();
-            Vec3d newup = projDir.cross(right);
-            result.setIdentity();
-            result.setTranslate(projPos);
-            Matrix4d tmpm;
-            tmpm.setValue(right, newup, projDir);
-            result.mult(tmpm);
-        }
-
-        Vec3f vecOut(
-        (result[0][0] * xy[0] +
-         result[1][0] * xy[1] +
-         result[2][0] * xy[2]  ),
-        (result[0][1] * xy[0] +
-         result[1][1] * xy[1] +
-         result[2][1] * xy[2]  ),
-        (result[0][2] * xy[0] +
-         result[1][2] * xy[1] +
-         result[2][2] * xy[2]  ) );
-
-        x = vecOut.x();
-        y = vecOut.y();
-    }
 
     Pnt3f from, at;
     multFull(cctowc, Pnt3f(x, y, 0), from); // -1
     multFull(cctowc, Pnt3f(x, y, 1), at ); // 0.1
-
-//    cout << "x, y: " << Vec2f(x,y) << endl;
-//    cout << "from: " << from << endl;
-//    cout << "at: " << at << endl;
+    if (view && view->getCameraDecoratorLeft()) from += Vec3f(view->getProjectionUser());
 
     Vec3f dir = at - from;
-
-//    cout << "dir: " << dir << endl;
     dir.normalize();
-//    cout << "dir(norm): " << dir << endl;
-//    cout << endl << endl;
+
+    if (cam->getType() == 1) { // hack for ortho cam, TODO: not working :(
+        from[2] = 0;
+    }
 
     line.setValue(from, dir);
     return true;
@@ -423,9 +358,11 @@ void VRMultiTouch::updatePosition(int x, int y) {
 
         bool inside = rescale(rx, box[0], box[2]) && rescale(ry, box[1], box[3]);
         if (inside) {
-            //cam->getCam()->cam->calcViewRay(ray,x,y,*v->getViewport());
+
             calcViewRay(cam, v, ray, rx,ry,w,h);
-            getBeacon()->setDir(Vec3d(ray.getDirection()));
+            auto p = Pose::create(Vec3d(ray.getPosition()), Vec3d(ray.getDirection()));
+            p->makeUpOrthogonal();
+            getBeacon()->setPose(p);
             //cout << "  Update MT x y (" << Vec2i(x,y) << "), rx ry (" << Vec2f(rx,ry) << "), w h (" << Vec2i(w,h) << ") dir " << getBeacon()->getDir() << endl;
             break;
         }
