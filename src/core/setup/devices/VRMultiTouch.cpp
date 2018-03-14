@@ -188,7 +188,7 @@ void VRMultiTouch::updateDevice() {
                 //cout << " " << txt << " : " << ev.value << endl;
                     for (auto f : fingers) {
                         if (f.second.pos[2] == 0) continue;
-                        //cout << " Finger: ID " << f.second.key << " pos " << f.second.pos << endl;
+                        cout << " Finger: ID " << f.second.key << " pos " << f.second.pos << endl;
                     }
             }
         }

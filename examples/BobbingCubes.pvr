@@ -7,12 +7,6 @@
           <constraint persistency="666"/>
         </Object>
         <Object accept_root="1" aspect="1" at="4.5 9 3.7" at_dir="1" base_name="Default" far="512" fov="1.0472" from="4.5 10 4" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
-          <Object at="0 0 -1" at_dir="0" base_name="VR Setup" from="0 0 0" name_space="__global__" name_suffix="1" persistency="666" pickable="0" scale="1 1 1" type="Transform" up="0 1 0" visible="1">
-            <Object accept_root="0" aspect="1" at="0 0 -1" at_dir="1" base_name="Setup" far="512" fov="1.0472" from="0 0 0" name_space="__global__" name_suffix="1" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
-              <constraint persistency="666"/>
-            </Object>
-            <constraint persistency="666"/>
-          </Object>
           <constraint persistency="666"/>
         </Object>
       </Object>
