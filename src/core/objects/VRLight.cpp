@@ -28,7 +28,7 @@ VRLight::VRLight(string name) : VRObject(name) {
     DirectionalLightMTRecPtr d_light = DirectionalLight::create();
     PointLightMTRecPtr p_light = PointLight::create();
     SpotLightMTRecPtr s_light = SpotLight::create();
-    SpotLightMTRecPtr ph_light = SpotLight::create();
+    PointLightMTRecPtr ph_light = PointLight::create();
 
     this->d_light = OSGCore::create(d_light);
     this->p_light = OSGCore::create(p_light);
@@ -40,10 +40,6 @@ VRLight::VRLight(string name) : VRObject(name) {
     s_light->setDirection(Vec3f(0,0,-1));
     s_light->setSpotCutOff(Pi/6.f);
     s_light->setSpotExponent(3.f);
-
-    ph_light->setDirection(Vec3f(0,0,-1));
-    ph_light->setSpotCutOff(Pi/6.f);
-    ph_light->setSpotExponent(3.f);
 
     setCore(OSGCore::create(p_light), "Light");
     attenuation = Vec3d(p_light->getConstantAttenuation(), p_light->getLinearAttenuation(), p_light->getQuadraticAttenuation());
@@ -196,6 +192,11 @@ void VRLight::setupShadowEngines() {
 bool VRLight::getShadows() { return shadows; }
 Color4f VRLight::getShadowColor() { return shadowColor; }
 
+void VRLight::toggleShadows(bool b) { // TODO: optimize this
+    if (shadows == b) return;
+    setShadows(b);
+}
+
 void VRLight::setShadows(bool b) {
     if (!ssme) setupShadowEngines();
     shadows = b;
@@ -250,7 +251,7 @@ void VRLight::setAttenuation(Vec3d a) {
     dynamic_pointer_cast<Light>(d_light->core)->setLinearAttenuation(a[1]);
     dynamic_pointer_cast<Light>(d_light->core)->setQuadraticAttenuation(a[2]);
     dynamic_pointer_cast<PointLight>(p_light->core)->setAttenuation(a[0], a[1], a[2]);
-    dynamic_pointer_cast<SpotLight>(ph_light->core)->setAttenuation(a[0], a[1], a[2]);
+    dynamic_pointer_cast<PointLight>(ph_light->core)->setAttenuation(a[0], a[1], a[2]);
     dynamic_pointer_cast<SpotLight>(s_light->core)->setAttenuation(a[0], a[1], a[2]);
 }
 

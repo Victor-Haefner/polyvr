@@ -13,17 +13,11 @@ uniform int           channel;
 uniform int           isFirstLamp;
 
 uniform vec3 lightUp;
-vec3 lightDirection;
+uniform vec3 lightDir;
 
 vec2 lookup;
 
-void calcLightParams() {
-	lightDirection = gl_LightSource[0].spotDirection;
-}
-
 float getPhotometricIntensity(vec3 vertex, vec3 light, vec3 normal) {
-	calcLightParams();
-
 	vec3 lightVector = vertex - light;
 	lightVector = normalize( lightVector );
 	float cosLight = -dot( normal, lightVector); 		// diffusion factor
@@ -31,7 +25,7 @@ float getPhotometricIntensity(vec3 vertex, vec3 light, vec3 normal) {
 	float dotV = dot( lightUp, lightVector ); 			// angle with up vector
 	lightVector -= lightUp * dotV;				// project light vector in dir plane
 	lightVector = normalize( lightVector );
-	float dotH = dot( lightDirection, lightVector );
+	float dotH = dot( lightDir, lightVector );
 
 	//apply intensity map				
 	vec2 tc = vec2(0,0);
@@ -45,12 +39,12 @@ float getPhotometricIntensity(vec3 vertex, vec3 light, vec3 normal) {
 // and diffuse material color MDIFF
 vec4 computePointLight(float amb, vec3 pos, vec3 norm, vec4 mDiff) {
     vec4  color = vec4(0);
-    vec3  lightDirUN = gl_LightSource[0].position.xyz - pos;
-    vec3  lightDir   = normalize(lightDirUN);
-    float NdotL      = max(dot(norm, lightDir), 0.);
+    vec3  lightDUN = gl_LightSource[0].position.xyz - pos;
+    vec3  lightD   = normalize(lightDUN);
+    float NdotL      = max(dot(norm, lightD), 0.);
 
     if(NdotL > 0.) {
-        float lightDist = length(lightDirUN);
+        float lightDist = length(lightDUN);
         float distAtt   = dot(vec3(gl_LightSource[0].constantAttenuation,
                                    gl_LightSource[0].linearAttenuation,
                                    gl_LightSource[0].quadraticAttenuation),

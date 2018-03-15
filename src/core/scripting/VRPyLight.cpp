@@ -21,6 +21,7 @@ PyMethodDef VRPyLight::methods[] = {
     {"loadPhotometricMap", PyWrap(Light, loadPhotometricMap, "Set map for photometric light, path to .ies file", void, string) },
     {"isOn", PyWrap(Light, isOn, "Return the state of the light", bool) },
     {"reloadDeferredSystem", PyWrap(Light, reloadDeferredSystem, "Reload parameters and shaders for the deferred system", void) },
+    {"toggleShadows", PyWrap(Light, toggleShadows, "Toggle shadows efficiently", void, bool) },
     {NULL}
 };
 

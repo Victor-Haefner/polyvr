@@ -56,6 +56,7 @@ class VRLight : public VRObject {
 
         void setOn(bool b);
         bool isOn();
+        void toggleShadows(bool b);
 
         void setType(string type);
         void setDeferred(bool b);
