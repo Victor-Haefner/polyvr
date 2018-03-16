@@ -37,6 +37,7 @@ class VRLight : public VRObject {
         Color4f lightAmbient;
         Color4f lightSpecular;
         Color4f shadowColor;
+        Vec2d shadowNearFar;
         Vec3d attenuation; // C L Q
         bool shadows = false;
         bool on = true;
@@ -69,10 +70,11 @@ class VRLight : public VRObject {
         Color4f getAmbient();
         Color4f getSpecular();
 
-        void setShadowParams(bool b, int res, Color4f c);
+        void setShadowParams(bool b, int res, Color4f c, Vec2d nf = Vec2d());
         void setShadows(bool b);
         bool getShadows();
         void setShadowColor(Color4f c);
+        void setShadowNearFar(Vec2d nf);
         void setShadowMapRes(int t);
         Color4f getShadowColor();
         int getShadowMapRes();

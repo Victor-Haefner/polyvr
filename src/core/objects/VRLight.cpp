@@ -107,11 +107,12 @@ void VRLight::setType(string type) {
     if (type == "photometric") setPhotometriclight();
 }
 
-void VRLight::setShadowParams(bool b, int res, Color4f c) {
+void VRLight::setShadowParams(bool b, int res, Color4f c, Vec2d nf) {
     cout << "VRLight::setShadowParams " << deferred << endl;
+    setShadows(b);
     setShadowMapRes(res);
     setShadowColor(c);
-    setShadows(b);
+    setShadowNearFar(nf);
 }
 
 void VRLight::setBeacon(VRLightBeaconPtr b) {
@@ -226,12 +227,24 @@ void VRLight::setShadows(bool b) {
     updateDeferredLight();
 }
 
+void VRLight::setShadowNearFar(Vec2d nf) {
+    shadowNearFar = nf;
+    //if (ssme) ssme->setShadowNear(nf[0]);
+    //if (ssme) ssme->setShadowFar(nf[1]);
+    if (gsme) gsme->setShadowNear(nf[0]);
+    if (gsme) gsme->setShadowFar(nf[1]);
+    if (ptsme) ptsme->setShadowNear(nf[0]);
+    if (ptsme) ptsme->setShadowFar(nf[1]);
+    if (stsme) stsme->setShadowNear(nf[0]);
+    if (stsme) stsme->setShadowFar(nf[1]);
+}
+
 void VRLight::setShadowColor(Color4f c) {
     shadowColor = c;
-    if (!ssme) return;
-    ssme->setShadowColor(c);
-    //gsme->setShadowColor(c);
-    //tsme->setShadowColor(c);
+    if (ssme) ssme->setShadowColor(c);
+    //if (gsme) gsme->setShadowColor(c);
+    //if (ptsme) ptsme->setShadowColor(c);
+    //if (stsme) stsme->setShadowColor(c);
     // TODO: shadow color has to be passed as uniform to light fragment shader
 }
 

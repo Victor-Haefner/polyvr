@@ -16,12 +16,13 @@ PyMethodDef VRPyLight::methods[] = {
     {"setSpecular", PyWrap(Light, setSpecular, "Set specular light color", void, Color4f) },
     {"setAttenuation", PyWrap(Light, setAttenuation, "Set light attenuation parameters, [constant, linear, quadratic]", void, Vec3d) },
     {"setType", PyWrap(Light, setType, "Set light type: 'point', 'directional', 'spot', 'photometric'", void, string) },
-    {"setShadowParams", PyWrap(Light, setShadowParams, "Set shadow parameters", void, bool, int, Color4f) },
+    {"setShadowParams", PyWrapOpt(Light, setShadowParams, "Set shadow parameters", "0 0", void, bool, int, Color4f, Vec2d) },
     {"setPhotometricMap", PyWrap(Light, setPhotometricMap, "Set map for photometric light, path to .ies file", void, VRTexturePtr) },
     {"loadPhotometricMap", PyWrap(Light, loadPhotometricMap, "Set map for photometric light, path to .ies file", void, string) },
     {"isOn", PyWrap(Light, isOn, "Return the state of the light", bool) },
     {"reloadDeferredSystem", PyWrap(Light, reloadDeferredSystem, "Reload parameters and shaders for the deferred system", void) },
     {"toggleShadows", PyWrap(Light, toggleShadows, "Toggle shadows efficiently", void, bool) },
+    {"setShadowNearFar", PyWrap(Light, setShadowNearFar, "Set near and far of the light pass", void, Vec2d) },
     {NULL}
 };
 
