@@ -10,6 +10,10 @@ uniform vec2          vpOffset;
 uniform int           channel;
 uniform float shadowColor = 0.0;
 
+uniform vec3 lightUp;
+uniform vec3 lightDir;
+uniform vec3 lightPos;
+
 vec3 pos;
 vec3 norm;
 vec4 color = vec4(0);
@@ -17,7 +21,7 @@ vec4 color = vec4(0);
 vec4 OSG_SSME_FP_calcShadow(in vec4 ecFragPos);
 
 void computePointLight() {
-    vec3  lightDirUN = gl_LightSource[0].position.xyz - pos;
+    vec3  lightDirUN = lightPos - pos;
     vec3  lightDir   = normalize(lightDirUN);
     float NdotL      = max(dot(norm, lightDir), 0.);
 

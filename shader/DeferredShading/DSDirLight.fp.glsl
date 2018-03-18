@@ -9,11 +9,15 @@ uniform sampler2DRect     texBufDiff;
 uniform vec2              vpOffset;
 uniform int               channel;
 
+uniform vec3 lightUp;
+uniform vec3 lightDir;
+uniform vec3 lightPos;
+
 vec4 norm;
 vec4 color;
 
 void computeDirLight(float ambFactor) {
-	vec3 light = normalize( gl_LightSource[0].position.xyz );
+	vec3 light = normalize( lightDir );
   	float NdotL = max(dot(norm.xyz, light), 0.0);
 	vec4 ambient = gl_LightSource[0].ambient * color;
 	//vec4 ambient = color * ambFactor;

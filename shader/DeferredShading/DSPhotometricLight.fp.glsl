@@ -14,6 +14,7 @@ uniform int           isFirstLamp;
 
 uniform vec3 lightUp;
 uniform vec3 lightDir;
+uniform vec3 lightPos;
 
 vec2 lookup;
 
@@ -39,7 +40,7 @@ float getPhotometricIntensity(vec3 vertex, vec3 light, vec3 normal) {
 // and diffuse material color MDIFF
 vec4 computePointLight(float amb, vec3 pos, vec3 norm, vec4 mDiff) {
     vec4  color = vec4(0);
-    vec3  lightDUN = gl_LightSource[0].position.xyz - pos;
+    vec3  lightDUN = lightPos - pos;
     vec3  lightD   = normalize(lightDUN);
     float NdotL      = max(dot(norm, lightD), 0.);
 
@@ -53,7 +54,7 @@ vec4 computePointLight(float amb, vec3 pos, vec3 norm, vec4 mDiff) {
         color = amb * distAtt * NdotL * mDiff * gl_LightSource[0].diffuse;
     }
 
-    float intensity = getPhotometricIntensity(pos, gl_LightSource[0].position.xyz, norm);
+    float intensity = getPhotometricIntensity(pos, lightPos, norm);
     color.rgb *= intensity;
     return color;
 }

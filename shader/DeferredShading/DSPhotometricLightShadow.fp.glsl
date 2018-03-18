@@ -14,6 +14,7 @@ uniform float         shadowColor = 0.0;
 
 uniform vec3 lightUp;
 uniform vec3 lightDir;
+uniform vec3 lightPos;
 
 vec3 pos;
 vec4 norm;
@@ -41,7 +42,7 @@ float getPhotometricIntensity(vec3 vertex, vec3 light, vec3 normal) {
 }
 
 vec4 computePointLight(float amb) {
-    vec3  lightDUN = gl_LightSource[0].position.xyz - pos;
+    vec3  lightDUN = lightPos - pos;
     vec3  lightD   = normalize(lightDUN);
     float NdotL      = max(dot(norm.xyz, lightD), 0.);
 
@@ -59,7 +60,7 @@ vec4 computePointLight(float amb) {
         //color = distAtt * NdotL * color * gl_LightSource[0].diffuse;
     }
 
-    float intensity = getPhotometricIntensity(pos, gl_LightSource[0].position.xyz, norm.xyz);
+    float intensity = getPhotometricIntensity(pos, lightPos, norm.xyz);
     color.rgb *= intensity;
     return color;
 }

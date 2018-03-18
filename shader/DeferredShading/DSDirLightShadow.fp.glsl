@@ -9,6 +9,10 @@ uniform sampler2DRect     texBufDiff;
 uniform vec2              vpOffset;
 uniform int               channel;
 
+uniform vec3 lightUp;
+uniform vec3 lightDir;
+uniform vec3 lightPos;
+
 vec3 pos;
 vec3 norm;
 vec4 color = vec4(0);
@@ -16,7 +20,7 @@ vec4 color = vec4(0);
 vec4 OSG_SSME_FP_calcShadow(in vec4 ecFragPos);
 
 void computeDirLight() {
-    vec3  lightDir = gl_LightSource[0].position.xyz;
+    vec3  lightDir = normalize( lightDir );
     float NdotL    = max(dot(norm, lightDir), 0.);
 
     if (NdotL > 0.) {
