@@ -207,7 +207,6 @@ void VRLight::setShadows(bool b) {
     };
 
     if (b) {
-        cout << "VRLight::setShadows " << deferred << endl;
         if (!deferred) setShadowEngine(d_light, ssme);
         if (!deferred) setShadowEngine(p_light, ssme);
         if (!deferred) setShadowEngine(s_light, ssme);
