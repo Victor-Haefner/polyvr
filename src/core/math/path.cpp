@@ -239,6 +239,10 @@ void Path::approximate(int d) {
     update();
 }
 
+int Path::addPoint2( Vec3d p, Vec3d d, Color3f c, Vec3d u ) {
+    addPoint(Pose(p,d,u), c);
+}
+
 int Path::addPoint( const Pose& p, Color3f c ) {
     points.push_back(p);
     point_colors.push_back(c);
@@ -344,7 +348,7 @@ void Path::compute(int N) {
 
 vector<Vec3d> Path::getPositions() { return positions; }
 vector<Vec3d> Path::getDirections() { return directions; }
-vector<Vec3d> Path::getUpvectors() { return up_vectors; }
+vector<Vec3d> Path::getUpVectors() { return up_vectors; }
 vector<Vec3d> Path::getColors() { return colors; }
 
 vector<Pose> Path::getPoses() {
@@ -444,6 +448,13 @@ void Path::getOrientation(float t, Vec3d& dir, Vec3d& up, int i, int j, bool fas
 PosePtr Path::getPose(float t, int i, int j, bool fast) {
     Vec3d d,u; getOrientation(t,d,u,i,j,fast);
     return Pose::create(getPosition(t,i,j,fast), d, u);
+}
+
+void Path::set(PosePtr p1, PosePtr p2, int res) {
+    clear();
+    addPoint(*p1);
+    addPoint(*p2);
+    compute(res);
 }
 
 float Path::getClosestPoint(Vec3d p) {

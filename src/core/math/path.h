@@ -37,7 +37,9 @@ class Path : public VRStorage {
 
         static PathPtr create();
 
+        void set(PosePtr p1, PosePtr p2, int res);
         int addPoint( const Pose& p, Color3f c = Color3f() );
+        int addPoint2( Vec3d p, Vec3d d, Color3f c, Vec3d u );
         void setPoint(int i, const Pose& p, Color3f c = Color3f() );
         Pose& getPoint(int i);
         Color3f getPointColor(int i);
@@ -49,7 +51,7 @@ class Path : public VRStorage {
         void compute(int N);
         vector<Vec3d> getPositions();
         vector<Vec3d> getDirections();
-        vector<Vec3d> getUpvectors();
+        vector<Vec3d> getUpVectors();
         vector<Vec3d> getColors();
         vector<Pose> getPoses();
         Vec3d getPosition(float t, int i = 0, int j = 0, bool fast = true);
