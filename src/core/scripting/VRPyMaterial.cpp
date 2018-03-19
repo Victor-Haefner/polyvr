@@ -61,6 +61,7 @@ PyMethodDef VRPyMaterial::methods[] = {
         "\n\t OSGLight3Active OSGLight4Active OSGLight5Active OSGLight6Active OSGLight7Active }",
         void, string) },
     {"setDefaultVertexShader", (PyCFunction)VRPyMaterial::setDefaultVertexShader, METH_NOARGS, "Set a default vertex shader - setDefaultVertexShader()" },
+    {"testFix", PyWrap( Material, testFix, "Debug helper", void ) },
     {"updateDeferredShader", PyWrap( Material, updateDeferredShader, "Reload deferred system parameters and shaders", void ) },
     {NULL}  /* Sentinel */
 };

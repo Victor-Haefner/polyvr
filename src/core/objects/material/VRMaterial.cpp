@@ -273,7 +273,7 @@ void VRMaterial::updateDeferredShader() {
     setShaderParameter("isLit", int(isLit()));
 }
 
-void VRMaterial::setDeffered(bool b) {
+void VRMaterial::setDeferred(bool b) {
     deferred = b;
     int a = activePass;
     for (uint i=0; i<mats.size(); i++) {
@@ -287,6 +287,21 @@ void VRMaterial::setDeffered(bool b) {
         mats[i]->toggleDeferredShader(b, getName());
     }
     setActivePass(a);
+}
+
+void VRMaterial::testFix() {
+    auto m = mats[activePass];
+
+    initShaderChunk();
+    string s = constructShaderVP(m);
+    m->vProgram->setProgram(s.c_str());
+    checkShader(GL_VERTEX_SHADER, s, "defferedVS");
+
+    string s = constructShaderFP(m);
+    m->fdProgram->setProgram(s.c_str());
+    checkShader(GL_FRAGMENT_SHADER, s, "defferedFS");
+
+    setShaderParameter("isLit", int(isLit()));
 }
 
 void VRMaterial::clearAll() {
@@ -319,7 +334,7 @@ int VRMaterial::addPass() {
     md->reset();
     passes->mat->addMaterial(md->mat);
     mats.push_back(md);
-    setDeffered(deferred);
+    setDeferred(deferred);
     return activePass;
 }
 
