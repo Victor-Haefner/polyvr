@@ -63,6 +63,8 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setDefaultVertexShader", (PyCFunction)VRPyMaterial::setDefaultVertexShader, METH_NOARGS, "Set a default vertex shader - setDefaultVertexShader()" },
     {"testFix", PyWrap( Material, testFix, "Debug helper", void ) },
     {"updateDeferredShader", PyWrap( Material, updateDeferredShader, "Reload deferred system parameters and shaders", void ) },
+    {"getVertexShader", PyWrap( Material, getVertexShader, "Get vertex shader", string ) },
+    {"getFragmentShader", PyWrap( Material, getFragmentShader, "Get fragment shader", string ) },
     {NULL}  /* Sentinel */
 };
 

@@ -75,7 +75,7 @@ VRLightPtr VRLight::ptr() { return static_pointer_cast<VRLight>( shared_from_thi
 VRLightPtr VRLight::create(string name) {
     auto l = shared_ptr<VRLight>(new VRLight(name) );
     VRScene::getCurrent()->addLight(l);
-    cout << "VRLight::create " << l << " " << l->getName() << " deferred " << l->deferred << endl;
+    //cout << "VRLight::create " << l << " " << l->getName() << " deferred " << l->deferred << endl;
     return l;
 }
 
@@ -89,7 +89,7 @@ void VRLight::setup() {
     setOn(on);
     loadPhotometricMap(photometricMapPath);
 
-    setup_after(); // TODO: deffered shading needs to have the light beacon before adding the node!?!
+    setup_after(); // TODO: deferred shading needs to have the light beacon before adding the node!?!
 }
 
 void VRLight::setup_after() {

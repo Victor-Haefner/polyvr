@@ -290,18 +290,17 @@ void VRMaterial::setDeferred(bool b) {
 }
 
 void VRMaterial::testFix() {
-    auto m = mats[activePass];
+    /*auto m = mats[activePass];
 
-    initShaderChunk();
     string s = constructShaderVP(m);
     m->vProgram->setProgram(s.c_str());
     checkShader(GL_VERTEX_SHADER, s, "defferedVS");
 
-    string s = constructShaderFP(m);
+    s = constructShaderFP(m);
     m->fdProgram->setProgram(s.c_str());
     checkShader(GL_FRAGMENT_SHADER, s, "defferedFS");
 
-    setShaderParameter("isLit", int(isLit()));
+    setShaderParameter("isLit", int(isLit()));*/
 }
 
 void VRMaterial::clearAll() {
@@ -978,9 +977,23 @@ void VRMaterial::readGeometryShader(string s) { setGeometryShader(readFile(s), s
 void VRMaterial::readTessControlShader(string s) { setTessControlShader(readFile(s), s); }
 void VRMaterial::readTessEvaluationShader(string s) { setTessEvaluationShader(readFile(s), s); }
 
-string VRMaterial::getVertexShader() { return ""; } // TODO
-string VRMaterial::getFragmentShader() { return ""; }
-string VRMaterial::getGeometryShader() { return ""; }
+string VRMaterial::getVertexShader() {
+    auto m = mats[activePass];
+    if (m->vProgram) return m->vProgram->getProgram();
+    return "";
+}
+
+string VRMaterial::getFragmentShader() {
+    auto m = mats[activePass];
+    if (m->fdProgram) return m->fdProgram->getProgram();
+    return "";
+}
+
+string VRMaterial::getGeometryShader() {
+    auto m = mats[activePass];
+    if (m->gProgram) return m->gProgram->getProgram();
+    return "";
+}
 
 void VRMaterial::setVertexScript(string script) {
     mats[activePass]->vertexScript = script;
