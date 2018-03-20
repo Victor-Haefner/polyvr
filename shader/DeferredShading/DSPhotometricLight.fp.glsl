@@ -21,6 +21,8 @@ vec4 norm;
 vec4 color = vec4(0);
 vec2 lookup;
 
+
+
 float getPhotometricIntensity(vec3 vertex, vec3 light) {
 	vec3 lightVector = vertex - light;
 	lightVector = normalize( lightVector );
@@ -52,6 +54,9 @@ vec4 computePointLight(float amb) {
                                    gl_LightSource[0].quadraticAttenuation),
                               vec3(1., lightDist, lightDist * lightDist));
         distAtt = 1. / distAtt;
+
+
+
         res = amb * distAtt * NdotL * color * gl_LightSource[0].diffuse;
     }
 

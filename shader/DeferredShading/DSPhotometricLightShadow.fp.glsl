@@ -42,27 +42,27 @@ float getPhotometricIntensity(vec3 vertex, vec3 light) {
 }
 
 vec4 computePointLight(float amb) {
+    vec4  res = vec4(0);
     vec3  lightDUN = lightPos - pos;
     vec3  lightD   = normalize(lightDUN);
     float NdotL      = max(dot(norm.xyz, lightD), 0.);
 
     if(NdotL > 0.) {
-        vec4  shadow    = OSG_SSME_FP_calcShadow(vec4(pos, 1.));
-        shadow += shadowColor;
-
         float lightDist = length(lightDUN);
         float distAtt   = dot(vec3(gl_LightSource[0].constantAttenuation,
                                    gl_LightSource[0].linearAttenuation,
                                    gl_LightSource[0].quadraticAttenuation),
                               vec3(1., lightDist, lightDist * lightDist));
         distAtt = 1. / distAtt;
-        color = shadow * amb * distAtt * NdotL * color * gl_LightSource[0].diffuse;
-        //color = distAtt * NdotL * color * gl_LightSource[0].diffuse;
+
+        vec4 shadow = OSG_SSME_FP_calcShadow(vec4(pos, 1.));
+        //shadow += shadowColor; // TODO
+        res = shadow * amb * distAtt * NdotL * color * gl_LightSource[0].diffuse;
     }
 
     float intensity = getPhotometricIntensity(pos, lightPos);
-    color.rgb *= intensity;
-    return color;
+    res.rgb *= intensity;
+    return res;
 }
 
 void main(void) {
