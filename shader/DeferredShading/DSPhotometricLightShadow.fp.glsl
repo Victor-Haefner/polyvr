@@ -23,10 +23,10 @@ vec2 lookup;
 
 vec4 OSG_SSME_FP_calcShadow(in vec4 ecFragPos);
 
-float getPhotometricIntensity(vec3 vertex, vec3 light, vec3 normal) {
+float getPhotometricIntensity(vec3 vertex, vec3 light) {
 	vec3 lightVector = vertex - light;
 	lightVector = normalize( lightVector );
-	float cosLight = -dot( normal, lightVector); 		// diffusion factor
+	float cosLight = -dot( norm.xyz, lightVector); 		// diffusion factor
 
 	float dotV = dot( lightUp, lightVector ); 			// angle with up vector
 	lightVector -= lightUp * dotV;				// project light vector in dir plane
@@ -60,7 +60,7 @@ vec4 computePointLight(float amb) {
         //color = distAtt * NdotL * color * gl_LightSource[0].diffuse;
     }
 
-    float intensity = getPhotometricIntensity(pos, lightPos, norm.xyz);
+    float intensity = getPhotometricIntensity(pos, lightPos);
     color.rgb *= intensity;
     return color;
 }
