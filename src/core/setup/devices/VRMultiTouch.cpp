@@ -26,6 +26,7 @@ VRMultiTouch::Touch::Touch(int k) : key(k) {}
 
 VRMultiTouch::VRMultiTouch() : VRDevice("multitouch") {
     fingers[0] = Touch(0);
+    fingers[0].beaconID = 0;
 
     store("device", &device);
     store("input", &input);
@@ -186,7 +187,7 @@ void VRMultiTouch::updateDevice() {
                 //cout << " " << txt << " : " << ev.value << endl;
                     for (auto f : fingers) {
                         if (f.second.pos[2] == 0) continue;
-                        cout << " Finger: ID " << f.second.key << " pos " << f.second.pos << endl;
+                        //cout << " Finger: ID " << f.second.key << " pos " << f.second.pos << endl;
                     }
             }
         }
@@ -296,6 +297,7 @@ void VRMultiTouch::multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut) 
 bool VRMultiTouch::addFinger(int fingerID) {
     if (!fingers.count(fingerID)) {
         fingers[fingerID] = Touch(fingerID);
+        fingers[fingerID].beaconID = this->addBeacon();
 
         return true;
     }
@@ -376,7 +378,8 @@ void VRMultiTouch::updatePosition(int x, int y) {
             calcViewRay(cam, v, ray, rx,ry,w,h);
             auto p = Pose::create(Vec3d(ray.getPosition()), Vec3d(ray.getDirection()));
             p->makeUpOrthogonal();
-            getBeacon()->setPose(p);
+
+            getBeacon(this->fingers[currentFingerID].beaconID)->setPose(p);
             //cout << "  Update MT x y (" << Vec2i(x,y) << "), rx ry (" << Vec2f(rx,ry) << "), w h (" << Vec2i(w,h) << ") dir " << getBeacon()->getDir() << endl;
             break;
         }

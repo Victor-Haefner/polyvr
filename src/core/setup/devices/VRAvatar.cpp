@@ -92,7 +92,7 @@ void VRAvatar::disableAvatar(string avatar, int i) { if (beacons[i].avatars.coun
 void VRAvatar::disableAvatar(string avatar) { disableAvatar(avatar, 0); }
 
 
-void VRAvatar::addBeacon() {
+int VRAvatar::addBeacon() {
     map<string, VRObjectPtr> m;
     Beacon newB{0, 0, m};
     beacons.push_back(newB);
@@ -114,6 +114,7 @@ void VRAvatar::addBeacon() {
     deviceRoot->addChild(beacons[id].beacon);
 
     //return beacons.back();
+    return id;
 }
 
 VRTransformPtr VRAvatar::getBeaconRoot() {
