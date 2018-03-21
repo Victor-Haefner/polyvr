@@ -13,6 +13,7 @@
 #include "core/setup/devices/VRKeyboard.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
+#include "core/objects/material/VRTextureGenerator.h"
 #include "core/utils/VRLogger.h"
 
 using namespace std;
@@ -22,7 +23,10 @@ vector< weak_ptr<CEF> > instances;
 bool cef_gl_init = false;
 
 CEF_handler::CEF_handler() {
-    image = VRTexture::create();
+    VRTextureGenerator g;
+    g.setSize(Vec3i(2,2,1), false);
+    g.drawFill(Color4f(0,0,0,1));
+    image = g.compose();
 }
 
 CEF_handler::~CEF_handler() {
@@ -129,7 +133,7 @@ void CEF::setMaterial(VRMaterialPtr mat) {
 }
 
 string CEF::getSite() { return site; }
-void CEF::reload() { if (browser) browser->Reload(); }
+void CEF::reload() { if (browser) browser->Reload(); if (auto m = mat.lock()) m->updateDeferredShader(); }
 
 void CEF::update() {
     if (!init || !client->getHandler()) return;
@@ -137,7 +141,8 @@ void CEF::update() {
     int dim1= img->getImage()->getDimension();
     CefDoMessageLoopWork();
     int dim2= img->getImage()->getDimension();
-    if (dim1 != dim2) mat.lock()->updateDeferredShader();
+    if (dim1 != dim2)
+        if (auto m = mat.lock()) m->updateDeferredShader();
 }
 
 void CEF::open(string site) {

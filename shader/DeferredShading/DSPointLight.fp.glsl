@@ -8,14 +8,17 @@ uniform sampler2DRect texBufPos;
 uniform sampler2DRect texBufNorm;
 uniform sampler2DRect texBufDiff;
 uniform vec2          vpOffset;
-uniform vec3          lightPosition;
 uniform int           channel;
+
+uniform vec3 lightUp;
+uniform vec3 lightDir;
+uniform vec3 lightPos;
 
 // compute point light INDEX for fragment at POS with normal NORM
 // and diffuse material color MDIFF
 vec4 computePointLight(int index, float amb, vec3 pos, vec3 norm, vec4 mDiff) {
     vec4  color = vec4(0);
-    vec3  lightDirUN = gl_LightSource[index].position.xyz - pos;
+    vec3  lightDirUN = lightPos - pos;
     vec3  lightDir   = normalize(lightDirUN);
     float NdotL      = max(dot(norm, lightDir), 0.);
 

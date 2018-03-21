@@ -146,7 +146,7 @@ void VRRenderStudio::update() {
     if (ssao) ssao->setSSAOparams(ssao_radius, ssao_kernel, ssao_noise);
 
     for (auto m : VRMaterial::materials) {
-        if (auto mat = m.second.lock()) mat->setDeffered(deferredRendering);
+        if (auto mat = m.second.lock()) mat->setDeferred(deferredRendering);
     }
 
     // update shader code
