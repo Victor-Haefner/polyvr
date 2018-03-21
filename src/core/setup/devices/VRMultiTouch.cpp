@@ -124,7 +124,7 @@ void VRMultiTouch::updateDevice() {
                 break;
             case 47:
                 txt = "ABS_MT_SLOT";
-                if (!fingers.count(ev.value)) fingers[ev.value] = Touch(ev.value);
+                if (!fingers.count(ev.value)) this->addFinger(ev.value);
                 currentFingerID = ev.value;
 
                 //cout << "SLOT: " << ev.value;
@@ -290,6 +290,20 @@ void VRMultiTouch::multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut) 
 }
 
 /**
+* Attempts to add a new finger with the given id
+* return: True, if finger has been created. False, if finger with given id already exists.
+*/
+bool VRMultiTouch::addFinger(int fingerID) {
+    if (!fingers.count(fingerID)) {
+        fingers[fingerID] = Touch(fingerID);
+
+        return true;
+    }
+
+    return true;
+}
+
+/**
 * TODO: Duplicate code with VRMouse. Push Method to super class or use Interface?
 */
 bool VRMultiTouch::calcViewRay(VRCameraPtr cam, VRViewPtr view, Line &line, float x, float y, int W, int H) {
@@ -372,7 +386,7 @@ void VRMultiTouch::updatePosition(int x, int y) {
 void VRMultiTouch::mouse(int button, int state, int x, int y) {
     updatePosition(x,y);
     change_button(button, state);
-    fingers[currentFingerID].eventState = -1;
+    fingers[this->currentFingerID].eventState = -1;
 }
 
 void VRMultiTouch::setCamera(VRCameraPtr cam) { this->cam = cam; }

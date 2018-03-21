@@ -48,6 +48,8 @@ class VRMultiTouch : public VRDevice {
         float clamp(float v, float m1, float m2);
         bool rescale(float& v, float m1, float m2);
 
+        bool addFinger(int fingerID);
+
     public:
         VRMultiTouch();
         ~VRMultiTouch();

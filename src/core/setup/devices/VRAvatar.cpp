@@ -12,8 +12,8 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 
-VRObjectPtr VRAvatar::initRay() {
-    VRGeometryPtr ray = VRGeometry::create(this->deviceName + "_av_ray");
+VRObjectPtr VRAvatar::initRay(int beaconID) {
+    VRGeometryPtr ray = VRGeometry::create(this->deviceName + "_" + to_string(beaconID) + "_av_ray");
 
     vector<Vec3d> pos, norms;
     vector<Vec2d> texs;
@@ -99,12 +99,12 @@ void VRAvatar::addBeacon() {
 
     int id = beacons.size()-1;
 
-    beacons[id].beacon = VRTransform::create(this->deviceName + "_beacon_" + to_string(id));
+    beacons[id].beacon = VRTransform::create(this->deviceName + "_" + to_string(id) + "_beacon");
     beacons[id].beacon->setPersistency(0);
-    beacons[id].tmpContainer = VRTransform::create(this->deviceName + "_tmp_beacon_" + to_string(id));
+    beacons[id].tmpContainer = VRTransform::create(this->deviceName + "_" + to_string(id) + "_tmp_beacon");
     beacons[id].tmpContainer->setPersistency(0);
 
-    beacons[id].avatars["ray"] = initRay();
+    beacons[id].avatars["ray"] = initRay(id);
     //newB.avatars["cone"] = initCone();
     //newB.avatars["broadray"] = initBroadRay();
 

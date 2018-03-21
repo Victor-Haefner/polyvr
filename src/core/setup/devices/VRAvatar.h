@@ -24,7 +24,7 @@ class VRAvatar {
         VRTransformPtr deviceRoot = 0;
         vector<Beacon> beacons;
 
-        VRObjectPtr initRay();
+        VRObjectPtr initRay(int beaconID);
         VRObjectPtr initCone();
         VRObjectPtr initBroadRay();
 
