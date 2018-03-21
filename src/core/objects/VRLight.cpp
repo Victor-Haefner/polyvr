@@ -435,7 +435,35 @@ void VRLight::loadPhotometricMap(string path) { // ies files
         for (int i=0; i<aNh; i++) ss >> aPhi[i];
         for (int i=0; i<N; i++) ss >> candela[i];
 
-        return candela;
+        auto getMinDelta = [&](vector<float>& v) {
+            float d = 1e6;
+            for (auto f : v) if (f<d && f > 1e-3) d = f;
+            return d;
+        };
+
+        int aNv2 = 180.0/getMinDelta(aTheta);
+        int aNh2 = 90.0/getMinDelta(aPhi);
+        int N2 = aNv2*aNh2;
+
+        vector<float> candela2(N2, 0);
+        for (int i=0; i<aNh2; i++) {
+            for (int j=0; j<aNv2; j++) {
+                float c = 0;
+
+                if (i < aNh && j < aNv) { // TODO: quick hack, resolve properly
+                    int k = i*aNv + j;
+                    c = candela[k];
+                }
+
+                int k2 = i*aNv2 + j;
+                candela2[k2] = c;
+            }
+        }
+
+        aNv = aNv2;
+        aNh = aNh2;
+        return candela2;
+        //return candela;
         //return rescale(candela, aNv, aNh, Nv, Nh, lmScale*0.05);
     };
 
