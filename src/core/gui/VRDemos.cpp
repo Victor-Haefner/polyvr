@@ -24,6 +24,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/import/VRImport.h"
+#include "core/scene/VRProjectsList.h"
 #include "core/setup/devices/VRSignal.h"
 #include "core/utils/system/VRSystem.h"
 #include "VRGuiUtils.h"
@@ -85,6 +86,7 @@ VRAppLauncherPtr VRAppSection::addLauncher(string path, VRGuiContextMenu* menu, 
     app->write_protected = true;
     app->favorite = false;
     app->table = "examples_tab";
+    app->lastStarted = "";
     apps[path] = app;
     setButton(app, menu, mgr);
     return app;
@@ -109,10 +111,12 @@ void VRAppSection::setButton(VRAppLauncherPtr e, VRGuiContextMenu* menu, VRAppMa
     Gtk::VBox* vb = Gtk::manage(new Gtk::VBox(false, 0));
     Gtk::VBox* vb2 = Gtk::manage(new Gtk::VBox(false, 0));
     e->label = Gtk::manage(new Gtk::Label(e->path, true));
+    e->timestamp = Gtk::manage(new Gtk::Label(e->lastStarted, true));
     e->butPlay = Gtk::manage(new Gtk::Button());
     e->butOpts = Gtk::manage(new Gtk::Button());
     e->butLock = Gtk::manage(new Gtk::Button());
     e->label->set_alignment(0.5, 0.5);
+    e->timestamp->set_alignment(0.5, 0.5);
     e->label->set_ellipsize(Pango::ELLIPSIZE_START);
     e->label->set_max_width_chars(20);
     e->butPlay->set_tooltip_text("Play/Stop");
@@ -127,7 +131,8 @@ void VRAppSection::setButton(VRAppLauncherPtr e, VRGuiContextMenu* menu, VRAppMa
     hb->pack_end(*e->butPlay, false, false, 5);
     hb->pack_end(*vb2, false, false, 5);
     vb->pack_start(*e->label, false, false, 5);
-    vb->pack_end(*hb, false, false, 5);
+    vb->pack_start(*hb, false, false, 5);
+    if (e->lastStarted != "") vb->pack_start(*e->timestamp, false, false, 2);
     e->widget->add(*ebox);
     ebox->add(*vb);
     e->butPlay->add(*e->imgPlay);
@@ -202,15 +207,16 @@ VRAppManager::VRAppManager() {
     favoritesSection = VRAppSection::create("Favorites");
     recentsSection = VRAppSection::create("Recents");
 
-    for (string path : VRSceneManager::get()->getExamplePaths() ) {
-        examplesSection->addLauncher(path, menu, this);
-    }
-
+    auto examples = VRSceneManager::get()->getExamplePaths();
+    for (auto e : examples->getEntries() ) examplesSection->addLauncher(e.first, menu, this);
     updateTable("examples_tab");
 
-    vector<string> favorites = VRSceneManager::get()->getFavoritePaths();
-    for (auto f : favorites) addEntry(f, "favorites_tab", false);
-    if (favorites.size() == 0) setNotebookPage("notebook2", 1);
+    auto favorites = VRSceneManager::get()->getFavoritePaths();
+    //for (string path : favorites) favoritesSection->addLauncher(path, menu, this);
+    //updateTable("favorites_tab");
+    for (auto f : favorites->getEntries()) addEntry(f.first, "favorites_tab", false);
+
+    if (favorites->size() == 0) setNotebookPage("notebook2", 1);
 
     updateCb = VRFunction<VRDeviceWeakPtr>::create("GUI_updateDemos", boost::bind(&VRAppManager::update, this) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( updateCb );

@@ -31,6 +31,7 @@ ptrFwd(VRAppManager);
 class VRAppLauncher {
     public:
         string path;
+        string lastStarted;
         string pxm_path;
         string table;
         Gtk::Frame* widget = 0;
@@ -38,6 +39,7 @@ class VRAppLauncher {
         Gtk::Button* butOpts = 0;
         Gtk::Button* butLock = 0;
         Gtk::Label* label = 0;
+        Gtk::Label* timestamp = 0;
         Gtk::Image* imgScene = 0;
         Gtk::Image* imgPlay = 0;
         Gtk::Image* imgLock = 0;
