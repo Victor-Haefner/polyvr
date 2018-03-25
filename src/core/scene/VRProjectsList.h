@@ -23,7 +23,9 @@ class VRProjectEntry : public VRStorage {
 
         string getName();
         string getPath();
-        string getTimestamp();
+        long getTimestamp();
+
+        void setTimestamp(string t);
 };
 
 class VRProjectsList : public VRStorage {
@@ -42,7 +44,9 @@ class VRProjectsList : public VRStorage {
         bool hasEntry(string path);
         void remEntry(string path);
         vector<string> getPaths();
+        VRProjectEntryPtr getEntry(string path);
         map<string, VRProjectEntryPtr> getEntries();
+        vector<VRProjectEntryPtr> getEntriesByTimestamp();
 };
 
 OSG_END_NAMESPACE;

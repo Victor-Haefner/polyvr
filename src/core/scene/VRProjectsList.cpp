@@ -21,7 +21,15 @@ void VRProjectEntry::set(string p, string t) {
 
 string VRProjectEntry::getName() { return path; } // needed for storage map key
 string VRProjectEntry::getPath() { return path; }
-string VRProjectEntry::getTimestamp() { return timestamp; }
+
+long VRProjectEntry::getTimestamp() {
+    if (timestamp == "") return 0;
+    long t;
+    toValue(timestamp, t);
+    return t;
+}
+
+void VRProjectEntry::setTimestamp(string t) { timestamp = t; }
 
 
 
@@ -38,6 +46,7 @@ void VRProjectsList::addEntry(VRProjectEntryPtr e) { entries[e->getPath()] = e; 
 bool VRProjectsList::hasEntry(string path) { return entries.count(path) != 0; }
 void VRProjectsList::remEntry(string path) { if (hasEntry(path)) entries.erase(path); }
 void VRProjectsList::clear() { entries.clear(); }
+VRProjectEntryPtr VRProjectsList::getEntry(string path) { return hasEntry(path) ? entries[path] : 0; }
 map<string, VRProjectEntryPtr> VRProjectsList::getEntries() { return entries; }
 
 vector<string> VRProjectsList::getPaths() {
@@ -45,4 +54,25 @@ vector<string> VRProjectsList::getPaths() {
     for (auto e : entries) res.push_back(e.first);
     return res;
 }
+
+vector<VRProjectEntryPtr> VRProjectsList::getEntriesByTimestamp() {
+    map<long, map<string, VRProjectEntryPtr> > tmp;
+    for (auto e : entries) {
+        long dt = time(0) - e.second->getTimestamp();
+        if (tmp.count(dt) == 0) tmp[dt] = map<string, VRProjectEntryPtr>();
+        tmp[dt][e.first] = e.second;
+    }
+
+    vector<VRProjectEntryPtr> res;
+    for (auto ev : tmp) {
+        for (auto e : ev.second) {
+            res.push_back(e.second);
+        }
+    }
+
+    return res;
+}
+
+
+
 

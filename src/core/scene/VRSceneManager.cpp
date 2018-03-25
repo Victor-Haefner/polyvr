@@ -22,6 +22,7 @@
 #include "core/utils/system/VRSystem.h"
 #include "core/scene/VRProjectsList.h"
 #include <boost/filesystem.hpp>
+#include <time.h>
 
 typedef boost::recursive_mutex::scoped_lock PLock;
 
@@ -63,6 +64,10 @@ void VRSceneManager::loadScene(string path, bool write_protected) {
     VRSceneLoader::get()->loadScene(path);
     current->setFlag("write_protected", write_protected);
     VRGuiSignals::get()->getSignal("scene_changed")->triggerPtr<VRDevice>(); // update gui
+    if (auto pEntry = projects->getEntry(path)) {
+        pEntry->setTimestamp(toString(time(0)));
+        storeFavorites();
+    }
 }
 
 string VRSceneManager::getOriginalWorkdir() { return original_workdir; }
@@ -185,7 +190,7 @@ void VRSceneManager::searchExercisesAndFavorites() {
             projects->addEntry( VRProjectEntry::create(line, "") );
         }
         file.close();
-        projects->saveToFile("examples/.config");
+        storeFavorites();
         remove("examples/.cfg"); // remove old config file
         return;
     }

@@ -72,7 +72,7 @@ class VRAppSection : public std::enable_shared_from_this<VRAppSection>, public V
         static VRAppSectionPtr create(string name);
         VRAppSectionPtr ptr();
 
-        VRAppLauncherPtr addLauncher(string path, VRGuiContextMenu* menu, VRAppManager* mgr);
+        VRAppLauncherPtr addLauncher(string path, string timestamp, VRGuiContextMenu* menu, VRAppManager* mgr);
         void remLauncher(string path);
         VRAppLauncherPtr getLauncher(string path);
         int getSize();
@@ -99,7 +99,7 @@ class VRAppManager {
         void updateTable(string t);
 
         void setGuiState(VRAppLauncherPtr e);
-        VRAppLauncherPtr addEntry(string path, string table, bool running);
+        VRAppLauncherPtr addEntry(string path, string table, bool running, string timestamp = "", bool recent = false);
 
         void updatePixmap(VRAppLauncherPtr e, Gtk::Image* img_pxb, int w, int h);
         void update();

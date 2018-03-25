@@ -76,17 +76,17 @@ VRAppSection::~VRAppSection() {}
 VRAppSectionPtr VRAppSection::create(string name) { return VRAppSectionPtr( new VRAppSection(name) ); }
 VRAppSectionPtr VRAppSection::ptr() { return shared_from_this(); }
 
-VRAppLauncherPtr VRAppSection::addLauncher(string path, VRGuiContextMenu* menu, VRAppManager* mgr) {
+VRAppLauncherPtr VRAppSection::addLauncher(string path, string timestamp, VRGuiContextMenu* menu, VRAppManager* mgr) {
     if (apps.count(path)) return apps[path];
     auto app = VRAppLauncher::create(ptr());
     app->path = path;
+    app->lastStarted = timestamp;
     string filename = getFileName(path);
     string foldername = getFolderName(path);
     app->pxm_path = foldername + "/.local_" + filename.substr(0,filename.size()-4) + "/snapshot.png";
     app->write_protected = true;
     app->favorite = false;
     app->table = "examples_tab";
-    app->lastStarted = "";
     apps[path] = app;
     setButton(app, menu, mgr);
     return app;
@@ -208,13 +208,22 @@ VRAppManager::VRAppManager() {
     recentsSection = VRAppSection::create("Recents");
 
     auto examples = VRSceneManager::get()->getExamplePaths();
-    for (auto e : examples->getEntries() ) examplesSection->addLauncher(e.first, menu, this);
+    for (auto p : examples->getPaths() ) examplesSection->addLauncher(p, "", menu, this);
     updateTable("examples_tab");
 
     auto favorites = VRSceneManager::get()->getFavoritePaths();
     //for (string path : favorites) favoritesSection->addLauncher(path, menu, this);
     //updateTable("favorites_tab");
-    for (auto f : favorites->getEntries()) addEntry(f.first, "favorites_tab", false);
+
+
+    int i=0;
+    for (auto p : favorites->getEntriesByTimestamp()) {
+        long ts = p->getTimestamp();
+        string t = "";
+        if (ts > 0) t = asctime( localtime(&ts) );
+        addEntry(p->getPath(), "favorites_tab", false, t, i<2);
+        i++;
+    }
 
     if (favorites->size() == 0) setNotebookPage("notebook2", 1);
 
@@ -295,12 +304,13 @@ void VRAppManager::setGuiState(VRAppLauncherPtr e) {
     setToolButtonSensitivity("toolbutton5", running); // toggle 'save as' button availability
 }
 
-VRAppLauncherPtr VRAppManager::addEntry(string path, string table, bool running) {
+VRAppLauncherPtr VRAppManager::addEntry(string path, string table, bool running, string timestamp, bool recent) {
     clearTable(table);
 
     VRAppLauncherPtr e = 0;
-    if (table == "examples_tab") e = examplesSection->addLauncher(path, menu, this);
-    if (table == "favorites_tab") e = favoritesSection->addLauncher(path, menu, this);
+    if (table == "examples_tab") e = examplesSection->addLauncher(path, timestamp, menu, this);
+    if (table == "favorites_tab" &&  recent) e =   recentsSection->addLauncher(path, timestamp, menu, this);
+    if (table == "favorites_tab" && !recent) e = favoritesSection->addLauncher(path, timestamp, menu, this);
     e->table = table;
     e->running = running;
 
