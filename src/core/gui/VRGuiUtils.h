@@ -11,7 +11,11 @@
 //OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-namespace Gtk { class Builder; }
+namespace Gtk {
+    class Builder;
+    class Image;
+}
+
 Glib::RefPtr<Gtk::Builder> VRGuiBuilder(bool standalone = false);
 
 // TEXT
@@ -83,6 +87,8 @@ string askUserPass(string msg);
 OSG::Color4f chooseColor(string drawable, OSG::Color4f current);
 void setColorChooser(string drawable, sigc::slot<bool, GdkEventButton*> sig);
 void setColorChooserColor(string drawable, OSG::Color3f col);
+
+Gtk::Image* loadGTKIcon(Gtk::Image* img, string path, int w, int h);
 
 OSG::VRTexturePtr takeSnapshot();
 void saveScene(string path = "", bool saveas = false);

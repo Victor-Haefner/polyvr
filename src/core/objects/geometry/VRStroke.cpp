@@ -66,7 +66,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
     for (auto path : paths) {
         auto pnts = path->getPositions();
         auto directions = path->getDirections();
-        auto up_vectors = path->getUpvectors();
+        auto up_vectors = path->getUpVectors();
         auto cols = path->getColors();
 
 
@@ -129,7 +129,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
 
             vector<Vec3d> pnts = paths[i]->getPositions();
             vector<Vec3d> directions = paths[i]->getDirections();
-            vector<Vec3d> up_vectors = paths[i]->getUpvectors();
+            vector<Vec3d> up_vectors = paths[i]->getUpVectors();
             vector<Vec3d> cols = paths[i]->getColors();
 
             if (pnts.size() == 0) { cout << "VRStroke::strokeProfile path size 0!\n"; continue; }

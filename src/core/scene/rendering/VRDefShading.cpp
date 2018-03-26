@@ -214,8 +214,8 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     li.lightFP->addUniformVariable<Int32>("texBufAmb",  3);
     li.lightFP->addUniformVariable<Int32>("texPhotometricMap", 4);
     li.lightFP->addUniformVariable<float>("shadowColor", shadowColor);
-    li.lightFP->addUniformVariable<Vec3f>("lightUpVS", Vec3f(0,1,0));
-    li.lightFP->addUniformVariable<Vec3f>("lightDirectionVS", Vec3f(0,0,-1));
+    li.lightFP->addUniformVariable<Vec3f>("lightUp", Vec3f(0,1,0));
+    li.lightFP->addUniformVariable<Vec3f>("lightDirection", Vec3f(0,0,-1));
     li.lightFP->addUniformVariable<Int32>("channel", 0);
     li.lightFP->addUniformVariable<Int32>("isFirstLamp", 1);
 
@@ -245,6 +245,8 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
 }
 
 void VRDefShading::updateLight(VRLightPtr l) {
+    int ID = l->getID();
+    if (lightInfos.count(ID) == 0) return;
     auto& li = lightInfos[l->getID()];
     string type = l->getLightType();
     bool shadows = l->getShadows();
@@ -264,12 +266,6 @@ void VRDefShading::updateLight(VRLightPtr l) {
     string fpFile = getLightFPFile(li.lightType, li.shadowType);
     li.lightVP->readProgram(vpFile.c_str());
     li.lightFP->readProgram(fpFile.c_str());
-
-    if (auto b = l->getBeacon()) {
-        auto p = b->getWorldPose();
-        li.lightFP->updateUniformVariable<Vec3f>("lightUpVS", Vec3f(p->up()));
-        li.lightFP->updateUniformVariable<Vec3f>("lightDirectionVS", Vec3f(p->dir()));
-    }
 
     auto tex = l->getPhotometricMap();
     if (tex) {

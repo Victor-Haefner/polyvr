@@ -20,16 +20,19 @@
 #include <gtkmm/main.h>
 #include <GL/glut.h>
 #include "core/utils/system/VRSystem.h"
+#include "core/scene/VRProjectsList.h"
 #include <boost/filesystem.hpp>
+#include <time.h>
 
 typedef boost::recursive_mutex::scoped_lock PLock;
 
 OSG_BEGIN_NAMESPACE
-using namespace std;
 
 VRSceneManager::VRSceneManager() {
     cout << "Init VRSceneManager..";
 	original_workdir = boost::filesystem::current_path().string();
+	examples = VRProjectsList::create();
+	projects = VRProjectsList::create();
     searchExercisesAndFavorites();
 
     on_scene_load = VRSignal::create();
@@ -61,6 +64,10 @@ void VRSceneManager::loadScene(string path, bool write_protected) {
     VRSceneLoader::get()->loadScene(path);
     current->setFlag("write_protected", write_protected);
     VRGuiSignals::get()->getSignal("scene_changed")->triggerPtr<VRDevice>(); // update gui
+    if (auto pEntry = projects->getEntry(path)) {
+        pEntry->setTimestamp(toString(time(0)));
+        storeFavorites();
+    }
 }
 
 string VRSceneManager::getOriginalWorkdir() { return original_workdir; }
@@ -140,26 +147,24 @@ void VRSceneManager::setScene(VRScenePtr scene) {
 }
 
 void VRSceneManager::storeFavorites() {
-    string path = original_workdir + "/examples/.cfg";
-    ofstream file(path);
-    for (auto f : favorite_paths) file << f << endl;
-    file.close();
+    string path = original_workdir + "/examples/.config";
+    projects->saveToFile(path);
 }
 
 void VRSceneManager::addFavorite(string path) {
-    for (auto p : favorite_paths) if (p == path) return;
-    favorite_paths.push_back(path);
+    if (projects->hasEntry(path)) return;
+    projects->addEntry( VRProjectEntry::create(path, ""));
     storeFavorites();
 }
 
 void VRSceneManager::remFavorite(string path) {
-    favorite_paths.erase(std::remove(favorite_paths.begin(), favorite_paths.end(), path), favorite_paths.end());
+    projects->remEntry(path);
     storeFavorites();
 }
 
 void VRSceneManager::searchExercisesAndFavorites() {
-    favorite_paths.clear();
-    example_paths.clear();
+    projects->clear();
+    examples->clear();
 
     // examples
 	vector<string> files = VRGuiFile::listDir("examples");
@@ -170,25 +175,31 @@ void VRSceneManager::searchExercisesAndFavorites() {
 		if (ending != ".xml" && ending != ".pvr") continue;
 
 		string path = canonical("examples/" + file);
-		example_paths.push_back(path);
+		examples->addEntry( VRProjectEntry::create(path, "") );
 	}
 
     // favorites
-    ifstream file( "examples/.cfg" );
-    if (!file.is_open()) return;
-
-    string line, path;
-    while ( getline (file,line) ) {
-        ifstream f(line.c_str());
-        if (!f.good()) continue;
-		line = canonical(line);
-        favorite_paths.push_back(line);
+    ifstream file( "examples/.cfg" ); // check for old config file
+    if (file.is_open()) {
+        string line, path;
+        while ( getline (file,line) ) {
+            ifstream f(line.c_str());
+            if (!f.good()) continue;
+            f.close();
+            line = canonical(line);
+            projects->addEntry( VRProjectEntry::create(line, "") );
+        }
+        file.close();
+        storeFavorites();
+        remove("examples/.cfg"); // remove old config file
+        return;
     }
-    file.close();
+
+    projects->loadFromFile("examples/.config");
 }
 
-vector<string> VRSceneManager::getFavoritePaths() { return favorite_paths; }
-vector<string> VRSceneManager::getExamplePaths() { return example_paths; }
+VRProjectsListPtr VRSceneManager::getFavoritePaths() { return projects; }
+VRProjectsListPtr VRSceneManager::getExamplePaths() { return examples; }
 
 VRScenePtr VRSceneManager::getCurrent() { return current; }
 

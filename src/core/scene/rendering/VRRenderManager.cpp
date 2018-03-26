@@ -77,6 +77,7 @@ void VRRenderManager::update() {
 }
 
 void VRRenderManager::addLight(VRLightPtr l) {
+    l->setDeferred(deferredRendering);
     for (auto r : getRenderings()) r->addLight(l);
 }
 
@@ -152,6 +153,10 @@ void VRRenderManager::setStageParameter(string name, string var, int val) {
 
 void VRRenderManager::setDeferredChannel(int c) {
     for (auto r : getRenderings()) r->setDeferredChannel(c);
+}
+
+void VRRenderManager::reloadStageShaders() {
+    for (auto r : getRenderings()) r->reloadStageShaders();
 }
 
 void VRRenderManager::setDeferredShading(bool b) { deferredRendering = b; update(); }

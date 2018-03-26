@@ -6,7 +6,7 @@
 #include "core/objects/OSGObject.h"
 #include "core/objects/object/OSGCore.h"
 #include "VRLightBeacon.h"
-#include "VRShadowEngine.h"
+//#include "VRShadowEngine.h"
 
 #include <OpenSG/OSGNode.h>
 #include <OpenSG/OSGShadowStage.h>
@@ -28,7 +28,7 @@ VRLight::VRLight(string name) : VRObject(name) {
     DirectionalLightMTRecPtr d_light = DirectionalLight::create();
     PointLightMTRecPtr p_light = PointLight::create();
     SpotLightMTRecPtr s_light = SpotLight::create();
-    SpotLightMTRecPtr ph_light = SpotLight::create();
+    PointLightMTRecPtr ph_light = PointLight::create();
 
     this->d_light = OSGCore::create(d_light);
     this->p_light = OSGCore::create(p_light);
@@ -40,10 +40,6 @@ VRLight::VRLight(string name) : VRObject(name) {
     s_light->setDirection(Vec3f(0,0,-1));
     s_light->setSpotCutOff(Pi/6.f);
     s_light->setSpotExponent(3.f);
-
-    ph_light->setDirection(Vec3f(0,0,-1));
-    ph_light->setSpotCutOff(Pi/6.f);
-    ph_light->setSpotExponent(3.f);
 
     setCore(OSGCore::create(p_light), "Light");
     attenuation = Vec3d(p_light->getConstantAttenuation(), p_light->getLinearAttenuation(), p_light->getQuadraticAttenuation());
@@ -78,8 +74,8 @@ VRLight::~VRLight() {
 VRLightPtr VRLight::ptr() { return static_pointer_cast<VRLight>( shared_from_this() ); }
 VRLightPtr VRLight::create(string name) {
     auto l = shared_ptr<VRLight>(new VRLight(name) );
-    cout << "VRLight::create " << l << " " << l->getName() << endl;
     VRScene::getCurrent()->addLight(l);
+    //cout << "VRLight::create " << l << " " << l->getName() << " deferred " << l->deferred << endl;
     return l;
 }
 
@@ -93,7 +89,7 @@ void VRLight::setup() {
     setOn(on);
     loadPhotometricMap(photometricMapPath);
 
-    setup_after(); // TODO: deffered shading needs to have the light beacon before adding the node!?!
+    setup_after(); // TODO: deferred shading needs to have the light beacon before adding the node!?!
 }
 
 void VRLight::setup_after() {
@@ -111,10 +107,12 @@ void VRLight::setType(string type) {
     if (type == "photometric") setPhotometriclight();
 }
 
-void VRLight::setShadowParams(bool b, int res, Color4f c) {
+void VRLight::setShadowParams(bool b, int res, Color4f c, Vec2d nf) {
+    cout << "VRLight::setShadowParams " << deferred << endl;
     setShadows(b);
     setShadowMapRes(res);
     setShadowColor(c);
+    setShadowNearFar(nf);
 }
 
 void VRLight::setBeacon(VRLightBeaconPtr b) {
@@ -162,9 +160,8 @@ void VRLight::setDeferred(bool b) {
 }
 
 void VRLight::setupShadowEngines() {
-    //ssme = static_pointer_cast<VRShadowEngine>( VRShadowEngine::create() );
-    ssme = VRShadowEngine::create();
-    //ssme = SimpleShadowMapEngine::create();
+    //ssme = VRShadowEngine::create();
+    ssme = SimpleShadowMapEngine::create();
     gsme = ShaderShadowMapEngine::create();
     ptsme = TrapezoidalShadowMapEngine::create();
     stsme = TrapezoidalShadowMapEngine::create();
@@ -196,6 +193,11 @@ void VRLight::setupShadowEngines() {
 bool VRLight::getShadows() { return shadows; }
 Color4f VRLight::getShadowColor() { return shadowColor; }
 
+void VRLight::toggleShadows(bool b) { // TODO: optimize this
+    if (shadows == b) return;
+    setShadows(b);
+}
+
 void VRLight::setShadows(bool b) {
     if (!ssme) setupShadowEngines();
     shadows = b;
@@ -224,12 +226,24 @@ void VRLight::setShadows(bool b) {
     updateDeferredLight();
 }
 
+void VRLight::setShadowNearFar(Vec2d nf) {
+    shadowNearFar = nf;
+    //if (ssme) ssme->setShadowNear(nf[0]);
+    //if (ssme) ssme->setShadowFar(nf[1]);
+    if (gsme) gsme->setShadowNear(nf[0]);
+    if (gsme) gsme->setShadowFar(nf[1]);
+    if (ptsme) ptsme->setShadowNear(nf[0]);
+    if (ptsme) ptsme->setShadowFar(nf[1]);
+    if (stsme) stsme->setShadowNear(nf[0]);
+    if (stsme) stsme->setShadowFar(nf[1]);
+}
+
 void VRLight::setShadowColor(Color4f c) {
     shadowColor = c;
-    if (!ssme) return;
-    ssme->setShadowColor(c);
-    //gsme->setShadowColor(c);
-    //tsme->setShadowColor(c);
+    if (ssme) ssme->setShadowColor(c);
+    //if (gsme) gsme->setShadowColor(c);
+    //if (ptsme) ptsme->setShadowColor(c);
+    //if (stsme) stsme->setShadowColor(c);
     // TODO: shadow color has to be passed as uniform to light fragment shader
 }
 
@@ -249,7 +263,7 @@ void VRLight::setAttenuation(Vec3d a) {
     dynamic_pointer_cast<Light>(d_light->core)->setLinearAttenuation(a[1]);
     dynamic_pointer_cast<Light>(d_light->core)->setQuadraticAttenuation(a[2]);
     dynamic_pointer_cast<PointLight>(p_light->core)->setAttenuation(a[0], a[1], a[2]);
-    dynamic_pointer_cast<SpotLight>(ph_light->core)->setAttenuation(a[0], a[1], a[2]);
+    dynamic_pointer_cast<PointLight>(ph_light->core)->setAttenuation(a[0], a[1], a[2]);
     dynamic_pointer_cast<SpotLight>(s_light->core)->setAttenuation(a[0], a[1], a[2]);
 }
 
@@ -329,6 +343,10 @@ string VRLight::getLightType() { return lightType; };
 
 void VRLight::updateDeferredLight() {
     VRScene::getCurrent()->updateLight( ptr() );
+}
+
+void VRLight::reloadDeferredSystem() {
+    updateDeferredLight();
 }
 
 void VRLight::setPhotometricMap(VRTexturePtr tex) { photometricMap = tex; updateDeferredLight(); }
@@ -417,7 +435,35 @@ void VRLight::loadPhotometricMap(string path) { // ies files
         for (int i=0; i<aNh; i++) ss >> aPhi[i];
         for (int i=0; i<N; i++) ss >> candela[i];
 
-        return candela;
+        auto getMinDelta = [&](vector<float>& v) {
+            float d = 1e6;
+            for (auto f : v) if (f<d && f > 1e-3) d = f;
+            return d;
+        };
+
+        int aNv2 = 180.0/getMinDelta(aTheta);
+        int aNh2 = 90.0/getMinDelta(aPhi);
+        int N2 = aNv2*aNh2;
+
+        vector<float> candela2(N2, 0);
+        for (int i=0; i<aNh2; i++) {
+            for (int j=0; j<aNv2; j++) {
+                float c = 0;
+
+                if (i < aNh && j < aNv) { // TODO: quick hack, resolve properly
+                    int k = i*aNv + j;
+                    c = candela[k];
+                }
+
+                int k2 = i*aNv2 + j;
+                candela2[k2] = c;
+            }
+        }
+
+        aNv = aNv2;
+        aNh = aNh2;
+        return candela2;
+        //return candela;
         //return rescale(candela, aNv, aNh, Nv, Nh, lmScale*0.05);
     };
 

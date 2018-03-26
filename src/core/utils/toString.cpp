@@ -25,6 +25,7 @@ typedef void* voidPtr;
 template<> string toString(const string& s) { return s; }
 template<> string toString(const bool& b) { stringstream ss; ss << b; return ss.str(); }
 template<> string toString(const int& i) { stringstream ss; ss << i; return ss.str(); }
+template<> string toString(const long& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const unsigned char& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const voidPtr& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const size_t& i) { stringstream ss; ss << i; return ss.str(); }
@@ -147,6 +148,7 @@ template <typename T> int ssToVal(stringstream& ss, T& t) {
 template<> int toValue(stringstream& ss, string& s) { s = ss.str(); return true; }
 template<> int toValue(stringstream& ss, bool& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, int& v) { return ssToVal(ss, v); }
+template<> int toValue(stringstream& ss, long& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, unsigned int& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, float& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, double& v) { return ssToVal(ss, v); }

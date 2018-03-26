@@ -109,6 +109,9 @@ class VRStorage {
         void setOverrideCallbacks(bool b);
 
         string getDescription();
+
+        bool saveToFile(string path, bool createDirs = true);
+        bool loadFromFile(string path);
 };
 
 OSG_END_NAMESPACE;

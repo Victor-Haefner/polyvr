@@ -754,6 +754,8 @@
 		<Unit filename="src/core/scene/VRObjectManager.h" />
 		<Unit filename="src/core/scene/VRPhysicsManager.cpp" />
 		<Unit filename="src/core/scene/VRPhysicsManager.h" />
+		<Unit filename="src/core/scene/VRProjectsList.cpp" />
+		<Unit filename="src/core/scene/VRProjectsList.h" />
 		<Unit filename="src/core/scene/VRScene.cpp" />
 		<Unit filename="src/core/scene/VRScene.h" />
 		<Unit filename="src/core/scene/VRSceneFwd.h" />

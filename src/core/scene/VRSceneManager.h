@@ -14,8 +14,9 @@ void glutUpdate();
 
 class VRSceneManager : public VRThreadManager, public VRCallbackManager, public VRNetworkManager {
     private:
-        vector<string> favorite_paths;
-        vector<string> example_paths;
+        VRProjectsListPtr examples;
+        VRProjectsListPtr projects;
+
         VRScenePtr current;
         string original_workdir;
         VRSignalPtr on_scene_load = 0;
@@ -46,8 +47,8 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager, public 
         VRSignalPtr getSignal_on_scene_load();
         VRSignalPtr getSignal_on_scene_close();
 
-        vector<string> getFavoritePaths();
-        vector<string> getExamplePaths();
+        VRProjectsListPtr getFavoritePaths();
+        VRProjectsListPtr getExamplePaths();
 
         VRScenePtr getCurrent();
 

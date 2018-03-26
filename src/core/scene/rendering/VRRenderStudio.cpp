@@ -146,7 +146,7 @@ void VRRenderStudio::update() {
     if (ssao) ssao->setSSAOparams(ssao_radius, ssao_kernel, ssao_noise);
 
     for (auto m : VRMaterial::materials) {
-        if (auto mat = m.second.lock()) mat->setDeffered(deferredRendering);
+        if (auto mat = m.second.lock()) mat->setDeferred(deferredRendering);
     }
 
     // update shader code
@@ -166,6 +166,10 @@ void VRRenderStudio::update() {
 void VRRenderStudio::reset() {
     root_scene->clearLinks(); // clear links to current scene root node
     clearLights();
+}
+
+void VRRenderStudio::reloadStageShaders() {
+    for (auto s : stages) s.second->getRendering()->reload();
 }
 
 void VRRenderStudio::initDSProxy(VRMaterialPtr mat) {

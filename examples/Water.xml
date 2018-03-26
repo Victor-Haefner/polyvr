@@ -104,7 +104,9 @@
 	
 	# do path
 	path = VR.Path('cyl_path')
-	path.set([-nz,nz,0], [1,0,0], [nz,nz,0], [1,0,0], 2)
+	p1 = VR.Pose([-nz,nz,0], [1,0,0], [0,1,0])
+	p2 = VR.Pose([ nz,nz,0], [1,0,0], [0,1,0])
+	path.set(p1, p2, 2)
 	# animate cylinder
 	pathtool = VR.Pathtool('pathtool')
 	pathtool.setVisible(False)

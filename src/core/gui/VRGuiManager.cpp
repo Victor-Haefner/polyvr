@@ -31,7 +31,7 @@ using namespace std;
 
 VRGuiScene* g_scene;
 VRGuiBits* g_bits;
-VRDemos* g_demos;
+VRAppManager* g_demos;
 VRGuiNav* g_nav;
 VRGuiScripts* g_sc;
 VRGuiSetup* g_di;
@@ -64,7 +64,7 @@ VRGuiManager::VRGuiManager() {
     }
 
     //gtk_rc_parse("gui/gtkrc");
-    g_demos = new VRDemos();
+    g_demos = new VRAppManager();
     g_scene = new VRGuiScene();
     g_bits = new VRGuiBits();
     g_nav = new VRGuiNav();

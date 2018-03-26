@@ -273,7 +273,7 @@ void VRMaterial::updateDeferredShader() {
     setShaderParameter("isLit", int(isLit()));
 }
 
-void VRMaterial::setDeffered(bool b) {
+void VRMaterial::setDeferred(bool b) {
     deferred = b;
     int a = activePass;
     for (uint i=0; i<mats.size(); i++) {
@@ -287,6 +287,20 @@ void VRMaterial::setDeffered(bool b) {
         mats[i]->toggleDeferredShader(b, getName());
     }
     setActivePass(a);
+}
+
+void VRMaterial::testFix() {
+    /*auto m = mats[activePass];
+
+    string s = constructShaderVP(m);
+    m->vProgram->setProgram(s.c_str());
+    checkShader(GL_VERTEX_SHADER, s, "defferedVS");
+
+    s = constructShaderFP(m);
+    m->fdProgram->setProgram(s.c_str());
+    checkShader(GL_FRAGMENT_SHADER, s, "defferedFS");
+
+    setShaderParameter("isLit", int(isLit()));*/
 }
 
 void VRMaterial::clearAll() {
@@ -319,7 +333,7 @@ int VRMaterial::addPass() {
     md->reset();
     passes->mat->addMaterial(md->mat);
     mats.push_back(md);
-    setDeffered(deferred);
+    setDeferred(deferred);
     return activePass;
 }
 
@@ -963,9 +977,23 @@ void VRMaterial::readGeometryShader(string s) { setGeometryShader(readFile(s), s
 void VRMaterial::readTessControlShader(string s) { setTessControlShader(readFile(s), s); }
 void VRMaterial::readTessEvaluationShader(string s) { setTessEvaluationShader(readFile(s), s); }
 
-string VRMaterial::getVertexShader() { return ""; } // TODO
-string VRMaterial::getFragmentShader() { return ""; }
-string VRMaterial::getGeometryShader() { return ""; }
+string VRMaterial::getVertexShader() {
+    auto m = mats[activePass];
+    if (m->vProgram) return m->vProgram->getProgram();
+    return "";
+}
+
+string VRMaterial::getFragmentShader() {
+    auto m = mats[activePass];
+    if (m->fdProgram) return m->fdProgram->getProgram();
+    return "";
+}
+
+string VRMaterial::getGeometryShader() {
+    auto m = mats[activePass];
+    if (m->gProgram) return m->gProgram->getProgram();
+    return "";
+}
 
 void VRMaterial::setVertexScript(string script) {
     mats[activePass]->vertexScript = script;
