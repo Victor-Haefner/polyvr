@@ -16,16 +16,17 @@ uniform vec3 lightPos;
 vec4 norm;
 vec4 color;
 
-void computeDirLight(float ambFactor) {
+void computeDirLight() {
 	vec3 light = normalize( lightDir );
-  	float NdotL = max(dot(norm.xyz, light), 0.0);
-	vec4 ambient = gl_LightSource[0].ambient * color;
-	//vec4 ambient = color * ambFactor;
-	vec4 diffuse = gl_LightSource[0].diffuse * NdotL * color;
+	if (norm.z < 0) norm *= -1; // two sided
+  	float NdotL = dot(norm.xyz, -light);
+  	float mNdotL = max(NdotL, 0.0);
+	vec4 ambient = gl_LightSource[0].ambient * color * (0.8+0.2*abs(NdotL));
+	vec4 diffuse = gl_LightSource[0].diffuse * color * mNdotL;
 	float NdotHV = max(dot(norm.xyz, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
 	vec4  specular = vec4(0);
-	if (NdotL > 0.0) specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
-	color = (ambient + diffuse) * ambFactor;
+	if (mNdotL > 0.0) specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
+	color = ambient + diffuse + specular;
 }
 
 void main(void) {
@@ -38,7 +39,7 @@ void main(void) {
 	bool isLit = (norm.w > 0);
 
 	if (channel == 0) {
-		if (isLit) computeDirLight(pos.w);
+		if (isLit) computeDirLight();
 		else color = vec4(color.xyz, 1.0);
 	}
 	if (channel == 1) color = vec4(pos.xyz, 1.0);
