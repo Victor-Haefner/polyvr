@@ -76,7 +76,7 @@ VRAppSection::~VRAppSection() {}
 VRAppSectionPtr VRAppSection::create(string name) { return VRAppSectionPtr( new VRAppSection(name) ); }
 VRAppSectionPtr VRAppSection::ptr() { return shared_from_this(); }
 
-VRAppLauncherPtr VRAppSection::addLauncher(string path, string timestamp, VRGuiContextMenu* menu, VRAppManager* mgr) {
+VRAppLauncherPtr VRAppSection::addLauncher(string path, string timestamp, VRGuiContextMenu* menu, VRAppManager* mgr, bool write_protected, bool favorite, string table) {
     if (apps.count(path)) return apps[path];
     auto app = VRAppLauncher::create(ptr());
     app->path = path;
@@ -84,9 +84,9 @@ VRAppLauncherPtr VRAppSection::addLauncher(string path, string timestamp, VRGuiC
     string filename = getFileName(path);
     string foldername = getFolderName(path);
     app->pxm_path = foldername + "/.local_" + filename.substr(0,filename.size()-4) + "/snapshot.png";
-    app->write_protected = true;
-    app->favorite = false;
-    app->table = "examples_tab";
+    app->write_protected = write_protected;
+    app->favorite = favorite;
+    app->table = table;
     apps[path] = app;
     setButton(app, menu, mgr);
     return app;
@@ -208,7 +208,7 @@ VRAppManager::VRAppManager() {
     recentsSection = VRAppSection::create("Recents");
 
     auto examples = VRSceneManager::get()->getExamplePaths();
-    for (auto p : examples->getPaths() ) examplesSection->addLauncher(p, "", menu, this);
+    for (auto p : examples->getPaths() ) examplesSection->addLauncher(p, "", menu, this, true, false, "examples_tab");
     updateTable("examples_tab");
 
     auto favorites = VRSceneManager::get()->getFavoritePaths();
@@ -308,10 +308,9 @@ VRAppLauncherPtr VRAppManager::addEntry(string path, string table, bool running,
     clearTable(table);
 
     VRAppLauncherPtr e = 0;
-    if (table == "examples_tab") e = examplesSection->addLauncher(path, timestamp, menu, this);
-    if (table == "favorites_tab" &&  recent) e =   recentsSection->addLauncher(path, timestamp, menu, this);
-    if (table == "favorites_tab" && !recent) e = favoritesSection->addLauncher(path, timestamp, menu, this);
-    e->table = table;
+    if (table == "examples_tab") e = examplesSection->addLauncher(path, timestamp, menu, this, true, false, table);
+    if (table == "favorites_tab" &&  recent) e =   recentsSection->addLauncher(path, timestamp, menu, this, false, true, table);
+    if (table == "favorites_tab" && !recent) e = favoritesSection->addLauncher(path, timestamp, menu, this, false, true, table);
     e->running = running;
 
     updateTable(table);

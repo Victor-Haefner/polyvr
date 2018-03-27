@@ -72,7 +72,7 @@ class VRAppSection : public std::enable_shared_from_this<VRAppSection>, public V
         static VRAppSectionPtr create(string name);
         VRAppSectionPtr ptr();
 
-        VRAppLauncherPtr addLauncher(string path, string timestamp, VRGuiContextMenu* menu, VRAppManager* mgr);
+        VRAppLauncherPtr addLauncher(string path, string timestamp, VRGuiContextMenu* menu, VRAppManager* mgr, bool write_protected, bool favorite, string table);
         void remLauncher(string path);
         VRAppLauncherPtr getLauncher(string path);
         int getSize();
