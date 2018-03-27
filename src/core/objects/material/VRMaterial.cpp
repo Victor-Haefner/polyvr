@@ -228,7 +228,7 @@ string VRMaterial::constructShaderVP(VRMatDataPtr data) {
     vp += "varying vec4 color;\n";
     vp += "void main(void) {\n";
     vp += "  vertPos = gl_ModelViewMatrix * osg_Vertex;\n";
-    vp += "  vertNorm = normalize( gl_NormalMatrix * osg_Normal );\n";
+    vp += "  vertNorm = gl_NormalMatrix * osg_Normal;\n";
     if (texD == 2) vp += "  gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0,0.0);\n";
     if (texD == 3) vp += "  gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0);\n";
     vp += "  color  = gl_Color;\n";
@@ -244,7 +244,7 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
 
     string fp;
     fp += "#version 120\n";
-    fp += "uniform int isLit;\n";
+    if (deferred) fp += "uniform int isLit;\n";
     fp += "varying vec4 vertPos;\n";
     fp += "varying vec3 vertNorm;\n";
     fp += "varying vec4 color;\n";
@@ -253,7 +253,7 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
 
     if (!deferred) {
         fp += "void applyLightning() {\n";
-        fp += " vec3  n = vertNorm;\n";
+        fp += " vec3  n = normalize(vertNorm);\n";
         fp += " vec3  light = normalize( gl_LightSource[0].position.xyz );\n";// directional light
         fp += " float NdotL = max(dot( n, light ), 0.0);\n";
         fp += " vec4  ambient = gl_LightSource[0].ambient * color;\n";
@@ -271,7 +271,7 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
     if (texD == 3) fp += "  vec4 diffCol = texture3D(tex0, gl_TexCoord[0].xyz);\n";
     if (deferred) {
         fp += "  gl_FragData[0] = vec4(pos, 1.0);\n";
-        fp += "  gl_FragData[1] = vec4(vertNorm, isLit);\n";
+        fp += "  gl_FragData[1] = vec4(normalize(vertNorm), isLit);\n";
         fp += "  gl_FragData[2] = vec4(diffCol.rgb, 0);\n";
     } else {
         fp += "  applyLightning();\n";
