@@ -1,7 +1,7 @@
 #version 400 compatibility
 
 uniform sampler2D tex;
-
+in vec4 position;
 in vec2 tcs;
 in vec3 norm;
 in vec3 col;

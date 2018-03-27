@@ -1,22 +1,26 @@
 #version 400 compatibility
 
 uniform sampler2D tex;
+in vec4 position;
 in vec2 tcs;
 in vec3 norm;
-in vec4 position;
+in vec3 col;
+vec4 color;
 
 
 void main( void ) {
-	vec4 color = texture(tex,tcs);
-	if (color.a < 0.5) discard;
-	color.a = 1.0;
-	color.x *= 0.7;
-	color.y *= 0.7;
-	color.z *= 0.2;
+	float ca = col[1];
+	float ch = col[2];
+	color = texture(tex,tcs);
+	if (color.a < 0.3) discard;
+	//color.a = 1.0;
+	color.x *= 0.4*ca;
+	color.y *= 0.8*ch;
+	color.z *= 0.2*ch;
 
-    gl_FragData[0] = vec4(position.xyz/position.w, 1.0);
-    gl_FragData[1] = vec4(norm, 1.0);
-    gl_FragData[2] = vec4(color.xyz, 1.0);
+	gl_FragData[0] = vec4(position.xyz/position.w, 1.0);
+	gl_FragData[1] = vec4(norm, 1.0);
+	gl_FragData[2] = vec4(color.xyz, 1.0);
 }
 
 
