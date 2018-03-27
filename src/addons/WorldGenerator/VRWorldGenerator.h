@@ -25,11 +25,6 @@ class VRWorldGenerator : public VRTransform {
         OSMMapPtr osmMap;
         Vec2d coords;
 
-        static string assetMatVShdr;
-        static string assetMatFShdr;
-        static string assetTexMatVShdr;
-        static string assetTexMatFShdr;
-
         void processOSMMap(double subN = -1, double subE = -1, double subSize = -1);
         void init();
 
