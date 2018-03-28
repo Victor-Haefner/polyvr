@@ -18,7 +18,7 @@ vec4 color;
 
 void computeDirLight() {
 	vec3 light = normalize( lightDir );
-	if (norm.z < 0) norm *= -1; // two sided
+	//if (norm.z < -0.1) norm *= -1; // two sided // induces artifacts
   	float NdotL = dot(norm.xyz, -light);
   	float mNdotL = max(NdotL, 0.0);
 	vec4 ambient = gl_LightSource[0].ambient * color * (0.8+0.2*abs(NdotL));
@@ -27,6 +27,7 @@ void computeDirLight() {
 	vec4  specular = vec4(0);
 	if (mNdotL > 0.0) specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
 	color = ambient + diffuse + specular;
+	//color = vec4(NdotL, mNdotL, -NdotL, 1);
 }
 
 void main(void) {
