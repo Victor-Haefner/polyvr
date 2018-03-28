@@ -48,6 +48,7 @@ void VRIES::parseData(vector<string>& lines, int& i) {
     string data;
     for (; i<lines.size(); i++) data += lines[i] + " ";
     int N = NvAngles*NhAngles;
+    float S = lScale*ballastFactor*photometricFactor;
 
     stringstream ss(data);
     vAngles = vector<float>(NvAngles, 0);
@@ -55,7 +56,7 @@ void VRIES::parseData(vector<string>& lines, int& i) {
     candela = vector<float>(N, 0);
     for (int i=0; i<NvAngles; i++) ss >> vAngles[i];
     for (int i=0; i<NhAngles; i++) ss >> hAngles[i];
-    for (int i=0; i<N; i++) ss >> candela[i];
+    for (int i=0; i<N; i++) { ss >> candela[i]; candela[i] *= S; }
 }
 
 VRTexturePtr VRIES::resample() { // TODO
