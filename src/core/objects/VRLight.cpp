@@ -130,6 +130,7 @@ void VRLight::setDiffuse(Color4f c) {
     dynamic_pointer_cast<Light>(p_light->core)->setDiffuse(c);
     dynamic_pointer_cast<Light>(s_light->core)->setDiffuse(c);
     dynamic_pointer_cast<Light>(ph_light->core)->setDiffuse(c);
+    updateDeferredLight();
 }
 
 Color4f VRLight::getDiffuse() { return lightDiffuse; }
@@ -140,6 +141,7 @@ void VRLight::setAmbient(Color4f c) {
     dynamic_pointer_cast<Light>(p_light->core)->setAmbient(c);
     dynamic_pointer_cast<Light>(s_light->core)->setAmbient(c);
     dynamic_pointer_cast<Light>(ph_light->core)->setAmbient(c);
+    updateDeferredLight();
 }
 
 Color4f VRLight::getAmbient() { return lightAmbient; }
@@ -342,7 +344,7 @@ LightMTRecPtr VRLight::getLightCore() { return dynamic_pointer_cast<Light>(getCo
 string VRLight::getLightType() { return lightType; };
 
 void VRLight::updateDeferredLight() {
-    VRScene::getCurrent()->updateLight( ptr() );
+    if (deferred) VRScene::getCurrent()->updateLight( ptr() );
 }
 
 void VRLight::reloadDeferredSystem() {

@@ -138,7 +138,7 @@ void VRBackground::setBackground(TYPE t) {
             break;
         case SKY:
             base->bg = base->sbg; // set solid bg
-            base->sbg->setColor(base->color);
+            base->sbg->setColor(Color3f(0,0,0));
             if (!base->sky) {
                 base->sky = VRSky::create();
                 auto scene = VRScene::getCurrent();
