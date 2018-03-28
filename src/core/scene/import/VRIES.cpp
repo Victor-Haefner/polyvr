@@ -2,6 +2,8 @@
 #include "core/objects/material/VRTexture.h"
 #include "core/utils/toString.h"
 
+// specs: http://lumen.iee.put.poznan.pl/kw/iesna.txt
+
 using namespace OSG;
 
 VRIES::VRIES() {}
@@ -14,34 +16,32 @@ void VRIES::parseLabels(vector<string>& lines, int& i) {
         i++;
 
         labels.push_back(line);
-        if (startswith(line, "TILT=")) break;
+        if (startswith(line, "TILT=")) { // end of labels reached
+            tiltMode = splitString(line, '=')[1];
+            break;
+        }
     }
 }
 
 void VRIES::parseParameters(vector<string>& lines, int& i) {
-    while (true) {
-        if (i >= lines.size()) break;
-        auto params = splitString( lines[i] );
-        i++;
-
-        if (params.size() >= 10) {
-            Nlamps = toInt(params[0]); // number of lamps
-            lampLumens = toFloat(params[1]); // lumen per lamp
-            lScale = toFloat(params[2]); // candela multiplier
-            NvAngles = toInt(params[3]); // number of vertical angles
-            NhAngles = toInt(params[4]); // number of horizontal angles
-            photometricType = toInt(params[5]); // photometric type
-            unitsType = toInt(params[6]); // type of units
-            extents = Vec3d(toFloat(params[7]), toFloat(params[8]), toFloat(params[9])); // width length height
-        }
-
-        if (params.size() == 3) {
-            ballastFactor = toFloat(params[0]); // ballast factor
-            photometricFactor = toFloat(params[1]); // ballast-lamp photometric factor
-            inputWatts = toFloat(params[2]); // input watts
-            return;
-        }
+    if (tiltMode == "INCLUDE") {
+        i += 4; // TODO: parse tilt parameters
     }
+
+    auto params = splitString(lines[i]); i++;
+    Nlamps = toInt(params[0]); // number of lamps
+    lampLumens = toFloat(params[1]); // lumen per lamp
+    lScale = toFloat(params[2]); // candela multiplier
+    NvAngles = toInt(params[3]); // number of vertical angles
+    NhAngles = toInt(params[4]); // number of horizontal angles
+    photometricType = toInt(params[5]); // photometric type
+    unitsType = toInt(params[6]); // type of units
+    extents = Vec3d(toFloat(params[7]), toFloat(params[8]), toFloat(params[9])); // width length height
+
+    params = splitString(lines[i]); i++;
+    ballastFactor = toFloat(params[0]); // ballast factor
+    photometricFactor = toFloat(params[1]); // ballast-lamp photometric factor
+    inputWatts = toFloat(params[2]); // input watts
 }
 
 void VRIES::parseData(vector<string>& lines, int& i) {

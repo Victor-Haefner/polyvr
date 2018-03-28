@@ -11,6 +11,7 @@ class VRIES {
     private:
         // data from parsing the file
         vector<string> labels;
+        string tiltMode = "NONE";
 
         int Nlamps = 1;
         float lampLumens = 1000;
