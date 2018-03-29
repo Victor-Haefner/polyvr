@@ -22,6 +22,7 @@ template<> PyObject* VRPyTypeCaster::cast(const Graph::node& n) {
 PyMethodDef VRPyGraph::methods[] = {
     {"getEdge", PyWrap2(Graph, getEdgeCopy, "Return the graph edge between n1 and n2", Graph::edge, int, int ) },
     {"getEdgeID", PyWrap2(Graph, getEdgeID, "Return the graph edge ID between n1 and n2", int, int, int ) },
+    {"getEdgeByID", PyWrap2(Graph, getEdgeCopyByID, "Return the graph edge by ID", Graph::edge, int ) },
     {"getEdges", PyWrap2(Graph, getEdgesCopy, "Return graph edges", vector<Graph::edge> ) },
     {"getInEdges", PyWrap2(Graph, getInEdges, "Return graph edges going in from node n", vector<Graph::edge>, int ) },
     {"getOutEdges", PyWrap2(Graph, getOutEdges, "Return graph edges going out from node n", vector<Graph::edge>, int ) },

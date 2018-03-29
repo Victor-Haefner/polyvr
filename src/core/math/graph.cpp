@@ -133,6 +133,8 @@ Graph::edge& Graph::getEdge(int i) {
     return getEdge(e[0], e[1]);
 }
 
+Graph::edge Graph::getEdgeCopyByID(int i) { return getEdge(i); }
+
 Graph::edge& Graph::getEdge(int n1, int n2) {
     if (!connected(n1,n2)) return nullEdge;
     for (auto& e : edges[n1]) if (e.to == n2) return e;
@@ -143,7 +145,7 @@ Graph::edge Graph::getEdgeCopy(int n1, int n2) { return getEdge(n1, n2); }
 vector< Graph::node > Graph::getNodesCopy() { return getNodes(); }
 vector<Graph::edge> Graph::getEdgesCopy() {
     vector<Graph::edge> res;
-    for (auto& n : edges) for (auto& e : n) res.push_back(e);
+    for (int i=0; i<getNEdges(); i++) res.push_back(getEdge(i));
     return res;
 }
 
