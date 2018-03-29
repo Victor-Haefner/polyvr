@@ -66,6 +66,13 @@ vector<VRPathFinding::Position> VRPathFinding::reconstructBestPath(Position curr
 bool VRPathFinding::valid(Position& p) {
     if (p.nID >= 0) if (graph->hasNode(p.nID)) return true;
     if (p.eID >= 0 && p.t >= 0 && p.t <= 1) if (graph->hasEdge(p.eID)) return true;
+    cout << " Warning: invalid graph position: ";
+    if (p.nID >= 0) if (!graph->hasNode(p.nID)) cout << " node " << p.nID << " not in graph\n";
+    if (p.eID >= 0) {
+        if (!graph->hasEdge(p.eID)) cout << " edge " << p.eID << " not in graph\n";
+        if (p.t < 0) cout << " edge t is < 0 (" << p.t << ")\n";
+        if (p.t > 1) cout << " edge t is > 1 (" << p.t << ")\n";
+    }
     return false;
 }
 
