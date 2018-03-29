@@ -30,21 +30,32 @@ class VRIES {
         vector<float> hAngles;
         vector<float> candela;
 
-        // texture parameters
+
+        // computed parameters
+        float vAngleRes = 0;
+        float hAngleRes = 0;
+        Vec2i vAngleRange = 0;
+        Vec2i hAngleRange = 0;
+        string symmetry = "NONE";
+
         vector<float> texData;
+        int texWidth = 1;
+        int texHeight = 1;
 
-        /*float resolution = 0;
-        Vec2d vARange = 0;
-        Vec2d hARange = 0;
-        int vNAngles = 0;
-        int hNAngles = 0;*/
 
+        // utility functions
         void parseLabels(vector<string>& lines, int& i);
         void parseParameters(vector<string>& lines, int& i);
         void parseData(vector<string>& lines, int& i);
-        VRTexturePtr resample();
+
+        void resample();
+        VRTexturePtr setupTexture();
 
         bool startswith(const string& a, const string& b);
+        void normalize(vector<float>& v);
+        float getMin(vector<float>& v);
+        float getMax(vector<float>& v);
+        float getMinDelta(vector<float>& v);
 
     public:
         VRIES();

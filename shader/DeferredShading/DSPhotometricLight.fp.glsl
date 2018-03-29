@@ -24,21 +24,26 @@ vec2 lookup;
 
 
 float getPhotometricIntensity(vec3 vertex, vec3 light) {
-	vec3 lightVector = vertex - light;
-	lightVector = normalize( lightVector );
-	float cosLight = -dot( norm.xyz, lightVector); 		// diffusion factor
+	vec3 lightVector = normalize( vertex - light );
 
 	float dotV = dot( lightUp, lightVector ); 			// angle with up vector
 	lightVector -= lightUp * dotV;				// project light vector in dir plane
 	lightVector = normalize( lightVector );
 	float dotH = dot( lightDir, lightVector );
+	float dotX = dot( cross(lightUp, lightDir), lightVector );
 
-	//apply intensity map				
-	vec2 tc = vec2(0,0);
-	tc.y = dotH*0.5 + 0.5; //phi
-	tc.x = dotV*0.5 + 0.5; //theta
+	dotV = dotV*0.5 + 0.5;
+	float u = 0.5 - dotH*0.5;
+	dotH = u*0.5;
+	float dotH2 = 0.5-dotH;
+	if (dotX > 0) dotH = 1.0 - dotH;
+	if (dotX < 0) dotH2 = 0.5 - dotH2;
+	else dotH2 -= 0.5;
 
-	return texture2D( texPhotometricMap, tc ).a;
+	//apply intensity map
+	float t1 = texture2D( texPhotometricMap, vec2(dotH2,dotV) ).a;
+	float t2 = texture2D( texPhotometricMap, vec2(dotH ,dotV) ).a;
+	return mix(t1, t2, u);
 }
 
 vec4 computePointLight(float amb) {
