@@ -21,7 +21,7 @@ vec4 norm;
 vec4 color = vec4(0);
 vec2 lookup;
 
-
+#define Pi 3.1415926535897932384626433832795
 
 float getPhotometricIntensity(vec3 vertex, vec3 light) {
 	vec3 lightVector = normalize( vertex - light );
@@ -29,20 +29,24 @@ float getPhotometricIntensity(vec3 vertex, vec3 light) {
 	float dotV = dot( lightUp, lightVector ); 			// angle with up vector
 	lightVector -= lightUp * dotV;				// project light vector in dir plane
 	lightVector = normalize( lightVector );
-	float dotH = dot( lightDir, lightVector );
+	float aH = acos(dot( lightDir, lightVector ))/Pi;
+	float aV = acos(dotV)/Pi;
 	float dotX = dot( cross(lightUp, lightDir), lightVector );
 
-	dotV = dotV*0.5 + 0.5;
-	float u = 0.5 - dotH*0.5;
-	dotH = u*0.5;
-	float dotH2 = 0.5-dotH;
-	if (dotX > 0) dotH = 1.0 - dotH;
-	if (dotX < 0) dotH2 = 0.5 - dotH2;
-	else dotH2 -= 0.5;
+	aV = 1.0 - aV;
+	float u = 1.0 - aH;
+	aH = u*0.5;
+	float aH2 = 0.5-aH;
+	if (dotX > 0) aH = 1.0 - aH;
+	if (dotX < 0) aH2 = 0.5 - aH2;
+	else aH2 -= 0.5;
+
+	//if (aH < 0.5) aH = 0.3;
+	//return aV;
 
 	//apply intensity map
-	float t1 = texture2D( texPhotometricMap, vec2(dotH2,dotV) ).a;
-	float t2 = texture2D( texPhotometricMap, vec2(dotH ,dotV) ).a;
+	float t1 = texture2D( texPhotometricMap, vec2(aH2,aV) ).a;
+	float t2 = texture2D( texPhotometricMap, vec2(aH ,aV) ).a;
 	return mix(t1, t2, u);
 }
 

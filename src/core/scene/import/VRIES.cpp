@@ -59,7 +59,7 @@ void VRIES::parseData(vector<string>& lines, int& i) {
     for (int i=0; i<N; i++) { ss >> candela[i]; candela[i] *= S; }
 }
 
-void VRIES::resample() { // TODO
+void VRIES::resample() {
     vAngleRes = getMinDelta(vAngles);
     hAngleRes = getMinDelta(hAngles);
     vAngleRange = Vec2i( round(getMin(vAngles)), round(getMax(vAngles)) );

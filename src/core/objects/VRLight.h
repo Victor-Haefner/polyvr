@@ -92,7 +92,7 @@ class VRLight : public VRObject {
 
         void setPhotometricMap(VRTexturePtr tex);
         void loadPhotometricMap(string path);
-        VRTexturePtr getPhotometricMap();
+        VRTexturePtr getPhotometricMap(bool forVisual = false);
 
         LightMTRecPtr getLightCore();
         string getLightType();

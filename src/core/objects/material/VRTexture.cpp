@@ -174,6 +174,25 @@ Color4f VRTexture::getPixel(Vec3i p) { // TODO: check data format (float/integer
     clampToImage(p);
     int i = p[0] + p[1]*w + p[2]*w*h;
 
+    return getPixel(i);
+}
+
+Color4f VRTexture::getPixel(Vec2d uv) {
+    auto res = Color4f(0,0,0,1);
+    if (!img) return res;
+    int w = img->getWidth();
+    int h = img->getHeight();
+    int x = uv[0]*(w-1);
+    int y = uv[1]*(h-1);
+    return getPixel(Vec3i(x,y,0));
+}
+
+Color4f VRTexture::getPixel(int i) {
+    auto res = Color4f(0,0,0,1);
+    if (!img) return res;
+    int N = getChannels();
+    auto data = img->getData();
+
     if (N == 1) {
         float* f = (float*)data;
         float d = f[i];
@@ -198,16 +217,6 @@ Color4f VRTexture::getPixel(Vec3i p) { // TODO: check data format (float/integer
     }
 
     return res;
-}
-
-Color4f VRTexture::getPixel(Vec2d uv) {
-    auto res = Color4f(0,0,0,1);
-    if (!img) return res;
-    int w = img->getWidth();
-    int h = img->getHeight();
-    int x = uv[0]*(w-1);
-    int y = uv[1]*(h-1);
-    return getPixel(Vec3i(x,y,0));
 }
 
 Vec3i VRTexture::getSize() {

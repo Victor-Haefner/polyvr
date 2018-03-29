@@ -268,6 +268,7 @@ void VRLight::setAttenuation(Vec3d a) {
     dynamic_pointer_cast<PointLight>(p_light->core)->setAttenuation(a[0], a[1], a[2]);
     dynamic_pointer_cast<PointLight>(ph_light->core)->setAttenuation(a[0], a[1], a[2]);
     dynamic_pointer_cast<SpotLight>(s_light->core)->setAttenuation(a[0], a[1], a[2]);
+    if (deferred) updateDeferredLight();
 }
 
 Vec3d VRLight::getAttenuation() { return attenuation; }
@@ -353,55 +354,25 @@ void VRLight::reloadDeferredSystem() {
 }
 
 void VRLight::setPhotometricMap(VRTexturePtr tex) { photometricMap = tex; updateDeferredLight(); }
-VRTexturePtr VRLight::getPhotometricMap() { return photometricMap; }
+
+VRTexturePtr VRLight::getPhotometricMap(bool forVisual) {
+    if (!forVisual) return photometricMap;
+
+    int W = photometricMap->getSize()[0];
+    int H = photometricMap->getSize()[1];
+    vector<Vec3f> texData = vector<Vec3f>(W*H);
+    for (int i=0; i<W*H; i++) {
+        float c = photometricMap->getPixel(i)[0];
+        texData[i] = Vec3f(c,c,c);
+    }
+
+    auto tex = VRTexture::create();
+    auto img = tex->getImage();
+    img->set( Image::OSG_RGB_PF, W, H, 1, 1, 1, 0, (const uint8_t*)&texData[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    return tex;
+}
 
 void VRLight::loadPhotometricMap(string path) { // ies files
-    /*auto sample2D = [&](float i, float j, vector<float>& data, int aNv, int aNh) {
-        int aNv_ = aNv - 1;
-        int aNh_ = aNh - 1;
-
-        // 4 corners
-        int i1 = floor(i*aNv_);
-        int i2 = ceil(i*aNv_);
-        int j1 = floor(j*aNh_);
-        int j2 = ceil(j*aNh_);
-
-        // sample pnt
-        float s,t;
-        if (i1==i2) s = 0.0;
-        else s = i*aNv_ - i1;
-        if (j1==j2) t = 0.0;
-        else t = j*aNh_ - j1;
-
-        //quad
-        float A = data[i1 + j1*aNv];
-        float B = data[i2 + j1*aNv];
-        float C = data[i1 + j2*aNv];
-        float D = data[i2 + j2*aNv];
-
-        float E = A + s*(B-A);
-        float F = C + s*(D-C);
-
-        float P = E + t*(F-E);
-        return P;
-    };
-
-    auto rescale = [&](vector<float>& data, int Nv, int Nh, int N2v, int N2h, float scale) {
-        vector<float> result(N2v*N2v); 1200 1.2 73 37 1 2 -0.237 0.000 0.050
-        for (int i = 0; i < N2v; i++) {
-            for (int j = 0; j < N2h; j++) {
-                float gi = acos(1-2*i/(N2v-1))/Pi;
-                float gj = acos(1-2*j/(N2h-1))/Pi;
-
-                float f = sample2D(gj, gi, data, Nv, Nh) * scale;
-                int k = i*N2h+j;
-                result[k] = f;
-            }
-        }
-        return result;
-    };*/
-
-
     if (path == "") return;
     photometricMapPath = path;
     VRIES parser;
