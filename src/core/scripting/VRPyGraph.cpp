@@ -30,6 +30,8 @@ PyMethodDef VRPyGraph::methods[] = {
     {"connect", PyWrapOpt2(Graph, connect, "Connect nodes n1 and n2, returns edge ID", "0", int, int, int, int ) },
     {"disconnect", PyWrap2(Graph, disconnect, "Disconnect nodes n1 and n2", void, int, int ) },
     {"getNodes", PyWrap2( Graph, getNodesCopy, "Get all node IDs", vector<Graph::node> ) },
+    {"hasNode", PyWrap2( Graph, hasNode, "Check if graph has node ID", bool, int ) },
+    {"hasEdge", PyWrap2( Graph, hasEdge, "Check if graph has edge ID", bool, int ) },
     {NULL} /* Sentinel */
 };
 
