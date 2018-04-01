@@ -43,6 +43,8 @@ class VRLight : public VRObject {
         bool on = true;
         bool deferred = false;
 
+        VRObjectPtr copy(vector<VRObjectPtr> children);
+
         void setup();
         void setup_after();
         void setupShadowEngines();

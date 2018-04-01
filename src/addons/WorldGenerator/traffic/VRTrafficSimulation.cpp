@@ -134,7 +134,7 @@ void VRTrafficSimulation::updateSimulation() {
 
         for (auto roadID : makeDiff(nearRoads, newNearRoads)) {
             auto& road = roads[roadID];
-            for (auto v : road.vehicles) v.destroy();
+            for (auto v : road.vehicles) { v.destroy(); numUnits--; }
             road.vehicles.clear();
             road.macro = true;
         }
@@ -256,7 +256,7 @@ void VRTrafficSimulation::updateSimulation() {
             auto& road = roads[r.first];
             for (auto& v : r.second) {
                 erase(road.vehicles, v.first);
-                if (v.second == -1) v.first.destroy();
+                if (v.second == -1) { v.first.destroy(); numUnits--; }
                 else {
                     auto& road2 = roads[v.second];
                     road2.vehicles.push_back(v.first);
@@ -280,6 +280,9 @@ void VRTrafficSimulation::addUser(VRTransformPtr t) {
 }
 
 void VRTrafficSimulation::addVehicle(int roadID, int type) {
+    if (maxUnits > 0 && numUnits >= maxUnits) return;
+    numUnits++;
+
     //if () cout << "VRTrafficSimulation::updateSimulation " << roads.size() << endl;
     auto& road = roads[roadID];
     auto v = Vehicle( Graph::position(roadID, 0.0) );
@@ -306,8 +309,9 @@ void VRTrafficSimulation::addVehicles(int roadID, float density, int type) {
     for (int i=N0; i<N; i++) addVehicle(roadID, type);
 }
 
-void VRTrafficSimulation::setTrafficDensity(float density, int type) {
+void VRTrafficSimulation::setTrafficDensity(float density, int type, int maxUnits) {
     //for (auto road : roads) addVehicles(road.first, density, type);
+    this->maxUnits = maxUnits;
     for (auto& road : roads) road.second.density = density;
 }
 

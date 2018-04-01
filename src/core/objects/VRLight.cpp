@@ -100,6 +100,37 @@ void VRLight::setup_after() {
     else cout << "  !! could not find light beacon: " << root << " " << this << endl;
 }
 
+VRObjectPtr VRLight::copy(vector<VRObjectPtr> children) {
+    VRLightPtr light = VRLight::create(getBaseName());
+    if (auto b = getBeacon()) {
+        for (auto c : children) {
+            auto tmpv = c->findAll(b->getBaseName());
+            if (tmpv.size() > 0) {
+                auto tmp = tmpv[0];
+                if (tmp) {
+                    light->setBeacon( static_pointer_cast<VRLightBeacon>(tmp) );
+                    break;
+                }
+            }
+        }
+    }
+    light->setVisible(isVisible());
+    light->setPickable(isPickable());
+    light->setOn(on);
+    light->setDiffuse(lightDiffuse);
+    light->setAmbient(lightAmbient);
+    light->setSpecular(lightSpecular);
+    light->setPhotometricMap(photometricMap);
+    light->setType(lightType);
+    light->setDeferred(deferred);
+    light->toggleShadows(shadows);
+    light->setShadowMapRes(shadowMapRes);
+    light->setShadowNearFar(shadowNearFar);
+    light->setShadowColor(shadowColor);
+    light->setAttenuation(attenuation);
+    return light;
+}
+
 void VRLight::setType(string type) {
     lightType = type;
     if (type == "point") setPointlight();
@@ -365,7 +396,6 @@ VRTexturePtr VRLight::getPhotometricMap(bool forVisual) {
         float c = photometricMap->getPixel(i)[0];
         texData[i] = Vec3f(c,c,c);
     }
-
     auto tex = VRTexture::create();
     auto img = tex->getImage();
     img->set( Image::OSG_RGB_PF, W, H, 1, 1, 1, 0, (const uint8_t*)&texData[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
@@ -378,7 +408,7 @@ void VRLight::loadPhotometricMap(string path) { // ies files
     VRIES parser;
     auto tex = parser.read(path);
     setPhotometricMap(tex);
-    cout << parser.toString(false);
+    cout << parser.toString(true);
 }
 
 

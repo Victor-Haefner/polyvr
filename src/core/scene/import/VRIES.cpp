@@ -48,7 +48,8 @@ void VRIES::parseData(vector<string>& lines, int& i) {
     string data;
     for (; i<lines.size(); i++) data += lines[i] + " ";
     int N = NvAngles*NhAngles;
-    float S = lScale*ballastFactor*photometricFactor;
+    //float S = lScale*ballastFactor*photometricFactor;
+    float S = 1.0;
 
     stringstream ss(data);
     vAngles = vector<float>(NvAngles, 0);
@@ -70,8 +71,8 @@ void VRIES::resample() {
     if (hAngleRange[1] ==  90) symmetry = "QUAD";
     if (hAngleRange[1] == 180) symmetry = "MID";
 
-    texWidth = 360.0/getMinDelta(vAngles)+1;
-    texHeight = 180.0/getMinDelta(hAngles)+1;
+    texWidth = 360.0/getMinDelta(hAngles)+1;
+    texHeight = 180.0/getMinDelta(vAngles)+1;
     int N2 = texWidth*texHeight;
     texData = vector<float>(N2, 0);
 
@@ -88,6 +89,12 @@ void VRIES::resample() {
         return ( c00*(1-u) + c10*u )*(1-v) + ( c01*(1-u) + c11*u )*v;
     };
 
+    auto bilinearInterpolation = [&](int i, int j, float u) -> float {
+        float c0 = getCandela(i  ,j  );
+        float c1 = getCandela(i+1,j  );
+        return c0*(1-u) + c1*u;
+    };
+
     auto getInterpolatedCandela = [&](float va, float ha) -> float {
         if (va < vAngles[0]) va = vAngles[0];
         if (va > vAngles[NvAngles-1]) va = vAngles[NvAngles-1];
@@ -95,6 +102,13 @@ void VRIES::resample() {
         if (ha > hAngles[NhAngles-1]) ha = hAngles[NhAngles-1];
 
         for (int v = 1; v<NvAngles; v++) {
+            if (NhAngles == 1) { // UNI symmetry
+                if (va >= vAngles[v-1] && va <= vAngles[v]) {
+                    float u = (va-vAngles[v-1])/(vAngles[v]-vAngles[v-1]);
+                    return bilinearInterpolation(v-1, 0, u);
+                }
+            }
+
             for (int h = 1; h<NhAngles; h++) {
                 if (va >= vAngles[v-1] && va <= vAngles[v]) {
                     if (ha >= hAngles[h-1] && ha <= hAngles[h]) {
@@ -123,6 +137,7 @@ void VRIES::resample() {
             float c = getInterpolatedCandela(va, ha);
             int k = i*texWidth + j;
             texData[k] = c;
+            cout << "ha " << ha << " c " << c << endl;
         }
     }
 
@@ -130,11 +145,16 @@ void VRIES::resample() {
 }
 
 VRTexturePtr VRIES::setupTexture() {
-    normalize(texData);
     auto tex = VRTexture::create();
     tex->setInternalFormat(GL_ALPHA32F_ARB); // important for unclamped float
     auto img = tex->getImage();
+
+    //normalize(candela);
+    //img->set( Image::OSG_A_PF, NvAngles, NhAngles, 1, 1, 1, 0, (const uint8_t*)&candela[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1); // for testing
+
+    normalize(texData);
     img->set( Image::OSG_A_PF, texWidth, texHeight, 1, 1, 1, 0, (const uint8_t*)&texData[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+
     return tex;
 }
 
@@ -212,6 +232,9 @@ string VRIES::toString(bool withData) {
     s += "  N vAngles: " + ::toString(vAngles.size()) + "\n";
     s += "  N hAngles: " + ::toString(hAngles.size()) + "\n";
     s += "  N candela: " + ::toString(candela.size()) + "\n";
+
+    s += "  tex width: " + ::toString(texWidth) + "\n";
+    s += "  tex height: " + ::toString(texHeight) + "\n";
     if (withData) {
         s += "   vert. angles: ";
         for (auto a : vAngles) s += " " + ::toString(a);

@@ -66,6 +66,8 @@ class VRTrafficSimulation : public VRObject {
         vector<Vehicle> users;
         vector<VRObjectPtr> models;
         map<int, vector<trafficLight> > trafficLights;
+        int maxUnits = 0;
+        int numUnits = 0;
 
         VRUpdateCbPtr updateCb;
         VRGeometryPtr flowGeo;
@@ -84,7 +86,7 @@ class VRTrafficSimulation : public VRObject {
 
         void addVehicle(int roadID, int type);
         void addVehicles(int roadID, float density, int type);
-        void setTrafficDensity(float density, int type);
+        void setTrafficDensity(float density, int type, int maxUnits = 0);
 
         int addVehicleModel(VRObjectPtr mesh);
 };
