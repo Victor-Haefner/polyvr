@@ -8,7 +8,19 @@
 
 using namespace OSG;
 
-VRAsphalt::VRAsphalt() : VRMaterial("asphalt") {
+VRAsphalt::VRAsphalt() : VRMaterial("asphalt") {}
+
+VRAsphalt::~VRAsphalt() {}
+
+VRAsphaltPtr VRAsphalt::create() {
+    auto p = VRAsphaltPtr( new VRAsphalt() );
+    p->init();
+    VRMaterial::materials[p->getName()] = p;
+    return p;
+}
+
+void VRAsphalt::init() {
+    VRMaterial::init();
     asphalt_fp = asphalt_fp_head + asphalt_fp_core;
     asphalt_dfp = asphalt_fp_head + asphalt_dfp_core;
 
@@ -19,14 +31,6 @@ VRAsphalt::VRAsphalt() : VRMaterial("asphalt") {
     setShininess(128);
     clearTexture();
     setMarkingsColor(Color4f(0.7,0.7,0.7,1.0));
-}
-
-VRAsphalt::~VRAsphalt() {}
-
-VRAsphaltPtr VRAsphalt::create() {
-    auto p = VRAsphaltPtr( new VRAsphalt() );
-    VRMaterial::materials[p->getName()] = p;
-    return p;
 }
 
 void VRAsphalt::setArrowMaterial() {

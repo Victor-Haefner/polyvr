@@ -23,6 +23,7 @@ vec2 lookup;
 
 #define Pi 3.1415926535897932384626433832795
 
+
 float getPhotometricIntensity(vec3 vertex, vec3 light) {
 	vec3 lightVector = normalize( vertex - light );
 
@@ -81,9 +82,9 @@ void main(void) {
 
     if (dot(norm.xyz, norm.xyz) < 0.95) discard;
     else {
-        vec4  posAmb = texture2DRect(texBufPos,  lookup);
+        vec4 posAmb = texture2DRect(texBufPos,  lookup);
         pos = posAmb.xyz;
-        color  = texture2DRect(texBufDiff, lookup);
+        color = texture2DRect(texBufDiff, lookup);
 
 	if (channel == 0 && isLit) color = computePointLight(posAmb.w);
 	else if (isFirstLamp == 1) {

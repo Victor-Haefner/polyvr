@@ -40,6 +40,8 @@ class VRAsphalt : public VRMaterial {
         ~VRAsphalt();
         static VRAsphaltPtr create();
 
+        void init();
+
         void setMarkingsColor(Color4f);
         void setArrowMaterial();
 
