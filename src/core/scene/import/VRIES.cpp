@@ -137,7 +137,6 @@ void VRIES::resample() {
             float c = getInterpolatedCandela(va, ha);
             int k = i*texWidth + j;
             texData[k] = c;
-            cout << "ha " << ha << " c " << c << endl;
         }
     }
 

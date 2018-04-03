@@ -408,7 +408,7 @@ void VRLight::loadPhotometricMap(string path) { // ies files
     VRIES parser;
     auto tex = parser.read(path);
     setPhotometricMap(tex);
-    cout << parser.toString(true);
+    //cout << parser.toString(false);
 }
 
 

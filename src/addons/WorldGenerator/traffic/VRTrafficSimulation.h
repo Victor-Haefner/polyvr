@@ -24,6 +24,13 @@ class VRTrafficSimulation : public VRObject {
             VRTransformPtr t;
             VRObjectPtr mesh;
 
+            vector<VRGeometryPtr> turnsignalsBL;
+            vector<VRGeometryPtr> turnsignalsBR;
+            vector<VRGeometryPtr> turnsignalsFL;
+            vector<VRGeometryPtr> turnsignalsFR;
+            vector<VRGeometryPtr> headlights;
+            vector<VRGeometryPtr> backlights;
+
             Graph::position pos;
             float speed = 0.15;
             Vec3d lastMove = Vec3d(0,0,0);
@@ -33,6 +40,8 @@ class VRTrafficSimulation : public VRObject {
             ~Vehicle();
 
             void destroy();
+            void hide();
+            void show(Graph::position p);
 
             bool operator==(const Vehicle& v);
         };
@@ -64,13 +73,25 @@ class VRTrafficSimulation : public VRObject {
         vector<int> seedRoads;
         vector<int> nearRoads;
         vector<Vehicle> users;
+        list<Vehicle> vehiclePool;
         vector<VRObjectPtr> models;
         map<int, vector<trafficLight> > trafficLights;
         int maxUnits = 0;
         int numUnits = 0;
 
+        VRMaterialPtr carLightWhiteOn;
+        VRMaterialPtr carLightWhiteOff;
+        VRMaterialPtr carLightRedOn;
+        VRMaterialPtr carLightRedOff;
+        VRMaterialPtr carLightOrangeOn;
+        VRMaterialPtr carLightOrangeOff;
+        VRMaterialPtr carLightOrangeBlink;
+        VRUpdateCbPtr turnSignalCb;
+
         VRUpdateCbPtr updateCb;
         VRGeometryPtr flowGeo;
+
+        void updateTurnSignal();
 
     public:
         VRTrafficSimulation();
