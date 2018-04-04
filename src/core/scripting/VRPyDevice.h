@@ -11,7 +11,7 @@ struct VRPyDevice : VRPyBaseT<OSG::VRDevice> {
 
     static PyObject* getName(VRPyDevice* self);
     static PyObject* destroy(VRPyDevice* self);
-    static PyObject* getBeacon(VRPyDevice* self);
+    static PyObject* getBeacon(VRPyDevice* self, PyObject *args);
     static PyObject* setBeacon(VRPyDevice* self, PyObject *args);
     static PyObject* getTarget(VRPyDevice* self);
     static PyObject* setTarget(VRPyDevice* self, PyObject *args);
