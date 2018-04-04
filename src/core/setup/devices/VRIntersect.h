@@ -54,6 +54,7 @@ class VRIntersect {
         map< int, map<VRObject*, VRObjectWeakPtr> > dynTrees;
 
         void initIntersect(VRDevicePtr dev);
+        VRIntersection intersectRay(VRObjectWeakPtr tree, Line ray);
 
         virtual void dragCB(VRTransformWeakPtr caster, VRObjectWeakPtr tree, VRDeviceWeakPtr dev = VRDevicePtr(0));
 
@@ -61,9 +62,7 @@ class VRIntersect {
         VRIntersect();
         ~VRIntersect();
 
-        VRIntersection intersect(VRObjectWeakPtr tree, Line ray);
-        VRIntersection intersect(VRObjectWeakPtr tree, bool force = false);
-        VRIntersection intersect();
+        VRIntersection intersect(VRObjectWeakPtr tree, bool force = false, VRTransformPtr caster = 0, Vec3d dir = Vec3d(0,0,-1));
         void drag(VRObjectWeakPtr obj, VRTransformWeakPtr caster);
         void drop(VRDeviceWeakPtr dev = VRDevicePtr(0));
         VRDeviceCbPtr addDrag(VRTransformWeakPtr caster, VRObjectWeakPtr tree);

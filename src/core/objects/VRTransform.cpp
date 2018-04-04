@@ -721,9 +721,8 @@ Line VRTransform::castRay(VRObjectPtr obj, Vec3d dir) { // TODO: check what this
 }
 
 VRIntersection VRTransform::intersect(VRObjectPtr obj, Vec3d dir) {
-    auto line = castRay(obj, dir);
     VRIntersect in;
-    return in.intersect(obj, line);
+    return in.intersect(obj, false, ptr(), dir);
 }
 
 /** Print the position of the object in local && world coords **/
