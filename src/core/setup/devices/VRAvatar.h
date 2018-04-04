@@ -35,22 +35,17 @@ class VRAvatar {
         VRAvatar(string name);
         ~VRAvatar();
 
-        void addAvatar(VRObjectPtr geo, int i);
+        void addAvatar(VRObjectPtr geo, int i = 0);
 
     public:
-        void enableAvatar(string avatar, int i);
-        void enableAvatar(string avatar);
-        void disableAvatar(string avatar, int i);
-        void disableAvatar(string avatar);
+        void enableAvatar(string avatar, int i = 0);
+        void disableAvatar(string avatar, int i = 0);
 
         int addBeacon();
         VRTransformPtr getBeaconRoot();
-        VRTransformPtr getBeacon(int i);
-        VRTransformPtr getBeacon();
-        VRTransformPtr editBeacon(int i);
-        VRTransformPtr editBeacon();
-        void setBeacon(VRTransformPtr b, int i);
-        void setBeacon(VRTransformPtr b);
+        VRTransformPtr getBeacon(int i = 0);
+        VRTransformPtr editBeacon(int i = 0);
+        void setBeacon(VRTransformPtr b, int i = 0);
         void updateBeacons();
 };
 
