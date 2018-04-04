@@ -17,7 +17,7 @@ simpleVRPyType(Device, New_named_ptr)
 PyMethodDef VRPyDevice::methods[] = {
     {"getName", (PyCFunction)VRPyDevice::getName, METH_NOARGS, "Return device name." },
     {"destroy", (PyCFunction)VRPyDevice::destroy, METH_NOARGS, "Destroy device." },
-    {"getBeacon", (PyCFunction)VRPyDevice::getBeacon, METH_VARARGS, "Get device beacon." },
+    {"getBeacon", (PyCFunction)VRPyDevice::getBeacon, METH_VARARGS, "Get device beacon. - DeviceBeacon getBeacon(int beaconId = 0)" },
     {"setBeacon", (PyCFunction)VRPyDevice::setBeacon, METH_VARARGS, "Set device beacon." },
     {"getTarget", (PyCFunction)VRPyDevice::getTarget, METH_NOARGS, "Get device target." },
     {"setTarget", (PyCFunction)VRPyDevice::setTarget, METH_VARARGS, "Set device target." },
@@ -141,8 +141,9 @@ PyObject* VRPyDevice::getBeacon(VRPyDevice* self, PyObject *args) {
 PyObject* VRPyDevice::setBeacon(VRPyDevice* self, PyObject *args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::setBeacon, Object is invalid"); return NULL; }
     VRPyTransform* beacon = NULL;
-    if (! PyArg_ParseTuple(args, "O", &beacon)) return NULL;
-    self->objPtr->setBeacon(beacon->objPtr);
+    int beaconId = 0;
+    if (! PyArg_ParseTuple(args, "O|i", &beacon, &beaconId)) return NULL;
+    self->objPtr->setBeacon(beacon->objPtr, beaconId);
     Py_RETURN_TRUE;
 }
 
