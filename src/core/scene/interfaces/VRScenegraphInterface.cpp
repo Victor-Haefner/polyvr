@@ -119,11 +119,12 @@ void VRScenegraphInterface::handle(string msg) {
 	if (m.size() == 0) return;
 
 	auto toMatrix = [](const vector<double>& d) {
-		Matrix4d m = Matrix4d(d[0], d[3], d[6], d[9], d[1], d[4], d[7], d[10], d[2], d[5], d[8], d[11], 0,0,0,1);
+		Matrix4d m;
+		if (d.size() > 11) m = Matrix4d(d[0], d[3], d[6], d[9], d[1], d[4], d[7], d[10], d[2], d[5], d[8], d[11], 0,0,0,1);
 		return m;
 	};
 
-	if (m[0] == "set") {
+	if (m[0] == "set" && m.size() > 2) {
 		string name = m[2];
 		VRGeometryPtr geo;
 		VRTransformPtr trans;
@@ -131,14 +132,14 @@ void VRScenegraphInterface::handle(string msg) {
 		if (transforms.count(name)) trans = meshes[name];
 
 		if (m[1] == "transform") {
-			if (trans) {
+			if (trans && m.size() > 3) {
                 replace( m[3].begin(), m[3].end(), ',', '.');
                 trans->setWorldMatrix(toMatrix(parseVec<double>(m[3])));
 			}
 		}
 
 		if (m[1] == "positions") {
-            if (geo) {
+            if (geo && m.size() > 3) {
                 GeoPnt3fPropertyMTRecPtr pos = GeoPnt3fProperty::create();
                 replace( m[3].begin(), m[3].end(), ',', '.');
                 parseOSGVec2<float, Pnt3f>(m[3], pos);
@@ -148,7 +149,7 @@ void VRScenegraphInterface::handle(string msg) {
 		}
 
 		if (m[1] == "normals") {
-            if (geo) {
+            if (geo && m.size() > 3) {
                 GeoVec3fPropertyMTRecPtr norms = GeoVec3fProperty::create();
                 replace( m[3].begin(), m[3].end(), ',', '.');
                 parseOSGVec2<float, Vec3f>(m[3], norms);
@@ -158,7 +159,7 @@ void VRScenegraphInterface::handle(string msg) {
 		}
 
 		if (m[1] == "indices") {
-            if (geo) {
+            if (geo && m.size() > 3) {
                 cout << "set geo indices " << geo->getName() << endl;
                 GeoUInt8PropertyMTRecPtr types = GeoUInt8Property::create();;
                 GeoUInt32PropertyMTRecPtr lengths = GeoUInt32Property::create();;
@@ -173,7 +174,7 @@ void VRScenegraphInterface::handle(string msg) {
             }
 		}
 
-		if (m[1] == "material") {
+		if (m[1] == "material" && m.size() > 3) {
 			string mat = m[3];
 			if (mat == "") mat = "__default__";
             if (geo && materials.count(mat)) {
@@ -188,12 +189,14 @@ void VRScenegraphInterface::handle(string msg) {
 
 		if (m[1] == "Material") {
             if (name == "") name = "__default__";
-            if (materials.count(name)) {
+            if (materials.count(name) && m.size() > 3) {
                 // format: [red, green, blue, ambient, diffuse, specular, shininess, transparency, emission]
                 replace( m[3].begin(), m[3].end(), ',', '.');
                 auto matData = parseVec<float>(m[3]);
-                Color3f rgb = Color3f(matData[0], matData[1], matData[2]); // r,g,b = mat[:3]
-                Color3f ads = Color3f(matData[3], matData[4], matData[5]); // a,d,s = mat[3:6]
+                Color3f rgb = Color3f(1,0,1);
+                Color3f ads = Color3f(1,1,1);
+                if (matData.size() > 2) rgb = Color3f(matData[0], matData[1], matData[2]); // r,g,b = mat[:3]
+                if (matData.size() > 5) ads = Color3f(matData[3], matData[4], matData[5]); // a,d,s = mat[3:6]
                 //print obj, mat
                 //materials[obj].setAmbient([r*a,g*a,b*a])
                 materials[name]->setDiffuse(rgb * ads[1]);
@@ -216,10 +219,29 @@ void VRScenegraphInterface::handle(string msg) {
 
 	if (m[0] == "new") {
 		string obj = m[2];
+
 		VRObjectPtr o;
 		if (m[1] == "Object") o = VRObject::create(obj);
-		if (m[1] == "Transform") { auto t = VRTransform::create(obj); transforms[obj] = t; o = t; }
-		if (m[1] == "Geometry") { auto g = VRGeometry::create(obj); g->setMeshVisibility(0); transforms[obj] = g; meshes[obj] = g; o = g; }
+
+		if (m[1] == "Transform") {
+            auto t = VRTransform::create(obj);
+            transforms[obj] = t;
+            o = t;
+        }
+
+		if (m[1] == "Geometry") {
+            VRGeometryPtr g = 0;
+            if (meshes.count(obj)) {
+                g = dynamic_pointer_cast<VRGeometry>(meshes[obj]->duplicate());
+            } else {
+                g = VRGeometry::create(obj);
+                g->setMeshVisibility(0);
+                transforms[obj] = g;
+                meshes[obj] = g;
+            }
+            o = g;
+        }
+
 		if (m[1] == "Material") {
 			if (obj == "") obj = "__default__";
 			materials[obj] = VRMaterial::create(obj);
@@ -230,7 +252,9 @@ void VRScenegraphInterface::handle(string msg) {
 		if (!o) { cout << "bad type:" << m[1] << endl; return; }
 
 		VRObjectPtr p;
-		if (objects.count(m[3])) p = objects[m[3]];
+		if (m.size() > 3) {
+            if (objects.count(m[3])) p = objects[m[3]];
+		}
 		if (!p) p = ptr();
 		p->addChild(o);
 		cout << "created new object:" << m[2] << endl;
