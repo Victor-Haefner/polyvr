@@ -19,6 +19,7 @@ ptrFctFwd( VRUpdate, void );
 ptrFctFwd( VRToggle, bool );
 ptrFctFwd( VREval, bool& );
 ptrFctFwd( VRAnim, float );
+ptrFctFwd( VRMessage, std::string );
 ptrFctFwd( VRDevice, OSG::VRDeviceWeakPtr );
 ptrFctFwd( VRThread, OSG::VRThreadWeakPtr );
 

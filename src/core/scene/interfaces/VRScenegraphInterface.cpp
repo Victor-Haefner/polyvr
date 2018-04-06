@@ -17,7 +17,6 @@ using namespace OSG;
 
 VRScenegraphInterface::VRScenegraphInterface(string name) : VRObject(name) {
     resetWebsocket();
-    selector = VRSelector::create();
 }
 
 VRScenegraphInterface::~VRScenegraphInterface() {}
@@ -36,6 +35,8 @@ void VRScenegraphInterface::clear() {
 
 void VRScenegraphInterface::setPort(int p) { if (p == port) return; port = p; resetWebsocket(); }
 
+void VRScenegraphInterface::send(string msg) { socket->answerWebSocket(clientID, msg); }
+
 void VRScenegraphInterface::resetWebsocket() {
     if (socket) VRSceneManager::get()->remSocket(socket->getName());
     socket = VRSceneManager::get()->getSocket(port);
@@ -44,10 +45,7 @@ void VRScenegraphInterface::resetWebsocket() {
     socket->setType("http receive");
 }
 
-void VRScenegraphInterface::select(VRObjectPtr obj) {
-    selector->select(obj, false);
-    socket->answerWebSocket(clientID, "selection|" + obj->getName());
-}
+void VRScenegraphInterface::addCallback(VRMessageCbPtr cb) { customHandlers.push_back(cb); }
 
 void VRScenegraphInterface::ws_callback(void* _args) {
 	HTTP_args* args = (HTTP_args*)_args;
@@ -114,6 +112,8 @@ void VRScenegraphInterface::handle(string msg) {
 	'set|indices|obj|x y z x y z x y z x y z ...'
 
 	"*/
+
+	for (auto handler : customHandlers) (*handler)(msg);
 
 	auto m = splitString(msg, '|');
 	if (m.size() == 0) return;
