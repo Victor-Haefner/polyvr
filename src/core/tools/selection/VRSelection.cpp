@@ -2,6 +2,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/math/boundingbox.h"
+#include "core/utils/toString.h"
 
 #include <OpenSG/OSGGeometry.h>
 
@@ -14,6 +15,8 @@ sudo apt-get install liblapacke-dev
 #define dgeev LAPACKE_dgeev_work
 
 using namespace OSG;
+
+template<> string typeName(const VRSelectionPtr& t) { return "Selection"; }
 
 VRSelection::VRSelection() { clear(); }
 

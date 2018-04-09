@@ -297,10 +297,20 @@ bool VRObject::shareAncestry(VRObjectPtr obj) {
     return getRoot() == obj->getRoot();
 }
 
-/** Returns the parent of ptr() object **/
 VRObjectPtr VRObject::getParent(bool checkForDrag) {
     if (checkForDrag && held) return old_parent.lock();
     return parent.lock();
+}
+
+vector<VRObjectPtr> VRObject::getAncestry(VRObjectPtr ancestor) {
+    VRObjectPtr first = ptr();
+    vector<VRObjectPtr> res;
+    while (first->getParent() && first != ancestor) {
+        first = first->getParent();
+        res.push_back(first);
+    }
+    reverse(res.begin(), res.end());
+    return res;
 }
 
 VRObjectPtr VRObject::getAtPath(string path) {

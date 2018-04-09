@@ -127,7 +127,13 @@ void VRSelector::select(VRObjectPtr obj, bool append, bool recursive) {
     update();
 }
 
-void VRSelector::select(VRSelectionPtr s) {
+VRObjectPtr VRSelector::getSelected() {
+    auto objs = selection->getSelected();
+    if (objs.size() > 0) return objs[0].lock();
+    return 0;
+}
+
+void VRSelector::set(VRSelectionPtr s) {
     if (s != selection) {
         clear();
         selection = s;

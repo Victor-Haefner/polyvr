@@ -75,6 +75,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"getChild", PyWrap(Object, getChild, "Return child object with index i", VRObjectPtr, int) },
     {"getChildren", PyWrapOpt(Object, getChildren, "Return the list of children objects, bool recursive, string type-filter", "0||0", vector<VRObjectPtr>, bool, string, bool) },
     {"getParent", PyWrapOpt(Object, getParent, "Return parent object, passing 'True' will take into account any DnD state", "0", VRObjectPtr, bool) },
+    {"getAncestry", PyWrapOpt(Object, getAncestry, "Return all parents", "0", vector<VRObjectPtr>, VRObjectPtr) },
     {"find", PyWrap(Object, find, "Find node with given name in scene graph below this node - obj find(str)", VRObjectPtr, string) },
     {"findAll", PyWrapOpt(Object, findAll, "Find nodes with given base name (str) in scene graph below this node", " ", vector<VRObjectPtr>, string, vector<VRObjectPtr>) },
     {"isPickable", PyWrap(Object, isPickable, "Return if the object is pickable", bool) },

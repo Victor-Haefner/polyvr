@@ -36,7 +36,8 @@ class VRSelector {
         static VRSelectorPtr create();
 
         void select(VRObjectPtr obj, bool append = false, bool recursive = true);
-        void select(VRSelectionPtr s);
+        VRObjectPtr getSelected();
+        void set(VRSelectionPtr s);
         void add(VRSelectionPtr s);
         VRSelectionPtr getSelection();
         void setColor(Color3f c);
