@@ -136,7 +136,6 @@ template<> string typeName(const Matrix4d& t) { return "Matrix"; }
 template<> string typeName(const Color3f& t) { return "Vec3d"; }
 template<> string typeName(const Color4f& t) { return "Vec4d"; }
 template<> string typeName(const Line& t) { return "Line"; }
-template<> string typeName(const VRAnimCbPtr& t) { return "void callback(float)"; }
 template<> string typeName(const Boundingbox& t) { return "Boundingbox"; }
 
 template <typename T> int ssToVal(stringstream& ss, T& t) {

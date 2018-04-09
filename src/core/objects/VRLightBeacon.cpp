@@ -46,6 +46,15 @@ VRLightBeaconPtr VRLightBeacon::create(string name) {
     return p;
 }
 
+VRObjectPtr VRLightBeacon::copy(vector<VRObjectPtr> children) {
+    VRLightBeaconPtr beacon = VRLightBeacon::create(getBaseName());
+    //for (auto c : children) // TODO: connect to light, light may be duplicated?
+    beacon->setVisible(isVisible());
+    beacon->setPickable(isPickable());
+    beacon->setMatrix(getMatrix());
+    return beacon;
+}
+
 void VRLightBeacon::showLightGeo(bool b) {
     if (b) lightGeo->node->setTravMask(0xffffffff);
     else lightGeo->node->setTravMask(0);

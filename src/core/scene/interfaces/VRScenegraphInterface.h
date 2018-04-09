@@ -6,6 +6,7 @@
 
 #include "core/objects/object/VRObject.h"
 #include "core/scene/VRSceneFwd.h"
+#include "core/utils/VRFunctionFwd.h"
 #include "core/networking/VRNetworkingFwd.h"
 #include "core/tools/selection/VRSelectionFwd.h"
 
@@ -17,9 +18,9 @@ class VRScenegraphInterface : public VRObject {
         int port = 5555;
         int clientID = 0;
 
-        VRSelectorPtr selector;
         VRSocketPtr socket;
         VRFunction<void*>* cb = 0;
+        vector<VRMessageCbPtr> customHandlers;
 
         map<string, VRMaterialPtr> materials;
         map<string, VRObjectPtr> objects;
@@ -36,10 +37,11 @@ class VRScenegraphInterface : public VRObject {
         static VRScenegraphInterfacePtr create(string name = "ScenegraphInterface");
         VRScenegraphInterfacePtr ptr();
 
-        void select(VRObjectPtr obj);
         void clear();
         void setPort(int p);
         void handle(string msg);
+        void send(string msg);
+        void addCallback(VRMessageCbPtr cb);
 
         void loadStream(string path);
 };

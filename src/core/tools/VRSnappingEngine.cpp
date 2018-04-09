@@ -13,7 +13,7 @@ using namespace OSG;
 
 template<> string typeName(const VRSnappingEngine::PRESET& o) { return "VRSnappingEngine::PRESET"; }
 template<> string typeName(const VRSnappingEngine::Type& o) { return "VRSnappingEngine::Type"; }
-template<> string typeName(const VRSnappingEngine::VRSnapCbPtr& o) { return "VRSnappingEngine::VRSnapCbPtr"; }
+template<> string typeName(const VRSnappingEngine::EventSnap& o) { return "VRSnappingEngine::EventSnap"; }
 
 template<> int toValue(stringstream& ss, VRSnappingEngine::PRESET& e) {
     string s = ss.str();

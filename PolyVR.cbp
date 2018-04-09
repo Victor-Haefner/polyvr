@@ -820,6 +820,8 @@
 		<Unit filename="src/core/scene/import/VRDXF.h" />
 		<Unit filename="src/core/scene/import/VRExport.cpp" />
 		<Unit filename="src/core/scene/import/VRExport.h" />
+		<Unit filename="src/core/scene/import/VRIES.cpp" />
+		<Unit filename="src/core/scene/import/VRIES.h" />
 		<Unit filename="src/core/scene/import/VRImport.cpp" />
 		<Unit filename="src/core/scene/import/VRImport.h" />
 		<Unit filename="src/core/scene/import/VRPLY.cpp" />

@@ -180,7 +180,20 @@ struct VRMatData {
 map<string, VRMaterialWeakPtr> VRMaterial::materials;
 map<MaterialMTRecPtr, VRMaterialWeakPtr> VRMaterial::materialsByPtr;
 
-VRMaterial::VRMaterial(string name) : VRObject(name) {
+VRMaterial::VRMaterial(string name) : VRObject(name) {}
+
+VRMaterial::~VRMaterial() {}
+
+VRMaterialPtr VRMaterial::ptr() { return static_pointer_cast<VRMaterial>( shared_from_this() ); }
+
+VRMaterialPtr VRMaterial::create(string name) {
+    auto p = VRMaterialPtr(new VRMaterial(name) );
+    p->init();
+    materials[p->getName()] = p;
+    return p;
+}
+
+void VRMaterial::init() {
     auto scene = VRScene::getCurrent();
     if (scene) deferred = scene->getDefferedShading();
     addAttachment("material", 0);
@@ -195,16 +208,6 @@ VRMaterial::VRMaterial(string name) : VRObject(name) {
     //store("diffuse", &diffuse);
     //store("specular", &specular);
     //store("ambient", &ambient);
-}
-
-VRMaterial::~VRMaterial() {}
-
-VRMaterialPtr VRMaterial::ptr() { return static_pointer_cast<VRMaterial>( shared_from_this() ); }
-
-VRMaterialPtr VRMaterial::create(string name) {
-    auto p = VRMaterialPtr(new VRMaterial(name) );
-    materials[p->getName()] = p;
-    return p;
 }
 
 void VRMaterial::setDefaultVertexShader() {
@@ -270,6 +273,7 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
     if (texD == 2) fp += "  vec4 diffCol = texture2D(tex0, gl_TexCoord[0].xy);\n";
     if (texD == 3) fp += "  vec4 diffCol = texture3D(tex0, gl_TexCoord[0].xyz);\n";
     if (deferred) {
+        fp += "  if (diffCol.a < 0.1) discard;\n";
         fp += "  gl_FragData[0] = vec4(pos, 1.0);\n";
         fp += "  gl_FragData[1] = vec4(normalize(vertNorm), isLit);\n";
         fp += "  gl_FragData[2] = vec4(diffCol.rgb, 0);\n";
@@ -308,6 +312,7 @@ void VRMaterial::setDeferred(bool b) {
             }
         } else if (mats[i]->tmpDeferredShdr) remShaderChunk();
         mats[i]->toggleDeferredShader(b, getName());
+        setTransparency( getTransparency() );
     }
     setActivePass(a);
 }
@@ -784,7 +789,7 @@ void VRMaterial::setTransparency(float c) {
     auto md = mats[activePass];
     md->colChunk->setDiffuse( toColor4f(getDiffuse(), c) );
 
-    if (c == 1) clearTransparency();
+    if (c == 1 || deferred) clearTransparency();
     else enableTransparency();
     //enableTransparency();
 }

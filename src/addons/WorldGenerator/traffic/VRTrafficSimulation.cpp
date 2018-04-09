@@ -35,6 +35,15 @@ VRTrafficSimulation::Vehicle::Vehicle(Graph::position p) : pos(p) {
 
 VRTrafficSimulation::Vehicle::~Vehicle() {}
 
+void VRTrafficSimulation::Vehicle::hide() {
+    t->hide();
+}
+
+void VRTrafficSimulation::Vehicle::show(Graph::position p) {
+    pos = p;
+    t->show();
+}
+
 void VRTrafficSimulation::Vehicle::destroy() {
     if (t) t->destroy();
     t = 0;
@@ -51,11 +60,36 @@ VRTrafficSimulation::VRTrafficSimulation() : VRObject("TrafficSimulation") {
     auto box = VRGeometry::create("boxCar");
     box->setPrimitive("Box", "2 1.5 4 1 1 1");
     addVehicleModel(box);
+
+    auto setupLightMaterial = [&](string name, Color3f c, bool lit) {
+        auto l = VRMaterial::create(name);
+        l->setLit(lit);
+        l->setDiffuse(c);
+        return l;
+    };
+
+    carLightWhiteOn   = setupLightMaterial("carLightWhiteOn"  , Color3f(1,1,1), false);
+    carLightWhiteOff  = setupLightMaterial("carLightWhiteOff" , Color3f(0.5,0.5,0.5), true);
+    carLightRedOn     = setupLightMaterial("carLightRedOn"    , Color3f(1,0.2,0.2), false);
+    carLightRedOff    = setupLightMaterial("carLightRedOff"   , Color3f(0.5,0.1,0.1), true);
+    carLightOrangeOn  = setupLightMaterial("carLightOrangeOn" , Color3f(1,0.7,0.1), false);
+    carLightOrangeOff = setupLightMaterial("carLightOrangeOff", Color3f(0.5,0.35,0.05), true);
+    carLightOrangeBlink = setupLightMaterial("carLightOrangeBlink", Color3f(1,0.7,0.1), false);
+
+    turnSignalCb = VRUpdateCb::create( "turnSignal", boost::bind(&VRTrafficSimulation::updateTurnSignal, this) );
+    VRScene::getCurrent()->addTimeoutFkt(turnSignalCb, 0, 500);
 }
 
 VRTrafficSimulation::~VRTrafficSimulation() {}
 
 VRTrafficSimulationPtr VRTrafficSimulation::create() { return VRTrafficSimulationPtr( new VRTrafficSimulation() ); }
+
+void VRTrafficSimulation::updateTurnSignal() {
+    bool l = !carLightOrangeBlink->isLit();
+    if (l) carLightOrangeBlink->setDiffuse(Color3f(0.5,0.35,0.05));
+    else   carLightOrangeBlink->setDiffuse(Color3f(1,0.7,0.1));
+    carLightOrangeBlink->setLit(l);
+}
 
 void VRTrafficSimulation::setRoadNetwork(VRRoadNetworkPtr rds) {
     roadNetwork = rds;
@@ -134,7 +168,8 @@ void VRTrafficSimulation::updateSimulation() {
 
         for (auto roadID : makeDiff(nearRoads, newNearRoads)) {
             auto& road = roads[roadID];
-            for (auto v : road.vehicles) v.destroy();
+            //for (auto v : road.vehicles) { v.destroy(); numUnits--; }
+            for (auto v : road.vehicles) { v.hide(); vehiclePool.push_front(v); numUnits--; }
             road.vehicles.clear();
             road.macro = true;
         }
@@ -256,7 +291,8 @@ void VRTrafficSimulation::updateSimulation() {
             auto& road = roads[r.first];
             for (auto& v : r.second) {
                 erase(road.vehicles, v.first);
-                if (v.second == -1) v.first.destroy();
+                //if (v.second == -1) { v.first.destroy(); numUnits--; }
+                if (v.second == -1) { v.first.hide(); vehiclePool.push_front(v.first); numUnits--; }
                 else {
                     auto& road2 = roads[v.second];
                     road2.vehicles.push_back(v.first);
@@ -280,10 +316,42 @@ void VRTrafficSimulation::addUser(VRTransformPtr t) {
 }
 
 void VRTrafficSimulation::addVehicle(int roadID, int type) {
+    if (maxUnits > 0 && numUnits >= maxUnits) return;
+    numUnits++;
+
+    auto getVehicle = [&]() {
+        if (vehiclePool.size() > 0) {
+            auto v = vehiclePool.back();
+            vehiclePool.pop_back();
+            v.show( Graph::position(roadID, 0.0) );
+            return v;
+        } else {
+            auto v = Vehicle( Graph::position(roadID, 0.0) );
+            v.mesh = models[type]->duplicate();
+            for (auto obj : v.mesh->getChildren(true, "Geometry")) {
+                VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(obj);
+                string name = geo->getBaseName();
+                if (name == "TurnSignalBL" || name == "turnsignalBL") v.turnsignalsBL.push_back(geo);
+                if (name == "TurnSignalBR" || name == "turnsignalBR") v.turnsignalsBR.push_back(geo);
+                if (name == "TurnSignalFL" || name == "turnsignalFL") v.turnsignalsFL.push_back(geo);
+                if (name == "TurnSignalFR" || name == "turnsignalFR") v.turnsignalsFR.push_back(geo);
+                if (name == "Headlight" || name == "headlight") v.headlights.push_back(geo);
+                if (name == "Backlight" || name == "backlight") v.backlights.push_back(geo);
+            }
+
+            for (auto l : v.turnsignalsBL) l->setMaterial(carLightOrangeBlink);
+            for (auto l : v.turnsignalsBR) l->setMaterial(carLightOrangeBlink);
+            for (auto l : v.turnsignalsFL) l->setMaterial(carLightOrangeBlink);
+            for (auto l : v.turnsignalsFR) l->setMaterial(carLightOrangeBlink);
+            for (auto l : v.headlights) l->setMaterial(carLightWhiteOn);
+            for (auto l : v.backlights) l->setMaterial(carLightRedOn);
+            return v;
+        }
+    };
+
     //if () cout << "VRTrafficSimulation::updateSimulation " << roads.size() << endl;
     auto& road = roads[roadID];
-    auto v = Vehicle( Graph::position(roadID, 0.0) );
-    v.mesh = models[type]->duplicate();
+    Vehicle v = getVehicle();
 
     //if (VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(v.mesh) ) g->makeUnique(); // only for debugging!!
     //v.t->setPickable(true);
@@ -306,8 +374,9 @@ void VRTrafficSimulation::addVehicles(int roadID, float density, int type) {
     for (int i=N0; i<N; i++) addVehicle(roadID, type);
 }
 
-void VRTrafficSimulation::setTrafficDensity(float density, int type) {
+void VRTrafficSimulation::setTrafficDensity(float density, int type, int maxUnits) {
     //for (auto road : roads) addVehicles(road.first, density, type);
+    this->maxUnits = maxUnits;
     for (auto& road : roads) road.second.density = density;
 }
 

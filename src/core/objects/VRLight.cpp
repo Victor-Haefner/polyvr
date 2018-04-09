@@ -3,6 +3,7 @@
 #include "core/utils/VRStorage_template.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/scene/VRScene.h"
+#include "core/scene/import/VRIES.h"
 #include "core/objects/OSGObject.h"
 #include "core/objects/object/OSGCore.h"
 #include "VRLightBeacon.h"
@@ -97,6 +98,37 @@ void VRLight::setup_after() {
     VRObjectPtr tmp = getRoot()->find(beacon_name);
     if (tmp) setBeacon( static_pointer_cast<VRLightBeacon>(tmp) );
     else cout << "  !! could not find light beacon: " << root << " " << this << endl;
+}
+
+VRObjectPtr VRLight::copy(vector<VRObjectPtr> children) {
+    VRLightPtr light = VRLight::create(getBaseName());
+    if (auto b = getBeacon()) {
+        for (auto c : children) {
+            auto tmpv = c->findAll(b->getBaseName());
+            if (tmpv.size() > 0) {
+                auto tmp = tmpv[0];
+                if (tmp) {
+                    light->setBeacon( static_pointer_cast<VRLightBeacon>(tmp) );
+                    break;
+                }
+            }
+        }
+    }
+    light->setVisible(isVisible());
+    light->setPickable(isPickable());
+    light->setOn(on);
+    light->setDiffuse(lightDiffuse);
+    light->setAmbient(lightAmbient);
+    light->setSpecular(lightSpecular);
+    light->setPhotometricMap(photometricMap);
+    light->setType(lightType);
+    light->setDeferred(deferred);
+    light->toggleShadows(shadows);
+    light->setShadowMapRes(shadowMapRes);
+    light->setShadowNearFar(shadowNearFar);
+    light->setShadowColor(shadowColor);
+    light->setAttenuation(attenuation);
+    return light;
 }
 
 void VRLight::setType(string type) {
@@ -267,6 +299,7 @@ void VRLight::setAttenuation(Vec3d a) {
     dynamic_pointer_cast<PointLight>(p_light->core)->setAttenuation(a[0], a[1], a[2]);
     dynamic_pointer_cast<PointLight>(ph_light->core)->setAttenuation(a[0], a[1], a[2]);
     dynamic_pointer_cast<SpotLight>(s_light->core)->setAttenuation(a[0], a[1], a[2]);
+    if (deferred) updateDeferredLight();
 }
 
 Vec3d VRLight::getAttenuation() { return attenuation; }
@@ -352,156 +385,30 @@ void VRLight::reloadDeferredSystem() {
 }
 
 void VRLight::setPhotometricMap(VRTexturePtr tex) { photometricMap = tex; updateDeferredLight(); }
-VRTexturePtr VRLight::getPhotometricMap() { return photometricMap; }
+
+VRTexturePtr VRLight::getPhotometricMap(bool forVisual) {
+    if (!forVisual) return photometricMap;
+
+    int W = photometricMap->getSize()[0];
+    int H = photometricMap->getSize()[1];
+    vector<Vec3f> texData = vector<Vec3f>(W*H);
+    for (int i=0; i<W*H; i++) {
+        float c = photometricMap->getPixel(i)[0];
+        texData[i] = Vec3f(c,c,c);
+    }
+    auto tex = VRTexture::create();
+    auto img = tex->getImage();
+    img->set( Image::OSG_RGB_PF, W, H, 1, 1, 1, 0, (const uint8_t*)&texData[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    return tex;
+}
 
 void VRLight::loadPhotometricMap(string path) { // ies files
-    auto sample2D = [&](float i, float j, vector<float>& data, int aNv, int aNh) {
-        int aNv_ = aNv - 1;
-        int aNh_ = aNh - 1;
-
-        // 4 corners
-        int i1 = floor(i*aNv_);
-        int i2 = ceil(i*aNv_);
-        int j1 = floor(j*aNh_);
-        int j2 = ceil(j*aNh_);
-
-        // sample pnt
-        float s,t;
-        if (i1==i2) s = 0.0;
-        else s = i*aNv_ - i1;
-        if (j1==j2) t = 0.0;
-        else t = j*aNh_ - j1;
-
-        //quad
-        float A = data[i1 + j1*aNv];
-        float B = data[i2 + j1*aNv];
-        float C = data[i1 + j2*aNv];
-        float D = data[i2 + j2*aNv];
-
-        float E = A + s*(B-A);
-        float F = C + s*(D-C);
-
-        float P = E + t*(F-E);
-        return P;
-    };
-
-    auto rescale = [&](vector<float>& data, int Nv, int Nh, int N2v, int N2h, float scale) {
-        vector<float> result(N2v*N2v);
-        for (int i = 0; i < N2v; i++) {
-            for (int j = 0; j < N2h; j++) {
-                float gi = acos(1-2*i/(N2v-1))/Pi;
-                float gj = acos(1-2*j/(N2h-1))/Pi;
-
-                float f = sample2D(gj, gi, data, Nv, Nh) * scale;
-                int k = i*N2h+j;
-                result[k] = f;
-            }
-        }
-        return result;
-    };
-
-    auto startswith = [](const string& a, const string& b) -> bool {
-        if (a.size() < b.size()) return false;
-        return a.compare(0, b.length(), b) == 0;
-    };
-
-    auto parseFile = [&](int Nv, int Nh, int& aNv, int& aNh) {
-        ifstream file(path);
-        string data((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-        auto lines = splitString(data, '\n');
-        if (lines.size() < 10) return vector<float>();
-
-        // read version
-        int paramLineN = 9;
-        if (startswith(lines[0], "IESNA:LM-63-2002")) paramLineN = 10;
-
-        // read parameters
-        auto params = splitString( lines[paramLineN] );
-        if (params.size() < 5) { cout << "Error, VRLight::loadPhotometricMap::parseFile failed, wrong number of parameters, " << lines[paramLineN] << endl; return vector<float>(); }
-        aNv = toInt(params[3]); // number of vertical angles
-        aNh = toInt(params[4]); // number of horizontal angles
-        int N = aNv*aNh;
-        float lmScale = toFloat(params[2]); // candela multiplier
-
-        //cout << "photometricMapPath " << lines[9] << endl;
-
-        // read data
-        string dataChunk;
-        for (int i=paramLineN+2; i<lines.size(); i++) dataChunk += lines[i] + " ";
-        stringstream ss(dataChunk);
-
-        vector<float> aTheta(aNv, 0);
-        vector<float> aPhi(aNh, 0);
-        vector<float> candela(N, 0);
-        for (int i=0; i<aNv; i++) ss >> aTheta[i];
-        for (int i=0; i<aNh; i++) ss >> aPhi[i];
-        for (int i=0; i<N; i++) ss >> candela[i];
-
-        auto getMinDelta = [&](vector<float>& v) {
-            float d = 1e6;
-            for (auto f : v) if (f<d && f > 1e-3) d = f;
-            return d;
-        };
-
-        int aNv2 = 180.0/getMinDelta(aTheta);
-        int aNh2 = 90.0/getMinDelta(aPhi);
-        int N2 = aNv2*aNh2;
-
-        vector<float> candela2(N2, 0);
-        for (int i=0; i<aNh2; i++) {
-            for (int j=0; j<aNv2; j++) {
-                float c = 0;
-
-                if (i < aNh && j < aNv) { // TODO: quick hack, resolve properly
-                    int k = i*aNv + j;
-                    c = candela[k];
-                }
-
-                int k2 = i*aNv2 + j;
-                candela2[k2] = c;
-            }
-        }
-
-        aNv = aNv2;
-        aNh = aNh2;
-        return candela2;
-        //return candela;
-        //return rescale(candela, aNv, aNh, Nv, Nh, lmScale*0.05);
-    };
-
-    int Nv = 64;
-    int Nh = 64;
-    int aNv = 0;
-    int aNh = 0;
-
     if (path == "") return;
-    auto candela = parseFile(Nv, Nh, aNv, aNh);
-    if (candela.size() == 0) { cout << "Error, VRLight::loadPhotometricMap failed" << endl; return; }
     photometricMapPath = path;
-
-    Nv = aNv;
-    Nh = aNh;
-
-    float cMax = 0;
-    for (auto& c : candela) if (c > cMax) cMax = c;
-    for (auto& c : candela) c /= cMax;
-
-    /*for (int i=0; i<Nv; i++) {
-        for (int j=0; j<Nh; j++) {
-            int k = i*Nh+j;
-            cout << " " << candela[k];
-        }
-        cout << endl;
-    }*/
-    auto tex = VRTexture::create();
-    //tex->read("imgres.png");
-    //tex->read("checkers.jpg");
-
-    tex->setInternalFormat(GL_ALPHA32F_ARB); // important for unclamped float
-    auto img = tex->getImage();
-    img->set( Image::OSG_A_PF, Nv, Nh, 1, 1, 1, 0, (const uint8_t*)&candela[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
-
+    VRIES parser;
+    auto tex = parser.read(path);
     setPhotometricMap(tex);
+    //cout << parser.toString(false);
 }
 
 
