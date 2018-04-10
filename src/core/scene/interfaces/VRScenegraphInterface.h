@@ -43,6 +43,8 @@ class VRScenegraphInterface : public VRObject {
         void send(string msg);
         void addCallback(VRMessageCbPtr cb);
 
+        VRObjectPtr getObject(string name);
+
         void loadStream(string path);
 };
 

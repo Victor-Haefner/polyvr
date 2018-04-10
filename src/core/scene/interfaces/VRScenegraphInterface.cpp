@@ -98,6 +98,11 @@ void parseOSGVec2(string& data, V& v) {
     }
 }
 
+VRObjectPtr VRScenegraphInterface::getObject(string name) {
+    if (objects.count(name)) return objects[name];
+    return 0;
+}
+
 void VRScenegraphInterface::handle(string msg) {
 	/** protocol
 
