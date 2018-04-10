@@ -60,9 +60,13 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             return true;
         };
 
-	    auto checkContinuationMatch = [](int i, int j, int Nin, int Nout) {
+	    auto checkContinuationMatch = [](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut) {
 	        if (Nout == Nin && i == j) return true;
-	        if (Nout > Nin && i == Nout-j-1) return true; // TODO
+	        //if (Nout > Nin && i == j-1) return true;
+	        //if (Nout > Nin && i< Nin/2 && j< Nout/2 && i == Nout-j-1) return true; // TODO
+            //if (Nout > Nin && i>= Nin/2 && j> Nout/2 && i == j) return true;
+            if (Nout > Nin && reSignIn<0 && i == j) return true;
+            if (Nout > Nin && reSignIn>0 && i == j-1) return true;
 	        if (Nout < Nin && Nin-i-1 == j) return true; // TODO
             //if (Nin == Nout && i != j && reSignIn != reSignOut) return false;
             //if (Nin == Nout && i != Nout-j-1 && reSignIn == reSignOut) return false;
@@ -85,7 +89,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                         auto laneOut = roadFront2->outLanes[j];
                         bool match = false;
                         switch (type) {
-                            case CONTINUATION: match = checkContinuationMatch(i,j,Nin, Nout); break;
+                            case CONTINUATION: match = checkContinuationMatch(i,j,Nin, Nout, reSign1, reSign2); break;
                             //case FORK: break;
                             //case MERGE: break;
                             //case UPLINK: break;
