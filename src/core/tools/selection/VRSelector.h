@@ -24,6 +24,7 @@ class VRSelector {
             MatStore(VRGeometryPtr geo);
         };
         vector<MatStore> orig_mats;
+        VRObjectPtr selected;
         VRSelectionPtr selection;
         VRGeometryPtr subselection;
 

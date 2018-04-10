@@ -116,6 +116,7 @@ void VRSelector::setBorder(int width, bool smooth) {
 }
 
 void VRSelector::select(VRObjectPtr obj, bool append, bool recursive) {
+    selected = obj;
     if (!append) {
         clear();
         selection->apply(obj, true, recursive);
@@ -128,6 +129,7 @@ void VRSelector::select(VRObjectPtr obj, bool append, bool recursive) {
 }
 
 VRObjectPtr VRSelector::getSelected() {
+    if (selected) return selected;
     auto objs = selection->getSelected();
     if (objs.size() > 0) return objs[0].lock();
     return 0;
@@ -138,12 +140,14 @@ void VRSelector::set(VRSelectionPtr s) {
         clear();
         selection = s;
     }
+    selected = 0;
     update();
 }
 
 void VRSelector::add(VRSelectionPtr s) {
     if (!selection) selection = s;
     else selection->append(s);
+    selected = 0;
     update();
 }
 
