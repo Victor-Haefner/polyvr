@@ -41,6 +41,7 @@ void VRSelector::update() {
     }
 
     // visualise subselections
+    if (selection->getSubselections().size() <= 1) return; // hack! should be zero!
     subselection = VRGeometry::create("subsel");
     subselection->setPersistency(0);
     for (auto m : selection->getSubselections()) {
