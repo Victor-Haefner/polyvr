@@ -56,6 +56,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 	    auto checkDefaultMatch = [](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut) {
             if (Nin == Nout && i != j && reSignIn != reSignOut) return false;
             if (Nin == Nout && i != Nout-j-1 && reSignIn == reSignOut) return false;
+            if (Nin > Nout && i!=j) return false;
             if (Nin == 1 || Nout == 1) return true;
             return true;
         };
