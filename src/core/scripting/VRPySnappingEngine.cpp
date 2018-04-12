@@ -7,24 +7,11 @@
 using namespace OSG;
 
 template<> bool toValue(PyObject* obj, VRSnappingEngine::PRESET& e) {
-    string s = PyString_AsString(obj);
-    if (s == "SIMPLE_ALIGNMENT") { e = VRSnappingEngine::SIMPLE_ALIGNMENT; return true; }
-    if (s == "SNAP_BACK") { e = VRSnappingEngine::SNAP_BACK; return true; }
-    if (s == "simple alignment") { e = VRSnappingEngine::SIMPLE_ALIGNMENT; return true; }
-    if (s == "snap back") { e = VRSnappingEngine::SNAP_BACK; return true; }
-    return false;
+    return toValue( PyString_AsString(obj) , e);
 }
 
 template<> bool toValue(PyObject* obj, VRSnappingEngine::Type& e) {
-    string s = PyString_AsString(obj);
-    if (s == "NONE") { e = VRSnappingEngine::NONE; return true; }
-    if (s == "POINT") { e = VRSnappingEngine::POINT; return true; }
-    if (s == "LINE") { e = VRSnappingEngine::LINE; return true; }
-    if (s == "PLANE") { e = VRSnappingEngine::PLANE; return true; }
-    if (s == "POINT_LOCAL") { e = VRSnappingEngine::POINT_LOCAL; return true; }
-    if (s == "LINE_LOCAL") { e = VRSnappingEngine::LINE_LOCAL; return true; }
-    if (s == "PLANE_LOCAL") { e = VRSnappingEngine::PLANE_LOCAL; return true; }
-    return false;
+    return toValue( PyString_AsString(obj) , e);
 }
 
 template<> bool toValue(PyObject* o, VRSnappingEngine::VRSnapCbPtr& e) {

@@ -38,7 +38,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/windows/VRView.h"
 
-#define WITH_PHOTOMETRIC
+//#define WITH_PHOTOMETRIC
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
