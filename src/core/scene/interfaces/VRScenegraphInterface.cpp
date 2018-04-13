@@ -362,6 +362,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 		PosePtr B = b->getPose();
 		A->invert();
 		B->invert();
+		if (!C) return make_pair(A,B);
 		PosePtr C_A = A->multRight(C); // A⁻¹*C
 		PosePtr C_B = B->multRight(C); // B⁻¹*C
 		return make_pair(C_A,C_B);
@@ -898,7 +899,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 				else {
 					Find_new_C(MateEntityTypeA,Values0.TypeC0,C,Values0.C0);
 					Values0.TypeC0 = TypeC;
-					Values0.C0 = newC;
+					if (newC) Values0.C0 = newC;
 					Values0.C_AandB0 = buildC_AandB(Values0.C0,a,b);
 					setupJoint(Values0.a0,Values0.b0,newDoF,Values0.C_AandB0,Values0.MinMax);
 				}
@@ -1003,8 +1004,6 @@ void VRScenegraphInterface::handle(string msg) {
 	'set|indices|obj|x y z x y z x y z x y z ...'
 
 	"*/
-
-	for (auto handler : customHandlers) (*handler)(msg);
 
 	auto m = splitString(msg, '|');
 	if (m.size() == 0) return;
@@ -1152,6 +1151,8 @@ void VRScenegraphInterface::handle(string msg) {
 		p->addChild(o);
 		cout << "created new object:" << m[2] << endl;
 	}
+
+	for (auto handler : customHandlers) (*handler)(msg); // TODO: pre and post handlers!
 }
 
 
