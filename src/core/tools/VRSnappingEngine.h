@@ -82,15 +82,15 @@ class VRSnappingEngine {
 
         void addCallback(VRSnapCbPtr cb);
 
-        int addRule(Type t, Type o, Line pt, Line po, float d, float w = 1, VRTransformPtr l = 0);
+        int addRule(Type t, Type o, Line pt, Line po, float d, int g = 0, VRTransformPtr l = 0);
         void remRule(int i);
 
         void addObjectAnchor(VRTransformPtr obj, VRTransformPtr a);
         void clearObjectAnchors(VRTransformPtr obj);
         void remLocalRules(VRTransformPtr obj);
 
-        void addObject(VRTransformPtr obj, float weight = 1);
-        void addTree(VRObjectPtr obj, float weight = 1);
+        void addObject(VRTransformPtr obj, int group = 0);
+        void addTree(VRObjectPtr obj, int group = 0);
         void remObject(VRTransformPtr obj);
 
         void setVisualHints(bool b = true);

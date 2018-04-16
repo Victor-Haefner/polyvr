@@ -6,10 +6,15 @@
 
 using namespace OSG;
 
+template<> bool toValue(PyObject* obj, VRSelector::VISUAL& e) {
+    return toValue( PyString_AsString(obj) , e);
+}
+
 simpleVRPyType(Selector, New_ptr);
 
 PyMethodDef VRPySelector::methods[] = {
-    {"setColor", PyWrap( Selector, setColor, "Set the color of the selection", void, Color3f ) },
+    {"setVisual", PyWrap( Selector, setVisual, "Set visualization type, 'OUTLINE' or 'OVERLAY'", void, VRSelector::VISUAL ) },
+    {"setColor", PyWrapOpt( Selector, setColor, "Set the color of the selection", "1", void, Color3f, float ) },
     {"deselect", PyWrap( Selector, clear, "Deselect object", void ) },
     {"select", PyWrapOpt( Selector, select, "Select object - select( obj, add, recursive )", "0|1", void, VRObjectPtr, bool, bool ) },
     {"update", PyWrap( Selector, update, "Update selection visualisation", void ) },

@@ -1,6 +1,7 @@
 #include "VRSnappingEngine.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/object/VRObjectT.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRScene.h"
@@ -43,13 +44,13 @@ struct VRSnappingEngine::Rule {
 
     VRTransformPtr csys = 0;
     float distance = 1;
-    float weight = 1;
+    int group = 0;
     Matrix4d C;
 
-    Rule(Type t, Type o, Line pt, Line po, float d, float w, VRTransformPtr l) :
+    Rule(Type t, Type o, Line pt, Line po, float d, int g, VRTransformPtr l) :
         translation(t), orientation(o),
         prim_t(pt), prim_o(po), csys(l),
-        distance(d), weight(w) {
+        distance(d), group(g) {
         static unsigned long long i = 0;
         ID = i++;
     }
@@ -92,6 +93,11 @@ struct VRSnappingEngine::Rule {
         bool b = (D <= distance && D < dmin);
         if (b) dmin = D;
         return b;
+    }
+
+    bool checkGroup(VRObjectPtr o) {
+        int og = o->getAttachment<int>("snapGroup");
+        return (og == group);
     }
 };
 
@@ -137,8 +143,8 @@ VRSnappingEngine::Type VRSnappingEngine::typeFromStr(string t) {
     return NONE;
 }
 
-int VRSnappingEngine::addRule(Type t, Type o, Line pt, Line po, float d, float w, VRTransformPtr l) {
-    Rule* r = new Rule(t,o,pt,po,d,w,l);
+int VRSnappingEngine::addRule(Type t, Type o, Line pt, Line po, float d, int g, VRTransformPtr l) {
+    Rule* r = new Rule(t,o,pt,po,d,g,l);
     rules[r->ID] = r;
     return r->ID;
 }
@@ -164,20 +170,21 @@ void VRSnappingEngine::remLocalRules(VRTransformPtr obj) {
     for (int i : d) remRule(i);
 }
 
-void VRSnappingEngine::addObject(VRTransformPtr obj, float weight) {
+void VRSnappingEngine::addObject(VRTransformPtr obj, int group) {
     if (!obj) return;
     objects[obj] = obj->getWorldMatrix();
     Vec3d p = obj->getWorldPosition();
     positions->add(p, obj.get());
+    obj->addAttachment<int>("snapGroup", group);
 }
 
 void VRSnappingEngine::remObject(VRTransformPtr obj) {
     if (objects.count(obj)) objects.erase(obj);
 }
 
-void VRSnappingEngine::addTree(VRObjectPtr obj, float weight) {
+void VRSnappingEngine::addTree(VRObjectPtr obj, int group) {
     vector<VRObjectPtr> objs = obj->getObjectListByType("Geometry");
-    for (auto o : objs) addObject(static_pointer_cast<VRTransform>(o), weight);
+    for (auto o : objs) addObject(static_pointer_cast<VRTransform>(o), group);
 }
 
 VRSignalPtr VRSnappingEngine::getSignalSnap() { return snapSignal; }
@@ -202,6 +209,7 @@ void VRSnappingEngine::update() {
         for (auto ri : rules) {
             Rule* r = ri.second;
             if (r->csys == obj) continue;
+            if (!r->checkGroup(obj)) continue;
 
             if (anchors.count(obj)) {
                 for (auto a : anchors[obj]) {
@@ -248,6 +256,8 @@ void VRSnappingEngine::update() {
         }
 
         if (event->snap) obj->setWorldMatrix(event->m);
+        else obj->setMatrix( gobj->getMatrix() );
+
         if (lastEvent != event->snap || lastEventID != event->snapID) {
             if (event->o1 == obj) {
                 snapSignal->trigger<EventSnap>(event);
