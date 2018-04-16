@@ -502,7 +502,7 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p) {
         arrowTemplates[dirs] = arrowTemplates.size();
 
         VRTextureGenerator tg;
-        tg.setSize(Vec3i(400,400,1), true);
+        tg.setSize(Vec3i(400,400,1), false);
         tg.drawFill(Color4f(0,0,1,1));
 
         for (int i=0; i<N; i++) {
