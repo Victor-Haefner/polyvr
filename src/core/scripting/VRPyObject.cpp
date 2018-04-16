@@ -57,6 +57,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
 };
 
 PyMethodDef VRPyObject::methods[] = {
+    {"destroy", (PyCFunction)VRPyObject::destroy, METH_NOARGS, "Destroy object and reset py object to None" },
     {"getName", (PyCFunction)VRPyObject::getName, METH_NOARGS, "Return the object name" },
     {"getBaseName", (PyCFunction)VRPyObject::getBaseName, METH_NOARGS, "Return the object base name" },
     {"setName", (PyCFunction)VRPyObject::setName, METH_VARARGS, "Set the object name" },
@@ -64,7 +65,6 @@ PyMethodDef VRPyObject::methods[] = {
     {"switchParent", PyWrapOpt(Object, switchParent, "Switch object to other parent object", "-1", void, VRObjectPtr, int) },
     {"hasDescendant", PyWrap(Object, hasDescendant, "Check if object in in subgraph", bool, VRObjectPtr) },
     {"hasAncestor", PyWrap(Object, hasAncestor, "Check if object is an ancestor", bool, VRObjectPtr) },
-    {"destroy", PyWrap(Object, destroy, "Destroy object", void) },
     {"hide", PyWrap(Object, hide, "Hide object", void) },
     {"show", PyWrap(Object, show, "Show object", void) },
     {"isVisible", PyWrap(Object, isVisible, "Return if object is visible", bool) },
@@ -102,6 +102,13 @@ PyMethodDef VRPyObject::methods[] = {
     {"setVolume", PyCastWrap(Object, setVolume, "Set the scenegraph volume to boundingbox", void, Boundingbox) },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyObject::destroy(VRPyObject* self) {
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::destroy - C Object is invalid"); return NULL; }
+    self->objPtr->destroy();
+    self->objPtr = 0;
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyObject::setPersistency(VRPyObject* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::setPersistency - C Object is invalid"); return NULL; }
