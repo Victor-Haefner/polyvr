@@ -178,7 +178,7 @@ int Graph::addNode(PosePtr p) {
 }
 void Graph::clear() { nodes.clear(); edges.clear(); }
 void Graph::update(int i, bool changed) {}
-void Graph::remNode(int i) { nodes.erase(nodes.begin() + i); }
+void Graph::remNode(int i) { if (i >= 0 && i < nodes.size()) nodes.erase(nodes.begin() + i); }
 
 Graph::edge::edge(int i, int j, CONNECTION c, int ID) : from(i), to(j), connection(c), ID(ID) {}
 

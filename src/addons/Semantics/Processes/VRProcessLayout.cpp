@@ -177,6 +177,17 @@ VRObjectPtr VRProcessLayout::addElement(VRProcessNodePtr n) {
     return e;
 }
 
+void VRProcessLayout::remElement(VRObjectPtr o) {
+    auto key = o.get();
+    if (elementIDs.count(key)) {
+        int nID = elementIDs[key];
+        elements.erase(nID);
+        elementIDs.erase(key);
+        o->destroy();
+        if (auto n = getProcessNode(nID)) process->remNode(n);
+    }
+}
+
 int VRProcessLayout::getElementID(VRObjectPtr o) { return elementIDs.count(o.get()) ? elementIDs[o.get()] : -1; }
 
 VRProcessNodePtr VRProcessLayout::getProcessNode(int i) { return process ? process->getNode(i) : 0; }
