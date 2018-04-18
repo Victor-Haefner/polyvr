@@ -93,7 +93,7 @@ string virtuose::getDeviceState() {
 
 void virtuose::enableForceFeedback(bool enable) {
     if (!connected()) return;
-    int i = (enable ? 1 : 0);
+    //int i = (enable ? 1 : 0);
     //CHECK(virtEnableForceFeedback(vc,i)); // TODO
 }
 
@@ -273,8 +273,8 @@ bool sync = false;
 void virtuose::updateVirtMechPre() {
 	if (!connected()) return;
 
-	float position[7] = {0.0,0.0,0.0,0.0,0.0,0.0,1.0};
-	float speed[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
+	//float position[7] = {0.0,0.0,0.0,0.0,0.0,0.0,1.0};
+	//float speed[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
 
 	bool shifting = interface.getObject<bool>("shifting", false);
     if (shifting) return;
@@ -316,7 +316,7 @@ void virtuose::updateVirtMechPre() {
 void virtuose::updateVirtMechPost() {
 	if (!connected()) return;
 
-	float force[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
+	//float force[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
 
 	bool shifting = interface.getObject<bool>("shifting", false);
     bool doPhysUpdate = interface.getObject<bool>("doPhysUpdate");

@@ -238,7 +238,7 @@ void mkDir(string path) {
 void mkPath(string path) {
     auto dirs = splitString(path, '/');
     path = "";
-    for (int i=1; i<dirs.size(); i++) {
+    for (uint i=1; i<dirs.size(); i++) {
         path += "/"+dirs[i];
         mkDir(path);
     }

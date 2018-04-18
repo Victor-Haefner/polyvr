@@ -18,7 +18,7 @@ PyObject* VRPyCodeCompletion::resolvePath(vector<string>& path) { // TODO
     return getObject(mod);
 
     string objPath;
-    for (int i=0; i<path.size()-1; i++) objPath += path[i] + "."; // TODO
+    for (uint i=0; i<path.size()-1; i++) objPath += path[i] + "."; // TODO
 }
 
 PyObject* VRPyCodeCompletion::getObject(string name) { // TODO

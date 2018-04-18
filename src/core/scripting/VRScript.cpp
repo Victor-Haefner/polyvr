@@ -375,7 +375,7 @@ finally:
     return 0;
 }
 
-void print_error_text(int offset, char *text) {
+void print_error_text(uint offset, char *text) {
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
         VRGuiManager::get()->getConsole( "Syntax" )->write( m, style, link );
     };

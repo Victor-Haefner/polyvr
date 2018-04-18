@@ -564,7 +564,7 @@ void VRSound::synthBufferOnChannels(vector<vector<Vec2d>> freqs1, vector<vector<
         the vectors should contain a vector with input data for every channel
         the duration determines how long the generated sound samples will be played on the audio buffer
     */
-    int num_channels = freqs1.size();
+    auto num_channels = freqs1.size();
     if (num_channels != freqs2.size()) {
         cout << "synthBufferOnChannels - sizes don't match - freqs1 = " << num_channels << " freqs2 = " << freqs2.size() << endl;
         return;
@@ -590,7 +590,7 @@ void VRSound::synthBufferOnChannels(vector<vector<Vec2d>> freqs1, vector<vector<
       element 1 the first frame on the second channel
       element 8 is the second frame on the first channel
     */
-    for (int i = 0; i < buffer_size; i++) {
+    for (uint i = 0; i < buffer_size; i++) {
         for (int channel = 0; channel < num_channels; channel++) {
             buffer[num_channels * i + channel] = synth_buffer[channel][i];
         }
