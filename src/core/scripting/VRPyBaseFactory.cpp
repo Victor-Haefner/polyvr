@@ -33,13 +33,6 @@ template<> bool toValue(PyObject* o, float& v) { if (!PyNumber_Check(o)) return 
 template<> bool toValue(PyObject* o, double& v) { if (!PyNumber_Check(o)) return 0; v = PyFloat_AsDouble(o); return 1; }
 template<> bool toValue(PyObject* o, string& v) { if (!PyString_Check(o)) return 0; v = PyString_AsString(o); return 1; }
 
-template<> bool toValue(PyObject* o, VRAnimCbPtr& v) {
-    //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!
-    Py_IncRef(o);
-    v = VRAnimCb::create( "pyExecCall", boost::bind(VRPyBase::execPyCall<float>, o, PyTuple_New(1), _1) );
-    return 1;
-}
-
 bool PyVec_Check(PyObject* o, int N, char type) {
     if (N == 2 && type == 'f') if (VRPyVec2f::check(o)) return true;
     if (N == 3 && type == 'f') if (VRPyVec3f::check(o)) return true;

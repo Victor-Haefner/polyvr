@@ -73,7 +73,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"physicalize", PyWrapOpt(Transform, physicalize, "physicalize subtree - physicalize( bool physicalized , bool dynamic , str shape, float shape param )\n\tshape can be: ['Box', 'Sphere', 'Convex', 'Concave', 'ConvexDecomposed']", "0", void, bool, bool, string, float ) },
     {"setConvexDecompositionParameters", PyWrap(Transform, setConvexDecompositionParameters, "Set parameters for the convex decomposition, set before physicalize", void, float, float, float, float, float, bool, bool, bool ) },
     {"setGhost", PyWrap(Transform, setGhost, "Set the physics object to be a ghost object", void, bool ) },
-    {"attach", PyWrap(Transform, attach, "Attach another object using a joint constraint and a spring constraint", void, VRTransformPtr, VRConstraintPtr, VRConstraintPtr ) },
+    {"attach", PyWrapOpt(Transform, attach, "Attach another object using a joint constraint and a spring constraint", "0", void, VRTransformPtr, VRConstraintPtr, VRConstraintPtr ) },
     {"detachJoint", PyWrap(Transform, detachJoint, "Remove all joints to given transform created by 'attach'", void, VRTransformPtr ) },
     {"setMass", PyWrap(Transform, setMass, "Set the mass of the physics object", void, float ) },
     {"setCollisionMargin", PyWrap(Transform, setCollisionMargin, "Set the collision margin of the physics object", void, float ) },

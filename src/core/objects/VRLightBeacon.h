@@ -14,6 +14,8 @@ class VRLightBeacon : public VRTransform {
         string light_name;
         OSGObjectPtr lightGeo;
 
+        VRObjectPtr copy(vector<VRObjectPtr> children);
+
     public:
         VRLightBeacon(string name);
         ~VRLightBeacon();

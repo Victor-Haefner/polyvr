@@ -19,6 +19,7 @@ PyMethodDef VRPyLight::methods[] = {
     {"setShadowParams", PyWrapOpt(Light, setShadowParams, "Set shadow parameters", "0 0", void, bool, int, Color4f, Vec2d) },
     {"setPhotometricMap", PyWrap(Light, setPhotometricMap, "Set map for photometric light, path to .ies file", void, VRTexturePtr) },
     {"loadPhotometricMap", PyWrap(Light, loadPhotometricMap, "Set map for photometric light, path to .ies file", void, string) },
+    {"getPhotometricMap", PyWrapOpt(Light, getPhotometricMap, "Return photometric map as texture", "0", VRTexturePtr, bool) },
     {"isOn", PyWrap(Light, isOn, "Return the state of the light", bool) },
     {"reloadDeferredSystem", PyWrap(Light, reloadDeferredSystem, "Reload parameters and shaders for the deferred system", void) },
     {"toggleShadows", PyWrap(Light, toggleShadows, "Toggle shadows efficiently", void, bool) },

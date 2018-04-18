@@ -388,10 +388,13 @@ void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float
     buf_size += buf_size%2;
     vector<short> samples(buf_size);
 
+    double tmp = 0;
     for(uint i=0; i<buf_size; i++) {
-        float t = i*2*Pi/sample_rate;
+        double t = i*2*Pi/sample_rate + synth_t0;
         samples[i] = Ac * sin( wc*t + pc + Am*sin(wm*t + pm) );
+        tmp = t;
     }
+    synth_t0 = tmp;
 
     playBuffer(samples, sample_rate);
 }

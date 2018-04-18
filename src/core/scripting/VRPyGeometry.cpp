@@ -44,6 +44,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"setTexture", (PyCFunction)VRPyGeometry::setTexture, METH_VARARGS, "set texture from file - setTexture(path)" },
     {"setColor", PyWrap(Geometry, setColor, "Set a colored material to the geometry", void, string) },
     {"setMaterial", PyWrap(Geometry, setMaterial, "Set the material of the geometry", void, VRMaterialPtr) },
+    {"flipNormals", PyWrap(Geometry, flipNormals, "Flip normals", void) },
     {"getTypes", (PyCFunction)VRPyGeometry::getTypes, METH_NOARGS, "get geometry primitive types - [int t] getTypes()\n\tt = 0 : GL_POINTS"
                                                                                                                     "\n\tt = 1 : GL_LINES"
                                                                                                                     "\n\tt = 2 : GL_LINE_LOOP"

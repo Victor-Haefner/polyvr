@@ -21,24 +21,34 @@ vec4 norm;
 vec4 color = vec4(0);
 vec2 lookup;
 
+#define Pi 3.1415926535897932384626433832795
 
 
 float getPhotometricIntensity(vec3 vertex, vec3 light) {
-	vec3 lightVector = vertex - light;
-	lightVector = normalize( lightVector );
-	float cosLight = -dot( norm.xyz, lightVector); 		// diffusion factor
+	vec3 lightVector = normalize( vertex - light );
 
 	float dotV = dot( lightUp, lightVector ); 			// angle with up vector
 	lightVector -= lightUp * dotV;				// project light vector in dir plane
 	lightVector = normalize( lightVector );
-	float dotH = dot( lightDir, lightVector );
+	float aH = acos(dot( lightDir, lightVector ))/Pi;
+	float aV = acos(dotV)/Pi;
+	float dotX = dot( cross(lightUp, lightDir), lightVector );
 
-	//apply intensity map				
-	vec2 tc = vec2(0,0);
-	tc.y = dotH*0.5 + 0.5; //phi
-	tc.x = dotV*0.5 + 0.5; //theta
+	aV = 1.0 - aV;
+	float u = 1.0 - aH;
+	aH = u*0.5;
+	float aH2 = 0.5-aH;
+	if (dotX > 0) aH = 1.0 - aH;
+	if (dotX < 0) aH2 = 0.5 - aH2;
+	else aH2 -= 0.5;
 
-	return texture2D( texPhotometricMap, tc ).a;
+	//if (aH < 0.5) aH = 0.3;
+	//return aV;
+
+	//apply intensity map
+	float t1 = texture2D( texPhotometricMap, vec2(aH2,aV) ).a;
+	float t2 = texture2D( texPhotometricMap, vec2(aH ,aV) ).a;
+	return mix(t1, t2, u);
 }
 
 vec4 computePointLight(float amb) {
@@ -72,9 +82,9 @@ void main(void) {
 
     if (dot(norm.xyz, norm.xyz) < 0.95) discard;
     else {
-        vec4  posAmb = texture2DRect(texBufPos,  lookup);
+        vec4 posAmb = texture2DRect(texBufPos,  lookup);
         pos = posAmb.xyz;
-        color  = texture2DRect(texBufDiff, lookup);
+        color = texture2DRect(texBufDiff, lookup);
 
 	if (channel == 0 && isLit) color = computePointLight(posAmb.w);
 	else if (isFirstLamp == 1) {

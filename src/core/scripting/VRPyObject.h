@@ -10,6 +10,8 @@ struct VRPyObject : VRPyBaseT<OSG::VRObject> {
     static int compare(PyObject* o1, PyObject* o2);
     static long hash(PyObject* o);
 
+    static PyObject* destroy(VRPyObject* self);
+
     static PyObject* getName(VRPyObject* self);
     static PyObject* getBaseName(VRPyObject* self);
     static PyObject* setName(VRPyObject* self, PyObject* args);

@@ -5,6 +5,7 @@
 #include "core/scene/VRScene.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/objects/material/VRTexture.h"
+#include "core/utils/system/VRSystem.h"
 
 #include <OpenSG/OSGImage.h>
 
@@ -567,4 +568,16 @@ void setTooltip(string widget, string tp) {
     VRGuiBuilder()->get_widget(widget, w);
     w->set_tooltip_text(tp);
 }
+
+Gtk::Image* loadGTKIcon(Gtk::Image* img, string path, int w, int h) {
+    if ( !exists( path ) ) {
+        cout << "Warning (loadGTKIcon): " << path << " not found!" << endl;
+        return img;
+    }
+    if (img == 0) img = Gtk::manage(new Gtk::Image());
+    img->set(path);
+    img->set_size_request(w, h);
+    return img;
+}
+
 

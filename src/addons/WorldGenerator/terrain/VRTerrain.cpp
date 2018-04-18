@@ -736,7 +736,7 @@ vec3 getNormal() {
     vec2 r2 = 2.0*texelSize;
     vec3 va = normalize(vec3(r2.x,s21-s01,0));
     vec3 vb = normalize(vec3(   0,s12-s10,r2.y));
-    vec3 n = cross(vb,va);
+    vec3 n = normalize( cross(vb,va) );
 	return n;
 }
 

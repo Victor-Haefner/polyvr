@@ -2,6 +2,8 @@
 #include "toString.h"
 #include "VRFunction.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/utils/system/VRSystem.h"
+#include <libxml++/libxml++.h>
 #include <libxml++/nodes/element.h>
 #include <boost/bind.hpp>
 
@@ -148,6 +150,26 @@ int getID(xmlpp::Element* el) {
     int ID;
     toValue( _ID, ID );
     return ID;
+}
+
+bool VRStorage::saveToFile(string path, bool createDirs) {
+    xmlpp::Document doc;
+    xmlpp::Element* root = doc.create_root_node("ProjectsList", "", "VRP"); // name, ns_uri, ns_prefix
+    save(root);
+    doc.write_to_file_formatted(path);
+    return true;
+}
+
+bool VRStorage::loadFromFile(string path) {
+    if (exists(path)) path = canonical(path);
+    else return false;
+
+    xmlpp::DomParser parser;
+    parser.set_validate(false);
+    parser.parse_file(path.c_str());
+    xmlpp::Element* root = dynamic_cast<xmlpp::Element*>(parser.get_document()->get_root_node());
+    load(root);
+    return true;
 }
 
 OSG_END_NAMESPACE;

@@ -36,16 +36,12 @@ PyObject* VRPyPathFinding::computePath(VRPyPathFinding* self, PyObject* args) {
     int i, j;
     float t1 = -1;
     float t2 = -1;
-    if (PyArg_ParseTuple(args, "ii", &i, &j));
-    else if (PyArg_ParseTuple(args, "ifi", &i, &t1, &j)); // TODO: this does not work for strange reasons!
-    else if (PyArg_ParseTuple(args, "iif", &i, &j, &t2));
-    else if (PyArg_ParseTuple(args, "ifif", &i, &t1, &j, &t2));
-    else return NULL;
+    if (!PyArg_ParseTuple(args, "ii|ff", &i, &j, &t1, &t2)) return NULL;
 
     VRPathFinding::Position p1(i);
     VRPathFinding::Position p2(j);
     if (t1 >= 0) p1 = VRPathFinding::Position(i,t1);
-    if (t2 >= 0) p1 = VRPathFinding::Position(j,t2);
+    if (t2 >= 0) p2 = VRPathFinding::Position(j,t2);
     auto route = self->objPtr->computePath( p1, p2 );
 
     PyObject* res = PyList_New(0);

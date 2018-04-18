@@ -800,7 +800,7 @@ void VRTransform::apply_constraints(bool force) { // TODO: check efficiency
 
     for (auto joint : bJoints) {
         VRTransformPtr child = joint.second.second.lock();
-        if (child) child->apply_constraints(true);
+        //if (child) child->apply_constraints(true); // TODO: may introduce loops?
     }
 }
 

@@ -180,7 +180,20 @@ struct VRMatData {
 map<string, VRMaterialWeakPtr> VRMaterial::materials;
 map<MaterialMTRecPtr, VRMaterialWeakPtr> VRMaterial::materialsByPtr;
 
-VRMaterial::VRMaterial(string name) : VRObject(name) {
+VRMaterial::VRMaterial(string name) : VRObject(name) {}
+
+VRMaterial::~VRMaterial() {}
+
+VRMaterialPtr VRMaterial::ptr() { return static_pointer_cast<VRMaterial>( shared_from_this() ); }
+
+VRMaterialPtr VRMaterial::create(string name) {
+    auto p = VRMaterialPtr(new VRMaterial(name) );
+    p->init();
+    materials[p->getName()] = p;
+    return p;
+}
+
+void VRMaterial::init() {
     auto scene = VRScene::getCurrent();
     if (scene) deferred = scene->getDefferedShading();
     addAttachment("material", 0);
@@ -197,17 +210,13 @@ VRMaterial::VRMaterial(string name) : VRObject(name) {
     //store("ambient", &ambient);
 }
 
-VRMaterial::~VRMaterial() {}
-
-VRMaterialPtr VRMaterial::ptr() { return static_pointer_cast<VRMaterial>( shared_from_this() ); }
-
-VRMaterialPtr VRMaterial::create(string name) {
-    auto p = VRMaterialPtr(new VRMaterial(name) );
-    materials[p->getName()] = p;
-    return p;
+void VRMaterial::setDefaultVertexShader() {
+    string vp = constructShaderVP();
+    setVertexShader(vp, "defaultVS");
 }
 
 string VRMaterial::constructShaderVP(VRMatDataPtr data) {
+    if (!data) data = mats[activePass];
     int texD = data->getTextureDimension();
 
     string vp;
@@ -219,40 +228,58 @@ string VRMaterial::constructShaderVP(VRMatDataPtr data) {
     if (texD == 3) vp += "attribute vec3 osg_MultiTexCoord0;\n";
     vp += "varying vec4 vertPos;\n";
     vp += "varying vec3 vertNorm;\n";
-    vp += "varying vec3 color;\n";
+    vp += "varying vec4 color;\n";
     vp += "void main(void) {\n";
     vp += "  vertPos = gl_ModelViewMatrix * osg_Vertex;\n";
     vp += "  vertNorm = gl_NormalMatrix * osg_Normal;\n";
     if (texD == 2) vp += "  gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0,0.0);\n";
     if (texD == 3) vp += "  gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0);\n";
-    vp += "  color  = gl_Color.rgb;\n";
+    vp += "  color  = gl_Color;\n";
     vp += "  gl_Position    = gl_ModelViewProjectionMatrix*osg_Vertex;\n";
     vp += "}\n";
     return vp;
 }
 
-string VRMaterial::constructShaderFP(VRMatDataPtr data) {
-    int texD = data->getTextureDimension();
+string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int forcedTextureDim) {
+    if (!data) data = mats[activePass];
+    int texD = forcedTextureDim;
+    if (texD == -1) texD = data->getTextureDimension();
 
     string fp;
     fp += "#version 120\n";
-    fp += "uniform int isLit;\n";
+    if (deferred) fp += "uniform int isLit;\n";
     fp += "varying vec4 vertPos;\n";
     fp += "varying vec3 vertNorm;\n";
-    fp += "varying vec3 color;\n";
-    //fp += "float luminance(vec3 col) { return dot(col, vec3(0.3, 0.59, 0.11)); }\n";
-    fp += "float luminance(vec3 col) { return 1; }\n";
+    fp += "varying vec4 color;\n";
     if (texD == 2) fp += "uniform sampler2D tex0;\n";
     if (texD == 3) fp += "uniform sampler3D tex0;\n";
+
+    if (!deferred) {
+        fp += "void applyLightning() {\n";
+        fp += " vec3  n = normalize(vertNorm);\n";
+        fp += " vec3  light = normalize( gl_LightSource[0].position.xyz );\n";// directional light
+        fp += " float NdotL = max(dot( n, light ), 0.0);\n";
+        fp += " vec4  ambient = gl_LightSource[0].ambient * color;\n";
+        fp += " vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;\n";
+        fp += " float NdotHV = max(dot(n, normalize(gl_LightSource[0].halfVector.xyz)),0.0);\n";
+        fp += " vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );\n";
+        fp += " gl_FragColor = ambient + diffuse + specular;\n";
+        fp += "}\n";
+    }
+
     fp += "void main(void) {\n";
     fp += "  vec3 pos = vertPos.xyz / vertPos.w;\n";
-    if (texD == 0) fp += "  vec3 diffCol = color;\n";
-    if (texD == 2) fp += "  vec3 diffCol = texture2D(tex0, gl_TexCoord[0].xy).rgb;\n";
-    if (texD == 3) fp += "  vec3 diffCol = texture3D(tex0, gl_TexCoord[0].xyz).rgb;\n";
-    fp += "  float ambVal  = luminance(diffCol);\n";
-    fp += "  gl_FragData[0] = vec4(pos, ambVal);\n";
-    fp += "  gl_FragData[1] = vec4(normalize(vertNorm), isLit);\n";
-    fp += "  gl_FragData[2] = vec4(diffCol, 0);\n";
+    if (texD == 0) fp += "  vec4 diffCol = color;\n";
+    if (texD == 2) fp += "  vec4 diffCol = texture2D(tex0, gl_TexCoord[0].xy);\n";
+    if (texD == 3) fp += "  vec4 diffCol = texture3D(tex0, gl_TexCoord[0].xyz);\n";
+    if (deferred) {
+        fp += "  if (diffCol.a < 0.1) discard;\n";
+        fp += "  gl_FragData[0] = vec4(pos, 1.0);\n";
+        fp += "  gl_FragData[1] = vec4(normalize(vertNorm), isLit);\n";
+        fp += "  gl_FragData[2] = vec4(diffCol.rgb, 0);\n";
+    } else {
+        fp += "  applyLightning();\n";
+    }
     fp += "}\n";
     return fp;
 }
@@ -285,6 +312,7 @@ void VRMaterial::setDeferred(bool b) {
             }
         } else if (mats[i]->tmpDeferredShdr) remShaderChunk();
         mats[i]->toggleDeferredShader(b, getName());
+        setTransparency( getTransparency() );
     }
     setActivePass(a);
 }
@@ -761,7 +789,7 @@ void VRMaterial::setTransparency(float c) {
     auto md = mats[activePass];
     md->colChunk->setDiffuse( toColor4f(getDiffuse(), c) );
 
-    if (c == 1) clearTransparency();
+    if (c == 1 || deferred) clearTransparency();
     else enableTransparency();
     //enableTransparency();
 }
@@ -871,27 +899,6 @@ void VRMaterial::remShaderChunk() {
 }
 
 ShaderProgramMTRecPtr VRMaterial::getShaderProgram() { return mats[activePass]->vProgram; }
-
-void VRMaterial::setDefaultVertexShader() {
-    auto md = mats[activePass];
-    int texD = md->getTextureDimension();
-
-    string vp;
-    vp += "#version 120\n";
-    vp += "attribute vec4 osg_Vertex;\n";
-    //vp += "attribute vec3 osg_Normal;\n";
-    //vp += "attribute vec4 osg_Color;\n";
-    if (texD == 2) vp += "attribute vec2 osg_MultiTexCoord0;\n";
-    if (texD == 3) vp += "attribute vec3 osg_MultiTexCoord0;\n";
-    vp += "void main(void) {\n";
-    //vp += "  gl_Normal = gl_NormalMatrix * osg_Normal;\n";
-    if (texD == 2) vp += "  gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0,0.0);\n";
-    if (texD == 3) vp += "  gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0);\n";
-    vp += "  gl_Position    = gl_ModelViewProjectionMatrix*osg_Vertex;\n";
-    vp += "}\n";
-
-    setVertexShader(vp, "defaultVS");
-}
 
 // type: GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, ...
 void VRMaterial::checkShader(int type, string shader, string name) {

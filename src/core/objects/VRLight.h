@@ -43,6 +43,8 @@ class VRLight : public VRObject {
         bool on = true;
         bool deferred = false;
 
+        VRObjectPtr copy(vector<VRObjectPtr> children);
+
         void setup();
         void setup_after();
         void setupShadowEngines();
@@ -92,7 +94,7 @@ class VRLight : public VRObject {
 
         void setPhotometricMap(VRTexturePtr tex);
         void loadPhotometricMap(string path);
-        VRTexturePtr getPhotometricMap();
+        VRTexturePtr getPhotometricMap(bool forVisual = false);
 
         LightMTRecPtr getLightCore();
         string getLightType();

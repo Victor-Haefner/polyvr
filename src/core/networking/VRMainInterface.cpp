@@ -6,6 +6,7 @@
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRView.h"
 #include "core/scene/VRSceneLoader.h"
+#include "core/scene/VRProjectsList.h"
 
 #include <boost/bind.hpp>
 
@@ -67,11 +68,13 @@ string VRMainInterface::handleRequest(map<string, string> params) {
     };
 
     if (var == "favorites") {
-        return pathsToList( VRSceneManager::get()->getFavoritePaths() );
+        auto favorites = VRSceneManager::get()->getFavoritePaths();
+        return pathsToList( favorites->getPaths() );
     }
 
     if (var == "examples") {
-        return pathsToList( VRSceneManager::get()->getExamplePaths() );
+        auto examples = VRSceneManager::get()->getExamplePaths();
+        return pathsToList( examples->getPaths() );
     }
 
     if (var == "toggle_calib") {
@@ -122,9 +125,9 @@ void VRMainInterface::update() {
 
     page += "<h1>Scenes</h1>";
     page += "<h2>Favorites:</h2>";
-    for (auto s : VRSceneManager::get()->getFavoritePaths()) page += "<button onClick='get(0,1,\"" + s + "\")'>" + s + "</button><br>";
+    for (auto s : VRSceneManager::get()->getFavoritePaths()->getPaths()) page += "<button onClick='get(0,1,\"" + s + "\")'>" + s + "</button><br>";
     page += "<h2>Examples:</h2>";
-    for (auto s : VRSceneManager::get()->getExamplePaths() ) page += "<button onClick='get(0,1,\"" + s + "\")'>" + s + "</button><br>";
+    for (auto s : VRSceneManager::get()->getExamplePaths()->getPaths() ) page += "<button onClick='get(0,1,\"" + s + "\")'>" + s + "</button><br>";
 
     page += "</body></html>";
     server->addWebSite("polyvr", page);

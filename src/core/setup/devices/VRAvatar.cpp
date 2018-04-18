@@ -4,6 +4,7 @@
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
+#include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/setup/VRSetup.h"
@@ -13,33 +14,23 @@ using namespace std;
 
 
 VRObjectPtr VRAvatar::initRay(int beaconID) {
-    VRGeometryPtr ray = VRGeometry::create(this->deviceName + "_" + to_string(beaconID) + "_av_ray");
-
-    vector<Vec3d> pos, norms;
-    vector<Vec2d> texs;
-    vector<int> inds;
-
-    //pos.push_back(Vec3d(0,0,-5));
-    //pos.push_back(Vec3d(0,0,50));
-    pos.push_back(Vec3d(0,0,0));
-    pos.push_back(Vec3d(0,0,-50));
-
-    for (int i=0;i<2;i++) {
-        norms.push_back(Vec3d(0,0,-1));
-        inds.push_back(i);
-        texs.push_back(Vec2d(0,0));
+    VRGeoData rayData;
+    int N = 100;
+    float L = 50;
+    float d = L/N;
+    for (int i=1; i<N; i++) {
+        Color3f c = Color3f(1-0.3*((i+1)%2),1-0.3*(i%2),0);
+        rayData.pushVert(Vec3d(0,0,-(i-1)*d), Vec3d(0,0,-1), c);
+        rayData.pushVert(Vec3d(0,0,-    i*d), Vec3d(0,0,-1), c);
+        rayData.pushLine();
     }
 
     VRMaterialPtr mat = VRMaterial::get("yellow_ray");
     mat->setLineWidth(6);
-    mat->setDiffuse(Color3f(1,1,0));
-    mat->setAmbient(Color3f(1,1,0));
-    mat->setSpecular(Color3f(1,1,0));
     mat->setLit(0);
 
-    ray->create(GL_LINES, pos, norms, inds, texs);
+    VRGeometryPtr ray = rayData.asGeometry(this->deviceName + "_" + to_string(beaconID) + "_av_ray");
     ray->setMaterial(mat);
-
     return ray;
 }
 

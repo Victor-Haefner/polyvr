@@ -30,9 +30,6 @@ class VRMaterial : public VRObject {
         static map<string, VRMaterialWeakPtr> materials;
         static map<MaterialMTRecPtr, VRMaterialWeakPtr> materialsByPtr;
 
-        string constructShaderVP(VRMatDataPtr data);
-        string constructShaderFP(VRMatDataPtr data);
-
         void setup();
 
     protected:
@@ -57,6 +54,8 @@ class VRMaterial : public VRObject {
 
         static VRMaterialPtr create(string name = "None");
         VRMaterialPtr ptr();
+
+        void init();
 
         void setDeferred(bool b);
         void updateDeferredShader();
@@ -129,6 +128,9 @@ class VRMaterial : public VRObject {
         float getShininess();
         Color3f getEmission();
         float getTransparency();
+
+        string constructShaderVP(VRMatDataPtr data = 0);
+        string constructShaderFP(VRMatDataPtr data = 0, bool deferred = true, int forcedTextureDim = -1 );
 
         void initShaderChunk();
         void remShaderChunk();

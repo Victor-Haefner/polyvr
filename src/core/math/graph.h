@@ -65,6 +65,7 @@ class Graph : public VRStorage {
         edge& getEdge(int e);
         edge& getEdge(int n1, int n2);
         edge getEdgeCopy(int n1, int n2);
+        edge getEdgeCopyByID(int e);
         int getEdgeID(int n1, int n2);
         vector< node >& getNodes();
         vector< node > getNodesCopy();

@@ -1,7 +1,7 @@
 #version 400 compatibility
 
 uniform sampler2D tex;
-
+in vec4 position;
 in vec2 tcs;
 in vec3 norm;
 in vec3 col;
@@ -9,7 +9,7 @@ vec4 color;
 
 
 void applyBlinnPhong() {
-	vec3 n = normalize( gl_NormalMatrix * norm );
+	vec3  n = normalize( gl_NormalMatrix * norm );
 	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
 	float NdotL = max(dot( n, light ), 0.0);
 	vec4  ambient = gl_LightSource[0].ambient * color;

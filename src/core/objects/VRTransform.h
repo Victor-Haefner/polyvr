@@ -186,7 +186,7 @@ class VRTransform : public VRObject {
         /** enable constraints on the object when dragged, 0 leaves the dof free, 1 restricts it **/
         void apply_constraints(bool force = false);
         static void updateConstraints();
-        void attach(VRTransformPtr a, VRConstraintPtr c, VRConstraintPtr s);
+        void attach(VRTransformPtr a, VRConstraintPtr c, VRConstraintPtr s = 0);
         void detachJoint(VRTransformPtr a);
         Vec3d getConstraintAngleWith(VRTransformPtr t, bool rotationOrPosition);
 

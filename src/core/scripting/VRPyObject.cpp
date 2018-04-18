@@ -57,6 +57,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
 };
 
 PyMethodDef VRPyObject::methods[] = {
+    {"destroy", (PyCFunction)VRPyObject::destroy, METH_NOARGS, "Destroy object and reset py object to None" },
     {"getName", (PyCFunction)VRPyObject::getName, METH_NOARGS, "Return the object name" },
     {"getBaseName", (PyCFunction)VRPyObject::getBaseName, METH_NOARGS, "Return the object base name" },
     {"setName", (PyCFunction)VRPyObject::setName, METH_VARARGS, "Set the object name" },
@@ -64,7 +65,6 @@ PyMethodDef VRPyObject::methods[] = {
     {"switchParent", PyWrapOpt(Object, switchParent, "Switch object to other parent object", "-1", void, VRObjectPtr, int) },
     {"hasDescendant", PyWrap(Object, hasDescendant, "Check if object in in subgraph", bool, VRObjectPtr) },
     {"hasAncestor", PyWrap(Object, hasAncestor, "Check if object is an ancestor", bool, VRObjectPtr) },
-    {"destroy", PyWrap(Object, destroy, "Destroy object", void) },
     {"hide", PyWrap(Object, hide, "Hide object", void) },
     {"show", PyWrap(Object, show, "Show object", void) },
     {"isVisible", PyWrap(Object, isVisible, "Return if object is visible", bool) },
@@ -75,6 +75,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"getChild", PyWrap(Object, getChild, "Return child object with index i", VRObjectPtr, int) },
     {"getChildren", PyWrapOpt(Object, getChildren, "Return the list of children objects, bool recursive, string type-filter", "0||0", vector<VRObjectPtr>, bool, string, bool) },
     {"getParent", PyWrapOpt(Object, getParent, "Return parent object, passing 'True' will take into account any DnD state", "0", VRObjectPtr, bool) },
+    {"getAncestry", PyWrapOpt(Object, getAncestry, "Return all parents", "0", vector<VRObjectPtr>, VRObjectPtr) },
     {"find", PyWrap(Object, find, "Find node with given name in scene graph below this node - obj find(str)", VRObjectPtr, string) },
     {"findAll", PyWrapOpt(Object, findAll, "Find nodes with given base name (str) in scene graph below this node", " ", vector<VRObjectPtr>, string, vector<VRObjectPtr>) },
     {"isPickable", PyWrap(Object, isPickable, "Return if the object is pickable", bool) },
@@ -101,6 +102,13 @@ PyMethodDef VRPyObject::methods[] = {
     {"setVolume", PyCastWrap(Object, setVolume, "Set the scenegraph volume to boundingbox", void, Boundingbox) },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyObject::destroy(VRPyObject* self) {
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::destroy - C Object is invalid"); return NULL; }
+    self->objPtr->destroy();
+    self->objPtr = 0;
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyObject::setPersistency(VRPyObject* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::setPersistency - C Object is invalid"); return NULL; }

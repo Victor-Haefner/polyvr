@@ -8,7 +8,19 @@
 
 using namespace OSG;
 
-VRAsphalt::VRAsphalt() : VRMaterial("asphalt") {
+VRAsphalt::VRAsphalt() : VRMaterial("asphalt") {}
+
+VRAsphalt::~VRAsphalt() {}
+
+VRAsphaltPtr VRAsphalt::create() {
+    auto p = VRAsphaltPtr( new VRAsphalt() );
+    p->init();
+    VRMaterial::materials[p->getName()] = p;
+    return p;
+}
+
+void VRAsphalt::init() {
+    VRMaterial::init();
     asphalt_fp = asphalt_fp_head + asphalt_fp_core;
     asphalt_dfp = asphalt_fp_head + asphalt_dfp_core;
 
@@ -21,17 +33,9 @@ VRAsphalt::VRAsphalt() : VRMaterial("asphalt") {
     setMarkingsColor(Color4f(0.7,0.7,0.7,1.0));
 }
 
-VRAsphalt::~VRAsphalt() {}
-
-VRAsphaltPtr VRAsphalt::create() {
-    auto p = VRAsphaltPtr( new VRAsphalt() );
-    VRMaterial::materials[p->getName()] = p;
-    return p;
-}
-
 void VRAsphalt::setArrowMaterial() {
-    setFragmentShader(asphaltArrow_fp, "asphaltArrowFP");
-    //setFragmentShader(asphaltArrow_dfp, "asphaltArrowDFP", true);
+    setFragmentShader(asphaltArrow_fp_head + asphaltArrow_fp_core , "asphaltArrowFP");
+    setFragmentShader(asphaltArrow_fp_head + asphaltArrow_dfp_core, "asphaltArrowDFP", true);
 }
 
 void VRAsphalt::setMarkingsColor(Color4f c) {
@@ -470,12 +474,7 @@ void main(void) {
 }
 );
 
-
-
-
-
-
-string VRAsphalt::asphaltArrow_fp =
+string VRAsphalt::asphaltArrow_fp_head =
 "#version 400 compatibility\n"
 "#extension GL_ARB_texture_rectangle : require\n"
 "#extension GL_ARB_texture_rectangle : enable\n"
@@ -514,13 +513,12 @@ void applyMud() {
 	color = mix(color, c_mud, smoothstep( 0.3, 0.8, c_mud.a)*0.2 );
 }
 
-void applyLine() {
-	float l = clamp(1.0 - smoothstep(0.0, 0.2, norm.x), 0, 1);
-	color = mix(color, cLine, l );
+void applyLine(float L) {
+	color = mix(vec4(0.5,0.5,0.5,1.0), cLine, L );
 }
 
 void computeNormal() {
-	vec2 tc = tc2*2;
+	/*vec2 tc = tc2*2;
     float s11 = texture(texNoise, tc).r;
     float s01 = textureOffset(texNoise, tc, off.xy).r;
     float s21 = textureOffset(texNoise, tc, off.zy).r;
@@ -529,7 +527,8 @@ void computeNormal() {
 
     vec3 va = normalize(vec3(size.y, s21-s01, size.x));
     vec3 vb = normalize(vec3(size.x, s12-s10, size.y));
-	norm = normalize( cross(va,vb) );
+	norm = normalize( cross(va,vb) );*/
+	norm = vec3(0,1,0);
 }
 
 void computeDepth() {
@@ -540,18 +539,7 @@ void computeDepth() {
 	gl_FragDepth = d*0.5 + 0.5;
 }
 
-void applyBlinnPhong() {
-	vec3 n = normalize( gl_NormalMatrix * norm );
-	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
-	float NdotL = max(dot( n, light ), 0.0);
-	vec4  ambient = gl_LightSource[0].ambient * color;
-	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;
-	float NdotHV = max(dot(norm, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
-	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
-	gl_FragColor = ambient + diffuse + specular;
-}
-
-void main(void) {
+void drawArrow() {
 	uv = tc2.xy;
 	noise = texture(texNoise, uv*0.2).r;
 	computeNormal();
@@ -559,71 +547,16 @@ void main(void) {
 
 	vec2 tc = vec2( (tc1.x+col.x*1000)*(1.0/NArrowTex), tc1.y );
 	float mark = texture(texMarkings, tc).r;
-	doLine = bool(mark == 1.0);
-	if (!doLine) discard;
-	if (doLine) applyLine();
+	if (mark < 0.1) discard;
+	applyLine(mark);
 	applyMud();
     computeDepth();
-    //gl_FragColor = vec4(mark,0,0,1);
-    //color = vec4(col.x*1000*(1.0/NArrowTex), 0, 1, 1);
-    //if (col.x == 0) color = vec4(1, 1, 0, 1);
-    applyBlinnPhong();
 }
+
 );
 
-
-string VRAsphalt::asphaltArrow_dfp =
-"#version 400 compatibility\n"
+string VRAsphalt::asphaltArrow_fp_core =
 GLSL(
-uniform sampler2D texMask;
-uniform vec4 cLine;
-
-vec4 color = vec4(0.0,0.0,0.0,1.0);
-
-const float pi = 3.14159265359;
-const vec3 light = vec3(-1,-1,-0.5);
-vec2 uv = vec2(0);
-vec3 norm = vec3(0,1,0);
-
-in vec4 position;
-in vec2 tc1; // noise
-
-void asphalt() {
-	float g = 0.35+0.2*noise;
-	color = vec4(g,g,g,1.0);
-}
-
-void applyMud() {
-	vec4 c_mud = texture(texMud, uv);
-	color = mix(color, c_mud, smoothstep( 0.3, 0.8, c_mud.a)*0.2 );
-}
-
-void applyLine() {
-	float l = clamp(1.0 - smoothstep(0.0, 0.2, norm.x), 0, 1);
-	color = mix(color, cLine, l );
-}
-
-void computeNormal() {
-	vec2 tc = tc1*2;
-    float s11 = texture(texNoise, tc).r;
-    float s01 = textureOffset(texNoise, tc, off.xy).r;
-    float s21 = textureOffset(texNoise, tc, off.zy).r;
-    float s10 = textureOffset(texNoise, tc, off.yx).r;
-    float s12 = textureOffset(texNoise, tc, off.yz).r;
-
-    vec3 va = normalize(vec3(size.y,s21-s01,size.x));
-    vec3 vb = normalize(vec3(size.x,s12-s10,size.y));
-	norm = normalize( cross(va,vb) );
-}
-
-void computeDepth(bool doLine) {
-	float o = 0.0;
-	if (doLine) o = -0.00002;
-	vec4 pp = gl_ProjectionMatrix * position;
-	float d = (pp.z+o) / pp.w;
-	gl_FragDepth = d*0.5 + 0.5;
-}
-
 void applyBlinnPhong() {
 	vec3 n = normalize( gl_NormalMatrix * norm );
 	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
@@ -635,48 +568,20 @@ void applyBlinnPhong() {
 	gl_FragColor = ambient + diffuse + specular;
 }
 
-void doPaths() {
-    vec3 pos = toWorld(position.xyz);
-	int k = 1;
-	float dist = 1.0;
-	int Nlines = int(roadData.x);
-
-	for (int i=0; i<Nlines; i++) {
-		vec4 pathData = getData(rID, k);
-		float width = pathData.y;
-		int Npoints = int(pathData.x);
-		dist = distToPath(k, rID, pos, pathData);
-		doLine = bool(dist < 10.0);
-		if (doLine) break;
-		k += Npoints+1;
-	}
-
-	if (!doLine) {
-		int Ntracks = int(roadData.y);
-		for (int i=0; i<Ntracks; i++) {
-			vec4 pathData = getData(rID, k);
-			float width = pathData.y;
-			int Npoints = int(pathData.x);
-			float d = distToPath(k, rID, pos, pathData);
-			if (d < 10.0) {
-				doTrack = true;
-				dist = min(dist,d/width);
-			}
-			k += Npoints+1;
-		}
-	}
-
-	if (doLine) applyLine();
-}
-
 void main(void) {
-	uv = tc1.xy;
-	noise = texture(texNoise, uv*0.2).r;
-	computeNormal();
-	asphalt();
-	doPaths();
-	applyMud();
-    computeDepth(doLine,doTrack);
+    drawArrow();
     applyBlinnPhong();
+}
+);
+
+
+string VRAsphalt::asphaltArrow_dfp_core =
+GLSL(
+void main(void) {
+    drawArrow();
+	norm = normalize( gl_NormalMatrix * norm );
+    gl_FragData[0] = vec4(position.xyz/position.w, 1.0);
+    gl_FragData[1] = vec4(norm, 1);
+    gl_FragData[2] = color;
 }
 );
