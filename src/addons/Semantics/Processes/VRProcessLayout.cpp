@@ -171,6 +171,7 @@ void VRProcessLayout::rebuild() {
 VRObjectPtr VRProcessLayout::getElement(int i) { return elements.count(i) ? elements[i].lock() : 0; }
 
 VRObjectPtr VRProcessLayout::addElement(VRProcessNodePtr n) {
+    if (!n) return 0;
     auto e = newWidget(n, height);
     elements[n->ID] = e;
     elementIDs[e.get()] = n->ID;
