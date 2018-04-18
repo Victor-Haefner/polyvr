@@ -23,13 +23,6 @@ struct VRPyProcessNode : VRPyBaseT<OSG::VRProcessNode> {
 
 struct VRPyProcessLayout : VRPyBaseT<OSG::VRProcessLayout> {
     static PyMethodDef methods[];
-    static PyObject* setProcess(VRPyProcessLayout* self, PyObject* args);
-    static PyObject* getElement(VRPyProcessLayout* self, PyObject* args);
-    static PyObject* getElementID(VRPyProcessLayout* self, PyObject* args);
-    static PyObject* getProcessNode(VRPyProcessLayout* self, PyObject* args);
-    static PyObject* addElement(VRPyProcessLayout* self, PyObject* args);
-    static PyObject* selectElement(VRPyProcessLayout* self, PyObject* args);
-    static PyObject* setElementName(VRPyProcessLayout* self, PyObject* args);
 };
 
 struct VRPyProcessEngine : VRPyBaseT<OSG::VRProcessEngine> {

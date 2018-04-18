@@ -162,6 +162,11 @@ void VRPathtool::remNode(int i) {
             h->destroy();
             handleToNode.erase(h.get());
         }
+
+        auto nIn = knots[i].in;
+        auto nOut = knots[i].out;
+        for (auto e : nIn) disconnect(e,i);
+        for (auto e : nOut) disconnect(i,e);
         knots.erase(i);
     }
 }
@@ -197,6 +202,7 @@ void VRPathtool::disconnect(int i1, int i2) {
 
     if (e) {
         if (auto l = e->line.lock()) l->destroy(); // TODO: entry destructor?
+        if (auto a = e->arrow.lock()) a->destroy();
         vecRemVal(handleToEntries[h1], e);
         vecRemVal(handleToEntries[h2], e);
         pathToEntry.erase(e->p.get());

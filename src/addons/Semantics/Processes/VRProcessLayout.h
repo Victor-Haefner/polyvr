@@ -29,6 +29,7 @@ class VRProcessLayout : public VRTransform {
         //void setProcess(VRProcessPtr p);
         void setProcess(VRProcessPtr p);
         VRObjectPtr getElement(int i);
+        void remElement(VRObjectPtr o);
         int getElementID(VRObjectPtr o);
         VRProcessNodePtr getProcessNode(int i);
         VRObjectPtr addElement(VRProcessNodePtr n);

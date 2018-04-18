@@ -83,62 +83,16 @@ PyMethodDef VRPyProcessNode::methods[] = {
 
 
 PyMethodDef VRPyProcessLayout::methods[] = {
-    {"setProcess", (PyCFunction)VRPyProcessLayout::setProcess, METH_VARARGS, "Set process - setProcess( process )" },
-    {"getElement", (PyCFunction)VRPyProcessLayout::getElement, METH_VARARGS, "Return element by ID - obj getElement( int ID )" },
-    {"getElementID", (PyCFunction)VRPyProcessLayout::getElementID, METH_VARARGS, "Return element ID - ID getElementID( VRObjectPtr geo )" },
-    {"getProcessNode", (PyCFunction)VRPyProcessLayout::getProcessNode, METH_VARARGS, "Return process node by ID - process node getElementID( int i )" },
+    {"setProcess", PyWrap(ProcessLayout, setProcess, "Set process - setProcess( process )", void, VRProcessPtr ) },
+    {"getElement", PyWrap(ProcessLayout, getElement, "Return element by ID - obj getElement( int ID )", VRObjectPtr, int ) },
+    {"getElementID", PyWrap(ProcessLayout, getElementID, "Return element ID - ID getElementID( VRObjectPtr geo )", int, VRObjectPtr ) },
+    {"getProcessNode", PyWrap(ProcessLayout, getProcessNode, "Return process node by ID - process node getElementID( int i )", VRProcessNodePtr, int ) },
     {"addElement", PyWrap(ProcessLayout, addElement, "Add process element", VRObjectPtr, VRProcessNodePtr) },
-    {"selectElement", (PyCFunction)VRPyProcessLayout::selectElement, METH_VARARGS, "Select a node geometry by changing its appearance - obj selectElement( geometry )" },
-    {"setElementName", (PyCFunction)VRPyProcessLayout::setElementName, METH_VARARGS, "Change the name of a node - obj setElementName( int i, string s )" },
+    {"selectElement", PyWrap(ProcessLayout, selectElement, "Select a node geometry by changing its appearance", void, VRGeometryPtr ) },
+    {"setElementName", PyWrap(ProcessLayout, setElementName, "Change the name of a node", void, int, string ) },
+    {"remElement", PyWrap(ProcessLayout, remElement, "Remove element", void, VRObjectPtr ) },
     {NULL}  /* Sentinel */
 };
-
-PyObject* VRPyProcessLayout::setElementName(VRPyProcessLayout* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    int i=0;
-    const char* n = 0;
-    if (!PyArg_ParseTuple(args, "is", &i, &n)) return NULL;
-    if (n) self->objPtr->setElementName( i, n );
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyProcessLayout::selectElement(VRPyProcessLayout* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    VRPyGeometry* g = 0;
-    if (!PyArg_ParseTuple(args, "O", &g)) return NULL;
-    self->objPtr->selectElement( g->objPtr );
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyProcessLayout::getElement(VRPyProcessLayout* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    int i=0;
-    if (!PyArg_ParseTuple(args, "i", &i)) return NULL;
-    return VRPyTypeCaster::cast( self->objPtr->getElement( i ) );
-}
-
-PyObject* VRPyProcessLayout::getProcessNode(VRPyProcessLayout* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    int i=0;
-    if (!PyArg_ParseTuple(args, "i", &i)) return NULL;
-    return VRPyProcessNode::fromSharedPtr( self->objPtr->getProcessNode( i ) );
-}
-
-PyObject* VRPyProcessLayout::setProcess(VRPyProcessLayout* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    VRPyProcess* p = 0;
-    if (!PyArg_ParseTuple(args, "O", &p)) return NULL;
-    self->objPtr->setProcess( p->objPtr );
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyProcessLayout::getElementID(VRPyProcessLayout* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    VRPyGeometry* p = 0;
-    if (!PyArg_ParseTuple(args, "O", &p)) return NULL;
-    return PyInt_FromLong( self->objPtr->getElementID( p->objPtr ) );
-}
-
 
 PyMethodDef VRPyProcessEngine::methods[] = {
     {"setProcess", (PyCFunction)VRPyProcessEngine::setProcess, METH_VARARGS, "Set process - setProcess( process )" },

@@ -3,15 +3,23 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/scene/VRScene.h"
+#include "core/utils/toString.h"
 
 #include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGGeoProperties.h>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRSelector::VISUAL& o) { return "VRSelector::VISUAL"; }
+
+template<> int toValue(stringstream& ss, VRSelector::VISUAL& e) {
+    string s = ss.str();
+    if (s == "OUTLINE") { e = VRSelector::OUTLINE; return true; }
+    if (s == "OVERLAY") { e = VRSelector::OVERLAY; return true; }
+    return false;
+}
 
 VRSelector::VRSelector() {
-    color = Color3f(0.2, 0.65, 0.9);
     selection = VRSelection::create();
 }
 
@@ -35,12 +43,15 @@ void VRSelector::update() {
 
         VRMaterialPtr mat = getMat();
         mat->prependPasses(geo->getMaterial());
-        mat->setActivePass(0);
-        mat->setStencilBuffer(true, 1,-1, GL_ALWAYS, GL_KEEP, GL_KEEP, GL_REPLACE);
+        if (visual == OUTLINE) {
+            mat->setActivePass(0);
+            mat->setStencilBuffer(true, 1,-1, GL_ALWAYS, GL_KEEP, GL_KEEP, GL_REPLACE);
+        }
         geo->setMaterial(mat);
     }
 
     // visualise subselections
+    if (selection->getSubselections().size() <= 1) return; // hack! should be zero!
     subselection = VRGeometry::create("subsel");
     subselection->setPersistency(0);
     for (auto m : selection->getSubselections()) {
@@ -67,7 +78,7 @@ void VRSelector::update() {
     m->setLit(false);
     m->setDiffuse(color);
     m->setFrontBackModes(GL_LINE, GL_LINE);
-    m->setPointSize(3);
+    m->setPointSize(width);
     subselection->setMaterial(m);
 
     auto scene = VRScene::getCurrent();
@@ -87,15 +98,17 @@ VRMaterialPtr VRSelector::getMat() {
 
     mat->addPass();*/
 
-    mat->setFrontBackModes(GL_LINE, GL_LINE);
     mat->setDiffuse(color);
     mat->setLineWidth(width, smooth);
-    mat->setLit(false);
-    mat->setStencilBuffer(false, 1,-1, GL_NOTEQUAL, GL_KEEP, GL_KEEP, GL_REPLACE);
-
-    //mat->addPass();
-    //mat->setDiffuse(color);
-    //mat->setLit(false);
+    if (visual == OUTLINE) {
+        mat->setFrontBackModes(GL_LINE, GL_LINE);
+        mat->setLit(false);
+        mat->setStencilBuffer(false, 1,-1, GL_NOTEQUAL, GL_KEEP, GL_KEEP, GL_REPLACE);
+    }
+    if (visual == OVERLAY) {
+        mat->setTransparency(transparency);
+        //mat->addPass();
+    }
 
     return mat;
 }
@@ -109,13 +122,8 @@ void VRSelector::deselect() {
 
 void VRSelector::clear() { selection->clear(); update(); }
 
-void VRSelector::setBorder(int width, bool smooth) {
-    this->width = width;
-    this->smooth = smooth;
-    update();
-}
-
 void VRSelector::select(VRObjectPtr obj, bool append, bool recursive) {
+    selected = obj;
     if (!append) {
         clear();
         selection->apply(obj, true, recursive);
@@ -127,21 +135,36 @@ void VRSelector::select(VRObjectPtr obj, bool append, bool recursive) {
     update();
 }
 
-void VRSelector::select(VRSelectionPtr s) {
+VRObjectPtr VRSelector::getSelected() {
+    if (selected) return selected;
+    auto objs = selection->getSelected();
+    if (objs.size() > 0) return objs[0].lock();
+    return 0;
+}
+
+void VRSelector::set(VRSelectionPtr s) {
     if (s != selection) {
         clear();
         selection = s;
     }
+    selected = 0;
     update();
 }
 
 void VRSelector::add(VRSelectionPtr s) {
     if (!selection) selection = s;
     else selection->append(s);
+    selected = 0;
     update();
 }
 
-void VRSelector::setColor(Color3f c) { color = c; }
+void VRSelector::setBorder(int width, bool smooth) {
+    this->width = width;
+    this->smooth = smooth;
+    update();
+}
+
+void VRSelector::setVisual(VISUAL v) { visual = v; update(); };
+void VRSelector::setColor(Color3f c, float t) { color = c; transparency = t; update(); }
 VRSelectionPtr VRSelector::getSelection() { return selection; }
 
-OSG_END_NAMESPACE;
