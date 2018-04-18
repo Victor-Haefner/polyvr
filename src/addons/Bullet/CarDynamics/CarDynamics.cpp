@@ -256,7 +256,7 @@ float VRCarDynamics::throttleBooster( float clampedThrottle ) {
 
 float VRCarDynamics::computeThrottle( float pedalPos ) {
     float retThrottle = 0;
-    retThrottle = throttleBooster(retThrottle);
+    if (type != SIMPLE) retThrottle = throttleBooster(retThrottle);
     retThrottle = strech(rescale(pedalPos, 0.05, 0.95)*rescale(pedalPos, 0.05, 0.95), retThrottle); //shifts pedalPos above minThrottle
     if (engine->rpm > engine->maxRpm) retThrottle = 0;
     return retThrottle;

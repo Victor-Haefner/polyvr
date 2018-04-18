@@ -149,6 +149,19 @@ void VRProcess::update() {
     }
 }
 
+void VRProcess::remNode(VRProcessNodePtr n) {
+    if (auto diag = interactionDiagram) {
+        if (diag->processnodes.count(n->ID)) {
+            diag->remNode(n->ID);
+            if (behaviorDiagrams.count(n->ID)) behaviorDiagrams.erase(n->ID);
+        }
+    }
+
+    for (auto diag : behaviorDiagrams) {
+        if (diag.second->processnodes.count(n->ID)) diag.second->remNode(n->ID);
+    }
+}
+
 VRProcessNodePtr VRProcess::addSubject(string name) {
     if (!interactionDiagram) interactionDiagram = DiagramPtr( new Diagram() );
     auto sID = interactionDiagram->addNode();
