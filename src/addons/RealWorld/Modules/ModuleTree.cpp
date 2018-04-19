@@ -29,7 +29,7 @@ void ModuleTree::loadBbox(MapGrid::Box bbox) {
         Vec3d pos3D = Vec3d(pos2D[0], mc->getElevation(pos2D), pos2D[1]);
 
         VRTreePtr tree = VRTree::create();
-        tree->setup(4,4,rand(), 0.2,0.5,0.75,0.55, 0.2,0.5,0.2,0.2);
+        tree->setup(4,4,rand(), Vec4d(0.2,0.5,0.75,0.55), Vec4d(0.2,0.5,0.2,0.2));
         tree->setFrom(pos3D);
         tree->setScale(Vec3d(2,2,2));
         root->addChild(tree);

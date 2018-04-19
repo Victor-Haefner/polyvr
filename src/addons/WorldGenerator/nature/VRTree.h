@@ -50,23 +50,19 @@ class VRTree : public VRTransform {
         static VRTreePtr create(string name = "tree");
         VRTreePtr ptr();
 
-        segment* grow(int seed = 0, segment* p = 0, int iteration = 0, float t = 1);
+        segment* growSegment(int seed = 0, segment* p = 0, int iteration = 0, float t = 1);
         void growLeafs(shared_ptr<leaf_params>);
+        void grow(int seed = 0);
 
-        void addBranching(int nodes = 1, int branching = 5,
-                   float n_angle = 0.2, float p_angle = 0.6, float length = 0.8, float radius = 0.1,
-                   float n_angle_v = 0.2, float p_angle_v = 0.4, float length_v = 0.2, float radius_v = 0.2);
-
-        // deprecated
-        void setup(int branching = 5, int iterations = 5, int seed = 0,
-                   float n_angle = 0.2, float p_angle = 0.6, float length = 0.8, float radius = 0.1,
-                   float n_angle_v = 0.2, float p_angle_v = 0.4, float length_v = 0.2, float radius_v = 0.2);
-
+        // params: n_angle, p_angle, length, radius
+        void setup(int branching = 5, int iterations = 5, int seed = 0, Vec4d params = Vec4d(0.2, 0.6, 0.8, 0.1), Vec4d params_v = Vec4d(0.2, 0.4, 0.2, 0.2) );
+        void addBranching(int nodes = 1, int branching = 5, Vec4d params = Vec4d(0.2, 0.6, 0.8, 0.1), Vec4d params_v = Vec4d(0.2, 0.4, 0.2, 0.2) );
         void addLeafs(int lvl, int amount, float size = 0.03);
         void setLeafMaterial(VRMaterialPtr mat);
 
-        void createHullTrunkLod(VRGeoData& geo, int lvl, Vec3d offset, int ID);
-        void createHullLeafLod(VRGeoData& geo, int lvl, Vec3d offset, int ID);
+        VRTransformPtr createLOD(int lvl);
+        void createHullTrunkLod(VRGeoData& geo, int lvl, Vec3d offset, int ID); // soon deprecated
+        void createHullLeafLod(VRGeoData& geo, int lvl, Vec3d offset, int ID); // soon deprecated
 };
 
 OSG_END_NAMESPACE;

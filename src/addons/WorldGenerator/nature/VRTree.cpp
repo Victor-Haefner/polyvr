@@ -156,7 +156,9 @@ Vec3d VRTree::randomRotate(Vec3d v, float a) {
     return v;
 }
 
-segment* VRTree::grow(int seed, segment* p, int iteration, float t) {
+void VRTree::grow(int seed) { growSegment(seed); }
+
+segment* VRTree::growSegment(int seed, segment* p, int iteration, float t) {
     this->seed = seed;
     if (int(parameters.size()) <= iteration) return 0;
     auto sp = parameters[iteration];
@@ -185,7 +187,7 @@ segment* VRTree::grow(int seed, segment* p, int iteration, float t) {
 
     for (int n=0; n<sp->nodes; n++) {
         for (int i=0; i<sp->child_number; i++) {
-            auto c = grow(seed, s, iteration+1, (n+1)*1.0/sp->nodes);
+            auto c = growSegment(seed, s, iteration+1, (n+1)*1.0/sp->nodes);
             if (c) s->children.push_back(c);
         }
     }
@@ -294,33 +296,28 @@ void VRTree::testSetup() {
     grow(time(0));
 }
 
-void VRTree::setup(int branching, int iterations, int seed,
-                   float n_angle, float p_angle, float length, float radius,
-                   float n_angle_v, float p_angle_v, float length_v, float radius_v) {
-
+void VRTree::setup(int branching, int iterations, int seed, Vec4d params, Vec4d params_v) {
     for (int i=0; i<iterations; i++) {
-        float r = 0.1*pow(radius,i);
-        addBranching(1, branching, n_angle, p_angle, length, r, n_angle_v, p_angle_v, length_v , radius_v);
+        Vec4d params2 = params;
+        params2[3] = 0.1*pow(params[3],i);
+        addBranching(1, branching, params2, params_v);
     }
 
     grow(seed);
 }
 
-
-void VRTree::addBranching(int nodes, int branching,
-           float n_angle, float p_angle, float length, float radius,
-           float n_angle_v, float p_angle_v, float length_v , float radius_v) {
+void VRTree::addBranching(int nodes, int branching, Vec4d params, Vec4d params_v) {
     auto sp = seg_params::create();
     sp->nodes = nodes;
     sp->child_number = branching;
-    sp->n_angle = n_angle;
-    sp->p_angle = p_angle;
-    sp->length = length;
-    sp->radius = radius;
-    sp->n_angle_var = n_angle_v;
-    sp->p_angle_var = p_angle_v;
-    sp->length_var = length_v;
-    sp->radius_var = radius_v;
+    sp->n_angle = params[0];
+    sp->p_angle = params[1];
+    sp->length = params[2];
+    sp->radius = params[3];
+    sp->n_angle_var = params_v[0];
+    sp->p_angle_var = params_v[1];
+    sp->length_var = params_v[2];
+    sp->radius_var = params_v[3];
     parameters.push_back(sp);
 }
 
@@ -358,7 +355,10 @@ void VRTree::growLeafs(shared_ptr<leaf_params> lp) {
     float ch = 1.0; // chlorophyl
     ca = 0.5 + rand()*0.5/RAND_MAX;
     ch = 0.5 + rand()*0.5/RAND_MAX;
-    VRGeoData geo0, geo1, geo2;
+    VRGeoData geo0(leafGeos[0]);
+    VRGeoData geo1(leafGeos[1]);
+    VRGeoData geo2(leafGeos[2]);
+
     for (auto b : branches) {
         if (b->lvl != lp->level) continue;
 
@@ -401,6 +401,12 @@ void VRTree::growLeafs(shared_ptr<leaf_params> lp) {
 
 void VRTree::setLeafMaterial(VRMaterialPtr mat) {
     for (auto g : leafGeos) g->setMaterial(mat);
+}
+
+VRTransformPtr VRTree::createLOD(int lvl) {
+    VRGeoData geo;
+    for (int i=0; i<=lvl; i++) createHullTrunkLod(geo, i, Vec3d(), 0);
+    return geo.asGeometry("TreeLOD");
 }
 
 void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3d offset, int ID) {
