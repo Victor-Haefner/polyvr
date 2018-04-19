@@ -28,6 +28,16 @@
 using namespace std;
 using namespace OSG;
 
+template<> string typeName(const VRTextureRenderer::CHANNEL& o) { return "VRTextureRenderer::CHANNEL"; }
+
+template<> int toValue(stringstream& ss, VRTextureRenderer::CHANNEL& e) {
+    string s = ss.str();
+    if (s == "RENDER") { e = VRTextureRenderer::RENDER; return true; }
+    if (s == "DIFFUSE") { e = VRTextureRenderer::DIFFUSE; return true; }
+    if (s == "NORMAL") { e = VRTextureRenderer::NORMAL; return true; }
+    return false;
+}
+
 OSG_BEGIN_NAMESPACE;
 struct VRTextureRenderer::Data {
     int fboWidth = 256;
@@ -165,7 +175,7 @@ void VRTextureRenderer::setActive(bool b) {
     else setCore(OSGCore::create(Group::create()), "TextureRenderer", true);
 }
 
-VRTexturePtr VRTextureRenderer::renderOnce() {
+VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
     if (!data->ract) {
         data->ract = RenderAction::create();
         data->win = PassiveWindow::create();
@@ -183,7 +193,37 @@ VRTexturePtr VRTextureRenderer::renderOnce() {
     return VRTexture::create( img );
 }
 
+/** special setup
+    - get all lights and light beacons above scene node and duplicate them
+    - link scene node blow lights
+    - render diffuse channel
+    - render normal channel
+*/
 
+VRMaterialPtr VRTextureRenderer::createTextureLod(VRObjectPtr scene, PosePtr cam) {
+    /*texRenderer = VRTextureRenderer::create("grassRenderer");
+    texRenderer->setBackground(Color3f(0,0.8,0));
+    texRenderer->setPersistency(0);
+    auto cam = VRCamera::create("grassCam", false);
+    auto light = VRLight::create("grassLight");
+    auto lightBeacon = VRLightBeacon::create("grassLightBeacon");
+    texRenderer->addChild(light);
+    light->addChild(cam);
+    cam->addChild(lightBeacon);
+    cam->setFov(0.33); //0.33
+    cam->setAspect(0.2);
+    light->setBeacon(lightBeacon);
+    light->addChild(grass);
+    light->setType("directional");
+	lightBeacon->setOrientation(Vec3d(0.5,-1,-1), Vec3d(0,0,1));
+	texRenderer->setup(cam, 512, 512, true);
+
+    cam->setTransform(Vec3d(0,0,-2), Vec3d(0,0,1)); // side
+    cam->updateChange();
+    auto texSide = texRenderer->renderOnce();
+    matGrassSide->setTexture(texSide);*/
+    return 0;
+}
 
 
 

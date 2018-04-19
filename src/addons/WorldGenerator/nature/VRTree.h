@@ -61,6 +61,7 @@ class VRTree : public VRTransform {
         void setLeafMaterial(VRMaterialPtr mat);
 
         VRTransformPtr createLOD(int lvl);
+        void createTwigLod(VRGeoData& geo, int lvl);
         void createHullTrunkLod(VRGeoData& geo, int lvl, Vec3d offset, int ID); // soon deprecated
         void createHullLeafLod(VRGeoData& geo, int lvl, Vec3d offset, int ID); // soon deprecated
 };

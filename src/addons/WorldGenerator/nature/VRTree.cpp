@@ -409,6 +409,10 @@ VRTransformPtr VRTree::createLOD(int lvl) {
     return geo.asGeometry("TreeLOD");
 }
 
+void VRTree::createTwigLod(VRGeoData& geo, int lvl) {
+    ;
+}
+
 void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3d offset, int ID) {
     Matrix4d Offset;
     Offset.setTranslate(offset); // TODO, use tree transformation rotation?
