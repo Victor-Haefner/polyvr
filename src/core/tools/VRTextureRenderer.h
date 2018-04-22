@@ -24,6 +24,8 @@ class VRTextureRenderer : public VRObject {
         VRTexturePtr fbotex = 0;
         VRCameraPtr cam = 0;
 
+        void setChannelFP(string fp);
+        void resetChannelFP();
         void test();
 
     public:

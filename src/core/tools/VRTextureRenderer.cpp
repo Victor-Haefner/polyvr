@@ -8,6 +8,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/material/VRTextureGenerator.h"
+#include "core/objects/geometry/VRGeometry.h"
 #include "core/scene/VRScene.h"
 #include "core/math/boundingbox.h"
 
@@ -178,6 +179,77 @@ void VRTextureRenderer::setActive(bool b) {
     else setCore(OSGCore::create(Group::create()), "TextureRenderer", true);
 }
 
+/** TODO, implement channels
+    - render normal channel, override material fragment shaders
+*/
+
+#define GLSL(shader) #shader
+
+string channelDiffuseFP =
+"#version 400 compatibility\n"
+GLSL(
+uniform sampler2D tex;
+in vec4 position;
+in vec2 tcs;
+in vec3 norm;
+in vec3 col;
+vec4 color;
+
+void main( void ) {
+	float ca = col[1];
+	float ch = col[2];
+	color = texture(tex,tcs);
+	if (color.a < 0.3) discard;
+
+	color.x *= 0.4*ca;
+	color.y *= 0.8*ch;
+	color.z *= 0.2*ch;
+	gl_FragColor = vec4(color.xyz,1.0);
+}
+);
+
+string channelNormalFP =
+"#version 400 compatibility\n"
+GLSL(
+uniform sampler2D tex;
+in vec4 position;
+in vec2 tcs;
+in vec3 norm;
+in vec3 col;
+vec4 color;
+
+void main( void ) {
+	float ca = col[1];
+	float ch = col[2];
+	color = texture(tex,tcs);
+	if (color.a < 0.3) discard;
+
+	vec3 n = normalize( gl_NormalMatrix * norm );
+	gl_FragColor = vec4(n,1.0);
+}
+);
+
+map<VRMaterial*, string> originalMatFP;
+
+void VRTextureRenderer::setChannelFP(string fp) {
+    for (auto geo : getChild(0)->getLinks()[0]->getChildren(true, "Geometry")) {
+        auto m = dynamic_pointer_cast<VRGeometry>(geo)->getMaterial();
+        if (originalMatFP.count(m.get())) continue;
+        originalMatFP[m.get()] = m->getFragmentShader();
+        m->setFragmentShader(fp, "texRendChannel");
+    }
+}
+
+void VRTextureRenderer::resetChannelFP() {
+    for (auto geo : getChild(0)->getLinks()[0]->getChildren(true, "Geometry")) {
+        auto m = dynamic_pointer_cast<VRGeometry>(geo)->getMaterial();
+        if (!originalMatFP.count(m.get())) continue;
+        m->setFragmentShader(originalMatFP[m.get()], "texRendChannel");
+        originalMatFP.erase(m.get());
+    }
+    originalMatFP.clear();
+}
+
 VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
     if (!data->ract) {
         data->ract = RenderAction::create();
@@ -190,9 +262,14 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
         data->view->setBackground(data->stage->getBackground());
     }
 
+    //if (c == DIFFUSE) setChannelFP(channelNormalFP);
+    if (c == DIFFUSE) setChannelFP(channelDiffuseFP);
+    if (c == NORMAL) setChannelFP(channelNormalFP);
+
     data->win->render(data->ract);
     ImageMTRecPtr img = Image::create();
     img->set( data->fboTexImg );
+    if (c != RENDER) resetChannelFP();
     return VRTexture::create( img );
 }
 
@@ -238,8 +315,8 @@ VRMaterialPtr VRTextureRenderer::createTextureLod(VRObjectPtr obj, PosePtr camP,
     auto texNormals = renderOnce(NORMAL);
 
     VRMaterialPtr mat = VRMaterial::create("lod");
-    mat->setTexture(texDiffuse, 0);
-    mat->setTexture(texNormals, 1);
+    mat->setTexture(texDiffuse, false, 0);
+    mat->setTexture(texNormals, false, 1);
     mat->setTextureParams(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_MODULATE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 	if (deferred) scene->setDeferredShading(true);
     return mat;

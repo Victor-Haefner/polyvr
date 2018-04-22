@@ -387,7 +387,7 @@ void VRTree::growLeafs(shared_ptr<leaf_params> lp) {
     }
     if (geo0.size() == 0) { cout << "VRTree::addLeafs Warning: no armature with level " << lp->level << endl; return; }
 
-    for (int i=0; i<geo0.size(); i+=4) {
+    /*for (int i=0; i<geo0.size(); i+=4) {
         auto c = geo0.getColor3(i); c[0] *= 2; // double lod leaf size
         geo1.pushVert( geo0.getPosition(i), geo0.getNormal(i), c);
         geo1.pushPoint();
@@ -395,6 +395,18 @@ void VRTree::growLeafs(shared_ptr<leaf_params> lp) {
 
     for (int i=0; i<geo0.size(); i+=16) {
         auto c = geo0.getColor3(i); c[0] *= 4; // double lod leaf size
+        geo2.pushVert( geo0.getPosition(i), geo0.getNormal(i), c);
+        geo2.pushPoint();
+    }*/
+
+    for (int i=0; i<geo0.size(); i++) {
+        auto c = geo0.getColor3(i); //c[0] *= 2; // double lod leaf size
+        geo1.pushVert( geo0.getPosition(i), geo0.getNormal(i), c);
+        geo1.pushPoint();
+    }
+
+    for (int i=0; i<geo0.size(); i++) {
+        auto c = geo0.getColor3(i); //c[0] *= 4; // double lod leaf size
         geo2.pushVert( geo0.getPosition(i), geo0.getNormal(i), c);
         geo2.pushPoint();
     }
