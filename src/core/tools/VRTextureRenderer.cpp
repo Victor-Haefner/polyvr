@@ -227,15 +227,15 @@ VRMaterialPtr VRTextureRenderer::createTextureLod(VRObjectPtr scene, PosePtr cam
     tmpScene->addChild(cam);
     tmpScene->addLink(scene);
 
-    auto texRenderer = VRTextureRenderer::create("grassRenderer");
-    texRenderer->setBackground(Color3f(0,0.8,0));
-    texRenderer->setPersistency(0);
-    texRenderer->addChild(tmpScene);
-	texRenderer->setup(cam, res, res/aspect, true);
-    auto tex1 = texRenderer->renderOnce();
+    setBackground(Color3f(0,0.8,0));
+    addChild(tmpScene);
+	setup(cam, res, res/aspect, true);
 
+    auto texDiffuse = renderOnce(DIFFUSE);
+    auto texNormals = renderOnce(NORMAL);
     VRMaterialPtr mat = VRMaterial::create("lod");
-    mat->setTexture(tex1);
+    mat->setTexture(texDiffuse, 0);
+    mat->setTexture(texNormals, 1);
     return mat;
 }
 
