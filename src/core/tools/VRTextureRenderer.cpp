@@ -203,9 +203,9 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
     - render normal channel
 */
 
-VRMaterialPtr VRTextureRenderer::createTextureLod(VRObjectPtr scene, PosePtr camP, int res, float aspect, float fov) {
+VRMaterialPtr VRTextureRenderer::createTextureLod(VRObjectPtr obj, PosePtr camP, int res, float aspect, float fov) {
     VRObjectPtr tmpScene = VRObject::create("tmpScene");
-    for (auto a : scene->getAncestry()) {
+    for (auto a : obj->getAncestry()) {
         if (a->getType() == "Light") {
             VRLightPtr l = dynamic_pointer_cast<VRLight>( a->duplicate() );
             tmpScene->addChild(l);
@@ -225,17 +225,23 @@ VRMaterialPtr VRTextureRenderer::createTextureLod(VRObjectPtr scene, PosePtr cam
     cam->setPose(camP);
     cam->updateChange();
     tmpScene->addChild(cam);
-    tmpScene->addLink(scene);
+    tmpScene->addLink(obj);
 
     setBackground(Color3f(0,0.8,0));
     addChild(tmpScene);
 	setup(cam, res, res/aspect, true);
 
+	auto scene = VRScene::getCurrent();
+	bool deferred = scene->getDefferedShading();
+	if (deferred) scene->setDeferredShading(false);
     auto texDiffuse = renderOnce(DIFFUSE);
     auto texNormals = renderOnce(NORMAL);
+
     VRMaterialPtr mat = VRMaterial::create("lod");
     mat->setTexture(texDiffuse, 0);
     mat->setTexture(texNormals, 1);
+    mat->setTextureParams(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_MODULATE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+	if (deferred) scene->setDeferredShading(true);
     return mat;
 }
 

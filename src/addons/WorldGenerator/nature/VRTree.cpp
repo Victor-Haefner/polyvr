@@ -435,7 +435,7 @@ VRTransformPtr VRTree::createLOD(int lvl) {
 
     addSprite( Pose::create(Vec3d(0,h2,-D[1]), Vec3d(0,0,1), Vec3d(0,1,0)), S[0], S[1], S[1]*0.5);
     addSprite( Pose::create(Vec3d(-D[1],h2,0), Vec3d(1,0,0), Vec3d(0,1,0)), S[2], S[1], S[1]*0.5);
-    addSprite( Pose::create(Vec3d(0,S[1]+max(D[0],D[2]),0), Vec3d(0,-1,0), Vec3d(0,0,1)), S[0], S[2], S[1]);
+    //addSprite( Pose::create(Vec3d(0,S[1]+max(D[0],D[2]),0), Vec3d(0,-1,0), Vec3d(0,0,1)), S[0], S[2], S[1]);
 
     return lod;
 }
