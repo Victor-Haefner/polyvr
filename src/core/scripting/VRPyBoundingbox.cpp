@@ -15,6 +15,7 @@ PyMethodDef VRPyBoundingbox::methods[] = {
     {"max", PyCastWrap(Boundingbox, max, "Get the maximum vector", Vec3d) },
     {"update", PyCastWrap(Boundingbox, update, "Update the bounding box", void, Vec3d) },
     {"center", PyCastWrap(Boundingbox, center, "Get the center", Vec3d) },
+    {"size", PyCastWrap(Boundingbox, size, "Get the size", Vec3d) },
     {NULL}  /* Sentinel */
 };
 

@@ -3,10 +3,13 @@
 #include "core/objects/object/OSGCore.h"
 #include "core/objects/VRCamera.h"
 #include "core/objects/OSGCamera.h"
+#include "core/objects/VRLight.h"
+#include "core/objects/VRLightBeacon.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/scene/VRScene.h"
+#include "core/math/boundingbox.h"
 
 #include <OpenSG/OSGBackground.h>
 #include <OpenSG/OSGSimpleStage.h>
@@ -200,29 +203,40 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
     - render normal channel
 */
 
-VRMaterialPtr VRTextureRenderer::createTextureLod(VRObjectPtr scene, PosePtr cam) {
-    /*texRenderer = VRTextureRenderer::create("grassRenderer");
+VRMaterialPtr VRTextureRenderer::createTextureLod(VRObjectPtr scene, PosePtr camP, int res, float aspect, float fov) {
+    VRObjectPtr tmpScene = VRObject::create("tmpScene");
+    for (auto a : scene->getAncestry()) {
+        if (a->getType() == "Light") {
+            VRLightPtr l = dynamic_pointer_cast<VRLight>( a->duplicate() );
+            tmpScene->addChild(l);
+            tmpScene = l;
+
+            auto b = dynamic_pointer_cast<VRLight>( a )->getBeacon();
+            auto p = b->getWorldPose();
+            auto lb = VRLightBeacon::create();
+            l->setBeacon(lb);
+            lb->setWorldPose(p);
+        }
+    }
+
+    auto cam = VRCamera::create("cam", false);
+    cam->setFov(fov); //0.33
+    cam->setAspect(1);
+    cam->setPose(camP);
+    cam->updateChange();
+    tmpScene->addChild(cam);
+    tmpScene->addLink(scene);
+
+    auto texRenderer = VRTextureRenderer::create("grassRenderer");
     texRenderer->setBackground(Color3f(0,0.8,0));
     texRenderer->setPersistency(0);
-    auto cam = VRCamera::create("grassCam", false);
-    auto light = VRLight::create("grassLight");
-    auto lightBeacon = VRLightBeacon::create("grassLightBeacon");
-    texRenderer->addChild(light);
-    light->addChild(cam);
-    cam->addChild(lightBeacon);
-    cam->setFov(0.33); //0.33
-    cam->setAspect(0.2);
-    light->setBeacon(lightBeacon);
-    light->addChild(grass);
-    light->setType("directional");
-	lightBeacon->setOrientation(Vec3d(0.5,-1,-1), Vec3d(0,0,1));
-	texRenderer->setup(cam, 512, 512, true);
+    texRenderer->addChild(tmpScene);
+	texRenderer->setup(cam, res, res/aspect, true);
+    auto tex1 = texRenderer->renderOnce();
 
-    cam->setTransform(Vec3d(0,0,-2), Vec3d(0,0,1)); // side
-    cam->updateChange();
-    auto texSide = texRenderer->renderOnce();
-    matGrassSide->setTexture(texSide);*/
-    return 0;
+    VRMaterialPtr mat = VRMaterial::create("lod");
+    mat->setTexture(tex1);
+    return mat;
 }
 
 

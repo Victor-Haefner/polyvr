@@ -7,8 +7,13 @@
 #include "core/objects/VRLod.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/math/boundingbox.h"
 #include "core/math/VRConvexHull.h"
 #include "core/utils/VRStorage_template.h"
+
+#include "core/tools/VRTextureRenderer.h"
+#include "core/math/pose.h"
+#include "core/objects/geometry/VRSprite.h"
 
 #include <OpenSG/OSGQuaternion.h>
 #include <random>
@@ -404,9 +409,34 @@ void VRTree::setLeafMaterial(VRMaterialPtr mat) {
 }
 
 VRTransformPtr VRTree::createLOD(int lvl) {
-    VRGeoData geo;
-    for (int i=0; i<=lvl; i++) createHullTrunkLod(geo, i, Vec3d(), 0);
-    return geo.asGeometry("TreeLOD");
+    /*VRGeoData geo;
+    createHullTrunkLod(geo, lvl, Vec3d(), 0);
+    return geo.asGeometry("TreeLOD");*/
+
+    auto lod = VRTransform::create("lod");
+
+    auto t = ptr();
+    auto bb = t->getBoundingbox();
+    Vec3d S = bb->size();
+    float h2 = S[1]*0.5;
+    float fov = 0.33;
+    Vec3d D = S*0.5/tan(fov*0.5);
+
+    auto addSprite = [&](PosePtr p, float W, float H) {
+        VRTextureRenderer tr("bla");
+        auto m = tr.createTextureLod(t, p, 512, W/H, fov);
+        auto s = VRSprite::create();
+        s->setSize(W,H);
+        s->setTransform(Vec3d(0,H*0.5,0), p->dir(), p->up());
+        s->applyTransformation();
+        s->setMaterial(m);
+        lod->addChild(s);
+    };
+
+    addSprite( Pose::create(Vec3d(0,h2,-D[1]), Vec3d(0,0,1), Vec3d(0,1,0)), S[0], S[1]);
+    addSprite( Pose::create(Vec3d(-D[1],h2,0), Vec3d(1,0,0), Vec3d(0,1,0)), S[2], S[1]);
+
+    return lod;
 }
 
 void VRTree::createTwigLod(VRGeoData& geo, int lvl) {

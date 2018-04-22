@@ -187,7 +187,8 @@ void VRCamera::focusObject(VRObjectPtr t) {
     Vec3d dp = getDir();
     if (dp.length() > 1e-4) d = dp; // only use new dir if it is valid
     d.normalize();
-    float r = max(bb->radius()*2, 0.1f);
+    //float r = max(bb->radius()*2, 0.1f);
+    float r = bb->radius() / tan(fov*0.5);
     setFrom(c - d*r); // go back or forth to see whole node
 
     //cout << "VRCamera::focus " << t->getName() << " pos " << c << " size " << r << endl;
