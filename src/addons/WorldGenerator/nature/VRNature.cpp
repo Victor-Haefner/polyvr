@@ -235,11 +235,12 @@ void VRNature::simpleInit(int treeTypes, int bushTypes) {
 		float r0 = 0.05+rand()*0.15/RAND_MAX;
 		float l0 = H/Nn;
 		auto t = VRTree::create("tree");
-		t->addBranching(Nn,4, 0.2,0.4,H,r0, 0.2,0.4,0.2,0.2);
-		t->addBranching(1,4, 0.2,0.4,0.8*l0,r0*pow(0.3,1), 0.2,0.4,0.2,0.2);
-		t->addBranching(1,4, 0.2,0.4,0.7*l0,r0*pow(0.3,2), 0.2,0.4,0.2,0.2);
-		t->addBranching(1,4, 0.2,0.4,0.6*l0,r0*pow(0.3,3), 0.2,0.4,0.2,0.2);
-		t->addBranching(1,4, 0.2,0.4,0.5*l0,r0*pow(0.3,4), 0.2,0.4,0.2,0.2);
+		Vec4d params_v = Vec4d(0.2,0.4,0.2,0.2);
+		t->addBranching(Nn,4, Vec4d(0.2,0.4,H,r0), params_v);
+		t->addBranching(1,4, Vec4d(0.2,0.4,0.8*l0,r0*pow(0.3,1)), params_v);
+		t->addBranching(1,4, Vec4d(0.2,0.4,0.7*l0,r0*pow(0.3,2)), params_v);
+		t->addBranching(1,4, Vec4d(0.2,0.4,0.6*l0,r0*pow(0.3,3)), params_v);
+		t->addBranching(1,4, Vec4d(0.2,0.4,0.5*l0,r0*pow(0.3,4)), params_v);
 		t->grow( int(rand()*100.0/RAND_MAX) );
 		t->addLeafs(4, 10, 0.1); // int lvl, int amount, float size
 		return t;
@@ -247,10 +248,11 @@ void VRNature::simpleInit(int treeTypes, int bushTypes) {
 
     auto doBush = [&]() {
 		auto t = VRTree::create("bush");
-		t->addBranching(1,10, 0.2,0.4,0.1,0.01, 0.2,0.4,0.2,0.2);
-		t->addBranching(1,4, 0.2,0.9,0.3,0.006, 0.2,0.4,0.2,0.2);
-		t->addBranching(1,4, 0.2,0.4,0.2,0.004, 0.2,0.4,0.2,0.2);
-		//t->addBranching(1,4, 0.2,0.4,0.2,0.0004, 0.2,0.4,0.2,0.2);
+		Vec4d params_v = Vec4d(0.2,0.4,0.2,0.2);
+		t->addBranching(1,10, Vec4d(0.2,0.4,0.1,0.01), params_v);
+		t->addBranching(1,4, Vec4d(0.2,0.9,0.3,0.006), params_v);
+		t->addBranching(1,4, Vec4d(0.2,0.4,0.2,0.004), params_v);
+		//t->addBranching(1,4, Vec4d(0.2,0.4,0.2,0.0004), params_v);
 		t->grow( int(rand()*100.0/RAND_MAX) );
 		t->addLeafs(2, 4, 0.1);
 		return t;

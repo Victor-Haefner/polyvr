@@ -10,6 +10,13 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRTextureRenderer : public VRObject {
+    public:
+        enum CHANNEL {
+            RENDER = 0,
+            DIFFUSE = 1,
+            NORMAL = 2
+        };
+
     private:
         struct Data;
         Data* data = 0;
@@ -17,6 +24,8 @@ class VRTextureRenderer : public VRObject {
         VRTexturePtr fbotex = 0;
         VRCameraPtr cam = 0;
 
+        void setChannelFP(string fp);
+        void resetChannelFP();
         void test();
 
     public:
@@ -32,7 +41,8 @@ class VRTextureRenderer : public VRObject {
         VRMaterialPtr getMaterial();
         VRCameraPtr getCamera();
 
-        VRTexturePtr renderOnce();
+        VRTexturePtr renderOnce(CHANNEL c = RENDER);
+        VRMaterialPtr createTextureLod(VRObjectPtr scene, PosePtr cam, int res, float aspect, float fov);
 };
 
 OSG_END_NAMESPACE;

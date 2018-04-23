@@ -711,6 +711,7 @@
 		<Unit filename="src/core/objects/geometry/VRSky.h" />
 		<Unit filename="src/core/objects/geometry/VRSprite.cpp" />
 		<Unit filename="src/core/objects/geometry/VRSprite.h" />
+		<Unit filename="src/core/objects/geometry/VRSpriteLod.h" />
 		<Unit filename="src/core/objects/geometry/VRStroke.cpp" />
 		<Unit filename="src/core/objects/geometry/VRStroke.h" />
 		<Unit filename="src/core/objects/material/OSGMaterial.cpp" />

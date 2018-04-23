@@ -410,7 +410,7 @@ PyObject* VRPyVec3f::getItem(PyObject* self, Py_ssize_t i) {
 int VRPyVec3f::setItem(PyObject* self, Py_ssize_t i, PyObject* val) {
     if (i < 0 || i > 2) {
         setErr("Index i not in range [0-2] ("+toString(int(i))+")");
-        return NULL;
+        return 0;
     }
     Vec3d& v = ((VRPyVec3f*)self)->v;
     v[i] = PyFloat_AsDouble(val);

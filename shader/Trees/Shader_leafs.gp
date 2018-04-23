@@ -8,17 +8,20 @@ in vec3 vcol[];
 out vec2 tcs;
 out vec3 norm;
 out vec3 col;
+out vec4 position;
 
 #define mMVP gl_ModelViewProjectionMatrix
 #define mMV gl_ModelViewMatrix
 #define mP gl_ProjectionMatrix
 
 vec4 crns[4];
+vec4 crnsMV[4];
 vec4 crnsMVP[4];
 vec2 TCS[4];
 
 void emit(int i) {
 	gl_Position = crnsMVP[i];
+	position = crnsMV[i];
 	tcs = TCS[i];
 	EmitVertex();
 }
@@ -42,6 +45,7 @@ void main() {
 	TCS[3] = vec2(1,1);
 	norm = normalize(cross(x.xyz,z.xyz));
 	col = vcol[0];
+	for (int i=0; i<4; i++) crnsMV[i] = mMV * crns[i];
 	for (int i=0; i<4; i++) crnsMVP[i] = mMVP * crns[i];
 	emit(0);
 	emit(1);

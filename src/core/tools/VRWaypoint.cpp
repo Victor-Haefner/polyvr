@@ -50,7 +50,7 @@ void VRWaypoint::updateGeo() {
     m->setDiffuse(Color3f(1,0,0));
     setMaterial(m);
     float s = size;
-    string params = toString(s) + " " + toString(s) + " " + toString(s*0.5) + " " + toString(s*0.4);
+    string params = toString(s) + " " + toString(s) + " " + toString(s*0.5) + " " + toString(s*0.4) + " " + toString(s*0.4);
     setPrimitive("Arrow", params);
     if (!pose || !floor) return;
 

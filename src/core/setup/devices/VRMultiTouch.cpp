@@ -208,7 +208,7 @@ void VRMultiTouch::disconnectDevice() {
 void VRMultiTouch::connectDevice() {
     devID = "";
     vector<int> IDs;
-    for (int i=0; i<devices.size(); i++) {
+    for (uint i=0; i<devices.size(); i++) {
         if (devices[i] == device) IDs.push_back( toInt(deviceIDs[i]) );
     }
     if (IDs.size() == 0) return;
