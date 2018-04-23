@@ -53,10 +53,29 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 	};
 
 	auto computeLaneMatches = [&]() {
-	    auto checkDefaultMatch = [](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut) {
+	    auto checkDefaultMatch = [&](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut, VRRoadPtr road1, VRRoadPtr road2) {
             if (Nin == Nout && i != j && reSignIn != reSignOut) return false;
             if (Nin == Nout && i != Nout-j-1 && reSignIn == reSignOut) return false;
-            //if (Nin > Nout && j==0) return false; //testing which lane is which index
+            if (Nin > Nout) {
+                auto getRoadConnectionAngle = [&](VRRoadPtr road1, VRRoadPtr road2) {
+                    auto& data1 = road1->getEdgePoints( node );
+                    auto& data2 = road2->getEdgePoints( node );
+                    return data1.n.dot(data2.n);
+                    //return data1.n.cross(data2.n);
+                };
+                bool parallel  = bool( getRoadConnectionAngle(road1, road2) < -0.8 );
+                bool right  = bool( getRoadConnectionAngle(road1, road2) > 0 );
+                bool left  = bool( getRoadConnectionAngle(road1, road2) < 0 );
+                if (parallel && reSignIn>0 && i!=j) return false;
+                if (parallel && reSignIn<0 && i-1!=j) return false;
+                //if (!parallel && reSignIn>0 && i!=j-2) return false;
+                if (!parallel && reSignIn>0 && i==1) return false;
+                if (!parallel && reSignIn<0 && i==1) return false;
+                if (right && reSignIn<0) return false;
+                //if (left && reSignIn<0) return false;
+                if (right && reSignIn>0) return false;
+                //if (left && reSignIn>0) return false;
+            } //testing which lane is which index
             if (Nin == 1 || Nout == 1) return true;
             return true;
         };
@@ -94,7 +113,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                             //case FORK: break;
                             //case MERGE: break;
                             //case UPLINK: break;
-                            default: match = checkDefaultMatch(i,j,Nin, Nout, reSign1, reSign2); break;
+                            default: match = checkDefaultMatch(i,j,Nin, Nout, reSign1, reSign2, road1, road2); break;
                         }
                         if (match) laneMatches.push_back(make_pair(laneIn, laneOut));
                     }
