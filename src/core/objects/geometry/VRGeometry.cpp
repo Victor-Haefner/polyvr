@@ -63,6 +63,7 @@ VRObjectPtr VRGeometry::copy(vector<VRObjectPtr> children) {
     geo->source = source;
     geo->setVisible(isVisible());
     geo->setPickable(isPickable());
+    geo->setEntity(entity);
     geo->setMatrix(getMatrix());
     return geo;
 }

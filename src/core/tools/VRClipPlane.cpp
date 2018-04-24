@@ -37,6 +37,10 @@ VRClipPlanePtr VRClipPlane::create(string name) {
     return p;
 }
 
+void VRClipPlane::setSize(float W, float H) {
+    setPrimitive("Plane", toString(W) + " " + toString(H) + " 1 1");
+}
+
 void VRClipPlane::setTree(VRObjectPtr obj) {
     if (tree == obj) return;
     tree = obj;

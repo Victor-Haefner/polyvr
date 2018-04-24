@@ -10,7 +10,7 @@ using namespace std;
 using namespace OSG;
 
 void OSG::loadE57(string path, VRTransformPtr res) {
-    cout << "load e57 " << path << endl;
+    cout << "load e57 pointcloud " << path << endl;
     res->setName(path);
 
     try {
@@ -86,6 +86,36 @@ void OSG::loadE57(string path, VRTransformPtr res) {
         imf.close();
     }
     catch (E57Exception& ex) { ex.report(__FILE__, __LINE__, __FUNCTION__); return; }
+    catch (std::exception& ex) { cerr << "Got an std::exception, what=" << ex.what() << endl; return; }
+    catch (...) { cerr << "Got an unknown exception" << endl; return; }
+}
+
+void OSG::loadXYZ(string path, VRTransformPtr res) {
+    cout << "load xyz pointcloud " << path << endl;
+    res->setName(path);
+
+    try {
+
+        VRGeoData data;
+        vector<float> vertex = vector<float>(6);
+        int i=0;
+
+        ifstream file(path);
+        while (file >> vertex[i]) {
+            i++;
+            if (i >= 6) {
+                i = 0;
+                data.pushVert(Pnt3d(vertex[0], vertex[1], vertex[2]), Vec3d(0,1,0), Color3f(vertex[3]/255.0, vertex[4]/255.0, vertex[5]/255.0));
+                data.pushPoint();
+            }
+        }
+
+        if (data.size()) {
+            cout << "  assemble geometry.. " << endl;
+            auto geo = data.asGeometry("points");
+            res->addChild(geo);
+        }
+    }
     catch (std::exception& ex) { cerr << "Got an std::exception, what=" << ex.what() << endl; return; }
     catch (...) { cerr << "Got an unknown exception" << endl; return; }
 }

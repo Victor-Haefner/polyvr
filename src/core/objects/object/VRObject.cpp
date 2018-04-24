@@ -111,6 +111,7 @@ VRObjectPtr VRObject::copy(vector<VRObjectPtr> children) {
     if (specialized) o->setCore(getCore(), getType());
     o->setVisible(visible);
     o->setPickable(pickable);
+    o->setEntity(entity);
     return o;
 }
 

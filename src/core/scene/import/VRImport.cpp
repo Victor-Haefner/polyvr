@@ -3,6 +3,7 @@
 #include "VRPLY.h"
 #include "VRVTK.h"
 #include "VRDXF.h"
+#include "VRIFC.h"
 #include "STEP/VRSTEP.h"
 #include "E57/E57.h"
 #include "GIS/VRGDAL.h"
@@ -137,6 +138,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         string ext = bpath.extension().string();
         cout << "load " << path << " ext: " << ext << " preset: " << preset << "\n";
         if (ext == ".e57") { loadE57(path, res); return; }
+        if (ext == ".xyz") { loadXYZ(path, res); return; }
         if (ext == ".ply") { loadPly(path, res); return; }
         if (ext == ".stp") { VRSTEP step; step.load(path, res, options); return; }
         if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res, thread)) return; else preset = "OSG"; }
@@ -146,6 +148,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         if (ext == ".tiff" || ext == ".tif") { loadTIFF(path, res); return; }
         if (ext == ".hgt") { loadTIFF(path, res); return; }
         if (ext == ".dxf") { loadDXF(path, res); return; }
+        if (ext == ".ifc") { loadIFC(path, res); return; }
         if (preset == "OSG" || preset == "COLLADA") osgLoad(path, res);
         if (preset == "COLLADA") loadCollada(path, res);
     };
