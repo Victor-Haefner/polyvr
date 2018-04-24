@@ -63,18 +63,23 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                     return data1.n.dot(data2.n);
                     //return data1.n.cross(data2.n);
                 };
+                auto getRoadTurnLeft = [&](VRRoadPtr road1, VRRoadPtr road2) {
+                    auto& data1 = road1->getEdgePoints( node );
+                    auto& data2 = road2->getEdgePoints( node );
+                    Vec3d w = data1.n.cross(data2.n);
+                    float a = asin( w.length() );
+                    if (w[1] < 0) a = -a;
+                    return a;
+                };
                 bool parallel  = bool( getRoadConnectionAngle(road1, road2) < -0.8 );
-                bool right  = bool( getRoadConnectionAngle(road1, road2) > 0 );
-                bool left  = bool( getRoadConnectionAngle(road1, road2) < 0 );
+                bool left  = bool( getRoadTurnLeft(road1, road2) < 0);
+
                 if (parallel && reSignIn>0 && i!=j) return false;
                 if (parallel && reSignIn<0 && i-1!=j) return false;
-                //if (!parallel && reSignIn>0 && i!=j-2) return false;
-                if (!parallel && reSignIn>0 && i==1) return false;
-                if (!parallel && reSignIn<0 && i==1) return false;
-                if (right && reSignIn<0) return false;
-                //if (left && reSignIn<0) return false;
-                if (right && reSignIn>0) return false;
-                //if (left && reSignIn>0) return false;
+                if (reSignIn<0) i=Nin-i-1;
+                if (reSignOut<0) j=Nout-j-1;
+                if (!parallel && (i!=j+2 || !left) && ((i!=0 || j!=Nout-1) || left)) return false;
+                if (!parallel && i==1) return false;
             } //testing which lane is which index
             if (Nin == 1 || Nout == 1) return true;
             return true;
