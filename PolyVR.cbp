@@ -261,7 +261,6 @@
 			<Add directory="/usr/include/CEF/include" />
 			<Add directory="/usr/lib/STEPcode" />
 			<Add directory="/usr/lib/1.4" />
-			<Add directory="/usr/local/lib" />
 			<Add directory="/usr/lib/IFC" />
 		</Linker>
 		<ExtraCommands>
