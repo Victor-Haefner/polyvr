@@ -24,6 +24,7 @@ class VRRoad : public VRRoadBase {
         };
 
         float offset = 0;
+        float offset2 = 0;
         map<VREntityPtr, edgePoint> edgePoints;
 
     public:
