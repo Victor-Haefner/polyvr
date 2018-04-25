@@ -149,7 +149,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto node2 = nodeEnt2->getEntity("node");
                 auto norm2 = nodeEnt2->getVec3("direction");
                 nodeEnt1->set("node", node2->getName());
-                if (D > 0) displacements[roadIn] = X;
+                if (D > 0) displacements[roadIn] = X;//X;
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
             }
             if (Nin < Nout) {
