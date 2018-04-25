@@ -74,12 +74,11 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 bool parallel  = bool( getRoadConnectionAngle(road1, road2) < -0.8 );
                 bool left  = bool( getRoadTurnLeft(road1, road2) < 0);
 
-                if (parallel && reSignIn>0 && i!=j) return false;
-                if (parallel && reSignIn<0 && i-1!=j) return false;
-                if (reSignIn<0) i=Nin-i-1;
+                if (reSignIn<0) i=Nin-i-1;  //making sure indexes stay consistent, independent of road-direction
                 if (reSignOut<0) j=Nout-j-1;
-                if (!parallel && (i!=j+2 || !left) && ((i!=0 || j!=Nout-1) || left)) return false;
-                if (!parallel && i==1) return false;
+                if (parallel && i!=Nout-j-1) return false; //matching way-through
+                if (!parallel && (i!=Nin-1 || j!=0 || !left) && ((i!=0 || j!=Nout-1) || left)) return false; //one left turn, one right turn
+                if (!parallel && i>0 && i<Nin-1) return false; //everything not being most left or most right lane
             } //testing which lane is which index
             if (Nin == 1 || Nout == 1) return true;
             return true;
