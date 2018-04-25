@@ -40,6 +40,14 @@ void OSG::loadE57(string path, VRTransformPtr res) {
             bool hasCol = (proto.isDefined("colorRed") && proto.isDefined("colorGreen") && proto.isDefined("colorBlue"));
             if (!hasPos) continue;
 
+            if (hasCol) cout << "   scan has colors\n";
+            else cout << "   scan has no colors\n";
+
+            for (int i=0; i<proto.childCount(); i++) {
+                auto child = proto.get(i);
+                cout << "    scan data: " << child.pathName() << endl;
+            }
+
             vector<SourceDestBuffer> destBuffers;
             const int N = 4;
             double x[N]; destBuffers.push_back(SourceDestBuffer(imf, "cartesianX", x, N, true));
