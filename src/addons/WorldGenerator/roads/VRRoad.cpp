@@ -50,7 +50,7 @@ PosePtr VRRoad::getRightEdge(Vec3d pos) {
     auto path = toPath(getEntity()->getEntity("path"), 16);
     float t = path->getClosestPoint(pos); // get nearest road path position to pos
     auto pose = path->getPose(t);
-    Vec3d p = pose->pos() + pose->x()*(getWidth()*0.5 + offset);
+    Vec3d p = pose->pos() + pose->x()*(getWidth()*0.5 + offsetIn);
     pose->setPos(p);
     return pose;
 }
@@ -142,13 +142,29 @@ VRGeometryPtr VRRoad::createGeometry() {
 	    float width = getWidth();
 		float W = width*0.5;
 		vector<Vec3d> profile;
-		profile.push_back(Vec3d(-W+offset,0,0));
-		profile.push_back(Vec3d(W+offset,0,0));
+		profile.push_back(Vec3d(-W,0,0));
+		profile.push_back(Vec3d(W,0,0));
 
 		auto geo = VRStroke::create("road");
 		vector<PathPtr> paths;
 		for (auto p : entity->getAllEntities("path")) {
-            paths.push_back( toPath(p,32) );
+            auto path = toPath(p,32);
+
+            if(true){
+                int zz=0;
+                for (auto point : path->getPoints()) { //TODO: Felix
+                    Vec3d p = point.pos();
+                    Vec3d n = point.dir();
+                    Vec3d x = point.x();
+                    Pose po = point;
+                    x.normalize();
+                    float offsetter = offsetIn*(1.0-float(zz/(path->size()-1))) + offsetOut*float(zz/(path->size()-1));
+                    po.setPos(-x*( -offsetter ) + p);
+                    path->setPoint(zz,po,Color3f(1,1,1));
+                    zz+=1;
+                }
+            }
+            paths.push_back( path );
 		}
 		geo->setPaths( paths );
 		geo->strokeProfile(profile, 0, 0);
@@ -199,13 +215,14 @@ void VRRoad::computeMarkings() {
 
     // compute markings nodes
     auto path = toPath(pathEnt, 12);
+    int zz=0;
     for (auto point : path->getPoints()) {
         Vec3d p = point.pos();
         Vec3d n = point.dir();
         Vec3d x = point.x();
         x.normalize();
-
-        float widthSum = -roadWidth*0.5 - offset;
+        float offsetter = offsetIn*(1.0-float(zz/(path->size()-1))) + offsetOut*float(zz/(path->size()-1));
+        float widthSum = -roadWidth*0.5 - offsetter;
         for (int li=0; li<Nlanes; li++) {
             auto lane = lanes[li];
             float width = toFloat( lane->get("width")->value );
@@ -215,7 +232,8 @@ void VRRoad::computeMarkings() {
             add(-x*k + p, n);
             widthSum += width;
         }
-        add(-x*(roadWidth*0.5 - mw*0.5 - offset) + p, n);
+        add(-x*(roadWidth*0.5 - mw*0.5 - offsetter ) + p, n);
+        zz+=1;
     }
 
     // markings
@@ -284,6 +302,7 @@ void VRRoad::addParkingLane( int direction, float width, int capacity, string ty
     }
 }
 
-void VRRoad::setOffset(float o) { offset = o; }
+void VRRoad::setOffsetIn(float o) { offsetIn = o; }
+void VRRoad::setOffsetOut(float o) { offsetOut = o; }
 
 

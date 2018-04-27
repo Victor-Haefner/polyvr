@@ -173,7 +173,15 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             auto rEnt = road->getEntity();
             if (!displacements.count(rEnt)) continue;
             Vec3d X = displacements[rEnt];
-            road->setOffset(X.dot(rfront->pose.x())*rfront->dir);
+            float offsetter = X.dot(rfront->pose.x())*rfront->dir;
+            if (offsetter>0) {
+                    road->setOffsetIn(offsetter);
+                    road->setOffsetOut(0.0);
+            }
+            if (offsetter<0) {
+                    road->setOffsetIn(0.0);
+                    road->setOffsetOut(offsetter);
+            }
 
             for (auto laneIn : rfront->inLanes) {
                 if (processedLanes.count(laneIn)) continue;
