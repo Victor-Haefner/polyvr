@@ -29,6 +29,8 @@
 #include <OpenSG/OSGRenderAction.h>
 #include <OpenSG/OSGSolidBackground.h>
 
+#define GLSL(shader) #shader
+
 using namespace std;
 using namespace OSG;
 
@@ -182,8 +184,6 @@ void VRTextureRenderer::setActive(bool b) {
 /** TODO, implement channels
     - render normal channel, override material fragment shaders
 */
-
-#define GLSL(shader) #shader
 
 string channelDiffuseFP =
 "#version 400 compatibility\n"

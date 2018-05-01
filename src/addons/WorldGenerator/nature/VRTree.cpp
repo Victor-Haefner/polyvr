@@ -252,35 +252,22 @@ void VRTree::initMaterials() {
 }
 
 void VRTree::initArmatureGeo() {
-    if (!lod) initLOD();
+    //if (!lod) initLOD();
 
-    VRGeoData geo[3];
+    VRGeoData geo;
     for (segment* s : branches) {
-        geo[0].pushVert(s->p1, s->n1, truncColor, Vec2d(s->radii[0]));
-        geo[0].pushVert(s->p2, s->n2, truncColor, Vec2d(s->radii[1]));
-        geo[0].pushLine();
-
-        if (s->lvl <= 3) { // first lod
-            geo[1].pushVert(s->p1, s->n1, truncColor, Vec2d(s->radii[0]));
-            geo[1].pushVert(s->p2, s->n2, truncColor, Vec2d(s->radii[1]));
-            geo[1].pushLine();
-        }
-
-        if (s->lvl <= 2) { // second lod
-            geo[2].pushVert(s->p1, s->n1, truncColor, Vec2d(s->radii[0]));
-            geo[2].pushVert(s->p2, s->n2, truncColor, Vec2d(s->radii[1]));
-            geo[2].pushLine();
-        }
+        geo.pushVert(s->p1, s->n1, truncColor, Vec2d(s->radii[0]));
+        geo.pushVert(s->p2, s->n2, truncColor, Vec2d(s->radii[1]));
+        geo.pushLine();
     }
 
-    for (int i=0; i<3; i++) {
-        woodGeos.push_back( geo[i].asGeometry("wood2") );
-        auto g = woodGeos[i];
-        g->setPatchVertices(2);
-        g->setType(GL_PATCHES);
-        g->setMaterial(treeMat);
-        lod->getChild(i)->addChild(g);
-    }
+    auto g = geo.asGeometry("wood2");
+    g->setPatchVertices(2);
+    g->setType(GL_PATCHES);
+    g->setMaterial(treeMat);
+    addChild(g);
+    woodGeos.push_back( g );
+    //lod->getChild(i)->addChild(g);
 }
 
 VRObjectPtr VRTree::copy(vector<VRObjectPtr> children) {
@@ -289,12 +276,8 @@ VRObjectPtr VRTree::copy(vector<VRObjectPtr> children) {
     tree->lod;
     tree->branches = branches;
     tree->truncColor = truncColor;
-    tree->woodGeos.push_back( dynamic_pointer_cast<VRGeometry>( children[0]->getChild(0)->getChild(0) ) );
-    tree->woodGeos.push_back( dynamic_pointer_cast<VRGeometry>( children[0]->getChild(1)->getChild(0) ) );
-    tree->woodGeos.push_back( dynamic_pointer_cast<VRGeometry>( children[0]->getChild(2)->getChild(0) ) );
-    tree->leafGeos.push_back( dynamic_pointer_cast<VRGeometry>( children[0]->getChild(0)->getChild(1) ) );
-    tree->leafGeos.push_back( dynamic_pointer_cast<VRGeometry>( children[0]->getChild(1)->getChild(1) ) );
-    tree->leafGeos.push_back( dynamic_pointer_cast<VRGeometry>( children[0]->getChild(2)->getChild(1) ) );
+    tree->woodGeos = woodGeos;
+    tree->leafGeos = leafGeos;
     tree->leafLodCache = leafLodCache;
     return tree;
 }
@@ -339,16 +322,15 @@ void VRTree::addLeafs(int lvl, int amount, float size) {
 }
 
 void VRTree::growLeafs(shared_ptr<leaf_params> lp) {
-    if (!lod) initLOD();
+    //if (!lod) initLOD();
 
     if (leafGeos.size() == 0) {
-        for (int i=0; i<3; i++) {
-            auto g = VRGeometry::create("branches");
-            g->setPersistency(0);
-            leafGeos.push_back( g );
-            lod->getChild(i)->addChild(g);
-            g->setMaterial(leafMat);
-        }
+        auto g = VRGeometry::create("branches");
+        g->setPersistency(0);
+        leafGeos.push_back( g );
+        addChild(g);
+        //lod->getChild(i)->addChild(g);
+        g->setMaterial(leafMat);
     }
 
     random_device rd;
@@ -363,9 +345,7 @@ void VRTree::growLeafs(shared_ptr<leaf_params> lp) {
     float ch = 1.0; // chlorophyl
     ca = 0.5 + rand()*0.5/RAND_MAX;
     ch = 0.5 + rand()*0.5/RAND_MAX;
-    VRGeoData geo0(leafGeos[0]);
-    VRGeoData geo1(leafGeos[1]);
-    VRGeoData geo2(leafGeos[2]);
+    VRGeoData geo(leafGeos[0]);
 
     for (auto b : branches) {
         if (b->lvl != lp->level) continue;
@@ -384,39 +364,26 @@ void VRTree::growLeafs(shared_ptr<leaf_params> lp) {
             Vec3d n = p+v-b->p1;
             n.normalize();
             // TODO: add model for carotene and chlorophyl depending on leaf age/size and more..
-            geo0.pushVert(p+v, n, Color3f(lp->size,ca,ch)); // color: leaf size, amount of carotene, amount of chlorophyl
-            geo0.pushPoint();
+            geo.pushVert(p+v, n, Color3f(lp->size,ca,ch)); // color: leaf size, amount of carotene, amount of chlorophyl
+            geo.pushPoint();
         }
     }
-    if (geo0.size() == 0) { cout << "VRTree::addLeafs Warning: no armature with level " << lp->level << endl; return; }
 
-    /*for (int i=0; i<geo0.size(); i+=4) {
-        auto c = geo0.getColor3(i); c[0] *= 2; // double lod leaf size
-        geo1.pushVert( geo0.getPosition(i), geo0.getNormal(i), c);
+    if (geo.size() == 0) { cout << "VRTree::addLeafs Warning: no armature with level " << lp->level << endl; return; }
+
+    /*for (int i=0; i<geo.size(); i++) {
+        auto c = geo.getColor3(i); //c[0] *= 2; // double lod leaf size
+        geo1.pushVert( geo.getPosition(i), geo.getNormal(i), c);
         geo1.pushPoint();
     }
 
-    for (int i=0; i<geo0.size(); i+=16) {
-        auto c = geo0.getColor3(i); c[0] *= 4; // double lod leaf size
-        geo2.pushVert( geo0.getPosition(i), geo0.getNormal(i), c);
+    for (int i=0; i<geo.size(); i++) {
+        auto c = geo.getColor3(i); //c[0] *= 4; // double lod leaf size
+        geo2.pushVert( geo.getPosition(i), geo.getNormal(i), c);
         geo2.pushPoint();
     }*/
 
-    for (int i=0; i<geo0.size(); i++) {
-        auto c = geo0.getColor3(i); //c[0] *= 2; // double lod leaf size
-        geo1.pushVert( geo0.getPosition(i), geo0.getNormal(i), c);
-        geo1.pushPoint();
-    }
-
-    for (int i=0; i<geo0.size(); i++) {
-        auto c = geo0.getColor3(i); //c[0] *= 4; // double lod leaf size
-        geo2.pushVert( geo0.getPosition(i), geo0.getNormal(i), c);
-        geo2.pushPoint();
-    }
-
-    geo0.apply(leafGeos[0]);
-    geo1.apply(leafGeos[1]);
-    geo2.apply(leafGeos[2]);
+    geo.apply(leafGeos[0]);
 }
 
 void VRTree::setLeafMaterial(VRMaterialPtr mat) {
