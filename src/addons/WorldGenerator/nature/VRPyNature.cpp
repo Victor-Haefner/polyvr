@@ -16,7 +16,7 @@ PyMethodDef VRPyTree::methods[] = {
     {"grow", PyWrapOpt( Tree, grow, "Set the tree parameters, int seed", "0", void, int ) },
     {"addLeafs", PyWrapOpt( Tree, addLeafs, "Add a leaf layer, int lvl, int amount, flt size", "0.03", void, int, int, float) },
     {"setLeafMaterial", PyWrap( Tree, setLeafMaterial, "Set custom leaf material", void, VRMaterialPtr ) },
-    {"createLOD", PyWrap( Tree, createLOD, "Create an LOD from the tree, int number of branching layers to keep", VRTransformPtr, int ) },
+    {"createLOD", PyWrap( Tree, createLOD, "Create an LOD from the tree, int number of branching layers to keep", VRGeometryPtr, int ) },
     {NULL}  /* Sentinel */
 };
 

@@ -3,6 +3,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRTexture.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/VRLod.h"
 #include "core/scene/VRScene.h"
@@ -17,6 +18,8 @@
 
 #include <OpenSG/OSGQuaternion.h>
 #include <random>
+
+#define GLSL(shader) #shader
 
 using namespace OSG;
 
@@ -420,12 +423,56 @@ void VRTree::setLeafMaterial(VRMaterialPtr mat) {
     for (auto g : leafGeos) g->setMaterial(mat);
 }
 
-VRTransformPtr VRTree::createLOD(int lvl) {
-    /*VRGeoData geo;
-    createHullTrunkLod(geo, lvl, Vec3d(), 0);
-    return geo.asGeometry("TreeLOD");*/
+string treeSprLODvp =
+"#version 120\n"
+GLSL(
+attribute vec4 osg_Vertex;
+attribute vec3 osg_Normal;
+attribute vec2 osg_MultiTexCoord0;
+varying vec4 vertPos;
+varying vec3 vertNorm;
+varying vec4 color;
+varying float Discard;
 
-    auto lod = VRTransform::create("lod");
+void main(void) {
+	vertPos = gl_ModelViewMatrix * osg_Vertex;
+	vertNorm = normalize( gl_NormalMatrix * osg_Normal );
+	gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0,0.0);
+	color = gl_Color;
+
+	//vec4 mid = normalize( gl_ModelViewMatrix * vec4(0,0,0,1) );
+	float D = dot(vec3(0,0,1), vertNorm);
+	Discard = 0;
+	if (abs(D) < 0.65) Discard = 1;
+	gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
+}
+);
+
+string treeSprLODdfp =
+"#version 120\n"
+GLSL(
+uniform int isLit;
+varying vec4 vertPos;
+varying vec3 vertNorm;
+varying vec4 color;
+uniform sampler2D tex0;
+uniform sampler2D tex1;
+varying float Discard;
+
+void main(void) {
+	if (Discard > 0.5) discard;
+	vec3 pos = vertPos.xyz / vertPos.w;
+	vec4 color = texture2D(tex0, gl_TexCoord[0].xy);
+	vec4 normal = texture2D(tex1, gl_TexCoord[0].xy);
+	if (color.a < 0.3) discard;
+	gl_FragData[0] = vec4(pos, 1.0);
+	gl_FragData[1] = vec4(normalize(normal.xyz), isLit);
+	gl_FragData[2] = vec4(color.rgb, 0);
+}
+);
+
+VRGeometryPtr VRTree::createLOD(int lvl) {
+    VRGeoData data;
 
     auto t = ptr();
     auto bb = t->getBoundingbox();
@@ -434,22 +481,57 @@ VRTransformPtr VRTree::createLOD(int lvl) {
     float fov = 0.33;
     Vec3d D = S*0.5/tan(fov*0.5);
 
+    vector<pair<VRMaterialPtr,int>> sides;
+    int Hmax = 1;
     auto addSprite = [&](PosePtr p, float W, float H, float Sh) {
         auto tr = VRTextureRenderer::create("treeLODtexR");
-        auto m = tr->createTextureLod(t, p, 512, W/H, fov);
-        auto s = VRSprite::create();
-        s->setSize(W,H);
-        s->setTransform(Vec3d(0,Sh,0), p->dir(), p->up());
-        s->applyTransformation();
-        s->setMaterial(m);
-        lod->addChild(s);
+        auto tm = tr->createTextureLod(t, p, 512, W/H, fov);
+        int h = int(512/W*H);
+        Hmax = max(Hmax, h);
+        sides.push_back(make_pair(tm,h));
+        data.pushQuad(Vec3d(0,Sh,0), p->dir(), p->up(), Vec2d(W, H), true);
     };
 
     addSprite( Pose::create(Vec3d(0,h2,-D[1]), Vec3d(0,0,1), Vec3d(0,1,0)), S[0], S[1], S[1]*0.5);
     addSprite( Pose::create(Vec3d(-D[1],h2,0), Vec3d(1,0,0), Vec3d(0,1,0)), S[2], S[1], S[1]*0.5);
     addSprite( Pose::create(Vec3d(0,S[1]+max(D[0],D[2]),0), Vec3d(0,-1,0), Vec3d(0,0,1)), S[0], S[2], S[1]);
 
-    return lod;
+    int N = sides.size();
+    if (N == 0) return 0;
+
+    auto m = sides[0].first;
+    if (N > 1) { // merge textures
+        auto tex0 = m->getTexture(0);
+        auto tex1 = m->getTexture(1);
+        tex0->resize(Vec3i(512*N, Hmax, 1), Vec3i());
+        tex1->resize(Vec3i(512*N, Hmax, 1), Vec3i());
+        for (int i=1; i<N; i++) {
+            Vec3i o = Vec3i(512*i, 0, 0);
+            tex0->paste(sides[i].first->getTexture(0), o);
+            tex1->paste(sides[i].first->getTexture(1), o);
+        }
+        m->setTexture(tex0, false, 0);
+        m->setTexture(tex1, false, 1);
+    }
+
+    for (int i=0; i<N; i++) { // create UV coordinates
+        float i1 = i*1.0/N;
+        float i2 = (i+1)*1.0/N;
+        float h = sides[i].second / float(Hmax);
+        data.setTexCoord(4*i  , Vec2d(i2,0));
+        data.setTexCoord(4*i+1, Vec2d(i1,0));
+        data.setTexCoord(4*i+2, Vec2d(i1,h));
+        data.setTexCoord(4*i+3, Vec2d(i2,h));
+    }
+
+    m->setShaderParameter("tex0", 0);
+    m->setShaderParameter("tex1", 1);
+    m->setVertexShader(treeSprLODvp, "treeSprLODvp");
+    m->setFragmentShader(treeSprLODdfp, "treeSprLODdfp", true);
+
+    auto geo = data.asGeometry("treeLod");
+    geo->setMaterial(m);
+    return geo;
 }
 
 void VRTree::createTwigLod(VRGeoData& geo, int lvl) {
