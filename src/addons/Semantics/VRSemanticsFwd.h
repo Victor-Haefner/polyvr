@@ -17,6 +17,7 @@ ptrFwd(VRStatement);
 ptrFwd(Variable);
 ptrFwd(VRProcess);
 ptrFwd(VRProcessNode);
+ptrFwd(VRProcessDiagram);
 ptrFwd(VRProcessLayout);
 ptrFwd(VRProcessEngine);
 

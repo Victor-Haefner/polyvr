@@ -11,10 +11,15 @@ using namespace OSG;
 
 template<> string typeName(const VRProcessPtr& o) { return "Process"; }
 template<> string typeName(const VRProcessNodePtr& o) { return "ProcessNode"; }
+template<> string typeName(const VRProcessDiagramPtr& o) { return "ProcessDiagram"; }
 
-void VRProcess::Diagram::update(int i, bool changed) { processnodes[i]->update(nodes[i], changed); }
-void VRProcess::Diagram::remNode(int i) { Graph::remNode(i); processnodes.erase(i); }
-void VRProcess::Diagram::clear() { Graph::clear(); processnodes.clear(); }
+
+VRProcessDiagram::VRProcessDiagram() {}
+VRProcessDiagram::~VRProcessDiagram() {}
+VRProcessDiagramPtr VRProcessDiagram::create() { return VRProcessDiagramPtr( new VRProcessDiagram() ); }
+void VRProcessDiagram::update(int i, bool changed) { processnodes[i]->update(nodes[i], changed); }
+void VRProcessDiagram::remNode(int i) { Graph::remNode(i); processnodes.erase(i); }
+void VRProcessDiagram::clear() { Graph::clear(); processnodes.clear(); }
 
 VRProcessNode::VRProcessNode(string name, PROCESS_WIDGET type, int ID) : type(type), label(name), ID(ID) {;}
 VRProcessNode::~VRProcessNode() {}
@@ -52,8 +57,8 @@ void VRProcess::open(string path) {
 
 void VRProcess::setOntology(VROntologyPtr o) { ontology = o; update(); }
 
-VRProcess::DiagramPtr VRProcess::getInteractionDiagram() { return interactionDiagram; }
-VRProcess::DiagramPtr VRProcess::getBehaviorDiagram(int subject) { return behaviorDiagrams.count(subject) ? behaviorDiagrams[subject] : 0; }
+VRProcessDiagramPtr VRProcess::getInteractionDiagram() { return interactionDiagram; }
+VRProcessDiagramPtr VRProcess::getBehaviorDiagram(int subject) { return behaviorDiagrams.count(subject) ? behaviorDiagrams[subject] : 0; }
 
 vector<VRProcessNodePtr> VRProcess::getSubjects() {
     vector<VRProcessNodePtr> res;
@@ -75,7 +80,7 @@ void VRProcess::update() {
     auto layers = query("q(x):Layer(x)");
     if (layers.size() == 0) return;
     auto layer = layers[0]; // only use first layer
-    interactionDiagram = DiagramPtr( new Diagram() );
+    interactionDiagram = VRProcessDiagram::create();
 
     map<string, int> nodes;
     string q_subjects = "q(x):ActiveProcessComponent(x);Layer("+layer->getName()+");has("+layer->getName()+",x)";
@@ -114,7 +119,7 @@ void VRProcess::update() {
     /** get behavior diagrams **/
 
     for (auto behavior : query("q(x):Behavior(x)")) {
-        auto behaviorDiagram = DiagramPtr( new Diagram() );
+        auto behaviorDiagram = VRProcessDiagram::create();
         string q_Subject = "q(x):ActiveProcessComponent(x);Behavior("+behavior->getName()+");has(x,"+behavior->getName()+")";
         auto subjects = query(q_Subject);
         if (subjects.size() == 0) continue;
@@ -163,16 +168,16 @@ void VRProcess::remNode(VRProcessNodePtr n) {
 }
 
 VRProcessNodePtr VRProcess::addSubject(string name) {
-    if (!interactionDiagram) interactionDiagram = DiagramPtr( new Diagram() );
+    if (!interactionDiagram) interactionDiagram = VRProcessDiagram::create();
     auto sID = interactionDiagram->addNode();
     auto s = VRProcessNode::create(name, SUBJECT, sID);
     interactionDiagram->processnodes[sID] = s;
-    auto behaviorDiagram = DiagramPtr( new Diagram() );
+    auto behaviorDiagram = VRProcessDiagram::create();
     behaviorDiagrams[sID] = behaviorDiagram;
     return s;
 }
 
-VRProcessNodePtr VRProcess::addMessage(string name, int i, int j, DiagramPtr diag) {
+VRProcessNodePtr VRProcess::addMessage(string name, int i, int j, VRProcessDiagramPtr diag) {
     if (!diag) diag = interactionDiagram;
     if (!diag) return 0;
     auto mID = diag->addNode();
@@ -193,7 +198,7 @@ VRProcessNodePtr VRProcess::addAction(string name, int sID) {
     return a;
 }
 
-VRProcessNodePtr VRProcess::getNode(int i, DiagramPtr diag) {
+VRProcessNodePtr VRProcess::getNode(int i, VRProcessDiagramPtr diag) {
     if (!diag) diag = interactionDiagram;
     return diag->processnodes[i];
 }

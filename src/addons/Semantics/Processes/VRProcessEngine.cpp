@@ -1,6 +1,9 @@
 #include "VRProcessEngine.h"
+#include "core/utils/toString.h"
 
 using namespace OSG;
+
+template<> string typeName(const VRProcessEnginePtr& o) { return "ProcessEngine"; }
 
 VRProcessEngine::VRProcessEngine() {}
 VRProcessEngine::~VRProcessEngine() {}
