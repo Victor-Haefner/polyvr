@@ -101,6 +101,10 @@ VRTree::VRTree(string name) : VRTransform(name) {
     if (c == 9) truncColor = Color3f(0.2, 0.1, 0.05);
     if (c ==10) truncColor = Color3f(0.2, 0.1, 0.05);
 
+    // desaturate and make brighter
+    float a = 0.3;
+    truncColor = truncColor*(1-a) + Color3f(a,a,a);
+
     store("seed", &seed);
     storeObjVec("branching", parameters, true);
     storeObjVec("foliage", foliage, true);
@@ -117,7 +121,7 @@ void VRTree::setup() {
 }
 
 void VRTree::initLOD() {
-    lod = VRLod::create("tree_lod");
+    /*lod = VRLod::create("tree_lod");
     lod->setPersistency(0);
     addChild(lod);
     auto lod1 = VRObject::create("tree_lod1");
@@ -130,8 +134,10 @@ void VRTree::initLOD() {
     lod->addChild(lod2);
     lod->addChild(lod3);
     lod->addDistance(20);
-    lod->addDistance(50);
+    lod->addDistance(50);*/
 }
+
+VRGeometryPtr VRTree::getLOD(int lvl) { return lod; }
 
 float VRTree::random (float min, float max) {
     if (max!=min) {
@@ -273,7 +279,7 @@ void VRTree::initArmatureGeo() {
 VRObjectPtr VRTree::copy(vector<VRObjectPtr> children) {
     auto tree = VRTree::create();
     tree->trunc = trunc;
-    tree->lod;
+    tree->lod = lod;
     tree->branches = branches;
     tree->truncColor = truncColor;
     tree->woodGeos = woodGeos;
@@ -437,6 +443,13 @@ void main(void) {
 	gl_FragData[2] = vec4(color.rgb, 0);
 }
 );
+
+void VRTree::appendLOD(VRGeoData& data, int lvl, Vec3d offset) {
+    if (!lod) lod = createLOD(lvl);
+    lod->setFrom(offset);
+    data.append(lod);
+    lod->setFrom(Vec3d());
+}
 
 VRGeometryPtr VRTree::createLOD(int lvl) {
     VRGeoData data;

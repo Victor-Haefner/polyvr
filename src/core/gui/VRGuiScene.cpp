@@ -95,14 +95,26 @@ void setObject(VRObjectPtr o) {
     else setTextEntry("entry17", "");
 }
 
+bool transformModeLocal = true;
+
 void setTransform(VRTransformPtr e) {
     setExpanderSensitivity("expander1", true);
 
-    Vec3d f = e->getFrom();
-    Vec3d a = e->getAt();
-    Vec3d u = e->getUp();
-    Vec3d d = e->getDir();
-    Vec3d s = e->getScale();
+    Vec3d f,a,u,d,s;
+    if (transformModeLocal) {
+        f = e->getFrom();
+        a = e->getAt();
+        u = e->getUp();
+        d = e->getDir();
+        s = e->getScale();
+    } else {
+        f = e->getWorldPosition();
+        a = e->getWorldAt();
+        u = e->getWorldUp();
+        d = e->getWorldDirection();
+        //s = e->getWorldScale(); TODO!
+        s = e->getScale();
+    }
 
     /*auto c = e->getConstraint();
     Vec3d tc = c->getTConstraint();
@@ -132,6 +144,9 @@ void setTransform(VRTransformPtr e) {
 
     setRadioButton("radiobutton1", !c->getTMode());
     setRadioButton("radiobutton2", c->getTMode());*/
+
+    setRadioButton("radiobutton19",  transformModeLocal);
+    setRadioButton("radiobutton20", !transformModeLocal);
 
     if (e->getPhysics()) {
         setCheckButton("checkbutton13", e->getPhysics()->isPhysicalized());
@@ -528,28 +543,41 @@ void VRGuiScene::on_group_edited() {
 void on_change_from(Vec3d v) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
-    obj->setFrom(v);
+    if (transformModeLocal) obj->setFrom(v);
+    else obj->setWorldPosition(v);
     updateObjectForms();
 }
 
 void on_change_at(Vec3d v) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
-    obj->setAt(v);
+    if (transformModeLocal) obj->setAt(v);
+    else obj->setWorldAt(v);
     updateObjectForms();
 }
 
 void on_change_dir(Vec3d v) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
-    obj->setDir(v);
+    if (transformModeLocal) obj->setDir(v);
+    else obj->setWorldDir(v);
     updateObjectForms();
 }
 
 void on_change_up(Vec3d v) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
-    obj->setUp(v);
+    if (transformModeLocal) obj->setUp(v);
+    else obj->setWorldUp(v);
+    updateObjectForms();
+}
+
+void on_scale_changed(Vec3d v) {
+    if(!trigger_cbs) return;
+    VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    if (transformModeLocal) obj->setScale(v);
+    //else obj->setWorldScale(v); TODO
+    else obj->setScale(v);
     updateObjectForms();
 }
 
@@ -557,13 +585,6 @@ void on_change_lod_center(Vec3d v) {
     if(!trigger_cbs) return;
     VRLodPtr obj = static_pointer_cast<VRLod>( getSelected() );
     obj->setCenter(v);
-    updateObjectForms();
-}
-
-void on_scale_changed(Vec3d v) {
-    if(!trigger_cbs) return;
-    VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
-    obj->setScale(v);
     updateObjectForms();
 }
 
@@ -974,6 +995,16 @@ void VRGuiScene_on_notebook_switched(GtkNotebook* notebook, GtkNotebookPage* pag
 
 // ------------- transform -----------------------
 
+void VRGuiScene::on_toggle_T_mode() {
+    if (!trigger_cbs) return;
+    transformModeLocal = getRadioButtonState("radiobutton19");
+
+    VRObjectPtr obj = getSelected();
+    if (obj) {
+        if (obj->hasTag("transform")) setTransform(static_pointer_cast<VRTransform>(obj));
+    }
+}
+
 void VRGuiScene::on_toggle_T_constraint_mode() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
@@ -1318,6 +1349,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     //setCheckButtonCallback("checkbutton27", on_toggle_CSG_editmode);
     setCheckButtonCallback("checkbutton17", sigc::mem_fun(*this, &VRGuiScene::on_toggle_camera_accept_realroot));
     setCheckButtonCallback("radiobutton1", sigc::mem_fun(*this, &VRGuiScene::on_toggle_T_constraint_mode) );
+    setCheckButtonCallback("radiobutton19", sigc::mem_fun(*this, &VRGuiScene::on_toggle_T_mode) );
     setCheckButtonCallback("checkbutton31", sigc::mem_fun(*this, &VRGuiScene::on_toggle_light) );
     setCheckButtonCallback("checkbutton32", sigc::mem_fun(*this, &VRGuiScene::on_toggle_light_shadow) );
     setCheckButtonCallback("checkbutton13", sigc::mem_fun(*this, &VRGuiScene::on_toggle_phys) );

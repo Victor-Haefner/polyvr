@@ -55,9 +55,13 @@ void VRLodLeaf::add(VRObjectPtr obj, int lvl) {
 }
 
 void VRLodLeaf::set(VRObjectPtr obj, int lvl) {
+    cout << " VRLodLeaf set leaf " << name << ", " << obj << " " << lvl << endl;
     if (lvl < 0 || lvl >= int(levels.size())) return;
     levels[lvl]->clearChildren();
-    if (obj) levels[lvl]->addChild(obj);
+    if (obj) {
+        levels[lvl]->addChild(obj);
+        cout << "  VRLodLeaf set addChild " << levels[lvl]->getName() << " " << obj->getName() << endl;
+    }
 }
 
 void VRLodLeaf::reset() { set(0,1); }
@@ -414,12 +418,12 @@ void VRNature::computeLODsThread(VRThreadWeakPtr tw) {
 
     VRThreadPtr t = tw.lock();
     t->syncFromMain();
-    computeLODs(leafs);
+    computeLODs2(leafs);
     t->syncToMain();
 }
 
 void VRNature::computeAllLODs(bool threaded) {
-    if (!threaded) { computeLODs(leafs); return; }
+    if (!threaded) { computeLODs2(leafs); return; }
 
     auto scene = VRScene::getCurrent();
     worker = VRThreadCb::create( "nature lods", boost::bind(&VRNature::computeLODsThread, this, _1) );
@@ -434,6 +438,71 @@ void VRNature::computeLODs(VRLodLeafPtr leaf) {
         aLeafs[o] = leafs[o];
     }
     computeLODs(aLeafs);
+}
+
+void VRNature::computeLODs2(map<OctreeNode*, VRLodLeafPtr>& leafs) {
+    // get all trees and grass patches for each leaf layer
+    map<VRLodLeaf*, vector<VRTree*> > trees;
+    map<VRLodLeaf*, vector<VRGrassPatch*> > grass;
+    for (auto l : leafs) {
+        auto& leaf = l.second;
+        int lvl = leaf->getLevel();
+        if (lvl == 0) continue;
+
+        vector<void*> data = leaf->getOLeaf()->getAllData();
+        for (auto v : data) {
+            if (((VRObject*)v)->hasTag("tree")) trees[leaf.get()].push_back((VRTree*)v);
+            if (((VRObject*)v)->hasTag("grass")) grass[leaf.get()].push_back((VRGrassPatch*)v);
+        }
+    }
+
+    // create layer node geometries
+    for (auto l : leafs) {
+        auto& leaf = l.second;
+        leaf->reset();
+        int lvl = leaf->getLevel();
+        if (lvl == 0) continue;
+        bool doTrees = (trees.count(leaf.get()) >= 0);
+        bool doGrass = (grass.count(leaf.get()) >= 0);
+
+        Boundingbox bb;
+        if (doTrees) for (auto t : trees[leaf.get()]) bb.update( t->getWorldPosition() );
+        //if (doGrass) for (auto g : grass[leaf.get()]) bb.update( g->getWorldPosition() );
+        Vec3d pos = bb.center();
+
+        VRGeoData geo;
+        VRMaterialPtr m;
+
+        if (doTrees) for (auto t : trees[leaf.get()]) {
+            if (treeRefs.count(t) == 0) continue;
+            auto tRef = treeRefs[t];
+            if (!tRef || !t) continue;
+            Vec3d offset = t->getWorldPosition() - pos;
+            tRef->appendLOD(geo, lvl, offset);
+            auto tlod = tRef->getLOD(0);
+            m = tlod->getMaterial();
+        }
+
+        /*if (doGrass) for (auto g : grass[leaf.get()]) {
+            if (grassPatchRefs.count(g) == 0) continue;
+            auto gRef = grassPatchRefs[g];
+            if (!gRef || !g) continue;
+            Vec3d offset = g->getWorldPosition() - pos;
+            gRef->createLod(geoGrass, lvl, offset, g->getID());
+        }*/
+
+        VRGeometryPtr woods;
+        if (geo.size() > 0) {
+            woods = geo.asGeometry("woods");
+            if (m) woods->setMaterial(m);
+            cout << "YAY: lod data: " << geo.size() << " " << woods << endl;
+
+            leaf->set( woods, 1 );
+            woods->setWorldPosition(pos);
+            woods->setDir(Vec3d(0,0,-1));
+            woods->setUp(Vec3d(0,1,0));
+        }
+    }
 }
 
 void VRNature::computeLODs(map<OctreeNode*, VRLodLeafPtr>& leafs) {

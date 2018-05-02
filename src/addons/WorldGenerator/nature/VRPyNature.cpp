@@ -23,7 +23,7 @@ PyMethodDef VRPyTree::methods[] = {
 PyMethodDef VRPyNature::methods[] = {
     {"addTree", PyWrapOpt(Nature, addTree, "Add a copy of the passed tree to the woods and return the copy", "0|1", VRTreePtr, VRTreePtr, bool, bool ) },
     {"addGrassPatch", PyWrapOpt(Nature, addGrassPatch, "Add a grass patch from polygon", "0|0|0", void, VRPolygonPtr, bool, bool) },
-    {"computeLODs", PyWrapOpt(Nature, computeAllLODs, "Compute LODs - computeLODs() ", "0", void, bool ) },
+    {"computeLODs", PyWrapOpt(Nature, computeAllLODs, "Compute LODs", "0", void, bool ) },
     {"addCollisionModels", PyWrap(Nature, addCollisionModels, "Add collision box to trees and bushes - addCollisionModels() ", void ) },
     {"clear", PyWrap(Nature, clear, "Clear woods", void ) },
     {"getTree", PyWrap(Nature, getTree, "Get a tree by id", VRTreePtr, int ) },
