@@ -455,6 +455,8 @@ VRGeometryPtr VRTree::createLOD(int lvl) {
     VRGeoData data;
 
     auto t = ptr();
+    auto old_pose = t->getPose();
+    t->setIdentity();
     auto bb = t->getBoundingbox();
     Vec3d S = bb->size();
     float h2 = S[1]*0.5;
@@ -503,6 +505,8 @@ VRGeometryPtr VRTree::createLOD(int lvl) {
         data.setTexCoord(4*i+2, Vec2d(i1,h));
         data.setTexCoord(4*i+3, Vec2d(i2,h));
     }
+
+    t->setPose(old_pose);
 
     m->setShaderParameter("tex0", 0);
     m->setShaderParameter("tex1", 1);
