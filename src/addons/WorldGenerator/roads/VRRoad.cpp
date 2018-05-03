@@ -148,22 +148,26 @@ VRGeometryPtr VRRoad::createGeometry() {
 		auto geo = VRStroke::create("road");
 		vector<PathPtr> paths;
 		for (auto p : entity->getAllEntities("path")) {
-            auto path = toPath(p,32);
+            //auto path = toPath(p,32);
+            auto path = toPath(p,12);
 
-            if(true){
-                int zz=0;
-                for (auto point : path->getPoints()) { //TODO: Felix
-                    Vec3d p = point.pos();
-                    Vec3d n = point.dir();
-                    Vec3d x = point.x();
-                    Pose po = point;
-                    x.normalize();
-                    float offsetter = offsetIn*(1.0-float(zz/(path->size()-1))) + offsetOut*float(zz/(path->size()-1));
-                    po.setPos(-x*( -offsetter ) + p);
-                    path->setPoint(zz,po,Color3f(1,1,1));
-                    zz+=1;
-                }
+            //if(offsetIn!=0 || offsetOut!=0){
+            int zz=0;
+            for (auto point : path->getPoints()) { ///TODO: Felix
+                Vec3d p = point.pos();
+                Vec3d n = point.dir();
+                Vec3d x = point.x();
+                auto po = point;
+                x.normalize();
+                float offsetter = offsetIn*(1.0-float(zz/(path->size()-1))) + offsetOut*float(zz/(path->size()-1));
+                po.setPos(x*( offsetter ) + p);
+                //point.setPos(-x*( -1.0 ) + p);
+                path->setPoint(zz,po,Color3f(1,1,1));
+                if (offsetter!=0) cout << "outp: " << zz << offsetter << "\n p " << p <<"\n x "<< x <<"\n np "<< po.pos() << endl;
+                if (offsetter!=0) cout << zz <<" p "<< path->getPoint(zz).pos()  << endl;
+                zz+=1;
             }
+            //}
             paths.push_back( path );
 		}
 		geo->setPaths( paths );
