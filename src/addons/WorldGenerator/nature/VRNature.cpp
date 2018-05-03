@@ -441,6 +441,7 @@ void VRNature::computeLODs(VRLodLeafPtr leaf) {
 }
 
 void VRNature::computeLODs2(map<OctreeNode*, VRLodLeafPtr>& leafs) {
+
     // get all trees and grass patches for each leaf layer
     map<VRLodLeaf*, vector<VRTree*> > trees;
     map<VRLodLeaf*, vector<VRGrassPatch*> > grass;

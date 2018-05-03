@@ -296,7 +296,8 @@ VRMaterialPtr VRTextureRenderer::createTextureLod(VRObjectPtr obj, PosePtr camP,
         }
     }
 
-    auto cam = VRCamera::create("cam", false);
+    auto cam = VRCamera::create("cam", false); // segfault when threaded
+
     cam->setFov(fov); //0.33
     cam->setAspect(1);
     cam->setPose(camP);
