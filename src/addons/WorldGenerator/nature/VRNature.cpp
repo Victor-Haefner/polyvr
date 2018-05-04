@@ -63,6 +63,7 @@ string getRandomKey(T& map) {
 
 VRTreePtr VRNature::createRandomTree(Vec3d p) { return createTree( getRandomKey(treeTemplates), p ); }
 VRTreePtr VRNature::createRandomBush(Vec3d p) { return createBush( getRandomKey(bushTemplates), p ); }
+VRLodTreePtr VRNature::getLodTree() { return ptr(); }
 
 VRTreePtr VRNature::createTree(string type, Vec3d p) {
     if (!treeTemplates.count(type)) return 0;

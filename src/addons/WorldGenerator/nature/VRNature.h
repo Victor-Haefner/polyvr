@@ -64,6 +64,7 @@ class VRNature : public VRLodTree, public VRWorldModule {
         void computeLODs(map<OctreeNode*, VRLodLeafPtr>& leafs);
         void computeLODs2(map<OctreeNode*, VRLodLeafPtr>& leafs);
 
+        VRLodTreePtr getLodTree();
 
         void addCollisionModels();
 };

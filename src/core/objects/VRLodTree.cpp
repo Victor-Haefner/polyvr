@@ -1,6 +1,7 @@
 #include "VRLodTree.h"
 #include "core/math/Octree.h"
 #include "core/utils/toString.h"
+#include "core/objects/geometry/VRGeometry.h"
 
 using namespace OSG;
 
@@ -77,6 +78,11 @@ vector<VRLodLeafPtr> VRLodTree::getSubTree(VRLodLeafPtr l) {
         res.push_back(leafs[o]);
     }
     return res;
+}
+
+void VRLodTree::showOctree() {
+    VRGeometryPtr o = octree->getVisualization();
+    addChild(o);
 }
 
 VRLodLeafPtr VRLodTree::addLeaf(OctreeNode* o, int lvl) {

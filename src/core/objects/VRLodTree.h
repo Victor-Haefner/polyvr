@@ -51,6 +51,8 @@ class VRLodTree : public VRObject {
         void reset(float size = 0);
 
         vector<VRLodLeafPtr> getSubTree(VRLodLeafPtr l);
+
+        void showOctree();
 };
 
 OSG_END_NAMESPACE;

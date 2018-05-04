@@ -18,6 +18,7 @@ PyMethodDef VRPyLodTree::methods[] = {
 	{"remObject", PyWrap( LodTree, remObject, "Remove object", VRLodLeafPtr, VRTransformPtr) },
 	{"reset", PyWrap( LodTree, reset, "Set the distance at which the specified LOD stage should be shown", void, float) },
 	{"getSubTree", PyWrap( LodTree, getSubTree, "Return sub tree", vector<VRLodLeafPtr>, VRLodLeafPtr) },
+	{"showOctree", PyWrap( LodTree, showOctree, "Show octree", void) },
     {NULL}  /* Sentinel */
 };
 

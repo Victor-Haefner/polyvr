@@ -92,6 +92,8 @@ class Octree : public std::enable_shared_from_this<Octree> {
         vector<void*> boxSearch(const Boundingbox& b);
 
         void test();
+
+        VRGeometryPtr getVisualization();
 };
 
 OSG_END_NAMESPACE

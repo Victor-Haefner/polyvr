@@ -30,6 +30,7 @@ PyMethodDef VRPyNature::methods[] = {
     {"removeTree", PyWrap(Nature, removeTree, "Remove a tree by id", void, int ) },
     {"simpleInit", PyWrap(Nature, simpleInit, "Add a few random tree and bush types", void, int, int) },
     {"createRandomTree", PyWrap(Nature, createRandomTree, "create a random tree", VRTreePtr, Vec3d) },
+    {"getLodTree", PyWrap(Nature, getLodTree, "Return lod tree module", VRLodTreePtr) },
     {NULL}  /* Sentinel */
 };
 

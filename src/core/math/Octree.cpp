@@ -7,6 +7,9 @@
 #include <string>  //for std::string
 
 #include "core/utils/toString.h"
+#include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/material/VRMaterial.h"
 
 OSG_BEGIN_NAMESPACE
 
@@ -342,6 +345,34 @@ void Octree::test() {
     cout << "\nOctreeNode test passed with " << radSearchRes_tree.size() << " found Vec3fs!\n";
 }
 
+VRGeometryPtr Octree::getVisualization() {
+    VRGeoData data;
+    for (auto c : root->getSubtree()) {
+        Pnt3d p = c->getCenter();
+        float s = c->getSize()*0.499;
+        int ruf = data.pushVert(p + Vec3d( 1, 1, 1)*s);
+        int luf = data.pushVert(p + Vec3d(-1, 1, 1)*s);
+        int rub = data.pushVert(p + Vec3d( 1, 1,-1)*s);
+        int lub = data.pushVert(p + Vec3d(-1, 1,-1)*s);
+        int rdf = data.pushVert(p + Vec3d( 1,-1, 1)*s);
+        int ldf = data.pushVert(p + Vec3d(-1,-1, 1)*s);
+        int rdb = data.pushVert(p + Vec3d( 1,-1,-1)*s);
+        int ldb = data.pushVert(p + Vec3d(-1,-1,-1)*s);
+        data.pushQuad(ruf, luf, lub, rub); // side up
+        data.pushQuad(rdf, ldf, ldb, rdb); // side down
+        data.pushQuad(luf, lub, ldb, ldf); // side left
+        data.pushQuad(ruf, rub, rdb, rdf); // side right
+        data.pushQuad(rub, lub, ldb, rdb); // side behind
+        data.pushQuad(ruf, luf, ldf, rdf); // side front
+    }
+
+    auto g = data.asGeometry("octree");
+    auto m = VRMaterial::create("octree");
+    m->setLit(false);
+    m->setWireFrame(true);
+    g->setMaterial(m);
+    return g;
+}
 
 
 OSG_END_NAMESPACE
