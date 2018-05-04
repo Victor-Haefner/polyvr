@@ -126,7 +126,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
         }
 	};
 
-	auto mergeMatchingLanes = [&]() {
+	auto mergeMatchingLanes = [&]() { ///FELIX - change offsets to middle road, apply new normal
 	    map<VREntityPtr, Vec3d> displacements; // map roads to displace!
 	    map<VREntityPtr, bool> processedLanes; // keep list of already processed lanes
         for (auto match : laneMatches) {
@@ -149,7 +149,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto node2 = nodeEnt2->getEntity("node");
                 auto norm2 = nodeEnt2->getVec3("direction");
                 nodeEnt1->set("node", node2->getName());
-                if (D > 0) displacements[roadIn] = X;//X;
+                if (D > 0) displacements[roadIn] = X;
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
             }
             if (Nin < Nout) {
@@ -158,8 +158,10 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto node2 = nodes2[1]->getEntity("node");
                 auto norm2 = nodes2[1]->getVec3("direction");
                 nodeEnt2->set("node", node1->getName());
-                if (D > 0) displacements[roadOut] = -X;
+                if (D > 0) displacements[roadIn] = X;
+                //if (D > 0) displacements[roadOut] = -X;
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
+                //roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
             }
 
             processedLanes[laneIn] = true;
@@ -174,12 +176,14 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             if (!displacements.count(rEnt)) continue;
             Vec3d X = displacements[rEnt];
             float offsetter = X.dot(rfront->pose.x())*rfront->dir;
+            //road->setOffsetIn(offsetter);
+            //road->setOffsetOut(0.0);
             if (offsetter>0) {
                     road->setOffsetIn(offsetter);
-                    road->setOffsetOut(0.0);
+                    road->setOffsetOut(offsetter);
             }
             if (offsetter<0) {
-                    road->setOffsetIn(0.0);
+                    road->setOffsetIn(offsetter);
                     road->setOffsetOut(offsetter);
             }
 
