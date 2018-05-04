@@ -297,7 +297,6 @@ VRMaterialPtr VRTextureRenderer::createTextureLod(VRObjectPtr obj, PosePtr camP,
     }
 
     auto cam = VRCamera::create("cam", false); // segfault when threaded
-
     cam->setFov(fov); //0.33
     cam->setAspect(1);
     cam->setPose(camP);
@@ -321,7 +320,6 @@ VRMaterialPtr VRTextureRenderer::createTextureLod(VRObjectPtr obj, PosePtr camP,
     mat->setTextureParams(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_MODULATE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 	if (deferred) scene->setDeferredShading(true);
     return mat;
-    //return 0;
 }
 
 

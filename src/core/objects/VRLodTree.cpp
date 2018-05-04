@@ -33,16 +33,18 @@ void VRLodLeaf::addLevel(float dist) {
 }
 
 void VRLodLeaf::add(VRObjectPtr obj, int lvl) {
+    //cout << " VRLodLeaf::add leaf " << name << ", " << obj->getName() << " " << lvl << endl;
     levels[lvl]->addChild(obj);
 }
 
 void VRLodLeaf::set(VRObjectPtr obj, int lvl) {
-    cout << " VRLodLeaf set leaf " << name << ", " << obj << " " << lvl << endl;
+    //if (obj) cout << " VRLodLeaf::set leaf " << name << ", " << obj->getName() << " " << lvl << endl;
+    //else cout << " VRLodLeaf::set leaf " << name << " cleared " << lvl << endl;
     if (lvl < 0 || lvl >= int(levels.size())) return;
     levels[lvl]->clearChildren();
     if (obj) {
         levels[lvl]->addChild(obj);
-        cout << "  VRLodLeaf set addChild " << levels[lvl]->getName() << " " << obj->getName() << endl;
+        //cout << "  VRLodLeaf set addChild " << levels[lvl]->getName() << " " << obj->getName() << endl;
     }
 }
 
@@ -133,10 +135,12 @@ VRLodLeafPtr VRLodTree::addLeaf(OctreeNode* o, int lvl) {
 }
 
 VRLodLeafPtr VRLodTree::addObject(VRTransformPtr obj, Vec3d p, int lvl) {
+    if (!octree || !obj) return 0;
+    //cout << "VRLodTree::addObject " << obj->getName() << " p " << p << " lvl: " << lvl << endl;
     if (leafs.size() == 0) addLeaf(octree->getRoot(), 0);
-    if (!octree) return 0;
     objects[lvl].push_back(obj);
-    auto oLeaf = octree->add(p, obj.get(), lvl, 0, true);
+    OctreeNode* oLeaf = octree->add(p, obj.get(), lvl, true);
+    //cout << " VRLodTree::addObject octree leaf: " << oLeaf->getSize() << endl;
     auto leaf = addLeaf(oLeaf, lvl);
     if (lvl == 0) leaf->add(obj, 0);
     else          leaf->add(obj, 1);

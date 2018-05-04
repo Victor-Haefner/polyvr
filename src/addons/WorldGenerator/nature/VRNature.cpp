@@ -359,7 +359,7 @@ void VRNature::computeLODs2(map<OctreeNode*, VRLodLeafPtr>& leafs) {
         if (geo.size() > 0) {
             woods = geo.asGeometry("woods");
             if (m) woods->setMaterial(m);
-            cout << "YAY: lod data: " << geo.size() << " " << woods << endl;
+            //cout << "YAY: lod data: " << geo.size() << " " << woods << endl;
 
             leaf->set( woods, 1 );
             woods->setWorldPosition(pos);

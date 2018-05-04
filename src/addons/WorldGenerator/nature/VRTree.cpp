@@ -454,6 +454,7 @@ void VRTree::appendLOD(VRGeoData& data, int lvl, Vec3d offset) {
 }
 
 VRGeometryPtr VRTree::createLOD(int lvl) {
+    cout << "VRTree::createLOD " << lvl << endl;
     VRGeoData data;
 
     auto t = ptr();
@@ -485,6 +486,7 @@ VRGeometryPtr VRTree::createLOD(int lvl) {
     if (N == 0) return 0;
 
     auto m = sides[0].first;
+    if (!m) return 0;
     if (N > 1) { // merge textures
         auto tex0 = m->getTexture(0);
         auto tex1 = m->getTexture(1);

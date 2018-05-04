@@ -16,6 +16,7 @@ class OctreeNode {
     private:
         float resolution = 0.1;
         float size = 10;
+        int level = 0;
 
         Vec3d center;
 
@@ -27,7 +28,7 @@ class OctreeNode {
         vector<Vec3d> points;
 
     public:
-        OctreeNode(OctreePtr tree, float resolution, float size = 10);
+        OctreeNode(OctreePtr tree, float resolution, float size = 10, int level = 0);
         ~OctreeNode();
 
         OctreeNode* getParent();
@@ -37,7 +38,7 @@ class OctreeNode {
         Vec3d getCenter();
         Vec3d getLocalCenter();
 
-        OctreeNode* add(Vec3d p, void* data, int targetLevel = -1, int currentLevel = 0, bool checkPosition = true);
+        OctreeNode* add(Vec3d p, void* data, int targetLevel = -1, bool checkPosition = true);
         OctreeNode* get(Vec3d p);
 
         void remData(void* data);
@@ -75,7 +76,7 @@ class Octree : public std::enable_shared_from_this<Octree> {
 
         OctreeNode* getRoot();
         void addBox(const Boundingbox& b, void* data, int targetLevel = -1, bool checkPosition = true);
-        OctreeNode* add(Vec3d p, void* data, int targetLevel = -1, int currentLevel = 0, bool checkPosition = true);
+        OctreeNode* add(Vec3d p, void* data, int targetLevel = -1, bool checkPosition = true);
         OctreeNode* get(Vec3d p);
 
         float getSize();
