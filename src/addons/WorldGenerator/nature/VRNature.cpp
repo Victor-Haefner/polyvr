@@ -342,9 +342,12 @@ void VRNature::computeLODs2(map<OctreeNode*, VRLodLeafPtr>& leafs) {
             auto tRef = treeRefs[t];
             if (!tRef || !t) continue;
             Vec3d offset = t->getWorldPosition() - pos;
-            tRef->appendLOD(geo, lvl, offset);
-            auto tlod = tRef->getLOD(0);
-            m = tlod->getMaterial();
+            VRTransformPtr tlod = tRef->getLOD(0);
+            /*tRef->appendLOD(geo, lvl, offset);
+            m = tlod->getMaterial();*/
+            VRTransformPtr l = dynamic_pointer_cast<VRTransform>( tlod->duplicate() );
+            leaf->add( l, 1 );
+            l->setWorldPosition(t->getWorldPosition());
         }
 
         /*if (doGrass) for (auto g : grass[leaf.get()]) {
@@ -355,7 +358,7 @@ void VRNature::computeLODs2(map<OctreeNode*, VRLodLeafPtr>& leafs) {
             gRef->createLod(geoGrass, lvl, offset, g->getID());
         }*/
 
-        VRGeometryPtr woods;
+        /*VRGeometryPtr woods;
         if (geo.size() > 0) {
             woods = geo.asGeometry("woods");
             if (m) woods->setMaterial(m);
@@ -365,7 +368,7 @@ void VRNature::computeLODs2(map<OctreeNode*, VRLodLeafPtr>& leafs) {
             woods->setWorldPosition(pos);
             woods->setDir(Vec3d(0,0,-1));
             woods->setUp(Vec3d(0,1,0));
-        }
+        }*/
     }
 }
 
