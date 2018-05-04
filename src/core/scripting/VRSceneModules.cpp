@@ -111,6 +111,8 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyLightBeacon>("LightBeacon", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyCamera>("Camera", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyLod>("Lod", pModVR, VRPyObject::typeRef);
+    sm->registerModule<VRPyLodLeaf>("LodLeaf", pModVR, VRPyTransform::typeRef);
+    sm->registerModule<VRPyLodTree>("LodTree", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPySprite>("Sprite", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPySound>("Sound", pModVR);
     sm->registerModule<VRPySoundManager>("SoundManager", pModVR);

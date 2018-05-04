@@ -21,6 +21,8 @@
 
 #define GLSL(shader) #shader
 
+template<> string typeName(const OSG::VRTreePtr& t) { return "Tree"; }
+
 using namespace OSG;
 
 struct OSG::seg_params : public VRStorage {
@@ -170,7 +172,7 @@ Vec3d VRTree::randomRotate(Vec3d v, float a) {
     return v;
 }
 
-void VRTree::grow(int seed) { growSegment(seed); lod = createLOD(0); }
+void VRTree::grow(int seed) { growSegment(seed); }
 
 segment* VRTree::growSegment(int seed, segment* p, int iteration, float t) {
     this->seed = seed;
@@ -514,6 +516,7 @@ VRGeometryPtr VRTree::createLOD(int lvl) {
 
     auto geo = data.asGeometry("treeLod");
     geo->setMaterial(m);
+    lod = geo;
     return geo;
 }
 

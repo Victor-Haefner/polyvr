@@ -709,6 +709,8 @@
 		<Unit filename="src/core/objects/VRLightBeacon.h" />
 		<Unit filename="src/core/objects/VRLod.cpp" />
 		<Unit filename="src/core/objects/VRLod.h" />
+		<Unit filename="src/core/objects/VRLodTree.cpp" />
+		<Unit filename="src/core/objects/VRLodTree.h" />
 		<Unit filename="src/core/objects/VRObjectFwd.h" />
 		<Unit filename="src/core/objects/VRShadowEngine.cpp" />
 		<Unit filename="src/core/objects/VRShadowEngine.h" />
