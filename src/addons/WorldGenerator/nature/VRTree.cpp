@@ -448,9 +448,10 @@ void main(void) {
 
 void VRTree::appendLOD(VRGeoData& data, int lvl, Vec3d offset) {
     if (!lod) lod = createLOD(lvl);
-    lod->setFrom(offset);
-    data.append(lod);
-    lod->setFrom(Vec3d());
+    auto p = lod->getFrom();
+    lod->setWorldPosition(offset);
+    data.append(lod, lod->getWorldMatrix());
+    lod->setFrom(p);
 }
 
 VRGeometryPtr VRTree::createLOD(int lvl) {
