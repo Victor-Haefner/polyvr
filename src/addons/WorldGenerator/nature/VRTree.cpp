@@ -170,7 +170,7 @@ Vec3d VRTree::randomRotate(Vec3d v, float a) {
     return v;
 }
 
-void VRTree::grow(int seed) { growSegment(seed); }
+void VRTree::grow(int seed) { growSegment(seed); lod = createLOD(0); }
 
 segment* VRTree::growSegment(int seed, segment* p, int iteration, float t) {
     this->seed = seed;
@@ -478,6 +478,7 @@ VRGeometryPtr VRTree::createLOD(int lvl) {
     addSprite( Pose::create(Vec3d(-D[1],h2,0), Vec3d(1,0,0), Vec3d(0,1,0)), S[2], S[1], S[1]*0.5);
     addSprite( Pose::create(Vec3d(0,S[1]+max(D[0],D[2]),0), Vec3d(0,-1,0), Vec3d(0,0,1)), S[0], S[2], S[1]);
 
+    t->setPose(old_pose);
     int N = sides.size();
     if (N == 0) return 0;
 
@@ -505,8 +506,6 @@ VRGeometryPtr VRTree::createLOD(int lvl) {
         data.setTexCoord(4*i+2, Vec2d(i1,h));
         data.setTexCoord(4*i+3, Vec2d(i2,h));
     }
-
-    t->setPose(old_pose);
 
     m->setShaderParameter("tex0", 0);
     m->setShaderParameter("tex1", 1);

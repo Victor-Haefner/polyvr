@@ -321,6 +321,7 @@ VRMaterialPtr VRTextureRenderer::createTextureLod(VRObjectPtr obj, PosePtr camP,
     mat->setTextureParams(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_MODULATE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 	if (deferred) scene->setDeferredShading(true);
     return mat;
+    //return 0;
 }
 
 
