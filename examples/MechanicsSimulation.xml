@@ -292,7 +292,6 @@
 		s = string.join([str(i) for i in params])
 		p.setPrimitive( s )
 		p.setPickable(True)
-		p.getConstraint().free([0,1,2,3,4,5])
 		p.getConstraint().setRotationConstraint([0,0,1], 'LINE', 1)
 		VR.gears.addChild(p)
 		p.addTag('gear')

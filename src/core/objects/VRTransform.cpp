@@ -34,6 +34,8 @@ using namespace std;
 VRTransform::VRTransform(string name) : VRObject(name) {
     t = OSGTransform::create( Transform::create() );
     constraint = VRConstraint::create();
+    constraint->free({0,1,2,3,4,5});
+    constraint->setActive(false);
     setCore(OSGCore::create(t->trans), "Transform");
     disableCore();
     addAttachment("transform", 0);
