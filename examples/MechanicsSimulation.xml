@@ -279,15 +279,12 @@
 	VR.block = 0
 	
 	# root node and reset
-	if hasattr(VR, 'gears'):
-		VR.gears.destroy()
+	if hasattr(VR, 'gears'): VR.gears.destroy()
 	VR.gears = VR.Transform('gears')
 	root.addChild(VR.gears)
 	
-	if hasattr(VR, 'mechanism'):
-		VR.mechanism.clear()
-	else:
-		VR.mechanism = VR.Mechanism()
+	if hasattr(VR, 'mechanism'): VR.mechanism.clear()
+	else: VR.mechanism = VR.Mechanism()
 	
 	# primitives
 	def addPrimitive(params, mecha):
@@ -295,11 +292,11 @@
 		s = string.join([str(i) for i in params])
 		p.setPrimitive( s )
 		p.setPickable(True)
+		p.getConstraint().free([0,1,2,3,4,5])
 		p.getConstraint().setRotationConstraint([0,0,1], 'LINE', 1)
 		VR.gears.addChild(p)
 		p.addTag('gear')
-		if mecha:
-			VR.mechanism.add(p)
+		if mecha: VR.mechanism.add(p)
 		return p
 		
 	# parameters

@@ -55,7 +55,7 @@
 	
 	# ground
 	ground = VR.Geometry('ground')
-	ground.setPrimitive('Box 100 1 100 100 1 100')
+	ground.setPrimitive('Box 100 1 100 10 1 10')
 	VR.scene.addChild(ground)
 	ground.physicalize(True, False, 'Convex')
 	brown = VR.Material('brown')
@@ -65,6 +65,7 @@
 	
 	# car
 	VR.car = VR.CarDynamics('car')
+	VR.car.setType(0)
 	VR.scene.addChild(VR.car)
 	
 	# chassis
@@ -131,7 +132,7 @@
 		if VR.car_gear == -1 and abs(speed) &lt; 5: VR.car_gear = 1
 		if VR.car_gear != -1:
 			VR.car_gear_lever = 'D'
-			VR.car_throttle = 0.3
+			VR.car_throttle = 0.9
 			VR.car_gear = 1
 	if S: 
 		VR.car_break = 1
