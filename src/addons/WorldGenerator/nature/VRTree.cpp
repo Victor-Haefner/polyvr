@@ -471,7 +471,7 @@ VRGeometryPtr VRTree::createLOD(int lvl) {
     int Hmax = 1;
     auto addSprite = [&](PosePtr p, float W, float H, float Sh) {
         auto tr = VRTextureRenderer::create("treeLODtexR");
-        auto tm = tr->createTextureLod(t, p, 512, W/H, fov);
+        auto tm = tr->createTextureLod(t, p, 512, W/H, fov, Color3f(0,0.5,0));
         int h = int(512/W*H);
         Hmax = max(Hmax, h);
         sides.push_back(make_pair(tm,h));

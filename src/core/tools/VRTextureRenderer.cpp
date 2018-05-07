@@ -199,12 +199,13 @@ void main( void ) {
 	float ca = col[1];
 	float ch = col[2];
 	color = texture(tex,tcs);
-	if (color.a < 0.3) discard;
+	//if (color.a < 0.9) discard;
 
 	color.x *= 0.4*ca;
 	color.y *= 0.8*ch;
 	color.z *= 0.2*ch;
-	gl_FragColor = vec4(color.xyz,1.0);
+	//gl_FragColor = vec4(color.xyz,1.0);
+	gl_FragColor = vec4(color.xyz,color.a);
 }
 );
 
@@ -280,7 +281,7 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
     - render normal channel
 */
 
-VRMaterialPtr VRTextureRenderer::createTextureLod(VRObjectPtr obj, PosePtr camP, int res, float aspect, float fov) {
+VRMaterialPtr VRTextureRenderer::createTextureLod(VRObjectPtr obj, PosePtr camP, int res, float aspect, float fov, Color3f bg) {
     VRObjectPtr tmpScene = VRObject::create("tmpScene");
     for (auto a : obj->getAncestry()) {
         if (a->getType() == "Light") {
@@ -304,7 +305,7 @@ VRMaterialPtr VRTextureRenderer::createTextureLod(VRObjectPtr obj, PosePtr camP,
     tmpScene->addChild(cam);
     tmpScene->addLink(obj);
 
-    setBackground(Color3f(0,0.8,0));
+    setBackground(bg);
     addChild(tmpScene);
 	setup(cam, res, res/aspect, true);
 
