@@ -107,8 +107,34 @@
 			<Add directory="/usr/include/STEPcode" />
 			<Add directory="/usr/include/vtk-5.10" />
 			<Add directory="/usr/include/Vive" />
+			<Add directory="/usr/include/oce" />
+			<Add directory="/usr/include/IFC" />
 		</Compiler>
 		<Linker>
+			<Add option="-lTKernel" />
+			<Add option="-lTKMath" />
+			<Add option="-lTKBRep" />
+			<Add option="-lIfcGeom" />
+			<Add option="-lTKGeomBase" />
+			<Add option="-lTKGeomAlgo" />
+			<Add option="-lTKG3d" />
+			<Add option="-lTKG2d" />
+			<Add option="-lTKShHealing" />
+			<Add option="-lTKTopAlgo" />
+			<Add option="-lTKMesh" />
+			<Add option="-lTKPrim" />
+			<Add option="-lTKBool" />
+			<Add option="-lTKBO" />
+			<Add option="-lTKFillet" />
+			<Add option="-lTKSTEP" />
+			<Add option="-lTKXSBase" />
+			<Add option="-lTKIGES" />
+			<Add option="-lTKOffset" />
+			<Add option="-lTKSTEPAttr" />
+			<Add option="-lTKSTEP209" />
+			<Add option="-lTKSTEPBase" />
+			<Add option="-lIfcParse" />
+			<Add option="`pkg-config icu-i18n --libs`" />
 			<Add option="-lcef" />
 			<Add option="-lcef_dll_wrapper" />
 			<Add option="`pkg-config --libs libxml++-2.6`" />
@@ -185,6 +211,7 @@
 			<Add option="-lboost_program_options" />
 			<Add option="-lboost_serialization" />
 			<Add option="-lboost_filesystem" />
+			<Add option="-lboost_regex" />
 			<Add option="-lrt" />
 			<Add option="-ljpeg" />
 			<Add option="-lpng" />
@@ -234,6 +261,7 @@
 			<Add directory="/usr/include/CEF/include" />
 			<Add directory="/usr/lib/STEPcode" />
 			<Add directory="/usr/lib/1.4" />
+			<Add directory="/usr/lib/IFC" />
 		</Linker>
 		<ExtraCommands>
 			<Add after='/bin/bash -c &quot;cp -u -p ressources/cef/icudtl.dat bin/Debug/ 2&gt;/dev/null&quot;' />
@@ -681,6 +709,8 @@
 		<Unit filename="src/core/objects/VRLightBeacon.h" />
 		<Unit filename="src/core/objects/VRLod.cpp" />
 		<Unit filename="src/core/objects/VRLod.h" />
+		<Unit filename="src/core/objects/VRLodTree.cpp" />
+		<Unit filename="src/core/objects/VRLodTree.h" />
 		<Unit filename="src/core/objects/VRObjectFwd.h" />
 		<Unit filename="src/core/objects/VRShadowEngine.cpp" />
 		<Unit filename="src/core/objects/VRShadowEngine.h" />
@@ -823,6 +853,8 @@
 		<Unit filename="src/core/scene/import/VRExport.h" />
 		<Unit filename="src/core/scene/import/VRIES.cpp" />
 		<Unit filename="src/core/scene/import/VRIES.h" />
+		<Unit filename="src/core/scene/import/VRIFC.cpp" />
+		<Unit filename="src/core/scene/import/VRIFC.h" />
 		<Unit filename="src/core/scene/import/VRImport.cpp" />
 		<Unit filename="src/core/scene/import/VRImport.h" />
 		<Unit filename="src/core/scene/import/VRPLY.cpp" />

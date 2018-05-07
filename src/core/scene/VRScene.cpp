@@ -149,6 +149,7 @@ VRObjectPtr VRScene::get(string name) {
 }
 
 void VRScene::setActiveCamera(string camname) {
+    cout << "set active camera: " << camname << endl;
     setMActiveCamera(camname);
     VRSetupPtr setup = VRSetup::getCurrent();
 

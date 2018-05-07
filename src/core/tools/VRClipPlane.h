@@ -34,6 +34,7 @@ class VRClipPlane : public VRGeometry {
         bool isActive();
         void setActive(bool a);
         void setTree(VRObjectPtr obj);
+        void setSize(float W, float H);
 };
 
 OSG_END_NAMESPACE;

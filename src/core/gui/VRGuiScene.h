@@ -18,6 +18,7 @@ class VRGuiScene {
         VRGuiContextMenu* menu;
 
         // ------------- transform -----------------------
+        void on_toggle_T_mode();
         void on_toggle_T_constraint_mode();
         void on_toggle_phys();
         void on_toggle_dynamic();

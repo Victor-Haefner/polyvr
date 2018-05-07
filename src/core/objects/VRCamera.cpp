@@ -64,14 +64,16 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
 }
 
 VRCamera::~VRCamera() {
-    VRGuiManager::broadcast("camera_added");
+    if (registred) VRGuiManager::broadcast("camera_added");
 }
 
 VRCameraPtr VRCamera::ptr() { return static_pointer_cast<VRCamera>( shared_from_this() ); }
+
 VRCameraPtr VRCamera::create(string name, bool reg) {
     auto p = shared_ptr<VRCamera>(new VRCamera(name) );
+    p->registred = reg;
     getAll().push_back( p );
-    VRGuiManager::broadcast("camera_added");
+    if (reg) VRGuiManager::broadcast("camera_added");
     if (reg) VRScene::getCurrent()->setMActiveCamera(p->getName());
     return p;
 }
@@ -99,7 +101,7 @@ void VRCamera::setup(bool reg) {
     if (cam) ocam = dynamic_pointer_cast<OrthographicCamera>(cam->cam);
 
     if (!pcam && camType == PERSPECTIVE) {
-        cout << " VRCamera::setup switch to perp " << reg << endl;
+        cout << " VRCamera::setup switch to perp, reg: " << reg << endl;
         pcam = PerspectiveCamera::create();
         cam = OSGCamera::create( pcam );
         pcam->setBeacon(getNode()->node);
@@ -107,7 +109,7 @@ void VRCamera::setup(bool reg) {
     }
 
     if (!ocam && camType == ORTHOGRAPHIC) {
-        cout << " VRCamera::setup switch to orth " << reg << endl;
+        cout << " VRCamera::setup switch to orth, reg: " << reg << endl;
         ocam = OrthographicCamera::create();
         cam = OSGCamera::create( ocam );
         ocam->setBeacon(getNode()->node);

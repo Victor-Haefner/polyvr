@@ -34,22 +34,23 @@ struct VRProcessNode : VRName {
     string getLabel();
 };
 
+struct VRProcessDiagram : public Graph {
+    map<int, VRProcessNodePtr> processnodes;
+
+    VRProcessDiagram();
+    ~VRProcessDiagram();
+    static VRProcessDiagramPtr create();
+
+    void update(int i, bool changed);
+    void remNode(int i);
+    void clear();
+};
+
 class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName {
-    public:
-        struct Diagram : public Graph {
-            map<int, VRProcessNodePtr> processnodes;
-
-            void update(int i, bool changed);
-            void remNode(int i);
-            void clear();
-        };
-
-        typedef shared_ptr< Diagram > DiagramPtr;
-
     private:
         VROntologyPtr ontology;
-        DiagramPtr interactionDiagram;
-        map<int, DiagramPtr> behaviorDiagrams;
+        VRProcessDiagramPtr interactionDiagram;
+        map<int, VRProcessDiagramPtr> behaviorDiagrams;
 
         void update();
 
@@ -60,13 +61,13 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
 
         void open(string path);
         void setOntology(VROntologyPtr o);
-        DiagramPtr getInteractionDiagram();
-        DiagramPtr getBehaviorDiagram(int subject);
+        VRProcessDiagramPtr getInteractionDiagram();
+        VRProcessDiagramPtr getBehaviorDiagram(int subject);
         vector<VRProcessNodePtr> getSubjects();
-        VRProcessNodePtr getNode(int i, DiagramPtr diag = 0);
+        VRProcessNodePtr getNode(int i, VRProcessDiagramPtr diag = 0);
 
         VRProcessNodePtr addSubject(string name);
-        VRProcessNodePtr addMessage(string name, int i, int j, DiagramPtr diag = 0);
+        VRProcessNodePtr addMessage(string name, int i, int j, VRProcessDiagramPtr diag = 0);
         VRProcessNodePtr addAction(string name, int sID);
 
         void remNode(VRProcessNodePtr n);

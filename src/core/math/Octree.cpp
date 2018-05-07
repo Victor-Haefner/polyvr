@@ -7,10 +7,13 @@
 #include <string>  //for std::string
 
 #include "core/utils/toString.h"
+#include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/material/VRMaterial.h"
 
 OSG_BEGIN_NAMESPACE
 
-OctreeNode::OctreeNode(OctreePtr tree, float res, float s) : resolution(res), size(s) { this->tree = tree; }
+OctreeNode::OctreeNode(OctreePtr tree, float res, float s, int lvl) : resolution(res), size(s), level(lvl) { this->tree = tree; }
 OctreeNode::~OctreeNode() {
     for (auto c : children) if (c) delete c;
 }
@@ -40,32 +43,37 @@ bool OctreeNode::inBox(Vec3d p, Vec3d c, float size) {
     return true;
 }
 
-OctreeNode* OctreeNode::add(Vec3d p, void* d, int targetLevel, int currentLevel, bool checkPosition) {
+OctreeNode* OctreeNode::add(Vec3d p, void* d, int targetLevel, bool checkPosition) {
     Vec3d rp = p - center;
+    int currentLevel = level;
 
     if ( !inBox(p, center, size) && checkPosition ) { // not in node
+        //cout << " OctreeNode::add " << p << " not in node " << currentLevel << " " << targetLevel << endl;
         if (parent == 0) { // no parent, create it
-            parent = new OctreeNode(tree.lock(), resolution, 2*size);
+            //cout << "  OctreeNode::add parent" << endl;
+            parent = new OctreeNode(tree.lock(), resolution, 2*size, currentLevel+1);
             Vec3d c = center + lvljumpCenter(size*0.5, rp);
             parent->center = c;
             int o = parent->getOctant(center);
             parent->children[o] = this;
             tree.lock()->updateRoot();
         }
-        return parent->add(p, d, targetLevel, currentLevel+1, true); // go a level up
+        return parent->add(p, d, targetLevel, true); // go a level up
     }
 
     if (size > resolution && (currentLevel != targetLevel || targetLevel == -1)) {
+        //cout << " OctreeNode::add " << p << " below " << currentLevel << " " << targetLevel << endl;
         int o = getOctant(p);
         if (children[o] == 0) {
-            children[o] = new OctreeNode(tree.lock(), resolution, size*0.5);
+            children[o] = new OctreeNode(tree.lock(), resolution, size*0.5, currentLevel-1);
             Vec3d c = center + lvljumpCenter(size*0.25, rp);
             children[o]->center = c;
             children[o]->parent = this;
         }
-        return children[o]->add(p, d, targetLevel, currentLevel-1, false);
+        return children[o]->add(p, d, targetLevel, false);
     }
 
+    //cout << "  OctreeNode::add " << p << " here! " << currentLevel << " " << targetLevel << endl;
     data.push_back(d);
     points.push_back(p);
     return this;
@@ -245,25 +253,25 @@ OctreePtr Octree::create(float resolution, float size) {
 OctreePtr Octree::ptr() { return shared_from_this(); }
 
 float Octree::getSize() { return root->getSize(); }
-void Octree::clear() { if (root) delete root; root = new OctreeNode(ptr(), resolution, firstSize); }
+void Octree::clear() { if (root) delete root; root = new OctreeNode(ptr(), resolution, firstSize, 0); }
 
 OctreeNode* Octree::get(Vec3d p) { return root->get(p); }
 
-OctreeNode* Octree::add(Vec3d p, void* data, int targetLevel, int currentLevel, bool checkPosition) {
-    return getRoot()->add(p, data, targetLevel, currentLevel, checkPosition);
+OctreeNode* Octree::add(Vec3d p, void* data, int targetLevel, bool checkPosition) {
+    return getRoot()->add(p, data, targetLevel, checkPosition);
 }
 
 void Octree::addBox(const Boundingbox& b, void* d, int targetLevel, bool checkPosition) {
     const Vec3d min = b.min();
     const Vec3d max = b.max();
-    add(min, d, targetLevel, 0, checkPosition);
-    add(Vec3d(max[0],min[1],min[2]), d, targetLevel, 0, checkPosition);
-    add(Vec3d(max[0],min[1],max[2]), d, targetLevel, 0, checkPosition);
-    add(Vec3d(min[0],min[1],max[2]), d, targetLevel, 0, checkPosition);
-    add(max, d, targetLevel, 0, checkPosition);
-    add(Vec3d(max[0],max[1],min[2]), d, targetLevel, 0, checkPosition);
-    add(Vec3d(min[0],max[1],min[2]), d, targetLevel, 0, checkPosition);
-    add(Vec3d(min[0],max[1],max[2]), d, targetLevel, 0, checkPosition);
+    add(min, d, targetLevel, checkPosition);
+    add(Vec3d(max[0],min[1],min[2]), d, targetLevel, checkPosition);
+    add(Vec3d(max[0],min[1],max[2]), d, targetLevel, checkPosition);
+    add(Vec3d(min[0],min[1],max[2]), d, targetLevel, checkPosition);
+    add(max, d, targetLevel, checkPosition);
+    add(Vec3d(max[0],max[1],min[2]), d, targetLevel, checkPosition);
+    add(Vec3d(min[0],max[1],min[2]), d, targetLevel, checkPosition);
+    add(Vec3d(min[0],max[1],max[2]), d, targetLevel, checkPosition);
 }
 
 OctreeNode* Octree::getRoot() { return root; }
@@ -342,6 +350,36 @@ void Octree::test() {
     cout << "\nOctreeNode test passed with " << radSearchRes_tree.size() << " found Vec3fs!\n";
 }
 
+VRGeometryPtr Octree::getVisualization() {
+    VRGeoData data;
+    auto nodes = root->getSubtree();
+    nodes.push_back(root);
+    for (auto c : nodes) {
+        Pnt3d p = c->getCenter();
+        float s = c->getSize()*0.499;
+        int ruf = data.pushVert(p + Vec3d( 1, 1, 1)*s);
+        int luf = data.pushVert(p + Vec3d(-1, 1, 1)*s);
+        int rub = data.pushVert(p + Vec3d( 1, 1,-1)*s);
+        int lub = data.pushVert(p + Vec3d(-1, 1,-1)*s);
+        int rdf = data.pushVert(p + Vec3d( 1,-1, 1)*s);
+        int ldf = data.pushVert(p + Vec3d(-1,-1, 1)*s);
+        int rdb = data.pushVert(p + Vec3d( 1,-1,-1)*s);
+        int ldb = data.pushVert(p + Vec3d(-1,-1,-1)*s);
+        data.pushQuad(ruf, luf, lub, rub); // side up
+        data.pushQuad(rdf, ldf, ldb, rdb); // side down
+        data.pushQuad(luf, lub, ldb, ldf); // side left
+        data.pushQuad(ruf, rub, rdb, rdf); // side right
+        data.pushQuad(rub, lub, ldb, rdb); // side behind
+        data.pushQuad(ruf, luf, ldf, rdf); // side front
+    }
+
+    auto g = data.asGeometry("octree");
+    auto m = VRMaterial::create("octree");
+    m->setLit(false);
+    m->setWireFrame(true);
+    g->setMaterial(m);
+    return g;
+}
 
 
 OSG_END_NAMESPACE

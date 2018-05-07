@@ -42,7 +42,7 @@ class VRTextureRenderer : public VRObject {
         VRCameraPtr getCamera();
 
         VRTexturePtr renderOnce(CHANNEL c = RENDER);
-        VRMaterialPtr createTextureLod(VRObjectPtr scene, PosePtr cam, int res, float aspect, float fov);
+        VRMaterialPtr createTextureLod(VRObjectPtr scene, PosePtr cam, int res, float aspect, float fov, Color3f bg);
 };
 
 OSG_END_NAMESPACE;

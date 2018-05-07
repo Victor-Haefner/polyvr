@@ -17,6 +17,7 @@ class VRCamera : public VRTransform {
         OSGCameraPtr cam;
         OSGObjectPtr camGeo;
 
+        bool registred = true;
         int camType = 0;
         float parallaxD = 1;
         float nearClipPlaneCoeff = 0.1;

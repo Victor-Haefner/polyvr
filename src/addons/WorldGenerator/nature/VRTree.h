@@ -15,7 +15,7 @@ class VRTree : public VRTransform {
     private:
         int seed = 0;
         segment* trunc = 0;
-        VRLodPtr lod;
+        VRGeometryPtr lod;
         vector<shared_ptr<seg_params>> parameters;
         vector<shared_ptr<leaf_params>> foliage;
         vector<segment*> branches;
@@ -60,7 +60,9 @@ class VRTree : public VRTransform {
         void addLeafs(int lvl, int amount, float size = 0.03);
         void setLeafMaterial(VRMaterialPtr mat);
 
-        VRTransformPtr createLOD(int lvl);
+        VRGeometryPtr createLOD(int lvl);
+        VRGeometryPtr getLOD(int lvl);
+        void appendLOD(VRGeoData& data, int lvl, Vec3d offset);
         void createTwigLod(VRGeoData& geo, int lvl);
         void createHullTrunkLod(VRGeoData& geo, int lvl, Vec3d offset, int ID); // soon deprecated
         void createHullLeafLod(VRGeoData& geo, int lvl, Vec3d offset, int ID); // soon deprecated

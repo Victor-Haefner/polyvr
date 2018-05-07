@@ -34,6 +34,8 @@ using namespace std;
 VRTransform::VRTransform(string name) : VRObject(name) {
     t = OSGTransform::create( Transform::create() );
     constraint = VRConstraint::create();
+    constraint->free({0,1,2,3,4,5});
+    constraint->setActive(false);
     setCore(OSGCore::create(t->trans), "Transform");
     disableCore();
     addAttachment("transform", 0);
@@ -57,13 +59,14 @@ VRTransformPtr VRTransform::ptr() { return static_pointer_cast<VRTransform>( sha
 VRTransformPtr VRTransform::create(string name) { return VRTransformPtr(new VRTransform(name) ); }
 
 VRObjectPtr VRTransform::copy(vector<VRObjectPtr> children) {
-    VRTransformPtr geo = VRTransform::create(getBaseName());
-    geo->setPickable(isPickable());
-    geo->setMatrix(getMatrix());
-    geo->setVisible(isVisible());
-    geo->setPickable(isPickable());
-    geo->old_parent = getParent();
-    return geo;
+    VRTransformPtr t = VRTransform::create(getBaseName());
+    t->setVisible(isVisible());
+    t->setPickable(isPickable());
+    t->setEntity(entity);
+    t->setMatrix(getMatrix());
+    t->setPickable(isPickable());
+    t->old_parent = getParent();
+    return t;
 }
 
 bool MatrixLookDir(Matrix4d &result, Pnt3d from, Vec3d dir, Vec3d up) {

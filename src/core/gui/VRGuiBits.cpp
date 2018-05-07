@@ -319,6 +319,7 @@ void VRGuiBits::updateVisualLayer() {
 }
 
 void VRGuiBits::update() { // scene changed
+    cout << "VRGuiBits::update" << endl;
     auto scene = VRScene::getCurrent();
     setLabel("label24", "Project: None");
     if (scene == 0) return;
