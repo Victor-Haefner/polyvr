@@ -157,7 +157,7 @@ VRGeometryPtr VRRoad::createGeometry() {
                     Vec3d x = path->getPoint(zz).x();
                     auto po = path->getPoint(zz);
                     x.normalize();
-                    float offsetter = offsetIn*(1.0-float(zz/(path->size()-1))) + offsetOut*float(zz/(path->size()-1));
+                    float offsetter = offsetIn*(1.0-(float(zz)/(float(path->size())-1.0))) + offsetOut*(float(zz)/(float(path->size())-1.0));
                     po.setPos(x*offsetter  + p);
                     path->setPoint(zz,po);
                 };
@@ -220,7 +220,7 @@ void VRRoad::computeMarkings() {
         Vec3d n = point.dir();
         Vec3d x = point.x();
         x.normalize();
-        float offsetter = offsetIn*(1.0-float(zz/(path->size()-1))) + offsetOut*float(zz/(path->size()-1));
+        float offsetter = offsetIn*(1.0-(float(zz)/(float(path->size())-1.0))) + offsetOut*(float(zz)/(float(path->size())-1.0));
         float widthSum = -roadWidth*0.5 - offsetter;
         for (int li=0; li<Nlanes; li++) {
             auto lane = lanes[li];
