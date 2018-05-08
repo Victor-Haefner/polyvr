@@ -369,7 +369,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                     roads->addKirb( wayToPolygon(way), getHeight(0.2) );
                 }
                 if (tag.second == "fence") {
-                    roads->addFence( wayToPath(way, 8), getHeight(1.5) );
+                    roads->addFence( wayToPath(way, 8), getHeight(1.8) );
                 }
                 continue;
             }

@@ -307,7 +307,7 @@ void VRRoadNetwork::addFence( PathPtr path, float height ) {
 		poles.push_back(po);
 	};
 
-    auto p0 = path->getPose(0);
+    /*auto p0 = path->getPose(0);
     auto p1 = path->getPose(1);
     p0->setPos( p0->pos() + p0->dir()*poleWidth );
     p1->setPos( p1->pos() - p1->dir()*poleWidth );
@@ -320,14 +320,14 @@ void VRRoadNetwork::addFence( PathPtr path, float height ) {
         int N2 = N;
         if (j == path->size()-2) N2--;
         for (int i = 0; i<N2; i++) addPole( *path->getPose( (i+1)*1.0/N, j, j+1 ) );
-    }
+    }*/
 
 	vector<Vec3d> profile;
     profile.push_back(Vec3d(0,0,0));
     profile.push_back(Vec3d(0,height,0));
 
 	auto rail = VRStroke::create("rail");
-	rail->setMaterial( w->getMaterial("guardrail") );
+	rail->setMaterial( w->getMaterial("fence") );
 	rail->setPaths({path});
 	rail->strokeProfile(profile, false, true, false);
 	rail->updateNormals(false);

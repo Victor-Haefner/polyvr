@@ -795,6 +795,7 @@ void VRMaterial::setTransparency(float c) {
 }
 
 void VRMaterial::enableTransparency(bool user_override) {
+    if (deferred) return;
     force_transparency = user_override;
     auto md = mats[activePass];
     if (md->blendChunk == 0) {
@@ -807,7 +808,7 @@ void VRMaterial::enableTransparency(bool user_override) {
 
 void VRMaterial::clearTransparency(bool user_override) {
     if (user_override) force_transparency = false;
-    if (force_transparency && !user_override) return;
+    if (force_transparency && !user_override && !deferred) return;
     auto md = mats[activePass];
     md->clearChunk(md->blendChunk);
     md->clearChunk(md->depthChunk);
