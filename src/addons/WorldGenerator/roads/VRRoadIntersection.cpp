@@ -285,12 +285,21 @@ VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d 
     return 0;
 }
 
-void VRRoadIntersection::computeTrafficLights() { // deprecated
-    /*
-    if (roads.size() == 2) return;
-    if (inLanes.size() == 1) return;
+void VRRoadIntersection::computeTrafficLights() {
+    //if (roads.size() == 2) return;
+    //if (inLanes.size() == 1) return;
 
-    auto node = entity->getEntity("node");
+    /**
+
+    - get traffic signals relevant for this intersection
+        - check if intersection node has traffic signal
+        - check each road going in and out of the intersection for traffic signals
+
+    - place traffic signal geometries
+
+    */
+
+    /*auto node = entity->getEntity("node");
     for (auto road : inLanes) {
         auto eP = road.first->getEdgePoints( node );
         Vec3d root = eP.p1;
@@ -308,8 +317,7 @@ void VRRoadIntersection::computeTrafficLights() { // deprecated
                 addTrafficLight(P, "trafficLight", root);
             }
         }
-    }
-    */
+    }*/
 }
 
 void VRRoadIntersection::computeMarkings() {

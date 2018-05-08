@@ -106,7 +106,7 @@ void VRWorldGenerator::init() {
     nature = VRNature::create();
     nature->setWorld( ptr() );
     addChild(nature);
-    nature->simpleInit(20, 20);
+    nature->simpleInit(10, 5);
 
     district = VRDistrict::create();
     district->setWorld( ptr() );
@@ -348,6 +348,10 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             graphNodes[pID] = n;
         }
 
+        auto getHeight = [&](float d) {
+            return way->hasTag("height") ? toFloat( way->tags["height"] ) : d;
+        };
+
         for (auto tag : way->tags) {
             if (tag.first == "highway") {
                 if (tag.second == "footway") { addRoad(way, tag.second, 1, true); continue; }
@@ -359,13 +363,13 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 
             if (tag.first == "barrier") {
                 if (tag.second == "guard_rail") {
-                    //cout << "VRWorldGenerator::processOSMMap guard_rail " << endl;
-                    float h = way->hasTag("height") ? toFloat( way->tags["height"] ) : 0.5;
-                    roads->addGuardRail( wayToPath(way, 8), h );
+                    roads->addGuardRail( wayToPath(way, 8), getHeight(0.5) );
                 }
                 if (tag.second == "kerb") {
-                    float h = way->hasTag("height") ? toFloat( way->tags["height"] ) : 0.2;
-                    roads->addKirb( wayToPolygon(way), h );
+                    roads->addKirb( wayToPolygon(way), getHeight(0.2) );
+                }
+                if (tag.second == "fence") {
+                    roads->addFence( wayToPath(way, 8), getHeight(1.5) );
                 }
                 continue;
             }
@@ -407,7 +411,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             }
 
             //if (tag.first == "traffic_sign:training_ground") {
-            if (startswith(tag.first, "traffic_sign:") || tag.first == "traffic_sign") {
+            if (startswith(tag.first, "traffic_sign")) {
                 auto signEnt = ontology->addEntity("sign", "Sign");
                 if ((tag.second == "yes" || tag.second == "custom") && node->tags.count("name")) {
                     signEnt->set("type", node->tags["name"]);
@@ -420,6 +424,16 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                     auto roadEnt = RoadEntities[node->ways[0]]->getEntity();
                     roadEnt->add("signs",signEnt->getName());
                     signEnt->set("road",roadEnt->getName());
+                }
+            }
+
+            if (startswith(tag.first, "traffic_signals")) {
+                auto signalEnt = ontology->addEntity("signal", "TrafficLight");
+                for (auto way : node->ways) {
+                    if (!RoadEntities.count(way)) continue;
+                    auto roadEnt = RoadEntities[node->ways[0]]->getEntity();
+                    roadEnt->add("signs",signalEnt->getName());
+                    signalEnt->set("road",roadEnt->getName());
                 }
             }
 
