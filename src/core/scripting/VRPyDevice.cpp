@@ -17,7 +17,7 @@ simpleVRPyType(Device, New_named_ptr)
 PyMethodDef VRPyDevice::methods[] = {
     {"getName", (PyCFunction)VRPyDevice::getName, METH_NOARGS, "Return device name." },
     {"destroy", (PyCFunction)VRPyDevice::destroy, METH_NOARGS, "Destroy device." },
-    {"getBeacon", (PyCFunction)VRPyDevice::getBeacon, METH_NOARGS, "Get device beacon." },
+    {"getBeacon", (PyCFunction)VRPyDevice::getBeacon, METH_VARARGS, "Get device beacon. - DeviceBeacon getBeacon(int beaconId = 0)" },
     {"setBeacon", (PyCFunction)VRPyDevice::setBeacon, METH_VARARGS, "Set device beacon." },
     {"getTarget", (PyCFunction)VRPyDevice::getTarget, METH_NOARGS, "Get device target." },
     {"setTarget", (PyCFunction)VRPyDevice::setTarget, METH_VARARGS, "Set device target." },
@@ -28,7 +28,18 @@ PyMethodDef VRPyDevice::methods[] = {
     {"getMessage", (PyCFunction)VRPyDevice::getMessage, METH_NOARGS, "Get device received message." },
     {"getType", (PyCFunction)VRPyDevice::getType, METH_NOARGS, "Get device type." },
     {"setDnD", (PyCFunction)VRPyDevice::setDnD, METH_VARARGS, "Set drag && drop." },
-    {"intersect", (PyCFunction)VRPyDevice::intersect, METH_VARARGS, "Intersects the scene - bool intersect( | obj scene, bool force )\n  Returns True if intersected something, else False.\n\t if force set True, ignores cached intersections" },
+//    {"intersect", (PyCFunction)VRPyDevice::intersect, METH_VARARGS, "Intersects the scene - bool intersect( | obj scene, bool force )\n  Returns True if intersected something, else False.\n\t if force set True, ignores cached intersections" },
+    {"intersect", (PyCFunction)VRPyDevice::intersect, METH_VARARGS, "Attempts to intersect the device beacon with the scene - \n"
+                                                                    "bool intersect(Object scene, bool force, DeviceBeacon beacon, Vec3 dir)\n\n"
+                                                                    "  return: True, if intersection successful, otherwise False\n\n"
+                                                                    "  scene:  [optional] default=VR.Scene()\n"
+                                                                    "          Specifies object in scene graph which is checked incl. its children.\n\n"
+                                                                    "  force:  [optional] default=False\n"
+                                                                    "          Forces reevaluation of intersect, if False existing intersection from same frame can be used.\n\n"
+                                                                    "  beacon: [optional] default=device.getBeacon()\n"
+                                                                    "          Specifies which beacon of the device will be intersected, in case of multiple beacons (Multitouch).\n\n"
+                                                                    "  dir:    [optional] default=[0,0,-1]\n"
+                                                                    "          Currently not implemented! Creates a beacon from device position in given direction for intersect." },
     {"getIntersected", (PyCFunction)VRPyDevice::getIntersected, METH_NOARGS, "Get device intersected object." },
     {"getIntersection", PyWrap(Device, getIntersectionPoint, "Get device intersection point", Pnt3d ) },
     {"getIntersectionNormal", PyWrap(Device, getIntersectionNormal, "Get normal at intersection point", Vec3d ) },
@@ -85,9 +96,11 @@ PyObject* VRPyDevice::setSpeed(VRPyDevice* self, PyObject *args) {
 PyObject* VRPyDevice::intersect(VRPyDevice* self, PyObject *args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::intersect, Object is invalid"); return NULL; }
     VRPyObject* o = 0;
+    VRPyTransform* c = 0;
+    PyObject* d = 0;
     int force = 0;
-    if (! PyArg_ParseTuple(args, "|Oi", &o, &force)) return NULL;
-    OSG::VRIntersection ins = self->objPtr->intersect(o ? o->objPtr : 0, force);
+    if (! PyArg_ParseTuple(args, "|OiOO", &o, &force, &c, &d)) return NULL;
+    OSG::VRIntersection ins = self->objPtr->intersect(o ? o->objPtr : 0, force, c ? c->objPtr : 0, d ? parseVec3dList(d) : Vec3d(0,0,-1));
     if (ins.hit) Py_RETURN_TRUE;
     else Py_RETURN_FALSE;
 }
@@ -118,16 +131,19 @@ PyObject* VRPyDevice::destroy(VRPyDevice* self) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyDevice::getBeacon(VRPyDevice* self) {
+PyObject* VRPyDevice::getBeacon(VRPyDevice* self, PyObject *args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getBeacon, Object is invalid"); return NULL; }
-    return VRPyTransform::fromSharedPtr(self->objPtr->getBeacon());
+    int beaconId = 0;
+    if (! PyArg_ParseTuple(args, "|i", &beaconId)) return NULL;
+    return VRPyTransform::fromSharedPtr(self->objPtr->getBeacon(beaconId));
 }
 
 PyObject* VRPyDevice::setBeacon(VRPyDevice* self, PyObject *args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::setBeacon, Object is invalid"); return NULL; }
     VRPyTransform* beacon = NULL;
-    if (! PyArg_ParseTuple(args, "O", &beacon)) return NULL;
-    self->objPtr->setBeacon(beacon->objPtr);
+    int beaconId = 0;
+    if (! PyArg_ParseTuple(args, "O|i", &beacon, &beaconId)) return NULL;
+    self->objPtr->setBeacon(beacon->objPtr, beaconId);
     Py_RETURN_TRUE;
 }
 

@@ -13,7 +13,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 
-VRObjectPtr VRAvatar::initRay() {
+VRObjectPtr VRAvatar::initRay(int beaconID) {
     VRGeoData rayData;
     int N = 100;
     float L = 50;
@@ -29,7 +29,7 @@ VRObjectPtr VRAvatar::initRay() {
     mat->setLineWidth(6);
     mat->setLit(0);
 
-    VRGeometryPtr ray = rayData.asGeometry(this->deviceName + "_av_ray");
+    VRGeometryPtr ray = rayData.asGeometry(this->deviceName + "_" + to_string(beaconID) + "_av_ray");
     ray->setMaterial(mat);
     return ray;
 }
@@ -78,24 +78,22 @@ VRAvatar::VRAvatar(string name) {
 VRAvatar::~VRAvatar() {}
 
 void VRAvatar::enableAvatar(string avatar, int i) { if (beacons[i].avatars.count(avatar)) beacons[i].avatars[avatar]->show(); }
-void VRAvatar::enableAvatar(string avatar) { enableAvatar(avatar, 0); }
 void VRAvatar::disableAvatar(string avatar, int i) { if (beacons[i].avatars.count(avatar)) beacons[i].avatars[avatar]->hide(); }
-void VRAvatar::disableAvatar(string avatar) { disableAvatar(avatar, 0); }
 
 
-void VRAvatar::addBeacon() {
+int VRAvatar::addBeacon() {
     map<string, VRObjectPtr> m;
     Beacon newB{0, 0, m};
     beacons.push_back(newB);
 
     int id = beacons.size()-1;
 
-    beacons[id].beacon = VRTransform::create(this->deviceName + "_beacon_" + to_string(id));
+    beacons[id].beacon = VRTransform::create(this->deviceName + "_" + to_string(id) + "_beacon");
     beacons[id].beacon->setPersistency(0);
-    beacons[id].tmpContainer = VRTransform::create(this->deviceName + "_tmp_beacon_" + to_string(id));
+    beacons[id].tmpContainer = VRTransform::create(this->deviceName + "_" + to_string(id) + "_tmp_beacon");
     beacons[id].tmpContainer->setPersistency(0);
 
-    beacons[id].avatars["ray"] = initRay();
+    beacons[id].avatars["ray"] = initRay(id);
     //newB.avatars["cone"] = initCone();
     //newB.avatars["broadray"] = initBroadRay();
 
@@ -105,24 +103,22 @@ void VRAvatar::addBeacon() {
     deviceRoot->addChild(beacons[id].beacon);
 
     //return beacons.back();
+    return id;
 }
 
 VRTransformPtr VRAvatar::getBeaconRoot() {
     return deviceRoot;
 }
 
+// TODO: check if beacon exists before attempt to return
 VRTransformPtr VRAvatar::getBeacon(int i) { return beacons[i].beacon; }
-VRTransformPtr VRAvatar::getBeacon() { return beacons[0].beacon; }
-
 VRTransformPtr VRAvatar::editBeacon(int i) { return beacons[i].tmpContainer?beacons[i].tmpContainer:beacons[i].beacon; }
-VRTransformPtr VRAvatar::editBeacon() { return beacons[0].tmpContainer?beacons[0].tmpContainer:beacons[0].beacon; }
 
 void VRAvatar::setBeacon(VRTransformPtr b, int i) {
     beacons[i].beacon = b;
     beacons[i].tmpContainer = 0;
     for (auto a : beacons[i].avatars) a.second->switchParent(b);
 }
-void VRAvatar::setBeacon(VRTransformPtr b) { setBeacon(b, 0);}
 
 void VRAvatar::updateBeacons() {
     for (auto b : beacons) b.beacon->updateTransform(b.tmpContainer);

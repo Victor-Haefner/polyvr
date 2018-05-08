@@ -23,6 +23,7 @@ class VRMultiTouch : public VRDevice {
             Vec3i pos;
             int eventState = -1;
             Touch(int k = -1);
+            int beaconID;
         };
 
     private:
@@ -47,6 +48,8 @@ class VRMultiTouch : public VRDevice {
 
         float clamp(float v, float m1, float m2);
         bool rescale(float& v, float m1, float m2);
+
+        bool addFinger(int fingerID);
 
     public:
         VRMultiTouch();

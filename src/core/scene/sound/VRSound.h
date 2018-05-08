@@ -27,6 +27,8 @@ class VRSound {
         bool initiated = false;
         bool doUpdate = false;
 
+        double synth_t0 = 0;
+
         bool loop = false;
         float pitch = 1;
         float gain = 1;

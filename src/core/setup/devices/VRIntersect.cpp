@@ -83,7 +83,7 @@ class VRIntersectAction : public IntersectAction {
         }
 };
 
-VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, Line ray) {
+VRIntersection VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray) {
     VRIntersection ins;
     auto tree = wtree.lock();
     if (!tree) return ins;
@@ -125,7 +125,7 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, Line ray) {
     return ins;
 }
 
-VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force) {
+VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force, VRTransformPtr caster, Vec3d dir) {
     vector<VRObjectPtr> trees;
     if (auto sp = wtree.lock()) trees.push_back(sp);
     else for (auto grp : dynTrees) {
@@ -134,7 +134,8 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force) {
 
     VRIntersection ins;
     VRDevice* dev = (VRDevice*)this;
-    VRTransformPtr caster = dev->getBeacon();
+
+    if (caster == 0) caster = dev->getBeacon();
     if (caster == 0) { cout << "Warning: VRIntersect::intersect, caster is 0!\n"; return ins; }
 
     uint now = VRGlobals::CURRENT_FRAME;
@@ -148,13 +149,11 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force) {
         }
 
         Line ray = caster->castRay(t);
-        auto ins_tmp = intersect(t, ray);
+        auto ins_tmp = intersectRay(t, ray);
         if (ins_tmp.hit) return ins_tmp;
     }
     return ins;
 }
-
-VRIntersection VRIntersect::intersect() { return intersect( VRObjectWeakPtr() ); }
 
 VRIntersect::VRIntersect() {
     initCross();

@@ -98,6 +98,9 @@ void VRMouse::multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut) {
     }
 }
 
+/**
+* TODO: Duplicate code with VRMultitouch. Push Method to super class or use Interface?
+*/
 bool VRMouse::calcViewRay(VRCameraPtr cam, Line &line, float x, float y, int W, int H) {
     if (!cam) return false;
     if(W <= 0 || H <= 0) return false;
@@ -158,8 +161,14 @@ void VRMouse::updatePosition(int x, int y) {
 
     //cam->getCam()->calcViewRay(ray,x,y,*v->getViewport());
     calcViewRay(cam, ray, rx,ry,w,h);
+
     editBeacon()->setDir(Vec3d(ray.getDirection()));
     editBeacon()->setFrom(Vec3d(ray.getPosition()));
+
+    // TODO: This would be the better variant (compare VRMultitouch), but causes a compilation error where VRMultitouch does not.
+//    auto p = Pose::create(Vec3d(ray.getPosition()), Vec3d(ray.getDirection()));
+//    p->makeUpOrthogonal();
+//    editBeacon()->setPose(p);
 
     int side = -1;
     if (rx > 0.95) side = 0;

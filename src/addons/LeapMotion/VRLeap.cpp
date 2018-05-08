@@ -100,11 +100,13 @@ void VRLeap::updateHandFromJson(Json::Value& handData, Json::Value& pointableDat
             int type = pointable["type"].asInt();
 
             // Setup joint positions
-            vector<Json::Value> joints = {pointable["carpPosition"],
-                                          pointable["mcpPosition"],
-                                          pointable["pipPosition"],
-                                          pointable["dipPosition"],
-                                          pointable["btipPosition"]};
+            // Joints are numbered from wrist outwards
+            // arrays of 3 floats each
+            vector<Json::Value> joints = {pointable["carpPosition"],    // the position of the base of metacarpal bone
+                                          pointable["mcpPosition"],     // metacarpophalangeal joint, or knuckle, of the finger
+                                          pointable["pipPosition"],     // proximal interphalangeal joint of the finger
+                                          pointable["dipPosition"],     // the position of the base of the distal phalanx
+                                          pointable["btipPosition"]};   // the position of the tip of the distal phalanx
 
             for (auto& jnt : joints) {
                 hand->joints[type].push_back( Vec3d(jnt[0].asFloat(), jnt[1].asFloat(), jnt[2].asFloat()) * 0.001f);
