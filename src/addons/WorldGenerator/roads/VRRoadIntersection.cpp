@@ -53,16 +53,44 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 	};
 
 	auto computeLaneMatches = [&]() {
-	    auto checkDefaultMatch = [](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut) {
+	    auto checkDefaultMatch = [&](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut, VRRoadPtr road1, VRRoadPtr road2) {
             if (Nin == Nout && i != j && reSignIn != reSignOut) return false;
             if (Nin == Nout && i != Nout-j-1 && reSignIn == reSignOut) return false;
+            if (Nin > Nout) {
+                auto getRoadConnectionAngle = [&](VRRoadPtr road1, VRRoadPtr road2) {
+                    auto& data1 = road1->getEdgePoints( node );
+                    auto& data2 = road2->getEdgePoints( node );
+                    return data1.n.dot(data2.n);
+                    //return data1.n.cross(data2.n);
+                };
+                auto getRoadTurnLeft = [&](VRRoadPtr road1, VRRoadPtr road2) {
+                    auto& data1 = road1->getEdgePoints( node );
+                    auto& data2 = road2->getEdgePoints( node );
+                    Vec3d w = data1.n.cross(data2.n);
+                    float a = asin( w.length() );
+                    if (w[1] < 0) a = -a;
+                    return a;
+                };
+                bool parallel  = bool( getRoadConnectionAngle(road1, road2) < -0.8 );
+                bool left  = bool( getRoadTurnLeft(road1, road2) < 0);
+
+                if (reSignIn<0) i=Nin-i-1;  //making sure indexes stay consistent, independent of road-direction
+                if (reSignOut<0) j=Nout-j-1;
+                if (parallel && i!=Nout-j-1) return false; //matching way-through
+                if (!parallel && (i!=Nin-1 || j!=0 || !left) && ((i!=0 || j!=Nout-1) || left)) return false; //one left turn, one right turn
+                if (!parallel && i>0 && i<Nin-1) return false; //everything not being most left or most right lane
+            }
             if (Nin == 1 || Nout == 1) return true;
             return true;
         };
 
-	    auto checkContinuationMatch = [](int i, int j, int Nin, int Nout) {
+	    auto checkContinuationMatch = [](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut) {
 	        if (Nout == Nin && i == j) return true;
-	        if (Nout > Nin && i == Nout-j-1) return true; // TODO
+	        //if (Nout > Nin && i == j-1) return true;
+	        //if (Nout > Nin && i< Nin/2 && j< Nout/2 && i == Nout-j-1) return true; // TODO
+            //if (Nout > Nin && i>= Nin/2 && j> Nout/2 && i == j) return true;
+            if (Nout > Nin && reSignIn<0 && i == j) return true;
+            if (Nout > Nin && reSignIn>0 && i == j-1) return true;
 	        if (Nout < Nin && Nin-i-1 == j) return true; // TODO
             //if (Nin == Nout && i != j && reSignIn != reSignOut) return false;
             //if (Nin == Nout && i != Nout-j-1 && reSignIn == reSignOut) return false;
@@ -85,11 +113,11 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                         auto laneOut = roadFront2->outLanes[j];
                         bool match = false;
                         switch (type) {
-                            case CONTINUATION: match = checkContinuationMatch(i,j,Nin, Nout); break;
+                            case CONTINUATION: match = checkContinuationMatch(i,j,Nin, Nout, reSign1, reSign2); break;
                             //case FORK: break;
                             //case MERGE: break;
                             //case UPLINK: break;
-                            default: match = checkDefaultMatch(i,j,Nin, Nout, reSign1, reSign2); break;
+                            default: match = checkDefaultMatch(i,j,Nin, Nout, reSign1, reSign2, road1, road2); break;
                         }
                         if (match) laneMatches.push_back(make_pair(laneIn, laneOut));
                     }
@@ -98,8 +126,9 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
         }
 	};
 
-	auto mergeMatchingLanes = [&]() {
-	    map<VREntityPtr, Vec3d> displacements; // map roads to displace!
+	auto mergeMatchingLanes = [&]() { ///FELIX - change offsets to middle road, apply new normal
+	    map<VREntityPtr, Vec3d> displacementsA; // map roads to displace!
+	    map<VREntityPtr, Vec3d> displacementsB; // map roads to displace!
 	    map<VREntityPtr, bool> processedLanes; // keep list of already processed lanes
         for (auto match : laneMatches) {
             auto laneIn = match.first;
@@ -121,7 +150,8 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto node2 = nodeEnt2->getEntity("node");
                 auto norm2 = nodeEnt2->getVec3("direction");
                 nodeEnt1->set("node", node2->getName());
-                if (D > 0) displacements[roadIn] = X;
+                if (D > 0) displacementsA[roadIn] = X;
+                //if (D > 0) displacementsA[roadIn] = 0;
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
             }
             if (Nin < Nout) {
@@ -130,22 +160,40 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto node2 = nodes2[1]->getEntity("node");
                 auto norm2 = nodes2[1]->getVec3("direction");
                 nodeEnt2->set("node", node1->getName());
-                if (D > 0) displacements[roadOut] = -X;
+                if (D > 0) displacementsA[roadIn] = 0;
+                if (D > 0) displacementsB[roadOut] = -X;
+                //if (D > 0) displacementsA[roadOut] = -X;
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
+                //roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
             }
 
             processedLanes[laneIn] = true;
             processedLanes[laneOut] = true;
         }
 
-        if (displacements.size() == 0) return;
+        if (displacementsA.size() == 0) return;
 
         for (auto rfront : roadFronts) {// shift whole road fronts!
             auto road = rfront->road;
             auto rEnt = road->getEntity();
-            if (!displacements.count(rEnt)) continue;
-            Vec3d X = displacements[rEnt];
-            road->setOffset(X.dot(rfront->pose.x())*rfront->dir);
+            if (!displacementsA.count(rEnt)) continue;
+            Vec3d X = displacementsA[rEnt];
+            float offsetter = X.dot(rfront->pose.x())*rfront->dir;
+            if (rfront->dir>0) {
+                road->setOffsetIn(0.0);
+                road->setOffsetOut(offsetter);
+            } else {
+                road->setOffsetIn(offsetter);
+                road->setOffsetOut(0.0);
+            }
+            /*if (offsetter>0) {
+                    road->setOffsetIn(offsetter);
+                    road->setOffsetOut(0);
+            }
+            if (offsetter<0) {
+                    road->setOffsetIn(0);
+                    road->setOffsetOut(offsetter);
+            }*/
 
             for (auto laneIn : rfront->inLanes) {
                 if (processedLanes.count(laneIn)) continue;
