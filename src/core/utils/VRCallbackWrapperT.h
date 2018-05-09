@@ -24,7 +24,7 @@ if (i < params.size()) { \
     } \
 } else { \
     int j = i - (N-defaultParams.size()); \
-    if (! toValue(defaultParams[j], t)) { \
+    if (! toValue( string(&defaultParams[j][0]), t)) { \
         VRCallbackWrapperBase::err = "Internal error, function argument "+toString(i)+" expects a "+typeName(t)+", but got default argument "+defaultParams[j]; \
         return false; \
     } \

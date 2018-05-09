@@ -6,7 +6,8 @@
 using namespace OSG;
 
 template<> bool toValue(PyObject* obj, VRTextureRenderer::CHANNEL& e) {
-    return toValue( PyString_AsString(obj) , e);
+    string str = PyString_AsString(obj);
+    return toValue( str , e);
 }
 
 simpleVRPyType(TextureRenderer, New_VRObjects_ptr);
