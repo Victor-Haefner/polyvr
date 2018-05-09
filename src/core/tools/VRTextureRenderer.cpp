@@ -38,9 +38,11 @@ template<> string typeName(const VRTextureRenderer::CHANNEL& o) { return "VRText
 
 template<> int toValue(stringstream& ss, VRTextureRenderer::CHANNEL& e) {
     string s = ss.str();
+    cout << "VRTextureRenderer::toValue " << s << endl;
     if (s == "RENDER") { e = VRTextureRenderer::RENDER; return true; }
     if (s == "DIFFUSE") { e = VRTextureRenderer::DIFFUSE; return true; }
     if (s == "NORMAL") { e = VRTextureRenderer::NORMAL; return true; }
+    cout << "VRTextureRenderer::toValue |" << s << "| AAA" << endl;
     return false;
 }
 
@@ -252,6 +254,8 @@ void VRTextureRenderer::resetChannelFP() {
 }
 
 VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
+    if (!cam) return 0;
+
     if (!data->ract) {
         data->ract = RenderAction::create();
         data->win = PassiveWindow::create();

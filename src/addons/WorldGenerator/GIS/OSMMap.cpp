@@ -209,14 +209,25 @@ vector<OSMWayPtr> OSMMap::splitWay(OSMWayPtr way, int segN) {
     OSMWayPtr w = 0;
     for (int s=0; s<segN && k<way->nodes.size(); s++) {
         w = OSMWayPtr( new OSMWay(way->id + "_" + toString(s)) );
+        w->tags = way->tags;
+        ways[w->id] = w;
         for (int i=0; i<segL; i++) {
+            if (i == 0 && k != 0) k--;
             w->nodes.push_back( way->nodes[k] );
             k++;
             if (k >= way->nodes.size()) break;
         }
+        for (auto n : w->nodes) {
+            int N = nodes[n]->ways.size();
+            for (int i=0; i<N; i++) {
+                if (nodes[n]->ways[i] == way->id) { nodes[n]->ways[i] = w->id; break; }
+                else if (i == N-1) { nodes[n]->ways.push_back(w->id); break; }
+            }
+        }
         res.push_back(w);
     }
 
+    ways.erase(way->id);
     for (; k<way->nodes.size(); k++) w->nodes.push_back( way->nodes[k] );
     return res;
 }
