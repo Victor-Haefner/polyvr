@@ -15,7 +15,7 @@ PyMethodDef VRPyTextureRenderer::methods[] = {
     {"setup", PyWrapOpt(TextureRenderer, setup, "Setup texture renderer, cam, width, height", "0", void, VRCameraPtr, int, int, bool) },
     {"getMaterial", PyWrap(TextureRenderer, getMaterial, "Get the material with the rendering", VRMaterialPtr) },
     {"setActive", PyWrap(TextureRenderer, setActive, "Activate and deactivate the texture rendering", void, bool) },
-    {"renderOnce", PyWrap(TextureRenderer, renderOnce, "Render once", VRTexturePtr, VRTextureRenderer::CHANNEL) },
+    {"renderOnce", PyWrapOpt(TextureRenderer, renderOnce, "Render once", "RENDER", VRTexturePtr, VRTextureRenderer::CHANNEL) },
     {"getCamera", PyWrap(TextureRenderer, getCamera, "Get camera", VRCameraPtr) },
     {NULL}  /* Sentinel */
 };
