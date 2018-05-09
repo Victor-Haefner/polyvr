@@ -85,6 +85,8 @@ class OSMMap {
         OSMRelationPtr getRelation(string id);
 
         double getMemoryConsumption();
+
+        vector<OSMWayPtr> splitWay(OSMWayPtr way, int segN);
 };
 
 OSG_END_NAMESPACE;

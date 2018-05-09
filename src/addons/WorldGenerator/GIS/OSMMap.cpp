@@ -145,7 +145,7 @@ void OSMMap::readFile(string path) {
     for (auto way : ways) {
         for (auto nID : way.second->nodes) {
             auto n = getNode(nID);
-            if (!n) { cout << " Error in OSMMap::readFile: no node with ID " << nID << endl; continue; }
+            if (!n) { /*cout << " Error in OSMMap::readFile: no node with ID " << nID << endl;*/ continue; }
             way.second->polygon.addPoint(Vec2d(n->lon, n->lat));
             n->ways.push_back(way.second->id);
         }
@@ -200,6 +200,26 @@ OSMNodePtr OSMMap::getNode(string id) { return nodes[id]; }
 OSMWayPtr OSMMap::getWay(string id) { return ways[id]; }
 OSMRelationPtr OSMMap::getRelation(string id) { return relations[id]; }
 void OSMMap::reload() { clear(); readFile(filepath); }
+
+vector<OSMWayPtr> OSMMap::splitWay(OSMWayPtr way, int segN) {
+    vector<OSMWayPtr> res;
+    int segL = way->nodes.size()/segN;
+
+    int k = 0;
+    OSMWayPtr w = 0;
+    for (int s=0; s<segN && k<way->nodes.size(); s++) {
+        w = OSMWayPtr( new OSMWay(way->id + "_" + toString(s)) );
+        for (int i=0; i<segL; i++) {
+            w->nodes.push_back( way->nodes[k] );
+            k++;
+            if (k >= way->nodes.size()) break;
+        }
+        res.push_back(w);
+    }
+
+    for (; k<way->nodes.size(); k++) w->nodes.push_back( way->nodes[k] );
+    return res;
+}
 
 void OSMMap::readNode(xmlpp::Element* element) {
     OSMNodePtr node = OSMNodePtr( new OSMNode(element) );

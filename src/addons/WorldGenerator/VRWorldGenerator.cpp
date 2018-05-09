@@ -235,8 +235,17 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         ;
     };
 
-    auto addRoad = [&](OSMWayPtr& way, string tag, float width, bool pedestrian) {
+    std::function<void(OSMWayPtr&, string, float, bool)> addRoad = [&](OSMWayPtr& way, string tag, float width, bool pedestrian) -> void {
         if (way->nodes.size() < 2) return;
+
+        int Nsegments = 0.5 + way->nodes.size()/20.0;
+        if (Nsegments > 1) { // too long, split it up!
+            for (auto w : osmMap->splitWay(way, Nsegments)) {
+                addRoad(w, tag, width, pedestrian);
+            }
+            return;
+        }
+
         string name = "road";
         if (way->hasTag("name")) name = way->tags["name"];
 
@@ -385,7 +394,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                 auto patch = VRGeometry::create("patch");
                 auto poly = wayToPolygon(way);
                 if (poly->size() == 0) continue;
-                for (auto p : poly->gridSplit(1)) {
+                for (auto p : poly->gridSplit(5)) {
                     if (terrain) terrain->elevatePolygon(p, 0.03, false);
                     Triangulator tri;
                     tri.add(*p);

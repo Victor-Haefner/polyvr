@@ -347,6 +347,16 @@ void VRRoadIntersection::computeTrafficLights() {
 
     */
 
+    for (auto roadFront : roadFronts) {
+        auto roadE = roadFront->road->getEntity();
+        auto signs = roadE->getAllEntities("signs");
+        for (auto signE : signs) {
+            if (signE->is_a("TrafficSignal")) {
+                cout << " VRRoadIntersection::computeTrafficLights " << entity->getName() << "  " << signE->getName() << endl;
+            }
+        }
+    }
+
     /*auto node = entity->getEntity("node");
     for (auto road : inLanes) {
         auto eP = road.first->getEdgePoints( node );
