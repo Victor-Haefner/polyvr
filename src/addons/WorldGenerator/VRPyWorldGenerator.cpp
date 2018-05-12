@@ -45,6 +45,7 @@ PyMethodDef VRPyRoadBase::methods[] = {
 };
 
 PyMethodDef VRPyRoad::methods[] = {
+    {"addTrafficLight", PyWrap( Road, addTrafficLight, "Add a traffic light", VREntityPtr ) },
     {NULL}  /* Sentinel */
 };
 

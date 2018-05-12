@@ -26,6 +26,8 @@
 #include "core/tools/VRText.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRTimer.h"
+#include "core/utils/VRFunction.h"
+#include "core/scene/VRScene.h"
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGMatrix22.h>
@@ -36,7 +38,11 @@ using namespace OSG;
 
 template<> string typeName(const VRRoadNetworkPtr& o) { return "RoadNetwork"; }
 
-VRRoadNetwork::VRRoadNetwork() : VRRoadBase("RoadNetwork") {}
+VRRoadNetwork::VRRoadNetwork() : VRRoadBase("RoadNetwork") {
+    updateCb = VRUpdateCb::create( "roadNetworkUpdate", boost::bind(&VRRoadNetwork::update, this) );
+    VRScene::getCurrent()->addUpdateFkt(updateCb);
+}
+
 VRRoadNetwork::~VRRoadNetwork() {}
 
 VRRoadNetworkPtr VRRoadNetwork::create() {
@@ -221,19 +227,6 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
     roads.push_back(road);
     roadsByEntity[road->getEntity()] = road;
     return road;
-}
-
-VRTrafficLightPtr VRRoadNetwork::addTrafficLight( string name, VREntityPtr lane, VREntityPtr laneNode, string group ) {
-    // TODO
-    //  - get road at node
-    //  - add traffic light to semantic layer
-
-	auto lE = ontology.lock()->addEntity( name, "TrafficLight");
-
-    VRTrafficLightsPtr system;
-    if (group != "") system = VRTrafficLights::create(group);
-    auto l = VRTrafficLight::create(lane, system);
-    return l;
 }
 
 void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
@@ -1017,6 +1010,10 @@ double VRRoadNetwork::getMemoryConsumption() {
     res += asphaltArrow->getMemoryConsumption();
 
     return res/1048576.0;
+}
+
+void VRRoadNetwork::update() {
+    for (auto i : intersections) i->update();
 }
 
 

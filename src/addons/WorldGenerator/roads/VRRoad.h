@@ -34,6 +34,7 @@ class VRRoad : public VRRoadBase {
         static VRRoadPtr create();
 
         void addParkingLane( int direction, float width, int capacity, string type );
+        VREntityPtr addTrafficLight();
 
         void setOffsetIn(float o);
         void setOffsetOut(float o);

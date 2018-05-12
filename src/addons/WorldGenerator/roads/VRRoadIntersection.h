@@ -42,13 +42,11 @@ class VRRoadIntersection : public VRRoadBase {
         Vec3d median;
 
         vector<shared_ptr<RoadFront>> roadFronts;
-        /*vector<VRRoadPtr> roads;
-        map<VRRoadPtr, vector<VREntityPtr>> inLanes; // all lanes going in of the intersection
-        map<VRRoadPtr, vector<VREntityPtr>> outLanes; // all lanes going out the intersection*/
-
         vector<Vec3d> intersectionPoints;
         vector<pair<VREntityPtr, VREntityPtr>> laneMatches; // matches of ingoing lanes with outgoing lanes
         map<VREntityPtr, vector<VREntityPtr>> nextLanes; // sequences of lanes, for example ingoing -> outgoing, or ingoing -> lane -> outgoing
+
+        VRTrafficLightsPtr system;
 
     public:
         VRRoadIntersection();
@@ -56,7 +54,7 @@ class VRRoadIntersection : public VRRoadBase {
 
         static VRRoadIntersectionPtr create();
 
-        VREntityPtr addTrafficLight( PosePtr p, string asset, Vec3d root );
+        VREntityPtr addTrafficLight( PosePtr p, string asset, Vec3d root, VREntityPtr lane, VREntityPtr signal );
         VRGeometryPtr createGeometry();
 
         void computePatch();
@@ -66,6 +64,8 @@ class VRRoadIntersection : public VRRoadBase {
         void computeTrafficLights();
 
         void addRoad(VRRoadPtr road);
+
+        void update();
 };
 
 OSG_END_NAMESPACE;

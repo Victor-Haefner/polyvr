@@ -1,6 +1,7 @@
 #include "VRRoadIntersection.h"
 #include "VRRoadNetwork.h"
 #include "VRRoad.h"
+#include "../traffic/VRTrafficLights.h"
 #include "../VRWorldGenerator.h"
 #include "../terrain/VRTerrain.h"
 #include "core/utils/toString.h"
@@ -322,13 +323,42 @@ void VRRoadIntersection::addRoad(VRRoadPtr road) {
     road->getEntity()->add("intersections", entity->getName());
 }
 
-VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d root) {
+VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d root, VREntityPtr lane, VREntityPtr signal) {
+    if (!system) system = VRTrafficLights::create();
+
     float R = 0.05;
-    if (auto geo = world.lock()->getAssetManager()->copy(asset, p)) {
-        addChild(geo);
-        geo->move(R);
+    VRTransformPtr geo = world.lock()->getAssetManager()->copy(asset, Pose::create());
+    VRGeometryPtr red, orange, green;
+    if (geo) {
+        red = dynamic_pointer_cast<VRGeometry>( geo->find("Red") );
+        orange = dynamic_pointer_cast<VRGeometry>( geo->find("Orange") );
+        green = dynamic_pointer_cast<VRGeometry>( geo->find("Green") );
+    } else {
+        auto box = VRGeometry::create("trafficLight");
+        box->setPrimitive("Box", "0.2 0.2 0.6 1 1 1");
+        box->setColor("grey");
+        geo = box;
+        red = VRGeometry::create("trafficLight");
+        red->setPrimitive("Sphere", "0.115 2");
+        box->addChild(red);
+        orange = VRGeometry::create("trafficLight");
+        orange->setPrimitive("Sphere", "0.115 2");
+        box->addChild(orange);
+        green = VRGeometry::create("trafficLight");
+        green->setPrimitive("Sphere", "0.115 2");
+        box->addChild(green);
+        red->translate(Vec3d(0, 0, 0.2));
+        green->translate(Vec3d(0, 0, -0.2));
     }
+    geo->move(R);
     VRGeometryPtr pole = addPole(root, p->pos(), R);
+
+    //auto light = VRTrafficLight::create(nextLanes[lane], system); // TODO: better data for trafficlight groups
+    auto light = VRTrafficLight::create(lane, system, p);
+    light->addChild(geo);
+    light->setupBulbs(red, orange, green);
+    light->setEntity(signal);
+    addChild(light);
     addChild(pole);
     return 0;
 }
@@ -381,7 +411,7 @@ void VRRoadIntersection::computeTrafficLights() {
         for (auto lane : roadFront->inLanes) {
             auto lP = getLaneNode(lane);
             //auto P = Pose::create( p.pos() + Vec3d(0,3,0), Vec3d(0,-1,0), p.dir());
-            addTrafficLight(lP, "trafficLight", root);
+            addTrafficLight(lP, "trafficLight", root, lane, signal);
         }
     }
 
@@ -691,4 +721,11 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
     computePatch();
     elevateRoadNodes();
 }
+
+void VRRoadIntersection::update() {
+    if (!system) return;
+    system->update();
+}
+
+
 

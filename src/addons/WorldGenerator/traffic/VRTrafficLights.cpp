@@ -1,14 +1,140 @@
 #include "VRTrafficLights.h"
+#include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/material/VRMaterial.h"
+#include "core/math/pose.h"
 
 using namespace OSG;
 
-VRTrafficLight::VRTrafficLight(VREntityPtr lane, VRTrafficLightsPtr system) : VRTransform("bridge"), lane(lane), system(system) {}
+VRTrafficLight::VRTrafficLight(VREntityPtr lane, VRTrafficLightsPtr system) : VRTransform("trafficLight"), lane(lane), system(system) {}
 VRTrafficLight::~VRTrafficLight() {}
 
-VRTrafficLightPtr VRTrafficLight::create(VREntityPtr lane, VRTrafficLightsPtr system) { return VRTrafficLightPtr(new VRTrafficLight(lane, system)); }
+VRTrafficLightPtr VRTrafficLight::create(VREntityPtr lane, VRTrafficLightsPtr system, PosePtr p) {
+    auto l = VRTrafficLightPtr(new VRTrafficLight(lane, system));
+    l->setPose(p);
+    system->addLight(l);
+    return l;
+}
+
+void VRTrafficLight::setupBulbs(VRGeometryPtr red, VRGeometryPtr orange, VRGeometryPtr green) {
+    auto redOff = VRMaterial::get("redOff");
+    auto orangeOff = VRMaterial::get("orangeOff");
+    auto greenOff = VRMaterial::get("greenOff");
+
+    red->setMaterial(redOff);
+    orange->setMaterial(orangeOff);
+    green->setMaterial(greenOff);
+
+    this->red = red;
+    this->orange = orange;
+    this->green = green;
+}
+
+void VRTrafficLight::setState(string s) {
+    auto sys = system.lock();
+    if (s[0] != state[0]) { if (s[0] == '1') red->setMaterial(sys->redOn); else red->setMaterial(sys->redOff); }
+    if (s[1] != state[1]) { if (s[1] == '1') orange->setMaterial(sys->orangeOn); else orange->setMaterial(sys->orangeOff); }
+    if (s[2] != state[2]) { if (s[2] == '1') green->setMaterial(sys->greenOn); else green->setMaterial(sys->greenOff); }
+    state = s;
+}
 
 
-VRTrafficLights::VRTrafficLights(string group) : group(group) {}
+
+VRTrafficLights::VRTrafficLights() {
+    redOff = VRMaterial::get("redOff");
+    orangeOff = VRMaterial::get("orangeOff");
+    greenOff = VRMaterial::get("greenOff");
+    redOn = VRMaterial::get("redOn");
+    orangeOn = VRMaterial::get("orangeOn");
+    greenOn = VRMaterial::get("greenOn");
+
+    static bool doInitColors = true;
+    if (doInitColors) {
+        doInitColors = false;
+        float C = 0.3;
+        redOff->setDiffuse(Color3f(C,0,0));
+        orangeOff->setDiffuse(Color3f(C,C,0));
+        greenOff->setDiffuse(Color3f(0,C,0));
+        redOn->setDiffuse(Color3f(1.0,0,0));
+        orangeOn->setDiffuse(Color3f(1.0,1.0,0));
+        greenOn->setDiffuse(Color3f(0,1.0,0));
+        redOn->setLit(false);
+        orangeOn->setLit(false);
+        greenOn->setLit(false);
+    }
+}
+
 VRTrafficLights::~VRTrafficLights() {}
+VRTrafficLightsPtr VRTrafficLights::create() { return VRTrafficLightsPtr(new VRTrafficLights()); }
 
-VRTrafficLightsPtr VRTrafficLights::create(string group) { return VRTrafficLightsPtr(new VRTrafficLights(group)); }
+void VRTrafficLights::addLight(VRTrafficLightPtr light) {
+    auto opposite = [&](VRTrafficLightPtr l1, VRTrafficLightPtr l2) { // TODO: this is pretty crappy..
+        /*auto lightE1 = l1->getEntity();
+        auto lightE2 = l2->getEntity();
+        auto laneE1 = l1->lane;
+        auto laneE2 = l2->lane;*/
+
+        auto p1 = l1->getPose();
+        auto p2 = l2->getPose();
+
+        Vec3d d1 = p1->up();
+        Vec3d d2 = p2->up();
+
+        d1.normalize();
+        d2.normalize();
+
+        float a = abs(d1.dot(d2));
+        cout << "  VRTrafficLights::addLight opposite " << a << "   " << d1 << "   " << d2 << "   " << l1->getName() << "  " << l2->getName() << endl;
+        if (a > 0.5) return true;
+
+        //return true;
+        return false;
+    };
+
+    cout << " VRTrafficLights::addLight" << endl;
+    for (auto& group : lights) {
+        int offset = group.first;
+        for (auto& l : group.second) {
+            if (!opposite(l, light)) continue;
+            group.second.push_back(light);
+            return;
+        }
+    }
+
+    // new group -> recompute keys
+    lights[-1].push_back(light);
+    map<int, vector<VRTrafficLightPtr> > newLights;
+    for (auto& group : lights) {
+        int i = newLights.size();
+        int grp = i*60.0/lights.size();
+        newLights[grp] = group.second;
+    }
+    lights = newLights;
+}
+
+void VRTrafficLights::update() { // TODO, use time instead of counter!
+    static int t = 0;
+    static int t1 = 0; t1++;
+    if (t1 > 120) { t1 = 0; t++; }
+
+    auto orangeBlinking = [&](VRTrafficLightPtr& l) {
+        if (t ==  0) l->setState("010");
+        if (t == 30) l->setState("000");
+    };
+
+    auto mainCycle = [&](VRTrafficLightPtr& l, int offset) {
+        int a = (t+offset)%60;
+        if (a ==  0) l->setState("100");
+        if (a == 30) l->setState("110");
+        if (a == 34) l->setState("001");
+        if (a == 56) l->setState("010");
+    };
+
+    for (auto& group : lights) {
+        int offset = group.first;
+        for (auto& l : group.second) {
+            //orangeBlinking(l);
+            mainCycle(l, offset);
+        }
+    }
+}
+

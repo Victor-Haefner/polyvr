@@ -33,6 +33,8 @@ class VRRoadNetwork : public VRRoadBase {
         VRPathtoolPtr tool;
         int nextRoadID = 0;
 
+        VRUpdateCbPtr updateCb;
+
         VRGeometryPtr arrows;
         VRTexturePtr arrowTexture;
         map<Vec4i, int> arrowTemplates;
@@ -82,7 +84,6 @@ class VRRoadNetwork : public VRRoadBase {
         VRRoadPtr addWay( string name, vector<VREntityPtr> paths, int rID, string type );
         VRRoadPtr addRoad( string name, string type, VREntityPtr node1, VREntityPtr node2, Vec3d norm1, Vec3d norm2, int Nlanes );
         VRRoadPtr addLongRoad( string name, string type, vector<VREntityPtr> nodes, vector<Vec3d> normals, int Nlanes );
-        VRTrafficLightPtr addTrafficLight( string name, VREntityPtr lane, VREntityPtr laneNode, string group );
 
         VRTunnelPtr addTunnel(VRRoadPtr road);
         VRBridgePtr addBridge(VRRoadPtr road);
@@ -105,6 +106,7 @@ class VRRoadNetwork : public VRRoadBase {
 
         void clear();
         void compute();
+        void update();
 
         void test1();
 

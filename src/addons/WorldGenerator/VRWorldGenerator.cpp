@@ -437,12 +437,10 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             }
 
             if (startswith(tag.first, "traffic_signals")) {
-                auto signalEnt = ontology->addEntity("trafficlight", "TrafficLight");
                 for (auto way : node->ways) {
                     if (!RoadEntities.count(way)) continue;
-                    auto roadEnt = RoadEntities[node->ways[0]]->getEntity();
-                    roadEnt->add("signs",signalEnt->getName());
-                    signalEnt->set("road",roadEnt->getName());
+                    auto road = RoadEntities[node->ways[0]];
+                    road->addTrafficLight();
                 }
             }
 

@@ -301,6 +301,17 @@ void VRRoad::addParkingLane( int direction, float width, int capacity, string ty
     }
 }
 
+VREntityPtr VRRoad::addTrafficLight() {
+    if (auto o = ontology.lock()) {
+        auto roadEnt = getEntity();
+        auto signalEnt = o->addEntity("trafficlight", "TrafficLight");
+        roadEnt->add("signs",signalEnt->getName());
+        signalEnt->set("road",roadEnt->getName());
+        return signalEnt;
+    }
+    return 0;
+}
+
 void VRRoad::setOffsetIn(float o) { offsetIn = o; }
 void VRRoad::setOffsetOut(float o) { offsetOut = o; }
 
