@@ -20,9 +20,9 @@ void VRTrafficLight::setupBulbs(VRGeometryPtr red, VRGeometryPtr orange, VRGeome
     auto orangeOff = VRMaterial::get("orangeOff");
     auto greenOff = VRMaterial::get("greenOff");
 
-    red->setMaterial(redOff);
-    orange->setMaterial(orangeOff);
-    green->setMaterial(greenOff);
+    if (red) red->setMaterial(redOff);
+    if (orange) orange->setMaterial(orangeOff);
+    if (green) green->setMaterial(greenOff);
 
     this->red = red;
     this->orange = orange;
@@ -31,9 +31,9 @@ void VRTrafficLight::setupBulbs(VRGeometryPtr red, VRGeometryPtr orange, VRGeome
 
 void VRTrafficLight::setState(string s) {
     auto sys = system.lock();
-    if (s[0] != state[0]) { if (s[0] == '1') red->setMaterial(sys->redOn); else red->setMaterial(sys->redOff); }
-    if (s[1] != state[1]) { if (s[1] == '1') orange->setMaterial(sys->orangeOn); else orange->setMaterial(sys->orangeOff); }
-    if (s[2] != state[2]) { if (s[2] == '1') green->setMaterial(sys->greenOn); else green->setMaterial(sys->greenOff); }
+    if (s[0] != state[0] && red) { if (s[0] == '1') red->setMaterial(sys->redOn); else red->setMaterial(sys->redOff); }
+    if (s[1] != state[1] && orange) { if (s[1] == '1') orange->setMaterial(sys->orangeOn); else orange->setMaterial(sys->orangeOff); }
+    if (s[2] != state[2] && green) { if (s[2] == '1') green->setMaterial(sys->greenOn); else green->setMaterial(sys->greenOff); }
     state = s;
 }
 
