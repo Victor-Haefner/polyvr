@@ -161,6 +161,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto node2 = nodes2[1]->getEntity("node");
                 auto norm2 = nodes2[1]->getVec3("direction");
                 nodeEnt2->set("node", node1->getName());
+                //if (lane->is_a("ParkingLane")) continue;
                 if (D > 0) displacementsA[roadIn] = 0;
                 if (D > 0) displacementsB[roadOut] = -X;
                 //if (D > 0) displacementsA[roadOut] = -X;
@@ -174,6 +175,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 
         if (displacementsA.size() == 0) return;
 
+        ///FELIX: clean up offsetter, not working for parking lanes atm
         for (auto rfront : roadFronts) {// shift whole road fronts!
             auto road = rfront->road;
             auto rEnt = road->getEntity();
@@ -181,7 +183,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             Vec3d X = displacementsA[rEnt];
             float offsetter = X.dot(rfront->pose.x())*rfront->dir;
             if (rfront->dir>0) {
-                road->setOffsetIn(0.0);
+                road->setOffsetIn(0.0); //TODO: apply both pffsetter, A B
                 road->setOffsetOut(offsetter);
             } else {
                 road->setOffsetIn(offsetter);
