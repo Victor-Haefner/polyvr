@@ -27,6 +27,7 @@ class Pose {
         void setPos(Vec3d p);
         void setDir(Vec3d d);
         void setUp(Vec3d u);
+        void setScale(Vec3d s);
         void makeUpOrthogonal();
         void makeDirOrthogonal();
 
@@ -34,6 +35,7 @@ class Pose {
         Vec3d dir() const;
         Vec3d up() const;
         Vec3d x() const;
+        Vec3d scale() const;
 
         Matrix4d asMatrix() const;
         void invert();
