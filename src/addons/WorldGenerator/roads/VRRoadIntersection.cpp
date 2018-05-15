@@ -165,9 +165,11 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto node2 = nodeEnt2->getEntity("node");
                 auto norm2 = nodeEnt2->getVec3("direction");
                 nodeEnt1->set("node", node2->getName());
-                if (D > 0) displacementsB[roadIn] = X;
+                //if (D > 0) displacementsB[roadIn] = 0; //WIP
+                //if (D > 0) displacementsA[roadOut] = X;
+                if (D > 0) displacementsB[roadIn] = X; //OLD
                 if (D > 0) displacementsA[roadOut] = 0;
-                if (Nin==Nout && D > 0) displacementsB[roadIn] = 0;
+                //if (Nin==Nout && D > 0) displacementsB[roadIn] = 0;
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
             }
             if (Nin < Nout) {
@@ -176,8 +178,10 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto node2 = nodes2[1]->getEntity("node");
                 auto norm2 = nodes2[1]->getVec3("direction");
                 nodeEnt2->set("node", node1->getName());
-                if (D > 0) displacementsB[roadIn] = 0;
-                if (D > 0) displacementsA[roadOut] = -X;                //if (D > 0) displacementsA[roadOut] = -X;
+                //if (D > 0) displacementsB[roadIn] = -X;
+                //if (D > 0) displacementsA[roadOut] = 0;
+                if (D > 0) displacementsB[roadIn] = 0; //OLD
+                if (D > 0) displacementsA[roadOut] = -X;
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
                 //roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
             }
