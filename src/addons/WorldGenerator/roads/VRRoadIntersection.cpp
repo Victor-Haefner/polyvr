@@ -99,6 +99,20 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             return false;
         };
 
+        auto checkForkMatch = [](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut) { ///FORK
+            if (Nout == Nin && i == j) return true;
+	        //if (Nout > Nin && i == j-1) return true;
+	        //if (Nout > Nin && i< Nin/2 && j< Nout/2 && i == Nout-j-1) return true; // TODO
+            //if (Nout > Nin && i>= Nin/2 && j> Nout/2 && i == j) return true;
+            if (Nout > Nin && reSignIn<0 && i == j) return true;
+            if (Nout > Nin && reSignIn>0 && i == j-1) return true;
+	        if (Nout < Nin && Nin-i-1 == j) return true; // TODO
+            //if (Nin == Nout && i != j && reSignIn != reSignOut) return false;
+            //if (Nin == Nout && i != Nout-j-1 && reSignIn == reSignOut) return false;
+            //if (Nin == 1 || Nout == 1) return true;
+            return false;
+        };
+
         for (auto roadFront1 : roadFronts) {
             for (auto roadFront2 : roadFronts) {
                 if (roadFront1 == roadFront2) continue;
@@ -115,7 +129,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                         bool match = false;
                         switch (type) {
                             case CONTINUATION: match = checkContinuationMatch(i,j,Nin, Nout, reSign1, reSign2); break;
-                            //case FORK: break;
+                            case FORK: match = checkForkMatch(i,j,Nin, Nout, reSign1, reSign2); break;
                             //case MERGE: break;
                             //case UPLINK: break;
                             default: match = checkDefaultMatch(i,j,Nin, Nout, reSign1, reSign2, road1, road2); break;
@@ -236,12 +250,35 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
         }
 	};
 
+    auto bridgeForkingLanes = [&]() { ///FORK
+        for (auto match : laneMatches) {
+            auto laneIn = match.first;
+            auto laneOut = match.second;
+
+            float width = laneIn->getValue<float>("width", 0.5);
+            bool pedestrianIn = laneIn->getValue<bool>("pedestrian", false);
+            auto nodes1 = laneIn->getEntity("path")->getAllEntities("nodes");
+            VREntityPtr node1 = *nodes1.rbegin();
+
+            bool pedestrianOut = laneOut->getValue<bool>("pedestrian", false);
+            auto node2 = laneOut->getEntity("path")->getAllEntities("nodes")[0];
+            auto lane = addLane(1, width, pedestrianIn || pedestrianOut);
+            auto nodes = { node1->getEntity("node"), node2->getEntity("node") };
+            auto norms = { node1->getVec3("direction"), node2->getVec3("direction") };
+            auto lPath = addPath("Path", "lane", nodes, norms);
+            lane->add("path", lPath->getName());
+            nextLanes[laneIn].push_back(lane);
+            nextLanes[lane].push_back(laneOut);
+            roads->connectGraph(nodes, norms, lane);
+        }
+	};
+
     getInAndOutLanes();
     computeLaneMatches();
 
     switch (type) {
         case CONTINUATION: mergeMatchingLanes(); break;
-        //case FORK: break;
+        case FORK: bridgeForkingLanes; break;
         //case MERGE: break;
         //case UPLINK: break;
         default: bridgeMatchingLanes(); break;
@@ -577,7 +614,7 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
             bool parallel01 = bool(getRoadConnectionAngle(roadFronts[0]->road, roadFronts[1]->road) < -0.5);
             bool parallel12 = bool(getRoadConnectionAngle(roadFronts[1]->road, roadFronts[2]->road) < -0.5);
             bool parallel02 = bool(getRoadConnectionAngle(roadFronts[2]->road, roadFronts[0]->road) < -0.5);
-            if ((parallel01 && parallel12) || (parallel01 && parallel02) || (parallel12 && parallel02)) type = FORK;
+            if ((parallel01 && parallel12) || (parallel01 && parallel02) || (parallel12 && parallel02)) {cout << "FORK\n"; type = FORK;}
             //type = FORK;
         }
 
