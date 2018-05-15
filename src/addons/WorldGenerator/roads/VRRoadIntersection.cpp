@@ -77,7 +77,8 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 
                 if (reSignIn<0) i=Nin-i-1;  //making sure indexes stay consistent, independent of road-direction
                 if (reSignOut<0) j=Nout-j-1;
-                if (parallel && i!=Nout-j-1) return false; //matching way-through
+                if (parallel && Nin<=Nout+1 && i!=Nout-j-1) return false; //matching way-through
+                if (parallel &&  Nin>Nout+1 && i!=Nout-j) return false; //matching way-through
                 if (!parallel && (i!=Nin-1 || j!=0 || !left) && ((i!=0 || j!=Nout-1) || left)) return false; //one left turn, one right turn
                 if (!parallel && i>0 && i<Nin-1) return false; //everything not being most left or most right lane
             }
@@ -738,6 +739,7 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
         }
 
         if (type == FORK || type == MERGE) {
+            resolveEdgeIntersections();
             /*Vec3d n1;
             for (int i=0; i<roads.size(); i++) {
                 auto& data = roads[i]->getEdgePoints( node );
