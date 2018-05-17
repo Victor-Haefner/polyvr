@@ -1,6 +1,7 @@
 #include "VRScenegraphInterface.h"
 #include "core/networking/VRSocket.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/scene/VRScene.h"
 #include "core/networking/VRNetworkManager.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
@@ -56,7 +57,10 @@ void VRScenegraphInterface::ws_callback(void* _args) {
     clientID = args->ws_id;
     string msg = args->ws_data;
     if (args->ws_data.size() == 0) return;
+
     handle(msg);
+    //auto job = VRUpdateCb::create("sgi_handler", boost::bind(&VRScenegraphInterface::handle, this, msg));
+    //VRScene::getCurrent()->queueJob(job);
 }
 
 void VRScenegraphInterface::loadStream(string path) {
@@ -1008,9 +1012,10 @@ void VRScenegraphInterface::handle(string msg) {
 	auto m = splitString(msg, '|');
 	if (m.size() == 0) return;
 
-	auto toMatrix = [](const vector<double>& d) {
+	auto toMatrix = [](const vector<double>& d, int offset = 0) {
 		Matrix4d m;
-		if (d.size() > 11) m = Matrix4d(d[0], d[3], d[6], d[9], d[1], d[4], d[7], d[10], d[2], d[5], d[8], d[11], 0,0,0,1);
+		int o = offset;
+		if (d.size() > 11) m = Matrix4d(d[o+0], d[o+3], d[o+6], d[o+9], d[o+1], d[o+4], d[o+7], d[o+10], d[o+2], d[o+5], d[o+8], d[o+11], 0,0,0,1);
 		return m;
 	};
 
@@ -1026,7 +1031,13 @@ void VRScenegraphInterface::handle(string msg) {
 		if (m[1] == "transform") {
 			if (trans && m.size() > 3) {
                 replace( m[3].begin(), m[3].end(), ',', '.');
-                trans->setWorldMatrix(toMatrix(parseVec<double>(m[3])));
+                vector<double> M = parseVec<double>(m[3]);
+                Matrix4d M2 = toMatrix(M, 0);
+                /*Matrix4d M1 = toMatrix(M, 12);
+                M1.invert();
+                M2.multLeft(M1);
+                trans->setMatrix(M2);*/
+                trans->setWorldMatrix(M2);
 			}
 		}
 
@@ -1111,6 +1122,7 @@ void VRScenegraphInterface::handle(string msg) {
 
 	if (m[0] == "new") {
 		string obj = m[2];
+		//if (!startsWith(obj, "SU_TIRE")) return;
 
 		VRObjectPtr o;
 		if (m[1] == "Object") o = VRObject::create(obj);
@@ -1147,7 +1159,8 @@ void VRScenegraphInterface::handle(string msg) {
 		if (m.size() > 3) {
             if (objects.count(m[3])) p = objects[m[3]];
 		}
-		if (!p) p = ptr();
+		//if (!p) p = ptr();
+		p = ptr();
 		p->addChild(o);
 		cout << "created new object:" << m[2] << endl;
 	}
