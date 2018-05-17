@@ -272,35 +272,35 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             int Nout = roadOut->getAllEntities("lanes").size();
             auto nodes1 = laneIn->getEntity("path")->getAllEntities("nodes");
             auto nodes2 = laneOut->getEntity("path")->getAllEntities("nodes");
-            VREntityPtr nodeEnt1 = *nodes1.rbegin();
-            VREntityPtr nodeEnt2 = nodes2[0];
+            VREntityPtr nodeEnt1 = *nodes1.rbegin();    //last node of roadIn
+            VREntityPtr nodeEnt2 = nodes2[0];           //first node of roadOut
             Vec3d X = nodeEnt2->getEntity("node")->getVec3("position") - nodeEnt1->getEntity("node")->getVec3("position");
             float D = X.length();
             cout << "------bridgeForkingLanes - " << zz << " - " << X;
 
             if (Nin >= Nout) {
-                //auto node1 = nodes1[nodes1.size()-2]->getEntity("node");
-                //auto norm1 = nodes1[nodes1.size()-2]->getVec3("direction");
-                //auto node2 = nodeEnt2->getEntity("node");
-                //auto norm2 = nodeEnt2->getVec3("direction");
-                //nodeEnt2->set("node", node1->getName());
+                auto node1 = nodes1[nodes1.size()-1]->getEntity("node");    //last node of roadIn
+                auto norm1 = nodes1[nodes1.size()-1]->getVec3("direction");
+                auto node2 = nodeEnt2->getEntity("node");                   //first node of roadOut
+                auto norm2 = nodeEnt2->getVec3("direction");
+                nodeEnt2->set("node", node1->getName());                    //set first node of roadOut as last node of roadIn
                 if (D > 0) displacementsA[roadIn] = 0;
                 if (D > 0) displacementsB[roadOut] = -X;
                 cout << " - " << roadOut << " - " << roadIn << " - a\n";
                 //if (Nin==Nout && D > 0) displacementsB[roadIn] = 0;
-                //roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
+                roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
             }
             if (Nin < Nout) {
-                //auto node1 = nodeEnt1->getEntity("node");
-                //auto norm1 = nodeEnt1->getVec3("direction");
-                //auto node2 = nodes2[1]->getEntity("node");
-                //auto norm2 = nodes2[1]->getVec3("direction");
-                //nodeEnt1->set("node", node2->getName());
+                auto node1 = nodeEnt1->getEntity("node");
+                auto norm1 = nodeEnt1->getVec3("direction");
+                auto node2 = nodes2[0]->getEntity("node");
+                auto norm2 = nodes2[0]->getVec3("direction");
+                nodeEnt1->set("node", node2->getName());
                 if (D > 0) displacementsB[roadIn] = X;
                 if (D > 0) displacementsA[roadOut] = 0;
                 cout << " - " << roadIn << " - " << roadOut << " - b\n";
                 //roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
-                //roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
+                roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
             }
 
             processedLanes[laneIn] = true;
@@ -327,13 +327,13 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 //road->setOffsetOut(offsetter2);
                 road->setOffsetIn(offsetter1);
             }
-            /*
+
             for (auto laneIn : rfront->inLanes) {
                 if (processedLanes.count(laneIn)) continue;
                 auto nodes = laneIn->getEntity("path")->getAllEntities("nodes");
                 VREntityPtr node = (*nodes.rbegin())->getEntity("node");
                 auto p = node->getVec3("position");
-                //p += X1; ///FELIX: what does this do
+                p += X2; ///FELIX: what does this do
                 node->setVec3("position", p, "Position");
                 graph->setPosition(node->getValue<int>("graphID", 0), Pose::create(p));
             }
@@ -342,10 +342,10 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 if (processedLanes.count(laneOut)) continue;
                 VREntityPtr node = laneOut->getEntity("path")->getAllEntities("nodes")[0]->getEntity("node");
                 auto p = node->getVec3("position");
-                //p += X1;
+                p += X2;
                 node->setVec3("position", p, "Position");
                 graph->setPosition(node->getValue<int>("graphID", 0), Pose::create(p));
-            }*/
+            }
         }
 	};
 
