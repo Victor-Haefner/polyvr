@@ -135,7 +135,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
 
         void printTree(int indent = 0);
 
-        VRObjectPtr duplicate(bool anchor = false);
+        VRObjectPtr duplicate(bool anchor = false, bool subgraph = true);
 
         void hide();
         void show();

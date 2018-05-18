@@ -500,18 +500,19 @@ void VRObject::printOSGTree(OSGObjectPtr o, string indent) {
 }
 
 /** duplicate ptr() object **/
-VRObjectPtr VRObject::duplicate(bool anchor) {
+VRObjectPtr VRObject::duplicate(bool anchor, bool subgraph) {
     vector<VRObjectPtr> children;
-    int N = getChildrenCount();
-    for (int i=0;i<N;i++) {// first duplicate all children
-        VRObjectPtr d = getChild(i)->duplicate();
-        children.push_back(d);// ptr() is not the objects children vector! (its local)
+
+    if (subgraph) {
+        int N = getChildrenCount();
+        for (int i=0;i<N;i++) {// first duplicate all children
+            VRObjectPtr d = getChild(i)->duplicate();
+            children.push_back(d);// ptr() is not the objects children vector! (its local)
+        }
     }
 
     VRObjectPtr o = copy(children); // copy himself
-    for (uint i=0; i<children.size();i++)
-        o->addChild(children[i]); // append children
-
+    for (uint i=0; i<children.size();i++) o->addChild(children[i]); // append children
     if (anchor && getParent()) getParent()->addChild(o);
     return o;
 }

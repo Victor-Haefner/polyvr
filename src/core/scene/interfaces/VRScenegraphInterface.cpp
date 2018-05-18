@@ -1136,7 +1136,7 @@ void VRScenegraphInterface::handle(string msg) {
 		if (m[1] == "Geometry") {
             VRGeometryPtr g = 0;
             if (meshes.count(objName)) {
-                g = dynamic_pointer_cast<VRGeometry>(meshes[objName]->duplicate());
+                g = dynamic_pointer_cast<VRGeometry>(meshes[objName]->duplicate(false, false));
             } else {
                 g = VRGeometry::create(objName);
                 g->setMeshVisibility(0);
