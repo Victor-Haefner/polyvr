@@ -6,6 +6,7 @@
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRScene.h"
 #include "core/math/Octree.h"
+#include "core/math/pose.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRDoublebuffer.h"
 #include "core/setup/devices/VRSignalT.h"
@@ -39,7 +40,8 @@ struct VRSnappingEngine::Rule {
     unsigned long long ID = 0;
     Type translation = NONE;
     Type orientation = NONE;
-    Line prim_t, prim_o;
+    PosePtr prim_t;
+    PosePtr prim_o;
     Vec3d snapP;
 
     VRTransformPtr csys = 0;
@@ -47,7 +49,7 @@ struct VRSnappingEngine::Rule {
     int group = 0;
     Matrix4d C;
 
-    Rule(Type t, Type o, Line pt, Line po, float d, int g, VRTransformPtr l) :
+    Rule(Type t, Type o, PosePtr pt, PosePtr po, float d, int g, VRTransformPtr l) :
         translation(t), orientation(o),
         prim_t(pt), prim_o(po), csys(l),
         distance(d), group(g) {
@@ -66,14 +68,20 @@ struct VRSnappingEngine::Rule {
     }
 
     Vec3d getSnapPoint(Vec3d p) {
-        if (translation == POINT) snapP = Vec3d(prim_t.getPosition());
-        if (translation == LINE) snapP = Vec3d( prim_t.getClosestPoint( Vec3f(local(p)) ) ); // project on line
+        if (translation == POINT) snapP = prim_t->pos();
+
+        if (translation == LINE) {
+            Line l(Vec3f(prim_t->pos()), Vec3f(prim_t->dir()));
+            snapP = Vec3d( l.getClosestPoint( Vec3f(local(p)) ) ); // project on line
+        }
+
         if (translation == PLANE) {
-            Plane pl(prim_t.getDirection(), prim_t.getPosition());
+            Plane pl(Vec3f(prim_t->pos()), Vec3f(prim_t->dir()));
             p = local(p);
             float d = pl.distance(Pnt3f(p)); // project on plane
             snapP = p + Vec3d(d*pl.getNormal());
         }
+
         return snapP;
     }
 
@@ -81,8 +89,8 @@ struct VRSnappingEngine::Rule {
         if (csys) C = csys->getWorldMatrix();
 
         if (orientation == POINT) {
-            MatrixLookAt(m, snapP, snapP+Vec3d(prim_o.getPosition()), Vec3d(prim_o.getDirection()));
-            m.multLeft(C);
+            MatrixLookAt(m, snapP, snapP+prim_o->dir(), prim_o->up());
+            if (csys) m.multLeft(C);
         }
     }
 
@@ -143,7 +151,7 @@ VRSnappingEngine::Type VRSnappingEngine::typeFromStr(string t) {
     return NONE;
 }
 
-int VRSnappingEngine::addRule(Type t, Type o, Line pt, Line po, float d, int g, VRTransformPtr l) {
+int VRSnappingEngine::addRule(Type t, Type o, PosePtr pt, PosePtr po, float d, int g, VRTransformPtr l) {
     Rule* r = new Rule(t,o,pt,po,d,g,l);
     rules[r->ID] = r;
     return r->ID;
@@ -252,7 +260,6 @@ void VRSnappingEngine::update() {
                 r->snap(mm);
                 event->set(obj, r->csys, mm, dev.second, 1, snapID);
             }
-
         }
 
         if (event->snap) obj->setWorldMatrix(event->m);
@@ -278,18 +285,19 @@ void VRSnappingEngine::setVisualHints(bool b) {
 void VRSnappingEngine::setPreset(PRESET preset) {
     clear();
 
-    Line t0(Pnt3f(0,0,0), Vec3f(0,0,0));
-    Line o0(Pnt3f(0,0,-1), Vec3f(0,1,0));
+    PosePtr pX = Pose::create(Vec3d(), Vec3d(-1,0,0), Vec3d(0,1,0));
+    PosePtr pY = Pose::create(Vec3d(), Vec3d(0,-1,0), Vec3d(0,0,1));
+    PosePtr pZ = Pose::create(Vec3d(), Vec3d(0,0,-1), Vec3d(0,1,0));
 
     switch(preset) {
         case SIMPLE_ALIGNMENT:
-            addRule(POINT, POINT, t0, o0, 1, 1, 0);
-            addRule(LINE, POINT, Line(Pnt3f(), Vec3f(1,0,0)), o0, 1, 1, 0);
-            addRule(LINE, POINT, Line(Pnt3f(), Vec3f(0,1,0)), o0, 1, 1, 0);
-            addRule(LINE, POINT, Line(Pnt3f(), Vec3f(0,0,1)), o0, 1, 1, 0);
+            addRule(POINT, POINT, pZ, pZ, 1, 0, 0);
+            addRule(LINE , POINT, pX, pZ, 1, 0, 0);
+            addRule(LINE , POINT, pY, pZ, 1, 0, 0);
+            addRule(LINE , POINT, pZ, pZ, 1, 0, 0);
             break;
         case SNAP_BACK:
-            addRule(POINT, POINT, t0, o0, 1, 1, 0);
+            addRule(POINT, POINT, pZ, pZ, 1, 0, 0);
             break;
     }
 }
