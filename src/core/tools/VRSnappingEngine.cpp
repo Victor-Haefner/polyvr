@@ -90,7 +90,9 @@ struct VRSnappingEngine::Rule {
 
         if (orientation == POINT) {
             MatrixLookAt(m, snapP, snapP+prim_o->dir(), prim_o->up());
-            if (csys) m.multLeft(C);
+            if (csys) {
+                m.multLeft(C);
+            }
         }
     }
 
