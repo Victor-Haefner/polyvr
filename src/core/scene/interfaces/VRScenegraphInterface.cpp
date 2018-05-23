@@ -1,6 +1,7 @@
 #include "VRScenegraphInterface.h"
 #include "core/networking/VRSocket.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/scene/VRScene.h"
 #include "core/networking/VRNetworkManager.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
@@ -29,6 +30,7 @@ VRScenegraphInterfacePtr VRScenegraphInterface::create(string name)  { return VR
 void VRScenegraphInterface::clear() {
     clearChildren();
     materials.clear();
+    objects.clear();
 	meshes.clear();
 	transforms.clear();
 	Mate_dictionary.clear();
@@ -56,7 +58,10 @@ void VRScenegraphInterface::ws_callback(void* _args) {
     clientID = args->ws_id;
     string msg = args->ws_data;
     if (args->ws_data.size() == 0) return;
+
     handle(msg);
+    //auto job = VRUpdateCb::create("sgi_handler", boost::bind(&VRScenegraphInterface::handle, this, msg));
+    //VRScene::getCurrent()->queueJob(job);
 }
 
 void VRScenegraphInterface::loadStream(string path) {
@@ -1008,25 +1013,28 @@ void VRScenegraphInterface::handle(string msg) {
 	auto m = splitString(msg, '|');
 	if (m.size() == 0) return;
 
-	auto toMatrix = [](const vector<double>& d) {
+	auto toMatrix = [](const vector<double>& d, int offset = 0) {
 		Matrix4d m;
-		if (d.size() > 11) m = Matrix4d(d[0], d[3], d[6], d[9], d[1], d[4], d[7], d[10], d[2], d[5], d[8], d[11], 0,0,0,1);
+		int o = offset;
+		if (d.size() > 11) m = Matrix4d(d[o+0], d[o+3], d[o+6], d[o+9], d[o+1], d[o+4], d[o+7], d[o+10], d[o+2], d[o+5], d[o+8], d[o+11], 0,0,0,1);
 		return m;
 	};
 
 	if (m[0] == "set" && m.size() > 2) {
-		string name = m[2];
+		string objID = m[2];
 		VRGeometryPtr geo;
 		VRTransformPtr trans;
 		VRObjectPtr obj;
-		if (meshes.count(name)) geo = meshes[name];
-		if (transforms.count(name)) trans = meshes[name];
-		if (objects.count(name)) obj = objects[name];
+		if (meshes.count(objID)) geo = meshes[objID];
+		if (transforms.count(objID)) trans = transforms[objID];
+		if (objects.count(objID)) obj = objects[objID];
 
 		if (m[1] == "transform") {
 			if (trans && m.size() > 3) {
                 replace( m[3].begin(), m[3].end(), ',', '.');
-                trans->setWorldMatrix(toMatrix(parseVec<double>(m[3])));
+                vector<double> M = parseVec<double>(m[3]);
+                Matrix4d M2 = toMatrix(M, 0);
+                trans->setWorldMatrix(M2);
 			}
 		}
 
@@ -1036,7 +1044,7 @@ void VRScenegraphInterface::handle(string msg) {
                 replace( m[3].begin(), m[3].end(), ',', '.');
                 parseOSGVec2<float, Pnt3f>(m[3], pos);
                 geo->setPositions(pos);
-                cout << "set geo positions " << geo->getName() << "  " << pos->size() << endl;
+                //cout << "set geo positions " << geo->getName() << "  " << pos->size() << endl;
             }
 		}
 
@@ -1046,13 +1054,13 @@ void VRScenegraphInterface::handle(string msg) {
                 replace( m[3].begin(), m[3].end(), ',', '.');
                 parseOSGVec2<float, Vec3f>(m[3], norms);
                 geo->setNormals(norms);
-                cout << "set geo normals " << geo->getName() << "  " << norms->size() << endl;
+                //cout << "set geo normals " << geo->getName() << "  " << norms->size() << endl;
             }
 		}
 
 		if (m[1] == "indices") {
             if (geo && m.size() > 3) {
-                cout << "set geo indices " << geo->getName() << endl;
+                //cout << "set geo indices " << geo->getName() << endl;
                 GeoUInt8PropertyMTRecPtr types = GeoUInt8Property::create();;
                 GeoUInt32PropertyMTRecPtr lengths = GeoUInt32Property::create();;
                 GeoUInt32PropertyMTRecPtr indices = GeoUInt32Property::create();
@@ -1071,19 +1079,19 @@ void VRScenegraphInterface::handle(string msg) {
 			if (mat == "") mat = "__default__";
             if (geo && materials.count(mat)) {
                 geo->setMaterial( materials[mat] );
-                cout << "set material " << mat << " to " << geo->getName() << endl;
+                //cout << "set material " << mat << " to " << geo->getName() << endl;
             }
 		}
 
 		if (m[1] == "visible") {
-		    if (toInt(m[3]) == 0) cout << " HIDE " << name << " " << trans << " " << obj << endl;
+		    if (toInt(m[3]) == 0) cout << " HIDE " << objID << " " << trans << " " << obj << endl;
 			//if (trans) trans->setVisible(toInt(m[3]));
 			if (obj) obj->setVisible(toInt(m[3]));
 		}
 
 		if (m[1] == "Material") {
-            if (name == "") name = "__default__";
-            if (materials.count(name) && m.size() > 3) {
+            if (objID == "") objID = "__default__";
+            if (materials.count(objID) && m.size() > 3) {
                 // format: [red, green, blue, ambient, diffuse, specular, shininess, transparency, emission]
                 replace( m[3].begin(), m[3].end(), ',', '.');
                 auto matData = parseVec<float>(m[3]);
@@ -1093,7 +1101,7 @@ void VRScenegraphInterface::handle(string msg) {
                 if (matData.size() > 5) ads = Color3f(matData[3], matData[4], matData[5]); // a,d,s = mat[3:6]
                 //print obj, mat
                 //materials[obj].setAmbient([r*a,g*a,b*a])
-                materials[name]->setDiffuse(rgb * ads[1]);
+                materials[objID]->setDiffuse(rgb * ads[1]);
                 //materials[obj].setSpecular([r*s,g*s,b*s])
                 //materials[obj].setTransparency(1-mat[7])
             }
@@ -1110,46 +1118,51 @@ void VRScenegraphInterface::handle(string msg) {
 	}
 
 	if (m[0] == "new") {
-		string obj = m[2];
+		string objName = m[2];
+		string objID = "NOID";
+		if (m.size() > 3) objID = m[3];
+		//if (!startsWith(obj, "SU_TIRE")) return;
 
 		VRObjectPtr o;
-		if (m[1] == "Object") o = VRObject::create(obj);
+		if (m[1] == "Object") o = VRObject::create(objName);
 
 		if (m[1] == "Transform") {
-            auto t = VRTransform::create(obj);
-            transforms[obj] = t;
+            auto t = VRTransform::create(objName);
+            cout << "create Transform: " << objID << endl;
+            transforms[objID] = t;
             o = t;
         }
 
 		if (m[1] == "Geometry") {
             VRGeometryPtr g = 0;
-            if (meshes.count(obj)) {
-                g = dynamic_pointer_cast<VRGeometry>(meshes[obj]->duplicate());
+            if (meshes.count(objName)) {
+                g = dynamic_pointer_cast<VRGeometry>(meshes[objName]->duplicate(false, false));
             } else {
-                g = VRGeometry::create(obj);
+                g = VRGeometry::create(objName);
                 g->setMeshVisibility(0);
-                transforms[obj] = g;
-                meshes[obj] = g;
+                meshes[objName] = g;
             }
+            cout << "create Geometry: " << objID << endl;
+            transforms[objID] = g;
             o = g;
         }
 
 		if (m[1] == "Material") {
-			if (obj == "") obj = "__default__";
-			materials[obj] = VRMaterial::create(obj);
+			if (objName == "") objName = "__default__";
+			materials[objName] = VRMaterial::create(objName);
 		}
 
-		objects[obj] = o;
+		objects[objID] = o;
 
 		if (!o) { cout << "bad type:" << m[1] << endl; return; }
 
 		VRObjectPtr p;
-		if (m.size() > 3) {
-            if (objects.count(m[3])) p = objects[m[3]];
+		if (m.size() > 4) {
+            if (objects.count(m[4])) p = objects[m[4]];
 		}
 		if (!p) p = ptr();
 		p->addChild(o);
-		cout << "created new object:" << m[2] << endl;
+		cout << "created new object:" << objName << " with ID " << objID << endl;
 	}
 
 	for (auto handler : customHandlers) (*handler)(msg); // TODO: pre and post handlers!

@@ -78,7 +78,7 @@ void VRConstraint::setTConstraint(Vec3d params, TCMode mode, bool local) {
         auto p = Vec3d(refMatrixA[3]);
         lock({1});
         free({0,2});
-        auto po = Pose::create(p, Vec3d(1,0,0), params);
+        auto po = Pose::create(p, Vec3d(refMatrixA[2]), params);
         po->makeDirOrthogonal();
         setReferenceA( po );
     }
@@ -108,7 +108,7 @@ void VRConstraint::setRConstraint(Vec3d params, TCMode mode, bool local) {
         auto p = Vec3d(refMatrixA[3]);
         lock({4});
         free({3,5});
-        auto po = Pose::create(p, Vec3d(1,0,0), params);
+        auto po = Pose::create(p, Vec3d(refMatrixA[2]), params);
         po->makeDirOrthogonal();
         setReferenceA( po );
     }

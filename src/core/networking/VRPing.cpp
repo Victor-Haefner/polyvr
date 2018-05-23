@@ -48,15 +48,19 @@ class ping_client {
         }
 
         bool connect(const std::string& host, const std::string& port, boost::posix_time::time_duration timeout) {
-            tcp::resolver::query query(host, port);
-            tcp::resolver::iterator iter = tcp::resolver(io_service_).resolve(query);
-            deadline_.expires_from_now(timeout);
+            try {
+                tcp::resolver::query query(host, port);
+                tcp::resolver::iterator iter = tcp::resolver(io_service_).resolve(query);
+                deadline_.expires_from_now(timeout);
 
-            boost::system::error_code ec = boost::asio::error::would_block;
-            boost::asio::async_connect(socket_, iter, var(ec) = _1);
-            do io_service_.run_one(); while (ec == boost::asio::error::would_block);
+                boost::system::error_code ec = boost::asio::error::would_block;
+                boost::asio::async_connect(socket_, iter, var(ec) = _1);
+                do io_service_.run_one(); while (ec == boost::asio::error::would_block);
 
-            return !(ec || !socket_.is_open());
+                return !(ec || !socket_.is_open());
+            } catch(...) {
+                return false;
+            }
         }
 };
 

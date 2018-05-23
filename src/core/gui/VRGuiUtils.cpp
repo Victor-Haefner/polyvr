@@ -502,6 +502,7 @@ OSG::VRTexturePtr takeSnapshot() {
 }
 
 void saveSnapshot(string path) {
+    if (!exists(getFolderName(path))) return;
     Gtk::DrawingArea* drawArea = 0;
     VRGuiBuilder()->get_widget("glarea", drawArea);
     Glib::RefPtr<Gdk::Drawable> src = drawArea->get_window();

@@ -82,7 +82,7 @@ class VRSnappingEngine {
 
         void addCallback(VRSnapCbPtr cb);
 
-        int addRule(Type t, Type o, Line pt, Line po, float d, int g = 0, VRTransformPtr l = 0);
+        int addRule(Type t, Type o, PosePtr pt, PosePtr po, float d, int g = 0, VRTransformPtr l = 0);
         void remRule(int i);
 
         void addObjectAnchor(VRTransformPtr obj, VRTransformPtr a);
