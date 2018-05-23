@@ -333,7 +333,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto nodes = laneIn->getEntity("path")->getAllEntities("nodes");
                 VREntityPtr node = (*nodes.rbegin())->getEntity("node");
                 auto p = node->getVec3("position");
-                p += X2; ///FELIX: what does this do
+                //p += X2; ///FELIX: what does this do
                 node->setVec3("position", p, "Position");
                 graph->setPosition(node->getValue<int>("graphID", 0), Pose::create(p));
             }
@@ -342,7 +342,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 if (processedLanes.count(laneOut)) continue;
                 VREntityPtr node = laneOut->getEntity("path")->getAllEntities("nodes")[0]->getEntity("node");
                 auto p = node->getVec3("position");
-                p += X2;
+                //p += X2;
                 node->setVec3("position", p, "Position");
                 graph->setPosition(node->getValue<int>("graphID", 0), Pose::create(p));
             }
