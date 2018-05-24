@@ -101,19 +101,16 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
         };
 
         auto checkForkMatch = [&](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut, VRRoadPtr road1, VRRoadPtr road2) {
-            cout << "------checkForkMatch ";
             auto getRoadConnectionAngle = [&](VRRoadPtr road1, VRRoadPtr road2) {
                 auto& data1 = road1->getEdgePoints( node );
                 auto& data2 = road2->getEdgePoints( node );
                 return data1.n.dot(data2.n);
-                //return data1.n.cross(data2.n);
             };
             bool parallel  = bool( getRoadConnectionAngle(road1, road2) < -0.8 );
-            if (parallel && Nin == Nout && i == Nout-j-1 && reSignIn==reSignOut) {cout << "-true\n"; return true;}
-            if (parallel && Nin == Nout && i == j && reSignIn != reSignOut) {cout << "-true\n"; return true;}
+            if (parallel && Nin == Nout && i == Nout-j-1 && reSignIn==reSignOut) {return true;}
+            if (parallel && Nin == Nout && i == j && reSignIn != reSignOut) {return true;}
             //match case A - split ways one left one right
             //match case B - split both ways, two left two right
-            cout << "-false\n";
             return false;
         };
 
@@ -259,7 +256,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 	};
 
     auto bridgeForkingLanes = [&]() { ///FORK
-        cout << "------bridgeForkingLanes\n";
+        cout << "----bridgeForkingLanes\n";
         map<VREntityPtr, Vec3d> displacementsA; // map roads to displace!
 	    map<VREntityPtr, Vec3d> displacementsB; // map roads to displace!
 	    map<VREntityPtr, bool> processedLanes; // keep list of already processed lanes
@@ -280,17 +277,16 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             cout << "------bridgeForkingLanes - " << zz << " - " << X;
 
             if (Nin >= Nout) {
-                auto node1 = nodeEnt1->getEntity("node");//nodes1[nodes1.size()-1]->getEntity("node");    //next to last node of roadIn
-                auto norm1 = nodeEnt1->getVec3("direction");//nodes1[nodes1.size()-1]->getVec3("direction");
-                auto node2 = nodes2[1]->getEntity("node");//nodeEnt2->getEntity("node");                   //first node of roadOut
-                auto norm2 = nodes2[1]->getVec3("direction");//nodeEnt2->getVec3("direction");
+                auto node1 = nodeEnt1->getEntity("node");    //last node of roadIn
+                auto norm1 = nodeEnt1->getVec3("direction");
+                auto node2 = nodes2[1]->getEntity("node");                 //second node of roadOut
+                auto norm2 = nodes2[1]->getVec3("direction");
                 nodeEnt2->set("node", node1->getName());                    //set first node of roadOut as last node of roadIn
                 if (D > 0) {
-                    displacementsA[roadIn] = 0;
+                    //displacementsA[roadIn] = 0;
                     displacementsB[roadOut] = -X;
                 }
                 cout << " - " << roadOut << " - " << roadIn << " - a\n";
-                //if (Nin==Nout && D > 0) displacementsB[roadIn] = 0;
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
             }
             if (Nin < Nout) {
@@ -301,10 +297,9 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 nodeEnt1->set("node", node2->getName());
                 if (D > 0) {
                     displacementsB[roadIn] = X;
-                    displacementsA[roadOut] = 0;
+                    //displacementsA[roadOut] = 0;
                 }
                 cout << " - " << roadIn << " - " << roadOut << " - b\n";
-                //roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
             }
 
@@ -695,7 +690,7 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
             bool parallel01 = bool(getRoadConnectionAngle(roadFronts[0]->road, roadFronts[1]->road) < -0.5);
             bool parallel12 = bool(getRoadConnectionAngle(roadFronts[1]->road, roadFronts[2]->road) < -0.5);
             bool parallel02 = bool(getRoadConnectionAngle(roadFronts[2]->road, roadFronts[0]->road) < -0.5);
-            if ((parallel01 && parallel12) || (parallel01 && parallel02) || (parallel12 && parallel02)) {cout << "------FORK\n"; type = FORK;}
+            if ((parallel01 && parallel12) || (parallel01 && parallel02) || (parallel12 && parallel02)) {cout << "------FORK: " << node->getName() << "\n"; type = FORK;}
             //type = FORK;
         }
 
@@ -815,8 +810,7 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
         }
 
         if (type == FORK || type == MERGE) {
-            cout << "------specialcase_fork\n";
-            //resolveEdgeIntersections();
+            //cout << "------specialcase_fork\n";
             /*Vec3d n1;
             for (int i=0; i<roads.size(); i++) {
                 auto& data = roads[i]->getEdgePoints( node );
