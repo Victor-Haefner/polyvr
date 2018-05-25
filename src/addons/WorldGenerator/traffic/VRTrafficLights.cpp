@@ -83,14 +83,12 @@ void VRTrafficLights::addLight(VRTrafficLightPtr light) {
         d2.normalize();
 
         float a = abs(d1.dot(d2));
-        cout << "  VRTrafficLights::addLight opposite " << a << "   " << d1 << "   " << d2 << "   " << l1->getName() << "  " << l2->getName() << endl;
         if (a > 0.5) return true;
 
         //return true;
         return false;
     };
 
-    cout << " VRTrafficLights::addLight" << endl;
     for (auto& group : lights) {
         int offset = group.first;
         for (auto& l : group.second) {

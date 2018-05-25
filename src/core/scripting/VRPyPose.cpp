@@ -28,8 +28,15 @@ PyMethodDef VRPyPose::methods[] = {
 
 PyObject* VRPyPose::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     PyObject *p, *d, *u;
-    if (! PyArg_ParseTuple(args, "OOO", &p, &d, &u)) return NULL;
-    return allocPtr( type, OSG::Pose::create( parseVec3dList(p), parseVec3dList(d), parseVec3dList(u) ) );
+    p = d = u = 0;
+    if (! PyArg_ParseTuple(args, "|OOO", &p, &d, &u)) return NULL;
+    Vec3d pos = Vec3d(0,0,0);
+    Vec3d dir = Vec3d(0,0,-1);
+    Vec3d up  = Vec3d(0,1,0);
+    if (p) pos = parseVec3dList(p);
+    if (d) dir = parseVec3dList(d);
+    if (u) up  = parseVec3dList(u);
+    return allocPtr( type, OSG::Pose::create( pos, dir, up ) );
 }
 
 PyObject* VRPyPose::fromMatrix(OSG::Matrix4d m) {
