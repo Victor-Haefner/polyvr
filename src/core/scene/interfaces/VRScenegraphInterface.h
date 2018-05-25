@@ -37,6 +37,7 @@ class VRScenegraphInterface : public VRObject {
 
         map<string, VRMaterialPtr> materials;
         map<string, VRObjectPtr> objects;
+        map<VRObject*, string> objectIDs;
         map<string, VRGeometryPtr> meshes;
         map<string, VRTransformPtr> transforms;
         map<string, Mate> Mate_dictionary;
@@ -59,6 +60,7 @@ class VRScenegraphInterface : public VRObject {
         void addCallback(VRMessageCbPtr cb);
 
         VRObjectPtr getObject(string name);
+        string getObjectID(VRObjectPtr obj);
 
         void loadStream(string path);
 };

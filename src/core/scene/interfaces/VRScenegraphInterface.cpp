@@ -31,6 +31,7 @@ void VRScenegraphInterface::clear() {
     clearChildren();
     materials.clear();
     objects.clear();
+    objectIDs.clear();
 	meshes.clear();
 	transforms.clear();
 	Mate_dictionary.clear();
@@ -105,9 +106,14 @@ void parseOSGVec2(string& data, V& v) {
     }
 }
 
-VRObjectPtr VRScenegraphInterface::getObject(string name) {
-    if (objects.count(name)) return objects[name];
+VRObjectPtr VRScenegraphInterface::getObject(string objID) {
+    if (objects.count(objID)) return objects[objID];
     return 0;
+}
+
+string VRScenegraphInterface::getObjectID(VRObjectPtr obj) {
+    if (objectIDs.count(obj.get())) return objectIDs[obj.get()];
+    return "";
 }
 
 void VRScenegraphInterface::buildKinematics(vector<string> m) {
@@ -1153,6 +1159,7 @@ void VRScenegraphInterface::handle(string msg) {
 		}
 
 		objects[objID] = o;
+		objectIDs[o.get()] = objID;
 
 		if (!o) { cout << "bad type:" << m[1] << endl; return; }
 
