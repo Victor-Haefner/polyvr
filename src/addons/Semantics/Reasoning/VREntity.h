@@ -24,7 +24,7 @@ struct VREntity : public VROntoID, public VRName {
     void addConcept(VRConceptPtr c);
     vector<VRConceptPtr> getConcepts();
     vector<string> getConceptNames();
-    VRPropertyPtr getProperty(string p);
+    VRPropertyPtr getProperty(string p, bool warn = true);
     vector<VRPropertyPtr> getProperties();
     void rem(VRPropertyPtr);
     string getConceptList();
