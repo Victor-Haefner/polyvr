@@ -82,7 +82,7 @@ VRObjectPtr VRGuiScene::getSelected() {
     return res;
 }
 
-void setObject(VRObjectPtr o) {
+void VRGuiScene::setObject(VRObjectPtr o) {
     setExpanderSensitivity("expander2", true);
 
     // set object properties
@@ -94,9 +94,7 @@ void setObject(VRObjectPtr o) {
     else setTextEntry("entry17", "");
 }
 
-bool transformModeLocal = true;
-
-void setTransform(VRTransformPtr e) {
+void VRGuiScene::setTransform(VRTransformPtr e) {
     setExpanderSensitivity("expander1", true);
 
     Vec3d f,a,u,d,s;
@@ -156,7 +154,7 @@ void setTransform(VRTransformPtr e) {
     }
 }
 
-void setMaterial(VRMaterialPtr mat) {
+void VRGuiScene::setMaterial(VRMaterialPtr mat) {
     bool lit = false;
     Color3f _cd, _cs, _ca;
     VRTexturePtr tex;
@@ -184,7 +182,7 @@ void setMaterial(VRMaterialPtr mat) {
     }
 }
 
-void setGeometry(VRGeometryPtr g) {
+void VRGuiScene::setGeometry(VRGeometryPtr g) {
     setExpanderSensitivity("expander11", true);
     setExpanderSensitivity("expander14", true);
     setExpanderSensitivity("expander16", true);
@@ -233,7 +231,7 @@ void setGeometry(VRGeometryPtr g) {
     }
 }
 
-void setLight(VRLightPtr l) {
+void VRGuiScene::setLight(VRLightPtr l) {
     setExpanderSensitivity("expander13", true);
 
     setCheckButton("checkbutton31", l->isOn());
@@ -266,7 +264,7 @@ void setLight(VRLightPtr l) {
     }
 }
 
-void setCamera(VRCameraPtr c) {
+void VRGuiScene::setCamera(VRCameraPtr c) {
     setExpanderSensitivity("expander12", true);
     setCheckButton("checkbutton17", c->getAcceptRoot());
     setTextEntry("entry60", toString(c->getAspect()));
@@ -275,7 +273,7 @@ void setCamera(VRCameraPtr c) {
     setTextEntry("entry7", toString(c->getFar()));
 }
 
-void setGroup(VRGroupPtr g) {
+void VRGuiScene::setGroup(VRGroupPtr g) {
     setExpanderSensitivity("expander2", true);
     setExpanderSensitivity("expander9", true);
     setCheckButton("checkbutton23", g->getActive() );
@@ -285,7 +283,7 @@ void setGroup(VRGroupPtr g) {
     setCombobox("combobox14", getListStorePos("liststore3",g->getGroup()));
 }
 
-void setLod(VRLodPtr lod) {
+void VRGuiScene::setLod(VRLodPtr lod) {
     setExpanderSensitivity("expander2", true);
     setExpanderSensitivity("expander10", true);
 
@@ -305,7 +303,7 @@ void setLod(VRLodPtr lod) {
     }
 }
 
-void setEntity(VREntityPtr e) {
+void VRGuiScene::setEntity(VREntityPtr e) {
     setExpanderSensitivity("expander27", true);
 
     setLabel("label145", e->getConceptList());

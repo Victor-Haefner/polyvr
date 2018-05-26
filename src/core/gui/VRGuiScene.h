@@ -15,11 +15,21 @@ class VRGuiScene {
         VRObjectWeakPtr dragDest;
         string dragPath;
         int dragPos = 0;
+        bool transformModeLocal = true;
         VRGuiContextMenu* menu;
 
         // ---------ObjectForms------
         VRObjectPtr getSelected();
         void updateObjectForms(bool disable = false);
+        void setObject(VRObjectPtr o);
+        void setTransform(VRTransformPtr e);
+        void setMaterial(VRMaterialPtr mat);
+        void setGeometry(VRGeometryPtr g);
+        void setLight(VRLightPtr l);
+        void setCamera(VRCameraPtr c);
+        void setGroup(VRGroupPtr g);
+        void setLod(VRLodPtr lod);
+        void setEntity(VREntityPtr e);
         // --------------------------
 
         // ---------TreeView---------
