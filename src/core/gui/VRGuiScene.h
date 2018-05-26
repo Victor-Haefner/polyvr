@@ -17,7 +17,29 @@ class VRGuiScene {
         int dragPos = 0;
         VRGuiContextMenu* menu;
 
+        // ---------ObjectForms------
+        VRObjectPtr getSelected();
+        void updateObjectForms(bool disable = false);
+        // --------------------------
+
+        // ---------TreeView---------
+        void on_treeview_select();
+        void getTypeColors(VRObjectPtr o, string& fg, string& bg);
+        void setSGRow(Gtk::TreeModel::iterator itr, VRObjectPtr o);
+        void parseSGTree(VRObjectPtr o, Gtk::TreeModel::iterator itr);
+        void parseSGTree(VRObjectPtr o);
+        void removeTreeStoreBranch(Gtk::TreeModel::iterator iter, bool self = true);
+        void syncSGTree(VRObjectPtr o, Gtk::TreeModel::iterator itr);
+        // ----------------------------------------------
+
         // ------------- transform -----------------------
+        void on_change_from(Vec3d v);
+        void on_change_at(Vec3d v);
+        void on_change_dir(Vec3d v);
+        void on_change_up(Vec3d v);
+        void on_scale_changed(Vec3d v);
+        void on_change_lod_center(Vec3d v);
+        void on_edit_T_constraint(Vec3d v);
         void on_toggle_T_mode();
         void on_toggle_T_constraint_mode();
         void on_toggle_phys();
@@ -36,6 +58,7 @@ class VRGuiScene {
         void setGeometry_object();
         void setGeometry_vertex_count();
         void setGeometry_face_count();
+        void on_edit_primitive_params(string path, string new_text);
         // ----------------------------------------------
 
         // ------------- light -----------------------
@@ -70,6 +93,7 @@ class VRGuiScene {
         // ----------------------------------------------
 
         // ------------- lod -----------------------
+        void on_edit_distance(string path, string new_text);
         void on_lod_decimate_changed();
         // ----------------------------------------------
 
@@ -77,7 +101,7 @@ class VRGuiScene {
         void on_drag_beg(const Glib::RefPtr<Gdk::DragContext>& dc);
         void on_drag_end(const Glib::RefPtr<Gdk::DragContext>& dc);
         void on_drag_data_receive(const Glib::RefPtr<Gdk::DragContext>& dc , int i1, int i2 ,const Gtk::SelectionData& sd, guint i3, guint i4);
-        void on_edit_object_name(string path, string name);
+        void on_edit_object_name(string path, string new_text);
         // ----------------------------------------------
 
         // ------------- context menu -------------------
