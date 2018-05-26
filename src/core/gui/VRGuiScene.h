@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <gtkmm/treeview.h>
+#include <gtkmm/treestore.h>
 #include "core/objects/object/VRObject.h"
 #include "VRGuiContextMenu.h"
 #include "VRGuiVectorEntry.h"
@@ -17,6 +18,24 @@ class VRGuiScene {
         int dragPos = 0;
         bool transformModeLocal = true;
         VRGuiContextMenu* menu;
+
+        Glib::RefPtr<Gtk::TreeStore> tree_store;
+        Glib::RefPtr<Gtk::TreeView> tree_view;
+
+        Gtk::TreeModel::iterator selected_itr;
+        string selected;
+        VRGeometryWeakPtr selected_geometry;
+        VRObjectWeakPtr VRGuiScene_copied;
+        bool liveUpdate = false;
+        bool trigger_cbs = false;
+
+        VRGuiVectorEntry posEntry;
+        VRGuiVectorEntry atEntry;
+        VRGuiVectorEntry dirEntry;
+        VRGuiVectorEntry upEntry;
+        VRGuiVectorEntry scaleEntry;
+        VRGuiVectorEntry ctEntry;
+        VRGuiVectorEntry lodCEntry;
 
         // ---------ObjectForms------
         VRObjectPtr getSelected();

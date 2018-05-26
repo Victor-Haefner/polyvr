@@ -41,24 +41,6 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-Glib::RefPtr<Gtk::TreeStore> tree_store;
-Glib::RefPtr<Gtk::TreeView> tree_view;
-
-Gtk::TreeModel::iterator selected_itr;
-string selected;
-VRGeometryWeakPtr selected_geometry;
-VRObjectWeakPtr VRGuiScene_copied;
-bool liveUpdate = false;
-bool trigger_cbs = false;
-
-VRGuiVectorEntry posEntry;
-VRGuiVectorEntry atEntry;
-VRGuiVectorEntry dirEntry;
-VRGuiVectorEntry upEntry;
-VRGuiVectorEntry scaleEntry;
-VRGuiVectorEntry ctEntry;
-VRGuiVectorEntry lodCEntry;
-
 // --------------------------
 // ---------ObjectForms------
 // --------------------------
