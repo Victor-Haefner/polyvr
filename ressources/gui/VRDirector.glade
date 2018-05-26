@@ -1428,6 +1428,30 @@ cave allocated</property>
       <column type="gchararray"/>
     </columns>
   </object>
+  <object class="GtkTreeStore" id="onto_list">
+    <columns>
+      <!-- column-name onto -->
+      <column type="gchararray"/>
+      <!-- column-name type -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkTreeStore" id="scenegraph">
+    <columns>
+      <!-- column-name Object -->
+      <column type="gchararray"/>
+      <!-- column-name Type -->
+      <column type="gchararray"/>
+      <!-- column-name objPath -->
+      <column type="gchararray"/>
+      <!-- column-name foreground -->
+      <column type="gchararray"/>
+      <!-- column-name background -->
+      <column type="gchararray"/>
+      <!-- column-name objID -->
+      <column type="gint"/>
+    </columns>
+  </object>
   <object class="GtkListStore" id="liststore9"/>
   <object class="GtkListStore" id="mouse_list">
     <columns>
@@ -1454,14 +1478,6 @@ cave allocated</property>
   <object class="GtkListStore" id="nav_presets">
     <columns>
       <!-- column-name nav_presets -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkTreeStore" id="onto_list">
-    <columns>
-      <!-- column-name onto -->
-      <column type="gchararray"/>
-      <!-- column-name type -->
       <column type="gchararray"/>
     </columns>
   </object>
@@ -1802,22 +1818,6 @@ cave allocated</property>
         </child>
       </object>
     </child>
-  </object>
-  <object class="GtkTreeStore" id="scenegraph">
-    <columns>
-      <!-- column-name Object -->
-      <column type="gchararray"/>
-      <!-- column-name Type -->
-      <column type="gchararray"/>
-      <!-- column-name obj -->
-      <column type="gchararray"/>
-      <!-- column-name foreground -->
-      <column type="gchararray"/>
-      <!-- column-name background -->
-      <column type="gchararray"/>
-      <!-- column-name doFrame -->
-      <column type="gint"/>
-    </columns>
   </object>
   <object class="GtkTreeStore" id="script_tree">
     <columns>

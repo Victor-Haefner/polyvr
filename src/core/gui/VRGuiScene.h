@@ -23,7 +23,7 @@ class VRGuiScene {
         Glib::RefPtr<Gtk::TreeView> tree_view;
 
         Gtk::TreeModel::iterator selected_itr;
-        string selected;
+        int selected = -1;
         VRGeometryWeakPtr selected_geometry;
         VRObjectWeakPtr VRGuiScene_copied;
         bool liveUpdate = false;

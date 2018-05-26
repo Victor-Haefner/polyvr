@@ -46,20 +46,22 @@ using namespace std;
 // --------------------------
 
 VRObjectPtr VRGuiScene::getSelected() {
-    if (selected == "") return 0;
+    if (selected < 0) return 0;
     auto scene = VRScene::getCurrent();
     if (scene == 0) return 0;
 
     VRObjectPtr root = scene->getRoot();
-    VRObjectPtr res = root->getAtPath(selected);
+    //VRObjectPtr res = root->getAtPath(selected);
+    VRObjectPtr res = root->find(selected);
+    if (!res) return 0;
 
-    if (res == 0) {
+    /*if (res == 0) {
         cout << "did not find " << selected << endl;
         tree_store->clear();
         parseSGTree( root );
         tree_view->expand_all();
         setTableSensitivity("table11", false);
-    }
+    }*/
 
     return res;
 }
@@ -360,13 +362,14 @@ void VRGuiScene::updateObjectForms(bool disable) {
 
 class ModelColumns : public Gtk::TreeModelColumnRecord {
     public:
-        ModelColumns() { add(name); add(type); add(obj); add(fg); add(bg); }
+        ModelColumns() { add(name); add(type); add(obj); add(fg); add(bg); add(ID); }
 
         Gtk::TreeModelColumn<Glib::ustring> name;
         Gtk::TreeModelColumn<Glib::ustring> type;
         Gtk::TreeModelColumn<Glib::ustring> obj;
         Gtk::TreeModelColumn<Glib::ustring> fg;
         Gtk::TreeModelColumn<Glib::ustring> bg;
+        Gtk::TreeModelColumn<int> ID;
 };
 
 class PrimModelColumns : public Gtk::TreeModelColumnRecord {
@@ -430,16 +433,12 @@ void VRGuiScene::removeTreeStoreBranch(Gtk::TreeModel::iterator iter, bool self)
         iter = iter->children()[0];
     } else iter = tree_store->erase(iter); //returns next row
 
-    while(tree_store->iter_depth(iter) > N) {
-        iter = tree_store->erase(iter); //returns next row
-    }
+    while (tree_store->iter_depth(iter) > N) iter = tree_store->erase(iter); //returns next row
 }
 
 void VRGuiScene::syncSGTree(VRObjectPtr o, Gtk::TreeModel::iterator itr) {
     if (o == 0) return;
-
     removeTreeStoreBranch(itr, false);
-
     for (uint i=0; i<o->getChildrenCount(); i++) parseSGTree( o->getChild(i), itr );
 }
 
@@ -454,7 +453,8 @@ void VRGuiScene::on_treeview_select() {
     //string name = row.get_value(cols.name);
     //string type = row.get_value(cols.type);
     updateObjectForms(true);
-    selected = row.get_value(cols.obj);
+    //selected = row.get_value(cols.obj);
+    selected = row.get_value(cols.ID);
     selected_itr = iter;
     updateObjectForms();
 
@@ -824,13 +824,13 @@ void VRGuiScene::on_menu_add_primitive(string s) {
 
 void VRGuiScene::on_menu_delete() {
     if(!selected_itr) return;
-    if (getSelected()->getPersistency() == 0) return;
+    //if (getSelected()->getPersistency() == 0) return; // if this behavior is intended, explain why..
     // todo: check for camera!!
 
     string msg1 = "Delete object " + getSelected()->getName();
     if (!askUser(msg1, "Are you sure you want to delete this object?")) return;
     getSelected()->destroy();
-    selected = "";
+    selected = -1;
 
     Glib::RefPtr<Gtk::TreeModel> model = tree_view->get_model();
     removeTreeStoreBranch(selected_itr);
@@ -909,12 +909,12 @@ void VRGuiScene::on_drag_end(const Glib::RefPtr<Gdk::DragContext>& dc) {
     auto dest = dragDest.lock();
     if (dest == 0) return;
     if (ac == 0) return;
-    VRObjectPtr selected = getSelected();
-    if (selected == 0) return;
-    selected->switchParent(dest, dragPos);
-    cout << "drag_end " << selected->getPath() << endl;
-    Gtk::TreeModel::iterator iter = tree_view->get_model()->get_iter(selected->getPath());
-    setSGRow(iter, selected);
+    VRObjectPtr obj = getSelected();
+    if (obj == 0) return;
+    obj->switchParent(dest, dragPos);
+    //cout << "drag_end " << obj->getPath() << endl;
+    Gtk::TreeModel::iterator iter = tree_view->get_model()->get_iter(obj->getPath());
+    setSGRow(iter, obj);
 }
 
 void VRGuiScene::on_drag_beg(const Glib::RefPtr<Gdk::DragContext>& dc) {
@@ -928,8 +928,8 @@ void VRGuiScene::on_drag_data_receive(const Glib::RefPtr<Gdk::DragContext>& dc ,
     if (path == 0) return;
 
     dragDest.reset();
-    VRObjectPtr selected = getSelected();
-    if (selected == 0) return;
+    VRObjectPtr obj = getSelected();
+    if (obj == 0) return;
 
     dragPath = path.to_string();
     dragPos = 0;
@@ -938,9 +938,9 @@ void VRGuiScene::on_drag_data_receive(const Glib::RefPtr<Gdk::DragContext>& dc ,
         dragPos = toInt( dragPath.substr(d+1) );
         dragPath = dragPath.substr(0,d);
     }
-    cout << "drag dest " << dragPath << " " << pos << endl;
+    //cout << "drag dest " << dragPath << " " << pos << endl;
 
-    if (selected->hasTag("treeviewNotDragable")) { dc->drag_status(Gdk::DragAction(0),0); return; } // object is not dragable
+    if (obj->hasTag("treeviewNotDragable")) { dc->drag_status(Gdk::DragAction(0),0); return; } // object is not dragable
     if (dragPath == "0" && pos <= 1) { dc->drag_status(Gdk::DragAction(0),0); return; } // drag out of root
 
     /*Gtk::TreeModel::iterator iter = tree_view->get_model()->get_iter(path);
@@ -1359,7 +1359,6 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     setColorChooser("light_amb", sigc::mem_fun(*this, &VRGuiScene::setLight_amb_color));
     setColorChooser("light_spec", sigc::mem_fun(*this, &VRGuiScene::setLight_spec_color));
 
-    selected = "";
     updateObjectForms();
 }
 
