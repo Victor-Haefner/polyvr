@@ -411,20 +411,13 @@ void VRGuiScene::setSGRow(Gtk::TreeModel::iterator itr, VRObjectPtr o) {
     gtk_tree_store_set (tree_store->gobj(), row.gobj(), 2, o->getPath().c_str(), -1);
     gtk_tree_store_set (tree_store->gobj(), row.gobj(), 3, fg.c_str(), -1);
     gtk_tree_store_set (tree_store->gobj(), row.gobj(), 4, bg.c_str(), -1);
-    gtk_tree_store_set (tree_store->gobj(), row.gobj(), 5, e?0:0, -1);
+    gtk_tree_store_set (tree_store->gobj(), row.gobj(), 5, o->getID(), -1);
 }
 
 void VRGuiScene::parseSGTree(VRObjectPtr o, Gtk::TreeModel::iterator itr) {
     if (o == 0) return;
-    if (!itr) { parseSGTree(o); return; }
-    itr = tree_store->append(itr->children());
-    setSGRow( itr, o );
-    for (uint i=0; i<o->getChildrenCount(); i++) parseSGTree( o->getChild(i), itr );
-}
-
-void VRGuiScene::parseSGTree(VRObjectPtr o) {
-    if (o == 0) return;
-    Gtk::TreeModel::iterator itr = tree_store->append();
+    if (!itr) itr = tree_store->append();
+    else itr = tree_store->append(itr->children());
     setSGRow( itr, o );
     for (uint i=0; i<o->getChildrenCount(); i++) parseSGTree( o->getChild(i), itr );
 }
@@ -448,6 +441,44 @@ void VRGuiScene::syncSGTree(VRObjectPtr o, Gtk::TreeModel::iterator itr) {
     removeTreeStoreBranch(itr, false);
 
     for (uint i=0; i<o->getChildrenCount(); i++) parseSGTree( o->getChild(i), itr );
+}
+
+void VRGuiScene::on_treeview_select() {
+    Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
+    if(!iter) return;
+    setTableSensitivity("table11", true);
+
+    ModelColumns cols;
+    Gtk::TreeModel::Row row = *iter;
+
+    //string name = row.get_value(cols.name);
+    //string type = row.get_value(cols.type);
+    updateObjectForms(true);
+    selected = row.get_value(cols.obj);
+    selected_itr = iter;
+    updateObjectForms();
+
+    selected_geometry.reset();
+    if (getSelected() == 0) return;
+    if (getSelected()->hasTag("geometry")) selected_geometry = static_pointer_cast<VRGeometry>(getSelected());
+}
+
+void VRGuiScene::on_edit_object_name(string path, string new_text) {
+    if(!trigger_cbs) return;
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview6"));
+    Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
+    if(!iter) return;
+
+    // set the cell with new name
+    ModelColumns cols;
+    Gtk::TreeModel::Row row = *iter;
+    row[cols.name] = new_text;
+
+    // do something
+    getSelected()->setName(new_text);
+    row[cols.name] = getSelected()->getName();
+    updateObjectForms();
+    if (getSelected()->getType() == "Camera") VRGuiSignals::get()->getSignal("camera_added")->triggerPtr<VRDevice>();
 }
 
 // --------------------------
@@ -726,46 +757,8 @@ void VRGuiScene::on_toggle_camera_accept_realroot() {
 
 
 // --------------------------
-// ---------TreeViewCallbacks
+// ---------Menu callbacks
 // --------------------------
-
-void VRGuiScene::on_treeview_select() {
-    Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
-    if(!iter) return;
-    setTableSensitivity("table11", true);
-
-    ModelColumns cols;
-    Gtk::TreeModel::Row row = *iter;
-
-    //string name = row.get_value(cols.name);
-    //string type = row.get_value(cols.type);
-    updateObjectForms(true);
-    selected = row.get_value(cols.obj);
-    selected_itr = iter;
-    updateObjectForms();
-
-    selected_geometry.reset();
-    if (getSelected() == 0) return;
-    if (getSelected()->hasTag("geometry")) selected_geometry = static_pointer_cast<VRGeometry>(getSelected());
-}
-
-void VRGuiScene::on_edit_object_name(string path, string new_text) {
-    if(!trigger_cbs) return;
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview6"));
-    Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
-    if(!iter) return;
-
-    // set the cell with new name
-    ModelColumns cols;
-    Gtk::TreeModel::Row row = *iter;
-    row[cols.name] = new_text;
-
-    // do something
-    getSelected()->setName(new_text);
-    row[cols.name] = getSelected()->getName();
-    updateObjectForms();
-    if (getSelected()->getType() == "Camera") VRGuiSignals::get()->getSignal("camera_added")->triggerPtr<VRDevice>();
-}
 
 template <class T>
 void VRGuiScene::on_menu_add() {

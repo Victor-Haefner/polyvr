@@ -55,8 +55,7 @@ class VRGuiScene {
         void on_treeview_select();
         void getTypeColors(VRObjectPtr o, string& fg, string& bg);
         void setSGRow(Gtk::TreeModel::iterator itr, VRObjectPtr o);
-        void parseSGTree(VRObjectPtr o, Gtk::TreeModel::iterator itr);
-        void parseSGTree(VRObjectPtr o);
+        void parseSGTree(VRObjectPtr o, Gtk::TreeModel::iterator itr = Gtk::TreeModel::iterator());
         void removeTreeStoreBranch(Gtk::TreeModel::iterator iter, bool self = true);
         void syncSGTree(VRObjectPtr o, Gtk::TreeModel::iterator itr);
         // ----------------------------------------------
