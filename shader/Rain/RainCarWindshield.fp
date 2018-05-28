@@ -299,6 +299,7 @@ void main() {
 	
 	if (dropColor == vec4(0,0,0,0)) discard;	
 	if (dropColor.w < 0.1) discard;	
+	dropColor.w=1;
 	gl_FragColor = dropColor;
 }
 
