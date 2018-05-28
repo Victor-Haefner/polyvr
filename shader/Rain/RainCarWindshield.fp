@@ -303,8 +303,6 @@ void main() {
 	gl_FragColor = dropColor;
 }
 
-/** NOT NEEDED RIGHT NOW */
-
 
 
 
