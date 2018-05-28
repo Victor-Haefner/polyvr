@@ -89,6 +89,7 @@ string Pose::toString() {
 
 void Pose::invert() {
     Matrix4d m = asMatrix();
+    m.invert();
     set(Vec3d(m[3]), Vec3d(-m[2]), Vec3d(m[1]));
 }
 
