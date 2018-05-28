@@ -21,11 +21,24 @@
 using namespace OSG;
 
 /* Python usage example:
-def initRainyWindshield():
-	VR.rcShield = VR.RainCarWindshield()
-	windshield = VR.find('windshield') #Geometry
-	VR.rcShield.setWindshield(windshield)
-	VR.scene.addChild(VR.rcShield)
+	def initDummyWindshield():
+		VR.dummyWindshield = VR.Geometry('windshield')
+		VR.dummyWindshield.setPrimitive('Box 1.7 0.01 0.5 1 1 1')
+		VR.dummyWindshield.setTransform([0,50,0],[0,1,1],[0,1,0])
+		VR.dummyWindshield.setPickable(1)
+		VR.scene.addChild(VR.dummyWindshield)
+		VR.dummyWindshield.setVisible(False)
+
+	def initRainyWindshield():
+		VR.rcShield = VR.RainCarWindshield()
+		windshield = VR.find('windshield') #Geometry
+		VR.rcShield.setWindshield(windshield)
+		VR.scene.addChild(VR.rcShield)
+		VR.rcShield.start()
+		VR.rcShield.setScale(True,3)
+
+    initDummyWindshield()
+	initRainyWindshield()
 */
 
 VRRainCarWindshield::VRRainCarWindshield() : VRGeometry("RainCarWindshield") {

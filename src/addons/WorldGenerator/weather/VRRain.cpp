@@ -20,10 +20,13 @@
 using namespace OSG;
 
 /*	Python usage example:
-    VR.rain = VR.Rain()
-	VR.rain.setScale(False, 3)
-	VR.scene.addChild(VR.rain)
-	VR.rain.start()
+	def initRain():
+		VR.rain = VR.Rain()
+		VR.rain.setScale(False, 3)
+		VR.scene.addChild(VR.rain)
+		VR.rain.start()
+
+    initRain()
 */
 
 VRRain::VRRain() : VRGeometry("Rain") {
