@@ -171,7 +171,7 @@ void main() {
 
 	vec3 check = checkrad();
 	//gl_FragColor = vec4(debugObstruction(),0.3); //DebugMode
-	gl_FragColor = vec4(check,0.2);
+	gl_FragColor = vec4(check,1);
 }
 
 
