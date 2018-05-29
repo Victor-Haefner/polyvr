@@ -36,6 +36,7 @@ class VRRain : public VRGeometry {
         float rainDensity = 0;
 
         bool isRaining = false;
+        bool depthTexer = false;
 
         uint textureSize;
 
