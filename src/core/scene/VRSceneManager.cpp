@@ -128,7 +128,11 @@ void VRSceneManager::newScene(string path) {
     if (user) user->addChild(headlight_B);
     else cam->addChild(headlight_B);
 
-    cam->setFrom(Vec3d(0,0,3));
+    cam->setFrom(Vec3d(3,2,3));
+    cam->setAt(Vec3d(0,0,0));
+
+    string initScript = "\timport VR\n\n\tif hasattr(VR, 'scene'): VR.scene.destroy()\n\tVR.scene = VR.Object('scene', 'light')\n\n\t";
+    current->newScript("init", initScript);
     setScene(current);
 }
 
