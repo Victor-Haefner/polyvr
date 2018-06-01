@@ -101,6 +101,7 @@ class VROWLImport {
         string whereIs(string s);
         void printState(RDFStatement& s, string ID = "");
         void printTripleStore();
+        void printOWLSubjects();
 
     public:
         VROWLImport();
