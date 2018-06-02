@@ -801,8 +801,6 @@
 		<Unit filename="src/core/scene/import/E57/constants.h" />
 		<Unit filename="src/core/scene/import/E57/e57_v0_6.rnc" />
 		<Unit filename="src/core/scene/import/E57/gnss_error.h" />
-		<Unit filename="src/core/scene/import/E57/src/E57RefImplConfig.cmake" />
-		<Unit filename="src/core/scene/import/E57/src/e57_v0_6.rnc" />
 		<Unit filename="src/core/scene/import/E57/time_conversion.c">
 			<Option compilerVar="CC" />
 		</Unit>
