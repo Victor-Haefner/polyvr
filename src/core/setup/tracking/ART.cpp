@@ -30,11 +30,11 @@ int ART_device::key() { return key(ID, type); }
 int ART_device::key(int ID, int type) { return ID*1000 + type; }
 
 void ART_device::init() {
-    if (type != 1) ent = VRTransform::create("ART_tracker");
+    if (type != 1) ent = VRTransform::create("ART_tracker", false);
 
     if (type == 2) { // finger tracking
         for (int i=0;i<5;i++) {
-            auto f = VRTransform::create("finger"+toString(i));
+            auto f = VRTransform::create("finger"+toString(i), false);
             ent->addChild(f);
             fingerEnts.push_back(f);
         }
