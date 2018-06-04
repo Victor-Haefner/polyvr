@@ -20,10 +20,13 @@
 using namespace OSG;
 
 /*	Python usage example:
-    VR.rain = VR.Rain()
-	VR.rain.setScale(False, 3)
-	VR.scene.addChild(VR.rain)
-	VR.rain.start()
+	def initRain():
+		VR.rain = VR.Rain()
+		VR.rain.setScale(False, 3)
+		VR.scene.addChild(VR.rain)
+		VR.rain.start()
+
+    initRain()
 */
 
 VRRain::VRRain() : VRGeometry("Rain") {
@@ -203,8 +206,14 @@ void VRRain::update() {
 
     auto camDef = VRScene::getCurrent()->getActiveCamera();
     if (debugRain) cout << "defcam: " << camDef->getName() << endl;
-    if (camDef == camTex) camDef = oldCamTex;
-    else oldCamTex = camDef;
+    if (camDef == camTex) {
+        camDef = oldCamTex;
+        depthTexer = true;
+    }
+    else {
+        oldCamTex = camDef;
+        depthTexer = false;
+    }
     //if (camDef->getName() == "car") oldCamTex = camDef;
     if (debugRain) cout << "oldcam: " << oldCamTex->getName() << endl;
     auto defCamPos = camDef->getWorldPosition();//camDef->getFrom();
@@ -216,6 +225,7 @@ void VRRain::update() {
     if (debugRain) cout << "camtexfrom: " << camTex->getFrom() << endl;
 
     mat->setShaderParameter<float>("rainOffset", offset);
+    mat->setShaderParameter<bool>("depthTexer", depthTexer);
     mat->readVertexShader(vScript);
     mat->readFragmentShader(fScript);
 }
