@@ -238,7 +238,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto nodes = laneIn->getEntity("path")->getAllEntities("nodes");
                 VREntityPtr node = (*nodes.rbegin())->getEntity("node");
                 auto p = node->getVec3("position");
-                p += X2; ///FELIX: what does this do
+                p += X2;
                 node->setVec3("position", p, "Position");
                 graph->setPosition(node->getValue<int>("graphID", 0), Pose::create(p));
             }
@@ -302,6 +302,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto norm1 = nodeEnt1->getVec3("direction");
                 auto node2 = nodes2[1]->getEntity("node");  //second node of roadOut
                 auto norm2 = nodes2[1]->getVec3("direction");
+                auto norm3 = nodes1[nodes1.size()-2]->getVec3("direction");
                 nodeEnt2->set("node", node1->getName());  //set first node of roadOut as last node of roadIn
                 if (D > 0) {
                     //displacementsA[roadIn] = 0;
@@ -314,6 +315,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto norm1 = nodes1[nodes1.size()-2]->getVec3("direction");
                 auto node2 = nodeEnt2->getEntity("node");;
                 auto norm2 = nodeEnt2->getVec3("direction");
+                auto norm3 = nodes2[1]->getVec3("direction");
                 nodeEnt1->set("node", node2->getName()); //set last node of roadIn as first node of roadOut
                 if (D > 0) {
                     displacementsB[roadIn] = X;
