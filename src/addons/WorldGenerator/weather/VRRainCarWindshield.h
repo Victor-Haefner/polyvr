@@ -26,6 +26,7 @@ class VRRainCarWindshield : public VRGeometry {
 
         string vScript;
         string fScript;
+        string dfScript;
 
         bool isRaining = false;
         bool isWiping = false;
@@ -74,6 +75,7 @@ class VRRainCarWindshield : public VRGeometry {
         void start();
         void stop();
 
+        void reloadShader();
 };
 
 OSG_END_NAMESPACE;

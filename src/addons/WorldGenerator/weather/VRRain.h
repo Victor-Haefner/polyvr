@@ -29,8 +29,10 @@ class VRRain : public VRGeometry {
 
         string vScript;
         string fScript;
+        string dfScript;
         string vScriptTex;
         string fScriptTex;
+        string dfScriptTex;
         float offset = 0;
         float camH = 40;
         float rainDensity = 0;
@@ -44,6 +46,7 @@ class VRRain : public VRGeometry {
         void startRainCallback(float t);
         void stopRainCallback(float t);
         void updateScale(float scaleNow);
+        void setupShaderLocations();
 
         //inital cloud parameters
         float densityStart = 0.1;
@@ -83,6 +86,7 @@ class VRRain : public VRGeometry {
         bool getIsRaining();
 
         void overrideParameters( float durationTransition, float rainDensity, float density, float speedX, float speedY, float color, float light );
+        void reloadShader();
 };
 
 OSG_END_NAMESPACE;

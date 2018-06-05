@@ -43,14 +43,10 @@ using namespace OSG;
 
 VRRainCarWindshield::VRRainCarWindshield() : VRGeometry("RainCarWindshield") {
     type = "RainCarWindshield";
-    string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Rain/";
-    vScript = resDir + "RainCarWindshield.vp";
-    fScript = resDir + "RainCarWindshield.fp";
 
     //Shader setup
     mat = VRMaterial::create("RainCarWindshield");
-    mat->readVertexShader(vScript);
-    mat->readFragmentShader(fScript);
+    reloadShader();
     setMaterial(mat);
     setPrimitive("Plane", "2 2 1 1");
     mat->setLit(false);
@@ -178,9 +174,13 @@ void VRRainCarWindshield::update() {
     mat->setActivePass(0);
     mat->readVertexShader(vScript);
     mat->readFragmentShader(fScript);
+    mat->readFragmentShader(dfScript, true);
+    mat->updateDeferredShader();
     mat->setActivePass(1);
     mat->readVertexShader(vScript);
     mat->readFragmentShader(fScript);
+    mat->readFragmentShader(dfScript, true);
+    mat->updateDeferredShader();
 
     setShaderParameter("tnow", tnow);
     setShaderParameter("tWiperstart", tWiperstart);
@@ -221,6 +221,20 @@ void VRRainCarWindshield::setWipers(bool isWiping, float wiperSpeed) {
     if (isWiping) this->wiperSpeed = wiperSpeed;
     if (isWiping) setShaderParameter("wiperSpeed", wiperSpeed);
     cout << "VRRainCarWindshield::setWipers(" << isWiping <<","<< wiperSpeed << ")" << endl;
+}
+
+void VRRainCarWindshield::reloadShader() {
+    cout << "VRRainCarWindshield::reloadShader()" << endl;
+    string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Rain/";
+    vScript = resDir + "RainCarWindshield.vp";
+    fScript = resDir + "RainCarWindshield.fp";
+    dfScript = resDir + "RainCarWindshield.dfp";
+
+    mat->readVertexShader(vScript);
+    mat->readFragmentShader(fScript);
+    mat->readFragmentShader(dfScript, true);
+
+    mat->updateDeferredShader();
 }
 
 
