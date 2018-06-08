@@ -224,7 +224,8 @@ void VRLeap::newFrame(Json::Value json) {
         numPens = json["pointables"].size();
     }
 
-    for (uint i = 0; i < json["pointables"].size(); ++i) { // Get the tools/pens
+    // Get the currently recognized tools/pens
+    for (uint i = 0; i < json["pointables"].size(); ++i) {
         auto pointable = json["pointables"][i];
 
         if (!pointable["tool"].asBool()) continue;
