@@ -15,6 +15,9 @@ template<> string typeName(const VRLeapPtr& o) { return "Leap"; }
 VRLeap::VRLeap() : VRDevice("leap") {
     transformation = Pose::create();
 
+    //TODO: Debugging only
+    numPens = 0;
+
     // left hand beacons
     for (int i = 1; i <= 5; ++i) {
             addBeacon();
@@ -215,6 +218,12 @@ void VRLeap::newFrame(Json::Value json) {
         VRScene::getCurrent()->queueJob(fkt);
     }
 
+    //TODO: Debugging only!
+    if (json["pointables"].size() != numPens) {
+        std::cout << "Number of recognized pens: " << json["pointables"].size() << ". Previously was: " << numPens << endl;
+        numPens = json["pointables"].size();
+    }
+
     for (uint i = 0; i < json["pointables"].size(); ++i) { // Get the tools/pens
         auto pointable = json["pointables"][i];
 
@@ -242,9 +251,6 @@ void VRLeap::newFrame(Json::Value json) {
         if (pens.size() == 2) {
             auto pose = computeCalibPose(pens);
             setPose(pose);
-        }
-        else {
-            std::cout << "LEAP CALIBRATION ERROR: Did not find 2 pens, but [" << pens.size() << "]" << endl;
         }
     }
 
