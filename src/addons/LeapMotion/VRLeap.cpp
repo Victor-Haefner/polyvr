@@ -243,6 +243,9 @@ void VRLeap::newFrame(Json::Value json) {
             auto pose = computeCalibPose(pens);
             setPose(pose);
         }
+        else {
+            std::cout << "LEAP CALIBRATION ERROR: Did not find 2 pens, but [" << pens.size() << "]" << endl;
+        }
     }
 
     for (auto& cb : frameCallbacks) cb(frame);

@@ -5,6 +5,7 @@
 
 OSG_BEGIN_NAMESPACE ;
 
+
 class VRHandGeo : public VRGeometry {
 
 public:
