@@ -21,7 +21,8 @@
 
 namespace CGAL {
     typedef Exact_predicates_exact_constructions_kernel Kernel;	// Mostly referenced as "Epeck"
-    class Polyhedron : public Polyhedron_3<Kernel> {};
+    //class Polyhedron : public Polyhedron_3<Kernel> {};
+    typedef Polyhedron_3<Kernel> Polyhedron;
     //typedef Polyhedron_3<Kernel/*, Polyhedron_items_with_id_3*/> Polyhedron; // Item "with_id_3" is necessary for vertex indices
     typedef Polyhedron::Vertex_iterator	Vertex_iterator;
     typedef Polyhedron::HalfedgeDS		HalfedgeDS;
@@ -31,5 +32,11 @@ namespace CGAL {
     typedef Aff_transformation_3<Kernel> Transformation;
 }
 
+class CGALPolyhedron {
+    public:
+        CGAL::Polyhedron* polyhedron = 0;
+        CGALPolyhedron() { polyhedron = new CGAL::Polyhedron(); }
+        ~CGALPolyhedron() { delete polyhedron; }
+};
 
 #endif /* CGALTYPEDEFS_H_ */

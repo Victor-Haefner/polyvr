@@ -221,8 +221,7 @@ void VRSound::playFrame() {
     if (al->state == AL_INITIAL) {
         if (!initiated) initiate();
         if (!al->context) { cout << "VRSound::playFrame Warning: no context" << endl; return; }
-        al->frame = avcodec_alloc_frame();
-        //al->frame = av_frame_alloc();
+        al->frame = av_frame_alloc();
         av_seek_frame(al->context, stream_id, 0,  AVSEEK_FLAG_FRAME);
         al->state = AL_PLAYING;
         interrupt = false;
@@ -290,8 +289,7 @@ void VRSound::playLocally() {
     if (!al->context) return;
     if (doUpdate) updateSource();
 
-    //al->frame = av_frame_alloc();
-    al->frame = avcodec_alloc_frame();
+    al->frame = av_frame_alloc();
     av_seek_frame(al->context, stream_id, 0,  AVSEEK_FLAG_FRAME);
 
     while (av_read_frame(al->context, &al->packet) >= 0) {

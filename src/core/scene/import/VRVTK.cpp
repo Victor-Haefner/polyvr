@@ -1,6 +1,5 @@
 #include "VRVTK.h"
 
-#include <vtkXMLParser.h>
 #include <vtkDataSetReader.h>
 #include <vtkDataSet.h>
 #include <vtkDataArray.h>
@@ -11,7 +10,7 @@
 #include <vtkLine.h>
 
 /* NOT COMPILING?
-sudo apt-get install libvtk5-dev
+sudo apt-get install libvtk7-dev
 */
 
 #include <fstream>
@@ -26,10 +25,6 @@ OSG_BEGIN_NAMESPACE;
 void loadVtk(string path, VRTransformPtr res) {
     cout << "load VTK file " << path << endl;
     VRGeoData geo;
-
-    /*auto parser = vtkXMLParser::New();
-    parser->SetFileName(path.c_str());
-    parser->Parse();*/
 
     vtkDataSetReader* reader = vtkDataSetReader::New();
     reader->SetFileName(path.c_str());

@@ -48,16 +48,16 @@ void CSGGeometry::init() {
 	oct = Octree::create(thresholdL);
 	type = "CSGGeometry";
 	setMatrix(oldWorldTrans);
-	polyhedron = new CGAL::Polyhedron();
+	polyhedron = new CGALPolyhedron();
 }
 
-void CSGGeometry::setCSGGeometry(CGAL::Polyhedron *p) {
-	if (!p->is_valid()) return;
+void CSGGeometry::setCSGGeometry(CGALPolyhedron *p) {
+	if (!p->polyhedron->is_valid()) return;
 	polyhedron = p;
 	VRGeometry::setMesh( OSGGeometry::create((GeometryMTRecPtr)toOsgGeometry(p)) );
 }
 
-CGAL::Polyhedron* CSGGeometry::getCSGGeometry() {
+CGALPolyhedron* CSGGeometry::getCSGGeometry() {
     if (polyhedron == 0) {
         Matrix4d worldTransform = getWorldMatrix();
         bool success;
@@ -67,7 +67,9 @@ CGAL::Polyhedron* CSGGeometry::getCSGGeometry() {
 	return polyhedron;
 }
 
-void CSGGeometry::operate(CGAL::Polyhedron *p1, CGAL::Polyhedron *p2) {
+void CSGGeometry::operate(CGALPolyhedron *P1, CGALPolyhedron *P2) {
+    auto p1 = P1->polyhedron;
+    auto p2 = P2->polyhedron;
 	if (!p1->is_closed() || !p2->is_closed()) return;
 
     try {
@@ -76,11 +78,12 @@ void CSGGeometry::operate(CGAL::Polyhedron *p1, CGAL::Polyhedron *p2) {
         else if(operation == "subtract") np1 -= np2;
         else if(operation == "intersect") np1 = np1.intersection(np2);
         else cout << "CSGGeometry: Warning: unexpected CSG operation!\n";
-        np1.convert_to_polyhedron(*polyhedron);
+        np1.convert_to_polyhedron(*(polyhedron->polyhedron));
     } catch (exception e) { cout << getName() << ": CSGGeometry::operate exception: " << e.what() << endl; }
 }
 
-void CSGGeometry::applyTransform(CGAL::Polyhedron* p, Matrix4d m) {
+void CSGGeometry::applyTransform(CGALPolyhedron* P, Matrix4d m) {
+    auto p = P->polyhedron;
     if (p == 0) return;
     CGAL::Transformation t(m[0][0], m[1][0], m[2][0], m[3][0],
                            m[0][1], m[1][1], m[2][1], m[3][1],
@@ -89,7 +92,8 @@ void CSGGeometry::applyTransform(CGAL::Polyhedron* p, Matrix4d m) {
     transform(p->points_begin(), p->points_end(), p->points_begin(), t);
 }
 
-GeometryTransitPtr CSGGeometry::toOsgGeometry(CGAL::Polyhedron *p) {
+GeometryTransitPtr CSGGeometry::toOsgGeometry(CGALPolyhedron *P) {
+    auto p = P->polyhedron;
 	GeoPnt3fPropertyRecPtr positions = GeoPnt3fProperty::create();
 	GeoVec3fPropertyRecPtr normals = GeoVec3fProperty::create();
 	GeoUInt32PropertyRecPtr indices = GeoUInt32Property::create();
@@ -111,8 +115,8 @@ GeometryTransitPtr CSGGeometry::toOsgGeometry(CGAL::Polyhedron *p) {
 
 	// Convert indices && positions
 	int curIndex = 0;
-	for (CGAL::Polyhedron::Facet_const_iterator it = p->facets_begin(); it != p->facets_end(); it++) {
-		CGAL::Polyhedron::Halfedge_around_facet_const_circulator circ = it->facet_begin();
+	for (auto it = p->facets_begin(); it != p->facets_end(); it++) {
+		auto circ = it->facet_begin();
 		do {
 			CGAL::Point cgalPos = circ->vertex()->point();
 			// We need to transform each point from global coordinates into our local coordinate system
@@ -156,7 +160,7 @@ size_t CSGGeometry::isKnownPoint(OSG::Pnt3f newPoint) {
 
 void CSGGeometry::enableEditMode() {
 	// Reset our result geometry
-	CGAL::Polyhedron* p = new CGAL::Polyhedron();
+	CGALPolyhedron* p = new CGALPolyhedron();
 	setCSGGeometry(p);
 	delete p;
 

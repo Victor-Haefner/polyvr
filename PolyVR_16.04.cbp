@@ -14,7 +14,6 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-g" />
-					<Add option="-frounding-math" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -32,7 +31,7 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
-			<Add option="-std=c++11" />
+			<Add option="-std=c++14" />
 			<Add option="`pkg-config gtk+-2.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
 			<Add option="`pkg-config --cflags libxml++-2.6`" />
@@ -88,6 +87,7 @@
 			<Add option="-DBOOST_NO_COMPILER_CONFIG" />
 			<Add option="-DBOOST_NO_CXX14_DECLTYPE_AUTO" />
 			<Add option="-DBOOST_NO_CXX11_DECLTYPE_N3276" />
+			<Add option="-DBOOST_NO_CXX11_HDR_ATOMIC=1" />
 			<Add option="-DGL_GLEXT_PROTOTYPES" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
@@ -109,6 +109,7 @@
 			<Add directory="/usr/include/Vive" />
 			<Add directory="/usr/include/oce" />
 			<Add directory="/usr/include/IFC" />
+			<Add directory="/usr/include/vtk-7.1/" />
 		</Compiler>
 		<Linker>
 			<Add option="-lTKernel" />
@@ -148,7 +149,8 @@
 			<Add option="`pkg-config vte --libs`" />
 			<Add option="-ljsoncpp" />
 			<Add option="-lvrpn" />
-			<Add option="-lvtkalglib" />
+			<Add option="-lquat" />
+ 			<Add option="-lvtkalglib" />
 			<Add option="-lvtkGeovis" />
 			<Add option="-lvtkproj4" />
 			<Add option="-lvtkCharts" />
@@ -157,17 +159,17 @@
 			<Add option="-lvtkCommon" />
 			<Add option="-lvtkHybrid" />
 			<Add option="-lvtksys" />
-			<Add option="-lvtkDICOMParser" />
+ 			<Add option="-lvtkDICOMParser" />
 			<Add option="-lvtkImaging" />
-			<Add option="-lvtkverdict" />
-			<Add option="-lvtkexoIIc" />
+ 			<Add option="-lvtkverdict" />
+ 			<Add option="-lvtkexoIIc" />
 			<Add option="-lvtkInfovis" />
 			<Add option="-lvtkViews" />
 			<Add option="-lvtkFiltering" />
 			<Add option="-lvtkIO" />
 			<Add option="-lvtkVolumeRendering" />
 			<Add option="-lvtkftgl" />
-			<Add option="-lvtkmetaio" />
+ 			<Add option="-lvtkmetaio" />
 			<Add option="-lvtkWidgets" />
 			<Add option="-lvtkGenericFiltering" />
 			<Add option="-lvtkParallel" />
