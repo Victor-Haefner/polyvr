@@ -14,6 +14,7 @@ bool debugB = false;
 uniform vec2 OSGViewportSize;
 uniform float rainOffset;
 uniform float rainDensity;
+uniform bool depthTexer;
 
 uniform sampler2D tex;
 
@@ -171,7 +172,8 @@ void main() {
 
 	vec3 check = checkrad();
 	//gl_FragColor = vec4(debugObstruction(),0.3); //DebugMode
-	gl_FragColor = vec4(check,0.2);
+	if (!depthTexer) gl_FragColor = vec4(check,1);
+	if (depthTexer) gl_FragColor = vec4(1,0,0,1);
 }
 
 
