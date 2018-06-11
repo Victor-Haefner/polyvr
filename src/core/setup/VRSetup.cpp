@@ -15,6 +15,7 @@
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
 #include "core/objects/object/VRObjectT.h"
+#include "core/objects/geometry/VRGeometry.h"
 #include "core/scripting/VRScript.h"
 #include <libxml++/libxml++.h>
 #include <libxml++/nodes/element.h>
@@ -266,6 +267,17 @@ void VRSetup::load(string file) {
         toValue( displayN->get_attribute("globalOffset")->get_value(), globalOffset );
         setDisplaysOffset(globalOffset);
     }
+}
+
+void VRSetup::makeTestCube() {
+    static bool done = false;
+    if (done) return; done = true;
+
+    auto cube = VRGeometry::create("testCube");
+    cube->setPrimitive("Box", "0.1 0.1 0.1 1 1 1");
+    cube->setFrom(Vec3d(0.1,0.1,-1));
+    cube->setPickable(true);
+    getRoot()->addChild(cube);
 }
 
 OSG_END_NAMESPACE;

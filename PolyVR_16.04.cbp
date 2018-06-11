@@ -14,7 +14,6 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-g" />
-					<Add option="-frounding-math" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -32,7 +31,7 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
-			<Add option="-std=c++11" />
+			<Add option="-std=c++14" />
 			<Add option="`pkg-config gtk+-2.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
 			<Add option="`pkg-config --cflags libxml++-2.6`" />
@@ -88,6 +87,7 @@
 			<Add option="-DBOOST_NO_COMPILER_CONFIG" />
 			<Add option="-DBOOST_NO_CXX14_DECLTYPE_AUTO" />
 			<Add option="-DBOOST_NO_CXX11_DECLTYPE_N3276" />
+			<Add option="-DBOOST_NO_CXX11_HDR_ATOMIC=1" />
 			<Add option="-DGL_GLEXT_PROTOTYPES" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
@@ -109,6 +109,7 @@
 			<Add directory="/usr/include/Vive" />
 			<Add directory="/usr/include/oce" />
 			<Add directory="/usr/include/IFC" />
+			<Add directory="/usr/include/vtk-7.1/" />
 		</Compiler>
 		<Linker>
 			<Add option="-lTKernel" />
@@ -148,7 +149,8 @@
 			<Add option="`pkg-config vte --libs`" />
 			<Add option="-ljsoncpp" />
 			<Add option="-lvrpn" />
-			<Add option="-lvtkalglib" />
+			<Add option="-lquat" />
+ 			<Add option="-lvtkalglib" />
 			<Add option="-lvtkGeovis" />
 			<Add option="-lvtkproj4" />
 			<Add option="-lvtkCharts" />
@@ -157,17 +159,17 @@
 			<Add option="-lvtkCommon" />
 			<Add option="-lvtkHybrid" />
 			<Add option="-lvtksys" />
-			<Add option="-lvtkDICOMParser" />
+ 			<Add option="-lvtkDICOMParser" />
 			<Add option="-lvtkImaging" />
-			<Add option="-lvtkverdict" />
-			<Add option="-lvtkexoIIc" />
+ 			<Add option="-lvtkverdict" />
+ 			<Add option="-lvtkexoIIc" />
 			<Add option="-lvtkInfovis" />
 			<Add option="-lvtkViews" />
 			<Add option="-lvtkFiltering" />
 			<Add option="-lvtkIO" />
 			<Add option="-lvtkVolumeRendering" />
 			<Add option="-lvtkftgl" />
-			<Add option="-lvtkmetaio" />
+ 			<Add option="-lvtkmetaio" />
 			<Add option="-lvtkWidgets" />
 			<Add option="-lvtkGenericFiltering" />
 			<Add option="-lvtkParallel" />
@@ -325,7 +327,6 @@
 		<Unit filename="src/addons/Engineering/CSG/CSGGeometry.cpp" />
 		<Unit filename="src/addons/Engineering/CSG/CSGGeometry.h" />
 		<Unit filename="src/addons/Engineering/CSG/CSGGeometryAlgorithms.cpp" />
-		<Unit filename="src/addons/Engineering/CSG/Octree/Octree.h" />
 		<Unit filename="src/addons/Engineering/CSG/PolyhedronBuilder.h" />
 		<Unit filename="src/addons/Engineering/CSG/VRPyCSG.cpp" />
 		<Unit filename="src/addons/Engineering/CSG/VRPyCSG.h" />
@@ -355,7 +356,6 @@
 		<Unit filename="src/addons/Engineering/Factory/network.h" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRMechanism.cpp" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRMechanism.h" />
-		<Unit filename="src/addons/Engineering/Mechanics/VRProfile.h" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRPyMechanism.cpp" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRPyMechanism.h" />
 		<Unit filename="src/addons/Engineering/Milling/VRMillingCuttingToolProfile.cpp" />
@@ -381,14 +381,6 @@
 		<Unit filename="src/addons/Engineering/VRPyRobotArm.h" />
 		<Unit filename="src/addons/Engineering/VRRobotArm.cpp" />
 		<Unit filename="src/addons/Engineering/VRRobotArm.h" />
-		<Unit filename="src/addons/Factory/VRFactory.h" />
-		<Unit filename="src/addons/Factory/VRLogistics.h" />
-		<Unit filename="src/addons/Factory/VRMechanism.h" />
-		<Unit filename="src/addons/Factory/VRNumberingEngine.h" />
-		<Unit filename="src/addons/Factory/VRPyLogistics.h" />
-		<Unit filename="src/addons/Factory/VRPyMechanism.h" />
-		<Unit filename="src/addons/Factory/VRPyNumberingEngine.h" />
-		<Unit filename="src/addons/Factory/network.h" />
 		<Unit filename="src/addons/LeapMotion/VRHandGeo.cpp" />
 		<Unit filename="src/addons/LeapMotion/VRHandGeo.h" />
 		<Unit filename="src/addons/LeapMotion/VRLeap.cpp" />
@@ -477,7 +469,6 @@
 		<Unit filename="src/addons/Semantics/Reasoning/VROntology.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntology.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyLibrary.cpp" />
-		<Unit filename="src/addons/Semantics/Reasoning/VROntologyLibrary.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyRule.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyRule.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyT.h" />
@@ -493,7 +484,6 @@
 		<Unit filename="src/addons/Semantics/Reasoning/VRSemanticUtils.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VRStatement.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VRStatement.h" />
-		<Unit filename="src/addons/Semantics/Reasoning/VRUtils.h" />
 		<Unit filename="src/addons/Semantics/Segmentation/VRAdjacencyGraph.cpp" />
 		<Unit filename="src/addons/Semantics/Segmentation/VRAdjacencyGraph.h" />
 		<Unit filename="src/addons/Semantics/Segmentation/VRPyAdjacencyGraph.cpp" />
@@ -502,7 +492,6 @@
 		<Unit filename="src/addons/Semantics/Segmentation/VRPySegmentation.h" />
 		<Unit filename="src/addons/Semantics/Segmentation/VRSegmentation.cpp" />
 		<Unit filename="src/addons/Semantics/Segmentation/VRSegmentation.h" />
-		<Unit filename="src/addons/Semantics/Tutoring/VRTutoringSystem.h" />
 		<Unit filename="src/addons/Semantics/VRSemanticsFwd.h" />
 		<Unit filename="src/addons/SimViDekont/GeoIO.h" />
 		<Unit filename="src/addons/SimViDekont/Player.h" />
@@ -567,7 +556,6 @@
 		<Unit filename="src/addons/WorldGenerator/traffic/VRTrafficLights.h" />
 		<Unit filename="src/addons/WorldGenerator/traffic/VRTrafficSimulation.cpp" />
 		<Unit filename="src/addons/WorldGenerator/traffic/VRTrafficSimulation.h" />
-		<Unit filename="src/addons/WorldGenerator/traffic/setup.sh" />
 		<Unit filename="src/addons/WorldGenerator/weather/VRPyWeather.cpp" />
 		<Unit filename="src/addons/WorldGenerator/weather/VRPyWeather.h" />
 		<Unit filename="src/addons/WorldGenerator/weather/VRRain.cpp" />
@@ -653,7 +641,6 @@
 		<Unit filename="src/core/math/frustum.h" />
 		<Unit filename="src/core/math/graph.cpp" />
 		<Unit filename="src/core/math/graph.h" />
-		<Unit filename="src/core/math/graphT.h" />
 		<Unit filename="src/core/math/interpolator.cpp" />
 		<Unit filename="src/core/math/interpolator.h" />
 		<Unit filename="src/core/math/patch.cpp" />
@@ -690,7 +677,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/networking/mongoose/mongoose.h" />
-		<Unit filename="src/core/networking/mongoose/mongoose_67.h" />
 		<Unit filename="src/core/objects/OSGCamera.cpp" />
 		<Unit filename="src/core/objects/OSGCamera.h" />
 		<Unit filename="src/core/objects/OSGObject.cpp" />
@@ -741,7 +727,6 @@
 		<Unit filename="src/core/objects/geometry/VRSky.h" />
 		<Unit filename="src/core/objects/geometry/VRSprite.cpp" />
 		<Unit filename="src/core/objects/geometry/VRSprite.h" />
-		<Unit filename="src/core/objects/geometry/VRSpriteLod.h" />
 		<Unit filename="src/core/objects/geometry/VRStroke.cpp" />
 		<Unit filename="src/core/objects/geometry/VRStroke.h" />
 		<Unit filename="src/core/objects/material/OSGMaterial.cpp" />
@@ -818,17 +803,6 @@
 		<Unit filename="src/core/scene/import/E57/constants.h" />
 		<Unit filename="src/core/scene/import/E57/e57_v0_6.rnc" />
 		<Unit filename="src/core/scene/import/E57/gnss_error.h" />
-		<Unit filename="src/core/scene/import/E57/inc/E57Foundation.h" />
-		<Unit filename="src/core/scene/import/E57/inc/E57Simple.h" />
-		<Unit filename="src/core/scene/import/E57/inc/LASReader.h" />
-		<Unit filename="src/core/scene/import/E57/inc/basictypes.h" />
-		<Unit filename="src/core/scene/import/E57/inc/constants.h" />
-		<Unit filename="src/core/scene/import/E57/inc/gnss_error.h" />
-		<Unit filename="src/core/scene/import/E57/inc/time_conversion.h" />
-		<Unit filename="src/core/scene/import/E57/src/E57FoundationImpl.h" />
-		<Unit filename="src/core/scene/import/E57/src/E57RefImplConfig.cmake" />
-		<Unit filename="src/core/scene/import/E57/src/E57SimpleImpl.h" />
-		<Unit filename="src/core/scene/import/E57/src/e57_v0_6.rnc" />
 		<Unit filename="src/core/scene/import/E57/time_conversion.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -859,7 +833,6 @@
 		<Unit filename="src/core/scene/import/VRImport.h" />
 		<Unit filename="src/core/scene/import/VRPLY.cpp" />
 		<Unit filename="src/core/scene/import/VRPLY.h" />
-		<Unit filename="src/core/scene/import/VRSTEP.h" />
 		<Unit filename="src/core/scene/import/VRVTK.cpp" />
 		<Unit filename="src/core/scene/import/VRVTK.h" />
 		<Unit filename="src/core/scene/interfaces/VRScenegraphInterface.cpp" />
@@ -868,7 +841,6 @@
 		<Unit filename="src/core/scene/rendering/VRDefShading.h" />
 		<Unit filename="src/core/scene/rendering/VRDeferredRenderStage.cpp" />
 		<Unit filename="src/core/scene/rendering/VRDeferredRenderStage.h" />
-		<Unit filename="src/core/scene/rendering/VRFSAA.h" />
 		<Unit filename="src/core/scene/rendering/VRFXAA.cpp" />
 		<Unit filename="src/core/scene/rendering/VRFXAA.h" />
 		<Unit filename="src/core/scene/rendering/VRFog.cpp" />

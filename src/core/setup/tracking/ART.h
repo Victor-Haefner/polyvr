@@ -9,7 +9,7 @@
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGMatrix.h>
 #include <map>
-#include <boost/thread/mutex.hpp>
+#include <boost/thread/recursive_mutex.hpp>
 
 class DTrack;
 
@@ -65,7 +65,7 @@ class ART : public VRStorage {
         template<typename dev> void getMatrix(dev t, Matrix4d& m, bool doOffset = true);
         template<typename dev> void getMatrix(dev t, ART_devicePtr d);
 
-        boost::mutex mutex;
+        boost::recursive_mutex mutex;
         void scan(int type = -1, int N = 0);
 
         void update_setup();

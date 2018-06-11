@@ -31,13 +31,14 @@ template<> string typeName(const OSG::VRTransformPtr& t) { return "Transform"; }
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRTransform::VRTransform(string name) : VRObject(name) {
+VRTransform::VRTransform(string name, bool doOpt) : VRObject(name) {
+    doOptimizations = doOpt;
     t = OSGTransform::create( Transform::create() );
     constraint = VRConstraint::create();
     constraint->free({0,1,2,3,4,5});
     constraint->setActive(false);
     setCore(OSGCore::create(t->trans), "Transform");
-    disableCore();
+    if (doOptimizations) disableCore();
     addAttachment("transform", 0);
 
     store("from", &_from);
@@ -56,7 +57,7 @@ VRTransform::~VRTransform() {
 }
 
 VRTransformPtr VRTransform::ptr() { return static_pointer_cast<VRTransform>( shared_from_this() ); }
-VRTransformPtr VRTransform::create(string name) { return VRTransformPtr(new VRTransform(name) ); }
+VRTransformPtr VRTransform::create(string name, bool doOpt) { return VRTransformPtr(new VRTransform(name, doOpt) ); }
 
 VRObjectPtr VRTransform::copy(vector<VRObjectPtr> children) {
     VRTransformPtr t = VRTransform::create(getBaseName());
@@ -118,15 +119,17 @@ void VRTransform::updateTransformation() {
         return;
     }
 
-    bool isI = isIdentity(matrix);
-    if (identity && !isI) {
-        identity = false;
-        enableCore();
-    }
+    if (doOptimizations) {
+        bool isI = isIdentity(matrix);
+        if (identity && !isI) {
+            identity = false;
+            enableCore();
+        }
 
-    if (!identity && isI) {
-        identity = true;
-        disableCore();
+        if (!identity && isI) {
+            identity = true;
+            disableCore();
+        }
     }
 
     t->trans->setMatrix(toMatrix4f(matrix));

@@ -16,6 +16,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <map>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 typedef __u64 mstime_t;
 
@@ -72,7 +74,8 @@ string execCmd(Args&&... args) {
     char foo[32768];
     size_t N = read(link[0], foo, sizeof(foo));
     result = string(foo, N);
-    wait();
+    int status;
+    wait(&status);
     return result;
 }
 
