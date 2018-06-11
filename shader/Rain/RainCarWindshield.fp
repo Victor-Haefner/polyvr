@@ -230,6 +230,8 @@ vec4 locateDrop() {
 }
 
 vec4 returnColor(vec4 drop) {
+	if (scale < 0.01) return vec4(0,0,0,0);
+
 	float xC = -floor(drop.x/disBD);
 	float yC = floor((drop.y)/disBD);
 	float hashValue = hash(vec2(xC*0.2437,yC*0.2437)); //same seed would be all same size due to calctime algorithm
@@ -279,7 +281,6 @@ vec4 drawBorder(vec4 check) {
 }
 
 void main() {
-	if (scale < 0.01) discard;
 	radius *= scale*0.1;
 	radius = clamp(radius, 0.0501, 0.3);
 

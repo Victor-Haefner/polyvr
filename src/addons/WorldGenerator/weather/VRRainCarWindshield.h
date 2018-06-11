@@ -34,6 +34,7 @@ class VRRainCarWindshield : public VRGeometry {
         bool lastWipe = false;
 
         float wiperSpeed = 0;
+        float newWiperSpeed = 0;
 
         uint textureSize;
 

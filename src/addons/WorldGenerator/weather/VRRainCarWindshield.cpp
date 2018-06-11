@@ -143,10 +143,32 @@ void VRRainCarWindshield::update() {
     tdelta = tnow-tlast;
     tlast = tnow;
 
-    if (isWiping && tnow-durationWiper/wiperSpeed>tWiperstart) tWiperstart=tnow;
-    if (!isWiping && wiperSpeed>0 && tnow-durationWiper/wiperSpeed>tWiperstart) {
-            wiperSpeed=0;
-            setShaderParameter("wiperSpeed", wiperSpeed);
+    auto applyWiperSpeed = [&]() {
+        wiperSpeed = newWiperSpeed;
+        setShaderParameter("wiperSpeed", wiperSpeed);
+    };
+
+    if (isWiping && newWiperSpeed == wiperSpeed){
+        //resetting time stamp for neutral wiper state
+        if (tnow-durationWiper/wiperSpeed>tWiperstart) tWiperstart=tnow;
+    } else {
+        //first start of wipers
+        if (isWiping && wiperSpeed == 0) {
+            tWiperstart=tnow;
+            applyWiperSpeed();
+        }
+        //seamless live changes of wiperSpeeds
+        if (isWiping && wiperSpeed > 0) {
+            float thisPeriod = durationWiper/wiperSpeed;
+            float newPeriod = durationWiper/newWiperSpeed;
+            tWiperstart=tnow - (tnow-tWiperstart)/thisPeriod*newPeriod;
+            applyWiperSpeed();
+        }
+        //stopping wipers only in neutral state
+        if (!isWiping && wiperSpeed > 0 && tnow-durationWiper/wiperSpeed>tWiperstart) {
+            newWiperSpeed = 0;
+            applyWiperSpeed();
+        }
     }
 
     Vec3d windshieldPos = geoWindshield->getWorldPosition();
@@ -216,11 +238,10 @@ void VRRainCarWindshield::stop() {
     cout << "VRRainCarWindshield::stop()" << endl;
 }
 
-void VRRainCarWindshield::setWipers(bool isWiping, float wiperSpeed) {
+void VRRainCarWindshield::setWipers(bool isWiping, float newWiperSpeed) {
     this->isWiping = isWiping;
-    if (isWiping) this->wiperSpeed = wiperSpeed;
-    if (isWiping) setShaderParameter("wiperSpeed", wiperSpeed);
-    cout << "VRRainCarWindshield::setWipers(" << isWiping <<","<< wiperSpeed << ")" << endl;
+    this->newWiperSpeed = newWiperSpeed;
+    cout << "VRRainCarWindshield::setWipers(" << isWiping <<","<< newWiperSpeed << ")" << endl;
 }
 
 void VRRainCarWindshield::reloadShader() {
