@@ -37,6 +37,7 @@ class VRAnimation : public VRName, public std::enable_shared_from_this<VRAnimati
         float start_time = 0;
         float duration = 0;
         float offset = 0;
+        float t = 0;
         bool run = false;
         bool loop = false;
 
