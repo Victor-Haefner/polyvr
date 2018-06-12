@@ -164,7 +164,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
         }
 	};
 
-	auto mergeMatchingLanes = [&]() { ///FELIX - change offsets to middle road, apply new normal
+	auto mergeMatchingLanes = [&]() { ///CONTINUATION
 	    map<VREntityPtr, Vec3d> displacementsA; // map roads to displace!
 	    map<VREntityPtr, Vec3d> displacementsB; // map roads to displace!
 	    map<VREntityPtr, bool> processedLanes; // keep list of already processed lanes
@@ -192,7 +192,6 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 //if (D > 0) displacementsA[roadOut] = X;
                 if (D > 0) displacementsB[roadIn] = X; //OLD
                 if (D > 0) displacementsA[roadOut] = 0;
-                //if (Nin==Nout && D > 0) displacementsB[roadIn] = 0;
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
             }
             if (Nin < Nout) {
@@ -206,7 +205,6 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 if (D > 0) displacementsB[roadIn] = 0; //OLD
                 if (D > 0) displacementsA[roadOut] = -X;
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
-                //roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
             }
 
             processedLanes[laneIn] = true;
@@ -215,18 +213,14 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 
         if (displacementsA.size() == 0 && displacementsB.size() == 0) return;
 
-        ///FELIX: cleaned up offsetter, not working for parking lanes atm
         for (auto rfront : roadFronts) {// shift whole road fronts!
             auto road = rfront->road;
             auto rEnt = road->getEntity();
-            if (!displacementsA.count(rEnt) || !displacementsB.count(rEnt)) continue;
+            //if (!displacementsA.count(rEnt) || !displacementsB.count(rEnt)) continue; //just no
             Vec3d X1 = displacementsA[rEnt];
             Vec3d X2 = displacementsB[rEnt];
             float offsetter1 = X1.dot(rfront->pose.x())*rfront->dir;
             float offsetter2 = X2.dot(rfront->pose.x())*rfront->dir;
-            //road->setOffsetIn(offsetter1);
-            //road->setOffsetOut(offsetter2);
-
             if (rfront->dir>0) {
                 road->setOffsetOut(offsetter2);
             } else {
@@ -254,7 +248,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
         }
 	};
 
-	auto bridgeMatchingLanes = [&]() {
+	auto bridgeMatchingLanes = [&]() { ///DEFAULT
         for (auto match : laneMatches) {
             auto laneIn = match.first;
             auto laneOut = match.second;
@@ -304,11 +298,12 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto norm2 = nodes2[1]->getVec3("direction");
                 auto norm3 = nodes1[nodes1.size()-2]->getVec3("direction");
                 nodeEnt2->set("node", node1->getName());  //set first node of roadOut as last node of roadIn
+                nodeEnt2->setVec3("direction", norm2, "Direction");
                 if (D > 0) {
                     //displacementsA[roadIn] = 0;
                     displacementsB[roadOut] = -X;
                 }
-                roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
+                roads->connectGraph({node1,node2}, {norm1,norm1}, laneOut);
             }
             if (Nin < Nout) {
                 auto node1 = nodes1[nodes1.size()-2]->getEntity("node");
@@ -317,11 +312,12 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto norm2 = nodeEnt2->getVec3("direction");
                 auto norm3 = nodes2[1]->getVec3("direction");
                 nodeEnt1->set("node", node2->getName()); //set last node of roadIn as first node of roadOut
+                nodeEnt1->setVec3("direction", norm1, "Direction");
                 if (D > 0) {
                     displacementsB[roadIn] = X;
                     //displacementsA[roadOut] = 0;
                 }
-                roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
+                roads->connectGraph({node1,node2}, {norm1,norm1}, laneIn);
             }
 
             processedLanes[laneIn] = true;

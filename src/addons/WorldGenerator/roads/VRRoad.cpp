@@ -158,7 +158,7 @@ VRGeometryPtr VRRoad::createGeometry() {
                     auto po = path->getPoint(zz);
                     x.normalize();
                     float offsetter = offsetIn*(1.0-(float(zz)/(float(path->size())-1.0))) + offsetOut*(float(zz)/(float(path->size())-1.0));
-                    if (zz>0 && zz<path->getPoints().size()-1) offsetter = 0; //hack, should be more intelligently solved at further dev
+                    if (zz>0 && zz<path->getPoints().size()-1) offsetter = 0; //only first node has offsetter
                     po.setPos(x*offsetter  + p);
                     path->setPoint(zz,po);
                 };
@@ -223,7 +223,7 @@ void VRRoad::computeMarkings() {
         x.normalize();
         float offsetter = offsetIn*(1.0-(float(zz)/(float(path->size())-1.0))) + offsetOut*(float(zz)/(float(path->size())-1.0));
         float offsetterOld = offsetter;
-        if (zz>0 && zz<path->getPoints().size()-1) offsetter = 0; //hack, should be more intelligently solved at further dev
+        if (zz>0 && zz<path->getPoints().size()-1) offsetter = 0; //only first node has offsetter
         float widthSum = -roadWidth*0.5 - offsetter;
         for (int li=0; li<Nlanes; li++) {
             auto lane = lanes[li];
@@ -232,10 +232,6 @@ void VRRoad::computeMarkings() {
             if (li == 0) k += mw*0.5;
             else if (lanes[li-1]->is_a("ParkingLane")) {
                 k += mw*0.5;
-                offsetter = toFloat(lanes[li-1]->get("width")->value)*0.5;
-                //offsetIn = offsetter;
-                //offsetOut = offsetter;
-                cout<<"ParkingLane "<<offsetterOld<<" "<<offsetIn<<" "<<offsetOut<<" "<< k <<endl;
             }
             add(-x*k + p, n);
             widthSum += width;
