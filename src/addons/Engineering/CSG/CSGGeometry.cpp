@@ -162,7 +162,6 @@ void CSGGeometry::enableEditMode() {
 	// Reset our result geometry
 	CGALPolyhedron* p = new CGALPolyhedron();
 	setCSGGeometry(p);
-	delete p;
 
 	for (auto c : children) {
 		if (c->getType() == string("Geometry") || c->getType() == string("CSGGeometry")) c->setVisible(true);
@@ -180,10 +179,9 @@ bool CSGGeometry::setEditMode(const bool editModeActive) {
 			result = disableEditMode();
 
 			// Promote news to our parents, but only if parents had edit mode disabled before
-			VRObjectPtr obj = getParent();
-			if (obj) {
-                CSGGeometryPtr geo = static_pointer_cast<CSGGeometry>(obj);
-                if (obj->getType() == "CSGGeometry" && !geo->getEditMode()) {
+			CSGGeometryPtr geo = dynamic_pointer_cast<CSGGeometry>( getParent() );
+			if (geo) {
+                if (!geo->getEditMode()) {
                     if (result) result = geo->setEditMode(true);
                     if (result) result = geo->setEditMode(false);
                 }
