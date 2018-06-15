@@ -253,8 +253,10 @@ void VRRainCarWindshield::setWipers(bool isWiping, float newWiperSpeed) {
 void VRRainCarWindshield::cutPower() {
     isWiping = false;
     hasPower = false;
-    float thisPeriod = durationWiper/wiperSpeed;
-    wiperState = (tnow-tWiperstart)/thisPeriod;
+    if (wiperSpeed != 0) {
+        float thisPeriod = durationWiper/wiperSpeed;
+        wiperState = (tnow-tWiperstart)/thisPeriod;
+    }
     newWiperSpeed = 0;
     wiperSpeed = newWiperSpeed;
     setShaderParameter("wiperSpeed", wiperSpeed);
