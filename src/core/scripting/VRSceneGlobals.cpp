@@ -246,10 +246,10 @@ PyObject* VRSceneGlobals::stackCall(VRSceneGlobals* self, PyObject *args) {
 
 void on_py_file_diag_cb(PyObject* pyFkt) {
     string res = VRGuiFile::getRelativePath_toWorkdir();
-    float scale = VRGuiFile::getScale();
-    PyObject *pArgs = PyTuple_New(2);
+    PyObject *pArgs = PyTuple_New(3);
     PyTuple_SetItem( pArgs, 0, PyString_FromString(res.c_str()) );
-    PyTuple_SetItem( pArgs, 1, PyFloat_FromDouble(scale) );
+    PyTuple_SetItem( pArgs, 1, PyFloat_FromDouble( VRGuiFile::getScale() ) );
+    PyTuple_SetItem( pArgs, 2, PyString_FromString( VRGuiFile::getPreset().c_str() ) );
     execCall( pyFkt, pArgs, 0 );
 }
 

@@ -20,6 +20,7 @@ sigc::slot<void> VRGuiFile::sigClose = sigc::slot<void>();
 sigc::slot<void> VRGuiFile::sigSelect = sigc::slot<void>();
 bool VRGuiFile::cache_override = 0;
 float VRGuiFile::scale = 1;
+string VRGuiFile::preset = "SOLIDWORKS-VRML2";
 
 typedef boost::filesystem::path path;
 
@@ -34,6 +35,11 @@ void VRGuiFile::init() {
 
     setEntryCallback("entry21", sigc::ptr_fun(&VRGuiFile::on_edit_import_scale) );
     setCheckButtonCallback("cache_override", sigc::ptr_fun(&VRGuiFile::on_toggle_cache_override) );
+    setComboboxCallback("combobox15", sigc::ptr_fun(&VRGuiFile::on_change_preset) );
+
+    vector<string> presets = { "SOLIDWORKS-VRML2", "OSG", "COLLADA" };
+    fillStringListstore("fileOpenPresets", presets);
+    setCombobox("combobox15", getListStorePos("fileOpenPresets", "SOLIDWORKS-VRML2"));
 }
 
 void VRGuiFile::open(string button, int action, string title) {
@@ -214,6 +220,10 @@ void VRGuiFile::on_toggle_cache_override() {
 
 void VRGuiFile::on_edit_import_scale() {
     scale = toFloat( getTextEntry("entry21") );
+}
+
+void VRGuiFile::on_change_preset() {
+    preset = getComboboxText("combobox15");
 }
 
 
