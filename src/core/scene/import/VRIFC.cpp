@@ -1,3 +1,5 @@
+#ifndef NO_IFC
+
 #include "VRIFC.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
@@ -358,6 +360,8 @@ void OSG::loadIFC(string path, VRTransformPtr res) {
     IFCLoader ifc;
     ifc.load(path, res);
 }
+
+#endif
 
 
 

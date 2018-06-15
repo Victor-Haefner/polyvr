@@ -205,7 +205,11 @@ void VRRecorder::closeCodec() {
 
 void VRRecorder::initFrame() {
     initCodec();
-    frame = av_frame_alloc();
+#ifdef OLD_LIBAV
+    frame = avcodec_alloc_frame(); // Allocate frame
+#else
+    frame = av_frame_alloc(); // Allocate frame
+#endif
     if (!frame) { fprintf(stderr, "Could not allocate video frame\n"); return; }
     frame->format = codec_context->pix_fmt;
     frame->width  = codec_context->width;
@@ -219,7 +223,11 @@ void VRRecorder::initFrame() {
 
 void VRRecorder::closeFrame() {
     av_freep(&frame->data[0]);
+#ifdef OLD_LIBAV
+    avcodec_free_frame(&frame);
+#else
     av_frame_free(&frame);
+#endif
     frame = 0;
 }
 
