@@ -38,8 +38,6 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/windows/VRView.h"
 
-#define WITH_PHOTOMETRIC
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -203,7 +201,7 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     li.lightType = LightEngine::Point;
     if (type == "directional") li.lightType = LightEngine::Directional;
     if (type == "spot") li.lightType = LightEngine::Spot;
-#ifdef WITH_PHOTOMETRIC
+#ifndef NO_PHOTOMETRIC
     if (type == "photometric") li.lightType = LightEngine::Photometric;
 #endif // WITH_PHOTOMETRIC
 
@@ -258,7 +256,7 @@ void VRDefShading::updateLight(VRLightPtr l) {
     li.lightType = LightEngine::Point;
     if (type == "directional") li.lightType = LightEngine::Directional;
     if (type == "spot") li.lightType = LightEngine::Spot;
-#ifdef WITH_PHOTOMETRIC
+#ifndef NO_PHOTOMETRIC
     if (type == "photometric") li.lightType = LightEngine::Photometric;
 #endif
     if (shadows) li.shadowType = defaultShadowType;
@@ -288,7 +286,7 @@ const std::string& VRDefShading::getLightVPFile(LightTypeE lightType) {
         case LightEngine::Directional: return dsDirLightVPFile;
         case LightEngine::Point: return dsPointLightVPFile;
         case LightEngine::Spot: return dsSpotLightVPFile;
-#ifdef WITH_PHOTOMETRIC
+#ifndef NO_PHOTOMETRIC
         case LightEngine::Photometric: return dsPhotometricLightVPFile;
 #endif
         default: return dsUnknownFile;
@@ -302,7 +300,7 @@ const std::string& VRDefShading::getLightFPFile(LightTypeE lightType, ShadowType
         case LightEngine::Directional: return ds ? dsDirLightShadowFPFile : dsDirLightFPFile;
         case LightEngine::Point: return ds ? dsPointLightShadowFPFile : dsPointLightFPFile;
         case LightEngine::Spot: return ds ? dsSpotLightShadowFPFile : dsSpotLightFPFile;
-#ifdef WITH_PHOTOMETRIC
+#ifndef NO_PHOTOMETRIC
         case LightEngine::Photometric: return ds ? dsPhotometricLightShadowFPFile : dsPhotometricLightFPFile;
 #endif
         default: return dsUnknownFile;
