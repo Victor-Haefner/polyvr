@@ -281,12 +281,12 @@ void VRNature::computeLODsThread(VRThreadWeakPtr tw) {
 
     VRThreadPtr t = tw.lock();
     t->syncFromMain();
-    computeLODs2(leafs);
+    computeLODs3(leafs);
     t->syncToMain();
 }
 
 void VRNature::computeAllLODs(bool threaded) {
-    if (!threaded) { computeLODs2(leafs); return; }
+    if (!threaded) { computeLODs3(leafs); return; }
 
     auto scene = VRScene::getCurrent();
     worker = VRThreadCb::create( "nature lods", boost::bind(&VRNature::computeLODsThread, this, _1) );
@@ -369,6 +369,21 @@ void VRNature::computeLODs2(map<OctreeNode*, VRLodLeafPtr>& leafs) {
             woods->setDir(Vec3d(0,0,-1));
             woods->setUp(Vec3d(0,1,0));
         }*/
+    }
+}
+
+void VRNature::computeLODs3(map<OctreeNode*, VRLodLeafPtr>& leafs) {
+    for (auto tree : treeRefs) {
+        auto tRef = tree.second;
+        VRTree* t = tree.first;
+        if (!tRef || !t) continue;
+        Vec3d offset = t->getWorldPosition();
+        VRTransformPtr tlod = tRef->getLOD(0);
+        /*tRef->appendLOD(geo, lvl, offset);
+        m = tlod->getMaterial();*/
+        VRTransformPtr l = dynamic_pointer_cast<VRTransform>( tlod->duplicate() );
+        addChild(l);
+        l->setWorldPosition(t->getWorldPosition());
     }
 }
 
