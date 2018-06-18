@@ -191,7 +191,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 //if (D > 0) displacementsB[roadIn] = 0; //WIP
                 //if (D > 0) displacementsA[roadOut] = X;
                 if (D > 0) displacementsB[roadIn] = X; //OLD
-                if (D > 0) displacementsA[roadOut] = 0;
+                //if (D > 0) displacementsA[roadOut] = 0;
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
             }
             if (Nin < Nout) {
@@ -202,7 +202,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 nodeEnt2->set("node", node1->getName());
                 //if (D > 0) displacementsB[roadIn] = -X;
                 //if (D > 0) displacementsA[roadOut] = 0;
-                if (D > 0) displacementsB[roadIn] = 0; //OLD
+                //if (D > 0) displacementsB[roadIn] = 0; //OLD
                 if (D > 0) displacementsA[roadOut] = -X;
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
             }
@@ -276,35 +276,6 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
         map<VREntityPtr, Vec3d> displacementsA; // map roads to displace!
 	    map<VREntityPtr, Vec3d> displacementsB; // map roads to displace!
 	    map<VREntityPtr, bool> processedLanes; // keep list of already processed lanes
-        Vec3d pNode = node->getVec3("position");
-        auto recalcRoadFronts = [&]() {
-            for (auto rf : roadFronts) { // compute road front
-                auto road = rf->road;
-                auto& data = road->getEdgePoints( node );
-                Vec3d p1 = data.p1;
-                Vec3d p2 = data.p2;
-                Vec3d norm = data.n;
-                float d1 = (p1-pNode).dot(norm);
-                float d2 = (p2-pNode).dot(norm);
-                float d = min(d1,d2);
-                d1 = max(0.f,d1-d);
-                d2 = max(0.f,d2-d);
-                data.p1 = p1-norm*(d1);
-                data.p2 = p2-norm*(d2);
-
-                Vec3d pm = (data.p1 + data.p2)*0.5; // compute road node
-                int nID = graph->addNode();
-                graph->setPosition(nID, Pose::create(pm));
-                auto n = addNode(nID, pm);
-                data.entry->set("node", n->getName());
-                n->add("paths", data.entry->getName());
-
-                auto rd = data.entry->getVec3("direction");
-                rf->pose = Pose(pm, norm);
-                rf->width = road->getWidth();
-                rf->dir = round(rd.dot(norm));
-            }
-        };
         int zz = 0;
         for (auto match : laneMatches) {
             auto laneIn = match.first;
@@ -696,6 +667,7 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
     auto node = entity->getEntity("node");
     Vec3d pNode = node->getVec3("position");
     int N = roadFronts.size();
+    int singleRoad;
 
     // sort roads
     auto compare = [&](shared_ptr<RoadFront> roadFront1, shared_ptr<RoadFront> roadFront2) -> bool {
@@ -738,6 +710,9 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
             bool parallel12 = bool(getRoadConnectionAngle(roadFronts[1]->road, roadFronts[2]->road) < -0.5);
             bool parallel02 = bool(getRoadConnectionAngle(roadFronts[2]->road, roadFronts[0]->road) < -0.5);
             if ((parallel01 && parallel12) || (parallel01 && parallel02) || (parallel12 && parallel02)) {type = FORK;}
+            if (parallel01 && parallel02) {singleRoad = 0;}
+            if (parallel01 && parallel12) {singleRoad = 1;}
+            if (parallel12 && parallel02) {singleRoad = 2;}
             //type = FORK;
         }
 
@@ -864,6 +839,19 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
                 if (n1.cross(data.n).squareLength() > 1e-5) return false; // not parallel, no special case, normal intersection
                 n1 = data.n;
             }*/
+            //same direction for incoming and outgoing roads
+            for (auto rf : roadFronts) {
+                auto road = rf->road;
+                auto roadOne = roadFronts[singleRoad]->road;
+
+                VREntityPtr rEntry = road->getNodeEntry( node );
+                VREntityPtr rEntryRO = roadOne->getNodeEntry( node );
+
+                auto norm1 = rEntry->getVec3("direction");
+                auto norm2 = rEntryRO->getVec3("direction");
+                if (norm1.dot(norm2)<0) norm2 = -norm2;
+                rEntry->setVec3("direction", norm2, "Direction");
+            }
             return true; // special case
         }
 
