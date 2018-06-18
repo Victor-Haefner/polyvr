@@ -298,7 +298,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 nodeEnt2->set("node", node1->getName());  //set first node of roadOut as last node of roadIn
                 if (D > 0) {
                     //displacementsA[roadIn] = 0;
-                    displacementsB[roadOut] = -X;
+                    if (abs(X.length())>abs(displacementsB[roadOut].length())) displacementsB[roadOut] = -X;
                 }
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
             }
@@ -309,12 +309,12 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto norm2 = nodeEnt2->getVec3("direction");
                 nodeEnt1->set("node", node2->getName()); //set last node of roadIn as first node of roadOut
                 if (D > 0) {
-                    displacementsB[roadIn] = X;
+                    if (abs(X.length())>abs(displacementsB[roadIn].length())) displacementsB[roadIn] = X;
                     //displacementsA[roadOut] = 0;
                 }
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
             }
-
+            cout << " --FORK::offset " << X << endl;
             processedLanes[laneIn] = true;
             processedLanes[laneOut] = true;
             zz++;
