@@ -21,7 +21,7 @@ class VRTextureMosaic : public VRTexture {
         VRTextureMosaic();
         ~VRTextureMosaic();
 
-        VRTextureMosaicPtr create();
+        static VRTextureMosaicPtr create();
         VRTextureMosaicPtr ptr();
 
         void add(VRTexturePtr tex, Vec2i pos);
