@@ -62,7 +62,6 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                     auto& data1 = road1->getEdgePoints( node );
                     auto& data2 = road2->getEdgePoints( node );
                     return data1.n.dot(data2.n);
-                    //return data1.n.cross(data2.n);
                 };
                 auto getRoadTurnLeft = [&](VRRoadPtr road1, VRRoadPtr road2) {
                     auto& data1 = road1->getEdgePoints( node );
@@ -296,35 +295,30 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto norm1 = nodeEnt1->getVec3("direction");
                 auto node2 = nodes2[1]->getEntity("node");  //second node of roadOut
                 auto norm2 = nodes2[1]->getVec3("direction");
-                auto norm3 = nodes1[nodes1.size()-2]->getVec3("direction");
                 nodeEnt2->set("node", node1->getName());  //set first node of roadOut as last node of roadIn
-                //nodeEnt2->setVec3("direction", norm3, "Direction");
                 if (D > 0) {
                     //displacementsA[roadIn] = 0;
                     displacementsB[roadOut] = -X;
                 }
-                roads->connectGraph({node1,node2}, {norm1,norm3}, laneOut);
+                roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
             }
             if (Nin < Nout) {
                 auto node1 = nodes1[nodes1.size()-2]->getEntity("node");
                 auto norm1 = nodes1[nodes1.size()-2]->getVec3("direction");
                 auto node2 = nodeEnt2->getEntity("node");;
                 auto norm2 = nodeEnt2->getVec3("direction");
-                auto norm3 = nodes2[1]->getVec3("direction");
                 nodeEnt1->set("node", node2->getName()); //set last node of roadIn as first node of roadOut
-                //nodeEnt1->setVec3("direction", norm3, "Direction");
                 if (D > 0) {
                     displacementsB[roadIn] = X;
                     //displacementsA[roadOut] = 0;
                 }
-                roads->connectGraph({node1,node2}, {norm1,norm3}, laneIn);
+                roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
             }
 
             processedLanes[laneIn] = true;
             processedLanes[laneOut] = true;
             zz++;
         }
-        //recalcRoadFronts();
         if (displacementsA.size() == 0 && displacementsB.size() == 0) return;
 
         for (auto rfront : roadFronts) {// shift whole road fronts!
