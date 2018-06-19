@@ -126,11 +126,10 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 if (reSignOut<0) j=Nout-j-1;
                 Vec3d X = node->getVec3("position");
 
-                ///TODO: debug occasional weird behaviour
-                if (Nin < Nout &&  left && i == j) { return true; }//cout << "Li<o" << X << "\n"; return true;}
-                if (Nin < Nout && !left && i == Nout-j-1) { return true; }//cout << "Ri<o" << X << "\n"; return true;}
-                if (Nin > Nout &&  left && i == Nout-j-1) { return true; }//cout << "Li>o" << X << "\n"; return true;}
-                if (Nin > Nout && !left && i == j) { return true; }//cout << "Ri>o" << X << "\n"; return true;}
+                if (Nin < Nout &&  left && i == j) { return true; }
+                if (Nin < Nout && !left && i == Nout-j-1) { return true; }
+                if (Nin > Nout &&  left && j == Nin-i-1) { return true; }
+                if (Nin > Nout && !left && i == j) { return true; }
             }
             //match case A - split ways one left one right
             //match case B - split both ways, two left two right
@@ -329,7 +328,8 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             Vec3d Xa = displacements[rEnt];
             float offsetter = Xa.dot(rfront->pose.x())*rfront->dir;
 
-            if(offsetter != 0) offsetter = road->getWidth()/rEnt->getAllEntities("lanes").size();
+            if(offsetter > 0) offsetter = road->getWidth()/rEnt->getAllEntities("lanes").size();
+            if(offsetter < 0) offsetter = - road->getWidth()/rEnt->getAllEntities("lanes").size();
             if (rEnt->getAllEntities("lanes").size()==1) offsetter*=0.5; //hack for merges where only one street comes, might need special case though
             if (rfront->dir>0) {
                 road->setOffsetOut(offsetter);
