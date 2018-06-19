@@ -241,7 +241,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 if (processedLanes.count(laneOut)) continue;
                 VREntityPtr node = laneOut->getEntity("path")->getAllEntities("nodes")[0]->getEntity("node");
                 auto p = node->getVec3("position");
-                p += X2;
+                p += X1;
                 node->setVec3("position", p, "Position");
                 graph->setPosition(node->getValue<int>("graphID", 0), Pose::create(p));
             }
