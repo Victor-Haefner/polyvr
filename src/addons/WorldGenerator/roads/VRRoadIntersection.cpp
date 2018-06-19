@@ -125,10 +125,12 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 if (reSignIn<0) i=Nin-i-1;  //making sure indexes stay consistent, independent of road-direction
                 if (reSignOut<0) j=Nout-j-1;
                 Vec3d X = node->getVec3("position");
-                if (Nin < Nout &&  left && i == j) {cout << "Li<o" << X << "\n"; return true;}
-                if (Nin < Nout && !left && i == Nout-j-1) {cout << "Ri<o" << X << "\n"; return true;}
-                if (Nin > Nout &&  left && i == Nout-j-1) {cout << "Li>o" << X << "\n"; return true;}
-                if (Nin > Nout && !left && i == j) {cout << "Ri>o" << X << "\n"; return true;}
+
+                ///TODO: debug occasional weird behaviour
+                if (Nin < Nout &&  left && i == j) { return true; }//cout << "Li<o" << X << "\n"; return true;}
+                if (Nin < Nout && !left && i == Nout-j-1) { return true; }//cout << "Ri<o" << X << "\n"; return true;}
+                if (Nin > Nout &&  left && i == Nout-j-1) { return true; }//cout << "Li>o" << X << "\n"; return true;}
+                if (Nin > Nout && !left && i == j) { return true; }//cout << "Ri>o" << X << "\n"; return true;}
             }
             //match case A - split ways one left one right
             //match case B - split both ways, two left two right
@@ -272,10 +274,10 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 
     auto bridgeForkingLanes = [&]() { ///FORK
         //cout << "VRRoadNetwork::computeLanes bridgeForkingLanes\n";
-        map<VREntityPtr, Vec3d> displacementsA; // map roads to displace!
-	    map<VREntityPtr, Vec3d> displacementsB; // map roads to displace!
+        map<VREntityPtr, Vec3d> displacements; // map roads to displace!
 	    map<VREntityPtr, bool> processedLanes; // keep list of already processed lanes
         int zz = 0;
+        VREntityPtr roadOne;
         for (auto match : laneMatches) {
             auto laneIn = match.first;
             auto laneOut = match.second;
@@ -297,10 +299,10 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto norm2 = nodes2[1]->getVec3("direction");
                 nodeEnt2->set("node", node1->getName());  //set first node of roadOut as last node of roadIn
                 if (D > 0) {
-                    //displacementsA[roadIn] = 0;
-                    if (abs(X.length())>abs(displacementsB[roadOut].length())) displacementsB[roadOut] = -X;
+                    if (abs(X.length())>abs(displacements[roadOut].length())) displacements[roadOut] = -X;
                 }
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
+                roadOne = roadIn;
             }
             if (Nin < Nout) {
                 auto node1 = nodes1[nodes1.size()-2]->getEntity("node");
@@ -309,35 +311,34 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto norm2 = nodeEnt2->getVec3("direction");
                 nodeEnt1->set("node", node2->getName()); //set last node of roadIn as first node of roadOut
                 if (D > 0) {
-                    if (abs(X.length())>abs(displacementsB[roadIn].length())) displacementsB[roadIn] = X;
-                    //displacementsA[roadOut] = 0;
+                    if (abs(X.length())>abs(displacements[roadIn].length())) displacements[roadIn] = X;
                 }
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
+                roadOne = roadOut;
             }
-            cout << " --FORK::offset " << X << endl;
             processedLanes[laneIn] = true;
             processedLanes[laneOut] = true;
             zz++;
         }
-        if (displacementsA.size() == 0 && displacementsB.size() == 0) return;
+        if (displacements.size() == 0) return;
 
         for (auto rfront : roadFronts) {// shift whole road fronts!
             auto road = rfront->road;
             auto rEnt = road->getEntity();
-            //if (!displacementsA.count(rEnt) || !displacementsB.count(rEnt)) continue;
-            Vec3d X1 = displacementsA[rEnt];
-            Vec3d X2 = displacementsB[rEnt];
-            float offsetter1 = X1.dot(rfront->pose.x())*rfront->dir;
-            float offsetter2 = X2.dot(rfront->pose.x())*rfront->dir;
 
+            Vec3d Xa = displacements[rEnt];
+            float offsetter = Xa.dot(rfront->pose.x())*rfront->dir;
+
+            if(offsetter != 0) offsetter = road->getWidth()/rEnt->getAllEntities("lanes").size();
+            if (rEnt->getAllEntities("lanes").size()==1) offsetter*=0.5; //hack for merges where only one street comes, might need special case though
             if (rfront->dir>0) {
-                road->setOffsetOut(offsetter2);
+                road->setOffsetOut(offsetter);
             } else {
-                //road->setOffsetOut(offsetter2);
-                road->setOffsetIn(offsetter2);
+                road->setOffsetIn(offsetter);
             }
 
-            ///unsure if needed
+            //unsure if needed
+            /*
             for (auto laneIn : rfront->inLanes) {
                 if (processedLanes.count(laneIn)) continue;
                 auto nodes = laneIn->getEntity("path")->getAllEntities("nodes");
@@ -357,7 +358,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 node->setVec3("position", p, "Position");
                 graph->setPosition(node->getValue<int>("graphID", 0), Pose::create(p));
                 cout << "------bridgeForkingLanes - outLane - " << node->getValue<int>("graphID", 0) << p <<"\n";
-            }
+            }*/
         }
 	};
 
