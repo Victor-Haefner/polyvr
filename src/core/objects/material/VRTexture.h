@@ -22,7 +22,7 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
     public:
         VRTexture();
         VRTexture(ImageMTRecPtr img);
-        ~VRTexture();
+        virtual ~VRTexture();
 
         static VRTexturePtr create();
         static VRTexturePtr create(ImageMTRecPtr img);

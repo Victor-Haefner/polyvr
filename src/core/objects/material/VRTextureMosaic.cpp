@@ -3,7 +3,13 @@
 using namespace OSG;
 
 void VRTextureMosaic::add(VRTexturePtr tex, Vec2i pos) {
-    resize( Vec3i(pos[0]+tex->getSize()[0], pos[1]+tex->getSize()[1], 1), Vec3i() );
+    auto s = getSize();
+    if (s[0] == 0) {
+        setImage( tex->getImage() );
+        return;
+    }
+
+    resize( Vec3i(pos[0]+tex->getSize()[0], max(pos[1]+tex->getSize()[1], s[1]), 1), Vec3i() );
     paste(tex, Vec3i(pos[0], pos[1], 0) );
 }
 

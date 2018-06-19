@@ -10,7 +10,9 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRTexture.h"
 #include "core/objects/material/VRTextureGenerator.h"
+#include "core/objects/material/VRTextureMosaic.h"
 #include "core/objects/VRLod.h"
 #include "core/math/Octree.h"
 #include "core/math/pose.h"
@@ -373,6 +375,34 @@ void VRNature::computeLODs2(map<OctreeNode*, VRLodLeafPtr>& leafs) {
 }
 
 void VRNature::computeLODs3(map<OctreeNode*, VRLodLeafPtr>& leafs) {
+    // construct master material
+    /*auto mosaic1 = VRTextureMosaic::create();
+    auto mosaic2 = VRTextureMosaic::create();
+    int H = 0;
+    for (auto tree : treeTemplates) {
+        VRGeoData data; // tmp, ditch when ready
+
+        int Hmax = 1;
+        auto sides = tree.second->createLODtextures(Hmax, data);
+
+        for (int i=0; i<sides.size(); i++) {
+            mosaic1->add( sides[i]->getTexture(0), Vec2i(512*i,H) );
+            mosaic2->add( sides[i]->getTexture(1), Vec2i(512*i,H) );
+        }
+
+        H += Hmax;
+        //m1->write("test.png");
+        break;
+    }
+
+    auto m = VRMaterial::create("natureMosaic");
+    m->setVertexShader(VRTree::treeSprLODvp, "treeSprLODvp");
+    m->setFragmentShader(VRTree::treeSprLODdfp, "treeSprLODdfp", true);
+    m->setShaderParameter("tex0", 0);
+    m->setShaderParameter("tex1", 1);
+    m->setTexture(mosaic1, false, 0);
+    m->setTexture(mosaic2, false, 1);*/
+
     for (auto tree : treeRefs) {
         auto tRef = tree.second;
         VRTree* t = tree.first;
@@ -381,7 +411,8 @@ void VRNature::computeLODs3(map<OctreeNode*, VRLodLeafPtr>& leafs) {
         VRTransformPtr tlod = tRef->getLOD(0);
         /*tRef->appendLOD(geo, lvl, offset);
         m = tlod->getMaterial();*/
-        VRTransformPtr l = dynamic_pointer_cast<VRTransform>( tlod->duplicate() );
+        VRGeometryPtr l = dynamic_pointer_cast<VRGeometry>( tlod->duplicate() );
+        //l->setMaterial(m);
         addChild(l);
         l->setWorldPosition(t->getWorldPosition());
     }
