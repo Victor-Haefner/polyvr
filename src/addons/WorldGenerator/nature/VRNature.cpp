@@ -430,19 +430,23 @@ void VRNature::computeLODs3(map<OctreeNode*, VRLodLeafPtr>& leafs) {
     m->setTexture(mosaic1, false, 0);
     m->setTexture(mosaic2, false, 1);
 
+    trees = VRGeometry::create("trees");
+    trees->setMaterial(m);
+    addChild(trees);
+    VRGeoData treesData(trees);
+
     for (auto tree : treeRefs) {
         auto tRef = tree.second;
         VRTree* t = tree.first;
         if (!tRef || !t) continue;
         Vec3d offset = t->getWorldPosition();
         VRTransformPtr tlod = tRef->getLOD(0);
-        /*tRef->appendLOD(geo, lvl, offset);
-        m = tlod->getMaterial();*/
         VRGeometryPtr l = dynamic_pointer_cast<VRGeometry>( tlod->duplicate() );
-        l->setMaterial(m);
-        addChild(l);
-        l->setWorldPosition(t->getWorldPosition());
+        VRGeoData other(l);
+        treesData.append(other, t->getWorldMatrix() );
     }
+
+    treesData.apply(trees);
 }
 
 void VRNature::computeLODs(map<OctreeNode*, VRLodLeafPtr>& leafs) {

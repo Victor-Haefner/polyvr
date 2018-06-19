@@ -25,6 +25,8 @@ class VRNature : public VRLodTree, public VRWorldModule {
         VRMaterialPtr leafMat2;
         VRMaterialPtr grassMat;
 
+        VRGeometryPtr trees;
+
         VRThreadCbPtr worker;
         void computeLODsThread(VRThreadWeakPtr t);
 
