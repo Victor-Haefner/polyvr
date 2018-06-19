@@ -376,24 +376,51 @@ void VRNature::computeLODs2(map<OctreeNode*, VRLodLeafPtr>& leafs) {
 
 void VRNature::computeLODs3(map<OctreeNode*, VRLodLeafPtr>& leafs) {
     // construct master material
-    /*auto mosaic1 = VRTextureMosaic::create();
+    auto mosaic1 = VRTextureMosaic::create();
     auto mosaic2 = VRTextureMosaic::create();
     int H = 0;
+
+    vector<float> HjVec;
+    int j = 0;
     for (auto tree : treeTemplates) {
-        VRGeoData data; // tmp, ditch when ready
+        if (!tree.second) continue;
 
         int Hmax = 1;
-        auto sides = tree.second->createLODtextures(Hmax, data);
+        auto sides = tree.second->getLodMaterials();
+        for (auto side : sides) Hmax = max(Hmax, side->getTexture(0)->getSize()[1]);
 
         for (int i=0; i<sides.size(); i++) {
-            mosaic1->add( sides[i]->getTexture(0), Vec2i(512*i,H) );
-            mosaic2->add( sides[i]->getTexture(1), Vec2i(512*i,H) );
+            mosaic1->add( sides[i]->getTexture(0), Vec2i(512*i,H), Vec2i(i,j) );
+            mosaic2->add( sides[i]->getTexture(1), Vec2i(512*i,H), Vec2i(i,j) );
+            //sides[i]->getTexture(0)->write("test_"+toString(i)+".png");
         }
 
         H += Hmax;
-        //m1->write("test.png");
-        break;
+        HjVec.push_back(H);
+        j++;
     }
+
+    j = 0;
+    for (auto tree : treeTemplates) {
+        VRGeometryPtr tlod = dynamic_pointer_cast<VRGeometry>( tree.second->getLOD(0) );
+        VRGeoData data(tlod);
+
+        int N = 3;
+        for (int i=0; i<N; i++) { // update UV coordinates
+            Vec2i ID = Vec2i(i,j);
+            float i1 = i*1.0/N;
+            float i2 = (i+1)*1.0/N;
+            float j1 = mosaic1->getChunkPosition(ID)[1]/float(H);
+            float j2 = j1+mosaic1->getChunkSize(ID)[1]/float(H);
+            data.setTexCoord(4*i  , Vec2d(i2,j1));
+            data.setTexCoord(4*i+1, Vec2d(i1,j1));
+            data.setTexCoord(4*i+2, Vec2d(i1,j2));
+            data.setTexCoord(4*i+3, Vec2d(i2,j2));
+        }
+        j++;
+    }
+
+    mosaic1->write("test.png");
 
     auto m = VRMaterial::create("natureMosaic");
     m->setVertexShader(VRTree::treeSprLODvp, "treeSprLODvp");
@@ -401,7 +428,7 @@ void VRNature::computeLODs3(map<OctreeNode*, VRLodLeafPtr>& leafs) {
     m->setShaderParameter("tex0", 0);
     m->setShaderParameter("tex1", 1);
     m->setTexture(mosaic1, false, 0);
-    m->setTexture(mosaic2, false, 1);*/
+    m->setTexture(mosaic2, false, 1);
 
     for (auto tree : treeRefs) {
         auto tRef = tree.second;
@@ -412,7 +439,7 @@ void VRNature::computeLODs3(map<OctreeNode*, VRLodLeafPtr>& leafs) {
         /*tRef->appendLOD(geo, lvl, offset);
         m = tlod->getMaterial();*/
         VRGeometryPtr l = dynamic_pointer_cast<VRGeometry>( tlod->duplicate() );
-        //l->setMaterial(m);
+        l->setMaterial(m);
         addChild(l);
         l->setWorldPosition(t->getWorldPosition());
     }

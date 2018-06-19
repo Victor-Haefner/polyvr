@@ -484,21 +484,23 @@ vector<VRMaterialPtr> VRTree::createLODtextures(int& Hmax, VRGeoData& data) {
     return sides;
 }
 
+vector<VRMaterialPtr> VRTree::getLodMaterials() { return lodMaterials; }
+
 VRGeometryPtr VRTree::createLOD(int lvl) {
     VRGeoData data;
     int Hmax = 1;
     auto sides = createLODtextures(Hmax, data);
+    lodMaterials = sides;
     int N = sides.size();
     if (N == 0) return 0;
-    auto m = sides[0];
-    if (!m) return 0;
 
     auto mosaic1 = VRTextureMosaic::create();
     auto mosaic2 = VRTextureMosaic::create();
     for (int i=0; i<N; i++) {
-        mosaic1->add( sides[i]->getTexture(0), Vec2i(512*i,0) );
-        mosaic2->add( sides[i]->getTexture(1), Vec2i(512*i,0) );
+        mosaic1->add( sides[i]->getTexture(0), Vec2i(512*i,0), Vec2i(i,0) );
+        mosaic2->add( sides[i]->getTexture(1), Vec2i(512*i,0), Vec2i(i,0) );
     }
+    auto m = VRMaterial::create("treeLOD");
     m->setTexture(mosaic1, false, 0);
     m->setTexture(mosaic2, false, 1);
 

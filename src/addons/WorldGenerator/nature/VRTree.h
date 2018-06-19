@@ -25,6 +25,7 @@ class VRTree : public VRTransform {
         vector<segment*> branches;
         vector<VRGeometryPtr> leafGeos;
         vector<VRGeometryPtr> woodGeos;
+        vector<VRMaterialPtr> lodMaterials;
         map<int, VRGeometryPtr> leafLodCache;
         map<int, VRGeometryPtr> truncLodCache;
         static VRMaterialPtr treeMat;
@@ -71,6 +72,8 @@ class VRTree : public VRTransform {
         void createTwigLod(VRGeoData& geo, int lvl);
         void createHullTrunkLod(VRGeoData& geo, int lvl, Vec3d offset, int ID); // soon deprecated
         void createHullLeafLod(VRGeoData& geo, int lvl, Vec3d offset, int ID); // soon deprecated
+
+        vector<VRMaterialPtr> getLodMaterials();
 };
 
 OSG_END_NAMESPACE;

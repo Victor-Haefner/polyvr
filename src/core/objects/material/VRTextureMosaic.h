@@ -14,8 +14,11 @@ class VRTextureMosaic : public VRTexture {
         struct Entry {
             VRTexturePtr tex;
             Vec2i pos;
+            Vec2i size;
             Vec2f uv;
         };
+
+        map<Vec2i, Entry> entries;
 
     public:
         VRTextureMosaic();
@@ -24,7 +27,10 @@ class VRTextureMosaic : public VRTexture {
         static VRTextureMosaicPtr create();
         VRTextureMosaicPtr ptr();
 
-        void add(VRTexturePtr tex, Vec2i pos);
+        void add(VRTexturePtr tex, Vec2i pos, Vec2i ID);
+
+        Vec2i getChunkPosition(Vec2i ID);
+        Vec2i getChunkSize(Vec2i ID);
 };
 
 OSG_END_NAMESPACE;
