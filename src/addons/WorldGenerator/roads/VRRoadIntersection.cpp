@@ -701,9 +701,9 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
         }
 
         if (N == 3) {
-            bool parallel01 = bool(getRoadConnectionAngle(roadFronts[0]->road, roadFronts[1]->road) < -0.5);
-            bool parallel12 = bool(getRoadConnectionAngle(roadFronts[1]->road, roadFronts[2]->road) < -0.5);
-            bool parallel02 = bool(getRoadConnectionAngle(roadFronts[2]->road, roadFronts[0]->road) < -0.5);
+            bool parallel01 = bool(getRoadConnectionAngle(roadFronts[0]->road, roadFronts[1]->road) < -0.82);
+            bool parallel12 = bool(getRoadConnectionAngle(roadFronts[1]->road, roadFronts[2]->road) < -0.82);
+            bool parallel02 = bool(getRoadConnectionAngle(roadFronts[2]->road, roadFronts[0]->road) < -0.82);
             if ((parallel01 && parallel12) || (parallel01 && parallel02) || (parallel12 && parallel02)) {type = FORK;}
             if (parallel01 && parallel02) {singleRoad = 0;}
             if (parallel01 && parallel12) {singleRoad = 1;}
@@ -838,7 +838,10 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
             for (auto rf : roadFronts) {
                 auto road = rf->road;
                 auto roadOne = roadFronts[singleRoad]->road;
-
+                bool pedestrian = false;
+                for (auto lane : rf->inLanes) { if (lane->getValue<bool>("pedestrian", false)) pedestrian = true; break;} //exception might bug some lanes of highways are pedestrian
+                for (auto lane : rf->inLanes) { if (lane->getValue<bool>("sidewalk", false)) pedestrian = true; break;} //exception might bug some lanes of highways are pedestrian
+                if (pedestrian) return false;
                 VREntityPtr rEntry = road->getNodeEntry( node );
                 VREntityPtr rEntryRO = roadOne->getNodeEntry( node );
 
