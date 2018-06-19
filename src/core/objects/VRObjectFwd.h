@@ -38,6 +38,7 @@ ptrFwd(VRBackground);
 ptrFwd(VRBackgroundBase);
 ptrFwd(VRTexture);
 ptrFwd(VRTextureGenerator);
+ptrFwd(VRTextureMosaic);
 ptrFwd(VRConstraint);
 ptrFwd(VRAnimation);
 

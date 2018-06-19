@@ -5,6 +5,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/material/VRTextureGenerator.h"
+#include "core/objects/material/VRTextureMosaic.h"
 #include "core/objects/VRLod.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
@@ -488,7 +489,17 @@ VRGeometryPtr VRTree::createLOD(int lvl) {
 
     auto m = sides[0].first;
     if (!m) return 0;
-    if (N > 1) { // merge textures
+
+    auto mosaic1 = VRTextureMosaic::create();
+    auto mosaic2 = VRTextureMosaic::create();
+    for (int i=0; i<N; i++) {
+        mosaic1->add( sides[i].first->getTexture(0), Vec2i(512*i,0) );
+        mosaic2->add( sides[i].first->getTexture(1), Vec2i(512*i,0) );
+    }
+    m->setTexture(mosaic1, false, 0);
+    m->setTexture(mosaic2, false, 1);
+
+    /*if (N > 1) { // merge textures
         auto tex0 = m->getTexture(0);
         auto tex1 = m->getTexture(1);
         tex0->resize(Vec3i(512*N, Hmax, 1), Vec3i());
@@ -500,7 +511,7 @@ VRGeometryPtr VRTree::createLOD(int lvl) {
         }
         m->setTexture(tex0, false, 0);
         m->setTexture(tex1, false, 1);
-    }
+    }*/
 
     for (int i=0; i<N; i++) { // create UV coordinates
         float i1 = i*1.0/N;

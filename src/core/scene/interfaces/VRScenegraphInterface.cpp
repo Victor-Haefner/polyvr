@@ -161,8 +161,8 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 			auto o = dynamic_pointer_cast<VRTransform>(getObject(m[i+1]));
 			if (o) b = o;
 			b_Name = m[i+1];
-			a->setPickable(true);
-			b->setPickable(true);
+			if (a) a->setPickable(true);
+			if (b) b->setPickable(true);
 			Mates = a_Name + " + " + b_Name;
 			Mates2 = b_Name + " + " + a_Name; //alternativer Name
 		}
@@ -171,8 +171,8 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 				auto o = dynamic_pointer_cast<VRTransform>(getObject(m[i+1]));
                 if (o) b = o;
 				b_Name = m[i+1];
-				a->setPickable(true);
-				b->setPickable(true);
+				if (a) a->setPickable(true);
+				if (b) b->setPickable(true);
 				Mates = a_Name + " + " + b_Name;
 				Mates2 = b_Name + " + " + a_Name; //alternativer Name
 			}
@@ -464,7 +464,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
     PosePtr C = Pose::create();
     pair<PosePtr, PosePtr> C_AandB = make_pair(Pose::create(), Pose::create());
 	if (Type == "0") { //coincident
-		if (MateEntityTypeA == "0") { //Point
+		if (MateEntityTypeA == "0" && a && b) { //Point
 			DoF = {3,4,5}; //nur Rotation (xyz)
 			C = Pose::create(XyzA,IjkA,buildnewUp(IjkA));
 			C_AandB = buildC_AandB(C,a,b);
@@ -472,7 +472,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 			Joint = check();
 		}
 
-		else if (MateEntityTypeA == "1") {  //Line
+		else if (MateEntityTypeA == "1" && a && b) {  //Line
 			DoF = {2,5};			//Translation : z Rotation um z
 			C = Pose::create(pnt2line(IjkA,XyzA,a->getFrom()),IjkA,buildnewUp(IjkA));
 			C_AandB = buildC_AandB(C,a,b);
@@ -480,7 +480,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 			Joint = check();
 		}
 
-		else if (MateEntityTypeA == "2") { //Circle
+		else if (MateEntityTypeA == "2" && a && b) { //Circle
 			DoF = {5}; //Rotation um z
 			C = Pose::create(XyzA,IjkA,buildnewUp(IjkA));
 			C_AandB = buildC_AandB(C,a,b);
@@ -488,7 +488,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 			Joint = check();
 		}
 
-		else if (MateEntityTypeA == "3") {  //Plane
+		else if (MateEntityTypeA == "3" && a && b) {  //Plane
 			DoF = {0,1,5};  // Translation : x&y Rotation um z
 			C = Pose::create(pnt2plane(IjkA,XyzA,a->getFrom()),IjkA,buildnewUp(IjkA));
 			C_AandB = buildC_AandB(C,a,b);
@@ -496,7 +496,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 			Joint = check();
 		}
 
-		else if (MateEntityTypeA == "4") {  //Cylinder
+		else if (MateEntityTypeA == "4" && a && b) {  //Cylinder
 			DoF = {2,5};			//Translation : z Rotation um z
 			C = Pose::create(pnt2line(IjkA,XyzA,a->getFrom()),IjkA,buildnewUp(IjkA));
 			C_AandB = buildC_AandB(C,a,b);
@@ -504,7 +504,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 			Joint = check();
 		}
 
-		else if (MateEntityTypeA == "5") {  //Sphere
+		else if (MateEntityTypeA == "5" && a && b) {  //Sphere
 			DoF = {3,4,5}; //nur Rotation (xyz)
 			C = Pose::create(XyzA,IjkA,buildnewUp(IjkA));
 			C_AandB = buildC_AandB(C,a,b);
@@ -533,7 +533,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 
 	else if (Type == "1") { //concentric
 
-		if (MateEntityTypeA == "2") {  //Circle
+		if (MateEntityTypeA == "2" && a && b) {  //Circle
 			DoF = {2,5}; //Rotation um z
 			C = Pose::create(XyzA,IjkA,buildnewUp(IjkA));
 			C_AandB = buildC_AandB(C,a,b);
@@ -541,7 +541,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 			Joint = check();
         }
 
-		else if (MateEntityTypeA == "4") {  //Cylinder
+		else if (MateEntityTypeA == "4" && a && b) {  //Cylinder
 			DoF = {2,5};			//Translation : z Rotation um z
 			C = Pose::create(pnt2line(IjkA,XyzA,a->getFrom()),IjkA,buildnewUp(IjkA));
 			C_AandB = buildC_AandB(C,a,b);
@@ -549,7 +549,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 			Joint = check();
         }
 
-		else if (MateEntityTypeA == "5") {  //Sphere
+		else if (MateEntityTypeA == "5" && a && b) {  //Sphere
 			//print "work : progress: 1.5 (2 joints needed)";
 			DoF = {2,3,4,5}; //Rotationfrei, translation nur : ausrichtung (geht noch nicht)
 			C = Pose::create(XyzA,IjkA,buildnewUp(IjkA));
@@ -558,7 +558,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 			Joint = check();
         }
 
-		else if (MateEntityTypeA == "7") {  //Cone
+		else if (MateEntityTypeA == "7" && a && b) {  //Cone
 			DoF = {2,5};			//Translation : z Rotation um z
 			C = Pose::create(pnt2line(IjkA,XyzA,a->getFrom()),IjkA,buildnewUp(IjkA));
 			C_AandB = buildC_AandB(C,a,b);
@@ -574,7 +574,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 			//DoF = {0,2,5] //Rotation um z, Translation : z und : ausrichtung(geht noch nicht: Dof 0,1)
         }
 
-		else if (MateEntityTypeA == "3") {  //Plane
+		else if (MateEntityTypeA == "3" && a && b) {  //Plane
 			if (MateEntityTypeB == "1" or MateEntityTypeB == "4" or MateEntityTypeB == "7")  { //Line,Cylinder,Cone
 				DoF = {0,1,2,5};
 				C = Pose::create(pnt2plane(IjkA,XyzA,a->getFrom()),IjkA,buildnewUp(IjkA));//?
@@ -583,7 +583,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 				Joint = check();
 				//ausrichtung ijkA= ebenen normale, ijkB = senkrecht dazu (bei ebene zu ebene)
             }
-			else if (MateEntityTypeB == "3") {
+			else if (MateEntityTypeB == "3" && a && b) {
 				DoF = {0,1,2,4,5};
 				C = Pose::create(pnt2plane(IjkA,XyzA,a->getFrom()),IjkA,buildnewUp(IjkA));
 				C_AandB = buildC_AandB(C,a,b);
@@ -609,7 +609,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 
 	else if (Type == "3") { //parallel
 
-		if (MateEntityTypeA == "1") {    //Line
+		if (MateEntityTypeA == "1" && a && b) {    //Line
 			if (MateEntityTypeB == "1" or MateEntityTypeB == "4" or MateEntityTypeB == "7")  {
 				DoF = {0,1,2,5};
 				C = Pose::create(pnt2line(IjkA,XyzA,a->getFrom()),IjkA,buildnewUp(IjkA));
@@ -623,7 +623,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 			Joint = check();
 		}
 
-		else if (MateEntityTypeA == "3") {    //Plane
+		else if (MateEntityTypeA == "3" && a && b) {    //Plane
 			if (MateEntityTypeB == "1") {
 				DoF = {0,1,2,4,5};
 				C = Pose::create(pnt2plane(IjkA,XyzA,a->getFrom()),IjkB,buildnewUp(IjkB));
@@ -637,7 +637,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 			Joint = check();
 		}
 
-		else if (MateEntityTypeA == "4") {    //Cylinder
+		else if (MateEntityTypeA == "4" && a && b) {    //Cylinder
 			DoF = {0,1,2,5};
 			C = Pose::create(pnt2line(IjkA,XyzA,a->getFrom()),IjkA,buildnewUp(IjkA));
 			C_AandB = buildC_AandB(C,a,b);
@@ -645,7 +645,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 			Joint = check();
 		}
 
-		else if (MateEntityTypeA == "7") {    //Cone
+		else if (MateEntityTypeA == "7" && a && b) {    //Cone
 			DoF = {0,1,2,5};
 			C = Pose::create(pnt2line(IjkA,XyzA,a->getFrom()),IjkA,buildnewUp(IjkA));
 			C_AandB = buildC_AandB(C,a,b);
@@ -670,54 +670,54 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
         */
 
 	} else if (Type == "5" && MaximumVariation == 0 && MinimumVariation == 0)  {  //distance
-		if (MateEntityTypeA == "0") {   //Point
+		if (MateEntityTypeA == "0" && a && b) {   //Point
 			DoF = {3,4,5}; //nur Rotation (xyz)
 			C = Pose::create(XyzA,IjkA,buildnewUp(IjkA));
 			C_AandB = buildC_AandB(C,a,b);
 			TypeC = "0";
 			Joint = check();
 		}
-		else if (MateEntityTypeA == "1") {    //Line
+		else if (MateEntityTypeA == "1" && a && b) {    //Line
 			DoF = {2,5};			//Translation : z Rotation um z
 			C = Pose::create(pnt2line(IjkA,XyzA,a->getFrom()),IjkA,buildnewUp(IjkA));
 			C_AandB = buildC_AandB(C,a,b);
 			TypeC = "1";
 			Joint = check();
 		}
-		else if (MateEntityTypeA == "3") {    //Plane
+		else if (MateEntityTypeA == "3" && a && b) {    //Plane
 			DoF = {0,1,5};  // Translation : x&y Rotation um z
 			C = Pose::create(pnt2plane(IjkA,XyzA,a->getFrom()),IjkA,buildnewUp(IjkA));
 			C_AandB = buildC_AandB(C,a,b);
 			TypeC = "3";
 			Joint = check();
 		}
-		else if (MateEntityTypeA == "4") {    //Cylinder
+		else if (MateEntityTypeA == "4" && a && b) {    //Cylinder
 			DoF = {2,5};			//Translation : z Rotation um z
 			C = Pose::create(pnt2line(IjkA,XyzA,a->getFrom()),IjkA,buildnewUp(IjkA));
 			C_AandB = buildC_AandB(C,a,b);
 			TypeC = "1";
 			Joint = check();
 		}
-		else if (MateEntityTypeA == "5") {    //Sphere
+		else if (MateEntityTypeA == "5" && a && b) {    //Sphere
 			DoF = {3,4,5}; //nur Rotation (xyz)
 			C = Pose::create(XyzA,IjkA,buildnewUp(IjkA));
 			C_AandB = buildC_AandB(C,a,b);
 			TypeC = "0";
 			Joint = check();
 		}
-		else if (MateEntityTypeA == "7") {    //Cone
+		else if (MateEntityTypeA == "7" && a && b) {    //Cone
 			DoF = {5}; //nur Rotation um z
 			C = Pose::create(pnt2line(IjkA,XyzA,a->getFrom()),IjkA,buildnewUp(IjkA));
 			C_AandB = buildC_AandB(C,a,b);
 			TypeC = "0";
 			Joint = check();
 		}
-		else if (MateEntityTypeA == "12") {    //GeneralCurce
+		else if (MateEntityTypeA == "12" && a && b) {    //GeneralCurce
 			//print "not possible yet: 5.12 Distance to Curve"
 		}
 	}
 
-	else if (Type == "6" && MaximumVariation == 0 && MinimumVariation == 0)  {  //angle
+	else if (Type == "6" && MaximumVariation == 0 && MinimumVariation == 0 && a && b)  {  //angle
 
 		if (MateEntityTypeA == "1" or MateEntityTypeA == "4" or MateEntityTypeA == "7")  {    //Line,Cylinder,Cone
 			DoF = {2,5};
@@ -738,7 +738,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
     }
 
 
-	else if (Type == "16") { //Lock
+	else if (Type == "16" && a && b) { //Lock
         DoF = {}; //0
         C = Pose::create(XyzA,IjkA,buildnewUp(IjkA));
         TypeC = "0";
@@ -802,7 +802,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 		Joint = check()*/
     }
 
-	else if (Type == "24") {//Profil Center
+	else if (Type == "24" && a && b) {//Profil Center
 		DoF = {}; //0
 		C = Pose::create(XyzA,IjkA,buildnewUp(IjkA));
 		TypeC = "0";
@@ -815,7 +815,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 	(cam-follower(n), gear(n), hinge(?), rack && pinion(n), screw(n), slot(n),universal joint(n))
 	*/
 
-	if (Type == "22") {//Hinge
+	if (Type == "22" && a && b) {//Hinge
 		DoF = {5}; //rotation
 		PosePtr C1 = Pose::create(pnt2line(IjkA,XyzA,a->getFrom()),IjkA,buildnewUp(IjkA)); //cylinder
 		PosePtr C2 = Pose::create(pnt2plane(IjkC,XyzC,a->getFrom()),IjkC,buildnewUp(IjkC)); //plane
@@ -835,6 +835,8 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 	*/
 
 	auto setupJoint = [&](VRTransformPtr a, VRTransformPtr b, vector<int> DoF, pair<PosePtr, PosePtr> C_AandB, vector<float> MinMax) {
+		if (!a || !b) return;
+
 		PosePtr C_A = C_AandB.first;
 		PosePtr C_B = C_AandB.second;
 

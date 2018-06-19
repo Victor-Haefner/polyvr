@@ -609,10 +609,10 @@ void VRTransform::rotateX(float a) {//rotate around x axis
 }
 
 /** Rotate the object around the point where at indicates && the up axis **/
-void VRTransform::rotateAround(float a) {//rotate around focus using up axis
+void VRTransform::rotateAround(float a, Vec3d v) {//rotate around focus using up axis
     if (isNan(a)) return;
     orientation_mode = OM_AT;
-    Quaterniond q(_up, -a);
+    Quaterniond q(v, -a);
     q.multVec(_dir,_dir);
     _from = _at - _dir;
     reg_change();
