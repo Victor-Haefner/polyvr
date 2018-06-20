@@ -420,7 +420,9 @@ void main(void) {
 	float D = dot(vec3(0,0,1), vertNorm);
 	Discard = 0;
 	if (abs(D) < 0.65) Discard = 1;
-	gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
+	vec4 p = gl_ModelViewProjectionMatrix*osg_Vertex;
+	if (p[2] < 40) Discard = 1;
+    gl_Position = p;
 }
 );
 
