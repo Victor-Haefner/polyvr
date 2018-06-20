@@ -443,7 +443,7 @@ void VRNature::computeLODs3(map<OctreeNode*, VRLodLeafPtr>& leafs) {
         VRTransformPtr tlod = tRef->getLOD(0);
         VRGeometryPtr l = dynamic_pointer_cast<VRGeometry>( tlod->duplicate() );
         VRGeoData other(l);
-        treesData.append(other, t->getWorldMatrix() );
+        treesData.append(other, t->getMatrixTo(ptr()) );
     }
 
     treesData.apply(trees);
