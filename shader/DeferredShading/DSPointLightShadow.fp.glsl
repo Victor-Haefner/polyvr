@@ -15,7 +15,7 @@ uniform vec3 lightDir;
 uniform vec3 lightPos;
 
 vec3 pos;
-vec3 norm;
+vec4 norm;
 vec4 color = vec4(0);
 
 vec4 OSG_SSME_FP_calcShadow(in vec4 ecFragPos);
@@ -23,7 +23,7 @@ vec4 OSG_SSME_FP_calcShadow(in vec4 ecFragPos);
 void computePointLight() {
     vec3  lightDirUN = lightPos - pos;
     vec3  lightDir   = normalize(lightDirUN);
-    float NdotL      = max(dot(norm, lightDir), 0.);
+    float NdotL      = max(dot(norm.xyz, lightDir), 0.);
 
     if(NdotL > 0.) {
         vec4  shadow    = OSG_SSME_FP_calcShadow(vec4(pos, 1.));
@@ -41,18 +41,15 @@ void computePointLight() {
 
 void main(void) {
     vec2 lookup = gl_FragCoord.xy - vpOffset;
-    norm   = texture2DRect(texBufNorm, lookup).xyz;
+    norm = texture2DRect(texBufNorm, lookup);
+    bool isLit = (norm.w > 0);
 
-    if (dot(norm, norm) < 0.95) discard;
+    if(channel != 0 || !isLit || dot(norm.xyz, norm.xyz) < 0.95) discard;
     else {
         vec4 posAmb = texture2DRect(texBufPos,  lookup);
         pos = posAmb.xyz;
         color = texture2DRect(texBufDiff, lookup);
-
-	if (channel == 0) computePointLight();
-	if (channel == 1) color = vec4(posAmb.xyz, 1.0);
-	if (channel == 2) color = vec4(norm.xyz, 1.0);
-	if (channel == 3) color = vec4(color.xyz, 1.0);
+	computePointLight();
         gl_FragColor = color;
     }
 }

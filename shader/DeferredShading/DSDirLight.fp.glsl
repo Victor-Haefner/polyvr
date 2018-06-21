@@ -33,19 +33,11 @@ void computeDirLight() {
 void main(void) {
 	vec2 lookup = gl_FragCoord.xy - vpOffset;
 	norm = texture2DRect(texBufNorm, lookup);
-	if (dot(norm.xyz, norm.xyz) < 0.95) discard;
-	vec4 pos = texture2DRect(texBufPos,  lookup);
-
-	color = texture2DRect(texBufDiff, lookup);
 	bool isLit = (norm.w > 0);
+    	if(channel != 0 || !isLit || dot(norm.xyz, norm.xyz) < 0.95) discard;
 
-	if (channel == 0) {
-		if (isLit) computeDirLight();
-		else color = vec4(color.xyz, 1.0);
-	}
-	if (channel == 1) color = vec4(pos.xyz, 1.0);
-	if (channel == 2) color = vec4(norm.xyz, 1.0);
-	if (channel == 3) color = vec4(color.xyz, 1.0);
-	if (channel == 4) color = vec4(pos.w,pos.w,pos.w, 1.0);
+	vec4 pos = texture2DRect(texBufPos,  lookup);
+	color = texture2DRect(texBufDiff, lookup);
+	computeDirLight();
 	gl_FragColor = color;
 }

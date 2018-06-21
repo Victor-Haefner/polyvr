@@ -85,12 +85,16 @@ void VRDefShading::init() {
     dsStage->setGBufferProgram(NULL);
 
     // ambient shader
-    ShaderProgramMTRecPtr      vpAmbient = ShaderProgram::createVertexShader  ();
-    ShaderProgramMTRecPtr      fpAmbient = ShaderProgram::createFragmentShader();
-    ShaderProgramChunkMTRecPtr shAmbient = ShaderProgramChunk::create();
+    vpAmbient = ShaderProgram::createVertexShader  ();
+    fpAmbient = ShaderProgram::createFragmentShader();
+    shAmbient = ShaderProgramChunk::create();
     vpAmbient->readProgram(dsAmbientVPFile.c_str());
     fpAmbient->readProgram(dsAmbientFPFile.c_str());
+    fpAmbient->addUniformVariable<Int32>("texBufPos",  0);
     fpAmbient->addUniformVariable<Int32>("texBufNorm", 1);
+    fpAmbient->addUniformVariable<Int32>("texBufDiff", 2);
+    fpAmbient->addUniformVariable<Int32>("texBufAmb",  3);
+    fpAmbient->addUniformVariable<Int32>("channel", 0);
     shAmbient->addShader(vpAmbient);
     shAmbient->addShader(fpAmbient);
     dsStage->setAmbientProgram(shAmbient);
@@ -125,11 +129,9 @@ int VRDefShading::addBuffer(int pformat, int ptype) {
 }
 
 void VRDefShading::reload() {
-    ShaderProgramMTRecPtr      vpAmbient = ShaderProgram::createVertexShader  ();
-    ShaderProgramMTRecPtr      fpAmbient = ShaderProgram::createFragmentShader();
-    ShaderProgramChunkMTRecPtr shAmbient = ShaderProgramChunk::create();
     vpAmbient->readProgram(dsAmbientVPFile.c_str());
     fpAmbient->readProgram(dsAmbientFPFile.c_str());
+    fpAmbient->addUniformVariable<Int32>("channel", channel);
     shAmbient->addShader(vpAmbient);
     shAmbient->addShader(fpAmbient);
     dsStage->setAmbientProgram(shAmbient);
@@ -140,11 +142,6 @@ void VRDefShading::reload() {
         li.second.lightVP->readProgram(vpFile.c_str());
         li.second.lightFP->readProgram(fpFile.c_str());
         li.second.lightFP->updateUniformVariable<Int32>("channel", channel);
-        li.second.lightFP->updateUniformVariable<Int32>("isFirstLamp", 0);
-    }
-
-    if (lightInfos.size() > 0) {
-        lightInfos.rbegin()->second.lightFP->updateUniformVariable<Int32>("isFirstLamp", 1);
     }
 }
 
