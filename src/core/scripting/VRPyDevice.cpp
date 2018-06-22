@@ -95,9 +95,10 @@ PyObject* VRPyDevice::setSpeed(VRPyDevice* self, PyObject *args) {
 
 PyObject* VRPyDevice::intersect(VRPyDevice* self, PyObject *args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::intersect, Object is invalid"); return NULL; }
-    VRPyObject* o = 0;
-    VRPyTransform* c = 0;
-    PyObject* d = 0;
+
+    VRPyObject* o = 0;          // root of sub scene graph to be intersected with
+    VRPyTransform* c = 0;       // caster, beacon to be used for intersection
+    PyObject* d = 0;            // additional direction vector, currently unused
     int force = 0;
     if (! PyArg_ParseTuple(args, "|OiOO", &o, &force, &c, &d)) return NULL;
     OSG::VRIntersection ins = self->objPtr->intersect(o ? o->objPtr : 0, force, c ? c->objPtr : 0, d ? parseVec3dList(d) : Vec3d(0,0,-1));

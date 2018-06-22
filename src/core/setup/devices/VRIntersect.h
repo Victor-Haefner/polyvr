@@ -62,7 +62,7 @@ class VRIntersect {
         VRIntersect();
         ~VRIntersect();
 
-        VRIntersection intersect(VRObjectWeakPtr tree, bool force = false, VRTransformPtr caster = 0, Vec3d dir = Vec3d(0,0,-1));
+        VRIntersection intersect(VRObjectWeakPtr wtree, bool force = false, VRTransformPtr caster = 0, Vec3d dir = Vec3d(0,0,-1));
         void drag(VRObjectWeakPtr obj, VRTransformWeakPtr caster);
         void drop(VRDeviceWeakPtr dev = VRDevicePtr(0));
         VRDeviceCbPtr addDrag(VRTransformWeakPtr caster, VRObjectWeakPtr tree);

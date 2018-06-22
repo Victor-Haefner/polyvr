@@ -125,7 +125,14 @@ VRIntersection VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray) {
     return ins;
 }
 
+/**
+* @param wtree: sub scene graph to be intersected with
+* @param force: determines if reevaluation of intersection within a single frame should be forced
+* @param caster: beacon which should be used for intersection (mult. beacons with multitouch)
+* @param dir: currently unused
+*/
 VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force, VRTransformPtr caster, Vec3d dir) {
+
     vector<VRObjectPtr> trees;
     if (auto sp = wtree.lock()) trees.push_back(sp);
     else for (auto grp : dynTrees) {
