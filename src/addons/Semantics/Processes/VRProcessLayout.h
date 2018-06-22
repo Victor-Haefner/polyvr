@@ -11,12 +11,14 @@ using namespace std;
 class VRProcessLayout : public VRTransform {
     private:
         VRProcessPtr process;
+        VRPathtoolPtr tool;
         map<int, VRObjectWeakPtr> elements;
         map<VRObject*, int> elementIDs;
         float height = 2;
 
         VRGeometryPtr newWidget(VRProcessNodePtr n, float height);
 
+        void init();
         void rebuild(); // TODO
 
     public:
@@ -26,7 +28,6 @@ class VRProcessLayout : public VRTransform {
         static VRProcessLayoutPtr create(string name = "");
         VRProcessLayoutPtr ptr();
 
-        //void setProcess(VRProcessPtr p);
         void setProcess(VRProcessPtr p);
         VRObjectPtr getElement(int i);
         void remElement(VRObjectPtr o);
@@ -35,6 +36,8 @@ class VRProcessLayout : public VRTransform {
         VRObjectPtr addElement(VRProcessNodePtr n);
         void selectElement(VRGeometryPtr geo);
         void setElementName(int ID, string name);
+
+        VRPathtoolPtr getPathtool();
 };
 
 OSG_END_NAMESPACE;
