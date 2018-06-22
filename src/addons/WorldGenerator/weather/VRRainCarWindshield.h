@@ -26,13 +26,17 @@ class VRRainCarWindshield : public VRGeometry {
 
         string vScript;
         string fScript;
+        string dfScript;
 
         bool isRaining = false;
         bool isWiping = false;
         bool firstWipe = true;
         bool lastWipe = false;
+        bool hasPower = true;
 
         float wiperSpeed = 0;
+        float newWiperSpeed = 0;
+        float wiperState = 0;
 
         uint textureSize;
 
@@ -69,11 +73,13 @@ class VRRainCarWindshield : public VRGeometry {
         void setWindshield(VRGeometryPtr geoWindshield);
         void setScale(bool liveChange, float scale);
         void setWipers(bool isWiping, float wiperSpeed);
+        void cutPower();
 
         void doTestFunction();
         void start();
         void stop();
 
+        void reloadShader();
 };
 
 OSG_END_NAMESPACE;
