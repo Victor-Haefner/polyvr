@@ -141,7 +141,7 @@ void VRView::setViewports() {//create && set size of viewports
     // renderingL stages
     if (renderingL) {
         renderingL->setHMDDeye(-1);
-        renderingR->setHMDDeye(1);
+        if (renderingR) renderingR->setHMDDeye(1);
         Vec2i s = window_size;
         float w = abs(p[3]-p[1]);
         float h = abs(p[2]-p[0]);
@@ -150,7 +150,7 @@ void VRView::setViewports() {//create && set size of viewports
         else {
             s[0] *= 0.5;
             renderingL->resize(s);
-            renderingR->resize(s);
+            if (renderingR) renderingR->resize(s);
         }
     }
 }
@@ -496,8 +496,8 @@ void VRView::swapEyes(bool b) {
     eyeinverted = b;
     if (PCDecoratorLeft) PCDecoratorLeft->setLeftEye(!b);
     if (PCDecoratorRight) PCDecoratorRight->setLeftEye(b);
-    renderingL->setEye( b ? VRRenderStudio::RIGHT : VRRenderStudio::LEFT );
-    renderingR->setEye( b ? VRRenderStudio::LEFT : VRRenderStudio::RIGHT );
+    if (renderingL) renderingL->setEye( b ? VRRenderStudio::RIGHT : VRRenderStudio::LEFT );
+    if (renderingR) renderingR->setEye( b ? VRRenderStudio::LEFT : VRRenderStudio::RIGHT );
 }
 
 bool VRView::eyesInverted() { return eyeinverted; }

@@ -250,8 +250,10 @@ void VRRenderStudio::setBackground(BackgroundMTRecPtr bg) {
 
 void VRRenderStudio::setScene(VRObjectPtr r) {
     if (!root_scene || !r) return;
+    //cout << "VRRenderStudio::setScene " << this << " r " << r.get() << " Nlinks " << root_scene->getLinks().size() << endl;
     root_scene->clearLinks(); // clear links to current scene root node
     root_scene->addLink( r );
+    //root_scene->addChild( r );
 }
 
 void VRRenderStudio::resize(Vec2i s) {
