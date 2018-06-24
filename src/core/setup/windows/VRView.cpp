@@ -388,13 +388,13 @@ void VRView::setRoot() {
     if (renderingL) {
         renderingL->setScene(view_root);
         nl = renderingL->getRoot()->getNode()->node;
-        renderingL->getRoot()->setVolumeCheck( false, true );
+        //renderingL->getRoot()->setVolumeCheck( false, true ); // disabled for shader directional shadow map engine
     }
 
     if (renderingR) {
         renderingR->setScene(view_root);
         nr = renderingR->getRoot()->getNode()->node;
-        renderingR->getRoot()->setVolumeCheck( false, true );
+        //renderingR->getRoot()->setVolumeCheck( false, true ); // disabled for shader directional shadow map engine
     }
 
     if (lView) lView->setRoot(nl);
