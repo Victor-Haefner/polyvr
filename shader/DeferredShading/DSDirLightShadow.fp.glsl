@@ -20,7 +20,7 @@ vec4 color = vec4(0);
 vec4 OSG_SSME_FP_calcShadow(in vec4 ecFragPos);
 
 void computeDirLight() {
-    vec3  lightDir = normalize( lightDir );
+    vec3  lightDir = gl_LightSource[0].position.xyz; // normalize( lightDir ); // TODO: which is right??
     float NdotL    = max(dot(norm.xyz, lightDir), 0.);
 
     if (NdotL > 0.) {
@@ -34,7 +34,7 @@ void main(void) {
     norm = texture2DRect(texBufNorm, lookup);
     bool isLit = (norm.w > 0);
 
-    if(channel != 0 || !isLit || dot(norm.xyz, norm.xyz) < 0.95) discard;
+    if (channel != 0 || !isLit || dot(norm.xyz, norm.xyz) < 0.95) discard;
     else {
         vec4 posAmb = texture2DRect(texBufPos,  lookup);
         pos = posAmb.xyz;

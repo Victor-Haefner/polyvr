@@ -1,17 +1,3 @@
-
-// Work In Progress
-//
-// This demonstates the use of the DeferredShadingStage and the
-// Shader/TrapezoidalShadowMapEngine with it.
-//
-// The program must be run from the Examples/Advanced/DeferredShading directory
-// so that it can find the files with the GLSL source for the shader programs.
-//
-// Please take a look at the keyboard glut callback for the interface
-//
-// Work In Progress
-
-
 #include <OpenSG/OSGGL.h>
 #include <OpenSG/OSGGLUT.h>
 #include <OpenSG/OSGGLUTWindow.h>

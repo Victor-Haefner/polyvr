@@ -157,6 +157,7 @@ void VRObject::addLink(VRObjectPtr obj) {
     VisitSubTreeMTRecPtr visitor = VisitSubTree::create();
     visitor->setSubTreeRoot(obj->getNode()->node);
     NodeMTRecPtr visit_node = makeNodeFor(visitor);
+    OSG::setName(visit_node, getName()+"_link");
     addChild(OSGObject::create(visit_node));
 
     links[obj.get()] = obj;
@@ -224,8 +225,8 @@ void VRObject::setSiblingPosition(int i) {
 }
 
 void VRObject::addChild(OSGObjectPtr n) {
-    if (!osg || !osg->node) { cout << "Warning! VRObject::addChild: bad osg parent node!\n"; return; }
-    if (!n || !n->node) { cout << "Warning! VRObject::addChild: bad osg child node!\n"; return; }
+    if (!osg || !osg->node) { cout << "Warning! VRObject::addChild to " << getName() << ": bad osg parent node!\n"; return; }
+    if (!n || !n->node) { cout << "Warning! VRObject::addChild to " << getName() << ": bad osg child node!\n"; return; }
     osg->node->addChild(n->node);
 }
 

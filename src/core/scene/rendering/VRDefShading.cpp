@@ -213,10 +213,7 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     li.lightFP->addUniformVariable<Int32>("texBufAmb",  3);
     li.lightFP->addUniformVariable<Int32>("texPhotometricMap", 4);
     li.lightFP->addUniformVariable<float>("shadowColor", shadowColor);
-    li.lightFP->addUniformVariable<Vec3f>("lightUp", Vec3f(0,1,0));
-    li.lightFP->addUniformVariable<Vec3f>("lightDirection", Vec3f(0,0,-1));
     li.lightFP->addUniformVariable<Int32>("channel", 0);
-    li.lightFP->addUniformVariable<Int32>("isFirstLamp", 1);
 
     li.lightSH->addShader(li.lightVP);
     li.lightSH->addShader(li.lightFP);
@@ -232,9 +229,6 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
         li.texChunk->setInternalFormat(tex->getInternalFormat());
     }
 
-    if (lightInfos.size() > 0) {
-        lightInfos.rbegin()->second.lightFP->updateUniformVariable<Int32>("isFirstLamp", 0);
-    }
     lightInfos[ID] = li;
 
     string vpFile = getLightVPFile(li.lightType);
