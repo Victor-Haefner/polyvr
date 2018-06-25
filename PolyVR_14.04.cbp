@@ -723,6 +723,8 @@
 		<Unit filename="src/core/objects/material/VRTexture.h" />
 		<Unit filename="src/core/objects/material/VRTextureGenerator.cpp" />
 		<Unit filename="src/core/objects/material/VRTextureGenerator.h" />
+		<Unit filename="src/core/objects/material/VRTextureMosaic.cpp" />
+		<Unit filename="src/core/objects/material/VRTextureMosaic.h" />
 		<Unit filename="src/core/objects/material/VRVideo.cpp" />
 		<Unit filename="src/core/objects/material/VRVideo.h" />
 		<Unit filename="src/core/objects/object/OSGCore.cpp" />
