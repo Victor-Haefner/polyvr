@@ -85,7 +85,7 @@ void main(void) {
         vec4 posAmb = texture2DRect(texBufPos,  lookup);
         pos = posAmb.xyz;
         color = texture2DRect(texBufDiff, lookup);
-	computePointLight(posAmb.w);
+	color = computePointLight(posAmb.w);
         gl_FragColor = color;
     }
 }
