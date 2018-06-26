@@ -109,7 +109,19 @@ void VRTrafficSimulation::setRoadNetwork(VRRoadNetworkPtr rds) {
 template<class T>
 T randomChoice(vector<T> vec) {
     if (vec.size() == 0) return 0;
-    return vec[ round((float(random())/RAND_MAX) * (vec.size()-1)) ];
+    auto inputA = (float(random())/RAND_MAX);
+    auto inputB = (vec.size()-1);
+    //auto input1 = round( inputA * inputB);
+    auto input1 = 0;
+    auto test = vec[ input1 ];
+    //auto test = vec[ round((float(random())/RAND_MAX) * (vec.size()-1)) ];
+    cout << "bla ";
+    cout << " " << inputA;
+    cout << " " << inputB;
+    cout << " " << input1;
+    //for (auto a : vec) { cout << a.getName(); }
+    cout << " " << endl;
+    return test;
 }
 
 void VRTrafficSimulation::updateSimulation() {
@@ -262,6 +274,8 @@ void VRTrafficSimulation::updateSimulation() {
                     else if (commingRight(pose, p, vehicle.lastMove)) state = 2;
                     if (state > 0) break;
                 }
+
+                state = 0; ///DANGER: debug mode, state = 0, discard collision check
 
                 for (auto& v : users) {
                     auto p = v.t->getPose();
