@@ -159,9 +159,14 @@ void VRTrafficSimulation::updateSimulation() {
 
         for (auto user : users) {
             Vec3d p = user.t->getPoseTo(ptr())->pos();
+            string debug = "";
             for (auto eV : graph->getEdges()) {
                 for (auto e : eV) {
-                    if (graph->getPrevEdges(e).size() == 0) { // roads that start out of "nowhere"
+                    bool checkA(graph->getPrevEdges(e).size() == 0);
+                    bool checkB(graph->getNextEdges(e).size() == 0);
+                    //if ( ( checkA && !checkB ) ) { // roads that start out of "nowhere"
+                    if ( ( checkA && !checkB ) || ( !checkA && checkB ) ) { // roads that start out of "nowhere"
+                    //if (graph->getPrevEdges(e).size() == 0) { // roads that start out of "nowhere"
                         newSeedRoads.push_back( e.ID );
                         continue;
                     }
@@ -176,6 +181,7 @@ void VRTrafficSimulation::updateSimulation() {
                     newNearRoads.push_back( e.ID ); // inside or on edge
                 }
             }
+            //cout << debug << endl;
         }
 
         for (auto roadID : makeDiff(nearRoads, newNearRoads)) {
@@ -211,6 +217,7 @@ void VRTrafficSimulation::updateSimulation() {
             auto edges = g->getNextEdges(edge);
             if (edges.size() > 0) {
                 gp.edge = randomChoice(edges).ID;
+                cout << gp.edge << endl;
                 auto& road = roads[gp.edge];
                 if (road.macro) toChangeRoad[road1ID].push_back( make_pair(vehicle, -1) );
                 else toChangeRoad[road1ID].push_back( make_pair(vehicle, gp.edge) );
