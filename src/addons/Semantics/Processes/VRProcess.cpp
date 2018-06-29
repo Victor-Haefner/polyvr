@@ -238,5 +238,3 @@ VRProcessNodePtr VRProcess::getNode(int i, VRProcessDiagramPtr diag) {
 
 
 
-
-

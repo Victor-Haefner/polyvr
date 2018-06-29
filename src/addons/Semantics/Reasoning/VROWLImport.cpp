@@ -412,8 +412,6 @@ void VROWLImport::AgglomerateData() {
         cout << "RDF parser: iteration: " << i << " with " << jobs << " triplets remaining" << endl;
 
         if (int(stack.size()) == lastStack && jobs == lastJobSize) {
-            //TODO: remove return statement
-            return;
             cout << "RDF parser warning: stack not shrinking, aborting with " << jobs << " triplets remaining!" << endl;
             cout << "Print Stack: " << endl;
             for (auto& sv : stack) for (auto& s : sv.second) printState(s);
@@ -469,32 +467,7 @@ void VROWLImport::read(VROntologyPtr o, string path) {
     raptor_free_world(world);
 
     AgglomerateData();
-    //printTripleStore();
     cout << " VROWLImport::load done\n";
-
-    //cout << "printTripleStore(): \n";
-    //printTripleStore();
-    printOWLSubjects();
-
-}
-
-void VROWLImport::printOWLSubjects(){
-    //cout << "Subjects: " << endl;
-    for (auto& sv : subjects) {
-        for (auto& st : sv.second) {
-            string subject = "FullySpecifiedSubject";
-
-            if(st.subject.find(subject) != string::npos){
-                if (st.predicate.find("hasModelComponentLabel") != string::npos && st.object.find("SBD: ") != string::npos) {
-                    string s;
-                    s += " subject " + st.subject;
-                    s += " predicate " + st.predicate;
-                    s += " object " + st.object;
-                    cout << s << endl;
-                }
-            }
-        }
-    }
 }
 
 
