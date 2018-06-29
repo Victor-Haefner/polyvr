@@ -43,14 +43,10 @@ using namespace OSG;
 
 VRRainCarWindshield::VRRainCarWindshield() : VRGeometry("RainCarWindshield") {
     type = "RainCarWindshield";
-    string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Rain/";
-    vScript = resDir + "RainCarWindshield.vp";
-    fScript = resDir + "RainCarWindshield.fp";
 
     //Shader setup
     mat = VRMaterial::create("RainCarWindshield");
-    mat->readVertexShader(vScript);
-    mat->readFragmentShader(fScript);
+    reloadShader();
     setMaterial(mat);
     setPrimitive("Plane", "2 2 1 1");
     mat->setLit(false);
@@ -76,6 +72,7 @@ VRRainCarWindshield::VRRainCarWindshield() : VRGeometry("RainCarWindshield") {
 
     setScale(false, scale);
     setShaderParameter("durationWiper", durationWiper);
+    setShaderParameter("hasPower", hasPower);
 
     updatePtr = VRUpdateCb::create("VRRainCarWindshield update", boost::bind(&VRRainCarWindshield::update, this));
     VRScene::getCurrent()->addUpdateFkt(updatePtr);
@@ -147,10 +144,35 @@ void VRRainCarWindshield::update() {
     tdelta = tnow-tlast;
     tlast = tnow;
 
-    if (isWiping && tnow-durationWiper/wiperSpeed>tWiperstart) tWiperstart=tnow;
-    if (!isWiping && wiperSpeed>0 && tnow-durationWiper/wiperSpeed>tWiperstart) {
-            wiperSpeed=0;
-            setShaderParameter("wiperSpeed", wiperSpeed);
+    auto applyWiperSpeed = [&]() {
+        wiperSpeed = newWiperSpeed;
+        setShaderParameter("wiperSpeed", wiperSpeed);
+    };
+
+    if (isWiping && newWiperSpeed == wiperSpeed){
+        //resetting time stamp for neutral wiper state
+        if (tnow-durationWiper/wiperSpeed>tWiperstart) tWiperstart=tnow;
+    } else {
+        //start of wipers
+        if (isWiping && wiperSpeed == 0) {
+            float newPeriod = durationWiper/newWiperSpeed;
+            tWiperstart=tnow - wiperState*newPeriod;
+            applyWiperSpeed();
+        }
+        //seamless live changes of wiperSpeeds
+        if (isWiping && wiperSpeed > 0) {
+            float thisPeriod = durationWiper/wiperSpeed;
+            float newPeriod = durationWiper/newWiperSpeed;
+            wiperState = (tnow-tWiperstart)/thisPeriod;
+            tWiperstart=tnow - wiperState*newPeriod;
+            applyWiperSpeed();
+        }
+        //soft-stopping wipers (stop in neutral state)
+        if (!isWiping && wiperSpeed > 0 && tnow-durationWiper/wiperSpeed>tWiperstart) {
+            newWiperSpeed = 0;
+            wiperState = 0;
+            applyWiperSpeed();
+        }
     }
 
     Vec3d windshieldPos = geoWindshield->getWorldPosition();
@@ -178,9 +200,13 @@ void VRRainCarWindshield::update() {
     mat->setActivePass(0);
     mat->readVertexShader(vScript);
     mat->readFragmentShader(fScript);
+    mat->readFragmentShader(dfScript, true);
+    mat->updateDeferredShader();
     mat->setActivePass(1);
     mat->readVertexShader(vScript);
     mat->readFragmentShader(fScript);
+    mat->readFragmentShader(dfScript, true);
+    mat->updateDeferredShader();
 
     setShaderParameter("tnow", tnow);
     setShaderParameter("tWiperstart", tWiperstart);
@@ -216,11 +242,41 @@ void VRRainCarWindshield::stop() {
     cout << "VRRainCarWindshield::stop()" << endl;
 }
 
-void VRRainCarWindshield::setWipers(bool isWiping, float wiperSpeed) {
+void VRRainCarWindshield::setWipers(bool isWiping, float newWiperSpeed) {
     this->isWiping = isWiping;
-    if (isWiping) this->wiperSpeed = wiperSpeed;
-    if (isWiping) setShaderParameter("wiperSpeed", wiperSpeed);
-    cout << "VRRainCarWindshield::setWipers(" << isWiping <<","<< wiperSpeed << ")" << endl;
+    this->newWiperSpeed = newWiperSpeed;
+    hasPower = true;
+    setShaderParameter("hasPower", hasPower);
+    cout << "VRRainCarWindshield::setWipers(" << isWiping <<","<< newWiperSpeed << ")" << endl;
+}
+
+void VRRainCarWindshield::cutPower() {
+    isWiping = false;
+    hasPower = false;
+    if (wiperSpeed != 0) {
+        float thisPeriod = durationWiper/wiperSpeed;
+        wiperState = (tnow-tWiperstart)/thisPeriod;
+    }
+    newWiperSpeed = 0;
+    wiperSpeed = newWiperSpeed;
+    setShaderParameter("wiperSpeed", wiperSpeed);
+    setShaderParameter("hasPower", hasPower);
+    setShaderParameter("wiperState", wiperState);
+    cout << "VRRainCarWindshield::cutPower()" << endl;
+}
+
+void VRRainCarWindshield::reloadShader() {
+    cout << "VRRainCarWindshield::reloadShader()" << endl;
+    string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Rain/";
+    vScript = resDir + "RainCarWindshield.vp";
+    fScript = resDir + "RainCarWindshield.fp";
+    dfScript = resDir + "RainCarWindshield.dfp";
+
+    mat->readVertexShader(vScript);
+    mat->readFragmentShader(fScript);
+    mat->readFragmentShader(dfScript, true);
+
+    mat->updateDeferredShader();
 }
 
 

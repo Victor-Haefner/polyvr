@@ -545,6 +545,7 @@ int getListStorePos(string ls, string s) {
 
 void fillStringListstore(string ls, vector<string> list) {
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object(ls.c_str()));
+    if (!store) { cout << "ERROR: liststore " << ls << " not found!" << endl; return; }
     store->clear();
     for (unsigned int i=0; i<list.size(); i++) {
         Gtk::ListStore::Row row = *store->append();

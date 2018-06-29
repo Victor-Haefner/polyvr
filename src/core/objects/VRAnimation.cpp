@@ -46,16 +46,20 @@ void VRAnimation::setCallback(VRAnimCbPtr fkt) {
     interp = i;
 }
 
-void VRAnimation::setLoop(bool b) { loop = b; }
 bool VRAnimation::getLoop() { return loop; }
-
-void VRAnimation::setDuration(float t) { duration = t; }
 float VRAnimation::getDuration() { return duration; }
+
+void VRAnimation::setLoop(bool b) { loop = b; }
+
+void VRAnimation::setDuration(float T) {
+    if (run) start_time += t*(duration-T);
+    duration = T;
+}
 
 bool VRAnimation::update(float current_time) {
     if (!run) return false;
 
-    float t = current_time - start_time - offset;
+    t = current_time - start_time - offset;
     if (t < 0) return true;
 
     if (duration > 0.00001) t /= duration;

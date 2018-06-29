@@ -32,14 +32,13 @@ class PolyVR {
 
         void checkProcessesAndSockets();
 
-        void run();
-
     public:
         PolyVR();
         ~PolyVR();
         static PolyVR* get();
         static void shutdown();
 
+        void run();
         void init(int argc, char **argv);
         void start(bool runit = true);
         void startTestScene(OSGObjectPtr n);

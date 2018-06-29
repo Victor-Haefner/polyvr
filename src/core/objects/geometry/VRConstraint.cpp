@@ -43,6 +43,7 @@ float VRConstraint::getMax(int i) { return max[i]; }
 
 void VRConstraint::lock(vector<int> dofs, float v) { for (int dof : dofs) setMinMax(dof,v,v); setActive(true); }
 void VRConstraint::free(vector<int> dofs) { for (int dof : dofs) setMinMax(dof,1,-1); setActive(true); }
+bool VRConstraint::isLocked(int i) { return bool(min[i] > max[i]); }
 
 void VRConstraint::setReferenceA(PosePtr p) { refMatrixA = p->asMatrix(); refMatrixA.inverse(refMatrixAI); };
 void VRConstraint::setReferenceB(PosePtr p) { refMatrixB = p->asMatrix(); refMatrixB.inverse(refMatrixBI); };

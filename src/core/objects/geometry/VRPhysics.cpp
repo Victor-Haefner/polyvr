@@ -801,7 +801,7 @@ btCollisionShape* VRPhysics::getHACDShape() {
         delete [] pointsCH;
         delete [] trianglesCH;
 
-        ConvexResult r(nPoints, vertices, nTriangles, triangles);
+        ConvexDecomposition::ConvexResult r(nPoints, vertices, nTriangles, triangles);
         convexDecomposition.ConvexDecompResult(r);
     }
 

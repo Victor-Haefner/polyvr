@@ -7,7 +7,6 @@
 #include "core/objects/OSGObject.h"
 #include "core/objects/object/OSGCore.h"
 #include "VRLightBeacon.h"
-//#include "VRShadowEngine.h"
 
 #include <OpenSG/OSGNode.h>
 #include <OpenSG/OSGShadowStage.h>
@@ -21,6 +20,7 @@
 #include <OpenSG/OSGSimpleShadowMapEngine.h>
 #include <OpenSG/OSGShaderShadowMapEngine.h>
 #include <OpenSG/OSGTrapezoidalShadowMapEngine.h>
+#include <OpenSG/OSGBoxVolume.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -194,7 +194,6 @@ void VRLight::setDeferred(bool b) {
 }
 
 void VRLight::setupShadowEngines() {
-    //ssme = VRShadowEngine::create();
     ssme = SimpleShadowMapEngine::create();
     gsme = ShaderShadowMapEngine::create();
     ptsme = TrapezoidalShadowMapEngine::create();
@@ -270,6 +269,13 @@ void VRLight::setShadowNearFar(Vec2d nf) {
     if (ptsme) ptsme->setShadowFar(nf[1]);
     if (stsme) stsme->setShadowNear(nf[0]);
     if (stsme) stsme->setShadowFar(nf[1]);
+}
+
+void VRLight::setShadowVolume(Boundingbox b) {
+    BoxVolume box(Pnt3f(b.min()), Pnt3f(b.max()));
+#ifdef WITH_SHADOW_VOLUME
+    if (gsme) gsme->setShadowVolume(box);
+#endif
 }
 
 void VRLight::setShadowColor(Color4f c) {

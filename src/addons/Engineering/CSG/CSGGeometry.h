@@ -6,7 +6,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "addons/Engineering/VREngineeringFwd.h"
 
-namespace CGAL { class Polyhedron; }
+class CGALPolyhedron;
 
 OSG_BEGIN_NAMESPACE;
 
@@ -14,7 +14,7 @@ class Octree;
 
 class CSGGeometry : public VRGeometry {
     private:
-        CGAL::Polyhedron* polyhedron = 0;
+        CGALPolyhedron* polyhedron = 0;
         string operation = "unite";
         bool editMode = true;
         Matrix4d oldWorldTrans;
@@ -23,14 +23,14 @@ class CSGGeometry : public VRGeometry {
         OctreePtr oct;
 
     protected:
-        void applyTransform(CGAL::Polyhedron* p, Matrix4d m);
-        void setCSGGeometry(CGAL::Polyhedron* p);
-        CGAL::Polyhedron* getCSGGeometry();
+        void applyTransform(CGALPolyhedron* p, Matrix4d m);
+        void setCSGGeometry(CGALPolyhedron* p);
+        CGALPolyhedron* getCSGGeometry();
         size_t isKnownPoint(OSG::Pnt3f newPoint);
-        GeometryTransitPtr toOsgGeometry(CGAL::Polyhedron* p);
-        CGAL::Polyhedron* toPolyhedron(GeometryMTRecPtr geometry, Matrix4d worldTransform, bool& success);
+        GeometryTransitPtr toOsgGeometry(CGALPolyhedron* p);
+        CGALPolyhedron* toPolyhedron(GeometryMTRecPtr geometry, Matrix4d worldTransform, bool& success);
 
-        void operate(CGAL::Polyhedron* minuend, CGAL::Polyhedron* subtrahend);
+        void operate(CGALPolyhedron* minuend, CGALPolyhedron* subtrahend);
 
         void enableEditMode();
         bool disableEditMode();

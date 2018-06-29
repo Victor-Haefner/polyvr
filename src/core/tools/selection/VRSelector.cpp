@@ -120,10 +120,9 @@ void VRSelector::deselect() {
     subselection.reset();
 }
 
-void VRSelector::clear() { selection->clear(); update(); }
+void VRSelector::clear() { selection->clear(); selected = 0; update(); }
 
 void VRSelector::select(VRObjectPtr obj, bool append, bool recursive) {
-    selected = obj;
     if (!append) {
         clear();
         selection->apply(obj, true, recursive);
@@ -132,6 +131,7 @@ void VRSelector::select(VRObjectPtr obj, bool append, bool recursive) {
         s->apply(obj, true, recursive);
         selection->append(s);
     }
+    selected = obj;
     update();
 }
 

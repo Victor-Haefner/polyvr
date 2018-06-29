@@ -54,6 +54,7 @@ class VRConstraint : public VRStorage {
         void lock(vector<int> dofs, float v = 0);
         void free(vector<int> dofs);
         void lockRotation();
+        bool isLocked(int i);
 
         void setReferenceA(PosePtr p);
         void setReferenceB(PosePtr p);

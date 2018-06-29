@@ -39,21 +39,17 @@ uniform int               channel;
 
 // DS pass
 void main(void) {
-    vec2  lookup = gl_FragCoord.xy - vpOffset;
-    vec3  norm   = texture2DRect(texBufNorm, lookup).xyz;
+    vec2 lookup = gl_FragCoord.xy - vpOffset;
+    vec4 norm = texture2DRect(texBufNorm, lookup);
+    bool isLit = (norm.w > 0);
 
-    if (dot(norm, norm) < 0.95) discard;
+    if(channel != 0 || !isLit || dot(norm.xyz, norm.xyz) < 0.95) discard;
     else {
         vec4  posAmb = texture2DRect(texBufPos,  lookup);
         vec3  pos    = posAmb.xyz;
         float amb    = posAmb.w;
         vec4  mDiff  = texture2DRect(texBufDiff, lookup);
-
-        vec4 c = vec4(0);
-	if (channel == 0) c = computeSpotLight(0, pos, norm, mDiff);
-	if (channel == 1) c = vec4(posAmb.xyz, 1.0);
-	if (channel == 2) c = vec4(norm.xyz, 1.0);
-	if (channel == 3) c = vec4(mDiff.xyz, 1.0);
+        vec4 c = computeSpotLight(0, pos, norm.xyz, mDiff);
         gl_FragColor = c;
     }
 }

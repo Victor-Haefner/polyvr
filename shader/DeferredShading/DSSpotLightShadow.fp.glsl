@@ -10,12 +10,11 @@ uniform vec2              vpOffset;
 uniform int               channel;
 
 vec3 pos;
-vec3 norm;
 vec4 color = vec4(0);
 
 vec4 OSG_SSME_FP_calcShadow(in vec4 ecFragPos);
 
-void computeSpotLight() {
+void computeSpotLight(vec3 norm) {
     vec3  lightDirUN = gl_LightSource[0].position.xyz - pos;
     vec3  lightDir   = normalize(lightDirUN);
     float spotEffect = dot(-lightDir, gl_LightSource[0].spotDirection);
@@ -39,18 +38,15 @@ void computeSpotLight() {
 
 void main(void) {
     vec2 lookup = gl_FragCoord.xy - vpOffset;
-    norm = texture2DRect(texBufNorm, lookup).xyz;
+    vec4 norm = texture2DRect(texBufNorm, lookup);
+    bool isLit = (norm.w > 0);
 
-    if (dot(norm, norm) < 0.95) discard;
+    if(channel != 0 || !isLit || dot(norm.xyz, norm.xyz) < 0.95) discard;
     else {
         vec4  posAmb = texture2DRect(texBufPos,  lookup);
         pos = posAmb.xyz;
         color = texture2DRect(texBufDiff, lookup);
-
-	if (channel == 0) computeSpotLight();
-	if (channel == 1) color = vec4(posAmb.xyz, 1.0);
-	if (channel == 2) color = vec4(norm.xyz, 1.0);
-	if (channel == 3) color = vec4(color.xyz, 1.0);
+	computeSpotLight(norm.xyz);
         gl_FragColor = color;
     }
 }

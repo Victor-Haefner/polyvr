@@ -5,6 +5,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/material/VRTextureGenerator.h"
+#include "core/objects/material/VRTextureMosaic.h"
 #include "core/objects/VRLod.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
@@ -398,7 +399,7 @@ void VRTree::setLeafMaterial(VRMaterialPtr mat) {
     for (auto g : leafGeos) g->setMaterial(mat);
 }
 
-string treeSprLODvp =
+string VRTree::treeSprLODvp =
 "#version 120\n"
 GLSL(
 attribute vec4 osg_Vertex;
@@ -419,11 +420,13 @@ void main(void) {
 	float D = dot(vec3(0,0,1), vertNorm);
 	Discard = 0;
 	if (abs(D) < 0.65) Discard = 1;
-	gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
+	vec4 p = gl_ModelViewProjectionMatrix*osg_Vertex;
+	if (p[2] < 40) Discard = 1;
+    gl_Position = p;
 }
 );
 
-string treeSprLODdfp =
+string VRTree::treeSprLODdfp =
 "#version 120\n"
 GLSL(
 uniform int isLit;
@@ -454,11 +457,8 @@ void VRTree::appendLOD(VRGeoData& data, int lvl, Vec3d offset) {
     lod->setFrom(p);
 }
 
-VRGeometryPtr VRTree::createLOD(int lvl) {
-    cout << "VRTree::createLOD " << lvl << endl;
-    VRGeoData data;
-
-    auto t = ptr();
+vector<VRMaterialPtr> VRTree::createLODtextures(int& Hmax, VRGeoData& data) {
+    VRTreePtr t = ptr();
     auto old_pose = t->getPose();
     t->setIdentity();
     auto bb = t->getBoundingbox();
@@ -467,14 +467,14 @@ VRGeometryPtr VRTree::createLOD(int lvl) {
     float fov = 0.33;
     Vec3d D = S*0.5/tan(fov*0.5);
 
-    vector<pair<VRMaterialPtr,int>> sides;
-    int Hmax = 1;
+    vector<VRMaterialPtr> sides;
+    Hmax = 1;
     auto addSprite = [&](PosePtr p, float W, float H, float Sh) {
         auto tr = VRTextureRenderer::create("treeLODtexR");
         auto tm = tr->createTextureLod(t, p, 512, W/H, fov, Color3f(0,0.5,0));
         int h = int(512/W*H);
         Hmax = max(Hmax, h);
-        sides.push_back(make_pair(tm,h));
+        sides.push_back(tm);
         data.pushQuad(Vec3d(0,Sh,0), p->dir(), p->up(), Vec2d(W, H), true);
     };
 
@@ -483,29 +483,33 @@ VRGeometryPtr VRTree::createLOD(int lvl) {
     addSprite( Pose::create(Vec3d(0,S[1]+max(D[0],D[2]),0), Vec3d(0,-1,0), Vec3d(0,0,1)), S[0], S[2], S[1]);
 
     t->setPose(old_pose);
+    return sides;
+}
+
+vector<VRMaterialPtr> VRTree::getLodMaterials() { return lodMaterials; }
+
+VRGeometryPtr VRTree::createLOD(int lvl) {
+    VRGeoData data;
+    int Hmax = 1;
+    auto sides = createLODtextures(Hmax, data);
+    lodMaterials = sides;
     int N = sides.size();
     if (N == 0) return 0;
 
-    auto m = sides[0].first;
-    if (!m) return 0;
-    if (N > 1) { // merge textures
-        auto tex0 = m->getTexture(0);
-        auto tex1 = m->getTexture(1);
-        tex0->resize(Vec3i(512*N, Hmax, 1), Vec3i());
-        tex1->resize(Vec3i(512*N, Hmax, 1), Vec3i());
-        for (int i=1; i<N; i++) {
-            Vec3i o = Vec3i(512*i, 0, 0);
-            tex0->paste(sides[i].first->getTexture(0), o);
-            tex1->paste(sides[i].first->getTexture(1), o);
-        }
-        m->setTexture(tex0, false, 0);
-        m->setTexture(tex1, false, 1);
+    auto mosaic1 = VRTextureMosaic::create();
+    auto mosaic2 = VRTextureMosaic::create();
+    for (int i=0; i<N; i++) {
+        mosaic1->add( sides[i]->getTexture(0), Vec2i(512*i,0), Vec2i(i,0) );
+        mosaic2->add( sides[i]->getTexture(1), Vec2i(512*i,0), Vec2i(i,0) );
     }
+    auto m = VRMaterial::create("treeLOD");
+    m->setTexture(mosaic1, false, 0);
+    m->setTexture(mosaic2, false, 1);
 
     for (int i=0; i<N; i++) { // create UV coordinates
         float i1 = i*1.0/N;
         float i2 = (i+1)*1.0/N;
-        float h = sides[i].second / float(Hmax);
+        float h = sides[i]->getTexture(0)->getSize()[1] / float(Hmax);
         data.setTexCoord(4*i  , Vec2d(i2,0));
         data.setTexCoord(4*i+1, Vec2d(i1,0));
         data.setTexCoord(4*i+2, Vec2d(i1,h));

@@ -14,7 +14,6 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-g" />
-					<Add option="-frounding-math" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -32,7 +31,7 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
-			<Add option="-std=c++11" />
+			<Add option="-std=c++14" />
 			<Add option="`pkg-config gtk+-2.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
 			<Add option="`pkg-config --cflags libxml++-2.6`" />
@@ -88,7 +87,9 @@
 			<Add option="-DBOOST_NO_COMPILER_CONFIG" />
 			<Add option="-DBOOST_NO_CXX14_DECLTYPE_AUTO" />
 			<Add option="-DBOOST_NO_CXX11_DECLTYPE_N3276" />
+			<Add option="-DBOOST_NO_CXX11_HDR_ATOMIC=1" />
 			<Add option="-DGL_GLEXT_PROTOTYPES" />
+			<Add option="-DWITH_SHADOW_VOLUME" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
 			<Add directory="/usr/lib64/glib-2.0/include" />
@@ -109,6 +110,7 @@
 			<Add directory="/usr/include/Vive" />
 			<Add directory="/usr/include/oce" />
 			<Add directory="/usr/include/IFC" />
+			<Add directory="/usr/include/vtk-7.1/" />
 		</Compiler>
 		<Linker>
 			<Add option="-lTKernel" />
@@ -148,29 +150,23 @@
 			<Add option="`pkg-config vte --libs`" />
 			<Add option="-ljsoncpp" />
 			<Add option="-lvrpn" />
-			<Add option="-lvtkalglib" />
-			<Add option="-lvtkGeovis" />
-			<Add option="-lvtkproj4" />
-			<Add option="-lvtkCharts" />
-			<Add option="-lvtkGraphics" />
-			<Add option="-lvtkRendering" />
-			<Add option="-lvtkCommon" />
-			<Add option="-lvtkHybrid" />
-			<Add option="-lvtksys" />
-			<Add option="-lvtkDICOMParser" />
-			<Add option="-lvtkImaging" />
-			<Add option="-lvtkverdict" />
-			<Add option="-lvtkexoIIc" />
-			<Add option="-lvtkInfovis" />
-			<Add option="-lvtkViews" />
-			<Add option="-lvtkFiltering" />
-			<Add option="-lvtkIO" />
-			<Add option="-lvtkVolumeRendering" />
-			<Add option="-lvtkftgl" />
-			<Add option="-lvtkmetaio" />
-			<Add option="-lvtkWidgets" />
-			<Add option="-lvtkGenericFiltering" />
-			<Add option="-lvtkParallel" />
+			<Add option="-lquat" />
+			<Add option="-lvtkalglib-7.1" />
+			<Add option="-lvtkGeovisCore-7.1" />
+			<Add option="-lvtkChartsCore-7.1" />
+			<Add option="-lvtkRenderingCore-7.1" />
+			<Add option="-lvtkCommonCore-7.1" />
+			<Add option="-lvtksys-7.1" />
+			<Add option="-lvtkDICOMParser-7.1" />
+			<Add option="-lvtkImagingCore-7.1" />
+			<Add option="-lvtkverdict-7.1" />
+			<Add option="-lvtkexoIIc-7.1" />
+			<Add option="-lvtkInfovisCore-7.1" />
+			<Add option="-lvtkViewsCore-7.1" />
+			<Add option="-lvtkIOLegacy-7.1" />
+			<Add option="-lvtkmetaio-7.1" />
+			<Add option="-lvtkParallelCore-7.1" />
+			<Add option="-lvtkCommonDataModel-7.1" />
 			<Add option="-lvirtuose" />
 			<Add option="-lCGAL" />
 			<Add option="-lgdal" />
@@ -742,6 +738,8 @@
 		<Unit filename="src/core/objects/material/VRTexture.h" />
 		<Unit filename="src/core/objects/material/VRTextureGenerator.cpp" />
 		<Unit filename="src/core/objects/material/VRTextureGenerator.h" />
+		<Unit filename="src/core/objects/material/VRTextureMosaic.cpp" />
+		<Unit filename="src/core/objects/material/VRTextureMosaic.h" />
 		<Unit filename="src/core/objects/material/VRVideo.cpp" />
 		<Unit filename="src/core/objects/material/VRVideo.h" />
 		<Unit filename="src/core/objects/object/OSGCore.cpp" />

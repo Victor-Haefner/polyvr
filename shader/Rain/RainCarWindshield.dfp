@@ -234,7 +234,7 @@ vec4 locateDrop() {
 
 vec4 returnColor(vec4 drop) {
 	if (scale < 0.01 || !isRaining) return vec4(0,0,0,0);
-
+	
 	float xC = -floor(drop.x/disBD);
 	float yC = floor((drop.y)/disBD);
 	float hashValue = hash(vec2(xC*0.2437,yC*0.2437)); //same seed would be all same size due to calctime algorithm
@@ -293,7 +293,7 @@ void main() {
 	axU = cross(windshieldDir,windshieldUp);
 	axV = windshieldDir;
 	
-	if (fragDir.y < -0.999) discard; //not sure if needed, but previous experiences showed conflicts with RAIN-MODULE's heightcam 
+	//if (fragDir.y < -0.999) discard; //not sure if needed, but previous experiences showed conflicts with RAIN-MODULE's heightcam 
 	vec4 dropColor = vec4(0,0,0,0);	
 	vec4 drop = locateDrop();
 	dropColor = returnColor(drop);
@@ -303,7 +303,12 @@ void main() {
 	if (dropColor == vec4(0,0,0,0)) discard;	
 	if (dropColor.w < 0.1) discard;	
 	dropColor.w=1;
-	gl_FragColor = dropColor;
+	//gl_FragColor = dropColor;
+	//discard;
+	//gl_FragDepth = 1.0; // depth is infinite at 1.0? behind all else (check)
+	gl_FragData[0] = vec4(worldVec,1);
+	gl_FragData[1] = vec4(0,0,1, -1);
+	gl_FragData[2] = dropColor;
 }
 
 

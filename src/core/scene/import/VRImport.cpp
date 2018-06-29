@@ -148,7 +148,9 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         if (ext == ".tiff" || ext == ".tif") { loadTIFF(path, res); return; }
         if (ext == ".hgt") { loadTIFF(path, res); return; }
         if (ext == ".dxf") { loadDXF(path, res); return; }
+#ifndef NO_IFC
         if (ext == ".ifc") { loadIFC(path, res); return; }
+#endif
         if (preset == "OSG" || preset == "COLLADA") osgLoad(path, res);
         if (preset == "COLLADA") loadCollada(path, res);
     };

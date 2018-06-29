@@ -12,6 +12,10 @@ struct seg_params;
 struct leaf_params;
 
 class VRTree : public VRTransform {
+    public:
+        static string treeSprLODvp;
+        static string treeSprLODdfp;
+
     private:
         int seed = 0;
         segment* trunc = 0;
@@ -21,6 +25,7 @@ class VRTree : public VRTransform {
         vector<segment*> branches;
         vector<VRGeometryPtr> leafGeos;
         vector<VRGeometryPtr> woodGeos;
+        vector<VRMaterialPtr> lodMaterials;
         map<int, VRGeometryPtr> leafLodCache;
         map<int, VRGeometryPtr> truncLodCache;
         static VRMaterialPtr treeMat;
@@ -60,12 +65,15 @@ class VRTree : public VRTransform {
         void addLeafs(int lvl, int amount, float size = 0.03);
         void setLeafMaterial(VRMaterialPtr mat);
 
+        vector<VRMaterialPtr> createLODtextures(int& Hmax, VRGeoData& data);
         VRGeometryPtr createLOD(int lvl);
         VRGeometryPtr getLOD(int lvl);
         void appendLOD(VRGeoData& data, int lvl, Vec3d offset);
         void createTwigLod(VRGeoData& geo, int lvl);
         void createHullTrunkLod(VRGeoData& geo, int lvl, Vec3d offset, int ID); // soon deprecated
         void createHullLeafLod(VRGeoData& geo, int lvl, Vec3d offset, int ID); // soon deprecated
+
+        vector<VRMaterialPtr> getLodMaterials();
 };
 
 OSG_END_NAMESPACE;

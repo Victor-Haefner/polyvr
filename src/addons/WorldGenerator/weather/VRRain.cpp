@@ -31,16 +31,11 @@ using namespace OSG;
 
 VRRain::VRRain() : VRGeometry("Rain") {
     type = "Rain";
-    string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Rain/";
-    vScript = resDir + "Rain.vp";
-    fScript = resDir + "Rain.fp";
-    vScriptTex = resDir + "RainTex.vp";
-    fScriptTex = resDir + "RainTex.fp";
+    setupShaderLocations();
 
     //Shader setup
     mat = VRMaterial::create("Rain");
-    mat->readVertexShader(vScript);
-    mat->readFragmentShader(fScript);
+    reloadShader();
     setMaterial(mat);
     setPrimitive("Plane", "2 2 1 1");
     mat->setLit(false);
@@ -199,6 +194,16 @@ void VRRain::updateScale( float scaleNow ){
     cout << " " << rainDensity << endl;
 }
 
+void VRRain::setupShaderLocations() {
+    string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Rain/";
+    vScript = resDir + "Rain.vp";
+    fScript = resDir + "Rain.fp";
+    dfScript = resDir + "Rain.dfp";
+    vScriptTex = resDir + "RainTex.vp";
+    fScriptTex = resDir + "RainTex.fp";
+    dfScriptTex = resDir + "RainTex.dfp";
+}
+
 void VRRain::update() {
     if (!isVisible()) return;
 
@@ -226,12 +231,18 @@ void VRRain::update() {
 
     mat->setShaderParameter<float>("rainOffset", offset);
     mat->setShaderParameter<bool>("depthTexer", depthTexer);
-    mat->readVertexShader(vScript);
-    mat->readFragmentShader(fScript);
+    reloadShader();
 }
 
 void VRRain::doTestFunction() {
     auto tmp = camTex->getFrom();
     cout << tmp << endl;
+}
+
+void VRRain::reloadShader() {
+    mat->readVertexShader(vScript);
+    mat->readFragmentShader(fScript);
+    mat->readFragmentShader(dfScript, true);
+    mat->updateDeferredShader();
 }
 

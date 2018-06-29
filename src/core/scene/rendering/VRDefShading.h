@@ -35,6 +35,10 @@ class VRDefShading {
             ShaderProgramChunkMTRecPtr lightSH;
         };
 
+        ShaderProgramMTRecPtr      vpAmbient;
+        ShaderProgramMTRecPtr      fpAmbient;
+        ShaderProgramChunkMTRecPtr shAmbient;
+
         string dsGBufferVPFile, dsGBufferFPFile;
         string dsAmbientVPFile, dsAmbientFPFile;
         string dsDirLightVPFile, dsDirLightFPFile, dsDirLightShadowFPFile;

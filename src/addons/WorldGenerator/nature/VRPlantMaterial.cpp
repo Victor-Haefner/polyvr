@@ -4,13 +4,16 @@
 
 using namespace OSG;
 
-VRPlantMaterial::VRPlantMaterial() : VRMaterial("plants") {
-    composeShader();
-}
+VRPlantMaterial::VRPlantMaterial() : VRMaterial("plants") {}
 
 VRPlantMaterial::~VRPlantMaterial() {}
 
-VRPlantMaterialPtr VRPlantMaterial::create() { return VRPlantMaterialPtr( new VRPlantMaterial() ); }
+VRPlantMaterialPtr VRPlantMaterial::create() {
+    auto m = VRPlantMaterialPtr( new VRPlantMaterial() );
+    m->init();
+    m->composeShader();
+    return m;
+}
 
 void VRPlantMaterial::composeShader() {
     string vshrd;

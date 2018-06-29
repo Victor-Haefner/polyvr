@@ -1,0 +1,238 @@
+#include <OpenSG/OSGGL.h>
+#include <OpenSG/OSGGLUT.h>
+#include <OpenSG/OSGGLUTWindow.h>
+#include <OpenSG/OSGSceneFileHandler.h>
+#include <OpenSG/OSGSimpleGeometry.h>
+#include <OpenSG/OSGSimpleSceneManager.h>
+#include <OpenSG/OSGSimpleTexturedMaterial.h>
+
+#include <OpenSG/OSGDeferredShadingStage.h>
+#include <OpenSG/OSGDirectionalLight.h>
+#include <OpenSG/OSGPointLight.h>
+#include <OpenSG/OSGSpotLight.h>
+
+#include <OpenSG/OSGShaderShadowMapEngine.h>
+#include <OpenSG/OSGTrapezoidalShadowMapEngine.h>
+
+// OpenSG Shaders
+#include <OpenSG/OSGShaderProgram.h>
+#include <OpenSG/OSGShaderProgramChunk.h>
+#include <OpenSG/OSGMatrixUtility.h>
+
+OSG_USING_NAMESPACE
+
+SimpleSceneManagerRefPtr mgr;
+
+class DirectionalLightTestScene {
+    public:
+        LightUnrecPtr              light = 0;
+        NodeUnrecPtr               lightN = 0;
+        NodeUnrecPtr               beaconN = 0;
+        ShaderProgramUnrecPtr      lightVP = 0;
+        ShaderProgramUnrecPtr      lightFP = 0;
+        ShaderProgramChunkUnrecPtr lightSH = 0;
+
+        NodeUnrecPtr                   rootN = 0;
+        NodeUnrecPtr                   dsStageN = 0;
+        DeferredShadingStageUnrecPtr   dsStage = 0;
+        NodeUnrecPtr                   sceneN = 0;
+        NodeUnrecPtr                   objN = 0;
+
+        std::string dsGBufferVPFile = "DSGBuffer.vp.glsl";
+        std::string dsGBufferFPFile = "DSGBuffer.fp.glsl";
+        std::string dsAmbientVPFile = "DSAmbient.vp.glsl";
+        std::string dsAmbientFPFile = "DSAmbient.fp.glsl";
+        std::string dsDirLightVPFile = "DSDirLight.vp.glsl";
+        std::string dsDirLightFPFile = "DSDirLight.fp.glsl";
+        std::string dsDirLightShadowFPFile = "DSDirLightShadow.fp.glsl" ;
+        std::string dsPointLightVPFile = "DSPointLight.vp.glsl";
+        std::string dsPointLightFPFile = "DSPointLight.fp.glsl";
+        std::string dsPointLightShadowFPFile = "DSPointLightShadow.fp.glsl";
+        std::string dsSpotLightVPFile = "DSSpotLight.vp.glsl";
+        std::string dsSpotLightFPFile = "DSSpotLight.fp.glsl";
+        std::string dsSpotLightShadowFPFile = "DSSpotLightShadow.fp.glsl";
+        std::string dsUnknownFile   = "unknownFile";
+
+        void buildDSStage(void) {
+            ShaderProgramUnrecPtr      vpGBuffer = ShaderProgram::createVertexShader  ();
+            ShaderProgramUnrecPtr      fpGBuffer = ShaderProgram::createFragmentShader();
+            ShaderProgramUnrecPtr      vpAmbient = ShaderProgram::createVertexShader  ();
+            ShaderProgramUnrecPtr      fpAmbient = ShaderProgram::createFragmentShader();
+            ShaderProgramChunkUnrecPtr shGBuffer = ShaderProgramChunk::create();
+            ShaderProgramChunkUnrecPtr shAmbient = ShaderProgramChunk::create();
+
+            dsStage  = DeferredShadingStage::create();
+            dsStageN = makeNodeFor(dsStage);
+            dsStage->setCamera(mgr->getCamera());
+            dsStage->editMFPixelFormats()->push_back(Image::OSG_RGBA_PF          );
+            dsStage->editMFPixelTypes  ()->push_back(Image::OSG_FLOAT32_IMAGEDATA);
+            dsStage->editMFPixelFormats()->push_back(Image::OSG_RGB_PF           );
+            dsStage->editMFPixelTypes  ()->push_back(Image::OSG_FLOAT32_IMAGEDATA);
+            dsStage->editMFPixelFormats()->push_back(Image::OSG_RGB_PF);
+            dsStage->editMFPixelTypes  ()->push_back(Image::OSG_UINT8_IMAGEDATA);
+
+            // G Buffer shader (one for the whole scene)
+            vpGBuffer->readProgram(dsGBufferVPFile.c_str());
+            fpGBuffer->readProgram(dsGBufferFPFile.c_str());
+            fpGBuffer->addUniformVariable<Int32>("tex0", 0);
+            shGBuffer->addShader(vpGBuffer);
+            shGBuffer->addShader(fpGBuffer);
+            dsStage->setGBufferProgram(shGBuffer);
+
+            // ambient shader
+            vpAmbient->readProgram(dsAmbientVPFile.c_str());
+            fpAmbient->readProgram(dsAmbientFPFile.c_str());
+            fpAmbient->addUniformVariable<Int32>("texBufNorm", 1);
+            shAmbient->addShader(vpAmbient);
+            shAmbient->addShader(fpAmbient);
+            dsStage->setAmbientProgram(shAmbient);
+        }
+
+        NodeTransitPtr buildTestScene(UInt32 nX, UInt32 nZ) {
+            Real32 stepX  = 10.f;
+            Real32 stepZ  = 10.f;
+
+            Real32 startX = - stepX * (nX-1) / 2.;
+            Real32 startZ = - stepZ * (nZ-1) / 2.;
+
+            NodeTransitPtr   groupN  = makeCoredNode<Group>();
+            GeometryUnrecPtr objGeo  = makeSphereGeo(2, 1.f);
+
+            for(UInt32 iX = 0; iX < nX; ++iX) {
+                for(UInt32 iZ = 0; iZ < nZ; ++iZ) {
+                    NodeUnrecPtr      objGeoN = makeNodeFor(objGeo);
+                    TransformUnrecPtr xform   = Transform::create();
+                    NodeUnrecPtr      xformN  = makeNodeFor(xform);
+
+                    Matrix matXForm;
+                    Vec3f  vecTrans(startX + iX * stepX, 4.f * osgCos(Pi/5.f * Real32(iX + iZ)), startZ + iZ * stepZ);
+                    matXForm.setTranslate(vecTrans);
+                    xform->setMatrix(matXForm);
+                    xformN->addChild(objGeoN);
+                    groupN->addChild(xformN );
+
+                    // add a 2nd layer of objects
+                    NodeUnrecPtr      objGeoN2 = makeNodeFor(objGeo);
+                    TransformUnrecPtr xform2   = Transform::create();
+                    NodeUnrecPtr      xformN2  = makeNodeFor(xform2);
+                    Matrix matXForm2;
+                    matXForm2.setTranslate(Vec3f(startX + iX * stepX, 15.f, startZ + iZ * stepZ ));
+                    xform2->setMatrix(matXForm2);
+                    xformN2->addChild(objGeoN2);
+                    groupN ->addChild(xformN2 );
+                }
+            }
+
+            // ground plane
+            TransformUnrecPtr xform   = Transform::create();
+            NodeUnrecPtr      xformN  = makeNodeFor(xform);
+            Matrix matXForm;
+            matXForm.setTranslate(Vec3f(0.f, -5.f, 0.f));
+            matXForm.setRotate   (Quaternion(Vec3f(1.f, 0.f, 0.f), -PiHalf));
+            xform->setMatrix(matXForm);
+            NodeUnrecPtr planeGeoN = makePlane(nX * stepX, nZ * stepZ, 1, 1);
+            xformN->addChild(planeGeoN);
+            groupN->addChild(xformN   );
+
+            // back box
+            xform   = Transform::create();
+            xformN  = makeNodeFor(xform);
+            matXForm.setIdentity();
+            matXForm.setTranslate(Vec3f(0.f, 15.f, -20.f));
+            xform->setMatrix(matXForm);
+            NodeUnrecPtr boxGeoN = makeBox(nX * stepX, 35.f, 2.f, 1, 1, 1);
+            xformN->addChild(boxGeoN);
+            groupN->addChild(xformN );
+            return groupN;
+        }
+
+        DirectionalLightTestScene() {
+            sceneN = makeCoredNode<Group>();
+            objN   = buildTestScene(5, 5);
+            sceneN->addChild(objN);
+            rootN = makeCoredNode<Group>();
+            buildDSStage();
+            dsStageN->addChild(sceneN  );
+            rootN   ->addChild(dsStageN);
+
+            TransformUnrecPtr beacon = Transform::create();
+            beaconN = makeNodeFor(beacon);
+            lightVP    = ShaderProgram     ::createVertexShader  ();
+            lightFP    = ShaderProgram     ::createFragmentShader();
+            lightSH    = ShaderProgramChunk::create              ();
+            light      = DirectionalLight::create();
+            light->setBeacon(beaconN);
+            lightN = makeNodeFor(light);
+            lightFP->addUniformVariable<Int32>("texBufPos",  0);
+            lightFP->addUniformVariable<Int32>("texBufNorm", 1);
+            lightFP->addUniformVariable<Int32>("texBufDiff", 2);
+            lightSH->addShader(lightVP);
+            lightSH->addShader(lightFP);
+
+            rootN->addChild(beaconN);
+            dsStage->editMFLights()->push_back(light  );
+            dsStage->editMFLightPrograms()->push_back(lightSH);
+
+            ShaderShadowMapEngineUnrecPtr shadowEng = ShaderShadowMapEngine::create();
+            shadowEng->setWidth (1024);
+            shadowEng->setHeight(1024);
+            shadowEng->setOffsetFactor(4.5f);
+            shadowEng->setOffsetBias(16.f);
+            shadowEng->setForceTextureUnit(3);
+
+            light->setLightEngine(shadowEng);
+            std::string vpFile = dsDirLightVPFile;
+            std::string fpFile = dsDirLightShadowFPFile;
+            lightVP->readProgram(vpFile.c_str());
+            lightFP->readProgram(fpFile.c_str());
+
+            Matrix m;
+            MatrixLookAt(m, Pnt3f(10,10,10), Vec3f(0,0,0), Vec3f(0,1,0));
+            beacon->setMatrix(m);
+        }
+};
+
+// react to size changes
+void reshape(int w, int h) {
+    mgr->resize(w, h);
+    glutPostRedisplay();
+}
+
+void display(void) {
+    commitChangesAndClear();
+    mgr->redraw();
+}
+
+void idle(void) { glutPostRedisplay(); }
+
+int setupGLUT(int *argc, char *argv[]) {
+    glutInit(argc, argv);
+    glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
+    int winid = glutCreateWindow("OpenSG");
+    glutReshapeFunc(reshape);
+    glutDisplayFunc(display);
+    glutIdleFunc(idle);
+    glutReshapeWindow(1400, 1050);
+    return winid;
+}
+
+int main(int argc, char *argv[]) {
+    osgInit(argc, argv);
+    int glutWinId = setupGLUT(&argc, argv);
+    GLUTWindowUnrecPtr glutWin = GLUTWindow::create();
+    glutWin->setGlutId(glutWinId);
+    glutWin->init();
+
+    mgr = SimpleSceneManager::create();
+    mgr->setWindow(glutWin);
+    mgr->setRoot(NULL);
+    mgr->getWindow()->getPort(0)->setSize(0.1f, 0.f, 0.8f, 1.f);
+
+    DirectionalLightTestScene scene;
+    mgr->setRoot(scene.rootN);
+    mgr->showAll();
+    commitChanges();
+    glutMainLoop();
+    return 0;
+}
+
