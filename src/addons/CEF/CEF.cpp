@@ -177,8 +177,8 @@ void CEF::setAspectRatio(float a) { aspect = a; resize(); }
 
 // dev callbacks:
 
-void CEF::addMouse(VRDevicePtr dev, VRObjectWeakPtr obj, int lb, int rb, int wu, int wd) {
-    if (dev == 0 || obj.lock() == 0) return;
+void CEF::addMouse(VRDevicePtr dev, VRObjectPtr obj, int lb, int rb, int wu, int wd) {
+    if (dev == 0 || obj == 0) return;
     this->obj = obj;
 
     auto k = dev.get();
