@@ -248,6 +248,10 @@ void CaveKeeper::place(VRDevicePtr dev, string obj, VRTransformPtr geo) {
 CaveKeeper::CaveKeeper() { initWorld(); }
 CaveKeeper::~CaveKeeper() { ; }
 
+void CaveKeeper::init(VRObjectPtr a) {
+    a->addChild(getAnchor());
+}
+
 shared_ptr<CaveKeeper> CaveKeeper::create() { return shared_ptr<CaveKeeper>(new CaveKeeper()); }
 
 OSG_END_NAMESPACE
