@@ -6,8 +6,6 @@
 
 struct VRPyAMLLoader : VRPyBaseT<OSG::VRAMLLoader> {
     static PyMethodDef methods[];
-
-    static PyObject* load(VRPyAMLLoader* self, PyObject* args);
 };
 
 #endif // VRPYAMLLOADER_H_INCLUDED
