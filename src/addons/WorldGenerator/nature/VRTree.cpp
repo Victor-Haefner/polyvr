@@ -92,21 +92,21 @@ struct OSG::segment {
 
 VRTree::VRTree(string name) : VRTransform(name) {
     int c = random(0,10);
-    if (c == 0) truncColor = Color3f(0.3, 0.2, 0);
-    if (c == 1) truncColor = Color3f(0.6, 0.5, 0.4);
-    if (c == 2) truncColor = Color3f(0.2, 0.1, 0.05);
-    if (c == 3) truncColor = Color3f(0.2, 0.1, 0.05);
-    if (c == 4) truncColor = Color3f(0.3, 0.2, 0);
-    if (c == 5) truncColor = Color3f(0.6, 0.5, 0.4);
-    if (c == 6) truncColor = Color3f(0.2, 0.1, 0.1);
-    if (c == 7) truncColor = Color3f(0.3, 0.2, 0);
-    if (c == 8) truncColor = Color3f(0.3, 0.2, 0);
-    if (c == 9) truncColor = Color3f(0.2, 0.1, 0.05);
-    if (c ==10) truncColor = Color3f(0.2, 0.1, 0.05);
+    if (c == 0) truncColor = Color4f(0.3, 0.2, 0, 1);
+    if (c == 1) truncColor = Color4f(0.6, 0.5, 0.4, 1);
+    if (c == 2) truncColor = Color4f(0.2, 0.1, 0.05, 1);
+    if (c == 3) truncColor = Color4f(0.2, 0.1, 0.05, 1);
+    if (c == 4) truncColor = Color4f(0.3, 0.2, 0, 1);
+    if (c == 5) truncColor = Color4f(0.6, 0.5, 0.4, 1);
+    if (c == 6) truncColor = Color4f(0.2, 0.1, 0.1, 1);
+    if (c == 7) truncColor = Color4f(0.3, 0.2, 0, 1);
+    if (c == 8) truncColor = Color4f(0.3, 0.2, 0, 1);
+    if (c == 9) truncColor = Color4f(0.2, 0.1, 0.05, 1);
+    if (c ==10) truncColor = Color4f(0.2, 0.1, 0.05, 1);
 
     // desaturate and make brighter
     float a = 0.3;
-    truncColor = truncColor*(1-a) + Color3f(a,a,a);
+    truncColor = truncColor*(1-a) + Color4f(a,a,a,1);
 
     store("seed", &seed);
     storeObjVec("branching", parameters, true);
@@ -238,8 +238,8 @@ void VRTree::initMaterials() {
 
         VRTextureGenerator tg;
         tg.setSize(Vec3i(50,50,50));
-        tg.add("Perlin", 1, truncColor, Color3f(1,0.9,0.7));
-        tg.add("Perlin", 0.25, Color3f(1,0.9,0.7), truncColor);
+        tg.add("Perlin", 1, truncColor, Color4f(1,0.9,0.7, 1));
+        tg.add("Perlin", 0.25, Color4f(1,0.9,0.7, 1), truncColor);
         treeMat->setTexture(tg.compose(0));
     }
 

@@ -80,9 +80,9 @@ VRMaterialPtr BlockWorld::initMaterial(string texture) {
     //texture
     VRTextureGenerator tgen;
     tgen.setSize(512,512);
-    tgen.add(PERLIN, 1./2, Color3f(0.3,0.1,0.1), Color3f(0.9,0.5,0.1));
-    tgen.add(PERLIN, 1./8, Color3f(0.8,0.8,0.8), Color3f(1.0,1.0,1.0));
-    tgen.add(PERLIN, 1./32, Color3f(0.8,0.8,0.8), Color3f(1.0,1.0,1.0));
+    tgen.add(PERLIN, 1./2, Color4f(0.3,0.1,0.1,1), Color4f(0.9,0.5,0.1,1));
+    tgen.add(PERLIN, 1./8, Color4f(0.8,0.8,0.8,1), Color4f(1.0,1.0,1.0,1));
+    tgen.add(PERLIN, 1./32, Color4f(0.8,0.8,0.8,1), Color4f(1.0,1.0,1.0,1));
     mat->setTexture( tgen.compose(0) );
     mat->setTextureParams(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_MODULATE, GL_REPEAT, GL_REPEAT);
 

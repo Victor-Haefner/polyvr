@@ -31,7 +31,7 @@ class VRTree : public VRTransform {
         static VRMaterialPtr treeMat;
         static VRMaterialPtr leafMat;
 
-        Color3f truncColor = Color3f(0.4,0.2,0);
+        Color4f truncColor = Color4f(0.4,0.2,0,1);
 
         float random (float min, float max);
         float variation(float val, float var);
