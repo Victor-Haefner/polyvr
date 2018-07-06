@@ -121,7 +121,7 @@ void VRScript::update() {
             if (state == -1) continue;
 
             if (dev != 0) {
-                if (state <= 1) t->sig = dev->addSignal(t->key, state);
+                if (state <= 1) t->sig = dev->newSignal(t->key, state);
                 if (state == 2) t->sig = dev->getDragSignal();
                 if (state == 3) t->sig = dev->getDropSignal();
                 if (state == 4) t->sig = dev->getToEdgeSignal();

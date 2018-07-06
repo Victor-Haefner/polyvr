@@ -49,7 +49,7 @@ void VRNavPreset::updateBinding(VRNavBinding& b) {
     if (dev == 0) return;
 
     b.clearSignal();
-    auto sig = b.doRepeat ? dev->addToggleSignal(b.key) : dev->addSignal( b.key, b.state);
+    auto sig = b.doRepeat ? dev->addToggleSignal(b.key) : dev->newSignal( b.key, b.state);
     sig->add(b.cb);
     b.sig = sig;
     //cout << "\nUPDATE BINDING " << b.cb->getName() << endl;

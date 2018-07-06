@@ -37,7 +37,7 @@ class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, p
 
         virtual void setCamera(VRCameraPtr cam);
 
-        VRSignalPtr addSignal(int key, int state);
+        VRSignalPtr newSignal(int key, int state);
         VRSignalPtr addToggleSignal(int key);
         void addSignal(VRSignalPtr sig, int key, int state);
         VRSignalPtr addSlider(int key);
@@ -77,6 +77,9 @@ class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, p
 
         void setSpeed(Vec2d s);
         Vec2d getSpeed();
+
+        void drag(VRObjectPtr obj);
+        void drop();
 
         Pnt3d getIntersectionPoint();
         Vec3i getIntersectionTriangle();

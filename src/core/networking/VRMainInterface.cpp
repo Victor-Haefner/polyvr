@@ -16,7 +16,7 @@ VRMainInterface::VRMainInterface() {
     cout << "Init VRMainInterface..";
     server = VRServer::create(5501);
     server->setName("MainInterface");
-    VRSignalPtr sig = server->addSignal(0,1);
+    VRSignalPtr sig = server->newSignal(0,1);
     clickCb = VRDeviceCb::create( "VRMainInterface_on_scene_clicked", boost::bind(&VRMainInterface::on_scene_clicked, this, _1) );
     sig->add( clickCb );
     reqCb = VRServerCb::create( "VRMainInterface_request_handler", boost::bind(&VRMainInterface::handleRequest, this, _1) );

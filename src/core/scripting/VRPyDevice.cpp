@@ -12,7 +12,13 @@
 #include "VRPyTypeCaster.h"
 
 using namespace OSG;
+
+simpleVRPyType(Signal, 0)
 simpleVRPyType(Device, New_named_ptr)
+
+PyMethodDef VRPySignal::methods[] = {
+    {NULL}  /* Sentinel */
+};
 
 PyMethodDef VRPyDevice::methods[] = {
     {"getName", (PyCFunction)VRPyDevice::getName, METH_NOARGS, "Return device name." },
@@ -49,12 +55,12 @@ PyMethodDef VRPyDevice::methods[] = {
     {"remIntersection", (PyCFunction)VRPyDevice::remIntersection, METH_VARARGS, "Remove device intersection node." },
     {"getDragged", (PyCFunction)VRPyDevice::getDragged, METH_NOARGS, "Get dragged object." },
     {"getDragGhost", (PyCFunction)VRPyDevice::getDragGhost, METH_NOARGS, "Get drag ghost." },
-    {"drag", (PyCFunction)VRPyDevice::drag, METH_VARARGS, "Start to drag an object - drag(obj)" },
-    {"drop", (PyCFunction)VRPyDevice::drop, METH_NOARGS, "Drop any object - drop()" },
-    {"setSpeed", (PyCFunction)VRPyDevice::setSpeed, METH_VARARGS, "Set the navigation speed of the device - setSpeed(float sx, float sy)" },
-    {"getSpeed", PyWrap(Device, getSpeed, "Get the navigation speed of the device", Vec2d ) },
-    {"addSignal", (PyCFunction)VRPyDevice::addSignal, METH_VARARGS, "Add a new signal - addSignal(int key, int state)" },
-    {"trigger", (PyCFunction)VRPyDevice::trigger, METH_VARARGS, "Trigger signal - trigger(int key, int state)" },
+    {"drag", PyWrap( Device, drag, "Start to drag an object", void, VRObjectPtr ) },
+    {"drop", PyWrap( Device, drop, "Drop any object", void ) },
+    {"setSpeed", PyWrap( Device, setSpeed, "Set the navigation speed of the device", void, Vec2d ) },
+    {"getSpeed", PyWrap( Device, getSpeed, "Get the navigation speed of the device", Vec2d ) },
+    {"addSignal", PyWrap( Device, newSignal, "Add a new signal, key, state", VRSignalPtr, int, int ) },
+    {"trigger", PyWrap( Device, change_button, "Trigger signal, key, state", void, int, int ) },
     {NULL}  /* Sentinel */
 };
 
@@ -75,7 +81,7 @@ PyObject* VRPyDevice::addSignal(VRPyDevice* self, PyObject *args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::setSpeed, Object is invalid"); return NULL; }
     int k, s;
     if (! PyArg_ParseTuple(args, "ii", &k, &s)) return NULL;
-    self->objPtr->addSignal( k,s );
+    self->objPtr->newSignal( k,s );
     Py_RETURN_TRUE;
 }
 
@@ -103,21 +109,6 @@ PyObject* VRPyDevice::intersect(VRPyDevice* self, PyObject *args) {
     OSG::VRIntersection ins = self->objPtr->intersect(o ? o->objPtr : 0, force, c ? c->objPtr : 0, d ? parseVec3dList(d) : Vec3d(0,0,-1));
     if (ins.hit) Py_RETURN_TRUE;
     else Py_RETURN_FALSE;
-}
-
-PyObject* VRPyDevice::drag(VRPyDevice* self, PyObject *args) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::drag, Object is invalid"); return NULL; }
-    OSG::VRObjectPtr obj = 0;
-    if (!VRPyObject::parse(args, &obj)) return NULL;
-    string name = obj->getName();
-    self->objPtr->drag(obj, self->objPtr->getBeacon());
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyDevice::drop(VRPyDevice* self) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::drop, Object is invalid"); return NULL; }
-    self->objPtr->drop();
-    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyDevice::getName(VRPyDevice* self) {

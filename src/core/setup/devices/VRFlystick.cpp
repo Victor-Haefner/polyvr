@@ -22,8 +22,8 @@ VRFlystickPtr VRFlystick::ptr() { return static_pointer_cast<VRFlystick>( shared
 void VRFlystick::clearSignals() {
     VRDevice::clearSignals();
 
-    addSignal( 0, 0)->add( getDrop() );
-    addSignal( 0, 1)->add( addDrag( getBeacon() ) );
+    newSignal( 0, 0)->add( getDrop() );
+    newSignal( 0, 1)->add( addDrag( getBeacon() ) );
 }
 
 void VRFlystick::update(vector<int> buttons) {

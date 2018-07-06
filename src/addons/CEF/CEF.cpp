@@ -183,8 +183,8 @@ void CEF::addMouse(VRDevicePtr dev, VRObjectPtr obj, int lb, int rb, int wu, int
 
     auto k = dev.get();
     if (!mouse_dev_callback.count(k)) mouse_dev_callback[k] = VRFunction<VRDeviceWeakPtr>::create( "CEF::MOUSE", boost::bind(&CEF::mouse, this, lb,rb,wu,wd,_1 ) );
-    dev->addSignal(-1,0)->add(mouse_dev_callback[k]);
-    dev->addSignal(-1,1)->add(mouse_dev_callback[k]);
+    dev->newSignal(-1,0)->add(mouse_dev_callback[k]);
+    dev->newSignal(-1,1)->add(mouse_dev_callback[k]);
 
     if (!mouse_move_callback.count(k)) mouse_move_callback[k] = VRUpdateCb::create( "CEF::MM", boost::bind(&CEF::mouse_move, this, dev) );
     auto scene = VRScene::getCurrent();
@@ -194,8 +194,8 @@ void CEF::addMouse(VRDevicePtr dev, VRObjectPtr obj, int lb, int rb, int wu, int
 void CEF::addKeyboard(VRDevicePtr dev) {
     if (dev == 0) return;
     if (!keyboard_dev_callback) keyboard_dev_callback = VRFunction<VRDeviceWeakPtr>::create( "CEF::KR", boost::bind(&CEF::keyboard, this, _1 ) );
-    dev->addSignal(-1, 0)->add( keyboard_dev_callback );
-    dev->addSignal(-1, 1)->add( keyboard_dev_callback );
+    dev->newSignal(-1, 0)->add( keyboard_dev_callback );
+    dev->newSignal(-1, 1)->add( keyboard_dev_callback );
 }
 
 void CEF::mouse_move(VRDeviceWeakPtr d) {

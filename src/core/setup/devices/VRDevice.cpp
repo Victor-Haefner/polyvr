@@ -84,7 +84,7 @@ void VRDevice::clearSignals() {
 string VRDevice::getType() { return type; }
 
 // signal event setup
-VRSignalPtr VRDevice::addSignal(int key, int state) {
+VRSignalPtr VRDevice::newSignal(int key, int state) {
     VRSignalPtr sig = createSignal(key, state);
     BStates[key] = false;
     return sig;
@@ -165,6 +165,9 @@ void VRDevice::printMap() {
 
 void VRDevice::setSpeed(Vec2d s) { speed = s; }
 Vec2d VRDevice::getSpeed() { return speed; }
+
+void VRDevice::drag(VRObjectPtr obj) { VRIntersect::drag(obj, getBeacon()); }
+void VRDevice::drop() { VRIntersect::drop(); }
 
 Pnt3d VRDevice::getIntersectionPoint() { return getLastIntersection().point; }
 Vec3i VRDevice::getIntersectionTriangle() { return getLastIntersection().triangleVertices; }

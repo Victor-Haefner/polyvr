@@ -4,6 +4,10 @@
 #include "VRPyBase.h"
 #include "core/setup/devices/VRDevice.h"
 
+struct VRPySignal : VRPyBaseT<OSG::VRSignal> {
+    static PyMethodDef methods[];
+};
+
 struct VRPyDevice : VRPyBaseT<OSG::VRDevice> {
     static PyMethodDef methods[];
 
