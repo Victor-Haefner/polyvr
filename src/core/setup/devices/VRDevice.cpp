@@ -179,4 +179,8 @@ void VRDevice::remIntersection(VRObjectPtr obj) { remDynTree(obj); }
 VRTransformPtr VRDevice::getDragged() { return getDraggedObject(); }
 VRTransformPtr VRDevice::getDragGhost() { return getDraggedGhost(); }
 
+VRTransformPtr VRDevice::getBeacon(int i) { return VRAvatar::getBeacon(i); }
+void VRDevice::setBeacon(VRTransformPtr b, int i) { VRAvatar::setBeacon(b, i); }
+void VRDevice::setDnD(bool b) { toggleDragnDrop(b); }
+
 OSG_END_NAMESPACE;

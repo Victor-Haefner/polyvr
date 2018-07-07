@@ -81,6 +81,10 @@ class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, p
         void drag(VRObjectPtr obj);
         void drop();
 
+        VRTransformPtr getBeacon(int i = 0);
+        void setBeacon(VRTransformPtr, int i = 0);
+        void setDnD(bool b);
+
         Pnt3d getIntersectionPoint();
         Vec3i getIntersectionTriangle();
         Vec3d getIntersectionNormal();
