@@ -904,6 +904,8 @@
 		<Unit filename="src/core/scripting/VRPyMouse.h" />
 		<Unit filename="src/core/scripting/VRPyMultiTouch.cpp" />
 		<Unit filename="src/core/scripting/VRPyMultiTouch.h" />
+		<Unit filename="src/core/scripting/VRPyNamed.cpp" />
+		<Unit filename="src/core/scripting/VRPyNamed.h" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.cpp" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.h" />
 		<Unit filename="src/core/scripting/VRPyNavigator.cpp" />
