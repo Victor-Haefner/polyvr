@@ -116,10 +116,7 @@ void VRCallbackManager::updateCallbacks() {
             continue;
         }
 
-        if (j.ptr) {
-            string name = j.ptr->getName();
-            (*j.ptr)();
-        }
+        if (j.ptr) (*j.ptr)();
     }
     jobFktPtrs = delayedJobs;
 }
@@ -132,7 +129,7 @@ void VRCallbackManager::printCallbacks() {
         cout << "  prio " << fl.first << " (" << fl.second->size() << ")\n";
         for (auto f : *fl.second) {
             auto sp = f.lock();
-            if (sp) cout << "   fkt " << sp->getName() << endl;
+            if (sp) cout << "   fkt " << sp->name << endl;
         }
     }
 }

@@ -169,10 +169,16 @@ Vec2d VRDevice::getSpeed() { return speed; }
 void VRDevice::drag(VRObjectPtr obj) { VRIntersect::drag(obj, getBeacon()); }
 void VRDevice::drop() { VRIntersect::drop(); }
 
+bool VRDevice::intersect2(VRObjectPtr o, bool f, VRTransformPtr c, Vec3d d) {
+    OSG::VRIntersection ins = VRIntersect::intersect(o, f, c, d);
+    return ins.hit;
+}
+
 Pnt3d VRDevice::getIntersectionPoint() { return getLastIntersection().point; }
 Vec3i VRDevice::getIntersectionTriangle() { return getLastIntersection().triangleVertices; }
 Vec3d VRDevice::getIntersectionNormal() { return getLastIntersection().normal; }
 Vec2d VRDevice::getIntersectionUV() { return getLastIntersection().texel; }
+VRObjectPtr VRDevice::getIntersected() { return getLastIntersection().object.lock(); }
 
 void VRDevice::addIntersection(VRObjectPtr obj) { addDynTree(obj); }
 void VRDevice::remIntersection(VRObjectPtr obj) { remDynTree(obj); }

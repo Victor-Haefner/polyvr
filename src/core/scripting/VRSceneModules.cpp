@@ -3,6 +3,7 @@
 #include "VRScriptManagerT.h"
 
 #include "VRPyMath.h"
+#include "VRPyNamed.h"
 #include "VRPyObject.h"
 #include "VRPyGeometry.h"
 #include "VRPyAnimation.h"
@@ -100,7 +101,8 @@
 using namespace OSG;
 
 void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
-    sm->registerModule<VRPyObject>("Object", pModVR, VRPyStorage::typeRef);
+    sm->registerModule<VRPyName>("Named", pModVR, VRPyStorage::typeRef);
+    sm->registerModule<VRPyObject>("Object", pModVR, VRPyName::typeRef);
     sm->registerModule<VRPyTransform>("Transform", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyCollision>("Collision", pModVR);
     sm->registerModule<VRPyGeometry>("Geometry", pModVR, VRPyTransform::typeRef);
@@ -119,7 +121,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPySocket>("Socket", pModVR);
     sm->registerModule<VRPyStroke>("Stroke", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyConstraint>("Constraint", pModVR);
-    sm->registerModule<VRPyDevice>("Device", pModVR);
+    sm->registerModule<VRPyDevice>("Device", pModVR, VRPyName::typeRef);
     sm->registerModule<VRPyIntersection>("Intersection", pModVR);
     sm->registerModule<VRPyHaptic>("Haptic", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyServer>("Mobile", pModVR, VRPyDevice::typeRef);
