@@ -85,6 +85,11 @@ class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, p
         Vec3i getIntersectionTriangle();
         Vec3d getIntersectionNormal();
         Vec2d getIntersectionUV();
+
+        void addIntersection(VRObjectPtr obj);
+        void remIntersection(VRObjectPtr obj);
+        VRTransformPtr getDragged();
+        VRTransformPtr getDragGhost();
 };
 
 

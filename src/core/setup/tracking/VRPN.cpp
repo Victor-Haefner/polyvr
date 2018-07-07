@@ -89,11 +89,11 @@ VRPN_devicePtr VRPN_device::ptr() { return static_pointer_cast<VRPN_device>( sha
 
 void VRPN_device::setAddress(string addr) {
     address = addr;
-    if (tracker) delete tracker; tracker = 0;
-    if (button) delete button; button = 0;
-    if (analog) delete analog; analog = 0;
-    if (dial) delete dial; dial = 0;
-    if (text) delete text; text = 0;
+    if (tracker) { delete tracker; tracker = 0; }
+    if (button) { delete button; button = 0; }
+    if (analog) { delete analog; analog = 0; }
+    if (dial) { delete dial; dial = 0; }
+    if (text) { delete text; text = 0; }
 
     if (address == "") return;
 

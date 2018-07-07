@@ -174,4 +174,9 @@ Vec3i VRDevice::getIntersectionTriangle() { return getLastIntersection().triangl
 Vec3d VRDevice::getIntersectionNormal() { return getLastIntersection().normal; }
 Vec2d VRDevice::getIntersectionUV() { return getLastIntersection().texel; }
 
+void VRDevice::addIntersection(VRObjectPtr obj) { addDynTree(obj); }
+void VRDevice::remIntersection(VRObjectPtr obj) { remDynTree(obj); }
+VRTransformPtr VRDevice::getDragged() { return getDraggedObject(); }
+VRTransformPtr VRDevice::getDragGhost() { return getDraggedGhost(); }
+
 OSG_END_NAMESPACE;
