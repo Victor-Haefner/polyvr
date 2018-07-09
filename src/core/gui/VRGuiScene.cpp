@@ -220,6 +220,7 @@ void VRGuiScene::setLight(VRLightPtr l) {
 
     setCheckButton("checkbutton31", l->isOn());
     setCheckButton("checkbutton32", l->getShadows());
+    setCheckButton("checkbutton2", l->getShadowVolume().volume() > 1e-4);
     setCombobox("combobox2", getListStorePos("light_types", l->getLightType()));
     setCombobox("combobox22", getListStorePos("shadow_types", toString(l->getShadowMapRes())));
 
@@ -232,6 +233,7 @@ void VRGuiScene::setLight(VRLightPtr l) {
     setTextEntry("entry44", toString(a[0]));
     setTextEntry("entry45", toString(a[1]));
     setTextEntry("entry46", toString(a[2]));
+    setTextEntry("entry36", toString(l->getShadowVolume().size()[0]));
 
     string bname = "NONE";
     auto beacon = l->getBeacon();
@@ -1099,6 +1101,21 @@ void VRGuiScene::on_toggle_light_shadow() {
     obj->setShadows(b);
 }
 
+void VRGuiScene::on_toggle_light_shadow_volume() {
+    if(!trigger_cbs) return;
+    VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
+    if (!obj) return;
+    bool b = getCheckButtonState("checkbutton2");
+    float D = toFloat( getTextEntry("entry36") );
+    Boundingbox bb;
+    if (!b) obj->setShadowVolume( bb );
+    else {
+        bb.inflate( 0.5*D );
+        cout << "VRGuiScene::on_toggle_light_shadow_volume " << 0.5*D << " " << bb.volume() << " " << bb.size() << endl;
+        obj->setShadowVolume( bb );
+    }
+}
+
 void VRGuiScene::on_change_light_type() {
     if(!trigger_cbs) return;
     VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
@@ -1314,6 +1331,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     setCheckButtonCallback("radiobutton19", sigc::mem_fun(*this, &VRGuiScene::on_toggle_T_mode) );
     setCheckButtonCallback("checkbutton31", sigc::mem_fun(*this, &VRGuiScene::on_toggle_light) );
     setCheckButtonCallback("checkbutton32", sigc::mem_fun(*this, &VRGuiScene::on_toggle_light_shadow) );
+    setCheckButtonCallback("checkbutton2", sigc::mem_fun(*this, &VRGuiScene::on_toggle_light_shadow_volume) );
     setCheckButtonCallback("checkbutton13", sigc::mem_fun(*this, &VRGuiScene::on_toggle_phys) );
     setCheckButtonCallback("checkbutton33", sigc::mem_fun(*this, &VRGuiScene::on_toggle_dynamic) );
     setCheckButtonCallback("checkbutton35", sigc::mem_fun(*this, &VRGuiScene::on_lod_decimate_changed) );
@@ -1329,6 +1347,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     setEntryCallback("entry44", sigc::mem_fun(*this, &VRGuiScene::on_edit_light_attenuation) );
     setEntryCallback("entry45", sigc::mem_fun(*this, &VRGuiScene::on_edit_light_attenuation) );
     setEntryCallback("entry46", sigc::mem_fun(*this, &VRGuiScene::on_edit_light_attenuation) );
+    setEntryCallback("entry36", sigc::mem_fun(*this, &VRGuiScene::on_toggle_light_shadow_volume) );
 
     posEntry.init("pos_entry", "from", sigc::mem_fun(*this, &VRGuiScene::on_change_from));
     atEntry.init("at_entry", "at", sigc::mem_fun(*this, &VRGuiScene::on_change_at));

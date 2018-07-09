@@ -240,7 +240,7 @@ void Path::approximate(int d) {
 }
 
 int Path::addPoint2( Vec3d p, Vec3d d, Color3f c, Vec3d u ) {
-    addPoint(Pose(p,d,u), c);
+    return addPoint(Pose(p,d,u), c);
 }
 
 int Path::addPoint( const Pose& p, Color3f c ) {

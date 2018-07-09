@@ -59,6 +59,7 @@ VRLight::VRLight(string name) : VRObject(name) {
     store("specular", &lightSpecular);
     store("shadowColor", &shadowColor);
     store("photometricMap", &photometricMapPath);
+    store("shadowVolume", &shadowVolume);
     storeObjName("beacon", &beacon, &beacon_name);
     regStorageSetupFkt( VRUpdateCb::create("light setup", boost::bind(&VRLight::setup, this)) );
     regStorageSetupAfterFkt( VRUpdateCb::create("light setup after", boost::bind(&VRLight::setup_after, this)) );
@@ -84,6 +85,7 @@ void VRLight::setup() {
     setType(lightType);
     setShadows(shadows);
     setShadowColor(shadowColor);
+    setShadowVolume(shadowVolume);
     setDiffuse(lightDiffuse);
     setAmbient(lightAmbient);
     setSpecular(lightSpecular);
@@ -272,10 +274,16 @@ void VRLight::setShadowNearFar(Vec2d nf) {
 }
 
 void VRLight::setShadowVolume(Boundingbox b) {
+    shadowVolume = b;
     BoxVolume box(Pnt3f(b.min()), Pnt3f(b.max()));
 #ifdef WITH_SHADOW_VOLUME
+    cout << "VRLight::setShadowVolume " << b.volume() << endl;
     if (gsme) gsme->setShadowVolume(box);
 #endif
+}
+
+Boundingbox VRLight::getShadowVolume() {
+    return shadowVolume;
 }
 
 void VRLight::setShadowColor(Color4f c) {
