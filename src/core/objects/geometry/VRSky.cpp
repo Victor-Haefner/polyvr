@@ -87,7 +87,12 @@ VRSky::VRSky() : VRGeometry("Sky") {
 
 VRSky::~VRSky() {}
 
-VRSkyPtr VRSky::create() { return VRSkyPtr( new VRSky() ); }
+VRSkyPtr VRSky::create() {
+    auto sky = VRSkyPtr( new VRSky() );
+    sky->hide("SHADOW");
+    return sky;
+}
+
 VRSkyPtr VRSky::ptr() { return static_pointer_cast<VRSky>( shared_from_this() ); }
 
 void VRSky::update() {

@@ -96,7 +96,12 @@ VRRain::VRRain() : VRGeometry("Rain") {
 }
 VRRain::~VRRain() {}
 
-VRRainPtr VRRain::create() { return VRRainPtr( new VRRain() ); }
+VRRainPtr VRRain::create() {
+    auto rain = VRRainPtr( new VRRain() );
+    rain->hide("SHADOW");
+    return rain;
+}
+
 VRRainPtr VRRain::ptr() { return static_pointer_cast<VRRain>( shared_from_this() ); }
 
 float VRRain::get() { return scale; }
