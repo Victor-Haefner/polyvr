@@ -532,23 +532,31 @@ int VRObject::findChild(VRObjectPtr node) {
 }
 
 /** Hide/show the object and all his subgraph **/
-void VRObject::hide() { setVisible(false); }
-void VRObject::show() { setVisible(true); }
+void VRObject::hide(string mode) { setVisible(false, mode); }
+void VRObject::show(string mode) { setVisible(true, mode); }
 
 /** Returns if object is visible or not **/
-bool VRObject::isVisible() { return visible; }
+bool VRObject::isVisible(string mode) { return visible; }
+
+void VRObject::setVisibleUndo(bool b) {
+    setVisible(b);
+}
 
 /** Set the visibility **/
-void VRObject::setVisible(bool b) {
+void VRObject::setVisible(bool b, string mode) {
     if (b == visible) return;
-    recUndo(&VRObject::setVisible, ptr(), visible, b);
+    recUndo(&VRObject::setVisibleUndo, ptr(), visible, b);
     visible = b;
-    if (b) osg->node->setTravMask(0xffffffff);
-    else osg->node->setTravMask(0);
+    int mask = getNode()->node->getTravMask();
+    if (b && mode == "SHADOW") mask |= 1UL << 4;
+    if (!b && mode == "SHADOW") mask &= ~(1UL << 4);
+    if (b && mode == "") mask = 0xffffffff;
+    if (!b && mode == "") mask = 0;
+    setTravMask(mask);
 }
 
 /** toggle visibility **/
-void VRObject::toggleVisible() { setVisible(!visible); }
+void VRObject::toggleVisible(string mode) { setVisible(!isVisible(mode), mode); }
 
 /** Returns if ptr() object is pickable || not **/
 bool VRObject::isPickable() { return pickable == 1; }

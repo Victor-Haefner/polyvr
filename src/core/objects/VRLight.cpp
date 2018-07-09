@@ -202,6 +202,11 @@ void VRLight::setupShadowEngines() {
     stsme = TrapezoidalShadowMapEngine::create();
     setShadowColor(shadowColor);
 
+    ssme->editShadowTravMask() = 16;
+    gsme->editShadowTravMask() = 16;
+    ptsme->editShadowTravMask() = 16;
+    stsme->editShadowTravMask() = 16;
+
     ssme->setWidth (shadowMapRes);
     ssme->setHeight(shadowMapRes);
     gsme->setWidth (shadowMapRes);
