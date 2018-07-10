@@ -62,10 +62,12 @@ void VRRoadNetwork::init() {
     asphaltArrow->setArrowMaterial();
 
     arrows = VRGeometry::create("arrows");
+    arrows->hide("SHADOW");
     arrows->setMaterial(asphaltArrow);
     addChild( arrows );
 
     collisionMesh = VRGeometry::create("roadsAssetsCollisionShape");
+    collisionMesh->hide("SHADOW");
     addChild( collisionMesh );
 }
 

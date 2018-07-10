@@ -16,7 +16,11 @@ using namespace OSG;
 VRRoad::VRRoad() : VRRoadBase("Road") {}
 VRRoad::~VRRoad() {}
 
-VRRoadPtr VRRoad::create() { return VRRoadPtr( new VRRoad() ); }
+VRRoadPtr VRRoad::create() {
+    auto r = VRRoadPtr( new VRRoad() );
+    r->hide("SHADOW");
+    return r;
+}
 
 float VRRoad::getWidth() {
     float width = 0;
