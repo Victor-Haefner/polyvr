@@ -145,6 +145,10 @@ void VRObject::setTravMask(int i) {
     getNode()->node->setTravMask(i);
 }
 
+int VRObject::getTravMask() {
+    return getNode()->node->getTravMask();
+}
+
 vector<VRObjectPtr> VRObject::getLinks() {
     vector<VRObjectPtr> res;
     for (auto wl : links) if (auto l = wl.second.lock()) res.push_back(l);
@@ -544,14 +548,24 @@ void VRObject::setVisibleUndo(bool b) {
 
 /** Set the visibility **/
 void VRObject::setVisible(bool b, string mode) {
-    if (b == visible) return;
+    if (b == visible && mode == "") return;
     recUndo(&VRObject::setVisibleUndo, ptr(), visible, b);
-    visible = b;
+
     int mask = getNode()->node->getTravMask();
-    if (b && mode == "SHADOW") mask |= 1UL << 4;
-    if (!b && mode == "SHADOW") mask &= ~(1UL << 4);
-    if (b && mode == "") mask = 0xffffffff;
-    if (!b && mode == "") mask = 0;
+    bool showObj = (mask != 0);
+    bool showShadow = (mask & 1UL << 4);
+
+    //cout << "VRObject::setVisible mode: " << mode << " to " << b << ", showObj: " << showObj << " showShadow: " << showShadow << endl;
+
+    if (mode == "") { showObj = b; visible = b; }
+    if (mode == "SHADOW") showShadow = b;
+
+    if (showObj) mask = 0xffffffff;
+    if (showShadow) mask |= 1UL << 4; // set bit
+    if (!showShadow) mask &= ~(1UL << 4); // remove bit
+    if (!showObj) mask = 0;
+
+    //cout << " VRObject::setVisible result: " << mask << ", showObj: " << showObj << " showShadow: " << showShadow << endl;
     setTravMask(mask);
 }
 

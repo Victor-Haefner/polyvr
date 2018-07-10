@@ -90,6 +90,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         static void printOSGTree(OSGObjectPtr o, string indent = "");
 
         void setTravMask(int i);
+        int getTravMask();
         void setVolume(const Boundingbox& box);
         void setVolumeCheck(bool b, bool recursive = false);
         void setSiblingPosition(int i);

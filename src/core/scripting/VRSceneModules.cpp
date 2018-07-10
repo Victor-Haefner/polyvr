@@ -155,7 +155,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyNavigator>("Navigator", pModVR);
     sm->registerModule<VRPyNavPreset>("NavPreset", pModVR);
     sm->registerModule<VRPyRendering>("Rendering", pModVR);
-    sm->registerModule<VRPySky>("Sky", pModVR, VRPyStorage::typeRef);
+    sm->registerModule<VRPySky>("Sky", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyScenegraphInterface>("ScenegraphInterface", pModVR, VRPyObject::typeRef);
 
     sm->registerModule<VRPyProgress>("Progress", pModVR);

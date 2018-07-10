@@ -56,7 +56,7 @@ VRRain::VRRain() : VRGeometry("Rain") {
     texRenderer = VRTextureRenderer::create("rainTexRenderer");
     texRenderer-> setPersistency(0);
     auto scene = VRScene::getCurrent();
-    scene->getRoot()->addChild(texRenderer);
+    scene->getRoot()->addChild(texRenderer, true, 0);
     auto lightF = scene->getRoot()->find("light");
 
     camTex = VRCamera::create("camRainTexture");
