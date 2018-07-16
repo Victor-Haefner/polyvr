@@ -11,19 +11,128 @@
 #include <chrono>
 
 #include <opc/ua/node.h>
+#include <opc/ua/protocol/variant.h>
 #include <opc/ua/subscription.h>
 #include <opc/ua/server/server.h>
 #include <opc/ua/client/client.h>
 
 using namespace OpcUa;
-
 using namespace OSG;
 
-VROPCUANode::VROPCUANode(OpcUa::Node* n) : node(n) {}
+
+string VROPCUANode::toString(uint8_t v) {
+    if (v == 0) return "null";
+    if (v == 1) return "boolean";
+    if (v == 2) return "sbyte";
+    if (v == 3) return "byte";
+    if (v == 4) return "int16";
+    if (v == 5) return "uint16";
+    if (v == 6) return "int32";
+    if (v == 7) return "uint32";
+    if (v == 8) return "int64";
+    if (v == 9) return "uint64";
+    if (v == 10) return "float";
+    if (v == 11) return "double";
+    if (v == 12) return "string";
+    if (v == 13) return "date_time";
+    if (v == 14) return "guid";
+    if (v == 15) return "byte_string";
+    if (v == 16) return "xml_element";
+    if (v == 17) return "node_id";
+    if (v == 18) return "expanded_node_id";
+    if (v == 19) return "status_code";
+    if (v == 20) return "qualified_name";
+    if (v == 21) return "localized_text";
+    if (v == 22) return "extension_object";
+    if (v == 23) return "data_value";
+    if (v == 24) return "variant";
+    if (v == 25) return "diagnostic_info";
+    return "none";
+}
+
+
+vector<OpcUa::Variant> MyMethod(NodeId context, vector<OpcUa::Variant> arguments) {
+    cout << "MyMethod called! " << endl;
+    vector<OpcUa::Variant> result;
+    result.push_back(Variant(static_cast<uint8_t>(0)));
+    return result;
+}
+
+string toString(OpcUa::Variant const& v) {
+    //if (v.IsNul()) return "None";
+    if (v.IsArray()) return "Array";
+
+    string res = "None";
+    if (v.IsScalar()) {
+        try { res = v.As<string>(); } catch(...) {}
+        try { res = toString(v.As<float>()); } catch(...) {}
+        try { res = toString(v.As<double>()); } catch(...) {}
+        try { res = toString(v.As<int>()); } catch(...) {}
+        try { res = toString(v.As<bool>()); } catch(...) {}
+        try { res = toString(v.As<int8_t>()); } catch(...) {}
+        try { res = toString(v.As<uint8_t>()); } catch(...) {}
+        try { res = toString(v.As<int16_t>()); } catch(...) {}
+        try { res = toString(v.As<uint16_t>()); } catch(...) {}
+        try { res = toString(v.As<int32_t>()); } catch(...) {}
+        try { res = toString(v.As<uint32_t>()); } catch(...) {}
+        try { res = toString(v.As<int64_t>()); } catch(...) {}
+        try { res = toString(v.As<uint64_t>()); } catch(...) {}
+        //try { res = toString(v.As<DateTime>()); } catch(...) {}
+        //try { res = toString(v.As<Guid>()); } catch(...) {}
+        //try { res = toString(v.As<ByteString>()); } catch(...) {}
+        try { res = toString(v.As<NodeId>().GetIntegerIdentifier()); } catch(...) {}
+        //try { res = toString(v.As<StatusCode>()); } catch(...) {}
+        try { res = v.As<LocalizedText>().Text; } catch(...) {}
+        try { res = v.As<QualifiedName>().Name; } catch(...) {}
+        try { res = toString(v.As<Variant>()); } catch(...) {}
+        //try { res = toString(v.As<DiagnosticInfo>()); } catch(...) {}
+    }
+
+    return res;
+}
+
+string toString(OpcUa::Node& n) {
+    string res;
+    res += n.GetBrowseName().Name + " (ID:" + toString( n.GetId().GetIntegerIdentifier() ) + ")";
+    res += " type: " + toString(n.GetDataType());
+    res += ", value: " + toString(n.GetValue());
+    return res;
+}
+
+void printTree(OpcUa::Node& node, string offset = "") {
+    cout << offset << "opcua node: " << toString(node) << endl;
+    for (OpcUa::Node child : node.GetChildren()) printTree(child, offset+" ");
+}
+
+
+
+
+VROPCUANode::VROPCUANode(shared_ptr<OpcUa::Node> n) : node(n) {}
 VROPCUANode::~VROPCUANode() {}
 
-VROPCUANodePtr VROPCUANode::create(OpcUa::Node& node) { return VROPCUANodePtr( new VROPCUANode(0) ); }
-//VROPCUANodePtr VROPCUANode::create(OpcUa::Node& node) { return VROPCUANodePtr( new VROPCUANode(&node) ); }
+VROPCUANodePtr VROPCUANode::create(OpcUa::Node& node) { return VROPCUANodePtr( new VROPCUANode( shared_ptr<OpcUa::Node>(new OpcUa::Node(node)) ) ); }
+
+int VROPCUANode::ID() { return node->GetId().GetIntegerIdentifier(); }
+string VROPCUANode::name() { return node->GetBrowseName().Name; }
+
+string VROPCUANode::type() {
+    VariantType type = node->GetValue().Type();
+    return VROPCUANode::toString(uint8_t(type));
+    //Variant v = node->GetDataType();
+    //return toString(v);
+}
+
+string VROPCUANode::value() {
+    Variant v = node->GetValue();
+    return ::toString(v);
+}
+
+vector<VROPCUANodePtr> VROPCUANode::getChildren() {
+    vector<VROPCUANodePtr> res;
+    for (OpcUa::Node child : node->GetChildren()) res.push_back( VROPCUANode::create(child) );
+    return res;
+}
+
 
 
 
@@ -38,42 +147,7 @@ class SubClient : public SubscriptionHandler {
     }
 };
 
-vector<OpcUa::Variant> MyMethod(NodeId context, vector<OpcUa::Variant> arguments) {
-    cout << "MyMethod called! " << endl;
-    vector<OpcUa::Variant> result;
-    result.push_back(Variant(static_cast<uint8_t>(0)));
-    return result;
-}
-
-string toString(OpcUa::Variant const& v) {
-    string res;
-    if (v.IsNul()) res += "None";
-    if (v.IsArray()) res += "Array";
-    if (v.IsScalar()) {
-        res += "Scalar(";
-        try { res += toString(v.As<string>()); } catch(...) {}
-        try { res += toString(v.As<float>()); } catch(...) {}
-        try { res += toString(v.As<double>()); } catch(...) {}
-        try { res += toString(v.As<int>()); } catch(...) {}
-        res += ")";
-    }
-    return res;
-}
-
-string toString(OpcUa::Node& n) {
-    string res;
-    res += n.GetBrowseName().Name + " (ID:" + toString( n.GetId().GetIntegerIdentifier() ) + ")";
-    res += " type: " + toString(n.GetDataType());
-    res += ", value: " + toString(n.GetDataValue().Value);
-    return res;
-}
-
-void printTree(OpcUa::Node& node, string offset = "") {
-    cout << offset << "opcua node: " << toString(node) << endl;
-    for (OpcUa::Node child : node.GetChildren()) printTree(child, offset+" ");
-}
-
-void VROPCUA::connect(string address) {
+VROPCUANodePtr VROPCUA::connect(string address) {
     //string endpoint = "opc.tcp://192.168.56.101:48030";
     //string endpoint = "opc.tcp://user:password@192.168.56.101:48030";
     //string endpoint = "opc.tcp://127.0.0.1:4840/freeopcua/server/";
@@ -140,6 +214,8 @@ void VROPCUA::connect(string address) {
     client.Disconnect();*/
 
     //return VROPCUANode::create( objects );
+    VROPCUANodePtr res = VROPCUANode::create( objects );
+    return res;
 }
 
 void startTestServerT() {

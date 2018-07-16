@@ -26,8 +26,11 @@ typedef void* voidPtr;
 
 template<> string toString(const string& s) { return s; }
 template<> string toString(const bool& b) { stringstream ss; ss << b; return ss.str(); }
+template<> string toString(const short& i) { stringstream ss; ss << i; return ss.str(); }
+template<> string toString(const unsigned short& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const int& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const long& i) { stringstream ss; ss << i; return ss.str(); }
+template<> string toString(const signed char& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const unsigned char& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const voidPtr& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const size_t& i) { stringstream ss; ss << i; return ss.str(); }

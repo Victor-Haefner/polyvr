@@ -3,7 +3,7 @@
 
 #include "VRNetworkingFwd.h"
 #include "core/utils/VRFunctionFwd.h"
-#include <string.h>
+#include <vector>
 #include <OpenSG/OSGConfig.h>
 
 namespace OpcUa {
@@ -16,13 +16,22 @@ OSG_BEGIN_NAMESPACE;
 
 class VROPCUANode {
     private:
-        OpcUa::Node* node = 0;
+        shared_ptr<OpcUa::Node> node = 0;
 
     public:
-        VROPCUANode(OpcUa::Node* node = 0);
+        VROPCUANode(shared_ptr<OpcUa::Node> node = 0);
         ~VROPCUANode();
 
         static VROPCUANodePtr create(OpcUa::Node& node);
+
+        int ID();
+        string name();
+        string value();
+        string type();
+
+        vector<VROPCUANodePtr> getChildren();
+
+        static string toString(uint8_t v);
 };
 
 class VROPCUA {
@@ -36,7 +45,7 @@ class VROPCUA {
 
         static VROPCUAPtr create();
 
-        void connect(string address);
+        VROPCUANodePtr connect(string address);
 
         void setupTestServer();
 };
