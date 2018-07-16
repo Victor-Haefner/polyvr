@@ -12,6 +12,7 @@ PyMethodDef VRPyOPCUANode::methods[] = {
     {"type", PyWrap( OPCUANode, type, "Get node type", string ) },
     {"ID", PyWrap( OPCUANode, ID, "Get node ID", int ) },
     {"getChildren", PyWrap( OPCUANode, getChildren, "Get node children", vector<VROPCUANodePtr> ) },
+    {"set", PyWrap( OPCUANode, set, "Set node value", void, string ) },
     {NULL}  /* Sentinel */
 };
 

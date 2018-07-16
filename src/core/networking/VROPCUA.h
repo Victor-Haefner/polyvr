@@ -28,10 +28,11 @@ class VROPCUANode {
         string name();
         string value();
         string type();
-
         vector<VROPCUANodePtr> getChildren();
 
-        static string toString(uint8_t v);
+        void set(string value);
+
+        static string typeToString(uint8_t v);
 };
 
 class VROPCUA {

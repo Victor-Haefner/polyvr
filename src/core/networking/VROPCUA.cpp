@@ -20,7 +20,7 @@ using namespace OpcUa;
 using namespace OSG;
 
 
-string VROPCUANode::toString(uint8_t v) {
+string VROPCUANode::typeToString(uint8_t v) {
     if (v == 0) return "null";
     if (v == 1) return "boolean";
     if (v == 2) return "sbyte";
@@ -117,9 +117,7 @@ string VROPCUANode::name() { return node->GetBrowseName().Name; }
 
 string VROPCUANode::type() {
     VariantType type = node->GetValue().Type();
-    return VROPCUANode::toString(uint8_t(type));
-    //Variant v = node->GetDataType();
-    //return toString(v);
+    return typeToString(uint8_t(type));
 }
 
 string VROPCUANode::value() {
@@ -133,6 +131,36 @@ vector<VROPCUANodePtr> VROPCUANode::getChildren() {
     return res;
 }
 
+void VROPCUANode::set(string value) {
+    uint8_t type = uint8_t(node->GetValue().Type());
+    if (type == 0) return;
+    if (type == 1) { bool v; toValue(value,v); node->SetValue( Variant(v) ); }
+    if (type == 2) { signed char v; toValue(value,v); node->SetValue( Variant(v) ); }
+    if (type == 3) { unsigned char v; toValue(value,v); node->SetValue( Variant(v) ); }
+    if (type == 4) { int16_t v; toValue(value,v); node->SetValue( Variant(v) ); }
+    if (type == 5) { uint16_t v; toValue(value,v); node->SetValue( Variant(v) ); }
+    if (type == 6) { int32_t v; toValue(value,v); node->SetValue( Variant(v) ); }
+    if (type == 7) { uint32_t v; toValue(value,v); node->SetValue( Variant(v) ); }
+    if (type == 8) { int64_t v; toValue(value,v); node->SetValue( Variant(v) ); }
+    if (type == 9) { uint64_t v; toValue(value,v); node->SetValue( Variant(v) ); }
+    if (type == 10) { float v; toValue(value,v); node->SetValue( Variant(v) ); }
+    if (type == 11) { double v; toValue(value,v); node->SetValue( Variant(v) ); }
+    if (type == 12) { string v; toValue(value,v); node->SetValue( Variant(v) ); }
+    if (type > 12) cout << "VROPCUANode::set ERROR: type " << typeToString(type) << " not supported!\n";
+    //if (type == 13) { date_time v; toValue(value,v); node->SetValue( Variant(v) ); }
+    //if (type == 14) { guid v; toValue(value,v); node->SetValue( Variant(v) ); }
+    //if (type == 15) { byte_string v; toValue(value,v); node->SetValue( Variant(v) ); }
+    //if (type == 16) { xml_element v; toValue(value,v); node->SetValue( Variant(v) ); }
+    //if (type == 17) { node_id v; toValue(value,v); node->SetValue( Variant(v) ); }
+    //if (type == 18) { expanded_node_id v; toValue(value,v); node->SetValue( Variant(v) ); }
+    //if (type == 19) { status_code v; toValue(value,v); node->SetValue( Variant(v) ); }
+    //if (type == 20) { qualified_name v; toValue(value,v); node->SetValue( Variant(v) ); }
+    //if (type == 21) { localized_text v; toValue(value,v); node->SetValue( Variant(v) ); }
+    //if (type == 22) { extension_object v; toValue(value,v); node->SetValue( Variant(v) ); }
+    //if (type == 23) { data_value v; toValue(value,v); node->SetValue( Variant(v) ); }
+    //if (type == 24) { variant v; toValue(value,v); node->SetValue( Variant(v) ); }
+    //if (type == 25) { diagnostic_info v; toValue(value,v); node->SetValue( Variant(v) ); }
+}
 
 
 
@@ -148,112 +176,42 @@ class SubClient : public SubscriptionHandler {
 };
 
 VROPCUANodePtr VROPCUA::connect(string address) {
-    //string endpoint = "opc.tcp://192.168.56.101:48030";
-    //string endpoint = "opc.tcp://user:password@192.168.56.101:48030";
-    //string endpoint = "opc.tcp://127.0.0.1:4840/freeopcua/server/";
-    //string endpoint = "opc.tcp://localhost:53530/OPCUA/SimulationServer/";
-    //string endpoint = "opc.tcp://localhost:48010";
     string endpoint = address;
     cout << "OPCUA: connect to " << endpoint << endl;
-
     if (client) client->Disconnect();
     client = shared_ptr<OpcUa::UaClient>( new OpcUa::UaClient(0) );
     client->Connect(endpoint);
-
-    //get Root node on server
-    //OpcUa::Node root = client->GetRootNode();
     OpcUa::Node objects = client->GetObjectsNode();
-    //printTree(objects);
-
-    //get a node from standard namespace using objectId
-    /*cout << "NamespaceArray is:" << endl;
-    OpcUa::Node nsnode = client.GetNode(ObjectId::Server_NamespaceArray);
-    OpcUa::Variant ns = nsnode.GetValue();
-
-    for (string d : ns.As<vector<string>>()) { cout << "    {}" << d << endl; }
-
-    OpcUa::Node myvar;
-    OpcUa::Node myobject;
-    OpcUa::Node mymethod;
-
-    //Initialize Node myvar:
-
-    //Get namespace index we are interested in
-
-    // From freeOpcUa Server:
-    uint32_t idx = client.GetNamespaceIndex("http://examples.freeopcua.github.io");
-    ////Get Node using path (BrowsePathToNodeId call)
-    //vector<string> varpath({ to_string(idx) + ":NewObject", "MyVariable" });
-    //myvar = objects.GetChild(varpath);
-    vector<string> methodpath({ to_string(idx) + ":NewObject" });
-    myobject = objects.GetChild(methodpath);
-    methodpath = { to_string(idx) + ":NewObject", "MyMethod" };
-    mymethod = objects.GetChild(methodpath);
-    vector<OpcUa::Variant> arguments;
-    arguments.push_back(static_cast<uint8_t>(0));
-    myobject.CallMethod(mymethod.GetId(), arguments);
-
-    // Example data from Prosys server:
-    //vector<string> varpath({"Objects", "5:Simulation", "5:Random1"});
-    //myvar = root.GetChild(varpath);
-
-    // Example from any UA server, standard dynamic variable node:
-    vector<string> varpath{ "Objects", "Server", "ServerStatus", "CurrentTime" };
-    myvar = root.GetChild(varpath);
-
-    cout << "got node: {}" << myvar << endl;
-
-    //Subscription
-    SubClient sclt;
-    auto sub = client.CreateSubscription(100, sclt);
-    //uint32_t handle = sub->SubscribeDataChange(myvar);
-    //cout << "Got sub handle: {}, sleeping 5 seconds" << handle << endl;
-    this_thread::sleep_for(chrono::seconds(5));
-
-    cout << "Disconnecting" << endl;
-    client.Disconnect();*/
-
-    //return VROPCUANode::create( objects );
-    VROPCUANodePtr res = VROPCUANode::create( objects );
-    return res;
+    return VROPCUANode::create( objects );
 }
 
 void startTestServerT() {
     string endpoint = "opc.tcp://localhost:4840/freeopcua/server";
     cout << "OPCUA: start server at " << endpoint << endl;
-    //First setup our server
     OpcUa::UaServer server(0);
     server.SetEndpoint(endpoint);
     server.SetServerURI("urn://exampleserver.freeopcua.github.io");
     server.Start();
 
-    //then register our server namespace and get its index in server
     uint32_t idx = server.RegisterNamespace("http://examples.freeopcua.github.io");
 
-    //Create our address space using different methods
-    OpcUa::Node objects = server.GetObjectsNode();
-
-    //Add a custom object with specific nodeid
+    // add data
     NodeId nid(99, idx);
     QualifiedName qn("RootNode", idx);
+    OpcUa::Node objects = server.GetObjectsNode();
     OpcUa::Node root = objects.AddObject(nid, qn);
-
-    //Add a variable and a property with auto-generated Nodeid to our custom object
-    OpcUa::Node myvar = root.AddVariable(idx, "MyVariable", Variant(8));
+    OpcUa::Node myvar = root.AddVariable(idx, "MyVariable", Variant(7));
     OpcUa::Node myprop = root.AddVariable(idx, "MyProperty", Variant(8.8));
     OpcUa::Node mymethod = root.AddMethod(idx, "MyMethod", MyMethod);
-
-    //browse root node on server side
-    //OpcUa::Node root = server.GetRootNode();
     printTree(root);
 
 
     //Uncomment following to subscribe to datachange events inside server
-    /*
+
     SubClient clt;
     unique_ptr<Subscription> sub = server.CreateSubscription(100, clt);
     sub->SubscribeDataChange(myvar);
-    */
+
 
     //Now write values to address space and send events so clients can have some fun
     uint32_t counter = 0;

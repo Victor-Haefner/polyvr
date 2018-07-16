@@ -151,9 +151,14 @@ template <typename T> int ssToVal(stringstream& ss, T& t) {
 
 template<> int toValue(stringstream& ss, string& s) { s = ss.str(); return true; }
 template<> int toValue(stringstream& ss, bool& v) { return ssToVal(ss, v); }
+template<> int toValue(stringstream& ss, signed char& v) { return ssToVal(ss, v); }
+template<> int toValue(stringstream& ss, unsigned char& v) { return ssToVal(ss, v); }
+template<> int toValue(stringstream& ss, short& v) { return ssToVal(ss, v); }
+template<> int toValue(stringstream& ss, unsigned short& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, int& v) { return ssToVal(ss, v); }
-template<> int toValue(stringstream& ss, long& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, unsigned int& v) { return ssToVal(ss, v); }
+template<> int toValue(stringstream& ss, long& v) { return ssToVal(ss, v); }
+template<> int toValue(stringstream& ss, unsigned long& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, float& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, double& v) { return ssToVal(ss, v); }
 
