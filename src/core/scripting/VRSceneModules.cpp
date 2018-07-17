@@ -158,8 +158,10 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyRendering>("Rendering", pModVR);
     sm->registerModule<VRPySky>("Sky", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyScenegraphInterface>("ScenegraphInterface", pModVR, VRPyObject::typeRef);
+#ifdef WITH_OPCUA
     sm->registerModule<VRPyOPCUA>("OPCUA", pModVR);
     sm->registerModule<VRPyOPCUANode>("OPCUANode", pModVR);
+#endif
 
     sm->registerModule<VRPyProgress>("Progress", pModVR);
     sm->registerModule<VRPyUndoManager>("UndoManager", pModVR);
