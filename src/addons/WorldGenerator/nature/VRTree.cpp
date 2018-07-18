@@ -12,6 +12,7 @@
 #include "core/math/boundingbox.h"
 #include "core/math/VRConvexHull.h"
 #include "core/utils/VRStorage_template.h"
+#include "core/utils/system/VRSystem.h"
 
 #include "core/tools/VRTextureRenderer.h"
 #include "core/math/pose.h"
@@ -19,6 +20,8 @@
 
 #include <OpenSG/OSGQuaternion.h>
 #include <random>
+
+#include <boost/functional/hash.hpp>
 
 #define GLSL(shader) #shader
 
@@ -457,7 +460,51 @@ void VRTree::appendLOD(VRGeoData& data, int lvl, Vec3d offset) {
     lod->setFrom(p);
 }
 
+string VRTree::getHash() {
+    vector<int> data;
+    data.push_back(seed);
+
+    int k = 1e4;
+
+    for (auto param : parameters) {
+        data.push_back(param->nodes*k);
+        data.push_back(param->child_number*k);
+        data.push_back(param->n_angle*k);
+        data.push_back(param->p_angle*k);
+        data.push_back(param->length*k);
+        data.push_back(param->radius*k);
+        data.push_back(param->n_angle_var*k);
+        data.push_back(param->p_angle_var*k);
+        data.push_back(param->length_var*k);
+        data.push_back(param->radius_var*k);
+    }
+
+    for (auto param : foliage) {
+        data.push_back(param->level*k);
+        data.push_back(param->amount*k);
+        data.push_back(param->size*k);
+    }
+
+    size_t hash = 0;
+    for (auto d : data) boost::hash_combine(hash, d);
+    return toString( hash );
+}
+
 vector<VRMaterialPtr> VRTree::createLODtextures(int& Hmax, VRGeoData& data) {
+    auto storeSprite = [&](string path, VRMaterialPtr m) {
+        auto t1 = m->getTexture(0);
+        auto t2 = m->getTexture(1);
+        t1->write(path+"_1.png");
+        t2->write(path+"_2.png");
+    };
+
+    auto loadSprite = [&](string path, VRMaterialPtr m) -> bool {
+        if (!exists(path+"_1.png") || !exists(path+"_2.png")) return false;
+        m->setTexture(path+"_1.png", 1, 0);
+        m->setTexture(path+"_2.png", 1, 1);
+        return true;
+    };
+
     VRTreePtr t = ptr();
     auto old_pose = t->getPose();
     t->setIdentity();
@@ -470,8 +517,13 @@ vector<VRMaterialPtr> VRTree::createLODtextures(int& Hmax, VRGeoData& data) {
     vector<VRMaterialPtr> sides;
     Hmax = 1;
     auto addSprite = [&](PosePtr p, float W, float H, float Sh) {
-        auto tr = VRTextureRenderer::create("treeLODtexR");
-        auto tm = tr->createTextureLod(t, p, 512, W/H, fov, Color3f(0,0.5,0));
+        string path = ".treeLods/treeLod"+getHash();
+        VRMaterialPtr tm = VRMaterial::create("lod");
+        if (!loadSprite(path, tm)) {
+            auto tr = VRTextureRenderer::create("treeLODtexR");
+            tm = tr->createTextureLod(t, p, 512, W/H, fov, Color3f(0,0.5,0));
+            storeSprite(path, tm);
+        }
         int h = int(512/W*H);
         Hmax = max(Hmax, h);
         sides.push_back(tm);

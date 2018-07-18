@@ -4,7 +4,15 @@
 #include <boost/filesystem.hpp>
 
 bool exists(string path) { return boost::filesystem::exists(path); }
-bool makedir(string path) { return boost::filesystem::create_directory(path); }
+
+bool makedir(string path) {
+    if (path == "") return true;
+    bool res = false;
+    try { res = boost::filesystem::create_directory(path); }
+    catch(...) { cout << "ERROR: makedir failed when trying to create directory '" + path + "'" << endl; }
+    return res;
+}
+
 bool removeFile(string path) { return boost::filesystem::remove(path); }
 string canonical(string path) { return boost::filesystem::canonical(path).string(); }
 
