@@ -3,6 +3,7 @@
 #include "VRGuiFile.h"
 #include "VRGuiSignals.h"
 #include "VRGuiContextMenu.h"
+#include "PolyVR.h"
 #include "core/scripting/VRScript.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
@@ -1335,6 +1336,10 @@ void VRGuiSetup::on_setup_changed() {
     if (guard) return;
     cout << "on_setup_changed\n";
     string name = getComboboxText("combobox6");
+
+    static bool init = true;
+    if (!init) if (!askUser("Switch to setup '" + name + "' - this will quit PolyVR", "Are you sure you want to switch to the " + name + " setup?")) return;
+
     ofstream f(setupDir()+".local"); f.write(name.c_str(), name.size()); f.close(); // remember setup
     string d = setupDir() + name + ".xml";
     auto mgr = VRSetupManager::get();
@@ -1342,6 +1347,12 @@ void VRGuiSetup::on_setup_changed() {
     updateSetup();
 
     current_setup.lock()->getSignal_on_new_art_device()->add(updateSetupCb); // TODO: where to put this? NOT in updateSetup() !!!
+
+    if (!init) {
+        auto fkt = VRUpdateCb::create("setup_induced_shutdown", boost::bind(&PolyVR::shutdown));
+        VRSceneManager::get()->queueJob(fkt, 0, 100); // TODO: this blocks everything..
+    }
+    init = false;
 }
 
 void VRGuiSetup::on_window_device_changed() {
