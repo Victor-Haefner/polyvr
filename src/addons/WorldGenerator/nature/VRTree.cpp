@@ -345,8 +345,7 @@ void VRTree::growLeafs(shared_ptr<leaf_params> lp) {
         g->setMaterial(leafMat);
     }
 
-    random_device rd;
-    mt19937 e2(rd());
+    mt19937 e2(seed);
     normal_distribution<> ndist(0,1);
 
     auto randVecInSphere = [&](float r) {
@@ -460,7 +459,7 @@ void VRTree::appendLOD(VRGeoData& data, int lvl, Vec3d offset) {
     lod->setFrom(p);
 }
 
-string VRTree::getHash() {
+string VRTree::getHash(vector<float> v) {
     vector<int> data;
     data.push_back(seed);
 
@@ -484,6 +483,8 @@ string VRTree::getHash() {
         data.push_back(param->amount*k);
         data.push_back(param->size*k);
     }
+
+    for (auto f : v) data.push_back(f*k);
 
     size_t hash = 0;
     for (auto d : data) boost::hash_combine(hash, d);
@@ -517,7 +518,7 @@ vector<VRMaterialPtr> VRTree::createLODtextures(int& Hmax, VRGeoData& data) {
     vector<VRMaterialPtr> sides;
     Hmax = 1;
     auto addSprite = [&](PosePtr p, float W, float H, float Sh) {
-        string path = ".treeLods/treeLod"+getHash();
+        string path = ".treeLods/treeLod"+getHash({W,H,Sh});
         VRMaterialPtr tm = VRMaterial::create("lod");
         if (!loadSprite(path, tm)) {
             auto tr = VRTextureRenderer::create("treeLODtexR");
