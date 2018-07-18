@@ -431,6 +431,7 @@ void VRNature::computeLODs3(map<OctreeNode*, VRLodLeafPtr>& leafs) {
     m->setTexture(mosaic2, false, 1);
 
     trees = VRGeometry::create("trees");
+    trees->hide("SHADOW");
     trees->setMaterial(m);
     addChild(trees);
     VRGeoData treesData(trees);

@@ -37,7 +37,7 @@ class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, p
 
         virtual void setCamera(VRCameraPtr cam);
 
-        VRSignalPtr addSignal(int key, int state);
+        VRSignalPtr newSignal(int key, int state);
         VRSignalPtr addToggleSignal(int key);
         void addSignal(VRSignalPtr sig, int key, int state);
         VRSignalPtr addSlider(int key);
@@ -78,10 +78,24 @@ class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, p
         void setSpeed(Vec2d s);
         Vec2d getSpeed();
 
+        void drag(VRObjectPtr obj);
+        void drop();
+
+        VRTransformPtr getBeacon(int i = 0);
+        void setBeacon(VRTransformPtr, int i = 0);
+        void setDnD(bool b);
+
+        bool intersect2(VRObjectPtr o = 0, bool f = 0, VRTransformPtr c = 0, Vec3d d = Vec3d(0,0,-1));
         Pnt3d getIntersectionPoint();
         Vec3i getIntersectionTriangle();
         Vec3d getIntersectionNormal();
         Vec2d getIntersectionUV();
+        VRObjectPtr getIntersected();
+
+        void addIntersection(VRObjectPtr obj);
+        void remIntersection(VRObjectPtr obj);
+        VRTransformPtr getDragged();
+        VRTransformPtr getDragGhost();
 };
 
 

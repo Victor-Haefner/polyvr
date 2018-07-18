@@ -49,10 +49,9 @@ ptrFwd(VRBlinds);
 ptrFwd(VROpening);
 ptrFwd(VRTree);
 ptrFwd(VRHandGeo)
-
-}
-
 ptrFwd(VRNumberingEngine);
 ptrFwd(VRLODSpace);
+
+}
 
 #endif // VROBJECTFWD_H_INCLUDED

@@ -89,6 +89,8 @@
 			<Add option="-DBOOST_NO_CXX11_DECLTYPE_N3276" />
 			<Add option="-DBOOST_NO_CXX11_HDR_ATOMIC=1" />
 			<Add option="-DGL_GLEXT_PROTOTYPES" />
+			<Add option="-DWITH_SHADOW_VOLUME" />
+			<Add option="-DWITH_OPCUA" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
 			<Add directory="/usr/lib64/glib-2.0/include" />
@@ -110,6 +112,7 @@
 			<Add directory="/usr/include/oce" />
 			<Add directory="/usr/include/IFC" />
 			<Add directory="/usr/include/vtk-7.1/" />
+			<Add directory="/usr/include/OPCUA" />
 		</Compiler>
 		<Linker>
 			<Add option="-lTKernel" />
@@ -237,6 +240,10 @@
 			<Add option="-lstepcore" />
 			<Add option="-lstepeditor" />
 			<Add option="-lsteplazyfile" />
+			<Add option="-lopcuaclient" />
+			<Add option="-lopcuaserver" />
+			<Add option="-lopcuaprotocol" />
+			<Add option="-lopcuacore" />
 			<Add option="-lpthread" />
 			<Add option="-ldl" />
 			<Add option="-lm" />
@@ -264,6 +271,7 @@
 			<Add directory="/usr/lib/STEPcode" />
 			<Add directory="/usr/lib/1.4" />
 			<Add directory="/usr/lib/IFC" />
+			<Add directory="/usr/lib/OPCUA" />
 		</Linker>
 		<ExtraCommands>
 			<Add after='/bin/bash -c &quot;cp -u -p ressources/cef/icudtl.dat bin/Debug/ 2&gt;/dev/null&quot;' />
@@ -661,6 +669,8 @@
 		<Unit filename="src/core/networking/VRNetworkManager.cpp" />
 		<Unit filename="src/core/networking/VRNetworkManager.h" />
 		<Unit filename="src/core/networking/VRNetworkingFwd.h" />
+		<Unit filename="src/core/networking/VROPCUA.cpp" />
+		<Unit filename="src/core/networking/VROPCUA.h" />
 		<Unit filename="src/core/networking/VRPing.cpp" />
 		<Unit filename="src/core/networking/VRPing.h" />
 		<Unit filename="src/core/networking/VRProtocol.cpp" />
@@ -925,10 +935,14 @@
 		<Unit filename="src/core/scripting/VRPyMouse.h" />
 		<Unit filename="src/core/scripting/VRPyMultiTouch.cpp" />
 		<Unit filename="src/core/scripting/VRPyMultiTouch.h" />
+		<Unit filename="src/core/scripting/VRPyNamed.cpp" />
+		<Unit filename="src/core/scripting/VRPyNamed.h" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.cpp" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.h" />
 		<Unit filename="src/core/scripting/VRPyNavigator.cpp" />
 		<Unit filename="src/core/scripting/VRPyNavigator.h" />
+		<Unit filename="src/core/scripting/VRPyOPCUA.cpp" />
+		<Unit filename="src/core/scripting/VRPyOPCUA.h" />
 		<Unit filename="src/core/scripting/VRPyObject.cpp" />
 		<Unit filename="src/core/scripting/VRPyObject.h" />
 		<Unit filename="src/core/scripting/VRPyObjectManager.cpp" />

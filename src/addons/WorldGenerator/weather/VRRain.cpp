@@ -56,7 +56,7 @@ VRRain::VRRain() : VRGeometry("Rain") {
     texRenderer = VRTextureRenderer::create("rainTexRenderer");
     texRenderer-> setPersistency(0);
     auto scene = VRScene::getCurrent();
-    scene->getRoot()->addChild(texRenderer);
+    scene->getRoot()->addChild(texRenderer, true, 0);
     auto lightF = scene->getRoot()->find("light");
 
     camTex = VRCamera::create("camRainTexture");
@@ -96,7 +96,12 @@ VRRain::VRRain() : VRGeometry("Rain") {
 }
 VRRain::~VRRain() {}
 
-VRRainPtr VRRain::create() { return VRRainPtr( new VRRain() ); }
+VRRainPtr VRRain::create() {
+    auto rain = VRRainPtr( new VRRain() );
+    rain->hide("SHADOW");
+    return rain;
+}
+
 VRRainPtr VRRain::ptr() { return static_pointer_cast<VRRain>( shared_from_this() ); }
 
 float VRRain::get() { return scale; }

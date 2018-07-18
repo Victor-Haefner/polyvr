@@ -21,22 +21,6 @@ void VRTextureGenerator::setSize(Vec3i dim, bool a) { width = dim[0]; height = d
 void VRTextureGenerator::setSize(int w, int h, int d) { width = w; height = h; depth = d; }
 Vec3i VRTextureGenerator::getSize() { return Vec3i(width, height, depth); };
 
-void VRTextureGenerator::add(string type, float amount, Color3f c1, Color3f c2) {
-    GEN_TYPE t = PERLIN;
-    if (type == "Bricks") t = BRICKS;
-    add(t, amount, c1, c2);
-}
-
-void VRTextureGenerator::add(GEN_TYPE type, float amount, Color3f c1, Color3f c2) {
-    Layer l;
-    l.amount = amount;
-    l.type = type;
-    l.c31 = c1;
-    l.c32 = c2;
-    l.Nchannels = 3;
-    layers.push_back(l);
-}
-
 void VRTextureGenerator::add(string type, float amount, Color4f c1, Color4f c2) {
     GEN_TYPE t = PERLIN;
     if (type == "Bricks") t = BRICKS;
@@ -47,8 +31,13 @@ void VRTextureGenerator::add(GEN_TYPE type, float amount, Color4f c1, Color4f c2
     Layer l;
     l.amount = amount;
     l.type = type;
-    l.c41 = c1;
-    l.c42 = c2;
+    if (hasAlpha) {
+        l.c41 = c1;
+        l.c42 = c2;
+    } else {
+        l.c31 = Color3f(c1[0], c1[1], c1[2]);
+        l.c32 = Color3f(c2[0], c2[1], c2[2]);
+    }
     l.Nchannels = 4;
     layers.push_back(l);
 }
@@ -343,21 +332,11 @@ VRTexturePtr VRTextureGenerator::readSharedMemory(string segment, string object)
 
 void VRTextureGenerator::addSimpleNoise(Vec3i dim, bool doAlpha, Color4f fg, Color4f bg, float amount) {
     setSize(dim, doAlpha);
-    if (doAlpha) {
-        add(PERLIN, amount*1./2, bg, fg);
-        add(PERLIN, amount*1./4, bg, fg);
-        add(PERLIN, amount*1./8, bg, fg);
-        add(PERLIN, amount*1./16, bg, fg);
-        add(PERLIN, amount*1./32, bg, fg);
-    } else {
-        Color3f fg3(fg[0], fg[1], fg[2]);
-        Color3f bg3(bg[0], bg[1], bg[2]);
-        add(PERLIN, amount*1./2, bg3, fg3);
-        add(PERLIN, amount*1./4, bg3, fg3);
-        add(PERLIN, amount*1./8, bg3, fg3);
-        add(PERLIN, amount*1./16, bg3, fg3);
-        add(PERLIN, amount*1./32, bg3, fg3);
-    }
+    add(PERLIN, amount*1./2, bg, fg);
+    add(PERLIN, amount*1./4, bg, fg);
+    add(PERLIN, amount*1./8, bg, fg);
+    add(PERLIN, amount*1./16, bg, fg);
+    add(PERLIN, amount*1./32, bg, fg);
 }
 
 OSG_END_NAMESPACE;

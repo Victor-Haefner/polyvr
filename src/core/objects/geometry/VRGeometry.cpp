@@ -923,7 +923,7 @@ void VRGeometry::setup() {
 
     switch(source.type) {
         case CODE:
-            return;
+            break;
         case SCRIPT:
             break;
         case FILE:

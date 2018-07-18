@@ -574,7 +574,7 @@ VRGeometryPtr VRPathtool::extrude(VRDevicePtr dev, PathPtr p) {
     e->anchor.lock()->addChild(h);
 
     if (dev) {
-        dev->drag(h, dev->getBeacon());
+        dev->drag(h);
         h->setPose( Pose::create(Vec3d(0,0,-1)) );
     }
 

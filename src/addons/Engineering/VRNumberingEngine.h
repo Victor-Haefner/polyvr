@@ -2,6 +2,7 @@
 #define VRNUMBERINGENGINE_H_INCLUDED
 
 #include "core/objects/geometry/VRGeometry.h"
+OSG_BEGIN_NAMESPACE;
 
 class VRNumberingEngine : public OSG::VRGeometry {
     private:
@@ -18,6 +19,7 @@ class VRNumberingEngine : public OSG::VRGeometry {
 
         vector<group> groups;
 
+        void resize(int N);
         void updateTexture();
         bool checkUIn(int grp);
         bool checkUIn(int i, int grp);
@@ -30,8 +32,8 @@ class VRNumberingEngine : public OSG::VRGeometry {
 
         void clear();
 
-        void add(OSG::Vec3d p = OSG::Vec3d(), int N = 1, float f = 0, int d = 2, int grp = 0);
         void set(int i, OSG::Vec3d p, float f = 0, int d = 2, int grp = 0);
+        int add(OSG::Vec3d p, float f = 0, int d = 2, int grp = 0);
 
         void setPrePost(int grp, string pre, string post);
         int addPrePost(string pre, string post);
@@ -40,5 +42,7 @@ class VRNumberingEngine : public OSG::VRGeometry {
         void setBillboard(bool b);
         void setOnTop(bool b);
 };
+
+OSG_END_NAMESPACE;
 
 #endif // VRNUMBERINGENGINE_H_INCLUDED

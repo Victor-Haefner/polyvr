@@ -101,7 +101,7 @@ void VRCamera::setup(bool reg) {
     if (cam) ocam = dynamic_pointer_cast<OrthographicCamera>(cam->cam);
 
     if (!pcam && camType == PERSPECTIVE) {
-        cout << " VRCamera::setup switch to perp, reg: " << reg << endl;
+        //cout << " VRCamera::setup switch to perp, reg: " << reg << endl;
         pcam = PerspectiveCamera::create();
         cam = OSGCamera::create( pcam );
         pcam->setBeacon(getNode()->node);
@@ -109,7 +109,7 @@ void VRCamera::setup(bool reg) {
     }
 
     if (!ocam && camType == ORTHOGRAPHIC) {
-        cout << " VRCamera::setup switch to orth, reg: " << reg << endl;
+        //cout << " VRCamera::setup switch to orth, reg: " << reg << endl;
         ocam = OrthographicCamera::create();
         cam = OSGCamera::create( ocam );
         ocam->setBeacon(getNode()->node);

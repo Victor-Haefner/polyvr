@@ -36,8 +36,7 @@ void main(void) {
 
     if (channel != 0 || !isLit || dot(norm.xyz, norm.xyz) < 0.95) discard;
     else {
-        vec4 posAmb = texture2DRect(texBufPos,  lookup);
-        pos = posAmb.xyz;
+        pos = texture2DRect(texBufPos,  lookup).xyz;
         color = texture2DRect(texBufDiff, lookup);
 	computeDirLight();
         gl_FragColor = color;

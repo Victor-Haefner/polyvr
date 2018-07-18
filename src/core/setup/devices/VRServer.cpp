@@ -71,8 +71,8 @@ void VRServer::answerWebSocket(int id, string msg) {
 void VRServer::clearSignals() {
     VRDevice::clearSignals();
 
-    addSignal( 0, 0)->add( getDrop() );
-    addSignal( 0, 1)->add( addDrag( getBeacon() ) );
+    newSignal( 0, 0)->add( getDrop() );
+    newSignal( 0, 1)->add( addDrag( getBeacon() ) );
 }
 
 void VRServer::setPort(int port) { this->port = port; soc->setPort(port); }

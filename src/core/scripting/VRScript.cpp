@@ -121,7 +121,7 @@ void VRScript::update() {
             if (state == -1) continue;
 
             if (dev != 0) {
-                if (state <= 1) t->sig = dev->addSignal(t->key, state);
+                if (state <= 1) t->sig = dev->newSignal(t->key, state);
                 if (state == 2) t->sig = dev->getDragSignal();
                 if (state == 3) t->sig = dev->getDropSignal();
                 if (state == 4) t->sig = dev->getToEdgeSignal();
@@ -375,7 +375,7 @@ finally:
     return 0;
 }
 
-void print_error_text(uint offset, char *text) {
+void print_error_text(int offset, char *text) {
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
         VRGuiManager::get()->getConsole( "Syntax" )->write( m, style, link );
     };

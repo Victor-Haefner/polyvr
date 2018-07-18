@@ -2,6 +2,7 @@
 #define VRLIGHT_H_INCLUDED
 
 #include "core/objects/object/VRObject.h"
+#include "core/math/boundingbox.h"
 #include <OpenSG/OSGSField.h>
 #include <OpenSG/OSGColor.h>
 
@@ -22,7 +23,6 @@ class VRLight : public VRObject {
         OSGCorePtr s_light;
         OSGCorePtr ph_light;
         VRLightBeaconWeakPtr beacon;
-        //VRShadowEngineRecPtr ssme;
         SimpleShadowMapEngineRefPtr ssme;
         ShaderShadowMapEngineRefPtr gsme;
         TrapezoidalShadowMapEngineRefPtr ptsme;
@@ -32,6 +32,7 @@ class VRLight : public VRObject {
         string beacon_name;
         string photometricMapPath;
         VRTexturePtr photometricMap = 0;
+        Boundingbox shadowVolume;
         int shadowMapRes = 2048;
         Color4f lightDiffuse;
         Color4f lightAmbient;
@@ -77,9 +78,11 @@ class VRLight : public VRObject {
         bool getShadows();
         void setShadowColor(Color4f c);
         void setShadowNearFar(Vec2d nf);
+        void setShadowVolume(Boundingbox b);
         void setShadowMapRes(int t);
         Color4f getShadowColor();
         int getShadowMapRes();
+        Boundingbox getShadowVolume();
 
         VRLightBeaconPtr getBeacon();
         void setBeacon(VRLightBeaconPtr b);

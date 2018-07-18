@@ -10,7 +10,10 @@
 using namespace std;
 
 
-class VRFunction_base : public VRName_base {
+class VRFunction_base {
+    public:
+        string name = "Function";
+
     private:
         int prof_id = 0;
 

@@ -54,11 +54,11 @@ void VRAsphalt::clearTexture() {
 VRTexturePtr VRAsphalt::noiseTexture() {
     VRTextureGenerator tg;
     tg.setSize(Vec3i(512, 512, 1));
-    tg.add(PERLIN, 1.0, Color3f(), Color3f(0.6, 0.6, 0.6));
-    tg.add(PERLIN, 1.0/2, Color3f(), Color3f(0.7, 0.7, 0.7));
-    tg.add(PERLIN, 1.0/4, Color3f(), Color3f(0.8, 0.8, 0.8));
-    tg.add(PERLIN, 1.0/8, Color3f(), Color3f(0.9, 0.9, 0.9));
-    tg.add(PERLIN, 1.0/16, Color3f(), Color3f(1.0, 1.0, 1.0));
+    tg.add(PERLIN, 1.0, Color4f(), Color4f(0.6, 0.6, 0.6, 1));
+    tg.add(PERLIN, 1.0/2, Color4f(), Color4f(0.7, 0.7, 0.7, 1));
+    tg.add(PERLIN, 1.0/4, Color4f(), Color4f(0.8, 0.8, 0.8, 1));
+    tg.add(PERLIN, 1.0/8, Color4f(), Color4f(0.9, 0.9, 0.9, 1));
+    tg.add(PERLIN, 1.0/16, Color4f(), Color4f(1.0, 1.0, 1.0, 1));
     return tg.compose(0);
 }
 

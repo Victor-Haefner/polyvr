@@ -24,6 +24,7 @@ PyMethodDef VRPyLight::methods[] = {
     {"reloadDeferredSystem", PyWrap(Light, reloadDeferredSystem, "Reload parameters and shaders for the deferred system", void) },
     {"toggleShadows", PyWrap(Light, toggleShadows, "Toggle shadows efficiently", void, bool) },
     {"setShadowNearFar", PyWrap(Light, setShadowNearFar, "Set near and far of the light pass", void, Vec2d) },
+    {"setShadowVolume", PyWrap(Light, setShadowVolume, "Set shadowed scene volume", void, Boundingbox) },
     {NULL}
 };
 

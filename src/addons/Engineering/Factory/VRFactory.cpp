@@ -238,6 +238,8 @@ bool VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res
     return true;
 }
 
+OSG_BEGIN_NAMESPACE;
+
 class VRLODSpace : public VRObject {
     private:
         map<Vec4i, VRLodPtr> lod_spaces;
@@ -284,6 +286,8 @@ class VRLODSpace : public VRObject {
             }
         }
 };
+
+OSG_END_NAMESPACE;
 
 VRObjectPtr VRFactory::setupLod(vector<string> paths) {
     vector<VRObjectPtr> objects;

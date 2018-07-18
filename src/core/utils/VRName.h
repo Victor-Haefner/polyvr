@@ -33,7 +33,9 @@ struct VRNameSpace {
     void filterNameChars(string chars, char replacement);
 };
 
-class VRName_base {
+OSG_BEGIN_NAMESPACE;
+
+class VRName : public VRStorage {
     protected:
         string name;
         string base_name;
@@ -42,8 +44,8 @@ class VRName_base {
         VRNameSpace* nameSpace = 0;
 
     public:
-        VRName_base();
-        ~VRName_base();
+        VRName();
+        ~VRName();
 
         string setName(string name);
         VRNameSpace* setNameSpace(string s);
@@ -55,14 +57,10 @@ class VRName_base {
         VRNameSpace* getNameSpace();
 
         void compileName();
-};
-
-class VRName : public OSG::VRStorage, public VRName_base {
-    public:
-        VRName();
-        ~VRName();
 
         static void printInternals();
 };
+
+OSG_END_NAMESPACE;
 
 #endif // VRNAME_H_INCLUDED

@@ -21,7 +21,11 @@ VRRoadIntersection::RoadFront::RoadFront(VRRoadPtr road) : road(road) {}
 VRRoadIntersection::VRRoadIntersection() : VRRoadBase("RoadIntersection") {}
 VRRoadIntersection::~VRRoadIntersection() {}
 
-VRRoadIntersectionPtr VRRoadIntersection::create() { return VRRoadIntersectionPtr( new VRRoadIntersection() ); }
+VRRoadIntersectionPtr VRRoadIntersection::create() {
+    auto i = VRRoadIntersectionPtr( new VRRoadIntersection() );
+    i->hide("SHADOW");
+    return i;
+}
 
 void VRRoadIntersection::computeLanes(GraphPtr graph) {
     auto w = world.lock();
