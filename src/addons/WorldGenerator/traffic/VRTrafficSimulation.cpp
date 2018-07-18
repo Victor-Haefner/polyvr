@@ -44,6 +44,14 @@ void VRTrafficSimulation::Vehicle::show(Graph::position p) {
     t->show();
 }
 
+int VRTrafficSimulation::Vehicle::getID() {
+    return vehicleID;
+}
+
+void VRTrafficSimulation::Vehicle::setID(int vehicleID) {
+    this->vehicleID = vehicleID;
+}
+
 void VRTrafficSimulation::Vehicle::destroy() {
     if (t) t->destroy();
     t = 0;
@@ -115,7 +123,7 @@ T randomChoice(vector<T> vec) {
     auto input1 = 0;
     auto test = vec[ input1 ];
     //auto test = vec[ round((float(random())/RAND_MAX) * (vec.size()-1)) ];
-    cout << "bla ";
+    cout << "randomChoice ";
     cout << " " << inputA;
     cout << " " << inputB;
     cout << " " << input1;
@@ -217,7 +225,7 @@ void VRTrafficSimulation::updateSimulation() {
             auto edges = g->getNextEdges(edge);
             if (edges.size() > 0) {
                 gp.edge = randomChoice(edges).ID;
-                cout << gp.edge << endl;
+                cout << gp.edge << " " << vehicle.getID() << endl;
                 auto& road = roads[gp.edge];
                 if (road.macro) toChangeRoad[road1ID].push_back( make_pair(vehicle, -1) );
                 else toChangeRoad[road1ID].push_back( make_pair(vehicle, gp.edge) );
@@ -265,7 +273,8 @@ void VRTrafficSimulation::updateSimulation() {
         for (auto& road : roads) {
             for (auto& vehicle : road.second.vehicles) {
                 if (!vehicle.t) continue;
-                float d = vehicle.speed/road.second.length;
+                float d = speedMultiplier*vehicle.speed/road.second.length;
+                if (!isSimRunning) d = 0;
 
                 // check if road ahead is free
                 auto pose = vehicle.t->getPose();
@@ -282,7 +291,8 @@ void VRTrafficSimulation::updateSimulation() {
                     if (state > 0) break;
                 }
 
-                state = 0; ///DANGER: debug mode, state = 0, discard collision check
+                bool debugBool = true; ///Debugging
+                if (debugBool) state = 0; ///DANGER: debug mode, state = 0, discard collision check
 
                 for (auto& v : users) {
                     auto p = v.t->getPose();
@@ -345,6 +355,7 @@ void VRTrafficSimulation::addVehicle(int roadID, int type) {
             auto v = vehiclePool.back();
             vehiclePool.pop_back();
             v.show( Graph::position(roadID, 0.0) );
+            if (v.getID()==0) v.setID(numUnits);
             return v;
         } else {
             auto v = Vehicle( Graph::position(roadID, 0.0) );
@@ -366,6 +377,7 @@ void VRTrafficSimulation::addVehicle(int roadID, int type) {
             for (auto l : v.turnsignalsFR) l->setMaterial(carLightOrangeBlink);
             for (auto l : v.headlights) l->setMaterial(carLightWhiteOn);
             for (auto l : v.backlights) l->setMaterial(carLightRedOn);
+            v.setID(numUnits);
             return v;
         }
     };
@@ -404,6 +416,18 @@ void VRTrafficSimulation::setTrafficDensity(float density, int type, int maxUnit
 int VRTrafficSimulation::addVehicleModel(VRObjectPtr mesh) {
     models.push_back( mesh->duplicate() );
     return models.size()-1;
+}
+
+void VRTrafficSimulation::toggleSim() {
+    isSimRunning = !isSimRunning;
+}
+
+void VRTrafficSimulation::setSpeedmultiplier(float speedMultiplier) {
+    this->speedMultiplier = speedMultiplier;
+}
+
+string VRTrafficSimulation::getVehicleData(int vehicleID){
+
 }
 
 void VRTrafficSimulation::updateDensityVisual(bool remesh) {
