@@ -12,6 +12,7 @@ uniform int               channel;
 uniform vec3 lightUp;
 uniform vec3 lightDir;
 uniform vec3 lightPos;
+uniform vec4 shadowColor;
 
 vec3 pos;
 vec4 norm;
@@ -24,7 +25,8 @@ void computeDirLight() {
     float NdotL    = max(dot(norm.xyz, lightDir), 0.);
 
     if (NdotL > 0.) {
-        vec4  shadow = OSG_SSME_FP_calcShadow(vec4(pos, 1.));
+        vec4 shadow = OSG_SSME_FP_calcShadow(vec4(pos, 1.));
+	if (shadow.r < 0.5) shadow = shadowColor;
         color = shadow * NdotL * color * gl_LightSource[0].diffuse;
     } else color = vec4(0);
 }
