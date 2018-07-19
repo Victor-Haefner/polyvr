@@ -12,6 +12,10 @@ struct seg_params;
 struct leaf_params;
 
 class VRTree : public VRTransform {
+    public:
+        static string treeSprLODvp;
+        static string treeSprLODdfp;
+
     private:
         int seed = 0;
         segment* trunc = 0;
@@ -21,12 +25,13 @@ class VRTree : public VRTransform {
         vector<segment*> branches;
         vector<VRGeometryPtr> leafGeos;
         vector<VRGeometryPtr> woodGeos;
+        vector<VRMaterialPtr> lodMaterials;
         map<int, VRGeometryPtr> leafLodCache;
         map<int, VRGeometryPtr> truncLodCache;
         static VRMaterialPtr treeMat;
         static VRMaterialPtr leafMat;
 
-        Color3f truncColor = Color3f(0.4,0.2,0);
+        Color4f truncColor = Color4f(0.4,0.2,0,1);
 
         float random (float min, float max);
         float variation(float val, float var);
@@ -53,6 +58,7 @@ class VRTree : public VRTransform {
         segment* growSegment(int seed = 0, segment* p = 0, int iteration = 0, float t = 1);
         void growLeafs(shared_ptr<leaf_params>);
         void grow(int seed = 0);
+        string getHash(vector<float> v = vector<float>());
 
         // params: n_angle, p_angle, length, radius
         void setup(int branching = 5, int iterations = 5, int seed = 0, Vec4d params = Vec4d(0.2, 0.6, 0.8, 0.1), Vec4d params_v = Vec4d(0.2, 0.4, 0.2, 0.2) );
@@ -60,12 +66,15 @@ class VRTree : public VRTransform {
         void addLeafs(int lvl, int amount, float size = 0.03);
         void setLeafMaterial(VRMaterialPtr mat);
 
+        vector<VRMaterialPtr> createLODtextures(int& Hmax, VRGeoData& data);
         VRGeometryPtr createLOD(int lvl);
         VRGeometryPtr getLOD(int lvl);
         void appendLOD(VRGeoData& data, int lvl, Vec3d offset);
         void createTwigLod(VRGeoData& geo, int lvl);
         void createHullTrunkLod(VRGeoData& geo, int lvl, Vec3d offset, int ID); // soon deprecated
         void createHullLeafLod(VRGeoData& geo, int lvl, Vec3d offset, int ID); // soon deprecated
+
+        vector<VRMaterialPtr> getLodMaterials();
 };
 
 OSG_END_NAMESPACE;

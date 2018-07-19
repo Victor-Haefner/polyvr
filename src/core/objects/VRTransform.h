@@ -30,6 +30,7 @@ class VRTransform : public VRObject {
         Matrix4d matrix;
         OSGTransformPtr t;
         bool noBlt = false;
+        bool doOptimizations = true;
         VRPhysics* physics = 0;
         VRAnimCbPtr pathAnimPtr;
 
@@ -70,10 +71,10 @@ class VRTransform : public VRObject {
         void initTranslator();
 
     public:
-        VRTransform(string name = "");
+        VRTransform(string name = "", bool doOptimizations = true);
         virtual ~VRTransform();
 
-        static VRTransformPtr create(string name = "None");
+        static VRTransformPtr create(string name = "None", bool doOptimizations = true);
         VRTransformPtr ptr();
 
         static VRTransformPtr getParentTransform(VRObjectPtr o);
@@ -155,7 +156,7 @@ class VRTransform : public VRObject {
         void rotate(float a, Vec3d v = Vec3d(0,1,0));
         void rotateUp(float a);
         void rotateX(float a);
-        void rotateAround(float a);
+        void rotateAround(float a, Vec3d v = Vec3d(0,1,0));
         void translate(Vec3d v);
         void zoom(float d);
         void move(float d);

@@ -52,7 +52,7 @@ void VRGuiNav::on_preset_changed() {
     navBindings_store->clear();
     for (auto& b : *preset) {
         string cb_name;
-        if (b.cb) cb_name = b.cb->getName();
+        if (b.cb) cb_name = b.cb->name;
 
         string type = "Event";
         if (b.doRepeat) type = "State";

@@ -41,23 +41,15 @@ vec4 computePointLight(int index, float amb, vec3 pos, vec3 norm, vec4 mDiff) {
 // DS pass
 void main(void) {
     vec2 lookup = gl_FragCoord.xy - vpOffset;
-    vec4 norm   = texture2DRect(texBufNorm, lookup);
-    bool isLit  = (norm.w > 0);
+    vec4 norm = texture2DRect(texBufNorm, lookup);
+    bool isLit = (norm.w > 0);
 
-    if(dot(norm.xyz, norm.xyz) < 0.95) discard;
+    if(channel != 0 || !isLit || dot(norm.xyz, norm.xyz) < 0.95) discard;
     else {
         vec4  posAmb = texture2DRect(texBufPos,  lookup);
         vec3  pos    = posAmb.xyz;
         vec4  color  = texture2DRect(texBufDiff, lookup);
-
-	if (channel == 0) {
-		if (isLit) color = computePointLight(0, posAmb.w, pos, norm.xyz, color);
-		else color = vec4(color.xyz, 1.0);
-	}
-	if (channel == 1) color = vec4(posAmb.xyz, 1.0);
-	if (channel == 2) color = vec4(norm.xyz, 1.0);
-	if (channel == 3) color = vec4(color.xyz, 1.0);
-	if (channel == 4) color = vec4(posAmb.w, posAmb.w, posAmb.w, 1.0);
+	color = computePointLight(0, posAmb.w, pos, norm.xyz, color);
         gl_FragColor = color;
     }
 }

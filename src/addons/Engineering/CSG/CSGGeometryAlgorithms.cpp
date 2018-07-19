@@ -30,7 +30,7 @@ float calcArea(Vec3d p1, Vec3d p2, Vec3d p3) {
 
  // Converts geometry to a polyhedron && applies the geometry node's world transform to the polyhedron.
 // OpenSG geometry data isn't transformed itself but has an associated transform core. Both are unified for CGAL.
-CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryMTRecPtr geometry, Matrix4d worldTransform, bool& success) {
+CGALPolyhedron* CSGGeometry::toPolyhedron(GeometryMTRecPtr geometry, Matrix4d worldTransform, bool& success) {
 	TriangleIterator it;
 	auto gpos = geometry->getPositions();
 
@@ -126,10 +126,10 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryMTRecPtr geometry, Matrix4d 
 
 	// Construct the polyhedron from raw data
     success = true;
-	CGAL::Polyhedron *result = new CGAL::Polyhedron();
+	CGALPolyhedron *result = new CGALPolyhedron();
 	PolyhedronBuilder<CGAL::HalfedgeDS> builder(positions, indices);
-	result->delegate(builder);
-	if (!result->is_closed()) {
+	result->polyhedron->delegate(builder);
+	if (!result->polyhedron->is_closed()) {
         success = false;
         cout << "Error: The polyhedron is not a closed mesh!" << endl;
         VRGeometry::create(GL_TRIANGLES, pos, pos, inds);
@@ -159,7 +159,7 @@ void CSGGeometry::markEdges(vector<Vec2i> edges) {
 bool CSGGeometry::disableEditMode() {
 	if (children.size() != 2) { cout << "CSGGeometry: Warning: editMode disabled with less than 2 children. Doing nothing.\n"; return false; }
 
-	vector<CGAL::Polyhedron*> polys(2,0); // We need two child geometries to work with
+	vector<CGALPolyhedron*> polys(2,0); // We need two child geometries to work with
 
 	for (int i=0; i<2; i++) { // Prepare the polyhedra
 		VRObjectPtr obj = children[i];
@@ -199,7 +199,7 @@ bool CSGGeometry::disableEditMode() {
 	if (polys[0] == 0) cout << "Warning! first polyhedron is 0! " << children[0]->getName() << endl;
 	if (polys[1] == 0) cout << "Warning! second polyhedron is 0! " << children[1]->getName() << endl;
 	if (polys[0] == 0 || polys[1] == 0) return false;
-    if (!polys[0]->is_closed() || !polys[1]->is_closed()) return false;
+    if (!polys[0]->polyhedron->is_closed() || !polys[1]->polyhedron->is_closed()) return false;
 
     operate(polys[0], polys[1]);
 	for (auto p : polys) delete p; // clean up

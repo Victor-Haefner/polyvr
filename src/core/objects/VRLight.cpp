@@ -7,7 +7,6 @@
 #include "core/objects/OSGObject.h"
 #include "core/objects/object/OSGCore.h"
 #include "VRLightBeacon.h"
-//#include "VRShadowEngine.h"
 
 #include <OpenSG/OSGNode.h>
 #include <OpenSG/OSGShadowStage.h>
@@ -21,6 +20,7 @@
 #include <OpenSG/OSGSimpleShadowMapEngine.h>
 #include <OpenSG/OSGShaderShadowMapEngine.h>
 #include <OpenSG/OSGTrapezoidalShadowMapEngine.h>
+#include <OpenSG/OSGBoxVolume.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -59,6 +59,7 @@ VRLight::VRLight(string name) : VRObject(name) {
     store("specular", &lightSpecular);
     store("shadowColor", &shadowColor);
     store("photometricMap", &photometricMapPath);
+    store("shadowVolume", &shadowVolume);
     storeObjName("beacon", &beacon, &beacon_name);
     regStorageSetupFkt( VRUpdateCb::create("light setup", boost::bind(&VRLight::setup, this)) );
     regStorageSetupAfterFkt( VRUpdateCb::create("light setup after", boost::bind(&VRLight::setup_after, this)) );
@@ -84,6 +85,7 @@ void VRLight::setup() {
     setType(lightType);
     setShadows(shadows);
     setShadowColor(shadowColor);
+    setShadowVolume(shadowVolume);
     setDiffuse(lightDiffuse);
     setAmbient(lightAmbient);
     setSpecular(lightSpecular);
@@ -194,12 +196,16 @@ void VRLight::setDeferred(bool b) {
 }
 
 void VRLight::setupShadowEngines() {
-    //ssme = VRShadowEngine::create();
     ssme = SimpleShadowMapEngine::create();
     gsme = ShaderShadowMapEngine::create();
     ptsme = TrapezoidalShadowMapEngine::create();
     stsme = TrapezoidalShadowMapEngine::create();
     setShadowColor(shadowColor);
+
+    ssme->editShadowTravMask() = 16;
+    gsme->editShadowTravMask() = 16;
+    ptsme->editShadowTravMask() = 16;
+    stsme->editShadowTravMask() = 16;
 
     ssme->setWidth (shadowMapRes);
     ssme->setHeight(shadowMapRes);
@@ -270,6 +276,19 @@ void VRLight::setShadowNearFar(Vec2d nf) {
     if (ptsme) ptsme->setShadowFar(nf[1]);
     if (stsme) stsme->setShadowNear(nf[0]);
     if (stsme) stsme->setShadowFar(nf[1]);
+}
+
+void VRLight::setShadowVolume(Boundingbox b) {
+    shadowVolume = b;
+    BoxVolume box(Pnt3f(b.min()), Pnt3f(b.max()));
+#ifdef WITH_SHADOW_VOLUME
+    cout << "VRLight::setShadowVolume " << b.volume() << endl;
+    if (gsme) gsme->setShadowVolume(box);
+#endif
+}
+
+Boundingbox VRLight::getShadowVolume() {
+    return shadowVolume;
 }
 
 void VRLight::setShadowColor(Color4f c) {

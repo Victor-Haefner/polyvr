@@ -9,6 +9,7 @@
 #include <libxml++/nodes/element.h>
 
 using namespace std;
+using namespace OSG;
 
 struct VRNamePool {
     list<pair<int,int>> ranges; // ranges of suffixes
@@ -141,10 +142,7 @@ class VRNameManager {
 VRNameManager nmgr;
 void VRName::printInternals() { nmgr.print(); }
 
-VRName_base::VRName_base() {;}
-VRName_base::~VRName_base() { setName(""); }
-
-VRNameSpace* VRName_base::setNameSpace(string s) {
+VRNameSpace* VRName::setNameSpace(string s) {
     nameSpaceName = s;
     if (nameSpace) {
         if(nameSpace->nspace == s) return nameSpace;
@@ -160,14 +158,14 @@ VRNameSpace* VRName_base::setNameSpace(string s) {
     return nameSpace;
 }
 
-VRNameSpace* VRName_base::resetNameSpace() { return setNameSpace("__global__"); }
+VRNameSpace* VRName::resetNameSpace() { return setNameSpace("__global__"); }
 
-void VRName_base::compileName() {
+void VRName::compileName() {
     if (!nameSpace) setNameSpace(nameSpaceName);
     name = nameSpace->compileName(base_name, name_suffix);
 }
 
-string VRName_base::setName(string name) {
+string VRName::setName(string name) {
     if (!nameSpace) setNameSpace(nameSpaceName);
     nameSpace->applyFilter(name);
     if (base_name == name && name_suffix == 0) return this->name; // already named like that, return
@@ -194,16 +192,17 @@ string VRName_base::setName(string name) {
     return this->name;
 }
 
-string VRName_base::getName() { return name; }
-string VRName_base::getBaseName() { return base_name; }
-int VRName_base::getNameSuffix() { return name_suffix; }
+string VRName::getName() { return name; }
+string VRName::getBaseName() { return base_name; }
+int VRName::getNameSuffix() { return name_suffix; }
 
 VRName::VRName() {
     store("name_suffix", &name_suffix);
     store("base_name", &base_name);
     store("name_space", &nameSpaceName);
 
-    regStorageSetupFkt( VRUpdateCb::create("name_update", boost::bind(&VRName_base::compileName, dynamic_cast<VRName_base*>(this))) );
+    regStorageSetupFkt( VRUpdateCb::create("name_update", boost::bind(&VRName::compileName, dynamic_cast<VRName*>(this))) );
 }
 
-VRName::~VRName() {}
+VRName::~VRName() { setName(""); }
+

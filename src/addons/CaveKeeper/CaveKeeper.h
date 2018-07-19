@@ -63,6 +63,8 @@ class CaveKeeper : public BlockWorld {
         CaveKeeper();
         ~CaveKeeper();
 
+        void init(VRObjectPtr anchor);
+
         static shared_ptr<CaveKeeper> create();
 
         int intersect(VRDevicePtr dev);

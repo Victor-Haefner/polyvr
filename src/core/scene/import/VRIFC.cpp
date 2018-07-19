@@ -1,3 +1,5 @@
+#ifndef NO_IFC
+
 #include "VRIFC.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
@@ -48,7 +50,7 @@ struct geom_filter {
 
 vector<IfcGeom::filter_t> setup_filters(const vector<geom_filter>& filters, const string& output_extension) {
     vector<IfcGeom::filter_t> filter_funcs;
-    foreach(const geom_filter& f, filters) {
+    for (auto& f : filters) {
         if (f.type == geom_filter::ENTITY_TYPE) {
             entity_filter.include = f.include;
             entity_filter.traverse = f.traverse;
@@ -358,6 +360,8 @@ void OSG::loadIFC(string path, VRTransformPtr res) {
     IFCLoader ifc;
     ifc.load(path, res);
 }
+
+#endif
 
 
 

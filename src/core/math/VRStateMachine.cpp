@@ -4,7 +4,8 @@ using namespace OSG;
 
 template<class P>
 VRStateMachine<P>::State::State(string name, VRTransitionCbPtr t) {
-    setNameSpace("State");
+    auto ns = setNameSpace("State");
+    ns->setUniqueNames(false);
     setName(name);
     transition = t;
 }

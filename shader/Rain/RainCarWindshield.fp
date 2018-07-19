@@ -25,10 +25,12 @@ uniform int pass;
 
 uniform vec2 OSGViewportSize;
 uniform float tnow;
+uniform float wiperState;
 uniform float offset;
 
 uniform bool isRaining;
 uniform bool isWiping;
+uniform bool hasPower;
 uniform float wiperSpeed;
 uniform float tWiperstart;
 uniform float durationWiper;
@@ -109,6 +111,7 @@ vec2 genPattern2Offset(vec2 uvC) {
 vec2 angles() {
 	float period = durationWiper/(wiperSpeed);
 	float time = (tnow-tWiperstart)/period;
+	if (!hasPower) time = wiperState;
 	float angA = 0;
 	float angB = 0;	
 	if (time<0.5) {
@@ -230,6 +233,8 @@ vec4 locateDrop() {
 }
 
 vec4 returnColor(vec4 drop) {
+	if (scale < 0.01 || !isRaining) return vec4(0,0,0,0);
+
 	float xC = -floor(drop.x/disBD);
 	float yC = floor((drop.y)/disBD);
 	float hashValue = hash(vec2(xC*0.2437,yC*0.2437)); //same seed would be all same size due to calctime algorithm
@@ -279,7 +284,6 @@ vec4 drawBorder(vec4 check) {
 }
 
 void main() {
-	if (scale < 0.01) discard;
 	radius *= scale*0.1;
 	radius = clamp(radius, 0.0501, 0.3);
 
@@ -291,7 +295,6 @@ void main() {
 	
 	if (fragDir.y < -0.999) discard; //not sure if needed, but previous experiences showed conflicts with RAIN-MODULE's heightcam 
 	vec4 dropColor = vec4(0,0,0,0);	
-	if (!isRaining) discard;
 	vec4 drop = locateDrop();
 	dropColor = returnColor(drop);
 	//dropColor = drawBorder(dropColor);
@@ -299,10 +302,9 @@ void main() {
 	
 	if (dropColor == vec4(0,0,0,0)) discard;	
 	if (dropColor.w < 0.1) discard;	
+	dropColor.w=1;
 	gl_FragColor = dropColor;
 }
-
-/** NOT NEEDED RIGHT NOW */
 
 
 

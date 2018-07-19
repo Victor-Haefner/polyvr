@@ -16,6 +16,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <map>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 typedef __u64 mstime_t;
 
@@ -72,7 +74,8 @@ string execCmd(Args&&... args) {
     char foo[32768];
     size_t N = read(link[0], foo, sizeof(foo));
     result = string(foo, N);
-    wait();
+    int status;
+    wait(&status);
     return result;
 }
 
@@ -240,8 +243,8 @@ void VRMultiTouch::clearSignals() {
     addSlider(5);
     addSlider(6);
 
-    addSignal( 0, 0)->add( getDrop() );
-    addSignal( 0, 1)->add( addDrag( getBeacon() ) );
+    newSignal( 0, 0)->add( getDrop() );
+    newSignal( 0, 1)->add( addDrag( getBeacon() ) );
 }
 
 void VRMultiTouch::multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut) {

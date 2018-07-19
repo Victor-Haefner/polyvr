@@ -90,6 +90,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         static void printOSGTree(OSGObjectPtr o, string indent = "");
 
         void setTravMask(int i);
+        int getTravMask();
         void setVolume(const Boundingbox& box);
         void setVolumeCheck(bool b, bool recursive = false);
         void setSiblingPosition(int i);
@@ -137,11 +138,12 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
 
         VRObjectPtr duplicate(bool anchor = false, bool subgraph = true);
 
-        void hide();
-        void show();
-        bool isVisible();
-        void setVisible(bool b);
-        void toggleVisible();
+        void setVisibleUndo(bool b);
+        void hide(string mode = "");
+        void show(string mode = "");
+        bool isVisible(string mode = "");
+        void setVisible(bool b, string mode = "");
+        void toggleVisible(string mode = "");
 
         bool isPickable();
         void setPickable(int b);

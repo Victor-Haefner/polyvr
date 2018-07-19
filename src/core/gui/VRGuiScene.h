@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <gtkmm/treeview.h>
+#include <gtkmm/treestore.h>
 #include "core/objects/object/VRObject.h"
 #include "VRGuiContextMenu.h"
 #include "VRGuiVectorEntry.h"
@@ -15,9 +16,58 @@ class VRGuiScene {
         VRObjectWeakPtr dragDest;
         string dragPath;
         int dragPos = 0;
+        bool transformModeLocal = true;
         VRGuiContextMenu* menu;
 
+        Glib::RefPtr<Gtk::TreeStore> tree_store;
+        Glib::RefPtr<Gtk::TreeView> tree_view;
+
+        Gtk::TreeModel::iterator selected_itr;
+        int selected = -1;
+        VRGeometryWeakPtr selected_geometry;
+        VRObjectWeakPtr VRGuiScene_copied;
+        bool liveUpdate = false;
+        bool trigger_cbs = false;
+
+        VRGuiVectorEntry posEntry;
+        VRGuiVectorEntry atEntry;
+        VRGuiVectorEntry dirEntry;
+        VRGuiVectorEntry upEntry;
+        VRGuiVectorEntry scaleEntry;
+        VRGuiVectorEntry ctEntry;
+        VRGuiVectorEntry lodCEntry;
+
+        // ---------ObjectForms------
+        VRObjectPtr getSelected();
+        void updateObjectForms(bool disable = false);
+        void setObject(VRObjectPtr o);
+        void setTransform(VRTransformPtr e);
+        void setMaterial(VRMaterialPtr mat);
+        void setGeometry(VRGeometryPtr g);
+        void setLight(VRLightPtr l);
+        void setCamera(VRCameraPtr c);
+        void setGroup(VRGroupPtr g);
+        void setLod(VRLodPtr lod);
+        void setEntity(VREntityPtr e);
+        // --------------------------
+
+        // ---------TreeView---------
+        void on_treeview_select();
+        void getTypeColors(VRObjectPtr o, string& fg, string& bg);
+        void setSGRow(Gtk::TreeModel::iterator itr, VRObjectPtr o);
+        void parseSGTree(VRObjectPtr o, Gtk::TreeModel::iterator itr = Gtk::TreeModel::iterator());
+        void removeTreeStoreBranch(Gtk::TreeModel::iterator iter, bool self = true);
+        void syncSGTree(VRObjectPtr o, Gtk::TreeModel::iterator itr);
+        // ----------------------------------------------
+
         // ------------- transform -----------------------
+        void on_change_from(Vec3d v);
+        void on_change_at(Vec3d v);
+        void on_change_dir(Vec3d v);
+        void on_change_up(Vec3d v);
+        void on_scale_changed(Vec3d v);
+        void on_change_lod_center(Vec3d v);
+        void on_edit_T_constraint(Vec3d v);
         void on_toggle_T_mode();
         void on_toggle_T_constraint_mode();
         void on_toggle_phys();
@@ -36,11 +86,13 @@ class VRGuiScene {
         void setGeometry_object();
         void setGeometry_vertex_count();
         void setGeometry_face_count();
+        void on_edit_primitive_params(string path, string new_text);
         // ----------------------------------------------
 
         // ------------- light -----------------------
         void on_toggle_light();
         void on_toggle_light_shadow();
+        void on_toggle_light_shadow_volume();
         void on_change_light_type();
         void on_change_light_shadow();
         void on_edit_light_attenuation();
@@ -70,6 +122,7 @@ class VRGuiScene {
         // ----------------------------------------------
 
         // ------------- lod -----------------------
+        void on_edit_distance(string path, string new_text);
         void on_lod_decimate_changed();
         // ----------------------------------------------
 
@@ -77,7 +130,7 @@ class VRGuiScene {
         void on_drag_beg(const Glib::RefPtr<Gdk::DragContext>& dc);
         void on_drag_end(const Glib::RefPtr<Gdk::DragContext>& dc);
         void on_drag_data_receive(const Glib::RefPtr<Gdk::DragContext>& dc , int i1, int i2 ,const Gtk::SelectionData& sd, guint i3, guint i4);
-        void on_edit_object_name(string path, string name);
+        void on_edit_object_name(string path, string new_text);
         // ----------------------------------------------
 
         // ------------- context menu -------------------

@@ -38,8 +38,6 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/windows/VRView.h"
 
-#define WITH_PHOTOMETRIC
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -87,12 +85,16 @@ void VRDefShading::init() {
     dsStage->setGBufferProgram(NULL);
 
     // ambient shader
-    ShaderProgramMTRecPtr      vpAmbient = ShaderProgram::createVertexShader  ();
-    ShaderProgramMTRecPtr      fpAmbient = ShaderProgram::createFragmentShader();
-    ShaderProgramChunkMTRecPtr shAmbient = ShaderProgramChunk::create();
+    vpAmbient = ShaderProgram::createVertexShader  ();
+    fpAmbient = ShaderProgram::createFragmentShader();
+    shAmbient = ShaderProgramChunk::create();
     vpAmbient->readProgram(dsAmbientVPFile.c_str());
     fpAmbient->readProgram(dsAmbientFPFile.c_str());
+    fpAmbient->addUniformVariable<Int32>("texBufPos",  0);
     fpAmbient->addUniformVariable<Int32>("texBufNorm", 1);
+    fpAmbient->addUniformVariable<Int32>("texBufDiff", 2);
+    fpAmbient->addUniformVariable<Int32>("texBufAmb",  3);
+    fpAmbient->addUniformVariable<Int32>("channel", 0);
     shAmbient->addShader(vpAmbient);
     shAmbient->addShader(fpAmbient);
     dsStage->setAmbientProgram(shAmbient);
@@ -127,11 +129,9 @@ int VRDefShading::addBuffer(int pformat, int ptype) {
 }
 
 void VRDefShading::reload() {
-    ShaderProgramMTRecPtr      vpAmbient = ShaderProgram::createVertexShader  ();
-    ShaderProgramMTRecPtr      fpAmbient = ShaderProgram::createFragmentShader();
-    ShaderProgramChunkMTRecPtr shAmbient = ShaderProgramChunk::create();
     vpAmbient->readProgram(dsAmbientVPFile.c_str());
     fpAmbient->readProgram(dsAmbientFPFile.c_str());
+    fpAmbient->addUniformVariable<Int32>("channel", channel);
     shAmbient->addShader(vpAmbient);
     shAmbient->addShader(fpAmbient);
     dsStage->setAmbientProgram(shAmbient);
@@ -142,11 +142,6 @@ void VRDefShading::reload() {
         li.second.lightVP->readProgram(vpFile.c_str());
         li.second.lightFP->readProgram(fpFile.c_str());
         li.second.lightFP->updateUniformVariable<Int32>("channel", channel);
-        li.second.lightFP->updateUniformVariable<Int32>("isFirstLamp", 0);
-    }
-
-    if (lightInfos.size() > 0) {
-        lightInfos.rbegin()->second.lightFP->updateUniformVariable<Int32>("isFirstLamp", 1);
     }
 }
 
@@ -203,7 +198,7 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     li.lightType = LightEngine::Point;
     if (type == "directional") li.lightType = LightEngine::Directional;
     if (type == "spot") li.lightType = LightEngine::Spot;
-#ifdef WITH_PHOTOMETRIC
+#ifndef NO_PHOTOMETRIC
     if (type == "photometric") li.lightType = LightEngine::Photometric;
 #endif // WITH_PHOTOMETRIC
 
@@ -218,10 +213,7 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     li.lightFP->addUniformVariable<Int32>("texBufAmb",  3);
     li.lightFP->addUniformVariable<Int32>("texPhotometricMap", 4);
     li.lightFP->addUniformVariable<float>("shadowColor", shadowColor);
-    li.lightFP->addUniformVariable<Vec3f>("lightUp", Vec3f(0,1,0));
-    li.lightFP->addUniformVariable<Vec3f>("lightDirection", Vec3f(0,0,-1));
     li.lightFP->addUniformVariable<Int32>("channel", 0);
-    li.lightFP->addUniformVariable<Int32>("isFirstLamp", 1);
 
     li.lightSH->addShader(li.lightVP);
     li.lightSH->addShader(li.lightFP);
@@ -237,9 +229,6 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
         li.texChunk->setInternalFormat(tex->getInternalFormat());
     }
 
-    if (lightInfos.size() > 0) {
-        lightInfos.rbegin()->second.lightFP->updateUniformVariable<Int32>("isFirstLamp", 0);
-    }
     lightInfos[ID] = li;
 
     string vpFile = getLightVPFile(li.lightType);
@@ -258,7 +247,7 @@ void VRDefShading::updateLight(VRLightPtr l) {
     li.lightType = LightEngine::Point;
     if (type == "directional") li.lightType = LightEngine::Directional;
     if (type == "spot") li.lightType = LightEngine::Spot;
-#ifdef WITH_PHOTOMETRIC
+#ifndef NO_PHOTOMETRIC
     if (type == "photometric") li.lightType = LightEngine::Photometric;
 #endif
     if (shadows) li.shadowType = defaultShadowType;
@@ -288,7 +277,7 @@ const std::string& VRDefShading::getLightVPFile(LightTypeE lightType) {
         case LightEngine::Directional: return dsDirLightVPFile;
         case LightEngine::Point: return dsPointLightVPFile;
         case LightEngine::Spot: return dsSpotLightVPFile;
-#ifdef WITH_PHOTOMETRIC
+#ifndef NO_PHOTOMETRIC
         case LightEngine::Photometric: return dsPhotometricLightVPFile;
 #endif
         default: return dsUnknownFile;
@@ -302,7 +291,7 @@ const std::string& VRDefShading::getLightFPFile(LightTypeE lightType, ShadowType
         case LightEngine::Directional: return ds ? dsDirLightShadowFPFile : dsDirLightFPFile;
         case LightEngine::Point: return ds ? dsPointLightShadowFPFile : dsPointLightFPFile;
         case LightEngine::Spot: return ds ? dsSpotLightShadowFPFile : dsSpotLightFPFile;
-#ifdef WITH_PHOTOMETRIC
+#ifndef NO_PHOTOMETRIC
         case LightEngine::Photometric: return ds ? dsPhotometricLightShadowFPFile : dsPhotometricLightFPFile;
 #endif
         default: return dsUnknownFile;

@@ -30,10 +30,12 @@ class Boundingbox {
         Vec3d center() const;
         Vec3d size() const;
         float radius() const;
+        float volume() const;
 
         void setCenter(const Vec3d& t);
         void move(const Vec3d& t);
         void scale(float s);
+        void inflate(float D);
 
         bool isInside(Vec3d p) const;
         bool intersectedBy(Line l);

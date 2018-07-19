@@ -21,23 +21,32 @@
 using namespace OSG;
 
 /* Python usage example:
-def initRainyWindshield():
-	VR.rcShield = VR.RainCarWindshield()
-	windshield = VR.find('windshield') #Geometry
-	VR.rcShield.setWindshield(windshield)
-	VR.scene.addChild(VR.rcShield)
+	def initDummyWindshield():
+		VR.dummyWindshield = VR.Geometry('windshield')
+		VR.dummyWindshield.setPrimitive('Box 1.7 0.01 0.5 1 1 1')
+		VR.dummyWindshield.setTransform([0,50,0],[0,1,1],[0,1,0])
+		VR.dummyWindshield.setPickable(1)
+		VR.scene.addChild(VR.dummyWindshield)
+		VR.dummyWindshield.setVisible(False)
+
+	def initRainyWindshield():
+		VR.rcShield = VR.RainCarWindshield()
+		windshield = VR.find('windshield') #Geometry
+		VR.rcShield.setWindshield(windshield)
+		VR.scene.addChild(VR.rcShield)
+		VR.rcShield.start()
+		VR.rcShield.setScale(True,3)
+
+    initDummyWindshield()
+	initRainyWindshield()
 */
 
 VRRainCarWindshield::VRRainCarWindshield() : VRGeometry("RainCarWindshield") {
     type = "RainCarWindshield";
-    string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Rain/";
-    vScript = resDir + "RainCarWindshield.vp";
-    fScript = resDir + "RainCarWindshield.fp";
 
     //Shader setup
     mat = VRMaterial::create("RainCarWindshield");
-    mat->readVertexShader(vScript);
-    mat->readFragmentShader(fScript);
+    reloadShader();
     setMaterial(mat);
     setPrimitive("Plane", "2 2 1 1");
     mat->setLit(false);
@@ -63,6 +72,7 @@ VRRainCarWindshield::VRRainCarWindshield() : VRGeometry("RainCarWindshield") {
 
     setScale(false, scale);
     setShaderParameter("durationWiper", durationWiper);
+    setShaderParameter("hasPower", hasPower);
 
     updatePtr = VRUpdateCb::create("VRRainCarWindshield update", boost::bind(&VRRainCarWindshield::update, this));
     VRScene::getCurrent()->addUpdateFkt(updatePtr);
@@ -90,8 +100,12 @@ float signum(float in) {
     return 0;
 }
 
+VRRainCarWindshieldPtr VRRainCarWindshield::create() {
+    auto w = VRRainCarWindshieldPtr( new VRRainCarWindshield() );
+    w->hide("SHADOW");
+    return w;
+}
 
-VRRainCarWindshieldPtr VRRainCarWindshield::create() { return VRRainCarWindshieldPtr( new VRRainCarWindshield() ); }
 VRRainCarWindshieldPtr VRRainCarWindshield::ptr() { return static_pointer_cast<VRRainCarWindshield>( shared_from_this() ); }
 
 float VRRainCarWindshield::get() { return scale; }
@@ -134,10 +148,35 @@ void VRRainCarWindshield::update() {
     tdelta = tnow-tlast;
     tlast = tnow;
 
-    if (isWiping && tnow-durationWiper/wiperSpeed>tWiperstart) tWiperstart=tnow;
-    if (!isWiping && wiperSpeed>0 && tnow-durationWiper/wiperSpeed>tWiperstart) {
-            wiperSpeed=0;
-            setShaderParameter("wiperSpeed", wiperSpeed);
+    auto applyWiperSpeed = [&]() {
+        wiperSpeed = newWiperSpeed;
+        setShaderParameter("wiperSpeed", wiperSpeed);
+    };
+
+    if (isWiping && newWiperSpeed == wiperSpeed){
+        //resetting time stamp for neutral wiper state
+        if (tnow-durationWiper/wiperSpeed>tWiperstart) tWiperstart=tnow;
+    } else {
+        //start of wipers
+        if (isWiping && wiperSpeed == 0) {
+            float newPeriod = durationWiper/newWiperSpeed;
+            tWiperstart=tnow - wiperState*newPeriod;
+            applyWiperSpeed();
+        }
+        //seamless live changes of wiperSpeeds
+        if (isWiping && wiperSpeed > 0) {
+            float thisPeriod = durationWiper/wiperSpeed;
+            float newPeriod = durationWiper/newWiperSpeed;
+            wiperState = (tnow-tWiperstart)/thisPeriod;
+            tWiperstart=tnow - wiperState*newPeriod;
+            applyWiperSpeed();
+        }
+        //soft-stopping wipers (stop in neutral state)
+        if (!isWiping && wiperSpeed > 0 && tnow-durationWiper/wiperSpeed>tWiperstart) {
+            newWiperSpeed = 0;
+            wiperState = 0;
+            applyWiperSpeed();
+        }
     }
 
     Vec3d windshieldPos = geoWindshield->getWorldPosition();
@@ -165,9 +204,13 @@ void VRRainCarWindshield::update() {
     mat->setActivePass(0);
     mat->readVertexShader(vScript);
     mat->readFragmentShader(fScript);
+    mat->readFragmentShader(dfScript, true);
+    mat->updateDeferredShader();
     mat->setActivePass(1);
     mat->readVertexShader(vScript);
     mat->readFragmentShader(fScript);
+    mat->readFragmentShader(dfScript, true);
+    mat->updateDeferredShader();
 
     setShaderParameter("tnow", tnow);
     setShaderParameter("tWiperstart", tWiperstart);
@@ -203,11 +246,41 @@ void VRRainCarWindshield::stop() {
     cout << "VRRainCarWindshield::stop()" << endl;
 }
 
-void VRRainCarWindshield::setWipers(bool isWiping, float wiperSpeed) {
+void VRRainCarWindshield::setWipers(bool isWiping, float newWiperSpeed) {
     this->isWiping = isWiping;
-    if (isWiping) this->wiperSpeed = wiperSpeed;
-    if (isWiping) setShaderParameter("wiperSpeed", wiperSpeed);
-    cout << "VRRainCarWindshield::setWipers(" << isWiping <<","<< wiperSpeed << ")" << endl;
+    this->newWiperSpeed = newWiperSpeed;
+    hasPower = true;
+    setShaderParameter("hasPower", hasPower);
+    cout << "VRRainCarWindshield::setWipers(" << isWiping <<","<< newWiperSpeed << ")" << endl;
+}
+
+void VRRainCarWindshield::cutPower() {
+    isWiping = false;
+    hasPower = false;
+    if (wiperSpeed != 0) {
+        float thisPeriod = durationWiper/wiperSpeed;
+        wiperState = (tnow-tWiperstart)/thisPeriod;
+    }
+    newWiperSpeed = 0;
+    wiperSpeed = newWiperSpeed;
+    setShaderParameter("wiperSpeed", wiperSpeed);
+    setShaderParameter("hasPower", hasPower);
+    setShaderParameter("wiperState", wiperState);
+    cout << "VRRainCarWindshield::cutPower()" << endl;
+}
+
+void VRRainCarWindshield::reloadShader() {
+    cout << "VRRainCarWindshield::reloadShader()" << endl;
+    string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Rain/";
+    vScript = resDir + "RainCarWindshield.vp";
+    fScript = resDir + "RainCarWindshield.fp";
+    dfScript = resDir + "RainCarWindshield.dfp";
+
+    mat->readVertexShader(vScript);
+    mat->readFragmentShader(fScript);
+    mat->readFragmentShader(dfScript, true);
+
+    mat->updateDeferredShader();
 }
 
 

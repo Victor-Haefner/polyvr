@@ -17,6 +17,8 @@ PyMethodDef VRPyAnimation::methods[] = {
     {"setCallback", PyWrap(Animation, setCallback, "Set animation callback", void, VRAnimCbPtr) },
     {"setDuration", PyWrap(Animation, setDuration, "Set animation duration", void, float) },
     {"setLoop", PyWrap(Animation, setLoop, "Set animation loop flag", void, bool) },
+    {"getDuration", PyWrap(Animation, getDuration, "Return total animation duration", float) },
+    {"getLoop", PyWrap(Animation, getLoop, "Return loop settings flag", bool) },
     {NULL}  /* Sentinel */
 };
 

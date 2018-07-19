@@ -90,7 +90,7 @@ class VRBehavior : public VRName {
         VRBehavior(string name);
         ~VRBehavior();
 
-        static VRBehaviorPtr create(string name);
+        static VRBehaviorPtr create(string name = "bahavior");
 
         void setSkeleton(VRSkeletonPtr s);
 };

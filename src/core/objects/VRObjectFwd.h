@@ -38,6 +38,7 @@ ptrFwd(VRBackground);
 ptrFwd(VRBackgroundBase);
 ptrFwd(VRTexture);
 ptrFwd(VRTextureGenerator);
+ptrFwd(VRTextureMosaic);
 ptrFwd(VRConstraint);
 ptrFwd(VRAnimation);
 
@@ -48,10 +49,9 @@ ptrFwd(VRBlinds);
 ptrFwd(VROpening);
 ptrFwd(VRTree);
 ptrFwd(VRHandGeo)
-
-}
-
 ptrFwd(VRNumberingEngine);
 ptrFwd(VRLODSpace);
+
+}
 
 #endif // VROBJECTFWD_H_INCLUDED

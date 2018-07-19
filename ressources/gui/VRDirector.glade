@@ -797,6 +797,12 @@ cave allocated</property>
       <action-widget response="0">button21</action-widget>
     </action-widgets>
   </object>
+  <object class="GtkListStore" id="fileOpenPresets">
+    <columns>
+      <!-- column-name presets -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkFileChooserDialog" id="file_dialog">
     <property name="can_focus">False</property>
     <property name="border_width">5</property>
@@ -855,7 +861,7 @@ cave allocated</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="n_rows">2</property>
-            <property name="n_columns">2</property>
+            <property name="n_columns">4</property>
             <child>
               <object class="GtkLabel" id="openFileWarning">
                 <property name="visible">True</property>
@@ -863,6 +869,7 @@ cave allocated</property>
                 <property name="label" translatable="yes">label</property>
               </object>
               <packing>
+                <property name="right_attach">3</property>
                 <property name="y_options">GTK_FILL</property>
               </packing>
             </child>
@@ -875,8 +882,8 @@ cave allocated</property>
                 <property name="draw_indicator">True</property>
               </object>
               <packing>
-                <property name="left_attach">1</property>
-                <property name="right_attach">2</property>
+                <property name="left_attach">3</property>
+                <property name="right_attach">4</property>
                 <property name="x_options">GTK_FILL</property>
                 <property name="y_options">GTK_FILL</property>
               </packing>
@@ -890,6 +897,8 @@ cave allocated</property>
                 <property name="label" translatable="yes">scale:</property>
               </object>
               <packing>
+                <property name="left_attach">2</property>
+                <property name="right_attach">3</property>
                 <property name="top_attach">1</property>
                 <property name="bottom_attach">2</property>
                 <property name="y_options">GTK_FILL</property>
@@ -906,12 +915,42 @@ cave allocated</property>
                 <property name="secondary_icon_sensitive">True</property>
               </object>
               <packing>
-                <property name="left_attach">1</property>
-                <property name="right_attach">2</property>
+                <property name="left_attach">3</property>
+                <property name="right_attach">4</property>
                 <property name="top_attach">1</property>
                 <property name="bottom_attach">2</property>
                 <property name="x_options">GTK_FILL</property>
                 <property name="y_options">GTK_FILL</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label163">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">label</property>
+              </object>
+              <packing>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkComboBox" id="combobox15">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="model">fileOpenPresets</property>
+                <child>
+                  <object class="GtkCellRendererText" id="cellrenderertext54"/>
+                  <attributes>
+                    <attribute name="text">0</attribute>
+                  </attributes>
+                </child>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
               </packing>
             </child>
           </object>
@@ -1457,6 +1496,20 @@ cave allocated</property>
       <column type="gchararray"/>
     </columns>
   </object>
+  <object class="GtkTreeStore" id="onto_list">
+    <columns>
+      <!-- column-name onto -->
+      <column type="gchararray"/>
+      <!-- column-name type -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="phys_shapes">
+    <columns>
+      <!-- column-name shapes -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkListStore" id="prim_list">
     <columns>
       <!-- column-name nav_presets -->
@@ -1478,20 +1531,6 @@ cave allocated</property>
       <!-- column-name time -->
       <column type="gchararray"/>
       <!-- column-name color -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkTreeStore" id="onto_list">
-    <columns>
-      <!-- column-name onto -->
-      <column type="gchararray"/>
-      <!-- column-name type -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkListStore" id="phys_shapes">
-    <columns>
-      <!-- column-name shapes -->
       <column type="gchararray"/>
     </columns>
   </object>
@@ -1809,13 +1848,13 @@ cave allocated</property>
       <column type="gchararray"/>
       <!-- column-name Type -->
       <column type="gchararray"/>
-      <!-- column-name obj -->
+      <!-- column-name objPath -->
       <column type="gchararray"/>
       <!-- column-name foreground -->
       <column type="gchararray"/>
       <!-- column-name background -->
       <column type="gchararray"/>
-      <!-- column-name doFrame -->
+      <!-- column-name objID -->
       <column type="gint"/>
     </columns>
   </object>
@@ -2420,6 +2459,24 @@ cave allocated</property>
                                 <child>
                                   <placeholder/>
                                 </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                               </object>
                             </child>
                           </object>
@@ -2451,6 +2508,24 @@ cave allocated</property>
                                 <property name="can_focus">False</property>
                                 <property name="n_columns">2</property>
                                 <property name="homogeneous">True</property>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                                 <child>
                                   <placeholder/>
                                 </child>
@@ -7169,7 +7244,6 @@ cave allocated</property>
                                             <attribute name="background">4</attribute>
                                             <attribute name="foreground">3</attribute>
                                             <attribute name="markup">0</attribute>
-                                            <attribute name="underline">5</attribute>
                                           </attributes>
                                         </child>
                                       </object>
@@ -8637,7 +8711,7 @@ to add distances</property>
                                               <object class="GtkTable" id="table19">
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
-                                                <property name="n_rows">10</property>
+                                                <property name="n_rows">11</property>
                                                 <property name="n_columns">3</property>
                                                 <child>
                                                   <object class="GtkComboBox" id="combobox2">
@@ -8654,8 +8728,6 @@ to add distances</property>
                                                   <packing>
                                                     <property name="left_attach">1</property>
                                                     <property name="right_attach">2</property>
-                                                    <property name="top_attach">8</property>
-                                                    <property name="bottom_attach">9</property>
                                                     <property name="x_options">GTK_FILL</property>
                                                   </packing>
                                                 </child>
@@ -8696,8 +8768,8 @@ to add distances</property>
                                                   </object>
                                                   <packing>
                                                     <property name="right_attach">3</property>
-                                                    <property name="top_attach">9</property>
-                                                    <property name="bottom_attach">10</property>
+                                                    <property name="top_attach">10</property>
+                                                    <property name="bottom_attach">11</property>
                                                     <property name="x_options">GTK_FILL</property>
                                                   </packing>
                                                 </child>
@@ -8711,6 +8783,8 @@ to add distances</property>
                                                   </object>
                                                   <packing>
                                                     <property name="right_attach">2</property>
+                                                    <property name="top_attach">1</property>
+                                                    <property name="bottom_attach">2</property>
                                                     <property name="x_options">GTK_FILL</property>
                                                   </packing>
                                                 </child>
@@ -8723,8 +8797,8 @@ to add distances</property>
                                                     <property name="draw_indicator">True</property>
                                                   </object>
                                                   <packing>
-                                                    <property name="top_attach">6</property>
-                                                    <property name="bottom_attach">7</property>
+                                                    <property name="top_attach">7</property>
+                                                    <property name="bottom_attach">8</property>
                                                     <property name="x_options">GTK_FILL</property>
                                                   </packing>
                                                 </child>
@@ -8743,8 +8817,8 @@ to add distances</property>
                                                   <packing>
                                                     <property name="left_attach">1</property>
                                                     <property name="right_attach">2</property>
-                                                    <property name="top_attach">6</property>
-                                                    <property name="bottom_attach">7</property>
+                                                    <property name="top_attach">7</property>
+                                                    <property name="bottom_attach">8</property>
                                                     <property name="x_options">GTK_FILL</property>
                                                   </packing>
                                                 </child>
@@ -8755,8 +8829,8 @@ to add distances</property>
                                                     <property name="label" translatable="yes">Shadow color:</property>
                                                   </object>
                                                   <packing>
-                                                    <property name="top_attach">7</property>
-                                                    <property name="bottom_attach">8</property>
+                                                    <property name="top_attach">8</property>
+                                                    <property name="bottom_attach">9</property>
                                                     <property name="x_options">GTK_FILL</property>
                                                   </packing>
                                                 </child>
@@ -8769,8 +8843,8 @@ to add distances</property>
                                                   </object>
                                                   <packing>
                                                     <property name="right_attach">2</property>
-                                                    <property name="top_attach">2</property>
-                                                    <property name="bottom_attach">3</property>
+                                                    <property name="top_attach">3</property>
+                                                    <property name="bottom_attach">4</property>
                                                     <property name="x_options">GTK_FILL</property>
                                                     <property name="x_padding">2</property>
                                                     <property name="y_padding">2</property>
@@ -8873,8 +8947,8 @@ to add distances</property>
                                                   </object>
                                                   <packing>
                                                     <property name="right_attach">2</property>
-                                                    <property name="top_attach">3</property>
-                                                    <property name="bottom_attach">4</property>
+                                                    <property name="top_attach">4</property>
+                                                    <property name="bottom_attach">5</property>
                                                     <property name="x_options">GTK_FILL</property>
                                                   </packing>
                                                 </child>
@@ -8885,8 +8959,6 @@ to add distances</property>
                                                     <property name="label" translatable="yes">Light type:</property>
                                                   </object>
                                                   <packing>
-                                                    <property name="top_attach">8</property>
-                                                    <property name="bottom_attach">9</property>
                                                     <property name="x_options">GTK_FILL</property>
                                                   </packing>
                                                 </child>
@@ -8911,8 +8983,8 @@ to add distances</property>
                                                   <packing>
                                                     <property name="left_attach">1</property>
                                                     <property name="right_attach">2</property>
-                                                    <property name="top_attach">7</property>
-                                                    <property name="bottom_attach">8</property>
+                                                    <property name="top_attach">8</property>
+                                                    <property name="bottom_attach">9</property>
                                                     <property name="x_options"/>
                                                     <property name="y_options"/>
                                                     <property name="y_padding">3</property>
@@ -8926,8 +8998,8 @@ to add distances</property>
                                                   </object>
                                                   <packing>
                                                     <property name="right_attach">2</property>
-                                                    <property name="top_attach">4</property>
-                                                    <property name="bottom_attach">5</property>
+                                                    <property name="top_attach">5</property>
+                                                    <property name="bottom_attach">6</property>
                                                     <property name="x_options">GTK_FILL</property>
                                                   </packing>
                                                 </child>
@@ -9013,8 +9085,8 @@ to add distances</property>
                                                   </object>
                                                   <packing>
                                                     <property name="right_attach">2</property>
-                                                    <property name="top_attach">5</property>
-                                                    <property name="bottom_attach">6</property>
+                                                    <property name="top_attach">6</property>
+                                                    <property name="bottom_attach">7</property>
                                                     <property name="x_options">GTK_FILL</property>
                                                   </packing>
                                                 </child>
@@ -9026,7 +9098,7 @@ to add distances</property>
                                                   <packing>
                                                     <property name="left_attach">2</property>
                                                     <property name="right_attach">3</property>
-                                                    <property name="bottom_attach">9</property>
+                                                    <property name="bottom_attach">10</property>
                                                   </packing>
                                                 </child>
                                                 <child>
@@ -9036,8 +9108,9 @@ to add distances</property>
                                                     <property name="label" translatable="yes">Light beacon:</property>
                                                   </object>
                                                   <packing>
-                                                    <property name="top_attach">1</property>
-                                                    <property name="bottom_attach">2</property>
+                                                    <property name="top_attach">2</property>
+                                                    <property name="bottom_attach">3</property>
+                                                    <property name="x_options">GTK_FILL</property>
                                                   </packing>
                                                 </child>
                                                 <child>
@@ -9050,8 +9123,42 @@ to add distances</property>
                                                   <packing>
                                                     <property name="left_attach">1</property>
                                                     <property name="right_attach">2</property>
-                                                    <property name="top_attach">1</property>
-                                                    <property name="bottom_attach">2</property>
+                                                    <property name="top_attach">2</property>
+                                                    <property name="bottom_attach">3</property>
+                                                    <property name="x_options">GTK_FILL</property>
+                                                  </packing>
+                                                </child>
+                                                <child>
+                                                  <object class="GtkCheckButton" id="checkbutton2">
+                                                    <property name="label" translatable="yes">shadow volume:</property>
+                                                    <property name="visible">True</property>
+                                                    <property name="can_focus">True</property>
+                                                    <property name="receives_default">False</property>
+                                                    <property name="draw_indicator">True</property>
+                                                  </object>
+                                                  <packing>
+                                                    <property name="top_attach">9</property>
+                                                    <property name="bottom_attach">10</property>
+                                                    <property name="x_options">GTK_FILL</property>
+                                                  </packing>
+                                                </child>
+                                                <child>
+                                                  <object class="GtkEntry" id="entry36">
+                                                    <property name="visible">True</property>
+                                                    <property name="can_focus">True</property>
+                                                    <property name="invisible_char">•</property>
+                                                    <property name="text" translatable="yes">10</property>
+                                                    <property name="primary_icon_activatable">False</property>
+                                                    <property name="secondary_icon_activatable">False</property>
+                                                    <property name="primary_icon_sensitive">True</property>
+                                                    <property name="secondary_icon_sensitive">True</property>
+                                                  </object>
+                                                  <packing>
+                                                    <property name="left_attach">1</property>
+                                                    <property name="right_attach">2</property>
+                                                    <property name="top_attach">9</property>
+                                                    <property name="bottom_attach">10</property>
+                                                    <property name="x_options">GTK_FILL</property>
                                                   </packing>
                                                 </child>
                                               </object>

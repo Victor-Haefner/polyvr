@@ -16,7 +16,11 @@ using namespace OSG;
 VRRoad::VRRoad() : VRRoadBase("Road") {}
 VRRoad::~VRRoad() {}
 
-VRRoadPtr VRRoad::create() { return VRRoadPtr( new VRRoad() ); }
+VRRoadPtr VRRoad::create() {
+    auto r = VRRoadPtr( new VRRoad() );
+    r->hide("SHADOW");
+    return r;
+}
 
 float VRRoad::getWidth() {
     float width = 0;
@@ -158,6 +162,7 @@ VRGeometryPtr VRRoad::createGeometry() {
                     auto po = path->getPoint(zz);
                     x.normalize();
                     float offsetter = offsetIn*(1.0-(float(zz)/(float(path->size())-1.0))) + offsetOut*(float(zz)/(float(path->size())-1.0));
+                    if (zz>0 && zz<path->getPoints().size()-1) offsetter = 0; //only first node has offsetter
                     po.setPos(x*offsetter  + p);
                     path->setPoint(zz,po);
                 };
@@ -221,13 +226,17 @@ void VRRoad::computeMarkings() {
         Vec3d x = point.x();
         x.normalize();
         float offsetter = offsetIn*(1.0-(float(zz)/(float(path->size())-1.0))) + offsetOut*(float(zz)/(float(path->size())-1.0));
+        float offsetterOld = offsetter;
+        if (zz>0 && zz<path->getPoints().size()-1) offsetter = 0; //only first node has offsetter
         float widthSum = -roadWidth*0.5 - offsetter;
         for (int li=0; li<Nlanes; li++) {
             auto lane = lanes[li];
             float width = toFloat( lane->get("width")->value );
             float k = widthSum;
             if (li == 0) k += mw*0.5;
-            else if (lanes[li-1]->is_a("ParkingLane")) k += mw*0.5;
+            else if (lanes[li-1]->is_a("ParkingLane")) {
+                k += mw*0.5;
+            }
             add(-x*k + p, n);
             widthSum += width;
         }

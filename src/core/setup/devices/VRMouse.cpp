@@ -40,8 +40,8 @@ void VRMouse::clearSignals() {
     addSlider(5);
     addSlider(6);
 
-    addSignal( 0, 0)->add( getDrop() );
-    addSignal( 0, 1)->add( addDrag( getBeacon() ) );
+    newSignal( 0, 0)->add( getDrop() );
+    newSignal( 0, 1)->add( addDrag( getBeacon() ) );
 
     if (on_to_edge) on_to_edge->clear();
     if (on_from_edge) on_from_edge->clear();

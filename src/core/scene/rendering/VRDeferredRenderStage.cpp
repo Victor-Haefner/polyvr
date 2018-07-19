@@ -46,10 +46,12 @@ void VRDeferredRenderStage::setActive(bool da, bool la) {
 void VRDeferredRenderStage::insert(shared_ptr<VRDeferredRenderStage> stage) {
     stage->getTop()->switchParent( getBottom() );
     if (child) child->getTop()->switchParent( stage->getBottom() );
-    for (auto l : getBottom()->getLinks()) {
+    //cout << "VRDeferredRenderStage::insert " << stage.get() << "  bottom " << getBottom()->getName() << endl;
+    /*for (auto l : getBottom()->getLinks()) { // TODO: is this needed??
+        cout << " move link " << l->getName() << " to " << stage->getBottom()->getName() << endl;
         stage->getBottom()->addLink(l);
         getBottom()->remLink(l);
-    }
+    }*/
     child = stage;
 }
 

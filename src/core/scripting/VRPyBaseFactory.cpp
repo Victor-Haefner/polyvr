@@ -17,7 +17,7 @@ template<> string typeName(const PyObjectPtr& o) {
 }
 
 template<> bool toValue(PyObject* o, int& v) {
-    if (PyInt_Check(o)) v = PyInt_AsLong(o); return 1;
+    if (PyInt_Check(o)) { v = PyInt_AsLong(o); return 1; }
     if (PyString_Check(o)) { // check for enumerator constant
         int iOSG = VRPyBase::toOSGConst(o);
         if (iOSG != -1) { v = iOSG; return 1; }

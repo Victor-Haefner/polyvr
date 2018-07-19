@@ -15,6 +15,7 @@
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
 #include "core/objects/object/VRObjectT.h"
+#include "core/objects/geometry/VRGeometry.h"
 #include "core/scripting/VRScript.h"
 #include <libxml++/libxml++.h>
 #include <libxml++/nodes/element.h>
@@ -22,6 +23,7 @@
 #include <OpenSG/OSGWindow.h>
 #include <OpenSG/OSGViewport.h>
 #include <OpenSG/OSGNameAttachment.h>
+#include <OpenSG/OSGVisitSubTree.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -188,18 +190,30 @@ xmlpp::Element* VRSetup::getElementChild(xmlpp::Element* e, string name) {
 }
 
 void VRSetup::printOSG() {
-    cout << "Setup " << endl;
+    std::function<void(Node*, string)> printOSGNode = [&](Node* node, string indent) {
+        string name = OSG::getName(node) ? OSG::getName(node) : "Unnamed";
+        cout << indent << "Node: " << name << " <- " << node->getCore()->getTypeName() << endl;
+        for (uint i=0; i < node->getNChildren(); i++) printOSGNode(node->getChild(i), indent + " ");
+        if (string(node->getCore()->getTypeName()) == "VisitSubTree") {
+            VisitSubTree* visitor = dynamic_cast<VisitSubTree*>( node->getCore() );
+            Node* link = visitor->getSubTreeRoot();
+            printOSGNode(link, indent + " ");
+        }
+    };
+
+    cout << "Setup windows" << endl;
     string name = "Unnamed";
     for (auto win : getWindows()) {
         VRWindowPtr w = win.second;
         WindowMTRecPtr osgw = w->getOSGWindow();
-        cout << "Window " << win.first << " " << osgw->getTypeName() << endl;
+        cout << " Window " << win.first << " " << osgw->getTypeName() << endl;
         int N = osgw->getMFPort()->size();
 
         for (int i=0; i<N; i++) {
             ViewportRefPtr view = osgw->getPort(i);
             name = OSG::getName(view) ? OSG::getName(view) : "Unnamed";
-            cout << "View " << name << " " << view->getTypeName() << endl;
+            cout << "  View " << name << " " << view->getTypeName() << endl;
+            printOSGNode( view->getRoot(), "   " );
         }
     }
 }
@@ -266,6 +280,18 @@ void VRSetup::load(string file) {
         toValue( displayN->get_attribute("globalOffset")->get_value(), globalOffset );
         setDisplaysOffset(globalOffset);
     }
+}
+
+void VRSetup::makeTestCube() {
+    static bool done = false;
+    if (done) return;
+    done = true;
+
+    auto cube = VRGeometry::create("testCube");
+    cube->setPrimitive("Box", "0.1 0.1 0.1 1 1 1");
+    cube->setFrom(Vec3d(0.1,0.1,-1));
+    cube->setPickable(true);
+    getRoot()->addChild(cube);
 }
 
 OSG_END_NAMESPACE;

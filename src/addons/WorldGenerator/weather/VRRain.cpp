@@ -20,24 +20,22 @@
 using namespace OSG;
 
 /*	Python usage example:
-    VR.rain = VR.Rain()
-	VR.rain.setScale(False, 3)
-	VR.scene.addChild(VR.rain)
-	VR.rain.start()
+	def initRain():
+		VR.rain = VR.Rain()
+		VR.rain.setScale(False, 3)
+		VR.scene.addChild(VR.rain)
+		VR.rain.start()
+
+    initRain()
 */
 
 VRRain::VRRain() : VRGeometry("Rain") {
     type = "Rain";
-    string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Rain/";
-    vScript = resDir + "Rain.vp";
-    fScript = resDir + "Rain.fp";
-    vScriptTex = resDir + "RainTex.vp";
-    fScriptTex = resDir + "RainTex.fp";
+    setupShaderLocations();
 
     //Shader setup
     mat = VRMaterial::create("Rain");
-    mat->readVertexShader(vScript);
-    mat->readFragmentShader(fScript);
+    reloadShader();
     setMaterial(mat);
     setPrimitive("Plane", "2 2 1 1");
     mat->setLit(false);
@@ -58,7 +56,7 @@ VRRain::VRRain() : VRGeometry("Rain") {
     texRenderer = VRTextureRenderer::create("rainTexRenderer");
     texRenderer-> setPersistency(0);
     auto scene = VRScene::getCurrent();
-    scene->getRoot()->addChild(texRenderer);
+    scene->getRoot()->addChild(texRenderer, true, 0);
     auto lightF = scene->getRoot()->find("light");
 
     camTex = VRCamera::create("camRainTexture");
@@ -80,6 +78,7 @@ VRRain::VRRain() : VRGeometry("Rain") {
     mat->setShaderParameter("tex", 1);
 
     cube = VRGeometry::create("cubeRainTexture");
+    cube->setPersistency(0);
 	cube->setMaterial(renderMat);
 	lightF->addChild(cube);
 
@@ -98,7 +97,12 @@ VRRain::VRRain() : VRGeometry("Rain") {
 }
 VRRain::~VRRain() {}
 
-VRRainPtr VRRain::create() { return VRRainPtr( new VRRain() ); }
+VRRainPtr VRRain::create() {
+    auto rain = VRRainPtr( new VRRain() );
+    rain->hide("SHADOW");
+    return rain;
+}
+
 VRRainPtr VRRain::ptr() { return static_pointer_cast<VRRain>( shared_from_this() ); }
 
 float VRRain::get() { return scale; }
@@ -191,9 +195,19 @@ void VRRain::overrideParameters( float durationTransition, float rainDensity, fl
 
 void VRRain::updateScale( float scaleNow ){
     scaleRN = scaleNow;
-    float rainDensity = 0.2 * 10/scaleRN;
+    float rainDensity = scaleRN == 0 ? 0 : 0.2 * 10/scaleRN;
     mat->setShaderParameter<float>("rainDensity", rainDensity);
-    cout << " " << rainDensity << endl;
+    cout << " rain density: " << rainDensity << endl;
+}
+
+void VRRain::setupShaderLocations() {
+    string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Rain/";
+    vScript = resDir + "Rain.vp";
+    fScript = resDir + "Rain.fp";
+    dfScript = resDir + "Rain.dfp";
+    vScriptTex = resDir + "RainTex.vp";
+    fScriptTex = resDir + "RainTex.fp";
+    dfScriptTex = resDir + "RainTex.dfp";
 }
 
 void VRRain::update() {
@@ -203,8 +217,14 @@ void VRRain::update() {
 
     auto camDef = VRScene::getCurrent()->getActiveCamera();
     if (debugRain) cout << "defcam: " << camDef->getName() << endl;
-    if (camDef == camTex) camDef = oldCamTex;
-    else oldCamTex = camDef;
+    if (camDef == camTex) {
+        camDef = oldCamTex;
+        depthTexer = true;
+    }
+    else {
+        oldCamTex = camDef;
+        depthTexer = false;
+    }
     //if (camDef->getName() == "car") oldCamTex = camDef;
     if (debugRain) cout << "oldcam: " << oldCamTex->getName() << endl;
     auto defCamPos = camDef->getWorldPosition();//camDef->getFrom();
@@ -216,12 +236,19 @@ void VRRain::update() {
     if (debugRain) cout << "camtexfrom: " << camTex->getFrom() << endl;
 
     mat->setShaderParameter<float>("rainOffset", offset);
-    mat->readVertexShader(vScript);
-    mat->readFragmentShader(fScript);
+    mat->setShaderParameter<bool>("depthTexer", depthTexer);
+    reloadShader();
 }
 
 void VRRain::doTestFunction() {
     auto tmp = camTex->getFrom();
     cout << tmp << endl;
+}
+
+void VRRain::reloadShader() {
+    mat->readVertexShader(vScript);
+    mat->readFragmentShader(fScript);
+    mat->readFragmentShader(dfScript, true);
+    mat->updateDeferredShader();
 }
 

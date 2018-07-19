@@ -19,6 +19,8 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+#define LOCK boost::recursive_mutex::scoped_lock
+
 ART_device::ART_device() { setName("ARTDevice"); }
 ART_device::ART_device(int ID, int type) : ID(ID), type(type) { setName("ARTDevice"); init(); }
 
@@ -28,11 +30,11 @@ int ART_device::key() { return key(ID, type); }
 int ART_device::key(int ID, int type) { return ID*1000 + type; }
 
 void ART_device::init() {
-    if (type != 1) ent = VRTransform::create("ART_tracker");
+    if (type != 1) ent = VRTransform::create("ART_tracker", false);
 
     if (type == 2) { // finger tracking
         for (int i=0;i<5;i++) {
-            auto f = VRTransform::create("finger"+toString(i));
+            auto f = VRTransform::create("finger"+toString(i), false);
             ent->addChild(f);
             fingerEnts.push_back(f);
         }
@@ -116,7 +118,7 @@ void ART::getMatrix(dev t, ART_devicePtr d) {
 
 void ART::scan(int type, int N) {
     if (type < 0) {
-        boost::mutex::scoped_lock lock(mutex);
+        LOCK lock(mutex);
         scan(0, dtrack->get_num_body());
         scan(1, dtrack->get_num_flystick());
         scan(2, dtrack->get_num_hand());
@@ -151,7 +153,7 @@ void ART::scan(int type, int N) {
     }
 }
 
-void ART::updateL() { updateT( weak_ptr<VRThread>() ); }
+void ART::updateL() { if (active) updateT( weak_ptr<VRThread>() ); }
 
 //update thread
 void ART::updateT( weak_ptr<VRThread>  t) {
@@ -208,7 +210,8 @@ void ART::checkNewDevices(int type, int N) {
 
 void ART::applyEvents() {
     //if (VRGlobals::CURRENT_FRAME < 10) return;
-    boost::mutex::scoped_lock lock(mutex);
+    LOCK lock(mutex);
+    //updateL();
     checkNewDevices();
     for (auto d : devices) d.second->update();
 }

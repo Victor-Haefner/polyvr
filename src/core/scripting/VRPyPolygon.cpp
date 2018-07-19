@@ -4,6 +4,9 @@
 
 using namespace OSG;
 
+template<> PyObject* VRPyTypeCaster::cast(const VRPolygon& p) { return VRPyPolygon::fromObject(p); }
+template<> bool toValue(PyObject* o, VRPolygon& v) { if (!VRPyPolygon::check(o)) return 0; v = *((VRPyPolygon*)o)->objPtr; return 1; }
+
 newPyType(VRPolygon, Polygon, New_ptr);
 
 PyMethodDef VRPyPolygon::methods[] = {

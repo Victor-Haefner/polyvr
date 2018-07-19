@@ -4,10 +4,10 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "addons/Engineering/VREngineeringFwd.h"
 
-class VRNumberingEngine;
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+
+class VRNumberingEngine;
 
 struct PeriodicTableEntry {
     int valence_electrons = 0;

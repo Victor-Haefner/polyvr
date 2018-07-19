@@ -34,7 +34,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"translate", PyWrap(Transform, translate, "Translate the object along a vector", void, Vec3d ) },
     {"move", PyWrap(Transform, move, "Move the object in dir direction", void, float ) },
     {"rotate", PyWrap(Transform, rotate, "Rotate the object around an axis and angle", void, float, Vec3d ) },
-    {"rotateAround", PyWrap(Transform, rotateAround, "Rotate the object around its at axis", void, float ) },
+    {"rotateAround", PyWrapOpt(Transform, rotateAround, "Rotate the object around its at axis", "0 1 0", void, float, Vec3d ) },
     {"rotateYonZ", PyWrap(Transform, rotateYonZ, "Rotate the Y axis onto the Z axis", void ) },
     {"getFrom", PyWrap(Transform, getFrom, "Return the object's from vector", Vec3d ) },
     {"getAt", PyWrap(Transform, getAt, "Return the object's at vector", Vec3d ) },

@@ -58,8 +58,11 @@ void VRVideo::open(string f) {
 
     NStreams = getNStreams();
 
+#ifdef OLD_LIBAV
     vFrame = avcodec_alloc_frame(); // Allocate video frame
-    //vFrame = av_frame_alloc(); // Allocate video frame
+#else
+    vFrame = av_frame_alloc(); // Allocate video frame
+#endif
 
     frames.clear();
     for (int i=0; i<NStreams; i++) {

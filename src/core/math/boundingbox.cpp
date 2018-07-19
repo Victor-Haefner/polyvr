@@ -62,6 +62,7 @@ Vec3d Boundingbox::max() const { return bb2; }
 Vec3d Boundingbox::center() const { return cleared ? Vec3d() : (bb2+bb1)*0.5; }
 Vec3d Boundingbox::size() const { return cleared ? Vec3d() : bb2-bb1; }
 float Boundingbox::radius() const { return cleared ? 0 : (size()*0.5).length(); }
+float Boundingbox::volume() const { auto s = size(); return s[0]*s[1]*s[2]; };
 
 bool Boundingbox::isInside(Vec3d p) const {
     return (p[0] <= bb2[0] && p[0] >= bb1[0]
@@ -84,6 +85,15 @@ void Boundingbox::scale(float s) {
     Vec3d sis = (si*s-si)*0.5;
     bb1 -= sis;
     bb2 += sis;
+}
+
+void Boundingbox::inflate(float D) {
+    if (cleared) {
+        bb1 = bb2 = Vec3d();
+        cleared = false;
+    }
+    bb1 -= Vec3d(D, D, D);
+    bb2 += Vec3d(D, D, D);
 }
 
 bool Boundingbox::intersectedBy(Line l) {

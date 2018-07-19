@@ -5,12 +5,14 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/material/VRTextureGenerator.h"
+#include "core/objects/material/VRTextureMosaic.h"
 #include "core/objects/VRLod.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/math/boundingbox.h"
 #include "core/math/VRConvexHull.h"
 #include "core/utils/VRStorage_template.h"
+#include "core/utils/system/VRSystem.h"
 
 #include "core/tools/VRTextureRenderer.h"
 #include "core/math/pose.h"
@@ -18,6 +20,8 @@
 
 #include <OpenSG/OSGQuaternion.h>
 #include <random>
+
+#include <boost/functional/hash.hpp>
 
 #define GLSL(shader) #shader
 
@@ -91,21 +95,21 @@ struct OSG::segment {
 
 VRTree::VRTree(string name) : VRTransform(name) {
     int c = random(0,10);
-    if (c == 0) truncColor = Color3f(0.3, 0.2, 0);
-    if (c == 1) truncColor = Color3f(0.6, 0.5, 0.4);
-    if (c == 2) truncColor = Color3f(0.2, 0.1, 0.05);
-    if (c == 3) truncColor = Color3f(0.2, 0.1, 0.05);
-    if (c == 4) truncColor = Color3f(0.3, 0.2, 0);
-    if (c == 5) truncColor = Color3f(0.6, 0.5, 0.4);
-    if (c == 6) truncColor = Color3f(0.2, 0.1, 0.1);
-    if (c == 7) truncColor = Color3f(0.3, 0.2, 0);
-    if (c == 8) truncColor = Color3f(0.3, 0.2, 0);
-    if (c == 9) truncColor = Color3f(0.2, 0.1, 0.05);
-    if (c ==10) truncColor = Color3f(0.2, 0.1, 0.05);
+    if (c == 0) truncColor = Color4f(0.3, 0.2, 0, 1);
+    if (c == 1) truncColor = Color4f(0.6, 0.5, 0.4, 1);
+    if (c == 2) truncColor = Color4f(0.2, 0.1, 0.05, 1);
+    if (c == 3) truncColor = Color4f(0.2, 0.1, 0.05, 1);
+    if (c == 4) truncColor = Color4f(0.3, 0.2, 0, 1);
+    if (c == 5) truncColor = Color4f(0.6, 0.5, 0.4, 1);
+    if (c == 6) truncColor = Color4f(0.2, 0.1, 0.1, 1);
+    if (c == 7) truncColor = Color4f(0.3, 0.2, 0, 1);
+    if (c == 8) truncColor = Color4f(0.3, 0.2, 0, 1);
+    if (c == 9) truncColor = Color4f(0.2, 0.1, 0.05, 1);
+    if (c ==10) truncColor = Color4f(0.2, 0.1, 0.05, 1);
 
     // desaturate and make brighter
     float a = 0.3;
-    truncColor = truncColor*(1-a) + Color3f(a,a,a);
+    truncColor = truncColor*(1-a) + Color4f(a,a,a,1);
 
     store("seed", &seed);
     storeObjVec("branching", parameters, true);
@@ -237,8 +241,8 @@ void VRTree::initMaterials() {
 
         VRTextureGenerator tg;
         tg.setSize(Vec3i(50,50,50));
-        tg.add("Perlin", 1, truncColor, Color3f(1,0.9,0.7));
-        tg.add("Perlin", 0.25, Color3f(1,0.9,0.7), truncColor);
+        tg.add("Perlin", 1, truncColor, Color4f(1,0.9,0.7, 1));
+        tg.add("Perlin", 0.25, Color4f(1,0.9,0.7, 1), truncColor);
         treeMat->setTexture(tg.compose(0));
     }
 
@@ -341,8 +345,7 @@ void VRTree::growLeafs(shared_ptr<leaf_params> lp) {
         g->setMaterial(leafMat);
     }
 
-    random_device rd;
-    mt19937 e2(rd());
+    mt19937 e2(seed);
     normal_distribution<> ndist(0,1);
 
     auto randVecInSphere = [&](float r) {
@@ -398,7 +401,7 @@ void VRTree::setLeafMaterial(VRMaterialPtr mat) {
     for (auto g : leafGeos) g->setMaterial(mat);
 }
 
-string treeSprLODvp =
+string VRTree::treeSprLODvp =
 "#version 120\n"
 GLSL(
 attribute vec4 osg_Vertex;
@@ -419,11 +422,13 @@ void main(void) {
 	float D = dot(vec3(0,0,1), vertNorm);
 	Discard = 0;
 	if (abs(D) < 0.65) Discard = 1;
-	gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
+	vec4 p = gl_ModelViewProjectionMatrix*osg_Vertex;
+	if (p[2] < 40) Discard = 1;
+    gl_Position = p;
 }
 );
 
-string treeSprLODdfp =
+string VRTree::treeSprLODdfp =
 "#version 120\n"
 GLSL(
 uniform int isLit;
@@ -454,11 +459,54 @@ void VRTree::appendLOD(VRGeoData& data, int lvl, Vec3d offset) {
     lod->setFrom(p);
 }
 
-VRGeometryPtr VRTree::createLOD(int lvl) {
-    cout << "VRTree::createLOD " << lvl << endl;
-    VRGeoData data;
+string VRTree::getHash(vector<float> v) {
+    vector<int> data;
+    data.push_back(seed);
 
-    auto t = ptr();
+    int k = 1e4;
+
+    for (auto param : parameters) {
+        data.push_back(param->nodes*k);
+        data.push_back(param->child_number*k);
+        data.push_back(param->n_angle*k);
+        data.push_back(param->p_angle*k);
+        data.push_back(param->length*k);
+        data.push_back(param->radius*k);
+        data.push_back(param->n_angle_var*k);
+        data.push_back(param->p_angle_var*k);
+        data.push_back(param->length_var*k);
+        data.push_back(param->radius_var*k);
+    }
+
+    for (auto param : foliage) {
+        data.push_back(param->level*k);
+        data.push_back(param->amount*k);
+        data.push_back(param->size*k);
+    }
+
+    for (auto f : v) data.push_back(f*k);
+
+    size_t hash = 0;
+    for (auto d : data) boost::hash_combine(hash, d);
+    return toString( hash );
+}
+
+vector<VRMaterialPtr> VRTree::createLODtextures(int& Hmax, VRGeoData& data) {
+    auto storeSprite = [&](string path, VRMaterialPtr m) {
+        auto t1 = m->getTexture(0);
+        auto t2 = m->getTexture(1);
+        t1->write(path+"_1.png");
+        t2->write(path+"_2.png");
+    };
+
+    auto loadSprite = [&](string path, VRMaterialPtr m) -> bool {
+        if (!exists(path+"_1.png") || !exists(path+"_2.png")) return false;
+        m->setTexture(path+"_1.png", 1, 0);
+        m->setTexture(path+"_2.png", 1, 1);
+        return true;
+    };
+
+    VRTreePtr t = ptr();
     auto old_pose = t->getPose();
     t->setIdentity();
     auto bb = t->getBoundingbox();
@@ -467,14 +515,19 @@ VRGeometryPtr VRTree::createLOD(int lvl) {
     float fov = 0.33;
     Vec3d D = S*0.5/tan(fov*0.5);
 
-    vector<pair<VRMaterialPtr,int>> sides;
-    int Hmax = 1;
+    vector<VRMaterialPtr> sides;
+    Hmax = 1;
     auto addSprite = [&](PosePtr p, float W, float H, float Sh) {
-        auto tr = VRTextureRenderer::create("treeLODtexR");
-        auto tm = tr->createTextureLod(t, p, 512, W/H, fov, Color3f(0,0.5,0));
+        string path = ".treeLods/treeLod"+getHash({W,H,Sh});
+        VRMaterialPtr tm = VRMaterial::create("lod");
+        if (!loadSprite(path, tm)) {
+            auto tr = VRTextureRenderer::create("treeLODtexR");
+            tm = tr->createTextureLod(t, p, 512, W/H, fov, Color3f(0,0.5,0));
+            storeSprite(path, tm);
+        }
         int h = int(512/W*H);
         Hmax = max(Hmax, h);
-        sides.push_back(make_pair(tm,h));
+        sides.push_back(tm);
         data.pushQuad(Vec3d(0,Sh,0), p->dir(), p->up(), Vec2d(W, H), true);
     };
 
@@ -483,29 +536,33 @@ VRGeometryPtr VRTree::createLOD(int lvl) {
     addSprite( Pose::create(Vec3d(0,S[1]+max(D[0],D[2]),0), Vec3d(0,-1,0), Vec3d(0,0,1)), S[0], S[2], S[1]);
 
     t->setPose(old_pose);
+    return sides;
+}
+
+vector<VRMaterialPtr> VRTree::getLodMaterials() { return lodMaterials; }
+
+VRGeometryPtr VRTree::createLOD(int lvl) {
+    VRGeoData data;
+    int Hmax = 1;
+    auto sides = createLODtextures(Hmax, data);
+    lodMaterials = sides;
     int N = sides.size();
     if (N == 0) return 0;
 
-    auto m = sides[0].first;
-    if (!m) return 0;
-    if (N > 1) { // merge textures
-        auto tex0 = m->getTexture(0);
-        auto tex1 = m->getTexture(1);
-        tex0->resize(Vec3i(512*N, Hmax, 1), Vec3i());
-        tex1->resize(Vec3i(512*N, Hmax, 1), Vec3i());
-        for (int i=1; i<N; i++) {
-            Vec3i o = Vec3i(512*i, 0, 0);
-            tex0->paste(sides[i].first->getTexture(0), o);
-            tex1->paste(sides[i].first->getTexture(1), o);
-        }
-        m->setTexture(tex0, false, 0);
-        m->setTexture(tex1, false, 1);
+    auto mosaic1 = VRTextureMosaic::create();
+    auto mosaic2 = VRTextureMosaic::create();
+    for (int i=0; i<N; i++) {
+        mosaic1->add( sides[i]->getTexture(0), Vec2i(512*i,0), Vec2i(i,0) );
+        mosaic2->add( sides[i]->getTexture(1), Vec2i(512*i,0), Vec2i(i,0) );
     }
+    auto m = VRMaterial::create("treeLOD");
+    m->setTexture(mosaic1, false, 0);
+    m->setTexture(mosaic2, false, 1);
 
     for (int i=0; i<N; i++) { // create UV coordinates
         float i1 = i*1.0/N;
         float i2 = (i+1)*1.0/N;
-        float h = sides[i].second / float(Hmax);
+        float h = sides[i]->getTexture(0)->getSize()[1] / float(Hmax);
         data.setTexCoord(4*i  , Vec2d(i2,0));
         data.setTexCoord(4*i+1, Vec2d(i1,0));
         data.setTexCoord(4*i+2, Vec2d(i1,h));

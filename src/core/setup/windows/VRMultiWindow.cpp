@@ -87,9 +87,16 @@ void VRMultiWindow::initialize() {
     cout << " done " << getStateString() << endl;
 }
 
+/**
+
+clustering issues may arise when not calling _win->render() after commiting changelist changes!
+keep this in mind when trying to optimize regarding to system state like the flags 'content' and 'active'
+
+*/
+
 void VRMultiWindow::render(bool fromThread) {
     if (state == INITIALIZING) initialize();
-    if (state == CONNECTED && active && content) {
+    if (state == CONNECTED && active) {
         try { _win->render(ract); }
         catch(exception& e) { reset(); }
     }

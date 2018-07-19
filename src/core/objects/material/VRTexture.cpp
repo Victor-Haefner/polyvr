@@ -1,6 +1,7 @@
 #include "VRTexture.h"
 #include "core/math/boundingbox.h"
 #include "core/utils/toString.h"
+#include "core/utils/system/VRSystem.h"
 
 #include <OpenSG/OSGImage.h>
 
@@ -27,6 +28,8 @@ void VRTexture::read(string path) {
 }
 
 void VRTexture::write(string path) {
+    string folder = getFolderName(path);
+    if (!exists(folder)) makedir(folder);
     if (!img->write(path.c_str())) cout << " VRTexture::write failed!" << endl;
 }
 

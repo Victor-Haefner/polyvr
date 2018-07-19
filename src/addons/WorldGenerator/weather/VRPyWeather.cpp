@@ -21,12 +21,13 @@ PyMethodDef VRPyRain::methods[] = {
 };
 
 PyMethodDef VRPyRainCarWindshield::methods[] = {
-    {"doTestFunction", PyWrap(RainCarWindshield, doTestFunction, "do test function", void ,void) },
+    //{"doTestFunction", PyWrap(RainCarWindshield, doTestFunction, "do test function", void ,void) },
     {"setWindshield", PyWrap(RainCarWindshield, setWindshield, "setWindshield", void, VRGeometryPtr) },
     {"setScale", PyWrap(RainCarWindshield, setScale, "sets scale", void, bool, float) },
     {"setWipers", PyWrap(RainCarWindshield, setWipers, "setWipers", void, bool, float) },
     {"start", PyWrap(RainCarWindshield, start, "starts rain on windshield", void, void) },
     {"stop", PyWrap(RainCarWindshield, stop, "stops rain on windshield", void, void) },
+    {"cutPower", PyWrap(RainCarWindshield, cutPower, "cuts power, wipers will stop where they are", void, void) },
     {NULL}  /* Sentinel */
 };
 

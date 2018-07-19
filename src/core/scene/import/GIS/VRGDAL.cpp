@@ -3,6 +3,7 @@
 #include <iostream>
 #include <gdal/gdal.h>
 #include <gdal/gdal_priv.h>
+#include <gdal/gdal_version.h>
 #include <gdal/ogrsf_frmts.h>
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGImage.h>
@@ -20,7 +21,11 @@ void loadPDF(string path, VRTransformPtr res) {
 
 void loadSHP(string path, VRTransformPtr res) {
     OGRRegisterAll();
-    OGRDataSource* poDS = OGRSFDriverRegistrar::Open( path.c_str(), FALSE );
+#if GDAL_VERSION_MAJOR < 2
+ 	OGRDataSource *poDS = OGRSFDriverRegistrar::Open(path.c_str(), false);
+#else
+	GDALDataset *poDS = (GDALDataset*) GDALOpenEx(path.c_str(), GDAL_OF_READONLY, NULL, NULL, NULL);
+#endif
     if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
 
     VRGeoData data;
@@ -108,7 +113,11 @@ void loadSHP(string path, VRTransformPtr res) {
         }
     }
 
-    OGRDataSource::DestroyDataSource( poDS );
+#if GDAL_VERSION_MAJOR < 2
+ 	OGRDataSource::DestroyDataSource(poDS);
+#else
+	GDALClose(poDS);
+#endif
 
     res->addChild( data.asGeometry(path) );
 }

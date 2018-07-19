@@ -19,10 +19,12 @@ class VRGuiFile {
         static sig sigSelect;
         static bool cache_override;
         static float scale;
+        static string preset;
         static void init();
 
         static void on_toggle_cache_override();
         static void on_edit_import_scale();
+        static void on_change_preset();
 
     public:
         static void open(string button, int action, string title);
@@ -48,6 +50,7 @@ class VRGuiFile {
         static vector<string> listDir(string dir);
 
         static float getScale() { return scale; }
+        static string getPreset() { return preset; }
 };
 
 #endif // VRGUIFILE_H_INCLUDED
