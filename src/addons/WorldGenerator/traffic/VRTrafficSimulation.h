@@ -84,6 +84,7 @@ class VRTrafficSimulation : public VRObject {
         int numUnits = 0;
         bool isSimRunning = true;
         float speedMultiplier = 1.0;
+        string lastseedRoadsString = "";
 
         VRMaterialPtr carLightWhiteOn;
         VRMaterialPtr carLightWhiteOff;

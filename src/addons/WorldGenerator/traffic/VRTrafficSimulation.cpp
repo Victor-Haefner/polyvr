@@ -173,8 +173,8 @@ void VRTrafficSimulation::updateSimulation() {
                     bool checkA(graph->getPrevEdges(e).size() == 0);
                     bool checkB(graph->getNextEdges(e).size() == 0);
                     //if ( ( checkA && !checkB ) ) { // roads that start out of "nowhere"
-                    if ( ( checkA && !checkB ) || ( !checkA && checkB ) ) { // roads that start out of "nowhere"
-                    //if (graph->getPrevEdges(e).size() == 0) { // roads that start out of "nowhere"
+                    //if ( ( checkA && !checkB ) || ( !checkA && checkB ) ) { // roads that start out of "nowhere"
+                    if (graph->getPrevEdges(e).size() == 0) { // roads that start out of "nowhere"
                         newSeedRoads.push_back( e.ID );
                         continue;
                     }
@@ -208,9 +208,16 @@ void VRTrafficSimulation::updateSimulation() {
             road.macro = false;
         }
 
+        string seedRoadsString = "seedRoads:";
         for (auto roadID : seedRoads) {
             auto& road = roads[roadID];
             addVehicles(roadID, road.density, 1); // TODO: pass a vehicle type!!
+            seedRoadsString += " " + toString(roadID);
+        }
+
+        if (seedRoadsString!=lastseedRoadsString) {
+            cout << seedRoadsString << endl;
+            lastseedRoadsString = seedRoadsString;
         }
     };
 
@@ -222,14 +229,25 @@ void VRTrafficSimulation::updateSimulation() {
             gp.pos -= 1;
             int road1ID = gp.edge;
             auto& edge = g->getEdge(gp.edge);
-            auto edges = g->getNextEdges(edge);
-            if (edges.size() > 0) {
-                gp.edge = randomChoice(edges).ID;
-                cout << gp.edge << " " << vehicle.getID() << endl;
+            auto nextEdges = g->getNextEdges(edge);
+            if (nextEdges.size() > 1) {
+                gp.edge = randomChoice(nextEdges).ID;
+                cout << vehicle.getID() << " " << road1ID << endl;
                 auto& road = roads[gp.edge];
                 if (road.macro) toChangeRoad[road1ID].push_back( make_pair(vehicle, -1) );
                 else toChangeRoad[road1ID].push_back( make_pair(vehicle, gp.edge) );
-            } else toChangeRoad[road1ID].push_back( make_pair(vehicle, -1) );
+            }
+            if (nextEdges.size() == 1) {
+                gp.edge = nextEdges[0].ID;
+                auto& road = roads[gp.edge];
+                toChangeRoad[road1ID].push_back( make_pair(vehicle, gp.edge) );
+                cout << "  transit of vehicle: " << vehicle.getID() << " from: " << road1ID << " to: " << gp.edge << endl;
+            }
+            if (nextEdges.size() == 0) {
+                //TODO: random choice of new seed road
+                toChangeRoad[road1ID].push_back( make_pair(vehicle, -1) );
+                cout << "   new spawn of vehicle: " << vehicle.getID() << " from: " << road1ID << endl;
+            }
         }
 
         auto p = roadNetwork->getPosition(vehicle.pos);
@@ -291,8 +309,8 @@ void VRTrafficSimulation::updateSimulation() {
                     if (state > 0) break;
                 }
 
-                bool debugBool = true; ///Debugging
-                if (debugBool) state = 0; ///DANGER: debug mode, state = 0, discard collision check
+                //bool debugBool = true; ///Debugging
+                //if (debugBool) state = 0; ///DANGER: debug mode, state = 0, discard collision check
 
                 for (auto& v : users) {
                     auto p = v.t->getPose();
@@ -301,11 +319,11 @@ void VRTrafficSimulation::updateSimulation() {
                     if (state > 0) break;
                 }
 
-                /*if (auto g = dynamic_pointer_cast<VRGeometry>(vehicle.mesh)) { // only for debugging!!
+                if (auto g = dynamic_pointer_cast<VRGeometry>(vehicle.mesh)) { // only for debugging!!
                     if (state == 0) g->setColor("white");
                     if (state == 1) g->setColor("blue");
                     if (state == 2) g->setColor("red");
-                }*/
+                }
 
                 if (state == 0) propagateVehicle(vehicle, d);
                 else if (VRGlobals::CURRENT_FRAME - vehicle.lastMoveTS > 200 ) {
@@ -418,6 +436,7 @@ int VRTrafficSimulation::addVehicleModel(VRObjectPtr mesh) {
     return models.size()-1;
 }
 
+///ANALYTICS
 void VRTrafficSimulation::toggleSim() {
     isSimRunning = !isSimRunning;
 }
@@ -427,7 +446,13 @@ void VRTrafficSimulation::setSpeedmultiplier(float speedMultiplier) {
 }
 
 string VRTrafficSimulation::getVehicleData(int vehicleID){
+    string returnInfo = "";
+    if (vehiclePool.size() == 0) return returnInfo;
 
+    auto v = vehiclePool.front();
+
+    returnInfo += " " + toString(v.getID());
+    return returnInfo + "/n" + lastseedRoadsString;
 }
 
 void VRTrafficSimulation::updateDensityVisual(bool remesh) {
