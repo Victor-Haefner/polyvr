@@ -174,7 +174,7 @@ void VRTrafficSimulation::updateSimulation() {
                     bool checkB(graph->getNextEdges(e).size() == 0);
                     //if ( ( checkA && !checkB ) ) { // roads that start out of "nowhere"
                     //if ( ( checkA && !checkB ) || ( !checkA && checkB ) ) { // roads that start out of "nowhere"
-                    if (graph->getPrevEdges(e).size() == 0) { // roads that start out of "nowhere"
+                    if (debugOverRideSeedRoad<0 && graph->getPrevEdges(e).size() == 0) { // roads that start out of "nowhere"
                         newSeedRoads.push_back( e.ID );
                         continue;
                     }
@@ -185,12 +185,14 @@ void VRTrafficSimulation::updateSimulation() {
                     float D2 = (ep2-p).length();
 
                     if (D1 > userRadius && D2 > userRadius) continue; // outside
-                    if (D1 > userRadius*0.5 || D2 > userRadius*0.5) newSeedRoads.push_back( e.ID ); // on edge
+                    //if (D1 > userRadius*0.5 || D2 > userRadius*0.5) newSeedRoads.push_back( e.ID ); // on edge
                     newNearRoads.push_back( e.ID ); // inside or on edge
                 }
             }
             //cout << debug << endl;
         }
+
+        if (debugOverRideSeedRoad!=-1) newSeedRoads.push_back( debugOverRideSeedRoad );
 
         for (auto roadID : makeDiff(nearRoads, newNearRoads)) {
             auto& road = roads[roadID];
@@ -246,7 +248,7 @@ void VRTrafficSimulation::updateSimulation() {
             if (nextEdges.size() == 0) {
                 //TODO: random choice of new seed road
                 toChangeRoad[road1ID].push_back( make_pair(vehicle, -1) );
-                cout << "   new spawn of vehicle: " << vehicle.getID() << " from: " << road1ID << endl;
+                cout << "   new spawn of vehicle: " << vehicle.getID() << endl; //" from: " << road1ID <<
             }
         }
 
@@ -309,8 +311,8 @@ void VRTrafficSimulation::updateSimulation() {
                     if (state > 0) break;
                 }
 
-                //bool debugBool = true; ///Debugging
-                //if (debugBool) state = 0; ///DANGER: debug mode, state = 0, discard collision check
+                bool debugBool = true; ///Debugging
+                if (debugBool) state = 0; ///DANGER: debug mode, state = 0, discard collision check
 
                 for (auto& v : users) {
                     auto p = v.t->getPose();
@@ -447,12 +449,28 @@ void VRTrafficSimulation::setSpeedmultiplier(float speedMultiplier) {
 
 string VRTrafficSimulation::getVehicleData(int vehicleID){
     string returnInfo = "";
-    if (vehiclePool.size() == 0) return returnInfo;
+    string nl = "\n ";
+    string roadInfo = "ALL ROADS: ";
 
-    auto v = vehiclePool.front();
+    int nn = 0;
+    auto graph = roadNetwork->getGraph();
+    for (auto eV : graph->getEdges()) {
+        for (auto e : eV) {
+            roadInfo += toString(e.ID) + " ";
+            nn++;
+        }
+    }
 
-    returnInfo += " " + toString(v.getID());
-    return returnInfo + "/n" + lastseedRoadsString;
+    //auto v = vehiclePool.front();
+    //returnInfo += " " + toString(v.getID());
+
+    returnInfo += lastseedRoadsString;
+    returnInfo += nl + toString(nn) + "--" + roadInfo;
+    return returnInfo;
+}
+
+void VRTrafficSimulation::setSeedRoad(int debugOverRideSeedRoad){
+    this->debugOverRideSeedRoad = debugOverRideSeedRoad;
 }
 
 void VRTrafficSimulation::updateDensityVisual(bool remesh) {

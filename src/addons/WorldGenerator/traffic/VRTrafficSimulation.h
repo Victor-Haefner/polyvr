@@ -85,6 +85,7 @@ class VRTrafficSimulation : public VRObject {
         bool isSimRunning = true;
         float speedMultiplier = 1.0;
         string lastseedRoadsString = "";
+        int debugOverRideSeedRoad = -1;
 
         VRMaterialPtr carLightWhiteOn;
         VRMaterialPtr carLightWhiteOff;
@@ -113,6 +114,7 @@ class VRTrafficSimulation : public VRObject {
         void toggleSim();
         void setSpeedmultiplier(float speedMultiplier);
         string getVehicleData(int vehicleID);
+        void setSeedRoad(int debugOverRideSeedRoad);
 
         void addUser(VRTransformPtr t);
 
