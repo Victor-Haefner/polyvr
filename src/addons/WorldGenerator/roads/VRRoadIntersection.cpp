@@ -191,7 +191,10 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto norm1 = nodes1[nodes1.size()-2]->getVec3("direction");
                 auto node2 = nodeEnt2->getEntity("node");
                 auto norm2 = nodeEnt2->getVec3("direction");
+                int tempID=nodeEnt1->getValue<int>("graphID", -1);
                 nodeEnt1->set("node", node2->getName());
+                roads->getGraph()->remNode(tempID);
+                cout << tempID << " node removed" << endl;
                 //if (D > 0) displacementsB[roadIn] = 0; //WIP
                 //if (D > 0) displacementsA[roadOut] = X;
                 if (D > 0) displacementsB[roadIn] = X; //OLD
@@ -203,7 +206,10 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto norm1 = nodeEnt1->getVec3("direction");
                 auto node2 = nodes2[1]->getEntity("node");
                 auto norm2 = nodes2[1]->getVec3("direction");
+                int tempID=nodeEnt2->getValue<int>("graphID", -1);
                 nodeEnt2->set("node", node1->getName());
+                roads->getGraph()->remNode(tempID); ///HINT: USE THIS LINE TO COPY TO FORK, AND Nin>= Nout ABOVE
+                cout << tempID << " node removed" << endl;
                 //if (D > 0) displacementsB[roadIn] = -X;
                 //if (D > 0) displacementsA[roadOut] = 0;
                 //if (D > 0) displacementsB[roadIn] = 0; //OLD
