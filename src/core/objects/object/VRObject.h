@@ -29,7 +29,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         int ID = 0;
         int childIndex = 0; // index of this object in its parent child vector
         int pickable = 0;
-        bool visible = true;
+        unsigned int visibleMask = -1;
         unsigned int graphChanged = 0; //is frame number
         map<string, VRAttachment*> attachments;
 
@@ -138,10 +138,11 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
 
         VRObjectPtr duplicate(bool anchor = false, bool subgraph = true);
 
-        void setVisibleUndo(bool b);
+        void setVisibleUndo(unsigned int b);
         void hide(string mode = "");
         void show(string mode = "");
         bool isVisible(string mode = "");
+        void setVisibleMask(unsigned int mask);
         void setVisible(bool b, string mode = "");
         void toggleVisible(string mode = "");
 

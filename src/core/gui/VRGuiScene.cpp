@@ -71,6 +71,7 @@ void VRGuiScene::setObject(VRObjectPtr o) {
 
     // set object properties
     setCheckButton("checkbutton6", o->isVisible());
+    setCheckButton("checkbutton43", o->isVisible("SHADOW"));
     setCheckButton("checkbutton15", o->isPickable());
 
     VRObjectPtr parent = o->getParent();
@@ -489,10 +490,15 @@ void VRGuiScene::on_edit_object_name(string path, string new_text) {
 
 // VRObjects
 void VRGuiScene::on_toggle_visible() {
-    if(trigger_cbs) getSelected()->toggleVisible();
+    if (trigger_cbs) getSelected()->toggleVisible();
     setSGRow(selected_itr, getSelected());
 }
-void VRGuiScene::on_toggle_pickable() { if(trigger_cbs) getSelected()->setPickable(!getSelected()->isPickable()); }
+
+void VRGuiScene::on_toggle_throw_shadow() {
+    if (trigger_cbs) getSelected()->toggleVisible("SHADOW");
+}
+
+void VRGuiScene::on_toggle_pickable() { if (trigger_cbs) getSelected()->setPickable(!getSelected()->isPickable()); }
 
 // VRGroup
 void VRGuiScene::on_groupsync_clicked() {
@@ -1335,6 +1341,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     setCheckButtonCallback("checkbutton13", sigc::mem_fun(*this, &VRGuiScene::on_toggle_phys) );
     setCheckButtonCallback("checkbutton33", sigc::mem_fun(*this, &VRGuiScene::on_toggle_dynamic) );
     setCheckButtonCallback("checkbutton35", sigc::mem_fun(*this, &VRGuiScene::on_lod_decimate_changed) );
+    setCheckButtonCallback("checkbutton43", sigc::mem_fun(*this, &VRGuiScene::on_toggle_throw_shadow) );
 
     setComboboxCallback("combobox14", sigc::mem_fun(*this, &VRGuiScene::on_change_group));
     setComboboxCallback("combobox23", sigc::mem_fun(*this, &VRGuiScene::on_change_cam_proj));
