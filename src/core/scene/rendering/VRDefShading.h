@@ -56,7 +56,7 @@ class VRDefShading {
 
         ShadowTypeE defaultShadowType;
         int shadowRes;
-        float shadowColor;
+        Color4f shadowColor;
         bool initiated = false;
         bool enabled = false;
         int channel = 0;

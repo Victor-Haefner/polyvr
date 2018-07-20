@@ -297,7 +297,7 @@ void VRLight::setShadowColor(Color4f c) {
     //if (gsme) gsme->setShadowColor(c);
     //if (ptsme) ptsme->setShadowColor(c);
     //if (stsme) stsme->setShadowColor(c);
-    // TODO: shadow color has to be passed as uniform to light fragment shader
+    updateDeferredLight();
 }
 
 void VRLight::setOn(bool b) {

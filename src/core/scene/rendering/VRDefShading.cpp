@@ -44,7 +44,7 @@ using namespace std;
 VRDefShading::VRDefShading() {
     defaultShadowType = ST_TRAPEZOID;
     shadowRes = 1024;
-    shadowColor = 0.3;
+    shadowColor = Color4f(0.3,0.3,0.3,1.0);
 }
 
 VRDefShading::~VRDefShading() {}
@@ -182,6 +182,7 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     LightMTRecPtr light = vrl->getLightCore();
     string type = vrl->getLightType();
     bool shadows = vrl->getShadows();
+    shadowColor = vrl->getShadowColor();
     int ID = vrl->getID();
 
     LightInfo li;
@@ -212,7 +213,7 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     li.lightFP->addUniformVariable<Int32>("texBufDiff", 2);
     li.lightFP->addUniformVariable<Int32>("texBufAmb",  3);
     li.lightFP->addUniformVariable<Int32>("texPhotometricMap", 4);
-    li.lightFP->addUniformVariable<float>("shadowColor", shadowColor);
+    li.lightFP->addUniformVariable<Color4f>("shadowColor", shadowColor);
     li.lightFP->addUniformVariable<Int32>("channel", 0);
 
     li.lightSH->addShader(li.lightVP);
@@ -243,6 +244,7 @@ void VRDefShading::updateLight(VRLightPtr l) {
     auto& li = lightInfos[l->getID()];
     string type = l->getLightType();
     bool shadows = l->getShadows();
+    shadowColor = l->getShadowColor();
 
     li.lightType = LightEngine::Point;
     if (type == "directional") li.lightType = LightEngine::Directional;
@@ -261,6 +263,7 @@ void VRDefShading::updateLight(VRLightPtr l) {
     string fpFile = getLightFPFile(li.lightType, li.shadowType);
     li.lightVP->readProgram(vpFile.c_str());
     li.lightFP->readProgram(fpFile.c_str());
+    li.lightFP->addUniformVariable<Color4f>("shadowColor", shadowColor);
 
     auto tex = l->getPhotometricMap();
     if (tex) {
