@@ -12,9 +12,13 @@ uniform int               channel;
 uniform vec3 lightUp;
 uniform vec3 lightDir;
 uniform vec3 lightPos;
+uniform vec4 shadowColor;
 
+vec3 pos;
 vec4 norm;
-vec4 color;
+vec4 color = vec4(0);
+
+
 
 void computeDirLight() {
 	vec3 light = normalize( lightDir );
@@ -26,17 +30,18 @@ void computeDirLight() {
 	float NdotHV = max(dot(norm.xyz, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
 	vec4  specular = vec4(0);
 	if (mNdotL > 0.0) specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
+
+
 	color = ambient + diffuse + specular;
-	//color = vec4(NdotL, mNdotL, -NdotL, 1);
 }
 
 void main(void) {
 	vec2 lookup = gl_FragCoord.xy - vpOffset;
 	norm = texture2DRect(texBufNorm, lookup);
 	bool isLit = (norm.w > 0);
-    	if(channel != 0 || !isLit || dot(norm.xyz, norm.xyz) < 0.95) discard;
+    	if (channel != 0 || !isLit || dot(norm.xyz, norm.xyz) < 0.95) discard;
 
-	vec4 pos = texture2DRect(texBufPos,  lookup);
+	pos = texture2DRect(texBufPos,  lookup).xyz;
 	color = texture2DRect(texBufDiff, lookup);
 	computeDirLight();
 	gl_FragColor = color;

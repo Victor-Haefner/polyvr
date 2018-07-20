@@ -21,26 +21,28 @@ vec4 color = vec4(0);
 vec4 OSG_SSME_FP_calcShadow(in vec4 ecFragPos);
 
 void computeDirLight() {
-    vec3  lightDir = gl_LightSource[0].position.xyz; // normalize( lightDir ); // TODO: which is right??
-    float NdotL    = max(dot(norm.xyz, lightDir), 0.);
-
-    if (NdotL > 0.) {
+	vec3 light = normalize( lightDir );
+	//if (norm.z < -0.1) norm *= -1; // two sided // induces artifacts
+  	float NdotL = dot(norm.xyz, -light);
+  	float mNdotL = max(NdotL, 0.0);
+	vec4 ambient = gl_LightSource[0].ambient * color * (0.8+0.2*abs(NdotL));
+	vec4 diffuse = gl_LightSource[0].diffuse * color * mNdotL;
+	float NdotHV = max(dot(norm.xyz, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
+	vec4  specular = vec4(0);
+	if (mNdotL > 0.0) specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
         vec4 shadow = OSG_SSME_FP_calcShadow(vec4(pos, 1.));
 	if (shadow.r < 0.5) shadow = shadowColor;
-        color = shadow * NdotL * color * gl_LightSource[0].diffuse;
-    } else color = vec4(0);
+	color = ambient + shadow * (diffuse + specular);
 }
 
 void main(void) {
-    vec2 lookup = gl_FragCoord.xy - vpOffset;
-    norm = texture2DRect(texBufNorm, lookup);
-    bool isLit = (norm.w > 0);
+	vec2 lookup = gl_FragCoord.xy - vpOffset;
+	norm = texture2DRect(texBufNorm, lookup);
+	bool isLit = (norm.w > 0);
+	if (channel != 0 || !isLit || dot(norm.xyz, norm.xyz) < 0.95) discard;
 
-    if (channel != 0 || !isLit || dot(norm.xyz, norm.xyz) < 0.95) discard;
-    else {
-        pos = texture2DRect(texBufPos,  lookup).xyz;
-        color = texture2DRect(texBufDiff, lookup);
+	pos = texture2DRect(texBufPos,  lookup).xyz;
+	color = texture2DRect(texBufDiff, lookup);
 	computeDirLight();
-        gl_FragColor = color;
-    }
+	gl_FragColor = color;
 }
