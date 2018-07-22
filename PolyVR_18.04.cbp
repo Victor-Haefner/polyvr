@@ -251,7 +251,6 @@
 			<Add option="-lssh2" />
 			<Add option="-lfftw3" />
 			<Add option="-lcrypto++" />
-			<Add option="-lz" />
 			<Add option="-Wl,-rpath=/usr/lib/x86_64-linux-gnu" />
 			<Add directory="/usr/lib/virtuose" />
 			<Add directory="/usr/lib/opensg" />
@@ -885,6 +884,8 @@
 		<Unit filename="src/core/scripting/VRPyConstructionKit.h" />
 		<Unit filename="src/core/scripting/VRPyDevice.cpp" />
 		<Unit filename="src/core/scripting/VRPyDevice.h" />
+		<Unit filename="src/core/scripting/VRPyEncryption.cpp" />
+		<Unit filename="src/core/scripting/VRPyEncryption.h" />
 		<Unit filename="src/core/scripting/VRPyGeoPrimitive.cpp" />
 		<Unit filename="src/core/scripting/VRPyGeoPrimitive.h" />
 		<Unit filename="src/core/scripting/VRPyGeometry.cpp" />
