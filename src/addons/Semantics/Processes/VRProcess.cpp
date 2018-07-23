@@ -100,6 +100,27 @@ vector<VRProcessNodePtr> VRProcess::getMessageSubjects(int messageID) {
     return res;
 }
 
+vector<VRProcessNodePtr> VRProcess::getSubjectActions(int subjectID) {
+    auto d = getBehaviorDiagram(subjectID);
+    vector<VRProcessNodePtr> res;
+    for (int i=0; i<d->size(); i++) {
+        auto& e = d->processnodes[i];
+        if (e->type == ACTION) res.push_back(e);
+    }
+    return res;
+}
+//TODO: fixing; doesn't return action transitions but empty list
+vector<VRProcessNodePtr> VRProcess::getActionTransitions(int subjectID, int actionID) {
+    auto d = getBehaviorDiagram(subjectID);
+    auto neighbors = d->getNeightbors( d->getNode(actionID) );
+    vector<VRProcessNodePtr> res;
+    for (auto node : neighbors) {
+        auto transition = getNode( node.ID );
+        res.push_back(transition);
+    }
+    return res;
+}
+
 void VRProcess::update() {
     if (!ontology) return;
 
