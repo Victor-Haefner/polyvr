@@ -12,6 +12,7 @@ using namespace std;
 vector<string> splitString(const string& s, char c = ' ');
 string subString(const string& s, int beg, int len);
 bool startsWith(const string& s, const string& s2);
+bool endsWith(const string& s, const string& s2);
 
 template<typename T>
 string toString(const T& s);

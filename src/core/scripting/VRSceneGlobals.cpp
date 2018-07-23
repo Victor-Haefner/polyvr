@@ -101,7 +101,7 @@ PyObject* VRSceneGlobals::getSystemDirectory(VRSceneGlobals* self, PyObject *arg
 }
 
 PyObject* VRSceneGlobals::loadScene(VRSceneGlobals* self, PyObject *args) {
-    auto fkt = VRUpdateCb::create( "scheduled scene load", boost::bind(&VRSceneManager::loadScene, VRSceneManager::get(), parseString(args), false ) );
+    auto fkt = VRUpdateCb::create( "scheduled scene load", boost::bind(&VRSceneManager::loadScene, VRSceneManager::get(), parseString(args), false, "" ) );
     VRSceneManager::get()->queueJob(fkt);
     Py_RETURN_TRUE;
 }

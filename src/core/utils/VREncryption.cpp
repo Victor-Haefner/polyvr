@@ -18,7 +18,7 @@ string VREncryption::fixString(string ciphertext) {
 
 void fixKey(string& key) {
     int N = key.size();
-    for (int i=N; i<33; i++) key += '0';
+    for (int i=N; i<32; i++) key += '0';
 }
 
 string VREncryption::encrypt(string plaintext, string key, string iv) {
