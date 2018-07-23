@@ -243,7 +243,7 @@ void VRTrafficSimulation::updateSimulation() {
                 gp.edge = nextEdges[0].ID;
                 auto& road = roads[gp.edge];
                 toChangeRoad[road1ID].push_back( make_pair(vehicle, gp.edge) );
-                cout << "  transit of vehicle: " << vehicle.getID() << " from: " << road1ID << " to: " << gp.edge << endl;
+                //cout << "  transit of vehicle: " << vehicle.getID() << " from: " << road1ID << " to: " << gp.edge << endl;
             }
             if (nextEdges.size() == 0) {
                 //TODO: random choice of new seed road
@@ -451,6 +451,7 @@ string VRTrafficSimulation::getVehicleData(int vehicleID){
     string returnInfo = "";
     string nl = "\n ";
     string roadInfo = "ALL ROADS: ";
+    string edgeInfo = "ALL EDGES: ";
     string nodeInfo = "ALL NODES: ";
 
     int nn = 0;
@@ -458,6 +459,7 @@ string VRTrafficSimulation::getVehicleData(int vehicleID){
     for (auto eV : graph->getEdges()) {
         for (auto e : eV) {
             roadInfo += toString(e.ID) + " ";
+            edgeInfo += toString(e.from) + toString(e.to) + " ";
             nn++;
         }
     }
@@ -473,6 +475,7 @@ string VRTrafficSimulation::getVehicleData(int vehicleID){
 
     returnInfo += lastseedRoadsString;
     returnInfo += nl + toString(nn) + "--" + roadInfo;
+    returnInfo += nl + toString(nn) + "--" + edgeInfo;
     returnInfo += nl + toString(nno) + "--" + nodeInfo;
     return returnInfo;
 }

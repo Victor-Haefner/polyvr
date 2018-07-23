@@ -191,25 +191,35 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto norm1 = nodes1[nodes1.size()-2]->getVec3("direction");
                 auto node2 = nodeEnt2->getEntity("node");
                 auto norm2 = nodeEnt2->getVec3("direction");
-                int tempID=nodeEnt1->getValue<int>("graphID", -1);
-                nodeEnt1->set("node", node2->getName());
-                roads->getGraph()->remNode(tempID);
-                cout << tempID << " node removed" << endl;
+                auto name2 = node2->getName();
+
+                auto nodeDelete = nodes1[nodes1.size()-1]->getEntity("node");
+                int tempID = nodeDelete->getValue<int>("graphID", -1);
+                int tempID2 = nodeEnt1->getEntity("node")->getValue<int>("graphID", -1);
+                int ID1 = node1->getValue<int>("graphID", -1);
+                //roads->getGraph()->remNode(tempID);
+                cout << tempID << tempID2 << ID1 << " node removed -- NIN>NOUT" << endl;
+
+                nodeEnt1->set("node", name2);
                 //if (D > 0) displacementsB[roadIn] = 0; //WIP
                 //if (D > 0) displacementsA[roadOut] = X;
                 if (D > 0) displacementsB[roadIn] = X; //OLD
                 //if (D > 0) displacementsA[roadOut] = 0;
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
+                auto rGraph = roads->getGraph();
+                if (rGraph->connected(tempID,ID1)) rGraph->disconnect(tempID,ID1);
+                else if (rGraph->connected(ID1,tempID)) rGraph->disconnect(ID1,tempID);
             }
             if (Nin < Nout) {
                 auto node1 = nodeEnt1->getEntity("node");
                 auto norm1 = nodeEnt1->getVec3("direction");
                 auto node2 = nodes2[1]->getEntity("node");
                 auto norm2 = nodes2[1]->getVec3("direction");
+                auto nodeDelete = nodes2[0]->getEntity("node");
                 int tempID=nodeEnt2->getValue<int>("graphID", -1);
                 nodeEnt2->set("node", node1->getName());
-                roads->getGraph()->remNode(tempID); ///HINT: USE THIS LINE TO COPY TO FORK, AND Nin>= Nout ABOVE
-                cout << tempID << " node removed" << endl;
+                //roads->getGraph()->remNode(tempID); ///HINT: USE THIS LINE TO COPY TO FORK, AND Nin>= Nout ABOVE
+                cout << tempID << " node removed -- NIN<NOUT" << endl;
                 //if (D > 0) displacementsB[roadIn] = -X;
                 //if (D > 0) displacementsA[roadOut] = 0;
                 //if (D > 0) displacementsB[roadIn] = 0; //OLD
