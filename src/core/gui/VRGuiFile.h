@@ -21,6 +21,7 @@ class VRGuiFile {
         static float scale;
         static string preset;
         static Gtk::Table* geoImportWidget;
+        static Gtk::Table* saveasWidget;
         static void init();
 
         static void on_toggle_cache_override(Gtk::CheckButton* b);
@@ -45,6 +46,7 @@ class VRGuiFile {
         static void setCallbacks(sig sa = sig(), sig sc = sig(), sig ss = sig());
         static void setWidget(Gtk::Table* table);
         static void setGeoLoadWidget();
+        static void setSaveasWidget(sigc::slot<void, Gtk::CheckButton*> sig);
 
         static bool exists(string path);
         static bool isDir(string path);

@@ -15,6 +15,7 @@
 #include "core/utils/VRTimer.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/system/VRSystem.h"
+#include "core/utils/VREncryption.h"
 #include "core/navigation/VRNavigator.h"
 #include "core/objects/VRLod.h"
 #include "addons/construction/building/VROpening.h"
@@ -76,7 +77,9 @@ VRSceneLoader* VRSceneLoader::get() {
     return s;
 }
 
-void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
+void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN, string encryptionKey) {
+    if (encryptionKey != "" && file[file.size()-1] == 'r') file[file.size()-1] = 'c';
+
     if (exists(file)) file = canonical(file);
     cout << " save " << file << endl;
     auto scene = VRScene::getCurrent();
@@ -92,7 +95,16 @@ void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
     VRObjectPtr root = scene->getRoot();
     root->saveUnder(objectsN);
     scene->saveScene(sceneN);
-    doc.write_to_file_formatted(file);
+
+    // write to file
+    if (encryptionKey == "") doc.write_to_file_formatted(file);
+    else {
+        VREncryptionPtr e = VREncryption::create();
+        auto data = doc.write_to_string_formatted();
+        data = e->encrypt(data, encryptionKey, "0000000000000000");
+        ofstream f(file, ios::binary);
+        f.write( data.c_str(), data.size() );
+    }
 }
 
 xmlpp::Element* VRSceneLoader_getElementChild_(xmlpp::Element* e, string name) {

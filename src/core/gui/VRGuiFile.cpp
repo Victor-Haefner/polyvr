@@ -23,6 +23,7 @@
 Gtk::FileChooserDialog* VRGuiFile::dialog = 0;
 Gtk::Table* VRGuiFile::addon = 0;
 Gtk::Table* VRGuiFile::geoImportWidget = 0;
+Gtk::Table* VRGuiFile::saveasWidget = 0;
 sigc::slot<void> VRGuiFile::sigApply = sigc::slot<void>();
 sigc::slot<void> VRGuiFile::sigClose = sigc::slot<void>();
 sigc::slot<void> VRGuiFile::sigSelect = sigc::slot<void>();
@@ -137,6 +138,24 @@ void VRGuiFile::setGeoLoadWidget() {
     }
 
     setWidget(geoImportWidget);
+}
+
+void VRGuiFile::setSaveasWidget( sigc::slot<void, Gtk::CheckButton*> sig ) {
+    if (saveasWidget == 0) {
+        saveasWidget = manage( new Gtk::Table() );
+        auto fixed = manage( new Gtk::Fixed() );
+        auto encrypt = manage( new Gtk::CheckButton("encrypt") );
+
+        Gtk::AttachOptions opts = Gtk::FILL|Gtk::EXPAND;
+        Gtk::AttachOptions opts3 = Gtk::FILL;
+        Gtk::AttachOptions opts2 = Gtk::AttachOptions(0);
+
+        saveasWidget->attach(*fixed, 0,3,0,1, opts, opts2);
+        saveasWidget->attach(*encrypt, 3,4,0,1, opts3, opts2);
+        encrypt->signal_toggled().connect( sigc::bind( sig, encrypt) );
+    }
+
+    setWidget(saveasWidget);
 }
 
 

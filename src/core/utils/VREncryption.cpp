@@ -16,7 +16,13 @@ string VREncryption::fixString(string ciphertext) {
     return result;
 }
 
+void fixKey(string& key) {
+    int N = key.size();
+    for (int i=N; i<33; i++) key += '0';
+}
+
 string VREncryption::encrypt(string plaintext, string key, string iv) {
+    fixKey(key);
     cout << "Encrypt " << plaintext.size() << " bytes" << endl << endl;
     string ciphertext;
     CryptoPP::AES::Encryption aesEncryption((const byte*)key.c_str(), key.size());
@@ -30,6 +36,7 @@ string VREncryption::encrypt(string plaintext, string key, string iv) {
 }
 
 string VREncryption::decrypt(string ciphertext, string key, string iv) {
+    fixKey(key);
     cout << "Decrypt " << ciphertext.size() << " bytes" << endl << endl;
     string decryptedtext;
     CryptoPP::AES::Decryption aesDecryption((const byte*)key.c_str(), key.size());

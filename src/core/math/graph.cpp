@@ -188,7 +188,7 @@ void Graph::update(int i, bool changed) {}
 
 void Graph::remNode(int i) {
     for (auto& n : getNeighbors(i)) disconnect(i, n.ID );
-    if (i >= 0 && i < nodes.size()) nodes.erase(nodes.begin() + i);
+    //if (i >= 0 && i < nodes.size()) nodes.erase(nodes.begin() + i);
 }
 
 Graph::edge::edge(int i, int j, CONNECTION c, int ID) : from(i), to(j), connection(c), ID(ID) {}

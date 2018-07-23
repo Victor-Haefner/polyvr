@@ -40,7 +40,7 @@ class VRSceneLoader {
         static VRSceneLoader* get();
         ~VRSceneLoader();
 
-        void saveScene(string file, xmlpp::Element* guiN = 0);
+        void saveScene(string file, xmlpp::Element* guiN = 0, string encryption = "");
         void loadScene(string file);
 };
 
