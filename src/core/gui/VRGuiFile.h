@@ -6,7 +6,7 @@
 #include <sigc++/functors/slot.h>
 #include <gtk-2.0/gdk/gdkevents.h>
 
-namespace Gtk { class FileChooserDialog; class Table; }
+namespace Gtk { class FileChooserDialog; class Table; class CheckButton; class Entry; class ComboBox; }
 using namespace std;
 
 class VRGuiFile {
@@ -20,11 +20,12 @@ class VRGuiFile {
         static bool cache_override;
         static float scale;
         static string preset;
+        static Gtk::Table* geoImportWidget;
         static void init();
 
-        static void on_toggle_cache_override();
-        static void on_edit_import_scale();
-        static void on_change_preset();
+        static void on_toggle_cache_override(Gtk::CheckButton* b);
+        static void on_edit_import_scale(Gtk::Entry* e);
+        static void on_change_preset(Gtk::ComboBox* b);
 
     public:
         static void open(string button, int action, string title);
@@ -43,6 +44,7 @@ class VRGuiFile {
 
         static void setCallbacks(sig sa = sig(), sig sc = sig(), sig ss = sig());
         static void setWidget(Gtk::Table* table);
+        static void setGeoLoadWidget();
 
         static bool exists(string path);
         static bool isDir(string path);

@@ -266,6 +266,7 @@ PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
     string m = PyString_AsString(mode);
     Gtk::FileChooserAction action = Gtk::FILE_CHOOSER_ACTION_OPEN;
     if (m == "Save" || m == "New" || m == "Create") action = Gtk::FILE_CHOOSER_ACTION_SAVE;
+    else VRGuiFile::setGeoLoadWidget();
     VRGuiFile::open( m, action, PyString_AsString(title) );
 
     Py_RETURN_TRUE;
