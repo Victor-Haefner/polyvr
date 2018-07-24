@@ -24,6 +24,7 @@ PyMethodDef VRPyGraph::methods[] = {
     {"getEdgeID", PyWrap2(Graph, getEdgeID, "Return the graph edge ID between n1 and n2", int, int, int ) },
     {"getEdgeByID", PyWrap2(Graph, getEdgeCopyByID, "Return the graph edge by ID", Graph::edge, int ) },
     {"getEdges", PyWrap2(Graph, getEdgesCopy, "Return graph edges", vector<Graph::edge> ) },
+    {"getNEdges", PyWrap2(Graph, getNEdges, "Return number of edges", int ) },
     {"getInEdges", PyWrap2(Graph, getInEdges, "Return graph edges going in from node n", vector<Graph::edge>, int ) },
     {"getOutEdges", PyWrap2(Graph, getOutEdges, "Return graph edges going out from node n", vector<Graph::edge>, int ) },
     {"getNodePose", PyWrap2(Graph, getPosition, "Return graph node pose", PosePtr, int ) },
@@ -33,6 +34,8 @@ PyMethodDef VRPyGraph::methods[] = {
     {"getNodes", PyWrap2( Graph, getNodesCopy, "Get all node IDs", vector<Graph::node> ) },
     {"hasNode", PyWrap2( Graph, hasNode, "Check if graph has node ID", bool, int ) },
     {"hasEdge", PyWrap2( Graph, hasEdge, "Check if graph has edge ID", bool, int ) },
+    {"remNode", PyWrap2( Graph, remNode, "Remove node", void, int ) },
+    {"clear", PyWrap2( Graph, clear, "Clear", void ) },
     {NULL} /* Sentinel */
 };
 

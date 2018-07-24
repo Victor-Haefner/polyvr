@@ -19,49 +19,48 @@ void VRGraphLayout::setAlgorithm(string a, int p) {
 
 void VRGraphLayout::applySprings(float eps, float v) {
     if (!graph) return;
-    for (auto& n : graph->getEdges()) {
-        for (auto& e : n) {
-            auto f1 = getFlag(e.from);
-            auto f2 = getFlag(e.to);
-            if (f1 & INACTIVE || f2 & INACTIVE) continue;
+    for (auto& edge : graph->getEdges()) {
+        auto& e = edge.second;
+        auto f1 = getFlag(e.from);
+        auto f2 = getFlag(e.to);
+        if (f1 & INACTIVE || f2 & INACTIVE) continue;
 
-            auto& n1 = graph->getNode(e.from);
-            auto& n2 = graph->getNode(e.to);
-            Vec3d p1 = n1.box.center();
-            Vec3d p2 = n2.box.center();
+        auto& n1 = graph->getNode(e.from);
+        auto& n2 = graph->getNode(e.to);
+        Vec3d p1 = n1.box.center();
+        Vec3d p2 = n2.box.center();
 
-            float r = radius + n1.box.radius() + n2.box.radius();
-            Vec3d d = p2 - p1;
-            float x = d.length() - r; // displacement
-            d.normalize();
-            if (abs(x) < eps) continue;
+        float r = radius + n1.box.radius() + n2.box.radius();
+        Vec3d d = p2 - p1;
+        float x = d.length() - r; // displacement
+        d.normalize();
+        if (abs(x) < eps) continue;
 
-            p1 += d*x*v;
-            p2 += -d*x*v;
-            auto po1 = graph->getPosition(e.from);
-            auto po2 = graph->getPosition(e.to);
-            po1->setPos(p1);
-            po2->setPos(p2);
-            switch (e.connection) {
-                case Graph::SIMPLE:
+        p1 += d*x*v;
+        p2 += -d*x*v;
+        auto po1 = graph->getPosition(e.from);
+        auto po2 = graph->getPosition(e.to);
+        po1->setPos(p1);
+        po2->setPos(p2);
+        switch (e.connection) {
+            case Graph::SIMPLE:
+                if (!(f1 & FIXED)) graph->setPosition(e.from, po1);
+                if (!(f2 & FIXED)) graph->setPosition(e.to, po2);
+                break;
+            case Graph::HIERARCHY:
+                if (!(f2 & FIXED)) graph->setPosition(e.to, po2);
+                else if (!(f1 & FIXED)) graph->setPosition(e.from, po1);
+                break;
+            case Graph::DEPENDENCY:
+                if (!(f1 & FIXED)) graph->setPosition(e.from, po1);
+                else if (!(f2 & FIXED)) graph->setPosition(e.to, po2);
+                break;
+            case Graph::SIBLING:
+                if (x < 0) { // push away siblings
                     if (!(f1 & FIXED)) graph->setPosition(e.from, po1);
                     if (!(f2 & FIXED)) graph->setPosition(e.to, po2);
-                    break;
-                case Graph::HIERARCHY:
-                    if (!(f2 & FIXED)) graph->setPosition(e.to, po2);
-                    else if (!(f1 & FIXED)) graph->setPosition(e.from, po1);
-                    break;
-                case Graph::DEPENDENCY:
-                    if (!(f1 & FIXED)) graph->setPosition(e.from, po1);
-                    else if (!(f2 & FIXED)) graph->setPosition(e.to, po2);
-                    break;
-                case Graph::SIBLING:
-                    if (x < 0) { // push away siblings
-                        if (!(f1 & FIXED)) graph->setPosition(e.from, po1);
-                        if (!(f2 & FIXED)) graph->setPosition(e.to, po2);
-                    }
-                    break;
-            }
+                }
+                break;
         }
     }
 }
