@@ -198,7 +198,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 int tempID2 = nodeEnt1->getEntity("node")->getValue<int>("graphID", -1);
                 int ID1 = node1->getValue<int>("graphID", -1);
                 //roads->getGraph()->remNode(tempID);
-                cout << tempID << tempID2 << ID1 << " node removed -- NIN>NOUT" << endl;
+                cout << tempID << " " << tempID2 << " " << ID1 << " node removed -- NIN>NOUT" << endl;
 
                 nodeEnt1->set("node", name2);
                 //if (D > 0) displacementsB[roadIn] = 0; //WIP
@@ -207,8 +207,10 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 //if (D > 0) displacementsA[roadOut] = 0;
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
                 auto rGraph = roads->getGraph();
-                if (rGraph->connected(tempID,ID1)) rGraph->disconnect(tempID,ID1);
-                else if (rGraph->connected(ID1,tempID)) rGraph->disconnect(ID1,tempID);
+                rGraph->remNode(tempID);
+
+                //if (rGraph->connected(tempID,ID1)) rGraph->disconnect(tempID,ID1);
+                //else if (rGraph->connected(ID1,tempID)) rGraph->disconnect(ID1,tempID);
             }
             if (Nin < Nout) {
                 auto node1 = nodeEnt1->getEntity("node");

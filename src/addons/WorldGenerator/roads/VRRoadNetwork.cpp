@@ -900,7 +900,7 @@ void VRRoadNetwork::connectGraph(vector<VREntityPtr> nodes, vector<Vec3d> norms,
 }
 
 
-PosePtr VRRoadNetwork::getPosition(Graph::position p) { // TODO
+PosePtr VRRoadNetwork::getPosition(Graph::position p) {
     int eID = p.edge;
     auto edge = graph->getEdge(eID);
     int n1 = edge.from;
