@@ -1,6 +1,12 @@
 #include "VREncryption.h"
 
-string fixString(string ciphertext) {
+using namespace OSG;
+
+VREncryption::VREncryption() {}
+VREncryption::~VREncryption() {}
+VREncryptionPtr VREncryption::create() { return VREncryptionPtr( new VREncryption() ); }
+
+string VREncryption::fixString(string ciphertext) {
     string result;
     for (unsigned int i = 0; i < ciphertext.size(); i++) {
         char buffer[2];
@@ -10,7 +16,13 @@ string fixString(string ciphertext) {
     return result;
 }
 
-string encrypt(string plaintext, string key, string iv) {
+void fixKey(string& key) {
+    int N = key.size();
+    for (int i=N; i<32; i++) key += '0';
+}
+
+string VREncryption::encrypt(string plaintext, string key, string iv) {
+    fixKey(key);
     cout << "Encrypt " << plaintext.size() << " bytes" << endl << endl;
     string ciphertext;
     CryptoPP::AES::Encryption aesEncryption((const byte*)key.c_str(), key.size());
@@ -23,7 +35,8 @@ string encrypt(string plaintext, string key, string iv) {
     return ciphertext;
 }
 
-string decrypt(string ciphertext, string key, string iv) {
+string VREncryption::decrypt(string ciphertext, string key, string iv) {
+    fixKey(key);
     cout << "Decrypt " << ciphertext.size() << " bytes" << endl << endl;
     string decryptedtext;
     CryptoPP::AES::Decryption aesDecryption((const byte*)key.c_str(), key.size());
@@ -35,19 +48,19 @@ string decrypt(string ciphertext, string key, string iv) {
     return decryptedtext;
 }
 
-void compressFolder(string folder, string archive) {
+void VREncryption::compressFolder(string folder, string archive) {
     cout << "Compress folder " << folder << " to " << archive << endl << endl;
     Zipper z(archive);
     z.add(folder);
 }
 
-void uncompressFolder(string archive, string folder) {
+void VREncryption::uncompressFolder(string archive, string folder) {
     cout << "Uncompress archive " << archive << " to " << folder << endl << endl;
     Unzipper z(archive);
     z.extract(folder);
 }
 
-string loadAsString(string path) {
+string VREncryption::loadAsString(string path) {
     ifstream input(path, ios::in | ios::binary);
     input.seekg(0, ios::end);
     int size = input.tellg();
@@ -60,14 +73,14 @@ string loadAsString(string path) {
 	return res;
 }
 
-void storeBin(string data, string path) {
+void VREncryption::storeBin(string data, string path) {
     ofstream output(path, ios::out | ios::binary);
 	output.write(data.c_str(), data.size());
 	output.flush();
 	output.close();
 }
 
-void test1() {
+void VREncryption::test1() {
     string key = "123456789012345678901234567890ab";
     string iv = "0000000000000000";
 
@@ -76,7 +89,7 @@ void test1() {
     string decryptext = decrypt(ciphertext, key, iv);
 }
 
-void test2() {
+void VREncryption::test2() {
     string key = "123456789012345678901234567890ab";
     string iv = "0000000000000000";
 

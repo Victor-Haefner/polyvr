@@ -795,6 +795,7 @@ void VRGuiScene::on_menu_add_file() {
     VRGuiFile::addFilter("VRML", 1, "*.wrl");
     VRGuiFile::addFilter("3DS", 1, "*.3ds");
     VRGuiFile::addFilter("OBJ", 1, "*.obj");
+    VRGuiFile::setGeoLoadWidget();
     VRGuiFile::open( "Load", Gtk::FILE_CHOOSER_ACTION_OPEN, "Load geometric data" );
 }
 

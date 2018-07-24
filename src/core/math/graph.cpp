@@ -172,7 +172,7 @@ void Graph::remNode(int nID) {
         if (connected(n.ID,nID)) disconnect(n.ID, nID);
     }
     nodes.erase(nID);
-    cout << "Graph::remNode " << nID << " deleted" << endl;
+    //cout << "Graph::remNode " << nID << " deleted" << endl;
 }
 
 Graph::edge::edge(int i, int j, CONNECTION c, int ID) : from(i), to(j), connection(c), ID(ID) {}

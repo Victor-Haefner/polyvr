@@ -101,7 +101,7 @@ PyObject* VRSceneGlobals::getSystemDirectory(VRSceneGlobals* self, PyObject *arg
 }
 
 PyObject* VRSceneGlobals::loadScene(VRSceneGlobals* self, PyObject *args) {
-    auto fkt = VRUpdateCb::create( "scheduled scene load", boost::bind(&VRSceneManager::loadScene, VRSceneManager::get(), parseString(args), false ) );
+    auto fkt = VRUpdateCb::create( "scheduled scene load", boost::bind(&VRSceneManager::loadScene, VRSceneManager::get(), parseString(args), false, "" ) );
     VRSceneManager::get()->queueJob(fkt);
     Py_RETURN_TRUE;
 }
@@ -266,6 +266,7 @@ PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
     string m = PyString_AsString(mode);
     Gtk::FileChooserAction action = Gtk::FILE_CHOOSER_ACTION_OPEN;
     if (m == "Save" || m == "New" || m == "Create") action = Gtk::FILE_CHOOSER_ACTION_SAVE;
+    else VRGuiFile::setGeoLoadWidget();
     VRGuiFile::open( m, action, PyString_AsString(title) );
 
     Py_RETURN_TRUE;

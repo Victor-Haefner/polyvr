@@ -21,6 +21,7 @@ vector<string> splitString(const string& s, char c) {
 string subString(const string& s, int beg, int len) { return s.substr(beg, len); }
 
 bool startsWith(const string& s, const string& s2) { return bool(subString(s, 0, s2.size()) == s2); }
+bool endsWith(const string& s, const string& s2) { return bool(subString(s, s.size() - s2.size(), s2.size()) == s2); }
 
 typedef void* voidPtr;
 
