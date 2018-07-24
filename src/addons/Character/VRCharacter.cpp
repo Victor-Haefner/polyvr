@@ -82,13 +82,12 @@ VRConstraintPtr VRSkeleton::getJoint(int id) { return dynamic_pointer_cast<VRCon
 
 void VRSkeleton::asGeometry(VRGeoData& data) {
     for (auto& joint : armature->getNodes()) {
-        data.pushVert( Pnt3d(joint.box.center()) );
+        data.pushVert( Pnt3d(joint.second.box.center()) );
     }
 
-    for (auto& jv : armature->getEdges()) {
-        for (auto& j : jv) {
-            data.pushLine(j.from, j.to);
-        }
+    for (auto& j : armature->getEdges()) {
+        auto& e = j.second;
+        data.pushLine(e.from, e.to);
     }
 }
 
