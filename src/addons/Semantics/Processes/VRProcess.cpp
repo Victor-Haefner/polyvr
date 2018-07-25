@@ -69,6 +69,58 @@ vector<VRProcessNodePtr> VRProcess::getSubjects() {
     return res;
 }
 
+vector<VRProcessNodePtr> VRProcess::getMessages() {
+    vector<VRProcessNodePtr> res;
+    for (int i=0; i<interactionDiagram->size(); i++) {
+        auto& e = interactionDiagram->processnodes[i];
+        if (e->type == MESSAGE) res.push_back(e);
+    }
+    return res;
+}
+
+vector<VRProcessNodePtr> VRProcess::getSubjectMessages(int subjectID) {
+    auto d = interactionDiagram;
+    auto neighbors = d->getNeightbors( d->getNode(subjectID) );
+    vector<VRProcessNodePtr> res;
+    for (auto node : neighbors) {
+        auto subject = getNode( node.ID );
+        res.push_back(subject);
+    }
+    return res;
+}
+
+vector<VRProcessNodePtr> VRProcess::getMessageSubjects(int messageID) {
+    auto d = interactionDiagram;
+    auto neighbors = d->getNeightbors( d->getNode(messageID) );
+    vector<VRProcessNodePtr> res;
+    for (auto node : neighbors) {
+        auto message = getNode( node.ID );
+        res.push_back(message);
+    }
+    return res;
+}
+
+vector<VRProcessNodePtr> VRProcess::getSubjectActions(int subjectID) {
+    auto d = getBehaviorDiagram(subjectID);
+    vector<VRProcessNodePtr> res;
+    for (int i=0; i<d->size(); i++) {
+        auto& e = d->processnodes[i];
+        if (e->type == ACTION) res.push_back(e);
+    }
+    return res;
+}
+//TODO: fixing; doesn't return action transitions but empty list
+vector<VRProcessNodePtr> VRProcess::getActionTransitions(int subjectID, int actionID) {
+    auto d = getBehaviorDiagram(subjectID);
+    auto neighbors = d->getNeightbors( d->getNode(actionID) );
+    vector<VRProcessNodePtr> res;
+    for (auto node : neighbors) {
+        auto transition = getNode( node.ID );
+        res.push_back(transition);
+    }
+    return res;
+}
+
 void VRProcess::update() {
     if (!ontology) return;
 
@@ -202,8 +254,6 @@ VRProcessNodePtr VRProcess::getNode(int i, VRProcessDiagramPtr diag) {
     if (!diag) diag = interactionDiagram;
     return diag->processnodes[i];
 }
-
-
 
 
 

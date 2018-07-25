@@ -3,17 +3,12 @@
 #include "VROntology.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/VRTimer.h"
-#include "core/gui/VRGuiManager.h"
-#include "core/gui/VRGuiConsole.h"
 
 #include <iostream>
 
 using namespace OSG;
 
 template<> string typeName(const VREntityPtr& o) { return "Entity"; }
-
-#define WARN(x) \
-VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
 
 VREntity::VREntity(string name, VROntologyPtr o, VRConceptPtr c) {
     ontology = o;
@@ -57,9 +52,9 @@ string VREntity::getConceptList() {
     return data;
 }
 
-VRPropertyPtr VREntity::getProperty(string name) {
+VRPropertyPtr VREntity::getProperty(string name, bool warn) {
     for (auto c : getConcepts()) if (auto p = c->getProperty(name, 0)) return p;
-    WARN("Warning: property " + name + " of " + toString() + " not found!");
+    if (warn) WARN("Warning in VREntity::getProperty: property " + name + " of " + toString() + " not found!");
     return 0;
 }
 
@@ -78,7 +73,7 @@ void VREntity::set(string name, string value, int pos) {
 }
 
 void VREntity::add(string name, string value) {
-    auto prop = getProperty(name);
+    auto prop = getProperty(name, true);
     if (!prop) { WARN("Warning (add): Entity " + this->name + " has no property " + name); return; }
     prop = prop->copy();
     prop->value = value;
@@ -86,7 +81,7 @@ void VREntity::add(string name, string value) {
 }
 
 void VREntity::clear(string name) {
-    auto prop = getProperty(name);
+    auto prop = getProperty(name, true);
     if (!prop) { WARN("Warning (clear): Entity " + this->name + " has no property " + name); return; }
     properties[name].clear();
 }

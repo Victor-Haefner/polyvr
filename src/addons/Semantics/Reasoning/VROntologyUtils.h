@@ -5,6 +5,12 @@
 
 using namespace std;
 
+#include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiConsole.h"
+
+#define WARN(x) \
+VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
+
 int guid();
 
 struct VROntoID {

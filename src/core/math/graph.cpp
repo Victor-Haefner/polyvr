@@ -75,6 +75,25 @@ void Graph::disconnect(int i, int j) {
     erase( edgesByID, Vec2i(i,j) );
 }
 
+vector< Graph::node > Graph::getNeightbors(node& n) {
+    int nID = n.ID;
+    vector< node > res;
+
+    for (int eID : n.inEdges)  {
+        auto edge = getEdge(eID);
+        if (edge.from == nID) res.push_back( getNode(edge.to) );
+        else res.push_back( getNode(edge.from) );
+    }
+
+    for (int eID : n.outEdges)  {
+        auto edge = getEdge(eID);
+        if (edge.from == nID) res.push_back( getNode(edge.to) );
+        else res.push_back( getNode(edge.from) );
+    }
+
+    return res;
+}
+
 vector< Graph::edge > Graph::getInEdges(int i) {
     vector< edge > res;
     auto edges = getEdges();

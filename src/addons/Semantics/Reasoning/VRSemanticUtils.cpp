@@ -214,7 +214,7 @@ vector<string> VPath::getValue(VREntityPtr e) {
         int k = 0;
         bool doSubset = getSubSet(m, k);
         vector<VRPropertyPtr> res;
-        auto prop = e->getProperty(m);
+        auto prop = e->getProperty(m, true);
         if (!prop) return res;
         if (!e->properties.count(prop->getName())) return res;
         for (auto p : e->properties[prop->getName()]) res.push_back(p);
@@ -249,7 +249,7 @@ vector<string> VPath::getValue(VREntityPtr e) {
 void VPath::setValue(string v, VREntityPtr e) {
     if (size() == 2) {
         string m = first;
-        auto prop = e->getProperty(m);
+        auto prop = e->getProperty(m, true);
         if (!prop) return;
         if (!e->properties.count(prop->getName())) return;
         for (auto p : e->properties[prop->getName()]) {
