@@ -108,7 +108,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"lastChanged", PyWrap(Transform, getLastChange, "Return the frame when the last change occured", uint ) },
     {"setWorldDir", PyWrap(Transform, setWorldDir, "Set the direction in world coordinates", void, Vec3d ) },
     {"setWorldUp", PyWrap(Transform, setWorldUp, "Set the up vector in world coordinates", void, Vec3d ) },
-    {"getPoseTo", PyWrap(Transform, getPoseTo, "Get the pose in the coordinate system of another object", PosePtr, VRObjectPtr ) },
+    {"getPoseTo", PyWrap(Transform, getPoseTo, "Get the transformation from this object to another, returns a pose", PosePtr, VRObjectPtr ) },
     {"applyTransformation", PyWrap(Transform, applyTransformation, "Apply a transformation to the mesh - applyTransformation( pose )", void, PosePtr ) },
     {NULL}  /* Sentinel */
 };

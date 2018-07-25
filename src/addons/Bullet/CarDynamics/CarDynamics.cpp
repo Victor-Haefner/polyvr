@@ -487,7 +487,7 @@ void VRCarDynamics::setParameter(float mass, float enginePower, float breakPower
     PLock lock(mtx());
     for ( auto geo : chassis->geos ) {
         geo->setMatrix(Matrix4d());
-        auto p = geo->getPoseTo(chassis->geo);
+        auto p = chassis->geo->getPoseTo(geo);
         geo->setFrom( p->pos() - massOffset + chassis->massOffset );
         geo->applyTransformation();
     }

@@ -226,14 +226,14 @@ Matrix4d VRTransform::getMatrixTo(VRObjectPtr obj, bool parentOnly) {
     Matrix4d m2 = ent->getWorldMatrix();
 
     // old computation
-    m2.invert();
+    /*m2.invert();
     m2.mult(m1);
-    return m2;
+    return m2;*/
 
     // correct computation
- /* m1.invert();
+    m1.invert();
     m1.mult(m2);
-    return m1;*/
+    return m1;
 }
 
 void VRTransform::setMatrixTo(Matrix4d m, VRObjectPtr obj) {
@@ -376,7 +376,7 @@ VRTransformPtr VRTransform::getParentTransform(VRObjectPtr o) {
 void VRTransform::setRelativePose(PosePtr p, VRObjectPtr o) {
     Matrix4d m = p->asMatrix();
     Matrix4d wm = getMatrixTo(o);
-    wm.invert();
+    //wm.invert();
     wm.mult(m);
 
     Matrix4d lm = getMatrix();
@@ -929,7 +929,7 @@ void VRTransform::applyTransformation(PosePtr po) {
     };
 
     auto computeNewMatrix = [&](VRGeometryPtr geo) {
-        auto m = geo->getMatrixTo(ptr());
+        auto m = getMatrixTo(geo);
         auto mI = m; mI.invert();
         m.multLeft(m0);
         m.multLeft(mI);

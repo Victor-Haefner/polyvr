@@ -444,7 +444,8 @@ void VRNature::computeLODs3(map<OctreeNode*, VRLodLeafPtr>& leafs) {
         VRTransformPtr tlod = tRef->getLOD(0);
         VRGeometryPtr l = dynamic_pointer_cast<VRGeometry>( tlod->duplicate() );
         VRGeoData other(l);
-        treesData.append(other, t->getMatrixTo(ptr()) );
+        auto trans = VRTransform::getParentTransform( ptr() );
+        treesData.append(other, trans->getMatrixTo(t->ptr()) );
     }
 
     treesData.apply(trees);
@@ -586,7 +587,8 @@ void VRNature::addCollisionModels() {
     VRGeoData data;
 
     for (auto tree : treesByID) {
-        auto p = tree.second->getPoseTo( ptr() );
+        auto trans = VRTransform::getParentTransform( ptr() );
+        auto p = trans->getPoseTo( tree.second );
         data.pushQuad(p->pos()+Vec3d(0,1,0), p->dir(), p->up(), Vec2d(0.3, 2), true);
     }
 
