@@ -291,8 +291,7 @@ void VRPathtool::update() { // call in script to have smooth knots
         auto key = handle.get();
         if (!handleToEntries.count(key)) continue;
         for (auto e : handleToEntries[key]) {
-            auto trans = VRTransform::getParentTransform(e->anchor.lock());
-            auto po = trans->getPoseTo(handle);
+            auto po = e->anchor.lock()->getPoseTo(handle);
             e->p->setPoint(e->points[key], *po);
         }
     }
@@ -328,8 +327,7 @@ void VRPathtool::updateEntry(entryPtr e) { // update path representation
 
 void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle belongs to
     if (!handle) return;
-    auto trans = VRTransform::getParentTransform(ptr());
-    auto p = trans->getPoseTo(handle);
+    auto p = getPoseTo(handle);
     auto key = handle.get();
     if (!handleToEntries.count(key)) return;
 

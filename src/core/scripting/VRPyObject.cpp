@@ -102,6 +102,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"getChildIndex", PyWrap(Object, getChildIndex, "Return the child index of this object - int getChildIndex()", int) },
     {"getBoundingbox", PyWrap(Object, getBoundingbox, "get Boundingbox", BoundingboxPtr) },
     {"setVolume", PyCastWrap(Object, setVolume, "Set the scenegraph volume to boundingbox", void, Boundingbox) },
+    {"getPoseTo", PyWrap(Object, getPoseTo, "Get the transformation from this object to another, returns a pose", PosePtr, VRObjectPtr ) },
     {NULL}  /* Sentinel */
 };
 

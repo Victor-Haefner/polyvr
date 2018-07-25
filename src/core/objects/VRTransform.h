@@ -93,12 +93,10 @@ class VRTransform : public VRObject {
         Vec3d getUp();
         Vec3d getScale();
         PosePtr getPose();
-        PosePtr getPoseTo(VRObjectPtr o);
         PosePtr getWorldPose();
         Vec3d getEuler();
         void getMatrix(Matrix4d& _m);
         Matrix4d getMatrix();
-        Matrix4d getMatrixTo(VRObjectPtr o, bool parentOnly = false);
         Matrix4d getRotationMatrix();
 
         void setIdentity();

@@ -168,8 +168,7 @@ void VRTrafficSimulation::updateSimulation() {
         vector<int> newNearRoads;
 
         for (auto user : users) {
-            auto trans = VRTransform::getParentTransform( ptr() );
-            Vec3d p = trans->getPoseTo(user.t)->pos();
+            Vec3d p = getPoseTo(user.t)->pos();
             string debug = "";
             for (auto eV : graph->getEdges()) {
                 auto& e = eV.second;
