@@ -48,9 +48,8 @@ class Graph : public VRStorage {
         };
 
     protected:
-        vector< vector<edge> > edges;
-        vector< Vec2i > edgesByID;
-        vector< node > nodes;
+        map<int, edge> edges;
+        map<int, node> nodes;
         edge nullEdge;
 
     public:
@@ -67,10 +66,10 @@ class Graph : public VRStorage {
         edge getEdgeCopy(int n1, int n2);
         edge getEdgeCopyByID(int e);
         int getEdgeID(int n1, int n2);
-        vector< node >& getNodes();
+        map< int, node >& getNodes();
         vector< node > getNodesCopy();
         vector< node > getNeighbors(int i);
-        vector< vector<edge> >& getEdges();
+        map< int, edge>& getEdges();
         vector< edge > getEdgesCopy();
         vector< edge > getInEdges(int n);
         vector< edge > getOutEdges(int n);
