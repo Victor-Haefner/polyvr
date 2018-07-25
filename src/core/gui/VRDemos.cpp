@@ -443,7 +443,7 @@ void VRAppManager::on_load_clicked() {
     VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRAppManager::on_diag_load_clicked) );
     VRGuiFile::gotoPath( g_get_home_dir() );
     VRGuiFile::clearFilter();
-    VRGuiFile::addFilter("Project", 2, "*.xml", "*.pvr", "*.pvc");
+    VRGuiFile::addFilter("Project", 3, "*.xml", "*.pvr", "*.pvc");
     VRGuiFile::addFilter("All", 1, "*");
     VRGuiFile::open( "Load", Gtk::FILE_CHOOSER_ACTION_OPEN, "Load project" );
 }

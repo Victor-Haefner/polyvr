@@ -490,13 +490,14 @@ Vec3d morphColor3(const Vec4d& c) { return Vec3d(c[0], c[1], c[2]); }
 Vec4d morphColor4(const Vec3d& c) { return Vec4d(c[0], c[1], c[2], 1); }
 Vec4d morphColor4(const Vec4d& c) { return c; }
 
-void VRGeometry::merge(VRGeometryPtr geo) {
+void VRGeometry::merge(VRGeometryPtr geo, PosePtr pose) {
     if (!geo) return;
     if (!geo->mesh->geo) return;
     if (!meshSet) setMesh();
 
     Matrix4d M;
-    if (shareAncestry(geo)) M = getMatrixTo(geo);
+    if (pose) M = pose->asMatrix();
+    else if (shareAncestry(geo)) M = getMatrixTo(geo);
 
     VRGeoData self(ptr());
     VRGeoData other(geo);
