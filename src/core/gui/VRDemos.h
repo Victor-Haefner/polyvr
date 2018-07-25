@@ -17,6 +17,7 @@ namespace Gtk {
     class Label;
     class Frame;
     class Table;
+    class CheckButton;
 }
 
 class VRGuiContextMenu;
@@ -120,6 +121,8 @@ class VRAppManager {
         void on_new_clicked();
         void on_saveas_clicked();
         void on_load_clicked();
+
+        void on_toggle_encryption(Gtk::CheckButton* b);
 
     public:
         VRAppManager();

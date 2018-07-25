@@ -91,7 +91,7 @@ void setColorChooserColor(string drawable, OSG::Color3f col);
 Gtk::Image* loadGTKIcon(Gtk::Image* img, string path, int w, int h);
 
 OSG::VRTexturePtr takeSnapshot();
-void saveScene(string path = "", bool saveas = false);
+void saveScene(string path = "", bool saveas = false, string encryptionKey = "");
 
 void showDialog(string d);
 void hideDialog(string d);

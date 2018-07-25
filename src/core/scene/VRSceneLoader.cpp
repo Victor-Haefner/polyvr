@@ -15,6 +15,7 @@
 #include "core/utils/VRTimer.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/system/VRSystem.h"
+#include "core/utils/VREncryption.h"
 #include "core/navigation/VRNavigator.h"
 #include "core/objects/VRLod.h"
 #include "addons/construction/building/VROpening.h"
@@ -76,7 +77,9 @@ VRSceneLoader* VRSceneLoader::get() {
     return s;
 }
 
-void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
+void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN, string encryptionKey) {
+    if (encryptionKey != "" && file[file.size()-1] == 'r') file[file.size()-1] = 'c';
+
     if (exists(file)) file = canonical(file);
     cout << " save " << file << endl;
     auto scene = VRScene::getCurrent();
@@ -92,7 +95,17 @@ void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
     VRObjectPtr root = scene->getRoot();
     root->saveUnder(objectsN);
     scene->saveScene(sceneN);
-    doc.write_to_file_formatted(file);
+
+    // write to file
+    if (encryptionKey == "") doc.write_to_file_formatted(file);
+    else {
+        VREncryptionPtr e = VREncryption::create();
+        string data = doc.write_to_string_formatted();
+        data = e->encrypt(data, encryptionKey, "0000000000000000");
+        ofstream f(file, ios::binary);
+        f.write( data.c_str(), data.size() );
+        f.close();
+    }
 }
 
 xmlpp::Element* VRSceneLoader_getElementChild_(xmlpp::Element* e, string name) {
@@ -127,10 +140,24 @@ xmlpp::Element* VRSceneLoader_getElementChild_(xmlpp::Element* e, int i) {
     return 0;
 }
 
-void VRSceneLoader::loadScene(string path) {
+void VRSceneLoader::loadScene(string path, string encryptionKey) {
     xmlpp::DomParser parser;
     parser.set_validate(false);
-    parser.parse_file(path.c_str());
+
+    if (encryptionKey != "") {
+        auto e = VREncryption::create();
+        ifstream f(path, ios::binary);
+        stringstream strm;
+        strm << f.rdbuf();
+        string data = e->decrypt(strm.str(), encryptionKey, "0000000000000000");
+        data.pop_back(); // remove last char
+        stringstream strm2(data);
+        parser.parse_stream( strm2 );
+        f.close();
+    } else {
+        parser.parse_file(path.c_str());
+    }
+
     xmlpp::Node* n = parser.get_document()->get_root_node();
     xmlpp::Element* sceneN = dynamic_cast<xmlpp::Element*>(n);
 

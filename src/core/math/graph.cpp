@@ -168,6 +168,13 @@ vector<Graph::edge> Graph::getEdgesCopy() {
     return res;
 }
 
+vector< Graph::node > Graph::getNeighbors(int i) {
+    vector<node> res;
+    for (auto e : getInEdges(i)) res.push_back( getNode(e.from) );
+    for (auto e : getOutEdges(i)) res.push_back( getNode(e.to) );
+    return res;
+}
+
 int Graph::getEdgeID(int n1, int n2) {
     if (!connected(n1,n2)) return -1;
     for (auto& e : edges[n1]) if (e.to == n2) return e.ID;
@@ -197,7 +204,11 @@ int Graph::addNode(PosePtr p) {
 }
 void Graph::clear() { nodes.clear(); edges.clear(); }
 void Graph::update(int i, bool changed) {}
-void Graph::remNode(int i) { if (i >= 0 && i < nodes.size()) nodes.erase(nodes.begin() + i); }
+
+void Graph::remNode(int i) {
+    for (auto& n : getNeighbors(i)) disconnect(i, n.ID );
+    //if (i >= 0 && i < nodes.size()) nodes.erase(nodes.begin() + i);
+}
 
 Graph::edge::edge(int i, int j, CONNECTION c, int ID) : from(i), to(j), connection(c), ID(ID) {}
 

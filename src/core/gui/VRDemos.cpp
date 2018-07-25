@@ -402,9 +402,17 @@ void VRAppManager::normFileName(string& path) {
     path += ".pvr";
 }
 
+string encryptionKey;
+void VRAppManager::on_toggle_encryption(Gtk::CheckButton* b) {
+    bool doEncryption = b->get_active();
+    encryptionKey = "";
+    if (!doEncryption) return;
+    encryptionKey = askUserPass("Please enter an encryption key");
+}
+
 void VRAppManager::on_diag_save_clicked() { // TODO: check if ending is .pvr
     string path = VRGuiFile::getPath();
-    saveScene(path, true);
+    saveScene(path, true, encryptionKey);
     VRSceneManager::get()->addFavorite(path);
     addEntry(path, "favorites_tab", true);
 }
@@ -412,12 +420,14 @@ void VRAppManager::on_diag_save_clicked() { // TODO: check if ending is .pvr
 void VRAppManager::on_saveas_clicked() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
+    encryptionKey = "";
     VRGuiFile::gotoPath( scene->getWorkdir() );
     VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRAppManager::on_diag_save_clicked) );
     VRGuiFile::clearFilter();
-    VRGuiFile::addFilter("Project", 2, "*.xml", "*.pvr");
+    VRGuiFile::addFilter("Project", 3, "*.xml", "*.pvr", "*.pvc");
     VRGuiFile::addFilter("All", 1, "*");
     VRGuiFile::open( "Save", Gtk::FILE_CHOOSER_ACTION_SAVE, "Save project as.." );
+    VRGuiFile::setSaveasWidget( sigc::mem_fun(*this, &VRAppManager::on_toggle_encryption) );
     VRGuiFile::setFile( scene->getFile() );
 }
 
@@ -433,7 +443,7 @@ void VRAppManager::on_load_clicked() {
     VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRAppManager::on_diag_load_clicked) );
     VRGuiFile::gotoPath( g_get_home_dir() );
     VRGuiFile::clearFilter();
-    VRGuiFile::addFilter("Project", 2, "*.xml", "*.pvr");
+    VRGuiFile::addFilter("Project", 3, "*.xml", "*.pvr", "*.pvc");
     VRGuiFile::addFilter("All", 1, "*");
     VRGuiFile::open( "Load", Gtk::FILE_CHOOSER_ACTION_OPEN, "Load project" );
 }
@@ -503,7 +513,11 @@ void VRAppManager::update() {
 void VRAppManager::toggleDemo(VRAppLauncherPtr e) {
     bool run = !e->running;
     VRSceneManager::get()->closeScene();
-    if (run) VRSceneManager::get()->loadScene(e->path, e->write_protected);
+    if (run) {
+        string encryptionKey;
+        if (endsWith(e->path, ".pvc")) encryptionKey = askUserPass("Please insert encryption key");
+        VRSceneManager::get()->loadScene(e->path, e->write_protected, encryptionKey);
+    }
 }
 
 OSG_END_NAMESPACE;

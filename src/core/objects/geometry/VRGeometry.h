@@ -89,7 +89,7 @@ class VRGeometry : public VRTransform {
         void setRandomColors();
         void removeDoubles(float minAngle);
         void decimate(float f);
-        void merge(VRGeometryPtr geo);
+        void merge(VRGeometryPtr geo, PosePtr pose = 0);
         void removeSelection(VRSelectionPtr sel);
         VRGeometryPtr copySelection(VRSelectionPtr sel);
         VRGeometryPtr separateSelection(VRSelectionPtr sel);

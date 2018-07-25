@@ -37,7 +37,7 @@ VRObject::VRObject(string _name) {
     setStorageType("Object");
     store("type", &type);
     store("pickable", &pickable);
-    store("visible", &visible);
+    store("visible", &visibleMask);
     storeObjVec("children", children);
 
     regStorageSetupFkt( VRUpdateCb::create("object setup", boost::bind(&VRObject::setup, this)) );
@@ -51,7 +51,7 @@ VRObject::~VRObject() {
 }
 
 void VRObject::setup() {
-    setVisible(visible);
+    setVisibleMask(visibleMask);
     setPickable(pickable);
 
     auto tmp = children;
@@ -109,7 +109,7 @@ void VRObject::printInformation() {;}
 VRObjectPtr VRObject::copy(vector<VRObjectPtr> children) {
     VRObjectPtr o = VRObject::create(getBaseName());
     if (specialized) o->setCore(getCore(), getType());
-    o->setVisible(visible);
+    o->setVisibleMask(visibleMask);
     o->setPickable(pickable);
     o->setEntity(entity);
     return o;
@@ -539,34 +539,50 @@ int VRObject::findChild(VRObjectPtr node) {
 void VRObject::hide(string mode) { setVisible(false, mode); }
 void VRObject::show(string mode) { setVisible(true, mode); }
 
-/** Returns if object is visible or not **/
-bool VRObject::isVisible(string mode) { return visible; }
+void VRObject::setVisibleUndo(unsigned int b) {
+    setVisibleMask(b);
+}
 
-void VRObject::setVisibleUndo(bool b) {
-    setVisible(b);
+bool getBit(const unsigned int& mask, int bit) {
+    return (mask & 1UL << bit);
+}
+
+void setBit(unsigned int& mask, int bit, bool value) {
+    if (value) mask |= 1UL << bit;
+    else mask &= ~(1UL << bit);
+}
+
+int getVisibleMaskBit(const string& mode) {
+    if (mode == "SHADOW") return 1;
+    return 0;
+}
+
+/** Returns if object is visible or not **/
+bool VRObject::isVisible(string mode) {
+    int b = getVisibleMaskBit(mode);
+    return getBit(visibleMask, b);
 }
 
 /** Set the visibility **/
 void VRObject::setVisible(bool b, string mode) {
-    if (b == visible && mode == "") return;
-    recUndo(&VRObject::setVisibleUndo, ptr(), visible, b);
+    int bit = getVisibleMaskBit(mode);
+    if (getBit(visibleMask, bit) == b) return;
+    auto oldMask = visibleMask;
+    setBit(visibleMask, bit, b);
+    recUndo(&VRObject::setVisibleUndo, ptr(), oldMask, visibleMask);
+    setVisibleMask(visibleMask);
+}
 
-    int mask = getNode()->node->getTravMask();
-    bool showObj = (mask != 0);
-    bool showShadow = (mask & 1UL << 4);
+void VRObject::setVisibleMask(unsigned int mask) {
+    visibleMask = mask;
+    bool showObj = getBit(visibleMask, 0);
+    bool showShadow = getBit(visibleMask, 1);
 
-    //cout << "VRObject::setVisible mode: " << mode << " to " << b << ", showObj: " << showObj << " showShadow: " << showShadow << endl;
-
-    if (mode == "") { showObj = b; visible = b; }
-    if (mode == "SHADOW") showShadow = b;
-
-    if (showObj) mask = 0xffffffff;
-    if (showShadow) mask |= 1UL << 4; // set bit
-    if (!showShadow) mask &= ~(1UL << 4); // remove bit
-    if (!showObj) mask = 0;
-
-    //cout << " VRObject::setVisible result: " << mask << ", showObj: " << showObj << " showShadow: " << showShadow << endl;
-    setTravMask(mask);
+    unsigned int osgMask = 0;
+    if (showObj) osgMask = 0xffffffff;
+    setBit(osgMask, 4, showShadow);
+    if (!showObj) osgMask = 0;
+    setTravMask(osgMask);
 }
 
 /** toggle visibility **/

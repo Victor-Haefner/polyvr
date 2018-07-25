@@ -514,13 +514,13 @@ void saveSnapshot(string path) {
     pxb->save(path, "png");
 }
 
-void saveScene(string path, bool saveas) {
+void saveScene(string path, bool saveas, string encryptionKey) {
     auto scene = OSG::VRScene::getCurrent();
     if (scene == 0) return;
     if (scene->getFlag("write_protected") && !saveas) return;
     scene->setFlag("write_protected", false);
     if (path == "") path = scene->getPath();
-    OSG::VRSceneLoader::get()->saveScene(path);
+    OSG::VRSceneLoader::get()->saveScene(path, 0, encryptionKey);
     saveSnapshot( scene->getIcon() );
     OSG::VRGuiSignals::get()->getSignal("onSaveScene")->triggerPtr<OSG::VRDevice>();
 }
