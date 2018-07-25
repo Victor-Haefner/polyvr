@@ -223,11 +223,17 @@ Matrix4d VRTransform::getMatrixTo(VRObjectPtr obj, bool parentOnly) {
     VRTransformPtr ent = getParentTransform(obj);
     Matrix4d m1 = getWorldMatrix(parentOnly);
     if (!ent) return m1;
-
     Matrix4d m2 = ent->getWorldMatrix();
-    m1.invert();
+
+    // old computation
+    m2.invert();
+    m2.mult(m1);
+    return m2;
+
+    // correct computation
+ /* m1.invert();
     m1.mult(m2);
-    return m1;
+    return m1;*/
 }
 
 void VRTransform::setMatrixTo(Matrix4d m, VRObjectPtr obj) {
