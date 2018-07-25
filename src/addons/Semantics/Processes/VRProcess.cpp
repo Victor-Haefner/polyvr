@@ -80,7 +80,7 @@ vector<VRProcessNodePtr> VRProcess::getMessages() {
 
 vector<VRProcessNodePtr> VRProcess::getSubjectMessages(int subjectID) {
     auto d = interactionDiagram;
-    auto neighbors = d->getNeightbors( d->getNode(subjectID) );
+    auto neighbors = d->getNeighbors( subjectID );
     vector<VRProcessNodePtr> res;
     for (auto node : neighbors) {
         auto subject = getNode( node.ID );
@@ -91,7 +91,7 @@ vector<VRProcessNodePtr> VRProcess::getSubjectMessages(int subjectID) {
 
 vector<VRProcessNodePtr> VRProcess::getMessageSubjects(int messageID) {
     auto d = interactionDiagram;
-    auto neighbors = d->getNeightbors( d->getNode(messageID) );
+    auto neighbors = d->getNeighbors( messageID );
     vector<VRProcessNodePtr> res;
     for (auto node : neighbors) {
         auto message = getNode( node.ID );
@@ -112,7 +112,7 @@ vector<VRProcessNodePtr> VRProcess::getSubjectActions(int subjectID) {
 //TODO: fixing; doesn't return action transitions but empty list
 vector<VRProcessNodePtr> VRProcess::getActionTransitions(int subjectID, int actionID) {
     auto d = getBehaviorDiagram(subjectID);
-    auto neighbors = d->getNeightbors( d->getNode(actionID) );
+    auto neighbors = d->getNeighbors( actionID );
     vector<VRProcessNodePtr> res;
     for (auto node : neighbors) {
         auto transition = getNode( node.ID );
