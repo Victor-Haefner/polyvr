@@ -169,15 +169,21 @@ void VRNature::addScrub(VRPolygonPtr area, bool addGround) {
         tri.add(*area);
         auto ground = tri.compute();
         ground->translate(median);
-        VRTextureGenerator tg;
-        tg.addSimpleNoise( Vec3i(128,128,1), false, Color4f(0.85,0.8,0.75,1), Color4f(0.5,0.3,0,1) );
-        auto mat = VRMaterial::create("earth");
-        mat->setTexture(tg.compose());
-        ground->setMaterial(mat);
         ground->setPositionalTexCoords(1.0, 0, Vec3i(0,2,1));
         ground->updateNormals();
         ground->flipNormals();
-        addChild(ground);
+
+        if (!groundPatches) {
+            groundPatches = VRGeometry::create("groundPatches");
+            addChild( groundPatches );
+            VRTextureGenerator tg;
+            tg.addSimpleNoise( Vec3i(128,128,1), false, Color4f(0.85,0.8,0.75,1), Color4f(0.5,0.3,0,1) );
+            auto mat = VRMaterial::create("earth");
+            mat->setTexture(tg.compose());
+            groundPatches->setMaterial(mat);
+        }
+        groundPatches->merge(ground, ground->getPose());
+        groundPatches->setPositionalTexCoords(1.0, 0, Vec3i(0,2,1)); // TODO: fix issues in VRGeoData
     }
 }
 
@@ -234,9 +240,14 @@ void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround)
         auto mat = VRMaterial::create("earth");
         mat->setTexture(tg.compose());
         mat->clearTransparency();
-        ground->setMaterial(mat);
         ground->setPositionalTexCoords(1.0, 0, Vec3i(0,2,1));
-        addChild(ground);
+        //addChild(ground);
+        if (!grassGroundPatches) {
+            grassGroundPatches = VRGeometry::create("grassGroundPatches");
+            addChild( grassGroundPatches );
+            grassGroundPatches->setMaterial(mat);
+        }
+        grassGroundPatches->merge(ground);
     }
 }
 
