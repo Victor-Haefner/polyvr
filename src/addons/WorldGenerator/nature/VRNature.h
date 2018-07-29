@@ -16,8 +16,6 @@ class VRNature : public VRLodTree, public VRWorldModule {
         map<string, VRTreePtr> bushTemplates;
         map<string, shared_ptr<VRObjectManager::Entry> > treeEntries;
         map<VRTree*, VRTreePtr> treeRefs;
-        VRGeometryPtr collisionMesh;
-
         map<VRGrassPatch*, VRGrassPatchPtr> grassPatchRefs;
 
         VRMaterialPtr truncMat;
@@ -25,7 +23,10 @@ class VRNature : public VRLodTree, public VRWorldModule {
         VRMaterialPtr leafMat2;
         VRMaterialPtr grassMat;
 
+        VRGeometryPtr collisionMesh;
         VRGeometryPtr trees;
+        VRGeometryPtr groundPatches;
+        VRGeometryPtr grassGroundPatches;
 
         VRThreadCbPtr worker;
         void computeLODsThread(VRThreadWeakPtr t);

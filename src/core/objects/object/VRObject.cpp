@@ -4,6 +4,7 @@
 #include "OSGCore.h"
 #include "VRObjectT.h"
 #include "VRAttachment.h"
+#include "core/math/pose.h"
 #include "core/math/boundingbox.h"
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGGroup.h>
@@ -48,6 +49,27 @@ VRObject::~VRObject() {
     NodeMTRecPtr p;
     if (osg->node) p = osg->node->getParent();
     if (p) p->subChild(osg->node);
+}
+
+Matrix4d VRObject::getMatrixTo(VRObjectPtr obj, bool parentOnly) {
+    VRTransformPtr ent1 = VRTransform::getParentTransform(ptr());
+    VRTransformPtr ent2 = VRTransform::getParentTransform(obj);
+
+    Matrix4d m1, m2;
+    if (ent1) m1 = ent1->getWorldMatrix(parentOnly);
+    if (ent2) m2 = ent2->getWorldMatrix();
+    if (!ent1) return m2;
+
+    m1.invert();
+    if (!ent2) return m1;
+
+    m1.mult(m2);
+    return m1;
+}
+
+PosePtr VRObject::getPoseTo(VRObjectPtr o) {
+    auto m = getMatrixTo(o);
+    return Pose::create(m);
 }
 
 void VRObject::setup() {

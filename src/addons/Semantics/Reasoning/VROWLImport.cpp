@@ -146,7 +146,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
     string& predicate = statement.predicate;
     string& object = statement.object;
 
-    //printState(statement, "hasEndState");
+    printState(statement, "hasEndState");
 
     auto stackStatement = [&]() -> RDFStatement& {
         auto s = statement;
@@ -321,7 +321,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
             if (auto c = getConcept(object)) { entities[subject]->addConcept( c ); return 0; }
 
         if (annproperties.count(predicate) && annproperties[predicate]->type == "aprop") { // entity(subject) has an annotation(predicate) with value(object)
-            if (entities[subject]->getProperty(predicate)) {
+            if (entities[subject]->getProperty(predicate, false)) {
                 entities[subject]->set(predicate, object); return 0;
             }
         }
@@ -329,7 +329,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
         // entity(subject) has a property(predicate) with value(object)
         //auto pv = entities[subject]->getValues(predicate);
         //if (pv.size()) { pv[0]->value = object; return 0; }
-        auto p = entities[subject]->getProperty(predicate);
+        auto p = entities[subject]->getProperty(predicate, false);
         if (p) {
             //if (p->type == "") cout << "Warning: data property " << predicate << " has no data type!\n";
             entities[subject]->add(predicate, object); return 0;
@@ -413,6 +413,7 @@ void VROWLImport::AgglomerateData() {
 
         if (int(stack.size()) == lastStack && jobs == lastJobSize) {
             cout << "RDF parser warning: stack not shrinking, aborting with " << jobs << " triplets remaining!" << endl;
+            cout << "Print Stack: " << endl;
             for (auto& sv : stack) for (auto& s : sv.second) printState(s);
             for (auto& lv : lists) {
                 cout << " parent: " << lv.first << " list: " << lv.second.listID << " complete: " << lv.second.complete << " - ";
@@ -466,8 +467,8 @@ void VROWLImport::read(VROntologyPtr o, string path) {
     raptor_free_world(world);
 
     AgglomerateData();
-    //printTripleStore();
     cout << " VROWLImport::load done\n";
 }
+
 
 

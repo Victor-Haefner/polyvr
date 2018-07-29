@@ -6,6 +6,7 @@
 #include "core/objects/VRObjectFwd.h"
 #include "core/math/VRMathFwd.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
+#include <OpenSG/OSGMatrixFwd.h>
 
 class VRAttachment;
 
@@ -151,6 +152,9 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
 
         void setup();
         void destroy();
+
+        PosePtr getPoseTo(VRObjectPtr o);
+        Matrix4d getMatrixTo(VRObjectPtr o, bool parentOnly = false);
 };
 
 OSG_END_NAMESPACE;

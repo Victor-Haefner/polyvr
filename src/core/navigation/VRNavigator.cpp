@@ -277,7 +277,7 @@ void VRNavigator::fly_walk(VRDeviceWeakPtr _dev) {
     if (target == 0 || flystick == 0) return;
     if (target->getParent() == 0 ) return;
 
-    Vec3d dir = flystick->getPoseTo(target->getParent())->dir();
+    Vec3d dir = target->getParent()->getPoseTo(flystick)->dir();
     //Vec3d dir = flystick->getDir();
     dir.normalize();
 
