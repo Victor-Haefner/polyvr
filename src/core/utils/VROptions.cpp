@@ -13,6 +13,7 @@ VROptions::VROptions() : desc("Configuration ") {
 
     addOption<bool>(false, "standalone");
     addOption<string>("", "application");
+    addOption<string>("", "decryption");
     addOption<string>("", "setup");
 
     addOption<int>(0, "shadowType");
