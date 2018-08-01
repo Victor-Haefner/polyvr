@@ -98,6 +98,7 @@ void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN, string encrypti
 
     // write to file
     if (encryptionKey == "") doc.write_to_file_formatted(file);
+#ifndef NO_ENCRYPTION
     else {
         VREncryptionPtr e = VREncryption::create();
         string data = doc.write_to_string_formatted();
@@ -106,6 +107,7 @@ void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN, string encrypti
         f.write( data.c_str(), data.size() );
         f.close();
     }
+#endif
 }
 
 xmlpp::Element* VRSceneLoader_getElementChild_(xmlpp::Element* e, string name) {
@@ -144,7 +146,9 @@ void VRSceneLoader::loadScene(string path, string encryptionKey) {
     xmlpp::DomParser parser;
     parser.set_validate(false);
 
-    if (encryptionKey != "") {
+    if (encryptionKey== "")  parser.parse_file(path.c_str());
+#ifndef NO_ENCRYPTION
+     else {
         auto e = VREncryption::create();
         ifstream f(path, ios::binary);
         stringstream strm;
@@ -154,9 +158,8 @@ void VRSceneLoader::loadScene(string path, string encryptionKey) {
         stringstream strm2(data);
         parser.parse_stream( strm2 );
         f.close();
-    } else {
-        parser.parse_file(path.c_str());
     }
+#endif
 
     xmlpp::Node* n = parser.get_document()->get_root_node();
     xmlpp::Element* sceneN = dynamic_cast<xmlpp::Element*>(n);
