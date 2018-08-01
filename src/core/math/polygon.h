@@ -49,7 +49,7 @@ class VRPolygon {
         double getDistance(Vec3d p);
         VRPolygonPtr shrink(double amount);
         Vec3d getRandomPoint();
-        vector<Vec3d> getRandomPoints(double density = 10, double padding = 0);
+        vector<Vec3d> getRandomPoints(double density = 10, double padding = 0, double spread = 0.5);
 
         vector<Vec3d> toSpace(Matrix4d m);
         bool isInside(Vec2d p);

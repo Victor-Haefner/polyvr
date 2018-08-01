@@ -162,7 +162,7 @@ void VRNature::addScrub(VRPolygonPtr area, bool addGround) {
     if (auto t = terrain.lock()) t->elevatePolygon(area, 0.18);
     Vec3d median = area->getBoundingBox().center();
     area->translate(-median);
-    for (auto p : area->getRandomPoints(1)) createRandomBush(median+p);
+    for (auto p : area->getRandomPoints(1.0)) createRandomBush(median+p);
 
     if (addGround) {
         Triangulator tri;
