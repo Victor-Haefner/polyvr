@@ -575,7 +575,7 @@ void VRMaterial::setTexture(string img_path, bool alpha, int unit) { // TODO: im
     md->texture->getImage()->read(img_path.c_str());
     setTexture(md->texture, alpha, unit);*/
     auto tex = VRTexture::create();
-    tex->getImage()->read(img_path.c_str());
+    tex->read(img_path);
     setTexture(tex, alpha, unit);
 }
 

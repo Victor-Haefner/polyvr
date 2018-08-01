@@ -421,9 +421,9 @@ void main(void) {
 	//vec4 mid = normalize( gl_ModelViewMatrix * vec4(0,0,0,1) );
 	float D = dot(vec3(0,0,1), vertNorm);
 	Discard = 0;
-	if (abs(D) < 0.65) Discard = 1;
+	if (abs(D) < 0.65) Discard = 1; // LoD
 	vec4 p = gl_ModelViewProjectionMatrix*osg_Vertex;
-	if (p[2] < 40) Discard = 1;
+	if (p[2] < 45) Discard = 1; // discard depending on orientation
     gl_Position = p;
 }
 );
