@@ -43,6 +43,7 @@ class Graph : public VRStorage {
             int edge = -1;
             float pos = 0;
 
+            position();
             position(int n);
             position(int e, float p);
         };

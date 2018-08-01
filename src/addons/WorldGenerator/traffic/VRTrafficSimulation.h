@@ -38,6 +38,7 @@ class VRTrafficSimulation : public VRObject {
             int lastMoveTS = 0;
 
             Vehicle(Graph::position p);
+            Vehicle();
             ~Vehicle();
 
             void destroy();
@@ -51,6 +52,7 @@ class VRTrafficSimulation : public VRObject {
         };
 
         struct road {
+            int rID = -1;
             float density = 0;
             float length = 0;
             bool macro = true;
@@ -75,6 +77,7 @@ class VRTrafficSimulation : public VRObject {
         VRRoadNetworkPtr roadNetwork;
         map<int, road> roads;
         map<int, Vehicle> allVehicles;
+        vector<Vehicle> vecVehicles;
         vector<int> seedRoads;
         vector<int> nearRoads;
         vector<Vehicle> users;
@@ -117,6 +120,7 @@ class VRTrafficSimulation : public VRObject {
         string getVehicleData(int ID);
         void runDiagnostics();
         void setSeedRoad(int debugOverRideSeedRoad);
+        bool isSeedRoad(int roadID);
 
         void addUser(VRTransformPtr t);
 
