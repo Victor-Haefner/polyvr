@@ -493,9 +493,9 @@ void VRRoadNetwork::computeSigns() {
 
             if (type == "Stop") { // TODO: use lanes widths
                 Vec3d x = pose->x();
-                Vec3d p1 = pose->pos() - x*3.0;
-                Vec3d p2 = pose->pos() - x*0.3;
-                auto mL = addPath("StopLine", "Stopline", { road->addNode(0, p1), road->addNode(0, p2) }, { x, x });
+                Vec3d p1 = pose->pos() + x*0.5;
+                Vec3d p2 = pose->pos() + x*2.8;
+                auto mL = road->addPath("StopLine", "Stopline", { road->addNode(0, p1), road->addNode(0, p2) }, { x, x });
                 mL->set("width", toString(0.3));
                 roadEnt->add("markings", mL->getName());
             }
