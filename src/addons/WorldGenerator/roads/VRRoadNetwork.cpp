@@ -248,6 +248,8 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
     auto pathEnt = road->getEntity("path");
     if (!pathEnt) return;
 	auto lanes = road->getAllEntities("lanes");
+    vector<vector<int>> lanesD1;
+    vector<vector<int>> lanesD2;
 
 	float roadWidth = 0;
 	for (auto lane : lanes) roadWidth += toFloat( lane->get("width")->value );
@@ -280,14 +282,36 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
             reverse(norms.begin(), norms.end());
         }
 
+        vector<int> laneEdges;
         for (uint i=1; i<nodes.size(); i++) {
             connectGraph({nodes[i-1], nodes[i]}, {norms[i-1], norms[i]}, lane);
+            laneEdges.push_back(graph->getEdgeID(nodes[i-1]->getValue<int>("graphID", -1),nodes[i]->getValue<int>("graphID", -1)));
+            //cout << toString(laneEdges[i-1]) << endl;
         }
 
         auto lPath = addPath("Path", "lane", nodes, norms);
 		lane->add("path", lPath->getName());
 		widthSum += width;
+		if (direction > 0) { lanesD1.push_back(laneEdges); cout << "pushed >0" << endl; }
+		if (direction < 0) { lanesD2.push_back(laneEdges); cout << "pushed <0" << endl; }
+		}
+
+	if (lanesD1.size()>1) {
+        for (int i = 0; i<lanesD1[0].size();i++) {
+            for (int j = 1; j<lanesD1.size();j++) {
+                graph->addRelation(lanesD1[j][i],lanesD1[j-1][i]);
+                //cout << toString(lanesD1[j][i]) << " -- " << toString(lanesD1[j-1][i]) << endl;
+            }
+        }
 	}
+    if (lanesD2.size()>1) {
+        for (int i = 0; i<lanesD2[0].size();i++) {
+            for (int j = 1; j<lanesD2.size();j++) {
+                graph->addRelation(lanesD2[j][i],lanesD2[j-1][i]);
+                //cout << toString(lanesD2[j][i]) << " -- " << toString(lanesD2[j-1][i]) << endl;
+            }
+        }
+    }
 }
 
 void VRRoadNetwork::addFence( PathPtr path, float height ) {

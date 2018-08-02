@@ -21,8 +21,22 @@ class VRTrafficSimulation : public VRObject {
 
     private:
         struct Vehicle {
+            enum VISION {
+                INFRONT = 0,
+                FROMLEFT = 1,
+                FROMRIGHT = 2
+                //BEHIND = 3
+            };
+            enum INTENTION {
+                STRAIGHT = 0,
+                SWITCHLEFT = 1,
+                SWITCHRIGHT = 2
+                //REVERSE = 3
+            };
+
             int vID = -1;
             VRTransformPtr t;
+            //VRTransformPtr offset;
             VRObjectPtr mesh;
 
             vector<VRGeometryPtr> turnsignalsBL;
@@ -32,10 +46,13 @@ class VRTrafficSimulation : public VRObject {
             vector<VRGeometryPtr> headlights;
             vector<VRGeometryPtr> backlights;
 
+            map<int, bool> vehiclesight;
+
             Graph::position pos;
             float speed = 0.15;
             Vec3d lastMove = Vec3d(0,0,0);
             int lastMoveTS = 0;
+            bool laneTransition = false;
 
             Vehicle(Graph::position p);
             Vehicle();

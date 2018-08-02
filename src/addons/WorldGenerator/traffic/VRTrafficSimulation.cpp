@@ -36,6 +36,9 @@ void erase(vector<T>& v, const T& t) {
 VRTrafficSimulation::Vehicle::Vehicle(Graph::position p) : pos(p) {
     t = VRTransform::create("t");
     speed = speed*(1.0+0.2*0.01*(rand()%100));
+    vehiclesight[INFRONT] = false;
+    vehiclesight[FROMLEFT] = false;
+    vehiclesight[FROMRIGHT] = false;
 }
 
 VRTrafficSimulation::Vehicle::Vehicle() {}
@@ -273,7 +276,7 @@ void VRTrafficSimulation::updateSimulation() {
         return d > 0 && L < 5 && rL < 2; // in front, in range, in corridor
     };
 
-    auto commingRight = [&](PosePtr p1, PosePtr p2, Vec3d lastMove) -> bool {
+    auto comingRight = [&](PosePtr p1, PosePtr p2, Vec3d lastMove) -> bool {
         lastMove.normalize();
         Vec3d D = p2->pos() - (p1->pos() + lastMove*3);
         float L = D.length();
@@ -289,11 +292,28 @@ void VRTrafficSimulation::updateSimulation() {
         return d > 0 && L < 15 && r > 0 && a > 0.3/* && rL >= 2*/; // in front, right, crossing paths,
     };
 
+    auto comingLeft = [&](PosePtr p1, PosePtr p2, Vec3d lastMove) -> bool { //vehicle1, vehicle2, vehicle1.lastmove
+        lastMove.normalize();
+        Vec3d D = p2->pos() - (p1->pos() + lastMove*3);
+        float L = D.length();
+        Vec3d Dn = D/L;
+
+        float d = Dn.dot(lastMove);
+        Vec3d x = lastMove.cross(Vec3d(0,1,0));
+        x.normalize();
+        float r = Dn.dot(x);
+        //float rL = abs( Dn.dot(x) );
+        float a = -x.dot( p2->dir() );
+
+        return d > 0 && L < 15 && r > 0 && a < -0.3;
+    };
+
     auto propagateVehicles = [&]() {
         int N = 0;
         for (auto& road : roads) {
             for (auto& vehicle : road.second.vehicles) {
                 if (!vehicle.t) continue;
+                vehicle.vehiclesight.clear();
                 float d = speedMultiplier*vehicle.speed/road.second.length;
                 if (!isSimRunning) d = 0;
 
@@ -307,18 +327,24 @@ void VRTrafficSimulation::updateSimulation() {
                     if (!v->t) continue;
                     auto p = v->t->getPose();
 
-                    if (inFront(pose, p, vehicle.lastMove)) state = 1;
-                    else if (commingRight(pose, p, vehicle.lastMove)) state = 2;
+                    if (inFront(pose, p, vehicle.lastMove)) {
+                        state = 1;
+                        vehicle.vehiclesight[vehicle.INFRONT] = true;
+                        cout << toString(vehicle.vID) << " infront" <<endl;
+                    }
+                    else if (comingRight(pose, p, vehicle.lastMove)) state = 2;
+                    if (comingLeft(pose, p, vehicle.lastMove)) { vehicle.vehiclesight[vehicle.FROMLEFT] = true; cout << toString(vehicle.vID) << " left" <<endl; }
+                    if (comingRight(pose, p, vehicle.lastMove)) { vehicle.vehiclesight[vehicle.FROMRIGHT] = true; cout << toString(vehicle.vID) << " right" <<endl; }
                     if (state > 0) break;
                 }
 
                 bool debugBool = false; ///Debugging
-                if (debugBool) state = 0; ///DANGER: debug mode, state = 0, discard collision check
+                if (debugBool) state = 0; //DANGER: debug mode, state = 0, discard collision check
 
                 for (auto& v : users) {
                     auto p = v.t->getPose();
                     if (inFront(pose, p, vehicle.lastMove)) state = 1;
-                    else if (commingRight(pose, p, vehicle.lastMove)) state = 2;
+                    else if (comingRight(pose, p, vehicle.lastMove)) state = 2;
                     if (state > 0) break;
                 }
 
@@ -483,8 +509,8 @@ string VRTrafficSimulation::getVehicleData(int ID){
     res+="Number of Vehicles: " + toString(counter) + nl;*/
     auto v = allVehicles[ID];
     res+= "VehicleID: " + toString(v.getID());
-    res+= nl + " position" + nl +  " node:" + toString(v.pos.node) + " edge: " + toString(v.pos.edge) + " pos:" +  toString(v.pos.pos);
-
+    res+= nl + " position: " + toString(v.t->getFrom());
+    res+= nl + " vehiclesight: " + nl +  " INFRONT:" + toString(v.vehiclesight[v.INFRONT]) + " FROMLEFT: " + toString(v.vehiclesight[v.FROMLEFT]) + " FROMRIGHT:" + toString(v.vehiclesight[v.FROMRIGHT]);
 
     return res;
 }
