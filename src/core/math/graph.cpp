@@ -142,6 +142,20 @@ vector< Graph::node > Graph::getNeighbors(int i) {
     return res;
 }
 
+vector< int > Graph::getRelations(int e) { return edges[e].relations; }
+
+void Graph::addRelation(int e1, int e2) {
+    if (!hasRelation(e1,e2)) {
+        edges[e1].relations.push_back(e2);
+        edges[e2].relations.push_back(e1);
+    }
+}
+
+bool Graph::hasRelation(int e1, int e2) {
+    for (e : edges[e1].relations) { if (e == e2) return true; }
+    return false;
+}
+
 int Graph::getEdgeID(int n1, int n2) {
     auto edge = getEdge(n1, n2);
     return edge.ID;
