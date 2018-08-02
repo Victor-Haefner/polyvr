@@ -389,7 +389,17 @@ void VRMultiTouch::updatePosition(int x, int y) {
     }
 }
 
+/**
+* Is invoked whenever a touch event happens.
+* @param button: id of the "button", mostly meaning which finger is touching. First event has id=0,
+* second consecutive event has id=1 and so on. Releasing a finger frees its id up for further events.
+* @param state: state of the event. 1 = press, 0 = release
+* @param x: x coordinate of the touch device, not necessarily same resolution as screen
+* @param y: y coordinate of the touch device, not necessarily same resolution as screen
+*/
 void VRMultiTouch::mouse(int button, int state, int x, int y) {
+    cout << "VRMultiTouch::mouse  Button: " << button << ", State: " << state << ", X:Y: " << x << ":" << y << endl;
+
     updatePosition(x,y);
     change_button(button, state);
     fingers[this->currentFingerID].eventState = -1;
