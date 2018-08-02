@@ -29,6 +29,7 @@ PyMethodDef VRPyPath::methods[] = {
     {"isStraight", PyWrapOpt2(Path, isStraight, "Check if the path is straight between point i and j - bool isStraight( | int i, int j )", "0|0", bool, int, int ) },
     {"isCurve", PyWrapOpt2(Path, isCurve, "Check if the path is curved between point i and j - bool isCurve( | int i, int j )", "0|0", bool, int, int ) },
     {"isSinuous", PyWrapOpt2(Path, isSinuous, "Check if the path is sinuous between point i and j - bool isSinuous( | int i, int j )", "0|0", bool, int, int ) },
+    {"translate", PyWrap2(Path, translate, "Move path points", void, Vec3d ) },
     {NULL}  /* Sentinel */
 };
 
