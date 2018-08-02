@@ -12,24 +12,27 @@
 #include "VRPyTypeCaster.h"
 
 using namespace OSG;
+
+simpleVRPyType(Signal, 0)
 simpleVRPyType(Device, New_named_ptr)
 
+PyMethodDef VRPySignal::methods[] = {
+    {NULL}  /* Sentinel */
+};
+
 PyMethodDef VRPyDevice::methods[] = {
-    {"getName", (PyCFunction)VRPyDevice::getName, METH_NOARGS, "Return device name." },
-    {"destroy", (PyCFunction)VRPyDevice::destroy, METH_NOARGS, "Destroy device." },
-    {"getBeacon", (PyCFunction)VRPyDevice::getBeacon, METH_VARARGS, "Get device beacon. - DeviceBeacon getBeacon(int beaconId = 0)" },
-    {"setBeacon", (PyCFunction)VRPyDevice::setBeacon, METH_VARARGS, "Set device beacon." },
-    {"getTarget", (PyCFunction)VRPyDevice::getTarget, METH_NOARGS, "Get device target." },
-    {"setTarget", (PyCFunction)VRPyDevice::setTarget, METH_VARARGS, "Set device target." },
-    {"getKey", (PyCFunction)VRPyDevice::getKey, METH_NOARGS, "Get activated device key." },
-    {"getState", (PyCFunction)VRPyDevice::getState, METH_NOARGS, "Get device state." },
-    {"getKeyState", (PyCFunction)VRPyDevice::getKeyState, METH_VARARGS, "Get device key state." },
-    {"getSlider", (PyCFunction)VRPyDevice::getSlider, METH_VARARGS, "Get device slider state." },
-    {"getMessage", (PyCFunction)VRPyDevice::getMessage, METH_NOARGS, "Get device received message." },
-    {"getType", (PyCFunction)VRPyDevice::getType, METH_NOARGS, "Get device type." },
-    {"setDnD", (PyCFunction)VRPyDevice::setDnD, METH_VARARGS, "Set drag && drop." },
-//    {"intersect", (PyCFunction)VRPyDevice::intersect, METH_VARARGS, "Intersects the scene - bool intersect( | obj scene, bool force )\n  Returns True if intersected something, else False.\n\t if force set True, ignores cached intersections" },
-    {"intersect", (PyCFunction)VRPyDevice::intersect, METH_VARARGS, "Attempts to intersect the device beacon with the scene - \n"
+    {"getBeacon", PyWrapOpt( Device, getBeacon, "Get device beacon. - DeviceBeacon getBeacon(int beaconId = 0)", "0", VRTransformPtr, int ) },
+    {"setBeacon", PyWrapOpt( Device, setBeacon, "Set device beacon.", "0", void, VRTransformPtr, int ) },
+    {"getTarget", PyWrap( Device, getTarget, "Get device target.", VRTransformPtr ) },
+    {"setTarget", PyWrap( Device, setTarget, "Set device target.", void, VRTransformPtr ) },
+    {"getKey", PyWrap( Device, key, "Get activated device key.", int ) },
+    {"getState", PyWrap( Device, getState, "Get device state.", int ) },
+    {"getKeyState", PyWrap( Device, b_state, "Get device key state.", int, int ) },
+    {"getSlider", PyWrap( Device, s_state, "Get device slider state.", float, int ) },
+    {"getMessage", PyWrap( Device, getMessage, "Get device received message.", string ) },
+    {"getType", PyWrap(Device, getType, "Get device type.", string ) },
+    {"setDnD", PyWrap( Device, setDnD, "Set drag && drop.", void, bool ) },
+    {"intersect", PyWrapOpt(Device, intersect2, "Attempts to intersect the device beacon with the scene - \n"
                                                                     "bool intersect(Object scene, bool force, DeviceBeacon beacon, Vec3 dir)\n\n"
                                                                     "  return: True, if intersection successful, otherwise False\n\n"
                                                                     "  scene:  [optional] default=VR.Scene()\n"
@@ -39,22 +42,22 @@ PyMethodDef VRPyDevice::methods[] = {
                                                                     "  beacon: [optional] default=device.getBeacon()\n"
                                                                     "          Specifies which beacon of the device will be intersected, in case of multiple beacons (Multitouch).\n\n"
                                                                     "  dir:    [optional] default=[0,0,-1]\n"
-                                                                    "          Currently not implemented! Creates a beacon from device position in given direction for intersect." },
-    {"getIntersected", (PyCFunction)VRPyDevice::getIntersected, METH_NOARGS, "Get device intersected object." },
+                                                                    "          Currently not implemented! Creates a beacon from device position in given direction for intersect.", "0|0|0|0 0 -1", bool, VRObjectPtr, bool, VRTransformPtr, Vec3d ) },
+    {"getIntersected", PyWrap(Device, getIntersected, "Get device intersected object.", VRObjectPtr ) },
     {"getIntersection", PyWrap(Device, getIntersectionPoint, "Get device intersection point", Pnt3d ) },
     {"getIntersectionNormal", PyWrap(Device, getIntersectionNormal, "Get normal at intersection point", Vec3d ) },
     {"getIntersectionUV", PyWrap(Device, getIntersectionUV, "Get uv at intersection point", Vec2d ) },
     {"getIntersectionTriangle", PyWrap(Device, getIntersectionTriangle, "Get triangle at intersection point", Vec3i ) },
-    {"addIntersection", (PyCFunction)VRPyDevice::addIntersection, METH_VARARGS, "Add device intersection node." },
-    {"remIntersection", (PyCFunction)VRPyDevice::remIntersection, METH_VARARGS, "Remove device intersection node." },
-    {"getDragged", (PyCFunction)VRPyDevice::getDragged, METH_NOARGS, "Get dragged object." },
-    {"getDragGhost", (PyCFunction)VRPyDevice::getDragGhost, METH_NOARGS, "Get drag ghost." },
-    {"drag", (PyCFunction)VRPyDevice::drag, METH_VARARGS, "Start to drag an object - drag(obj)" },
-    {"drop", (PyCFunction)VRPyDevice::drop, METH_NOARGS, "Drop any object - drop()" },
-    {"setSpeed", (PyCFunction)VRPyDevice::setSpeed, METH_VARARGS, "Set the navigation speed of the device - setSpeed(float sx, float sy)" },
-    {"getSpeed", PyWrap(Device, getSpeed, "Get the navigation speed of the device", Vec2d ) },
-    {"addSignal", (PyCFunction)VRPyDevice::addSignal, METH_VARARGS, "Add a new signal - addSignal(int key, int state)" },
-    {"trigger", (PyCFunction)VRPyDevice::trigger, METH_VARARGS, "Trigger signal - trigger(int key, int state)" },
+    {"addIntersection", PyWrap( Device, addIntersection, "Add device intersection node.", void, VRObjectPtr ) },
+    {"remIntersection", PyWrap( Device, remIntersection, "Remove device intersection node.", void, VRObjectPtr ) },
+    {"getDragged", PyWrap( Device, getDragged, "Get dragged object.", VRTransformPtr ) },
+    {"getDragGhost", PyWrap( Device, getDragGhost, "Get drag ghost.", VRTransformPtr ) },
+    {"drag", PyWrap( Device, drag, "Start to drag an object", void, VRObjectPtr ) },
+    {"drop", PyWrap( Device, drop, "Drop any object", void ) },
+    {"setSpeed", PyWrap( Device, setSpeed, "Set the navigation speed of the device", void, Vec2d ) },
+    {"getSpeed", PyWrap( Device, getSpeed, "Get the navigation speed of the device", Vec2d ) },
+    {"addSignal", PyWrap( Device, newSignal, "Add a new signal, key, state", VRSignalPtr, int, int ) },
+    {"trigger", PyWrap( Device, change_button, "Trigger signal, key, state", void, int, int ) },
     {NULL}  /* Sentinel */
 };
 
@@ -70,7 +73,8 @@ PyObject* VRPyDevice::fromSharedPtr(VRDevicePtr dev) {
     cout << "\nERROR in VRPyTypeCaster::cast device: " << type << " not handled!\n";
     return VRPyBaseT<VRDevice>::fromSharedPtr(dev);
 }
-
+/*
+<<<<<<< HEAD
 PyObject* VRPyDevice::addSignal(VRPyDevice* self, PyObject *args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::setSpeed, Object is invalid"); return NULL; }
     int k, s;
@@ -234,3 +238,5 @@ PyObject* VRPyDevice::getDragged(VRPyDevice* self) {
     return VRPyTypeCaster::cast(self->objPtr->getDraggedObject());
 }
 
+=======
+>>>>>>> upstream/master*/

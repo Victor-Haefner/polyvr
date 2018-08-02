@@ -243,8 +243,8 @@ void VRMultiTouch::clearSignals() {
     addSlider(5);
     addSlider(6);
 
-    addSignal( 0, 0)->add( getDrop() );
-    addSignal( 0, 1)->add( addDrag( getBeacon() ) );
+    newSignal( 0, 0)->add( getDrop() );
+    newSignal( 0, 1)->add( addDrag( getBeacon() ) );
 }
 
 void VRMultiTouch::multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut) {

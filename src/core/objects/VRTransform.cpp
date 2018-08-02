@@ -219,19 +219,6 @@ Matrix4d VRTransform::getRotationMatrix() {
     return m;
 }
 
-Matrix4d VRTransform::getMatrixTo(VRObjectPtr obj, bool parentOnly) {
-    VRTransformPtr ent = getParentTransform(obj);
-
-    Matrix4d m1, m2;
-    if (ent) m1 = ent->getWorldMatrix();
-    m2 = getWorldMatrix(parentOnly);
-    if (!ent) return m2;
-
-    m1.invert();
-    m1.mult(m2);
-    return m1;
-}
-
 void VRTransform::setMatrixTo(Matrix4d m, VRObjectPtr obj) {
     VRTransformPtr ent = getParentTransform(obj);
     if (!ent) { setWorldMatrix(m); return; }
@@ -372,7 +359,7 @@ VRTransformPtr VRTransform::getParentTransform(VRObjectPtr o) {
 void VRTransform::setRelativePose(PosePtr p, VRObjectPtr o) {
     Matrix4d m = p->asMatrix();
     Matrix4d wm = getMatrixTo(o);
-    wm.invert();
+    //wm.invert();
     wm.mult(m);
 
     Matrix4d lm = getMatrix();
@@ -507,11 +494,6 @@ void VRTransform::setPose2(const Pose& p) { setTransform(p.pos(), p.dir(), p.up(
 PosePtr VRTransform::getPose() { return Pose::create(Vec3d(_from), Vec3d(_dir), Vec3d(_up)); }
 PosePtr VRTransform::getWorldPose() { return Pose::create( getWorldMatrix() ); }
 void VRTransform::setWorldPose(PosePtr p) { setWorldMatrix(p->asMatrix()); }
-
-PosePtr VRTransform::getPoseTo(VRObjectPtr o) {
-    auto m = getMatrixTo(o);
-    return Pose::create(m);
-}
 
 /** Set the local Matrix4d **/
 void VRTransform::setMatrix(Matrix4d m) {
@@ -925,7 +907,7 @@ void VRTransform::applyTransformation(PosePtr po) {
     };
 
     auto computeNewMatrix = [&](VRGeometryPtr geo) {
-        auto m = geo->getMatrixTo(ptr());
+        auto m = getMatrixTo(geo);
         auto mI = m; mI.invert();
         m.multLeft(m0);
         m.multLeft(mI);

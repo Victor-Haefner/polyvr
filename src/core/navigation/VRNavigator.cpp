@@ -49,7 +49,7 @@ void VRNavPreset::updateBinding(VRNavBinding& b) {
     if (dev == 0) return;
 
     b.clearSignal();
-    auto sig = b.doRepeat ? dev->addToggleSignal(b.key) : dev->addSignal( b.key, b.state);
+    auto sig = b.doRepeat ? dev->addToggleSignal(b.key) : dev->newSignal( b.key, b.state);
     sig->add(b.cb);
     b.sig = sig;
     //cout << "\nUPDATE BINDING " << b.cb->getName() << endl;
@@ -130,7 +130,7 @@ string VRNavigator_base::getNavigationTip(string s) {
     auto& bngs = p->getBindings();
     for ( uint i=0; i<bngs.size(); i++ ) {
         auto& v = bngs[i];
-        res += v.cb->getName() + " ";
+        res += v.cb->name + " ";
         res += toString(v.key) + " ";
         res += toString(v.state);
         if (i < bngs.size()-1) res += "\n";
@@ -143,7 +143,7 @@ string VRNavigator_base::getActiveNavigation() { return current_name; }
 vector<string> VRNavigator_base::getNavigationNames() { vector<string> res; for(auto p : presets) res.push_back(p.first); return res; }
 map<string, shared_ptr<VRNavPreset>> VRNavigator_base::getNavigations() { return presets; }
 
-void VRNavigator_base::storeNavigationCallback(VRDeviceCbPtr cb) { library[cb->getName()] = cb; }
+void VRNavigator_base::storeNavigationCallback(VRDeviceCbPtr cb) { library[cb->name] = cb; }
 VRDeviceCbPtr VRNavigator_base::getNavigationCallback(string s) { if (library.count(s)) return library[s]; return 0; }
 map<string, VRDeviceCbPtr>& VRNavigator_base::getNavigationCallbacks() { return library; }
 
@@ -277,7 +277,7 @@ void VRNavigator::fly_walk(VRDeviceWeakPtr _dev) {
     if (target == 0 || flystick == 0) return;
     if (target->getParent() == 0 ) return;
 
-    Vec3d dir = flystick->getPoseTo(target->getParent())->dir();
+    Vec3d dir = target->getParent()->getPoseTo(flystick)->dir();
     //Vec3d dir = flystick->getDir();
     dir.normalize();
 

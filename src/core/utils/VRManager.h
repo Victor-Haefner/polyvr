@@ -5,7 +5,7 @@
 #include "VRName.h"
 
 template<class T>
-class VRManager : public VRName {
+class VRManager : public OSG::VRName {
     protected:
         map<int, shared_ptr<T> > data;
         vector<int> getIDs();

@@ -84,7 +84,7 @@ void VRDevice::clearSignals() {
 string VRDevice::getType() { return type; }
 
 // signal event setup
-VRSignalPtr VRDevice::addSignal(int key, int state) {
+VRSignalPtr VRDevice::newSignal(int key, int state) {
     VRSignalPtr sig = createSignal(key, state);
     BStates[key] = false;
     return sig;
@@ -166,9 +166,27 @@ void VRDevice::printMap() {
 void VRDevice::setSpeed(Vec2d s) { speed = s; }
 Vec2d VRDevice::getSpeed() { return speed; }
 
+void VRDevice::drag(VRObjectPtr obj) { VRIntersect::drag(obj, getBeacon()); }
+void VRDevice::drop() { VRIntersect::drop(); }
+
+bool VRDevice::intersect2(VRObjectPtr o, bool f, VRTransformPtr c, Vec3d d) {
+    OSG::VRIntersection ins = VRIntersect::intersect(o, f, c, d);
+    return ins.hit;
+}
+
 Pnt3d VRDevice::getIntersectionPoint() { return getLastIntersection().point; }
 Vec3i VRDevice::getIntersectionTriangle() { return getLastIntersection().triangleVertices; }
 Vec3d VRDevice::getIntersectionNormal() { return getLastIntersection().normal; }
 Vec2d VRDevice::getIntersectionUV() { return getLastIntersection().texel; }
+VRObjectPtr VRDevice::getIntersected() { return getLastIntersection().object.lock(); }
+
+void VRDevice::addIntersection(VRObjectPtr obj) { addDynTree(obj); }
+void VRDevice::remIntersection(VRObjectPtr obj) { remDynTree(obj); }
+VRTransformPtr VRDevice::getDragged() { return getDraggedObject(); }
+VRTransformPtr VRDevice::getDragGhost() { return getDraggedGhost(); }
+
+VRTransformPtr VRDevice::getBeacon(int i) { return VRAvatar::getBeacon(i); }
+void VRDevice::setBeacon(VRTransformPtr b, int i) { VRAvatar::setBeacon(b, i); }
+void VRDevice::setDnD(bool b) { toggleDragnDrop(b); }
 
 OSG_END_NAMESPACE;

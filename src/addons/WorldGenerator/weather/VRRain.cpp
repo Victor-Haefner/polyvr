@@ -54,9 +54,9 @@ VRRain::VRRain() : VRGeometry("Rain") {
     oldCamTex = camDef;
 
     texRenderer = VRTextureRenderer::create("rainTexRenderer");
-    texRenderer-> setPersistency(0);
+    texRenderer->setPersistency(0);
     auto scene = VRScene::getCurrent();
-    scene->getRoot()->addChild(texRenderer);
+    scene->getRoot()->addChild(texRenderer, true, 0);
     auto lightF = scene->getRoot()->find("light");
 
     camTex = VRCamera::create("camRainTexture");
@@ -78,6 +78,7 @@ VRRain::VRRain() : VRGeometry("Rain") {
     mat->setShaderParameter("tex", 1);
 
     cube = VRGeometry::create("cubeRainTexture");
+    cube->setPersistency(0);
 	cube->setMaterial(renderMat);
 	lightF->addChild(cube);
 
@@ -96,7 +97,12 @@ VRRain::VRRain() : VRGeometry("Rain") {
 }
 VRRain::~VRRain() {}
 
-VRRainPtr VRRain::create() { return VRRainPtr( new VRRain() ); }
+VRRainPtr VRRain::create() {
+    auto rain = VRRainPtr( new VRRain() );
+    rain->hide("SHADOW");
+    return rain;
+}
+
 VRRainPtr VRRain::ptr() { return static_pointer_cast<VRRain>( shared_from_this() ); }
 
 float VRRain::get() { return scale; }
@@ -189,9 +195,9 @@ void VRRain::overrideParameters( float durationTransition, float rainDensity, fl
 
 void VRRain::updateScale( float scaleNow ){
     scaleRN = scaleNow;
-    float rainDensity = 0.2 * 10/scaleRN;
+    float rainDensity = scaleRN == 0 ? 0 : 0.2 * 10/scaleRN;
     mat->setShaderParameter<float>("rainDensity", rainDensity);
-    cout << " " << rainDensity << endl;
+    cout << " rain density: " << rainDensity << endl;
 }
 
 void VRRain::setupShaderLocations() {

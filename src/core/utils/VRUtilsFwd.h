@@ -14,6 +14,7 @@ ptrTemplateFwd(VRCallbackWrapper, VRCallbackPyWrapper, PyObject*);
 namespace OSG {
     ptrFwd(VRVisualLayer);
     ptrFwd(VRProgress);
+    ptrFwd(VREncryption);
 }
 
 #endif // VRUTILSFWD_H_INCLUDED

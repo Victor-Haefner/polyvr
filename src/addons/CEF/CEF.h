@@ -11,12 +11,13 @@
 #include "core/objects/VRObjectFwd.h"
 
 using namespace std;
+OSG_BEGIN_NAMESPACE;
 
-namespace OSG{ class VRDevice; }
+class VRDevice;
 
 class CEF_handler : public CefRenderHandler {
     private:
-        OSG::VRTexturePtr image = 0;
+        VRTexturePtr image = 0;
         int width = 1024;
         int height = 1024;
 
@@ -26,7 +27,7 @@ class CEF_handler : public CefRenderHandler {
 
         bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect);
         void OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height);
-        OSG::VRTexturePtr getImage();
+        VRTexturePtr getImage();
         void resize(int resolution, float aspect);
         void close();
 
@@ -55,16 +56,16 @@ class CEF {
         CefRefPtr<CEF_client> client;
 
         string site;
-        OSG::VRMaterialWeakPtr mat;
-        OSG::VRObjectWeakPtr obj;
+        VRMaterialWeakPtr mat;
+        VRObjectWeakPtr obj;
         int resolution = 1024;
         float aspect = 1;
         bool init = false;
         bool focus = false;
 
         VRUpdateCbPtr update_callback;
-        map<OSG::VRDevice*, VRDeviceCbPtr> mouse_dev_callback;
-        map<OSG::VRDevice*, VRUpdateCbPtr> mouse_move_callback;
+        map<VRDevice*, VRDeviceCbPtr> mouse_dev_callback;
+        map<VRDevice*, VRUpdateCbPtr> mouse_move_callback;
         //VRDeviceCbPtr mouse_dev_callback;
         VRDeviceCbPtr keyboard_dev_callback;
 
@@ -72,9 +73,9 @@ class CEF {
         void initiate();
         void update();
 
-        void mouse(int lb, int rb, int wu, int wd, OSG::VRDeviceWeakPtr dev);
-        void mouse_move(OSG::VRDeviceWeakPtr dev);
-        void keyboard(OSG::VRDeviceWeakPtr dev);
+        void mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr dev);
+        void mouse_move(VRDeviceWeakPtr dev);
+        void keyboard(VRDeviceWeakPtr dev);
 
         CEF();
     public:
@@ -84,9 +85,9 @@ class CEF {
         void setResolution(float a);
         void setAspectRatio(float a);
 
-        void setMaterial(OSG::VRMaterialPtr mat);
-        void addMouse(OSG::VRDevicePtr dev, OSG::VRObjectWeakPtr obj, int lb, int rb, int wu, int wd);
-        void addKeyboard(OSG::VRDevicePtr dev);
+        void setMaterial(VRMaterialPtr mat);
+        void addMouse(VRDevicePtr dev, VRObjectPtr obj, int lb, int rb, int wu, int wd);
+        void addKeyboard(VRDevicePtr dev);
 
         void open(string site);
         void reload();
@@ -98,5 +99,7 @@ class CEF {
 };
 
 typedef shared_ptr<CEF> CEFPtr;
+
+OSG_END_NAMESPACE;
 
 #endif // CAVEKEEPER_H_INCLUDED

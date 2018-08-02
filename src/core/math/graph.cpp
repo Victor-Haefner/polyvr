@@ -35,23 +35,19 @@ Graph::position::position(int e, float p) { edge = e; pos = p; }
 
 
 Graph::Graph() {
-    storeVecVec("edges", edges);
-    storeVec("edgesByID", edgesByID);
-    storeVec("nodes", nodes);
+    storeMap("nodes", nodes);
+    storeMap("edges", edges);
 }
 
 Graph::~Graph() {}
 
 int Graph::connect(int i, int j, int c) {
     if (i < 0 || j < 0) return -1;
-    //if (i >= int(nodes.size()) || j >= int(nodes.size())) return edge;
-    while (i >= int(edges.size())) edges.push_back( vector<edge>() );
-    auto e = edge(i,j,CONNECTION(c),edgesByID.size());
-    edges[i].push_back(e);
-    edgesByID.push_back(Vec2i(i,j));
-    getNode(i).outEdges.push_back(e.ID);
-    getNode(j).inEdges.push_back(e.ID);
-    return edgesByID.size()-1;
+    static size_t eID = -1; eID++;
+    edges[eID] = edge(i,j,CONNECTION(c),eID);
+    getNode(i).outEdges.push_back(eID);
+    getNode(j).inEdges.push_back(eID);
+    return eID;
 }
 
 template<class T>
@@ -60,42 +56,22 @@ void erase(vector<T>& v, const T& t) {
 }
 
 void Graph::disconnect(int i, int j) {
-    if (i >= int(nodes.size()) || j >= int(nodes.size())) return;
-    if (i >= int(edges.size())) return;
-    auto& edge = getEdge(i,j);
-    auto& v = edges[i];
-    for (uint k=0; k<v.size(); k++) {
-        if (v[k].to == j) {
-            v.erase(v.begin()+k);
-            break;
-        }
-    }
-    erase( getNode(i).outEdges, edge.from );
-    erase( getNode(j).outEdges, edge.to );
-    erase( edgesByID, Vec2i(i,j) );
+    int eID = getEdgeID(i,j);
+    if (!hasEdge(eID)) return;
+    edges.erase(eID);
+    erase( getNode(i).outEdges, eID );
+    erase( getNode(j).inEdges, eID );
 }
 
 vector< Graph::edge > Graph::getInEdges(int i) {
-    vector< edge > res;
-    auto edges = getEdges();
-    for (auto& n : edges) {
-        for (auto& e : n) {
-            if (e.to != i) continue;
-            res.push_back(e);
-        }
-    }
+    vector<edge> res;
+    for (int e : getNode(i).inEdges) res.push_back(edges[e]);
     return res;
 }
 
 vector< Graph::edge > Graph::getOutEdges(int i) {
-    vector< edge > res;
-    auto edges = getEdges();
-    for (auto& n : edges) {
-        for (auto& e : n) {
-            if (e.from != i) continue;
-            res.push_back(e);
-        }
-    }
+    vector<edge> res;
+    for (int e : getNode(i).outEdges) res.push_back(edges[e]);
     return res;
 }
 
@@ -115,54 +91,65 @@ vector<Graph::edge> Graph::getNextEdges(edge& e) {
 
 bool Graph::connected(int i, int j) {
     if (!hasNode(i) || !hasNode(j)) return false;
-    if (i >= int(edges.size())) return false;
-    for (auto& e : edges[i]) if (e.to == j) return true;
+    auto n = getNode(i);
+    for (auto eID : n.outEdges) if (edges[eID].to == j) return true;
     return false;
 }
 
 int Graph::size() { return nodes.size(); }
-bool Graph::hasNode(int i) { return (i >= 0 && i < int(nodes.size())); }
-bool Graph::hasEdge(int i) { return (i >= 0 && i < int(edgesByID.size())); }
-vector< vector< Graph::edge > >& Graph::getEdges() { return edges; }
-vector< Graph::node >& Graph::getNodes() { return nodes; }
+bool Graph::hasNode(int i) { return nodes.count(i); }
+bool Graph::hasEdge(int i) { return edges.count(i); }
+map< int, Graph::edge >& Graph::getEdges() { return edges; }
+map< int, Graph::node >& Graph::getNodes() { return nodes; }
 Graph::node& Graph::getNode(int i) { return nodes[i]; }
 
 Graph::edge& Graph::getEdge(int i) {
-    if (i >= edgesByID.size() || i < 0) return nullEdge;
-    Vec2i e = edgesByID[i];
-    return getEdge(e[0], e[1]);
+    if (!hasEdge(i)) return nullEdge;
+    return edges[i];
 }
 
 Graph::edge Graph::getEdgeCopyByID(int i) { return getEdge(i); }
 
 Graph::edge& Graph::getEdge(int n1, int n2) {
-    if (!connected(n1,n2)) return nullEdge;
-    for (auto& e : edges[n1]) if (e.to == n2) return e;
+    if (!hasNode(n1)) return nullEdge;
+    for (auto& eID : nodes[n1].outEdges) {
+        if (!hasEdge(eID)) continue;
+        auto& e = edges[eID];
+        if (e.to == n2) return e;
+    }
     return nullEdge;
 }
 
 Graph::edge Graph::getEdgeCopy(int n1, int n2) { return getEdge(n1, n2); }
-vector< Graph::node > Graph::getNodesCopy() { return getNodes(); }
+
+vector< Graph::node > Graph::getNodesCopy() {
+    vector<node> res;
+    for (auto& n : nodes) res.push_back(n.second);
+    return res;
+}
+
 vector<Graph::edge> Graph::getEdgesCopy() {
-    vector<Graph::edge> res;
-    for (int i=0; i<getNEdges(); i++) res.push_back(getEdge(i));
+    vector<edge> res;
+    for (auto& e : edges) res.push_back(e.second);
+    return res;
+}
+
+vector< Graph::node > Graph::getNeighbors(int i) {
+    vector<node> res;
+    for (auto& e : getInEdges(i)) res.push_back( getNode(e.from) );
+    for (auto& e : getOutEdges(i)) res.push_back( getNode(e.to) );
     return res;
 }
 
 int Graph::getEdgeID(int n1, int n2) {
-    if (!connected(n1,n2)) return -1;
-    for (auto& e : edges[n1]) if (e.to == n2) return e.ID;
-    return -1;
+    auto edge = getEdge(n1, n2);
+    return edge.ID;
 }
 
-int Graph::getNEdges() {
-    int N = 0;
-    for (auto& n : edges) N += n.size();
-    return N;
-}
+int Graph::getNEdges() { return edges.size(); }
 
 void Graph::setPosition(int i, PosePtr p) {
-    if (!p || i >= int(nodes.size()) || i < 0) return;
+    if (!p || !hasNode(i)) return;
     nodes[i].p = *p;
     update(i, true);
 }
@@ -170,15 +157,23 @@ void Graph::setPosition(int i, PosePtr p) {
 PosePtr Graph::getPosition(int i) { auto p = Pose::create(); *p = nodes[i].p; return p; }
 
 int Graph::addNode(PosePtr p) {
-    nodes.push_back(node());
-    int i = nodes.size()-1;
-    getNode(i).ID = i;
-    if (p) setPosition(i, p);
-    return i;
+    static size_t nID = -1; nID++;
+    nodes[nID] = node();
+    nodes[nID].ID = nID;
+    if (p) setPosition(nID, p);
+    return nID;
 }
 void Graph::clear() { nodes.clear(); edges.clear(); }
 void Graph::update(int i, bool changed) {}
-void Graph::remNode(int i) { if (i >= 0 && i < nodes.size()) nodes.erase(nodes.begin() + i); }
+
+void Graph::remNode(int nID) {
+    for (auto& n : getNeighbors(nID)) {
+        if (connected(nID,n.ID)) disconnect(nID, n.ID);
+        if (connected(n.ID,nID)) disconnect(n.ID, nID);
+    }
+    nodes.erase(nID);
+    //cout << "Graph::remNode " << nID << " deleted" << endl;
+}
 
 Graph::edge::edge(int i, int j, CONNECTION c, int ID) : from(i), to(j), connection(c), ID(ID) {}
 

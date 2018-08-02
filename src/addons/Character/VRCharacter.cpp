@@ -1,13 +1,16 @@
 #include "VRCharacter.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/utils/toString.h"
 #include <math.h>
 
 const float Pi = 3.14159;
 
-OSG_BEGIN_NAMESPACE;
 using namespace std;
+using namespace OSG;
 
+template<> string typeName(const VRBehaviorPtr& m) { return "Behavior"; }
+template<> string typeName(const VRSkeletonPtr& m) { return "Skeleton"; }
 
 VRBehavior::Action::Action(string n) { setNameSpace("bhAction"); setName(n); }
 VRBehavior::Action::~Action() {}
@@ -79,13 +82,12 @@ VRConstraintPtr VRSkeleton::getJoint(int id) { return dynamic_pointer_cast<VRCon
 
 void VRSkeleton::asGeometry(VRGeoData& data) {
     for (auto& joint : armature->getNodes()) {
-        data.pushVert( Pnt3d(joint.box.center()) );
+        data.pushVert( Pnt3d(joint.second.box.center()) );
     }
 
-    for (auto& jv : armature->getEdges()) {
-        for (auto& j : jv) {
-            data.pushLine(j.from, j.to);
-        }
+    for (auto& j : armature->getEdges()) {
+        auto& e = j.second;
+        data.pushLine(e.from, e.to);
     }
 }
 
@@ -203,7 +205,6 @@ void VRCharacter::simpleSetup() {
     addAction(stomp_L);
 }
 
-OSG_END_NAMESPACE;
 
 /** TODO
 

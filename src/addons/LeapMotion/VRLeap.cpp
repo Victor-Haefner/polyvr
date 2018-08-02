@@ -319,12 +319,12 @@ void VRLeap::clearSignals() {
     */
 
     // left
-    addSignal( 0, 0)->add( getDrop() );
-    addSignal( 0, 1)->add( addDrag( getBeacon(1) ) );
+    newSignal( 0, 0)->add( getDrop() );
+    newSignal( 0, 1)->add( addDrag( getBeacon(1) ) );
 
     // right
-    addSignal( 1, 0)->add( getDrop() );
-    addSignal( 1, 1)->add( addDrag( getBeacon(7) ) );
+    newSignal( 1, 0)->add( getDrop() );
+    newSignal( 1, 1)->add( addDrag( getBeacon(7) ) );
 }
 
 VRIntersection findInside(VRObjectWeakPtr wtree, Vec3d point) {
@@ -374,7 +374,7 @@ void VRLeap::dragCB(VRTransformWeakPtr wcaster, VRObjectWeakPtr wtree, VRDeviceW
         if (ins.hit) break;
     }
 
-    drag(ins.object, caster);
+    VRIntersect::drag(ins.object, caster);
 }
 
 void VRLeap::setPose(PosePtr pose) {

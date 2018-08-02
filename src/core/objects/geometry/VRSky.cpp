@@ -60,14 +60,14 @@ VRSky::VRSky() : VRGeometry("Sky") {
     textureSize = 512;
 	VRTextureGenerator tg;
 	tg.setSize(textureSize, textureSize);
-    tg.add(PERLIN, 1, Color3f(0.9), Color3f(1.0));
-	tg.add(PERLIN, 1.0/2, Color3f(0.8), Color3f(1.0));
-	tg.add(PERLIN, 1.0/4, Color3f(0.7), Color3f(1.0));
-	tg.add(PERLIN, 1.0/8, Color3f(0.6), Color3f(1.0));
-	tg.add(PERLIN, 1.0/16, Color3f(0.4), Color3f(1.0));
-	tg.add(PERLIN, 1.0/32, Color3f(0.2), Color3f(1.0));
-	tg.add(PERLIN, 1.0/64, Color3f(0.1), Color3f(1.0));
-	tg.add(PERLIN, 1.0/128, Color3f(0.1), Color3f(1.0));
+    tg.add(PERLIN, 1, Color4f(0.9), Color4f(1.0));
+	tg.add(PERLIN, 1.0/2, Color4f(0.8), Color4f(1.0));
+	tg.add(PERLIN, 1.0/4, Color4f(0.7), Color4f(1.0));
+	tg.add(PERLIN, 1.0/8, Color4f(0.6), Color4f(1.0));
+	tg.add(PERLIN, 1.0/16, Color4f(0.4), Color4f(1.0));
+	tg.add(PERLIN, 1.0/32, Color4f(0.2), Color4f(1.0));
+	tg.add(PERLIN, 1.0/64, Color4f(0.1), Color4f(1.0));
+	tg.add(PERLIN, 1.0/128, Color4f(0.1), Color4f(1.0));
 	/*
 	tg.add(PERLIN, 1, Color3f(0.95), Color3f(1.0));
 	tg.add(PERLIN, 1.0/2, Color3f(0.9), Color3f(1.0));
@@ -87,7 +87,12 @@ VRSky::VRSky() : VRGeometry("Sky") {
 
 VRSky::~VRSky() {}
 
-VRSkyPtr VRSky::create() { return VRSkyPtr( new VRSky() ); }
+VRSkyPtr VRSky::create() {
+    auto sky = VRSkyPtr( new VRSky() );
+    sky->hide("SHADOW");
+    return sky;
+}
+
 VRSkyPtr VRSky::ptr() { return static_pointer_cast<VRSky>( shared_from_this() ); }
 
 void VRSky::update() {

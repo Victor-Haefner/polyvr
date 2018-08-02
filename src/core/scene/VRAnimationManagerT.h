@@ -7,7 +7,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 template<typename T>
-VRAnimation::VRAnimation(float _duration, float _offset, std::shared_ptr< VRFunction<T> > _fkt, T _start, T _end, bool _loop, bool owned) : VRAnimation(_fkt->getBaseName()) {
+VRAnimation::VRAnimation(float _duration, float _offset, std::shared_ptr< VRFunction<T> > _fkt, T _start, T _end, bool _loop, bool owned) : VRAnimation(_fkt->name) {
     run = false;
 
     duration = _duration;

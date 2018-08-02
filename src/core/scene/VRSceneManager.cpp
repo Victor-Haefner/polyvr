@@ -54,14 +54,14 @@ VRSceneManager* VRSceneManager::get() {
     return mgr;
 }
 
-void VRSceneManager::loadScene(string path, bool write_protected) {
+void VRSceneManager::loadScene(string path, bool write_protected, string encryptionKey) {
     if (!exists(path)) { cout << "loadScene " << path << " not found" << endl; return; }
     path = canonical(path);
     if (current) if (current->getPath() == path) return;
     cout << "loadScene " << path << endl;
 
     newEmptyScene(path);
-    VRSceneLoader::get()->loadScene(path);
+    VRSceneLoader::get()->loadScene(path, encryptionKey);
     current->setFlag("write_protected", write_protected);
     VRGuiSignals::get()->getSignal("scene_changed")->triggerPtr<VRDevice>(); // update gui
     if (auto pEntry = projects->getEntry(path)) {

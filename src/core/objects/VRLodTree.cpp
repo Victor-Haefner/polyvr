@@ -156,3 +156,9 @@ VRLodLeafPtr VRLodTree::remObject(VRTransformPtr obj) { // TODO, finish it!
     o->remData(obj.get());
     return leafs[o];
 }
+
+int VRLodTree::size() {
+    int N = 0;
+    for (auto ov : objects) N += ov.second.size();
+    return N;
+}

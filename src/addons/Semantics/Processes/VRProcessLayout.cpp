@@ -6,6 +6,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/utils/toString.h"
 #include "core/tools/VRText.h"
+#include "core/tools/VRPathtool.h"
 
 #include <OpenSG/OSGMatrixUtility.h>
 
@@ -15,8 +16,18 @@ VRProcessLayout::VRProcessLayout(string name) : VRTransform(name) {}
 VRProcessLayout::~VRProcessLayout() {}
 
 VRProcessLayoutPtr VRProcessLayout::ptr() { return static_pointer_cast<VRProcessLayout>( shared_from_this() ); }
-VRProcessLayoutPtr VRProcessLayout::create(string name) { return VRProcessLayoutPtr(new VRProcessLayout(name) ); }
+VRProcessLayoutPtr VRProcessLayout::create(string name) {
+    auto l = VRProcessLayoutPtr(new VRProcessLayout(name) );
+    l->init();
+    return l;
+}
 
+void VRProcessLayout::init() {
+    tool = VRPathtool::create();
+    addChild(tool);
+}
+
+VRPathtoolPtr VRProcessLayout::getPathtool() { return tool; }
 
 /* IDEAS
 
@@ -146,9 +157,49 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     return w;
 }
 
-void VRProcessLayout::setProcess(VRProcessPtr p) { process = p; }
+void VRProcessLayout::setProcess(VRProcessPtr p) { process = p; rebuild(); }
 
 void VRProcessLayout::rebuild() {
+    if (!process) return;
+    clearChildren();
+    addChild(tool);
+    auto diag = process->getInteractionDiagram();
+    if (!diag) return;
+
+    int i = 0;
+	for (auto subject : process->getSubjects()) {
+        PosePtr pose = Pose::create(Vec3d(0,0,i*25),Vec3d(0,0,-1),Vec3d(0,1,0));
+		auto n = tool->addNode(pose);
+		auto h = tool->getHandle(n);
+		h->addChild(addElement(subject) );
+		i++;
+	}
+
+	for (auto message : process->getMessages()) {
+		auto messageElement = addElement(message);
+		auto subjects = process->getMessageSubjects( message->getID() );
+
+
+		auto id0 = subjects[0]->getID();
+		auto id1 = subjects[1]->getID();
+
+		auto h0 = tool->getHandle(id0);
+		auto h1 = tool->getHandle(id1);
+		auto p = (h0->getWorldPosition() + h1->getWorldPosition())*0.5;
+		auto n = tool->addNode( Pose::create(p,Vec3d(0,0,-1),Vec3d(0,1,0) ) );
+		auto h = tool->getHandle(n);
+		h->addChild( messageElement );
+
+		Vec3d norm = Vec3d(1,0,0);
+		int idm = message->getID();
+		tool->connect(id0, idm, false, true, norm, norm);
+		tool->connect(idm, id1, false, true, norm, norm);
+	}
+
+	tool->update();
+}
+
+/*void VRProcessLayout::rebuild() {
     if (!process) return;
     clearChildren();
     float f=0;
@@ -166,7 +217,7 @@ void VRProcessLayout::rebuild() {
         n.box.updateFromGeometry(geo);
         n.box.setCenter(p);
     }
-}
+}*/
 
 VRObjectPtr VRProcessLayout::getElement(int i) { return elements.count(i) ? elements[i].lock() : 0; }
 

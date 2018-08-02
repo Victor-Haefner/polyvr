@@ -4,6 +4,7 @@
 #include "OSGCore.h"
 #include "VRObjectT.h"
 #include "VRAttachment.h"
+#include "core/math/pose.h"
 #include "core/math/boundingbox.h"
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGGroup.h>
@@ -37,7 +38,7 @@ VRObject::VRObject(string _name) {
     setStorageType("Object");
     store("type", &type);
     store("pickable", &pickable);
-    store("visible", &visible);
+    store("visible", &visibleMask);
     storeObjVec("children", children);
 
     regStorageSetupFkt( VRUpdateCb::create("object setup", boost::bind(&VRObject::setup, this)) );
@@ -50,8 +51,29 @@ VRObject::~VRObject() {
     if (p) p->subChild(osg->node);
 }
 
+Matrix4d VRObject::getMatrixTo(VRObjectPtr obj, bool parentOnly) {
+    VRTransformPtr ent1 = VRTransform::getParentTransform(ptr());
+    VRTransformPtr ent2 = VRTransform::getParentTransform(obj);
+
+    Matrix4d m1, m2;
+    if (ent1) m1 = ent1->getWorldMatrix(parentOnly);
+    if (ent2) m2 = ent2->getWorldMatrix();
+    if (!ent1) return m2;
+
+    m1.invert();
+    if (!ent2) return m1;
+
+    m1.mult(m2);
+    return m1;
+}
+
+PosePtr VRObject::getPoseTo(VRObjectPtr o) {
+    auto m = getMatrixTo(o);
+    return Pose::create(m);
+}
+
 void VRObject::setup() {
-    setVisible(visible);
+    setVisibleMask(visibleMask);
     setPickable(pickable);
 
     auto tmp = children;
@@ -109,7 +131,7 @@ void VRObject::printInformation() {;}
 VRObjectPtr VRObject::copy(vector<VRObjectPtr> children) {
     VRObjectPtr o = VRObject::create(getBaseName());
     if (specialized) o->setCore(getCore(), getType());
-    o->setVisible(visible);
+    o->setVisibleMask(visibleMask);
     o->setPickable(pickable);
     o->setEntity(entity);
     return o;
@@ -143,6 +165,10 @@ VRObjectPtr VRObject::hasAncestorWithTag(string name) {
 
 void VRObject::setTravMask(int i) {
     getNode()->node->setTravMask(i);
+}
+
+int VRObject::getTravMask() {
+    return getNode()->node->getTravMask();
 }
 
 vector<VRObjectPtr> VRObject::getLinks() {
@@ -532,23 +558,57 @@ int VRObject::findChild(VRObjectPtr node) {
 }
 
 /** Hide/show the object and all his subgraph **/
-void VRObject::hide() { setVisible(false); }
-void VRObject::show() { setVisible(true); }
+void VRObject::hide(string mode) { setVisible(false, mode); }
+void VRObject::show(string mode) { setVisible(true, mode); }
+
+void VRObject::setVisibleUndo(unsigned int b) {
+    setVisibleMask(b);
+}
+
+bool getBit(const unsigned int& mask, int bit) {
+    return (mask & 1UL << bit);
+}
+
+void setBit(unsigned int& mask, int bit, bool value) {
+    if (value) mask |= 1UL << bit;
+    else mask &= ~(1UL << bit);
+}
+
+int getVisibleMaskBit(const string& mode) {
+    if (mode == "SHADOW") return 1;
+    return 0;
+}
 
 /** Returns if object is visible or not **/
-bool VRObject::isVisible() { return visible; }
+bool VRObject::isVisible(string mode) {
+    int b = getVisibleMaskBit(mode);
+    return getBit(visibleMask, b);
+}
 
 /** Set the visibility **/
-void VRObject::setVisible(bool b) {
-    if (b == visible) return;
-    recUndo(&VRObject::setVisible, ptr(), visible, b);
-    visible = b;
-    if (b) osg->node->setTravMask(0xffffffff);
-    else osg->node->setTravMask(0);
+void VRObject::setVisible(bool b, string mode) {
+    int bit = getVisibleMaskBit(mode);
+    if (getBit(visibleMask, bit) == b) return;
+    auto oldMask = visibleMask;
+    setBit(visibleMask, bit, b);
+    recUndo(&VRObject::setVisibleUndo, ptr(), oldMask, visibleMask);
+    setVisibleMask(visibleMask);
+}
+
+void VRObject::setVisibleMask(unsigned int mask) {
+    visibleMask = mask;
+    bool showObj = getBit(visibleMask, 0);
+    bool showShadow = getBit(visibleMask, 1);
+
+    unsigned int osgMask = 0;
+    if (showObj) osgMask = 0xffffffff;
+    setBit(osgMask, 4, showShadow);
+    if (!showObj) osgMask = 0;
+    setTravMask(osgMask);
 }
 
 /** toggle visibility **/
-void VRObject::toggleVisible() { setVisible(!visible); }
+void VRObject::toggleVisible(string mode) { setVisible(!isVisible(mode), mode); }
 
 /** Returns if ptr() object is pickable || not **/
 bool VRObject::isPickable() { return pickable == 1; }

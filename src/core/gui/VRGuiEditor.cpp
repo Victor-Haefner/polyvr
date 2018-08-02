@@ -65,13 +65,14 @@ bool VRGuiEditor::on_editor_shortkey( GdkEventKey* e ) {
         //return itr;
     };
 
-    auto getLine = [&](int l) {
+    auto getLine = [&](int l) -> string {
         auto b = GTK_TEXT_BUFFER(sourceBuffer);
         GtkTextIter itr1;
         gtk_text_buffer_get_iter_at_line_index(b, &itr1, l, 0);
         GtkTextIter itr2 = itr1;
         gtk_text_iter_forward_to_line_end(&itr2);
         string data = gtk_text_buffer_get_slice(b, &itr1, &itr2, true);
+        if (data[0] == '\n') return "";
         return data;
     };
 
@@ -79,18 +80,25 @@ bool VRGuiEditor::on_editor_shortkey( GdkEventKey* e ) {
         auto b = GTK_TEXT_BUFFER(sourceBuffer);
         GtkTextIter itr;
         gtk_text_buffer_get_iter_at_line_index(b, &itr, l, 0);
-        line = line+"\n";
+        int l2 = gtk_text_iter_get_line(&itr);
+        if (l2 < l) {
+            gtk_text_buffer_get_end_iter(b, &itr);
+            line = "\n"+line;
+        } else {
+            line = line+"\n";
+        }
         gtk_source_buffer_begin_not_undoable_action(sourceBuffer);
         gtk_text_buffer_insert(b, &itr, line.c_str(), line.length());
         gtk_source_buffer_end_not_undoable_action(sourceBuffer);
     };
 
     auto eraseLine = [&](int l) {
+        string line = getLine(l);
         auto b = GTK_TEXT_BUFFER(sourceBuffer);
         GtkTextIter itr1;
         gtk_text_buffer_get_iter_at_line_index(b, &itr1, l, 0);
         GtkTextIter itr2 = itr1;
-        gtk_text_iter_forward_to_line_end(&itr2);
+        if (line != "") gtk_text_iter_forward_to_line_end(&itr2);
         gtk_text_iter_forward_char(&itr2);
         gtk_source_buffer_begin_not_undoable_action(sourceBuffer);
         gtk_text_buffer_delete(b, &itr1, &itr2);
@@ -121,7 +129,7 @@ bool VRGuiEditor::on_editor_shortkey( GdkEventKey* e ) {
 
     if (e->keyval == 116) {// t
         auto l = getCurrentLine();
-        if (l == 0) return true;
+        if (l <= 1) return true;
         string line = getLine(l-1);
         insertLineAfter(line, l+1);
         eraseLine(l-1);

@@ -32,6 +32,7 @@ class VRLight : public VRObject {
         string beacon_name;
         string photometricMapPath;
         VRTexturePtr photometricMap = 0;
+        Boundingbox shadowVolume;
         int shadowMapRes = 2048;
         Color4f lightDiffuse;
         Color4f lightAmbient;
@@ -81,6 +82,7 @@ class VRLight : public VRObject {
         void setShadowMapRes(int t);
         Color4f getShadowColor();
         int getShadowMapRes();
+        Boundingbox getShadowVolume();
 
         VRLightBeaconPtr getBeacon();
         void setBeacon(VRLightBeaconPtr b);

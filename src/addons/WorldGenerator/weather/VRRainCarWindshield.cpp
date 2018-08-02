@@ -100,8 +100,12 @@ float signum(float in) {
     return 0;
 }
 
+VRRainCarWindshieldPtr VRRainCarWindshield::create() {
+    auto w = VRRainCarWindshieldPtr( new VRRainCarWindshield() );
+    w->hide("SHADOW");
+    return w;
+}
 
-VRRainCarWindshieldPtr VRRainCarWindshield::create() { return VRRainCarWindshieldPtr( new VRRainCarWindshield() ); }
 VRRainCarWindshieldPtr VRRainCarWindshield::ptr() { return static_pointer_cast<VRRainCarWindshield>( shared_from_this() ); }
 
 float VRRainCarWindshield::get() { return scale; }

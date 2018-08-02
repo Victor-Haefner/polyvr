@@ -29,7 +29,7 @@ void VRProcessNode::update(Graph::node& n, bool changed) { // callede when graph
     if (widget && !widget->isDragged() && changed) widget->setFrom(n.box.center());
 
     if (widget && widget->isDragged()) {
-        auto m = widget->getMatrixTo( widget->getDragParent() );
+        auto m = widget->getDragParent()->getMatrixTo( widget );
         n.box.setCenter( Vec3d(m[3]) );
     }
 }
@@ -65,6 +65,58 @@ vector<VRProcessNodePtr> VRProcess::getSubjects() {
     for (int i=0; i<interactionDiagram->size(); i++) {
         auto& e = interactionDiagram->processnodes[i];
         if (e->type == SUBJECT) res.push_back(e);
+    }
+    return res;
+}
+
+vector<VRProcessNodePtr> VRProcess::getMessages() {
+    vector<VRProcessNodePtr> res;
+    for (int i=0; i<interactionDiagram->size(); i++) {
+        auto& e = interactionDiagram->processnodes[i];
+        if (e->type == MESSAGE) res.push_back(e);
+    }
+    return res;
+}
+
+vector<VRProcessNodePtr> VRProcess::getSubjectMessages(int subjectID) {
+    auto d = interactionDiagram;
+    auto neighbors = d->getNeighbors( subjectID );
+    vector<VRProcessNodePtr> res;
+    for (auto node : neighbors) {
+        auto subject = getNode( node.ID );
+        res.push_back(subject);
+    }
+    return res;
+}
+
+vector<VRProcessNodePtr> VRProcess::getMessageSubjects(int messageID) {
+    auto d = interactionDiagram;
+    auto neighbors = d->getNeighbors( messageID );
+    vector<VRProcessNodePtr> res;
+    for (auto node : neighbors) {
+        auto message = getNode( node.ID );
+        res.push_back(message);
+    }
+    return res;
+}
+
+vector<VRProcessNodePtr> VRProcess::getSubjectActions(int subjectID) {
+    auto d = getBehaviorDiagram(subjectID);
+    vector<VRProcessNodePtr> res;
+    for (int i=0; i<d->size(); i++) {
+        auto& e = d->processnodes[i];
+        if (e->type == ACTION) res.push_back(e);
+    }
+    return res;
+}
+//TODO: fixing; doesn't return action transitions but empty list
+vector<VRProcessNodePtr> VRProcess::getActionTransitions(int subjectID, int actionID) {
+    auto d = getBehaviorDiagram(subjectID);
+    auto neighbors = d->getNeighbors( actionID );
+    vector<VRProcessNodePtr> res;
+    for (auto node : neighbors) {
+        auto transition = getNode( node.ID );
+        res.push_back(transition);
     }
     return res;
 }
@@ -202,8 +254,6 @@ VRProcessNodePtr VRProcess::getNode(int i, VRProcessDiagramPtr diag) {
     if (!diag) diag = interactionDiagram;
     return diag->processnodes[i];
 }
-
-
 
 
 

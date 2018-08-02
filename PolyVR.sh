@@ -6,5 +6,5 @@ libs=/usr/lib/opensg:/usr/lib/CEF:/usr/lib/1.4:/usr/lib/virtuose:/usr/lib/STEPco
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 
-export LD_LIBRARY_PATH=$libs && ./bin/Release/VRFramework $@
-#export LD_LIBRARY_PATH=$libs && ./bin/Debug/VRFramework $@
+#export LD_LIBRARY_PATH=$libs && ./bin/Release/VRFramework $@
+export LD_LIBRARY_PATH=$libs && ./bin/Debug/VRFramework $@

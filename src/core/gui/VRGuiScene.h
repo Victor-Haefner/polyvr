@@ -92,6 +92,7 @@ class VRGuiScene {
         // ------------- light -----------------------
         void on_toggle_light();
         void on_toggle_light_shadow();
+        void on_toggle_light_shadow_volume();
         void on_change_light_type();
         void on_change_light_shadow();
         void on_edit_light_attenuation();
@@ -166,6 +167,7 @@ class VRGuiScene {
         void on_toggle_liveupdate();
         void on_toggle_visible();
         void on_toggle_pickable();
+        void on_toggle_throw_shadow();
         void on_toggle_rc();
         void on_toggle_T_constraint();
         void on_toggle_R_constraint();

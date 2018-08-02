@@ -85,7 +85,7 @@ void VREntityWidget::on_select_property() {
     int ID = row.get_value(cols.ID);
 
     VRPropertyPtr p = 0;
-    if (type == 0) p = entity->getProperty( row.get_value(cols.prop) );
+    if (type == 0) p = entity->getProperty( row.get_value(cols.prop), true );
     if (type == 1) {
         auto pv = entity->getAll( row.get_value(cols.prop) );
         for (auto pi : pv) if (pi->ID == ID) { p = pi; break; }

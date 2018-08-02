@@ -20,6 +20,11 @@ PyMethodDef VRPyProcess::methods[] = {
     {"getInteractionDiagram", PyWrap(Process, getInteractionDiagram, "Return subjects interaction diagram - getInteractionDiagram()", VRProcessDiagramPtr ) },
     {"getBehaviorDiagram", PyWrap(Process, getBehaviorDiagram, "Return subject behavior diagram - getBehaviorDiagram( int ID )", VRProcessDiagramPtr, int ) },
     {"getSubjects", PyWrap(Process, getSubjects, "Return subjects - [ProcessNode] getSubjects()", vector<VRProcessNodePtr> ) },
+    {"getMessages", PyWrap(Process, getMessages, "Return messages - [ProcessNode] getMessages()", vector<VRProcessNodePtr> ) },
+    {"getSubjectMessages", PyWrap(Process, getSubjectMessages, "Return subject messages - [ProcessNode] getSubjectMessages()", vector<VRProcessNodePtr>, int ) },
+    {"getMessageSubjects", PyWrap(Process, getMessageSubjects, "Return message subjects - [ProcessNode] getMessageSubjects()", vector<VRProcessNodePtr>, int ) },
+    {"getSubjectActions", PyWrap(Process, getSubjectActions, "Return subject actions - [ProcessNode] getSubjectActions()", vector<VRProcessNodePtr>, int ) },
+    {"getActionTransitions", PyWrap(Process, getActionTransitions, "Return action transitions - [ProcessNode] getActionTransitions()", vector<VRProcessNodePtr>, int, int ) },
     {"addSubject", PyWrap(Process, addSubject, "Add a new subject - ProcessNode addSubject( name )", VRProcessNodePtr, string ) },
     {"addAction", PyWrap(Process, addAction, "Add a new action to subject, by ID", VRProcessNodePtr, string, int ) },
     {"addMessage", PyWrapOpt(Process, addMessage, "Add a new message between subjects or actions i and j - ProcessNode addMessage( name, int i, int j )", "0", VRProcessNodePtr, string, int, int, VRProcessDiagramPtr ) },
@@ -37,6 +42,7 @@ PyMethodDef VRPyProcessDiagram::methods[] = {
 };
 
 PyMethodDef VRPyProcessLayout::methods[] = {
+    {"getPathtool", PyWrap(ProcessLayout, getPathtool, "Access path tool", VRPathtoolPtr ) },
     {"setProcess", PyWrap(ProcessLayout, setProcess, "Set process - setProcess( process )", void, VRProcessPtr ) },
     {"getElement", PyWrap(ProcessLayout, getElement, "Return element by ID - obj getElement( int ID )", VRObjectPtr, int ) },
     {"getElementID", PyWrap(ProcessLayout, getElementID, "Return element ID - ID getElementID( VRObjectPtr geo )", int, VRObjectPtr ) },

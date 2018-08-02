@@ -134,11 +134,7 @@ void VRPathtool::setGraph(GraphPtr g, bool doClear) {
     graph = g;
 
     for (int i=0; i<g->size(); i++) setGraphNode(i);
-    for (auto& n : g->getEdges()) {
-        for (auto& e : n) {
-            setGraphEdge(e);
-        }
-    }
+    for (auto& e : g->getEdges()) setGraphEdge(e.second);
 }
 
 int VRPathtool::addNode(PosePtr p) {
@@ -295,7 +291,7 @@ void VRPathtool::update() { // call in script to have smooth knots
         auto key = handle.get();
         if (!handleToEntries.count(key)) continue;
         for (auto e : handleToEntries[key]) {
-            auto po = handle->getPoseTo(e->anchor.lock());
+            auto po = e->anchor.lock()->getPoseTo(handle);
             e->p->setPoint(e->points[key], *po);
         }
     }
@@ -331,7 +327,7 @@ void VRPathtool::updateEntry(entryPtr e) { // update path representation
 
 void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle belongs to
     if (!handle) return;
-    auto p = handle->getPoseTo(ptr());
+    auto p = getPoseTo(handle);
     auto key = handle.get();
     if (!handleToEntries.count(key)) return;
 
@@ -574,7 +570,7 @@ VRGeometryPtr VRPathtool::extrude(VRDevicePtr dev, PathPtr p) {
     e->anchor.lock()->addChild(h);
 
     if (dev) {
-        dev->drag(h, dev->getBeacon());
+        dev->drag(h);
         h->setPose( Pose::create(Vec3d(0,0,-1)) );
     }
 

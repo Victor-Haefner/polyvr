@@ -21,7 +21,11 @@ VRRoadIntersection::RoadFront::RoadFront(VRRoadPtr road) : road(road) {}
 VRRoadIntersection::VRRoadIntersection() : VRRoadBase("RoadIntersection") {}
 VRRoadIntersection::~VRRoadIntersection() {}
 
-VRRoadIntersectionPtr VRRoadIntersection::create() { return VRRoadIntersectionPtr( new VRRoadIntersection() ); }
+VRRoadIntersectionPtr VRRoadIntersection::create() {
+    auto i = VRRoadIntersectionPtr( new VRRoadIntersection() );
+    i->hide("SHADOW");
+    return i;
+}
 
 void VRRoadIntersection::computeLanes(GraphPtr graph) {
     auto w = world.lock();
@@ -187,24 +191,34 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto norm1 = nodes1[nodes1.size()-2]->getVec3("direction");
                 auto node2 = nodeEnt2->getEntity("node");
                 auto norm2 = nodeEnt2->getVec3("direction");
-                nodeEnt1->set("node", node2->getName());
-                //if (D > 0) displacementsB[roadIn] = 0; //WIP
-                //if (D > 0) displacementsA[roadOut] = X;
-                if (D > 0) displacementsB[roadIn] = X; //OLD
-                //if (D > 0) displacementsA[roadOut] = 0;
+                auto name2 = node2->getName();
+
+                auto nodeToDelete = nodeEnt1->getEntity("node");
+                auto tempID = nodeToDelete->getValue<int>("graphID", -1);
+                //cout << tempID << " node removed -- NIN>NOUT" << endl;
+
+                nodeEnt1->set("node", name2);
+                if (D > 0) displacementsB[roadIn] = X;
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
+                auto rGraph = roads->getGraph();
+                rGraph->remNode(tempID);
             }
             if (Nin < Nout) {
                 auto node1 = nodeEnt1->getEntity("node");
                 auto norm1 = nodeEnt1->getVec3("direction");
                 auto node2 = nodes2[1]->getEntity("node");
                 auto norm2 = nodes2[1]->getVec3("direction");
+
+                auto nodeToDelete = nodeEnt2->getEntity("node");
+                auto tempID=nodeToDelete->getValue<int>("graphID", -1);
+                //cout << tempID << " node removed -- NIN<NOUT" << endl;
+
                 nodeEnt2->set("node", node1->getName());
-                //if (D > 0) displacementsB[roadIn] = -X;
-                //if (D > 0) displacementsA[roadOut] = 0;
-                //if (D > 0) displacementsB[roadIn] = 0; //OLD
+
                 if (D > 0) displacementsA[roadOut] = -X;
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
+                auto rGraph = roads->getGraph();
+                rGraph->remNode(tempID);
             }
 
             processedLanes[laneIn] = true;
@@ -296,24 +310,38 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto norm1 = nodeEnt1->getVec3("direction");
                 auto node2 = nodes2[1]->getEntity("node");  //second node of roadOut
                 auto norm2 = nodes2[1]->getVec3("direction");
+
+                auto nodeToDelete = nodeEnt2->getEntity("node");
+                auto tempID=nodeToDelete->getValue<int>("graphID", -1);
+                //cout << tempID << " node removed -- NIN<NOUT" << endl;
+
                 nodeEnt2->set("node", node1->getName());  //set first node of roadOut as last node of roadIn
                 if (D > 0) {
                     if (abs(X.length())>abs(displacements[roadOut].length())) displacements[roadOut] = -X;
                 }
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
                 roadOne = roadIn;
+                auto rGraph = roads->getGraph();
+                rGraph->remNode(tempID);
             }
             if (Nin < Nout) {
                 auto node1 = nodes1[nodes1.size()-2]->getEntity("node");
                 auto norm1 = nodes1[nodes1.size()-2]->getVec3("direction");
                 auto node2 = nodeEnt2->getEntity("node");;
                 auto norm2 = nodeEnt2->getVec3("direction");
+
+                auto nodeToDelete = nodeEnt1->getEntity("node");
+                auto tempID=nodeToDelete->getValue<int>("graphID", -1);
+                //cout << tempID << " node removed -- NIN<NOUT" << endl;
+
                 nodeEnt1->set("node", node2->getName()); //set last node of roadIn as first node of roadOut
                 if (D > 0) {
                     if (abs(X.length())>abs(displacements[roadIn].length())) displacements[roadIn] = X;
                 }
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
                 roadOne = roadOut;
+                auto rGraph = roads->getGraph();
+                rGraph->remNode(tempID);
             }
             processedLanes[laneIn] = true;
             processedLanes[laneOut] = true;
@@ -344,7 +372,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto nodes = laneIn->getEntity("path")->getAllEntities("nodes");
                 VREntityPtr node = (*nodes.rbegin())->getEntity("node");
                 auto p = node->getVec3("position");
-                p += X2;
+                p += Xa;
                 node->setVec3("position", p, "Position");
                 graph->setPosition(node->getValue<int>("graphID", 0), Pose::create(p));
                 cout << "------bridgeForkingLanes -  inLane - " << node->getValue<int>("graphID", 0) << p <<"\n";
@@ -354,7 +382,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 if (processedLanes.count(laneOut)) continue;
                 VREntityPtr node = laneOut->getEntity("path")->getAllEntities("nodes")[0]->getEntity("node");
                 auto p = node->getVec3("position");
-                p += X2;
+                p += Xa;
                 node->setVec3("position", p, "Position");
                 graph->setPosition(node->getValue<int>("graphID", 0), Pose::create(p));
                 cout << "------bridgeForkingLanes - outLane - " << node->getValue<int>("graphID", 0) << p <<"\n";

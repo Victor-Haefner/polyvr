@@ -6,6 +6,7 @@
 #include "core/objects/VRObjectFwd.h"
 #include "core/math/VRMathFwd.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
+#include <OpenSG/OSGMatrixFwd.h>
 
 class VRAttachment;
 
@@ -29,7 +30,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         int ID = 0;
         int childIndex = 0; // index of this object in its parent child vector
         int pickable = 0;
-        bool visible = true;
+        unsigned int visibleMask = -1;
         unsigned int graphChanged = 0; //is frame number
         map<string, VRAttachment*> attachments;
 
@@ -90,6 +91,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         static void printOSGTree(OSGObjectPtr o, string indent = "");
 
         void setTravMask(int i);
+        int getTravMask();
         void setVolume(const Boundingbox& box);
         void setVolumeCheck(bool b, bool recursive = false);
         void setSiblingPosition(int i);
@@ -137,17 +139,22 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
 
         VRObjectPtr duplicate(bool anchor = false, bool subgraph = true);
 
-        void hide();
-        void show();
-        bool isVisible();
-        void setVisible(bool b);
-        void toggleVisible();
+        void setVisibleUndo(unsigned int b);
+        void hide(string mode = "");
+        void show(string mode = "");
+        bool isVisible(string mode = "");
+        void setVisibleMask(unsigned int mask);
+        void setVisible(bool b, string mode = "");
+        void toggleVisible(string mode = "");
 
         bool isPickable();
         void setPickable(int b);
 
         void setup();
         void destroy();
+
+        PosePtr getPoseTo(VRObjectPtr o);
+        Matrix4d getMatrixTo(VRObjectPtr o, bool parentOnly = false);
 };
 
 OSG_END_NAMESPACE;

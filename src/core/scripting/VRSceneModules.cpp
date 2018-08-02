@@ -3,6 +3,7 @@
 #include "VRScriptManagerT.h"
 
 #include "VRPyMath.h"
+#include "VRPyNamed.h"
 #include "VRPyObject.h"
 #include "VRPyGeometry.h"
 #include "VRPyAnimation.h"
@@ -61,6 +62,8 @@
 #include "VRPyObjectManager.h"
 #include "VRPySky.h"
 #include "VRPyScenegraphInterface.h"
+#include "VRPyOPCUA.h"
+#include "VRPyEncryption.h"
 
 #include "addons/Character/VRPyCharacter.h"
 #include "addons/Algorithms/VRPyGraphLayout.h"
@@ -100,7 +103,8 @@
 using namespace OSG;
 
 void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
-    sm->registerModule<VRPyObject>("Object", pModVR, VRPyStorage::typeRef);
+    sm->registerModule<VRPyName>("Named", pModVR, VRPyStorage::typeRef);
+    sm->registerModule<VRPyObject>("Object", pModVR, VRPyName::typeRef);
     sm->registerModule<VRPyTransform>("Transform", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyCollision>("Collision", pModVR);
     sm->registerModule<VRPyGeometry>("Geometry", pModVR, VRPyTransform::typeRef);
@@ -119,7 +123,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPySocket>("Socket", pModVR);
     sm->registerModule<VRPyStroke>("Stroke", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyConstraint>("Constraint", pModVR);
-    sm->registerModule<VRPyDevice>("Device", pModVR);
+    sm->registerModule<VRPyDevice>("Device", pModVR, VRPyName::typeRef);
     sm->registerModule<VRPyIntersection>("Intersection", pModVR);
     sm->registerModule<VRPyHaptic>("Haptic", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyServer>("Mobile", pModVR, VRPyDevice::typeRef);
@@ -153,9 +157,14 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyNavigator>("Navigator", pModVR);
     sm->registerModule<VRPyNavPreset>("NavPreset", pModVR);
     sm->registerModule<VRPyRendering>("Rendering", pModVR);
-    sm->registerModule<VRPySky>("Sky", pModVR, VRPyStorage::typeRef);
+    sm->registerModule<VRPySky>("Sky", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyScenegraphInterface>("ScenegraphInterface", pModVR, VRPyObject::typeRef);
+#ifdef WITH_OPCUA
+    sm->registerModule<VRPyOPCUA>("OPCUA", pModVR);
+    sm->registerModule<VRPyOPCUANode>("OPCUANode", pModVR);
+#endif
 
+    sm->registerModule<VRPyEncryption>("Encryption", pModVR);
     sm->registerModule<VRPyProgress>("Progress", pModVR);
     sm->registerModule<VRPyUndoManager>("UndoManager", pModVR);
     sm->registerModule<VRPyObjectManager>("ObjectManager", pModVR, VRPyObject::typeRef);

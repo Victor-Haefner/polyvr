@@ -4,10 +4,10 @@
 #include "VRGeometry.h"
 #include <OpenSG/OSGColor.h>
 
-class CEF;
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+
+class CEF;
 
 class VRSprite : public VRGeometry {
     protected:

@@ -4,6 +4,8 @@
 #include "core/utils/VRFwdDeclTemplate.h"
 
 namespace OSG {
+    ptrFwd(VROPCUA);
+    ptrFwd(VROPCUANode);
     ptrFwd(VRSocket);
 }
 

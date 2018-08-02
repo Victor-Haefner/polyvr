@@ -250,6 +250,7 @@
 			<Add option="-lHACD" />
 			<Add option="-lssh2" />
 			<Add option="-lfftw3" />
+			<Add option="-lcrypto++" />
 			<Add option="-Wl,-rpath=/usr/lib/x86_64-linux-gnu" />
 			<Add directory="/usr/lib/virtuose" />
 			<Add directory="/usr/lib/opensg" />
@@ -883,6 +884,8 @@
 		<Unit filename="src/core/scripting/VRPyConstructionKit.h" />
 		<Unit filename="src/core/scripting/VRPyDevice.cpp" />
 		<Unit filename="src/core/scripting/VRPyDevice.h" />
+		<Unit filename="src/core/scripting/VRPyEncryption.cpp" />
+		<Unit filename="src/core/scripting/VRPyEncryption.h" />
 		<Unit filename="src/core/scripting/VRPyGeoPrimitive.cpp" />
 		<Unit filename="src/core/scripting/VRPyGeoPrimitive.h" />
 		<Unit filename="src/core/scripting/VRPyGeometry.cpp" />
@@ -919,6 +922,8 @@
 		<Unit filename="src/core/scripting/VRPyMouse.h" />
 		<Unit filename="src/core/scripting/VRPyMultiTouch.cpp" />
 		<Unit filename="src/core/scripting/VRPyMultiTouch.h" />
+		<Unit filename="src/core/scripting/VRPyNamed.cpp" />
+		<Unit filename="src/core/scripting/VRPyNamed.h" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.cpp" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.h" />
 		<Unit filename="src/core/scripting/VRPyNavigator.cpp" />
@@ -1102,6 +1107,8 @@
 		<Unit filename="src/core/utils/VRDeviceFwd.h" />
 		<Unit filename="src/core/utils/VRDoublebuffer.cpp" />
 		<Unit filename="src/core/utils/VRDoublebuffer.h" />
+		<Unit filename="src/core/utils/VREncryption.cpp" />
+		<Unit filename="src/core/utils/VREncryption.h" />
 		<Unit filename="src/core/utils/VRFlags.cpp" />
 		<Unit filename="src/core/utils/VRFlags.h" />
 		<Unit filename="src/core/utils/VRFunction.cpp" />
@@ -1148,6 +1155,36 @@
 		<Unit filename="src/core/utils/toString.cpp" />
 		<Unit filename="src/core/utils/toString.h" />
 		<Unit filename="src/core/utils/toStringBis.h" />
+		<Unit filename="src/core/utils/zipper/defs.h" />
+		<Unit filename="src/core/utils/zipper/filesystem.cpp" />
+		<Unit filename="src/core/utils/zipper/filesystem.h" />
+		<Unit filename="src/core/utils/zipper/minizip/crypt.h" />
+		<Unit filename="src/core/utils/zipper/minizip/ioapi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/utils/zipper/minizip/ioapi.h" />
+		<Unit filename="src/core/utils/zipper/minizip/ioapi_buf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/utils/zipper/minizip/ioapi_buf.h" />
+		<Unit filename="src/core/utils/zipper/minizip/ioapi_mem.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/utils/zipper/minizip/ioapi_mem.h" />
+		<Unit filename="src/core/utils/zipper/minizip/unzip.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/utils/zipper/minizip/unzip.h" />
+		<Unit filename="src/core/utils/zipper/minizip/zip.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/utils/zipper/minizip/zip.h" />
+		<Unit filename="src/core/utils/zipper/tools.cpp" />
+		<Unit filename="src/core/utils/zipper/tools.h" />
+		<Unit filename="src/core/utils/zipper/unzipper.cpp" />
+		<Unit filename="src/core/utils/zipper/unzipper.h" />
+		<Unit filename="src/core/utils/zipper/zipper.cpp" />
+		<Unit filename="src/core/utils/zipper/zipper.h" />
 		<Unit filename="src/main.cpp" />
 		<Extensions>
 			<code_completion />
