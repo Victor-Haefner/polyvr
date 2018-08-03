@@ -77,7 +77,7 @@ class VRTrafficSimulation : public VRObject {
             float density = 0;
             float length = 0;
             bool macro = true;
-            vector<Vehicle> vehicles;
+            vector<int> vehicleIDs;
             VRRoadPtr r;
         };
 
@@ -91,13 +91,13 @@ class VRTrafficSimulation : public VRObject {
 
         struct intersection {
             float density = 0;
-            vector<road> roads;
-            vector<Vehicle> vehicles;
+            vector<int> roadIDs;
+            vector<int> vehicleIDs;
         };
 
         VRRoadNetworkPtr roadNetwork;
         map<int, road> roads;
-        map<int, Vehicle> allVehicles;
+        map<int, Vehicle> vehicles;
         vector<int> seedRoads;
         vector<int> nearRoads;
         vector<Vehicle> users;
