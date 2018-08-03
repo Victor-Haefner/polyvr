@@ -33,6 +33,8 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"reloadOSMMap", PyWrapOpt( WorldGenerator, reloadOSMMap, "Reload OSM data", "-1|-1|-1", void, double, double, double ) },
     {"clear", PyWrap( WorldGenerator, clear, "Clear everything", void ) },
     {"getStats", PyWrap( WorldGenerator, getStats, "Return stats as string", string ) },
+    {"setupPhysics", PyWrap( WorldGenerator, setupPhysics, "Process collision shapes", void ) },
+    {"updatePhysics", PyWrap( WorldGenerator, updatePhysics, "Update physicalized region", void, Boundingbox ) },
     {NULL}  /* Sentinel */
 };
 

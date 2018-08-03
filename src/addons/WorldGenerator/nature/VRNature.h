@@ -70,6 +70,7 @@ class VRNature : public VRLodTree, public VRWorldModule {
         VRLodTreePtr getLodTree();
 
         void addCollisionModels();
+        VRGeometryPtr getCollisionObject();
 };
 
 OSG_END_NAMESPACE;

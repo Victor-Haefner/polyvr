@@ -152,6 +152,8 @@ void VRNature::removeTree(int id) {
     computeLODs(aLeafs);
 }
 
+VRGeometryPtr VRNature::getCollisionObject() { return collisionMesh; }
+
 void VRNature::addScrub(VRPolygonPtr area, bool addGround) {
     float a = area->computeArea();
     if (a == 0) return;

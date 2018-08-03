@@ -10,6 +10,7 @@
 #include "core/objects/VRTransform.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/geometry/VRSpatialCollisionManager.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/scene/VRObjectManager.h"
 #include "core/utils/toString.h"
@@ -21,7 +22,10 @@
 
 using namespace OSG;
 
-VRWorldGenerator::VRWorldGenerator() : VRTransform("WorldGenerator") {}
+VRWorldGenerator::VRWorldGenerator() : VRTransform("WorldGenerator") {
+    collisionShape = VRSpatialCollisionManager::create(12);
+}
+
 VRWorldGenerator::~VRWorldGenerator() {}
 
 VRWorldGeneratorPtr VRWorldGenerator::create() {
@@ -31,6 +35,18 @@ VRWorldGeneratorPtr VRWorldGenerator::create() {
 }
 
 VRWorldGeneratorPtr VRWorldGenerator::ptr() { return dynamic_pointer_cast<VRWorldGenerator>( shared_from_this() ); }
+
+void VRWorldGenerator::setupPhysics() {
+    auto c1 = nature->getCollisionObject();
+    auto c2 = roads->getAssetCollisionObject();
+    //collisionShape->add(c1);
+    collisionShape->add(c2);
+    addChild(collisionShape);
+}
+
+void VRWorldGenerator::updatePhysics(Boundingbox box) {
+    collisionShape->localize(box);
+}
 
 void VRWorldGenerator::setOntology(VROntologyPtr o) {
     ontology = o;

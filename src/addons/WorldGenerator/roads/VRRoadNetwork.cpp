@@ -393,9 +393,14 @@ void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
         Vec3d d1 = p2-p1; d1.normalize();
         Vec3d d2 = p3-p2; d2.normalize();
         Vec3d n = d1+d2; n.normalize();
-        Vec3d p21 = p2 - d1*0.01;
-        Vec3d p23 = p2 + d2*0.01;
+        Vec3d p21 = p2 - d1*0.01 + median;
+        Vec3d p23 = p2 + d2*0.01 + median;
         Vec3d p22 = (p21+p23)*0.5;
+        if (auto t = terrain.lock()) {
+            t->elevatePoint(p21);
+            t->elevatePoint(p22);
+            t->elevatePoint(p23);
+        }
         path->addPoint( Pose(p21, d1) );
         path->addPoint( Pose(p22, n ) );
         path->addPoint( Pose(p23, d2) );
@@ -408,11 +413,7 @@ void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
     kirb->strokeProfile({Vec3d(0.0, h, 0), Vec3d(-0.1, h, 0), Vec3d(-0.1, 0, 0)}, 0, 1, 0);
     kirb->updateNormals(1);
     kirb->setMaterial( w->getMaterial("kirb") );
-
-    if (auto t = terrain.lock()) t->elevatePoint(median); // TODO: elevate each point of the polygon
-    kirb->translate(median);
     addChild(kirb);
-	assets.push_back(kirb);
 
 	// physics
 	auto shape = VRStroke::create("shape");
@@ -421,7 +422,7 @@ void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
 	collisionMesh->merge(shape);
 }
 
-void VRRoadNetwork::physicalizeAssets() {
+void VRRoadNetwork::physicalizeAssets(Boundingbox volume) {
     collisionMesh->getPhysics()->setDynamic(false);
     collisionMesh->getPhysics()->setShape("Concave");
     collisionMesh->getPhysics()->setPhysicalized(true);
@@ -773,8 +774,11 @@ void VRRoadNetwork::compute() {
     computeSigns();
     //computeGreenBelts();
     updateAsphaltTexture();
-    physicalizeAssets();
+    //physicalizeAssets();
+    collisionMesh->setMeshVisibility(false);
 }
+
+VRGeometryPtr VRRoadNetwork::getAssetCollisionObject() { return collisionMesh; }
 
 vector<VREntityPtr> VRRoadNetwork::getPreviousRoads(VREntityPtr road) {
 	auto getPreviousPaths = [](VREntityPtr path) {

@@ -100,7 +100,7 @@ class VRRoadNetwork : public VRRoadBase {
         void computeMarkings();
         void computeArrows();
         void computeSigns();
-        void physicalizeAssets();
+        void physicalizeAssets(Boundingbox volume);
         vector<VRPolygonPtr> computeGreenBelts();
 
         void computeTracksLanes(VREntityPtr way);
@@ -112,6 +112,8 @@ class VRRoadNetwork : public VRRoadBase {
         void test1();
 
         double getMemoryConsumption();
+
+        VRGeometryPtr getAssetCollisionObject();
 };
 
 OSG_END_NAMESPACE;
