@@ -143,8 +143,8 @@ void VRTrafficSimulation::updateSimulation() {
     auto fillOctree = [&]() {
         for (auto& road : roads) { // fill octree
             for (auto& ID : road.second.vehicleIDs) {
-                auto pos = vehicles[ID].t->getFrom();
-                space->add(pos, &vehicles[ID]);
+                auto pos = vehicles[ID.first].t->getFrom();
+                space->add(pos, &vehicles[ID.first]);
             }
         }
     };
@@ -193,7 +193,7 @@ void VRTrafficSimulation::updateSimulation() {
         for (auto roadID : makeDiff(nearRoads, newNearRoads)) {
             auto& road = roads[roadID];
             //for (auto v : road.vehicles) { v.destroy(); numUnits--; }
-            for (auto ID : road.vehicleIDs) { vehicles[ID].hide(); vehiclePool.push_front(vehicles[ID]); numUnits--; }
+            for (auto ID : road.vehicleIDs) { vehicles[ID.first].hide(); vehiclePool.push_front(vehicles[ID.first]); numUnits--; }
             road.vehicleIDs.clear();
             road.macro = true;
         }
@@ -327,7 +327,7 @@ void VRTrafficSimulation::updateSimulation() {
         int N = 0;
         for (auto& road : roads) {
             for (auto& ID : road.second.vehicleIDs) {
-                auto& vehicle = vehicles[ID];
+                auto& vehicle = vehicles[ID.first];
                 if (!vehicle.t) continue;
                 vehicle.vehiclesight.clear();
                 float d = speedMultiplier*vehicle.speed/road.second.length;
@@ -387,12 +387,12 @@ void VRTrafficSimulation::updateSimulation() {
         for (auto r : toChangeRoad) {
             auto& road = roads[r.first];
             for (auto v : r.second) {
-                erase(road.vehicleIDs, v.first);
+                road.vehicleIDs.erase(v.first);
                 //if (v.second == -1) { v.first.destroy(); numUnits--; }
                 if (v.second == -1) { vehicles[v.first].hide(); vehiclePool.push_front(vehicles[v.first]); numUnits--; }
                 else {
                     auto& road2 = roads[v.second];
-                    road2.vehicleIDs.push_back(v.first);
+                    road2.vehicleIDs[v.first]=v.first;
                 }
             }
         }
@@ -424,8 +424,7 @@ void VRTrafficSimulation::addVehicle(int roadID, float density, int type) {
     float L = (g->getNode(n2).p.pos() - g->getNode(n1).p.pos()).length();
     float dis = 100000.0;
     if (road.vehicleIDs.size()>0) {
-        auto lastVehicleID = road.vehicleIDs[road.vehicleIDs.size()-1];
-        auto pos = vehicles[lastVehicleID].t->getFrom();
+        auto pos = vehicles[road.lastVehicleID].t->getFrom();
         dis = (pos - g->getNode(n1).p.pos()).length();
         //cout << toString(pos)<< " --- "<< toString(g->getNode(n1).p.pos()) << " --- " << toString(dis)<< endl;
     } //TODO: change 5m below to vehicle length, maybe change 1m to safety distance between cars
@@ -477,7 +476,8 @@ void VRTrafficSimulation::addVehicle(int roadID, float density, int type) {
 
     v.t->addChild(v.mesh);
     addChild(v.t);
-    road.vehicleIDs.push_back( v.getID() );
+    road.vehicleIDs[v.getID()] = v.getID();
+    road.lastVehicleID = v.getID();
 }
 
 void VRTrafficSimulation::addVehicles(int roadID, float density, int type) {
