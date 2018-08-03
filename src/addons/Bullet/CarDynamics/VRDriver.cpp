@@ -39,6 +39,11 @@ void VRDriver::update() {
     float L = p_path->getLength();
     float aimingLength = 4.0;//2.0*speed;
 
+    if (t >= to && p_path->getDistance( pos ) < 1) {
+        car->update(0, 0.2, 0);
+        return;
+    }
+
     Vec3d p0 = p_path->getPose(t)->pos();
     t += aimingLength/L; // aim some meter ahead
     clamp(t,0,1);
@@ -74,9 +79,10 @@ void VRDriver::update() {
     car->update(throttle, breaking, steering);
 }
 
-void VRDriver::followPath(PathPtr p, PathPtr v) {
+void VRDriver::followPath(PathPtr p, PathPtr v, float to) {
     p_path = p;
     v_path = v;
+    this->to = to;
     active = true;
 }
 

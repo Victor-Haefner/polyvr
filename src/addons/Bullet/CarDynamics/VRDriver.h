@@ -13,6 +13,7 @@ class VRDriver {
     private:
         VRCarDynamicsPtr car;
         bool active = false;
+        float to = 1;
         PathPtr p_path;
         PathPtr v_path;
         VRUpdateCbPtr updatePtr;
@@ -26,7 +27,7 @@ class VRDriver {
 
         //void setTask(); // TODO
         void setCar( VRCarDynamicsPtr car );
-        void followPath(PathPtr p, PathPtr v);
+        void followPath(PathPtr p, PathPtr v, float to = 1);
         void stop();
         bool isDriving();
 };
