@@ -227,7 +227,7 @@ void VRTrafficSimulation::updateSimulation() {
         }
     };
 
-    auto propagateVehicle = [&](Vehicle& vehicle, float d) {
+    auto propagateVehicle = [&](Vehicle& vehicle, float d, int intention) {
         auto& gp = vehicle.pos;
         gp.pos += d;
 
@@ -255,10 +255,24 @@ void VRTrafficSimulation::updateSimulation() {
             }
         }
 
+        Vec3d offset = Vec3d(0,0,0);
+        Vec3d dir = vehicle.t->getPose()->dir();
+        Vec3d up = vehicle.t->getPose()->up();
+        Vec3d left = -dir.cross(up);
+        Vec3d right = dir.cross(up);
+
+        //cout << toString(left) << endl;
+        if (intention==vehicle.STRAIGHT) offset = vehicle.currentOffset + Vec3d(0,0,0);
+        if (intention==vehicle.SWITCHLEFT) offset = vehicle.currentOffset + left*0.3;
+        if (intention==vehicle.SWITCHRIGHT) offset = vehicle.currentOffset + right*0.3;
+        cout << intention << " -- " << toString(vehicle.vID) << " -- " << toString(vehicle.behavior) <<  toString(allVehicles[vehicle.vID].behavior) << " -- "<< toString(offset) << endl;
         auto p = roadNetwork->getPosition(vehicle.pos);
-        vehicle.lastMove = p->pos() - vehicle.t->getFrom();
+        //cout << "propagated vehicle pos " <<toString(p) << endl;
+        vehicle.lastMove = p->pos() + offset - vehicle.t->getFrom();
+        p->setPos(p->pos()+offset);
         vehicle.t->setPose(p);
         vehicle.lastMoveTS = VRGlobals::CURRENT_FRAME;
+        vehicle.currentOffset = offset;
         //cout << "Vehicle " << vehicle.vehicleID << " " << p->pos() << " " << vehicle.pos.edge << " " << vehicle.pos.pos << endl;
     };
 
@@ -354,10 +368,13 @@ void VRTrafficSimulation::updateSimulation() {
                     if (state == 2) g->setColor("red");
                 }
 
-                if (state == 0) propagateVehicle(vehicle, d);
+                int vbeh = vehicle.behavior;
+                if (vbeh == vehicle.STRAIGHT && state == 0) propagateVehicle(vehicle, d, vbeh);
                 else if (VRGlobals::CURRENT_FRAME - vehicle.lastMoveTS > 200 ) {
-                    toChangeRoad[road.first].push_back( make_pair(vehicle, -1) );
+                    toChangeRoad[road.first].push_back( make_pair(vehicle, -1) ); //killswitch if vehicle get's stuck
                 }
+                if (vbeh == vehicle.SWITCHLEFT  && vehicle.vehiclesight[vehicle.FROMLEFT] == false) propagateVehicle(vehicle, d, vbeh);
+                if (vbeh == vehicle.SWITCHRIGHT && vehicle.vehiclesight[vehicle.FROMRIGHT] == false) propagateVehicle(vehicle, d, vbeh);
                 N++; // count vehicles!
             }
         }
@@ -445,7 +462,6 @@ void VRTrafficSimulation::addVehicle(int roadID, float density, int type) {
                 allVehicles[nID] =v;
                 cout<<"VRTrafficSimulation::addVehicle: Added vechicle to map vID:" << v.getID()<<endl;
             }
-            vecVehicles.push_back(v);
             return v;
         }
     };
@@ -454,7 +470,7 @@ void VRTrafficSimulation::addVehicle(int roadID, float density, int type) {
     //auto& road = roads[roadID];
     Vehicle v = getVehicle();
 
-    if (VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(v.mesh) ) g->makeUnique(); // only for debugging!!
+    //if (VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(v.mesh) ) g->makeUnique(); // only for debugging!!
     //v.t->setPickable(true);
 
     v.t->addChild(v.mesh);
@@ -513,6 +529,11 @@ string VRTrafficSimulation::getVehicleData(int ID){
     res+= nl + " vehiclesight: " + nl +  " INFRONT:" + toString(v.vehiclesight[v.INFRONT]) + " FROMLEFT: " + toString(v.vehiclesight[v.FROMLEFT]) + " FROMRIGHT:" + toString(v.vehiclesight[v.FROMRIGHT]);
 
     return res;
+}
+
+void VRTrafficSimulation::forceIntention(int vID,int behavior){
+    allVehicles[vID].behavior = behavior;
+    cout << "Vehicle " << toString(vID) << " set to" << allVehicles[vID].behavior << endl;
 }
 
 void VRTrafficSimulation::runDiagnostics(){

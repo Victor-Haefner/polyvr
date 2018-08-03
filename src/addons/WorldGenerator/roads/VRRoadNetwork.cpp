@@ -292,8 +292,8 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
         auto lPath = addPath("Path", "lane", nodes, norms);
 		lane->add("path", lPath->getName());
 		widthSum += width;
-		if (direction > 0) { lanesD1.push_back(laneEdges); cout << "pushed >0" << endl; }
-		if (direction < 0) { lanesD2.push_back(laneEdges); cout << "pushed <0" << endl; }
+		if (direction > 0) { lanesD1.push_back(laneEdges); }
+		if (direction < 0) { lanesD2.push_back(laneEdges); }
 		}
 
 	if (lanesD1.size()>1) {

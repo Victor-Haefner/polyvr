@@ -17,5 +17,6 @@ PyMethodDef VRPyTrafficSimulation::methods[] = {
     {"setSeedRoad", PyWrap( TrafficSimulation, setSeedRoad, "setSeedRoad", void, int ) },
     {"runDiagnostics", PyWrap( TrafficSimulation, runDiagnostics, "runDiagnostics", void ) },
     {"isSeedRoad", PyWrap( TrafficSimulation, isSeedRoad, "isSeedRoad", bool, int ) },
+    {"forceIntention", PyWrap( TrafficSimulation, forceIntention, "forceIntention", void, int, int ) },
     {NULL}  /* Sentinel */
 };

@@ -36,7 +36,7 @@ class VRTrafficSimulation : public VRObject {
 
             int vID = -1;
             VRTransformPtr t;
-            //VRTransformPtr offset;
+            VRTransformPtr offset;
             VRObjectPtr mesh;
 
             vector<VRGeometryPtr> turnsignalsBL;
@@ -51,7 +51,11 @@ class VRTrafficSimulation : public VRObject {
             Graph::position pos;
             float speed = 0.15;
             Vec3d lastMove = Vec3d(0,0,0);
+            Vec3d currentOffset = Vec3d(0,0,0);
             int lastMoveTS = 0;
+            int roadFrom;
+            int roadTo;
+            int behavior = 0;
             bool laneTransition = false;
 
             Vehicle(Graph::position p);
@@ -94,7 +98,6 @@ class VRTrafficSimulation : public VRObject {
         VRRoadNetworkPtr roadNetwork;
         map<int, road> roads;
         map<int, Vehicle> allVehicles;
-        vector<Vehicle> vecVehicles;
         vector<int> seedRoads;
         vector<int> nearRoads;
         vector<Vehicle> users;
@@ -132,13 +135,6 @@ class VRTrafficSimulation : public VRObject {
         void updateSimulation();
         void updateDensityVisual(bool remesh = false);
 
-        void toggleSim();
-        void setSpeedmultiplier(float speedMultiplier);
-        string getVehicleData(int ID);
-        void runDiagnostics();
-        void setSeedRoad(int debugOverRideSeedRoad);
-        bool isSeedRoad(int roadID);
-
         void addUser(VRTransformPtr t);
 
         void addVehicle(int roadID, float density, int type);
@@ -146,6 +142,15 @@ class VRTrafficSimulation : public VRObject {
         void setTrafficDensity(float density, int type, int maxUnits = 0);
 
         int addVehicleModel(VRObjectPtr mesh);
+
+        //diagnostics:
+        void toggleSim();
+        void setSpeedmultiplier(float speedMultiplier);
+        void forceIntention(int vID,int behavior);
+        string getVehicleData(int ID);
+        void runDiagnostics();
+        void setSeedRoad(int debugOverRideSeedRoad);
+        bool isSeedRoad(int roadID);
 };
 
 OSG_END_NAMESPACE;
