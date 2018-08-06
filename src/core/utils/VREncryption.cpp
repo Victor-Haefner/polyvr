@@ -6,16 +6,6 @@ VREncryption::VREncryption() {}
 VREncryption::~VREncryption() {}
 VREncryptionPtr VREncryption::create() { return VREncryptionPtr( new VREncryption() ); }
 
-string VREncryption::fixString(string ciphertext) {
-    string result;
-    for (unsigned int i = 0; i < ciphertext.size(); i++) {
-        char buffer[2];
-        sprintf (buffer, "%02x", ciphertext[i]);
-        result += string(buffer, 2);
-    }
-    return result;
-}
-
 void fixKey(string& key) {
     int N = key.size();
     for (int i=N; i<32; i++) key += '0';
@@ -23,28 +13,29 @@ void fixKey(string& key) {
 
 string VREncryption::encrypt(string plaintext, string key, string iv) {
     fixKey(key);
-    cout << "Encrypt " << plaintext.size() << " bytes" << endl << endl;
+    cout << "Encrypt " << plaintext.size() << " bytes" << endl;
     string ciphertext;
-    CryptoPP::AES::Encryption aesEncryption((const byte*)key.c_str(), key.size());
-    CryptoPP::CBC_Mode_ExternalCipher::Encryption cbcEncryption( aesEncryption, (const byte*)iv.c_str() );
-    CryptoPP::StreamTransformationFilter stfEncryptor(cbcEncryption, new CryptoPP::StringSink( ciphertext ) );
-    stfEncryptor.Put( reinterpret_cast<const unsigned char*>( plaintext.c_str() ), plaintext.length() + 1 );
-    stfEncryptor.MessageEnd();
-    //cout << "Cipher text (" << ciphertext.size() << " bytes) '" << ciphertext << "'" << endl << endl;
-    //cout << "Cipher text '" << fixString(ciphertext) << "'" << endl << endl;
+    try {
+        CryptoPP::AES::Encryption aesEncryption((const byte*)key.c_str(), key.size());
+        CryptoPP::CBC_Mode_ExternalCipher::Encryption cbcEncryption( aesEncryption, (const byte*)iv.c_str() );
+        CryptoPP::StreamTransformationFilter stfEncryptor(cbcEncryption, new CryptoPP::StringSink( ciphertext ), CryptoPP::StreamTransformationFilter::PKCS_PADDING );
+        stfEncryptor.Put( reinterpret_cast<const unsigned char*>( plaintext.c_str() ), plaintext.size() );
+        stfEncryptor.MessageEnd();
+    } catch(exception& e) { cout << "VREncryption::encrypt, encryption failed with \"" << e.what() << "\"!" << endl; return ""; }
     return ciphertext;
 }
 
 string VREncryption::decrypt(string ciphertext, string key, string iv) {
     fixKey(key);
-    cout << "Decrypt " << ciphertext.size() << " bytes" << endl << endl;
+    cout << "Decrypt " << ciphertext.size() << " bytes" << endl;
     string decryptedtext;
-    CryptoPP::AES::Decryption aesDecryption((const byte*)key.c_str(), key.size());
-    CryptoPP::CBC_Mode_ExternalCipher::Decryption cbcDecryption( aesDecryption, (const byte*)iv.c_str() );
-    CryptoPP::StreamTransformationFilter stfDecryptor(cbcDecryption, new CryptoPP::StringSink( decryptedtext ) );
-    stfDecryptor.Put( reinterpret_cast<const unsigned char*>( ciphertext.c_str() ), ciphertext.size() );
-    stfDecryptor.MessageEnd();
-    //cout << "Decrypted text: '" << decryptedtext << "'" << endl << endl;
+    try {
+        CryptoPP::AES::Decryption aesDecryption((const byte*)key.c_str(), key.size());
+        CryptoPP::CBC_Mode_ExternalCipher::Decryption cbcDecryption( aesDecryption, (const byte*)iv.c_str() );
+        CryptoPP::StreamTransformationFilter stfDecryptor(cbcDecryption, new CryptoPP::StringSink( decryptedtext ), CryptoPP::StreamTransformationFilter::PKCS_PADDING );
+        stfDecryptor.Put( reinterpret_cast<const unsigned char*>( ciphertext.c_str() ), ciphertext.size() );
+        stfDecryptor.MessageEnd();
+    } catch(exception& e) { cout << "VREncryption::decryption, encryption failed with \"" << e.what() << "\"!" << endl; return ""; }
     return decryptedtext;
 }
 

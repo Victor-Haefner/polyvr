@@ -22,9 +22,7 @@
 
 using namespace OSG;
 
-VRWorldGenerator::VRWorldGenerator() : VRTransform("WorldGenerator") {
-    collisionShape = VRSpatialCollisionManager::create(12);
-}
+VRWorldGenerator::VRWorldGenerator() : VRTransform("WorldGenerator") {}
 
 VRWorldGenerator::~VRWorldGenerator() {}
 
@@ -36,12 +34,13 @@ VRWorldGeneratorPtr VRWorldGenerator::create() {
 
 VRWorldGeneratorPtr VRWorldGenerator::ptr() { return dynamic_pointer_cast<VRWorldGenerator>( shared_from_this() ); }
 
+VRSpatialCollisionManagerPtr VRWorldGenerator::getPhysicsSystem() { return collisionShape; }
+
 void VRWorldGenerator::setupPhysics() {
-    auto c1 = nature->getCollisionObject();
+    /*auto c1 = nature->getCollisionObject();
     auto c2 = roads->getAssetCollisionObject();
     //collisionShape->add(c1);
-    collisionShape->add(c2);
-    addChild(collisionShape);
+    collisionShape->add(c2);*/
 }
 
 void VRWorldGenerator::updatePhysics(Boundingbox box) {
@@ -104,6 +103,9 @@ void VRWorldGenerator::init() {
         mat->setFragmentShader(dfp, name+"DFS", true);
         addMaterial(name, mat);
     };
+
+    collisionShape = VRSpatialCollisionManager::create(12);
+    addChild(collisionShape);
 
     addMat("phong", 0);
     addMat("phongTex", 2);
