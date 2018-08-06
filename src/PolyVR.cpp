@@ -118,7 +118,11 @@ void PolyVR::run() {
 
         if (VRGlobals::CURRENT_FRAME == 300) {
             string app = options->getOption<string>("application");
-            if (app != "") VRSceneManager::get()->loadScene(app);
+            string dcy = options->getOption<string>("decryption");
+            string key;
+            if (startsWith(dcy, "key:")) key = subString(dcy, 4, dcy.size()-4);
+            if (startsWith(dcy, "serial:")) key = "123"; // TODO: access serial connection to retreive key
+            if (app != "") VRSceneManager::get()->loadScene(app, false, key);
         }
     }
 }

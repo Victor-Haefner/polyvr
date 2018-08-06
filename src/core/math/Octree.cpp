@@ -241,7 +241,7 @@ vector<void*> OctreeNode::getAllData() {
 }
 
 
-Octree::Octree(float res, float s) : resolution(res), firstSize(s) {}
+Octree::Octree(float res, float s) : resolution(res), firstSize(s) { if (s < res) firstSize = res; }
 Octree::~Octree() { if (root) delete root; }
 
 OctreePtr Octree::create(float resolution, float size) {

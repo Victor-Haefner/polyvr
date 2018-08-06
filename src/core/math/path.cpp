@@ -560,3 +560,11 @@ bool Path::isSinuous(int i, int j) { // TODO
     if (iPnts.size() >= 1) return true;
     return false;
 }
+
+void Path::translate(Vec3d t) {
+    for (auto& p : points) p.setPos( p.pos()+t );
+    compute(iterations);
+}
+
+
+

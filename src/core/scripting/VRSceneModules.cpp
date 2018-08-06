@@ -63,7 +63,9 @@
 #include "VRPySky.h"
 #include "VRPyScenegraphInterface.h"
 #include "VRPyOPCUA.h"
+#ifndef NO_ENCRYPTION
 #include "VRPyEncryption.h"
+#endif
 
 #include "addons/Character/VRPyCharacter.h"
 #include "addons/Algorithms/VRPyGraphLayout.h"
@@ -164,7 +166,9 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyOPCUANode>("OPCUANode", pModVR);
 #endif
 
+#ifndef NO_ENCRYPTION
     sm->registerModule<VRPyEncryption>("Encryption", pModVR);
+#endif
     sm->registerModule<VRPyProgress>("Progress", pModVR);
     sm->registerModule<VRPyUndoManager>("UndoManager", pModVR);
     sm->registerModule<VRPyObjectManager>("ObjectManager", pModVR, VRPyObject::typeRef);

@@ -91,7 +91,7 @@ VRLodLeafPtr VRLodTree::addLeaf(OctreeNode* o, int lvl) {
     if (leafs.count(o)) return leafs[o];
     auto l = VRLodLeaf::create("lodLeaf", o, lvl);
     l->setPersistency(0);
-    if (lvl > 0) l->addLevel( o->getSize()*5 );
+    if (lvl > 0) l->addLevel( o->getSize()*2 );
     l->setFrom(o->getLocalCenter());
     leafs[o] = l;
 
@@ -155,4 +155,10 @@ VRLodLeafPtr VRLodTree::remObject(VRTransformPtr obj) { // TODO, finish it!
     OctreeNode* o = octree->get( obj->getWorldPosition() );
     o->remData(obj.get());
     return leafs[o];
+}
+
+int VRLodTree::size() {
+    int N = 0;
+    for (auto ov : objects) N += ov.second.size();
+    return N;
 }

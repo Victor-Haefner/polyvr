@@ -30,8 +30,8 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-std=c++11" />
 			<Add option="-Wall" />
+			<Add option="-std=c++11" />
 			<Add option="`pkg-config gtk+-2.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
 			<Add option="`pkg-config --cflags libxml++-2.6`" />
@@ -92,6 +92,7 @@
 			<Add option="-DOLD_LIBAV" />
 			<Add option="-DNO_IFC" />
 			<Add option="-DNO_PHOTOMETRIC" />
+			<Add option="-DNO_ENCRYPTION" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
 			<Add directory="/usr/lib64/glib-2.0/include" />

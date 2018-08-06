@@ -904,7 +904,7 @@ void VRPhysics::updateVisualGeo() {
         if (data.size()) data.apply(geo);
     }
 
-    if (stype == 21) { // trianglemesh, TODO: test it
+    if (stype == 21) { // trianglemesh
         auto tshpe = (btBvhTriangleMeshShape*)shape;
         auto tmsh = (btTriangleMesh*)tshpe->getMeshInterface();
         IndexedMeshArray& mesh = tmsh->getIndexedMeshArray();
@@ -929,6 +929,7 @@ void VRPhysics::updateVisualGeo() {
             int i2 = bt_inds[i+2];
             data.pushTri(i0,i1,i2);
         }
+
         if (data.size()) data.apply(geo);
     }
 
@@ -953,15 +954,36 @@ void VRPhysics::updateVisualGeo() {
 
         int NIoffset = 0;
         for (int j = 0; j < cpshape->getNumChildShapes(); j++) {
-            btConvexHullShape* cshape = (btConvexHullShape*)cpshape->getChildShape(j);
-            btShapeHull hull(cshape);
-            hull.buildHull(cshape->getMargin());
+            btCollisionShape* shape2 = cpshape->getChildShape(j);
+            int s2type = shape2->getShapeType();
 
-            int Ni = hull.numIndices();
-            int Nv = hull.numVertices();
-            const unsigned int* bt_inds = hull.getIndexPointer();
-            const btVector3* verts = hull.getVertexPointer();
+            int Ni = 0;
+            int Nv = 0;
+            unsigned int* bt_inds = 0;
+            btVector3* verts = 0;
 
+            if (s2type == 21) {
+                auto tshpe = (btBvhTriangleMeshShape*)shape2;
+                auto tmsh = (btTriangleMesh*)tshpe->getMeshInterface();
+                IndexedMeshArray& mesh = tmsh->getIndexedMeshArray();
+                if (mesh.size() == 0) return;
+
+                Ni = mesh[0].m_numTriangles;
+                Nv = mesh[0].m_numVertices;
+                bt_inds = (unsigned int*)mesh[0].m_triangleIndexBase;
+                verts = (btVector3*)mesh[0].m_vertexBase;
+            }
+
+            if (s2type == 4) {
+                btConvexHullShape* cshape = (btConvexHullShape*)shape2;
+                btShapeHull hull(cshape);
+                hull.buildHull(cshape->getMargin());
+
+                Ni = hull.numIndices();
+                Nv = hull.numVertices();
+                bt_inds = (unsigned int*)hull.getIndexPointer();
+                verts = (btVector3*)hull.getVertexPointer();
+            }
 
             for (int i=0; i<Ni; i++) inds->addValue( NIoffset + bt_inds[i] );
             NIoffset += Nv;

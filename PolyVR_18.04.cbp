@@ -720,6 +720,8 @@
 		<Unit filename="src/core/objects/geometry/VRPrimitive.h" />
 		<Unit filename="src/core/objects/geometry/VRSky.cpp" />
 		<Unit filename="src/core/objects/geometry/VRSky.h" />
+		<Unit filename="src/core/objects/geometry/VRSpatialCollisionManager.cpp" />
+		<Unit filename="src/core/objects/geometry/VRSpatialCollisionManager.h" />
 		<Unit filename="src/core/objects/geometry/VRSprite.cpp" />
 		<Unit filename="src/core/objects/geometry/VRSprite.h" />
 		<Unit filename="src/core/objects/geometry/VRStroke.cpp" />
@@ -968,6 +970,8 @@
 		<Unit filename="src/core/scripting/VRPySocket.h" />
 		<Unit filename="src/core/scripting/VRPySound.cpp" />
 		<Unit filename="src/core/scripting/VRPySound.h" />
+		<Unit filename="src/core/scripting/VRPySpatialCollisionManager.cpp" />
+		<Unit filename="src/core/scripting/VRPySpatialCollisionManager.h" />
 		<Unit filename="src/core/scripting/VRPySprite.cpp" />
 		<Unit filename="src/core/scripting/VRPySprite.h" />
 		<Unit filename="src/core/scripting/VRPyStateMachine.cpp" />
