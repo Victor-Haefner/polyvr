@@ -275,6 +275,11 @@ void VRTrafficSimulation::updateSimulation() {
                 //cout << "   new spawn of vehicle: " << vehicle.getID() << endl; //" from: " << road1ID <<
             }
         }
+        else {
+            auto& edge = g->getEdge(gp.edge);
+            auto nextEdges = g->getNextEdges(edge);
+            //if (nextEdges.size() == 0) changeLane(vehicle.vID,1);
+        }
 
         Vec3d offset = Vec3d(0,0,0);
         Vec3d dir = vehicle.t->getPose()->dir();
@@ -557,7 +562,6 @@ void VRTrafficSimulation::changeLane(int ID, int direction) {
     bool checked = false;
     auto rSize = edge.relations.size();
 
-    //TODO: should get real left and right detection
     int edgeLeft;
     int edgeRight;
     auto check = [&](int input) {
@@ -619,60 +623,64 @@ void VRTrafficSimulation::setSpeedmultiplier(float speedMultiplier) {
 
 
 void VRTrafficSimulation::showGraph(){
-	map<int,VRGeometryPtr> idx;
-	vector<string> gg;
-	gg.push_back("graphVizPnts");
-	gg.push_back("graphVizLines");
-	gg.push_back("graphVizSeedLines");
+	map<int,int> idx;
+	map<string, VRGeometryPtr> vizGeos;
 	auto graph = roadNetwork->getGraph();
 	auto scene = VRScene::getCurrent();
 
-	auto makeViz = [&](string strInput){
+	for (string strInput : {"graphVizPnts", "graphVizLines", "graphVizSeedLines"}) {
 		if ( scene->getRoot()->find(strInput) ) scene->getRoot()->find(strInput)->destroy();
 		auto graphViz = VRGeometry::create(strInput);
         graphViz->setPersistency(0);
 		scene->getRoot()->addChild(graphViz);
-	};
+		vizGeos[strInput] = graphViz;
+	}
 
 	if (scene->getRoot()->find("graphAnn")) scene->getRoot()->find("graphAnn")->destroy();
 	auto graphAnn = VRAnnotationEngine::create();
+	graphAnn->setPersistency(0);
 	graphAnn->setBillboard(true);
 	graphAnn->setBackground(Color4f(1,1,1,1));
 	scene->getRoot()->addChild(graphAnn);
 
-	for (a : gg) makeViz(a);
-/*
+	VRGeoData gg0;
+	VRGeoData gg1;
+	VRGeoData gg2;
+
 	for (node : graph->getNodes()){
 		auto nPose = graph->getNode(node.first).p;
 		auto p = nPose.pos() + Vec3d(0,3,0);
-		VRGeometryPtr vID = scene->getRoot()->find(gg[0])->addVertex(p);
-		scene->getRoot()->find(gg[1])->addVertex(p);
-		scene->getRoot()->find(gg[2])->addVertex(p);
-		scene->getRoot()->find(gg[0])->addPoint();
-		graphAnn->set(node, nPose.pos() + Vec3d(0,4,0), "Node "+toString(node));
-		idx[node] = vID;
+		int vID = gg0.pushVert(p);
+		gg1.pushVert(p);
+		gg2.pushVert(p);
+		gg0.pushPoint();
+		graphAnn->set(vID, nPose.pos() + Vec3d(0,4,0), "Node "+toString(node.first));
+		idx[node.first] = vID;
 	}
 
 	for (connection : graph->getEdges()){
 		auto edge = connection.first;
-		if (isSeedRoad(edge)) { scene->getRoot()->find(gg[2])->addLine(idx[connection.second.from], idx[connection.second.to]); }
-		if (!isSeedRoad(edge)) { scene->getRoot()->find(gg[1])->addLine(idx[connection.second.from], idx[connection.second.to]); }
+		if (isSeedRoad(edge)) { gg2.pushLine(idx[connection.second.from], idx[connection.second.to]); }
+		if (!isSeedRoad(edge)) { gg1.pushLine(idx[connection.second.from], idx[connection.second.to]); }
 		auto pos1 = graph->getNode(connection.second.from).p.pos();
 		auto pos2 = graph->getNode(connection.second.to).p.pos();
 		graphAnn->set(edge+100, (pos1+pos2)*0.5 + Vec3d(0,4,0), "Edge "+toString(edge)+"("+toString(connection.second.from)+"-"+toString(connection.second.to)+")");
 	}
 
-	for (a : gg){
-		auto mat = VRMaterial::create(a);
+	gg0.apply( vizGeos["graphVizPnts"] );
+	gg1.apply( vizGeos["graphVizLines"] );
+	gg2.apply( vizGeos["graphVizSeedLines"] );
+
+	for (auto geo : vizGeos) {
+		auto mat = VRMaterial::create(geo.first+"_mat");
 		mat->setLit(0);
-		int r = a==gg[2];
-		int g = a==gg[0];
-		int b = a==gg[1];
+		int r = geo.first == "graphVizSeedLines";
+		int g = geo.first == "graphVizPnts";
+		int b = geo.first == "graphVizLines";
 		mat->setDiffuse(Color3f(r,g,b));
 		mat->setPointSize(5);
-		scene->getRoot()->find(a)->setMaterial(mat);
+		geo.second->setMaterial(mat);
 	}
-	*/
 }
 
 void VRTrafficSimulation::hideGraph(){
@@ -680,6 +688,7 @@ void VRTrafficSimulation::hideGraph(){
 	gg.push_back("graphVizPnts");
 	gg.push_back("graphVizLines");
 	gg.push_back("graphVizSeedLines");
+	gg.push_back("graphAnn");
 	auto scene = VRScene::getCurrent();
     for ( a : gg ){
         if ( scene->getRoot()->find(a) ) scene->getRoot()->find(a)->destroy();
