@@ -19,6 +19,7 @@
 #include "core/scene/VRObjectManager.h"
 #include "addons/Semantics/Reasoning/VREntity.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
+#include "core/tools/VRAnnotationEngine.h"
 
 #include <boost/bind.hpp>
 
@@ -138,7 +139,7 @@ void VRTrafficSimulation::updateSimulation() {
     auto g = roadNetwork->getGraph();
     auto space = Octree::create(2);
     map<int, vector<pair<int, int>>> toChangeRoad;
-    float userRadius = 150; // x meter radius around users
+    float userRadius = 300; // x meter radius around users
 
     auto fillOctree = [&]() {
         for (auto& road : roads) { // fill octree
@@ -222,7 +223,7 @@ void VRTrafficSimulation::updateSimulation() {
         }
 
         if (seedRoadsString!=lastseedRoadsString) {
-            cout << seedRoadsString << endl;
+            //cout << seedRoadsString << endl;
             lastseedRoadsString = seedRoadsString;
         }
     };
@@ -239,18 +240,38 @@ void VRTrafficSimulation::updateSimulation() {
             if (nextEdges.size() > 1) {
                 gp.edge = randomChoice(nextEdges).ID;
                 auto& road = roads[gp.edge];
-                if (road.macro) toChangeRoad[road1ID].push_back( make_pair(vehicle.vID, -1) );
-                else toChangeRoad[road1ID].push_back( make_pair(vehicle.vID, gp.edge) );
+                if (road.macro) {
+                    toChangeRoad[road1ID].push_back( make_pair(vehicle.vID, -1) );
+                    vehicle.currentState = 0;
+                    vehicle.behavior = 0;
+                    vehicle.roadFrom = -1;
+                    vehicle.roadTo = -1;
+                }
+                else {
+                    toChangeRoad[road1ID].push_back( make_pair(vehicle.vID, gp.edge) );
+                    if (vehicle.currentState != 0) {
+                        vehicle.roadTo = g->getNextEdges(g->getEdge(vehicle.roadTo))[0].ID;
+                        vehicle.roadFrom = gp.edge;
+                    }
+                }
                 //cout << toString(gp.edge) << endl;
             }
             if (nextEdges.size() == 1) {
                 gp.edge = nextEdges[0].ID;
                 auto& road = roads[gp.edge];
                 toChangeRoad[road1ID].push_back( make_pair(vehicle.vID, gp.edge) );
+                if (vehicle.currentState != 0) {
+                    vehicle.roadTo = g->getNextEdges(g->getEdge(vehicle.roadTo))[0].ID;
+                    vehicle.roadFrom = gp.edge;
+                }
                 //cout << "  transit of vehicle: " << vehicle.getID() << " from: " << road1ID << " to: " << gp.edge << endl;
             }
             if (nextEdges.size() == 0) {
                 toChangeRoad[road1ID].push_back( make_pair(vehicle.vID, -1) );
+                vehicle.currentState = 0;
+                vehicle.behavior = 0;
+                vehicle.roadFrom = -1;
+                vehicle.roadTo = -1;
                 //cout << "   new spawn of vehicle: " << vehicle.getID() << endl; //" from: " << road1ID <<
             }
         }
@@ -258,37 +279,48 @@ void VRTrafficSimulation::updateSimulation() {
         Vec3d offset = Vec3d(0,0,0);
         Vec3d dir = vehicle.t->getPose()->dir();
         Vec3d up = vehicle.t->getPose()->up();
-        Vec3d left = -dir.cross(up);
-        Vec3d right = dir.cross(up);
-
+        Vec3d left = up.cross(dir);
+        Vec3d right = -up.cross(dir);
         //cout << toString(left) << endl;
         float vS = float(vehicle.currentState);
+        if (vS == 0) vehicle.currentOffset = Vec3d(0,0,0);
         if (intention==vehicle.STRAIGHT) offset = vehicle.currentOffset + Vec3d(0,0,0);
-        if (intention==vehicle.SWITCHLEFT) offset = vehicle.currentOffset*vS + left*vS*d;
-        if (intention==vehicle.SWITCHRIGHT) offset = vehicle.currentOffset*vS + right*vS*d;
+        if (intention==vehicle.SWITCHLEFT) offset = vehicle.currentOffset + left*d*5*3;
+        if (intention==vehicle.SWITCHRIGHT) offset = vehicle.currentOffset + right*d*5*3;
         //cout << intention << " -- " << toString(vehicle.vID) << " -- " << toString(vehicle.behavior) <<  toString(vehicles[vehicle.vID].behavior) << " -- "<< toString(offset) << endl;
 
         auto road = roads[gp.edge];
-        auto lanewidth = 3; //TODO: should be called from real data
-        if (abs(offset.length()) > lanewidth/2 && vS>0.5) {
-            roads[vehicle.roadFrom].vehicleIDs.erase(vehicle.vID);
-            roads[vehicle.roadTo].vehicleIDs[vehicle.vID] = vehicle.vID;
+        float lanewidth = 3.0; //TODO: should be called from real data
+        float dirOffset;
+        if (intention == 1 && vS > 0.5) dirOffset = left.dot(offset);
+        if (intention == 2 && vS > 0.5) dirOffset = right.dot(offset);
+        if (intention == 1 && vS < -0.5) dirOffset = right.dot(offset);
+        if (intention == 2 && vS < -0.5) dirOffset = left.dot(offset);
+        if (dirOffset > lanewidth/2 && vS>0.5) {
+            toChangeRoad[vehicle.roadFrom].push_back( make_pair(vehicle.vID, vehicle.roadTo) );
+            gp.edge = vehicle.roadTo;
             vehicle.currentState = -1;
+            offset = -offset;
+            //cout << "trafficsim changing state " << toString(vehicle.vID) << " " << toString(dirOffset) <<endl;
         }
-        if (abs(offset.length()) < 0.01 && vS<-0.5) {
+        if (dirOffset < 0.1 && vS<-0.5) {
             vehicle.roadFrom = -1;
             vehicle.roadTo = -1;
             vehicle.currentState = 0;
+            vehicle.behavior = 0;
+            offset = Vec3d(0,0,0);
+            //cout << "changed lane" << endl;
         }
-
         auto p = roadNetwork->getPosition(vehicle.pos);
         //cout << "propagated vehicle pos " <<toString(p) << endl;
-        if (offset.length()>20) offset = Vec3d(0,0,0); ///DEBUGGING
+        if (offset.length()>20) offset = Vec3d(0,0,0); //DEBUGGING FAIL SAFE
         vehicle.lastMove = p->pos() + offset - vehicle.t->getFrom();
         p->setPos(p->pos()+offset);
         vehicle.t->setPose(p);
         vehicle.lastMoveTS = VRGlobals::CURRENT_FRAME;
         vehicle.currentOffset = offset;
+
+        //if (vehicle.vID == 0) cout << toString(offset) << endl;
         //cout << "Vehicle " << vehicle.vehicleID << " " << p->pos() << " " << vehicle.pos.edge << " " << vehicle.pos.pos << endl;
     };
 
@@ -389,6 +421,10 @@ void VRTrafficSimulation::updateSimulation() {
                 if (vbeh == vehicle.STRAIGHT && state == 0) propagateVehicle(vehicle, d, vbeh);
                 else if (VRGlobals::CURRENT_FRAME - vehicle.lastMoveTS > 200 ) {
                     toChangeRoad[road.first].push_back( make_pair(vehicle.vID, -1) ); //killswitch if vehicle get's stuck
+                    vehicle.currentState = 0;
+                    vehicle.behavior = 0;
+                    vehicle.roadFrom = -1;
+                    vehicle.roadTo = -1;
                 }
                 if (vbeh == vehicle.SWITCHLEFT  && vehicle.vehiclesight[vehicle.FROMLEFT] == false && vehicle.vehiclesight[vehicle.INFRONT] == false) propagateVehicle(vehicle, d, vbeh);
                 if (vbeh == vehicle.SWITCHRIGHT && vehicle.vehiclesight[vehicle.FROMRIGHT] == false && vehicle.vehiclesight[vehicle.INFRONT] == false) propagateVehicle(vehicle, d, vbeh);
@@ -451,7 +487,7 @@ void VRTrafficSimulation::addVehicle(int roadID, float density, int type) {
             auto v = vehiclePool.back();
             vehiclePool.pop_back();
             vehicles[v.vID].show( Graph::position(roadID, 0.0) );
-            return vehicles[v.vID];
+            return v.vID;
         } else {
             auto v = Vehicle( Graph::position(roadID, 0.0) );
             v.mesh = models[type]->duplicate();
@@ -476,15 +512,15 @@ void VRTrafficSimulation::addVehicle(int roadID, float density, int type) {
                 static size_t nID = -1; nID++;
                 v.setID(nID);
                 vehicles[nID] =v;
-                cout<<"VRTrafficSimulation::addVehicle: Added vehicle to map vID:" << v.getID()<<endl;
+                //cout<<"VRTrafficSimulation::addVehicle: Added vehicle to map vID:" << v.getID()<<endl;
             }
-            return vehicles[v.vID];
+            return v.vID;
         }
     };
 
     //if () cout << "VRTrafficSimulation::updateSimulation " << roads.size() << endl;
     //auto& road = roads[roadID];
-    Vehicle v = getVehicle();
+    Vehicle v = vehicles[getVehicle()];
 
     //if (VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(v.mesh) ) g->makeUnique(); // only for debugging!!
     //v.t->setPickable(true);
@@ -510,18 +546,55 @@ void VRTrafficSimulation::addVehicles(int roadID, float density, int type) {
 
 void VRTrafficSimulation::changeLane(int ID, int direction) {
     auto& v = vehicles[ID];
+    if (v.behavior != 0) return;
     auto& gp = v.pos;
-    v.roadFrom = gp.edge;
     auto& edge = roadNetwork->getGraph()->getEdge(gp.edge);
+    auto posV = v.pos; //current vehicle position
+    auto pos = v.pos; //position on alternative road
+    auto poseV = roadNetwork->getPosition(gp);
+    auto vDir = v.t->getPose()->dir();
+    auto vUp = v.t->getPose()->up();
+    bool checked = false;
+    auto rSize = edge.relations.size();
+
     //TODO: should get real left and right detection
-    if (edge.relations.size()>0){
-        if (direction = 1) v.roadTo = edge.relations[0];
-        if (direction = 2 && edge.relations.size()>1) v.roadTo = edge.relations[1];
-        else v.roadTo = edge.relations[0];
+    int edgeLeft;
+    int edgeRight;
+    auto check = [&](int input) {
+        auto rSize = edge.relations.size();
+        //CPRINT(toString(rSize));
+        if (rSize > 0) {
+            auto opt = edge.relations[0];
+            pos.edge = opt;
+            auto pose = roadNetwork->getPosition(pos);
+            float res = vUp.cross(vDir).dot(pose->pos() - poseV->pos());
+            if (res > 0 && input==1) { edgeLeft = opt; return true; }
+            if (res < 0 && input==2) { edgeRight = opt; return true; }
+
+            if (rSize > 1) {
+                opt = edge.relations[1];
+                pos.edge = opt;
+                pose = roadNetwork->getPosition(pos);
+                res = vUp.cross(vDir).dot(pose->pos() - poseV->pos());
+                if (res > 0 && input==1) { edgeLeft = opt; return true; }
+                if (res < 0 && input==2) { edgeRight = opt; return true; }
+            }
+        }
+        return false;
+    };
+
+    if ( direction == 1 && check(1) ) { checked = true; v.roadTo = edgeLeft; }
+    if ( direction == 2 && check(2)) { checked = true; v.roadTo = edgeRight;}
+    if ( checked ){
         v.currentState = 1;
         v.behavior = direction;
+        v.roadFrom = gp.edge;
     }
-    else cout << "VRTrafficSimulation::changeLane: possible lane doesn't exist" << endl;
+    else {/*
+        string s = toString(ID) + " " + toString(rSize) + " " + toString(poseV) + " rejected";
+        CPRINT(s);
+        cout << "VRTrafficSimulation::changeLane: trying to change to a lane, which doesn't exist" << endl;*/
+    }
 }
 
 void VRTrafficSimulation::setTrafficDensity(float density, int type, int maxUnits) {
@@ -543,6 +616,76 @@ void VRTrafficSimulation::toggleSim() {
 void VRTrafficSimulation::setSpeedmultiplier(float speedMultiplier) {
     this->speedMultiplier = speedMultiplier;
 }
+
+
+void VRTrafficSimulation::showGraph(){
+	map<int,VRGeometryPtr> idx;
+	vector<string> gg;
+	gg.push_back("graphVizPnts");
+	gg.push_back("graphVizLines");
+	gg.push_back("graphVizSeedLines");
+	auto graph = roadNetwork->getGraph();
+	auto scene = VRScene::getCurrent();
+
+	auto makeViz = [&](string strInput){
+		if ( scene->getRoot()->find(strInput) ) scene->getRoot()->find(strInput)->destroy();
+		auto graphViz = VRGeometry::create(strInput);
+        graphViz->setPersistency(0);
+		scene->getRoot()->addChild(graphViz);
+	};
+
+	if (scene->getRoot()->find("graphAnn")) scene->getRoot()->find("graphAnn")->destroy();
+	auto graphAnn = VRAnnotationEngine::create();
+	graphAnn->setBillboard(true);
+	graphAnn->setBackground(Color4f(1,1,1,1));
+	scene->getRoot()->addChild(graphAnn);
+
+	for (a : gg) makeViz(a);
+/*
+	for (node : graph->getNodes()){
+		auto nPose = graph->getNode(node.first).p;
+		auto p = nPose.pos() + Vec3d(0,3,0);
+		VRGeometryPtr vID = scene->getRoot()->find(gg[0])->addVertex(p);
+		scene->getRoot()->find(gg[1])->addVertex(p);
+		scene->getRoot()->find(gg[2])->addVertex(p);
+		scene->getRoot()->find(gg[0])->addPoint();
+		graphAnn->set(node, nPose.pos() + Vec3d(0,4,0), "Node "+toString(node));
+		idx[node] = vID;
+	}
+
+	for (connection : graph->getEdges()){
+		auto edge = connection.first;
+		if (isSeedRoad(edge)) { scene->getRoot()->find(gg[2])->addLine(idx[connection.second.from], idx[connection.second.to]); }
+		if (!isSeedRoad(edge)) { scene->getRoot()->find(gg[1])->addLine(idx[connection.second.from], idx[connection.second.to]); }
+		auto pos1 = graph->getNode(connection.second.from).p.pos();
+		auto pos2 = graph->getNode(connection.second.to).p.pos();
+		graphAnn->set(edge+100, (pos1+pos2)*0.5 + Vec3d(0,4,0), "Edge "+toString(edge)+"("+toString(connection.second.from)+"-"+toString(connection.second.to)+")");
+	}
+
+	for (a : gg){
+		auto mat = VRMaterial::create(a);
+		mat->setLit(0);
+		int r = a==gg[2];
+		int g = a==gg[0];
+		int b = a==gg[1];
+		mat->setDiffuse(Color3f(r,g,b));
+		mat->setPointSize(5);
+		scene->getRoot()->find(a)->setMaterial(mat);
+	}
+	*/
+}
+
+void VRTrafficSimulation::hideGraph(){
+    vector<string> gg;
+	gg.push_back("graphVizPnts");
+	gg.push_back("graphVizLines");
+	gg.push_back("graphVizSeedLines");
+	auto scene = VRScene::getCurrent();
+    for ( a : gg ){
+        if ( scene->getRoot()->find(a) ) scene->getRoot()->find(a)->destroy();
+    }
+}
+
 
 string VRTrafficSimulation::getVehicleData(int ID){
     string res = "";
@@ -567,7 +710,7 @@ string VRTrafficSimulation::getVehicleData(int ID){
 void VRTrafficSimulation::forceIntention(int vID,int behavior){
     //vehicles[vID].behavior = behavior;
     changeLane(vID,behavior);
-    cout << "Vehicle " << toString(vID) << " set to" << vehicles[vID].behavior << endl;
+    //cout << "Vehicle " << toString(vID) << " set to" << vehicles[vID].behavior << endl;
 }
 
 void VRTrafficSimulation::runDiagnostics(){
@@ -577,6 +720,7 @@ void VRTrafficSimulation::runDiagnostics(){
     string edgeInfo = "ALL EDGES: ";
     string nodeInfo = "ALL NODES: ";
     string vehiInfo = "ALL VEHICLES: ";
+    string edgeNeighbors = "Relations: ";
 
     auto fit = [&](int input) {
         string res = "";
@@ -592,6 +736,9 @@ void VRTrafficSimulation::runDiagnostics(){
         auto e = eV.second;
         roadInfo += toString(e.ID) + " ";
         edgeInfo += toString(e.from) +"-"+ toString(e.to) + " ";
+        edgeNeighbors += toString(e.ID) + ":";
+        for (nn : graph->getRelations(e.ID)) edgeNeighbors +=" " + toString(nn);
+        edgeNeighbors += "; ";
         n1++;
     }
 
@@ -612,6 +759,7 @@ void VRTrafficSimulation::runDiagnostics(){
     returnInfo += lastseedRoadsString;
     returnInfo += nl + fit(n1) + "--" + roadInfo;
     returnInfo += nl + fit(n1) + "--" + edgeInfo;
+    returnInfo += nl + fit(n1) + "--" + edgeNeighbors;
     returnInfo += nl + fit(n2) + "--" + nodeInfo;
     returnInfo += nl + fit(n3) + "--" + vehiInfo;
 

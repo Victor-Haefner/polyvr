@@ -150,6 +150,8 @@ class VRTrafficSimulation : public VRObject {
         //diagnostics:
         void toggleSim();
         void setSpeedmultiplier(float speedMultiplier);
+        void showGraph();
+        void hideGraph();
         void forceIntention(int vID,int behavior);
         string getVehicleData(int ID);
         void runDiagnostics();

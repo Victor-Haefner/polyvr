@@ -956,9 +956,6 @@ VREntityPtr VRRoadNetwork::addRoute(vector<int> nodeIDs) { // nodeIDs as compute
 
     return addPath("Path", "route", nodes, norms);
 }
-
-
-
 template <class Key, class Value>
 unsigned long mapSize(const map<Key,Value> &map){
     unsigned long size = 0;
