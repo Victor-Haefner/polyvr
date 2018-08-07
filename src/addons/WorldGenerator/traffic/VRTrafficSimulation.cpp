@@ -637,7 +637,7 @@ void VRTrafficSimulation::showGraph(){
 		vizGeos[strInput] = graphViz;
 	}
 
-	if (scene->getRoot()->find("graphAnn")) scene->getRoot()->find("graphAnn")->destroy();
+	if (scene->getRoot()->find("AnnotationEngine")) scene->getRoot()->find("AnnotationEngine")->destroy();
 	auto graphAnn = VRAnnotationEngine::create();
 	graphAnn->setPersistency(0);
 	graphAnn->setBillboard(true);
@@ -694,6 +694,7 @@ void VRTrafficSimulation::showGraph(){
 		int g = (geo.first == "graphVizPnts" || geo.first ==  "graphVizRelations");
 		int b = (geo.first == "graphVizLines"|| geo.first ==  "graphVizRelations");
 		mat->setDiffuse(Color3f(r,g,b));
+		mat->setLineWidth(3);
 		mat->setPointSize(5);
 		geo.second->setMaterial(mat);
 	}
@@ -705,7 +706,7 @@ void VRTrafficSimulation::hideGraph(){
 	gg.push_back("graphVizLines");
 	gg.push_back("graphVizSeedLines");
 	gg.push_back("graphVizRelations");
-	gg.push_back("graphAnn");
+	gg.push_back("AnnotationEngine");
 	auto scene = VRScene::getCurrent();
     for ( a : gg ){
         if ( scene->getRoot()->find(a) ) scene->getRoot()->find(a)->destroy();
