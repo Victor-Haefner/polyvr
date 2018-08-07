@@ -60,6 +60,10 @@ void VRServer::callback(void* _args) { // TODO: implement generic button trigger
     change_button(button, state);
 }
 
+map<string, vector<int>> VRServer::getClients() {
+    return soc->getClients();
+}
+
 int VRServer::openWebSocket(string address, string protocols) {
     return soc->openWebSocket(address, protocols);
 }

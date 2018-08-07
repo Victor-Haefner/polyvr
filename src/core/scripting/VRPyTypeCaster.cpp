@@ -76,6 +76,12 @@ PyObject* VRPyTypeCaster::pack(const vector<PyObject*>& v) {
     return l;
 }
 
+PyObject* VRPyTypeCaster::pack(const vector< pair<PyObject*,PyObject*> >& v) {
+    auto l = PyDict_New();
+    for (auto i : v) PyDict_SetItem(l, i.first, i.second);
+    return l;
+}
+
 
 
 
