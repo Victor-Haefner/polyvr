@@ -55,6 +55,7 @@
 #include "VRPyMeasure.h"
 #include "VRPyJointTool.h"
 #include "VRPyImage.h"
+#include "VRPyNetworking.h"
 #include "VRPyProjectManager.h"
 #include "VRPyGeoPrimitive.h"
 #include "VRPyProgress.h"
@@ -137,6 +138,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyPath>("Path", pModVR);
     sm->registerModule<VRPyGraph>("Graph", pModVR);
     sm->registerModule<VRPyStateMachine>("StateMachine", pModVR);
+    sm->registerModule<VRPyHDLC>("HDLC", pModVR);
     sm->registerModule<VRPyState>("State", pModVR);
     sm->registerModule<VRPyGraphLayout>("GraphLayout", pModVR);
     sm->registerModule<VRPyPathFinding>("PathFinding", pModVR);
