@@ -140,7 +140,7 @@ void VRTrafficSimulation::updateSimulation() {
     auto space = Octree::create(2);
     map<int, vector<pair<int, int>>> toChangeRoad;
     map<int, int> toChangeLane;
-    map<int, vector<int>> visionVec;
+    map<int, vector<vector<int>>> visionVec;
     float userRadius = 300; // x meter radius around users
 
     auto fillOctree = [&]() {
@@ -334,6 +334,16 @@ void VRTrafficSimulation::updateSimulation() {
 
     auto inFront = [&](PosePtr p1, PosePtr p2, Vec3d lastMove) -> bool { //vehicle1, vehicle2, vehicle1.lastmove
         lastMove.normalize();
+        Vec3d D = p2->pos() - (p1->pos() + lastMove*3);
+        float L = D.length();
+        Vec3d Dn = D/L;
+
+        float d = Dn.dot(lastMove);
+        Vec3d x = lastMove.cross(Vec3d(0,1,0));
+        x.normalize();
+        float rL = abs( D.dot(x) );
+
+        return d > 0 && L < 5 && rL < 2;/*lastMove.normalize();
         Vec3d D = p2->pos() - (p1->pos() + lastMove*5); //vector between vehicles
         float L = D.length();
         Vec3d Dn = D/L;
@@ -343,11 +353,25 @@ void VRTrafficSimulation::updateSimulation() {
         x.normalize();
         float rL = abs( D.dot(x) ); //check if vehicle2 left or right of vehicle1
 
-        return d > 0 && L < 5  && rL < 1.5; // in front, in range, in corridor
+        return d > 0 && L < 5  && rL < 1.5; // in front, in range, in corridor*/
     };
 
     auto comingLeft = [&](PosePtr p1, PosePtr p2, Vec3d lastMove) -> bool { //vehicle1, vehicle2, vehicle1.lastmove
         lastMove.normalize();
+        Vec3d D = p2->pos() - (p1->pos() + lastMove*3);
+        float L = D.length();
+        Vec3d Dn = D/L;
+
+        float d = Dn.dot(lastMove);
+        Vec3d x = lastMove.cross(Vec3d(0,1,0));
+        x.normalize();
+        float r = Dn.dot(x);
+        //float rL = abs( Dn.dot(x) );
+        float a = -x.dot( p2->dir() );
+
+        return d > 0 && L < 15 && r > 0 && a < -0.3/* && rL >= 2*/; // in front, right, crossing paths,
+
+        /*lastMove.normalize();
         Vec3d D = p2->pos() - p1->pos();
         float L = D.length();
         Vec3d Dn = D/L;
@@ -360,12 +384,25 @@ void VRTrafficSimulation::updateSimulation() {
         //float rL = abs( Dn.dot(x) );
         float a = -left.dot( p2->dir() );
         bool leftBehind = d < 0 && dis < 5 && l > 0 && l < 4 ;
-        bool leftFront = d > 0 && dis < 6 && l > 0 && l < 4 /* && a < -0.3*/;
-        return leftBehind || leftFront;
+        bool leftFront = d > 0 && dis < 6 && l > 0 && l < 4;
+        return leftBehind || leftFront;*/
     };
 
     auto comingRight = [&](PosePtr p1, PosePtr p2, Vec3d lastMove) -> bool {
         lastMove.normalize();
+        Vec3d D = p2->pos() - (p1->pos() + lastMove*3);
+        float L = D.length();
+        Vec3d Dn = D/L;
+
+        float d = Dn.dot(lastMove);
+        Vec3d x = lastMove.cross(Vec3d(0,1,0));
+        x.normalize();
+        float r = Dn.dot(x);
+        //float rL = abs( Dn.dot(x) );
+        float a = -x.dot( p2->dir() );
+
+        return d > 0 && L < 15 && r > 0 && a > 0.3/* && rL >= 2*/; // in front, right, crossing paths,
+        /*lastMove.normalize();
         Vec3d D = p2->pos() - p1->pos();
         float L = D.length();
         Vec3d Dn = D/L;
@@ -378,8 +415,8 @@ void VRTrafficSimulation::updateSimulation() {
         //float rL = abs( Dn.dot(x) );
         float a = -left.dot( p2->dir() );
         bool rightBehind = d < 0 && dis < 5 && l > 0 && l < 4 ;
-        bool rightFront = d > 0 && dis < 6 && l > 0 && l < 4 /* && a < -0.3*/;
-        return rightBehind || rightFront;
+        bool rightFront = d > 0 && dis < 6 && l > 0 && l < 4 ;
+        return rightBehind || rightFront;*/
     };
 
     auto propagateVehicles = [&]() {
@@ -394,24 +431,27 @@ void VRTrafficSimulation::updateSimulation() {
 
                 // check if road ahead is free
                 auto pose = vehicle.t->getPose();
-                auto res = space->radiusSearch(pose->pos(), 10);
+                auto res = space->radiusSearch(pose->pos(), 5);
                 int state = 0;
-                vector<int> visionIDs;
+                vector<int> visionIDsStraight;
+                vector<int> visionIDsLeft;
+                vector<int> visionIDsRight;
                 for (auto vv : res) {
                     auto v = (Vehicle*)vv;
                     if (!v->t->isVisible()) continue;
                     if (!v) continue;
                     if (!v->t) continue;
-                    visionIDs.push_back(v->vID);
                     auto p = v->t->getPose();
 
-                    if (inFront(pose, p, vehicle.lastMove)) { state = 1; vehicle.vehiclesight[vehicle.INFRONT] = true; }
+                    if (inFront(pose, p, vehicle.lastMove)) { state = 1; vehicle.vehiclesight[vehicle.INFRONT] = true; visionIDsStraight.push_back(v->vID); }
                     else if (comingRight(pose, p, vehicle.lastMove)) state = 2;
-                    if (comingLeft(pose, p, vehicle.lastMove)) { vehicle.vehiclesight[vehicle.FROMLEFT] = true; }
-                    if (comingRight(pose, p, vehicle.lastMove)) { vehicle.vehiclesight[vehicle.FROMRIGHT] = true; }
+                    if (comingLeft(pose, p, vehicle.lastMove)) { vehicle.vehiclesight[vehicle.FROMLEFT] = true; visionIDsLeft.push_back(v->vID); }
+                    if (comingRight(pose, p, vehicle.lastMove)) { vehicle.vehiclesight[vehicle.FROMRIGHT] = true; visionIDsRight.push_back(v->vID); }
                     //if (state > 0) break;
                 }
-                visionVec[vehicle.vID] = visionIDs;
+                visionVec[vehicle.vID].push_back(visionIDsStraight);
+                visionVec[vehicle.vID].push_back(visionIDsLeft);
+                visionVec[vehicle.vID].push_back(visionIDsRight);
 
                 bool debugBool = false; ///Debugging
                 if (debugBool) state = 0; //DANGER: debug mode, state = 0, discard collision check
@@ -481,8 +521,8 @@ void VRTrafficSimulation::updateSimulation() {
         }
     };
 
+    //map<int, map<int,vector<int>>> visionVec
     auto showVehicleVision = [&](){
-        map<int,int> idx;
         //VRGeometryPtr vizGeos;
         auto graph = roadNetwork->getGraph();
         auto scene = VRScene::getCurrent();
@@ -495,18 +535,27 @@ void VRTrafficSimulation::updateSimulation() {
 
         VRGeoData gg0;
 
+        int n = 0;
         for (vv : visionVec){
-            auto vvID = vv.first;
-            auto nPose = vehicles[vvID].t->getPose();
-            auto p = nPose->pos() + Vec3d(0,2,0);
-            int vID = gg0.pushVert(p);
-
-            idx[vv.first] = vID;
-        }
-
-        for (vv : visionVec){
+            n = 0;
             for (vVis : vv.second){
-                gg0.pushLine(idx[vVis],idx[vv.first]);
+                for (vvv : vVis){
+                    if (vVis.size()==0) continue;
+                    auto nPose1 = vehicles[vv.first].t->getPose();
+                    auto nPose2 = vehicles[vvv].t->getPose();
+                    auto p1 = nPose1->pos() + Vec3d(0,2+0.2*n,0.1*n);
+                    auto p2 = nPose2->pos() + Vec3d(0,2+0.2*n,0.1*n);
+                    int r = n==2 || n==0;
+                    int g = n==0;
+                    int b = n==1;
+                    Color3f ff = Color3f(float(r),float(g),float(b));
+                    int vID1 = gg0.pushVert(p1);
+                    gg0.pushColor(Color3f(r,g,b));
+                    int vID2 = gg0.pushVert(p2);
+                    gg0.pushColor(Color3f(r,g,b));
+                    gg0.pushLine(vID1,vID2);
+                }
+                n++;
             }
         }
 
