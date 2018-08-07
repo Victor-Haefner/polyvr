@@ -140,6 +140,7 @@ void VRTrafficSimulation::updateSimulation() {
     auto space = Octree::create(2);
     map<int, vector<pair<int, int>>> toChangeRoad;
     map<int, int> toChangeLane;
+    map<int, vector<int>> visionVec;
     float userRadius = 300; // x meter radius around users
 
     auto fillOctree = [&]() {
@@ -395,11 +396,13 @@ void VRTrafficSimulation::updateSimulation() {
                 auto pose = vehicle.t->getPose();
                 auto res = space->radiusSearch(pose->pos(), 10);
                 int state = 0;
+                vector<int> visionIDs;
                 for (auto vv : res) {
                     auto v = (Vehicle*)vv;
                     if (!v->t->isVisible()) continue;
                     if (!v) continue;
                     if (!v->t) continue;
+                    visionIDs.push_back(v->vID);
                     auto p = v->t->getPose();
 
                     if (inFront(pose, p, vehicle.lastMove)) { state = 1; vehicle.vehiclesight[vehicle.INFRONT] = true; }
@@ -408,6 +411,7 @@ void VRTrafficSimulation::updateSimulation() {
                     if (comingRight(pose, p, vehicle.lastMove)) { vehicle.vehiclesight[vehicle.FROMRIGHT] = true; }
                     //if (state > 0) break;
                 }
+                visionVec[vehicle.vID] = visionIDs;
 
                 bool debugBool = false; ///Debugging
                 if (debugBool) state = 0; //DANGER: debug mode, state = 0, discard collision check
@@ -439,6 +443,7 @@ void VRTrafficSimulation::updateSimulation() {
                 N++; // count vehicles!
             }
         }
+
         //cout << "propagateVehicles, updated " << N << " vehicles" << endl;
     };
 
@@ -476,11 +481,50 @@ void VRTrafficSimulation::updateSimulation() {
         }
     };
 
+    auto showVehicleVision = [&](){
+        map<int,int> idx;
+        //VRGeometryPtr vizGeos;
+        auto graph = roadNetwork->getGraph();
+        auto scene = VRScene::getCurrent();
+
+        string strInput = "graphVizVisionLines";
+        if ( scene->getRoot()->find(strInput) ) scene->getRoot()->find(strInput)->destroy();
+        auto graphViz = VRGeometry::create(strInput);
+        graphViz->setPersistency(0);
+        scene->getRoot()->addChild(graphViz);
+
+        VRGeoData gg0;
+
+        for (vv : visionVec){
+            auto vvID = vv.first;
+            auto nPose = vehicles[vvID].t->getPose();
+            auto p = nPose->pos() + Vec3d(0,2,0);
+            int vID = gg0.pushVert(p);
+
+            idx[vv.first] = vID;
+        }
+
+        for (vv : visionVec){
+            for (vVis : vv.second){
+                gg0.pushLine(idx[vVis],idx[vv.first]);
+            }
+        }
+
+        gg0.apply( graphViz );
+
+        auto mat = VRMaterial::create(strInput+"_mat");
+        mat->setLit(0);
+        mat->setDiffuse(Color3f(1,1,0));
+        mat->setLineWidth(3);
+        graphViz->setMaterial(mat);
+    };
+
     updateSimulationArea();
     fillOctree();
     propagateVehicles();
     //resolveCollisions();
     //updateDensityVisual();
+    showVehicleVision();
     resolveRoadChanges();
     resolveLaneChanges();
 }
@@ -647,7 +691,7 @@ void VRTrafficSimulation::setSpeedmultiplier(float speedMultiplier) {
     this->speedMultiplier = speedMultiplier;
 }
 
-
+/** SHOW GRAPH */
 void VRTrafficSimulation::showGraph(){
 	map<int,int> idx;
 	map<int,int> idx2;
