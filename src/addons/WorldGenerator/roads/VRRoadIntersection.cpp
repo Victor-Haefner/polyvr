@@ -172,10 +172,10 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 	    map<VREntityPtr, Vec3d> displacementsA; // map roads to displace!
 	    map<VREntityPtr, Vec3d> displacementsB; // map roads to displace!
 	    map<VREntityPtr, bool> processedLanes; // keep list of already processed lanes
-	    vector<int> inIDs;
-	    vector<VREntityPtr> inRoads;
-	    vector<int> outIDs;
-	    vector<VREntityPtr> outRoads;
+	    //vector<int> inIDs;
+	    //vector<VREntityPtr> inRoads;
+	    //vector<int> outIDs;
+	    //vector<VREntityPtr> outRoads;
         for (auto match : laneMatches) {
             auto laneIn = match.first;
             auto laneOut = match.second;
@@ -202,13 +202,13 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 //cout << tempID << " node removed -- NIN>NOUT" << endl;
 
                 nodeEnt1->set("node", name2);
+                auto rGraph = roads->getGraph();
                 if (D > 0) displacementsB[roadIn] = X;
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
-                auto rGraph = roads->getGraph();
                 rGraph->remNode(tempID);
-                auto newEdgeID = rGraph->getEdgeID(node1->getValue<int>("graphID", -1),node2->getValue<int>("graphID", -1));
-                inIDs.push_back(newEdgeID);
-                inRoads.push_back(roadIn);
+                //auto newEdgeID = rGraph->getEdgeID(node1->getValue<int>("graphID", -1),node2->getValue<int>("graphID", -1));
+                //inIDs.push_back(newEdgeID);
+                //inRoads.push_back(roadIn);
             }
             if (Nin < Nout) {
                 auto node1 = nodeEnt1->getEntity("node");
@@ -223,23 +223,26 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 nodeEnt2->set("node", node1->getName());
 
                 if (D > 0) displacementsA[roadOut] = -X;
-                roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
                 auto rGraph = roads->getGraph();
+                roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
                 rGraph->remNode(tempID);
-                auto newEdgeID = rGraph->getEdgeID(node1->getValue<int>("graphID", -1),node2->getValue<int>("graphID", -1));
-                outIDs.push_back(newEdgeID);
-                outRoads.push_back(roadOut);
+                //auto newEdgeID = rGraph->getEdgeID(node1->getValue<int>("graphID", -1),node2->getValue<int>("graphID", -1));
+                //outIDs.push_back(newEdgeID);
+                //outRoads.push_back(roadOut);
             }
 
             processedLanes[laneIn] = true;
             processedLanes[laneOut] = true;
         }
         auto graph = roads->getGraph();
-        for (int i=1; i < inIDs.size(); i++) { if (inRoads[i]==inRoads[i-1]) graph->addRelation(inIDs[i],inIDs[i-1]); }
-        for (int i=1; i < outIDs.size(); i++) { if (outRoads[i]==outRoads[i-1]) graph->addRelation(outIDs[i],outIDs[i-1]); }
+        //for (int i=1; i < inIDs.size(); i++) { if (inRoads[i]==inRoads[i-1]) graph->addRelation(inIDs[i],inIDs[i-1]); }
+        //for (int i=1; i < outIDs.size(); i++) { if (outRoads[i]==outRoads[i-1]) graph->addRelation(outIDs[i],outIDs[i-1]); }
 
         if (displacementsA.size() == 0 && displacementsB.size() == 0) return;
-
+        int n = 0;
+        auto rGraph = roads->getGraph();
+        vector<vector<int>> inl;
+        vector<vector<int>> oul;
         for (auto rfront : roadFronts) {// shift whole road fronts!
             auto road = rfront->road;
             auto rEnt = road->getEntity();
@@ -253,10 +256,20 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             } else {
                 road->setOffsetIn(offsetter1);
             }
-
+            cout << "roadFronts " << toString(n) << endl;
+            n++;
+            vector<int> inIDs;
+            vector<int> ouIDs;
             for (auto laneIn : rfront->inLanes) {
-                if (processedLanes.count(laneIn)) continue;
                 auto nodes = laneIn->getEntity("path")->getAllEntities("nodes");
+                auto node1 = nodes[nodes.size()-2]->getEntity("node");
+                auto node2 = nodes[nodes.size()-1]->getEntity("node");
+                auto edgeID = rGraph->getEdgeID(node1->getValue<int>("graphID", -1),node2->getValue<int>("graphID", -1));
+                inIDs.push_back(edgeID);
+                cout << "inlane " << toString(n) << " " << toString(edgeID) <<  endl;
+
+                if (processedLanes.count(laneIn)) continue;
+                //auto nodes = laneIn->getEntity("path")->getAllEntities("nodes");
                 VREntityPtr node = (*nodes.rbegin())->getEntity("node");
                 auto p = node->getVec3("position");
                 p += X2;
@@ -265,12 +278,33 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             }
 
             for (auto laneOut : rfront->outLanes) {
+                auto nodes = laneOut->getEntity("path")->getAllEntities("nodes");
+                auto node1 = nodes[0]->getEntity("node");
+                auto node2 = nodes[1]->getEntity("node");
+                auto edgeID = rGraph->getEdgeID(node1->getValue<int>("graphID", -1),node2->getValue<int>("graphID", -1));
+                ouIDs.push_back(edgeID);
+                cout << "outLane " << toString(n) << " " << toString(edgeID) <<  endl;
+
                 if (processedLanes.count(laneOut)) continue;
                 VREntityPtr node = laneOut->getEntity("path")->getAllEntities("nodes")[0]->getEntity("node");
                 auto p = node->getVec3("position");
                 p += X1;
                 node->setVec3("position", p, "Position");
                 graph->setPosition(node->getValue<int>("graphID", 0), Pose::create(p));
+            }
+            inl.push_back(inIDs);
+            oul.push_back(ouIDs);
+        }
+        for (int i = 0; i < inl.size(); i++) {
+            for (int k = 1; k < inl[i].size(); k++) {
+                graph->getEdge(inl[i][k]).relations.clear();
+                graph->addRelation(inl[i][k],inl[i][k-1]);
+            }
+        }
+        for (int i = 0; i < oul.size(); i++) {
+            for (int k = 1; k < oul[i].size(); k++) {
+                graph->getEdge(oul[i][k]).relations.clear();
+                graph->addRelation(oul[i][k],oul[i][k-1]);
             }
         }
 	};
