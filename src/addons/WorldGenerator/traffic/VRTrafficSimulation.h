@@ -52,7 +52,9 @@ class VRTrafficSimulation : public VRObject {
             float speed = 0.15;
             Vec3d lastMove = Vec3d(0,0,0);
             Vec3d currentOffset = Vec3d(0,0,0);
+            Vec3d currentdOffset = Vec3d(0,0,0);
             int lastMoveTS = 0;
+            int indicatorTS = 0;
             int roadFrom = -1;
             int roadTo = -1;
             int behavior = 0; //0 = straight, 1 = left, 2 = right
