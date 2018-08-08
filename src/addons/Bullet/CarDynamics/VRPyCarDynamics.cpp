@@ -10,7 +10,14 @@
 using namespace OSG;
 
 simpleVRPyType(CarDynamics, New_named_ptr);
+simpleVRPyType(CarSound, New_ptr);
 simpleVRPyType(Driver, New_ptr);
+
+PyMethodDef VRPyCarSound::methods[] = {
+    {"play", PyWrap(CarSound, play, "play, feed RPM", void, float) },
+    {"loadSoundFile", PyWrap(CarSound, loadSoundFile, "load ressources", void, string) },
+    {NULL}  /* Sentinel */
+};
 
 PyMethodDef VRPyCarDynamics::methods[] = {
     {"update", PyWrap(CarDynamics, update, "Update vehicle physics input, throttle {0,1}, break {0,1}, steering {-1,1}, clutch {0,1}, gear", void, float, float, float, float, int) },

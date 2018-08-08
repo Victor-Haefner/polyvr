@@ -11,6 +11,7 @@
 #include "core/setup/VRSetupFwd.h"
 #include "core/scene/rendering/VRRenderManager.h"
 #include "core/math/VRMathFwd.h"
+#include "core/utils/VRGlobals.h"
 
 namespace xmlpp{ class Element; }
 
@@ -86,6 +87,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         VRTransformPtr user;
         VRTransformPtr dummy_user;
         string user_name;
+        VRGlobals::Int lastMirrored = -1;
         VRCameraPtr cam;
 
         BackgroundMTRecPtr background;
