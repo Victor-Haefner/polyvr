@@ -105,6 +105,7 @@ class VRTrafficSimulation : public VRObject {
         map<int, Vehicle> vehicles;
         vector<int> seedRoads;
         vector<int> nearRoads;
+        vector<int> forceSeedRoads;
         vector<Vehicle> users;
         list<Vehicle> vehiclePool;
         vector<VRObjectPtr> models;
@@ -112,6 +113,8 @@ class VRTrafficSimulation : public VRObject {
         int maxUnits = 0;
         int numUnits = 0;
         bool isSimRunning = true;
+        bool isShowingVehicleVision = false;
+        bool laneChange = false;
         float speedMultiplier = 1.0;
         string lastseedRoadsString = "";
         int debugOverRideSeedRoad = -1;
@@ -155,10 +158,14 @@ class VRTrafficSimulation : public VRObject {
         void setSpeedmultiplier(float speedMultiplier);
         void showGraph();
         void hideGraph();
+        void showVehicVision();
+        void hideVehicVision();
+        void toggleLangeChanges();
         void forceIntention(int vID,int behavior);
         string getVehicleData(int ID);
         void runDiagnostics();
         void setSeedRoad(int debugOverRideSeedRoad);
+        void setSeedRoadVec(vector<int> forceSeedRoads);
         bool isSeedRoad(int roadID);
 };
 
