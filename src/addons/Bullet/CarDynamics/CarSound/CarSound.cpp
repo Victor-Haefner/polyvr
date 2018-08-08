@@ -8,14 +8,14 @@
 
 using namespace OSG;
 
-CarSound::CarSound() {
+VRCarSound::VRCarSound() {
     sound = VRSound::create();
 }
 
-CarSound::~CarSound() {}
-CarSoundPtr CarSound::create() { return CarSoundPtr( new CarSound() ); }
+VRCarSound::~VRCarSound() {}
+VRCarSoundPtr VRCarSound::create() { return VRCarSoundPtr( new VRCarSound() ); }
 
-const vector<double>& CarSound::getSpectrum(const float rpm) {
+const vector<double>& VRCarSound::getSpectrum(const float rpm) {
   if (rpm == lastRPM) return current; // could this return garbage: current == null => last == null or NaN
 
   // if we ask for a value that we have exact results for, return those
@@ -68,23 +68,23 @@ const vector<double>& CarSound::getSpectrum(const float rpm) {
   return current;
 }
 
-void CarSound::interpLin(double& y, const float &x, const float &x0, const float &x1, const double &y0, const double &y1) {
+void VRCarSound::interpLin(double& y, const float &x, const float &x0, const float &x1, const double &y0, const double &y1) {
   y =  y0 + (x - x0) * (y1 - y0) / (x1 - x0);
 }
 
-void CarSound::interpLag3(double& y, const float &x, const float &x0, const float &x1, const float &x2, const double &y0, const double &y1, const double &y2) {
+void VRCarSound::interpLag3(double& y, const float &x, const float &x0, const float &x1, const float &x2, const double &y0, const double &y1, const double &y2) {
   y =  (y0 * (x - x1) * (x - x2)) / ((x0 - x1)*(x0 - x2)) + (y1 * (x - x0) * (x - x2)) / ((x1 - x0)*(x1 - x2)) + (y2 * (x - x0) * (x - x1)) / ((x2 - x0)*(x2 - x1));
 }
 
-const float CarSound::getMinRPM() {
+const float VRCarSound::getMinRPM() {
   return data.begin()->first;
 }
 
-const float CarSound::getMaxRPM() {
+const float VRCarSound::getMaxRPM() {
   return data.rbegin()->first;
 }
 
-void CarSound::readFile(string filename) {
+void VRCarSound::readFile(string filename) {
 
   ifstream file(filename);
 
@@ -137,7 +137,7 @@ void CarSound::readFile(string filename) {
   init = true;
 }
 
-void CarSound::print() {
+void VRCarSound::print() {
     cout << "Spectrum data:\nNumber of samples: " <<nSamples <<"\nResolution: "<<resolution<<endl;
     cout << data.size()<<" labels. Values:"<<endl;
 
@@ -148,7 +148,7 @@ void CarSound::print() {
     }
 }
 
-void CarSound::resetValues() {
+void VRCarSound::resetValues() {
     minRPM = 0.;
     maxRPM = 0.;
     maxVal = 0.;
@@ -158,7 +158,7 @@ void CarSound::resetValues() {
     init = false;
 }
 
-void CarSound::loadSoundFile(string filename) {
+void VRCarSound::loadSoundFile(string filename) {
 //    if (isLoaded()) {
 //        cout<<"Spectrum data already loaded"<<endl;
 //        return;
@@ -172,7 +172,7 @@ void CarSound::loadSoundFile(string filename) {
     cout<<"Spectrum tool loaded"<<endl;
 }
 
-void CarSound::play(float rpm) {
+void VRCarSound::play(float rpm) {
     if (active and sound) {
         if (!isLoaded()) { cout << "No spectrum data loaded" << endl; return; }
         auto clamp = [](float& v, float a, float b) { return min(b,max(a,v)); };
@@ -185,14 +185,14 @@ void CarSound::play(float rpm) {
     }
 }
 
-void CarSound::toggleSound(bool onOff) { active = onOff; }
-void CarSound::setSound(VRSoundPtr s) { sound = s; }
-VRSoundPtr CarSound::getSound() { return sound; }
-const uint CarSound::getRes() {return resolution; }
-const bool CarSound::isLoaded() {return init; }
-const double CarSound::getMaxSample() {return maxVal; }
-void CarSound::setFade(float f) { fade = f; }
-void CarSound::setDuration(float d) { duration = d; }
+void VRCarSound::toggleSound(bool onOff) { active = onOff; }
+void VRCarSound::setSound(VRSoundPtr s) { sound = s; }
+VRSoundPtr VRCarSound::getSound() { return sound; }
+const uint VRCarSound::getRes() {return resolution; }
+const bool VRCarSound::isLoaded() {return init; }
+const double VRCarSound::getMaxSample() {return maxVal; }
+void VRCarSound::setFade(float f) { fade = f; }
+void VRCarSound::setDuration(float d) { duration = d; }
 
 
 

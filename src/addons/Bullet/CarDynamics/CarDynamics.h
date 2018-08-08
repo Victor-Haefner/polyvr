@@ -111,7 +111,7 @@ class VRCarDynamics : public VRObject {
         ChassisPtr chassis;
         vector<WheelPtr> wheels;
 
-        CarSoundPtr carSound;
+        VRCarSoundPtr carSound;
         VRUpdateCbPtr updateEPtr;
         VRUpdateCbPtr updateWPtr;
 
@@ -197,7 +197,7 @@ class VRCarDynamics : public VRObject {
         void setIgnition(bool b);
         bool isRunning();
 
-        CarSoundPtr getCarSound();
+        VRCarSoundPtr getCarSound();
 };
 
 OSG_END_NAMESPACE

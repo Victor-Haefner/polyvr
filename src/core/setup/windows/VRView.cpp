@@ -420,10 +420,25 @@ Vec3d VRView::getMirrorPos() { return mirrorPos; }
 Vec3d VRView::getMirrorNorm() { return mirrorNorm; }
 
 void VRView::updateMirror() {
-    if (!mirror || !user) return;
-    auto u = user->getMatrix();
-    u.multLeft(mirrorMatrix); // u' = m*Z*mI*u
-    dummy_user->setMatrix(u);
+    //cout << "VRView::updateMirror " << mirror << " " <<  << endl;
+    if (!mirror) return;
+    VRTransformPtr u = user;
+    if (!u) u = dummy_user;
+    if (!u) return;
+
+    auto now = VRGlobals::CURRENT_FRAME;
+    auto lc = u->getLastChange();
+    auto lm = lastMirrored;
+    if (lm != -1 && lm >= lc) return;
+
+    cout << "VRView::updateMirror " << u->changedNow() << endl;
+
+    Matrix4d m = u->getMatrix();
+    m.multLeft(mirrorMatrix); // u' = m*Z*mI*u
+
+    lastMirrored = now;
+    u->setMatrix(m);
+    cout << " VRView::updateMirror " << dummy_user->getPose()->pos() << endl;
 }
 
 void VRView::setUser(VRTransformPtr u) {
@@ -504,6 +519,7 @@ bool VRView::eyesInverted() { return eyeinverted; }
 bool VRView::activeStereo() { return active_stereo; }
 
 void VRView::update() {
+    updateMirrorMatrix();
     setViewports();
     setDecorators();
     setCam();

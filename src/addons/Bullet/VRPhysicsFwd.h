@@ -5,7 +5,7 @@
 
 namespace OSG {
     ptrFwd(VRCollision);
-    ptrFwd(CarSound);
+    ptrFwd(VRCarSound);
     ptrFwd(VRCarDynamics);
     ptrFwd(VRDriver);
     ptrFwd(VRSpatialCollisionManager);

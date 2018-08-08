@@ -467,6 +467,12 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                     assets->copy("Camera", Pose::create(pos, dir), false);
                 }
             }
+
+            if (tag.first == "highway") {
+                if (tag.second == "street_lamp") {
+                    assets->copy("Streetlamp", Pose::create(pos, dir), false);
+                }
+            }
         }
     }
 }

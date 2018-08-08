@@ -71,7 +71,7 @@ VRCarDynamics::VRCarDynamics(string name) : VRObject(name) {
 
     setPersistency(0);
 	initPhysics();
-	carSound = CarSound::create();
+	carSound = VRCarSound::create();
 
     store("type", &type);
     storeObj("engine", engine);
@@ -89,7 +89,7 @@ VRCarDynamics::~VRCarDynamics() {
 
 VRCarDynamicsPtr VRCarDynamics::create(string name) { return VRCarDynamicsPtr( new VRCarDynamics(name) ); }
 
-CarSoundPtr VRCarDynamics::getCarSound() { return carSound; }
+VRCarSoundPtr VRCarDynamics::getCarSound() { return carSound; }
 
 //only to be done once
 void VRCarDynamics::initPhysics() {
