@@ -286,8 +286,8 @@ void VRTrafficSimulation::updateSimulation() {
         if (vS == 0) vehicle.currentOffset = Vec3d(0,0,0);
         if (vS == 0) vehicle.currentdOffset = Vec3d(0,0,0);
         if (intention==vehicle.STRAIGHT) { offset = vehicle.currentOffset + Vec3d(0,0,0); doffset = vehicle.currentdOffset + Vec3d(0,0,0); }
-        if (intention==vehicle.SWITCHLEFT) { offset = vehicle.currentOffset + left*0.023; doffset = vehicle.currentdOffset + left*vS*0.002; }
-        if (intention==vehicle.SWITCHRIGHT) { offset = vehicle.currentOffset + right*0.023; doffset = vehicle.currentdOffset + -left*vS*0.002; }
+        if (intention==vehicle.SWITCHLEFT) { offset = vehicle.currentOffset + left*0.023; doffset = vehicle.currentdOffset + left*vS*0.0015; }
+        if (intention==vehicle.SWITCHRIGHT) { offset = vehicle.currentOffset + right*0.023; doffset = vehicle.currentdOffset + -left*vS*0.0015; }
         //cout << toString(d*5*3) << " - " << toString(d*1.5) << endl;
         //cout << intention << " -- " << toString(vehicle.vID) << " -- " << toString(vehicle.behavior) <<  toString(vehicles[vehicle.vID].behavior) << " -- "<< toString(offset) << endl;
 
@@ -306,6 +306,10 @@ void VRTrafficSimulation::updateSimulation() {
             //cout << "trafficsim changing state " << toString(vehicle.vID) << " " << toString(dirOffset) <<endl;
         }
         if (dirOffset < 0.1 && vS<-0.5) {
+            for (auto l : vehicle.turnsignalsBL) l->setMaterial(carLightOrangeOff);
+            for (auto l : vehicle.turnsignalsBR) l->setMaterial(carLightOrangeOff);
+            for (auto l : vehicle.turnsignalsFL) l->setMaterial(carLightOrangeOff);
+            for (auto l : vehicle.turnsignalsFR) l->setMaterial(carLightOrangeOff);
             vehicle.roadFrom = -1;
             vehicle.roadTo = -1;
             vehicle.currentState = 0;
@@ -497,6 +501,10 @@ void VRTrafficSimulation::updateSimulation() {
                     //vehicles[v.first].hide();
                     auto& vehicle = vehicles[v.first];
                     auto& gp = vehicle.pos;
+                    auto p = roadNetwork->getPosition(vehicle.pos);
+                    Vec3d offset = Vec3d(0,-30,0);
+                    p->setPos(p->pos()+offset);
+                    vehicle.t->setPose(p);
                     vehicle.hide();
                     gp.pos -= 1;
                     vehicle.currentState = 0;
@@ -505,6 +513,10 @@ void VRTrafficSimulation::updateSimulation() {
                     vehicle.roadTo = -1;
                     vehicle.speed = 0.15;
                     vehiclePool.push_front(vehicles[v.first]);
+                    for (auto l : vehicle.turnsignalsBL) l->setMaterial(carLightOrangeOff);
+                    for (auto l : vehicle.turnsignalsBR) l->setMaterial(carLightOrangeOff);
+                    for (auto l : vehicle.turnsignalsFL) l->setMaterial(carLightOrangeOff);
+                    for (auto l : vehicle.turnsignalsFR) l->setMaterial(carLightOrangeOff);
                     numUnits--;
                 }
                 else {
@@ -623,12 +635,12 @@ void VRTrafficSimulation::addVehicle(int roadID, float density, int type) {
                 if (name == "Backlight" || name == "backlight") v.backlights.push_back(geo);
             }
 
-            for (auto l : v.turnsignalsBL) l->setMaterial(carLightOrangeBlink);
-            for (auto l : v.turnsignalsBR) l->setMaterial(carLightOrangeBlink);
-            for (auto l : v.turnsignalsFL) l->setMaterial(carLightOrangeBlink);
-            for (auto l : v.turnsignalsFR) l->setMaterial(carLightOrangeBlink);
+            for (auto l : v.turnsignalsBL) l->setMaterial(carLightOrangeOff);
+            for (auto l : v.turnsignalsBR) l->setMaterial(carLightOrangeOff);
+            for (auto l : v.turnsignalsFL) l->setMaterial(carLightOrangeOff);
+            for (auto l : v.turnsignalsFR) l->setMaterial(carLightOrangeOff);
             for (auto l : v.headlights) l->setMaterial(carLightWhiteOn);
-            for (auto l : v.backlights) l->setMaterial(carLightRedOn);
+            for (auto l : v.backlights) l->setMaterial(carLightRedOff);
             if (v.getID()==-1) {
                 static size_t nID = -1; nID++;
                 v.setID(nID);
@@ -705,8 +717,19 @@ void VRTrafficSimulation::changeLane(int ID, int direction) {
         return false;
     };
 
-    if ( direction == 1 && check(1) ) { checked = true; v.roadTo = edgeLeft; v.speed += 0.03; }
-    if ( direction == 2 && check(2)) { checked = true; v.roadTo = edgeRight; v.speed -= 0.03; }
+    auto signalLights = [&](int input) {
+        if (input == 1) {
+            for (auto l : v.turnsignalsBL) l->setMaterial(carLightOrangeBlink);
+            for (auto l : v.turnsignalsFL) l->setMaterial(carLightOrangeBlink);
+        }
+        if (input == 2) {
+            for (auto l : v.turnsignalsBR) l->setMaterial(carLightOrangeBlink);
+            for (auto l : v.turnsignalsFR) l->setMaterial(carLightOrangeBlink);
+        }
+    };
+
+    if ( direction == 1 && check(1) ) { checked = true; v.roadTo = edgeLeft; v.speed += 0.03; /* signalLights(1); */ }
+    if ( direction == 2 && check(2)) { checked = true; v.roadTo = edgeRight; v.speed -= 0.03; /* signalLights(2); */ }
     if ( checked ){
         v.currentState = 1;
         v.behavior = direction;

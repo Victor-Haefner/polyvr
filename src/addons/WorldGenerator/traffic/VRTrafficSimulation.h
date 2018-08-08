@@ -47,6 +47,7 @@ class VRTrafficSimulation : public VRObject {
             vector<VRGeometryPtr> backlights;
 
             map<int, bool> vehiclesight;
+            map<int, bool> vehiclesightFar;
 
             Graph::position pos;
             float speed = 0.15;
