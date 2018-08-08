@@ -280,7 +280,8 @@ void VRPhysics::clear() {
         soft_body = 0;
     }
 
-    if (shape != 0) { delete shape; shape = 0; }
+    if (shape != 0 && shape != customShape) delete shape;
+    if (shape != 0) shape = 0;
     if (motionState != 0) { delete motionState; motionState = 0; }
 
     if (visShape) visShape->destroy();
