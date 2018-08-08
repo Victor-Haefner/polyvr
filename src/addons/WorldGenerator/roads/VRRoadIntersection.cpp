@@ -322,6 +322,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 	    map<VREntityPtr, bool> processedLanes; // keep list of already processed lanes
         int zz = 0;
         VREntityPtr roadOne;
+        //cout << toString(laneMatches.size()) << endl;
         for (auto match : laneMatches) {
             auto laneIn = match.first;
             auto laneOut = match.second;
@@ -335,7 +336,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             VREntityPtr nodeEnt2 = nodes2[0];           //first node of roadOut
             Vec3d X = nodeEnt2->getEntity("node")->getVec3("position") - nodeEnt1->getEntity("node")->getVec3("position");
             float D = X.length();
-
+            //cout <<toString(X.length()) << endl;
             if (Nin >= Nout) {
                 auto node1 = nodeEnt1->getEntity("node");    //last node of roadIn
                 auto norm1 = nodeEnt1->getVec3("direction");
@@ -349,6 +350,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 nodeEnt2->set("node", node1->getName());  //set first node of roadOut as last node of roadIn
                 if (D > 0) {
                     if (abs(X.length())>abs(displacements[roadOut].length())) displacements[roadOut] = -X;
+                    displacements[roadOut] = -X;
                 }
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
                 roadOne = roadIn;
@@ -368,6 +370,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 nodeEnt1->set("node", node2->getName()); //set last node of roadIn as first node of roadOut
                 if (D > 0) {
                     if (abs(X.length())>abs(displacements[roadIn].length())) displacements[roadIn] = X;
+                    displacements[roadIn] = X;
                 }
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
                 roadOne = roadOut;
@@ -390,10 +393,10 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 
             Vec3d Xa = displacements[rEnt];
             float offsetter = Xa.dot(rfront->pose.x())*rfront->dir;
-
-            if(offsetter > 0) offsetter = road->getWidth()/rEnt->getAllEntities("lanes").size();
-            if(offsetter < 0) offsetter = - road->getWidth()/rEnt->getAllEntities("lanes").size();
-            if (rEnt->getAllEntities("lanes").size()==1) offsetter*=0.5; //hack for merges where only one street comes, might need special case though
+            if (laneMatches.size() % 2 == 0 && laneMatches.size() < 5){
+                if(offsetter > 0) offsetter = road->getWidth()/rEnt->getAllEntities("lanes").size();
+                if(offsetter < 0) offsetter = - road->getWidth()/rEnt->getAllEntities("lanes").size();
+            }//if (rEnt->getAllEntities("lanes").size()==1) offsetter*=0.5; //hack for merges where only one street comes, might need special case though
             if (rfront->dir>0) {
                 road->setOffsetOut(offsetter);
             } else {
