@@ -20,6 +20,7 @@
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRStroke.h"
 #include "core/objects/geometry/VRPhysics.h"
+#include "core/objects/geometry/VRSpatialCollisionManager.h"
 #include "core/tools/VRAnalyticGeometry.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/material/VRTexture.h"
@@ -335,7 +336,7 @@ void VRRoadNetwork::addFence( PathPtr path, float height ) {
 	auto shape = VRStroke::create("shape");
 	shape->setPaths({path});
 	shape->strokeProfile({Vec3d(0,0,0), Vec3d(0,height,0)}, false, true, false);
-	collisionMesh->merge(shape);
+	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape);
 }
 
 void VRRoadNetwork::addGuardRail( PathPtr path, float height ) {
@@ -398,7 +399,7 @@ void VRRoadNetwork::addGuardRail( PathPtr path, float height ) {
 	auto shape = VRStroke::create("shape");
 	shape->setPaths({path});
 	shape->strokeProfile({Vec3d(0,0,0), Vec3d(0,height,0)}, false, true, false);
-	collisionMesh->merge(shape);
+	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape);
 }
 
 void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
@@ -443,14 +444,14 @@ void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
 	auto shape = VRStroke::create("shape");
 	shape->addPath(path);
 	shape->strokeProfile({Vec3d(-0.1, h, 0), Vec3d(-0.1, 0, 0)}, false, true, false);
-	collisionMesh->merge(shape);
+	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape);
 }
 
 void VRRoadNetwork::physicalizeAssets(Boundingbox volume) {
-    collisionMesh->getPhysics()->setDynamic(false);
+    /*collisionMesh->getPhysics()->setDynamic(false);
     collisionMesh->getPhysics()->setShape("Concave");
     collisionMesh->getPhysics()->setPhysicalized(true);
-    collisionMesh->setMeshVisibility(false);
+    collisionMesh->setMeshVisibility(false);*/
 }
 
 vector<VREntityPtr> VRRoadNetwork::getRoadNodes() { // all nodes from all paths from all roads
@@ -716,10 +717,11 @@ void VRRoadNetwork::computeSurfaces() {
         auto roadGeo = road->createGeometry();
         if (!roadGeo) return;
         roadGeo->setMaterial( asphalt );
-        roadGeo->getPhysics()->setDynamic(false);
+        /*roadGeo->getPhysics()->setDynamic(false);
         roadGeo->getPhysics()->setShape("Concave");
-        roadGeo->getPhysics()->setPhysicalized(true);
+        roadGeo->getPhysics()->setPhysicalized(true);*/
         //addChild( roadGeo );
+        if (auto w = world.lock()) w->getPhysicsSystem()->add(roadGeo);
     };
 
     for (auto way : ways) computeRoadSurface(way);
@@ -729,10 +731,11 @@ void VRRoadNetwork::computeSurfaces() {
         auto iGeo = intersection->createGeometry();
         if (!iGeo) continue;
         iGeo->setMaterial( asphalt );
-        iGeo->getPhysics()->setDynamic(false);
+        /*iGeo->getPhysics()->setDynamic(false);
         iGeo->getPhysics()->setShape("Concave");
-        iGeo->getPhysics()->setPhysicalized(true);
+        iGeo->getPhysics()->setPhysicalized(true);*/
         //addChild( iGeo );
+        if (auto w = world.lock()) w->getPhysicsSystem()->add(iGeo);
     }
 
     for (auto tunnel : tunnels) {

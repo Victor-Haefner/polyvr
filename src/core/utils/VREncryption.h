@@ -23,8 +23,6 @@ OSG_BEGIN_NAMESPACE;
 class VREncryption {
     private:
 
-        string fixString(string ciphertext);
-
     public:
         VREncryption();
         ~VREncryption();

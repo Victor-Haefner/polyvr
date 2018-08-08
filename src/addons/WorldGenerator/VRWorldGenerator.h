@@ -56,6 +56,7 @@ class VRWorldGenerator : public VRTransform {
 
         void setupPhysics();
         void updatePhysics(Boundingbox box);
+        VRSpatialCollisionManagerPtr getPhysicsSystem();
 
         string getStats();
 };

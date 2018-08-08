@@ -280,7 +280,8 @@ void VRPhysics::clear() {
         soft_body = 0;
     }
 
-    if (shape != 0) { delete shape; shape = 0; }
+    if (shape != 0 && shape != customShape) delete shape;
+    if (shape != 0) shape = 0;
     if (motionState != 0) { delete motionState; motionState = 0; }
 
     if (visShape) visShape->destroy();
@@ -923,10 +924,10 @@ void VRPhysics::updateVisualGeo() {
             data.pushVert(p,n);
         }
 
-        for (int i=0; i<Ni; i+=3) {
-            int i0 = bt_inds[i];
-            int i1 = bt_inds[i+1];
-            int i2 = bt_inds[i+2];
+        for (int i=0; i<Ni; i++) {
+            int i0 = bt_inds[i*3];
+            int i1 = bt_inds[i*3+1];
+            int i2 = bt_inds[i*3+2];
             data.pushTri(i0,i1,i2);
         }
 
@@ -948,11 +949,8 @@ void VRPhysics::updateVisualGeo() {
 
     if (stype == 31) { // compound
         btCompoundShape* cpshape = (btCompoundShape*)shape;
-        OSG::GeoPnt3fPropertyMTRecPtr pos = OSG::GeoPnt3fProperty::create();
-        OSG::GeoVec3fPropertyMTRecPtr norms = OSG::GeoVec3fProperty::create();
-        OSG::GeoUInt32PropertyMTRecPtr inds = OSG::GeoUInt32Property::create();
+        OSG::VRGeoData data;
 
-        int NIoffset = 0;
         for (int j = 0; j < cpshape->getNumChildShapes(); j++) {
             btCollisionShape* shape2 = cpshape->getChildShape(j);
             int s2type = shape2->getShapeType();
@@ -985,25 +983,28 @@ void VRPhysics::updateVisualGeo() {
                 verts = (btVector3*)hull.getVertexPointer();
             }
 
-            for (int i=0; i<Ni; i++) inds->addValue( NIoffset + bt_inds[i] );
-            NIoffset += Nv;
 
+            int I0 = data.size();
             for (int i=0; i<Nv; i++) {
                 OSG::Vec3d p = VRPhysics::toVec3d(verts[i]);
+                OSG::Vec3d n = p; n.normalize();
                 p += CoMOffset;
-                pos->addValue( p );
-                p.normalize();
-                norms->addValue( p );
+                data.pushVert(p,n);
+            }
+
+            for (int i=0; i<Ni; i++) {
+                int i0 = bt_inds[i*3];
+                int i1 = bt_inds[i*3+1];
+                int i2 = bt_inds[i*3+2];
+                data.pushTri(I0+i0,I0+i1,I0+i2);
             }
         }
 
-        geo->setType(GL_TRIANGLES);
-        geo->setPositions(pos);
-        geo->setNormals(norms);
-        geo->setIndices(inds);
+        if (data.size()) data.apply(geo);
     }
 
     auto mat = OSG::VRMaterial::get("phys_mat");
+    mat->setZOffset(-2,-2);
     geo->setMaterial(mat);
 }
 

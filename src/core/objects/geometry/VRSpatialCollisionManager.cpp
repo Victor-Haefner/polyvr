@@ -72,7 +72,6 @@ void VRSpatialCollisionManager::localize(Boundingbox box) {
     btCompoundShape* compound = new btCompoundShape();
 
     for (auto data : space->boxSearch(box)) {
-        cout << "VRSpatialCollisionManager::localize " << data << endl;
         if (!data) continue;
         btTriangleMesh* tri_mesh = (btTriangleMesh*)data;
         btBvhTriangleMeshShape* shape = new btBvhTriangleMeshShape(tri_mesh, true);
@@ -82,6 +81,13 @@ void VRSpatialCollisionManager::localize(Boundingbox box) {
         compound->addChildShape(T, shape);
     }
 
+    auto old_shape = getPhysics()->getCollisionShape();
+    if (old_shape) {
+        btCompoundShape* c = (btCompoundShape*)old_shape;
+        for (int i=0; i<c->getNumChildShapes(); i++) c->removeChildShapeByIndex(i);
+    }
+
+    getPhysics()->setPhysicalized(false);
     getPhysics()->setDynamic(false);
     getPhysics()->setCustomShape(compound);
     getPhysics()->setPhysicalized(true);

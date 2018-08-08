@@ -154,7 +154,8 @@ void VRSceneLoader::loadScene(string path, string encryptionKey) {
         stringstream strm;
         strm << f.rdbuf();
         string data = e->decrypt(strm.str(), encryptionKey, "0000000000000000");
-        data.pop_back(); // remove last char
+        if (data == "") { cout << "ERROR: loading scene " << path << " failed during decryption attempt!\n"; return; }
+        //data.pop_back(); // remove last char
         stringstream strm2(data);
         parser.parse_stream( strm2 );
         f.close();

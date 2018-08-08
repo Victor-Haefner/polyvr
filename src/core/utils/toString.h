@@ -23,6 +23,7 @@ template<typename T> string typeName(const T& t);
 template<typename T> string typeName(const vector<T>& t) { return "list of "+typeName<T>(T()); }
 template<typename T> string typeName(const vector<vector<T>>& t) { return "list of lists of "+typeName<T>(T()); }
 template<typename T> string typeName(const std::shared_ptr<VRFunction<T>> t) { return "callback("+typeName<T>(T())+")"; }
+template<typename T> string typeName(const std::shared_ptr<VRFunction<vector<T>>> t) { return "callback(list of "+typeName<T>(T())+")"; }
 
 template<typename T> int toValue(stringstream& s, T& t);
 template<typename T> int toValue(string s, T& t) { stringstream ss(s); return toValue(ss,t); }

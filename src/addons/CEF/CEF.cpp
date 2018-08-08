@@ -59,14 +59,6 @@ CEF_client::~CEF_client() {
     cout << "~CEF_client\n";
 }
 
-void CEF_handler::close() {
-    image = 0;
-}
-
-void CEF_client::close() {
-    handler->close();
-}
-
 CefRefPtr<CefRenderHandler> CEF_client::GetRenderHandler() { return handler; }
 CefRefPtr<CEF_handler> CEF_client::getHandler() { return handler; }
 
@@ -80,7 +72,7 @@ CEF::CEF() {
 
 CEF::~CEF() {
     cout << "CEF destroyed " << client->HasOneRef() << " " << browser->HasOneRef() << endl;
-    client->close();
+    browser->GetHost()->CloseBrowser(false);
 }
 
 void CEF::shutdown() { if (!cef_gl_init) return; cout << "CEF shutdown\n"; CefShutdown(); }
