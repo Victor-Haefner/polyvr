@@ -24,23 +24,27 @@ int VRSerial::set_interface_attribs (int fd, int speed, int parity) {
 
     struct termios2 tty;
     ioctl(fd, TCGETS2, &tty);
-    tty.c_cflag &= ~CBAUD;
-    tty.c_cflag |= BOTHER;
-
-    tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;     // 8-bit chars
     // disable IGNBRK for mismatched speed tests; otherwise receive break as \000 chars
-    tty.c_iflag &= ~IGNBRK;         // disable break processing
     tty.c_lflag = 0;                // no signaling chars, no echo, no canonical processing
+
+    tty.c_iflag &= ~IGNBRK;         // disable break processing
+    tty.c_iflag &=~(INLCR|ICRNL);
+    tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff ctrl
+
     tty.c_oflag = 0;                // no remapping, no delays
+    tty.c_oflag &=~(ONLCR|OCRNL);
+
     tty.c_cc[VMIN]  = 0;            // read doesn't block
     tty.c_cc[VTIME] = 5;            // 0.5 seconds read timeout
-    tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff ctrl
+
+    tty.c_cflag &= ~CBAUD;
+    tty.c_cflag |= BOTHER;
+    tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;     // 8-bit chars
     tty.c_cflag |= (CLOCAL | CREAD);// ignore modem controls, enable reading
     tty.c_cflag &= ~(PARENB | PARODD);      // shut off parity
     tty.c_cflag |= parity;
     tty.c_cflag &= ~CSTOPB;
     tty.c_cflag &= ~CRTSCTS;
-
 
     tty.c_ispeed = speed;
     tty.c_ospeed = speed;
@@ -78,7 +82,7 @@ VRSerial::~VRSerial() {}
 VRSerialPtr VRSerial::create(string interfaceName) { return VRSerialPtr(new VRSerial(interfaceName)); }
 
 vector<unsigned char> VRSerial::read() {
-    char buf [100];
+    char buf[100];
     int n = ::read(fd, buf, sizeof buf);
     if (n < 0) return vector<unsigned char>();
     string s(buf, n);
@@ -130,12 +134,14 @@ void VRHDLC::handleData() {
 }
 
 bool VRHDLC::handle(unsigned char c) {
+    auto orig = c;
     if (verbose) cout << "B " << serialState << " " << serialData.size() << " " << std::hex << c;
     if (c == 0x7E) { // 126
         if (serialState == "undefined") { serialState = "start"; serialData.clear(); }
         if (serialState == "end") serialState = "start";
         if (serialState == "data") {
-            if (serialData.size() == 0 || serialData == vector<unsigned char>({0xd, 0xa}) || serialData == vector<unsigned char>({0xa})) serialState = "start"; //ignore cariage return or empty data
+            //if (serialData.size() == 0 || serialData == vector<unsigned char>({0xd, 0xa}) || serialData == vector<unsigned char>({0xa})) serialState = "start"; //ignore cariage return or empty data
+            if (serialData.size() == 0 || serialData == vector<unsigned char>({0xd, 0xa})) serialState = "start"; //ignore cariage return or empty data
             else {
                 serialState = "end";
                 handleData();
@@ -237,7 +243,7 @@ string VRSerial::asHexRepr(const vector<unsigned char>& data, bool doX, string d
 
 vector<unsigned char> VRSerial::asHex(const string& data) {
     vector<unsigned char> res;
-    for (auto s : data) res.push_back( (unsigned int)(s) );
+    for (auto s : data) res.push_back( (unsigned char)(s) );
     return res;
 }
 
