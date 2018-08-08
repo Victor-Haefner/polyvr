@@ -932,6 +932,8 @@
 		<Unit filename="src/core/scripting/VRPyNavPreset.h" />
 		<Unit filename="src/core/scripting/VRPyNavigator.cpp" />
 		<Unit filename="src/core/scripting/VRPyNavigator.h" />
+		<Unit filename="src/core/scripting/VRPyNetworking.cpp" />
+		<Unit filename="src/core/scripting/VRPyNetworking.h" />
 		<Unit filename="src/core/scripting/VRPyObject.cpp" />
 		<Unit filename="src/core/scripting/VRPyObject.h" />
 		<Unit filename="src/core/scripting/VRPyObjectManager.cpp" />
