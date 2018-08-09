@@ -160,7 +160,7 @@ class VRTrafficSimulation : public VRObject {
         void hideGraph();
         void showVehicVision();
         void hideVehicVision();
-        void toggleLangeChanges();
+        void toggleLaneChanges();
         void forceIntention(int vID,int behavior);
         string getVehicleData(int ID);
         void runDiagnostics();

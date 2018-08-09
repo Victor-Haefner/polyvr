@@ -21,7 +21,7 @@ PyMethodDef VRPyTrafficSimulation::methods[] = {
     {"forceIntention", PyWrap( TrafficSimulation, forceIntention, "forceIntention", void, int, int ) },
     {"showGraph", PyWrap( TrafficSimulation, showGraph, "showGraph", void ) },
     {"hideGraph", PyWrap( TrafficSimulation, hideGraph, "hideGraph", void ) },
-    {"toggleLangeChanges", PyWrap( TrafficSimulation, toggleLangeChanges, "toggleLangeChanges", void ) },
+    {"toggleLaneChanges", PyWrap( TrafficSimulation, toggleLaneChanges, "toggleLaneChanges", void ) },
     {"showVehicVision", PyWrap( TrafficSimulation, showVehicVision, "showVehicVision", void ) },
     {"hideVehicVision", PyWrap( TrafficSimulation, hideVehicVision, "hideVehicVision", void ) },
     {NULL}  /* Sentinel */

@@ -741,6 +741,7 @@ void VRTrafficSimulation::changeLane(int ID, int direction) {
         v.behavior = direction;
         v.roadFrom = gp.edge;
         v.indicatorTS = VRGlobals::CURRENT_FRAME;
+        cout << "VRTrafficSimulation::changeLane" << toString(v.behavior) << endl;
     }
     else {/*
         string s = toString(ID) + " " + toString(rSize) + " " + toString(poseV) + " rejected";
@@ -949,6 +950,7 @@ void VRTrafficSimulation::runDiagnostics(){
     returnInfo += nl + fit(n2) + "--" + edgeNeighbors;
     returnInfo += nl + fit(n3) + "--" + nodeInfo;
     returnInfo += nl + fit(n4) + "--" + vehiInfo;
+    returnInfo += nl + "Lanechanging state: " + toString(laneChange);
 
 
     CPRINT(returnInfo);
@@ -967,7 +969,7 @@ void VRTrafficSimulation::setSeedRoadVec(vector<int> forceSeedRoads){
     this->forceSeedRoads = forceSeedRoads;
 }
 
-void VRTrafficSimulation::toggleLangeChanges(){
+void VRTrafficSimulation::toggleLaneChanges(){
     laneChange = !laneChange;
     CPRINT("lanechanging: "+toString(laneChange));
 }
