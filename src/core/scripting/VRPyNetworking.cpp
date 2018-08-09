@@ -18,6 +18,7 @@ PyMethodDef VRPyHDLC::methods[] = {
     {"readData", PyWrap(HDLC, readData, "Stop animation", bool) },
     {"waitForMessage", PyWrap(HDLC, waitForMessage, "Stop animation", void) },
     {"sendData", PyWrapOpt(HDLC, sendData, "Stop animation", "0", void, vector<unsigned char>, bool) },
+    {"pauseSend", PyWrap(HDLC, pauseSend, "Stop animation", void, int) },
     {"getLastInput", PyWrap(HDLC, getLastInput, "Stop animation", size_t) },
     {NULL}  /* Sentinel */
 };

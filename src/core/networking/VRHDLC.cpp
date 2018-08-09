@@ -105,6 +105,11 @@ VRHDLCPtr VRHDLC::create() { return VRHDLCPtr(new VRHDLC()); }
 
 bool VRHDLC::isIdle() { return idle; }
 
+void VRHDLC::pauseSend(int T) {
+    pausingTime = time(0);
+	pausingDuration = T;
+}
+
 string VRHDLC::getInterface() {
     auto interfaces = { "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyACM0", "/dev/car-interface" };
     for (auto i : interfaces) {
@@ -204,6 +209,12 @@ void VRHDLC::setCallback(VRHDLCCbPtr cb) { callback = cb; }
 
 void VRHDLC::sendData(vector<unsigned char> data, bool doWait) {
     if (!serial) return;
+
+    if (pausingDuration != 0) {
+        if ( time(0) - pausingTime <= pausingDuration) return;
+        pausingDuration = 0;
+    }
+
     vector<unsigned char> tmp;
     for (auto d : data) {
         if (d == 0x7D) { tmp.push_back(0x7D); tmp.push_back(0x7D ^ 0x20); } // 0x7D -> 0x7D, 0x7D ^ 0x20
