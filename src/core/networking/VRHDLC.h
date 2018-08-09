@@ -23,6 +23,7 @@ class VRSerial {
 
         static VRSerialPtr create(string interfaceName);
 
+        bool good();
         vector<unsigned char> read();
         void write(vector<unsigned char> data);
 
@@ -44,6 +45,7 @@ class VRHDLC {
 		vector<unsigned char> serialData;
 		vector<unsigned char> buffer;
 		bool idle = true;
+		size_t lastInput = 0;
 
     public:
         VRHDLC();
@@ -58,6 +60,7 @@ class VRHDLC {
 
         void connect();
         bool connected();
+        size_t getLastInput();
 
         void handleData();
         bool handle(unsigned char c);

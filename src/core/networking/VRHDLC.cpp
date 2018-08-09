@@ -94,6 +94,9 @@ void VRSerial::write(vector<unsigned char> data) {
     ::write (fd, s.c_str(), s.size());
 }
 
+bool VRSerial::good() { // TODO
+    return true;
+}
 
 
 VRHDLC::VRHDLC() {}
@@ -125,7 +128,13 @@ void VRHDLC::connect() {
     }
 }
 
-bool VRHDLC::connected() { return (serial != 0); }
+bool VRHDLC::connected() {
+    if (!serial) return 0;
+    if (!serial->good()) return 0;
+    return 1;
+}
+
+size_t VRHDLC::getLastInput() { return time(0) - lastInput; }
 
 void VRHDLC::handleData() {
     if (verbose) cout << endl << "handleData: " << VRSerial::asHexRepr(serialData) << endl;
@@ -185,6 +194,7 @@ bool VRHDLC::process(vector<unsigned char> input) {
 bool VRHDLC::readData() {
     if (!serial) return false;
     vector<unsigned char> input = serial->read();
+    if (input.size() > 0) lastInput = time(0);
     return process(input);
 }
 
