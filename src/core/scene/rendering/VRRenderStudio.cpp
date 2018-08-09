@@ -18,8 +18,9 @@
 
 #include <OpenSG/OSGRenderAction.h>
 #include <OpenSG/OSGProjectionCameraDecorator.h>
+#include <OpenSG/OSGFogStage.h>
 
-OSG_BEGIN_NAMESPACE;
+using namespace OSG;
 using namespace std;
 
 /**
@@ -46,6 +47,7 @@ scene
 VRRenderStudio::VRRenderStudio(EYE e) {
     eye = e;
     root_system = VRObject::create("System root");
+    addFogStage();
     addStage("shading");
     addStage("blurY", "shading");
     addStage("blurX", "blurY");
@@ -61,6 +63,21 @@ VRRenderStudio::VRRenderStudio(EYE e) {
 
 VRRenderStudio::~VRRenderStudio() {}
 VRRenderStudioPtr VRRenderStudio::create(EYE e) { return VRRenderStudioPtr( new VRRenderStudio(e) ); }
+
+void VRRenderStudio::addFogStage() { // TODO or not TODO
+    //FogStageRefPtr fog = FogStage::create();
+
+    /*string name = "fog";
+    if (stages.count(name)) return;
+    stages[name] = fog;
+    if (!stages.count(parent)) s->getTop()->switchParent( root_system );
+    else {
+        auto pstage = stages[parent];
+        pstage->insert(s);
+        if (pstage->getBottom() == root_scene) root_scene = s->getBottom();
+    }
+    if (cam) setCamera(cam);*/
+}
 
 void VRRenderStudio::addStage(string name, string parent) {
     if (stages.count(name)) return;
@@ -282,7 +299,5 @@ void VRRenderStudio::setCalib(bool b) { calib = b; update(); }
 void VRRenderStudio::setHMDD(bool b) { do_hmdd = b; update(); }
 void VRRenderStudio::setMarker(bool b) { do_marker = b; update(); }
 void VRRenderStudio::setFXAA(bool b) { do_fxaa = b; update(); }
-
 void VRRenderStudio::setHMDDeye(float e) { hmdd->setHMDDparams(e); }
 
-OSG_END_NAMESPACE;

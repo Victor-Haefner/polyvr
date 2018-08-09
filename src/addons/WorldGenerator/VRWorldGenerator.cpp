@@ -410,6 +410,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 
             if (tag.first == "landuse") { // TODO
                 auto patch = VRGeometry::create("patch");
+                patch->hide("SHADOW");
                 auto poly = wayToPolygon(way);
                 if (poly->size() == 0) continue;
                 for (auto p : poly->gridSplit(5)) {

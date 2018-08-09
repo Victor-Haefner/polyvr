@@ -65,6 +65,7 @@ class VRRenderStudio : public VRStorage {
         VRObjectPtr getRoot();
 
         void addStage(string name, string parent = "");
+        void addFogStage();
         void setStageActive(string name, bool da, bool la);
         void setStageShader(string name, string VPpath, string FPpath, bool doDeferred);
         int addStageBuffer(string name, int pformat, int ptype);

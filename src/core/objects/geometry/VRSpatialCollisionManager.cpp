@@ -11,6 +11,7 @@ using namespace OSG;
 
 VRSpatialCollisionManager::VRSpatialCollisionManager(float resolution) : VRGeometry("spatialCollisionShape") {
     space = Octree::create(resolution);
+    hide("SHADOW");
 }
 
 VRSpatialCollisionManager::~VRSpatialCollisionManager() {}
