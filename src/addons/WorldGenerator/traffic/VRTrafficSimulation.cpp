@@ -260,8 +260,11 @@ void VRTrafficSimulation::updateSimulation() {
                 auto& road = roads[gp.edge];
                 toChangeRoad[road1ID].push_back( make_pair(vehicle.vID, gp.edge) );
                 if (vehicle.currentState != 0) {
-                    vehicle.roadTo = g->getNextEdges(g->getEdge(vehicle.roadTo))[0].ID;
-                    vehicle.roadFrom = gp.edge;
+                    if (g->getNextEdges(g->getEdge(vehicle.roadTo)).size() < 1) toChangeRoad[road1ID].push_back( make_pair(vehicle.vID, -1) );
+                    else {
+                        vehicle.roadTo = g->getNextEdges(g->getEdge(vehicle.roadTo))[0].ID;
+                        vehicle.roadFrom = gp.edge;
+                    }
                 }
                 //cout << "  transit of vehicle: " << vehicle.getID() << " from: " << road1ID << " to: " << gp.edge << endl;
             }
@@ -476,11 +479,17 @@ void VRTrafficSimulation::updateSimulation() {
                     if (state == 2) g->setColor("red");
                 }
 
+                auto seesVehicle = [&](int dir) {
+                    if (vehicle.vehiclesight.count(dir) == 0) return false;
+                    return vehicle.vehiclesight[dir];
+                };
+                //cout << toString(vehicle.vehiclesight[0]) << toString(vehicle.vehiclesight[1]) << toString(vehicle.vehiclesight[2]) << endl ;
                 int vbeh = vehicle.behavior;
-                if ( vbeh == vehicle.STRAIGHT && !vehicle.vehiclesight[vehicle.INFRONT]) { propagateVehicle(vehicle, d, vbeh); }
-                if ( vbeh == vehicle.STRAIGHT &&  vehicle.vehiclesight[vehicle.INFRONT]) { toChangeLane[vehicle.vID] = 1; }
-                if ( vbeh == vehicle.SWITCHLEFT  && !vehicle.vehiclesight[vehicle.FROMLEFT] && !vehicle.vehiclesight[vehicle.INFRONT] /*&& VRGlobals::CURRENT_FRAME - vehicle.indicatorTS > 200*/ ) propagateVehicle(vehicle, d, vbeh);
-                if ( vbeh == vehicle.SWITCHRIGHT && !vehicle.vehiclesight[vehicle.FROMRIGHT] && !vehicle.vehiclesight[vehicle.INFRONT] /*&& VRGlobals::CURRENT_FRAME - vehicle.indicatorTS > 200*/ ) propagateVehicle(vehicle, d, vbeh);
+                bool inFront = seesVehicle(vehicle.INFRONT);
+                if ( vbeh == vehicle.STRAIGHT && !inFront) { propagateVehicle(vehicle, d, vbeh); }
+                if ( vbeh == vehicle.STRAIGHT &&  inFront) { toChangeLane[vehicle.vID] = 1; }
+                if ( vbeh == vehicle.SWITCHLEFT  && !seesVehicle(vehicle.FROMLEFT) && !inFront /*&& VRGlobals::CURRENT_FRAME - vehicle.indicatorTS > 200*/ ) propagateVehicle(vehicle, d, vbeh);
+                if ( vbeh == vehicle.SWITCHRIGHT && !seesVehicle(vehicle.FROMRIGHT) && !inFront /*&& VRGlobals::CURRENT_FRAME - vehicle.indicatorTS > 200*/ ) propagateVehicle(vehicle, d, vbeh);
 
                 if (VRGlobals::CURRENT_FRAME - vehicle.lastMoveTS > 200 ) {
                     toChangeRoad[road.first].push_back( make_pair(vehicle.vID, -1) ); ///------killswitch if vehicle get's stuck
@@ -701,20 +710,20 @@ void VRTrafficSimulation::changeLane(int ID, int direction) {
         //CPRINT(toString(rSize));
         if (rSize > 0) {
             auto opt = edge.relations[0];
-            if (!roadNetwork->getGraph()->hasEdge(opt)) return false;
+            if (roadNetwork->getGraph()->getEdge(opt).ID == -1) return false;
             pos.edge = opt;
             auto pose = roadNetwork->getPosition(pos);
-            if ((pose->pos() - poseV->pos()).length() > 5) return false;
+            if ((pose->pos() - poseV->pos()).length() > 3.5) return false;
             float res = vUp.cross(vDir).dot(pose->pos() - poseV->pos());
             if (res > 0 && input==1) { edgeLeft = opt; return true; }
             if (res < 0 && input==2) { edgeRight = opt; return true; }
 
             if (rSize > 1) {
                 opt = edge.relations[1];
-                if (!roadNetwork->getGraph()->hasEdge(opt)) return false;
+                if (roadNetwork->getGraph()->getEdge(opt).ID == -1) return false;
                 pos.edge = opt;
                 pose = roadNetwork->getPosition(pos);
-                if ((pose->pos() - poseV->pos()).length() > 5) return false;
+                if ((pose->pos() - poseV->pos()).length() > 3.5) return false;
                 res = vUp.cross(vDir).dot(pose->pos() - poseV->pos());
                 if (res > 0 && input==1) { edgeLeft = opt; return true; }
                 if (res < 0 && input==2) { edgeRight = opt; return true; }
@@ -741,12 +750,12 @@ void VRTrafficSimulation::changeLane(int ID, int direction) {
         v.behavior = direction;
         v.roadFrom = gp.edge;
         v.indicatorTS = VRGlobals::CURRENT_FRAME;
-        cout << "VRTrafficSimulation::changeLane" << toString(v.behavior) << endl;
+        //cout << "VRTrafficSimulation::changeLane" << toString(v.behavior) << " - " << toString(v.roadFrom) << " - " << toString(v.roadTo) << endl;
     }
     else {/*
         string s = toString(ID) + " " + toString(rSize) + " " + toString(poseV) + " rejected";
-        CPRINT(s);
-        cout << "VRTrafficSimulation::changeLane: trying to change to a lane, which doesn't exist" << endl;*/
+        CPRINT(s);*/
+        //cout << "VRTrafficSimulation::changeLane: trying to change to a lane, which doesn't exist "<< toString(v.roadFrom) << " - " << toString(v.roadTo) << endl;
     }
 }
 
