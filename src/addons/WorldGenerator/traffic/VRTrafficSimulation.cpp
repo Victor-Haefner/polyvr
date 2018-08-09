@@ -704,6 +704,7 @@ void VRTrafficSimulation::changeLane(int ID, int direction) {
             if (!roadNetwork->getGraph()->hasEdge(opt)) return false;
             pos.edge = opt;
             auto pose = roadNetwork->getPosition(pos);
+            if ((pose->pos() - poseV->pos()).length() > 5) return false;
             float res = vUp.cross(vDir).dot(pose->pos() - poseV->pos());
             if (res > 0 && input==1) { edgeLeft = opt; return true; }
             if (res < 0 && input==2) { edgeRight = opt; return true; }
@@ -713,6 +714,7 @@ void VRTrafficSimulation::changeLane(int ID, int direction) {
                 if (!roadNetwork->getGraph()->hasEdge(opt)) return false;
                 pos.edge = opt;
                 pose = roadNetwork->getPosition(pos);
+                if ((pose->pos() - poseV->pos()).length() > 5) return false;
                 res = vUp.cross(vDir).dot(pose->pos() - poseV->pos());
                 if (res > 0 && input==1) { edgeLeft = opt; return true; }
                 if (res < 0 && input==2) { edgeRight = opt; return true; }
