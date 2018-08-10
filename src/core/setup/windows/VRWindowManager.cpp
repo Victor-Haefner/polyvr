@@ -180,9 +180,13 @@ void VRWindowManager::updateWindows() {
     BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
     if (barrier->getNumWaiting() == VRWindow::active_window_count) {
         //for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRMultiWindow>(w.second)) if (win->getState() == VRMultiWindow::INITIALIZING) win->initialize();
+        //cout << " wait at window manager barrier 1 " << endl;
         barrier->enter(VRWindow::active_window_count+1);
+        //cout << "  go on " << endl;
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
+        //cout << " wait at window manager barrier 2 " << endl;
         barrier->enter(VRWindow::active_window_count+1);
+        //cout << "  go on " << endl;
         Thread::getCurrentChangeList()->clear();
     }
 

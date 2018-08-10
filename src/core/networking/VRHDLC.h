@@ -46,8 +46,10 @@ class VRHDLC {
 		vector<unsigned char> buffer;
 		bool idle = true;
 		size_t lastInput = 0;
-		size_t pausingTime = 0;
-		int pausingDuration = 0;
+		size_t pausingTimeS = 0;
+		size_t pausingTimeR = 0;
+		int pausingDurationS = 0;
+		int pausingDurationR = 0;
 
     public:
         VRHDLC();
@@ -64,11 +66,13 @@ class VRHDLC {
         bool connected();
         size_t getLastInput();
         void pauseSend(int T);
+        void pauseReceive(int T);
 
         void handleData();
         bool handle(unsigned char c);
         bool process(vector<unsigned char> input);
         bool readData();
+        void readAllData();
 
         void waitForMessage();
         void sendData(vector<unsigned char> data, bool doWait = true);

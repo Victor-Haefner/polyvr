@@ -106,8 +106,13 @@ VRHDLCPtr VRHDLC::create() { return VRHDLCPtr(new VRHDLC()); }
 bool VRHDLC::isIdle() { return idle; }
 
 void VRHDLC::pauseSend(int T) {
-    pausingTime = time(0);
-	pausingDuration = T;
+    pausingTimeS = time(0);
+	pausingDurationS = T;
+}
+
+void VRHDLC::pauseReceive(int T) {
+    pausingTimeR = time(0);
+	pausingDurationR = T;
 }
 
 string VRHDLC::getInterface() {
@@ -200,7 +205,22 @@ bool VRHDLC::readData() {
     if (!serial) return false;
     vector<unsigned char> input = serial->read();
     if (input.size() > 0) lastInput = time(0);
+
+    if (pausingDurationR != 0) {
+        if ( time(0) - pausingTimeR <= pausingDurationR) {
+            buffer.clear();
+            return false;
+        }
+        pausingDurationR = 0;
+    }
+
     return process(input);
+}
+
+void VRHDLC::readAllData() {
+    do {
+        readData();
+    } while( buffer.size() > 0 );
 }
 
 void VRHDLC::waitForMessage() { while( readData() ) {}; }
@@ -210,9 +230,9 @@ void VRHDLC::setCallback(VRHDLCCbPtr cb) { callback = cb; }
 void VRHDLC::sendData(vector<unsigned char> data, bool doWait) {
     if (!serial) return;
 
-    if (pausingDuration != 0) {
-        if ( time(0) - pausingTime <= pausingDuration) return;
-        pausingDuration = 0;
+    if (pausingDurationS != 0) {
+        if ( time(0) - pausingTimeS <= pausingDurationS) return;
+        pausingDurationS = 0;
     }
 
     vector<unsigned char> tmp;
