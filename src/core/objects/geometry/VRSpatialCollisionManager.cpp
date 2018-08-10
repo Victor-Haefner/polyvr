@@ -21,7 +21,7 @@ VRSpatialCollisionManagerPtr VRSpatialCollisionManager::create(float resolution)
 vector<VRGeometryPtr> tmpGeos;
 void VRSpatialCollisionManager::add(VRObjectPtr o) {
     if (!o) return;
-    cout << "VRSpatialCollisionManager::add " << o->getName() << endl;
+    //cout << "VRSpatialCollisionManager::add " << o->getName() << endl;
     auto getCollisionShape = [&](Vec3d p) {
         //p = Vec3d(0,0,0);
         //cout << " getCollisionShape at: " << p << endl;
@@ -47,6 +47,7 @@ void VRSpatialCollisionManager::add(VRObjectPtr o) {
     for (auto obj : o->getChildren(true, "Geometry", true)) {
         auto geo = dynamic_pointer_cast<VRGeometry>(obj);
         if (!geo) continue;
+        if (geo->getMesh() == 0) continue;
         if (geo->getMesh()->geo == 0) continue;
         //merge(geo);
 

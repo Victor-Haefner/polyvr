@@ -3,7 +3,10 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
+#include "core/objects/geometry/VRStroke.h"
 #include "core/math/triangulator.h"
+#include "core/math/path.h"
+#include "core/math/pose.h"
 
 using namespace OSG;
 
@@ -17,6 +20,24 @@ VRBuilding::VRBuilding() {
 VRBuilding::~VRBuilding() {}
 
 VRBuildingPtr VRBuilding::create() { return VRBuildingPtr( new VRBuilding() ); }
+
+VRGeometryPtr VRBuilding::getCollisionShape() {
+    auto perimeter = stories[0].second;
+    if (perimeter.size() <= 1) return 0;
+
+    auto path = Path::create();
+    for (auto p : perimeter.get()) {
+        Vec3d p3 = Vec3d(p[0], ground, p[1]);
+        path->addPoint( Pose(p3) );
+    }
+    path->close();
+    path->compute(2);
+
+	auto shape = VRStroke::create("shape");
+	shape->addPath(path);
+	shape->strokeProfile({Vec3d(0, -2, 0), Vec3d(0, 2, 0)}, false, true, false);
+	return shape;
+}
 
 void VRBuilding::addFoundation(VRPolygon polygon, float H) {
     auto t = terrain.lock();

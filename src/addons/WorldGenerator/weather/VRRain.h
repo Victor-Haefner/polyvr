@@ -36,6 +36,9 @@ class VRRain : public VRGeometry {
         float offset = 0;
         float camH = 40;
         float rainDensity = 0;
+        Vec3f dropColor;
+        float dropWidth;
+        float dropLength;
 
         bool isRaining = false;
         bool depthTexer = false;
@@ -43,6 +46,7 @@ class VRRain : public VRGeometry {
         uint textureSize;
 
         void update();
+        Vec3f convertV3dToV3f(Vec3d in);
         void startRainCallback(float t);
         void stopRainCallback(float t);
         void updateScale(float scaleNow);
@@ -77,6 +81,9 @@ class VRRain : public VRGeometry {
         float get();
         VRTextureRendererPtr getRenderer();
         VRMaterialPtr getTexMat();
+
+        void setDropColor(Vec3d clIn);
+        void setDropSize(float dropWidth, float dropLength);
 
         void setScale( bool liveChange , float scale );
         void doTestFunction();

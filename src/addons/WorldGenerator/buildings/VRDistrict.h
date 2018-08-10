@@ -34,7 +34,6 @@ class VRDistrict : public VRObject, public VRWorldModule {
 
         void addBuilding( VRPolygonPtr p, int stories, string housenumber, string street );
         void remBuilding( string street, string housenumber );
-
         void clear();
 };
 

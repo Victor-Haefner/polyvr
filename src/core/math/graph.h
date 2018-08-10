@@ -35,6 +35,7 @@ class Graph : public VRStorage {
             CONNECTION connection = SIMPLE;
             int ID = -1;
 
+            vector<int> relations;
             edge(int i = 0, int j = 0, CONNECTION c = SIMPLE, int ID = 0);
         };
 
@@ -43,6 +44,7 @@ class Graph : public VRStorage {
             int edge = -1;
             float pos = 0;
 
+            position();
             position(int n);
             position(int e, float p);
         };
@@ -73,14 +75,17 @@ class Graph : public VRStorage {
         vector< edge > getEdgesCopy();
         vector< edge > getInEdges(int n);
         vector< edge > getOutEdges(int n);
+        vector< int > getRelations(int e);
         int getNEdges();
         int size();
         bool connected(int i1, int i2);
         void setPosition(int i, PosePtr v);
+        void addRelation(int e1, int e2);
         PosePtr getPosition(int i);
 
         bool hasNode(int i);
         bool hasEdge(int i);
+        bool hasRelation(int e1, int e2);
 
         vector<edge> getConnectedEdges(node& n);
         vector<edge> getPrevEdges(edge& e);

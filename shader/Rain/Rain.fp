@@ -16,14 +16,15 @@ uniform float rainOffset;
 uniform float rainDensity;
 uniform bool depthTexer;
 
+uniform vec3 dropColor;
+uniform float dropWidth;
+uniform float dropLength;
+
 uniform sampler2D tex;
 
 uniform float camH;
 
 float theta;
-
-//** DROPSIZE CAN BE CHANGED HERE **/
-float dropsize = 0.1; 
 
 void computeDirection() {
 	fragDir = normalize( miN * (miP * pos).xyz );
@@ -67,10 +68,18 @@ vec3 debugObstruction(){
 	return color;
 }
 
-float getdropsize(in float theta,float distance){
-	if (theta < M_PI/2) return dropsize*2*theta/M_PI*2/distance;
+/** DROPSIZE CALCULATION HERE */
+float getdropWidth(in float theta,float distance){
+	if (theta < M_PI/2) return dropWidth*2*theta/M_PI*2/distance;
 	else {
-		if (theta > M_PI/2) return dropsize*2*(M_PI-theta)/M_PI*2/distance;
+		if (theta > M_PI/2) return dropWidth*2*(M_PI-theta)/M_PI*2/distance;
+		else return 0;
+	}
+}
+float getdropLength(in float theta,float distance){
+	if (theta < M_PI/2) return dropLength*2*theta/M_PI*2/distance;
+	else {
+		if (theta > M_PI/2) return dropLength*2*(M_PI-theta)/M_PI*2/distance;
 		else return 0;
 	}
 }
@@ -112,7 +121,8 @@ vec3 worldCoords(float D){
 bool isD(float D) {
 	float dropdis = 2/(D*D); 	// horizontal distance between drops
 	float dropdisy = rainDensity*6; // vertical distance between drops
-	float dropsize = getdropsize(gettheta(fragDir),D);
+	float dropwidth = getdropWidth(gettheta(fragDir),D);
+	float droplength = getdropLength(gettheta(fragDir),D);
 	float toffset = rainOffset;
 	float phi = atan( fragDir.x, fragDir.z);
 
@@ -133,7 +143,7 @@ bool isD(float D) {
 	if (D > 8) gl_FragDepth = 0.993;
 	//computeDepth(gl_ModelViewProjectionMatrix*vec4(worldCoords(D),1));
 
-	if (gettheta(fragDir)>0.3 && israindropx < dropsize && israindropy < dropsize && !obstruction(D)) return true;
+	if (gettheta(fragDir)>0.3 && israindropx < dropwidth && israindropy < droplength && !obstruction(D)) return true;
 	else return false;
 
 	return true;
@@ -149,7 +159,8 @@ vec3 checkrad() {
 		if (atan( fragDir.x, fragDir.z)*180/M_PI>-158 && atan( fragDir.x, fragDir.z)*180/M_PI<-156 && gettheta(fragDir)>M_PI/2) return vec3(0,1,0);	
 		if (atan( fragDir.x, fragDir.z)*180/M_PI>-180 && atan( fragDir.x, fragDir.z)*180/M_PI<-179 && gettheta(fragDir)>M_PI/2) return vec3(0,1,1);	
 	}
-	vec3 color = vec3(0.3,0.3,0.7);
+	//vec3 color = vec3(0.3,0.3,0.7);
+	vec3 color = dropColor;
 	
 	if (debugB) color = vec3(1.,0.,0.);
 

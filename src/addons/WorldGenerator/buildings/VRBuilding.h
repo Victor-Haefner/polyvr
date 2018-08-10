@@ -53,6 +53,7 @@ class VRBuilding : public VRWorldModule {
         void addRoof(VRPolygon polygon);
 
         void computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs);
+        VRGeometryPtr getCollisionShape();
 };
 
 OSG_END_NAMESPACE;

@@ -2,6 +2,7 @@
 #include "VRTree.h"
 #include "VRGrassPatch.h"
 #include "../terrain/VRTerrain.h"
+#include "../VRWorldGenerator.h"
 
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
@@ -9,6 +10,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRPhysics.h"
+#include "core/objects/geometry/VRSpatialCollisionManager.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/material/VRTextureGenerator.h"
@@ -611,19 +613,20 @@ void VRNature::addCollisionModels() {
         data.pushQuad(p->pos()+Vec3d(0,1,0), p->dir(), p->up(), Vec2d(0.3, 2), true);
     }
 
-    if (collisionMesh) collisionMesh->destroy();
-    collisionMesh = data.asGeometry("natureCollisionMesh");
+    auto geo = data.asGeometry("natureCollisionMesh");
+	if (auto w = world.lock()) w->getPhysicsSystem()->add(geo);
+
+    /*if (collisionMesh) collisionMesh->destroy();
     collisionMesh->getPhysics()->setDynamic(false);
     collisionMesh->getPhysics()->setShape("Concave");
     collisionMesh->getPhysics()->setPhysicalized(true);
     collisionMesh->setMeshVisibility(false);
-    addChild( collisionMesh );
+    addChild( collisionMesh );*/
 }
 
 /**
 
 TODO:
- - get rid of transform of lodleaf?
  - optimize level zero structure
 
 */
