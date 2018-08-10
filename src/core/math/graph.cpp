@@ -154,7 +154,7 @@ void Graph::addRelation(int e1, int e2) {
 }
 
 bool Graph::hasRelation(int e1, int e2) {
-    for (e : edges[e1].relations) { if (e == e2) return true; }
+    for (auto e : edges[e1].relations) { if (e == e2) return true; }
     return false;
 }
 

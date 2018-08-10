@@ -559,10 +559,10 @@ void VRTrafficSimulation::updateSimulation() {
         VRGeoData gg0;
 
         int n = 0;
-        for (vv : visionVec){
+        for (auto vv : visionVec){
             n = 0;
-            for (vVis : vv.second){
-                for (vvv : vVis){
+            for (auto vVis : vv.second){
+                for (auto vvv : vVis){
                     if (vVis.size()==0) continue;
                     auto nPose1 = vehicles[vv.first].t->getPose();
                     auto nPose2 = vehicles[vvv].t->getPose();
@@ -807,7 +807,7 @@ void VRTrafficSimulation::showGraph(){
 	VRGeoData gg2;
 	VRGeoData gg3;
 
-	for (node : graph->getNodes()){
+	for (auto node : graph->getNodes()){
 		auto nPose = graph->getNode(node.first).p;
 		auto p = nPose.pos() + Vec3d(0,3,0);
 		int vID = gg0.pushVert(p);
@@ -818,7 +818,7 @@ void VRTrafficSimulation::showGraph(){
 		idx[node.first] = vID;
 	}
 
-	for (connection : graph->getEdges()){
+	for (auto connection : graph->getEdges()){
 		auto edge = connection.first;
 		if (isSeedRoad(edge)) { gg2.pushLine(idx[connection.second.from], idx[connection.second.to]); }
 		if (!isSeedRoad(edge)) { gg1.pushLine(idx[connection.second.from], idx[connection.second.to]); }
@@ -827,9 +827,9 @@ void VRTrafficSimulation::showGraph(){
 		graphAnn->set(edge+100, (pos1+pos2)*0.5 + Vec3d(0,4,0), "Edge "+toString(edge)+"("+toString(connection.second.from)+"-"+toString(connection.second.to)+")");
 	}
 
-    for (connection : graph->getEdges()){
+    for (auto connection : graph->getEdges()){
 		auto edge = connection.first;
-		for (rel : graph->getRelations(edge)) {
+		for (auto rel : graph->getRelations(edge)) {
             //if (isSeedRoad(edge)) { gg2.pushLine(idx[connection.second.from], idx[connection.second.to]); }
             auto pos1 = (graph->getNode(connection.second.from).p.pos()+graph->getNode(connection.second.to).p.pos())/2 + Vec3d(0,3,0);
             auto pos2 = (graph->getNode(graph->getEdgeCopyByID(rel).from).p.pos()+graph->getNode(graph->getEdgeCopyByID(rel).to).p.pos())/2 + Vec3d(0,3,0);
@@ -866,7 +866,7 @@ void VRTrafficSimulation::hideGraph(){
 	gg.push_back("graphVizRelations");
 	gg.push_back("graphAnn");
 	auto scene = VRScene::getCurrent();
-    for ( a : gg ){
+    for (auto a : gg ){
         if ( scene->getRoot()->find(a) ) scene->getRoot()->find(a)->destroy();
     }
 }
@@ -932,7 +932,7 @@ void VRTrafficSimulation::runDiagnostics(){
         edgeInfo += toString(e.from) +"-"+ toString(e.to) + " ";
         if (graph->getRelations(e.ID).size() > 0) {
             edgeNeighbors += toString(e.ID) + ":";
-            for (nn : graph->getRelations(e.ID)) { edgeNeighbors +=" " + toString(nn); }
+            for (auto nn : graph->getRelations(e.ID)) { edgeNeighbors +=" " + toString(nn); }
             edgeNeighbors += "; ";
             n2++;
         }
