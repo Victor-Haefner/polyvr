@@ -526,6 +526,7 @@ void VRRoadNetwork::computeSigns() {
                 roadEnt->add("markings", mL->getName());
             }
         }
+        if (auto w = world.lock()) w->getPhysicsSystem()->addQuad(0.15, 2, *sign->getPose());
     }
 }
 

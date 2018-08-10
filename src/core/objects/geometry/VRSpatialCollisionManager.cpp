@@ -1,8 +1,10 @@
 #include "VRSpatialCollisionManager.h"
 #include "core/math/boundingbox.h"
 #include "core/math/Octree.h"
+#include "core/math/pose.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRPhysics.h"
+#include "core/objects/geometry/VRGeoData.h"
 
 #include <OpenSG/OSGTriangleIterator.h>
 #include <btBulletDynamicsCommon.h>
@@ -49,7 +51,7 @@ void VRSpatialCollisionManager::add(VRObjectPtr o) {
         if (!geo) continue;
         if (geo->getMesh() == 0) continue;
         if (geo->getMesh()->geo == 0) continue;
-        //merge(geo);
+        //merge(geo); // enable for debugging purposes
 
         int N = 0;
         Matrix4d m;
@@ -68,6 +70,13 @@ void VRSpatialCollisionManager::add(VRObjectPtr o) {
             N++;
         }
     }
+}
+
+void VRSpatialCollisionManager::addQuad(float width, float height, const Pose& p) {
+    Vec3d pos = p.pos() + p.up()*height*0.5;
+    VRGeoData data; data.pushQuad();
+    data.pushQuad(pos, p.dir(), p.up(), Vec2d(width, height), true);
+    add(data.asGeometry("tmp"));
 }
 
 void VRSpatialCollisionManager::localize(Boundingbox box) {

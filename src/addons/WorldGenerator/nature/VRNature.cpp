@@ -607,7 +607,6 @@ void VRNature::clear() {
 
 void VRNature::addCollisionModels() {
     VRGeoData data;
-
     for (auto tree : treesByID) {
         auto p = getPoseTo( tree.second );
         data.pushQuad(p->pos()+Vec3d(0,1,0), p->dir(), p->up(), Vec2d(0.3, 2), true);
@@ -615,13 +614,6 @@ void VRNature::addCollisionModels() {
 
     auto geo = data.asGeometry("natureCollisionMesh");
 	if (auto w = world.lock()) w->getPhysicsSystem()->add(geo);
-
-    /*if (collisionMesh) collisionMesh->destroy();
-    collisionMesh->getPhysics()->setDynamic(false);
-    collisionMesh->getPhysics()->setShape("Concave");
-    collisionMesh->getPhysics()->setPhysicalized(true);
-    collisionMesh->setMeshVisibility(false);
-    addChild( collisionMesh );*/
 }
 
 /**

@@ -1006,6 +1006,7 @@ void VRPhysics::updateVisualGeo() {
     auto mat = OSG::VRMaterial::get("phys_mat");
     mat->setZOffset(-2,-2);
     geo->setMaterial(mat);
+    geo->setWorldMatrix( getTransformation() );
 }
 
 void VRPhysics::updateTransformation(OSG::VRTransformPtr trans) {
