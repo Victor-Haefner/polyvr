@@ -32,6 +32,8 @@ class VRCollision {
         float distance;
         VRTransformWeakPtr obj1;
         VRTransformWeakPtr obj2;
+        vector<Vec4d> triangle1;
+        vector<Vec4d> triangle2;
 
     public:
         VRCollision();
@@ -43,6 +45,8 @@ class VRCollision {
         float getDistance();
         VRTransformPtr getObj1();
         VRTransformPtr getObj2();
+        vector<Vec4d> getTriangle1();
+        vector<Vec4d> getTriangle2();
 };
 
 class VRPhysics : public VRStorage {
@@ -218,7 +222,8 @@ class VRPhysics : public VRStorage {
 
         static btVector3 toBtVector3(Vec3d);
         static Vec3d toVec3d(btVector3);
-
+        static btVector3 toBtVector3(Vec4d);
+        static Vec4d toVec4d(btVector3);
 
         void setConstraint(VRPhysics* p, VRConstraintPtr c, VRConstraintPtr cs = 0); //for Rigid to Rigid
         void setConstraint(VRPhysics* p, int nodeIndex,Vec3d localPivot,bool ignoreCollision,float influence);//for Soft to Rigid

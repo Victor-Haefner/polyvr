@@ -5,6 +5,7 @@
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRGeoData.h"
+#include "core/scene/VRScene.h"
 
 #include <OpenSG/OSGTriangleIterator.h>
 #include <btBulletDynamicsCommon.h>
@@ -14,15 +15,27 @@ using namespace OSG;
 VRSpatialCollisionManager::VRSpatialCollisionManager(float resolution) : VRGeometry("spatialCollisionShape") {
     space = Octree::create(resolution);
     hide("SHADOW");
+    updateCollisionCb = VRUpdateCb::create( "collision check", boost::bind( &VRSpatialCollisionManager::checkCollisions, this ) );
+    VRScene::getCurrent()->addUpdateFkt(updateCollisionCb);
 }
 
 VRSpatialCollisionManager::~VRSpatialCollisionManager() {}
-
 VRSpatialCollisionManagerPtr VRSpatialCollisionManager::create(float resolution) { return VRSpatialCollisionManagerPtr( new VRSpatialCollisionManager(resolution) ); }
 
+void VRSpatialCollisionManager::checkCollisions() {
+    if (!collisionCb) return;
+    auto collisions = getCollisions();
+    if (collisions.size()) (*collisionCb)(collisions);
+    //int objID = co;
+    //cout << " VRSpatialCollisionManager::checkCollisions: " << toVec3d(v) << endl;
+}
+
+void VRSpatialCollisionManager::setCollisionCallback(VRCollisionCbPtr cb) { collisionCb = cb; }
+
 vector<VRGeometryPtr> tmpGeos;
-void VRSpatialCollisionManager::add(VRObjectPtr o) {
+void VRSpatialCollisionManager::add(VRObjectPtr o, int objID) {
     if (!o) return;
+    //objID = VRScene::getCurrent()->getRoot()->getID();
     //cout << "VRSpatialCollisionManager::add " << o->getName() << endl;
     auto getCollisionShape = [&](Vec3d p) {
         //p = Vec3d(0,0,0);
@@ -63,6 +76,7 @@ void VRSpatialCollisionManager::add(VRObjectPtr o) {
             for (int i=0;i<3;i++) {
                 Pnt3d p = getTriPos(ti, i, m);
                 for (int j=0;j<3;j++) vertexPos[i][j] = p[j];
+                vertexPos[i].setW(objID);
             }
 
             tri_mesh->addTriangle(vertexPos[0], vertexPos[1], vertexPos[2]);
@@ -72,11 +86,11 @@ void VRSpatialCollisionManager::add(VRObjectPtr o) {
     }
 }
 
-void VRSpatialCollisionManager::addQuad(float width, float height, const Pose& p) {
+void VRSpatialCollisionManager::addQuad(float width, float height, const Pose& p, int objID) {
     Vec3d pos = p.pos() + p.up()*height*0.5;
     VRGeoData data; data.pushQuad();
     data.pushQuad(pos, p.dir(), p.up(), Vec2d(width, height), true);
-    add(data.asGeometry("tmp"));
+    add(data.asGeometry("tmp"), objID);
 }
 
 void VRSpatialCollisionManager::localize(Boundingbox box) {
@@ -104,6 +118,10 @@ void VRSpatialCollisionManager::localize(Boundingbox box) {
     getPhysics()->setPhysicalized(true);
     //setMeshVisibility(0);
 }
+
+
+
+
 
 
 

@@ -465,15 +465,15 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 
             if (tag.first == "surveillance:type") {
                 if (tag.second == "camera") {
-                    assets->copy("Camera", Pose::create(pos, dir), false);
-                    collisionShape->addQuad(0.1, 2, Pose(pos, dir));
+                    auto cam = assets->copy("Camera", Pose::create(pos, dir), false);
+                    collisionShape->addQuad(0.1, 2, Pose(pos, dir), cam->getID());
                 }
             }
 
             if (tag.first == "highway") {
                 if (tag.second == "street_lamp") {
-                    assets->copy("Streetlamp", Pose::create(pos, dir), false);
-                    collisionShape->addQuad(0.1, 2, Pose(pos, dir));
+                    auto lamp = assets->copy("Streetlamp", Pose::create(pos, dir), false);
+                    collisionShape->addQuad(0.1, 2, Pose(pos, dir), lamp->getID());
                 }
             }
         }

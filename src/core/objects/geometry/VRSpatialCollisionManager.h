@@ -7,9 +7,15 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
+ptrFctFwd( VRCollision, vector<VRCollision> );
+
 class VRSpatialCollisionManager : public VRGeometry {
     private:
         OctreePtr space;
+        VRCollisionCbPtr collisionCb;
+        VRUpdateCbPtr updateCollisionCb;
+
+        void checkCollisions();
 
     public:
         VRSpatialCollisionManager(float resolution);
@@ -17,9 +23,11 @@ class VRSpatialCollisionManager : public VRGeometry {
 
         static VRSpatialCollisionManagerPtr create(float resolution);
 
-        void add(VRObjectPtr o);
-        void addQuad(float width, float height, const Pose& p);
+        void add(VRObjectPtr o, int objID);
+        void addQuad(float width, float height, const Pose& p, int objID);
         void localize(Boundingbox box);
+
+        void setCollisionCallback(VRCollisionCbPtr cb);
 };
 
 OSG_END_NAMESPACE;

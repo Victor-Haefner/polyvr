@@ -44,6 +44,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"triggerScript", (PyCFunction)VRSceneGlobals::pyTriggerScript, METH_VARARGS, "Trigger a script - triggerScript( str script )" },
 	{"getRoot", (PyCFunction)VRSceneGlobals::getRoot, METH_NOARGS, "Return the root node of the scenegraph - object getRoot()" },
 	{"find", (PyCFunction)VRSceneGlobals::find, METH_VARARGS, "Return a ressource by name - something find(str name)\n\tthe ressources searched are: Objects, Devices" },
+	{"findByID", (PyCFunction)VRSceneGlobals::findByID, METH_VARARGS, "Return a ressource by ID - something find(int ID)\n\tthe ressources searched are: Objects" },
 	{"printOSG", (PyCFunction)VRSceneGlobals::printOSG, METH_NOARGS, "Print the OSG tree to console" },
 	{"getNavigator", (PyCFunction)VRSceneGlobals::getNavigator, METH_NOARGS, "Return a handle to the navigator object" },
 	{"getRendering", (PyCFunction)VRSceneGlobals::getRendering, METH_NOARGS, "Return a handle to the rendering manager" },
@@ -134,7 +135,13 @@ PyObject* VRSceneGlobals::exit(VRSceneGlobals* self) {
 PyObject* VRSceneGlobals::find(VRSceneGlobals* self, PyObject *args) {
     string name = parseString(args);
     if (auto res = VRSetup::getCurrent()->getDevice(name)) return VRPyTypeCaster::cast(res);
-    if (auto res = VRScene::getCurrent()->getRoot()->find(name)) return VRPyTypeCaster::cast(res);
+    if (auto res = VRScene::getCurrent()->get(name)) return VRPyTypeCaster::cast(res);
+    Py_RETURN_NONE;
+}
+
+PyObject* VRSceneGlobals::findByID(VRSceneGlobals* self, PyObject *args) {
+    int ID = parseInt(args);
+    if (auto res = VRScene::getCurrent()->get(ID)) return VRPyTypeCaster::cast(res);
     Py_RETURN_NONE;
 }
 

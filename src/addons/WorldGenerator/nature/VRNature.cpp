@@ -32,14 +32,21 @@ template<> string typeName(const OSG::VRNaturePtr& t) { return "Nature"; }
 // --------------------------------------------------------------------------------------------------
 
 VRNature::VRNature(string name) : VRLodTree(name, 5) {
+    trees = VRGeometry::create("trees");
+    trees->hide("SHADOW");
+
     storeMap("templateTrees", &treeTemplates, true);
     storeMap("trees", &treeEntries, true);
     regStorageSetupFkt( VRUpdateCb::create("woods setup", boost::bind(&VRNature::setup, this)) );
 }
 
 VRNature::~VRNature() {}
-VRNaturePtr VRNature::create(string name) { return VRNaturePtr(new VRNature(name)); }
 VRNaturePtr VRNature::ptr() { return static_pointer_cast<VRNature>( shared_from_this() ); }
+VRNaturePtr VRNature::create(string name) {
+    auto nat = VRNaturePtr(new VRNature(name));
+    nat->addChild(nat->trees);
+    return nat;
+}
 
 void VRNature::setup() {
     for (auto& t : treeEntries) {
@@ -451,11 +458,7 @@ void VRNature::computeLODs3(map<OctreeNode*, VRLodLeafPtr>& leafs) {
     m->setShaderParameter("tex1", 1);
     m->setTexture(mosaic1, false, 0);
     m->setTexture(mosaic2, false, 1);
-
-    trees = VRGeometry::create("trees");
-    trees->hide("SHADOW");
     trees->setMaterial(m);
-    addChild(trees);
     VRGeoData treesData(trees);
 
     cout << "treeRefs: " << treeRefs.size() << endl;
@@ -613,7 +616,7 @@ void VRNature::addCollisionModels() {
     }
 
     auto geo = data.asGeometry("natureCollisionMesh");
-	if (auto w = world.lock()) w->getPhysicsSystem()->add(geo);
+	if (auto w = world.lock()) w->getPhysicsSystem()->add(geo, trees->getID());
 }
 
 /**

@@ -104,7 +104,7 @@ void VRDistrict::addBuilding( VRPolygonPtr p, int stories, string housenumber, s
     bEnt->set("area", area->getName());
 
     auto geo = b->getCollisionShape();
-    if (auto w = world.lock()) w->getPhysicsSystem()->add(geo);
+    if (auto w = world.lock()) w->getPhysicsSystem()->add(geo, getID());
 }
 
 void VRDistrict::computeGeometry() {

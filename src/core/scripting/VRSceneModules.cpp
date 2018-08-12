@@ -44,6 +44,7 @@
 #include "VRPySelection.h"
 #include "VRPyPatchSelection.h"
 #include "VRPyPolygonSelection.h"
+#include "VRPySpatialCollisionManager.h"
 #include "VRPyMenu.h"
 #include "VRPyClipPlane.h"
 #include "VRPyListMath.h"
@@ -111,6 +112,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyTransform>("Transform", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyCollision>("Collision", pModVR);
     sm->registerModule<VRPyGeometry>("Geometry", pModVR, VRPyTransform::typeRef);
+    sm->registerModule<VRPySpatialCollisionManager>("SpatialCollisionManager", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyMaterial>("Material", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTextureGenerator>("TextureGenerator", pModVR);
     sm->registerModule<VRPyImage>("Image", pModVR);

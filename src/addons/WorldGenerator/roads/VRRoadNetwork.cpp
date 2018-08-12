@@ -336,7 +336,7 @@ void VRRoadNetwork::addFence( PathPtr path, float height ) {
 	auto shape = VRStroke::create("shape");
 	shape->setPaths({path});
 	shape->strokeProfile({Vec3d(0,0,0), Vec3d(0,height,0)}, false, true, false);
-	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape);
+	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape, fence->getID());
 }
 
 void VRRoadNetwork::addGuardRail( PathPtr path, float height ) {
@@ -399,7 +399,7 @@ void VRRoadNetwork::addGuardRail( PathPtr path, float height ) {
 	auto shape = VRStroke::create("shape");
 	shape->setPaths({path});
 	shape->strokeProfile({Vec3d(0,0,0), Vec3d(0,height,0)}, false, true, false);
-	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape);
+	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape, rail->getID());
 }
 
 void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
@@ -444,7 +444,7 @@ void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
 	auto shape = VRStroke::create("shape");
 	shape->addPath(path);
 	shape->strokeProfile({Vec3d(-0.1, h, 0), Vec3d(-0.1, 0, 0)}, false, true, false);
-	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape);
+	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape, kirb->getID());
 }
 
 void VRRoadNetwork::physicalizeAssets(Boundingbox volume) {
@@ -526,7 +526,7 @@ void VRRoadNetwork::computeSigns() {
                 roadEnt->add("markings", mL->getName());
             }
         }
-        if (auto w = world.lock()) w->getPhysicsSystem()->addQuad(0.15, 2, *sign->getPose());
+        if (auto w = world.lock()) w->getPhysicsSystem()->addQuad(0.15, 2, *sign->getPose(), sign->getID());
     }
 }
 
@@ -722,7 +722,7 @@ void VRRoadNetwork::computeSurfaces() {
         roadGeo->getPhysics()->setShape("Concave");
         roadGeo->getPhysics()->setPhysicalized(true);*/
         //addChild( roadGeo );
-        if (auto w = world.lock()) w->getPhysicsSystem()->add(roadGeo);
+        if (auto w = world.lock()) w->getPhysicsSystem()->add(roadGeo, roadGeo->getID());
     };
 
     for (auto way : ways) computeRoadSurface(way);
@@ -736,7 +736,7 @@ void VRRoadNetwork::computeSurfaces() {
         iGeo->getPhysics()->setShape("Concave");
         iGeo->getPhysics()->setPhysicalized(true);*/
         //addChild( iGeo );
-        if (auto w = world.lock()) w->getPhysicsSystem()->add(iGeo);
+        if (auto w = world.lock()) w->getPhysicsSystem()->add(iGeo, iGeo->getID());
     }
 
     for (auto tunnel : tunnels) {

@@ -32,16 +32,9 @@
 #include <ConvexDecomposition/ConvexBuilder.h>
 #include <boost/thread/recursive_mutex.hpp>
 
-/*
-
-IMPORTANT: ..not compiling? you need to install the libbullet-extras-dev package!
-open a terminal
-sudo apt-get install libbullet-extras-dev
-
-*/
-
 using namespace OSG;
 
+template<> string typeName(const VRCollision& c) { return "Collision"; }
 typedef boost::recursive_mutex::scoped_lock PLock;
 
 boost::recursive_mutex& VRPhysics_mtx() {
@@ -82,6 +75,8 @@ Vec3d VRCollision::getNorm() { return norm; }
 float VRCollision::getDistance() { return distance; }
 VRTransformPtr VRCollision::getObj1() { return obj1.lock(); }
 VRTransformPtr VRCollision::getObj2() { return obj2.lock(); }
+vector<Vec4d> VRCollision::getTriangle1() { return triangle1; }
+vector<Vec4d> VRCollision::getTriangle2() { return triangle2; }
 
 VRPhysics::VRPhysics(OSG::VRTransformWeakPtr t) {
     vr_obj = t;
@@ -99,6 +94,8 @@ btCollisionShape* VRPhysics::getCollisionShape() { PLock lock(VRPhysics_mtx()); 
 
 OSG::Vec3d VRPhysics::toVec3d(btVector3 v) { return OSG::Vec3d(v[0], v[1], v[2]); }
 btVector3 VRPhysics::toBtVector3(OSG::Vec3d v) { return btVector3(v[0], v[1], v[2]); }
+OSG::Vec4d VRPhysics::toVec4d(btVector3 v) { return OSG::Vec4d(v[0], v[1], v[2], v.w()); }
+btVector3 VRPhysics::toBtVector3(OSG::Vec4d v) { btVector3 b(v[0], v[1], v[2]); b.setW(v[3]); return b; }
 
 void VRPhysics::setPhysicalized(bool b) { physicalized = b; update(); }
 void VRPhysics::setShape(string s, float param) { physicsShape = s; shape_param = param; update(); }
@@ -150,6 +147,42 @@ vector<VRCollision> VRPhysics::getCollisions() {
     PLock lock(VRPhysics_mtx());
     vector<VRCollision> res;
     if (!physicalized) return res;
+
+    function<vector<Vec4d> (const btCollisionShape*, int, const btManifoldPoint&, btPersistentManifold*) > getShapeTriangle = [&](const btCollisionShape* shape, int triangleID, const btManifoldPoint& pt, btPersistentManifold* manifold) {
+        int stype = shape->getShapeType();
+        vector<Vec4d> res;
+        if (stype == 8) return res; // sphere
+        if (stype == 0) return res; // box
+        if (stype == 24) return res; // heightmap
+        if (stype == 4) return res; // convex, TODO: complete and validate
+
+        if (stype == 21) { // trianglemesh
+            auto tshpe = (btBvhTriangleMeshShape*)shape;
+            auto tmsh = (btTriangleMesh*)tshpe->getMeshInterface();
+            IndexedMeshArray& mesh = tmsh->getIndexedMeshArray();
+            if (mesh.size() == 0) return res;
+
+            int Ni = mesh[0].m_numTriangles;
+            int Nv = mesh[0].m_numVertices;
+            if (triangleID >= Ni) return res;
+
+            unsigned int* bt_inds = (unsigned int*)mesh[0].m_triangleIndexBase;
+            btVector3* verts = (btVector3*)mesh[0].m_vertexBase;
+            btVector3 vert1 = verts[bt_inds[triangleID*3+0]]; // first trianlge vertex
+            btVector3 vert2 = verts[bt_inds[triangleID*3+1]]; // secon trianlge vertex
+            btVector3 vert3 = verts[bt_inds[triangleID*3+2]]; // third trianlge vertex
+            return vector<Vec4d>( { toVec4d(vert1), toVec4d(vert2), toVec4d(vert3) } );
+        }
+
+        if (stype == 31) { // compound
+            btCompoundShape* cpshape = (btCompoundShape*)shape;
+            btCollisionShape* shape2 = cpshape->getChildShape( manifold->m_index1a );
+            return getShapeTriangle(shape2, triangleID, pt, manifold);
+        }
+
+        return res;
+    };
+
     if (!ghost) {
         int numManifolds = world->getDispatcher()->getNumManifolds();
         for (int i=0;i<numManifolds;i++) {
@@ -168,6 +201,8 @@ vector<VRCollision> VRPhysics::getCollisions() {
                     c.pos2 = toVec3d( pt.getPositionWorldOnB() );
                     c.norm = toVec3d( pt.m_normalWorldOnB );
                     c.distance = pt.getDistance();
+                    c.triangle1 = getShapeTriangle( manifold->getBody0()->getCollisionShape(), pt.m_index0, pt, manifold );
+                    c.triangle2 = getShapeTriangle( manifold->getBody1()->getCollisionShape(), pt.m_index1, pt, manifold );
                     res.push_back(c);
                 }
             }
