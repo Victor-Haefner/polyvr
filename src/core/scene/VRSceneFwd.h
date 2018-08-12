@@ -15,6 +15,7 @@ ptrFwd(VRProjectEntry);
 ptrFwd(VRProjectsList);
 ptrFwd(VRSemanticManager);
 ptrFwd(VRPhysicsManager);
+ptrFwd(VRDeferredRenderStage);
 ptrFwd(VRRenderManager);
 ptrFwd(VRRenderStudio);
 ptrFwd(VRScene);

@@ -33,9 +33,15 @@ VRRenderManager::VRRenderManager() {
     store("ssao_kernel", &ssao_kernel);
     store("ssao_radius", &ssao_radius);
     store("ssao_noise", &ssao_noise);
+    store("fogParams", &fogParams);
+    store("fogColor", &fogColor);
 }
 
 VRRenderManager::~VRRenderManager() {}
+
+void VRRenderManager::setFogParams(Color4f fp, Color4f fc) {
+    for (auto r : getRenderings()) r->setFogParams(fp, fc);
+}
 
 void VRRenderManager::update() {
     auto setup = VRSetup::getCurrent();

@@ -17,5 +17,6 @@ PyMethodDef VRPyRendering::methods[] = {
     {"setStageTexture", PyWrap(Rendering, setStageTexture, "Set stage material texture - setStageTexture( str stage, texture, int unit, str mag, str min )", void, string, VRTexturePtr, int, int, int ) },
     {"setDeferredShading", PyWrap(Rendering, setDeferredShading, "Toggle deferred shading", void, bool ) },
     {"reloadStageShaders", PyWrap(Rendering, reloadStageShaders, "Reload shaders of rendering stages", void ) },
+    {"setFogParams", PyWrap(Rendering, setFogParams, "Set fog", void, Color4f, Color4f ) },
     {NULL}  /* Sentinel */
 };

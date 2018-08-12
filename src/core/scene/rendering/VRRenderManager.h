@@ -2,6 +2,7 @@
 #define VRRENDERMANAGER_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
+#include <OpenSG/OSGColor.h>
 #include "core/objects/VRObjectFwd.h"
 #include "core/scene/VRSceneFwd.h"
 #include "core/setup/VRSetupFwd.h"
@@ -27,6 +28,8 @@ class VRRenderManager : public VRStorage {
         int ssao_kernel = 4;
         int ssao_noise = 4;
         float ssao_radius = 0.02;
+        Color4f fogParams = Color4f(0, 0, 100, 0.1);
+        Color4f fogColor = Color4f(0.5, 0.5, 0.5, 1);
 
     protected:
         VRObjectPtr root = 0;
@@ -63,6 +66,7 @@ class VRRenderManager : public VRStorage {
         bool getCalib();
         bool getFXAA();
 
+        void setFogParams(Color4f fogParams, Color4f fogColor);
         void setDeferredShading(bool b);
         void setDeferredChannel(int channel);
         void setSSAO(bool b);

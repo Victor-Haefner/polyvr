@@ -9,6 +9,7 @@
 #include "core/objects/VRLight.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/VRStage.h"
+#include "core/objects/object/OSGCore.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRCamera.h"
 #include "VRDefShading.h"
@@ -18,7 +19,7 @@
 
 #include <OpenSG/OSGRenderAction.h>
 #include <OpenSG/OSGProjectionCameraDecorator.h>
-#include <OpenSG/OSGFogStage.h>
+//#include <OpenSG/OSGFogStage.h>
 
 using namespace OSG;
 using namespace std;
@@ -47,7 +48,6 @@ scene
 VRRenderStudio::VRRenderStudio(EYE e) {
     eye = e;
     root_system = VRObject::create("System root");
-    addFogStage();
     addStage("shading");
     addStage("blurY", "shading");
     addStage("blurX", "blurY");
@@ -59,29 +59,34 @@ VRRenderStudio::VRRenderStudio(EYE e) {
     root_scene = stages["ssao"]->getBottom();
 
     //addStage("texturing", "shading");
+    //addFogStage();
 }
 
 VRRenderStudio::~VRRenderStudio() {}
 VRRenderStudioPtr VRRenderStudio::create(EYE e) { return VRRenderStudioPtr( new VRRenderStudio(e) ); }
 
-void VRRenderStudio::addFogStage() { // TODO or not TODO
-    //FogStageRefPtr fog = FogStage::create();
+/*void VRRenderStudio::addFogStage() { // TODO, wrap it nicer
+    VRDeferredRenderStagePtr shadingStage = stages["shading"];
 
-    /*string name = "fog";
-    if (stages.count(name)) return;
-    stages[name] = fog;
-    if (!stages.count(parent)) s->getTop()->switchParent( root_system );
-    else {
-        auto pstage = stages[parent];
-        pstage->insert(s);
-        if (pstage->getBottom() == root_scene) root_scene = s->getBottom();
-    }
-    if (cam) setCamera(cam);*/
-}
+    VRObjectPtr fogObj = VRObject::create("fogStage");
+    FogStageRefPtr fog = FogStage::create();
+    fogObj->setCore( OSGCore::create(fog), "FogStage", true);
+    //fog->setupStageData(700, 450);
+    //FogStageDataRecPtr fogData = fog->setupStageData(700, 450);
+    fog->setBufferFormat(GL_RGB);
+    fog->setFogColor(Color4f(1,0,0,1));
+    fog->setFogMode(FogStage::FOG_MODE_LINEAR);
+    fog->setFogStart(-100);
+    fog->setFogEnd(-1000);
+    fog->setFogDensity(0.1);
+
+    fogObj->switchParent(shadingStage->getTop()->getParent());
+    shadingStage->getTop()->switchParent(fogObj);
+}*/
 
 void VRRenderStudio::addStage(string name, string parent) {
     if (stages.count(name)) return;
-    auto s = shared_ptr<VRDeferredRenderStage>( new VRDeferredRenderStage(name) );
+    auto s = VRDeferredRenderStagePtr( new VRDeferredRenderStage(name) );
     stages[name] = s;
     if (!stages.count(parent)) s->getTop()->switchParent( root_system );
     else {
@@ -248,6 +253,11 @@ void VRRenderStudio::clearLights() {
 void VRRenderStudio::setEye(EYE e) {
     eye = e;
     if (auto s = stages["calibration"]) s->getMaterial()->setShaderParameter<int>("isRightEye", eye);
+}
+
+void VRRenderStudio::setFogParams(Color4f fogParams, Color4f fogColor) {
+    auto defShading = stages["shading"]->getRendering();
+    if (defShading) defShading->setFogParams(fogParams, fogColor);
 }
 
 void VRRenderStudio::setCamera(OSGCameraPtr cam) {

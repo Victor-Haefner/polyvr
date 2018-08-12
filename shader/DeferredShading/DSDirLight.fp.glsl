@@ -14,11 +14,21 @@ uniform vec3 lightDir;
 uniform vec3 lightPos;
 uniform vec4 shadowColor;
 
+uniform vec4 fogParams;
+uniform vec4 fogColor;
+
 vec3 pos;
 vec4 norm;
 vec4 color = vec4(0);
 
-
+void computeFog() {
+	if (fogParams[0] < 0.5) return;
+	float z = abs(pos.z);
+	if (z < fogParams[1]) return;
+	float t = (z-fogParams[1])/(fogParams[2]-fogParams[1]);
+	t = clamp(pow(t,fogParams[0]), 0, 1);
+	color = mix(color, fogColor, t);
+}
 
 void computeDirLight() {
 	vec3 light = normalize( lightDir );
@@ -44,5 +54,6 @@ void main(void) {
 	pos = texture2DRect(texBufPos,  lookup).xyz;
 	color = texture2DRect(texBufDiff, lookup);
 	computeDirLight();
+	computeFog();
 	gl_FragColor = color;
 }

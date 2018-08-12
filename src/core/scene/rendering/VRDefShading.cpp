@@ -214,6 +214,8 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     li.lightFP->addUniformVariable<Int32>("texBufAmb",  3);
     li.lightFP->addUniformVariable<Int32>("texPhotometricMap", 4);
     li.lightFP->addUniformVariable<Color4f>("shadowColor", shadowColor);
+    li.lightFP->addUniformVariable<Color4f>("fogParams", fogParams);
+    li.lightFP->addUniformVariable<Color4f>("fogColor", fogColor);
     li.lightFP->addUniformVariable<Int32>("channel", 0);
 
     li.lightSH->addShader(li.lightVP);
@@ -264,6 +266,8 @@ void VRDefShading::updateLight(VRLightPtr l) {
     li.lightVP->readProgram(vpFile.c_str());
     li.lightFP->readProgram(fpFile.c_str());
     li.lightFP->addUniformVariable<Color4f>("shadowColor", shadowColor);
+    li.lightFP->addUniformVariable<Color4f>("fogParams", fogParams);
+    li.lightFP->addUniformVariable<Color4f>("fogColor", fogColor);
 
     auto tex = l->getPhotometricMap();
     if (tex) {
@@ -271,6 +275,8 @@ void VRDefShading::updateLight(VRLightPtr l) {
         li.texChunk->setImage(tex->getImage());
     }
 }
+
+void VRDefShading::setFogParams(Color4f fp, Color4f fc) { fogParams = fp, fogColor = fc; }
 
 TextureObjChunkRefPtr VRDefShading::getTarget() { return fboTex; }
 

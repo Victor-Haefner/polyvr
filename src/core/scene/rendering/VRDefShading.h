@@ -57,6 +57,8 @@ class VRDefShading {
         ShadowTypeE defaultShadowType;
         int shadowRes;
         Color4f shadowColor;
+        Color4f fogParams;
+        Color4f fogColor;
         bool initiated = false;
         bool enabled = false;
         int channel = 0;
@@ -83,6 +85,7 @@ class VRDefShading {
         void updateLight(VRLightPtr l);
         void subLight(int ID);
         void setBackground(BackgroundRecPtr bg);
+        void setFogParams(Color4f fogParams, Color4f fogColor);
 
         const std::string &getLightVPFile(LightTypeE lightType);
         const std::string &getLightFPFile(LightTypeE lightType, ShadowTypeE shadowType);

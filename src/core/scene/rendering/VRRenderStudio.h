@@ -36,6 +36,8 @@ class VRRenderStudio : public VRStorage {
         int ssao_kernel = 4;
         int ssao_noise = 4;
         float ssao_radius = 0.02;
+        Color4f fogParams = Color4f(0, 0, 100, 0.1);
+        Color4f fogColor = Color4f(0.5, 0.5, 0.5, 1);
         EYE eye = LEFT;
         OSGCameraPtr cam;
 
@@ -65,7 +67,6 @@ class VRRenderStudio : public VRStorage {
         VRObjectPtr getRoot();
 
         void addStage(string name, string parent = "");
-        void addFogStage();
         void setStageActive(string name, bool da, bool la);
         void setStageShader(string name, string VPpath, string FPpath, bool doDeferred);
         int addStageBuffer(string name, int pformat, int ptype);
@@ -83,6 +84,7 @@ class VRRenderStudio : public VRStorage {
         void setBackground(BackgroundMTRecPtr bg);
         void resize(Vec2i s);
         void setEye(EYE e);
+        void setFogParams(Color4f fogParams, Color4f fogColor);
 
         void setDefferedShading(bool b);
         void setDeferredChannel(int c);
