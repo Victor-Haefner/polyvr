@@ -28,7 +28,7 @@ void computeDirLight() {
 	float NdotHV = max(dot(norm.xyz, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
 	vec4  specular = vec4(0);
 	if (mNdotL > 0.0) specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
-	color = ambient + diffuse + specular;
+	color = mix(color, ambient + diffuse + specular, norm.w);
 }
 
 void main(void) {

@@ -135,7 +135,7 @@ void VRRenderStudio::init(VRObjectPtr root) {
     fogMat->setShaderParameter<int>("texBufDiff", 2);
     fogMat->setShaderParameter<Color4f>("fogParams", fogParams);
     fogMat->setShaderParameter<Color4f>("fogColor", fogColor);
-    stages["fog"]->setActive(true, true);
+    stages["fog"]->setActive(false, false);
 
     stages["blurX"]->initDeferred();
     stages["blurY"]->initDeferred();
@@ -255,6 +255,8 @@ void VRRenderStudio::setFogParams(Color4f fogParams, Color4f fogColor) {
     auto fogMat = stages["fog"]->getMaterial();
     fogMat->setShaderParameter<Color4f>("fogParams", fogParams);
     fogMat->setShaderParameter<Color4f>("fogColor", fogColor);
+    bool a = fogParams[0] > 0.5;
+    stages["fog"]->setActive(a,a);
 }
 
 void VRRenderStudio::setCamera(OSGCameraPtr cam) {
