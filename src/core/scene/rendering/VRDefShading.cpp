@@ -122,7 +122,7 @@ void VRDefShading::init() {
     fbo->setHeight(800);*/
 
     initiated = true;
-    setupFogLight();
+    //setupFogLight(); // deprecated
 }
 
 int VRDefShading::addBuffer(int pformat, int ptype) {

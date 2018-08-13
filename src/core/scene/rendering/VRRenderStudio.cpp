@@ -49,7 +49,8 @@ VRRenderStudio::VRRenderStudio(EYE e) {
     eye = e;
     root_system = VRObject::create("System root");
     addStage("shading");
-    addStage("blurY", "shading");
+    addStage("fog", "shading");
+    addStage("blurY", "fog");
     addStage("blurX", "blurY");
     addStage("ssao", "blurX");
     addStage("marker");
@@ -57,32 +58,10 @@ VRRenderStudio::VRRenderStudio(EYE e) {
     addStage("hmdd");
     addStage("fxaa");
     root_scene = stages["ssao"]->getBottom();
-
-    //addStage("texturing", "shading");
-    //addFogStage();
 }
 
 VRRenderStudio::~VRRenderStudio() {}
 VRRenderStudioPtr VRRenderStudio::create(EYE e) { return VRRenderStudioPtr( new VRRenderStudio(e) ); }
-
-/*void VRRenderStudio::addFogStage() { // TODO, wrap it nicer
-    VRDeferredRenderStagePtr shadingStage = stages["shading"];
-
-    VRObjectPtr fogObj = VRObject::create("fogStage");
-    FogStageRefPtr fog = FogStage::create();
-    fogObj->setCore( OSGCore::create(fog), "FogStage", true);
-    //fog->setupStageData(700, 450);
-    //FogStageDataRecPtr fogData = fog->setupStageData(700, 450);
-    fog->setBufferFormat(GL_RGB);
-    fog->setFogColor(Color4f(1,0,0,1));
-    fog->setFogMode(FogStage::FOG_MODE_LINEAR);
-    fog->setFogStart(-100);
-    fog->setFogEnd(-1000);
-    fog->setFogDensity(0.1);
-
-    fogObj->switchParent(shadingStage->getTop()->getParent());
-    shadingStage->getTop()->switchParent(fogObj);
-}*/
 
 void VRRenderStudio::addStage(string name, string parent) {
     if (stages.count(name)) return;
@@ -146,8 +125,24 @@ void VRRenderStudio::init(VRObjectPtr root) {
     stages["shading"]->initDeferred();
     stages["shading"]->getTop()->switchParent( hmdd );
 
+    stages["fog"]->initDeferred();
+    string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
+    auto fogMat = stages["fog"]->getMaterial();
+    fogMat->readVertexShader(shdrDir + "fog.vp.glsl");
+    fogMat->readFragmentShader(shdrDir + "fog.fp.glsl", true);
+    fogMat->setShaderParameter<int>("texBufPos", 0);
+    fogMat->setShaderParameter<int>("texBufNorm", 1);
+    fogMat->setShaderParameter<int>("texBufDiff", 2);
+    fogMat->setShaderParameter<Color4f>("fogParams", Color4f(1,10,100,0.1));
+    fogMat->setShaderParameter<Color4f>("fogColor", Color4f(0.5,0.5,0.5,1));
+    stages["fog"]->setActive(true, true);
+
+    stages["blurX"]->initDeferred();
+    stages["blurY"]->initDeferred();
+    stages["ssao"]->initDeferred();
     ssao->initSSAO( stages["ssao"]->getMaterial() );
     ssao->initBlur( stages["blurX"]->getMaterial(), stages["blurY"]->getMaterial() );
+
     hmdd->initHMDD( stages["hmdd"]->getMaterial() );
     fxaa->initFXAA( stages["fxaa"]->getMaterial() );
     stages["hmdd"]->getMaterial()->setTexture( stages["shading"]->getRendering()->getTarget(), 0 );

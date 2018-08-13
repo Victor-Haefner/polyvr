@@ -37,6 +37,7 @@ VRObjectPtr VRDeferredRenderStage::getBottom() { return root; }
 VRMaterialPtr VRDeferredRenderStage::getMaterial() { return mat; }
 VRGeometryPtr VRDeferredRenderStage::getLayer() { return layer; }
 shared_ptr<VRDefShading> VRDeferredRenderStage::getRendering() { return defRendering; }
+//shared_ptr<VRDefShading> VRDeferredRenderStage::getRendering() { if (!defRendering) initDeferred(); return defRendering; }
 
 void VRDeferredRenderStage::setActive(bool da, bool la) {
     if (defRendering) defRendering->setDeferredShading(da);
