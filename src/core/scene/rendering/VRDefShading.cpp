@@ -70,6 +70,8 @@ void VRDefShading::init() {
     dsSpotLightVPFile = resDir + "DSSpotLight.vp.glsl";
     dsSpotLightFPFile = resDir + "DSSpotLight.fp.glsl";
     dsSpotLightShadowFPFile = resDir + "DSSpotLightShadow.fp.glsl";
+    dsFogVPFile = resDir + "DSDirLight.vp.glsl";
+    dsFogFPFile = resDir + "DSFogLight.fp.glsl";
 
     dsStage = DeferredShadingStage::create();
     dsStage->editMFPixelFormats()->push_back(Image::OSG_RGBA_PF          ); // positions (RGB) + ambient (A) term buffer
@@ -120,6 +122,7 @@ void VRDefShading::init() {
     fbo->setHeight(800);*/
 
     initiated = true;
+    setupFogLight();
 }
 
 int VRDefShading::addBuffer(int pformat, int ptype) {
@@ -137,6 +140,7 @@ void VRDefShading::reload() {
     dsStage->setAmbientProgram(shAmbient);
 
     for (auto li : lightInfos) {
+        if (!li.second.lightVP || !li.second.lightFP) continue;
         string vpFile = getLightVPFile(li.second.lightType);
         string fpFile = getLightFPFile(li.second.lightType, li.second.shadowType);
         li.second.lightVP->readProgram(vpFile.c_str());
@@ -159,7 +163,7 @@ void VRDefShading::setDeferredShading(bool b) {
     for (auto li : lightInfos) {
         auto l = li.second.vrlight.lock();
         //if (b) l->setDeferred(b);
-        l->setDeferred(b);
+        if (l) l->setDeferred(b);
     }
 }
 
@@ -174,6 +178,47 @@ void VRDefShading::setDSCamera(OSGCameraPtr cam) {
 
 void VRDefShading::setBackground(BackgroundRecPtr bg) {
     if (initiated) dsStage->setBackground(bg);
+}
+
+void VRDefShading::setupFogLight() {
+    fogLight = VRLightPtr(new VRLight("fogLight") );
+
+    LightMTRecPtr light = fogLight->getLightCore();
+    string type = fogLight->getLightType();
+    int ID = fogLight->getID();
+
+    LightInfo li;
+
+    li.vrlight = fogLight;
+    li.lightVP = ShaderProgram     ::createVertexShader  ();
+    li.lightFP = ShaderProgram     ::createFragmentShader();
+    li.lightSH = ShaderProgramChunk::create              ();
+
+    li.shadowType = ST_NONE;
+    li.light = light;
+    li.lightType = (LightTypeE)10;
+
+    li.lightFP->addUniformVariable<Int32>("texBufPos",  0);
+    li.lightFP->addUniformVariable<Int32>("texBufNorm", 1);
+    li.lightFP->addUniformVariable<Int32>("texBufDiff", 2);
+    li.lightFP->addUniformVariable<Int32>("texBufAmb",  3);
+    li.lightFP->addUniformVariable<Color4f>("fogParams", fogParams);
+    li.lightFP->addUniformVariable<Color4f>("fogColor", fogColor);
+    li.lightFP->addUniformVariable<Int32>("channel", 0);
+
+    li.lightSH->addShader(li.lightVP);
+    li.lightSH->addShader(li.lightFP);
+    li.texChunk = TextureObjChunk::create();
+    string vpFile = getLightVPFile(li.lightType);
+    string fpFile = getLightFPFile(li.lightType, li.shadowType);
+    li.lightVP->readProgram(vpFile.c_str());
+    li.lightFP->readProgram(fpFile.c_str());
+
+    dsStage->editMFLights         ()->push_back(li.light  );
+    dsStage->editMFLightPrograms  ()->push_back(li.lightSH);
+    dsStage->editMFPhotometricMaps()->push_back(li.texChunk);
+
+    lightInfos[ID] = li;
 }
 
 void VRDefShading::addDSLight(VRLightPtr vrl) {
@@ -214,8 +259,6 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     li.lightFP->addUniformVariable<Int32>("texBufAmb",  3);
     li.lightFP->addUniformVariable<Int32>("texPhotometricMap", 4);
     li.lightFP->addUniformVariable<Color4f>("shadowColor", shadowColor);
-    li.lightFP->addUniformVariable<Color4f>("fogParams", fogParams);
-    li.lightFP->addUniformVariable<Color4f>("fogColor", fogColor);
     li.lightFP->addUniformVariable<Int32>("channel", 0);
 
     li.lightSH->addShader(li.lightVP);
@@ -249,6 +292,7 @@ void VRDefShading::updateLight(VRLightPtr l) {
     shadowColor = l->getShadowColor();
 
     li.lightType = LightEngine::Point;
+    if (l == fogLight) li.lightType = (LightTypeE)10;
     if (type == "directional") li.lightType = LightEngine::Directional;
     if (type == "spot") li.lightType = LightEngine::Spot;
 #ifndef NO_PHOTOMETRIC
@@ -266,8 +310,6 @@ void VRDefShading::updateLight(VRLightPtr l) {
     li.lightVP->readProgram(vpFile.c_str());
     li.lightFP->readProgram(fpFile.c_str());
     li.lightFP->addUniformVariable<Color4f>("shadowColor", shadowColor);
-    li.lightFP->addUniformVariable<Color4f>("fogParams", fogParams);
-    li.lightFP->addUniformVariable<Color4f>("fogColor", fogColor);
 
     auto tex = l->getPhotometricMap();
     if (tex) {
@@ -276,13 +318,21 @@ void VRDefShading::updateLight(VRLightPtr l) {
     }
 }
 
-void VRDefShading::setFogParams(Color4f fp, Color4f fc) { fogParams = fp, fogColor = fc; }
+void VRDefShading::setFogParams(Color4f fp, Color4f fc) {
+    fogParams = fp;
+    fogColor = fc;
+    if (lightInfos.count(fogLight->getID()) == 0) return;
+    auto& li = lightInfos[fogLight->getID()];
+    li.lightFP->addUniformVariable<Color4f>("fogParams", fogParams);
+    li.lightFP->addUniformVariable<Color4f>("fogColor", fogColor);
+}
 
 TextureObjChunkRefPtr VRDefShading::getTarget() { return fboTex; }
 
 // file containing vertex shader code for the light type
 const std::string& VRDefShading::getLightVPFile(LightTypeE lightType) {
     switch(lightType) {
+        case 10: return dsFogVPFile;
         case LightEngine::Directional: return dsDirLightVPFile;
         case LightEngine::Point: return dsPointLightVPFile;
         case LightEngine::Spot: return dsSpotLightVPFile;
@@ -297,6 +347,7 @@ const std::string& VRDefShading::getLightVPFile(LightTypeE lightType) {
 const std::string& VRDefShading::getLightFPFile(LightTypeE lightType, ShadowTypeE shadowType) {
     bool ds = (shadowType != ST_NONE);
     switch(lightType) {
+        case 10: return dsFogFPFile;
         case LightEngine::Directional: return ds ? dsDirLightShadowFPFile : dsDirLightFPFile;
         case LightEngine::Point: return ds ? dsPointLightShadowFPFile : dsPointLightFPFile;
         case LightEngine::Spot: return ds ? dsSpotLightShadowFPFile : dsSpotLightFPFile;

@@ -36,10 +36,10 @@ VRObjectPtr VRDeferredRenderStage::getTop() { return layer; }
 VRObjectPtr VRDeferredRenderStage::getBottom() { return root; }
 VRMaterialPtr VRDeferredRenderStage::getMaterial() { return mat; }
 VRGeometryPtr VRDeferredRenderStage::getLayer() { return layer; }
-shared_ptr<VRDefShading> VRDeferredRenderStage::getRendering() { if (!defRendering) initDeferred(); return defRendering; }
+shared_ptr<VRDefShading> VRDeferredRenderStage::getRendering() { return defRendering; }
 
 void VRDeferredRenderStage::setActive(bool da, bool la) {
-    getRendering()->setDeferredShading(da);
+    if (defRendering) defRendering->setDeferredShading(da);
     layer->setMeshVisibility(la);
 }
 

@@ -143,6 +143,7 @@ void VRRenderStudio::init(VRObjectPtr root) {
 
     root_system->addChild( fxaa );
     fxaa->addChild( hmdd );
+    stages["shading"]->initDeferred();
     stages["shading"]->getTop()->switchParent( hmdd );
 
     ssao->initSSAO( stages["ssao"]->getMaterial() );
@@ -172,7 +173,7 @@ void VRRenderStudio::update() {
     }
 
     // update shader code
-    for (auto s : stages) s.second->getRendering()->reload();
+    for (auto s : stages) if (auto r = s.second->getRendering()) r->reload();
     if (do_hmdd && hmdd) hmdd->reload();
     if (do_fxaa && fxaa) fxaa->reload();
 
@@ -191,7 +192,7 @@ void VRRenderStudio::reset() {
 }
 
 void VRRenderStudio::reloadStageShaders() {
-    for (auto s : stages) s.second->getRendering()->reload();
+    for (auto s : stages) if (auto r = s.second->getRendering()) r->reload();
 }
 
 void VRRenderStudio::initDSProxy(VRMaterialPtr mat) {
@@ -261,7 +262,7 @@ void VRRenderStudio::setFogParams(Color4f fogParams, Color4f fogColor) {
 }
 
 void VRRenderStudio::setCamera(OSGCameraPtr cam) {
-    for (auto s : stages) s.second->getRendering()->setDSCamera(cam);
+    for (auto s : stages) if (auto r = s.second->getRendering()) r->setDSCamera(cam);
     if (hmdd) hmdd->setCamera(cam);
     if (fxaa) fxaa->setCamera(cam);
     this->cam = cam;

@@ -39,8 +39,11 @@ class VRDefShading {
         ShaderProgramMTRecPtr      fpAmbient;
         ShaderProgramChunkMTRecPtr shAmbient;
 
+        VRLightPtr fogLight;
+
         string dsGBufferVPFile, dsGBufferFPFile;
         string dsAmbientVPFile, dsAmbientFPFile;
+        string dsFogVPFile, dsFogFPFile;
         string dsDirLightVPFile, dsDirLightFPFile, dsDirLightShadowFPFile;
         string dsPointLightVPFile, dsPointLightFPFile, dsPointLightShadowFPFile;
         string dsPhotometricLightVPFile, dsPhotometricLightFPFile, dsPhotometricLightShadowFPFile;
@@ -66,6 +69,7 @@ class VRDefShading {
         VRMaterialPtr ssao_mat;
 
         void init();
+        void setupFogLight();
 
     public:
         VRDefShading();

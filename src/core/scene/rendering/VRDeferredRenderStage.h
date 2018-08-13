@@ -18,7 +18,6 @@ class VRDeferredRenderStage {
         shared_ptr<VRDeferredRenderStage> child;
 
         VRMaterialPtr setupRenderLayer(string name);
-        void initDeferred();
 
     public:
         VRDeferredRenderStage(string name);
@@ -28,6 +27,7 @@ class VRDeferredRenderStage {
         VRObjectPtr getBottom();
         VRMaterialPtr getMaterial();
         VRGeometryPtr getLayer();
+        void initDeferred();
         shared_ptr<VRDefShading> getRendering();
         void setActive(bool da, bool la);
         void insert(shared_ptr<VRDeferredRenderStage> stage);
