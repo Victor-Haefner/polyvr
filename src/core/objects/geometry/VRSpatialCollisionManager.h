@@ -4,6 +4,8 @@
 #include "VRGeometry.h"
 #include "addons/Bullet/VRPhysicsFwd.h"
 
+class btTriangleMesh;
+
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
@@ -16,6 +18,7 @@ class VRSpatialCollisionManager : public VRGeometry {
         VRUpdateCbPtr updateCollisionCb;
 
         void checkCollisions();
+        btTriangleMesh* getCollisionShape(Vec3d p, bool create = true);
 
     public:
         VRSpatialCollisionManager(float resolution);

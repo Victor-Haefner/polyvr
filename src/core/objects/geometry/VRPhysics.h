@@ -32,6 +32,8 @@ class VRCollision {
         float distance;
         VRTransformWeakPtr obj1;
         VRTransformWeakPtr obj2;
+        int triangleID1;
+        int triangleID2;
         vector<Vec4d> triangle1;
         vector<Vec4d> triangle2;
 

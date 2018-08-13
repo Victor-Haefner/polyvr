@@ -49,9 +49,9 @@ VRRenderStudio::VRRenderStudio(EYE e) {
     eye = e;
     root_system = VRObject::create("System root");
     addStage("shading");
-    //addStage("fog", "shading");
-    //addStage("blurY", "fog");
-    addStage("blurY", "shading");
+    addStage("fog", "shading");
+    addStage("blurY", "fog");
+    //addStage("blurY", "shading");
     addStage("blurX", "blurY");
     addStage("ssao", "blurX");
     addStage("marker");

@@ -148,7 +148,7 @@ vector<VRCollision> VRPhysics::getCollisions() {
     vector<VRCollision> res;
     if (!physicalized) return res;
 
-    function<vector<Vec4d> (const btCollisionShape*, int, const btManifoldPoint&, btPersistentManifold*) > getShapeTriangle = [&](const btCollisionShape* shape, int triangleID, const btManifoldPoint& pt, btPersistentManifold* manifold) {
+    function<vector<Vec4d> (const btCollisionShape*, int, int, const btManifoldPoint&, btPersistentManifold*) > getShapeTriangle = [&](const btCollisionShape* shape, int partID, int triangleID, const btManifoldPoint& pt, btPersistentManifold* manifold) {
         int stype = shape->getShapeType();
         vector<Vec4d> res;
         if (stype == 8) return res; // sphere
@@ -160,14 +160,17 @@ vector<VRCollision> VRPhysics::getCollisions() {
             auto tshpe = (btBvhTriangleMeshShape*)shape;
             auto tmsh = (btTriangleMesh*)tshpe->getMeshInterface();
             IndexedMeshArray& mesh = tmsh->getIndexedMeshArray();
-            if (mesh.size() == 0) return res;
+            if (partID >= mesh.size()) return res;
 
-            int Ni = mesh[0].m_numTriangles;
-            int Nv = mesh[0].m_numVertices;
-            if (triangleID >= Ni) return res;
+            int Ni = mesh[partID].m_numTriangles;
+            int Nv = mesh[partID].m_numVertices;
+            if (triangleID >= Ni) {
+                cout << "VRPhysics::getCollisions, WARNING: triangleID " << triangleID << " to big! (" << Ni << ") N mesh: " << mesh.size() << endl;
+                return res;
+            }
 
-            unsigned int* bt_inds = (unsigned int*)mesh[0].m_triangleIndexBase;
-            btVector3* verts = (btVector3*)mesh[0].m_vertexBase;
+            unsigned int* bt_inds = (unsigned int*)mesh[partID].m_triangleIndexBase;
+            btVector3* verts = (btVector3*)mesh[partID].m_vertexBase;
             btVector3 vert1 = verts[bt_inds[triangleID*3+0]]; // first trianlge vertex
             btVector3 vert2 = verts[bt_inds[triangleID*3+1]]; // secon trianlge vertex
             btVector3 vert3 = verts[bt_inds[triangleID*3+2]]; // third trianlge vertex
@@ -175,9 +178,10 @@ vector<VRCollision> VRPhysics::getCollisions() {
         }
 
         if (stype == 31) { // compound
-            btCompoundShape* cpshape = (btCompoundShape*)shape;
-            btCollisionShape* shape2 = cpshape->getChildShape( manifold->m_index1a );
-            return getShapeTriangle(shape2, triangleID, pt, manifold);
+            return res;
+            /*btCompoundShape* cpshape = (btCompoundShape*)shape;
+            btCollisionShape* shape2 = cpshape->getChildShape( manifold->m_index1a ); // TODO: m_index1a does not work, no idea what to get here!
+            return getShapeTriangle(shape2, triangleID, pt, manifold);*/
         }
 
         return res;
@@ -187,7 +191,8 @@ vector<VRCollision> VRPhysics::getCollisions() {
         int numManifolds = world->getDispatcher()->getNumManifolds();
         for (int i=0;i<numManifolds;i++) {
             btPersistentManifold* manifold =  world->getDispatcher()->getManifoldByIndexInternal(i);
-            auto otherBody = manifold->getBody0() == body ? manifold->getBody1() : manifold->getBody0();
+            bool thisFirst = (manifold->getBody0() == body);
+            auto otherBody = thisFirst ? manifold->getBody1() : manifold->getBody0();
             auto otherObj = ((VRPhysics*)otherBody->getUserPointer())->vr_obj;
 
             int numContacts = manifold->getNumContacts();
@@ -197,12 +202,16 @@ vector<VRCollision> VRPhysics::getCollisions() {
                     VRCollision c;
                     c.obj1 = vr_obj;
                     c.obj2 = otherObj;
-                    c.pos1 = toVec3d( pt.getPositionWorldOnA() );
-                    c.pos2 = toVec3d( pt.getPositionWorldOnB() );
+                    c.pos1 = thisFirst ? toVec3d( pt.getPositionWorldOnA() ) : toVec3d( pt.getPositionWorldOnB() );
+                    c.pos2 = thisFirst ? toVec3d( pt.getPositionWorldOnB() ) : toVec3d( pt.getPositionWorldOnA() );
                     c.norm = toVec3d( pt.m_normalWorldOnB );
                     c.distance = pt.getDistance();
-                    c.triangle1 = getShapeTriangle( manifold->getBody0()->getCollisionShape(), pt.m_index0, pt, manifold );
-                    c.triangle2 = getShapeTriangle( manifold->getBody1()->getCollisionShape(), pt.m_index1, pt, manifold );
+                    auto t1 = getShapeTriangle( manifold->getBody0()->getCollisionShape(), pt.m_partId0, pt.m_index0, pt, manifold );
+                    auto t2 = getShapeTriangle( manifold->getBody1()->getCollisionShape(), pt.m_partId1, pt.m_index1, pt, manifold );
+                    c.triangleID1 = thisFirst ? pt.m_index0 : pt.m_index1;
+                    c.triangleID2 = thisFirst ? pt.m_index1 : pt.m_index0;
+                    c.triangle1 = thisFirst ? t1 : t2;
+                    c.triangle2 = thisFirst ? t2 : t1;
                     res.push_back(c);
                 }
             }
@@ -943,27 +952,31 @@ void VRPhysics::updateVisualGeo() {
     if (stype == 21) { // trianglemesh
         auto tshpe = (btBvhTriangleMeshShape*)shape;
         auto tmsh = (btTriangleMesh*)tshpe->getMeshInterface();
-        IndexedMeshArray& mesh = tmsh->getIndexedMeshArray();
-        if (mesh.size() == 0) return;
-
-        int Ni = mesh[0].m_numTriangles;
-        int Nv = mesh[0].m_numVertices;
-        unsigned int* bt_inds = (unsigned int*)mesh[0].m_triangleIndexBase;
-        btVector3* verts = (btVector3*)mesh[0].m_vertexBase;
-
+        IndexedMeshArray& meshes = tmsh->getIndexedMeshArray();
         OSG::VRGeoData data;
-        for (int i=0; i<Nv; i++) {
-            OSG::Vec3d p = VRPhysics::toVec3d(verts[i]);
-            OSG::Vec3d n = p; n.normalize();
-            p += CoMOffset;
-            data.pushVert(p,n);
-        }
 
-        for (int i=0; i<Ni; i++) {
-            int i0 = bt_inds[i*3];
-            int i1 = bt_inds[i*3+1];
-            int i2 = bt_inds[i*3+2];
-            data.pushTri(i0,i1,i2);
+        for (int i=0; i<meshes.size(); i++) {
+            auto& mesh = meshes[i];
+            int Ni0 = data.size();
+
+            int Ni = mesh.m_numTriangles;
+            int Nv = mesh.m_numVertices;
+            unsigned int* bt_inds = (unsigned int*)mesh.m_triangleIndexBase;
+            btVector3* verts = (btVector3*)mesh.m_vertexBase;
+
+            for (int i=0; i<Nv; i++) {
+                OSG::Vec3d p = VRPhysics::toVec3d(verts[i]);
+                OSG::Vec3d n = p; n.normalize();
+                p += CoMOffset;
+                data.pushVert(p,n);
+            }
+
+            for (int i=0; i<Ni; i++) {
+                int i0 = Ni0 + bt_inds[i*3];
+                int i1 = Ni0 + bt_inds[i*3+1];
+                int i2 = Ni0 + bt_inds[i*3+2];
+                data.pushTri(i0,i1,i2);
+            }
         }
 
         if (data.size()) data.apply(geo);
