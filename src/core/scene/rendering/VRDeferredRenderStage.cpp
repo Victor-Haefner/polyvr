@@ -21,6 +21,7 @@ VRMaterialPtr VRDeferredRenderStage::setupRenderLayer(string name) {
     layer->setPrimitive("Plane", s+" "+s+" 1 1");
     layer->setMaterial( mat );
     layer->setMeshVisibility(false);
+    //layer->hide("SHADOW");
     mat->setDepthTest(GL_ALWAYS);
     //mat->setSortKey(1000);
     return mat;

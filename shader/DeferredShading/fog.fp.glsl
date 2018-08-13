@@ -19,13 +19,21 @@ void main(void) {
 
     vec3 pos = posAmb.xyz;
     if (pos.z >= 0) discard;
+    bool isLit = (norm.w > 0);
     float amb = posAmb.w;
-    float lit = 1;
+    float lit = norm.w;
 
     float z = abs(pos.z);
-    if (z > fogParams[1] && fogParams[0] > 0.5) {
-	float t = (z-fogParams[1])/(fogParams[2]-fogParams[1]);
-	t = clamp(pow(t,fogParams[0]), 0, 1);
+    if (z > fogParams[1] && fogParams[0] > 0.5 && isLit) {
+	float t = 0;
+	if (fogParams[0] < 1.5) { // linear
+		t = (z-fogParams[1])/(fogParams[2]-fogParams[1]);
+		t = clamp(pow(t,fogParams[0]), 0, 1);
+	}
+	else if (fogParams[0] < 2.5) { // exponential
+		t = clamp(exp((z-fogParams[1])*fogParams[3])-1.0, 0, 1);
+	}
+
 	mDiff = mix(mDiff, fogColor, t);
 	norm.xyz = normalize(mix(norm.xyz, vec3(0,0,1), t));
 	lit = 1.0-t;
