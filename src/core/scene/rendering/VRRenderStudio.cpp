@@ -49,8 +49,9 @@ VRRenderStudio::VRRenderStudio(EYE e) {
     eye = e;
     root_system = VRObject::create("System root");
     addStage("shading");
-    addStage("fog", "shading");
-    addStage("blurY", "fog");
+    //addStage("fog", "shading");
+    //addStage("blurY", "fog");
+    addStage("blurY", "shading");
     addStage("blurX", "blurY");
     addStage("ssao", "blurX");
     addStage("marker");
@@ -125,17 +126,19 @@ void VRRenderStudio::init(VRObjectPtr root) {
     stages["shading"]->initDeferred();
     stages["shading"]->getTop()->switchParent( hmdd );
 
-    stages["fog"]->initDeferred();
-    string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
-    auto fogMat = stages["fog"]->getMaterial();
-    fogMat->readVertexShader(shdrDir + "fog.vp.glsl");
-    fogMat->readFragmentShader(shdrDir + "fog.fp.glsl", true);
-    fogMat->setShaderParameter<int>("texBufPos", 0);
-    fogMat->setShaderParameter<int>("texBufNorm", 1);
-    fogMat->setShaderParameter<int>("texBufDiff", 2);
-    fogMat->setShaderParameter<Color4f>("fogParams", fogParams);
-    fogMat->setShaderParameter<Color4f>("fogColor", fogColor);
-    stages["fog"]->setActive(false, false);
+    if (stages.count("fog")) {
+        stages["fog"]->initDeferred();
+        string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
+        auto fogMat = stages["fog"]->getMaterial();
+        fogMat->readVertexShader(shdrDir + "fog.vp.glsl");
+        fogMat->readFragmentShader(shdrDir + "fog.fp.glsl", true);
+        fogMat->setShaderParameter<int>("texBufPos", 0);
+        fogMat->setShaderParameter<int>("texBufNorm", 1);
+        fogMat->setShaderParameter<int>("texBufDiff", 2);
+        fogMat->setShaderParameter<Color4f>("fogParams", fogParams);
+        fogMat->setShaderParameter<Color4f>("fogColor", fogColor);
+        stages["fog"]->setActive(false, false);
+    }
 
     stages["blurX"]->initDeferred();
     stages["blurY"]->initDeferred();
@@ -252,11 +255,13 @@ void VRRenderStudio::setEye(EYE e) {
 }
 
 void VRRenderStudio::setFogParams(Color4f fogParams, Color4f fogColor) {
-    auto fogMat = stages["fog"]->getMaterial();
-    fogMat->setShaderParameter<Color4f>("fogParams", fogParams);
-    fogMat->setShaderParameter<Color4f>("fogColor", fogColor);
-    bool a = fogParams[0] > 0.5;
-    stages["fog"]->setActive(a,a);
+    if (stages.count("fog")) {
+        auto fogMat = stages["fog"]->getMaterial();
+        fogMat->setShaderParameter<Color4f>("fogParams", fogParams);
+        fogMat->setShaderParameter<Color4f>("fogColor", fogColor);
+        bool a = fogParams[0] > 0.5;
+        stages["fog"]->setActive(a,a);
+    }
 }
 
 void VRRenderStudio::setCamera(OSGCameraPtr cam) {
