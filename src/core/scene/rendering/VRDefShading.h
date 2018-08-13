@@ -69,7 +69,6 @@ class VRDefShading {
         VRMaterialPtr ssao_mat;
 
         void init();
-        void setupFogLight();
 
     public:
         VRDefShading();
@@ -89,7 +88,6 @@ class VRDefShading {
         void updateLight(VRLightPtr l);
         void subLight(int ID);
         void setBackground(BackgroundRecPtr bg);
-        void setFogParams(Color4f fogParams, Color4f fogColor);
 
         const std::string &getLightVPFile(LightTypeE lightType);
         const std::string &getLightFPFile(LightTypeE lightType, ShadowTypeE shadowType);

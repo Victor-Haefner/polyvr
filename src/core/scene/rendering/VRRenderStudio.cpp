@@ -133,8 +133,8 @@ void VRRenderStudio::init(VRObjectPtr root) {
     fogMat->setShaderParameter<int>("texBufPos", 0);
     fogMat->setShaderParameter<int>("texBufNorm", 1);
     fogMat->setShaderParameter<int>("texBufDiff", 2);
-    fogMat->setShaderParameter<Color4f>("fogParams", Color4f(1,10,100,0.1));
-    fogMat->setShaderParameter<Color4f>("fogColor", Color4f(0.5,0.5,0.5,1));
+    fogMat->setShaderParameter<Color4f>("fogParams", fogParams);
+    fogMat->setShaderParameter<Color4f>("fogColor", fogColor);
     stages["fog"]->setActive(true, true);
 
     stages["blurX"]->initDeferred();
@@ -252,8 +252,9 @@ void VRRenderStudio::setEye(EYE e) {
 }
 
 void VRRenderStudio::setFogParams(Color4f fogParams, Color4f fogColor) {
-    auto defShading = stages["shading"]->getRendering();
-    if (defShading) defShading->setFogParams(fogParams, fogColor);
+    auto fogMat = stages["fog"]->getMaterial();
+    fogMat->setShaderParameter<Color4f>("fogParams", fogParams);
+    fogMat->setShaderParameter<Color4f>("fogColor", fogColor);
 }
 
 void VRRenderStudio::setCamera(OSGCameraPtr cam) {

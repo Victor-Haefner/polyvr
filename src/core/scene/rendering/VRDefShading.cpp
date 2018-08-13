@@ -122,7 +122,6 @@ void VRDefShading::init() {
     fbo->setHeight(800);*/
 
     initiated = true;
-    //setupFogLight(); // deprecated
 }
 
 int VRDefShading::addBuffer(int pformat, int ptype) {
@@ -178,47 +177,6 @@ void VRDefShading::setDSCamera(OSGCameraPtr cam) {
 
 void VRDefShading::setBackground(BackgroundRecPtr bg) {
     if (initiated) dsStage->setBackground(bg);
-}
-
-void VRDefShading::setupFogLight() {
-    fogLight = VRLightPtr(new VRLight("fogLight") );
-
-    LightMTRecPtr light = fogLight->getLightCore();
-    string type = fogLight->getLightType();
-    int ID = fogLight->getID();
-
-    LightInfo li;
-
-    li.vrlight = fogLight;
-    li.lightVP = ShaderProgram     ::createVertexShader  ();
-    li.lightFP = ShaderProgram     ::createFragmentShader();
-    li.lightSH = ShaderProgramChunk::create              ();
-
-    li.shadowType = ST_NONE;
-    li.light = light;
-    li.lightType = (LightTypeE)10;
-
-    li.lightFP->addUniformVariable<Int32>("texBufPos",  0);
-    li.lightFP->addUniformVariable<Int32>("texBufNorm", 1);
-    li.lightFP->addUniformVariable<Int32>("texBufDiff", 2);
-    li.lightFP->addUniformVariable<Int32>("texBufAmb",  3);
-    li.lightFP->addUniformVariable<Color4f>("fogParams", fogParams);
-    li.lightFP->addUniformVariable<Color4f>("fogColor", fogColor);
-    li.lightFP->addUniformVariable<Int32>("channel", 0);
-
-    li.lightSH->addShader(li.lightVP);
-    li.lightSH->addShader(li.lightFP);
-    li.texChunk = TextureObjChunk::create();
-    string vpFile = getLightVPFile(li.lightType);
-    string fpFile = getLightFPFile(li.lightType, li.shadowType);
-    li.lightVP->readProgram(vpFile.c_str());
-    li.lightFP->readProgram(fpFile.c_str());
-
-    dsStage->editMFLights         ()->push_back(li.light  );
-    dsStage->editMFLightPrograms  ()->push_back(li.lightSH);
-    dsStage->editMFPhotometricMaps()->push_back(li.texChunk);
-
-    lightInfos[ID] = li;
 }
 
 void VRDefShading::addDSLight(VRLightPtr vrl) {
@@ -316,15 +274,6 @@ void VRDefShading::updateLight(VRLightPtr l) {
         dsStage->editMFPhotometricMaps();
         li.texChunk->setImage(tex->getImage());
     }
-}
-
-void VRDefShading::setFogParams(Color4f fp, Color4f fc) {
-    fogParams = fp;
-    fogColor = fc;
-    if (lightInfos.count(fogLight->getID()) == 0) return;
-    auto& li = lightInfos[fogLight->getID()];
-    li.lightFP->addUniformVariable<Color4f>("fogParams", fogParams);
-    li.lightFP->addUniformVariable<Color4f>("fogColor", fogColor);
 }
 
 TextureObjChunkRefPtr VRDefShading::getTarget() { return fboTex; }
