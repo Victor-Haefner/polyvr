@@ -66,6 +66,9 @@ class VRTree : public VRTransform {
         void addLeafs(int lvl, int amount, float size = 0.03);
         void setLeafMaterial(VRMaterialPtr mat);
 
+        VRMaterialPtr getTruncMaterial();
+        VRMaterialPtr getLeafMaterial();
+
         vector<VRMaterialPtr> createLODtextures(int& Hmax, VRGeoData& data);
         VRGeometryPtr createLOD(int lvl);
         VRGeometryPtr getLOD(int lvl);

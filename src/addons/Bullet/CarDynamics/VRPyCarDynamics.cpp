@@ -191,7 +191,9 @@ PyObject* VRPyCarDynamics::setParameter(VRPyCarDynamics* self, PyObject* args) {
 PyMethodDef VRPyDriver::methods[] = {
     {"setCar", (PyCFunction)VRPyDriver::setCar, METH_VARARGS, "Set car - setCar( car )" },
     {"followPath", (PyCFunction)VRPyDriver::followPath, METH_VARARGS, "Start the pilot to follow a path with a certain speed curve - followPath( path p, path v, | float to )" },
-    {"stop", (PyCFunction)VRPyDriver::stop, METH_NOARGS, "Stop driving - stop()" },
+    {"stop", PyWrap( Driver, stop, "Stop driving", void ) },
+    {"resume", PyWrap( Driver, resume, "Resume driving", void ) },
+    {"setTargetSpeed", PyWrap( Driver, setTargetSpeed, "Set default target speed", void, float ) },
     {"isDriving", (PyCFunction)VRPyDriver::isDriving, METH_NOARGS, "Check if driving - bool isDriving()" },
     {NULL}  /* Sentinel */
 };
@@ -212,11 +214,6 @@ PyObject* VRPyDriver::followPath(VRPyDriver* self, PyObject* args) {
     float t = 1;
     if (! PyArg_ParseTuple(args, "OO|f", &p, &v, &t)) return NULL;
     self->objPtr->followPath(p->objPtr, v->objPtr, t);
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyDriver::stop(VRPyDriver* self) {
-    self->objPtr->stop();
     Py_RETURN_TRUE;
 }
 

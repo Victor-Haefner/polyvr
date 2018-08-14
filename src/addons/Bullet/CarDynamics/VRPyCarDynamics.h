@@ -49,7 +49,6 @@ struct VRPyDriver : VRPyBaseT<OSG::VRDriver> {
 
     static PyObject* setCar(VRPyDriver* self, PyObject* args);
     static PyObject* followPath(VRPyDriver* self, PyObject* args);
-    static PyObject* stop(VRPyDriver* self);
     static PyObject* isDriving(VRPyDriver* self);
 };
 

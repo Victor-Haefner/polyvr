@@ -49,9 +49,7 @@ void VRDriver::update() {
     clamp(t,0,1);
 
     auto tpos = p_path->getPose(t)->pos(); // get target position
-    //auto tvel = v_path->getPose(t).pos()[1]; // get target velocity
-
-    float target_speed = 5; // TODO: get from path
+    //auto tvel = v_path->getPose(t).pos()[1]; // TODO: get target velocity
 
     // compute throttle and breaking
     float sDiff = target_speed-speed;
@@ -86,7 +84,9 @@ void VRDriver::followPath(PathPtr p, PathPtr v, float to) {
     active = true;
 }
 
+void VRDriver::setTargetSpeed( float speed ) { target_speed = speed; }
 void VRDriver::stop() { active = false; }
+void VRDriver::resume() { active = true; }
 bool VRDriver::isDriving() { return active; }
 
 

@@ -135,13 +135,10 @@ void VRNature::simpleInit(int treeTypes, int bushTypes) {
 
     for (int i=0; i<treeTypes; i++) addTreeTemplate( doTree() );
     for (int i=0; i<bushTypes; i++) addBushTemplate( doBush() );
-
-    for (auto t : treeTemplates) t.second->createLOD(0);
-    for (auto t : bushTemplates) t.second->createLOD(0);
 }
 
-void VRNature::addTreeTemplate(VRTreePtr t) { treeTemplates[t->getName()] = t; }
-void VRNature::addBushTemplate(VRTreePtr t) { bushTemplates[t->getName()] = t; }
+void VRNature::addTreeTemplate(VRTreePtr t) { treeTemplates[t->getName()] = t; t->createLOD(0); }
+void VRNature::addBushTemplate(VRTreePtr t) { bushTemplates[t->getName()] = t; t->createLOD(0); }
 
 void VRNature::removeTree(int id) {
     if (!treesByID.count(id)) return;

@@ -16,6 +16,7 @@ class VRDriver {
         float to = 1;
         PathPtr p_path;
         PathPtr v_path;
+        float target_speed = 5;
         VRUpdateCbPtr updatePtr;
 
         void update();
@@ -29,6 +30,8 @@ class VRDriver {
         void setCar( VRCarDynamicsPtr car );
         void followPath(PathPtr p, PathPtr v, float to = 1);
         void stop();
+        void resume();
+        void setTargetSpeed( float speed );
         bool isDriving();
 };
 

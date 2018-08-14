@@ -221,6 +221,9 @@ segment* VRTree::growSegment(int seed, segment* p, int iteration, float t) {
     return s;
 }
 
+VRMaterialPtr VRTree::getTruncMaterial() { return treeMat; }
+VRMaterialPtr VRTree::getLeafMaterial() { return leafMat; }
+
 void VRTree::initMaterials() {
     if (!treeMat) {
         treeMat = VRMaterial::create("tree_wood");
