@@ -87,12 +87,12 @@ void PolyVR::setOption(string name, int val) { options->setOption(name, val); }
 void PolyVR::setOption(string name, float val) { options->setOption(name, val); }
 
 void PolyVR::init(int argc, char **argv) {
-    checkProcessesAndSockets();
     cout << "Init PolyVR\n\n";
     enableCoreDump(true);
     setlocale(LC_ALL, "C");
     options = shared_ptr<VROptions>(VROptions::get());
     options->parse(argc,argv);
+    checkProcessesAndSockets();
 
     //GLUT
     glutInit(&argc, argv);
@@ -184,9 +184,10 @@ char getch() {
 
 void PolyVR::checkProcessesAndSockets() {
     // check for failed startup
+    bool dofailcheck = VROptions::get()->getOption<bool>("dofailcheck");
     string timestamp;
     ifstream f1("setup/.startup"); getline(f1,timestamp); f1.close();
-    if (timestamp != "") {
+    if (timestamp != "" && dofailcheck) {
         bool handling_bad_startup = true;
         cout << "Warning! a previously failed startup has been detected that occurred at " << timestamp << endl;
         cout << "Hints: " << endl;
