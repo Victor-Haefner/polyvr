@@ -94,6 +94,7 @@ void GISWorld::setupOntology() {
     Building->addProperty("streetName", "string");
     Building->addProperty("area", "Area");
     TrafficLight->addProperty("state", "string");
+    TrafficLight->addProperty("node", "Node");
 
     auto Plant = world->addConcept("Plant");
     auto Tree = world->addConcept("Tree", "Plant");

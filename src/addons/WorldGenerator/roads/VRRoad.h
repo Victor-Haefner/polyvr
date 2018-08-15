@@ -41,7 +41,8 @@ class VRRoad : public VRRoadBase {
         float getWidth();
         VRGeometryPtr createGeometry();
         VREntityPtr getNodeEntry( VREntityPtr node );
-        edgePoint& getEdgePoints( VREntityPtr node );
+        edgePoint& getEdgePoint( VREntityPtr node );
+        map<VREntityPtr, edgePoint>& getEdgePoints();
         void computeMarkings();
         bool hasMarkings();
         PosePtr getRightEdge(Vec3d pos);

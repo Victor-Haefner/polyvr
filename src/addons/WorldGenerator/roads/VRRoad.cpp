@@ -67,7 +67,7 @@ PosePtr VRRoad::getPosition(float t) {
     return paths[0]->getPose(t);
 }
 
-VRRoad::edgePoint& VRRoad::getEdgePoints( VREntityPtr node ) {
+VRRoad::edgePoint& VRRoad::getEdgePoint( VREntityPtr node ) {
     if (edgePoints.count(node) == 0) {
         float width = getWidth();
         VREntityPtr rEntry = getNodeEntry( node );
@@ -80,6 +80,18 @@ VRRoad::edgePoint& VRRoad::getEdgePoints( VREntityPtr node ) {
         edgePoints[node] = edgePoint(p1,p2,norm,rEntry);
     }
     return edgePoints[node];
+}
+
+map<VREntityPtr, VRRoad::edgePoint>& VRRoad::getEdgePoints() {
+    if (edgePoints.size() == 0) {
+        auto e = getEntity();
+        auto nodeEntries = e->getEntity("path")->getAllEntities("nodes");
+        for (auto ne : nodeEntries) {
+            auto n = ne->getEntity("node");
+            getEdgePoint(n);
+        }
+    }
+    return edgePoints;
 }
 
 vector<VRRoadPtr> VRRoad::splitAtIntersections(VRRoadNetworkPtr network) { // TODO: refactor the code a bit
@@ -317,12 +329,36 @@ void VRRoad::addParkingLane( int direction, float width, int capacity, string ty
 void VRRoad::addTrafficLight( Vec3d pos ) {
     if (auto o = ontology.lock()) {
         auto roadEnt = getEntity();
+
+        float dmin = 1e6;
+        Vec3d dir;
+        VREntityPtr nodeEnt;
+        cout << " ------------------    VRRoad::addTrafficLight " << pos << " S " << getEdgePoints().size() << endl;
+        for (auto ep : getEdgePoints()) {
+            Vec3d p = (ep.second.p1+ep.second.p2)*0.5;
+            cout << "    ------------------    ep " << p << endl;
+            float d = (p-pos).length();
+            if (dmin > d) {
+                dmin = d;
+                dir = pos-p;
+                dir.normalize();
+                nodeEnt = ep.first;
+                cout << "       ------------------      " << pos << " d " << d << " dir " << dir << endl;
+            }
+        }
+
         for (auto laneEnt : roadEnt->getAllEntities("lanes")) {
-            //auto laneDir = laneEnt->getValue("direction", 1);
-            auto signalEnt = o->addEntity("trafficlight", "TrafficLight");
-            laneEnt->add("signs",signalEnt->getName());
-            signalEnt->set("lanes",laneEnt->getName());
-            signalEnt->setVec3("position", pos, "Position");
+            auto laneDir = laneEnt->getValue("direction", 1);
+            Vec3d laneTangent = getRightEdge(pos)->dir() * laneDir;
+            laneTangent.normalize();
+            cout << " VRRoad::addTrafficLight " << dir.dot(laneTangent) << endl;
+            if (dir.dot(laneTangent) < -0.5) {
+                auto signalEnt = o->addEntity("trafficlight", "TrafficLight");
+                laneEnt->add("signs",signalEnt->getName());
+                signalEnt->add("lanes",laneEnt->getName());
+                signalEnt->setVec3("position", pos, "Position");
+                signalEnt->set("node", nodeEnt->getName());
+            }
         }
     }
 }

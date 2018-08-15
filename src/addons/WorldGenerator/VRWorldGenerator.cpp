@@ -454,8 +454,10 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                     for (auto laneEnt : roadEnt->getAllEntities("lanes")) {
                         auto laneDir = laneEnt->getValue("direction", 1);
                         Vec3d laneTangent = road->getRightEdge(pos)->dir() * laneDir;
-                        if (dir.dot(laneTangent) < -0.5) laneEnt->add("signs",signEnt->getName());
-                        signEnt->add("lanes",laneEnt->getName());
+                        if (dir.dot(laneTangent) < -0.5) {
+                            laneEnt->add("signs",signEnt->getName());
+                            signEnt->add("lanes",laneEnt->getName());
+                        }
                     }
                 }
             }
