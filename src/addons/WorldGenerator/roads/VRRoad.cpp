@@ -333,17 +333,14 @@ void VRRoad::addTrafficLight( Vec3d pos ) {
         float dmin = 1e6;
         Vec3d dir;
         VREntityPtr nodeEnt;
-        cout << " ------------------    VRRoad::addTrafficLight " << pos << " S " << getEdgePoints().size() << endl;
         for (auto ep : getEdgePoints()) {
             Vec3d p = (ep.second.p1+ep.second.p2)*0.5;
-            cout << "    ------------------    ep " << p << endl;
             float d = (p-pos).length();
             if (dmin > d) {
                 dmin = d;
                 dir = pos-p;
                 dir.normalize();
                 nodeEnt = ep.first;
-                cout << "       ------------------      " << pos << " d " << d << " dir " << dir << endl;
             }
         }
 
@@ -351,7 +348,6 @@ void VRRoad::addTrafficLight( Vec3d pos ) {
             auto laneDir = laneEnt->getValue("direction", 1);
             Vec3d laneTangent = getRightEdge(pos)->dir() * laneDir;
             laneTangent.normalize();
-            cout << " VRRoad::addTrafficLight " << dir.dot(laneTangent) << endl;
             if (dir.dot(laneTangent) < -0.5) {
                 auto signalEnt = o->addEntity("trafficlight", "TrafficLight");
                 laneEnt->add("signs",signalEnt->getName());

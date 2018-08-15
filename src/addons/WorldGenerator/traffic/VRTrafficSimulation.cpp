@@ -122,6 +122,18 @@ void VRTrafficSimulation::setRoadNetwork(VRRoadNetworkPtr rds) {
         Vec3d p2 = graph->getNode(e.to).p.pos();
         roads[i].length = (p2-p1).length();
         roads[i].rID = i;
+
+        /*auto laneEnt = roadNetwork->getLane(i);
+        for (auto sign : laneEnt->getAllEntities("signs")) { // TODO
+            VREntityPtr node = sign->getEntity("node");
+            Vec3d pos = sign->getVec3("position");
+            Graph::position gp = graph->getGraphPosition(pos);
+
+            signal sig;
+            sig.position = gp.t;
+            sig.type = "blaa";
+            roads[i].signals.push_back(sig);
+        }*/
     }
 
     //updateDensityVisual(true);

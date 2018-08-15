@@ -79,6 +79,7 @@ class VRRoadNetwork : public VRRoadBase {
         PosePtr getPosition(Graph::position p);
         VREntityPtr addRoute(vector<int> nodes);
 
+        VREntityPtr getLane(int edgeID);
         vector<VRRoadPtr> getRoads();
         vector<VRRoadIntersectionPtr> getIntersections();
         vector<VREntityPtr> getPreviousRoads(VREntityPtr road);
