@@ -712,7 +712,7 @@ void VRRoadIntersection::computeMarkings() {
                 if (inCarLanes >= 2) { // stop lines
                     float D = 0.4;
                     float w = 0.35;
-                    addLine( "StopLine", p-x*W*w+n*D*0.5, p+x*W*w+n*D*0.5, x, x, D, 0, "yellow");
+                    addLine( "StopLine", p-x*W*w+n*D*0.5, p+x*W*w+n*D*0.5, x, x, D, 0, "white");
                 }
 
                 // arrows
