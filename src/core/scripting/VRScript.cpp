@@ -523,7 +523,7 @@ void VRScript::compile( PyObject* pGlobal, PyObject* pModVR ) {
 
 void VRScript::execute() {
     if (type == "Python") {
-        if (!isInitScript && VRGlobals::CURRENT_FRAME <= loadingFrame + 2) return;
+        if (!isInitScript && VRGlobals::CURRENT_FRAME <= loadingFrame + 2) return; // delay timeout scripts
         if (fkt == 0 || !active) return;
         PyGILState_STATE gstate = PyGILState_Ensure();
         pyErrPrint( "Errors" );
@@ -693,7 +693,7 @@ void VRScript::load(xmlpp::Element* e) {
 
             if (t->trigger == "on_scene_load" && active) {
                 auto scene = VRScene::getCurrent();
-                scene->queueJob(cbfkt_sys);
+                scene->queueJob(cbfkt_sys, 0, 1);
                 isInitScript = true;
                 loadingFrame = VRGlobals::CURRENT_FRAME;
             }

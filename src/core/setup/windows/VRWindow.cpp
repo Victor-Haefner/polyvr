@@ -84,10 +84,10 @@ void VRWindow::update( weak_ptr<VRThread>  wt) {
             render(true);
             Thread::getCurrentChangeList()->clear();
         }
-
         barrier->enter(active_window_count+1);
+
         osgSleep(1);
-    } while(t->control_flag);
+    } while(t && t->control_flag);
 }
 
 bool VRWindow::isActive() { return active; }
