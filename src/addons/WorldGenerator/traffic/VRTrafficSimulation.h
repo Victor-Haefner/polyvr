@@ -76,6 +76,12 @@ class VRTrafficSimulation : public VRObject {
             bool operator==(const Vehicle& v);
         };
 
+        struct signal {
+            float position; // edge coordinate from 0 to 1
+            string type;
+            string state;
+        };
+
         struct road {
             int rID = -1;
             float density = 0;
@@ -84,14 +90,7 @@ class VRTrafficSimulation : public VRObject {
             map<int, int> vehicleIDs;
             int lastVehicleID = 0;
             VRRoadPtr r;
-        };
-
-        struct trafficLight {
-            int state; // 0,1,2 = red, yellow, green
-            int group;
-            VRObjectPtr model;
-
-            void updateModel();
+            vector<signal> signals;
         };
 
         struct intersection {
@@ -109,7 +108,6 @@ class VRTrafficSimulation : public VRObject {
         vector<Vehicle> users;
         list<Vehicle> vehiclePool;
         vector<VRObjectPtr> models;
-        map<int, vector<trafficLight> > trafficLights;
         int maxUnits = 0;
         int numUnits = 0;
         bool isSimRunning = true;

@@ -314,15 +314,17 @@ void VRRoad::addParkingLane( int direction, float width, int capacity, string ty
     }
 }
 
-VREntityPtr VRRoad::addTrafficLight() {
+void VRRoad::addTrafficLight( Vec3d pos ) {
     if (auto o = ontology.lock()) {
         auto roadEnt = getEntity();
-        auto signalEnt = o->addEntity("trafficlight", "TrafficLight");
-        roadEnt->add("signs",signalEnt->getName());
-        signalEnt->set("road",roadEnt->getName());
-        return signalEnt;
+        for (auto laneEnt : roadEnt->getAllEntities("lanes")) {
+            //auto laneDir = laneEnt->getValue("direction", 1);
+            auto signalEnt = o->addEntity("trafficlight", "TrafficLight");
+            laneEnt->add("signs",signalEnt->getName());
+            signalEnt->set("lanes",laneEnt->getName());
+            signalEnt->setVec3("position", pos, "Position");
+        }
     }
-    return 0;
 }
 
 void VRRoad::setOffsetIn(float o) { offsetIn = o; }

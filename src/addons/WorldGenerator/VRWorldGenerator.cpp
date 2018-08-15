@@ -449,9 +449,14 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                 //cout << "add OSM sign: " << tag.first << "  " << signEnt->getValue<string>("type", "") << endl;
                 for (auto way : node->ways) {
                     if (!RoadEntities.count(way)) continue;
-                    auto roadEnt = RoadEntities[node->ways[0]]->getEntity();
-                    roadEnt->add("signs",signEnt->getName());
-                    signEnt->set("road",roadEnt->getName());
+                    auto road = RoadEntities[node->ways[0]];
+                    auto roadEnt = road->getEntity();
+                    for (auto laneEnt : roadEnt->getAllEntities("lanes")) {
+                        auto laneDir = laneEnt->getValue("direction", 1);
+                        Vec3d laneTangent = road->getRightEdge(pos)->dir() * laneDir;
+                        if (dir.dot(laneTangent) < -0.5) laneEnt->add("signs",signEnt->getName());
+                        signEnt->add("lanes",laneEnt->getName());
+                    }
                 }
             }
 
@@ -459,7 +464,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                 for (auto way : node->ways) {
                     if (!RoadEntities.count(way)) continue;
                     auto road = RoadEntities[node->ways[0]];
-                    road->addTrafficLight();
+                    road->addTrafficLight(pos);
                 }
             }
 

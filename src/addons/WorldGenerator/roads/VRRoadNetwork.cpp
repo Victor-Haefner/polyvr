@@ -512,7 +512,8 @@ void VRRoadNetwork::computeSigns() {
         if (!sign) continue;
 
         //cout << " sign: " << type << " road: " << signEnt->getEntity("road") << endl;
-        if (auto roadEnt = signEnt->getEntity("road")) {
+        if (auto laneEnt = signEnt->getEntity("lanes")) {
+            auto roadEnt = laneEnt->getEntity("road");
             auto road = roadsByEntity[roadEnt];// get vrroad from roadent
             auto pose = road->getRightEdge(pos);
             auto d = pose->dir(); d[1] = 0; d.normalize();
@@ -526,6 +527,7 @@ void VRRoadNetwork::computeSigns() {
                 Vec3d p2 = pose->pos() + x*2.8;
                 auto mL = road->addPath("StopLine", "Stopline", { road->addNode(0, p1), road->addNode(0, p2) }, { x, x });
                 mL->set("width", toString(0.3));
+                mL->set("color", "yellow");
                 roadEnt->add("markings", mL->getName());
             }
         }

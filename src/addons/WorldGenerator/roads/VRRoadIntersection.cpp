@@ -591,12 +591,23 @@ void VRRoadIntersection::computeTrafficLights() {
 
     */
 
-    vector<pair<shared_ptr<RoadFront>, VREntityPtr>> signals;
+    struct signalData {
+        shared_ptr<RoadFront> roadFront;
+        VREntityPtr lane;
+        VREntityPtr signal;
+        signalData(shared_ptr<RoadFront> rf, VREntityPtr l, VREntityPtr s) : roadFront(rf), lane(l), signal(s) {}
+    };
+
+    vector<signalData> signals;
     for (auto roadFront : roadFronts) {
         auto roadE = roadFront->road->getEntity();
-        auto signs = roadE->getAllEntities("signs");
-        for (auto signE : signs) {
-            if (signE->is_a("TrafficLight")) signals.push_back( make_pair(roadFront, signE) );
+        auto lanes = roadE->getAllEntities("lanes");
+        for (auto laneE : lanes) {
+            auto signs = laneE->getAllEntities("signs");
+            for (auto signE : signs) {
+                Vec3d pos = signE->getVec3("position");
+                if (signE->is_a("TrafficLight")) signals.push_back( signalData(roadFront, laneE, signE) );
+            }
         }
     }
 
@@ -615,18 +626,12 @@ void VRRoadIntersection::computeTrafficLights() {
 
     auto node = entity->getEntity("node");
     for (auto s : signals) {
-        auto roadFront = s.first;
-        auto signal = s.second;
-
-        auto p = roadFront->pose;
-        auto eP = roadFront->road->getEdgePoints( node );
+        auto p = s.roadFront->pose;
+        auto eP = s.roadFront->road->getEdgePoints( node );
         Vec3d root = eP.p1;
 
-        for (auto lane : roadFront->inLanes) {
-            auto lP = getLaneNode(lane);
-            //auto P = Pose::create( p.pos() + Vec3d(0,3,0), Vec3d(0,-1,0), p.dir());
-            addTrafficLight(lP, "trafficLight", root, lane, signal);
-        }
+        auto lP = getLaneNode(s.lane);
+        addTrafficLight(lP, "trafficLight", root, s.lane, s.signal);
     }
 
 

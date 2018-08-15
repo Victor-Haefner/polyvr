@@ -69,6 +69,7 @@ void GISWorld::setupOntology() {
     Lane->addProperty("path", "Path");
     Lane->addProperty("arrows", "Arrow");
     Lane->addProperty("pedestrian", "bool");
+    Lane->addProperty("signs", Sign);
     ParkingLane->addProperty("angle", "float");
     ParkingLane->addProperty("capacity", "int");
     GreenBelt->addProperty("width", "float");
@@ -77,10 +78,9 @@ void GISWorld::setupOntology() {
     Road->addProperty("intersections", RoadIntersection);
     Road->addProperty("buildings", Building);
     Road->addProperty("type", "string");
-    Road->addProperty("signs", Sign);
     Sign->addProperty("type", "string");
     Sign->addProperty("direction", "Direction");
-    Sign->addProperty("road", Road);
+    Sign->addProperty("lanes", Lane);
     RoadIntersection->addProperty("node", "Node");
     RoadIntersection->addProperty("roads", Road);
     RoadIntersection->addProperty("type", "string");
