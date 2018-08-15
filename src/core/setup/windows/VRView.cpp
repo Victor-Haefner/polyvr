@@ -494,6 +494,7 @@ void VRView::setOffset(Vec3d o) { offset = o; update(); }
 
 void VRView::setWindow() {
     if (window == 0) return;
+    if (cam == 0) return;
     if (lView) window->addPort(lView);
     if (rView) window->addPort(rView);
 }

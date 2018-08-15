@@ -18,7 +18,6 @@
 #include <OpenSG/OSGShaderProgram.h>
 #include <OpenSG/OSGShaderShadowMapEngine.h>
 #include <OpenSG/OSGTrapezoidalShadowMapEngine.h>
-#include <OpenSG/OSGProjectionCameraDecorator.h>
 
 #include <OpenSG/OSGFrameBufferObject.h>
 #include <OpenSG/OSGTextureBuffer.h>

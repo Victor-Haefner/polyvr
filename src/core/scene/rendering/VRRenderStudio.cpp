@@ -18,8 +18,6 @@
 #include "VRFXAA.h"
 
 #include <OpenSG/OSGRenderAction.h>
-#include <OpenSG/OSGProjectionCameraDecorator.h>
-//#include <OpenSG/OSGFogStage.h>
 
 using namespace OSG;
 using namespace std;

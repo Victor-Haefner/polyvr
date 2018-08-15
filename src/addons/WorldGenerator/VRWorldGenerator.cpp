@@ -431,6 +431,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         if (!nodeInSubarea(node)) continue;
         Vec3d pos = planet->fromLatLongPosition(node->lat, node->lon, true);
         Vec3d dir = getDir(node);
+        bool hasDir = node->tags.count("direction");
         if (terrain) terrain->elevatePoint(pos);
         for (auto tag : node->tags) {
             if (tag.first == "natural") {
@@ -454,7 +455,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                     for (auto laneEnt : roadEnt->getAllEntities("lanes")) {
                         auto laneDir = laneEnt->getValue("direction", 1);
                         Vec3d laneTangent = road->getRightEdge(pos)->dir() * laneDir;
-                        if (dir.dot(laneTangent) < -0.5) {
+                        if (dir.dot(laneTangent) < -0.5 || !hasDir) {
                             laneEnt->add("signs",signEnt->getName());
                             signEnt->add("lanes",laneEnt->getName());
                         }
