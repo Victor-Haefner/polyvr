@@ -269,8 +269,12 @@ void VRRoad::computeMarkings() {
             if (li != 0 && lastDir*direction > 0) {
                 mL->set("style", "dashed");
                 mL->set("dashLength", "2");
+            } else if (li != 0 && li != Nlanes-1) {
+                mL->set("color", "yellow");
             }
             lastDir = direction;
+
+
 
             // parking lanes
             if (li > 0) if (lanes[li-1]->is_a("ParkingLane")) mL->set("dashLength", "1");

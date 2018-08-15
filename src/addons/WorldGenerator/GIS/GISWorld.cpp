@@ -62,6 +62,7 @@ void GISWorld::setupOntology() {
     Arrow->addProperty("position", "float");
     Arrow->addProperty("direction", "float");
     Arrow->addProperty("lane", Lane);
+    Arrow->addProperty("type", "int");
     Lane->addProperty("road", Way);
     Lane->addProperty("width", "float");
     Lane->addProperty("direction", "int");
@@ -87,6 +88,7 @@ void GISWorld::setupOntology() {
     RoadMarking->addProperty("width", "float");
     RoadMarking->addProperty("style", "string");
     RoadMarking->addProperty("dashLength", "float");
+    RoadMarking->addProperty("color", "string");
     RoadTrack->addProperty("width", "float");
     Building->addProperty("houseNumber", "string");
     Building->addProperty("streetName", "string");

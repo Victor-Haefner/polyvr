@@ -134,9 +134,12 @@ void VRRoadNetwork::updateAsphaltTexture() {
 		for (auto marking : markings) {
             auto w = marking->get("width");
             auto dL = marking->get("dashLength");
+            string c = marking->getValue<string>("color", "white");
+            int colorID = 1;
+            if (c == "yellow") colorID = 2;
             float width = w ? toFloat( w->value ) : 0;
             float dashL = dL ? toInt( dL->value ) : 0;
-            asphalt->addMarking(rID, toPath(marking, 4), width, dashL);
+            asphalt->addMarking(rID, toPath(marking, 4), width, dashL, 0, colorID);
 		}
 
 		for (auto track : tracks) {
@@ -530,6 +533,9 @@ void VRRoadNetwork::computeSigns() {
     }
 }
 
+void VRRoadNetwork::setRoadStyle(int aType) { arrowType = aType; }
+int VRRoadNetwork::getArrowStyle() { return arrowType; }
+
 void VRRoadNetwork::computeArrows() {
     auto w = world.lock();
     for (auto arrow : w->getOntology()->getEntities("Arrow")) {
@@ -542,11 +548,11 @@ void VRRoadNetwork::computeArrows() {
         Vec4i drs(999,999,999,999);
         for (uint i=0; i<4 && i < dirs.size(); i++) drs[i] = int(dirs[i]*5/pi)*180/5;
         if (t < 0) t = 1+t; // from the end
-        createArrow(drs, min(int(dirs.size()),4), *lpath->getPose(t));
+        createArrow(drs, min(int(dirs.size()),4), *lpath->getPose(t), arrow->getValue<int>("type", 0));
     }
 }
 
-void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p) {
+void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p, int type) {
     if (N == 0) return;
 
     //if (arrowTemplates.size() > 20) { cout << "VRRoadNetwork::createArrow, Warning! arrowTexture too big!\n"; return; }
@@ -565,12 +571,28 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p) {
             Vec2f d02 = Vec2f(0.5,0.5); // rotation point
             Vec3d d03 = Vec3d(0.5,0.5,0); // rotation point
 
-            auto apath = Path::create();
-            apath->addPoint( Pose(Vec3d(0.5,1.0,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
-            apath->addPoint( Pose(Vec3d(0.5,0.8,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
-            apath->addPoint( Pose(d03+dir*0.31, dir, Vec3d(0,0,1)) );
-            apath->compute(12);
-            tg.drawPath(apath, Color4f(1,1,1,1), 0.1);
+            if (type == 0) {
+                auto apath = Path::create();
+                apath->addPoint( Pose(Vec3d(0.5,1.0,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
+                apath->addPoint( Pose(Vec3d(0.5,0.8,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
+                apath->addPoint( Pose(d03+dir*0.31, dir, Vec3d(0,0,1)) );
+                apath->compute(12);
+                tg.drawPath(apath, Color4f(1,1,1,1), 0.1);
+            }
+
+            if (type == 1) {
+                auto apath = Path::create();
+                apath->addPoint( Pose(Vec3d(0.5,1.0,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
+                apath->addPoint( Pose(Vec3d(0.5,0.5,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
+                apath->compute(2);
+                tg.drawPath(apath, Color4f(1,1,1,1), 0.1);
+
+                apath = Path::create();
+                apath->addPoint( Pose(Vec3d(0.5,0.5,0), dir, Vec3d(0,0,1)) );
+                apath->addPoint( Pose(d03+dir*0.31, dir, Vec3d(0,0,1)) );
+                apath->compute(2);
+                tg.drawPath(apath, Color4f(1,1,1,1), 0.15);
+            }
 
             auto poly = VRPolygon::create();
             Matrix22<float> R(cos(a), -sin(a), sin(a), cos(a));

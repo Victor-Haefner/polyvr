@@ -43,7 +43,7 @@ PyMethodDef VRPyRoadBase::methods[] = {
     {"addLane", PyWrapOpt( RoadBase, addLane, "Add a lane", "0", VREntityPtr, int, float, bool ) },
     {"addNode", PyWrapOpt( RoadBase, addNode, "Add a node", "1|0", VREntityPtr, int, Vec3d, bool, float ) },
     {"addPath", PyWrap( RoadBase, addPath, "Add a new path", VREntityPtr, string, string, vector<VREntityPtr>, vector<Vec3d> ) },
-    {"addArrows", PyWrap( RoadBase, addArrows, "Add a new path", VREntityPtr, VREntityPtr, float, vector<float> ) },
+    {"addArrows", PyWrapOpt( RoadBase, addArrows, "Add a new path", "0", VREntityPtr, VREntityPtr, float, vector<float>, int ) },
     {NULL}  /* Sentinel */
 };
 
@@ -65,7 +65,7 @@ PyMethodDef VRPyDistrict::methods[] = {
 };
 
 PyMethodDef VRPyAsphalt::methods[] = {
-    {"addMarking", PyWrapOpt(Asphalt, addMarking, "Add marking", "0|0", void, int, PathPtr, float, float, float ) },
+    {"addMarking", PyWrapOpt(Asphalt, addMarking, "Add marking", "0|0|1", void, int, PathPtr, float, float, float, int ) },
     {"addTrack", PyWrapOpt(Asphalt, addTrack, "Add track", "0|0", void, int, PathPtr, float, float, float ) },
     {"clearTexture", PyWrap(Asphalt, clearTexture, "Clear internal textures", void ) },
     {"updateTexture", PyWrap(Asphalt, updateTexture, "Update internal textures", void ) },
@@ -97,6 +97,7 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"getNextRoads", PyWrap( RoadNetwork, getNextRoads, "Get the next roads", vector<VREntityPtr>, VREntityPtr ) },
     {"addRoute", PyWrap( RoadNetwork, addRoute, "Add route path entity from graph node IDs", VREntityPtr, vector<int> ) },
     {"setTerrainOffset", PyWrap( RoadNetwork, setTerrainOffset, "Set road to terrain offset", void, float ) },
+    {"setRoadStyle", PyWrap( RoadNetwork, setRoadStyle, "Set road style flags", void, int ) },
     {NULL}  /* Sentinel */
 };
 

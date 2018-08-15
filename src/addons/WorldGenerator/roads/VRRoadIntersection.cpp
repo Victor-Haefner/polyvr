@@ -659,13 +659,14 @@ void VRRoadIntersection::computeMarkings() {
     float markingsWidth = roads->getMarkingsWidth();
     float markingsWidthHalf = 0.5*markingsWidth;
 
-    auto addLine = [&]( const string& type, Vec3d p1, Vec3d p2, Vec3d n1, Vec3d n2, float w, float dashLength) {
+    auto addLine = [&]( const string& type, Vec3d p1, Vec3d p2, Vec3d n1, Vec3d n2, float w, float dashLength, string color) {
 		auto node1 = addNode( 0, p1 );
 		auto node2 = addNode( 0, p2 );
 		auto m = addPath(type, name, {node1, node2}, {n1,n2});
 		m->set("width", toString(w)); //  width in meter
 		if (dashLength == 0) m->set("style", "solid"); // simple line
 		m->set("style", "dashed"); // dotted line
+		m->set("color", color); // dotted line
 		m->set("dashLength", toString(dashLength)); // dotted line
 		entity->add("markings", m->getName());
 		return m;
@@ -702,7 +703,7 @@ void VRRoadIntersection::computeMarkings() {
                 if (inCarLanes >= 2) { // stop lines
                     float D = 0.4;
                     float w = 0.35;
-                    addLine( "StopLine", p-x*W*w+n*D*0.5, p+x*W*w+n*D*0.5, x, x, D, 0);
+                    addLine( "StopLine", p-x*W*w+n*D*0.5, p+x*W*w+n*D*0.5, x, x, D, 0, "yellow");
                 }
 
                 // arrows
@@ -716,7 +717,7 @@ void VRRoadIntersection::computeMarkings() {
                     if (w[1] < 0) a = -a;
                     directions.push_back(a);
                 }
-                addArrows( lane, -5, directions );
+                addArrows( lane, -5, directions, roads->getArrowStyle() );
             }
         }
     }
@@ -745,7 +746,7 @@ void VRRoadIntersection::computeMarkings() {
             Vec3d n = p2-p1; n.normalize();
             p1 -= n*markingsWidthHalf;
             p2 += n*markingsWidthHalf;
-            addLine( "RoadMarking", p1, p2, n, n, markingsWidth, 0);
+            addLine( "RoadMarking", p1, p2, n, n, markingsWidth, 0, "white");
         }
     }
 }

@@ -45,8 +45,9 @@ class VRRoadNetwork : public VRRoadBase {
 		float trackWidth = 1.6; // TODO
         float roadTerrainOffset = 0.06; // same as terrain physics offset
         float markingsWidth = 0.15;
+        int arrowType = 0;
 
-        void createArrow(Vec4i dirs, int N, const Pose& p);
+        void createArrow(Vec4i dirs, int N, const Pose& p, int type = 0);
 
         vector<VREntityPtr> getRoadNodes();
         vector<VRRoadPtr> getNodeRoads(VREntityPtr node);
@@ -59,6 +60,9 @@ class VRRoadNetwork : public VRRoadBase {
 
         static VRRoadNetworkPtr create();
         VRRoadNetworkPtr ptr();
+
+        void setRoadStyle(int arrowType);
+        int getArrowStyle();
 
         void setTerrainOffset(float o);
         void setMarkingsWidth(float w);

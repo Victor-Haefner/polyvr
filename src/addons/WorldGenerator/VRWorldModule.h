@@ -17,6 +17,7 @@ class VRWorldModule {
         VRPlanetWeakPtr planet;
         VRTerrainWeakPtr terrain;
         VROntologyWeakPtr ontology;
+        VRRoadNetworkWeakPtr roads;
 
     public:
         VRWorldModule();
