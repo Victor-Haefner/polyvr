@@ -526,6 +526,7 @@ void VRRoadNetwork::computeSigns() {
                 Vec3d p2 = pose->pos() + x*2.8;
                 auto mL = road->addPath("StopLine", "Stopline", { road->addNode(0, p1), road->addNode(0, p2) }, { x, x });
                 mL->set("width", toString(0.3));
+                mL->set("color", "yellow");
                 roadEnt->add("markings", mL->getName());
             }
         }

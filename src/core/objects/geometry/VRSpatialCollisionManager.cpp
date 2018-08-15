@@ -125,37 +125,30 @@ void VRSpatialCollisionManager::addQuad(float width, float height, const Pose& p
 }
 
 void VRSpatialCollisionManager::localize(Boundingbox box) {
-    /*btCompoundShape* compound = new btCompoundShape();
-
-    for (auto data : space->boxSearch(box)) {
-        if (!data) continue;
-        btTriangleMesh* tri_mesh = (btTriangleMesh*)data;
-        btBvhTriangleMeshShape* shape = new btBvhTriangleMeshShape(tri_mesh, true);
-
-        btTransform T;
-        T.setIdentity();
-        compound->addChildShape(T, shape);
-    }
-
-    auto old_shape = getPhysics()->getCollisionShape();
+    /*auto old_shape = getPhysics()->getCollisionShape();
     if (old_shape) {
-        btCompoundShape* c = (btCompoundShape*)old_shape;
-        for (int i=0; i<c->getNumChildShapes(); i++) c->removeChildShapeByIndex(i);
-    }
-
-    getPhysics()->setPhysicalized(false);
-    getPhysics()->setDynamic(false);
-    getPhysics()->setCustomShape(compound);
-    getPhysics()->setPhysicalized(true);*/
+        btBvhTriangleMeshShape* c = (btBvhTriangleMeshShape*)old_shape;
+        auto tmsh = (btTriangleMesh*)c->getMeshInterface();
+        tmsh->getIndexedMeshArray().clear();
+        //for (int i=0; i<tmsh->getNumParts(); i++) tmsh->removePart(i);
+    }*/
 
     btTriangleMesh* mesh = new btTriangleMesh();
+    bool valid = false;
 
     for (auto data : space->boxSearch(box)) {
         if (!data) continue;
         btTriangleMesh* tri_mesh = (btTriangleMesh*)data;
         auto& meshes = tri_mesh->getIndexedMeshArray();
-        for (int i=0; i<meshes.size(); i++ ) mesh->addIndexedMesh( meshes[i] );
+        for (int i=0; i<meshes.size(); i++ ) {
+            if (meshes[i].m_numTriangles > 0) {
+                mesh->addIndexedMesh( meshes[i] );
+                valid = true;
+            }
+        }
     }
+
+    if (!valid) return;
 
     btBvhTriangleMeshShape* shape = new btBvhTriangleMeshShape(mesh, true);
     getPhysics()->setPhysicalized(false);
