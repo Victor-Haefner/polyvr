@@ -693,7 +693,8 @@ void VRScript::load(xmlpp::Element* e) {
 
             if (t->trigger == "on_scene_load" && active) {
                 auto scene = VRScene::getCurrent();
-                scene->queueJob(cbfkt_sys, 0, 1);
+                //scene->queueJob(cbfkt_sys, 0, 1); // strange effect, breaks the clustering when slaves connected bevore scene started
+                scene->queueJob(cbfkt_sys);
                 isInitScript = true;
                 loadingFrame = VRGlobals::CURRENT_FRAME;
             }

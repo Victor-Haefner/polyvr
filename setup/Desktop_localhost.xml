@@ -6,7 +6,7 @@
     </Window>
     <Window active="1" type="0" width="300" height="300" name="remote" mouse="None" keyboard="None" Nx="1" Ny="1" ConnType="Multicast">
       <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0 0" normal="0 0 1" user_pos="1 0 2" up="0 1 0" size="1 1" shear="0 0" warp="0 0" vsize="1700 1080" mirror="1" mirrorPos="0 0 0" mirrorNorm="1 0 0" user=""/>
-      <Server Address="l1"/>
+      <Server Address="localhost:30000"/>
     </Window>
   </Displays>
   <Devices>

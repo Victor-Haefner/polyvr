@@ -92,8 +92,6 @@ keep this in mind when trying to optimize regarding to system state like the fla
 */
 
 void VRMultiWindow::render(bool fromThread) {
-    //if (state == INITIALIZING) { initialize(); return; }
-
     if (state == JUSTCONNECTED) {
         Thread::getCurrentChangeList()->clear();
         Thread::getCurrentChangeList()->fillFromCurrentState();
@@ -115,6 +113,7 @@ string VRMultiWindow::getStateString() {
     if (state == CONNECTED) return "connected";
     if (state == INITIALIZING) return "initializing";
     if (state == CONNECTING) return "connecting";
+    if (state == JUSTCONNECTED) return "just connected";
     if (state == NO_CONNECTION) return "not connencted";
     return "invalid state";
 }

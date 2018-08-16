@@ -175,19 +175,21 @@ void VRWindowManager::updateWindows() {
         sc->getElem(VRGlobals::SCRIPTS_FRAME_RATE.statFPS)->add(VRGlobals::SCRIPTS_FRAME_RATE.fps);
     }
 
-    commitChanges();
+    //TODO: use barrier->getnumwaiting to make a state machine, allways ensure all are waiting!!
 
     BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
     if (barrier->getNumWaiting() == VRWindow::active_window_count) {
-        for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRMultiWindow>(w.second))
-            if (win->getState() == VRMultiWindow::INITIALIZING) win->initialize();
         barrier->enter(VRWindow::active_window_count+1);
-        //cout << "  go on " << endl;
+        auto clist = Thread::getCurrentChangeList();
+        for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRMultiWindow>(w.second)) if (win->getState() == VRMultiWindow::INITIALIZING) win->initialize();
+        commitChanges();
+        barrier->enter(VRWindow::active_window_count+1);
+        //if (clist->getNumCreated() > 0 || clist->getNumChanged() > 0) cout << "VRWindowManager::updateWindows " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
+        barrier->enter(VRWindow::active_window_count+1);
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
-        //cout << " wait at window manager barrier 2 " << endl;
         barrier->enter(VRWindow::active_window_count+1);
-        //cout << "  go on " << endl;
-        Thread::getCurrentChangeList()->clear();
+        clist->clear();
+        //sleep(1);
     }
 
     if (scene) scene->blockScriptThreads();

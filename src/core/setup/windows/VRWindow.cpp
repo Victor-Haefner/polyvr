@@ -78,13 +78,16 @@ void VRWindow::update( weak_ptr<VRThread>  wt) {
 
         if (t->control_flag) {
             barrier->enter(active_window_count+1);
+            barrier->enter(active_window_count+1);
             auto appCL = t->appThread->getChangeList();
-            //if (appCL->getNumCreated() > 0) cout << "VRWindow::update " << appCL->getNumCreated() << " " << appCL->getNumChanged() << endl;
-            Thread::getCurrentChangeList()->merge(*appCL);
+            auto clist = Thread::getCurrentChangeList();
+            clist->merge(*appCL);
+            //if (clist->getNumCreated() > 0 || clist->getNumChanged() > 0) cout << "VRWindow::update " << name << " " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
+            barrier->enter(active_window_count+1);
             render(true);
-            Thread::getCurrentChangeList()->clear();
+            clist->clear();
+            barrier->enter(active_window_count+1);
         }
-        barrier->enter(active_window_count+1);
 
         osgSleep(1);
     } while(t && t->control_flag);
