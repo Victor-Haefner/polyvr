@@ -210,7 +210,7 @@ void startTestServerT() {
     //Uncomment following to subscribe to datachange events inside server
 
     SubClient clt;
-    unique_ptr<Subscription> sub = server.CreateSubscription(100, clt);
+    auto sub = server.CreateSubscription(100, clt);
     sub->SubscribeDataChange(myvar);
 
 
