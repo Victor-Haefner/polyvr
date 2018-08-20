@@ -116,30 +116,34 @@ void VRProcess::printNodes(VRProcessDiagramPtr d){
     }
 }
 
-//TODO: fixing; doesn't return action transitions but empty list
+//TODO: remove cout's
 vector<VRProcessNodePtr> VRProcess::getActionTransitions(int subjectID, int actionID) {
 
     auto d = getBehaviorDiagram(subjectID);
     cout << "Behavior diagram: " << d << endl;
     auto neighbors = d->getNeightbors(d->getNode(actionID));
     vector<VRProcessNodePtr> res;
-    cout << "entering for loop" << endl;
 
-    cout << "neighbors count: " << neighbors.size() << endl;
     for (int i=0; i<neighbors.size(); i++){//auto node : neighbors) {
-        cout << "insite for loop" << endl;
-        cout << "node id: " << neighbors[i].ID <<endl;
         auto transition = getNode( neighbors[i].ID );
-        cout << "transition id: " << transition << endl;
         res.push_back(transition);
     }
-    cout << "leaving for loop" << endl;
-
     cout << "Behavior Nodes: " << endl;
     printNodes(d);
     cout << "Interaction Nodes: " << endl;
     printNodes(getInteractionDiagram());
 
+    return res;
+}
+
+vector<VRProcessNodePtr> VRProcess::getTransitionActions(int subjectID, int transitionID) {
+    auto d = getBehaviorDiagram(subjectID);
+    auto neighbors = d->getNeightbors( d->getNode(transitionID) );
+    vector<VRProcessNodePtr> res;
+    for (auto node : neighbors) {
+        auto action = getNode( node.ID );
+        res.push_back(action);
+    }
     return res;
 }
 
@@ -224,7 +228,7 @@ void VRProcess::update() {
 
         for ( auto source : edges ) {
             for (auto target : source.second) {
-                addTransition("T:", sID, nodes[source.first], nodes[target.first], behaviorDiagram);
+                addMessage("Msg:", nodes[source.first], nodes[target.first], behaviorDiagram);
             }
         }
     }
@@ -274,7 +278,7 @@ VRProcessNodePtr VRProcess::addAction(string name, int sID) {
     return a;
 }
 
-/*
+
 VRProcessNodePtr VRProcess::addTransition(string name, int sID, int i, int j, VRProcessDiagramPtr diag ){
     if (!diag) diag = behaviorDiagrams[sID];
     if (!diag) return 0;
@@ -285,7 +289,7 @@ VRProcessNodePtr VRProcess::addTransition(string name, int sID, int i, int j, VR
     diag->connect(tID, j, Graph::DEPENDENCY);
     return t;
 }
-*/
+
 
 VRProcessNodePtr VRProcess::getNode(int i, VRProcessDiagramPtr diag) {
     if (!diag) diag = interactionDiagram;

@@ -21,14 +21,15 @@ PyMethodDef VRPyProcess::methods[] = {
     {"getBehaviorDiagram", PyWrap(Process, getBehaviorDiagram, "Return subject behavior diagram - getBehaviorDiagram( int ID )", VRProcessDiagramPtr, int ) },
     {"getSubjects", PyWrap(Process, getSubjects, "Return subjects - [ProcessNode] getSubjects()", vector<VRProcessNodePtr> ) },
     {"getMessages", PyWrap(Process, getMessages, "Return messages - [ProcessNode] getMessages()", vector<VRProcessNodePtr> ) },
-    {"getSubjectMessages", PyWrap(Process, getSubjectMessages, "Return subject messages - [ProcessNode] getSubjectMessages()", vector<VRProcessNodePtr>, int ) },
-    {"getMessageSubjects", PyWrap(Process, getMessageSubjects, "Return message subjects - [ProcessNode] getMessageSubjects()", vector<VRProcessNodePtr>, int ) },
-    {"getSubjectActions", PyWrap(Process, getSubjectActions, "Return subject actions - [ProcessNode] getSubjectActions()", vector<VRProcessNodePtr>, int ) },
-    {"getActionTransitions", PyWrap(Process, getActionTransitions, "Return action transitions - [ProcessNode] getActionTransitions()", vector<VRProcessNodePtr>, int, int ) },
+    {"getSubjectMessages", PyWrap(Process, getSubjectMessages, "Return subject messages - [ProcessNode] getSubjectMessages(subject)", vector<VRProcessNodePtr>, int ) },
+    {"getMessageSubjects", PyWrap(Process, getMessageSubjects, "Return message subjects - [ProcessNode] getMessageSubjects(message)", vector<VRProcessNodePtr>, int ) },
+    {"getSubjectActions", PyWrap(Process, getSubjectActions, "Return subject actions - [ProcessNode] getSubjectActions(subject)", vector<VRProcessNodePtr>, int ) },
+    {"getActionTransitions", PyWrap(Process, getActionTransitions, "Return action transitions - [ProcessNode] getActionTransitions(subject, action)", vector<VRProcessNodePtr>, int, int ) },
+    {"getTransitionActions", PyWrap(Process, getActionTransitions, "Return actions connected by a given transition - [ProcessNode] getTransitionActions(subject, transition)", vector<VRProcessNodePtr>, int, int ) },
     {"addSubject", PyWrap(Process, addSubject, "Add a new subject - ProcessNode addSubject( name )", VRProcessNodePtr, string ) },
     {"addAction", PyWrap(Process, addAction, "Add a new action to subject, by ID", VRProcessNodePtr, string, int ) },
     {"addMessage", PyWrapOpt(Process, addMessage, "Add a new message between subjects or actions i and j - ProcessNode addMessage( name, int i, int j )", "0", VRProcessNodePtr, string, int, int, VRProcessDiagramPtr ) },
-    //{"addTransition", PyWrapOpt(Process, addTransition, "Add a new transition between actions i and j - ProcessNode addTransition( name, subject, int i, int j )", "0", VRProcessNodePtr, string, int, int, int, VRProcessDiagramPtr ) },
+    {"addTransition", PyWrapOpt(Process, addTransition, "Add a new transition between actions i and j - ProcessNode addTransition( name, subject, int i, int j )", "0", VRProcessNodePtr, string, int, int, int, VRProcessDiagramPtr ) },
    {NULL}  /* Sentinel */
 };
 

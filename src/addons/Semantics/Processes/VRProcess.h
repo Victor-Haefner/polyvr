@@ -73,12 +73,13 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         vector<VRProcessNodePtr> getMessages();
         vector<VRProcessNodePtr> getSubjectActions(int subjectID);
         vector<VRProcessNodePtr> getActionTransitions(int subjectID, int actionID);
+        vector<VRProcessNodePtr> getTransitionActions(int subjectID, int transitionID);
 
 
         VRProcessNodePtr addSubject(string name);
         VRProcessNodePtr addMessage(string name, int i, int j, VRProcessDiagramPtr diag = 0);
         VRProcessNodePtr addAction(string name, int sID);
-        //VRProcessNodePtr addTransition(string name, int sID, int i, int j, VRProcessDiagramPtr d = 0);
+        VRProcessNodePtr addTransition(string name, int sID, int i, int j, VRProcessDiagramPtr d = 0);
 
         void remNode(VRProcessNodePtr n);
 };

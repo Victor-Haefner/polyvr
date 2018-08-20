@@ -127,9 +127,10 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     if (n->type == SUBJECT) { fg = Color4f(0,0,0,1); bg = Color4f(0.8,0.9,1,1); }
     if (n->type == ACTION) { fg = Color4f(0,0,0,1); bg = Color4f(1,0.9,0.8,1); }
     if (n->type == MESSAGE) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,0,1); }
+    if (n->type == TRANSITION) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,0,1); }
 
     int wrapN = 12;
-    if (n->type == MESSAGE) wrapN = 22;
+    if (n->type == MESSAGE || n->type == TRANSITION) wrapN = 22;
     string l = n->label;
     int lineN = wrapString(l, wrapN);
 
@@ -142,12 +143,13 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
 
     if (n->type == SUBJECT) pushSubjectBox(geo, wrapN, lineN*height*0.5);
     if (n->type == ACTION) pushActionBox(geo, wrapN, lineN*height*0.5);
-    if (n->type == MESSAGE) pushMsgBox(geo, wrapN, lineN*height*0.5);
+    if (n->type == MESSAGE || n->type == TRANSITION) pushMsgBox(geo, wrapN, lineN*height*0.5);
 
     auto w = geo.asGeometry("ProcessElement");
     if (n->type == SUBJECT) w->addTag("subject");
     if (n->type == ACTION) w->addTag("action");
     if (n->type == MESSAGE) w->addTag("message");
+    if (n->type == TRANSITION) w->addTag("transition");
     w->setMaterial(mat);
     w->getConstraint()->setTConstraint(Vec3d(0,1,0), VRConstraint::PLANE);
     w->getConstraint()->setReferential(ptr());
@@ -215,35 +217,30 @@ void VRProcessLayout::buildSBDs(){
             auto h = tool->getHandle(n);
             h->addChild(addElement(action) );
             j++;
+            /*
+            for (auto transition : process->getActionTransitions(subject->getID(), action->getID())){
+                auto transitionElement = addElement(transition);
+                auto actions = process->getTransitionActions(subject->getID(), transition->getID());
+
+                auto id0 = actions[0]->getID();
+                auto id1 = actions[1]->getID();
+
+                auto h0 = tool->getHandle(id0);
+                auto h1 = tool->getHandle(id1);
+                auto p = (h0->getWorldPosition() + h1->getWorldPosition())*0.5;
+                auto n = tool->addNode( Pose::create(p,Vec3d(0,0,-1),Vec3d(0,1,0) ) );
+                auto h = tool->getHandle(n);
+                h->addChild( transitionElement );
+
+                Vec3d norm = Vec3d(1,0,0);
+                int idt = transition->getID();
+                tool->connect(id0, idt, false, true, norm, norm);
+                tool->connect(idt, id1, false, true, norm, norm);
+            }
+            */
         }
         i++;
 	}
-
-	//TODO: adjust to receive action transitions (not messages)
-	/*
-	for (auto message : process->getMessages()) {
-		auto messageElement = addElement(message);
-		auto subjects = process->getMessageSubjects( message->getID() );
-
-        if(subjects[0]->type == ACTION){
-            auto id0 = subjects[0]->getID();
-        }
-
-		auto id1 = subjects[1]->getID();
-
-		auto h0 = tool->getHandle(id0);
-		auto h1 = tool->getHandle(id1);
-		auto p = (h0->getWorldPosition() + h1->getWorldPosition())*0.5;
-		auto n = tool->addNode( Pose::create(p,Vec3d(0,0,-1),Vec3d(0,1,0) ) );
-		auto h = tool->getHandle(n);
-		h->addChild( messageElement );
-
-		Vec3d norm = Vec3d(1,0,0);
-		int idm = message->getID();
-		tool->connect(id0, idm, false, true, norm, norm);
-		tool->connect(idm, id1, false, true, norm, norm);
-	}
-    */
 }
 
 /*void VRProcessLayout::rebuild() {
