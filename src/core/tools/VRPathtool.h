@@ -129,10 +129,10 @@ class VRPathtool : public VRObject {
 
         void setGraph(GraphPtr g, bool doClear = true);
         int addNode(PosePtr p);
-        void remNode(int i);
+        void removeNode(int i);
         int getNodeID(VRObjectPtr o);
-        void connect(int i1, int i2, bool handles = true, bool doArrow = false);
-        void connect(int i1, int i2, bool handles, bool doArrow, Vec3d n1, Vec3d n2);
+        VRGeometryPtr addHandle(int nID, PosePtr p);
+        void connect(int i1, int i2, Vec3d n1, Vec3d n2, bool handles = true, bool doArrow = false);
         void disconnect(int i1, int i2);
 
         PathPtr newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution = 10, bool doCHandles = false);
@@ -153,7 +153,7 @@ class VRPathtool : public VRObject {
         VRMaterialPtr getPathMaterial();
 
         void select(VRGeometryPtr handle);
-        void select(PathPtr p);
+        void selectPath(PathPtr p);
         void deselect();
         void update();
 };

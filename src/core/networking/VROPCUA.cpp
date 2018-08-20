@@ -180,7 +180,8 @@ VROPCUANodePtr VROPCUA::connect(string address) {
     cout << "OPCUA: connect to " << endpoint << endl;
     if (client) client->Disconnect();
     client = shared_ptr<OpcUa::UaClient>( new OpcUa::UaClient(0) );
-    client->Connect(endpoint);
+    try { client->Connect(endpoint); }
+    catch(...) { return 0;}
     OpcUa::Node objects = client->GetObjectsNode();
     return VROPCUANode::create( objects );
 }

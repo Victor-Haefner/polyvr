@@ -192,8 +192,8 @@ void VRProcessLayout::rebuild() {
 
 		Vec3d norm = Vec3d(1,0,0);
 		int idm = message->getID();
-		tool->connect(id0, idm, false, true, norm, norm);
-		tool->connect(idm, id1, false, true, norm, norm);
+		tool->connect(id0, idm, norm, norm, false, true);
+		tool->connect(idm, id1, norm, norm, false, true);
 	}
 
 	tool->update();

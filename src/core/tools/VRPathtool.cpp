@@ -138,19 +138,26 @@ void VRPathtool::setGraph(GraphPtr g, bool doClear) {
 }
 
 int VRPathtool::addNode(PosePtr p) {
+    if (!graph) setGraph( Graph::create() );
+    int i = graph->addNode();
+    addHandle(i,p);
+    return i;
+}
+
+VRGeometryPtr VRPathtool::addHandle(int nID, PosePtr p) {
+    if (!graph) return 0;
+
     auto tmp = VRTransform::create("tmp");
     tmp->setPose(p);
     p = tmp->getRelativePose(ptr());
 
-    if (!graph) setGraph( Graph::create() );
-    int i = graph->addNode();
-    graph->setPosition(i, p);
-    auto h = setGraphNode(i);
+    graph->setPosition(nID, p);
+    auto h = setGraphNode(nID);
     h->setPose(p);
-    return i;
+    return h;
 }
 
-void VRPathtool::remNode(int i) {
+void VRPathtool::removeNode(int i) {
     if (!graph) return;
     graph->remNode(i);
     if (knots.count(i)) {
@@ -208,17 +215,18 @@ void VRPathtool::disconnect(int i1, int i2) {
     vecRemVal(knots[i2].in, i1);
 }
 
-void VRPathtool::connect(int i1, int i2, bool handles, bool doArrow) {
-    if (i1 == i2) return;
-    auto& nodes = graph->getNodes();
-    Vec3d d = nodes[i2].p.pos() - nodes[i1].p.pos();
-    d.normalize();
-    connect(i1,i2,handles,doArrow,d,d);
-}
-
-void VRPathtool::connect(int i1, int i2, bool handles, bool doArrow, Vec3d n1, Vec3d n2) {
+void VRPathtool::connect(int i1, int i2, Vec3d n1, Vec3d n2, bool handles, bool doArrow) {
     if (i1 == i2) return;
     if (!graph) return;
+
+    if (n1.length() < 1e-4) {
+        auto& nodes = graph->getNodes();
+        Vec3d d = nodes[i2].p.pos() - nodes[i1].p.pos();
+        d.normalize();
+        n1 = d;
+        n2 = d;
+    }
+
     if (!graph->connected(i1,i2)) {
         int eID = graph->connect(i1,i2);
         auto& e = graph->getEdge(eID);
@@ -645,7 +653,7 @@ void VRPathtool::select(VRGeometryPtr h) {
     manip->manipulate(h);
 }
 
-void VRPathtool::select(PathPtr p) {
+void VRPathtool::selectPath(PathPtr p) {
     if (selectedPath) getStroke(selectedPath)->setMaterial(lmat);
     selectedPath = p;
     getStroke(selectedPath)->setMaterial(lsmat);
