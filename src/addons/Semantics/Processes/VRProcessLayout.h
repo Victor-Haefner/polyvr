@@ -20,6 +20,8 @@ class VRProcessLayout : public VRTransform {
 
         void init();
         void rebuild(); // TODO
+        void buildSID();
+        void buildSBDs();
 
     public:
         VRProcessLayout(string name = "");
