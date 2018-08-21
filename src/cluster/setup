@@ -1,7 +1,7 @@
 #!/bin/bash
 libs="-lOSGBase -lOSGContribTrapezoidalShadowMaps -lOSGCluster -lOSGDrawable -lOSGEffectGroups -lOSGGroup -lOSGImageFileIO -lOSGState -lOSGSystem -lOSGUtil -lOSGText -lOSGWindow -lOSGWindowGLUT -lOSGWindowX -lGLU -lGL -lSM -lICE -lX11 -lXext -lglut -lXmu -lXi -lboost_system"
 libpaths="-L/usr/lib/opensg"
-flags="-DLC_ALL=C -DOSG_WITH_GLUT -DOSG_WITH_JPG -DOSG_WITH_PNG -D_OSG_HAVE_CONFIGURED_H_ -DOSG_BUILD_ACTIVE"
+flags="-DLC_ALL=C -DOSG_WITH_GLUT -DOSG_WITH_JPG -DOSG_WITH_PNG -D_OSG_HAVE_CONFIGURED_H_ -DOSG_BUILD_ACTIVE -DBOOST_NO_CXX11_HDR_ATOMIC=1"
 
 sudo apt-get install build-essential libglew-dev freeglut3-dev libboost-dev libxi-dev libxmu-dev libboost-filesystem-dev libgdal1-dev
 

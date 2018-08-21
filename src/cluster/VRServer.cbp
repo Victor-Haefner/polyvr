@@ -31,11 +31,11 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-std=c++11" />
+			<Add option="-fPIC" />
 			<Add option="`pkg-config gtk+-2.0 --cflags`" />
 			<Add option="`pkg-config --cflags libxml++-2.6`" />
 			<Add option="-use_readonly_const" />
 			<Add option="-ftemplate-depth-100" />
-			<Add option="-fPIC" />
 			<Add option="-Wno-deprecated" />
 			<Add option="-DLC_ALL=C" />
 			<Add option="-DOSG_WITH_GLUT" />
@@ -43,6 +43,7 @@
 			<Add option="-DOSG_WITH_PNG" />
 			<Add option="-D_OSG_HAVE_CONFIGURED_H_" />
 			<Add option="-DOSG_BUILD_ACTIVE" />
+			<Add option="-DBOOST_NO_CXX11_HDR_ATOMIC=1" />
 		</Compiler>
 		<Linker>
 			<Add option="-lOSGBase" />
