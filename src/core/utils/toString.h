@@ -14,10 +14,21 @@ string subString(const string& s, int beg, int len);
 bool startsWith(const string& s, const string& s2);
 bool endsWith(const string& s, const string& s2);
 
-template<typename T>
-string toString(const T& s);
+template<typename T> string toString(const T& s);
 string toString(const double& f, int d = -1);
 string toString(const float& f, int d = -1);
+
+template<typename T> string toString(const vector<T>& v) {
+    string res = "[";
+    for (unsigned int i=0; i<v.size(); i++) {
+        if (i > 0) res += ", ";
+        res += toString<T>(v[i]);
+    }
+    return res+"]";
+}
+
+string toString(const vector<float>& v, int d=-1);
+string toString(const vector<double>& v, int d=-1);
 
 template<typename T> string typeName(const T& t);
 template<typename T> string typeName(const vector<T>& t) { return "list of "+typeName<T>(T()); }

@@ -36,17 +36,37 @@ template<> string toString(const unsigned char& i) { stringstream ss; ss << i; r
 template<> string toString(const voidPtr& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const size_t& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const unsigned int& i) { stringstream ss; ss << i; return ss.str(); }
+
 string toString(const float& f, int d) {
     stringstream ss;
     if (d >= 0) ss << fixed << setprecision(d);//ss.precision(d);
     ss << f;
     return ss.str();
 }
+
 string toString(const double& f, int d) {
     stringstream ss;
     if (d >= 0) ss << fixed << setprecision(d);//ss.precision(d);
     ss << f;
     return ss.str();
+}
+
+string toString(const vector<float>& v, int d) {
+    string res = "[";
+    for (unsigned int i=0; i<v.size(); i++) {
+        if (i > 0) res += ", ";
+        res += toString(v[i], d);
+    }
+    return res+"]";
+}
+
+string toString(const vector<double>& v, int d) {
+    string res = "[";
+    for (unsigned int i=0; i<v.size(); i++) {
+        if (i > 0) res += ", ";
+        res += toString(v[i], d);
+    }
+    return res+"]";
 }
 
 template<> string toString(const Vec2d& v) {
