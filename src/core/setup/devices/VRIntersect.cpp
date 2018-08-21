@@ -145,6 +145,13 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force, VRTrans
     if (caster == 0) caster = dev->getBeacon();
     if (caster == 0) { cout << "Warning: VRIntersect::intersect, caster is 0!\n"; return ins; }
 
+    // TODO: testing purposes for mapping touch position to viewport
+//    cout << "VRIntersect::intersect. getType: " << dev->getType() << endl;
+    // TODO: unfinished.
+    if (dev->getType() == "multitouch") {
+        cout << "VRIntersect::intersect. Caster at: " << caster->getAt() << endl;
+    }
+
     uint now = VRGlobals::CURRENT_FRAME;
     for (auto t : trees) {
         if (intersections.count(t.get())) {

@@ -398,6 +398,9 @@ void VRMultiTouch::updatePosition(int x, int y) {
 * @param y: y coordinate of the touch device, not necessarily same resolution as screen
 */
 void VRMultiTouch::mouse(int button, int state, int x, int y) {
+
+    //TODO: Testing purposes: get appropriate viewport from touch position
+
     cout << "VRMultiTouch::mouse  Button: " << button << ", State: " << state << ", X:Y: " << x << ":" << y << endl;
 
     updatePosition(x,y);
