@@ -147,6 +147,15 @@ vector<VRProcessNodePtr> VRProcess::getTransitionActions(int subjectID, int tran
     return res;
 }
 
+vector<VRProcessNodePtr> VRProcess::getTransitions(int subjectID) {
+    vector<VRProcessNodePtr> res;
+    auto d = getBehaviorDiagram(subjectID);
+    for (int i=0; i<d->size(); i++) {
+        auto& e = d->processnodes[i];
+        if (e->type == TRANSITION) res.push_back(e);
+    }
+    return res;
+}
 
 
 void VRProcess::update() {
