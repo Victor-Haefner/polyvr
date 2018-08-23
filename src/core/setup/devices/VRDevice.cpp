@@ -170,12 +170,6 @@ void VRDevice::drag(VRObjectPtr obj) { VRIntersect::drag(obj, getBeacon()); }
 void VRDevice::drop() { VRIntersect::drop(); }
 
 bool VRDevice::intersect2(VRObjectPtr subtreeRoot, bool force, VRTransformPtr caster, Vec3d dir) {
-    //TODO: find out in which view port event happens (when multitouch)
-
-//    if (caster == 0) caster = this->getBeacon();
-//    cout << "VRDevice::intersect2. Caster.at: " << caster->getAt() << endl;
-
-
     OSG::VRIntersection ins = VRIntersect::intersect(subtreeRoot, force, caster, dir);
     return ins.hit;
 }

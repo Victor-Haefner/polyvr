@@ -70,7 +70,8 @@ VRCamera::~VRCamera() {
 VRCameraPtr VRCamera::ptr() { return static_pointer_cast<VRCamera>( shared_from_this() ); }
 
 VRCameraPtr VRCamera::create(string name, bool reg) {
-    auto p = shared_ptr<VRCamera>(new VRCamera(name) );
+    auto p = VRCameraPtr(new VRCamera(name) );
+    p->addChild(p->vrSetup);
     p->registred = reg;
     getAll().push_back( p );
     if (reg) VRGuiManager::broadcast("camera_added");
@@ -93,8 +94,11 @@ void VRCamera::updateOrthSize() {
 void VRCamera::setMatrix(Matrix4d m) { VRTransform::setMatrix(m); updateOrthSize(); }
 void VRCamera::setAt(Vec3d m) { VRTransform::setAt(m); updateOrthSize(); }
 void VRCamera::setFrom(Vec3d m) { VRTransform::setFrom(m); updateOrthSize(); }
+VRObjectPtr VRCamera::getSetupNode() { return vrSetup; }
 
 void VRCamera::setup(bool reg) {
+    vrSetup = VRObject::create("Device Beacons");
+
     PerspectiveCameraMTRecPtr pcam;
     OrthographicCameraMTRecPtr ocam;
     if (cam) pcam = dynamic_pointer_cast<PerspectiveCamera>(cam->cam);

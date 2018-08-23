@@ -27,6 +27,13 @@ class VRMultiTouch : public VRDevice {
         };
 
     private:
+        // maximum raw coordinates of MT Device
+        // Min and max values from manual experiments:
+        // X: min ~70, max ~28560
+        // Y: min ~80, max ~16020
+        const static int maxX = 28630;
+        const static int maxY = 16100;
+
         int fd;
         mtdev dev;
         VRUpdateCbPtr updatePtr;

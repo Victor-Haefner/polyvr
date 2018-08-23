@@ -309,7 +309,7 @@ bool VRMultiTouch::addFinger(int fingerID) {
 }
 
 /**
-* TODO: Duplicate code with VRMouse. Push Method to super class or use Interface?
+* TODO: Duplicate code with VRMouse. Push Method to super class?
 */
 bool VRMultiTouch::calcViewRay(VRCameraPtr cam, VRViewPtr view, Line &line, float x, float y, int W, int H) {
     if (!cam) return false;
@@ -338,6 +338,8 @@ bool VRMultiTouch::calcViewRay(VRCameraPtr cam, VRViewPtr view, Line &line, floa
     multFull(cctowc, Pnt3f(x, y, 1), at ); // 0.1
     if (view && view->getCameraDecoratorLeft()) from += Vec3f(view->getProjectionUser());
 
+    cout << "VRMultiTouch::calcViewRay cam: " << cam->getName() << " from: " << from << endl;
+
     Vec3f dir = at - from;
     dir.normalize();
 
@@ -350,40 +352,57 @@ bool VRMultiTouch::calcViewRay(VRCameraPtr cam, VRViewPtr view, Line &line, floa
 }
 
 bool VRMultiTouch::rescale(float& v, float m1, float m2) {
-    v = ( v-m1 ) / (m2-m1)*2 -1;
+    // Rescale v to window coordinates ([-1;1]) of given bounds m1, m2
+    v = (v-m1)/(m2-m1) *2 -1;
+    // check if v is within bounds
     return (v >= -1 && v <= 1);
 }
 
 //3d object to emulate a hand in VRSpace
 void VRMultiTouch::updatePosition(int x, int y) {
-    auto cam = this->cam.lock();
+
+    auto cam = this->cam.lock(); // TODO: is this obsolete after adding "cam = view->getCamera();" in if(inside)?
     auto win = window.lock();
     if (!cam) { cout << "Warning: VRMultiTouch::updatePosition, no camera defined!" << endl; return; }
     if (!win) { cout << "Warning: VRMultiTouch::updatePosition, no window defined!" << endl; return; }
 
-    for (auto v : win->getViews()) {
+
+    for (auto view : win->getViews()) {
+        // Find the view in which the touch event is currently positioned
         int w, h;
-        w = v->getViewportL()->calcPixelWidth();
-        h = v->getViewportL()->calcPixelHeight();
+        w = view->getViewportL()->calcPixelWidth();
+        h = view->getViewportL()->calcPixelHeight();
 
-        float rx, ry;
-        rx =  (x/28430.0 - 0.5 )*2; // 65535.0
-        ry = -(y/16000.0 - 0.5 )*2;
+        // Get position coords of the views from [0;1] to [-1;1]
+        Vec4d box = view->getPosition()*2 - Vec4d(1,1,1,1);
 
-        Vec4d box = v->getPosition()*2 - Vec4d(1,1,1,1);
+        // switch y position coords, so that -1 is on the lower bound, not the upper
         auto tmp = box[1];
         box[1] = -box[3];
         box[3] = -tmp;
 
+        // Normalize input coords to [-1;1]
+        // Needs to be in loop, since rx, ry are modified by rescale
+        float rx, ry;
+        rx =  (x/float(maxX) - 0.5 )*2;
+        ry = -(y/float(maxY) - 0.5 )*2;
+
         bool inside = rescale(rx, box[0], box[2]) && rescale(ry, box[1], box[3]);
+//        cout << "X: " << Vec2f(box[0], box[2]) << ", Y: " << Vec2f(box[1], box[3]) << ". rx,ry: " << Vec2f(rx,ry) << " --> " << inside << endl;
+
         if (inside) {
 
-            calcViewRay(cam, v, ray, rx,ry,w,h);
+            cam = view->getCamera();
+
+            calcViewRay(cam, view, ray, rx,ry,w,h);
             auto p = Pose::create(Vec3d(ray.getPosition()), Vec3d(ray.getDirection()));
             p->makeUpOrthogonal();
 
-            getBeacon(this->fingers[currentFingerID].beaconID)->setPose(p);
-            //cout << "  Update MT x y (" << Vec2i(x,y) << "), rx ry (" << Vec2f(rx,ry) << "), w h (" << Vec2i(w,h) << ") dir " << getBeacon()->getDir() << endl;
+            auto beacon = getBeacon(this->fingers[currentFingerID].beaconID);
+            beacon->setPose(p);
+            if (!beacon->hasAncestor(cam)) cam->getSetupNode()->addChild(beacon);
+
+//            cout << "  Update MT x y (" << Vec2i(x,y) << "), rx ry (" << Vec2f(rx,ry) << "), w h (" << Vec2i(w,h) << ") dir " << getBeacon()->getDir() << endl;
             break;
         }
     }
@@ -399,9 +418,8 @@ void VRMultiTouch::updatePosition(int x, int y) {
 */
 void VRMultiTouch::mouse(int button, int state, int x, int y) {
 
-    //TODO: Testing purposes: get appropriate viewport from touch position
 
-    cout << "VRMultiTouch::mouse  Button: " << button << ", State: " << state << ", X:Y: " << x << ":" << y << endl;
+//    cout << "VRMultiTouch::mouse  Button: " << button << ", State: " << state << ", X:Y: " << x << ":" << y << endl;
 
     updatePosition(x,y);
     change_button(button, state);
