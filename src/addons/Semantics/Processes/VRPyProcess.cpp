@@ -44,7 +44,8 @@ PyMethodDef VRPyProcessDiagram::methods[] = {
 };
 
 PyMethodDef VRPyProcessLayout::methods[] = {
-    {"getPathtool", PyWrap(ProcessLayout, getPathtool, "Access path tool", VRPathtoolPtr ) },
+    {"getSIDPathtool", PyWrap(ProcessLayout, getSIDPathtool, "Access path tool", VRPathtoolPtr ) },
+    {"getSBDPathtool", PyWrap(ProcessLayout, getSBDPathtool, "Access path tool", VRPathtoolPtr, int ) },
     {"setProcess", PyWrap(ProcessLayout, setProcess, "Set process - setProcess( process )", void, VRProcessPtr ) },
     {"getElement", PyWrap(ProcessLayout, getElement, "Return element by ID - obj getElement( int ID )", VRObjectPtr, int ) },
     {"getElementID", PyWrap(ProcessLayout, getElementID, "Return element ID - ID getElementID( VRObjectPtr geo )", int, VRObjectPtr ) },
