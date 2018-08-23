@@ -8,12 +8,14 @@
 #include "addons/RealWorld/VRRealWorldFwd.h"
 #include "core/math/VRMathFwd.h"
 #include "core/objects/VRTransform.h"
+#include "addons/Bullet/VRPhysicsFwd.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRWorldGenerator : public VRTransform {
     private:
+        VRSpatialCollisionManagerPtr collisionShape;
         VROntologyPtr ontology;
         VRPlanetPtr planet;
         VRObjectManagerPtr assets;
@@ -51,6 +53,10 @@ class VRWorldGenerator : public VRTransform {
         VRTerrainPtr getTerrain();
         VRDistrictPtr getDistrict();
         VRMaterialPtr getMaterial(string name);
+
+        void setupPhysics();
+        void updatePhysics(Boundingbox box);
+        VRSpatialCollisionManagerPtr getPhysicsSystem();
 
         string getStats();
 };

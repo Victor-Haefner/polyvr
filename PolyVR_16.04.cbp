@@ -667,6 +667,8 @@
 		<Unit filename="src/core/navigation/VRNavigationFwd.h" />
 		<Unit filename="src/core/navigation/VRNavigator.cpp" />
 		<Unit filename="src/core/navigation/VRNavigator.h" />
+		<Unit filename="src/core/networking/VRHDLC.cpp" />
+		<Unit filename="src/core/networking/VRHDLC.h" />
 		<Unit filename="src/core/networking/VRMainInterface.cpp" />
 		<Unit filename="src/core/networking/VRMainInterface.h" />
 		<Unit filename="src/core/networking/VRNetworkManager.cpp" />
@@ -738,6 +740,8 @@
 		<Unit filename="src/core/objects/geometry/VRPrimitive.h" />
 		<Unit filename="src/core/objects/geometry/VRSky.cpp" />
 		<Unit filename="src/core/objects/geometry/VRSky.h" />
+		<Unit filename="src/core/objects/geometry/VRSpatialCollisionManager.cpp" />
+		<Unit filename="src/core/objects/geometry/VRSpatialCollisionManager.h" />
 		<Unit filename="src/core/objects/geometry/VRSprite.cpp" />
 		<Unit filename="src/core/objects/geometry/VRSprite.h" />
 		<Unit filename="src/core/objects/geometry/VRStroke.cpp" />
@@ -946,6 +950,8 @@
 		<Unit filename="src/core/scripting/VRPyNavPreset.h" />
 		<Unit filename="src/core/scripting/VRPyNavigator.cpp" />
 		<Unit filename="src/core/scripting/VRPyNavigator.h" />
+		<Unit filename="src/core/scripting/VRPyNetworking.cpp" />
+		<Unit filename="src/core/scripting/VRPyNetworking.h" />
 		<Unit filename="src/core/scripting/VRPyOPCUA.cpp" />
 		<Unit filename="src/core/scripting/VRPyOPCUA.h" />
 		<Unit filename="src/core/scripting/VRPyObject.cpp" />
@@ -988,6 +994,8 @@
 		<Unit filename="src/core/scripting/VRPySocket.h" />
 		<Unit filename="src/core/scripting/VRPySound.cpp" />
 		<Unit filename="src/core/scripting/VRPySound.h" />
+		<Unit filename="src/core/scripting/VRPySpatialCollisionManager.cpp" />
+		<Unit filename="src/core/scripting/VRPySpatialCollisionManager.h" />
 		<Unit filename="src/core/scripting/VRPySprite.cpp" />
 		<Unit filename="src/core/scripting/VRPySprite.h" />
 		<Unit filename="src/core/scripting/VRPyStateMachine.cpp" />

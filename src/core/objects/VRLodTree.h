@@ -9,7 +9,7 @@ using namespace std;
 
 class OctreeNode;
 
-class VRLodLeaf : public VRTransform {
+class VRLodLeaf : public VRObject {
     private:
         OctreeNode* oLeaf = 0;
         int lvl = 0;
@@ -28,6 +28,7 @@ class VRLodLeaf : public VRTransform {
         void reset();
 
         OctreeNode* getOLeaf();
+        VRLodPtr getLod();
         int getLevel();
 };
 

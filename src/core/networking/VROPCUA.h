@@ -14,9 +14,13 @@ namespace OpcUa {
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class VROPCUANode {
+class VROPCUANode : public std::enable_shared_from_this<VROPCUANode> {
     private:
         shared_ptr<OpcUa::Node> node = 0;
+
+        uint8_t nodeType = 0;
+        bool isScalar = true;
+        bool isArray = false;
 
     public:
         VROPCUANode(shared_ptr<OpcUa::Node> node = 0);
@@ -24,13 +28,18 @@ class VROPCUANode {
 
         static VROPCUANodePtr create(OpcUa::Node& node);
 
-        int ID();
+        string ID();
         string name();
         string value();
         string type();
         vector<VROPCUANodePtr> getChildren();
 
+        VROPCUANodePtr getChild(int i);
+        VROPCUANodePtr getChildByName(string name);
+        VROPCUANodePtr getChildAtPath(string path); // Names separated by '.'
+
         void set(string value);
+        void setVector(vector<string> values);
 
         static string typeToString(uint8_t v);
 };

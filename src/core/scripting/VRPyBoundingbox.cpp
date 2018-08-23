@@ -16,7 +16,15 @@ PyMethodDef VRPyBoundingbox::methods[] = {
     {"update", PyCastWrap(Boundingbox, update, "Update the bounding box", void, Vec3d) },
     {"center", PyCastWrap(Boundingbox, center, "Get the center", Vec3d) },
     {"size", PyCastWrap(Boundingbox, size, "Get the size", Vec3d) },
+    {"radius", PyCastWrap(Boundingbox, radius, "Get the size", float) },
+    {"volume", PyCastWrap(Boundingbox, volume, "Get the size", float) },
+    {"setCenter", PyCastWrap(Boundingbox, setCenter, "Get the size", void, Vec3d) },
+    {"move", PyCastWrap(Boundingbox, move, "Get the size", void, Vec3d) },
+    {"scale", PyCastWrap(Boundingbox, scale, "Get the size", void, float) },
+    {"inflate", PyCastWrap(Boundingbox, inflate, "Get the size", void, float) },
+    {"isInside", PyCastWrap(Boundingbox, isInside, "Get the size", bool, Vec3d) },
+    {"intersectedBy", PyCastWrap(Boundingbox, intersectedBy, "Get the size", bool, Line) },
+    {"clamp", PyCastWrap(Boundingbox, clamp, "Get the size", void, Vec3d) },
+    {"getRandomPoint", PyCastWrap(Boundingbox, getRandomPoint, "Get the size", Vec3d) },
     {NULL}  /* Sentinel */
 };
-
-

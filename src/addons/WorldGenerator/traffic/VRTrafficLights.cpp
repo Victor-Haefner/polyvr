@@ -11,7 +11,7 @@ VRTrafficLight::~VRTrafficLight() {}
 VRTrafficLightPtr VRTrafficLight::create(VREntityPtr lane, VRTrafficLightsPtr system, PosePtr p) {
     auto l = VRTrafficLightPtr(new VRTrafficLight(lane, system));
     l->setPose(p);
-    system->addLight(l);
+    system->addTrafficLight(l);
     return l;
 }
 
@@ -54,6 +54,10 @@ VRTrafficLights::VRTrafficLights() {
         redOff->setDiffuse(Color3f(C,0,0));
         orangeOff->setDiffuse(Color3f(C,C,0));
         greenOff->setDiffuse(Color3f(0,C,0));
+        redOff->setLit(false);
+        orangeOff->setLit(false);
+        greenOff->setLit(false);
+
         redOn->setDiffuse(Color3f(1.0,0,0));
         orangeOn->setDiffuse(Color3f(1.0,1.0,0));
         greenOn->setDiffuse(Color3f(0,1.0,0));
@@ -66,7 +70,7 @@ VRTrafficLights::VRTrafficLights() {
 VRTrafficLights::~VRTrafficLights() {}
 VRTrafficLightsPtr VRTrafficLights::create() { return VRTrafficLightsPtr(new VRTrafficLights()); }
 
-void VRTrafficLights::addLight(VRTrafficLightPtr light) {
+void VRTrafficLights::addTrafficLight(VRTrafficLightPtr light) {
     auto opposite = [&](VRTrafficLightPtr l1, VRTrafficLightPtr l2) { // TODO: this is pretty crappy..
         /*auto lightE1 = l1->getEntity();
         auto lightE2 = l2->getEntity();

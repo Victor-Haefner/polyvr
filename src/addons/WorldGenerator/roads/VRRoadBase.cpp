@@ -123,12 +123,13 @@ VREntityPtr VRRoadBase::addPath( string type, string name, vector<VREntityPtr> n
 	return path;
 }
 
-VREntityPtr VRRoadBase::addArrows( VREntityPtr lane, float t, vector<float> dirs ) {
+VREntityPtr VRRoadBase::addArrows( VREntityPtr lane, float t, vector<float> dirs, int type ) {
     auto o = ontology.lock();
     auto arrow = o->addEntity("laneArrow", "Arrow");
     lane->add("arrows", arrow->getName());
     arrow->set("position", toString(t));
     arrow->set("lane", lane->getName());
+    arrow->set("type", toString(type));
     for (auto d : dirs) arrow->add("direction", toString(d));
     return arrow;
 }

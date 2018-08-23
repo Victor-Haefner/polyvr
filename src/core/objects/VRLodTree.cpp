@@ -8,7 +8,7 @@ using namespace OSG;
 template<> string typeName(const OSG::VRLodLeafPtr& t) { return "LodLeaf"; }
 template<> string typeName(const OSG::VRLodTreePtr& t) { return "LodTree"; }
 
-VRLodLeaf::VRLodLeaf(string name, OctreeNode* o, int l) : VRTransform(name), oLeaf(o), lvl(l) {}
+VRLodLeaf::VRLodLeaf(string name, OctreeNode* o, int l) : VRObject(name), oLeaf(o), lvl(l) {}
 VRLodLeaf::~VRLodLeaf() {}
 VRLodLeafPtr VRLodLeaf::ptr() { return static_pointer_cast<VRLodLeaf>( shared_from_this() ); }
 
@@ -23,6 +23,8 @@ VRLodLeafPtr VRLodLeaf::create(string name, OctreeNode* o, int lvl) {
     l->lod->addChild(lvl0);
     return l;
 }
+
+VRLodPtr VRLodLeaf::getLod() { return lod; }
 
 void VRLodLeaf::addLevel(float dist) {
     auto lvl = VRObject::create("lvl");
@@ -91,8 +93,8 @@ VRLodLeafPtr VRLodTree::addLeaf(OctreeNode* o, int lvl) {
     if (leafs.count(o)) return leafs[o];
     auto l = VRLodLeaf::create("lodLeaf", o, lvl);
     l->setPersistency(0);
-    if (lvl > 0) l->addLevel( o->getSize()*5 );
-    l->setFrom(o->getLocalCenter());
+    if (lvl > 0) l->addLevel( o->getSize()*2 );
+    l->getLod()->setCenter( o->getCenter() );
     leafs[o] = l;
 
     /**
@@ -128,7 +130,7 @@ VRLodLeafPtr VRLodTree::addLeaf(OctreeNode* o, int lvl) {
         auto p = oldRootLeaf->getOLeaf()->getParent();
         if (!leafs.count(p)) addLeaf(p, lvl+1);
         leafs[p]->add(oldRootLeaf,0);
-        oldRootLeaf->setFrom( oldRootLeaf->getOLeaf()->getLocalCenter() );
+        oldRootLeaf->getLod()->setCenter( oldRootLeaf->getOLeaf()->getCenter() );
     }
 
     return l;

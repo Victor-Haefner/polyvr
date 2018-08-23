@@ -20,6 +20,7 @@
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRStroke.h"
 #include "core/objects/geometry/VRPhysics.h"
+#include "core/objects/geometry/VRSpatialCollisionManager.h"
 #include "core/tools/VRAnalyticGeometry.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/material/VRTexture.h"
@@ -133,9 +134,12 @@ void VRRoadNetwork::updateAsphaltTexture() {
 		for (auto marking : markings) {
             auto w = marking->get("width");
             auto dL = marking->get("dashLength");
+            string c = marking->getValue<string>("color", "white");
+            int colorID = 1;
+            if (c == "yellow") colorID = 2;
             float width = w ? toFloat( w->value ) : 0;
             float dashL = dL ? toInt( dL->value ) : 0;
-            asphalt->addMarking(rID, toPath(marking, 4), width, dashL);
+            asphalt->addMarking(rID, toPath(marking, 4), width, dashL, 0, colorID);
 		}
 
 		for (auto track : tracks) {
@@ -248,6 +252,8 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
     auto pathEnt = road->getEntity("path");
     if (!pathEnt) return;
 	auto lanes = road->getAllEntities("lanes");
+    vector<vector<int>> lanesD1;
+    vector<vector<int>> lanesD2;
 
 	float roadWidth = 0;
 	for (auto lane : lanes) roadWidth += toFloat( lane->get("width")->value );
@@ -280,14 +286,36 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
             reverse(norms.begin(), norms.end());
         }
 
+        vector<int> laneEdges;
         for (uint i=1; i<nodes.size(); i++) {
             connectGraph({nodes[i-1], nodes[i]}, {norms[i-1], norms[i]}, lane);
+            laneEdges.push_back(graph->getEdgeID(nodes[i-1]->getValue<int>("graphID", -1),nodes[i]->getValue<int>("graphID", -1)));
+            //cout << toString(laneEdges[i-1]) << endl;
         }
 
         auto lPath = addPath("Path", "lane", nodes, norms);
 		lane->add("path", lPath->getName());
 		widthSum += width;
+		if (direction > 0) { lanesD1.push_back(laneEdges); }
+		if (direction < 0) { lanesD2.push_back(laneEdges); }
+		}
+
+	if (lanesD1.size()>1) {
+        for (int i = 0; i<lanesD1[0].size();i++) {
+            for (int j = 1; j<lanesD1.size();j++) {
+                graph->addRelation(lanesD1[j][i],lanesD1[j-1][i]);
+                //cout << toString(lanesD1[j][i]) << " -- " << toString(lanesD1[j-1][i]) << endl;
+            }
+        }
 	}
+    if (lanesD2.size()>1) {
+        for (int i = 0; i<lanesD2[0].size();i++) {
+            for (int j = 1; j<lanesD2.size();j++) {
+                graph->addRelation(lanesD2[j][i],lanesD2[j-1][i]);
+                //cout << toString(lanesD2[j][i]) << " -- " << toString(lanesD2[j-1][i]) << endl;
+            }
+        }
+    }
 }
 
 void VRRoadNetwork::addFence( PathPtr path, float height ) {
@@ -311,7 +339,7 @@ void VRRoadNetwork::addFence( PathPtr path, float height ) {
 	auto shape = VRStroke::create("shape");
 	shape->setPaths({path});
 	shape->strokeProfile({Vec3d(0,0,0), Vec3d(0,height,0)}, false, true, false);
-	collisionMesh->merge(shape);
+	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape, fence->getID());
 }
 
 void VRRoadNetwork::addGuardRail( PathPtr path, float height ) {
@@ -374,7 +402,7 @@ void VRRoadNetwork::addGuardRail( PathPtr path, float height ) {
 	auto shape = VRStroke::create("shape");
 	shape->setPaths({path});
 	shape->strokeProfile({Vec3d(0,0,0), Vec3d(0,height,0)}, false, true, false);
-	collisionMesh->merge(shape);
+	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape, rail->getID());
 }
 
 void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
@@ -393,9 +421,14 @@ void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
         Vec3d d1 = p2-p1; d1.normalize();
         Vec3d d2 = p3-p2; d2.normalize();
         Vec3d n = d1+d2; n.normalize();
-        Vec3d p21 = p2 - d1*0.01;
-        Vec3d p23 = p2 + d2*0.01;
+        Vec3d p21 = p2 - d1*0.01 + median;
+        Vec3d p23 = p2 + d2*0.01 + median;
         Vec3d p22 = (p21+p23)*0.5;
+        if (auto t = terrain.lock()) {
+            t->elevatePoint(p21);
+            t->elevatePoint(p22);
+            t->elevatePoint(p23);
+        }
         path->addPoint( Pose(p21, d1) );
         path->addPoint( Pose(p22, n ) );
         path->addPoint( Pose(p23, d2) );
@@ -408,24 +441,20 @@ void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
     kirb->strokeProfile({Vec3d(0.0, h, 0), Vec3d(-0.1, h, 0), Vec3d(-0.1, 0, 0)}, 0, 1, 0);
     kirb->updateNormals(1);
     kirb->setMaterial( w->getMaterial("kirb") );
-
-    if (auto t = terrain.lock()) t->elevatePoint(median); // TODO: elevate each point of the polygon
-    kirb->translate(median);
     addChild(kirb);
-	assets.push_back(kirb);
 
 	// physics
 	auto shape = VRStroke::create("shape");
 	shape->addPath(path);
 	shape->strokeProfile({Vec3d(-0.1, h, 0), Vec3d(-0.1, 0, 0)}, false, true, false);
-	collisionMesh->merge(shape);
+	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape, kirb->getID());
 }
 
-void VRRoadNetwork::physicalizeAssets() {
-    collisionMesh->getPhysics()->setDynamic(false);
+void VRRoadNetwork::physicalizeAssets(Boundingbox volume) {
+    /*collisionMesh->getPhysics()->setDynamic(false);
     collisionMesh->getPhysics()->setShape("Concave");
     collisionMesh->getPhysics()->setPhysicalized(true);
-    collisionMesh->setMeshVisibility(false);
+    collisionMesh->setMeshVisibility(false);*/
 }
 
 vector<VREntityPtr> VRRoadNetwork::getRoadNodes() { // all nodes from all paths from all roads
@@ -483,7 +512,8 @@ void VRRoadNetwork::computeSigns() {
         if (!sign) continue;
 
         //cout << " sign: " << type << " road: " << signEnt->getEntity("road") << endl;
-        if (auto roadEnt = signEnt->getEntity("road")) {
+        if (auto laneEnt = signEnt->getEntity("lanes")) {
+            auto roadEnt = laneEnt->getEntity("road");
             auto road = roadsByEntity[roadEnt];// get vrroad from roadent
             auto pose = road->getRightEdge(pos);
             auto d = pose->dir(); d[1] = 0; d.normalize();
@@ -493,15 +523,20 @@ void VRRoadNetwork::computeSigns() {
 
             if (type == "Stop") { // TODO: use lanes widths
                 Vec3d x = pose->x();
-                Vec3d p1 = pose->pos() - x*3.0;
-                Vec3d p2 = pose->pos() - x*0.3;
-                auto mL = addPath("StopLine", "Stopline", { road->addNode(0, p1), road->addNode(0, p2) }, { x, x });
+                Vec3d p1 = pose->pos() + x*0.5;
+                Vec3d p2 = pose->pos() + x*2.8;
+                auto mL = road->addPath("StopLine", "Stopline", { road->addNode(0, p1), road->addNode(0, p2) }, { x, x });
                 mL->set("width", toString(0.3));
+                mL->set("color", "yellow");
                 roadEnt->add("markings", mL->getName());
             }
         }
+        if (auto w = world.lock()) w->getPhysicsSystem()->addQuad(0.15, 2, *sign->getPose(), sign->getID());
     }
 }
+
+void VRRoadNetwork::setRoadStyle(int aType) { arrowType = aType; }
+int VRRoadNetwork::getArrowStyle() { return arrowType; }
 
 void VRRoadNetwork::computeArrows() {
     auto w = world.lock();
@@ -515,11 +550,11 @@ void VRRoadNetwork::computeArrows() {
         Vec4i drs(999,999,999,999);
         for (uint i=0; i<4 && i < dirs.size(); i++) drs[i] = int(dirs[i]*5/pi)*180/5;
         if (t < 0) t = 1+t; // from the end
-        createArrow(drs, min(int(dirs.size()),4), *lpath->getPose(t));
+        createArrow(drs, min(int(dirs.size()),4), *lpath->getPose(t), arrow->getValue<int>("type", 0));
     }
 }
 
-void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p) {
+void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p, int type) {
     if (N == 0) return;
 
     //if (arrowTemplates.size() > 20) { cout << "VRRoadNetwork::createArrow, Warning! arrowTexture too big!\n"; return; }
@@ -538,12 +573,28 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p) {
             Vec2f d02 = Vec2f(0.5,0.5); // rotation point
             Vec3d d03 = Vec3d(0.5,0.5,0); // rotation point
 
-            auto apath = Path::create();
-            apath->addPoint( Pose(Vec3d(0.5,1.0,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
-            apath->addPoint( Pose(Vec3d(0.5,0.8,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
-            apath->addPoint( Pose(d03+dir*0.31, dir, Vec3d(0,0,1)) );
-            apath->compute(12);
-            tg.drawPath(apath, Color4f(1,1,1,1), 0.1);
+            if (type == 0) {
+                auto apath = Path::create();
+                apath->addPoint( Pose(Vec3d(0.5,1.0,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
+                apath->addPoint( Pose(Vec3d(0.5,0.8,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
+                apath->addPoint( Pose(d03+dir*0.31, dir, Vec3d(0,0,1)) );
+                apath->compute(12);
+                tg.drawPath(apath, Color4f(1,1,1,1), 0.1);
+            }
+
+            if (type == 1) {
+                auto apath = Path::create();
+                apath->addPoint( Pose(Vec3d(0.5,1.0,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
+                apath->addPoint( Pose(Vec3d(0.5,0.5,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
+                apath->compute(2);
+                tg.drawPath(apath, Color4f(1,1,1,1), 0.1);
+
+                apath = Path::create();
+                apath->addPoint( Pose(Vec3d(0.5,0.5,0), dir, Vec3d(0,0,1)) );
+                apath->addPoint( Pose(d03+dir*0.31, dir, Vec3d(0,0,1)) );
+                apath->compute(2);
+                tg.drawPath(apath, Color4f(1,1,1,1), 0.15);
+            }
 
             auto poly = VRPolygon::create();
             Matrix22<float> R(cos(a), -sin(a), sin(a), cos(a));
@@ -575,6 +626,8 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p) {
     geo->setPositionalTexCoords2D(1.0, 1, Vec2i(0,2));
     arrows->merge(geo, Pose::create(p));
 }
+
+VREntityPtr VRRoadNetwork::getLane(int eID) { return graphEdgeEntities[eID]; }
 
 vector<VRRoadPtr> VRRoadNetwork::getNodeRoads(VREntityPtr node) {
     vector<VREntityPtr> nPaths;
@@ -691,10 +744,11 @@ void VRRoadNetwork::computeSurfaces() {
         auto roadGeo = road->createGeometry();
         if (!roadGeo) return;
         roadGeo->setMaterial( asphalt );
-        roadGeo->getPhysics()->setDynamic(false);
+        /*roadGeo->getPhysics()->setDynamic(false);
         roadGeo->getPhysics()->setShape("Concave");
-        roadGeo->getPhysics()->setPhysicalized(true);
+        roadGeo->getPhysics()->setPhysicalized(true);*/
         //addChild( roadGeo );
+        if (auto w = world.lock()) w->getPhysicsSystem()->add(roadGeo, roadGeo->getID());
     };
 
     for (auto way : ways) computeRoadSurface(way);
@@ -704,10 +758,11 @@ void VRRoadNetwork::computeSurfaces() {
         auto iGeo = intersection->createGeometry();
         if (!iGeo) continue;
         iGeo->setMaterial( asphalt );
-        iGeo->getPhysics()->setDynamic(false);
+        /*iGeo->getPhysics()->setDynamic(false);
         iGeo->getPhysics()->setShape("Concave");
-        iGeo->getPhysics()->setPhysicalized(true);
+        iGeo->getPhysics()->setPhysicalized(true);*/
         //addChild( iGeo );
+        if (auto w = world.lock()) w->getPhysicsSystem()->add(iGeo, iGeo->getID());
     }
 
     for (auto tunnel : tunnels) {
@@ -773,8 +828,11 @@ void VRRoadNetwork::compute() {
     computeSigns();
     //computeGreenBelts();
     updateAsphaltTexture();
-    physicalizeAssets();
+    //physicalizeAssets();
+    collisionMesh->setMeshVisibility(false);
 }
+
+VRGeometryPtr VRRoadNetwork::getAssetCollisionObject() { return collisionMesh; }
 
 vector<VREntityPtr> VRRoadNetwork::getPreviousRoads(VREntityPtr road) {
 	auto getPreviousPaths = [](VREntityPtr path) {
@@ -860,12 +918,12 @@ VREntityPtr VRRoadNetwork::addNode( Vec3d pos, bool elevate, float elevationOffs
     return VRRoadBase::addNode(nID, pos, elevate, elevationOffset);
 }
 
-void VRRoadNetwork::connectGraph(vector<VREntityPtr> nodes, vector<Vec3d> norms, VREntityPtr entity) {
+void VRRoadNetwork::connectGraph(vector<VREntityPtr> nodes, vector<Vec3d> norms, VREntityPtr lane) {
     auto nID1 = nodes[0]->getValue<int>("graphID", -1);
     auto nID2 = nodes[1]->getValue<int>("graphID", -1);
     int eID = graph->connect(nID1, nID2);
     graphNormals[eID] = norms;
-    graphEdgeEntities[eID] = entity;
+    graphEdgeEntities[eID] = lane;
 }
 
 
@@ -932,9 +990,6 @@ VREntityPtr VRRoadNetwork::addRoute(vector<int> nodeIDs) { // nodeIDs as compute
 
     return addPath("Path", "route", nodes, norms);
 }
-
-
-
 template <class Key, class Value>
 unsigned long mapSize(const map<Key,Value> &map){
     unsigned long size = 0;

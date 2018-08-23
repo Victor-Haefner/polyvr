@@ -42,6 +42,8 @@ class VRServer : public VRDevice {
 
         int openWebSocket(string address, string protocols);
         void answerWebSocket(int id, string msg);
+
+        map<string, vector<int>> getClients();
 };
 
 

@@ -77,6 +77,7 @@ VRAppSectionPtr VRAppSection::create(string name) { return VRAppSectionPtr( new 
 VRAppSectionPtr VRAppSection::ptr() { return shared_from_this(); }
 
 VRAppLauncherPtr VRAppSection::addLauncher(string path, string timestamp, VRGuiContextMenu* menu, VRAppManager* mgr, bool write_protected, bool favorite, string table) {
+    if (!exists(path)) return 0;
     if (apps.count(path)) return apps[path];
     auto app = VRAppLauncher::create(ptr());
     app->path = path;
@@ -305,12 +306,15 @@ void VRAppManager::setGuiState(VRAppLauncherPtr e) {
 }
 
 VRAppLauncherPtr VRAppManager::addEntry(string path, string table, bool running, string timestamp, bool recent) {
+    if (!exists(path)) return 0;
     clearTable(table);
 
     VRAppLauncherPtr e = 0;
     if (table == "examples_tab") e = examplesSection->addLauncher(path, timestamp, menu, this, true, false, table);
     if (table == "favorites_tab" &&  recent) e =   recentsSection->addLauncher(path, timestamp, menu, this, false, true, table);
     if (table == "favorites_tab" && !recent) e = favoritesSection->addLauncher(path, timestamp, menu, this, false, true, table);
+    if (!e) return 0;
+
     e->running = running;
 
     updateTable(table);
@@ -433,6 +437,7 @@ void VRAppManager::on_saveas_clicked() {
 
 void VRAppManager::on_diag_load_clicked() {
     string path = VRGuiFile::getPath();
+    if (!exists(path)) return;
     if (current_demo) if (current_demo->running) toggleDemo(current_demo); // close demo if it is running
     auto e = addEntry(path, "favorites_tab", false);
     VRSceneManager::get()->addFavorite(path);
@@ -465,9 +470,9 @@ void VRAppManager::on_diag_new_clicked() {
     VRSceneManager::get()->newScene(path);
     string gitIgnorePath = getFolderName(path) + "/.gitignore";
     if (!exists(gitIgnorePath)) writeGitignore(gitIgnorePath);
+    saveScene(path);
     addEntry(path, "favorites_tab", true);
     VRSceneManager::get()->addFavorite(path);
-    saveScene(path);
 }
 
 void VRAppManager::on_new_clicked() {

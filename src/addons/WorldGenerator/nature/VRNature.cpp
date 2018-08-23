@@ -2,6 +2,7 @@
 #include "VRTree.h"
 #include "VRGrassPatch.h"
 #include "../terrain/VRTerrain.h"
+#include "../VRWorldGenerator.h"
 
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
@@ -9,6 +10,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRPhysics.h"
+#include "core/objects/geometry/VRSpatialCollisionManager.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/material/VRTextureGenerator.h"
@@ -30,14 +32,21 @@ template<> string typeName(const OSG::VRNaturePtr& t) { return "Nature"; }
 // --------------------------------------------------------------------------------------------------
 
 VRNature::VRNature(string name) : VRLodTree(name, 5) {
+    trees = VRGeometry::create("trees");
+    trees->hide("SHADOW");
+
     storeMap("templateTrees", &treeTemplates, true);
     storeMap("trees", &treeEntries, true);
     regStorageSetupFkt( VRUpdateCb::create("woods setup", boost::bind(&VRNature::setup, this)) );
 }
 
 VRNature::~VRNature() {}
-VRNaturePtr VRNature::create(string name) { return VRNaturePtr(new VRNature(name)); }
 VRNaturePtr VRNature::ptr() { return static_pointer_cast<VRNature>( shared_from_this() ); }
+VRNaturePtr VRNature::create(string name) {
+    auto nat = VRNaturePtr(new VRNature(name));
+    nat->addChild(nat->trees);
+    return nat;
+}
 
 void VRNature::setup() {
     for (auto& t : treeEntries) {
@@ -126,13 +135,10 @@ void VRNature::simpleInit(int treeTypes, int bushTypes) {
 
     for (int i=0; i<treeTypes; i++) addTreeTemplate( doTree() );
     for (int i=0; i<bushTypes; i++) addBushTemplate( doBush() );
-
-    for (auto t : treeTemplates) t.second->createLOD(0);
-    for (auto t : bushTemplates) t.second->createLOD(0);
 }
 
-void VRNature::addTreeTemplate(VRTreePtr t) { treeTemplates[t->getName()] = t; }
-void VRNature::addBushTemplate(VRTreePtr t) { bushTemplates[t->getName()] = t; }
+void VRNature::addTreeTemplate(VRTreePtr t) { treeTemplates[t->getName()] = t; t->createLOD(0); }
+void VRNature::addBushTemplate(VRTreePtr t) { bushTemplates[t->getName()] = t; t->createLOD(0); }
 
 void VRNature::removeTree(int id) {
     if (!treesByID.count(id)) return;
@@ -152,6 +158,8 @@ void VRNature::removeTree(int id) {
     computeLODs(aLeafs);
 }
 
+VRGeometryPtr VRNature::getCollisionObject() { return collisionMesh; }
+
 void VRNature::addScrub(VRPolygonPtr area, bool addGround) {
     float a = area->computeArea();
     if (a == 0) return;
@@ -162,7 +170,7 @@ void VRNature::addScrub(VRPolygonPtr area, bool addGround) {
     if (auto t = terrain.lock()) t->elevatePolygon(area, 0.18);
     Vec3d median = area->getBoundingBox().center();
     area->translate(-median);
-    for (auto p : area->getRandomPoints(1)) createRandomBush(median+p);
+    for (auto p : area->getRandomPoints(1.0, -0.1, 0.7)) createRandomBush(median+p);
 
     if (addGround) {
         Triangulator tri;
@@ -389,48 +397,55 @@ void VRNature::computeLODs3(map<OctreeNode*, VRLodLeafPtr>& leafs) {
     // construct master material
     auto mosaic1 = VRTextureMosaic::create();
     auto mosaic2 = VRTextureMosaic::create();
+
+    int j = 0;
+    int k = 0;
     int H = 0;
 
-    vector<float> HjVec;
-    int j = 0;
-    for (auto tree : treeTemplates) {
-        if (!tree.second) continue;
+    auto prepSprites = [&]( map<string, VRTreePtr>& templates ) {
+        for (auto tree : templates) {
+            if (!tree.second) continue;
 
-        int Hmax = 1;
-        auto sides = tree.second->getLodMaterials();
-        for (auto side : sides) Hmax = max(Hmax, side->getTexture(0)->getSize()[1]);
+            int Hmax = 1;
+            auto sides = tree.second->getLodMaterials();
+            for (auto side : sides) Hmax = max(Hmax, side->getTexture(0)->getSize()[1]);
 
-        for (int i=0; i<sides.size(); i++) {
-            mosaic1->add( sides[i]->getTexture(0), Vec2i(512*i,H), Vec2i(i,j) );
-            mosaic2->add( sides[i]->getTexture(1), Vec2i(512*i,H), Vec2i(i,j) );
-            //sides[i]->getTexture(0)->write("test_"+toString(i)+".png");
+            for (int i=0; i<sides.size(); i++) {
+                mosaic1->add( sides[i]->getTexture(0), Vec2i(512*i,H), Vec2i(i,j) );
+                mosaic2->add( sides[i]->getTexture(1), Vec2i(512*i,H), Vec2i(i,j) );
+                //sides[i]->getTexture(0)->write("test_"+toString(i)+".png");
+            }
+
+            H += Hmax;
+            j++;
         }
+    };
 
-        H += Hmax;
-        HjVec.push_back(H);
-        j++;
-    }
+    auto updateUVs = [&]( map<string, VRTreePtr>& templates ) {
+        for (auto tree : templates) {
+            VRGeometryPtr tlod = dynamic_pointer_cast<VRGeometry>( tree.second->getLOD(0) );
+            VRGeoData data(tlod);
 
-    j = 0;
-    for (auto tree : treeTemplates) {
-        VRGeometryPtr tlod = dynamic_pointer_cast<VRGeometry>( tree.second->getLOD(0) );
-        VRGeoData data(tlod);
-
-        int N = 3;
-        for (int i=0; i<N; i++) { // update UV coordinates
-            Vec2i ID = Vec2i(i,j);
-            float i1 = i*1.0/N;
-            float i2 = (i+1)*1.0/N;
-            float j1 = mosaic1->getChunkPosition(ID)[1]/float(H);
-            float j2 = j1+mosaic1->getChunkSize(ID)[1]/float(H);
-            data.setTexCoord(4*i  , Vec2d(i2,j1));
-            data.setTexCoord(4*i+1, Vec2d(i1,j1));
-            data.setTexCoord(4*i+2, Vec2d(i1,j2));
-            data.setTexCoord(4*i+3, Vec2d(i2,j2));
+            int N = 3;
+            for (int i=0; i<N; i++) { // update UV coordinates
+                Vec2i ID = Vec2i(i,k);
+                float i1 = i*1.0/N;
+                float i2 = (i+1)*1.0/N;
+                float j1 = mosaic1->getChunkPosition(ID)[1]/float(H);
+                float j2 = j1+mosaic1->getChunkSize(ID)[1]/float(H);
+                data.setTexCoord(4*i  , Vec2d(i2,j1));
+                data.setTexCoord(4*i+1, Vec2d(i1,j1));
+                data.setTexCoord(4*i+2, Vec2d(i1,j2));
+                data.setTexCoord(4*i+3, Vec2d(i2,j2));
+            }
+            k++;
         }
-        j++;
-    }
+    };
 
+    prepSprites(treeTemplates);
+    prepSprites(bushTemplates);
+    updateUVs(treeTemplates);
+    updateUVs(bushTemplates);
     mosaic1->write("test.png");
 
     auto m = VRMaterial::create("natureMosaic");
@@ -440,13 +455,10 @@ void VRNature::computeLODs3(map<OctreeNode*, VRLodLeafPtr>& leafs) {
     m->setShaderParameter("tex1", 1);
     m->setTexture(mosaic1, false, 0);
     m->setTexture(mosaic2, false, 1);
-
-    trees = VRGeometry::create("trees");
-    trees->hide("SHADOW");
     trees->setMaterial(m);
-    addChild(trees);
     VRGeoData treesData(trees);
 
+    cout << "treeRefs: " << treeRefs.size() << endl;
     for (auto tree : treeRefs) {
         auto tRef = tree.second;
         VRTree* t = tree.first;
@@ -595,25 +607,18 @@ void VRNature::clear() {
 
 void VRNature::addCollisionModels() {
     VRGeoData data;
-
     for (auto tree : treesByID) {
         auto p = getPoseTo( tree.second );
         data.pushQuad(p->pos()+Vec3d(0,1,0), p->dir(), p->up(), Vec2d(0.3, 2), true);
     }
 
-    if (collisionMesh) collisionMesh->destroy();
-    collisionMesh = data.asGeometry("natureCollisionMesh");
-    collisionMesh->getPhysics()->setDynamic(false);
-    collisionMesh->getPhysics()->setShape("Concave");
-    collisionMesh->getPhysics()->setPhysicalized(true);
-    collisionMesh->setMeshVisibility(false);
-    addChild( collisionMesh );
+    auto geo = data.asGeometry("natureCollisionMesh");
+	if (auto w = world.lock()) w->getPhysicsSystem()->add(geo, trees->getID());
 }
 
 /**
 
 TODO:
- - get rid of transform of lodleaf?
  - optimize level zero structure
 
 */

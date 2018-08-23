@@ -34,7 +34,7 @@ class VRAsphalt : public VRMaterial {
 
         VRTexturePtr noiseTexture();
         VRTexturePtr mudTexture();
-        void addPath(PathPtr path, int rID, float width, float dashL, float offset);
+        void addPath(PathPtr path, int rID, float width, float dashL, float offset, int colorID = 1);
 
     public:
         VRAsphalt();
@@ -43,13 +43,13 @@ class VRAsphalt : public VRMaterial {
 
         void init();
 
-        void setMarkingsColor(Color4f);
+        void setMarkingsColor(Color4f, int ID = 1);
         void setArrowMaterial();
 
         void clearTexture();
         void updateTexture();
         void addTrack(int rID, PathPtr track, float width, float dashL, float offset = 0);
-        void addMarking(int rID, PathPtr marking, float width, float dashL, float offset = 0);
+        void addMarking(int rID, PathPtr marking, float width, float dashL, float offset = 0, int colorID = 1);
 
         double getMemoryConsumption();
 };

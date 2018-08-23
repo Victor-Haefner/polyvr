@@ -83,6 +83,7 @@ class HTTPServer {
 
         map<mg_connection*, int> websocket_ids;
         map<int, mg_connection*> websockets;
+        map<int, string> ws_groups;
 
         HTTPServer() {
             data = new HTTP_args();
@@ -152,11 +153,24 @@ class HTTPServer {
         }
 
         int websocket_open(string address, string protocols) {
-            int newID = websockets.size();
+            static size_t clientID = 1e5; clientID++;
+            int newID = clientID;
             auto c = mg_connect_ws(server, server_answer_to_connection_m, address.c_str(), protocols.c_str(), NULL);
             if (c) websockets[newID] = c;
             else newID = -1;
             return newID;
+        }
+
+        map<string, vector<int>> getClients() {
+            map<string, vector<int>> res;
+            for (auto ws : websockets) {
+                int ID = ws.first;
+                string group = "ungrouped";
+                if (ws_groups.count(ID)) group = ws_groups[ID];
+                if (!res.count(group)) res[group] = vector<int>();
+                res[group].push_back(ID);
+            }
+            return res;
         }
 };
 
@@ -178,11 +192,13 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
 
     if (ev == MG_EV_CLOSE) {
         VRLog::log("net", "MG_EV_CLOSE\n");
+        //cout << "MG_EV_CLOSE\n" << endl;
         //HTTP_args* sad = (HTTP_args*) conn->mgr_data;
         if (sad->serv->websocket_ids.count(conn)) {
             int wsid = sad->serv->websocket_ids[conn];
             sad->serv->websockets.erase(wsid);
             sad->serv->websocket_ids.erase(conn);
+            if (sad->serv->ws_groups.count(wsid)) sad->serv->ws_groups.erase(wsid);
         }
         return;
     }
@@ -198,9 +214,14 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
         struct websocket_message* wm = (struct websocket_message*) ev_data;
         sad->ws_data = string(reinterpret_cast<char const*>(wm->data), wm->size);
 
-        int wslid = sad->serv->websocket_ids.size();
-        if (!sad->serv->websocket_ids.count(conn)) { sad->serv->websocket_ids[conn] = wslid; sad->serv->websockets[wslid] = conn; }
+        if (!sad->serv->websocket_ids.count(conn)) {
+            static size_t ID = 0; ID++;
+            sad->serv->websocket_ids[conn] = ID;
+            sad->serv->websockets[ID] = conn;
+        }
         sad->ws_id = sad->serv->websocket_ids[conn];
+        if ( startsWith(sad->ws_data, "register ") ) sad->serv->ws_groups[sad->ws_id] = splitString(sad->ws_data, ' ')[1];
+        else if ( startsWith(sad->ws_data, "register|") ) sad->serv->ws_groups[sad->ws_id] = splitString(sad->ws_data, '|')[1];
 
         auto fkt = VRUpdateCb::create("HTTP_answer_job", boost::bind(server_answer_job, sad->copy()));
         VRSceneManager::get()->queueJob(fkt);
@@ -308,6 +329,8 @@ VRSocket::~VRSocket() {
 }
 
 std::shared_ptr<VRSocket> VRSocket::create(string name) { return std::shared_ptr<VRSocket>(new VRSocket(name)); }
+
+map<string, vector<int>> VRSocket::getClients() { return http_serv ? http_serv->getClients() : map<string, vector<int>>(); }
 
 int VRSocket::openWebSocket(string address, string protocols) {
     if (http_serv) return http_serv->websocket_open(address, protocols);

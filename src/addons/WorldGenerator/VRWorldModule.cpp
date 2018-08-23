@@ -11,4 +11,5 @@ void VRWorldModule::setWorld(VRWorldGeneratorPtr w) {
     planet = w->getPlanet();
     terrain = w->getTerrain();
     ontology = w->getOntology();
+    roads = w->getRoadNetwork();
 }

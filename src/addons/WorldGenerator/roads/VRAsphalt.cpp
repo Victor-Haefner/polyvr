@@ -3,6 +3,7 @@
 #include "core/objects/material/VRTexture.h"
 #include "core/math/path.h"
 #include "core/utils/VRTimer.h"
+#include "core/utils/toString.h"
 
 #define GLSL(shader) #shader
 
@@ -30,7 +31,8 @@ void VRAsphalt::init() {
     clearTransparency();
     setShininess(128);
     clearTexture();
-    setMarkingsColor(Color4f(0.7,0.7,0.7,1.0));
+    setMarkingsColor(Color4f(0.7,0.7,0.7,1.0), 1);
+    setMarkingsColor(Color4f(0.9,0.5,0.1,1.0), 2);
 }
 
 void VRAsphalt::setArrowMaterial() {
@@ -38,8 +40,8 @@ void VRAsphalt::setArrowMaterial() {
     setFragmentShader(asphaltArrow_fp_head + asphaltArrow_dfp_core, "asphaltArrowDFP", true);
 }
 
-void VRAsphalt::setMarkingsColor(Color4f c) {
-    setShaderParameter("cLine", c);
+void VRAsphalt::setMarkingsColor(Color4f c, int ID) {
+    setShaderParameter("cLine"+toString(ID), c);
 }
 
 void VRAsphalt::clearTexture() {
@@ -89,7 +91,7 @@ void VRAsphalt::updateTexture() {
     setupTexture(2, mudTex, "texMud");
 }
 
-void VRAsphalt::addPath(PathPtr path, int rID, float width, float dashL, float offset) {
+void VRAsphalt::addPath(PathPtr path, int rID, float width, float dashL, float offset, int colorID) {
     int& i = roadData[rID].rDataLengths;
     int iNpnts = i;
     i += 2;
@@ -122,18 +124,18 @@ void VRAsphalt::addPath(PathPtr path, int rID, float width, float dashL, float o
     }
 
     int Npoints = i-iNpnts-2;
-    texGen->drawPixel(Vec3i(rID,iNpnts  ,0), Color4f(Npoints,width,0,1));
+    texGen->drawPixel(Vec3i(rID,iNpnts  ,0), Color4f(Npoints,width,colorID,1));
     texGen->drawPixel(Vec3i(rID,iNpnts+1,0), Color4f(offset,0,0,1));
     if (texGen->getSize()[0] < rID) cout << "WARNING, texture width not enough! " << rID << "/" << texGen->getSize()[0] << endl;
     if (texGen->getSize()[1] < i) cout << "WARNING, texture height not enough! " << i << "/" << texGen->getSize()[1] << endl;
 }
 
-void VRAsphalt::addMarking(int rID, PathPtr marking, float width, float dashL, float offset) {
+void VRAsphalt::addMarking(int rID, PathPtr marking, float width, float dashL, float offset, int colorID) {
     if (roadData.count(rID) == 0) roadData[rID] = road();
     auto& rdata = roadData[rID];
     rdata.markingsN++;
     texGen->drawPixel(Vec3i(rID,0,0), Color4f(rdata.markingsN, rdata.tracksN, 0, 1));
-    addPath(marking, rID, width, dashL, offset);
+    addPath(marking, rID, width, dashL, offset, colorID);
 }
 
 void VRAsphalt::addTrack(int rID, PathPtr track, float width, float dashL, float offset) {
@@ -191,7 +193,8 @@ GLSL(
 uniform sampler2D texMarkings;
 uniform sampler2D texMud;
 uniform sampler2D texNoise;
-uniform vec4 cLine;
+uniform vec4 cLine1;
+uniform vec4 cLine2;
 
 const float Inv3 = 1.0/3.0;
 const float Inv27 = 1.0/27.0;
@@ -246,9 +249,10 @@ void applyMud() {
 	color = mix(color, c_mud, smoothstep( 0.3, 0.8, c_mud.a)*0.2 );
 }
 
-void applyLine() {
+void applyLine(int colorID) {
 	float l = clamp(1.0 - smoothstep(0.0, 0.2, norm.x), 0, 1);
-	color = mix(color, cLine, l );
+	if (colorID == 2) color = mix(color, cLine2, l );
+	else color = mix(color, cLine1, l );
 }
 
 void applyTrack() {
@@ -396,18 +400,20 @@ void doPaths() {
     vec3 pos = toWorld(position.xyz);
 	int k = 1;
 	int Nlines = int(roadData.x);
+	int colorID = 0;
 
 	for (int i=0; i<Nlines; i++) {
 		vec4 pathData1 = getData(rID, k);
 		vec4 pathData2 = getData(rID, k+1);
 		int Npoints = int(pathData1.x);
+        colorID = int(pathData1.z);
         distTrack = distToPath(k+1, rID, pos, pathData1, pathData2);
         doLine = bool(distTrack < 10.0);
         if (doLine) break;
 		k += Npoints+2;
 	}
 
-	if (doLine) { applyLine(); return; }
+	if (doLine) { applyLine(colorID); return; }
 
 	int Ntracks = int(roadData.y);
 	for (int i=0; i<Ntracks; i++) {
@@ -483,7 +489,8 @@ uniform sampler2D texMarkings;
 uniform sampler2D texMud;
 uniform sampler2D texNoise;
 uniform int NArrowTex;
-uniform vec4 cLine;
+uniform vec4 cLine1;
+uniform vec4 cLine2;
 
 vec4 color = vec4(0.0,0.0,0.0,1.0);
 vec4 trackColor = vec4(0.3, 0.3, 0.3, 1.0);
@@ -514,7 +521,7 @@ void applyMud() {
 }
 
 void applyLine(float L) {
-	color = mix(vec4(0.5,0.5,0.5,1.0), cLine, L );
+	color = mix(vec4(0.5,0.5,0.5,1.0), cLine1, L );
 }
 
 void computeNormal() {

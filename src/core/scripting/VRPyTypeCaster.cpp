@@ -57,6 +57,9 @@ template<> PyObject* VRPyTypeCaster::cast(const VRObjectPtr& obj) {
 template<> PyObject* VRPyTypeCaster::cast(const int& i) { return PyInt_FromLong(i); }
 template<> PyObject* VRPyTypeCaster::cast(const uint& i) { return PyInt_FromLong(i); }
 template<> PyObject* VRPyTypeCaster::cast(const short& s) { return PyInt_FromLong(s); }
+template<> PyObject* VRPyTypeCaster::cast(const char& i) { return PyInt_FromLong(i); }
+template<> PyObject* VRPyTypeCaster::cast(const size_t& i) { return PyInt_FromLong(i); }
+template<> PyObject* VRPyTypeCaster::cast(const unsigned char& i) { return PyInt_FromLong(i); }
 template<> PyObject* VRPyTypeCaster::cast(const float& f) { return PyFloat_FromDouble(f); }
 template<> PyObject* VRPyTypeCaster::cast(const string& s) { return PyString_FromString(s.c_str()); }
 template<> PyObject* VRPyTypeCaster::cast(const bool& b) { if (b) Py_RETURN_TRUE; else Py_RETURN_FALSE; }
@@ -73,6 +76,12 @@ template<> PyObject* VRPyTypeCaster::cast(const Boundingbox& b) { return VRPyBou
 PyObject* VRPyTypeCaster::pack(const vector<PyObject*>& v) {
     auto l = PyList_New(v.size());
     for (uint i=0; i<v.size(); i++) PyList_SetItem(l,i,v[i]);
+    return l;
+}
+
+PyObject* VRPyTypeCaster::pack(const vector< pair<PyObject*,PyObject*> >& v) {
+    auto l = PyDict_New();
+    for (auto i : v) PyDict_SetItem(l, i.first, i.second);
     return l;
 }
 

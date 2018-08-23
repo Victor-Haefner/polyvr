@@ -39,8 +39,11 @@ class VRDefShading {
         ShaderProgramMTRecPtr      fpAmbient;
         ShaderProgramChunkMTRecPtr shAmbient;
 
+        VRLightPtr fogLight;
+
         string dsGBufferVPFile, dsGBufferFPFile;
         string dsAmbientVPFile, dsAmbientFPFile;
+        string dsFogVPFile, dsFogFPFile;
         string dsDirLightVPFile, dsDirLightFPFile, dsDirLightShadowFPFile;
         string dsPointLightVPFile, dsPointLightFPFile, dsPointLightShadowFPFile;
         string dsPhotometricLightVPFile, dsPhotometricLightFPFile, dsPhotometricLightShadowFPFile;
@@ -57,6 +60,8 @@ class VRDefShading {
         ShadowTypeE defaultShadowType;
         int shadowRes;
         Color4f shadowColor;
+        Color4f fogParams;
+        Color4f fogColor;
         bool initiated = false;
         bool enabled = false;
         int channel = 0;

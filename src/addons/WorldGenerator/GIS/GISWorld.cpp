@@ -62,12 +62,14 @@ void GISWorld::setupOntology() {
     Arrow->addProperty("position", "float");
     Arrow->addProperty("direction", "float");
     Arrow->addProperty("lane", Lane);
+    Arrow->addProperty("type", "int");
     Lane->addProperty("road", Way);
     Lane->addProperty("width", "float");
     Lane->addProperty("direction", "int");
     Lane->addProperty("path", "Path");
     Lane->addProperty("arrows", "Arrow");
     Lane->addProperty("pedestrian", "bool");
+    Lane->addProperty("signs", Sign);
     ParkingLane->addProperty("angle", "float");
     ParkingLane->addProperty("capacity", "int");
     GreenBelt->addProperty("width", "float");
@@ -76,10 +78,9 @@ void GISWorld::setupOntology() {
     Road->addProperty("intersections", RoadIntersection);
     Road->addProperty("buildings", Building);
     Road->addProperty("type", "string");
-    Road->addProperty("signs", Sign);
     Sign->addProperty("type", "string");
     Sign->addProperty("direction", "Direction");
-    Sign->addProperty("road", Road);
+    Sign->addProperty("lanes", Lane);
     RoadIntersection->addProperty("node", "Node");
     RoadIntersection->addProperty("roads", Road);
     RoadIntersection->addProperty("type", "string");
@@ -87,11 +88,13 @@ void GISWorld::setupOntology() {
     RoadMarking->addProperty("width", "float");
     RoadMarking->addProperty("style", "string");
     RoadMarking->addProperty("dashLength", "float");
+    RoadMarking->addProperty("color", "string");
     RoadTrack->addProperty("width", "float");
     Building->addProperty("houseNumber", "string");
     Building->addProperty("streetName", "string");
     Building->addProperty("area", "Area");
     TrafficLight->addProperty("state", "string");
+    TrafficLight->addProperty("node", "Node");
 
     auto Plant = world->addConcept("Plant");
     auto Tree = world->addConcept("Tree", "Plant");

@@ -9,7 +9,7 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class CarSound {
+class VRCarSound {
     private:
         OSG::VRSoundPtr sound;
         float currentRPM = 0;
@@ -35,13 +35,12 @@ class CarSound {
         void resetValues();
 
     public:
-        CarSound();
-        ~CarSound();
-        static CarSoundPtr create();
+        VRCarSound();
+        ~VRCarSound();
+        static VRCarSoundPtr create();
 
         void loadSoundFile(string filename);
         void play(float rpm); // (ms) default audio clip duration, fade 1% either side of sample
-        void setRPM(float rpm);
         const float getRPM();
         void setSound(VRSoundPtr s);
         void setFade(float f);

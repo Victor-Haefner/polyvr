@@ -57,7 +57,7 @@ int VRMultiWindow::getNYTiles() { return Ny; }
 
 bool VRMultiWindow::init_win(const std::string &msg, const std::string &server, Real32 progress) {
     cout << endl << msg << " to " << server << " : " << progress;
-    if (progress == 1) { state = CONNECTED; return true; }
+    if (progress == 1) { state = JUSTCONNECTED; return true; }
     if (tries == 3) { state = NO_CONNECTION; return false; }
     tries++;
     return true;
@@ -77,13 +77,10 @@ void VRMultiWindow::initialize() {
     for (auto s : servers) win->editMFServers()->push_back(s);
     for (auto wv : views) if (auto v = wv.lock()) v->setWindow(win);
 
-    Thread::getCurrentChangeList()->commitChangesAndClear();
-    Thread::getCurrentChangeList()->fillFromCurrentState();
-
     ClusterWindow::ConnectionCB cb = boost::bind(&VRMultiWindow::init_win, this, _1, _2, _3);
     win->initAsync(cb);
-    cout << endl << " render once " << endl;
-    if (state == CONNECTED) win->render(ract);
+    //cout << endl << " render once " << endl;
+    //if (state == CONNECTED) win->render(ract);
     cout << " done " << getStateString() << endl;
 }
 
@@ -95,8 +92,13 @@ keep this in mind when trying to optimize regarding to system state like the fla
 */
 
 void VRMultiWindow::render(bool fromThread) {
-    if (state == INITIALIZING) initialize();
-    if (state == CONNECTED && active) {
+    if (state == JUSTCONNECTED) {
+        Thread::getCurrentChangeList()->clear();
+        Thread::getCurrentChangeList()->fillFromCurrentState();
+        state = CONNECTED;
+    }
+
+    if (state == CONNECTED) {
         try { _win->render(ract); }
         catch(exception& e) { reset(); }
     }
@@ -111,6 +113,7 @@ string VRMultiWindow::getStateString() {
     if (state == CONNECTED) return "connected";
     if (state == INITIALIZING) return "initializing";
     if (state == CONNECTING) return "connecting";
+    if (state == JUSTCONNECTED) return "just connected";
     if (state == NO_CONNECTION) return "not connencted";
     return "invalid state";
 }

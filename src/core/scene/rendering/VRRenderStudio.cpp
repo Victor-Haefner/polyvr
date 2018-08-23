@@ -9,6 +9,7 @@
 #include "core/objects/VRLight.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/VRStage.h"
+#include "core/objects/object/OSGCore.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRCamera.h"
 #include "VRDefShading.h"
@@ -17,9 +18,8 @@
 #include "VRFXAA.h"
 
 #include <OpenSG/OSGRenderAction.h>
-#include <OpenSG/OSGProjectionCameraDecorator.h>
 
-OSG_BEGIN_NAMESPACE;
+using namespace OSG;
 using namespace std;
 
 /**
@@ -47,7 +47,9 @@ VRRenderStudio::VRRenderStudio(EYE e) {
     eye = e;
     root_system = VRObject::create("System root");
     addStage("shading");
-    addStage("blurY", "shading");
+    addStage("fog", "shading");
+    addStage("blurY", "fog");
+    //addStage("blurY", "shading");
     addStage("blurX", "blurY");
     addStage("ssao", "blurX");
     addStage("marker");
@@ -55,8 +57,6 @@ VRRenderStudio::VRRenderStudio(EYE e) {
     addStage("hmdd");
     addStage("fxaa");
     root_scene = stages["ssao"]->getBottom();
-
-    //addStage("texturing", "shading");
 }
 
 VRRenderStudio::~VRRenderStudio() {}
@@ -64,7 +64,7 @@ VRRenderStudioPtr VRRenderStudio::create(EYE e) { return VRRenderStudioPtr( new 
 
 void VRRenderStudio::addStage(string name, string parent) {
     if (stages.count(name)) return;
-    auto s = shared_ptr<VRDeferredRenderStage>( new VRDeferredRenderStage(name) );
+    auto s = VRDeferredRenderStagePtr( new VRDeferredRenderStage(name) );
     stages[name] = s;
     if (!stages.count(parent)) s->getTop()->switchParent( root_system );
     else {
@@ -121,10 +121,29 @@ void VRRenderStudio::init(VRObjectPtr root) {
 
     root_system->addChild( fxaa );
     fxaa->addChild( hmdd );
+    stages["shading"]->initDeferred();
     stages["shading"]->getTop()->switchParent( hmdd );
 
+    if (stages.count("fog")) {
+        stages["fog"]->initDeferred();
+        string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
+        auto fogMat = stages["fog"]->getMaterial();
+        fogMat->readVertexShader(shdrDir + "fog.vp.glsl");
+        fogMat->readFragmentShader(shdrDir + "fog.fp.glsl", true);
+        fogMat->setShaderParameter<int>("texBufPos", 0);
+        fogMat->setShaderParameter<int>("texBufNorm", 1);
+        fogMat->setShaderParameter<int>("texBufDiff", 2);
+        fogMat->setShaderParameter<Color4f>("fogParams", fogParams);
+        fogMat->setShaderParameter<Color4f>("fogColor", fogColor);
+        stages["fog"]->setActive(false, false);
+    }
+
+    stages["blurX"]->initDeferred();
+    stages["blurY"]->initDeferred();
+    stages["ssao"]->initDeferred();
     ssao->initSSAO( stages["ssao"]->getMaterial() );
     ssao->initBlur( stages["blurX"]->getMaterial(), stages["blurY"]->getMaterial() );
+
     hmdd->initHMDD( stages["hmdd"]->getMaterial() );
     fxaa->initFXAA( stages["fxaa"]->getMaterial() );
     stages["hmdd"]->getMaterial()->setTexture( stages["shading"]->getRendering()->getTarget(), 0 );
@@ -150,7 +169,7 @@ void VRRenderStudio::update() {
     }
 
     // update shader code
-    for (auto s : stages) s.second->getRendering()->reload();
+    for (auto s : stages) if (auto r = s.second->getRendering()) r->reload();
     if (do_hmdd && hmdd) hmdd->reload();
     if (do_fxaa && fxaa) fxaa->reload();
 
@@ -169,7 +188,7 @@ void VRRenderStudio::reset() {
 }
 
 void VRRenderStudio::reloadStageShaders() {
-    for (auto s : stages) s.second->getRendering()->reload();
+    for (auto s : stages) if (auto r = s.second->getRendering()) r->reload();
 }
 
 void VRRenderStudio::initDSProxy(VRMaterialPtr mat) {
@@ -233,8 +252,18 @@ void VRRenderStudio::setEye(EYE e) {
     if (auto s = stages["calibration"]) s->getMaterial()->setShaderParameter<int>("isRightEye", eye);
 }
 
+void VRRenderStudio::setFogParams(Color4f fogParams, Color4f fogColor) {
+    if (stages.count("fog")) {
+        auto fogMat = stages["fog"]->getMaterial();
+        fogMat->setShaderParameter<Color4f>("fogParams", fogParams);
+        fogMat->setShaderParameter<Color4f>("fogColor", fogColor);
+        bool a = fogParams[0] > 0.5;
+        stages["fog"]->setActive(a,a);
+    }
+}
+
 void VRRenderStudio::setCamera(OSGCameraPtr cam) {
-    for (auto s : stages) s.second->getRendering()->setDSCamera(cam);
+    for (auto s : stages) if (auto r = s.second->getRendering()) r->setDSCamera(cam);
     if (hmdd) hmdd->setCamera(cam);
     if (fxaa) fxaa->setCamera(cam);
     this->cam = cam;
@@ -282,7 +311,5 @@ void VRRenderStudio::setCalib(bool b) { calib = b; update(); }
 void VRRenderStudio::setHMDD(bool b) { do_hmdd = b; update(); }
 void VRRenderStudio::setMarker(bool b) { do_marker = b; update(); }
 void VRRenderStudio::setFXAA(bool b) { do_fxaa = b; update(); }
-
 void VRRenderStudio::setHMDDeye(float e) { hmdd->setHMDDparams(e); }
 
-OSG_END_NAMESPACE;

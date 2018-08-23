@@ -10,6 +10,7 @@
 #include "core/objects/VRTransform.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/geometry/VRSpatialCollisionManager.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/scene/VRObjectManager.h"
 #include "core/utils/toString.h"
@@ -22,6 +23,7 @@
 using namespace OSG;
 
 VRWorldGenerator::VRWorldGenerator() : VRTransform("WorldGenerator") {}
+
 VRWorldGenerator::~VRWorldGenerator() {}
 
 VRWorldGeneratorPtr VRWorldGenerator::create() {
@@ -31,6 +33,19 @@ VRWorldGeneratorPtr VRWorldGenerator::create() {
 }
 
 VRWorldGeneratorPtr VRWorldGenerator::ptr() { return dynamic_pointer_cast<VRWorldGenerator>( shared_from_this() ); }
+
+VRSpatialCollisionManagerPtr VRWorldGenerator::getPhysicsSystem() { return collisionShape; }
+
+void VRWorldGenerator::setupPhysics() {
+    /*auto c1 = nature->getCollisionObject();
+    auto c2 = roads->getAssetCollisionObject();
+    //collisionShape->add(c1);
+    collisionShape->add(c2);*/
+}
+
+void VRWorldGenerator::updatePhysics(Boundingbox box) {
+    collisionShape->localize(box);
+}
 
 void VRWorldGenerator::setOntology(VROntologyPtr o) {
     ontology = o;
@@ -88,6 +103,9 @@ void VRWorldGenerator::init() {
         mat->setFragmentShader(dfp, name+"DFS", true);
         addMaterial(name, mat);
     };
+
+    collisionShape = VRSpatialCollisionManager::create(12);
+    addChild(collisionShape);
 
     addMat("phong", 0);
     addMat("phongTex", 2);
@@ -392,6 +410,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 
             if (tag.first == "landuse") { // TODO
                 auto patch = VRGeometry::create("patch");
+                patch->hide("SHADOW");
                 auto poly = wayToPolygon(way);
                 if (poly->size() == 0) continue;
                 for (auto p : poly->gridSplit(5)) {
@@ -412,6 +431,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         if (!nodeInSubarea(node)) continue;
         Vec3d pos = planet->fromLatLongPosition(node->lat, node->lon, true);
         Vec3d dir = getDir(node);
+        bool hasDir = node->tags.count("direction");
         if (terrain) terrain->elevatePoint(pos);
         for (auto tag : node->tags) {
             if (tag.first == "natural") {
@@ -430,9 +450,16 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                 //cout << "add OSM sign: " << tag.first << "  " << signEnt->getValue<string>("type", "") << endl;
                 for (auto way : node->ways) {
                     if (!RoadEntities.count(way)) continue;
-                    auto roadEnt = RoadEntities[node->ways[0]]->getEntity();
-                    roadEnt->add("signs",signEnt->getName());
-                    signEnt->set("road",roadEnt->getName());
+                    auto road = RoadEntities[node->ways[0]];
+                    auto roadEnt = road->getEntity();
+                    for (auto laneEnt : roadEnt->getAllEntities("lanes")) {
+                        auto laneDir = laneEnt->getValue("direction", 1);
+                        Vec3d laneTangent = road->getRightEdge(pos)->dir() * laneDir;
+                        if (dir.dot(laneTangent) < -0.5 || !hasDir) {
+                            laneEnt->add("signs",signEnt->getName());
+                            signEnt->add("lanes",laneEnt->getName());
+                        }
+                    }
                 }
             }
 
@@ -440,13 +467,21 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                 for (auto way : node->ways) {
                     if (!RoadEntities.count(way)) continue;
                     auto road = RoadEntities[node->ways[0]];
-                    road->addTrafficLight();
+                    road->addTrafficLight(pos);
                 }
             }
 
             if (tag.first == "surveillance:type") {
                 if (tag.second == "camera") {
-                    assets->copy("Camera", Pose::create(pos, dir), false);
+                    auto cam = assets->copy("Camera", Pose::create(pos, dir), false);
+                    collisionShape->addQuad(0.1, 2, Pose(pos, dir), cam->getID());
+                }
+            }
+
+            if (tag.first == "highway") {
+                if (tag.second == "street_lamp") {
+                    auto lamp = assets->copy("Streetlamp", Pose::create(pos, dir), false);
+                    collisionShape->addQuad(0.1, 2, Pose(pos, dir), lamp->getID());
                 }
             }
         }

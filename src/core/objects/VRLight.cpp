@@ -75,7 +75,7 @@ VRLight::~VRLight() {
 
 VRLightPtr VRLight::ptr() { return static_pointer_cast<VRLight>( shared_from_this() ); }
 VRLightPtr VRLight::create(string name) {
-    auto l = shared_ptr<VRLight>(new VRLight(name) );
+    auto l = VRLightPtr(new VRLight(name) );
     VRScene::getCurrent()->addLight(l);
     //cout << "VRLight::create " << l << " " << l->getName() << " deferred " << l->deferred << endl;
     return l;

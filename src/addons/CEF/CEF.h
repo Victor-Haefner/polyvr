@@ -29,7 +29,6 @@ class CEF_handler : public CefRenderHandler {
         void OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height);
         VRTexturePtr getImage();
         void resize(int resolution, float aspect);
-        void close();
 
         IMPLEMENT_REFCOUNTING(CEF_handler);
 };
@@ -44,8 +43,6 @@ class CEF_client : public CefClient {
 
         CefRefPtr<CEF_handler> getHandler();
         CefRefPtr<CefRenderHandler> GetRenderHandler();
-
-        void close();
 
         IMPLEMENT_REFCOUNTING(CEF_client);
 };

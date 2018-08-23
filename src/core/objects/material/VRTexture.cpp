@@ -24,13 +24,13 @@ int VRTexture::getInternalFormat() { return internal_format; }
 ImageMTRecPtr VRTexture::getImage() { return img; }
 
 void VRTexture::read(string path) {
-    if (!img->read(path.c_str())) cout << " VRTexture::read failed!" << endl;
+    if (!img->read(path.c_str())) cout << " VRTexture::read from file '" << path << "' failed!" << endl;
 }
 
 void VRTexture::write(string path) {
     string folder = getFolderName(path);
     if (!exists(folder)) makedir(folder);
-    if (!img->write(path.c_str())) cout << " VRTexture::write failed!" << endl;
+    if (!img->write(path.c_str())) cout << " VRTexture::write to file '" << path << "' failed!" << endl;
 }
 
 void VRTexture::paste(VRTexturePtr other, Vec3i offset) {

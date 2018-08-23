@@ -274,6 +274,7 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
     if (texD == 3) fp += "  vec4 diffCol = texture3D(tex0, gl_TexCoord[0].xyz);\n";
     if (deferred) {
         fp += "  if (diffCol.a < 0.1) discard;\n";
+        fp += "  diffCol.rgb = mix(vec3(0.5), diffCol.rgb, diffCol.a);\n";
         fp += "  gl_FragData[0] = vec4(pos, 1.0);\n";
         fp += "  gl_FragData[1] = vec4(normalize(vertNorm), isLit);\n";
         fp += "  gl_FragData[2] = vec4(diffCol.rgb, 0);\n";
@@ -575,7 +576,7 @@ void VRMaterial::setTexture(string img_path, bool alpha, int unit) { // TODO: im
     md->texture->getImage()->read(img_path.c_str());
     setTexture(md->texture, alpha, unit);*/
     auto tex = VRTexture::create();
-    tex->getImage()->read(img_path.c_str());
+    tex->read(img_path);
     setTexture(tex, alpha, unit);
 }
 

@@ -30,9 +30,10 @@ class VRMultiWindow : public VRWindow {
 
         enum STATE {
             NO_CONNECTION = 0,
-            CONNECTED = 1,
-            INITIALIZING = 2,
-            CONNECTING = 3
+            INITIALIZING = 1,
+            CONNECTING = 2,
+            JUSTCONNECTED = 3,
+            CONNECTED = 4
         };
 
         void initialize();

@@ -5,7 +5,6 @@
 #include <OpenSG/OSGSimpleStage.h>
 #include <OpenSG/OSGFrameBufferObject.h>
 #include <OpenSG/OSGTextureObjChunk.h>
-#include <OpenSG/OSGProjectionCameraDecorator.h>
 
 #include "core/objects/object/VRObject.h"
 #include "core/objects/VRObjectFwd.h"

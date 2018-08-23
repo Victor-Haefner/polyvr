@@ -36,17 +36,37 @@ template<> string toString(const unsigned char& i) { stringstream ss; ss << i; r
 template<> string toString(const voidPtr& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const size_t& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const unsigned int& i) { stringstream ss; ss << i; return ss.str(); }
+
 string toString(const float& f, int d) {
     stringstream ss;
     if (d >= 0) ss << fixed << setprecision(d);//ss.precision(d);
     ss << f;
     return ss.str();
 }
+
 string toString(const double& f, int d) {
     stringstream ss;
     if (d >= 0) ss << fixed << setprecision(d);//ss.precision(d);
     ss << f;
     return ss.str();
+}
+
+string toString(const vector<float>& v, int d) {
+    string res = "[";
+    for (unsigned int i=0; i<v.size(); i++) {
+        if (i > 0) res += ", ";
+        res += toString(v[i], d);
+    }
+    return res+"]";
+}
+
+string toString(const vector<double>& v, int d) {
+    string res = "[";
+    for (unsigned int i=0; i<v.size(); i++) {
+        if (i > 0) res += ", ";
+        res += toString(v[i], d);
+    }
+    return res+"]";
 }
 
 template<> string toString(const Vec2d& v) {
@@ -130,6 +150,8 @@ template<> string typeName(const unsigned int& t) { return "int"; }
 template<> string typeName(const float& t) { return "float"; }
 template<> string typeName(const double& t) { return "double"; }
 template<> string typeName(const bool& t) { return "bool"; }
+template<> string typeName(const char& t) { return "char"; }
+template<> string typeName(const unsigned char& t) { return "unsigned char"; }
 template<> string typeName(const Pnt2d& t) { return "Pnt2d"; }
 template<> string typeName(const Pnt3d& t) { return "Pnt3d"; }
 template<> string typeName(const Pnt4d& t) { return "Pnt4d"; }
@@ -152,6 +174,7 @@ template <typename T> int ssToVal(stringstream& ss, T& t) {
 
 template<> int toValue(stringstream& ss, string& s) { s = ss.str(); return true; }
 template<> int toValue(stringstream& ss, bool& v) { return ssToVal(ss, v); }
+template<> int toValue(stringstream& ss, char& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, signed char& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, unsigned char& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, short& v) { return ssToVal(ss, v); }

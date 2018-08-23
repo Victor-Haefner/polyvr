@@ -2,6 +2,7 @@
 #define VRPYTYPECASTER_H_INCLUDED
 
 #include <vector>
+#include <map>
 
 #undef _XOPEN_SOURCE
 #undef _POSIX_C_SOURCE
@@ -15,6 +16,7 @@ using namespace std;
 class VRPyTypeCaster {
     private:
         static PyObject* pack(const vector<PyObject*>& v);
+        static PyObject* pack(const vector< pair<PyObject*,PyObject*> >& v);
 
     public:
         VRPyTypeCaster();
@@ -29,6 +31,28 @@ class VRPyTypeCaster {
             for (auto t : vt) {
                 PyObject* o = cast<T>(t);
                 if (o) l.push_back(o);
+            }
+            return pack(l);
+        }
+
+        template<typename T, typename G>
+        static PyObject* cast(const map<T,G>& vt) {
+            vector< pair<PyObject*,PyObject*> > l;
+            for (auto t : vt) {
+                PyObject* o1 = cast<T>(t.first);
+                PyObject* o2 = cast<G>(t.second);
+                if (o1 && o2) l.push_back(make_pair(o1, o2));
+            }
+            return pack(l);
+        }
+
+        template<typename T, typename G>
+        static PyObject* cast(const map<T,vector<G>>& vt) {
+            vector< pair<PyObject*,PyObject*> > l;
+            for (auto t : vt) {
+                PyObject* o1 = cast<T>(t.first);
+                PyObject* o2 = cast<G>(t.second);
+                if (o1 && o2) l.push_back(make_pair(o1, o2));
             }
             return pack(l);
         }

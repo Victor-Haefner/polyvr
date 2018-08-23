@@ -10,6 +10,7 @@ using namespace std;
 class VRUndoInterface {
     private:
         VRUndoManagerWeakPtr undo;
+        bool initiated = false;
 
     public:
         VRUndoInterface();
@@ -19,6 +20,8 @@ class VRUndoInterface {
 
         template<class F, class O, class V>
         void recUndo(F f, std::shared_ptr<O> o, V v1, V v2);
+
+        bool undoInitiated();
 };
 
 OSG_END_NAMESPACE;

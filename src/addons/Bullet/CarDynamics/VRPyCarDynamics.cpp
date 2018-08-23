@@ -10,7 +10,14 @@
 using namespace OSG;
 
 simpleVRPyType(CarDynamics, New_named_ptr);
+simpleVRPyType(CarSound, New_ptr);
 simpleVRPyType(Driver, New_ptr);
+
+PyMethodDef VRPyCarSound::methods[] = {
+    {"play", PyWrap(CarSound, play, "play, feed RPM", void, float) },
+    {"loadSoundFile", PyWrap(CarSound, loadSoundFile, "load ressources", void, string) },
+    {NULL}  /* Sentinel */
+};
 
 PyMethodDef VRPyCarDynamics::methods[] = {
     {"update", PyWrap(CarDynamics, update, "Update vehicle physics input, throttle {0,1}, break {0,1}, steering {-1,1}, clutch {0,1}, gear", void, float, float, float, float, int) },
@@ -183,8 +190,10 @@ PyObject* VRPyCarDynamics::setParameter(VRPyCarDynamics* self, PyObject* args) {
 
 PyMethodDef VRPyDriver::methods[] = {
     {"setCar", (PyCFunction)VRPyDriver::setCar, METH_VARARGS, "Set car - setCar( car )" },
-    {"followPath", (PyCFunction)VRPyDriver::followPath, METH_VARARGS, "Start the pilot to follow a path with a certain speed curve - followPath( path p, path v )" },
-    {"stop", (PyCFunction)VRPyDriver::stop, METH_NOARGS, "Stop driving - stop()" },
+    {"followPath", (PyCFunction)VRPyDriver::followPath, METH_VARARGS, "Start the pilot to follow a path with a certain speed curve - followPath( path p, path v, | float to )" },
+    {"stop", PyWrap( Driver, stop, "Stop driving", void ) },
+    {"resume", PyWrap( Driver, resume, "Resume driving", void ) },
+    {"setTargetSpeed", PyWrap( Driver, setTargetSpeed, "Set default target speed", void, float ) },
     {"isDriving", (PyCFunction)VRPyDriver::isDriving, METH_NOARGS, "Check if driving - bool isDriving()" },
     {NULL}  /* Sentinel */
 };
@@ -202,13 +211,9 @@ PyObject* VRPyDriver::setCar(VRPyDriver* self, PyObject* args) {
 
 PyObject* VRPyDriver::followPath(VRPyDriver* self, PyObject* args) {
     VRPyPath *p,*v;
-    if (! PyArg_ParseTuple(args, "OO", &p, &v)) return NULL;
-    self->objPtr->followPath(p->objPtr, v->objPtr);
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyDriver::stop(VRPyDriver* self) {
-    self->objPtr->stop();
+    float t = 1;
+    if (! PyArg_ParseTuple(args, "OO|f", &p, &v, &t)) return NULL;
+    self->objPtr->followPath(p->objPtr, v->objPtr, t);
     Py_RETURN_TRUE;
 }
 

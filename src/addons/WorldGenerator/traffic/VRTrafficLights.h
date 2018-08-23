@@ -53,8 +53,7 @@ class VRTrafficLights {
 
         static VRTrafficLightsPtr create();
 
-        void addLight(VRTrafficLightPtr light);
-        void setLight(VRTrafficLightPtr light, string state);
+        void addTrafficLight(VRTrafficLightPtr light);
 
         void update();
 

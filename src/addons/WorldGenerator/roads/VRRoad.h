@@ -34,14 +34,15 @@ class VRRoad : public VRRoadBase {
         static VRRoadPtr create();
 
         void addParkingLane( int direction, float width, int capacity, string type );
-        VREntityPtr addTrafficLight();
+        void addTrafficLight( Vec3d pos );
 
         void setOffsetIn(float o);
         void setOffsetOut(float o);
         float getWidth();
         VRGeometryPtr createGeometry();
         VREntityPtr getNodeEntry( VREntityPtr node );
-        edgePoint& getEdgePoints( VREntityPtr node );
+        edgePoint& getEdgePoint( VREntityPtr node );
+        map<VREntityPtr, edgePoint>& getEdgePoints();
         void computeMarkings();
         bool hasMarkings();
         PosePtr getRightEdge(Vec3d pos);

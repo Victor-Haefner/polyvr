@@ -17,11 +17,15 @@ PyMethodDef VRPyTree::methods[] = {
     {"addLeafs", PyWrapOpt( Tree, addLeafs, "Add a leaf layer, int lvl, int amount, flt size", "0.03", void, int, int, float) },
     {"setLeafMaterial", PyWrap( Tree, setLeafMaterial, "Set custom leaf material", void, VRMaterialPtr ) },
     {"createLOD", PyWrap( Tree, createLOD, "Create an LOD from the tree, int number of branching layers to keep", VRGeometryPtr, int ) },
+    {"getTruncMaterial", PyWrap(Tree, getTruncMaterial, "Access trunc material", VRMaterialPtr) },
+    {"getLeafMaterial", PyWrap(Tree, getLeafMaterial, "Access leafs material", VRMaterialPtr) },
     {NULL}  /* Sentinel */
 };
 
 PyMethodDef VRPyNature::methods[] = {
     {"addTree", PyWrapOpt(Nature, addTree, "Add a copy of the passed tree to the woods and return the copy", "0|1", VRTreePtr, VRTreePtr, bool, bool ) },
+    {"addTreeTemplate", PyWrap(Nature, addTreeTemplate, "Add a tree as template", void, VRTreePtr ) },
+    {"addBushTemplate", PyWrap(Nature, addBushTemplate, "Add a tree as template", void, VRTreePtr ) },
     {"addGrassPatch", PyWrapOpt(Nature, addGrassPatch, "Add a grass patch from polygon", "0|0|0", void, VRPolygonPtr, bool, bool) },
     {"computeLODs", PyWrapOpt(Nature, computeAllLODs, "Compute LODs", "0", void, bool ) },
     {"addCollisionModels", PyWrap(Nature, addCollisionModels, "Add collision box to trees and bushes - addCollisionModels() ", void ) },

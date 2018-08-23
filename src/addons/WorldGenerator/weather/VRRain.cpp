@@ -28,10 +28,21 @@ using namespace OSG;
 
     initRain()
 */
+Vec3f VRRain::convertV3dToV3f(Vec3d in) {
+    Vec3f out;
+    out[0] = (float)in[0];
+    out[1] = (float)in[1];
+    out[2] = (float)in[2];
+    return out;
+}
 
 VRRain::VRRain() : VRGeometry("Rain") {
     type = "Rain";
     setupShaderLocations();
+
+    dropColor = Vec3f(0.3,0.3,0.7);
+    dropWidth = 0.1;
+    dropLength = 0.1;
 
     //Shader setup
     mat = VRMaterial::create("Rain");
@@ -43,6 +54,9 @@ VRRain::VRRain() : VRGeometry("Rain") {
 	mat->setShaderParameter<float>("rainOffset", offset);
 	mat->setShaderParameter<float>("rainDensity", rainDensity);
 	mat->setShaderParameter<float>("camH", camH);
+	mat->setShaderParameter<Vec3f>("dropColor", dropColor);
+	mat->setShaderParameter<float>("dropWidth", dropWidth);
+	mat->setShaderParameter<float>("dropLength", dropLength);
 	mat->enableTransparency();
 
     setVolumeCheck(false, true);
@@ -237,7 +251,19 @@ void VRRain::update() {
 
     mat->setShaderParameter<float>("rainOffset", offset);
     mat->setShaderParameter<bool>("depthTexer", depthTexer);
+	mat->setShaderParameter<Vec3f>("dropColor", dropColor);
+	mat->setShaderParameter<float>("dropLength", dropLength);
+	mat->setShaderParameter<float>("dropWidth", dropWidth);
     reloadShader();
+}
+
+void VRRain::setDropColor(Vec3d clIn) {
+    dropColor = convertV3dToV3f(clIn);
+}
+
+void VRRain::setDropSize(float dropWidth, float dropLength) {
+    this->dropWidth = dropWidth;
+    this->dropLength = dropLength;
 }
 
 void VRRain::doTestFunction() {

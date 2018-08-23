@@ -91,6 +91,7 @@ class VRSocket : public VRName {
 
         int openWebSocket(string address, string protocols);
         void answerWebSocket(int id, string msg);
+        map<string, vector<int>> getClients();
 
         string getType();
         string getIP();

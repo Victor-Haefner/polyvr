@@ -18,7 +18,6 @@
 #include <OpenSG/OSGShaderProgram.h>
 #include <OpenSG/OSGShaderShadowMapEngine.h>
 #include <OpenSG/OSGTrapezoidalShadowMapEngine.h>
-#include <OpenSG/OSGProjectionCameraDecorator.h>
 
 #include <OpenSG/OSGFrameBufferObject.h>
 #include <OpenSG/OSGTextureBuffer.h>
@@ -70,6 +69,8 @@ void VRDefShading::init() {
     dsSpotLightVPFile = resDir + "DSSpotLight.vp.glsl";
     dsSpotLightFPFile = resDir + "DSSpotLight.fp.glsl";
     dsSpotLightShadowFPFile = resDir + "DSSpotLightShadow.fp.glsl";
+    dsFogVPFile = resDir + "DSDirLight.vp.glsl";
+    dsFogFPFile = resDir + "DSFogLight.fp.glsl";
 
     dsStage = DeferredShadingStage::create();
     dsStage->editMFPixelFormats()->push_back(Image::OSG_RGBA_PF          ); // positions (RGB) + ambient (A) term buffer
@@ -137,6 +138,7 @@ void VRDefShading::reload() {
     dsStage->setAmbientProgram(shAmbient);
 
     for (auto li : lightInfos) {
+        if (!li.second.lightVP || !li.second.lightFP) continue;
         string vpFile = getLightVPFile(li.second.lightType);
         string fpFile = getLightFPFile(li.second.lightType, li.second.shadowType);
         li.second.lightVP->readProgram(vpFile.c_str());
@@ -159,7 +161,7 @@ void VRDefShading::setDeferredShading(bool b) {
     for (auto li : lightInfos) {
         auto l = li.second.vrlight.lock();
         //if (b) l->setDeferred(b);
-        l->setDeferred(b);
+        if (l) l->setDeferred(b);
     }
 }
 
@@ -247,6 +249,7 @@ void VRDefShading::updateLight(VRLightPtr l) {
     shadowColor = l->getShadowColor();
 
     li.lightType = LightEngine::Point;
+    if (l == fogLight) li.lightType = (LightTypeE)10;
     if (type == "directional") li.lightType = LightEngine::Directional;
     if (type == "spot") li.lightType = LightEngine::Spot;
 #ifndef NO_PHOTOMETRIC
@@ -277,6 +280,7 @@ TextureObjChunkRefPtr VRDefShading::getTarget() { return fboTex; }
 // file containing vertex shader code for the light type
 const std::string& VRDefShading::getLightVPFile(LightTypeE lightType) {
     switch(lightType) {
+        case 10: return dsFogVPFile;
         case LightEngine::Directional: return dsDirLightVPFile;
         case LightEngine::Point: return dsPointLightVPFile;
         case LightEngine::Spot: return dsSpotLightVPFile;
@@ -291,6 +295,7 @@ const std::string& VRDefShading::getLightVPFile(LightTypeE lightType) {
 const std::string& VRDefShading::getLightFPFile(LightTypeE lightType, ShadowTypeE shadowType) {
     bool ds = (shadowType != ST_NONE);
     switch(lightType) {
+        case 10: return dsFogFPFile;
         case LightEngine::Directional: return ds ? dsDirLightShadowFPFile : dsDirLightFPFile;
         case LightEngine::Point: return ds ? dsPointLightShadowFPFile : dsPointLightFPFile;
         case LightEngine::Spot: return ds ? dsSpotLightShadowFPFile : dsSpotLightFPFile;

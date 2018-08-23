@@ -591,7 +591,7 @@ void VRObject::setVisible(bool b, string mode) {
     if (getBit(visibleMask, bit) == b) return;
     auto oldMask = visibleMask;
     setBit(visibleMask, bit, b);
-    recUndo(&VRObject::setVisibleUndo, ptr(), oldMask, visibleMask);
+    if (undoInitiated()) recUndo(&VRObject::setVisibleUndo, ptr(), oldMask, visibleMask);
     setVisibleMask(visibleMask);
 }
 

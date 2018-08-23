@@ -34,6 +34,9 @@ struct VRCallbackWrapper<PyObject*> : VRCallbackWrapperBase {
     template<typename T>
     PyObject* convert(const vector<T>& t) { return VRPyTypeCaster::cast(t); }
 
+    template<typename T, typename G>
+    PyObject* convert(const map<T,G>& t) { return VRPyTypeCaster::cast(t); }
+
     virtual bool execute(void* obj, const vector<PyObject*>& params, PyObject*& result) = 0;
 };
 

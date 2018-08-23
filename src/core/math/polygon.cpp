@@ -146,21 +146,29 @@ VRPolygonPtr VRPolygon::shrink(double amount) {
     return area;
 }
 
-vector<Vec3d> VRPolygon::getRandomPoints(double density, double padding) {
+vector<Vec3d> VRPolygon::getRandomPoints(double density, double padding, double spread) {
     vector<Vec3d> res;
     auto area = shrink(padding);
     if (!area) return res;
-    //for (auto& area : area1->getConvexDecomposition()) {
-        auto bb = area->getBoundingBox();
-        int N = ceil(density*area->computeArea());
-        for (int i=0; i<N; i++) {
-            Vec3d p;
-            int c = 0;
-            do { p = bb.getRandomPoint(); c++; if (c > 1e4) { cout << "Warning! VRPolygon::getRandomPoints, no point inside!" << endl; return res; } }
-            while( !area->isInside(Vec2d(p[0], p[2])) );
-            res.push_back( p );
+
+    auto bb = area->getBoundingBox();
+    Vec3i gridN;
+    Vec3d gridO = bb.min();
+    Vec3d gridD;
+    for (int i=0; i<3; i++) gridN[i] = ceil(bb.size()[i]*density)+1;
+    for (int i=0; i<3; i++) gridD[i] = bb.size()[i]/(gridN[i]-1);
+
+    for (int i=0; i<gridN[0]; i++) {
+        for (int j=0; j<gridN[2]; j++) {
+            Vec3d p = Vec3d(gridO[0] + i*gridD[0], 0, gridO[2] + j*gridD[2]);
+            if (area->isInside(Vec2d(p[0], p[2]))) {
+                p[0] += spread*gridD[0]*(float(rand())/RAND_MAX-0.5);
+                p[2] += spread*gridD[0]*(float(rand())/RAND_MAX-0.5);
+                res.push_back( p );
+            }
         }
-    //}
+    }
+
     return res;
 }
 

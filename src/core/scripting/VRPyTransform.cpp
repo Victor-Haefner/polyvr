@@ -26,6 +26,8 @@ PyMethodDef VRPyCollision::methods[] = {
     {"getDistance", PyWrap(Collision, getDistance, "Get the distance between collision points", float) },
     {"getObj1", PyWrap(Collision, getObj1, "Get the first collision object", VRTransformPtr) },
     {"getObj2", PyWrap(Collision, getObj2, "Get the second collision object", VRTransformPtr) },
+    {"getTriangle1", PyWrap(Collision, getTriangle1, "Get the first collision triangle", vector<Vec4d>) },
+    {"getTriangle2", PyWrap(Collision, getTriangle2, "Get the second collision triangle", vector<Vec4d>) },
     {NULL}  /* Sentinel */
 };
 

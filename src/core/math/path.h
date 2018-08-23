@@ -69,6 +69,7 @@ class Path : public VRStorage {
         bool isSinuous(int i = 0, int j = 0);
 
         void approximate(int degree);
+        void translate(Vec3d t);
 
         float getLength(int i = 0, int j = 0);
         int size();

@@ -44,6 +44,7 @@
 #include "VRPySelection.h"
 #include "VRPyPatchSelection.h"
 #include "VRPyPolygonSelection.h"
+#include "VRPySpatialCollisionManager.h"
 #include "VRPyMenu.h"
 #include "VRPyClipPlane.h"
 #include "VRPyListMath.h"
@@ -55,6 +56,7 @@
 #include "VRPyMeasure.h"
 #include "VRPyJointTool.h"
 #include "VRPyImage.h"
+#include "VRPyNetworking.h"
 #include "VRPyProjectManager.h"
 #include "VRPyGeoPrimitive.h"
 #include "VRPyProgress.h"
@@ -63,7 +65,9 @@
 #include "VRPySky.h"
 #include "VRPyScenegraphInterface.h"
 #include "VRPyOPCUA.h"
+#ifndef NO_ENCRYPTION
 #include "VRPyEncryption.h"
+#endif
 
 #include "addons/Character/VRPyCharacter.h"
 #include "addons/Algorithms/VRPyGraphLayout.h"
@@ -108,6 +112,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyTransform>("Transform", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyCollision>("Collision", pModVR);
     sm->registerModule<VRPyGeometry>("Geometry", pModVR, VRPyTransform::typeRef);
+    sm->registerModule<VRPySpatialCollisionManager>("SpatialCollisionManager", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyMaterial>("Material", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTextureGenerator>("TextureGenerator", pModVR);
     sm->registerModule<VRPyImage>("Image", pModVR);
@@ -135,6 +140,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyPath>("Path", pModVR);
     sm->registerModule<VRPyGraph>("Graph", pModVR);
     sm->registerModule<VRPyStateMachine>("StateMachine", pModVR);
+    sm->registerModule<VRPyHDLC>("HDLC", pModVR);
     sm->registerModule<VRPyState>("State", pModVR);
     sm->registerModule<VRPyGraphLayout>("GraphLayout", pModVR);
     sm->registerModule<VRPyPathFinding>("PathFinding", pModVR);
@@ -164,7 +170,9 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyOPCUANode>("OPCUANode", pModVR);
 #endif
 
+#ifndef NO_ENCRYPTION
     sm->registerModule<VRPyEncryption>("Encryption", pModVR);
+#endif
     sm->registerModule<VRPyProgress>("Progress", pModVR);
     sm->registerModule<VRPyUndoManager>("UndoManager", pModVR);
     sm->registerModule<VRPyObjectManager>("ObjectManager", pModVR, VRPyObject::typeRef);
@@ -180,6 +188,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyFluids>("Fluids", pModVR, VRPyParticles::typeRef);
     sm->registerModule<VRPyMetaBalls>("MetaBalls", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyCarDynamics>("CarDynamics", pModVR, VRPyObject::typeRef);
+    sm->registerModule<VRPyCarSound>("CarSound", pModVR);
     sm->registerModule<VRPyDriver>("Driver", pModVR);
     sm->registerModule<VRPyCEF>("CEF", pModVR);
     sm->registerModule<VRPyWebCam>("Webcam", pModVR, VRPySprite::typeRef);
@@ -203,7 +212,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyOntology>("Ontology", pModVR);
     sm->registerModule<VRPyProcess>("Process", pModVR);
     sm->registerModule<VRPyProcessNode>("ProcessNode", pModVR);
-    sm->registerModule<VRPyProcessDiagram>("ProcessNode", pModVR, VRPyGraph::typeRef);
+    sm->registerModule<VRPyProcessDiagram>("ProcessDiagram", pModVR, VRPyGraph::typeRef);
     sm->registerModule<VRPyProcessLayout>("ProcessLayout", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyProcessEngine>("ProcessEngine", pModVR);
     sm->registerModule<VRPyOntologyRule>("OntologyRule", pModVR);

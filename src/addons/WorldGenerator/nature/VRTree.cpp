@@ -221,6 +221,9 @@ segment* VRTree::growSegment(int seed, segment* p, int iteration, float t) {
     return s;
 }
 
+VRMaterialPtr VRTree::getTruncMaterial() { return treeMat; }
+VRMaterialPtr VRTree::getLeafMaterial() { return leafMat; }
+
 void VRTree::initMaterials() {
     if (!treeMat) {
         treeMat = VRMaterial::create("tree_wood");
@@ -419,11 +422,11 @@ void main(void) {
 	color = gl_Color;
 
 	//vec4 mid = normalize( gl_ModelViewMatrix * vec4(0,0,0,1) );
-	float D = dot(vec3(0,0,1), vertNorm);
+	float angle = dot(vec3(0,0,1), vertNorm);
 	Discard = 0;
-	if (abs(D) < 0.65) Discard = 1;
+	if (abs(angle) < 0.6) Discard = 1; // discard depending on orientation
 	vec4 p = gl_ModelViewProjectionMatrix*osg_Vertex;
-	if (p[2] < 40) Discard = 1;
+	if (p[2] < 15) Discard = 1; // LoD
     gl_Position = p;
 }
 );

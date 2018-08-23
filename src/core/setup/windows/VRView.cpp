@@ -40,10 +40,10 @@ string VRView::getName() { return name; }
 void VRView::setMaterial() {
     ImageMTRecPtr img = Image::create();
 
-    Vec3d bg  = Vec3d(0.5, 0.7, 0.95);
-    Vec3d c1  = Vec3d(0.5, 0.7, 0.95);
-    Vec3d cax = Vec3d(0.9, 0.2, 0.2);
-    Vec3d cay = Vec3d(0.2, 0.9, 0.2);
+    Color3f bg  = Color3f(0.5, 0.7, 0.95);
+    Color3f c1  = Color3f(0.5, 0.7, 0.95);
+    Color3f cax = Color3f(0.9, 0.2, 0.2);
+    Color3f cay = Color3f(0.2, 0.9, 0.2);
 
     auto label = VRText::get()->create(name, "SANS 20", 20, Color4f(1,1,1,1), Color4f(bg[2], bg[1], bg[0], 1));
     float lw = label->getImage()->getWidth();
@@ -55,7 +55,7 @@ void VRView::setMaterial() {
     int ar = 50;
     Vec2d pl(-0.1*s, -0.05*s);
 
-	vector<Vec3d> data;
+	vector<Color3f> data;
 	data.resize(s*s);
 
     for (int i=0; i<s; i++) {
@@ -77,7 +77,7 @@ void VRView::setMaterial() {
                 int v = y - pl[1] + lh*0.5;
                 int w = 4*(u+v*lw);
                 const UInt8* d = label->getImage()->getData();
-                data[k] = Vec3d(d[w]/255.0, d[w+1]/255.0, d[w+2]/255.0);
+                data[k] = Color3f(d[w]/255.0, d[w+1]/255.0, d[w+2]/255.0);
                 //data[k] = Vec4d(1,1,1, 1);
             }
         }
@@ -420,10 +420,25 @@ Vec3d VRView::getMirrorPos() { return mirrorPos; }
 Vec3d VRView::getMirrorNorm() { return mirrorNorm; }
 
 void VRView::updateMirror() {
-    if (!mirror || !user) return;
-    auto u = user->getMatrix();
-    u.multLeft(mirrorMatrix); // u' = m*Z*mI*u
-    dummy_user->setMatrix(u);
+    //cout << "VRView::updateMirror " << mirror << " " <<  << endl;
+    if (!mirror) return;
+    VRTransformPtr u = user;
+    if (!u) u = dummy_user;
+    if (!u) return;
+
+    auto now = VRGlobals::CURRENT_FRAME;
+    auto lc = u->getLastChange();
+    auto lm = lastMirrored;
+    if (lm != -1 && lm >= lc) return;
+
+    cout << "VRView::updateMirror " << u->changedNow() << endl;
+
+    Matrix4d m = u->getMatrix();
+    m.multLeft(mirrorMatrix); // u' = m*Z*mI*u
+
+    lastMirrored = now;
+    u->setMatrix(m);
+    cout << " VRView::updateMirror " << dummy_user->getPose()->pos() << endl;
 }
 
 void VRView::setUser(VRTransformPtr u) {
@@ -479,6 +494,7 @@ void VRView::setOffset(Vec3d o) { offset = o; update(); }
 
 void VRView::setWindow() {
     if (window == 0) return;
+    if (cam == 0) return;
     if (lView) window->addPort(lView);
     if (rView) window->addPort(rView);
 }
@@ -504,6 +520,7 @@ bool VRView::eyesInverted() { return eyeinverted; }
 bool VRView::activeStereo() { return active_stereo; }
 
 void VRView::update() {
+    updateMirrorMatrix();
     setViewports();
     setDecorators();
     setCam();

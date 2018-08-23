@@ -17,6 +17,8 @@ PyMethodDef VRPyRain::methods[] = {
     //{"doTestFunction", PyWrap(Rain, doTestFunction, "doTestFunction", void) },
     {"getRenderer", PyWrap(Rain, getRenderer, "Get renderer", VRTextureRendererPtr) },
     //{"getTexMat", PyWrap(Rain, getTexMat, "getTexMat", VRMaterialPtr) },
+    {"setDropColor", PyWrap(Rain, setDropColor, "Set drop color", void, Vec3d) },
+    {"setDropSize", PyWrap(Rain, setDropSize, "setDropSize - width, length", void, float, float) },
     {NULL}  /* Sentinel */
 };
 

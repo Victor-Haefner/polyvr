@@ -50,8 +50,9 @@ PyObject* VRPyPolygon::getRandomPoints(VRPyPolygon* self, PyObject* args) {
     if (!self->valid()) return NULL;
     float d = 10;
     float p = 0;
-    if (! PyArg_ParseTuple(args, "|ff", &d, &p)) return NULL;
-    auto vec = self->objPtr->getRandomPoints(d,p);
+    float s = 0.5;
+    if (! PyArg_ParseTuple(args, "|fff", &d, &p, &s)) return NULL;
+    auto vec = self->objPtr->getRandomPoints(d,p,s);
     PyObject* res = PyList_New(vec.size());
     for (uint i=0; i<vec.size(); i++) PyList_SetItem(res, i, toPyObject(vec[i]));
     return res;
