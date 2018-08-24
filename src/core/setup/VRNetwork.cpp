@@ -100,7 +100,8 @@ void VRNetworkNode::update() {
     stat_path = "";
 
     VRPing p;
-    if ( !p.start(address, "22", 1) ) { stat_node = "ping failed"; return; }
+    if ( !p.start(address, 1) ) { stat_node = "not reachable"; return; }
+    if ( !p.start(address, "22", 1) ) { stat_node = "no ssh"; return; }
 
     auto ssh = VRSSHSession::open(address, user);
     stat_ssh = ssh->getStat();

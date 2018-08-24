@@ -1,4 +1,6 @@
 #include "VRPing.h"
+#include "core/utils/toString.h"
+
 #include <boost/asio.hpp>
 #include <iostream>
 
@@ -68,11 +70,25 @@ using namespace std;
 
 VRPing::VRPing() {;}
 
-bool VRPing::start(string IP, string port, int timeout) {
+bool VRPing::start(string address, string port, int timeout) {
     ping_client c;
-    return c.connect(IP, port, boost::posix_time::seconds(timeout));
+    return c.connect(address, port, boost::posix_time::seconds(timeout));
 }
 
-bool VRPing::start(std::string IP, int timeout) {
-    return false; // TODO
+/**
+uses system call to ping.. meh..
+the nicer solution would be to use boost asio with icmp socket!
+BUT! ..this requires root rights, thus cannot be used :(
+**/
+
+bool VRPing::start(std::string address, int timeout) {
+    int max_attempts = 1;
+    std::string command = "ping -c " + toString(max_attempts) + " " + address + " 2>&1";
+
+    FILE *in;
+    char buff[512];
+    if (!(in = popen(command.c_str(), "r"))) return false;
+    while (fgets(buff, sizeof(buff), in)!=NULL) ;
+    int code =  pclose(in);
+    return (code == 0);
 }
