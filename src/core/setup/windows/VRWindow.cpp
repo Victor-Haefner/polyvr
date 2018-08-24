@@ -77,8 +77,8 @@ void VRWindow::update( weak_ptr<VRThread>  wt) {
         BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
 
         if (t->control_flag) {
-            //barrier->enter(active_window_count+1);
-            //barrier->enter(active_window_count+1);
+            barrier->enter(active_window_count+1);
+            barrier->enter(active_window_count+1);
             auto appCL = t->appThread->getChangeList();
             auto clist = Thread::getCurrentChangeList();
             clist->merge(*appCL);
