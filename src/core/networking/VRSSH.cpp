@@ -119,7 +119,13 @@ bool VRSSHSession::hasLocalKey() {
     return exists(kf+privKeyPath);
 }
 
-string VRSSHSession::checkLocalKeyPair() { // TODO
+void VRSSHSession::createLocalKey() {
+    if (hasLocalKey()) return;
+    string kf = getenv("HOME") + keyFolder;
+    systemCall("ssh-keygen -b 2048 -t rsa -f ~/.ssh/id_rsa -q -N \"\"");
+}
+
+string VRSSHSession::checkLocalKeyPair() { // TODO, deprecated?
     if (hasLocalKey()) return "ok";
     cout << "Warning! generate new ssh key pair!" << endl;
     string kf = getenv("HOME") + keyFolder;
