@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Setup>
   <Displays globalOffset="0 0 0">
-    <Window active="1" type="2" width="1322" height="748" name="local" mouse="mouse" keyboard="keyboard">
-      <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0 0" normal="0 0 1" user_pos="0 0 0" up="0 1 0" size="2 1" shear="0 0" warp="0 0" vsize="1322 748" mirror="0" mirrorPos="0 0 0" mirrorNorm="0 0 1" user=""/>
+    <Window active="1" type="2" width="1318" height="822" name="local" mouse="mouse" keyboard="keyboard">
+      <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0 0" normal="0 0 1" user_pos="0 0 0" up="0 1 0" size="2 1" shear="0 0" warp="0 0" vsize="1318 822" mirror="0" mirrorPos="0 0 0" mirrorNorm="0 0 1" user=""/>
     </Window>
     <Window active="1" type="0" width="300" height="300" name="remote" mouse="None" keyboard="None" Nx="1" Ny="1" ConnType="Multicast">
       <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0 0" normal="0 0 1" user_pos="1 0 2" up="0 1 0" size="1 1" shear="0 0" warp="0 0" vsize="1700 1080" mirror="1" mirrorPos="0 0 0" mirrorNorm="1 0 0" user=""/>
-      <Server Address="localhost:30000"/>
+      <Server Address="l1"/>
     </Window>
   </Displays>
   <Devices>
@@ -17,7 +17,7 @@
   <TrackingART active="0" axis="0 1 2" offset="0 0 0" persistency="666" port="5000" up=""/>
   <TrackingVRPN active="1" persistency="666" port="3883" verbose="0"/>
   <Network base_name="Network" name_space="Manager" name_suffix="0" persistency="666">
-    <Node address="127.0.0.1" base_name="Node" name_space="NetworkNode" name_suffix="0" persistency="666" slavePath="/home/victor/Projects/Software/polyvr/src/cluster/start" user="victor" ID="0">
+    <Node address="127.0.0.1" base_name="Node" name_space="NetworkNode" name_suffix="0" persistency="666" slavePath="/home/administrator/Projects/polyvr/src/cluster/start" user="administrator" ID="0">
       <Node active_stereo="0" autostart="0" base_name="l1" connection_type="Multicast" display=":0.0" fullscreen="0" name_space="NetworkNode" name_suffix="0" persistency="666" port="3000" ID="0"/>
     </Node>
   </Network>

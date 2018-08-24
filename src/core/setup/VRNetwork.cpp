@@ -60,6 +60,7 @@ void VRNetworkNode::set(string a, string u, string p) {
 void VRNetworkNode::distributeKey() {
     if (stat_node != "ok") return;
     auto ssh = VRSSHSession::open(address, user);
+    if (!ssh->hasLocalKey()) ssh->createLocalKey();
     ssh->distrib_key();
     stat_ssh = ssh->getStat();
     stat_ssh_key = ssh->getKeyStat();
@@ -100,11 +101,13 @@ void VRNetworkNode::update() {
     stat_path = "";
 
     VRPing p;
-    if ( !p.start(address, "22", 1) ) { stat_node = "ping failed"; return; }
+    if ( !p.start(address, 1) ) { stat_node = "not reachable"; return; }
+    if ( !p.start(address, "22", 1) ) { stat_node = "no ssh"; return; }
 
     auto ssh = VRSSHSession::open(address, user);
     stat_ssh = ssh->getStat();
     stat_ssh_key = ssh->getKeyStat();
+    if (stat_ssh != "ok") { stat_path = "no ssh access"; return; }
 
     string res = execCmd("ls "+slavePath, true);
     bool b = res.substr(0, slavePath.size()) == slavePath;

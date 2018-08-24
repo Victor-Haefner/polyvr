@@ -1,0 +1,10 @@
+#!/bin/sh
+
+mkdir codeblocks
+cd codeblocks
+wget http://sourceforge.net/projects/codeblocks/files/Binaries/17.12/Linux/Debian%20stable/codeblocks_17.12-1_amd64_stable.tar.xz
+tar -xf codeblocks_17.12-1_amd64_stable.tar.xz
+#sudo apt install libboost-system1.62.0
+sudo apt install libcanberra-gtk-module
+rm *contrib*.deb
+sudo dpkg -i *.deb

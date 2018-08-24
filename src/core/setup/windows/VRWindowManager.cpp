@@ -179,11 +179,11 @@ void VRWindowManager::updateWindows() {
 
     BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
     if (barrier->getNumWaiting() == VRWindow::active_window_count) {
-        //barrier->enter(VRWindow::active_window_count+1);
+        barrier->enter(VRWindow::active_window_count+1);
         auto clist = Thread::getCurrentChangeList();
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRMultiWindow>(w.second)) if (win->getState() == VRMultiWindow::INITIALIZING) win->initialize();
         commitChanges();
-        //barrier->enter(VRWindow::active_window_count+1);
+        barrier->enter(VRWindow::active_window_count+1);
         //if (clist->getNumCreated() > 0 || clist->getNumChanged() > 0) cout << "VRWindowManager::updateWindows " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
         barrier->enter(VRWindow::active_window_count+1);
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();

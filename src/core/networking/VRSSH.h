@@ -43,6 +43,7 @@ class VRSSHSession {
         string connect_session();
 
         bool hasLocalKey();
+        void createLocalKey();
         string checkLocalKeyPair();
 
         void distrib_key();
