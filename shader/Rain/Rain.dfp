@@ -22,6 +22,11 @@ uniform float dropLength;
 uniform float dropSpeed;
 uniform float dropDensity;
 
+uniform vec3 lastCt2;
+uniform vec3 lastCt3;
+uniform vec3 lastCt5;
+uniform vec3 lastCt8;
+
 uniform sampler2D tex;
 
 uniform float camH;

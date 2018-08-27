@@ -41,6 +41,10 @@ class VRRain : public VRGeometry {
         float dropLength;
         float dropSpeed;
         float dropDensity;
+        Vec3d lastCt2;
+        Vec3d lastCt3;
+        Vec3d lastCt5;
+        Vec3d lastCt8;
 
         bool isRaining = false;
         bool depthTexer = false;
