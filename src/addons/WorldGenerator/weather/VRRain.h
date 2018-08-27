@@ -39,6 +39,8 @@ class VRRain : public VRGeometry {
         Vec3f dropColor;
         float dropWidth;
         float dropLength;
+        float dropSpeed;
+        float dropDensity;
 
         bool isRaining = false;
         bool depthTexer = false;
@@ -84,6 +86,8 @@ class VRRain : public VRGeometry {
 
         void setDropColor(Vec3d clIn);
         void setDropSize(float dropWidth, float dropLength);
+        void setDropSpeed(float dropSpeed);
+        void setDropDensity(float dropDensity);
 
         void setScale( bool liveChange , float scale );
         void doTestFunction();

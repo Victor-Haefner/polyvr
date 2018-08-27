@@ -43,6 +43,8 @@ VRRain::VRRain() : VRGeometry("Rain") {
     dropColor = Vec3f(0.3,0.3,0.7);
     dropWidth = 0.1;
     dropLength = 0.1;
+    dropSpeed = 1;
+    dropDensity = 1;
 
     //Shader setup
     mat = VRMaterial::create("Rain");
@@ -254,6 +256,8 @@ void VRRain::update() {
 	mat->setShaderParameter<Vec3f>("dropColor", dropColor);
 	mat->setShaderParameter<float>("dropLength", dropLength);
 	mat->setShaderParameter<float>("dropWidth", dropWidth);
+	mat->setShaderParameter<float>("dropSpeed", dropSpeed);
+	mat->setShaderParameter<float>("dropDensity", dropDensity);
     reloadShader();
 }
 
@@ -264,6 +268,14 @@ void VRRain::setDropColor(Vec3d clIn) {
 void VRRain::setDropSize(float dropWidth, float dropLength) {
     this->dropWidth = dropWidth;
     this->dropLength = dropLength;
+}
+
+void VRRain::setDropSpeed(float dropSpeed) {
+    this->dropSpeed = dropSpeed;
+}
+
+void VRRain::setDropDensity(float dropDensity) {
+    this->dropDensity = dropDensity;
 }
 
 void VRRain::doTestFunction() {

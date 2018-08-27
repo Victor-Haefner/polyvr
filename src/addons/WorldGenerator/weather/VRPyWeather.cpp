@@ -13,12 +13,14 @@ PyMethodDef VRPyRain::methods[] = {
     {"stop", PyWrap(Rain, stop, "Stops Rain", void) },
     {"setScale", PyWrap(Rain, setScale, "Sets Scale, live change: changes weather live (True or False)", void, bool, float) },
     {"get", PyWrap(Rain, get, "Gets Scale", float ) },
-    {"overrideParameters", PyWrap(Rain, overrideParameters, "7 parameters: tTransition, densRain, densCL, vX, vY, clCL, light \n\t", void, float, float, float, float, float, float, float ) },
+    //{"overrideParameters", PyWrap(Rain, overrideParameters, "7 parameters: tTransition, densRain, densCL, vX, vY, clCL, light \n\t", void, float, float, float, float, float, float, float ) },
     //{"doTestFunction", PyWrap(Rain, doTestFunction, "doTestFunction", void) },
     {"getRenderer", PyWrap(Rain, getRenderer, "Get renderer", VRTextureRendererPtr) },
     //{"getTexMat", PyWrap(Rain, getTexMat, "getTexMat", VRMaterialPtr) },
     {"setDropColor", PyWrap(Rain, setDropColor, "Set drop color", void, Vec3d) },
     {"setDropSize", PyWrap(Rain, setDropSize, "setDropSize - width, length", void, float, float) },
+    {"setDropSpeed", PyWrap(Rain, setDropSpeed, "setDropSpeed", void, float) },
+    {"setDropDensity", PyWrap(Rain, setDropDensity, "setDropDensity", void, float) },
     {NULL}  /* Sentinel */
 };
 

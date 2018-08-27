@@ -19,6 +19,8 @@ uniform bool depthTexer;
 uniform vec3 dropColor;
 uniform float dropWidth;
 uniform float dropLength;
+uniform float dropSpeed;
+uniform float dropDensity;
 
 uniform sampler2D tex;
 
@@ -85,7 +87,7 @@ float getdropLength(in float theta,float distance){
 }
 
 float getOffset(in float rOffset, in float dropdis,in float D) {
-	return rOffset*5/sqrt(D);
+	return dropSpeed*rOffset*5/sqrt(D);
 	//return 0;
 }
 
@@ -120,7 +122,7 @@ vec3 worldCoords(float D){
 //** computes whether there should be raindrops at certain distance D **/
 bool isD(float D) {
 	float dropdis = 2/(D*D); 	// horizontal distance between drops
-	float dropdisy = rainDensity*6; // vertical distance between drops
+	float dropdisy = rainDensity*6/dropDensity; // vertical distance between drops
 	float dropwidth = getdropWidth(gettheta(fragDir),D);
 	float droplength = getdropLength(gettheta(fragDir),D);
 	float toffset = rainOffset;
