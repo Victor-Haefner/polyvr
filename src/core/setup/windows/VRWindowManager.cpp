@@ -178,18 +178,47 @@ void VRWindowManager::updateWindows() {
     //TODO: use barrier->getnumwaiting to make a state machine, allways ensure all are waiting!!
 
     BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
-    if (barrier->getNumWaiting() == VRWindow::active_window_count) {
+
+    auto wait = [&]() {
+        size_t tEnter = time(0);
+        while (barrier->getNumWaiting() < VRWindow::active_window_count) {
+            usleep(1);
+            size_t tNow = time(0);
+            int delta = tNow - tEnter;
+            if (delta >= 1) {
+                cout << "WARNING! skipping barrier!" << endl;
+                return false;
+            }
+        }
         barrier->enter(VRWindow::active_window_count+1);
+        return true;
+    };
+
+    auto tryRender = [&]() {
+        if (barrier->getNumWaiting() != VRWindow::active_window_count) return true;
+
+        if (!wait()) return false;
         auto clist = Thread::getCurrentChangeList();
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRMultiWindow>(w.second)) if (win->getState() == VRMultiWindow::INITIALIZING) win->initialize();
         commitChanges();
-        barrier->enter(VRWindow::active_window_count+1);
+        if (!wait()) return false;
         //if (clist->getNumCreated() > 0 || clist->getNumChanged() > 0) cout << "VRWindowManager::updateWindows " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
-        barrier->enter(VRWindow::active_window_count+1);
+        if (!wait()) return false;
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
-        barrier->enter(VRWindow::active_window_count+1);
+        if (!wait()) return false;
         clist->clear();
+        return true;
         //sleep(1);
+    };
+
+    if (!tryRender()) {
+        cout << "WARNING! a remote window hangs or something!\n";
+        for (auto w : getWindows() ) {
+            auto win = dynamic_pointer_cast<VRMultiWindow>(w.second);
+            if (!win) continue;
+            if (win->isWaiting()) continue;
+            cout << "WARNING!  window " << win->getName() << " is hanging, state: " << win->getState() << endl;
+        }
     }
 
     if (scene) scene->blockScriptThreads();

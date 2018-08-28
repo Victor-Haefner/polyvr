@@ -19,6 +19,7 @@ class VRWindow : public std::enable_shared_from_this<VRWindow>, public VRName {
     protected:
         bool active = false;
         bool content = false;
+        bool waitingAtBarrier = false;
         int type = -1;
         WindowMTRecPtr _win;
         RenderActionRefPtr ract;
@@ -54,6 +55,8 @@ class VRWindow : public std::enable_shared_from_this<VRWindow>, public VRName {
 
         bool hasContent();
         void setContent(bool b);
+
+        bool isWaiting();
 
         void setMouse(VRMousePtr m);
         void setMultitouch(VRMultiTouchPtr m);
