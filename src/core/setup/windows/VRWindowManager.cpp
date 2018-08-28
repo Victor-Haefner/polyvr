@@ -24,6 +24,12 @@
 #include "VRGtkWindow.h"
 #include "VRMultiWindow.h"
 
+#include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiConsole.h"
+
+#define WARN(x) \
+VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -221,6 +227,8 @@ void VRWindowManager::updateWindows() {
             if (!win) continue;
             if (win->isWaiting()) continue;
             cout << "WARNING!  window " << win->getName() << " is hanging, state: " << win->getState() << endl;
+            WARN("WARNING! Lost connection with " + win->getName());
+            win->reset();
         }
     }
 
