@@ -7,7 +7,8 @@ in vec4 pos;
 in vec2 tcs;
 in mat3 miN;
 in mat4 miP;
-vec3 fragDir;
+vec3 fragDir = vec3(0,0,0);
+vec3 newfragDir;
 vec4 color;
 bool debugB = false;
 
@@ -22,14 +23,21 @@ uniform float dropLength;
 uniform float dropSpeed;
 uniform float dropDensity;
 
+uniform vec3 lastCt2;
+uniform vec3 lastCt3;
+uniform vec3 lastCt5;
+uniform vec3 lastCt8;
+
 uniform sampler2D tex;
 
 uniform float camH;
 
 float theta;
+vec3 PCam0;
+vec3 PCam;
 
 void computeDirection() {
-	fragDir = normalize( miN * (miP * pos).xyz );
+	newfragDir = normalize( miN * (miP * pos).xyz );
 }
 
 float hash(vec2 co){
@@ -40,8 +48,46 @@ float gettheta(vec3 d){
 	return acos(d.y);
 }
 
+vec3 getlastCt(float D) {
+	vec3 lastCt;
+	if (D == 2) lastCt = vec3(lastCt2.x,PCam.y,lastCt2.z);
+	if (D == 3) lastCt = vec3(lastCt3.x,PCam.y,lastCt3.z);
+	if (D == 5) lastCt = vec3(lastCt5.x,PCam.y,lastCt5.z);
+	if (D == 8) lastCt = vec3(lastCt8.x,PCam.y,lastCt8.z);
+	return lastCt;
+}
+
+vec3 getlastCt0(float D) {
+	vec3 lastCt;
+	if (D == 2) lastCt = lastCt2;
+	if (D == 3) lastCt = lastCt3;
+	if (D == 5) lastCt = lastCt5;
+	if (D == 8) lastCt = lastCt8;
+	return lastCt;
+}
+
+vec3 calcDirFromFragDir(float D) {
+	vec3 dir;
+	float n;
+	vec3 localOffset = PCam0 - getlastCt0(D);
+	float pX = localOffset.x;
+	float pZ = localOffset.z;
+	float fX = newfragDir.x;
+	float fZ = newfragDir.z;
+	float r = D/2;
+	//n = -(sqrt(fZ*fZ* (r*r - pX*pX) + 2*pX*fX*pZ*fZ + fX*fX*(r*r - pZ*pZ)) + pX*fX + pZ*fZ)/(fX*fX + fZ*fZ);
+	n = (sqrt(fZ*fZ* (r*r - pX*pX) + 2*pX*fX*pZ*fZ + fX*fX*(r*r - pZ*pZ)) - pX*fX - pZ*fZ)/(fX*fX + fZ*fZ);
+	vec3 Point = PCam + newfragDir * n;
+	dir = normalize(Point - getlastCt(D));	
+	//fragDir
+	//PCam0
+
+	return dir;
+}
+
 /** OBSTRUCTION RETURNS TRUE, IF RAIN IS BLOCKED **/
 bool obstruction(float D){
+	//vec3 fragDir = calcDirFromFragDir(D);
 	float phi = -atan(fragDir.x,fragDir.z);
 	vec2 texPos = vec2(0.5+sin(phi)*D/(camH),0.5+cos(phi)*D/(camH));	//texture positions
 	vec4 texC = texture2D(tex,texPos); 					//RGB value of pixel
@@ -59,6 +105,7 @@ bool obstruction(float D){
 
 vec3 debugObstruction(){
 	vec3 color = vec3(1,0,0);
+	//vec3 fragDir = calcDirFromFragDir(D);
 	if (atan( fragDir.x, fragDir.z)*180/M_PI<1 && atan( fragDir.x, fragDir.z)*180/M_PI>-1 && gettheta(fragDir)>M_PI/2) return vec3(1,1,1);	
 	if (atan( fragDir.x, fragDir.z)*180/M_PI<91 && atan( fragDir.x, fragDir.z)*180/M_PI>89 && gettheta(fragDir)>M_PI/2) return vec3(0,0,1);	
 	if ((atan( fragDir.x, fragDir.z)*180/M_PI<-179 || atan( fragDir.x, fragDir.z)*180/M_PI>179) && gettheta(fragDir)>M_PI/2) return vec3(0,0,1);	
@@ -110,6 +157,7 @@ void ccDepth(vec3 position){
 }
 
 vec3 worldCoords(float D){
+	//vec3 fragDir = calcDirFromFragDir(D);
 	mat4 m = inverse(gl_ModelViewMatrix);
 	vec3 PCam = (m*vec4(0,0,0,1)).xyz;
 	float relX = D*sin(atan( fragDir.x, fragDir.z)); //relative to cam pos
@@ -121,6 +169,7 @@ vec3 worldCoords(float D){
 
 //** computes whether there should be raindrops at certain distance D **/
 bool isD(float D) {
+	fragDir = calcDirFromFragDir(D);
 	float dropdis = 2/(D*D); 	// horizontal distance between drops
 	float dropdisy = rainDensity*6/dropDensity; // vertical distance between drops
 	float dropwidth = getdropWidth(gettheta(fragDir),D);
@@ -151,8 +200,8 @@ bool isD(float D) {
 	return true;
 }
 
-
 vec3 checkrad() {
+	//vec3 fragDir = calcDirFromFragDir(D);
 	//DEBUGGING POINTERS -- RAIN OCCLUSION ONLY WORKS BETWEEN GREEN POINTERS
 	if (debugB) {
 		if (atan( fragDir.x, fragDir.z)*180/M_PI>-1 && atan( fragDir.x, fragDir.z)*180/M_PI<1 && gettheta(fragDir)>M_PI/2) return vec3(1,1,1);	
@@ -174,13 +223,16 @@ void main() {
 	computeDirection();
 
 	// \theta is angle of fragDir to zenith
+	//vec3 fragDir = calcDirFromFragDir(D);
 	theta = acos(fragDir.y);
 
 	mat4 m = inverse(gl_ModelViewMatrix);
-	vec3 PCam = (m*vec4(0,0,0,1)).xyz;
+	PCam = (m*vec4(0,0,0,1)).xyz;
 	vec3 P0 = vec3(0,100,0);
 	vec3 T0 = P0-PCam;
 	vec3 D0 = normalize( P0-PCam );
+
+	PCam0 = vec3(PCam.x,0.0,PCam.z);
 	//if (dot(D0,fragDir) < 0.9999 && dot(D0,fragDir) > 0.999) discard;
 
 	vec3 check = checkrad();
