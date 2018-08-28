@@ -179,15 +179,17 @@ void VRWindowManager::updateWindows() {
 
     BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
 
-    auto wait = [&]() {
-        size_t tEnter = time(0);
-        while (barrier->getNumWaiting() < VRWindow::active_window_count) {
-            usleep(1);
-            size_t tNow = time(0);
-            int delta = tNow - tEnter;
-            if (delta >= 1) {
-                cout << "WARNING! skipping barrier!" << endl;
-                return false;
+    auto wait = [&](int timeout = -1) {
+        if (timeout > 0) {
+            size_t tEnter = time(0);
+            while (barrier->getNumWaiting() < VRWindow::active_window_count) {
+                usleep(1);
+                size_t tNow = time(0);
+                int delta = tNow - tEnter;
+                if (delta >= timeout) {
+                    cout << "WARNING! skipping barrier!" << endl;
+                    return false;
+                }
             }
         }
         barrier->enter(VRWindow::active_window_count+1);
@@ -202,10 +204,11 @@ void VRWindowManager::updateWindows() {
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRMultiWindow>(w.second)) if (win->getState() == VRMultiWindow::INITIALIZING) win->initialize();
         commitChanges();
         if (!wait()) return false;
+        /** let the windows merge the change lists **/
         //if (clist->getNumCreated() > 0 || clist->getNumChanged() > 0) cout << "VRWindowManager::updateWindows " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
         if (!wait()) return false;
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
-        if (!wait()) return false;
+        if (!wait(20)) return false;
         clist->clear();
         return true;
         //sleep(1);

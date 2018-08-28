@@ -79,6 +79,7 @@ void VRWindow::update( weak_ptr<VRThread>  wt) {
         if (t->control_flag) {
             waitingAtBarrier = true;
             barrier->enter(active_window_count+1);
+            /** let the window manager initiate multi windows if necessary **/
             barrier->enter(active_window_count+1);
             waitingAtBarrier = false;
             auto appCL = t->appThread->getChangeList();
