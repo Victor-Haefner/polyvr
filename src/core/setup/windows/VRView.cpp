@@ -249,6 +249,8 @@ VRView::VRView(string name) {
 
     dummy_user = VRTransform::create("view_user");
     dummy_user->setPersistency(0);
+    mirror_user = VRTransform::create("view_mirror_user");
+    mirror_user->setPersistency(0);
 
     viewGeo = makeNodeFor(makePlaneGeo(1,1,1,1));
     viewGeo->setTravMask(0);
@@ -381,6 +383,7 @@ void VRView::setRoot() {
 
     if (user && real_root) user->switchParent(real_root);
     if (dummy_user && real_root) dummy_user->switchParent(real_root);
+    if (mirror_user && real_root) mirror_user->switchParent(real_root);
 
     NodeMTRecPtr nl = view_root ? view_root->getNode()->node : 0;
     NodeMTRecPtr nr = nl;
@@ -426,19 +429,9 @@ void VRView::updateMirror() {
     if (!u) u = dummy_user;
     if (!u) return;
 
-    auto now = VRGlobals::CURRENT_FRAME;
-    auto lc = u->getLastChange();
-    auto lm = lastMirrored;
-    if (lm != -1 && lm >= lc) return;
-
-    cout << "VRView::updateMirror " << u->changedNow() << endl;
-
     Matrix4d m = u->getMatrix();
     m.multLeft(mirrorMatrix); // u' = m*Z*mI*u
-
-    lastMirrored = now;
-    u->setMatrix(m);
-    cout << " VRView::updateMirror " << dummy_user->getPose()->pos() << endl;
+    mirror_user->setMatrix(m);
 }
 
 void VRView::setUser(VRTransformPtr u) {
@@ -450,14 +443,12 @@ void VRView::setUser(VRTransformPtr u) {
 void VRView::setUser() {
     if (user == 0 && user_name != "") user = VRSetup::getCurrent()->getTracker(user_name);
 
-    if (user == 0 || mirror) {
-        if (PCDecoratorLeft) PCDecoratorLeft->setUser(dummy_user->getNode()->node);
-        if (PCDecoratorRight) PCDecoratorRight->setUser(dummy_user->getNode()->node);
-    } else {
-        user_name = user->getName();
-        if (PCDecoratorLeft) PCDecoratorLeft->setUser(user->getNode()->node);
-        if (PCDecoratorRight) PCDecoratorRight->setUser(user->getNode()->node);
-    }
+    VRTransformPtr u = user;
+    if (!u) u = dummy_user;
+    if (mirror) u = mirror_user;
+
+    if (PCDecoratorLeft) PCDecoratorLeft->setUser(u->getNode()->node);
+    if (PCDecoratorRight) PCDecoratorRight->setUser(u->getNode()->node);
 }
 
 void VRView::setCamera(VRCameraPtr c) {
