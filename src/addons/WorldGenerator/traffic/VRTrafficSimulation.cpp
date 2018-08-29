@@ -912,6 +912,28 @@ string VRTrafficSimulation::getVehicleData(int ID){
     return res;
 }
 
+string VRTrafficSimulation::getEdgeData(int ID){
+    string res = "";
+    string nextEdges = "next Edges: ";
+    string prevEdges = "prev Edges: ";
+    string edgeNeighbors = "Relations: ";
+    string nl = "\n ";
+    auto graph = roadNetwork->getGraph();
+    if (!graph->hasEdge(ID)) { return "Road "+toString(ID)+" does not exist in network"; }
+
+    auto& edge = graph->getEdge(ID);
+
+    for (auto nn : graph->getRelations(ID)) { edgeNeighbors +=" " + toString(nn); }
+    for (auto nn : graph->getPrevEdges(edge)) { prevEdges +=" " + toString(nn.ID); }
+    for (auto nn : graph->getNextEdges(edge)) { nextEdges +=" " + toString(nn.ID); }
+
+    res+="Road " + toString(ID) + nl;
+    res+=edgeNeighbors + nl;
+    res+=prevEdges + nl;
+    res+=nextEdges;
+    return res;
+}
+
 void VRTrafficSimulation::forceIntention(int vID,int behavior){
     //vehicles[vID].behavior = behavior;
     changeLane(vID,behavior);
