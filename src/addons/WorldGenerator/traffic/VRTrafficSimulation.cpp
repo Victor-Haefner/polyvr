@@ -36,7 +36,8 @@ void erase(vector<T>& v, const T& t) {
 
 VRTrafficSimulation::Vehicle::Vehicle(Graph::position p) : pos(p) {
     t = VRTransform::create("t");
-    speed = speed*(1.0+0.2*0.01*(rand()%100));
+    speed = speed*(0.8+0.2*0.2*(rand()%100));
+    //speed = speed*(1.0+0.2*0.01*(rand()%100));
     vehiclesight[INFRONT] = false;
     vehiclesight[FROMLEFT] = false;
     vehiclesight[FROMRIGHT] = false;
@@ -186,10 +187,6 @@ void VRTrafficSimulation::updateSimulation() {
             string debug = "";
             for (auto eV : graph->getEdges()) {
                 auto& e = eV.second;
-                if (debugOverRideSeedRoad<0 && graph->getPrevEdges(e).size() == 0) { // roads that start out of "nowhere"
-                    newSeedRoads.push_back( e.ID );
-                    continue;
-                }
 
                 Vec3d ep1 = graph->getNode(e.from).p.pos();
                 Vec3d ep2 = graph->getNode(e.to  ).p.pos();
@@ -197,6 +194,10 @@ void VRTrafficSimulation::updateSimulation() {
                 float D2 = (ep2-p).length();
 
                 if (D1 > userRadius && D2 > userRadius) continue; // outside
+                if (debugOverRideSeedRoad<0 && graph->getPrevEdges(e).size() == 0) { // roads that start out of "nowhere"
+                    newSeedRoads.push_back( e.ID );
+                    continue;
+                }
                 ///TODO: look into radius
                 if ( debugOverRideSeedRoad < 0 && (D1 > userRadius*0.5 || D2 > userRadius*0.5) ) newSeedRoads.push_back( e.ID ); // on edge
                 newNearRoads.push_back( e.ID ); // inside or on edge

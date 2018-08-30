@@ -136,11 +136,11 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 if (Nin > Nout && !left && i == j) { return true; }
             }
             if (Nout == 1 || Nin == 1){
-                return true;
+                //return true;
             }
             //match case A - split ways one left one right
             //match case B - split both ways, two left two right
-            cout << toString(node->getValue<int>("graphID", -1)) << endl;
+            //cout << toString(node->getValue<int>("graphID", -1)) << endl;
             return false;
         };
 
@@ -352,7 +352,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto norm1 = nodeEnt1->getVec3("direction");
                 auto node2 = nodes2[1]->getEntity("node");  //second node of roadOut
                 auto norm2 = nodes2[1]->getVec3("direction");
-                cout << "in" << toString(node1->getValue<int>("graphID", -1)) << endl;
+                //cout << "in" << toString(node1->getValue<int>("graphID", -1)) << endl;
                 auto nodeToDelete = nodeEnt2->getEntity("node");
                 auto tempID=nodeToDelete->getValue<int>("graphID", -1);
                 //cout << tempID << " node removed -- NIN<NOUT" << endl;
@@ -372,7 +372,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto norm1 = nodes1[nodes1.size()-2]->getVec3("direction");
                 auto node2 = nodeEnt2->getEntity("node");;
                 auto norm2 = nodeEnt2->getVec3("direction");
-                cout << "ot" << toString(node2->getValue<int>("graphID", -1)) << endl;
+                //cout << "ot" << toString(node2->getValue<int>("graphID", -1)) << endl;
                 auto nodeToDelete = nodeEnt1->getEntity("node");
                 auto tempID=nodeToDelete->getValue<int>("graphID", -1);
                 //cout << tempID << " node removed -- NIN<NOUT" << endl;
