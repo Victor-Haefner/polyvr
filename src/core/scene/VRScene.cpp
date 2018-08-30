@@ -178,7 +178,10 @@ void VRScene::setActiveCamera(string camname) {
     if (server1) server1->setTarget(cam);
 
     setup->setViewCamera(cam, -1);
-    if (cam->getAcceptRoot()) setup->getRoot()->switchParent(cam);
+    if (cam->getAcceptRoot()) {
+        setup->getRoot()->switchParent(cam);
+        //setup->getRoot()->switchParent(cam->getSetupNode());
+    }
 }
 
 VRObjectPtr VRScene::getRoot() { return root; }

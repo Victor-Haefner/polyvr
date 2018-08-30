@@ -8,6 +8,8 @@
 
 #include <boost/algorithm/string/join.hpp>
 #include <ifcparse/IfcFile.h>
+//if compiling fails because of "ifcparse/IfcFile.h: No such file or directory"
+//in polyvr-folder: "sudo ./ install"
 #include <ifcgeom/IfcGeom.h>
 #include <ifcgeom/IfcGeomFilter.h>
 #include <ifcgeom/IfcGeomIterator.h>
@@ -362,6 +364,3 @@ void OSG::loadIFC(string path, VRTransformPtr res) {
 }
 
 #endif
-
-
-

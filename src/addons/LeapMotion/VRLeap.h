@@ -13,6 +13,9 @@ OSG_BEGIN_NAMESPACE;
 
 class VRLeap : public VRDevice {
     private:
+        //TODO: Debugging only
+        int numPens;
+
         vector<std::function<void(VRLeapFramePtr)>> frameCallbacks;
 
         string host{"localhost"};

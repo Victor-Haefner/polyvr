@@ -16,6 +16,7 @@ class VRCamera : public VRTransform {
     private:
         OSGCameraPtr cam;
         OSGObjectPtr camGeo;
+        VRObjectPtr vrSetup;
 
         bool registred = true;
         int camType = 0;
@@ -49,6 +50,7 @@ class VRCamera : public VRTransform {
 
         void setAcceptRoot(bool b);
         bool getAcceptRoot();
+        VRObjectPtr getSetupNode();
 
         float getAspect();
         float getFov();

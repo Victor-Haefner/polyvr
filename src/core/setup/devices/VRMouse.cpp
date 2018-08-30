@@ -189,7 +189,15 @@ void VRMouse::updatePosition(int x, int y) {
     onEdge = side;
 }
 
+/**
+* Is invoked whenever a mouse button is pressed or released.
+* @param button: id of the button. Mostly left button = 0, middle button = 1, right button  = 2
+* @param state: state of the event. 0 = button pressed, 1 = button released
+* @param x: x coordinate of mouse pointer on screen
+* @param y: y coordinate of mouse pointer on screen
+*/
 void VRMouse::mouse(int button, int state, int x, int y) {
+
     float _x, _y;
     auto sv = view.lock();
     if (!sv) return;

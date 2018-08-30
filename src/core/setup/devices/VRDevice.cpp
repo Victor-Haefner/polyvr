@@ -169,8 +169,8 @@ Vec2d VRDevice::getSpeed() { return speed; }
 void VRDevice::drag(VRObjectPtr obj) { VRIntersect::drag(obj, getBeacon()); }
 void VRDevice::drop() { VRIntersect::drop(); }
 
-bool VRDevice::intersect2(VRObjectPtr o, bool f, VRTransformPtr c, Vec3d d) {
-    OSG::VRIntersection ins = VRIntersect::intersect(o, f, c, d);
+bool VRDevice::intersect2(VRObjectPtr subtreeRoot, bool force, VRTransformPtr caster, Vec3d dir) {
+    OSG::VRIntersection ins = VRIntersect::intersect(subtreeRoot, force, caster, dir);
     return ins.hit;
 }
 

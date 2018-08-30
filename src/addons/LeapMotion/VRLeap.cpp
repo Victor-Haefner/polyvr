@@ -15,6 +15,9 @@ template<> string typeName(const VRLeapPtr& o) { return "Leap"; }
 VRLeap::VRLeap() : VRDevice("leap") {
     transformation = Pose::create();
 
+    //TODO: Debugging only
+    numPens = 0;
+
     // left hand beacons
     for (int i = 1; i <= 5; ++i) {
             addBeacon();
@@ -215,7 +218,14 @@ void VRLeap::newFrame(Json::Value json) {
         VRScene::getCurrent()->queueJob(fkt);
     }
 
-    for (uint i = 0; i < json["pointables"].size(); ++i) { // Get the tools/pens
+    //TODO: Debugging only!
+    if (json["pointables"].size() != numPens) {
+        std::cout << "Number of recognized pens: " << json["pointables"].size() << ". Previously was: " << numPens << endl;
+        numPens = json["pointables"].size();
+    }
+
+    // Get the currently recognized tools/pens
+    for (uint i = 0; i < json["pointables"].size(); ++i) {
         auto pointable = json["pointables"][i];
 
         if (!pointable["tool"].asBool()) continue;

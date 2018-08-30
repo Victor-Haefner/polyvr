@@ -73,4 +73,3 @@ PyObject* VRPyDevice::fromSharedPtr(VRDevicePtr dev) {
     cout << "\nERROR in VRPyTypeCaster::cast device: " << type << " not handled!\n";
     return VRPyBaseT<VRDevice>::fromSharedPtr(dev);
 }
-

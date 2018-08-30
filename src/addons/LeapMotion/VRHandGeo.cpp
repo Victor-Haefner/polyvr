@@ -45,6 +45,8 @@ void VRHandGeo::connectToLeap(VRLeapPtr leap) {
 
 void VRHandGeo::updateHandGeo() {
 
+//    std::cout << "updateHandGeo" << endl;
+
     boost::mutex::scoped_lock lock(mutex);
 
     if (visible != isVisible()) { toggleVisible(); }
