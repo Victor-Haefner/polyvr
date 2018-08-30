@@ -71,7 +71,9 @@ void VRMultiWindow::initialize() {
     //cout << " Render MW " << getName() << " state " << getStateString() << endl;
     win = 0; _win = 0; tries = 0; state = CONNECTING;
     win = MultiDisplayWindow::create(); _win = win;
-    //win->setManageClientViewports(true); // what exactly does it do? (default is true)
+#ifdef WITH_CLUSTERING_FIX
+    win->setFrameCounting(false);
+#endif
     OSG::setName( win, getName() );
 
     win->setSize(width, height);
