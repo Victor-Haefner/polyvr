@@ -6,6 +6,7 @@
 #include <string>
 
 #include "core/setup/VRSetupFwd.h"
+#include "PolyVRFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -18,11 +19,13 @@ class VRSetupManager {
     public:
         VRSetupManager();
         ~VRSetupManager();
+
+        static VRSetupManagerPtr create();
         static VRSetupManager* get();
 
         VRSetupPtr getCurrent();
         void closeSetup();
-        VRSetupPtr create();
+        VRSetupPtr newSetup();
         VRSetupPtr load(string name, string path);
 };
 

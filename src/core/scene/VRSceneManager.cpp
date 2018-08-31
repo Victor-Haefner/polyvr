@@ -28,8 +28,11 @@ typedef boost::recursive_mutex::scoped_lock PLock;
 
 OSG_BEGIN_NAMESPACE
 
+VRSceneManager* main_instance = 0;
+
 VRSceneManager::VRSceneManager() {
     cout << "Init VRSceneManager..";
+    main_instance = this;
 	original_workdir = boost::filesystem::current_path().string();
 	examples = VRProjectsList::create();
 	projects = VRProjectsList::create();
@@ -45,14 +48,13 @@ VRSceneManager::VRSceneManager() {
     //initThread(sceneUpdateCb, "update scene", true, 1); // TODO
 }
 
-VRSceneManager::~VRSceneManager() {}
-
-void VRSceneManager::operator= (VRSceneManager v) {;}
-
-VRSceneManager* VRSceneManager::get() {
-    static VRSceneManager* mgr = new VRSceneManager();
-    return mgr;
+VRSceneManager::~VRSceneManager() {
+    main_instance = 0;
+    cout << "VRSceneManager::~VRSceneManager" << endl;
 }
+
+VRSceneManagerPtr VRSceneManager::create() { return VRSceneManagerPtr( new VRSceneManager()); }
+VRSceneManager* VRSceneManager::get() { return main_instance; }
 
 void VRSceneManager::loadScene(string path, bool write_protected, string encryptionKey) {
     if (!exists(path)) { cout << "loadScene " << path << " not found" << endl; return; }

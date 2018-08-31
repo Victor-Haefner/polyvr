@@ -38,11 +38,7 @@ VRWindowManager::VRWindowManager() {
     ract = RenderAction::create();
 }
 
-VRWindowManager::~VRWindowManager() {
-    windows.clear();
-    BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
-    for (uint i=0; i<VRWindow::active_window_count+1; i++) subRef(barrier);
-}
+VRWindowManager::~VRWindowManager() {}
 
 bool VRWindowManager::checkWin(string name) {
     if (windows.count(name) == 1) return true;
@@ -149,6 +145,14 @@ void VRWindowManager::getWindowSize(string name, int& width, int& height) {
     WindowMTRecPtr win = windows[name]->getOSGWindow();
     width = win->getWidth();
     height = win->getHeight();
+}
+
+void VRWindowManager::stopWindows() {
+    cout << "VRWindowManager::stopWindows" << endl;
+    BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
+    while (barrier->getNumWaiting() < VRWindow::active_window_count) usleep(1);
+    for (auto w : getWindows() ) w.second->stop();
+    barrier->enter(VRWindow::active_window_count+1);
 }
 
 void VRWindowManager::updateWindows() {

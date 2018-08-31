@@ -98,10 +98,6 @@ void VRThreadManager::stopAllThreads() {
     cout << "VRThreadManager::stopAllThreads() " << threads.size() << endl;
     for (auto t : threads) t.second->control_flag = false;
 
-    BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
-    barrier->enter();
-    barrier->enter();
-
     int count = 0;
     while(threads.size() > 0) {
         if (count == 100) break;
