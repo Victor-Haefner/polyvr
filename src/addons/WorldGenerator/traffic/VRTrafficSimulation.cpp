@@ -36,7 +36,7 @@ void erase(vector<T>& v, const T& t) {
 
 VRTrafficSimulation::Vehicle::Vehicle(Graph::position p) : pos(p) {
     t = VRTransform::create("t");
-    speed = speed*(0.8+0.2*0.2*(rand()%100));
+    speed = speed*(0.8+0.2*0.01*(rand()%10));
     //speed = speed*(1.0+0.2*0.01*(rand()%100));
     vehiclesight[INFRONT] = false;
     vehiclesight[FROMLEFT] = false;
@@ -199,7 +199,7 @@ void VRTrafficSimulation::updateSimulation() {
                     continue;
                 }
                 ///TODO: look into radius
-                if ( debugOverRideSeedRoad < 0 && (D1 > userRadius*0.5 || D2 > userRadius*0.5) ) newSeedRoads.push_back( e.ID ); // on edge
+                if ( debugOverRideSeedRoad > -2 && debugOverRideSeedRoad < 0 && (D1 > userRadius*0.5 || D2 > userRadius*0.5) ) newSeedRoads.push_back( e.ID ); // on edge
                 newNearRoads.push_back( e.ID ); // inside or on edge
             }
             //cout << debug << endl;
@@ -882,6 +882,11 @@ void VRTrafficSimulation::hideGraph(){
     for (auto a : gg ){
         if ( scene->getRoot()->find(a) ) scene->getRoot()->find(a)->destroy();
     }
+}
+
+/** DISABLING VEHICLE GEOMETRIES*/
+void VRTrafficSimulation::runWithoutGeometries(){
+    isShowingGeometries = false;
 }
 
 /** VEHICLE VISION*/

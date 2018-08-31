@@ -51,6 +51,10 @@ class VRTrafficSimulation : public VRObject {
 
             Graph::position pos;
             float speed = 0.15;
+            float targetVelocity = 0.0; //try km/h
+            float currentVelocity = 0.0;
+            float maxAcceleration = 0.0;
+            float maxDecceleration = 0.0;
             Vec3d lastMove = Vec3d(0,0,0);
             Vec3d currentOffset = Vec3d(0,0,0);
             Vec3d currentdOffset = Vec3d(0,0,0);
@@ -112,6 +116,7 @@ class VRTrafficSimulation : public VRObject {
         int numUnits = 0;
         bool isSimRunning = true;
         bool isShowingVehicleVision = false;
+        bool isShowingGeometries = true;
         bool laneChange = false;
         float speedMultiplier = 1.0;
         string lastseedRoadsString = "";
@@ -153,6 +158,7 @@ class VRTrafficSimulation : public VRObject {
 
         //diagnostics:
         void toggleSim();
+        void runWithoutGeometries();
         void setSpeedmultiplier(float speedMultiplier);
         void showGraph();
         void hideGraph();
