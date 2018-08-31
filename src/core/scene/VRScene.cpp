@@ -63,6 +63,7 @@ VRScene::VRScene() {
 
 VRScene::~VRScene() {
     //kill physics thread
+    cout << "VRScene::~VRScene " << name << endl;
     VRThreadManager::stopThread(physicsThreadID);
     root->destroy();
     VRGroup::clearGroups();
