@@ -58,7 +58,6 @@ VRSetup::~VRSetup() {
 }
 
 VRSetupPtr VRSetup::create(string name) { return VRSetupPtr(new VRSetup(name)); }
-
 VRSetupPtr VRSetup::getCurrent() { return VRSetupManager::get()->getCurrent(); }
 
 void VRSetup::showStats(bool b) {

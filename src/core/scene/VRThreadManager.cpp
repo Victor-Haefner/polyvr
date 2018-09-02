@@ -112,6 +112,7 @@ void VRThreadManager::stopAllThreads() {
         osgSleep(10);
     }
 
+    if (threads.size() > 0) cout << "VRThreadManager::stopAllThreads, kill " << threads.size() << " remaining threads!" << endl;
     threads.clear(); // kills remaining threads!
 }
 

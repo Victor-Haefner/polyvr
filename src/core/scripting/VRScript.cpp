@@ -33,7 +33,6 @@ using namespace std;
 void updateArgPtr(VRScript::argPtr a) {
     string t = a->type;
     auto scene = VRScene::getCurrent();
-    VRSetupPtr setup = VRSetup::getCurrent();
 
     if (t == "VRPyObjectType" || t == "VRPyGeometryType" || t == "VRPyTransformType" || t == "VRPyLightType" || t == "VRPyLodType" || t == "VRPyLeapFrameType") {
         a->ptr = (void*)scene->get(a->val).get();
@@ -44,6 +43,7 @@ void updateArgPtr(VRScript::argPtr a) {
         return;
     }
     if (t == "VRPyDeviceType" || t == "VRPyMouseType" || t == "VRPyHapticType" || t == "VRPyServerType") {
+        auto setup = VRSetup::getCurrent();
         a->ptr = (void*)setup->getDevice(a->val).get();
         return;
     }

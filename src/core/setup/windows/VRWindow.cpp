@@ -78,25 +78,26 @@ void VRWindow::update( weak_ptr<VRThread>  wt) {
         t = wt.lock();
         BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
 
-        if (t->control_flag) {
+        auto wait = [&]() {
             waitingAtBarrier = true;
             barrier->enter(active_window_count+1);
-            if (stopping) return;
-            /** let the window manager initiate multi windows if necessary **/
-            barrier->enter(active_window_count+1);
             waitingAtBarrier = false;
+            if (stopping) return true;
+            return false;
+        };
+
+        if (t->control_flag) {
+            if (wait()) break;
+            /** let the window manager initiate multi windows if necessary **/
+            if (wait()) break;
             auto appCL = t->appThread->getChangeList();
             auto clist = Thread::getCurrentChangeList();
             clist->merge(*appCL);
             //if (clist->getNumCreated() > 0 || clist->getNumChanged() > 0) cout << "VRWindow::update " << name << " " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
-            waitingAtBarrier = true;
-            barrier->enter(active_window_count+1);
-            waitingAtBarrier = false;
+            if (wait()) break;
             render(true);
             clist->clear();
-            waitingAtBarrier = true;
-            barrier->enter(active_window_count+1);
-            waitingAtBarrier = false;
+            if (wait()) break;
         }
 
         osgSleep(1);

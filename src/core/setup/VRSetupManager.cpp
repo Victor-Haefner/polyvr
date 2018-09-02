@@ -19,7 +19,6 @@ VRSetupManager::~VRSetupManager() {
 
 VRSetupManagerPtr VRSetupManager::create() { return VRSetupManagerPtr(new VRSetupManager()); }
 VRSetupManager* VRSetupManager::get() { return setup_mgr; }
-
 VRSetupPtr VRSetupManager::getCurrent() { return get()->current; }
 void VRSetupManager::closeSetup() { current = 0; }
 

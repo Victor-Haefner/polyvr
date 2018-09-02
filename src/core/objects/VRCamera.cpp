@@ -31,6 +31,7 @@ VRMaterialPtr getCamGeoMat() {
 VRCamera::VRCamera(string name) : VRTransform(name) {
     type = "Camera";
     fov = osgDegree2Rad(60);
+    vrSetup = VRObject::create("Device Beacons");
     setup(false);
 
     store("accept_root", &doAcceptRoot);
@@ -97,7 +98,7 @@ void VRCamera::setFrom(Vec3d m) { VRTransform::setFrom(m); updateOrthSize(); }
 VRObjectPtr VRCamera::getSetupNode() { return vrSetup; }
 
 void VRCamera::setup(bool reg) {
-    vrSetup = VRObject::create("Device Beacons");
+    vrSetup->setPersistency(0);
 
     PerspectiveCameraMTRecPtr pcam;
     OrthographicCameraMTRecPtr ocam;

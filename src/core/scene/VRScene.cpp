@@ -77,7 +77,7 @@ VRScene::~VRScene() {
 VRScenePtr VRScene::getCurrent() { return VRSceneManager::get()->getCurrent(); }
 
 void VRScene::initDevices() { // TODO: remove this after refactoring the navigation stuff
-    VRSetupPtr setup = VRSetup::getCurrent();
+    auto setup = VRSetup::getCurrent();
     if (!setup) return;
 
     VRMousePtr mouse = dynamic_pointer_cast<VRMouse>( setup->getDevice("mouse") );
@@ -152,7 +152,7 @@ VRObjectPtr VRScene::get(string name) {
 void VRScene::setActiveCamera(string camname) {
     cout << "set active camera: " << camname << endl;
     setMActiveCamera(camname);
-    VRSetupPtr setup = VRSetup::getCurrent();
+    auto setup = VRSetup::getCurrent();
 
     // TODO: refactor the following workaround
     VRCameraPtr cam = getActiveCamera();

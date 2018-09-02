@@ -71,9 +71,9 @@ void PolyVR::shutdown() {
 
     auto pvr = get();
     pvr->scene_mgr->closeScene();
-    pvr->setup_mgr->getCurrent()->stopWindows();
+    VRSetup::getCurrent()->stopWindows();
     pvr->scene_mgr->stopAllThreads();
-    //pvr->setup_mgr->closeSetup();
+    pvr->setup_mgr->closeSetup();
     delete pvr;
     printFieldContainer();
     osgExit();

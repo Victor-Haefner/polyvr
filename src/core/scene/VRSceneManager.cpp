@@ -237,9 +237,11 @@ void VRSceneManager::update() {
     VRGlobals::UPDATE_LOOP2.update(timer);
 
     VRTimer t5; t5.start();
-    auto setup = VRSetup::getCurrent();
-    if (setup) setup->updateTracking(); // tracking
-    if (setup) setup->updateDevices(); // device beacon update
+    if (auto setup = VRSetup::getCurrent()) {
+        setup->updateTracking(); // tracking
+        setup->updateDevices(); // device beacon update
+    }
+
     VRGlobals::SMCALLBACKS_FRAME_RATE.update(t5);
     VRGlobals::UPDATE_LOOP3.update(timer);
 
@@ -248,9 +250,10 @@ void VRSceneManager::update() {
     VRGlobals::SCRIPTS_FRAME_RATE.update(t6);
     VRGlobals::UPDATE_LOOP4.update(timer);
 
-    if (setup) {
+    if (auto setup = VRSetup::getCurrent()) {
         VRTimer t2; t2.start();
         setup->updateWindows(); // rendering
+        setup.reset(); // updateGtk may close application, reset setup to avoid memory leak
         VRGlobals::WINDOWS_FRAME_RATE.update(t2);
         VRGlobals::UPDATE_LOOP5.update(timer);
         VRGuiManager::get()->updateGtk();
