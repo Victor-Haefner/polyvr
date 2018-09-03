@@ -23,9 +23,11 @@ class VRTrafficSimulation : public VRObject {
         struct Vehicle {
             enum VISION {
                 INFRONT = 0,
-                FROMLEFT = 1,
-                FROMRIGHT = 2
-                //BEHIND = 3
+                FRONTLEFT = 1,
+                FRONTRIGHT = 2,
+                BEHINDLEFT = 3,
+                BEHINDRIGHT = 4,
+                BEHIND = 5
             };
             enum INTENTION {
                 STRAIGHT = 0,
@@ -46,8 +48,8 @@ class VRTrafficSimulation : public VRObject {
             vector<VRGeometryPtr> headlights;
             vector<VRGeometryPtr> backlights;
 
-            map<int, bool> vehiclesight;
-            map<int, bool> vehiclesightFar;
+            map<int, float> vehiclesight;
+            map<int, float> vehiclesightFar;
 
             Graph::position pos;
             float speed = 50;
