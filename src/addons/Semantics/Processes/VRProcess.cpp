@@ -101,7 +101,7 @@ vector<VRProcessNodePtr> VRProcess::getMessageSubjects(int messageID) {
 }
 
 vector<VRProcessNodePtr> VRProcess::getSubjectActions(int subjectID) {
-    auto d = getBehaviorDiagram(subjectID);
+    auto d = behaviorDiagrams[subjectID];
     vector<VRProcessNodePtr> res;
     for (int i=0; i<d->size(); i++) {
         auto& e = d->processnodes[i];
@@ -118,9 +118,7 @@ void VRProcess::printNodes(VRProcessDiagramPtr d){
 
 //TODO: remove cout's
 vector<VRProcessNodePtr> VRProcess::getActionTransitions(int subjectID, int actionID) {
-
     auto d = getBehaviorDiagram(subjectID);
-    cout << "Behavior diagram: " << d << endl;
     auto neighbors = d->getNeightbors(d->getNode(actionID));
     vector<VRProcessNodePtr> res;
 
@@ -128,11 +126,12 @@ vector<VRProcessNodePtr> VRProcess::getActionTransitions(int subjectID, int acti
         auto transition = getNode( neighbors[i].ID );
         res.push_back(transition);
     }
+    /*
     cout << "Behavior Nodes: " << endl;
     printNodes(d);
     cout << "Interaction Nodes: " << endl;
     printNodes(getInteractionDiagram());
-
+    */
     return res;
 }
 

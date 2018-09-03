@@ -11,6 +11,7 @@ using namespace std;
 class VRProcessLayout : public VRTransform {
     private:
         VRProcessPtr process;
+        VRProcessEnginePtr engine;
         VRPathtoolPtr toolSID;
         map<int, VRPathtoolPtr> toolSBDs;
         map<int, VRObjectWeakPtr> elements;
@@ -32,6 +33,7 @@ class VRProcessLayout : public VRTransform {
         VRProcessLayoutPtr ptr();
 
         void setProcess(VRProcessPtr p);
+        void setEngine(VRProcessEnginePtr e);
         VRObjectPtr getElement(int i);
         void remElement(VRObjectPtr o);
         int getElementID(VRObjectPtr o);

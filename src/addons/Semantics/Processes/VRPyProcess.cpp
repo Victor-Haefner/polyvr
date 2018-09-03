@@ -54,6 +54,7 @@ PyMethodDef VRPyProcessLayout::methods[] = {
     {"selectElement", PyWrap(ProcessLayout, selectElement, "Select a node geometry by changing its appearance", void, VRGeometryPtr ) },
     {"setElementName", PyWrap(ProcessLayout, setElementName, "Change the name of a node", void, int, string ) },
     {"remElement", PyWrap(ProcessLayout, remElement, "Remove element", void, VRObjectPtr ) },
+    {"setEngine", PyWrap(ProcessLayout, setEngine, "Set process engine - setEngine( engine )", void, VRProcessEnginePtr ) },
     {NULL}  /* Sentinel */
 };
 
@@ -63,5 +64,6 @@ PyMethodDef VRPyProcessEngine::methods[] = {
     {"run", PyWrapOpt(ProcessEngine, run, "Run the simulation with a simulation speed multiplier, 1 is real time - run(float s)", "1", void, float ) },
     {"reset", PyWrap(ProcessEngine, reset, "Reset simulation - reset()", void ) },
     {"pause", PyWrap(ProcessEngine, pause, "Pause simulation - pause()", void ) },
+    {"getCurrentActions", PyWrap(ProcessEngine, getCurrentActions, "Current actions of all subjects - [ProcessNode] getCurrentActions()",  vector<VRProcessNodePtr> ) },
     {NULL}  /* Sentinel */
 };

@@ -126,9 +126,10 @@ void pushMsgBox(VRGeoData& geo, int N, float h) {
 VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     Color4f fg, bg;
     if (n->type == SUBJECT) { fg = Color4f(0,0,0,1); bg = Color4f(0.8,0.9,1,1); }
-    if (n->type == ACTION) { fg = Color4f(0,0,0,1); bg = Color4f(1,0.9,0.8,1); }
     if (n->type == MESSAGE) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,0,1); }
     if (n->type == TRANSITION) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,0,1); }
+    //TODO: set different color for current actions in the process engine
+    if (n->type == ACTION) { fg = Color4f(0,0,0,1); bg = Color4f(1,0.9,0.8,1); }
 
     int wrapN = 12;
     if (n->type == MESSAGE || n->type == TRANSITION) wrapN = 22;
@@ -174,6 +175,8 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
     rebuild();
 
 }
+
+void VRProcessLayout::setEngine(VRProcessEnginePtr e) { engine = e; }
 
 void VRProcessLayout::rebuild() {
     if (!process) return;
