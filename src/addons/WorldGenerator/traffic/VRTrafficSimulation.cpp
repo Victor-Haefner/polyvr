@@ -20,6 +20,7 @@
 #include "addons/Semantics/Reasoning/VREntity.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
 #include "core/tools/VRAnnotationEngine.h"
+#include <GL/glut.h>
 
 #include <boost/bind.hpp>
 
@@ -36,7 +37,8 @@ void erase(vector<T>& v, const T& t) {
 
 VRTrafficSimulation::Vehicle::Vehicle(Graph::position p) : pos(p) {
     t = VRTransform::create("t");
-    speed = speed*(0.8+0.2*0.01*(rand()%10));
+    speed = speed*(1.0+0.2*0.01*(rand()%100));
+    targetVelocity = speed;
     //speed = speed*(1.0+0.2*0.01*(rand()%100));
     vehiclesight[INFRONT] = false;
     vehiclesight[FROMLEFT] = false;
@@ -442,12 +444,15 @@ void VRTrafficSimulation::updateSimulation() {
 
     auto propagateVehicles = [&]() {
         int N = 0;
+        float current = float(glutGet(GLUT_ELAPSED_TIME)*0.001);
+        deltaT = current - lastT;
+        lastT = current;
         for (auto& road : roads) {
             for (auto& ID : road.second.vehicleIDs) {
                 auto& vehicle = vehicles[ID.first];
                 if (!vehicle.t) continue;
                 vehicle.vehiclesight.clear();
-                float d = speedMultiplier*vehicle.speed/road.second.length;
+                float d = speedMultiplier*vehicle.speed*deltaT/3.6/road.second.length;
                 if (!isSimRunning) d = 0;
 
                 // check if road ahead is free
@@ -504,7 +509,7 @@ void VRTrafficSimulation::updateSimulation() {
                 if ( vbeh == vehicle.SWITCHLEFT  && !seesVehicle(vehicle.FROMLEFT) && !inFront /*&& VRGlobals::CURRENT_FRAME - vehicle.indicatorTS > 200*/ ) propagateVehicle(vehicle, d, vbeh);
                 if ( vbeh == vehicle.SWITCHRIGHT && !seesVehicle(vehicle.FROMRIGHT) && !inFront /*&& VRGlobals::CURRENT_FRAME - vehicle.indicatorTS > 200*/ ) propagateVehicle(vehicle, d, vbeh);
 
-                if (VRGlobals::CURRENT_FRAME - vehicle.lastMoveTS > 200 ) {
+                if (isSimRunning && VRGlobals::CURRENT_FRAME - vehicle.lastMoveTS > 200 ) {
                     toChangeRoad[road.first].push_back( make_pair(vehicle.vID, -1) ); ///------killswitch if vehicle get's stuck
                 }
                 N++; // count vehicles!
@@ -534,7 +539,7 @@ void VRTrafficSimulation::updateSimulation() {
                     vehicle.behavior = 0;
                     vehicle.roadFrom = -1;
                     vehicle.roadTo = -1;
-                    vehicle.speed = 0.15;
+                    vehicle.speed = vehicle.targetVelocity;
                     vehiclePool.push_front(vehicles[v.first]);
                     for (auto l : vehicle.turnsignalsBL) l->setMaterial(carLightOrangeOff);
                     for (auto l : vehicle.turnsignalsBR) l->setMaterial(carLightOrangeOff);

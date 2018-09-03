@@ -50,7 +50,8 @@ class VRTrafficSimulation : public VRObject {
             map<int, bool> vehiclesightFar;
 
             Graph::position pos;
-            float speed = 0.15;
+            float speed = 50;
+            //float speed = 0.15;
             float targetVelocity = 0.0; //try km/h
             float currentVelocity = 0.0;
             float maxAcceleration = 0.0;
@@ -119,6 +120,8 @@ class VRTrafficSimulation : public VRObject {
         bool isShowingGeometries = true;
         bool laneChange = false;
         float speedMultiplier = 1.0;
+        float deltaT;
+        float lastT = 0.0;
         string lastseedRoadsString = "";
         int debugOverRideSeedRoad = -1;
 
