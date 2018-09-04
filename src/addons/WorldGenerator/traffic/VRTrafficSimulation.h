@@ -50,6 +50,7 @@ class VRTrafficSimulation : public VRObject {
 
             map<int, float> vehiclesight;
             map<int, float> vehiclesightFar;
+            map<int, int> vehiclesightFarID;
 
             Graph::position pos;
             float speed = 50;

@@ -457,12 +457,12 @@ void VRTrafficSimulation::updateSimulation() {
         float rL = abs( D.dot(x) ); //check if vehicle2 left or right of vehicle1
         float left = - D.dot(x);
 
-        if ( d > 0 && d<5 && rL < 1 ) return 0; // in front, in range, in corridor
-        //if ( d > 0 && left > 1.5 ) return 1; // in front, in range, left of corridor
-        //if ( d > 0 && left <-1.5 ) return 2; // in front, in range, right of corridor
-        //if ( d < 0 && left > 1.5 ) return 3; // in behind, in range, left corridor
-        //if ( d < 0 && left <-1.5 ) return 4; // in behind, in range, right of corridor
-        //if ( d < 0 && rL < 1 ) return 5; // in behind, in range, in corridor
+        if ( d > 0 && rL < 1 ) return 0; // in front, in range, in corridor
+        if ( d > 0 && left > 1.5 ) return 1; // in front, in range, left of corridor
+        if ( d > 0 && left <-1.5 ) return 2; // in front, in range, right of corridor
+        if ( d < 0 && left > 1.5 ) return 3; // in behind, in range, left corridor
+        if ( d < 0 && left <-1.5 ) return 4; // in behind, in range, right of corridor
+        if ( d < 0 && rL < 1 ) return 5; // in behind, in range, in corridor
         return -1;
     };
 
@@ -488,6 +488,20 @@ void VRTrafficSimulation::updateSimulation() {
                 vector<int> visionIDsStraight;
                 vector<int> visionIDsLeft;
                 vector<int> visionIDsRight;
+
+                auto setSight = [&](int dir, float D, int ID) {
+                    if (dir==-1) return;
+                    if (!vehicle.vehiclesightFar[dir]) {
+                        vehicle.vehiclesightFar[dir] = D;
+                        vehicle.vehiclesightFarID[dir] = ID;
+                        return;
+                    }
+                    if ( vehicle.vehiclesightFar[dir] > 0 && D < vehicle.vehiclesightFar[dir] ) {
+                        vehicle.vehiclesightFar[dir] = D;
+                        vehicle.vehiclesightFarID[dir] = ID;
+                    }
+                };
+
                 for (auto vv : res) {
                     auto v = (Vehicle*)vv;
                     if (!v->t->isVisible()) continue;
@@ -511,6 +525,7 @@ void VRTrafficSimulation::updateSimulation() {
                     auto D = (pose->pos() - p->pos()).length();
                     int farP = farPosition(pose, p, vehicle.lastMove);
                     //if (farP ==-1) continue;
+                    setSight(farP,D,v->vID);
                     if (farP == 0) { visionIDsStraight.push_back(v->vID); continue; }
                     if (farP == 1) { visionIDsLeft.push_back(v->vID); continue; }
                     if (farP == 2) { visionIDsRight.push_back(v->vID); continue; }
@@ -518,7 +533,7 @@ void VRTrafficSimulation::updateSimulation() {
                     if (farP == 4) { visionIDsRight.push_back(v->vID); continue; }
                     if (farP == 5) { visionIDsStraight.push_back(v->vID); continue; }
                 }
-
+                //visionVec[vehicle.vID] = vehicle.vehiclesightFarID;
                 if (visionIDsStraight.size() > 0) visionVec[vehicle.vID][0] = visionIDsStraight;
                 if (visionIDsLeft.size() > 0) visionVec[vehicle.vID][1] = visionIDsLeft;
                 if (visionIDsRight.size() > 0) visionVec[vehicle.vID][2] = visionIDsRight;
@@ -573,12 +588,12 @@ void VRTrafficSimulation::updateSimulation() {
                 if (v.second == -1) {
                     //vehicles[v.first].hide();
                     auto& vehicle = vehicles[v.first];
+                    vehicle.hide();
                     auto& gp = vehicle.pos;
                     auto p = roadNetwork->getPosition(vehicle.pos);
                     Vec3d offset = Vec3d(0,-30,0);
                     p->setPos(p->pos()+offset);
                     vehicle.t->setPose(p);
-                    vehicle.hide();
                     gp.pos -= 1;
                     vehicle.currentState = 0;
                     vehicle.behavior = 0;
@@ -613,45 +628,54 @@ void VRTrafficSimulation::updateSimulation() {
         //VRGeometryPtr vizGeos;
         auto graph = roadNetwork->getGraph();
         auto scene = VRScene::getCurrent();
-
         string strInput = "graphVizVisionLines";
         if ( scene->getRoot()->find(strInput) ) scene->getRoot()->find(strInput)->destroy();
-        auto graphViz = VRGeometry::create(strInput);
-        graphViz->setPersistency(0);
-        scene->getRoot()->addChild(graphViz);
 
         VRGeoData gg0;
         int n = 0;
-
+        //map<int, map<int,int>> vehGeoIDs;
         if (visionVec.size()==0) return;
         for (auto vv : visionVec){
-            if (visionVec.size()==0) continue;
-            n = 0;
+            //if (visionVec.count(vv.first)==0) continue;
+            n = -1;
             for (auto vVis : vv.second){
-                if (vv.second.size()==0) continue;
-                auto nPose1 = vehicles[vv.first].t->getPose();
+                n = vVis.first;
+                if (vv.second.count(n)==0) continue;
+                /*auto nPose1 = vehicles[vv.first].t->getPose();
                 auto p1 = nPose1->pos() + Vec3d(0,2+0.2*n,0.1*n);
                 int vID1 = gg0.pushVert(p1);
                 int r = n==2 || n==0;
                 int g = n==0;
                 int b = n==1;
                 gg0.pushColor(Color3f(r,g,b));
+                vehGeoIDs[vv.first][n] = vID1;*/
                 for (auto vvv : vVis.second){
                     if (vVis.second.size()==0) continue;
+                    if (!vehicles[vv.first].t->isVisible() || !vehicles[vvv].t->isVisible()) continue;
+
+                    auto nPose1 = vehicles[vv.first].t->getPose();
                     auto nPose2 = vehicles[vvv].t->getPose();
+
+                    auto p1 = nPose1->pos() + Vec3d(0,2+0.2*n,0.1*n);
                     auto p2 = nPose2->pos() + Vec3d(0,2+0.2*n,0.1*n);
-                    auto dis = (p2 - p1).length();
-                    if (dis > 25) continue;
-                    Color3f ff = Color3f(float(r),float(g),float(b));
+                    int vID1 = gg0.pushVert(p1);
+                    int r = n==2 || n==0;
+                    int g = n==0;
+                    int b = n==1;
+                    gg0.pushColor(Color3f(r,g,b));
+
                     int vID2 = gg0.pushVert(p2);
                     //cout << toString(vID1) << toString(vID2) << endl;
                     gg0.pushColor(Color3f(r,g,b));
                     gg0.pushLine(vID1,vID2);
                 }
-                n++;
             }
         }
         if (gg0.size() > 0) {
+            auto graphViz = VRGeometry::create(strInput);
+            graphViz->setPersistency(0);
+            scene->getRoot()->addChild(graphViz);
+
             gg0.apply( graphViz );
 
             auto mat = VRMaterial::create(strInput+"_mat");
@@ -667,9 +691,10 @@ void VRTrafficSimulation::updateSimulation() {
     propagateVehicles();
     //resolveCollisions();
     //updateDensityVisual();
-    showVehicleVision();
+    //showVehicleVision();
     resolveRoadChanges();
     resolveLaneChanges();
+    showVehicleVision();
 }
 
 void VRTrafficSimulation::addUser(VRTransformPtr t) {
