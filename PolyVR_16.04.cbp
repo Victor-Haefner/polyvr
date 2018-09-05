@@ -32,6 +32,7 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-std=c++14" />
+			<Add option="-fPIC" />
 			<Add option="`pkg-config gtk+-2.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
 			<Add option="`pkg-config --cflags libxml++-2.6`" />
@@ -41,7 +42,6 @@
 			<Add option="`pkg-config gtksourceview-2.0 --cflags`" />
 			<Add option="-fopenmp" />
 			<Add option="-use_readonly_const" />
-			<Add option="-fPIC" />
 			<Add option="-Wno-deprecated" />
 			<Add option="-frounding-math" />
 			<Add option="-ftime-report" />
@@ -132,6 +132,9 @@
 			<Add option="-lTKFillet" />
 			<Add option="-lTKSTEP" />
 			<Add option="-lTKXSBase" />
+			<Add option="-lTKXCAF" />
+			<Add option="-lTKLCAF" />
+			<Add option="-lTKXDESTEP" />
 			<Add option="-lTKIGES" />
 			<Add option="-lTKOffset" />
 			<Add option="-lTKSTEPAttr" />
@@ -282,6 +285,7 @@
 		</ExtraCommands>
 		<Unit filename="src/PolyVR.cpp" />
 		<Unit filename="src/PolyVR.h" />
+		<Unit filename="src/PolyVRFwd.h" />
 		<Unit filename="src/addons/Algorithms/VRAlgorithmsFwd.h" />
 		<Unit filename="src/addons/Algorithms/VRGraphLayout.cpp" />
 		<Unit filename="src/addons/Algorithms/VRGraphLayout.h" />
@@ -852,6 +856,8 @@
 		<Unit filename="src/core/scene/import/VRImport.h" />
 		<Unit filename="src/core/scene/import/VRPLY.cpp" />
 		<Unit filename="src/core/scene/import/VRPLY.h" />
+		<Unit filename="src/core/scene/import/VRSTEPCascade.cpp" />
+		<Unit filename="src/core/scene/import/VRSTEPCascade.h" />
 		<Unit filename="src/core/scene/import/VRVTK.cpp" />
 		<Unit filename="src/core/scene/import/VRVTK.h" />
 		<Unit filename="src/core/scene/interfaces/VRScenegraphInterface.cpp" />
