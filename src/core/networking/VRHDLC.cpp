@@ -160,7 +160,7 @@ size_t VRHDLC::getLastInput() { return time(0) - lastInput; }
 
 void VRHDLC::handleData() {
     if (verbose) cout << endl << "handleData: " << VRSerial::asHexRepr(serialData) << endl;
-    (*callback)(serialData);
+    if (callback) (*callback)(serialData);
     serialData.clear();
 }
 
