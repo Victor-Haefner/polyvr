@@ -92,6 +92,7 @@
 			<Add option="-DWITH_SHADOW_VOLUME" />
 			<Add option="-DWITH_OPCUA" />
 			<Add option="-DWITH_CLUSTERING_FIX" />
+			<Add option="-DWITH_STEP" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
 			<Add directory="/usr/lib64/glib-2.0/include" />
@@ -133,6 +134,9 @@
 			<Add option="-lTKFillet" />
 			<Add option="-lTKSTEP" />
 			<Add option="-lTKXSBase" />
+			<Add option="-lTKXCAF" />
+			<Add option="-lTKLCAF" />
+			<Add option="-lTKXDESTEP" />
 			<Add option="-lTKIGES" />
 			<Add option="-lTKOffset" />
 			<Add option="-lTKSTEPAttr" />
@@ -844,6 +848,8 @@
 		<Unit filename="src/core/scene/import/VRImport.h" />
 		<Unit filename="src/core/scene/import/VRPLY.cpp" />
 		<Unit filename="src/core/scene/import/VRPLY.h" />
+		<Unit filename="src/core/scene/import/VRSTEPCascade.cpp" />
+		<Unit filename="src/core/scene/import/VRSTEPCascade.h" />
 		<Unit filename="src/core/scene/import/VRVTK.cpp" />
 		<Unit filename="src/core/scene/import/VRVTK.h" />
 		<Unit filename="src/core/scene/interfaces/VRScenegraphInterface.cpp" />
