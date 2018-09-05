@@ -111,7 +111,7 @@
 			<Add directory="/usr/include/STEPcode" />
 			<Add directory="/usr/include/vtk-5.10" />
 			<Add directory="/usr/include/Vive" />
-			<Add directory="/usr/include/oce" />
+			<Add directory="/usr/include/OCE" />
 			<Add directory="/usr/include/IFC" />
 			<Add directory="/usr/include/vtk-7.1/" />
 			<Add directory="/usr/include/OPCUA" />
@@ -271,6 +271,7 @@
 			<Add directory="/usr/lib/1.4" />
 			<Add directory="/usr/lib/IFC" />
 			<Add directory="/usr/lib/OPCUA" />
+			<Add directory="/usr/lib/OCE" />
 		</Linker>
 		<ExtraCommands>
 			<Add after='/bin/bash -c &quot;cp -u -p ressources/cef/icudtl.dat bin/Debug/ 2&gt;/dev/null&quot;' />
