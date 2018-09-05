@@ -32,8 +32,8 @@ class VRTrafficSimulation : public VRObject {
             enum INTENTION {
                 STRAIGHT = 0,
                 SWITCHLEFT = 1,
-                SWITCHRIGHT = 2
-                //REVERSE = 3
+                SWITCHRIGHT = 2,
+                REVERSE = 3
             };
 
             int vID = -1;
@@ -55,7 +55,7 @@ class VRTrafficSimulation : public VRObject {
             Graph::position pos;
             float speed = 50;
             //float speed = 0.15;
-            float targetVelocity = 0.0; //try km/h
+            float targetVelocity = 25.0; //try km/h
             float currentVelocity = 0.0;
             float maxAcceleration = 0.0;
             float maxDecceleration = 0.0;
@@ -126,7 +126,8 @@ class VRTrafficSimulation : public VRObject {
         float deltaT;
         float lastT = 0.0;
         string lastseedRoadsString = "";
-        int debugOverRideSeedRoad = -1;
+        //int debugOverRideSeedRoad = -1;
+        int debugOverRideSeedRoad = -2;
 
         VRMaterialPtr carLightWhiteOn;
         VRMaterialPtr carLightWhiteOff;

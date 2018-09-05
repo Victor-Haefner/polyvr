@@ -446,15 +446,25 @@ void VRTrafficSimulation::updateSimulation() {
                 auto& vehicle = vehicles[ID.first];
                 if (!vehicle.t) continue;
                 vehicle.vehiclesight.clear();
-                vehicle.vehiclesightFar.clear();
-                vehicle.vehiclesightFarID.clear();
-                float d = speedMultiplier*vehicle.speed*deltaT/3.6/road.second.length;
-                if (!isSimRunning) d = 0;
+                if (isSimRunning){
+                    vehicle.vehiclesightFar.clear();
+                    vehicle.vehiclesightFarID.clear();
+                }
+                float d = vehicle.currentVelocity;
+                float environmentFactor = 1;
+                float roadFactor = 1; //1 in city, 2 highway
+                float safetyDis = vehicle.currentVelocity * environmentFactor * roadFactor / 4.0 + 6;
+
+                int vbeh = vehicle.behavior;
+                float accFactor = 2.7 *3.6;
+                float decFactor = - 8.0 *3.6; //8 dry, 4-5 sand, 1-4 snow
+
+                float sightRadius = safetyDis/2 + 6;
 
                 // check if road ahead is free
                 auto pose = vehicle.t->getPose();
                 auto res = space->radiusSearch(pose->pos(), 5);
-                auto resFar = space->radiusSearch(pose->pos(), 25);
+                auto resFar = space->radiusSearch(pose->pos(), sightRadius);
                 int state = 0;
 
                 auto setSight = [&](int dir, float D, int ID) { //set nearest vehicleID as neighbor, also set Distance
@@ -469,7 +479,7 @@ void VRTrafficSimulation::updateSimulation() {
                         vehicle.vehiclesightFarID[dir] = ID;
                     }
                 };
-
+                /*
                 for (auto vv : res) {
                     auto v = (Vehicle*)vv;
                     if (!v->t->isVisible()) continue;
@@ -483,7 +493,7 @@ void VRTrafficSimulation::updateSimulation() {
                     if (comingRight(pose, p, vehicle.lastMove)) { }
 
                     //if (state > 0) break;
-                }
+                }*/
                 for (auto vv : resFar) {
                     auto v = (Vehicle*)vv;
                     if (!v->t->isVisible()) continue;
@@ -493,23 +503,95 @@ void VRTrafficSimulation::updateSimulation() {
                     auto D = (pose->pos() - p->pos()).length();
                     int farP = farPosition(pose, p, vehicle.lastMove);
                     setSight(farP,D,v->vID);
-                    ///TODO: implement behavior in accordance to vision here
                 }
-                visionVec[vehicle.vID] = vehicle.vehiclesightFarID;
 
-                bool debugBool = false; ///Debugging
-                if (debugBool) state = 0; //DANGER: debug mode, state = 0, discard collision check
 
+                //bool debugBool = false; ///Debugging
+                //if (debugBool) state = 0; //DANGER: debug mode, state = 0, discard collision check
+                /*
                 for (auto& v : users) {
                     auto p = v.t->getPose();
                     auto D = (pose->pos() - p->pos()).length();
-                    if (inFront(pose, p, vehicle.lastMove)) { state = 1; }
+                    /*if (inFront(pose, p, vehicle.lastMove)) { state = 1; }
                     else if (comingRight(pose, p, vehicle.lastMove)) state = 2;
                     if (comingLeft(pose, p, vehicle.lastMove)) { }
-                    if (comingRight(pose, p, vehicle.lastMove)) { }
-                    //if (state > 0) break;
-                }
+                    if (comingRight(pose, p, vehicle.lastMove)) { }*/
+                /*
+                    int farP = farPosition(pose, p, vehicle.lastMove);
+                    setSight(farP,D,v.vID);
+                }*/
 
+                visionVec[vehicle.vID] = vehicle.vehiclesightFarID;
+                if ( vbeh == vehicle.STRAIGHT ) {
+                    if ( vehicle.vehiclesightFarID[vehicle.INFRONT] ) {
+                    //vehicle ahead?
+                        int frontID = vehicle.vehiclesightFarID[vehicle.INFRONT];
+                        float disToFrontV = vehicle.vehiclesightFar[vehicle.INFRONT];
+                        float nextMoveAcc = (vehicle.currentVelocity + accFactor)/3.6 * deltaT;
+                        float nextMoveDec = (vehicle.currentVelocity + decFactor)/3.6 * deltaT;
+                        if ( vehicles[frontID].currentVelocity > vehicle.currentVelocity && vehicle.currentVelocity < vehicle.targetVelocity ) {
+                        //vehicle ahead faster, and targetVelocity not reached
+                            if ( disToFrontV - nextMoveAcc > safetyDis ) {
+                                d = vehicle.currentVelocity + accFactor/3.6*deltaT;
+                                //accelerate
+                            }
+                            if ( disToFrontV - nextMoveAcc < safetyDis ) {
+                                d = vehicle.currentVelocity + decFactor/3.6*deltaT;
+                                //break/decelerate
+                                //toChangeLane[vehicle.vID] = 1;
+                            }
+                        }
+                        if ( vehicles[frontID].currentVelocity < vehicle.currentVelocity && vehicle.currentVelocity < vehicle.targetVelocity ) {
+                        //vehicle ahead slower
+                            if ( disToFrontV - nextMoveAcc > safetyDis ) {
+                                d = vehicle.currentVelocity + accFactor/3.6*deltaT;
+                                //accelerate
+                            }
+                            if ( disToFrontV - nextMoveAcc < safetyDis ) {
+                                d = vehicle.currentVelocity + decFactor/3.6*deltaT;
+                                //break/decelerate
+                                //toChangeLane[vehicle.vID] = 1;
+                            }
+                            //check if lane switch possible
+                        }
+                    }
+                    if (!vehicle.vehiclesightFarID[vehicle.INFRONT]) {
+                    //no vehicle ahead
+                        if ( vehicle.currentVelocity < vehicle.targetVelocity ) {
+                        //targetVelocity not reached
+                            d = vehicle.currentVelocity + accFactor/3.6*deltaT;
+                            //accelerate
+                        }
+                        if ( vehicle.currentVelocity > vehicle.targetVelocity ) {
+                        //targetVelocity overreached
+                            d = vehicle.currentVelocity + decFactor/3.6*deltaT;
+                            //decelerate
+                        }
+                        if ( vehicle.currentVelocity == vehicle.targetVelocity ) {
+                        //targetVelocity reached
+                            d = vehicle.currentVelocity;
+                            //proceed
+                        }
+                        //check if road is ending/intersections etc - possible breaking
+                    }
+                }
+                if ( vbeh == vehicle.SWITCHLEFT ) {
+                    d = vehicle.currentVelocity;
+                }
+                if ( vbeh == vehicle.SWITCHRIGHT ) {
+                    d = vehicle.currentVelocity;
+                }
+                if ( vbeh == vehicle.REVERSE ) {
+                    d = vehicle.currentVelocity;
+                }
+                vehicle.currentVelocity = d;
+                d *= deltaT/3.6/road.second.length;
+                if (!isSimRunning) d = 0;
+                propagateVehicle(vehicle, d, vbeh);
+
+
+
+                /*
                 if (auto g = dynamic_pointer_cast<VRGeometry>(vehicle.mesh)) { // only for debugging!!
                     if (state == 0) g->setColor("white");
                     if (state == 1) g->setColor("blue");
@@ -524,10 +606,9 @@ void VRTrafficSimulation::updateSimulation() {
                 int vbeh = vehicle.behavior;
                 bool inFront = seesVehicle(vehicle.INFRONT);
                 if ( vbeh == vehicle.STRAIGHT && !inFront) { propagateVehicle(vehicle, d, vbeh); }
-                if ( vbeh == vehicle.STRAIGHT &&  inFront) { toChangeLane[vehicle.vID] = 1; }
-                if ( vbeh == vehicle.SWITCHLEFT  && !seesVehicle(vehicle.FRONTLEFT) && !inFront /*&& VRGlobals::CURRENT_FRAME - vehicle.indicatorTS > 200*/ ) propagateVehicle(vehicle, d, vbeh);
-                if ( vbeh == vehicle.SWITCHRIGHT && !seesVehicle(vehicle.BEHINDRIGHT) && !inFront /*&& VRGlobals::CURRENT_FRAME - vehicle.indicatorTS > 200*/ ) propagateVehicle(vehicle, d, vbeh);
-
+                if ( vbeh == vehicle.STRAIGHT &&  inFront) { toChangeLane[vehicle.vID] = 1; }*/
+                //if ( vbeh == vehicle.SWITCHLEFT  && !seesVehicle(vehicle.FRONTLEFT) && !inFront /*&& VRGlobals::CURRENT_FRAME - vehicle.indicatorTS > 200*/ ) propagateVehicle(vehicle, d, vbeh);
+                //if ( vbeh == vehicle.SWITCHRIGHT && !seesVehicle(vehicle.BEHINDRIGHT) && !inFront /*&& VRGlobals::CURRENT_FRAME - vehicle.indicatorTS > 200*/ ) propagateVehicle(vehicle, d, vbeh);
                 if (isSimRunning && VRGlobals::CURRENT_FRAME - vehicle.lastMoveTS > 200 ) {
                     toChangeRoad[road.first].push_back( make_pair(vehicle.vID, -1) ); ///------killswitch if vehicle get's stuck
                 }
@@ -559,6 +640,7 @@ void VRTrafficSimulation::updateSimulation() {
                     vehicle.roadFrom = -1;
                     vehicle.roadTo = -1;
                     vehicle.speed = vehicle.targetVelocity;
+                    vehicle.currentVelocity = 0.0;
                     vehiclePool.push_front(vehicles[v.first]);
                     for (auto l : vehicle.turnsignalsBL) l->setMaterial(carLightOrangeOff);
                     for (auto l : vehicle.turnsignalsBR) l->setMaterial(carLightOrangeOff);
