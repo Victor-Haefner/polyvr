@@ -18,6 +18,14 @@ class VRTrafficSimulation : public VRObject {
             SCOOTER = 1,
             BYCICLE = 2
         };
+        enum VISION {
+                INFRONT = 0,
+                FRONTLEFT = 1,
+                FRONTRIGHT = 2,
+                BEHINDLEFT = 3,
+                BEHINDRIGHT = 4,
+                BEHIND = 5
+        };
 
     private:
         struct Vehicle {
@@ -55,15 +63,18 @@ class VRTrafficSimulation : public VRObject {
             Graph::position pos;
             float speed = 50;
             //float speed = 0.15;
-            float targetVelocity = 25.0; //try km/h
+            float targetVelocity = 50.0; //try km/h
             float currentVelocity = 0.0;
-            float maxAcceleration = 0.0;
-            float maxDecceleration = 0.0;
+            float maxAcceleration = 2.7;
+            float maxDecceleration = 8.0;
+            float Acceleration = 0.0;
+            float Decceleration = 0.0;
             Vec3d lastMove = Vec3d(0,0,0);
             Vec3d currentOffset = Vec3d(0,0,0);
             Vec3d currentdOffset = Vec3d(0,0,0);
             int lastMoveTS = 0;
             int indicatorTS = 0;
+            int lastLaneSwitchTS = 0;
             int roadFrom = -1;
             int roadTo = -1;
             int behavior = 0; //0 = straight, 1 = left, 2 = right
