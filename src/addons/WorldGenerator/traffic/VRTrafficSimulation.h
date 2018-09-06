@@ -140,7 +140,7 @@ class VRTrafficSimulation : public VRObject {
         float lastT = 0.0;
         string lastseedRoadsString = "";
         //int debugOverRideSeedRoad = -1;
-        int debugOverRideSeedRoad = -2;
+        int debugOverRideSeedRoad = -1;
 
         VRMaterialPtr carLightWhiteOn;
         VRMaterialPtr carLightWhiteOff;

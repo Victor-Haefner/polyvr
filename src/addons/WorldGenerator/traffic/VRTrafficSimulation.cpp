@@ -436,16 +436,17 @@ void VRTrafficSimulation::updateSimulation() {
         Vec3d Dn = D/L;
 
         float d = Dn.dot(lastMove); //check if vehicle2 behind vehicle1
-        Vec3d x = lastMove.cross(Vec3d(0,1,0));
+        //Vec3d x = lastMove.cross(Vec3d(0,1,0));
+        Vec3d x = p1->dir().cross(Vec3d(0,1,0));
         x.normalize();
         float rL = abs( D.dot(x) ); //check if vehicle2 left or right of vehicle1
         float left = - D.dot(x);
 
         if ( d > 0 && rL < 1 ) return 0; // in front, in range, in corridor
-        if ( d > 0 && left > 1.5 && left < 5) return 1; // in front, in range, left of corridor
-        if ( d > 0 && left <-1.5 && left >-5) return 2; // in front, in range, right of corridor
-        if ( d < 0 && left > 1.5 && left < 5) return 3; // in behind, in range, left of corridor
-        if ( d < 0 && left <-1.5 && left >-5) return 4; // in behind, in range, right of corridor
+        if ( d > 0 && left > 1 && left < 5) return 1; // in front, in range, left of corridor
+        if ( d > 0 && left <-1 && left >-5) return 2; // in front, in range, right of corridor
+        if ( d < 0 && left > 1 && left < 5) return 3; // in behind, in range, left of corridor
+        if ( d < 0 && left <-1 && left >-5) return 4; // in behind, in range, right of corridor
         if ( d < 0 && rL < 1 ) return 5; // in behind, in range, in corridor
         return -1;
     };
@@ -676,7 +677,6 @@ void VRTrafficSimulation::updateSimulation() {
                 if (!isSimRunning) d = 0;
                 if (d<0 && vbeh != vehicle.REVERSE) d = 0; //hack
                 if (vehicle.collisionDetected) d = 0;
-                cout << toString(d) << endl;
                 propagateVehicle(vehicle, d, vbeh);
 
 
@@ -804,7 +804,6 @@ void VRTrafficSimulation::updateSimulation() {
     propagateVehicles();
     //resolveCollisions();
     //updateDensityVisual();
-    //showVehicleVision();
     resolveRoadChanges();
     resolveLaneChanges();
     showVehicleVision();
