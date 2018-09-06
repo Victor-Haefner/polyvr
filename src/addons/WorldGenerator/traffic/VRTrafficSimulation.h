@@ -80,6 +80,7 @@ class VRTrafficSimulation : public VRObject {
             int behavior = 0; //0 = straight, 1 = left, 2 = right
             int currentState = 0; //1 = leaving lane, -1 = coming onto lane
             bool laneTransition = true;
+            bool collisionDetected = false;
 
             Vehicle(Graph::position p);
             Vehicle();
@@ -87,6 +88,7 @@ class VRTrafficSimulation : public VRObject {
 
             void destroy();
             void hide();
+            void setDefaults();
             void show(Graph::position p);
 
             int getID();

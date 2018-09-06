@@ -58,6 +58,16 @@ void VRTrafficSimulation::Vehicle::hide() {
     t->hide();
 }
 
+void VRTrafficSimulation::Vehicle::setDefaults() {
+    currentState = 0;
+    behavior = 0;
+    roadFrom = -1;
+    roadTo = -1;
+    speed = targetVelocity;
+    currentVelocity = 0.0;
+    collisionDetected = false;
+}
+
 void VRTrafficSimulation::Vehicle::show(Graph::position p) {
     pos = p;
     t->show();
@@ -273,6 +283,7 @@ void VRTrafficSimulation::updateSimulation() {
                         vehicle.roadTo = g->getNextEdges(g->getEdge(vehicle.roadTo))[0].ID;
                         vehicle.roadFrom = gp.edge;
                     }
+                    gp.pos = gp.pos * roads[road1ID].length/roads[gp.edge].length;
                 }
                 //cout << toString(gp.edge) << endl;
             }
@@ -280,6 +291,7 @@ void VRTrafficSimulation::updateSimulation() {
                 gp.edge = nextEdges[0].ID;
                 auto& road = roads[gp.edge];
                 toChangeRoad[road1ID].push_back( make_pair(vehicle.vID, gp.edge) );
+                gp.pos = gp.pos * roads[road1ID].length/roads[gp.edge].length;
                 if (vehicle.currentState != 0) {
                     if (g->getNextEdges(g->getEdge(vehicle.roadTo)).size() < 1) toChangeRoad[road1ID].push_back( make_pair(vehicle.vID, -1) );
                     else {
@@ -531,6 +543,7 @@ void VRTrafficSimulation::updateSimulation() {
                     //auto D = pose->dir().dot(pose->pos() - p->pos());
                     int farP = farPosition(pose, p, vehicle.lastMove);
                     setSight(farP,D,v->vID);
+                    //if (vehicle.currentVelocity > 6 && D <  0.1) vehicle.collisionDetected = true;
                 }
 
 
@@ -589,6 +602,8 @@ void VRTrafficSimulation::updateSimulation() {
                             if ( sinceLastLS > 200 && checkR(vehicle.vID) && vehicle.currentVelocity > 20 ) { toChangeLane[vehicle.vID] = 2; }
                             //check if lane switch possible
                         }
+
+                        if ( disToFrontV - nextMove < safetyDis ) d = vehicle.currentVelocity + decFactor/3.6*deltaT;
                     }
                     if (!vehicle.vehiclesightFarID[vehicle.INFRONT]) {
                     //no vehicle ahead
@@ -630,7 +645,7 @@ void VRTrafficSimulation::updateSimulation() {
                     //no vehicle ahead
                         d = vehicle.currentVelocity;
                     }
-                    cout << "swLeft " << toString(vehicle.vID) << endl;
+                    //cout << "swLeft " << toString(vehicle.vID) << endl;
                 }
                 if ( vbeh == vehicle.SWITCHRIGHT ) {
                     if ( vehicle.vehiclesightFarID[vehicle.INFRONT] ) {
@@ -650,16 +665,18 @@ void VRTrafficSimulation::updateSimulation() {
                     //no vehicle ahead
                         d = vehicle.currentVelocity;
                     }
-                    cout << "swRight " << toString(vehicle.vID) << endl;
+                    //cout << "swRight " << toString(vehicle.vID) << endl;
                 }
                 if ( vbeh == vehicle.REVERSE ) {
                     d = vehicle.currentVelocity;
-                    cout << "swLeft " << toString(vehicle.vID) << endl;
+                    //cout << "swLeft " << toString(vehicle.vID) << endl;
                 }
                 vehicle.currentVelocity = d;
                 d *= deltaT/3.6/road.second.length;
                 if (!isSimRunning) d = 0;
                 if (d<0 && vbeh != vehicle.REVERSE) d = 0; //hack
+                if (vehicle.collisionDetected) d = 0;
+                cout << toString(d) << endl;
                 propagateVehicle(vehicle, d, vbeh);
 
 
@@ -707,13 +724,9 @@ void VRTrafficSimulation::updateSimulation() {
                     Vec3d offset = Vec3d(0,-30,0);
                     p->setPos(p->pos()+offset);
                     vehicle.t->setPose(p);
-                    gp.pos -= 1;
-                    vehicle.currentState = 0;
-                    vehicle.behavior = 0;
-                    vehicle.roadFrom = -1;
-                    vehicle.roadTo = -1;
-                    vehicle.speed = vehicle.targetVelocity;
-                    vehicle.currentVelocity = 0.0;
+                    //gp.pos -= 1;
+                    gp.pos = 0;
+                    vehicle.setDefaults();
                     vehiclePool.push_front(vehicles[v.first]);
                     for (auto l : vehicle.turnsignalsBL) l->setMaterial(carLightOrangeOff);
                     for (auto l : vehicle.turnsignalsBR) l->setMaterial(carLightOrangeOff);
