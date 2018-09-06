@@ -60,6 +60,7 @@ void VRTrafficSimulation::Vehicle::hide() {
 
 void VRTrafficSimulation::Vehicle::setDefaults() {
     currentState = 0;
+    pos.pos = 0;
     behavior = 0;
     roadFrom = -1;
     roadTo = -1;
@@ -568,6 +569,7 @@ void VRTrafficSimulation::updateSimulation() {
                 float nextMoveAcc = (vehicle.currentVelocity + accFactor)/3.6 * deltaT;
                 float nextMoveDec = (vehicle.currentVelocity + decFactor)/3.6 * deltaT;
                 float sinceLastLS = VRGlobals::CURRENT_FRAME - vehicle.lastLaneSwitchTS;
+                float nextIntersection = 10000; ///TODO CALCULATE NEXT INTERSECTION
                 if ( vbeh == vehicle.STRAIGHT ) {
                     if ( vehicle.vehiclesightFarID[vehicle.INFRONT] ) {
                     //vehicle ahead?
@@ -588,7 +590,7 @@ void VRTrafficSimulation::updateSimulation() {
                             //break/decelerate
 
                                 //check if lane switch possible
-                            if ( sinceLastLS > 200 && checkL(vehicle.vID) && vehicle.currentVelocity > 20 ) { toChangeLane[vehicle.vID] = 1; }
+                            if ( sinceLastLS > 200 && nextIntersection > 10 && checkL(vehicle.vID) && vehicle.currentVelocity > 20 ) { toChangeLane[vehicle.vID] = 1; }
                         }
                         if ( vehicle.currentVelocity >= vehicle.targetVelocity ) {
                         //vehicle ahead slower
@@ -600,7 +602,7 @@ void VRTrafficSimulation::updateSimulation() {
                                 d = vehicle.currentVelocity + decFactor/3.6*deltaT;
                                 //break/decelerate
                             }
-                            if ( sinceLastLS > 200 && checkR(vehicle.vID) && vehicle.currentVelocity > 20 ) { toChangeLane[vehicle.vID] = 2; }
+                            if ( sinceLastLS > 200 && nextIntersection > 10 && checkR(vehicle.vID) && vehicle.currentVelocity > 20 ) { toChangeLane[vehicle.vID] = 2; }
                             //check if lane switch possible
                         }
 
@@ -623,7 +625,8 @@ void VRTrafficSimulation::updateSimulation() {
                             d = vehicle.currentVelocity;
                             //proceed
                         }
-                        if ( sinceLastLS > 200 && checkR(vehicle.vID) && vehicle.currentVelocity > 20 ) { toChangeLane[vehicle.vID] = 2; }
+                        if ( sinceLastLS > 200 && nextIntersection > 10 && checkR(vehicle.vID) && vehicle.currentVelocity > 20 ) { toChangeLane[vehicle.vID] = 2; }
+                        if ( nextIntersection < safetyDis + 0.2 ) d = vehicle.currentVelocity + decFactor/3.6*deltaT;
 
                         //check if road is ending/intersections etc - possible breaking
                     }
@@ -873,6 +876,7 @@ void VRTrafficSimulation::addVehicle(int roadID, float density, int type) {
     //if () cout << "VRTrafficSimulation::updateSimulation " << roads.size() << endl;
     //auto& road = roads[roadID];
     Vehicle v = vehicles[getVehicle()];
+    vehicles[v.getID()].setDefaults();
 
     //if (VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(v.mesh) ) g->makeUnique(); // only for debugging!!
     //v.t->setPickable(true);
