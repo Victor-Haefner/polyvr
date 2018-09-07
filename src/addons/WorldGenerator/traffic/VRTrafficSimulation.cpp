@@ -58,7 +58,7 @@ void VRTrafficSimulation::Vehicle::hide() {
 
 void VRTrafficSimulation::Vehicle::setDefaults() {
     currentVelocity = 0.0;
-    targetVelocity = 50.0/3.6; //try m/s  - km/h
+    targetVelocity = 10.0/3.6; //try m/s  - km/h
     float tmp = targetVelocity;
     targetVelocity = targetVelocity*(1.0+0.2*0.01*(rand()%100));
 
@@ -686,10 +686,11 @@ void VRTrafficSimulation::updateSimulation() {
                 end_behav:
                 vehicle.currentVelocity = d;
                 d *= deltaT/road.second.length;
+                if (d<0.0003 && vehicle.pos.pos > 0.1) d = 0;
                 if (!isSimRunning) d = 0;
                 if (d<0 && vbeh != vehicle.REVERSE) d = 0; //hack
                 if (vehicle.collisionDetected) d = 0;
-                propagateVehicle(vehicle, d, vbeh);
+                if (d!=0) propagateVehicle(vehicle, d, vbeh);
 
 
 
