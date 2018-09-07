@@ -150,7 +150,7 @@ void VRTrafficSimulation::setRoadNetwork(VRRoadNetworkPtr rds) {
     for (auto& e : graph->getEdgesCopy()) {
         int i = e.ID;
     //for (int i = 0; i < graph->getNEdges(); i++) {
-        roads[i] = road();
+        roads[i] = laneSegment();
         //auto& e = graph->getEdge(i);
         Vec3d p1 = graph->getNode(e.from).p.pos();
         Vec3d p2 = graph->getNode(e.to).p.pos();
@@ -169,7 +169,16 @@ void VRTrafficSimulation::setRoadNetwork(VRRoadNetworkPtr rds) {
             roads[i].signals.push_back(sig);
         }*/
     }
-
+    /** PSEUDO
+    for (auto road : roadNetwork->getRoads()) {
+        for (auto lane : road->getLaneEntites()) {
+            for (auto eID : lane->getAllValues<int>("graphIDS")) {
+                roads[eID].lane = lane;
+                roads[eID].road = road;
+            }
+        }
+    }
+    */
     //updateDensityVisual(true);
 }
 

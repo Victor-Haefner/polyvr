@@ -102,14 +102,15 @@ class VRTrafficSimulation : public VRObject {
             string state;
         };
 
-        struct road {
+        struct laneSegment { //road
             int rID = -1;
             float density = 0;
             float length = 0;
             bool macro = true;
             map<int, int> vehicleIDs;
             int lastVehicleID = 0;
-            VRRoadPtr r;
+            VRRoadPtr road;
+            VREntityPtr lane;
             vector<signal> signals;
         };
 
@@ -120,7 +121,7 @@ class VRTrafficSimulation : public VRObject {
         };
 
         VRRoadNetworkPtr roadNetwork;
-        map<int, road> roads;
+        map<int, laneSegment> roads;
         map<int, Vehicle> vehicles;
         vector<int> seedRoads;
         vector<int> nearRoads;

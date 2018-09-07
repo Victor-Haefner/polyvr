@@ -331,7 +331,7 @@ void VRRoad::addTrafficLight( Vec3d pos ) {
         auto roadEnt = getEntity();
 
         float dmin = 1e6;
-        Vec3d dir;
+        Vec3d dir; // direction from intersection to traffic light
         VREntityPtr nodeEnt;
         for (auto ep : getEdgePoints()) {
             Vec3d p = (ep.second.p1+ep.second.p2)*0.5;

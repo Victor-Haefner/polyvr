@@ -70,6 +70,7 @@ void GISWorld::setupOntology() {
     Lane->addProperty("arrows", "Arrow");
     Lane->addProperty("pedestrian", "bool");
     Lane->addProperty("signs", Sign);
+    Lane->addProperty("graphIDs", "int");
     ParkingLane->addProperty("angle", "float");
     ParkingLane->addProperty("capacity", "int");
     GreenBelt->addProperty("width", "float");
