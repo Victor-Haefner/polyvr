@@ -61,26 +61,25 @@ class VRTrafficSimulation : public VRObject {
             map<int, int> vehiclesightFarID;
 
             Graph::position pos;
-            float speed = 50;
-            //float speed = 0.15;
-            float targetVelocity = 50.0; //try km/h
-            float currentVelocity = 0.0;
-            float maxAcceleration = 2.7;
-            float maxDecceleration = 8.0;
-            float Acceleration = 0.0;
-            float Decceleration = 0.0;
-            Vec3d lastMove = Vec3d(0,0,0);
-            Vec3d currentOffset = Vec3d(0,0,0);
-            Vec3d currentdOffset = Vec3d(0,0,0);
+            float speed;
+            float currentVelocity;
+            float targetVelocity; //try km/h
+            float maxAcceleration;
+            float maxDecceleration;
+            float Acceleration;
+            float Decceleration;
+            Vec3d lastMove;
+            Vec3d currentOffset;
+            Vec3d currentdOffset;
             int lastMoveTS = 0;
             int indicatorTS = 0;
             int lastLaneSwitchTS = 0;
-            int roadFrom = -1;
-            int roadTo = -1;
+            int roadFrom;
+            int roadTo;
             int behavior = 0; //0 = straight, 1 = left, 2 = right
             int currentState = 0; //1 = leaving lane, -1 = coming onto lane
             bool laneTransition = true;
-            bool collisionDetected = false;
+            bool collisionDetected;
 
             Vehicle(Graph::position p);
             Vehicle();
