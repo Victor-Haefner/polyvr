@@ -279,6 +279,7 @@
 		</ExtraCommands>
 		<Unit filename="src/PolyVR.cpp" />
 		<Unit filename="src/PolyVR.h" />
+		<Unit filename="src/PolyVRFwd.h" />
 		<Unit filename="src/addons/Algorithms/VRAlgorithmsFwd.h" />
 		<Unit filename="src/addons/Algorithms/VRGraphLayout.cpp" />
 		<Unit filename="src/addons/Algorithms/VRGraphLayout.h" />

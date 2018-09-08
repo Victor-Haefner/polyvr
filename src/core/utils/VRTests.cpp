@@ -6,9 +6,11 @@
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/setup/devices/VRHaptic.h"
+#include "core/utils/toString.h"
 
 #include <map>
 #include <OpenSG/OSGMaterial.h>
+#include <OpenSG/OSGNameAttachment.h>
 
 using namespace OSG;
 
@@ -63,6 +65,33 @@ void vrpn_server() {
     if (setup) setup->startVRPNTestServer();
 }
 
+void debugFields(string data) {
+    auto IDs = splitString(data);
+    int N = FieldContainerFactory::the()->getNumTotalContainers();
+
+
+    for (string s : IDs) {
+        int fieldID = toInt(s);
+        if (fieldID >= N) continue;
+
+        FieldContainer* fc = FieldContainerFactory::the()->getContainer( fieldID );
+
+        AttachmentContainer* ac = dynamic_cast<AttachmentContainer*>(fc);
+        if (ac == 0) {
+            Attachment* a = dynamic_cast<Attachment*>(fc);
+            if (a != 0) {
+                FieldContainer* dad = 0;
+                if (a->getMFParents()->size() > 0) dad = a->getParents(0);
+                ac = dynamic_cast<AttachmentContainer*>(dad);
+            }
+        }
+
+        string name = "no name";
+        if (auto n = OSG::getName(ac)) name = string(n);
+        cout << "Debug field " << fieldID << ", type: " << fc->getTypeName() << " name: " << name << " refcount: " << fc->getRefCount() << endl;
+    }
+}
+
 void VRRunTest(string test) {
     cout << "run test " << test << endl;
 
@@ -70,4 +99,5 @@ void VRRunTest(string test) {
     if (test == "vrpn_client") vrpn_client();
     if (test == "vrpn_server") vrpn_server();
     if (test == "haptic1") VRHaptic::runTest1();
+    if (startsWith(test, "debugFields")) debugFields( subString(test, 12, test.size()-12) );
 }

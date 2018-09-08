@@ -12,6 +12,8 @@
 #include "core/objects/object/VRObject.h"
 #include "core/utils/VRRate.h"
 #include "core/scene/VRScene.h"
+#include "core/setup/VRSetup.h"
+#include "core/scene/rendering/VRRenderStudio.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRGlobals.h"
@@ -189,6 +191,13 @@ void VRWindowManager::updateWindows() {
 
     BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
 
+    auto updateSceneLinks = [&]() {
+        for (auto view : VRSetup::getCurrent()->getViews()) {
+            if (auto r = view->getRenderingL()) r->updateSceneLink();
+            if (auto r = view->getRenderingR()) r->updateSceneLink();
+        }
+    };
+
     auto wait = [&](int timeout = -1) {
         if (timeout > 0) {
             size_t tEnter = time(0);
@@ -215,14 +224,16 @@ void VRWindowManager::updateWindows() {
         commitChanges();
         if (!wait()) return false;
         /** let the windows merge the change lists **/
-        //if (clist->getNumCreated() > 0 || clist->getNumChanged() > 0) cout << "VRWindowManager::updateWindows " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
         if (!wait()) return false;
+        //if (clist->getNumCreated() > 0) cout << "VRWindowManager::updateWindows " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
         if (!wait(20)) return false;
         clist->clear();
         return true;
         //sleep(1);
     };
+
+    updateSceneLinks();
 
     if (!tryRender()) {
         cout << "WARNING! a remote window hangs or something!\n";

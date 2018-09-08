@@ -132,6 +132,7 @@ int VRDefShading::addBuffer(int pformat, int ptype) {
 void VRDefShading::reload() {
     vpAmbient->readProgram(dsAmbientVPFile.c_str());
     fpAmbient->readProgram(dsAmbientFPFile.c_str());
+    fpAmbient->subUniformVariable("channel");
     fpAmbient->addUniformVariable<Int32>("channel", channel);
     shAmbient->addShader(vpAmbient);
     shAmbient->addShader(fpAmbient);
@@ -266,6 +267,7 @@ void VRDefShading::updateLight(VRLightPtr l) {
     string fpFile = getLightFPFile(li.lightType, li.shadowType);
     li.lightVP->readProgram(vpFile.c_str());
     li.lightFP->readProgram(fpFile.c_str());
+    li.lightFP->subUniformVariable("shadowColor");
     li.lightFP->addUniformVariable<Color4f>("shadowColor", shadowColor);
 
     auto tex = l->getPhotometricMap();

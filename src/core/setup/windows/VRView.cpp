@@ -524,6 +524,11 @@ void VRView::update() {
     setMaterial();
 }
 
+void VRView::testUpdate() {
+    if (renderingL) renderingL->updateSceneLink();
+    if (renderingR) renderingR->updateSceneLink();
+}
+
 void VRView::reset() {
     cam = 0;
     view_root = 0;

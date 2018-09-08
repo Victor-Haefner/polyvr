@@ -180,8 +180,9 @@ vector<VRObjectPtr> VRObject::getLinks() {
 void VRObject::addLink(VRObjectPtr obj) {
     if (osg->links.count(obj.get())) return;
 
+    NodeMTRecPtr node = obj->getNode()->node;
     VisitSubTreeMTRecPtr visitor = VisitSubTree::create();
-    visitor->setSubTreeRoot(obj->getNode()->node);
+    visitor->setSubTreeRoot(node);
     NodeMTRecPtr visit_node = makeNodeFor(visitor);
     OSG::setName(visit_node, getName()+"_link");
     addChild(OSGObject::create(visit_node));
@@ -200,13 +201,8 @@ void VRObject::remLink(VRObjectPtr obj) {
 }
 
 void VRObject::clearLinks() {
-    vector<VRObject*> links;
-    for (auto o : osg->links) links.push_back(o.first);
-    for (auto o : links) {
-        NodeMTRecPtr node = osg->links[o];
-        subChild(OSGObject::create(node));
-        osg->links.erase(o);
-    }
+    auto tmp = links;
+    for (auto o : tmp) remLink(o.second.lock());
 }
 
 void VRObject::setCore(OSGCorePtr c, string _type, bool force) {

@@ -7,7 +7,6 @@
 #include "addons/Engineering/VRNumberingEngine.h"
 
 #include <OpenSG/OSGGeoProperties.h>
-#include <OpenSG/OSGShaderVariableOSG.h>
 #include <OpenSG/OSGQuaternion.h>
 
 #define GLSL(shader) #shader
