@@ -500,6 +500,19 @@ void VRObject::printTree(int indent) {
     if(indent == 0) cout << "\n";
 }
 
+vector<OSGObjectPtr> VRObject::getNodes() {
+    vector<OSGObjectPtr> nodes;
+
+    function< void (NodeMTRecPtr)> aggregate = [&](NodeMTRecPtr node) {
+        nodes.push_back( OSGObject::create(node) );
+        for (uint i=0; i<node->getNChildren(); i++) aggregate( node->getChild(i) );
+    };
+
+    aggregate(getNode()->node);
+
+    return nodes;
+}
+
 void VRObject::printOSGTree(OSGObjectPtr o, string indent) {
     if (o == 0) return;
 

@@ -18,12 +18,15 @@
       <core>
 	import VR
 	
-	v = VR.getSetup().getView(1)
-	v.testUpdate()
+	#v = VR.getSetup().getView(1)
+	#v.testUpdate()
 	
 	#ids = [ 5341, 5342, 5343, 5344 ]
+	#ids = [ 5380, 5381, 5382 ]
+	ids = range(5197, 5201+1)
+	#ids = [ 5402, 5403, 5404, 5405, 5406 ]
 	#ids = [ 5558, 5559, 5560, 5561 ]
-	#VR.runTest('debugFields '+' '.join([str(i) for i in ids]))
+	VR.runTest('debugFields '+' '.join([str(i) for i in ids]))
 </core>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="102" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
     </Script>

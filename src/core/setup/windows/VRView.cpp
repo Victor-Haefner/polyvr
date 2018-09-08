@@ -293,6 +293,7 @@ int VRView::getID() { return ID; }
 void VRView::setID(int i) { ID = i; }
 
 void VRView::showStats(bool b) {
+    if (doStats == b) return;
     if (stats == 0) {
         stats = SimpleStatisticsForeground::create();
         stats->setSize(25);

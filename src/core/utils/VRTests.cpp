@@ -65,10 +65,17 @@ void vrpn_server() {
     if (setup) setup->startVRPNTestServer();
 }
 
+#include <OpenSG/OSGDrawableStatsAttachment.h>
+
 void debugFields(string data) {
     auto IDs = splitString(data);
     int N = FieldContainerFactory::the()->getNumTotalContainers();
 
+    for (auto node : VRScene::getCurrent()->getRoot()->getNodes()) {
+        string name = OSG::getName(node->node) ? OSG::getName(node->node) : "unknown";
+        DrawableStatsAttachment *st = DrawableStatsAttachment::get(node->node->getCore());
+        if (st) OSG::setName(st, (name+"_stats_attachment").c_str());
+    }
 
     for (string s : IDs) {
         int fieldID = toInt(s);
