@@ -139,8 +139,11 @@ void VRMultiWindow::render(bool fromThread) {
 
     if (state == CONNECTED) {
         //try { OSG_render(_win, ract); }
-        try { _win->render(ract); }
-        catch(exception& e) { reset(); }
+        try {
+            state = RENDERING;
+            _win->render(ract);
+            state = CONNECTED;
+        } catch(exception& e) { reset(); }
     }
 }
 
@@ -151,6 +154,7 @@ string VRMultiWindow::getConnectionType() { return connection_type; }
 
 string VRMultiWindow::getStateString() {
     if (state == CONNECTED) return "connected";
+    if (state == RENDERING) return "rendering";
     if (state == INITIALIZING) return "initializing";
     if (state == CONNECTING) return "connecting";
     if (state == JUSTCONNECTED) return "just connected";
