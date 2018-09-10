@@ -323,7 +323,7 @@ VRSocket::VRSocket(string name) {
 VRSocket::~VRSocket() {
     run = false;
     //shutdown(socketID, SHUT_RDWR);
-    VRSceneManager::get()->stopThread(threadID);
+    if (auto sm = VRSceneManager::get()) sm->stopThread(threadID);
     if (http_args) delete http_args;
     if (http_serv) delete http_serv;
 }
@@ -547,7 +547,7 @@ void VRSocket::initServer(CONNECTION_TYPE t, int _port) {
 void VRSocket::update() {
     run = false;
     //shutdown(socketID, SHUT_RDWR);
-    VRSceneManager::get()->stopThread(threadID);
+    if (auto sm = VRSceneManager::get()) sm->stopThread(threadID);
     if (http_serv) http_serv->close();
 
     sig->setName("on_" + name + "_" + type);

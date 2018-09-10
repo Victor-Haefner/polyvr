@@ -28,8 +28,11 @@ typedef boost::recursive_mutex::scoped_lock PLock;
 
 OSG_BEGIN_NAMESPACE
 
+VRSceneManager* main_instance = 0;
+
 VRSceneManager::VRSceneManager() {
     cout << "Init VRSceneManager..";
+    main_instance = this;
 	original_workdir = boost::filesystem::current_path().string();
 	examples = VRProjectsList::create();
 	projects = VRProjectsList::create();
@@ -45,14 +48,13 @@ VRSceneManager::VRSceneManager() {
     //initThread(sceneUpdateCb, "update scene", true, 1); // TODO
 }
 
-VRSceneManager::~VRSceneManager() {}
-
-void VRSceneManager::operator= (VRSceneManager v) {;}
-
-VRSceneManager* VRSceneManager::get() {
-    static VRSceneManager* mgr = new VRSceneManager();
-    return mgr;
+VRSceneManager::~VRSceneManager() {
+    main_instance = 0;
+    cout << "VRSceneManager::~VRSceneManager" << endl;
 }
+
+VRSceneManagerPtr VRSceneManager::create() { return VRSceneManagerPtr( new VRSceneManager()); }
+VRSceneManager* VRSceneManager::get() { return main_instance; }
 
 void VRSceneManager::loadScene(string path, bool write_protected, string encryptionKey) {
     if (!exists(path)) { cout << "loadScene " << path << " not found" << endl; return; }
@@ -235,9 +237,11 @@ void VRSceneManager::update() {
     VRGlobals::UPDATE_LOOP2.update(timer);
 
     VRTimer t5; t5.start();
-    auto setup = VRSetup::getCurrent();
-    if (setup) setup->updateTracking(); // tracking
-    if (setup) setup->updateDevices(); // device beacon update
+    if (auto setup = VRSetup::getCurrent()) {
+        setup->updateTracking(); // tracking
+        setup->updateDevices(); // device beacon update
+    }
+
     VRGlobals::SMCALLBACKS_FRAME_RATE.update(t5);
     VRGlobals::UPDATE_LOOP3.update(timer);
 
@@ -246,9 +250,10 @@ void VRSceneManager::update() {
     VRGlobals::SCRIPTS_FRAME_RATE.update(t6);
     VRGlobals::UPDATE_LOOP4.update(timer);
 
-    if (setup) {
+    if (auto setup = VRSetup::getCurrent()) {
         VRTimer t2; t2.start();
         setup->updateWindows(); // rendering
+        setup.reset(); // updateGtk may close application, reset setup to avoid memory leak
         VRGlobals::WINDOWS_FRAME_RATE.update(t2);
         VRGlobals::UPDATE_LOOP5.update(timer);
         VRGuiManager::get()->updateGtk();

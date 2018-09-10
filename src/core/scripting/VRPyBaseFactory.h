@@ -18,8 +18,11 @@ template<typename T> bool toValue(PyObject* o, vector<T>& v) {
 }
 template<typename T> bool toValue(PyObject* o, std::shared_ptr<VRFunction<T>>& v) {
     //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!
-    Py_IncRef(o);
-    v = VRFunction<T>::create( "pyExecCall", boost::bind(VRPyBase::execPyCall<T>, o, PyTuple_New(1), _1) );
+    if (VRPyBase::isNone(o)) v = 0;
+    else {
+        Py_IncRef(o);
+        v = VRFunction<T>::create( "pyExecCall", boost::bind(VRPyBase::execPyCall<T>, o, PyTuple_New(1), _1) );
+    }
     return 1;
 }
 

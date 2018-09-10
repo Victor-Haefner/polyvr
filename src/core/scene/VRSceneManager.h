@@ -6,6 +6,7 @@
 #include "VRThreadManager.h"
 #include "VRCallbackManager.h"
 #include "core/networking/VRNetworkManager.h"
+#include "PolyVRFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -23,14 +24,16 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager, public 
         VRSignalPtr on_scene_close = 0;
         VRThreadCbPtr sceneUpdateCb;
 
-        VRSceneManager();
-        void operator= (VRSceneManager v);
-
         void searchExercisesAndFavorites();
 
     public:
-        static VRSceneManager* get();
+        VRSceneManager();
         ~VRSceneManager();
+
+        static VRSceneManagerPtr create();
+        static VRSceneManager* get();
+
+
 
         void setScene(VRScenePtr s);
         void newEmptyScene(string name);

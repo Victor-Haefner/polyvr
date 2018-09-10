@@ -18,6 +18,41 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+void checkGarbageCollection() { // for diagnostic purposes
+    auto gc = PyImport_ImportModule("gc");
+    string name = PyModule_GetName(gc);
+    cout << "Python checkGarbageColection, module " << name << endl;
+    auto gc_dict = PyModule_GetDict(gc);
+
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+
+    map<string, PyObject*> gc_members;
+    while (PyDict_Next(gc_dict, &pos, &key, &value)) {
+        //cout << " " << key << "  " << item << endl;
+        string key_name = PyString_AsString(key);
+        gc_members[key_name] = value;
+    }
+
+    auto exec = [&](string cb) {
+        auto pyFkt = gc_members[cb];
+        PyGILState_STATE gstate = PyGILState_Ensure();
+        if (PyErr_Occurred() != NULL) PyErr_Print();
+        PyObject* res = PyObject_CallObject(pyFkt, 0);
+        if (PyErr_Occurred() != NULL) PyErr_Print();
+        PyGILState_Release(gstate);
+        return res;
+    };
+
+    exec("collect");
+
+    auto garbage = gc_members["garbage"];
+    for (int i=0; i<PyList_Size(garbage); i++) {
+        PyObject* item = PyList_GetItem(garbage, i);
+
+    }
+}
+
 VRScriptManager::VRScriptManager() {
     initPyModules();
 
@@ -32,6 +67,9 @@ VRScriptManager::~VRScriptManager() {
     if (PyErr_Occurred() != NULL) PyErr_Print();
     //Py_XDECREF(pModBase);
     if (PyErr_Occurred() != NULL) PyErr_Print();
+    int N = Py_REFCNT(pModVR);
+    for (int i=0; i<N; i++) Py_DECREF(pModVR); // this destroys the VR module, helps with memory leaks :)
+    //checkGarbageCollection();
     PyErr_Clear();
     VRPyBase::err = 0;
     Py_Finalize();

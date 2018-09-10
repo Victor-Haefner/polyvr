@@ -4,6 +4,7 @@
 #include "VRVTK.h"
 #include "VRDXF.h"
 #include "VRIFC.h"
+#include "VRSTEPCascade.h"
 #include "STEP/VRSTEP.h"
 #include "E57/E57.h"
 #include "GIS/VRGDAL.h"
@@ -140,7 +141,10 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         if (ext == ".e57") { loadE57(path, res); return; }
         if (ext == ".xyz") { loadXYZ(path, res); return; }
         if (ext == ".ply") { loadPly(path, res); return; }
-        if (ext == ".stp") { VRSTEP step; step.load(path, res, options); return; }
+        //if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { VRSTEP step; step.load(path, res, options); return; }
+#ifdef WITH_STEP
+        if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { loadSTEPCascade(path, res); return; }
+#endif
         if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res, thread)) return; else preset = "OSG"; }
         if (ext == ".vtk") { loadVtk(path, res); return; }
         if (ext == ".shp") { loadSHP(path, res); return; }
