@@ -1,7 +1,10 @@
 #include "VRTrafficLights.h"
+#include "core/scene/VRScene.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/math/pose.h"
+
+#include <GL/glut.h>
 
 using namespace OSG;
 
@@ -54,9 +57,9 @@ VRTrafficLights::VRTrafficLights() {
         redOff->setDiffuse(Color3f(C,0,0));
         orangeOff->setDiffuse(Color3f(C,C,0));
         greenOff->setDiffuse(Color3f(0,C,0));
-        redOff->setLit(false);
-        orangeOff->setLit(false);
-        greenOff->setLit(false);
+        redOff->setLit(true);
+        orangeOff->setLit(true);
+        greenOff->setLit(true);
 
         redOn->setDiffuse(Color3f(1.0,0,0));
         orangeOn->setDiffuse(Color3f(1.0,1.0,0));
@@ -119,24 +122,36 @@ void VRTrafficLights::update() { // TODO, use time instead of counter!
     if (t1 > 120) { t1 = 0; t++; }
 
     auto orangeBlinking = [&](VRTrafficLightPtr& l) {
-        if (t ==  0) l->setState("010");
-        if (t == 30) l->setState("000");
+        if (t%6 < 3) l->setState("010");
+        if (t%6 >= 3) l->setState("000");
     };
 
     auto mainCycle = [&](VRTrafficLightPtr& l, int offset) {
         int a = (t+offset)%60;
-        if (a ==  0) l->setState("100");
+        if (a ==  0) l->setState("100"); //red|orange|green
         if (a == 30) l->setState("110");
         if (a == 34) l->setState("001");
         if (a == 56) l->setState("010");
     };
 
+    auto allOn = [&](VRTrafficLightPtr& l) {
+        l->setState("111");
+    };
+    auto allOff = [&](VRTrafficLightPtr& l) {
+        l->setState("000");
+    };
+
     for (auto& group : lights) {
         int offset = group.first;
         for (auto& l : group.second) {
+            //allOff(l);
+            //allOn(l);
             //orangeBlinking(l);
             mainCycle(l, offset);
         }
     }
+
+
+    //cout << "switched traffic light " << toString(t) << endl;
 }
 

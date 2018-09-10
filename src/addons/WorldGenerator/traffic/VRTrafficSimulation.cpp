@@ -1,4 +1,5 @@
 #include "VRTrafficSimulation.h"
+#include "VRTrafficLights.h"
 #include "../roads/VRRoad.h"
 #include "../roads/VRRoadNetwork.h"
 #include "../VRWorldGenerator.h"

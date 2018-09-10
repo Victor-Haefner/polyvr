@@ -554,9 +554,14 @@ VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d 
     VRTransformPtr geo = world.lock()->getAssetManager()->copy(asset, Pose::create());
     VRGeometryPtr red, orange, green;
     if (geo) {
-        red = dynamic_pointer_cast<VRGeometry>( geo->find("Red") );
-        orange = dynamic_pointer_cast<VRGeometry>( geo->find("Orange") );
-        green = dynamic_pointer_cast<VRGeometry>( geo->find("Green") );
+        red = dynamic_pointer_cast<VRGeometry>( geo->findFirst("red") );
+        orange = dynamic_pointer_cast<VRGeometry>( geo->findFirst("yellow") );
+        green = dynamic_pointer_cast<VRGeometry>( geo->findFirst("green") );
+        if (!red) {
+            red = dynamic_pointer_cast<VRGeometry>( geo->findFirst("Red") );
+            orange = dynamic_pointer_cast<VRGeometry>( geo->findFirst("Orange") );
+            green = dynamic_pointer_cast<VRGeometry>( geo->findFirst("Green") );
+        }
     } else {
         auto box = VRGeometry::create("trafficLight");
         box->setPrimitive("Box", "0.2 0.2 0.6 1 1 1");
