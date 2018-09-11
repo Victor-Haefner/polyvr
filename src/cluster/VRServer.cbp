@@ -69,6 +69,7 @@
 			<Add option="-lXmu" />
 			<Add option="-lXi" />
 			<Add option="-lboost_system" />
+			<Add option="-lboost_filesystem" />
 			<Add directory="/usr/lib/opensg" />
 		</Linker>
 		<Unit filename="VRServer.cpp" />

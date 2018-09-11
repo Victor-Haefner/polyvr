@@ -1,4 +1,9 @@
 #include <iostream>
+#include <boost/filesystem.hpp>
+
+#ifndef _WIN32
+#include <sys/resource.h>
+#endif
 
 #include <OpenSG/OSGGLUT.h>
 #include <OpenSG/OSGConfig.h>
@@ -13,6 +18,16 @@ using namespace OSG;
 GLUTWindowRefPtr    window;
 RenderActionRefPtr  ract;
 ClusterServer      *server;
+
+void enableCoreDumps() {
+    string file = boost::filesystem::current_path().string()+"/core";
+    remove(file.c_str()); // remove old coredump in current folder
+
+    struct rlimit corelim;
+    corelim.rlim_cur = -1;
+    corelim.rlim_max = -1;
+    if (setrlimit (RLIMIT_CORE, &corelim) != 0) cerr << "Couldn't set core limit\n";
+}
 
 bool doPrint() {
     static int t0 = 0;
@@ -129,6 +144,7 @@ int main(int argc, char **argv) {
     }
 
     // initialize Glut
+    enableCoreDumps();
     glutInit(&argc, argv);
     evalParams(argc, argv);
     if (active_stereo) glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL | GLUT_STEREO);
