@@ -182,6 +182,8 @@ class VRTrafficSimulation : public VRObject {
         void setSpeedmultiplier(float speedMultiplier);
         void showGraph();
         void hideGraph();
+        void showIntersections();
+        void hideIntersections();
         void showVehicVision();
         void hideVehicVision();
         void toggleLaneChanges();

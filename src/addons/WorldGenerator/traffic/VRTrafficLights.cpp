@@ -40,7 +40,8 @@ void VRTrafficLight::setState(string s) {
     state = s;
 }
 
-
+void VRTrafficLight::setUsingAsset(bool check) { isUsingAsset = check; }
+bool VRTrafficLight::getUsingAsset() { return isUsingAsset; }
 
 VRTrafficLights::VRTrafficLights() {
     redOff = VRMaterial::get("redOff");
@@ -86,6 +87,13 @@ void VRTrafficLights::addTrafficLight(VRTrafficLightPtr light) {
         Vec3d d1 = p1->up();
         Vec3d d2 = p2->up();
 
+        if (light->getUsingAsset()) {
+            p1 = l1->getWorldPose();
+            p2 = l2->getWorldPose();
+            d1 = p1->up();
+            d2 = p2->up();
+        }
+
         d1.normalize();
         d2.normalize();
 
@@ -104,7 +112,6 @@ void VRTrafficLights::addTrafficLight(VRTrafficLightPtr light) {
             return;
         }
     }
-
     // new group -> recompute keys
     lights[-1].push_back(light);
     map<int, vector<VRTrafficLightPtr> > newLights;
@@ -114,6 +121,20 @@ void VRTrafficLights::addTrafficLight(VRTrafficLightPtr light) {
         newLights[grp] = group.second;
     }
     lights = newLights;
+}
+
+vector<VRTrafficLightPtr> VRTrafficLights::getLights() {
+    vector<VRTrafficLightPtr> res;
+    for (auto& group : lights) {
+        for (auto& l : group.second) {
+            res.push_back(l);
+        }
+    }
+    return res;
+}
+
+map<int, vector<VRTrafficLightPtr>> VRTrafficLights::getMap() {
+    return lights;
 }
 
 void VRTrafficLights::update() { // TODO, use time instead of counter!
