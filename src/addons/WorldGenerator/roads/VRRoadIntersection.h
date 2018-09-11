@@ -65,6 +65,9 @@ class VRRoadIntersection : public VRRoadBase {
 
         void addRoad(VRRoadPtr road);
 
+        vector<VRTrafficLightPtr> getTrafficLights();
+        map<int, vector<VRTrafficLightPtr>> getTrafficLightMap();
+
         void update();
 };
 

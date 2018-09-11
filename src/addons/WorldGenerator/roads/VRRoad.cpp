@@ -51,10 +51,25 @@ bool VRRoad::hasMarkings() {
 }
 
 PosePtr VRRoad::getRightEdge(Vec3d pos) {
-    auto path = toPath(getEntity()->getEntity("path"), 16);
+    auto path = toPath(getEntity()->getEntity("path"), 12);
     float t = path->getClosestPoint(pos); // get nearest road path position to pos
     auto pose = path->getPose(t);
-    Vec3d p = pose->pos() + pose->x()*(getWidth()*0.5 + offsetIn);
+    float offsetter = 0.0;
+    if (t < 0.1) offsetter = offsetIn;
+    if (t > 0.9) offsetter = offsetOut;
+    Vec3d p = pose->pos() + pose->x()*(getWidth()*0.5 + offsetter);
+    pose->setPos(p);
+    return pose;
+}
+
+PosePtr VRRoad::getLeftEdge(Vec3d pos) {
+    auto path = toPath(getEntity()->getEntity("path"), 12);
+    float t = path->getClosestPoint(pos); // get nearest road path position to pos
+    auto pose = path->getPose(t);
+    float offsetter = 0.0;
+    if (t < 0.1) offsetter = offsetIn;
+    if (t > 0.9) offsetter = offsetOut;
+    Vec3d p = pose->pos() - pose->x()*(getWidth()*0.5 + offsetter);
     pose->setPos(p);
     return pose;
 }

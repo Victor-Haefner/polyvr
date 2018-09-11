@@ -553,6 +553,7 @@ VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d 
     float R = 0.05;
     VRTransformPtr geo = world.lock()->getAssetManager()->copy(asset, Pose::create());
     VRGeometryPtr red, orange, green;
+    bool checked = false;
     if (geo) {
         red = dynamic_pointer_cast<VRGeometry>( geo->findFirst("red") );
         orange = dynamic_pointer_cast<VRGeometry>( geo->findFirst("yellow") );
@@ -562,6 +563,13 @@ VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d 
             orange = dynamic_pointer_cast<VRGeometry>( geo->findFirst("Orange") );
             green = dynamic_pointer_cast<VRGeometry>( geo->findFirst("Green") );
         }
+        red->makeUnique();
+        orange->makeUnique();
+        green->makeUnique();
+        red->setColors(0);
+        orange->setColors(0);
+        green->setColors(0);
+        checked = true;
     } else {
         auto box = VRGeometry::create("trafficLight");
         box->setPrimitive("Box", "0.2 0.2 0.6 1 1 1");
@@ -587,6 +595,7 @@ VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d 
     light->addChild(geo);
     light->setupBulbs(red, orange, green);
     light->setEntity(signal);
+    light->setUsingAsset(checked);
     addChild(light);
     addChild(pole);
     return 0;
@@ -980,6 +989,18 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
     computeIntersectionPaths();
     computePatch();
     elevateRoadNodes();
+}
+
+vector<VRTrafficLightPtr> VRRoadIntersection::getTrafficLights(){
+    vector<VRTrafficLightPtr> res;
+    if (!system) return res;
+    return system->getLights();
+}
+
+map<int, vector<VRTrafficLightPtr>> VRRoadIntersection::getTrafficLightMap(){
+    map<int, vector<VRTrafficLightPtr>> res;
+    if (!system) return res;
+    return system->getMap();
 }
 
 void VRRoadIntersection::update() {

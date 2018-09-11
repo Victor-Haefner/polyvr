@@ -46,6 +46,7 @@ class VRRoad : public VRRoadBase {
         void computeMarkings();
         bool hasMarkings();
         PosePtr getRightEdge(Vec3d pos);
+        PosePtr getLeftEdge(Vec3d pos);
         vector<VRRoadPtr> splitAtIntersections(VRRoadNetworkPtr network);
 
         PosePtr getPosition(float t);
