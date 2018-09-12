@@ -204,7 +204,7 @@ void VRView::setDecorators() {//set decorators, only if projection true
     }
 
     if (projection && !stereo) {
-        cout << "\nset single projection decorator";
+        //cout << "\nset single projection decorator";
         PCDecoratorLeft = ProjectionCameraDecorator::create();
         PCDecoratorLeft->setLeftEye(true);
         PCDecoratorLeft->setEyeSeparation(0);
@@ -219,7 +219,7 @@ void VRView::setDecorators() {//set decorators, only if projection true
 
     // stereo
 
-    cout << "\nset projection decorators";
+    //cout << "\nset projection decorators";
     PCDecoratorLeft = ProjectionCameraDecorator::create();
     PCDecoratorRight = ProjectionCameraDecorator::create();
 

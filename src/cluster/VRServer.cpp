@@ -59,10 +59,17 @@ void display() {
     try {
         server->render(ract);
         Thread::getCurrentChangeList()->clear();
+    }
 
-    } catch(OSG_STDEXCEPTION_NAMESPACE::exception &e) {
+    catch(OSG_STDEXCEPTION_NAMESPACE::exception &e) {
         SLOG << e.what() << endLog;
+        window->clearPorts();
+        server->stop();
+        server->start();
+    }
 
+    catch ( ... ) {
+        SLOG << "ERROR, unknown error thrown in display()" << endLog;
         window->clearPorts();
         server->stop();
         server->start();
@@ -187,3 +194,6 @@ int main(int argc, char **argv) {
 
     return 0;
 }
+
+
+
