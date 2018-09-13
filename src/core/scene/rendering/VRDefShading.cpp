@@ -277,9 +277,12 @@ void VRDefShading::updateLight(VRLightPtr l) {
 
     auto tex = l->getPhotometricMap();
     if (tex) {
-        dsStage->editMFPhotometricMaps();
-        li.texChunk->setImage(tex->getImage());
-        li.texChunk->setInternalFormat(tex->getInternalFormat());
+        auto img = tex->getImage();
+        if (img != li.texChunk->getImage()) {
+            dsStage->editMFPhotometricMaps();
+            li.texChunk->setImage(img);
+            li.texChunk->setInternalFormat(tex->getInternalFormat());
+        }
     }
 }
 
