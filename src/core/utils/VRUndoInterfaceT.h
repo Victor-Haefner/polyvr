@@ -4,6 +4,7 @@
 #include "VRUndoInterface.h"
 #include "VRFunction.h"
 #include "core/tools/VRUndoManager.h"
+#include <boost/bind.hpp>
 
 template<class O>
 void OSG_VRUndoInterface_valid(std::weak_ptr<O> o, bool& b) {

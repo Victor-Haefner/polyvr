@@ -50,7 +50,7 @@ void CSGGeometry::setCSGGeometry(CGALPolyhedron* p) {
 CGALPolyhedron* CSGGeometry::getCSGGeometry() {
     if (!polyhedron) {
         bool success;
-        polyhedron = toPolyhedron(getWorldPose(), success);
+        polyhedron = toPolyhedron(ptr(), getWorldPose(), success);
     }
 	return polyhedron;
 }

@@ -1,22 +1,20 @@
 #include "VRObject.h"
-#include "../VRTransform.h"
-#include "../OSGObject.h"
 #include "OSGCore.h"
-#include "VRObjectT.h"
-#include "VRAttachment.h"
+#include "../OSGObject.h"
+#include "../VRTransform.h"
+
 #include "core/math/pose.h"
 #include "core/math/boundingbox.h"
-#include <OpenSG/OSGNameAttachment.h>
-#include <OpenSG/OSGGroup.h>
-#include <OpenSG/OSGTransform.h>
-#include <OpenSG/OSGVisitSubTree.h>
 #include "core/utils/VRGlobals.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRUndoInterfaceT.h"
 #include "core/utils/VRStorage_template.h"
-#include "addons/Semantics/Reasoning/VREntity.h"
-#include <libxml++/nodes/element.h>
+
+#include <OpenSG/OSGGroup.h>
+#include <OpenSG/OSGTransform.h>
+#include <OpenSG/OSGNameAttachment.h>
+#include <OpenSG/OSGVisitSubTree.h>
 
 using namespace OSG;
 
@@ -29,9 +27,7 @@ VRObject::VRObject(string _name) {
 
     setName(_name);
 
-    osg = shared_ptr<OSGObject>( new OSGObject() );
-
-    osg->node = makeNodeFor(Group::create());
+    osg = OSGObject::create( makeNodeFor( Group::create() ) );
     OSG::setName(osg->node, name);
     type = "Object";
 
@@ -217,10 +213,8 @@ void VRObject::setCore(OSGCorePtr c, string _type, bool force) {
     specialized = true;
 }
 
-/** Returns the object OSG core **/
 OSGCorePtr VRObject::getCore() { return core; }
 
-/** Switch the object core by another **/
 void VRObject::switchCore(OSGCorePtr c) {
     if(!specialized) return;
     osg->node->setCore(c->core);
@@ -230,7 +224,6 @@ void VRObject::switchCore(OSGCorePtr c) {
 void VRObject::disableCore() { osg->node->setCore( Group::create() ); }
 void VRObject::enableCore() { osg->node->setCore( core->core ); }
 
-/** Returns the object OSG node **/
 OSGObjectPtr VRObject::getNode() { return osg; }
 
 void VRObject::setSiblingPosition(int i) {
@@ -292,7 +285,6 @@ void VRObject::switchParent(VRObjectPtr new_p, int place) {
     new_p->addChild(ptr(), true, place);
 }
 
-/** Returns the number of children **/
 size_t VRObject::getChildrenCount() { return children.size(); }
 
 void VRObject::clearChildren() {
@@ -445,7 +437,6 @@ vector<VRObjectPtr> VRObject::filterByType(string Type, vector<VRObjectPtr> res)
     return res;
 }
 
-/** Returns the first ancestor that is pickable, || 0 if none found **/
 VRObjectPtr VRObject::findPickableAncestor() {
     if (pickable == -1) return 0;
     if (isPickable()) return ptr();
@@ -459,7 +450,6 @@ bool VRObject::hasGraphChanged() {
     return getParent()->hasGraphChanged();
 }
 
-/** Returns the Boundingbox of the OSG Node */
 BoundingboxPtr VRObject::getBoundingbox() {
     Pnt3f p1, p2;
     commitChanges();
@@ -487,7 +477,6 @@ void VRObject::flattenHiarchy() {
     }
 }
 
-/** Print to console the scene subgraph starting at ptr() object **/
 void VRObject::printTree(int indent) {
     if(indent == 0) cout << "\nPrint Tree : ";
 
@@ -535,7 +524,6 @@ void VRObject::printOSGTree(OSGObjectPtr o, string indent) {
     }
 }
 
-/** duplicate ptr() object **/
 VRObjectPtr VRObject::duplicate(bool anchor, bool subgraph) {
     vector<VRObjectPtr> children;
 
@@ -566,7 +554,6 @@ int VRObject::findChild(VRObjectPtr node) {
     return -1;
 }
 
-/** Hide/show the object and all his subgraph **/
 void VRObject::hide(string mode) { setVisible(false, mode); }
 void VRObject::show(string mode) { setVisible(true, mode); }
 
@@ -588,13 +575,11 @@ int getVisibleMaskBit(const string& mode) {
     return 0;
 }
 
-/** Returns if object is visible or not **/
 bool VRObject::isVisible(string mode) {
     int b = getVisibleMaskBit(mode);
     return getBit(visibleMask, b);
 }
 
-/** Set the visibility **/
 void VRObject::setVisible(bool b, string mode) {
     int bit = getVisibleMaskBit(mode);
     if (getBit(visibleMask, bit) == b) return;
@@ -616,13 +601,10 @@ void VRObject::setVisibleMask(unsigned int mask) {
     setTravMask(osgMask);
 }
 
-/** toggle visibility **/
 void VRObject::toggleVisible(string mode) { setVisible(!isVisible(mode), mode); }
 
-/** Returns if ptr() object is pickable || not **/
 bool VRObject::isPickable() { return pickable == 1; }
 
-/** Set the object pickable || not **/
 void VRObject::setPickable(int b) { if (hasTag("transform")) pickable = b; } //TODO: check if the if is necessary!
 
 string VRObject::getPath() {
