@@ -17,7 +17,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/OSGMaterial.h"
 #include "core/objects/material/VRTexture.h"
-#include "core/objects/geometry/VRSprite.h"
+#include "core/objects/geometry/sprite/VRSprite.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
 #include "core/objects/OSGCamera.h"

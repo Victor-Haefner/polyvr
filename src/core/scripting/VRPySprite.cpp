@@ -13,6 +13,7 @@ PyMethodDef VRPySprite::methods[] = {
     {"setSize", PyWrap(Sprite, setSize, "Set sprite size.", void, float, float ) },
     {"setTexture", PyWrap(Sprite, setTexture, "Set sprite texture", void, string) },
     {"webOpen", PyWrap(Sprite, webOpen, "Open and display a website - webOpen(str uri, int width, flt ratio)", void, string, int, float) },
+    {"showResizeTool", PyWrap(Sprite, showResizeTool, "Show handles to resize the sprite in 3D", void, bool) },
     {"convertToCloth", PyWrap(Sprite, convertToCloth, "convert this Sprite to cloth (softbody)", void) },
     {NULL}  /* Sentinel */
 };

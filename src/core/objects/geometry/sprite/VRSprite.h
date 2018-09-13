@@ -1,7 +1,7 @@
 #ifndef OSGPANEL_H_INCLUDED
 #define OSGPANEL_H_INCLUDED
 
-#include "VRGeometry.h"
+#include "core/objects/geometry/VRGeometry.h"
 #include <OpenSG/OSGColor.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -17,6 +17,7 @@ class VRSprite : public VRGeometry {
         float width;
         float height;
         string label;
+        VRSpriteResizeToolPtr resizeTool;
         shared_ptr<CEF> web;
 
         void updateGeo();
@@ -39,6 +40,7 @@ class VRSprite : public VRGeometry {
         Vec2d getSize();
         string getLabel();
 
+        void showResizeTool(bool b);
         void convertToCloth();
 };
 

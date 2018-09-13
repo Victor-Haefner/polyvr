@@ -1,5 +1,6 @@
 #include "VRSprite.h"
 
+#include "VRSpriteResizeTool.h"
 #include "core/tools/VRText.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/OSGGeometry.h"
@@ -93,6 +94,17 @@ void VRSprite::setSize(float w, float h) {
     width = w;
     height = h;
     updateGeo();
+}
+
+void VRSprite::showResizeTool(bool b) {
+    if (!b && resizeTool) resizeTool->hide();
+    if (b) {
+        if (!resizeTool) {
+            resizeTool = VRSpriteResizeTool::create( ptr() );
+            addChild(resizeTool);
+        }
+        resizeTool->show();
+    }
 }
 
 void VRSprite::convertToCloth() {

@@ -16,7 +16,7 @@
 
 #include "core/tools/VRTextureRenderer.h"
 #include "core/math/pose.h"
-#include "core/objects/geometry/VRSprite.h"
+#include "core/objects/geometry/sprite/VRSprite.h"
 
 #include <OpenSG/OSGQuaternion.h>
 #include <random>
