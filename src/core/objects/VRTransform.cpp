@@ -1,30 +1,27 @@
 #include "VRTransform.h"
+#include "core/math/pose.h"
+#include "core/math/path.h"
 #include "core/utils/isNan.h"
 #include "core/utils/toString.h"
-#include "core/utils/VRStorage_template.h"
-#include "core/scene/VRScene.h"
-#include "core/objects/object/OSGCore.h"
-#include "core/objects/geometry/VRConstraint.h"
-#include "core/utils/VRUndoInterfaceT.h"
-#include "core/utils/VRDoublebuffer.h"
+#include "core/utils/VRFunction.h"
 #include "core/utils/VRGlobals.h"
-#include "core/utils/VRRate.h"
-#include "core/scene/VRAnimationManagerT.h"
-#include "core/scene/VRSpaceWarper.h"
-#include "core/math/pose.h"
-#include "geometry/VRGeometry.h"
-#include "geometry/OSGGeometry.h"
-#include "geometry/VRPhysics.h"
-#include "core/math/path.h"
-#include "core/objects/OSGObject.h"
+#include "core/utils/VRStorage_template.h"
+#include "core/utils/VRUndoInterfaceT.h"
 #include "core/objects/OSGTransform.h"
+#include "core/objects/OSGObject.h"
+#include "core/objects/object/OSGCore.h"
+#include "core/objects/geometry/OSGGeometry.h"
+#include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/VRConstraint.h"
+#include "core/objects/geometry/VRPhysics.h"
+#include "core/scene/VRScene.h"
+#include "core/scene/VRSpaceWarper.h"
 
-#include <OpenSG/OSGTransform.h>
-#include <OpenSG/OSGQuaternion.h>
-#include <OpenSG/OSGSimpleSHLChunk.h>
+#include <boost/bind.hpp>
+#include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGChunkMaterial.h>
 #include <OpenSG/OSGDepthChunk.h>
-#include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
+#include <OpenSG/OSGSimpleSHLChunk.h>
 
 template<> string typeName(const OSG::VRTransformPtr& t) { return "Transform"; }
 
@@ -189,11 +186,11 @@ void VRTransform::initTranslator() { // TODO
     "   gl_FrontColor = gl_Color;"
     "}";
 
-    /*string shdr_fp =
-    "void main( void ) {"
-    "   gl_Position = gl_ModelViewProjectionMatrix4d*gl_Vertex;"
-    "   gl_Position.z = -0.1;"
-    "}";*/
+    //string shdr_fp =
+    //"void main( void ) {"
+    //"   gl_Position = gl_ModelViewProjectionMatrix4d*gl_Vertex;"
+    //"   gl_Position.z = -0.1;"
+    //"}";
 
     ChunkMaterialMTRecPtr mat = ChunkMaterial::create();
     mat->setSortKey(100);// render last
@@ -280,7 +277,6 @@ Matrix4d VRTransform::getRelativeMatrix(VRObjectPtr o, bool parentOnly) {
 
 PosePtr VRTransform::getRelativePose(VRObjectPtr o, bool parentOnly) { return Pose::create( getRelativeMatrix(o,parentOnly) ); }
 
-/** Returns the world Matrix4d **/
 void VRTransform::getWorldMatrix(Matrix4d& M, bool parentOnly) {
     VRTransformPtr t = 0;
     M.setIdentity();
@@ -305,21 +301,18 @@ Matrix4d VRTransform::getWorldMatrix(bool parentOnly) {
     return m;
 }
 
-/** Returns the world Position **/
 Vec3d VRTransform::getWorldPosition(bool parentOnly) {
     Matrix4d m;
     getWorldMatrix(m, parentOnly);
     return Vec3d(m[3]);
 }
 
-/** Returns the world direction vector (not normalized) **/
 Vec3d VRTransform::getWorldDirection(bool parentOnly) {
     Matrix4d m;
     getWorldMatrix(m, parentOnly);
     return -Vec3d(m[2]);
 }
 
-/** Returns the world direction vector (not normalized) **/
 Vec3d VRTransform::getWorldUp(bool parentOnly) {
     Matrix4d m;
     getWorldMatrix(m, parentOnly);
@@ -341,7 +334,6 @@ void VRTransform::updateTransform(VRTransformPtr t) {
     setMatrix(t->getMatrix()); // TODO: may need world matrix here
 }
 
-/** Set the world Matrix4d of the object **/
 void VRTransform::setWorldMatrix(Matrix4d m) {
     if (isNan(m)) return;
     Matrix4d wm = getWorldMatrix(true);
@@ -388,7 +380,6 @@ void VRTransform::setRelativeUp(Vec3d up, VRObjectPtr o) {
     setRelativePose(p,o);
 }
 
-/** Set the world position of the object **/
 void VRTransform::setWorldPosition(Vec3d pos) {
     if (isNan(pos)) return;
 
@@ -401,7 +392,6 @@ void VRTransform::setWorldPosition(Vec3d pos) {
     setFrom( Vec3d(wm[3]) );
 }
 
-/** Set the world position of the object **/
 void VRTransform::setWorldOrientation(Vec3d dir, Vec3d up) {
     if (isNan(dir)) return;
 
@@ -437,7 +427,6 @@ void VRTransform::setWorldAt(Vec3d at) {
 }
 
 //local pose setter--------------------
-/** Set the from vector **/
 void VRTransform::setFrom(Vec3d pos) {
     if (isNan(pos)) return;
     _from = pos;
@@ -446,7 +435,6 @@ void VRTransform::setFrom(Vec3d pos) {
     reg_change();
 }
 
-/** Set the at vector **/
 void VRTransform::setAt(Vec3d at) {
     if (isNan(at)) return;
     _at = at;
@@ -455,7 +443,6 @@ void VRTransform::setAt(Vec3d at) {
     reg_change();
 }
 
-/** Set the up vector **/
 void VRTransform::setUp(Vec3d up) {
     if (isNan(up)) return;
     _up = up;
@@ -473,7 +460,6 @@ void VRTransform::setDir(Vec3d dir) {
 int VRTransform::get_orientation_mode() { return orientation_mode; }
 void VRTransform::set_orientation_mode(int b) { orientation_mode = b; }
 
-/** Set the orientation of the object with the at and up vectors **/
 void VRTransform::setOrientation(Vec3d at, Vec3d up) {
     if (isNan(at) || isNan(up)) return;
     _at = at;
@@ -495,13 +481,12 @@ PosePtr VRTransform::getPose() { return Pose::create(Vec3d(_from), Vec3d(_dir), 
 PosePtr VRTransform::getWorldPose() { return Pose::create( getWorldMatrix() ); }
 void VRTransform::setWorldPose(PosePtr p) { setWorldMatrix(p->asMatrix()); }
 
-/** Set the local Matrix4d **/
 void VRTransform::setMatrix(Matrix4d m) {
     if (isNan(m)) return;
 
-    /*float s1 = Vec3d(_m[0][0], _m[1][0], _m[2][0]).length();
-    float s2 = Vec3d(_m[0][1], _m[1][1], _m[2][1]).length();
-    float s3 = Vec3d(_m[0][2], _m[1][2], _m[2][2]).length();*/
+    //float s1 = Vec3d(_m[0][0], _m[1][0], _m[2][0]).length();
+    //float s2 = Vec3d(_m[0][1], _m[1][1], _m[2][1]).length();
+    //float s3 = Vec3d(_m[0][2], _m[1][2], _m[2][2]).length();
 
     float s1 = m[0].length(); //TODO: check if this is fine
     float s2 = m[1].length();
@@ -518,7 +503,6 @@ void VRTransform::showCoordAxis(bool b) {
     else coords->node->setTravMask(0);
 }
 
-/** Set the scale of the object, not implemented **/
 void VRTransform::setScale(float s) { setScale(Vec3d(s,s,s)); }
 
 void VRTransform::setScale(Vec3d s) {
@@ -578,7 +562,6 @@ void VRTransform::rotateUp(float a) {//rotate the _up axis
     reg_change();
 }
 
-        /** Rotate the object around its x axis **/
 void VRTransform::rotateX(float a) {//rotate around x axis
     if (isNan(a)) return;
     Vec3d d = _dir.cross(_up);
@@ -590,7 +573,6 @@ void VRTransform::rotateX(float a) {//rotate around x axis
     reg_change();
 }
 
-/** Rotate the object around the point where at indicates && the up axis **/
 void VRTransform::rotateAround(float a, Vec3d v) {//rotate around focus using up axis
     if (isNan(a)) return;
     orientation_mode = OM_AT;
@@ -604,7 +586,6 @@ void VRTransform::rotateYonZ() {
     rotate(Pi*0.5, Vec3d(1,0,0));
 }
 
-/** translate the object with a vector v, this changes the from && at vector **/
 void VRTransform::translate(Vec3d v) {
     if (isNan(v)) return;
     _at += Vec3d(v);
@@ -612,14 +593,12 @@ void VRTransform::translate(Vec3d v) {
     reg_change();
 }
 
-/** translate the object by changing the from in direction of the at vector **/
 void VRTransform::zoom(float d) {
     if (isNan(d)) return;
     setFrom(_from + _dir*d);
     reg_change();
 }
 
-/** Translate the object towards at **/
 void VRTransform::move(float d) {
     if (isNan(d)) return;
     Vec3d dv = _dir;
@@ -627,7 +606,6 @@ void VRTransform::move(float d) {
     translate(Vec3d(dv*d));
 }
 
-/** Drag the object with another **/
 void VRTransform::drag(VRTransformPtr new_parent) {
     if (held) return;
     held = true;
@@ -651,7 +629,6 @@ void VRTransform::drag(VRTransformPtr new_parent) {
     updateChange();
 }
 
-/** Drop the object, this returns the object at its old place in hirarchy **/
 void VRTransform::drop() {
     if (!held) return;
     held = false;
@@ -684,7 +661,7 @@ void VRTransform::rebaseDrag(VRObjectPtr new_parent) {
 bool VRTransform::isDragged() { return held; }
 VRObjectPtr VRTransform::getDragParent() { return old_parent.lock(); }
 
-/** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
+// Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults
 Line VRTransform::castRay(VRObjectPtr obj, Vec3d dir) { // TODO: check what this is doing exactly and simplify!
     Matrix4d m = getWorldMatrix();
     if (obj) obj = obj->getParent();
@@ -713,7 +690,6 @@ VRIntersection VRTransform::intersect(VRObjectPtr obj, Vec3d dir) {
     return in.intersect(obj, false, ptr(), dir);
 }
 
-/** Print the position of the object in local && world coords **/
 void VRTransform::printPos() {
     Matrix4d wm, wm_osg, lm;
     getWorldMatrix(wm);
@@ -722,7 +698,6 @@ void VRTransform::printPos() {
     cout << "Position of " << getName() << ", local: " << Vec3d(lm[3]) << ", world: " << Vec3d(wm[3]) << "  " << Vec3d(wm_osg[3]);
 }
 
-/** Print the positions of all the subtree **/
 void VRTransform::printTransformationTree(int indent) {
     if (indent == 0) cout << "\nPrint Transformation Tree : ";
 
@@ -773,7 +748,6 @@ void VRTransform::detachJoint(VRTransformPtr b) { // TODO, remove joints
 
 VRConstraintPtr VRTransform::getConstraint() { setConstraint(constraint); return constraint; }
 
-/** enable constraints on the object, 0 leaves the DOF free, 1 restricts it **/
 void VRTransform::apply_constraints(bool force) { // TODO: check efficiency
     if (!constraint && aJoints.size() == 0) return;
     if (!checkWorldChange() && !force) return;
@@ -824,7 +798,6 @@ void VRTransform::setConvexDecompositionParameters(float cw, float vw, float nc,
     getPhysics()->setConvexDecompositionParameters(cw, vw, nc, nv, c, aedp, andp, afp);
 }
 
-/** Update the object OSG transformation **/
 void VRTransform::updateChange() {
     apply_constraints();
     if (held) updatePhysics();

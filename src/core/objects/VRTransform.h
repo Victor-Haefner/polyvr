@@ -166,7 +166,7 @@ class VRTransform : public VRObject {
         VRObjectPtr getDragParent();
         bool isDragged();
 
-        /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
+        // Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults
         Line castRay(VRObjectPtr obj = 0, Vec3d dir = Vec3d(0,0,-1));
         VRIntersection intersect(VRObjectPtr obj, Vec3d dir = Vec3d(0,0,-1));
 
@@ -182,14 +182,12 @@ class VRTransform : public VRObject {
         void setConstraint(VRConstraintPtr c);
         VRConstraintPtr getConstraint();
 
-        /** enable constraints on the object when dragged, 0 leaves the dof free, 1 restricts it **/
         void apply_constraints(bool force = false);
         static void updateConstraints();
         void attach(VRTransformPtr a, VRConstraintPtr c, VRConstraintPtr s = 0);
         void detachJoint(VRTransformPtr a);
         Vec3d getConstraintAngleWith(VRTransformPtr t, bool rotationOrPosition);
 
-        /** Set the physics object **/
         VRPhysics* getPhysics();
         void resolvePhysics();
         void updateFromBullet();
@@ -197,10 +195,7 @@ class VRTransform : public VRObject {
 
         vector<VRCollision> getCollisions();
 
-        /** Do not update the transform in the physics context for the next frame **/
         void setNoBltFlag();
-
-        /** Update the object OSG transformation **/
         virtual void updateChange();
         void setup();
 
