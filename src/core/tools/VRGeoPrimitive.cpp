@@ -107,40 +107,40 @@ void VRGeoPrimitive::setupHandles() {
         if (n == "Rings") continue;
         if (n == "Number of teeth") continue;
 
-        auto h = VRHandle::create(n);
-        h->setPersistency(0);
-        handles.push_back(h);
-        geo->addChild(h);
-
         auto cb = VRFunction<float>::create( "geo_prim_update", boost::bind(&VRGeoPrimitive::update, this, i, _1) );
 
-        if (n == "Scale") h->configure(cb, VRHandle::LINEAR, Vec3d(1,0,0), 1, true);
-        if (n == "Size x") h->configure(cb, VRHandle::LINEAR, Vec3d(1,0,0), 0.5, true);
-        if (n == "Size y") h->configure(cb, VRHandle::LINEAR, Vec3d(0,1,0), 0.5, true);
-        if (n == "Size z") h->configure(cb, VRHandle::LINEAR, Vec3d(0,0,1), 0.5, true);
-        if (n == "Radius") h->configure(cb, VRHandle::LINEAR, Vec3d(1,0,0), 1, true);
-        if (n == "Height") {
-            h->configure(cb, VRHandle::LINEAR, Vec3d(0,1,0), 0.5, true);
-            if (type == "Arrow") h->configure(cb, VRHandle::LINEAR, Vec3d(0,0,1), 1, true);
-        }
-        if (n == "Width") h->configure(cb, VRHandle::LINEAR, Vec3d(1,0,0), 0.5, true);
-        if (n == "Trunc") h->configure(cb, VRHandle::LINEAR, Vec3d(1,0,0), 0.5, true);
-        if (n == "Hat") h->configure(cb, VRHandle::LINEAR, Vec3d(0,0,1), 1, true);
-        if (n == "Inner radius") h->configure(cb, VRHandle::LINEAR, Vec3d(0,1,0), 1, true);
-        if (n == "Outer radius") h->configure(cb, VRHandle::LINEAR, Vec3d(1,0,0), 0.5, true);
+        auto addHandle = [&](Vec3d d, float L) {
+            auto h = VRHandle::create(n);
+            h->setPersistency(0);
+            handles.push_back(h);
+            geo->addChild(h);
+            h->configure(cb, VRHandle::LINEAR, d, L, false);
 
-        if (n == "Hole") h->configure(cb, VRHandle::LINEAR, Vec3d(1,0,0), 1, true);
-        if (n == "Pitch") h->configure(cb, VRHandle::LINEAR, Vec3d(0,0,1), 2, true);
-        if (n == "Teeth size") h->configure(cb, VRHandle::LINEAR, Vec3d(0,1,0), 1, true);
-        if (n == "Bevel") h->configure(cb, VRHandle::LINEAR, Vec3d(1,1,0), 1, true);
-        if (n == "Length") h->configure(cb, VRHandle::LINEAR, Vec3d(0,0,1), 1, true);
+            float v = toFloat(param);
+            h->set( Pose::create(), v );
+            string lbl = h->getBaseName() + " " + toString( v*1000, 4 ) + " mm";
+            auto a = h->getAxis();
+            auto o = h->getOrigin()->pos();
+            params_geo->set(i, (a*v*0.5 + o)*0.5, lbl);
+        };
 
-        float v = toFloat(param);
-        h->set( Pose::create(), v );
-        string lbl = h->getBaseName() + " " + toString( v*1000, 4 ) + " mm";
-        auto a = h->getAxis();
-        auto o = h->getOrigin()->pos();
-        params_geo->set(i, (a*v*0.5 + o)*0.5, lbl);
+        if (n == "Scale") addHandle(Vec3d(1,0,0), 1);
+        if (n == "Size x") addHandle(Vec3d(1,0,0), 0.5);
+        if (n == "Size y") addHandle(Vec3d(0,1,0), 0.5);
+        if (n == "Size z") addHandle(Vec3d(0,0,1), 0.5);
+        if (n == "Radius") addHandle(Vec3d(1,0,0), 1);
+        if (n == "Height" && type != "Arrow") addHandle(Vec3d(0,1,0), 0.5);
+        if (n == "Height" && type == "Arrow") addHandle(Vec3d(0,0,1), 1);
+        if (n == "Width") addHandle(Vec3d(1,0,0), 0.5);
+        if (n == "Trunc") addHandle(Vec3d(1,0,0), 0.5);
+        if (n == "Hat") addHandle(Vec3d(0,0,1), 1);
+        if (n == "Inner radius") addHandle(Vec3d(0,1,0), 1);
+        if (n == "Outer radius") addHandle(Vec3d(1,0,0), 0.5);
+        if (n == "Hole") addHandle(Vec3d(1,0,0), 1);
+        if (n == "Pitch") addHandle(Vec3d(0,0,1), 2);
+        if (n == "Teeth size") addHandle(Vec3d(0,1,0), 1);
+        if (n == "Bevel") addHandle(Vec3d(1,1,0), 1);
+        if (n == "Length") addHandle(Vec3d(0,0,1), 1);
     }
 }
 
