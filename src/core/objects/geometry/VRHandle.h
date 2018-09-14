@@ -27,14 +27,17 @@ class VRHandle : public VRGeometry {
         PosePtr origin;
         TYPE constraint = LINEAR;
 
+        vector<VRHandleWeakPtr> siblings;
+
     public:
         VRHandle(string name);
 
         static VRHandlePtr create(string name = "handle");
         VRHandlePtr ptr();
 
-        void updateHandle();
-        void configure(VRAnimCbPtr cb, TYPE t, Vec3d n, float scale, bool symmetric);
+        void updateHandle(bool su = false);
+        void configure(VRAnimCbPtr cb, TYPE t, Vec3d n, float scale);
+        void addSibling(VRHandlePtr cb);
         void set(PosePtr p, float v);
 
         Vec3d getAxis();

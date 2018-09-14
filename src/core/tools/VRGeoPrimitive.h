@@ -18,7 +18,7 @@ class VRGeoPrimitive : public VRTransform {
         VRGeometryWeakPtr geometry;
         VRAnnotationEnginePtr params_geo;
 
-        void update(int i, float v);
+        void update(int i, VRHandleWeakPtr hw, float v);
         void setupHandles();
 
     public:
