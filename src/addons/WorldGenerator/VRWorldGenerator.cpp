@@ -381,7 +381,18 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 
         for (auto tag : way->tags) {
             if (tag.first == "highway") {
-                if (tag.second == "footway") { addRoad(way, tag.second, 1, true); continue; }
+                if (tag.second == "footway") {
+                    bool addedFootway = false;
+                    /*for (auto tag : way->tags) {
+                        if (!addedFootway && ( (tag.first == "crossing" && tag.second == "zebra") || (tag.first == "footway" && tag.second == "crossing")) ) {
+                            addRoad(way, "crossing", 3, true);
+                            addedFootway = true;
+                            continue;
+                        }
+                    }*/
+                    if (!addedFootway) { addRoad(way, tag.second, 1, true); }
+                    continue;
+                }
                 addRoad(way, tag.second, 4, false); // default road
                 continue;
             }
@@ -464,10 +475,12 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             }
 
             if (startswith(tag.first, "traffic_signals")) {
+                cout << " VRWorldGenerator::processOSMMap tr_signal " << endl;
                 for (auto way : node->ways) {
                     if (!RoadEntities.count(way)) continue;
                     auto road = RoadEntities[node->ways[0]];
                     road->addTrafficLight(pos);
+                    cout << "    VRWorldGenerator::processOSMMap " <<toString(road->getID()) << endl;
                 }
             }
 

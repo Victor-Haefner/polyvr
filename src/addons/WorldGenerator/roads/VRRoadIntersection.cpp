@@ -23,9 +23,12 @@ VRRoadIntersection::~VRRoadIntersection() {}
 
 VRRoadIntersectionPtr VRRoadIntersection::create() {
     auto i = VRRoadIntersectionPtr( new VRRoadIntersection() );
+    i->setPtr(i);
     i->hide("SHADOW");
     return i;
 }
+
+void VRRoadIntersection::setPtr(VRRoadIntersectionPtr i) { isecPtr = i; }
 
 void VRRoadIntersection::computeLanes(GraphPtr graph) {
     auto w = world.lock();
@@ -87,6 +90,26 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             }
             if (Nin == 1 || Nout == 1) return true;
             return true;
+        };
+
+        auto checkCrossingMatch = [&](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut, VRRoadPtr road1, VRRoadPtr road2) {
+            string type1 = "road";
+            string type2 = "road";
+            if (auto t1 = road1->getEntity()->get("type")) type1 = t1->value;
+            if (auto t2 = road2->getEntity()->get("type")) type2 = t2->value;
+            if (type1 != type2) return false;
+
+            if (Nout == Nin && i == j) return true;
+	        //if (Nout > Nin && i == j-1) return true;
+	        //if (Nout > Nin && i< Nin/2 && j< Nout/2 && i == Nout-j-1) return true; // TODO
+            //if (Nout > Nin && i>= Nin/2 && j> Nout/2 && i == j) return true;
+            if (Nout > Nin && reSignIn<0 && i == j) return true;
+            if (Nout > Nin && reSignIn>0 && i == j-1) return true;
+	        if (Nout < Nin && Nin-i-1 == j) return true; // TODO
+            //if (Nin == Nout && i != j && reSignIn != reSignOut) return false;
+            //if (Nin == Nout && i != Nout-j-1 && reSignIn == reSignOut) return false;
+            //if (Nin == 1 || Nout == 1) return true;
+            return false;
         };
 
 	    auto checkContinuationMatch = [](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut) {
@@ -161,6 +184,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                         switch (type) {
                             case CONTINUATION: match = checkContinuationMatch(i,j,Nin, Nout, reSign1, reSign2); break;
                             case FORK: match = checkForkMatch(i,j,Nin, Nout, reSign1, reSign2, road1, road2); break;
+                            case CROSSING: match = checkCrossingMatch(i,j,Nin, Nout, reSign1, reSign2, road1, road2); break;
                             //case MERGE: break;
                             //case UPLINK: break;
                             default: match = checkDefaultMatch(i,j,Nin, Nout, reSign1, reSign2, road1, road2); break;
@@ -303,7 +327,69 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
         }
 	};
 
+    auto checkForCrossings = [&]() {
+        //cout << "  checkForCrossings" << endl;
+
+        function<bool (VRRoadPtr, VRRoadIntersectionPtr, VRRoadIntersectionPtr)> recSearch = [&](VRRoadPtr nRoad, VRRoadIntersectionPtr lastIntersec, VRRoadIntersectionPtr firstIntersec) {
+            Vec3d oldPos = lastIntersec->entity->getEntity("node")->getVec3("position");
+            Vec3d thisPos = firstIntersec->entity->getEntity("node")->getVec3("position");
+            //cout << toString((oldPos-thisPos).length()) << endl;
+            if ((oldPos-thisPos).length() > 30) return false;
+            for (auto is : nRoad->getIntersections()) {
+                if (is != lastIntersec) {
+                    auto type = is->getEntity()->get("type")->value;
+                    //cout << type << endl;
+                    if (type == "crossing") { firstIntersec->crossingRoadsPos.push_back(is->entity->getEntity("node")->getVec3("position")); return true; }
+                    if (type == "continuation") {
+                        for (auto road : is->getRoads()) {
+                            if (road != nRoad) { return recSearch(road,is,firstIntersec); }
+                        }
+                    }
+                }
+            }
+            return false;
+        };
+
+        for (auto road : getRoads()) {
+            bool checked = false;
+            checked = recSearch(road,isecPtr,isecPtr);
+            if (checked) crossingRoads.push_back(road->getEntity());
+        }
+    };
+
+    auto checkForSignals = [&]() {
+        //cout << "  checkForSignals" << endl;
+
+        function<bool (VRRoadPtr, VRRoadIntersectionPtr, VRRoadIntersectionPtr)> recSearch = [&](VRRoadPtr nRoad, VRRoadIntersectionPtr lastIntersec, VRRoadIntersectionPtr firstIntersec) {
+            Vec3d oldPos = lastIntersec->entity->getEntity("node")->getVec3("position");
+            Vec3d thisPos = firstIntersec->entity->getEntity("node")->getVec3("position");
+            if ((oldPos-thisPos).length() > 30) return false;
+            /*for (auto sign : nRoad->getEntity()->get("signs")->value) {
+                if (sign == "trafficLight")) return true;
+            }
+            for (auto is : nRoad->getIntersections()) {
+                if (is != lastIntersec) {
+                    auto type = is->getEntity()->get("type")->value;
+                    if (type == "continuation") {
+                        for (auto road : is->getRoads()) {
+                            if (road != nRoad) { return recSearch(road,is,firstIntersec); }
+                        }
+                    }
+                }
+            }*/
+            return false;
+        };
+
+        for (auto road : getRoads()) {
+            bool checked = false;
+            checked = recSearch(road,isecPtr,isecPtr);
+            if (checked) trafficLightRoads.push_back(road->getEntity());
+        }
+    };
+
 	auto bridgeMatchingLanes = [&]() { ///DEFAULT
+	    checkForCrossings();
+	    checkForSignals();
         for (auto match : laneMatches) {
             auto laneIn = match.first;
             auto laneOut = match.second;
@@ -323,6 +409,12 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             nextLanes[laneIn].push_back(lane);
             nextLanes[lane].push_back(laneOut);
             roads->connectGraph(nodes, norms, lane);
+        }
+        if (crossingRoads.size()>0) {
+            for (int i = 0; i<crossingRoads.size()-1; i++) {
+                auto rd = crossingRoads[i];
+                cout << "  VRRoadIntersection::computeLanes - crossing " << toString(crossingRoadsPos[i]) << endl;
+            }
         }
 	};
 
@@ -469,6 +561,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 
     switch (type) {
         case CONTINUATION: mergeMatchingLanes(); break;
+        case CROSSING: bridgeMatchingLanes(); break;
         case FORK: bridgeForkingLanes(); break;
         //case MERGE: break;
         //case UPLINK: break;
@@ -549,7 +642,7 @@ void VRRoadIntersection::addRoad(VRRoadPtr road) {
 
 VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d root, VREntityPtr lane, VREntityPtr signal) {
     if (!system) system = VRTrafficLights::create();
-
+    cout << "  VRRoadIntersection::addTrafficLight" << endl;
     float R = 0.05;
     VRTransformPtr geo = world.lock()->getAssetManager()->copy(asset, Pose::create());
     VRGeometryPtr red, orange, green;
@@ -632,7 +725,10 @@ void VRRoadIntersection::computeTrafficLights() {
             auto signs = laneE->getAllEntities("signs");
             for (auto signE : signs) {
                 Vec3d pos = signE->getVec3("position");
-                if (signE->is_a("TrafficLight")) signals.push_back( signalData(roadFront, laneE, signE) );
+                if (signE->is_a("TrafficLight")) {
+                    signals.push_back( signalData(roadFront, laneE, signE) );
+                    cout << "   VRRoadIntersection:computeTrafficLights" << toString(pos) << endl;
+                }
             }
         }
     }
@@ -837,11 +933,24 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
             //type = FORK;
         }
 
+        if (N == 4) {
+            //check for Pedestrian, might be CROSSING
+            int pedestrians = 0;
+            for (auto roadFront : roadFronts) {
+                string type = "road";
+                if (auto t = roadFront->road->getEntity()->get("type")) type = t->value;
+                if (type == "footway") pedestrians++;
+            }
+            if (pedestrians == 2) {type = CROSSING;}
+            //cout << "crossing" << endl;
+        }
+
         auto entity = getEntity();
         switch (type) {
             case CONTINUATION: entity->set("type", "continuation"); break;
             case FORK: entity->set("type", "fork"); break;
             case MERGE: entity->set("type", "merge"); break;
+            case CROSSING: entity->set("type", "crossing"); break;
             default: entity->set("type", "intersection");
         }
     };
@@ -887,6 +996,7 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
     auto computeRoadFronts = [&]() {
         for (auto rf : roadFronts) { // compute road front
             auto road = rf->road;
+            road->addIntersection(isecPtr);
             auto& data = road->getEdgePoint( node );
             Vec3d p1 = data.p1;
             Vec3d p2 = data.p2;
@@ -979,12 +1089,16 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
             return true; // special case
         }
 
+        if (type == CROSSING) { // special cases for crossings
+            return true;
+        }
+
         return false; // no special case
     };
 
     sort( roadFronts.begin(), roadFronts.end(), compare );            // sort roads by how they are aligned next to each other
     resolveIntersectionType();
-    if (!resolveSpacialCases()) resolveEdgeIntersections(); //
+    if (!resolveSpacialCases()) resolveEdgeIntersections();
     computeRoadFronts();
     computeIntersectionPaths();
     computePatch();
@@ -1001,6 +1115,12 @@ map<int, vector<VRTrafficLightPtr>> VRRoadIntersection::getTrafficLightMap(){
     map<int, vector<VRTrafficLightPtr>> res;
     if (!system) return res;
     return system->getMap();
+}
+
+vector<VRRoadPtr> VRRoadIntersection::getRoads(){
+    vector<VRRoadPtr> res;
+    for (auto rf : roadFronts) res.push_back(rf->road);
+    return res;
 }
 
 void VRRoadIntersection::update() {

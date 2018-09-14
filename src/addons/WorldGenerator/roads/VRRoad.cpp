@@ -1,5 +1,6 @@
 #include "VRRoad.h"
 #include "VRRoadNetwork.h"
+#include "VRRoadIntersection.h"
 #include "../VRWorldGenerator.h"
 #include "../terrain/VRTerrain.h"
 #include "core/utils/toString.h"
@@ -211,7 +212,6 @@ VRGeometryPtr VRRoad::createGeometry() {
 	return geo;
 }
 
-
 void VRRoad::computeMarkings() {
     if (!hasMarkings()) return;
     auto w = world.lock();
@@ -347,6 +347,8 @@ void VRRoad::addTrafficLight( Vec3d pos ) {
 
         float dmin = 1e6;
         Vec3d dir; // direction from intersection to traffic light
+        Vec3d as;
+        Vec3d df;
         VREntityPtr nodeEnt;
         for (auto ep : getEdgePoints()) {
             Vec3d p = (ep.second.p1+ep.second.p2)*0.5;
@@ -356,13 +358,16 @@ void VRRoad::addTrafficLight( Vec3d pos ) {
                 dir = pos-p;
                 dir.normalize();
                 nodeEnt = ep.first;
+                as = p;
+                //df = pos;
             }
         }
-
+        cout << "  VRRoad::addTrafficLight " << toString(dmin) << "  " << toString(as) << "  " << toString(pos) << endl;
         for (auto laneEnt : roadEnt->getAllEntities("lanes")) {
             auto laneDir = laneEnt->getValue("direction", 1);
             Vec3d laneTangent = getRightEdge(pos)->dir() * laneDir;
             laneTangent.normalize();
+            cout << "   VRRoad::addTrafficLight " << toString(dir.dot(laneTangent)) << endl;
             if (dir.dot(laneTangent) < -0.5) {
                 auto signalEnt = o->addEntity("trafficlight", "TrafficLight");
                 laneEnt->add("signs",signalEnt->getName());
@@ -376,5 +381,8 @@ void VRRoad::addTrafficLight( Vec3d pos ) {
 
 void VRRoad::setOffsetIn(float o) { offsetIn = o; }
 void VRRoad::setOffsetOut(float o) { offsetOut = o; }
+
+void VRRoad::addIntersection(VRRoadIntersectionPtr isec) { intersections.push_back(isec); }
+vector<VRRoadIntersectionPtr> VRRoad::getIntersections() { return intersections; }
 
 
