@@ -413,6 +413,13 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
         if (crossingRoads.size()>0) {
             for (int i = 0; i<crossingRoads.size()-1; i++) {
                 auto rd = crossingRoads[i];
+                Vec3d X = crossingRoadsPos[i];
+                for (auto lane : rd->getAllEntities("lanes")) {
+                    auto nodes = lane->getEntity("path")->getAllEntities("nodes");
+                    Vec3d A = entity->getEntity("node")->getVec3("position");
+                    //Vec3d p = asdf->getEntity("node")->getVec3("position");
+                    //asdf->getEntity("node")->setVec3("position", p, "Position");
+                }
                 cout << "  VRRoadIntersection::computeLanes - crossing " << toString(crossingRoadsPos[i]) << endl;
             }
         }
