@@ -16,7 +16,7 @@ using namespace std;
 
 VRJointTool::VRJointTool(string name) : VRGeometry(name) {
     type = "JointTool";
-    setPrimitive("Cylinder", "0.05 0.1 16 0 0 1");
+    setPrimitive("Cylinder 0.05 0.1 16 0 0 1");
 
     auto mat = VRMaterial::create("VRJointTool");
     mat->setDiffuse(Color3f(0,0,0));

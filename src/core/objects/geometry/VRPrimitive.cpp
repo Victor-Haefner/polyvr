@@ -14,7 +14,7 @@ int VRPrimitive::getNParams() { return N; }
 string VRPrimitive::getType() { return type; }
 void VRPrimitive::fromString(string s) { stringstream ss(s); fromStream(ss); }
 string VRPrimitive::toString() { stringstream ss; toStream(ss); return ss.str(); }
-VRPrimitive* VRPrimitive::make(string p) {
+VRPrimitive* VRPrimitive::create(string p) {
     if (p == "Plane") return new VRPlane();
     if (p == "Box") return new VRBox();
     if (p == "Sphere") return new VRSphere();

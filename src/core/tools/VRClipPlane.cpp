@@ -10,7 +10,7 @@ using namespace std;
 VRClipPlane::VRClipPlane(string name) : VRGeometry(name) {
     // init plane geometry
     type = "ClipPlane";
-    setPrimitive("Plane", "0.2 0.2 1 1");
+    setPrimitive("Plane 0.2 0.2 1 1");
     VRMaterialPtr m = VRMaterial::create("clipPlane");
     setMaterial(m);
 
@@ -38,7 +38,7 @@ VRClipPlanePtr VRClipPlane::create(string name) {
 }
 
 void VRClipPlane::setSize(float W, float H) {
-    setPrimitive("Plane", toString(W) + " " + toString(H) + " 1 1");
+    setPrimitive("Plane " + toString(W) + " " + toString(H) + " 1 1");
 }
 
 void VRClipPlane::setTree(VRObjectPtr obj) {

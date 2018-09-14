@@ -559,17 +559,17 @@ VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d 
         green = dynamic_pointer_cast<VRGeometry>( geo->find("Green") );
     } else {
         auto box = VRGeometry::create("trafficLight");
-        box->setPrimitive("Box", "0.2 0.2 0.6 1 1 1");
+        box->setPrimitive("Box 0.2 0.2 0.6 1 1 1");
         box->setColor("grey");
         geo = box;
         red = VRGeometry::create("trafficLight");
-        red->setPrimitive("Sphere", "0.115 2");
+        red->setPrimitive("Sphere 0.115 2");
         box->addChild(red);
         orange = VRGeometry::create("trafficLight");
-        orange->setPrimitive("Sphere", "0.115 2");
+        orange->setPrimitive("Sphere 0.115 2");
         box->addChild(orange);
         green = VRGeometry::create("trafficLight");
-        green->setPrimitive("Sphere", "0.115 2");
+        green->setPrimitive("Sphere 0.115 2");
         box->addChild(green);
         red->translate(Vec3d(0, 0, 0.2));
         green->translate(Vec3d(0, 0, -0.2));

@@ -907,7 +907,7 @@ void VRPhysics::updateVisualGeo() {
         btScalar radius = sshape->getRadius();
         stringstream params;
         params << radius*1.01 << " 2";
-        geo->setPrimitive("Sphere", params.str());
+        geo->setPrimitive("Sphere " + params.str());
     }
 
     if (stype == 0) { // box
@@ -919,7 +919,7 @@ void VRPhysics::updateVisualGeo() {
         bshape->getPlaneEquation(plane, 4); dim[2] = 2*(abs(plane[3]) + shape->getMargin());
         stringstream params;
         params << dim[0]*1.01 << " " << dim[1]*1.01 << " " << dim[2]*1.01 << " 1 1 1";
-        geo->setPrimitive("Box", params.str());
+        geo->setPrimitive("Box " + params.str());
     }
 
     if (stype == 4) { // convex

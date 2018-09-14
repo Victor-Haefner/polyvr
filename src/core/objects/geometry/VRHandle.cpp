@@ -12,7 +12,7 @@ VRHandle::VRHandle(string name) : VRGeometry(name) {
     type = "Handle";
     updateCb = VRUpdateCb::create("handle_update", boost::bind(&VRHandle::updateHandle, this) );
     setPickable(true);
-    setPrimitive("Box", "0.1 0.1 0.1 1 1 1");
+    setPrimitive("Box 0.1 0.1 0.1 1 1 1");
     auto m = VRMaterial::get("VRHandle");
     m->setDiffuse(Color3f(0.3,0.6,1.0));
     setMaterial( m );

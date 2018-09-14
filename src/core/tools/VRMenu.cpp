@@ -66,7 +66,7 @@ void VRMenu::setLinear() {
 void VRMenu::setLeafType(TYPE t, Vec2d s) {
     mtype = t;
     scale = s;
-    if (t == SPRITE) setPrimitive("Plane", toString(s) + " 1 1");
+    if (t == SPRITE) setPrimitive("Plane " + toString(s) + " 1 1");
 }
 
 void VRMenu::setLayout(LAYOUT l, float p) {

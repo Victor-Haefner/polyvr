@@ -792,10 +792,7 @@ PyObject* VRPyGeometry::getMaterial(VRPyGeometry* self) {
 PyObject* VRPyGeometry::setPrimitive(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     string params = parseString(args);
-    string p1, p2;
-    stringstream ss(params);
-    ss >> p1; getline(ss, p2);
-    self->objPtr->setPrimitive(p1, p2);
+    self->objPtr->setPrimitive(params);
     Py_RETURN_TRUE;
 }
 

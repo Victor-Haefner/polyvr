@@ -18,7 +18,7 @@ VRMaterialPtr VRDeferredRenderStage::setupRenderLayer(string name) {
     layer = VRGeometry::create(name+"_renderlayer");
     auto mat = VRMaterial::create(name+"_mat");
     string s = "2"; // TODO: check if layers are not culled in CAVE!
-    layer->setPrimitive("Plane", s+" "+s+" 1 1");
+    layer->setPrimitive("Plane "+s+" "+s+" 1 1");
     layer->setMaterial( mat );
     layer->setMeshVisibility(false);
     //layer->hide("SHADOW");

@@ -1,4 +1,5 @@
 #include "VRGeoPrimitive.h"
+#include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRPrimitive.h"
 #include "core/objects/geometry/VRHandle.h"
 #include "core/objects/material/VRMaterial.h"
@@ -11,7 +12,7 @@
 
 using namespace OSG;
 
-VRGeoPrimitive::VRGeoPrimitive(string name) : VRGeometry(name) {
+VRGeoPrimitive::VRGeoPrimitive(string name) : VRObject(name) {
     type = "GeoPrimitive";
     selector = VRSelector::create();
 
@@ -54,7 +55,11 @@ void VRGeoPrimitive::select(bool b) {
 }
 
 void VRGeoPrimitive::update(int i, float v) {
+    VRGeometryPtr geo = geometry.lock();
+    if (!geo) return;
+    auto primitive = geo->getPrimitive();
     if (!primitive) return;
+
     auto params = splitString(primitive->toString(), ' ');
     string args;
     for (uint j=0; j<params.size(); j++) {
@@ -62,7 +67,7 @@ void VRGeoPrimitive::update(int i, float v) {
         else args += toString(v);
         if (j < params.size()-1) args += " ";
     }
-    VRGeometry::setPrimitive(primitive->getType(), args);
+    geo->setPrimitive(primitive->getType() + " " + args);
 
     auto h = getHandle(i);
     if (!params_geo || !h) return;
@@ -73,7 +78,12 @@ void VRGeoPrimitive::update(int i, float v) {
 }
 
 void VRGeoPrimitive::setupHandles() {
-    for (auto h : handles) subChild(h);
+    VRGeometryPtr geo = geometry.lock();
+    if (!geo) return;
+    auto primitive = geo->getPrimitive();
+    if (!primitive) return;
+
+    for (auto h : handles) h->destroy();
     handles.clear();
 
     string type = primitive->getType();
@@ -100,7 +110,7 @@ void VRGeoPrimitive::setupHandles() {
         auto h = VRHandle::create(n);
         h->setPersistency(0);
         handles.push_back(h);
-        addChild(h);
+        geo->addChild(h);
 
         auto cb = VRFunction<float>::create( "geo_prim_update", boost::bind(&VRGeoPrimitive::update, this, i, _1) );
 
@@ -135,7 +145,12 @@ void VRGeoPrimitive::setupHandles() {
 }
 
 void VRGeoPrimitive::setPrimitive(string prim, string args) {
-    VRGeometry::setPrimitive(prim, args);
+    VRGeometryPtr geo = geometry.lock();
+    if (!geo) {
+        geo = VRGeometry::create(name+"_geo");
+        addChild(geo);
+    }
+    geo->setPrimitive(prim + " " + args);
     setupHandles(); // change primitive type
     select(true);
 }

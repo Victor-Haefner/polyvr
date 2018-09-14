@@ -4,17 +4,18 @@
 #include "core/objects/VRObjectFwd.h"
 #include "core/tools/VRToolsFwd.h"
 #include "core/tools/selection/VRSelectionFwd.h"
-#include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/object/VRObject.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRGeoPrimitive : public VRGeometry {
+class VRGeoPrimitive : public VRObject {
     private:
         bool selected = false;
 
         vector<VRHandlePtr> handles;
         VRSelectorPtr selector;
+        VRGeometryWeakPtr geometry;
         VRAnnotationEnginePtr params_geo;
 
         void update(int i, float v);

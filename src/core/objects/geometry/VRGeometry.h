@@ -67,7 +67,7 @@ class VRGeometry : public VRTransform {
         void setMeshVisibility(bool b);
 
         virtual bool applyIntersectionAction(Action* ia);
-        virtual void setPrimitive(string primitive, string args = "");
+        virtual void setPrimitive(string parameters);
 
         /** Create a mesh using vectors with positions, normals, indices && optionaly texture coordinates **/
         void create(int type, vector<Vec3d> pos, vector<Vec3d> norms, vector<int> inds, vector<Vec2d> texs = vector<Vec2d>());
