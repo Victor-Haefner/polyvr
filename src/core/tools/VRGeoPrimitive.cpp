@@ -12,18 +12,18 @@
 
 using namespace OSG;
 
-VRGeoPrimitive::VRGeoPrimitive(string name) : VRObject(name) {
+VRGeoPrimitive::VRGeoPrimitive(string name) : VRTransform(name) {
     type = "GeoPrimitive";
     selector = VRSelector::create();
 
     params_geo = VRAnnotationEngine::create();
-    params_geo->getMaterial()->setDepthTest(GL_ALWAYS);
     params_geo->getMaterial()->setLit(0);
     params_geo->setSize(0.015);
     params_geo->setBillboard(1);
     params_geo->setScreensize(1);
     params_geo->setColor(Color4f(0,0,0,1));
     params_geo->setBackground(Color4f(1,1,1,1));
+    params_geo->getMaterial()->setDepthTest(GL_ALWAYS);
     params_geo->setPersistency(0);
 }
 
@@ -144,13 +144,14 @@ void VRGeoPrimitive::setupHandles() {
     }
 }
 
-void VRGeoPrimitive::setPrimitive(string prim, string args) {
+void VRGeoPrimitive::setPrimitive(string params) {
     VRGeometryPtr geo = geometry.lock();
     if (!geo) {
         geo = VRGeometry::create(name+"_geo");
         addChild(geo);
+        geometry = geo;
     }
-    geo->setPrimitive(prim + " " + args);
+    geo->setPrimitive(params);
     setupHandles(); // change primitive type
     select(true);
 }

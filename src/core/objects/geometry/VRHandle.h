@@ -30,7 +30,7 @@ class VRHandle : public VRGeometry {
     public:
         VRHandle(string name);
 
-        static VRHandlePtr create(string name);
+        static VRHandlePtr create(string name = "handle");
         VRHandlePtr ptr();
 
         void updateHandle();

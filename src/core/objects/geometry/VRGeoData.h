@@ -89,15 +89,11 @@ class VRGeoData {
         int pushVert(const VRGeoData& other, int i, Matrix4d m);
 
         void pushPoint(int i = -1);
-        void pushLine(int i, int j);
-        void pushTri(int i, int j, int k);
-        void pushQuad(int i, int j, int k, int l);
+        void pushLine(int i = -2, int j = -1);
+        void pushTri(int i = -3, int j = -2, int k = -1);
+        void pushQuad(int i = -4, int j = -3, int k = -2, int l = -1);
 
-        void pushLine();
-        void pushTri();
-        void pushQuad();
         void pushPatch(int N);
-
         void pushQuad(Vec3d p, Vec3d n, Vec3d u, Vec2d s, bool addInds = false);
 
         void apply(VRGeometryPtr geo, bool check = true) const;

@@ -149,7 +149,8 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyTriangulator>("Triangulator", pModVR);
     sm->registerModule<VRPyRecorder>("Recorder", pModVR);
     sm->registerModule<VRPyProjectManager>("ProjectManager", pModVR, VRPyObject::typeRef);
-    sm->registerModule<VRPyGeoPrimitive>("GeoPrimitive", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPyHandle>("Handle", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPyGeoPrimitive>("GeoPrimitive", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyStorage>("Storage", pModVR);
     sm->registerModule<VRPySnappingEngine>("SnappingEngine", pModVR);
     sm->registerModule<VRPyAnnotationEngine>("AnnotationEngine", pModVR, VRPyGeometry::typeRef);

@@ -86,6 +86,11 @@ class VRGeometry : public VRTransform {
         void setPositionalTexCoords(float scale = 1.0, int i = 0, Vec3i format = Vec3i(0,1,2));
         void setPositionalTexCoords2D(float scale = 1.0, int i = 0, Vec2i format = Vec2i(0,1));
 
+        void addPoint(int i = -1);
+        void addLine( Vec2i ij = Vec2i(-2,-1) );
+        void addTriangle( Vec3i ijk = Vec3i(-3,-2,-1) );
+        void addQuad( Vec4i ijkl = Vec4i(-4,-3,-2,-1) );
+
         void setRandomColors();
         void removeDoubles(float minAngle);
         void decimate(float f);
@@ -105,16 +110,15 @@ class VRGeometry : public VRTransform {
         float calcSurfaceArea();
 
         int size();
+        void clear();
         Vec3d getGeometricCenter();
         Vec3d getAverageNormal();
         float getMax(int axis);
         float getMin(int axis);
 
-        /** Returns the mesh as a OSG geometry core **/
         OSGGeometryPtr getMesh();
         VRPrimitive* getPrimitive();
 
-        /** Set the material of the mesh **/
         void setColor(string c);
         void setMaterial(VRMaterialPtr mat = 0);
         VRMaterialPtr getMaterial();

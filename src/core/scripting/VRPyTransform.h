@@ -11,7 +11,6 @@ struct VRPyCollision : VRPyBaseT<OSG::VRCollision> {
 
 struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyMethodDef methods[];
-
     static PyObject* fromSharedPtr(OSG::VRTransformPtr obj);
 };
 

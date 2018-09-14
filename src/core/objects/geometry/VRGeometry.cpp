@@ -998,5 +998,37 @@ void VRGeometry::readSharedMemory(string segment, string object) {
 }
 
 
+void VRGeometry::clear() {
+    VRGeoData geo(ptr());
+    geo.reset();
+}
+
+void VRGeometry::addPoint(int i) {
+    VRGeoData geo(ptr());
+    bool toApply = (geo.getNIndices() == 0);
+    geo.pushPoint(i);
+    if (toApply) geo.apply(ptr(), false);
+}
+
+void VRGeometry::addLine(Vec2i ij) {
+    VRGeoData geo(ptr());
+    bool toApply = (geo.getNIndices() == 0);
+    geo.pushLine(ij[0], ij[1]);
+    if (toApply) geo.apply(ptr(), false);
+}
+
+void VRGeometry::addTriangle(Vec3i ijk) {
+    VRGeoData geo(ptr());
+    bool toApply = (geo.getNIndices() == 0);
+    geo.pushTri(ijk[0], ijk[1], ijk[2]);
+    if (toApply) geo.apply(ptr(), false);
+}
+
+void VRGeometry::addQuad(Vec4i ijkl) {
+    VRGeoData geo(ptr());
+    bool toApply = (geo.getNIndices() == 0);
+    geo.pushQuad(ijkl[0], ijkl[1], ijkl[2], ijkl[3]);
+    if (toApply) geo.apply(ptr(), false);
+}
 
 OSG_END_NAMESPACE;

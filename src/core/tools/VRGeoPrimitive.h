@@ -4,12 +4,12 @@
 #include "core/objects/VRObjectFwd.h"
 #include "core/tools/VRToolsFwd.h"
 #include "core/tools/selection/VRSelectionFwd.h"
-#include "core/objects/object/VRObject.h"
+#include "core/objects/VRTransform.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRGeoPrimitive : public VRObject {
+class VRGeoPrimitive : public VRTransform {
     private:
         bool selected = false;
 
@@ -32,7 +32,7 @@ class VRGeoPrimitive : public VRObject {
 
         void select(bool b); // activates editing handles
 
-        void setPrimitive(string primitive, string args = ""); // hook on virtual function VRGeometry::setPrimitive
+        void setPrimitive(string params);
         VRAnnotationEnginePtr getLabels();
 };
 
