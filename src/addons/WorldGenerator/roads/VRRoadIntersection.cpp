@@ -390,20 +390,66 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 	auto bridgeMatchingLanes = [&]() { ///DEFAULT
 	    checkForCrossings();
 	    checkForSignals();
+        map<VREntityPtr, bool> processedLanes; // keep list of already processed lanes
         for (auto match : laneMatches) {
             auto laneIn = match.first;
             auto laneOut = match.second;
+            auto roadIn = laneIn->getEntity("road");
+            auto roadOut = laneOut->getEntity("road");
 
             float width = laneIn->getValue<float>("width", 0.5);
             bool pedestrianIn = laneIn->getValue<bool>("pedestrian", false);
             auto nodes1 = laneIn->getEntity("path")->getAllEntities("nodes");
-            VREntityPtr node1 = *nodes1.rbegin();
+            VREntityPtr node1Ent = *nodes1.rbegin();
+            VREntityPtr node10Ent = nodes1[nodes1.size()-2];
+            auto node1 = node1Ent->getEntity("node");
+            auto node10 =node10Ent->getEntity("node");
 
             bool pedestrianOut = laneOut->getValue<bool>("pedestrian", false);
-            auto node2 = laneOut->getEntity("path")->getAllEntities("nodes")[0];
+            VREntityPtr node2Ent = laneOut->getEntity("path")->getAllEntities("nodes")[0];
+            VREntityPtr node20Ent = laneOut->getEntity("path")->getAllEntities("nodes")[1];
+            auto node2 = node2Ent->getEntity("node");
+            auto node20 =node20Ent->getEntity("node");
             auto lane = addLane(1, width, pedestrianIn || pedestrianOut);
-            auto nodes = { node1->getEntity("node"), node2->getEntity("node") };
-            auto norms = { node1->getVec3("direction"), node2->getVec3("direction") };
+            auto graph = roads->getGraph();
+            if (crossingRoads.size()>0) {
+                for (int i = 0; i<crossingRoads.size()-1; i++) {
+                    auto rd = crossingRoads[i];
+                    if (rd->getName() == roadIn->getName()){
+                        Vec3d X = crossingRoadsPos[i];
+                        Vec3d p1 = node1->getVec3("position");
+                        Vec3d p10= node10->getVec3("position");
+                        Vec3d dir1= node1Ent->getVec3("direction");
+                        Vec3d np1 = p1-dir1*3; //-dir1.dot((X-p1))+
+                        Vec3d np10= p10-dir1*1.5;
+                        node1->setVec3("position", np1, "Position");
+                        node10->setVec3("position", np10, "Position");
+                        cout << "as1 " << toString(node1->getEntity("node")->getValue<int>("graphID", 0)) << " " << toString(np1) << " " << toString(np10) << " " << toString(dir1) << endl;
+
+                        graph->setPosition(node1->getValue<int>("graphID", 0), Pose::create(np1));
+                        graph->setPosition(node10->getValue<int>("graphID", 0), Pose::create(np10));
+                        processedLanes[laneIn] = true;
+                    }
+                    if (rd->getName() == roadOut->getName()) {
+                        Vec3d X = crossingRoadsPos[i];
+                        Vec3d p2 = node2->getVec3("position");
+                        Vec3d p20= node20->getVec3("position");
+                        Vec3d dir2= node2Ent->getVec3("direction");
+                        Vec3d np2 = p2+dir2*3; // -dir2.dot((X-p2))
+                        Vec3d np20= p20+dir2*1.5;
+                        node2->setVec3("position", np2, "Position");
+                        node20->setVec3("position", np20, "Position");
+                        cout << "as2 " << toString(node2->getValue<int>("graphID", 0)) << " " << toString(np2) << " " << toString(np20) << " " << toString(dir2) << endl;
+
+                        graph->setPosition(node2->getValue<int>("graphID", 0), Pose::create(np2));
+                        graph->setPosition(node20->getValue<int>("graphID", 0), Pose::create(np20));
+                        processedLanes[laneOut] = true;
+                    }
+                }
+            }
+
+            auto nodes = { node1, node2 };
+            auto norms = { node1Ent->getVec3("direction"), node2Ent->getVec3("direction") };
             auto lPath = addPath("Path", "lane", nodes, norms);
             lane->add("path", lPath->getName());
             nextLanes[laneIn].push_back(lane);
