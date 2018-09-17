@@ -200,7 +200,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 	    map<VREntityPtr, Vec3d> displacementsA; // map roads to displace!
 	    map<VREntityPtr, Vec3d> displacementsB; // map roads to displace!
 	    map<VREntityPtr, bool> processedLanes; // keep list of already processed lanes
-        for (auto match : laneMatches) {
+	    for (auto match : laneMatches) {
             auto laneIn = match.first;
             auto laneOut = match.second;
             auto roadIn = laneIn->getEntity("road");
@@ -338,8 +338,9 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             for (auto is : nRoad->getIntersections()) {
                 if (is != lastIntersec) {
                     auto type = is->getEntity()->get("type")->value;
+                    Vec3d newPos = is->entity->getEntity("node")->getVec3("position");
                     //cout << type << endl;
-                    if (type == "crossing") { firstIntersec->crossingRoadsPos.push_back(is->entity->getEntity("node")->getVec3("position")); return true; }
+                    if (type == "crossing" && (newPos-thisPos).length() < 30) { firstIntersec->crossingRoadsPos.push_back(is->entity->getEntity("node")->getVec3("position")); return true; }
                     if (type == "continuation") {
                         for (auto road : is->getRoads()) {
                             if (road != nRoad) { return recSearch(road,is,firstIntersec); }
@@ -388,9 +389,17 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
     };
 
 	auto bridgeMatchingLanes = [&]() { ///DEFAULT
-	    checkForCrossings();
+	    crossingRoads.clear();
+        checkForCrossings();
 	    checkForSignals();
         map<VREntityPtr, bool> processedLanes; // keep list of already processed lanes
+        //map<VREntityPtr, bool> processedLanes; // keep list of already processed lanes
+        auto graph = roads->getGraph();
+        for (auto rf : roadFronts) {
+            //make map match roadfront to crossingRoad
+            //modify roadfronts to be at different place
+            //delete lane segments between crossing and main intersection
+        }
         for (auto match : laneMatches) {
             auto laneIn = match.first;
             auto laneOut = match.second;
@@ -400,55 +409,50 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             float width = laneIn->getValue<float>("width", 0.5);
             bool pedestrianIn = laneIn->getValue<bool>("pedestrian", false);
             auto nodes1 = laneIn->getEntity("path")->getAllEntities("nodes");
-            VREntityPtr node1Ent = *nodes1.rbegin();
-            VREntityPtr node10Ent = nodes1[nodes1.size()-2];
-            auto node1 = node1Ent->getEntity("node");
-            auto node10 =node10Ent->getEntity("node");
+            auto node1Ent = *nodes1.rbegin();
 
             bool pedestrianOut = laneOut->getValue<bool>("pedestrian", false);
-            VREntityPtr node2Ent = laneOut->getEntity("path")->getAllEntities("nodes")[0];
-            VREntityPtr node20Ent = laneOut->getEntity("path")->getAllEntities("nodes")[1];
-            auto node2 = node2Ent->getEntity("node");
-            auto node20 =node20Ent->getEntity("node");
+            auto nodes2 = laneOut->getEntity("path")->getAllEntities("nodes");
+            auto node2Ent = nodes2[0];
+
             auto lane = addLane(1, width, pedestrianIn || pedestrianOut);
-            auto graph = roads->getGraph();
             if (crossingRoads.size()>0) {
                 for (int i = 0; i<crossingRoads.size()-1; i++) {
                     auto rd = crossingRoads[i];
-                    if (rd->getName() == roadIn->getName()){
+                    if (rd->getName() == roadIn->getName() && nodes1.size()>1 && !processedLanes.count(laneIn)){
+                        auto node10Ent = nodes1[nodes1.size()-2];
                         Vec3d X = crossingRoadsPos[i];
-                        Vec3d p1 = node1->getVec3("position");
-                        Vec3d p10= node10->getVec3("position");
+                        Vec3d p1 = node1Ent->getEntity("node")->getVec3("position");
+                        Vec3d p10= node10Ent->getEntity("node")->getVec3("position");
                         Vec3d dir1= node1Ent->getVec3("direction");
-                        Vec3d np1 = p1-dir1*3; //-dir1.dot((X-p1))+
-                        Vec3d np10= p10-dir1*1.5;
-                        node1->setVec3("position", np1, "Position");
-                        node10->setVec3("position", np10, "Position");
-                        cout << "as1 " << toString(node1->getEntity("node")->getValue<int>("graphID", 0)) << " " << toString(np1) << " " << toString(np10) << " " << toString(dir1) << endl;
+                        Vec3d np1 = p1-dir1*dir1.dot((p1-X))+dir1*1.5;
+                        node1Ent->setVec3("position", np1, "Position");
+                        //node10Ent->getEntity("node")->setVec3("position", np10, "Position");
+                        cout << "as1 " << " " << toString(np1)<< " " << toString(dir1) << endl; //* << " " << toString(np10)
 
-                        graph->setPosition(node1->getValue<int>("graphID", 0), Pose::create(np1));
-                        graph->setPosition(node10->getValue<int>("graphID", 0), Pose::create(np10));
+                        graph->setPosition(node1Ent->getEntity("node")->getValue<int>("graphID", 0), Pose::create(np1));
+                        //graph->setPosition(node10Ent->getEntity("node")->getValue<int>("graphID", 0), Pose::create(np10));
                         processedLanes[laneIn] = true;
                     }
-                    if (rd->getName() == roadOut->getName()) {
+                    if (rd->getName() == roadOut->getName() && nodes2.size()>1 && !processedLanes.count(laneOut)) {
+                        auto node20Ent = nodes2[1];
                         Vec3d X = crossingRoadsPos[i];
-                        Vec3d p2 = node2->getVec3("position");
-                        Vec3d p20= node20->getVec3("position");
+                        Vec3d p2 = node2Ent->getEntity("node")->getVec3("position");
+                        Vec3d p20= node20Ent->getEntity("node")->getVec3("position");
                         Vec3d dir2= node2Ent->getVec3("direction");
-                        Vec3d np2 = p2+dir2*3; // -dir2.dot((X-p2))
-                        Vec3d np20= p20+dir2*1.5;
-                        node2->setVec3("position", np2, "Position");
-                        node20->setVec3("position", np20, "Position");
-                        cout << "as2 " << toString(node2->getValue<int>("graphID", 0)) << " " << toString(np2) << " " << toString(np20) << " " << toString(dir2) << endl;
+                        Vec3d np2 = p2+dir2*dir2.dot((X-p2))-dir2*1.5;
+                        node2Ent->getEntity("node")->setVec3("position", np2, "Position");
+                        //node20Ent->getEntity("node")->setVec3("position", np20, "Position");
+                        cout << "as2 " << " " << toString(np2) << " "<< toString(dir2) << endl;//* << toString(np20) << " "
 
-                        graph->setPosition(node2->getValue<int>("graphID", 0), Pose::create(np2));
-                        graph->setPosition(node20->getValue<int>("graphID", 0), Pose::create(np20));
+                        graph->setPosition(node2Ent->getEntity("node")->getValue<int>("graphID", 0), Pose::create(np2));
+                        //graph->setPosition(node20Ent->getEntity("node")->getValue<int>("graphID", 0), Pose::create(np20));
                         processedLanes[laneOut] = true;
                     }
                 }
             }
 
-            auto nodes = { node1, node2 };
+            auto nodes = { node1Ent->getEntity("node"), node2Ent->getEntity("node") };
             auto norms = { node1Ent->getVec3("direction"), node2Ent->getVec3("direction") };
             auto lPath = addPath("Path", "lane", nodes, norms);
             lane->add("path", lPath->getName());
@@ -469,6 +473,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 cout << "  VRRoadIntersection::computeLanes - crossing " << toString(crossingRoadsPos[i]) << endl;
             }
         }
+        computeLayout(graph);
 	};
 
     auto bridgeForkingLanes = [&]() { ///FORK
