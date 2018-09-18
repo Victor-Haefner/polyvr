@@ -88,16 +88,16 @@ vector<OctreeNode*> OctreeNode::getAncestry() {
     return res;
 }
 
-OctreeNode* OctreeNode::get(Vec3d p) {
-    if ( !inBox(p, center, size) ) {
-        if (parent) return parent->get(p);
+OctreeNode* OctreeNode::get(Vec3d p, bool checkPosition) {
+    if ( !inBox(p, center, size) && checkPosition ) {
+        if (parent) return parent->get(p, true);
         else return 0;
     }
 
     if (size > resolution) {
         int o = getOctant(p);
         if (!children[o]) return this;
-        return children[o]->get(p);
+        return children[o]->get(p, false);
     }
 
     return this;

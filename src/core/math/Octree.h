@@ -39,7 +39,7 @@ class OctreeNode {
         Vec3d getLocalCenter();
 
         OctreeNode* add(Vec3d p, void* data, int targetLevel = -1, bool checkPosition = true);
-        OctreeNode* get(Vec3d p);
+        OctreeNode* get(Vec3d p, bool checkPosition = true);
 
         void remData(void* data);
         //void clear();
