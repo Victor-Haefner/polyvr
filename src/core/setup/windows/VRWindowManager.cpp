@@ -241,7 +241,7 @@ void VRWindowManager::updateWindows() {
             auto win = dynamic_pointer_cast<VRMultiWindow>(w.second);
             if (!win) continue;
             if (win->isWaiting()) continue;
-            cout << "WARNING!  window " << win->getName() << " is hanging, state: " << win->getState() << endl;
+            cout << "WARNING!  window " << win->getName() << " is hanging, state: " << win->getStateString() << endl;
             WARN("WARNING! Lost connection with " + win->getName());
             win->reset();
         }

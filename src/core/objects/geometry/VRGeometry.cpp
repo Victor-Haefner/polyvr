@@ -1,6 +1,7 @@
 #include "VRGeometry.h"
 #include "VRGeoData.h"
 #include <libxml++/nodes/element.h>
+#include <sstream>
 
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
@@ -170,7 +171,7 @@ VRGeometryPtr VRGeometry::create(string name) { auto g = VRGeometryPtr(new VRGeo
 VRGeometryPtr VRGeometry::create(string name, bool hidden) { auto g = VRGeometryPtr(new VRGeometry(name, hidden) ); g->setMesh(); return g; }
 VRGeometryPtr VRGeometry::create(string name, string primitive, string params) {
     auto g = VRGeometryPtr(new VRGeometry(name) );
-    g->setPrimitive(primitive, params);
+    g->setPrimitive(primitive + " " + params);
     return g;
 }
 
@@ -205,12 +206,17 @@ void VRGeometry::setMesh(OSGGeometryPtr g) {
 
 void VRGeometry::meshChanged() { lastMeshChange = VRGlobals::CURRENT_FRAME; }
 
-void VRGeometry::setPrimitive(string primitive, string args) {
-    this->primitive = VRPrimitive::make(primitive);
+void VRGeometry::setPrimitive(string parameters) {
+    stringstream ss(parameters);
+    string prim, args;
+    ss >> prim;
+    getline(ss, args);
+
+    this->primitive = VRPrimitive::create(prim);
     if (this->primitive == 0) return;
     if (args != "") this->primitive->fromString(args);
     source.type = PRIMITIVE;
-    source.parameter = primitive + " " + this->primitive->toString();
+    source.parameter = prim + " " + this->primitive->toString();
     setMesh( OSGGeometry::create( this->primitive->make() ), source);
 }
 
@@ -938,9 +944,7 @@ void VRGeometry::setup() {
             else cout << "failed to load " << p2 << " from file " << p1 << endl;
             break;
         case PRIMITIVE:
-            ss << source.parameter;
-            ss >> p1; getline(ss, p2);
-            setPrimitive(p1, p2);
+            setPrimitive(source.parameter);
             break;
     }
 
@@ -994,5 +998,37 @@ void VRGeometry::readSharedMemory(string segment, string object) {
 }
 
 
+void VRGeometry::clear() {
+    VRGeoData geo(ptr());
+    geo.reset();
+}
+
+void VRGeometry::addPoint(int i) {
+    VRGeoData geo(ptr());
+    bool toApply = (geo.getNIndices() == 0);
+    geo.pushPoint(i);
+    if (toApply) geo.apply(ptr(), false);
+}
+
+void VRGeometry::addLine(Vec2i ij) {
+    VRGeoData geo(ptr());
+    bool toApply = (geo.getNIndices() == 0);
+    geo.pushLine(ij[0], ij[1]);
+    if (toApply) geo.apply(ptr(), false);
+}
+
+void VRGeometry::addTriangle(Vec3i ijk) {
+    VRGeoData geo(ptr());
+    bool toApply = (geo.getNIndices() == 0);
+    geo.pushTri(ijk[0], ijk[1], ijk[2]);
+    if (toApply) geo.apply(ptr(), false);
+}
+
+void VRGeometry::addQuad(Vec4i ijkl) {
+    VRGeoData geo(ptr());
+    bool toApply = (geo.getNIndices() == 0);
+    geo.pushQuad(ijkl[0], ijkl[1], ijkl[2], ijkl[3]);
+    if (toApply) geo.apply(ptr(), false);
+}
 
 OSG_END_NAMESPACE;

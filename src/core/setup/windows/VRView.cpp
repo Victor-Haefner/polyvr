@@ -17,7 +17,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/OSGMaterial.h"
 #include "core/objects/material/VRTexture.h"
-#include "core/objects/geometry/VRSprite.h"
+#include "core/objects/geometry/sprite/VRSprite.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
 #include "core/objects/OSGCamera.h"
@@ -204,7 +204,7 @@ void VRView::setDecorators() {//set decorators, only if projection true
     }
 
     if (projection && !stereo) {
-        cout << "\nset single projection decorator";
+        //cout << "\nset single projection decorator";
         PCDecoratorLeft = ProjectionCameraDecorator::create();
         PCDecoratorLeft->setLeftEye(true);
         PCDecoratorLeft->setEyeSeparation(0);
@@ -219,7 +219,7 @@ void VRView::setDecorators() {//set decorators, only if projection true
 
     // stereo
 
-    cout << "\nset projection decorators";
+    //cout << "\nset projection decorators";
     PCDecoratorLeft = ProjectionCameraDecorator::create();
     PCDecoratorRight = ProjectionCameraDecorator::create();
 

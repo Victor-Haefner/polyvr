@@ -21,6 +21,7 @@ class VRUndoInterface {
         template<class F, class O, class V>
         void recUndo(F f, std::shared_ptr<O> o, V v1, V v2);
 
+        bool isUndoing();
         bool undoInitiated();
 };
 

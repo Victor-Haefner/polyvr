@@ -94,15 +94,22 @@ class STEPLoader {
     public:
         STEPLoader() {}
 
-        string getName(TDF_Label& label) {
-            string name = "UNKNOWN";
-            Handle(TDataStd_Name) N;
-            if ( label.FindAttribute(TDataStd_Name::GetID(),N)) {
-                name.resize(N->Get().LengthOfCString());
-                char* buffer = &name[0];
-                N->Get().ToUTF8CString( buffer );
-            }
+        string toString(Handle(TCollection_HAsciiString)& s) {
+            return string(s->ToCString());
+        }
+
+        string toString(Handle(TDataStd_Name)& N) {
+            string name = "";
+            name.resize(N->Get().LengthOfCString());
+            char* buffer = &name[0];
+            N->Get().ToUTF8CString( buffer );
             return name;
+        }
+
+        string getName(TDF_Label& label) {
+            Handle(TDataStd_Name) N;
+            if ( label.FindAttribute(TDataStd_Name::GetID(),N)) return toString(N);
+            return "UNKNOWN";
         }
 
         void load(string path, VRTransformPtr res) {
@@ -119,6 +126,7 @@ class STEPLoader {
             reader.SetLayerMode(true);
             auto transferOk = reader.Transfer(aDoc);
             if (!transferOk) { cout << "failed to transfer to XDS doc" << endl; return; }
+            cout << "XCAF transfer ok " << endl;
 
             Handle(XCAFDoc_ShapeTool) Assembly = XCAFDoc_DocumentTool::ShapeTool(aDoc->Main());
             TDF_LabelSequence shapes;

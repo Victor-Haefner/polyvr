@@ -51,11 +51,19 @@ void VRDriver::update() {
     auto tpos = p_path->getPose(t)->pos(); // get target position
     //auto tvel = v_path->getPose(t).pos()[1]; // TODO: get target velocity
 
-    // compute throttle and breaking
+    // compute throttle, breaking and clutch
     float sDiff = target_speed-speed;
     float throttle = 0;
     float breaking = 0;
-    if (sDiff > 0) throttle = sDiff*0.7;
+    float clutch = 0;
+    if (sDiff > 0) {
+        float c = sDiff*0.2;
+        clamp(c, 0, 1);
+        clutch = 0.6*c;
+
+        throttle = sDiff*0.7;
+        clamp(throttle, 0, 1.0-clutch*0.6);
+    }
     if (sDiff < 0) breaking = -sDiff*0.2;
     //cout << "pilot " << sDiff << " " << throttle << " " << breaking << endl;
 
@@ -71,10 +79,12 @@ void VRDriver::update() {
     // clamp inputs
     clamp(throttle, 0,1);
     clamp(breaking, 0,1);
+    clamp(clutch,   0,1);
     clamp(steering, -1,1);
 
     // apply inputs
-    car->update(throttle, breaking, steering);
+    if (!car->isRunning()) car->setIgnition(true);
+    car->update(throttle, breaking, steering, clutch);
 }
 
 void VRDriver::followPath(PathPtr p, PathPtr v, float to) {

@@ -31,6 +31,7 @@ class VRUndoManager : public VRManager<VRUndoAtom>, public std::enable_shared_fr
         std::map<int, VRUndoAtomPtr>::reverse_iterator current = data.rend();
         bool ward = false;
         int key = 0;
+        bool undoing = false;
 
     public:
         VRUndoManager();
@@ -43,6 +44,8 @@ class VRUndoManager : public VRManager<VRUndoAtom>, public std::enable_shared_fr
 
         void undo();
         void redo();
+
+        bool isUndoing();
 };
 
 OSG_END_NAMESPACE;

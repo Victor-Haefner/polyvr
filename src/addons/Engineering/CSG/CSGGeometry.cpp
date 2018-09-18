@@ -1,25 +1,16 @@
-#include "core/utils/VRDoublebuffer.h"
-#include "core/objects/material/VRMaterial.h"
-#include "core/objects/material/OSGMaterial.h"
-#include "core/objects/geometry/OSGGeometry.h"
-#include "core/math/Octree.h"
-
 #include "CSGGeometry.h"
 #include "CGALTypedefs.h"
 #include "PolyhedronBuilder.h"
 
-#include <stdio.h>
-#include <OpenSG/OSGTriangleIterator.h>
-#include <OpenSG/OSGQuaternion.h>
+#include "core/objects/geometry/OSGGeometry.h"
+#include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/material/VRMaterial.h"
+#include "core/math/Octree.h"
+#include "core/math/pose.h"
+
 #include <OpenSG/OSGGeoFunctions.h>
-#include <OpenSG/OSGChunkMaterial.h>
-#include <OpenSG/OSGMultiPassMaterial.h>
-#include <libxml++/nodes/element.h>
 
-//#include "../../../../csg_alt/GTSGeometry.h"
-#include "core/scene/VRSceneManager.h"
-
-OSG_BEGIN_NAMESPACE
+using namespace OSG;
 using namespace std;
 
 vector<string> CSGGeometry::getOperations() {
@@ -35,11 +26,10 @@ CSGGeometry::CSGGeometry(string name) : VRGeometry(name) {
 }
 
 CSGGeometry::~CSGGeometry() {}
-
 CSGGeometryPtr CSGGeometry::ptr() { return static_pointer_cast<CSGGeometry>( shared_from_this() ); }
 
 CSGGeometryPtr CSGGeometry::create(string name) {
-    auto c = shared_ptr<CSGGeometry>(new CSGGeometry(name) );
+    auto c = CSGGeometryPtr( new CSGGeometry(name) );
     c->init();
     return c;
 }
@@ -47,44 +37,28 @@ CSGGeometryPtr CSGGeometry::create(string name) {
 void CSGGeometry::init() {
 	oct = Octree::create(thresholdL);
 	type = "CSGGeometry";
-	setMatrix(oldWorldTrans);
+	setPose(oldWorldTrans);
 	polyhedron = new CGALPolyhedron();
 }
 
-void CSGGeometry::setCSGGeometry(CGALPolyhedron *p) {
+void CSGGeometry::setCSGGeometry(CGALPolyhedron* p) {
 	if (!p->polyhedron->is_valid()) return;
 	polyhedron = p;
-	VRGeometry::setMesh( OSGGeometry::create((GeometryMTRecPtr)toOsgGeometry(p)) );
+	toOsgGeometry(p);
 }
 
 CGALPolyhedron* CSGGeometry::getCSGGeometry() {
-    if (polyhedron == 0) {
-        Matrix4d worldTransform = getWorldMatrix();
+    if (!polyhedron) {
         bool success;
-        polyhedron = toPolyhedron(getMesh()->geo, worldTransform, success);
+        polyhedron = toPolyhedron(ptr(), getWorldPose(), success);
     }
-
 	return polyhedron;
 }
 
-void CSGGeometry::operate(CGALPolyhedron *P1, CGALPolyhedron *P2) {
-    auto p1 = P1->polyhedron;
-    auto p2 = P2->polyhedron;
-	if (!p1->is_closed() || !p2->is_closed()) return;
-
-    try {
-        CGAL::Nef_Polyhedron np1(*p1), np2(*p2);
-        if (operation == "unite") np1 += np2;
-        else if(operation == "subtract") np1 -= np2;
-        else if(operation == "intersect") np1 = np1.intersection(np2);
-        else cout << "CSGGeometry: Warning: unexpected CSG operation!\n";
-        np1.convert_to_polyhedron(*(polyhedron->polyhedron));
-    } catch (exception e) { cout << getName() << ": CSGGeometry::operate exception: " << e.what() << endl; }
-}
-
-void CSGGeometry::applyTransform(CGALPolyhedron* P, Matrix4d m) {
+void CSGGeometry::applyTransform(CGALPolyhedron* P, PosePtr pose) {
     auto p = P->polyhedron;
     if (p == 0) return;
+    Matrix4d m = pose->asMatrix();
     CGAL::Transformation t(m[0][0], m[1][0], m[2][0], m[3][0],
                            m[0][1], m[1][1], m[2][1], m[3][1],
                            m[0][2], m[1][2], m[2][2], m[3][2],
@@ -92,67 +66,41 @@ void CSGGeometry::applyTransform(CGALPolyhedron* P, Matrix4d m) {
     transform(p->points_begin(), p->points_end(), p->points_begin(), t);
 }
 
-GeometryTransitPtr CSGGeometry::toOsgGeometry(CGALPolyhedron *P) {
+void CSGGeometry::toOsgGeometry(CGALPolyhedron *P) {
     auto p = P->polyhedron;
-	GeoPnt3fPropertyRecPtr positions = GeoPnt3fProperty::create();
-	GeoVec3fPropertyRecPtr normals = GeoVec3fProperty::create();
-	GeoUInt32PropertyRecPtr indices = GeoUInt32Property::create();
+    VRGeoData data;
 
-	/*
-	 * Iterate over all faces, add their vertices to 'positions' && write indices at
-	 * the same time. Results in no shared vertices && therefore no normal interpolation between
-	 * faces, but makes cubes look good. Well, well...
-	 */
+	//Iterate over all faces, add their vertices to 'positions' and write indices at
+	//the same time. Results in no shared vertices && therefore no normal interpolation between
+	//faces, but makes cubes look good. Well, well...
 
 	Matrix4d localToWorld = getWorldMatrix();
-	OSG::Vec3d translation;
-	OSG::Quaterniond rotation;
-	OSG::Vec3d scaleFactor;
-	OSG::Quaterniond scaleOrientation;
-	localToWorld.getTransform(translation, rotation, scaleFactor, scaleOrientation);
+	Vec3d translation = Vec3d(localToWorld[3]);
 	Matrix4d worldToLocal;
 	worldToLocal.invertFrom(localToWorld);
 
 	// Convert indices && positions
-	int curIndex = 0;
 	for (auto it = p->facets_begin(); it != p->facets_end(); it++) {
 		auto circ = it->facet_begin();
 		do {
 			CGAL::Point cgalPos = circ->vertex()->point();
 			// We need to transform each point from global coordinates into our local coordinate system
 			// (CGAL uses global, OpenSG has geometry in node-local coords)
-			OSG::Vec3d vecPos = OSG::Vec3d(CGAL::to_double(cgalPos.x()),
-											  CGAL::to_double(cgalPos.y()),
-											  CGAL::to_double(cgalPos.z()));
-			OSG::Vec3d localVec = worldToLocal * (vecPos - translation);
-			OSG::Pnt3d osgPos(localVec.x(), localVec.y(), localVec.z());
-
-			positions->addValue(osgPos);
-			normals->addValue(Vec3d(0,1,0));
-			indices->addValue(curIndex);
-			curIndex++;
+			Vec3d vecPos = Vec3d(CGAL::to_double(cgalPos.x()), CGAL::to_double(cgalPos.y()), CGAL::to_double(cgalPos.z()));
+			Vec3d localVec = worldToLocal * (vecPos - translation);
+			Pnt3d osgPos(localVec.x(), localVec.y(), localVec.z());
+			data.pushVert(osgPos, Vec3d(0,1,0));
 		} while (++circ != it->facet_begin());
+		data.pushTri();
 	}
 
-	GeoUInt8PropertyRecPtr types = GeoUInt8Property::create();
-	types->addValue(GL_TRIANGLES);
-	GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
-	lengths->addValue(indices->size());
-
-	GeometryMTRecPtr mesh = Geometry::create();
-	mesh->setPositions(positions);
-	mesh->setNormals(normals);
-	mesh->setIndices(indices);
-	mesh->setTypes(types);
-	mesh->setLengths(lengths);
-	mesh->setMaterial(VRMaterial::getDefault()->getMaterial()->mat);
-    createSharedIndex(mesh);
-	calcVertexNormals(mesh, 0.523598775598 /*30 deg in rad*/);
-
-	return GeometryTransitPtr(mesh);
+	data.apply(ptr());
+	setMaterial( VRMaterial::getDefault() );
+    createSharedIndex(mesh->geo);
+	calcVertexNormals(mesh->geo, 0.523598775598); // 30 degrees
 }
 
-size_t CSGGeometry::isKnownPoint(OSG::Pnt3f newPoint) {
+size_t CSGGeometry::isKnownPoint(Pnt3f newPoint) {
 	vector<void*> resultData = oct->radiusSearch(Vec3d(newPoint), thresholdL);
 	if (resultData.size() > 0) return *(size_t*)resultData.at(0);
 	return numeric_limits<size_t>::max();
@@ -212,5 +160,3 @@ void CSGGeometry::setOperation(string op) {
 
 bool CSGGeometry::getEditMode() { return editMode; }
 string CSGGeometry::getOperation() { return operation; }
-
-OSG_END_NAMESPACE

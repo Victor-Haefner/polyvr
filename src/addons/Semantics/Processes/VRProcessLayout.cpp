@@ -1,6 +1,6 @@
 #include "VRProcessLayout.h"
 #include "VRProcess.h"
-#include "core/objects/geometry/VRSprite.h"
+#include "core/objects/geometry/sprite/VRSprite.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRConstraint.h"
 #include "core/objects/geometry/VRGeoData.h"

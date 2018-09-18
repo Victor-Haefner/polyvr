@@ -58,6 +58,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setWorldAt", PyWrap(Transform, setWorldAt, "Set the object's at vector", void, Vec3d ) },
     {"setPose", PyWrap(Transform, setPose, "Set the object's pose", void, PosePtr ) },
     {"setTransform", PyWrapOpt(Transform, setTransform, "Set the object's pose", "0 0 -1|0 1 0", void, Vec3d, Vec3d, Vec3d ) },
+    {"setOrientation", PyWrapOpt(Transform, setOrientation, "Set the object's orientation", "0 1 0", void, Vec3d, Vec3d ) },
     {"setWorldPose", PyWrap(Transform, setWorldPose, "Set the object's pose", void, PosePtr ) },
     {"setPosition", PyWrap(Transform, setFrom, "Set the object's from vector", void, Vec3d ) },
     {"setFrom", PyWrap(Transform, setFrom, "Set the object's from vector", void, Vec3d ) },

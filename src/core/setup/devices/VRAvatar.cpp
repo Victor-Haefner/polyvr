@@ -38,7 +38,7 @@ VRObjectPtr VRAvatar::initCone() {
     VRGeometryPtr cone = VRGeometry::create("av_cone");
     cone->setMesh( OSGGeometry::create(makeConeGeo(0.3, 0.03, 32, true, true)) );
     cone->setFrom(Vec3d(0,0,-0.1));
-    cone->setOrientation(Vec3d(1,0,-0.1), Vec3d(0,0,-1));
+    cone->setOrientation(Vec3d(1,0,0), Vec3d(0,0,-1));
 
     return cone;
 }

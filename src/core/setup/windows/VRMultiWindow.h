@@ -33,7 +33,8 @@ class VRMultiWindow : public VRWindow {
             INITIALIZING = 1,
             CONNECTING = 2,
             JUSTCONNECTED = 3,
-            CONNECTED = 4
+            CONNECTED = 4,
+            RENDERING = 5
         };
 
         void initialize();

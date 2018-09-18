@@ -63,12 +63,12 @@ void VRManipulator::setup() {
     gRX = VRGeometry::create("gRX");
     gRY = VRGeometry::create("gRY");
     gRZ = VRGeometry::create("gRZ");
-    gTX->setPrimitive("Box", "0.1 0.02 0.02 1 1 1");
-    gTY->setPrimitive("Box", "0.02 0.1 0.02 1 1 1");
-    gTZ->setPrimitive("Box", "0.02 0.02 0.1 1 1 1");
-    gRX->setPrimitive("Torus", "0.01 0.07 4 16");
-    gRY->setPrimitive("Torus", "0.01 0.07 4 16");
-    gRZ->setPrimitive("Torus", "0.01 0.07 4 16");
+    gTX->setPrimitive("Box 0.1 0.02 0.02 1 1 1");
+    gTY->setPrimitive("Box 0.02 0.1 0.02 1 1 1");
+    gTZ->setPrimitive("Box 0.02 0.02 0.1 1 1 1");
+    gRX->setPrimitive("Torus 0.01 0.07 4 16");
+    gRY->setPrimitive("Torus 0.01 0.07 4 16");
+    gRZ->setPrimitive("Torus 0.01 0.07 4 16");
     gRX->setDir(Vec3d(1,0,0));
     gRY->setDir(Vec3d(0,1,0));
     gRY->setUp(Vec3d(1,0,0));
@@ -99,7 +99,7 @@ VRPathtool::VRPathtool() : VRObject("Pathtool") {
     lsmat->setLineWidth(3);
 
     arrowTemplate = VRGeometry::create("arrow");
-    arrowTemplate->setPrimitive("Arrow", "2 3 3 1.5 1.2");
+    arrowTemplate->setPrimitive("Arrow 2 3 3 1.5 1.2");
     arrowTemplate->setMaterial(lmat);
 
     storeObj("handle", customHandle);
@@ -486,7 +486,7 @@ PathPtr VRPathtool::newPath( VRDevicePtr dev, VRObjectPtr anchor, int resolution
 VRGeometryPtr VRPathtool::newControlHandle(VRGeometryPtr handle, Vec3d p) {
     VRGeometryPtr h;
     h = VRGeometry::create("handle");
-    h->setPrimitive("Sphere", "0.04 2");
+    h->setPrimitive("Sphere 0.04 2");
     handle->addChild(h);
 
     h->setPickable(true);
@@ -507,7 +507,7 @@ VRGeometryPtr VRPathtool::newHandle() {
         h = static_pointer_cast<VRGeometry>( customHandle->duplicate() );
     } else {
         h = VRGeometry::create("handle");
-        h->setPrimitive("Torus", "0.04 0.15 3 4");
+        h->setPrimitive("Torus 0.04 0.15 3 4");
     }
 
     h->setPickable(true);

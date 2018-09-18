@@ -1,5 +1,5 @@
 #include "VRLogistics.h"
-#include "core/objects/geometry/VRSprite.h"
+#include "core/objects/geometry/sprite/VRSprite.h"
 #include "core/objects/VRTransform.h"
 #include "core/math/path.h"
 #include "core/objects/geometry/VRStroke.h"

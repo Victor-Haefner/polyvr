@@ -99,7 +99,7 @@ void VRConstructionKit::breakup(VRTransformPtr obj) {
 int VRConstructionKit::addAnchorType(float size, Color3f color) {
     auto g = VRGeometry::create("anchor");
     string bs = toString(size);
-    g->setPrimitive("Box", bs + " " + bs + " " + bs + " 1 1 1");
+    g->setPrimitive("Box " + bs + " " + bs + " " + bs + " 1 1 1");
     auto m = VRMaterial::create("anchor");
     m->setDiffuse(color);
     g->setMaterial(m);

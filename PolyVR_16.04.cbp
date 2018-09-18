@@ -92,6 +92,7 @@
 			<Add option="-DWITH_SHADOW_VOLUME" />
 			<Add option="-DWITH_OPCUA" />
 			<Add option="-DWITH_STEP" />
+			<Add option="-DWITH_CLUSTERING_FIX" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
 			<Add directory="/usr/lib64/glib-2.0/include" />
@@ -344,6 +345,7 @@
 		<Unit filename="src/addons/Engineering/CSG/CSGGeometry.cpp" />
 		<Unit filename="src/addons/Engineering/CSG/CSGGeometry.h" />
 		<Unit filename="src/addons/Engineering/CSG/CSGGeometryAlgorithms.cpp" />
+		<Unit filename="src/addons/Engineering/CSG/CSGGeometryBis.cpp" />
 		<Unit filename="src/addons/Engineering/CSG/PolyhedronBuilder.h" />
 		<Unit filename="src/addons/Engineering/CSG/VRPyCSG.cpp" />
 		<Unit filename="src/addons/Engineering/CSG/VRPyCSG.h" />
@@ -748,10 +750,12 @@
 		<Unit filename="src/core/objects/geometry/VRSky.h" />
 		<Unit filename="src/core/objects/geometry/VRSpatialCollisionManager.cpp" />
 		<Unit filename="src/core/objects/geometry/VRSpatialCollisionManager.h" />
-		<Unit filename="src/core/objects/geometry/VRSprite.cpp" />
-		<Unit filename="src/core/objects/geometry/VRSprite.h" />
 		<Unit filename="src/core/objects/geometry/VRStroke.cpp" />
 		<Unit filename="src/core/objects/geometry/VRStroke.h" />
+		<Unit filename="src/core/objects/geometry/sprite/VRSprite.cpp" />
+		<Unit filename="src/core/objects/geometry/sprite/VRSprite.h" />
+		<Unit filename="src/core/objects/geometry/sprite/VRSpriteResizeTool.cpp" />
+		<Unit filename="src/core/objects/geometry/sprite/VRSpriteResizeTool.h" />
 		<Unit filename="src/core/objects/material/OSGMaterial.cpp" />
 		<Unit filename="src/core/objects/material/OSGMaterial.h" />
 		<Unit filename="src/core/objects/material/VRBricks.cpp" />
