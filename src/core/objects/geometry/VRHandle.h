@@ -38,6 +38,7 @@ class VRHandle : public VRGeometry {
         void updateHandle(bool su = false);
         void configure(VRAnimCbPtr cb, TYPE t, Vec3d n, float scale);
         void addSibling(VRHandlePtr cb);
+        void setSize(float size);
         void set(PosePtr p, float v);
 
         Vec3d getAxis();

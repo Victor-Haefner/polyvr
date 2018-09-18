@@ -107,7 +107,7 @@ class VRTransform : public VRObject {
         virtual void setDir(Vec3d dir);
         void setScale(float s);
         void setScale(Vec3d s);
-        void setOrientation(Vec3d at, Vec3d up);
+        void setOrientation(Vec3d dir, Vec3d up);
         void setEuler(Vec3d euler);
         void setTransform(Vec3d p, Vec3d d = Vec3d(0,0,-1), Vec3d u = Vec3d(0,1,0));
         void setPose2(const Pose& p);

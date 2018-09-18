@@ -38,6 +38,18 @@ VRGeoPrimitivePtr VRGeoPrimitive::ptr() { return static_pointer_cast<VRGeoPrimit
 
 VRAnnotationEnginePtr VRGeoPrimitive::getLabels() { return params_geo; }
 
+void VRGeoPrimitive::setGeometry(VRGeometryPtr geo) {
+    if (ownsGeometry) if (auto g = geometry.lock()) g->destroy();
+    geometry = geo;
+    ownsGeometry = false;
+    setupHandles();
+}
+
+void VRGeoPrimitive::setHandleSize(float s) {
+    size = s;
+    for (auto h : handles) h->setSize(s);
+}
+
 VRHandlePtr VRGeoPrimitive::getHandle(int i) {
     if (i < 0 || i >= int(handles.size())) return 0;
     return handles[i];
@@ -85,6 +97,7 @@ void VRGeoPrimitive::setupHandles() {
 
     for (auto h : handles) h->destroy();
     handles.clear();
+    params_geo->clear();
 
     string type = primitive->getType();
     int N = primitive->getNParams();
@@ -109,6 +122,7 @@ void VRGeoPrimitive::setupHandles() {
 
         function<VRHandlePtr(Vec3d, float, bool)> addHandle = [&](Vec3d d, float L, bool symmetric) {
             auto h = VRHandle::create(n);
+            h->setSize(size);
             h->setPersistency(0);
             handles.push_back(h);
             geo->addChild(h);
@@ -157,6 +171,7 @@ void VRGeoPrimitive::setPrimitive(string params) {
         geo = VRGeometry::create(name+"_geo");
         addChild(geo);
         geometry = geo;
+        ownsGeometry = true;
     }
     geo->setPrimitive(params);
     setupHandles(); // change primitive type

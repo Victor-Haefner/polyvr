@@ -6,6 +6,8 @@
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRGeoData.h"
+#include "core/tools/VRAnnotationEngine.h"
+#include "core/tools/VRGeoPrimitive.h"
 #include "core/setup/VRSetup.h"
 #include "addons/CEF/CEF.h"
 #include <OpenSG/OSGNameAttachment.h>
@@ -35,7 +37,7 @@ VRSpritePtr VRSprite::create(string name, bool alpha, float w, float h) {
 
 VRSpritePtr VRSprite::ptr() { return static_pointer_cast<VRSprite>( shared_from_this() ); }
 
-void VRSprite::updateGeo() {
+void VRSprite::updateGeo() { // TODO: plane primitive would be better, but backwards compatibility??
     VRGeoData data;
     float w2 = width*0.5;
     float h2 = height*0.5;
@@ -96,14 +98,18 @@ void VRSprite::setSize(float w, float h) {
     updateGeo();
 }
 
-void VRSprite::showResizeTool(bool b) {
-    if (!b && resizeTool) resizeTool->hide();
+void VRSprite::showResizeTool(bool b, float size, bool doAnnotations) {
+    if (!b && resizeTool) resizeTool->select(false);
     if (b) {
         if (!resizeTool) {
-            resizeTool = VRSpriteResizeTool::create( ptr() );
+            setPrimitive("Plane "+toString(width)+" "+toString(height)+" 1 1");
+            resizeTool = VRGeoPrimitive::create();
+            resizeTool->setGeometry(ptr());
             addChild(resizeTool);
         }
-        resizeTool->show();
+        resizeTool->select(true);
+        resizeTool->setHandleSize(size);
+        resizeTool->getLabels()->setVisible(doAnnotations);
     }
 }
 

@@ -460,11 +460,10 @@ void VRTransform::setDir(Vec3d dir) {
 int VRTransform::get_orientation_mode() { return orientation_mode; }
 void VRTransform::set_orientation_mode(int b) { orientation_mode = b; }
 
-void VRTransform::setOrientation(Vec3d at, Vec3d up) {
-    if (isNan(at) || isNan(up)) return;
-    _at = at;
+void VRTransform::setOrientation(Vec3d dir, Vec3d up) {
+    if (isNan(dir) || isNan(up)) return;
     _up = up;
-    reg_change();
+    setDir(dir);
 }
 
 void VRTransform::setTransform(Vec3d from, Vec3d dir, Vec3d up) {

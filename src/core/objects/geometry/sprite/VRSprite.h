@@ -17,7 +17,7 @@ class VRSprite : public VRGeometry {
         float width;
         float height;
         string label;
-        VRSpriteResizeToolPtr resizeTool;
+        VRGeoPrimitivePtr resizeTool;
         shared_ptr<CEF> web;
 
         void updateGeo();
@@ -40,7 +40,7 @@ class VRSprite : public VRGeometry {
         Vec2d getSize();
         string getLabel();
 
-        void showResizeTool(bool b);
+        void showResizeTool(bool b, float size = 0.1, bool doAnnotations = true);
         void convertToCloth();
 };
 

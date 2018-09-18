@@ -12,6 +12,8 @@ using namespace std;
 class VRGeoPrimitive : public VRTransform {
     private:
         bool selected = false;
+        bool ownsGeometry = false;
+        float size = 0.1;
 
         vector<VRHandlePtr> handles;
         VRSelectorPtr selector;
@@ -31,7 +33,9 @@ class VRGeoPrimitive : public VRTransform {
         vector<VRHandlePtr> getHandles();
 
         void select(bool b); // activates editing handles
+        void setHandleSize(float size);
 
+        void setGeometry(VRGeometryPtr geo);
         void setPrimitive(string params);
         VRAnnotationEnginePtr getLabels();
 };
