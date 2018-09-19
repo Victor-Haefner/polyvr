@@ -2,6 +2,8 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/utils/toString.h"
+#include "core/utils/VRProgress.h"
 
 #include <XCAFDoc_ShapeTool.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
@@ -37,6 +39,21 @@ using namespace IfcSchema;
 
 typedef double real_t;
 
+VRProgress progress;
+int lastStage = 0;
+
+void on_update(int i, int N, int stage) {
+    if (stage != lastStage) {
+        cout << "next stage " << stage << endl;
+        progress.setup("STEP mesher stage " + toString(stage), N);
+        progress.reset();
+    }
+
+    progress.update(i);
+    //cout << "mesher update: " << i << "/" << N << " of stage " << stage << endl;
+    lastStage = stage;
+}
+
 class STEPLoader {
     private:
         VRGeometryPtr convertGeo(const TopoDS_Shape& shape) {
@@ -45,10 +62,12 @@ class STEPLoader {
             float linear_deflection = 0.1;
             float angular_deflection = 0.5;
 
-            BRepMesh_IncrementalMesh mesher(shape, linear_deflection, false, angular_deflection, false); // shape, linear deflection, relative to edge length, angular deflection, paralellize
+            BRepMesh_IncrementalMesh mesher(shape, linear_deflection, false, angular_deflection, true); // shape, linear deflection, relative to edge length, angular deflection, paralellize
+            //BRepMesh_IncrementalMesh mesher(shape, linear_deflection, false, angular_deflection, true, on_update); // shape, linear deflection, relative to edge length, angular deflection, paralellize
             VRGeoData data;
 
             for (TopExp_Explorer exp(shape, TopAbs_FACE); exp.More(); exp.Next()) {
+                cout << "STEPLoader::convertGeo, data size: " << data.size() << endl;
                 const TopoDS_Face& face = TopoDS::Face(exp.Current());
                 TopLoc_Location loc;
                 Handle(Poly_Triangulation) tri = BRep_Tool::Triangulation(face, loc);
@@ -148,10 +167,9 @@ class STEPLoader {
                     cout << " shape " << name << " " << Assembly->IsSimpleShape(aLabel) << " " << Assembly->IsAssembly(aLabel) << " " << Assembly->IsFree(aLabel) << endl;
                     if (Assembly->IsSimpleShape(aLabel)) {
                         cout << "  create shape\n";
-                        Handle(TDataStd_Name) N;
                         auto obj = convertGeo(shape);
                         obj->setName( name );
-                        if (parts.count(name)) cout << "ASAAAAH, non unique name in STEP!!\n";
+                        if (parts.count(name)) cout << "Warning in STEP import, the name '" << name << "' is allready taken!" << endl;
                         parts[name] = obj;
                         auto mat = VRMaterial::create("mat");
                         obj->setMaterial(mat);
