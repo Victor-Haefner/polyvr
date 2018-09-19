@@ -268,6 +268,7 @@ VRProcessNodePtr VRProcess::addSubject(string name) {
     interactionDiagram->processnodes[sID] = s;
     auto behaviorDiagram = VRProcessDiagram::create();
     behaviorDiagrams[sID] = behaviorDiagram;
+    cout << "added Subject: " << sID << endl;
     return s;
 }
 
@@ -279,6 +280,7 @@ VRProcessNodePtr VRProcess::addMessage(string name, int i, int j, VRProcessDiagr
     diag->processnodes[mID] = m;
     diag->connect(i, mID, Graph::HIERARCHY);
     diag->connect(mID, j, Graph::DEPENDENCY);
+    cout << "added Message: " << mID << endl;
     return m;
 }
 
@@ -294,6 +296,7 @@ VRProcessNodePtr VRProcess::addAction(string name, int sID) {
     auto aID = diag->addNode();
     auto a = VRProcessNode::create(name, ACTION, aID);
     diag->processnodes[aID] = a;
+    cout << "added Action: " << aID << endl;
     return a;
 }
 
@@ -306,6 +309,8 @@ VRProcessNodePtr VRProcess::addTransition(string name, int sID, int i, int j, VR
     diag->processnodes[tID] = t;
     diag->connect(i, tID, Graph::HIERARCHY);
     diag->connect(tID, j, Graph::DEPENDENCY);
+
+    cout << "added Transition: " << tID << endl;
     return t;
 }
 

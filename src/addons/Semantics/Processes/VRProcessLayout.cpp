@@ -171,14 +171,15 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
     process = p;
 
     //initialize pathtool for each sbd
-    for (auto subject : process->getSubjects()){
+    for (auto subject : p->getSubjects()){
         if (!process->getBehaviorDiagram(subject->getID())) return;
         VRPathtoolPtr toolSBD = VRPathtool::create();
         toolSBDs[subject->getID()] = toolSBD;
         addChild(toolSBD);
+        toolSBD->setGraph(p->getBehaviorDiagram(subject->getID()));
     }
-
     toolSID->setGraph( p->getInteractionDiagram() );
+
     rebuild();
 }
 
@@ -239,20 +240,24 @@ void VRProcessLayout::buildSBDs(){
     int i = 0;
 	for (auto subject : process->getSubjects()) {
 
-        cout << subject->label << " behavior nodes: " << endl;
-        //process->printNodes(process->getBehaviorDiagram(subject->ID));
+        cout << subject->label << endl;
+        cout << " actions: " << process->getSubjectActions(subject->getID()).size() << endl;
 
         int j = 1;
         auto toolSBD = toolSBDs[subject->getID()];
         for (auto action : process->getSubjectActions(subject->getID())){
             PosePtr pose = Pose::create(Vec3d(j*25,0,i*25),Vec3d(0,0,-1),Vec3d(-1,0,0));
-            auto n = toolSBD->addNode(pose);
-            auto h = toolSBD->getHandle(n);
+            auto h = toolSBD->getHandle(action->getID());
+            toolSBD->setHandlePose(action->getID(), pose);
+
+            //auto n = toolSBD->addNode(pose);
+            //auto h = toolSBD->getHandle(n);
             h->addChild(addElement(action) );
             j++;
         }
 
-        cout << "subject transitions:" << process->getTransitions(subject->getID()).size() << endl;
+        //cout << "subject transitions:" << process->getTransitions(subject->getID()).size() << endl;
+        cout << " action transitions: " << process->getTransitions(subject->ID).size() << endl;
         for (auto transition : process->getTransitions(subject->getID())){
             auto transitionElement = addElement(transition);
             auto actions = process->getTransitionActions(subject->getID(), transition->getID());
@@ -260,14 +265,18 @@ void VRProcessLayout::buildSBDs(){
             auto id0 = actions[0]->getID();
             auto id1 = actions[1]->getID();
 
+            Vec3d p;
             auto h0 = toolSBD->getHandle(id0);
             auto h1 = toolSBD->getHandle(id1);
 
-            if (!h0 || !h1) {
-                cout << "meh" << endl;
-                continue;
-            }
+            if (h0 && h1) p = (h0->getWorldPosition() + h1->getWorldPosition())*0.5;
 
+            int idt = transition->getID();
+            toolSBD->setHandlePose(idt, Pose::create(p,Vec3d(0,0,-1), Vec3d(0,1,0)));
+            auto h = toolSBD->getHandle(idt);
+            h->addChild(transitionElement);
+
+            /*
             auto p = (h0->getWorldPosition() + h1->getWorldPosition())*0.5;
             auto n = toolSBD->addNode(Pose::create(p,Vec3d(0,0,-1), Vec3d(0,1,0)));
             auto h = toolSBD->getHandle(n);
@@ -277,30 +286,12 @@ void VRProcessLayout::buildSBDs(){
             int idt = transition->getID();
             toolSBD->connect(id0, idt, norm, norm, false, true);
             toolSBD->connect(idt, id1, norm, norm, false, true);
+            */
         }
         i++;
 	}
 }
 
-/*void VRProcessLayout::rebuild() {
-    if (!process) return;
-    clearChildren();
-    float f=0;
-    auto diag = process->getInteractionDiagram();
-    if (!diag) return;
-    for (int i=0; i<diag->size(); i++) {
-        auto& e = diag->processnodes[i];
-        auto geo = newWidget(e, height);
-
-        Vec3d p = Vec3d(f, 0, 0.01*(rand()%100));
-        f += e->label.size()+2;
-        e->widget->setFrom(p);
-
-        auto& n = diag->getNode(i);
-        n.box.updateFromGeometry(geo);
-        n.box.setCenter(p);
-    }
-}*/
 
 VRObjectPtr VRProcessLayout::getElement(int i) { return elements.count(i) ? elements[i].lock() : 0; }
 
@@ -356,7 +347,7 @@ void VRProcessLayout::setElementName(int ID, string name) {
 
 void VRProcessLayout::update(){
     toolSID->update();
-	for(auto tool : toolSBDs) tool.second->update();
+	for(auto toolSBD : toolSBDs) toolSBD.second->update();
 }
 
 
