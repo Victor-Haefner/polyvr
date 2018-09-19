@@ -30,9 +30,9 @@ float calcArea(Vec3d p1, Vec3d p2, Vec3d p3) {
 
  // Converts geometry to a polyhedron && applies the geometry node's world transform to the polyhedron.
 // OpenSG geometry data isn't transformed itself but has an associated transform core. Both are unified for CGAL.
-CGALPolyhedron* CSGGeometry::toPolyhedron(GeometryMTRecPtr geometry, Matrix4d worldTransform, bool& success) {
+CGALPolyhedron* CSGGeometry::toPolyhedron(VRGeometryPtr geo, PosePtr worldTransform, bool& success) {
 	TriangleIterator it;
-	auto gpos = geometry->getPositions();
+	auto gpos = geo->getMesh()->geo->getPositions();
 
 	//float THRESHOLD2 = thresholdL*thresholdL;
 
@@ -43,7 +43,7 @@ CGALPolyhedron* CSGGeometry::toPolyhedron(GeometryMTRecPtr geometry, Matrix4d wo
 	int NA = 0;
 	do {
         NA = 0;
-        for (it = TriangleIterator(geometry); !it.isAtEnd() ;++it) {
+        for (it = TriangleIterator(geo->getMesh()->geo); !it.isAtEnd() ;++it) {
             vector<Pnt3f> p(3);
             vector<Vec3f> v(3);
             Vec3i vi = Vec3i(it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2));
@@ -81,7 +81,7 @@ CGALPolyhedron* CSGGeometry::toPolyhedron(GeometryMTRecPtr geometry, Matrix4d wo
 	size_t curIndex = 0;
 
 	// Convert triangles to cgal indices and vertices
-	for (it = TriangleIterator(geometry); !it.isAtEnd() ;++it) {
+	for (it = TriangleIterator(geo->getMesh()->geo); !it.isAtEnd() ;++it) {
         vector<size_t> IDs(3);
         for (int i=0; i<3; i++) IDs[i] = isKnownPoint( it.getPosition(i) );
 
@@ -133,7 +133,7 @@ CGALPolyhedron* CSGGeometry::toPolyhedron(GeometryMTRecPtr geometry, Matrix4d wo
         success = false;
         cout << "Error: The polyhedron is not a closed mesh!" << endl;
         VRGeometry::create(GL_TRIANGLES, pos, pos, inds);
-        setWorldMatrix(worldTransform);
+        setWorldPose(worldTransform);
         createSharedIndex(mesh->geo);
         calcVertexNormals(mesh->geo, 0.523598775598 /*30 deg in rad*/);
         getMaterial()->setFrontBackModes(GL_FILL, GL_NONE);
@@ -170,7 +170,7 @@ bool CSGGeometry::disableEditMode() {
             cout << "child: " << geo->getName() << " toPolyhedron\n";
             bool success;
 			try {
-			    polys[i] = toPolyhedron( geo->getMesh()->geo, geo->getWorldMatrix(), success );
+			    polys[i] = toPolyhedron( geo, geo->getWorldPose(), success );
 			} catch (exception e) {
 			    success = false;
 			    cout << getName() << ": toPolyhedron exception: " << e.what() << endl;

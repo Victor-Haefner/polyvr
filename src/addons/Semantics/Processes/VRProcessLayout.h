@@ -5,6 +5,8 @@
 #include "core/objects/VRTransform.h"
 #include "VRProcess.h"
 
+#include "core/utils/VRFunctionFwd.h"
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -17,6 +19,8 @@ class VRProcessLayout : public VRTransform {
         map<int, VRObjectWeakPtr> elements;
         map<VRObject*, int> elementIDs;
         float height = 2;
+
+        VRUpdateCbPtr updateCb;
 
         VRGeometryPtr newWidget(VRProcessNodePtr n, float height);
 
@@ -44,6 +48,8 @@ class VRProcessLayout : public VRTransform {
 
         VRPathtoolPtr getSIDPathtool();
         VRPathtoolPtr getSBDPathtool(int sID);
+
+        void update();
 };
 
 OSG_END_NAMESPACE;

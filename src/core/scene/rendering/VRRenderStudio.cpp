@@ -9,6 +9,7 @@
 #include "core/objects/VRLight.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/VRStage.h"
+#include "core/objects/OSGObject.h"
 #include "core/objects/object/OSGCore.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRCamera.h"
@@ -18,6 +19,7 @@
 #include "VRFXAA.h"
 
 #include <OpenSG/OSGRenderAction.h>
+#include <OpenSG/OSGVisitSubTree.h>
 
 using namespace OSG;
 using namespace std;
@@ -277,9 +279,26 @@ void VRRenderStudio::setBackground(BackgroundMTRecPtr bg) {
     if (fxaa) fxaa->setBackground(bg);
 }
 
+/**
+There seams to be an issue with clustering
+and creating the link then there is no geometry on the scene
+*/
+
+void VRRenderStudio::updateSceneLink() {
+    if (!root_scene) return;
+    NodeMTRecPtr rsNode = root_scene->getNode()->node;
+    if (rsNode->getNChildren() == 0) return;
+    NodeMTRecPtr linkNode = rsNode->getChild(0);
+    VisitSubTreeMTRecPtr link = dynamic_cast<VisitSubTree*>( linkNode->getCore() );
+    if (!link) return;
+    NodeMTRecPtr lRoot = link->getSubTreeRoot();
+    if (lRoot) link->setSubTreeRoot(lRoot);
+}
+
 void VRRenderStudio::setScene(VRObjectPtr r) {
     if (!root_scene || !r) return;
-    //cout << "VRRenderStudio::setScene " << this << " r " << r.get() << " Nlinks " << root_scene->getLinks().size() << endl;
+    //cout << "VRRenderStudio::setScene " << this << " r " << r.get() << " Nlinks " << root_scene->getLinks().size() << " rsn: " << root_scene->getName() << endl;
+    //cout << "   changelist: " << Thread::getCurrentChangeList() << endl;
     root_scene->clearLinks(); // clear links to current scene root node
     root_scene->addLink( r );
     //root_scene->addChild( r );
@@ -290,6 +309,7 @@ void VRRenderStudio::resize(Vec2i s) {
     if (fxaa) fxaa->setSize(s);
 }
 
+VRObjectPtr VRRenderStudio::getSceneRoot() { return root_scene; }
 VRObjectPtr VRRenderStudio::getRoot() { return root_system; }
 bool VRRenderStudio::getSSAO() { return do_ssao; }
 bool VRRenderStudio::getHMDD() { return do_hmdd; }

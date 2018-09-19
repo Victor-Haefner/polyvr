@@ -392,7 +392,7 @@ void VRRoadNetwork::addGuardRail( PathPtr path, float height ) {
 
 	// add poles
 	auto pole = VRGeometry::create("pole");
-	pole->setPrimitive("Box", "0.02 "+toString(height)+" "+toString(poleWidth)+" 1 1 1");
+	pole->setPrimitive("Box 0.02 "+toString(height)+" "+toString(poleWidth)+" 1 1 1");
 	for (auto p : poles) guardRailPoles->merge(pole, p);
     guardRailPoles->setMaterial( w->getMaterial("guardrail") );
 	addChild(rail);

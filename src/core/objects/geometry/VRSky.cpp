@@ -45,7 +45,7 @@ VRSky::VRSky() : VRGeometry("Sky") {
     mat = VRMaterial::create("Sky");
     reloadShader();
     setMaterial(mat);
-    setPrimitive("Plane", "2 2 1 1");
+    setPrimitive("Plane 2 2 1 1");
     mat->setLit(false);
 	mat->setDiffuse(Color3f(1));
 

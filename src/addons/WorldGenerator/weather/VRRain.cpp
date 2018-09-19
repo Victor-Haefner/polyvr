@@ -55,7 +55,7 @@ VRRain::VRRain() : VRGeometry("Rain") {
     mat = VRMaterial::create("Rain");
     reloadShader();
     setMaterial(mat);
-    setPrimitive("Plane", "2 2 1 1");
+    setPrimitive("Plane 2 2 1 1");
     mat->setLit(false);
 	mat->setDiffuse(Color3f(1));
 	mat->setShaderParameter<float>("rainOffset", offset);

@@ -103,7 +103,7 @@ void World::updateGeometry() {
     sphere = VRGeometry::create("sphere");
     sphere->setMesh(makeSphereGeo(1,2));
     sphere->setFrom(center);
-    sphere->setOrientation(center + Vec3d(0,1,0), Vec3d(1,0,0.5));
+    sphere->setOrientation(Vec3d(0,1,0), Vec3d(1,0,0.5));
     scene->add(sphere);
     scene->physicalize(sphere, false);
     //scene->setGravity(Vec3d(0, -1000, 0));

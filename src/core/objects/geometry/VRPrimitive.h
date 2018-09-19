@@ -16,7 +16,7 @@ struct VRPrimitive {
     void fromString(string s);
     string toString();
 
-    static VRPrimitive* make(string p);
+    static VRPrimitive* create(string p);
     static vector<string> getTypes();
     static vector<string> getTypeParameter(string type);
 

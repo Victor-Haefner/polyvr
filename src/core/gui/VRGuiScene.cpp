@@ -694,7 +694,7 @@ void VRGuiScene::on_edit_primitive_params(string path, string new_text) {
     }
 
     VRGeometryPtr obj = static_pointer_cast<VRGeometry>( getSelected() );
-    obj->setPrimitive(prim, args);
+    obj->setPrimitive(prim + " " + args);
 }
 
 // VRLod

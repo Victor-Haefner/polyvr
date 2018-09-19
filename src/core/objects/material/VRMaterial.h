@@ -128,6 +128,7 @@ class VRMaterial : public VRObject {
         float getShininess();
         Color3f getEmission();
         float getTransparency();
+        int getDepthTest();
 
         string constructShaderVP(VRMatDataPtr data = 0);
         string constructShaderFP(VRMatDataPtr data = 0, bool deferred = true, int forcedTextureDim = -1 );

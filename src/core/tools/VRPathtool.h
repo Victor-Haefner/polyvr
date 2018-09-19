@@ -132,6 +132,7 @@ class VRPathtool : public VRObject {
         void removeNode(int i);
         int getNodeID(VRObjectPtr o);
         VRGeometryPtr addHandle(int nID, PosePtr p);
+        void setHandlePose(int nID, PosePtr p);
         void connect(int i1, int i2, Vec3d n1, Vec3d n2, bool handles = true, bool doArrow = false);
         void disconnect(int i1, int i2);
 
@@ -147,7 +148,7 @@ class VRPathtool : public VRObject {
         vector<PathPtr> getPaths(VRGeometryPtr h = 0);
         PathPtr getPath(VRGeometryPtr h1, VRGeometryPtr h2);
         VRGeometryPtr getHandle(int ID);
-        vector<VRGeometryPtr> getHandles(PathPtr p);
+        vector<VRGeometryPtr> getHandles(PathPtr p = 0);
         VRStrokePtr getStroke(PathPtr p);
 
         VRMaterialPtr getPathMaterial();

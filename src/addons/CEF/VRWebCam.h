@@ -1,7 +1,7 @@
 #ifndef VRWEBCAM_H_INCLUDED
 #define VRWEBCAM_H_INCLUDED
 
-#include "core/objects/geometry/VRSprite.h"
+#include "core/objects/geometry/sprite/VRSprite.h"
 #include <string>
 
 OSG_BEGIN_NAMESPACE;

@@ -48,7 +48,7 @@ VRRainCarWindshield::VRRainCarWindshield() : VRGeometry("RainCarWindshield") {
     mat = VRMaterial::create("RainCarWindshield");
     reloadShader();
     setMaterial(mat);
-    setPrimitive("Plane", "2 2 1 1");
+    setPrimitive("Plane 2 2 1 1");
     mat->setLit(false);
 	mat->setDiffuse(Color3f(1));
 	mat->enableTransparency();
@@ -58,7 +58,7 @@ VRRainCarWindshield::VRRainCarWindshield() : VRGeometry("RainCarWindshield") {
     mat->readVertexShader(vScript);
     mat->readFragmentShader(fScript);
     setMaterial(mat);
-    setPrimitive("Plane", "2 2 1 1");
+    setPrimitive("Plane 2 2 1 1");
     mat->setLit(false);
 	mat->setDiffuse(Color3f(1));
 	mat->enableTransparency();

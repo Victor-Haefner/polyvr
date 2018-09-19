@@ -51,7 +51,7 @@ void VRWaypoint::updateGeo() {
     setMaterial(m);
     float s = size;
     string params = toString(s) + " " + toString(s) + " " + toString(s*0.5) + " " + toString(s*0.4) + " " + toString(s*0.4);
-    setPrimitive("Arrow", params);
+    setPrimitive("Arrow " + params);
     if (!pose || !floor) return;
 
     // compute pos

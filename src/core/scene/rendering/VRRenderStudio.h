@@ -65,6 +65,7 @@ class VRRenderStudio : public VRStorage {
         void reset();
 
         VRObjectPtr getRoot();
+        VRObjectPtr getSceneRoot();
 
         void addStage(string name, string parent = "");
         void setStageActive(string name, bool da, bool la);
@@ -79,6 +80,7 @@ class VRRenderStudio : public VRStorage {
         void subLight(int ID);
         void clearLights();
 
+        void updateSceneLink();
         void setScene(VRObjectPtr root);
         void setCamera(OSGCameraPtr cam);
         void setBackground(BackgroundMTRecPtr bg);

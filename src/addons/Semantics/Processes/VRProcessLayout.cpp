@@ -1,6 +1,6 @@
 #include "VRProcessLayout.h"
 #include "VRProcess.h"
-#include "core/objects/geometry/VRSprite.h"
+#include "core/objects/geometry/sprite/VRSprite.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRConstraint.h"
 #include "core/objects/geometry/VRGeoData.h"
@@ -10,9 +10,15 @@
 
 #include <OpenSG/OSGMatrixUtility.h>
 
+#include "core/scene/VRScene.h"
+#include <boost/bind.hpp>
+
 using namespace OSG;
 
-VRProcessLayout::VRProcessLayout(string name) : VRTransform(name) {}
+VRProcessLayout::VRProcessLayout(string name) : VRTransform(name) {
+    updateCb = VRUpdateCb::create("process layout update", boost::bind(&VRProcessLayout::update, this));
+    VRScene::getCurrent()->addUpdateFkt(updateCb);
+}
 VRProcessLayout::~VRProcessLayout() {}
 
 VRProcessLayoutPtr VRProcessLayout::ptr() { return static_pointer_cast<VRProcessLayout>( shared_from_this() ); }
@@ -172,8 +178,8 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
         addChild(toolSBD);
     }
 
+    toolSID->setGraph( p->getInteractionDiagram() );
     rebuild();
-
 }
 
 void VRProcessLayout::setEngine(VRProcessEnginePtr e) { engine = e; }
@@ -182,9 +188,7 @@ void VRProcessLayout::rebuild() {
     if (!process) return;
     clearChildren();
     addChild(toolSID);
-    for(auto tool : toolSBDs){
-        addChild(tool.second);
-    }
+    for(auto tool : toolSBDs) addChild(tool.second);
     auto sid = process->getInteractionDiagram();
     if (!sid) return;
 
@@ -197,18 +201,16 @@ void VRProcessLayout::rebuild() {
     }
 
 	toolSID->update();
-	for(auto tool : toolSBDs){
-        tool.second->update();
-	}
+	for(auto tool : toolSBDs) tool.second->update();
 }
 
-void VRProcessLayout::buildSID(){
+void VRProcessLayout::buildSID() {
     int i = 0;
 	for (auto subject : process->getSubjects()) {
         PosePtr pose = Pose::create(Vec3d(0,0,i*25),Vec3d(0,0,-1),Vec3d(0,1,0));
-		auto n = toolSID->addNode(pose);
-		auto h = toolSID->getHandle(n);
-		h->addChild(addElement(subject) );
+		auto h = toolSID->getHandle(subject->getID());
+		toolSID->setHandlePose(subject->getID(), pose);
+		h->addChild( addElement(subject) );
 		i++;
 	}
 
@@ -219,26 +221,15 @@ void VRProcessLayout::buildSID(){
 		auto id0 = subjects[0]->getID();
 		auto id1 = subjects[1]->getID();
 
+		Vec3d p;
 		auto h0 = toolSID->getHandle(id0);
 		auto h1 = toolSID->getHandle(id1);
+		if (h0 && h1) p = (h0->getWorldPosition() + h1->getWorldPosition())*0.5;
 
-		if (!h0 || !h1) {
-            cout << "AAAARGH" << endl;
-            continue;
-		}
-
-        h0->getWorldPosition();
-        h1->getWorldPosition();
-		auto p = (h0->getWorldPosition() + h1->getWorldPosition())*0.5;
-
-		auto n = toolSID->addNode( Pose::create(p,Vec3d(0,0,-1),Vec3d(0,1,0) ) );
-		auto h = toolSID->getHandle(n);
-		h->addChild( messageElement );
-
-		Vec3d norm = Vec3d(1,0,0);
 		int idm = message->getID();
-		toolSID->connect(id0, idm, norm, norm, false, true);
-		toolSID->connect(idm, id1, norm, norm, false, true);
+		toolSID->setHandlePose(idm, Pose::create(p,Vec3d(0,0,-1),Vec3d(0,1,0) ));
+		auto h = toolSID->getHandle(idm);
+		h->addChild( messageElement );
 	}
 }
 
@@ -361,6 +352,11 @@ void VRProcessLayout::setElementName(int ID, string name) {
     mat->setTextureParams(GL_LINEAR, GL_LINEAR);
 
     e->setMaterial(mat);
+}
+
+void VRProcessLayout::update(){
+    toolSID->update();
+	for(auto tool : toolSBDs) tool.second->update();
 }
 
 

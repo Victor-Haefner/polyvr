@@ -93,7 +93,7 @@ void VRWindow::update( weak_ptr<VRThread>  wt) {
             auto appCL = t->appThread->getChangeList();
             auto clist = Thread::getCurrentChangeList();
             clist->merge(*appCL);
-            //if (clist->getNumCreated() > 0 || clist->getNumChanged() > 0) cout << "VRWindow::update " << name << " " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
+            //if (clist->getNumCreated() > 0) cout << "VRWindow::update " << name << " " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
             if (wait()) break;
             render(true);
             clist->clear();

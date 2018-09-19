@@ -160,7 +160,7 @@ size_t VRHDLC::getLastInput() { return time(0) - lastInput; }
 
 void VRHDLC::handleData() {
     if (verbose) cout << endl << "handleData: " << VRSerial::asHexRepr(serialData) << endl;
-    (*callback)(serialData);
+    if (callback) (*callback)(serialData);
     serialData.clear();
 }
 
@@ -255,7 +255,7 @@ void VRHDLC::sendData(vector<unsigned char> data, bool doWait) {
     }
     tmp = VRSerial::concat( VRSerial::concat({0x7E}, tmp) , {0x7E} );
     //if (verbose) cout << " serial send (" << tmp.size() << "): " << asHexRepr( tmp ) << endl;
-    cout << " serial send (" << tmp.size() << "): " << VRSerial::asHexRepr( tmp ) << endl;
+    //cout << " serial send (" << tmp.size() << "): " << VRSerial::asHexRepr( tmp ) << endl;
     serial->write(tmp);
     if (doWait) waitForMessage();
 }

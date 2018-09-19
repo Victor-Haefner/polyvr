@@ -2,7 +2,7 @@
 #define VRPYSPRITE_H_INCLUDED
 
 #include "VRPyBase.h"
-#include "core/objects/geometry/VRSprite.h"
+#include "core/objects/geometry/sprite/VRSprite.h"
 
 struct VRPySprite : VRPyBaseT<OSG::VRSprite> {
     static PyMethodDef methods[];

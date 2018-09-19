@@ -76,7 +76,7 @@ VRTrafficSimulation::VRTrafficSimulation() : VRObject("TrafficSimulation") {
     VRScene::getCurrent()->addUpdateFkt(updateCb);
 
     auto box = VRGeometry::create("boxCar");
-    box->setPrimitive("Box", "2 1.5 4 1 1 1");
+    box->setPrimitive("Box 2 1.5 4 1 1 1");
     addVehicleModel(box);
 
     auto setupLightMaterial = [&](string name, Color3f c, bool lit) {
