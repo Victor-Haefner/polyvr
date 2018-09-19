@@ -210,16 +210,16 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyMolecule>("Molecule", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyCrystal>("Crystal", pModVR, VRPyMolecule::typeRef);
     sm->registerModule<VRPyRobotArm>("RobotArm", pModVR);
-    sm->registerModule<VRPyOntology>("Ontology", pModVR);
+    sm->registerModule<VRPyOntology>("Ontology", pModVR, VRPyName::typeRef);
     sm->registerModule<VRPyProcess>("Process", pModVR);
     sm->registerModule<VRPyProcessNode>("ProcessNode", pModVR);
     sm->registerModule<VRPyProcessDiagram>("ProcessDiagram", pModVR, VRPyGraph::typeRef);
     sm->registerModule<VRPyProcessLayout>("ProcessLayout", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyProcessEngine>("ProcessEngine", pModVR);
     sm->registerModule<VRPyOntologyRule>("OntologyRule", pModVR);
-    sm->registerModule<VRPyProperty>("Property", pModVR);
-    sm->registerModule<VRPyConcept>("Concept", pModVR);
-    sm->registerModule<VRPyEntity>("Entity", pModVR);
+    sm->registerModule<VRPyProperty>("Property", pModVR, VRPyName::typeRef);
+    sm->registerModule<VRPyConcept>("Concept", pModVR, VRPyName::typeRef);
+    sm->registerModule<VRPyEntity>("Entity", pModVR, VRPyName::typeRef);
     sm->registerModule<VRPyReasoner>("Reasoner", pModVR);
 
     sm->registerModule<VRPyHandGeo>("HandGeo", pModVR, VRPyGeometry::typeRef);

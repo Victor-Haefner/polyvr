@@ -60,6 +60,7 @@ void VRProcess::open(string path) {
 }
 
 void VRProcess::setOntology(VROntologyPtr o) { ontology = o; update(); }
+VROntologyPtr VRProcess::getOntology() { return ontology; }
 
 VRProcessDiagramPtr VRProcess::getInteractionDiagram() {
     if (!interactionDiagram) interactionDiagram = VRProcessDiagram::create();
@@ -134,13 +135,13 @@ void VRProcess::update() {
     auto query = [&](string q) { return reasoner->process(q, ontology); };
 
     /** get interaction diagram **/
-    auto layers = query("q(x):Layer(x)");
+    auto layers = query("q(x):ModelLayer(x)");
     if (layers.size() == 0) return;
     auto layer = layers[0]; // only use first layer
     interactionDiagram = VRProcessDiagram::create();
 
     map<string, int> nodes;
-    string q_subjects = "q(x):ActiveProcessComponent(x);Layer("+layer->getName()+");has("+layer->getName()+",x)";
+    string q_subjects = "q(x):Subject(x);ModelLayer("+layer->getName()+");has("+layer->getName()+",x)";
     for ( auto subject : query(q_subjects) ) {
         string label;
         if (auto l = subject->get("hasModelComponentLable") ) label = l->value;
@@ -149,7 +150,7 @@ void VRProcess::update() {
     }
 
     map<string, map<string, vector<VREntityPtr>>> messages;
-    string q_messages = "q(x):MessageExchange(x);Layer("+layer->getName()+");has("+layer->getName()+",x)";
+    string q_messages = "q(x):MessageExchange(x);ModelLayer("+layer->getName()+");has("+layer->getName()+",x)";
     for ( auto message : query(q_messages) ) {
         string sender;
         string receiver;

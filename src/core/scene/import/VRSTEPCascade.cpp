@@ -44,7 +44,7 @@ int lastStage = 0;
 
 void on_update(int i, int N, int stage) {
     if (stage != lastStage) {
-        cout << "next stage " << stage << endl;
+        cout << endl;
         progress.setup("STEP mesher stage " + toString(stage), N);
         progress.reset();
     }

@@ -61,6 +61,7 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
 
         void open(string path);
         void setOntology(VROntologyPtr o);
+        VROntologyPtr getOntology();
         VRProcessDiagramPtr getInteractionDiagram();
         VRProcessDiagramPtr getBehaviorDiagram(int subject);
         VRProcessNodePtr getNode(int i, VRProcessDiagramPtr diag = 0);
@@ -71,7 +72,6 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         vector<VRProcessNodePtr> getMessages();
         vector<VRProcessNodePtr> getSubjectActions(int subjectID);
         vector<VRProcessNodePtr> getActionTransitions(int subjectID, int actionID);
-
 
         VRProcessNodePtr addSubject(string name);
         VRProcessNodePtr addMessage(string name, int i, int j, VRProcessDiagramPtr diag = 0);

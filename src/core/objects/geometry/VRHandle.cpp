@@ -80,7 +80,7 @@ void VRHandle::updateHandle(bool sceneUpdate) {
     for (auto hw : siblings) {
         if (auto h = hw.lock()) {
             Vec3d pos = h->origin->pos() + h->axis*h->scale*v/scale;
-            cout << "VRHandle::updateHandle sibling v: " << v << " scale: " << scale << " hscale: " << h->scale << " haxis: " << h->axis << " pos: " << pos << endl;
+            //cout << "VRHandle::updateHandle sibling v: " << v << " scale: " << scale << " hscale: " << h->scale << " haxis: " << h->axis << " pos: " << pos << endl;
             h->setFrom(pos);
         }
     }

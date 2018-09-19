@@ -258,11 +258,7 @@ VREntityPtr VROntology::getEntity(string e) {
 vector<VREntityPtr> VROntology::getEntities(string concept) {
     vector<VREntityPtr> res;
     if (concept != "") {
-        for (auto i : entities) {
-            for (auto c : i.second->getConcepts()) {
-                if(c && c->is_a(concept)) { res.push_back(i.second); break; }
-            }
-        }
+        for (auto i : entities) if (i.second->is_a(concept)) res.push_back(i.second);
     } else for (auto i : entities) res.push_back(i.second);
     return res;
 }

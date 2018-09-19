@@ -20,7 +20,6 @@ simpleVRPyType(Reasoner, New_ptr);
 // --------------------- Property --------------------
 
 PyMethodDef VRPyProperty::methods[] = {
-    {"getName", (PyCFunction)VRPyProperty::getName, METH_NOARGS, "Return the name - str getName()" },
     {"toString", (PyCFunction)VRPyProperty::toString, METH_NOARGS, "Return the property as string - str toString()" },
     {"getType", (PyCFunction)VRPyProperty::getType, METH_NOARGS, "Return the type - str getType()" },
     {"getValue", (PyCFunction)VRPyProperty::getValue, METH_NOARGS, "Return value - val getValue()" },
@@ -46,7 +45,6 @@ PyObject* VRPyProperty::getValue(VRPyProperty* self) {
 // --------------------- Concept --------------------
 
 PyMethodDef VRPyConcept::methods[] = {
-    {"getName", (PyCFunction)VRPyConcept::getName, METH_NOARGS, "Return the name - str getName()" },
     {"toString", (PyCFunction)VRPyConcept::toString, METH_NOARGS, "Return the concept as string - str toString()" },
     {"getProperty", (PyCFunction)VRPyConcept::getProperty, METH_VARARGS, "Return a property by name - property getProperty( str name )" },
     {"getProperties", (PyCFunction)VRPyConcept::getProperties, METH_NOARGS, "Return all properties - [property] getProperties()" },
@@ -108,7 +106,6 @@ PyObject* VRPyOntologyRule::toString(VRPyOntologyRule* self) {
 // --------------------- Entity --------------------
 
 PyMethodDef VRPyEntity::methods[] = {
-    {"getName", (PyCFunction)VRPyEntity::getName, METH_NOARGS, "Return the name - str getName()" },
     {"toString", (PyCFunction)VRPyEntity::toString, METH_NOARGS, "Return the entity as string - str toString()" },
     {"getConcept", (PyCFunction)VRPyEntity::getConcept, METH_NOARGS, "Return the concept - concept getConcept()" },
     {"getProperties", (PyCFunction)VRPyEntity::getProperties, METH_VARARGS, "Return all properties or the properties of a certain type - [property] getProperties( str )" },
@@ -122,6 +119,7 @@ PyMethodDef VRPyEntity::methods[] = {
     {"getAll", (PyCFunction)VRPyEntity::getAll, METH_VARARGS, "Get all values of property named prop - [str] get( str prop )" },
     {"getAllVector", (PyCFunction)VRPyEntity::getAllVector, METH_VARARGS, "Get all values of vector property named prop - [[x,y,z]] getAllVector( str prop ) )" },
     {"setSGObject", (PyCFunction)VRPyEntity::setSGObject, METH_VARARGS, "Link the entity to its scene graph object - setSGObject( obj ) )" },
+    {"is_a", PyCastWrap(Entity, is_a, "Check is entity is of a given type", bool, string) },
     {NULL}  /* Sentinel */
 };
 

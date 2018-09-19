@@ -17,6 +17,7 @@ simpleVRPyType(ProcessEngine, New_ptr);
 PyMethodDef VRPyProcess::methods[] = {
     {"open", PyWrap(Process, open, "Open file - open(path)", void, string ) },
     {"setOntology", PyWrap(Process, setOntology, "Set data from ontology - open(ontology)", void, VROntologyPtr ) },
+    {"getOntology", PyWrap(Process, getOntology, "Get ontology", VROntologyPtr ) },
     {"getInteractionDiagram", PyWrap(Process, getInteractionDiagram, "Return subjects interaction diagram - getInteractionDiagram()", VRProcessDiagramPtr ) },
     {"getBehaviorDiagram", PyWrap(Process, getBehaviorDiagram, "Return subject behavior diagram - getBehaviorDiagram( int ID )", VRProcessDiagramPtr, int ) },
     {"getSubjects", PyWrap(Process, getSubjects, "Return subjects - [ProcessNode] getSubjects()", vector<VRProcessNodePtr> ) },

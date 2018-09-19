@@ -179,13 +179,14 @@ void VRProcessLayout::rebuild() {
 		auto messageElement = addElement(message);
 		auto subjects = process->getMessageSubjects( message->getID() );
 
-
 		auto id0 = subjects[0]->getID();
 		auto id1 = subjects[1]->getID();
 
+		Vec3d p;
 		auto h0 = tool->getHandle(id0);
 		auto h1 = tool->getHandle(id1);
-		auto p = (h0->getWorldPosition() + h1->getWorldPosition())*0.5;
+		if (h0 && h1) p = (h0->getWorldPosition() + h1->getWorldPosition())*0.5;
+
 		auto n = tool->addNode( Pose::create(p,Vec3d(0,0,-1),Vec3d(0,1,0) ) );
 		auto h = tool->getHandle(n);
 		h->addChild( messageElement );
