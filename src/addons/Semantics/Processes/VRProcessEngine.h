@@ -3,6 +3,7 @@
 
 #include "addons/Semantics/VRSemanticsFwd.h"
 #include "core/math/VRMathFwd.h"
+#include "core/utils/VRFunctionFwd.h"
 #include <map>
 #include <OpenSG/OSGVector.h>
 
@@ -12,9 +13,17 @@ OSG_BEGIN_NAMESPACE;
 class VRProcessEngine {
     private:
         VRProcessPtr process;
-        VRStateMachineMapPtr processState;
-        map<int, VRStateMachineMapPtr> subjectStates;
+        //VRStateMachineMapPtr processState;
+        //map<int, VRStateMachineMapPtr> subjectStates;
+        map<int, VRProcessNodePtr> currentActions;
+        map<int, vector<VRProcessNodePtr>> subjectActions;
 
+        VRUpdateCbPtr updateCb;
+        bool running = false;
+
+        void initialize();
+        void performAction(VRProcessNodePtr);
+        void nextAction(int, VRProcessNodePtr);
         void update();
 
     public:
@@ -29,6 +38,8 @@ class VRProcessEngine {
         void reset();
         void run(float speed = 1);
         void pause();
+
+        vector<VRProcessNodePtr> getCurrentActions();
 };
 
 OSG_END_NAMESPACE;

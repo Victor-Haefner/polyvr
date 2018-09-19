@@ -11,7 +11,9 @@ using namespace std;
 class VRProcessLayout : public VRTransform {
     private:
         VRProcessPtr process;
-        VRPathtoolPtr tool;
+        VRProcessEnginePtr engine;
+        VRPathtoolPtr toolSID;
+        map<int, VRPathtoolPtr> toolSBDs;
         map<int, VRObjectWeakPtr> elements;
         map<VRObject*, int> elementIDs;
         float height = 2;
@@ -20,6 +22,8 @@ class VRProcessLayout : public VRTransform {
 
         void init();
         void rebuild(); // TODO
+        void buildSID();
+        void buildSBDs();
 
     public:
         VRProcessLayout(string name = "");
@@ -29,6 +33,7 @@ class VRProcessLayout : public VRTransform {
         VRProcessLayoutPtr ptr();
 
         void setProcess(VRProcessPtr p);
+        void setEngine(VRProcessEnginePtr e);
         VRObjectPtr getElement(int i);
         void remElement(VRObjectPtr o);
         int getElementID(VRObjectPtr o);
@@ -37,7 +42,8 @@ class VRProcessLayout : public VRTransform {
         void selectElement(VRGeometryPtr geo);
         void setElementName(int ID, string name);
 
-        VRPathtoolPtr getPathtool();
+        VRPathtoolPtr getSIDPathtool();
+        VRPathtoolPtr getSBDPathtool(int sID);
 };
 
 OSG_END_NAMESPACE;
