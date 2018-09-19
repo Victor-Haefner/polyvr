@@ -97,7 +97,11 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             string type2 = "road";
             if (auto t1 = road1->getEntity()->get("type")) type1 = t1->value;
             if (auto t2 = road2->getEntity()->get("type")) type2 = t2->value;
-            if (type1 != type2) return false;
+            if (type1 != type2) {
+                if (type1 == "footway" && road1->getGeometry()) { road1->getGeometry()->setVisible(0); }
+                if (type2 == "footway" && road2->getGeometry()) { road2->getGeometry()->setVisible(0); }
+                return false;
+            }
 
             if (Nout == Nin && i == j) return true;
 	        //if (Nout > Nin && i == j-1) return true;
@@ -440,15 +444,15 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             if (crossingRoads.size()==0) return;
             for (auto rf : roadFronts) { // compute road front
                 auto road = rf->road;
-                if (!roadOffsetted.count(road->getEntity())) {
+                if (!roadOffsetted.count(road->getEntity()) && crossingRoads.count(road->getEntity())) {
                     auto& data = road->getEdgePoint( node );
                     Vec3d X = crossingRoads[road->getEntity()];
                     auto rd = data.entry->getVec3("direction");
                     Vec3d p1 = data.p1;
                     Vec3d p2 = data.p2;
                     Vec3d norm = data.n;
-                    Vec3d offset1 = norm*(-(p1-X).dot(norm)+1.5);
-                    Vec3d offset2 = norm*(-(p2-X).dot(norm)+1.5);
+                    Vec3d offset1 = norm*(-(p1-X).dot(norm)+1);
+                    Vec3d offset2 = norm*(-(p2-X).dot(norm)+1);
                     float d1 = abs((offset1).dot(norm));
                     float d2 = abs((offset2).dot(norm));
                     float d = min(d1,d2);
@@ -485,17 +489,18 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             auto node2Ent = nodes2[0];
 
             auto lane = addLane(1, width, pedestrianIn || pedestrianOut);
-            /*
+
             if (crossingRoads.size()>0) {
-                for (int i = 0; i<crossingRoads.size()-1; i++) {
-                    auto rd = crossingRoads[i];
-                    if (rd->getName() == roadIn->getName() && nodes1.size()>1 && !processedLanes.count(laneIn)){
+                for (auto rf : roadFronts) {
+                    auto road = rf->road;
+                    if (!crossingRoads.count(road->getEntity())) continue;
+                    if (road->getEntity()->getName() == roadIn->getName() && nodes1.size()>1 && !processedLanes.count(laneIn)){
                         auto node10Ent = nodes1[nodes1.size()-2];
-                        Vec3d X = crossingRoadsPos[i];
+                        Vec3d X = crossingRoads[road->getEntity()];
                         Vec3d p1 = node1Ent->getEntity("node")->getVec3("position");
                         Vec3d p10= node10Ent->getEntity("node")->getVec3("position");
                         Vec3d dir1= node1Ent->getVec3("direction");
-                        Vec3d offset = -dir1*dir1.dot((p1-X))+dir1*1.5;
+                        Vec3d offset = -dir1*dir1.dot((p1-X))+dir1*1;
                         Vec3d np1 = p1+offset;
                         node1Ent->getEntity("node")->setVec3("position", np1, "Position");
                         //node10Ent->getEntity("node")->setVec3("position", np10, "Position");
@@ -507,13 +512,13 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                         //graph->setPosition(node10Ent->getEntity("node")->getValue<int>("graphID", 0), Pose::create(np10));
                         processedLanes[laneIn] = true;
                     }
-                    if (rd->getName() == roadOut->getName() && nodes2.size()>1 && !processedLanes.count(laneOut)) {
+                    if (road->getEntity()->getName() == roadOut->getName() && nodes2.size()>1 && !processedLanes.count(laneOut)) {
                         auto node20Ent = nodes2[1];
-                        Vec3d X = crossingRoadsPos[i];
+                        Vec3d X = crossingRoads[road->getEntity()];
                         Vec3d p2 = node2Ent->getEntity("node")->getVec3("position");
                         Vec3d p20= node20Ent->getEntity("node")->getVec3("position");
                         Vec3d dir2= node2Ent->getVec3("direction");
-                        Vec3d offset = dir2*dir2.dot((X-p2))-dir2*1.5;
+                        Vec3d offset = dir2*dir2.dot((X-p2))-dir2*1;
                         Vec3d np2 = p2+offset;
                         node2Ent->getEntity("node")->setVec3("position", np2, "Position");
                         //node20Ent->getEntity("node")->setVec3("position", np20, "Position");
@@ -526,7 +531,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                         processedLanes[laneOut] = true;
                     }
                 }
-            }*/
+            }
 
             auto nodes = { node1Ent->getEntity("node"), node2Ent->getEntity("node") };
             auto norms = { node1Ent->getVec3("direction"), node2Ent->getVec3("direction") };
@@ -953,6 +958,21 @@ void VRRoadIntersection::computeMarkings() {
     }
 
     for (auto roadFront : roadFronts) {
+        auto road = roadFront->road;
+        if (crossingRoads.count(road->getEntity())) {
+            auto& data = road->getEdgePoint( entity->getEntity("node") );
+            Vec3d p1 = data.p1;
+            Vec3d p2 = data.p2;
+            Vec3d n = data.n;
+
+            Vec3d x = n.cross(Vec3d(0,1,0));
+            n.normalize();
+            x.normalize();
+            float W = 3;
+            float L = 0.3;
+            addLine( "RoadMarking", p1+x*3+n*(W*0.5 + 0.45), p2-x*3+n*(W*0.5 + 0.45), x, x, W, L, "white");
+        }
+
         for (auto lane : roadFront->inLanes) {
             for (auto pathEnt : lane->getAllEntities("path")) {
                 auto entry = pathEnt->getEntity("nodes",-1);

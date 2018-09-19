@@ -28,6 +28,7 @@ class VRRoad : public VRRoadBase {
         float offsetOut = 0;
         vector<VRRoadIntersectionPtr> intersections;
         map<VREntityPtr, edgePoint> edgePoints;
+        VRGeometryPtr selfPtr;
 
     public:
         VRRoad();
@@ -42,6 +43,7 @@ class VRRoad : public VRRoadBase {
         void setOffsetOut(float o);
         float getWidth();
         VRGeometryPtr createGeometry();
+        VRGeometryPtr getGeometry();
         VREntityPtr getNodeEntry( VREntityPtr node );
         edgePoint& getEdgePoint( VREntityPtr node );
         map<VREntityPtr, edgePoint>& getEdgePoints();

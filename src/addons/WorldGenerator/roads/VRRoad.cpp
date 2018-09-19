@@ -209,7 +209,13 @@ VRGeometryPtr VRRoad::createGeometry() {
 	if (!geo) return 0;
 	setupTexCoords( geo, entity );
 	addChild(geo);
-	return geo;
+	selfPtr = geo;
+    return geo;
+}
+
+VRGeometryPtr VRRoad::getGeometry() {
+    if (selfPtr) return selfPtr;
+    return 0;
 }
 
 void VRRoad::computeMarkings() {

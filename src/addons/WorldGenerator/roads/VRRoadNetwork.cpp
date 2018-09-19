@@ -138,7 +138,7 @@ void VRRoadNetwork::updateAsphaltTexture() {
             int colorID = 1;
             if (c == "yellow") colorID = 2;
             float width = w ? toFloat( w->value ) : 0;
-            float dashL = dL ? toInt( dL->value ) : 0;
+            float dashL = dL ? toFloat( dL->value ) : 0;
             asphalt->addMarking(rID, toPath(marking, 4), width, dashL, 0, colorID);
 		}
 
@@ -146,7 +146,7 @@ void VRRoadNetwork::updateAsphaltTexture() {
             auto w = track->get("width");
             auto dL = track->get("dashLength");
             float width = w ? toFloat( w->value ) : 0;
-            float dashL = dL ? toInt( dL->value ) : 0;
+            float dashL = dL ? toFloat( dL->value ) : 0;
             asphalt->addTrack(rID, toPath(track, 4), width, dashL, trackWidth*0.5);
 		}
 
