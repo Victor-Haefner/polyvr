@@ -269,6 +269,7 @@ VRProcessNodePtr VRProcess::addSubject(string name) {
     auto behaviorDiagram = VRProcessDiagram::create();
     behaviorDiagrams[sID] = behaviorDiagram;
     cout << "added Subject: " << sID << endl;
+    cout << "added Behavior: " << behaviorDiagram << endl;
     return s;
 }
 
