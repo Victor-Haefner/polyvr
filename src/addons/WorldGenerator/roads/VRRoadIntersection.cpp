@@ -1218,6 +1218,12 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
         }
 
         if (type == CROSSING) { // special cases for crossings
+            for (auto rf : roadFronts) {
+                auto road = rf->road;
+                string type = "road";
+                if (auto t = road->getEntity()->get("type")) type = t->value;
+                if (type == "footway" && road->getGeometry()) { road->getGeometry()->setVisible(0); }
+            }
             return true;
         }
 
