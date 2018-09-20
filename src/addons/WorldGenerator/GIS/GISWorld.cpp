@@ -61,6 +61,7 @@ void GISWorld::setupOntology() {
     Way->addProperty("lanes", Lane);
     Arrow->addProperty("position", "float");
     Arrow->addProperty("direction", "float");
+    Arrow->addProperty("offset", "float");
     Arrow->addProperty("lane", Lane);
     Arrow->addProperty("type", "int");
     Lane->addProperty("road", Way);

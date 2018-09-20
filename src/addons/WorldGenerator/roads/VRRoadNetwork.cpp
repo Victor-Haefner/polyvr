@@ -550,7 +550,13 @@ void VRRoadNetwork::computeArrows() {
         Vec4i drs(999,999,999,999);
         for (uint i=0; i<4 && i < dirs.size(); i++) drs[i] = int(dirs[i]*5/pi)*180/5;
         if (t < 0) t = 1+t; // from the end
-        createArrow(drs, min(int(dirs.size()),4), *lpath->getPose(t), arrow->getValue<int>("type", 0));
+        auto pose = *lpath->getPose(t);
+        auto dir = pose->dir();
+        if ( arrow->get("offset") ) {
+            float offset = toFloat(arrow->get("offset")->value);
+            pose->setPos(pose->pos() + dir*offset);
+        }
+        createArrow(drs, min(int(dirs.size()),4), *pose, arrow->getValue<int>("type", 0));
     }
 }
 

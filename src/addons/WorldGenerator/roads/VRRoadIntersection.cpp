@@ -406,6 +406,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
         auto node = entity->getEntity("node");
         Vec3d pNode = node->getVec3("position");
         int N = roadFronts.size();
+        float disToCrossing = 0.1;
         map<VREntityPtr, bool> processedLanes; // keep list of already processed lanes
         map<VREntityPtr, bool> crossroadFronts; // keep list of already processed lanes
         map<VREntityPtr, Vec3d> roadOffsets;
@@ -446,8 +447,8 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                     Vec3d p1 = data.p1;
                     Vec3d p2 = data.p2;
                     Vec3d norm = data.n;
-                    Vec3d offset1 = norm*(-(p1-X).dot(norm)+1);
-                    Vec3d offset2 = norm*(-(p2-X).dot(norm)+1);
+                    Vec3d offset1 = norm*(-(p1-X).dot(norm)+disToCrossing);
+                    Vec3d offset2 = norm*(-(p2-X).dot(norm)+disToCrossing);
                     float d1 = abs((offset1).dot(norm));
                     float d2 = abs((offset2).dot(norm));
                     float d = min(d1,d2);
@@ -492,7 +493,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                         Vec3d X = crossingRoads[road->getEntity()];
                         Vec3d p1 = node1Ent->getEntity("node")->getVec3("position");
                         Vec3d dir1= node1Ent->getVec3("direction");
-                        Vec3d offset = -dir1*dir1.dot((p1-X))+dir1*1;
+                        Vec3d offset = -dir1*dir1.dot((p1-X))+dir1*disToCrossing;
                         Vec3d np1 = p1+offset;
                         node1Ent->getEntity("node")->setVec3("position", np1, "Position");
 
@@ -503,7 +504,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                         Vec3d X = crossingRoads[road->getEntity()];
                         Vec3d p2 = node2Ent->getEntity("node")->getVec3("position");
                         Vec3d dir2= node2Ent->getVec3("direction");
-                        Vec3d offset = dir2*dir2.dot((X-p2))-dir2*1;
+                        Vec3d offset = dir2*dir2.dot((X-p2))-dir2*disToCrossing;
                         Vec3d np2 = p2+offset;
                         node2Ent->getEntity("node")->setVec3("position", np2, "Position");
 
@@ -942,6 +943,7 @@ void VRRoadIntersection::computeMarkings() {
         }
 
         for (auto lane : roadFront->inLanes) {
+            auto road = lane->getEntity("road");
             for (auto pathEnt : lane->getAllEntities("path")) {
                 auto entry = pathEnt->getEntity("nodes",-1);
                 auto node = entry->getEntity("node");
@@ -971,7 +973,8 @@ void VRRoadIntersection::computeMarkings() {
                     if (w[1] < 0) a = -a;
                     directions.push_back(a);
                 }
-                addArrows( lane, -5, directions, roads->getArrowStyle() );
+                auto arrow = addArrows( lane, -5, directions, roads->getArrowStyle() );
+                if (crossingRoads.count(road)) { arrow->set("offset", toString(-3)); }
             }
         }
     }
