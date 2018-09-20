@@ -206,9 +206,10 @@ void VRProcessLayout::rebuild() {
 
 	toolSID->update();
 
+	cout << "Handles after build SBDs: " << endl;
 	printHandlePositions();
 	for(auto tool : toolSBDs) tool.second->update();
-
+    cout << "Handles after Pathtool->update(): " << endl;
 	printHandlePositions();
 }
 
@@ -251,26 +252,20 @@ void VRProcessLayout::buildSBDs(){
         auto toolSBD = toolSBDs[subject->getID()];
         for (auto action : process->getSubjectActions(subject->getID())){
             PosePtr pose = Pose::create(Vec3d(j*25,0,i*25),Vec3d(0,0,-1),Vec3d(-1,0,0));
-            //cout << "Pose Action " << action->getID() << " (" << j*25 << "," << 0 << "," << i*25 << ")" << endl;
 
             auto h = toolSBD->getHandle(action->getID());
-            cout << "action handle id: " << action->getID() << endl;
             toolSBD->setHandlePose(action->getID(), pose);
 
             h->addChild(addElement(action) );
-            //cout << "Handle " << action->getID() << " Pose: " << h->getPose()->toString() << endl;
             j++;
         }
 
         for (auto transition : process->getTransitions(subject->getID())) {
-            //cout << "subject " << subject->getID() << " transition " << transition->getID() << endl;
             auto transitionElement = addElement(transition);
             auto actions = process->getTransitionActions(subject->getID(), transition->getID());
 
             auto id0 = actions[0]->getID();
             auto id1 = actions[1]->getID();
-
-            cout << "transition actions handle id's: " << id0 << ", " << id1 << endl;
 
             Vec3d p;
             auto h0 = toolSBD->getHandle(id0);
@@ -278,15 +273,9 @@ void VRProcessLayout::buildSBDs(){
 
             if (h0 && h1) p = (h0->getWorldPosition() + h1->getWorldPosition())*0.5;
 
-            cout << "transition handle id: " << transition->getID() << endl;
             toolSBD->setHandlePose(transition->getID(), Pose::create(p,Vec3d(0,0,-1), Vec3d(0,1,0)));
             auto h = toolSBD->getHandle(transition->getID());
             h->addChild(transitionElement);
-/*
-            cout << "h0->getWorldPosition() " << h0->getWorldPosition() << endl;
-            cout << "h1->getWorldPosition() " << h1->getWorldPosition() << endl;
-            cout << "h->getWorldPosition() " << h->getWorldPosition() << endl;
-*/
         }
         i++;
 	}
