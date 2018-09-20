@@ -71,16 +71,16 @@ VRProcessDiagramPtr VRProcess::getBehaviorDiagram(int subject) { return behavior
 
 vector<VRProcessNodePtr> VRProcess::getSubjects() {
     vector<VRProcessNodePtr> res;
-    for (auto n : interactionDiagram->processnodes) {
-        if (n.second->type == SUBJECT) res.push_back(n.second);
+    for (auto node : interactionDiagram->processnodes) {
+        if (node.second->type == SUBJECT) res.push_back(node.second);
     }
     return res;
 }
 
 vector<VRProcessNodePtr> VRProcess::getMessages() {
     vector<VRProcessNodePtr> res;
-    for (auto n : interactionDiagram->processnodes) {
-        if (n.second->type == MESSAGE) res.push_back(n.second);
+    for (auto node : interactionDiagram->processnodes) {
+        if (node.second->type == MESSAGE) res.push_back(node.second);
     }
     return res;
 }
@@ -110,16 +110,19 @@ vector<VRProcessNodePtr> VRProcess::getMessageSubjects(int messageID) {
 vector<VRProcessNodePtr> VRProcess::getSubjectActions(int subjectID) {
     auto d = behaviorDiagrams[subjectID];
     vector<VRProcessNodePtr> res;
-    for (auto n : d->processnodes) {
-        if (n.second->type == ACTION) res.push_back(n.second);
+    for (auto node : d->processnodes) {
+        if (node.second->type == ACTION) res.push_back(node.second);
     }
     return res;
 }
 
 void VRProcess::printNodes(VRProcessDiagramPtr d){
+    for (auto node : d->processnodes) cout << node.second->getLabel() << endl;
+    /*
     for (int i=0; i<d->processnodes.size(); i++){
         cout << d->processnodes[i]->getLabel() << endl;
     }
+    */
 }
 
 //TODO: remove cout's
@@ -128,10 +131,16 @@ vector<VRProcessNodePtr> VRProcess::getActionTransitions(int subjectID, int acti
     auto neighbors = d->getNeighbors( actionID );
     vector<VRProcessNodePtr> res;
 
-    for (int i=0; i<neighbors.size(); i++){//auto node : neighbors) {
-        auto transition = getNode( neighbors[i].ID );
+    for (auto neighbor : neighbors){
+        auto transition = d->processnodes[neighbor.ID];
         res.push_back(transition);
     }
+    /*
+    for (int i=0; i<neighbors.size(); i++){//auto node : neighbors) {
+        auto transition = d->processnodes[neighbors[i].ID];
+        res.push_back(transition);
+    }
+    */
     /*
     cout << "Behavior Nodes: " << endl;
     printNodes(d);
@@ -146,7 +155,7 @@ vector<VRProcessNodePtr> VRProcess::getTransitionActions(int subjectID, int tran
     auto neighbors = d->getNeighbors( transitionID );
     vector<VRProcessNodePtr> res;
     for (auto node : neighbors) {
-        auto action = getNode( node.ID );
+        auto action = d->processnodes[node.ID];
         res.push_back(action);
     }
     return res;
@@ -155,10 +164,16 @@ vector<VRProcessNodePtr> VRProcess::getTransitionActions(int subjectID, int tran
 vector<VRProcessNodePtr> VRProcess::getTransitions(int subjectID) {
     vector<VRProcessNodePtr> res;
     auto d = behaviorDiagrams[subjectID];
+
+    for (auto node : d->processnodes){
+        if (node.second->type == TRANSITION) res.push_back(node.second);
+    }
+    /*
     for (int i=0; i<d->size(); i++) {
         auto e = d->processnodes[i];
         if (e && e->type == TRANSITION) res.push_back(e);
-    }
+    }*/
+    cout << "VRProcess::getTransitions: " << " Subject " << subjectID << " diagram " << d << " size:" << d->size() << " transitions: " << res.size() << endl;
     return res;
 }
 
@@ -268,8 +283,7 @@ VRProcessNodePtr VRProcess::addSubject(string name) {
     interactionDiagram->processnodes[sID] = s;
     auto behaviorDiagram = VRProcessDiagram::create();
     behaviorDiagrams[sID] = behaviorDiagram;
-    cout << "added Subject: " << sID << endl;
-    cout << "added Behavior: " << behaviorDiagram << endl;
+    cout << "added Subject: " << " NodeID "  << sID <<" behavior diagram: " << behaviorDiagram << endl;
     return s;
 }
 
@@ -281,15 +295,11 @@ VRProcessNodePtr VRProcess::addMessage(string name, int i, int j, VRProcessDiagr
     diag->processnodes[mID] = m;
     diag->connect(i, mID, Graph::HIERARCHY);
     diag->connect(mID, j, Graph::DEPENDENCY);
-    cout << "added Message: " << mID << endl;
+    cout << "added Message: " << " NodeID "  << mID << " in diagram: " << diag << endl;
     return m;
 }
 
 VRProcessNodePtr VRProcess::addAction(string name, int sID) {
-    if (!behaviorDiagrams.count(sID)) {
-        cout << "VRProcess::addAction " << sID << "  " << behaviorDiagrams.size() << endl;
-        for (auto d : behaviorDiagrams) cout << " " << d.first << endl;
-    }
 
     if (!behaviorDiagrams.count(sID)) return 0;
     auto diag = behaviorDiagrams[sID];
@@ -297,7 +307,7 @@ VRProcessNodePtr VRProcess::addAction(string name, int sID) {
     auto aID = diag->addNode();
     auto a = VRProcessNode::create(name, ACTION, aID);
     diag->processnodes[aID] = a;
-    cout << "added Action: " << aID << endl;
+    cout << "added Action: " << " NodeID " << aID  << " in diagram: " << diag << endl;
     return a;
 }
 
@@ -311,7 +321,7 @@ VRProcessNodePtr VRProcess::addTransition(string name, int sID, int i, int j, VR
     diag->connect(i, tID, Graph::HIERARCHY);
     diag->connect(tID, j, Graph::DEPENDENCY);
 
-    cout << "added Transition: " << tID << endl;
+    cout << "added Transition: " << " NodeID "  << tID << " in diagram: " << diag  << " type " << t->type << endl;
     return t;
 }
 
@@ -319,6 +329,7 @@ VRProcessNodePtr VRProcess::addTransition(string name, int sID, int i, int j, VR
 VRProcessNodePtr VRProcess::getNode(int i, VRProcessDiagramPtr diag) {
     if (!diag) diag = interactionDiagram;
     return diag->processnodes[i];
+
 }
 
 
