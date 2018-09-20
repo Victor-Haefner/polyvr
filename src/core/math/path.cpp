@@ -212,18 +212,26 @@ void Path::approximate(int d) {
             if (Tvec.size() == 0) Tvec = {0.5};
             vector<Pose> poses;
             poses.push_back(p1);
-            for (auto t : Tvec) poses.push_back( *getPose(t, j-1, j, false) );
+            for (auto t : Tvec) {
+                PosePtr pm = getPose(t, j-1, j, false);
+                if (isLinear(p1,*pm)) pm->setDir( p1.dir() );
+                Vec3d n = pm->dir();
+                n.normalize();
+                pm->setDir( n );
+                //pm->setDir( p1.dir() );
+                poses.push_back( *pm );
+            }
             poses.push_back(p4);
 
             for (uint i=1; i<poses.size()-1; i++) {
                 auto& p0 = poses[i-1];
                 auto& pm = poses[i];
-                if (isLinear(p0,pm)) res.push_back( Pose( (p0.pos()+pm.pos())*0.5, pm.dir(), pm.up() ) );
+                if (isLinear(p0,pm)) res.push_back( Pose( (p0.pos()+pm.pos())*0.5, p0.dir(), pm.up() ) );
                 else res.push_back( Pose( intersect(p0,pm) ) );
                 res.push_back(pm);
                 if (i == poses.size()-2) {
                     auto& p2 = poses[i+1];
-                    if (isLinear(pm,p2)) res.push_back( Pose( (pm.pos()+p2.pos())*0.5, pm.dir(), pm.up() ) );
+                    if (isLinear(pm,p2)) res.push_back( Pose( (pm.pos()+p2.pos())*0.5, p2.dir(), pm.up() ) );
                     else res.push_back( Pose( intersect(pm,p2) ) );
                 }
             }
