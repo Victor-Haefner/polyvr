@@ -369,15 +369,24 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
     auto checkForSignals = [&]() {
         //cout << "  checkForSignals" << endl;
 
-        function<bool (VRRoadPtr, VRRoadIntersectionPtr, VRRoadIntersectionPtr)> recSearch = [&](VRRoadPtr nRoad, VRRoadIntersectionPtr lastIntersec, VRRoadIntersectionPtr firstIntersec) {
-            Vec3d oldPos = lastIntersec->entity->getEntity("node")->getVec3("position");
-            Vec3d thisPos = firstIntersec->entity->getEntity("node")->getVec3("position");
-            if ((oldPos-thisPos).length() > 30) return false;
-            /*for (auto sign : nRoad->getEntity()->get("signs")->value) {
-                if (sign == "trafficLight")) return true;
+        function<bool (VRRoadPtr, VRRoadIntersectionPtr, VRRoadIntersectionPtr)> recSearch = [&](VRRoadPtr nRoad, VRRoadIntersectionPtr nIntersec, VRRoadIntersectionPtr firstIntersec) {
+            Vec3d newPos = nIntersec->entity->getEntity("node")->getVec3("position");
+            Vec3d origPos = firstIntersec->entity->getEntity("node")->getVec3("position");
+            if ((newPos-origPos).length() > 30) return false;
+            auto lanes = nRoad->getEntity()->getAllEntities("lanes");
+            for (auto laneE : lanes) {
+                auto signs = laneE->getAllEntities("signs");
+                for (auto signE : signs) {
+                    Vec3d pos = signE->getVec3("position");
+                    cout << "   VRRoadIntersection:checkForSignals " << toString(pos) << endl;
+                    if (signE->is_a("TrafficLight")) {
+                        cout << "   VRRoadIntersection:checkForSignals" << endl;
+                        return true;
+                    }
+                }
             }
             for (auto is : nRoad->getIntersections()) {
-                if (is != lastIntersec) {
+                if (is != nIntersec) {
                     auto type = is->getEntity()->get("type")->value;
                     if (type == "continuation") {
                         for (auto road : is->getRoads()) {
@@ -385,14 +394,28 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                         }
                     }
                 }
-            }*/
+            }
             return false;
+            /*for (auto roadFront : roadFronts) {
+                auto roadE = roadFront->road->getEntity();
+                auto lanes = roadE->getAllEntities("lanes");
+                for (auto laneE : lanes) {
+                    auto signs = laneE->getAllEntities("signs");
+                    for (auto signE : signs) {
+                        Vec3d pos = signE->getVec3("position");
+                        if (signE->is_a("TrafficLight")) {
+                            signals.push_back( signalData(roadFront, laneE, signE) );
+                            cout << "   VRRoadIntersection:computeTrafficLights" << toString(pos) << endl;
+                        }
+                    }
+                }
+            }*/
         };
 
         for (auto road : getRoads()) {
             bool checked = false;
             checked = recSearch(road,isecPtr,isecPtr);
-            if (checked) trafficLightRoads.push_back(road->getEntity());
+            //if (checked) //trafficLightRoads.push_back(road->getEntity());
         }
     };
 
