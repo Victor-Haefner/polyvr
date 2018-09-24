@@ -159,7 +159,7 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     if (n->type == MESSAGE) w->addTag("message");
     if (n->type == TRANSITION) w->addTag("transition");
     w->setMaterial(mat);
-    w->getConstraint()->setTConstraint(Vec3d(0,1,0), VRConstraint::PLANE);
+    w->getConstraint()->lock({1,3,4,5});
     w->getConstraint()->setReferential(ptr());
     w->getConstraint()->setActive(true);
     addChild(w);
@@ -177,7 +177,6 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
         toolSBDs[subject->getID()] = toolSBD;
         addChild(toolSBD);
         toolSBD->setGraph(p->getBehaviorDiagram(subject->getID()));
-        cout << "VRProcessLayout::setProcess " << " created Pathtool : " << toolSBD << " for Subject " << subject->getID() << " with Graph " << p->getBehaviorDiagram(subject->getID()) << endl;
     }
     toolSID->setGraph( p->getInteractionDiagram() );
 
@@ -201,16 +200,12 @@ void VRProcessLayout::rebuild() {
         if (!sbd) return;
     }
 
-    //buildSID();
+    buildSID();
     buildSBDs();
 
 	toolSID->update();
-
-	cout << "Handles after build SBDs: " << endl;
-	printHandlePositions();
 	for(auto tool : toolSBDs) tool.second->update();
-    cout << "Handles after Pathtool->update(): " << endl;
-	printHandlePositions();
+
 }
 
 void VRProcessLayout::buildSID() {
@@ -220,6 +215,9 @@ void VRProcessLayout::buildSID() {
 		auto h = toolSID->getHandle(subject->getID());
 		toolSID->setHandlePose(subject->getID(), pose);
 		h->addChild( addElement(subject) );
+        h->getConstraint()->lock({1,3,5});
+        h->getConstraint()->setReferential(ptr());
+        h->getConstraint()->setActive(true);
 		i++;
 	}
 
@@ -243,7 +241,6 @@ void VRProcessLayout::buildSID() {
 }
 
 void VRProcessLayout::buildSBDs(){
-    cout << "building sbd's" << endl;
 
     int i = 0;
 	for (auto subject : process->getSubjects()) {
@@ -251,10 +248,13 @@ void VRProcessLayout::buildSBDs(){
         int j = 1;
         auto toolSBD = toolSBDs[subject->getID()];
         for (auto action : process->getSubjectActions(subject->getID())){
-            PosePtr pose = Pose::create(Vec3d(j*25,0,i*25),Vec3d(0,0,-1),Vec3d(-1,0,0));
+            PosePtr pose = Pose::create(Vec3d(j*25,0,i*25),Vec3d(0,0,-1),Vec3d(0,1,0));
 
             auto h = toolSBD->getHandle(action->getID());
             toolSBD->setHandlePose(action->getID(), pose);
+            h->getConstraint()->lock({1,3,5});
+            h->getConstraint()->setReferential(ptr());
+            h->getConstraint()->setActive(true);
 
             h->addChild(addElement(action) );
             j++;
@@ -290,7 +290,10 @@ void VRProcessLayout::printHandlePositions(){
             auto nid = node.second->getID();
             auto handle = toolSBD->getHandle(nid);
             auto position = handle->getWorldPosition();
-            cout << "node type " << node.second->type << " handle position: " << position << endl;
+            auto p = handle->getRelativePose(handle->getParent());
+            cout << "node type " << node.second->type << " handle position: " << position << " parent: " << handle->getParent()->getName() << " rel pose: " << p->toString() << endl;
+            handle->setRelativeDir(p->dir(), handle->getParent());
+            cout << "node type " << node.second->type << " handle position: " << position << " parent: " << handle->getParent()->getName() << " rel pose: " << p->toString() << endl;
         }
     }
 }
@@ -349,7 +352,7 @@ void VRProcessLayout::setElementName(int ID, string name) {
 
 void VRProcessLayout::update(){
     toolSID->update();
-	//for(auto toolSBD : toolSBDs) toolSBD.second->update();
+	for(auto toolSBD : toolSBDs) toolSBD.second->update();
 }
 
 
