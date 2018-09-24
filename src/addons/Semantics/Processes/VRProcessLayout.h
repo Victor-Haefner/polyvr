@@ -26,9 +26,13 @@ class VRProcessLayout : public VRTransform {
 
         void init();
         void rebuild(); // TODO
+        void build(VRProcessDiagramPtr diagram, VRPathtoolPtr pathtool, Vec3d position);
         void buildSID();
         void buildSBDs();
         void printHandlePositions();
+
+        void appendToHandle(Vec3d pos, VRProcessNodePtr node, VRPathtoolPtr ptool);
+        void setupLabel(VRProcessNodePtr message, VRPathtoolPtr ptool, vector<VRProcessNodePtr> nodes);
 
     public:
         VRProcessLayout(string name = "");

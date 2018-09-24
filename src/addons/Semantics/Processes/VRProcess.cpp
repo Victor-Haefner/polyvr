@@ -118,11 +118,6 @@ vector<VRProcessNodePtr> VRProcess::getSubjectActions(int subjectID) {
 
 void VRProcess::printNodes(VRProcessDiagramPtr d){
     for (auto node : d->processnodes) cout << node.second->getLabel() << endl;
-    /*
-    for (int i=0; i<d->processnodes.size(); i++){
-        cout << d->processnodes[i]->getLabel() << endl;
-    }
-    */
 }
 
 //TODO: remove cout's
@@ -135,18 +130,6 @@ vector<VRProcessNodePtr> VRProcess::getActionTransitions(int subjectID, int acti
         auto transition = d->processnodes[neighbor.ID];
         res.push_back(transition);
     }
-    /*
-    for (int i=0; i<neighbors.size(); i++){//auto node : neighbors) {
-        auto transition = d->processnodes[neighbors[i].ID];
-        res.push_back(transition);
-    }
-    */
-    /*
-    cout << "Behavior Nodes: " << endl;
-    printNodes(d);
-    cout << "Interaction Nodes: " << endl;
-    printNodes(getInteractionDiagram());
-    */
     return res;
 }
 
@@ -168,12 +151,6 @@ vector<VRProcessNodePtr> VRProcess::getTransitions(int subjectID) {
     for (auto node : d->processnodes){
         if (node.second->type == TRANSITION) res.push_back(node.second);
     }
-    /*
-    for (int i=0; i<d->size(); i++) {
-        auto e = d->processnodes[i];
-        if (e && e->type == TRANSITION) res.push_back(e);
-    }*/
-    cout << "VRProcess::getTransitions: " << " Subject " << subjectID << " diagram " << d << " size:" << d->size() << " transitions: " << res.size() << endl;
     return res;
 }
 
@@ -283,7 +260,6 @@ VRProcessNodePtr VRProcess::addSubject(string name) {
     interactionDiagram->processnodes[sID] = s;
     auto behaviorDiagram = VRProcessDiagram::create();
     behaviorDiagrams[sID] = behaviorDiagram;
-    cout << "added Subject: " << " NodeID "  << sID <<" behavior diagram: " << behaviorDiagram << endl;
     return s;
 }
 
@@ -295,7 +271,6 @@ VRProcessNodePtr VRProcess::addMessage(string name, int i, int j, VRProcessDiagr
     diag->processnodes[mID] = m;
     diag->connect(i, mID, Graph::HIERARCHY);
     diag->connect(mID, j, Graph::DEPENDENCY);
-    cout << "added Message: " << " NodeID "  << mID << " in diagram: " << diag << endl;
     return m;
 }
 
@@ -307,7 +282,6 @@ VRProcessNodePtr VRProcess::addAction(string name, int sID) {
     auto aID = diag->addNode();
     auto a = VRProcessNode::create(name, ACTION, aID);
     diag->processnodes[aID] = a;
-    cout << "added Action: " << " NodeID " << aID  << " in diagram: " << diag << endl;
     return a;
 }
 
@@ -320,8 +294,6 @@ VRProcessNodePtr VRProcess::addTransition(string name, int sID, int i, int j, VR
     diag->processnodes[tID] = t;
     diag->connect(i, tID, Graph::HIERARCHY);
     diag->connect(tID, j, Graph::DEPENDENCY);
-
-    cout << "added Transition: " << " NodeID "  << tID << " in diagram: " << diag  << " type " << t->type << endl;
     return t;
 }
 

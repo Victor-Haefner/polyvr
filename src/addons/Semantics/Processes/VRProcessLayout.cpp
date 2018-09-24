@@ -202,82 +202,63 @@ void VRProcessLayout::rebuild() {
 
     buildSID();
     buildSBDs();
+    update();
+}
 
-	toolSID->update();
-	for(auto tool : toolSBDs) tool.second->update();
+void VRProcessLayout::appendToHandle(Vec3d pos, VRProcessNodePtr node, VRPathtoolPtr ptool) {
+    PosePtr pose = Pose::create(pos,Vec3d(0,0,-1),Vec3d(0,1,0));
+    auto h = ptool->getHandle(node->getID());
+    ptool->setHandlePose(node->getID(), pose);
+    h->addChild( addElement(node) );
+    h->getConstraint()->lock({1,3,5});
+    h->getConstraint()->setReferential(ptr());
+    h->getConstraint()->setActive(true);
+}
 
+void VRProcessLayout::setupLabel(VRProcessNodePtr message, VRPathtoolPtr ptool, vector<VRProcessNodePtr> nodes) {
+    auto messageElement = addElement(message);
+
+    auto id0 = nodes[0]->getID();
+    auto id1 = nodes[1]->getID();
+
+    Vec3d p;
+    auto h0 = ptool->getHandle(id0);
+    auto h1 = ptool->getHandle(id1);
+    if (h0 && h1) p = (h0->getWorldPosition() + h1->getWorldPosition())*0.5;
+
+    int idm = message->getID();
+    ptool->setHandlePose(idm, Pose::create(p,Vec3d(0,0,-1),Vec3d(0,1,0) ));
+    auto h = ptool->getHandle(idm);
+    h->addChild( messageElement );
 }
 
 void VRProcessLayout::buildSID() {
-    int i = 0;
-	for (auto subject : process->getSubjects()) {
-        PosePtr pose = Pose::create(Vec3d(0,0,i*25),Vec3d(0,0,-1),Vec3d(0,1,0));
-		auto h = toolSID->getHandle(subject->getID());
-		toolSID->setHandlePose(subject->getID(), pose);
-		h->addChild( addElement(subject) );
-        h->getConstraint()->lock({1,3,5});
-        h->getConstraint()->setReferential(ptr());
-        h->getConstraint()->setActive(true);
-		i++;
+    auto subjects = process->getSubjects();
+	for (int i=0; i < subjects.size(); i++) {
+        appendToHandle(Vec3d(0,0,i*25), subjects[i], toolSID);
 	}
 
 	for (auto message : process->getMessages()) {
-		auto messageElement = addElement(message);
-		auto subjects = process->getMessageSubjects( message->getID() );
-
-		auto id0 = subjects[0]->getID();
-		auto id1 = subjects[1]->getID();
-
-		Vec3d p;
-		auto h0 = toolSID->getHandle(id0);
-		auto h1 = toolSID->getHandle(id1);
-		if (h0 && h1) p = (h0->getWorldPosition() + h1->getWorldPosition())*0.5;
-
-		int idm = message->getID();
-		toolSID->setHandlePose(idm, Pose::create(p,Vec3d(0,0,-1),Vec3d(0,1,0) ));
-		auto h = toolSID->getHandle(idm);
-		h->addChild( messageElement );
+        auto subjects = process->getMessageSubjects( message->getID() );
+        setupLabel(message, toolSID, subjects);
 	}
 }
 
-void VRProcessLayout::buildSBDs(){
+void VRProcessLayout::buildSBDs() {
+    auto subjects = process->getSubjects();
+	for (int i=0; i < subjects.size(); i++) {
+        int sID = subjects[i]->getID();
+        auto toolSBD = toolSBDs[sID];
+        auto actions = process->getSubjectActions(sID);
 
-    int i = 0;
-	for (auto subject : process->getSubjects()) {
-
-        int j = 1;
-        auto toolSBD = toolSBDs[subject->getID()];
-        for (auto action : process->getSubjectActions(subject->getID())){
-            PosePtr pose = Pose::create(Vec3d(j*25,0,i*25),Vec3d(0,0,-1),Vec3d(0,1,0));
-
-            auto h = toolSBD->getHandle(action->getID());
-            toolSBD->setHandlePose(action->getID(), pose);
-            h->getConstraint()->lock({1,3,5});
-            h->getConstraint()->setReferential(ptr());
-            h->getConstraint()->setActive(true);
-
-            h->addChild(addElement(action) );
-            j++;
+        for (int j=0; j < actions.size(); j++) {
+            appendToHandle(Vec3d((j+1)*25,0,i*25), actions[j], toolSBD);
         }
 
-        for (auto transition : process->getTransitions(subject->getID())) {
-            auto transitionElement = addElement(transition);
-            auto actions = process->getTransitionActions(subject->getID(), transition->getID());
-
-            auto id0 = actions[0]->getID();
-            auto id1 = actions[1]->getID();
-
-            Vec3d p;
-            auto h0 = toolSBD->getHandle(id0);
-            auto h1 = toolSBD->getHandle(id1);
-
-            if (h0 && h1) p = (h0->getWorldPosition() + h1->getWorldPosition())*0.5;
-
-            toolSBD->setHandlePose(transition->getID(), Pose::create(p,Vec3d(0,0,-1), Vec3d(0,1,0)));
-            auto h = toolSBD->getHandle(transition->getID());
-            h->addChild(transitionElement);
+        for (auto transition : process->getTransitions(sID)) {
+            auto actions = process->getTransitionActions(sID, transition->getID());
+            setupLabel(transition, toolSBD, actions);
         }
-        i++;
 	}
 }
 

@@ -62,11 +62,12 @@ void VRProcessEngine::pause() {
 }
 
 void VRProcessEngine::update() {
+    cout << "running: " << running << endl;
     if (!running) return;
-
+    cout << "currentactions size: " << currentActions.size() << endl;
     for (auto currentAction : currentActions) { // all subjects current states/actions
         //create a thread for each subject
-
+        cout << "current Action: " << currentAction.second << endl;
         performAction(currentAction.second);
         nextAction(currentAction.first, currentAction.second);
     }
