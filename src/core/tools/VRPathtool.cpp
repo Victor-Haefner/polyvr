@@ -133,7 +133,7 @@ void VRPathtool::setGraph(GraphPtr g, bool doClear) {
     if (doClear) clear();
     graph = g;
 
-    for (int i=0; i<g->size(); i++) setGraphNode(i);
+    for (auto& n : g->getNodes()) setGraphNode(n.first);
     for (auto& e : g->getEdges()) setGraphEdge(e.second);
 }
 
@@ -146,15 +146,19 @@ int VRPathtool::addNode(PosePtr p) {
 
 VRGeometryPtr VRPathtool::addHandle(int nID, PosePtr p) {
     if (!graph) return 0;
+    auto h = setGraphNode(nID);
+    setHandlePose(nID, p);
+    return h;
+}
 
-    auto tmp = VRTransform::create("tmp");
+void VRPathtool::setHandlePose(int nID, PosePtr p) {
+    auto h = getHandle(nID);
+    /*auto tmp = VRTransform::create("tmp");
     tmp->setPose(p);
     p = tmp->getRelativePose(ptr());
-
-    graph->setPosition(nID, p);
-    auto h = setGraphNode(nID);
-    h->setPose(p);
-    return h;
+    if (h) h->setPose(p);*/
+    if (h) h->setWorldPose(p);
+    if (graph) graph->setPosition(nID, p);
 }
 
 void VRPathtool::removeNode(int i) {
@@ -229,9 +233,13 @@ void VRPathtool::connect(int i1, int i2, Vec3d n1, Vec3d n2, bool handles, bool 
 
     if (!graph->connected(i1,i2)) {
         int eID = graph->connect(i1,i2);
+        cout << "VRPathtool::connect " << i1 << " with " << i2 << ", eID" << eID << endl;
         auto& e = graph->getEdge(eID);
         setGraphEdge(e, handles, doArrow, n1, n2);
-    } else disconnect(i1,i2);
+    } else {
+        cout << "VRPathtool::disconnect " << i1 << " with " << i2 << "!" << endl;
+        disconnect(i1,i2);
+    }
 }
 
 void VRPathtool::setGraphEdge(Graph::edge& e, bool handles, bool doArrow) {
@@ -274,9 +282,10 @@ VRGeometryPtr VRPathtool::setGraphNode(int i) {
 void VRPathtool::update() { // call in script to have smooth knots
     if (graph) { // smooth knot transformations
         map<int, Vec3d> hPositions; // get handle positions
-        for (uint i=0; i<knots.size(); i++)
-            //if (auto h = knots[i].handle.lock()) hPositions[i] = h->getRelativePosition(ptr());
-            if (auto h = knots[i].handle.lock()) hPositions[i] = h->getWorldPosition();
+        for (auto& knot : knots) {
+            auto h = knot.second.handle.lock();
+            if (h) hPositions[knot.first] = h->getWorldPosition();
+        }
 
         for (auto& knot : knots) { // compute and set direction of handles
             auto h = knot.second.handle.lock();
@@ -521,6 +530,8 @@ VRGeometryPtr VRPathtool::newHandle() {
 }
 
 VRGeometryPtr VRPathtool::getHandle(int ID) {
+    //cout << "VRPathtool::getHandle ID: " << ID << " knots:" << endl;
+    //for (auto k : knots) cout << " knot ID: " << k.first << " knot handle: " << k.second.handle.lock() << endl;
     return knots[ID].handle.lock();
 }
 

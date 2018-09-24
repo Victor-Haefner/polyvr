@@ -5,21 +5,34 @@
 #include "core/objects/VRTransform.h"
 #include "VRProcess.h"
 
+#include "core/utils/VRFunctionFwd.h"
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRProcessLayout : public VRTransform {
     private:
         VRProcessPtr process;
-        VRPathtoolPtr tool;
+        VRProcessEnginePtr engine;
+        VRPathtoolPtr toolSID;
+        map<int, VRPathtoolPtr> toolSBDs;
         map<int, VRObjectWeakPtr> elements;
         map<VRObject*, int> elementIDs;
         float height = 2;
+
+        VRUpdateCbPtr updateCb;
 
         VRGeometryPtr newWidget(VRProcessNodePtr n, float height);
 
         void init();
         void rebuild(); // TODO
+        void build(VRProcessDiagramPtr diagram, VRPathtoolPtr pathtool, Vec3d position);
+        void buildSID();
+        void buildSBDs();
+        void printHandlePositions();
+
+        void appendToHandle(Vec3d pos, VRProcessNodePtr node, VRPathtoolPtr ptool);
+        void setupLabel(VRProcessNodePtr message, VRPathtoolPtr ptool, vector<VRProcessNodePtr> nodes);
 
     public:
         VRProcessLayout(string name = "");
@@ -29,6 +42,7 @@ class VRProcessLayout : public VRTransform {
         VRProcessLayoutPtr ptr();
 
         void setProcess(VRProcessPtr p);
+        void setEngine(VRProcessEnginePtr e);
         VRObjectPtr getElement(int i);
         void remElement(VRObjectPtr o);
         int getElementID(VRObjectPtr o);
@@ -37,7 +51,10 @@ class VRProcessLayout : public VRTransform {
         void selectElement(VRGeometryPtr geo);
         void setElementName(int ID, string name);
 
-        VRPathtoolPtr getPathtool();
+        VRPathtoolPtr getSIDPathtool();
+        VRPathtoolPtr getSBDPathtool(int sID);
+
+        void update();
 };
 
 OSG_END_NAMESPACE;
