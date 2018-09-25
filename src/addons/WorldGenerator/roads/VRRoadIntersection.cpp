@@ -378,9 +378,9 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto signs = laneE->getAllEntities("signs");
                 for (auto signE : signs) {
                     Vec3d pos = signE->getVec3("position");
-                    cout << "   VRRoadIntersection:checkForSignals " << toString(pos) << endl;
+                    //cout << "   VRRoadIntersection:checkForSignals " << toString(pos) << endl;
                     if (signE->is_a("TrafficLight")) {
-                        cout << "   VRRoadIntersection:checkForSignals" << endl;
+                        cout << "   VRRoadIntersection:checkForSignals - found" << endl;
                         return true;
                     }
                 }
@@ -839,7 +839,8 @@ void VRRoadIntersection::computeTrafficLights() {
     - place traffic signal geometries
 
     */
-
+    auto type = entity->get("type")->value;
+    if (type == "crossing") return;
     struct signalData {
         shared_ptr<RoadFront> roadFront;
         VREntityPtr lane;

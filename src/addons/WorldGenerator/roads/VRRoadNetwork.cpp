@@ -495,6 +495,7 @@ void VRRoadNetwork::computeSigns() {
         Vec3d pos = signEnt->getVec3("position");
         Vec3d dir = signEnt->getVec3("direction");
         string type = signEnt->getValue<string>("type", "");
+        if (signEnt->is_a("TrafficLight")) continue;
         //cout << " sign: " << type << endl;
         auto sign = assets->copy(type, Pose::create(pos, dir), false);
         if (!sign) {

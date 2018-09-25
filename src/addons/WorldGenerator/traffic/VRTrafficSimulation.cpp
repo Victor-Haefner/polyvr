@@ -226,6 +226,12 @@ void VRTrafficSimulation::updateSimulation() {
         vector<int> newSeedRoads;
         vector<int> newNearRoads;
 
+        auto isPedestrian = [&](int ID) {
+            auto lane = roadNetwork->getLane(ID);
+            if (lane->getValue<bool>("pedestrian", false)) return true;
+            return false;
+        };
+
         for (auto user : users) {
             Vec3d p = getPoseTo(user.t)->pos();
             string debug = "";
@@ -238,12 +244,12 @@ void VRTrafficSimulation::updateSimulation() {
                 float D2 = (ep2-p).length();
 
                 if (D1 > userRadius && D2 > userRadius) continue; // outside
-                if (debugOverRideSeedRoad<0 && graph->getPrevEdges(e).size() == 0) { // roads that start out of "nowhere"
+                if (debugOverRideSeedRoad<0 && graph->getPrevEdges(e).size() == 0  && !isPedestrian(e.ID)) { // roads that start out of "nowhere"
                     newSeedRoads.push_back( e.ID );
                     continue;
                 }
                 ///TODO: look into radius
-                if ( debugOverRideSeedRoad > -2 && debugOverRideSeedRoad < 0 && (D1 > userRadius*0.5 || D2 > userRadius*0.5) ) newSeedRoads.push_back( e.ID ); // on edge
+                if ( debugOverRideSeedRoad > -2 && debugOverRideSeedRoad < 0 && (D1 > userRadius*0.5 || D2 > userRadius*0.5) && !isPedestrian(e.ID) ) newSeedRoads.push_back( e.ID ); // on edge
                 newNearRoads.push_back( e.ID ); // inside or on edge
             }
             //cout << debug << endl;
@@ -285,6 +291,7 @@ void VRTrafficSimulation::updateSimulation() {
         if (seedRoadsString!=lastseedRoadsString) {
             //cout << seedRoadsString << endl;
             lastseedRoadsString = seedRoadsString;
+            if (isShowingGraph) updateGraph();
         }
     };
 
@@ -1015,7 +1022,12 @@ void VRTrafficSimulation::setSpeedmultiplier(float speedMultiplier) {
 
 /** SHOW GRAPH */
 void VRTrafficSimulation::showGraph(){
-	map<int,int> idx;
+    isShowingGraph = true;
+    updateGraph();
+}
+
+void VRTrafficSimulation::updateGraph(){
+    map<int,int> idx;
 	map<int,int> idx2;
 	map<string, VRGeometryPtr> vizGeos;
 	auto graph = roadNetwork->getGraph();
@@ -1093,6 +1105,8 @@ void VRTrafficSimulation::showGraph(){
 }
 
 void VRTrafficSimulation::hideGraph(){
+    isShowingGraph = false;
+
     vector<string> gg;
 	gg.push_back("graphVizPnts");
 	gg.push_back("graphVizLines");
@@ -1143,7 +1157,8 @@ void VRTrafficSimulation::showIntersections(){
             int pID1 = gg1.pushVert(p1);
             int pID2 = gg1.pushVert(p2);
             gg1.pushLine(pID1,pID2);
-            insecAnn->set(pID1, light->getPose()->pos()+Vec3d(0,0.5,0), toString(light->getEntity()->getName()));
+            string anno = toString(light->getEntity()->getName()) + " " + toString(intersection->getEntity()->get("type")->value);
+            insecAnn->set(pID1, light->getPose()->pos()+Vec3d(0,0.5,0), anno);
         }
         /*
         for (auto group : getTrafficLightMap) {

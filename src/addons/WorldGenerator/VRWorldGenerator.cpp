@@ -451,7 +451,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             }
 
             //if (tag.first == "traffic_sign:training_ground") {
-            if (startswith(tag.first, "traffic_sign")) {
+            if (startswith(tag.first, "traffic_sign") && !startswith(tag.first, "traffic_signals")) {
                 auto signEnt = ontology->addEntity("sign", "Sign");
                 if ((tag.second == "yes" || tag.second == "custom") && node->tags.count("name")) {
                     signEnt->set("type", node->tags["name"]);
@@ -473,7 +473,6 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                     }
                 }
             }
-
             if (startswith(tag.first, "traffic_signals")) {
                 cout << " VRWorldGenerator::processOSMMap tr_signal " << endl;
                 for (auto way : node->ways) {

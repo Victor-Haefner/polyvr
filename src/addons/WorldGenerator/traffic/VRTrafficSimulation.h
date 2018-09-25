@@ -133,6 +133,7 @@ class VRTrafficSimulation : public VRObject {
         int numUnits = 0;
         bool isSimRunning = true;
         bool isShowingVehicleVision = false;
+        bool isShowingGraph = false;
         bool isShowingGeometries = true;
         bool laneChange = false;
         float speedMultiplier = 1.0;
@@ -155,6 +156,7 @@ class VRTrafficSimulation : public VRObject {
         VRGeometryPtr flowGeo;
 
         void updateTurnSignal();
+        void updateGraph();
 
     public:
         VRTrafficSimulation();
