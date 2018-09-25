@@ -8,9 +8,11 @@
 #include <XCAFDoc_ShapeTool.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
 #include <XCAFDoc_ColorTool.hxx>
+#include <XCAFDoc_MaterialTool.hxx>
 #include <XCAFDoc.hxx>
 #include <STEPControl_Reader.hxx>
 #include <STEPCAFControl_Reader.hxx>
+#include <TopoDS.hxx>
 #include <TopoDS_Shape.hxx>
 #include <TopoDS_Compound.hxx>
 #include <TopoDS_CompSolid.hxx>
@@ -18,11 +20,15 @@
 #include <TopoDS_Shell.hxx>
 #include <BRepTools.hxx>
 #include <TopLoc_Location.hxx>
+#include <TColgp_Array1OfPnt2d.hxx>
 #include <Poly_Triangulation.hxx>
 #include <Quantity_Color.hxx>
 #include <TShort_Array1OfShortReal.hxx>
 #include <BRepMesh_FastDiscret.hxx>
+#include <BRepMesh_IncrementalMesh.hxx>
 #include <BRepLProp_SLProps.hxx>
+#include <BRepGProp_Face.hxx>
+#include <TopExp_Explorer.hxx>
 #include <XCAFApp_Application.hxx>
 #include <StepData_StepModel.hxx>
 #include <TCollection_HAsciiString.hxx>
@@ -31,11 +37,8 @@
 #include <TDF_LabelSequence.hxx>
 #include <XSControl_WorkSession.hxx>
 
-#include <ifcgeom/IfcGeom.h>
-
 using namespace std;
 using namespace OSG;
-using namespace IfcSchema;
 
 typedef double real_t;
 
@@ -56,18 +59,48 @@ void on_update(int i, int N, int stage) {
 
 class STEPLoader {
     private:
+        Handle(XCAFDoc_ColorTool) colors;
+        Handle(XCAFDoc_MaterialTool) materials;
+
+        pair<bool, Color3f> getColor(const TDF_Label& label) {
+            bool valid = false;
+            Quantity_Color c;
+            if (!valid) valid = colors->GetColor(label, XCAFDoc_ColorSurf, c);
+            if (!valid) valid = colors->GetColor(label, XCAFDoc_ColorCurv, c);
+            if (!valid) valid = colors->GetColor(label, XCAFDoc_ColorGen , c);
+            return make_pair(valid, Color3f(c.Red(), c.Green(), c.Blue()));
+        }
+
+        pair<bool, Color3f> getColor(const TopoDS_Shape& shape) {
+            bool valid = false;
+            Quantity_Color c;
+            if (!valid) valid = colors->GetColor(shape, XCAFDoc_ColorSurf, c);
+            if (!valid) valid = colors->GetColor(shape, XCAFDoc_ColorCurv, c);
+            if (!valid) valid = colors->GetColor(shape, XCAFDoc_ColorGen , c);
+            return make_pair(valid, Color3f(c.Red(), c.Green(), c.Blue()));
+        }
+
         VRGeometryPtr convertGeo(const TopoDS_Shape& shape) {
             if (shape.IsNull()) return 0;
 
-            float linear_deflection = 0.1;
-            float angular_deflection = 0.5;
+            double linear_deflection = 0.1;
+            double angular_deflection = 0.5;
+            //cout << "step convert shape dim max: " << Dmax << ", ld: " << linear_deflection << endl;
 
-            BRepMesh_IncrementalMesh mesher(shape, linear_deflection, false, angular_deflection, true); // shape, linear deflection, relative to edge length, angular deflection, paralellize
-            //BRepMesh_IncrementalMesh mesher(shape, linear_deflection, false, angular_deflection, true, on_update); // shape, linear deflection, relative to edge length, angular deflection, paralellize
+            //BRepMesh_IncrementalMesh mesher(shape, linear_deflection, false, angular_deflection, true); // shape, linear deflection, relative to edge length, angular deflection, paralellize
+            BRepMesh_IncrementalMesh mesher(shape, linear_deflection, true, angular_deflection, true, on_update); // shape, linear deflection, relative to edge length, angular deflection, paralellize
             VRGeoData data;
 
+            auto shapeColor = getColor(shape);
+            if (!shapeColor.first) shapeColor.second = Color3f(0.5,0.9,0.4);
+            bool useVertexColors = false;
             for (TopExp_Explorer exp(shape, TopAbs_FACE); exp.More(); exp.Next()) {
-                cout << "STEPLoader::convertGeo, data size: " << data.size() << endl;
+                const TopoDS_Face& face = TopoDS::Face(exp.Current());
+                auto color = getColor(face);
+                if (color.first) { useVertexColors = true; break; }
+            }
+
+            for (TopExp_Explorer exp(shape, TopAbs_FACE); exp.More(); exp.Next()) {
                 const TopoDS_Face& face = TopoDS::Face(exp.Current());
                 TopLoc_Location loc;
                 Handle(Poly_Triangulation) tri = BRep_Tool::Triangulation(face, loc);
@@ -76,12 +109,14 @@ class STEPLoader {
                 const TColgp_Array1OfPnt& nodes = tri->Nodes();
                 int i0 = data.size();
 
+                // face vertices
                 for (int i = 1; i <= nodes.Length(); ++i) {
                     gp_Pnt pnt = nodes(i).Transformed(loc);
                     Pnt3d pos(pnt.X(), pnt.Y(), pnt.Z());
                     data.pushPos( pos );
                 }
 
+                // face normals
                 if (tri->HasUVNodes()) {
                     const TColgp_Array1OfPnt2d& uvs = tri->UVNodes();
                     BRepGProp_Face prop(face);
@@ -95,12 +130,20 @@ class STEPLoader {
                     }
                 }
 
+                // face triangle indices
                 const Poly_Array1OfTriangle& triangles = tri->Triangles();
                 for (int i = 1; i <= triangles.Length(); ++i) {
                     int n1, n2, n3;
                     triangles(i).Get(n1, n2, n3);
                     if (face.Orientation() == TopAbs_REVERSED) data.pushTri(i0+n1-1, i0+n3-1, i0+n2-1);
                     else                                       data.pushTri(i0+n1-1, i0+n2-1, i0+n3-1);
+                }
+
+                // face colors
+                if (useVertexColors) {
+                    auto color = getColor(face);
+                    if (!color.first) color.second = shapeColor.second;
+                    for (int i = 1; i <= nodes.Length(); ++i) data.pushColor( color.second );
                 }
             }
 
@@ -110,11 +153,25 @@ class STEPLoader {
             return geo;
         }
 
+        void applyMaterial(VRGeometryPtr geo, const TopoDS_Shape& shape) {
+            auto mat = VRMaterial::create("mat");
+            geo->setMaterial(mat);
+            auto color = getColor(shape);
+            if (color.first) mat->setDiffuse(color.second);
+            else mat->setDiffuse(Color3f(0.5,0.7,0.9));
+        }
+
     public:
         STEPLoader() {}
 
-        string toString(Handle(TCollection_HAsciiString)& s) {
-            return string(s->ToCString());
+        string toString(Handle(TCollection_HAsciiString)& s) { return string(s->ToCString()); }
+
+        string toString(Standard_GUID id) {
+            string name = "";
+            name.resize(36);
+            char* buffer = &name[0];
+            id.ToCString(buffer);
+            return name;
         }
 
         string toString(Handle(TDataStd_Name)& N) {
@@ -136,14 +193,15 @@ class STEPLoader {
             Handle(XCAFApp_Application) anApp = XCAFApp_Application::GetApplication();
             anApp->NewDocument("MDTV-XCAF",aDoc);
 
-            STEPCAFControl_Reader reader;
-            IFSelect_ReturnStatus stat = reader.ReadFile(path.c_str());
+            STEPCAFControl_Reader reader(on_update);
+            reader.ReadFile(path.c_str());
             cout << "Number of roots in STEP file: " << reader.NbRootsForTransfer() << endl;
             reader.SetNameMode(true);
-            //reader.SetMatMode(true);
+            reader.SetMatMode(true);
             reader.SetColorMode(true);
             reader.SetLayerMode(true);
             auto transferOk = reader.Transfer(aDoc);
+            cout << endl;
             if (!transferOk) { cout << "failed to transfer to XDS doc" << endl; return; }
             cout << "XCAF transfer ok " << endl;
 
@@ -155,29 +213,33 @@ class STEPLoader {
             cout << "found " << shapes.Length() << " shapes, and " << rootShapes.Length() << " root shapes" << endl;
 
 
-            Handle(XCAFDoc_ColorTool) colors = XCAFDoc_DocumentTool::ColorTool(aDoc->Main());
-            Quantity_Color c;
+            colors = XCAFDoc_DocumentTool::ColorTool(aDoc->Main());
+            TDF_LabelSequence cols;
+            colors->GetColors(cols);
+            cout << "imported colors: (" << cols.Length() << ")" << endl;
+            for (int i=1; i<=cols.Length(); i++) cout << " color: " << getColor( shapes.Value(i) ).second << " " << getColor( shapes.Value(i) ).first << endl;
 
-            map<string, VRGeometryPtr> parts;
+            materials = XCAFDoc_DocumentTool::MaterialTool( aDoc->Main() );
+            TDF_LabelSequence mats;
+            materials->GetMaterialLabels(mats);
+            cout << "imported materials: (" << mats.Length() << ")" << endl;
+
+            cout << "build STEP parts:" << endl;
+            map<int, VRGeometryPtr> parts;
             for (int i=1; i<=shapes.Length(); i++) {
                 TopoDS_Shape shape = Assembly->GetShape(shapes.Value(i));
-                TDF_Label aLabel = Assembly->FindShape(shape, false);
-                if ( (!aLabel.IsNull()) && (Assembly->IsShape(aLabel)) ) {
-                    string name = getName(aLabel);
-                    cout << " shape " << name << " " << Assembly->IsSimpleShape(aLabel) << " " << Assembly->IsAssembly(aLabel) << " " << Assembly->IsFree(aLabel) << endl;
-                    if (Assembly->IsSimpleShape(aLabel)) {
-                        cout << "  create shape\n";
-                        auto obj = convertGeo(shape);
+                TDF_Label label = Assembly->FindShape(shape, false);
+                //cout << " shape label:" << endl << label << endl;
+                if ( (!label.IsNull()) && (Assembly->IsShape(label)) ) {
+                    string name = getName(label);
+                    //cout << "  shape " << name << " " << Assembly->IsSimpleShape(label) << " " << Assembly->IsAssembly(label) << " " << Assembly->IsFree(label) << endl;
+                    if (Assembly->IsSimpleShape(label)) {
+                        cout << " create shape " << name << endl;
+                        VRGeometryPtr obj = convertGeo(shape);
                         obj->setName( name );
-                        if (parts.count(name)) cout << "Warning in STEP import, the name '" << name << "' is allready taken!" << endl;
-                        parts[name] = obj;
-                        auto mat = VRMaterial::create("mat");
-                        obj->setMaterial(mat);
-                        //colors->GetColor(shape, XCAFDoc_ColorGen, c);
-                        //colors->GetColor(shape, XCAFDoc_ColorCurv, c);
-                        colors->GetColor(shape, XCAFDoc_ColorSurf, c);
-                        Color3f color = Color3f(c.Red(), c.Green(), c.Blue());
-                        mat->setDiffuse(color);
+                        applyMaterial(obj, shape);
+                        if (parts.count(label.Tag())) cout << "Warning in STEP import, the label tag " << label.Tag() << " is allready used!" << endl;
+                        parts[label.Tag()] = obj;
                     }
                 }
             }
@@ -196,11 +258,16 @@ class STEPLoader {
                 obj->setMatrix(mat);
             };
 
-            function<void (TDF_Label&, TopoDS_Shape&, VRTransformPtr)> explore = [&](TDF_Label& label, TopoDS_Shape& shape, VRTransformPtr parent) {
+            cout << "build STEP assembly" << endl;
+            function<void (TDF_Label, VRTransformPtr)> explore = [&](TDF_Label node, VRTransformPtr parent) {
+                TopoDS_Shape shape = Assembly->GetShape(node);
+                TDF_Label    label = Assembly->FindShape(shape, false);
+
                 string name = getName(label);
+                cout << " add node: " << name << " ID: " << label.Tag() << endl;
 
                 if (Assembly->IsSimpleShape(label)) {
-                    VRGeometryPtr part = dynamic_pointer_cast<VRGeometry>( parts[name]->duplicate() );
+                    VRGeometryPtr part = dynamic_pointer_cast<VRGeometry>( parts[label.Tag()]->duplicate() );
                     applyTransform(part, shape);
                     parent->addChild( part );
                 }
@@ -211,20 +278,12 @@ class STEPLoader {
                     VRTransformPtr t = VRTransform::create(name);
                     applyTransform(t, shape);
                     parent->addChild(t);
-                    for (int i=1; i<=children.Length(); i++) {
-                        TopoDS_Shape cShape = Assembly->GetShape(children.Value(i));
-                        TDF_Label cLabel = Assembly->FindShape(cShape, false);
-                        explore(cLabel, cShape, t);
-                    }
+                    for (int i=1; i<=children.Length(); i++) explore(children.Value(i), t);
                 }
             };
 
-            // get root shape
-            for (int i=1; i<=rootShapes.Length(); i++) {
-                TopoDS_Shape shape = Assembly->GetShape(rootShapes.Value(i));
-                TDF_Label aLabel = Assembly->FindShape(shape, false);
-                explore(aLabel, shape, res);
-            }
+            // explore root shape
+            for (int i=1; i<=rootShapes.Length(); i++) explore(rootShapes.Value(i), res);
         }
 };
 

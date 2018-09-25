@@ -75,8 +75,6 @@ void VRProcessEngine::update() {
 
 vector<VRProcessNodePtr> VRProcessEngine::getCurrentActions(){
     vector<VRProcessNodePtr> res;
-    for (action : currentActions) {
-        res.push_back(action.second);
-    }
+    for (auto action : currentActions) res.push_back(action.second);
     return res;
 }
