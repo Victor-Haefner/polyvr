@@ -11,20 +11,30 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRProcessEngine {
+    public:
+        struct Action {
+            VRProcessNodePtr node;
+            float duration;
+        };
+
+        struct Actor {
+            Action current;
+            vector<Action> actions;
+        };
+
     private:
         VRProcessPtr process;
-        //VRStateMachineMapPtr processState;
-        //map<int, VRStateMachineMapPtr> subjectStates;
-        map<int, VRProcessNodePtr> currentActions;
-        map<int, vector<VRProcessNodePtr>> subjectActions;
+        map<int, Actor> subjects;
 
         VRUpdateCbPtr updateCb;
         bool running = false;
 
         void initialize();
-        void performAction(VRProcessNodePtr);
-        void nextAction(int, VRProcessNodePtr);
+        void performAction(Action);
+        void nextAction(Actor, Action);
         void update();
+
+        float defaultDuration = 60*5;
 
     public:
         VRProcessEngine();

@@ -20,32 +20,64 @@ VRProcessEnginePtr VRProcessEngine::create() { return VRProcessEnginePtr( new VR
 
 void VRProcessEngine::initialize(){
     cout << "initialize()" << endl;
+
     //get subject actions
-    for (auto subject : process->getSubjects()){
-        auto actions = process->getSubjectActions(subject->getID());
+    auto processSubjects = process->getSubjects();
+    for ( int i=0; i<processSubjects.size(); i++){
+        auto actions = process->getSubjectActions(processSubjects[i]->getID());
+        float duration = defaultDuration;
+        vector<Action> actorActions = {};
         if(!actions.size() == 0){
-            subjectActions[subject->getID()] = actions;
-            cout << "set current action to: " << actions[0]->getLabel() << " for subject: " << subject->getLabel() << endl;
-            //activate first action initially
-            currentActions[subject->getID()] = actions[0];
+            for (int j=0; j<actions.size(); j++){
+                auto node = actions[j];
+                Action actorAction{node, duration};
+                actorActions.push_back(actorAction); // &actorAction;
+            }
+        }
+        if (actorActions.size()){
+            Actor actor{actorActions[0], actorActions};
+            cout << processSubjects[i]->getLabel() << ": " << actorActions[0].node->getLabel() << endl;
+            subjects[i] = actor; //subjects[i] = &actor;
         }
     }
+
+    /* print all actions
+    for (auto subject : subjects){
+        auto actor = subject.second;
+        cout << "Actions: " << endl;
+        for (auto action : actor.actions) cout << action.node->getLabel() << endl;
+    }
+    */
 }
 
-void VRProcessEngine::performAction(VRProcessNodePtr action){
-    //signal to functions to perform current actions
-    cout << "performing action: " << action->getLabel() << endl;
+void VRProcessEngine::performAction(Action action){
+
 }
 
-void VRProcessEngine::nextAction(int sID, VRProcessNodePtr currentAction){
+void VRProcessEngine::nextAction(Actor actor, Action currentAction){
+    auto actionID = currentAction.node->getID();
+    vector<Action>& actions = actor.actions;
+
+    for (int i=0; i<actions.size(); i++) {
+        auto nodeID = actions[i].node->getID();
+        if(nodeID == actionID){
+            int nextID = (i+1) % (actions.size()-1); //TODO: increment nextID
+            //cout << "i+1 " << i+1 << endl;
+            //cout << "nextID " << nextID << endl;
+            actor.current = actions[nextID];
+            return;
+        }
+    }
+
     //TODO: check which transition to take
-    auto transition = process->getActionTransitions(sID, currentAction->getID())[0]; //first transition
+/*    auto transition = process->getActionTransitions(sID, currentAction->getID())[0]; //first transition
 
     //determine nextaction by given transition, currentAction
     auto actions = process->getTransitionActions(sID, transition->getID());
     for (auto action : actions) {
-        if (action != currentAction) currentActions[sID] = action;     //update currentActions
+        //if (action != currentAction) currentActions[sID] = action;     //update currentActions
     }
+    */
 }
 
 void VRProcessEngine::setProcess(VRProcessPtr p) { process = p; initialize();}
@@ -62,21 +94,30 @@ void VRProcessEngine::pause() {
 }
 
 void VRProcessEngine::update() {
-    cout << "running: " << running << endl;
     if (!running) return;
-    cout << "currentactions size: " << currentActions.size() << endl;
-    for (auto currentAction : currentActions) { // all subjects current states/actions
-        //create a thread for each subject
-        cout << "current Action: " << currentAction.second << endl;
-        performAction(currentAction.second);
-        nextAction(currentAction.first, currentAction.second);
+
+    for (subject : subjects) {
+        auto& actor = subject.second;
+        auto& currentAction = actor.current;
+        //TODO: call specific action functions for each current action
+
+        performAction(currentAction); //dummy action function
+        currentAction.duration--;
+        if (currentAction.duration <= 0){
+            currentAction.duration = defaultDuration;
+            nextAction(actor, currentAction);
+            cout << "performing action: " << currentAction.node->getLabel() << endl;
+        }
+
     }
 }
 
 vector<VRProcessNodePtr> VRProcessEngine::getCurrentActions(){
     vector<VRProcessNodePtr> res;
-    for (action : currentActions) {
-        res.push_back(action.second);
+
+    for (subject : subjects) {
+        res.push_back(subject.second.current.node);
     }
+
     return res;
 }
