@@ -368,20 +368,20 @@ void VRRoad::addTrafficLight( Vec3d pos ) {
                 //df = pos;
             }
         }
-        cout << "  VRRoad::addTrafficLight " << toString(dmin) << "  " << toString(as) << "  " << toString(pos) << endl;
+        //cout << "  VRRoad::addTrafficLight " << toString(dmin) << "  " << toString(as) << "  " << toString(pos) << endl;
         for (auto laneEnt : roadEnt->getAllEntities("lanes")) {
             auto laneDir = laneEnt->getValue("direction", 1);
             Vec3d laneTangent = getRightEdge(pos)->dir() * laneDir;
             laneTangent.normalize();
-            cout << "   VRRoad::addTrafficLight " << toString(dir.dot(laneTangent)) << endl;
+            //cout << "   VRRoad::addTrafficLight " << toString(dir.dot(laneTangent)) << endl;
             if (dir.dot(laneTangent) < -0.5) {
                 auto signalEnt = o->addEntity("trafficlight", "TrafficLight");
                 laneEnt->add("signs",signalEnt->getName());
                 signalEnt->add("lanes",laneEnt->getName());
                 signalEnt->setVec3("position", pos, "Position");
                 signalEnt->set("node", nodeEnt->getName());
-                cout << "   VRRoad::addTrafficLight- "<< "\033[32mset\033[0m" << " -" << signalEnt->getName() << endl;
-            } else cout << "   VRRoad::addTrafficLight-" << "\033[31mnot set\033[0m" << endl;
+                //cout << "   VRRoad::addTrafficLight- "<< "\033[32mset\033[0m" << " -" << signalEnt->getName() << endl;
+            } //else cout << "   VRRoad::addTrafficLight-" << "\033[31mnot set\033[0m" << endl;
 
         }
     }
@@ -389,6 +389,9 @@ void VRRoad::addTrafficLight( Vec3d pos ) {
 
 void VRRoad::setOffsetIn(float o) { offsetIn = o; }
 void VRRoad::setOffsetOut(float o) { offsetOut = o; }
+
+void VRRoad::setVisible(bool in) { visible = in; }
+bool VRRoad::isVisible() { return visible; }
 
 void VRRoad::addIntersection(VRRoadIntersectionPtr isec) { intersections.push_back(isec); }
 vector<VRRoadIntersectionPtr> VRRoad::getIntersections() { return intersections; }

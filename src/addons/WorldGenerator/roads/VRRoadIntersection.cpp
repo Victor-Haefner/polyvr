@@ -380,7 +380,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                     Vec3d pos = signE->getVec3("position");
                     //cout << "   VRRoadIntersection:checkForSignals " << toString(pos) << endl;
                     if (signE->is_a("TrafficLight")) {
-                        cout << "   VRRoadIntersection:checkForSignals - found" << endl;
+                        cout << "   VRRoadIntersection:checkForSignals - found - " << toString( signE->getName() ) << endl;
                         return true;
                     }
                 }
@@ -396,20 +396,6 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 }
             }
             return false;
-            /*for (auto roadFront : roadFronts) {
-                auto roadE = roadFront->road->getEntity();
-                auto lanes = roadE->getAllEntities("lanes");
-                for (auto laneE : lanes) {
-                    auto signs = laneE->getAllEntities("signs");
-                    for (auto signE : signs) {
-                        Vec3d pos = signE->getVec3("position");
-                        if (signE->is_a("TrafficLight")) {
-                            signals.push_back( signalData(roadFront, laneE, signE) );
-                            cout << "   VRRoadIntersection:computeTrafficLights" << toString(pos) << endl;
-                        }
-                    }
-                }
-            }*/
         };
 
         for (auto road : getRoads()) {
@@ -425,7 +411,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
         //delete lane segments between crossing and main intersection
 	    crossingRoads.clear();
         checkForCrossings();
-	    checkForSignals();
+	    //checkForSignals();
         auto node = entity->getEntity("node");
         Vec3d pNode = node->getVec3("position");
         int N = roadFronts.size();
@@ -774,7 +760,7 @@ void VRRoadIntersection::addRoad(VRRoadPtr road) {
 
 VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d root, VREntityPtr lane, VREntityPtr signal) {
     if (!system) system = VRTrafficLights::create();
-    cout << "  VRRoadIntersection::addTrafficLight" << endl;
+    //cout << "  VRRoadIntersection::addTrafficLight" << endl;
     float R = 0.05;
     VRTransformPtr geo = world.lock()->getAssetManager()->copy(asset, Pose::create());
     VRGeometryPtr red, orange, green;
@@ -840,7 +826,8 @@ void VRRoadIntersection::computeTrafficLights() {
 
     */
     auto type = entity->get("type")->value;
-    if (type == "crossing") return;
+    if (type != "intersection") return;
+    //if (type == "crossing") return;
     struct signalData {
         shared_ptr<RoadFront> roadFront;
         VREntityPtr lane;
@@ -860,7 +847,7 @@ void VRRoadIntersection::computeTrafficLights() {
                 Vec3d pos = signE->getVec3("position");
                 if (signE->is_a("TrafficLight")) {
                     signals.push_back( signalData(roadFront, laneE, signE) );
-                    cout << "   VRRoadIntersection:computeTrafficLights" << toString(pos) << endl;
+                    //cout << "   VRRoadIntersection:computeTrafficLights " << toString(pos) << " " << toString (signE->getName()) << endl;
                 }
             }
         }
@@ -882,12 +869,13 @@ void VRRoadIntersection::computeTrafficLights() {
     auto node = entity->getEntity("node");
     for (auto s : signals) {
         auto signalNode = s.signal->getEntity("node");
-        if (signalNode != node) continue;
+        //if (signalNode != node) continue;
         auto p = s.roadFront->pose;
         auto eP = s.roadFront->road->getEdgePoint( node );
         Vec3d root = eP.p1;
 
         auto lP = getLaneNode(s.lane);
+        if ( (signalNode->getVec3("position") - node->getVec3("position")).length() > 30 ) continue;
         addTrafficLight(lP, "trafficLight", root, s.lane, s.signal);
     }
 
@@ -1246,7 +1234,7 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
                 auto road = rf->road;
                 string type = "road";
                 if (auto t = road->getEntity()->get("type")) type = t->value;
-                if (type == "footway" && road->getGeometry()) { road->getGeometry()->setVisible(0); }
+                if (type == "footway") { road->setVisible(0); }
             }
             return true;
         }
