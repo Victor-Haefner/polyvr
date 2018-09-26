@@ -18,6 +18,15 @@ VRCameraManager::~VRCameraManager() {;}
 
 void VRCameraManager::CMsetup() {
     setMActiveCamera(activeName);
+    if (!getActiveCamera()) setMActiveCamera("Default");
+    if (!getActiveCamera()) {
+        auto cams = VRCamera::getAll();
+        if (cams.size() == 0) cout << "Warning in VRCameraManager::CMsetup, no camera available to initiate!\n";
+        else {
+            active = cams.front();
+            activeName = getActiveCamera()->getName();
+        }
+    }
 }
 
 VRCameraPtr VRCameraManager::getCamera(int ID) {
