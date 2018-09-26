@@ -2,6 +2,23 @@
 #include <stdlib.h>
 #include <iostream>
 #include <boost/filesystem.hpp>
+#include <execinfo.h>
+#include <stdio.h>
+#include <unistd.h>
+
+void printBacktrace() {
+    void *buffer[100];
+    char **strings;
+
+    int nptrs = backtrace(buffer, 100);
+    printf("backtrace() returned %d addresses\n", nptrs);
+
+    strings = backtrace_symbols(buffer, nptrs);
+    if (strings != NULL) {
+        for (int j = 0; j < nptrs; j++) printf("%s\n", strings[j]);
+        free(strings);
+    }
+}
 
 bool exists(string path) { return boost::filesystem::exists(path); }
 

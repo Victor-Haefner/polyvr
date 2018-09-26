@@ -18,6 +18,7 @@
 #include "core/utils/VRTimer.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRProgress.h"
+#include "core/utils/system/VRSystem.h"
 #include <libxml++/nodes/element.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -151,6 +152,7 @@ VRObjectPtr VRScene::get(string name) {
 
 void VRScene::setActiveCamera(string camname) {
     cout << "set active camera: " << camname << endl;
+    //printBacktrace();
     setMActiveCamera(camname);
     auto setup = VRSetup::getCurrent();
 
@@ -252,6 +254,7 @@ void mkPath(string path) {
 void VRScene::saveScene(xmlpp::Element* e) {
     if (e == 0) return;
     VRName::save(e);
+    VRCameraManager::saveUnder(e);
     VRRenderManager::saveUnder(e);
     VRScriptManager::saveUnder(e);
     VRNetworkManager::saveUnder(e);
@@ -283,6 +286,7 @@ void VRScene::loadScene(xmlpp::Element* e) {
     loadingProgressThread = VRSceneManager::get()->initThread(loadingProgressThreadCb, "loading progress thread", true, 1);
 
     VRName::load(e);
+    VRCameraManager::loadChildFrom(e);
     VRRenderManager::loadChildFrom(e);
     VRScriptManager::loadChildFrom(e);
     VRNetworkManager::loadChildFrom(e);
@@ -291,6 +295,7 @@ void VRScene::loadScene(xmlpp::Element* e) {
     VRMaterialManager::loadChildFrom(e);
     semanticManager->loadChildFrom(e);
 
+    VRCameraManager::CMsetup();
     VRRenderManager::update();
     VRScriptManager::update();
     VRNetworkManager::update();

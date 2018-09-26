@@ -75,7 +75,7 @@ VRCameraPtr VRCamera::create(string name, bool reg) {
     p->addChild(p->vrSetup);
     p->registred = reg;
     getAll().push_back( p );
-    if (reg) VRGuiManager::broadcast("camera_added");
+    VRGuiManager::broadcast("camera_added");
     if (reg) VRScene::getCurrent()->setMActiveCamera(p->getName());
     return p;
 }
@@ -143,7 +143,7 @@ void VRCamera::setup(bool reg) {
 void VRCamera::activate() {
     auto scene = VRScene::getCurrent();
     if (scene) scene->setActiveCamera(getName());
-    VRGuiManager::broadcast("camera_added");
+    VRGuiManager::broadcast("camera_changed");
 }
 
 void VRCamera::showCamGeo(bool b) {

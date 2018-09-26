@@ -104,25 +104,6 @@ void VRHandle::drop() {
     lock = false;
 }
 
-#include <execinfo.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-void printBacktrace() {
-    void *buffer[100];
-    char **strings;
-
-    int nptrs = backtrace(buffer, 100);
-    printf("backtrace() returned %d addresses\n", nptrs);
-
-    strings = backtrace_symbols(buffer, nptrs);
-    if (strings != NULL) {
-        for (int j = 0; j < nptrs; j++) printf("%s\n", strings[j]);
-        free(strings);
-    }
-}
-
 void VRHandle::setMatrix(Matrix4d m) { // for undo/redo, PROBLEM: called by the constraint non stop
     VRTransform::setMatrix(m);
     if (lock) return;
