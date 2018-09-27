@@ -80,16 +80,14 @@ void VRProcessEngine::reset() {}
 
 void VRProcessEngine::run(float speed) {
     VRProcessEngine::speed = speed;
-    //TODO: adjust action durations to speed
-
+    //adjust action durations to speed
     for (auto& subject : subjects){
-        auto actor = subject.second;
-        for (auto action : actor.actions){
-            auto duration = action.duration;
+        auto& actor = subject.second;
+        for (auto& action : actor.actions){
+            auto& duration = action.duration;
             duration = defaultDuration/speed;
         }
     }
-
     running = true;
 }
 
@@ -104,14 +102,14 @@ void VRProcessEngine::update() {
         auto& actor = subject.second;
         auto& currentAction = actor.current;
         //TODO: call specific action functions for each current action
-        if (subject.second.current.duration <= 0){
-            subject.second.current.duration = defaultDuration; //speed;
+        if (currentAction.duration <= 0){
+            currentAction.duration = defaultDuration/speed;
 
-            subject.second.current = nextAction(subject.second);
-            cout << process->getSubjects()[subject.first]->getLabel() << ": " << subject.second.current.node->getLabel() << endl;
+            currentAction = nextAction(actor);
+            cout << process->getSubjects()[subject.first]->getLabel() << ": " << currentAction.node->getLabel() << endl;
         }
-        performAction(subject.second.current); //dummy action function
-        subject.second.current.duration--;
+        performAction(currentAction); //dummy action function
+        currentAction.duration--;
     }
 }
 
