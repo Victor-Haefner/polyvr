@@ -31,10 +31,11 @@ class VRProcessEngine {
 
         void initialize();
         void performAction(Action);
-        void nextAction(Actor, Action);
+        Action nextAction(Actor);
         void update();
 
-        float defaultDuration = 60*5;
+        float defaultDuration = 60; //= 1s if 60fps
+        float speed;
 
     public:
         VRProcessEngine();
