@@ -137,6 +137,18 @@ vector<Graph::edge> Graph::getEdgesCopy() {
     return res;
 }
 
+vector< Graph::node > Graph::getPreviousNodes(int i) {
+    vector<node> res;
+    for (auto& e : getInEdges(i)) res.push_back( getNode(e.from) );
+    return res;
+}
+
+vector< Graph::node > Graph::getNextNodes(int i) {
+    vector<node> res;
+    for (auto& e : getOutEdges(i)) res.push_back( getNode(e.to) );
+    return res;
+}
+
 vector< Graph::node > Graph::getNeighbors(int i) {
     vector<node> res;
     for (auto& e : getInEdges(i)) res.push_back( getNode(e.from) );

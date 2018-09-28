@@ -14,7 +14,7 @@ OSG_BEGIN_NAMESPACE;
 enum PROCESS_WIDGET {
     SUBJECT,
     MESSAGE,
-    ACTION,
+    STATE,
     TRANSITION
 };
 
@@ -24,10 +24,11 @@ struct VRProcessNode : VRName {
     PROCESS_WIDGET type;
     string label;
     int ID = 0;
+    int subject = 0;
 
-    VRProcessNode(string name, PROCESS_WIDGET type, int ID);
+    VRProcessNode(string name, PROCESS_WIDGET type, int ID, int sID);
     ~VRProcessNode();
-    static VRProcessNodePtr create(string name, PROCESS_WIDGET type, int ID);
+    static VRProcessNodePtr create(string name, PROCESS_WIDGET type, int ID, int sID);
 
     void update(Graph::node& n, bool changed);
 
@@ -72,17 +73,18 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         vector<VRProcessNodePtr> getMessageSubjects(int messageID);
         vector<VRProcessNodePtr> getSubjects();
         vector<VRProcessNodePtr> getMessages();
-        vector<VRProcessNodePtr> getSubjectActions(int subjectID);
-        vector<VRProcessNodePtr> getActionTransitions(int subjectID, int actionID);
+        vector<VRProcessNodePtr> getSubjectStates(int subjectID);
+        vector<VRProcessNodePtr> getStateTransitions(int subjectID, int actionID);
         vector<VRProcessNodePtr> getTransitionActions(int subjectID, int transitionID);
         vector<VRProcessNodePtr> getTransitions(int subjectID);
 
         VRProcessNodePtr addSubject(string name);
         VRProcessNodePtr addMessage(string name, int i, int j, VRProcessDiagramPtr diag = 0);
-        VRProcessNodePtr addAction(string name, int sID);
+        VRProcessNodePtr addState(string name, int sID);
         VRProcessNodePtr addTransition(string name, int sID, int i, int j, VRProcessDiagramPtr d = 0);
 
         void remNode(VRProcessNodePtr n);
+        VRProcessNodePtr getTransitionState(VRProcessNodePtr transition);
 };
 
 OSG_END_NAMESPACE;

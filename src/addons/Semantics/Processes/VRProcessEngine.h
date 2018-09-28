@@ -4,6 +4,7 @@
 #include "addons/Semantics/VRSemanticsFwd.h"
 #include "core/math/VRMathFwd.h"
 #include "core/utils/VRFunctionFwd.h"
+#include "core/math/VRStateMachine.h"
 #include <map>
 #include <OpenSG/OSGVector.h>
 
@@ -12,14 +13,81 @@ OSG_BEGIN_NAMESPACE;
 
 class VRProcessEngine {
     public:
+        struct Message {
+            string message;
+            string sender;
+
+            Message(string m, string s) : message(m), sender(s) {}
+
+            bool operator==(const Message& m) { return m.message == message && m.sender == sender; }
+        };
+
+        struct Inventory {
+            vector<Message> messages;
+
+            bool hasMessage(Message m) {
+                for (auto& m2 : messages) if (m2 == m) return true;
+                return false;
+            }
+        };
+
+        struct Prerequisite {
+            Message message;
+
+            Prerequisite(Message m) : message(m) {}
+
+            bool valid(Inventory* inventory) {
+                return inventory->hasMessage(message);
+            }
+        };
+
         struct Action {
+            string nextState;
             VRProcessNodePtr node;
-            float duration;
+            float duration = 0;
+            vector<Prerequisite> prerequisites;
+
+            Action(string state, VRProcessNodePtr n) : nextState(state), node(n) {}
+
+            bool valid(Inventory* inventory) {
+                for (auto& p : prerequisites) if (!p.valid(inventory)) return false;
+                return true;
+            }
         };
 
         struct Actor {
-            Action current;
-            vector<Action> actions;
+            Action* current = 0;
+            map<string, vector<Action>> actions; // maps state name to possible actions/transitions
+            VRStateMachine<float> sm;
+            Inventory inventory;
+
+            Actor() : sm("ProcessActor") {}
+
+            string transitioning( float t ) {
+                auto state = sm.getCurrentState();
+                string stateName = state->getName();
+                cout << "Actor::transitioning from " << stateName << endl;
+
+                // check if currently acting
+                if (current) {
+                    string nextState = current->nextState;
+                    current = 0;
+                    cout << " Actor::transitioning goto next state actions " << nextState << endl;
+                    return nextState; // state machine goes into nextState
+                } else {
+                    cout << " Actor::transitioning check actions " << actions.size() << endl;
+                    // check if any actions are ready to start
+                    for (auto& action : actions[stateName]) {
+                        if (action.valid(&inventory)) { current = &action; return ""; }
+                    }
+                }
+
+                return "";
+            }
+
+            void receiveMessage(Message m) {
+                inventory.messages.push_back(m);
+            }
         };
 
     private:
@@ -31,7 +99,7 @@ class VRProcessEngine {
 
         void initialize();
         void performAction(Action);
-        Action nextAction(Actor);
+        //Action nextAction(Actor);
         void update();
 
         float defaultDuration = 60; //= 1s if 60fps

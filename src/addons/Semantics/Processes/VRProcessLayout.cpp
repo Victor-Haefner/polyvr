@@ -134,7 +134,7 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     if (n->type == SUBJECT) { fg = Color4f(0,0,0,1); bg = Color4f(0.8,0.9,1,1); }
     if (n->type == MESSAGE) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,0,1); }
     if (n->type == TRANSITION) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,0,1); }
-    if (n->type == ACTION) { fg = Color4f(0,0,0,1); bg = Color4f(1,0.9,0.8,1); }
+    if (n->type == STATE) { fg = Color4f(0,0,0,1); bg = Color4f(1,0.9,0.8,1); }
 
     int wrapN = 12;
     if (n->type == MESSAGE || n->type == TRANSITION) wrapN = 22;
@@ -149,12 +149,12 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     VRGeoData geo;
 
     if (n->type == SUBJECT) pushSubjectBox(geo, wrapN, lineN*height*0.5);
-    if (n->type == ACTION) pushActionBox(geo, wrapN, lineN*height*0.5);
+    if (n->type == STATE) pushActionBox(geo, wrapN, lineN*height*0.5);
     if (n->type == MESSAGE || n->type == TRANSITION) pushMsgBox(geo, wrapN, lineN*height*0.5);
 
     auto w = geo.asGeometry("ProcessElement");
     if (n->type == SUBJECT) w->addTag("subject");
-    if (n->type == ACTION) w->addTag("action");
+    if (n->type == STATE) w->addTag("action");
     if (n->type == MESSAGE) w->addTag("message");
     if (n->type == TRANSITION) w->addTag("transition");
     w->setMaterial(mat);
@@ -248,10 +248,10 @@ void VRProcessLayout::buildSBDs() {
 	for (int i=0; i < subjects.size(); i++) {
         int sID = subjects[i]->getID();
         auto toolSBD = toolSBDs[sID];
-        auto actions = process->getSubjectActions(sID);
+        auto actions = process->getSubjectStates(sID);
 
         for (int j=0; j < actions.size(); j++) {
-            appendToHandle(Vec3d((j+1)*25,0,i*25), actions[j], toolSBD);
+            appendToHandle(Vec3d((j+1)*40,0,i*25), actions[j], toolSBD);
         }
 
         for (auto transition : process->getTransitions(sID)) {
@@ -336,12 +336,37 @@ void VRProcessLayout::update(){
 
 	//get current actions and change box color/material
 	if(engine){
+        //auto textColor = Color3f(0,0,0,1);
+        auto elementColor = Color3f(1,0.9,0.8);
+        auto activeElementColor = Color3f(1,0.51,0.22);
+        //iterate over all actions
+        for (auto subject : process->getSubjects()){
+            for (auto action : process->getSubjectStates(subject->getID())){
+                //set element color/texture depending on if its active or not
+                auto element = getElement(action->getID());
+                auto geo = dynamic_pointer_cast<VRGeometry>(element);
+                auto mat = geo->getMaterial();
 
+                //check if action is active
+                bool isActive = false;
+                auto actives = engine->getCurrentActions();
+                for (auto activeNode : actives){
+                    if (activeNode->getID() == action->getID()) isActive = true;
+                }
+
+                if (isActive){
+                   mat->setDiffuse(activeElementColor);
+                } else mat->setDiffuse(elementColor);
+            }
+        }
+
+/*
         for (auto currentAction : engine->getCurrentActions()){
             auto nodeID = currentAction->getID();
-            auto element = dynamic_pointer_cast<VRGeometry>( getElement(nodeID) );
+            auto g = dynamic_pointer_cast<VRGeometry>( getElement(nodeID) );
             element->setColor("green");
         }
+        */
 	}
 
 
