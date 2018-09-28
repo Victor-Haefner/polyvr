@@ -491,16 +491,28 @@ void VRTrafficSimulation::updateSimulation() {
 
     auto calcEdgePoints = [&](int ID) {
         auto& vehicle = vehicles[ID];
+        if (vehicle.lastEPTS == VRGlobals::CURRENT_FRAME) return;
         auto p = vehicle.t->getPose();
-        auto left = p->up().dot(p->dir());
+        auto left = p->up().cross(p->dir());
         auto LH = p->dir()*0.5*vehicle.length;
         auto WH = left*vehicle.width;
         vehicle.vehicleEPs[0] = p->pos() + LH + WH;
         vehicle.vehicleEPs[1] = p->pos() + LH - WH;
         vehicle.vehicleEPs[2] = p->pos() - LH + WH;
         vehicle.vehicleEPs[3] = p->pos() - LH - WH;
+        vehicle.lastEPTS = VRGlobals::CURRENT_FRAME;
     };
 
+    auto calcDisToEP = [&](int ID1, int ID2) {
+        auto& v1 = vehicles[ID1];
+        auto& v2 = vehicles[ID2];
+        float res = 5000.0;
+        for (auto p : v2.vehicleEPs) {
+            float cc = abs((p.second - v1.t->getPose()->pos()).dot(v1.t->getPose()->dir().cross(v1.t->getPose()->up())));
+            if (res > cc) res = cc;
+        }
+        return res;
+    };
 
     auto propagateVehicles = [&]() {
         int N = 0;
