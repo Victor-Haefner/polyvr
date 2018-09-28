@@ -98,8 +98,8 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             if (auto t1 = road1->getEntity()->get("type")) type1 = t1->value;
             if (auto t2 = road2->getEntity()->get("type")) type2 = t2->value;
             if (type1 != type2) {
-                if (type1 == "footway" && road1->getGeometry()) { road1->getGeometry()->setVisible(0); }
-                if (type2 == "footway" && road2->getGeometry()) { road2->getGeometry()->setVisible(0); }
+                //if (type1 == "footway" && road1->getGeometry()) { road1->getGeometry()->setVisible(0); }
+                //if (type2 == "footway" && road2->getGeometry()) { road2->getGeometry()->setVisible(0); }
                 return false;
             }
 
@@ -1235,6 +1235,7 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
                 string type = "road";
                 if (auto t = road->getEntity()->get("type")) type = t->value;
                 if (type == "footway") { road->setVisible(0); }
+                //if (type == "footway") { road->setVisible(0); }
             }
             return true;
         }

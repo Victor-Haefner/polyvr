@@ -748,10 +748,11 @@ void VRRoadNetwork::computeLanes() {
 void VRRoadNetwork::computeSurfaces() {
     cout << "VRRoadNetwork::computeSurfaces\n";
     auto computeRoadSurface = [&](VRRoadPtr road) {
-        if (!road->isVisible()) return;
         auto roadGeo = road->createGeometry();
         if (!roadGeo) return;
         roadGeo->setMaterial( asphalt );
+        if (!road->isVisible()) roadGeo->setVisible(false);
+
         /*roadGeo->getPhysics()->setDynamic(false);
         roadGeo->getPhysics()->setShape("Concave");
         roadGeo->getPhysics()->setPhysicalized(true);*/
