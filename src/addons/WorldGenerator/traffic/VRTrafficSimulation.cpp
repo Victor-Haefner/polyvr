@@ -489,6 +489,18 @@ void VRTrafficSimulation::updateSimulation() {
         return -1;
     };
 
+    auto calcEdgePoints = [&](int ID) {
+        auto& vehicle = vehicles[ID];
+        auto p = vehicle.t->getPose();
+        auto left = p->up().dot(p->dir());
+        auto LH = p->dir()*0.5*vehicle.length;
+        auto WH = left*vehicle.width;
+        vehicle.vehicleEPs[0] = p->pos() + LH + WH;
+        vehicle.vehicleEPs[1] = p->pos() + LH - WH;
+        vehicle.vehicleEPs[2] = p->pos() - LH + WH;
+        vehicle.vehicleEPs[3] = p->pos() - LH - WH;
+    };
+
 
     auto propagateVehicles = [&]() {
         int N = 0;
@@ -733,6 +745,7 @@ void VRTrafficSimulation::updateSimulation() {
                 if (isSimRunning && VRGlobals::CURRENT_FRAME - vehicle.lastMoveTS > 200 ) {
                     toChangeRoad[road.first].push_back( make_pair(vehicle.vID, -1) ); ///------killswitch if vehicle get's stuck
                 }
+                if (!isSimRunning) vehicle.lastMoveTS = VRGlobals::CURRENT_FRAME;
                 N++; // count vehicles!
             }
         }

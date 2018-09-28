@@ -59,8 +59,12 @@ class VRTrafficSimulation : public VRObject {
             map<int, float> vehiclesight;
             map<int, float> vehiclesightFar;
             map<int, int> vehiclesightFarID;
+            map<int, Vec3d> vehicleEPs;
+            int lastEPTS = 0;
 
             Graph::position pos;
+            float length = 5;
+            float width = 2.4;
             float speed;
             float currentVelocity;
             float targetVelocity; //try km/h
