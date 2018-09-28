@@ -4,7 +4,7 @@
 #include "../VRSemanticsFwd.h"
 #include "core/objects/VRTransform.h"
 #include "VRProcess.h"
-
+#include "VRProcessEngine.h"
 #include "core/utils/VRFunctionFwd.h"
 
 OSG_BEGIN_NAMESPACE;
