@@ -627,7 +627,7 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p, int type) {
     for (int i=0; i<4; i++) cols->addValue(color);
 
     VRGeoData gdata;
-    gdata.pushQuad(Vec3d(0,0.02,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(2,2), true);
+    gdata.pushQuad(Vec3d(0,0.025,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(2,2), true);
     auto geo = gdata.asGeometry("arrow");
     geo->setColors(cols);
     geo->setPositionalTexCoords2D(1.0, 1, Vec2i(0,2));
