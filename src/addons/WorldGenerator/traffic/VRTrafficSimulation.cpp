@@ -489,25 +489,27 @@ void VRTrafficSimulation::updateSimulation() {
         return -1;
     };
 
-    auto calcEdgePoints = [&](int ID) {
+    auto calcFramePoints = [&](int ID) {
+    //calculation of 4 points at the edges of vehicle
         auto& vehicle = vehicles[ID];
-        if (vehicle.lastEPTS == VRGlobals::CURRENT_FRAME) return;
+        if (vehicle.lastFPTS == VRGlobals::CURRENT_FRAME) return;
         auto p = vehicle.t->getPose();
         auto left = p->up().cross(p->dir());
-        auto LH = p->dir()*0.5*vehicle.length;
-        auto WH = left*vehicle.width;
-        vehicle.vehicleEPs[0] = p->pos() + LH + WH;
-        vehicle.vehicleEPs[1] = p->pos() + LH - WH;
-        vehicle.vehicleEPs[2] = p->pos() - LH + WH;
-        vehicle.vehicleEPs[3] = p->pos() - LH - WH;
-        vehicle.lastEPTS = VRGlobals::CURRENT_FRAME;
+        auto LH = p->dir()*0.5*vehicle.length; //half of vehicle length
+        auto WH = left*vehicle.width;   //half of vehicle width
+        vehicle.vehicleFPs[0] = p->pos() + LH + WH;
+        vehicle.vehicleFPs[1] = p->pos() + LH - WH;
+        vehicle.vehicleFPs[2] = p->pos() - LH + WH;
+        vehicle.vehicleFPs[3] = p->pos() - LH - WH;
+        vehicle.lastFPTS = VRGlobals::CURRENT_FRAME;
     };
 
-    auto calcDisToEP = [&](int ID1, int ID2) {
+    auto calcDisToFP = [&](int ID1, int ID2) {
+    //simple way to calculate the distance between vehicle1 and vehicle2
         auto& v1 = vehicles[ID1];
         auto& v2 = vehicles[ID2];
         float res = 5000.0;
-        for (auto p : v2.vehicleEPs) {
+        for (auto p : v2.vehicleFPs) {
             float cc = abs((p.second - v1.t->getPose()->pos()).dot(v1.t->getPose()->dir().cross(v1.t->getPose()->up())));
             if (res > cc) res = cc;
         }
@@ -545,7 +547,8 @@ void VRTrafficSimulation::updateSimulation() {
                 auto resFar = space->radiusSearch(pose->pos(), sightRadius);
                 int state = 0;
 
-                auto setSight = [&](int dir, float D, int ID) { //set nearest vehicleID as neighbor, also set Distance
+                auto setSight = [&](int dir, float D, int ID) {
+                //set nearest vehicleID as neighbor, also set Distance
                     if (dir==-1) return;
                     if (!vehicle.vehiclesightFar[dir]) {
                         vehicle.vehiclesightFar[dir] = D;
@@ -609,6 +612,7 @@ void VRTrafficSimulation::updateSimulation() {
                     //if (state > 0) break;
                 }*/
                 for (auto vv : resFar) {
+                //check vehicles in radiusSearch
                     auto v = (Vehicle*)vv;
                     if (!v->t->isVisible()) continue;
                     if (!v) continue;
@@ -616,6 +620,9 @@ void VRTrafficSimulation::updateSimulation() {
                     auto p = v->t->getPose();
                     auto D = (pose->pos() - p->pos()).length();
                     //auto D = pose->dir().dot(pose->pos() - p->pos());
+                    calcFramePoints(v->vID);
+                    float diss = calcDisToFP(vehicle.vID,v->vID);
+                    cout << "  propagateVehicles " << toString(diss) << endl;
                     int farP = farPosition(pose, p, vehicle.lastMove);
                     setSight(farP,D,v->vID);
                     //if (vehicle.currentVelocity > 6 && D <  0.1) vehicle.collisionDetected = true;

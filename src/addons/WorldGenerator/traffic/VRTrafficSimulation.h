@@ -59,8 +59,8 @@ class VRTrafficSimulation : public VRObject {
             map<int, float> vehiclesight;
             map<int, float> vehiclesightFar;
             map<int, int> vehiclesightFarID;
-            map<int, Vec3d> vehicleEPs;
-            int lastEPTS = 0;
+            map<int, Vec3d> vehicleFPs;
+            int lastFPTS = 0;
 
             Graph::position pos;
             float length = 5;
