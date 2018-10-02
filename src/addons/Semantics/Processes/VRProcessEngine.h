@@ -63,6 +63,7 @@ class VRProcessEngine {
 
             Actor() : sm("ProcessActor") {}
 
+            //performs transition to next state
             string transitioning( float t ) {
                 auto state = sm.getCurrentState();
                 string stateName = state->getName();
@@ -102,8 +103,8 @@ class VRProcessEngine {
         //Action nextAction(Actor);
         void update();
 
-        float defaultDuration = 60; //= 1s if 60fps
         float speed;
+        float tickDuration = 60; //= 1s if 60fps
 
     public:
         VRProcessEngine();

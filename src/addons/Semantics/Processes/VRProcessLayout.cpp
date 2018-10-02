@@ -255,7 +255,7 @@ void VRProcessLayout::buildSBDs() {
         }
 
         for (auto transition : process->getTransitions(sID)) {
-            auto actions = process->getTransitionActions(sID, transition->getID());
+            auto actions = process->getTransitionStates(sID, transition->getID());
             setupLabel(transition, toolSBD, actions);
         }
 	}

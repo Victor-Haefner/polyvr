@@ -21,47 +21,38 @@ VRProcessEngine::~VRProcessEngine() {}
 VRProcessEnginePtr VRProcessEngine::create() { return VRProcessEnginePtr( new VRProcessEngine() ); }
 
 void VRProcessEngine::initialize(){
-    cout << "initialize()" << endl;
+    //cout << "VRProcessEngine::initialize()" << endl;
 
-    //get subject actions
     auto processSubjects = process->getSubjects();
-    for ( uint i=0; i<processSubjects.size(); i++) {
-        Actor actor;
-        subjects[i] = actor;
-        int SID = processSubjects[i]->getID();
+    auto initialStates = process->getInitialStates();
+    //cout << "initialStates.size() " << initialStates.size() << endl;
 
-        auto states = process->getSubjectStates(SID);
-        float duration = defaultDuration;
+    for (uint i=0; i<processSubjects.size(); i++) {
+        int sID = processSubjects[i]->getID();
+        auto states = process->getSubjectStates(sID);
+        string initialState = "";
 
-        string dummyStartState = "";
+        if (initialStates.count(processSubjects[i])){
+            initialState = initialStates[processSubjects[i]]->getLabel();
+        }
+        //cout << "initialState " << initialState << endl;
 
-        for (int j=0; j<states.size(); j++) {
+        for (uint j=0; j<states.size(); j++) {
             auto state = states[j];
             vector<Action> actions;
 
-            auto transitions = process->getStateTransitions(SID, state->getID());
+            auto transitions = process->getStateTransitions(sID, state->getID());
             for (auto transition : transitions) {
                 auto nextState = process->getTransitionState(transition);
                 Action action(nextState->getLabel(), transition);
                 actions.push_back(action);
             }
-            //Action action{state, duration};
-            // // &actorAction;
+
             auto transitionCB = VRFunction<float, string>::create("processTransition", boost::bind(&VRProcessEngine::Actor::transitioning, &subjects[i], _1));
             subjects[i].actions[state->getLabel()] = actions;
             subjects[i].sm.addState(state->getLabel(), transitionCB);
-
-            dummyStartState = state->getLabel();
         }
-
-        subjects[i].sm.setCurrentState( dummyStartState );
-
-        /*if (actorActions.size()) {
-            Actor actor{actorActions[0], actorActions};
-            cout << processSubjects[i]->getLabel() << ": " << actorActions[0].node->getLabel() << endl;
-            subjects[i] = actor; //subjects[i] = &actor;
-        }*/
-
+        subjects[i].sm.setCurrentState( initialState );
     }
 }
 
@@ -101,14 +92,6 @@ void VRProcessEngine::reset() {}
 
 void VRProcessEngine::run(float speed) {
     VRProcessEngine::speed = speed;
-    //adjust action durations to speed
-    /*for (auto& subject : subjects){
-        auto& actor = subject.second;
-        for (auto& action : actor.actions){
-            auto& duration = action.duration;
-            duration = defaultDuration/speed;
-        }
-    }*/
     running = true;
 }
 
@@ -119,22 +102,16 @@ void VRProcessEngine::pause() {
 void VRProcessEngine::update() {
     if (!running) return;
 
-    for (auto& subject : subjects) {
+    if(tickDuration <= 0) {
+        tickDuration = 60;
+        for (auto& subject : subjects) {
         auto& actor = subject.second;
-        /*auto& currentAction = actor.current;
-        //TODO: call specific action functions for each current action
-        if (currentAction.duration <= 0){
-            currentAction.duration = defaultDuration/speed;
-
-            currentAction = nextAction(actor);
-            cout << process->getSubjects()[subject.first]->getLabel() << ": " << currentAction.node->getLabel() << endl;
+        actor.sm.process(0); //transitioning istead of sm.process?
         }
-        performAction(currentAction); //dummy action function
-        currentAction.duration--;*/
-
-        actor.sm.process(0);
     }
+    tickDuration-=speed;
 }
+
 
 vector<VRProcessNodePtr> VRProcessEngine::getCurrentActions() {
     vector<VRProcessNodePtr> res;

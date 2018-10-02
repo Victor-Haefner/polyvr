@@ -29,6 +29,7 @@ PyMethodDef VRPyProcess::methods[] = {
     //{"getTransitionStates", PyWrap(Process, getTransitionStates, "Return actions connected by a given transition - [ProcessNode] getTransitionActions(subject, transition)", vector<VRProcessNodePtr>, int, int ) },
     {"addSubject", PyWrap(Process, addSubject, "Add a new subject - ProcessNode addSubject( name )", VRProcessNodePtr, string ) },
     {"addState", PyWrap(Process, addState, "Add a new action to subject, by ID", VRProcessNodePtr, string, int ) },
+    {"setInitialState", PyWrap(Process, setInitialState, "Set a state to initial state.", void, VRProcessNodePtr, int ) },
     {"addMessage", PyWrapOpt(Process, addMessage, "Add a new message between subjects or actions i and j - ProcessNode addMessage( name, int i, int j )", "0", VRProcessNodePtr, string, int, int, VRProcessDiagramPtr ) },
     {"addTransition", PyWrapOpt(Process, addTransition, "Add a new transition between actions i and j - ProcessNode addTransition( name, subject, int i, int j )", "0", VRProcessNodePtr, string, int, int, int, VRProcessDiagramPtr ) },
    {NULL}  /* Sentinel */

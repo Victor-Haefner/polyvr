@@ -120,10 +120,9 @@ void VRProcess::printNodes(VRProcessDiagramPtr d){
     for (auto node : d->processnodes) cout << node.second->getLabel() << endl;
 }
 
-//TODO: remove cout's
-vector<VRProcessNodePtr> VRProcess::getStateTransitions(int subjectID, int actionID) {
+vector<VRProcessNodePtr> VRProcess::getStateTransitions(int subjectID, int stateID) {
     auto d = behaviorDiagrams[subjectID];
-    auto neighbors = d->getNeighbors( actionID );
+    auto neighbors = d->getNeighbors( stateID );
     vector<VRProcessNodePtr> res;
 
     for (auto neighbor : neighbors){
@@ -133,7 +132,7 @@ vector<VRProcessNodePtr> VRProcess::getStateTransitions(int subjectID, int actio
     return res;
 }
 
-vector<VRProcessNodePtr> VRProcess::getTransitionActions(int subjectID, int transitionID) {
+vector<VRProcessNodePtr> VRProcess::getTransitionStates(int subjectID, int transitionID) {
     auto d = behaviorDiagrams[subjectID];
     auto neighbors = d->getNeighbors( transitionID );
     vector<VRProcessNodePtr> res;
@@ -154,6 +153,20 @@ vector<VRProcessNodePtr> VRProcess::getTransitions(int subjectID) {
     return res;
 }
 
+map<VRProcessNodePtr, VRProcessNodePtr> VRProcess::getInitialStates(){
+    map<VRProcessNodePtr, VRProcessNodePtr> res;
+    for (auto s : getSubjects()){
+        auto diag = behaviorDiagrams[s->getID()];
+        if (!diag) cout << "VRProcess::getInitialStates: No Behavior for subject " << s->getLabel() << " found." << endl;
+        for (auto n : diag->processnodes) {
+            if (n.second->isInitialState) {
+                res[s] = n.second;
+            }
+        }
+    }
+    if(!res.size()) cout << "VRProcess:: No initial states could be found." << endl;
+    return res;
+}
 
 void VRProcess::update() {
     if (!ontology) return;
@@ -282,6 +295,37 @@ VRProcessNodePtr VRProcess::addState(string name, int sID) {
     auto a = VRProcessNode::create(name, STATE, aID, sID);
     diag->processnodes[aID] = a;
     return a;
+}
+
+
+void VRProcess::setInitialState(VRProcessNodePtr state, int sID){
+    auto diag = behaviorDiagrams[sID];
+    if (!diag) cout << "VRProcess::setInitialState: No Behavior for subject " << getSubjects()[sID]->getLabel() << " found." << endl;
+
+    if (state->type != STATE){
+        cout << "VRProcess::setInitialState: The given Processnode if not of STATE type." << endl;
+        return;
+    }
+    //lookup for state value in processnodes map and set it to initial state
+    auto oldInitialState = 0;
+    bool newInitialState = false;
+    for(auto n : diag->processnodes){
+        //cout << "for(auto n : diag->processnodes){" << endl;
+        if(n.second->isInitialState) {
+            //cout << "VRProcess::setInitialState: n.second->isInitialState == true" << endl;
+            if (newInitialState) n.second->isInitialState = false;
+            else oldInitialState = n.first;
+        }
+        else if(n.second == state){
+            //cout << "VRProcess::setInitialState: n.second == state" << endl;
+            if (oldInitialState){
+                diag->processnodes[oldInitialState]->isInitialState = false;
+            }
+            n.second->isInitialState = true;
+            newInitialState = true;
+            //cout << "VRProcess::setInitialState: set initial state: " << n.second->getLabel() << endl;
+        }
+    }
 }
 
 
