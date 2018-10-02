@@ -66,6 +66,6 @@ PyMethodDef VRPyProcessEngine::methods[] = {
     {"run", PyWrapOpt(ProcessEngine, run, "Run the simulation with a simulation speed multiplier, 1 is real time - run(float s)", "1", void, float ) },
     {"reset", PyWrap(ProcessEngine, reset, "Reset simulation - reset()", void ) },
     {"pause", PyWrap(ProcessEngine, pause, "Pause simulation - pause()", void ) },
-    {"getCurrentActions", PyWrap(ProcessEngine, getCurrentActions, "Current actions of all subjects - [ProcessNode] getCurrentActions()",  vector<VRProcessNodePtr> ) },
+    {"getCurrentStates", PyWrap(ProcessEngine, getCurrentStates, "Current states of all subjects - [ProcessNode] getCurrentStates()",  vector<VRProcessNodePtr> ) },
     {NULL}  /* Sentinel */
 };

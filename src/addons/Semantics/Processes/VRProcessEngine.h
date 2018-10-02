@@ -100,7 +100,6 @@ class VRProcessEngine {
 
         void initialize();
         void performAction(Action);
-        //Action nextAction(Actor);
         void update();
 
         float speed;
@@ -119,7 +118,7 @@ class VRProcessEngine {
         void run(float speed = 1);
         void pause();
 
-        vector<VRProcessNodePtr> getCurrentActions();
+        vector<VRProcessNodePtr> getCurrentStates();
 };
 
 OSG_END_NAMESPACE;

@@ -349,7 +349,7 @@ void VRProcessLayout::update(){
 
                 //check if action is active
                 bool isActive = false;
-                auto actives = engine->getCurrentActions();
+                auto actives = engine->getCurrentStates();
                 for (auto activeNode : actives){
                     if (activeNode->getID() == action->getID()) isActive = true;
                 }
