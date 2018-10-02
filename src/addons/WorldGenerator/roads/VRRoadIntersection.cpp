@@ -62,25 +62,34 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 
 	auto computeLaneMatches = [&]() {
 	    auto checkDefaultMatch = [&](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut, VRRoadPtr road1, VRRoadPtr road2) {
+        ///DEFAULT - INTERSECTION
+        //i= index lane in; j= index lane out; Nin= number of lanes going in at road1; Nout= number of lanes going out at road2; reSignIn= , reSignOut=,
+            auto getRoadConnectionAngle = [&](VRRoadPtr road1, VRRoadPtr road2) {
+                auto& data1 = road1->getEdgePoint( node );
+                auto& data2 = road2->getEdgePoint( node );
+                return data1.n.dot(data2.n);
+            };
+            auto getRoadTurnLeft = [&](VRRoadPtr road1, VRRoadPtr road2) {
+                auto& data1 = road1->getEdgePoint( node );
+                auto& data2 = road2->getEdgePoint( node );
+                Vec3d w = data1.n.cross(data2.n);
+                float a = asin( w.length() );
+                if (w[1] < 0) a = -a;
+                return a;
+            };
             if (Nin == Nout && i != j && reSignIn != reSignOut) return false;
             if (Nin == Nout && i != Nout-j-1 && reSignIn == reSignOut) return false;
-            if (Nin > Nout) {
-                auto getRoadConnectionAngle = [&](VRRoadPtr road1, VRRoadPtr road2) {
-                    auto& data1 = road1->getEdgePoint( node );
-                    auto& data2 = road2->getEdgePoint( node );
-                    return data1.n.dot(data2.n);
-                };
-                auto getRoadTurnLeft = [&](VRRoadPtr road1, VRRoadPtr road2) {
-                    auto& data1 = road1->getEdgePoint( node );
-                    auto& data2 = road2->getEdgePoint( node );
-                    Vec3d w = data1.n.cross(data2.n);
-                    float a = asin( w.length() );
-                    if (w[1] < 0) a = -a;
-                    return a;
-                };
+            if (Nin == Nout && Nin>1 && roadFronts.size()>2) {
                 bool parallel  = bool( getRoadConnectionAngle(road1, road2) < -0.8 );
                 bool left  = bool( getRoadTurnLeft(road1, road2) < 0);
-
+                if (reSignIn<0) i=Nin-i-1;  //making sure indexes stay consistent, independent of road-direction
+                //if (reSignOut<0) j=Nout-j-1;
+                if (!parallel && i>0 && !left) return false;
+                if (!parallel && i<Nin-1 && left) return false;
+            }
+            if (Nin > Nout) {
+                bool parallel  = bool( getRoadConnectionAngle(road1, road2) < -0.8 );
+                bool left  = bool( getRoadTurnLeft(road1, road2) < 0);
                 if (reSignIn<0) i=Nin-i-1;  //making sure indexes stay consistent, independent of road-direction
                 if (reSignOut<0) j=Nout-j-1;
                 if (parallel && Nin<=Nout+1 && i!=Nout-j-1) return false; //matching way-through
@@ -88,35 +97,34 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 if (!parallel && (i!=Nin-1 || j!=0 || !left) && ((i!=0 || j!=Nout-1) || left)) return false; //one left turn, one right turn
                 if (!parallel && i>0 && i<Nin-1) return false; //everything not being most left or most right lane
             }
+            if (Nin < Nout) {
+                bool parallel  = bool( getRoadConnectionAngle(road1, road2) < -0.8 );
+                bool left  = bool( getRoadTurnLeft(road1, road2) < 0);
+                //if (reSignIn<0) i=Nin-i-1;  //making sure indexes stay consistent, independent of road-direction
+                if (reSignOut<0) j=Nout-j-1;
+                if (!parallel && j>0 && left) return false;
+                if (!parallel && j<Nout-1 && !left) return false;
+            }
             if (Nin == 1 || Nout == 1) return true;
             return true;
         };
 
         auto checkCrossingMatch = [&](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut, VRRoadPtr road1, VRRoadPtr road2) {
+        ///CROSSING
             string type1 = "road";
             string type2 = "road";
             if (auto t1 = road1->getEntity()->get("type")) type1 = t1->value;
             if (auto t2 = road2->getEntity()->get("type")) type2 = t2->value;
-            if (type1 != type2) {
-                //if (type1 == "footway" && road1->getGeometry()) { road1->getGeometry()->setVisible(0); }
-                //if (type2 == "footway" && road2->getGeometry()) { road2->getGeometry()->setVisible(0); }
-                return false;
-            }
-
+            if (type1 != type2) return false;
             if (Nout == Nin && i == j) return true;
-	        //if (Nout > Nin && i == j-1) return true;
-	        //if (Nout > Nin && i< Nin/2 && j< Nout/2 && i == Nout-j-1) return true; // TODO
-            //if (Nout > Nin && i>= Nin/2 && j> Nout/2 && i == j) return true;
-            if (Nout > Nin && reSignIn<0 && i == j) return true;
+	        if (Nout > Nin && reSignIn<0 && i == j) return true;
             if (Nout > Nin && reSignIn>0 && i == j-1) return true;
 	        if (Nout < Nin && Nin-i-1 == j) return true; // TODO
-            //if (Nin == Nout && i != j && reSignIn != reSignOut) return false;
-            //if (Nin == Nout && i != Nout-j-1 && reSignIn == reSignOut) return false;
-            //if (Nin == 1 || Nout == 1) return true;
             return false;
         };
 
 	    auto checkContinuationMatch = [](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut) {
+        ///CONTINUATION
 	        if (Nout == Nin && i == j) return true;
 	        //if (Nout > Nin && i == j-1) return true;
 	        //if (Nout > Nin && i< Nin/2 && j< Nout/2 && i == Nout-j-1) return true; // TODO
@@ -131,6 +139,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
         };
 
         auto checkForkMatch = [&](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut, VRRoadPtr road1, VRRoadPtr road2) {
+        ///FORK
             auto getRoadConnectionAngle = [&](VRRoadPtr road1, VRRoadPtr road2) {
                 auto& data1 = road1->getEdgePoint( node );
                 auto& data2 = road2->getEdgePoint( node );
@@ -200,7 +209,8 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
         }
 	};
 
-	auto mergeMatchingLanes = [&]() { ///CONTINUATION
+	auto mergeMatchingLanes = [&]() {
+    ///CONTINUATION
 	    map<VREntityPtr, Vec3d> displacementsA; // map roads to displace!
 	    map<VREntityPtr, Vec3d> displacementsB; // map roads to displace!
 	    map<VREntityPtr, bool> processedLanes; // keep list of already processed lanes
@@ -405,7 +415,8 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
         }
     };
 
-	auto bridgeMatchingLanes = [&]() { ///DEFAULT
+	auto bridgeMatchingLanes = [&]() {
+    ///DEFAULT
         //make map match roadfront to crossingRoad
         //modify roadfronts to be at different place
         //delete lane segments between crossing and main intersection
@@ -536,7 +547,8 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
         computePatch();
 	};
 
-    auto bridgeForkingLanes = [&]() { ///FORK
+    auto bridgeForkingLanes = [&]() {
+    ///FORK
         //cout << "VRRoadNetwork::computeLanes bridgeForkingLanes\n";
         map<VREntityPtr, Vec3d> displacements; // map roads to displace!
 	    map<VREntityPtr, bool> processedLanes; // keep list of already processed lanes
