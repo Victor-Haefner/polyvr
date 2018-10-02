@@ -172,8 +172,8 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 if (Nin > Nout &&  left && j == Nin-i-1) { return true; }
                 if (Nin > Nout && !left && i == j) { return true; }
             }
-            if (Nout == 1 || Nin == 1){
-                //return true;
+            if (Nout == 1 && Nin == 1){
+                return true;
             }
             //match case A - split ways one left one right
             //match case B - split both ways, two left two right
