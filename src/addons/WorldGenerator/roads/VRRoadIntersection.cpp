@@ -61,7 +61,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 	};
 
 	auto computeLaneMatches = [&]() {
-	    auto checkDefaultMatch = [&](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut, VRRoadPtr road1, VRRoadPtr road2) {
+	    auto checkDefaultMatch = [&](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut, VRRoadPtr road1, VRRoadPtr road2, int Zout, int Zin) {
         ///DEFAULT - INTERSECTION
         //i= index lane in; j= index lane out; Nin= number of lanes going in at road1; Nout= number of lanes going out at road2; reSignIn= , reSignOut=,
             auto getRoadConnectionAngle = [&](VRRoadPtr road1, VRRoadPtr road2) {
@@ -77,9 +77,10 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 if (w[1] < 0) a = -a;
                 return a;
             };
+            bool oneway =  ( Zout==0 || Zin==0 );
             if (Nin == Nout && i != j && reSignIn != reSignOut) return false;
             if (Nin == Nout && i != Nout-j-1 && reSignIn == reSignOut) return false;
-            if (Nin == Nout && Nin>1 && roadFronts.size()>2) {
+            if (Nin == Nout && Nin>1 && roadFronts.size()>2 && !oneway) {
                 bool parallel  = bool( getRoadConnectionAngle(road1, road2) < -0.8 );
                 bool left  = bool( getRoadTurnLeft(road1, road2) < 0);
                 if (reSignIn<0) i=Nin-i-1;  //making sure indexes stay consistent, independent of road-direction
@@ -87,7 +88,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 if (!parallel && i>0 && !left) return false;
                 if (!parallel && i<Nin-1 && left) return false;
             }
-            if (Nin > Nout) {
+            if (Nin > Nout && !oneway) {
                 bool parallel  = bool( getRoadConnectionAngle(road1, road2) < -0.8 );
                 bool left  = bool( getRoadTurnLeft(road1, road2) < 0);
                 if (reSignIn<0) i=Nin-i-1;  //making sure indexes stay consistent, independent of road-direction
@@ -97,7 +98,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 if (!parallel && (i!=Nin-1 || j!=0 || !left) && ((i!=0 || j!=Nout-1) || left)) return false; //one left turn, one right turn
                 if (!parallel && i>0 && i<Nin-1) return false; //everything not being most left or most right lane
             }
-            if (Nin < Nout) {
+            if (Nin < Nout && roadFronts.size()>2 && !oneway) {
                 bool parallel  = bool( getRoadConnectionAngle(road1, road2) < -0.8 );
                 bool left  = bool( getRoadTurnLeft(road1, road2) < 0);
                 //if (reSignIn<0) i=Nin-i-1;  //making sure indexes stay consistent, independent of road-direction
@@ -188,7 +189,9 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 int reSign1 = roadFront1->dir;
                 int reSign2 = roadFront2->dir;
                 int Nin = roadFront1->inLanes.size();
+                int Zout = roadFront1->outLanes.size();
                 int Nout = roadFront2->outLanes.size();
+                int Zin = roadFront2->inLanes.size();
                 for (int i=0; i<Nin; i++) {
                     auto laneIn = roadFront1->inLanes[i];
                     for (int j=0; j<Nout; j++) {
@@ -200,7 +203,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                             case CROSSING: match = checkCrossingMatch(i,j,Nin, Nout, reSign1, reSign2, road1, road2); break;
                             //case MERGE: break;
                             //case UPLINK: break;
-                            default: match = checkDefaultMatch(i,j,Nin, Nout, reSign1, reSign2, road1, road2); break;
+                            default: match = checkDefaultMatch(i,j,Nin, Nout, reSign1, reSign2, road1, road2, Zout, Zin); break;
                         }
                         if (match) laneMatches.push_back(make_pair(laneIn, laneOut));
                     }
