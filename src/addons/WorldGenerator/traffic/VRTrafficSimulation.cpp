@@ -467,7 +467,8 @@ void VRTrafficSimulation::updateSimulation() {
         return d > 0 && L < 15 && r > 0 && a > 0.3/* && rL >= 2*/; // in front, right, crossing paths,
     };
 
-    auto farPosition  = [&](PosePtr p1, PosePtr p2, Vec3d lastMove) -> int {
+    auto farPosition  = [&](int ID, PosePtr p1, PosePtr p2, float disToM, Vec3d lastMove) -> int {
+        auto& vehicle = vehicles[ID];
         //Vec3d D = p2->pos() - (p1->pos() + lastMove*5); //vector between vehicles
         Vec3d D = p2->pos() - p1->pos();
         float L = D.length();
@@ -477,15 +478,15 @@ void VRTrafficSimulation::updateSimulation() {
         //Vec3d x = lastMove.cross(Vec3d(0,1,0));
         Vec3d x = p1->dir().cross(Vec3d(0,1,0));
         x.normalize();
-        float rL = abs( D.dot(x) ); //check if vehicle2 left or right of vehicle1
+        //float rL = abs( D.dot(x) ); //check if vehicle2 left or right of vehicle1   rL < 1
         float left = - D.dot(x);
 
-        if ( d > 0 && rL < 1 ) return 0; // in front, in range, in corridor
+        if ( d > 0 && disToM < vehicle.width/2 ) return 0; // in front, in range, in corridor
+        if ( d < 0 && disToM < vehicle.width/2 ) return 5; // in behind, in range, in corridor
         if ( d > 0 && left > 1 && left < 5) return 1; // in front, in range, left of corridor
         if ( d > 0 && left <-1 && left >-5) return 2; // in front, in range, right of corridor
         if ( d < 0 && left > 1 && left < 5) return 3; // in behind, in range, left of corridor
         if ( d < 0 && left <-1 && left >-5) return 4; // in behind, in range, right of corridor
-        if ( d < 0 && rL < 1 ) return 5; // in behind, in range, in corridor
         return -1;
     };
 
@@ -496,16 +497,18 @@ void VRTrafficSimulation::updateSimulation() {
         auto p = vehicle.t->getPose();
         auto left = p->up().cross(p->dir());
         auto LH = p->dir()*0.5*vehicle.length; //half of vehicle length
-        auto WH = left*vehicle.width;   //half of vehicle width
+        auto WH = left*0.5*vehicle.width;   //half of vehicle width
         vehicle.vehicleFPs[0] = p->pos() + LH + WH;
         vehicle.vehicleFPs[1] = p->pos() + LH - WH;
         vehicle.vehicleFPs[2] = p->pos() - LH + WH;
         vehicle.vehicleFPs[3] = p->pos() - LH - WH;
+        vehicle.vehicleFPs[4] = p->pos();
         vehicle.lastFPTS = VRGlobals::CURRENT_FRAME;
     };
 
     auto calcDisToFP = [&](int ID1, int ID2) {
     //simple way to calculate the distance between vehicle1 and vehicle2
+    ///TODO: make B-curve later
         auto& v1 = vehicles[ID1];
         auto& v2 = vehicles[ID2];
         float res = 5000.0;
@@ -622,8 +625,8 @@ void VRTrafficSimulation::updateSimulation() {
                     //auto D = pose->dir().dot(pose->pos() - p->pos());
                     calcFramePoints(v->vID);
                     float diss = calcDisToFP(vehicle.vID,v->vID);
-                    cout << "  propagateVehicles " << toString(diss) << endl;
-                    int farP = farPosition(pose, p, vehicle.lastMove);
+                    //cout << "  propagateVehicles " << toString(diss) << endl;
+                    int farP = farPosition(vehicle.vID, pose, p, diss, vehicle.lastMove);
                     setSight(farP,D,v->vID);
                     //if (vehicle.currentVelocity > 6 && D <  0.1) vehicle.collisionDetected = true;
                 }
@@ -826,6 +829,7 @@ void VRTrafficSimulation::updateSimulation() {
             for (auto vVis : vv.second){
                 if (!vVis.second) continue;
                 int n = vVis.first;
+                if (n>0) continue;
                 int ID1 = vv.first;
                 int ID2 = vVis.second;
 

@@ -63,8 +63,8 @@ class VRTrafficSimulation : public VRObject {
             int lastFPTS = 0;
 
             Graph::position pos;
-            float length = 5;
-            float width = 2.4;
+            float length = 4.4;
+            float width = 1.7;
             float speed;
             float currentVelocity;
             float targetVelocity; //try km/h
