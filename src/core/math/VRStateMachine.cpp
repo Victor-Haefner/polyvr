@@ -18,16 +18,27 @@ typename VRStateMachine<P>::StatePtr VRStateMachine<P>::State::create(string nam
 
 template<class P>
 string VRStateMachine<P>::State::process(const P& params) {
-    //on state Enter callback
+    //state enter CB
+    if(enter) (*enter);
 
-    //transition callback
+    //state transition CB
     if (!transition) return "";
 
-    //on state leave callback
+    //state leave CB
+    if(leave) (*leave);
 
     return (*transition)(params);
 }
 
+template<class P>
+void VRStateMachine<P>::State::setStateEnterCB(VRStateEnterCbPtr ptr){
+    enter = ptr;
+}
+
+template<class P>
+void VRStateMachine<P>::State::setStateLeaveCB(VRStateLeaveCbPtr ptr){
+    leave = ptr;
+}
 
 template<class P>
 VRStateMachine<P>::VRStateMachine(string name) {
