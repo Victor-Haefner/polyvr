@@ -21,7 +21,7 @@ VRProcessEngine::~VRProcessEngine() {}
 VRProcessEnginePtr VRProcessEngine::create() { return VRProcessEnginePtr( new VRProcessEngine() ); }
 
 void VRProcessEngine::initialize(){
-    //cout << "VRProcessEngine::initialize()" << endl;
+    cout << "VRProcessEngine::initialize()" << endl;
 
     auto processSubjects = process->getSubjects();
     auto initialStates = process->getInitialStates();
@@ -53,6 +53,8 @@ void VRProcessEngine::initialize(){
             subjects[i].sm.addState(state->getLabel(), transitionCB);
         }
         subjects[i].sm.setCurrentState( initialState );
+        //Testing
+        if( processSubjects[i] && subjects[i].sm.getCurrentState()) cout << processSubjects[i]->getLabel() << " init state: " << subjects[i].sm.getCurrentState()->getName() << endl;
     }
 }
 
@@ -76,9 +78,13 @@ void VRProcessEngine::reset() {
         if (initialStates.count(processSubjects[i])){
             initialState = initialStates[processSubjects[i]]->getLabel();
         }
-        //cout << "set state " << subjects[i].sm.getCurrentState()->getLabel() << " to ";
-        subjects[i].sm.setCurrentState( initialState );
-        //cout << subjects[i].sm.getCurrentState()->getLabel() << endl;
+        auto currentState = subjects[i].sm.getCurrentState();
+        if(currentState){
+            cout << "set state " << currentState->getName() << " to ";
+            subjects[i].sm.setCurrentState( initialState );
+            cout << currentState->getName() << endl;
+        }
+
     }
 }
 
@@ -108,8 +114,13 @@ void VRProcessEngine::update() {
 vector<VRProcessNodePtr> VRProcessEngine::getCurrentStates() {
     vector<VRProcessNodePtr> res;
     for (auto& subject : subjects) {
-        auto state = subject.second.current;
-        if (state) res.push_back(state->node);
+        auto action = subject.second.current;
+        if (action){
+            auto sID = action->node->subject;
+            auto tID = action->node->getID();
+            auto tStates = process->getTransitionStates(sID, tID);
+            res.push_back(tStates[0]);
+        }
     }
     return res;
 }

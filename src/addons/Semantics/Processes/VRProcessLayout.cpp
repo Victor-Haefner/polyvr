@@ -233,7 +233,7 @@ void VRProcessLayout::setupLabel(VRProcessNodePtr message, VRPathtoolPtr ptool, 
 
 void VRProcessLayout::buildSID() {
     auto subjects = process->getSubjects();
-	for (int i=0; i < subjects.size(); i++) {
+	for (uint i=0; i < subjects.size(); i++) {
         appendToHandle(Vec3d(0,0,i*25), subjects[i], toolSID);
 	}
 
@@ -245,12 +245,12 @@ void VRProcessLayout::buildSID() {
 
 void VRProcessLayout::buildSBDs() {
     auto subjects = process->getSubjects();
-	for (int i=0; i < subjects.size(); i++) {
+	for (uint i=0; i < subjects.size(); i++) {
         int sID = subjects[i]->getID();
         auto toolSBD = toolSBDs[sID];
         auto actions = process->getSubjectStates(sID);
 
-        for (int j=0; j < actions.size(); j++) {
+        for (uint j=0; j < actions.size(); j++) {
             appendToHandle(Vec3d((j+1)*40,0,i*25), actions[j], toolSBD);
         }
 
@@ -341,21 +341,24 @@ void VRProcessLayout::update(){
         auto activeElementColor = Color3f(1,0.51,0.22);
         //iterate over all actions
         for (auto subject : process->getSubjects()){
-            for (auto action : process->getSubjectStates(subject->getID())){
+            auto actives = engine->getCurrentStates();
+
+            for (auto state : process->getSubjectStates(subject->getID())){
                 //set element color/texture depending on if its active or not
-                auto element = getElement(action->getID());
+                auto element = getElement(state->getID());
                 auto geo = dynamic_pointer_cast<VRGeometry>(element);
                 auto mat = geo->getMaterial();
 
-                //check if action is active
+                //check if state is active
                 bool isActive = false;
-                auto actives = engine->getCurrentStates();
                 for (auto activeNode : actives){
-                    if (activeNode->getID() == action->getID()) isActive = true;
+                    if (activeNode->getID() == state->getID()){
+                        isActive = true;
+                    }
                 }
 
                 if (isActive){
-                   mat->setDiffuse(activeElementColor);
+                    mat->setDiffuse(activeElementColor);
                 } else mat->setDiffuse(elementColor);
             }
         }

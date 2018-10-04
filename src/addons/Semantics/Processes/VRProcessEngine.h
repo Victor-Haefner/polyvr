@@ -69,7 +69,7 @@ class VRProcessEngine {
                 string stateName = state->getName();
                 cout << "Actor::transitioning from " << stateName << endl;
 
-                // check if currently acting
+                // if currently in action go to next state, else check for possible actions
                 if (current) {
                     string nextState = current->nextState;
                     current = 0;
