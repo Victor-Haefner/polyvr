@@ -33,6 +33,7 @@ class VRTrafficLight : public VRTransform {
         void setupBulbs(VRGeometryPtr red, VRGeometryPtr orange, VRGeometryPtr green);
 
         void setState(string s);
+        string getState();
         void setUsingAsset(bool check);
         bool getUsingAsset();
 

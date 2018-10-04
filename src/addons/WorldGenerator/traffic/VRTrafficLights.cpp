@@ -40,6 +40,7 @@ void VRTrafficLight::setState(string s) {
     state = s;
 }
 
+string VRTrafficLight::getState() { return state; }
 void VRTrafficLight::setUsingAsset(bool check) { isUsingAsset = check; }
 bool VRTrafficLight::getUsingAsset() { return isUsingAsset; }
 

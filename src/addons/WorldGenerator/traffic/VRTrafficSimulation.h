@@ -84,6 +84,7 @@ class VRTrafficSimulation : public VRObject {
             int currentState = 0; //1 = leaving lane, -1 = coming onto lane
             bool laneTransition = true;
             bool collisionDetected;
+            VRRoadIntersectionPtr lastIntersection;
 
             Vehicle(Graph::position p);
             Vehicle();
