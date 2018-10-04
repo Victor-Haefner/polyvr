@@ -14,7 +14,7 @@ OSG_BEGIN_NAMESPACE;
 enum PROCESS_WIDGET {
     SUBJECT,
     MESSAGE,
-    STATE,
+    STATE, //Do State, Send State, Receive State
     TRANSITION
 };
 

@@ -89,6 +89,12 @@ class VRProcessEngine {
             void receiveMessage(Message m) {
                 inventory.messages.push_back(m);
             }
+
+            //if in send state
+            void sendMessage(string message, Actor* receiver){
+                //Message m;
+
+            }
         };
 
     private:
