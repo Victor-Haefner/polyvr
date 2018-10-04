@@ -680,6 +680,7 @@ void VRRoadNetwork::computeIntersections() {
         intersection->setWorld(w);
         intersection->setEntity(iEnt);
         intersections.push_back(intersection);
+        intersectionsByEntity[iEnt] = intersection;
         addChild(intersection);
         for (auto r : nodeRoads) { intersection->addRoad(r); }
         iEnt->set("node", node->getName());
@@ -842,6 +843,15 @@ void VRRoadNetwork::compute() {
 }
 
 VRGeometryPtr VRRoadNetwork::getAssetCollisionObject() { return collisionMesh; }
+
+VRRoadPtr VRRoadNetwork::getRoad(VREntityPtr road) {
+    if (roadsByEntity.count(road)) return roadsByEntity[road];
+    return 0;
+}
+VRRoadIntersectionPtr VRRoadNetwork::getIntersection(VREntityPtr intersection) {
+    if (intersectionsByEntity.count(intersection)) return intersectionsByEntity[intersection];
+    return 0;
+}
 
 vector<VREntityPtr> VRRoadNetwork::getPreviousRoads(VREntityPtr road) {
 	auto getPreviousPaths = [](VREntityPtr path) {

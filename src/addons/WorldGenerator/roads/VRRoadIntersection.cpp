@@ -222,6 +222,8 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             auto laneOut = match.second;
             auto roadIn = laneIn->getEntity("road");
             auto roadOut = laneOut->getEntity("road");
+            laneIn->set("nextIntersection", entity->getName());
+            laneOut->set("lastIntersection", entity->getName());
             int Nin = roadIn->getAllEntities("lanes").size();
             int Nout = roadOut->getAllEntities("lanes").size();
             auto nodes1 = laneIn->getEntity("path")->getAllEntities("nodes");
@@ -497,6 +499,9 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             auto roadIn = laneIn->getEntity("road");
             auto roadOut = laneOut->getEntity("road");
 
+            laneIn->set("nextIntersection", entity->getName());
+            laneOut->set("lastIntersection", entity->getName());
+
             float width = laneIn->getValue<float>("width", 0.5);
             bool pedestrianIn = laneIn->getValue<bool>("pedestrian", false);
             auto nodes1 = laneIn->getEntity("path")->getAllEntities("nodes");
@@ -563,6 +568,8 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             auto laneOut = match.second;
             auto roadIn = laneIn->getEntity("road");
             auto roadOut = laneOut->getEntity("road");
+            laneIn->set("nextIntersection", entity->getName());
+            laneOut->set("lastIntersection", entity->getName());
             int Nin = roadIn->getAllEntities("lanes").size();
             int Nout = roadOut->getAllEntities("lanes").size();
             auto nodes1 = laneIn->getEntity("path")->getAllEntities("nodes");
@@ -822,6 +829,7 @@ VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d 
     light->setupBulbs(red, orange, green);
     light->setEntity(signal);
     light->setUsingAsset(checked);
+    matchedLights[lane] = light;
     addChild(light);
     addChild(pole);
     return 0;
@@ -1271,6 +1279,11 @@ vector<VRTrafficLightPtr> VRRoadIntersection::getTrafficLights(){
     vector<VRTrafficLightPtr> res;
     if (!system) return res;
     return system->getLights();
+}
+
+VRTrafficLightPtr VRRoadIntersection::getTrafficLight(VREntityPtr lane){
+    if (matchedLights.count(lane)) return matchedLights[lane];
+    return 0;
 }
 
 map<int, vector<VRTrafficLightPtr>> VRRoadIntersection::getTrafficLightMap(){
