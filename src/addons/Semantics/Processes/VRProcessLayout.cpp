@@ -339,10 +339,9 @@ void VRProcessLayout::update(){
         //auto textColor = Color3f(0,0,0,1);
         auto elementColor = Color3f(1,0.9,0.8);
         auto activeElementColor = Color3f(1,0.51,0.22);
+        auto actives = engine->getCurrentStates();
         //iterate over all actions
         for (auto subject : process->getSubjects()){
-            auto actives = engine->getCurrentStates();
-
             for (auto state : process->getSubjectStates(subject->getID())){
                 //set element color/texture depending on if its active or not
                 auto element = getElement(state->getID());
@@ -363,6 +362,8 @@ void VRProcessLayout::update(){
             }
         }
 
+    }
+
 /*
         for (auto currentAction : engine->getCurrentActions()){
             auto nodeID = currentAction->getID();
@@ -370,9 +371,6 @@ void VRProcessLayout::update(){
             element->setColor("green");
         }
         */
-	}
-
-
 }
 
 

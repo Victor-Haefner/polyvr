@@ -60,6 +60,7 @@ class VRProcessEngine {
             map<string, vector<Action>> actions; // maps state name to possible actions/transitions
             VRStateMachine<float> sm;
             Inventory inventory;
+            vector<Message> outgoingMessages;
 
             Actor() : sm("ProcessActor") {}
 
@@ -82,7 +83,6 @@ class VRProcessEngine {
                         if (action.valid(&inventory)) { current = &action; return ""; }
                     }
                 }
-
                 return "";
             }
 

@@ -103,23 +103,32 @@ void VRProcessEngine::update() {
     if(tickDuration <= 0) {
         tickDuration = 60;
         for (auto& subject : subjects) {
-        auto& actor = subject.second;
-        actor.sm.process(0);
+            auto& actor = subject.second;
+            actor.sm.process(0);
         }
+        auto actives = getCurrentStates();
+        /*
+        cout << "current states:    ";
+        for (auto state : actives) cout << state->getLabel() << "   ";
+        cout << endl;
+        */
     }
     tickDuration-=speed;
 }
 
-
+//TODO: get sm current state
 vector<VRProcessNodePtr> VRProcessEngine::getCurrentStates() {
     vector<VRProcessNodePtr> res;
     for (auto& subject : subjects) {
         auto action = subject.second.current;
         if (action){
+
             auto sID = action->node->subject;
             auto tID = action->node->getID();
             auto tStates = process->getTransitionStates(sID, tID);
             res.push_back(tStates[0]);
+
+            //auto sm = subject.sm.getCurrentState()->getName();
         }
     }
     return res;

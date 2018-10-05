@@ -96,6 +96,26 @@ vector<VRProcessNodePtr> VRProcess::getSubjectMessages(int subjectID) {
     return res;
 }
 
+vector<VRProcessNodePtr> VRProcess::getOutgoingMessages(int subjectID) {
+    auto diag = behaviorDiagrams[subjectID];
+    auto nextNodes = diag->getNextNodes(subjectID);
+    vector<VRProcessNodePtr> res;
+    for (auto node : nextNodes){
+        res.push_back(diag->processnodes[node.ID]);
+    }
+    return res;
+}
+
+vector<VRProcessNodePtr> VRProcess::getIncomingMessages(int subjectID) {
+    auto diag = behaviorDiagrams[subjectID];
+    auto previousNodes = diag->getPreviousNodes(subjectID);
+    vector<VRProcessNodePtr> res;
+    for (auto node : previousNodes){
+        res.push_back(diag->processnodes[node.ID]);
+    }
+    return res;
+}
+
 vector<VRProcessNodePtr> VRProcess::getMessageSubjects(int messageID) {
     auto d = interactionDiagram;
     auto neighbors = d->getNeighbors( messageID );
