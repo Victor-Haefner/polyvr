@@ -654,25 +654,45 @@ void VRTrafficSimulation::updateSimulation() {
                 float nextMoveDec = (vehicle.currentVelocity + decFactor*deltaT) * deltaT;
                 float sinceLastLS = VRGlobals::CURRENT_FRAME - vehicle.lastLaneSwitchTS;
                 float nextIntersection = 10000; ///TODO CALCULATE NEXT INTERSECTION
+                float nextSignalDistance = 10000; ///TODO CALCULATE NEXT INTERSECTION
                 string nextSignalState = "000"; //red|organge|green
                 VRTrafficLightPtr nextSignalE;
+                Vec3d nextSignalP;
+
+                function<bool (VREntityPtr, Vec3d)> recSearch =[&](VREntityPtr newLane, Vec3d posV) {
+                    auto interE = roadNetwork->getIntersection(newLane->getEntity("nextIntersection"));
+                    if (interE) {
+                        auto node = newLane->getEntity("nextIntersection")->getEntity("node");
+                        Vec3d pNode = node->getVec3("position");
+
+                        auto type = newLane->getEntity("nextIntersection")->get("type")->value;
+                        if (type != "intersection" && roadNetwork->getNextRoads(newLane).size()==1) {
+                            if ( (pNode - posV).length()<safetyDis + 8 ) {
+                                auto nextLane = roadNetwork->getNextRoads(newLane)[0];
+                                recSearch (nextLane, posV);
+                            }
+                            else return false;
+                        }
+                        if (type == "intersection") {
+                            nextSignalE = interE->getTrafficLight(newLane);
+                            nextIntersection = (pNode - posV).dot(vehicle.t->getPose()->dir());
+                            if (nextSignalE) {
+                                nextSignalP = nextSignalE->getFrom();
+                                nextSignalDistance = (nextSignalP - posV).dot(vehicle.t->getPose()->dir());
+                            }
+                            return true;
+                        }
+                    }
+                    return false;
+                };
 
                 //auto roadE = roadNetwork->getLane(vehicle.pos.edge)->getEntity("road");
                 auto laneE = roadNetwork->getLane(vehicle.pos.edge);
                 auto nextIntersectionE = roadNetwork->getIntersection(laneE->getEntity("nextIntersection"));
-                if (nextIntersectionE) nextSignalE = nextIntersectionE->getTrafficLight(laneE);
-                if (nextSignalE) {
-                    nextSignalState = nextSignalE->getState();
-
-                    auto type = laneE->getEntity("nextIntersection")->get("type")->value;
-                    if (type == "intersection") {
-                        auto node = laneE->getEntity("nextIntersection")->getEntity("node");
-                        Vec3d pNode = node->getVec3("position");
-                        nextIntersection = (pNode - vehicle.t->getPose()->pos()).length();
-                    }
-                }
+                bool blub = recSearch(laneE,vehicle.t->getPose()->pos());
+                if (nextSignalE) { nextSignalState = nextSignalE->getState(); }
                 bool signalBlock = (nextSignalState=="100" || nextSignalState=="010");
-                bool interBlock = (nextIntersection < safetyDis + 15 && nextIntersection > safetyDis + 5);
+                bool interBlock = (nextIntersection < 60 && nextIntersection > 6);
                 //if (nextSignal != "000") cout << toString(nextSignal) << endl;
 
                 auto& edge = g->getEdge(vehicle.pos.edge);
@@ -685,11 +705,13 @@ void VRTrafficSimulation::updateSimulation() {
                 //if ( nextEdges.size() > 1 ) { nextIntersection = (1 - vehicle.pos.pos) * roads[vehicle.pos.edge].length; cout << toString(nextIntersection) << endl; }
                 auto behave = [&]() {
                     if ( vbeh == vehicle.STRAIGHT ) {
+                        if ( ( nextSignalE && nextSignalDistance < safetyDis -3 ) && signalBlock ) { decelerate(); return; }
+                        if ( !nextSignalE && nextSignalDistance < safetyDis -3 && signalBlock ) { decelerate(); return; }
+
                         if (!vehicle.vehiclesightFarID[vehicle.INFRONT]) {
                         //no vehicle ahead
                             if ( sinceLastLS > 200 && nextIntersection > 20 && checkR(vehicle.vID) && vehicle.currentVelocity > 20 ) { toChangeLane[vehicle.vID] = 2; }
                             //check if road is ending/intersections etc - possible breaking
-                            if ( nextIntersection < safetyDis + 8 && signalBlock ) { decelerate(); return; }
                             if ( vehicle.currentVelocity < vehicle.targetVelocity ) { accelerate(); return; }
                             //targetVelocity not reached //accelerate
                             if ( vehicle.currentVelocity > vehicle.targetVelocity ) { decelerate(); return; }
@@ -702,7 +724,7 @@ void VRTrafficSimulation::updateSimulation() {
                             int frontID = vehicle.vehiclesightFarID[vehicle.INFRONT];
                             float disToFrontV = vehicle.vehiclesightFar[vehicle.INFRONT];
                             if ( disToFrontV - nextMove < safetyDis ) { decelerate(); return; }
-                            if ( nextIntersection < safetyDis + 0.2 ) { decelerate(); return; }
+                            //if ( nextIntersection < safetyDis + 0.2 ) { decelerate(); return; }
                             if ( vehicles[frontID].currentVelocity > vehicle.currentVelocity && vehicle.currentVelocity < vehicle.targetVelocity ) {
                             //vehicle ahead faster, and targetVelocity not reached
                                 if ( disToFrontV - nextMoveAcc > safetyDis ) { accelerate(); return; }
@@ -765,7 +787,7 @@ void VRTrafficSimulation::updateSimulation() {
                 vehicle.currentVelocity = d;
                 d *= deltaT/road.second.length;
                 if (d<0.0003 && vehicle.pos.pos > 0.1) d = 0;
-                if (nextIntersection < 5 && signalBlock) d = 0; //hack
+                if (nextSignalDistance > 0.5 && nextSignalDistance < 5 && nextSignalState=="100") d = 0; //hack
                 if (!isSimRunning) d = 0;
                 if (d<0 && vbeh != vehicle.REVERSE) d = 0; //hack
                 if (vehicle.collisionDetected) d = 0;

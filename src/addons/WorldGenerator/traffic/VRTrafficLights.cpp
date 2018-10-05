@@ -43,7 +43,6 @@ void VRTrafficLight::setState(string s) {
 string VRTrafficLight::getState() { return state; }
 void VRTrafficLight::setUsingAsset(bool check) { isUsingAsset = check; }
 bool VRTrafficLight::getUsingAsset() { return isUsingAsset; }
-
 VRTrafficLights::VRTrafficLights() {
     redOff = VRMaterial::get("redOff");
     orangeOff = VRMaterial::get("orangeOff");
