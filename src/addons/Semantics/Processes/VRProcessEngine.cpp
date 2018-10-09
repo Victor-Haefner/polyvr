@@ -60,19 +60,6 @@ void VRProcessEngine::initialize(){
         //Testing
         if( processSubjects[i] && subjects[i].sm.getCurrentState()) cout << processSubjects[i]->getLabel() << " init state: " << subjects[i].sm.getCurrentState()->getName() << endl;
     }
-
-    //Testing
-    /*
-    for (auto s : subjects){
-        auto actor = s.second;
-        for (auto action : actor.actions) {
-            cout << "state " << action.first; // string state
-            for (auto a : action.second) { //possible actions
-                cout << " nextState " << a.nextState << endl;
-            }
-        }
-    }
-    */
 }
 
 void VRProcessEngine::performAction(Action action){
@@ -145,6 +132,25 @@ vector<VRProcessNodePtr> VRProcessEngine::getCurrentStates() {
             auto tStates = process->getTransitionStates(sID, tID);
             res.push_back(tStates[0]);
 
+            //auto sm = subject.sm.getCurrentState()->getName();
+        }
+    }
+    return res;
+}
+
+vector<VRProcessNodePtr> VRProcessEngine::getCurrentNodes() {
+    vector<VRProcessNodePtr> res;
+
+    for (auto& subject : subjects) {
+        auto action = subject.second.current;
+        if (action){
+
+            auto sID = action->node->subject;
+            auto tID = action->node->getID();
+            auto tStates = process->getTransitionStates(sID, tID);
+            res.push_back(tStates[0]);
+            auto currentTransition = action->node;
+            res.push_back(currentTransition);
             //auto sm = subject.sm.getCurrentState()->getName();
         }
     }

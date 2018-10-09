@@ -135,6 +135,7 @@ class VRProcessEngine {
         void pause();
 
         vector<VRProcessNodePtr> getCurrentStates();
+        vector<VRProcessNodePtr> getCurrentNodes();
 };
 
 OSG_END_NAMESPACE;

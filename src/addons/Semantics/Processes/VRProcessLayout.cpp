@@ -339,9 +339,31 @@ void VRProcessLayout::update(){
         //auto textColor = Color3f(0,0,0,1);
         auto elementColor = Color3f(1,0.9,0.8);
         auto activeElementColor = Color3f(1,0.51,0.22);
-        auto actives = engine->getCurrentStates();
+        auto actives = engine->getCurrentNodes();
         //iterate over all actions
+
         for (auto subject : process->getSubjects()){
+                /*
+            for (auto node : process->getBehaviorDiagram(subject->getID())->processnodes ){
+                //set element color/texture depending on if its active or not
+                auto element = getElement(node.second->getID());
+                auto geo = dynamic_pointer_cast<VRGeometry>(element);
+                auto mat = geo->getMaterial();
+
+                //check if node is active
+                bool isActive = false;
+                for (auto activeNode : actives){
+                    if (activeNode->getID() == node.second->getID()){
+                        isActive = true;
+                    }
+                }
+
+                if (isActive){
+                    mat->setDiffuse(activeElementColor);
+                } else mat->setDiffuse(elementColor);
+            }
+            */
+
             for (auto state : process->getSubjectStates(subject->getID())){
                 //set element color/texture depending on if its active or not
                 auto element = getElement(state->getID());
