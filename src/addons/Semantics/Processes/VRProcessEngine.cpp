@@ -35,6 +35,7 @@ void VRProcessEngine::initialize(){
         if (initialStates.count(processSubjects[i])){
             initialState = initialStates[processSubjects[i]]->getLabel();
         }
+        //cout << "initialState " << initialState << endl;
 
         for (uint j=0; j<states.size(); j++) {
             auto state = states[j];
@@ -42,6 +43,8 @@ void VRProcessEngine::initialize(){
 
             //auto transitions = process->getStateTransitions(sID, state->getID());
             auto transitions = process->getStateOutTransitions(sID, state->getID());
+
+            //cout << "transitions " << transitions.size() << endl;
             for (auto transition : transitions) {
                 auto nextState = process->getTransitionState(transition);
                 Action action(nextState->getLabel(), transition);
@@ -52,10 +55,24 @@ void VRProcessEngine::initialize(){
             subjects[i].actions[state->getLabel()] = actions;
             subjects[i].sm.addState(state->getLabel(), transitionCB);
         }
+        subjects[i].initialState = initialState;
         subjects[i].sm.setCurrentState( initialState );
         //Testing
         if( processSubjects[i] && subjects[i].sm.getCurrentState()) cout << processSubjects[i]->getLabel() << " init state: " << subjects[i].sm.getCurrentState()->getName() << endl;
     }
+
+    //Testing
+    /*
+    for (auto s : subjects){
+        auto actor = s.second;
+        for (auto action : actor.actions) {
+            cout << "state " << action.first; // string state
+            for (auto a : action.second) { //possible actions
+                cout << " nextState " << a.nextState << endl;
+            }
+        }
+    }
+    */
 }
 
 void VRProcessEngine::performAction(Action action){

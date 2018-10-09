@@ -61,6 +61,7 @@ class VRProcessEngine {
             VRStateMachine<float> sm;
             Inventory inventory;
             vector<Message> outgoingMessages;
+            string initialState = "";
 
             Actor() : sm("ProcessActor") {}
 
@@ -78,6 +79,12 @@ class VRProcessEngine {
                     return nextState; // state machine goes into nextState
                 } else {
                     //cout << " Actor::transitioning check actions " << actions.size() << endl;
+                    if(stateName == "End"){
+                        cout << "this is the end." << endl;
+                        sm.setCurrentState(initialState);
+                        cout << "initial state " << initialState << endl;
+                        cout << "current state " << sm.getCurrentState()->getName() << endl;
+                    }
                     // check if any actions are ready to start
                     for (auto& action : actions[stateName]) {
                         if (action.valid(&inventory)) {
