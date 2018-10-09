@@ -65,6 +65,7 @@ PolyVR* PolyVR::get() {
 }
 
 void PolyVR::shutdown() {
+    cout << "PolyVR::shutdown" << endl;
     VRSharedMemory sm("PolyVR_System");
     int* i = sm.addObject<int>("identifier");
     *i = 0;

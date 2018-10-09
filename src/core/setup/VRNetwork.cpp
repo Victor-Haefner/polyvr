@@ -147,7 +147,7 @@ void VRNetworkSlave::start() {
 
     string disp = "export DISPLAY=\"" + display + "\" && ";
     string pipes = " > /dev/null 2> /dev/null < /dev/null &";
-    //string pipes = " > /dev/null 2> /dev/null < /dev/null"; // TODO: without & it returns the correct exit code, but it also makes the app stuck!
+    //string pipes = " > /dev/null 2> /dev/null < /dev/null"; // TODO: without & it returns the correct code, but it also makes the app stuck!
     string args;
     if (!fullscreen) args += " -w";
     if (active_stereo) args += " -A";
