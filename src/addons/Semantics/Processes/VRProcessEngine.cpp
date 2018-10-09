@@ -35,13 +35,13 @@ void VRProcessEngine::initialize(){
         if (initialStates.count(processSubjects[i])){
             initialState = initialStates[processSubjects[i]]->getLabel();
         }
-        //cout << "initialState " << initialState << endl;
 
         for (uint j=0; j<states.size(); j++) {
             auto state = states[j];
             vector<Action> actions;
 
-            auto transitions = process->getStateTransitions(sID, state->getID());
+            //auto transitions = process->getStateTransitions(sID, state->getID());
+            auto transitions = process->getStateOutTransitions(sID, state->getID());
             for (auto transition : transitions) {
                 auto nextState = process->getTransitionState(transition);
                 Action action(nextState->getLabel(), transition);

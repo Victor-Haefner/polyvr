@@ -77,10 +77,13 @@ class VRProcessEngine {
                     cout << " Actor::transitioning goto next state actions " << nextState << endl;
                     return nextState; // state machine goes into nextState
                 } else {
-                    cout << " Actor::transitioning check actions " << actions.size() << endl;
+                    //cout << " Actor::transitioning check actions " << actions.size() << endl;
                     // check if any actions are ready to start
                     for (auto& action : actions[stateName]) {
-                        if (action.valid(&inventory)) { current = &action; return ""; }
+                        if (action.valid(&inventory)) {
+                            current = &action;
+                            return "";
+                        }
                     }
                 }
                 return "";

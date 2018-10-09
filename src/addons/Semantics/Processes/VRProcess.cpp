@@ -152,6 +152,18 @@ vector<VRProcessNodePtr> VRProcess::getStateTransitions(int subjectID, int state
     return res;
 }
 
+vector<VRProcessNodePtr> VRProcess::getStateOutTransitions(int subjectID, int stateID) {
+    auto d = behaviorDiagrams[subjectID];
+    auto neighbors = d->getNextNodes( stateID );
+    vector<VRProcessNodePtr> res;
+
+    for (auto neighbor : neighbors){
+        auto transition = d->processnodes[neighbor.ID];
+        res.push_back(transition);
+    }
+    return res;
+}
+
 vector<VRProcessNodePtr> VRProcess::getTransitionStates(int subjectID, int transitionID) {
     auto d = behaviorDiagrams[subjectID];
     auto neighbors = d->getNeighbors( transitionID );
