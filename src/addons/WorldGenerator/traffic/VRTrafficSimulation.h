@@ -67,11 +67,13 @@ class VRTrafficSimulation : public VRObject {
             float width = 1.7;
             float speed;
             float currentVelocity;
-            float targetVelocity; //try km/h
+            float targetVelocity;
             float maxAcceleration;
             float maxDecceleration;
             float Acceleration;
             float Decceleration;
+            float DistanceToNextSignal;
+            float DistanceToNextIntersec;
             Vec3d lastMove;
             Vec3d currentOffset;
             Vec3d currentdOffset;
@@ -83,6 +85,7 @@ class VRTrafficSimulation : public VRObject {
             int behavior = 0; //0 = straight, 1 = left, 2 = right
             int currentState = 0; //1 = leaving lane, -1 = coming onto lane
             bool laneTransition = true;
+            bool isUser = false;
             bool collisionDetected;
             VRRoadIntersectionPtr lastIntersection;
 
@@ -134,8 +137,10 @@ class VRTrafficSimulation : public VRObject {
         vector<Vehicle> users;
         list<Vehicle> vehiclePool;
         vector<VRObjectPtr> models;
+        size_t nID = -1;
         int maxUnits = 0;
         int numUnits = 0;
+        int stopVehicleID = -1;
         bool isSimRunning = true;
         bool isShowingVehicleVision = false;
         bool isShowingGraph = false;
@@ -186,6 +191,7 @@ class VRTrafficSimulation : public VRObject {
         //diagnostics:
         void toggleSim();
         void runWithoutGeometries();
+        void runWithGeometries();
         void setSpeedmultiplier(float speedMultiplier);
         void showGraph();
         void hideGraph();
@@ -198,6 +204,7 @@ class VRTrafficSimulation : public VRObject {
         string getVehicleData(int ID);
         string getEdgeData(int ID);
         void runDiagnostics();
+        void stopVehicle(int ID);
         void setSeedRoad(int debugOverRideSeedRoad);
         void setSeedRoadVec(vector<int> forceSeedRoads);
         bool isSeedRoad(int roadID);
