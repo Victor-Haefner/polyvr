@@ -137,9 +137,9 @@ class VRTrafficSimulation : public VRObject {
         vector<Vehicle> users;
         list<Vehicle> vehiclePool;
         vector<VRObjectPtr> models;
-        size_t nID = -1;
         int maxUnits = 0;
         int numUnits = 0;
+        size_t nID = -1;
         int stopVehicleID = -1;
         bool isSimRunning = true;
         bool isShowingVehicleVision = false;

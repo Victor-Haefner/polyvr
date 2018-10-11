@@ -122,6 +122,8 @@ VRTrafficSimulation::VRTrafficSimulation() : VRObject("TrafficSimulation") {
         return l;
     };
 
+    //static size_t nID = -1;
+
     carLightWhiteOn   = setupLightMaterial("carLightWhiteOn"  , Color3f(1,1,1), false);
     carLightWhiteOff  = setupLightMaterial("carLightWhiteOff" , Color3f(0.5,0.5,0.5), true);
     carLightRedOn     = setupLightMaterial("carLightRedOn"    , Color3f(1,0.2,0.2), false);
@@ -490,13 +492,14 @@ void VRTrafficSimulation::updateSimulation() {
         return -1;
     };
 
-    auto calcFramePoints = [&](int ID) {
+    auto calcFramePoints = [&](Vehicle& vehicle) {
     //calculation of 4 points at the edges of vehicle
-        auto& vehicle = vehicles[ID];
         if (vehicle.lastFPTS == VRGlobals::CURRENT_FRAME) return;
         auto p = vehicle.t->getPose();
-        auto left = p->up().cross(p->dir());
-        auto LH = p->dir()*0.5*vehicle.length; //half of vehicle length
+        auto dir = p->dir();
+        dir.normalize();
+        auto left = p->up().cross(dir);
+        auto LH = dir*0.5*vehicle.length; //half of vehicle length
         auto WH = left*0.5*vehicle.width;   //half of vehicle width
         vehicle.vehicleFPs[0] = p->pos() + LH + WH;
         vehicle.vehicleFPs[1] = p->pos() + LH - WH;
@@ -506,14 +509,13 @@ void VRTrafficSimulation::updateSimulation() {
         vehicle.lastFPTS = VRGlobals::CURRENT_FRAME;
     };
 
-    auto calcDisToFP = [&](int ID1, int ID2) {
+    auto calcDisToFP = [&](Vehicle& v1, Vehicle& v2) {
     //simple way to calculate the distance between vehicle1 and vehicle2
     ///TODO: make B-curve later AGRAJAG
-        auto& v1 = vehicles[ID1];
-        auto& v2 = vehicles[ID2];
         float res = 5000.0;
+        auto dir = v1.t->getPose()->dir();
         for (auto p : v2.vehicleFPs) {
-            float cc = abs((p.second - v1.t->getPose()->pos()).dot(v1.t->getPose()->dir().cross(v1.t->getPose()->up())));
+            float cc = abs((p.second - v1.t->getPose()->pos()).dot(dir.cross(v1.t->getPose()->up())));
             if (res > cc) res = cc;
         }
         return res;
@@ -622,31 +624,25 @@ void VRTrafficSimulation::updateSimulation() {
                     if (!v->t) continue;
                     auto p = v->t->getPose();
                     auto D = (pose->pos() - p->pos()).length();
-                    //auto D = pose->dir().dot(pose->pos() - p->pos());
-                    calcFramePoints(v->vID);
-                    float diss = calcDisToFP(vehicle.vID,v->vID);
-                    //cout << "  propagateVehicles " << toString(diss) << endl;
-                    int farP = farPosition(vehicle.vID, pose, p, diss, vehicle.lastMove);
+
+                    calcFramePoints(vehicles[v->vID]);
+                    float diss = calcDisToFP(vehicles[ID.first],vehicles[v->vID]); //distance to middle line of vehicle
+                    int farP = farPosition(ID.first, pose, p, diss, vehicle.lastMove);
                     setSight(farP,D,v->vID);
                     //if (vehicle.currentVelocity > 6 && D <  0.1) vehicle.collisionDetected = true;
                 }
 
-
-                //bool debugBool = false; ///Debugging
-                //if (debugBool) state = 0; //DANGER: debug mode, state = 0, discard collision check
-
-                /*for (auto& v : users) {
+                for (auto& v : users) {
+                    if (!v.t) continue;
                     auto p = v.t->getPose();
                     auto simpleDis = (pose->pos() - p->pos()).length();
                     if (simpleDis > safetyDis + 10) continue;
 
-                    calcFramePoints();
-
-                    float diss = calcDisToFPUser(vehicle.vID);
-
-                    int farP = farPositionUser(-2, pose, p, vehicle.lastMove);
-                    setSight(farP,D,v.vID);
-                }*/
+                    calcFramePoints(v);
+                    float diss = calcDisToFP(vehicles[ID.first],v);
+                    int farP = farPosition(ID.first, pose, p, diss, vehicle.lastMove);
+                    setSight(farP,simpleDis,v.vID);
+                }
 
                 visionVec[vehicle.vID] = vehicle.vehiclesightFarID;
 
@@ -676,7 +672,7 @@ void VRTrafficSimulation::updateSimulation() {
 
                                 auto nextID = g->getNextEdges(g->getEdge(eID))[0].ID;
                                 auto nextLane = roadNetwork->getLane(nextID);
-                                cout << type <<" " <<toString(vehicle.vID) << " " << toString(nextID) << endl;
+                                //cout << type <<" " <<toString(vehicle.vID) << " " << toString(nextID) << endl; //AGRAJAG
                                 recSearch (nextLane, nextID, posV);
                             }
                             else return false;
@@ -687,7 +683,7 @@ void VRTrafficSimulation::updateSimulation() {
                             if (nextSignalE) {
                                 nextSignalP = nextSignalE->getFrom();
                                 nextSignalDistance = (nextSignalP - posV).dot(vehicle.t->getPose()->dir());
-                                cout << " signal - " << toString(vehicle.vID) << endl;
+                                //cout << " signal - " << toString(vehicle.vID) << endl; //AGRAJAG
                             }
                             return true;
                         }
@@ -718,7 +714,7 @@ void VRTrafficSimulation::updateSimulation() {
                         if ( ( nextSignalE && nextSignalDistance < safetyDis -3 ) && signalBlock ) { decelerate(); return; }
                         if ( !nextSignalE && nextSignalDistance < safetyDis -3 && signalBlock ) { decelerate(); return; }
 
-                        if (!vehicle.vehiclesightFarID[vehicle.INFRONT]) {
+                        if ( !vehicle.vehiclesightFarID.count(vehicle.INFRONT)) {
                         //no vehicle ahead
                             if ( sinceLastLS > 200 && nextIntersection > 20 && checkR(vehicle.vID) && vehicle.currentVelocity > 20 ) { toChangeLane[vehicle.vID] = 2; }
                             //check if road is ending/intersections etc - possible breaking
@@ -729,7 +725,7 @@ void VRTrafficSimulation::updateSimulation() {
                             if ( vehicle.currentVelocity == vehicle.targetVelocity ) { d = vehicle.currentVelocity; return; }
                             //targetVelocity reached //proceed
                         }
-                        if ( vehicle.vehiclesightFarID[vehicle.INFRONT] ) {
+                        if ( vehicle.vehiclesightFarID.count(vehicle.INFRONT) ) {
                         //vehicle ahead?
                             int frontID = vehicle.vehiclesightFarID[vehicle.INFRONT];
                             float disToFrontV = vehicle.vehiclesightFar[vehicle.INFRONT];
@@ -763,9 +759,9 @@ void VRTrafficSimulation::updateSimulation() {
                         }
                     }
                     if ( vbeh == vehicle.SWITCHLEFT ) {
-                        if (!vehicle.vehiclesightFarID[vehicle.INFRONT]) { d = vehicle.currentVelocity; return; }
+                        if (!vehicle.vehiclesightFarID.count(vehicle.INFRONT) ) { d = vehicle.currentVelocity; return; }
                         //no vehicle ahead
-                        if ( vehicle.vehiclesightFarID[vehicle.INFRONT] ) {
+                        if ( vehicle.vehiclesightFarID.count(vehicle.INFRONT) ) {
                         //vehicle ahead?
                             int frontID = vehicle.vehiclesightFarID[vehicle.INFRONT];
                             float disToFrontV = vehicle.vehiclesightFar[vehicle.INFRONT];
@@ -776,9 +772,9 @@ void VRTrafficSimulation::updateSimulation() {
                         }
                     }
                     if ( vbeh == vehicle.SWITCHRIGHT ) {
-                        if (!vehicle.vehiclesightFarID[vehicle.INFRONT]) { d = vehicle.currentVelocity; return; }
+                        if (!vehicle.vehiclesightFarID.count(vehicle.INFRONT) ) { d = vehicle.currentVelocity; return; }
                         //no vehicle ahead
-                        if ( vehicle.vehiclesightFarID[vehicle.INFRONT] ) {
+                        if ( vehicle.vehiclesightFarID.count(vehicle.INFRONT) ) {
                         //vehicle ahead?
                             int frontID = vehicle.vehiclesightFarID[vehicle.INFRONT];
                             float disToFrontV = vehicle.vehiclesightFar[vehicle.INFRONT];
@@ -945,12 +941,13 @@ void VRTrafficSimulation::updateSimulation() {
         if (vehicles.size()==0) return;
         for (auto vv : vehicles){
             auto v = vv.second;
+            //if (!v) continue;
+            if (!v.t) continue;
             auto vPose = v.t->getWorldPose();
             auto p = vPose->pos() + Vec3d(0,1.7,0);
             auto p2 = v.t->getPose()->pos() + Vec3d(0,1.7,0);
             int vID1 = gg0.pushVert(p);
-            if (v.getID()!=0) gg0.pushColor(Color3f(1,1,0));
-            else gg0.pushColor(Color3f(1,0,0));
+            gg0.pushColor(Color3f(1,1,0));
             gg0.pushPoint();
             vehicAnn->set(vID1, p2 + Vec3d(0,0.2,0), "V: "+toString(v.getID()));
         }
@@ -983,12 +980,12 @@ void VRTrafficSimulation::updateSimulation() {
 
 void VRTrafficSimulation::addUser(VRTransformPtr t) {
     auto v = Vehicle( Graph::position(0, 0.0) );
+    nID++;
+    v.setID(nID);
+    vehicles[nID] =v;
+    v.isUser = true;
     users.push_back(v);
     users[users.size()-1].t = t;
-    //nID++;
-    //v.setID(nID);
-    //vehicles[nID] =v;
-    //v.isUser = true;
 }
 
 void VRTrafficSimulation::addVehicle(int roadID, float density, int type) {
@@ -1040,6 +1037,7 @@ void VRTrafficSimulation::addVehicle(int roadID, float density, int type) {
                 nID++;
                 v.setID(nID);
                 vehicles[nID] =v;
+                //cout << nID << endl ;
                 //cout<<"VRTrafficSimulation::addVehicle: Added vehicle to map vID:" << v.getID()<<endl;
             }
             return v.vID;
