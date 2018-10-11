@@ -212,6 +212,9 @@ void VRScriptManager::initPyModules() {
     modErr = 0;
 
     Py_Initialize();
+    char* argv[1];
+    argv[0] = "PolyVR";
+    PySys_SetArgv(1, argv);
     PyEval_InitThreads();
     VRPyBase::err = PyErr_NewException((char *)"VR.Error", NULL, NULL);
 
