@@ -14,7 +14,9 @@ OSG_BEGIN_NAMESPACE;
 enum PROCESS_WIDGET {
     SUBJECT,
     MESSAGE,
-    STATE, //Do State, Send State, Receive State
+    STATE,
+    SENDSTATE,
+    RECEIVESTATE,
     TRANSITION
 };
 
@@ -26,6 +28,7 @@ struct VRProcessNode : VRName {
     int ID = 0;
     int subject = 0;
     bool isInitialState = 0;
+    VRProcessNodePtr message;
 
     VRProcessNode(string name, PROCESS_WIDGET type, int ID, int sID);
     ~VRProcessNode();
@@ -55,6 +58,7 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         VRProcessDiagramPtr interactionDiagram;
         map<int, VRProcessDiagramPtr> behaviorDiagrams;
         void printNodes(VRProcessDiagramPtr d);
+        map<VRProcessNodePtr, VRProcessNodePtr> stateToMessage; //maps state to message for send/receive refenrences
 
         void update();
 
@@ -82,10 +86,13 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         vector<VRProcessNodePtr> getTransitionStates(int subjectID, int transitionID);
         vector<VRProcessNodePtr> getTransitions(int subjectID);
         map<VRProcessNodePtr, VRProcessNodePtr> getInitialStates(); // <subjectNode, initialStateNode>
+        VRProcessNodePtr getStateMessage(VRProcessNodePtr state);
 
         VRProcessNodePtr addSubject(string name);
         VRProcessNodePtr addMessage(string name, int i, int j, VRProcessDiagramPtr diag = 0);
         VRProcessNodePtr addState(string name, int sID);
+        VRProcessNodePtr addSendState(string name, int sID, VRProcessNodePtr message);
+        VRProcessNodePtr addReceiveState(string name, int sID, VRProcessNodePtr message);
         void setInitialState(VRProcessNodePtr state, int sID);
         VRProcessNodePtr addTransition(string name, int sID, int i, int j, VRProcessDiagramPtr d = 0);
 

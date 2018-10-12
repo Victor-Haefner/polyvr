@@ -200,6 +200,11 @@ map<VRProcessNodePtr, VRProcessNodePtr> VRProcess::getInitialStates(){
     return res;
 }
 
+
+VRProcessNodePtr VRProcess::getStateMessage(VRProcessNodePtr state){
+    return stateToMessage[state];
+}
+
 void VRProcess::update() {
     if (!ontology) return;
 
@@ -322,40 +327,48 @@ VRProcessNodePtr VRProcess::addMessage(string name, int i, int j, VRProcessDiagr
 VRProcessNodePtr VRProcess::addState(string name, int sID) {
     if (!behaviorDiagrams.count(sID)) return 0;
     auto diag = behaviorDiagrams[sID];
-    if (!diag) return 0;
-    auto aID = diag->addNode();
-    auto a = VRProcessNode::create(name, STATE, aID, sID);
-    diag->processnodes[aID] = a;
-    return a;
+    //if (!diag) return 0;
+    auto nID = diag->addNode();
+    auto s = VRProcessNode::create(name, STATE, nID, sID);
+    diag->processnodes[nID] = s;
+    return s;
 }
 
+
+VRProcessNodePtr VRProcess::addSendState(string name, int sID, VRProcessNodePtr message){
+    auto state = addState(name, sID);
+    stateToMessage[state] = message;
+    return state;
+}
+
+VRProcessNodePtr VRProcess::addReceiveState(string name, int sID, VRProcessNodePtr message){
+    auto state = addState(name, sID);
+    stateToMessage[state] = message;
+    return state;
+}
 
 void VRProcess::setInitialState(VRProcessNodePtr state, int sID){
     auto diag = behaviorDiagrams[sID];
     if (!diag) cout << "VRProcess::setInitialState: No Behavior for subject " << getSubjects()[sID]->getLabel() << " found." << endl;
 
     if (state->type != STATE){
-        cout << "VRProcess::setInitialState: The given Processnode if not of STATE type." << endl;
+        cout << "VRProcess::setInitialState: The given Processnode if not of type STATE." << endl;
         return;
     }
     //lookup for state value in processnodes map and set it to initial state
     auto oldInitialState = 0;
     bool newInitialState = false;
     for(auto n : diag->processnodes){
-        //cout << "for(auto n : diag->processnodes){" << endl;
         if(n.second->isInitialState) {
-            //cout << "VRProcess::setInitialState: n.second->isInitialState == true" << endl;
             if (newInitialState) n.second->isInitialState = false;
             else oldInitialState = n.first;
         }
         else if(n.second == state){
-            //cout << "VRProcess::setInitialState: n.second == state" << endl;
             if (oldInitialState){
                 diag->processnodes[oldInitialState]->isInitialState = false;
             }
             n.second->isInitialState = true;
             newInitialState = true;
-            //cout << "VRProcess::setInitialState: set initial state: " << n.second->getLabel() << endl;
         }
     }
 }

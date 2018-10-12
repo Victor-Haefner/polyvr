@@ -60,7 +60,7 @@ class VRProcessEngine {
             map<string, vector<Action>> actions; // maps state name to possible actions/transitions
             VRStateMachine<float> sm;
             Inventory inventory;
-            vector<Message> outgoingMessages;
+            //vector<Message> outgoingMessages;
             string initialState = "";
 
             Actor() : sm("ProcessActor") {}
@@ -73,6 +73,9 @@ class VRProcessEngine {
 
                 // if currently in action go to next state, else check for possible actions
                 if (current) {
+                    //if current->node->subject->type == SENDSTATE
+                    //elseif current->node->subject->type == RECEIVESTATE
+
                     string nextState = current->nextState;
                     current = 0;
                     cout << " Actor::transitioning goto next state actions " << nextState << endl;
@@ -102,6 +105,8 @@ class VRProcessEngine {
 
             //if in send state
             void sendMessage(string message, Actor* receiver){
+
+
                 //Message m;
 
             }

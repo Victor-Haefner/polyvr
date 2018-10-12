@@ -48,6 +48,7 @@ void VRProcessEngine::initialize(){
             for (auto transition : transitions) {
                 auto nextState = process->getTransitionState(transition);
                 Action action(nextState->getLabel(), transition);
+                //if state == receive state: Prerequisite p(message); action.prerequisites.push_back(p);
                 actions.push_back(action);
             }
 
