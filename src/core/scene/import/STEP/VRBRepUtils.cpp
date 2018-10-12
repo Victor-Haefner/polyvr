@@ -64,9 +64,9 @@ float VRBRepUtils::Bik(float t, int i, int k, const vector<double>& knots, bool 
     float tL = knots[knots.size()-1];
     if (verbose) cout << " Bik ti: " << ti << " ti1: " << ti1 << " tik: " << tik << " tik1: " << tik1 << endl;
     if (k == 0) {
-        if (t >= ti && t <= ti1) { if (verbose) cout << " Bik exit first 1" << endl; return 1; }
-        if (t == ti1 && t == tL) { if (verbose) cout << " Bik exit second 1" << endl; return 1; }
-        else { if (verbose) cout << " Bik exit 0" << endl; return 0; }
+        if (t >= ti && t <= ti1) { if (verbose) cout << " Bik goes first 1" << endl; return 1; }
+        if (t == ti1 && t == tL) { if (verbose) cout << " Bik goes second 1" << endl; return 1; }
+        else { if (verbose) cout << " Bik goes 0" << endl; return 0; }
     }
     float A = tik == ti ? 0 : Bik(t, i, k-1, knots, verbose)*(t-ti)/(tik-ti);
     float B = tik1 == ti1 ? 0 : Bik(t, i+1, k-1, knots, verbose)*(tik1 - t)/(tik1 - ti1);
