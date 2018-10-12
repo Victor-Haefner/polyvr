@@ -923,7 +923,7 @@ void VRTrafficSimulation::updateSimulation() {
     };
 
     auto showVehicleMarkers = [&](){
-        //if (isShowingGeometries) return; AGRAJAG
+        if (isShowingGeometries) return;
 
         auto scene = VRScene::getCurrent();
         string strInput = "graphVizVehicMarkers";
@@ -943,6 +943,7 @@ void VRTrafficSimulation::updateSimulation() {
             auto v = vv.second;
             //if (!v) continue;
             if (!v.t) continue;
+            if (v.isUser) continue;
             auto vPose = v.t->getWorldPose();
             auto p = vPose->pos() + Vec3d(0,1.7,0);
             auto p2 = v.t->getPose()->pos() + Vec3d(0,1.7,0);
@@ -1403,6 +1404,7 @@ string VRTrafficSimulation::getEdgeData(int ID){
     string nextEdges = "next Edges: ";
     string prevEdges = "prev Edges: ";
     string edgeNeighbors = "Relations: ";
+    string edgeLength = "FromTo: ";
     string nl = "\n ";
     auto graph = roadNetwork->getGraph();
     if (!graph->hasEdge(ID)) { return "Road "+toString(ID)+" does not exist in network"; }
@@ -1412,11 +1414,14 @@ string VRTrafficSimulation::getEdgeData(int ID){
     for (auto nn : graph->getRelations(ID)) { edgeNeighbors +=" " + toString(nn); }
     for (auto nn : graph->getPrevEdges(edge)) { prevEdges +=" " + toString(nn.ID); }
     for (auto nn : graph->getNextEdges(edge)) { nextEdges +=" " + toString(nn.ID); }
+    edgeLength += toString(graph->getPosition(edge.from)->pos()) + " " + toString(graph->getPosition(edge.to)->pos());
 
     res+="Road " + toString(ID) + nl;
     res+=edgeNeighbors + nl;
     res+=prevEdges + nl;
-    res+=nextEdges;
+    res+=nextEdges + nl;
+    res+=edgeLength;
+
     return res;
 }
 
