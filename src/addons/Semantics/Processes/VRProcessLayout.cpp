@@ -168,6 +168,8 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
 }
 
 void VRProcessLayout::setProcess(VRProcessPtr p) {
+    if (!p) { cout << "WARNING in ProcessLayout, setProcess: process is null!\n"; return; }
+
     process = p;
 
     //initialize pathtool for each sbd
