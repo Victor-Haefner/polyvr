@@ -168,7 +168,7 @@ void VRProcess::update() {
     auto query = [&](string q) { return reasoner->process(q, ontology); };
 
     /** get interaction diagram **/
-    auto layers = query("q(x):ModelLayer(x)");
+    auto layers = ontology->getEntities("ModelLayer");
     if (layers.size() == 0) return;
     auto layer = layers[0]; // only use first layer
     interactionDiagram = VRProcessDiagram::create();
@@ -180,6 +180,7 @@ void VRProcess::update() {
         if (auto l = subject->get("hasModelComponentLable") ) label = l->value;
         int nID = addSubject(label)->ID;
         if (auto ID = subject->get("hasModelComponentID") ) nodes[ID->value] = nID;
+        //cout << " VRProcess::update subject: " << label << endl;
     }
 
     map<string, map<string, vector<VREntityPtr>>> messages;
