@@ -19,24 +19,16 @@ class VRTrafficSimulation : public VRObject {
             BYCICLE = 2
         };
         enum VISION {
-                INFRONT = 0,
-                FRONTLEFT = 1,
-                FRONTRIGHT = 2,
-                BEHINDLEFT = 3,
-                BEHINDRIGHT = 4,
-                BEHIND = 5
+            INFRONT = 0,
+            FRONTLEFT = 1,
+            FRONTRIGHT = 2,
+            BEHINDLEFT = 3,
+            BEHINDRIGHT = 4,
+            BEHIND = 5
         };
 
     private:
         struct Vehicle {
-            enum VISION {
-                INFRONT = 0,
-                FRONTLEFT = 1,
-                FRONTRIGHT = 2,
-                BEHINDLEFT = 3,
-                BEHINDRIGHT = 4,
-                BEHIND = 5
-            };
             enum INTENTION {
                 STRAIGHT = 0,
                 SWITCHLEFT = 1,
