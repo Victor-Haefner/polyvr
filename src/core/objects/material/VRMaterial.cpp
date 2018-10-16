@@ -812,16 +812,22 @@ void VRMaterial::clearTransparency(bool user_override) {
     if (force_transparency && !user_override && !deferred) return;
     auto md = mats[activePass];
     md->clearChunk(md->blendChunk);
-    md->clearChunk(md->depthChunk);
+    //md->clearChunk(md->depthChunk); // messes with depth tests ?
 }
 
 void VRMaterial::setDepthTest(int d) {
     auto md = mats[activePass];
     if (md->depthChunk == 0) {
         md->depthChunk = DepthChunk::create();
-        md->depthChunk->setFunc(d); // GL_ALWAYS
         md->mat->addChunk(md->depthChunk);
     }
+    md->depthChunk->setFunc(d); // GL_ALWAYS
+}
+
+int VRMaterial::getDepthTest() {
+    auto md = mats[activePass];
+    if (md->depthChunk == 0) return 0;
+    return md->depthChunk->getFunc();
 }
 
 void VRMaterial::setDiffuse(string c) { setDiffuse(toColor(c)); }

@@ -5,6 +5,8 @@
 
 using namespace std;
 
+void printBacktrace();
+
 bool exists(string path);
 bool makedir(string path);
 bool removeFile(string path);

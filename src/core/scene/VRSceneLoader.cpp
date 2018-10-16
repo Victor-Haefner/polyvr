@@ -173,8 +173,8 @@ void VRSceneLoader::loadScene(string path, string encryptionKey) {
     VRSceneLoader_current_scene = scene;
 
     scene->getRoot()->load(root);
-    VRSceneManager::get()->setScene(scene);
     scene->loadScene(sceneN);
+    VRSceneManager::get()->setScene(scene);
 }
 
 

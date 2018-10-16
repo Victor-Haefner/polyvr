@@ -227,7 +227,7 @@ float VRCarDynamics::strech(float v, float m1) {
 
 void VRCarDynamics::setType(TYPE t) { type = t; }
 
-void VRCarDynamics::updateWheel( WheelPtr wheel, float eForce, float eBreak ) {
+void VRCarDynamics::updateWheelForces( WheelPtr wheel, float eForce, float eBreak ) {
     vehicle->setBrake(eBreak, wheel->ID);
 
     if (wheel->isDriven) vehicle->applyEngineForce(eForce, wheel->ID);
@@ -386,7 +386,7 @@ void VRCarDynamics::updateEngine() {
         eForces = eForce;
         eBreaks = eBreak;
 
-        updateWheel(wheel, eForce, eBreak);// apply force
+        updateWheelForces(wheel, eForce, eBreak);// apply forces
     }
 
     updateSpeedAndAcceleration();

@@ -145,7 +145,7 @@ void VRPlanet::rebuild() {
     lod = VRLod::create("planetLod");
     auto addLod = [&](int i, double d) {
         auto s = VRGeometry::create("sphere");
-        s->setPrimitive("Sphere", toString(radius)+" "+toString(i));
+        s->setPrimitive("Sphere " + toString(radius)+" "+toString(i));
         s->setMaterial(sphereMat);
         lod->addChild(s);
         lod->addDistance(d);

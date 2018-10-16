@@ -6,19 +6,23 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 
-VRSetupManager::VRSetupManager() {}
+VRSetupManager* setup_mgr = 0;
 
-VRSetupManager::~VRSetupManager() {}
+VRSetupManager::VRSetupManager() {
+    setup_mgr = this;
+}
 
+VRSetupManager::~VRSetupManager() {
+    cout << "VRSetupManager::~VRSetupManager" << endl;
+    setup_mgr = 0;
+}
+
+VRSetupManagerPtr VRSetupManager::create() { return VRSetupManagerPtr(new VRSetupManager()); }
+VRSetupManager* VRSetupManager::get() { return setup_mgr; }
 VRSetupPtr VRSetupManager::getCurrent() { return get()->current; }
 void VRSetupManager::closeSetup() { current = 0; }
 
-VRSetupManager* VRSetupManager::get() {
-    static VRSetupManager* mgr = new VRSetupManager();
-    return mgr;
-}
-
-VRSetupPtr VRSetupManager::create() {
+VRSetupPtr VRSetupManager::newSetup() {
     current = VRSetup::create("VRSetup");
     current_path = "setup/" + current->getName() + ".xml";
     current->setScene( VRScene::getCurrent() );

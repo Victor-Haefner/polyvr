@@ -22,6 +22,7 @@ ptrFwd(VRCamera);
 ptrFwd(VRLod);
 ptrFwd(VRLodLeaf);
 ptrFwd(VRSprite);
+ptrFwd(VRSpriteResizeTool);
 ptrFwd(VRStroke);
 ptrFwd(VRMaterial);
 ptrFwd(VRLight);

@@ -58,7 +58,6 @@ VRSetup::~VRSetup() {
 }
 
 VRSetupPtr VRSetup::create(string name) { return VRSetupPtr(new VRSetup(name)); }
-
 VRSetupPtr VRSetup::getCurrent() { return VRSetupManager::get()->getCurrent(); }
 
 void VRSetup::showStats(bool b) {
@@ -288,7 +287,7 @@ void VRSetup::makeTestCube() {
     done = true;
 
     auto cube = VRGeometry::create("testCube");
-    cube->setPrimitive("Box", "0.1 0.1 0.1 1 1 1");
+    cube->setPrimitive("Box 0.1 0.1 0.1 1 1 1");
     cube->setFrom(Vec3d(0.1,0.1,-1));
     cube->setPickable(true);
     getRoot()->addChild(cube);

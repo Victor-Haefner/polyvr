@@ -43,12 +43,19 @@ VRRain::VRRain() : VRGeometry("Rain") {
     dropColor = Vec3f(0.3,0.3,0.7);
     dropWidth = 0.1;
     dropLength = 0.1;
+    dropSpeed = 1;
+    dropDensity = 1;
+
+    lastCt2 = Vec3d(0,0,0);
+    lastCt3 = Vec3d(0,0,0);
+    lastCt5 = Vec3d(0,0,0);
+    lastCt8 = Vec3d(0,0,0);
 
     //Shader setup
     mat = VRMaterial::create("Rain");
     reloadShader();
     setMaterial(mat);
-    setPrimitive("Plane", "2 2 1 1");
+    setPrimitive("Plane 2 2 1 1");
     mat->setLit(false);
 	mat->setDiffuse(Color3f(1));
 	mat->setShaderParameter<float>("rainOffset", offset);
@@ -254,7 +261,22 @@ void VRRain::update() {
 	mat->setShaderParameter<Vec3f>("dropColor", dropColor);
 	mat->setShaderParameter<float>("dropLength", dropLength);
 	mat->setShaderParameter<float>("dropWidth", dropWidth);
+	mat->setShaderParameter<float>("dropSpeed", dropSpeed);
+	mat->setShaderParameter<float>("dropDensity", dropDensity);
     reloadShader();
+
+    Vec3d tmpPos = Vec3d(defCamPos[0],0,defCamPos[2]);
+    if ( (tmpPos-lastCt2).length() > 0.1* 2 ) lastCt2 = tmpPos;
+    if ( (tmpPos-lastCt3).length() > 0.3* 3 ) lastCt3 = tmpPos;
+    if ( (tmpPos-lastCt5).length() > 0.5* 5 ) lastCt5 = tmpPos;
+    if ( (tmpPos-lastCt8).length() > 0.5* 8 ) lastCt8 = tmpPos;
+
+	mat->setShaderParameter<Vec3f>("lastCt2", convertV3dToV3f(lastCt2));
+	mat->setShaderParameter<Vec3f>("lastCt3", convertV3dToV3f(lastCt3));
+	mat->setShaderParameter<Vec3f>("lastCt5", convertV3dToV3f(lastCt5));
+	mat->setShaderParameter<Vec3f>("lastCt8", convertV3dToV3f(lastCt8));
+
+	//cout << toString(lastCt2) << " " << toString(lastCt3) << " " << toString(lastCt5) << " " << toString(lastCt8) << endl;
 }
 
 void VRRain::setDropColor(Vec3d clIn) {
@@ -264,6 +286,14 @@ void VRRain::setDropColor(Vec3d clIn) {
 void VRRain::setDropSize(float dropWidth, float dropLength) {
     this->dropWidth = dropWidth;
     this->dropLength = dropLength;
+}
+
+void VRRain::setDropSpeed(float dropSpeed) {
+    this->dropSpeed = dropSpeed;
+}
+
+void VRRain::setDropDensity(float dropDensity) {
+    this->dropDensity = dropDensity;
 }
 
 void VRRain::doTestFunction() {

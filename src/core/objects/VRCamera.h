@@ -35,7 +35,7 @@ class VRCamera : public VRTransform {
         VRCamera(string name = "");
         ~VRCamera();
 
-        static VRCameraPtr create(string name = "None", bool reg = true);
+        static VRCameraPtr create(string name = "None", bool reg = false);
         VRCameraPtr ptr();
 
         void setType(int type);

@@ -78,7 +78,7 @@ VRCameraPtr VRCamera::create(string name, bool reg) {
     p->addChild(p->vrSetup);
     p->registred = reg;
     getAll().push_back( p );
-    if (reg) VRGuiManager::broadcast("camera_added");
+    VRGuiManager::broadcast("camera_added");
     if (reg) VRScene::getCurrent()->setMActiveCamera(p->getName());
     return p;
 }
@@ -101,6 +101,11 @@ void VRCamera::setFrom(Vec3d m) { VRTransform::setFrom(m); updateOrthSize(); }
 VRObjectPtr VRCamera::getSetupNode() { return vrSetup; }
 
 void VRCamera::setup(bool reg) {
+<<<<<<< HEAD
+=======
+    vrSetup->setPersistency(0);
+
+>>>>>>> upstream/master
     PerspectiveCameraMTRecPtr pcam;
     OrthographicCameraMTRecPtr ocam;
     if (cam) pcam = dynamic_pointer_cast<PerspectiveCamera>(cam->cam);
@@ -146,7 +151,7 @@ void VRCamera::setup(bool reg) {
 void VRCamera::activate() {
     auto scene = VRScene::getCurrent();
     if (scene) scene->setActiveCamera(getName());
-    VRGuiManager::broadcast("camera_added");
+    VRGuiManager::broadcast("camera_changed");
 }
 
 void VRCamera::showCamGeo(bool b) {

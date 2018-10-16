@@ -161,6 +161,7 @@ class VRTrafficSimulation : public VRObject {
         void toggleLaneChanges();
         void forceIntention(int vID,int behavior);
         string getVehicleData(int ID);
+        string getEdgeData(int ID);
         void runDiagnostics();
         void setSeedRoad(int debugOverRideSeedRoad);
         void setSeedRoadVec(vector<int> forceSeedRoads);

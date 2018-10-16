@@ -16,7 +16,7 @@ class VRDriver {
         float to = 1;
         PathPtr p_path;
         PathPtr v_path;
-        float target_speed = 5;
+        float target_speed = 8;
         VRUpdateCbPtr updatePtr;
 
         void update();

@@ -246,7 +246,7 @@ VRObjectPtr VRProduction::test() {
     robotOnto->getConcept("Robot")->addProperty("skill", "Manipulation");
 
     auto machine = VRGeometry::create("machine");
-    machine->setPrimitive("Box", "1 2 1 1 1 1");
+    machine->setPrimitive("Box 1 2 1 1 1 1");
 
     // drill ----------
     auto drill = new VRProductionMachine();

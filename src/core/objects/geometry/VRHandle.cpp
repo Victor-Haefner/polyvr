@@ -1,6 +1,7 @@
 #include "VRHandle.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/VRGlobals.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRConstraint.h"
 #include "core/math/pose.h"
@@ -10,9 +11,9 @@ using namespace OSG;
 
 VRHandle::VRHandle(string name) : VRGeometry(name) {
     type = "Handle";
-    updateCb = VRUpdateCb::create("handle_update", boost::bind(&VRHandle::updateHandle, this) );
+    updateCb = VRUpdateCb::create("handle_update", boost::bind(&VRHandle::updateHandle, this, true) );
     setPickable(true);
-    setPrimitive("Box", "0.1 0.1 0.1 1 1 1");
+    setPrimitive("Box 0.1 0.1 0.1 1 1 1");
     auto m = VRMaterial::get("VRHandle");
     m->setDiffuse(Color3f(0.3,0.6,1.0));
     setMaterial( m );
@@ -21,7 +22,7 @@ VRHandle::VRHandle(string name) : VRGeometry(name) {
 VRHandlePtr VRHandle::create(string name) { return VRHandlePtr( new VRHandle(name) ); }
 VRHandlePtr VRHandle::ptr() { return static_pointer_cast<VRHandle>( shared_from_this() ); }
 
-void VRHandle::configure(VRAnimCbPtr cb, TYPE t, Vec3d n, float s, bool symmetric) {
+void VRHandle::configure(VRAnimCbPtr cb, TYPE t, Vec3d n, float s) {
     axis = n;
     paramCb = cb;
     constraint = t;
@@ -33,6 +34,8 @@ void VRHandle::configure(VRAnimCbPtr cb, TYPE t, Vec3d n, float s, bool symmetri
         c->setTConstraint(n, VRConstraint::LINE);
     }
 }
+
+void VRHandle::addSibling(VRHandlePtr h) { siblings.push_back(h); }
 
 void VRHandle::set(PosePtr p, float v) {
     value = v;
@@ -53,36 +56,57 @@ void VRHandle::set(PosePtr p, float v) {
 Vec3d VRHandle::getAxis() { return axis; }
 PosePtr VRHandle::getOrigin() { return origin; }
 
-void VRHandle::updateHandle() {
-    if (!paramCb) return;
+void VRHandle::setSize(float size) {
+    string s = toString(size);
+    setPrimitive("Box "+s+" "+s+" "+s+" 1 1 1");
+}
 
+bool lock = false;
+
+void VRHandle::updateHandle(bool sceneUpdate) {
+    if (!paramCb) return;
     VRGeometryPtr p =  dynamic_pointer_cast<VRGeometry>(getDragParent());
     if (!p) return;
 
-    Matrix4d p0 = p->getWorldMatrix();
-    p0.invert();
-    Pnt3d p1 = getWorldPosition();
-    p0.mult(p1,p1);
+    if (lock) return;
+    lock = true; // WARNING! do not return after this line!
 
-    Vec3d d = Vec3d(p1)-origin->pos();
+    PosePtr pi = p->getPoseTo(ptr());
+    Vec3d d = pi->pos() - origin->pos();
     float v = axis.dot(d);
     value = abs(v)/scale;
     (*paramCb)(value);
+
+    for (auto hw : siblings) {
+        if (auto h = hw.lock()) {
+            Vec3d pos = h->origin->pos() + h->axis*h->scale*v/scale;
+            //cout << "VRHandle::updateHandle sibling v: " << v << " scale: " << scale << " hscale: " << h->scale << " haxis: " << h->axis << " pos: " << pos << endl;
+            h->setFrom(pos);
+        }
+    }
+
+    lock = false;
 }
 
 void VRHandle::drag(VRTransformPtr new_parent) {
+    lock = true;
     VRTransform::drag(new_parent);
     auto scene = VRScene::getCurrent();
     scene->addUpdateFkt( updateCb );
+    lock = false;
 }
 
 void VRHandle::drop() {
+    lock = true;
     VRTransform::drop();
     auto scene = VRScene::getCurrent();
     scene->dropUpdateFkt( updateCb );
+    lock = false;
 }
 
-void VRHandle::setMatrix(Matrix4d m) { // for undo/redo
+void VRHandle::setMatrix(Matrix4d m) { // for undo/redo, PROBLEM: called by the constraint non stop
     VRTransform::setMatrix(m);
-    (*updateCb)(); // problem: called non stop :(
+    if (lock) return;
+    //printBacktrace();
+    if (isUndoing()) updateHandle(); // problem: called non stop :(
 }

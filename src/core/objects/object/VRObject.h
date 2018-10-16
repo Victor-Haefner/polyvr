@@ -85,6 +85,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         void enableCore();
 
         OSGObjectPtr getNode();
+        vector<OSGObjectPtr> getNodes();
         virtual void addChild(OSGObjectPtr n);
         virtual void subChild(OSGObjectPtr n);
         VRObjectPtr find(OSGObjectPtr n, string indent = " ");

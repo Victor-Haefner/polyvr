@@ -14,8 +14,10 @@
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/sound/VRSoundManager.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/setup/VRSetup.h"
 #include "addons/CEF/CEF.h"
 
+#include <OpenSG/OSGPrimeMaterial.h>
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGNode.h>
 #include <GL/glut.h>
@@ -25,12 +27,13 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-void printFieldContainer() {
+void printFieldContainer(int maxID = -1) {
     int N = FieldContainerFactory::the()->getNumTotalContainers();
     for (int i=0;i<N;++i) {
         FieldContainer* fc = FieldContainerFactory::the()->getContainer(i);
         if(fc == 0) continue;
-        if(fc->getId() < 343) continue; // stuff created in osgInit()
+        if(fc->getId() <= 358) continue; // stuff created in osgInit()
+        if(fc->getId() > maxID && maxID > 0) break; // stop
 
         // skip prototypes
         if(fc->getType().getPrototype() == 0 || fc->getType().getPrototype() == fc  ) continue;
@@ -62,14 +65,16 @@ PolyVR* PolyVR::get() {
 }
 
 void PolyVR::shutdown() {
+    cout << "PolyVR::shutdown" << endl;
     VRSharedMemory sm("PolyVR_System");
     int* i = sm.addObject<int>("identifier");
     *i = 0;
 
     auto pvr = get();
     pvr->scene_mgr->closeScene();
+    VRSetup::getCurrent()->stopWindows();
     pvr->scene_mgr->stopAllThreads();
-    //pvr->setup_mgr->closeSetup();
+    pvr->setup_mgr->closeSetup();
     delete pvr;
     printFieldContainer();
     osgExit();
@@ -109,6 +114,9 @@ void PolyVR::init(int argc, char **argv) {
     VRSharedMemory sm("PolyVR_System");
     int* i = sm.addObject<int>("identifier");
     *i = 1;
+
+    PrimeMaterialRecPtr pMat = OSG::getDefaultMaterial();
+    OSG::setName(pMat, "default_material");
 }
 
 void PolyVR::run() {
@@ -134,8 +142,8 @@ void PolyVR::start(bool runit) {
 
     cout << "Init Modules\n";
     sound_mgr = VRSoundManager::get();
-    setup_mgr = shared_ptr<VRSetupManager>(VRSetupManager::get());
-    scene_mgr = shared_ptr<VRSceneManager>(VRSceneManager::get());
+    setup_mgr = VRSetupManager::create();
+    scene_mgr = VRSceneManager::create();
     interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
     monitor = shared_ptr<VRInternalMonitor>(VRInternalMonitor::get());
     gui_mgr = shared_ptr<VRGuiManager>(VRGuiManager::get());

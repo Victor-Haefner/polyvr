@@ -34,6 +34,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
+#include "core/objects/material/VRTextureGenerator.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/windows/VRView.h"
 
@@ -132,6 +133,7 @@ int VRDefShading::addBuffer(int pformat, int ptype) {
 void VRDefShading::reload() {
     vpAmbient->readProgram(dsAmbientVPFile.c_str());
     fpAmbient->readProgram(dsAmbientFPFile.c_str());
+    fpAmbient->subUniformVariable("channel");
     fpAmbient->addUniformVariable<Int32>("channel", channel);
     shAmbient->addShader(vpAmbient);
     shAmbient->addShader(fpAmbient);
@@ -220,17 +222,21 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
 
     li.lightSH->addShader(li.lightVP);
     li.lightSH->addShader(li.lightFP);
+
     li.texChunk = TextureObjChunk::create();
+
+    if (auto tex = vrl->getPhotometricMap()) {
+        li.texChunk->setImage(tex->getImage());
+        li.texChunk->setInternalFormat(tex->getInternalFormat());
+    } else {
+        VRTextureGenerator tg;
+        tg.setSize(1,1,1);
+        li.texChunk->setImage(tg.compose(0)->getImage());
+    }
 
     dsStage->editMFLights         ()->push_back(li.light  );
     dsStage->editMFLightPrograms  ()->push_back(li.lightSH);
     dsStage->editMFPhotometricMaps()->push_back(li.texChunk);
-
-    auto tex = vrl->getPhotometricMap();
-    if (tex) {
-        li.texChunk->setImage(tex->getImage());
-        li.texChunk->setInternalFormat(tex->getInternalFormat());
-    }
 
     lightInfos[ID] = li;
 
@@ -266,12 +272,17 @@ void VRDefShading::updateLight(VRLightPtr l) {
     string fpFile = getLightFPFile(li.lightType, li.shadowType);
     li.lightVP->readProgram(vpFile.c_str());
     li.lightFP->readProgram(fpFile.c_str());
+    li.lightFP->subUniformVariable("shadowColor");
     li.lightFP->addUniformVariable<Color4f>("shadowColor", shadowColor);
 
     auto tex = l->getPhotometricMap();
     if (tex) {
-        dsStage->editMFPhotometricMaps();
-        li.texChunk->setImage(tex->getImage());
+        auto img = tex->getImage();
+        if (img != li.texChunk->getImage()) {
+            dsStage->editMFPhotometricMaps();
+            li.texChunk->setImage(img);
+            li.texChunk->setInternalFormat(tex->getInternalFormat());
+        }
     }
 }
 

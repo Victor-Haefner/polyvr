@@ -1,4 +1,5 @@
 #include "VRGeoPrimitive.h"
+#include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRPrimitive.h"
 #include "core/objects/geometry/VRHandle.h"
 #include "core/objects/material/VRMaterial.h"
@@ -11,18 +12,18 @@
 
 using namespace OSG;
 
-VRGeoPrimitive::VRGeoPrimitive(string name) : VRGeometry(name) {
+VRGeoPrimitive::VRGeoPrimitive(string name) : VRTransform(name) {
     type = "GeoPrimitive";
     selector = VRSelector::create();
 
     params_geo = VRAnnotationEngine::create();
-    params_geo->getMaterial()->setDepthTest(GL_ALWAYS);
     params_geo->getMaterial()->setLit(0);
     params_geo->setSize(0.015);
     params_geo->setBillboard(1);
     params_geo->setScreensize(1);
     params_geo->setColor(Color4f(0,0,0,1));
     params_geo->setBackground(Color4f(1,1,1,1));
+    params_geo->getMaterial()->setDepthTest(GL_ALWAYS);
     params_geo->setPersistency(0);
 }
 
@@ -36,6 +37,18 @@ VRGeoPrimitivePtr VRGeoPrimitive::create(string name) {
 VRGeoPrimitivePtr VRGeoPrimitive::ptr() { return static_pointer_cast<VRGeoPrimitive>( shared_from_this() ); }
 
 VRAnnotationEnginePtr VRGeoPrimitive::getLabels() { return params_geo; }
+
+void VRGeoPrimitive::setGeometry(VRGeometryPtr geo) {
+    if (ownsGeometry) if (auto g = geometry.lock()) g->destroy();
+    geometry = geo;
+    ownsGeometry = false;
+    setupHandles();
+}
+
+void VRGeoPrimitive::setHandleSize(float s) {
+    size = s;
+    for (auto h : handles) h->setSize(s);
+}
 
 VRHandlePtr VRGeoPrimitive::getHandle(int i) {
     if (i < 0 || i >= int(handles.size())) return 0;
@@ -53,8 +66,12 @@ void VRGeoPrimitive::select(bool b) {
     else selector->clear();
 }
 
-void VRGeoPrimitive::update(int i, float v) {
+void VRGeoPrimitive::update(int i, VRHandleWeakPtr hw, float v) {
+    VRGeometryPtr geo = geometry.lock();
+    if (!geo) return;
+    auto primitive = geo->getPrimitive();
     if (!primitive) return;
+
     auto params = splitString(primitive->toString(), ' ');
     string args;
     for (uint j=0; j<params.size(); j++) {
@@ -62,9 +79,9 @@ void VRGeoPrimitive::update(int i, float v) {
         else args += toString(v);
         if (j < params.size()-1) args += " ";
     }
-    VRGeometry::setPrimitive(primitive->getType(), args);
+    geo->setPrimitive(primitive->getType() + " " + args);
 
-    auto h = getHandle(i);
+    auto h = hw.lock();
     if (!params_geo || !h) return;
     auto a = h->getAxis();
     auto o = h->getOrigin()->pos();
@@ -73,8 +90,14 @@ void VRGeoPrimitive::update(int i, float v) {
 }
 
 void VRGeoPrimitive::setupHandles() {
-    for (auto h : handles) subChild(h);
+    VRGeometryPtr geo = geometry.lock();
+    if (!geo) return;
+    auto primitive = geo->getPrimitive();
+    if (!primitive) return;
+
+    for (auto h : handles) h->destroy();
     handles.clear();
+    params_geo->clear();
 
     string type = primitive->getType();
     int N = primitive->getNParams();
@@ -97,45 +120,60 @@ void VRGeoPrimitive::setupHandles() {
         if (n == "Rings") continue;
         if (n == "Number of teeth") continue;
 
-        auto h = VRHandle::create(n);
-        h->setPersistency(0);
-        handles.push_back(h);
-        addChild(h);
+        function<VRHandlePtr(Vec3d, float, bool)> addHandle = [&](Vec3d d, float L, bool symmetric) {
+            auto h = VRHandle::create(n);
+            h->setSize(size);
+            h->setPersistency(0);
+            handles.push_back(h);
+            geo->addChild(h);
 
-        auto cb = VRFunction<float>::create( "geo_prim_update", boost::bind(&VRGeoPrimitive::update, this, i, _1) );
+            auto cb = VRFunction<float>::create( "geo_prim_update", boost::bind(&VRGeoPrimitive::update, this, i, h, _1) );
+            h->configure(cb, VRHandle::LINEAR, d, L);
 
-        if (n == "Scale") h->configure(cb, VRHandle::LINEAR, Vec3d(1,0,0), 1, true);
-        if (n == "Size x") h->configure(cb, VRHandle::LINEAR, Vec3d(1,0,0), 0.5, true);
-        if (n == "Size y") h->configure(cb, VRHandle::LINEAR, Vec3d(0,1,0), 0.5, true);
-        if (n == "Size z") h->configure(cb, VRHandle::LINEAR, Vec3d(0,0,1), 0.5, true);
-        if (n == "Radius") h->configure(cb, VRHandle::LINEAR, Vec3d(1,0,0), 1, true);
-        if (n == "Height") {
-            h->configure(cb, VRHandle::LINEAR, Vec3d(0,1,0), 0.5, true);
-            if (type == "Arrow") h->configure(cb, VRHandle::LINEAR, Vec3d(0,0,1), 1, true);
-        }
-        if (n == "Width") h->configure(cb, VRHandle::LINEAR, Vec3d(1,0,0), 0.5, true);
-        if (n == "Trunc") h->configure(cb, VRHandle::LINEAR, Vec3d(1,0,0), 0.5, true);
-        if (n == "Hat") h->configure(cb, VRHandle::LINEAR, Vec3d(0,0,1), 1, true);
-        if (n == "Inner radius") h->configure(cb, VRHandle::LINEAR, Vec3d(0,1,0), 1, true);
-        if (n == "Outer radius") h->configure(cb, VRHandle::LINEAR, Vec3d(1,0,0), 0.5, true);
+            float v = toFloat(param);
+            h->set( Pose::create(), v );
+            string lbl = h->getBaseName() + " " + toString( v*1000, 4 ) + " mm";
+            auto a = h->getAxis();
+            auto o = h->getOrigin()->pos();
+            params_geo->set(i, (a*v*0.5 + o)*0.5, lbl);
 
-        if (n == "Hole") h->configure(cb, VRHandle::LINEAR, Vec3d(1,0,0), 1, true);
-        if (n == "Pitch") h->configure(cb, VRHandle::LINEAR, Vec3d(0,0,1), 2, true);
-        if (n == "Teeth size") h->configure(cb, VRHandle::LINEAR, Vec3d(0,1,0), 1, true);
-        if (n == "Bevel") h->configure(cb, VRHandle::LINEAR, Vec3d(1,1,0), 1, true);
-        if (n == "Length") h->configure(cb, VRHandle::LINEAR, Vec3d(0,0,1), 1, true);
+            if (symmetric) {
+                auto h2 = addHandle(-d,L,false);
+                h->addSibling(h2);
+                h2->addSibling(h);
+            }
+            return h;
+        };
 
-        float v = toFloat(param);
-        h->set( Pose::create(), v );
-        string lbl = h->getBaseName() + " " + toString( v*1000, 4 ) + " mm";
-        auto a = h->getAxis();
-        auto o = h->getOrigin()->pos();
-        params_geo->set(i, (a*v*0.5 + o)*0.5, lbl);
+        if (n == "Scale") addHandle(Vec3d(1,0,0), 1, false);
+        if (n == "Size x") addHandle(Vec3d(1,0,0), 0.5, true);
+        if (n == "Size y") addHandle(Vec3d(0,1,0), 0.5, true);
+        if (n == "Size z") addHandle(Vec3d(0,0,1), 0.5, true);
+        if (n == "Radius") addHandle(Vec3d(1,0,0), 1, false);
+        if (n == "Height" && type != "Arrow") addHandle(Vec3d(0,1,0), 0.5, false);
+        if (n == "Height" && type == "Arrow") addHandle(Vec3d(0,0,1), 1, false);
+        if (n == "Width") addHandle(Vec3d(1,0,0), 0.5, false);
+        if (n == "Trunc") addHandle(Vec3d(1,0,0), 0.5, false);
+        if (n == "Hat") addHandle(Vec3d(0,0,1), 1, false);
+        if (n == "Inner radius") addHandle(Vec3d(0,1,0), 1, false);
+        if (n == "Outer radius") addHandle(Vec3d(1,0,0), 0.5, false);
+        if (n == "Hole") addHandle(Vec3d(1,0,0), 1, false);
+        if (n == "Pitch") addHandle(Vec3d(0,0,1), 2, false);
+        if (n == "Teeth size") addHandle(Vec3d(0,1,0), 1, false);
+        if (n == "Bevel") addHandle(Vec3d(1,1,0), 1, false);
+        if (n == "Length") addHandle(Vec3d(0,0,1), 1, false);
     }
 }
 
-void VRGeoPrimitive::setPrimitive(string prim, string args) {
-    VRGeometry::setPrimitive(prim, args);
+void VRGeoPrimitive::setPrimitive(string params) {
+    VRGeometryPtr geo = geometry.lock();
+    if (!geo) {
+        geo = VRGeometry::create(name+"_geo");
+        addChild(geo);
+        geometry = geo;
+        ownsGeometry = true;
+    }
+    geo->setPrimitive(params);
     setupHandles(); // change primitive type
     select(true);
 }

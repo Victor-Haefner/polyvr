@@ -11,7 +11,7 @@
 #include "core/objects/VRLod.h"
 
 
-#include "core/objects/geometry/VRSprite.h"
+#include "core/objects/geometry/sprite/VRSprite.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/tools/VRTextureRenderer.h"

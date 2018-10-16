@@ -13,6 +13,9 @@
 #include <OpenSG/OSGThread.h>
 #include <OpenSG/OSGThreadManager.h>
 #include <OpenSG/OSGBarrier.h>
+#include <OpenSG/OSGClusterNetwork.h>
+#include <OpenSG/OSGGroupMCastConnection.h>
+#include <OpenSG/OSGGroupSockConnection.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -68,6 +71,10 @@ void VRMultiWindow::initialize() {
     //cout << " Render MW " << getName() << " state " << getStateString() << endl;
     win = 0; _win = 0; tries = 0; state = CONNECTING;
     win = MultiDisplayWindow::create(); _win = win;
+#ifdef WITH_CLUSTERING_FIX
+    win->setFrameCounting(false);
+#endif
+    OSG::setName( win, getName() );
 
     win->setSize(width, height);
     win->setHServers(Nx);
@@ -82,6 +89,38 @@ void VRMultiWindow::initialize() {
     //cout << endl << " render once " << endl;
     //if (state == CONNECTED) win->render(ract);
     cout << " done " << getStateString() << endl;
+}
+
+void OSG_render(WindowMTRecPtr _win, RenderActionRefPtr ract) {
+    auto win = dynamic_pointer_cast<MultiDisplayWindow>(_win);
+
+    win->activate();
+    win->frameInit();
+    win->renderAllViewports(ract);
+    if (win->getNetwork()->getMainConnection() && win->getNetwork()->getAspect()) {
+        Connection* connection = win->getNetwork()->getMainConnection();
+        GroupConnection* cgroup = win->getNetwork()->getMainGroupConnection(); // ok! :D
+        GroupMCastConnection* cmgroup = dynamic_cast<GroupMCastConnection*>(cgroup); // 0
+        GroupSockConnection* csgroup = dynamic_cast<GroupSockConnection*>(cgroup); // ok! :D
+
+        if(!win->getInterleave()) {
+            ChangeList* tCL = Thread::getCurrentChangeList();
+            //auto _pContainerChanges = win->getContainerChanges();
+            //ChangeList* pCL = _pContainerChanges->pList;
+
+            //cout << "A  " << pCL << " " << tCL << endl;
+            cgroup->wait(); // wait for all servers to finish
+            //cout << " B " << (pCL == tCL) << endl;
+
+            connection->signal(); // initiate swap
+        }
+
+        if (win->getClientWindow()) {
+            win->getClientWindow()->swap();
+            win->getClientWindow()->frameExit();
+        }
+    }
+    win->frameExit();
 }
 
 /**
@@ -99,8 +138,12 @@ void VRMultiWindow::render(bool fromThread) {
     }
 
     if (state == CONNECTED) {
-        try { _win->render(ract); }
-        catch(exception& e) { reset(); }
+        //try { OSG_render(_win, ract); }
+        try {
+            state = RENDERING;
+            _win->render(ract);
+            state = CONNECTED;
+        } catch(exception& e) { reset(); }
     }
 }
 
@@ -111,6 +154,7 @@ string VRMultiWindow::getConnectionType() { return connection_type; }
 
 string VRMultiWindow::getStateString() {
     if (state == CONNECTED) return "connected";
+    if (state == RENDERING) return "rendering";
     if (state == INITIALIZING) return "initializing";
     if (state == CONNECTING) return "connecting";
     if (state == JUSTCONNECTED) return "just connected";

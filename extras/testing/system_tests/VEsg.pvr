@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene base_name="VEsg" name_space="Scene" name_suffix="0" persistency="666">
+  <Objects>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="4294967295">
+      <Object ambient="0.57258 0.57258 0.57258 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="1" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="0 0 0 0 0 0 0" specular="0.1 0.1 0.1 1" type="Light" visible="4294967295">
+        <Object at="0.3 -1 -0.7" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="4294967295">
+          <constraint persistency="666"/>
+        </Object>
+        <Object accept_root="1" aspect="1" at="0.930222 0.328241 1.07928" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-6.46966 3.00257 1.70253" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+          <constraint persistency="666"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Rendering deferred_rendering="1" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="Script" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	#v = VR.getSetup().getView(1)
+	#v.testUpdate()
+	
+	#ids = [ 5341, 5342, 5343, 5344 ]
+	#ids = [ 5380, 5381, 5382 ]
+	ids = range(5197, 5201+1)
+	#ids = [ 5402, 5403, 5404, 5405, 5406 ]
+	#ids = [ 5558, 5559, 5560, 5561 ]
+	VR.runTest('debugFields '+' '.join([str(i) for i in ids]))
+</core>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="102" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
+    </Script>
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR, datetime
+	
+	pi = 3.14
+
+	if hasattr(VR, 'scene'): VR.scene.destroy()
+	VR.scene = VR.Object('scene', 'light')
+
+	def addObj(name, params, pos, color, parent):
+		o = VR.Geometry(name)
+		o.setPrimitive(params)
+		parent.addChild(o)
+		o.setFrom(pos)
+		
+		m = VR.Material(name)
+		m.setDiffuse(color)
+		o.setMaterial(m)
+		o.setPickable(True)
+		return o
+		
+	ground = addObj('ground', 'Box 3.2 0.2 3.2 5 1 5', [0,-0.6,0], [0.5,0.5,0.5], VR.scene)
+	cube = addObj('cube', 'Box 1 1 1 1 1 1', [-1,0.6,-1], [0.7,0.7,0.7], ground)
+	ball = addObj('ball', 'Sphere 0.5 2', [2,0,0], [0.7,0.7,0.7], cube)
+	ring = addObj('ring', 'Torus 0.1 0.4 16 16', [1,0.6,1], [0.7,0.7,0.7], ground)
+	gear = addObj('gear', 'Gear 0.2 0.2 0.1 30 0.05 0', [-2,0,0], [0.7,0.7,0.7], ring)
+	
+	print 'init', datetime.datetime.now()
+	
+	
+	
+	
+</core>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="update" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	#VR.init()
+</core>
+      <trig type="on_timeout" dev="" state="Pressed" param="100" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
+    </Script>
+  </Scripts>
+  <Sockets persistency="666"/>
+  <Background color="0.733577 0.363195 0.363195" format=".png" path="" persistency="666" type="0"/>
+  <Navigation active="Orbit" persistency="666"/>
+  <Materials persistency="666"/>
+  <Semantics persistency="666"/>
+</Scene>

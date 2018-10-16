@@ -4,20 +4,23 @@
 #include "core/objects/VRObjectFwd.h"
 #include "core/tools/VRToolsFwd.h"
 #include "core/tools/selection/VRSelectionFwd.h"
-#include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/VRTransform.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRGeoPrimitive : public VRGeometry {
+class VRGeoPrimitive : public VRTransform {
     private:
         bool selected = false;
+        bool ownsGeometry = false;
+        float size = 0.1;
 
         vector<VRHandlePtr> handles;
         VRSelectorPtr selector;
+        VRGeometryWeakPtr geometry;
         VRAnnotationEnginePtr params_geo;
 
-        void update(int i, float v);
+        void update(int i, VRHandleWeakPtr hw, float v);
         void setupHandles();
 
     public:
@@ -30,8 +33,10 @@ class VRGeoPrimitive : public VRGeometry {
         vector<VRHandlePtr> getHandles();
 
         void select(bool b); // activates editing handles
+        void setHandleSize(float size);
 
-        void setPrimitive(string primitive, string args = ""); // hook on virtual function VRGeometry::setPrimitive
+        void setGeometry(VRGeometryPtr geo);
+        void setPrimitive(string params);
         VRAnnotationEnginePtr getLabels();
 };
 

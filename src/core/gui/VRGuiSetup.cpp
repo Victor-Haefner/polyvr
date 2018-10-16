@@ -338,7 +338,7 @@ string VRGuiSetup::setupDir() { return VRSceneManager::get()->getOriginalWorkdir
 
 void VRGuiSetup::on_new_clicked() {
     guard = true;
-    current_setup = VRSetupManager::get()->create();
+    current_setup = VRSetupManager::get()->newSetup();
 
     on_save_clicked();
     // remember setup

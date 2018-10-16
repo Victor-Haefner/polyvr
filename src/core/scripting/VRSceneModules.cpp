@@ -149,7 +149,8 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyTriangulator>("Triangulator", pModVR);
     sm->registerModule<VRPyRecorder>("Recorder", pModVR);
     sm->registerModule<VRPyProjectManager>("ProjectManager", pModVR, VRPyObject::typeRef);
-    sm->registerModule<VRPyGeoPrimitive>("GeoPrimitive", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPyHandle>("Handle", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPyGeoPrimitive>("GeoPrimitive", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyStorage>("Storage", pModVR);
     sm->registerModule<VRPySnappingEngine>("SnappingEngine", pModVR);
     sm->registerModule<VRPyAnnotationEngine>("AnnotationEngine", pModVR, VRPyGeometry::typeRef);
@@ -209,16 +210,16 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyMolecule>("Molecule", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyCrystal>("Crystal", pModVR, VRPyMolecule::typeRef);
     sm->registerModule<VRPyRobotArm>("RobotArm", pModVR);
-    sm->registerModule<VRPyOntology>("Ontology", pModVR);
+    sm->registerModule<VRPyOntology>("Ontology", pModVR, VRPyName::typeRef);
     sm->registerModule<VRPyProcess>("Process", pModVR);
     sm->registerModule<VRPyProcessNode>("ProcessNode", pModVR);
     sm->registerModule<VRPyProcessDiagram>("ProcessDiagram", pModVR, VRPyGraph::typeRef);
     sm->registerModule<VRPyProcessLayout>("ProcessLayout", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyProcessEngine>("ProcessEngine", pModVR);
     sm->registerModule<VRPyOntologyRule>("OntologyRule", pModVR);
-    sm->registerModule<VRPyProperty>("Property", pModVR);
-    sm->registerModule<VRPyConcept>("Concept", pModVR);
-    sm->registerModule<VRPyEntity>("Entity", pModVR);
+    sm->registerModule<VRPyProperty>("Property", pModVR, VRPyName::typeRef);
+    sm->registerModule<VRPyConcept>("Concept", pModVR, VRPyName::typeRef);
+    sm->registerModule<VRPyEntity>("Entity", pModVR, VRPyName::typeRef);
     sm->registerModule<VRPyReasoner>("Reasoner", pModVR);
 
     sm->registerModule<VRPyHandGeo>("HandGeo", pModVR, VRPyGeometry::typeRef);

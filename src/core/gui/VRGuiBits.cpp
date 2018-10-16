@@ -57,6 +57,7 @@ void VRGuiBits::on_view_option_toggle(VRVisualLayer* l, Gtk::ToggleToolButton* t
 }
 
 void VRGuiBits::on_camera_changed() {
+    if (update_ward) return;
     string name = getComboboxText("combobox4");
     auto scene = VRScene::getCurrent();
     scene->setActiveCamera(name);
@@ -319,7 +320,7 @@ void VRGuiBits::updateVisualLayer() {
 }
 
 void VRGuiBits::update() { // scene changed
-    cout << "VRGuiBits::update" << endl;
+    update_ward = true;
     auto scene = VRScene::getCurrent();
     setLabel("label24", "Project: None");
     if (scene == 0) return;
@@ -334,6 +335,7 @@ void VRGuiBits::update() { // scene changed
     setLabel("label24", "Project: " + scene->getName());
 
     updateVisualLayer();
+    update_ward = false;
 }
 
 OSG_END_NAMESPACE;

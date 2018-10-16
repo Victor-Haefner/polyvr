@@ -18,6 +18,7 @@
 #include "core/utils/VRTimer.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRProgress.h"
+#include "core/utils/system/VRSystem.h"
 #include <libxml++/nodes/element.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -63,6 +64,7 @@ VRScene::VRScene() {
 
 VRScene::~VRScene() {
     //kill physics thread
+    cout << "VRScene::~VRScene " << name << endl;
     VRThreadManager::stopThread(physicsThreadID);
     root->destroy();
     VRGroup::clearGroups();
@@ -76,7 +78,7 @@ VRScene::~VRScene() {
 VRScenePtr VRScene::getCurrent() { return VRSceneManager::get()->getCurrent(); }
 
 void VRScene::initDevices() { // TODO: remove this after refactoring the navigation stuff
-    VRSetupPtr setup = VRSetup::getCurrent();
+    auto setup = VRSetup::getCurrent();
     if (!setup) return;
 
     VRMousePtr mouse = dynamic_pointer_cast<VRMouse>( setup->getDevice("mouse") );
@@ -150,8 +152,9 @@ VRObjectPtr VRScene::get(string name) {
 
 void VRScene::setActiveCamera(string camname) {
     cout << "set active camera: " << camname << endl;
+    //printBacktrace();
     setMActiveCamera(camname);
-    VRSetupPtr setup = VRSetup::getCurrent();
+    auto setup = VRSetup::getCurrent();
 
     // TODO: refactor the following workaround
     VRCameraPtr cam = getActiveCamera();
@@ -251,6 +254,7 @@ void mkPath(string path) {
 void VRScene::saveScene(xmlpp::Element* e) {
     if (e == 0) return;
     VRName::save(e);
+    VRCameraManager::saveUnder(e);
     VRRenderManager::saveUnder(e);
     VRScriptManager::saveUnder(e);
     VRNetworkManager::saveUnder(e);
@@ -282,6 +286,7 @@ void VRScene::loadScene(xmlpp::Element* e) {
     loadingProgressThread = VRSceneManager::get()->initThread(loadingProgressThreadCb, "loading progress thread", true, 1);
 
     VRName::load(e);
+    VRCameraManager::loadChildFrom(e);
     VRRenderManager::loadChildFrom(e);
     VRScriptManager::loadChildFrom(e);
     VRNetworkManager::loadChildFrom(e);
@@ -290,6 +295,7 @@ void VRScene::loadScene(xmlpp::Element* e) {
     VRMaterialManager::loadChildFrom(e);
     semanticManager->loadChildFrom(e);
 
+    VRCameraManager::CMsetup();
     VRRenderManager::update();
     VRScriptManager::update();
     VRNetworkManager::update();

@@ -86,8 +86,8 @@ class VRView : public std::enable_shared_from_this<VRView> {
         VRTransformPtr real_root;
         VRTransformPtr user;
         VRTransformPtr dummy_user;
+        VRTransformPtr mirror_user;
         string user_name;
-        VRGlobals::Int lastMirrored = -1;
         VRCameraPtr cam;
 
         BackgroundMTRecPtr background;
@@ -178,6 +178,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
 
         void update();
         void reset();
+        void testUpdate();
 
         void setFotoMode(bool b);
         VRTexturePtr grab();

@@ -160,6 +160,7 @@ template<> string typeName(const Vec3d& t) { return "Vec3d"; }
 template<> string typeName(const Vec4d& t) { return "Vec4d"; }
 template<> string typeName(const Vec2i& t) { return "Vec2i"; }
 template<> string typeName(const Vec3i& t) { return "Vec3i"; }
+template<> string typeName(const Vec4i& t) { return "Vec4i"; }
 template<> string typeName(const Matrix4d& t) { return "Matrix"; }
 template<> string typeName(const Color3f& t) { return "Vec3d"; }
 template<> string typeName(const Color4f& t) { return "Vec4d"; }

@@ -135,8 +135,12 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 if (Nin > Nout &&  left && j == Nin-i-1) { return true; }
                 if (Nin > Nout && !left && i == j) { return true; }
             }
+            if (Nout == 1 || Nin == 1){
+                return true;
+            }
             //match case A - split ways one left one right
             //match case B - split both ways, two left two right
+            cout << toString(node->getValue<int>("graphID", -1)) << endl;
             return false;
         };
 
@@ -252,6 +256,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto node2 = nodes[nodes.size()-1]->getEntity("node");
                 auto edgeID = graph->getEdgeID(node1->getValue<int>("graphID", -1),node2->getValue<int>("graphID", -1));
                 inIDs.push_back(edgeID);
+                //cout << "---inID " << toString(edgeID) << endl;
 
                 if (processedLanes.count(laneIn)) continue;
                 //auto nodes = laneIn->getEntity("path")->getAllEntities("nodes");
@@ -268,6 +273,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto node2 = nodes[1]->getEntity("node");
                 auto edgeID = graph->getEdgeID(node1->getValue<int>("graphID", -1),node2->getValue<int>("graphID", -1));
                 ouIDs.push_back(edgeID);
+                //cout << "---ouIDs " << toString(edgeID) << endl;
 
                 if (processedLanes.count(laneOut)) continue;
                 VREntityPtr node = laneOut->getEntity("path")->getAllEntities("nodes")[0]->getEntity("node");
@@ -280,15 +286,19 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             oul.push_back(ouIDs);
         }
         for (int i = 0; i < inl.size(); i++) {
+            if (inl[i].size()>1) graph->getEdge(inl[i][0]).relations.clear();
             for (int k = 1; k < inl[i].size(); k++) {
                 graph->getEdge(inl[i][k]).relations.clear();
                 graph->addRelation(inl[i][k],inl[i][k-1]);
+                //cout << "rel: in " << toString(i) << " " << toString(inl[i][k]) << " -- " << toString(inl[i][k-1]) << endl;
             }
         }
         for (int i = 0; i < oul.size(); i++) {
+            if (oul[i].size()>1) graph->getEdge(oul[i][0]).relations.clear();
             for (int k = 1; k < oul[i].size(); k++) {
                 graph->getEdge(oul[i][k]).relations.clear();
                 graph->addRelation(oul[i][k],oul[i][k-1]);
+                //cout << "rel: out " << toString(i) << " " << toString(oul[i][k]) << " -- " << toString(oul[i][k-1]) << endl;
             }
         }
 	};
@@ -342,7 +352,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto norm1 = nodeEnt1->getVec3("direction");
                 auto node2 = nodes2[1]->getEntity("node");  //second node of roadOut
                 auto norm2 = nodes2[1]->getVec3("direction");
-
+                cout << "in" << toString(node1->getValue<int>("graphID", -1)) << endl;
                 auto nodeToDelete = nodeEnt2->getEntity("node");
                 auto tempID=nodeToDelete->getValue<int>("graphID", -1);
                 //cout << tempID << " node removed -- NIN<NOUT" << endl;
@@ -362,7 +372,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto norm1 = nodes1[nodes1.size()-2]->getVec3("direction");
                 auto node2 = nodeEnt2->getEntity("node");;
                 auto norm2 = nodeEnt2->getVec3("direction");
-
+                cout << "ot" << toString(node2->getValue<int>("graphID", -1)) << endl;
                 auto nodeToDelete = nodeEnt1->getEntity("node");
                 auto tempID=nodeToDelete->getValue<int>("graphID", -1);
                 //cout << tempID << " node removed -- NIN<NOUT" << endl;
@@ -411,7 +421,6 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto node2 = nodes[nodes.size()-1]->getEntity("node");
                 auto edgeID = graph->getEdgeID(node1->getValue<int>("graphID", -1),node2->getValue<int>("graphID", -1));
                 inIDs.push_back(edgeID);
-
                 /*if (processedLanes.count(laneIn)) continue;
                 //auto nodes = laneIn->getEntity("path")->getAllEntities("nodes");
                 VREntityPtr node = (*nodes.rbegin())->getEntity("node");
@@ -428,7 +437,6 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto node2 = nodes[1]->getEntity("node");
                 auto edgeID = graph->getEdgeID(node1->getValue<int>("graphID", -1),node2->getValue<int>("graphID", -1));
                 ouIDs.push_back(edgeID);
-
                 /*if (processedLanes.count(laneOut)) continue;
                 VREntityPtr node = laneOut->getEntity("path")->getAllEntities("nodes")[0]->getEntity("node");
                 auto p = node->getVec3("position");
@@ -441,12 +449,14 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             oul.push_back(ouIDs);
         }
         for (int i = 0; i < inl.size(); i++) {
+            if (inl[i].size()>1) graph->getEdge(inl[i][0]).relations.clear();
             for (int k = 1; k < inl[i].size(); k++) {
                 graph->getEdge(inl[i][k]).relations.clear();
                 graph->addRelation(inl[i][k],inl[i][k-1]);
             }
         }
         for (int i = 0; i < oul.size(); i++) {
+            if (oul[i].size()>1) graph->getEdge(oul[i][0]).relations.clear();
             for (int k = 1; k < oul[i].size(); k++) {
                 graph->getEdge(oul[i][k]).relations.clear();
                 graph->addRelation(oul[i][k],oul[i][k-1]);
@@ -549,17 +559,17 @@ VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d 
         green = dynamic_pointer_cast<VRGeometry>( geo->find("Green") );
     } else {
         auto box = VRGeometry::create("trafficLight");
-        box->setPrimitive("Box", "0.2 0.2 0.6 1 1 1");
+        box->setPrimitive("Box 0.2 0.2 0.6 1 1 1");
         box->setColor("grey");
         geo = box;
         red = VRGeometry::create("trafficLight");
-        red->setPrimitive("Sphere", "0.115 2");
+        red->setPrimitive("Sphere 0.115 2");
         box->addChild(red);
         orange = VRGeometry::create("trafficLight");
-        orange->setPrimitive("Sphere", "0.115 2");
+        orange->setPrimitive("Sphere 0.115 2");
         box->addChild(orange);
         green = VRGeometry::create("trafficLight");
-        green->setPrimitive("Sphere", "0.115 2");
+        green->setPrimitive("Sphere 0.115 2");
         box->addChild(green);
         red->translate(Vec3d(0, 0, 0.2));
         green->translate(Vec3d(0, 0, -0.2));

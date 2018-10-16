@@ -63,12 +63,12 @@ void VRManipulator::setup() {
     gRX = VRGeometry::create("gRX");
     gRY = VRGeometry::create("gRY");
     gRZ = VRGeometry::create("gRZ");
-    gTX->setPrimitive("Box", "0.1 0.02 0.02 1 1 1");
-    gTY->setPrimitive("Box", "0.02 0.1 0.02 1 1 1");
-    gTZ->setPrimitive("Box", "0.02 0.02 0.1 1 1 1");
-    gRX->setPrimitive("Torus", "0.01 0.07 4 16");
-    gRY->setPrimitive("Torus", "0.01 0.07 4 16");
-    gRZ->setPrimitive("Torus", "0.01 0.07 4 16");
+    gTX->setPrimitive("Box 0.1 0.02 0.02 1 1 1");
+    gTY->setPrimitive("Box 0.02 0.1 0.02 1 1 1");
+    gTZ->setPrimitive("Box 0.02 0.02 0.1 1 1 1");
+    gRX->setPrimitive("Torus 0.01 0.07 4 16");
+    gRY->setPrimitive("Torus 0.01 0.07 4 16");
+    gRZ->setPrimitive("Torus 0.01 0.07 4 16");
     gRX->setDir(Vec3d(1,0,0));
     gRY->setDir(Vec3d(0,1,0));
     gRY->setUp(Vec3d(1,0,0));
@@ -99,7 +99,7 @@ VRPathtool::VRPathtool() : VRObject("Pathtool") {
     lsmat->setLineWidth(3);
 
     arrowTemplate = VRGeometry::create("arrow");
-    arrowTemplate->setPrimitive("Arrow", "2 3 3 1.5 1.2");
+    arrowTemplate->setPrimitive("Arrow 2 3 3 1.5 1.2");
     arrowTemplate->setMaterial(lmat);
 
     storeObj("handle", customHandle);
@@ -133,7 +133,7 @@ void VRPathtool::setGraph(GraphPtr g, bool doClear) {
     if (doClear) clear();
     graph = g;
 
-    for (int i=0; i<g->size(); i++) setGraphNode(i);
+    for (auto& n : g->getNodes()) setGraphNode(n.first);
     for (auto& e : g->getEdges()) setGraphEdge(e.second);
 }
 
@@ -146,15 +146,19 @@ int VRPathtool::addNode(PosePtr p) {
 
 VRGeometryPtr VRPathtool::addHandle(int nID, PosePtr p) {
     if (!graph) return 0;
+    auto h = setGraphNode(nID);
+    setHandlePose(nID, p);
+    return h;
+}
 
-    auto tmp = VRTransform::create("tmp");
+void VRPathtool::setHandlePose(int nID, PosePtr p) {
+    auto h = getHandle(nID);
+    /*auto tmp = VRTransform::create("tmp");
     tmp->setPose(p);
     p = tmp->getRelativePose(ptr());
-
-    graph->setPosition(nID, p);
-    auto h = setGraphNode(nID);
-    h->setPose(p);
-    return h;
+    if (h) h->setPose(p);*/
+    if (h) h->setWorldPose(p);
+    if (graph) graph->setPosition(nID, p);
 }
 
 void VRPathtool::removeNode(int i) {
@@ -229,9 +233,13 @@ void VRPathtool::connect(int i1, int i2, Vec3d n1, Vec3d n2, bool handles, bool 
 
     if (!graph->connected(i1,i2)) {
         int eID = graph->connect(i1,i2);
+        cout << "VRPathtool::connect " << i1 << " with " << i2 << ", eID" << eID << endl;
         auto& e = graph->getEdge(eID);
         setGraphEdge(e, handles, doArrow, n1, n2);
-    } else disconnect(i1,i2);
+    } else {
+        cout << "VRPathtool::disconnect " << i1 << " with " << i2 << "!" << endl;
+        disconnect(i1,i2);
+    }
 }
 
 void VRPathtool::setGraphEdge(Graph::edge& e, bool handles, bool doArrow) {
@@ -274,9 +282,10 @@ VRGeometryPtr VRPathtool::setGraphNode(int i) {
 void VRPathtool::update() { // call in script to have smooth knots
     if (graph) { // smooth knot transformations
         map<int, Vec3d> hPositions; // get handle positions
-        for (uint i=0; i<knots.size(); i++)
-            //if (auto h = knots[i].handle.lock()) hPositions[i] = h->getRelativePosition(ptr());
-            if (auto h = knots[i].handle.lock()) hPositions[i] = h->getWorldPosition();
+        for (auto& knot : knots) {
+            auto h = knot.second.handle.lock();
+            if (h) hPositions[knot.first] = h->getWorldPosition();
+        }
 
         for (auto& knot : knots) { // compute and set direction of handles
             auto h = knot.second.handle.lock();
@@ -486,7 +495,7 @@ PathPtr VRPathtool::newPath( VRDevicePtr dev, VRObjectPtr anchor, int resolution
 VRGeometryPtr VRPathtool::newControlHandle(VRGeometryPtr handle, Vec3d p) {
     VRGeometryPtr h;
     h = VRGeometry::create("handle");
-    h->setPrimitive("Sphere", "0.04 2");
+    h->setPrimitive("Sphere 0.04 2");
     handle->addChild(h);
 
     h->setPickable(true);
@@ -507,7 +516,7 @@ VRGeometryPtr VRPathtool::newHandle() {
         h = static_pointer_cast<VRGeometry>( customHandle->duplicate() );
     } else {
         h = VRGeometry::create("handle");
-        h->setPrimitive("Torus", "0.04 0.15 3 4");
+        h->setPrimitive("Torus 0.04 0.15 3 4");
     }
 
     h->setPickable(true);
@@ -521,6 +530,8 @@ VRGeometryPtr VRPathtool::newHandle() {
 }
 
 VRGeometryPtr VRPathtool::getHandle(int ID) {
+    //cout << "VRPathtool::getHandle ID: " << ID << " knots:" << endl;
+    //for (auto k : knots) cout << " knot ID: " << k.first << " knot handle: " << k.second.handle.lock() << endl;
     return knots[ID].handle.lock();
 }
 

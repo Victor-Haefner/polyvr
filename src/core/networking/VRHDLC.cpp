@@ -15,6 +15,12 @@
 #include <asm/ioctls.h>
 #include <asm/termbits.h>
 
+#include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiConsole.h"
+
+#define WARN(x) \
+VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
+
 using namespace OSG;
 
 int VRSerial::set_interface_attribs (int fd, int speed, int parity) {
@@ -73,7 +79,12 @@ int VRSerial::set_interface_attribs (int fd, int speed, int parity) {
 
 VRSerial::VRSerial(string interfaceName) {
     fd = open(interfaceName.c_str(), O_RDWR | O_NOCTTY | O_SYNC | O_NONBLOCK);
-    if (fd < 0) { cout << "Connecting to VRSerial port " << interfaceName << " failed!\n"; return; }
+    if (fd < 0) {
+        cout << "Connecting to VRSerial port " << interfaceName << " failed!\n";
+        cout << " Reason: " << strerror(errno) << endl;
+        WARN( string("Serial connection to " + interfaceName + " failed with '") + strerror(errno) + "'");
+        return;
+    }
     set_interface_attribs(fd, 256000, 0);  // set speed to 115,200 bps, 8n1 (no parity)
 }
 
@@ -135,6 +146,7 @@ void VRHDLC::connect() {
     if (serial) {
         cout << "Connected to " << interfaceName << endl;
         idle = false;
+        lastInput = time(0);
     }
 }
 
@@ -148,7 +160,7 @@ size_t VRHDLC::getLastInput() { return time(0) - lastInput; }
 
 void VRHDLC::handleData() {
     if (verbose) cout << endl << "handleData: " << VRSerial::asHexRepr(serialData) << endl;
-    (*callback)(serialData);
+    if (callback) (*callback)(serialData);
     serialData.clear();
 }
 
@@ -188,7 +200,7 @@ bool VRHDLC::process(vector<unsigned char> input) {
     buffer.clear();
     idle = (bytes.size() == 0);
     if (bytes.size() == 0) return true;
-    //cout << " " << asHexRepr(input) << endl;
+    //cout << " " << VRSerial::asHexRepr(input) << endl;
     if (verbose) cout << "A read data! " << serialState << " " << bytes.size() << " " << VRSerial::asHexRepr(bytes) << endl;
     for (unsigned int i = 0; i<bytes.size(); i++) {
         auto b = bytes[i];
@@ -243,7 +255,7 @@ void VRHDLC::sendData(vector<unsigned char> data, bool doWait) {
     }
     tmp = VRSerial::concat( VRSerial::concat({0x7E}, tmp) , {0x7E} );
     //if (verbose) cout << " serial send (" << tmp.size() << "): " << asHexRepr( tmp ) << endl;
-    cout << " serial send (" << tmp.size() << "): " << VRSerial::asHexRepr( tmp ) << endl;
+    //cout << " serial send (" << tmp.size() << "): " << VRSerial::asHexRepr( tmp ) << endl;
     serial->write(tmp);
     if (doWait) waitForMessage();
 }

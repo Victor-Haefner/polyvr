@@ -76,7 +76,7 @@ VRTrafficSimulation::VRTrafficSimulation() : VRObject("TrafficSimulation") {
     VRScene::getCurrent()->addUpdateFkt(updateCb);
 
     auto box = VRGeometry::create("boxCar");
-    box->setPrimitive("Box", "2 1.5 4 1 1 1");
+    box->setPrimitive("Box 2 1.5 4 1 1 1");
     addVehicleModel(box);
 
     auto setupLightMaterial = [&](string name, Color3f c, bool lit) {
@@ -909,6 +909,28 @@ string VRTrafficSimulation::getVehicleData(int ID){
     res+= nl + " position: " + toString(v.t->getFrom());
     res+= nl + " vehiclesight: " + nl +  " INFRONT:" + toString(v.vehiclesight[v.INFRONT]) + " FROMLEFT: " + toString(v.vehiclesight[v.FROMLEFT]) + " FROMRIGHT:" + toString(v.vehiclesight[v.FROMRIGHT]);
 
+    return res;
+}
+
+string VRTrafficSimulation::getEdgeData(int ID){
+    string res = "";
+    string nextEdges = "next Edges: ";
+    string prevEdges = "prev Edges: ";
+    string edgeNeighbors = "Relations: ";
+    string nl = "\n ";
+    auto graph = roadNetwork->getGraph();
+    if (!graph->hasEdge(ID)) { return "Road "+toString(ID)+" does not exist in network"; }
+
+    auto& edge = graph->getEdge(ID);
+
+    for (auto nn : graph->getRelations(ID)) { edgeNeighbors +=" " + toString(nn); }
+    for (auto nn : graph->getPrevEdges(edge)) { prevEdges +=" " + toString(nn.ID); }
+    for (auto nn : graph->getNextEdges(edge)) { nextEdges +=" " + toString(nn.ID); }
+
+    res+="Road " + toString(ID) + nl;
+    res+=edgeNeighbors + nl;
+    res+=prevEdges + nl;
+    res+=nextEdges;
     return res;
 }
 

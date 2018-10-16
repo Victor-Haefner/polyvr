@@ -45,6 +45,7 @@ class VRWindowManager {
         void pauseRendering(bool b);
         RenderActionRefPtr getRenderAction();
         void updateWindows();
+        void stopWindows();
 
         VRGtkWindowPtr getEditorWindow();
 

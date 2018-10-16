@@ -18,12 +18,13 @@ unsigned int VRWindow::active_window_count = 0;
 VRWindow::VRWindow() {
     active_window_count++;
     string n = getName();
-    winThread = VRFunction< VRThreadWeakPtr >::create("VRWindow", boost::bind(&VRWindow::update, this, _1) );
+    winThread = VRThreadCb::create("VRWindow", boost::bind(&VRWindow::update, this, _1) );
     thread_id = VRSceneManager::get()->initThread(winThread,"window_"+n,true,0);
 }
 
 VRWindow::~VRWindow() {
-    VRSceneManager::get()->stopThread(thread_id);
+    cout << " VRWindow::~VRWindow\n";
+    if (auto sm = VRSceneManager::get()) sm->stopThread(thread_id);
     _win = NULL;
     active_window_count--;
 }
@@ -47,6 +48,7 @@ void VRWindow::remView(VRViewPtr view) {
     }
 }
 
+void VRWindow::stop() { stopping = true; }
 void VRWindow::setAction(RenderActionRefPtr ract) { this->ract = ract; }
 bool VRWindow::hasType(int i) { return (i == type); }
 Vec2i VRWindow::getSize() { return Vec2i(width, height); }
@@ -76,22 +78,34 @@ void VRWindow::update( weak_ptr<VRThread>  wt) {
         t = wt.lock();
         BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
 
+        auto wait = [&]() {
+            waitingAtBarrier = true;
+            barrier->enter(active_window_count+1);
+            waitingAtBarrier = false;
+            if (stopping) return true;
+            return false;
+        };
+
         if (t->control_flag) {
-            barrier->enter(active_window_count+1);
-            barrier->enter(active_window_count+1);
+            if (wait()) break;
+            /** let the window manager initiate multi windows if necessary **/
+            if (wait()) break;
             auto appCL = t->appThread->getChangeList();
             auto clist = Thread::getCurrentChangeList();
             clist->merge(*appCL);
-            //if (clist->getNumCreated() > 0 || clist->getNumChanged() > 0) cout << "VRWindow::update " << name << " " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
-            barrier->enter(active_window_count+1);
+            //if (clist->getNumCreated() > 0) cout << "VRWindow::update " << name << " " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
+            if (wait()) break;
             render(true);
             clist->clear();
-            barrier->enter(active_window_count+1);
+            if (wait()) break;
         }
 
         osgSleep(1);
     } while(t && t->control_flag);
+    cout << "VRWindow::update done" << endl;
 }
+
+bool VRWindow::isWaiting() { return waitingAtBarrier; }
 
 bool VRWindow::isActive() { return active; }
 void VRWindow::setActive(bool b) { active = b; }
