@@ -3,7 +3,7 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRGlobals.h"
 #include "core/objects/material/VRMaterial.h"
-#include "core/objects/geometry/VRConstraint.h"
+#include "core/math/kinematics/VRConstraint.h"
 #include "core/math/pose.h"
 #include <boost/bind.hpp>
 

@@ -5,11 +5,11 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/OSGGeometry.h"
-#include "core/objects/geometry/VRConstraint.h"
 #include "core/objects/geometry/VRStroke.h"
 #include "core/utils/VRVisualLayer.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/VRRate.h"
+#include "core/math/kinematics/VRConstraint.h"
 #include "core/math/pose.h"
 
 #include <OpenSG/OSGTriangleIterator.h>

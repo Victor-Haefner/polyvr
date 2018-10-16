@@ -8,8 +8,8 @@
 #include "VRPyMath.h"
 #include "VRPyBaseT.h"
 #include "core/objects/geometry/VRPhysics.h"
-#include "core/objects/geometry/VRConstraint.h"
 #include "core/objects/VRAnimation.h"
+#include "core/math/kinematics/VRConstraint.h"
 #include "core/setup/devices/VRIntersect.h"
 
 using namespace OSG;
