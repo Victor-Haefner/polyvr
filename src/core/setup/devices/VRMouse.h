@@ -11,6 +11,7 @@ using namespace std;
 class VRMouse : public VRDevice {
     private:
 
+        // TODO: Camera Pointer is not updated if the camera of the view
         VRCameraWeakPtr cam;
         VRViewWeakPtr view;
         Line ray;

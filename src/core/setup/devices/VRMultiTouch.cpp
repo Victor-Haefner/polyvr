@@ -319,7 +319,7 @@ bool VRMultiTouch::calcViewRay(VRCameraPtr cam, VRViewPtr view, Line &line, floa
     w = view->getViewportL()->calcPixelWidth();
     h = view->getViewportL()->calcPixelHeight();
 
-    cout << "VRMultiTouch::calcViewRay. w,h: " << Vec2i(w,h) << endl;
+//    cout << "VRMultiTouch::calcViewRay. w,h: " << Vec2i(w,h) << endl;
 
     if (w <= 0 || h <= 0) return false;
 
