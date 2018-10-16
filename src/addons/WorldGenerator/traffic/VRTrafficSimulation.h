@@ -133,6 +133,7 @@ class VRTrafficSimulation : public VRObject {
         int numUnits = 0;
         size_t nID = -1;
         int stopVehicleID = -1;
+        int deleteVehicleID = -1;
         bool isSimRunning = true;
         bool isShowingVehicleVision = false;
         bool isShowingGraph = false;
@@ -197,6 +198,7 @@ class VRTrafficSimulation : public VRObject {
         string getEdgeData(int ID);
         void runDiagnostics();
         void stopVehicle(int ID);
+        void deleteVehicle(int ID);
         void setSeedRoad(int debugOverRideSeedRoad);
         void setSeedRoadVec(vector<int> forceSeedRoads);
         bool isSeedRoad(int roadID);

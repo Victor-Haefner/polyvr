@@ -30,5 +30,6 @@ PyMethodDef VRPyTrafficSimulation::methods[] = {
     {"showVehicVision", PyWrap( TrafficSimulation, showVehicVision, "showVehicVision", void ) },
     {"hideVehicVision", PyWrap( TrafficSimulation, hideVehicVision, "hideVehicVision", void ) },
     {"stopVehicle", PyWrap( TrafficSimulation, stopVehicle, "stopVehicle", void, int ) },
+    //{"deleteVehicle", PyWrap( TrafficSimulation, deleteVehicle, "deleteVehicle", void, int ) },
     {NULL}  /* Sentinel */
 };

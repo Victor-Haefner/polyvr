@@ -521,6 +521,10 @@ void VRTrafficSimulation::updateSimulation() {
         return res;
     };
 
+    auto computePerception = [&](Vehicle& vehicle) {
+
+    };
+
     auto propagateVehicles = [&]() {
         int N = 0;
         float current = float(glutGet(GLUT_ELAPSED_TIME)*0.001);
@@ -530,6 +534,11 @@ void VRTrafficSimulation::updateSimulation() {
             for (auto& ID : road.second.vehicleIDs) {
                 auto& vehicle = vehicles[ID.first];
                 if (!vehicle.t) continue;
+
+                computePerception(vehicle);
+                //computeDecision(vehicle);
+                //computeAction(vehicle);
+
                 vehicle.vehiclesight.clear();
                 if (isSimRunning){
                     vehicle.vehiclesightFar.clear();
@@ -863,6 +872,7 @@ void VRTrafficSimulation::updateSimulation() {
                 }
             }
         }
+        if (deleteVehicleID > -1) deleteVehicleID = -1;
     };
 
     auto resolveLaneChanges = [&]() {
@@ -1508,6 +1518,10 @@ void VRTrafficSimulation::setSeedRoad(int debugOverRideSeedRoad){
 void VRTrafficSimulation::stopVehicle(int ID){
     if ( stopVehicleID < 0 ) stopVehicleID = ID;
     else stopVehicleID = -1;
+}
+void VRTrafficSimulation::deleteVehicle(int ID){
+    if ( deleteVehicleID < 0 ) deleteVehicleID = ID;
+    else deleteVehicleID = -1;
 }
 
 void VRTrafficSimulation::setSeedRoadVec(vector<int> forceSeedRoads){
