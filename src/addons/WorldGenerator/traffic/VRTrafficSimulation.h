@@ -62,10 +62,16 @@ class VRTrafficSimulation : public VRObject {
             float targetVelocity;
             float maxAcceleration;
             float maxDecceleration;
-            float Acceleration;
-            float Decceleration;
-            float DistanceToNextSignal;
-            float DistanceToNextIntersec;
+            float acceleration;
+            float decceleration;
+
+            ///Perception
+            float distanceToNextSignal;
+            float distanceToNextIntersec;
+            string nextSignalState; //"000" - red|organge|green
+            bool signalAhead;
+
+            ///Behavior
             Vec3d lastMove;
             Vec3d currentOffset;
             Vec3d currentdOffset;
@@ -77,6 +83,7 @@ class VRTrafficSimulation : public VRObject {
             int behavior = 0; //0 = straight, 1 = left, 2 = right
             int currentState = 0; //1 = leaving lane, -1 = coming onto lane
             bool laneTransition = true;
+            bool turnAtIntersec = false;
             bool isUser = false;
             bool collisionDetected;
             VRRoadIntersectionPtr lastIntersection;
@@ -142,6 +149,8 @@ class VRTrafficSimulation : public VRObject {
         float speedMultiplier = 1.0;
         float deltaT;
         float lastT = 0.0;
+        float environmentFactor = 1; // 4 snow
+        float roadFactor = 1; //1 in city, 2 highway
         string lastseedRoadsString = "";
         //int debugOverRideSeedRoad = -1;
         int debugOverRideSeedRoad = -1;
