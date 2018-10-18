@@ -55,6 +55,7 @@ class VRTrafficSimulation : public VRObject {
             int lastFPTS = 0;
 
             Graph::position pos;
+            int nextEdge = -1;
             float length = 4.4;
             float width = 1.7;
             float speed;
@@ -149,8 +150,12 @@ class VRTrafficSimulation : public VRObject {
         float speedMultiplier = 1.0;
         float deltaT;
         float lastT = 0.0;
+
         float environmentFactor = 1; // 4 snow
         float roadFactor = 1; //1 in city, 2 highway
+
+        float roadVelocity;
+
         string lastseedRoadsString = "";
         //int debugOverRideSeedRoad = -1;
         int debugOverRideSeedRoad = -1;
