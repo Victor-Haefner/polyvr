@@ -325,7 +325,8 @@ void VRTrafficSimulation::updateSimulation() {
             auto nextEdges = g->getNextEdges(edge);
 
             if (nextEdges.size() > 1) {
-                gp.edge = vehicle.nextEdge;
+                //gp.edge = vehicle.nextEdge;
+                gp.edge = randomChoice(nextEdges).ID;
                 auto& road = roads[gp.edge];
                 if (road.macro) {
                     toChangeRoad[road1ID].push_back( make_pair(vehicle.vID, -1) );
@@ -699,8 +700,9 @@ void VRTrafficSimulation::updateSimulation() {
                 auto checkNextEdgeForTurn = [&]() {
                     int nEdge = vehicle.nextEdge;
                     auto g = roadNetwork->getGraph();
-                    auto& edge = g->getEdge(gp.edge);
-                }
+                    //auto& edge = g->getEdge(gp.edge);
+                    return false;
+                };
 
                 float nextMove = (vehicle.currentVelocity) * deltaT;
                 float nextMoveAcc = (vehicle.currentVelocity + accFactor*deltaT) * deltaT;
