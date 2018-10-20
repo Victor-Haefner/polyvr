@@ -38,6 +38,8 @@ class VRCamera : public VRTransform {
         static VRCameraPtr create(string name = "None", bool reg = false);
         VRCameraPtr ptr();
 
+        VRObjectPtr copy(vector<VRObjectPtr> children);
+
         void setType(int type);
         int getType();
         void setup(bool reg = true);

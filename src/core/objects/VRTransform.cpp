@@ -59,7 +59,6 @@ VRTransformPtr VRTransform::create(string name, bool doOpt) { return VRTransform
 VRObjectPtr VRTransform::copy(vector<VRObjectPtr> children) {
     VRTransformPtr t = VRTransform::create(getBaseName());
     t->setVisible(isVisible());
-    t->setPickable(isPickable());
     t->setEntity(entity);
     t->setMatrix(getMatrix());
     t->setPickable(isPickable());

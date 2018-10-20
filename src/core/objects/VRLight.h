@@ -84,6 +84,7 @@ class VRLight : public VRObject {
         int getShadowMapRes();
         Boundingbox getShadowVolume();
 
+        VRLightBeaconPtr addBeacon();
         VRLightBeaconPtr getBeacon();
         void setBeacon(VRLightBeaconPtr b);
 
