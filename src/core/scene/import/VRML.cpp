@@ -26,7 +26,9 @@ struct VRMLNode {
     vector<VRMLNode*> children;
     map<string, string> params;
     string data;
-    VRGeoData geo;
+    vector<Vec3d> positions;
+    vector<Vec3d> normals;
+    vector<int> coordIndex;
     VRObjectPtr obj;
     VRMaterialPtr material;
     Matrix4d pose;
@@ -418,36 +420,18 @@ struct VRMLNode {
     }
 
     void handleCoordinate3(map<string, string> data) {
-        auto positions = getMFVec3f(data, "point", {});
-        for (auto p : positions) geo.pushVert(Pnt3d(p));
+        positions = getMFVec3f(data, "point", {});
     }
 
     void handleNormal(map<string, string> data) {
-        auto normals = getMFVec3f(data, "normal", {});
-        for (auto n : normals) geo.pushNorm(n);
+        normals = getMFVec3f(data, "normal", {});
     }
 
     void handleIndexedFaceSet(map<string, string> data) {
-        vector<int> coordIndex = getMFLong(data, "coordIndex", {0});
+        coordIndex = getMFLong(data, "coordIndex", {0});
         //vector<int> materialIndex = getMFLong(data, "materialIndex", {-1}); // TODO
         //vector<int> normalIndex = getMFLong(data, "normalIndex", {-1});
         //vector<int> textureCoordIndex = getMFLong(data, "textureCoordIndex", {-1});
-
-        vector<int> face;
-        cout << "handleIndexedFaceSet " << coordIndex.size() << endl;
-        for (auto i : coordIndex) {
-            if (i == -1) {
-                cout << " face " << face.size() << endl;
-                if (face.size() == 3) geo.pushTri(face[0], face[1], face[2]);
-                if (face.size() == 4) geo.pushQuad(face[0], face[1], face[2], face[3]);
-                face.clear();
-                continue;
-            }
-            face.push_back(i);
-        }
-
-        VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
-        geo.apply(g);
     }
 
     void handleMaterial(map<string, string> data) {
@@ -523,6 +507,39 @@ struct VRMLNode {
         }
 
         return m;
+    }
+
+    VRGeoData applyGeometries(VRGeoData data = VRGeoData()) {
+        if (type == "IndexedFaceSet") {
+            VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
+            if (g) {
+                vector<int> face;
+                cout << "handleIndexedFaceSet " << coordIndex.size() << endl;
+                for (auto i : coordIndex) {
+                    if (i == -1) {
+                        cout << " face " << face.size() << endl;
+                        if (face.size() == 3) data.pushTri(face[0], face[1], face[2]);
+                        if (face.size() == 4) data.pushQuad(face[0], face[1], face[2], face[3]);
+                        face.clear();
+                        continue;
+                    }
+                    face.push_back(i);
+                }
+                data.apply(g);
+            }
+        } else if(type == "Coordinate3") {
+            for (auto p : positions) data.pushVert(Pnt3d(p));
+        } else if(type == "Normal") {
+            for (auto n : normals) data.pushNorm(n);
+        } else if(type == "Separator") {
+            data = VRGeoData();
+        }
+
+        for (auto c : children) {
+            data = c->applyGeometries(data);
+        }
+
+        return data;
     }
 
     void buildOSG() {
@@ -811,6 +828,7 @@ class VRMLLoader {
             tree->buildOSG();
             tree->applyTransformations();
             tree->applyMaterials();
+            tree->applyGeometries();
             delete tree;
         }
 };
