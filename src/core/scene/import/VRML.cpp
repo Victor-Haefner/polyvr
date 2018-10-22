@@ -19,13 +19,194 @@
 
 using namespace OSG;
 
-struct VRMLNode {
+struct VRMLUtils {
+    int version = 1;
+
+    bool isNumber(string number) {
+        if (number[0] >= '0' && number[0] <= '9') return true;
+        if (number[0] == '-' || number[0] == '+' || number[0] == '.') {
+            if (number[1] >= '0' && number[1] <= '9') return true;
+        }
+        return false;
+    }
+
+    bool isBool(string b) {
+        if (b == "false" || b == "False" || b == "FALSE") return true;
+        if (b == "true" || b == "True" || b == "TRUE") return true;
+        return false;
+    }
+
+    bool isBracket(string bracket) {
+        if (bracket == "{" || bracket == "}") return true;
+        if (bracket == "{}") return true;
+
+        if (version == 2) {
+            if (bracket == "[" || bracket == "]") return true;
+            if (bracket == "[]") return true;
+        }
+
+        return false;
+    }
+
+    bool isGroupNode(string node) {
+        if (version == 1) {
+            if (node == "Group") return true;
+            if (node == "Separator") return true;
+            if (node == "Switch") return true;
+            if (node == "TransformSeparator") return true;
+        }
+
+        if (version == 2) {
+            if (node == "children") return true;
+        }
+
+        return false;
+    }
+
+    bool isGeometryNode(string node) {
+        if (node == "IndexedFaceSet") return true;
+        if (node == "IndexedLineSet") return true;
+        if (node == "PointSet") return true;
+        if (node == "Cone") return true;
+        if (node == "Sphere") return true;
+        if (node == "Cylinder") return true;
+
+        if (version == 1) {
+            if (node == "Cube") return true;
+            if (node == "AsciiText") return true;
+        }
+
+        if (version == 2) {
+            if (node == "Box") return true;
+            if (node == "ElevationGrid") return true;
+            if (node == "Extrusion") return true;
+            if (node == "Text") return true;
+        }
+
+        return false;
+    }
+
+    bool isPropertyNode(string node) {
+        if (node == "DirectionalLight") return true;
+        if (node == "PointLight") return true;
+        if (node == "SpotLight") return true;
+        if (node == "Normal") return true;
+        if (node == "FontStyle") return true;
+        if (node == "Material") return true;
+        if (node == "LOD") return true;
+        if (node == "Transform") return true;
+
+        if (version == 1) {
+            if (node == "Coordinate3") return true;
+            if (node == "Info") return true;
+            if (node == "MaterialBinding") return true;
+            if (node == "NormalBinding") return true;
+            if (node == "Texture2") return true;
+            if (node == "Texture2Transform") return true;
+            if (node == "TextureCoordinate2") return true;
+            if (node == "ShapeHints") return true;
+            if (node == "MatrixTransform") return true;
+            if (node == "Rotation") return true;
+            if (node == "Scale") return true;
+            if (node == "Translation") return true;
+            if (node == "OrthographicCamera") return true;
+            if (node == "PerspectiveCamera") return true;
+        }
+
+        if (version == 2) {
+            if (node == "Group") return true;
+            if (node == "Anchor") return true;
+            if (node == "Billboard") return true;
+            if (node == "Collision") return true;
+            if (node == "Inline") return true;
+            if (node == "Switch") return true;
+            if (node == "AudioClip") return true;
+            if (node == "Script") return true;
+            if (node == "Shape") return true;
+            if (node == "Sound") return true;
+            if (node == "WorldInfo") return true;
+            if (node == "Color") return true;
+            if (node == "Coordinate") return true;
+            if (node == "TextureCoordinate") return true;
+            if (node == "Appearance") return true;
+            if (node == "ImageTexture") return true;
+            if (node == "MovieTexture") return true;
+            if (node == "PixelTexture") return true;
+            if (node == "TextureTransform") return true;
+        }
+
+        return false;
+    }
+
+    bool isOtherNode(string node) {
+        if (version == 1) {
+            if (node == "WWWAnchor") return true;
+            if (node == "WWWInline") return true;
+        }
+
+        if (version == 2) {
+            if (node == "CylinderSensor") return true;
+            if (node == "PlaneSensor") return true;
+            if (node == "ProximitySensor") return true;
+            if (node == "SphereSensor") return true;
+            if (node == "TimeSensor") return true;
+            if (node == "TouchSensor") return true;
+            if (node == "VisibilitySensor") return true;
+            if (node == "ColorInterpolator") return true;
+            if (node == "CoordinateInterpolator") return true;
+            if (node == "NormalInterpolator") return true;
+            if (node == "OrientationInterpolator") return true;
+            if (node == "PositionInterpolator") return true;
+            if (node == "ScalarInterpolator") return true;
+            if (node == "Background") return true;
+            if (node == "Fog") return true;
+            if (node == "NavigationInfo") return true;
+            if (node == "Viewpoint") return true;
+        }
+        return false;
+    }
+
+    bool isNode(string node) {
+        if (isGroupNode(node)) return true;
+        if (isGeometryNode(node)) return true;
+        if (isPropertyNode(node)) return true;
+        if (isOtherNode(node)) return true;
+        return false;
+    }
+
+    bool isTransformationNode(string node) {
+        if (version == 1) {
+            if (node == "MatrixTransform") return true;
+            if (node == "Rotation") return true;
+            if (node == "Scale") return true;
+            if (node == "Transform") return true;
+            if (node == "Translation") return true;
+        }
+
+        if (version == 2) {}
+
+        return false;
+    }
+
+    bool isTransformationResetNode(string node) {
+        if (version == 1) {
+            if (node == "Separator") return true;
+            if (node == "TransformSeparator") return true;
+        }
+
+        if (version == 2) {}
+
+        return false;
+    }
+
+};
+
+struct VRMLNode : VRMLUtils {
     string name;
     string type;
     VRMLNode* parent = 0;
     vector<VRMLNode*> children;
     map<string, string> params;
-    string data;
     vector<Vec3d> positions;
     vector<Vec3d> normals;
     vector<int> coordIndex;
@@ -38,88 +219,17 @@ struct VRMLNode {
         for (auto c : children) delete c;
     }
 
-    VRMLNode* addChild(string t, string n) {
-        cout << "VRMLNode::addChild '" << n << "' of type " << t << endl;
-        auto c = new VRMLNode(t,n);
-        c->parent = this;
-        children.push_back(c);
-        return c;
-    }
+    virtual VRMLNode* addChild(string t, string n) = 0;
 
     void print(string padding = "") {
-        cout << padding << "Node '" << name << "' of type " << type << " with data " << data << endl;
+        cout << padding << "Node '" << name << "' of type " << type << " with params [";
+        for (auto p : params) cout << " (" << p.first << " : " << p.second << ") ";
+        cout << "]" << endl;
         for (auto c : children) c->print(padding+" ");
     }
 
 
     // build OSG ---------------------
-
-    bool isGroupNode(string node) {
-        if (node == "Group") return true;
-        if (node == "Separator") return true;
-        if (node == "Switch") return true;
-        if (node == "TransformSeparator") return true;
-        return false;
-    }
-
-    bool isGeometryNode(string node) {
-        if (node == "IndexedFaceSet") return true;
-        if (node == "IndexedLineSet") return true;
-        if (node == "PointSet") return true;
-        if (node == "Cone") return true;
-        if (node == "Cube") return true;
-        if (node == "Sphere") return true;
-        if (node == "Cylinder") return true;
-        if (node == "AsciiText") return true;
-        return false;
-    }
-
-    bool isPropertyNode(string node) {
-        if (node == "Coordinate3") return true;
-        if (node == "FontStyle") return true;
-        if (node == "Info") return true;
-        if (node == "LOD") return true;
-        if (node == "Material") return true;
-        if (node == "MaterialBinding") return true;
-        if (node == "Normal") return true;
-        if (node == "NormalBinding") return true;
-        if (node == "Texture2") return true;
-        if (node == "Texture2Transform") return true;
-        if (node == "TextureCoordinate2") return true;
-        if (node == "ShapeHints") return true;
-        if (node == "MatrixTransform") return true;
-        if (node == "Rotation") return true;
-        if (node == "Scale") return true;
-        if (node == "Transform") return true;
-        if (node == "Translation") return true;
-        if (node == "OrthographicCamera") return true;
-        if (node == "PerspectiveCamera") return true;
-        if (node == "DirectionalLight") return true;
-        if (node == "PointLight") return true;
-        if (node == "SpotLight") return true;
-        return false;
-    }
-
-    bool isTransformationNode(string node) {
-        if (node == "MatrixTransform") return true;
-        if (node == "Rotation") return true;
-        if (node == "Scale") return true;
-        if (node == "Transform") return true;
-        if (node == "Translation") return true;
-        return false;
-    }
-
-    bool isTransformationResetNode(string node) {
-        if (node == "Separator") return true;
-        if (node == "TransformSeparator") return true;
-        return false;
-    }
-
-    bool isWebNode(string node) {
-        if (node == "WWWAnchor") return true;
-        if (node == "WWWInline") return true;
-        return false;
-    }
 
     vector<string> parseStringField(string mf) {
         vector<string> v;
@@ -453,13 +563,13 @@ struct VRMLNode {
 
     void applyProperties() {
         if (isGroupNode( type )) return; // group nodes have no properties
-        if (isWebNode( type )) return; // web nodes are ignored
+        if (isOtherNode( type )) return; // other nodes are ignored
         else if (type == "PointLight") handlePointLight(params);
         else if (type == "SpotLight") handleSpotLight(params);
         else if (type == "DirectionalLight") handleDirectionalLight(params);
         else if (type == "PerspectiveCamera") handlePerspectiveCamera(params);
         else if (type == "Sphere") handleSphere(params);
-        else if (type == "Cube") handleCube(params);
+        else if (type == "Cube" || type == "Box") handleCube(params);
         else if (type == "Cone") handleCone(params);
         else if (type == "Cylinder") handleCylinder(params);
         else if (type == "IndexedFaceSet") handleIndexedFaceSet(params);
@@ -473,6 +583,34 @@ struct VRMLNode {
         else {
             cout << "VRML applyProperties, node " << type << " not handled!" << endl;
         }
+    }
+
+    void buildOSG() {
+        if (!obj) {
+            obj = makeObject();
+            if (parent && parent->obj) parent->obj->addChild(obj);
+            else cout << "WARNING in VRMLNode::buildOSG, cannot append object to parent!" << endl;
+            applyProperties();
+        }
+
+        for (auto c : children) c->buildOSG();
+    }
+
+    virtual Matrix4d applyTransformations(Matrix4d m = Matrix4d()) = 0;
+    virtual VRMaterialPtr applyMaterials(VRMaterialPtr m = 0) = 0;
+    virtual VRGeoData applyGeometries(VRGeoData data = VRGeoData()) = 0;
+};
+
+struct VRML1Node : VRMLNode {
+    VRML1Node(string type, string name = "Unnamed") : VRMLNode(type, name) { version = 1; }
+    ~VRML1Node() {}
+
+    VRML1Node* addChild(string t, string n) {
+        cout << "VRML1Node::addChild '" << n << "' of type " << t << endl;
+        auto c = new VRML1Node(t,n);
+        c->parent = this;
+        children.push_back(c);
+        return c;
     }
 
     Matrix4d applyTransformations(Matrix4d m = Matrix4d()) {
@@ -541,37 +679,39 @@ struct VRMLNode {
 
         return data;
     }
-
-    void buildOSG() {
-        if (!obj) {
-            obj = makeObject();
-            if (parent && parent->obj) parent->obj->addChild(obj);
-            else cout << "WARNING in VRMLNode::buildOSG, cannot append object to parent!" << endl;
-            applyProperties();
-        }
-
-        for (auto c : children) c->buildOSG();
-    }
-
-};
-
-struct VRML1Node : VRMLNode {
-    VRML1Node(string type, string name = "Unnamed") : VRMLNode(type, name) {}
-    ~VRML1Node() {}
 };
 
 struct VRML2Node : VRMLNode {
-    VRML2Node(string type, string name = "Unnamed") : VRMLNode(type, name) {}
+    VRML2Node(string type, string name = "Unnamed") : VRMLNode(type, name) { version = 2; }
     ~VRML2Node() {}
+
+    VRML2Node* addChild(string t, string n) {
+        cout << "VRML2Node::addChild '" << n << "' of type " << t << endl;
+        auto c = new VRML2Node(t,n);
+        c->parent = this;
+        children.push_back(c);
+        return c;
+    }
+
+    Matrix4d applyTransformations(Matrix4d m = Matrix4d()) {
+        return m;
+    }
+
+    VRMaterialPtr applyMaterials(VRMaterialPtr m = 0) {
+        return m;
+    }
+
+    VRGeoData applyGeometries(VRGeoData data = VRGeoData()) {
+        return data;
+    }
 };
 
-class VRMLLoader {
+class VRMLLoader : public VRMLUtils {
     private:
         string path;
         VRTransformPtr res;
         VRProgressPtr progress;
         bool threaded = false;
-        int version = 1;
         VRMLNode* tree = 0;
 
         enum STATE {
@@ -617,101 +757,10 @@ class VRMLLoader {
             return fileSize;
         }
 
-        // VRML1 functions
-        bool isNumber(string number) {
-            if (number[0] >= '0' && number[0] <= '9') return true;
-            if (number[0] == '-' || number[0] == '+' || number[0] == '.') {
-                if (number[1] >= '0' && number[1] <= '9') return true;
-            }
-            return false;
-        }
-
-        bool isBracket(string number) {
-            if (number.size() == 1) {
-                if (number[0] == '{' || number[0] == '}') return true;
-            }
-            if (number == "{}") return true;
-            return false;
-        }
-
-        bool isGroupNode(string node) {
-            if (node == "Group") return true;
-            if (node == "Separator") return true;
-            if (node == "Switch") return true;
-            if (node == "TransformSeparator") return true;
-            return false;
-        }
-
-        bool isGeometryNode(string node) {
-            if (node == "IndexedFaceSet") return true;
-            if (node == "IndexedLineSet") return true;
-            if (node == "PointSet") return true;
-            if (node == "Cone") return true;
-            if (node == "Cube") return true;
-            if (node == "Sphere") return true;
-            if (node == "Cylinder") return true;
-            if (node == "AsciiText") return true;
-            return false;
-        }
-
-        bool isPropertyNode(string node) {
-            if (node == "Coordinate3") return true;
-            if (node == "FontStyle") return true;
-            if (node == "Info") return true;
-            if (node == "LOD") return true;
-            if (node == "Material") return true;
-            if (node == "MaterialBinding") return true;
-            if (node == "Normal") return true;
-            if (node == "NormalBinding") return true;
-            if (node == "Texture2") return true;
-            if (node == "Texture2Transform") return true;
-            if (node == "TextureCoordinate2") return true;
-            if (node == "ShapeHints") return true;
-            if (node == "MatrixTransform") return true;
-            if (node == "Rotation") return true;
-            if (node == "Scale") return true;
-            if (node == "Transform") return true;
-            if (node == "Translation") return true;
-            if (node == "OrthographicCamera") return true;
-            if (node == "PerspectiveCamera") return true;
-            if (node == "DirectionalLight") return true;
-            if (node == "PointLight") return true;
-            if (node == "SpotLight") return true;
-            return false;
-        }
-
-        bool isWebNode(string node) {
-            if (node == "WWWAnchor") return true;
-            if (node == "WWWInline") return true;
-            return false;
-        }
-
-        bool isNode(string node) {
-            if (isGroupNode(node)) return true;
-            if (isGeometryNode(node)) return true;
-            if (isPropertyNode(node)) return true;
-            if (isWebNode(node)) return true;
-            return false;
-        }
-
         Matrix4d handleMatrixTransform(map<string, string> data) {
             if (!data.count("matrix")) return Matrix4d();
             vector<float> v = toValue<vector<float>>( data["matrix"] );
             return Matrix4d(v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11], v[12], v[13], v[14], v[15]);
-        }
-
-        void handleGroupNode(string node) {};
-        void handleGeometryNode(string node) {};
-        void handlePropertyNode(string node) {};
-        void handleWebNode(string node) {};
-
-        void handleNode(string node) {
-            cout << "  handle VRML node: " << node << ", set as nextNodeType!" << endl;
-            ctx.nextNodeType = node;
-            if (isGroupNode(node)) { handleGroupNode(node); return; }
-            if (isGeometryNode(node)) { handleGeometryNode(node); return; }
-            if (isPropertyNode(node)) { handlePropertyNode(node); return; }
-            if (isWebNode(node)) { handleWebNode(node); return; }
         }
 
         void handleBracket(string bracket) {
@@ -720,6 +769,7 @@ class VRMLLoader {
                     ctx.currentNode = ctx.currentNode->addChild(ctx.nextNodeType, ctx.nextNodeName);
                     ctx.nextNodeType = "Untyped";
                     ctx.nextNodeName = "Unnamed";
+
                     if (isGroupNode(ctx.currentNode->type)) ctx.state = HEAD;
                     else                                    ctx.state = BODY;
                 } else cout << "WARNING in VRML handleBracket: currentNode at opening bracket is NULL" << endl;
@@ -762,7 +812,11 @@ class VRMLLoader {
         void handleToken(string token) {
             cout << " handle VRML token: " << token << endl;
             if (isBracket(token)) { handleBracket(token); return; }
-            if (isNode(token)) { handleNode(token); return; }
+            if (isNode(token)) {
+                cout << "  handle VRML node: " << token << ", set as nextNodeType!" << endl;
+                ctx.nextNodeType = token;
+                return;
+            }
 
             cout << "  VRML context state: " << stateToString(ctx.state) << endl;
             if (ctx.state == HEAD) {
@@ -774,13 +828,12 @@ class VRMLLoader {
                 return;
             } // must be a name
             if (ctx.state == FIELD) {
-                //cout << "   " << token << " in field " << isNumber(token) << " '" << ctx.params[ctx.field] << "' field: " << ctx.field << endl;
+                cout << "   " << token << " in field " << isBool(token) << " '" << ctx.currentNode->params[ctx.field] << "' field: " << ctx.field << endl;
                 if (token == "[" || token == "]" || token == ",") return;
-                if (isNumber(token)) { ctx.currentNode->params[ctx.field] += token+" "; return; }
+                if (isNumber(token) || isBool(token)) { ctx.currentNode->params[ctx.field] += token+" "; return; }
                 ctx.state = BODY; // don't return here
             }
             if (ctx.state == BODY) {
-                //if (isNumber(token)) { handleNumber(token); return; }
                 ctx.currentNode->params[token] = ""; // must be a field
                 ctx.field = token;
                 ctx.state = FIELD;
