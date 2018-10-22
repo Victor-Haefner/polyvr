@@ -163,6 +163,9 @@ struct VRMLUtils {
         if (number[0] == '-' || number[0] == '+' || number[0] == '.') {
             if (number[1] >= '0' && number[1] <= '9') return true;
         }
+        if (number[0] == '-' || number[0] == '+') {
+            if (number[1] == '.' && number[2] >= '0' && number[3] <= '9') return true;
+        }
         return false;
     }
 
@@ -560,12 +563,18 @@ struct VRMLNode : VRMLUtils {
     }
 
     void handleCube(map<string, string> data) {
-        float width = getSFFloat(data, "width", 2);
-        float height = getSFFloat(data, "height", 2);
-        float depth = getSFFloat(data, "depth", 2);
+        Vec3d s;
+        if (version == 1) {
+            s[0] = getSFFloat(data, "width", 2);
+            s[1] = getSFFloat(data, "height", 2);
+            s[2] = getSFFloat(data, "depth", 2);
+        }
+        if (version == 2) {
+            s = getSFVec3f(data, "size", Vec3d(2,2,2));
+        }
         VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(obj);
         if (!geo) { cout << "WARNING in VRML handleCube, cast failed" << endl; return; }
-        geo->setPrimitive("Box " + toString(width) + " " + toString(height) + " " + toString(depth) + " 1 1 1");
+        geo->setPrimitive("Box " + toString(s[0]) + " " + toString(s[1]) + " " + toString(s[2]) + " 1 1 1");
         applyPose();
         applyMaterial();
     }
@@ -987,7 +996,7 @@ class VRMLLoader : public VRMLUtils {
         }
 
         void handleToken(string token) {
-            cout << " handle VRML token: " << token << endl;
+            cout << " handle VRML token: " << token << " " << stateToString(ctx.state) << endl;
             if (isBracket(token)) { handleBracket(token); return; }
             if (isNode(token)) {
                 cout << "  handle VRML node: " << token << ", set as nextNodeType!" << endl;
@@ -995,10 +1004,10 @@ class VRMLLoader : public VRMLUtils {
                 return;
             }
 
-            cout << "  VRML context state: " << stateToString(ctx.state) << endl;
+            //cout << "  VRML context state: " << stateToString(ctx.state) << endl;
 
             if (ctx.state == FIELD) {
-                cout << "   " << token << " in field " << isBool(token) << " '" << ctx.currentNode->params[ctx.field] << "' field: " << ctx.field << endl;
+                cout << "   " << token << " in field " << isNumber(token) << " '" << ctx.currentNode->params[ctx.field] << "' field: " << ctx.field << endl;
                 if (token == "[" || token == "]" || token == ",") return;
                 if (isNumber(token) || isBool(token)) { ctx.currentNode->params[ctx.field] += token+" "; return; }
                 ctx.state = NODE; // don't return here
