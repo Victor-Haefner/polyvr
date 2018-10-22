@@ -19,6 +19,139 @@
 
 using namespace OSG;
 
+struct VRMLSchema {
+    int version = 1;
+
+    struct FieldRef {
+        string type;
+        string def;
+    };
+
+    struct NodeRef {
+        map<string, FieldRef> fieldRefs;
+    };
+
+    map<string, NodeRef> nodeRefs;
+
+    void addNodeRef(string node, vector<string> fields, vector<string> types, vector<string> defaults) {
+        nodeRefs[node] = NodeRef();
+        for (int i=0; i<fields.size(); i++) {
+            nodeRefs[node].fieldRefs[fields[i]] = FieldRef();
+            nodeRefs[node].fieldRefs[fields[i]].type = types[i];
+            nodeRefs[node].fieldRefs[fields[i]].def  = defaults[i];
+        }
+    }
+
+    VRMLSchema(int version) : version(version) {
+        if (version == 1) { // TODO
+            addNodeRef("AsciiText", {}, {}, {});
+            addNodeRef("Cone", {}, {}, {});
+            addNodeRef("Cube", {}, {}, {});
+            addNodeRef("Cylinder", {}, {}, {});
+            addNodeRef("IndexedFaceSet", {}, {}, {});
+            addNodeRef("IndexedLineSet", {}, {}, {});
+            addNodeRef("PointSet", {}, {}, {});
+            addNodeRef("Sphere", {}, {}, {});
+            addNodeRef("Coordinate3", {}, {}, {});
+            addNodeRef("FontStyle", {}, {}, {});
+            addNodeRef("Info", {}, {}, {});
+            addNodeRef("LOD", {}, {}, {});
+            addNodeRef("Material", {}, {}, {});
+            addNodeRef("MaterialBinding", {}, {}, {});
+            addNodeRef("Normal", {}, {}, {});
+            addNodeRef("NormalBinding", {}, {}, {});
+            addNodeRef("Texture2", {}, {}, {});
+            addNodeRef("Texture2Transform", {}, {}, {});
+            addNodeRef("TextureCoordinate2", {}, {}, {});
+            addNodeRef("ShapeHints", {}, {}, {});
+            addNodeRef("MatrixTransform", {}, {}, {});
+            addNodeRef("Rotation", {}, {}, {});
+            addNodeRef("Scale", {}, {}, {});
+            addNodeRef("Transform", {}, {}, {});
+            addNodeRef("Translation", {}, {}, {});
+            addNodeRef("OrthographicCamera", {}, {}, {});
+            addNodeRef("PerspectiveCamera", {}, {}, {});
+            addNodeRef("DirectionalLight", {}, {}, {});
+            addNodeRef("PointLight", {}, {}, {});
+            addNodeRef("SpotLight", {}, {}, {});
+            addNodeRef("Group", {}, {}, {});
+            addNodeRef("Separator", {}, {}, {});
+            addNodeRef("Switch", {}, {}, {});
+            addNodeRef("TransformSeparator", {}, {}, {});
+            addNodeRef("WWWAnchor", {}, {}, {});
+            addNodeRef("WWWInline", {}, {}, {});
+        }
+
+        if (version == 2) {
+            addNodeRef("Anchor", {"children", "description", "parameter", "url", "bboxCenter", "bboxSize"}, {"MFNode", "SFString", "MFString", "MFString", "SFVec3f", "SFVec3f"}, {"[]", "", "[]", "[]", "0 0 0", "-1 -1 -1"});
+            addNodeRef("Appearance", {"material", "texture", "textureTransform"}, {"SFNode", "SFNode", "SFNode"}, {"NULL", "NULL", "NULL"});
+            addNodeRef("AudioClip", {"description", "loop", "pitch", "startTime", "stopTime", "url"}, {"SFString", "SFBool", "SFFloat", "SFTime", "SFTime", "MFString"}, {"", "FALSE", "1.0", "0", "0", "[]"});
+            addNodeRef("Background", {"groundAngle", "groundColor", "backUrl", "bottomUrl", "frontUrl", "leftUrl", "rightUrl", "topUrl", "skyAngle", "skyColor"}, {"MFFloat", "MFColor", "MFString", "MFString", "MFString", "MFString", "MFString", "MFString", "MFFloat", "MFColor"}, {"[]", "[]", "[]", "[]", "[]", "[]", "[]", "[]", "[]", "[ 0 0 0 ]"});
+            addNodeRef("Billboard", {"axisOfRotation", "children", "bboxCenter", "bboxSize"}, {"SFVec3f", "MFNode", "SFVec3f", "SFVec3f"}, {"0 1 0", "[]", "0 0 0", "-1 -1 -1"});
+            addNodeRef("Box", {"size"}, {"SFVec3f"}, {"2 2 2"});
+            addNodeRef("Collision", {"children", "collide", "bboxCenter", "bboxSize", "proxy"}, {"MFNode", "SFBool", "SFVec3f", "SFVec3f", "SFNode"}, {"[]", "TRUE", "0 0 0", "-1 -1 -1", "NULL"});
+            addNodeRef("Color", {"color"}, {"MFColor"}, {"[]"});
+            addNodeRef("ColorInterpolator", {"key", "keyValue"}, {"MFFloat", "MFColor"}, {"[]", "[]"});
+            addNodeRef("Cone", {"bottomRadius", "height", "side", "bottom"}, {"SFFloat", "SFFloat", "SFBool", "SFBool"}, {"1", "2", "TRUE", "TRUE"});
+            addNodeRef("Coordinate", {"point"}, {"MFVec3f"}, {"[]"});
+            addNodeRef("CoordinateInterpolator", {"key", "keyValue"}, {"MFFloat", "MFVec3f"}, {"[]", "[]"});
+            addNodeRef("Cylinder", {"bottom", "height", "radius", "side", "top"}, {"SFBool", "SFFloat", "SFFloat", "SFBool", "SFBool"}, {"TRUE", "2", "1", "TRUE", "TRUE"});
+            addNodeRef("CylinderSensor", {"autoOffset", "diskAngle", "enabled", "maxAngle", "minAngle", "offset"}, {"SFBool", "SFFloat", "SFBool", "SFFloat", "SFFloat", "SFFloat"}, {"TRUE", "0.262", "TRUE", "-1", "0", "0"});
+            addNodeRef("DirectionalLight", {"ambientIntensity", "color", "direction", "intensity", "on"}, {"SFFloat", "SFColor", "SFVec3f", "SFFloat", "SFBool"}, {"0", "1 1 1", "0 0 -1", "1", "TRUE"});
+            addNodeRef("ElevationGrid", {"color", "normal", "texCoord", "height", "ccw", "colorPerVertex", "creaseAngle", "normalPerVertex", "solid", "xDimension", "xSpacing", "zDimension", "zSpacing"}, {"SFNode", "SFNode", "SFNode", "MFFloat", "SFBool", "SFBool", "SFFloat", "SFBool", "SFBool", "SFInt32", "SFFloat", "SFInt32", "SFFloat"}, {"NULL", "NULL", "NULL", "[]", "TRUE", "TRUE", "0.0", "TRUE", "TRUE", "0", "0.0", "0", "0.0"});
+            addNodeRef("Extrusion", {"beginCap", "ccw", "convex", "creaseAngle", "crossSection", "endCap", "orientation", "scale", "solid", "spine"}, {"SFBool", "SFBool", "SFBool", "SFFloat", "MFVec2f", "SFBool", "MFRotation", "MFVec2f", "SFBool", "MFVec3f"}, {"TRUE", "TRUE", "TRUE", "0", "[ 1 1, 1 -1, -1 -1, -1 1, 1 1 ]", "TRUE", "0 0 1 0", "1 1", "TRUE", "[ 0 0 0, 0 1 0 ]"});
+            addNodeRef("Fog", {"color", "fogType", "visibilityRange"}, {"SFColor", "SFString", "SFFloat"}, {"1 1 1", "LINEAR", "0"});
+            addNodeRef("FontStyle", {"family", "horizontal", "justify", "language", "leftToRight", "size", "spacing", "style", "topToBottom"}, {"SFString", "SFBool", "MFString", "SFString", "SFBool", "SFFloat", "SFFloat", "SFString", "SFBool"}, {"SERIF", "TRUE", "BEGIN", "", "TRUE", "1.0", "1.0", "PLAIN", "TRUE"});
+            addNodeRef("Group", {"children", "bboxCenter", "bboxSize"}, {"MFNode", "SFVec3f", "SFVec3f"}, {"[]", "0 0 0", "-1 -1 -1"});
+            addNodeRef("ImageTexture", {"url", "repeatS", "repeatT"}, {"MFString", "SFBool", "SFBool"}, {"[]", "TRUE", "TRUE"});
+            addNodeRef("IndexedFaceSet", {"color", "coord", "normal", "texCoord", "ccw", "colorIndex", "colorPerVertex", "convex", "coordIndex", "creaseAngle", "normalIndex", "normalPerVertex", "solid", "texCoordIndex"}, {"SFNode", "SFNode", "SFNode", "SFNode", "SFBool", "MFInt32", "SFBool", "SFBool", "MFInt32", "SFFloat", "MFInt32", "SFBool", "SFBool", "MFInt32"}, {"NULL", "NULL", "NULL", "NULL", "TRUE", "[]", "TRUE", "TRUE", "[]", "0", "[]", "TRUE", "TRUE", "[]"});
+            addNodeRef("IndexedLineSet", {"color", "coord", "colorIndex", "colorPerVertex", "coordIndex"}, {"SFNode", "SFNode", "MFInt32", "SFBool", "MFInt32"}, {"NULL", "NULL", "[]", "TRUE", "[]"});
+            addNodeRef("Inline", {"url", "bboxCenter", "bboxSize"}, {"MFString", "SFVec3f", "SFVec3f"}, {"[]", "0 0 0", "-1 -1 -1"});
+            addNodeRef("LOD", {"level", "center", "range"}, {"MFNode", "SFVec3f", "MFFloat"}, {"[]", "0 0 0", "[]"});
+            addNodeRef("Material", {"ambientIntensity", "diffuseColor", "emissiveColor", "shininess", "specularColor", "transparency"}, {"SFFloat", "SFColor", "SFColor", "SFFloat", "SFColor", "SFFloat"}, {"0.2", "0.8 0.8 0.8", "0 0 0", "0.2", "0 0 0", "0"});
+            addNodeRef("MovieTexture", {"loop", "speed", "startTime", "stopTime", "url", "repeatS", "repeatT"}, {"SFBool", "SFFloat", "SFTime", "SFTime", "MFString", "SFBool", "SFBool"}, {"FALSE", "1", "0", "0", "[]", "TRUE", "TRUE"});
+            addNodeRef("NavigationInfo", {"avatarSize", "headlight", "speed", "type", "visibilityLimit"}, {"MFFloat", "SFBool", "SFFloat", "MFString", "SFFloat"}, {"[ 0.25, 1.6, 0.75 ]", "TRUE", "1.0", "WALK", "0.0"});
+            addNodeRef("Normal", {"vector"}, {"MFVec3f"}, {"[]"});
+            addNodeRef("NormalInterpolator", {"key", "keyValue"}, {"MFFloat", "MFVec3f"}, {"[]", "[]"});
+            addNodeRef("OrientationInterpolator", {"key", "keyValue"}, {"MFFloat", "MFRotation"}, {"[]", "[]"});
+            addNodeRef("PixelTexture", {"image", "repeatS", "repeatT"}, {"SFImage", "SFBool", "SFBool"}, {"0 0 0", "TRUE", "TRUE"});
+            addNodeRef("PlaneSensor", {"autoOffset", "enabled", "maxPosition", "minPosition", "offset"}, {"SFBool", "SFBool", "SFVec2f", "SFVec2f", "SFVec2f"}, {"TRUE", "TRUE", "-1 -1", "0 0", "0 0 0"});
+            addNodeRef("PointLight", {"ambientIntensity", "attenuation", "color", "intensity", "location", "on", "radius"}, {"SFFloat", "SFVec3f", "SFColor", "SFFloat", "SFVec3f", "SFBool", "SFFloat"}, {"0", "1 0 0", "1 1 1", "1", "0 0 0", "TRUE", "100"});
+            addNodeRef("PointSet", {"color", "coord"}, {"SFNode", "SFNode"}, {"NULL", "NULL"});
+            addNodeRef("PositionInterpolator", {"key", "keyValue"}, {"MFFloat", "MFVec3f"}, {"[]", "[]"});
+            addNodeRef("ProximitySensor", {"center", "size", "enabled"}, {"SFVec3f", "SFVec3f", "SFBool"}, {"0 0 0", "0 0 0", "TRUE"});
+            addNodeRef("ScalarInterpolator", {"key", "keyValue"}, {"MFFloat", "MFFloat"}, {"[]", "[]"});
+            addNodeRef("Script", {"url", "directOutput", "mustEvaluate"}, {"MFString", "SFBool", "SFBool"}, {"[]", "FALSE", "FALSE"});
+            addNodeRef("Shape", {"appearance", "geometry"}, {"SFNode", "SFNode"}, {"NULL", "NULL"});
+            addNodeRef("Sound", {"direction", "intensity", "location", "maxBack", "maxFront", "minBack", "minFront", "priority", "source", "spatialize"}, {"SFVec3f", "SFFloat", "SFVec3f", "SFFloat", "SFFloat", "SFFloat", "SFFloat", "SFFloat", "SFNode", "SFBool"}, {"0 0 1", "1", "0 0 0", "10", "10", "1", "1", "0", "NULL", "TRUE"});
+            addNodeRef("Sphere", {"radius"}, {"SFFloat"}, {"1"});
+            addNodeRef("SphereSensor", {"autoOffset", "enabled", "offset"}, {"SFBool", "SFBool", "SFRotation"}, {"TRUE", "TRUE", "0 1 0 0"});
+            addNodeRef("SpotLight", {"ambientIntensity", "attenuation", "beamWidth", "color", "cutOffAngle", "direction", "intensity", "location", "on", "radius"}, {"SFFloat", "SFVec3f", "SFFloat", "SFColor", "SFFloat", "SFVec3f", "SFFloat", "SFVec3f", "SFBool", "SFFloat"}, {"0", "1 0 0", "1.570796", "1 1 1", "0.785398", "0 0 -1", "1", "0 0 0", "TRUE", "100"});
+            addNodeRef("Switch", {"choice", "whichChoice"}, {"MFNode", "SFInt32"}, {"[]", "-1"});
+            addNodeRef("Text", {"string", "fontStyle", "length", "maxExtent"}, {"MFString", "SFNode", "MFFloat", "SFFloat"}, {"[]", "NULL", "[]", "0.0"});
+            addNodeRef("TextureCoordinate", {"point"}, {"MFVec2f"}, {"[]"});
+            addNodeRef("TextureTransform", {"center", "rotation", "scale", "translation"}, {"SFVec2f", "SFFloat", "SFVec2f", "SFVec2f"}, {"0 0", "0", "1 1", "0 0"});
+            addNodeRef("TimeSensor", {"cycleInterval", "enabled", "loop", "startTime", "stopTime"}, {"SFTime", "SFBool", "SFBool", "SFTime", "SFTime"}, {"1", "TRUE", "FALSE", "0", "0"});
+            addNodeRef("TouchSensor", {"enabled"}, {"SFBool"}, {"TRUE"});
+            addNodeRef("Transform", {"center", "children", "rotation", "scale", "scaleOrientation", "translation", "bboxCenter", "bboxSize"}, {"SFVec3f", "MFNode", "SFRotation", "SFVec3f", "SFRotation", "SFVec3f", "SFVec3f", "SFVec3f"}, {"0 0 0", "[]", "0 0 1 0", "1 1 1", "0 0 1 0", "0 0 0", "0 0 0", "-1 -1 -1"});
+            addNodeRef("Viewpoint", {"fieldOfView", "jump", "orientation", "position", "description"}, {"SFFloat", "SFBool", "SFRotation", "SFVec3f", "SFString"}, {"0.785398", "TRUE", "0 0 1 0", "0 0 10", ""});
+            addNodeRef("VisibilitySensor", {"center", "enabled", "size"}, {"SFVec3f", "SFBool", "SFVec3f"}, {"0 0 0", "TRUE", "0 0 0"});
+            addNodeRef("WorldInfo", {"info", "title"}, {"MFString", "SFString"}, {"[]", ""});
+        }
+    }
+
+    bool isNode(string& token) { return nodeRefs.count(token); }
+
+    bool isFieldOf(string& node, string& token) {
+        if (!isNode(node)) return false;
+        return nodeRefs[node].fieldRefs.count(token);
+    }
+};
+
+VRMLSchema schema1(1);
+VRMLSchema schema2(2);
+
+
 struct VRMLUtils {
     int version = 1;
 
@@ -57,7 +190,7 @@ struct VRMLUtils {
         }
 
         if (version == 2) {
-            if (node == "children") return true;
+            //if (node == "children") return true;
         }
 
         return false;
@@ -827,12 +960,14 @@ class VRMLLoader : public VRMLUtils {
                 }
                 return;
             } // must be a name
+
             if (ctx.state == FIELD) {
                 cout << "   " << token << " in field " << isBool(token) << " '" << ctx.currentNode->params[ctx.field] << "' field: " << ctx.field << endl;
                 if (token == "[" || token == "]" || token == ",") return;
                 if (isNumber(token) || isBool(token)) { ctx.currentNode->params[ctx.field] += token+" "; return; }
                 ctx.state = BODY; // don't return here
             }
+
             if (ctx.state == BODY) {
                 ctx.currentNode->params[token] = ""; // must be a field
                 ctx.field = token;
