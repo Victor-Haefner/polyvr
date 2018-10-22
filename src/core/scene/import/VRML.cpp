@@ -357,6 +357,15 @@ struct VRMLNode : VRMLUtils {
 
     virtual VRMLNode* addChild(string t, string n) = 0;
 
+    vector<VRMLNode*> getSiblings() {
+        vector<VRMLNode*> res;
+        if (!parent) return res;
+        for (auto c : parent->children) {
+            if (c != this) res.push_back(c);
+        }
+        return res;
+    }
+
     void print(string padding = "") {
         cout << padding << "Node '" << name << "' of type " << type << " with params [";
         for (auto p : params) cout << " (" << p.first << " : " << p.second << ") ";
@@ -497,6 +506,11 @@ struct VRMLNode : VRMLUtils {
             if (type == "SpotLight") return VRLight::create(name);
             if (type == "PerspectiveCamera") return VRCamera::create(name, false);
         }
+
+        if (version == 2) {
+            if (type == "Transform") return VRTransform::create(name);
+        }
+
         return VRObject::create(name);
     }
 
@@ -655,6 +669,7 @@ struct VRMLNode : VRMLUtils {
         Vec3d translation = getSFVec3f(data, "translation", Vec3d(0,0,0));
         Vec4d rotation = getSFRotation(data, "rotation", Vec4d(0,0,1,0));
         Vec3d scaleFactor = getSFVec3f(data, "scaleFactor", Vec3d(1,1,1));
+        if (version == 2) scaleFactor = getSFVec3f(data, "scale", Vec3d(1,1,1));
         Vec4d scaleOrientation = getSFRotation(data, "scaleOrientation", Vec4d(0,0,1,0));
         Vec3d center = getSFVec3f(data, "center", Vec3d(0,0,0));
         Matrix4d m1; m1.setTranslate(translation+center); m1.setRotate( Quaterniond( Vec3d(rotation[0], rotation[1], rotation[2]), rotation[3] ) );
@@ -759,10 +774,7 @@ struct VRML1Node : VRMLNode {
             m.setIdentity();
         }
 
-        for (auto c : children) {
-            m = c->applyTransformations(m);
-        }
-
+        for (auto c : children) m = c->applyTransformations(m);
         return m;
     }
 
@@ -830,10 +842,32 @@ struct VRML2Node : VRMLNode {
     }
 
     Matrix4d applyTransformations(Matrix4d m = Matrix4d()) {
+        if (type == "Transform") {
+            VRTransformPtr t = dynamic_pointer_cast<VRTransform>(obj);
+            if (t) t->setMatrix(pose);
+        }
+
+        for (auto c : children) c->applyTransformations(m);
         return m;
     }
 
     VRMaterialPtr applyMaterials(VRMaterialPtr m = 0) {
+        if (isGeometryNode(type)) {
+            VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
+            if (g) {
+                VRMaterialPtr mat = 0;
+                for (auto sibling : getSiblings()) {
+                    if (sibling->type == "Appearance") {
+                        for (auto c : sibling->children) {
+                            if (c->type == "Material") mat = c->material;
+                        }
+                    }
+                }
+                if (mat) g->setMaterial(mat);
+            }
+        }
+
+        for (auto c : children) c->applyMaterials(m);
         return m;
     }
 
@@ -940,6 +974,7 @@ class VRMLLoader : public VRMLUtils {
             if (s == NODE) return "NODE";
             if (s == STRING) return "STRING";
             if (s == FIELD) return "FIELD";
+            return "UNNOKWN";
         }
 
         void handleToken(string token) {
