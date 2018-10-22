@@ -42,7 +42,7 @@ struct VRMLSchema {
         }
     }
 
-    VRMLSchema(int version) : version(version) {
+    VRMLSchema(int version = 1) : version(version) {
         if (version == 1) { // TODO
             addNodeRef("AsciiText", {}, {}, {});
             addNodeRef("Cone", {}, {}, {});
@@ -146,10 +146,13 @@ struct VRMLSchema {
         if (!isNode(node)) return false;
         return nodeRefs[node].fieldRefs.count(token);
     }
+
+    FieldRef& getField(string& node, string& field) {
+        return nodeRefs[node].fieldRefs[field];
+    }
 };
 
-VRMLSchema schema1(1);
-VRMLSchema schema2(2);
+VRMLSchema schema;
 
 
 struct VRMLUtils {
@@ -848,13 +851,13 @@ class VRMLLoader : public VRMLUtils {
         VRMLNode* tree = 0;
 
         enum STATE {
-            HEAD,
-            BODY,
+            NODE,
+            STRING,
             FIELD
         };
 
         struct Context {
-            STATE state = HEAD;
+            STATE state = NODE;
             string field;
             VRMLNode* currentNode = 0;
 
@@ -902,9 +905,6 @@ class VRMLLoader : public VRMLUtils {
                     ctx.currentNode = ctx.currentNode->addChild(ctx.nextNodeType, ctx.nextNodeName);
                     ctx.nextNodeType = "Untyped";
                     ctx.nextNodeName = "Unnamed";
-
-                    if (isGroupNode(ctx.currentNode->type)) ctx.state = HEAD;
-                    else                                    ctx.state = BODY;
                 } else cout << "WARNING in VRML handleBracket: currentNode at opening bracket is NULL" << endl;
             };
 
@@ -915,14 +915,14 @@ class VRMLLoader : public VRMLUtils {
                 } else cout << "WARNING in VRML handleBracket: currentNode at closing bracket is NULL" << endl;
             };
 
+            ctx.state = NODE;
+
             if (ctx.currentNode) {
-                if (version == 1 || version == 2) {
-                    if (bracket == "}") close();
-                    if (bracket == "{") open();
-                    if (bracket == "{}") {
-                        open();
-                        close();
-                    }
+                if (bracket == "}") close();
+                if (bracket == "{") open();
+                if (bracket == "{}") {
+                    open();
+                    close();
                 }
 
                 if (version == 2) { // for children node
@@ -937,8 +937,8 @@ class VRMLLoader : public VRMLUtils {
         };
 
         string stateToString(STATE s) {
-            if (s == HEAD) return "HEAD";
-            if (s == BODY) return "BODY";
+            if (s == NODE) return "NODE";
+            if (s == STRING) return "STRING";
             if (s == FIELD) return "FIELD";
         }
 
@@ -952,27 +952,30 @@ class VRMLLoader : public VRMLUtils {
             }
 
             cout << "  VRML context state: " << stateToString(ctx.state) << endl;
-            if (ctx.state == HEAD) {
-                if (token == "DEF") ctx.nextNodeDEF = true;
-                else {
-                    cout << "  set '" << token << "' as nextNodeName!" << endl;
-                    ctx.nextNodeName = token;
-                }
-                return;
-            } // must be a name
 
             if (ctx.state == FIELD) {
                 cout << "   " << token << " in field " << isBool(token) << " '" << ctx.currentNode->params[ctx.field] << "' field: " << ctx.field << endl;
                 if (token == "[" || token == "]" || token == ",") return;
                 if (isNumber(token) || isBool(token)) { ctx.currentNode->params[ctx.field] += token+" "; return; }
-                ctx.state = BODY; // don't return here
+                ctx.state = NODE; // don't return here
             }
 
-            if (ctx.state == BODY) {
-                ctx.currentNode->params[token] = ""; // must be a field
-                ctx.field = token;
-                ctx.state = FIELD;
-                return;
+            if (ctx.state == NODE) {
+                if (token == "DEF") { ctx.nextNodeDEF = true; return; }
+                if (ctx.nextNodeDEF) { ctx.nextNodeName = token; ctx.nextNodeDEF = false; return; }
+                if (schema.isFieldOf(ctx.currentNode->type, token)) {
+                    string fType = schema.getField(ctx.currentNode->type, token).type;
+                    if (fType == "SFNode" || fType == "MFNode") {
+                        ctx.nextNodeName = token;
+                        ctx.nextNodeType = "Parameter";
+                        return;
+                    }
+
+                    ctx.currentNode->params[token] = "";
+                    ctx.field = token;
+                    ctx.state = FIELD;
+                    return;
+                }
             }
 
             cout << "WARNING: VRML token not handled: " << token << endl;
@@ -1006,6 +1009,7 @@ class VRMLLoader : public VRMLUtils {
             if (versionStr == "#VRML V1.0 ascii") version = 1;
             else version = 2;
 
+            schema = VRMLSchema(version);
             ctx = Context();
             if (version == 1) tree = new VRML1Node("Root", "Root");
             if (version == 2) tree = new VRML2Node("Root", "Root");
