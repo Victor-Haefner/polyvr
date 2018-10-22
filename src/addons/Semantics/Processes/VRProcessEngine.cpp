@@ -35,8 +35,8 @@ void VRProcessEngine::initialize(){
         if (initialStates.count(processSubjects[i])){
             initialState = initialStates[processSubjects[i]]->getLabel();
         }
-        //cout << "initialState " << initialState << endl;
 
+        //for each state of this Subject create the possible Actions
         for (uint j=0; j<states.size(); j++) {
             auto state = states[j];
             vector<Action> actions;
@@ -44,17 +44,25 @@ void VRProcessEngine::initialize(){
             //auto transitions = process->getStateTransitions(sID, state->getID());
             auto transitions = process->getStateOutTransitions(sID, state->getID());
 
-            //cout << "transitions " << transitions.size() << endl;
+            //for each transition out of this State create Actions which lead to the next State
             for (auto transition : transitions) {
                 auto nextState = process->getTransitionState(transition);
                 Action action(nextState->getLabel(), transition);
-                //if state == receive state: Prerequisite p(message); action.prerequisites.push_back(p);
+                //if state == receive state add the message to receive to action prerequisites
+                if(state->type == RECEIVESTATE){
+                    Message m(process->getStateMessage(state)->getLabel(), processSubjects[i]->getLabel());
+                    Prerequisite p(m);
+                    action.prerequisites.push_back(p);
+                }
                 actions.push_back(action);
             }
 
+            //define function to call by the State Machine on state switch (process)
             auto transitionCB = VRFunction<float, string>::create("processTransition", boost::bind(&VRProcessEngine::Actor::transitioning, &subjects[i], _1));
             subjects[i].actions[state->getLabel()] = actions;
             subjects[i].sm.addState(state->getLabel(), transitionCB);
+
+            // if send state call sm setonleave -> sendMessage
         }
         subjects[i].initialState = initialState;
         subjects[i].sm.setCurrentState( initialState );

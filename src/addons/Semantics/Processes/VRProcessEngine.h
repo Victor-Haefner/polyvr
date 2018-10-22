@@ -57,7 +57,7 @@ class VRProcessEngine {
 
         struct Actor {
             Action* current = 0;
-            map<string, vector<Action>> actions; // maps state name to possible actions/transitions
+            map<string, vector<Action>> actions; // maps state name (see VRStateMachine) to possible Actions
             VRStateMachine<float> sm;
             Inventory inventory;
             //vector<Message> outgoingMessages;
@@ -81,12 +81,8 @@ class VRProcessEngine {
                     cout << " Actor::transitioning goto next state actions " << nextState << endl;
                     return nextState; // state machine goes into nextState
                 } else {
-                    //cout << " Actor::transitioning check actions " << actions.size() << endl;
                     if(stateName == "End"){
-                        cout << "this is the end." << endl;
                         sm.setCurrentState(initialState);
-                        cout << "initial state " << initialState << endl;
-                        cout << "current state " << sm.getCurrentState()->getName() << endl;
                     }
                     // check if any actions are ready to start
                     for (auto& action : actions[stateName]) {
@@ -99,16 +95,8 @@ class VRProcessEngine {
                 return "";
             }
 
-            void receiveMessage(Message m) {
-                inventory.messages.push_back(m);
-            }
-
-            //if in send state
             void sendMessage(string message, Actor* receiver){
-
-
-                //Message m;
-
+                //receiver.inventory.messages.push_back(Message(message, self));
             }
         };
 

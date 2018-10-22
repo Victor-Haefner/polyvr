@@ -28,7 +28,7 @@ struct VRProcessNode : VRName {
     int ID = 0;
     int subject = 0;
     bool isInitialState = 0;
-    VRProcessNodePtr message;
+    //VRProcessNodePtr message;
 
     VRProcessNode(string name, PROCESS_WIDGET type, int ID, int sID);
     ~VRProcessNode();
