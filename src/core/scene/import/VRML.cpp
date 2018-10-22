@@ -179,10 +179,10 @@ struct VRMLUtils {
         if (bracket == "{" || bracket == "}") return true;
         if (bracket == "{}") return true;
 
-        if (version == 2) {
+        /*if (version == 2) {
             if (bracket == "[" || bracket == "]") return true;
             if (bracket == "[]") return true;
-        }
+        }*/
 
         return false;
     }
@@ -346,9 +346,14 @@ struct VRMLNode : VRMLUtils {
     VRMLNode* parent = 0;
     vector<VRMLNode*> children;
     map<string, string> params;
-    vector<Vec3d> positions;
+    vector<Pnt3d> positions;
     vector<Vec3d> normals;
+    vector<Color3f> colors;
+    vector<Vec2d> texCoords;
     vector<int> coordIndex;
+    vector<int> normalIndex;
+    vector<int> colorIndex;
+    vector<int> texCoordIndex;
     VRObjectPtr obj;
     VRMaterialPtr material;
     Matrix4d pose;
@@ -484,20 +489,9 @@ struct VRMLNode : VRMLUtils {
         return data.count(var) ? toValue<Vec4d>(data[var]) : def;
     }
 
-    vector<int> getMFLong(map<string, string>& data, string var, vector<int> def) {
-        return data.count(var) ? toValue<vector<int>>(data[var]) : def;
-    }
-
-    vector<float> getMFFloat(map<string, string>& data, string var, vector<float> def) {
-        return data.count(var) ? toValue<vector<float>>(data[var]) : def;
-    }
-
-    vector<Color3f> getMFColor(map<string, string>& data, string var, vector<Color3f> def) {
-        return data.count(var) ? toValue<vector<Color3f>>(data[var]) : def;
-    }
-
-    vector<Vec3d> getMFVec3f(map<string, string>& data, string var, vector<Vec3d> def) {
-        return data.count(var) ? toValue<vector<Vec3d>>(data[var]) : def;
+    template<class T>
+    vector<T> getMultiField(map<string, string>& data, string var, vector<T> def) {
+        return data.count(var) ? toValue<vector<T>>(data[var]) : def;
     }
 
 
@@ -666,6 +660,7 @@ struct VRMLNode : VRMLUtils {
         c->setFov(1.0/heightAngle);
     }
 
+    // transformation data
     void handleTranslation(map<string, string> data) {
         pose.setTranslate( getSFVec3f(data, "translation", Vec3d(0,0,0)) );
     }
@@ -694,28 +689,44 @@ struct VRMLNode : VRMLUtils {
         pose = M;
     }
 
+    // geo data
     void handleCoordinate3(map<string, string> data) {
-        positions = getMFVec3f(data, "point", {});
+        positions = getMultiField<Pnt3d>(data, "point", {});
     }
 
     void handleNormal(map<string, string> data) {
-        normals = getMFVec3f(data, "normal", {});
+        normals = getMultiField<Vec3d>(data, "normal", {});
+    }
+
+    void handleColor(map<string, string> data) {
+        colors = getMultiField<Color3f>(data, "color", {});
+    }
+
+    void handleTextureCoordinate(map<string, string> data) {
+        texCoords = getMultiField<Vec2d>(data, "point", {});
     }
 
     void handleIndexedFaceSet(map<string, string> data) {
-        coordIndex = getMFLong(data, "coordIndex", {0});
-        //vector<int> materialIndex = getMFLong(data, "materialIndex", {-1}); // TODO
-        //vector<int> normalIndex = getMFLong(data, "normalIndex", {-1});
-        //vector<int> textureCoordIndex = getMFLong(data, "textureCoordIndex", {-1});
+        coordIndex = getMultiField<int>(data, "coordIndex", {});
+        normalIndex = getMultiField<int>(data, "normalIndex", {});
+        if (version == 1) {
+            colorIndex = getMultiField<int>(data, "materialIndex", {});
+            texCoordIndex = getMultiField<int>(data, "textureCoordIndex", {});
+        }
+        if (version == 2) {
+            colorIndex = getMultiField<int>(data, "colorIndex", {});
+            texCoordIndex = getMultiField<int>(data, "texCoordIndex", {});
+        }
     }
 
+
     void handleMaterial(map<string, string> data) {
-        vector<Color3f> ambientColor = getMFColor(data, "ambientColor", {Color3f(0.2,0.2,0.2)});
-        vector<Color3f> diffuseColor = getMFColor(data, "diffuseColor", {Color3f(0.8,0.8,0.8)});
-        vector<Color3f> specularColor = getMFColor(data, "specularColor", {Color3f(0,0,0)});
-        vector<Color3f> emissiveColor = getMFColor(data, "emissiveColor", {Color3f(0,0,0)});
-        vector<float> shininess = getMFFloat(data, "shininess", {0.2});
-        vector<float> transparency = getMFFloat(data, "transparency", {0});
+        vector<Color3f> ambientColor = getMultiField<Color3f>(data, "ambientColor", {Color3f(0.2,0.2,0.2)});
+        vector<Color3f> diffuseColor = getMultiField<Color3f>(data, "diffuseColor", {Color3f(0.8,0.8,0.8)});
+        vector<Color3f> specularColor = getMultiField<Color3f>(data, "specularColor", {Color3f(0,0,0)});
+        vector<Color3f> emissiveColor = getMultiField<Color3f>(data, "emissiveColor", {Color3f(0,0,0)});
+        vector<float> shininess = getMultiField<float>(data, "shininess", {0.2});
+        vector<float> transparency = getMultiField<float>(data, "transparency", {0});
         auto m = VRMaterial::create("material");
         for (int i=0; i<diffuseColor.size(); i++) {
             if (i > 0) m->addPass();
@@ -738,8 +749,10 @@ struct VRMLNode : VRMLUtils {
         else if (type == "Cone") handleCone(params);
         else if (type == "Cylinder") handleCylinder(params);
         else if (type == "IndexedFaceSet") handleIndexedFaceSet(params);
-        else if (type == "Coordinate3") handleCoordinate3(params);
+        else if (type == "Coordinate3" || type == "Coordinate") handleCoordinate3(params);
         else if (type == "Normal") handleNormal(params);
+        else if (type == "Color") handleColor(params);
+        else if (type == "TextureCoordinate") handleTextureCoordinate(params);
         else if (type == "Translation") handleTranslation(params);
         else if (type == "Rotation") handleRotation(params);
         else if (type == "Scale") handleScale(params);
@@ -886,6 +899,33 @@ struct VRML2Node : VRMLNode {
     }
 
     VRGeoData applyGeometries(VRGeoData data = VRGeoData()) {
+        if (type == "IndexedFaceSet") {
+            VRGeoData geo;
+
+            for (auto c : children) {
+                if (c->type == "Coordinate") for (auto p : c->positions) geo.pushVert(p);
+                if (c->type == "Normal") for (auto n : c->normals) geo.pushNorm(n);
+                if (c->type == "Color") for (auto c : c->colors) geo.pushColor(c);
+                if (c->type == "TextureCoordinate") for (auto t : c->texCoords) geo.pushTexCoord(t);
+            }
+
+            VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
+            if (g) {
+                vector<int> face;
+                for (auto i : coordIndex) {
+                    if (i == -1) {
+                        if (face.size() == 3) geo.pushTri(face[0], face[1], face[2]);
+                        if (face.size() == 4) geo.pushQuad(face[0], face[1], face[2], face[3]);
+                        face.clear();
+                        continue;
+                    }
+                    face.push_back(i);
+                }
+                geo.apply(g);
+            }
+        }
+
+        for (auto c : children) c->applyGeometries(data);
         return data;
     }
 };
@@ -977,14 +1017,11 @@ class VRMLLoader : public VRMLUtils {
                     close();
                 }
 
-                if (version == 2) { // for children node
+                /*if (version == 2) { // for children node
+                    if ()
                     if (bracket == "]") close();
                     if (bracket == "[") open();
-                    if (bracket == "[]") {
-                        open();
-                        close();
-                    }
-                }
+                }*/
             }
         };
 
@@ -996,10 +1033,10 @@ class VRMLLoader : public VRMLUtils {
         }
 
         void handleToken(string token) {
-            cout << " handle VRML token: " << token << " " << stateToString(ctx.state) << endl;
+            //cout << " handle VRML token: " << token << " " << stateToString(ctx.state) << endl;
             if (isBracket(token)) { handleBracket(token); return; }
             if (isNode(token)) {
-                cout << "  handle VRML node: " << token << ", set as nextNodeType!" << endl;
+                //cout << "  handle VRML node: " << token << ", set as nextNodeType!" << endl;
                 ctx.nextNodeType = token;
                 return;
             }
@@ -1007,7 +1044,7 @@ class VRMLLoader : public VRMLUtils {
             //cout << "  VRML context state: " << stateToString(ctx.state) << endl;
 
             if (ctx.state == FIELD) {
-                cout << "   " << token << " in field " << isNumber(token) << " '" << ctx.currentNode->params[ctx.field] << "' field: " << ctx.field << endl;
+                //cout << "   " << token << " in field " << isNumber(token) << " '" << ctx.currentNode->params[ctx.field] << "' field: " << ctx.field << endl;
                 if (token == "[" || token == "]" || token == ",") return;
                 if (isNumber(token) || isBool(token)) { ctx.currentNode->params[ctx.field] += token+" "; return; }
                 ctx.state = NODE; // don't return here
@@ -1040,7 +1077,7 @@ class VRMLLoader : public VRMLUtils {
                 }
             }
 
-            cout << "WARNING: VRML token not handled: " << token << endl;
+            cout << "WARNING: VRML token not handled: '" << token << "'" << endl;
         };
 
         bool parseFile(ifstream& file) {
@@ -1054,6 +1091,26 @@ class VRMLLoader : public VRMLUtils {
                     string s; ss >> s;
                     if (s.size() == 0) continue; // ignore empty tokens
                     if (s[0] == '#') break; // ignore comments
+
+                    int n = s.size()-1;
+                    if (n > 0) {
+                        if (s[0] == '{' || s[0] == '}' || s[0] == '[' || s[0] == ']') {
+                            string s1 = subString(s, 0, 1);
+                            string s2 = subString(s, 1, n);
+                            handleToken(s1);
+                            handleToken(s2);
+                            continue;
+                        }
+
+                        if (s[n] == '{' || s[n] == '}' || s[n] == '[' || s[n] == ']') {
+                            string s1 = subString(s, 0, n);
+                            string s2 = subString(s, n, 1);
+                            handleToken(s1);
+                            handleToken(s2);
+                            continue;
+                        }
+                    }
+
                     handleToken(s);
                 }
             }
