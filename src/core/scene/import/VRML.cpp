@@ -469,8 +469,15 @@ struct VRMLNode : VRMLUtils {
         return false;
     }
 
+    bool getBool(string b) {
+        if (b == "false" || b == "False" || b == "FALSE") return false;
+        if (b == "true" || b == "True" || b == "TRUE") return true;
+        return toValue<bool>(b);
+    }
+
     bool getSFBool(map<string, string>& data, string var, bool def) {
-        return data.count(var) ? toValue<bool>(data[var]) : def;
+        if (! data.count(var)) return def;
+        return getBool(data[var]);
     }
 
     float getSFFloat(map<string, string>& data, string var, float def) {
@@ -900,17 +907,23 @@ struct VRML2Node : VRMLNode {
 
     VRGeoData applyGeometries(VRGeoData data = VRGeoData()) {
         if (type == "IndexedFaceSet") {
-            VRGeoData geo;
-
-            for (auto c : children) {
-                if (c->type == "Coordinate") for (auto p : c->positions) geo.pushVert(p);
-                if (c->type == "Normal") for (auto n : c->normals) geo.pushNorm(n);
-                if (c->type == "Color") for (auto c : c->colors) geo.pushColor(c);
-                if (c->type == "TextureCoordinate") for (auto t : c->texCoords) geo.pushTexCoord(t);
-            }
-
             VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
             if (g) {
+                VRGeoData geo;
+
+                bool colorPerVertex = getBool(params["colorPerVertex"]);
+                bool normalPerVertex = getBool(params["normalPerVertex"]);
+                bool doNormals = false;
+                bool doColors = false;
+                bool doTexCoords = false;
+
+                for (auto c : children) {
+                    if (c->type == "Coordinate") for (auto p : c->positions) geo.pushVert(p);
+                    if (c->type == "Normal") { for (auto n : c->normals) geo.pushNorm(n); doNormals = true; }
+                    if (c->type == "Color") { for (auto c : c->colors) geo.pushColor(c); doColors = true; }
+                    if (c->type == "TextureCoordinate") { for (auto t : c->texCoords) geo.pushTexCoord(t); doTexCoords = true; }
+                }
+
                 vector<int> face;
                 for (auto i : coordIndex) {
                     if (i == -1) {
@@ -921,7 +934,54 @@ struct VRML2Node : VRMLNode {
                     }
                     face.push_back(i);
                 }
+                // last face may not be followed by -1, so we have to check again!
+                if (face.size() == 3) geo.pushTri(face[0], face[1], face[2]);
+                if (face.size() == 4) geo.pushQuad(face[0], face[1], face[2], face[3]);
+
+                if (doNormals) {
+                    if (!normalPerVertex) {
+                        if (normalIndex.size()) { // different color indices, one index per face
+                            for (int i = 0; i<normalIndex.size(); i++) {
+                                int ID = normalIndex[i];
+                                int N = geo.getFaceSize(i);
+                                for (int j=0; j<N; j++) geo.pushNormalIndex(ID);
+                            }
+                        } else {
+                            for (int i = 0; i<geo.getNFaces(); i++) {
+                                int N = geo.getFaceSize(i);
+                                for (int j=0; j<N; j++) geo.pushNormalIndex(i);
+                            }
+                        }
+                    } else {
+                        if (normalIndex.size()) { // different color indices, same primitives!
+                            for (int i : normalIndex) if (i != -1) geo.pushNormalIndex(i);
+                        } else {} // nothing to do
+                    }
+                }
+
+                if (doColors) {
+                    if (!colorPerVertex) {
+                        if (colorIndex.size()) { // different color indices, one index per face
+                            for (int i = 0; i<colorIndex.size(); i++) {
+                                int ID = colorIndex[i];
+                                int N = geo.getFaceSize(i);
+                                for (int j=0; j<N; j++) geo.pushColorIndex(ID);
+                            }
+                        } else {
+                            for (int i = 0; i<geo.getNFaces(); i++) {
+                                int N = geo.getFaceSize(i);
+                                for (int j=0; j<N; j++) geo.pushColorIndex(i);
+                            }
+                        }
+                    } else {
+                        if (colorIndex.size()) { // different color indices, same primitives!
+                            for (int i : colorIndex) if (i != -1) geo.pushColorIndex(i);
+                        } else {} // nothing to do
+                    }
+                }
+
                 geo.apply(g);
+                if (!doNormals) g->updateNormals(false); // TODO: use creaseAngle
             }
         }
 

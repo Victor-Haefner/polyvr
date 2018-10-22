@@ -31,6 +31,8 @@ class VRGeoData {
         static VRGeoDataPtr create();
 
         int size() const;
+        int getNFaces() const;
+        int getFaceSize(int fID) const;
 
         void reset();
         bool valid() const;
@@ -63,6 +65,8 @@ class VRGeoData {
         int pushTexCoord2(Vec2d t);
         int pushColor(Color3f c);
         int pushColor(Color4f c);
+        int pushNormalIndex(int i);
+        int pushColorIndex(int i);
 
         bool setVert(int i, Pnt3d p);
         bool setVert(int i, Pnt3d p, Vec3d n);
