@@ -355,7 +355,12 @@ struct VRMLNode : VRMLUtils {
         for (auto c : children) delete c;
     }
 
-    virtual VRMLNode* addChild(string t, string n) = 0;
+    void addChild(VRMLNode* c) {
+        c->parent = this;
+        children.push_back(c);
+    }
+
+    virtual VRMLNode* newChild(string t, string n) = 0;
 
     vector<VRMLNode*> getSiblings() {
         vector<VRMLNode*> res;
@@ -750,17 +755,21 @@ struct VRMLNode : VRMLUtils {
     virtual Matrix4d applyTransformations(Matrix4d m = Matrix4d()) = 0;
     virtual VRMaterialPtr applyMaterials(VRMaterialPtr m = 0) = 0;
     virtual VRGeoData applyGeometries(VRGeoData data = VRGeoData()) = 0;
+
+    void resolveLinks(map<string, VRMLNode*>& references) {
+        if (type == "Link") obj->getParent()->addChild(references[name]->obj->duplicate());
+        for (auto c : children) c->resolveLinks(references);
+    }
 };
 
 struct VRML1Node : VRMLNode {
     VRML1Node(string type, string name = "Unnamed") : VRMLNode(type, name) { version = 1; }
     ~VRML1Node() {}
 
-    VRML1Node* addChild(string t, string n) {
-        cout << "VRML1Node::addChild '" << n << "' of type " << t << endl;
+    VRML1Node* newChild(string t, string n) {
+        cout << "VRML1Node::newChild '" << n << "' of type " << t << endl;
         auto c = new VRML1Node(t,n);
-        c->parent = this;
-        children.push_back(c);
+        addChild(c);
         return c;
     }
 
@@ -788,10 +797,7 @@ struct VRML1Node : VRMLNode {
             m = 0;
         }
 
-        for (auto c : children) {
-            m = c->applyMaterials(m);
-        }
-
+        for (auto c : children) m = c->applyMaterials(m);
         return m;
     }
 
@@ -833,11 +839,10 @@ struct VRML2Node : VRMLNode {
     VRML2Node(string type, string name = "Unnamed") : VRMLNode(type, name) { version = 2; }
     ~VRML2Node() {}
 
-    VRML2Node* addChild(string t, string n) {
-        cout << "VRML2Node::addChild '" << n << "' of type " << t << endl;
+    VRML2Node* newChild(string t, string n) {
+        cout << "VRML2Node::newChild '" << n << "' of type " << t << endl;
         auto c = new VRML2Node(t,n);
-        c->parent = this;
-        children.push_back(c);
+        addChild(c);
         return c;
     }
 
@@ -883,6 +888,7 @@ class VRMLLoader : public VRMLUtils {
         VRProgressPtr progress;
         bool threaded = false;
         VRMLNode* tree = 0;
+        map<string, VRMLNode*> references;
 
         enum STATE {
             NODE,
@@ -897,6 +903,7 @@ class VRMLLoader : public VRMLUtils {
 
             // node header
             bool nextNodeDEF = false;
+            bool nextNodeUSE = false;
             string nextNodeType = "Untyped";
             string nextNodeName = "Unnamed";
         };
@@ -936,9 +943,11 @@ class VRMLLoader : public VRMLUtils {
         void handleBracket(string bracket) {
             auto open = [&]() {
                 if (ctx.currentNode) {
-                    ctx.currentNode = ctx.currentNode->addChild(ctx.nextNodeType, ctx.nextNodeName);
+                    ctx.currentNode = ctx.currentNode->newChild(ctx.nextNodeType, ctx.nextNodeName);
+                    if (ctx.nextNodeDEF) references[ctx.nextNodeName] = ctx.currentNode;
                     ctx.nextNodeType = "Untyped";
                     ctx.nextNodeName = "Unnamed";
+                    ctx.nextNodeDEF = false;
                 } else cout << "WARNING in VRML handleBracket: currentNode at opening bracket is NULL" << endl;
             };
 
@@ -997,7 +1006,16 @@ class VRMLLoader : public VRMLUtils {
 
             if (ctx.state == NODE) {
                 if (token == "DEF") { ctx.nextNodeDEF = true; return; }
-                if (ctx.nextNodeDEF) { ctx.nextNodeName = token; ctx.nextNodeDEF = false; return; }
+                if (token == "USE") { ctx.nextNodeUSE = true; return; }
+                if (ctx.nextNodeDEF) { ctx.nextNodeName = token; return; }
+                if (ctx.nextNodeUSE) {
+                    if (!references.count(token)) cout << "WARNING in VRML handle token, no reference named " << token << " found!" << endl;
+                    auto refNode = references[token];
+                    ctx.currentNode->newChild("Link", token);
+                    ctx.nextNodeUSE = false;
+                    return;
+                }
+
                 if (schema.isFieldOf(ctx.currentNode->type, token)) {
                     string fType = schema.getField(ctx.currentNode->type, token).type;
                     if (fType == "SFNode" || fType == "MFNode") {
@@ -1056,6 +1074,7 @@ class VRMLLoader : public VRMLUtils {
             tree->applyTransformations();
             tree->applyMaterials();
             tree->applyGeometries();
+            tree->resolveLinks(references);
             delete tree;
         }
 };
