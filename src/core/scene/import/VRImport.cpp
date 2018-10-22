@@ -146,8 +146,8 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
 #ifdef WITH_STEP
         if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { loadSTEPCascade(path, res); return; }
 #endif
-        //if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res, thread)) return; else preset = "OSG"; }
-        if (ext == ".wrl") { loadVRML(path, res, progress, thread); return; }
+        if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res, thread)) return; else preset = "OSG"; }
+        if (ext == ".wrl" && preset == "PVR") { loadVRML(path, res, progress, thread); return; }
         if (ext == ".vtk") { loadVtk(path, res); return; }
         if (ext == ".shp") { loadSHP(path, res); return; }
         if (ext == ".pdf") { loadPDF(path, res); return; }
