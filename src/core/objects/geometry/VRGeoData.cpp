@@ -180,10 +180,10 @@ void VRGeoData::apply(VRGeometryPtr geo, bool check, bool checkIndices) const {
     geo->setTexCoords( data->texs->size() > 0 ? data->texs : 0, 0 );
     geo->setTexCoords( data->texs2->size() > 0 ? data->texs2 : 0, 1 );
     if (data->indices->size() > 0) geo->setIndices( data->indices );
-    if (data->indicesNormals->size() > 0) {
+    if (data->indicesNormals->size() > 0)
         if (data->indicesNormals->size() == data->indices->size()) geo->getMesh()->geo->setIndex( data->indicesNormals, Geometry::NormalsIndex );
-    }
-    //if (data->indicesColors->size() > 0) geo->getMesh()->geo->setIndex( data->indicesColors, Geometry::ColorsIndex );
+    if (data->indicesColors->size() > 0)
+        if (data->indicesColors->size() == data->indices->size()) geo->getMesh()->geo->setIndex( data->indicesColors, Geometry::ColorsIndex );
 
     GeoVectorProperty* c3 = data->cols3->size() > 0 ? data->cols3 : 0;
     GeoVectorProperty* c4 = data->cols4->size() > 0 ? data->cols4 : 0;
