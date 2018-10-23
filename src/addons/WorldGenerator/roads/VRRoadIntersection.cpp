@@ -63,6 +63,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 	auto computeLaneMatches = [&]() {
 	    auto checkDefaultMatch = [&](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut, VRRoadPtr road1, VRRoadPtr road2, int Zout, int Zin) {
         ///DEFAULT - INTERSECTION
+        ///AGRAJAG
         //i= index lane in; j= index lane out; Nin= number of lanes going in at road1; Nout= number of lanes going out at road2; reSignIn= , reSignOut=,
             auto getRoadConnectionAngle = [&](VRRoadPtr road1, VRRoadPtr road2) {
                 auto& data1 = road1->getEdgePoint( node );
@@ -78,36 +79,30 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 return a;
             };
             bool oneway =  ( Zout==0 || Zin==0 );
-            if (Nin == Nout && i != j && reSignIn != reSignOut) return false;
-            if (Nin == Nout && i != Nout-j-1 && reSignIn == reSignOut) return false;
+            if (reSignIn<0) i=Nin-i-1;  //making sure indexes stay consistent, independent of road-direction
+            if (reSignOut<0) j=Nout-j-1;
+            bool parallel  = bool( getRoadConnectionAngle(road1, road2) < -0.8 );
+            bool left  = bool( getRoadTurnLeft(road1, road2) < 0);
+
+            //if (Nin == Nout && reSignIn != reSignOut && i == Nout-j-1) return true;
             if (Nin == Nout && Nin>1 && roadFronts.size()>2 && !oneway) {
-                bool parallel  = bool( getRoadConnectionAngle(road1, road2) < -0.8 );
-                bool left  = bool( getRoadTurnLeft(road1, road2) < 0);
-                if (reSignIn<0) i=Nin-i-1;  //making sure indexes stay consistent, independent of road-direction
-                //if (reSignOut<0) j=Nout-j-1;
-                if (!parallel && i>0 && !left) return false;
-                if (!parallel && i<Nin-1 && left) return false;
+                if ( parallel && i==Nout-j-1) return true;
+                if (!parallel &&  left && i==Nin-1 && j==0) return true;
+                if (!parallel && !left && i==0 && j==Nout-1) return true;
             }
             if (Nin > Nout && !oneway) {
-                bool parallel  = bool( getRoadConnectionAngle(road1, road2) < -0.8 );
-                bool left  = bool( getRoadTurnLeft(road1, road2) < 0);
-                if (reSignIn<0) i=Nin-i-1;  //making sure indexes stay consistent, independent of road-direction
-                if (reSignOut<0) j=Nout-j-1;
-                if (parallel && Nin<=Nout+1 && i!=Nout-j-1) return false; //matching way-through
-                if (parallel &&  Nin>Nout+1 && i!=Nout-j) return false; //matching way-through
-                if (!parallel && (i!=Nin-1 || j!=0 || !left) && ((i!=0 || j!=Nout-1) || left)) return false; //one left turn, one right turn
-                if (!parallel && i>0 && i<Nin-1) return false; //everything not being most left or most right lane
+                if ( parallel && i==Nout-j-1) return true; //matching way-through
+                if (!parallel &&  left && i==Nin-1 && j==0) return true; //one left turn
+                if (!parallel && !left && i==0 && j==Nout-1) return true; //one right turn
             }
             if (Nin < Nout && roadFronts.size()>2 && !oneway) {
-                bool parallel  = bool( getRoadConnectionAngle(road1, road2) < -0.8 );
-                bool left  = bool( getRoadTurnLeft(road1, road2) < 0);
-                //if (reSignIn<0) i=Nin-i-1;  //making sure indexes stay consistent, independent of road-direction
-                if (reSignOut<0) j=Nout-j-1;
-                if (!parallel && j>0 && left) return false;
-                if (!parallel && j<Nout-1 && !left) return false;
+                if ( parallel && i==Nout-j-1) return true;
+                if (!parallel &&  left && i==Nin-1 && j==0) return true;
+                if (!parallel && !left && i==0 && j==Nout-1) return true;
             }
-            if (Nin == 1 || Nout == 1) return true;
-            return true;
+            if (Nin == 1 && Nout == 1) return true;
+            if (oneway) return true;
+            return false;
         };
 
         auto checkCrossingMatch = [&](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut, VRRoadPtr road1, VRRoadPtr road2) {
@@ -656,6 +651,8 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             nextLanes[laneIn].push_back(lane);
             nextLanes[lane].push_back(laneOut);
             roads->connectGraph(nodes, norms, lane);
+
+            ///AGRAJAG
         }
 
         resolveEdgeIntersections();

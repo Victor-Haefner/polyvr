@@ -542,6 +542,7 @@ int VRRoadNetwork::getArrowStyle() { return arrowType; }
 void VRRoadNetwork::computeArrows() {
     auto w = world.lock();
     for (auto arrow : w->getOntology()->getEntities("Arrow")) {
+        cout << "arrow" << endl;
         float t = toFloat( arrow->get("position")->value );
         auto lane = arrow->getEntity("lane");
         if (!lane || !lane->getEntity("path")) continue;
