@@ -174,7 +174,7 @@ template <typename T> int ssToVal(stringstream& ss, T& t) {
         b = bool(ss >> t);
         if (ss.fail()) {
             ss.clear();
-            string dummy;
+            char dummy;
             ss >> dummy;
         } else break;
     } while(!ss.eof());

@@ -511,7 +511,7 @@ struct VRMLNode : VRMLUtils {
 
 
     VRObjectPtr makeObject() {
-        cout << "make object '" << name << "' of type " << type << endl;
+        //cout << "make object '" << name << "' of type " << type << endl;
         if (isGroupNode(type)) return VRObject::create(name);
         if (isGeometryNode(type)) {
             if (type == "AsciiText") return VRSprite::create(name);
@@ -527,6 +527,12 @@ struct VRMLNode : VRMLUtils {
         if (version == 2) {
             if (type == "Transform") return VRTransform::create(name);
         }
+
+        if (type == "Coordinate") return 0;
+        if (type == "Normal") return 0;
+        if (type == "Color") return 0;
+        if (type == "Material") return 0;
+        if (type == "Appearance") return 0;
 
         return VRObject::create(name);
     }
@@ -757,6 +763,8 @@ struct VRMLNode : VRMLUtils {
         if (isGroupNode( type )) return; // group nodes have no properties
         if (isOtherNode( type )) return; // other nodes are ignored
         if (type == "Untyped") return;
+        if (type == "Link") return;
+        if (type == "Shape" || type == "Appearance") return;
         else if (type == "PointLight") handlePointLight(params);
         else if (type == "SpotLight") handleSpotLight(params);
         else if (type == "DirectionalLight") handleDirectionalLight(params);
@@ -783,8 +791,10 @@ struct VRMLNode : VRMLUtils {
     void buildOSG() {
         if (!obj) {
             obj = makeObject();
-            if (parent && parent->obj) parent->obj->addChild(obj);
-            else cout << "WARNING in VRMLNode::buildOSG, cannot append object to parent!" << endl;
+            if (obj) {
+                if (parent && parent->obj) parent->obj->addChild(obj);
+                else cout << "WARNING in VRMLNode::buildOSG, cannot append object to parent!" << endl;
+            }
             applyProperties();
         }
 
@@ -793,7 +803,7 @@ struct VRMLNode : VRMLUtils {
 
     virtual Matrix4d applyTransformations(Matrix4d m = Matrix4d()) = 0;
     virtual VRMaterialPtr applyMaterials(VRMaterialPtr m = 0) = 0;
-    virtual VRGeoData applyGeometries(VRGeoData data = VRGeoData()) = 0;
+    virtual VRGeoData applyGeometries(VRGeoData data, map<string, VRMLNode*>& references) = 0;
 
     void resolveLinks(map<string, VRMLNode*>& references) {
         if (type == "Link") obj->getParent()->addChild(references[name]->obj->duplicate());
@@ -806,7 +816,7 @@ struct VRML1Node : VRMLNode {
     ~VRML1Node() {}
 
     VRML1Node* newChild(string t, string n) {
-        cout << "VRML1Node::newChild '" << n << "' of type " << t << endl;
+        //cout << "VRML1Node::newChild '" << n << "' of type " << t << endl;
         auto c = new VRML1Node(t,n);
         addChild(c);
         return c;
@@ -840,7 +850,7 @@ struct VRML1Node : VRMLNode {
         return m;
     }
 
-    VRGeoData applyGeometries(VRGeoData data = VRGeoData()) {
+    VRGeoData applyGeometries(VRGeoData data, map<string, VRMLNode*>& references) {
         if (type == "IndexedFaceSet") {
             VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
             if (g) {
@@ -866,10 +876,7 @@ struct VRML1Node : VRMLNode {
             data = VRGeoData();
         }
 
-        for (auto c : children) {
-            data = c->applyGeometries(data);
-        }
-
+        for (auto c : children) data = c->applyGeometries(data, references);
         return data;
     }
 };
@@ -879,7 +886,7 @@ struct VRML2Node : VRMLNode {
     ~VRML2Node() {}
 
     VRML2Node* newChild(string t, string n) {
-        cout << "VRML2Node::newChild '" << n << "' of type " << t << endl;
+        //cout << "VRML2Node::newChild '" << n << "' of type " << t << endl;
         auto c = new VRML2Node(t,n);
         addChild(c);
         return c;
@@ -915,7 +922,7 @@ struct VRML2Node : VRMLNode {
         return m;
     }
 
-    VRGeoData applyGeometries(VRGeoData data = VRGeoData()) {
+    VRGeoData applyGeometries(VRGeoData data, map<string, VRMLNode*>& references) {
         if (type == "IndexedFaceSet") {
             VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
             if (g) {
@@ -928,6 +935,7 @@ struct VRML2Node : VRMLNode {
                 bool doTexCoords = false;
 
                 for (auto c : children) {
+                    if (c->type == "Link") { if (references.count(c->name)) c = references[c->name]; }
                     if (c->type == "Coordinate") for (auto p : c->positions) geo.pushVert(p);
                     if (c->type == "Normal") { for (auto n : c->normals) geo.pushNorm(n); doNormals = true; }
                     if (c->type == "Color") { for (auto col : c->colors) geo.pushColor(col); doColors = true; }
@@ -996,7 +1004,7 @@ struct VRML2Node : VRMLNode {
             }
         }
 
-        for (auto c : children) c->applyGeometries(data);
+        for (auto c : children) c->applyGeometries(data, references);
         return data;
     }
 };
@@ -1148,6 +1156,8 @@ class VRMLLoader : public VRMLUtils {
                 }
             }
 
+            if (token == "[" || token == "]") return;
+
             cout << "WARNING: VRML token not handled: '" << token << "'" << endl;
         };
 
@@ -1210,7 +1220,7 @@ class VRMLLoader : public VRMLUtils {
             tree->buildOSG();
             tree->applyTransformations();
             tree->applyMaterials();
-            tree->applyGeometries();
+            tree->applyGeometries(VRGeoData(), references);
             tree->resolveLinks(references);
             delete tree;
         }
