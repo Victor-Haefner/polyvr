@@ -170,8 +170,12 @@ struct VRMLUtils {
     }
 
     bool isBool(string b) {
+        if (b[0] != 'f' && b[0] != 't' && b[0] != 'F' && b[0] != 'T') return false;
+        if (b == "f" || b == "F" || b == "t" || b == "T") return true;
         if (b == "false" || b == "False" || b == "FALSE") return true;
         if (b == "true" || b == "True" || b == "TRUE") return true;
+        if (b == "false " || b == "False " || b == "FALSE ") return true;
+        if (b == "true " || b == "True " || b == "TRUE ") return true;
         return false;
     }
 
@@ -470,6 +474,10 @@ struct VRMLNode : VRMLUtils {
     }
 
     bool getBool(string b) {
+        if (b == "f" || b == "F") return false;
+        if (b == "t" || b == "T") return true;
+        if (b == "false " || b == "False " || b == "FALSE ") return false;
+        if (b == "true " || b == "True " || b == "TRUE ") return true;
         if (b == "false" || b == "False" || b == "FALSE") return false;
         if (b == "true" || b == "True" || b == "TRUE") return true;
         return toValue<bool>(b);
@@ -702,7 +710,8 @@ struct VRMLNode : VRMLUtils {
     }
 
     void handleNormal(map<string, string> data) {
-        normals = getMultiField<Vec3d>(data, "normal", {});
+        if (version == 1) normals = getMultiField<Vec3d>(data, "normal", {});
+        if (version == 2) normals = getMultiField<Vec3d>(data, "vector", {});
     }
 
     void handleColor(map<string, string> data) {
@@ -747,6 +756,7 @@ struct VRMLNode : VRMLUtils {
     void applyProperties() {
         if (isGroupNode( type )) return; // group nodes have no properties
         if (isOtherNode( type )) return; // other nodes are ignored
+        if (type == "Untyped") return;
         else if (type == "PointLight") handlePointLight(params);
         else if (type == "SpotLight") handleSpotLight(params);
         else if (type == "DirectionalLight") handleDirectionalLight(params);
@@ -924,6 +934,7 @@ struct VRML2Node : VRMLNode {
                     if (c->type == "TextureCoordinate") { for (auto t : c->texCoords) geo.pushTexCoord(t); doTexCoords = true; }
                 }
 
+
                 vector<int> face;
                 for (auto i : coordIndex) {
                     if (i == -1) {
@@ -938,23 +949,23 @@ struct VRML2Node : VRMLNode {
                 if (face.size() == 3) geo.pushTri(face[0], face[1], face[2]);
                 if (face.size() == 4) geo.pushQuad(face[0], face[1], face[2], face[3]);
 
-                if (doNormals) {
+                if (doNormals) { // TODO, there may be negative values??
                     if (!normalPerVertex) {
-                        if (normalIndex.size()) { // different color indices, one index per face
+                        if (normalIndex.size()) { // different normal indices, one index per face
                             for (int i = 0; i<normalIndex.size(); i++) {
                                 int ID = normalIndex[i];
                                 int N = geo.getFaceSize(i);
-                                for (int j=0; j<N; j++) geo.pushNormalIndex(ID);
+                                for (int j=0; j<N; j++) if (ID >= 0) geo.pushNormalIndex(ID);
                             }
                         } else {
                             for (int i = 0; i<geo.getNFaces(); i++) {
                                 int N = geo.getFaceSize(i);
-                                for (int j=0; j<N; j++) geo.pushNormalIndex(i);
+                                for (int j=0; j<N; j++) if (i >= 0) geo.pushNormalIndex(i);
                             }
                         }
                     } else {
-                        if (normalIndex.size()) { // different color indices, same primitives!
-                            for (int i : normalIndex) if (i != -1) geo.pushNormalIndex(i);
+                        if (normalIndex.size()) { // different normal indices, same primitives!
+                            for (int i : normalIndex) if (i >= 0) geo.pushNormalIndex(i);
                         } else {} // nothing to do
                     }
                 }
@@ -1195,7 +1206,7 @@ class VRMLLoader : public VRMLUtils {
             tree->obj = res;
             ctx.currentNode = tree;
             parseFile(file);
-            tree->print();
+            //tree->print();
             tree->buildOSG();
             tree->applyTransformations();
             tree->applyMaterials();

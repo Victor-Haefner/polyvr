@@ -133,7 +133,61 @@ bool VRGeoData::valid() const {
     if (!data->types->size()) { cout << "VRGeoData invalid: no types!\n"; return false; }
     if (!data->lengths->size()) { cout << "VRGeoData invalid: no lengths!\n"; return false; }
     if (!data->pos->size()) { cout << "VRGeoData invalid: no pos!\n"; return false; }
+
+    int Ni = data->indices->size();
+    int Nni = data->indicesNormals->size();
+    int Nci = data->indicesColors->size();
+    if (Ni > 0) {
+        if (Nni > 0 && Nni != Ni) { cout << "VRGeoData invalid: coord and normal indices lengths mismatch!\n"; return false; }
+        if (Nci > 0 && Nci != Ni) { cout << "VRGeoData invalid: coord and color indices lengths mismatch!\n"; return false; }
+    } else {
+        if (Nni > 0) { cout << "VRGeoData invalid: normal indices defined but no coord indices!\n"; return false; }
+        if (Nci > 0) { cout << "VRGeoData invalid: color indices defined but no coord indices!\n"; return false; }
+    }
     return true;
+}
+
+bool VRGeoData::validIndices() const {
+    auto checkMaxIndex = [](GeoUInt32PropertyMTRecPtr indices, int VecN) {
+        if (VecN == 0) return true;
+        uint Imax = 0;
+        for (int i = 0; i < indices->size(); i++) {
+            uint idx = indices->getValue(i);
+            if (idx > Imax) Imax = idx;
+        }
+        if (Imax >= VecN) return false;
+        return true;
+    };
+
+    if (!checkMaxIndex(data->indices, data->pos->size())) { cout << "VRGeoData invalid: coord indices have too big values!\n"; return false; }
+    if (!checkMaxIndex(data->indicesNormals, data->norms->size())) { cout << "VRGeoData invalid: normal indices have too big values!\n"; return false; }
+    if (data->cols3->size())
+        if (!checkMaxIndex(data->indicesColors, data->cols3->size())) { cout << "VRGeoData invalid: normal indices have too big values!\n"; return false; }
+    if (data->cols4->size())
+        if (!checkMaxIndex(data->indicesColors, data->cols4->size())) { cout << "VRGeoData invalid: normal indices have too big values!\n"; return false; }
+    return true;
+}
+
+void VRGeoData::apply(VRGeometryPtr geo, bool check, bool checkIndices) const {
+    if (!geo) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: geometry invalid!" << endl; return; }
+    if (check && !valid()) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: data invalid!" << endl; return; }
+    if (checkIndices && !validIndices()) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: indices invalid!" << endl; return; }
+
+    geo->setPositions( data->pos );
+    geo->setLengths( data->lengths->size() > 0 ? data->lengths : 0 );
+    geo->setTypes( data->types->size() > 0 ? data->types : 0 );
+    geo->setNormals( data->norms->size() > 0 ? data->norms : 0 );
+    geo->setTexCoords( data->texs->size() > 0 ? data->texs : 0, 0 );
+    geo->setTexCoords( data->texs2->size() > 0 ? data->texs2 : 0, 1 );
+    if (data->indices->size() > 0) geo->setIndices( data->indices );
+    if (data->indicesNormals->size() > 0) {
+        if (data->indicesNormals->size() == data->indices->size()) geo->getMesh()->geo->setIndex( data->indicesNormals, Geometry::NormalsIndex );
+    }
+    //if (data->indicesColors->size() > 0) geo->getMesh()->geo->setIndex( data->indicesColors, Geometry::ColorsIndex );
+
+    GeoVectorProperty* c3 = data->cols3->size() > 0 ? data->cols3 : 0;
+    GeoVectorProperty* c4 = data->cols4->size() > 0 ? data->cols4 : 0;
+    geo->setColors( c3 ? c3 : c4 );
 }
 
 int VRGeoData::size() const { return data->pos->size(); }
@@ -394,25 +448,6 @@ void VRGeoData::pushPrim(Primitive p) {
     }
     if (p.lid == 0 && isStripOrFan(p.type)) data->lastPrim = -1;
     updateType(p.type, N-No);
-}
-
-void VRGeoData::apply(VRGeometryPtr geo, bool check) const {
-    if (!geo) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: geometry invalid!" << endl; return; }
-    if (check && !valid()) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: data invalid!" << endl; return; }
-
-    geo->setPositions( data->pos );
-    geo->setLengths( data->lengths->size() > 0 ? data->lengths : 0 );
-    geo->setTypes( data->types->size() > 0 ? data->types : 0 );
-    geo->setNormals( data->norms->size() > 0 ? data->norms : 0 );
-    geo->setTexCoords( data->texs->size() > 0 ? data->texs : 0, 0 );
-    geo->setTexCoords( data->texs2->size() > 0 ? data->texs2 : 0, 1 );
-    if (data->indices->size() > 0) geo->setIndices( data->indices );
-    if (data->indicesNormals->size() > 0) geo->getMesh()->geo->setIndex( data->indicesNormals, Geometry::NormalsIndex );
-    if (data->indicesColors->size() > 0) geo->getMesh()->geo->setIndex( data->indicesColors, Geometry::ColorsIndex );
-
-    GeoVectorProperty* c3 = data->cols3->size() > 0 ? data->cols3 : 0;
-    GeoVectorProperty* c4 = data->cols4->size() > 0 ? data->cols4 : 0;
-    geo->setColors( c3 ? c3 : c4 );
 }
 
 void VRGeoData::append(const VRGeoData& geo, const Matrix4d& m) {

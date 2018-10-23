@@ -36,6 +36,7 @@ class VRGeoData {
 
         void reset();
         bool valid() const;
+        bool validIndices() const;
 
         Pnt3d getPosition(int i);
         Vec3d getNormal(int i);
@@ -100,7 +101,7 @@ class VRGeoData {
         void pushPatch(int N);
         void pushQuad(Vec3d p, Vec3d n, Vec3d u, Vec2d s, bool addInds = false);
 
-        void apply(VRGeometryPtr geo, bool check = true) const;
+        void apply(VRGeometryPtr geo, bool check = true, bool checkIndices = false) const;
         VRGeometryPtr asGeometry(string name) const;
         void append(VRGeometryPtr geo, const Matrix4d& m = Matrix4d());
         void append(const VRGeoData& geo, const Matrix4d& m = Matrix4d());
