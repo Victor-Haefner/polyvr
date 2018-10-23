@@ -862,6 +862,8 @@
 		<Unit filename="src/core/scene/import/VRIFC.h" />
 		<Unit filename="src/core/scene/import/VRImport.cpp" />
 		<Unit filename="src/core/scene/import/VRImport.h" />
+		<Unit filename="src/core/scene/import/VRML.cpp" />
+		<Unit filename="src/core/scene/import/VRML.h" />
 		<Unit filename="src/core/scene/import/VRPLY.cpp" />
 		<Unit filename="src/core/scene/import/VRPLY.h" />
 		<Unit filename="src/core/scene/import/VRSTEPCascade.cpp" />

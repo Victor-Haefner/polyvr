@@ -920,7 +920,7 @@ struct VRML2Node : VRMLNode {
                 for (auto c : children) {
                     if (c->type == "Coordinate") for (auto p : c->positions) geo.pushVert(p);
                     if (c->type == "Normal") { for (auto n : c->normals) geo.pushNorm(n); doNormals = true; }
-                    if (c->type == "Color") { for (auto c : c->colors) geo.pushColor(c); doColors = true; }
+                    if (c->type == "Color") { for (auto col : c->colors) geo.pushColor(col); doColors = true; }
                     if (c->type == "TextureCoordinate") { for (auto t : c->texCoords) geo.pushTexCoord(t); doTexCoords = true; }
                 }
 
