@@ -63,6 +63,7 @@ void VRTrafficSimulation::Vehicle::setDefaults() {
     targetVelocity = 50.0/3.6; //try m/s  - km/h
     float tmp = targetVelocity;
     targetVelocity = targetVelocity*(1.0+0.2*0.01*(rand()%100));
+    roadVelocity = targetVelocity;
     distanceToNextIntersec = 10000;
 
     maxAcceleration = 5;
@@ -76,6 +77,7 @@ void VRTrafficSimulation::Vehicle::setDefaults() {
     currentState = 0; //0 = on lane, 1 = leaving lane, -1 = coming onto lane
     roadFrom = -1;
     roadTo = -1;
+    nextEdge = -1;
 
     lastMove = Vec3d(0,0,0);
     currentOffset = Vec3d(0,0,0);
@@ -304,18 +306,14 @@ void VRTrafficSimulation::updateSimulation() {
     auto propagateVehicle = [&](Vehicle& vehicle, float d, int intention) {
         auto& gp = vehicle.pos;
         gp.pos += d;
+
         if (gp.pos > 0.3 && vehicle.nextEdge == -1) {
             auto& edge = g->getEdge(gp.edge);
             auto nextEdges = g->getNextEdges(edge);
-            if (nextEdges.size() > 1) {
-                vehicle.nextEdge = randomChoice(nextEdges).ID;
-            }
-            if (nextEdges.size() == 1) {
-                vehicle.nextEdge = nextEdges[0].ID;
-            }
-            if (nextEdges.size() == 0) {
-                vehicle.nextEdge = -1;
-            }
+
+            if (nextEdges.size() > 1)  { vehicle.nextEdge = randomChoice(nextEdges).ID; }
+            if (nextEdges.size() == 1) { vehicle.nextEdge = nextEdges[0].ID; }
+            if (nextEdges.size() == 0) { vehicle.nextEdge = -1; }
         }
 
         if (gp.pos > 1) {
@@ -325,8 +323,8 @@ void VRTrafficSimulation::updateSimulation() {
             auto nextEdges = g->getNextEdges(edge);
 
             if (nextEdges.size() > 1) {
-                //gp.edge = vehicle.nextEdge;
-                gp.edge = randomChoice(nextEdges).ID;
+                gp.edge = vehicle.nextEdge;
+                //gp.edge = randomChoice(nextEdges).ID;
                 auto& road = roads[gp.edge];
                 if (road.macro) {
                     toChangeRoad[road1ID].push_back( make_pair(vehicle.vID, -1) );
@@ -342,7 +340,8 @@ void VRTrafficSimulation::updateSimulation() {
                 //cout << toString(gp.edge) << endl;
             }
             if (nextEdges.size() == 1) {
-                gp.edge = nextEdges[0].ID;
+                gp.edge = vehicle.nextEdge;
+                //gp.edge = nextEdges[0].ID;
                 auto& road = roads[gp.edge];
                 toChangeRoad[road1ID].push_back( make_pair(vehicle.vID, gp.edge) );
                 gp.pos = gp.pos * roads[road1ID].length/roads[gp.edge].length;
@@ -623,6 +622,35 @@ void VRTrafficSimulation::updateSimulation() {
                 if (type == "intersection") {
                     nextSignalE = interE->getTrafficLight(newLane);
                     vehicle.distanceToNextIntersec = (pNode - posV).dot(vehicle.t->getPose()->dir());
+
+                    ///-----------------------------------------------------------------------------------------
+                    auto g = roadNetwork->getGraph();
+                    auto& edge = g->getEdge(eID);
+                    auto nextEdges = g->getNextEdges(edge);
+
+                    if (nextEdges.size() > 1) {
+                        for (auto a : nextEdges) {
+                            if (a.ID == vehicle.nextEdge) {
+                                auto road1 = roadNetwork->getRoad(roadNetwork->getLane(eID));
+                                auto road2 = roadNetwork->getRoad(roadNetwork->getLane(a.ID));
+                                //auto& data1 = road1->getEdgePoint( node );
+                                //auto& data2 = road2->getEdgePoint( node );
+                                /*float connectingAngle = data1.n.dot(data2.n);
+                                Vec3d w = data1.n.cross(data2.n);
+                                float a = asin( w.length() );
+                                if (w[1] < 0) a = -a;
+                                float turnLeft = a;
+
+                                bool parallel  = bool( connectingAngle < -0.8 );
+                                bool left  = bool( turnLeft < 0);
+                                if (  parallel ) { vehicle.turnAhead = 0; }
+                                if ( !parallel &&  left ) { vehicle.turnAhead = 1; }
+                                if ( !parallel && !left ) { vehicle.turnAhead = 2; }*/
+                            }
+                        }
+                    }
+                    ///-----------------------------------------------------------------------------------------
+
                     if (nextSignalE) {
                         nextSignalP = nextSignalE->getFrom();
                         vehicle.distanceToNextSignal  = (nextSignalP - posV).dot(vehicle.t->getPose()->dir());
@@ -638,6 +666,8 @@ void VRTrafficSimulation::updateSimulation() {
 
         auto laneE = roadNetwork->getLane(vehicle.pos.edge);
         auto nextIntersectionE = roadNetwork->getIntersection(laneE->getEntity("nextIntersection"));
+
+        vehicle.distanceToNextIntersec = 10000;
         recSearch(laneE,vehicle.pos.edge,vehicle.t->getPose()->pos());
     };
 
@@ -697,13 +727,6 @@ void VRTrafficSimulation::updateSimulation() {
                     return false;
                 };
 
-                auto checkNextEdgeForTurn = [&]() {
-                    int nEdge = vehicle.nextEdge;
-                    auto g = roadNetwork->getGraph();
-                    //auto& edge = g->getEdge(gp.edge);
-                    return false;
-                };
-
                 float nextMove = (vehicle.currentVelocity) * deltaT;
                 float nextMoveAcc = (vehicle.currentVelocity + accFactor*deltaT) * deltaT;
                 float nextMoveDec = (vehicle.currentVelocity + decFactor*deltaT) * deltaT;
@@ -713,17 +736,22 @@ void VRTrafficSimulation::updateSimulation() {
                 bool interBlock = (vehicle.distanceToNextIntersec < 60 && vehicle.distanceToNextIntersec > 10);
                 //if (nextSignal != "000") cout << toString(nextSignal) << endl;
 
-
+                /*
                 Vec3d left = vehicle.t->getPose()->up().cross(vehicle.lastMove);
-                Vec3d dir = vehicle.t->getPose()->dir();
+                left.normalize();
+                Vec3d dir = vehicle.t->getWorldPose()->dir();
                 dir.normalize();
-                bool checkLeft = dir.dot(left) > 0;
-                if (checkLeft && vehicle.distanceToNextIntersec < 10) vehicle.turnAtIntersec = true;
-                else vehicle.turnAtIntersec = false;
+                Vec3d tmp = vehicle.lastMove;
+                tmp.normalize();
+                bool checkLeft = left.dot(dir) > 0;
+                cout << toString(vehicle.t->getPose()->up()) << endl;
+                if ( (checkLeft && vehicle.distanceToNextIntersec < 10) || (vehicle.distanceToNextIntersec < 10 && vehicle.turnAtIntersec) ) vehicle.turnAtIntersec = true;
+                else vehicle.turnAtIntersec = false;*/
 
-                //if ( vehicle.distanceToNextIntersec < 20 ) vehicle.targetVelocity = 20/3.6;
-                //if ( vehicle.distanceToNextIntersec < 10 ) vehicle.targetVelocity = 15/3.6;
-                //if ( vehicle.distanceToNextIntersec > 20 ) vehicle.targetVelocity = 50/3.6;
+                vehicle.targetVelocity = roadVelocity;
+                if ( vehicle.distanceToNextIntersec < 20 ) vehicle.targetVelocity = 20/3.6;
+                if ( vehicle.distanceToNextIntersec < 10 ) vehicle.targetVelocity = 15/3.6;
+                if ( vehicle.distanceToNextIntersec > 20 ) vehicle.targetVelocity = 50/3.6;
 
                 auto inFront = [&]() { return vehicle.vehiclesightFarID.count(INFRONT); };
                 auto comingLeft = [&]() { return vehicle.vehiclesightFarID.count(FRONTLEFT); };
@@ -731,7 +759,7 @@ void VRTrafficSimulation::updateSimulation() {
                 auto accelerate = [&]() { d = vehicle.currentVelocity + accFactor*deltaT; };
                 auto decelerate = [&]() { d = vehicle.currentVelocity + decFactor*deltaT; };
                 auto holdVelocity = [&]() { d = vehicle.currentVelocity; };
-                auto nextVehicleTurner = [&]() { return (vehicles[vehicle.vehiclesightFarID[INFRONT]].turnAtIntersec || vehicles[vehicle.vehiclesightFarID[FRONTRIGHT]].turnAtIntersec); };
+                //auto nextVehicleTurner = [&]() { return (vehicles[vehicle.vehiclesightFarID[INFRONT]].turnAtIntersec || vehicles[vehicle.vehiclesightFarID[FRONTRIGHT]].turnAtIntersec); };
 
                 //if ( nextEdges.size() > 1 ) { nextIntersection = (1 - vehicle.pos.pos) * roads[vehicle.pos.edge].length; cout << toString(nextIntersection) << endl; }
                 auto behave = [&]() {
@@ -739,9 +767,12 @@ void VRTrafficSimulation::updateSimulation() {
                     float nextSignalDistance = vehicle.distanceToNextSignal;
                     float nextIntersection = vehicle.distanceToNextIntersec;
                     bool signalAhead = vehicle.signalAhead;
-                    bool turnAhead = checkNextEdgeForTurn();
+                    bool turnAhead = vehicle.turnAhead>0;
+                    turnAhead = true;
 
-                    if ( nextIntersection < 20 && turnAhead ) { vehicle.targetVelocity = 20/3.6; }
+                    //if ( nextIntersection < 20 && turnAhead ) { vehicle.targetVelocity = 20/3.6; }
+                    //if ( nextIntersection < 15 && turnAhead ) { vehicle.targetVelocity = 10/3.6; }
+                    //if ( vehicle.turnAtIntersec ) { d = 0; return; vehicle.targetVelocity = 0; }
 
                     if ( vbeh == vehicle.STRAIGHT ) {
                         if ( ( signalAhead && nextSignalDistance < safetyDis -4 ) && signalBlock ) { decelerate(); return; }
@@ -749,7 +780,7 @@ void VRTrafficSimulation::updateSimulation() {
 
                         if ( !inFront() ) {
                         //no vehicle ahead
-                            if ( vehicle.turnAtIntersec && ( comingRight() || comingLeft() ) && !nextVehicleTurner() ) { decelerate(); return; }
+                            //if ( vehicle.turnAtIntersec && ( comingRight() || comingLeft() ) && !nextVehicleTurner() ) { decelerate(); return; }
                             if ( sinceLastLS > 200 && nextIntersection > 20 && checkR(vehicle.vID) && vehicle.currentVelocity > 20 ) { toChangeLane[vehicle.vID] = 2; }
                             //check if road is ending/intersections etc - possible breaking
                             if ( vehicle.currentVelocity < vehicle.targetVelocity ) { accelerate(); return; }
@@ -763,7 +794,7 @@ void VRTrafficSimulation::updateSimulation() {
                         //vehicle ahead?
                             int frontID = vehicle.vehiclesightFarID[INFRONT];
                             float disToFrontV = vehicle.vehiclesightFar[INFRONT];
-                            if ( vehicle.turnAtIntersec && !nextVehicleTurner() ) { decelerate(); return; }
+                            //if ( vehicle.turnAtIntersec && !nextVehicleTurner() ) { decelerate(); return; }
                             if ( disToFrontV - nextMove < safetyDis ) { decelerate(); return; }
                             //if ( nextIntersection < safetyDis + 0.2 ) { decelerate(); return; }
                             if ( vehicles[frontID].currentVelocity > vehicle.currentVelocity && vehicle.currentVelocity < vehicle.targetVelocity ) {

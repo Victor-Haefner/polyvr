@@ -61,6 +61,7 @@ class VRTrafficSimulation : public VRObject {
             float speed;
             float currentVelocity;
             float targetVelocity;
+            float roadVelocity;
             float maxAcceleration;
             float maxDecceleration;
             float acceleration;
@@ -82,6 +83,7 @@ class VRTrafficSimulation : public VRObject {
             int roadFrom;
             int roadTo;
             int behavior = 0; //0 = straight, 1 = left, 2 = right
+            int turnAhead = 0; //0 = straight, 1 = left, 2 = right
             int currentState = 0; //1 = leaving lane, -1 = coming onto lane
             bool laneTransition = true;
             bool turnAtIntersec = false;
