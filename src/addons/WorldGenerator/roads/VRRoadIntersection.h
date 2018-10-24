@@ -48,6 +48,7 @@ class VRRoadIntersection : public VRRoadBase {
         vector<shared_ptr<RoadFront>> roadFronts;
         vector<Vec3d> intersectionPoints;
         vector<pair<VREntityPtr, VREntityPtr>> laneMatches; // matches of ingoing lanes with outgoing lanes
+        vector<string> laneTurnDirection;
         map<VREntityPtr, vector<VREntityPtr>> nextLanes; // sequences of lanes, for example ingoing -> outgoing, or ingoing -> lane -> outgoing
         map<VREntityPtr, VRTrafficLightPtr> matchedLights;
 

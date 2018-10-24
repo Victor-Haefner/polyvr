@@ -74,6 +74,7 @@ void GISWorld::setupOntology() {
     Lane->addProperty("graphIDs", "int");
     Lane->addProperty("nextIntersection", RoadIntersection);
     Lane->addProperty("lastIntersection", RoadIntersection);
+    Lane->addProperty("turnDirection", "string");
     ParkingLane->addProperty("angle", "float");
     ParkingLane->addProperty("capacity", "int");
     GreenBelt->addProperty("width", "float");
