@@ -503,12 +503,12 @@ void VRTrafficSimulation::updateSimulation() {
         //float rL = abs( D.dot(x) ); //check if vehicle2 left or right of vehicle1   rL < 1
         float left = - D.dot(x);
 
-        if ( d > 0 && disToM < vehicle.width/2 ) return 0; // in front, in range, in corridor
-        if ( d < 0 && disToM < vehicle.width/2 ) return 5; // in behind, in range, in corridor
-        if ( d > 0 && left > 1 && left < 5) return 1; // in front, in range, left of corridor
-        if ( d > 0 && left <-1 && left >-5) return 2; // in front, in range, right of corridor
-        if ( d < 0 && left > 1 && left < 5) return 3; // in behind, in range, left of corridor
-        if ( d < 0 && left <-1 && left >-5) return 4; // in behind, in range, right of corridor
+        if ( d > 0 && disToM < vehicle.width/2 ) return INFRONT; // in front, in range, in corridor
+        if ( d < 0 && disToM < vehicle.width/2 ) return BEHIND; // in behind, in range, in corridor
+        if ( d > 0 && left > 1 && left < 5) return FRONTLEFT; // in front, in range, left of corridor
+        if ( d > 0 && left <-1 && left >-5) return FRONTRIGHT; // in front, in range, right of corridor
+        if ( d < 0 && left > 1 && left < 5) return BEHINDLEFT; // in behind, in range, left of corridor
+        if ( d < 0 && left <-1 && left >-5) return BEHINDRIGHT; // in behind, in range, right of corridor
         return -1;
     };
 
@@ -762,6 +762,7 @@ void VRTrafficSimulation::updateSimulation() {
                 //auto nextVehicleTurner = [&]() { return (vehicles[vehicle.vehiclesightFarID[INFRONT]].turnAtIntersec || vehicles[vehicle.vehiclesightFarID[FRONTRIGHT]].turnAtIntersec); };
 
                 //if ( nextEdges.size() > 1 ) { nextIntersection = (1 - vehicle.pos.pos) * roads[vehicle.pos.edge].length; cout << toString(nextIntersection) << endl; }
+
                 auto behave = [&]() {
                 ///LOGIC
                     float nextSignalDistance = vehicle.distanceToNextSignal;
@@ -773,6 +774,10 @@ void VRTrafficSimulation::updateSimulation() {
                     //if ( nextIntersection < 20 && turnAhead ) { vehicle.targetVelocity = 20/3.6; }
                     //if ( nextIntersection < 15 && turnAhead ) { vehicle.targetVelocity = 10/3.6; }
                     //if ( vehicle.turnAtIntersec ) { d = 0; return; vehicle.targetVelocity = 0; }
+                    if (roadNetwork->getLane(vehicle.pos.edge)->get("turnDirection")) {
+                        //cout << roadNetwork->getLane(vehicle.pos.edge)->get("turnDirection")->value << endl;
+                        if (toString(roadNetwork->getLane(vehicle.pos.edge)->get("turnDirection")->value) == "left") { d = 0; return; }
+                    }
 
                     if ( vbeh == vehicle.STRAIGHT ) {
                         if ( ( signalAhead && nextSignalDistance < safetyDis -4 ) && signalBlock ) { decelerate(); return; }
