@@ -176,6 +176,7 @@ class VRTrafficSimulation : public VRObject {
 
         void updateTurnSignal();
         void updateGraph();
+        void updateIntersectionVis(bool in);
 
     public:
         VRTrafficSimulation();

@@ -1253,9 +1253,9 @@ void VRTrafficSimulation::updateGraph(){
 		addChild(graphViz);
 		vizGeos[strInput] = graphViz;
 	}
-
 	string gAnn = "graphAnn";
 	if (scene->getRoot()->find(gAnn)) scene->getRoot()->find(gAnn)->destroy();
+    if (!isShowingGraph) return;
 	auto graphAnn = VRAnnotationEngine::create(gAnn);
 	graphAnn->setPersistency(0);
 	graphAnn->setBillboard(true);
@@ -1325,58 +1325,64 @@ void VRTrafficSimulation::updateGraph(){
 
 void VRTrafficSimulation::hideGraph(){
     isShowingGraph = false;
-
-    vector<string> gg;
-	gg.push_back("graphVizPnts");
-	gg.push_back("graphVizLines");
-	gg.push_back("graphVizMacroLines");
-	gg.push_back("graphVizSeedLines");
-	gg.push_back("graphVizRelations");
-	gg.push_back("graphAnn");
-	auto scene = VRScene::getCurrent();
-    for (auto a : gg ){
-        if ( scene->getRoot()->find(a) ) scene->getRoot()->find(a)->destroy();
-    }
+    updateGraph();
 }
 
 /** SHOW INTERSECTION */
-void VRTrafficSimulation::showIntersections(){
-	map<int,int> idx;
+void VRTrafficSimulation::showIntersections(){ updateIntersectionVis(true); }
+void VRTrafficSimulation::hideIntersections(){ updateIntersectionVis(false); }
+
+void VRTrafficSimulation::updateIntersectionVis(bool in){
+    map<int,int> idx;
 	map<int,int> idx2;
 	map<string, VRGeometryPtr> vizGeos;
 	auto graph = roadNetwork->getGraph();
 	auto scene = VRScene::getCurrent();
-	for (string strInput : {"graphVizLightOrigin", "graphVizLightDir"}) {
+	for (string strInput : {"graphVizIntersections", "graphVizLightOrigin", "graphVizLightDir"}) {
 		if ( scene->getRoot()->find(strInput) ) scene->getRoot()->find(strInput)->destroy();
 		auto graphViz = VRGeometry::create(strInput);
         graphViz->setPersistency(0);
 		addChild(graphViz);
 		vizGeos[strInput] = graphViz;
 	}
-
 	string insecA = "insecAnn";
 	if (scene->getRoot()->find(insecA)) scene->getRoot()->find(insecA)->destroy();
+	string insecTA = "insecTypeAnn";
+	if (scene->getRoot()->find(insecTA)) scene->getRoot()->find(insecTA)->destroy();
+
+	if (!in) return;
 	auto insecAnn = VRAnnotationEngine::create(insecA);
+	auto insecTAnn = VRAnnotationEngine::create(insecTA);
 	insecAnn->setPersistency(0);
 	insecAnn->setBillboard(true);
 	insecAnn->setBackground(Color4f(1,1,1,1));
 	addChild(insecAnn);
+	insecTAnn->setPersistency(0);
+	insecTAnn->setBillboard(true);
+	insecTAnn->setBackground(Color4f(1,1,1,1));
+	addChild(insecTAnn);
 
-	VRGeoData gg0; //traffic signal origin points
-	VRGeoData gg1; //traffic signal dirs
-	//VRGeoData gg2; //traffic signal links
+	VRGeoData gg0; //intersection position
+	VRGeoData gg1; //traffic signal origin points
+	VRGeoData gg2; //traffic signal dirs
+	//VRGeoData gg3; //traffic signal links
 
     auto intersections = roadNetwork->getIntersections();
 	for (auto intersection : intersections){
+        int pID0 = gg0.pushVert(intersection->getEntity()->getEntity("node")->getVec3("position")+Vec3d(0,5,0));
+        gg0.pushPoint();
+        string anno = toString(toString(intersection->getEntity()->get("type")->value));
+        insecTAnn->set(pID0, intersection->getEntity()->getEntity("node")->getVec3("position")+Vec3d(0,5.5,0), anno);
+
         auto lights = intersection->getTrafficLights();
         for (auto light : lights){
-            gg0.pushVert(light->getEntity()->getVec3("position")+Vec3d(0,3,0));
-            gg0.pushPoint();
+            gg1.pushVert(light->getEntity()->getVec3("position")+Vec3d(0,3,0));
+            gg1.pushPoint();
             Vec3d p1 = light->getPose()->pos();
             Vec3d p2 = p1 + light->getPose()->up()*0.5;
-            int pID1 = gg1.pushVert(p1);
-            int pID2 = gg1.pushVert(p2);
-            gg1.pushLine(pID1,pID2);
+            int pID1 = gg2.pushVert(p1);
+            int pID2 = gg2.pushVert(p2);
+            gg2.pushLine(pID1,pID2);
             string anno = toString(light->getEntity()->getName()) + " " + toString(intersection->getEntity()->get("type")->value);
             insecAnn->set(pID1, light->getPose()->pos()+Vec3d(0,0.5,0), anno);
         }
@@ -1384,18 +1390,19 @@ void VRTrafficSimulation::showIntersections(){
         for (auto group : getTrafficLightMap) {
             for (auto light : group.second){
                 Vec3d p = light1->getPose()->pos();
-                int pID = gg2.pushVert(p1);
+                int pID = gg3.pushVert(p1);
             }
             Vec3d p1 = light1->getPose()->pos();
             Vec3d p2 = light1->getPose()->pos();
-            int pID1 = gg2.pushVert(p1);
-            int pID2 = gg2.pushVert(p2);
-            gg2.pushLine(pID1,pID2);
+            int pID1 = gg3.pushVert(p1);
+            int pID2 = gg3.pushVert(p2);
+            gg3.pushLine(pID1,pID2);
         }*/
 	}
 
-	gg0.apply( vizGeos["graphVizLightOrigin"] );
-	gg1.apply( vizGeos["graphVizLightDir"] );
+	gg0.apply( vizGeos["graphVizIntersections"] );
+	gg1.apply( vizGeos["graphVizLightOrigin"] );
+	gg2.apply( vizGeos["graphVizLightDir"] );
 
 	for (auto geo : vizGeos) {
 		auto mat = VRMaterial::create(geo.first+"_mat");
@@ -1408,17 +1415,6 @@ void VRTrafficSimulation::showIntersections(){
 		mat->setPointSize(5);
 		geo.second->setMaterial(mat);
 	}
-}
-
-void VRTrafficSimulation::hideIntersections(){
-    vector<string> gg;
-	gg.push_back("graphVizLightOrigin");
-	gg.push_back("graphVizLightDir");
-	gg.push_back("insecAnn");
-	auto scene = VRScene::getCurrent();
-    for (auto a : gg ){
-        if ( scene->getRoot()->find(a) ) scene->getRoot()->find(a)->destroy();
-    }
 }
 
 /** DISABLING VEHICLE GEOMETRIES*/
