@@ -1246,7 +1246,7 @@ void VRTrafficSimulation::updateGraph(){
 	map<string, VRGeometryPtr> vizGeos;
 	auto graph = roadNetwork->getGraph();
 	auto scene = VRScene::getCurrent();
-	for (string strInput : {"graphVizPnts", "graphVizLines", "graphVizSeedLines", "graphVizRelations",}) {
+	for (string strInput : {"graphVizPnts", "graphVizLines", "graphVizMacroLines", "graphVizSeedLines", "graphVizRelations",}) {
 		if ( scene->getRoot()->find(strInput) ) scene->getRoot()->find(strInput)->destroy();
 		auto graphViz = VRGeometry::create(strInput);
         graphViz->setPersistency(0);
@@ -1266,6 +1266,7 @@ void VRTrafficSimulation::updateGraph(){
 	VRGeoData gg1;
 	VRGeoData gg2;
 	VRGeoData gg3;
+	VRGeoData gg4;
 
 	for (auto node : graph->getNodes()){
 		auto nPose = graph->getNode(node.first).p;
@@ -1273,6 +1274,7 @@ void VRTrafficSimulation::updateGraph(){
 		int vID = gg0.pushVert(p);
 		gg1.pushVert(p);
 		gg2.pushVert(p);
+		gg4.pushVert(p);
 		gg0.pushPoint();
 		graphAnn->set(vID, nPose.pos() + Vec3d(0,2.2,0), "Node "+toString(node.first));
 		idx[node.first] = vID;
@@ -1280,8 +1282,10 @@ void VRTrafficSimulation::updateGraph(){
 
 	for (auto connection : graph->getEdges()){
 		auto edge = connection.first;
+		auto& road = roads[edge];
 		if (isSeedRoad(edge)) { gg2.pushLine(idx[connection.second.from], idx[connection.second.to]); }
-		if (!isSeedRoad(edge)) { gg1.pushLine(idx[connection.second.from], idx[connection.second.to]); }
+		if (!isSeedRoad(edge) && !road.macro) { gg1.pushLine(idx[connection.second.from], idx[connection.second.to]); }
+		if (road.macro) { gg4.pushLine(idx[connection.second.from], idx[connection.second.to]); }
 		auto pos1 = graph->getNode(connection.second.from).p.pos();
 		auto pos2 = graph->getNode(connection.second.to).p.pos();
 		graphAnn->set(edge+100, (pos1+pos2)*0.5 + Vec3d(0,2.6,0), "Edge "+toString(edge)+"("+toString(connection.second.from)+"-"+toString(connection.second.to)+")");
@@ -1304,12 +1308,13 @@ void VRTrafficSimulation::updateGraph(){
 	gg1.apply( vizGeos["graphVizLines"] );
 	gg2.apply( vizGeos["graphVizSeedLines"] );
 	gg3.apply( vizGeos["graphVizRelations"] );
+	gg4.apply( vizGeos["graphVizMacroLines"] );
 
 	for (auto geo : vizGeos) {
 		auto mat = VRMaterial::create(geo.first+"_mat");
 		mat->setLit(0);
-		int r = (geo.first == "graphVizSeedLines" || geo.first ==  "graphVizRelations");
-		int g = (geo.first == "graphVizPnts" || geo.first ==  "graphVizRelations");
+		int r = (geo.first == "graphVizSeedLines" || geo.first ==  "graphVizRelations" || geo.first ==  "graphVizMacroLines");
+		int g = (geo.first == "graphVizPnts" || geo.first ==  "graphVizRelations" || geo.first ==  "graphVizMacroLines");
 		int b = (geo.first == "graphVizLines"|| geo.first ==  "graphVizRelations");
 		mat->setDiffuse(Color3f(r,g,b));
 		mat->setLineWidth(3);
@@ -1324,6 +1329,7 @@ void VRTrafficSimulation::hideGraph(){
     vector<string> gg;
 	gg.push_back("graphVizPnts");
 	gg.push_back("graphVizLines");
+	gg.push_back("graphVizMacroLines");
 	gg.push_back("graphVizSeedLines");
 	gg.push_back("graphVizRelations");
 	gg.push_back("graphAnn");
