@@ -466,7 +466,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                     if ( startswith(tagN.first,"traffic_sign:backward") ) { tmp = -dir; revDir = true; }
                 }
                 if ( !tmpc ) signEnt->set("type", tag.second);
-                cout << " revDir " << toString( tmp) << toString(dir) << endl;
+                //cout << "VRWorldGenerator::processOSMMap  revDir " << toString( tmp) << toString(dir) << endl; //AGRAJAG
 
                 signEnt->setVec3("position", pos, "Position");
                 signEnt->setVec3("direction", dir, "Direction");
