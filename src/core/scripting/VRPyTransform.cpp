@@ -74,7 +74,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setConstraint", PyWrap(Transform, setConstraint, "Set the constraints object - setConstraint( constraint )", void, VRConstraintPtr ) },
     {"getConstraint", PyWrap(Transform, getConstraint, "Get the constraints object - constraint getConstraint()", VRConstraintPtr ) },
     {"physicalize", PyWrapOpt(Transform, physicalize, "physicalize subtree - physicalize( bool physicalized , bool dynamic , str shape, float shape param )\n\tshape can be: ['Box', 'Sphere', 'Convex', 'Concave', 'ConvexDecomposed']", "0", void, bool, bool, string, float ) },
-    {"setConvexDecompositionParameters", PyWrap(Transform, setConvexDecompositionParameters, "Set parameters for the convex decomposition, set before physicalize", void, float, float, float, float, float, bool, bool, bool ) },
+    {"setConvexDecompositionParameters", PyWrap(Transform, setConvexDecompositionParameters, "Set parameters for the convex decomposition, set before physicalize: compacityWeight (0.1), volumeWeight (0.0), NClusters (2), NVerticesPerCH (100), concavity (100), addExtraDistPoints (false), addNeighboursDistPoints (false), addFacesPoints (false) ", void, float, float, float, float, float, bool, bool, bool ) },
     {"setGhost", PyWrap(Transform, setGhost, "Set the physics object to be a ghost object", void, bool ) },
     {"attach", PyWrapOpt(Transform, attach, "Attach another object using a joint constraint and a spring constraint", "0", void, VRTransformPtr, VRConstraintPtr, VRConstraintPtr ) },
     {"detachJoint", PyWrap(Transform, detachJoint, "Remove all joints to given transform created by 'attach'", void, VRTransformPtr ) },
