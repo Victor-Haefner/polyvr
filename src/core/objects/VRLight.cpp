@@ -385,6 +385,13 @@ vector<string> VRLight::getTypeParameter(string type) {
 
 // IDEE: licht sucht ob beacon schon da ist, danach sucht beacon ob licht schon da ist.. je nachdem wer wann erstellt wird..
 
+VRLightBeaconPtr VRLight::addBeacon() {
+    auto b = VRLightBeacon::create(getName() + "_beacon");
+    addChild(b);
+    setBeacon(b);
+    return b;
+}
+
 VRLightBeaconPtr VRLight::getBeacon() { return beacon.lock(); }
 
 void VRLight::setPointlight() { switchCore(p_light); updateDeferredLight(); }

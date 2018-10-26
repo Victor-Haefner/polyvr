@@ -7,4 +7,8 @@ template<typename T> int toValue(string s, std::shared_ptr<T>& t) {
     return true;
 }
 
+template<typename T> int toValue(string s, vector<std::shared_ptr<T>>& t) {
+    return true;
+}
+
 #endif // TOSTRINGBIS_H_INCLUDED
