@@ -44,6 +44,7 @@ class VRProcessEngine {
         struct Action {
             string nextState;
             VRProcessNodePtr node;
+            VRProcessNodePtr sourceState;
             float duration = 0;
             vector<Prerequisite> prerequisites;
 
@@ -60,7 +61,6 @@ class VRProcessEngine {
             map<string, vector<Action>> actions; // maps state name (see VRStateMachine) to possible Actions
             VRStateMachine<float> sm;
             Inventory inventory;
-            //vector<Message> outgoingMessages;
             string initialState = "";
 
             Actor() : sm("ProcessActor") {}
@@ -73,8 +73,6 @@ class VRProcessEngine {
 
                 // if currently in action go to next state, else check for possible actions
                 if (current) {
-                    //if current->node->subject->type == SENDSTATE
-                    //elseif current->node->subject->type == RECEIVESTATE
 
                     string nextState = current->nextState;
                     current = 0;
@@ -95,8 +93,15 @@ class VRProcessEngine {
                 return "";
             }
 
-            void sendMessage(string message, Actor* receiver){
-                //receiver.inventory.messages.push_back(Message(message, self));
+            void sendMessage(string message){
+
+/*                auto sourceStateNode = current.sourceState;
+                auto messageNode = process->getStateMessage(sourceStateNode);
+                auto receiverNode = process->getMessageReceiver(messageNode);
+
+                receiver.inventory.messages.push_back(Message(message->getLabel(), this));
+*/
+
             }
         };
 

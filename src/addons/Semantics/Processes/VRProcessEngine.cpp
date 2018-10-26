@@ -28,6 +28,7 @@ void VRProcessEngine::initialize(){
     //cout << "initialStates.size() " << initialStates.size() << endl;
 
     for (uint i=0; i<processSubjects.size(); i++) {
+        Actor actor;
         int sID = processSubjects[i]->getID();
         auto states = process->getSubjectStates(sID);
         string initialState = "";
@@ -54,20 +55,29 @@ void VRProcessEngine::initialize(){
                     Prerequisite p(m);
                     action.prerequisites.push_back(p);
                 }
+                action.sourceState = state;
                 actions.push_back(action);
             }
 
             //define function to call by the State Machine on state switch (process)
+            //auto transitionCB = VRFunction<float, string>::create("processTransition", boost::bind(&VRProcessEngine::Actor::transitioning, &subjects[i], _1));
             auto transitionCB = VRFunction<float, string>::create("processTransition", boost::bind(&VRProcessEngine::Actor::transitioning, &subjects[i], _1));
-            subjects[i].actions[state->getLabel()] = actions;
-            subjects[i].sm.addState(state->getLabel(), transitionCB);
+            //subjects[i].actions[state->getLabel()] = actions;
+            actor.actions[state->getLabel()] = actions;
+            //auto smState = subjects[i].sm.addState(state->getLabel(), transitionCB);
+            auto smState = actor.sm.addState(state->getLabel(), transitionCB);
 
-            // if send state call sm setonleave -> sendMessage
+            // if state == send state, add a sendMessage callback
+            if (state->type == SENDSTATE) {
+                VRStateMachine<float>::VRStateEnterCbPtr onSendMessageCB = VRStateMachine<float>::VRStateEnterCb::create("sendMessage", boost::bind(&VRProcessEngine::Actor::sendMessage, &subjects[i], _1));
+                smState->setStateLeaveCB(onSendMessageCB);
+            }
         }
-        subjects[i].initialState = initialState;
-        subjects[i].sm.setCurrentState( initialState );
-        //Testing
-        if( processSubjects[i] && subjects[i].sm.getCurrentState()) cout << processSubjects[i]->getLabel() << " init state: " << subjects[i].sm.getCurrentState()->getName() << endl;
+        //subjects[i].initialState = initialState;
+        //subjects[i].sm.setCurrentState( initialState );
+        actor.initialState = initialState;
+        actor.sm.setCurrentState( initialState );
+        subjects[i] = actor;
     }
 }
 
@@ -119,17 +129,10 @@ void VRProcessEngine::update() {
             auto& actor = subject.second;
             actor.sm.process(0);
         }
-        auto actives = getCurrentStates();
-        /*
-        cout << "current states:    ";
-        for (auto state : actives) cout << state->getLabel() << "   ";
-        cout << endl;
-        */
     }
     tickDuration-=speed;
 }
 
-//TODO: get sm current state
 vector<VRProcessNodePtr> VRProcessEngine::getCurrentStates() {
     vector<VRProcessNodePtr> res;
     for (auto& subject : subjects) {
@@ -140,8 +143,6 @@ vector<VRProcessNodePtr> VRProcessEngine::getCurrentStates() {
             auto tID = action->node->getID();
             auto tStates = process->getTransitionStates(sID, tID);
             res.push_back(tStates[0]);
-
-            //auto sm = subject.sm.getCurrentState()->getName();
         }
     }
     return res;
@@ -160,7 +161,6 @@ vector<VRProcessNodePtr> VRProcessEngine::getCurrentNodes() {
             res.push_back(tStates[0]);
             auto currentTransition = action->node;
             res.push_back(currentTransition);
-            //auto sm = subject.sm.getCurrentState()->getName();
         }
     }
     return res;

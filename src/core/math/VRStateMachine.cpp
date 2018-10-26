@@ -7,7 +7,7 @@ VRStateMachine<P>::State::State(string name, VRTransitionCbPtr t) {
     auto ns = setNameSpace("State");
     ns->setUniqueNames(false);
     setName(name);
-    transition = t;
+    transitionCb = t;
 }
 
 template<class P>
@@ -18,26 +18,28 @@ typename VRStateMachine<P>::StatePtr VRStateMachine<P>::State::create(string nam
 
 template<class P>
 string VRStateMachine<P>::State::process(const P& params) {
-    //state enter CB
-    if(enter) (*enter);
-
-    //state transition CB
-    if (!transition) return "";
-
-    //state leave CB
-    if(leave) (*leave);
-
-    return (*transition)(params);
+    if (!transitionCb) return ""; //state transition CB
+    return (*transitionCb)(params);
 }
 
 template<class P>
 void VRStateMachine<P>::State::setStateEnterCB(VRStateEnterCbPtr ptr){
-    enter = ptr;
+    enterCb = ptr;
 }
 
 template<class P>
 void VRStateMachine<P>::State::setStateLeaveCB(VRStateLeaveCbPtr ptr){
-    leave = ptr;
+    leaveCb = ptr;
+}
+
+template<class P>
+void VRStateMachine<P>::State::enter() {
+    if (enterCb) (*enterCb)(0); //state enter CB
+}
+
+template<class P>
+void VRStateMachine<P>::State::leave() {
+    if (leaveCb) (*leaveCb)(0); //state leave CB
 }
 
 template<class P>
@@ -66,7 +68,13 @@ template<class P> typename VRStateMachine<P>::StatePtr VRStateMachine<P>::getCur
 template<class P>
 typename VRStateMachine<P>::StatePtr VRStateMachine<P>::process(const P& params) {
     if (!currentState) return 0;
-    string newState = currentState->process(params);
-    if (states.count(newState)) setCurrentState(newState);
+    string newStateName = currentState->process(params);
+    if (newStateName != currentState->getName()) { // state change
+        if (states.count(newStateName)) {
+            currentState->leave();
+            setCurrentState(newStateName);
+            states[newStateName]->enter();
+        }
+    }
     return currentState;
 }

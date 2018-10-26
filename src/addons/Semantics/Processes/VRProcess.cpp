@@ -29,7 +29,7 @@ VRProcessNode::VRProcessNode(string name, PROCESS_WIDGET type, int ID, int sID) 
 VRProcessNode::~VRProcessNode() {}
 VRProcessNodePtr VRProcessNode::create(string name, PROCESS_WIDGET type, int ID, int sID) { return VRProcessNodePtr( new VRProcessNode(name, type, ID, sID) ); }
 
-void VRProcessNode::update(Graph::node& n, bool changed) { // callede when graph node changes
+void VRProcessNode::update(Graph::node& n, bool changed) { // called when graph node changes
     if (widget && !widget->isDragged() && changed) widget->setFrom(n.box.center());
 
     if (widget && widget->isDragged()) {
@@ -127,6 +127,16 @@ vector<VRProcessNodePtr> VRProcess::getMessageSubjects(int messageID) {
     return res;
 }
 
+vector<VRProcessNodePtr> VRProcess::getMessageReceiver(int messageID){
+    auto diag = interactionDiagram;
+    auto nextNodes = diag->getNextNodes(messageID);
+    vector<VRProcessNodePtr> res;
+    for (auto node : nextNodes){
+        res.push_back(diag->processnodes[node.ID]);
+    }
+    return res;
+}
+
 vector<VRProcessNodePtr> VRProcess::getSubjectStates(int subjectID) {
     auto d = behaviorDiagrams[subjectID];
     vector<VRProcessNodePtr> res;
@@ -169,8 +179,19 @@ vector<VRProcessNodePtr> VRProcess::getTransitionStates(int subjectID, int trans
     auto neighbors = d->getNeighbors( transitionID );
     vector<VRProcessNodePtr> res;
     for (auto node : neighbors) {
-        auto action = d->processnodes[node.ID];
-        res.push_back(action);
+        auto state = d->processnodes[node.ID];
+        res.push_back(state);
+    }
+    return res;
+}
+
+vector<VRProcessNodePtr> VRProcess::getTransitionSourceState(int subjectID, int transitionID) {
+    auto d = behaviorDiagrams[subjectID];
+    auto neighbors = d->getNextNodes( transitionID );
+    vector<VRProcessNodePtr> res;
+    for (auto node : neighbors) {
+        auto state = d->processnodes[node.ID];
+        res.push_back(state);
     }
     return res;
 }
@@ -337,12 +358,26 @@ VRProcessNodePtr VRProcess::addState(string name, int sID) {
 
 VRProcessNodePtr VRProcess::addSendState(string name, int sID, VRProcessNodePtr message){
     auto state = addState(name, sID);
+    /*if (!behaviorDiagrams.count(sID)) return 0;
+    auto diag = behaviorDiagrams[sID];
+
+    auto nID = diag->addNode();
+    auto state = VRProcessNode::create(name, SENDSTATE, nID, sID);
+    diag->processnodes[nID] = state;*/
+
     stateToMessage[state] = message;
     return state;
 }
 
 VRProcessNodePtr VRProcess::addReceiveState(string name, int sID, VRProcessNodePtr message){
     auto state = addState(name, sID);
+    /*if (!behaviorDiagrams.count(sID)) return 0;
+    auto diag = behaviorDiagrams[sID];
+
+    auto nID = diag->addNode();
+    auto state = VRProcessNode::create(name, RECEIVESTATE, nID, sID);
+    diag->processnodes[nID] = state;*/
+
     stateToMessage[state] = message;
     return state;
 }

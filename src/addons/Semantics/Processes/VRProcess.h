@@ -78,12 +78,14 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         vector<VRProcessNodePtr> getOutgoingMessages(int subjectID);
         vector<VRProcessNodePtr> getIncomingMessages(int subjectID);
         vector<VRProcessNodePtr> getMessageSubjects(int messageID);
+        vector<VRProcessNodePtr> getMessageReceiver(int messageID);
         vector<VRProcessNodePtr> getSubjects();
         vector<VRProcessNodePtr> getMessages();
         vector<VRProcessNodePtr> getSubjectStates(int subjectID);
         vector<VRProcessNodePtr> getStateTransitions(int subjectID, int stateID); // all edges
         vector<VRProcessNodePtr> getStateOutTransitions(int subjectID, int stateID); //only outgoing edges
         vector<VRProcessNodePtr> getTransitionStates(int subjectID, int transitionID);
+        vector<VRProcessNodePtr> getTransitionSourceState(int subjectID, int transitionID);
         vector<VRProcessNodePtr> getTransitions(int subjectID);
         map<VRProcessNodePtr, VRProcessNodePtr> getInitialStates(); // <subjectNode, initialStateNode>
         VRProcessNodePtr getStateMessage(VRProcessNodePtr state);
