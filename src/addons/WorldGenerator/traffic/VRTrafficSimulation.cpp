@@ -240,6 +240,12 @@ void VRTrafficSimulation::updateSimulation() {
             return false;
         };
 
+        auto isParkingLane = [&](int ID) {
+            auto lane = roadNetwork->getLane(ID);
+            if (lane->is_a("ParkingLane")) return true;
+            return false;
+        };
+
         for (auto user : users) {
             Vec3d p = getPoseTo(user.t)->pos();
             string debug = "";
@@ -252,7 +258,7 @@ void VRTrafficSimulation::updateSimulation() {
                 float D2 = (ep2-p).length();
 
                 if (D1 > userRadius && D2 > userRadius) continue; // outside
-                if (debugOverRideSeedRoad<0 && graph->getPrevEdges(e).size() == 0  && !isPedestrian(e.ID)) { // roads that start out of "nowhere"
+                if (debugOverRideSeedRoad<0 && graph->getPrevEdges(e).size() == 0  && !isPedestrian(e.ID) && !isParkingLane(e.ID)) { // roads that start out of "nowhere"
                     newSeedRoads.push_back( e.ID );
                     continue;
                 }
