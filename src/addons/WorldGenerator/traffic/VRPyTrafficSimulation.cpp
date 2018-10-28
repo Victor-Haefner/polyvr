@@ -20,10 +20,16 @@ PyMethodDef VRPyTrafficSimulation::methods[] = {
     {"runDiagnostics", PyWrap( TrafficSimulation, runDiagnostics, "runDiagnostics", void ) },
     {"isSeedRoad", PyWrap( TrafficSimulation, isSeedRoad, "isSeedRoad", bool, int ) },
     {"forceIntention", PyWrap( TrafficSimulation, forceIntention, "forceIntention", void, int, int ) },
+    {"runWithoutGeometries", PyWrap( TrafficSimulation, runWithoutGeometries, "runWithoutGeometries", void ) },
+    {"runWithGeometries", PyWrap( TrafficSimulation, runWithGeometries, "runWithGeometries", void ) },
     {"showGraph", PyWrap( TrafficSimulation, showGraph, "showGraph", void ) },
     {"hideGraph", PyWrap( TrafficSimulation, hideGraph, "hideGraph", void ) },
+    {"showIntersections", PyWrap( TrafficSimulation, showIntersections, "showIntersections", void ) },
+    {"hideIntersections", PyWrap( TrafficSimulation, hideIntersections, "hideIntersections", void ) },
     {"toggleLaneChanges", PyWrap( TrafficSimulation, toggleLaneChanges, "toggleLaneChanges", void ) },
     {"showVehicVision", PyWrap( TrafficSimulation, showVehicVision, "showVehicVision", void ) },
     {"hideVehicVision", PyWrap( TrafficSimulation, hideVehicVision, "hideVehicVision", void ) },
+    {"stopVehicle", PyWrap( TrafficSimulation, stopVehicle, "stopVehicle", void, int ) },
+    //{"deleteVehicle", PyWrap( TrafficSimulation, deleteVehicle, "deleteVehicle", void, int ) },
     {NULL}  /* Sentinel */
 };

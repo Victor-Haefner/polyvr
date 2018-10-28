@@ -18,20 +18,22 @@ class VRTrafficSimulation : public VRObject {
             SCOOTER = 1,
             BYCICLE = 2
         };
+        enum VISION {
+            INFRONT = 0,
+            FRONTLEFT = 1,
+            FRONTRIGHT = 2,
+            BEHINDLEFT = 3,
+            BEHINDRIGHT = 4,
+            BEHIND = 5
+        };
 
     private:
         struct Vehicle {
-            enum VISION {
-                INFRONT = 0,
-                FROMLEFT = 1,
-                FROMRIGHT = 2
-                //BEHIND = 3
-            };
             enum INTENTION {
                 STRAIGHT = 0,
                 SWITCHLEFT = 1,
-                SWITCHRIGHT = 2
-                //REVERSE = 3
+                SWITCHRIGHT = 2,
+                REVERSE = 3
             };
 
             int vID = -1;
@@ -46,21 +48,48 @@ class VRTrafficSimulation : public VRObject {
             vector<VRGeometryPtr> headlights;
             vector<VRGeometryPtr> backlights;
 
-            map<int, bool> vehiclesight;
-            map<int, bool> vehiclesightFar;
+            map<int, float> vehiclesight;
+            map<int, float> vehiclesightFar;
+            map<int, int> vehiclesightFarID;
+            map<int, Vec3d> vehicleFPs;
+            int lastFPTS = 0;
 
             Graph::position pos;
-            float speed = 0.15;
-            Vec3d lastMove = Vec3d(0,0,0);
-            Vec3d currentOffset = Vec3d(0,0,0);
-            Vec3d currentdOffset = Vec3d(0,0,0);
+            int nextEdge = -1;
+            float length = 4.4;
+            float width = 1.7;
+            float speed;
+            float currentVelocity;
+            float targetVelocity;
+            float roadVelocity;
+            float maxAcceleration;
+            float maxDecceleration;
+            float acceleration;
+            float decceleration;
+
+            ///Perception
+            float distanceToNextSignal;
+            float distanceToNextIntersec;
+            string nextSignalState; //"000" - red|organge|green
+            bool signalAhead;
+
+            ///Behavior
+            Vec3d lastMove;
+            Vec3d currentOffset;
+            Vec3d currentdOffset;
             int lastMoveTS = 0;
             int indicatorTS = 0;
-            int roadFrom = -1;
-            int roadTo = -1;
+            int lastLaneSwitchTS = 0;
+            int roadFrom;
+            int roadTo;
             int behavior = 0; //0 = straight, 1 = left, 2 = right
+            int turnAhead = 0; //0 = straight, 1 = left, 2 = right
             int currentState = 0; //1 = leaving lane, -1 = coming onto lane
             bool laneTransition = true;
+            bool turnAtIntersec = false;
+            bool isUser = false;
+            bool collisionDetected;
+            VRRoadIntersectionPtr lastIntersection;
 
             Vehicle(Graph::position p);
             Vehicle();
@@ -68,6 +97,7 @@ class VRTrafficSimulation : public VRObject {
 
             void destroy();
             void hide();
+            void setDefaults();
             void show(Graph::position p);
 
             int getID();
@@ -82,14 +112,15 @@ class VRTrafficSimulation : public VRObject {
             string state;
         };
 
-        struct road {
+        struct laneSegment { //road
             int rID = -1;
             float density = 0;
             float length = 0;
             bool macro = true;
             map<int, int> vehicleIDs;
             int lastVehicleID = 0;
-            VRRoadPtr r;
+            VRRoadPtr road;
+            VREntityPtr lane;
             vector<signal> signals;
         };
 
@@ -100,7 +131,7 @@ class VRTrafficSimulation : public VRObject {
         };
 
         VRRoadNetworkPtr roadNetwork;
-        map<int, road> roads;
+        map<int, laneSegment> roads;
         map<int, Vehicle> vehicles;
         vector<int> seedRoads;
         vector<int> nearRoads;
@@ -110,11 +141,25 @@ class VRTrafficSimulation : public VRObject {
         vector<VRObjectPtr> models;
         int maxUnits = 0;
         int numUnits = 0;
+        size_t nID = -1;
+        int stopVehicleID = -1;
+        int deleteVehicleID = -1;
         bool isSimRunning = true;
         bool isShowingVehicleVision = false;
+        bool isShowingGraph = false;
+        bool isShowingGeometries = true;
         bool laneChange = false;
         float speedMultiplier = 1.0;
+        float deltaT;
+        float lastT = 0.0;
+
+        float environmentFactor = 1; // 4 snow
+        float roadFactor = 1; //1 in city, 2 highway
+
+        float roadVelocity;
+
         string lastseedRoadsString = "";
+        //int debugOverRideSeedRoad = -1;
         int debugOverRideSeedRoad = -1;
 
         VRMaterialPtr carLightWhiteOn;
@@ -130,6 +175,8 @@ class VRTrafficSimulation : public VRObject {
         VRGeometryPtr flowGeo;
 
         void updateTurnSignal();
+        void updateGraph();
+        void updateIntersectionVis(bool in);
 
     public:
         VRTrafficSimulation();
@@ -153,9 +200,13 @@ class VRTrafficSimulation : public VRObject {
 
         //diagnostics:
         void toggleSim();
+        void runWithoutGeometries();
+        void runWithGeometries();
         void setSpeedmultiplier(float speedMultiplier);
         void showGraph();
         void hideGraph();
+        void showIntersections();
+        void hideIntersections();
         void showVehicVision();
         void hideVehicVision();
         void toggleLaneChanges();
@@ -163,6 +214,8 @@ class VRTrafficSimulation : public VRObject {
         string getVehicleData(int ID);
         string getEdgeData(int ID);
         void runDiagnostics();
+        void stopVehicle(int ID);
+        void deleteVehicle(int ID);
         void setSeedRoad(int debugOverRideSeedRoad);
         void setSeedRoadVec(vector<int> forceSeedRoads);
         bool isSeedRoad(int roadID);

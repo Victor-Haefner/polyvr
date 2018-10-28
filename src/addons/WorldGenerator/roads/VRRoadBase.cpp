@@ -86,6 +86,7 @@ VREntityPtr VRRoadBase::addLane( int direction, float width, bool pedestrian ) {
 	l->set("pedestrian", toString(pedestrian));
 	entity->add("lanes", l->getName());
 	l->set("road", entity->getName());
+	//for (int eID : edgeIDs) l->add("graphIDs", eID);
 	return l;
 }
 
