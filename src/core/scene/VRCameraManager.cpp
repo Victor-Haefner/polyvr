@@ -1,17 +1,33 @@
 #include "VRCameraManager.h"
 #include "VRSpaceWarper.h"
 #include "../objects/VRCamera.h"
+#include "core/utils/VRFunction.h"
+#include <boost/bind.hpp>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRCameraManager::VRCameraManager() {
     cout << "Init VRCameraManager\n";
-
     //setupSpaceWarper(true);
+    setStorageType("Cameras");
+    store("activeCam", &activeName);
 }
 
 VRCameraManager::~VRCameraManager() {;}
+
+void VRCameraManager::CMsetup() {
+    setMActiveCamera(activeName);
+    if (!getActiveCamera()) setMActiveCamera("Default");
+    if (!getActiveCamera()) {
+        auto cams = VRCamera::getAll();
+        if (cams.size() == 0) cout << "Warning in VRCameraManager::CMsetup, no camera available to initiate!\n";
+        else {
+            active = cams.front();
+            activeName = getActiveCamera()->getName();
+        }
+    }
+}
 
 VRCameraPtr VRCameraManager::getCamera(int ID) {
     int i=0;
@@ -21,7 +37,7 @@ VRCameraPtr VRCameraManager::getCamera(int ID) {
 
 void VRCameraManager::setMActiveCamera(string cam) {
     for (auto c : VRCamera::getAll()) {
-        if (auto sp = c.lock()) if (sp->getName() == cam) active = sp;
+        if (auto sp = c.lock()) if (sp->getName() == cam) { active = sp; activeName = cam; }
     }
 }
 
@@ -30,9 +46,15 @@ VRCameraPtr VRCameraManager::getActiveCamera() {
 }
 
 int VRCameraManager::getActiveCameraIndex() {
-    int i=0;
-    for (auto c : VRCamera::getAll()) { if (c.lock() == active.lock()) return i; i++; }
-    return -1;
+    int index = -1;
+    if (active.lock()) {
+        int i=0;
+        for (auto c : VRCamera::getAll()) {
+            if (c.lock() == active.lock()) { index = i; break; }
+            i++;
+        }
+    }
+    return index;
 }
 
 vector<string> VRCameraManager::getCameraNames() {

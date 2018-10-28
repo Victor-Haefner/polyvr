@@ -16,6 +16,7 @@ using namespace std;
 
 class VRGuiBits {
     private:
+        bool update_ward = false;
         VRConsoleWidgetPtr openConsole;
         Gtk::Notebook* terminal;
         map<string, VRConsoleWidgetPtr> consoles;

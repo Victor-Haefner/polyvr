@@ -4,6 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 #include <string>
 #include <vector>
+#include "core/utils/VRStorage.h"
 #include "core/scene/VRSceneFwd.h"
 #include "core/objects/VRObjectFwd.h"
 
@@ -11,10 +12,14 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 
-class VRCameraManager {
+class VRCameraManager : public VRStorage {
     private:
         VRCameraWeakPtr active;
+        string activeName = "Default";
         VRSpaceWarperPtr spaceWarper;
+
+    protected:
+        void CMsetup();
 
     public:
         VRCameraManager();

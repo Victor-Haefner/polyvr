@@ -134,9 +134,9 @@ class IFCLoader {
         }
 
         Color3f getColor(int faceID, vector<int>& mat_ids, vector<IfcGeom::Material>& materials) {
-            if (faceID < 0 || faceID >= mat_ids.size()) return defaultColor;
+            if (faceID < 0 || faceID >= int(mat_ids.size())) return defaultColor;
             int matID = mat_ids[faceID];
-            if (matID < 0 || matID >= materials.size()) return defaultColor;
+            if (matID < 0 || matID >= int(materials.size())) return defaultColor;
             IfcGeom::Material& mat = materials[matID];
             return Color3f( mat.diffuse()[0], mat.diffuse()[1], mat.diffuse()[2] );
         }
@@ -177,6 +177,32 @@ class IFCLoader {
                         }}
                     case IfcUtil::ArgumentType::Argument_AGGREGATE_OF_ENTITY_INSTANCE:
                         return "";
+                    case IfcUtil::ArgumentType::Argument_NULL:
+                        return "";
+                    case IfcUtil::ArgumentType::Argument_DERIVED:
+                        return "";
+                    case IfcUtil::ArgumentType::Argument_BINARY:
+                        return "";
+                    case IfcUtil::ArgumentType::Argument_EMPTY_AGGREGATE:
+                        return "";
+                    case IfcUtil::ArgumentType::Argument_AGGREGATE_OF_INT:
+                        return "";
+                    case IfcUtil::ArgumentType::Argument_AGGREGATE_OF_DOUBLE:
+                        return "";
+                    case IfcUtil::ArgumentType::Argument_AGGREGATE_OF_STRING:
+                        return "";
+                    case IfcUtil::ArgumentType::Argument_AGGREGATE_OF_BINARY:
+                        return "";
+                    case IfcUtil::ArgumentType::Argument_AGGREGATE_OF_EMPTY_AGGREGATE:
+                        return "";
+                    case IfcUtil::ArgumentType::Argument_AGGREGATE_OF_AGGREGATE_OF_INT:
+                        return "";
+                    case IfcUtil::ArgumentType::Argument_AGGREGATE_OF_AGGREGATE_OF_DOUBLE:
+                        return "";
+                    case IfcUtil::ArgumentType::Argument_AGGREGATE_OF_AGGREGATE_OF_ENTITY_INSTANCE:
+                        return "";
+                    case IfcUtil::ArgumentType::Argument_UNKNOWN:
+                        return "";
                 }
             }
             return "";
@@ -188,9 +214,8 @@ class IFCLoader {
 
             IfcRelDefines::list::ptr propertyList = ifc->product()->IsDefinedBy();
             for (IfcRelDefines* p : *propertyList) {
-                IfcRelDefinesByProperties* by_prop = 0;
-
-                if (by_prop = p->as<IfcRelDefinesByProperties>()) {
+                IfcRelDefinesByProperties* by_prop = p->as<IfcRelDefinesByProperties>();
+                if (by_prop) {
                     auto pdef = by_prop->RelatingPropertyDefinition();
                     if (IfcPropertySet* pset = pdef->as<IfcPropertySet>()) {
                         auto props = pset->HasProperties();
@@ -251,9 +276,9 @@ class IFCLoader {
             if (faces.size() == 0) return 0;
 
             VRGeoData data;
-            for (int i=0; i<verts.size(); i+=3) data.pushPos( Pnt3d(verts[i], verts[i+1], verts[i+2]) );
-            for (int i=0; i<norms.size(); i+=3) data.pushNorm( Vec3d(norms[i], norms[i+1], norms[i+2]) );
-            for (int i=0; i<faces.size(); i+=3) data.pushTri( faces[i], faces[i+1], faces[i+2] );
+            for (uint i=0; i<verts.size(); i+=3) data.pushPos( Pnt3d(verts[i], verts[i+1], verts[i+2]) );
+            for (uint i=0; i<norms.size(); i+=3) data.pushNorm( Vec3d(norms[i], norms[i+1], norms[i+2]) );
+            for (uint i=0; i<faces.size(); i+=3) data.pushTri( faces[i], faces[i+1], faces[i+2] );
 
             vector<Color3f> cols = vector<Color3f>(verts.size()/3, defaultColor); // TODO: replace by material system!
             int Nfaces = faces.size()/3;
@@ -264,7 +289,7 @@ class IFCLoader {
                 cols[faces[3*i+1]] = color;
                 cols[faces[3*i+2]] = color;
             }
-            for (int i=0; i<cols.size(); i++) data.pushColor( cols[i] );
+            for (uint i=0; i<cols.size(); i++) data.pushColor( cols[i] );
 
             string name = o->name();// + "_" + o->unique_id();
             auto geo = data.asGeometry(name);

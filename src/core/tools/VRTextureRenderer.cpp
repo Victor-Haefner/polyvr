@@ -269,10 +269,13 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
     if (c == DIFFUSE) setChannelFP(channelDiffuseFP);
     if (c == NORMAL) setChannelFP(channelNormalFP);
 
+    bool v = isVisible();
+    show(); // TODO: the visible texture renderer kills directional deferred shadows..
     data->win->render(data->ract);
     ImageMTRecPtr img = Image::create();
     img->set( data->fboTexImg );
     if (c != RENDER) resetChannelFP();
+    setVisible(v);
     return VRTexture::create( img );
 }
 

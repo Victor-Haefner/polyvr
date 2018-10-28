@@ -121,7 +121,8 @@ void VRSceneManager::newScene(string path) {
     headlight->setBeacon(headlight_B);
     current->add(headlight);
 
-    VRTransformPtr cam = VRCamera::create("Default");
+    VRCameraPtr cam = VRCamera::create("Default");
+    cam->activate();
     headlight->addChild(cam);
 
     VRTransformPtr user;
