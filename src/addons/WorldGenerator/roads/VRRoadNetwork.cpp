@@ -138,7 +138,7 @@ void VRRoadNetwork::updateAsphaltTexture() {
             int colorID = 1;
             if (c == "yellow") colorID = 2;
             float width = w ? toFloat( w->value ) : 0;
-            float dashL = dL ? toInt( dL->value ) : 0;
+            float dashL = dL ? toFloat( dL->value ) : 0;
             asphalt->addMarking(rID, toPath(marking, 4), width, dashL, 0, colorID);
 		}
 
@@ -146,7 +146,7 @@ void VRRoadNetwork::updateAsphaltTexture() {
             auto w = track->get("width");
             auto dL = track->get("dashLength");
             float width = w ? toFloat( w->value ) : 0;
-            float dashL = dL ? toInt( dL->value ) : 0;
+            float dashL = dL ? toFloat( dL->value ) : 0;
             asphalt->addTrack(rID, toPath(track, 4), width, dashL, trackWidth*0.5);
 		}
 
@@ -495,6 +495,7 @@ void VRRoadNetwork::computeSigns() {
         Vec3d pos = signEnt->getVec3("position");
         Vec3d dir = signEnt->getVec3("direction");
         string type = signEnt->getValue<string>("type", "");
+        if (signEnt->is_a("TrafficLight")) continue;
         //cout << " sign: " << type << endl;
         auto sign = assets->copy(type, Pose::create(pos, dir), false);
         if (!sign) {
@@ -550,7 +551,13 @@ void VRRoadNetwork::computeArrows() {
         Vec4i drs(999,999,999,999);
         for (uint i=0; i<4 && i < dirs.size(); i++) drs[i] = int(dirs[i]*5/pi)*180/5;
         if (t < 0) t = 1+t; // from the end
-        createArrow(drs, min(int(dirs.size()),4), *lpath->getPose(t), arrow->getValue<int>("type", 0));
+        auto pose = lpath->getPose(t);
+        auto dir = pose->dir();
+        if ( arrow->get("offset") ) {
+            float offset = toFloat(arrow->get("offset")->value);
+            pose->setPos(pose->pos() + dir*offset);
+        }
+        createArrow(drs, min(int(dirs.size()),4), *pose, arrow->getValue<int>("type", 0));
     }
 }
 
@@ -620,7 +627,7 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p, int type) {
     for (int i=0; i<4; i++) cols->addValue(color);
 
     VRGeoData gdata;
-    gdata.pushQuad(Vec3d(0,0.02,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(2,2), true);
+    gdata.pushQuad(Vec3d(0,0.025,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(2,2), true);
     auto geo = gdata.asGeometry("arrow");
     geo->setColors(cols);
     geo->setPositionalTexCoords2D(1.0, 1, Vec2i(0,2));
@@ -673,6 +680,7 @@ void VRRoadNetwork::computeIntersections() {
         intersection->setWorld(w);
         intersection->setEntity(iEnt);
         intersections.push_back(intersection);
+        intersectionsByEntity[iEnt] = intersection;
         addChild(intersection);
         for (auto r : nodeRoads) { intersection->addRoad(r); }
         iEnt->set("node", node->getName());
@@ -744,6 +752,8 @@ void VRRoadNetwork::computeSurfaces() {
         auto roadGeo = road->createGeometry();
         if (!roadGeo) return;
         roadGeo->setMaterial( asphalt );
+        if (!road->isVisible()) roadGeo->setVisible(false);
+
         /*roadGeo->getPhysics()->setDynamic(false);
         roadGeo->getPhysics()->setShape("Concave");
         roadGeo->getPhysics()->setPhysicalized(true);*/
@@ -833,6 +843,15 @@ void VRRoadNetwork::compute() {
 }
 
 VRGeometryPtr VRRoadNetwork::getAssetCollisionObject() { return collisionMesh; }
+
+VRRoadPtr VRRoadNetwork::getRoad(VREntityPtr road) {
+    if (roadsByEntity.count(road)) return roadsByEntity[road];
+    return 0;
+}
+VRRoadIntersectionPtr VRRoadNetwork::getIntersection(VREntityPtr intersection) {
+    if (intersectionsByEntity.count(intersection)) return intersectionsByEntity[intersection];
+    return 0;
+}
 
 vector<VREntityPtr> VRRoadNetwork::getPreviousRoads(VREntityPtr road) {
 	auto getPreviousPaths = [](VREntityPtr path) {

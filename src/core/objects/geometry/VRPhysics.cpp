@@ -1044,11 +1044,12 @@ void VRPhysics::updateVisualGeo() {
                 int i0 = bt_inds[i*3];
                 int i1 = bt_inds[i*3+1];
                 int i2 = bt_inds[i*3+2];
+                if (i0 < 0 || i0 >= Nv || i1 < 0 || i1 >= Nv || i2 < 0 || i2 >= Nv) continue;
                 data.pushTri(I0+i0,I0+i1,I0+i2);
             }
         }
 
-        if (data.size()) data.apply(geo);
+        if (data.size()) data.apply(geo, true, true);
     }
 
     auto mat = OSG::VRMaterial::get("phys_mat");

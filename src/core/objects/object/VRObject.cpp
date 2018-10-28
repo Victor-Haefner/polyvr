@@ -405,6 +405,16 @@ VRObjectPtr VRObject::find(string Name) {
     return 0;
 }
 
+VRObjectPtr VRObject::findFirst(string Name) {
+    if (base_name == Name) return ptr();
+    for (auto c : children) {
+        if (c == ptr()) continue; // workaround! TODO: find why ptr() can happn
+        VRObjectPtr tmp = c->findFirst(Name);
+        if (tmp != 0) return tmp;
+    }
+    return 0;
+}
+
 vector<VRObjectPtr> VRObject::findAll(string Name, vector<VRObjectPtr> res ) {
     if (base_name == Name) res.push_back(ptr());
     for (auto c : children) {

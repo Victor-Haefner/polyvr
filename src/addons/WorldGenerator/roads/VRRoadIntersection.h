@@ -19,7 +19,8 @@ class VRRoadIntersection : public VRRoadBase {
             CONTINUATION, // one road goes directly into another
             FORK, // a road forks into two roads or two merge into one
             MERGE, // a road forks into two roads or two merge into one
-            UPLINK // a road connects to a middle node of another road
+            UPLINK, // a road connects to a middle node of another road
+            CROSSING
         };
 
         struct RoadFront {
@@ -32,9 +33,12 @@ class VRRoadIntersection : public VRRoadBase {
 
             RoadFront(VRRoadPtr road);
         };
+        VRRoadIntersectionPtr isecPtr;
 
     private:
         VREntityPtr getRoadNode(VREntityPtr roadEnt);
+
+        void setPtr(VRRoadIntersectionPtr i);
 
         IntersectionTYPE type = DEFAULT;
         VRPolygonPtr patch;
@@ -44,7 +48,9 @@ class VRRoadIntersection : public VRRoadBase {
         vector<shared_ptr<RoadFront>> roadFronts;
         vector<Vec3d> intersectionPoints;
         vector<pair<VREntityPtr, VREntityPtr>> laneMatches; // matches of ingoing lanes with outgoing lanes
+        vector<string> laneTurnDirection;
         map<VREntityPtr, vector<VREntityPtr>> nextLanes; // sequences of lanes, for example ingoing -> outgoing, or ingoing -> lane -> outgoing
+        map<VREntityPtr, VRTrafficLightPtr> matchedLights;
 
         VRTrafficLightsPtr system;
 
@@ -64,6 +70,14 @@ class VRRoadIntersection : public VRRoadBase {
         void computeTrafficLights();
 
         void addRoad(VRRoadPtr road);
+        vector<VRRoadPtr> getRoads();
+        vector<VRTrafficLightPtr> getTrafficLights();
+        VRTrafficLightPtr getTrafficLight(VREntityPtr lane);
+        map<VREntityPtr,Vec3d> crossingRoads;
+        vector<Vec3d> crossingRoadsPos;
+        vector<VREntityPtr> trafficLightRoads; // roads with a crossing
+
+        map<int, vector<VRTrafficLightPtr>> getTrafficLightMap();
 
         void update();
 };
