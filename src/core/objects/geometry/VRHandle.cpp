@@ -80,7 +80,7 @@ void VRHandle::updateHandle(bool sceneUpdate) {
     for (auto hw : siblings) {
         if (auto h = hw.lock()) {
             Vec3d pos = h->origin->pos() + h->axis*h->scale*v/scale;
-            cout << "VRHandle::updateHandle sibling v: " << v << " scale: " << scale << " hscale: " << h->scale << " haxis: " << h->axis << " pos: " << pos << endl;
+            //cout << "VRHandle::updateHandle sibling v: " << v << " scale: " << scale << " hscale: " << h->scale << " haxis: " << h->axis << " pos: " << pos << endl;
             h->setFrom(pos);
         }
     }
@@ -102,25 +102,6 @@ void VRHandle::drop() {
     auto scene = VRScene::getCurrent();
     scene->dropUpdateFkt( updateCb );
     lock = false;
-}
-
-#include <execinfo.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-void printBacktrace() {
-    void *buffer[100];
-    char **strings;
-
-    int nptrs = backtrace(buffer, 100);
-    printf("backtrace() returned %d addresses\n", nptrs);
-
-    strings = backtrace_symbols(buffer, nptrs);
-    if (strings != NULL) {
-        for (int j = 0; j < nptrs; j++) printf("%s\n", strings[j]);
-        free(strings);
-    }
 }
 
 void VRHandle::setMatrix(Matrix4d m) { // for undo/redo, PROBLEM: called by the constraint non stop

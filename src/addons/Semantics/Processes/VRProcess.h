@@ -14,7 +14,8 @@ OSG_BEGIN_NAMESPACE;
 enum PROCESS_WIDGET {
     SUBJECT,
     MESSAGE,
-    ACTION
+    ACTION,
+    TRANSITION
 };
 
 struct VRProcessNode : VRName {
@@ -51,6 +52,7 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         VROntologyPtr ontology;
         VRProcessDiagramPtr interactionDiagram;
         map<int, VRProcessDiagramPtr> behaviorDiagrams;
+        void printNodes(VRProcessDiagramPtr d);
 
         void update();
 
@@ -61,6 +63,7 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
 
         void open(string path);
         void setOntology(VROntologyPtr o);
+        VROntologyPtr getOntology();
         VRProcessDiagramPtr getInteractionDiagram();
         VRProcessDiagramPtr getBehaviorDiagram(int subject);
         VRProcessNodePtr getNode(int i, VRProcessDiagramPtr diag = 0);
@@ -71,11 +74,13 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         vector<VRProcessNodePtr> getMessages();
         vector<VRProcessNodePtr> getSubjectActions(int subjectID);
         vector<VRProcessNodePtr> getActionTransitions(int subjectID, int actionID);
-
+        vector<VRProcessNodePtr> getTransitionActions(int subjectID, int transitionID);
+        vector<VRProcessNodePtr> getTransitions(int subjectID);
 
         VRProcessNodePtr addSubject(string name);
         VRProcessNodePtr addMessage(string name, int i, int j, VRProcessDiagramPtr diag = 0);
         VRProcessNodePtr addAction(string name, int sID);
+        VRProcessNodePtr addTransition(string name, int sID, int i, int j, VRProcessDiagramPtr d = 0);
 
         void remNode(VRProcessNodePtr n);
 };

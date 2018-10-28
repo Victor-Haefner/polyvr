@@ -10,9 +10,15 @@
 
 #include <OpenSG/OSGMatrixUtility.h>
 
+#include "core/scene/VRScene.h"
+#include <boost/bind.hpp>
+
 using namespace OSG;
 
-VRProcessLayout::VRProcessLayout(string name) : VRTransform(name) {}
+VRProcessLayout::VRProcessLayout(string name) : VRTransform(name) {
+    updateCb = VRUpdateCb::create("process layout update", boost::bind(&VRProcessLayout::update, this));
+    VRScene::getCurrent()->addUpdateFkt(updateCb);
+}
 VRProcessLayout::~VRProcessLayout() {}
 
 VRProcessLayoutPtr VRProcessLayout::ptr() { return static_pointer_cast<VRProcessLayout>( shared_from_this() ); }
@@ -23,11 +29,12 @@ VRProcessLayoutPtr VRProcessLayout::create(string name) {
 }
 
 void VRProcessLayout::init() {
-    tool = VRPathtool::create();
-    addChild(tool);
+    toolSID = VRPathtool::create();
+    addChild(toolSID);
 }
 
-VRPathtoolPtr VRProcessLayout::getPathtool() { return tool; }
+VRPathtoolPtr VRProcessLayout::getSIDPathtool() { return toolSID; }
+VRPathtoolPtr VRProcessLayout::getSBDPathtool(int subject) { return toolSBDs[subject]; }
 
 /* IDEAS
 
@@ -125,11 +132,13 @@ void pushMsgBox(VRGeoData& geo, int N, float h) {
 VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     Color4f fg, bg;
     if (n->type == SUBJECT) { fg = Color4f(0,0,0,1); bg = Color4f(0.8,0.9,1,1); }
-    if (n->type == ACTION) { fg = Color4f(0,0,0,1); bg = Color4f(1,0.9,0.8,1); }
     if (n->type == MESSAGE) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,0,1); }
+    if (n->type == TRANSITION) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,0,1); }
+    //TODO: set different color for current actions in the process engine
+    if (n->type == ACTION) { fg = Color4f(0,0,0,1); bg = Color4f(1,0.9,0.8,1); }
 
     int wrapN = 12;
-    if (n->type == MESSAGE) wrapN = 22;
+    if (n->type == MESSAGE || n->type == TRANSITION) wrapN = 22;
     string l = n->label;
     int lineN = wrapString(l, wrapN);
 
@@ -142,14 +151,15 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
 
     if (n->type == SUBJECT) pushSubjectBox(geo, wrapN, lineN*height*0.5);
     if (n->type == ACTION) pushActionBox(geo, wrapN, lineN*height*0.5);
-    if (n->type == MESSAGE) pushMsgBox(geo, wrapN, lineN*height*0.5);
+    if (n->type == MESSAGE || n->type == TRANSITION) pushMsgBox(geo, wrapN, lineN*height*0.5);
 
     auto w = geo.asGeometry("ProcessElement");
     if (n->type == SUBJECT) w->addTag("subject");
     if (n->type == ACTION) w->addTag("action");
     if (n->type == MESSAGE) w->addTag("message");
+    if (n->type == TRANSITION) w->addTag("transition");
     w->setMaterial(mat);
-    w->getConstraint()->setTConstraint(Vec3d(0,1,0), VRConstraint::PLANE);
+    w->getConstraint()->lock({1,3,4,5});
     w->getConstraint()->setReferential(ptr());
     w->getConstraint()->setActive(true);
     addChild(w);
@@ -180,62 +190,96 @@ void VRProcessLayout::setEngine(VRProcessEnginePtr e) { engine = e; }
 void VRProcessLayout::rebuild() {
     if (!process) return;
     clearChildren();
-    addChild(tool);
-    auto diag = process->getInteractionDiagram();
-    if (!diag) return;
+    addChild(toolSID);
 
-    int i = 0;
-	for (auto subject : process->getSubjects()) {
-        PosePtr pose = Pose::create(Vec3d(0,0,i*25),Vec3d(0,0,-1),Vec3d(0,1,0));
-		auto n = tool->addNode(pose);
-		auto h = tool->getHandle(n);
-		h->addChild(addElement(subject) );
-		i++;
+    for(auto tool : toolSBDs) addChild(tool.second);
+
+    auto sid = process->getInteractionDiagram();
+    if (!sid) return;
+
+    for (auto subject : process->getSubjects()){
+        auto sbd = process->getBehaviorDiagram(subject->getID());
+        if (!sbd) return;
+    }
+
+    buildSID();
+    buildSBDs();
+    update();
+}
+
+void VRProcessLayout::appendToHandle(Vec3d pos, VRProcessNodePtr node, VRPathtoolPtr ptool) {
+    PosePtr pose = Pose::create(pos,Vec3d(0,0,-1),Vec3d(0,1,0));
+    auto h = ptool->getHandle(node->getID());
+    ptool->setHandlePose(node->getID(), pose);
+    h->addChild( addElement(node) );
+    h->getConstraint()->lock({1,3,5});
+    h->getConstraint()->setReferential(ptr());
+    h->getConstraint()->setActive(true);
+}
+
+void VRProcessLayout::setupLabel(VRProcessNodePtr message, VRPathtoolPtr ptool, vector<VRProcessNodePtr> nodes) {
+    auto messageElement = addElement(message);
+
+    auto id0 = nodes[0]->getID();
+    auto id1 = nodes[1]->getID();
+
+    Vec3d p;
+    auto h0 = ptool->getHandle(id0);
+    auto h1 = ptool->getHandle(id1);
+    if (h0 && h1) p = (h0->getWorldPosition() + h1->getWorldPosition())*0.5;
+
+    int idm = message->getID();
+    ptool->setHandlePose(idm, Pose::create(p,Vec3d(0,0,-1),Vec3d(0,1,0) ));
+    auto h = ptool->getHandle(idm);
+    h->addChild( messageElement );
+}
+
+void VRProcessLayout::buildSID() {
+    auto subjects = process->getSubjects();
+	for (int i=0; i < subjects.size(); i++) {
+        appendToHandle(Vec3d(0,0,i*25), subjects[i], toolSID);
 	}
 
 	for (auto message : process->getMessages()) {
-		auto messageElement = addElement(message);
-		auto subjects = process->getMessageSubjects( message->getID() );
-
-
-		auto id0 = subjects[0]->getID();
-		auto id1 = subjects[1]->getID();
-
-		auto h0 = tool->getHandle(id0);
-		auto h1 = tool->getHandle(id1);
-		auto p = (h0->getWorldPosition() + h1->getWorldPosition())*0.5;
-		auto n = tool->addNode( Pose::create(p,Vec3d(0,0,-1),Vec3d(0,1,0) ) );
-		auto h = tool->getHandle(n);
-		h->addChild( messageElement );
-
-		Vec3d norm = Vec3d(1,0,0);
-		int idm = message->getID();
-		tool->connect(id0, idm, norm, norm, false, true);
-		tool->connect(idm, id1, norm, norm, false, true);
+        auto subjects = process->getMessageSubjects( message->getID() );
+        setupLabel(message, toolSID, subjects);
 	}
-
-	tool->update();
 }
 
-/*void VRProcessLayout::rebuild() {
-    if (!process) return;
-    clearChildren();
-    float f=0;
-    auto diag = process->getInteractionDiagram();
-    if (!diag) return;
-    for (int i=0; i<diag->size(); i++) {
-        auto& e = diag->processnodes[i];
-        auto geo = newWidget(e, height);
+void VRProcessLayout::buildSBDs() {
+    auto subjects = process->getSubjects();
+	for (int i=0; i < subjects.size(); i++) {
+        int sID = subjects[i]->getID();
+        auto toolSBD = toolSBDs[sID];
+        auto actions = process->getSubjectActions(sID);
 
-        Vec3d p = Vec3d(f, 0, 0.01*(rand()%100));
-        f += e->label.size()+2;
-        e->widget->setFrom(p);
+        for (int j=0; j < actions.size(); j++) {
+            appendToHandle(Vec3d((j+1)*25,0,i*25), actions[j], toolSBD);
+        }
 
-        auto& n = diag->getNode(i);
-        n.box.updateFromGeometry(geo);
-        n.box.setCenter(p);
+        for (auto transition : process->getTransitions(sID)) {
+            auto actions = process->getTransitionActions(sID, transition->getID());
+            setupLabel(transition, toolSBD, actions);
+        }
+	}
+}
+
+void VRProcessLayout::printHandlePositions(){
+    for (auto subject : process->getSubjects()){
+        cout << "subject: " << subject->getID() << endl;
+        auto toolSBD = toolSBDs[subject->getID()];
+        auto behavior = process->getBehaviorDiagram(subject->getID());
+        for (auto node : behavior->processnodes){
+            auto nid = node.second->getID();
+            auto handle = toolSBD->getHandle(nid);
+            auto position = handle->getWorldPosition();
+            auto p = handle->getRelativePose(handle->getParent());
+            cout << "node type " << node.second->type << " handle position: " << position << " parent: " << handle->getParent()->getName() << " rel pose: " << p->toString() << endl;
+            handle->setRelativeDir(p->dir(), handle->getParent());
+            cout << "node type " << node.second->type << " handle position: " << position << " parent: " << handle->getParent()->getName() << " rel pose: " << p->toString() << endl;
+        }
     }
-}*/
+}
 
 VRObjectPtr VRProcessLayout::getElement(int i) { return elements.count(i) ? elements[i].lock() : 0; }
 
@@ -287,6 +331,11 @@ void VRProcessLayout::setElementName(int ID, string name) {
     mat->setTextureParams(GL_LINEAR, GL_LINEAR);
 
     e->setMaterial(mat);
+}
+
+void VRProcessLayout::update(){
+    toolSID->update();
+	for(auto toolSBD : toolSBDs) toolSBD.second->update();
 }
 
 
