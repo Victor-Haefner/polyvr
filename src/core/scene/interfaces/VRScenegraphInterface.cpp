@@ -8,7 +8,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/tools/selection/VRSelector.h"
-#include "core/objects/geometry/VRConstraint.h"
+#include "core/math/kinematics/VRConstraint.h"
 
 #include <boost/bind.hpp>
 #include <OpenSG/OSGMatrix.h>

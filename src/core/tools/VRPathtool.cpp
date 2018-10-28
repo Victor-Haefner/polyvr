@@ -1,12 +1,12 @@
 #include "VRPathtool.h"
 #include "core/objects/geometry/VRGeometry.h"
-#include "core/objects/geometry/VRConstraint.h"
 #include "core/objects/geometry/VRStroke.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/scene/VRScene.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/math/path.h"
+#include "core/math/kinematics/VRConstraint.h"
 #include "core/utils/toString.h"
 
 #include <OpenSG/OSGGeoProperties.h>

@@ -80,6 +80,22 @@ VRCameraPtr VRCamera::create(string name, bool reg) {
     return p;
 }
 
+VRObjectPtr VRCamera::copy(vector<VRObjectPtr> children) {
+    VRCameraPtr t = VRCamera::create(getBaseName());
+    t->setVisible(isVisible());
+    t->setPickable(isPickable());
+    t->setEntity(entity);
+    t->setMatrix(getMatrix());
+
+    t->setType(getType());
+    t->setAspect(getAspect());
+    t->setFov(getFov());
+    t->setNear(getNear());
+    t->setFar(getFar());
+    t->setOrthoSize(getOrthoSize());
+    return t;
+}
+
 void VRCamera::setCam(OSGCameraPtr c) { cam = c; } // warning: setup() will override this!
 
 void VRCamera::setType(int type) { camType = type; setup(); }

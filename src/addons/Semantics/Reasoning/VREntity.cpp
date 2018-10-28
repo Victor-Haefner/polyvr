@@ -19,9 +19,11 @@ VREntity::VREntity(string name, VROntologyPtr o, VRConceptPtr c) {
     setStorageType("Entity");
     storeObjNames("concepts", &concepts, &conceptNames);
 
+
     auto ns = setNameSpace("VREntity");
     ns->filterNameChars(".,",'_');
     ns->setSeparator('_');
+    ns->setUniqueNames(false);
     setName(name);
 }
 

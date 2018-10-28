@@ -24,7 +24,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRPrimitive.h"
-#include "core/objects/geometry/VRConstraint.h"
+#include "core/math/kinematics/VRConstraint.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/import/VRImport.h"
 #include "core/utils/toString.h"

@@ -1,8 +1,8 @@
 #include "VRProcessLayout.h"
 #include "VRProcess.h"
+#include "core/math/kinematics/VRConstraint.h"
 #include "core/objects/geometry/sprite/VRSprite.h"
 #include "core/objects/material/VRMaterial.h"
-#include "core/objects/geometry/VRConstraint.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/utils/toString.h"
 #include "core/tools/VRText.h"
@@ -157,7 +157,25 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     return w;
 }
 
-void VRProcessLayout::setProcess(VRProcessPtr p) { process = p; rebuild(); }
+void VRProcessLayout::setProcess(VRProcessPtr p) {
+    if (!p) { cout << "WARNING in ProcessLayout, setProcess: process is null!\n"; return; }
+
+    process = p;
+
+    //initialize pathtool for each sbd
+    for (auto subject : p->getSubjects()){
+        if (!p->getBehaviorDiagram(subject->getID())) return;
+        VRPathtoolPtr toolSBD = VRPathtool::create();
+        toolSBDs[subject->getID()] = toolSBD;
+        addChild(toolSBD);
+        toolSBD->setGraph(p->getBehaviorDiagram(subject->getID()));
+    }
+    toolSID->setGraph( p->getInteractionDiagram() );
+
+    rebuild();
+}
+
+void VRProcessLayout::setEngine(VRProcessEnginePtr e) { engine = e; }
 
 void VRProcessLayout::rebuild() {
     if (!process) return;

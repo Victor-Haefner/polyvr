@@ -1,6 +1,7 @@
 #include "VRTransform.h"
 #include "core/math/pose.h"
 #include "core/math/path.h"
+#include "core/math/kinematics/VRConstraint.h"
 #include "core/utils/isNan.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
@@ -12,7 +13,6 @@
 #include "core/objects/object/OSGCore.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRGeometry.h"
-#include "core/objects/geometry/VRConstraint.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSpaceWarper.h"
@@ -59,7 +59,6 @@ VRTransformPtr VRTransform::create(string name, bool doOpt) { return VRTransform
 VRObjectPtr VRTransform::copy(vector<VRObjectPtr> children) {
     VRTransformPtr t = VRTransform::create(getBaseName());
     t->setVisible(isVisible());
-    t->setPickable(isPickable());
     t->setEntity(entity);
     t->setMatrix(getMatrix());
     t->setPickable(isPickable());
