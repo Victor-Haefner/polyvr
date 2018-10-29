@@ -7,6 +7,7 @@ using namespace OSG;
 VRProperty::VRProperty(string name, string t) {
     setStorageType("Property");
     auto ns = setNameSpace("VRProperty");
+    ns->filterNameChars(".,",'_'); // filter path and math characters
     ns->setSeparator('_');
     ns->setUniqueNames(false);
     setName(name);
@@ -20,6 +21,11 @@ VRPropertyPtr VRProperty::create(string name, string type) { return VRPropertyPt
 
 void VRProperty::setType(string type) { this->type = type; }
 
+void VRProperty::setValue(string value) {
+    for (char c : string(".,")) replace(value.begin(), value.end(),c,'_');
+    this->value = value;
+}
+
 string VRProperty::toString() {
     string res;
     res += " prop "+name+" = "+value+" ("+type+")\n";
@@ -28,6 +34,6 @@ string VRProperty::toString() {
 
 VRPropertyPtr VRProperty::copy() {
     auto p = create(base_name, type);
-    p->value = value;
+    p->setValue( value );
     return p;
 }

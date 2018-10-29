@@ -307,7 +307,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
 
         if (annproperties.count(predicate) && annproperties[predicate]->type == "aprop") { // concept(subject) has an annotation(predicate) with value(object)
             auto p = annproperties[predicate]->copy(); // copy annotations
-            p->value = object;
+            p->setValue( object );
             getConcept(subject)->addAnnotation(p);
             return 0;
         }
@@ -329,7 +329,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
 
         // entity(subject) has a property(predicate) with value(object)
         //auto pv = entities[subject]->getValues(predicate);
-        //if (pv.size()) { pv[0]->value = object; return 0; }
+        //if (pv.size()) { pv[0]->setValue( object ); return 0; }
         auto p = entities[subject]->getProperty(predicate, false);
         if (p) {
             //if (p->type == "") cout << "Warning: data property " << predicate << " has no data type!\n";
