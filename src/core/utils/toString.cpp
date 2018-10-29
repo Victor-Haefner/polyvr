@@ -314,4 +314,14 @@ template<> int toValue(stringstream& ss, Boundingbox& box) {
     return B;
 }
 
+bool isNumber(string number) {
+    if (number[0] >= '0' && number[0] <= '9') return true;
+    if (number[0] == '-' || number[0] == '+' || number[0] == '.') {
+        if (number[1] >= '0' && number[1] <= '9') return true;
+    }
+    if (number[0] == '-' || number[0] == '+') {
+        if (number[1] == '.' && number[2] >= '0' && number[3] <= '9') return true;
+    }
+    return false;
+}
 

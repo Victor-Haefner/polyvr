@@ -1,4 +1,5 @@
 #include "VRProperty.h"
+#include "core/utils/toString.h"
 
 #include <iostream>
 
@@ -22,7 +23,7 @@ VRPropertyPtr VRProperty::create(string name, string type) { return VRPropertyPt
 void VRProperty::setType(string type) { this->type = type; }
 
 void VRProperty::setValue(string value) {
-    for (char c : string(".,")) replace(value.begin(), value.end(),c,'_');
+    if (!isNumber(value)) for (char c : string(".,")) replace(value.begin(), value.end(),c,'_');
     this->value = value;
 }
 
