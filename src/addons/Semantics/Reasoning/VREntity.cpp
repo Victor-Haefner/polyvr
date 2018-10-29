@@ -20,10 +20,14 @@ VREntity::VREntity(string name, VROntologyPtr o, VRConceptPtr c) {
     storeObjNames("concepts", &concepts, &conceptNames);
 
 
-    auto ns = setNameSpace("VREntity");
+    auto ns = setNameSpace("VREntity_"+o->getName());
     ns->filterNameChars(".,",'_'); // filter path and math characters
     ns->setSeparator('_');
-    ns->setUniqueNames(false);
+
+    // problematic when creating ontology in code, in world gen for example!
+    // nice when importing from file, because names are used in properties!
+    //ns->setUniqueNames(false);
+
     setName(name);
     //if (name != getName()) cout << "VREntity::VREntity " << name << " -> " << getName() << endl;
 }

@@ -74,6 +74,7 @@ VRDistrictPtr VRWorldGenerator::getDistrict() { return district; }
 
 void VRWorldGenerator::addMaterial( string name, VRMaterialPtr mat ) { materials[name] = mat; }
 void VRWorldGenerator::addAsset( string name, VRTransformPtr geo ) {
+    if (!geo) return;
     for (auto o : geo->getChildren(true, "Geometry")) {
         auto g = dynamic_pointer_cast<VRGeometry>(o);
         auto m = getMaterial("phong");

@@ -340,6 +340,13 @@ void VRProcessLayout::update(){
 	for(auto toolSBD : toolSBDs) toolSBD.second->update();
 }
 
+void VRProcessLayout::store() {
+    saveToFile(".process_layout.plt");
+}
+
+void VRProcessLayout::load() {
+    loadFromFile(".process_layout.plt");
+}
 
 
 
