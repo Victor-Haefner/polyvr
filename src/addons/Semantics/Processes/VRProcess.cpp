@@ -38,6 +38,7 @@ void VRProcessNode::update(Graph::node& n, bool changed) { // callede when graph
     }
 }
 
+VREntityPtr VRProcessNode::getEntity() { return entity; }
 int VRProcessNode::getID() { return ID; }
 string VRProcessNode::getLabel() { return label; }
 
@@ -177,7 +178,7 @@ void VRProcess::update() {
     string q_subjects = "q(x):Subject(x);ModelLayer("+layer->getName()+");has("+layer->getName()+",x)";
     for ( auto subject : query(q_subjects) ) {
         string label;
-        if (auto l = subject->get("hasModelComponentLable") ) label = l->value;
+        if (auto l = subject->get("hasModelComponentLabel") ) label = l->value;
         int nID = addSubject(label)->ID;
         if (auto ID = subject->get("hasModelComponentID") ) nodes[ID->value] = nID;
         //cout << " VRProcess::update subject: " << label << endl;
@@ -188,19 +189,21 @@ void VRProcess::update() {
     for ( auto message : query(q_messages) ) {
         string sender;
         string receiver;
-        if (auto s = message->get("sender") ) sender = s->value;
-        if (auto r = message->get("receiver") ) receiver = r->value;
-        messages[sender][receiver].push_back(message);
+        if (auto s = message->get("hasSender") ) sender = s->value;
+        else cout << "Warning! in VRProcess::update, no sender for message '" << message->getName() << "'" << endl;
+        if (auto r = message->get("hasReceiver") ) receiver = r->value;
+        else cout << "Warning! in VRProcess::update, no receiver for message '" << message->getName() << "'" << endl;
+        if (sender != "" && receiver != "") messages[sender][receiver].push_back(message);
     }
 
     for ( auto sender : messages ) {
         for (auto receiver : sender.second) {
             string label = "Msg:";
             for (auto message : receiver.second) {
-                string q_message = "q(x):MessageSpec(x);MessageExchange("+message->getName()+");is(x,"+message->getName()+".hasMessageType)";
+                string q_message = "q(x):MessageSpecification(x);MessageExchange("+message->getName()+");is(x,"+message->getName()+".hasMessageType)";
                 auto msgs = query(q_message);
                 if (msgs.size())
-                    if (auto l = msgs[0]->get("hasModelComponentLable") ) label += "\n - " + l->value;
+                    if (auto l = msgs[0]->get("hasModelComponentLabel") ) label += "\n - " + l->value;
             }
 
             addMessage(label, nodes[sender.first], nodes[receiver.first]);
@@ -223,7 +226,7 @@ void VRProcess::update() {
         string q_States = "q(x):State(x);Behavior("+behavior->getName()+");has("+behavior->getName()+",x)";
         for (auto state : query(q_States)) {
             string label;
-            if (auto l = state->get("hasModelComponentLable") ) label = l->value;
+            if (auto l = state->get("hasModelComponentLabel") ) label = l->value;
             int nID = addAction(label, sID)->ID;
             if (auto ID = state->get("hasModelComponentID") ) nodes[ID->value] = nID;
         }

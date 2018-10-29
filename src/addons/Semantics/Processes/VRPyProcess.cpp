@@ -37,6 +37,7 @@ PyMethodDef VRPyProcess::methods[] = {
 PyMethodDef VRPyProcessNode::methods[] = {
     {"getLabel", PyWrap(ProcessNode, getLabel, "Get node label", string) },
     {"getID", PyWrap(ProcessNode, getID, "Get node graph ID", int) },
+    {"getEntity", PyWrap(ProcessNode, getEntity, "Get entity", VREntityPtr) },
     {NULL}  /* Sentinel */
 };
 

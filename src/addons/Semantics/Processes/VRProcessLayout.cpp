@@ -218,6 +218,8 @@ void VRProcessLayout::appendToHandle(Vec3d pos, VRProcessNodePtr node, VRPathtoo
 }
 
 void VRProcessLayout::setupLabel(VRProcessNodePtr message, VRPathtoolPtr ptool, vector<VRProcessNodePtr> nodes) {
+    if (nodes.size() < 2) { cout << "VRProcessLayout::setupLabel, at least two nodes needed! message: " << message->getName() << endl; return; }
+    if (!nodes[0] || !nodes[1]) { cout << "VRProcessLayout::setupLabel, a node is invalid! message: " << message->getName() << endl; return; }
     auto messageElement = addElement(message);
 
     auto id0 = nodes[0]->getID();
