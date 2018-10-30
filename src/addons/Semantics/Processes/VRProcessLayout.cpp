@@ -349,15 +349,18 @@ void VRProcessLayout::update(){
 void VRProcessLayout::storeLayout() {
     string path = ".process_layout.plt";
 
-    auto handles = toolSID->getHandles();
-
     xmlpp::Document doc;
     xmlpp::Element* root = doc.create_root_node("ProjectsList", "", "VRP"); // name, ns_uri, ns_prefix
 
-    for (auto handle : handles) {
-        handle->setPersistency(1);
-        handle->saveUnder(root);
-    }
+    auto storeHandles = [&](VRPathtoolPtr tool) {
+        for (auto handle : tool->getHandles()) {
+            handle->setPersistency(1);
+            handle->saveUnder(root);
+        }
+    };
+
+    storeHandles(toolSID);
+    for (auto tool : toolSBDs) storeHandles(tool.second);
 
     doc.write_to_file_formatted(path);
 }
@@ -371,11 +374,16 @@ void VRProcessLayout::loadLayout() {
     parser.parse_file(path.c_str());
     xmlpp::Element* root = dynamic_cast<xmlpp::Element*>(parser.get_document()->get_root_node());
 
-    auto handles = toolSID->getHandles();
-    for (int i=0; i<handles.size(); i++) {
-        auto handle = handles[i];
-        auto element = handle->loadChildIFrom(root, i, context);
-    }
+    int i = 0;
+    auto loadHandles = [&](VRPathtoolPtr tool) {
+        for (auto handle : tool->getHandles()) {
+            auto element = handle->loadChildIFrom(root, i, context);
+            i++;
+        }
+    };
+    loadHandles(toolSID);
+    for (auto tool : toolSBDs) loadHandles(tool.second);
+
     update();
 }
 
