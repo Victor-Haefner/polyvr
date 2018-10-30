@@ -72,14 +72,12 @@ class VRProcessEngine {
             string transitioning( float t ) {
                 auto state = sm.getCurrentState();
                 string stateName = state->getName();
-                cout << "Actor::transitioning from " << stateName << endl;
 
                 // if currently in action go to next state, else check for possible actions
                 if (current) {
 
                     string nextState = current->nextState;
                     current = 0;
-                    cout << " Actor::transitioning goto next state actions " << nextState << endl;
                     return nextState; // state machine goes into nextState
                 } else {
                     //TODO: check if this is the last state

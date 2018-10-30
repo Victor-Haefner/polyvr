@@ -53,6 +53,7 @@ void VRProcessEngine::initialize(){
                 Action action(nextState->getLabel(), transition);
 
                 if(state->type == RECEIVESTATE){ //if state == receive state add the receive message to action prerequisites
+                    cout << "receive state found" << endl;
                     bool messageExist = false;
                     auto messageNode =  process->getStateMessage(state);
                     auto receiver = processSubjects[i]->getLabel();
@@ -80,6 +81,7 @@ void VRProcessEngine::initialize(){
                 }
 
                 else if (state->type == SENDSTATE) { //add a sendMessage callback
+                    cout << "send state found" << endl;
                     VRStateMachine<float>::VRStateEnterCbPtr sendMessageCB = VRStateMachine<float>::VRStateEnterCb::create("sendMessage", boost::bind(&VRProcessEngine::Actor::sendMessage, &subjects[i], _1));
                     smState->setStateLeaveCB(sendMessageCB);
 
@@ -124,6 +126,8 @@ void VRProcessEngine::initialize(){
         actor.sm.setCurrentState( initialState );
         actor.label = processSubjects[i]->getLabel();
         subjects[i] = actor;
+
+        cout << "initialized, message count: " << processMessages.size() << endl;
     }
 }
 
