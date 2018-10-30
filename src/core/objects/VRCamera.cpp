@@ -33,7 +33,8 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
     fov = osgDegree2Rad(60);
 
     vrSetup = VRObject::create("DeviceBeacons");
-    vrSetup->setPersistency(0);
+    // probably not needed
+    //vrSetup->setPersistency(0);
 
     setup(false);
 
@@ -101,11 +102,9 @@ void VRCamera::setFrom(Vec3d m) { VRTransform::setFrom(m); updateOrthSize(); }
 VRObjectPtr VRCamera::getSetupNode() { return vrSetup; }
 
 void VRCamera::setup(bool reg) {
-<<<<<<< HEAD
-=======
+
     vrSetup->setPersistency(0);
 
->>>>>>> upstream/master
     PerspectiveCameraMTRecPtr pcam;
     OrthographicCameraMTRecPtr ocam;
     if (cam) pcam = dynamic_pointer_cast<PerspectiveCamera>(cam->cam);

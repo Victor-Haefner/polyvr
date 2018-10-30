@@ -41,7 +41,9 @@ VRLeap::VRLeap() : VRDevice("leap") {
     store("port", &port);
     store("transformation", &transformation);
 
-    reconnect();
+    regStorageSetupFkt( VRUpdateCb::create("leap setup", boost::bind(&VRLeap::setup, this)) );
+
+    //reconnect();
 }
 
 VRLeapPtr VRLeap::create() {
@@ -50,6 +52,10 @@ VRLeapPtr VRLeap::create() {
     d->clearSignals();
 
     return d;
+}
+
+void VRLeap::setup() {
+    reconnect();
 }
 
 string VRLeap::getHost() {

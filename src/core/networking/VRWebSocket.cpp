@@ -33,6 +33,7 @@ bool VRWebSocket::open(string url) {
     if (threadId < 0) threadId = VRSceneManager::get()->initThread(threadFkt, "webSocketPollThread", false);
 
     cout << "Connecting to " << url << " ";
+
     while (connectionStatus < 0) { usleep(10000); }
 
     return connectionStatus;
@@ -50,7 +51,10 @@ bool VRWebSocket::close() {
     if (isConnected()) {
         cout << "Closing socket" << endl;
         mg_send_websocket_frame(connection, WEBSOCKET_OP_CLOSE, nullptr, 0);
-        while (connectionStatus != -1) { usleep(10000); }
+
+        // TODO: output only for testing purposes. Remove after closing of web sockets is fixed.
+        int i = 0;
+        while (connectionStatus != -1) { cout << "sleep 10 ms " << i << endl; i++; usleep(10000); }
         return true;
     } else {
         done = true;

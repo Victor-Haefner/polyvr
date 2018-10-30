@@ -52,6 +52,7 @@ class VRLeap : public VRDevice {
 
         static VRLeapPtr create();
 
+        void setup();
         bool reconnect();
 
         string getHost();
