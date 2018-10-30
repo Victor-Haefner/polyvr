@@ -782,7 +782,7 @@ void VRTrafficSimulation::updateSimulation() {
                     //if ( vehicle.turnAtIntersec ) { d = 0; return; vehicle.targetVelocity = 0; }
                     if (roadNetwork->getLane(vehicle.pos.edge)->get("turnDirection")) {
                         //cout << roadNetwork->getLane(vehicle.pos.edge)->get("turnDirection")->value << endl;
-                        if (toString(roadNetwork->getLane(vehicle.pos.edge)->get("turnDirection")->value) == "left") { d = 0; return; }
+                        //if (toString(roadNetwork->getLane(vehicle.pos.edge)->get("turnDirection")->value) == "left") { d = 0; return; }
                     }
 
                     if ( vbeh == vehicle.STRAIGHT ) {
