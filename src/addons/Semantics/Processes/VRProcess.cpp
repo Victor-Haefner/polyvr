@@ -294,8 +294,7 @@ void VRProcess::update() {
 
     //return;
     /** get behavior diagrams **/
-    for (auto behavior : query("q(x):SubjectBehavior(x)")) { //Behavior
-        cout << "importing behavior..." << endl;
+    for (auto behavior : query("q(x):SubjectBehavior(x)")) {
         auto behaviorDiagram = VRProcessDiagram::create();
         string q_Subject = "q(x):Subject(x);SubjectBehavior("+behavior->getName()+");has(x,"+behavior->getName()+")";
         auto subjects = query(q_Subject);
@@ -317,7 +316,6 @@ void VRProcess::update() {
         map<string, map<string, vector<VREntityPtr>>> transitions;
         string q_Transitions = "q(x):Transition(x);SubjectBehavior("+behavior->getName()+");has("+behavior->getName()+",x)";
         for (auto transition : query(q_Transitions)) {
-            cout << "importing transitions..." << endl;
             string source;
             string target;
             if (auto s = transition->get("hasSourceState") ) source = s->value;
@@ -325,12 +323,12 @@ void VRProcess::update() {
             transitions[source][target].push_back(transition);
         }
 
-        cout << "adding messages..." << endl;
         for ( auto source : transitions ) {
             for (auto target : source.second) {
                 for (auto message : target.second) {
                     //cout << " add message from " << source.first << " to " << target.first << " (" << nodes.count(source.first)  << "," << nodes.count(target.first) << ")" << endl;
-                    addTransition(message->getName(), sID, nodes[source.first], nodes[target.first], behaviorDiagram);
+                    string msg = message->get("hasModelComponentLabel")->value;
+                    addTransition(msg, sID, nodes[source.first], nodes[target.first], behaviorDiagram);
                 }
             }
         }

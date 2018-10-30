@@ -73,9 +73,7 @@ class VRProcessEngine {
                 auto state = sm.getCurrentState();
                 string stateName = state->getName();
 
-                // if currently in action go to next state, else check for possible actions
-                if (current) {
-
+                if (current) { // if currently in action go to next state, else check for possible actions
                     string nextState = current->nextState;
                     current = 0;
                     return nextState; // state machine goes into nextState
@@ -84,8 +82,7 @@ class VRProcessEngine {
                     if(stateName == "End"){
                         sm.setCurrentState(initialState);
                     }
-                    // check if any actions are ready to start
-                    for (auto& action : actions[stateName]) {
+                    for (auto& action : actions[stateName]) { // check if any actions are ready to start
                         if (action.valid(&inventory)) {
                             current = &action;
                             return "";

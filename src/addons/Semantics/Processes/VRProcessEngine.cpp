@@ -49,6 +49,7 @@ void VRProcessEngine::initialize(){
 
             //for each transition out of this State create Actions which lead to the next State
             for (auto transition : transitions) {
+                //get transition requirements
                 auto nextState = process->getTransitionState(transition);
                 Action action(nextState->getLabel(), transition);
 
