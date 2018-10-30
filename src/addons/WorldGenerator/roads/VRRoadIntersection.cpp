@@ -725,6 +725,15 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
         int zz = 0;
         VREntityPtr roadOne;
         //cout << toString(laneMatches.size()) << endl;
+        int aa=0;
+        if (laneMatches.size() == 2) {
+            auto laneIn1 = laneMatches[0].first;
+            auto laneIn2 = laneMatches[1].second;
+            auto laneOut1 = laneMatches[0].first;
+            auto laneOut2 = laneMatches[1].second;
+            if (laneIn1->getEntity("road")->getName() == laneIn2->getEntity("road")->getName()) { cout << " foundA" << endl; forkSingleRoad = laneIn1->getEntity("road"); }
+            if (laneOut1->getEntity("road")->getName() == laneOut2->getEntity("road")->getName()) { cout << " foundB" << endl; forkSingleRoad = laneOut1->getEntity("road"); }
+        }
         for (auto match : laneMatches) {
             auto laneIn = match.first;
             auto laneOut = match.second;
@@ -740,8 +749,36 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             VREntityPtr nodeEnt2 = nodes2[0];           //first node of roadOut
             Vec3d X = nodeEnt2->getEntity("node")->getVec3("position") - nodeEnt1->getEntity("node")->getVec3("position");
             float D = X.length();
-            //cout <<toString(X.length()) << endl;
-            if (Nin >= Nout) {
+            if (Nin == Nout && laneMatches.size()==2) {
+                cout << " hhoiasd" << endl;
+                if (forkSingleRoad->getName() == roadIn->getName()) {
+                    cout << " aaaa" << endl;
+                    auto node1 = nodeEnt1->getEntity("node");   //last node of roadIn
+                    auto norm1 = nodeEnt1->getVec3("direction");
+                    auto node2 = nodes2[1]->getEntity("node");  //second node of roadOut
+                    auto norm2 = nodes2[1]->getVec3("direction");
+                    auto nodeToDelete = nodes2[0]->getEntity("node");
+                    auto tempID=nodeToDelete->getValue<int>("graphID", -1);
+                    nodeEnt2->set("node", node1->getName());
+                    roads->connectGraph({node1,node2}, {norm1,norm2}, laneOut);
+                    auto rGraph = roads->getGraph();
+                    rGraph->remNode(tempID);
+                }
+                if (forkSingleRoad->getName() == roadOut->getName()) {
+                    cout << " bbbb" << endl;
+                    auto node1 = nodes1[nodes1.size()-2]->getEntity("node");   //second to last node of roadIn
+                    auto norm1 = nodes1[nodes1.size()-2]->getVec3("direction");
+                    auto node2 = nodes2[0]->getEntity("node");  //first node of roadOut
+                    auto norm2 = nodes2[0]->getVec3("direction");
+                    auto nodeToDelete = nodeEnt1->getEntity("node");
+                    auto tempID=nodeToDelete->getValue<int>("graphID", -1);
+                    nodeEnt1->set("node", node2->getName());
+                    roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
+                    auto rGraph = roads->getGraph();
+                    rGraph->remNode(tempID);
+                }
+            }
+            if (Nin >= Nout && laneMatches.size()!=2) {
                 auto node1 = nodeEnt1->getEntity("node");   //last node of roadIn
                 auto norm1 = nodeEnt1->getVec3("direction");
                 auto node2 = nodes2[1]->getEntity("node");  //second node of roadOut
@@ -1396,6 +1433,7 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
                 n1 = data.n;
             }*/
             //same direction for incoming and outgoing roads
+            forkSingleRoad = roadFronts[singleRoad]->road->getEntity();
             for (auto rf : roadFronts) {
                 auto road = rf->road;
                 auto roadOne = roadFronts[singleRoad]->road;

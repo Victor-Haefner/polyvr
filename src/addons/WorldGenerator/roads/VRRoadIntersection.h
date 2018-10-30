@@ -44,6 +44,7 @@ class VRRoadIntersection : public VRRoadBase {
         VRPolygonPtr patch;
         VRPolygonPtr perimeter;
         Vec3d median;
+        VREntityPtr forkSingleRoad;
 
         vector<shared_ptr<RoadFront>> roadFronts;
         vector<Vec3d> intersectionPoints;
