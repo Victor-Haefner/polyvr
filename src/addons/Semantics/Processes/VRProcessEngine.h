@@ -16,8 +16,9 @@ class VRProcessEngine {
         struct Message {
             string message;
             string sender;
+            string receiver;
 
-            Message(string m, string s) : message(m), sender(s) {}
+            Message(string m, string s, string r) : message(m), sender(s), receiver(r) {}
 
             bool operator==(const Message& m) { return m.message == message && m.sender == sender; }
         };
@@ -59,9 +60,11 @@ class VRProcessEngine {
         struct Actor {
             Action* current = 0;
             map<string, vector<Action>> actions; // maps state name (see VRStateMachine) to possible Actions
+            //map<Action, Message> sendToMessage; //maps send Action to sent message
             VRStateMachine<float> sm;
             Inventory inventory;
             string initialState = "";
+            string label = "";
 
             Actor() : sm("ProcessActor") {}
 
@@ -79,6 +82,7 @@ class VRProcessEngine {
                     cout << " Actor::transitioning goto next state actions " << nextState << endl;
                     return nextState; // state machine goes into nextState
                 } else {
+                    //TODO: check if this is the last state
                     if(stateName == "End"){
                         sm.setCurrentState(initialState);
                     }
@@ -94,20 +98,17 @@ class VRProcessEngine {
             }
 
             void sendMessage(string message){
-
-/*                auto sourceStateNode = current.sourceState;
-                auto messageNode = process->getStateMessage(sourceStateNode);
-                auto receiverNode = process->getMessageReceiver(messageNode);
-
-                receiver.inventory.messages.push_back(Message(message->getLabel(), this));
-*/
-
-            }
+/*                auto message = current.transition.msgCon.message;
+                auto receiver = current.transition.msgCon.receiver;
+                auto sender = current.transition.msgCon.sender.label;
+                receiver.inventory.messages.push_back(Message(message, sender));
+*/            }
         };
 
     private:
         VRProcessPtr process;
         map<int, Actor> subjects;
+        vector<Message> processMessages;
 
         VRUpdateCbPtr updateCb;
         bool running = false;

@@ -25,7 +25,6 @@ void VRProcessEngine::initialize(){
 
     auto processSubjects = process->getSubjects();
     auto initialStates = process->getInitialStates();
-    //cout << "initialStates.size() " << initialStates.size() << endl;
 
     for (uint i=0; i<processSubjects.size(); i++) {
         Actor actor;
@@ -42,6 +41,9 @@ void VRProcessEngine::initialize(){
             auto state = states[j];
             vector<Action> actions;
 
+            auto transitionCB = VRFunction<float, string>::create("processTransition", boost::bind(&VRProcessEngine::Actor::transitioning, &subjects[i], _1));
+            auto smState = actor.sm.addState(state->getLabel(), transitionCB);
+
             //auto transitions = process->getStateTransitions(sID, state->getID());
             auto transitions = process->getStateOutTransitions(sID, state->getID());
 
@@ -49,34 +51,78 @@ void VRProcessEngine::initialize(){
             for (auto transition : transitions) {
                 auto nextState = process->getTransitionState(transition);
                 Action action(nextState->getLabel(), transition);
-                //if state == receive state add the message to receive to action prerequisites
-                if(state->type == RECEIVESTATE){
-                    Message m(process->getStateMessage(state)->getLabel(), processSubjects[i]->getLabel());
-                    Prerequisite p(m);
-                    action.prerequisites.push_back(p);
+
+                if(state->type == RECEIVESTATE){ //if state == receive state add the receive message to action prerequisites
+                    bool messageExist = false;
+                    auto messageNode =  process->getStateMessage(state);
+                    auto receiver = processSubjects[i]->getLabel();
+
+                    for (auto m : processMessages) {
+                        if (m.receiver == receiver) {
+                            if (m.message == messageNode->getLabel()){ //if the message already exists, add it to action prerequisites
+                                Prerequisite p(m);
+                                action.prerequisites.push_back(p);
+                                messageExist = true;
+                            }
+                        }
+                    }
+
+                    if(!messageExist){ //create a new message instance if it doesnt exist and add it to action prerequisites
+                        auto sender = process->getMessageSender(messageNode->getID());
+                        for (auto s : sender) {
+                            Message m(messageNode->getLabel(), s->getLabel(), receiver);
+                            Prerequisite p(m);
+                            action.prerequisites.push_back(p);
+                        }
+                    }
+
+
                 }
+
+                else if (state->type == SENDSTATE) { //add a sendMessage callback
+                    VRStateMachine<float>::VRStateEnterCbPtr sendMessageCB = VRStateMachine<float>::VRStateEnterCb::create("sendMessage", boost::bind(&VRProcessEngine::Actor::sendMessage, &subjects[i], _1));
+                    smState->setStateLeaveCB(sendMessageCB);
+
+                    auto messageNode = process->getStateMessage(state);
+                    auto receiverNodes = process->getMessageReceiver(messageNode->getID());
+                    auto sender = processSubjects[i]->getLabel();
+
+                    bool messageExist = false;
+                    for (auto m : processMessages) { //check if the message already exists
+                        if (m.sender == sender) {
+                            if (m.message == messageNode->getLabel()){
+                                messageExist = true;
+                            }
+                        }
+                    }
+
+                    if (!messageExist){ //if message doesnt exist, create one for each receiver and add to processMessages
+                        auto receiver = process->getMessageReceiver(messageNode->getID());
+                        for (auto r : receiver) {
+                            Message m(messageNode->getLabel(), sender, r->getLabel());
+                            processMessages.push_back(m);
+                        }
+                    }
+                }
+
                 action.sourceState = state;
                 actions.push_back(action);
             }
 
             //define function to call by the State Machine on state switch (process)
             //auto transitionCB = VRFunction<float, string>::create("processTransition", boost::bind(&VRProcessEngine::Actor::transitioning, &subjects[i], _1));
-            auto transitionCB = VRFunction<float, string>::create("processTransition", boost::bind(&VRProcessEngine::Actor::transitioning, &subjects[i], _1));
+
             //subjects[i].actions[state->getLabel()] = actions;
             actor.actions[state->getLabel()] = actions;
             //auto smState = subjects[i].sm.addState(state->getLabel(), transitionCB);
-            auto smState = actor.sm.addState(state->getLabel(), transitionCB);
 
-            // if state == send state, add a sendMessage callback
-            if (state->type == SENDSTATE) {
-                VRStateMachine<float>::VRStateEnterCbPtr onSendMessageCB = VRStateMachine<float>::VRStateEnterCb::create("sendMessage", boost::bind(&VRProcessEngine::Actor::sendMessage, &subjects[i], _1));
-                smState->setStateLeaveCB(onSendMessageCB);
-            }
+
         }
         //subjects[i].initialState = initialState;
         //subjects[i].sm.setCurrentState( initialState );
         actor.initialState = initialState;
         actor.sm.setCurrentState( initialState );
+        actor.label = processSubjects[i]->getLabel();
         subjects[i] = actor;
     }
 }
