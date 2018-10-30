@@ -314,21 +314,24 @@ void VRProcess::update() {
             if (auto ID = state->get("hasModelComponentID") ) nodes[ID->value] = nID;
         }
 
-        map<string, map<string, vector<VREntityPtr>>> edges;
-        string q_Edges = "q(x):Transition(x);SubjectBehavior("+behavior->getName()+");has("+behavior->getName()+",x)";
-        for (auto edge : query(q_Edges)) {
+        map<string, map<string, vector<VREntityPtr>>> transitions;
+        string q_Transitions = "q(x):Transition(x);SubjectBehavior("+behavior->getName()+");has("+behavior->getName()+",x)";
+        for (auto transition : query(q_Transitions)) {
             cout << "importing transitions..." << endl;
             string source;
             string target;
-            if (auto s = edge->get("hasSourceState") ) source = s->value;
-            if (auto r = edge->get("hasTargetState") ) target = r->value;
-            edges[source][target].push_back(edge);
+            if (auto s = transition->get("hasSourceState") ) source = s->value;
+            if (auto r = transition->get("hasTargetState") ) target = r->value;
+            transitions[source][target].push_back(transition);
         }
 
-        for ( auto source : edges ) {
+        cout << "adding messages..." << endl;
+        for ( auto source : transitions ) {
             for (auto target : source.second) {
-                cout << "adding messages..." << endl;
-                addMessage("Msg:", nodes[source.first], nodes[target.first], behaviorDiagram);
+                for (auto message : target.second) {
+                    //cout << " add message from " << source.first << " to " << target.first << " (" << nodes.count(source.first)  << "," << nodes.count(target.first) << ")" << endl;
+                    addTransition(message->getName(), sID, nodes[source.first], nodes[target.first], behaviorDiagram);
+                }
             }
         }
     }
