@@ -17,7 +17,7 @@ VRLod::VRLod(string name) : VRObject(name) {
 
     store("center", &center);
     store("distances", &distances_string);
-    regStorageSetupFkt( VRUpdateCb::create("lod setup", boost::bind(&VRLod::loadSetup, this)) );
+    regStorageSetupFkt( VRStorageCb::create("lod setup", boost::bind(&VRLod::loadSetup, this, _1)) );
 }
 
 VRLod::~VRLod() {}
@@ -33,7 +33,7 @@ Vec3d VRLod::getCenter() { return center; }
 bool VRLod::getDecimate() { return decimate; }
 int VRLod::getDecimateNumber() { return decimateNumber; }
 
-void VRLod::loadSetup() {
+void VRLod::loadSetup(VRStorageContextPtr context) {
     stringstream ss(distances_string);
     float d = 0;
     for (int i=0; ss >> d; i++) distances[i] = d;

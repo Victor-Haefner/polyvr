@@ -46,7 +46,7 @@ VRTransform::VRTransform(string name, bool doOpt) : VRObject(name) {
     store("at_dir", &orientation_mode);
     storeObj("constraint", constraint);
 
-    regStorageSetupFkt( VRUpdateCb::create("transform_update", boost::bind(&VRTransform::setup, this)) );
+    regStorageSetupFkt( VRStorageCb::create("transform_update", boost::bind(&VRTransform::setup, this, _1)) );
 }
 
 VRTransform::~VRTransform() {
@@ -804,7 +804,7 @@ void VRTransform::updateChange() {
     updatePhysics();
 }
 
-void VRTransform::setup() {
+void VRTransform::setup(VRStorageContextPtr context) {
     setAt(_at);
 }
 

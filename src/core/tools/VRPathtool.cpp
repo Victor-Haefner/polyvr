@@ -107,8 +107,8 @@ VRPathtool::VRPathtool() : VRObject("Pathtool") {
     storeMap("paths", &paths, true);
     storeMap("options", options);
     //regStorageSetupBeforeFkt( VRUpdateCb::create("pathtool clear", boost::bind(&VRPathtool::clear, this)) );
-    regStorageSetupBeforeFkt( VRUpdateCb::create("pathtool clear", boost::bind(&VRPathtool::setupBefore, this)) );
-    regStorageSetupFkt( VRUpdateCb::create("pathtool setup", boost::bind(&VRPathtool::setup, this)) );
+    regStorageSetupBeforeFkt( VRStorageCb::create("pathtool clear", boost::bind(&VRPathtool::setupBefore, this, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("pathtool setup", boost::bind(&VRPathtool::setup, this, _1)) );
 }
 
 VRPathtool::~VRPathtool() {
@@ -117,11 +117,11 @@ VRPathtool::~VRPathtool() {
 
 VRPathtoolPtr VRPathtool::create() { return VRPathtoolPtr( new VRPathtool() ); }
 
-void VRPathtool::setupBefore() {
+void VRPathtool::setupBefore(VRStorageContextPtr context) {
     clear();
 }
 
-void VRPathtool::setup() {
+void VRPathtool::setup(VRStorageContextPtr context) {
     setGraph(graph, false);
 }
 

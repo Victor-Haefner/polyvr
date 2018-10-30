@@ -122,8 +122,8 @@ class VRPathtool : public VRObject {
         ~VRPathtool();
 
         static VRPathtoolPtr create();
-        void setup();
-        void setupBefore();
+        void setup(VRStorageContextPtr context);
+        void setupBefore(VRStorageContextPtr context);
 
         void setProjectionGeometry(VRObjectPtr obj);
 

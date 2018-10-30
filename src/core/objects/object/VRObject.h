@@ -152,7 +152,8 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         bool isPickable();
         void setPickable(int b);
 
-        void setup();
+        void setupBefore(VRStorageContextPtr context);
+        void setupAfter(VRStorageContextPtr context);
         void destroy();
 
         PosePtr getPoseTo(VRObjectPtr o);

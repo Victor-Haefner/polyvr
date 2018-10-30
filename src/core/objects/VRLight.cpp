@@ -61,7 +61,7 @@ VRLight::VRLight(string name) : VRObject(name) {
     store("photometricMap", &photometricMapPath);
     store("shadowVolume", &shadowVolume);
     storeObjName("beacon", &beacon, &beacon_name);
-    regStorageSetupFkt( VRUpdateCb::create("light setup", boost::bind(&VRLight::setup, this)) );
+    regStorageSetupFkt( VRStorageCb::create("light setup", boost::bind(&VRLight::setup, this, _1)) );
     regStorageSetupAfterFkt( VRUpdateCb::create("light setup after", boost::bind(&VRLight::setup_after, this)) );
 
     // test scene
@@ -81,7 +81,7 @@ VRLightPtr VRLight::create(string name) {
     return l;
 }
 
-void VRLight::setup() {
+void VRLight::setup(VRStorageContextPtr context) {
     setType(lightType);
     setShadows(shadows);
     setShadowColor(shadowColor);

@@ -18,6 +18,8 @@ using namespace OSG;
 VRProcessLayout::VRProcessLayout(string name) : VRTransform(name) {
     updateCb = VRUpdateCb::create("process layout update", boost::bind(&VRProcessLayout::update, this));
     VRScene::getCurrent()->addUpdateFkt(updateCb);
+
+    //store();
 }
 VRProcessLayout::~VRProcessLayout() {}
 
@@ -30,6 +32,7 @@ VRProcessLayoutPtr VRProcessLayout::create(string name) {
 
 void VRProcessLayout::init() {
     toolSID = VRPathtool::create();
+    toolSID->setPersistency(0);
     addChild(toolSID);
 }
 
@@ -176,6 +179,7 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
     for (auto subject : p->getSubjects()){
         if (!p->getBehaviorDiagram(subject->getID())) return;
         VRPathtoolPtr toolSBD = VRPathtool::create();
+        toolSBD->setPersistency(0);
         toolSBDs[subject->getID()] = toolSBD;
         addChild(toolSBD);
         toolSBD->setGraph(p->getBehaviorDiagram(subject->getID()));
@@ -341,11 +345,16 @@ void VRProcessLayout::update(){
 }
 
 void VRProcessLayout::store() {
+    auto p = getPersistency();
+    setPersistency(1);
     saveToFile(".process_layout.plt");
+    setPersistency(p);
 }
 
 void VRProcessLayout::load() {
-    loadFromFile(".process_layout.plt");
+    auto context = VRStorageContext::create(true);
+    loadFromFile(".process_layout.plt", context);
+    update();
 }
 
 

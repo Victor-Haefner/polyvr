@@ -42,7 +42,7 @@ class VRCamera : public VRTransform {
 
         void setType(int type);
         int getType();
-        void setup(bool reg = true);
+        void setup(bool reg = true, VRStorageContextPtr context = 0);
 
         int camID = -1;
         void activate();

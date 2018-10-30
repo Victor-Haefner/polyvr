@@ -32,6 +32,8 @@ class VRNetworkSlave : public VRName {
 
         static VRNetworkSlavePtr create(string name = "Slave");
 
+        void setup(VRStorageContextPtr context);
+
         void setNode(VRNetworkNodePtr n);
         void set(string ct, bool fs, bool as, bool au, string a, int p);
 
@@ -77,6 +79,8 @@ class VRNetworkNode : public VRManager<VRNetworkSlave>, public std::enable_share
 
         static VRNetworkNodePtr create(string name = "Node");
         VRNetworkNodePtr ptr();
+
+        void setup(VRStorageContextPtr context);
 
         virtual VRNetworkSlavePtr add(string name = "");
 

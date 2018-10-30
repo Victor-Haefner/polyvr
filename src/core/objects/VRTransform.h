@@ -197,7 +197,7 @@ class VRTransform : public VRObject {
 
         void setNoBltFlag();
         virtual void updateChange();
-        void setup();
+        void setup(VRStorageContextPtr context);
 
         void physicalize(bool b, bool dynamic, string shape, float param = 0);
         void setPhysicalizeTree(bool b);

@@ -46,7 +46,7 @@ class VRLight : public VRObject {
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
-        void setup();
+        void setup(VRStorageContextPtr context);
         void setup_after();
         void setupShadowEngines();
         void updateDeferredLight();

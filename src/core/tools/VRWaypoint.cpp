@@ -19,13 +19,13 @@ VRWaypoint::VRWaypoint(string name) : VRGeometry(name) {
     store("wp_at", &at);
     store("wp_size", &size);
 
-    regStorageSetupFkt( VRUpdateCb::create("waypoint setup", boost::bind(&VRWaypoint::setup, this)) );
+    regStorageSetupFkt( VRStorageCb::create("waypoint setup", boost::bind(&VRWaypoint::setup, this, _1)) );
 }
 
 VRWaypointPtr VRWaypoint::create(string name) { return shared_ptr<VRWaypoint>(new VRWaypoint(name) ); }
 VRWaypointPtr VRWaypoint::ptr() { return static_pointer_cast<VRWaypoint>( shared_from_this() ); }
 
-void VRWaypoint::setup() {
+void VRWaypoint::setup(VRStorageContextPtr context) {
     auto m = VRMaterial::get("waypoint");
     m->setDiffuse(Color3f(1,0,0));
     setMaterial(m);

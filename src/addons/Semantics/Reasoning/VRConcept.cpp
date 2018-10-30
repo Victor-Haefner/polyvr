@@ -23,7 +23,7 @@ VRConcept::VRConcept(string name, VROntologyPtr o) {
     storeMap("Parents", &parents, true);
     storeMap("Properties", &properties, true);
     storeMap("Annotations", &annotations, true);
-    regStorageSetupFkt( VRUpdateCb::create("concept setup", boost::bind(&VRConcept::setup, this)) );
+    regStorageSetupFkt( VRStorageCb::create("concept setup", boost::bind(&VRConcept::setup, this, _1)) );
 }
 
 VRConcept::~VRConcept() {
@@ -47,7 +47,7 @@ VRConceptPtr VRConcept::copy() {
     return c;
 }
 
-void VRConcept::setup() {
+void VRConcept::setup(VRStorageContextPtr context) {
     auto tmp = parents;
     parents.clear();
     for (auto p : tmp) p.second->append(ptr());

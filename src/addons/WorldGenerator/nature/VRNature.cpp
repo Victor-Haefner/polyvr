@@ -37,7 +37,7 @@ VRNature::VRNature(string name) : VRLodTree(name, 5) {
 
     storeMap("templateTrees", &treeTemplates, true);
     storeMap("trees", &treeEntries, true);
-    regStorageSetupFkt( VRUpdateCb::create("woods setup", boost::bind(&VRNature::setup, this)) );
+    regStorageSetupFkt( VRStorageCb::create("woods setup", boost::bind(&VRNature::setup, this, _1)) );
 }
 
 VRNature::~VRNature() {}
@@ -48,7 +48,7 @@ VRNaturePtr VRNature::create(string name) {
     return nat;
 }
 
-void VRNature::setup() {
+void VRNature::setup(VRStorageContextPtr context) {
     for (auto& t : treeEntries) {
         if (!treeTemplates.count(t.second->type)) { cout << "VRNature::setup Warning, " << t.second->type << " is not a tree template!" << endl; continue; }
         auto tree = treeTemplates[t.second->type];
