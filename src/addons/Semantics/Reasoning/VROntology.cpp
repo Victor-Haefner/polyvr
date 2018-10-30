@@ -28,7 +28,7 @@ VROntology::VROntology(string name) {
     storeMap("Entities", &entities, true);
     storeMap("Rules", &rules, true);
     store("flag", &flag);
-    regStorageSetupFkt( VRUpdateCb::create("ontology setup", boost::bind(&VROntology::setup, this)) );
+    regStorageSetupFkt( VRStorageCb::create("ontology setup", boost::bind(&VROntology::setup, this, _1)) );
 }
 
 VROntologyPtr VROntology::create(string name) {
@@ -45,7 +45,7 @@ VROntologyPtr VROntology::create(string name) {
 
 VROntologyPtr VROntology::ptr() { return shared_from_this(); }
 
-void VROntology::setup() {
+void VROntology::setup(VRStorageContextPtr context) {
     //map<int, VRConceptPtr> cpts;
     //thing->getDescendance(cpts);
     //for (auto& c : cpts) concepts[c.second->getName()] = c.second;

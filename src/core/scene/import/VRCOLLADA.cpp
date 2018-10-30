@@ -8,9 +8,9 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
 #include "core/objects/object/VRObjectT.h"
-#include "core/objects/geometry/VRConstraint.h"
 #include "core/objects/geometry/VRPhysics.h"
 
+#include "core/math/kinematics/VRConstraint.h"
 #include "core/math/path.h"
 
 #include <fstream>

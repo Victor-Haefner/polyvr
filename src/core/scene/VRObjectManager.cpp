@@ -27,14 +27,14 @@ void VRObjectManager::Entry::set(PosePtr p, string t) {
 VRObjectManager::VRObjectManager(string name) : VRObject(name) {
     storeMap("templates", &templatesByName, true);
     storeMap("instances", &entries, true);
-    regStorageSetupFkt( VRUpdateCb::create("object manager setup", boost::bind(&VRObjectManager::setup, this)) );
+    regStorageSetupFkt( VRStorageCb::create("object manager setup", boost::bind(&VRObjectManager::setup, this, _1)) );
 }
 
 VRObjectManager::~VRObjectManager() {}
 
 VRObjectManagerPtr VRObjectManager::create(string name) { return shared_ptr<VRObjectManager>(new VRObjectManager(name)); }
 
-void VRObjectManager::setup() {
+void VRObjectManager::setup(VRStorageContextPtr context) {
     for (auto t : templatesByName) addTemplate(t.second);
 
     for (auto& t : entries) {

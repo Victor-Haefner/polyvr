@@ -5,9 +5,9 @@
 #include <OpenSG/OSGVector.h>
 #include <string>
 #include "core/math/pose.h"
+#include "core/math/kinematics/VRConstraint.h"
 #include "core/objects/VRObjectFwd.h"
 #include "core/objects/geometry/VRGeometry.h"
-#include "core/objects/geometry/VRConstraint.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

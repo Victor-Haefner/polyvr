@@ -1,12 +1,12 @@
 #include "VRPathtool.h"
 #include "core/objects/geometry/VRGeometry.h"
-#include "core/objects/geometry/VRConstraint.h"
 #include "core/objects/geometry/VRStroke.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/scene/VRScene.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/math/path.h"
+#include "core/math/kinematics/VRConstraint.h"
 #include "core/utils/toString.h"
 
 #include <OpenSG/OSGGeoProperties.h>
@@ -107,8 +107,8 @@ VRPathtool::VRPathtool() : VRObject("Pathtool") {
     storeMap("paths", &paths, true);
     storeMap("options", options);
     //regStorageSetupBeforeFkt( VRUpdateCb::create("pathtool clear", boost::bind(&VRPathtool::clear, this)) );
-    regStorageSetupBeforeFkt( VRUpdateCb::create("pathtool clear", boost::bind(&VRPathtool::setupBefore, this)) );
-    regStorageSetupFkt( VRUpdateCb::create("pathtool setup", boost::bind(&VRPathtool::setup, this)) );
+    regStorageSetupBeforeFkt( VRStorageCb::create("pathtool clear", boost::bind(&VRPathtool::setupBefore, this, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("pathtool setup", boost::bind(&VRPathtool::setup, this, _1)) );
 }
 
 VRPathtool::~VRPathtool() {
@@ -117,11 +117,11 @@ VRPathtool::~VRPathtool() {
 
 VRPathtoolPtr VRPathtool::create() { return VRPathtoolPtr( new VRPathtool() ); }
 
-void VRPathtool::setupBefore() {
+void VRPathtool::setupBefore(VRStorageContextPtr context) {
     clear();
 }
 
-void VRPathtool::setup() {
+void VRPathtool::setup(VRStorageContextPtr context) {
     setGraph(graph, false);
 }
 

@@ -3,6 +3,8 @@
 #include "core/math/path.h"
 #include "VRSoundManager.h"
 
+#include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiConsole.h"
 
 extern "C" {
 #include <libavresample/avresample.h>
@@ -27,6 +29,9 @@ sudo apt-get install libfftw3-dev
 #include <map>
 #include <climits>
 //#include <complex>
+
+#define WARN(x) \
+VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
 
 using namespace OSG;
 
@@ -79,10 +84,10 @@ bool VRSound::isRunning() {
 void VRSound::stop() { interrupt = true; loop = false; }
 
 void VRSound::close() {
-    ALCHECK( alDeleteSources(1u, &source));
-    ALCHECK( alDeleteBuffers(Nbuffers, buffers));
-    if(al->context) avformat_close_input(&al->context);
-    if(al->resampler) avresample_free(&al->resampler);
+    if (source) ALCHECK( alDeleteSources(1u, &source));
+    if (buffers && Nbuffers) ALCHECK( alDeleteBuffers(Nbuffers, buffers));
+    if (al->context) avformat_close_input(&al->context);
+    if (al->resampler) avresample_free(&al->resampler);
     al->context = 0;
     al->resampler = 0;
     init = 0;
@@ -112,7 +117,14 @@ bool VRSound::initiate() {
 
     if (path == "") return 1;
 
-    if (auto e = avformat_open_input(&al->context, path.c_str(), NULL, NULL)) if (e < 0) { cout << "ERROR! avformat_open_input of path '"+path+"' failed: " << avErrToStr(e) << endl; return 0; }
+    auto e = avformat_open_input(&al->context, path.c_str(), NULL, NULL);
+    if (e < 0) {
+        string warning = "ERROR! avformat_open_input of path '"+path+"' failed: " + avErrToStr(e);
+        cout << warning << endl;
+        WARN(warning);
+        return 0;
+    }
+
     if (auto e = avformat_find_stream_info(al->context, NULL)) if (e < 0) { cout << "ERROR! avformat_find_stream_info failed: " << avErrToStr(e) << endl; return 0; }
     av_dump_format(al->context, 0, path.c_str(), 0);
 
@@ -220,7 +232,7 @@ void VRSound::playFrame() {
 
     if (al->state == AL_INITIAL) {
         if (!initiated) initiate();
-        if (!al->context) { cout << "VRSound::playFrame Warning: no context" << endl; return; }
+        if (!al->context) { /*cout << "VRSound::playFrame Warning: no context" << endl;*/ return; }
 #ifdef OLD_LIBAV
         al->frame = avcodec_alloc_frame(); // Allocate frame
 #else

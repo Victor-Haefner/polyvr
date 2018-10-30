@@ -14,7 +14,7 @@ class VRWaypoint : public VRGeometry {
         Vec3d at;
         float size;
 
-        void setup();
+        void setup(VRStorageContextPtr context);
         void updateGeo();
 
     public:

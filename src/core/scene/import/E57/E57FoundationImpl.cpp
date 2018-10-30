@@ -4438,56 +4438,6 @@ unsigned ImageFileImpl::bitsNeeded(int64_t minimum, int64_t maximum)
     return(log2);
 }
 
-#ifdef BITSNEEDED_UNIT_TEST
-
-void test1(int64_t minimum, int64_t maximum)
-{
-#ifdef E57_MAX_VERBOSE
-    cout << "bitsNeeded(" << minimum << "," << maximum << ") = " << bitsNeeded(minimum, maximum) << endl;
-#endif
-}
-
-void main()
-{
-    test1(0, 0);
-    test1(0, 1);
-    test1(0, 2);
-    test1(0, 3);
-    test1(0, 4);
-    test1(0, 5);
-    test1(0, 6);
-    test1(0, 7);
-    test1(0, 8);
-    cout << endl;
-
-    test1(1, 1);
-    test1(1, 2);
-    test1(-128, 127);
-    cout << endl;
-
-    test1(E57_INT8_MIN, E57_INT8_MAX);
-    test1(E57_INT16_MIN, E57_INT16_MAX);
-    test1(E57_INT32_MIN, E57_INT32_MAX);
-    test1(E57_INT64_MIN, E57_INT64_MAX);
-    cout << endl;
-
-    for (int i=0; i < 64; i++) {
-        if (bitsNeeded(0, 1LL<<i) != i+1) {
-            cout << "OOPS: i=" << i << endl;
-            exit(-1);
-        }
-    }
-
-    cout << endl;
-    for (int i=0; i < 64; i++)
-        test1(0, 3LL<<i);
-    cout << endl;
-    for (int i=0; i < 64; i++)
-        test1(0, 5LL<<i);
-}
-
-#endif
-
 //================================================================
 
 const size_t   CheckedFile::physicalPageSizeLog2 = 10;  // physical page size is 2 raised to this power

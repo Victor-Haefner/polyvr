@@ -35,12 +35,14 @@ class VRCamera : public VRTransform {
         VRCamera(string name = "");
         ~VRCamera();
 
-        static VRCameraPtr create(string name = "None", bool reg = true);
+        static VRCameraPtr create(string name = "None", bool reg = false);
         VRCameraPtr ptr();
+
+        VRObjectPtr copy(vector<VRObjectPtr> children);
 
         void setType(int type);
         int getType();
-        void setup(bool reg = true);
+        void setup(bool reg = true, VRStorageContextPtr context = 0);
 
         int camID = -1;
         void activate();

@@ -34,7 +34,7 @@ void VREntityWidget::on_edit_prop_clicked() {
     dialog->show();
     if (dialog->run() == Gtk::RESPONSE_OK) {
         //selected_entity_property->setName( getTextEntry("entry23") );
-        selected_entity_property->value = getTextEntry("entry24");
+        selected_entity_property->setValue( getTextEntry("entry24") );
     }
     dialog->hide();
     update();

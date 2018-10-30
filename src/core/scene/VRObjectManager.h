@@ -32,7 +32,7 @@ class VRObjectManager : public VRObject {
         map<int, VRTransformWeakPtr> instances;
         map<string, shared_ptr<VRObjectManager::Entry> > entries;
 
-        void setup();
+        void setup(VRStorageContextPtr context);
 
     public:
         VRObjectManager(string name);

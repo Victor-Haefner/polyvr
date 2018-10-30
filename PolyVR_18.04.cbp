@@ -653,6 +653,10 @@
 		<Unit filename="src/core/math/graph.h" />
 		<Unit filename="src/core/math/interpolator.cpp" />
 		<Unit filename="src/core/math/interpolator.h" />
+		<Unit filename="src/core/math/kinematics/VRConstraint.cpp" />
+		<Unit filename="src/core/math/kinematics/VRConstraint.h" />
+		<Unit filename="src/core/math/kinematics/VRKinematics.cpp" />
+		<Unit filename="src/core/math/kinematics/VRKinematics.h" />
 		<Unit filename="src/core/math/patch.cpp" />
 		<Unit filename="src/core/math/patch.h" />
 		<Unit filename="src/core/math/path.cpp" />
@@ -725,8 +729,6 @@
 		<Unit filename="src/core/objects/geometry/OSGGeometry.h" />
 		<Unit filename="src/core/objects/geometry/VRBillboard.cpp" />
 		<Unit filename="src/core/objects/geometry/VRBillboard.h" />
-		<Unit filename="src/core/objects/geometry/VRConstraint.cpp" />
-		<Unit filename="src/core/objects/geometry/VRConstraint.h" />
 		<Unit filename="src/core/objects/geometry/VRGeoData.cpp" />
 		<Unit filename="src/core/objects/geometry/VRGeoData.h" />
 		<Unit filename="src/core/objects/geometry/VRGeometry.cpp" />
@@ -851,6 +853,8 @@
 		<Unit filename="src/core/scene/import/VRIFC.h" />
 		<Unit filename="src/core/scene/import/VRImport.cpp" />
 		<Unit filename="src/core/scene/import/VRImport.h" />
+		<Unit filename="src/core/scene/import/VRML.cpp" />
+		<Unit filename="src/core/scene/import/VRML.h" />
 		<Unit filename="src/core/scene/import/VRPLY.cpp" />
 		<Unit filename="src/core/scene/import/VRPLY.h" />
 		<Unit filename="src/core/scene/import/VRSTEPCascade.cpp" />

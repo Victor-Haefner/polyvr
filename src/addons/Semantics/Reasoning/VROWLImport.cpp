@@ -51,6 +51,7 @@ string VROWLImport::RDFStatement::toString() {
 
 VROWLImport::VROWLImport() {
     predicate_blacklist["imports"] = 1;
+    predicate_blacklist["implements"] = 1;
     predicate_blacklist["subPropertyOf"] = 1;
     predicate_blacklist["versionInfo"] = 1;
     predicate_blacklist["inverseOf"] = 1;
@@ -146,7 +147,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
     string& predicate = statement.predicate;
     string& object = statement.object;
 
-    printState(statement, "hasEndState");
+    //printState(statement, "hasEndState");
 
     auto stackStatement = [&]() -> RDFStatement& {
         auto s = statement;
@@ -306,7 +307,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
 
         if (annproperties.count(predicate) && annproperties[predicate]->type == "aprop") { // concept(subject) has an annotation(predicate) with value(object)
             auto p = annproperties[predicate]->copy(); // copy annotations
-            p->value = object;
+            p->setValue( object );
             getConcept(subject)->addAnnotation(p);
             return 0;
         }
@@ -328,7 +329,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
 
         // entity(subject) has a property(predicate) with value(object)
         //auto pv = entities[subject]->getValues(predicate);
-        //if (pv.size()) { pv[0]->value = object; return 0; }
+        //if (pv.size()) { pv[0]->setValue( object ); return 0; }
         auto p = entities[subject]->getProperty(predicate, false);
         if (p) {
             //if (p->type == "") cout << "Warning: data property " << predicate << " has no data type!\n";
@@ -431,6 +432,7 @@ void VROWLImport::AgglomerateData() {
     for (auto c : concepts) onto->addConcept(c.second);
     cout << " VROWLImport::AgglomerateData add " << entities.size() << " entities to ontology" << endl;
     for (auto e : entities) onto->addEntity(e.second);
+    //for (auto e : entities) if (e.second->is_a("MessageSpecification")) cout << "  " << e.second->toString() << endl;
 }
 
 void processTriple(void* mgr, raptor_statement* rs) {
@@ -440,6 +442,7 @@ void processTriple(void* mgr, raptor_statement* rs) {
 
 void VROWLImport::processTriple(raptor_statement* rs) {
     auto s = RDFStatement(rs);
+    //if (s.predicate == "hasModelComponentLabel") cout << "RDF statement: " << s.toString() << endl;
     subjects[s.subject].push_back(s);
     objects[s.subject][s.object] = s.predicate;
 }

@@ -100,6 +100,10 @@ void VRAsphalt::addPath(PathPtr path, int rID, float width, float dashL, float o
     auto pnts = path->getPoints();
     int N = (pnts.size()-1)*0.5;
 
+    if (width < 1e-3) {
+        cout << " Warning in VRAsphalt::addPath, width way too small, N: " << N << "  rID: " << rID << " width: " << width << " dashL: " << dashL << " offset: " << offset << " colorID: " << colorID << endl;
+    }
+
     for (int j = 0; j<N; j++) {// p1,p2,p3
         Vec3d P0 = pnts[2*j].pos();
         Vec3d P1 = pnts[2*j+1].pos();

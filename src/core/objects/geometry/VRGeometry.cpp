@@ -150,7 +150,7 @@ VRGeometry::VRGeometry(string name) : VRTransform(name) {
     store("sourcetype", &source.type);
     store("sourceparam", &source.parameter);
 
-    regStorageSetupFkt( VRUpdateCb::create("geometry_update", boost::bind(&VRGeometry::setup, this)) );
+    regStorageSetupFkt( VRStorageCb::create("geometry_update", boost::bind(&VRGeometry::setup, this, _1)) );
 
     // override intersect action callbacks for geometry
     IntersectAction::registerEnterDefault( Geometry::getClassType(), reinterpret_cast<Action::Callback>(&geoIntersectionProxy::intersectEnter));
@@ -423,7 +423,12 @@ int VRGeometry::getLastMeshChange() { return lastMeshChange; }
 
 void VRGeometry::setTypes(GeoIntegralProperty* types) { if (!meshSet) setMesh(); mesh->geo->setTypes(types); }
 void VRGeometry::setNormals(GeoVectorProperty* Norms) { if (!meshSet) setMesh(); mesh->geo->setNormals(Norms); }
-void VRGeometry::setColors(GeoVectorProperty* Colors, bool fixMapping) { if (!meshSet) setMesh(); mesh->geo->setColors(Colors); if (fixMapping) fixColorMapping(); }
+void VRGeometry::setColors(GeoVectorProperty* Colors, bool fixMapping) {
+    if (!meshSet) setMesh();
+    if (!Colors || Colors->size() == 0) { mesh->geo->setColors(0); fixColorMapping(); }
+    else mesh->geo->setColors(Colors);
+    if (fixMapping) fixColorMapping();
+}
 void VRGeometry::setLengths(GeoIntegralProperty* lengths) { if (!meshSet) setMesh(); mesh->geo->setLengths(lengths); }
 void VRGeometry::setTexCoords(GeoVectorProperty* Tex, int i, bool fixMapping) {
     if (!meshSet) setMesh();
@@ -918,7 +923,7 @@ void VRGeometry::showGeometricData(string type, bool b) {
     m->setLit(false);
 }
 
-void VRGeometry::setup() {
+void VRGeometry::setup(VRStorageContextPtr context) {
     string p1, p2, p3, p4;
     stringstream ss;
     VRGeometryPtr g;

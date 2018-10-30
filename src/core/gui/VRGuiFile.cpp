@@ -106,8 +106,8 @@ void VRGuiFile::setGeoLoadWidget() {
         geoImportWidget = manage( new Gtk::Table() );
         auto fixed = manage( new Gtk::Fixed() );
         auto cache_override = manage( new Gtk::CheckButton("ignore cache") );
-        auto label163 = manage( new Gtk::Label("label") );
-        auto openFileWarning1 = manage( new Gtk::Label("scale:", Gtk::ALIGN_RIGHT) );
+        auto label163 = manage( new Gtk::Label("Loader:") );
+        auto openFileWarning1 = manage( new Gtk::Label("Scale:", Gtk::ALIGN_RIGHT) );
         auto entry21 = manage( new Gtk::Entry() );
         auto combobox15 = manage( new Gtk::ComboBox() );
         auto cellrenderertext54 = manage( new Gtk::CellRendererText() );
@@ -131,7 +131,7 @@ void VRGuiFile::setGeoLoadWidget() {
         combobox15->signal_changed().connect( sigc::bind(&VRGuiFile::on_change_preset, combobox15) );
 
         Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("fileOpenPresets"));
-        vector<string> presets = { "SOLIDWORKS-VRML2", "OSG", "COLLADA" };
+        vector<string> presets = { "SOLIDWORKS-VRML2", "OSG", "COLLADA", "PVR" };
         fillStringListstore("fileOpenPresets", presets);
         combobox15->set_model( store );
         combobox15->set_active( getListStorePos("fileOpenPresets", "SOLIDWORKS-VRML2") );

@@ -38,6 +38,7 @@ struct VRProcessNode : VRName {
 
     int getID();
     string getLabel();
+    VREntityPtr getEntity();
 };
 
 struct VRProcessDiagram : public Graph {

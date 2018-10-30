@@ -200,7 +200,6 @@ vector<VRProcessNodePtr> VRProcessEngine::getCurrentStates() {
 
 vector<VRProcessNodePtr> VRProcessEngine::getCurrentNodes() {
     vector<VRProcessNodePtr> res;
-
     for (auto& subject : subjects) {
         auto action = subject.second.current;
         if (action){
@@ -213,5 +212,6 @@ vector<VRProcessNodePtr> VRProcessEngine::getCurrentNodes() {
             res.push_back(currentTransition);
         }
     }
+    //for (auto action : currentActions) res.push_back(action.second);
     return res;
 }

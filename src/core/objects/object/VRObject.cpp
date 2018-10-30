@@ -37,7 +37,30 @@ VRObject::VRObject(string _name) {
     store("visible", &visibleMask);
     storeObjVec("children", children);
 
-    regStorageSetupFkt( VRUpdateCb::create("object setup", boost::bind(&VRObject::setup, this)) );
+    regStorageSetupBeforeFkt( VRStorageCb::create("object setup", boost::bind(&VRObject::setupBefore, this, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("object setup", boost::bind(&VRObject::setupAfter, this, _1)) );
+}
+
+vector<VRObjectPtr> tmpChildren;
+
+void VRObject::setupBefore(VRStorageContextPtr context) {
+    bool onlyReload = false;
+    if (context) onlyReload = context->onlyReload;
+    if (!onlyReload) clearChildren();
+    else tmpChildren = children;
+}
+
+void VRObject::setupAfter(VRStorageContextPtr context) {
+    setVisibleMask(visibleMask);
+    setPickable(pickable);
+
+    bool onlyReload = false;
+    if (context) onlyReload = context->onlyReload;
+    if (!onlyReload) {
+        auto tmp = children;
+        children.clear();
+        for (auto c : tmp) addChild(c);
+    } else children = tmpChildren;
 }
 
 VRObject::~VRObject() {
@@ -66,15 +89,6 @@ Matrix4d VRObject::getMatrixTo(VRObjectPtr obj, bool parentOnly) {
 PosePtr VRObject::getPoseTo(VRObjectPtr o) {
     auto m = getMatrixTo(o);
     return Pose::create(m);
-}
-
-void VRObject::setup() {
-    setVisibleMask(visibleMask);
-    setPickable(pickable);
-
-    auto tmp = children;
-    children.clear();
-    for (auto c : tmp) addChild(c);
 }
 
 void VRObject::destroy() {
@@ -400,6 +414,16 @@ VRObjectPtr VRObject::find(string Name) {
     for (auto c : children) {
         if (c == ptr()) continue; // workaround! TODO: find why ptr() can happn
         VRObjectPtr tmp = c->find(Name);
+        if (tmp != 0) return tmp;
+    }
+    return 0;
+}
+
+VRObjectPtr VRObject::findFirst(string Name) {
+    if (base_name == Name) return ptr();
+    for (auto c : children) {
+        if (c == ptr()) continue; // workaround! TODO: find why ptr() can happn
+        VRObjectPtr tmp = c->findFirst(Name);
         if (tmp != 0) return tmp;
     }
     return 0;

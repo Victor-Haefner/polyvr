@@ -28,14 +28,18 @@ VRNetworkNode::VRNetworkNode(string name) : VRManager("NetworkNode") {
     store("address", &address);
     store("user", &user);
     store("slavePath", &slavePath);
-    regStorageSetupFkt( VRUpdateCb::create("network_node_update", boost::bind(&VRNetworkNode::update, this)) );
-    regStorageSetupFkt( VRUpdateCb::create("network_node_update2", boost::bind(&VRNetworkNode::initSlaves, this)) );
+    regStorageSetupFkt( VRStorageCb::create("network_node_update", boost::bind(&VRNetworkNode::setup, this, _1)) );
 }
 
 VRNetworkNode::~VRNetworkNode() { stopSlaves(); }
 
 VRNetworkNodePtr VRNetworkNode::create(string name) { return VRNetworkNodePtr( new VRNetworkNode(name) ); }
 VRNetworkNodePtr VRNetworkNode::ptr() { return static_pointer_cast<VRNetworkNode>( shared_from_this() ); }
+
+void VRNetworkNode::setup(VRStorageContextPtr context) {
+    update();
+    initSlaves();
+}
 
 string VRNetworkNode::getAddress() { return address; }
 string VRNetworkNode::getUser() { return user; }
@@ -131,15 +135,11 @@ VRNetworkSlave::VRNetworkSlave(string name) {
     store("display", &display);
     store("autostart", &autostart);
     store("port", &port);
-
-    regStorageSetupFkt( VRUpdateCb::create("network_slave_update", boost::bind(&VRNetworkSlave::update, this)) );
 }
 
 VRNetworkSlave::~VRNetworkSlave() {}
 
 VRNetworkSlavePtr VRNetworkSlave::create(string name) { return VRNetworkSlavePtr( new VRNetworkSlave(name) ); }
-
-void VRNetworkSlave::update() {} // TODO: compute stats
 
 void VRNetworkSlave::start() {
     if (!node) return;
@@ -147,7 +147,7 @@ void VRNetworkSlave::start() {
 
     string disp = "export DISPLAY=\"" + display + "\" && ";
     string pipes = " > /dev/null 2> /dev/null < /dev/null &";
-    //string pipes = " > /dev/null 2> /dev/null < /dev/null"; // TODO: without & it returns the correct exit code, but it also makes the app stuck!
+    //string pipes = " > /dev/null 2> /dev/null < /dev/null"; // TODO: without & it returns the correct code, but it also makes the app stuck!
     string args;
     if (!fullscreen) args += " -w";
     if (active_stereo) args += " -A";
@@ -176,6 +176,8 @@ void VRNetworkSlave::set(string ct, bool fs, bool as, bool au, string a, int p) 
     port = p;
     update();
 }
+
+void VRNetworkSlave::update() {}
 
 string VRNetworkSlave::getStatMulticast() { return stat_multicast; }
 string VRNetworkSlave::getStat() { return stat; }

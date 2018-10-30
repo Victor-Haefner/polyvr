@@ -172,22 +172,26 @@ string VRName::setName(string name) {
     nameSpace->removeName(base_name, name_suffix); // check if already named, remove old name from dict
     if (name == "") return "";
 
-    // check if passed name has a base|separator|suffix structure
-    auto vs = splitString(name, nameSpace->separator);
-    if (vs.size() > 1) {
-        string last = *vs.rbegin();
-        bool isNumber = (last.find_first_not_of( "0123456789" ) == string::npos);
-        if (isNumber) {
-            base_name = vs[0];
-            for (uint i=1; i<vs.size()-1; i++) base_name += nameSpace->separator + vs[i];
-            name_suffix = nameSpace->getSuffix(base_name, toInt(last));
-            compileName();
-            return this->name;
+    if (nameSpace->unique) {
+        // check if passed name has a base|separator|suffix structure
+        auto vs = splitString(name, nameSpace->separator);
+        if (vs.size() > 1) {
+            string last = *vs.rbegin();
+            bool isNumber = (last.find_first_not_of( "0123456789" ) == string::npos);
+            if (isNumber) {
+                base_name = vs[0];
+                for (uint i=1; i<vs.size()-1; i++) base_name += nameSpace->separator + vs[i];
+                name_suffix = nameSpace->getSuffix(base_name, toInt(last));
+                compileName();
+                return this->name;
+            }
         }
+        base_name = name;
+        name_suffix = nameSpace->getSuffix(base_name);
+    } else {
+        base_name = name;
     }
 
-    base_name = name; // set new base name
-    if (nameSpace->unique) name_suffix = nameSpace->getSuffix(base_name);
     compileName();
     return this->name;
 }
@@ -201,8 +205,10 @@ VRName::VRName() {
     store("base_name", &base_name);
     store("name_space", &nameSpaceName);
 
-    regStorageSetupFkt( VRUpdateCb::create("name_update", boost::bind(&VRName::compileName, dynamic_cast<VRName*>(this))) );
+    regStorageSetupFkt( VRStorageCb::create("name_update", boost::bind(&VRName::setup, dynamic_cast<VRName*>(this), _1)) );
 }
 
 VRName::~VRName() { setName(""); }
+
+void VRName::setup(VRStorageContextPtr context) { compileName(); }
 

@@ -38,10 +38,24 @@ template<typename T> string typeName(const std::shared_ptr<VRFunction<vector<T>>
 
 template<typename T> int toValue(stringstream& s, T& t);
 template<typename T> int toValue(string s, T& t) { stringstream ss(s); return toValue(ss,t); }
-template<typename T> int toValue(string s, vector<T>& t) { return true; }
+
+template<typename T> int toValue(string s, vector<T>& t) {
+    stringstream ss(s);
+    T v;
+    while (!ss.eof()) {
+        int b = toValue(ss, v);
+        if (b) t.push_back(v);
+        else break;
+    }
+    return true;
+}
+
+template<typename T> int toValue(string s, vector<vector<T>>& t) { return true; } // not implemented
 template<class T>    T   toValue(string s) { T t; toValue(s,t); return t; }
 
 int   toInt  (string s);
 float toFloat(string s);
+
+bool isNumber(string s);
 
 #endif // TOSTRING_H_INCLUDED

@@ -11,13 +11,13 @@ VRStatement::VRStatement() {;}
 VRStatement::VRStatement(string s, int p) {
     statement = s;
     place = p;
-    setup();
+    setup(0);
 
     store("data", &statement);
-    regStorageSetupFkt( VRUpdateCb::create("statement setup", boost::bind(&VRStatement::setup, this)) );
+    regStorageSetupFkt( VRStorageCb::create("statement setup", boost::bind(&VRStatement::setup, this, _1)) );
 }
 
-void VRStatement::setup() { // parse statement
+void VRStatement::setup(VRStorageContextPtr context) { // parse statement
     if (statement == "") return;
 
     // verb

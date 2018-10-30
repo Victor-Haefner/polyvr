@@ -39,7 +39,7 @@ void VRRuleWidget::on_edit_prop_clicked() {
     dialog->show();
     if (dialog->run() == Gtk::RESPONSE_OK) {
         selected_statement->statement = getTextEntry("entry23");
-        selected_statement->setup();
+        selected_statement->setup(0);
         //selected_statement->type = getTextEntry("entry24");
         saveScene();
     }

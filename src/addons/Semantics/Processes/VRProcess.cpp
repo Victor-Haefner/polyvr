@@ -38,6 +38,7 @@ void VRProcessNode::update(Graph::node& n, bool changed) { // called when graph 
     }
 }
 
+VREntityPtr VRProcessNode::getEntity() { return entity; }
 int VRProcessNode::getID() { return ID; }
 string VRProcessNode::getLabel() { return label; }
 
@@ -71,6 +72,7 @@ VRProcessDiagramPtr VRProcess::getBehaviorDiagram(int subject) { return behavior
 
 vector<VRProcessNodePtr> VRProcess::getSubjects() {
     vector<VRProcessNodePtr> res;
+    if (!interactionDiagram) return res;
     for (auto node : interactionDiagram->processnodes) {
         if (node.second->type == SUBJECT) res.push_back(node.second);
     }
@@ -79,6 +81,7 @@ vector<VRProcessNodePtr> VRProcess::getSubjects() {
 
 vector<VRProcessNodePtr> VRProcess::getMessages() {
     vector<VRProcessNodePtr> res;
+    if (!interactionDiagram) return res;
     for (auto node : interactionDiagram->processnodes) {
         if (node.second->type == MESSAGE) res.push_back(node.second);
     }
@@ -86,9 +89,10 @@ vector<VRProcessNodePtr> VRProcess::getMessages() {
 }
 
 vector<VRProcessNodePtr> VRProcess::getSubjectMessages(int subjectID) {
+    vector<VRProcessNodePtr> res;
+    if (!interactionDiagram) return res;
     auto d = interactionDiagram;
     auto neighbors = d->getNeighbors( subjectID );
-    vector<VRProcessNodePtr> res;
     for (auto node : neighbors) {
         auto subject = getNode( node.ID );
         res.push_back(subject);
@@ -117,9 +121,10 @@ vector<VRProcessNodePtr> VRProcess::getIncomingMessages(int subjectID) {
 }
 
 vector<VRProcessNodePtr> VRProcess::getMessageSubjects(int messageID) {
+    vector<VRProcessNodePtr> res;
+    if (!interactionDiagram) return res;
     auto d = interactionDiagram;
     auto neighbors = d->getNeighbors( messageID );
-    vector<VRProcessNodePtr> res;
     for (auto node : neighbors) {
         auto message = getNode( node.ID );
         res.push_back(message);
@@ -150,6 +155,8 @@ vector<VRProcessNodePtr> VRProcess::getMessageSender(int messageID){
 vector<VRProcessNodePtr> VRProcess::getSubjectStates(int subjectID) {
     auto d = behaviorDiagrams[subjectID];
     vector<VRProcessNodePtr> res;
+    if (!behaviorDiagrams.count(subjectID)) return res;
+    auto d = behaviorDiagrams[subjectID];
     for (auto node : d->processnodes) {
         if (node.second->type == STATE) res.push_back(node.second);
     }
@@ -244,7 +251,7 @@ void VRProcess::update() {
     auto query = [&](string q) { return reasoner->process(q, ontology); };
 
     /** get interaction diagram **/
-    auto layers = query("q(x):ModelLayer(x)");
+    auto layers = ontology->getEntities("ModelLayer");
     if (layers.size() == 0) return;
     auto layer = layers[0]; // only use first layer
     interactionDiagram = VRProcessDiagram::create();
@@ -253,9 +260,10 @@ void VRProcess::update() {
     string q_subjects = "q(x):Subject(x);ModelLayer("+layer->getName()+");has("+layer->getName()+",x)";
     for ( auto subject : query(q_subjects) ) {
         string label;
-        if (auto l = subject->get("hasModelComponentLable") ) label = l->value;
+        if (auto l = subject->get("hasModelComponentLabel") ) label = l->value;
         int nID = addSubject(label)->ID;
         if (auto ID = subject->get("hasModelComponentID") ) nodes[ID->value] = nID;
+        //cout << " VRProcess::update subject: " << label << endl;
     }
 
     map<string, map<string, vector<VREntityPtr>>> messages;
@@ -263,19 +271,21 @@ void VRProcess::update() {
     for ( auto message : query(q_messages) ) {
         string sender;
         string receiver;
-        if (auto s = message->get("sender") ) sender = s->value;
-        if (auto r = message->get("receiver") ) receiver = r->value;
-        messages[sender][receiver].push_back(message);
+        if (auto s = message->get("hasSender") ) sender = s->value;
+        else cout << "Warning! in VRProcess::update, no sender for message '" << message->getName() << "'" << endl;
+        if (auto r = message->get("hasReceiver") ) receiver = r->value;
+        else cout << "Warning! in VRProcess::update, no receiver for message '" << message->getName() << "'" << endl;
+        if (sender != "" && receiver != "") messages[sender][receiver].push_back(message);
     }
 
     for ( auto sender : messages ) {
         for (auto receiver : sender.second) {
             string label = "Msg:";
             for (auto message : receiver.second) {
-                string q_message = "q(x):MessageSpec(x);MessageExchange("+message->getName()+");is(x,"+message->getName()+".hasMessageType)";
+                string q_message = "q(x):MessageSpecification(x);MessageExchange("+message->getName()+");is(x,"+message->getName()+".hasMessageType)";
                 auto msgs = query(q_message);
                 if (msgs.size())
-                    if (auto l = msgs[0]->get("hasModelComponentLable") ) label += "\n - " + l->value;
+                    if (auto l = msgs[0]->get("hasModelComponentLabel") ) label += "\n - " + l->value;
             }
 
             addMessage(label, nodes[sender.first], nodes[receiver.first]);

@@ -18,6 +18,7 @@ struct VRProperty : public VROntoID, public VRName {
     VRPropertyPtr copy();
 
     void setType(string type);
+    void setValue(string value);
 
     string toString();
 };

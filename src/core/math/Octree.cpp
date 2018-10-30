@@ -43,6 +43,21 @@ bool OctreeNode::inBox(Vec3d p, Vec3d c, float size) {
     return true;
 }
 
+OctreeNode* OctreeNode::get(Vec3d p, bool checkPosition) {
+    if ( !inBox(p, center, size) && checkPosition ) {
+        if (parent) return parent->get(p, true);
+        else return 0;
+    }
+
+    if (size > resolution) {
+        int o = getOctant(p);
+        if (!children[o]) return this;
+        return children[o]->get(p, false);
+    }
+
+    return this;
+}
+
 OctreeNode* OctreeNode::add(Vec3d p, void* d, int targetLevel, bool checkPosition) {
     Vec3d rp = p - center;
     int currentLevel = level;
@@ -86,21 +101,6 @@ vector<OctreeNode*> OctreeNode::getAncestry() {
     auto p = parent;
     while (p) { res.push_back(p); p = p->parent; }
     return res;
-}
-
-OctreeNode* OctreeNode::get(Vec3d p) {
-    if ( !inBox(p, center, size) ) {
-        if (parent) return parent->get(p);
-        else return 0;
-    }
-
-    if (size > resolution) {
-        int o = getOctant(p);
-        if (!children[o]) return this;
-        return children[o]->get(p);
-    }
-
-    return this;
 }
 
 vector<OctreeNode*> OctreeNode::getChildren() {
@@ -255,7 +255,7 @@ OctreePtr Octree::ptr() { return shared_from_this(); }
 float Octree::getSize() { return root->getSize(); }
 void Octree::clear() { if (root) delete root; root = new OctreeNode(ptr(), resolution, firstSize, 0); }
 
-OctreeNode* Octree::get(Vec3d p) { return root->get(p); }
+OctreeNode* Octree::get(Vec3d p, bool checkPosition) { return root->get(p, checkPosition); }
 
 OctreeNode* Octree::add(Vec3d p, void* data, int targetLevel, bool checkPosition) {
     return getRoot()->add(p, data, targetLevel, checkPosition);

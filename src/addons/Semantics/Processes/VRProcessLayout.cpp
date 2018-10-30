@@ -1,8 +1,8 @@
 #include "VRProcessLayout.h"
 #include "VRProcess.h"
+#include "core/math/kinematics/VRConstraint.h"
 #include "core/objects/geometry/sprite/VRSprite.h"
 #include "core/objects/material/VRMaterial.h"
-#include "core/objects/geometry/VRConstraint.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/utils/toString.h"
 #include "core/tools/VRText.h"
@@ -18,6 +18,8 @@ using namespace OSG;
 VRProcessLayout::VRProcessLayout(string name) : VRTransform(name) {
     updateCb = VRUpdateCb::create("process layout update", boost::bind(&VRProcessLayout::update, this));
     VRScene::getCurrent()->addUpdateFkt(updateCb);
+
+    //store();
 }
 VRProcessLayout::~VRProcessLayout() {}
 
@@ -30,6 +32,7 @@ VRProcessLayoutPtr VRProcessLayout::create(string name) {
 
 void VRProcessLayout::init() {
     toolSID = VRPathtool::create();
+    toolSID->setPersistency(0);
     addChild(toolSID);
 }
 
@@ -167,12 +170,15 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
 }
 
 void VRProcessLayout::setProcess(VRProcessPtr p) {
+    if (!p) { cout << "WARNING in ProcessLayout, setProcess: process is null!\n"; return; }
+
     process = p;
 
     //initialize pathtool for each sbd
     for (auto subject : p->getSubjects()){
         if (!p->getBehaviorDiagram(subject->getID())) return;
         VRPathtoolPtr toolSBD = VRPathtool::create();
+        toolSBD->setPersistency(0);
         toolSBDs[subject->getID()] = toolSBD;
         addChild(toolSBD);
         toolSBD->setGraph(p->getBehaviorDiagram(subject->getID()));
@@ -215,6 +221,8 @@ void VRProcessLayout::appendToHandle(Vec3d pos, VRProcessNodePtr node, VRPathtoo
 }
 
 void VRProcessLayout::setupLabel(VRProcessNodePtr message, VRPathtoolPtr ptool, vector<VRProcessNodePtr> nodes) {
+    if (nodes.size() < 2) { cout << "VRProcessLayout::setupLabel, at least two nodes needed! message: " << message->getName() << endl; return; }
+    if (!nodes[0] || !nodes[1]) { cout << "VRProcessLayout::setupLabel, a node is invalid! message: " << message->getName() << endl; return; }
     auto messageElement = addElement(message);
 
     auto id0 = nodes[0]->getID();
@@ -370,6 +378,18 @@ void VRProcessLayout::update(){
     }
 }
 
+void VRProcessLayout::store() {
+    auto p = getPersistency();
+    setPersistency(1);
+    saveToFile(".process_layout.plt");
+    setPersistency(p);
+}
+
+void VRProcessLayout::load() {
+    auto context = VRStorageContext::create(true);
+    loadFromFile(".process_layout.plt", context);
+    update();
+}
 
 
 

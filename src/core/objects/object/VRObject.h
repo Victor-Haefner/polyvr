@@ -125,6 +125,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
 
         VRObjectPtr find(VRObjectPtr obj);
         VRObjectPtr find(string Name);
+        VRObjectPtr findFirst(string Name);
         VRObjectPtr find(int id);
         vector<VRObjectPtr> findAll(string Name, vector<VRObjectPtr> res = vector<VRObjectPtr>() );
         vector<VRObjectPtr> filterByType(string Type, vector<VRObjectPtr> res = vector<VRObjectPtr>() );
@@ -151,7 +152,8 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         bool isPickable();
         void setPickable(int b);
 
-        void setup();
+        void setupBefore(VRStorageContextPtr context);
+        void setupAfter(VRStorageContextPtr context);
         void destroy();
 
         PosePtr getPoseTo(VRObjectPtr o);

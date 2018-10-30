@@ -65,6 +65,8 @@ class VRMultiTouch : public VRDevice {
         static VRMultiTouchPtr create();
         VRMultiTouchPtr ptr();
 
+        void setup(VRStorageContextPtr context);
+
         static vector<string> getDevices();
         string getDevice();
         string getInput();
