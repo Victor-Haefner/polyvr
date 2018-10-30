@@ -97,6 +97,7 @@ class VRStorage {
         void regStorageSetupAfterFkt(VRUpdateCbPtr u);
 
         static xmlpp::Element* getChild(xmlpp::Element* e, string c);
+        static xmlpp::Element* getChildI(xmlpp::Element* e, int i);
         static vector<xmlpp::Element*> getChildren(xmlpp::Element* e);
 
     public:
@@ -106,7 +107,8 @@ class VRStorage {
         virtual void save(xmlpp::Element* e, int p = 0);
         virtual void load(xmlpp::Element* e, VRStorageContextPtr context = 0);
         xmlpp::Element* saveUnder(xmlpp::Element* e, int p = 0, string t = "");
-        void loadChildFrom(xmlpp::Element* e, string t = "", VRStorageContextPtr context = 0);
+        xmlpp::Element* loadChildFrom(xmlpp::Element* e, string t = "", VRStorageContextPtr context = 0);
+        xmlpp::Element* loadChildIFrom(xmlpp::Element* e, int i, VRStorageContextPtr context = 0);
 
         static int getPersistency(xmlpp::Element* e);
         static VRStoragePtr createFromStore(xmlpp::Element* e, bool verbose = true);
@@ -118,6 +120,7 @@ class VRStorage {
 
         string getDescription();
 
+        // only single object
         bool saveToFile(string path, bool createDirs = true);
         bool loadFromFile(string path, VRStorageContextPtr context = 0);
 };
