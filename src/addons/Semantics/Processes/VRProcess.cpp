@@ -156,7 +156,6 @@ vector<VRProcessNodePtr> VRProcess::getSubjectStates(int subjectID) {
     auto d = behaviorDiagrams[subjectID];
     vector<VRProcessNodePtr> res;
     if (!behaviorDiagrams.count(subjectID)) return res;
-    auto d = behaviorDiagrams[subjectID];
     for (auto node : d->processnodes) {
         if (node.second->type == STATE) res.push_back(node.second);
     }
@@ -258,6 +257,7 @@ void VRProcess::update() {
 
     map<string, int> nodes;
     string q_subjects = "q(x):Subject(x);ModelLayer("+layer->getName()+");has("+layer->getName()+",x)";
+    cout << "q_subjects: " << q_subjects << endl;
     for ( auto subject : query(q_subjects) ) {
         string label;
         if (auto l = subject->get("hasModelComponentLabel") ) label = l->value;
@@ -294,10 +294,10 @@ void VRProcess::update() {
 
     //return;
     /** get behavior diagrams **/
-
-    for (auto behavior : query("q(x):Behavior(x)")) {
+    for (auto behavior : query("q(x):SubjectBehavior(x)")) { //Behavior
+        cout << "importing behavior..." << endl;
         auto behaviorDiagram = VRProcessDiagram::create();
-        string q_Subject = "q(x):ActiveProcessComponent(x);Behavior("+behavior->getName()+");has(x,"+behavior->getName()+")";
+        string q_Subject = "q(x):Subject(x);SubjectBehavior("+behavior->getName()+");has(x,"+behavior->getName()+")";
         auto subjects = query(q_Subject);
         if (subjects.size() == 0) continue;
         auto subject = subjects[0];
@@ -305,17 +305,19 @@ void VRProcess::update() {
         int sID = nodes[ID->value];
         behaviorDiagrams[sID] = behaviorDiagram;
 
-        string q_States = "q(x):State(x);Behavior("+behavior->getName()+");has("+behavior->getName()+",x)";
+        string q_States = "q(x):State(x);SubjectBehavior("+behavior->getName()+");has("+behavior->getName()+",x)"; //State
         for (auto state : query(q_States)) {
+            cout << "importing states..." << endl;
             string label;
-            if (auto l = state->get("hasModelComponentLable") ) label = l->value;
+            if (auto l = state->get("hasModelComponentLabel") ) label = l->value;
             int nID = addState(label, sID)->ID;
             if (auto ID = state->get("hasModelComponentID") ) nodes[ID->value] = nID;
         }
 
         map<string, map<string, vector<VREntityPtr>>> edges;
-        string q_Edges = "q(x):TransitionEdge(x);Behavior("+behavior->getName()+");has("+behavior->getName()+",x)";
+        string q_Edges = "q(x):Transition(x);SubjectBehavior("+behavior->getName()+");has("+behavior->getName()+",x)";
         for (auto edge : query(q_Edges)) {
+            cout << "importing transitions..." << endl;
             string source;
             string target;
             if (auto s = edge->get("hasSourceState") ) source = s->value;
@@ -325,6 +327,7 @@ void VRProcess::update() {
 
         for ( auto source : edges ) {
             for (auto target : source.second) {
+                cout << "adding messages..." << endl;
                 addMessage("Msg:", nodes[source.first], nodes[target.first], behaviorDiagram);
             }
         }
