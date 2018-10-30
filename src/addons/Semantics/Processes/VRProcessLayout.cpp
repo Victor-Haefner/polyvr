@@ -13,14 +13,16 @@
 #include "core/scene/VRScene.h"
 #include <boost/bind.hpp>
 
+#include <libxml++/libxml++.h>
+#include <libxml++/nodes/element.h>
+
 using namespace OSG;
 
 VRProcessLayout::VRProcessLayout(string name) : VRTransform(name) {
     updateCb = VRUpdateCb::create("process layout update", boost::bind(&VRProcessLayout::update, this));
     VRScene::getCurrent()->addUpdateFkt(updateCb);
-
-    //store();
 }
+
 VRProcessLayout::~VRProcessLayout() {}
 
 VRProcessLayoutPtr VRProcessLayout::ptr() { return static_pointer_cast<VRProcessLayout>( shared_from_this() ); }
@@ -344,16 +346,36 @@ void VRProcessLayout::update(){
 	for(auto toolSBD : toolSBDs) toolSBD.second->update();
 }
 
-void VRProcessLayout::store() {
-    auto p = getPersistency();
-    setPersistency(1);
-    saveToFile(".process_layout.plt");
-    setPersistency(p);
+void VRProcessLayout::storeLayout() {
+    string path = ".process_layout.plt";
+
+    auto handles = toolSID->getHandles();
+
+    xmlpp::Document doc;
+    xmlpp::Element* root = doc.create_root_node("ProjectsList", "", "VRP"); // name, ns_uri, ns_prefix
+
+    for (auto handle : handles) {
+        handle->setPersistency(1);
+        handle->saveUnder(root);
+    }
+
+    doc.write_to_file_formatted(path);
 }
 
-void VRProcessLayout::load() {
+void VRProcessLayout::loadLayout() {
+    string path = ".process_layout.plt";
     auto context = VRStorageContext::create(true);
-    loadFromFile(".process_layout.plt", context);
+
+    xmlpp::DomParser parser;
+    parser.set_validate(false);
+    parser.parse_file(path.c_str());
+    xmlpp::Element* root = dynamic_cast<xmlpp::Element*>(parser.get_document()->get_root_node());
+
+    auto handles = toolSID->getHandles();
+    for (int i=0; i<handles.size(); i++) {
+        auto handle = handles[i];
+        auto element = handle->loadChildIFrom(root, i, context);
+    }
     update();
 }
 

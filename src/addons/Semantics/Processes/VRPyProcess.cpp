@@ -57,8 +57,8 @@ PyMethodDef VRPyProcessLayout::methods[] = {
     {"setElementName", PyWrap(ProcessLayout, setElementName, "Change the name of a node", void, int, string ) },
     {"remElement", PyWrap(ProcessLayout, remElement, "Remove element", void, VRObjectPtr ) },
     {"setEngine", PyWrap(ProcessLayout, setEngine, "Set process engine", void, VRProcessEnginePtr ) },
-    {"store", PyWrap(ProcessLayout, store, "Store layout to file", void ) },
-    {"load", PyWrap(ProcessLayout, load, "Load layour from file", void ) },
+    {"storeLayout", PyWrap(ProcessLayout, storeLayout, "Store layout to file", void ) },
+    {"loadLayout", PyWrap(ProcessLayout, loadLayout, "Load layour from file", void ) },
     {NULL}  /* Sentinel */
 };
 

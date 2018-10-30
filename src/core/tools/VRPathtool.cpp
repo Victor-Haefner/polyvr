@@ -118,14 +118,21 @@ VRPathtool::~VRPathtool() {
 VRPathtoolPtr VRPathtool::create() { return VRPathtoolPtr( new VRPathtool() ); }
 
 void VRPathtool::setupBefore(VRStorageContextPtr context) {
-    clear();
+    bool onlyReload = false;
+    if (context) onlyReload = context->onlyReload;
+    if (!onlyReload) clear();
 }
 
 void VRPathtool::setup(VRStorageContextPtr context) {
+    bool onlyReload = false;
+    if (context) onlyReload = context->onlyReload;
+    //if (!onlyReload)
     setGraph(graph, false);
 }
 
 void VRPathtool::setProjectionGeometry(VRObjectPtr obj) { projObj = obj; }
+
+GraphPtr VRPathtool::getGraph() { return graph; }
 
 void VRPathtool::setGraph(GraphPtr g, bool doClear) {
     if (!g) return;
