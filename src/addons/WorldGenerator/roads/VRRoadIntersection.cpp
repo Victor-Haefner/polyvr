@@ -750,9 +750,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             Vec3d X = nodeEnt2->getEntity("node")->getVec3("position") - nodeEnt1->getEntity("node")->getVec3("position");
             float D = X.length();
             if (Nin == Nout && laneMatches.size()==2) {
-                cout << " hhoiasd" << endl;
                 if (forkSingleRoad->getName() == roadIn->getName()) {
-                    cout << " aaaa" << endl;
                     auto node1 = nodeEnt1->getEntity("node");   //last node of roadIn
                     auto norm1 = nodeEnt1->getVec3("direction");
                     auto node2 = nodes2[1]->getEntity("node");  //second node of roadOut
@@ -765,7 +763,6 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                     rGraph->remNode(tempID);
                 }
                 if (forkSingleRoad->getName() == roadOut->getName()) {
-                    cout << " bbbb" << endl;
                     auto node1 = nodes1[nodes1.size()-2]->getEntity("node");   //second to last node of roadIn
                     auto norm1 = nodes1[nodes1.size()-2]->getVec3("direction");
                     auto node2 = nodes2[0]->getEntity("node");  //first node of roadOut
