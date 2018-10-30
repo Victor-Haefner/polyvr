@@ -522,6 +522,10 @@ void VRTrafficSimulation::updateSimulation() {
     //calculation of 4 points at the edges of vehicle
         if (vehicle.lastFPTS == VRGlobals::CURRENT_FRAME) return;
         auto p = vehicle.t->getPose();
+        if (vehicle.isUser) {
+            Vec3d offset = Vec3d(-4817.3,0,-5559.75);
+            p->setPos(p->pos() - offset);
+        }
         auto dir = p->dir();
         dir.normalize();
         auto left = p->up().cross(dir);
@@ -592,10 +596,12 @@ void VRTrafficSimulation::updateSimulation() {
 
         for (auto& v : users) {
             if (!v.t) continue;
-            auto p = v.t->getPose();
+            //auto vP = v.t->getPoseTo( this->getWorldPose() );
+            auto p = v.t->getWorldPose();
+            Vec3d offset = Vec3d(-4817.3,0,-5559.75); ///AGRAJAG - should be globalOffset
+            p->setPos(p->pos() - offset);
             auto simpleDis = (pose->pos() - p->pos()).length();
             if (simpleDis > safetyDis + 10) continue;
-
             calcFramePoints(v);
             float diss = calcDisToFP(vehicle,v);
             int farP = farPosition(vehicle.vID, pose, p, diss, vehicle.lastMove);
@@ -1068,6 +1074,7 @@ void VRTrafficSimulation::addUser(VRTransformPtr t) {
     v.isUser = true;
     users.push_back(v);
     users[users.size()-1].t = t;
+    cout << "VRTrafficSimulation::addUser " << nID << endl;
 }
 
 void VRTrafficSimulation::addVehicle(int roadID, float density, int type) {
@@ -1471,6 +1478,8 @@ string VRTrafficSimulation::getVehicleData(int ID){
     auto v = vehicles[ID];
     res+= "VehicleID: " + toString(v.getID());
     res+= nl + " position: " + toString(v.t->getFrom());
+    res+= nl + " worldPos: " + toString(v.t->getWorldPose()->pos());
+    res+= nl + " isUser: " + toString(v.isUser);
     //res+= nl + " vehiclesight: " + nl +  " INFRONT:" + toString(v.vehiclesight[v.INFRONT]) + " FROMLEFT: " + toString(v.vehiclesight[v.FRONTLEFT]) + " FROMRIGHT:" + toString(v.vehiclesight[v.BEHINDRIGHT]);
     res+= nl + " current_speed: " + toString(v.currentVelocity*3.6);
     res+= nl + " target_speed: " + toString(v.targetVelocity*3.6);
