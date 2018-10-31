@@ -128,6 +128,7 @@ class VRPathtool : public VRObject {
         void setProjectionGeometry(VRObjectPtr obj);
 
         void setGraph(GraphPtr g, bool doClear = true);
+        GraphPtr getGraph();
         int addNode(PosePtr p);
         void removeNode(int i);
         int getNodeID(VRObjectPtr o);

@@ -100,10 +100,18 @@ void VRStorage::load(xmlpp::Element* e, VRStorageContextPtr context) {
     f_setup_after.clear();
 }
 
-void VRStorage::loadChildFrom(xmlpp::Element* e, string t, VRStorageContextPtr context) {
+xmlpp::Element* VRStorage::loadChildFrom(xmlpp::Element* e, string t, VRStorageContextPtr context) {
     string tag = type;
     if (t != "") tag = t;
-    load( getChild(e, tag), context );
+    e = getChild(e, tag);
+    load( e, context );
+    return e;
+}
+
+xmlpp::Element* VRStorage::loadChildIFrom(xmlpp::Element* e, int i, VRStorageContextPtr context) {
+    e = getChildI(e, i);
+    load( e, context );
+    return e;
 }
 
 int VRStorage::getPersistency(xmlpp::Element* e) {
@@ -135,6 +143,18 @@ xmlpp::Element* VRStorage::getChild(xmlpp::Element* e, string c) {
         xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
         if (!el) continue;
         if (el->get_name() == c) return el;
+    }
+    return 0;
+}
+
+xmlpp::Element* VRStorage::getChildI(xmlpp::Element* e, int i) {
+    if (e == 0) return 0;
+    int k=0;
+    for (auto n : e->get_children()) {
+        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        if (!el) continue;
+        if (k == i) return el;
+        k++;
     }
     return 0;
 }
@@ -175,15 +195,6 @@ bool VRStorage::loadFromFile(string path, VRStorageContextPtr context) {
     parser.parse_file(path.c_str());
     xmlpp::Element* root = dynamic_cast<xmlpp::Element*>(parser.get_document()->get_root_node());
     load(root, context);
-
-    /*if (root == 0) return true;
-    cout << "VRStorage::loadFromFile " << path << endl;
-    //for (auto f : f_setup_before) (*f)();
-    for (auto s : storage) (*s.second.f1)(root);
-    for (auto f : f_setup) (*f)();
-    //for (auto f : f_setup_after) VRSceneManager::get()->queueJob(f);
-    //f_setup_after.clear();*/
-
     return true;
 }
 
