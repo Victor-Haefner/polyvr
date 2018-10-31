@@ -63,7 +63,6 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 	auto computeLaneMatches = [&]() {
 	    auto checkDefaultMatch = [&](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut, VRRoadPtr road1, VRRoadPtr road2, int Zout, int Zin) {
         ///DEFAULT - INTERSECTION
-        ///AGRAJAG
         //i= index lane in; j= index lane out; Nin= number of lanes going in at road1; Nout= number of lanes going out at road2; reSignIn= , reSignOut=,
             auto getRoadConnectionAngle = [&](VRRoadPtr road1, VRRoadPtr road2) {
                 auto& data1 = road1->getEdgePoint( node );
@@ -382,33 +381,6 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
                 rGraph->remNode(tempID);
             }
-            /*
-            auto laneIn = match.first;
-            auto laneOut = match.second;
-            auto roadIn = laneIn->getEntity("road");
-            auto roadOut = laneOut->getEntity("road");
-
-            laneIn->set("nextIntersection", entity->getName());
-            laneOut->set("lastIntersection", entity->getName());
-
-            float width = laneIn->getValue<float>("width", 0.5);
-            bool pedestrianIn = laneIn->getValue<bool>("pedestrian", false);
-            auto nodes1 = laneIn->getEntity("path")->getAllEntities("nodes");
-            auto node1Ent = *nodes1.rbegin();
-
-            bool pedestrianOut = laneOut->getValue<bool>("pedestrian", false);
-            auto nodes2 = laneOut->getEntity("path")->getAllEntities("nodes");
-            auto node2Ent = nodes2[0];
-
-            auto lane = addLane(1, width, pedestrianIn || pedestrianOut);
-
-            auto nodes = { node1Ent->getEntity("node"), node2Ent->getEntity("node") };
-            auto norms = { node1Ent->getVec3("direction"), node2Ent->getVec3("direction") };
-            auto lPath = addPath("Path", "lane", nodes, norms);
-            lane->add("path", lPath->getName());
-            nextLanes[laneIn].push_back(lane);
-            nextLanes[lane].push_back(laneOut);
-            roads->connectGraph(nodes, norms, lane);*/
         }
         int n = 0;
         vector<vector<int>> inl;
@@ -849,14 +821,6 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto node2 = nodes[nodes.size()-1]->getEntity("node");
                 auto edgeID = graph->getEdgeID(node1->getValue<int>("graphID", -1),node2->getValue<int>("graphID", -1));
                 inIDs.push_back(edgeID);
-                /*if (processedLanes.count(laneIn)) continue;
-                //auto nodes = laneIn->getEntity("path")->getAllEntities("nodes");
-                VREntityPtr node = (*nodes.rbegin())->getEntity("node");
-                auto p = node->getVec3("position");
-                p += Xa;
-                node->setVec3("position", p, "Position");
-                graph->setPosition(node->getValue<int>("graphID", 0), Pose::create(p));
-                cout << "------bridgeForkingLanes -  inLane - " << node->getValue<int>("graphID", 0) << p <<"\n";*/
             }
 
             for (auto laneOut : rfront->outLanes) {
@@ -865,13 +829,6 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto node2 = nodes[1]->getEntity("node");
                 auto edgeID = graph->getEdgeID(node1->getValue<int>("graphID", -1),node2->getValue<int>("graphID", -1));
                 ouIDs.push_back(edgeID);
-                /*if (processedLanes.count(laneOut)) continue;
-                VREntityPtr node = laneOut->getEntity("path")->getAllEntities("nodes")[0]->getEntity("node");
-                auto p = node->getVec3("position");
-                p += Xa;
-                node->setVec3("position", p, "Position");
-                graph->setPosition(node->getValue<int>("graphID", 0), Pose::create(p));
-                cout << "------bridgeForkingLanes - outLane - " << node->getValue<int>("graphID", 0) << p <<"\n";*/
             }
             inl.push_back(inIDs);
             oul.push_back(ouIDs);
