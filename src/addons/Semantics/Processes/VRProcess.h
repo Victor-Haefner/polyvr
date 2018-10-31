@@ -55,11 +55,18 @@ struct VRProcessDiagram : public Graph {
 
 class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName {
     private:
+        enum TRANSITION_CONDITION {
+            SEND_CONDITION,
+            RECEIVE_CONDITION,
+            DEFAULT
+        };
+
         VROntologyPtr ontology;
         VRProcessDiagramPtr interactionDiagram;
         map<int, VRProcessDiagramPtr> behaviorDiagrams;
         void printNodes(VRProcessDiagramPtr d);
         map<VRProcessNodePtr, VRProcessNodePtr> stateToMessage; //maps state to message for send/receive refenrences
+        map<VRProcessNodePtr, TRANSITION_CONDITION> transitionToCondition; //maps a transition to a transition condition if available
 
         void update();
 
@@ -91,6 +98,8 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         vector<VRProcessNodePtr> getTransitions(int subjectID);
         map<VRProcessNodePtr, VRProcessNodePtr> getInitialStates(); // <subjectNode, initialStateNode>
         VRProcessNodePtr getStateMessage(VRProcessNodePtr state);
+
+        //TODO: getTransitionCondition(VRProcessNodePtr)
 
         VRProcessNodePtr addSubject(string name);
         VRProcessNodePtr addMessage(string name, int i, int j, VRProcessDiagramPtr diag = 0);
