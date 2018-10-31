@@ -47,14 +47,21 @@ void VRWebSocket::poll(VRThreadWeakPtr t) {
     threadId = -1;
 }
 
+/**
+* Send a close request to the web socket and waits for closing confirmation.
+* TODO: Cancels waiting after 1 second to avoid deadlock, when confirmation fails.
+*/
 bool VRWebSocket::close() {
     if (isConnected()) {
-        cout << "Closing socket" << endl;
+        cout << "Closing socket: ";
         mg_send_websocket_frame(connection, WEBSOCKET_OP_CLOSE, nullptr, 0);
 
         // TODO: output only for testing purposes. Remove after closing of web sockets is fixed.
         int i = 0;
-        while (connectionStatus != -1) { cout << "sleep 10 ms " << i << endl; i++; usleep(10000); }
+        cout << "Waiting for confirmation";
+        while (connectionStatus != -1 && i < 100) { cout << "."; i++; usleep(10000); }
+        if(i==100) cout << endl << "No closing confirmation for web socket. Canceling wait period.";
+        cout << endl;
         return true;
     } else {
         done = true;
