@@ -44,7 +44,7 @@ class VRGuiFile {
         static void clearFilter();
 
         static void setCallbacks(sig sa = sig(), sig sc = sig(), sig ss = sig());
-        static void setWidget(Gtk::Table* table);
+        static void setWidget(Gtk::Table* table, bool expand = false, bool fill = false);
         static void setGeoLoadWidget();
         static void setSaveasWidget(sigc::slot<void, Gtk::CheckButton*> sig);
 
