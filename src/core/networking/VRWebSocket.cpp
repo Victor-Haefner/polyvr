@@ -49,7 +49,7 @@ void VRWebSocket::poll(VRThreadWeakPtr t) {
 
 /**
 * Send a close request to the web socket and waits for closing confirmation.
-* TODO: Cancels waiting after 1 second to avoid deadlock, when confirmation fails.
+* TODO: Cancels waiting after 1 second to avoid freezing when confirmation fails.
 */
 bool VRWebSocket::close() {
     if (isConnected()) {
