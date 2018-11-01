@@ -166,7 +166,6 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     w->setMaterial(mat);
     w->getConstraint()->lock({1,3,4,5});
     w->getConstraint()->setReferential(ptr());
-    w->getConstraint()->setActive(true);
     addChild(w);
     n->widget = w;
     return w;
@@ -177,6 +176,14 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
 
     process = p;
 
+    auto constrainHandles = [&](VRPathtoolPtr tool) {
+        for (auto h : tool->getHandles()) {
+            auto c = h->getConstraint();
+            c->setReferential( ptr() );
+            c->lock({1,3,5});
+        }
+    };
+
     //initialize pathtool for each sbd
     for (auto subject : p->getSubjects()){
         if (!p->getBehaviorDiagram(subject->getID())) return;
@@ -185,8 +192,10 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
         toolSBDs[subject->getID()] = toolSBD;
         addChild(toolSBD);
         toolSBD->setGraph(p->getBehaviorDiagram(subject->getID()));
+        constrainHandles(toolSBD);
     }
     toolSID->setGraph( p->getInteractionDiagram() );
+    constrainHandles(toolSID);
 
     rebuild();
 }
