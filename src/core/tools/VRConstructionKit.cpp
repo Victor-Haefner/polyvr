@@ -124,12 +124,18 @@ void VRConstructionKit::remObject(VRTransformPtr t) {
 
 VRGeometryPtr VRConstructionKit::addObjectAnchor(VRTransformPtr t, int a, Vec3d pos, float radius) {
     if (!anchors.count(a)) return 0;
+
+    Vec3d d(0,1,0);
+    Vec3d u(1,0,0);
+
     VRGeometryPtr anc = static_pointer_cast<VRGeometry>(anchors[a]->duplicate());
-    anc->setTransform(pos, Vec3d(0,1,0), Vec3d(1,0,0));
+    anc->setTransform(pos, d, u);
     anc->show();
     anc->switchParent(t);
     snapping->addObjectAnchor(t, anc);
-    snapping->addRule(VRSnappingEngine::POINT, VRSnappingEngine::POINT, Pose::create(), Pose::create(Vec3d(), Vec3d(1,0,0), Vec3d(0,1,0)), radius, 1, t );
+    snapping->addRule(VRSnappingEngine::POINT, VRSnappingEngine::POINT, Pose::create(), Pose::create(Vec3d(), d, u), radius, 0, t );
+    //snapping->addRule(VRSnappingEngine::POINT, VRSnappingEngine::POINT, Pose::create(), Pose::create(Vec3d(), Vec3d(1,0,0), Vec3d(0,1,0)), radius, 0, t );
+    //snapping->addRule(VRSnappingEngine::POINT, VRSnappingEngine::POINT, Pose::create(), Pose::create(), radius, 0, t );
     return anc;
 }
 
