@@ -27,21 +27,16 @@
 		
 	if not hasattr(VR, 'kit'):
 		VR.kit = VR.ConstructionKit()
-		VR.a1_ID = VR.kit.addAnchorType(s*0.1, [1,1,1])
+		VR.a1_ID = VR.kit.addAnchorType(s*0.1, [1,1,1])	
 	
-	r = VR.find('Headlight')
-	idev = VR.find('mouse')
-	if VR.find('flystick'): idev = VR.find('flystick')	
-	
+	# create brick
 	g = VR.Geometry('brick')
 	g.setPrimitive('Box '+str(X)+' '+str(Y)+' '+str(Z)+' 1 1 1')
 	g.setMaterial(VR.bmat)
 	g.setPickable(1)
-	r.addChild(g)
-	idev.drag(g)
-	g.setFrom([0,0,-0.5])
-	idev.getDragGhost().setFrom([0,0,-0.5])
+	VR.find('Headlight').addChild(g)
 	
+	# add brick anchor points
 	h = Y*0.5
 	VR.kit.addObject(g)
 
@@ -51,6 +46,12 @@
 			y = j*s - Z*0.5 +0.5*s
 			VR.kit.addObjectAnchor(g, VR.a1_ID, [x,h,y], s*0.3)
 			VR.kit.addObjectAnchor(g, VR.a1_ID, [x,-h,y], s*0.3)
+			
+	# drag new brick
+	idev = VR.find('mouse')
+	if VR.find('flystick'): idev = VR.find('flystick')
+	idev.drag(g)
+	idev.getDragGhost().setFrom([0,0,-0.5])
 </core>
       <arg type="float" value="1" base_name="X" name_space="addBrick" name_suffix="0" persistency="666"/>
       <arg type="float" value="1" base_name="Y" name_space="addBrick" name_suffix="0" persistency="666"/>
