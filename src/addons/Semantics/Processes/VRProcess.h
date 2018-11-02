@@ -20,6 +20,12 @@ enum PROCESS_WIDGET {
     TRANSITION
 };
 
+enum TRANSITION_CONDITION {
+    SEND_CONDITION,
+    RECIEVE_CONDITION,
+    DEFAULT
+};
+
 struct VRProcessNode : VRName {
     VREntityPtr entity;
     VRTransformPtr widget;
@@ -55,18 +61,12 @@ struct VRProcessDiagram : public Graph {
 
 class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName {
     private:
-        enum TRANSITION_CONDITION {
-            SEND_CONDITION,
-            RECEIVE_CONDITION,
-            DEFAULT
-        };
-
         VROntologyPtr ontology;
         VRProcessDiagramPtr interactionDiagram;
         map<int, VRProcessDiagramPtr> behaviorDiagrams;
         void printNodes(VRProcessDiagramPtr d);
         map<VRProcessNodePtr, VRProcessNodePtr> stateToMessage; //maps state to message for send/receive refenrences
-        map<VRProcessNodePtr, TRANSITION_CONDITION> transitionToCondition; //maps a transition to a transition condition if available
+        map<VRProcessNodePtr, TRANSITION_CONDITION> transitionNodeToCondition; //maps a transition to a transition condition if available
 
         void update();
 

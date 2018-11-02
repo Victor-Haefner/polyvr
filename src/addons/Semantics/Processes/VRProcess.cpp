@@ -257,7 +257,6 @@ void VRProcess::update() {
 
     map<string, int> nodes;
     string q_subjects = "q(x):Subject(x);ModelLayer("+layer->getName()+");has("+layer->getName()+",x)";
-    cout << "q_subjects: " << q_subjects << endl;
     for ( auto subject : query(q_subjects) ) {
         string label;
         if (auto l = subject->get("hasModelComponentLabel") ) label = l->value;
@@ -287,13 +286,14 @@ void VRProcess::update() {
                 if (msgs.size())
                     if (auto l = msgs[0]->get("hasModelComponentLabel") ) label += "\n - " + l->value;
             }
-
             addMessage(label, nodes[sender.first], nodes[receiver.first]);
         }
     }
 
     //return;
     /** get behavior diagrams **/
+
+    map<VREntityPtr, TRANSITION_CONDITION> entityToTransitionCondition;
     for (auto behavior : query("q(x):SubjectBehavior(x)")) {
         auto behaviorDiagram = VRProcessDiagram::create();
         string q_Subject = "q(x):Subject(x);SubjectBehavior("+behavior->getName()+");has(x,"+behavior->getName()+")";
@@ -313,62 +313,75 @@ void VRProcess::update() {
         }
 
         map<string, map<string, vector<VREntityPtr>> > transitions;
-        map<VREntityPtr, TRANSITION_CONDITION> entityToTransitionCondition;
-        TRANSITION_CONDITION conditionType = DEFAULT;
+        //TRANSITION_CONDITION conditionType = DEFAULT;
         string q_Transitions = "q(x):Transition(x);SubjectBehavior("+behavior->getName()+");has("+behavior->getName()+",x)";
         for (auto transition : query(q_Transitions)) {
             string source;
             string target;
-            VREntityPtr transitionCondition;
             if (auto s = transition->get("hasSourceState") ) source = s->value;
             if (auto r = transition->get("hasTargetState") ) target = r->value;
             transitions[source][target].push_back(transition);
 
-            if (auto c = transition->get("hasTransitionCondition") ) {
-                transitionCondition = ontology->getEntity(c->value);
+            VREntityPtr transitionCondition;
+            if (auto condition = transition->get("hasTransitionCondition") ) {
+                transitionCondition = ontology->getEntity(condition->value);
                 if (transitionCondition->is_a("ReceiveTransitionCondition") ) {
-                    conditionType = RECEIVE_CONDITION;
-                    entityToTransitionCondition[transitionCondition] = conditionType;
-                } else if (transitionCondition->is_a("SendTransitionCondition") ) {
-                    conditionType = SEND_CONDITION;
-                    entityToTransitionCondition[transitionCondition] = conditionType;
+                    entityToTransitionCondition[transition] = RECIEVE_CONDITION;
                 }
+                if (transitionCondition->is_a("SendTransitionCondition") ) {
+                    entityToTransitionCondition[transition] = SEND_CONDITION;
+                }
+
+                /*
+                VREntityPtr message;
+                if (auto messageConnector = transition->get("refersTo")) {
+                    auto connector = ontology->getEntity(messageConnector->value);
+                    if (auto m = connector->get("hasMessageType")){
+                        message = ontology->getEntity(m->value);
+                    }
+                }
+                */
             }
         }
 
         for ( auto source : transitions ) {
             for (auto target : source.second) {
                 for (auto message : target.second) {
-                    //cout << " add message from " << source.first << " to " << target.first << " (" << nodes.count(source.first)  << "," << nodes.count(target.first) << ")" << endl;
                     string msg = message->get("hasModelComponentLabel")->value;
                     auto transitionNode = addTransition(msg, sID, nodes[source.first], nodes[target.first], behaviorDiagram);
-                    auto type = entityToTransitionCondition[message];
-                    if ( type == RECEIVE_CONDITION) {
-                        transitionToCondition[transitionNode] = type;
-                    }
-                    if ( type == SEND_CONDITION) {
-                        transitionToCondition[transitionNode] = type;
+
+                    if (entityToTransitionCondition.count(message)){
+                        auto type = entityToTransitionCondition[message];
+                        if ( type == RECIEVE_CONDITION) transitionNodeToCondition[transitionNode] = type;
+                        else if ( type == SEND_CONDITION) transitionNodeToCondition[transitionNode] = type;
                     }
                 }
             }
         }
-        int count = 0;
-        for (auto e : entityToTransitionCondition) {
-            cout << "entity " << e.first->getName() << " has conditiontype " << e.second << endl;
-            count ++;
-        }
-        cout << "entityToTransitionCondition size: " << count << endl;
     }
-    int count = 0;
-    for (auto condition : transitionToCondition) {
+
+    /////// TESTING ///////////
+    //TODO: remove
+    //checking entityToTransitionCondition map content
+    for (auto e : entityToTransitionCondition) {
+            auto type = e.second;
+            string t = "";
+            if (type == RECIEVE_CONDITION) t = "RECIEVE_CONDITION";
+            if (type == SEND_CONDITION) t = "SEND_CONDITION";
+        //cout << "entity " << e.first->get("hasModelComponentID")->value << " has conditiontype: " << t << endl;
+    }
+    cout << "entityToTransitionCondition size: " << entityToTransitionCondition.size() << endl;
+
+    //checking transitionNodeToCondition map content
+    for (auto condition : transitionNodeToCondition) {
         auto type = condition.second;
         string t = "";
-        if (type == 1) t = "RECEIVE_CONDITION";
+        if (type == 1) t = "RECIEVE_CONDITION";
         else if (type == 0) t = "SEND_CONDITION";
-        cout << condition.first->getLabel() << " has condition type " << t << endl;
-        count++;
+        //cout << condition.first->getID() << " has condition type: " << t << endl;
     }
-    cout << "transitionToCondition size: " << count << endl;
+    cout << "transitionNodeToCondition size: " << transitionNodeToCondition.size() << endl;
+    /////// TESTING ///////////
 }
 
 void VRProcess::remNode(VRProcessNodePtr n) {
