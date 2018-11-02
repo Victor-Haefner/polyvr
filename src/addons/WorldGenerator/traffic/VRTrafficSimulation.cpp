@@ -74,7 +74,7 @@ void VRTrafficSimulation::Vehicle::setDefaults() {
 
     pos.pos = 0;
     behavior = 0; //0 = straight, 1 = left, 2 = right
-    currentState = 0; //0 = on lane, 1 = leaving lane, -1 = coming onto lane
+    laneChangeState = 0; //0 = on lane, 1 = leaving lane, -1 = coming onto lane
     roadFrom = -1;
     roadTo = -1;
     nextEdge = -1;
@@ -337,7 +337,7 @@ void VRTrafficSimulation::updateSimulation() {
                 }
                 else {
                     toChangeRoad[road1ID].push_back( make_pair(vehicle.vID, gp.edge) );
-                    if (vehicle.currentState != 0) {
+                    if (vehicle.laneChangeState != 0) {
                         vehicle.roadTo = g->getNextEdges(g->getEdge(vehicle.roadTo))[0].ID;
                         vehicle.roadFrom = gp.edge;
                     }
@@ -351,7 +351,7 @@ void VRTrafficSimulation::updateSimulation() {
                 auto& road = roads[gp.edge];
                 toChangeRoad[road1ID].push_back( make_pair(vehicle.vID, gp.edge) );
                 gp.pos = gp.pos * roads[road1ID].length/roads[gp.edge].length;
-                if (vehicle.currentState != 0) {
+                if (vehicle.laneChangeState != 0) {
                     if (g->getNextEdges(g->getEdge(vehicle.roadTo)).size() < 1) toChangeRoad[road1ID].push_back( make_pair(vehicle.vID, -1) );
                     else {
                         vehicle.roadTo = g->getNextEdges(g->getEdge(vehicle.roadTo))[0].ID;
@@ -379,7 +379,7 @@ void VRTrafficSimulation::updateSimulation() {
         Vec3d left = up.cross(dir);
         Vec3d right = -up.cross(dir);
         //cout << toString(left) << endl;
-        float vS = float(vehicle.currentState);
+        float vS = float(vehicle.laneChangeState);
         if (vS == 0) vehicle.currentOffset = Vec3d(0,0,0);
         if (vS == 0) vehicle.currentdOffset = Vec3d(0,0,0);
         //float offsetVel = 0.023;
@@ -403,7 +403,7 @@ void VRTrafficSimulation::updateSimulation() {
         if (dirOffset > lanewidth/2 && vS>0.5) {
             toChangeRoad[vehicle.roadFrom].push_back( make_pair(vehicle.vID, vehicle.roadTo) );
             gp.edge = vehicle.roadTo;
-            vehicle.currentState = -1;
+            vehicle.laneChangeState = -1;
             offset = -offset;
             //cout << "trafficsim changing state " << toString(vehicle.vID) << " " << toString(dirOffset) <<endl;
         }
@@ -414,7 +414,7 @@ void VRTrafficSimulation::updateSimulation() {
             for (auto l : vehicle.turnsignalsFR) l->setMaterial(carLightOrangeOff);
             vehicle.roadFrom = -1;
             vehicle.roadTo = -1;
-            vehicle.currentState = 0;
+            vehicle.laneChangeState = 0;
             vehicle.behavior = 0;
             vehicle.nextEdge = -1;
             offset = Vec3d(0,0,0);
@@ -1218,7 +1218,7 @@ void VRTrafficSimulation::changeLane(int ID, int direction) {
     if ( direction == 1 && check(1) ) { checked = true; v.roadTo = edgeLeft; v.speed += 0.03; /* signalLights(1); */ }
     if ( direction == 2 && check(2)) { checked = true; v.roadTo = edgeRight; v.speed -= 0.03; /* signalLights(2); */ }
     if ( checked ){
-        v.currentState = 1;
+        v.laneChangeState = 1;
         v.behavior = direction;
         v.roadFrom = gp.edge;
         v.indicatorTS = VRGlobals::CURRENT_FRAME;

@@ -35,11 +35,22 @@ class VRTrafficSimulation : public VRObject {
                 SWITCHRIGHT = 2,
                 REVERSE = 3
             };
+            enum DecisionSTATE {
+                DRIVE,
+                WAIT
+            };
 
+            ///Data
             int vID = -1;
             VRTransformPtr t;
             VRTransformPtr offset;
             VRObjectPtr mesh;
+            Graph::position pos;
+            int nextEdge = -1;
+            float length = 4.4;
+            float width = 1.7;
+            bool isUser = false;
+            bool collisionDetected;
 
             vector<VRGeometryPtr> turnsignalsBL;
             vector<VRGeometryPtr> turnsignalsBR;
@@ -48,16 +59,22 @@ class VRTrafficSimulation : public VRObject {
             vector<VRGeometryPtr> headlights;
             vector<VRGeometryPtr> backlights;
 
+            ///Perception
+            float distanceToNextSignal;
+            float distanceToNextIntersec;
+            string nextSignalState; //"000" - red|organge|green
+            bool signalAhead;
+
             map<int, float> vehiclesight;
             map<int, float> vehiclesightFar;
             map<int, int> vehiclesightFarID;
             map<int, Vec3d> vehicleFPs;
             int lastFPTS = 0;
 
-            Graph::position pos;
-            int nextEdge = -1;
-            float length = 4.4;
-            float width = 1.7;
+            ///Behavior
+            DecisionSTATE state = DRIVE;
+            Vec3d lastMove;
+
             float speed;
             float currentVelocity;
             float targetVelocity;
@@ -67,16 +84,6 @@ class VRTrafficSimulation : public VRObject {
             float acceleration;
             float decceleration;
 
-            ///Perception
-            float distanceToNextSignal;
-            float distanceToNextIntersec;
-            string nextSignalState; //"000" - red|organge|green
-            bool signalAhead;
-
-            ///Behavior
-            Vec3d lastMove;
-            Vec3d currentOffset;
-            Vec3d currentdOffset;
             int lastMoveTS = 0;
             int indicatorTS = 0;
             int lastLaneSwitchTS = 0;
@@ -84,11 +91,11 @@ class VRTrafficSimulation : public VRObject {
             int roadTo;
             int behavior = 0; //0 = straight, 1 = left, 2 = right
             int turnAhead = 0; //0 = straight, 1 = left, 2 = right
-            int currentState = 0; //1 = leaving lane, -1 = coming onto lane
+            int laneChangeState = 0; //1 = leaving lane, -1 = coming onto lane
             bool laneTransition = true;
             bool turnAtIntersec = false;
-            bool isUser = false;
-            bool collisionDetected;
+            Vec3d currentOffset;
+            Vec3d currentdOffset;
             VRRoadIntersectionPtr lastIntersection;
 
             Vehicle(Graph::position p);
