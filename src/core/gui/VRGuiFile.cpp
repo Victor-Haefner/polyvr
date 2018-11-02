@@ -72,7 +72,7 @@ void VRGuiFile::close() {
     }
 }
 
-void VRGuiFile::setWidget(Gtk::Table* table) {
+void VRGuiFile::setWidget(Gtk::Table* table, bool expand, bool fill) {
     if (addon == table) return;
     Gtk::VBox* vbox;
     VRGuiBuilder()->get_widget("dialog-vbox1", vbox);
@@ -83,7 +83,8 @@ void VRGuiFile::setWidget(Gtk::Table* table) {
     if (table == 0) return;
 
     // add
-    vbox->pack_start(*table, Gtk::PACK_SHRINK);
+    vbox->pack_start(*table, expand, fill);
+    //vbox->pack_start(*table, Gtk::PACK_SHRINK);
     vbox->show_all();
 }
 
