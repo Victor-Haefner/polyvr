@@ -333,14 +333,19 @@ void VRProcess::update() {
                 }
 
                 /*
-                VREntityPtr message;
+                //VREntityPtr message;
                 if (auto messageConnector = transition->get("refersTo")) {
+                    cout << "got refersTo" << endl;
                     auto connector = ontology->getEntity(messageConnector->value);
+                    cout << "got connector entity" << endl;
                     if (auto m = connector->get("hasMessageType")){
-                        message = ontology->getEntity(m->value);
+                        cout << "got message" << endl;
+                        auto message = ontology->getEntity(m->value);
+                        cout << "got message entity" << endl;
                     }
                 }
                 */
+
             }
         }
 
