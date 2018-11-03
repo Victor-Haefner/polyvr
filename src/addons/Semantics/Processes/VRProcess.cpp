@@ -242,8 +242,20 @@ VRProcessNodePtr VRProcess::getStateMessage(VRProcessNodePtr state){
     return stateToMessage[state];
 }
 
+TRANSITION_CONDITION VRProcess::getTransitionCondition(VRProcessNodePtr transition){
+    if (!transitionNodeToCondition.count(transition)) return DEFAULT;
+    return transitionNodeToCondition[transition];
+}
+
+VRProcessNodePtr VRProcess::getTransitionMessage(VRProcessNodePtr transition){
+    if (!transitionToMessage.count(transition)) return 0;
+    return transitionToMessage[transition];
+}
+
 void VRProcess::update() {
     if (!ontology) return;
+
+    map<VREntityPtr, VRProcessNodePtr> messageEntityToNode;
 
     VRReasonerPtr reasoner = VRReasoner::create();
     reasoner->setVerbose(true,  false); //
@@ -280,21 +292,29 @@ void VRProcess::update() {
     for ( auto sender : messages ) {
         for (auto receiver : sender.second) {
             string label = "Msg:";
+            vector<VREntityPtr> res;
             for (auto message : receiver.second) {
                 string q_message = "q(x):MessageSpecification(x);MessageExchange("+message->getName()+");is(x,"+message->getName()+".hasMessageType)";
                 auto msgs = query(q_message);
                 if (msgs.size())
                     if (auto l = msgs[0]->get("hasModelComponentLabel") ) label += "\n - " + l->value;
+                res.push_back(msgs[0]);
             }
-            addMessage(label, nodes[sender.first], nodes[receiver.first]);
+            auto messageNode = addMessage(label, nodes[sender.first], nodes[receiver.first]);
+            for (auto entity : res) {
+                messageEntityToNode[entity] = messageNode;
+            }
         }
     }
 
     //return;
     /** get behavior diagrams **/
 
-    map<VREntityPtr, TRANSITION_CONDITION> transitionToCondition;
     for (auto behavior : query("q(x):SubjectBehavior(x)")) {
+
+        map<VREntityPtr, TRANSITION_CONDITION> transitionToCondition;
+        map<VREntityPtr,VREntityPtr> transitionsToMessages;
+
         auto behaviorDiagram = VRProcessDiagram::create();
         string q_Subject = "q(x):Subject(x);SubjectBehavior("+behavior->getName()+");has(x,"+behavior->getName()+")";
         auto subjects = query(q_Subject);
@@ -324,19 +344,15 @@ void VRProcess::update() {
             VREntityPtr transitionConditionEntity;
             if (auto transitionCondition = transition->get("hasTransitionCondition") ) {
                 transitionConditionEntity = ontology->getEntity(transitionCondition->value);
-                if (transitionConditionEntity->is_a("ReceiveTransitionCondition") ) {
-                    transitionToCondition[transition] = RECIEVE_CONDITION;
-                }
-                if (transitionConditionEntity->is_a("SendTransitionCondition") ) {
-                    transitionToCondition[transition] = SEND_CONDITION;
-                }
+                if (transitionConditionEntity->is_a("ReceiveTransitionCondition") ) transitionToCondition[transition] = RECIEVE_CONDITION;
+                else if (transitionConditionEntity->is_a("SendTransitionCondition") ) transitionToCondition[transition] = SEND_CONDITION;
 
 
-                VREntityPtr messageEntity;
+                //VREntityPtr messageEntity;
                 if (auto messageConnector = transition->get("refersTo")) {
                     if (auto connector = ontology->getEntity(messageConnector->value)) {
                         if (auto m = connector->get("hasMessageType")){
-                            if (auto message = ontology->getEntity(m->value)) messageEntity = message;
+                            if (auto messageEntity = ontology->getEntity(m->value)) transitionsToMessages[transition] = messageEntity;
                         }
                     }
                 }
@@ -345,14 +361,20 @@ void VRProcess::update() {
 
         for ( auto source : transitions ) {
             for (auto target : source.second) {
-                for (auto message : target.second) {
-                    string msg = message->get("hasModelComponentLabel")->value;
+                for (auto transitionEntity : target.second) {
+                    string msg = transitionEntity->get("hasModelComponentLabel")->value;
                     auto transitionNode = addTransition(msg, sID, nodes[source.first], nodes[target.first], behaviorDiagram);
 
-                    if (transitionToCondition.count(message)){
-                        auto type = transitionToCondition[message];
+                    if (transitionToCondition.count(transitionEntity)){
+                        auto type = transitionToCondition[transitionEntity];
                         if ( type == RECIEVE_CONDITION) transitionNodeToCondition[transitionNode] = type;
                         else if ( type == SEND_CONDITION) transitionNodeToCondition[transitionNode] = type;
+
+                        if (transitionsToMessages.count(transitionEntity)) {
+                            auto messageEntity = transitionsToMessages[transitionEntity];
+                            auto messageNode = messageEntityToNode[messageEntity];
+                            transitionToMessage[transitionNode] = messageNode;
+                        }
                     }
                 }
             }

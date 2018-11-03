@@ -67,6 +67,7 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         void printNodes(VRProcessDiagramPtr d);
         map<VRProcessNodePtr, VRProcessNodePtr> stateToMessage; //maps state to message for send/receive refenrences
         map<VRProcessNodePtr, TRANSITION_CONDITION> transitionNodeToCondition; //maps a transition to a transition condition if available
+        map<VRProcessNodePtr,VRProcessNodePtr> transitionToMessage; //maps the send/receive transition node to the corresponding message node
 
         void update();
 
@@ -99,7 +100,8 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         map<VRProcessNodePtr, VRProcessNodePtr> getInitialStates(); // <subjectNode, initialStateNode>
         VRProcessNodePtr getStateMessage(VRProcessNodePtr state);
 
-        //TODO: getTransitionCondition(VRProcessNodePtr)
+        TRANSITION_CONDITION getTransitionCondition(VRProcessNodePtr);
+        VRProcessNodePtr getTransitionMessage(VRProcessNodePtr);
 
         VRProcessNodePtr addSubject(string name);
         VRProcessNodePtr addMessage(string name, int i, int j, VRProcessDiagramPtr diag = 0);
