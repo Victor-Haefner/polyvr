@@ -152,6 +152,7 @@ class VRTrafficSimulation : public VRObject {
         float speedMultiplier = 1.0;
         float deltaT;
         float lastT = 0.0;
+        Vec3d globalOffset = Vec3d(0,0,0);
 
         float environmentFactor = 1; // 4 snow
         float roadFactor = 1; //1 in city, 2 highway
