@@ -190,10 +190,10 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
         toolSBD->setPersistency(0);
         toolSBDs[subject->getID()] = toolSBD;
         addChild(toolSBD);
-        toolSBD->setGraph(p->getBehaviorDiagram(subject->getID()));
+        toolSBD->setGraph(p->getBehaviorDiagram(subject->getID()), 1,0,1);
         constrainHandles(toolSBD);
     }
-    toolSID->setGraph( p->getInteractionDiagram() );
+    toolSID->setGraph( p->getInteractionDiagram(), 1,0,1);
     constrainHandles(toolSID);
 
     rebuild();

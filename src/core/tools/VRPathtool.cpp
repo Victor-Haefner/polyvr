@@ -134,14 +134,14 @@ void VRPathtool::setProjectionGeometry(VRObjectPtr obj) { projObj = obj; }
 
 GraphPtr VRPathtool::getGraph() { return graph; }
 
-void VRPathtool::setGraph(GraphPtr g, bool doClear) {
+void VRPathtool::setGraph(GraphPtr g, bool doClear, bool handles, bool doArrows) {
     if (!g) return;
     if (g == graph) graph = 0; // important, else the clear will also clear the graph!
     if (doClear) clear();
     graph = g;
 
     for (auto& n : g->getNodes()) setGraphNode(n.first);
-    for (auto& e : g->getEdges()) setGraphEdge(e.second);
+    for (auto& e : g->getEdges()) setGraphEdge(e.second, handles, doArrows);
 }
 
 int VRPathtool::addNode(PosePtr p) {

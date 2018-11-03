@@ -32,7 +32,7 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"clear", PyWrapOpt( Pathtool, clear, "Clear a path or all paths nodes", "0", void, PathPtr ) },
     {"setHandleGeometry", PyWrap( Pathtool, setHandleGeometry, "Replace the default handle geometry - setHandleGeometry( geo )", void, VRGeometryPtr ) },
     {"getPathMaterial", PyWrap( Pathtool, getPathMaterial, "Get the material used for paths geometry", VRMaterialPtr ) },
-    {"setGraph", PyWrapOpt( Pathtool, setGraph, "Setup from graph", "1", void, GraphPtr, bool ) },
+    {"setGraph", PyWrapOpt( Pathtool, setGraph, "Setup from graph, flags: doClear, doHandles, doArrows", "1|0|0", void, GraphPtr, bool, bool, bool ) },
     {"addHandle", PyWrap( Pathtool, addHandle, "Add handle, graph nodeID, pose", VRGeometryPtr, int, PosePtr ) },
     {"addNode", PyWrap( Pathtool, addNode, "Add node", int, PosePtr ) },
     {"removeNode", PyWrap( Pathtool, removeNode, "Remove node by id", void, int ) },
