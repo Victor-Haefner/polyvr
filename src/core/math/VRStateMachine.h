@@ -15,9 +15,17 @@ class VRStateMachine : public VRName {
         typedef VRFunction< P, string > VRTransitionCb;
         typedef shared_ptr<VRTransitionCb> VRTransitionCbPtr;
 
+        typedef VRFunction< string, void > VRStateEnterCb;
+        typedef shared_ptr<VRStateEnterCb> VRStateEnterCbPtr;
+
+        typedef VRFunction< string, void > VRStateLeaveCb;
+        typedef shared_ptr<VRStateLeaveCb> VRStateLeaveCbPtr;
+
         class State : public VRName {
             private:
-                VRTransitionCbPtr transition;
+                VRStateEnterCbPtr enterCb;
+                VRTransitionCbPtr transitionCb;
+                VRStateLeaveCbPtr leaveCb;
 
             public:
                 State(string name, VRTransitionCbPtr t);
@@ -26,6 +34,11 @@ class VRStateMachine : public VRName {
                 static shared_ptr<State> create(string name, VRTransitionCbPtr t);
 
                 string process(const P& parameters);
+                void setStateEnterCB(VRStateEnterCbPtr);
+                void setStateLeaveCB(VRStateLeaveCbPtr);
+
+                void enter();
+                void leave();
         };
 
         typedef shared_ptr<State> StatePtr;
