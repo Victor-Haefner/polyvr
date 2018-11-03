@@ -293,7 +293,7 @@ void VRProcess::update() {
     //return;
     /** get behavior diagrams **/
 
-    map<VREntityPtr, TRANSITION_CONDITION> entityToTransitionCondition;
+    map<VREntityPtr, TRANSITION_CONDITION> transitionToCondition;
     for (auto behavior : query("q(x):SubjectBehavior(x)")) {
         auto behaviorDiagram = VRProcessDiagram::create();
         string q_Subject = "q(x):Subject(x);SubjectBehavior("+behavior->getName()+");has(x,"+behavior->getName()+")";
@@ -313,7 +313,6 @@ void VRProcess::update() {
         }
 
         map<string, map<string, vector<VREntityPtr>> > transitions;
-        //TRANSITION_CONDITION conditionType = DEFAULT;
         string q_Transitions = "q(x):Transition(x);SubjectBehavior("+behavior->getName()+");has("+behavior->getName()+",x)";
         for (auto transition : query(q_Transitions)) {
             string source;
@@ -322,30 +321,25 @@ void VRProcess::update() {
             if (auto r = transition->get("hasTargetState") ) target = r->value;
             transitions[source][target].push_back(transition);
 
-            VREntityPtr transitionCondition;
-            if (auto condition = transition->get("hasTransitionCondition") ) {
-                transitionCondition = ontology->getEntity(condition->value);
-                if (transitionCondition->is_a("ReceiveTransitionCondition") ) {
-                    entityToTransitionCondition[transition] = RECIEVE_CONDITION;
+            VREntityPtr transitionConditionEntity;
+            if (auto transitionCondition = transition->get("hasTransitionCondition") ) {
+                transitionConditionEntity = ontology->getEntity(transitionCondition->value);
+                if (transitionConditionEntity->is_a("ReceiveTransitionCondition") ) {
+                    transitionToCondition[transition] = RECIEVE_CONDITION;
                 }
-                if (transitionCondition->is_a("SendTransitionCondition") ) {
-                    entityToTransitionCondition[transition] = SEND_CONDITION;
+                if (transitionConditionEntity->is_a("SendTransitionCondition") ) {
+                    transitionToCondition[transition] = SEND_CONDITION;
                 }
 
-                /*
-                //VREntityPtr message;
+
+                VREntityPtr messageEntity;
                 if (auto messageConnector = transition->get("refersTo")) {
-                    cout << "got refersTo" << endl;
-                    auto connector = ontology->getEntity(messageConnector->value);
-                    cout << "got connector entity" << endl;
-                    if (auto m = connector->get("hasMessageType")){
-                        cout << "got message" << endl;
-                        auto message = ontology->getEntity(m->value);
-                        cout << "got message entity" << endl;
+                    if (auto connector = ontology->getEntity(messageConnector->value)) {
+                        if (auto m = connector->get("hasMessageType")){
+                            if (auto message = ontology->getEntity(m->value)) messageEntity = message;
+                        }
                     }
                 }
-                */
-
             }
         }
 
@@ -355,8 +349,8 @@ void VRProcess::update() {
                     string msg = message->get("hasModelComponentLabel")->value;
                     auto transitionNode = addTransition(msg, sID, nodes[source.first], nodes[target.first], behaviorDiagram);
 
-                    if (entityToTransitionCondition.count(message)){
-                        auto type = entityToTransitionCondition[message];
+                    if (transitionToCondition.count(message)){
+                        auto type = transitionToCondition[message];
                         if ( type == RECIEVE_CONDITION) transitionNodeToCondition[transitionNode] = type;
                         else if ( type == SEND_CONDITION) transitionNodeToCondition[transitionNode] = type;
                     }
@@ -364,29 +358,6 @@ void VRProcess::update() {
             }
         }
     }
-
-    /////// TESTING ///////////
-    //TODO: remove
-    //checking entityToTransitionCondition map content
-    for (auto e : entityToTransitionCondition) {
-            auto type = e.second;
-            string t = "";
-            if (type == RECIEVE_CONDITION) t = "RECIEVE_CONDITION";
-            if (type == SEND_CONDITION) t = "SEND_CONDITION";
-        //cout << "entity " << e.first->get("hasModelComponentID")->value << " has conditiontype: " << t << endl;
-    }
-    cout << "entityToTransitionCondition size: " << entityToTransitionCondition.size() << endl;
-
-    //checking transitionNodeToCondition map content
-    for (auto condition : transitionNodeToCondition) {
-        auto type = condition.second;
-        string t = "";
-        if (type == 1) t = "RECIEVE_CONDITION";
-        else if (type == 0) t = "SEND_CONDITION";
-        //cout << condition.first->getID() << " has condition type: " << t << endl;
-    }
-    cout << "transitionNodeToCondition size: " << transitionNodeToCondition.size() << endl;
-    /////// TESTING ///////////
 }
 
 void VRProcess::remNode(VRProcessNodePtr n) {
