@@ -278,6 +278,7 @@ void VRPathtool::setGraphEdge(Graph::edge& e, bool handles, bool doArrow, Vec3d 
 VRGeometryPtr VRPathtool::setGraphNode(int i) {
     auto h = newHandle();
     knots[i] = knot();
+    knots[i].ID = i;
     knots[i].handle = h;
     handleToNode[h.get()] = i;
     addChild(h);
@@ -286,27 +287,45 @@ VRGeometryPtr VRPathtool::setGraphNode(int i) {
     return h;
 }
 
+void VRPathtool::updateHandlePose(knot& knot, map<int, Vec3d>& hPositions, bool doUpdateEntry) {
+    auto h = knot.handle.lock();
+    if (!h) return;
+
+    auto getPose = [&](int ID) {
+        if (!hPositions.count(ID)) {
+            auto h = knots[ID].handle.lock();
+            hPositions[ID] = h ? h->getRelativePosition(ptr()) : Vec3d();
+        }
+        return hPositions[ID];
+    };
+
+    Vec3d pos = getPose(knot.ID);
+    Vec3d dir;
+
+    for (auto k : knot.in) dir += pos - getPose(k);
+    for (auto k : knot.out) dir += getPose(k) - pos;
+
+    if (dir.squareLength() > 1e-6) {
+        dir.normalize();
+        auto key = h.get();
+        h->setRelativeDir(dir, ptr());
+        h->apply_constraints(true);
+
+        if (doUpdateEntry && handleToEntries.count(key)) {
+            for (auto e : handleToEntries[key]) {
+                auto po = e->p->getPoint(e->points[key]);
+                po.setDir(dir);
+                e->p->setPoint( e->points[key], po );
+                updateEntry(e);
+            }
+        }
+    }
+}
+
 void VRPathtool::update() { // call in script to have smooth knots
     if (graph) { // smooth knot transformations
         map<int, Vec3d> hPositions; // get handle positions
-        for (auto& knot : knots) {
-            auto h = knot.second.handle.lock();
-            if (h) hPositions[knot.first] = h->getWorldPosition();
-        }
-
-        for (auto& knot : knots) { // compute and set direction of handles
-            auto h = knot.second.handle.lock();
-            if (!h) continue;
-
-            Vec3d pos = h->getRelativePosition(ptr());
-            Vec3d dir;
-            for (auto k : knot.second.in) if (hPositions.count(k)) dir += pos - hPositions[k];
-            for (auto k : knot.second.out) if (hPositions.count(k)) dir += hPositions[k] - pos;
-            if (dir.squareLength() > 1e-6) {
-                dir.normalize();
-                h->setRelativeDir(dir, ptr());
-            }
-        }
+        for (auto& knot : knots) updateHandlePose(knot.second, hPositions, false); // compute and set direction of handles
     }
 
     for (auto wh : handles) { // apply handle transformation to path points
@@ -315,8 +334,8 @@ void VRPathtool::update() { // call in script to have smooth knots
         auto key = handle.get();
         if (!handleToEntries.count(key)) continue;
         for (auto e : handleToEntries[key]) {
-            auto po = e->anchor.lock()->getPoseTo(handle);
-            e->p->setPoint(e->points[key], *po);
+            auto po = *e->anchor.lock()->getPoseTo(handle);
+            e->p->setPoint( e->points[key], po );
         }
     }
 
@@ -374,38 +393,11 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
 
         if (handle->getChildrenWithTag("controlhandle").size() == 0) { // no control handles -> smooth knots curve
             map<int, Vec3d> hPositions; // get handle positions
-            auto getPos = [&](int ID) {
-                if (!hPositions.count(ID)) {
-                    auto h = knots[ID].handle.lock();
-                    hPositions[ID] = h ? h->getRelativePosition(ptr()) : Vec3d();
-                }
-                return hPositions[ID];
-            };
-
-            auto updateHandleDir = [&](int ID) {
-                Vec3d pos = getPos(ID);
-                Vec3d dir;
-                for (auto k : knots[ID].in ) dir += pos - getPos(k);
-                for (auto k : knots[ID].out) dir += getPos(k) - pos;
-                if (dir.squareLength() > 1e-6) {
-                    dir.normalize();
-                    auto h = knots[ID].handle.lock();
-                    auto key = h.get();
-                    if (h) {
-                        h->setRelativeDir(dir, ptr());
-                        for (auto e : handleToEntries[key]) {
-                            auto op = e->p->getPoint(e->points[key]);
-                            e->p->setPoint( e->points[key], Pose(op.pos(), dir, op.up()));
-                            updateEntry(e);
-                        }
-                    }
-                }
-            };
 
             int nID = handleToNode[key];
-            updateHandleDir( nID );
-            for (auto k : knots[nID].out) updateHandleDir(k);
-            for (auto k : knots[nID].in ) updateHandleDir(k);
+            updateHandlePose( knots[nID], hPositions );
+            for (auto k : knots[nID].out) updateHandlePose( knots[k], hPositions );
+            for (auto k : knots[nID].in ) updateHandlePose( knots[k], hPositions );
         }
     }
 

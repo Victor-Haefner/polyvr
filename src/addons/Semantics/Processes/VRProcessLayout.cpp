@@ -184,7 +184,7 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
     };
 
     //initialize pathtool for each sbd
-    for (auto subject : p->getSubjects()){
+    for (auto subject : p->getSubjects()) {
         if (!p->getBehaviorDiagram(subject->getID())) return;
         VRPathtoolPtr toolSBD = VRPathtool::create();
         toolSBD->setPersistency(0);
@@ -226,9 +226,6 @@ void VRProcessLayout::appendToHandle(Vec3d pos, VRProcessNodePtr node, VRPathtoo
     auto h = ptool->getHandle(node->getID());
     ptool->setHandlePose(node->getID(), pose);
     h->addChild( addElement(node) );
-    h->getConstraint()->lock({1,3,5});
-    h->getConstraint()->setReferential(ptr());
-    h->getConstraint()->setActive(true);
 }
 
 void VRProcessLayout::setupLabel(VRProcessNodePtr message, VRPathtoolPtr ptool, vector<VRProcessNodePtr> nodes) {

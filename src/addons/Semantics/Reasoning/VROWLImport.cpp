@@ -412,7 +412,7 @@ void VROWLImport::AgglomerateData() {
         int jobs = jobSize();
         cout << "RDF parser: iteration: " << i << " with " << jobs << " triplets remaining" << endl;
 
-        if (int(stack.size()) == lastStack && jobs == lastJobSize) {
+        if (int(stack.size()) == lastStack && jobs == lastJobSize && lastStack > 0) {
             cout << "RDF parser warning: stack not shrinking, aborting with " << jobs << " triplets remaining!" << endl;
             cout << "Print Stack: " << endl;
             for (auto& sv : stack) for (auto& s : sv.second) printState(s);
