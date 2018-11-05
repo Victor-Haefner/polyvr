@@ -124,8 +124,10 @@ void VRConstraint::apply(VRTransformPtr obj, VRObjectPtr parent, bool force) {
 
     if (local) parent = obj->getParent(true);
     if (auto r = Referential.lock()) parent = r;
-    if (!parent) return;
-    Matrix4d J = parent->getMatrixTo(obj);
+
+    Matrix4d J;
+    if (parent) J = parent->getMatrixTo(obj);
+    else J = obj->getWorldMatrix();
     J.mult(refMatrixB);
     J.multLeft(refMatrixAI);
 
