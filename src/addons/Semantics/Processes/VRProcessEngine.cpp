@@ -11,6 +11,32 @@ using namespace OSG;
 
 template<> string typeName(const VRProcessEnginePtr& o) { return "ProcessEngine"; }
 
+// ----------- process engine actor --------------
+
+string VRProcessEngine::Actor::transitioning( float t ) {
+    auto state = sm.getCurrentState();
+    if (!state) return "";
+    string stateName = state->getName();
+
+    for (auto& transition : transitions[stateName]) { // check if any actions are ready to start
+        if (transition.valid(&inventory)) {
+            currentState = transition.nextState;
+            return transition.nextState->getLabel();
+        }
+    }
+
+    return "";
+}
+
+void VRProcessEngine::Actor::sendMessage(string message) {
+    /*auto message = current.transition.msgCon.message;
+    auto receiver = current.transition.msgCon.receiver;
+    auto sender = current.transition.msgCon.sender.label;
+    receiver.inventory.messages.push_back(Message(message, sender));*/
+}
+
+// ----------- process engine --------------
+
 VRProcessEngine::VRProcessEngine() {
     updateCb = VRUpdateCb::create("process engine update", boost::bind(&VRProcessEngine::update, this));
     VRScene::getCurrent()->addTimeoutFkt(updateCb, 0, 500);
@@ -24,6 +50,8 @@ void VRProcessEngine::setProcess(VRProcessPtr p) { process = p; initialize();}
 VRProcessPtr VRProcessEngine::getProcess() { return process; }
 void VRProcessEngine::pause() { running = false; }
 
+void VRProcessEngine::performTransition(Transition transition) {}
+
 void VRProcessEngine::run(float s) {
     speed = s; running = true;
     VRScene::getCurrent()->dropTimeoutFkt(updateCb);
@@ -35,6 +63,7 @@ void VRProcessEngine::reset() {
 
     for (auto state : process->getInitialStates()) {
         int sID = state->subject;
+        subjects[sID].currentState = state;
         subjects[sID].sm.setCurrentState( state->getLabel() );
         cout << "VRProcessEngine::reset, set initial state '" << state->getLabel() << "'" << endl;
     }
@@ -60,75 +89,67 @@ void VRProcessEngine::update() {
     }
 }
 
+vector<VRProcessNodePtr> VRProcessEngine::getCurrentStates() {
+    vector<VRProcessNodePtr> res;
+    for (auto& actor : subjects) {
+        auto state = actor.second.currentState;
+        if (state) res.push_back(state);
+    }
+    return res;
+}
+
 void VRProcessEngine::initialize() {
     cout << "VRProcessEngine::initialize()" << endl;
 
-    auto processSubjects = process->getSubjects();
-    auto initialStates = process->getInitialStates();
+    for (auto subject : process->getSubjects()) {
+        int sID = subject->getID();
+        subjects[sID] = Actor();
+        Actor& actor = subjects[sID];
+        actor.label = subject->getLabel();
 
-    for (uint i=0; i<processSubjects.size(); i++) {
-        Actor actor;
-        int sID = processSubjects[i]->getID();
-        auto states = process->getSubjectStates(sID);
-        //string initialState = "";
-
-        /*if (initialStates.count(processSubjects[i])){
-            initialState = initialStates[processSubjects[i]]->getLabel();
-        }*/
-
-        //for each state of this Subject create the possible Actions
-        for (uint j=0; j<states.size(); j++) {
-            auto state = states[j];
-            vector<Action> actions;
-
-            auto transitionCB = VRFunction<float, string>::create("processTransition", boost::bind(&VRProcessEngine::Actor::transitioning, &subjects[sID], _1));
+        for (auto state : process->getSubjectStates(sID)) { //for each state of this Subject create the possible Actions
+            auto transitionCB = VRFunction<float, string>::create("processTransition", boost::bind(&VRProcessEngine::Actor::transitioning, &actor, _1));
             auto smState = actor.sm.addState(state->getLabel(), transitionCB);
 
-            //auto transitions = process->getStateTransitions(sID, state->getID());
-            auto transitions = process->getStateOutTransitions(sID, state->getID());
-
-            //for each transition out of this State create Actions which lead to the next State
-            for (auto transition : transitions) {
+            for (auto processTransition : process->getStateOutTransitions(sID, state->getID())) { //for each transition out of this State create Actions which lead to the next State
                 //get transition requirements
-                auto nextState = process->getTransitionState(transition);
-                Action action(nextState->getLabel(), transition);
+                auto nextState = process->getTransitionState(processTransition);
+                Transition transition(state, nextState, processTransition);
 
-                if(state->type == RECEIVESTATE){ //if state == receive state add the receive message to action prerequisites
+                /*if (state->type == RECEIVESTATE) { //if state == receive state add the receive message to transition prerequisites
                     cout << "receive state found" << endl;
                     bool messageExist = false;
                     auto messageNode =  process->getStateMessage(state);
-                    auto receiver = processSubjects[i]->getLabel();
+                    auto receiver = subject->getLabel();
 
                     for (auto m : processMessages) {
                         if (m.receiver == receiver) {
-                            if (m.message == messageNode->getLabel()){ //if the message already exists, add it to action prerequisites
+                            if (m.message == messageNode->getLabel()){ //if the message already exists, add it to transition prerequisites
                                 Prerequisite p(m);
-                                action.prerequisites.push_back(p);
+                                transition.prerequisites.push_back(p);
                                 messageExist = true;
                             }
                         }
                     }
 
-                    if(!messageExist){ //create a new message instance if it doesnt exist and add it to action prerequisites
+                    if (!messageExist){ //create a new message instance if it doesnt exist and add it to transition prerequisites
                         auto sender = process->getMessageSender(messageNode->getID());
                         for (auto s : sender) {
                             Message m(messageNode->getLabel(), s->getLabel(), receiver);
                             Prerequisite p(m);
-                            action.prerequisites.push_back(p);
+                            transition.prerequisites.push_back(p);
                         }
                     }
-
-
                 }
 
                 else if (state->type == SENDSTATE) { //add a sendMessage callback
                     cout << "send state found" << endl;
-                    VRStateMachine<float>::VRStateEnterCbPtr sendMessageCB = VRStateMachine<float>::VRStateEnterCb::create("sendMessage", boost::bind(&VRProcessEngine::Actor::sendMessage, &subjects[i], _1));
+                    VRStateMachine<float>::VRStateEnterCbPtr sendMessageCB = VRStateMachine<float>::VRStateEnterCb::create("sendMessage", boost::bind(&VRProcessEngine::Actor::sendMessage, &subjects[sID], _1));
                     smState->setStateLeaveCB(sendMessageCB);
 
                     auto messageNode = process->getStateMessage(state);
                     auto receiverNodes = process->getMessageReceiver(messageNode->getID());
-                    auto sender = processSubjects[i]->getLabel();
+                    auto sender = subject->getLabel();
 
                     bool messageExist = false;
                     for (auto m : processMessages) { //check if the message already exists
@@ -147,60 +168,16 @@ void VRProcessEngine::initialize() {
                         }
                     }
                 }
+                */
 
-                action.sourceState = state;
-                actions.push_back(action);
+                actor.transitions[state->getLabel()].push_back(transition);
             }
-
-            //define function to call by the State Machine on state switch (process)
-            //auto transitionCB = VRFunction<float, string>::create("processTransition", boost::bind(&VRProcessEngine::Actor::transitioning, &subjects[i], _1));
-
-            //subjects[i].actions[state->getLabel()] = actions;
-            actor.actions[state->getLabel()] = actions;
-            //auto smState = subjects[i].sm.addState(state->getLabel(), transitionCB);
         }
-        //subjects[i].initialState = initialState;
-        //subjects[i].sm.setCurrentState( initialState );
-        //actor.initialState = initialState;
-        //actor.sm.setCurrentState( initialState );
-        actor.label = processSubjects[i]->getLabel();
-        subjects[sID] = actor;
 
         cout << "initialized, message count: " << processMessages.size() << endl;
     }
 }
 
-void VRProcessEngine::performAction(Action action) {
 
-}
 
-vector<VRProcessNodePtr> VRProcessEngine::getCurrentStates() {
-    vector<VRProcessNodePtr> res;
-    for (auto& subject : subjects) {
-        auto action = subject.second.current;
-        if (action) {
-            auto sID = action->node->subject;
-            auto tID = action->node->getID();
-            auto tStates = process->getTransitionStates(sID, tID);
-            res.push_back(tStates[0]);
-        }
-    }
-    return res;
-}
 
-vector<VRProcessNodePtr> VRProcessEngine::getCurrentNodes() {
-    vector<VRProcessNodePtr> res;
-    for (auto& subject : subjects) {
-        auto action = subject.second.current;
-        if (action) {
-            auto sID = action->node->subject;
-            auto tID = action->node->getID();
-            auto tStates = process->getTransitionStates(sID, tID);
-            res.push_back(tStates[0]);
-            auto currentTransition = action->node;
-            res.push_back(currentTransition);
-        }
-    }
-    //for (auto action : currentActions) res.push_back(action.second);
-    return res;
-}

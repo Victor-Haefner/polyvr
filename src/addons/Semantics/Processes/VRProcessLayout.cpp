@@ -353,7 +353,7 @@ void VRProcessLayout::update(){
 	//get current actions and change box color/material
 	if (engine && process) {
         //auto textColor = Color3f(0,0,0,1);
-        auto actives = engine->getCurrentNodes();
+        auto actives = engine->getCurrentStates();
 
         for (auto subject : process->getSubjects()) { // iterate over all actions
             for (auto state : process->getSubjectStates(subject->getID())) {

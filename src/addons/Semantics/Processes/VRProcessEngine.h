@@ -42,14 +42,13 @@ class VRProcessEngine {
             }
         };
 
-        struct Action {
-            string nextState;
-            VRProcessNodePtr node;
+        struct Transition {
             VRProcessNodePtr sourceState;
-            float duration = 0;
+            VRProcessNodePtr nextState;
+            VRProcessNodePtr node;
             vector<Prerequisite> prerequisites;
 
-            Action(string state, VRProcessNodePtr n) : nextState(state), node(n) {}
+            Transition(VRProcessNodePtr s1, VRProcessNodePtr s2, VRProcessNodePtr n) : sourceState(s1), nextState(s2), node(n) {}
 
             bool valid(Inventory* inventory) {
                 for (auto& p : prerequisites) if (!p.valid(inventory)) return false;
@@ -58,46 +57,19 @@ class VRProcessEngine {
         };
 
         struct Actor {
-            Action* current = 0;
-            map<string, vector<Action>> actions; // maps state name (see VRStateMachine) to possible Actions
+            map<string, vector<Transition>> transitions; // maps state name (see VRStateMachine) to possible transitions
             //map<Action, Message> sendToMessage; //maps send Action to sent message
             VRStateMachine<float> sm;
             Inventory inventory;
             string initialState = "";
             string label = "";
+            VRProcessNodePtr currentState;
 
             Actor() : sm("ProcessActor") {}
 
-            //performs transition to next state
-            string transitioning( float t ) {
-                auto state = sm.getCurrentState();
-                string stateName = state->getName();
+            string transitioning( float t ); // performs transitions to next states
 
-                if (current) { // if currently in action go to next state, else check for possible actions
-                    string nextState = current->nextState;
-                    current = 0;
-                    return nextState; // state machine goes into nextState
-                } else {
-                    //TODO: check if this is the last state
-                    if(stateName == "End"){
-                        sm.setCurrentState(initialState);
-                    }
-                    for (auto& action : actions[stateName]) { // check if any actions are ready to start
-                        if (action.valid(&inventory)) {
-                            current = &action;
-                            return "";
-                        }
-                    }
-                }
-                return "";
-            }
-
-            void sendMessage(string message){
-/*                auto message = current.transition.msgCon.message;
-                auto receiver = current.transition.msgCon.receiver;
-                auto sender = current.transition.msgCon.sender.label;
-                receiver.inventory.messages.push_back(Message(message, sender));
-*/            }
+            void sendMessage(string message);
         };
 
     private:
@@ -109,7 +81,7 @@ class VRProcessEngine {
         bool running = false;
 
         void initialize();
-        void performAction(Action);
+        void performTransition(Transition t);
         void update();
 
         float speed;
@@ -129,7 +101,6 @@ class VRProcessEngine {
         void pause();
 
         vector<VRProcessNodePtr> getCurrentStates();
-        vector<VRProcessNodePtr> getCurrentNodes();
 };
 
 OSG_END_NAMESPACE;
