@@ -92,16 +92,9 @@ void VRProcessEngine::reset() {
         cout << "VRProcessEngine::reset, set initial state '" << state->getLabel() << "'" << endl;
     }
 
-    /*for (auto subject : process->getSubjects()) {
-        int sID = subject->getID();
-
-        string initialState = "";
-        if (initialStates.count(subject)) {
-            initialState = initialStates[subject]->getLabel();
-        }
-        subjects[sID].sm.setCurrentState( initialState );
-        cout << "VRProcessEngine::reset, set initial state '" << initialState << "'" << endl;
-    }*/
+    for (auto& actor : subjects) {
+        actor.second.inventory.messages.clear();
+    }
 }
 
 void VRProcessEngine::update() {
