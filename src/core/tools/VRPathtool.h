@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGColor.h>
 #include <vector>
 #include <map>
 
@@ -76,6 +77,10 @@ class VRPathtool : public VRObject {
         struct option {
             int resolution = 10;
             bool useControlHandles = false;
+
+            Color3f color1;
+            Color3f color2;
+            bool useColors = false;
 
             option(int r = 10, bool uch = false);
         };
@@ -156,6 +161,10 @@ class VRPathtool : public VRObject {
         VRStrokePtr getStroke(PathPtr p);
 
         VRMaterialPtr getPathMaterial();
+
+        // options
+        void setEdgeResolution(int eID, int resolution);
+        void setEdgeColor(int eID, Color3f color1, Color3f color2);
 
         void select(VRGeometryPtr handle);
         void selectPath(PathPtr p);

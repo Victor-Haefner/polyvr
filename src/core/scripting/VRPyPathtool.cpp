@@ -39,7 +39,9 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"getNodeID", PyWrap(Pathtool, getNodeID, "Return node ID from handle", int, VRObjectPtr) },
     {"connect", PyWrapOpt( Pathtool, connect, "Connect two nodes by id, using optional normals, id1, id2, n1, n2, doHandles, addArrow)", "0,0,0|0,0,0|1|0", void, int, int, Vec3d, Vec3d, bool, bool ) },
     {"disconnect", PyWrap( Pathtool, disconnect, "Disconnect two nodes - disconnect( id1, id2 )", void, int, int ) },
-    {"setProjectionGeometry", PyWrap( Pathtool, setProjectionGeometry, "Set an object to project handles onto - setProjectionGeometry( object )", void, VRObjectPtr ) },
+    {"setProjectionGeometry", PyWrap( Pathtool, setProjectionGeometry, "Set an object to project handles onto", void, VRObjectPtr ) },
+    {"setEdgeResolution", PyWrap( Pathtool, setEdgeResolution, "Set edge resolution, eID, res", void, int, int ) },
+    {"setEdgeColor", PyWrap( Pathtool, setEdgeColor, "Set edge color, eID, color1, color2", void, int, Color3f, Color3f ) },
     {NULL}  /* Sentinel */
 };
 

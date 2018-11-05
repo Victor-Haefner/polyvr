@@ -213,6 +213,8 @@ void VRStroke::strokeStrew(VRGeometryPtr geo) {
     }
 }
 
+void VRStroke::setDoColor(bool b) { doColor = b; }
+
 void VRStroke::update() {
     switch (mode) {
         case 0:

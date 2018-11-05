@@ -287,6 +287,9 @@ vector<Pose> Path::getPoints() { return points; }
 Pose& Path::getPoint(int i) { return points[i]; }
 int Path::size() { return points.size(); }
 
+Color3f Path::getPointColor(int i) { return point_colors[i]; }
+void Path::setPointColor(int i, Color3f c) { point_colors[i] = c; }
+
 void Path::compute(int N) {
     if (points.size() <= 1) return;
     iterations = N;

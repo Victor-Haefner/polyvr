@@ -347,9 +347,17 @@ void VRPathtool::updateEntry(entryPtr e) { // update path representation
     int hN = e->handles.size();
     if (hN <= 0) return;
     auto opt = options[e->edge];
+
+    if (opt.useColors) {
+        for (int i=0; i<e->p->size(); i++) {
+            Color3f c = opt.color1 + (opt.color2-opt.color1)*float(i)/(e->p->size()-1);
+            e->p->setPointColor(i, c);
+        }
+    }
+
     e->p->compute(opt.resolution);
     int pN = e->p->getPositions().size();
-    if (pN <= 2) return;
+    if (pN < 2) return;
 
     if (!e->anchor.lock()) e->anchor = ptr();
     if (!e->line.lock() && e->anchor.lock()) { // update path line
@@ -361,10 +369,14 @@ void VRPathtool::updateEntry(entryPtr e) { // update path representation
         vector<Vec3d> profile;
         profile.push_back(Vec3d());
         line->addPath(e->p);
-        line->strokeProfile(profile, 0, 0, 0);
+        line->strokeProfile(profile, 0, 0, opt.useColors);
     }
 
-    if (auto l = e->line.lock()) l->update();
+    if (auto l = e->line.lock()) {
+        l->setDoColor( opt.useColors );
+        l->update();
+    }
+
     if (auto a = e->arrow.lock()) a->setPose(e->p->getPose(0.5));
 }
 
@@ -490,6 +502,9 @@ PathPtr VRPathtool::newPath( VRDevicePtr dev, VRObjectPtr anchor, int resolution
     extrude(dev,e->p);
     return e->p;
 }
+
+void VRPathtool::setEdgeResolution(int eID, int resolution) { options[eID].resolution = resolution; }
+void VRPathtool::setEdgeColor(int eID, Color3f color1, Color3f color2) { options[eID].color1 = color1; options[eID].color2 = color2; options[eID].useColors = true; }
 
 VRGeometryPtr VRPathtool::newControlHandle(VRGeometryPtr handle, Vec3d p) {
     VRGeometryPtr h;

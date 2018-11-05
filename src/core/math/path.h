@@ -43,6 +43,7 @@ class Path : public VRStorage {
         void setPoint(int i, const Pose& p, Color3f c = Color3f() );
         Pose& getPoint(int i);
         Color3f getPointColor(int i);
+        void setPointColor(int i, Color3f c);
         vector<Pose> getPoints();
 
         void invert();
