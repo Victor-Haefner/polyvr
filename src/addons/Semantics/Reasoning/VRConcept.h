@@ -72,7 +72,7 @@ struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VROnto
     string toString(string indent = "");
     string toString(map<int, vector<VRConceptPtr>>& cMap, string indent = "");
 
-    void setup();
+    void setup(VRStorageContextPtr context);
 };
 
 OSG_END_NAMESPACE;

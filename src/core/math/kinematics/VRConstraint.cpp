@@ -115,10 +115,11 @@ void VRConstraint::setRConstraint(Vec3d params, TCMode mode, bool local) {
     }
 }
 
-void VRConstraint::apply(VRTransformPtr obj, VRObjectPtr parent) {
+// called from VRTransform::apply_constraints
+void VRConstraint::apply(VRTransformPtr obj, VRObjectPtr parent, bool force) {
     if (!active || obj->getPhysics()->isPhysicalized()) return;
     auto now = VRGlobals::CURRENT_FRAME;
-    if (apply_time_stamp == now) return;
+    if (apply_time_stamp == now && !force) return;
     apply_time_stamp = now;
 
     if (local) parent = obj->getParent(true);
@@ -135,6 +136,19 @@ void VRConstraint::apply(VRTransformPtr obj, VRObjectPtr parent) {
     }
 
     Vec3d angles = VRTransform::computeEulerAngles(J);
+
+    auto sign = [](float a) {
+        return a<0?-1:1;
+    };
+
+    // TODO: this is not correct, for example [180, 20, 180], corresponds to [0, 160, 0], and not [0, 20, 0] !!
+    //  this tries to fix it somewhat, but its not clean!
+    if ( abs(angles[0]) > Pi*0.5 && abs(angles[2]) > Pi*0.5) {
+        angles[0] -= sign(angles[0])*Pi;
+        angles[2] -= sign(angles[2])*Pi;
+        angles[1] = Pi - angles[1];
+    }
+
     Vec3d angleDiff;
     for (int i=3; i<6; i++) { // rotation
         if (min[i] > max[i]) continue; // free

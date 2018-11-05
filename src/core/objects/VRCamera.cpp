@@ -45,7 +45,7 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
     store("fov", &fov);
     store("orthoSize", &orthoSize);
     store("type", &type);
-    regStorageSetupFkt( VRUpdateCb::create("camera_update", boost::bind(&VRCamera::setup, this, true)) );
+    regStorageSetupFkt( VRStorageCb::create("camera_update", boost::bind(&VRCamera::setup, this, true, _1)) );
 
     // cam geo
     TransformMTRecPtr trans = Transform::create();
@@ -84,6 +84,22 @@ VRCameraPtr VRCamera::create(string name, bool reg) {
     return p;
 }
 
+VRObjectPtr VRCamera::copy(vector<VRObjectPtr> children) {
+    VRCameraPtr t = VRCamera::create(getBaseName());
+    t->setVisible(isVisible());
+    t->setPickable(isPickable());
+    t->setEntity(entity);
+    t->setMatrix(getMatrix());
+
+    t->setType(getType());
+    t->setAspect(getAspect());
+    t->setFov(getFov());
+    t->setNear(getNear());
+    t->setFar(getFar());
+    t->setOrthoSize(getOrthoSize());
+    return t;
+}
+
 void VRCamera::setCam(OSGCameraPtr c) { cam = c; } // warning: setup() will override this!
 
 void VRCamera::setType(int type) { camType = type; setup(); }
@@ -101,8 +117,7 @@ void VRCamera::setAt(Vec3d m) { VRTransform::setAt(m); updateOrthSize(); }
 void VRCamera::setFrom(Vec3d m) { VRTransform::setFrom(m); updateOrthSize(); }
 VRObjectPtr VRCamera::getSetupNode() { return vrSetup; }
 
-void VRCamera::setup(bool reg) {
-
+void VRCamera::setup(bool reg, VRStorageContextPtr context) {
     vrSetup->setPersistency(0);
 
     PerspectiveCameraMTRecPtr pcam;

@@ -34,7 +34,7 @@ class VRNature : public VRLodTree, public VRWorldModule {
         void computeFirstLevel();
         void computeSecondLevel();
 
-        void setup();
+        void setup(VRStorageContextPtr context);
         void initLOD();
 
     public:

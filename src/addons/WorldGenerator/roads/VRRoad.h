@@ -4,6 +4,7 @@
 #include <map>
 #include <OpenSG/OSGVector.h>
 #include "VRRoadBase.h"
+#include "VRRoadIntersection.h"
 #include "core/objects/VRObjectFwd.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
@@ -25,7 +26,10 @@ class VRRoad : public VRRoadBase {
 
         float offsetIn = 0;
         float offsetOut = 0;
+        bool visible = true;
+        vector<VRRoadIntersectionPtr> intersections;
         map<VREntityPtr, edgePoint> edgePoints;
+        VRGeometryPtr selfPtr;
 
     public:
         VRRoad();
@@ -40,13 +44,20 @@ class VRRoad : public VRRoadBase {
         void setOffsetOut(float o);
         float getWidth();
         VRGeometryPtr createGeometry();
+        VRGeometryPtr getGeometry();
+        void setVisible(bool in);
+        bool isVisible();
         VREntityPtr getNodeEntry( VREntityPtr node );
         edgePoint& getEdgePoint( VREntityPtr node );
         map<VREntityPtr, edgePoint>& getEdgePoints();
         void computeMarkings();
         bool hasMarkings();
         PosePtr getRightEdge(Vec3d pos);
+        PosePtr getLeftEdge(Vec3d pos);
         vector<VRRoadPtr> splitAtIntersections(VRRoadNetworkPtr network);
+
+        void addIntersection(VRRoadIntersectionPtr);
+        vector<VRRoadIntersectionPtr> getIntersections();
 
         PosePtr getPosition(float t);
 };

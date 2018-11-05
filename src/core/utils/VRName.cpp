@@ -205,8 +205,10 @@ VRName::VRName() {
     store("base_name", &base_name);
     store("name_space", &nameSpaceName);
 
-    regStorageSetupFkt( VRUpdateCb::create("name_update", boost::bind(&VRName::compileName, dynamic_cast<VRName*>(this))) );
+    regStorageSetupFkt( VRStorageCb::create("name_update", boost::bind(&VRName::setup, dynamic_cast<VRName*>(this), _1)) );
 }
 
 VRName::~VRName() { setName(""); }
+
+void VRName::setup(VRStorageContextPtr context) { compileName(); }
 

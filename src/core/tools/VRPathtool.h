@@ -67,6 +67,7 @@ class VRPathtool : public VRObject {
         };
 
         struct knot {
+            int ID;
             vector<int> in;
             vector<int> out;
             VRGeometryWeakPtr handle;
@@ -80,6 +81,8 @@ class VRPathtool : public VRObject {
         };
 
         typedef shared_ptr<entry> entryPtr;
+
+        void updateHandlePose(knot& knot, map<int, Vec3d>& hPositions, bool doUpdateEntry = true);
 
     private:
         GraphPtr graph;
@@ -122,12 +125,13 @@ class VRPathtool : public VRObject {
         ~VRPathtool();
 
         static VRPathtoolPtr create();
-        void setup();
-        void setupBefore();
+        void setup(VRStorageContextPtr context);
+        void setupBefore(VRStorageContextPtr context);
 
         void setProjectionGeometry(VRObjectPtr obj);
 
-        void setGraph(GraphPtr g, bool doClear = true);
+        void setGraph(GraphPtr g, bool doClear = true, bool handles = false, bool doArrows = false);
+        GraphPtr getGraph();
         int addNode(PosePtr p);
         void removeNode(int i);
         int getNodeID(VRObjectPtr o);

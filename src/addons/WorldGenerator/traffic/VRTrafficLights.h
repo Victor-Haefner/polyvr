@@ -17,6 +17,7 @@ class VRTrafficLight : public VRTransform {
         VREntityPtr lane;
         VRTrafficLightsWeakPtr system;
         string state = "000";
+        bool isUsingAsset = false;
 
         VRGeometryPtr red;
         VRGeometryPtr orange;
@@ -32,13 +33,16 @@ class VRTrafficLight : public VRTransform {
         void setupBulbs(VRGeometryPtr red, VRGeometryPtr orange, VRGeometryPtr green);
 
         void setState(string s);
+        string getState();
+        void setUsingAsset(bool check);
+        bool getUsingAsset();
 
         friend class VRTrafficLights;
 };
 
 class VRTrafficLights {
     public:
-        map<int, vector<VRTrafficLightPtr> > lights;
+        map<int, vector<VRTrafficLightPtr>> lights;
 
         VRMaterialPtr redOff;
         VRMaterialPtr orangeOff;
@@ -54,6 +58,9 @@ class VRTrafficLights {
         static VRTrafficLightsPtr create();
 
         void addTrafficLight(VRTrafficLightPtr light);
+
+        vector<VRTrafficLightPtr> getLights();
+        map<int, vector<VRTrafficLightPtr>> getMap();
 
         void update();
 

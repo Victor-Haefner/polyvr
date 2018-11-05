@@ -1,6 +1,7 @@
 #include "VRTransform.h"
 #include "core/math/pose.h"
 #include "core/math/path.h"
+#include "core/math/kinematics/VRConstraint.h"
 #include "core/utils/isNan.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
@@ -12,7 +13,6 @@
 #include "core/objects/object/OSGCore.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRGeometry.h"
-#include "core/objects/geometry/VRConstraint.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSpaceWarper.h"
@@ -46,7 +46,7 @@ VRTransform::VRTransform(string name, bool doOpt) : VRObject(name) {
     store("at_dir", &orientation_mode);
     storeObj("constraint", constraint);
 
-    regStorageSetupFkt( VRUpdateCb::create("transform_update", boost::bind(&VRTransform::setup, this)) );
+    regStorageSetupFkt( VRStorageCb::create("transform_update", boost::bind(&VRTransform::setup, this, _1)) );
 }
 
 VRTransform::~VRTransform() {
@@ -59,7 +59,6 @@ VRTransformPtr VRTransform::create(string name, bool doOpt) { return VRTransform
 VRObjectPtr VRTransform::copy(vector<VRObjectPtr> children) {
     VRTransformPtr t = VRTransform::create(getBaseName());
     t->setVisible(isVisible());
-    t->setPickable(isPickable());
     t->setEntity(entity);
     t->setMatrix(getMatrix());
     t->setPickable(isPickable());
@@ -534,7 +533,7 @@ Vec3d VRTransform::computeEulerAngles(const Matrix4d& m) {
 }
 
 void VRTransform::applyEulerAngles(Matrix4d& t, Vec3d e) {
-    Pnt3d p = Pnt3d(t[3]);
+    Pnt3d p = Pnt3d(t[3]); // copy position
     Vec3d s = Vec3d(sin(e[0]), sin(e[1]), sin(e[2]));
     Vec3d c = Vec3d(cos(e[0]), cos(e[1]), cos(e[2]));
     Vec3d d = Vec3d( c[0]*c[2]*s[1]+s[0]*s[2], c[0]*s[1]*s[2]-s[0]*c[2], c[0]*c[1]);
@@ -752,10 +751,10 @@ void VRTransform::apply_constraints(bool force) { // TODO: check efficiency
     if (!checkWorldChange() && !force) return;
     computeMatrix4d(); // update matrix!
 
-    if (constraint) constraint->apply(ptr());
+    if (constraint) constraint->apply(ptr(), 0, force);
     for (auto joint : aJoints) {
         VRTransformPtr parent = joint.second.second.lock();
-        if (parent) joint.second.first->apply(ptr(), parent);
+        if (parent) joint.second.first->apply(ptr(), parent, force);
         //if (parent) cout << "VRTransform::apply_constraints to " << getName() << " with parent: " << parent->getName() << endl;
     }
 
@@ -805,7 +804,7 @@ void VRTransform::updateChange() {
     updatePhysics();
 }
 
-void VRTransform::setup() {
+void VRTransform::setup(VRStorageContextPtr context) {
     setAt(_at);
 }
 

@@ -12,6 +12,12 @@ template<> string typeName(const OSG::VRStoragePtr& o) { return "Storage"; }
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+VRStorageContextPtr VRStorageContext::create(bool onlyReload) {
+    auto c = VRStorageContextPtr( new VRStorageContext() );
+    c->onlyReload = onlyReload;
+    return c;
+}
+
 map<string, VRStorageFactoryCbPtr> VRStorage::factory = map<string, VRStorageFactoryCbPtr>();
 
 VRStorage::VRStorage() {
@@ -35,9 +41,9 @@ string VRStorage::getDescription() {
 
 void VRStorage::setPersistency(int p) { persistency = p; }
 int VRStorage::getPersistency() { return persistency; }
-void VRStorage::regStorageSetupFkt(VRUpdateCbPtr u) { f_setup.push_back(u); }
+void VRStorage::regStorageSetupBeforeFkt(VRStorageCbPtr u) { f_setup_before.push_back(u); }
+void VRStorage::regStorageSetupFkt(VRStorageCbPtr u) { f_setup.push_back(u); }
 void VRStorage::regStorageSetupAfterFkt(VRUpdateCbPtr u) { f_setup_after.push_back(u); }
-void VRStorage::regStorageSetupBeforeFkt(VRUpdateCbPtr u) { f_setup_before.push_back(u); }
 void VRStorage::setStorageType(string t) { type = t; }
 
 void VRStorage::load_strstr_map_cb(map<string, string>* m, string tag, xmlpp::Element* e) {
@@ -85,19 +91,27 @@ xmlpp::Element* VRStorage::saveUnder(xmlpp::Element* e, int p, string t) {
     return e;
 }
 
-void VRStorage::load(xmlpp::Element* e) {
+void VRStorage::load(xmlpp::Element* e, VRStorageContextPtr context) {
     if (e == 0) return;
-    for (auto f : f_setup_before) (*f)();
+    for (auto f : f_setup_before) (*f)(context);
     for (auto s : storage) (*s.second.f1)(e);
-    for (auto f : f_setup) (*f)();
+    for (auto f : f_setup) (*f)(context);
     for (auto f : f_setup_after) VRSceneManager::get()->queueJob(f);
     f_setup_after.clear();
 }
 
-void VRStorage::loadChildFrom(xmlpp::Element* e, string t) {
+xmlpp::Element* VRStorage::loadChildFrom(xmlpp::Element* e, string t, VRStorageContextPtr context) {
     string tag = type;
     if (t != "") tag = t;
-    load( getChild(e, tag) );
+    e = getChild(e, tag);
+    load( e, context );
+    return e;
+}
+
+xmlpp::Element* VRStorage::loadChildIFrom(xmlpp::Element* e, int i, VRStorageContextPtr context) {
+    e = getChildI(e, i);
+    load( e, context );
+    return e;
 }
 
 int VRStorage::getPersistency(xmlpp::Element* e) {
@@ -133,6 +147,18 @@ xmlpp::Element* VRStorage::getChild(xmlpp::Element* e, string c) {
     return 0;
 }
 
+xmlpp::Element* VRStorage::getChildI(xmlpp::Element* e, int i) {
+    if (e == 0) return 0;
+    int k=0;
+    for (auto n : e->get_children()) {
+        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        if (!el) continue;
+        if (k == i) return el;
+        k++;
+    }
+    return 0;
+}
+
 vector<xmlpp::Element*> VRStorage::getChildren(xmlpp::Element* e) {
     vector<xmlpp::Element*> res;
     if (!e) return res;
@@ -160,7 +186,7 @@ bool VRStorage::saveToFile(string path, bool createDirs) {
     return true;
 }
 
-bool VRStorage::loadFromFile(string path) {
+bool VRStorage::loadFromFile(string path, VRStorageContextPtr context) {
     if (exists(path)) path = canonical(path);
     else return false;
 
@@ -168,7 +194,7 @@ bool VRStorage::loadFromFile(string path) {
     parser.set_validate(false);
     parser.parse_file(path.c_str());
     xmlpp::Element* root = dynamic_cast<xmlpp::Element*>(parser.get_document()->get_root_node());
-    load(root);
+    load(root, context);
     return true;
 }
 

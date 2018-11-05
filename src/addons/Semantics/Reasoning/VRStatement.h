@@ -24,7 +24,7 @@ struct VRStatement : VRStorage {
     VRStatement();
     VRStatement(string s, int i = -1);
     static VRStatementPtr create(string s = "", int i = -1);
-    void setup();
+    void setup(VRStorageContextPtr context);
 
     string toString();
     void updateLocalVariables(map<string, VariablePtr>& globals, VROntologyPtr onto);

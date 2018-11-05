@@ -37,7 +37,7 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
     static VROntologyPtr create(string name = "");
     VROntologyPtr ptr();
 
-    void setup();
+    void setup(VRStorageContextPtr context);
 
     void import(VROntologyPtr o);
     void merge(VROntologyPtr o);

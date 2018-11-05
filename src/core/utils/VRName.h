@@ -57,6 +57,7 @@ class VRName : public VRStorage {
         VRNameSpace* getNameSpace();
 
         void compileName();
+        void setup(VRStorageContextPtr context);
 
         static void printInternals();
 };

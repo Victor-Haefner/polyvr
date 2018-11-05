@@ -33,7 +33,7 @@ VRMultiTouch::VRMultiTouch() : VRDevice("multitouch") {
     store("device", &device);
     store("input", &input);
 
-    regStorageSetupFkt( VRUpdateCb::create("connect mt device", boost::bind(&VRMultiTouch::connectDevice, this)) );
+    regStorageSetupFkt( VRStorageCb::create("connect mt device", boost::bind(&VRMultiTouch::setup, this, _1)) );
 }
 
 VRMultiTouch::~VRMultiTouch() {
@@ -48,6 +48,10 @@ VRMultiTouchPtr VRMultiTouch::create() {
 }
 
 VRMultiTouchPtr VRMultiTouch::ptr() { return static_pointer_cast<VRMultiTouch>( shared_from_this() ); }
+
+void VRMultiTouch::setup(VRStorageContextPtr context) {
+    connectDevice();
+}
 
 #define die(e) do { fprintf(stderr, "%s\n", e); exit(EXIT_FAILURE); } while (0);
 

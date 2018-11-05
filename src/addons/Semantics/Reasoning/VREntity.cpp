@@ -20,11 +20,16 @@ VREntity::VREntity(string name, VROntologyPtr o, VRConceptPtr c) {
     storeObjNames("concepts", &concepts, &conceptNames);
 
 
-    auto ns = setNameSpace("VREntity");
-    ns->filterNameChars(".,",'_');
+    auto ns = setNameSpace("VREntity_"+o->getName());
+    ns->filterNameChars(".,",'_'); // filter path and math characters
     ns->setSeparator('_');
-    ns->setUniqueNames(false);
+
+    // problematic when creating ontology in code, in world gen for example!
+    // nice when importing from file, because names are used in properties!
+    //ns->setUniqueNames(false);
+
     setName(name);
+    //if (name != getName()) cout << "VREntity::VREntity " << name << " -> " << getName() << endl;
 }
 
 VREntityPtr VREntity::create(string name, VROntologyPtr o, VRConceptPtr c) { return VREntityPtr( new VREntity(name, o, c) ); }
@@ -70,7 +75,7 @@ void VREntity::set(string name, string value, int pos) {
     if (!properties.count(name)) { add(name, value); return; }
     auto prop = get(name);
     if (!prop) { WARN("Warning (set): Entity " + this->name + " has no property " + name); return; }
-    properties[name][pos]->value = value;
+    properties[name][pos]->setValue( value );
     // TODO: warn if vector size bigger 1
 }
 
@@ -78,7 +83,7 @@ void VREntity::add(string name, string value) {
     auto prop = getProperty(name, true);
     if (!prop) { WARN("Warning (add): Entity " + this->name + " has no property " + name); return; }
     prop = prop->copy();
-    prop->value = value;
+    prop->setValue( value );
     properties[name].push_back( prop );
 }
 
@@ -244,8 +249,8 @@ void VREntity::load(xmlpp::Element* e) {
         for (auto el2 : getChildren(el)) {
             string n = el2->get_name();
             auto p = VRProperty::create(n,"");
-            if (el2->get_attribute("value")) p->value = el2->get_attribute("value")->get_value();
-            if (el2->get_attribute("type")) p->type = el2->get_attribute("type")->get_value();
+            if (el2->get_attribute("value")) p->setValue( el2->get_attribute("value")->get_value() );
+            if (el2->get_attribute("type")) p->setType( el2->get_attribute("type")->get_value() );
             properties[n].push_back(p);
         }
     }

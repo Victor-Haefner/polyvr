@@ -1,5 +1,6 @@
 #include "VRRoad.h"
 #include "VRRoadNetwork.h"
+#include "VRRoadIntersection.h"
 #include "../VRWorldGenerator.h"
 #include "../terrain/VRTerrain.h"
 #include "core/utils/toString.h"
@@ -51,10 +52,25 @@ bool VRRoad::hasMarkings() {
 }
 
 PosePtr VRRoad::getRightEdge(Vec3d pos) {
-    auto path = toPath(getEntity()->getEntity("path"), 16);
+    auto path = toPath(getEntity()->getEntity("path"), 12);
     float t = path->getClosestPoint(pos); // get nearest road path position to pos
     auto pose = path->getPose(t);
-    Vec3d p = pose->pos() + pose->x()*(getWidth()*0.5 + offsetIn);
+    float offsetter = 0.0;
+    if (t < 0.1) offsetter = offsetIn;
+    if (t > 0.9) offsetter = offsetOut;
+    Vec3d p = pose->pos() + pose->x()*(getWidth()*0.5 + offsetter);
+    pose->setPos(p);
+    return pose;
+}
+
+PosePtr VRRoad::getLeftEdge(Vec3d pos) {
+    auto path = toPath(getEntity()->getEntity("path"), 12);
+    float t = path->getClosestPoint(pos); // get nearest road path position to pos
+    auto pose = path->getPose(t);
+    float offsetter = 0.0;
+    if (t < 0.1) offsetter = offsetIn;
+    if (t > 0.9) offsetter = offsetOut;
+    Vec3d p = pose->pos() - pose->x()*(getWidth()*0.5 + offsetter);
     pose->setPos(p);
     return pose;
 }
@@ -193,9 +209,14 @@ VRGeometryPtr VRRoad::createGeometry() {
 	if (!geo) return 0;
 	setupTexCoords( geo, entity );
 	addChild(geo);
-	return geo;
+	selfPtr = geo;
+    return geo;
 }
 
+VRGeometryPtr VRRoad::getGeometry() {
+    if (selfPtr) return selfPtr;
+    return 0;
+}
 
 void VRRoad::computeMarkings() {
     if (!hasMarkings()) return;
@@ -331,35 +352,48 @@ void VRRoad::addTrafficLight( Vec3d pos ) {
         auto roadEnt = getEntity();
 
         float dmin = 1e6;
-        Vec3d dir;
+        Vec3d dir; // direction from intersection to traffic light
+        Vec3d as;
+        Vec3d df;
         VREntityPtr nodeEnt;
         for (auto ep : getEdgePoints()) {
             Vec3d p = (ep.second.p1+ep.second.p2)*0.5;
             float d = (p-pos).length();
-            if (dmin > d) {
+            if (dmin > d && d > 0.07) {
                 dmin = d;
                 dir = pos-p;
                 dir.normalize();
                 nodeEnt = ep.first;
+                as = p;
+                //df = pos;
             }
         }
-
+        //cout << "  VRRoad::addTrafficLight " << toString(dmin) << "  " << toString(as) << "  " << toString(pos) << endl;
         for (auto laneEnt : roadEnt->getAllEntities("lanes")) {
             auto laneDir = laneEnt->getValue("direction", 1);
             Vec3d laneTangent = getRightEdge(pos)->dir() * laneDir;
             laneTangent.normalize();
+            //cout << "   VRRoad::addTrafficLight " << toString(dir.dot(laneTangent)) << endl;
             if (dir.dot(laneTangent) < -0.5) {
                 auto signalEnt = o->addEntity("trafficlight", "TrafficLight");
                 laneEnt->add("signs",signalEnt->getName());
                 signalEnt->add("lanes",laneEnt->getName());
                 signalEnt->setVec3("position", pos, "Position");
                 signalEnt->set("node", nodeEnt->getName());
-            }
+                //cout << "   VRRoad::addTrafficLight- "<< "\033[32mset\033[0m" << " -" << signalEnt->getName() << endl;
+            } //else cout << "   VRRoad::addTrafficLight-" << "\033[31mnot set\033[0m" << endl;
+
         }
     }
 }
 
 void VRRoad::setOffsetIn(float o) { offsetIn = o; }
 void VRRoad::setOffsetOut(float o) { offsetOut = o; }
+
+void VRRoad::setVisible(bool in) { visible = in; }
+bool VRRoad::isVisible() { return visible; }
+
+void VRRoad::addIntersection(VRRoadIntersectionPtr isec) { intersections.push_back(isec); }
+vector<VRRoadIntersectionPtr> VRRoad::getIntersections() { return intersections; }
 
 

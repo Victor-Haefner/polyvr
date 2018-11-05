@@ -79,6 +79,7 @@ bool Variable::has(VariablePtr other, VPath& path1, VPath& path2, VROntologyPtr 
 
         for (auto p : e->properties) { // property vectors of local entity
             for (auto v : p.second) { // local properties
+                //cout << " prop: " << v->value << " " << oName << " " << bool(v->value == oName) << endl;
                 //if (v->value == other->value) matches[e].push_back(0); // TODO: direct match with other variable value
                 if (v->value == oName) return true;
                 //auto childEntity = onto->getEntity(v->value); // TODO: this might by stupid..
@@ -94,6 +95,7 @@ bool Variable::has(VariablePtr other, VPath& path1, VPath& path2, VROntologyPtr 
         for (auto i1 : entities) { // all entities of that variable
             for (auto v : path1.getValue(i1.second)) {
                 bool doMatch = computeMatches(onto->getEntity(v), oName);
+                //cout << "Variable::has " << v << " has " << oName << " ? -> " << doMatch << endl;
                 if (doMatch) matches[i1.second].push_back(i2.second);
             }
         }
@@ -253,7 +255,7 @@ void VPath::setValue(string v, VREntityPtr e) {
         if (!prop) return;
         if (!e->properties.count(prop->getName())) return;
         for (auto p : e->properties[prop->getName()]) {
-            p->value = v;
+            p->setValue( v );
         }
     }
 }
