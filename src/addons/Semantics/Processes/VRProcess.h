@@ -97,7 +97,7 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         vector<VRProcessNodePtr> getTransitionStates(int subjectID, int transitionID);
         vector<VRProcessNodePtr> getTransitionSourceState(int subjectID, int transitionID);
         vector<VRProcessNodePtr> getTransitions(int subjectID);
-        map<VRProcessNodePtr, VRProcessNodePtr> getInitialStates(); // <subjectNode, initialStateNode>
+        vector<VRProcessNodePtr> getInitialStates();
         VRProcessNodePtr getStateMessage(VRProcessNodePtr state);
 
         TRANSITION_CONDITION getTransitionCondition(VRProcessNodePtr);
@@ -108,8 +108,8 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         VRProcessNodePtr addState(string name, int sID);
         VRProcessNodePtr addSendState(string name, int sID, VRProcessNodePtr message);
         VRProcessNodePtr addReceiveState(string name, int sID, VRProcessNodePtr message);
-        void setInitialState(VRProcessNodePtr state, int sID);
         VRProcessNodePtr addTransition(string name, int sID, int i, int j, VRProcessDiagramPtr d = 0);
+        void setInitialState(VRProcessNodePtr state);
 
         void remNode(VRProcessNodePtr n);
         VRProcessNodePtr getTransitionState(VRProcessNodePtr transition);

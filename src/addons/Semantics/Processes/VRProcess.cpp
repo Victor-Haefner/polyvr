@@ -74,7 +74,7 @@ vector<VRProcessNodePtr> VRProcess::getSubjects() {
     vector<VRProcessNodePtr> res;
     if (!interactionDiagram) return res;
     for (auto node : interactionDiagram->processnodes) {
-        if (node.second->type == SUBJECT) res.push_back(node.second);
+        if (node.second) if (node.second->type == SUBJECT) res.push_back(node.second);
     }
     return res;
 }
@@ -222,21 +222,20 @@ vector<VRProcessNodePtr> VRProcess::getTransitions(int subjectID) {
     return res;
 }
 
-map<VRProcessNodePtr, VRProcessNodePtr> VRProcess::getInitialStates(){
-    map<VRProcessNodePtr, VRProcessNodePtr> res;
-    for (auto s : getSubjects()){
-        auto diag = behaviorDiagrams[s->getID()];
-        if (!diag) cout << "VRProcess::getInitialStates: No Behavior for subject " << s->getLabel() << " found." << endl;
-        for (auto n : diag->processnodes) {
+vector<VRProcessNodePtr> VRProcess::getInitialStates() {
+    vector<VRProcessNodePtr> res;
+    for (auto diag : behaviorDiagrams) {
+        for (auto n : diag.second->processnodes) {
             if (n.second->isInitialState) {
-                res[s] = n.second;
+                res.push_back( n.second );
+                break;
             }
         }
     }
-    if(!res.size()) cout << "VRProcess:: No initial states could be found." << endl;
+
+    if(!res.size()) cout << "VRProcess::getInitialStates, No initial states could be found." << endl;
     return res;
 }
-
 
 VRProcessNodePtr VRProcess::getStateMessage(VRProcessNodePtr state){
     return stateToMessage[state];
@@ -453,30 +452,18 @@ VRProcessNodePtr VRProcess::addReceiveState(string name, int sID, VRProcessNodeP
     return state;
 }
 
-void VRProcess::setInitialState(VRProcessNodePtr state, int sID){
+void VRProcess::setInitialState(VRProcessNodePtr state) {
+    int sID = state->subject;
     auto diag = behaviorDiagrams[sID];
     if (!diag) cout << "VRProcess::setInitialState: No Behavior for subject " << getSubjects()[sID]->getLabel() << " found." << endl;
 
-    if (state->type != STATE){
+    if (state->type != STATE) {
         cout << "VRProcess::setInitialState: The given Processnode if not of type STATE." << endl;
         return;
     }
-    //lookup for state value in processnodes map and set it to initial state
-    auto oldInitialState = 0;
-    bool newInitialState = false;
-    for(auto n : diag->processnodes){
-        if(n.second->isInitialState) {
-            if (newInitialState) n.second->isInitialState = false;
-            else oldInitialState = n.first;
-        }
-        else if(n.second == state){
-            if (oldInitialState){
-                diag->processnodes[oldInitialState]->isInitialState = false;
-            }
-            n.second->isInitialState = true;
-            newInitialState = true;
-        }
-    }
+
+    for (auto n : diag->processnodes) n.second->isInitialState = false; // reset all
+    state->isInitialState = true;
 }
 
 
@@ -493,9 +480,9 @@ VRProcessNodePtr VRProcess::addTransition(string name, int sID, int i, int j, VR
 
 
 VRProcessNodePtr VRProcess::getNode(int i, VRProcessDiagramPtr diag) {
-    if (!diag) diag = interactionDiagram;
-    return diag->processnodes[i];
-
+    if (diag && diag->processnodes.count(i)) return diag->processnodes[i];
+    if (interactionDiagram && interactionDiagram->processnodes.count(i)) return interactionDiagram->processnodes[i];
+    for (auto diag : behaviorDiagrams) if (diag.second && diag.second->processnodes.count(i)) return diag.second->processnodes[i];
 }
 
 VRProcessNodePtr VRProcess::getTransitionState(VRProcessNodePtr transition) {

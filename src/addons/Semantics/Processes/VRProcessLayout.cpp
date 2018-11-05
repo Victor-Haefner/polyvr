@@ -7,10 +7,10 @@
 #include "core/utils/toString.h"
 #include "core/tools/VRText.h"
 #include "core/tools/VRPathtool.h"
-
-#include <OpenSG/OSGMatrixUtility.h>
-
 #include "core/scene/VRScene.h"
+
+#include <algorithm>
+#include <OpenSG/OSGMatrixUtility.h>
 #include <boost/bind.hpp>
 
 #include <libxml++/libxml++.h>
@@ -351,43 +351,34 @@ void VRProcessLayout::update(){
 	for(auto toolSBD : toolSBDs) toolSBD.second->update();
 
 	//get current actions and change box color/material
-	if(engine){
+	if (engine && process) {
         //auto textColor = Color3f(0,0,0,1);
         auto actives = engine->getCurrentNodes();
-        //iterate over all actions
 
-        for (auto subject : process->getSubjects()){
-
-            for (auto state : process->getSubjectStates(subject->getID())){
+        for (auto subject : process->getSubjects()) { // iterate over all actions
+            for (auto state : process->getSubjectStates(subject->getID())) {
                 //set element color/texture depending on if its active or not
                 auto element = getElement(state->getID());
                 auto geo = dynamic_pointer_cast<VRGeometry>(element);
                 auto mat = geo->getMaterial();
 
                 //check if state is active
-                bool isActive = false;
-                for (auto activeNode : actives){
-                    if (activeNode->getID() == state->getID()){
-                        isActive = true;
+                bool isActive = ::find( actives.begin(), actives.end(), state) != actives.end();
+                if (isActive) mat->setDiffuse(colorActiveState);
+                else {
+                    switch (state->type) {
+                        case RECEIVESTATE: mat->setDiffuse(colorReceiveState);
+                        case SENDSTATE: mat->setDiffuse(colorSendState);
+                        default: mat->setDiffuse(colorState);
                     }
-                }
-
-                if (isActive){
-                    mat->setDiffuse(colorActiveState);
-                } else {
-                    if (state->type == RECEIVESTATE) {
-                        mat->setDiffuse(colorReceiveState);
-                    } else if (state->type == SENDSTATE){
-                        mat->setDiffuse(colorSendState);
-                    } else mat->setDiffuse(colorState);
                 }
             }
         }
     }
 }
 
-void VRProcessLayout::storeLayout() {
-    string path = ".process_layout.plt";
+void VRProcessLayout::storeLayout(string path) {
+    if (path == "") path = ".process_layout.plt";
 
     xmlpp::Document doc;
     xmlpp::Element* root = doc.create_root_node("ProjectsList", "", "VRP"); // name, ns_uri, ns_prefix
@@ -405,8 +396,8 @@ void VRProcessLayout::storeLayout() {
     doc.write_to_file_formatted(path);
 }
 
-void VRProcessLayout::loadLayout() {
-    string path = ".process_layout.plt";
+void VRProcessLayout::loadLayout(string path) {
+    if (path == "") path = ".process_layout.plt";
     auto context = VRStorageContext::create(true);
 
     xmlpp::DomParser parser;

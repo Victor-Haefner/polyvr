@@ -13,14 +13,54 @@ template<> string typeName(const VRProcessEnginePtr& o) { return "ProcessEngine"
 
 VRProcessEngine::VRProcessEngine() {
     updateCb = VRUpdateCb::create("process engine update", boost::bind(&VRProcessEngine::update, this));
-    VRScene::getCurrent()->addUpdateFkt(updateCb);
+    VRScene::getCurrent()->addTimeoutFkt(updateCb, 0, 500);
 }
 
 VRProcessEngine::~VRProcessEngine() {}
 
 VRProcessEnginePtr VRProcessEngine::create() { return VRProcessEnginePtr( new VRProcessEngine() ); }
 
-void VRProcessEngine::initialize(){
+void VRProcessEngine::setProcess(VRProcessPtr p) { process = p; initialize();}
+VRProcessPtr VRProcessEngine::getProcess() { return process; }
+void VRProcessEngine::pause() { running = false; }
+
+void VRProcessEngine::run(float s) {
+    speed = s; running = true;
+    VRScene::getCurrent()->dropTimeoutFkt(updateCb);
+    VRScene::getCurrent()->addTimeoutFkt(updateCb, 0, speed*1000);
+}
+
+void VRProcessEngine::reset() {
+    auto initialStates = process->getInitialStates();
+
+    for (auto state : process->getInitialStates()) {
+        int sID = state->subject;
+        subjects[sID].sm.setCurrentState( state->getLabel() );
+        cout << "VRProcessEngine::reset, set initial state '" << state->getLabel() << "'" << endl;
+    }
+
+    /*for (auto subject : process->getSubjects()) {
+        int sID = subject->getID();
+
+        string initialState = "";
+        if (initialStates.count(subject)) {
+            initialState = initialStates[subject]->getLabel();
+        }
+        subjects[sID].sm.setCurrentState( initialState );
+        cout << "VRProcessEngine::reset, set initial state '" << initialState << "'" << endl;
+    }*/
+}
+
+void VRProcessEngine::update() {
+    if (!running) return;
+
+    for (auto& subject : subjects) {
+        auto& actor = subject.second;
+        actor.sm.process(0);
+    }
+}
+
+void VRProcessEngine::initialize() {
     cout << "VRProcessEngine::initialize()" << endl;
 
     auto processSubjects = process->getSubjects();
@@ -30,18 +70,18 @@ void VRProcessEngine::initialize(){
         Actor actor;
         int sID = processSubjects[i]->getID();
         auto states = process->getSubjectStates(sID);
-        string initialState = "";
+        //string initialState = "";
 
-        if (initialStates.count(processSubjects[i])){
+        /*if (initialStates.count(processSubjects[i])){
             initialState = initialStates[processSubjects[i]]->getLabel();
-        }
+        }*/
 
         //for each state of this Subject create the possible Actions
         for (uint j=0; j<states.size(); j++) {
             auto state = states[j];
             vector<Action> actions;
 
-            auto transitionCB = VRFunction<float, string>::create("processTransition", boost::bind(&VRProcessEngine::Actor::transitioning, &subjects[i], _1));
+            auto transitionCB = VRFunction<float, string>::create("processTransition", boost::bind(&VRProcessEngine::Actor::transitioning, &subjects[sID], _1));
             auto smState = actor.sm.addState(state->getLabel(), transitionCB);
 
             //auto transitions = process->getStateTransitions(sID, state->getID());
@@ -118,78 +158,27 @@ void VRProcessEngine::initialize(){
             //subjects[i].actions[state->getLabel()] = actions;
             actor.actions[state->getLabel()] = actions;
             //auto smState = subjects[i].sm.addState(state->getLabel(), transitionCB);
-
-
         }
         //subjects[i].initialState = initialState;
         //subjects[i].sm.setCurrentState( initialState );
-        actor.initialState = initialState;
-        actor.sm.setCurrentState( initialState );
+        //actor.initialState = initialState;
+        //actor.sm.setCurrentState( initialState );
         actor.label = processSubjects[i]->getLabel();
-        subjects[i] = actor;
+        subjects[sID] = actor;
 
         cout << "initialized, message count: " << processMessages.size() << endl;
     }
 }
 
-void VRProcessEngine::performAction(Action action){
+void VRProcessEngine::performAction(Action action) {
 
-}
-
-void VRProcessEngine::setProcess(VRProcessPtr p) { process = p; initialize();}
-VRProcessPtr VRProcessEngine::getProcess() { return process; }
-
-void VRProcessEngine::reset() {
-
-    auto processSubjects = process->getSubjects();
-    auto initialStates = process->getInitialStates();
-
-    for (uint i=0; i<processSubjects.size(); i++) {
-        int sID = processSubjects[i]->getID();
-        auto states = process->getSubjectStates(sID);
-        string initialState = "";
-
-        if (initialStates.count(processSubjects[i])){
-            initialState = initialStates[processSubjects[i]]->getLabel();
-        }
-        auto currentState = subjects[i].sm.getCurrentState();
-        if(currentState){
-            cout << "set state " << currentState->getName() << " to ";
-            subjects[i].sm.setCurrentState( initialState );
-            cout << currentState->getName() << endl;
-        }
-
-    }
-}
-
-void VRProcessEngine::run(float speed) {
-    VRProcessEngine::speed = speed;
-    running = true;
-}
-
-void VRProcessEngine::pause() {
-    running = false;
-}
-
-void VRProcessEngine::update() {
-    if (!running) return;
-
-    if(tickDuration <= 0) {
-        tickDuration = 60;
-        for (auto& subject : subjects) {
-            auto& actor = subject.second;
-            actor.sm.process(0);
-        }
-    }
-    tickDuration-=speed;
 }
 
 vector<VRProcessNodePtr> VRProcessEngine::getCurrentStates() {
     vector<VRProcessNodePtr> res;
     for (auto& subject : subjects) {
         auto action = subject.second.current;
-        if (action){
-
+        if (action) {
             auto sID = action->node->subject;
             auto tID = action->node->getID();
             auto tStates = process->getTransitionStates(sID, tID);
@@ -203,8 +192,7 @@ vector<VRProcessNodePtr> VRProcessEngine::getCurrentNodes() {
     vector<VRProcessNodePtr> res;
     for (auto& subject : subjects) {
         auto action = subject.second.current;
-        if (action){
-
+        if (action) {
             auto sID = action->node->subject;
             auto tID = action->node->getID();
             auto tStates = process->getTransitionStates(sID, tID);

@@ -59,8 +59,8 @@ class VRProcessLayout : public VRTransform {
         VRPathtoolPtr getSIDPathtool();
         VRPathtoolPtr getSBDPathtool(int sID);
 
-        void storeLayout();
-        void loadLayout();
+        void storeLayout(string path);
+        void loadLayout(string path);
 
         void update();
 };
