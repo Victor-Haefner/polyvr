@@ -241,11 +241,6 @@ VRProcessNodePtr VRProcess::getStateMessage(VRProcessNodePtr state){
     return stateToMessage[state];
 }
 
-TRANSITION_CONDITION VRProcess::getTransitionCondition(VRProcessNodePtr transition){
-    if (!transitionNodeToCondition.count(transition)) return DEFAULT;
-    return transitionNodeToCondition[transition];
-}
-
 VRProcessNodePtr VRProcess::getTransitionMessage(VRProcessNodePtr transition){
     if (!transitionToMessage.count(transition)) return 0;
     return transitionToMessage[transition];
@@ -343,7 +338,7 @@ void VRProcess::update() {
             VREntityPtr transitionConditionEntity;
             if (auto transitionCondition = transition->get("hasTransitionCondition") ) {
                 transitionConditionEntity = ontology->getEntity(transitionCondition->value);
-                if (transitionConditionEntity->is_a("ReceiveTransitionCondition") ) transitionToCondition[transition] = RECIEVE_CONDITION;
+                if (transitionConditionEntity->is_a("ReceiveTransitionCondition") ) transitionToCondition[transition] = RECEIVE_CONDITION;
                 else if (transitionConditionEntity->is_a("SendTransitionCondition") ) transitionToCondition[transition] = SEND_CONDITION;
 
 
@@ -364,12 +359,13 @@ void VRProcess::update() {
                     string msg = transitionEntity->get("hasModelComponentLabel")->value;
                     auto transitionNode = addTransition(msg, sID, nodes[source.first], nodes[target.first], behaviorDiagram);
 
-                    if (transitionToCondition.count(transitionEntity)){
-                        auto type = transitionToCondition[transitionEntity];
-                        if ( type == RECIEVE_CONDITION) transitionNodeToCondition[transitionNode] = type;
-                        else if ( type == SEND_CONDITION) transitionNodeToCondition[transitionNode] = type;
+                    if (transitionToCondition.count(transitionEntity)) {
+                        auto node = getNode( nodes[source.first] );
+                        transitionNode->transition = transitionToCondition[transitionEntity];
+                        if (transitionNode->transition == SEND_CONDITION) node->isSendState = true;
+                        if (transitionNode->transition == RECEIVE_CONDITION) node->isReceiveState = true;
 
-                        if (transitionsToMessages.count(transitionEntity)) {
+                        if (transitionsToMessages.count(transitionEntity)) { // ?
                             auto messageEntity = transitionsToMessages[transitionEntity];
                             auto messageNode = messageEntityToNode[messageEntity];
                             transitionToMessage[transitionNode] = messageNode;
@@ -425,33 +421,6 @@ VRProcessNodePtr VRProcess::addState(string name, int sID) {
     return s;
 }
 
-
-VRProcessNodePtr VRProcess::addSendState(string name, int sID, VRProcessNodePtr message){
-    auto state = addState(name, sID);
-    /*if (!behaviorDiagrams.count(sID)) return 0;
-    auto diag = behaviorDiagrams[sID];
-
-    auto nID = diag->addNode();
-    auto state = VRProcessNode::create(name, SENDSTATE, nID, sID);
-    diag->processnodes[nID] = state;*/
-
-    stateToMessage[state] = message;
-    return state;
-}
-
-VRProcessNodePtr VRProcess::addReceiveState(string name, int sID, VRProcessNodePtr message){
-    auto state = addState(name, sID);
-    /*if (!behaviorDiagrams.count(sID)) return 0;
-    auto diag = behaviorDiagrams[sID];
-
-    auto nID = diag->addNode();
-    auto state = VRProcessNode::create(name, RECEIVESTATE, nID, sID);
-    diag->processnodes[nID] = state;*/
-
-    stateToMessage[state] = message;
-    return state;
-}
-
 void VRProcess::setInitialState(VRProcessNodePtr state) {
     int sID = state->subject;
     auto diag = behaviorDiagrams[sID];
@@ -483,6 +452,7 @@ VRProcessNodePtr VRProcess::getNode(int i, VRProcessDiagramPtr diag) {
     if (diag && diag->processnodes.count(i)) return diag->processnodes[i];
     if (interactionDiagram && interactionDiagram->processnodes.count(i)) return interactionDiagram->processnodes[i];
     for (auto diag : behaviorDiagrams) if (diag.second && diag.second->processnodes.count(i)) return diag.second->processnodes[i];
+    return 0;
 }
 
 VRProcessNodePtr VRProcess::getTransitionState(VRProcessNodePtr transition) {

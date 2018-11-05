@@ -366,11 +366,9 @@ void VRProcessLayout::update(){
                 bool isActive = ::find( actives.begin(), actives.end(), state) != actives.end();
                 if (isActive) mat->setDiffuse(colorActiveState);
                 else {
-                    switch (state->type) {
-                        case RECEIVESTATE: mat->setDiffuse(colorReceiveState);
-                        case SENDSTATE: mat->setDiffuse(colorSendState);
-                        default: mat->setDiffuse(colorState);
-                    }
+                    if      (state->isSendState)    mat->setDiffuse(colorSendState);
+                    else if (state->isReceiveState) mat->setDiffuse(colorReceiveState);
+                    else                            mat->setDiffuse(colorState);
                 }
             }
         }
@@ -408,7 +406,7 @@ void VRProcessLayout::loadLayout(string path) {
     int i = 0;
     auto loadHandles = [&](VRPathtoolPtr tool) {
         for (auto handle : tool->getHandles()) {
-            auto element = handle->loadChildIFrom(root, i, context);
+            handle->loadChildIFrom(root, i, context);
             i++;
         }
     };

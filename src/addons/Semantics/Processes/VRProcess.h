@@ -15,25 +15,26 @@ enum PROCESS_WIDGET {
     SUBJECT,
     MESSAGE,
     STATE,
-    SENDSTATE,
-    RECEIVESTATE,
     TRANSITION
 };
 
 enum TRANSITION_CONDITION {
     SEND_CONDITION,
-    RECIEVE_CONDITION,
-    DEFAULT
+    RECEIVE_CONDITION,
+    NONE
 };
 
 struct VRProcessNode : VRName {
     VREntityPtr entity;
     VRTransformPtr widget;
     PROCESS_WIDGET type;
+    TRANSITION_CONDITION transition = NONE;
     string label;
     int ID = 0;
     int subject = 0;
-    bool isInitialState = 0;
+    bool isInitialState = false;
+    bool isSendState = false;
+    bool isReceiveState = false;
     //VRProcessNodePtr message;
 
     VRProcessNode(string name, PROCESS_WIDGET type, int ID, int sID);
@@ -66,8 +67,7 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         map<int, VRProcessDiagramPtr> behaviorDiagrams;
         void printNodes(VRProcessDiagramPtr d);
         map<VRProcessNodePtr, VRProcessNodePtr> stateToMessage; //maps state to message for send/receive refenrences
-        map<VRProcessNodePtr, TRANSITION_CONDITION> transitionNodeToCondition; //maps a transition to a transition condition if available
-        map<VRProcessNodePtr,VRProcessNodePtr> transitionToMessage; //maps the send/receive transition node to the corresponding message node
+        map<VRProcessNodePtr, VRProcessNodePtr> transitionToMessage; //maps the send/receive transition node to the corresponding message node
 
         void update();
 
@@ -98,16 +98,13 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         vector<VRProcessNodePtr> getTransitionSourceState(int subjectID, int transitionID);
         vector<VRProcessNodePtr> getTransitions(int subjectID);
         vector<VRProcessNodePtr> getInitialStates();
-        VRProcessNodePtr getStateMessage(VRProcessNodePtr state);
 
-        TRANSITION_CONDITION getTransitionCondition(VRProcessNodePtr);
-        VRProcessNodePtr getTransitionMessage(VRProcessNodePtr);
+        VRProcessNodePtr getStateMessage(VRProcessNodePtr state);
+        VRProcessNodePtr getTransitionMessage(VRProcessNodePtr transition);
 
         VRProcessNodePtr addSubject(string name);
         VRProcessNodePtr addMessage(string name, int i, int j, VRProcessDiagramPtr diag = 0);
         VRProcessNodePtr addState(string name, int sID);
-        VRProcessNodePtr addSendState(string name, int sID, VRProcessNodePtr message);
-        VRProcessNodePtr addReceiveState(string name, int sID, VRProcessNodePtr message);
         VRProcessNodePtr addTransition(string name, int sID, int i, int j, VRProcessDiagramPtr d = 0);
         void setInitialState(VRProcessNodePtr state);
 
