@@ -47,6 +47,7 @@ class VRWorldGenerator : public VRTransform {
 
         VROntologyPtr getOntology();
         VRPlanetPtr getPlanet();
+        Vec2d getPlanetCoords();
         VRRoadNetworkPtr getRoadNetwork();
         VRObjectManagerPtr getAssetManager();
         VRNaturePtr getNature();

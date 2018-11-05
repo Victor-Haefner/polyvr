@@ -38,13 +38,14 @@ void VRPlanet::localize(double north, double east) {
 
     for (auto s : sectors) {
         auto sector = s.second;
-        Vec2i p = s.first;
         addChild(sector);
         sector->setIdentity();
         Vec2d size = sector->getTerrain()->getSize();
-        float X = p[1]*sectorSize-east;
-        float Y = p[0]*sectorSize-north;
-        cout << "VRPlanet::localize " << X << " " << X*size[0] << endl;
+        Vec2d p = sector->getPlanetCoords() + Vec2d(1,1)*sectorSize*0.5; // sector mid point
+        float X = p[0]-east;
+        float Y = north - p[1];
+        cout << "VRPlanet::localize p " << p << " P " << Vec2f(north, east) << " XY " << Vec2d(X, Y) << endl;
+        //cout << "VRPlanet::localize " << Y << " " << p[0]*sectorSize << " " << north << endl;
         sector->translate(Vec3d(X*size[0]/sectorSize, 0, Y*size[1]/sectorSize));
     }
 
@@ -168,7 +169,7 @@ void VRPlanet::rebuild() {
     }
 }
 
-void VRPlanet::setParameters( double r, double s ) { radius = r; sectorSize = s; rebuild(); }
+void VRPlanet::setParameters( double r, double s ) { radius = r; sectorSize = s; }//rebuild(); } // TODO: rebuild breaks the pins
 
 VRWorldGeneratorPtr VRPlanet::addSector( double north, double east ) {
     auto generator = VRWorldGenerator::create();
@@ -192,6 +193,12 @@ VRWorldGeneratorPtr VRPlanet::getSector( double north, double east ) {
 VRMaterialPtr VRPlanet::getMaterial() { return sphereMat; }
 
 int VRPlanet::addPin( string label, double north, double east, double length ) {
+    if (!metaGeo) {
+        metaGeo = VRAnalyticGeometry::create("PlanetMetaData");
+        metaGeo->setLabelParams(0.02, true, true, Color4f(0.5,0.1,0,1), Color4f(1,1,0.5,1));
+        origin->addChild(metaGeo);
+    }
+
     Vec3d n = fromLatLongNormal(north, east);
     Vec3d p = fromLatLongPosition(north, east);
     static int ID = -1; ID++;//metaGeo->getNewID(); // TODO

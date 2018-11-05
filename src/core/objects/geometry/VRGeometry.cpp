@@ -425,8 +425,9 @@ void VRGeometry::setTypes(GeoIntegralProperty* types) { if (!meshSet) setMesh();
 void VRGeometry::setNormals(GeoVectorProperty* Norms) { if (!meshSet) setMesh(); mesh->geo->setNormals(Norms); }
 void VRGeometry::setColors(GeoVectorProperty* Colors, bool fixMapping) {
     if (!meshSet) setMesh();
-    if (!Colors || Colors->size() == 0) { mesh->geo->setColors(0); fixColorMapping(); }
-    else mesh->geo->setColors(Colors);
+    //if (!Colors || Colors->size() == 0) { mesh->geo->setColors(0); fixColorMapping(); } // TODO: needed?
+    if (!Colors || Colors->size() == 0) fixColorMapping();
+    mesh->geo->setColors(Colors);
     if (fixMapping) fixColorMapping();
 }
 void VRGeometry::setLengths(GeoIntegralProperty* lengths) { if (!meshSet) setMesh(); mesh->geo->setLengths(lengths); }
