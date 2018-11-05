@@ -116,9 +116,9 @@ void VRProcessEngine::initialize() {
                 auto nextState = process->getTransitionState(processTransition);
                 Transition transition(state, nextState, processTransition);
 
-                /*if (state->type == RECEIVESTATE) { //if state == receive state add the receive message to transition prerequisites
+                if (processTransition->transition == RECEIVE_CONDITION) { // if state == receive state add the receive message to transition prerequisites
                     cout << "receive state found" << endl;
-                    bool messageExist = false;
+                    /*bool messageExist = false;
                     auto messageNode =  process->getStateMessage(state);
                     auto receiver = subject->getLabel();
 
@@ -139,12 +139,10 @@ void VRProcessEngine::initialize() {
                             Prerequisite p(m);
                             transition.prerequisites.push_back(p);
                         }
-                    }
-                }
-
-                else if (state->type == SENDSTATE) { //add a sendMessage callback
+                    }*/
+                } else if (processTransition->transition == SEND_CONDITION) { // add a sendMessage callback
                     cout << "send state found" << endl;
-                    VRStateMachine<float>::VRStateEnterCbPtr sendMessageCB = VRStateMachine<float>::VRStateEnterCb::create("sendMessage", boost::bind(&VRProcessEngine::Actor::sendMessage, &subjects[sID], _1));
+                    /*VRStateMachine<float>::VRStateEnterCbPtr sendMessageCB = VRStateMachine<float>::VRStateEnterCb::create("sendMessage", boost::bind(&VRProcessEngine::Actor::sendMessage, &subjects[sID], _1));
                     smState->setStateLeaveCB(sendMessageCB);
 
                     auto messageNode = process->getStateMessage(state);
@@ -166,9 +164,9 @@ void VRProcessEngine::initialize() {
                             Message m(messageNode->getLabel(), sender, r->getLabel());
                             processMessages.push_back(m);
                         }
-                    }
+                    }*/
                 }
-                */
+
 
                 actor.transitions[state->getLabel()].push_back(transition);
             }
