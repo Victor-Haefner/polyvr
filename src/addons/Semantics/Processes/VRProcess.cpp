@@ -284,8 +284,8 @@ void VRProcess::update() {
     }
 
     for ( auto sender : messages ) {
-        for (auto receiver : sender.second) {
-            string label = "Msg:";
+        for (auto receiver : sender.second) { // TODO: first version is pretty, but messes up the messaging!
+            /*string label = "Msg:";
             vector<VREntityPtr> res;
             for (auto message : receiver.second) {
                 string q_message = "q(x):MessageSpecification(x);MessageExchange("+message->getName()+");is(x,"+message->getName()+".hasMessageType)";
@@ -297,6 +297,17 @@ void VRProcess::update() {
             auto messageNode = addMessage(label, nodes[sender.first], nodes[receiver.first]);
             for (auto entity : res) {
                 messageEntityToNode[entity] = messageNode;
+            }*/
+
+            for (auto message : receiver.second) {
+                string q_message = "q(x):MessageSpecification(x);MessageExchange("+message->getName()+");is(x,"+message->getName()+".hasMessageType)";
+                auto msgs = query(q_message);
+                if (msgs.size()) {
+                    if (auto l = msgs[0]->get("hasModelComponentLabel") ) {
+                        auto messageNode = addMessage(l->value, nodes[sender.first], nodes[receiver.first]);
+                        messageEntityToNode[msgs[0]] = messageNode;
+                    }
+                }
             }
         }
     }

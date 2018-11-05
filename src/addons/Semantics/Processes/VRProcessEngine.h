@@ -26,10 +26,7 @@ class VRProcessEngine {
         struct Inventory {
             vector<Message> messages;
 
-            bool hasMessage(Message m) {
-                for (auto& m2 : messages) if (m2 == m) return true;
-                return false;
-            }
+            bool hasMessage(Message m);
         };
 
         struct Prerequisite {
@@ -37,9 +34,13 @@ class VRProcessEngine {
 
             Prerequisite(Message m) : message(m) {}
 
-            bool valid(Inventory* inventory) {
-                return inventory->hasMessage(message);
-            }
+            bool valid(Inventory* inventory);
+        };
+
+        struct Action {
+            VRUpdateCbPtr cb;
+
+            Action(VRUpdateCbPtr cb) : cb(cb) {}
         };
 
         struct Transition {
@@ -47,6 +48,7 @@ class VRProcessEngine {
             VRProcessNodePtr nextState;
             VRProcessNodePtr node;
             vector<Prerequisite> prerequisites;
+            vector<Action> actions;
 
             Transition(VRProcessNodePtr s1, VRProcessNodePtr s2, VRProcessNodePtr n) : sourceState(s1), nextState(s2), node(n) {}
 
@@ -69,7 +71,7 @@ class VRProcessEngine {
 
             string transitioning( float t ); // performs transitions to next states
 
-            void sendMessage(string message);
+            void receiveMessage(Message message);
         };
 
     private:

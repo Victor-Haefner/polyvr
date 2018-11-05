@@ -11,6 +11,23 @@ using namespace OSG;
 
 template<> string typeName(const VRProcessEnginePtr& o) { return "ProcessEngine"; }
 
+// ----------- process engine prerequisites --------------
+
+bool VRProcessEngine::Inventory::hasMessage(Message m) {
+    for (auto& m2 : messages) {
+        cout << " VRProcessEngine::Inventory::hasMessage '" << m.message << "' and '" << m2.message << "' -> " << bool(m2 == m) << endl;
+        if (m2 == m) return true;
+    }
+    return false;
+}
+
+// ----------- process engine prerequisites --------------
+
+bool VRProcessEngine::Prerequisite::valid(Inventory* inventory) {
+    cout << "VRProcessEngine::Prerequisite::valid check for " << message.message << endl;
+    return inventory->hasMessage(message);
+}
+
 // ----------- process engine actor --------------
 
 string VRProcessEngine::Actor::transitioning( float t ) {
@@ -21,6 +38,7 @@ string VRProcessEngine::Actor::transitioning( float t ) {
     for (auto& transition : transitions[stateName]) { // check if any actions are ready to start
         if (transition.valid(&inventory)) {
             currentState = transition.nextState;
+            for (auto& action : transition.actions) (*action.cb)();
             return transition.nextState->getLabel();
         }
     }
@@ -28,11 +46,9 @@ string VRProcessEngine::Actor::transitioning( float t ) {
     return "";
 }
 
-void VRProcessEngine::Actor::sendMessage(string message) {
-    /*auto message = current.transition.msgCon.message;
-    auto receiver = current.transition.msgCon.receiver;
-    auto sender = current.transition.msgCon.sender.label;
-    receiver.inventory.messages.push_back(Message(message, sender));*/
+void VRProcessEngine::Actor::receiveMessage(Message message) {
+    cout << "VRProcessEngine::Actor::receiveMessage '" << message.message << "' to '" << message.receiver << "'" << endl;
+    inventory.messages.push_back( message );
 }
 
 // ----------- process engine --------------
@@ -101,74 +117,51 @@ vector<VRProcessNodePtr> VRProcessEngine::getCurrentStates() {
 void VRProcessEngine::initialize() {
     cout << "VRProcessEngine::initialize()" << endl;
 
+
+
     for (auto subject : process->getSubjects()) {
         int sID = subject->getID();
         subjects[sID] = Actor();
-        Actor& actor = subjects[sID];
-        actor.label = subject->getLabel();
+        subjects[sID].label = subject->getLabel();
+    }
+
+    for (auto& actor : subjects) {
+        int sID = actor.first;
 
         for (auto state : process->getSubjectStates(sID)) { //for each state of this Subject create the possible Actions
-            auto transitionCB = VRFunction<float, string>::create("processTransition", boost::bind(&VRProcessEngine::Actor::transitioning, &actor, _1));
-            auto smState = actor.sm.addState(state->getLabel(), transitionCB);
+            auto transitionCB = VRFunction<float, string>::create("processTransition", boost::bind(&VRProcessEngine::Actor::transitioning, &actor.second, _1));
+            auto smState = actor.second.sm.addState(state->getLabel(), transitionCB);
 
             for (auto processTransition : process->getStateOutTransitions(sID, state->getID())) { //for each transition out of this State create Actions which lead to the next State
                 //get transition requirements
                 auto nextState = process->getTransitionState(processTransition);
                 Transition transition(state, nextState, processTransition);
 
-                if (processTransition->transition == RECEIVE_CONDITION) { // if state == receive state add the receive message to transition prerequisites
-                    cout << "receive state found" << endl;
-                    /*bool messageExist = false;
-                    auto messageNode =  process->getStateMessage(state);
-                    auto receiver = subject->getLabel();
-
-                    for (auto m : processMessages) {
-                        if (m.receiver == receiver) {
-                            if (m.message == messageNode->getLabel()){ //if the message already exists, add it to transition prerequisites
-                                Prerequisite p(m);
-                                transition.prerequisites.push_back(p);
-                                messageExist = true;
-                            }
+                if (processTransition->transition == RECEIVE_CONDITION) {
+                    auto message = process->getTransitionMessage( processTransition );
+                    if (message) {
+                        auto sender = process->getMessageSender(message->getID())[0];
+                        auto receiver = process->getMessageReceiver(message->getID())[0];
+                        if (message && sender && receiver) {
+                            Message m(message->getLabel(), sender->getLabel(), receiver->getLabel());
+                            transition.prerequisites.push_back( Prerequisite(m) );
                         }
                     }
-
-                    if (!messageExist){ //create a new message instance if it doesnt exist and add it to transition prerequisites
-                        auto sender = process->getMessageSender(messageNode->getID());
-                        for (auto s : sender) {
-                            Message m(messageNode->getLabel(), s->getLabel(), receiver);
-                            Prerequisite p(m);
-                            transition.prerequisites.push_back(p);
-                        }
-                    }*/
-                } else if (processTransition->transition == SEND_CONDITION) { // add a sendMessage callback
-                    cout << "send state found" << endl;
-                    /*VRStateMachine<float>::VRStateEnterCbPtr sendMessageCB = VRStateMachine<float>::VRStateEnterCb::create("sendMessage", boost::bind(&VRProcessEngine::Actor::sendMessage, &subjects[sID], _1));
-                    smState->setStateLeaveCB(sendMessageCB);
-
-                    auto messageNode = process->getStateMessage(state);
-                    auto receiverNodes = process->getMessageReceiver(messageNode->getID());
-                    auto sender = subject->getLabel();
-
-                    bool messageExist = false;
-                    for (auto m : processMessages) { //check if the message already exists
-                        if (m.sender == sender) {
-                            if (m.message == messageNode->getLabel()){
-                                messageExist = true;
-                            }
+                } else if (processTransition->transition == SEND_CONDITION) {
+                    auto message = process->getTransitionMessage( processTransition );
+                    if (message) {
+                        auto sender = process->getMessageSender(message->getID())[0];
+                        auto receiver = process->getMessageReceiver(message->getID())[0];
+                        if (sender && receiver) {
+                            Message m(message->getLabel(), sender->getLabel(), receiver->getLabel());
+                            Actor& rActor = subjects[receiver->getID()];
+                            auto cb = VRUpdateCb::create("action", boost::bind(&VRProcessEngine::Actor::receiveMessage, rActor, m));
+                            transition.actions.push_back( Action(cb) );
                         }
                     }
-
-                    if (!messageExist){ //if message doesnt exist, create one for each receiver and add to processMessages
-                        auto receiver = process->getMessageReceiver(messageNode->getID());
-                        for (auto r : receiver) {
-                            Message m(messageNode->getLabel(), sender, r->getLabel());
-                            processMessages.push_back(m);
-                        }
-                    }*/
                 }
 
-
-                actor.transitions[state->getLabel()].push_back(transition);
+                actor.second.transitions[state->getLabel()].push_back(transition);
             }
         }
 
