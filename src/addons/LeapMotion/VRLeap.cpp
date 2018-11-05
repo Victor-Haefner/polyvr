@@ -41,7 +41,9 @@ VRLeap::VRLeap() : VRDevice("leap") {
     store("port", &port);
     store("transformation", &transformation);
 
-    regStorageSetupFkt( VRUpdateCb::create("leap setup", boost::bind(&VRLeap::setup, this)) );
+    // TODO: apparently needs to be a StorageCb instead of UpdateCb.
+    regStorageSetupFkt( VRStorageCb::create("leap setup", boost::bind(&VRLeap::setup, this)) );
+//    regStorageSetupFkt( VRUpdateCb::create("leap setup", boost::bind(&VRLeap::setup, this)) );
 
     //reconnect();
 }
