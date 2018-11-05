@@ -52,10 +52,7 @@ class VRProcessEngine {
 
             Transition(VRProcessNodePtr s1, VRProcessNodePtr s2, VRProcessNodePtr n) : sourceState(s1), nextState(s2), node(n) {}
 
-            bool valid(Inventory* inventory) {
-                for (auto& p : prerequisites) if (!p.valid(inventory)) return false;
-                return true;
-            }
+            bool valid(Inventory* inventory);
         };
 
         struct Actor {
