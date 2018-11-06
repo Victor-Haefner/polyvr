@@ -313,8 +313,10 @@ void VRPathtool::updateHandlePose(knot& knot, map<int, Vec3d>& hPositions, bool 
 
         if (doUpdateEntry && handleToEntries.count(key)) {
             for (auto e : handleToEntries[key]) {
+                auto opt = options[e->edge];
                 auto po = e->p->getPoint(e->points[key]);
-                po.setDir(dir);
+                int i = e->points[key];
+                po.setDir(dir - opt.bulge*(2.0*i/(e->p->size()-1)-1));
                 e->p->setPoint( e->points[key], po );
                 updateEntry(e);
             }
@@ -334,8 +336,11 @@ void VRPathtool::update() { // call in script to have smooth knots
         auto key = handle.get();
         if (!handleToEntries.count(key)) continue;
         for (auto e : handleToEntries[key]) {
+            auto opt = options[e->edge];
+            int i = e->points[key];
             auto po = *e->anchor.lock()->getPoseTo(handle);
-            e->p->setPoint( e->points[key], po );
+            po.setDir( po.dir() - opt.bulge*(2.0*i/(e->p->size()-1)-1) );
+            e->p->setPoint( i, po );
         }
     }
 
@@ -348,8 +353,14 @@ void VRPathtool::updateEntry(entryPtr e) { // update path representation
     if (hN <= 0) return;
     auto opt = options[e->edge];
 
-    if (opt.useColors) {
-        for (int i=0; i<e->p->size(); i++) {
+    for (int i=0; i<e->p->size(); i++) { // apply options
+        /*if (graph) { // TODO
+            Vec3d n = e->handles[i].lock()->getPose()->dir();
+            n -= opt.bulge*(2.0*i/(e->p->size()-1)-1);
+            e->p->getPoint(i).setDir(n);
+        }*/
+
+        if (opt.useColors) {
             Color3f c = opt.color1 + (opt.color2-opt.color1)*float(i)/(e->p->size()-1);
             e->p->setPointColor(i, c);
         }
@@ -505,6 +516,7 @@ PathPtr VRPathtool::newPath( VRDevicePtr dev, VRObjectPtr anchor, int resolution
 
 void VRPathtool::setEdgeResolution(int eID, int resolution) { options[eID].resolution = resolution; }
 void VRPathtool::setEdgeColor(int eID, Color3f color1, Color3f color2) { options[eID].color1 = color1; options[eID].color2 = color2; options[eID].useColors = true; }
+void VRPathtool::setEdgeBulge(int eID, Vec3d bulge) { options[eID].bulge = bulge; }
 
 VRGeometryPtr VRPathtool::newControlHandle(VRGeometryPtr handle, Vec3d p) {
     VRGeometryPtr h;

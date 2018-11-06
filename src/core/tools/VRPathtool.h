@@ -82,6 +82,8 @@ class VRPathtool : public VRObject {
             Color3f color2;
             bool useColors = false;
 
+            Vec3d bulge;
+
             option(int r = 10, bool uch = false);
         };
 
@@ -165,6 +167,7 @@ class VRPathtool : public VRObject {
         // options
         void setEdgeResolution(int eID, int resolution);
         void setEdgeColor(int eID, Color3f color1, Color3f color2);
+        void setEdgeBulge(int eID, Vec3d bulge);
 
         void select(VRGeometryPtr handle);
         void selectPath(PathPtr p);
