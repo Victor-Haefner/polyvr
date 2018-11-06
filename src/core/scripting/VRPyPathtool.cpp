@@ -32,6 +32,7 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"clear", PyWrapOpt( Pathtool, clear, "Clear a path or all paths nodes", "0", void, PathPtr ) },
     {"setHandleGeometry", PyWrap( Pathtool, setHandleGeometry, "Replace the default handle geometry - setHandleGeometry( geo )", void, VRGeometryPtr ) },
     {"getPathMaterial", PyWrap( Pathtool, getPathMaterial, "Get the material used for paths geometry", VRMaterialPtr ) },
+    {"getArrowMaterial", PyWrap( Pathtool, getArrowMaterial, "Get the material used for arrow geometry", VRMaterialPtr ) },
     {"setGraph", PyWrapOpt( Pathtool, setGraph, "Setup from graph, flags: doClear, doHandles, doArrows", "1|0|0", void, GraphPtr, bool, bool, bool ) },
     {"addHandle", PyWrap( Pathtool, addHandle, "Add handle, graph nodeID, pose", VRGeometryPtr, int, PosePtr ) },
     {"addNode", PyWrap( Pathtool, addNode, "Add node", int, PosePtr ) },
@@ -44,6 +45,8 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"setEdgeColor", PyWrap( Pathtool, setEdgeColor, "Set edge color, eID, color1, color2", void, int, Color3f, Color3f ) },
     {"setEdgeBulge", PyWrap( Pathtool, setEdgeBulge, "Set edge bulge, eID, bulge", void, int, Vec3d ) },
     {"setEdgeSmoothGraphNodes", PyWrap( Pathtool, setEdgeSmoothGraphNodes, "Set edge flag for computing smooth graph nodes", void, int, bool ) },
+    {"setEdgeVisibility", PyWrap( Pathtool, setEdgeVisibility, "Set edge flag for computing smooth graph nodes", void, int, bool ) },
+    {"setArrowSize", PyWrap( Pathtool, setArrowSize, "Set arrow sizes, call after the arrows are instantiated!", void, float ) },
     {NULL}  /* Sentinel */
 };
 

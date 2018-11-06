@@ -78,6 +78,7 @@ class VRPathtool : public VRObject {
             int resolution = 10;
             bool useControlHandles = false;
             bool doSmoothGraphNodes = true;
+            bool isVisible = true;
 
             Color3f color1;
             Color3f color2;
@@ -108,6 +109,7 @@ class VRPathtool : public VRObject {
 
         VRMaterialPtr lmat;
         VRMaterialPtr lsmat;
+        VRMaterialPtr amat;
 
         VRUpdateCbPtr updatePtr;
         VRManipulator* manip = 0;
@@ -164,12 +166,15 @@ class VRPathtool : public VRObject {
         VRStrokePtr getStroke(PathPtr p);
 
         VRMaterialPtr getPathMaterial();
+        VRMaterialPtr getArrowMaterial();
+        void setArrowSize(float s);
 
         // options
         void setEdgeResolution(int eID, int resolution);
         void setEdgeColor(int eID, Color3f color1, Color3f color2);
         void setEdgeBulge(int eID, Vec3d bulge);
         void setEdgeSmoothGraphNodes(int eID, bool b);
+        void setEdgeVisibility(int eID, bool b);
 
         void select(VRGeometryPtr handle);
         void selectPath(PathPtr p);
