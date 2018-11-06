@@ -76,6 +76,8 @@ class VRSky : public VRGeometry {
         void setLuminance(float turbidity);
         void setPosition(float latitude, float longitude);
         void reloadShader();
+
+        int getHour();
 };
 
 OSG_END_NAMESPACE;

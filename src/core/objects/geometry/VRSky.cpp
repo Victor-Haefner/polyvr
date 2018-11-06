@@ -269,6 +269,10 @@ void VRSky::setLuminance(float t) {
     mat->setShaderParameter<Vec3f>("E", coeffsE);
 }
 
+int VRSky::getHour(){
+    return date.hour;
+}
+
 void VRSky::reloadShader() {
     cout << "VRSky::reloadShader" << endl;
     string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Sky/";
