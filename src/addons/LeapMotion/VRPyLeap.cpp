@@ -12,9 +12,14 @@ PyMethodDef VRPyLeapFrame::methods[] = {
 
 PyMethodDef VRPyLeap::methods[] = {
     {"registerFrameCallback", (PyCFunction)VRPyLeap::registerFrameCallback, METH_VARARGS, "Add description" },
-    {"clearFrameCallbacks",   PyWrap(Leap, clearFrameCallbacks,   "Add description", void ) },
-    {"setPose",               PyWrap(Leap, setPose,               "Add description", void, PosePtr ) },
-    {"open",                  PyWrap(Leap, setAddress,               "Add description", void, string ) },
+    {"clearFrameCallbacks",   PyWrap(Leap, clearFrameCallbacks, "Add description", void ) },
+    {"getPose",               PyWrap(Leap, getPose,             "Get the leap's current transformation", PosePtr) },
+    {"setPose",               PyWrap(Leap, setPose,             "Set the transformation of the leap", void, PosePtr ) },
+    {"calibrate",             PyWrap(Leap, calibrateManual,     "Set calibration parameters for the leap manually using \n"
+                                                                "Vec3d pos: center position of the screen relative to the leap \n"
+                                                                "Vec3d dir: direction from pos to leap \n"
+                                                                "Vec3d up: relative up direction \n", void, Vec3d, Vec3d, Vec3d) },
+    {"open",                  PyWrap(Leap, setAddress,          "Add description", void, string ) },
     {NULL} /* Sentinel */
 };
 

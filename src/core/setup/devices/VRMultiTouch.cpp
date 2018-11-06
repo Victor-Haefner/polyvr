@@ -315,18 +315,31 @@ bool VRMultiTouch::addFinger(int fingerID) {
 /**
 * TODO: Duplicate code with VRMouse. Push Method to super class?
 */
-bool VRMultiTouch::calcViewRay(VRCameraPtr cam, VRViewPtr view, Line &line, float x, float y, int W, int H) {
+bool VRMultiTouch::calcViewRay(VRCameraPtr cam, VRViewPtr view, Line &line, float x, float y) {
     if (!cam) return false;
-    if(W <= 0 || H <= 0) return false;
+
+    int w, h;
+    // TODO: returns 320x240 instead of actual parameters for some reason.
+    w = view->getViewportL()->calcPixelWidth();
+    h = view->getViewportL()->calcPixelHeight();
+
+//    cout << "VRMultiTouch::calcViewRay. w,h: " << Vec2i(w,h) << endl;
+
+    if (w <= 0 || h <= 0) return false;
 
     Matrix proj, projtrans;
     if (view && view->getCameraDecoratorLeft()) {
         auto c = view->getCameraDecoratorLeft();
-        c->getProjection(proj, W, H);
-        c->getProjectionTranslation(projtrans, W, H);
-    } else {
-        cam->getCam()->cam->getProjection(proj, W, H);
-        cam->getCam()->cam->getProjectionTranslation(projtrans, W, H);
+        c->getProjection(proj, w, h);
+        c->getProjectionTranslation(projtrans, w, h);
+    } else { // TODO: send window parameters from slaves back to master and update view size!
+        //////////////////////////////////////
+        //Temporary Hack to get the right aspect ratio
+        w = 16;
+        h = 9;
+        //////////////////////////////////////
+        cam->getCam()->cam->getProjection(proj, w, h);
+        cam->getCam()->cam->getProjectionTranslation(projtrans, w, h);
     }
 
     Matrix wctocc;
@@ -342,7 +355,7 @@ bool VRMultiTouch::calcViewRay(VRCameraPtr cam, VRViewPtr view, Line &line, floa
     multFull(cctowc, Pnt3f(x, y, 1), at ); // 0.1
     if (view && view->getCameraDecoratorLeft()) from += Vec3f(view->getProjectionUser());
 
-    cout << "VRMultiTouch::calcViewRay cam: " << cam->getName() << " from: " << from << endl;
+//    cout << "VRMultiTouch::calcViewRay cam: " << cam->getName() << " from: " << from << endl;
 
     Vec3f dir = at - from;
     dir.normalize();
@@ -354,6 +367,7 @@ bool VRMultiTouch::calcViewRay(VRCameraPtr cam, VRViewPtr view, Line &line, floa
     line.setValue(from, dir);
     return true;
 }
+
 
 bool VRMultiTouch::rescale(float& v, float m1, float m2) {
     // Rescale v to window coordinates ([-1;1]) of given bounds m1, m2
@@ -373,9 +387,6 @@ void VRMultiTouch::updatePosition(int x, int y) {
 
     for (auto view : win->getViews()) {
         // Find the view in which the touch event is currently positioned
-        int w, h;
-        w = view->getViewportL()->calcPixelWidth();
-        h = view->getViewportL()->calcPixelHeight();
 
         // Get position coords of the views from [0;1] to [-1;1]
         Vec4d box = view->getPosition()*2 - Vec4d(1,1,1,1);
@@ -398,7 +409,7 @@ void VRMultiTouch::updatePosition(int x, int y) {
 
             cam = view->getCamera();
 
-            calcViewRay(cam, view, ray, rx,ry,w,h);
+            calcViewRay(cam, view, ray, rx,ry);
             auto p = Pose::create(Vec3d(ray.getPosition()), Vec3d(ray.getDirection()));
             p->makeUpOrthogonal();
 

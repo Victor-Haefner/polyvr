@@ -52,6 +52,7 @@ class VRLeap : public VRDevice {
 
         static VRLeapPtr create();
 
+        void setup();
         bool reconnect();
 
         string getHost();
@@ -67,10 +68,11 @@ class VRLeap : public VRDevice {
         void registerFrameCallback(std::function<void(VRLeapFramePtr)> func);
         void clearFrameCallbacks();
         void setPose(PosePtr pose);
-        PosePtr getPose() const;
+        PosePtr getPose();
 
         void startCalibration();
         void stopCalibration();
+        void calibrateManual(Vec3d position, Vec3d direction, Vec3d normal);
 
         void clearSignals();
 

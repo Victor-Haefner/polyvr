@@ -149,8 +149,24 @@ VRSignalPtr VRMouse::getFromEdgeSignal() { return on_from_edge; }
 void VRMouse::updatePosition(int x, int y) {
     auto cam = this->cam.lock();
     if (!cam) return;
+
     auto v = view.lock();
     if (!v) return;
+
+    auto altCam = v->getCamera();
+    if (altCam && cam != altCam) {
+
+        cout << "VRMouse::updatePosition. Changed cam to: " << altCam->getName() << endl;
+
+        setCamera(altCam);
+
+        auto beacon = getBeacon();
+        cout << "VRMouse::updatePosition. Beacon: " << beacon->getName() << endl;
+        if (!beacon->hasAncestor(altCam)) {
+                cout << "change beacon's ancestor to " << altCam->getSetupNode()->getName() << endl;
+                altCam->getSetupNode()->addChild(beacon);
+        }
+    }
 
     int w, h;
     w = v->getViewportL()->calcPixelWidth();
@@ -158,6 +174,7 @@ void VRMouse::updatePosition(int x, int y) {
 
     float rx, ry;
     v->getViewportL()->calcNormalizedCoordinates(rx, ry, x, y);
+
 
     //cam->getCam()->calcViewRay(ray,x,y,*v->getViewport());
     calcViewRay(cam, ray, rx,ry,w,h);

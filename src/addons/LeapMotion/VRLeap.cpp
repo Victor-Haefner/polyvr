@@ -41,7 +41,11 @@ VRLeap::VRLeap() : VRDevice("leap") {
     store("port", &port);
     store("transformation", &transformation);
 
-    reconnect();
+    // TODO: apparently needs to be a StorageCb instead of UpdateCb.
+    regStorageSetupFkt( VRStorageCb::create("leap setup", boost::bind(&VRLeap::setup, this)) );
+//    regStorageSetupFkt( VRUpdateCb::create("leap setup", boost::bind(&VRLeap::setup, this)) );
+
+    //reconnect();
 }
 
 VRLeapPtr VRLeap::create() {
@@ -50,6 +54,10 @@ VRLeapPtr VRLeap::create() {
     d->clearSignals();
 
     return d;
+}
+
+void VRLeap::setup() {
+    reconnect();
 }
 
 string VRLeap::getHost() {
@@ -279,6 +287,14 @@ PosePtr VRLeap::computeCalibPose(vector<PenPtr>& pens) {
     return result;
 }
 
+void VRLeap::calibrateManual(Vec3d position, Vec3d direction, Vec3d normal) {
+    PosePtr pose = Pose::create();
+    pose->set(position, direction, normal);
+    //pose->invert();
+
+    setPose(pose);
+}
+
 string VRLeap::getConnectionStatus() {
     return connectionStatus;
 }
@@ -383,7 +399,7 @@ void VRLeap::setPose(PosePtr pose) {
     transformed = true;
 }
 
-PosePtr VRLeap::getPose() const {
+PosePtr VRLeap::getPose() {
     return transformation;
 }
 
