@@ -12,6 +12,7 @@ PyMethodDef VRPySky::methods[] = {
     {"setLuminance",  PyWrap(Sky, setLuminance, "Set the luminance parameters, turbidity", void, float) },
     {"setPosition",  PyWrap(Sky, setPosition, "Set the latitude and longitude of the observer, flt latitude, flt longitude", void, float, float) },
     {"setSpeed",  PyWrap(Sky, setSpeed, "Set a time modifier", void, float) },
+    {"getHour",  PyWrap(Sky, getHour, "get Time, in hours", int, void) },
     {NULL}  /* Sentinel */
 };
 
