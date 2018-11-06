@@ -77,6 +77,7 @@ class VRPathtool : public VRObject {
         struct option {
             int resolution = 10;
             bool useControlHandles = false;
+            bool doSmoothGraphNodes = true;
 
             Color3f color1;
             Color3f color2;
@@ -168,6 +169,7 @@ class VRPathtool : public VRObject {
         void setEdgeResolution(int eID, int resolution);
         void setEdgeColor(int eID, Color3f color1, Color3f color2);
         void setEdgeBulge(int eID, Vec3d bulge);
+        void setEdgeSmoothGraphNodes(int eID, bool b);
 
         void select(VRGeometryPtr handle);
         void selectPath(PathPtr p);
