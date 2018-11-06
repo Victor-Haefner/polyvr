@@ -287,6 +287,14 @@ PosePtr VRLeap::computeCalibPose(vector<PenPtr>& pens) {
     return result;
 }
 
+void VRLeap::calibrateManual(Vec3d position, Vec3d direction, Vec3d normal) {
+    PosePtr pose = Pose::create();
+    pose->set(position, direction, normal);
+    //pose->invert();
+
+    setPose(pose);
+}
+
 string VRLeap::getConnectionStatus() {
     return connectionStatus;
 }
@@ -391,7 +399,7 @@ void VRLeap::setPose(PosePtr pose) {
     transformed = true;
 }
 
-PosePtr VRLeap::getPose() const {
+PosePtr VRLeap::getPose() {
     return transformation;
 }
 
