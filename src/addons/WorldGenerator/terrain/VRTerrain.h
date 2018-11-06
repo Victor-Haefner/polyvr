@@ -66,6 +66,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
 
         void setParameters( Vec2d size, double resolution, double heightScale, float w = 0 );
         void setWaterLevel(float w);
+        void setHeightScale(float s);
         void setMap( VRTexturePtr tex, int channel = 3 );
         void loadMap( string path, int channel = 3 );
         VRTexturePtr getMap();
