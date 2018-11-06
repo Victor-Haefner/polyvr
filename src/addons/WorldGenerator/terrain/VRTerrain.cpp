@@ -139,9 +139,8 @@ void VRTerrain::setParameters( Vec2d s, double r, double h, float w ) {
     setupGeo();
 }
 
-void VRTerrain::setWaterLevel(float w) {
-    mat->setShaderParameter("waterLevel", w);
-}
+void VRTerrain::setWaterLevel(float w) { mat->setShaderParameter("waterLevel", w); }
+void VRTerrain::setHeightScale(float s) { heightScale = s; mat->setShaderParameter("heightScale", s); }
 
 void VRTerrain::setMap( VRTexturePtr t, int channel ) {
     if (!t) return;
