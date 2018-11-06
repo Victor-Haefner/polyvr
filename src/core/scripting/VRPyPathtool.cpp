@@ -43,6 +43,7 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"setEdgeResolution", PyWrap( Pathtool, setEdgeResolution, "Set edge resolution, eID, res", void, int, int ) },
     {"setEdgeColor", PyWrap( Pathtool, setEdgeColor, "Set edge color, eID, color1, color2", void, int, Color3f, Color3f ) },
     {"setEdgeBulge", PyWrap( Pathtool, setEdgeBulge, "Set edge bulge, eID, bulge", void, int, Vec3d ) },
+    {"setEdgeSmoothGraphNodes", PyWrap( Pathtool, setEdgeSmoothGraphNodes, "Set edge flag for computing smooth graph nodes", void, int, bool ) },
     {NULL}  /* Sentinel */
 };
 
