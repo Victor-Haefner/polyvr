@@ -93,6 +93,9 @@ VRPathtool::VRPathtool() : VRObject("Pathtool") {
     lmat->setDiffuse(Color3f(0.1,0.9,0.2));
     lmat->setLineWidth(3);
 
+    amat = VRMaterial::create("pline");
+    amat->setDiffuse(Color3f(0.9,0.9,0.2));
+
     lsmat = VRMaterial::create("spline");
     lsmat->setLit(false);
     lsmat->setDiffuse(Color3f(0.9,0.1,0.2));
@@ -100,7 +103,7 @@ VRPathtool::VRPathtool() : VRObject("Pathtool") {
 
     arrowTemplate = VRGeometry::create("arrow");
     arrowTemplate->setPrimitive("Arrow 2 3 3 1.5 1.2");
-    arrowTemplate->setMaterial(lmat);
+    arrowTemplate->setMaterial(amat);
 
     storeObj("handle", customHandle);
     storeObj("graph", graph);
@@ -246,6 +249,14 @@ void VRPathtool::connect(int i1, int i2, Vec3d n1, Vec3d n2, bool handles, bool 
     } else {
         cout << "VRPathtool::disconnect " << i1 << " with " << i2 << "!" << endl;
         disconnect(i1,i2);
+    }
+}
+
+VRMaterialPtr VRPathtool::getArrowMaterial() { return amat; }
+
+void VRPathtool::setArrowSize(float s) {
+    for (auto e : pathToEntry) {
+        if (auto a = e.second->arrow.lock()) a->setScale(Vec3d(s,s,s));
     }
 }
 
@@ -405,9 +416,13 @@ void VRPathtool::updateEntry(entryPtr e) { // update path representation
     if (auto l = e->line.lock()) {
         l->setDoColor( opt.useColors );
         l->update();
+        l->setVisible(opt.isVisible);
     }
 
-    if (auto a = e->arrow.lock()) a->setPose(e->p->getPose(0.5));
+    if (auto a = e->arrow.lock()) {
+        a->setPose(e->p->getPose(0.5));
+        a->setVisible(opt.isVisible);
+    }
 }
 
 void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle belongs to
@@ -537,6 +552,7 @@ void VRPathtool::setEdgeResolution(int eID, int resolution) { options[eID].resol
 void VRPathtool::setEdgeColor(int eID, Color3f color1, Color3f color2) { options[eID].color1 = color1; options[eID].color2 = color2; options[eID].useColors = true; }
 void VRPathtool::setEdgeBulge(int eID, Vec3d bulge) { options[eID].bulge = bulge; }
 void VRPathtool::setEdgeSmoothGraphNodes(int eID, bool b) { options[eID].doSmoothGraphNodes = b; }
+void VRPathtool::setEdgeVisibility(int eID, bool b) { options[eID].isVisible = b; }
 
 VRGeometryPtr VRPathtool::newControlHandle(VRGeometryPtr handle, Vec3d p) {
     VRGeometryPtr h;
