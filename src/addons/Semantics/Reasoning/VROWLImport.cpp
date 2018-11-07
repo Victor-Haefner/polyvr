@@ -265,7 +265,12 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
 
         if (object == "Ontology") { ontologyName = subject; return 0; }
         if (object == "Class") { concepts[subject] = VRConcept::create(subject, onto); return 0; }
-        if (object == "NamedIndividual") { entities[subject] = VREntity::create(subject, onto); return 0; }
+
+        if (object == "NamedIndividual") {
+            if (entities.count(subject)) cout << "OWL import ERROR: entity '" << subject << "' allready exists, skipping it! (make sure the names are unique)" << endl;
+            else entities[subject] = VREntity::create(subject, onto);
+            return 0;
+        }
 
         // properties
         if (object == "Datatype") { datproperties[subject] = VRProperty::create(subject); return 0; }
@@ -412,7 +417,7 @@ void VROWLImport::AgglomerateData() {
         int jobs = jobSize();
         cout << "RDF parser: iteration: " << i << " with " << jobs << " triplets remaining" << endl;
 
-        if (int(stack.size()) == lastStack && jobs == lastJobSize) {
+        if (int(stack.size()) == lastStack && jobs == lastJobSize && lastStack > 0) {
             cout << "RDF parser warning: stack not shrinking, aborting with " << jobs << " triplets remaining!" << endl;
             cout << "Print Stack: " << endl;
             for (auto& sv : stack) for (auto& s : sv.second) printState(s);

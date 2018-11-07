@@ -2,8 +2,8 @@
 <Scene base_name="Bricks" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
-      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="17.8036 24.3013 2.10903" at_dir="0" base_name="Default" far="250" fov="1.0472" from="18.2848 24.3417 2.14507" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="17.8036 24.3013 2.10903" at_dir="0" base_name="Default" far="250" fov="1.0472" from="23.692 24.7957 2.55006" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <constraint persistency="666"/>
           </Object>
@@ -12,8 +12,55 @@
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Cameras activeCam="Default" persistency="666"/>
+  <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
+    <Script base_name="addBrick" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	if not hasattr(VR, 'bmat'):
+		VR.bmat = VR.Material('bricks')
+		VR.bmat.setDiffuse(0,0.5,1)
+		VR.bmat.setVertexProgram('shdr_v')
+		VR.bmat.setFragmentProgram('shdr_f')
+		
+	if not hasattr(VR, 'kit'):
+		VR.kit = VR.ConstructionKit()
+		VR.a1_ID = VR.kit.addAnchorType(s*0.1, [1,1,1])	
+	
+	# create brick
+	g = VR.Geometry('brick')
+	g.setPrimitive('Box '+str(X)+' '+str(Y)+' '+str(Z)+' 1 1 1')
+	g.setMaterial(VR.bmat)
+	g.setPickable(1)
+	VR.find('Headlight').addChild(g)
+	
+	# add brick anchor points
+	h = Y*0.5
+	VR.kit.addObject(g)
+
+	for i in range(int(X/s)):
+		for j in range(int(Z/s)):
+			x = i*s - X*0.5 +0.5*s
+			y = j*s - Z*0.5 +0.5*s
+			R = s*0.3
+			#VR.kit.getSnappingEngine().addRule('POINT', 'POINT', VR.Pose(), VR.Pose(), R, 0, g)
+			#VR.kit.getSnappingEngine().addRule('POINT', 'POINT', VR.Pose(), VR.Pose(), R, 0, g)
+			VR.kit.addObjectAnchor(g, VR.a1_ID, [x,h,y], s*0.3)
+			VR.kit.addObjectAnchor(g, VR.a1_ID, [x,-h,y], s*0.3)
+			
+	# drag new brick
+	idev = VR.find('mouse')
+	if VR.find('flystick'): idev = VR.find('flystick')
+	idev.drag(g)
+	idev.getDragGhost().setFrom([0,0,-0.5])
+</core>
+      <arg type="float" value="1" base_name="X" name_space="addBrick" name_suffix="0" persistency="666"/>
+      <arg type="float" value="1" base_name="Y" name_space="addBrick" name_suffix="0" persistency="666"/>
+      <arg type="float" value="1" base_name="Z" name_space="addBrick" name_suffix="0" persistency="666"/>
+      <arg type="float" value="0.1" base_name="s" name_space="addBrick" name_suffix="0" persistency="666"/>
+    </Script>
     <Script base_name="gui" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
       <core>
 &lt;!DOCTYPE html&gt;
@@ -173,49 +220,15 @@
 	import VR
 	
 	s = 0.1
-		
-	r = VR.getRoot().find('Headlight')
 	
 	k = dev.getKey()
 	m = dev.getMessage()
 	
-	idev = mouse
-	if flystick:
-		idev = flystick
-	
-	if not hasattr(VR, 'bmat'):
-		VR.bmat = VR.Material('bricks')
-		VR.bmat.setDiffuse(0,0.5,1)
-		if not flystick:
-			VR.bmat.setVertexProgram('shdr_v')
-			VR.bmat.setFragmentProgram('shdr_f')
-	
-	if not hasattr(VR, 'kit'):
-		VR.kit = VR.ConstructionKit()
-		VR.a1_ID = VR.kit.addAnchorType(s*0.1, [1,1,1])
-	
 	# new brick
 	if k == 1:
 		dims = m.split('_')
-		dims = [float(dims[0])*s, float(dims[1])*s, float(dims[2])*s]
-		g = VR.Geometry('brick')
-		g.setPrimitive('Box '+str(dims[0])+' '+str(dims[1])+' '+str(dims[2])+' 1 1 1')
-		g.setMaterial(VR.bmat)
-		g.setPickable(1)
-		r.addChild(g)
-		idev.drag(g)
-		g.setFrom([0,0,-0.5])
-		idev.getDragGhost().setFrom([0,0,-0.5])
+		VR.addBrick(float(dims[0])*s, float(dims[1])*s, float(dims[2])*s, s)
 		
-		h = dims[1]*0.5
-		VR.kit.addObject(g)
-
-		for i in range(int(dims[0]/s)):
-			for j in range(int(dims[2]/s)):
-				x = i*s - dims[0]*0.5 +0.5*s
-				y = j*s - dims[2]*0.5 +0.5*s
-				VR.kit.addObjectAnchor(g, VR.a1_ID, [x,h,y], s*0.3)
-				VR.kit.addObjectAnchor(g, VR.a1_ID, [x,-h,y], s*0.3)
 		
 </core>
       <arg type="VRPyDeviceType" value="flystick" base_name="flystick" name_space="handler" name_suffix="0" persistency="666"/>
@@ -226,26 +239,14 @@
       <core>
 	import VR
 	
-	gui = VR.Geometry('gui')
-	gui.setPrimitive('Plane 0.5 0.65 1 1')
+	gui = VR.Sprite('gui')
+	gui.setSize(0.5, 0.65)
+	gui.webOpen('http://localhost:5500/gui', 200, 0.769)
 	gui.setTransform([-0.5,0,-1], [0,0,1], [0,-1,0])
-	l = VR.getRoot().find('Default')
-	l.addChild(gui)
 	
-	m = VR.Material('gui')
-	m.setLit(False)
-	gui.setMaterial(m)
-	site = VR.CEF()
-	site.setMaterial( gui.getMaterial() )
-		
-	site.setAspectRatio(0.769)
-	site.setResolution(200)
-	site.open('http://localhost:5500/gui')
-	#site.open('http://threejs.org/examples/#webgl_geometry_cube')
-	site.addMouse(mouse, gui, 0, 2, 3, 4)
-	site.addMouse(flystick, gui, 0, 2, 3, 4)
-	site.addKeyboard(keyboard)
-	VR.site = site
+	cam = VR.find('Default')
+	cam.addChild(gui)
+	
 </core>
       <arg type="VRPyDeviceType" value="flystick" base_name="flystick" name_space="init" name_suffix="0" persistency="666"/>
       <arg type="VRPyDeviceType" value="keyboard" base_name="keyboard" name_space="init" name_suffix="0" persistency="666"/>

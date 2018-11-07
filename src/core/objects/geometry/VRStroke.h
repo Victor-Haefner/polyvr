@@ -49,6 +49,7 @@ class VRStroke : public VRGeometry {
 
         vector<Vec3d> getProfile();
 
+        void setDoColor(bool b);
         void convertToRope();
 
         void update();

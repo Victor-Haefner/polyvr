@@ -37,6 +37,7 @@ PyMethodDef VRPyConstraint::methods[] = {
     {"setTranslationConstraint", PyWrapOpt(Constraint, setTConstraint, "Set a translation constraint, [axis/normal], mode, bool global\n\tmode can be 'POINT', 'LINE', 'PLANE'", "0", void, Vec3d, VRConstraint::TCMode, bool ) },
     {"getReferenceA", PyWrap(Constraint, getReferenceA, "Get reference in A", PosePtr ) },
     {"getReferenceB", PyWrap(Constraint, getReferenceB, "Get reference in B", PosePtr ) },
+    {"setActive", PyWrap(Constraint, setActive, "Set active or not", void, bool ) },
     {NULL}  /* Sentinel */
 };
 

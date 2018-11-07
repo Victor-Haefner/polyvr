@@ -125,12 +125,14 @@ void VRWorldGenerator::init() {
     nature = VRNature::create();
     nature->setWorld( ptr() );
     addChild(nature);
-    nature->simpleInit(10, 5);
+    //nature->simpleInit(10, 5);
 
     district = VRDistrict::create();
     district->setWorld( ptr() );
     addChild(district);
 }
+
+Vec2d VRWorldGenerator::getPlanetCoords() { return coords; }
 
 void VRWorldGenerator::addOSMMap(string path, double subN, double subE, double subSize) {
     osmMap = OSMMap::loadMap(path);

@@ -93,6 +93,9 @@ VRPathtool::VRPathtool() : VRObject("Pathtool") {
     lmat->setDiffuse(Color3f(0.1,0.9,0.2));
     lmat->setLineWidth(3);
 
+    amat = VRMaterial::create("pline");
+    amat->setDiffuse(Color3f(0.9,0.9,0.2));
+
     lsmat = VRMaterial::create("spline");
     lsmat->setLit(false);
     lsmat->setDiffuse(Color3f(0.9,0.1,0.2));
@@ -100,7 +103,7 @@ VRPathtool::VRPathtool() : VRObject("Pathtool") {
 
     arrowTemplate = VRGeometry::create("arrow");
     arrowTemplate->setPrimitive("Arrow 2 3 3 1.5 1.2");
-    arrowTemplate->setMaterial(lmat);
+    arrowTemplate->setMaterial(amat);
 
     storeObj("handle", customHandle);
     storeObj("graph", graph);
@@ -134,14 +137,14 @@ void VRPathtool::setProjectionGeometry(VRObjectPtr obj) { projObj = obj; }
 
 GraphPtr VRPathtool::getGraph() { return graph; }
 
-void VRPathtool::setGraph(GraphPtr g, bool doClear) {
+void VRPathtool::setGraph(GraphPtr g, bool doClear, bool handles, bool doArrows) {
     if (!g) return;
     if (g == graph) graph = 0; // important, else the clear will also clear the graph!
     if (doClear) clear();
     graph = g;
 
     for (auto& n : g->getNodes()) setGraphNode(n.first);
-    for (auto& e : g->getEdges()) setGraphEdge(e.second);
+    for (auto& e : g->getEdges()) setGraphEdge(e.second, handles, doArrows);
 }
 
 int VRPathtool::addNode(PosePtr p) {
@@ -249,6 +252,14 @@ void VRPathtool::connect(int i1, int i2, Vec3d n1, Vec3d n2, bool handles, bool 
     }
 }
 
+VRMaterialPtr VRPathtool::getArrowMaterial() { return amat; }
+
+void VRPathtool::setArrowSize(float s) {
+    for (auto e : pathToEntry) {
+        if (auto a = e.second->arrow.lock()) a->setScale(Vec3d(s,s,s));
+    }
+}
+
 void VRPathtool::setGraphEdge(Graph::edge& e, bool handles, bool doArrow) {
     auto& nodes = graph->getNodes();
     setGraphEdge(e, handles, doArrow, nodes[e.from].p.dir(), nodes[e.to].p.dir());
@@ -278,6 +289,7 @@ void VRPathtool::setGraphEdge(Graph::edge& e, bool handles, bool doArrow, Vec3d 
 VRGeometryPtr VRPathtool::setGraphNode(int i) {
     auto h = newHandle();
     knots[i] = knot();
+    knots[i].ID = i;
     knots[i].handle = h;
     handleToNode[h.get()] = i;
     addChild(h);
@@ -286,27 +298,56 @@ VRGeometryPtr VRPathtool::setGraphNode(int i) {
     return h;
 }
 
+void VRPathtool::updateHandlePose(knot& knot, map<int, Vec3d>& hPositions, bool doUpdateEntry) {
+    auto h = knot.handle.lock();
+    if (!h) return;
+
+    auto getPose = [&](int ID) {
+        if (!hPositions.count(ID)) {
+            auto h = knots[ID].handle.lock();
+            hPositions[ID] = h ? h->getRelativePosition(ptr()) : Vec3d();
+        }
+        return hPositions[ID];
+    };
+
+    Vec3d pos = getPose(knot.ID);
+    Vec3d dir;
+
+    for (auto k : knot.in) dir += pos - getPose(k);
+    for (auto k : knot.out) dir += getPose(k) - pos;
+
+    if (dir.squareLength() > 1e-6) {
+        dir.normalize();
+        auto key = h.get();
+        h->setRelativeDir(dir, ptr());
+        h->apply_constraints(true);
+
+        if (doUpdateEntry && handleToEntries.count(key)) {
+            for (auto e : handleToEntries[key]) {
+                auto opt = options[e->edge];
+                int i = e->points[key];
+                auto po = e->p->getPoint(i);
+                if (!opt.doSmoothGraphNodes) {
+                    Vec3d p1 = po.pos();
+                    Vec3d p0 = p1;
+                    Vec3d p2 = p1;
+                    if (i > 0) p0 = e->p->getPoint(i-1).pos();
+                    if (i < e->p->size()-1) p2 = e->p->getPoint(i+1).pos();
+                    dir = p2-p0;
+                    dir.normalize();
+                }
+                po.setDir(dir - opt.bulge*(2.0*i/(e->p->size()-1)-1));
+                e->p->setPoint( e->points[key], po );
+                updateEntry(e);
+            }
+        }
+    }
+}
+
 void VRPathtool::update() { // call in script to have smooth knots
     if (graph) { // smooth knot transformations
         map<int, Vec3d> hPositions; // get handle positions
-        for (auto& knot : knots) {
-            auto h = knot.second.handle.lock();
-            if (h) hPositions[knot.first] = h->getWorldPosition();
-        }
-
-        for (auto& knot : knots) { // compute and set direction of handles
-            auto h = knot.second.handle.lock();
-            if (!h) continue;
-
-            Vec3d pos = h->getRelativePosition(ptr());
-            Vec3d dir;
-            for (auto k : knot.second.in) if (hPositions.count(k)) dir += pos - hPositions[k];
-            for (auto k : knot.second.out) if (hPositions.count(k)) dir += hPositions[k] - pos;
-            if (dir.squareLength() > 1e-6) {
-                dir.normalize();
-                h->setRelativeDir(dir, ptr());
-            }
-        }
+        for (auto& knot : knots) updateHandlePose(knot.second, hPositions, false); // compute and set direction of handles
     }
 
     for (auto wh : handles) { // apply handle transformation to path points
@@ -315,8 +356,21 @@ void VRPathtool::update() { // call in script to have smooth knots
         auto key = handle.get();
         if (!handleToEntries.count(key)) continue;
         for (auto e : handleToEntries[key]) {
-            auto po = e->anchor.lock()->getPoseTo(handle);
-            e->p->setPoint(e->points[key], *po);
+            auto opt = options[e->edge];
+            int i = e->points[key];
+            auto po = *e->anchor.lock()->getPoseTo(handle);
+            if (!opt.doSmoothGraphNodes) {
+                Vec3d p1 = po.pos();
+                Vec3d p0 = p1;
+                Vec3d p2 = p1;
+                if (i > 0) p0 = e->p->getPoint(i-1).pos();
+                if (i < e->p->size()-1) p2 = e->p->getPoint(i+1).pos();
+                Vec3d dir = p2-p0;
+                dir.normalize();
+                po.setDir(dir);
+            }
+            po.setDir( po.dir() - opt.bulge*(2.0*i/(e->p->size()-1)-1) );
+            e->p->setPoint( i, po );
         }
     }
 
@@ -328,9 +382,23 @@ void VRPathtool::updateEntry(entryPtr e) { // update path representation
     int hN = e->handles.size();
     if (hN <= 0) return;
     auto opt = options[e->edge];
+
+    for (int i=0; i<e->p->size(); i++) { // apply options
+        /*if (graph) { // TODO
+            Vec3d n = e->handles[i].lock()->getPose()->dir();
+            n -= opt.bulge*(2.0*i/(e->p->size()-1)-1);
+            e->p->getPoint(i).setDir(n);
+        }*/
+
+        if (opt.useColors) {
+            Color3f c = opt.color1 + (opt.color2-opt.color1)*float(i)/(e->p->size()-1);
+            e->p->setPointColor(i, c);
+        }
+    }
+
     e->p->compute(opt.resolution);
     int pN = e->p->getPositions().size();
-    if (pN <= 2) return;
+    if (pN < 2) return;
 
     if (!e->anchor.lock()) e->anchor = ptr();
     if (!e->line.lock() && e->anchor.lock()) { // update path line
@@ -342,11 +410,19 @@ void VRPathtool::updateEntry(entryPtr e) { // update path representation
         vector<Vec3d> profile;
         profile.push_back(Vec3d());
         line->addPath(e->p);
-        line->strokeProfile(profile, 0, 0, 0);
+        line->strokeProfile(profile, 0, 0, opt.useColors);
     }
 
-    if (auto l = e->line.lock()) l->update();
-    if (auto a = e->arrow.lock()) a->setPose(e->p->getPose(0.5));
+    if (auto l = e->line.lock()) {
+        l->setDoColor( opt.useColors );
+        l->update();
+        l->setVisible(opt.isVisible);
+    }
+
+    if (auto a = e->arrow.lock()) {
+        a->setPose(e->p->getPose(0.5));
+        a->setVisible(opt.isVisible);
+    }
 }
 
 void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle belongs to
@@ -374,38 +450,11 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
 
         if (handle->getChildrenWithTag("controlhandle").size() == 0) { // no control handles -> smooth knots curve
             map<int, Vec3d> hPositions; // get handle positions
-            auto getPos = [&](int ID) {
-                if (!hPositions.count(ID)) {
-                    auto h = knots[ID].handle.lock();
-                    hPositions[ID] = h ? h->getRelativePosition(ptr()) : Vec3d();
-                }
-                return hPositions[ID];
-            };
-
-            auto updateHandleDir = [&](int ID) {
-                Vec3d pos = getPos(ID);
-                Vec3d dir;
-                for (auto k : knots[ID].in ) dir += pos - getPos(k);
-                for (auto k : knots[ID].out) dir += getPos(k) - pos;
-                if (dir.squareLength() > 1e-6) {
-                    dir.normalize();
-                    auto h = knots[ID].handle.lock();
-                    auto key = h.get();
-                    if (h) {
-                        h->setRelativeDir(dir, ptr());
-                        for (auto e : handleToEntries[key]) {
-                            auto op = e->p->getPoint(e->points[key]);
-                            e->p->setPoint( e->points[key], Pose(op.pos(), dir, op.up()));
-                            updateEntry(e);
-                        }
-                    }
-                }
-            };
 
             int nID = handleToNode[key];
-            updateHandleDir( nID );
-            for (auto k : knots[nID].out) updateHandleDir(k);
-            for (auto k : knots[nID].in ) updateHandleDir(k);
+            updateHandlePose( knots[nID], hPositions );
+            for (auto k : knots[nID].out) updateHandlePose( knots[k], hPositions );
+            for (auto k : knots[nID].in ) updateHandlePose( knots[k], hPositions );
         }
     }
 
@@ -498,6 +547,12 @@ PathPtr VRPathtool::newPath( VRDevicePtr dev, VRObjectPtr anchor, int resolution
     extrude(dev,e->p);
     return e->p;
 }
+
+void VRPathtool::setEdgeResolution(int eID, int resolution) { options[eID].resolution = resolution; }
+void VRPathtool::setEdgeColor(int eID, Color3f color1, Color3f color2) { options[eID].color1 = color1; options[eID].color2 = color2; options[eID].useColors = true; }
+void VRPathtool::setEdgeBulge(int eID, Vec3d bulge) { options[eID].bulge = bulge; }
+void VRPathtool::setEdgeSmoothGraphNodes(int eID, bool b) { options[eID].doSmoothGraphNodes = b; }
+void VRPathtool::setEdgeVisibility(int eID, bool b) { options[eID].isVisible = b; }
 
 VRGeometryPtr VRPathtool::newControlHandle(VRGeometryPtr handle, Vec3d p) {
     VRGeometryPtr h;

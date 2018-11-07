@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGColor.h>
 #include <vector>
 #include <map>
 
@@ -67,6 +68,7 @@ class VRPathtool : public VRObject {
         };
 
         struct knot {
+            int ID;
             vector<int> in;
             vector<int> out;
             VRGeometryWeakPtr handle;
@@ -75,11 +77,21 @@ class VRPathtool : public VRObject {
         struct option {
             int resolution = 10;
             bool useControlHandles = false;
+            bool doSmoothGraphNodes = true;
+            bool isVisible = true;
+
+            Color3f color1;
+            Color3f color2;
+            bool useColors = false;
+
+            Vec3d bulge;
 
             option(int r = 10, bool uch = false);
         };
 
         typedef shared_ptr<entry> entryPtr;
+
+        void updateHandlePose(knot& knot, map<int, Vec3d>& hPositions, bool doUpdateEntry = true);
 
     private:
         GraphPtr graph;
@@ -97,6 +109,7 @@ class VRPathtool : public VRObject {
 
         VRMaterialPtr lmat;
         VRMaterialPtr lsmat;
+        VRMaterialPtr amat;
 
         VRUpdateCbPtr updatePtr;
         VRManipulator* manip = 0;
@@ -127,7 +140,7 @@ class VRPathtool : public VRObject {
 
         void setProjectionGeometry(VRObjectPtr obj);
 
-        void setGraph(GraphPtr g, bool doClear = true);
+        void setGraph(GraphPtr g, bool doClear = true, bool handles = false, bool doArrows = false);
         GraphPtr getGraph();
         int addNode(PosePtr p);
         void removeNode(int i);
@@ -153,6 +166,15 @@ class VRPathtool : public VRObject {
         VRStrokePtr getStroke(PathPtr p);
 
         VRMaterialPtr getPathMaterial();
+        VRMaterialPtr getArrowMaterial();
+        void setArrowSize(float s);
+
+        // options
+        void setEdgeResolution(int eID, int resolution);
+        void setEdgeColor(int eID, Color3f color1, Color3f color2);
+        void setEdgeBulge(int eID, Vec3d bulge);
+        void setEdgeSmoothGraphNodes(int eID, bool b);
+        void setEdgeVisibility(int eID, bool b);
 
         void select(VRGeometryPtr handle);
         void selectPath(PathPtr p);

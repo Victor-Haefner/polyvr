@@ -24,11 +24,13 @@ PyMethodDef VRPyProcess::methods[] = {
     {"getMessages", PyWrap(Process, getMessages, "Return messages - [ProcessNode] getMessages()", vector<VRProcessNodePtr> ) },
     {"getSubjectMessages", PyWrap(Process, getSubjectMessages, "Return subject messages - [ProcessNode] getSubjectMessages(subject)", vector<VRProcessNodePtr>, int ) },
     {"getMessageSubjects", PyWrap(Process, getMessageSubjects, "Return message subjects - [ProcessNode] getMessageSubjects(message)", vector<VRProcessNodePtr>, int ) },
-    {"getSubjectActions", PyWrap(Process, getSubjectActions, "Return subject actions - [ProcessNode] getSubjectActions(subject)", vector<VRProcessNodePtr>, int ) },
-    {"getActionTransitions", PyWrap(Process, getActionTransitions, "Return action transitions - [ProcessNode] getActionTransitions(subject, action)", vector<VRProcessNodePtr>, int, int ) },
-    {"getTransitionActions", PyWrap(Process, getActionTransitions, "Return actions connected by a given transition - [ProcessNode] getTransitionActions(subject, transition)", vector<VRProcessNodePtr>, int, int ) },
+    {"getSubjectStates", PyWrap(Process, getSubjectStates, "Return subject actions - [ProcessNode] getSubjectActions(subject)", vector<VRProcessNodePtr>, int ) },
+    {"getStateTransitions", PyWrap(Process, getStateTransitions, "Return action transitions - [ProcessNode] getActionTransitions(subject, action)", vector<VRProcessNodePtr>, int, int ) },
+    //{"getTransitionStates", PyWrap(Process, getTransitionStates, "Return actions connected by a given transition - [ProcessNode] getTransitionActions(subject, transition)", vector<VRProcessNodePtr>, int, int ) },
+    {"getStateMessage", PyWrap(Process, getStateMessage, "Returns the Message of a send/receive state - [ProcessNode] getStateMessage(state)", VRProcessNodePtr, VRProcessNodePtr ) },
     {"addSubject", PyWrap(Process, addSubject, "Add a new subject - ProcessNode addSubject( name )", VRProcessNodePtr, string ) },
-    {"addAction", PyWrap(Process, addAction, "Add a new action to subject, by ID", VRProcessNodePtr, string, int ) },
+    {"addState", PyWrap(Process, addState, "Add a new state to subject, by subject ID", VRProcessNodePtr, string, int ) },
+    {"setInitialState", PyWrap(Process, setInitialState, "Set a state to initial state.", void, VRProcessNodePtr ) },
     {"addMessage", PyWrapOpt(Process, addMessage, "Add a new message between subjects or actions i and j - ProcessNode addMessage( name, int i, int j )", "0", VRProcessNodePtr, string, int, int, VRProcessDiagramPtr ) },
     {"addTransition", PyWrapOpt(Process, addTransition, "Add a new transition between actions i and j - ProcessNode addTransition( name, subject, int i, int j )", "0", VRProcessNodePtr, string, int, int, int, VRProcessDiagramPtr ) },
    {NULL}  /* Sentinel */
@@ -57,17 +59,17 @@ PyMethodDef VRPyProcessLayout::methods[] = {
     {"setElementName", PyWrap(ProcessLayout, setElementName, "Change the name of a node", void, int, string ) },
     {"remElement", PyWrap(ProcessLayout, remElement, "Remove element", void, VRObjectPtr ) },
     {"setEngine", PyWrap(ProcessLayout, setEngine, "Set process engine", void, VRProcessEnginePtr ) },
-    {"storeLayout", PyWrap(ProcessLayout, storeLayout, "Store layout to file", void ) },
-    {"loadLayout", PyWrap(ProcessLayout, loadLayout, "Load layour from file", void ) },
+    {"storeLayout", PyWrapOpt(ProcessLayout, storeLayout, "Store layout to file", "", void, string ) },
+    {"loadLayout", PyWrapOpt(ProcessLayout, loadLayout, "Load layour from file", "", void, string ) },
     {NULL}  /* Sentinel */
 };
 
 PyMethodDef VRPyProcessEngine::methods[] = {
     {"setProcess", PyWrap(ProcessEngine, setProcess, "Set process - setProcess( process )", void, VRProcessPtr ) },
     {"getProcess", PyWrap(ProcessEngine, getProcess, "Get the current process - process getProcess()", VRProcessPtr ) },
-    {"run", PyWrapOpt(ProcessEngine, run, "Run the simulation with a simulation speed multiplier, 1 is real time - run(float s)", "1", void, float ) },
+    {"run", PyWrapOpt(ProcessEngine, run, "Run the simulation with a simulation tick speed in seconds", "1", void, float ) },
     {"reset", PyWrap(ProcessEngine, reset, "Reset simulation - reset()", void ) },
     {"pause", PyWrap(ProcessEngine, pause, "Pause simulation - pause()", void ) },
-    {"getCurrentActions", PyWrap(ProcessEngine, getCurrentActions, "Current actions of all subjects - [ProcessNode] getCurrentActions()",  vector<VRProcessNodePtr> ) },
+    {"getCurrentStates", PyWrap(ProcessEngine, getCurrentStates, "Current states of all subjects - [ProcessNode] getCurrentStates()",  vector<VRProcessNodePtr> ) },
     {NULL}  /* Sentinel */
 };
