@@ -44,6 +44,7 @@ PyMethodDef VRPyProcessNode::methods[] = {
 };
 
 PyMethodDef VRPyProcessDiagram::methods[] = {
+    {"getNodes", PyWrap(ProcessDiagram, getNodes, "Get nodes", vector<VRProcessNodePtr>) },
     {NULL}  /* Sentinel */
 };
 
@@ -70,6 +71,7 @@ PyMethodDef VRPyProcessEngine::methods[] = {
     {"run", PyWrapOpt(ProcessEngine, run, "Run the simulation with a simulation tick speed in seconds", "1", void, float ) },
     {"reset", PyWrap(ProcessEngine, reset, "Reset simulation - reset()", void ) },
     {"pause", PyWrap(ProcessEngine, pause, "Pause simulation - pause()", void ) },
-    {"getCurrentStates", PyWrap(ProcessEngine, getCurrentStates, "Current states of all subjects - [ProcessNode] getCurrentStates()",  vector<VRProcessNodePtr> ) },
+    {"getCurrentStates", PyWrap(ProcessEngine, getCurrentStates, "Current states of all subjects - [ProcessNode] getCurrentStates()", vector<VRProcessNodePtr> ) },
+    {"continueWith", PyWrap(ProcessEngine, continueWith, "Continue execution with this next transition", void, VRProcessNodePtr ) },
     {NULL}  /* Sentinel */
 };

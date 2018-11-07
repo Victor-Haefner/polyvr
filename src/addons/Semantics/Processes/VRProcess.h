@@ -57,6 +57,7 @@ struct VRProcessDiagram : public Graph {
 
     void update(int i, bool changed);
     void remNode(int i);
+    vector<VRProcessNodePtr> getNodes();
     void clear();
 };
 
