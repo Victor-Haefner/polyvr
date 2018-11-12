@@ -47,6 +47,8 @@ class VRProcessEngine {
             VRProcessNodePtr sourceState;
             VRProcessNodePtr nextState;
             VRProcessNodePtr node;
+
+            bool overridePrerequisites = false;
             vector<Prerequisite> prerequisites;
             vector<Action> actions;
 
@@ -100,6 +102,8 @@ class VRProcessEngine {
         void pause();
 
         vector<VRProcessNodePtr> getCurrentStates();
+
+        void continueWith(VRProcessNodePtr n);
 };
 
 OSG_END_NAMESPACE;

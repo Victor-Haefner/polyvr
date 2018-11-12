@@ -204,6 +204,7 @@ class VRTrafficSimulation : public VRObject {
         void setTrafficDensity(float density, int type, int maxUnits = 0);
 
         int addVehicleModel(VRObjectPtr mesh);
+        void setGlobalOffset(Vec3d globalOffset);
 
         void changeLane(int ID, int direction);
 

@@ -31,7 +31,11 @@ VRMaterialPtr getCamGeoMat() {
 VRCamera::VRCamera(string name) : VRTransform(name) {
     type = "Camera";
     fov = osgDegree2Rad(60);
-    vrSetup = VRObject::create("Device Beacons");
+
+    vrSetup = VRObject::create("DeviceBeacons");
+    // probably not needed
+    //vrSetup->setPersistency(0);
+
     setup(false);
 
     store("accept_root", &doAcceptRoot);
@@ -154,6 +158,8 @@ void VRCamera::setup(bool reg, VRStorageContextPtr context) {
         ocam->setNear(parallaxD * nearClipPlaneCoeff);
         ocam->setFar(parallaxD * farClipPlaneCoeff);
     }
+
+    vrSetup->setPersistency(0);
 }
 
 void VRCamera::activate() {

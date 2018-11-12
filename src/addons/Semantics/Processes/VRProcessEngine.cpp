@@ -6,6 +6,7 @@
 #include "core/math/VRStateMachine.cpp"
 
 #include <boost/bind.hpp>
+#include <algorithm>
 
 using namespace OSG;
 
@@ -15,8 +16,11 @@ template<> string typeName(const VRProcessEnginePtr& o) { return "ProcessEngine"
 
 bool VRProcessEngine::Inventory::hasMessage(Message m) {
     for (auto& m2 : messages) {
-        cout << "  VRProcessEngine::Inventory::hasMessage '" << m.message << "' and '" << m2.message << "' -> " << bool(m2 == m) << endl;
-        if (m2 == m) return true;
+        //cout << "  VRProcessEngine::Inventory::hasMessage '" << m.message << "' and '" << m2.message << "' -> " << bool(m2 == m) << endl;
+        if (m2 == m) {
+            messages.erase(std::remove(messages.begin(), messages.end(), m2), messages.end());
+            return true;
+        }
     }
     return false;
 }
@@ -24,13 +28,16 @@ bool VRProcessEngine::Inventory::hasMessage(Message m) {
 // ----------- process engine prerequisite --------------
 
 bool VRProcessEngine::Prerequisite::valid(Inventory* inventory) {
-    cout << " VRProcessEngine::Prerequisite::valid check for '" << message.message << "' inv: " << inventory << endl;
+    //cout << " VRProcessEngine::Prerequisite::valid check for '" << message.message << "' inv: " << inventory << endl;
     return inventory->hasMessage(message);
 }
 
 // ----------- process engine transition --------------
 
 bool VRProcessEngine::Transition::valid(Inventory* inventory) {
+    if (overridePrerequisites) {
+        cout << "VRProcessEngine::Transition::valid YAY\n";
+        overridePrerequisites = false; return true; }
     for (auto& p : prerequisites) if (!p.valid(inventory)) return false;
     return true;
 }
@@ -43,7 +50,7 @@ string VRProcessEngine::Actor::transitioning( float t ) {
     string stateName = state->getName();
 
     for (auto& transition : transitions[stateName]) { // check if any actions are ready to start
-        cout << "VRProcessEngine::Actor::transitioning check preqs, actor: " << this << endl;
+        //cout << "VRProcessEngine::Actor::transitioning check preqs, actor: " << this << endl;
         if (transition.valid(&inventory)) {
             currentState = transition.nextState;
             for (auto& action : transition.actions) (*action.cb)();
@@ -115,6 +122,19 @@ vector<VRProcessNodePtr> VRProcessEngine::getCurrentStates() {
     return res;
 }
 
+void VRProcessEngine::continueWith(VRProcessNodePtr n) {
+    int sID = n->subject;
+    Actor& a = subjects[sID];
+    for (auto& tv : a.transitions) {
+        for (auto& t : tv.second) {
+            if (t.node == n) {
+                t.overridePrerequisites = true;
+                return;
+            }
+        }
+    }
+}
+
 void VRProcessEngine::initialize() {
     cout << "VRProcessEngine::initialize()" << endl;
 
@@ -156,7 +176,6 @@ void VRProcessEngine::initialize() {
                         if (sender && receiver) {
                             Message m(message->getLabel(), sender->getLabel(), receiver->getLabel());
                             Actor& rActor = subjects[receiver->getID()];
-                            cout << "AAAAAAAA " << rActor.label << endl;
                             auto cb = VRUpdateCb::create("action", boost::bind(&VRProcessEngine::Actor::receiveMessage, &rActor, m));
                             transition.actions.push_back( Action(cb) );
                         }
