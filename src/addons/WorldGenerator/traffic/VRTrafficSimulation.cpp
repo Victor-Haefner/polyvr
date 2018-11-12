@@ -321,7 +321,7 @@ void VRTrafficSimulation::updateSimulation() {
             if (nextEdges.size() == 1) { vehicle.nextEdge = nextEdges[0].ID; }
             if (nextEdges.size() == 0) { vehicle.nextEdge = -1; }
         }
-
+        if (!isTimeForward && gp.pos < 0) { toChangeRoad[gp.edge].push_back( make_pair(vehicle.vID, -1) );}
         if (gp.pos > 1) {
             gp.pos -= 1;
             int road1ID = gp.edge;
@@ -881,6 +881,7 @@ void VRTrafficSimulation::updateSimulation() {
                 if (isSimRunning && d<=0 && vbeh != vehicle.REVERSE) { d = 0; vehicle.currentVelocity = d; }
                 if (vehicle.collisionDetected) d = 0;
                 if (d!=0 && speedMultiplier!=1.0) d*=speedMultiplier;
+                if (!isTimeForward) d = -d;
                 if (d!=0) propagateVehicle(vehicle, d, vbeh);
 
 
@@ -1250,6 +1251,10 @@ void VRTrafficSimulation::toggleSim() {
 
 void VRTrafficSimulation::setSpeedmultiplier(float speedMultiplier) {
     this->speedMultiplier = speedMultiplier;
+}
+
+void VRTrafficSimulation::toggleDirection() {
+    isTimeForward = !isTimeForward;
 }
 
 /** SHOW GRAPH */

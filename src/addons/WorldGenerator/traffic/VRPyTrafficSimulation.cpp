@@ -11,7 +11,9 @@ PyMethodDef VRPyTrafficSimulation::methods[] = {
     {"setTrafficDensity", PyWrapOpt( TrafficSimulation, setTrafficDensity, "Set overall traffic", "0", void, float, int, int ) },
     {"addVehicleModel", PyWrap( TrafficSimulation, addVehicleModel, "Set vehicle geometry", int, VRObjectPtr ) },
     {"addUser", PyWrap( TrafficSimulation, addUser, "Set vehicle geometry", void, VRTransformPtr ) },
+    ///Diagnostics
     {"toggleSim", PyWrap( TrafficSimulation, toggleSim, "toggleSim - pause/resume", void, void ) },
+    {"toggleDirection", PyWrap( TrafficSimulation, toggleDirection, "toggleDirection - forward/backward", void, void ) },
     {"setSpeedmultiplier", PyWrap( TrafficSimulation, setSpeedmultiplier, "setSpeedmultiplier", void, float ) },
     {"getVehicleData", PyWrap( TrafficSimulation, getVehicleData, "getVehicleData", string, int ) },
     {"getEdgeData", PyWrap( TrafficSimulation, getEdgeData, "getEdgeData", string, int ) },

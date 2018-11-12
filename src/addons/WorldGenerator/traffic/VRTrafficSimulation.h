@@ -152,6 +152,7 @@ class VRTrafficSimulation : public VRObject {
         int stopVehicleID = -1;
         int deleteVehicleID = -1;
         bool isSimRunning = true;
+        bool isTimeForward = true;
         bool isShowingVehicleVision = false;
         bool isShowingGraph = false;
         bool isShowingGeometries = true;
@@ -206,8 +207,9 @@ class VRTrafficSimulation : public VRObject {
 
         void changeLane(int ID, int direction);
 
-        //diagnostics:
+        ///Diagnostics:
         void toggleSim();
+        void toggleDirection();
         void runWithoutGeometries();
         void runWithGeometries();
         void setSpeedmultiplier(float speedMultiplier);
