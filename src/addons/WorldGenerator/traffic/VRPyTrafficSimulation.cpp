@@ -13,6 +13,7 @@ PyMethodDef VRPyTrafficSimulation::methods[] = {
     {"addUser", PyWrap( TrafficSimulation, addUser, "Set vehicle geometry", void, VRTransformPtr ) },
     {"toggleSim", PyWrap( TrafficSimulation, toggleSim, "toggleSim - pause/resume", void, void ) },
     {"setSpeedmultiplier", PyWrap( TrafficSimulation, setSpeedmultiplier, "setSpeedmultiplier", void, float ) },
+    {"setGlobalOffset", PyWrap( TrafficSimulation, setGlobalOffset, "setGlobalOffset", void, Vec3d ) },
     {"getVehicleData", PyWrap( TrafficSimulation, getVehicleData, "getVehicleData", string, int ) },
     {"getEdgeData", PyWrap( TrafficSimulation, getEdgeData, "getEdgeData", string, int ) },
     {"setSeedRoad", PyWrap( TrafficSimulation, setSeedRoad, "setSeedRoad", void, int ) },
