@@ -598,7 +598,7 @@ void VRTrafficSimulation::updateSimulation() {
             if (!v.t) continue;
             //auto vP = v.t->getPoseTo( this->getWorldPose() );
             auto p = v.t->getWorldPose();
-            Vec3d offset = Vec3d(-4817.3,0,-5559.75); ///AGRAJAG - should be globalOffset
+            Vec3d offset = globalOffset; ///Vec3d(-4817.3,0,-5559.75); ///AGRAJAG - should be globalOffset
             p->setPos(p->pos() - offset);
             auto simpleDis = (pose->pos() - p->pos()).length();
             if (simpleDis > safetyDis + 10) continue;
@@ -1076,6 +1076,8 @@ void VRTrafficSimulation::addUser(VRTransformPtr t) {
     users[users.size()-1].t = t;
     cout << "VRTrafficSimulation::addUser " << nID << endl;
 }
+
+void VRTrafficSimulation::setGlobalOffset(Vec3d globalOffset) { this->globalOffset = globalOffset; }
 
 void VRTrafficSimulation::addVehicle(int roadID, float density, int type) {
     if (maxUnits > 0 && numUnits >= maxUnits) return;
