@@ -254,22 +254,30 @@ void main( void ) {
 );
 
 map<VRMaterial*, string> originalMatFP;
+map<VRMaterial*, VRMaterialPtr> originalMat;
 
 void VRTextureRenderer::setChannelFP(string fp) {
     for (auto geo : getChild(0)->getLinks()[0]->getChildren(true, "Geometry")) {
-        auto m = dynamic_pointer_cast<VRGeometry>(geo)->getMaterial();
-        if (originalMatFP.count(m.get())) continue;
-        originalMatFP[m.get()] = m->getFragmentShader();
-        m->setFragmentShader(fp, "texRendChannel");
+        auto g = dynamic_pointer_cast<VRGeometry>(geo);
+        auto m = g->getMaterial();
+        auto m2 = dynamic_pointer_cast<VRMaterial>(m->duplicate());
+        m2 = m;
+        //if (originalMatFP.count(m.get())) continue;
+        originalMatFP[m2.get()] = m2->getFragmentShader();
+        originalMat[m2.get()] = m;
+        m2->setFragmentShader(fp, "texRendChannel");
+        g->setMaterial(m2);
     }
 }
 
 void VRTextureRenderer::resetChannelFP() {
     for (auto geo : getChild(0)->getLinks()[0]->getChildren(true, "Geometry")) {
-        auto m = dynamic_pointer_cast<VRGeometry>(geo)->getMaterial();
+        auto g = dynamic_pointer_cast<VRGeometry>(geo);
+        auto m = g->getMaterial();
         if (!originalMatFP.count(m.get())) continue;
         m->setFragmentShader(originalMatFP[m.get()], "texRendChannel");
         originalMatFP.erase(m.get());
+        g->setMaterial( originalMat[m.get()] );
     }
     originalMatFP.clear();
 }
