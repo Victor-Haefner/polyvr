@@ -327,7 +327,7 @@ void VRRoadNetwork::addFence( PathPtr path, float height ) {
     profile.push_back(Vec3d(0,height,0));
 
 	auto fence = VRStroke::create("fence");
-	fence->setMaterial( w->getMaterial("fenceMat") );
+	fence->setMaterial( w->getMaterial("fence") );
 	fence->setPaths({path});
 	fence->strokeProfile(profile, false, true, false);
 	fence->updateNormals(false);
