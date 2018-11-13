@@ -594,7 +594,7 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p, int type) {
                 apath->addPoint( Pose(Vec3d(0.5,1.0,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
                 apath->addPoint( Pose(Vec3d(0.5,0.5,0), Vec3d(0,-1,0), Vec3d(0,0,1)) );
                 apath->compute(2);
-                tg.drawPath(apath, Color4f(1,1,1,1), 0.1);
+                tg.drawPath(apath, Color4f(1,1,1,1), 0.15);
 
                 apath = Path::create();
                 apath->addPoint( Pose(Vec3d(0.5,0.5,0), dir, Vec3d(0,0,1)) );
