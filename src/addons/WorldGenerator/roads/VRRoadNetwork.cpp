@@ -327,7 +327,7 @@ void VRRoadNetwork::addFence( PathPtr path, float height ) {
     profile.push_back(Vec3d(0,height,0));
 
 	auto fence = VRStroke::create("fence");
-	fence->setMaterial( w->getMaterial("fenceMat") );
+	fence->setMaterial( w->getMaterial("fence") );
 	fence->setPaths({path});
 	fence->strokeProfile(profile, false, true, false);
 	fence->updateNormals(false);
@@ -600,7 +600,9 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p, int type) {
                 apath->addPoint( Pose(Vec3d(0.5,0.5,0), dir, Vec3d(0,0,1)) );
                 apath->addPoint( Pose(d03+dir*0.31, dir, Vec3d(0,0,1)) );
                 apath->compute(2);
-                tg.drawPath(apath, Color4f(1,1,1,1), 0.15);
+                float w = 0.15;
+                if (a == 0) w = 0.1;
+                tg.drawPath(apath, Color4f(1,1,1,1), w);
             }
 
             auto poly = VRPolygon::create();
