@@ -494,6 +494,51 @@ string VRTree::getHash(vector<float> v) {
     return toString( hash );
 }
 
+string channelDiffuseLeafFP =
+"#version 400 compatibility\n"
+GLSL(
+uniform sampler2D tex;
+in vec4 position;
+in vec2 tcs;
+in vec3 norm;
+in vec3 col;
+vec4 color;
+
+void main( void ) {
+	float ca = col[1];
+	float ch = col[2];
+	color = texture(tex,tcs);
+	//if (color.a < 0.9) discard;
+
+	color.x *= 0.4*ca;
+	color.y *= 0.8*ch;
+	color.z *= 0.2*ch;
+	//gl_FragColor = vec4(color.xyz,1.0);
+	gl_FragColor = vec4(color.xyz,color.a);
+}
+);
+
+string channelNormalLeafFP =
+"#version 400 compatibility\n"
+GLSL(
+uniform sampler2D tex;
+in vec4 position;
+in vec2 tcs;
+in vec3 norm;
+in vec3 col;
+vec4 color;
+
+void main( void ) {
+	float ca = col[1];
+	float ch = col[2];
+	color = texture(tex,tcs);
+	if (color.a < 0.3) discard;
+
+	vec3 n = normalize( gl_NormalMatrix * norm );
+	gl_FragColor = vec4(n,1.0);
+}
+);
+
 vector<VRMaterialPtr> VRTree::createLODtextures(int& Hmax, VRGeoData& data) {
     auto storeSprite = [&](string path, VRMaterialPtr m) {
         auto t1 = m->getTexture(0);
@@ -518,6 +563,30 @@ vector<VRMaterialPtr> VRTree::createLODtextures(int& Hmax, VRGeoData& data) {
     float fov = 0.33;
     Vec3d D = S*0.5/tan(fov*0.5);
 
+    // setup material substitues for lod render pass for normal and diffuse passes
+    map<VRMaterial*, VRMaterialPtr> matSubsDiff;
+    map<VRMaterial*, VRMaterialPtr> matSubsNorm;
+
+    auto leafMatDiff = dynamic_pointer_cast<VRMaterial>( leafMat->duplicate() );
+    leafMatDiff->setFragmentShader(channelDiffuseLeafFP, "texRendChannel");
+    matSubsDiff[leafMat.get()] = leafMatDiff;
+    auto leafMatNorm = dynamic_pointer_cast<VRMaterial>( leafMat->duplicate() );
+    leafMatNorm->setFragmentShader(channelNormalLeafFP, "texRendChannel");
+    matSubsNorm[leafMat.get()] = leafMatNorm;
+
+    string wdir = VRSceneManager::get()->getOriginalWorkdir();
+
+    auto treeMatDiff = dynamic_pointer_cast<VRMaterial>( treeMat->duplicate() );
+    treeMatDiff->setFragmentShader(channelDiffuseLeafFP, "texRendChannel");
+    treeMatDiff->setDeferred(false);
+    //treeMatDiff->readFragmentShader(wdir+"/shader/Trees/Shader_tree_channel_diffuse.fp");
+    matSubsDiff[treeMat.get()] = treeMatDiff;
+    auto treeMatNorm = dynamic_pointer_cast<VRMaterial>( treeMat->duplicate() );
+    treeMatNorm->setFragmentShader(channelNormalLeafFP, "texRendChannel");
+    treeMatNorm->setDeferred(false);
+    //treeMatNorm->readFragmentShader(wdir+"/shader/Trees/Shader_tree_channel_normal.fp");
+    matSubsNorm[treeMat.get()] = treeMatNorm;
+
     vector<VRMaterialPtr> sides;
     Hmax = 1;
     auto addSprite = [&](PosePtr p, float W, float H, float Sh) {
@@ -525,6 +594,8 @@ vector<VRMaterialPtr> VRTree::createLODtextures(int& Hmax, VRGeoData& data) {
         VRMaterialPtr tm = VRMaterial::create("lod");
         if (!loadSprite(path, tm)) {
             auto tr = VRTextureRenderer::create("treeLODtexR");
+            tr->setMaterialSubstitutes(matSubsDiff, VRTextureRenderer::DIFFUSE);
+            tr->setMaterialSubstitutes(matSubsNorm, VRTextureRenderer::NORMAL);
             tm = tr->createTextureLod(t, p, 512, W/H, fov, Color3f(0,0.5,0));
             storeSprite(path, tm);
         }

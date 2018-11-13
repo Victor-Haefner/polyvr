@@ -181,9 +181,32 @@ void VRTextureRenderer::setActive(bool b) {
     else setCore(OSGCore::create(Group::create()), "TextureRenderer", true);
 }
 
-/** TODO, implement channels
-    - render normal channel, override material fragment shaders
-*/
+void VRTextureRenderer::setChannelSubstitutes(CHANNEL c) {
+    cout << " ---------------------- VRTextureRenderer::setChannelSubstitutes, diffuse? " << bool(c == DIFFUSE) << endl;
+    for (auto geo : getChild(0)->getLinks()[0]->getChildren(true, "Geometry")) {
+        auto g = dynamic_pointer_cast<VRGeometry>(geo);
+        auto m = g->getMaterial();
+        if ( substitutes[c].count(m.get()) ) {
+            auto sm = substitutes[c][m.get()];
+            originalMaterials[sm.get()] = m;
+            sm->setDeferred(0);
+            cout << "    sub mat " << g->getName() << endl;
+            g->setMaterial(sm);
+        }
+    }
+}
+
+void VRTextureRenderer::resetChannelSubstitutes() {
+    for (auto geo : getChild(0)->getLinks()[0]->getChildren(true, "Geometry")) {
+        auto g = dynamic_pointer_cast<VRGeometry>(geo);
+        auto m = g->getMaterial();
+        if (!originalMaterials.count(m.get())) continue;
+        g->setMaterial(originalMaterials[m.get()]);
+    }
+    originalMaterials.clear();
+}
+
+// --- depr
 
 string channelDiffuseFP =
 "#version 400 compatibility\n"
@@ -250,6 +273,11 @@ void VRTextureRenderer::resetChannelFP() {
     }
     originalMatFP.clear();
 }
+// ---
+
+void VRTextureRenderer::setMaterialSubstitutes(map<VRMaterial*, VRMaterialPtr> s, CHANNEL c) {
+    substitutes[c] = s;
+}
 
 VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
     if (!cam) return 0;
@@ -265,7 +293,7 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
         data->view->setBackground(data->stage->getBackground());
     }
 
-    //if (c == DIFFUSE) setChannelFP(channelNormalFP);
+    //setChannelSubstitutes(c);
     if (c == DIFFUSE) setChannelFP(channelDiffuseFP);
     if (c == NORMAL) setChannelFP(channelNormalFP);
 
@@ -275,6 +303,7 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
     ImageMTRecPtr img = Image::create();
     img->set( data->fboTexImg );
     if (c != RENDER) resetChannelFP();
+    //if (c != RENDER) resetChannelSubstitutes();
     setVisible(v);
     return VRTexture::create( img );
 }
