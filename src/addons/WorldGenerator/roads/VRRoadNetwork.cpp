@@ -637,6 +637,7 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p, int type) {
 }
 
 VREntityPtr VRRoadNetwork::getLane(int eID) { return graphEdgeEntities[eID]; }
+int VRRoadNetwork::getLaneID(VREntityPtr lane) { return graphEdgeIDs[lane]; }
 
 vector<VRRoadPtr> VRRoadNetwork::getNodeRoads(VREntityPtr node) {
     vector<VREntityPtr> nPaths;
@@ -945,6 +946,7 @@ void VRRoadNetwork::connectGraph(vector<VREntityPtr> nodes, vector<Vec3d> norms,
     int eID = graph->connect(nID1, nID2);
     graphNormals[eID] = norms;
     graphEdgeEntities[eID] = lane;
+    graphEdgeIDs[lane] = eID;
 }
 
 

@@ -1452,6 +1452,14 @@ vector<VRRoadPtr> VRRoadIntersection::getRoads(){
     return res;
 }
 
+vector<VREntityPtr> VRRoadIntersection::getInLanes(){
+    vector<VREntityPtr> res;
+    for (auto rf : roadFronts) {
+        for (auto l : rf->inLanes) res.push_back(l);
+    }
+    return res;
+}
+
 void VRRoadIntersection::update() {
     if (!system) return;
     system->update();

@@ -72,6 +72,7 @@ class VRRoadIntersection : public VRRoadBase {
 
         void addRoad(VRRoadPtr road);
         vector<VRRoadPtr> getRoads();
+        vector<VREntityPtr> getInLanes();
         vector<VRTrafficLightPtr> getTrafficLights();
         VRTrafficLightPtr getTrafficLight(VREntityPtr lane);
         map<VREntityPtr,Vec3d> crossingRoads;
