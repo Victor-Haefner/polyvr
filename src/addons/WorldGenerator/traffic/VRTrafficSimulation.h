@@ -64,6 +64,8 @@ class VRTrafficSimulation : public VRObject {
             float distanceToNextIntersec;
             string nextSignalState; //"000" - red|organge|green
             bool signalAhead;
+            bool incTrafficRight = false;
+            bool incTrafficLeft = false;
 
             map<int, float> vehiclesight;
             map<int, float> vehiclesightFar;

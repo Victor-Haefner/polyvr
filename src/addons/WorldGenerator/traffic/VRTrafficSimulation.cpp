@@ -566,6 +566,8 @@ void VRTrafficSimulation::updateSimulation() {
             }
         };
 
+        //========================
+
         vehicle.vehiclesight.clear();
         if (isSimRunning){
             vehicle.vehiclesightFar.clear();
@@ -581,7 +583,7 @@ void VRTrafficSimulation::updateSimulation() {
         for (auto vv : resFar) {
         //check vehicles in radiusSearch
             auto v = (Vehicle*)vv;
-            if (!v->t->isVisible()) continue;
+            //if (!v->t->isVisible()) continue;
             if (!v) continue;
             if (!v->t) continue;
             auto p = v->t->getPose();
@@ -617,6 +619,7 @@ void VRTrafficSimulation::updateSimulation() {
         Vec3d nextSignalP;
 
         function<bool (VREntityPtr, int, Vec3d)> recSearch =[&](VREntityPtr newLane, int eID, Vec3d posV) {
+        //searches for next intersection in graph, also searches for trafficSignals at intersection
             auto interE = roadNetwork->getIntersection(newLane->getEntity("nextIntersection"));
             if (interE) {
                 auto node = newLane->getEntity("nextIntersection")->getEntity("node");
@@ -636,11 +639,12 @@ void VRTrafficSimulation::updateSimulation() {
                     nextSignalE = interE->getTrafficLight(newLane);
                     vehicle.distanceToNextIntersec = (pNode - posV).dot(vehicle.t->getPose()->dir());
 
-                    ///-----------------------------------------------------------------------------------------
                     auto g = roadNetwork->getGraph();
                     auto& edge = g->getEdge(eID);
                     auto nextEdges = g->getNextEdges(edge);
 
+                    ///-----------------------------------------------------------------------------------------
+                    //trying to set up turn decision at next intersection before actually reaching/crossing intersection
                     if (nextEdges.size() > 1) {
                         for (auto a : nextEdges) {
                             if (a.ID == vehicle.nextEdge) {
@@ -663,7 +667,27 @@ void VRTrafficSimulation::updateSimulation() {
                         }
                     }
                     ///-----------------------------------------------------------------------------------------
+                    //trying to see if incoming traffic at next intersection from right/left/front
 
+                    auto inLanes = interE->getInLanes();
+                    for (auto l : inLanes) {
+                        //get vehicles
+                        int lID = roadNetwork->getLaneID(l);
+                        auto ls = roads[lID];
+                        for (auto IDpair : ls.vehicleIDs) {
+                            auto v = vehicles[IDpair.second];
+                            auto p = v.t->getPose();
+                            auto D = (pose->pos() - p->pos()).length();
+                            if ( D > 1.5*sightRadius ) continue;
+                            auto dir = p->dir();
+                            auto vDir = vehicle.t->getPose()->dir();
+                            auto left = Vec3d(0,1,0).cross(vDir);
+                            if (dir.dot(left)>0.7) vehicle.incTrafficRight = true; //cout << "incoming right" << endl;
+                            if (dir.dot(left)<-0.7) vehicle.incTrafficLeft = true; //cout << "incoming left" << endl;
+                       }
+                    }
+
+                    ///-----------------------------------------------------------------------------------------
                     if (nextSignalE) {
                         nextSignalP = nextSignalE->getFrom();
                         vehicle.distanceToNextSignal  = (nextSignalP - posV).dot(vehicle.t->getPose()->dir());
@@ -681,6 +705,8 @@ void VRTrafficSimulation::updateSimulation() {
         auto nextIntersectionE = roadNetwork->getIntersection(laneE->getEntity("nextIntersection"));
 
         vehicle.distanceToNextIntersec = 10000;
+        vehicle.incTrafficRight = false;
+        vehicle.incTrafficLeft = false;
         recSearch(laneE,vehicle.pos.edge,vehicle.t->getPose()->pos());
     };
 
@@ -762,9 +788,9 @@ void VRTrafficSimulation::updateSimulation() {
                 else vehicle.turnAtIntersec = false;*/
 
                 vehicle.targetVelocity = roadVelocity;
-                if ( vehicle.distanceToNextIntersec < 20 ) vehicle.targetVelocity = 20/3.6;
-                if ( vehicle.distanceToNextIntersec < 10 ) vehicle.targetVelocity = 15/3.6;
-                if ( vehicle.distanceToNextIntersec > 20 ) vehicle.targetVelocity = 50/3.6;
+                //if ( vehicle.distanceToNextIntersec < 20 ) vehicle.targetVelocity = 20/3.6;
+                //if ( vehicle.distanceToNextIntersec < 10 ) vehicle.targetVelocity = 15/3.6;
+                //if ( vehicle.distanceToNextIntersec > 20 ) vehicle.targetVelocity = 50/3.6;
 
                 auto inFront = [&]() { return vehicle.vehiclesightFarID.count(INFRONT); };
                 auto comingLeft = [&]() { return vehicle.vehiclesightFarID.count(FRONTLEFT); };
@@ -791,6 +817,7 @@ void VRTrafficSimulation::updateSimulation() {
                         //cout << roadNetwork->getLane(vehicle.pos.edge)->get("turnDirection")->value << endl;
                         //if (toString(roadNetwork->getLane(vehicle.pos.edge)->get("turnDirection")->value) == "left") { d = 0; return; }
                     }
+                    if (vehicle.incTrafficRight) { decelerate(); return; } //rudimentary right of way
 
                     if ( vbeh == vehicle.STRAIGHT ) {
                         if ( ( signalAhead && nextSignalDistance < safetyDis -4 ) && signalBlock ) { decelerate(); return; }
