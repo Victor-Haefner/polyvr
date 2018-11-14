@@ -495,62 +495,63 @@ void VRTrafficSimulation::updateSimulation() {
         return d > 0 && L < 15 && r > 0 && a > 0.3/* && rL >= 2*; // in front, right, crossing paths,
     };*/
 
-    auto farPosition  = [&](int ID, PosePtr p1, PosePtr p2, float disToM, Vec3d lastMove) -> int {
-        auto& vehicle = vehicles[ID];
-        //Vec3d D = p2->pos() - (p1->pos() + lastMove*5); //vector between vehicles
-        Vec3d D = p2->pos() - p1->pos();
-        float L = D.length();
-        Vec3d Dn = D/L;
-
-        float d = Dn.dot(lastMove); //check if vehicle2 behind vehicle1
-        //Vec3d x = lastMove.cross(Vec3d(0,1,0));
-        Vec3d x = p1->dir().cross(Vec3d(0,1,0));
-        x.normalize();
-        //float rL = abs( D.dot(x) ); //check if vehicle2 left or right of vehicle1   rL < 1
-        float left = - D.dot(x);
-
-        if ( d > 0 && disToM < vehicle.width/2 ) return INFRONT; // in front, in range, in corridor
-        if ( d < 0 && disToM < vehicle.width/2 ) return BEHIND; // in behind, in range, in corridor
-        if ( d > 0 && left > 1 && left < 5) return FRONTLEFT; // in front, in range, left of corridor
-        if ( d > 0 && left <-1 && left >-5) return FRONTRIGHT; // in front, in range, right of corridor
-        if ( d < 0 && left > 1 && left < 5) return BEHINDLEFT; // in behind, in range, left of corridor
-        if ( d < 0 && left <-1 && left >-5) return BEHINDRIGHT; // in behind, in range, right of corridor
-        return -1;
-    };
-
-    auto calcFramePoints = [&](Vehicle& vehicle) {
-    //calculation of 4 points at the edges of vehicle
-        if (vehicle.lastFPTS == VRGlobals::CURRENT_FRAME) return;
-        auto p = vehicle.t->getPose();
-        if (vehicle.isUser) {
-            p->setPos(p->pos() - globalOffset);
-        }
-        auto dir = p->dir();
-        dir.normalize();
-        auto left = p->up().cross(dir);
-        auto LH = dir*0.5*vehicle.length; //half of vehicle length
-        auto WH = left*0.5*vehicle.width;   //half of vehicle width
-        vehicle.vehicleFPs[0] = p->pos() + LH + WH;
-        vehicle.vehicleFPs[1] = p->pos() + LH - WH;
-        vehicle.vehicleFPs[2] = p->pos() - LH + WH;
-        vehicle.vehicleFPs[3] = p->pos() - LH - WH;
-        vehicle.vehicleFPs[4] = p->pos();
-        vehicle.lastFPTS = VRGlobals::CURRENT_FRAME;
-    };
-
-    auto calcDisToFP = [&](Vehicle& v1, Vehicle& v2) {
-    //simple way to calculate the distance between vehicle1-FPs and vehicle2-middle track
-    ///TODO: make B-curve later AGRAJAG
-        float res = 5000.0;
-        auto dir = v1.t->getPose()->dir();
-        for (auto p : v2.vehicleFPs) {
-            float cc = abs((p.second - v1.t->getPose()->pos()).dot(dir.cross(v1.t->getPose()->up())));
-            if (res > cc) res = cc;
-        }
-        return res;
-    };
-
+    ///=====PERCEPTION==============================================================================================================================
     auto computePerception = [&](Vehicle& vehicle) {
+        auto relativePosition  = [&](int ID, PosePtr p1, PosePtr p2, float disToM, Vec3d lastMove) -> int {
+            auto& vehic = vehicles[ID];
+            //Vec3d D = p2->pos() - (p1->pos() + lastMove*5); //vector between vehicles
+            Vec3d D = p2->pos() - p1->pos();
+            float L = D.length();
+            Vec3d Dn = D/L;
+
+            float d = Dn.dot(lastMove); //check if vehicle2 behind vehicle1
+            //Vec3d x = lastMove.cross(Vec3d(0,1,0));
+            Vec3d x = p1->dir().cross(Vec3d(0,1,0));
+            x.normalize();
+            //float rL = abs( D.dot(x) ); //check if vehicle2 left or right of vehicle1   rL < 1
+            float left = - D.dot(x);
+
+            if ( d > 0 && disToM < vehic.width/2 ) return INFRONT; // in front, in range, in corridor
+            if ( d < 0 && disToM < vehic.width/2 ) return BEHIND; // in behind, in range, in corridor
+            if ( d > 0 && left > 1 && left < 5) return FRONTLEFT; // in front, in range, left of corridor
+            if ( d > 0 && left <-1 && left >-5) return FRONTRIGHT; // in front, in range, right of corridor
+            if ( d < 0 && left > 1 && left < 5) return BEHINDLEFT; // in behind, in range, left of corridor
+            if ( d < 0 && left <-1 && left >-5) return BEHINDRIGHT; // in behind, in range, right of corridor
+            return -1;
+        };
+
+        auto calcFramePoints = [&](Vehicle& vehic) {
+        //calculation of 4 points at the edges of vehicle
+            if (vehic.lastFPTS == VRGlobals::CURRENT_FRAME) return;
+            auto p = vehic.t->getPose();
+            if (vehic.isUser) {
+                p->setPos(p->pos() - globalOffset);
+            }
+            auto dir = p->dir();
+            dir.normalize();
+            auto left = p->up().cross(dir);
+            auto LH = dir*0.5*vehic.length; //half of vehicle length
+            auto WH = left*0.5*vehic.width;   //half of vehicle width
+            vehic.vehicleFPs[0] = p->pos() + LH + WH;
+            vehic.vehicleFPs[1] = p->pos() + LH - WH;
+            vehic.vehicleFPs[2] = p->pos() - LH + WH;
+            vehic.vehicleFPs[3] = p->pos() - LH - WH;
+            vehic.vehicleFPs[4] = p->pos();
+            vehic.lastFPTS = VRGlobals::CURRENT_FRAME;
+        };
+
+        auto calcDisToFP = [&](Vehicle& v1, Vehicle& v2) {
+        //simple way to calculate the distance between vehicle1-FPs and vehicle2-middle track
+        ///TODO: make B-curve later AGRAJAG
+            float res = 5000.0;
+            auto dir = v1.t->getPose()->dir();
+            for (auto p : v2.vehicleFPs) {
+                float cc = abs((p.second - v1.t->getPose()->pos()).dot(dir.cross(v1.t->getPose()->up())));
+                if (res > cc) res = cc;
+            }
+            return res;
+        };
+
         auto setSight = [&](int dir, float D, int ID) {
         //set nearest vehicleID as neighbor, also set Distance
             if (dir==-1) return;
@@ -588,21 +589,23 @@ void VRTrafficSimulation::updateSimulation() {
 
             calcFramePoints(vehicles[v->vID]);
             float diss = calcDisToFP(vehicle,vehicles[v->vID]); //distance to middle line of vehicle
-            int farP = farPosition(vehicle.vID, pose, p, diss, vehicle.lastMove);
+            int farP = relativePosition(vehicle.vID, pose, p, diss, vehicle.lastMove);
             setSight(farP,D,v->vID);
             //if (vehicle.currentVelocity > 6 && D <  0.1) vehicle.collisionDetected = true;
         }
-
+        bool tmpUser = false;
         for (auto& v : users) {
             if (!v.t) continue;
             //auto vP = v.t->getPoseTo( this->getWorldPose() );
             auto p = v.t->getWorldPose();
             p->setPos(p->pos() - globalOffset);
             auto simpleDis = (pose->pos() - p->pos()).length();
+            if (!tmpUser && simpleDis > 100) vehicle.t->setVisible(false);
+            if (simpleDis < 100) { vehicle.t->setVisible(true); tmpUser = true; }
             if (simpleDis > safetyDis + 10) continue;
             calcFramePoints(v);
             float diss = calcDisToFP(vehicle,v);
-            int farP = farPosition(vehicle.vID, pose, p, diss, vehicle.lastMove);
+            int farP = relativePosition(vehicle.vID, pose, p, diss, vehicle.lastMove);
             setSight(farP,simpleDis,v.vID);
         }
 
