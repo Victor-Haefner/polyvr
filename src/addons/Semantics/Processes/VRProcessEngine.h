@@ -47,6 +47,9 @@ class VRProcessEngine {
             VRProcessNodePtr sourceState;
             VRProcessNodePtr nextState;
             VRProcessNodePtr node;
+
+            string state = "unknown";
+            bool overridePrerequisites = false;
             vector<Prerequisite> prerequisites;
             vector<Action> actions;
 
@@ -69,6 +72,8 @@ class VRProcessEngine {
             string transitioning( float t ); // performs transitions to next states
 
             void receiveMessage(Message message);
+
+            void tryAdvance();
         };
 
     private:
@@ -100,6 +105,9 @@ class VRProcessEngine {
         void pause();
 
         vector<VRProcessNodePtr> getCurrentStates();
+
+        void continueWith(VRProcessNodePtr n);
+        void tryAdvance(int sID);
 };
 
 OSG_END_NAMESPACE;

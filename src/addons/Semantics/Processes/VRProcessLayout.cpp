@@ -364,8 +364,11 @@ void VRProcessLayout::update(){
 
                 //check if state is active
                 bool isActive = ::find( actives.begin(), actives.end(), state) != actives.end();
-                if (isActive) mat->setDiffuse(colorActiveState);
-                else {
+                if (isActive) {
+                    mat->setDiffuse(colorActiveState);
+                    mat->setLit(0);
+                } else {
+                    mat->setLit(1);
                     if      (state->isSendState)    mat->setDiffuse(colorSendState);
                     else if (state->isReceiveState) mat->setDiffuse(colorReceiveState);
                     else                            mat->setDiffuse(colorState);

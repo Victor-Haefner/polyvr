@@ -282,7 +282,7 @@ void VRGeometry::setPositions(GeoVectorProperty* Pos) {
 }
 
 void VRGeometry::setColor(string c) {
-    auto m = VRMaterial::create(c);
+    auto m = VRMaterial::get(c); // use get instead of create because of memory leak?
     m->setDiffuse(c);
     setMaterial(m);
 }
@@ -425,9 +425,9 @@ void VRGeometry::setTypes(GeoIntegralProperty* types) { if (!meshSet) setMesh();
 void VRGeometry::setNormals(GeoVectorProperty* Norms) { if (!meshSet) setMesh(); mesh->geo->setNormals(Norms); }
 void VRGeometry::setColors(GeoVectorProperty* Colors, bool fixMapping) {
     if (!meshSet) setMesh();
-    if (!Colors || Colors->size() == 0) { mesh->geo->setColors(0); fixColorMapping(); }
+    if (!Colors) { mesh->geo->setColors(0); return; }
     else mesh->geo->setColors(Colors);
-    if (fixMapping) fixColorMapping();
+    if (fixMapping || Colors->size() == 0) fixColorMapping();
 }
 void VRGeometry::setLengths(GeoIntegralProperty* lengths) { if (!meshSet) setMesh(); mesh->geo->setLengths(lengths); }
 void VRGeometry::setTexCoords(GeoVectorProperty* Tex, int i, bool fixMapping) {

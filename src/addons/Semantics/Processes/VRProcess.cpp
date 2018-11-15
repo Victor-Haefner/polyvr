@@ -22,6 +22,12 @@ void VRProcessDiagram::update(int i, bool changed) {
     if (processnodes.count(i)) processnodes[i]->update(nodes[i], changed);
 }
 
+vector<VRProcessNodePtr> VRProcessDiagram::getNodes() {
+    vector<VRProcessNodePtr> res;
+    for (auto p : processnodes) res.push_back(p.second);
+    return res;
+}
+
 void VRProcessDiagram::remNode(int i) { Graph::remNode(i); processnodes.erase(i); }
 void VRProcessDiagram::clear() { Graph::clear(); processnodes.clear(); }
 
@@ -41,6 +47,7 @@ void VRProcessNode::update(Graph::node& n, bool changed) { // called when graph 
 VREntityPtr VRProcessNode::getEntity() { return entity; }
 int VRProcessNode::getID() { return ID; }
 string VRProcessNode::getLabel() { return label; }
+int VRProcessNode::getSubjectID() { return subject; }
 
 VRProcess::VRProcess(string name) {
     setStorageType("Process");

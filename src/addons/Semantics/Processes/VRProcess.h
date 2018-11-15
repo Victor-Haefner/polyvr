@@ -46,6 +46,7 @@ struct VRProcessNode : VRName {
     int getID();
     string getLabel();
     VREntityPtr getEntity();
+    int getSubjectID();
 };
 
 struct VRProcessDiagram : public Graph {
@@ -57,6 +58,7 @@ struct VRProcessDiagram : public Graph {
 
     void update(int i, bool changed);
     void remNode(int i);
+    vector<VRProcessNodePtr> getNodes();
     void clear();
 };
 
