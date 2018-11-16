@@ -46,7 +46,6 @@ class VRTrafficSimulation : public VRObject {
             VRTransformPtr offset;
             VRObjectPtr mesh;
             Graph::position pos;
-            int nextEdge = -1;
             float length = 4.4;
             float width = 1.7;
             bool isUser = false;
@@ -66,11 +65,13 @@ class VRTrafficSimulation : public VRObject {
             bool signalAhead;
             bool incTrafficRight = false;
             bool incTrafficLeft = false;
+            bool incTrafficStraight = false;
 
             map<int, float> vehiclesight;
             map<int, float> vehiclesightFar;
             map<int, int> vehiclesightFarID;
             map<int, Vec3d> vehicleFPs;
+            vector<int> nextLanesCoices;
             int lastFPTS = 0;
 
             ///Behavior
@@ -94,6 +95,7 @@ class VRTrafficSimulation : public VRObject {
             int behavior = 0; //0 = straight, 1 = left, 2 = right
             int turnAhead = 0; //0 = straight, 1 = left, 2 = right
             int laneChangeState = 0; //1 = leaving lane, -1 = coming onto lane
+            int nextTurnLane;
             bool laneTransition = true;
             bool turnAtIntersec = false;
             Vec3d currentOffset;

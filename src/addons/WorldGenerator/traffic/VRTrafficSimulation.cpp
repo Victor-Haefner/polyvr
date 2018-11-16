@@ -77,7 +77,6 @@ void VRTrafficSimulation::Vehicle::setDefaults() {
     laneChangeState = 0; //0 = on lane, 1 = leaving lane, -1 = coming onto lane
     roadFrom = -1;
     roadTo = -1;
-    nextEdge = -1;
 
     lastMove = Vec3d(0,0,0);
     currentOffset = Vec3d(0,0,0);
@@ -313,14 +312,6 @@ void VRTrafficSimulation::updateSimulation() {
         auto& gp = vehicle.pos;
         gp.pos += d;
 
-        if (gp.pos > 0.3 && vehicle.nextEdge == -1) {
-            auto& edge = g->getEdge(gp.edge);
-            auto nextEdges = g->getNextEdges(edge);
-
-            if (nextEdges.size() > 1)  { vehicle.nextEdge = randomChoice(nextEdges).ID; }
-            if (nextEdges.size() == 1) { vehicle.nextEdge = nextEdges[0].ID; }
-            if (nextEdges.size() == 0) { vehicle.nextEdge = -1; }
-        }
         if (!isTimeForward && gp.pos < 0) { toChangeRoad[gp.edge].push_back( make_pair(vehicle.vID, -1) );}
         if (gp.pos > 1) {
             gp.pos -= 1;
@@ -329,8 +320,10 @@ void VRTrafficSimulation::updateSimulation() {
             auto nextEdges = g->getNextEdges(edge);
 
             if (nextEdges.size() > 1) {
-                gp.edge = vehicle.nextEdge;
-                //gp.edge = randomChoice(nextEdges).ID;
+                gp.edge = randomChoice(nextEdges).ID;
+                for (auto e : nextEdges) {
+                    if (e.ID == vehicle.nextTurnLane) gp.edge = vehicle.nextTurnLane;
+                }
                 auto& road = roads[gp.edge];
                 if (road.macro) {
                     toChangeRoad[road1ID].push_back( make_pair(vehicle.vID, -1) );
@@ -346,8 +339,7 @@ void VRTrafficSimulation::updateSimulation() {
                 //cout << toString(gp.edge) << endl;
             }
             if (nextEdges.size() == 1) {
-                gp.edge = vehicle.nextEdge;
-                //gp.edge = nextEdges[0].ID;
+                gp.edge = nextEdges[0].ID;
                 auto& road = roads[gp.edge];
                 toChangeRoad[road1ID].push_back( make_pair(vehicle.vID, gp.edge) );
                 gp.pos = gp.pos * roads[road1ID].length/roads[gp.edge].length;
@@ -364,7 +356,6 @@ void VRTrafficSimulation::updateSimulation() {
                 toChangeRoad[road1ID].push_back( make_pair(vehicle.vID, -1) );
                 //cout << "   new spawn of vehicle: " << vehicle.getID() << endl; //" from: " << road1ID <<
             }
-            vehicle.nextEdge = -1;
         }
         else {
             //auto& edge = g->getEdge(gp.edge);
@@ -416,7 +407,7 @@ void VRTrafficSimulation::updateSimulation() {
             vehicle.roadTo = -1;
             vehicle.laneChangeState = 0;
             vehicle.behavior = 0;
-            vehicle.nextEdge = -1;
+            vehicle.nextTurnLane = -1;
             offset = Vec3d(0,0,0);
             doffset = Vec3d(0,0,0);
             //cout << "changed lane" << endl;
@@ -602,8 +593,8 @@ void VRTrafficSimulation::updateSimulation() {
             auto p = v.t->getWorldPose();
             p->setPos(p->pos() - globalOffset);
             auto simpleDis = (pose->pos() - p->pos()).length();
-            if (!tmpUser && simpleDis > 100) vehicle.t->setVisible(false);
-            if (simpleDis < 100) { vehicle.t->setVisible(true); tmpUser = true; }
+            //if (!tmpUser && simpleDis > 100) vehicle.t->setVisible(false);
+            //if (simpleDis < 100) { vehicle.t->setVisible(true); tmpUser = true; }
             if (simpleDis > safetyDis + 10) continue;
             calcFramePoints(v);
             float diss = calcDisToFP(vehicle,v);
@@ -633,7 +624,7 @@ void VRTrafficSimulation::updateSimulation() {
                         auto nextLane = roadNetwork->getLane(nextID);
                         recSearch (nextLane, nextID, posV);
                     }
-                    else { vehicle.signalAhead = false; return false; }
+                    else { vehicle.nextTurnLane = -1; vehicle.signalAhead = false; return false; }
                 }
                 if (type == "intersection") {
                     nextSignalE = interE->getTrafficLight(newLane);
@@ -643,32 +634,18 @@ void VRTrafficSimulation::updateSimulation() {
                     auto& edge = g->getEdge(eID);
                     auto nextEdges = g->getNextEdges(edge);
 
-                    ///-----------------------------------------------------------------------------------------
+                    ///--------------
                     //trying to set up turn decision at next intersection before actually reaching/crossing intersection
-                    if (nextEdges.size() > 1) {
-                        for (auto a : nextEdges) {
-                            if (a.ID == vehicle.nextEdge) {
-                                auto road1 = roadNetwork->getRoad(roadNetwork->getLane(eID));
-                                auto road2 = roadNetwork->getRoad(roadNetwork->getLane(a.ID));
-                                //auto& data1 = road1->getEdgePoint( node );
-                                //auto& data2 = road2->getEdgePoint( node );
-                                /*float connectingAngle = data1.n.dot(data2.n);
-                                Vec3d w = data1.n.cross(data2.n);
-                                float a = asin( w.length() );
-                                if (w[1] < 0) a = -a;
-                                float turnLeft = a;
 
-                                bool parallel  = bool( connectingAngle < -0.8 );
-                                bool left  = bool( turnLeft < 0);
-                                if (  parallel ) { vehicle.turnAhead = 0; }
-                                if ( !parallel &&  left ) { vehicle.turnAhead = 1; }
-                                if ( !parallel && !left ) { vehicle.turnAhead = 2; }*/
-                            }
-                        }
+                    if (nextEdges.size() > 0) {
+                    //decide before turning, and see if left, right turn or straight
+                        vector<int> res;
+                        for (auto e : nextEdges) res.push_back(e.ID);
+                        vehicle.nextLanesCoices = res;
                     }
-                    ///-----------------------------------------------------------------------------------------
-                    //trying to see if incoming traffic at next intersection from right/left/front
 
+                    ///--------------
+                    //seeing if incoming traffic at next intersection coming from right/left/front
                     auto inLanes = interE->getInLanes();
                     for (auto l : inLanes) {
                         //get vehicles
@@ -686,8 +663,8 @@ void VRTrafficSimulation::updateSimulation() {
                             if (dir.dot(left)<-0.7) vehicle.incTrafficLeft = true; //cout << "incoming left" << endl;
                        }
                     }
+                    ///--------------
 
-                    ///-----------------------------------------------------------------------------------------
                     if (nextSignalE) {
                         nextSignalP = nextSignalE->getFrom();
                         vehicle.distanceToNextSignal  = (nextSignalP - posV).dot(vehicle.t->getPose()->dir());
@@ -708,6 +685,29 @@ void VRTrafficSimulation::updateSimulation() {
         vehicle.incTrafficRight = false;
         vehicle.incTrafficLeft = false;
         recSearch(laneE,vehicle.pos.edge,vehicle.t->getPose()->pos());
+
+        if (vehicle.nextTurnLane != -1) {
+            auto nextRoad = roadNetwork->getLane(vehicle.nextTurnLane);
+            if (nextRoad->get("turnDirection")) {
+                auto turnDir = nextRoad->get("turnDirection")->value;
+                if (turnDir == "straight") { vehicle.turnAhead = 0; }
+                if (turnDir == "left") { vehicle.turnAhead = 1; }
+                if (turnDir == "right") { vehicle.turnAhead = 2; }
+            }
+        } else { vehicle.turnAhead = -1; }
+    };
+
+    auto computeRoutingDecision = [&](Vehicle& vehicle) {
+        //right now random, IDEA: get routing integrated here
+        if (vehicle.nextTurnLane != -1) return;
+        if (vehicle.nextLanesCoices.size() == 1 ) {
+            vehicle.nextTurnLane = vehicle.nextLanesCoices[0];
+            return;
+        }
+        if (vehicle.nextLanesCoices.size() > 1) {
+            vehicle.nextTurnLane = vehicle.nextLanesCoices[round((float(random())/RAND_MAX) * (vehicle.nextLanesCoices.size()-1))];
+            return;
+        }
     };
 
     auto propagateVehicles = [&]() {
@@ -721,7 +721,7 @@ void VRTrafficSimulation::updateSimulation() {
                 if (!vehicle.t) continue;
 
                 computePerception(vehicle);
-                //computeDecision(vehicle);
+                computeRoutingDecision(vehicle);
                 //computeAction(vehicle);
 
                 float d = vehicle.currentVelocity;
@@ -788,9 +788,10 @@ void VRTrafficSimulation::updateSimulation() {
                 else vehicle.turnAtIntersec = false;*/
 
                 vehicle.targetVelocity = roadVelocity;
-                //if ( vehicle.distanceToNextIntersec < 20 ) vehicle.targetVelocity = 20/3.6;
-                //if ( vehicle.distanceToNextIntersec < 10 ) vehicle.targetVelocity = 15/3.6;
-                //if ( vehicle.distanceToNextIntersec > 20 ) vehicle.targetVelocity = 50/3.6;
+                if ( vehicle.distanceToNextIntersec < 20 && vehicle.turnAhead>0) vehicle.targetVelocity = 20/3.6;
+                if ( vehicle.distanceToNextIntersec < 10 && vehicle.turnAhead>0) vehicle.targetVelocity = 15/3.6;
+                if ( vehicle.distanceToNextIntersec > 20 ) vehicle.targetVelocity = 50/3.6;
+                if ( vehicle.distanceToNextIntersec < 1 ) vehicle.nextTurnLane = -1; ///AGRAJAG
 
                 auto inFront = [&]() { return vehicle.vehiclesightFarID.count(INFRONT); };
                 auto comingLeft = [&]() { return vehicle.vehiclesightFarID.count(FRONTLEFT); };
@@ -817,7 +818,7 @@ void VRTrafficSimulation::updateSimulation() {
                         //cout << roadNetwork->getLane(vehicle.pos.edge)->get("turnDirection")->value << endl;
                         //if (toString(roadNetwork->getLane(vehicle.pos.edge)->get("turnDirection")->value) == "left") { d = 0; return; }
                     }
-                    if (vehicle.incTrafficRight) { decelerate(); return; } //rudimentary right of way
+                    if (vehicle.incTrafficRight && !signalAhead) { decelerate(); return; } //rudimentary right of way
 
                     if ( vbeh == vehicle.STRAIGHT ) {
                         if ( ( signalAhead && nextSignalDistance < safetyDis -4 ) && signalBlock ) { decelerate(); return; }
@@ -933,6 +934,9 @@ void VRTrafficSimulation::updateSimulation() {
                 //if ( vbeh == vehicle.SWITCHLEFT  && !seesVehicle(vehicle.FRONTLEFT) && !inFront /*&& VRGlobals::CURRENT_FRAME - vehicle.indicatorTS > 200*/ ) propagateVehicle(vehicle, d, vbeh);
                 //if ( vbeh == vehicle.SWITCHRIGHT && !seesVehicle(vehicle.BEHINDRIGHT) && !inFront /*&& VRGlobals::CURRENT_FRAME - vehicle.indicatorTS > 200*/ ) propagateVehicle(vehicle, d, vbeh);
                 if (isSimRunning && VRGlobals::CURRENT_FRAME - vehicle.lastMoveTS > 200 && !interBlock) { // && !interBlock && stopVehicleID != ID.first) {
+                    toChangeRoad[road.first].push_back( make_pair(vehicle.vID, -1) ); ///------killswitch if vehicle get's stuck
+                }
+                if (isSimRunning && VRGlobals::CURRENT_FRAME - vehicle.lastMoveTS > 2000) { // && !interBlock && stopVehicleID != ID.first) {
                     toChangeRoad[road.first].push_back( make_pair(vehicle.vID, -1) ); ///------killswitch if vehicle get's stuck
                 }
                 if (!isSimRunning) vehicle.lastMoveTS = VRGlobals::CURRENT_FRAME;
