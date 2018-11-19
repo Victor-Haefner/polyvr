@@ -518,6 +518,7 @@ void VRRoadNetwork::computeSigns() {
             auto road = roadsByEntity[roadEnt];// get vrroad from roadent
             auto pose = road->getRightEdge(pos);
             auto d = pose->dir(); d[1] = 0; d.normalize();
+            if (laneEnt->get("direction")->value == "-1") { pose = road->getLeftEdge(pos); d=-d; }
             pose->setDir(-d); // sign looks against road direction
             pose->setUp(Vec3d(0,1,0));
             sign->setPose(pose);
