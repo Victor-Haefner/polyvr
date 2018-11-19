@@ -447,9 +447,10 @@ void main(void) {
 	vec3 pos = vertPos.xyz / vertPos.w;
 	vec4 color = texture2D(tex0, gl_TexCoord[0].xy);
 	vec4 normal = texture2D(tex1, gl_TexCoord[0].xy);
+	vec3 norm = normalize( normal.xyz );
 	if (color.a < 0.3) discard;
 	gl_FragData[0] = vec4(pos, 1.0);
-	gl_FragData[1] = vec4(normalize(normal.xyz), isLit);
+	gl_FragData[1] = vec4(norm, isLit);
 	gl_FragData[2] = vec4(color.rgb, 0);
 }
 );
@@ -577,14 +578,10 @@ vector<VRMaterialPtr> VRTree::createLODtextures(int& Hmax, VRGeoData& data) {
     string wdir = VRSceneManager::get()->getOriginalWorkdir();
 
     auto treeMatDiff = dynamic_pointer_cast<VRMaterial>( treeMat->duplicate() );
-    treeMatDiff->setFragmentShader(channelDiffuseLeafFP, "texRendChannel");
-    treeMatDiff->setDeferred(false);
-    //treeMatDiff->readFragmentShader(wdir+"/shader/Trees/Shader_tree_channel_diffuse.fp");
+    treeMatDiff->readFragmentShader(wdir+"/shader/Trees/Shader_tree_channel_diffuse.fp");
     matSubsDiff[treeMat.get()] = treeMatDiff;
     auto treeMatNorm = dynamic_pointer_cast<VRMaterial>( treeMat->duplicate() );
-    treeMatNorm->setFragmentShader(channelNormalLeafFP, "texRendChannel");
-    treeMatNorm->setDeferred(false);
-    //treeMatNorm->readFragmentShader(wdir+"/shader/Trees/Shader_tree_channel_normal.fp");
+    treeMatNorm->readFragmentShader(wdir+"/shader/Trees/Shader_tree_channel_normal.fp");
     matSubsNorm[treeMat.get()] = treeMatNorm;
 
     vector<VRMaterialPtr> sides;
