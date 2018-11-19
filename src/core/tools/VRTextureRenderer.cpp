@@ -261,7 +261,7 @@ void VRTextureRenderer::setChannelFP(string fp) {
         auto g = dynamic_pointer_cast<VRGeometry>(geo);
         auto m = g->getMaterial();
         auto m2 = dynamic_pointer_cast<VRMaterial>(m->duplicate());
-        m2 = m;
+        //m2 = m;
         //if (originalMatFP.count(m.get())) continue;
         originalMatFP[m2.get()] = m2->getFragmentShader();
         originalMat[m2.get()] = m;

@@ -592,7 +592,8 @@ vector<VRMaterialPtr> VRTree::createLODtextures(int& Hmax, VRGeoData& data) {
     auto addSprite = [&](PosePtr p, float W, float H, float Sh) {
         string path = ".treeLods/treeLod"+getHash({W,H,Sh});
         VRMaterialPtr tm = VRMaterial::create("lod");
-        if (!loadSprite(path, tm)) {
+        //if (!loadSprite(path, tm)) {
+        if (true) {
             auto tr = VRTextureRenderer::create("treeLODtexR");
             tr->setMaterialSubstitutes(matSubsDiff, VRTextureRenderer::DIFFUSE);
             tr->setMaterialSubstitutes(matSubsNorm, VRTextureRenderer::NORMAL);
