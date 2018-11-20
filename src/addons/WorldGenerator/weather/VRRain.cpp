@@ -149,7 +149,7 @@ void VRRain::start() {
 
 void VRRain::startRainCallback(float t) {
     auto sky = VRScene::getCurrent()->getSky();
-    sky->setClouds(densityStart+(density-densityStart)*t, 1e-5, 3000, Vec2d(speedStartX+(speedX-speedStartX)*t, speedStartY+(speedX-speedStartY)*t), Color4f(colorStart-(colorStart-color)*t,colorStart-(colorStart-color)*t,colorStart-(colorStart-color)*t,1));
+    if (sky) sky->setClouds(densityStart+(density-densityStart)*t, 1e-5, 3000, Vec2d(speedStartX+(speedX-speedStartX)*t, speedStartY+(speedX-speedStartY)*t), Color4f(colorStart-(colorStart-color)*t,colorStart-(colorStart-color)*t,colorStart-(colorStart-color)*t,1));
 
 	//IDEA: MAYBE CHANGE LIGHT SETTINGS OF SCENE
 	//lightMain = VRScene::getCurrent()->getRoot()->find("light");
@@ -174,7 +174,7 @@ void VRRain::stop() {
 
 void VRRain::stopRainCallback(float t) {
     auto sky = VRScene::getCurrent()->getSky();
-    sky->setClouds(density-(density-densityStart)*t, 1e-5, 3000, Vec2d(speedX-(speedX-speedStartX)*t, speedX-(speedX-speedStartY)*t), Color4f(color+(colorStart-color)*t,color+(colorStart-color)*t,color+(colorStart-color)*t,1));
+    if (sky) sky->setClouds(density-(density-densityStart)*t, 1e-5, 3000, Vec2d(speedX-(speedX-speedStartX)*t, speedX-(speedX-speedStartY)*t), Color4f(color+(colorStart-color)*t,color+(colorStart-color)*t,color+(colorStart-color)*t,1));
 
     //lightMain = VRScene::getCurrent()->getRoot()->find("light");
     //float cl = 0.6+0.4*t;
@@ -198,7 +198,7 @@ void VRRain::setScale( bool liveChange, float scale){
         if (liveChange) {
             updateScale(scale);
             auto sky = VRScene::getCurrent()->getSky();
-            sky->setClouds(density, 1e-5, 3000, Vec2d(speedX, speedY), Color4f(color,color,color,1));
+            if (sky) sky->setClouds(density, 1e-5, 3000, Vec2d(speedX, speedY), Color4f(color,color,color,1));
         }
     }
 }

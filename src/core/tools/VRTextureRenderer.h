@@ -26,6 +26,12 @@ class VRTextureRenderer : public VRObject {
 
         void setChannelFP(string fp);
         void resetChannelFP();
+
+        map<CHANNEL, map<VRMaterial*, VRMaterialPtr>> substitutes;
+        map<VRMaterial*, VRMaterialPtr> originalMaterials;
+
+        void setChannelSubstitutes(CHANNEL c);
+        void resetChannelSubstitutes();
         void test();
 
     public:
@@ -35,6 +41,7 @@ class VRTextureRenderer : public VRObject {
         static VRTextureRendererPtr create(string name = "textureRenderer");
 
         void setup(VRCameraPtr cam, int width, int height, bool alpha = false);
+        void setMaterialSubstitutes(map<VRMaterial*, VRMaterialPtr> substitutes, CHANNEL c);
         void setBackground(Color3f c);
 
         void setActive(bool b);

@@ -24,7 +24,7 @@ boost::recursive_mutex& VRParticles::mtx() {
 }
 
 VRParticles::VRParticles(string name, bool spawnParticles) : VRGeometry(name) {
-    ocparticles = Octree::create(0.1);
+    ocparticles = Octree::create(0.1,10,name);
     if (spawnParticles) resetParticles<Particle>();
     setVolumeCheck(false);
 }
