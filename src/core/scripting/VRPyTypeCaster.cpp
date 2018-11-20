@@ -67,7 +67,9 @@ template<> PyObject* VRPyTypeCaster::cast(const Vec2d& b) { return toPyObject(b)
 template<> PyObject* VRPyTypeCaster::cast(const Vec3d& b) { return toPyObject(b); }
 template<> PyObject* VRPyTypeCaster::cast(const Vec4d& b) { return VRPyBase::toPyTuple(b); }
 template<> PyObject* VRPyTypeCaster::cast(const Pnt3d& b) { return toPyObject(Vec3d(b)); }
+template<> PyObject* VRPyTypeCaster::cast(const Vec2i& b) { return VRPyBase::toPyTuple(b); }
 template<> PyObject* VRPyTypeCaster::cast(const Vec3i& b) { return VRPyBase::toPyTuple(b); }
+template<> PyObject* VRPyTypeCaster::cast(const Vec4i& b) { return VRPyBase::toPyTuple(b); }
 template<> PyObject* VRPyTypeCaster::cast(const Color3f& b) { return VRPyBase::toPyTuple(Vec3d(b)); }
 template<> PyObject* VRPyTypeCaster::cast(const Color4f& b) { return VRPyBase::toPyTuple(Vec4d(b)); }
 //template<> PyObject* VRPyTypeCaster::cast(const Line& b) {}

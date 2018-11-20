@@ -22,6 +22,7 @@
 #include "VRPyStroke.h"
 #include "VRPyColorChooser.h"
 #include "VRPyTextureRenderer.h"
+#include "VRPyTextureMosaic.h"
 #include "VRPyConstraint.h"
 #include "VRPyHaptic.h"
 #include "VRPyMouse.h"
@@ -184,6 +185,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyJointTool>("JointTool", pModVR, VRPyGeometry::typeRef);
 	sm->registerModule<VRPyColorChooser>("ColorChooser", pModVR);
 	sm->registerModule<VRPyTextureRenderer>("TextureRenderer", pModVR, VRPyObject::typeRef);
+	sm->registerModule<VRPyTextureMosaic>("TextureMosaic", pModVR, VRPyImage::typeRef);
     sm->registerModule<VRPyCaveKeeper>("CaveKeeper", pModVR);
     sm->registerModule<VRPyParticles>("Particles", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyFluids>("Fluids", pModVR, VRPyParticles::typeRef);
