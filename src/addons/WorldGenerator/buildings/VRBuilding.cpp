@@ -185,17 +185,41 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs) {
     int ri = N*float(roofType) / RAND_MAX;
     float r_tc1 = ri * _N;
 
+    auto roofTop = *roof.shrink(-2);
+
+    float H = 2.0; // roof height
+
     // roof
     Triangulator t;
-    t.add(roof);
+    t.add(roofTop);
     auto g = t.compute();
-    g->translate(Vec3d(0,ground+height,0));
+    g->translate(Vec3d(0,ground+height+H,0));
     g->applyTransformation();
+    VRGeoData data(g);
+
+    int Nr = roof.size();
+    if (Nr == roofTop.size() && Nr > 0) {
+        for (int i=0; i<Nr; i++) {
+            Vec2d p1 = roof.getPoint(i);
+            Vec2d p2 = roofTop.getPoint(i);
+            Vec3d P1 = Vec3d(p1[0], ground+height, p1[1]);
+            Vec3d P2 = Vec3d(p2[0], ground+height+H, p2[1]);
+            int i1 = data.pushVert(P1, Vec3d(0,1,0));
+            int i2 = data.pushVert(P2, Vec3d(0,1,0));
+        }
+        int I = data.size();
+        for (int i=0; i<Nr; i++) {
+            int j = I-2*Nr+i*2;
+            if (i < Nr-1) data.pushQuad(j, j+2, j+3, j+1);
+            if (i < Nr-1) data.pushQuad(j, j+2, j+3, j+1);
+            else          data.pushQuad(j, I-2*Nr, I-2*Nr+1, j+1);
+        }
+    }
+
+    data.addVertexColors(Color4f(r_tc1, 0.75, r_tc1, 0.75));
     g->updateNormals();
     g->setPositionalTexCoords2D(0.05,0,Vec2i(0,2));
     g->setPositionalTexCoords2D(0.05,1,Vec2i(0,2));
-    VRGeoData data(g);
-    data.addVertexColors(Color4f(r_tc1, 0.75, r_tc1, 0.75));
     roofs->merge(g);
 }
 

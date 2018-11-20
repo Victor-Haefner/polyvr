@@ -74,11 +74,6 @@ void VRDistrict::addBuilding( VRPolygonPtr p, int stories, string housenumber, s
     b->addRoof(*p);
     b->computeGeometry(facades, roofs);
 
-    auto o = ontology.lock();
-    auto bEnt = o->addEntity("building", "Building");
-    bEnt->set("streetName", street);
-    bEnt->set("houseNumber", housenumber);
-
     auto toStringVector = [](const Vec3d& v) {
         vector<string> res;
         res.push_back( toString(v[0]) );
@@ -87,21 +82,28 @@ void VRDistrict::addBuilding( VRPolygonPtr p, int stories, string housenumber, s
         return res;
     };
 
-    auto area = o->addEntity("area", "Area");
-    auto perimeter = o->addEntity("perimeter", "Path");
-    for (auto pnt : p->get()) {
-        auto node = o->addEntity("node", "Node");
-        node->setVector("position", toStringVector(Vec3d(pnt[0],0,pnt[1])), "Position");
-		auto nodeEntry = o->addEntity(name+"Entry", "NodeEntry");
-		nodeEntry->set("path", perimeter->getName());
-		nodeEntry->set("node", node->getName());
-		nodeEntry->set("sign", "0");
-		nodeEntry->setVector("direction", toStringVector(Vec3d()), "Direction");
-		node->add("paths", nodeEntry->getName());
-		perimeter->add("nodes", nodeEntry->getName());
+    auto o = ontology.lock();
+    if (o) {
+        auto bEnt = o->addEntity("building", "Building");
+        bEnt->set("streetName", street);
+        bEnt->set("houseNumber", housenumber);
+        auto area = o->addEntity("area", "Area");
+        auto perimeter = o->addEntity("perimeter", "Path");
+        area->set("borders", perimeter->getName());
+        bEnt->set("area", area->getName());
+
+        for (auto pnt : p->get()) {
+            auto node = o->addEntity("node", "Node");
+            node->setVector("position", toStringVector(Vec3d(pnt[0],0,pnt[1])), "Position");
+            auto nodeEntry = o->addEntity(name+"Entry", "NodeEntry");
+            nodeEntry->set("path", perimeter->getName());
+            nodeEntry->set("node", node->getName());
+            nodeEntry->set("sign", "0");
+            nodeEntry->setVector("direction", toStringVector(Vec3d()), "Direction");
+            node->add("paths", nodeEntry->getName());
+            perimeter->add("nodes", nodeEntry->getName());
+        }
     }
-    area->set("borders", perimeter->getName());
-    bEnt->set("area", area->getName());
 
     auto geo = b->getCollisionShape();
     if (auto w = world.lock()) w->getPhysicsSystem()->add(geo, getID());
