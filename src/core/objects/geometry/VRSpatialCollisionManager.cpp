@@ -13,7 +13,7 @@
 using namespace OSG;
 
 VRSpatialCollisionManager::VRSpatialCollisionManager(float resolution) : VRGeometry("spatialCollisionShape") {
-    space = Octree::create(resolution);
+    space = Octree::create(resolution,10,"spatialCollisionShape");
     hide("SHADOW");
     updateCollisionCb = VRUpdateCb::create( "collision check", boost::bind( &VRSpatialCollisionManager::checkCollisions, this ) );
     VRScene::getCurrent()->addUpdateFkt(updateCollisionCb);
