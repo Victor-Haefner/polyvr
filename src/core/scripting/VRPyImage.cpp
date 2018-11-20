@@ -51,6 +51,8 @@ PyMethodDef VRPyImage::methods[] = {
     {"read", (PyCFunction)VRPyImage::read, METH_VARARGS, "Read an image from disk - read( str path )" },
     {"write", (PyCFunction)VRPyImage::write, METH_VARARGS, "Write an image to disk - write( str path )" },
     {"getPixel", (PyCFunction)VRPyImage::getPixel, METH_VARARGS, "Return pixel at coordinates u,v - getPixel( [u,v] )" },
+    {"getSize", (PyCFunction)VRPyImage::getSize, METH_NOARGS, "Return pixel at coordinates u,v - getPixel( [u,v] )" },
+    {"getChannels", (PyCFunction)VRPyImage::getChannels, METH_NOARGS, "Return pixel at coordinates u,v - getPixel( [u,v] )" },
     {NULL}  /* Sentinel */
 };
 
@@ -91,6 +93,14 @@ PyObject* VRPyImage::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     img->getImage()->set(pf, W, H, 1, 1, 1, 0, cdata, dt, true);
     if (channels2) img->setInternalFormat( toOSGConst(PyString_AsString((PyObject*)channels2)) );
     return allocPtr( type, img );
+}
+
+PyObject* VRPyImage::getChannels(VRPyImage* self, PyObject *args) {
+    return PyInt_FromLong(self->objPtr->getChannels());
+}
+
+PyObject* VRPyImage::getSize(VRPyImage* self, PyObject *args) {
+    return toPyTuple(self->objPtr->getSize());
 }
 
 PyObject* VRPyImage::read(VRPyImage* self, PyObject *args) {
