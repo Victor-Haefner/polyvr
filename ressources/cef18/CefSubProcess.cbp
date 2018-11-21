@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="CefSubProcess" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Release">
+				<Option output="CefSubProcess" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-O2" />
+			<Add option="-Wall" />
+			<Add option="-fPIC" />
+			<Add option="-fstack-protector" />
+			<Add option="--param=ssp-buffer-size=4" />
+			<Add option="-Werror" />
+			<Add option="-pthread" />
+			<Add option="-fno-exceptions" />
+			<Add option="-fno-strict-aliasing" />
+			<Add option="-Wno-unused-parameter" />
+			<Add option="-Wno-missing-field-initializers" />
+			<Add option="-fvisibility=hidden" />
+			<Add option="-pipe" />
+			<Add option="`pkg-config --cflags gmodule-2.0 gtk+-2.0 gthread-2.0 gtk+-unix-print-2.0`" />
+			<Add option="-fno-ident" />
+			<Add option="-fdata-sections" />
+			<Add option="-ffunction-sections" />
+			<Add option="-DV8_DEPRECATION_WARNINGS" />
+			<Add option="-D_FILE_OFFSET_BITS=64" />
+			<Add option="-DCHROMIUM_BUILD" />
+			<Add option="-DUSE_CAIRO=1" />
+			<Add option="-DUSE_GLIB=1" />
+			<Add option="-DUSE_DEFAULT_RENDER_THEME=1" />
+			<Add option="-DUSE_LIBJPEG_TURBO=1" />
+			<Add option="-DUSE_NSS=1" />
+			<Add option="-DUSE_X11=1" />
+			<Add option="-DENABLE_ONE_CLICK_SIGNIN" />
+			<Add option="-DGTK_DISABLE_SINGLE_INCLUDES=1" />
+			<Add option="-DUSE_XI2_MT=2" />
+			<Add option="-DENABLE_REMOTING=1" />
+			<Add option="-DENABLE_WEBRTC=1" />
+			<Add option="-DENABLE_PEPPER_CDMS" />
+			<Add option="-DENABLE_CONFIGURATION_POLICY" />
+			<Add option="-DENABLE_INPUT_SPEECH" />
+			<Add option="-DENABLE_NOTIFICATIONS" />
+			<Add option="-DUSE_UDEV" />
+			<Add option="-DICU_UTIL_DATA_IMPL=ICU_UTIL_DATA_STATIC" />
+			<Add option="-DENABLE_EGLIMAGE=1" />
+			<Add option="-DENABLE_TASK_MANAGER=1" />
+			<Add option="-DENABLE_EXTENSIONS=1" />
+			<Add option="-DENABLE_PLUGIN_INSTALLATION=1" />
+			<Add option="-DENABLE_PLUGINS=1" />
+			<Add option="-DENABLE_SESSION_SERVICE=1" />
+			<Add option="-DENABLE_THEMES=1" />
+			<Add option="-DENABLE_BACKGROUND=1" />
+			<Add option="-DENABLE_AUTOMATION=1" />
+			<Add option="-DENABLE_GOOGLE_NOW=1" />
+			<Add option="-DCLD_VERSION=2" />
+			<Add option="-DENABLE_FULL_PRINTING=1" />
+			<Add option="-DENABLE_PRINTING=1" />
+			<Add option="-DENABLE_SPELLCHECK=1" />
+			<Add option="-DENABLE_CAPTIVE_PORTAL_DETECTION=1" />
+			<Add option="-DENABLE_MANAGED_USERS=1" />
+			<Add option="-DENABLE_MDNS=1" />
+			<Add option="-DUSING_CEF_SHARED" />
+			<Add option="-D__STDC_CONSTANT_MACROS" />
+			<Add option="-D__STDC_FORMAT_MACROS" />
+			<Add option="-DNDEBUG" />
+			<Add option="-DNVALGRIND" />
+			<Add option="-DDYNAMIC_ANNOTATIONS_ENABLED=0" />
+			<Add option="-D_FORTIFY_SOURCE=2" />
+			<Add directory="/usr/include/CEF" />
+		</Compiler>
+		<Linker>
+			<Add option="-Wl,-z,now" />
+			<Add option="-Wl,-z,relro" />
+			<Add option="-pthread" />
+			<Add option="-Wl,-z,noexecstack" />
+			<Add option="-fPIC" />
+			<Add option="-Wl,-rpath,." />
+			<Add option="-Wl,-O1" />
+			<Add option="-Wl,--as-needed" />
+			<Add option="-Wl,--gc-sections" />
+			<Add option="-Wl,--start-group" />
+			<Add option="-Wl,--end-group" />
+			<Add option="-lcef_dll_wrapper" />
+			<Add option="-lcef" />
+			<Add option="-lgmodule-2.0" />
+			<Add option="-lgthread-2.0" />
+			<Add option="-lgtk-x11-2.0" />
+			<Add option="-lgdk-x11-2.0" />
+			<Add option="-latk-1.0" />
+			<Add option="-lgio-2.0" />
+			<Add option="-lpangoft2-1.0" />
+			<Add option="-lpangocairo-1.0" />
+			<Add option="-lgdk_pixbuf-2.0" />
+			<Add option="-lcairo -lpango-1.0 -lfontconfig -lgobject-2.0 -lglib-2.0" />
+			<Add option="-lfreetype" />
+			<Add directory="/usr/lib/CEF" />
+		</Linker>
+		<Unit filename="WKSubProcess.cpp" />
+		<Extensions>
+			<envvars />
+			<code_completion />
+			<lib_finder disable_auto="1" />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

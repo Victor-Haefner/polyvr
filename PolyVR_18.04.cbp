@@ -249,7 +249,6 @@
 			<Add option="-lavutil" />
 			<Add option="-lqrencode" />
 			<Add option="-ludev" />
-			<Add option="-lffmpegsumo" />
 			<Add option="-lraptor2" />
 			<Add option="-lgomp" />
 			<Add option="-llapacke" />

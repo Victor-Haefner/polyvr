@@ -91,14 +91,22 @@ void CEF::global_initiate() {
     cout << "Global CEF init\n";
     cef_gl_init = true;
     CefSettings settings;
+
+#ifdef CEF18
+    string path = "/ressources/cef18";
+#else
+    string path = "/ressources/cef";
+#endif
+
 #ifndef _WIN32
-    string bsp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/CefSubProcess";
+    string bsp = VRSceneManager::get()->getOriginalWorkdir() + path + "/CefSubProcess";
 #else
     string bsp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/CefSubProcessWin.exe";
 #endif
-    string ldp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/locales";
-    string rdp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef";
-    string lfp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/wblog.log";
+
+    string ldp = VRSceneManager::get()->getOriginalWorkdir() + path + "/locales";
+    string rdp = VRSceneManager::get()->getOriginalWorkdir() + path;
+    string lfp = VRSceneManager::get()->getOriginalWorkdir() + path + "/wblog.log";
     CefString(&settings.browser_subprocess_path).FromASCII(bsp.c_str());
     CefString(&settings.locales_dir_path).FromASCII(ldp.c_str());
     CefString(&settings.resources_dir_path).FromASCII(rdp.c_str());
@@ -113,7 +121,12 @@ void CEF::initiate() {
     init = true;
     CefWindowInfo win;
     CefBrowserSettings browser_settings;
+#ifdef CEF18
+    win.SetAsWindowless(0);
+#else
     win.SetAsWindowless(0, true);
+#endif
+
     browser = CefBrowserHost::CreateBrowserSync(win, client, "www.google.de", browser_settings, 0);
 }
 
