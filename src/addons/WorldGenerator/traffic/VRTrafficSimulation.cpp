@@ -523,8 +523,7 @@ void VRTrafficSimulation::updateSimulation() {
         if (vehicle.lastFPTS == VRGlobals::CURRENT_FRAME) return;
         auto p = vehicle.t->getPose();
         if (vehicle.isUser) {
-            Vec3d offset = Vec3d(-4817.3,0,-5559.75);
-            p->setPos(p->pos() - offset);
+            p->setPos(p->pos() - globalOffset);
         }
         auto dir = p->dir();
         dir.normalize();
@@ -598,8 +597,7 @@ void VRTrafficSimulation::updateSimulation() {
             if (!v.t) continue;
             //auto vP = v.t->getPoseTo( this->getWorldPose() );
             auto p = v.t->getWorldPose();
-            Vec3d offset = globalOffset; ///Vec3d(-4817.3,0,-5559.75); ///AGRAJAG - should be globalOffset
-            p->setPos(p->pos() - offset);
+            p->setPos(p->pos() - globalOffset);
             auto simpleDis = (pose->pos() - p->pos()).length();
             if (simpleDis > safetyDis + 10) continue;
             calcFramePoints(v);
