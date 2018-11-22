@@ -15,34 +15,47 @@ template<> string typeName(const VRProcessEnginePtr& o) { return "ProcessEngine"
 // ----------- process engine prerequisites --------------
 
 bool VRProcessEngine::Inventory::hasMessage(Message m) {
+    for (auto& m2 : messages) if (m2 == m) return true;
+    return false;
+}
+
+void VRProcessEngine::Inventory::remMessage(Message m) {
     for (auto& m2 : messages) {
-        //cout << "  VRProcessEngine::Inventory::hasMessage '" << m.message << "' and '" << m2.message << "' -> " << bool(m2 == m) << endl;
         if (m2 == m) {
             messages.erase(std::remove(messages.begin(), messages.end(), m2), messages.end());
-            return true;
+            return;
         }
     }
-    return false;
+    return;
 }
 
 // ----------- process engine prerequisite --------------
 
 bool VRProcessEngine::Prerequisite::valid(Inventory* inventory) {
     //cout << " VRProcessEngine::Prerequisite::valid check for '" << message.message << "' inv: " << inventory << endl;
-    return inventory->hasMessage(message);
+    bool b = inventory->hasMessage(message);
+    if (b) inventory->remMessage(message);
+    return b;
 }
 
 // ----------- process engine transition --------------
 
 bool VRProcessEngine::Transition::valid(Inventory* inventory) {
-    if (overridePrerequisites) {
-        cout << "VRProcessEngine::Transition::valid YAY\n";
-        overridePrerequisites = false; return true; }
-    for (auto& p : prerequisites) if (!p.valid(inventory)) return false;
+    if (overridePrerequisites) { overridePrerequisites = false; state = "overridden"; return true; }
+    for (auto& p : prerequisites) if (!p.valid(inventory)) { state = "invalid"; return false; }
+    state = "valid";
     return true;
 }
 
 // ----------- process engine actor --------------
+
+void VRProcessEngine::Actor::checkTransitions() {
+    auto state = sm.getCurrentState();
+    if (state) {
+        string stateName = state->getName();
+        for (auto& t : transitions[stateName]) t.valid(&inventory);
+    }
+}
 
 string VRProcessEngine::Actor::transitioning( float t ) {
     auto state = sm.getCurrentState();
@@ -57,13 +70,27 @@ string VRProcessEngine::Actor::transitioning( float t ) {
             return transition.nextState->getLabel();
         }
     }
-
     return "";
 }
 
 void VRProcessEngine::Actor::receiveMessage(Message message) {
     cout << "VRProcessEngine::Actor::receiveMessage '" << message.message << "' to '" << message.receiver << "' inv: " << &inventory << ", actor: " << this << endl;
     inventory.messages.push_back( message );
+}
+
+void VRProcessEngine::Actor::tryAdvance() {
+    sm.process(0);
+    checkTransitions();
+}
+
+VRProcessEngine::Transition& VRProcessEngine::Actor::getTransition(int tID) {
+    for (auto& state : transitions) {
+        for (auto& t : state.second) {
+            if (t.node->getID() == tID) return t;
+        }
+    }
+    auto t = Transition(0,0,0);
+    return t;
 }
 
 // ----------- process engine --------------
@@ -80,8 +107,9 @@ VRProcessEnginePtr VRProcessEngine::create() { return VRProcessEnginePtr( new VR
 void VRProcessEngine::setProcess(VRProcessPtr p) { process = p; initialize();}
 VRProcessPtr VRProcessEngine::getProcess() { return process; }
 void VRProcessEngine::pause() { running = false; }
-
 void VRProcessEngine::performTransition(Transition transition) {}
+void VRProcessEngine::tryAdvance(int sID) { if (subjects.count(sID)) subjects[sID].tryAdvance(); }
+VRProcessEngine::Transition& VRProcessEngine::getTransition(int sID, int tID) { return subjects[sID].getTransition(tID); }
 
 void VRProcessEngine::run(float s) {
     speed = s; running = true;
@@ -106,11 +134,7 @@ void VRProcessEngine::reset() {
 
 void VRProcessEngine::update() {
     if (!running) return;
-
-    for (auto& subject : subjects) {
-        auto& actor = subject.second;
-        actor.sm.process(0);
-    }
+    for (auto& subject : subjects) subject.second.tryAdvance();
 }
 
 vector<VRProcessNodePtr> VRProcessEngine::getCurrentStates() {
@@ -137,8 +161,6 @@ void VRProcessEngine::continueWith(VRProcessNodePtr n) {
 
 void VRProcessEngine::initialize() {
     cout << "VRProcessEngine::initialize()" << endl;
-
-
 
     for (auto subject : process->getSubjects()) {
         int sID = subject->getID();

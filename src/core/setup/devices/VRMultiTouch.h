@@ -5,6 +5,7 @@
 #include "VRDevice.h"
 #include <OpenSG/OSGLine.h>
 #include "core/math/pose.h"
+#include "core/tools/VRToolsFwd.h"
 
 /*
 not compiling? then you are missing a library:
@@ -39,6 +40,7 @@ class VRMultiTouch : public VRDevice {
         VRUpdateCbPtr updatePtr;
         VRCameraWeakPtr cam;
         VRWindowWeakPtr window;
+        VRAnalyticGeometryPtr visual;
         Line ray;
 
         static vector<string> devices;
@@ -84,6 +86,8 @@ class VRMultiTouch : public VRDevice {
         Line getRay();
         void setCamera(VRCameraPtr cam);
         void setWindow(VRWindowPtr win);
+
+        void showVisual(bool b);
 };
 
 OSG_END_NAMESPACE;

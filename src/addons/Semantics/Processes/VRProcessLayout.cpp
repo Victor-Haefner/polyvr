@@ -135,11 +135,8 @@ void pushMsgBox(VRGeoData& geo, int N, float h) {
 }
 
 VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
-    Color4f fg, bg;
-    if (n->type == SUBJECT) { fg = Color4f(0,0,0,1); bg = Color4f(0.8,0.9,1,1); }
-    if (n->type == MESSAGE) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,0,1); }
-    if (n->type == TRANSITION) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,0,1); }
-    if (n->type == STATE) { fg = Color4f(0,0,0,1); bg = Color4f(1,0.9,0.8,1); }
+    Color4f fg = Color4f(0,0,0,1);
+    Color4f bg = Color4f(1,1,1,1);
 
     int wrapN = 12;
     if (n->type == MESSAGE || n->type == TRANSITION) wrapN = 22;
@@ -150,6 +147,10 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     auto mat = VRMaterial::create("ProcessElement");
     mat->setTexture(txt, false);
     mat->setTextureParams(GL_LINEAR, GL_LINEAR);
+    if (n->type == SUBJECT) mat->setDiffuse( Color3f(0.8,0.9,1) );
+    if (n->type == MESSAGE) mat->setDiffuse( Color3f(1,1,0) );
+    if (n->type == TRANSITION) mat->setDiffuse( Color3f(1,1,0) );
+    if (n->type == STATE) mat->setDiffuse( Color3f(0.8,0.9,1) );
     //mat->enableTransparency(0);
     VRGeoData geo;
 
@@ -330,9 +331,8 @@ void VRProcessLayout::setElementName(int ID, string name) {
     auto n = process->getNode(ID);
     n->label = name;
 
-    Color4f fg, bg;
-    if (n->type == SUBJECT) { fg = Color4f(0,0,0,1); bg = Color4f(0.8,0.9,1,1); }
-    if (n->type == MESSAGE) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,0,1); }
+    Color4f fg = Color4f(0,0,0,1);
+    Color4f bg = Color4f(1,1,1,1);
 
     int wrapN = 12;
     if (n->type == MESSAGE) wrapN = 22;
@@ -346,32 +346,47 @@ void VRProcessLayout::setElementName(int ID, string name) {
     e->setMaterial(mat);
 }
 
-void VRProcessLayout::update(){
+void VRProcessLayout::update() {
     toolSID->update();
 	for(auto toolSBD : toolSBDs) toolSBD.second->update();
+
+	auto setElementDisplay = [&](int eID, Color3f color, bool isLit) {
+        auto element = getElement(eID);
+        auto geo = dynamic_pointer_cast<VRGeometry>(element);
+        auto mat = geo->getMaterial();
+        mat->setDiffuse(color);
+        mat->setLit(isLit);
+	} ;
 
 	//get current actions and change box color/material
 	if (engine && process) {
         //auto textColor = Color3f(0,0,0,1);
         auto actives = engine->getCurrentStates();
 
-        for (auto subject : process->getSubjects()) { // iterate over all actions
-            for (auto state : process->getSubjectStates(subject->getID())) {
-                //set element color/texture depending on if its active or not
-                auto element = getElement(state->getID());
-                auto geo = dynamic_pointer_cast<VRGeometry>(element);
-                auto mat = geo->getMaterial();
 
+        for (auto subject : process->getSubjects()) { // iterate over all actions
+            int sID = subject->getID();
+
+            for (auto transition : process->getSubjectTransitions(sID)) {
+                setElementDisplay(transition->getID(), Color3f(1,1,0), 1);
+            }
+
+            for (auto state : process->getSubjectStates(sID)) {
                 //check if state is active
                 bool isActive = ::find( actives.begin(), actives.end(), state) != actives.end();
                 if (isActive) {
-                    mat->setDiffuse(colorActiveState);
-                    mat->setLit(0);
+                    setElementDisplay(state->getID(), colorActiveState, 0);
+
+                    for (auto transition : process->getStateOutTransitions(sID, state->getID())) {
+                        auto& eTransition = engine->getTransition(sID, transition->getID());
+                        if (eTransition.overridePrerequisites) setElementDisplay(transition->getID(), Color3f(0.3,0.4,1), 0);
+                        if (eTransition.state == "invalid") setElementDisplay(transition->getID(), Color3f(1,0.4,0.3), 0);
+                        if (eTransition.state == "valid") setElementDisplay(transition->getID(), Color3f(0.3,1,0.3), 0);
+                    }
                 } else {
-                    mat->setLit(1);
-                    if      (state->isSendState)    mat->setDiffuse(colorSendState);
-                    else if (state->isReceiveState) mat->setDiffuse(colorReceiveState);
-                    else                            mat->setDiffuse(colorState);
+                    if      (state->isSendState)    setElementDisplay(state->getID(), colorSendState, 1);
+                    else if (state->isReceiveState) setElementDisplay(state->getID(), colorReceiveState, 1);
+                    else                            setElementDisplay(state->getID(), colorState, 1);
                 }
             }
         }

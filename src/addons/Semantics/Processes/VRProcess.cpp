@@ -47,6 +47,7 @@ void VRProcessNode::update(Graph::node& n, bool changed) { // called when graph 
 VREntityPtr VRProcessNode::getEntity() { return entity; }
 int VRProcessNode::getID() { return ID; }
 string VRProcessNode::getLabel() { return label; }
+int VRProcessNode::getSubjectID() { return subject; }
 
 VRProcess::VRProcess(string name) {
     setStorageType("Process");
@@ -159,9 +160,9 @@ vector<VRProcessNodePtr> VRProcess::getMessageSender(int messageID){
 }
 
 vector<VRProcessNodePtr> VRProcess::getSubjectStates(int subjectID) {
-    auto d = behaviorDiagrams[subjectID];
     vector<VRProcessNodePtr> res;
     if (!behaviorDiagrams.count(subjectID)) return res;
+    auto d = behaviorDiagrams[subjectID];
     for (auto node : d->processnodes) {
         if (node.second->type == STATE) res.push_back(node.second);
     }
@@ -172,10 +173,21 @@ void VRProcess::printNodes(VRProcessDiagramPtr d){
     for (auto node : d->processnodes) cout << node.second->getLabel() << endl;
 }
 
+vector<VRProcessNodePtr> VRProcess::getSubjectTransitions(int subjectID) {
+    vector<VRProcessNodePtr> res;
+    if (!behaviorDiagrams.count(subjectID)) return res;
+    auto d = behaviorDiagrams[subjectID];
+    for (auto node : d->processnodes) {
+        if (node.second->type == TRANSITION) res.push_back(node.second);
+    }
+    return res;
+}
+
 vector<VRProcessNodePtr> VRProcess::getStateTransitions(int subjectID, int stateID) {
+    vector<VRProcessNodePtr> res;
+    if (!behaviorDiagrams.count(subjectID)) return res;
     auto d = behaviorDiagrams[subjectID];
     auto neighbors = d->getNeighbors( stateID );
-    vector<VRProcessNodePtr> res;
 
     for (auto neighbor : neighbors){
         auto transition = d->processnodes[neighbor.ID];
@@ -185,9 +197,10 @@ vector<VRProcessNodePtr> VRProcess::getStateTransitions(int subjectID, int state
 }
 
 vector<VRProcessNodePtr> VRProcess::getStateOutTransitions(int subjectID, int stateID) {
+    vector<VRProcessNodePtr> res;
+    if (!behaviorDiagrams.count(subjectID)) return res;
     auto d = behaviorDiagrams[subjectID];
     auto neighbors = d->getNextNodes( stateID );
-    vector<VRProcessNodePtr> res;
 
     for (auto neighbor : neighbors){
         auto transition = d->processnodes[neighbor.ID];

@@ -46,6 +46,7 @@ VRLeap::VRLeap() : VRDevice("leap") {
 //    regStorageSetupFkt( VRUpdateCb::create("leap setup", boost::bind(&VRLeap::setup, this)) );
 
     //reconnect();
+    enableAvatar("ray");
 }
 
 VRLeapPtr VRLeap::create() {
@@ -100,6 +101,7 @@ void VRLeap::updateHandFromJson(Json::Value& handData, Json::Value& pointableDat
         hand->pinchStrength = handData["pinchStrength"].asFloat();
         hand->grabStrength = handData["grabStrength"].asFloat();
         hand->confidence = handData["confidence"].asFloat();
+        hand->isPinching = hand->isPinching ? hand->pinchStrength < dropThreshold : hand->pinchStrength > dragThreshold;
 
         int id = handData["id"].asInt();
 
@@ -162,19 +164,20 @@ void VRLeap::updateSceneData(vector<HandPtr> hands) {
             // update beacons
             int rootIdx = i * 6;
             getBeacon(rootIdx)->setRelativePose(hand->pose, parent);
-          //  editBeacon(rootIdx)->setPose(hand->pose);
+            //getBeacon(rootIdx)->setPose(hand->pose);
 
             int b = i * 5;
             for (size_t j = 0; j < hand->bases.size(); ++j) {
                 PosePtr p = Pose::create(hand->joints[j][4], hand->bases[j].back().dir(), hand->bases[j].back().up());
                 getBeacon(rootIdx+j+1)->setRelativePose(p, parent);
+                //getBeacon(rootIdx+j+1)->setPose(p);
                 b++;
             }
 
             // update buttons
-            int dnd_state;
-            if (BStates[dnd_btn]) dnd_state = (hand->pinchStrength < dropThreshold) ? 0 : 1;
-            else                  dnd_state = (hand->pinchStrength > dragThreshold) ? 1 : 0;
+            int dnd_state = hand->isPinching;
+
+            cout << "VRLeap::updateSceneData " << dnd_state << "   " << hand->pinchStrength << "   " << dropThreshold << endl;
             if (BStates[dnd_btn] != dnd_state || BStates.count(dnd_btn) == 0) {
                 change_button(dnd_btn, dnd_state);
             }
@@ -336,11 +339,11 @@ void VRLeap::clearSignals() {
 
     // left
     newSignal( 0, 0)->add( getDrop() );
-    newSignal( 0, 1)->add( addDrag( getBeacon(1) ) );
+    newSignal( 0, 1)->add( addDrag( getBeacon(0) ) ); // 1
 
     // right
     newSignal( 1, 0)->add( getDrop() );
-    newSignal( 1, 1)->add( addDrag( getBeacon(7) ) );
+    newSignal( 1, 1)->add( addDrag( getBeacon(6) ) ); // 7
 }
 
 VRIntersection findInside(VRObjectWeakPtr wtree, Vec3d point) {
