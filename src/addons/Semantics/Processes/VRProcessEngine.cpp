@@ -15,21 +15,27 @@ template<> string typeName(const VRProcessEnginePtr& o) { return "ProcessEngine"
 // ----------- process engine prerequisites --------------
 
 bool VRProcessEngine::Inventory::hasMessage(Message m) {
+    for (auto& m2 : messages) if (m2 == m) return true;
+    return false;
+}
+
+void VRProcessEngine::Inventory::remMessage(Message m) {
     for (auto& m2 : messages) {
-        //cout << "  VRProcessEngine::Inventory::hasMessage '" << m.message << "' and '" << m2.message << "' -> " << bool(m2 == m) << endl;
         if (m2 == m) {
             messages.erase(std::remove(messages.begin(), messages.end(), m2), messages.end());
-            return true;
+            return;
         }
     }
-    return false;
+    return;
 }
 
 // ----------- process engine prerequisite --------------
 
 bool VRProcessEngine::Prerequisite::valid(Inventory* inventory) {
     //cout << " VRProcessEngine::Prerequisite::valid check for '" << message.message << "' inv: " << inventory << endl;
-    return inventory->hasMessage(message);
+    bool b = inventory->hasMessage(message);
+    if (b) inventory->remMessage(message);
+    return b;
 }
 
 // ----------- process engine transition --------------

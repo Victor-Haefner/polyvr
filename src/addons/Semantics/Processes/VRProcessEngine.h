@@ -27,6 +27,7 @@ class VRProcessEngine {
             vector<Message> messages;
 
             bool hasMessage(Message m);
+            void remMessage(Message m);
         };
 
         struct Prerequisite {
