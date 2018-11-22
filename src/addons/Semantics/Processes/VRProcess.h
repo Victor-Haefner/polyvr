@@ -46,6 +46,7 @@ struct VRProcessNode : VRName {
     int getID();
     string getLabel();
     VREntityPtr getEntity();
+    int getSubjectID();
 };
 
 struct VRProcessDiagram : public Graph {
@@ -93,7 +94,8 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         vector<VRProcessNodePtr> getSubjects();
         vector<VRProcessNodePtr> getMessages();
         vector<VRProcessNodePtr> getSubjectStates(int subjectID);
-        vector<VRProcessNodePtr> getStateTransitions(int subjectID, int stateID); // all edges
+        vector<VRProcessNodePtr> getSubjectTransitions(int subjectID); // all subject edges
+        vector<VRProcessNodePtr> getStateTransitions(int subjectID, int stateID); // all state edges
         vector<VRProcessNodePtr> getStateOutTransitions(int subjectID, int stateID); //only outgoing edges
         vector<VRProcessNodePtr> getTransitionStates(int subjectID, int transitionID);
         vector<VRProcessNodePtr> getTransitionSourceState(int subjectID, int transitionID);
