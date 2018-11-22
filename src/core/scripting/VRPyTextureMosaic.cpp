@@ -18,9 +18,11 @@ using namespace OSG;
 simpleVRPyType(TextureMosaic, New_ptr);
 
 PyMethodDef VRPyTextureMosaic::methods[] = {
-    {"add", PyWrap(TextureMosaic, add, "add", void, VRTexturePtr, Vec2i, Vec2i) },
-    //{"getChunkPosition", PyWrap(TextureMosaic, getChunkPosition, "getChunkPosition", Vec2i, Vec2i) },
-    {"getChunkSize", PyWrap(TextureMosaic, getChunkSize, "getChunkSize", Vec2i, Vec2i) },
+    {"add", PyWrap(TextureMosaic, add, "add image to mosaic, img, pos, id", void, VRTexturePtr, Vec2i, Vec2i) },
+    {"getChunkPosition", PyWrap(TextureMosaic, getChunkPosition, "return chunk position", Vec2i, Vec2i) },
+    {"getChunkSize", PyWrap(TextureMosaic, getChunkSize, "return chunk size", Vec2i, Vec2i) },
+    {"getChunkUVasVector", PyWrap(TextureMosaic, getChunkUVasVector, "returns vector of UV coords in a list", vector<Vec2d>, Vec2i) },
+    {"getChunkUV", PyWrap(TextureMosaic, getChunkUV, "returns UVmin and UVmax", Vec4d, Vec2i) },
     {NULL}  /* Sentinel */
 };
 
