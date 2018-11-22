@@ -7,6 +7,8 @@
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
 #include "core/scripting/VRPyBaseFactory.h"
 
+#include <OpenSG/OSGVector.h>
+
 using namespace OSG;
 
 simpleVRPyType(WorldGenerator, New_ptr );
@@ -16,6 +18,7 @@ simpleVRPyType(RoadIntersection, New_ptr);
 simpleVRPyType(RoadNetwork, New_ptr);
 simpleVRPyType(District, New_ptr);
 simpleVRPyType(Asphalt, New_ptr);
+simpleVRPyType(TrafficSigns, New_ptr);
 
 
 
@@ -23,6 +26,7 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"addAsset", PyWrap( WorldGenerator, addAsset, "Add an asset template", void, string, VRTransformPtr ) },
     {"getAssetManager", PyWrap( WorldGenerator, getAssetManager, "Get the asset manager", VRObjectManagerPtr ) },
     {"getRoadNetwork", PyWrap( WorldGenerator, getRoadNetwork, "Access road network", VRRoadNetworkPtr ) },
+    {"getTrafficSigns", PyWrap( WorldGenerator, getTrafficSigns, "Access traffic signs", VRTrafficSignsPtr ) },
     {"getNature", PyWrap( WorldGenerator, getNature, "Access nature module", VRNaturePtr ) },
     {"getTerrain", PyWrap( WorldGenerator, getTerrain, "Access the terrain", VRTerrainPtr ) },
     {"getDistrict", PyWrap( WorldGenerator, getDistrict, "Access the district module", VRDistrictPtr ) },
@@ -97,7 +101,11 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"getNextRoads", PyWrap( RoadNetwork, getNextRoads, "Get the next roads", vector<VREntityPtr>, VREntityPtr ) },
     {"addRoute", PyWrap( RoadNetwork, addRoute, "Add route path entity from graph node IDs", VREntityPtr, vector<int> ) },
     {"setTerrainOffset", PyWrap( RoadNetwork, setTerrainOffset, "Set road to terrain offset", void, float ) },
-    {"setRoadStyle", PyWrap( RoadNetwork, setRoadStyle, "Set road style flags", void, int ) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyTrafficSigns::methods[] = {
+    {"getName", PyWrap( TrafficSigns, getName, "returns name of shield by ID", string, Vec2i ) },
     {NULL}  /* Sentinel */
 };
 

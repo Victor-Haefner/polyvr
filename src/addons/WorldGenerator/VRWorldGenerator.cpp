@@ -4,6 +4,7 @@
 #include "roads/VRAsphalt.h"
 #include "roads/VRRoad.h"
 #include "roads/VRRoadNetwork.h"
+#include "roads/VRTrafficSigns.h"
 #include "nature/VRNature.h"
 #include "terrain/VRTerrain.h"
 #include "buildings/VRDistrict.h"
@@ -66,6 +67,7 @@ void VRWorldGenerator::setPlanet(VRPlanetPtr p, Vec2d c) {
 
 VROntologyPtr VRWorldGenerator::getOntology() { return ontology; }
 VRRoadNetworkPtr VRWorldGenerator::getRoadNetwork() { return roads; }
+VRTrafficSignsPtr VRWorldGenerator::getTrafficSigns() { return trafficSigns; }
 VRObjectManagerPtr VRWorldGenerator::getAssetManager() { return assets; }
 VRTerrainPtr VRWorldGenerator::getTerrain() { return terrain; }
 VRNaturePtr VRWorldGenerator::getNature() { return nature; }
@@ -118,6 +120,10 @@ void VRWorldGenerator::init() {
     roads = VRRoadNetwork::create();
     roads->setWorld( ptr() );
     addChild(roads);
+
+    trafficSigns = VRTrafficSigns::create();
+    trafficSigns->setWorld( ptr() );
+    addChild(trafficSigns);
 
     assets = VRObjectManager::create();
     addChild(assets);
