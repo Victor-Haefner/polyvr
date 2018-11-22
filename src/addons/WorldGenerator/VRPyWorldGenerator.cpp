@@ -106,6 +106,7 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
 
 PyMethodDef VRPyTrafficSigns::methods[] = {
     {"getName", PyWrap( TrafficSigns, getName, "returns name of shield by ID", string, Vec2i ) },
+    {"getOSMTag", PyWrap( TrafficSigns, getOSMTag, "returns OSM tag by ID", string, Vec2i ) },
     {NULL}  /* Sentinel */
 };
 

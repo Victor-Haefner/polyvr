@@ -13,12 +13,12 @@ OSG_BEGIN_NAMESPACE;
 
 class VRTrafficSigns : public VRRoadBase {
     private:
-        int ID;
         VRGeometryPtr selfPtr;
         VRTextureMosaicPtr megaTex;
-        string type;
+        map<string,map<string,Vec2i>> matrix;
+        map<Vec2i,string> signNameByID;
+        vector<string> types;
         string country;
-        Vec2i texID;
 
     public:
         VRTrafficSigns();
@@ -26,6 +26,8 @@ class VRTrafficSigns : public VRRoadBase {
 
         static VRTrafficSignsPtr create();
         void setMegaTexture(VRTextureMosaicPtr megaTex);
+        string getName(Vec2i ID);
+        string getOSMTag(Vec2i ID);
 
         PosePtr getPosition(int ID);
         VRGeometryPtr getGeometry();

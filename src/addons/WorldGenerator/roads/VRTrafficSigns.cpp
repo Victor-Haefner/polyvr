@@ -17,6 +17,7 @@ VRTrafficSigns::~VRTrafficSigns() {}
 
 VRTrafficSignsPtr VRTrafficSigns::create() {
     auto r = VRTrafficSignsPtr( new VRTrafficSigns() );
+    r->setMatrix("CN");
     return r;
 }
 
@@ -29,11 +30,21 @@ PosePtr VRTrafficSigns::getPosition(int ID) {
     return res;
 }
 
+string VRTrafficSigns::getName(Vec2i ID) {
+    if ( signNameByID.count(ID) ) return signNameByID[ID];
+    return "No sign with this ID";
+}
+
+string VRTrafficSigns::getOSMTag(Vec2i ID) {
+    if ( country == "CN" && signNameByID.count(ID) ) return country+":"+types[ID[0]]+":"+signNameByID[ID];
+    return "No sign with this ID";
+}
+
 void VRTrafficSigns::setMatrix(string country){
-    map<string,map<string,Vec2i>> matrix;
     this->country  = country;
     if ( country == "CN" ) {
-        vector<string> types = {"Additional", "Indicative", "Informational", "Prohibitory", "Tourist", "Vehicle-mounted", "Warning"};
+        matrix.clear();
+        types = {"Additional", "Indicative", "Informational", "Prohibitory", "Tourist", "Vehicle-mounted", "Warning"};
         vector<vector<string>> allSigns = {
             {"1a", "1b", "2", "3", "4", "5", "6", "7a", "7b", "7c", "7d", "7e", "7f", "7g", "7h", "8", "9", "10", "11", "12", "13", "15", "16", "17", "18", "19", "20", "22"},
             {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12b", "13", "14", "15", "1650", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "28", "29", "30", "31", "32", "33", "34", "35a", "35b", "35c", "35d", "36"},
@@ -48,6 +59,7 @@ void VRTrafficSigns::setMatrix(string country){
             int i = 0;
             for (auto sign : allSigns[nType]) {
                 matrix[types[nType]][sign] = Vec2i(nType,i);
+                signNameByID[Vec2i(nType,i)] = sign;
                 i++;
             }
             nType++;
