@@ -42,9 +42,9 @@ Vec4d VRTextureMosaic::getChunkUV(Vec2i ID) {
     auto S = getSize();
     auto p = getChunkPosition(ID);
     auto s = getChunkSize(ID);
-    double u1 = double(p[0])/S[0];
-    double v1 = double(p[1])/S[1];
-    double u2 = double(p[0]+s[0])/S[0];
-    double v2 = double(p[1]+s[1])/S[1];
+    double u1 = (double(p[0])+1.0)/S[0];
+    double v1 = (double(p[1])+1.0)/S[1];
+    double u2 = (double(p[0]+s[0])-1.0)/S[0];
+    double v2 = (double(p[1]+s[1])-1.0)/S[1];
     return Vec4d(u1,v1,u2,v2);
 }
