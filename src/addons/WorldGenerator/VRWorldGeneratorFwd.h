@@ -26,6 +26,7 @@ ptrFwd( VRNature );
 ptrFwd( VRTrafficSimulation );
 ptrFwd( VRTrafficLight );
 ptrFwd( VRTrafficLights );
+ptrFwd( VRTrafficSigns );
 ptrFwd( VRRain );
 ptrFwd( VRRainCarWindshield );
 
