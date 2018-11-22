@@ -1,5 +1,6 @@
 #include "VRHandGeo.h"
 #include <core/objects/geometry/OSGGeometry.h>
+#include <core/objects/material/VRMaterial.h>
 #include <core/utils/VRFunction.h>
 #include <core/scene/VRScene.h>
 #include <core/math/pose.h>
@@ -53,6 +54,12 @@ void VRHandGeo::updateHandGeo() {
 
     if (handData && isVisible()) {
 
+        string c = handData->isPinching ? "orange" : "white";
+        for (int i=1; i<4; i++) {
+            bones[0][i]->setColor(c);
+            bones[1][i]->setColor(c);
+        }
+
         // Palm
         setRelativePose(handData->pose, getParent());
 
@@ -88,6 +95,8 @@ void VRHandGeo::updateHandGeo() {
             bones[i][3]->setMesh(OSGGeometry::create(makeCylinderGeo(l3, 0.0075, 8, true, true, true)));
             p = Pose::create(p3, handData->bases[i][3].dir(), handData->bases[i][3].up());
             bones[i][3]->setRelativePose(p, getParent());
+
+            //bones[i][3]->getMaterial()->setDiffuse(c);
         }
 
     }

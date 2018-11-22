@@ -16,7 +16,6 @@ VRAnalyticGeometry::VRAnalyticGeometry(string name) : VRTransform(name) {
     ae = VRAnnotationEngine::create();
     vectorLinesGeometry = VRGeometry::create("AGLines");
     vectorEndsGeometry = VRGeometry::create("AGPoints");
-    //circlesGeometry = VRGeometry::create("AGCircles"); // TODO: segfault prone :(
 
     vecMat = VRMaterial::create("AnalyticGeometry");
     vecMat->setLit(false);
@@ -34,7 +33,6 @@ VRAnalyticGeometry::VRAnalyticGeometry(string name) : VRTransform(name) {
     cirMat->setLit(false);
     cirMat->setVertexShader(circle_vp, "analyticCircleVS");
     cirMat->setFragmentShader(circle_fp, "analyticCircleFS");
-    if (circlesGeometry) circlesGeometry->setMaterial(cirMat);
 }
 
 VRAnalyticGeometry::~VRAnalyticGeometry() {}
@@ -49,7 +47,6 @@ VRAnalyticGeometryPtr VRAnalyticGeometry::create(string name)  {
 void VRAnalyticGeometry::init() {
     addChild(vectorLinesGeometry);
     addChild(vectorEndsGeometry);
-    addChild(circlesGeometry);
     addChild(ae);
 
     if (ae) {
@@ -165,8 +162,28 @@ void VRAnalyticGeometry::setAngle(int i, Vec3d p, Vec3d v1, Vec3d v2, Color3f c1
 }
 
 void VRAnalyticGeometry::setCircle(int i, Vec3d p, Vec3d n, float r, Color3f color, string label) {
+    if (!circlesGeometry) {
+        circlesGeometry = VRGeometry::create("AGCircles"); // TODO: segfault prone :(
+        circlesGeometry->setMaterial(cirMat);
+        addChild(circlesGeometry);
+
+        GeoPnt3fPropertyMTRecPtr pos = GeoPnt3fProperty::create();
+        GeoVec3fPropertyMTRecPtr cols = GeoVec3fProperty::create();
+        GeoUInt32PropertyMTRecPtr lengths = GeoUInt32Property::create();
+        lengths->addValue(0);
+        GeoVec2fPropertyMTRecPtr tcs = GeoVec2fProperty::create();
+        GeoVec3fPropertyMTRecPtr norms = GeoVec3fProperty::create();
+
+        circlesGeometry->setType(GL_QUADS);
+        circlesGeometry->setPositions(pos);
+        circlesGeometry->setColors(cols);
+        circlesGeometry->setNormals(norms);
+        circlesGeometry->setTexCoords(tcs);
+        circlesGeometry->setLengths(lengths);
+    }
+
     if (!circlesGeometry) return;
-    if (ae) ae->set(i, p, label);
+    if (ae && label != "") ae->set(i, p, label);
     resize(-1, -1, 4*i+3);
 
     Vec3d v1 = Vec3d(0, -n[2], n[1]);

@@ -28,6 +28,7 @@ class VRLeapFrame : public std::enable_shared_from_this<VRLeapFrame> {
             float pinchStrength;
             float grabStrength;
             float confidence; //"How well the internal hand model fits the observed data." - see Leap Documentation
+            bool isPinching = 0;
 
             Hand() : pose(Pose::create()), joints(5), bases(5), extended(5) { }
             HandPtr clone();

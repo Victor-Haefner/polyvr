@@ -55,7 +55,7 @@ void VRColorChooser::setColor(Color3f c) { last_color = color; color = c; update
 Color3f VRColorChooser::getColor() { return color; }
 Color3f VRColorChooser::getLastColor() { return last_color; }
 
-void VRColorChooser::setGeometry(VRGeometryPtr g) { geo = g; g->setMaterial(mat); }
+void VRColorChooser::setGeometry(VRGeometryPtr g) { if (!g) return; geo = g; g->setMaterial(mat); }
 
 void VRColorChooser::resolve(VRDevicePtr dev) {
     if (dev == 0) return;
