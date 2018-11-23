@@ -41,6 +41,7 @@ void VRDistrict::init() {
         b_mat->setFragmentShader(matFDShdr, "buildingFS", true);
         b_mat->setShaderParameter("chunkSize", Vec2f(0.25, 0.25));
         b_mat->setMagMinFilter(GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST, 0);
+        texture = VRTextureMosaic::create();
     }
 
     if (facades) facades->destroy();
@@ -53,9 +54,29 @@ void VRDistrict::init() {
     roofs->setMaterial(b_mat);
 }
 
-void VRDistrict::setTexture(string path) {
-    b_mat->setTexture(path, false);
+VRDistrictPtr VRDistrict::ptr() { return dynamic_pointer_cast<VRDistrict>(shared_from_this()); }
+
+Vec4d VRDistrict::getChunkUV(string type, int i) { return texture->getChunkUV( chunkIDs[type][i] ); }
+
+void VRDistrict::addTexture(VRTexturePtr tex, string type) {
+    Vec2i ID, pos;
+    if (chunkIDs.count(type) == 0) ID[1] = chunkIDs.size();
+    else { ID[1] = chunkIDs[type][0][1]; ID[0] = chunkIDs[type].size(); }
+    pos = Vec2i(ID[0]*256, ID[1]*256);
+    texture->add(tex, pos, ID);
+    chunkIDs[type].push_back(ID);
+    b_mat->setTexture(texture, false);
 }
+
+void VRDistrict::addTextures(string folder, string type) {
+    for (auto f : openFolder(folder)) {
+        auto tex = VRTexture::create();
+        tex->read(folder + "/" + f);
+        addTexture(tex, type);
+    }
+}
+
+VRTextureMosaicPtr VRDistrict::getTexture() { return texture; }
 
 void VRDistrict::addBuilding( VRPolygonPtr p, int stories, string housenumber, string street ) {
     if (p->size() < 3) return;
@@ -72,7 +93,7 @@ void VRDistrict::addBuilding( VRPolygonPtr p, int stories, string housenumber, s
     b->addFoundation(*p, 2.5);
     for (auto i=0; i<stories; i++) b->addFloor(*p, 2.5);
     b->addRoof(*p);
-    b->computeGeometry(facades, roofs);
+    b->computeGeometry(facades, roofs, ptr());
 
     auto toStringVector = [](const Vec3d& v) {
         vector<string> res;
@@ -111,7 +132,7 @@ void VRDistrict::addBuilding( VRPolygonPtr p, int stories, string housenumber, s
 
 void VRDistrict::computeGeometry() {
     init();
-    for (auto b : buildings) b.second->computeGeometry(facades, roofs);
+    for (auto b : buildings) b.second->computeGeometry(facades, roofs, ptr());
 }
 
 void VRDistrict::remBuilding( string street, string housenumber ) {

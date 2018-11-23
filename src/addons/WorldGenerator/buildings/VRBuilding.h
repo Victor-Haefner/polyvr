@@ -52,7 +52,7 @@ class VRBuilding : public VRWorldModule {
         void addFloor(VRPolygon polygon, float H);
         void addRoof(VRPolygon polygon);
 
-        void computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs);
+        void computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs, VRDistrictPtr district);
         VRGeometryPtr getCollisionShape();
 };
 
