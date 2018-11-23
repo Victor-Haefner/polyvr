@@ -12,6 +12,8 @@ struct VRPyImage : VRPyBaseT<OSG::VRTexture> {
     static PyObject* read(VRPyImage* self, PyObject *args);
     static PyObject* write(VRPyImage* self, PyObject *args);
     static PyObject* getPixel(VRPyImage* self, PyObject *args);
+    static PyObject* getSize(VRPyImage* self, PyObject *args);
+    static PyObject* getChannels(VRPyImage* self, PyObject *args);
 };
 
 #endif // VRPYIMAGE_H_INCLUDED

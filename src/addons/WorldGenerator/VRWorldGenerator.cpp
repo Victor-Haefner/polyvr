@@ -4,6 +4,7 @@
 #include "roads/VRAsphalt.h"
 #include "roads/VRRoad.h"
 #include "roads/VRRoadNetwork.h"
+#include "roads/VRTrafficSigns.h"
 #include "nature/VRNature.h"
 #include "terrain/VRTerrain.h"
 #include "buildings/VRDistrict.h"
@@ -66,6 +67,7 @@ void VRWorldGenerator::setPlanet(VRPlanetPtr p, Vec2d c) {
 
 VROntologyPtr VRWorldGenerator::getOntology() { return ontology; }
 VRRoadNetworkPtr VRWorldGenerator::getRoadNetwork() { return roads; }
+VRTrafficSignsPtr VRWorldGenerator::getTrafficSigns() { return trafficSigns; }
 VRObjectManagerPtr VRWorldGenerator::getAssetManager() { return assets; }
 VRTerrainPtr VRWorldGenerator::getTerrain() { return terrain; }
 VRNaturePtr VRWorldGenerator::getNature() { return nature; }
@@ -118,6 +120,10 @@ void VRWorldGenerator::init() {
     roads = VRRoadNetwork::create();
     roads->setWorld( ptr() );
     addChild(roads);
+
+    trafficSigns = VRTrafficSigns::create();
+    trafficSigns->setWorld( ptr() );
+    addChild(trafficSigns);
 
     assets = VRObjectManager::create();
     addChild(assets);
@@ -448,7 +454,9 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         bool hasDir = node->tags.count("direction");
         if (terrain) terrain->elevatePoint(pos);
         bool addToOnto = false;
+        bool added = false;
         for (auto tag : node->tags) {
+            if (added) continue;
             if (tag.first == "natural") {
                 if (tag.second == "tree") nature->createRandomTree(pos);
                 continue;
@@ -457,38 +465,50 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             //if (tag.first == "traffic_sign:training_ground") {
             if (startswith(tag.first, "traffic_sign") && !startswith(tag.first, "traffic_signals")) {
                 auto signEnt = ontology->addEntity("sign", "Sign");
+                added = true; //making sure not to add twice
                 /*if ((tag.second == "yes" || tag.second == "custom") && node->tags.count("name")) {
                     signEnt->set("type", node->tags["name"]);
                 } else signEnt->set("type", tag.second);*/
-                bool tmpc = false;
-                bool revDir = false;
+                bool tmpc = false; //check if custom sign with name
+                bool revDir = false; //check if sign facing other way
                 Vec3d tmp = dir;
                 for ( auto tagN : node->tags ) {
-                    if ( tagN.first == "traffic_sign" && (tagN.second == "yes" || tagN.second == "custom") && node->tags.count("name") ) { signEnt->set("type", node->tags["name"]); tmpc = true; }
+                    if ( tagN.first == "traffic_sign" && (tagN.second == "yes" || tagN.second == "custom" || tagN.second == "*") && node->tags.count("name") ) { signEnt->set("type", node->tags["name"]); tmpc = true; }
                     //if ( startswith(tagN.first,"traffic_sign") && (tagN.second == "yes" || tagN.second == "custom") && node->tags.count("name") && !tmpc ) { signEnt->set("type", node->tags["name"]); tmpc = true; }
-                    if ( startswith(tagN.first,"traffic_sign:backward") ) { tmp = -dir; revDir = true; }
+                    if ( tagN.first == "traffic_sign:backward" ) { tmp = -dir; revDir = true; }
                 }
                 if ( !tmpc ) signEnt->set("type", tag.second);
-                //cout << "VRWorldGenerator::processOSMMap  revDir " << toString( tmp) << toString(dir) << endl; //AGRAJAG
 
                 signEnt->setVec3("position", pos, "Position");
                 signEnt->setVec3("direction", dir, "Direction");
-                //cout << "add OSM sign: " << tag.first << "  " << signEnt->getValue<string>("type", "") << endl;
                 for (auto way : node->ways) {
                     if (!RoadEntities.count(way)) continue;
                     auto road = RoadEntities[node->ways[0]];
                     auto roadEnt = road->getEntity();
                     for (auto laneEnt : roadEnt->getAllEntities("lanes")) {
                         auto laneDir = laneEnt->getValue("direction", 1);
-                        Vec3d laneTangent = road->getRightEdge(pos)->dir() * laneDir;
-                        if (tmp.dot(laneTangent) < -0.5 || ( !hasDir && ( revDir && laneDir<0 || !revDir && laneDir>0 ) ) ) {
+                        //Vec3d laneTangent = road->getRightEdge(pos)->dir() * laneDir;
+                        if (( !hasDir && ( ( revDir && laneDir<0 ) || ( !revDir && laneDir>0 ) ) ) ) { //tmp.dot(laneTangent) < -0.5 ||
                             laneEnt->add("signs",signEnt->getName());
                             signEnt->add("lanes",laneEnt->getName());
                         }
                     }
                 }
             }
+
+            if (tag.first == "information"){
+                continue;
+                auto signEnt = ontology->addEntity("sign", "Sign");
+                bool tmpc = false;
+                if ( node->tags.count("name") ) { signEnt->set("type", node->tags["name"]); tmpc = true; }
+                if ( !tmpc ) signEnt->set("type", tag.second);
+
+                signEnt->setVec3("position", pos, "Position");
+                signEnt->setVec3("direction", dir, "Direction");
+            }
+
             if (startswith(tag.first, "traffic_signals")) {
+                added = true;
                 //cout << " VRWorldGenerator::processOSMMap tr_signal " << endl;
                 for (auto way : node->ways) {
                     if (!RoadEntities.count(way)) continue;

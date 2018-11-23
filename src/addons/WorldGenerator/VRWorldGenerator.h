@@ -23,6 +23,7 @@ class VRWorldGenerator : public VRTransform {
         VRTerrainPtr terrain;
         map<string, VRMaterialPtr> materials;
         VRRoadNetworkPtr roads;
+        VRTrafficSignsPtr trafficSigns;
         VRDistrictPtr district;
         OSMMapPtr osmMap;
         Vec2d coords;
@@ -49,6 +50,7 @@ class VRWorldGenerator : public VRTransform {
         VRPlanetPtr getPlanet();
         Vec2d getPlanetCoords();
         VRRoadNetworkPtr getRoadNetwork();
+        VRTrafficSignsPtr getTrafficSigns();
         VRObjectManagerPtr getAssetManager();
         VRNaturePtr getNature();
         VRTerrainPtr getTerrain();
