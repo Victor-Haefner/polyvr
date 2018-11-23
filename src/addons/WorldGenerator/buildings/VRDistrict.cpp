@@ -39,7 +39,6 @@ void VRDistrict::init() {
         b_mat->setVertexShader(matVShdr, "buildingVS");
         b_mat->setFragmentShader(matFShdr, "buildingFS");
         b_mat->setFragmentShader(matFDShdr, "buildingFS", true);
-        b_mat->setShaderParameter("chunkSize", Vec2f(0.25, 0.25));
         b_mat->setMagMinFilter(GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST, 0);
         texture = VRTextureMosaic::create();
     }
@@ -65,7 +64,12 @@ void VRDistrict::addTexture(VRTexturePtr tex, string type) {
     pos = Vec2i(ID[0]*256, ID[1]*256);
     texture->add(tex, pos, ID);
     chunkIDs[type].push_back(ID);
+
+    int Nmax = 1;
+    for (auto c : chunkIDs) Nmax = max(Nmax, int(c.second.size()));
+
     b_mat->setTexture(texture, false);
+    b_mat->setShaderParameter("chunkSize", Vec2f(1.0/Nmax, 1.0/chunkIDs.size()));
 }
 
 void VRDistrict::addTextures(string folder, string type) {
