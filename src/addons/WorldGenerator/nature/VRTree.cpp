@@ -447,6 +447,8 @@ void main(void) {
 	vec3 pos = vertPos.xyz / vertPos.w;
 	vec4 color = texture2D(tex0, gl_TexCoord[0].xy);
 	vec4 normal = texture2D(tex1, gl_TexCoord[0].xy);
+	normal.xyz = ( normal.xyz - vec3(0.5,0.5,0.5) )*2; // unpack RGB
+	if (vertNorm.z > 0) normal.x *= -1;
 	vec3 norm = normalize( normal.xyz );
 	if (color.a < 0.3) discard;
 	gl_FragData[0] = vec4(pos, 1.0);
@@ -536,6 +538,7 @@ void main( void ) {
 	if (color.a < 0.3) discard;
 
 	vec3 n = normalize( gl_NormalMatrix * norm );
+	n = n*0.5 + vec3(0.5,0.5,0.5); // pack in RGB
 	gl_FragColor = vec4(n,1.0);
 }
 );
