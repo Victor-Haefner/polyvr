@@ -62,7 +62,7 @@ PyMethodDef VRPyRoadIntersection::methods[] = {
 
 PyMethodDef VRPyDistrict::methods[] = {
     {"remBuilding", PyWrap( District, remBuilding, "Remove a building by address", void, string, string ) },
-    {"addBuilding", PyWrapOpt( District, addBuilding, "Add a building, outline, stories, housenumber, streetname", "|", void, VRPolygonPtr, int, string, string ) },
+    {"addBuilding", PyWrapOpt( District, addBuilding, "Add a building, outline, stories, housenumber, streetname", "||resitential", void, VRPolygonPtr, int, string, string, string ) },
     {"addTexture", PyWrap( District, addTexture, "Add a texture for the building, texture, type, the type can be roof, wall, window or door", void, VRTexturePtr, string ) },
     {"addTextures", PyWrap( District, addTextures, "Add a folder with textures, folder, type, for the types see addTexture", void, string, string ) },
     {"getTexture", PyWrap( District, getTexture, "Get mega texture", VRTextureMosaicPtr ) },

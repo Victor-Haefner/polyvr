@@ -61,6 +61,7 @@ void VRBuilding::addFloor(VRPolygon polygon, float H) {
 }
 
 void VRBuilding::addRoof(VRPolygon polygon) { roof = polygon; }
+void VRBuilding::setType(string t) { type = t; }
 
 void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs, VRDistrictPtr district) {
     height = 0;
@@ -112,6 +113,7 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs, VRDis
     // stories
     for (auto story : stories) {
         float H = story.first;
+        if (type == "shopping" && height == 0) H += 1;
         auto& polygon = story.second;
         VRGeoData geo;
         for (int i=0; i<polygon.size(); i++) {
@@ -130,6 +132,7 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs, VRDis
 
             float low = ground+height;
             float high = low+H;
+
 
             // insert a door at a random place (when on level 0 && there is enough room)
             vector<int> doors;
@@ -187,6 +190,12 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs, VRDis
 
                 Vec2d wallVector = w2-w1;
                 Vec3d n = Vec3d(-wallVector[1], 0, wallVector[0]);
+
+                if (type == "shopping" && height == 0) {
+                    int si = N*float(rand()) / RAND_MAX;
+                    dUV = district->getChunkUV("shops", si);
+                    wUV = district->getChunkUV("shops", si);
+                }
 
                 if (isDoor(i)) { // door
                     Color4f c = Color4f(fUV[0], fUV[1], dUV[0], dUV[1]);

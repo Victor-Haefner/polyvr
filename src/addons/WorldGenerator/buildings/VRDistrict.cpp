@@ -82,10 +82,11 @@ void VRDistrict::addTextures(string folder, string type) {
 
 VRTextureMosaicPtr VRDistrict::getTexture() { return texture; }
 
-void VRDistrict::addBuilding( VRPolygonPtr p, int stories, string housenumber, string street ) {
+void VRDistrict::addBuilding( VRPolygonPtr p, int stories, string housenumber, string street, string type ) {
     if (p->size() < 3) return;
     if (p->isCCW()) p->reverseOrder();
     auto b = VRBuilding::create();
+    b->setType(type);
     string ID = street+housenumber;
     if (ID == "" || buildings.count(ID)) {
         static int i = 0; i++;

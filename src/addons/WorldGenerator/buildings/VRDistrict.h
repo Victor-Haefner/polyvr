@@ -40,7 +40,7 @@ class VRDistrict : public VRObject, public VRWorldModule {
 
         Vec4d getChunkUV(string type, int i);
 
-        void addBuilding( VRPolygonPtr p, int stories, string housenumber, string street );
+        void addBuilding( VRPolygonPtr p, int stories, string housenumber, string street, string type );
         void remBuilding( string street, string housenumber );
         void clear();
 };
