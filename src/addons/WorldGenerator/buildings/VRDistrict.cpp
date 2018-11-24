@@ -55,7 +55,11 @@ void VRDistrict::init() {
 
 VRDistrictPtr VRDistrict::ptr() { return dynamic_pointer_cast<VRDistrict>(shared_from_this()); }
 
-Vec4d VRDistrict::getChunkUV(string type, int i) { return texture->getChunkUV( chunkIDs[type][i] ); }
+Vec4d VRDistrict::getChunkUV(string type, int i) {
+    if (!chunkIDs.count(type)) return Vec4d();
+    if (i >= chunkIDs[type].size() || i < 0) return Vec4d();
+    return texture->getChunkUV( chunkIDs[type][i] );
+}
 
 void VRDistrict::addTexture(VRTexturePtr tex, string type) {
     Vec2i ID, pos;
@@ -83,6 +87,7 @@ void VRDistrict::addTextures(string folder, string type) {
 VRTextureMosaicPtr VRDistrict::getTexture() { return texture; }
 
 void VRDistrict::addBuilding( VRPolygonPtr p, int stories, string housenumber, string street, string type ) {
+    p->removeDoubles(0.1);
     if (p->size() < 3) return;
     if (p->isCCW()) p->reverseOrder();
     auto b = VRBuilding::create();
@@ -165,7 +170,7 @@ attribute vec2 osg_MultiTexCoord0;
 attribute vec2 osg_MultiTexCoord1;
 
 void main( void ) {
-    vnrm = normalize( gl_NormalMatrix * osg_Normal );
+    vnrm = gl_NormalMatrix * osg_Normal;
     vtc1 = osg_Color.xyzw;
     vtc2 = vec2(osg_MultiTexCoord0);
     vtc3 = vec2(osg_MultiTexCoord1);
@@ -223,7 +228,7 @@ float alphaFix(vec2 uv, float a) {
 }
 
 void main( void ) {
-	normal = vnrm;
+	normal = normalize( vnrm );
 	vec2 uv1 = modTC(vtc2);
 	vec2 uv2 = modTC(vtc3);
 	vec4 tex1 = texture2D(tex, uv1 + vtc1.xy);
@@ -270,7 +275,7 @@ float alphaFix(vec2 uv, float a) {
 }
 
 void main( void ) {
-	normal = vnrm;
+	normal = normalize( vnrm );
 	vec2 uv1 = modTC(vtc2);
 	vec2 uv2 = modTC(vtc3);
 	vec4 tex1 = texture2D(tex, uv1 + vtc1.xy);

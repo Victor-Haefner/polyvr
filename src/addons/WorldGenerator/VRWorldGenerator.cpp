@@ -347,7 +347,9 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         if (way->hasTag("building:levels")) lvls = toInt( way->tags["building:levels"] );
         if (way->hasTag("addr:housenumber")) housenumber = way->tags["addr:housenumber"];
         if (way->hasTag("addr:street")) street = way->tags["addr:street"];
-        district->addBuilding( wayToPolygon(way), lvls, housenumber, street, "residential" );
+        string bType = "residential";
+        if (rand()%2) bType = "shopping";
+        district->addBuilding( wayToPolygon(way), lvls, housenumber, street, bType );
     };
 
     auto nodeInSubarea = [&](OSMNodePtr node) {

@@ -237,6 +237,8 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs, VRDis
     g->applyTransformation();
     VRGeoData data(g);
 
+    for (int i=0; i<data.size(); i++) data.setNorm(i,Vec3d(0,1,0));
+
     int Nr = roof.size();
     if (Nr == roofTop.size() && Nr > 0) {
         for (int i=0; i<Nr; i++) {
@@ -257,9 +259,9 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs, VRDis
     }
 
     data.addVertexColors(Color4f(rUV[0], rUV[1], rUV[0], rUV[1]));
-    g->updateNormals();
     g->setPositionalTexCoords2D(0.05,0,Vec2i(0,2));
     g->setPositionalTexCoords2D(0.05,1,Vec2i(0,2));
+    g->updateNormals(false);
     roofs->merge(g);
 }
 
