@@ -109,7 +109,9 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
 };
 
 PyMethodDef VRPyTrafficSigns::methods[] = {
+    {"addSign", PyWrap( TrafficSigns, addSign, "adds trafficSign to world - type - pose", void, string, PosePtr ) },
     {"getName", PyWrap( TrafficSigns, getName, "returns name of shield by ID", string, Vec2i ) },
+    {"getVecID", PyWrap( TrafficSigns, getVecID, "returns ID of sign as vector", Vec2i, string ) },
     {"getOSMTag", PyWrap( TrafficSigns, getOSMTag, "returns OSM tag by ID", string, Vec2i ) },
     {"getTextureMosaic", PyWrap( TrafficSigns, getTextureMosaic, "returns textureMosaic", VRTextureMosaicPtr ) },
     //{"setMegaTexture", PyWrap( TrafficSigns, setMegaTexture, "sets textureMosaic", void, VRTextureMosaicPtr ) },

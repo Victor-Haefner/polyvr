@@ -476,6 +476,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                 Vec3d tmp = dir;
                 for ( auto tagN : node->tags ) {
                     if ( tagN.first == "traffic_sign" && (tagN.second == "yes" || tagN.second == "custom" || tagN.second == "*") && node->tags.count("name") ) { signEnt->set("type", node->tags["name"]); tmpc = true; }
+                    if ( tagN.first == "traffic_sign" && startswith(tagN.second,"CN:") ) { signEnt->set("type", "OSMSign"); signEnt->set("info",tagN.second); tmpc = true; }
                     //if ( startswith(tagN.first,"traffic_sign") && (tagN.second == "yes" || tagN.second == "custom") && node->tags.count("name") && !tmpc ) { signEnt->set("type", node->tags["name"]); tmpc = true; }
                     if ( tagN.first == "traffic_sign:backward" ) { tmp = -dir; revDir = true; }
                 }

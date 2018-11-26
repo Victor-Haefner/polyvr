@@ -6,6 +6,7 @@
 #include "../terrain/VRTerrain.h"
 #include "../traffic/VRTrafficLights.h"
 #include "../VRWorldGenerator.h"
+#include "VRTrafficSigns.h"
 #include "VRAsphalt.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
@@ -495,10 +496,11 @@ void VRRoadNetwork::computeSigns() {
         Vec3d pos = signEnt->getVec3("position");
         Vec3d dir = signEnt->getVec3("direction");
         string type = signEnt->getValue<string>("type", "");
+        bool osmSign = (type == "OSMSign");
         if (signEnt->is_a("TrafficLight")) continue;
         //cout << " sign: " << type << endl;
         auto sign = assets->copy(type, Pose::create(pos, dir), false);
-        if (!sign) {
+        if (!sign && !osmSign) {
             sign = assets->copy("Sign", Pose::create(pos, dir), false);
             if (sign) { // TODO: add label
                 auto surface = dynamic_pointer_cast<VRGeometry>( sign->findAll("Sign")[3] );
@@ -510,9 +512,23 @@ void VRRoadNetwork::computeSigns() {
                 surface->setMaterial(m);
             }
         }
+        if ( osmSign ) {
+            auto tfsigns = w->getTrafficSigns();
+            auto input = signEnt->getValue<string>("info", "");
+            PosePtr nullpose = Pose::create(pos, dir);
+            auto oSign = tfsigns->addTrafficSign(input, nullpose);
+            if (auto laneEnt = signEnt->getEntity("lanes")) {
+                auto roadEnt = laneEnt->getEntity("road");
+                auto road = roadsByEntity[roadEnt];// get vrroad from roadent
+                auto pose = road->getRightEdge(pos);
+                auto d = pose->dir(); d[1] = 0; d.normalize();
+                if (laneEnt->get("direction")->value == "-1") { pose = road->getLeftEdge(pos); d=-d; }
+                pose->setDir(d);
+                pose->setUp(Vec3d(0,1,0));
+                oSign->setPose(pose);
+            }
+        }
         if (!sign) continue;
-
-        //cout << " sign: " << type << " road: " << signEnt->getEntity("road") << endl;
         if (auto laneEnt = signEnt->getEntity("lanes")) {
             auto roadEnt = laneEnt->getEntity("road");
             auto road = roadsByEntity[roadEnt];// get vrroad from roadent

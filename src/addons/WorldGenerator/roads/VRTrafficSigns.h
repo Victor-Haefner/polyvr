@@ -5,24 +5,33 @@
 #include <OpenSG/OSGVector.h>
 #include "VRRoadBase.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/VRTransform.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
+class VRTrafficSign;
+class VRTrafficSigns;
+
+class VRTrafficSign : public VRTransform {
+    private:
+        Vec2i ID;
+        VRTransformPtr t;
+        string type;
+        string OSMID;
+
+    public:
+        VRTrafficSign();
+        ~VRTrafficSign();
+        static VRTrafficSignPtr create();
+
+        void setID(Vec2i);
+};
+
 class VRTrafficSigns : public VRRoadBase {
     private:
-        struct TrafficSign {
-            int ID = -1;
-            VRTransformPtr t;
-            string type;
-            string OSMID;
-
-            TrafficSign();
-            ~TrafficSign();
-        };
-
         VRGeometryPtr selfPtr;
         VRTextureMosaicPtr megaTex;
         map<string,map<string,Vec2i>> matrix;
@@ -30,19 +39,29 @@ class VRTrafficSigns : public VRRoadBase {
         vector<string> types;
         vector<vector<string>> allFileNames;
         string country;
-        map<int,TrafficSign> trafficSignsByID;
+        map<int,VRTrafficSign> trafficSignsByID;
+
         VRObjectPtr baseModel;
+        VRGeometryPtr baseGeoSign;
+        VRGeometryPtr baseGeoPole;
+        VRMaterialPtr baseMaterial;
+        VRMaterialPtr baseMaterialPole;
 
         int maxSignsPerRow = 40;
+
+        void setupBaseSign();
 
     public:
         VRTrafficSigns();
         ~VRTrafficSigns();
 
         static VRTrafficSignsPtr create();
-        void addTrafficSign(string type, PosePtr pose);
+        VRTrafficSignPtr addTrafficSign(string type, PosePtr pose);
+        void addSign(string type, PosePtr pose);
         void loadTextures();
         void setMegaTexture(VRTextureMosaicPtr megaTex);
+
+        Vec2i getVecID(string type);
         string getName(Vec2i ID);
         string getOSMTag(Vec2i ID);
 
