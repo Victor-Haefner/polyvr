@@ -89,8 +89,12 @@ void VRTrafficSigns::addSign(string type, PosePtr pose) {
     sign->setTexCoords(tc);
     auto pose1 = sign->getPose();
     pose1->setPos(pose1->pos() + pose->pos());
+    pose1->setDir(pose->dir());
+    pose1->setUp(pose->up());
     auto pose2 = pole->getPose();
     pose2->setPos(pose2->pos() + pose->pos());
+    pose2->setDir(pose->dir());
+    pose2->setUp(pose->up());
     trafficSignsGeo->merge(sign,pose1);
     trafficSignsGeoPoles->merge(pole,pose2);
 }
