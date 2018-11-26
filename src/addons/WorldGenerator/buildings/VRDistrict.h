@@ -2,6 +2,7 @@
 #define MODULEBUILDINGS_H
 
 #include "core/objects/object/VRObject.h"
+#include "core/objects/material/VRTextureMosaic.h"
 #include "../VRWorldGeneratorFwd.h"
 #include "../VRWorldModule.h"
 #include <map>
@@ -19,6 +20,8 @@ class VRDistrict : public VRObject, public VRWorldModule {
         map<string, VRBuildingPtr> buildings;
         VRGeometryPtr facades;
         VRGeometryPtr roofs;
+        VRTextureMosaicPtr texture;
+        map<string, vector<Vec2i>> chunkIDs;
         VRMaterialPtr b_mat;
 
         void computeGeometry();
@@ -29,10 +32,15 @@ class VRDistrict : public VRObject, public VRWorldModule {
         ~VRDistrict();
 
         static VRDistrictPtr create();
+        VRDistrictPtr ptr();
 
-        void setTexture(string path);
+        void addTexture(VRTexturePtr tex, string type);
+        void addTextures(string folder, string type);
+        VRTextureMosaicPtr getTexture();
 
-        void addBuilding( VRPolygonPtr p, int stories, string housenumber, string street );
+        Vec4d getChunkUV(string type, int i);
+
+        void addBuilding( VRPolygonPtr p, int stories, string housenumber, string street, string type );
         void remBuilding( string street, string housenumber );
         void clear();
 };

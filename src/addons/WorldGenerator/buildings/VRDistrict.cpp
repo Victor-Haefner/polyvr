@@ -39,8 +39,8 @@ void VRDistrict::init() {
         b_mat->setVertexShader(matVShdr, "buildingVS");
         b_mat->setFragmentShader(matFShdr, "buildingFS");
         b_mat->setFragmentShader(matFDShdr, "buildingFS", true);
-        b_mat->setShaderParameter("chunkSize", Vec2f(0.25, 0.25));
         b_mat->setMagMinFilter(GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST, 0);
+        texture = VRTextureMosaic::create();
     }
 
     if (facades) facades->destroy();
@@ -53,14 +53,45 @@ void VRDistrict::init() {
     roofs->setMaterial(b_mat);
 }
 
-void VRDistrict::setTexture(string path) {
-    b_mat->setTexture(path, false);
+VRDistrictPtr VRDistrict::ptr() { return dynamic_pointer_cast<VRDistrict>(shared_from_this()); }
+
+Vec4d VRDistrict::getChunkUV(string type, int i) {
+    if (!chunkIDs.count(type)) return Vec4d();
+    if (i >= chunkIDs[type].size() || i < 0) return Vec4d();
+    return texture->getChunkUV( chunkIDs[type][i] );
 }
 
-void VRDistrict::addBuilding( VRPolygonPtr p, int stories, string housenumber, string street ) {
+void VRDistrict::addTexture(VRTexturePtr tex, string type) {
+    Vec2i ID, pos;
+    if (chunkIDs.count(type) == 0) ID[1] = chunkIDs.size();
+    else { ID[1] = chunkIDs[type][0][1]; ID[0] = chunkIDs[type].size(); }
+    pos = Vec2i(ID[0]*256, ID[1]*256);
+    texture->add(tex, pos, ID);
+    chunkIDs[type].push_back(ID);
+
+    int Nmax = 1;
+    for (auto c : chunkIDs) Nmax = max(Nmax, int(c.second.size()));
+
+    b_mat->setTexture(texture, false);
+    b_mat->setShaderParameter("chunkSize", Vec2f(1.0/Nmax, 1.0/chunkIDs.size()));
+}
+
+void VRDistrict::addTextures(string folder, string type) {
+    for (auto f : openFolder(folder)) {
+        auto tex = VRTexture::create();
+        tex->read(folder + "/" + f);
+        addTexture(tex, type);
+    }
+}
+
+VRTextureMosaicPtr VRDistrict::getTexture() { return texture; }
+
+void VRDistrict::addBuilding( VRPolygonPtr p, int stories, string housenumber, string street, string type ) {
+    p->removeDoubles(0.1);
     if (p->size() < 3) return;
     if (p->isCCW()) p->reverseOrder();
     auto b = VRBuilding::create();
+    b->setType(type);
     string ID = street+housenumber;
     if (ID == "" || buildings.count(ID)) {
         static int i = 0; i++;
@@ -72,7 +103,7 @@ void VRDistrict::addBuilding( VRPolygonPtr p, int stories, string housenumber, s
     b->addFoundation(*p, 2.5);
     for (auto i=0; i<stories; i++) b->addFloor(*p, 2.5);
     b->addRoof(*p);
-    b->computeGeometry(facades, roofs);
+    b->computeGeometry(facades, roofs, ptr());
 
     auto toStringVector = [](const Vec3d& v) {
         vector<string> res;
@@ -111,7 +142,7 @@ void VRDistrict::addBuilding( VRPolygonPtr p, int stories, string housenumber, s
 
 void VRDistrict::computeGeometry() {
     init();
-    for (auto b : buildings) b.second->computeGeometry(facades, roofs);
+    for (auto b : buildings) b.second->computeGeometry(facades, roofs, ptr());
 }
 
 void VRDistrict::remBuilding( string street, string housenumber ) {
@@ -139,7 +170,7 @@ attribute vec2 osg_MultiTexCoord0;
 attribute vec2 osg_MultiTexCoord1;
 
 void main( void ) {
-    vnrm = normalize( gl_NormalMatrix * osg_Normal );
+    vnrm = gl_NormalMatrix * osg_Normal;
     vtc1 = osg_Color.xyzw;
     vtc2 = vec2(osg_MultiTexCoord0);
     vtc3 = vec2(osg_MultiTexCoord1);
@@ -197,7 +228,7 @@ float alphaFix(vec2 uv, float a) {
 }
 
 void main( void ) {
-	normal = vnrm;
+	normal = normalize( vnrm );
 	vec2 uv1 = modTC(vtc2);
 	vec2 uv2 = modTC(vtc3);
 	vec4 tex1 = texture2D(tex, uv1 + vtc1.xy);
@@ -244,7 +275,7 @@ float alphaFix(vec2 uv, float a) {
 }
 
 void main( void ) {
-	normal = vnrm;
+	normal = normalize( vnrm );
 	vec2 uv1 = modTC(vtc2);
 	vec2 uv2 = modTC(vtc3);
 	vec4 tex1 = texture2D(tex, uv1 + vtc1.xy);

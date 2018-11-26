@@ -149,7 +149,8 @@ void main( void ) {
 	color = texture(tex, tc);
 	computeDepth();
 	
-	norm = gl_NormalMatrix * norm;
+	norm = normalize( gl_NormalMatrix * norm );
+	norm = norm*0.5 + vec3(0.5,0.5,0.5); // pack in RGB
 	gl_FragColor = vec4(norm, 1.0);
 }
 

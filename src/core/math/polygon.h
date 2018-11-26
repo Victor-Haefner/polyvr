@@ -26,6 +26,8 @@ class VRPolygon {
         void addPoint(Vec3d p);
         Vec2d getPoint(int i);
         Vec3d getPoint3(int i);
+        void remPoint(int i);
+        void remPoint3(int i);
         void close();
         int size();
         void clear();
@@ -44,6 +46,7 @@ class VRPolygon {
         Boundingbox getBoundingBox();
         vector< VRPolygon > getConvexDecomposition();
         vector< VRPolygonPtr > gridSplit(double G);
+        void removeDoubles(float d = 1e-3);
 
         double computeArea();
         double getDistance(Vec3d p);
