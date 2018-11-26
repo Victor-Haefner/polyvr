@@ -512,11 +512,10 @@ void VRRoadNetwork::computeSigns() {
                 surface->setMaterial(m);
             }
         }
+
         if ( osmSign ) {
             auto tfsigns = w->getTrafficSigns();
             auto input = signEnt->getValue<string>("info", "");
-            PosePtr nullpose = Pose::create(pos, dir);
-            auto oSign = tfsigns->addTrafficSign(input, nullpose);
             if (auto laneEnt = signEnt->getEntity("lanes")) {
                 auto roadEnt = laneEnt->getEntity("road");
                 auto road = roadsByEntity[roadEnt];// get vrroad from roadent
@@ -525,9 +524,10 @@ void VRRoadNetwork::computeSigns() {
                 if (laneEnt->get("direction")->value == "-1") { pose = road->getLeftEdge(pos); d=-d; }
                 pose->setDir(d);
                 pose->setUp(Vec3d(0,1,0));
-                oSign->setPose(pose);
+                tfsigns->addSign(input, pose);
             }
         }
+
         if (!sign) continue;
         if (auto laneEnt = signEnt->getEntity("lanes")) {
             auto roadEnt = laneEnt->getEntity("road");

@@ -12,24 +12,6 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class VRTrafficSign;
-class VRTrafficSigns;
-
-class VRTrafficSign : public VRTransform {
-    private:
-        Vec2i ID;
-        VRTransformPtr t;
-        string type;
-        string OSMID;
-
-    public:
-        VRTrafficSign();
-        ~VRTrafficSign();
-        static VRTrafficSignPtr create();
-
-        void setID(Vec2i);
-};
-
 class VRTrafficSigns : public VRRoadBase {
     private:
         VRGeometryPtr selfPtr;
@@ -39,9 +21,10 @@ class VRTrafficSigns : public VRRoadBase {
         vector<string> types;
         vector<vector<string>> allFileNames;
         string country;
-        map<int,VRTrafficSign> trafficSignsByID;
+        //map<int,VRTrafficSign> trafficSignsByID;
 
-        VRObjectPtr baseModel;
+        VRGeometryPtr trafficSignsGeo;
+        VRGeometryPtr trafficSignsGeoPoles;
         VRGeometryPtr baseGeoSign;
         VRGeometryPtr baseGeoPole;
         VRMaterialPtr baseMaterial;
@@ -56,7 +39,6 @@ class VRTrafficSigns : public VRRoadBase {
         ~VRTrafficSigns();
 
         static VRTrafficSignsPtr create();
-        VRTrafficSignPtr addTrafficSign(string type, PosePtr pose);
         void addSign(string type, PosePtr pose);
         void loadTextures();
         void setMegaTexture(VRTextureMosaicPtr megaTex);

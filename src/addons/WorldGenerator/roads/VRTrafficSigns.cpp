@@ -25,18 +25,6 @@
 
 using namespace OSG;
 
-VRTrafficSign::VRTrafficSign() : VRTransform("trafficSign") {}
-VRTrafficSign::~VRTrafficSign() {}
-
-VRTrafficSignPtr VRTrafficSign::create() {
-    auto t = VRTrafficSignPtr(new VRTrafficSign());
-    return t;
-}
-
-void VRTrafficSign::setID(Vec2i ID){
-    this->ID = ID;
-}
-
 VRTrafficSigns::VRTrafficSigns() : VRRoadBase("TrafficSigns") {}
 VRTrafficSigns::~VRTrafficSigns() {}
 
@@ -51,6 +39,11 @@ VRTrafficSignsPtr VRTrafficSigns::create() {
 }
 
 void VRTrafficSigns::setupBaseSign(){
+    trafficSignsGeo = VRGeometry::create("trafficSignsTop");
+    trafficSignsGeoPoles = VRGeometry::create("trafficSignsPoles");
+    this->addChild(trafficSignsGeo);
+    this->addChild(trafficSignsGeoPoles);
+
     baseGeoSign = VRGeometry::create("trafficSignTop");
     baseGeoSign->setPrimitive("Plane 0.6 0.6 1 1");
     baseGeoSign->translate(Vec3d(0,2.3,0));
@@ -67,6 +60,9 @@ void VRTrafficSigns::setupBaseSign(){
     baseMaterialPole = VRMaterial::get("trafficSignMatPole");
     baseMaterialPole->setDiffuse(Color3f(0.3,0.3,0.3));
     baseMaterialPole->setLit(true);
+
+    trafficSignsGeo->setMaterial(baseMaterial);
+    trafficSignsGeoPoles->setMaterial(baseMaterialPole);
 }
 
 Vec2i VRTrafficSigns::getVecID(string type) {
@@ -79,30 +75,24 @@ Vec2i VRTrafficSigns::getVecID(string type) {
     return matrix[subClass][subName];
 }
 
-VRTrafficSignPtr VRTrafficSigns::addTrafficSign(string type, PosePtr pose) {
-    auto ts = VRTrafficSign::create();
+void VRTrafficSigns::addSign(string type, PosePtr pose) {
     VRGeometryPtr sign = static_pointer_cast<VRGeometry>( baseGeoSign->duplicate() );
     VRGeometryPtr pole = static_pointer_cast<VRGeometry>( baseGeoPole->duplicate() );
     sign->makeUnique();
     sign->setMaterial(baseMaterial);
     pole->setMaterial(baseMaterialPole);
-    ts->addChild(sign);
-    ts->addChild(pole);
-    this->addChild(ts);
     auto signID = getVecID(type);
     auto coords = megaTex->getChunkUVasVector(signID);
     GeoVectorPropertyRecPtr tc = GeoVec2fProperty::create();
     //cout << toString(coords) << endl;
     for (auto vec : coords) tc->addValue(vec);
     sign->setTexCoords(tc);
-    ts->setPose(pose);
-    ts->setID(signID);
-    //ts.OSMID = type;
-    return ts;
-}
-
-void VRTrafficSigns::addSign(string type, PosePtr pose) {
-    addTrafficSign(type, pose);
+    auto pose1 = sign->getPose();
+    pose1->setPos(pose1->pos() + pose->pos());
+    auto pose2 = pole->getPose();
+    pose2->setPos(pose2->pos() + pose->pos());
+    trafficSignsGeo->merge(sign,pose1);
+    trafficSignsGeoPoles->merge(pole,pose2);
 }
 
 void VRTrafficSigns::setMegaTexture(VRTextureMosaicPtr megaTex){
