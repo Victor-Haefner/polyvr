@@ -46,11 +46,11 @@ void VRTrafficSigns::setupBaseSign(){
 
     baseGeoSign = VRGeometry::create("trafficSignTop");
     baseGeoSign->setPrimitive("Plane 0.6 0.6 1 1");
-    baseGeoSign->translate(Vec3d(0,2.3,0));
+    baseGeoSign->translate(Vec3d(0,2.3,0.01));
 
     baseGeoPole = VRGeometry::create("trafficSignPole");
-    baseGeoPole->setPrimitive("Plane 0.05 2.4 1 1");
-    baseGeoPole->translate(Vec3d(0,0.8,0));
+    baseGeoPole->setPrimitive("Plane 0.05 2.7 1 1");
+    baseGeoPole->translate(Vec3d(0,1.0,0));
 
     baseMaterial = VRMaterial::create("trafficSignMat");
     baseMaterial->setTexture( megaTex );
@@ -124,18 +124,52 @@ string VRTrafficSigns::getOSMTag(Vec2i ID) {
 
 void VRTrafficSigns::loadTextures(){
     string path;
-    boost::filesystem::path full_path(boost::filesystem::current_path());
-    //std::cout << "Current path is : " << full_path << std::endl;
-    path = full_path.string();
     megaTex = VRTextureMosaic::create();
     auto seedTex = VRTexture::create();
-    string sTexFile =  path+ "/world/assets/roadsigns/emptyPixel.png";
+    string sTexFile =  "world/assets/roadsigns/emptyPixel.png";
     seedTex->read(sTexFile);
 	megaTex->add(seedTex, Vec2i(0,0), Vec2i(0,0));
 	//cout << path << endl;
+
 	if (country == "CN") {
+	    /*
+        auto getSignName = [&](string input){
+            string res = "";
+            if (country == "CN") {
+                int divider1 = type.find("__")+1;
+                int divider2 = type.find(".",divider1+1)+1;
+                //string res = type.substr(divider1,divider2-divider1-1);
+                string res = type.substr(divider1);
+                if (res.substr(0,1) == "0") res = res.substr(1);
+            }
+            return res;
+        };
+        string folder = "world/assets/roadsigns/China";
+        int nType = 0;
+        for (auto f : openFolder(folder)) {
+            string type = f;
+            string subFolder = folder+"/"+f;
+            int nSign = 0;
+            typesByID[nType] = f;
+            cout << subFolder << endl;
+            for (auto pic : openFolder(subFolder)) {
+                if (nSign > maxSignsPerRow) continue;
+                string signName = getSignName(pic);
+                cout << nSign << signName << " ";
+                nSign ++;
+                continue;
+                matrix[type][signName] = Vec2i(nType, nSign);
+                auto singleTex = VRTexture::create();
+                singleTex->read(subFolder+"/"+pic);
+                megaTex->add( singleTex, Vec2i(nType*100, nSign*100), Vec2i(nType,nSign) );
+                nSign++;
+            }
+            nType++;
+            cout << endl;
+        }*/
+
         string fileBaseName = "China_road_sign__";
-        path = path+ "/world/assets/roadsigns/China/";
+        path = "world/assets/roadsigns/China/";
         int nType = 0;
         for (auto type : types) {
             int nSign = 0;
@@ -149,10 +183,10 @@ void VRTrafficSigns::loadTextures(){
             }
             nType++;
         }
-        megaTex->write(full_path.string()+"/world/assets/roadsigns/trafficSignMegaTex.png");
+        megaTex->write("world/assets/roadsigns/trafficSignMegaTex.png");
     }
     if (country == "DE") {
-        //example
+        //example TODO
         path = path+ "/world/assets/roadsigns/Germany/";
     }
 }

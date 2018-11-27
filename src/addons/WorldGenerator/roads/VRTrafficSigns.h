@@ -16,6 +16,8 @@ class VRTrafficSigns : public VRRoadBase {
     private:
         VRGeometryPtr selfPtr;
         VRTextureMosaicPtr megaTex;
+        map<int, string> typesByID;
+
         map<string,map<string,Vec2i>> matrix;
         map<Vec2i,string> signNameByID;
         vector<string> types;
