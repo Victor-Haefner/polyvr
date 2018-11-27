@@ -46,7 +46,7 @@ void VRTrafficSigns::setupBaseSign(){
 
     baseGeoSign = VRGeometry::create("trafficSignTop");
     baseGeoSign->setPrimitive("Plane 0.6 0.6 1 1");
-    baseGeoSign->translate(Vec3d(0,2.3,0.01));
+    baseGeoSign->translate(Vec3d(0,2.3,0));
 
     baseGeoPole = VRGeometry::create("trafficSignPole");
     baseGeoPole->setPrimitive("Plane 0.05 2.7 1 1");
@@ -88,7 +88,7 @@ void VRTrafficSigns::addSign(string type, PosePtr pose) {
     for (auto vec : coords) tc->addValue(vec);
     sign->setTexCoords(tc);
     auto pose1 = sign->getPose();
-    pose1->setPos(pose1->pos() + pose->pos());
+    pose1->setPos(pose1->pos() + pose->pos() - pose->dir()*0.01);
     pose1->setDir(pose->dir());
     pose1->setUp(pose->up());
     auto pose2 = pole->getPose();
