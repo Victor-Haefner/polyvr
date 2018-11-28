@@ -170,6 +170,7 @@ void VRTrafficSigns::loadTextures(){
 
         string fileBaseName = "China_road_sign__";
         path = "world/assets/roadsigns/China/";
+        if (!exists(path)) return;
         int nType = 0;
         for (auto type : types) {
             int nSign = 0;
