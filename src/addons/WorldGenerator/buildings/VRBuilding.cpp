@@ -1,4 +1,5 @@
 #include "VRBuilding.h"
+#include "VRDistrict.h"
 #include "../terrain/VRTerrain.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRGeometry.h"
@@ -60,8 +61,9 @@ void VRBuilding::addFloor(VRPolygon polygon, float H) {
 }
 
 void VRBuilding::addRoof(VRPolygon polygon) { roof = polygon; }
+void VRBuilding::setType(string t) { type = t; }
 
-void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs) {
+void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs, VRDistrictPtr district) {
     height = 0;
 
     // foundations
@@ -87,23 +89,21 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs) {
             float low = ground-H;
             float high = low+H;
 
-            int N = 4;
-            float _N = 1./N;
 
+            int N = 4;
             int fi = N*float(wallType) / RAND_MAX;
-            float f_tc1 = fi * _N;
-            float f_tc2 = (fi+1) * _N;
+            Vec4d UV = district->getChunkUV("walls", fi);
 
             for (int i=0; i<segN; i++) {
                 Vec2d w1 = pos1 + (wallDir * (i*wall_segment));
                 Vec2d w2 = pos1 + (wallDir * ((i+1)*wall_segment));
                 Vec2d wallVector = w2-w1;
                 Vec3d n = Vec3d(-wallVector[1], 0, wallVector[0]);
-                Color4f c = Color4f(f_tc1, 0, 0, 0.25);
-                geo.pushVert(Vec3d(w1[0], low, w1[1]), n, c, Vec2d(f_tc1, 0), Vec2d(0, 0.25));
-                geo.pushVert(Vec3d(w2[0], low, w2[1]), n, c, Vec2d(f_tc2, 0), Vec2d(0, 0.25));
-                geo.pushVert(Vec3d(w2[0], high, w2[1]), n, c, Vec2d(f_tc2, 0.25), Vec2d(0, 0.5));
-                geo.pushVert(Vec3d(w1[0], high, w1[1]), n, c, Vec2d(f_tc1, 0.25), Vec2d(0, 0.5));
+                Color4f c = Color4f(UV[0], UV[1], 0, 0.25);
+                geo.pushVert(Vec3d(w1[0], low, w1[1]), n, c, Vec2d(UV[0], UV[1]), Vec2d(0, 0.25));
+                geo.pushVert(Vec3d(w2[0], low, w2[1]), n, c, Vec2d(UV[2], UV[1]), Vec2d(0, 0.25));
+                geo.pushVert(Vec3d(w2[0], high, w2[1]), n, c, Vec2d(UV[2], UV[3]), Vec2d(0, 0.5));
+                geo.pushVert(Vec3d(w1[0], high, w1[1]), n, c, Vec2d(UV[0], UV[3]), Vec2d(0, 0.5));
                 geo.pushQuad();
             }
         }
@@ -113,6 +113,7 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs) {
     // stories
     for (auto story : stories) {
         float H = story.first;
+        if (type == "shopping" && height == 0) H += 1;
         auto& polygon = story.second;
         VRGeoData geo;
         for (int i=0; i<polygon.size(); i++) {
@@ -132,23 +133,56 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs) {
             float low = ground+height;
             float high = low+H;
 
+
             // insert a door at a random place (when on level 0 && there is enough room)
-            int doorIndex = -1;
-            if (height == 0 && segN > 2) doorIndex = rand() % segN;
+            vector<int> doors;
+            if (height == 0) { // compute door layouts
+                // special cases
+                if (segN == 4) doors.push_back(1+rand()%2);
+
+                // case 1: segN is multiple of 3
+                else if (segN >= 3 && segN%3 == 0) {
+                    int N = segN/3;
+                    for (int i=0; i<N; i++) doors.push_back(1+i*3);
+                }
+
+                // case 2: segN is multiple of 5
+                else if (segN >= 5 && segN%5 == 0) {
+                    int N = segN/5;
+                    for (int i=0; i<N; i++) doors.push_back(2+i*5);
+                }
+
+                // case 3: segN - 2 is multiple of 3
+                else if (segN >= 8 && segN%3 == 2) {
+                    int N = (segN-2)/3;
+                    for (int i=0; i<N; i++) doors.push_back(2+i*3);
+                }
+
+                // case 4: segN - 1 is multiple of 3
+                else if (segN >= 7 && segN%3 == 1) {
+                    int N = (segN-1)/3;
+                    N -= N%2;
+                    N /= 2;
+                    for (int i=0; i < N; i++) {
+                        doors.push_back(2+i*3);
+                        doors.push_back(segN-1 - (2+i*3));
+                    }
+                }
+            }
+
+            auto isDoor = [&](int i) {
+                for (int j : doors) if (i == j) return true;
+                return false;
+            };
 
             int N = 4;
-            float _N = 1./N;
-
             int di = N*float(doorType) / RAND_MAX;
             int wi = N*float(windowType) / RAND_MAX;
             int fi = N*float(wallType) / RAND_MAX;
 
-            float d_tc1 = di * _N;
-            float d_tc2 = di * _N + _N;
-            float w_tc1 = wi * _N;
-            float w_tc2 = wi * _N + _N;
-            float f_tc1 = fi * _N;
-            float f_tc2 = fi * _N + _N;
+            Vec4d dUV = district->getChunkUV("doors", di);
+            Vec4d wUV = district->getChunkUV("windows", wi);
+            Vec4d fUV = district->getChunkUV("walls", fi);
 
             for (int i=0; i<segN; i++) {
                 Vec2d w1 = pos1 + (wallDir * (i*wall_segment));
@@ -157,19 +191,25 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs) {
                 Vec2d wallVector = w2-w1;
                 Vec3d n = Vec3d(-wallVector[1], 0, wallVector[0]);
 
-                if (i == doorIndex) { // door
-                    Color4f c = Color4f(f_tc1, 0, d_tc1, 0.5);
-                    geo.pushVert(Vec3d(w1[0], low, w1[1]), n, c, Vec2d(f_tc1, 0), Vec2d(d_tc1, 0.5));
-                    geo.pushVert(Vec3d(w2[0], low, w2[1]), n, c, Vec2d(f_tc2, 0), Vec2d(d_tc2, 0.5));
-                    geo.pushVert(Vec3d(w2[0], high, w2[1]), n, c, Vec2d(f_tc2, 0.25), Vec2d(d_tc2, 0.75));
-                    geo.pushVert(Vec3d(w1[0], high, w1[1]), n, c, Vec2d(f_tc1, 0.25), Vec2d(d_tc1, 0.75));
+                if (type == "shopping" && height == 0) {
+                    int si = N*float(rand()) / RAND_MAX;
+                    dUV = district->getChunkUV("shops", si);
+                    wUV = district->getChunkUV("shops", si);
+                }
+
+                if (isDoor(i)) { // door
+                    Color4f c = Color4f(fUV[0], fUV[1], dUV[0], dUV[1]);
+                    geo.pushVert(Vec3d(w1[0], low, w1[1]), n, c, Vec2d(fUV[0], fUV[1]), Vec2d(dUV[0], dUV[1]));
+                    geo.pushVert(Vec3d(w2[0], low, w2[1]), n, c, Vec2d(fUV[2], fUV[1]), Vec2d(dUV[2], dUV[1]));
+                    geo.pushVert(Vec3d(w2[0], high, w2[1]), n, c, Vec2d(fUV[2], fUV[3]), Vec2d(dUV[2], dUV[3]));
+                    geo.pushVert(Vec3d(w1[0], high, w1[1]), n, c, Vec2d(fUV[0], fUV[3]), Vec2d(dUV[0], dUV[3]));
                     geo.pushQuad();
                 } else { // window
-                    Color4f c = Color4f(f_tc1, 0, w_tc1, 0.25);
-                    geo.pushVert(Vec3d(w1[0], low, w1[1]), n, c, Vec2d(f_tc1, 0), Vec2d(w_tc1, 0.25));
-                    geo.pushVert(Vec3d(w2[0], low, w2[1]), n, c, Vec2d(f_tc2, 0), Vec2d(w_tc2, 0.25));
-                    geo.pushVert(Vec3d(w2[0], high, w2[1]), n, c, Vec2d(f_tc2, 0.25), Vec2d(w_tc2, 0.5));
-                    geo.pushVert(Vec3d(w1[0], high, w1[1]), n, c, Vec2d(f_tc1, 0.25), Vec2d(w_tc1, 0.5));
+                    Color4f c = Color4f(fUV[0], fUV[1], wUV[0], wUV[1]);
+                    geo.pushVert(Vec3d(w1[0], low, w1[1]), n, c, Vec2d(fUV[0], fUV[1]), Vec2d(wUV[0], wUV[1]));
+                    geo.pushVert(Vec3d(w2[0], low, w2[1]), n, c, Vec2d(fUV[2], fUV[1]), Vec2d(wUV[2], wUV[1]));
+                    geo.pushVert(Vec3d(w2[0], high, w2[1]), n, c, Vec2d(fUV[2], fUV[3]), Vec2d(wUV[2], wUV[3]));
+                    geo.pushVert(Vec3d(w1[0], high, w1[1]), n, c, Vec2d(fUV[0], fUV[3]), Vec2d(wUV[0], wUV[3]));
                     geo.pushQuad();
                 }
 
@@ -183,19 +223,45 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs) {
     int N = 4;
     float _N = 1./N;
     int ri = N*float(roofType) / RAND_MAX;
-    float r_tc1 = ri * _N;
+    Vec4d rUV = district->getChunkUV("roofs", ri);
+
+    auto roofTop = *roof.shrink(-2);
+
+    float H = 2.0; // roof height
 
     // roof
     Triangulator t;
-    t.add(roof);
+    t.add(roofTop);
     auto g = t.compute();
-    g->translate(Vec3d(0,ground+height,0));
+    g->translate(Vec3d(0,ground+height+H,0));
     g->applyTransformation();
-    g->updateNormals();
+    VRGeoData data(g);
+
+    for (int i=0; i<data.size(); i++) data.setNorm(i,Vec3d(0,1,0));
+
+    int Nr = roof.size();
+    if (Nr == roofTop.size() && Nr > 0) {
+        for (int i=0; i<Nr; i++) {
+            Vec2d p1 = roof.getPoint(i);
+            Vec2d p2 = roofTop.getPoint(i);
+            Vec3d P1 = Vec3d(p1[0], ground+height, p1[1]);
+            Vec3d P2 = Vec3d(p2[0], ground+height+H, p2[1]);
+            int i1 = data.pushVert(P1, Vec3d(0,1,0));
+            int i2 = data.pushVert(P2, Vec3d(0,1,0));
+        }
+        int I = data.size();
+        for (int i=0; i<Nr; i++) {
+            int j = I-2*Nr+i*2;
+            if (i < Nr-1) data.pushQuad(j, j+2, j+3, j+1);
+            if (i < Nr-1) data.pushQuad(j, j+2, j+3, j+1);
+            else          data.pushQuad(j, I-2*Nr, I-2*Nr+1, j+1);
+        }
+    }
+
+    data.addVertexColors(Color4f(rUV[0], rUV[1], rUV[0], rUV[1]));
     g->setPositionalTexCoords2D(0.05,0,Vec2i(0,2));
     g->setPositionalTexCoords2D(0.05,1,Vec2i(0,2));
-    VRGeoData data(g);
-    data.addVertexColors(Color4f(r_tc1, 0.75, r_tc1, 0.75));
+    g->updateNormals(false);
     roofs->merge(g);
 }
 

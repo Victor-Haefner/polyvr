@@ -33,6 +33,15 @@ void VRTexture::write(string path) {
     if (!img->write(path.c_str())) cout << " VRTexture::write to file '" << path << "' failed!" << endl;
 }
 
+struct Pixel {
+    char r;
+    char g;
+    char b;
+    char a;
+
+    Pixel(char r, char g, char b, char a) : r(r), g(g), b(b), a(a) {}
+};
+
 void VRTexture::paste(VRTexturePtr other, Vec3i offset) {
     Vec3i s1 = getSize();
     Vec3i s2 = other->getSize();
@@ -43,14 +52,38 @@ void VRTexture::paste(VRTexturePtr other, Vec3i offset) {
     if (S[1] > s1[1]) { cout << "VRTexture::paste sy too big: " << S << " s " << s1 << endl; return; }
     if (S[2] > s1[2]) { cout << "VRTexture::paste sz too big: " << S << " s " << s1 << endl; return; }
 
+
     auto data1 = img->editData();
     auto data2 = other->img->editData();
-    int Bpp = getPixelByteSize();
+    int Bpp1 = getPixelByteSize();
+    int Bpp2 = other->getPixelByteSize();
+    int BppMin = min(Bpp1, Bpp2);
     for (int k=0; k<s2[2]; k++) {
         for (int j=0; j<s2[1]; j++) {
-            size_t J1 = (offset[0] + (j+offset[1])*s1[0] + (k+offset[2])*s1[0]*s1[1])*Bpp;
-            size_t J2 = (j*s2[0] + k*s2[0]*s2[1])*Bpp;
-            memcpy(data1+J1, data2+J2, s2[0]*Bpp);
+            size_t J1 = (offset[0] + (j+offset[1])*s1[0] + (k+offset[2])*s1[0]*s1[1])*Bpp1;
+            size_t J2 = (j*s2[0] + k*s2[0]*s2[1])*Bpp2;
+            if (Bpp1 == Bpp2) memcpy(data1+J1, data2+J2, s2[0]*Bpp2); // copy whole line
+            else {
+                for (int i=0; i<s2[0]; i++) {
+                    size_t J11 = J1 + i*Bpp1;
+                    size_t J21 = J2 + i*Bpp2;
+
+                    if (Bpp1 == 4 && Bpp2 == 1) { // hack, make it nicer later on
+                        char c = *(data2+J21);
+                        auto p = new Pixel(c,c,c,255);
+                        memcpy(data1+J11, p, Bpp1);
+                        delete p;
+                    }
+
+                    if (Bpp1 == 4 && Bpp2 == 3) { // hack, make it nicer later on
+                        auto p = new Pixel(255,255,255,255);
+                        memcpy(data1+J11, p, Bpp1);
+                        delete p;
+                    }
+
+                    memcpy(data1+J11, data2+J21, BppMin); // copy single pixel
+                }
+            }
         }
     }
 

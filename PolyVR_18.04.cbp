@@ -93,6 +93,7 @@
 			<Add option="-DWITH_OPCUA" />
 			<Add option="-DWITH_CLUSTERING_FIX" />
 			<Add option="-DWITH_STEP" />
+			<Add option="-DCEF18" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
 			<Add directory="/usr/lib64/glib-2.0/include" />
@@ -249,7 +250,6 @@
 			<Add option="-lavutil" />
 			<Add option="-lqrencode" />
 			<Add option="-ludev" />
-			<Add option="-lffmpegsumo" />
 			<Add option="-lraptor2" />
 			<Add option="-lgomp" />
 			<Add option="-llapacke" />
@@ -550,6 +550,8 @@
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoadIntersection.h" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoadNetwork.cpp" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRRoadNetwork.h" />
+		<Unit filename="src/addons/WorldGenerator/roads/VRTrafficSigns.cpp" />
+		<Unit filename="src/addons/WorldGenerator/roads/VRTrafficSigns.h" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRTunnel.cpp" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRTunnel.h" />
 		<Unit filename="src/addons/WorldGenerator/terrain/VRPlanet.cpp" />
@@ -1011,6 +1013,8 @@
 		<Unit filename="src/core/scripting/VRPyStroke.h" />
 		<Unit filename="src/core/scripting/VRPyTextureGenerator.cpp" />
 		<Unit filename="src/core/scripting/VRPyTextureGenerator.h" />
+		<Unit filename="src/core/scripting/VRPyTextureMosaic.cpp" />
+		<Unit filename="src/core/scripting/VRPyTextureMosaic.h" />
 		<Unit filename="src/core/scripting/VRPyTextureRenderer.cpp" />
 		<Unit filename="src/core/scripting/VRPyTextureRenderer.h" />
 		<Unit filename="src/core/scripting/VRPyTransform.cpp" />

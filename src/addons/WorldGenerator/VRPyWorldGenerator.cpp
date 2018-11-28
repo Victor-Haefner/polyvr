@@ -4,8 +4,11 @@
 #include "core/scripting/VRPyPath.h"
 #include "core/scripting/VRPyGeometry.h"
 #include "core/scripting/VRPyPolygon.h"
+#include "core/objects/material/VRTextureMosaic.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
 #include "core/scripting/VRPyBaseFactory.h"
+
+#include <OpenSG/OSGVector.h>
 
 using namespace OSG;
 
@@ -16,6 +19,7 @@ simpleVRPyType(RoadIntersection, New_ptr);
 simpleVRPyType(RoadNetwork, New_ptr);
 simpleVRPyType(District, New_ptr);
 simpleVRPyType(Asphalt, New_ptr);
+simpleVRPyType(TrafficSigns, New_ptr);
 
 
 
@@ -23,6 +27,7 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"addAsset", PyWrap( WorldGenerator, addAsset, "Add an asset template", void, string, VRTransformPtr ) },
     {"getAssetManager", PyWrap( WorldGenerator, getAssetManager, "Get the asset manager", VRObjectManagerPtr ) },
     {"getRoadNetwork", PyWrap( WorldGenerator, getRoadNetwork, "Access road network", VRRoadNetworkPtr ) },
+    {"getTrafficSigns", PyWrap( WorldGenerator, getTrafficSigns, "Access traffic signs", VRTrafficSignsPtr ) },
     {"getNature", PyWrap( WorldGenerator, getNature, "Access nature module", VRNaturePtr ) },
     {"getTerrain", PyWrap( WorldGenerator, getTerrain, "Access the terrain", VRTerrainPtr ) },
     {"getDistrict", PyWrap( WorldGenerator, getDistrict, "Access the district module", VRDistrictPtr ) },
@@ -58,8 +63,10 @@ PyMethodDef VRPyRoadIntersection::methods[] = {
 
 PyMethodDef VRPyDistrict::methods[] = {
     {"remBuilding", PyWrap( District, remBuilding, "Remove a building by address", void, string, string ) },
-    {"addBuilding", PyWrapOpt( District, addBuilding, "Add a building, outline, stories, housenumber, streetname", "|", void, VRPolygonPtr, int, string, string ) },
-    {"setTexture", PyWrap( District, setTexture, "Set the building texture", void, string ) },
+    {"addBuilding", PyWrapOpt( District, addBuilding, "Add a building, outline, stories, housenumber, streetname", "||resitential", void, VRPolygonPtr, int, string, string, string ) },
+    {"addTexture", PyWrap( District, addTexture, "Add a texture for the building, texture, type, the type can be roof, wall, window or door", void, VRTexturePtr, string ) },
+    {"addTextures", PyWrap( District, addTextures, "Add a folder with textures, folder, type, for the types see addTexture", void, string, string ) },
+    {"getTexture", PyWrap( District, getTexture, "Get mega texture", VRTextureMosaicPtr ) },
     {"clear", PyWrap( District, clear, "Clear all buildings", void ) },
     {NULL}  /* Sentinel */
 };
@@ -96,8 +103,18 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"getPreviousRoads", PyWrap( RoadNetwork, getPreviousRoads, "Get the previous roads", vector<VREntityPtr>, VREntityPtr ) },
     {"getNextRoads", PyWrap( RoadNetwork, getNextRoads, "Get the next roads", vector<VREntityPtr>, VREntityPtr ) },
     {"addRoute", PyWrap( RoadNetwork, addRoute, "Add route path entity from graph node IDs", VREntityPtr, vector<int> ) },
-    {"setTerrainOffset", PyWrap( RoadNetwork, setTerrainOffset, "Set road to terrain offset", void, float ) },
     {"setRoadStyle", PyWrap( RoadNetwork, setRoadStyle, "Set road style flags", void, int ) },
+    {"setTerrainOffset", PyWrap( RoadNetwork, setTerrainOffset, "Set road to terrain offset", void, float ) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyTrafficSigns::methods[] = {
+    {"addSign", PyWrap( TrafficSigns, addSign, "adds trafficSign to world - type - pose", void, string, PosePtr ) },
+    {"getName", PyWrap( TrafficSigns, getName, "returns name of shield by ID", string, Vec2i ) },
+    {"getVecID", PyWrap( TrafficSigns, getVecID, "returns ID of sign as vector", Vec2i, string ) },
+    {"getOSMTag", PyWrap( TrafficSigns, getOSMTag, "returns OSM tag by ID", string, Vec2i ) },
+    {"getTextureMosaic", PyWrap( TrafficSigns, getTextureMosaic, "returns textureMosaic", VRTextureMosaicPtr ) },
+    //{"setMegaTexture", PyWrap( TrafficSigns, setMegaTexture, "sets textureMosaic", void, VRTextureMosaicPtr ) },
     {NULL}  /* Sentinel */
 };
 

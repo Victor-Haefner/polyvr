@@ -23,6 +23,7 @@ PyMethodDef VRPyPolygon::methods[] = {
     {"gridSplit", PyWrap(Polygon, gridSplit, "Split the polygon using a virtual grid layout", vector< VRPolygonPtr >, double) },
     {"reverseOrder", PyWrap(Polygon, reverseOrder, "Reverse the order of the points", void) },
     {"translate", PyWrap(Polygon, translate, "Translate all points", void, Vec3d) },
+    {"removeDoubles", PyWrapOpt(Polygon, removeDoubles, "Remove doubles", "0.001", void, float) },
     {NULL}  /* Sentinel */
 };
 

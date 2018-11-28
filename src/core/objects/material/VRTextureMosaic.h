@@ -31,6 +31,8 @@ class VRTextureMosaic : public VRTexture {
 
         Vec2i getChunkPosition(Vec2i ID);
         Vec2i getChunkSize(Vec2i ID);
+        Vec4d getChunkUV(Vec2i ID);
+        vector<Vec2d> getChunkUVasVector(Vec2i ID);
 };
 
 OSG_END_NAMESPACE;

@@ -241,11 +241,11 @@ vector<void*> OctreeNode::getAllData() {
 }
 
 
-Octree::Octree(float res, float s) : resolution(res), firstSize(s) { if (s < res) firstSize = res; }
+Octree::Octree(float res, float s, string n) : resolution(res), firstSize(s), name(n) { if (s < res) firstSize = res; }
 Octree::~Octree() { if (root) delete root; }
 
-OctreePtr Octree::create(float resolution, float size) {
-    auto o = OctreePtr( new Octree(resolution, size) );
+OctreePtr Octree::create(float resolution, float size, string n) {
+    auto o = OctreePtr( new Octree(resolution, size, n) );
     o->clear();
     return o;
 }

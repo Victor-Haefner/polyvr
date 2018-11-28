@@ -181,74 +181,32 @@ void VRTextureRenderer::setActive(bool b) {
     else setCore(OSGCore::create(Group::create()), "TextureRenderer", true);
 }
 
-/** TODO, implement channels
-    - render normal channel, override material fragment shaders
-*/
-
-string channelDiffuseFP =
-"#version 400 compatibility\n"
-GLSL(
-uniform sampler2D tex;
-in vec4 position;
-in vec2 tcs;
-in vec3 norm;
-in vec3 col;
-vec4 color;
-
-void main( void ) {
-	float ca = col[1];
-	float ch = col[2];
-	color = texture(tex,tcs);
-	//if (color.a < 0.9) discard;
-
-	color.x *= 0.4*ca;
-	color.y *= 0.8*ch;
-	color.z *= 0.2*ch;
-	//gl_FragColor = vec4(color.xyz,1.0);
-	gl_FragColor = vec4(color.xyz,color.a);
-}
-);
-
-string channelNormalFP =
-"#version 400 compatibility\n"
-GLSL(
-uniform sampler2D tex;
-in vec4 position;
-in vec2 tcs;
-in vec3 norm;
-in vec3 col;
-vec4 color;
-
-void main( void ) {
-	float ca = col[1];
-	float ch = col[2];
-	color = texture(tex,tcs);
-	if (color.a < 0.3) discard;
-
-	vec3 n = normalize( gl_NormalMatrix * norm );
-	gl_FragColor = vec4(n,1.0);
-}
-);
-
-map<VRMaterial*, string> originalMatFP;
-
-void VRTextureRenderer::setChannelFP(string fp) {
+void VRTextureRenderer::setChannelSubstitutes(CHANNEL c) {
     for (auto geo : getChild(0)->getLinks()[0]->getChildren(true, "Geometry")) {
-        auto m = dynamic_pointer_cast<VRGeometry>(geo)->getMaterial();
-        if (originalMatFP.count(m.get())) continue;
-        originalMatFP[m.get()] = m->getFragmentShader();
-        m->setFragmentShader(fp, "texRendChannel");
+        auto g = dynamic_pointer_cast<VRGeometry>(geo);
+        auto m = g->getMaterial();
+        if ( substitutes[c].count(m.get()) ) {
+            auto sm = substitutes[c][m.get()];
+            originalMaterials[sm.get()] = m;
+            sm->setDeferred(0);
+            cout << "    sub mat " << g->getName() << endl;
+            g->setMaterial(sm);
+        }
     }
 }
 
-void VRTextureRenderer::resetChannelFP() {
+void VRTextureRenderer::resetChannelSubstitutes() {
     for (auto geo : getChild(0)->getLinks()[0]->getChildren(true, "Geometry")) {
-        auto m = dynamic_pointer_cast<VRGeometry>(geo)->getMaterial();
-        if (!originalMatFP.count(m.get())) continue;
-        m->setFragmentShader(originalMatFP[m.get()], "texRendChannel");
-        originalMatFP.erase(m.get());
+        auto g = dynamic_pointer_cast<VRGeometry>(geo);
+        auto m = g->getMaterial();
+        if (!originalMaterials.count(m.get())) continue;
+        g->setMaterial(originalMaterials[m.get()]);
     }
-    originalMatFP.clear();
+    originalMaterials.clear();
+}
+
+void VRTextureRenderer::setMaterialSubstitutes(map<VRMaterial*, VRMaterialPtr> s, CHANNEL c) {
+    substitutes[c] = s;
 }
 
 VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
@@ -265,16 +223,14 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
         data->view->setBackground(data->stage->getBackground());
     }
 
-    //if (c == DIFFUSE) setChannelFP(channelNormalFP);
-    if (c == DIFFUSE) setChannelFP(channelDiffuseFP);
-    if (c == NORMAL) setChannelFP(channelNormalFP);
+    setChannelSubstitutes(c);
 
     bool v = isVisible();
     show(); // TODO: the visible texture renderer kills directional deferred shadows..
     data->win->render(data->ract);
     ImageMTRecPtr img = Image::create();
     img->set( data->fboTexImg );
-    if (c != RENDER) resetChannelFP();
+    if (c != RENDER) resetChannelSubstitutes();
     setVisible(v);
     return VRTexture::create( img );
 }

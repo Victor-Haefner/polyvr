@@ -201,7 +201,7 @@ T randomChoice(vector<T> vec) {
 void VRTrafficSimulation::updateSimulation() {
     if (!roadNetwork) return;
     auto g = roadNetwork->getGraph();
-    auto space = Octree::create(2);
+    auto space = Octree::create(2,10,"trafficSim");
     map<int, vector<pair<int, int>>> toChangeRoad;
     map<int, int> toChangeLane;
     map<int, map<int, int>> visionVec;

@@ -31,3 +31,20 @@ VRTextureMosaicPtr VRTextureMosaic::ptr() { return static_pointer_cast<VRTexture
 
 Vec2i VRTextureMosaic::getChunkPosition(Vec2i ID) { return entries[ID].pos; }
 Vec2i VRTextureMosaic::getChunkSize(Vec2i ID) { return entries[ID].size; }
+
+vector<Vec2d> VRTextureMosaic::getChunkUVasVector(Vec2i ID) {
+    auto uvs = getChunkUV(ID);
+	vector<Vec2d> tcs( {Vec2d(uvs[0], uvs[1]), Vec2d(uvs[2], uvs[1]), Vec2d(uvs[0], uvs[3]), Vec2d(uvs[2], uvs[3])} );
+	return tcs;
+}
+
+Vec4d VRTextureMosaic::getChunkUV(Vec2i ID) {
+    auto S = getSize();
+    auto p = getChunkPosition(ID);
+    auto s = getChunkSize(ID);
+    double u1 = (double(p[0])+1.0)/S[0];
+    double v1 = (double(p[1])+1.0)/S[1];
+    double u2 = (double(p[0]+s[0])-1.0)/S[0];
+    double v2 = (double(p[1]+s[1])-1.0)/S[1];
+    return Vec4d(u1,v1,u2,v2);
+}

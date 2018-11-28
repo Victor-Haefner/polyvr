@@ -29,8 +29,8 @@ class VRLeap : public VRDevice {
         bool calibrate{false};
         string serial;
 
-        float dragThreshold{0.8f};
-        float dropThreshold{0.6f};
+        float dragThreshold{0.7f}; // 0.8
+        float dropThreshold{0.5f}; // 0.6
 
         void newFrame(Json::Value json);
         void updateHandFromJson(Json::Value& handData, Json::Value& pointableData, HandPtr hand);

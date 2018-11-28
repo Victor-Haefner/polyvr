@@ -45,6 +45,17 @@ string getFolderName(string path) {
     return path.substr(0, sp);
 }
 
+vector<string> openFolder(string folder) {
+    vector<string> res;
+    if ( !exists( folder ) ) return res;
+
+    boost::filesystem::directory_iterator End; // default construction yields past-the-end
+    for ( boost::filesystem::directory_iterator itr( folder ); itr != End; ++itr ) {
+        string name = itr->path().filename().string();
+        res.push_back( name );
+    }
+    return res;
+}
 
 int systemCall(string cmd) {
     return system(cmd.c_str());

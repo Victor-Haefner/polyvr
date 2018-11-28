@@ -146,6 +146,25 @@ VRPolygonPtr VRPolygon::shrink(double amount) {
     return area;
 }
 
+void VRPolygon::remPoint(int i) { points.erase(points.begin() + i); }
+void VRPolygon::remPoint3(int i) { points3.erase(points3.begin() + i); }
+
+void VRPolygon::removeDoubles(float d) {
+    float d2 = d*d;
+
+    auto process = [&]() {
+        for (int i=1; i<points.size(); i++) {
+            auto p1 = points[i-1];
+            auto p2 = points[i];
+            if ((p2-p1).squareLength() < d2) { remPoint(i); return true; }
+        }
+        if (points.size() > 1) if ((points[points.size()-1]-points[0]).squareLength() < d2) { remPoint(points.size()-1); return true; }
+        return false;
+    };
+
+    while (process()) {;}
+}
+
 vector<Vec3d> VRPolygon::getRandomPoints(double density, double padding, double spread) {
     vector<Vec3d> res;
     auto area = shrink(padding);

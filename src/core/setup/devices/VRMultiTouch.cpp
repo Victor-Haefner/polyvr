@@ -6,6 +6,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/objects/VRCamera.h"
 #include "core/objects/OSGCamera.h"
+#include "core/tools/VRAnalyticGeometry.h"
 #include "VRSignal.h"
 #include <GL/glut.h>
 #include <OpenSG/OSGPerspectiveCamera.h>
@@ -110,6 +111,8 @@ static void print_event(const struct input_event *ev) {
 }
 
 void VRMultiTouch::updateDevice() {
+    if (!visual) showVisual(true);
+
 	struct input_event ev;
 	string txt;
 	//while (!mtdev_idle(&dev, fd, 15000)) { // while the device has not been inactive for fifteen seconds */
@@ -119,6 +122,8 @@ void VRMultiTouch::updateDevice() {
         // 1: Only signals start (ev.value==1) and end (ev.value==0) of touch events
         // 3: This is the interesting part. Contains all touch and multitouch events.
         //    ev.code contains the type of touch event
+
+        auto& finger = fingers[currentFingerID];
 
         if (ev.type == 3) {
             switch (ev.code) {
@@ -149,40 +154,44 @@ void VRMultiTouch::updateDevice() {
             case 53:
                 txt = " ABS_MT_POSITION_X";
                 if (currentFingerID == -1) return;
-                fingers[currentFingerID].pos[0] = ev.value;
-                updatePosition(fingers[currentFingerID].pos[0], fingers[currentFingerID].pos[1]);
+                finger.pos[0] = ev.value;
+                updatePosition(finger.pos[0], finger.pos[1]);
 
-                if ( fingers[currentFingerID].eventState >= 0) {
-                        fingers[currentFingerID].eventState++;
-                }
-                if ( fingers[currentFingerID].eventState == 2) {
-                        mouse(currentFingerID,fingers[currentFingerID].pos[2], fingers[currentFingerID].pos[0], fingers[currentFingerID].pos[1]);
+                if ( finger.eventState >= 0) finger.eventState++;
+                if ( finger.eventState == 2) {
+                    mouse(currentFingerID,finger.pos[2], finger.pos[0], finger.pos[1]);
+                    if (visual && visual->isVisible()) {
+                        auto bPose = getBeacon(finger.beaconID)->getPose();
+                        Vec3d p = bPose->pos() + bPose->dir()*1;
+                        visual->setCircle(currentFingerID, p, Vec3d(0,0,1), 0.1, Color3f(0,0.3,1));
+                    }
                 }
                 break;
             case 54:
                 txt = "  ABS_MT_POSITION_Y";
                 if (currentFingerID == -1) return;
-                fingers[currentFingerID].pos[1] = ev.value;
-                updatePosition(fingers[currentFingerID].pos[0], fingers[currentFingerID].pos[1]);
+                finger.pos[1] = ev.value;
+                updatePosition(finger.pos[0], finger.pos[1]);
 
-                if ( fingers[currentFingerID].eventState >= 0) {
-                        fingers[currentFingerID].eventState++;
-                }
-                if ( fingers[currentFingerID].eventState == 2) {
-                        mouse(currentFingerID,fingers[currentFingerID].pos[2], fingers[currentFingerID].pos[0], fingers[currentFingerID].pos[1]);
+                if ( finger.eventState >= 0 ) finger.eventState++;
+                if ( finger.eventState == 2 ) {
+                    mouse(currentFingerID,finger.pos[2], finger.pos[0], finger.pos[1]);
+                    if (visual && visual->isVisible())  {
+                        auto bPose = getBeacon(finger.beaconID)->getPose();
+                        Vec3d p = bPose->pos() + bPose->dir()*1;
+                        visual->setCircle(currentFingerID, p, Vec3d(0,0,1), 0.1, Color3f(0,0.3,1));
+                    }
                 }
                 break;
             case 57:
                 txt = "ABS_MT_TRACKING_ID";
-                // Finger is "released" as in not present on the touch surface anymore
-                if (ev.value == -1) {
-                    fingers[currentFingerID].pos[2] = 0;
-                    mouse(currentFingerID,fingers[currentFingerID].pos[2], fingers[currentFingerID].pos[0], fingers[currentFingerID].pos[1]);
-                }
-                // New touch event.
-                else {
-                    fingers[currentFingerID].pos[2] = 1;
-                    fingers[currentFingerID].eventState = 0;
+                if (ev.value == -1) { // Finger is "released" as in not present on the touch surface anymore
+                    finger.pos[2] = 0;
+                    mouse(currentFingerID, finger.pos[2], finger.pos[0], finger.pos[1]);
+                    if (visual && visual->isVisible()) visual->setCircle(currentFingerID, Vec3d(), Vec3d(0,1,0), 0, Color3f(0,0.3,1));
+                } else { // New touch event.
+                    finger.pos[2] = 1;
+                    finger.eventState = 0;
                 }
                 break;
             default:
@@ -192,14 +201,23 @@ void VRMultiTouch::updateDevice() {
 
             if (ev.code == 53 || ev.code == 54 || ev.code == 57 ) {
                 //cout << " " << txt << " : " << ev.value << endl;
-                    for (auto f : fingers) {
-                        if (f.second.pos[2] == 0) continue;
-                        //cout << " Finger: ID " << f.second.key << " pos " << f.second.pos << endl;
-                    }
+                for (auto f : fingers) {
+                    if (f.second.pos[2] == 0) continue;
+                    //cout << " Finger: ID " << f.second.key << " pos " << f.second.pos << endl;
+                }
             }
         }
     }
 	//}
+}
+
+void VRMultiTouch::showVisual(bool b) {
+    if (!visual) {
+        visual = VRAnalyticGeometry::create("touch_visuals");
+        getBeacon()->getParent()->addChild(visual);
+    }
+
+    visual->setVisible(b);
 }
 
 void VRMultiTouch::disconnectDevice() {
@@ -220,9 +238,17 @@ void VRMultiTouch::connectDevice() {
     if (IDs.size() == 0) return;
 
     int ID = IDs[0];
-    for (auto id : IDs) ID = min(id,ID);
+
+    if (IDs.size() > 1) { // more than one ID
+        for (auto id : IDs) {
+            devID = toString(id);
+            string props = execCmd("/usr/bin/xinput", "xinput", "list-props", devID.c_str());
+            auto mtPos = props.find("Abs MT Position");
+            if (mtPos != string::npos) ID = id;
+        }
+    }
+
     devID = toString(ID);
-    if (devID == "") return;
 
     string props = execCmd("/usr/bin/xinput", "xinput", "list-props", devID.c_str());
     auto eventPos = props.find("/dev/input/event");
@@ -239,7 +265,7 @@ void VRMultiTouch::connectDevice() {
 
     updatePtr = VRUpdateCb::create( "MultiTouch_update", boost::bind(&VRMultiTouch::updateDevice, this) );
     VRSceneManager::get()->addUpdateFkt(updatePtr);
-    cout << "VRMultiTouch::connectDevice successfully connected to device " << input << endl;
+    cout << "VRMultiTouch::connectDevice successfully connected to device " << devID << " at event " << input << endl;
 }
 
 void VRMultiTouch::clearSignals() {
@@ -434,7 +460,7 @@ void VRMultiTouch::updatePosition(int x, int y) {
 void VRMultiTouch::mouse(int button, int state, int x, int y) {
 
 
-//    cout << "VRMultiTouch::mouse  Button: " << button << ", State: " << state << ", X:Y: " << x << ":" << y << endl;
+    //cout << "VRMultiTouch::mouse  Button: " << button << ", State: " << state << ", X:Y: " << x << ":" << y << endl;
 
     updatePosition(x,y);
     change_button(button, state);

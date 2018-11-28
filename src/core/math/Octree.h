@@ -67,11 +67,14 @@ class Octree : public std::enable_shared_from_this<Octree> {
         float firstSize = 10;
         OctreeNode* root = 0;
 
-        Octree(float resolution, float size = 10);
+        Octree(float resolution, float size = 10, string name = "");
+
+    public:
+        string name;
 
     public:
         ~Octree();
-        static OctreePtr create(float resolution, float size = 10);
+        static OctreePtr create(float resolution, float size = 10, string name = "");
         OctreePtr ptr();
 
         OctreeNode* getRoot();
