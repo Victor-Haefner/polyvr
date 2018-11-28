@@ -77,6 +77,7 @@ void VRTrafficSimulation::Vehicle::setDefaults() {
     laneChangeState = 0; //0 = on lane, 1 = leaving lane, -1 = coming onto lane
     roadFrom = -1;
     roadTo = -1;
+    nextTurnLane = -1;
 
     lastMove = Vec3d(0,0,0);
     currentOffset = Vec3d(0,0,0);
@@ -322,7 +323,7 @@ void VRTrafficSimulation::updateSimulation() {
             if (nextEdges.size() > 1) {
                 gp.edge = randomChoice(nextEdges).ID;
                 for (auto e : nextEdges) {
-                    if (e.ID == vehicle.nextTurnLane) gp.edge = vehicle.nextTurnLane;
+                    if (e.ID == vehicle.nextTurnLane) { gp.edge = vehicle.nextTurnLane; }
                 }
                 auto& road = roads[gp.edge];
                 if (road.macro) {
@@ -629,6 +630,7 @@ void VRTrafficSimulation::updateSimulation() {
                 if (type == "intersection") {
                     nextSignalE = interE->getTrafficLight(newLane);
                     vehicle.distanceToNextIntersec = (pNode - posV).dot(vehicle.t->getPose()->dir());
+                    vehicle.nextIntersection = pNode;
 
                     auto g = roadNetwork->getGraph();
                     auto& edge = g->getEdge(eID);
@@ -640,7 +642,13 @@ void VRTrafficSimulation::updateSimulation() {
                     if (nextEdges.size() > 0) {
                     //decide before turning, and see if left, right turn or straight
                         vector<int> res;
-                        for (auto e : nextEdges) res.push_back(e.ID);
+                        bool tmpchecknext = false;
+                        for (auto e : nextEdges) {
+                            res.push_back(e.ID);
+                            if (e.ID == vehicle.nextTurnLane) tmpchecknext = true;
+                            //making sure nextTurnLane get's reset if vehicle crossed intersection
+                        }
+                        if (!tmpchecknext) vehicle.nextTurnLane = -1;
                         vehicle.nextLanesCoices = res;
                     }
 
@@ -661,6 +669,7 @@ void VRTrafficSimulation::updateSimulation() {
                             auto left = Vec3d(0,1,0).cross(vDir);
                             if (dir.dot(left)>0.7) vehicle.incTrafficRight = true; //cout << "incoming right" << endl;
                             if (dir.dot(left)<-0.7) vehicle.incTrafficLeft = true; //cout << "incoming left" << endl;
+                            if (dir.dot(vDir)<-0.7) vehicle.incTrafficFront = true;
                        }
                     }
                     ///--------------
@@ -671,6 +680,7 @@ void VRTrafficSimulation::updateSimulation() {
                         vehicle.nextSignalState = nextSignalE->getState();
                         vehicle.signalAhead = true;
                     }
+                    vehicle.lastFoundIntersection = interE;
                     return true;
                 }
             }
@@ -684,8 +694,8 @@ void VRTrafficSimulation::updateSimulation() {
         vehicle.distanceToNextIntersec = 10000;
         vehicle.incTrafficRight = false;
         vehicle.incTrafficLeft = false;
+        vehicle.incTrafficFront = false;
         recSearch(laneE,vehicle.pos.edge,vehicle.t->getPose()->pos());
-
         if (vehicle.nextTurnLane != -1) {
             auto nextRoad = roadNetwork->getLane(vehicle.nextTurnLane);
             if (nextRoad->get("turnDirection")) {
@@ -791,7 +801,6 @@ void VRTrafficSimulation::updateSimulation() {
                 if ( vehicle.distanceToNextIntersec < 20 && vehicle.turnAhead>0) vehicle.targetVelocity = 20/3.6;
                 if ( vehicle.distanceToNextIntersec < 10 && vehicle.turnAhead>0) vehicle.targetVelocity = 15/3.6;
                 if ( vehicle.distanceToNextIntersec > 20 ) vehicle.targetVelocity = 50/3.6;
-                if ( vehicle.distanceToNextIntersec < 1 ) vehicle.nextTurnLane = -1; ///AGRAJAG
 
                 auto inFront = [&]() { return vehicle.vehiclesightFarID.count(INFRONT); };
                 auto comingLeft = [&]() { return vehicle.vehiclesightFarID.count(FRONTLEFT); };
@@ -819,6 +828,7 @@ void VRTrafficSimulation::updateSimulation() {
                         //if (toString(roadNetwork->getLane(vehicle.pos.edge)->get("turnDirection")->value) == "left") { d = 0; return; }
                     }
                     if (vehicle.incTrafficRight && !signalAhead) { decelerate(); return; } //rudimentary right of way
+                    if (vehicle.incTrafficFront && vehicle.turnAhead == 1) { decelerate(); return; } //rudimentary right of way
 
                     if ( vbeh == vehicle.STRAIGHT ) {
                         if ( ( signalAhead && nextSignalDistance < safetyDis -4 ) && signalBlock ) { decelerate(); return; }
@@ -936,7 +946,7 @@ void VRTrafficSimulation::updateSimulation() {
                 if (isSimRunning && VRGlobals::CURRENT_FRAME - vehicle.lastMoveTS > 200 && !interBlock) { // && !interBlock && stopVehicleID != ID.first) {
                     toChangeRoad[road.first].push_back( make_pair(vehicle.vID, -1) ); ///------killswitch if vehicle get's stuck
                 }
-                if (isSimRunning && VRGlobals::CURRENT_FRAME - vehicle.lastMoveTS > 2000) { // && !interBlock && stopVehicleID != ID.first) {
+                if (isSimRunning && VRGlobals::CURRENT_FRAME - vehicle.lastMoveTS > 4000) { // && !interBlock && stopVehicleID != ID.first) {
                     toChangeRoad[road.first].push_back( make_pair(vehicle.vID, -1) ); ///------killswitch if vehicle get's stuck
                 }
                 if (!isSimRunning) vehicle.lastMoveTS = VRGlobals::CURRENT_FRAME;
@@ -1043,14 +1053,13 @@ void VRTrafficSimulation::updateSimulation() {
     };
 
     auto showVehicleMarkers = [&](){
-        if (isShowingGeometries) return;
-
         auto scene = VRScene::getCurrent();
         string strInput = "graphVizVehicMarkers";
         if ( scene->getRoot()->find(strInput) ) scene->getRoot()->find(strInput)->destroy();
 
         string vAnn = "vehicAnn";
         if (scene->getRoot()->find(vAnn)) scene->getRoot()->find(vAnn)->destroy();
+        if (!isShowingVehicleMarkers) return;
         auto vehicAnn = VRAnnotationEngine::create(vAnn);
         vehicAnn->setPersistency(0);
         vehicAnn->setBillboard(true);
@@ -1071,6 +1080,20 @@ void VRTrafficSimulation::updateSimulation() {
             gg0.pushColor(Color3f(1,1,0));
             gg0.pushPoint();
             vehicAnn->set(vID1, p2 + Vec3d(0,0.2,0), "V: "+toString(v.getID()));
+            auto node = v.nextIntersection;
+            if (node.length() > 0) {
+                auto po1 = vPose->pos() + Vec3d(0,.5,0);
+                auto po2 = node + Vec3d(0,.5,0);
+                auto vvID1 = gg0.pushVert(po1);
+                Color3f cl = Color3f(0,0,0);
+                if (v.turnAhead == 0) cl = Color3f(0,0,0.5);
+                if (v.turnAhead == 1) cl = Color3f(1,0,0);
+                if (v.turnAhead == 2) cl = Color3f(1,1,0);
+                gg0.pushColor(cl);
+                auto vvID2 = gg0.pushVert(po2);
+                gg0.pushColor(cl);
+                gg0.pushLine(vvID1,vvID2);
+            }
         }
         if (gg0.size() > 0) {
             auto graphViz = VRGeometry::create(strInput);
@@ -1289,6 +1312,10 @@ void VRTrafficSimulation::setSpeedmultiplier(float speedMultiplier) {
 
 void VRTrafficSimulation::toggleDirection() {
     isTimeForward = !isTimeForward;
+}
+
+void VRTrafficSimulation::toggleVehicMarkers() {
+    isShowingVehicleMarkers = !isShowingVehicleMarkers;
 }
 
 /** SHOW GRAPH */

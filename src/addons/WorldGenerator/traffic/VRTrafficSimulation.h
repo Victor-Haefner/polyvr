@@ -66,6 +66,7 @@ class VRTrafficSimulation : public VRObject {
             bool incTrafficRight = false;
             bool incTrafficLeft = false;
             bool incTrafficStraight = false;
+            bool incTrafficFront = false;
 
             map<int, float> vehiclesight;
             map<int, float> vehiclesightFar;
@@ -100,7 +101,9 @@ class VRTrafficSimulation : public VRObject {
             bool turnAtIntersec = false;
             Vec3d currentOffset;
             Vec3d currentdOffset;
+            Vec3d nextIntersection = Vec3d(0,-20,0);
             VRRoadIntersectionPtr lastIntersection;
+            VRRoadIntersectionPtr lastFoundIntersection;
 
             Vehicle(Graph::position p);
             Vehicle();
@@ -160,6 +163,7 @@ class VRTrafficSimulation : public VRObject {
         bool isShowingVehicleVision = false;
         bool isShowingGraph = false;
         bool isShowingGeometries = true;
+        bool isShowingVehicleMarkers = false;
         bool laneChange = false;
         float speedMultiplier = 1.0;
         float deltaT;
@@ -224,6 +228,7 @@ class VRTrafficSimulation : public VRObject {
         void hideIntersections();
         void showVehicVision();
         void hideVehicVision();
+        void toggleVehicMarkers();
         void toggleLaneChanges();
         void forceIntention(int vID,int behavior);
         string getVehicleData(int ID);

@@ -29,6 +29,7 @@ PyMethodDef VRPyTrafficSimulation::methods[] = {
     {"hideGraph", PyWrap( TrafficSimulation, hideGraph, "hideGraph", void ) },
     {"showIntersections", PyWrap( TrafficSimulation, showIntersections, "showIntersections", void ) },
     {"hideIntersections", PyWrap( TrafficSimulation, hideIntersections, "hideIntersections", void ) },
+    {"toggleVehicMarkers", PyWrap( TrafficSimulation, toggleVehicMarkers, "toggleVehicMarkers", void ) },
     {"toggleLaneChanges", PyWrap( TrafficSimulation, toggleLaneChanges, "toggleLaneChanges", void ) },
     {"showVehicVision", PyWrap( TrafficSimulation, showVehicVision, "showVehicVision", void ) },
     {"hideVehicVision", PyWrap( TrafficSimulation, hideVehicVision, "hideVehicVision", void ) },
