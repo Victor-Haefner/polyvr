@@ -55,6 +55,12 @@ void VRTrafficSigns::setupBaseSign(){
     baseMaterial = VRMaterial::create("trafficSignMat");
     baseMaterial->setTexture( megaTex );
     baseMaterial->enableTransparency();
+    baseMaterial->setShaderParameter<float>("tex", 0);
+    string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/TrafficSigns/";
+    vScript = resDir + "TrafficSigns.vp";
+    fScript = resDir + "TrafficSigns.fp";
+    dfScript = resDir + "TrafficSigns.dfp";
+    this->reloadShader();
 
     //baseMaterialPole = VRMaterial::create("trafficSignMatPole");
     baseMaterialPole = VRMaterial::get("trafficSignMatPole");
@@ -63,6 +69,13 @@ void VRTrafficSigns::setupBaseSign(){
 
     trafficSignsGeo->setMaterial(baseMaterial);
     trafficSignsGeoPoles->setMaterial(baseMaterialPole);
+}
+
+void VRTrafficSigns::reloadShader() {
+    baseMaterial->readVertexShader(vScript);
+    baseMaterial->readFragmentShader(fScript);
+    baseMaterial->readFragmentShader(dfScript, true);
+    baseMaterial->updateDeferredShader();
 }
 
 Vec2i VRTrafficSigns::getVecID(string type) {

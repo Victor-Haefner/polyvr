@@ -516,12 +516,13 @@ void VRRoadNetwork::computeSigns() {
         if ( osmSign ) {
             auto tfsigns = w->getTrafficSigns();
             auto input = signEnt->getValue<string>("info", "");
+            //cout << "--------------OSM sign " << input << endl;
             if (auto laneEnt = signEnt->getEntity("lanes")) {
                 auto roadEnt = laneEnt->getEntity("road");
                 auto road = roadsByEntity[roadEnt];// get vrroad from roadent
                 auto pose = road->getRightEdge(pos);
                 auto d = pose->dir(); d[1] = 0; d.normalize();
-                if (laneEnt->get("direction")->value == "-1") { pose = road->getLeftEdge(pos); d=-d; }
+                if (laneEnt->get("direction")->value == "-1" || input == "CN:Prohibitory:5") { pose = road->getLeftEdge(pos); d=-d; }
                 pose->setDir(d);
                 pose->setUp(Vec3d(0,1,0));
                 tfsigns->addSign(input, pose);

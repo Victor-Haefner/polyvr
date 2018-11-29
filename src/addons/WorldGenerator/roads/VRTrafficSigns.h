@@ -24,6 +24,9 @@ class VRTrafficSigns : public VRRoadBase {
         vector<vector<string>> allFileNames;
         string country;
         //map<int,VRTrafficSign> trafficSignsByID;
+        string vScript;
+        string fScript;
+        string dfScript;
 
         VRGeometryPtr trafficSignsGeo;
         VRGeometryPtr trafficSignsGeoPoles;
@@ -53,6 +56,7 @@ class VRTrafficSigns : public VRRoadBase {
         VRTextureMosaicPtr getTextureMosaic();
         VRGeometryPtr getGeometry();
 
+        void reloadShader();
         void setMatrix(string country);
 };
 

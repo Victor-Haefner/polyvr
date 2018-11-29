@@ -114,6 +114,7 @@ PyMethodDef VRPyTrafficSigns::methods[] = {
     {"getVecID", PyWrap( TrafficSigns, getVecID, "returns ID of sign as vector", Vec2i, string ) },
     {"getOSMTag", PyWrap( TrafficSigns, getOSMTag, "returns OSM tag by ID", string, Vec2i ) },
     {"getTextureMosaic", PyWrap( TrafficSigns, getTextureMosaic, "returns textureMosaic", VRTextureMosaicPtr ) },
+    {"reloadShader", PyWrap( TrafficSigns, reloadShader, "reloads shader", void ) },
     //{"setMegaTexture", PyWrap( TrafficSigns, setMegaTexture, "sets textureMosaic", void, VRTextureMosaicPtr ) },
     {NULL}  /* Sentinel */
 };

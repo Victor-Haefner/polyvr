@@ -473,15 +473,22 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                 } else signEnt->set("type", tag.second);*/
                 bool tmpc = false; //check if custom sign with name
                 bool revDir = false; //check if sign facing other way
+                bool nDir = false; //check if sign facing other way
                 Vec3d tmp = dir;
                 for ( auto tagN : node->tags ) {
                     if ( tagN.first == "traffic_sign" && (tagN.second == "yes" || tagN.second == "custom" || tagN.second == "*") && node->tags.count("name") ) { signEnt->set("type", node->tags["name"]); tmpc = true; }
-                    if ( tagN.first == "traffic_sign" && startswith(tagN.second,"CN:") ) { signEnt->set("type", "OSMSign"); signEnt->set("info",tagN.second); tmpc = true; }
+                    if ( tagN.first == "traffic_sign" && startswith(tagN.second,"CN:") ) {
+                        //cout << "-----------OSMsign" << endl;
+                        signEnt->set("type", "OSMSign");
+                        signEnt->set("info",tagN.second);
+                        if (tagN.second == "CN:Prohibitory:5") nDir = true;
+                        tmpc = true;
+                    }
                     //if ( startswith(tagN.first,"traffic_sign") && (tagN.second == "yes" || tagN.second == "custom") && node->tags.count("name") && !tmpc ) { signEnt->set("type", node->tags["name"]); tmpc = true; }
                     if ( tagN.first == "traffic_sign:backward" ) { tmp = -dir; revDir = true; }
                 }
                 if ( !tmpc ) signEnt->set("type", tag.second);
-
+                if ( nDir ) revDir = false;
                 signEnt->setVec3("position", pos, "Position");
                 signEnt->setVec3("direction", dir, "Direction");
                 for (auto way : node->ways) {

@@ -246,6 +246,15 @@ void VRTrafficSimulation::updateSimulation() {
             return false;
         };
 
+        auto isIntersectionLane = [&](int ID) {
+            auto lane = roadNetwork->getLane(ID);
+            if (lane->get("turnDirection")) {
+                auto turnDir = lane->get("turnDirection")->value;
+                if (turnDir.length() > 2) return true;
+            }
+            return false;
+        };
+
         for (auto user : users) {
             Vec3d p = getPoseTo(user.t)->pos();
             string debug = "";
@@ -258,12 +267,12 @@ void VRTrafficSimulation::updateSimulation() {
                 float D2 = (ep2-p).length();
 
                 if (D1 > userRadius && D2 > userRadius) continue; // outside
-                if (debugOverRideSeedRoad<0 && graph->getPrevEdges(e).size() == 0  && !isPedestrian(e.ID) && !isParkingLane(e.ID)) { // roads that start out of "nowhere"
+                if (debugOverRideSeedRoad<0 && graph->getPrevEdges(e).size() == 0  && !isPedestrian(e.ID) && !isParkingLane(e.ID) && !isIntersectionLane(e.ID)) { // roads that start out of "nowhere"
                     newSeedRoads.push_back( e.ID );
                     continue;
                 }
                 ///TODO: look into radius
-                if ( debugOverRideSeedRoad > -2 && debugOverRideSeedRoad < 0 && (D1 > userRadius*0.5 || D2 > userRadius*0.5) && !isPedestrian(e.ID) ) newSeedRoads.push_back( e.ID ); // on edge
+                if ( debugOverRideSeedRoad > -2 && debugOverRideSeedRoad < 0 && (D1 > userRadius*0.5 || D2 > userRadius*0.5) && !isPedestrian(e.ID) && !isIntersectionLane(e.ID) ) newSeedRoads.push_back( e.ID ); // on edge
                 newNearRoads.push_back( e.ID ); // inside or on edge
             }
             //cout << debug << endl;
