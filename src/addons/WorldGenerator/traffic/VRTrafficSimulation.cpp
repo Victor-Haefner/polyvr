@@ -669,7 +669,10 @@ void VRTrafficSimulation::updateSimulation() {
                             auto left = Vec3d(0,1,0).cross(vDir);
                             if (dir.dot(left)>0.7) vehicle.incTrafficRight = true; //cout << "incoming right" << endl;
                             if (dir.dot(left)<-0.7) vehicle.incTrafficLeft = true; //cout << "incoming left" << endl;
-                            if (dir.dot(vDir)<-0.7) vehicle.incTrafficFront = true;
+                            if (dir.dot(vDir)<-0.7) {
+                                vehicle.incTrafficFront = true;
+                                vehicle.frontVehicLastMove = v.lastMoveTS;
+                            }
                        }
                     }
                     ///--------------
@@ -783,6 +786,7 @@ void VRTrafficSimulation::updateSimulation() {
 
                 bool signalBlock = (vehicle.nextSignalState=="100" || vehicle.nextSignalState=="010");
                 bool interBlock = (vehicle.distanceToNextIntersec < 60 && vehicle.distanceToNextIntersec > 10);
+                bool vehicBlock = false;
                 //if (nextSignal != "000") cout << toString(nextSignal) << endl;
 
                 /*
@@ -827,8 +831,8 @@ void VRTrafficSimulation::updateSimulation() {
                         //cout << roadNetwork->getLane(vehicle.pos.edge)->get("turnDirection")->value << endl;
                         //if (toString(roadNetwork->getLane(vehicle.pos.edge)->get("turnDirection")->value) == "left") { d = 0; return; }
                     }
-                    if (vehicle.incTrafficRight && !signalAhead) { decelerate(); return; } //rudimentary right of way
-                    if (vehicle.incTrafficFront && vehicle.turnAhead == 1) { decelerate(); return; } //rudimentary right of way
+                    if (vehicle.incTrafficRight && !signalAhead && vehicle.turnAhead != 2) { vehicBlock = true; decelerate(); return; } //rudimentary right of way
+                    if (vehicle.incTrafficFront && vehicle.turnAhead == 1 && VRGlobals::CURRENT_FRAME - vehicle.frontVehicLastMove<400) { vehicBlock = true; decelerate(); return; } //rudimentary right of way
 
                     if ( vbeh == vehicle.STRAIGHT ) {
                         if ( ( signalAhead && nextSignalDistance < safetyDis -4 ) && signalBlock ) { decelerate(); return; }
@@ -943,7 +947,7 @@ void VRTrafficSimulation::updateSimulation() {
                 if ( vbeh == vehicle.STRAIGHT &&  inFront) { toChangeLane[vehicle.vID] = 1; }*/
                 //if ( vbeh == vehicle.SWITCHLEFT  && !seesVehicle(vehicle.FRONTLEFT) && !inFront /*&& VRGlobals::CURRENT_FRAME - vehicle.indicatorTS > 200*/ ) propagateVehicle(vehicle, d, vbeh);
                 //if ( vbeh == vehicle.SWITCHRIGHT && !seesVehicle(vehicle.BEHINDRIGHT) && !inFront /*&& VRGlobals::CURRENT_FRAME - vehicle.indicatorTS > 200*/ ) propagateVehicle(vehicle, d, vbeh);
-                if (isSimRunning && VRGlobals::CURRENT_FRAME - vehicle.lastMoveTS > 200 && !interBlock) { // && !interBlock && stopVehicleID != ID.first) {
+                if (isSimRunning && VRGlobals::CURRENT_FRAME - vehicle.lastMoveTS > 200 && !interBlock && !vehicBlock) { // && !interBlock && stopVehicleID != ID.first) {
                     toChangeRoad[road.first].push_back( make_pair(vehicle.vID, -1) ); ///------killswitch if vehicle get's stuck
                 }
                 if (isSimRunning && VRGlobals::CURRENT_FRAME - vehicle.lastMoveTS > 4000) { // && !interBlock && stopVehicleID != ID.first) {
@@ -1319,8 +1323,8 @@ void VRTrafficSimulation::toggleVehicMarkers() {
 }
 
 /** SHOW GRAPH */
-void VRTrafficSimulation::showGraph(){
-    isShowingGraph = true;
+void VRTrafficSimulation::toggleGraph(){
+    isShowingGraph = !isShowingGraph;
     updateGraph();
 }
 
@@ -1407,14 +1411,8 @@ void VRTrafficSimulation::updateGraph(){
 	}
 }
 
-void VRTrafficSimulation::hideGraph(){
-    isShowingGraph = false;
-    updateGraph();
-}
-
 /** SHOW INTERSECTION */
-void VRTrafficSimulation::showIntersections(){ updateIntersectionVis(true); }
-void VRTrafficSimulation::hideIntersections(){ updateIntersectionVis(false); }
+void VRTrafficSimulation::toggleIntersections(){ isShowingIntersecs = !isShowingIntersecs; updateIntersectionVis(isShowingIntersecs); }
 
 void VRTrafficSimulation::updateIntersectionVis(bool in){
     map<int,int> idx;
@@ -1501,32 +1499,15 @@ void VRTrafficSimulation::updateIntersectionVis(bool in){
 	}
 }
 
-/** DISABLING VEHICLE GEOMETRIES*/
-void VRTrafficSimulation::runWithoutGeometries(){
-    isShowingGeometries = false;
-}
-
-void VRTrafficSimulation::runWithGeometries(){
-    isShowingGeometries = true;
-    auto scene = VRScene::getCurrent();
-    string strInput = "graphVizVehicMarkers";
-    if ( scene->getRoot()->find(strInput) ) scene->getRoot()->find(strInput)->destroy();
-
-    string vAnn = "vehicAnn";
-    if (scene->getRoot()->find(vAnn)) scene->getRoot()->find(vAnn)->destroy();
-}
-
 /** VEHICLE VISION*/
-void VRTrafficSimulation::showVehicVision(){
-    isShowingVehicleVision = true;
-}
-
-void VRTrafficSimulation::hideVehicVision(){
-    isShowingVehicleVision = false;
-    auto graph = roadNetwork->getGraph();
-    auto scene = VRScene::getCurrent();
-    string strInput = "graphVizVisionLines";
-    if ( scene->getRoot()->find(strInput) ) scene->getRoot()->find(strInput)->destroy();
+void VRTrafficSimulation::toggleVehicVision(){
+    isShowingVehicleVision = !isShowingVehicleVision;
+    if (!isShowingVehicleVision){
+        auto graph = roadNetwork->getGraph();
+        auto scene = VRScene::getCurrent();
+        string strInput = "graphVizVisionLines";
+        if ( scene->getRoot()->find(strInput) ) scene->getRoot()->find(strInput)->destroy();
+    }
 }
 
 string VRTrafficSimulation::getVehicleData(int ID){

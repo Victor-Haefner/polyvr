@@ -67,6 +67,7 @@ class VRTrafficSimulation : public VRObject {
             bool incTrafficLeft = false;
             bool incTrafficStraight = false;
             bool incTrafficFront = false;
+            int frontVehicLastMove = 0;
 
             map<int, float> vehiclesight;
             map<int, float> vehiclesightFar;
@@ -162,6 +163,7 @@ class VRTrafficSimulation : public VRObject {
         bool isTimeForward = true;
         bool isShowingVehicleVision = false;
         bool isShowingGraph = false;
+        bool isShowingIntersecs = false;
         bool isShowingGeometries = true;
         bool isShowingVehicleMarkers = false;
         bool laneChange = false;
@@ -219,15 +221,10 @@ class VRTrafficSimulation : public VRObject {
         ///Diagnostics:
         void toggleSim();
         void toggleDirection();
-        void runWithoutGeometries();
-        void runWithGeometries();
         void setSpeedmultiplier(float speedMultiplier);
-        void showGraph();
-        void hideGraph();
-        void showIntersections();
-        void hideIntersections();
-        void showVehicVision();
-        void hideVehicVision();
+        void toggleGraph();
+        void toggleIntersections();
+        void toggleVehicVision();
         void toggleVehicMarkers();
         void toggleLaneChanges();
         void forceIntention(int vID,int behavior);
