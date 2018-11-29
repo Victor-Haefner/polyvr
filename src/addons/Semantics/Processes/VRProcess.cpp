@@ -285,10 +285,15 @@ void VRProcess::update() {
     for ( auto subject : query(q_subjects) ) {
         string label;
         if (auto l = subject->get("hasModelComponentLabel") ) label = l->value;
+        //if subject->get("InterfaceSubject")...
+        //add Multisubject
         int nID = addSubject(label)->ID;
         if (auto ID = subject->get("hasModelComponentID") ) nodes[ID->value] = nID;
         //cout << " VRProcess::update subject: " << label << endl;
     }
+
+    //TODO: parse InterfaceSubject
+    //string q_interfaceSubjects = "q(x):InterfaceSubject(x);ModelLayer("+layer->getName()+");has("+layer->getName()+",x)";
 
     map<string, map<string, vector<VREntityPtr>>> messages;
     string q_messages = "q(x):MessageExchange(x);ModelLayer("+layer->getName()+");has("+layer->getName()+",x)";
