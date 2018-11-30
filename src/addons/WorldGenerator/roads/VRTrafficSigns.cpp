@@ -55,12 +55,13 @@ void VRTrafficSigns::setupBaseSign(){
     baseMaterial = VRMaterial::create("trafficSignMat");
     baseMaterial->setTexture( megaTex );
     baseMaterial->enableTransparency();
-    baseMaterial->setShaderParameter<float>("tex", 0);
+    baseMaterial->setLit(true);
+    //baseMaterial->setShaderParameter<float>("tex", 0);
     string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/TrafficSigns/";
     vScript = resDir + "TrafficSigns.vp";
     fScript = resDir + "TrafficSigns.fp";
     dfScript = resDir + "TrafficSigns.dfp";
-    this->reloadShader();
+    //this->reloadShader();
 
     //baseMaterialPole = VRMaterial::create("trafficSignMatPole");
     baseMaterialPole = VRMaterial::get("trafficSignMatPole");

@@ -69,6 +69,7 @@ class VRRoadIntersection : public VRRoadBase {
         void computeLanes(GraphPtr graph);
         void computeMarkings();
         void computeTrafficLights();
+        void computeTrafficSigns();
 
         void addRoad(VRRoadPtr road);
         vector<VRRoadPtr> getRoads();

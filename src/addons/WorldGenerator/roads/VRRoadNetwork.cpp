@@ -523,6 +523,7 @@ void VRRoadNetwork::computeSigns() {
                 auto pose = road->getRightEdge(pos);
                 auto d = pose->dir(); d[1] = 0; d.normalize();
                 if (laneEnt->get("direction")->value == "-1" || input == "CN:Prohibitory:5") { pose = road->getLeftEdge(pos); d=-d; }
+                if (input == "CN:Indicative:7") { pose = road->getSplit(pos); pose->setPos(pose->pos() - Vec3d(0,1.5,0)); }
                 pose->setDir(d);
                 pose->setUp(Vec3d(0,1,0));
                 tfsigns->addSign(input, pose);

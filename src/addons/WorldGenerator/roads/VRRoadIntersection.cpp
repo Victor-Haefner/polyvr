@@ -11,6 +11,7 @@
 #include "core/scene/VRObjectManager.h"
 #include "addons/Semantics/Reasoning/VREntity.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
+#include "addons/Semantics/Reasoning/VROntology.h"
 
 using namespace OSG;
 
@@ -1196,6 +1197,57 @@ void VRRoadIntersection::computeMarkings() {
     }
 }
 
+void VRRoadIntersection::computeTrafficSigns(){
+    auto generateMatchingSigns = [&]() { };
+    auto generateCrossingSigns = [&]() { };
+    auto generateForkingSigns = [&]() { };
+
+    auto generateDefaultSigns = [&]() {
+        string input = "CN:Indicative:7";
+        for (auto roadFront : roadFronts) {
+            Vec3d pos;
+            Vec3d dir;
+            auto road = roadFront->road;
+            auto roadEnt = road->getEntity();
+            auto& data = road->getEdgePoint( entity->getEntity("node") );
+            Vec3d p1 = data.p1;
+            Vec3d p2 = data.p2;
+            pos = (p1+p2)/2;
+            dir = data.n;
+            int n1 = 0; int n2 = 0;
+            vector<VREntityPtr> laneEnts;
+            for (auto laneEnt : roadEnt->getAllEntities("lanes")) {
+                auto laneDir = laneEnt->getValue("direction", 1);
+                Vec3d laneTangent = road->getRightEdge(pos)->dir() * laneDir;
+                if (dir.dot(laneTangent) < -0.5 && !laneEnt->getValue<bool>("pedestrian", false)) {
+                    laneEnts.push_back(laneEnt);
+                    n1++;
+                } else n2++;
+            }
+            if (n1 + n2 < 3) return;
+            auto o = ontology.lock();
+            auto signEnt = o->addEntity("sign", "Sign");
+            signEnt->set("type", "OSMSign");
+            signEnt->set("info", input);
+            for (auto laneEnt : laneEnts) {
+                laneEnt->add("signs",laneEnt->getName());
+                signEnt->add("lanes",laneEnt->getName());
+            }
+            signEnt->setVec3("position", pos, "Position");
+            signEnt->setVec3("direction", dir, "Direction");
+        }
+    };
+
+    switch (type) {
+        case CONTINUATION: generateMatchingSigns(); break;
+        case CROSSING: generateCrossingSigns(); break;
+        case FORK: generateForkingSigns(); break;
+        //case MERGE: break;
+        //case UPLINK: break;
+        default: generateDefaultSigns(); break;
+    }
+}
+
 void VRRoadIntersection::computeLayout(GraphPtr graph) {
     auto node = entity->getEntity("node");
     Vec3d pNode = node->getVec3("position");
@@ -1425,6 +1477,7 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
     if (!resolveSpacialCases()) resolveEdgeIntersections();
     computeRoadFronts();
     computeIntersectionPaths();
+    computeTrafficSigns();
     computePatch();
     elevateRoadNodes();
 }

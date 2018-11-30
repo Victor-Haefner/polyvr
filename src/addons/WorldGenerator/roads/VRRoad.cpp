@@ -75,6 +75,29 @@ PosePtr VRRoad::getLeftEdge(Vec3d pos) {
     return pose;
 }
 
+PosePtr VRRoad::getSplit(Vec3d pos) {
+    int n1 = 0;
+    int n2 = 0;
+    if (auto o = ontology.lock()) {
+        auto roadEnt = getEntity();
+        for (auto laneEnt : roadEnt->getAllEntities("lanes")) {
+            auto laneDir = laneEnt->getValue("direction", 1);
+            if ( laneDir > 0 ) n1++;
+            if ( laneDir < 0 ) n2++;
+        }
+    }
+
+    auto path = toPath(getEntity()->getEntity("path"), 12);
+    float t = path->getClosestPoint(pos); // get nearest road path position to pos
+    auto pose = path->getPose(t);
+    float offsetter = 0.0;
+    if (t < 0.1) offsetter = offsetIn;
+    if (t > 0.9) offsetter = offsetOut;
+    Vec3d p = pose->pos() + pose->x()*(getWidth()*0.5 + offsetter) - pose->x()*(getWidth()/(n1+n2)*n1 );
+    pose->setPos(p);
+    return pose;
+}
+
 PosePtr VRRoad::getPosition(float t) {
     vector<PathPtr> paths;
     for (auto p : entity->getAllEntities("path")) {
