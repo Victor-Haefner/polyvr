@@ -14,6 +14,8 @@ OSG_BEGIN_NAMESPACE;
 class VRSerial {
     private:
         int fd = 0;
+        char buf[100];
+        string interface;
 
         int set_interface_attribs (int fd, int speed, int parity);
 
