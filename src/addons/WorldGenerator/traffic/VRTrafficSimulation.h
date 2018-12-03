@@ -190,6 +190,7 @@ class VRTrafficSimulation : public VRObject {
         void updateDensityVisual(bool remesh = false);
 
         void addUser(VRTransformPtr t);
+        VRTransformPtr getUser();
 
         void addVehicle(int roadID, float density, int type);
         void addVehicles(int roadID, float density, int type);
