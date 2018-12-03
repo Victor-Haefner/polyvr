@@ -137,10 +137,11 @@ string VRTrafficSigns::getOSMTag(Vec2i ID) {
 }
 
 void VRTrafficSigns::loadTextures(){
-    string path;
+    string path = "world/assets/roadsigns/";
+    if (!exists(path)) path = "../world/assets/roadsigns/";
     megaTex = VRTextureMosaic::create();
     auto seedTex = VRTexture::create();
-    string sTexFile =  "world/assets/roadsigns/emptyPixel.png";
+    string sTexFile =  path+"emptyPixel.png";
     seedTex->read(sTexFile);
 	megaTex->add(seedTex, Vec2i(0,0), Vec2i(0,0));
 	//cout << path << endl;
@@ -183,7 +184,7 @@ void VRTrafficSigns::loadTextures(){
         }*/
 
         string fileBaseName = "China_road_sign__";
-        path = "world/assets/roadsigns/China/";
+        path = path+"China/";
         if (!exists(path)) return;
         int nType = 0;
         for (auto type : types) {
@@ -198,11 +199,11 @@ void VRTrafficSigns::loadTextures(){
             }
             nType++;
         }
-        megaTex->write("world/assets/roadsigns/trafficSignMegaTex.png");
+        megaTex->write(path+"trafficSignMegaTex.png");
     }
     if (country == "DE") {
         //example TODO
-        path = path+ "/world/assets/roadsigns/Germany/";
+        path = path+ "Germany/";
     }
 }
 
