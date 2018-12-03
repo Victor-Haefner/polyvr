@@ -21,6 +21,7 @@ PyMethodDef VRPyTrafficSimulation::methods[] = {
     {"setSeedRoad", PyWrap( TrafficSimulation, setSeedRoad, "setSeedRoad", void, int ) },
     {"setSeedRoadVec", PyWrap( TrafficSimulation, setSeedRoadVec, "setSeedRoadVec", void, vector<int> ) },
     {"runDiagnostics", PyWrap( TrafficSimulation, runDiagnostics, "runDiagnostics", void ) },
+    {"runVehicleDiagnostics", PyWrap( TrafficSimulation, runVehicleDiagnostics, "runVehicleDiagnostics", void ) },
     //{"isSeedRoad", PyWrap( TrafficSimulation, isSeedRoad, "isSeedRoad", bool, int ) },
     //{"forceIntention", PyWrap( TrafficSimulation, forceIntention, "forceIntention", void, int, int ) },
     {"toggleGraph", PyWrap( TrafficSimulation, toggleGraph, "enables/disables visualisation of: roadnetwork graph", void ) },

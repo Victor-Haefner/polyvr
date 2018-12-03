@@ -231,6 +231,7 @@ class VRTrafficSimulation : public VRObject {
         string getVehicleData(int ID);
         string getEdgeData(int ID);
         void runDiagnostics();
+        void runVehicleDiagnostics();
         void stopVehicle(int ID);
         void deleteVehicle(int ID);
         void setSeedRoad(int debugOverRideSeedRoad);

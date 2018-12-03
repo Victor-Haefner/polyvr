@@ -1638,6 +1638,39 @@ void VRTrafficSimulation::runDiagnostics(){
     CPRINT(returnInfo);
 }
 
+void VRTrafficSimulation::runVehicleDiagnostics(){
+    string returnInfo = "";
+    string nl = "\n ";
+    string vehiInfo = "ALL VEHICLES: ";
+    string posEdgeInfo = "Positions Edge: ";
+    string posPosInfo = "Positions Pos: ";
+    string velInfo = "Velocities: ";
+
+    auto fit = [&](int input) {
+        string res = "";
+        int l1 = toString(input).length();
+        for (int i=l1 ; i<4 ; i++) res+=" ";
+        return res+toString(input);
+    };
+
+    ///get all vehicles
+    int n1=0;
+    for (auto v : vehicles) {
+        vehiInfo += toString(v.second.vID) + " ";
+        posEdgeInfo += toString(v.second.pos.edge) + " ";
+        posPosInfo += toString(v.second.pos.pos) + " ";
+        velInfo += toString(v.second.currentVelocity) + " ";
+        n1++;
+    }
+
+    returnInfo += fit(n1) + "--" + vehiInfo;
+    returnInfo += nl + fit(n1) + "--" + posEdgeInfo;
+    returnInfo += nl + fit(n1) + "--" + posPosInfo;
+    returnInfo += nl + fit(n1) + "--" + velInfo;
+
+    CPRINT(returnInfo);
+}
+
 bool VRTrafficSimulation::isSeedRoad(int roadID){
     for (auto e : seedRoads){if (roadID==e) return true;}
     return false;
