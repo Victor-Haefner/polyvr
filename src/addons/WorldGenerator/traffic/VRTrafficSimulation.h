@@ -166,6 +166,7 @@ class VRTrafficSimulation : public VRObject {
         bool isShowingIntersecs = false;
         bool isShowingGeometries = true;
         bool isShowingVehicleMarkers = false;
+        int whichVehicleMarkers = -1;
         bool laneChange = false;
         float speedMultiplier = 1.0;
         float deltaT;
@@ -225,7 +226,7 @@ class VRTrafficSimulation : public VRObject {
         void toggleGraph();
         void toggleIntersections();
         void toggleVehicVision();
-        void toggleVehicMarkers();
+        void toggleVehicMarkers(int i);
         void toggleLaneChanges();
         void forceIntention(int vID,int behavior);
         string getVehicleData(int ID);

@@ -26,7 +26,7 @@ PyMethodDef VRPyTrafficSimulation::methods[] = {
     //{"forceIntention", PyWrap( TrafficSimulation, forceIntention, "forceIntention", void, int, int ) },
     {"toggleGraph", PyWrap( TrafficSimulation, toggleGraph, "enables/disables visualisation of: roadnetwork graph", void ) },
     {"toggleIntersections", PyWrap( TrafficSimulation, toggleIntersections, "enables/disables visualisation of: intersection location and type", void ) },
-    {"toggleVehicMarkers", PyWrap( TrafficSimulation, toggleVehicMarkers, "enables/disables visualisation of: vehicle IDs, next pinpointed intersection, turn direction red left, yellow right, blue straight", void ) },
+    {"toggleVehicMarkers", PyWrap( TrafficSimulation, toggleVehicMarkers, "enables/disables visualisation of: vehicle IDs, next pinpointed intersection, turn direction red left, yellow right, blue straight ; -1, default; 0,1", void, int ) },
     {"toggleLaneChanges", PyWrap( TrafficSimulation, toggleLaneChanges, "toggleLaneChanges", void ) },
     {"toggleVehicVision", PyWrap( TrafficSimulation, toggleVehicVision, "enables/disables visualisation of: vehicle vision", void ) },
     {"stopVehicle", PyWrap( TrafficSimulation, stopVehicle, "stopVehicle", void, int ) },
