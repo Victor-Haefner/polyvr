@@ -66,9 +66,11 @@ PolyVR* PolyVR::get() {
 
 void PolyVR::shutdown() {
     cout << "PolyVR::shutdown" << endl;
-    VRSharedMemory sm("PolyVR_System");
-    int* i = sm.addObject<int>("identifier");
-    *i = 0;
+    try {
+        VRSharedMemory sm("PolyVR_System");
+        int* i = sm.addObject<int>("identifier");
+        *i = 0;
+    } catch(...) {}
 
     auto pvr = get();
     pvr->scene_mgr->closeScene();
@@ -111,9 +113,11 @@ void PolyVR::init(int argc, char **argv) {
     cout << "Init OSG\n";
     osgInit(argc,argv);
 
-    VRSharedMemory sm("PolyVR_System");
-    int* i = sm.addObject<int>("identifier");
-    *i = 1;
+    try {
+        VRSharedMemory sm("PolyVR_System");
+        int* i = sm.addObject<int>("identifier");
+        *i = 1;
+    } catch(...) {}
 
     PrimeMaterialRecPtr pMat = OSG::getDefaultMaterial();
     OSG::setName(pMat, "default_material");
@@ -217,9 +221,11 @@ void PolyVR::checkProcessesAndSockets() {
     ofstream f("setup/.startup"); f.write(timestamp.c_str(), timestamp.size()); f.close();
 
     // TODO!!
-    VRSharedMemory sm("PolyVR_System");// check for running PolyVR process
-    int i = sm.getObject<int>("identifier");
-    if (i) cout << "Error: A PolyVR instance is already running!\n";
+    try {
+        VRSharedMemory sm("PolyVR_System");// check for running PolyVR process
+        int i = sm.getObject<int>("identifier");
+        if (i) cout << "Error: A PolyVR instance is already running!\n";
+    } catch(...) {}
 }
 
 
