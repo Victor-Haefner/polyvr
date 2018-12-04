@@ -58,6 +58,7 @@ class VRTrafficSimulation : public VRObject {
             vector<VRGeometryPtr> headlights;
             vector<VRGeometryPtr> backlights;
 
+            vector<int> lastFiveSteps;
             ///Perception
             float distanceToNextSignal;
             float distanceToNextIntersec;

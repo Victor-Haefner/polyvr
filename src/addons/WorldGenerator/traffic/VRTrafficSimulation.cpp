@@ -89,6 +89,9 @@ void VRTrafficSimulation::Vehicle::setDefaults() {
 
     signalAhead = false;
     nextSignalState = "000"; //red|organge|green
+
+    lastFiveSteps.clear();
+    for (int i = 0; i<5 ;i++) lastFiveSteps.push_back(0);
 }
 
 void VRTrafficSimulation::Vehicle::show(Graph::position p) {
@@ -799,18 +802,6 @@ void VRTrafficSimulation::updateSimulation() {
                 bool vehicBlock = false;
                 //if (nextSignal != "000") cout << toString(nextSignal) << endl;
 
-                /*
-                Vec3d left = vehicle.t->getPose()->up().cross(vehicle.lastMove);
-                left.normalize();
-                Vec3d dir = vehicle.t->getWorldPose()->dir();
-                dir.normalize();
-                Vec3d tmp = vehicle.lastMove;
-                tmp.normalize();
-                bool checkLeft = left.dot(dir) > 0;
-                cout << toString(vehicle.t->getPose()->up()) << endl;
-                if ( (checkLeft && vehicle.distanceToNextIntersec < 10) || (vehicle.distanceToNextIntersec < 10 && vehicle.turnAtIntersec) ) vehicle.turnAtIntersec = true;
-                else vehicle.turnAtIntersec = false;*/
-
                 vehicle.targetVelocity = roadVelocity;
                 if ( vehicle.distanceToNextIntersec < 20 && vehicle.turnAhead>0) vehicle.targetVelocity = 20/3.6;
                 if ( vehicle.distanceToNextIntersec < 10 && vehicle.turnAhead>0) vehicle.targetVelocity = 15/3.6;
@@ -819,12 +810,41 @@ void VRTrafficSimulation::updateSimulation() {
                 auto inFront = [&]() { return vehicle.vehiclesightFarID.count(INFRONT); };
                 auto comingLeft = [&]() { return vehicle.vehiclesightFarID.count(FRONTLEFT); };
                 auto comingRight = [&]() { return vehicle.vehiclesightFarID.count(FRONTRIGHT); };
-                auto accelerate = [&]() { d = vehicle.currentVelocity + accFactor*deltaT; };
-                auto decelerate = [&]() { d = vehicle.currentVelocity + decFactor*deltaT; };
-                auto holdVelocity = [&]() { d = vehicle.currentVelocity; };
-                //auto nextVehicleTurner = [&]() { return (vehicles[vehicle.vehiclesightFarID[INFRONT]].turnAtIntersec || vehicles[vehicle.vehiclesightFarID[FRONTRIGHT]].turnAtIntersec); };
 
-                //if ( nextEdges.size() > 1 ) { nextIntersection = (1 - vehicle.pos.pos) * roads[vehicle.pos.edge].length; cout << toString(nextIntersection) << endl; }
+                ///Velocity control functions
+                auto accelerate = [&]() {
+                    d = vehicle.currentVelocity + accFactor*deltaT; /*
+                    vehicle.lastFiveSteps.erase(vehicle.lastFiveSteps.begin());
+                    vehicle.lastFiveSteps.push_back(0);
+                    int sum = 0;
+                    for (auto a : vehicle.lastFiveSteps) sum += a;
+                    if (sum >  0) */ for (auto l : vehicle.backlights) l->setMaterial(carLightRedOff);
+                };
+                auto decelerate = [&]() {
+                    d = vehicle.currentVelocity + decFactor*deltaT;
+                    for (auto l : vehicle.backlights) l->setMaterial(carLightRedOn);
+                };
+                auto holdVelocity = [&]() {
+                    d = vehicle.currentVelocity;
+                    for (auto l : vehicle.backlights) l->setMaterial(carLightRedOff);
+                };
+
+                auto signalLights = [&](int input) {
+                    if (input == 0) { //straight
+                        for (auto l : vehicle.turnsignalsBL) l->setMaterial(carLightOrangeOff);
+                        for (auto l : vehicle.turnsignalsFL) l->setMaterial(carLightOrangeOff);
+                        for (auto l : vehicle.turnsignalsBR) l->setMaterial(carLightOrangeOff);
+                        for (auto l : vehicle.turnsignalsFR) l->setMaterial(carLightOrangeOff);
+                    }
+                    if (input == 1) { //left
+                        for (auto l : vehicle.turnsignalsBL) l->setMaterial(carLightOrangeBlink);
+                        for (auto l : vehicle.turnsignalsFL) l->setMaterial(carLightOrangeBlink);
+                    }
+                    if (input == 2) { //right
+                        for (auto l : vehicle.turnsignalsBR) l->setMaterial(carLightOrangeBlink);
+                        for (auto l : vehicle.turnsignalsFR) l->setMaterial(carLightOrangeBlink);
+                    }
+                };
 
                 auto behave = [&]() {
                 ///LOGIC
@@ -834,17 +854,17 @@ void VRTrafficSimulation::updateSimulation() {
                     bool turnAhead = vehicle.turnAhead>0;
                     turnAhead = true;
 
-                    //if ( nextIntersection < 20 && turnAhead ) { vehicle.targetVelocity = 20/3.6; }
-                    //if ( nextIntersection < 15 && turnAhead ) { vehicle.targetVelocity = 10/3.6; }
-                    //if ( vehicle.turnAtIntersec ) { d = 0; return; vehicle.targetVelocity = 0; }
-                    if (roadNetwork->getLane(vehicle.pos.edge)->get("turnDirection")) {
-                        //cout << roadNetwork->getLane(vehicle.pos.edge)->get("turnDirection")->value << endl;
-                        //if (toString(roadNetwork->getLane(vehicle.pos.edge)->get("turnDirection")->value) == "left") { d = 0; return; }
-                    }
+                    ///INICATORS
+                    if (nextIntersection > 35) signalLights(0);
+                    if (vehicle.turnAhead == 1 && nextIntersection < 35) signalLights(1); //left
+                    if (vehicle.turnAhead == 2 && nextIntersection < 35) signalLights(2); //right
+
+                    ///RIGHT OF WAY
                     if (vehicle.incTrafficRight && !signalAhead && vehicle.turnAhead != 2) { vehicBlock = true; decelerate(); return; } //rudimentary right of way
                     if (vehicle.incTrafficFront && vehicle.turnAhead == 1 ) { vehicBlock = true; decelerate(); return; } //rudimentary right of way
                     if (vehicle.incTrafficFront && vehicle.turnAhead == 1 && VRGlobals::CURRENT_FRAME - vehicle.frontVehicLastMove<400) { vehicBlock = true; decelerate(); return; } //rudimentary right of way
 
+                    ///VELOCITY CONTROL
                     if ( vbeh == vehicle.STRAIGHT ) {
                         if ( ( signalAhead && nextSignalDistance < safetyDis -4 ) && signalBlock ) { decelerate(); return; }
                         if ( !signalAhead && nextSignalDistance < safetyDis -4 && signalBlock ) { decelerate(); return; }
@@ -854,11 +874,11 @@ void VRTrafficSimulation::updateSimulation() {
                             //if ( vehicle.turnAtIntersec && ( comingRight() || comingLeft() ) && !nextVehicleTurner() ) { decelerate(); return; }
                             if ( sinceLastLS > 200 && nextIntersection > 20 && checkR(vehicle.vID) && vehicle.currentVelocity > 20 ) { toChangeLane[vehicle.vID] = 2; }
                             //check if road is ending/intersections etc - possible breaking
-                            if ( vehicle.currentVelocity < vehicle.targetVelocity ) { accelerate(); return; }
+                            if ( vehicle.currentVelocity < vehicle.targetVelocity*0.95 ) { accelerate(); return; }
                             //targetVelocity not reached //accelerate
-                            if ( vehicle.currentVelocity > vehicle.targetVelocity ) { decelerate(); return; }
+                            if ( vehicle.currentVelocity > vehicle.targetVelocity*1.05 ) { decelerate(); return; }
                             //targetVelocity overreached //decelerate
-                            if ( vehicle.currentVelocity == vehicle.targetVelocity ) { holdVelocity(); return; }
+                            if ( vehicle.currentVelocity > vehicle.targetVelocity*0.95 && vehicle.currentVelocity < vehicle.targetVelocity*1.05 ) { holdVelocity(); return; }
                             //targetVelocity reached //proceed
                         }
                         if ( inFront() ) {
@@ -870,19 +890,23 @@ void VRTrafficSimulation::updateSimulation() {
                             //if ( nextIntersection < safetyDis + 0.2 ) { decelerate(); return; }
                             if ( vehicles[frontID].currentVelocity > vehicle.currentVelocity && vehicle.currentVelocity < vehicle.targetVelocity ) {
                             //vehicle ahead faster, and targetVelocity not reached
-                                if ( disToFrontV - nextMoveAcc > safetyDis ) { accelerate(); return; }
+                                if ( disToFrontV - nextMoveAcc > safetyDis + 2 ) { accelerate(); return; }
                                 //accelerate
                                 if ( disToFrontV - nextMoveAcc < safetyDis ) { decelerate(); return; }
                                 //break/decelerate
+                                if ( disToFrontV - nextMoveAcc < safetyDis + 2 && disToFrontV - nextMoveAcc > safetyDis  ) { holdVelocity(); return; }
+                                //hold velocity
                             }
                             if ( vehicles[frontID].currentVelocity <= vehicle.currentVelocity && vehicle.currentVelocity < vehicle.targetVelocity ) {
                             //vehicle ahead slower
                                 if ( sinceLastLS > 200 && nextIntersection > 20 && checkL(vehicle.vID) && vehicle.currentVelocity > 20/3.6 ) { toChangeLane[vehicle.vID] = 1; }
                                 //check if lane switch possible
-                                if ( disToFrontV - nextMoveAcc > safetyDis ) { accelerate(); return; }
+                                if ( disToFrontV - nextMoveAcc > safetyDis + 2 ) { accelerate(); return; }
                                 //accelerate
                                 if ( disToFrontV - nextMoveAcc < safetyDis ) { decelerate(); return; }
                                 //break/decelerate
+                                if ( disToFrontV - nextMoveAcc < safetyDis + 2 && disToFrontV - nextMoveAcc > safetyDis  ) { holdVelocity(); return; }
+                                //hold velocity
                             }
                             if ( vehicle.currentVelocity >= vehicle.targetVelocity ) {
                             //vehicle ahead slower
@@ -902,9 +926,11 @@ void VRTrafficSimulation::updateSimulation() {
                         //vehicle ahead?
                             int frontID = vehicle.vehiclesightFarID[INFRONT];
                             float disToFrontV = vehicle.vehiclesightFar[INFRONT];
-                            if ( disToFrontV - nextMove > safetyDis ) { accelerate(); return; }
+                            if ( disToFrontV - nextMove > safetyDis + 2 ) { accelerate(); return; }
                             //accelerate
                             if ( disToFrontV - nextMoveAcc < safetyDis ) { decelerate(); return; }
+                            //break/decelerate
+                            if ( disToFrontV - nextMoveAcc < safetyDis + 2 && disToFrontV - nextMoveAcc > safetyDis ) { holdVelocity(); return; }
                             //break/decelerate
                         }
                     }
@@ -915,9 +941,11 @@ void VRTrafficSimulation::updateSimulation() {
                         //vehicle ahead?
                             int frontID = vehicle.vehiclesightFarID[INFRONT];
                             float disToFrontV = vehicle.vehiclesightFar[INFRONT];
-                            if ( disToFrontV - nextMove > safetyDis ) { accelerate(); return; }
+                            if ( disToFrontV - nextMove > safetyDis + 2 ) { accelerate(); return; }
                             //accelerate
                             if ( disToFrontV - nextMoveAcc < safetyDis ) { decelerate(); return; }
+                            //break/decelerate
+                            if ( disToFrontV - nextMoveAcc < safetyDis + 2 && disToFrontV - nextMoveAcc > safetyDis ) { holdVelocity(); return; }
                             //break/decelerate
                         }
                     }
@@ -1184,12 +1212,12 @@ void VRTrafficSimulation::addVehicle(int roadID, float density, int type) {
             for (auto obj : v.mesh->getChildren(true, "Geometry")) {
                 VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(obj);
                 string name = geo->getBaseName();
-                if (name == "TurnSignalBL" || name == "turnsignalBL") v.turnsignalsBL.push_back(geo);
-                if (name == "TurnSignalBR" || name == "turnsignalBR") v.turnsignalsBR.push_back(geo);
-                if (name == "TurnSignalFL" || name == "turnsignalFL") v.turnsignalsFL.push_back(geo);
-                if (name == "TurnSignalFR" || name == "turnsignalFR") v.turnsignalsFR.push_back(geo);
-                if (name == "Headlight" || name == "headlight") v.headlights.push_back(geo);
-                if (name == "Backlight" || name == "backlight") v.backlights.push_back(geo);
+                if (name == "TurnSignalBL" || name == "turnsignalBL") { geo->makeUnique(); v.turnsignalsBL.push_back(geo); }
+                if (name == "TurnSignalBR" || name == "turnsignalBR") { geo->makeUnique(); v.turnsignalsBR.push_back(geo); }
+                if (name == "TurnSignalFL" || name == "turnsignalFL") { geo->makeUnique(); v.turnsignalsFL.push_back(geo); }
+                if (name == "TurnSignalFR" || name == "turnsignalFR") { geo->makeUnique(); v.turnsignalsFR.push_back(geo); }
+                if (name == "Headlight" || name == "headlight") { geo->makeUnique(); v.headlights.push_back(geo); }
+                if (name == "Backlight" || name == "backlight") { geo->makeUnique(); v.backlights.push_back(geo); }
             }
 
             for (auto l : v.turnsignalsBL) l->setMaterial(carLightOrangeOff);
@@ -1291,8 +1319,8 @@ void VRTrafficSimulation::changeLane(int ID, int direction) {
         }
     };
 
-    if ( direction == 1 && check(1) ) { checked = true; v.roadTo = edgeLeft; v.speed += 0.03; /* signalLights(1); */ }
-    if ( direction == 2 && check(2)) { checked = true; v.roadTo = edgeRight; v.speed -= 0.03; /* signalLights(2); */ }
+    if ( direction == 1 && check(1) ) { checked = true; v.roadTo = edgeLeft; v.speed += 0.03; signalLights(1); }
+    if ( direction == 2 && check(2)) { checked = true; v.roadTo = edgeRight; v.speed -= 0.03; signalLights(2); }
     if ( checked ){
         v.laneChangeState = 1;
         v.behavior = direction;
