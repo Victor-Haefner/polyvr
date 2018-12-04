@@ -24,6 +24,8 @@ PyMethodDef VRPyProcess::methods[] = {
     {"getMessages", PyWrap(Process, getMessages, "Return messages - [ProcessNode] getMessages()", vector<VRProcessNodePtr> ) },
     {"getSubjectMessages", PyWrap(Process, getSubjectMessages, "Return subject messages - [ProcessNode] getSubjectMessages(subject)", vector<VRProcessNodePtr>, int ) },
     {"getMessageSubjects", PyWrap(Process, getMessageSubjects, "Return message subjects - [ProcessNode] getMessageSubjects(message)", vector<VRProcessNodePtr>, int ) },
+    {"getMessageSender", PyWrap(Process, getMessageSender, "Returns the sender of the message - [ProcessNode] getMessageSender(message)", vector<VRProcessNodePtr>, int ) },
+    {"getMessageReceiver", PyWrap(Process, getMessageReceiver, "Returns the receiver of the message - [ProcessNode] getMessageReceiver(message)", vector<VRProcessNodePtr>, int ) },
     {"getSubjectStates", PyWrap(Process, getSubjectStates, "Return subject actions - [ProcessNode] getSubjectActions(subject)", vector<VRProcessNodePtr>, int ) },
     {"getStateTransitions", PyWrap(Process, getStateTransitions, "Return action transitions - [ProcessNode] getActionTransitions(subject, action)", vector<VRProcessNodePtr>, int, int ) },
     //{"getTransitionStates", PyWrap(Process, getTransitionStates, "Return actions connected by a given transition - [ProcessNode] getTransitionActions(subject, transition)", vector<VRProcessNodePtr>, int, int ) },
