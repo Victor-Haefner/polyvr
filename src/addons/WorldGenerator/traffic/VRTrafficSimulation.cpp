@@ -1064,6 +1064,8 @@ void VRTrafficSimulation::updateSimulation() {
     showVehicleMarkers();
 }
 
+VRTransformPtr VRTrafficSimulation::getUser() { return users[0].t; }
+
 void VRTrafficSimulation::addUser(VRTransformPtr t) {
     auto v = Vehicle( Graph::position(0, 0.0) );
     nID++;
