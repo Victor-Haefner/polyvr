@@ -87,8 +87,9 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             if (reSignOut<0) j=Nout-j-1;
 
             if (Nin == Nout && i != Nout-j-1) {
-                if (roadFronts.size()!=4) return false;
-                if (!parallel) return false;
+                //if (roadFronts.size()!=4) return false;
+                //if (!parallel) return false;
+                return false;
             }
 
             if (Nin == Nout && Nin>1 && roadFronts.size()>2 && !oneway) {
