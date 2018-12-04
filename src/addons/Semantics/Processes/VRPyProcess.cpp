@@ -53,6 +53,7 @@ PyMethodDef VRPyProcessLayout::methods[] = {
     {"getSIDPathtool", PyWrap(ProcessLayout, getSIDPathtool, "Access path tool", VRPathtoolPtr ) },
     {"getSBDPathtool", PyWrap(ProcessLayout, getSBDPathtool, "Access path tool", VRPathtoolPtr, int ) },
     {"setProcess", PyWrap(ProcessLayout, setProcess, "Set process - setProcess( process )", void, VRProcessPtr ) },
+    {"getProcess", PyWrap(ProcessLayout, getProcess, "Get process - ProcessNodePtr getProcess()", VRProcessPtr) },
     {"getElement", PyWrap(ProcessLayout, getElement, "Return element by ID - obj getElement( int ID )", VRObjectPtr, int ) },
     {"getElementID", PyWrap(ProcessLayout, getElementID, "Return element ID - ID getElementID( VRObjectPtr geo )", int, VRObjectPtr ) },
     {"getProcessNode", PyWrap(ProcessLayout, getProcessNode, "Return process node by ID - process node getElementID( int i )", VRProcessNodePtr, int ) },
