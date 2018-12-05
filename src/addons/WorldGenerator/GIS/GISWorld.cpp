@@ -85,6 +85,7 @@ void GISWorld::setupOntology() {
     Road->addProperty("buildings", Building);
     Road->addProperty("type", "string");
     Sign->addProperty("type", "string");
+    Sign->addProperty("info", "string");
     Sign->addProperty("direction", "Direction");
     Sign->addProperty("lanes", Lane);
     RoadIntersection->addProperty("node", "Node");

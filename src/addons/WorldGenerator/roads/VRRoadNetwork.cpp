@@ -6,6 +6,7 @@
 #include "../terrain/VRTerrain.h"
 #include "../traffic/VRTrafficLights.h"
 #include "../VRWorldGenerator.h"
+#include "VRTrafficSigns.h"
 #include "VRAsphalt.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
@@ -495,10 +496,11 @@ void VRRoadNetwork::computeSigns() {
         Vec3d pos = signEnt->getVec3("position");
         Vec3d dir = signEnt->getVec3("direction");
         string type = signEnt->getValue<string>("type", "");
+        bool osmSign = (type == "OSMSign");
         if (signEnt->is_a("TrafficLight")) continue;
         //cout << " sign: " << type << endl;
         auto sign = assets->copy(type, Pose::create(pos, dir), false);
-        if (!sign) {
+        if (!sign && !osmSign) {
             sign = assets->copy("Sign", Pose::create(pos, dir), false);
             if (sign) { // TODO: add label
                 auto surface = dynamic_pointer_cast<VRGeometry>( sign->findAll("Sign")[3] );
@@ -510,9 +512,25 @@ void VRRoadNetwork::computeSigns() {
                 surface->setMaterial(m);
             }
         }
-        if (!sign) continue;
 
-        //cout << " sign: " << type << " road: " << signEnt->getEntity("road") << endl;
+        if ( osmSign ) {
+            auto tfsigns = w->getTrafficSigns();
+            auto input = signEnt->getValue<string>("info", "");
+            //cout << "--------------OSM sign " << input << endl;
+            if (auto laneEnt = signEnt->getEntity("lanes")) {
+                auto roadEnt = laneEnt->getEntity("road");
+                auto road = roadsByEntity[roadEnt];// get vrroad from roadent
+                auto pose = road->getRightEdge(pos);
+                auto d = pose->dir(); d[1] = 0; d.normalize();
+                if (laneEnt->get("direction")->value == "-1" || input == "CN:Prohibitory:5") { pose = road->getLeftEdge(pos); d=-d; }
+                if (input == "CN:Indicative:7") { pose = road->getSplit(pos); pose->setPos(pose->pos() - Vec3d(0,1.5,0)); }
+                pose->setDir(d);
+                pose->setUp(Vec3d(0,1,0));
+                tfsigns->addSign(input, pose);
+            }
+        }
+
+        if (!sign) continue;
         if (auto laneEnt = signEnt->getEntity("lanes")) {
             auto roadEnt = laneEnt->getEntity("road");
             auto road = roadsByEntity[roadEnt];// get vrroad from roadent
@@ -638,6 +656,7 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p, int type) {
 }
 
 VREntityPtr VRRoadNetwork::getLane(int eID) { return graphEdgeEntities[eID]; }
+int VRRoadNetwork::getLaneID(VREntityPtr lane) { return graphEdgeIDs[lane]; }
 
 vector<VRRoadPtr> VRRoadNetwork::getNodeRoads(VREntityPtr node) {
     vector<VREntityPtr> nPaths;
@@ -946,6 +965,7 @@ void VRRoadNetwork::connectGraph(vector<VREntityPtr> nodes, vector<Vec3d> norms,
     int eID = graph->connect(nID1, nID2);
     graphNormals[eID] = norms;
     graphEdgeEntities[eID] = lane;
+    graphEdgeIDs[lane] = eID;
 }
 
 

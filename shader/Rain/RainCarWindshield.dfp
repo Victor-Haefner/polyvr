@@ -284,6 +284,7 @@ vec4 drawBorder(vec4 check) {
 }
 
 void main() {
+	if (pass > 0) discard;
 	radius *= scale*0.1;
 	radius = clamp(radius, 0.0501, 0.3);
 
