@@ -215,7 +215,8 @@ vec3 checkrad() {
 	
 	if (debugB) color = vec3(1.,0.,0.);
 	//if (isD(3) ||isD(5) || isD(8)) return color;
-	if (isD(2) || isD(3) ||isD(5) || isD(8)) return color;
+	//if (isD(2) || isD(3) ||isD(5) || isD(8)) return color;
+	if (isD(2) || isD(8)) return color;	
 	else discard;
 }
 
