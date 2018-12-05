@@ -5,8 +5,10 @@
 #include "addons/Semantics/VRSemanticsFwd.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 #include "core/math/VRMathFwd.h"
+#include "core/math/pose.h"
 #include "core/math/graph.h"
 #include "core/objects/object/VRObject.h"
+#include <boost/thread/recursive_mutex.hpp>
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -50,6 +52,9 @@ class VRTrafficSimulation : public VRObject {
             float width = 1.7;
             bool isUser = false;
             bool collisionDetected;
+            PosePtr simPose;
+
+            //boost::recursive_mutex mtxV;
 
             vector<VRGeometryPtr> turnsignalsBL;
             vector<VRGeometryPtr> turnsignalsBR;
@@ -147,6 +152,10 @@ class VRTrafficSimulation : public VRObject {
         };
 
         VRRoadNetworkPtr roadNetwork;
+        VRThreadCbPtr worker;
+
+        boost::recursive_mutex mtx;
+
         map<int, laneSegment> roads;
         map<int, Vehicle> vehicles;
         vector<int> seedRoads;
@@ -204,6 +213,9 @@ class VRTrafficSimulation : public VRObject {
         ~VRTrafficSimulation();
 
         static VRTrafficSimulationPtr create();
+
+        void initiateWorker();
+        void trafficSimThread(VRThreadWeakPtr tw);
 
         void setRoadNetwork(VRRoadNetworkPtr roads);
         void updateSimulation();
