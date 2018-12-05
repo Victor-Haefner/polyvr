@@ -45,11 +45,11 @@ struct Variable {
     bool has(VariablePtr other, VPath& p1, VPath& p2, VROntologyPtr onto);
     bool is(VariablePtr other, VPath& p1, VPath& p2);
 
-    Variable(VROntologyPtr onto, string concept, string var);
+    Variable(VROntologyPtr onto, string concept, string var, VRSemanticContextPtr context);
     Variable(VROntologyPtr onto, string val);
     Variable();
 
-    static VariablePtr create(VROntologyPtr onto, string concept, string var);
+    static VariablePtr create(VROntologyPtr onto, string concept, string var, VRSemanticContextPtr context);
     static VariablePtr create(VROntologyPtr onto, string val);
 
     void addEntity(VREntityPtr e);
@@ -84,7 +84,8 @@ struct Query {
     void substituteRequest(VRStatementPtr s);
 };
 
-struct VRSemanticContext {
+struct VRSemanticContext : public std::enable_shared_from_this<VRSemanticContext>{
+    map<string, bool> options;
     map<string, VariablePtr> vars;
     map<string, Query> rules;
     list<Query> queries;
@@ -95,8 +96,10 @@ struct VRSemanticContext {
     int itr_max = 5;
 
     VRSemanticContext(VROntologyPtr onto = 0);
-
+    VRSemanticContextPtr ptr();
     static VRSemanticContextPtr create(VROntologyPtr onto = 0);
+
+    bool getOption(string option);
 };
 
 OSG_END_NAMESPACE;

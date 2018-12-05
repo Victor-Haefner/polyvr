@@ -301,8 +301,9 @@ void VROntology::addModule(string mod) {
 void VROntology::setFlag(string f) { flag = f; }
 string VROntology::getFlag() { return flag; }
 
-vector<VREntityPtr> VROntology::process(string query) {
+vector<VREntityPtr> VROntology::process(string query, bool allowAssumptions) {
     auto r = VRReasoner::create();
+    r->setOption("allowAssumptions", allowAssumptions);
     return r->process(query, ptr());
 }
 

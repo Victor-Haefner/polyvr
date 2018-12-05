@@ -33,25 +33,27 @@ string Variable::toString() {
     !valid: something is terribly wrong!
 */
 
-Variable::Variable(VROntologyPtr onto, string concept, string var) {
+Variable::Variable(VROntologyPtr onto, string concept, string var, VRSemanticContextPtr context) {
     auto cl = onto->getConcept(concept);
     if (cl == 0) return;
 
+    this->concept = concept; // TODO: maybe the entity has a concept that inherits from the concept passed above?
+    value = var;
+
     if ( auto i = onto->getEntity(var) ) {
         addEntity(i);
-        this->concept = concept; // TODO: maybe the entity has a concept that inherits from the concept passed above?
         isAnonymous = false;
     } else { // get all entities of the required type
         for (auto i : onto->getEntities(concept)) addEntity(i);
         if (entities.size() == 0) {
-            auto i = onto->addEntity(var, concept);
-            addEntity(i);
-            isAssumption = true; // TODO: put that in the evaluation
+            if (context->getOption("allowAssumptions")) {
+                auto i = onto->addEntity(var, concept);
+                addEntity(i);
+                isAssumption = true; // TODO: put that in the evaluation
+            } else return;
         }
-        this->concept = concept;
     }
 
-    value = var;
     valid = true;
 }
 
@@ -59,7 +61,7 @@ Variable::Variable(VROntologyPtr onto, string val) {
     value = val;
 }
 
-shared_ptr<Variable> Variable::create(VROntologyPtr onto, string concept, string var) { return shared_ptr<Variable>( new Variable(onto, concept, var) ); }
+shared_ptr<Variable> Variable::create(VROntologyPtr onto, string concept, string var, VRSemanticContextPtr context) { return shared_ptr<Variable>( new Variable(onto, concept, var, context) ); }
 shared_ptr<Variable> Variable::create(VROntologyPtr onto, string val) { return shared_ptr<Variable>( new Variable(onto, val) ); }
 
 void Variable::addEntity(VREntityPtr e) {
@@ -267,7 +269,7 @@ VRSemanticContext::VRSemanticContext(VROntologyPtr onto) {
     //cout << "Init VRSemanticContext:" << endl;
     for (auto i : onto->entities) {
         if (i.second->getConcepts().size() == 0) { cout << "VRSemanticContext::VRSemanticContext instance " << i.second->getName() << " has no concepts!" << endl; continue; }
-        vars[i.second->getName()] = Variable::create( onto, i.second->getConcepts()[0]->getName(), i.second->getName() );
+        vars[i.second->getName()] = Variable::create( onto, i.second->getConcepts()[0]->getName(), i.second->getName(), ptr() );
         //cout << " add instance " << i.second->toString() << endl;
     }
 
@@ -295,6 +297,7 @@ VRSemanticContext::VRSemanticContext(VROntologyPtr onto) {
     }
 }
 
+VRSemanticContextPtr VRSemanticContext::ptr() { return static_pointer_cast<VRSemanticContext>( shared_from_this() ); }
 VRSemanticContextPtr VRSemanticContext::create(VROntologyPtr onto) { return VRSemanticContextPtr( new VRSemanticContext(onto) ); }
 
 // TODO: parse concept statements here
@@ -428,6 +431,10 @@ void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of
     request = replace;
 }
 
+bool VRSemanticContext::getOption(string option) {
+    if (options.count(option)) return options[option];
+    return false;
+}
 
 
 

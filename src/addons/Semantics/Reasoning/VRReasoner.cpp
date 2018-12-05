@@ -26,6 +26,8 @@ VRReasoner::VRReasoner() {
     verbConsole = false;
 }
 
+void VRReasoner::setOption(string option, bool b) { options[option] = b; }
+
 vector<string> VRReasoner::split(string s, string d) {
     vector<string> res;
     size_t pos = 0;
@@ -273,7 +275,8 @@ bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
         for (auto e : v->entities) {
             if (!v->evaluations.count(e.first)) continue;
             auto& eval = v->evaluations[e.first];
-            if (eval.state == Evaluation::VALID) context->results.push_back(e.second);
+            bool valid = (eval.state == Evaluation::VALID);
+            if (valid) context->results.push_back(e.second);
         }
         statement->state = 1;
         print("  process results of queried variable " + x, GREEN);
@@ -312,7 +315,7 @@ bool VRReasoner::evaluate(VRStatementPtr statement, VRSemanticContextPtr context
                 return true;
             }
 
-            auto var = Variable::create( context->onto, concept, name );
+            auto var = Variable::create( context->onto, concept, name, context );
             context->vars[name] = var;
             print("  added variable " + var->toString(), BLUE);
             statement->state = 1;
@@ -327,6 +330,7 @@ vector<VREntityPtr> VRReasoner::process(string initial_query, VROntologyPtr onto
     print(initial_query);
 
     auto context = VRSemanticContext::create(onto); // create context
+    context->options = options;
     context->queries.push_back(Query(initial_query));
 
     while( context->queries.size() ) { // while queries to process

@@ -79,7 +79,7 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
     void setFlag(string f);
     string getFlag();
 
-    vector<VREntityPtr> process(string query);
+    vector<VREntityPtr> process(string query, bool allowAssumptions = false);
 };
 
 OSG_END_NAMESPACE;

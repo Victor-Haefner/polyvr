@@ -96,7 +96,7 @@ PyMethodDef VRPyOntology::methods[] = {
     {"merge", PyWrap(Ontology, merge, "Merge in another ontology - merge( ontology )", void, VROntologyPtr ) },
     {"copy", PyWrap(Ontology, copy, "Copy the ontology - ontology copy()", VROntologyPtr ) },
     {"addModule", PyWrap(Ontology, addModule, "Add module from library", void, string) },
-    {"process", PyWrap(Ontology, process, "Process a query - process( str query )", vector<VREntityPtr>, string ) },
+    {"process", PyWrap(Ontology, process, "Process a query - process( str query )", vector<VREntityPtr>, string, bool ) },
     {NULL}  /* Sentinel */
 };
 
