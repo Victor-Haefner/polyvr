@@ -164,6 +164,7 @@ class VRTrafficSimulation : public VRObject {
         vector<Vehicle> users;
         list<Vehicle> vehiclePool;
         vector<VRObjectPtr> models;
+        vector<int> toBeAddedVehicles;
         int maxUnits = 0;
         int numUnits = 0;
         size_t nID = -1;
