@@ -1,5 +1,6 @@
 #include "VRHDLC.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/system/VRSystem.h"
 
 #include <boost/filesystem.hpp>
 
@@ -55,6 +56,7 @@ int VRSerial::set_interface_attribs (int fd, int speed, int parity) {
     tty.c_ispeed = speed;
     tty.c_ospeed = speed;
     ioctl(fd, TCSETS2, &tty);
+    ioctl(fd, TIOCEXCL);
 
     /*cfsetospeed (&tty, speed);
     cfsetispeed (&tty, speed);
@@ -78,6 +80,7 @@ int VRSerial::set_interface_attribs (int fd, int speed, int parity) {
 }
 
 VRSerial::VRSerial(string interfaceName) {
+    interface = interfaceName;
     fd = open(interfaceName.c_str(), O_RDWR | O_NOCTTY | O_SYNC | O_NONBLOCK);
     if (fd < 0) {
         cout << "Connecting to VRSerial port " << interfaceName << " failed!\n";
@@ -93,7 +96,6 @@ VRSerial::~VRSerial() {}
 VRSerialPtr VRSerial::create(string interfaceName) { return VRSerialPtr(new VRSerial(interfaceName)); }
 
 vector<unsigned char> VRSerial::read() {
-    char buf[100];
     int n = ::read(fd, buf, sizeof buf);
     if (n < 0) return vector<unsigned char>();
     string s(buf, n);
@@ -105,8 +107,8 @@ void VRSerial::write(vector<unsigned char> data) {
     ::write (fd, s.c_str(), s.size());
 }
 
-bool VRSerial::good() { // TODO
-    return true;
+bool VRSerial::good() {
+    return exists(interface);
 }
 
 

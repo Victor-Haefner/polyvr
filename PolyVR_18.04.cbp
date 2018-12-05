@@ -274,8 +274,13 @@
 			<Add directory="/usr/lib/OCE" />
 		</Linker>
 		<ExtraCommands>
-			<Add after='/bin/bash -c &quot;cp -u -p ressources/cef/icudtl.dat bin/Debug/ 2&gt;/dev/null&quot;' />
-			<Add after='/bin/bash -c &quot;cp -u -p ressources/cef/icudtl.dat bin/Release/ 2&gt;/dev/null&quot;' />
+			<Add after='/bin/bash -c &quot;mkdir -p bin/Release 2&gt;/dev/null&quot;' />
+			<Add after='/bin/bash -c &quot;mkdir -p bin/Debug 2&gt;/dev/null&quot;' />
+			<Add after='/bin/bash -c &quot;cp -u -p ressources/cef18/*.bin bin/Release/ 2&gt;/dev/null&quot;' />
+			<Add after='/bin/bash -c &quot;cp -u -p ressources/cef18/*.bin bin/Debug/ 2&gt;/dev/null&quot;' />
+			<Add after='/bin/bash -c &quot;cp -u -p ressources/cef18/icudtl.dat bin/Release/ 2&gt;/dev/null&quot;' />
+			<Add after='/bin/bash -c &quot;cp -u -p ressources/cef18/icudtl.dat bin/Debug/ 2&gt;/dev/null&quot;' />
+			<Mode after="always" />
 		</ExtraCommands>
 		<Unit filename="src/PolyVR.cpp" />
 		<Unit filename="src/PolyVR.h" />
