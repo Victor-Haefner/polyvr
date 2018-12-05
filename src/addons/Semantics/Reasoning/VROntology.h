@@ -59,6 +59,7 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
     VREntityPtr addEntity(string name, string concept = "", map<string, string> props = map<string, string>());
     VREntityPtr addVectorEntity(string name, string concept, string x, string y, string z);
     VREntityPtr addVectorEntity(string name, string concept, vector<string> val);
+    VREntityPtr addVec3Entity(string name, string concept, Vec3d v);
 
     template <typename T, typename R, typename ...Args>
     VRCallbackStrWrapperPtr addBuiltin(string builtin, R (T::*callback)(Args...) );

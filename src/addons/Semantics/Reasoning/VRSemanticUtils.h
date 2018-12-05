@@ -99,6 +99,7 @@ struct VRSemanticContext : public std::enable_shared_from_this<VRSemanticContext
     VRSemanticContextPtr ptr();
     static VRSemanticContextPtr create(VROntologyPtr onto = 0);
 
+    void init();
     bool getOption(string option);
 };
 

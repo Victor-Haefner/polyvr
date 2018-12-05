@@ -263,8 +263,11 @@ void VPath::setValue(string v, VREntityPtr e) {
 }
 
 VRSemanticContext::VRSemanticContext(VROntologyPtr onto) {
-    if (!onto) return;
     this->onto = onto;
+}
+
+void VRSemanticContext::init() {
+    if (!onto) return;
 
     //cout << "Init VRSemanticContext:" << endl;
     for (auto i : onto->entities) {
@@ -298,7 +301,12 @@ VRSemanticContext::VRSemanticContext(VROntologyPtr onto) {
 }
 
 VRSemanticContextPtr VRSemanticContext::ptr() { return static_pointer_cast<VRSemanticContext>( shared_from_this() ); }
-VRSemanticContextPtr VRSemanticContext::create(VROntologyPtr onto) { return VRSemanticContextPtr( new VRSemanticContext(onto) ); }
+
+VRSemanticContextPtr VRSemanticContext::create(VROntologyPtr onto) {
+    auto context = VRSemanticContextPtr( new VRSemanticContext(onto) );
+    context->init();
+    return context;
+}
 
 // TODO: parse concept statements here
 Query::Query() {}
@@ -326,20 +334,39 @@ string Term::computeExpression(VRSemanticContextPtr context) {
     Expression me(str);
     if (!me.isMathExpression()) return "";
     me.computeTree(); // build RDP tree
+
+    /*auto asVec3 = [&](VREntityPtr e) {
+        Vec3d res;
+        auto vec = getVector(prop, i);
+        int N = vec.size(); N = min(N,3);
+        for (int i=0; i<N; i++) res[i] = toFloat( vec[i]->value );
+        return res;
+    };*/
+
     for (auto l : me.getLeafs()) {
         VPath p(l->param);
         l->setValue(p.root); // default is to use path root, might just be a number
         if (context->vars.count(p.root)) {
             auto v = context->vars[p.root];
             for (auto e : v->entities) {
-                auto vals = p.getValue(e.second);
-                for (auto val : vals) {
+                if (e.second->is_a("Vector")) {
+                    auto props = e.second->getAll();
+                    vector<string> vec(props.size());
+                    for (int i=0; i<props.size(); i++) vec[i] = props[i]->value;
+                    string val = "("+vec[0]+","+vec[1]+","+vec[2]+")";
                     l->setValue(val);
-                    cout << " computeExpression, replace " << p.root << " by " << val << endl;
+                    cout << "  computeExpression, replace " << p.root << " by " << val << endl;
+                } else {
+                    auto vals = p.getValue(e.second);
+                    for (auto val : vals) {
+                        l->setValue(val);
+                        cout << "  computeExpression, replace " << p.root << " by " << val << endl;
+                    }
                 }
             }
         }
     }
+
     string res = me.compute();
     cout << " computeExpression '"+str+"' results to " << res << endl;
     return res;
@@ -391,13 +418,15 @@ void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of
     for (auto s : substitutes) cout << "  substitute "+s.first+" "+s.second << endl;
 
     for (auto statement : statements) { // substitute values in all statements of the query
+        cout << " substitute statement " << statement->toString() << endl;
         for (auto& ts : statement->terms) {
+            cout << "  substitute term " << ts.str << endl;
             if (ts.isMathExpression()) {
                 Expression e(ts.str);
                 e.computeTree();
-                cout << " substitute expression: " << e.toString() << endl;
+                cout << "   substitute expression: " << e.toString() << " leafs: " << e.getLeafs().size() << endl;
                 for (auto& l : e.getLeafs()) {
-                    for (uint i=0; i<request->terms.size(); i++) {
+                    /*for (uint i=0; i<request->terms.size(); i++) {
                         auto& t1 = request->terms[i];
                         //cout << " substitute " << l->param << " , " << t1.path.root << " in expression " << ts.str << " ?" << endl;
                         if (t1.path.root == l->param) substitute(l->param);
@@ -409,13 +438,23 @@ void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of
                                 l->param = lpath.toString();
                             }
                         }
+                    }*/
+                    if (ts.path.root == l->param) {
+                        cout << "    substitute 1 param: " << l->param << endl;
+                        substitute(l->param);
+                    } else {
+                        VPath lpath(l->param);
+                        cout << "    substitute 2 param: " << lpath.root << endl;
+                        substitute(lpath.root);
+                        lpath.nodes[0] = lpath.root;
+                        l->param = lpath.toString();
                     }
                 }
                 ts.str = e.toString();
                 ts.path = VPath(ts.str);
-                cout << " substituted expression: " << ts.str << endl;
+                cout << "    substituted expression: " << ts.str << endl;
             } else {
-                for (uint i=0; i<request->terms.size(); i++) {
+                /*for (uint i=0; i<request->terms.size(); i++) { // this has trouble when verbs are identical
                     auto& t1 = request->terms[i];
                     if (t1.path.root == ts.path.root) {
                         substitute(ts.path.root);
@@ -423,7 +462,12 @@ void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of
                         ts.str = ts.path.toString();
                         ts.path = VPath(ts.str);
                     }
-                }
+                }*/
+                substitute(ts.path.root);
+                ts.path.nodes[0] = ts.path.root;
+                ts.str = ts.path.toString();
+                ts.path = VPath(ts.str);
+                cout << "    substituted term: " << ts.str << endl;
             }
         }
     }

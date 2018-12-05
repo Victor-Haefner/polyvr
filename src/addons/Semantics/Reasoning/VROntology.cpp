@@ -307,5 +307,8 @@ vector<VREntityPtr> VROntology::process(string query, bool allowAssumptions) {
     return r->process(query, ptr());
 }
 
+VREntityPtr VROntology::addVec3Entity(string name, string concept, Vec3d v) {
+    return addVectorEntity(name, concept, {::toString(v[0]), ::toString(v[1]), ::toString(v[2])});
+}
 
 
