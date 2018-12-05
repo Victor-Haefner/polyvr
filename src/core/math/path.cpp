@@ -23,6 +23,19 @@ Path::~Path() {}
 
 PathPtr Path::create() { return PathPtr(new Path()); }
 
+bool Path::isCrossing(PathPtr path) {
+    for (uint i = 1; i<positions.size(); i++) {
+        auto p1 = positions[i-1];
+        auto p2 = positions[i];
+        auto t = path->getClosestPoint(p1);
+        auto p = path->getPosition(t);
+        auto d1 = p - p1;
+        auto d2 = p - p2;
+        if (d1.dot(d2) < 0) return true;
+    }
+    return false;
+}
+
 Vec3d Path::projectInPlane(Vec3d v, Vec3d n, bool keep_length) {
     n.normalize();
     float l;

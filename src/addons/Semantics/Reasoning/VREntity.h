@@ -10,6 +10,13 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
+struct VRPropertyValue {// allows to cast type in py bindings
+    VRPropertyPtr p;
+    VROntologyPtr o;
+    VRPropertyValue(VRPropertyPtr p, VROntologyPtr o) : p(p), o(0) {}
+    VRPropertyValue() {}
+};
+
 struct VREntity : public VROntoID, public VRName {
     vector<VRConceptWeakPtr> concepts;
     vector<string> conceptNames;
@@ -22,6 +29,7 @@ struct VREntity : public VROntoID, public VRName {
     static VREntityPtr create(string name = "none", VROntologyPtr o = 0, VRConceptPtr c = 0);
     VREntityPtr copy();
     void addConcept(VRConceptPtr c);
+    VRConceptPtr getConcept();
     vector<VRConceptPtr> getConcepts();
     vector<string> getConceptNames();
     VRPropertyPtr getProperty(string p, bool warn = true);
@@ -44,6 +52,11 @@ struct VREntity : public VROntoID, public VRName {
     vector<VRPropertyPtr> getAll(const string& prop = "");
     vector<VRPropertyPtr> getVector(const string& prop, int i = 0);
     vector< vector<VRPropertyPtr> > getAllVector(const string& prop);
+
+    VRPropertyValue getStringValue(const string& prop, int i = 0);
+    vector<VRPropertyValue> getAllStringValues(const string& prop = "");
+    vector<VRPropertyValue> getStringVector(const string& prop, int i = 0);
+    vector< vector<VRPropertyValue> > getAllStringVector(const string& prop);
 
     template<class T> T getValue(const string& prop, T t, int i = 0) {
         auto P = get(prop, i);

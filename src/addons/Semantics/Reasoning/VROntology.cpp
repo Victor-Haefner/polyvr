@@ -103,7 +103,7 @@ vector<VRConceptPtr> VROntology::getConcepts() {
     return res;
 }
 
-VRConceptPtr VROntology::addConcept(string concept, string parents, string comment) {
+VRConceptPtr VROntology::addConcept(string concept, string parents, map<string, string> props, string comment) {
     if (concepts.count(concept) && concept != "Thing") { cout << "WARNING in VROntology::addConcept, " << concept << " known, skipping!\n"; return 0;  }
 
     vector<VRConceptPtr> Parents;
@@ -123,6 +123,7 @@ VRConceptPtr VROntology::addConcept(string concept, string parents, string comme
     for (uint i=1; i<Parents.size(); i++) Parents[i]->append(Concept);
     Concept->addAnnotation(comment, "comment");
     addConcept(Concept);
+    for (p : props) Concept->addProperty(p.first, p.second);
     return Concept;
 }
 
@@ -152,6 +153,10 @@ void VROntology::remEntity(VREntityPtr e) {
     if (!e) return;
     if (!entities.count(e->ID)) return;
     entities.erase(e->ID);
+}
+
+void VROntology::remEntity(string name) {
+    remEntity(getEntity(name));
 }
 
 void VROntology::remEntities(string concept) {
@@ -234,10 +239,11 @@ void VROntology::addEntity(VREntityPtr& e) {
     //cout << "VROntology::addEntity " << entities.size() << " " << entities[e->ID] << endl;
 }
 
-VREntityPtr VROntology::addEntity(string name, string concept) {
+VREntityPtr VROntology::addEntity(string name, string concept, map<string, string> props) {
     auto c = getConcept(concept);
     auto e = VREntity::create(name, ptr(), c);
     addEntity(e);
+    for (auto p : props) e->set(p.first, p.second);
     /*int ID = guid();
     auto p = entities.emplace(ID, name, ptr(), c);
     VREntityPtr e = p.first->second;

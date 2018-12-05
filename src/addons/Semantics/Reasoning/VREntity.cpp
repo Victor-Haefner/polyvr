@@ -39,6 +39,11 @@ VRObjectPtr VREntity::getSGObject() { return sgObject.lock(); }
 
 void VREntity::addConcept(VRConceptPtr c) { concepts.push_back(c); }
 
+VRConceptPtr VREntity::getConcept() {
+    for (auto cw : concepts) if (auto c = cw.lock()) return c;
+    return 0;
+}
+
 vector<VRConceptPtr> VREntity::getConcepts() {
     vector<VRConceptPtr> res;
     for (auto cw : concepts) if (auto c = cw.lock()) res.push_back(c);
@@ -164,6 +169,32 @@ VRPropertyPtr VREntity::get(const string& prop, int i) {
     if (i < 0) i += props.size();
     if (i >= int(props.size())) return 0;
     return props[i];
+}
+
+VRPropertyValue VREntity::getStringValue(const string& prop, int i) {
+    return VRPropertyValue(get(prop, i), ontology.lock());
+}
+
+vector<VRPropertyValue> VREntity::getAllStringValues(const string& prop) {
+    vector<VRPropertyValue> res;
+    for (auto p : getAll(prop)) res.push_back( VRPropertyValue(p, ontology.lock()) );
+    return res;
+}
+
+vector<VRPropertyValue> VREntity::getStringVector(const string& prop, int i) {
+    vector<VRPropertyValue> res;
+    for (auto p : getVector(prop, i)) res.push_back( VRPropertyValue(p, ontology.lock()) );
+    return res;
+}
+
+vector< vector<VRPropertyValue> > VREntity::getAllStringVector(const string& prop) {
+    vector< vector<VRPropertyValue> > res;
+    for (auto pv : getAllVector(prop)) {
+        vector<VRPropertyValue> r;
+        for (auto p : pv) r.push_back( VRPropertyValue(p, ontology.lock()) );
+        res.push_back(r);
+    }
+    return res;
 }
 
 VREntityPtr VREntity::getEntity(const string& prop, int i) {

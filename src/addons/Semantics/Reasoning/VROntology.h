@@ -48,14 +48,15 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
     void addEntity(VREntityPtr& e);
     void remConcept(VRConceptPtr c);
     void remEntity(VREntityPtr e);
+    void remEntity(string name);
     void remEntities(string concept);
     void remRule(VROntologyRulePtr rule);
     void renameConcept(VRConceptPtr c, string newName);
     void renameEntity(VREntityPtr e, string s);
 
-    VRConceptPtr addConcept(string concept, string parent = "", string comment = "");
+    VRConceptPtr addConcept(string concept, string parent = "", map<string, string> props = map<string, string>(), string comment = "");
     VROntologyRulePtr addRule(string rule, string ac);
-    VREntityPtr addEntity(string name, string concept);
+    VREntityPtr addEntity(string name, string concept = "", map<string, string> props = map<string, string>());
     VREntityPtr addVectorEntity(string name, string concept, string x, string y, string z);
     VREntityPtr addVectorEntity(string name, string concept, vector<string> val);
 

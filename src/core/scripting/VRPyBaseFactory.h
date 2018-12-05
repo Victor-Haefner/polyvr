@@ -7,6 +7,7 @@
 #include "core/utils/VRCallbackWrapperT.h"
 
 template<typename T> bool toValue(PyObject* o, T& b);
+
 template<typename T> bool toValue(PyObject* o, vector<T>& v) {
     for (int i=0; i<VRPyBase::pySize(o); i++) {
         T t;
@@ -16,6 +17,36 @@ template<typename T> bool toValue(PyObject* o, vector<T>& v) {
     }
     return 1;
 }
+
+template<typename T> bool toValue(PyObject* o, vector<vector<T>>& v) {
+    for (int i=0; i<VRPyBase::pySize(o); i++) {
+        PyObject* oi = PyList_GetItem(o, i);
+        vector<T> v2;
+        for (int j=0; j<VRPyBase::pySize(oi); j++) {
+            T t;
+            PyObject* oi = PyList_GetItem(o, i);
+            if (!toValue(oi, t)) return 0;
+            v2.push_back( t );
+        }
+        v.push_back( v2 );
+    }
+    return 1;
+}
+
+template<typename T, typename U> bool toValue(PyObject* o, map<T, U>& m) {
+    PyObject* keys = PyDict_Keys(o);
+    for (int i=0; i<VRPyBase::pySize(keys); i++) {
+        T t;
+        U u;
+        PyObject* k = PyList_GetItem(keys, i);
+        PyObject* f = PyDict_GetItem(o, k);
+        if (!toValue(k, t)) return 0;
+        if (!toValue(f, u)) return 0;
+        m[t] = u;
+    }
+    return 1;
+}
+
 template<typename T> bool toValue(PyObject* o, std::shared_ptr<VRFunction<T>>& v) {
     //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!
     if (VRPyBase::isNone(o)) v = 0;
