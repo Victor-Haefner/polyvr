@@ -606,8 +606,8 @@ void VRTrafficSimulation::updateSimulation() {
             auto p = v.t->getWorldPose();
             p->setPos(p->pos() - globalOffset);
             auto simpleDis = (pose->pos() - p->pos()).length();
-            //if (!tmpUser && simpleDis > 100) vehicle.t->setVisible(false);
-            //if (simpleDis < 100) { vehicle.t->setVisible(true); tmpUser = true; }
+            if (!tmpUser && simpleDis > 500) vehicle.t->setVisible(false);
+            if (simpleDis < 500) { vehicle.t->setVisible(true); tmpUser = true; }
             if (simpleDis > safetyDis + 10) continue;
             calcFramePoints(v);
             float diss = calcDisToFP(vehicle,v);
