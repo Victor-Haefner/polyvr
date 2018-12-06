@@ -13,7 +13,7 @@ OSG_BEGIN_NAMESPACE;
 struct VRPropertyValue {// allows to cast type in py bindings
     VRPropertyPtr p;
     VROntologyPtr o;
-    VRPropertyValue(VRPropertyPtr p, VROntologyPtr o) : p(p), o(0) {}
+    VRPropertyValue(VRPropertyPtr p, VROntologyPtr o) : p(p), o(o) {}
     VRPropertyValue() {}
 };
 
