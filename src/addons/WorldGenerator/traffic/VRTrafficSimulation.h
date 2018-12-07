@@ -52,6 +52,7 @@ class VRTrafficSimulation : public VRObject {
             float width = 1.7;
             bool isUser = false;
             bool shouldBeVisible = false;
+            bool isVisible = true;
             bool collisionDetected;
             PosePtr simPose;
             int type;
@@ -166,11 +167,13 @@ class VRTrafficSimulation : public VRObject {
         vector<int> nearRoads;
         vector<int> forceSeedRoads;
         vector<Vehicle> users;
-        list<Vehicle> vehiclePool;
+        list<int> vehiclePool;
         vector<VRObjectPtr> models;
         vector<int> toBeAddedVehicles;
         vector<int> toBeShownVehicles;
         vector<int> toBeHiddenVehicles;
+        vector<int> toBeMadeInvisVehicles;
+        vector<int> toBeTransformedVehicles;
         int maxUnits = 0;
         int numUnits = 0;
         size_t nID = -1;
@@ -207,6 +210,9 @@ class VRTrafficSimulation : public VRObject {
         void updateGraph();
         void updateIntersectionVis(bool in);
 
+        ///Diagnostics
+        bool hidden = false;
+
     public:
         VRTrafficSimulation();
         ~VRTrafficSimulation();
@@ -234,6 +240,7 @@ class VRTrafficSimulation : public VRObject {
 
         ///Diagnostics:
         void toggleSim();
+        void toggleVisibility();
         void toggleDirection();
         void setSpeedmultiplier(float speedMultiplier);
         void toggleGraph();
