@@ -5,6 +5,7 @@
 #include <map>
 
 #include <OpenSG/OSGVector.h>
+#include "core/math/VRMathFwd.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -79,9 +80,13 @@ class Expression {
         Expression(string s);
         ~Expression();
 
+        static ExpressionPtr create();
+
         bool isMathExpression();
-        void computeTree();
+        void makeTree();
         vector<Node*> getLeafs();
+        void set(string s);
+        string computeTree();
         string compute();
         string toString();
 };

@@ -333,7 +333,7 @@ bool Term::isMathExpression() { Expression e(str); return e.isMathExpression(); 
 string Term::computeExpression(VRSemanticContextPtr context) {
     Expression me(str);
     if (!me.isMathExpression()) return "";
-    me.computeTree(); // build RDP tree
+    me.makeTree(); // build RDP tree
 
     /*auto asVec3 = [&](VREntityPtr e) {
         Vec3d res;
@@ -367,7 +367,7 @@ string Term::computeExpression(VRSemanticContextPtr context) {
         }
     }
 
-    string res = me.compute();
+    string res = me.computeTree();
     cout << " computeExpression '"+str+"' results to " << res << endl;
     return res;
 }
@@ -423,7 +423,7 @@ void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of
             cout << "  substitute term " << ts.str << endl;
             if (ts.isMathExpression()) {
                 Expression e(ts.str);
-                e.computeTree();
+                e.makeTree();
                 cout << "   substitute expression: " << e.toString() << " leafs: " << e.getLeafs().size() << endl;
                 for (auto& l : e.getLeafs()) {
                     /*for (uint i=0; i<request->terms.size(); i++) {

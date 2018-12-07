@@ -2,6 +2,7 @@
 #define VRPYMATH_H_INCLUDED
 
 #include "VRPyObject.h"
+#include "core/math/Expression.h"
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
@@ -81,6 +82,10 @@ struct VRPyLine : VRPyBaseT<OSG::Line> {
     static PyObject* intersect(VRPyLine* self, PyObject *args);
     static PyObject* pos(VRPyLine* self);
     static PyObject* dir(VRPyLine* self);
+};
+
+struct VRPyExpression : VRPyBaseT<OSG::Expression> {
+    static PyMethodDef methods[];
 };
 
 #endif // VRPYMATH_H_INCLUDED

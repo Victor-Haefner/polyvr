@@ -519,3 +519,20 @@ PyObject* VRPyLine::intersect(VRPyLine* self, PyObject *args) {
     auto i = insct( self->l.getPosition(), self->l.getDirection(), L->l.getPosition(), L->l.getDirection() );
     return ::toPyObject( i );
 }
+
+
+
+
+// expression bindings
+
+simplePyType(Expression, New_ptr);
+
+PyMethodDef VRPyExpression::methods[] = {
+    {"set", PyWrap2( Expression, set, "Set expression", void, string ) },
+    {"compute", PyWrap2( Expression, compute, "Compute expression", string ) },
+    {NULL}  /* Sentinel */
+};
+
+
+
+

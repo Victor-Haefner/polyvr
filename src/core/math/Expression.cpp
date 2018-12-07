@@ -106,6 +106,7 @@ string Expression::Node::treeToString(string indent) {
 }
 
 void Expression::Node::compute() { // compute value based on left and right values and param as operator
+    if (!left || !right) return;
     if (left->value == 0 || right->value == 0) return;
     char op = param[0];
     if (op == '+') value = left->value->add(right->value);
@@ -213,6 +214,8 @@ void Expression::buildTree() { // build a binary expression tree from the prefix
         } else nodeStack.push(node);
     }
     tree = nodeStack.top(); nodeStack.pop();
+
+    for (auto l : getLeafs()) l->setValue(l->param);
     //cout << "expression tree:\n" << tree->treeToString() << " " << tree->parent << endl;
 }
 
@@ -232,12 +235,14 @@ Expression::Expression(string s) {
 
 Expression::~Expression() {}
 
+ExpressionPtr Expression::create() { return ExpressionPtr( new Expression("") ); }
+
 bool Expression::isMathExpression() {
     for (auto c : data) if (isMathToken(c)) return true;
     return false;
 }
 
-void Expression::computeTree() {
+void Expression::makeTree() {
     convToPrefixExpr();
     buildTree();
 }
@@ -248,16 +253,23 @@ vector<Expression::Node*> Expression::getLeafs() {
     return res;
 }
 
-string Expression::compute() { // compute result of binary expression tree
+void Expression::set(string s) { data = s; }
+
+string Expression::computeTree() { // compute result of binary expression tree
     std::function<void(Node*)> subCompute = [&](Node* n) {
-        if (!n || !n->left || !n->right) return;
+        if (!n) return;
         subCompute(n->left);
         subCompute(n->right);
         n->compute();
     };
     subCompute(tree);
-    if (tree->value) return tree->value->toString();
-    else return "";
+    if (!tree || !tree->value) return "";
+    return tree->value->toString();
+}
+
+string Expression::compute() {
+    makeTree();
+    return computeTree();
 }
 
 string Expression::toString() { return tree->toString(); }
