@@ -84,10 +84,14 @@ Expression::Node::~Node() { if (value) delete value; }
 
 void Expression::Node::setValue(float f) { value = new Value<float>(f); }
 void Expression::Node::setValue(Vec3d v) { value = new Value<Vec3d>(v); }
+
 void Expression::Node::setValue(string s) {
-    int N = std::count(s.begin(), s.end(), ' ');
+    int N = std::count(s.begin(), s.end(), ',');
+    cout << "Expression::Node::setValue " << s << "  " << N << endl;
     if (N == 0) setValue(toFloat(s));
-    if (N == 2) setValue(toValue<Vec3d>(s));
+    if (N == 2) {
+        setValue(toValue<Vec3d>(s));
+    }
 }
 
 string Expression::Node::toString() {
@@ -220,7 +224,7 @@ void Expression::buildTree() { // build a binary expression tree from the prefix
 }
 
 Expression::Expression(string s) {
-    data = s;
+    set(s);
 
     OperatorHierarchy['+'] = 6;
     OperatorHierarchy['-'] = 6;
@@ -253,7 +257,12 @@ vector<Expression::Node*> Expression::getLeafs() {
     return res;
 }
 
-void Expression::set(string s) { data = s; }
+void Expression::set(string s) {
+    data = s;
+    data.erase(std::remove(data.begin(), data.end(), ' '), data.end());
+    data.erase(std::remove(data.begin(), data.end(), '\t'), data.end());
+    data.erase(std::remove(data.begin(), data.end(), '\n'), data.end());
+}
 
 string Expression::computeTree() { // compute result of binary expression tree
     std::function<void(Node*)> subCompute = [&](Node* n) {
@@ -269,6 +278,7 @@ string Expression::computeTree() { // compute result of binary expression tree
 
 string Expression::compute() {
     makeTree();
+    if (tree) cout << tree->treeToString() << endl;
     return computeTree();
 }
 
