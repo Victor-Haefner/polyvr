@@ -16,8 +16,8 @@ OSG_BEGIN_NAMESPACE;
 class VRTrafficSimulation : public VRObject {
     public:
         enum VEHICLE {
-            CAR = 0,
-            SCOOTER = 1,
+            SCOOTER = 0,
+            CAR = 1,
             BYCICLE = 2
         };
         enum VISION {
@@ -51,12 +51,11 @@ class VRTrafficSimulation : public VRObject {
             float length = 4.4;
             float width = 1.7;
             bool isUser = false;
+            bool shouldBeVisible = false;
             bool collisionDetected;
             PosePtr simPose;
             int type;
             vector<int> signaling;
-
-            //boost::recursive_mutex mtxV;
 
             vector<VRGeometryPtr> turnsignalsBL;
             vector<VRGeometryPtr> turnsignalsBR;
@@ -65,7 +64,6 @@ class VRTrafficSimulation : public VRObject {
             vector<VRGeometryPtr> headlights;
             vector<VRGeometryPtr> backlights;
 
-            vector<int> lastFiveSteps;
             ///Perception
             float distanceToNextSignal;
             float distanceToNextIntersec;
