@@ -372,7 +372,7 @@ string Term::computeExpression(VRSemanticContextPtr context) {
     return res;
 }
 
-bool Term::valid() { return var->valid; }
+bool Term::valid() { return var ? var->valid : false; }
 
 bool Term::is(Term& t, VRSemanticContextPtr context) {
     auto v = t.var;

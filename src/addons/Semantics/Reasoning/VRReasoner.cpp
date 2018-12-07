@@ -246,7 +246,7 @@ bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
                     print("  set " + left.str + " to " + right.str + " -> " + vR, GREEN);
                 }
             }
-        } else {
+        } else if (left.var && right.var) {
             left.var->value = rim ? rmv : right.var->value;
             print("  set " + left.str + " to " + right.str + " -> " + toString(left.var->value), GREEN);
         }
