@@ -123,7 +123,7 @@ VRConceptPtr VROntology::addConcept(string concept, string parents, map<string, 
     for (uint i=1; i<Parents.size(); i++) Parents[i]->append(Concept);
     Concept->addAnnotation(comment, "comment");
     addConcept(Concept);
-    for (p : props) Concept->addProperty(p.first, p.second);
+    for (auto p : props) Concept->addProperty(p.first, p.second);
     return Concept;
 }
 
