@@ -47,6 +47,7 @@ struct VREntity : public VROntoID, public VRName {
     void addVector(string prop, vector<string> value, string type);
     void setVec3(string prop, Vec3d value, string type, int pos = 0);
     void addVec3(string prop, Vec3d value, string type);
+    string asVectorString();
 
     VRPropertyPtr get(const string& prop, int i = 0);
     vector<VRPropertyPtr> getAll(const string& prop = "");

@@ -37,9 +37,12 @@ VROntologyPtr VROntology::create(string name) {
     o->thing = thing;
     o->concepts["Thing"] = o->thing;
     o->storeObj("Thing", o->thing);
-    o->addConcept("float");
-    o->addConcept("int");
-    o->addConcept("string");
+    auto f = o->addConcept("float");
+    auto i = o->addConcept("int");
+    auto s = o->addConcept("string");
+    f->addProperty("var", "float");
+    i->addProperty("var", "int");
+    s->addProperty("var", "string");
     return o;
 }
 

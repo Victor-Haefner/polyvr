@@ -22,6 +22,10 @@ Expression::Value<T>::~Value() {}
 template<typename T>
 string Expression::Value<T>::toString() { return ::toString(value); }
 
+namespace OSG {
+    template<> string Expression::Value<Vec3d>::toString() { return "[" + ::toString(value[0]) + "," + ::toString(value[1]) + "," + ::toString(value[2]) + "]"; }
+}
+
 template<typename T>
 Expression::ValueBase* Expression::Value<T>::add(Expression::ValueBase* n) {
     if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value + v2->value);
@@ -87,7 +91,6 @@ void Expression::Node::setValue(Vec3d v) { value = new Value<Vec3d>(v); }
 
 void Expression::Node::setValue(string s) {
     int N = std::count(s.begin(), s.end(), ',');
-    cout << "Expression::Node::setValue " << s << "  " << N << endl;
     if (N == 0) setValue(toFloat(s));
     if (N == 2) {
         setValue(toValue<Vec3d>(s));
@@ -128,6 +131,7 @@ void Expression::Node::compute() { // compute value based on left and right valu
 bool Expression::isMathToken(char c) {
     if (c == '+' || c == '-' || c == '*' || c == '/') return true;
     if (c == '(' || c == ')') return true;
+    if (c == '[' || c == ']') return true; // delimits vector
     if (c == '<' || c == '>'|| c == '=') return true;
     return false;
 }
@@ -153,11 +157,13 @@ void Expression::convToPrefixExpr() { // convert infix to prefix expression
 
     auto processTriple = [&]() {
         char Operator = OperatorStack.top(); OperatorStack.pop();
-        auto RightOperand = OperandStack.top(); OperandStack.pop();
-        auto LeftOperand = OperandStack.top(); OperandStack.pop();
-        string op; op += Operator;
-        string tmp = op +" "+ LeftOperand +" "+ RightOperand;
-        OperandStack.push( tmp );
+        if (OperandStack.size() > 1) {
+            string RightOperand = OperandStack.top(); OperandStack.pop();
+            string LeftOperand = OperandStack.top(); OperandStack.pop();
+            string op; op += Operator;
+            string tmp = op +" "+ LeftOperand +" "+ RightOperand;
+            OperandStack.push( tmp );
+        }
     };
 
     for (auto t : tokens) {
@@ -165,6 +171,8 @@ void Expression::convToPrefixExpr() { // convert infix to prefix expression
             OperandStack.push(t); continue;
         }
         char o = t[0];
+
+        if ( o == '[' || o == ']' ) continue;
 
         if ( o == '(' || OperatorStack.size() == 0 || OperatorHierarchy[o] < OperatorHierarchy[OperatorStack.top()] ) {
             OperatorStack.push(o); continue;
@@ -265,6 +273,7 @@ void Expression::set(string s) {
 }
 
 string Expression::computeTree() { // compute result of binary expression tree
+    //if (tree) cout << tree->treeToString() << endl;
     std::function<void(Node*)> subCompute = [&](Node* n) {
         if (!n) return;
         subCompute(n->left);
@@ -278,7 +287,6 @@ string Expression::computeTree() { // compute result of binary expression tree
 
 string Expression::compute() {
     makeTree();
-    if (tree) cout << tree->treeToString() << endl;
     return computeTree();
 }
 

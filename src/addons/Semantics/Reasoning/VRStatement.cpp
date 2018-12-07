@@ -25,11 +25,30 @@ void VRStatement::setup(VRStorageContextPtr context) { // parse statement
     if (s1.size() == 0) return;
     verb = s1[0];
 
+    auto contain = [&](string& s, char c) {
+        return bool(s.find(c) != std::string::npos);
+    };
+
     // terms
     if (s1.size() < 2) return;
     auto s2 = VRReasoner::split(s1[1], ')');
     if (s2.size() == 0) return;
-    auto s3 = VRReasoner::split( s2[0] , ',');
+
+    // merge vectors
+    vector<string> s3;
+    bool append = false;
+    string S;
+    for (auto s : VRReasoner::split( s2[0] , ',')) {
+        if (append) {
+            if (S.size()) S += ",";
+            S += s;
+        } else S = s;
+        if (contain(s,'[')) append = true;
+        if (contain(s,']')) append = false;
+        if (!append) s3.push_back(S);
+    }
+
+    // make terms
     terms.clear();
     for (string s : s3) terms.push_back(Term(s));
 }

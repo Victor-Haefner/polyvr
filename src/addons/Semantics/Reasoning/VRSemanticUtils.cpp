@@ -204,7 +204,14 @@ vector<string> VPath::getValue(VREntityPtr e) {
     auto onto = e->ontology.lock();
     if (!onto) return res;
 
-    if (size() == 1) { res.push_back( e->getName() ); return res; }
+    if (size() == 1) {
+        if (e->is_a("float")) res.push_back( e->get("var")->value );
+        if (e->is_a("int")) res.push_back( e->get("var")->value );
+        if (e->is_a("string")) res.push_back( e->get("var")->value );
+        if (e->is_a("Vector")) res.push_back( e->asVectorString() );
+        else res.push_back( e->getName() );
+        return res;
+    }
 
     auto getSubSet = [&](string& m, int& k) {
         auto s1 = splitString(m,'[');
@@ -353,7 +360,7 @@ string Term::computeExpression(VRSemanticContextPtr context) {
                     auto props = e.second->getAll();
                     vector<string> vec(props.size());
                     for (int i=0; i<props.size(); i++) vec[i] = props[i]->value;
-                    string val = "("+vec[0]+","+vec[1]+","+vec[2]+")";
+                    string val = "["+vec[0]+","+vec[1]+","+vec[2]+"]";
                     l->setValue(val);
                     cout << "  computeExpression, replace " << p.root << " by " << val << endl;
                 } else {

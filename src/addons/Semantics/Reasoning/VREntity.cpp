@@ -225,6 +225,10 @@ vector< Vec3d > VREntity::getAllVec3(const string& prop) { // TODO
     return res;
 }
 
+string VREntity::asVectorString() {
+    return "[" + get("x")->value +","+ get("y")->value +","+ get("z")->value+"]";
+}
+
 VREntityPtr VREntity::copy() {
     auto o = ontology.lock();
     auto e = create(getBaseName(), o);

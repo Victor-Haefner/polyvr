@@ -133,7 +133,7 @@ bool VRReasoner::builtin(VRStatementPtr s, VRSemanticContextPtr c) {
                     auto e_var = c->vars[v];
                     for (auto ep : e_var->entities) {
                         auto e = ep.second;
-                        if (e->is_a("Vector")) params[i][er.get()] = e->get("x")->value +" "+ e->get("y")->value +" "+ e->get("z")->value;
+                        if (e->is_a("Vector")) params[i][er.get()] = e->asVectorString();
                         else params[i][er.get()] = e->getName();
                     }
                 }
@@ -145,7 +145,7 @@ bool VRReasoner::builtin(VRStatementPtr s, VRSemanticContextPtr c) {
             for (auto ep : t.var->entities) {
                 auto e = ep.second;
                 if (!e) continue;
-                if (e->is_a("Vector")) params[i][e.get()] = e->get("x")->value +" "+ e->get("y")->value +" "+ e->get("z")->value;
+                if (e->is_a("Vector")) params[i][e.get()] = e->asVectorString();
                 else params[i][e.get()] = e->getName();
             }
             continue;
