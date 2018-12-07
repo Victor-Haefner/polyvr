@@ -28,7 +28,7 @@ struct VPath {
 };
 
 struct Evaluation {
-    enum STATE {VALID, INVALID};
+    enum STATE {VALID, INVALID, ASSUMPTION};
     STATE state = VALID; // valid, assumption, anonymous, ruled_out, ...
 };
 
@@ -37,7 +37,6 @@ struct Variable {
     map<int, Evaluation> evaluations; // summarize the evaluation state of each instance!
     string value;
     string concept = "var";
-    bool isAssumption = false;
     bool isAnonymous = true;
     bool valid = true;
 
@@ -52,9 +51,11 @@ struct Variable {
     static VariablePtr create(VROntologyPtr onto, string concept, string var, VRSemanticContextPtr context);
     static VariablePtr create(VROntologyPtr onto, string val);
 
-    void addEntity(VREntityPtr e);
+    void addEntity(VREntityPtr e, bool assumtion = false);
     bool operator==(Variable v);
     void discard(VREntityPtr e);
+
+    void addAssumption(VRSemanticContextPtr context, string var);
 };
 
 struct Term {

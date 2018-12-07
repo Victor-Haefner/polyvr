@@ -21,7 +21,7 @@ string Variable::toString() {
     if (entities.size() > 0) s.pop_back();
     s +="}[";
     if (isAnonymous) s += "anonymous, ";
-    if (isAssumption) s += "assumption, ";
+    //if (isAssumption) s += "assumption, ";
     s += valid ? "valid" : "invalid";
     s +="]";
     return s;
@@ -45,13 +45,7 @@ Variable::Variable(VROntologyPtr onto, string concept, string var, VRSemanticCon
         isAnonymous = false;
     } else { // get all entities of the required type
         for (auto i : onto->getEntities(concept)) addEntity(i);
-        if (entities.size() == 0) {
-            if (context->getOption("allowAssumptions")) {
-                auto i = onto->addEntity(var, concept);
-                addEntity(i);
-                isAssumption = true; // TODO: put that in the evaluation
-            } else return;
-        }
+        if (entities.size() == 0) addAssumption(context, var);
     }
 
     valid = true;
@@ -64,9 +58,27 @@ Variable::Variable(VROntologyPtr onto, string val) {
 shared_ptr<Variable> Variable::create(VROntologyPtr onto, string concept, string var, VRSemanticContextPtr context) { return shared_ptr<Variable>( new Variable(onto, concept, var, context) ); }
 shared_ptr<Variable> Variable::create(VROntologyPtr onto, string val) { return shared_ptr<Variable>( new Variable(onto, val) ); }
 
-void Variable::addEntity(VREntityPtr e) {
+void Variable::addAssumption(VRSemanticContextPtr context, string var) {
+    if (context->getOption("allowAssumptions")) {
+        auto c = context->onto->getConcept(concept);
+        auto e = context->onto->addEntity(var, concept);
+        addEntity(e, true);
+        if (c->is_a("Vector")) {
+            Vec3d v;
+            bool b = toValue(value, v);
+            if (b) {
+                e->set("x", ::toString(v[0]));
+                e->set("y", ::toString(v[1]));
+                e->set("z", ::toString(v[2]));
+            }
+        }
+    }
+}
+
+void Variable::addEntity(VREntityPtr e, bool assumtion) {
     entities[e->ID] = e;
     evaluations[e->ID] = Evaluation();
+    if (assumtion) evaluations[e->ID].state = Evaluation::ASSUMPTION;
 }
 
 bool Variable::has(VariablePtr other, VPath& path1, VPath& path2, VROntologyPtr onto) {
@@ -362,20 +374,15 @@ string Term::computeExpression(VRSemanticContextPtr context) {
                     for (int i=0; i<props.size(); i++) vec[i] = props[i]->value;
                     string val = "["+vec[0]+","+vec[1]+","+vec[2]+"]";
                     l->setValue(val);
-                    cout << "  computeExpression, replace " << p.root << " by " << val << endl;
                 } else {
                     auto vals = p.getValue(e.second);
-                    for (auto val : vals) {
-                        l->setValue(val);
-                        cout << "  computeExpression, replace " << p.root << " by " << val << endl;
-                    }
+                    for (auto val : vals) l->setValue(val);
                 }
             }
         }
     }
 
     string res = me.computeTree();
-    cout << " computeExpression '"+str+"' results to " << res << endl;
     return res;
 }
 

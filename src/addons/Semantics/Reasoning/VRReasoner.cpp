@@ -212,7 +212,11 @@ bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
     auto clearAssumptions = [&]() {
         vector<string> toDelete;
         for (auto v : context->vars) {
-            if (v.second->isAssumption) toDelete.push_back(v.first);
+            for (auto e : v.second->entities) {
+                if (!v.second->evaluations.count(e.first)) continue;
+                auto& eval = v.second->evaluations[e.first];
+                if (eval.state == Evaluation::ASSUMPTION) v.second->discard(e.second);
+            }
         }
         for (auto v : toDelete) {
             context->onto->remEntity( context->onto->getEntity(v) );
@@ -272,15 +276,23 @@ bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
         if (!context->vars.count(x)) return false;
         VariablePtr v = context->vars[x];
         if (!v) return false;
+
+        bool addAssumtions = true;
+        for (auto e : v->evaluations) if(e.second.state == Evaluation::VALID) addAssumtions = false;
+        if (addAssumtions) v->addAssumption(context, x); // TODO
+        //cout << "query variable: " << v->toString() << endl;
+
         for (auto e : v->entities) {
             if (!v->evaluations.count(e.first)) continue;
             auto& eval = v->evaluations[e.first];
-            bool valid = (eval.state == Evaluation::VALID);
-            if (valid) context->results.push_back(e.second);
+            bool valid = (eval.state == Evaluation::VALID || addAssumtions && eval.state != Evaluation::INVALID);
+            if (valid) {
+                context->results.push_back(e.second);
+            }
         }
         statement->state = 1;
         print("  process results of queried variable " + x, GREEN);
-        clearAssumptions();
+        //clearAssumptions(); //TODO
     }
 
     return true;

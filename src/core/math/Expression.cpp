@@ -220,8 +220,8 @@ void Expression::buildTree() { // build a binary expression tree from the prefix
         node = new Node(t);
         nodes.push_back(node);
         if ( t.size() == 1 && isMathToken(t[0]) ) { // found operator
-            node->right = nodeStack.top(); nodeStack.pop();
             node->left = nodeStack.top(); nodeStack.pop();
+            node->right = nodeStack.top(); nodeStack.pop();
             nodeStack.push(node);
         } else nodeStack.push(node);
     }

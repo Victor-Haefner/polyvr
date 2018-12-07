@@ -43,14 +43,16 @@ void VRStatement::setup(VRStorageContextPtr context) { // parse statement
             if (S.size()) S += ",";
             S += s;
         } else S = s;
-        if (contain(s,'[')) append = true;
         if (contain(s,']')) append = false;
+        if (contain(s,'[')) append = true;
         if (!append) s3.push_back(S);
     }
 
     // make terms
     terms.clear();
-    for (string s : s3) terms.push_back(Term(s));
+    for (string s : s3) {
+        terms.push_back(Term(s));
+    }
 }
 
 VRStatementPtr VRStatement::create(string s, int p) { return VRStatementPtr( new VRStatement(s,p) ); }
