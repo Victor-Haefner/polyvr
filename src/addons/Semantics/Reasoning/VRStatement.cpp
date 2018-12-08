@@ -69,7 +69,7 @@ void VRStatement::updateLocalVariables(map<string, VariablePtr>& globals, VROnto
     this->onto = onto;
     for (auto& t : terms) {
         if (globals.count(t.path.root)) t.var = globals[t.path.root];
-        else t.var = Variable::create(onto,t.path.root);
+        else t.var = Variable::create(onto,{t.path.root});
         //cout << "updateLocalVariables " << t.str << " " << t.path.root << " " << t.var->concept << endl;
     }
 }
@@ -97,7 +97,7 @@ bool VRStatement::match(VRStatementPtr s) {
         if (!cS || !cR) continue; // may be anything..
 
         if (!cS->is_a(cR) && !cR->is_a(cS)) { // check if the concepts are related
-            VRReasoner::print("       var "+tR.var->value+" ("+tR.var->concept+") and var "+tS.var->value+" ("+tS.var->concept+") are not related!", VRReasoner::RED);
+            VRReasoner::print("       var "+tR.var->valToString()+" ("+tR.var->concept+") and var "+tS.var->valToString()+" ("+tS.var->concept+") are not related!", VRReasoner::RED);
             return false;
         }
 

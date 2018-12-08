@@ -35,21 +35,22 @@ struct Evaluation {
 struct Variable {
     map<int, VREntityPtr> entities;
     map<int, Evaluation> evaluations; // summarize the evaluation state of each instance!
-    string value;
+    vector<string> value;
     string concept = "var";
     bool isAnonymous = true;
     bool valid = true;
 
     string toString();
+    string valToString();
     bool has(VariablePtr other, VPath& p1, VPath& p2, VROntologyPtr onto);
     bool is(VariablePtr other, VPath& p1, VPath& p2);
 
-    Variable(VROntologyPtr onto, string concept, string var, VRSemanticContextPtr context);
-    Variable(VROntologyPtr onto, string val);
+    Variable(VROntologyPtr onto, string concept, vector<string> var, VRSemanticContextPtr context);
+    Variable(VROntologyPtr onto, vector<string> val);
     Variable();
 
-    static VariablePtr create(VROntologyPtr onto, string concept, string var, VRSemanticContextPtr context);
-    static VariablePtr create(VROntologyPtr onto, string val);
+    static VariablePtr create(VROntologyPtr onto, string concept, vector<string> var, VRSemanticContextPtr context);
+    static VariablePtr create(VROntologyPtr onto, vector<string> val);
 
     void addEntity(VREntityPtr e, bool assumtion = false);
     bool operator==(Variable v);
@@ -67,7 +68,7 @@ struct Term {
     bool valid();
 
     bool isMathExpression();
-    string computeExpression(VRSemanticContextPtr c);
+    vector<string> computeExpression(VRSemanticContextPtr c);
 
     bool is(Term& t, VRSemanticContextPtr context);
     bool has(Term& t, VRSemanticContextPtr context);

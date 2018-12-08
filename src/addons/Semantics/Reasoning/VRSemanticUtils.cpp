@@ -16,47 +16,56 @@ using namespace OSG;
 Variable::Variable() {;}
 
 string Variable::toString() {
-    string s = value+"(" + concept + "){";
+    string s = valToString()+" (" + concept + "){";
     for (auto i : entities) s += i.second->getName()+",";
     if (entities.size() > 0) s.pop_back();
     s +="}[";
     if (isAnonymous) s += "anonymous, ";
-    //if (isAssumption) s += "assumption, ";
     s += valid ? "valid" : "invalid";
     s +="]";
     return s;
 }
 
+string Variable::valToString() {
+    string r;
+    for (int i=0; i<value.size(); i++) {
+        if (i > 0) r += ", ";
+        r += value[i];
+    }
+    return r;
+}
+
 /* Variable flags:
-    isAssumption: no entities of the type have been found
     isAnonymous: no entities with that name have been found
     !valid: something is terribly wrong!
 */
 
-Variable::Variable(VROntologyPtr onto, string concept, string var, VRSemanticContextPtr context) {
+Variable::Variable(VROntologyPtr onto, string concept, vector<string> var, VRSemanticContextPtr context) {
     auto cl = onto->getConcept(concept);
     if (cl == 0) return;
 
     this->concept = concept; // TODO: maybe the entity has a concept that inherits from the concept passed above?
     value = var;
 
-    if ( auto i = onto->getEntity(var) ) {
-        addEntity(i);
-        isAnonymous = false;
-    } else { // get all entities of the required type
-        for (auto i : onto->getEntities(concept)) addEntity(i);
-        if (entities.size() == 0) addAssumption(context, var);
+    for (auto v : value) {
+        if ( auto i = onto->getEntity(v) ) {
+            addEntity(i);
+            isAnonymous = false;
+        } else { // get all entities of the required type
+            for (auto i : onto->getEntities(concept)) addEntity(i);
+            if (entities.size() == 0) addAssumption(context, v);
+        }
     }
 
     valid = true;
 }
 
-Variable::Variable(VROntologyPtr onto, string val) {
+Variable::Variable(VROntologyPtr onto, vector<string> val) {
     value = val;
 }
 
-shared_ptr<Variable> Variable::create(VROntologyPtr onto, string concept, string var, VRSemanticContextPtr context) { return shared_ptr<Variable>( new Variable(onto, concept, var, context) ); }
-shared_ptr<Variable> Variable::create(VROntologyPtr onto, string val) { return shared_ptr<Variable>( new Variable(onto, val) ); }
+shared_ptr<Variable> Variable::create(VROntologyPtr onto, string concept, vector<string> var, VRSemanticContextPtr context) { return shared_ptr<Variable>( new Variable(onto, concept, var, context) ); }
+shared_ptr<Variable> Variable::create(VROntologyPtr onto, vector<string> val) { return shared_ptr<Variable>( new Variable(onto, val) ); }
 
 void Variable::addAssumption(VRSemanticContextPtr context, string var) {
     if (context->getOption("allowAssumptions")) {
@@ -65,7 +74,7 @@ void Variable::addAssumption(VRSemanticContextPtr context, string var) {
         addEntity(e, true);
         if (c->is_a("Vector")) {
             Vec3d v;
-            bool b = toValue(value, v);
+            bool b = toValue(value[0], v);
             if (b) {
                 e->set("x", ::toString(v[0]));
                 e->set("y", ::toString(v[1]));
@@ -154,23 +163,24 @@ bool Variable::is(VariablePtr other, VPath& path1, VPath& path2) {
     auto hasSameVal2 = [&](vector<string>& val1) {
         bool res = false;
         for (auto e : other->entities) {
+            cout << "  other entities: " << e.second->toString() << endl;
             vector<string> val2 = path2.getValue(e.second);
-            //for (auto v : val2) cout << "  var2 value: " << v << endl;
+            for (auto v : val2) cout << "  var2 value: " << v << endl;
             auto r = hasSameVal(val1, val2);
             if (!r) evaluations[e.first].state = Evaluation::INVALID;
             if (r) res = true;
         }
         if (res) return true;
 
-        for (string s : val1) if (s == other->value) return true;
+        for (string s : val1) for (string v : other->value) if (s == v) return true;
         return false;
     };
 
-    //cout << "Variable::is " << toString() << " at path " << path1.toString() << " =?= " << other->toString() << " at path " << path2.toString() << endl;
+    cout << "Variable::is " << toString() << " at path " << path1.toString() << " =?= " << other->toString() << " at path " << path2.toString() << endl;
     bool res = false;
     for (auto e : entities) {
         vector<string> val1 = path1.getValue(e.second);
-        //for (auto v : val1) cout << " var1 value: " << v << endl;
+        for (auto v : val1) cout << " var1 value: " << v << endl;
         auto r = hasSameVal2(val1);
         if (!r) evaluations[e.first].state = Evaluation::INVALID;
         if (r) res = true;
@@ -291,7 +301,7 @@ void VRSemanticContext::init() {
     //cout << "Init VRSemanticContext:" << endl;
     for (auto i : onto->entities) {
         if (i.second->getConcepts().size() == 0) { cout << "VRSemanticContext::VRSemanticContext instance " << i.second->getName() << " has no concepts!" << endl; continue; }
-        vars[i.second->getName()] = Variable::create( onto, i.second->getConcepts()[0]->getName(), i.second->getName(), ptr() );
+        vars[i.second->getName()] = Variable::create( onto, i.second->getConcepts()[0]->getName(), { i.second->getName() }, ptr() );
         //cout << " add instance " << i.second->toString() << endl;
     }
 
@@ -301,11 +311,11 @@ void VRSemanticContext::init() {
         if (!q.request) continue;
 
         for (Term& t : q.request->terms) {
-            t.var = Variable::create(onto,t.path.root);
+            t.var = Variable::create(onto,{t.path.root});
 
             for (auto& s : q.statements) {
                 if (s->isSimpleVerb()) continue;
-                s->terms[0].var = Variable::create(onto, s->terms[0].path.root);
+                s->terms[0].var = Variable::create(onto, {s->terms[0].path.root});
                 auto var = s->terms[0].var;
                 if (var->value != t.var->value) continue;
 
@@ -349,9 +359,9 @@ Term::Term(string s) : path(s), str(s) {}
 
 bool Term::isMathExpression() { Expression e(str); return e.isMathExpression(); }
 
-string Term::computeExpression(VRSemanticContextPtr context) {
+vector<string> Term::computeExpression(VRSemanticContextPtr context) {
     Expression me(str);
-    if (!me.isMathExpression()) return "";
+    if (!me.isMathExpression()) return vector<string>();
     me.makeTree(); // build RDP tree
 
     /*auto asVec3 = [&](VREntityPtr e) {
@@ -362,27 +372,56 @@ string Term::computeExpression(VRSemanticContextPtr context) {
         return res;
     };*/
 
+    //cout << "Term::computeExpression " << str << endl;
+    vector<vector<string>> valuesMap;
     for (auto l : me.getLeafs()) {
         VPath p(l->param);
-        l->setValue(p.root); // default is to use path root, might just be a number
+        vector<string> values;
+        //cout << " expression leaf " << l->param << endl;
         if (context->vars.count(p.root)) {
             auto v = context->vars[p.root];
             for (auto e : v->entities) {
+                //cout << "  v entity " << e.second->toString() << endl;
                 if (e.second->is_a("Vector")) {
                     auto props = e.second->getAll();
                     vector<string> vec(props.size());
                     for (int i=0; i<props.size(); i++) vec[i] = props[i]->value;
-                    string val = "["+vec[0]+","+vec[1]+","+vec[2]+"]";
-                    l->setValue(val);
+                    values.push_back( "["+vec[0]+","+vec[1]+","+vec[2]+"]" );
                 } else {
                     auto vals = p.getValue(e.second);
-                    for (auto val : vals) l->setValue(val);
+                    for (auto val : vals) values.push_back(val);
                 }
             }
         }
+
+        if (values.size() == 0) values.push_back(p.root); // default is to use path root, might just be a number
+        valuesMap.push_back(values);
+        //for (auto val : values) l->setValue(val);
+        //cout << "  expression leaf final " << l->toString() << ", from " << values.size() << " values!" << endl;
     }
 
-    string res = me.computeTree();
+    vector<string> res;
+    auto leafs = me.getLeafs();
+    int N = leafs.size();
+    vector<int> config(N, 0);
+
+    auto setConfig = [&]() { // set a value configuration, compute and push result
+        for (int i=0; i<valuesMap.size(); i++) {
+            leafs[i]->setValue( valuesMap[i][config[i]] );
+        }
+        res.push_back( me.computeTree() );
+    };
+
+    function<void(int)> aggregate = [&](int k) {
+        for (int i=0; i<valuesMap[k].size(); i++) {
+            config[k] = i;
+            if (k == N-1) setConfig();
+            else aggregate(k+1);
+        }
+    };
+
+    aggregate(0);
+
     return res;
 }
 
@@ -418,7 +457,7 @@ void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of
     for (uint i=0; i<request->terms.size(); i++) {
         Term& t1 = request->terms[i];
         Term& t2 = replace->terms[i];
-        substitutes[t1.var->value] = t2.str;
+        substitutes[t1.var->value[0]] = t2.str;
     }
 
     auto substitute = [&](string& var) {

@@ -73,10 +73,10 @@ void VRReasoner::print(const string& s, COLOR c) {
 
     if (verbGui) {
         switch(c) {
-            case BLUE: VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n", "blue" );
-            case RED: VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n", "red" );
-            case GREEN: VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n", "green" );
-            case YELLOW: VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n", "yellow" );
+            case BLUE: VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n", "blue" ); break;
+            case RED: VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n", "red" ); break;
+            case GREEN: VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n", "green" ); break;
+            case YELLOW: VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n", "yellow" ); break;
         }
     }
 }
@@ -110,11 +110,11 @@ bool VRReasoner::builtin(VRStatementPtr s, VRSemanticContextPtr c) {
     if (!c->onto->builtins.count(cb_name)) return false;
     auto& builtin = c->onto->builtins[cb_name];
 
-    vector< map<VREntity*, string> > params; // get parameters
+    vector< map<VREntity*, vector<string> > > params; // get parameters
 
     for (uint i=0; i<s->terms.size()-2; i++) {
         auto& t = s->terms[2+i];
-        params.push_back( map<VREntity*, string>() );
+        params.push_back( map<VREntity*, vector<string> >() );
         //cout << "builtin params in: " << t.str << endl;
 
         if (t.isMathExpression()) { params[i][0] = t.computeExpression(c); continue; }
@@ -133,8 +133,8 @@ bool VRReasoner::builtin(VRStatementPtr s, VRSemanticContextPtr c) {
                     auto e_var = c->vars[v];
                     for (auto ep : e_var->entities) {
                         auto e = ep.second;
-                        if (e->is_a("Vector")) params[i][er.get()] = e->asVectorString();
-                        else params[i][er.get()] = e->getName();
+                        if (e->is_a("Vector")) params[i][er.get()].push_back( e->asVectorString() );
+                        else params[i][er.get()].push_back(e->getName());
                     }
                 }
             }
@@ -145,8 +145,8 @@ bool VRReasoner::builtin(VRStatementPtr s, VRSemanticContextPtr c) {
             for (auto ep : t.var->entities) {
                 auto e = ep.second;
                 if (!e) continue;
-                if (e->is_a("Vector")) params[i][e.get()] = e->asVectorString();
-                else params[i][e.get()] = e->getName();
+                if (e->is_a("Vector")) params[i][e.get()].push_back( e->asVectorString() );
+                else params[i][e.get()].push_back( e->getName() );
             }
             continue;
         }
@@ -158,11 +158,11 @@ bool VRReasoner::builtin(VRStatementPtr s, VRSemanticContextPtr c) {
         if (!obj) continue;
 
         vector<string> args;
-        for (auto p : params) {
+        for (auto pm : params) {
             auto e = entity.second.get();
             //cout << " e in p: " << p.count(e) << " ps: " << p.size() << endl;
-            if (p.count(e)) args.push_back(p[e]);
-            if (p.count(0)) args.push_back(p[0]);
+            if (pm.count(e)) for (auto p : pm[e]) args.push_back(p);
+            if (pm.count(0)) for (auto p : pm[0]) args.push_back(p);
         }
 
         //cout << "builtin sg object: " << obj << endl;
@@ -177,12 +177,12 @@ bool VRReasoner::builtin(VRStatementPtr s, VRSemanticContextPtr c) {
 bool VRReasoner::is(VRStatementPtr statement, VRSemanticContextPtr context) {
     auto& left = statement->terms[0];
     auto& right = statement->terms[1];
-    if ( context->vars.count(left.var->value) == 0) return false; // check if context has a variable with the left value
+    for (auto v : left.var->value) if ( context->vars.count(v) == 0) return false; // check if context has a variable with the left value
     if (!left.valid() || !right.valid()) return false; // return if one of the sides invalid
 
     bool b = left.is(right, context);
     bool NOT = statement->verb_suffix == "not";
-    print("   " + left.str + " is " + (b?"":" not ") + (NOT?" not ":"") + right.var->value);
+    print("   " + left.str + " is" + (b?" ":" not ") + (NOT?" not ":" ") + right.var->valToString());
 
     return ( (b && !NOT) || (!b && NOT) );
 }
@@ -203,7 +203,7 @@ bool VRReasoner::has(VRStatementPtr statement, VRSemanticContextPtr context) { /
     if (Pconcept == 0) { cout << "Warning (has): first concept " << left.var->concept << " not found!\n"; return false; }
     if (Cconcept == 0) { cout << "Warning (has): second concept " << right.var->concept << " not found!\n"; return false; }
     auto prop = Pconcept->getProperties( Cconcept->getName() );
-    if (prop.size() == 0) cout << "Warning: has evaluation failed, property " << right.var->value << " missing!\n"; return false;
+    if (prop.size() == 0) cout << "Warning: has evaluation failed, property " << right.var->valToString() << " missing!\n"; return false;
     return false;
 }
 
@@ -224,34 +224,42 @@ bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
         }
     };
 
+    auto aggr = [](vector<string> v) {
+        string r;
+        for (int i=0; i<v.size(); i++) {
+            if (i > 0) r += ", ";
+            r += v[i];
+        }
+        return r;
+    };
+
     if (statement->verb == "is") {
         auto& left = statement->terms[0];
         auto& right = statement->terms[1];
 
         bool lim = left.isMathExpression();
         bool rim = right.isMathExpression();
-        string lmv, rmv;
+        vector<string> lmv, rmv;
         if (lim) lmv = left.computeExpression(context);
         if (rim) rmv = right.computeExpression(context);
-        if (lim) print("  left term " + left.str + " is math expression! -> " + lmv, GREEN);
-        if (rim) print("  right term " + right.str + " is math expression! -> " + rmv, GREEN);
+        if (lim) print("  left term " + left.str + " is math expression! -> (" + aggr(lmv)+")", GREEN);
+        if (rim) print("  right term " + right.str + " is math expression! -> (" + aggr(rmv)+")", GREEN);
 
         if (left.path.size() > 1) {
             for (auto eL : left.var->entities) {
                 for (auto eR : right.var->entities) {
-                    string vR = "";
+                    vector<string> vR;
                     if (rim) vR = rmv;
-                    else {
-                        vector<string> valR = right.path.getValue( eR.second );
-                        if (valR.size() > 0) vR = valR[0];
-                    }
+                    else vR = right.path.getValue( eR.second );
 
-                    left.path.setValue(vR, eL.second);
-                    print("  set " + left.str + " to " + right.str + " -> " + vR, GREEN);
+                    if (vR.size()) {
+                        left.path.setValue(vR[0], eL.second);
+                        print("  set " + left.str + " to " + right.str + " -> " + vR[0], GREEN);
+                    }
                 }
             }
         } else if (left.var && right.var) {
-            left.var->value = rim ? rmv : right.var->value;
+            left.var->value = (rim && rmv.size()) ? rmv : vector<string>( { right.var->value } );
             print("  set " + left.str + " to " + right.str + " -> " + toString(left.var->value), GREEN);
         }
         statement->state = 1;
@@ -265,14 +273,14 @@ bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
         if (!Pconcept || !Cconcept) { print("Warning: failed to apply " + statement->toString()); return false; }
         auto prop = Pconcept->getProperties( Cconcept->getName() );
         if (prop.size() == 0) { print("Warning: failed to apply " + statement->toString()); return false; }
-        for (auto i : left.var->entities) i.second->add(prop[0]->getName(), right.var->value); // TODO: the first parameter is wrong
+        if (right.var->value.size()) for (auto i : left.var->entities) i.second->add(prop[0]->getName(), right.var->value[0]); // TODO: the first parameter is wrong
         statement->state = 1;
         print("  give " + right.str + " to " + left.str, GREEN);
     }
 
     if (statement->verb == "q") {
         if (statement->terms.size() == 0) { print("Warning: failed to apply " + statement->toString() + ", empty query!"); return false; }
-        string x = statement->terms[0].var->value;
+        string x = statement->terms[0].var->value[0];
         if (!context->vars.count(x)) return false;
         VariablePtr v = context->vars[x];
         if (!v) return false;
@@ -327,7 +335,7 @@ bool VRReasoner::evaluate(VRStatementPtr statement, VRSemanticContextPtr context
                 return true;
             }
 
-            auto var = Variable::create( context->onto, concept, name, context );
+            auto var = Variable::create( context->onto, concept, {name}, context );
             context->vars[name] = var;
             print("  added variable " + var->toString(), BLUE);
             statement->state = 1;
