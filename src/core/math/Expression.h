@@ -25,6 +25,7 @@ class Expression {
             virtual ValueBase* compG(ValueBase* n) = 0;
             virtual ValueBase* compGE(ValueBase* n) = 0;
             virtual ValueBase* cross(ValueBase* n) = 0;
+            virtual ValueBase* dot(ValueBase* n) = 0;
         };
 
         template<typename T> struct Value : ValueBase {
@@ -44,6 +45,7 @@ class Expression {
             ValueBase* compG(ValueBase* n);
             ValueBase* compGE(ValueBase* n);
             ValueBase* cross(ValueBase* n);
+            ValueBase* dot(ValueBase* n);
         };
 
         //ValueBase* add(Value<Vec3d>* v1, Value<Vec3d>* v2) { return new Value<T>(v1->value + v2->value); }

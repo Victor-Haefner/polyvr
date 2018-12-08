@@ -81,14 +81,18 @@ Expression::ValueBase* Expression::Value<T>::compGE(Expression::ValueBase* n) {
     return 0;
 }
 
-template<typename T>
-Expression::ValueBase* Expression::Value<T>::cross(Expression::ValueBase* n) { // only for vectors
+// vector only
+
+template<typename T> Expression::ValueBase* Expression::Value<T>::cross(Expression::ValueBase* n) { return 0; }
+template<typename T> Expression::ValueBase* Expression::Value<T>::dot(Expression::ValueBase* n) { return 0; }
+
+template<> Expression::ValueBase* Expression::Value<Vec3d>::cross(Expression::ValueBase* n) {
+    if (auto v2 = dynamic_cast<Value<Vec3d>*>(n)) return new Value<Vec3d>(value.cross(v2->value));
     return 0;
 }
 
-template<>
-Expression::ValueBase* Expression::Value<Vec3d>::cross(Expression::ValueBase* n) {
-    if (auto v2 = dynamic_cast<Value<Vec3d>*>(n)) return new Value<Vec3d>(value.cross(v2->value));
+template<> Expression::ValueBase* Expression::Value<Vec3d>::dot(Expression::ValueBase* n) {
+    if (auto v2 = dynamic_cast<Value<Vec3d>*>(n)) return new Value<float>(value.dot(v2->value));
     return 0;
 }
 
@@ -150,6 +154,7 @@ void Expression::Node::compute() { // compute value based on left and right valu
     if (op == '>') value = left->value->compG(right->value);
     //if (op == '>') value = left->value->compGE(right->value); // TODO
     if (param == "cross") value = left->value->cross(right->value);
+    if (param == "dot") value = left->value->dot(right->value);
 }
 
 
@@ -176,9 +181,12 @@ void Expression::convToPrefixExpr() { // convert infix to prefix expression
 
     // split into tokens
     string last;
+    bool inVector = false;
     for (uint i=0; i<data.size(); i++) {
         char c = data[i];
-        if (isMathToken(c)) {
+        if (isMathToken(c) || (c == ',' && !inVector)) {
+            if (c == '[') inVector = true;
+            if (c == ']') inVector = false;
             if (last.size() > 0 ) tokens.push_back(last);
             last = "";
             string t; t+=c;
@@ -201,24 +209,30 @@ void Expression::convToPrefixExpr() { // convert infix to prefix expression
         }
     };
 
-    string state;
+    auto isSecondaryToken = [&](string t) {
+        if (t == ",") return true;
+        return false;
+    };
 
     for (auto t : tokens) {
-        cout << " token " << t << endl;
-        if (t == "cross") {
-            cout << "push operator x" << endl;
-            OperatorStack.push(t); continue;
+        if (isMathFunction(t)) { OperatorStack.push(t); continue; }
+
+        if (!isSecondaryToken(t)) {
+            if ( t.size() != 1 || !isMathToken(t[0]) ) {
+                OperandStack.push(t); continue;
+            }
         }
 
-        if ( t == "," ) continue;
-
-        if (t.size() != 1 || !isMathToken(t[0]) ) {
-            cout << "push operand " << t << endl;
-            OperandStack.push(t); continue;
-        }
-
-        if ( t == "{" || t == "}" ) continue;
+        if ( t == "{" ) t = "(";
+        if ( t == "}" ) t = ")";
         if ( t == "[" || t == "]" ) continue;
+
+        if ( t == "," ) { // single comma delimits function parameters, acts like ")("
+            while( OperatorStack.top() != "(" ) processTriple();
+            t = OperatorStack.top(); OperatorStack.pop();
+            OperatorStack.push("(");
+            continue;
+        }
 
         if ( t == "(" || OperatorStack.size() == 0 || OperatorHierarchy[t] < OperatorHierarchy[OperatorStack.top()] ) {
             OperatorStack.push(t); continue;
@@ -239,8 +253,10 @@ void Expression::convToPrefixExpr() { // convert infix to prefix expression
     }
 
     while( OperatorStack.size() ) processTriple();
-    prefixExpression = OperandStack.top(); // store prefix expression
-    prefixExpr = true;
+    if (OperandStack.size()) {
+        prefixExpression = OperandStack.top(); // store prefix expression
+        prefixExpr = true;
+    }
 }
 
 void Expression::buildTree() { // build a binary expression tree from the prefix expression data
@@ -259,7 +275,7 @@ void Expression::buildTree() { // build a binary expression tree from the prefix
     }
     if (token.size()) tokens.push_back(token);*/
 
-    cout << "Expression::buildTree from prefix expression: " << prefixExpression << endl;
+    //cout << "Expression::buildTree from prefix expression: " << prefixExpression << endl;
     vector<string> tokens = splitString(prefixExpression, ' '); // prefix expression is delimited by spaces!
 
     for (uint i=0; i<tokens.size(); i++) {
