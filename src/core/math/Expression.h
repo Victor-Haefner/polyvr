@@ -24,6 +24,7 @@ class Expression {
             virtual ValueBase* compLE(ValueBase* n) = 0;
             virtual ValueBase* compG(ValueBase* n) = 0;
             virtual ValueBase* compGE(ValueBase* n) = 0;
+            virtual ValueBase* cross(ValueBase* n) = 0;
         };
 
         template<typename T> struct Value : ValueBase {
@@ -42,6 +43,7 @@ class Expression {
             ValueBase* compLE(ValueBase* n);
             ValueBase* compG(ValueBase* n);
             ValueBase* compGE(ValueBase* n);
+            ValueBase* cross(ValueBase* n);
         };
 
         //ValueBase* add(Value<Vec3d>* v1, Value<Vec3d>* v2) { return new Value<T>(v1->value + v2->value); }
@@ -61,18 +63,21 @@ class Expression {
             void setValue(string s);
 
             string toString();
+            string toString2();
             string treeToString(string indent = "");
             void compute();
         };
 
     public:
         string data;
+        string prefixExpression;
         Node* tree = 0;
         vector<Node*> nodes;
-        map<char,int> OperatorHierarchy;
+        map<string,int> OperatorHierarchy;
         bool prefixExpr = false;
 
         bool isMathToken(char c);
+        bool isMathFunction(string f);
         void convToPrefixExpr();
         void buildTree();
 
@@ -89,6 +94,7 @@ class Expression {
         string computeTree();
         string compute();
         string toString();
+        string treeAsString();
 };
 
 OSG_END_NAMESPACE;

@@ -479,6 +479,7 @@ void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of
                 e.makeTree();
                 cout << "   substitute expression: " << e.toString() << " leafs: " << e.getLeafs().size() << endl;
                 for (auto& l : e.getLeafs()) {
+                    cout << "    substitute leaf: " << l->toString2() << endl;
                     /*for (uint i=0; i<request->terms.size(); i++) {
                         auto& t1 = request->terms[i];
                         //cout << " substitute " << l->param << " , " << t1.path.root << " in expression " << ts.str << " ?" << endl;
@@ -493,11 +494,11 @@ void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of
                         }
                     }*/
                     if (ts.path.root == l->param) {
-                        cout << "    substitute 1 param: " << l->param << endl;
+                        cout << "     substitute 1 param: " << l->param << endl;
                         substitute(l->param);
                     } else {
                         VPath lpath(l->param);
-                        cout << "    substitute 2 param: " << lpath.root << endl;
+                        cout << "     substitute 2 param: " << lpath.root << endl;
                         substitute(lpath.root);
                         lpath.nodes[0] = lpath.root;
                         l->param = lpath.toString();

@@ -43,8 +43,8 @@ void VRStatement::setup(VRStorageContextPtr context) { // parse statement
             if (S.size()) S += ",";
             S += s;
         } else S = s;
-        if (contain(s,']')) append = false;
-        if (contain(s,'[')) append = true;
+        if (contain(s,']') || contain(s,'}')) append = false;
+        if (contain(s,'[') || contain(s,'{')) append = true;
         if (!append) s3.push_back(S);
     }
 
