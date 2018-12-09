@@ -208,8 +208,8 @@ void Expression::convToPrefixExpr() { // convert infix to prefix expression
     };
 
     auto processTriple = [&]() {
-        string Operator = topOperator(1);
         if (OperandStack.size() > 1) {
+            string Operator = topOperator(1);
             string RightOperand = OperandStack.top(); OperandStack.pop();
             string LeftOperand = OperandStack.top(); OperandStack.pop();
             string op; op += Operator;
@@ -229,7 +229,19 @@ void Expression::convToPrefixExpr() { // convert infix to prefix expression
         return bool(topOperator() != c);
     };
 
+    auto operatorsToStr = [&]() {
+        auto stackCopy = OperatorStack;
+        string s;
+        while (!stackCopy.empty( ) ) {
+            s = stackCopy.top() + " " + s;
+            stackCopy.pop( );
+        }
+        return s;
+    };
+
+    //cout << "Expression::convToPrefixExpr data: " << data << endl;
     for (auto t : tokens) {
+        //cout << " token " << t << "   \toperators: " << operatorsToStr() << endl;
         if (isMathFunction(t)) { OperatorStack.push(t); continue; }
 
         if (!isSecondaryToken(t)) {
@@ -238,18 +250,16 @@ void Expression::convToPrefixExpr() { // convert infix to prefix expression
             }
         }
 
-        if ( t == "{" ) t = "(";
-        if ( t == "}" ) t = ")";
         if ( t == "[" || t == "]" ) continue;
 
-        if ( t == "," ) { // single comma delimits function parameters, acts like ")("
-            while( checkCharacter("(") ) processTriple();
+        if ( t == "," ) { // single comma delimits function parameters, acts like "}{"
+            while( checkCharacter("{") ) processTriple();
             t = topOperator(1);
-            OperatorStack.push("(");
+            OperatorStack.push("{");
             continue;
         }
 
-        if ( t == "(" || OperatorStack.size() == 0 || OperatorHierarchy[t] < OperatorHierarchy[topOperator()] ) {
+        if ( t == "{" || t == "(" || OperatorStack.size() == 0 || OperatorHierarchy[t] < OperatorHierarchy[topOperator()] ) {
             OperatorStack.push(t); continue;
         }
 
@@ -259,9 +269,17 @@ void Expression::convToPrefixExpr() { // convert infix to prefix expression
             continue;
         }
 
+        if ( t == "}" ) {
+            while( checkCharacter("{") ) processTriple();
+            t = topOperator(1);
+            continue;
+        }
+
         if ( OperatorHierarchy[t] >= OperatorHierarchy[topOperator()] ) {
-            while( OperatorStack.size() != 0 and OperatorHierarchy[t] >= OperatorHierarchy[topOperator()] ) {
+            int i=0;
+            while( OperatorStack.size() != 0 && OperatorHierarchy[t] >= OperatorHierarchy[topOperator()] && i < 50 ) {
                 processTriple();
+                i++;
             }
             OperatorStack.push(t);
         }
@@ -271,6 +289,7 @@ void Expression::convToPrefixExpr() { // convert infix to prefix expression
     if (OperandStack.size()) {
         prefixExpression = OperandStack.top(); // store prefix expression
         prefixExpr = true;
+        //cout << " resulting prefix espression: " << prefixExpression << endl;
     }
 }
 
@@ -312,6 +331,10 @@ void Expression::buildTree() { // build a binary expression tree from the prefix
 Expression::Expression(string s) {
     set(s);
 
+    OperatorHierarchy["dot"] = 0;
+    OperatorHierarchy["cross"] = 0;
+    OperatorHierarchy["{"] = 7;
+    OperatorHierarchy["}"] = 7;
     OperatorHierarchy["+"] = 6;
     OperatorHierarchy["-"] = 6;
     OperatorHierarchy["*"] = 5;
