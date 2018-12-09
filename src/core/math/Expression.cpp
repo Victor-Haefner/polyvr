@@ -198,8 +198,17 @@ void Expression::convToPrefixExpr() { // convert infix to prefix expression
     stack<string> OperandStack;
     stack<string> OperatorStack;
 
+    auto topOperator = [&](bool pop = 0) -> string {
+        if (OperatorStack.size()) {
+            auto t = OperatorStack.top();
+            if (pop) OperatorStack.pop();
+            return t;
+        }
+        return "";
+    };
+
     auto processTriple = [&]() {
-        string Operator = OperatorStack.top(); OperatorStack.pop();
+        string Operator = topOperator(1);
         if (OperandStack.size() > 1) {
             string RightOperand = OperandStack.top(); OperandStack.pop();
             string LeftOperand = OperandStack.top(); OperandStack.pop();
@@ -212,6 +221,12 @@ void Expression::convToPrefixExpr() { // convert infix to prefix expression
     auto isSecondaryToken = [&](string t) {
         if (t == ",") return true;
         return false;
+    };
+
+    auto checkCharacter = [&](string c) {
+        auto t = topOperator();
+        if (t == "") return false; // something went wrong!
+        return bool(topOperator() != c);
     };
 
     for (auto t : tokens) {
@@ -228,24 +243,24 @@ void Expression::convToPrefixExpr() { // convert infix to prefix expression
         if ( t == "[" || t == "]" ) continue;
 
         if ( t == "," ) { // single comma delimits function parameters, acts like ")("
-            while( OperatorStack.top() != "(" ) processTriple();
-            t = OperatorStack.top(); OperatorStack.pop();
+            while( checkCharacter("(") ) processTriple();
+            t = topOperator(1);
             OperatorStack.push("(");
             continue;
         }
 
-        if ( t == "(" || OperatorStack.size() == 0 || OperatorHierarchy[t] < OperatorHierarchy[OperatorStack.top()] ) {
+        if ( t == "(" || OperatorStack.size() == 0 || OperatorHierarchy[t] < OperatorHierarchy[topOperator()] ) {
             OperatorStack.push(t); continue;
         }
 
         if ( t == ")" ) {
-            while( OperatorStack.top() != "(" ) processTriple();
-            t = OperatorStack.top(); OperatorStack.pop();
+            while( checkCharacter("(") ) processTriple();
+            t = topOperator(1);
             continue;
         }
 
-        if ( OperatorHierarchy[t] >= OperatorHierarchy[OperatorStack.top()] ) {
-            while( OperatorStack.size() != 0 and OperatorHierarchy[t] >= OperatorHierarchy[OperatorStack.top()] ) {
+        if ( OperatorHierarchy[t] >= OperatorHierarchy[topOperator()] ) {
+            while( OperatorStack.size() != 0 and OperatorHierarchy[t] >= OperatorHierarchy[topOperator()] ) {
                 processTriple();
             }
             OperatorStack.push(t);

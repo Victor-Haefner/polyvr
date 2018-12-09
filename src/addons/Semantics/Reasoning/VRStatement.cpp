@@ -34,18 +34,24 @@ void VRStatement::setup(VRStorageContextPtr context) { // parse statement
     auto s2 = VRReasoner::split(s1[1], ')');
     if (s2.size() == 0) return;
 
-    // merge vectors
+    // merge math expressions
     vector<string> s3;
-    bool append = false;
+    int mathExprLvl = 0;
     string S;
     for (auto s : VRReasoner::split( s2[0] , ',')) {
-        if (append) {
+        if (mathExprLvl > 0) {
             if (S.size()) S += ",";
             S += s;
         } else S = s;
-        if (contain(s,']') || contain(s,'}')) append = false;
-        if (contain(s,'[') || contain(s,'{')) append = true;
-        if (!append) s3.push_back(S);
+
+        for (char c : s) {
+            if (c == '[' || c == '{') mathExprLvl++;
+            if (c == ']' || c == '}') mathExprLvl--;
+        }
+
+        if (mathExprLvl == 0) {
+            s3.push_back(S);
+        }
     }
 
     // make terms

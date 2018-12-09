@@ -281,13 +281,22 @@ bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
     if (statement->verb == "q") {
         if (statement->terms.size() == 0) { print("Warning: failed to apply " + statement->toString() + ", empty query!"); return false; }
         string x = statement->terms[0].var->value[0];
-        if (!context->vars.count(x)) return false;
+        print("  process results of queried variable " + x, GREEN);
+        if (!context->vars.count(x)) {
+            print("   Warning: variable " + x + " not known!", RED);
+            return false;
+        }
         VariablePtr v = context->vars[x];
-        if (!v) return false;
+        if (!v) {
+            print("   Warning: variable " + x + " known but invalid!", RED);
+            return false;
+        }
 
         bool addAssumtions = true;
         for (auto e : v->evaluations) if(e.second.state == Evaluation::VALID) addAssumtions = false;
+        print("   add assumptions? " + toString(addAssumtions), BLUE);
         if (addAssumtions) v->addAssumption(context, x); // TODO
+        print("   now processing variable: " + v->toString(), BLUE);
         //cout << "query variable: " << v->toString() << endl;
 
         for (auto e : v->entities) {
@@ -295,11 +304,11 @@ bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
             auto& eval = v->evaluations[e.first];
             bool valid = (eval.state == Evaluation::VALID || addAssumtions && eval.state != Evaluation::INVALID);
             if (valid) {
+                print("    add valid entity: " + e.second->toString(), GREEN);
                 context->results.push_back(e.second);
             }
         }
         statement->state = 1;
-        print("  process results of queried variable " + x, GREEN);
         //clearAssumptions(); //TODO
     }
 

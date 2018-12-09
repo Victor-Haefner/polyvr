@@ -81,6 +81,22 @@ void Variable::addAssumption(VRSemanticContextPtr context, string var) {
                 e->set("z", ::toString(v[2]));
             }
         }
+
+        if (c->is_a("float")) {
+            float f;
+            bool b = toValue(value[0], f);
+            if (b) e->set("var", ::toString(f));
+        }
+
+        if (c->is_a("int")) {
+            int f;
+            bool b = toValue(value[0], f);
+            if (b) e->set("var", ::toString(f));
+        }
+
+        if (c->is_a("string")) {
+            e->set("var", value[0]);
+        }
     }
 }
 
@@ -227,9 +243,11 @@ vector<string> VPath::getValue(VREntityPtr e) {
     if (!onto) return res;
 
     if (size() == 1) {
-        if (e->is_a("float")) res.push_back( e->get("var")->value );
-        if (e->is_a("int")) res.push_back( e->get("var")->value );
-        if (e->is_a("string")) res.push_back( e->get("var")->value );
+        if (auto var = e->get("var")) {
+            if (e->is_a("float")) res.push_back( var->value );
+            if (e->is_a("int")) res.push_back( var->value );
+            if (e->is_a("string")) res.push_back( var->value );
+        }
         if (e->is_a("Vector")) res.push_back( e->asVectorString() );
         else res.push_back( e->getName() );
         return res;
@@ -364,24 +382,17 @@ vector<string> Term::computeExpression(VRSemanticContextPtr context) {
     if (!me.isMathExpression()) return vector<string>();
     me.makeTree(); // build RDP tree
 
-    /*auto asVec3 = [&](VREntityPtr e) {
-        Vec3d res;
-        auto vec = getVector(prop, i);
-        int N = vec.size(); N = min(N,3);
-        for (int i=0; i<N; i++) res[i] = toFloat( vec[i]->value );
-        return res;
-    };*/
-
-    //cout << "Term::computeExpression " << str << endl;
+    cout << "Term::computeExpression " << str << endl;
+    cout << "Term::computeExpression tree:\n" << me.treeAsString() << endl;
     vector<vector<string>> valuesMap;
     for (auto l : me.getLeafs()) {
         VPath p(l->param);
         vector<string> values;
-        //cout << " expression leaf " << l->param << endl;
+        cout << " expression leaf " << l->param << endl;
         if (context->vars.count(p.root)) {
             auto v = context->vars[p.root];
             for (auto e : v->entities) {
-                //cout << "  v entity " << e.second->toString() << endl;
+                cout << "  v entity " << e.second->toString() << endl;
                 if (e.second->is_a("Vector")) {
                     auto props = e.second->getAll();
                     vector<string> vec(props.size());
@@ -397,7 +408,7 @@ vector<string> Term::computeExpression(VRSemanticContextPtr context) {
         if (values.size() == 0) values.push_back(p.root); // default is to use path root, might just be a number
         valuesMap.push_back(values);
         //for (auto val : values) l->setValue(val);
-        //cout << "  expression leaf final " << l->toString() << ", from " << values.size() << " values!" << endl;
+        cout << "  expression leaf final " << l->toString() << ", from " << values.size() << " values!" << endl;
     }
 
     vector<string> res;
