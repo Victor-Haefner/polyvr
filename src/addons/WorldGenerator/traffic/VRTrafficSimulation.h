@@ -67,7 +67,9 @@ class VRTrafficSimulation : public VRObject {
 
             ///Perception
             float distanceToNextSignal;
+            float distanceToNextStop;
             float distanceToNextIntersec;
+            Vec3d nextStop;
             string nextSignalState; //"000" - red|organge|green
             bool signalAhead;
             bool incTrafficRight = false;
@@ -163,6 +165,7 @@ class VRTrafficSimulation : public VRObject {
         map<int, laneSegment> roads;
         map<int, Vehicle> vehicles;
         map<string, VRMaterialPtr> lightMaterials;
+        map<int, map<int, int>> visionVecSaved;
         vector<int> seedRoads;
         vector<int> nearRoads;
         vector<int> forceSeedRoads;
@@ -185,7 +188,7 @@ class VRTrafficSimulation : public VRObject {
         bool isShowingGraph = false;
         bool isShowingIntersecs = false;
         bool isShowingGeometries = true;
-        bool isShowingVehicleMarkers = false;
+        bool isShowingMarkers = false;
         int whichVehicleMarkers = -1;
         bool laneChange = false;
         float speedMultiplier = 1.0;
@@ -208,6 +211,8 @@ class VRTrafficSimulation : public VRObject {
 
         void updateTurnSignal();
         void updateGraph();
+        void updateVehicVision();
+        void updateVehicIntersecs();
         void updateIntersectionVis(bool in);
 
         ///Diagnostics
