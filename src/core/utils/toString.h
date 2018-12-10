@@ -33,6 +33,7 @@ string toString(const vector<double>& v, int d=-1);
 template<typename T> string typeName(const T& t);
 template<typename T> string typeName(const vector<T>& t) { return "list of "+typeName<T>(T()); }
 template<typename T> string typeName(const vector<vector<T>>& t) { return "list of lists of "+typeName<T>(T()); }
+template<typename T, typename U> string typeName(const map<T,U>& t) { return "dictionary of "+typeName<T>(T()) + " to " + typeName<U>(U()); }
 template<typename T> string typeName(const std::shared_ptr<VRFunction<T>> t) { return "callback("+typeName<T>(T())+")"; }
 template<typename T> string typeName(const std::shared_ptr<VRFunction<vector<T>>> t) { return "callback(list of "+typeName<T>(T())+")"; }
 
@@ -51,6 +52,7 @@ template<typename T> int toValue(string s, vector<T>& t) {
 }
 
 template<typename T> int toValue(string s, vector<vector<T>>& t) { return true; } // not implemented
+template<typename T, typename U> int toValue(string s, map<T, U>& t) { return true; } // not implemented
 template<class T>    T   toValue(string s) { T t; toValue(s,t); return t; }
 
 int   toInt  (string s);

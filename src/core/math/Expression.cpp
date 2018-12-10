@@ -22,6 +22,10 @@ Expression::Value<T>::~Value() {}
 template<typename T>
 string Expression::Value<T>::toString() { return ::toString(value); }
 
+namespace OSG {
+    template<> string Expression::Value<Vec3d>::toString() { return "[" + ::toString(value[0]) + "," + ::toString(value[1]) + "," + ::toString(value[2]) + "]"; }
+}
+
 template<typename T>
 Expression::ValueBase* Expression::Value<T>::add(Expression::ValueBase* n) {
     if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value + v2->value);
@@ -77,6 +81,21 @@ Expression::ValueBase* Expression::Value<T>::compGE(Expression::ValueBase* n) {
     return 0;
 }
 
+// vector only
+
+template<typename T> Expression::ValueBase* Expression::Value<T>::cross(Expression::ValueBase* n) { return 0; }
+template<typename T> Expression::ValueBase* Expression::Value<T>::dot(Expression::ValueBase* n) { return 0; }
+
+template<> Expression::ValueBase* Expression::Value<Vec3d>::cross(Expression::ValueBase* n) {
+    if (auto v2 = dynamic_cast<Value<Vec3d>*>(n)) return new Value<Vec3d>(value.cross(v2->value));
+    return 0;
+}
+
+template<> Expression::ValueBase* Expression::Value<Vec3d>::dot(Expression::ValueBase* n) {
+    if (auto v2 = dynamic_cast<Value<Vec3d>*>(n)) return new Value<float>(value.dot(v2->value));
+    return 0;
+}
+
 
 
 Expression::Node::Node(string s) : param(s) {;}
@@ -84,14 +103,30 @@ Expression::Node::~Node() { if (value) delete value; }
 
 void Expression::Node::setValue(float f) { value = new Value<float>(f); }
 void Expression::Node::setValue(Vec3d v) { value = new Value<Vec3d>(v); }
+
 void Expression::Node::setValue(string s) {
-    int N = std::count(s.begin(), s.end(), ' ');
-    if (N == 0) setValue(toFloat(s));
-    if (N == 2) setValue(toValue<Vec3d>(s));
+    int N = std::count(s.begin(), s.end(), ',');
+    if (N == 0) {
+        float f;
+        bool b = toValue(s,f);
+        if (b) setValue(f);
+    }
+    if (N == 2) {
+        Vec3d f;
+        bool b = toValue(s,f);
+        if (b) setValue(f);
+    }
 }
 
 string Expression::Node::toString() {
     string res = value ? value->toString() : param;
+    if (right) res = right->toString() + res;
+    if (left) res += left->toString();
+    return res;
+}
+
+string Expression::Node::toString2() {
+    string res = param + "(" + (value ? value->toString() : "") + ")";
     if (right) res = right->toString() + res;
     if (left) res += left->toString();
     return res;
@@ -106,6 +141,7 @@ string Expression::Node::treeToString(string indent) {
 }
 
 void Expression::Node::compute() { // compute value based on left and right values and param as operator
+    if (!left || !right) return;
     if (left->value == 0 || right->value == 0) return;
     char op = param[0];
     if (op == '+') value = left->value->add(right->value);
@@ -117,13 +153,26 @@ void Expression::Node::compute() { // compute value based on left and right valu
     //if (op == '<') value = left->value->compLE(right->value); // TODO
     if (op == '>') value = left->value->compG(right->value);
     //if (op == '>') value = left->value->compGE(right->value); // TODO
+    if (param == "cross") value = left->value->cross(right->value);
+    if (param == "dot") value = left->value->dot(right->value);
 }
 
 
 bool Expression::isMathToken(char c) {
     if (c == '+' || c == '-' || c == '*' || c == '/') return true;
     if (c == '(' || c == ')') return true;
+    if (c == '[' || c == ']') return true; // delimits vector
+    if (c == '{' || c == '}') return true; // delimits function arguments
     if (c == '<' || c == '>'|| c == '=') return true;
+    return false;
+}
+
+bool Expression::isMathFunction(string f) {
+    if (f == "cos") return true;
+    if (f == "sin") return true;
+    if (f == "cross") return true;
+    if (f == "length") return true;
+    if (f == "dot") return true;
     return false;
 }
 
@@ -132,9 +181,12 @@ void Expression::convToPrefixExpr() { // convert infix to prefix expression
 
     // split into tokens
     string last;
+    bool inVector = false;
     for (uint i=0; i<data.size(); i++) {
         char c = data[i];
-        if (isMathToken(c)) {
+        if (isMathToken(c) || (c == ',' && !inVector)) {
+            if (c == '[') inVector = true;
+            if (c == ']') inVector = false;
             if (last.size() > 0 ) tokens.push_back(last);
             last = "";
             string t; t+=c;
@@ -144,44 +196,101 @@ void Expression::convToPrefixExpr() { // convert infix to prefix expression
     if (last.size() > 0 ) tokens.push_back(last);
 
     stack<string> OperandStack;
-    stack<char> OperatorStack;
+    stack<string> OperatorStack;
 
-    auto processTriple = [&]() {
-        char Operator = OperatorStack.top(); OperatorStack.pop();
-        auto RightOperand = OperandStack.top(); OperandStack.pop();
-        auto LeftOperand = OperandStack.top(); OperandStack.pop();
-        string op; op += Operator;
-        string tmp = op +" "+ LeftOperand +" "+ RightOperand;
-        OperandStack.push( tmp );
+    auto topOperator = [&](bool pop = 0) -> string {
+        if (OperatorStack.size()) {
+            auto t = OperatorStack.top();
+            if (pop) OperatorStack.pop();
+            return t;
+        }
+        return "";
     };
 
+    auto processTriple = [&]() {
+        if (OperandStack.size() > 1) {
+            string Operator = topOperator(1);
+            string RightOperand = OperandStack.top(); OperandStack.pop();
+            string LeftOperand = OperandStack.top(); OperandStack.pop();
+            string op; op += Operator;
+            string tmp = op +" "+ LeftOperand +" "+ RightOperand;
+            OperandStack.push( tmp );
+        }
+    };
+
+    auto isSecondaryToken = [&](string t) {
+        if (t == ",") return true;
+        return false;
+    };
+
+    auto checkCharacter = [&](string c) {
+        auto t = topOperator();
+        if (t == "") return false; // something went wrong!
+        return bool(topOperator() != c);
+    };
+
+    auto operatorsToStr = [&]() {
+        auto stackCopy = OperatorStack;
+        string s;
+        while (!stackCopy.empty( ) ) {
+            s = stackCopy.top() + " " + s;
+            stackCopy.pop( );
+        }
+        return s;
+    };
+
+    //cout << "Expression::convToPrefixExpr data: " << data << endl;
     for (auto t : tokens) {
-        if (t.size() != 1 || !isMathToken(t[0]) ) {
-            OperandStack.push(t); continue;
-        }
-        char o = t[0];
+        //cout << " token " << t << "   \toperators: " << operatorsToStr() << endl;
+        if (isMathFunction(t)) { OperatorStack.push(t); continue; }
 
-        if ( o == '(' || OperatorStack.size() == 0 || OperatorHierarchy[o] < OperatorHierarchy[OperatorStack.top()] ) {
-            OperatorStack.push(o); continue;
+        if (!isSecondaryToken(t)) {
+            if ( t.size() != 1 || !isMathToken(t[0]) ) {
+                OperandStack.push(t); continue;
+            }
         }
 
-        if ( o == ')' ) {
-            while( OperatorStack.top() != '(' ) processTriple();
-            o = OperatorStack.top(); OperatorStack.pop();
+        if ( t == "[" || t == "]" ) continue;
+
+        if ( t == "," ) { // single comma delimits function parameters, acts like "}{"
+            while( checkCharacter("{") ) processTriple();
+            t = topOperator(1);
+            OperatorStack.push("{");
             continue;
         }
 
-        if ( OperatorHierarchy[o] >= OperatorHierarchy[OperatorStack.top()] ) {
-            while( OperatorStack.size() != 0 and OperatorHierarchy[o] >= OperatorHierarchy[OperatorStack.top()] ) {
+        if ( t == "{" || t == "(" || OperatorStack.size() == 0 || OperatorHierarchy[t] < OperatorHierarchy[topOperator()] ) {
+            OperatorStack.push(t); continue;
+        }
+
+        if ( t == ")" ) {
+            while( checkCharacter("(") ) processTriple();
+            t = topOperator(1);
+            continue;
+        }
+
+        if ( t == "}" ) {
+            while( checkCharacter("{") ) processTriple();
+            t = topOperator(1);
+            continue;
+        }
+
+        if ( OperatorHierarchy[t] >= OperatorHierarchy[topOperator()] ) {
+            int i=0;
+            while( OperatorStack.size() != 0 && OperatorHierarchy[t] >= OperatorHierarchy[topOperator()] && i < 50 ) {
                 processTriple();
+                i++;
             }
-            OperatorStack.push(o);
+            OperatorStack.push(t);
         }
     }
 
     while( OperatorStack.size() ) processTriple();
-    data = OperandStack.top(); // store prefix expression
-    prefixExpr = true;
+    if (OperandStack.size()) {
+        prefixExpression = OperandStack.top(); // store prefix expression
+        prefixExpr = true;
+        //cout << " resulting prefix espression: " << prefixExpression << endl;
+    }
 }
 
 void Expression::buildTree() { // build a binary expression tree from the prefix expression data
@@ -191,7 +300,7 @@ void Expression::buildTree() { // build a binary expression tree from the prefix
 
     /*vector<string> tokens; // split string in tokens
     string token;
-    for (auto c : data) {
+    for (auto c : prefixExpression) {
         if (isMathToken(c)) {
             tokens.push_back(token);
             tokens.push_back(string()+c);
@@ -200,44 +309,53 @@ void Expression::buildTree() { // build a binary expression tree from the prefix
     }
     if (token.size()) tokens.push_back(token);*/
 
-    vector<string> tokens = splitString(data, ' '); // prefix expression is delimited by spaces!
+    //cout << "Expression::buildTree from prefix expression: " << prefixExpression << endl;
+    vector<string> tokens = splitString(prefixExpression, ' '); // prefix expression is delimited by spaces!
 
     for (uint i=0; i<tokens.size(); i++) {
         string t = tokens[tokens.size()-i-1];
         node = new Node(t);
         nodes.push_back(node);
-        if ( t.size() == 1 && isMathToken(t[0]) ) { // found operator
-            node->right = nodeStack.top(); nodeStack.pop();
+        if ( (t.size() == 1 && isMathToken(t[0])) || isMathFunction(t) ) { // found operator
             node->left = nodeStack.top(); nodeStack.pop();
+            node->right = nodeStack.top(); nodeStack.pop();
             nodeStack.push(node);
         } else nodeStack.push(node);
     }
     tree = nodeStack.top(); nodeStack.pop();
+
+    for (auto l : getLeafs()) l->setValue(l->param);
     //cout << "expression tree:\n" << tree->treeToString() << " " << tree->parent << endl;
 }
 
 Expression::Expression(string s) {
-    data = s;
+    set(s);
 
-    OperatorHierarchy['+'] = 6;
-    OperatorHierarchy['-'] = 6;
-    OperatorHierarchy['*'] = 5;
-    OperatorHierarchy['/'] = 5;
-    OperatorHierarchy['('] = 2;
-    OperatorHierarchy[')'] = 2;
-    OperatorHierarchy['<'] = 1;
-    OperatorHierarchy['>'] = 1;
-    OperatorHierarchy['='] = 1;
+    OperatorHierarchy["dot"] = 0;
+    OperatorHierarchy["cross"] = 0;
+    OperatorHierarchy["{"] = 7;
+    OperatorHierarchy["}"] = 7;
+    OperatorHierarchy["+"] = 6;
+    OperatorHierarchy["-"] = 6;
+    OperatorHierarchy["*"] = 5;
+    OperatorHierarchy["/"] = 5;
+    OperatorHierarchy["("] = 2;
+    OperatorHierarchy[")"] = 2;
+    OperatorHierarchy["<"] = 1;
+    OperatorHierarchy[">"] = 1;
+    OperatorHierarchy["="] = 1;
 }
 
 Expression::~Expression() {}
+
+ExpressionPtr Expression::create() { return ExpressionPtr( new Expression("") ); }
 
 bool Expression::isMathExpression() {
     for (auto c : data) if (isMathToken(c)) return true;
     return false;
 }
 
-void Expression::computeTree() {
+void Expression::makeTree() {
     convToPrefixExpr();
     buildTree();
 }
@@ -248,19 +366,36 @@ vector<Expression::Node*> Expression::getLeafs() {
     return res;
 }
 
-string Expression::compute() { // compute result of binary expression tree
+void Expression::set(string s) {
+    data = s;
+    data.erase(std::remove(data.begin(), data.end(), ' '), data.end());
+    data.erase(std::remove(data.begin(), data.end(), '\t'), data.end());
+    data.erase(std::remove(data.begin(), data.end(), '\n'), data.end());
+}
+
+string Expression::computeTree() { // compute result of binary expression tree
+    //if (tree) cout << tree->treeToString() << endl;
     std::function<void(Node*)> subCompute = [&](Node* n) {
-        if (!n || !n->left || !n->right) return;
+        if (!n) return;
         subCompute(n->left);
         subCompute(n->right);
         n->compute();
     };
     subCompute(tree);
-    if (tree->value) return tree->value->toString();
-    else return "";
+    if (!tree || !tree->value) return "";
+    return tree->value->toString();
+}
+
+string Expression::compute() {
+    makeTree();
+    return computeTree();
 }
 
 string Expression::toString() { return tree->toString(); }
+string Expression::treeAsString() {
+    if (!tree) makeTree();
+    return tree ? tree->treeToString() : "No tree";
+}
 
 
 

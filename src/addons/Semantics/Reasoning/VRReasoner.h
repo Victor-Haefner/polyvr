@@ -43,6 +43,8 @@ class VRReasoner {
         static bool startswith(string s, string subs);
 
     private:
+        map<string, bool> options;
+
         VRReasoner();
 
         bool evaluate(VRStatementPtr s, VRSemanticContextPtr c);
@@ -54,6 +56,8 @@ class VRReasoner {
 
     public:
         static VRReasonerPtr create();
+
+        void setOption(string option, bool b);
         vector<VREntityPtr> process(string query, VROntologyPtr onto);
         void setVerbose(bool gui, bool console);
 };
