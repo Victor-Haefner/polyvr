@@ -86,14 +86,16 @@ Expression::ValueBase* Expression::Value<T>::compGE(Expression::ValueBase* n) {
 template<typename T> Expression::ValueBase* Expression::Value<T>::cross(Expression::ValueBase* n) { return 0; }
 template<typename T> Expression::ValueBase* Expression::Value<T>::dot(Expression::ValueBase* n) { return 0; }
 
-template<> Expression::ValueBase* Expression::Value<Vec3d>::cross(Expression::ValueBase* n) {
-    if (auto v2 = dynamic_cast<Value<Vec3d>*>(n)) return new Value<Vec3d>(value.cross(v2->value));
-    return 0;
-}
+namespace OSG {
+    template<> Expression::ValueBase* Expression::Value<Vec3d>::cross(Expression::ValueBase* n) {
+        if (auto v2 = dynamic_cast<Value<Vec3d>*>(n)) return new Value<Vec3d>(value.cross(v2->value));
+        return 0;
+    }
 
-template<> Expression::ValueBase* Expression::Value<Vec3d>::dot(Expression::ValueBase* n) {
-    if (auto v2 = dynamic_cast<Value<Vec3d>*>(n)) return new Value<float>(value.dot(v2->value));
-    return 0;
+    template<> Expression::ValueBase* Expression::Value<Vec3d>::dot(Expression::ValueBase* n) {
+        if (auto v2 = dynamic_cast<Value<Vec3d>*>(n)) return new Value<float>(value.dot(v2->value));
+        return 0;
+    }
 }
 
 

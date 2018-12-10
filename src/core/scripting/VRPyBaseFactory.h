@@ -9,6 +9,7 @@
 template<typename T> bool toValue(PyObject* o, T& b);
 
 template<typename T> bool toValue(PyObject* o, vector<T>& v) {
+    if (!PyList_Check(o)) return 0;
     for (int i=0; i<VRPyBase::pySize(o); i++) {
         T t;
         PyObject* oi = PyList_GetItem(o, i);
@@ -19,21 +20,17 @@ template<typename T> bool toValue(PyObject* o, vector<T>& v) {
 }
 
 template<typename T> bool toValue(PyObject* o, vector<vector<T>>& v) {
+    if (!PyList_Check(o)) return 0;
     for (int i=0; i<VRPyBase::pySize(o); i++) {
         PyObject* oi = PyList_GetItem(o, i);
-        vector<T> v2;
-        for (int j=0; j<VRPyBase::pySize(oi); j++) {
-            T t;
-            PyObject* oi = PyList_GetItem(o, i);
-            if (!toValue(oi, t)) return 0;
-            v2.push_back( t );
-        }
-        v.push_back( v2 );
+        v.push_back( vector<T>() );
+        if (!toValue(oi, v[i])) return 0;
     }
     return 1;
 }
 
 template<typename T, typename U> bool toValue(PyObject* o, map<T, U>& m) {
+    if (!PyDict_Check(o)) return 0;
     PyObject* keys = PyDict_Keys(o);
     for (int i=0; i<VRPyBase::pySize(keys); i++) {
         T t;
