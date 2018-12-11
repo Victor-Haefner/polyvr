@@ -291,7 +291,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
         if (object == "IrreflexiveProperty") { objproperties[subject] = VRProperty::create(subject); return 0; }
 
         // rules
-        if (object == "Variable") { variables[subject] = Variable::create(onto, subject); return 0; }
+        if (object == "Variable") { variables[subject] = Variable::create(onto, {subject}); return 0; }
     }
 
     if (type == "") { // resolve the subject type of the statement

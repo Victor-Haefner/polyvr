@@ -68,6 +68,7 @@ class Path : public VRStorage {
         bool isStraight(int i = 0, int j = 0);
         bool isCurve(int i = 0, int j = 0);
         bool isSinuous(int i = 0, int j = 0);
+        bool isCrossing(PathPtr path);
 
         void approximate(int degree);
         void translate(Vec3d t);

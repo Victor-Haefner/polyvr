@@ -2,6 +2,7 @@
 #include "VROntologyT.h"
 #include "addons/WorldGenerator/GIS/GISWorld.h"
 
+#include "core/math/path.h"
 #include "core/objects/VRTransform.h"
 
 using namespace OSG;
@@ -61,6 +62,7 @@ void VROntology::setupLibrary() {
     mathOnto->getConcept("Box")->addProperty("max", "Vector");
     mathOnto->addRule("inside(p,b):Box(b);Position(p);isGe(p,b.min);isGe(b.max,p)", "Box");
     mathOnto->addRule("connected(n,m):Node(n);Node(m);Path(p);has(p.nodes,n);has(p.nodes,m)", "Node");
+    //mathOnto->addBuiltin("crossing", &Path::isCrossing); // TODO: the Path class has to be linked to the Path concept
     // TODO: quaternion rotation rule to change direction
 
     objectOnto->import(mathOnto);

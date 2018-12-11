@@ -16,6 +16,7 @@ using namespace std;
 class VRPyTypeCaster {
     private:
         static PyObject* pack(const vector<PyObject*>& v);
+        static PyObject* pack(const vector< vector<PyObject*> >& v);
         static PyObject* pack(const vector< pair<PyObject*,PyObject*> >& v);
 
     public:
@@ -33,6 +34,20 @@ class VRPyTypeCaster {
                 if (o) l.push_back(o);
             }
             return pack(l);
+        }
+
+        template<typename T>
+        static PyObject* cast(const vector<vector<T>>& vvt) {
+            vector<vector<PyObject*>> l2;
+            for (auto vt : vvt) {
+                vector<PyObject*> l;
+                for (auto t : vt) {
+                    PyObject* o = cast<T>(t);
+                    if (o) l.push_back(o);
+                }
+                l2.push_back(l);
+            }
+            return pack(l2);
         }
 
         template<typename T, typename G>

@@ -26,7 +26,8 @@ void GISWorld::setupOntology() {
     World->addProperty("cities", City);
     Country->addProperty("regions", Region);
 
-    auto WayNetwork = world->addConcept("WayNetwork", "", "The network of all ways in a country");
+    map<string, string> empty;
+    auto WayNetwork = world->addConcept("WayNetwork", "", empty, "The network of all ways in a country");
     auto Way = world->addConcept("Way", "Area");
     auto Road = world->addConcept("Road", "Way");
     auto Sidewalk = world->addConcept("Sidewalk", "Way");
@@ -39,7 +40,7 @@ void GISWorld::setupOntology() {
     auto RoadMarking = world->addConcept("RoadMarking", "Border");
     auto StopLine = world->addConcept("StopLine", "RoadMarking");
     auto RoadTrack = world->addConcept("RoadTrack", "Path");
-    auto Kerb = world->addConcept("Kerb", "Border", "A stone edging to a pavement or raised way");
+    auto Kerb = world->addConcept("Kerb", "Border", empty, "A stone edging to a pavement or raised way");
     auto Arrow = world->addConcept("Arrow");
     auto ParkingLot = world->addConcept("ParkingLot", "Road");
     auto ParallelParkingLot = world->addConcept("ParallelParkingLot", "ParkingLot");
@@ -84,6 +85,7 @@ void GISWorld::setupOntology() {
     Road->addProperty("buildings", Building);
     Road->addProperty("type", "string");
     Sign->addProperty("type", "string");
+    Sign->addProperty("info", "string");
     Sign->addProperty("direction", "Direction");
     Sign->addProperty("lanes", Lane);
     RoadIntersection->addProperty("node", "Node");

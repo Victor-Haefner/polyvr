@@ -28,33 +28,35 @@ struct VPath {
 };
 
 struct Evaluation {
-    enum STATE {VALID, INVALID};
+    enum STATE {VALID, INVALID, ASSUMPTION};
     STATE state = VALID; // valid, assumption, anonymous, ruled_out, ...
 };
 
 struct Variable {
     map<int, VREntityPtr> entities;
     map<int, Evaluation> evaluations; // summarize the evaluation state of each instance!
-    string value;
+    vector<string> value;
     string concept = "var";
-    bool isAssumption = false;
     bool isAnonymous = true;
     bool valid = true;
 
     string toString();
+    string valToString();
     bool has(VariablePtr other, VPath& p1, VPath& p2, VROntologyPtr onto);
     bool is(VariablePtr other, VPath& p1, VPath& p2);
 
-    Variable(VROntologyPtr onto, string concept, string var);
-    Variable(VROntologyPtr onto, string val);
+    Variable(VROntologyPtr onto, string concept, vector<string> var, VRSemanticContextPtr context);
+    Variable(VROntologyPtr onto, vector<string> val);
     Variable();
 
-    static VariablePtr create(VROntologyPtr onto, string concept, string var);
-    static VariablePtr create(VROntologyPtr onto, string val);
+    static VariablePtr create(VROntologyPtr onto, string concept, vector<string> var, VRSemanticContextPtr context);
+    static VariablePtr create(VROntologyPtr onto, vector<string> val);
 
-    void addEntity(VREntityPtr e);
+    void addEntity(VREntityPtr e, bool assumtion = false);
     bool operator==(Variable v);
     void discard(VREntityPtr e);
+
+    void addAssumption(VRSemanticContextPtr context, string var);
 };
 
 struct Term {
@@ -66,7 +68,7 @@ struct Term {
     bool valid();
 
     bool isMathExpression();
-    string computeExpression(VRSemanticContextPtr c);
+    vector<string> computeExpression(VRSemanticContextPtr c);
 
     bool is(Term& t, VRSemanticContextPtr context);
     bool has(Term& t, VRSemanticContextPtr context);
@@ -84,7 +86,8 @@ struct Query {
     void substituteRequest(VRStatementPtr s);
 };
 
-struct VRSemanticContext {
+struct VRSemanticContext : public std::enable_shared_from_this<VRSemanticContext>{
+    map<string, bool> options;
     map<string, VariablePtr> vars;
     map<string, Query> rules;
     list<Query> queries;
@@ -95,8 +98,11 @@ struct VRSemanticContext {
     int itr_max = 5;
 
     VRSemanticContext(VROntologyPtr onto = 0);
-
+    VRSemanticContextPtr ptr();
     static VRSemanticContextPtr create(VROntologyPtr onto = 0);
+
+    void init();
+    bool getOption(string option);
 };
 
 OSG_END_NAMESPACE;

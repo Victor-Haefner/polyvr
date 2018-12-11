@@ -4,6 +4,7 @@
 #include "core/scripting/VRPyPath.h"
 #include "core/scripting/VRPyGeometry.h"
 #include "core/scripting/VRPyPolygon.h"
+#include "core/objects/material/VRTextureMosaic.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
 #include "core/scripting/VRPyBaseFactory.h"
 
@@ -108,8 +109,13 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
 };
 
 PyMethodDef VRPyTrafficSigns::methods[] = {
+    {"addSign", PyWrap( TrafficSigns, addSign, "adds trafficSign to world - type - pose", void, string, PosePtr ) },
     {"getName", PyWrap( TrafficSigns, getName, "returns name of shield by ID", string, Vec2i ) },
+    {"getVecID", PyWrap( TrafficSigns, getVecID, "returns ID of sign as vector", Vec2i, string ) },
     {"getOSMTag", PyWrap( TrafficSigns, getOSMTag, "returns OSM tag by ID", string, Vec2i ) },
+    {"getTextureMosaic", PyWrap( TrafficSigns, getTextureMosaic, "returns textureMosaic", VRTextureMosaicPtr ) },
+    {"reloadShader", PyWrap( TrafficSigns, reloadShader, "reloads shader", void ) },
+    //{"setMegaTexture", PyWrap( TrafficSigns, setMegaTexture, "sets textureMosaic", void, VRTextureMosaicPtr ) },
     {NULL}  /* Sentinel */
 };
 
