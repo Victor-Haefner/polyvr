@@ -119,6 +119,7 @@ PyMethodDef VRPyEntity::methods[] = {
     {"getAll", (PyCFunction)VRPyEntity::getAll, METH_VARARGS, "Get all values of property named prop - [str] get( str prop )" },
     {"getAllVector", (PyCFunction)VRPyEntity::getAllVector, METH_VARARGS, "Get all values of vector property named prop - [[x,y,z]] getAllVector( str prop ) )" },
     {"setSGObject", (PyCFunction)VRPyEntity::setSGObject, METH_VARARGS, "Link the entity to its scene graph object - setSGObject( obj ) )" },
+    {"getSGObject", PyWrap(Entity, getSGObject, "Get linked entity", VRObjectPtr) },
     {"is_a", PyCastWrap(Entity, is_a, "Check is entity is of a given type", bool, string) },
     {NULL}  /* Sentinel */
 };
