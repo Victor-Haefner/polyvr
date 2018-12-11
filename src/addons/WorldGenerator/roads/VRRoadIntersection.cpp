@@ -11,6 +11,7 @@
 #include "core/scene/VRObjectManager.h"
 #include "addons/Semantics/Reasoning/VREntity.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
+#include "addons/Semantics/Reasoning/VROntology.h"
 
 using namespace OSG;
 
@@ -63,7 +64,6 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 	auto computeLaneMatches = [&]() {
 	    auto checkDefaultMatch = [&](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut, VRRoadPtr road1, VRRoadPtr road2, int Zout, int Zin) {
         ///DEFAULT - INTERSECTION
-        ///AGRAJAG
         //i= index lane in; j= index lane out; Nin= number of lanes going in at road1; Nout= number of lanes going out at road2; reSignIn= , reSignOut=,
             auto getRoadConnectionAngle = [&](VRRoadPtr road1, VRRoadPtr road2) {
                 auto& data1 = road1->getEdgePoint( node );
@@ -79,14 +79,21 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 return a;
             };
             bool oneway =  ( Zout==0 || Zin==0 );
-            if (Nin == Nout && i != j && reSignIn != reSignOut) return false;
-            if (Nin == Nout && i != Nout-j-1 && reSignIn == reSignOut) return false;
+            //if (Nin == Nout && i != j && reSignIn != reSignOut) return false;
+            //if (Nin == Nout && i != Nout-j-1 && reSignIn == reSignOut) return false;
             bool parallel  = bool( getRoadConnectionAngle(road1, road2) < -0.8 );
             bool left  = bool( getRoadTurnLeft(road1, road2) < 0);
             if (reSignIn<0) i=Nin-i-1;  //making sure indexes stay consistent, independent of road-direction
             if (reSignOut<0) j=Nout-j-1;
 
+            if (Nin == Nout && i != Nout-j-1) {
+                //if (roadFronts.size()!=4) return false;
+                //if (!parallel) return false;
+                return false;
+            }
+
             if (Nin == Nout && Nin>1 && roadFronts.size()>2 && !oneway) {
+                if ( parallel && i==Nin-1 && roadFronts.size()>3) return false;
                 if (!parallel && i>0 && !left) return false;
                 if (!parallel && i<Nin-1 && left) return false;
             }
@@ -382,33 +389,6 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 roads->connectGraph({node1,node2}, {norm1,norm2}, laneIn);
                 rGraph->remNode(tempID);
             }
-            /*
-            auto laneIn = match.first;
-            auto laneOut = match.second;
-            auto roadIn = laneIn->getEntity("road");
-            auto roadOut = laneOut->getEntity("road");
-
-            laneIn->set("nextIntersection", entity->getName());
-            laneOut->set("lastIntersection", entity->getName());
-
-            float width = laneIn->getValue<float>("width", 0.5);
-            bool pedestrianIn = laneIn->getValue<bool>("pedestrian", false);
-            auto nodes1 = laneIn->getEntity("path")->getAllEntities("nodes");
-            auto node1Ent = *nodes1.rbegin();
-
-            bool pedestrianOut = laneOut->getValue<bool>("pedestrian", false);
-            auto nodes2 = laneOut->getEntity("path")->getAllEntities("nodes");
-            auto node2Ent = nodes2[0];
-
-            auto lane = addLane(1, width, pedestrianIn || pedestrianOut);
-
-            auto nodes = { node1Ent->getEntity("node"), node2Ent->getEntity("node") };
-            auto norms = { node1Ent->getVec3("direction"), node2Ent->getVec3("direction") };
-            auto lPath = addPath("Path", "lane", nodes, norms);
-            lane->add("path", lPath->getName());
-            nextLanes[laneIn].push_back(lane);
-            nextLanes[lane].push_back(laneOut);
-            roads->connectGraph(nodes, norms, lane);*/
         }
         int n = 0;
         vector<vector<int>> inl;
@@ -849,14 +829,6 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto node2 = nodes[nodes.size()-1]->getEntity("node");
                 auto edgeID = graph->getEdgeID(node1->getValue<int>("graphID", -1),node2->getValue<int>("graphID", -1));
                 inIDs.push_back(edgeID);
-                /*if (processedLanes.count(laneIn)) continue;
-                //auto nodes = laneIn->getEntity("path")->getAllEntities("nodes");
-                VREntityPtr node = (*nodes.rbegin())->getEntity("node");
-                auto p = node->getVec3("position");
-                p += Xa;
-                node->setVec3("position", p, "Position");
-                graph->setPosition(node->getValue<int>("graphID", 0), Pose::create(p));
-                cout << "------bridgeForkingLanes -  inLane - " << node->getValue<int>("graphID", 0) << p <<"\n";*/
             }
 
             for (auto laneOut : rfront->outLanes) {
@@ -865,13 +837,6 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 auto node2 = nodes[1]->getEntity("node");
                 auto edgeID = graph->getEdgeID(node1->getValue<int>("graphID", -1),node2->getValue<int>("graphID", -1));
                 ouIDs.push_back(edgeID);
-                /*if (processedLanes.count(laneOut)) continue;
-                VREntityPtr node = laneOut->getEntity("path")->getAllEntities("nodes")[0]->getEntity("node");
-                auto p = node->getVec3("position");
-                p += Xa;
-                node->setVec3("position", p, "Position");
-                graph->setPosition(node->getValue<int>("graphID", 0), Pose::create(p));
-                cout << "------bridgeForkingLanes - outLane - " << node->getValue<int>("graphID", 0) << p <<"\n";*/
             }
             inl.push_back(inIDs);
             oul.push_back(ouIDs);
@@ -1239,6 +1204,57 @@ void VRRoadIntersection::computeMarkings() {
     }
 }
 
+void VRRoadIntersection::computeTrafficSigns(){
+    auto generateMatchingSigns = [&]() { };
+    auto generateCrossingSigns = [&]() { };
+    auto generateForkingSigns = [&]() { };
+
+    auto generateDefaultSigns = [&]() {
+        string input = "CN:Indicative:7";
+        for (auto roadFront : roadFronts) {
+            Vec3d pos;
+            Vec3d dir;
+            auto road = roadFront->road;
+            auto roadEnt = road->getEntity();
+            auto& data = road->getEdgePoint( entity->getEntity("node") );
+            Vec3d p1 = data.p1;
+            Vec3d p2 = data.p2;
+            pos = (p1+p2)/2;
+            dir = data.n;
+            int n1 = 0; int n2 = 0;
+            vector<VREntityPtr> laneEnts;
+            for (auto laneEnt : roadEnt->getAllEntities("lanes")) {
+                auto laneDir = laneEnt->getValue("direction", 1);
+                Vec3d laneTangent = road->getRightEdge(pos)->dir() * laneDir;
+                if (dir.dot(laneTangent) < -0.5 && !laneEnt->getValue<bool>("pedestrian", false)) {
+                    laneEnts.push_back(laneEnt);
+                    n1++;
+                } else n2++;
+            }
+            if (n1 + n2 < 3) return;
+            auto o = ontology.lock();
+            auto signEnt = o->addEntity("sign", "Sign");
+            signEnt->set("type", "OSMSign");
+            signEnt->set("info", input);
+            for (auto laneEnt : laneEnts) {
+                laneEnt->add("signs",laneEnt->getName());
+                signEnt->add("lanes",laneEnt->getName());
+            }
+            signEnt->setVec3("position", pos, "Position");
+            signEnt->setVec3("direction", dir, "Direction");
+        }
+    };
+
+    switch (type) {
+        case CONTINUATION: generateMatchingSigns(); break;
+        case CROSSING: generateCrossingSigns(); break;
+        case FORK: generateForkingSigns(); break;
+        //case MERGE: break;
+        //case UPLINK: break;
+        default: generateDefaultSigns(); break;
+    }
+}
+
 void VRRoadIntersection::computeLayout(GraphPtr graph) {
     auto node = entity->getEntity("node");
     Vec3d pNode = node->getVec3("position");
@@ -1468,6 +1484,7 @@ void VRRoadIntersection::computeLayout(GraphPtr graph) {
     if (!resolveSpacialCases()) resolveEdgeIntersections();
     computeRoadFronts();
     computeIntersectionPaths();
+    computeTrafficSigns();
     computePatch();
     elevateRoadNodes();
 }
@@ -1492,6 +1509,14 @@ map<int, vector<VRTrafficLightPtr>> VRRoadIntersection::getTrafficLightMap(){
 vector<VRRoadPtr> VRRoadIntersection::getRoads(){
     vector<VRRoadPtr> res;
     for (auto rf : roadFronts) res.push_back(rf->road);
+    return res;
+}
+
+vector<VREntityPtr> VRRoadIntersection::getInLanes(){
+    vector<VREntityPtr> res;
+    for (auto rf : roadFronts) {
+        for (auto l : rf->inLanes) res.push_back(l);
+    }
     return res;
 }
 

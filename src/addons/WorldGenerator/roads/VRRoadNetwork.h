@@ -28,6 +28,7 @@ class VRRoadNetwork : public VRRoadBase {
         GraphPtr graph;
         map<int, vector<Vec3d> > graphNormals;
         map<int, VREntityPtr> graphEdgeEntities;
+        map<VREntityPtr, int> graphEdgeIDs;
         //map<int, VRRoadPtr> roadsByEdgeID;
 
         VRAsphaltPtr asphalt;
@@ -82,6 +83,7 @@ class VRRoadNetwork : public VRRoadBase {
         VREntityPtr addRoute(vector<int> nodes);
 
         VREntityPtr getLane(int edgeID);
+        int getLaneID(VREntityPtr lane);
         VRRoadPtr getRoad(VREntityPtr road);
         VRRoadIntersectionPtr getIntersection(VREntityPtr intersection);
 

@@ -25,13 +25,40 @@ void VRStatement::setup(VRStorageContextPtr context) { // parse statement
     if (s1.size() == 0) return;
     verb = s1[0];
 
+    auto contain = [&](string& s, char c) {
+        return bool(s.find(c) != std::string::npos);
+    };
+
     // terms
     if (s1.size() < 2) return;
     auto s2 = VRReasoner::split(s1[1], ')');
     if (s2.size() == 0) return;
-    auto s3 = VRReasoner::split( s2[0] , ',');
+
+    // merge math expressions
+    vector<string> s3;
+    int mathExprLvl = 0;
+    string S;
+    for (auto s : VRReasoner::split( s2[0] , ',')) {
+        if (mathExprLvl > 0) {
+            if (S.size()) S += ",";
+            S += s;
+        } else S = s;
+
+        for (char c : s) {
+            if (c == '[' || c == '{') mathExprLvl++;
+            if (c == ']' || c == '}') mathExprLvl--;
+        }
+
+        if (mathExprLvl == 0) {
+            s3.push_back(S);
+        }
+    }
+
+    // make terms
     terms.clear();
-    for (string s : s3) terms.push_back(Term(s));
+    for (string s : s3) {
+        terms.push_back(Term(s));
+    }
 }
 
 VRStatementPtr VRStatement::create(string s, int p) { return VRStatementPtr( new VRStatement(s,p) ); }
@@ -48,7 +75,7 @@ void VRStatement::updateLocalVariables(map<string, VariablePtr>& globals, VROnto
     this->onto = onto;
     for (auto& t : terms) {
         if (globals.count(t.path.root)) t.var = globals[t.path.root];
-        else t.var = Variable::create(onto,t.path.root);
+        else t.var = Variable::create(onto,{t.path.root});
         //cout << "updateLocalVariables " << t.str << " " << t.path.root << " " << t.var->concept << endl;
     }
 }
@@ -76,7 +103,7 @@ bool VRStatement::match(VRStatementPtr s) {
         if (!cS || !cR) continue; // may be anything..
 
         if (!cS->is_a(cR) && !cR->is_a(cS)) { // check if the concepts are related
-            VRReasoner::print("       var "+tR.var->value+" ("+tR.var->concept+") and var "+tS.var->value+" ("+tS.var->concept+") are not related!", VRReasoner::RED);
+            VRReasoner::print("       var "+tR.var->valToString()+" ("+tR.var->concept+") and var "+tS.var->valToString()+" ("+tS.var->concept+") are not related!", VRReasoner::RED);
             return false;
         }
 

@@ -21,6 +21,8 @@ VRProperty::VRProperty(string name, string t) {
 VRPropertyPtr VRProperty::create(string name, string type) { return VRPropertyPtr(new VRProperty(name, type)); }
 
 void VRProperty::setType(string type) { this->type = type; }
+string VRProperty::getType() { return type; }
+string VRProperty::getValue() { return value; }
 
 void VRProperty::setValue(string value) {
     if (!isNumber(value)) for (char c : string(".,")) replace(value.begin(), value.end(),c,'_');
