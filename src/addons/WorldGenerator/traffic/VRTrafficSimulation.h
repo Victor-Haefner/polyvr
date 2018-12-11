@@ -204,6 +204,8 @@ class VRTrafficSimulation : public VRObject {
         string lastseedRoadsString = "";
         //int debugOverRideSeedRoad = -1;
         int debugOverRideSeedRoad = -1;
+        float killswitch1 = 5;
+        float killswitch2 = 200;
         VRUpdateCbPtr turnSignalCb;
 
         VRUpdateCbPtr updateCb;
@@ -259,6 +261,7 @@ class VRTrafficSimulation : public VRObject {
         void runDiagnostics();
         void runVehicleDiagnostics();
         void stopVehicle(int ID);
+        void setKillswitches(float k1, float k2);
         void deleteVehicle(int ID);
         void setSeedRoad(int debugOverRideSeedRoad);
         void setSeedRoadVec(vector<int> forceSeedRoads);
