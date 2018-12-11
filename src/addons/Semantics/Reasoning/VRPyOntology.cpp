@@ -61,6 +61,7 @@ template<> PyObject* VRPyTypeCaster::cast(const VRPropertyValue& v) {
 };
 
 PyMethodDef VRPyEntity::methods[] = {
+    {"getSGObject", PyWrap(Entity, getSGObject, "Get linked entity", VRObjectPtr) },
     {"toString", PyWrap(Entity, toString, "Return the entity as string", string ) },
     {"getConcept", PyWrap(Entity, getConcept, "Return the concept", VRConceptPtr ) },
     {"getProperties", PyCastWrapOpt(Entity, getAll, "Return all properties or the properties of a certain type", "", vector<VRPropertyPtr>, string ) },
