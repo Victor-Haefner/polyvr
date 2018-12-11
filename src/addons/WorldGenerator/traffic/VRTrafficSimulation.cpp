@@ -107,6 +107,7 @@ void VRTrafficSimulation::Vehicle::setDefaults() {
     maxDecceleration = 10; //8 dry, 4-5 sand, 1-4 snow
     acceleration = 0.0;
     decceleration = 0.0;
+    lastLaneSwitchTS = 0.0;
 
     pos.pos = 0;
     behavior = 0; //0 = straight, 1 = left, 2 = right
@@ -876,7 +877,8 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 float sinceLastLS = float(glutGet(GLUT_ELAPSED_TIME)*0.001) - vehicle.lastLaneSwitchTS;
 
                 float intersectionWidth = vehicle.distanceToNextIntersec - vehicle.distanceToNextStop;
-                bool signalBlock = (vehicle.nextSignalState=="100" || vehicle.nextSignalState=="010");
+                bool signalBlock = vehicle.nextSignalState=="100";
+                bool signalTransit = vehicle.nextSignalState=="010";
                 bool interBlock = (vehicle.distanceToNextStop < 60 && vehicle.distanceToNextIntersec > intersectionWidth);
                 bool vehicBlock = false;
                 bool holdAtIntersec = false;
@@ -906,13 +908,13 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                     vehicle.signaling.push_back(4);
                 };
 
-                auto driveToIntersec =[&]() {
+                /*auto driveToIntersec =[&]() {
                     auto dis = vehicle.distanceToNextStop;
                     if ( dis < safetyDis - 3 ) { decelerate(1); }
                     if ( dis > safetyDis - 3 && dis < safetyDis + 2 ) { decelerate(0.66); }
                     if ( dis > safetyDis + 2 && dis > safetyDis + 10) { holdVelocity(); }
                     if ( dis > safetyDis + 10 ) { accelerate(1); }
-                };
+                };*/
 
                 auto behave = [&]() {
                 ///LOGIC
@@ -927,10 +929,11 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                     if (nextIntersection > 35 && nextStopDistance > 30) vehicle.signaling.push_back(0);
                     if (vehicle.turnAhead == 1 && nextIntersection < 35 && nextStopDistance < 30) vehicle.signaling.push_back(1); //left
                     if (vehicle.turnAhead == 2 && nextIntersection < 35 && nextStopDistance < 30) vehicle.signaling.push_back(2); //right
-
+                    /*
                     ///RIGHT OF WAY
-                    if (vehicle.incTrafficRight && !signalAhead && vehicle.turnAhead != 2) { vehicBlock = true; driveToIntersec(); return; } //rudimentary right of way
-                    if (vehicle.incTrafficFront && vehicle.turnAhead == 1 ) { vehicBlock = true; decelerate(1); return; } //rudimentary right of way
+                    if (vehicle.incTrafficRight && !signalAhead && vehicle.turnAhead != 2 && !inFront()) { vehicBlock = true; driveToIntersec(); return; } //rudimentary right of way
+                    if (vehicle.incTrafficFront && (nextStopDistance < 5 || inIntersec) &&vehicle.turnAhead == 1 ) { vehicBlock = true; decelerate(1); return; } //rudimentary right of way
+                    if (vehicle.incTrafficFront && nextStopDistance > 5 && vehicle.turnAhead == 1 && !inFront() ) { vehicBlock = true; driveToIntersec(); return; } //rudimentary right of way
                     if (vehicle.incTrafficFront && vehicle.turnAhead == 1 && VRGlobals::CURRENT_FRAME - vehicle.frontVehicLastMove<400) { vehicBlock = true; decelerate(1); return; } //rudimentary right of way
 
                     ///VELOCITY CONTROL
@@ -939,6 +942,8 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                         //no vehicle ahead
                             ///APPROACHING INTERSECTION
                             if ( signalAhead && nextStopDistance < safetyDis + 20 && signalBlock ) { driveToIntersec(); return; }
+                            if ( signalAhead && nextStopDistance < safetyDis + 3 && signalTransit ) { accelerate(1); return; }
+                            if ( signalAhead && nextStopDistance > safetyDis + 3 && signalTransit ) { driveToIntersec(); return; }
                             //if ( !signalAhead && nextSignalDistance < safetyDis + 6 && signalBlock ) { driveToIntersec(); return; }
                             //if ( nextSignalDistance < safetyDis + 6 ) { driveToIntersec(); return; }
 
@@ -1025,7 +1030,56 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                     }
                     if ( vbeh == vehicle.REVERSE ) {
                         d = vehicle.currentVelocity;
-                    }
+                    }*/
+
+                    auto checkLaneSwitch =[&]() {
+                        if (sinceLastLS < 10 || nextStopDistance < 35 || vehicle.currentVelocity < 15/3.6 ) return;
+                        if ( inFront() ) {
+                            if ( checkR(vehicle.vID) ) toChangeLane[vehicle.vID] = 2;
+                        }
+                        else {
+                            if ( checkL(vehicle.vID) ) toChangeLane[vehicle.vID] = 1;
+                        }
+                    };
+
+                    auto checkAcceleration =[&]() {
+                        bool safeTravel = nextStopDistance - nextMoveAcc > safetyDis;
+                        if ( vehicle.currentVelocity > vehicle.targetVelocity*0.95 ) return false;
+                        if (  signalAhead && signalBlock && !safeTravel ) return false; //red light
+                        if (  signalAhead && signalTransit && nextStopDistance - nextMoveAcc < safetyDis + 1 && !inIntersec ) return false; //orange light
+                        if ( !signalAhead && vehicle.incTrafficRight && vehicle.turnAhead != 2 && !safeTravel ) return false;
+                        if ( vehicle.turnAhead == 1 && vehicle.incTrafficFront && nextStopDistance < 5  ) return false;
+                        if ( inFront() ) {
+                            int frontID = vehicle.vehiclesightFarID[INFRONT];
+                            float disToFrontV = vehicle.vehiclesightFar[INFRONT];
+                            if ( disToFrontV - nextMoveAcc < safetyDis + 3 ) return false;
+                        }
+                        return true;
+                    };
+
+                    auto checkHoldVelocity =[&]() {
+                        bool safeTravel = nextStopDistance - nextMove > safetyDis - 2;
+                        if ( vehicle.currentVelocity > vehicle.targetVelocity ) return false;
+                        if (  signalAhead && signalBlock && !safeTravel ) return false;
+                        if (  signalAhead && signalTransit && !safeTravel && !inIntersec ) return false; //orange light
+                        if ( !signalAhead && vehicle.incTrafficRight && vehicle.turnAhead != 2 && !safeTravel ) return false;
+                        if ( vehicle.turnAhead == 1 && vehicle.incTrafficFront && nextStopDistance < 1.5  ) return false;
+                        if ( inFront() ) {
+                            int frontID = vehicle.vehiclesightFarID[INFRONT];
+                            float disToFrontV = vehicle.vehiclesightFar[INFRONT];
+                            if ( disToFrontV - nextMove < safetyDis + 1 ) return false;
+                        }
+                        return true;
+                    };
+
+                    auto checkDeceleration =[&]() {
+                        return true;
+                    };
+
+                    checkLaneSwitch();
+                    if ( checkAcceleration() ) { accelerate(1); return; }
+                    if ( checkHoldVelocity() ) { holdVelocity(); return; }
+                    if ( checkDeceleration() ) { decelerate(1); return; }
                 };
                 behave();
                 vehicle.currentVelocity = d;
