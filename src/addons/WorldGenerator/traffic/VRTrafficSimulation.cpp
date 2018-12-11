@@ -277,7 +277,7 @@ T randomChoice(vector<T> vec) {
 void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
     if (auto t = tw.lock()) if (t->control_flag == false) return;
 
-    this_thread::sleep_for(chrono::microseconds(100));
+    this_thread::sleep_for(chrono::microseconds(500));
     PLock lock(mtx);
 
     if (!roadNetwork) return;
@@ -515,7 +515,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         if (intention==vehicle.STRAIGHT) { offset = vehicle.currentOffset + Vec3d(0,0,0); doffset = vehicle.currentdOffset + Vec3d(0,0,0); }
         if (intention==vehicle.SWITCHLEFT && vehicle.indicatorTS > 2 ) { offset = vehicle.currentOffset + left*offsetVel; doffset = vehicle.currentdOffset + left*vS*doffsetVel; }
         if (intention==vehicle.SWITCHRIGHT && vehicle.indicatorTS > 2 ) { offset = vehicle.currentOffset + right*offsetVel; doffset = vehicle.currentdOffset + -left*vS*doffsetVel; }
-        if (intention != 0) { cout << offsetVel << endl; cout << d << endl; }
+        //if (intention != 0) { cout << offsetVel << endl; cout << d << endl; }
         //cout << toString(d*5*3) << " - " << toString(d*1.5) << endl;
         //cout << intention << " -- " << toString(vehicle.vID) << " -- " << toString(vehicle.behavior) <<  toString(vehicles[vehicle.vID].behavior) << " -- "<< toString(offset) << endl;
 
@@ -1115,7 +1115,6 @@ void VRTrafficSimulation::updateSimulation() {
     vector<int> N(4,0);
     auto addTransforms = [&]() {
         if (toBeAddedVehicles.size() == 0) return;
-        float start = glutGet(GLUT_ELAPSED_TIME);
         for (auto each : toBeAddedVehicles) {
             Vehicle& v = vehicles[each];
             v.setupSG(models[v.type]->duplicate(), lightMaterials);
@@ -1123,23 +1122,16 @@ void VRTrafficSimulation::updateSimulation() {
             N[0]++;
         }
         toBeAddedVehicles.clear();
-        float stop = glutGet(GLUT_ELAPSED_TIME);
-        float delt = stop-start;
-        //if (N[0] > 0 && delt>0) cout << "addTransforms " << N[0] << " " << delt << endl;
     };
 
     auto hideTransforms = [&]() {
         if (toBeHiddenVehicles.size() == 0) return;
-        float start = glutGet(GLUT_ELAPSED_TIME);
         for (auto each : toBeHiddenVehicles) {
             Vehicle& v = vehicles[each];
             v.hide();
             N[1]++;
         }
         toBeHiddenVehicles.clear();
-        float stop = glutGet(GLUT_ELAPSED_TIME);
-        float delt = stop-start;
-        //if (N[1] > 0 && delt>0) cout << "hideTransforms " << N[1] << " "  << delt << endl;
     };
 
     auto showTransforms = [&]() {
@@ -1158,25 +1150,19 @@ void VRTrafficSimulation::updateSimulation() {
 
     auto makeInvisTransforms = [&]() {
         if (toBeMadeInvisVehicles.size() == 0) return;
-        float start = glutGet(GLUT_ELAPSED_TIME);
         for (auto each : toBeMadeInvisVehicles) {
             Vehicle& v = vehicles[each];
             v.t->setVisible(false);
             //v.isVisible = false;
         }
         toBeMadeInvisVehicles.clear();
-        float stop = glutGet(GLUT_ELAPSED_TIME);
-        float delt = stop-start;
-        //if (N[2] > 0 && delt>0) cout << "showTransforms " << N[2] << " "  << delt << endl;
     };
 
     auto updateTransforms = [&]() {
-        float start = glutGet(GLUT_ELAPSED_TIME);
         for (auto& u : users) {
             if (!u.t)  continue;
-            auto p = u.t->getWorldPose();
-            u.simPose = p;
-            N[3]++;
+            u.simPose = u.t->getWorldPose();
+            //N[3]++;
         }
         if (toBeTransformedVehicles.size() == 0) return;
         for (auto each : toBeTransformedVehicles) {
@@ -1188,14 +1174,10 @@ void VRTrafficSimulation::updateSimulation() {
                 //v.isVisible = true;
                 for (auto i : v.signaling) v.signalLights(i, lightMaterials);
                 v.signaling.clear();
-                N[3]++;
+                //N[3]++;
             }
         }
         toBeTransformedVehicles.clear();
-
-        float stop = glutGet(GLUT_ELAPSED_TIME);
-        float delt = stop-start;
-        if (N[3] > 1 && delt>5) cout << "updateTransforms " << N[3] << " "  << delt << endl;
     };
 
     auto updateVisuals = [&](){
