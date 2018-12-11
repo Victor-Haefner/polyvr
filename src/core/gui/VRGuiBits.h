@@ -58,6 +58,7 @@ class VRGuiBits {
         bool toggleStereo(GdkEventKey* k);
 
         void update();
+        void wipeConsoles();
 };
 
 OSG_END_NAMESPACE;
