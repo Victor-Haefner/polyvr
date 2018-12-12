@@ -209,6 +209,7 @@ class VRTrafficSimulation : public VRObject {
         int stopVehicleID = -1;
         int deleteVehicleID = -1;
         bool isSimRunning = true;
+        bool isUpdRunning = true;
         bool isTimeForward = true;
         bool isShowingVehicleVision = false;
         bool isShowingGraph = false;
@@ -219,6 +220,7 @@ class VRTrafficSimulation : public VRObject {
         bool laneChange = true;
         float speedMultiplier = 1.0;
         int debugOverRideSeedRoad = -1;
+        float visibilityRadius = 100;
 
     public:
         VRTrafficSimulation();
@@ -247,6 +249,7 @@ class VRTrafficSimulation : public VRObject {
 
         ///Diagnostics:
         void toggleSim();
+        void toggleSimUpd();
         void toggleVisibility();
         void toggleDirection();
         void setSpeedmultiplier(float speedMultiplier);
@@ -265,6 +268,7 @@ class VRTrafficSimulation : public VRObject {
         void deleteVehicle(int ID);
         void setSeedRoad(int debugOverRideSeedRoad);
         void setSeedRoadVec(vector<int> forceSeedRoads);
+        void setVisibilityRadius(float visibilityRadius);
         bool isSeedRoad(int roadID);
 };
 

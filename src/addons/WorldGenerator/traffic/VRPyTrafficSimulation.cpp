@@ -14,6 +14,7 @@ PyMethodDef VRPyTrafficSimulation::methods[] = {
     ///Diagnostics
     {"getUser", PyWrap( TrafficSimulation, getUser, "Get first user vehicle geometry", VRTransformPtr ) },
     {"toggleSim", PyWrap( TrafficSimulation, toggleSim, "toggleSim - pause/resume", void, void ) },
+    {"toggleSimUpd", PyWrap( TrafficSimulation, toggleSimUpd, "toggleSim - pause/resume geometry updating", void, void ) },
     {"toggleVisibility", PyWrap( TrafficSimulation, toggleVisibility, "toggles Visibilty", void, void ) },
     {"toggleDirection", PyWrap( TrafficSimulation, toggleDirection, "toggleDirection - forward/backward", void, void ) },
     {"setSpeedmultiplier", PyWrap( TrafficSimulation, setSpeedmultiplier, "setSpeedmultiplier", void, float ) },
@@ -33,6 +34,7 @@ PyMethodDef VRPyTrafficSimulation::methods[] = {
     {"toggleVehicVision", PyWrap( TrafficSimulation, toggleVehicVision, "enables/disables visualisation of: vehicle vision", void ) },
     {"stopVehicle", PyWrap( TrafficSimulation, stopVehicle, "stopVehicle", void, int ) },
     {"setKillswitches", PyWrap( TrafficSimulation, setKillswitches, "setKillswitches", void, float, float ) },
+    {"setVisibilityRadius", PyWrap( TrafficSimulation, setVisibilityRadius, "setVisibilityRadius", void, float ) },
     //{"deleteVehicle", PyWrap( TrafficSimulation, deleteVehicle, "deleteVehicle", void, int ) },
     {NULL}  /* Sentinel */
 };
