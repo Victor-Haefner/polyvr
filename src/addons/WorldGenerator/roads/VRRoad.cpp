@@ -189,6 +189,7 @@ vector<VRRoadPtr> VRRoad::splitAtIntersections(VRRoadNetworkPtr network) { // TO
 
 VRGeometryPtr VRRoad::createGeometry() {
     auto w = world.lock();
+    if (!visible) return 0;
     if (!w) return 0;
     auto roads = w->getRoadNetwork();
     if (!roads) return 0;
@@ -231,7 +232,7 @@ VRGeometryPtr VRRoad::createGeometry() {
 	auto geo = strokeGeometry();
 	if (!geo) return 0;
 	setupTexCoords( geo, entity );
-	addChild(geo);
+	//addChild(geo);
 	selfPtr = geo;
     return geo;
 }

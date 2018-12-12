@@ -91,7 +91,7 @@ bool VRReasoner::findRule(VRStatementPtr statement, VRSemanticContextPtr context
         if (query.request->verb != statement->verb) continue; // rule verb does not match
         print("      found rule with matching name: " + query.request->toString(), GREEN);
         if (!statement->match(query.request)) continue; // statements are not similar enough
-        print("      found rule: " + query.request->toString(), GREEN);
+        print("      found rule: " + query.toString(), GREEN);
 
         query.substituteRequest(statement);
         //query.request->updateLocalVariables(context.vars, context.onto);

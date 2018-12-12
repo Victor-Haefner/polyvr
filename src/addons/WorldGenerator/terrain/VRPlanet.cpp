@@ -190,6 +190,12 @@ VRWorldGeneratorPtr VRPlanet::getSector( double north, double east ) {
     return 0;
 }
 
+vector<VRWorldGeneratorPtr> VRPlanet::getSectors() {
+    vector<VRWorldGeneratorPtr> res;
+    for (auto s : sectors) res.push_back(s.second);
+    return res;
+}
+
 VRMaterialPtr VRPlanet::getMaterial() { return sphereMat; }
 
 int VRPlanet::addPin( string label, double north, double east, double length ) {

@@ -63,14 +63,23 @@ void VRRoadNetwork::init() {
     asphaltArrow = VRAsphalt::create();
     asphaltArrow->setArrowMaterial();
 
+    roadsGeo = VRGeometry::create("roads");
+    roadsGeo->hide("SHADOW");
+    roadsGeo->setMaterial(asphalt);
+    addChild( roadsGeo );
+
     arrows = VRGeometry::create("arrows");
     arrows->hide("SHADOW");
     arrows->setMaterial(asphaltArrow);
     addChild( arrows );
 
-    auto w = world.lock();
+    fences = VRGeometry::create("fences");
+    kirbs = VRGeometry::create("kirbs");
+    guardRails = VRGeometry::create("guardRails");
     guardRailPoles = VRGeometry::create("guardRailPoles");
-    //guardRailPoles->setMaterial( w->getMaterial("guardrail") );
+    addChild( fences );
+    addChild( kirbs );
+    addChild( guardRails );
     addChild( guardRailPoles );
 
     auto baseMaterialPole = VRMaterial::get("trafficSignalsMatPole");
@@ -188,7 +197,6 @@ VRRoadPtr VRRoadNetwork::addWay( string name, vector<VREntityPtr> paths, int rID
     auto road = VRRoad::create();
     road->setWorld(world.lock());
     road->setEntity(roadEnt);
-    addChild(road);
     ways.push_back(road);
 	return road;
 }
@@ -198,9 +206,6 @@ VRRoadPtr VRRoadNetwork::addRoad( string name, string type, VREntityPtr node1, V
 }
 
 VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityPtr> nodesIn, vector<Vec3d> normalsIn, int Nlanes ) {
-    //static VRAnalyticGeometryPtr ana = 0;
-    //if (!ana) { ana = VRAnalyticGeometry::create(); addChild(ana); }
-
     if (nodesIn.size() != normalsIn.size()) {
         cout << "Warning in VRRoadNetwork::addLongRoad: ignore road '" << name << "', nodes and normals vector sizes mismatch!" << endl;
         return 0;
@@ -343,19 +348,15 @@ void VRRoadNetwork::addFence( PathPtr path, float height ) {
     profile.push_back(Vec3d(0,height,0));
 
 	auto fence = VRStroke::create("fence");
-	fence->setMaterial( w->getMaterial("fence") );
 	fence->setPaths({path});
 	fence->strokeProfile(profile, false, true, false);
-	fence->updateNormals(false);
-
-	addChild(fence);
-	assets.push_back(fence);
+	fences->merge(fence);
 
 	// physics
 	auto shape = VRStroke::create("shape");
 	shape->setPaths({path});
 	shape->strokeProfile({Vec3d(0,0,0), Vec3d(0,height,0)}, false, true, false);
-	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape, fence->getID());
+	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape, fences->getID());
 }
 
 void VRRoadNetwork::addGuardRail( PathPtr path, float height ) {
@@ -399,10 +400,9 @@ void VRRoadNetwork::addGuardRail( PathPtr path, float height ) {
     profile.push_back(Vec3d(0.0,height+0.0,0));
 
 	auto rail = VRStroke::create("rail");
-	rail->setMaterial( w->getMaterial("guardrail") );
 	rail->setPaths({path});
 	rail->strokeProfile(profile, false, true, false);
-	rail->updateNormals(false);
+	guardRails->merge(rail);
 	//rail->physicalize(true,false,false);
 	//rail.showGeometricData("Normals", True);
 
@@ -411,14 +411,12 @@ void VRRoadNetwork::addGuardRail( PathPtr path, float height ) {
 	pole->setPrimitive("Box 0.02 "+toString(height)+" "+toString(poleWidth)+" 1 1 1");
 	for (auto p : poles) guardRailPoles->merge(pole, p);
     guardRailPoles->setMaterial( w->getMaterial("guardrail") );
-	addChild(rail);
-	assets.push_back(rail);
 
 	// physics
 	auto shape = VRStroke::create("shape");
 	shape->setPaths({path});
 	shape->strokeProfile({Vec3d(0,0,0), Vec3d(0,height,0)}, false, true, false);
-	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape, rail->getID());
+	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape, guardRails->getID());
 }
 
 void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
@@ -451,19 +449,17 @@ void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
     }
     path->close();
     path->compute(2);
+
     auto kirb = VRStroke::create("kirb");
     kirb->addPath(path);
-
     kirb->strokeProfile({Vec3d(0.0, h, 0), Vec3d(-0.1, h, 0), Vec3d(-0.1, 0, 0)}, 0, 1, 0);
-    kirb->updateNormals(1);
-    kirb->setMaterial( w->getMaterial("kirb") );
-    addChild(kirb);
+    kirbs->merge(kirb);
 
 	// physics
 	auto shape = VRStroke::create("shape");
 	shape->addPath(path);
 	shape->strokeProfile({Vec3d(-0.1, h, 0), Vec3d(-0.1, 0, 0)}, false, true, false);
-	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape, kirb->getID());
+	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape, kirbs->getID());
 }
 
 void VRRoadNetwork::physicalizeAssets(Boundingbox volume) {
@@ -705,7 +701,6 @@ void VRRoadNetwork::computeIntersections() {
         roads.push_back(r);
         ways.push_back(r);
         roadsByEntity[r->getEntity()] = r;
-        addChild(r);
     }
 
     for (auto node : getRoadNodes()) {
@@ -788,27 +783,16 @@ void VRRoadNetwork::computeSurfaces() {
     auto computeRoadSurface = [&](VRRoadPtr road) {
         auto roadGeo = road->createGeometry();
         if (!roadGeo) return;
-        roadGeo->setMaterial( asphalt );
-        if (!road->isVisible()) roadGeo->setVisible(false);
-
-        /*roadGeo->getPhysics()->setDynamic(false);
-        roadGeo->getPhysics()->setShape("Concave");
-        roadGeo->getPhysics()->setPhysicalized(true);*/
-        //addChild( roadGeo );
+        roadsGeo->merge(roadGeo);
         if (auto w = world.lock()) w->getPhysicsSystem()->add(roadGeo, roadGeo->getID());
     };
 
     for (auto way : ways) computeRoadSurface(way);
-    //for (auto road : roads) computeRoadSurface(road);
 
     for (auto intersection : intersections) {
         auto iGeo = intersection->createGeometry();
         if (!iGeo) continue;
         iGeo->setMaterial( asphalt );
-        /*iGeo->getPhysics()->setDynamic(false);
-        iGeo->getPhysics()->setShape("Concave");
-        iGeo->getPhysics()->setPhysicalized(true);*/
-        //addChild( iGeo );
         if (auto w = world.lock()) w->getPhysicsSystem()->add(iGeo, iGeo->getID());
     }
 
@@ -877,6 +861,17 @@ void VRRoadNetwork::compute() {
     updateAsphaltTexture();
     //physicalizeAssets();
     collisionMesh->setMeshVisibility(false);
+
+    auto w = world.lock();
+    if (w) {
+        guardRails->setMaterial( w->getMaterial("guardrail") );
+        fences->setMaterial( w->getMaterial("fence") );
+        kirbs->setMaterial( w->getMaterial("kirb") );
+    }
+
+	guardRails->updateNormals(0);
+    kirbs->updateNormals(1);
+	fences->updateNormals(0);
 }
 
 VRGeometryPtr VRRoadNetwork::getAssetCollisionObject() { return collisionMesh; }

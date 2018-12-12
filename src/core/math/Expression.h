@@ -79,7 +79,7 @@ class Expression {
         bool prefixExpr = false;
 
         bool isMathToken(char c);
-        bool isMathFunction(string f);
+        static bool isMathFunction(string f);
         void convToPrefixExpr();
         void buildTree();
 

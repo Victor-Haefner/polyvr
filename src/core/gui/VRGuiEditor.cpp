@@ -110,6 +110,11 @@ bool VRGuiEditor::on_editor_shortkey( GdkEventKey* e ) {
         return true;
     }
 
+    if (e->keyval == 119) {// w
+        if (keyBindings.count("wipe")) (*keyBindings["wipe"])();
+        return true;
+    }
+
     if (e->keyval == 115) {// s
         if (keyBindings.count("save")) (*keyBindings["save"])();
         return true;
