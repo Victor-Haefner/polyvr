@@ -171,8 +171,10 @@ void VRTerrain::setMap( VRTexturePtr t, int channel ) {
 void VRTerrain::updateTexelSize() {
     if (!tex) return;
     Vec3i s = tex->getSize();
-    texelSize[0] = size[0]/(s[0]-1);
-    texelSize[1] = size[1]/(s[1]-1);
+    Vec2f texel = Vec2f(1.0/(s[0]-1), 1.0/(s[1]-1));
+    texelSize[0] = size[0]*texel[0];
+    texelSize[1] = size[1]*texel[1];
+	mat->setShaderParameter("texel", texel);
 	mat->setShaderParameter("texelSize", texelSize);
 }
 
@@ -332,6 +334,7 @@ void VRTerrain::setSimpleNoise() {
 void VRTerrain::setupMat() {
 	auto defaultMat = VRMaterial::get("defaultTerrain");
 	tex = defaultMat->getTexture();
+    Vec2f texel = Vec2f(1,1);
 	if (!tex) {
         Color4f w(0,0,0,0);
         VRTextureGenerator tg;
@@ -340,6 +343,8 @@ void VRTerrain::setupMat() {
         tex = tg.compose(0);
         defaultMat->setTexture(tex);
         defaultMat->clearTransparency();
+        auto texSize = tex->getSize();
+        texel = Vec2f( 1.0/texSize[0], 1.0/texSize[1] );
 	}
 
 	mat = VRMaterial::create("terrain");
@@ -350,6 +355,7 @@ void VRTerrain::setupMat() {
 	mat->setTessEvaluationShader(tessEvaluationShader, "terrainTES");
 	mat->setShaderParameter("resolution", resolution);
 	mat->setShaderParameter("channel", 3);
+	mat->setShaderParameter("texel", texel);
 	mat->setShaderParameter("texelSize", texelSize);
     mat->setZOffset(1,1);
 	setMap(tex);
@@ -710,6 +716,7 @@ uniform sampler2D texGravel;
 const ivec3 off = ivec3(-1,0,1);
 const vec3 light = vec3(-1,-1,-0.5);
 uniform vec2 texelSize;
+uniform vec2 texel;
 uniform int doHeightTextures;
 uniform float waterLevel;
 uniform vec3 atmoColor;
@@ -742,6 +749,14 @@ vec3 getNormal() {
     vec3 va = normalize(vec3(r2.x,s21-s01,0));
     vec3 vb = normalize(vec3(   0,s12-s10,r2.y));
     vec3 n = normalize( cross(vb,va) );
+
+
+    float k = texel.x;
+    float _k = 1.0/k;
+    if (tc.x > 1.0-k*1.5) n = mix(n, vec3(0,1,0), (tc.x-1.0+k*1.5)*_k);
+    if (tc.y > 1.0-k*1.5) n = mix(n, vec3(0,1,0), (tc.y-1.0+k*1.5)*_k);
+    if (tc.x < k*1.5) n = mix(n, vec3(0,1,0), 1.0-(tc.x-k*0.5)*_k);
+    if (tc.y < k*1.5) n = mix(n, vec3(0,1,0), 1.0-(tc.y-k*0.5)*_k);
 	return n;
 }
 
