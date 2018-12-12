@@ -63,6 +63,11 @@ void VRRoadNetwork::init() {
     asphaltArrow = VRAsphalt::create();
     asphaltArrow->setArrowMaterial();
 
+    roadsGeo = VRGeometry::create("roads");
+    roadsGeo->hide("SHADOW");
+    roadsGeo->setMaterial(asphalt);
+    addChild( roadsGeo );
+
     arrows = VRGeometry::create("arrows");
     arrows->hide("SHADOW");
     arrows->setMaterial(asphaltArrow);
@@ -773,13 +778,7 @@ void VRRoadNetwork::computeSurfaces() {
     auto computeRoadSurface = [&](VRRoadPtr road) {
         auto roadGeo = road->createGeometry();
         if (!roadGeo) return;
-        roadGeo->setMaterial( asphalt );
-        if (!road->isVisible()) roadGeo->setVisible(false);
-
-        /*roadGeo->getPhysics()->setDynamic(false);
-        roadGeo->getPhysics()->setShape("Concave");
-        roadGeo->getPhysics()->setPhysicalized(true);*/
-        //addChild( roadGeo );
+        roadsGeo->merge(roadGeo);
         if (auto w = world.lock()) w->getPhysicsSystem()->add(roadGeo, roadGeo->getID());
     };
 

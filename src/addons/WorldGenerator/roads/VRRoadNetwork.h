@@ -38,6 +38,7 @@ class VRRoadNetwork : public VRRoadBase {
 
         VRUpdateCbPtr updateCb;
 
+        VRGeometryPtr roadsGeo;
         VRGeometryPtr arrows;
         VRGeometryPtr guardRailPoles;
         VRTexturePtr arrowTexture;
