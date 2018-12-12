@@ -122,8 +122,12 @@ void Expression::Node::setValue(string s) {
 
 string Expression::Node::toString() {
     string res = value ? value->toString() : param;
-    if (right) res = right->toString() + res;
-    if (left) res += left->toString();
+    if (isMathFunction(res) && left && right) {
+        res += "{" + left->toString() + "," + right->toString() + "}";
+    } else {
+        if (left) res = left->toString() + res;
+        if (right) res += right->toString();
+    }
     return res;
 }
 
