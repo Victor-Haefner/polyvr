@@ -642,7 +642,6 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         float safetyDis = vehicle.currentVelocity*3.6 * environmentFactor * roadFactor / 4.0 + 6;
         float sightRadius = safetyDis + 8;
 
-        //auto pose = vehicle.t->getPose();
         auto pose = vehicle.simPose;
         auto resFar = space->radiusSearch(pose->pos(), sightRadius);
 
@@ -651,7 +650,6 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             auto v = (Vehicle*)vv;
             if (!v) continue;
             //if (!v->t) continue;
-            //auto p = v->t->getPose();
             auto p = v->simPose;
             auto D = (pose->pos() - p->pos()).length();
 
@@ -665,8 +663,6 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         float disDis = 800;
         for (auto& v : users) {
             //if (!v.t) continue;
-            //auto vP = v.t->getPoseTo( this->getWorldPose() );
-            //auto p = v.t->getWorldPose();
             auto p = v.simPose;
             p->setPos(p->pos() - globalOffset);
             auto simpleDis = (pose->pos() - p->pos()).length();
@@ -689,14 +685,17 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         //========================
 
         VRTrafficLightPtr nextSignalE;
+        VRRoadIntersectionPtr nextInterE;
         Vec3d nextSignalP;
 
+        ///RECURSIVE INTERSECTION SEARCH
         function<bool (VREntityPtr, int, Vec3d)> recSearch =[&](VREntityPtr newLane, int eID, Vec3d posV) {
         //searches for next intersection in graph, also searches for trafficSignals at intersection
             auto interE = roadNetwork->getIntersection(newLane->getEntity("nextIntersection"));
             if (interE) {
                 auto node = newLane->getEntity("nextIntersection")->getEntity("node");
                 Vec3d pNode = node->getVec3("position");
+                nextInterE = interE;
 
                 auto type = newLane->getEntity("nextIntersection")->get("type")->value;
                 auto g = roadNetwork->getGraph();
@@ -733,31 +732,6 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                         vehicle.nextLanesCoices = res;
                     }
 
-                    ///--------------LEFT RIGHT FRONT DETECTION
-                    //seeing if incoming traffic at next intersection coming from right/left/front
-                    auto inLanes = interE->getInLanes();
-                    for (auto l : inLanes) {
-                        //get vehicles
-                        int lID = roadNetwork->getLaneID(l);
-                        auto ls = roads[lID];
-                        for (auto IDpair : ls.vehicleIDs) {
-                            auto v = vehicles[IDpair.second];
-                            auto p = v.simPose; //t->getPose();
-                            auto D = (pose->pos() - p->pos()).length();
-                            if ( D > 1.5*sightRadius && vehicle.turnAhead != 1 || D > 35 ) continue;
-                            auto dir = p->dir();
-                            auto vDir = vehicle.simPose->dir(); //t->getPose()->dir();
-                            auto left = Vec3d(0,1,0).cross(vDir);
-                            if (dir.dot(left)>0.7) vehicle.incTrafficRight = true; //cout << "incoming right" << endl;
-                            if (dir.dot(left)<-0.7) vehicle.incTrafficLeft = true; //cout << "incoming left" << endl;
-                            if (dir.dot(vDir)<-0.7) {
-                                if (v.turnAhead == 1) continue;
-                                vehicle.incTrafficFront = true;
-                                vehicle.frontVehicLastMove = v.lastMoveTS;
-                            }
-                       }
-                    }
-
                     ///--------------SIGNAL DETECTION
                     if (nextSignalE) {
                         nextSignalP = nextSignalE->getFrom();
@@ -773,8 +747,45 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             return false;
         };
 
+        ///INCOMING TRAFFIC DETECTION: at next intersection
+        auto recDetection = [&](VRRoadIntersectionPtr nextInterE){
+        //seeing if incoming traffic at next intersection coming from right/left/front
+            if (!nextInterE) return;
+            auto inLanes = nextInterE->getInLanes();
+            for (auto l : inLanes) {
+                function<bool (VREntityPtr, int, Vec3d)> recL =[&](VREntityPtr newLane, int eID, Vec3d posV) {
+                    //get vehicles
+                    auto ls = roads[eID];
+                    for (auto IDpair : ls.vehicleIDs) {
+                        auto v = vehicles[IDpair.second];
+                        auto p = v.simPose;
+                        auto D = (pose->pos() - p->pos()).length();
+                        if ( D > 1.5*sightRadius && vehicle.turnAhead != 1 || D > 45 ) continue;
+                        auto dir = p->dir();
+                        auto vDir = vehicle.simPose->dir();
+                        auto left = Vec3d(0,1,0).cross(vDir);
+                        if (dir.dot(left)>0.7 && D < 35) vehicle.incTrafficRight = true; //cout << "incoming right" << endl;
+                        if (dir.dot(left)<-0.7 && D < 35) vehicle.incTrafficLeft = true; //cout << "incoming left" << endl;
+                        if (dir.dot(vDir)<-0.7) {
+                            if (v.turnAhead == 1) continue;
+                            vehicle.incTrafficFront = true;
+                            vehicle.frontVehicLastMove = v.lastMoveTS;
+                        }
+                    }
+                    if (g->getPrevEdges(g->getEdge(eID)).size()==1) {
+                        return false;
+                        auto nextID = g->getPrevEdges(g->getEdge(eID))[0].ID;
+                        auto nextLane = roadNetwork->getLane(nextID);
+                        return recL(nextLane, nextID, posV);
+                    }
+                    return false;
+                };
+                int lID = roadNetwork->getLaneID(l);
+                recL(l, lID, vehicle.simPose->pos());
+            }
+        };
+
         auto laneE = roadNetwork->getLane(vehicle.pos.edge);
-        auto nextIntersectionE = roadNetwork->getIntersection(laneE->getEntity("nextIntersection"));
 
         vehicle.distanceToNextIntersec = 10000;
         vehicle.distanceToNextSignal = 10000;
@@ -782,8 +793,9 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         vehicle.incTrafficRight = false;
         vehicle.incTrafficLeft = false;
         vehicle.incTrafficFront = false;
-        //recSearch(laneE,vehicle.pos.edge,vehicle.t->getPose()->pos());
+
         recSearch(laneE,vehicle.pos.edge,vehicle.simPose->pos());
+        recDetection(nextInterE);
         if (vehicle.nextTurnLane != -1) {
             auto nextRoad = roadNetwork->getLane(vehicle.nextTurnLane);
             if (nextRoad->get("turnDirection")) {
@@ -831,7 +843,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 float d = vehicle.currentVelocity;
                 float safetyDis = vehicle.currentVelocity*3.6 * environmentFactor * roadFactor / 4.0 + vehicle.length + 1;
                 int vbeh = vehicle.behavior;
-                float accFactor = vehicle.maxAcceleration;
+                float accFactor =   vehicle.maxAcceleration;
                 float decFactor = - vehicle.maxDecceleration;
 
                 auto checkL = [&](int ID) -> bool { //
@@ -920,70 +932,8 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                     if (nextIntersection > 35 && nextStopDistance > 30) vehicle.signaling.push_back(0);
                     if (vehicle.turnAhead == 1 && nextIntersection < 35 && nextStopDistance < 30) vehicle.signaling.push_back(1); //left
                     if (vehicle.turnAhead == 2 && nextIntersection < 35 && nextStopDistance < 30) vehicle.signaling.push_back(2); //right
-                    /*
-                    ///VELOCITY CONTROL
-                    if ( vbeh == vehicle.STRAIGHT ) {
-                        if ( !inFront() ) {
-                        //no vehicle ahead
-                            ///APPROACHING INTERSECTION
-                            if ( signalAhead && nextStopDistance < safetyDis + 20 && signalBlock ) { driveToIntersec(); return; }
-                            if ( signalAhead && nextStopDistance < safetyDis + 3 && signalTransit ) { accelerate(1); return; }
-                            if ( signalAhead && nextStopDistance > safetyDis + 3 && signalTransit ) { driveToIntersec(); return; }
-                            //if ( !signalAhead && nextSignalDistance < safetyDis + 6 && signalBlock ) { driveToIntersec(); return; }
-                            //if ( nextSignalDistance < safetyDis + 6 ) { driveToIntersec(); return; }
 
-                            //if ( vehicle.turnAtIntersec && ( comingRight() || comingLeft() ) && !nextVehicleTurner() ) { decelerate(); return; }
-                            if ( sinceLastLS > 10 && nextIntersection > 20 && checkR(vehicle.vID) && vehicle.currentVelocity > 5/3.6 ) { toChangeLane[vehicle.vID] = 2; }
-                            //check if road is ending/intersections etc - possible breaking
-                            if ( vehicle.currentVelocity < vehicle.targetVelocity*0.95 ) { accelerate(1); return; }
-                            //targetVelocity not reached //accelerate
-                            if ( vehicle.currentVelocity > vehicle.targetVelocity*1.05 ) { decelerate(1); return; }
-                            //targetVelocity overreached //decelerate
-                            if ( vehicle.currentVelocity > vehicle.targetVelocity*0.95 && vehicle.currentVelocity < vehicle.targetVelocity*1.05 ) { holdVelocity(); return; }
-                            //targetVelocity reached //proceed
-                        }
-                        if ( inFront() ) {
-                        //vehicle ahead?
-                            if ( vehicle.currentVelocity == 0 && signalAhead && nextStopDistance < 4 && signalBlock ) { return; }
-                            if ( vehicle.currentVelocity > 0 && signalAhead && nextStopDistance < 4 && signalBlock && !inIntersec ) { driveToIntersec(); return; }
-                            if ( vehicle.currentVelocity > 0 && signalAhead && nextStopDistance < 4 && signalBlock &&  inIntersec ) { decelerate(1); return; }
-                            int frontID = vehicle.vehiclesightFarID[INFRONT];
-                            float disToFrontV = vehicle.vehiclesightFar[INFRONT];
-                            //if ( vehicle.turnAtIntersec && !nextVehicleTurner() ) { decelerate(); return; }
-                            if ( disToFrontV - nextMove < safetyDis ) { decelerate(1); return; }
-                            //if ( nextIntersection < safetyDis + 0.2 ) { decelerate(); return; }
-                            if ( vehicles[frontID].currentVelocity > vehicle.currentVelocity && vehicle.currentVelocity < vehicle.targetVelocity ) {
-                            //vehicle ahead faster, and targetVelocity not reached
-                                if ( disToFrontV - nextMoveAcc > safetyDis + 2 ) { accelerate(1); return; }
-                                //accelerate
-                                if ( disToFrontV - nextMoveAcc < safetyDis ) { decelerate(1); return; }
-                                //break/decelerate
-                                if ( disToFrontV - nextMoveAcc < safetyDis + 2 && disToFrontV - nextMoveAcc > safetyDis  ) { holdVelocity(); return; }
-                                //hold velocity
-                            }
-                            if ( vehicles[frontID].currentVelocity <= vehicle.currentVelocity && vehicle.currentVelocity < vehicle.targetVelocity ) {
-                            //vehicle ahead slower
-                                if ( sinceLastLS > 10 && nextIntersection > 30 && checkL(vehicle.vID) && vehicle.currentVelocity > 20/3.6 ) { toChangeLane[vehicle.vID] = 1; }
-                                //check if lane switch possible
-                                if ( disToFrontV - nextMoveAcc > safetyDis + 2 ) { accelerate(1); return; }
-                                //accelerate
-                                if ( disToFrontV - nextMoveAcc < safetyDis ) { decelerate(1); return; }
-                                //break/decelerate
-                                if ( disToFrontV - nextMoveAcc < safetyDis + 2 && disToFrontV - nextMoveAcc > safetyDis  ) { holdVelocity(); return; }
-                                //hold velocity
-                            }
-                            if ( vehicle.currentVelocity >= vehicle.targetVelocity ) {
-                            //vehicle ahead slower
-                                if ( sinceLastLS > 10 && nextIntersection > 30 && checkR(vehicle.vID) && vehicle.currentVelocity > 20/3.6 ) { toChangeLane[vehicle.vID] = 2; }
-                                //check if lane switch possible
-                                if ( disToFrontV - nextMove > safetyDis && vehicle.currentVelocity == vehicle.targetVelocity ) { holdVelocity(); return; }
-                                //accelerate
-                                if ( disToFrontV - nextMoveAcc < safetyDis ) { decelerate(1); return; }
-                                //break/decelerate
-                            }
-                        }
-                    }*/
-
+                    ///LANE SWITCH
                     auto checkLaneSwitch =[&]() {
                         if (sinceLastLS < 10 || nextStopDistance < 35 || vehicle.currentVelocity < 15/3.6 ) return;
                         if ( inFront() ) {
@@ -994,11 +944,12 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                         }
                     };
 
+                    ///PRIORITY 1: Acceleration
                     auto checkAcceleration =[&]() {
                         bool safeTravel = nextStopDistance - nextMoveAcc > safetyDis;
                         if ( vehicle.currentVelocity > vehicle.targetVelocity*0.95 ) return false;
                         if (  signalAhead && signalBlock && !safeTravel ) return false; //red light
-                        if (  signalAhead && signalTransit && nextStopDistance - nextMoveAcc < safetyDis + 1 && !inIntersec ) return false; //orange light
+                        if (  signalAhead && signalTransit && nextStopDistance - nextMoveAcc < safetyDis + 2 && !inIntersec ) return false; //orange light
                         if ( !signalAhead && vehicle.incTrafficRight && vehicle.turnAhead != 2 && !safeTravel ) return false;
                         if ( vehicle.turnAhead == 1 && vehicle.incTrafficFront && nextStopDistance < 5  ) return false;
                         if ( inFront() ) {
@@ -1009,6 +960,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                         return true;
                     };
 
+                    ///PRIORITY 2: Holding Velocity
                     auto checkHoldVelocity =[&]() {
                         bool safeTravel = nextStopDistance - nextMove > safetyDis - 2;
                         if ( vehicle.currentVelocity > vehicle.targetVelocity ) return false;
@@ -1024,6 +976,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                         return true;
                     };
 
+                    ///PRIORITY 4: Braking
                     auto checkDeceleration =[&]() {
                         return true;
                     };
@@ -1110,6 +1063,8 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
 
 void VRTrafficSimulation::updateSimulation() {
     if (!roadNetwork) return;
+
+    if (!isSimRunning) return;
 
     PLock lock(mtx);
     vector<int> N(4,0);
@@ -1320,7 +1275,7 @@ void VRTrafficSimulation::addVehicles(int roadID, float density, int type) {
 
 /** CHANGE LANE **/
 void VRTrafficSimulation::changeLane(int ID, int direction) {
-
+    if ( !laneChange ) return;
     PLock lock(mtx);
 
     auto& v = vehicles[ID];

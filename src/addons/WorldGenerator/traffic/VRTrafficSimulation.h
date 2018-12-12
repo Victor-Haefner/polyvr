@@ -180,18 +180,6 @@ class VRTrafficSimulation : public VRObject {
         int maxUnits = 0;
         int numUnits = 0;
         size_t nID = -1;
-        int stopVehicleID = -1;
-        int deleteVehicleID = -1;
-        bool isSimRunning = true;
-        bool isTimeForward = true;
-        bool isShowingVehicleVision = false;
-        bool isShowingGraph = false;
-        bool isShowingIntersecs = false;
-        bool isShowingGeometries = true;
-        bool isShowingMarkers = false;
-        int whichVehicleMarkers = -1;
-        bool laneChange = false;
-        float speedMultiplier = 1.0;
         float deltaT;
         float lastT = 0.0;
         Vec3d globalOffset = Vec3d(0,0,0);
@@ -203,7 +191,6 @@ class VRTrafficSimulation : public VRObject {
 
         string lastseedRoadsString = "";
         //int debugOverRideSeedRoad = -1;
-        int debugOverRideSeedRoad = -1;
         float killswitch1 = 5;
         float killswitch2 = 200;
         VRUpdateCbPtr turnSignalCb;
@@ -219,6 +206,19 @@ class VRTrafficSimulation : public VRObject {
 
         ///Diagnostics
         bool hidden = false;
+        int stopVehicleID = -1;
+        int deleteVehicleID = -1;
+        bool isSimRunning = true;
+        bool isTimeForward = true;
+        bool isShowingVehicleVision = false;
+        bool isShowingGraph = false;
+        bool isShowingIntersecs = false;
+        bool isShowingGeometries = true;
+        bool isShowingMarkers = false;
+        int whichVehicleMarkers = -1;
+        bool laneChange = true;
+        float speedMultiplier = 1.0;
+        int debugOverRideSeedRoad = -1;
 
     public:
         VRTrafficSimulation();
