@@ -126,7 +126,7 @@ void VRTerrain::clear() {
     embankments.clear();
 }
 
-void VRTerrain::setParameters( Vec2d s, double r, double h, float w ) {
+void VRTerrain::setParameters( Vec2d s, double r, double h, float w, float aT, Color3f aC) {
     size = s;
     resolution = r;
     heightScale = h;
@@ -135,11 +135,14 @@ void VRTerrain::setParameters( Vec2d s, double r, double h, float w ) {
     mat->setShaderParameter("heightScale", heightScale);
     mat->setShaderParameter("doHeightTextures", 0);
     mat->setShaderParameter("waterLevel", w);
+    mat->setShaderParameter("atmoColor", aC);
+    mat->setShaderParameter("atmoThickness", aT);
     updateTexelSize();
     setupGeo();
 }
 
 void VRTerrain::setWaterLevel(float w) { mat->setShaderParameter("waterLevel", w); }
+void VRTerrain::setAtmosphericEffect(float thickness, Color3f color) { mat->setShaderParameter("atmoColor", color); mat->setShaderParameter("atmoThickness", thickness); }
 void VRTerrain::setHeightScale(float s) { heightScale = s; mat->setShaderParameter("heightScale", s); }
 
 void VRTerrain::setMap( VRTexturePtr t, int channel ) {
@@ -689,8 +692,8 @@ void main( void ) {
         vec4 cG3 = texture(texGravel, tc*17);
         vec4 cG4 = texture(texGravel, tc);
         vec4 cG = mix(cG0,mix(cG1,mix(cG2,mix(cG3,cG4,0.5),0.5),0.5),0.5);
-        color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
         if (height < waterLevel) color = vec4(0.2,0.4,1,1);
+        else color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
 	}
 
 	applyBlinnPhong();
@@ -709,6 +712,8 @@ const vec3 light = vec3(-1,-1,-0.5);
 uniform vec2 texelSize;
 uniform int doHeightTextures;
 uniform float waterLevel;
+uniform vec3 atmoColor;
+uniform float atmoThickness;
 
 in vec4 vertex;
 in vec4 pos;
@@ -767,8 +772,10 @@ void main( void ) {
         vec4 cG3 = texture(texGravel, tc*17);
         vec4 cG4 = texture(texGravel, tc);
         vec4 cG = mix(cG0,mix(cG1,mix(cG2,mix(cG3,cG4,0.5),0.5),0.5),0.5);
-        color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
+
         if (height < waterLevel) color = vec4(0.2,0.4,1,1);
+        else color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
+        color = mix(color, vec4(atmoColor,1), clamp(atmoThickness*length(pos.xyz), 0.0, 0.9)); // atmospheric effects
 	}
 
 	norm = normalize( gl_NormalMatrix * norm );

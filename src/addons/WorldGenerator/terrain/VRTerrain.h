@@ -2,6 +2,7 @@
 #define VRTERRAIN_H_INCLUDED
 
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGColor.h>
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/math/polygon.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
@@ -64,8 +65,9 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void setSimpleNoise();
         Boundingbox getBoundingBox();
 
-        void setParameters( Vec2d size, double resolution, double heightScale, float w = 0 );
+        void setParameters( Vec2d size, double resolution, double heightScale, float w = 0, float aT = 1e-4, Color3f aC = Color3f(0.7,0.9,1));
         void setWaterLevel(float w);
+        void setAtmosphericEffect(float thickness, Color3f color);
         void setHeightScale(float s);
         void setMap( VRTexturePtr tex, int channel = 3 );
         void loadMap( string path, int channel = 3 );
