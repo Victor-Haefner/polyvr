@@ -1062,13 +1062,8 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
 }
 
 void VRTrafficSimulation::updateSimulation() {
-    if (!roadNetwork) return;
-
-    if (!isUpdRunning) return;
-
-    PLock lock(mtx);
     vector<int> N(4,0);
-    float starter = glutGet(GLUT_ELAPSED_TIME);
+
     auto addTransforms = [&]() {
         if (toBeAddedVehicles.size() == 0) return;
         for (auto each : toBeAddedVehicles) {
@@ -1077,7 +1072,6 @@ void VRTrafficSimulation::updateSimulation() {
             addChild(v.t);
             N[0]++;
         }
-        toBeAddedVehicles.clear();
     };
 
     auto hideTransforms = [&]() {
@@ -1087,7 +1081,6 @@ void VRTrafficSimulation::updateSimulation() {
             v.hide();
             N[1]++;
         }
-        toBeHiddenVehicles.clear();
     };
 
     auto showTransforms = [&]() {
@@ -1098,7 +1091,6 @@ void VRTrafficSimulation::updateSimulation() {
             v.show();
             N[2]++;
         }
-        toBeShownVehicles.clear();
         float stop = glutGet(GLUT_ELAPSED_TIME);
         float delt = stop-start;
         //if (N[2] > 0 && delt>0) cout << "showTransforms " << N[2] << " "  << delt << endl;
@@ -1111,7 +1103,6 @@ void VRTrafficSimulation::updateSimulation() {
             v.t->setVisible(false);
             //v.isVisible = false;
         }
-        toBeMadeInvisVehicles.clear();
     };
 
     auto updateTransforms = [&]() {
@@ -1126,10 +1117,9 @@ void VRTrafficSimulation::updateSimulation() {
                 for (auto i : v.signaling) v.signalLights(i, lightMaterials);
                 v.signaling.clear();
                 N[3]++;
-                if (glutGet(GLUT_ELAPSED_TIME) - starter > 3) return;
+                //if (glutGet(GLUT_ELAPSED_TIME) - starter > 3) return;
             }
         }
-        toBeTransformedVehicles.clear();
     };
 
     auto updateUsers =[&]() {
@@ -1146,35 +1136,54 @@ void VRTrafficSimulation::updateSimulation() {
         if (isShowingMarkers) updateVehicIntersecs();
     };
 
+    if (!roadNetwork) return;
+    if (!isUpdRunning) return;
+
+    VRTimer timer;
+
+    timer.start("withLock");
+    PLock lock(mtx);
+    timer.start("withoutLock");
+    float starter = glutGet(GLUT_ELAPSED_TIME);
+
     string t = "";
-    addTransforms();
-    auto ts = glutGet(GLUT_ELAPSED_TIME);
-    t += toString(ts - starter) + " ";
+    for (int i=0; i<1; i++) {
+        auto ts0 = glutGet(GLUT_ELAPSED_TIME);
+        addTransforms();
+        auto ts = glutGet(GLUT_ELAPSED_TIME);
+        //t += toString(ts - ts0) + " ";
 
-    hideTransforms();
-    auto ts1 = glutGet(GLUT_ELAPSED_TIME);
-    t += toString(ts1 - ts) + " ";
+        hideTransforms();
+        auto ts1 = glutGet(GLUT_ELAPSED_TIME);
+        //t += toString(ts1 - ts) + " ";
 
-    showTransforms();
-    auto ts2 = glutGet(GLUT_ELAPSED_TIME);
-    t += toString(ts2 - ts1) + " ";
+        showTransforms();
+        auto ts2 = glutGet(GLUT_ELAPSED_TIME);
+        //t += toString(ts2 - ts1) + " ";
 
-    makeInvisTransforms();
-    auto ts3 = glutGet(GLUT_ELAPSED_TIME);
-    t += toString(ts3 - ts2) + " ";
+        makeInvisTransforms();
+        auto ts3 = glutGet(GLUT_ELAPSED_TIME);
+        //t += toString(ts3 - ts2) + " ";
 
-    updateTransforms();
-    auto ts4 = glutGet(GLUT_ELAPSED_TIME);
-    t += toString(ts4 - ts3) + " ";
+        updateTransforms();
+        auto ts4 = glutGet(GLUT_ELAPSED_TIME);
+        //t += toString(ts4 - ts3) + " ";
 
-    updateUsers();
+        updateUsers();
+    }
     //updateVisuals();
     auto ts5 = glutGet(GLUT_ELAPSED_TIME);
-    t += toString(ts5 - ts4) + " ";
+    t += toString(ts5 - starter) + " ";
     float stopper = glutGet(GLUT_ELAPSED_TIME);
     float delta = stopper-starter;
-    //if (delta > 0) cout << "everything " << delta << "__" << t << " - " << Vec4i(N[0], N[1], N[2], N[3]) << endl;
+    //if (delta > 0)
+    cout << "everything " << timer.stop("withLock") << "__" << timer.stop("withoutLock") << " - " << Vec4i(N[0], N[1], N[2], N[3]) << endl;
 
+    toBeAddedVehicles.clear();
+    toBeShownVehicles.clear();
+    toBeHiddenVehicles.clear();
+    toBeMadeInvisVehicles.clear();
+    toBeTransformedVehicles.clear();
     //cout << "lul " << Vec4i(N[0], N[1], N[2], N[3]) << endl;
 }
 

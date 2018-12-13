@@ -8,6 +8,7 @@
 #include "core/math/pose.h"
 #include "core/math/graph.h"
 #include "core/objects/object/VRObject.h"
+#include "core/utils/VRDoublebuffer.h"
 #include <boost/thread/recursive_mutex.hpp>
 
 using namespace std;
@@ -55,6 +56,7 @@ class VRTrafficSimulation : public VRObject {
             bool isVisible = true;
             bool collisionDetected;
             PosePtr simPose;
+            doubleBuffer poseBuffer;
             int type;
             vector<int> signaling;
 
@@ -118,6 +120,10 @@ class VRTrafficSimulation : public VRObject {
             Vehicle(Graph::position p, int type);
             Vehicle();
             ~Vehicle();
+
+
+            Vec3d getPosition();
+            Pose getPose();
 
             void setupSG(VRObjectPtr g, map<string, VRMaterialPtr>& lightMaterials);
             void destroy();
