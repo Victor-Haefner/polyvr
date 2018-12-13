@@ -92,7 +92,6 @@ class VRTrafficSimulation : public VRObject {
             DecisionSTATE state = DRIVE;
             Vec3d lastMove;
 
-            float speed;
             float currentVelocity;
             float targetVelocity;
             float roadVelocity;
@@ -173,7 +172,6 @@ class VRTrafficSimulation : public VRObject {
         vector<int> seedRoads;
         vector<int> nearRoads;
         vector<int> forceSeedRoads;
-        vector<int> toBeAddedVehicles;
         vector<Vehicle> users;
         list<int> vehiclePool;
         vector<VRObjectPtr> models;
@@ -239,7 +237,6 @@ class VRTrafficSimulation : public VRObject {
         VRTransformPtr getUser();
 
         void addVehicle(int roadID, float density, int type);
-        void addVehicles(int roadID, float density, int type);
         void setTrafficDensity(float density, int type, int maxUnits = 0);
 
         int addVehicleModel(VRObjectPtr mesh);
