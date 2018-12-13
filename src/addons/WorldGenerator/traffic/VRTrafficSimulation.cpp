@@ -91,9 +91,6 @@ void VRTrafficSimulation::Vehicle::hide() {
 }
 
 void VRTrafficSimulation::Vehicle::setDefaults() {
-
-    //PLock lock(mtxV);
-
     targetVelocity = 50.0/3.6; //try m/s  - km/h
     currentVelocity = targetVelocity;
     float tmp = targetVelocity;
@@ -277,7 +274,7 @@ T randomChoice(vector<T> vec) {
 void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
     if (auto t = tw.lock()) if (t->control_flag == false) return;
 
-    this_thread::sleep_for(chrono::microseconds(500));
+    this_thread::sleep_for(chrono::microseconds(1));
     PLock lock(mtx);
 
     if (!roadNetwork) return;
@@ -289,8 +286,6 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
     float userRadius = 300; // x meter radius around users
 
     auto clearVecs =[&](){
-        toBeMadeInvisVehicles.clear();
-        toBeTransformedVehicles.clear();
         visionVecSaved.clear();
     };
 
@@ -319,7 +314,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             if (vehiclePool.size() > 0) {
                 auto vID = vehiclePool.back();
                 vehiclePool.pop_back();
-                toBeShownVehicles.push_back(vID);
+                vehicles[vID].simVisible = true;
                 return vID;
             } else {
                 auto v = Vehicle( Graph::position(roadID, 0.0), type );
@@ -422,7 +417,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         for (auto roadID : makeDiff(nearRoads, newNearRoads)) {
             auto& road = roads[roadID];
             //for (auto v : road.vehicles) { v.destroy(); numUnits--; }
-            for (auto ID : road.vehicleIDs) { toBeHiddenVehicles.push_back(ID.first); vehiclePool.push_front(ID.first); numUnits--; }
+            for (auto ID : road.vehicleIDs) { vehicles[ID.first].simVisible = false; vehiclePool.push_front(ID.first); numUnits--; }
             road.vehicleIDs.clear();
             road.macro = true;
         }
@@ -552,6 +547,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         //doffset = Vec3d(0,0,0);
         p->setDir(p->dir()+doffset);
         vehicle.simPose = p;
+        //vehicle.poseBuffer.write(p->asMatrix());
         //cout << toString(vehicle.vID) << " propagated " << toString(vehicle.simPose) << endl;
         vehicle.lastMoveTS = float(glutGet(GLUT_ELAPSED_TIME)*0.001);
         vehicle.currentOffset = offset;
@@ -674,11 +670,9 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             setSight(farP,simpleDis,v.vID);
         }
         if (disDis < visibilityRadius) {
-            vehicle.shouldBeVisible = true; toBeTransformedVehicles.push_back(vehicle.vID);
+            vehicle.simVisible = true;
         }
-        else vehicle.shouldBeVisible = false;
-        if (!vehicle.shouldBeVisible) toBeMadeInvisVehicles.push_back(vehicle.vID);
-        //if (!vehicle.isVisible && vehicle.shouldBeVisible) toBeShownVehicles.push_back(vehicle.vID);
+        else vehicle.simVisible = false;
 
         visionVec[vehicle.vID] = vehicle.vehiclesightFarID;
 
@@ -691,6 +685,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         ///RECURSIVE INTERSECTION SEARCH
         function<bool (VREntityPtr, int, Vec3d)> recSearch =[&](VREntityPtr newLane, int eID, Vec3d posV) {
         //searches for next intersection in graph, also searches for trafficSignals at intersection
+            if (!newLane) return false;
             auto interE = roadNetwork->getIntersection(newLane->getEntity("nextIntersection"));
             if (interE) {
                 auto node = newLane->getEntity("nextIntersection")->getEntity("node");
@@ -1021,7 +1016,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 road.vehicleIDs.erase(v.first);
                 if (v.second == -1) {
                     auto& vehicle = vehicles[v.first];
-                    toBeHiddenVehicles.push_back(vehicle.vID);
+                    vehicle.simVisible = false;
                     auto& gp = vehicle.pos;
                     auto p = roadNetwork->getPosition(vehicle.pos);
                     Vec3d offset = Vec3d(0,-30,0);
@@ -1031,7 +1026,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                     vehicle.setDefaults();
                     vehiclePool.push_front(v.first);
                     vehicle.signaling.push_back(0);
-                    toBeMadeInvisVehicles.push_back(vehicle.vID);
+                    vehicle.simVisible = false;
                     numUnits--;
                 }
                 else {
@@ -1049,6 +1044,25 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         }
     };
 
+    auto updateUsers =[&](){
+        PLock lock(mtx2);
+        for (auto& u : users) {
+            //Matrix4d m;
+            //poseBuffer.read(m);
+            u.simPose = Pose::create(u.simPose2);
+        }
+    };
+
+    auto updateVehicles =[&](){
+        PLock lock(mtx2);
+        for (auto& u : vehicles) {
+            if (u.second.isUser) continue;
+            if (u.second.simPose) u.second.simPose2 = *u.second.simPose;
+            u.second.vrwVisible = u.second.simVisible;
+        }
+    };
+
+    updateUsers();
     clearVecs();
     updateSimulationArea();
     fillOctree();
@@ -1057,6 +1071,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
     //updateDensityVisual();
     resolveRoadChanges();
     resolveLaneChanges();
+    updateVehicles();
 
     //cout << "-------hello, this is traffic sim thread " << deltaT << endl;
 }
@@ -1064,60 +1079,24 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
 void VRTrafficSimulation::updateSimulation() {
     vector<int> N(4,0);
 
-    auto addTransforms = [&]() {
-        if (toBeAddedVehicles.size() == 0) return;
-        for (auto each : toBeAddedVehicles) {
-            Vehicle& v = vehicles[each];
-            v.setupSG(models[v.type]->duplicate(), lightMaterials);
-            addChild(v.t);
-            N[0]++;
-        }
-    };
-
-    auto hideTransforms = [&]() {
-        if (toBeHiddenVehicles.size() == 0) return;
-        for (auto each : toBeHiddenVehicles) {
-            Vehicle& v = vehicles[each];
-            v.hide();
-            N[1]++;
-        }
-    };
-
-    auto showTransforms = [&]() {
-        if (toBeShownVehicles.size() == 0) return;
-        float start = glutGet(GLUT_ELAPSED_TIME);
-        for (auto each : toBeShownVehicles) {
-            Vehicle& v = vehicles[each];
-            v.show();
-            N[2]++;
-        }
-        float stop = glutGet(GLUT_ELAPSED_TIME);
-        float delt = stop-start;
-        //if (N[2] > 0 && delt>0) cout << "showTransforms " << N[2] << " "  << delt << endl;
-    };
-
-    auto makeInvisTransforms = [&]() {
-        if (toBeMadeInvisVehicles.size() == 0) return;
-        for (auto each : toBeMadeInvisVehicles) {
-            Vehicle& v = vehicles[each];
-            v.t->setVisible(false);
-            //v.isVisible = false;
-        }
-    };
-
     auto updateTransforms = [&]() {
-        if (toBeTransformedVehicles.size() == 0) return;
-        for (auto each : toBeTransformedVehicles) {
-            auto& v = vehicles[each];
+        for (auto& vD : vehicles) {
+            auto& v = vD.second;
+            if (v.isUser) continue;
+            if (!v.t){
+                v.setupSG(models[v.type]->duplicate(), lightMaterials);
+                addChild(v.t);
+            }
             if (v.t) {
-                auto pose = v.simPose;
-                v.t->setPose(v.simPose);
-                v.t->setVisible(true);
-                //v.isVisible = true;
+                //v.t->setPose(v.getPose());
+                v.t->setMatrix(v.simPose2.asMatrix());
+                v.t->setVisible(v.vrwVisible);
+                if (  v.vrwVisible ) v.show();
+                if ( !v.vrwVisible ) v.hide();
+
                 for (auto i : v.signaling) v.signalLights(i, lightMaterials);
                 v.signaling.clear();
                 N[3]++;
-                //if (glutGet(GLUT_ELAPSED_TIME) - starter > 3) return;
             }
         }
     };
@@ -1125,7 +1104,8 @@ void VRTrafficSimulation::updateSimulation() {
     auto updateUsers =[&]() {
         for (auto& u : users) {
             if (!u.t)  continue;
-            u.simPose = u.t->getWorldPose();
+            //u.poseBuffer.write( u.t->getWorldMatrix() );
+            u.simPose2 = *u.t->getWorldPose();
             //N[3]++;
         }
     };
@@ -1142,48 +1122,17 @@ void VRTrafficSimulation::updateSimulation() {
     VRTimer timer;
 
     timer.start("withLock");
-    PLock lock(mtx);
+    //PLock lock(mtx);
+    PLock lock(mtx2);
     timer.start("withoutLock");
-    float starter = glutGet(GLUT_ELAPSED_TIME);
 
-    string t = "";
-    for (int i=0; i<1; i++) {
-        auto ts0 = glutGet(GLUT_ELAPSED_TIME);
-        addTransforms();
-        auto ts = glutGet(GLUT_ELAPSED_TIME);
-        //t += toString(ts - ts0) + " ";
+    updateTransforms();
+    updateUsers();
 
-        hideTransforms();
-        auto ts1 = glutGet(GLUT_ELAPSED_TIME);
-        //t += toString(ts1 - ts) + " ";
-
-        showTransforms();
-        auto ts2 = glutGet(GLUT_ELAPSED_TIME);
-        //t += toString(ts2 - ts1) + " ";
-
-        makeInvisTransforms();
-        auto ts3 = glutGet(GLUT_ELAPSED_TIME);
-        //t += toString(ts3 - ts2) + " ";
-
-        updateTransforms();
-        auto ts4 = glutGet(GLUT_ELAPSED_TIME);
-        //t += toString(ts4 - ts3) + " ";
-
-        updateUsers();
-    }
     //updateVisuals();
-    auto ts5 = glutGet(GLUT_ELAPSED_TIME);
-    t += toString(ts5 - starter) + " ";
-    float stopper = glutGet(GLUT_ELAPSED_TIME);
-    float delta = stopper-starter;
-    //if (delta > 0)
+
     cout << "everything " << timer.stop("withLock") << "__" << timer.stop("withoutLock") << " - " << Vec4i(N[0], N[1], N[2], N[3]) << endl;
 
-    toBeAddedVehicles.clear();
-    toBeShownVehicles.clear();
-    toBeHiddenVehicles.clear();
-    toBeMadeInvisVehicles.clear();
-    toBeTransformedVehicles.clear();
     //cout << "lul " << Vec4i(N[0], N[1], N[2], N[3]) << endl;
 }
 
@@ -1924,7 +1873,7 @@ void VRTrafficSimulation::runVehicleDiagnostics(){
         velInfo += toString(v.second.currentVelocity * 3.6) + " ";
         tarVelInfo += toString(v.second.targetVelocity * 3.6) + " ";
         maxAccel += toString(v.second.maxAcceleration) + " ";
-        if (v.second.isVisible) vis ++;
+        if (v.second.vrwVisible) vis ++;
         n1++;
     }
 

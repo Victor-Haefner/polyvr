@@ -52,11 +52,12 @@ class VRTrafficSimulation : public VRObject {
             float length = 4.4;
             float width = 1.7;
             bool isUser = false;
-            bool shouldBeVisible = false;
-            bool isVisible = true;
+            bool simVisible = false;
+            bool vrwVisible = false;
             bool collisionDetected;
             PosePtr simPose;
-            doubleBuffer poseBuffer;
+            Pose simPose2;
+            //doubleBuffer poseBuffer;
             int type;
             vector<int> signaling;
 
@@ -121,10 +122,6 @@ class VRTrafficSimulation : public VRObject {
             Vehicle();
             ~Vehicle();
 
-
-            Vec3d getPosition();
-            Pose getPose();
-
             void setupSG(VRObjectPtr g, map<string, VRMaterialPtr>& lightMaterials);
             void destroy();
             void hide();
@@ -167,6 +164,7 @@ class VRTrafficSimulation : public VRObject {
         VRThreadCbPtr worker;
 
         boost::recursive_mutex mtx;
+        boost::recursive_mutex mtx2;
 
         map<int, laneSegment> roads;
         map<int, Vehicle> vehicles;
@@ -175,14 +173,10 @@ class VRTrafficSimulation : public VRObject {
         vector<int> seedRoads;
         vector<int> nearRoads;
         vector<int> forceSeedRoads;
+        vector<int> toBeAddedVehicles;
         vector<Vehicle> users;
         list<int> vehiclePool;
         vector<VRObjectPtr> models;
-        vector<int> toBeAddedVehicles;
-        vector<int> toBeShownVehicles;
-        vector<int> toBeHiddenVehicles;
-        vector<int> toBeMadeInvisVehicles;
-        vector<int> toBeTransformedVehicles;
         int maxUnits = 0;
         int numUnits = 0;
         size_t nID = -1;
