@@ -82,6 +82,21 @@ void VRRoadNetwork::init() {
     addChild( guardRails );
     addChild( guardRailPoles );
 
+    auto baseMaterialPole = VRMaterial::get("trafficSignalsMatPole");
+    baseMaterialPole->setDiffuse(Color3f(0.3,0.3,0.3));
+    baseMaterialPole->setLit(true);
+
+    auto baseMaterialTop = VRMaterial::get("trafficSignalsMatTop");
+    baseMaterialTop->setDiffuse(Color3f(0.1,0.1,0.1));
+    baseMaterialTop->setLit(true);
+
+    trafficSignalsGeo = VRGeometry::create("trafficSignalsGeo");
+    trafficSignalsGeo->setMaterial(baseMaterialTop);
+    trafficSignalsPolesGeo = VRGeometry::create("trafficSignalsPolesGeo");
+    trafficSignalsPolesGeo->setMaterial(baseMaterialPole);
+    addChild(trafficSignalsGeo);
+    addChild(trafficSignalsPolesGeo);
+
     collisionMesh = VRGeometry::create("roadsAssetsCollisionShape");
     collisionMesh->hide("SHADOW");
     addChild( collisionMesh );
@@ -869,6 +884,9 @@ VRRoadIntersectionPtr VRRoadNetwork::getIntersection(VREntityPtr intersection) {
     if (intersectionsByEntity.count(intersection)) return intersectionsByEntity[intersection];
     return 0;
 }
+
+VRGeometryPtr VRRoadNetwork::getTrafficSignalsGeo() { return trafficSignalsGeo; }
+VRGeometryPtr VRRoadNetwork::getTrafficSignalsPolesGeo() { return trafficSignalsPolesGeo; }
 
 vector<VREntityPtr> VRRoadNetwork::getPreviousRoads(VREntityPtr road) {
 	auto getPreviousPaths = [](VREntityPtr path) {

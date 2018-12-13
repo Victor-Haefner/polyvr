@@ -47,6 +47,9 @@ class VRRoadNetwork : public VRRoadBase {
         VRTexturePtr arrowTexture;
         map<Vec4i, int> arrowTemplates;
 
+        VRGeometryPtr trafficSignalsGeo;
+        VRGeometryPtr trafficSignalsPolesGeo;
+
         VRGeometryPtr collisionMesh;
 
 		float trackWidth = 1.6; // TODO
@@ -130,6 +133,8 @@ class VRRoadNetwork : public VRRoadBase {
         double getMemoryConsumption();
 
         VRGeometryPtr getAssetCollisionObject();
+        VRGeometryPtr getTrafficSignalsGeo();
+        VRGeometryPtr getTrafficSignalsPolesGeo();
 };
 
 OSG_END_NAMESPACE;

@@ -14,6 +14,8 @@ PyMethodDef VRPyTrafficSimulation::methods[] = {
     ///Diagnostics
     {"getUser", PyWrap( TrafficSimulation, getUser, "Get first user vehicle geometry", VRTransformPtr ) },
     {"toggleSim", PyWrap( TrafficSimulation, toggleSim, "toggleSim - pause/resume", void, void ) },
+    {"toggleSimUpd", PyWrap( TrafficSimulation, toggleSimUpd, "toggleSim - pause/resume geometry updating", void, void ) },
+    {"toggleVisibility", PyWrap( TrafficSimulation, toggleVisibility, "toggles Visibilty", void, void ) },
     {"toggleDirection", PyWrap( TrafficSimulation, toggleDirection, "toggleDirection - forward/backward", void, void ) },
     {"setSpeedmultiplier", PyWrap( TrafficSimulation, setSpeedmultiplier, "setSpeedmultiplier", void, float ) },
     {"setGlobalOffset", PyWrap( TrafficSimulation, setGlobalOffset, "setGlobalOffset - if trafficSim is located somewhere else as user", void, Vec3d ) },
@@ -26,11 +28,13 @@ PyMethodDef VRPyTrafficSimulation::methods[] = {
     //{"isSeedRoad", PyWrap( TrafficSimulation, isSeedRoad, "isSeedRoad", bool, int ) },
     //{"forceIntention", PyWrap( TrafficSimulation, forceIntention, "forceIntention", void, int, int ) },
     {"toggleGraph", PyWrap( TrafficSimulation, toggleGraph, "enables/disables visualisation of: roadnetwork graph", void ) },
+    {"toggleVehicMarkers", PyWrap( TrafficSimulation, toggleVehicMarkers, "enables/disables visualisation of: next Intersection in vehicle sight", void, int ) },
     {"toggleIntersections", PyWrap( TrafficSimulation, toggleIntersections, "enables/disables visualisation of: intersection location and type", void ) },
-    {"toggleVehicMarkers", PyWrap( TrafficSimulation, toggleVehicMarkers, "enables/disables visualisation of: vehicle IDs, next pinpointed intersection, turn direction red left, yellow right, blue straight ; -1, default; 0,1", void, int ) },
     {"toggleLaneChanges", PyWrap( TrafficSimulation, toggleLaneChanges, "toggleLaneChanges", void ) },
     {"toggleVehicVision", PyWrap( TrafficSimulation, toggleVehicVision, "enables/disables visualisation of: vehicle vision", void ) },
     {"stopVehicle", PyWrap( TrafficSimulation, stopVehicle, "stopVehicle", void, int ) },
+    {"setKillswitches", PyWrap( TrafficSimulation, setKillswitches, "setKillswitches", void, float, float ) },
+    {"setVisibilityRadius", PyWrap( TrafficSimulation, setVisibilityRadius, "setVisibilityRadius", void, float ) },
     //{"deleteVehicle", PyWrap( TrafficSimulation, deleteVehicle, "deleteVehicle", void, int ) },
     {NULL}  /* Sentinel */
 };
