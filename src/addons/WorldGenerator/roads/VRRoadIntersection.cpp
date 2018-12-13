@@ -517,7 +517,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
         Vec3d pNode = node->getVec3("position");
         int N = roadFronts.size();
         float disToCrossing = 0.4;
-        float disToIntersec = 1.5;
+        float disToIntersec = 2.0;
         map<VREntityPtr, bool> processedLanes; // keep list of already processed lanes
         map<VREntityPtr, bool> crossroadFronts; // keep list of already processed lanes
         map<VREntityPtr, Vec3d> roadOffsets;
@@ -945,16 +945,20 @@ VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d 
     //cout << "  VRRoadIntersection::addTrafficLight" << endl;
     float R = 0.05;
     VRTransformPtr geo = world.lock()->getAssetManager()->copy(asset, Pose::create());
-    VRGeometryPtr red, orange, green;
+    VRGeometryPtr red, orange, green, box, caps;
     bool checked = false;
     if (geo) {
         red = dynamic_pointer_cast<VRGeometry>( geo->findFirst("red") );
         orange = dynamic_pointer_cast<VRGeometry>( geo->findFirst("yellow") );
         green = dynamic_pointer_cast<VRGeometry>( geo->findFirst("green") );
+        box = dynamic_pointer_cast<VRGeometry>( geo->findFirst("box") );
+        caps = dynamic_pointer_cast<VRGeometry>( geo->findFirst("caps") );
         if (!red) {
             red = dynamic_pointer_cast<VRGeometry>( geo->findFirst("Red") );
             orange = dynamic_pointer_cast<VRGeometry>( geo->findFirst("Orange") );
             green = dynamic_pointer_cast<VRGeometry>( geo->findFirst("Green") );
+            box = dynamic_pointer_cast<VRGeometry>( geo->findFirst("Box") );
+            caps = dynamic_pointer_cast<VRGeometry>( geo->findFirst("Caps") );
         }
         red->makeUnique();
         orange->makeUnique();
@@ -970,13 +974,13 @@ VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d 
         geo = box;
         red = VRGeometry::create("trafficLight");
         red->setPrimitive("Sphere 0.115 2");
-        box->addChild(red);
+        //box->addChild(red);
         orange = VRGeometry::create("trafficLight");
         orange->setPrimitive("Sphere 0.115 2");
-        box->addChild(orange);
+        //box->addChild(orange);
         green = VRGeometry::create("trafficLight");
         green->setPrimitive("Sphere 0.115 2");
-        box->addChild(green);
+        //box->addChild(green);
         red->translate(Vec3d(0, 0, 0.2));
         green->translate(Vec3d(0, 0, -0.2));
     }
@@ -985,13 +989,27 @@ VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d 
 
     //auto light = VRTrafficLight::create(nextLanes[lane], system); // TODO: better data for trafficlight groups
     auto light = VRTrafficLight::create(lane, system, p);
-    light->addChild(geo);
+    if ( checked ) light->addChild(geo);
+    if (!checked ) {
+        light->addChild(red);
+        light->addChild(orange);
+        light->addChild(green);
+    }
     light->setupBulbs(red, orange, green);
     light->setEntity(signal);
     light->setUsingAsset(checked);
     matchedLights[lane] = light;
     addChild(light);
-    addChild(pole);
+    //addChild(pole);
+    auto pose1 = light->getWorldPose();
+    auto pose2 = pole->getWorldPose();
+    auto roads = world.lock()->getRoadNetwork();
+    auto mergeGeo = roads->getTrafficSignalsGeo();
+    auto mergeGeoPoles = roads->getTrafficSignalsPolesGeo();
+    //if (  checked ) { light->addChild(box); light->addChild(caps); }
+    //mergeGeo->merge(box, pose1);
+    if ( !checked ) mergeGeo->merge(caps, pose1);
+    mergeGeoPoles->merge(pole,pose2);
     return 0;
 }
 
