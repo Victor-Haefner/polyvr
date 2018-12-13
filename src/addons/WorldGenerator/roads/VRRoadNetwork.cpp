@@ -698,7 +698,8 @@ void VRRoadNetwork::computeIntersections() {
         intersection->setEntity(iEnt);
         intersections.push_back(intersection);
         intersectionsByEntity[iEnt] = intersection;
-        addChild(intersection);
+        addChild(intersection); // TODO: remove when managed stuff appended to intersection node
+
         for (auto r : nodeRoads) { intersection->addRoad(r); }
         iEnt->set("node", node->getName());
         intersection->computeLayout(graph);
@@ -777,7 +778,8 @@ void VRRoadNetwork::computeSurfaces() {
     for (auto intersection : intersections) {
         auto iGeo = intersection->createGeometry();
         if (!iGeo) continue;
-        iGeo->setMaterial( asphalt );
+        //iGeo->setMaterial( asphalt );
+        roadsGeo->merge(iGeo);
         if (auto w = world.lock()) w->getPhysicsSystem()->add(iGeo, iGeo->getID());
     }
 

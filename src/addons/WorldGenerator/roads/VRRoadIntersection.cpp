@@ -908,7 +908,6 @@ VRGeometryPtr VRRoadIntersection::createGeometry() {
     intersection->setFrom(p);
     intersection->applyTransformation();
 	setupTexCoords( intersection, entity );
-	addChild(intersection);
 	return intersection;
 }
 
