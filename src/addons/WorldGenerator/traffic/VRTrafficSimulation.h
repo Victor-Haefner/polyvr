@@ -100,6 +100,8 @@ class VRTrafficSimulation : public VRObject {
             float acceleration;
             float decceleration;
 
+            float deltaTt;
+
             float lastMoveTS = 0;
             float indicatorTS = 0;
             float lastLaneSwitchTS = 0;
@@ -216,6 +218,7 @@ class VRTrafficSimulation : public VRObject {
         float speedMultiplier = 1.0;
         int debugOverRideSeedRoad = -1;
         float visibilityRadius = 100;
+        map<int,bool> debuggerCars;
 
     public:
         VRTrafficSimulation();
@@ -264,6 +267,8 @@ class VRTrafficSimulation : public VRObject {
         void setSeedRoadVec(vector<int> forceSeedRoads);
         void setVisibilityRadius(float visibilityRadius);
         bool isSeedRoad(int roadID);
+
+        void addDcar(int i);
 };
 
 OSG_END_NAMESPACE;
