@@ -13,6 +13,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRSpatialCollisionManager.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/VRLodTree.h"
 #include "core/scene/VRObjectManager.h"
 #include "core/utils/toString.h"
 #include "core/math/path.h"
@@ -73,6 +74,7 @@ VRTerrainPtr VRWorldGenerator::getTerrain() { return terrain; }
 VRNaturePtr VRWorldGenerator::getNature() { return nature; }
 VRPlanetPtr VRWorldGenerator::getPlanet() { return planet; }
 VRDistrictPtr VRWorldGenerator::getDistrict() { return district; }
+VRLodTreePtr VRWorldGenerator::getLodTree() { return lodTree; }
 
 void VRWorldGenerator::addMaterial( string name, VRMaterialPtr mat ) { materials[name] = mat; }
 void VRWorldGenerator::addAsset( string name, VRTransformPtr geo ) {
@@ -106,6 +108,9 @@ void VRWorldGenerator::init() {
         mat->setFragmentShader(dfp, name+"DFS", true);
         addMaterial(name, mat);
     };
+
+    lodTree = VRLodTree::create(name, 5);
+    addChild(lodTree);
 
     collisionShape = VRSpatialCollisionManager::create(12);
     addChild(collisionShape);

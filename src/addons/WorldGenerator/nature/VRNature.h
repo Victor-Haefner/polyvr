@@ -19,8 +19,6 @@ class VRNature : public VRObject, public VRWorldModule {
         map<VRTree*, VRTreePtr> treeRefs;
         map<VRGrassPatch*, VRGrassPatchPtr> grassPatchRefs;
 
-        VRLodTreePtr lodTree;
-
         VRMaterialPtr truncMat;
         VRMaterialPtr leafMat1;
         VRMaterialPtr leafMat2;

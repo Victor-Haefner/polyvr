@@ -33,7 +33,6 @@ template<> string typeName(const OSG::VRNaturePtr& t) { return "Nature"; }
 // --------------------------------------------------------------------------------------------------
 
 VRNature::VRNature(string name) {
-    lodTree = VRLodTree::create(name, 5);
     trees = VRGeometry::create("trees");
     trees->hide("SHADOW");
 
