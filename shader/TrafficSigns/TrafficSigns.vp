@@ -1,21 +1,14 @@
-#version 400 compatibility
-
-out vec3 norm;
-out vec4 pos;
-out vec2 tcs;
-out mat3 miN;
-out mat4 miP;
-
-in vec4 osg_Vertex;
-in vec3 osg_Normal;
-in vec2 osg_MultiTexCoord0;
-
-void main() {
-	miN = transpose(gl_NormalMatrix);
-	miP = inverse(gl_ProjectionMatrix);
-	pos = osg_Vertex * 0.5;
-	pos.z = 0.5; // try to fix stereo
-	gl_Position = osg_Vertex;
-	norm = osg_Normal;
-	tcs = osg_MultiTexCoord0;
+#version 120
+attribute vec4 osg_Vertex;
+attribute vec3 osg_Normal;
+attribute vec2 osg_MultiTexCoord0;
+varying vec4 vertPos;
+varying vec3 vertNorm;
+varying vec4 color;
+void main(void) {
+  vertPos = gl_ModelViewMatrix * osg_Vertex;
+  vertNorm = gl_NormalMatrix * osg_Normal;
+  gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0,0.0);
+  color  = gl_Color;
+  gl_Position    = gl_ModelViewProjectionMatrix*osg_Vertex;
 }

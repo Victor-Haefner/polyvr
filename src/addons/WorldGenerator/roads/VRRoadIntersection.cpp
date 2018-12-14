@@ -968,7 +968,7 @@ VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d 
         green->setColors(0);
         checked = true;
     } else {
-        auto box = VRGeometry::create("trafficLight");
+        box = VRGeometry::create("trafficLight");
         box->setPrimitive("Box 0.2 0.2 0.6 1 1 1");
         box->setColor("grey");
         geo = box;
@@ -1007,8 +1007,8 @@ VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d 
     auto mergeGeo = roads->getTrafficSignalsGeo();
     auto mergeGeoPoles = roads->getTrafficSignalsPolesGeo();
     //if (  checked ) { light->addChild(box); light->addChild(caps); }
-    //mergeGeo->merge(box, pose1);
-    if ( !checked ) mergeGeo->merge(caps, pose1);
+    //mergeGeo->merge(box);
+    //if ( !checked ) mergeGeo->merge(caps, pose1);
     mergeGeoPoles->merge(pole,pose2);
     return 0;
 }

@@ -994,15 +994,28 @@ string VRMaterial::getVertexShader() {
     return "";
 }
 
-string VRMaterial::getFragmentShader() {
+string VRMaterial::getFragmentShader(bool deferred) {
     auto m = mats[activePass];
-    if (m->fdProgram) return m->fdProgram->getProgram();
+    if (deferred && m->fdProgram) return m->fdProgram->getProgram();
+    if (!deferred && m->fProgram) return m->fProgram->getProgram();
     return "";
 }
 
 string VRMaterial::getGeometryShader() {
     auto m = mats[activePass];
     if (m->gProgram) return m->gProgram->getProgram();
+    return "";
+}
+
+string VRMaterial::getTessControlShader() {
+    auto m = mats[activePass];
+    if (m->tcProgram) return m->tcProgram->getProgram();
+    return "";
+}
+
+string VRMaterial::getTessEvaluationShader() {
+    auto m = mats[activePass];
+    if (m->teProgram) return m->teProgram->getProgram();
     return "";
 }
 
