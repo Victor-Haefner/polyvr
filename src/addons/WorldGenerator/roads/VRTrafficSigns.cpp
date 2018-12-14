@@ -61,7 +61,7 @@ void VRTrafficSigns::setupBaseSign(){
     vScript = resDir + "TrafficSigns.vp";
     fScript = resDir + "TrafficSigns.fp";
     dfScript = resDir + "TrafficSigns.dfp";
-    //reloadShader();
+    reloadShader();
 
     //baseMaterialPole = VRMaterial::create("trafficSignMatPole");
     baseMaterialPole = VRMaterial::get("trafficSignMatPole");

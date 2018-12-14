@@ -60,7 +60,7 @@ int VRLodLeaf::getLevel() { return lvl; }
 VRLodTree::VRLodTree(string name, float size) : VRObject(name) { octree = Octree::create(size,size,name); }
 VRLodTree::~VRLodTree() {}
 VRLodTreePtr VRLodTree::ptr() { return static_pointer_cast<VRLodTree>( shared_from_this() ); }
-VRLodTreePtr VRLodTree::create(string name) { return VRLodTreePtr(new VRLodTree(name)); }
+VRLodTreePtr VRLodTree::create(string name, float size) { return VRLodTreePtr(new VRLodTree(name, size)); }
 
 void VRLodTree::reset(float size) {
     leafs.clear();
@@ -73,6 +73,12 @@ void VRLodTree::reset(float size) {
     }
     clearChildren();
 }
+
+VRLodLeafPtr VRLodTree::getLeaf(OctreeNode* o) {
+    return leafs.count(o) ? leafs[o] : 0;
+}
+
+map<OctreeNode*, VRLodLeafPtr>& VRLodTree::getLeafs() { return leafs; }
 
 vector<VRLodLeafPtr> VRLodTree::getSubTree(VRLodLeafPtr l) {
     vector<VRLodLeafPtr> res;
