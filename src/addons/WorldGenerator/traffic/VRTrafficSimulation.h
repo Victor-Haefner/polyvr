@@ -127,9 +127,6 @@ class VRTrafficSimulation : public VRObject {
             void setDefaults();
             void show();
 
-            int getID();
-            void setID(int vID);
-
             bool operator==(const Vehicle& v);
 
             void signalLights(int input, map<string, VRMaterialPtr>& lightMaterials);
