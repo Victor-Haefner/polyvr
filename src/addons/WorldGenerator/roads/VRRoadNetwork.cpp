@@ -22,6 +22,7 @@
 #include "core/objects/geometry/VRStroke.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRSpatialCollisionManager.h"
+#include "core/objects/VRLodTree.h"
 #include "core/tools/VRAnalyticGeometry.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/material/VRTexture.h"
@@ -522,6 +523,11 @@ void VRRoadNetwork::computeSigns() {
                 m->setTexture(tex);
                 surface->setMaterial(m);
             }
+        }
+
+        if (sign) {
+            lodTree->addObject(sign, sign->getWorldPosition(), 3, false);
+            sign->setDir(dir);
         }
 
         if ( osmSign ) {

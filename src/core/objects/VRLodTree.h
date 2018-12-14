@@ -47,7 +47,7 @@ class VRLodTree : public VRObject {
         static VRLodTreePtr create(string name = "lodtree", float size = 10);
         VRLodTreePtr ptr();
 
-        VRLodLeafPtr addObject(VRTransformPtr obj, Vec3d p, int lvl);
+        VRLodLeafPtr addObject(VRTransformPtr obj, Vec3d p, int lvl, bool underLod = true);
         VRLodLeafPtr remObject(VRTransformPtr obj);
         void reset(float size = 0);
         int size();

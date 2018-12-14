@@ -142,7 +142,7 @@ VRLodLeafPtr VRLodTree::addLeaf(OctreeNode* o, int lvl) {
     return l;
 }
 
-VRLodLeafPtr VRLodTree::addObject(VRTransformPtr obj, Vec3d p, int lvl) {
+VRLodLeafPtr VRLodTree::addObject(VRTransformPtr obj, Vec3d p, int lvl, bool underLod) {
     if (!octree || !obj) return 0;
     //cout << "VRLodTree::addObject " << obj->getName() << " p " << p << " lvl: " << lvl << endl;
     if (leafs.size() == 0) addLeaf(octree->getRoot(), 0);
@@ -150,7 +150,7 @@ VRLodLeafPtr VRLodTree::addObject(VRTransformPtr obj, Vec3d p, int lvl) {
     OctreeNode* oLeaf = octree->add(p, obj.get(), lvl, true);
     //cout << " VRLodTree::addObject octree leaf: " << oLeaf->getSize() << endl;
     auto leaf = addLeaf(oLeaf, lvl);
-    if (lvl == 0) leaf->add(obj, 0);
+    if (lvl == 0 || !underLod) leaf->add(obj, 0);
     else          leaf->add(obj, 1);
     obj->setRelativePosition(p, ptr());
     obj->setDir(Vec3d(0,0,-1));

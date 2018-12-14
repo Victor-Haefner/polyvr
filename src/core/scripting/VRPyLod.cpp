@@ -14,7 +14,7 @@ PyMethodDef VRPyLod::methods[] = {
 };
 
 PyMethodDef VRPyLodTree::methods[] = {
-	{"addObject", PyWrap( LodTree, addObject, "Add object, obj, pos, lvl", VRLodLeafPtr, VRTransformPtr, Vec3d, int) },
+	{"addObject", PyWrapOpt( LodTree, addObject, "Add object, obj, pos, lvl", "1", VRLodLeafPtr, VRTransformPtr, Vec3d, int, bool) },
 	{"remObject", PyWrap( LodTree, remObject, "Remove object", VRLodLeafPtr, VRTransformPtr) },
 	{"reset", PyWrap( LodTree, reset, "Set the distance at which the specified LOD stage should be shown", void, float) },
 	{"getSubTree", PyWrap( LodTree, getSubTree, "Return sub tree", vector<VRLodLeafPtr>, VRLodLeafPtr) },
