@@ -44,15 +44,17 @@ class VRLodTree : public VRObject {
     public:
         VRLodTree(string name, float size = 10);
         ~VRLodTree();
-        static VRLodTreePtr create(string name = "lodtree");
+        static VRLodTreePtr create(string name = "lodtree", float size = 10);
         VRLodTreePtr ptr();
 
-        VRLodLeafPtr addObject(VRTransformPtr obj, Vec3d p, int lvl);
+        VRLodLeafPtr addObject(VRTransformPtr obj, Vec3d p, int lvl, bool underLod = true);
         VRLodLeafPtr remObject(VRTransformPtr obj);
         void reset(float size = 0);
         int size();
 
         vector<VRLodLeafPtr> getSubTree(VRLodLeafPtr l);
+        VRLodLeafPtr getLeaf(OctreeNode* o);
+        map<OctreeNode*, VRLodLeafPtr>& getLeafs();
 
         void showOctree();
 };

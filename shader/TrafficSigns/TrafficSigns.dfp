@@ -1,42 +1,20 @@
-#version 400 compatibility
-#define M_PI 3.1415926535897932384626433832795
-
-// gen
-in vec3 norm;
-in vec4 pos;
-in vec2 tcs;
-in mat3 miN;
-in mat4 miP;
-vec3 fragDir = vec3(0,0,0);
-vec3 newfragDir;
-
-void computeDirection() {
-	newfragDir = normalize( miN * (miP * pos).xyz );
+#version 120
+uniform int isLit;
+varying vec4 vertPos;
+varying vec3 vertNorm;
+varying vec4 color;
+uniform sampler2D tex0;
+void main(void) {
+  vec3 pos = vertPos.xyz / vertPos.w;
+  vec4 diffCol = texture2D(tex0, gl_TexCoord[0].xy);
+  if (diffCol.a < 0.1) discard;
+  vec3 norm = normalize(vertNorm);
+  diffCol.rgb = mix(vec3(0.5), diffCol.rgb, diffCol.a);
+  if (norm.z < 0) {
+	diffCol = vec4(0.8,0.8,0.8,1);
+	norm *= -1; 
+  }
+  gl_FragData[0] = vec4(pos, 1.0);
+  gl_FragData[1] = vec4(norm, isLit);
+  gl_FragData[2] = vec4(diffCol.rgb, 0);
 }
-
-float gettheta(vec3 d){
-	return acos(d.y);
-}
-
-void main() {
-	//computeDirection();
-
-	/*mat4 m = inverse(gl_ModelViewMatrix);
-	PCam = (m*vec4(0,0,0,1)).xyz;
-	vec3 P0 = vec3(0,100,0);
-	vec3 T0 = P0-PCam;
-	vec3 D0 = normalize( P0-PCam );
-
-	PCam0 = vec3(PCam.x,0.0,PCam.z);
-*/
-
-	//discard;
-	gl_FragData[0] = vec4(pos.xyzw);
-	gl_FragData[1] = vec4(0,0,1, -1);
-	//gl_FragData[2] = vec4(check,1);
-}
-
-
-
-
-

@@ -531,6 +531,7 @@ PyMethodDef VRPyExpression::methods[] = {
     {"set", PyWrap2( Expression, set, "Set expression", void, string ) },
     {"compute", PyWrap2( Expression, compute, "Compute expression", string ) },
     {"makeTree", PyWrap2( Expression, makeTree, "Build tree structure", void ) },
+    {"toString", PyWrap2( Expression, toString, "Compute tree structure", string ) },
     {"treeAsString", PyWrap2( Expression, treeAsString, "Compute tree structure", string ) },
     {NULL}  /* Sentinel */
 };

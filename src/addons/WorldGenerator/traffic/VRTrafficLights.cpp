@@ -138,9 +138,11 @@ map<int, vector<VRTrafficLightPtr>> VRTrafficLights::getMap() {
 }
 
 void VRTrafficLights::update() { // TODO, use time instead of counter!
-    static int t = 0;
-    static int t1 = 0; t1++;
-    if (t1 > 120) { t1 = 0; t++; }
+    static int lastT = int(glutGet(GLUT_ELAPSED_TIME)*0.001);
+    int thisT = int(glutGet(GLUT_ELAPSED_TIME)*0.001);
+    int deltaT = thisT - lastT;
+    int t = deltaT;
+    if (t > 120) lastT = thisT;
 
     auto orangeBlinking = [&](VRTrafficLightPtr& l) {
         if (t%6 < 3) l->setState("010");

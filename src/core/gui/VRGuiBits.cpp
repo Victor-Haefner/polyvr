@@ -338,4 +338,8 @@ void VRGuiBits::update() { // scene changed
     update_ward = false;
 }
 
+void VRGuiBits::wipeConsoles() {
+    for (auto c : consoles) c.second->clear();
+}
+
 OSG_END_NAMESPACE;

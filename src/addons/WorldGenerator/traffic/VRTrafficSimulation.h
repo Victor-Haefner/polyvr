@@ -5,8 +5,11 @@
 #include "addons/Semantics/VRSemanticsFwd.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 #include "core/math/VRMathFwd.h"
+#include "core/math/pose.h"
 #include "core/math/graph.h"
 #include "core/objects/object/VRObject.h"
+#include "core/utils/VRDoublebuffer.h"
+#include <boost/thread/recursive_mutex.hpp>
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -14,8 +17,8 @@ OSG_BEGIN_NAMESPACE;
 class VRTrafficSimulation : public VRObject {
     public:
         enum VEHICLE {
-            CAR = 0,
-            SCOOTER = 1,
+            SCOOTER = 0,
+            CAR = 1,
             BYCICLE = 2
         };
         enum VISION {
@@ -49,7 +52,14 @@ class VRTrafficSimulation : public VRObject {
             float length = 4.4;
             float width = 1.7;
             bool isUser = false;
+            bool simVisible = false;
+            bool vrwVisible = false;
             bool collisionDetected;
+            PosePtr simPose;
+            Pose simPose2;
+            //doubleBuffer poseBuffer;
+            int type;
+            vector<int> signaling;
 
             vector<VRGeometryPtr> turnsignalsBL;
             vector<VRGeometryPtr> turnsignalsBR;
@@ -58,17 +68,18 @@ class VRTrafficSimulation : public VRObject {
             vector<VRGeometryPtr> headlights;
             vector<VRGeometryPtr> backlights;
 
-            vector<int> lastFiveSteps;
             ///Perception
             float distanceToNextSignal;
+            float distanceToNextStop;
             float distanceToNextIntersec;
+            Vec3d nextStop;
             string nextSignalState; //"000" - red|organge|green
             bool signalAhead;
             bool incTrafficRight = false;
             bool incTrafficLeft = false;
             bool incTrafficStraight = false;
             bool incTrafficFront = false;
-            int frontVehicLastMove = 0;
+            float frontVehicLastMove = 0;
 
             map<int, float> vehiclesight;
             map<int, float> vehiclesightFar;
@@ -90,9 +101,9 @@ class VRTrafficSimulation : public VRObject {
             float acceleration;
             float decceleration;
 
-            int lastMoveTS = 0;
-            int indicatorTS = 0;
-            int lastLaneSwitchTS = 0;
+            float lastMoveTS = 0;
+            float indicatorTS = 0;
+            float lastLaneSwitchTS = 0;
             int roadFrom;
             int roadTo;
             int behavior = 0; //0 = straight, 1 = left, 2 = right
@@ -107,19 +118,22 @@ class VRTrafficSimulation : public VRObject {
             VRRoadIntersectionPtr lastIntersection;
             VRRoadIntersectionPtr lastFoundIntersection;
 
-            Vehicle(Graph::position p);
+            Vehicle(Graph::position p, int type);
             Vehicle();
             ~Vehicle();
 
+            void setupSG(VRObjectPtr g, map<string, VRMaterialPtr>& lightMaterials);
             void destroy();
             void hide();
             void setDefaults();
-            void show(Graph::position p);
+            void show();
 
             int getID();
             void setID(int vID);
 
             bool operator==(const Vehicle& v);
+
+            void signalLights(int input, map<string, VRMaterialPtr>& lightMaterials);
         };
 
         struct signal {
@@ -147,29 +161,25 @@ class VRTrafficSimulation : public VRObject {
         };
 
         VRRoadNetworkPtr roadNetwork;
+        VRThreadCbPtr worker;
+
+        boost::recursive_mutex mtx;
+        boost::recursive_mutex mtx2;
+
         map<int, laneSegment> roads;
         map<int, Vehicle> vehicles;
+        map<string, VRMaterialPtr> lightMaterials;
+        map<int, map<int, int>> visionVecSaved;
         vector<int> seedRoads;
         vector<int> nearRoads;
         vector<int> forceSeedRoads;
+        vector<int> toBeAddedVehicles;
         vector<Vehicle> users;
-        list<Vehicle> vehiclePool;
+        list<int> vehiclePool;
         vector<VRObjectPtr> models;
         int maxUnits = 0;
         int numUnits = 0;
         size_t nID = -1;
-        int stopVehicleID = -1;
-        int deleteVehicleID = -1;
-        bool isSimRunning = true;
-        bool isTimeForward = true;
-        bool isShowingVehicleVision = false;
-        bool isShowingGraph = false;
-        bool isShowingIntersecs = false;
-        bool isShowingGeometries = true;
-        bool isShowingVehicleMarkers = false;
-        int whichVehicleMarkers = -1;
-        bool laneChange = false;
-        float speedMultiplier = 1.0;
         float deltaT;
         float lastT = 0.0;
         Vec3d globalOffset = Vec3d(0,0,0);
@@ -181,15 +191,8 @@ class VRTrafficSimulation : public VRObject {
 
         string lastseedRoadsString = "";
         //int debugOverRideSeedRoad = -1;
-        int debugOverRideSeedRoad = -1;
-
-        VRMaterialPtr carLightWhiteOn;
-        VRMaterialPtr carLightWhiteOff;
-        VRMaterialPtr carLightRedOn;
-        VRMaterialPtr carLightRedOff;
-        VRMaterialPtr carLightOrangeOn;
-        VRMaterialPtr carLightOrangeOff;
-        VRMaterialPtr carLightOrangeBlink;
+        float killswitch1 = 5;
+        float killswitch2 = 200;
         VRUpdateCbPtr turnSignalCb;
 
         VRUpdateCbPtr updateCb;
@@ -197,13 +200,36 @@ class VRTrafficSimulation : public VRObject {
 
         void updateTurnSignal();
         void updateGraph();
+        void updateVehicVision();
+        void updateVehicIntersecs();
         void updateIntersectionVis(bool in);
+
+        ///Diagnostics
+        bool hidden = false;
+        int stopVehicleID = -1;
+        int deleteVehicleID = -1;
+        bool isSimRunning = true;
+        bool isUpdRunning = true;
+        bool isTimeForward = true;
+        bool isShowingVehicleVision = false;
+        bool isShowingGraph = false;
+        bool isShowingIntersecs = false;
+        bool isShowingGeometries = true;
+        bool isShowingMarkers = false;
+        int whichVehicleMarkers = -1;
+        bool laneChange = true;
+        float speedMultiplier = 1.0;
+        int debugOverRideSeedRoad = -1;
+        float visibilityRadius = 100;
 
     public:
         VRTrafficSimulation();
         ~VRTrafficSimulation();
 
         static VRTrafficSimulationPtr create();
+
+        void initiateWorker();
+        void trafficSimThread(VRThreadWeakPtr tw);
 
         void setRoadNetwork(VRRoadNetworkPtr roads);
         void updateSimulation();
@@ -223,6 +249,8 @@ class VRTrafficSimulation : public VRObject {
 
         ///Diagnostics:
         void toggleSim();
+        void toggleSimUpd();
+        void toggleVisibility();
         void toggleDirection();
         void setSpeedmultiplier(float speedMultiplier);
         void toggleGraph();
@@ -236,9 +264,11 @@ class VRTrafficSimulation : public VRObject {
         void runDiagnostics();
         void runVehicleDiagnostics();
         void stopVehicle(int ID);
+        void setKillswitches(float k1, float k2);
         void deleteVehicle(int ID);
         void setSeedRoad(int debugOverRideSeedRoad);
         void setSeedRoadVec(vector<int> forceSeedRoads);
+        void setVisibilityRadius(float visibilityRadius);
         bool isSeedRoad(int roadID);
 };
 

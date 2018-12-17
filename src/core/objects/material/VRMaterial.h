@@ -152,7 +152,7 @@ class VRMaterial : public VRObject {
         void setTessControlScript(string script);
         void setTessEvaluationScript(string script);
         string getVertexShader();
-        string getFragmentShader();
+        string getFragmentShader(bool deferred = false);
         string getGeometryShader();
         string getTessControlShader();
         string getTessEvaluationShader();

@@ -8,8 +8,9 @@ simpleVRPyType(Terrain, New_VRObjects_ptr);
 simpleVRPyType(Planet, New_VRObjects_ptr);
 
 PyMethodDef VRPyTerrain::methods[] = {
-    {"setParameters", PyWrapOpt(Terrain, setParameters, "Set the terrain parameters, size, resolution, height scale, water level", "1|0", void, Vec2d, double, double, float ) },
+    {"setParameters", PyWrapOpt(Terrain, setParameters, "Set the terrain parameters, size, resolution, height scale, water level", "1|0|0.0001|0.7 0.9 1", void, Vec2d, double, double, float, float, Color3f ) },
     {"setWaterLevel", PyWrap(Terrain, setWaterLevel, "Set the water level", void, float ) },
+    {"setAtmosphericEffect", PyWrap(Terrain, setAtmosphericEffect, "Set the atmospheric density and color", void, float, Color3f ) },
     {"loadMap", PyWrapOpt(Terrain, loadMap, "Load height map", "3", void, string, int ) },
     {"setMap", PyWrapOpt(Terrain, setMap, "Set height map", "3", void, VRTexturePtr, int ) },
     {"physicalize", PyWrap(Terrain, physicalize, "Physicalize terrain", void, bool ) },
@@ -28,6 +29,7 @@ PyMethodDef VRPyTerrain::methods[] = {
 PyMethodDef VRPyPlanet::methods[] = {
     {"addSector", PyWrap(Planet, addSector, "Add sector to planet", VRWorldGeneratorPtr, double, double ) },
     {"getSector", PyWrap(Planet, getSector, "Return sector at N E", VRWorldGeneratorPtr, double, double ) },
+    {"getSectors", PyWrap(Planet, getSectors, "Return all sectors", vector<VRWorldGeneratorPtr> ) },
     {"getMaterial", PyWrap(Planet, getMaterial, "Get planet material", VRMaterialPtr ) },
     {"setParameters", PyWrapOpt(Planet, setParameters, "Set planet parameters: radius, sector size", "0.1", void, double, double ) },
     {"addPin", PyWrapOpt(Planet, addPin, "Add a pin: label, north, east, length", "10000", int, string, double, double, double) },

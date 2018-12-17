@@ -126,7 +126,7 @@ void VRTerrain::clear() {
     embankments.clear();
 }
 
-void VRTerrain::setParameters( Vec2d s, double r, double h, float w ) {
+void VRTerrain::setParameters( Vec2d s, double r, double h, float w, float aT, Color3f aC) {
     size = s;
     resolution = r;
     heightScale = h;
@@ -135,11 +135,14 @@ void VRTerrain::setParameters( Vec2d s, double r, double h, float w ) {
     mat->setShaderParameter("heightScale", heightScale);
     mat->setShaderParameter("doHeightTextures", 0);
     mat->setShaderParameter("waterLevel", w);
+    mat->setShaderParameter("atmoColor", aC);
+    mat->setShaderParameter("atmoThickness", aT);
     updateTexelSize();
     setupGeo();
 }
 
 void VRTerrain::setWaterLevel(float w) { mat->setShaderParameter("waterLevel", w); }
+void VRTerrain::setAtmosphericEffect(float thickness, Color3f color) { mat->setShaderParameter("atmoColor", color); mat->setShaderParameter("atmoThickness", thickness); }
 void VRTerrain::setHeightScale(float s) { heightScale = s; mat->setShaderParameter("heightScale", s); }
 
 void VRTerrain::setMap( VRTexturePtr t, int channel ) {
@@ -168,8 +171,10 @@ void VRTerrain::setMap( VRTexturePtr t, int channel ) {
 void VRTerrain::updateTexelSize() {
     if (!tex) return;
     Vec3i s = tex->getSize();
-    texelSize[0] = size[0]/(s[0]-1);
-    texelSize[1] = size[1]/(s[1]-1);
+    Vec2f texel = Vec2f(1.0/(s[0]-1), 1.0/(s[1]-1));
+    texelSize[0] = size[0]*texel[0];
+    texelSize[1] = size[1]*texel[1];
+	mat->setShaderParameter("texel", texel);
 	mat->setShaderParameter("texelSize", texelSize);
 }
 
@@ -329,6 +334,7 @@ void VRTerrain::setSimpleNoise() {
 void VRTerrain::setupMat() {
 	auto defaultMat = VRMaterial::get("defaultTerrain");
 	tex = defaultMat->getTexture();
+    Vec2f texel = Vec2f(1,1);
 	if (!tex) {
         Color4f w(0,0,0,0);
         VRTextureGenerator tg;
@@ -337,6 +343,8 @@ void VRTerrain::setupMat() {
         tex = tg.compose(0);
         defaultMat->setTexture(tex);
         defaultMat->clearTransparency();
+        auto texSize = tex->getSize();
+        texel = Vec2f( 1.0/texSize[0], 1.0/texSize[1] );
 	}
 
 	mat = VRMaterial::create("terrain");
@@ -347,6 +355,7 @@ void VRTerrain::setupMat() {
 	mat->setTessEvaluationShader(tessEvaluationShader, "terrainTES");
 	mat->setShaderParameter("resolution", resolution);
 	mat->setShaderParameter("channel", 3);
+	mat->setShaderParameter("texel", texel);
 	mat->setShaderParameter("texelSize", texelSize);
     mat->setZOffset(1,1);
 	setMap(tex);
@@ -689,8 +698,8 @@ void main( void ) {
         vec4 cG3 = texture(texGravel, tc*17);
         vec4 cG4 = texture(texGravel, tc);
         vec4 cG = mix(cG0,mix(cG1,mix(cG2,mix(cG3,cG4,0.5),0.5),0.5),0.5);
-        color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
         if (height < waterLevel) color = vec4(0.2,0.4,1,1);
+        else color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
 	}
 
 	applyBlinnPhong();
@@ -707,8 +716,11 @@ uniform sampler2D texGravel;
 const ivec3 off = ivec3(-1,0,1);
 const vec3 light = vec3(-1,-1,-0.5);
 uniform vec2 texelSize;
+uniform vec2 texel;
 uniform int doHeightTextures;
 uniform float waterLevel;
+uniform vec3 atmoColor;
+uniform float atmoThickness;
 
 in vec4 vertex;
 in vec4 pos;
@@ -737,6 +749,14 @@ vec3 getNormal() {
     vec3 va = normalize(vec3(r2.x,s21-s01,0));
     vec3 vb = normalize(vec3(   0,s12-s10,r2.y));
     vec3 n = normalize( cross(vb,va) );
+
+
+    float k = texel.x;
+    float _k = 1.0/k;
+    if (tc.x > 1.0-k*1.5) n = mix(n, vec3(0,1,0), (tc.x-1.0+k*1.5)*_k);
+    if (tc.y > 1.0-k*1.5) n = mix(n, vec3(0,1,0), (tc.y-1.0+k*1.5)*_k);
+    if (tc.x < k*1.5) n = mix(n, vec3(0,1,0), 1.0-(tc.x-k*0.5)*_k);
+    if (tc.y < k*1.5) n = mix(n, vec3(0,1,0), 1.0-(tc.y-k*0.5)*_k);
 	return n;
 }
 
@@ -767,8 +787,10 @@ void main( void ) {
         vec4 cG3 = texture(texGravel, tc*17);
         vec4 cG4 = texture(texGravel, tc);
         vec4 cG = mix(cG0,mix(cG1,mix(cG2,mix(cG3,cG4,0.5),0.5),0.5),0.5);
-        color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
+
         if (height < waterLevel) color = vec4(0.2,0.4,1,1);
+        else color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
+        color = mix(color, vec4(atmoColor,1), clamp(atmoThickness*length(pos.xyz), 0.0, 0.9)); // atmospheric effects
 	}
 
 	norm = normalize( gl_NormalMatrix * norm );
