@@ -182,7 +182,10 @@ void VRTextureRenderer::setActive(bool b) {
 }
 
 void VRTextureRenderer::setChannelSubstitutes(CHANNEL c) {
-    for (auto geo : getChild(0)->getLinks()[0]->getChildren(true, "Geometry")) {
+    auto obj = getChild(0);
+    if (obj) obj = obj->getLink(0); // TODO: this is comming from tree LODs, refactor please!
+    if (!obj) return;
+    for (auto geo : obj->getChildren(true, "Geometry")) {
         auto g = dynamic_pointer_cast<VRGeometry>(geo);
         auto m = g->getMaterial();
         if ( substitutes[c].count(m.get()) ) {
@@ -196,7 +199,10 @@ void VRTextureRenderer::setChannelSubstitutes(CHANNEL c) {
 }
 
 void VRTextureRenderer::resetChannelSubstitutes() {
-    for (auto geo : getChild(0)->getLinks()[0]->getChildren(true, "Geometry")) {
+    auto obj = getChild(0);
+    if (obj) obj = obj->getLink(0); // TODO: this is comming from tree LODs, refactor please!
+    if (!obj) return;
+    for (auto geo : obj->getChildren(true, "Geometry")) {
         auto g = dynamic_pointer_cast<VRGeometry>(geo);
         auto m = g->getMaterial();
         if (!originalMaterials.count(m.get())) continue;
@@ -223,7 +229,7 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
         data->view->setBackground(data->stage->getBackground());
     }
 
-    setChannelSubstitutes(c);
+    if (c != RENDER) setChannelSubstitutes(c);
 
     bool v = isVisible();
     show(); // TODO: the visible texture renderer kills directional deferred shadows..

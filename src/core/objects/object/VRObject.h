@@ -41,7 +41,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
 
     protected:
         vector<VRObjectPtr> children;
-        map<VRObject*, VRObjectWeakPtr> links;
+        vector<pair<VRObject*, VRObjectWeakPtr>> links;
         string type;
         VREntityPtr entity;
 
@@ -99,6 +99,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
 
         virtual void addChild(VRObjectPtr child, bool osg = true, int place = -1);
         virtual void subChild(VRObjectPtr child, bool osg = true);
+        VRObjectPtr getLink(int i);
         vector<VRObjectPtr> getLinks();
         void addLink(VRObjectPtr obj);
         void remLink(VRObjectPtr obj);
