@@ -83,7 +83,7 @@ class VRProcessEngine {
     private:
         VRProcessPtr process;
         map<int, Actor> subjects;
-        vector<Message> processMessages;
+        //vector<Message> processMessages;
 
         VRUpdateCbPtr updateCb;
         bool running = false;

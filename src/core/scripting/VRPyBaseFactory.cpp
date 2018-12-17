@@ -1,6 +1,7 @@
 #include "VRPyBaseT.h"
 #include "VRPyBaseFactory.h"
 #include "VRPyMath.h"
+#include "VRPyPose.h"
 #include "core/utils/VRCallbackWrapper.h"
 
 #include <OpenSG/OSGVector.h>
@@ -69,6 +70,13 @@ template<> bool toValue(PyObject* o, Vec3i& v) { if (!PyVec_Check(o, 3, 'i')) re
 template<> bool toValue(PyObject* o, Vec4i& v) { if (!PyVec_Check(o, 4, 'i')) return 0; v = VRPyBase::parseVec4iList(o); return 1; }
 template<> bool toValue(PyObject* o, Line& l) { if (!PyVec_Check(o, 6, 'f')) return 0; l = VRPyBase::PyToLine(o); return 1; }
 template<> bool toValue(PyObject* o, Matrix4d& m) { if (!PyVec_Check(o, 16, 'f')) return 0; m = VRPyBase::parseMatrixList(o); return 1; }
+
+template<> bool toValue(PyObject* o, Pose& m) {
+    if (!VRPyPose::check(o)) return 0;
+    auto p = (VRPyPose*)(o);
+    m = *p->objPtr.get();
+    return 1;
+}
 
 
 

@@ -207,8 +207,6 @@ void VRProcessEngine::initialize() {
                 actor.second.transitions[state->getLabel()].push_back(transition);
             }
         }
-
-        cout << "initialized, message count: " << processMessages.size() << endl;
     }
 }
 
