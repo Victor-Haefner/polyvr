@@ -643,6 +643,17 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             }
         };
 
+        auto collisionCheck =[&](Vehicle& v1, Vehicle& v2){
+            for (auto p : v2.vehicleFPs){
+                float disT = (p.second - v1.simPose->pos()).length();
+                if (disT < v2.width || disT < v1.width) {
+                    //if (v2.isUser) cout << " crash detected " << v1.vID << " - " << v2.vID << endl;
+                    return true;
+                }
+            }
+            return false;
+        };
+
         //========================
 
         vehicle.vehiclesight.clear();
@@ -661,11 +672,12 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         //check vehicles in radiusSearch
             auto v = (Vehicle*)vv;
             if (!v) continue;
+            if (v->vID == vehicle.vID) continue;
             //if (!v->t) continue;
             auto p = v->simPose;
             auto D = (pose->pos() - p->pos()).length();
-
             calcFramePoints(vehicles[v->vID]);
+            if (D < 2*vehicle.length) collisionCheck(vehicle,vehicles[v->vID]);
             float diss = calcDisToFP(vehicle,vehicles[v->vID]); //distance to middle line of vehicle
             int farP = relativePosition(vehicle.vID, pose, p, diss, vehicle.lastMove);
             setSight(farP,D,v->vID);
@@ -974,6 +986,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                             float disToFrontV = vehicle.vehiclesightFar[INFRONT];
                             if ( disToFrontV - nextMoveAcc < safetyDis + 3 ) return false;
                         }
+                        if ( comingRight() && vehicle.turnAhead == 0 ) return false;
                         return true;
                     };
 
@@ -1178,6 +1191,7 @@ void VRTrafficSimulation::addUser(VRTransformPtr t) {
     vehicles[nID] = v;
     users.push_back(v);
     users[users.size()-1].t = t;
+    //userCarDyns.push_back(userCar);
     cout << "VRTrafficSimulation::addUser " << nID << endl;
 }
 

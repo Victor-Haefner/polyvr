@@ -10,6 +10,7 @@
 #include "core/objects/object/VRObject.h"
 #include "core/utils/VRDoublebuffer.h"
 #include <boost/thread/recursive_mutex.hpp>
+#include "addons/Bullet/CarDynamics/CarDynamics.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -172,6 +173,7 @@ class VRTrafficSimulation : public VRObject {
         vector<int> nearRoads;
         vector<int> forceSeedRoads;
         vector<Vehicle> users;
+        vector<VRCarDynamicsPtr> userCarDyns;
         list<int> vehiclePool;
         vector<VRObjectPtr> models;
         int maxUnits = 0;
