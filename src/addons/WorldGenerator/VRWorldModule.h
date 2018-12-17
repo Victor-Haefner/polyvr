@@ -6,6 +6,7 @@
 #include <vector>
 #include <OpenSG/OSGVector.h>
 #include "VRWorldGeneratorFwd.h"
+#include "core/objects/VRObjectFwd.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
 
 using namespace std;
@@ -18,6 +19,7 @@ class VRWorldModule {
         VRTerrainWeakPtr terrain;
         VROntologyWeakPtr ontology;
         VRRoadNetworkWeakPtr roads;
+        VRLodTreePtr lodTree;
 
     public:
         VRWorldModule();

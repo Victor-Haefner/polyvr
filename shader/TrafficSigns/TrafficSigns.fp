@@ -1,26 +1,11 @@
-#version 400 compatibility
-#define M_PI 3.1415926535897932384626433832795
+#version 120
+uniform int isLit;
+varying vec4 vertPos;
+varying vec3 vertNorm;
+varying vec4 color;
+uniform sampler2D tex0;
 
-// gen
-uniform sampler2D tex;
-in vec3 norm;
-in vec4 pos;
-in vec2 tcs;
-in mat3 miN;
-in mat4 miP;
-
-float theta;
-vec3 PCam0;
-vec3 newfragDir;
-vec4 color;
-
-void computeDirection() {
-	newfragDir = normalize( miN * (miP * pos).xyz );
-}
-
-float gettheta(vec3 d){
-	return acos(d.y);
-}
+vec3 norm;
 
 void applyBlinnPhong() {
 	vec3  n = normalize( gl_NormalMatrix * norm );
@@ -34,17 +19,16 @@ void applyBlinnPhong() {
 }
 
 void main() {
-	//computeDirection();
-
-	//float ca = col[1];
-	//float ch = col[2];
-	color = texture(tex,tcs);
-	if (color.a < 0.3) discard;
-	//color.a = 1.0;
-	gl_FragColor = color;
-	
-	//applyBlinnPhong();
-	//discard;
+	vec3 pos = vertPos.xyz / vertPos.w;
+	vec4 diffCol = texture2D(tex0, gl_TexCoord[0].xy);
+	if (diffCol.a < 0.1) discard;
+	diffCol.rgb = mix(vec3(0.5), diffCol.rgb, diffCol.a);
+	vec3 norm = normalize(vertNorm);
+	if (norm.z < 0) {
+		diffCol = vec4(0.8,0.8,0.8,1);
+		norm *= -1; 
+	}
+	applyBlinnPhong();
 }
 
 

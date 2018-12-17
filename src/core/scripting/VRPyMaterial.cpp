@@ -64,8 +64,18 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setDefaultVertexShader", (PyCFunction)VRPyMaterial::setDefaultVertexShader, METH_NOARGS, "Set a default vertex shader - setDefaultVertexShader()" },
     {"testFix", PyWrap( Material, testFix, "Debug helper", void ) },
     {"updateDeferredShader", PyWrap( Material, updateDeferredShader, "Reload deferred system parameters and shaders", void ) },
+
+    {"readVertexShader", PyWrap( Material, readVertexShader, "Read vertex shader from file", void, string ) },
+    {"readFragmentShader", PyWrap( Material, readFragmentShader, "Read fragment shader from file", void, string, bool ) },
+    {"readGeometryShader", PyWrap( Material, readGeometryShader, "Read geometry shader from file", void, string ) },
+    {"readTessControlShader", PyWrap( Material, readTessControlShader, "Read tesselation control shader from file", void, string ) },
+    {"readTessEvaluationShader", PyWrap( Material, readTessEvaluationShader, "Read tesselation evaluation shader from file", void, string ) },
+
     {"getVertexShader", PyWrap( Material, getVertexShader, "Get vertex shader", string ) },
-    {"getFragmentShader", PyWrap( Material, getFragmentShader, "Get fragment shader", string ) },
+    {"getFragmentShader", PyWrapOpt( Material, getFragmentShader, "Get fragment shader", "0", string, bool ) },
+    {"getGeometryShader", PyWrap( Material, getGeometryShader, "Get geometry shader", string ) },
+    {"getTessControlShader", PyWrap( Material, getTessControlShader, "Get tesselation control shader", string ) },
+    {"getTessEvaluationShader", PyWrap( Material, getTessEvaluationShader, "Get tesselation evaluation shader", string ) },
     {NULL}  /* Sentinel */
 };
 

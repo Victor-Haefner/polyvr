@@ -22,6 +22,7 @@
 #include "core/objects/geometry/VRStroke.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRSpatialCollisionManager.h"
+#include "core/objects/VRLodTree.h"
 #include "core/tools/VRAnalyticGeometry.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/material/VRTexture.h"
@@ -524,6 +525,11 @@ void VRRoadNetwork::computeSigns() {
             }
         }
 
+        if (sign) {
+            lodTree->addObject(sign, sign->getWorldPosition(), 3, false);
+            sign->setDir(dir);
+        }
+
         if ( osmSign ) {
             auto tfsigns = w->getTrafficSigns();
             auto input = signEnt->getValue<string>("info", "");
@@ -713,7 +719,8 @@ void VRRoadNetwork::computeIntersections() {
         intersection->setEntity(iEnt);
         intersections.push_back(intersection);
         intersectionsByEntity[iEnt] = intersection;
-        addChild(intersection);
+        addChild(intersection); // TODO: remove when managed stuff appended to intersection node
+
         for (auto r : nodeRoads) { intersection->addRoad(r); }
         iEnt->set("node", node->getName());
         intersection->computeLayout(graph);
@@ -792,7 +799,8 @@ void VRRoadNetwork::computeSurfaces() {
     for (auto intersection : intersections) {
         auto iGeo = intersection->createGeometry();
         if (!iGeo) continue;
-        iGeo->setMaterial( asphalt );
+        //iGeo->setMaterial( asphalt );
+        roadsGeo->merge(iGeo);
         if (auto w = world.lock()) w->getPhysicsSystem()->add(iGeo, iGeo->getID());
     }
 
