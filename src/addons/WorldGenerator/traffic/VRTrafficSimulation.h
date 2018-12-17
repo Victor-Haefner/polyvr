@@ -202,6 +202,7 @@ class VRTrafficSimulation : public VRObject {
         void updateIntersectionVis(bool in);
 
         ///Diagnostics
+        map<int,int> bugDelete;
         bool hidden = false;
         int stopVehicleID = -1;
         int deleteVehicleID = -1;

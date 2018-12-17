@@ -847,6 +847,12 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 auto& vehicle = vehicles[ID.first];
                 //if (!vehicle.t) continue;
 
+                if (vehicle.pos.edge != road.first) { ///warning: bugfix, but not sure yet where the cause is
+                    //cout << " error vehicle on lane " << toString(ID.first) << " - " << toString(road.first) << endl;
+                    bugDelete[road.first] = ID.first;
+                    continue;
+                }
+
                 computePerception(vehicle);
                 computeRoutingDecision(vehicle);
                 //computeAction(vehicle);
@@ -999,7 +1005,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 };
                 behave();
                 vehicle.currentVelocity = dRel;
-                if (debuggerCars.count(ID.first)) cout << "fuvk " << road.first << endl;
+                if (debuggerCars.count(ID.first)) cout << "car " << ID.first << " - " << road.first << endl;
                 dRel *= deltaT;
                 //if (dRel<0.00003 && vehicle.pos.pos > 0.1 && signalBlock) { dRel = 0; vehicle.currentVelocity = dRel; }
                 //if (nextSignalDistance > 0.5 && nextSignalDistance < 5 && nextSignalState=="100") d = 0; //hack
@@ -1072,6 +1078,11 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         }
     };
 
+    auto clearGhosts = [&](){
+        for (auto each : bugDelete) { roads[each.first].vehicleIDs.erase(each.second); }
+        bugDelete.clear();
+    };
+
     updateUsers();
     clearVecs();
     updateSimulationArea();
@@ -1082,6 +1093,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
     resolveRoadChanges();
     resolveLaneChanges();
     updateVehicles();
+    clearGhosts();
 
     //cout << "-------hello, this is traffic sim thread " << deltaT << endl;
 }
