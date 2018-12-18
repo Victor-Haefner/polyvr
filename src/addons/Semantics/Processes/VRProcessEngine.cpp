@@ -66,9 +66,19 @@ string VRProcessEngine::Actor::transitioning( float t ) {
         //cout << "VRProcessEngine::Actor::transitioning check preqs, actor: " << this << endl;
         if (transition.valid(&inventory)) {
             currentState = transition.nextState;
-            for (auto& action : transition.actions) (*action.cb)();
+            for (auto& action : transition.actions){
+                (*action.cb)();
+                //send a new message if there is an action
+                sendMessage(&action.message);
+                //Message* m = new Message(action.message.message, action.message.sender, action.message.receiver);
+            }
             for ( auto p : transition.prerequisites){
                 inventory.remMessage(p.message);
+                //remove the message instance
+                //auto len1 = sentMessages.size();
+                sentMessages.erase(std::remove(sentMessages.begin(), sentMessages.end(), &p.message), sentMessages.end());
+                //auto len2 = sentMessages.size();
+                //if (len1 != len2) cout << "Message removed! " << this->label << " sentMessages: " << this->sentMessages.size() << endl;
             }
             return transition.nextState->getLabel();
         }
@@ -76,9 +86,18 @@ string VRProcessEngine::Actor::transitioning( float t ) {
     return "";
 }
 
+//TODO: Actor should receive all messages that were sent to him without knowing the message
 void VRProcessEngine::Actor::receiveMessage(Message message) {
     cout << "VRProcessEngine::Actor::receiveMessage '" << message.message << "' to '" << message.receiver << "' inv: " << &inventory << ", actor: " << this << endl;
     inventory.messages.push_back( message );
+}
+
+
+void VRProcessEngine::Actor::sendMessage(Message* m) {
+    cout << "VRProcessEngine::Actor::sendMessage '" << m->message << "' to '" << m->sender << "' inv: " << &inventory << ", actor: " << this << endl;
+    Message* message = new Message(m->message, m->sender, m->receiver, m->messageNode);
+    sentMessages.push_back( message );
+    cout << this->label << " sent messages: " << sentMessages.size() << endl;
 }
 
 void VRProcessEngine::Actor::tryAdvance() {
@@ -132,6 +151,7 @@ void VRProcessEngine::reset() {
 
     for (auto& actor : subjects) {
         actor.second.inventory.messages.clear();
+        actor.second.sentMessages.clear();
     }
 }
 
@@ -189,7 +209,7 @@ void VRProcessEngine::initialize() {
                         auto sender = process->getMessageSender(message->getID())[0];
                         auto receiver = process->getMessageReceiver(message->getID())[0];
                         if (message && sender && receiver) {
-                            Message m(message->getLabel(), sender->getLabel(), receiver->getLabel());
+                            Message m(message->getLabel(), sender->getLabel(), receiver->getLabel(), state);
                             transition.prerequisites.push_back( Prerequisite(m) );
                         }
                     }
@@ -199,10 +219,12 @@ void VRProcessEngine::initialize() {
                         auto sender = process->getMessageSender(message->getID())[0];
                         auto receiver = process->getMessageReceiver(message->getID())[0];
                         if (sender && receiver) {
-                            Message m(message->getLabel(), sender->getLabel(), receiver->getLabel());
+                            //TODO: a message should be created every time the actor is in the correlated send state (dynamic)
+                            //f.e. in the Send-Action transition, instead of here (static)
+                            Message m(message->getLabel(), sender->getLabel(), receiver->getLabel(), state);
                             Actor& rActor = subjects[receiver->getID()];
                             auto cb = VRUpdateCb::create("action", boost::bind(&VRProcessEngine::Actor::receiveMessage, &rActor, m));
-                            transition.actions.push_back( Action(cb) );
+                            transition.actions.push_back( Action(cb, m) );
                         }
                     }
                 }

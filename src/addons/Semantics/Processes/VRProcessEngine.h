@@ -14,11 +14,12 @@ OSG_BEGIN_NAMESPACE;
 class VRProcessEngine {
     public:
         struct Message {
+            VRProcessNodePtr messageNode;
             string message;
             string sender;
             string receiver;
 
-            Message(string m, string s, string r) : message(m), sender(s), receiver(r) {}
+            Message(string m, string s, string r, VRProcessNodePtr node) : message(m), sender(s), receiver(r), messageNode(node) {}
 
             bool operator==(const Message& m) { return m.message == message && m.sender == sender; }
         };
@@ -40,8 +41,9 @@ class VRProcessEngine {
 
         struct Action {
             VRUpdateCbPtr cb;
+            Message message; //sends an instance of this message
 
-            Action(VRUpdateCbPtr cb) : cb(cb) {}
+            Action(VRUpdateCbPtr cb, Message m) : cb(cb), message(m) {}
         };
 
         struct Transition {
@@ -62,6 +64,7 @@ class VRProcessEngine {
         struct Actor {
             map<string, vector<Transition>> transitions; // maps state name (see VRStateMachine) to possible transitions
             //map<Action, Message> sendToMessage; //maps send Action to sent message
+            vector<Message*> sentMessages;
             VRStateMachine<float> sm;
             Inventory inventory;
             string initialState = "";
@@ -74,6 +77,7 @@ class VRProcessEngine {
             string transitioning( float t ); // performs transitions to next states
 
             void receiveMessage(Message message);
+            void sendMessage(Message* message);
 
             void tryAdvance();
 
