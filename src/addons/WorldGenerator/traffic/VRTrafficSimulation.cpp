@@ -644,12 +644,14 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         };
 
         auto collisionCheck =[&](Vehicle& v1, Vehicle& v2){
+            auto poly = VRPolygon::create();
+            for (int a = 0; a < 5; a++) {
+                Vec2d t2d = Vec2d(v1.vehicleFPs[a][0],v1.vehicleFPs[a][2]);
+                poly->addPoint(t2d);
+            }
             for (auto p : v2.vehicleFPs){
-                float disT = (p.second - v1.simPose->pos()).length();
-                if (disT < v2.width || disT < v1.width) {
-                    //if (v2.isUser) cout << " crash detected " << v1.vID << " - " << v2.vID << endl;
-                    return true;
-                }
+                Vec2d FP2d = Vec2d(p.second[0],p.second[2]);
+                if ( poly->isInside(FP2d) ) return true;
             }
             return false;
         };
@@ -677,7 +679,10 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             auto p = v->simPose;
             auto D = (pose->pos() - p->pos()).length();
             calcFramePoints(vehicles[v->vID]);
-            if (D < 2*vehicle.length) collisionCheck(vehicle,vehicles[v->vID]);
+            if (D < 2.5*vehicle.length) {
+                //bool check = collisionCheck(vehicle,vehicles[v->vID]);
+                //if ( check ) cout << "collision detected with vehicle " << vehicle.vID << " - " << v->vID << endl;
+            }
             float diss = calcDisToFP(vehicle,vehicles[v->vID]); //distance to middle line of vehicle
             int farP = relativePosition(vehicle.vID, pose, p, diss, vehicle.lastMove);
             setSight(farP,D,v->vID);
@@ -693,6 +698,10 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             if (simpleDis < disDis) disDis = simpleDis;
             if (simpleDis > safetyDis + 10) continue;
             calcFramePoints(v);
+            if (simpleDis < 2.5*vehicle.length) {
+                bool check = collisionCheck(vehicle,v);
+                if ( check ) cout << " user collision detected with vehicle " << vehicle.vID << endl;
+            }
             float diss = calcDisToFP(vehicle,v);
             int farP = relativePosition(vehicle.vID, pose, p, diss, vehicle.lastMove);
             setSight(farP,simpleDis,v.vID);
@@ -714,6 +723,21 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         function<bool (VREntityPtr, int, Vec3d)> recSearch =[&](VREntityPtr newLane, int eID, Vec3d posV) {
         //searches for next intersection in graph, also searches for trafficSignals at intersection
             if (!newLane) return false;
+            ///--------------TRAFFIC SIGNS DETECTION
+            auto signs = newLane->getAllEntities("signs");
+            for (auto signEnt : signs) {
+                string type = signEnt->getValue<string>("type", "");
+                bool osmSign = (type == "OSMSign");
+                Vec3d pos = signEnt->getVec3("position");
+                if (osmSign) {
+                    auto input = signEnt->getValue<string>("info", "");
+                    //if (input == "CN:Prohibitory:1") cout << " osm stop sign in vicinity " << vehicle.vID << endl;
+                    //if (input == "CN:Prohibitory:2") cout << " osm yield sign in vicinity " << vehicle.vID << endl;
+                    //if (input == "CN:Indicative:7")
+                }
+            }
+
+            ///--------------INTERSECTION DETECTION
             auto interE = roadNetwork->getIntersection(newLane->getEntity("nextIntersection"));
             if (interE) {
                 auto node = newLane->getEntity("nextIntersection")->getEntity("node");
