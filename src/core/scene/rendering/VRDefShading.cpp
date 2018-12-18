@@ -287,6 +287,7 @@ void VRDefShading::updateLight(VRLightPtr l) {
 }
 
 TextureObjChunkRefPtr VRDefShading::getTarget() { return fboTex; }
+DeferredShadingStageMTRecPtr VRDefShading::getOSGStage() { return dsStage; }
 
 // file containing vertex shader code for the light type
 const std::string& VRDefShading::getLightVPFile(LightTypeE lightType) {

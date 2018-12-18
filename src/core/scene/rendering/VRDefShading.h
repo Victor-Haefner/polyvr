@@ -82,6 +82,7 @@ class VRDefShading {
         int addBuffer(int pformat, int ptype);
         void setDeferredChannel(int channel);
         TextureObjChunkRefPtr getTarget();
+        DeferredShadingStageMTRecPtr getOSGStage();
 
         void setDSCamera(OSGCameraPtr cam);
         void addDSLight(VRLightPtr light);

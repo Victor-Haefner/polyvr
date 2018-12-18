@@ -10,6 +10,11 @@
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/scene/VRScene.h"
+#include "core/setup/windows/VRView.h"
+#include "core/setup/VRSetup.h"
+#include "core/scene/rendering/VRRenderStudio.h"
+#include "core/scene/rendering/VRDeferredRenderStage.h"
+#include "core/scene/rendering/VRDefShading.h"
 #include "core/math/boundingbox.h"
 
 #include <OpenSG/OSGBackground.h>
@@ -59,6 +64,9 @@ struct VRTextureRenderer::Data {
     RenderActionRefPtr ract;
     PassiveWindowMTRecPtr win;
     ViewportMTRecPtr view;
+    //VRViewPtr view;
+
+    VRDeferredRenderStagePtr deferredStage;
 };
 OSG_END_NAMESPACE;
 
@@ -218,26 +226,67 @@ void VRTextureRenderer::setMaterialSubstitutes(map<VRMaterial*, VRMaterialPtr> s
 VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
     if (!cam) return 0;
 
-    if (!data->ract) {
+    if (!data->ract || true) {
         data->ract = RenderAction::create();
         data->win = PassiveWindow::create();
-        data->view = Viewport::create();
 
-        data->win->addPort(data->view);
-        data->view->setRoot(getNode()->node);
+        //VRObjectPtr root = ptr();
+        VRObjectPtr root = VRScene::getCurrent()->getRoot();
+
+        data->deferredStage = VRDeferredRenderStage::create("renderOnce");
+        data->deferredStage->initDeferred();
+        data->deferredStage->getBottom()->addLink(root);
+        data->deferredStage->setActive(true, true);
+        data->deferredStage->setCamera(cam->getCam());
+
+        auto lights = VRScene::getCurrent()->getRoot()->getChildren(true, "Light");
+        for (auto obj : lights) if (auto l = dynamic_pointer_cast<VRLight>(obj)) data->deferredStage->addLight(l);
+        cout << "VRTextureRenderer::renderOnce init, N lights: " << lights.size() << endl;
+
+        data->view = Viewport::create();
+        data->view->setRoot(data->deferredStage->getTop()->getNode()->node);
         data->view->setCamera(cam->getCam()->cam);
         data->view->setBackground(data->stage->getBackground());
+        data->win->addPort(data->view);
+
+
+        data->deferredStage->getRendering()->getOSGStage()->setRenderTarget(data->fbo);
+        data->deferredStage->getRendering()->setDeferredChannel(GL_DIFFUSE);
+
+
+
+        //data->view = VRView::create("texRendererView");
+        /*data->view->setRoot(ptr(), 0);
+        data->view->setCamera(cam);
+        data->view->setBackground(data->stage->getBackground());
+        data->win->addPort(data->view->getViewportL());*/
+
+        //if (auto rendering = data->view->getRenderingL()) {
+            /*rL->setDefferedShading(true);
+            for (auto obj : VRScene::getCurrent()->getRoot()->getChildren(true, "light"))
+                if (auto l = dynamic_pointer_cast<VRLight>(obj)) rL->addLight(l);*/
+
+
+            //rendering->setDefferedShading(true);
+            /*rendering->setSSAO(false);
+            rendering->setCalib(false);
+            rendering->setHMDD(false);
+            rendering->setMarker(false);
+            rendering->setFXAA(false);*/
+        //}
+
+        /*data->view = VRSetup::getCurrent()->getView(0);
+        data->win->addPort(data->view->getViewportL());*/
     }
 
-    if (c != RENDER) setChannelSubstitutes(c);
+    //if (c != RENDER) setChannelSubstitutes(c);
 
-    bool v = isVisible();
-    show(); // TODO: the visible texture renderer kills directional deferred shadows..
     data->win->render(data->ract);
+
     ImageMTRecPtr img = Image::create();
     img->set( data->fboTexImg );
-    if (c != RENDER) resetChannelSubstitutes();
-    setVisible(v);
+
+    //if (c != RENDER) resetChannelSubstitutes();
     return VRTexture::create( img );
 }
 
