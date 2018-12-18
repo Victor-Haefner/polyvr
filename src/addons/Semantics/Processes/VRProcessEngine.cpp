@@ -34,7 +34,7 @@ void VRProcessEngine::Inventory::remMessage(Message m) {
 bool VRProcessEngine::Prerequisite::valid(Inventory* inventory) {
     //cout << " VRProcessEngine::Prerequisite::valid check for '" << message.message << "' inv: " << inventory << endl;
     bool b = inventory->hasMessage(message);
-    if (b) inventory->remMessage(message);
+    //if (b) inventory->remMessage(message);
     return b;
 }
 
@@ -67,6 +67,9 @@ string VRProcessEngine::Actor::transitioning( float t ) {
         if (transition.valid(&inventory)) {
             currentState = transition.nextState;
             for (auto& action : transition.actions) (*action.cb)();
+            for ( auto p : transition.prerequisites){
+                inventory.remMessage(p.message);
+            }
             return transition.nextState->getLabel();
         }
     }

@@ -381,7 +381,6 @@ void VRProcess::update() {
                 if (transitionConditionEntity->is_a("ReceiveTransitionCondition") ) transitionToCondition[transition] = RECEIVE_CONDITION;
                 else if (transitionConditionEntity->is_a("SendTransitionCondition") ) transitionToCondition[transition] = SEND_CONDITION;
 
-
                 /* old standard pass
                 if (auto messageConnector = transition->get("refersTo")) {
                     if (auto connector = ontology->getEntity(messageConnector->value)) {
@@ -391,7 +390,6 @@ void VRProcess::update() {
                     }
                 }
                 */
-
                 if (auto messageConnector = transitionConditionEntity->get("requiresPerformedMessageExchange")){
                     if (auto connector = ontology->getEntity(messageConnector->value)) {
                         if (auto m = connector->get("hasMessageType")){
@@ -399,7 +397,6 @@ void VRProcess::update() {
                         }
                     }
                 }
-
             }
         }
 
