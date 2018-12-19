@@ -130,6 +130,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
 
         VRTransformPtr getUser();
         VRCameraPtr getCamera();
+        VRObjectPtr getRoot();
         ProjectionCameraDecoratorMTRecPtr getCameraDecoratorLeft();
         ProjectionCameraDecoratorMTRecPtr getCameraDecoratorRight();
         bool isStereo();
