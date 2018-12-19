@@ -35,6 +35,11 @@
 #include <OpenSG/OSGRenderAction.h>
 #include <OpenSG/OSGSolidBackground.h>
 
+#include "core/setup/VRSetup.h"
+#include "core/setup/windows/VRView.h"
+#include "core/scene/rendering/VRRenderStudio.h"
+#include <OpenSG/OSGFBOViewport.h>
+
 #define GLSL(shader) #shader
 
 using namespace std;
@@ -59,15 +64,16 @@ struct VRTextureRenderer::Data {
     ImageRefPtr             fboTexImg;
     TextureObjChunkRefPtr   fboDTex;
     ImageRefPtr             fboDTexImg;
-    SimpleStageRefPtr       stage;
+    StageRefPtr             stage;
+    VRObjectPtr             stageRoot;
 
     // render once ressources
     RenderActionRefPtr ract;
     PassiveWindowMTRecPtr win;
     ViewportMTRecPtr view;
-    //VRViewPtr view;
-    VRDefShadingPtr         deferredStage;
-    VRObjectPtr             root;
+    FBOViewportMTRecPtr fboView;
+    VRDefShadingPtr deferredStage;
+    VRObjectPtr deferredStageRoot;
 };
 OSG_END_NAMESPACE;
 
@@ -127,7 +133,8 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     data->fbo = FrameBufferObject::create();
     data->fbo->setColorAttachment(texBuf, 0);
     //data->fbo->setColorAttachment(texDBuf, 1);
-    data->fbo->setDepthAttachment(texDBuf); //HERE depthBuf/texDBuf
+    //data->fbo->setDepthAttachment(texDBuf); //HERE depthBuf/texDBuf
+    data->fbo->editMFDrawBuffers()->clear();
     data->fbo->editMFDrawBuffers()->push_back(GL_DEPTH_ATTACHMENT_EXT);
     data->fbo->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
     data->fbo->setWidth (data->fboWidth );
@@ -146,21 +153,19 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     auto scene = VRScene::getCurrent();
 
     // Stage
-    data->stage = SimpleStage::create();
+    data->stage = Stage::create();
     data->stage->setRenderTarget(data->fbo);
-    data->stage->setSize(0.0f, 0.0f, 1.0f, 1.0f);
-    data->stage->setBackground( scene->getBackground() );
-    setCore(OSGCore::create(data->stage), "TextureRenderer");
+    //data->stage->setSize(0.0f, 0.0f, 1.0f, 1.0f);
+    //data->stage->setBackground( scene->getBackground() );
+    data->stageRoot = VRObject::create("TextureRendererStageRoot");
+    data->stageRoot->setCore(OSGCore::create(data->stage), "TextureRenderer");
 
     // Stage2
-    data->root = VRObject::create("renderRoot");
+    data->deferredStageRoot = VRObject::create("TextureRendererDeferredRoot");
     data->deferredStage = VRDefShading::create();
-    data->deferredStage->initDeferredShading(data->root);
+    data->deferredStage->initDeferredShading(data->deferredStageRoot);
     data->deferredStage->setDeferredShading(true);
     data->deferredStage->setBackground( scene->getBackground() );
-
-    //auto stage = tr->data->deferredStage->getOSGStage();
-    //stage->setRenderTarget(tr->data->fbo);
 }
 
 VRTextureRenderer::~VRTextureRenderer() { delete data; }
@@ -191,8 +196,11 @@ void VRTextureRenderer::setup(VRCameraPtr c, int width, int height, bool alpha) 
         data->fboTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
         data->fboDTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
     }
-    data->stage->setCamera( cam->getCam()->cam );
-    if (data->deferredStage) data->deferredStage->setDSCamera( cam->getCam() );
+    //data->stage->setCamera( cam->getCam()->cam );
+    if (data->deferredStage) {
+        data->deferredStage->setDSCamera( cam->getCam() );
+        //data->deferredStage->setSize(Vec2i(width, height));
+    }
 }
 
 VRMaterialPtr VRTextureRenderer::getMaterial() { return mat; }
@@ -237,15 +245,11 @@ void VRTextureRenderer::setMaterialSubstitutes(map<VRMaterial*, VRMaterialPtr> s
     substitutes[c] = s;
 }
 
-#include "core/setup/VRSetup.h"
-#include "core/setup/windows/VRView.h"
-#include "core/scene/rendering/VRRenderStudio.h"
-#include <OpenSG/OSGFBOViewport.h>
-
 VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
     if (!cam) return 0;
 
     if (!data->ract) {
+        auto scene = VRScene::getCurrent();
         data->ract = RenderAction::create();
         data->win = PassiveWindow::create();
 
@@ -253,25 +257,31 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
             auto lights = VRScene::getCurrent()->getRoot()->getChildren(true, "Light");
             for (auto obj : lights) if (auto l = dynamic_pointer_cast<VRLight>(obj)) data->deferredStage->addDSLight(l);
             data->deferredStage->setDSCamera( cam->getCam() );
+            for (auto link : getLinks()) data->deferredStageRoot->addLink(link);
+            for (auto child : getChildren()) data->deferredStageRoot->addChild(child);
+            clearLinks();
         }
 
-        for (auto link : getLinks()) data->root->addLink(link);
-        for (auto child : getChildren()) data->root->addChild(child);
-        clearLinks();
-        addChild(data->root);
+        if (true) { // works only once ??
+            data->fboView = FBOViewport::create();
+            data->fboView->setSize(0, 0, 1, 1);
+            data->fboView->setFrameBufferObject(data->fbo); // replaces stage!
+            data->win->addPort(data->fboView);
+            data->fboView->setCamera(cam->getCam()->cam);
+            data->fboView->setBackground(scene->getBackground());
+            data->fboView->setRoot(data->deferredStageRoot->getNode()->node);
+        } else {
+            data->view = Viewport::create();
+            data->view->setSize(0, 0, 1, 1);
+            data->win->addPort(data->view);
+            data->view->setCamera(cam->getCam()->cam);
+            data->view->setBackground(scene->getBackground());
+            data->view->setRoot(data->stageRoot->getNode()->node);
+            data->stageRoot->addChild(data->deferredStageRoot);
+        }
 
         data->win->init();
         data->win->setSize(data->fboWidth, data->fboHeight);
-
-        // works once ??
-        FBOViewportMTRecPtr view = FBOViewport::create();
-        view->setFrameBufferObject(data->fbo); // replaces stage!
-        data->win->addPort(view);
-        view->setCamera(cam->getCam()->cam);
-        view->setBackground(data->stage->getBackground());
-
-        //view->setRoot(getNode()->node);
-        view->setRoot(data->root->getNode()->node);
     }
 
     if (c != RENDER) setChannelSubstitutes(c);
