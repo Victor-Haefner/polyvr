@@ -49,6 +49,8 @@ VRDefShading::VRDefShading() {
 
 VRDefShading::~VRDefShading() {}
 
+VRDefShadingPtr VRDefShading::create() { return VRDefShadingPtr( new VRDefShading() ); }
+
 void VRDefShading::init() {
     shadowMapWidth = shadowRes;
     shadowMapHeight = shadowRes;
@@ -104,15 +106,15 @@ void VRDefShading::init() {
     // fbo -> TODO
     /*FrameBufferObjectRefPtr fbo = FrameBufferObject::create();
     ImageMTRecPtr img = Image::create();
-    tex = TextureObjChunk::create();
+    fboTex = TextureObjChunk::create();
     TextureBufferRefPtr texBuf = TextureBuffer::create();
     RenderBufferRefPtr depthBuf = RenderBuffer::create();
 
     fbo->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
     fbo->setPostProcessOnDeactivate(true);
     dsStage->setRenderTarget(fbo);
-    tex->setImage(img);
-    texBuf->setTexture(tex);
+    fboTex->setImage(img);
+    texBuf->setTexture(fboTex);
     depthBuf->setInternalFormat(GL_DEPTH_COMPONENT24); // 16 24 32
     fbo->setColorAttachment(texBuf, 0);
     fbo->setDepthAttachment(depthBuf);
@@ -155,11 +157,15 @@ void VRDefShading::initDeferredShading(VRObjectPtr o) {
     setDeferredShading(enabled);
 }
 
+void VRDefShading::setActive(bool b) {
+    if (b) stageObject->setCore(OSGCore::create(dsStage), "defShading", true);
+    else stageObject->setCore(OSGCore::create(Group::create()), "Object", true);
+}
+
 void VRDefShading::setDeferredShading(bool b) {
     enabled = b;
     if (stageObject == 0) return;
-    if (b) stageObject->setCore(OSGCore::create(dsStage), "defShading", true);
-    else stageObject->setCore(OSGCore::create(Group::create()), "Object", true);
+    setActive(b);
     for (auto li : lightInfos) {
         auto l = li.second.vrlight.lock();
         //if (b) l->setDeferred(b);

@@ -7,6 +7,7 @@
 #include <OpenSG/OSGImage.h>
 #include <OpenSG/OSGLightEngine.h>
 #include "core/objects/VRObjectFwd.h"
+#include "core/scene/VRSceneFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -74,7 +75,10 @@ class VRDefShading {
         VRDefShading();
         ~VRDefShading();
 
+        static VRDefShadingPtr create();
+
         void initDeferredShading(VRObjectPtr o);
+        void setActive(bool b);
         void setDeferredShading(bool b);
         bool getDeferredShading();
         void reload();
