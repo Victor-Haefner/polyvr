@@ -15,6 +15,7 @@
 #include "core/scene/rendering/VRRenderStudio.h"
 #include "core/scene/rendering/VRDeferredRenderStage.h"
 #include "core/scene/rendering/VRDefShading.h"
+#include "core/scene/VRSceneManager.h"
 #include "core/math/boundingbox.h"
 
 #include <OpenSG/OSGBackground.h>
@@ -65,8 +66,8 @@ struct VRTextureRenderer::Data {
     PassiveWindowMTRecPtr win;
     ViewportMTRecPtr view;
     //VRViewPtr view;
-
-    VRDeferredRenderStagePtr deferredStage;
+    VRDefShadingPtr         deferredStage;
+    VRObjectPtr             root;
 };
 OSG_END_NAMESPACE;
 
@@ -149,19 +150,31 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     data->stage->setRenderTarget(data->fbo);
     data->stage->setSize(0.0f, 0.0f, 1.0f, 1.0f);
     data->stage->setBackground( scene->getBackground() );
-
     setCore(OSGCore::create(data->stage), "TextureRenderer");
+
+    // Stage2
+    data->root = VRObject::create("renderRoot");
+    data->deferredStage = VRDefShading::create();
+    data->deferredStage->initDeferredShading(data->root);
+    data->deferredStage->setDeferredShading(true);
+    data->deferredStage->setBackground( scene->getBackground() );
+
+    //auto stage = tr->data->deferredStage->getOSGStage();
+    //stage->setRenderTarget(tr->data->fbo);
 }
 
 VRTextureRenderer::~VRTextureRenderer() { delete data; }
-VRTextureRendererPtr VRTextureRenderer::create(string name) { return VRTextureRendererPtr( new VRTextureRenderer(name) ); }
+VRTextureRendererPtr VRTextureRenderer::create(string name) {
+    auto tr = VRTextureRendererPtr( new VRTextureRenderer(name) );
+    return tr;
+}
 
 void VRTextureRenderer::setBackground(Color3f c) {
     SolidBackgroundMTRecPtr bg = SolidBackground::create();
     bg->setAlpha(0);
     bg->setColor(c);
     mat->enableTransparency();
-    data->stage->setBackground( bg );
+    //data->stage->setBackground( bg );
 }
 
 void VRTextureRenderer::setup(VRCameraPtr c, int width, int height, bool alpha) {
@@ -178,7 +191,8 @@ void VRTextureRenderer::setup(VRCameraPtr c, int width, int height, bool alpha) 
         data->fboTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
         data->fboDTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
     }
-    data->stage->setCamera(cam->getCam()->cam);
+    data->stage->setCamera( cam->getCam()->cam );
+    if (data->deferredStage) data->deferredStage->setDSCamera( cam->getCam() );
 }
 
 VRMaterialPtr VRTextureRenderer::getMaterial() { return mat; }
@@ -228,6 +242,33 @@ void VRTextureRenderer::setMaterialSubstitutes(map<VRMaterial*, VRMaterialPtr> s
 #include "core/scene/rendering/VRRenderStudio.h"
 #include <OpenSG/OSGFBOViewport.h>
 
+class DeferredMixer : public VRGeometry {
+    private:
+    public:
+        DeferredMixer() : VRGeometry("DeferredMixer") {
+            setPrimitive("Plane 2 2 1 1");
+            auto mat = VRMaterial::create("DeferredMixer_mat");
+            mat->setDepthTest(GL_ALWAYS);
+            mat->setLit(false);
+            mat->setShaderParameter<int>("texBufPos", 0);
+            mat->setShaderParameter<int>("texBufNorm", 1);
+            mat->setShaderParameter<int>("texBufDiff", 2);
+
+
+            string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
+            mat->readVertexShader(shdrDir + "DeferredMixer.vp.glsl");
+            mat->readFragmentShader(shdrDir + "DeferredMixer.fp.glsl");
+            mat->setShaderParameter<int>("grid", 64);
+            mat->setShaderParameter<int>("isRightEye", 1);
+            mat->setDeferred(false);
+
+
+            setMaterial( mat );
+        }
+
+        static shared_ptr<DeferredMixer> create() { return shared_ptr<DeferredMixer>(new DeferredMixer()); }
+};
+
 VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
     if (!cam) return 0;
 
@@ -235,18 +276,23 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
         data->ract = RenderAction::create();
         data->win = PassiveWindow::create();
 
+        if (data->deferredStage) {
+            auto lights = VRScene::getCurrent()->getRoot()->getChildren(true, "Light");
+            for (auto obj : lights) if (auto l = dynamic_pointer_cast<VRLight>(obj)) data->deferredStage->addDSLight(l);
+            cout << "VRTextureRenderer::renderOnce init, N lights: " << lights.size() << endl;
+
+            data->deferredStage->setDSCamera( cam->getCam() );
+        }
+
         //VRObjectPtr root = ptr();
-        VRObjectPtr root = VRScene::getCurrent()->getRoot();
+        /*VRObjectPtr root = VRScene::getCurrent()->getRoot();
 
         data->deferredStage = VRDeferredRenderStage::create("renderOnce");
         data->deferredStage->initDeferred();
         data->deferredStage->getBottom()->addLink(root);
-        data->deferredStage->setActive(true, true);
+        data->deferredStage->setActive(true, false);
         data->deferredStage->setCamera(cam->getCam());
 
-        auto lights = VRScene::getCurrent()->getRoot()->getChildren(true, "Light");
-        for (auto obj : lights) if (auto l = dynamic_pointer_cast<VRLight>(obj)) data->deferredStage->addLight(l);
-        cout << "VRTextureRenderer::renderOnce init, N lights: " << lights.size() << endl;
 
         data->view = Viewport::create();
         data->view->setRoot(data->deferredStage->getTop()->getNode()->node);
@@ -256,29 +302,25 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
 
 
         data->deferredStage->getRendering()->getOSGStage()->setRenderTarget(data->fbo);
-        data->deferredStage->getRendering()->setDeferredChannel(GL_DIFFUSE);
+        data->deferredStage->getRendering()->setDeferredChannel(GL_DIFFUSE);*/
 
-
-
-        //data->view = VRView::create("texRendererView");
-        /*data->view->setRoot(ptr(), 0);
-        data->view->setCamera(cam);
+        data->view = Viewport::create();
+        data->view->setRoot(getNode()->node);
+        data->view->setCamera(cam->getCam()->cam);
         data->view->setBackground(data->stage->getBackground());
-        data->win->addPort(data->view->getViewportL());*/
+        data->win->addPort(data->view);
 
-        //if (auto rendering = data->view->getRenderingL()) {
-            /*rL->setDefferedShading(true);
-            for (auto obj : VRScene::getCurrent()->getRoot()->getChildren(true, "light"))
-                if (auto l = dynamic_pointer_cast<VRLight>(obj)) rL->addLight(l);*/
+        /*for (auto link : getLinks()) data->root->addLink(link);
+        for (auto child : getChildren()) data->root->addChild(child);
+        clearLinks();
+        addChild(data->root);*/
+
+        //data->deferredStage->setActive(0);
 
 
-            //rendering->setDefferedShading(true);
-            /*rendering->setSSAO(false);
-            rendering->setCalib(false);
-            rendering->setHMDD(false);
-            rendering->setMarker(false);
-            rendering->setFXAA(false);*/
-        //}
+        //data->root = VRObject::create("renderRoot");
+        //data->root->addChild();
+
 
         /*data->view = VRSetup::getCurrent()->getView(0);
         data->win->addPort(data->view->getViewportL());*/
@@ -303,6 +345,10 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
         view->setRoot(port->getRoot());
         view->setCamera(cam->getCam()->cam);
         view->setBackground(data->stage->getBackground());
+
+        // first remotely working idea:
+        auto dm = DeferredMixer::create();
+        addChild(dm);
     }
 
     if (c != RENDER) setChannelSubstitutes(c);

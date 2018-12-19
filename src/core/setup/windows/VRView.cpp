@@ -380,8 +380,6 @@ void VRView::setPosition(Vec4d pos) { position = pos; update(); }
 void VRView::setRoot(VRObjectPtr root, VRTransformPtr real) { view_root = root; real_root = real; update(); }
 VRObjectPtr VRView::getRoot() { return view_root; }
 
-VRObjectPtr VRView::getRoot() { return view_root; }
-
 void VRView::setRoot() {
     if (real_root && viewGeo) real_root->addChild(OSGObject::create(viewGeo));
 
