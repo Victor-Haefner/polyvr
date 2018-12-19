@@ -242,113 +242,36 @@ void VRTextureRenderer::setMaterialSubstitutes(map<VRMaterial*, VRMaterialPtr> s
 #include "core/scene/rendering/VRRenderStudio.h"
 #include <OpenSG/OSGFBOViewport.h>
 
-class DeferredMixer : public VRGeometry {
-    private:
-    public:
-        DeferredMixer() : VRGeometry("DeferredMixer") {
-            setPrimitive("Plane 2 2 1 1");
-            auto mat = VRMaterial::create("DeferredMixer_mat");
-            mat->setDepthTest(GL_ALWAYS);
-            mat->setLit(false);
-            mat->setShaderParameter<int>("texBufPos", 0);
-            mat->setShaderParameter<int>("texBufNorm", 1);
-            mat->setShaderParameter<int>("texBufDiff", 2);
-
-
-            string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
-            mat->readVertexShader(shdrDir + "DeferredMixer.vp.glsl");
-            mat->readFragmentShader(shdrDir + "DeferredMixer.fp.glsl");
-            mat->setShaderParameter<int>("grid", 64);
-            mat->setShaderParameter<int>("isRightEye", 1);
-            mat->setDeferred(false);
-
-
-            setMaterial( mat );
-        }
-
-        static shared_ptr<DeferredMixer> create() { return shared_ptr<DeferredMixer>(new DeferredMixer()); }
-};
-
 VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
     if (!cam) return 0;
 
-    if (!data->ract || true) {
+    if (!data->ract) {
         data->ract = RenderAction::create();
         data->win = PassiveWindow::create();
 
         if (data->deferredStage) {
             auto lights = VRScene::getCurrent()->getRoot()->getChildren(true, "Light");
             for (auto obj : lights) if (auto l = dynamic_pointer_cast<VRLight>(obj)) data->deferredStage->addDSLight(l);
-            cout << "VRTextureRenderer::renderOnce init, N lights: " << lights.size() << endl;
-
             data->deferredStage->setDSCamera( cam->getCam() );
         }
 
-        //VRObjectPtr root = ptr();
-        /*VRObjectPtr root = VRScene::getCurrent()->getRoot();
-
-        data->deferredStage = VRDeferredRenderStage::create("renderOnce");
-        data->deferredStage->initDeferred();
-        data->deferredStage->getBottom()->addLink(root);
-        data->deferredStage->setActive(true, false);
-        data->deferredStage->setCamera(cam->getCam());
-
-
-        data->view = Viewport::create();
-        data->view->setRoot(data->deferredStage->getTop()->getNode()->node);
-        data->view->setCamera(cam->getCam()->cam);
-        data->view->setBackground(data->stage->getBackground());
-        data->win->addPort(data->view);
-
-
-        data->deferredStage->getRendering()->getOSGStage()->setRenderTarget(data->fbo);
-        data->deferredStage->getRendering()->setDeferredChannel(GL_DIFFUSE);*/
-
-        data->view = Viewport::create();
-        data->view->setRoot(getNode()->node);
-        data->view->setCamera(cam->getCam()->cam);
-        data->view->setBackground(data->stage->getBackground());
-        data->win->addPort(data->view);
-
-        /*for (auto link : getLinks()) data->root->addLink(link);
+        for (auto link : getLinks()) data->root->addLink(link);
         for (auto child : getChildren()) data->root->addChild(child);
         clearLinks();
-        addChild(data->root);*/
-
-        //data->deferredStage->setActive(0);
-
-
-        //data->root = VRObject::create("renderRoot");
-        //data->root->addChild();
-
-
-        /*data->view = VRSetup::getCurrent()->getView(0);
-        data->win->addPort(data->view->getViewportL());*/
+        addChild(data->root);
 
         data->win->init();
         data->win->setSize(data->fboWidth, data->fboHeight);
 
-        /*data->view = Viewport::create();
-        data->win->addPort(data->view);
-        data->view->setRoot(getNode()->node);
-        data->view->setCamera(cam->getCam()->cam);
-        data->view->setBackground(data->stage->getBackground());*/
-
-        auto port = VRSetup::getCurrent()->getView(0)->getViewportL();
-        auto renderingL = VRSetup::getCurrent()->getView(0)->getRenderingL();
-        renderingL->resize( Vec2i(data->fboWidth, data->fboHeight) ); // not working??
-
-        // works appart from minor issues with size
+        // works once ??
         FBOViewportMTRecPtr view = FBOViewport::create();
         view->setFrameBufferObject(data->fbo); // replaces stage!
         data->win->addPort(view);
-        view->setRoot(port->getRoot());
         view->setCamera(cam->getCam()->cam);
         view->setBackground(data->stage->getBackground());
 
-        // first remotely working idea:
-        auto dm = DeferredMixer::create();
-        addChild(dm);
+        //view->setRoot(getNode()->node);
+        view->setRoot(data->root->getNode()->node);
     }
 
     if (c != RENDER) setChannelSubstitutes(c);
