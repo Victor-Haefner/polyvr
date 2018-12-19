@@ -378,6 +378,7 @@ Vec4d VRView::getPosition() { return position; }
 void VRView::setPosition(Vec4d pos) { position = pos; update(); }
 
 void VRView::setRoot(VRObjectPtr root, VRTransformPtr real) { view_root = root; real_root = real; update(); }
+VRObjectPtr VRView::getRoot() { return view_root; }
 
 VRObjectPtr VRView::getRoot() { return view_root; }
 

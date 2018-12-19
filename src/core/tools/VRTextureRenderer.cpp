@@ -223,6 +223,11 @@ void VRTextureRenderer::setMaterialSubstitutes(map<VRMaterial*, VRMaterialPtr> s
     substitutes[c] = s;
 }
 
+#include "core/setup/VRSetup.h"
+#include "core/setup/windows/VRView.h"
+#include "core/scene/rendering/VRRenderStudio.h"
+#include <OpenSG/OSGFBOViewport.h>
+
 VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
     if (!cam) return 0;
 
@@ -277,16 +282,34 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
 
         /*data->view = VRSetup::getCurrent()->getView(0);
         data->win->addPort(data->view->getViewportL());*/
+
+        data->win->init();
+        data->win->setSize(data->fboWidth, data->fboHeight);
+
+        /*data->view = Viewport::create();
+        data->win->addPort(data->view);
+        data->view->setRoot(getNode()->node);
+        data->view->setCamera(cam->getCam()->cam);
+        data->view->setBackground(data->stage->getBackground());*/
+
+        auto port = VRSetup::getCurrent()->getView(0)->getViewportL();
+        auto renderingL = VRSetup::getCurrent()->getView(0)->getRenderingL();
+        renderingL->resize( Vec2i(data->fboWidth, data->fboHeight) ); // not working??
+
+        // works appart from minor issues with size
+        FBOViewportMTRecPtr view = FBOViewport::create();
+        view->setFrameBufferObject(data->fbo); // replaces stage!
+        data->win->addPort(view);
+        view->setRoot(port->getRoot());
+        view->setCamera(cam->getCam()->cam);
+        view->setBackground(data->stage->getBackground());
     }
 
-    //if (c != RENDER) setChannelSubstitutes(c);
-
+    if (c != RENDER) setChannelSubstitutes(c);
     data->win->render(data->ract);
-
     ImageMTRecPtr img = Image::create();
     img->set( data->fboTexImg );
-
-    //if (c != RENDER) resetChannelSubstitutes();
+    if (c != RENDER) resetChannelSubstitutes();
     return VRTexture::create( img );
 }
 
