@@ -40,6 +40,12 @@
 #include "core/scene/rendering/VRRenderStudio.h"
 #include <OpenSG/OSGFBOViewport.h>
 
+#include <OpenSG/OSGTransform.h>
+#include <OpenSG/OSGPerspectiveCamera.h>
+#include <OpenSG/OSGDirectionalLight.h>
+#include <OpenSG/OSGShaderProgram.h>
+#include <OpenSG/OSGShaderProgramChunk.h>
+
 #define GLSL(shader) #shader
 
 using namespace std;
@@ -133,7 +139,7 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     data->fbo = FrameBufferObject::create();
     data->fbo->setColorAttachment(texBuf, 0);
     //data->fbo->setColorAttachment(texDBuf, 1);
-    //data->fbo->setDepthAttachment(texDBuf); //HERE depthBuf/texDBuf
+    data->fbo->setDepthAttachment(texDBuf); //HERE depthBuf/texDBuf
     data->fbo->editMFDrawBuffers()->clear();
     data->fbo->editMFDrawBuffers()->push_back(GL_DEPTH_ATTACHMENT_EXT);
     data->fbo->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
@@ -245,6 +251,106 @@ void VRTextureRenderer::setMaterialSubstitutes(map<VRMaterial*, VRMaterialPtr> s
     substitutes[c] = s;
 }
 
+struct OsgTestScene {
+    TransformUnrecPtr camBeacon;
+    NodeUnrecPtr camBeaconNode;
+    PerspectiveCameraUnrecPtr cam;
+    SolidBackgroundUnrecPtr background;
+    NodeUnrecPtr lightNode;
+    DirectionalLightUnrecPtr light;
+
+    NodeUnrecPtr dsStageN;
+    DeferredShadingStageUnrecPtr dsStage;
+    ShaderProgramUnrecPtr lightVP;
+    ShaderProgramUnrecPtr lightFP;
+    ShaderProgramChunkUnrecPtr lightSH;
+
+    OsgTestScene() {
+        // camera
+        camBeacon = Transform::create();
+        camBeaconNode = makeNodeFor( camBeacon );
+        cam = PerspectiveCamera::create();
+        cam->setBeacon(camBeaconNode);
+        cam->setFov   (osgDegree2Rad(90));
+        cam->setNear  (0.1f);
+        cam->setFar   (1000);
+
+        // light
+        light = DirectionalLight::create();
+        lightNode = makeNodeFor(light);
+        light->setAmbient  (.3f, .3f, .3f, 1);
+        light->setDiffuse  ( 1,  1,  1, 1);
+        light->setDirection( 0,  -1, 0   );
+        light->setBeacon   (camBeaconNode);
+
+        // background
+        background = SolidBackground::create();
+        background->setColor(Color3f(0,1,0));
+
+        // scene
+        NodeUnrecPtr torus = makeTorus(.5, 2, 16, 16);
+        lightNode->addChild(camBeaconNode);
+        lightNode->addChild(torus);
+
+        Matrix m;
+        m.setTranslate(Vec3f(0,0,5));
+        camBeacon->setMatrix(m);
+
+
+        // deferred stage
+        ShaderProgramUnrecPtr      vpGBuffer = ShaderProgram::createVertexShader  ();
+        ShaderProgramUnrecPtr      fpGBuffer = ShaderProgram::createFragmentShader();
+        ShaderProgramUnrecPtr      vpAmbient = ShaderProgram::createVertexShader  ();
+        ShaderProgramUnrecPtr      fpAmbient = ShaderProgram::createFragmentShader();
+        ShaderProgramChunkUnrecPtr shGBuffer = ShaderProgramChunk::create();
+        ShaderProgramChunkUnrecPtr shAmbient = ShaderProgramChunk::create();
+
+        dsStage  = DeferredShadingStage::create();
+        dsStageN = makeNodeFor(dsStage);
+        //dsStageN = makeNodeFor(Group::create());
+        dsStage->setCamera(cam);
+        dsStage->setBackground(background);
+        dsStageN->addChild(lightNode);
+
+        dsStage->editMFPixelFormats()->push_back(Image::OSG_RGBA_PF);// positions (RGB) + ambient (A) term buffer
+        dsStage->editMFPixelTypes  ()->push_back(Image::OSG_FLOAT32_IMAGEDATA);
+        dsStage->editMFPixelFormats()->push_back(Image::OSG_RGB_PF); // normals (RGB) buffer
+        dsStage->editMFPixelTypes  ()->push_back(Image::OSG_FLOAT32_IMAGEDATA);
+        dsStage->editMFPixelFormats()->push_back(Image::OSG_RGB_PF); // diffuse (RGB) buffer
+        dsStage->editMFPixelTypes  ()->push_back(Image::OSG_UINT8_IMAGEDATA);
+
+        // G Buffer shader (one for the whole scene)
+        vpGBuffer->readProgram("DSGBuffer.vp.glsl");
+        fpGBuffer->readProgram("DSGBuffer.fp.glsl");
+        fpGBuffer->addUniformVariable<Int32>("tex0", 0);
+        shGBuffer->addShader(vpGBuffer);
+        shGBuffer->addShader(fpGBuffer);
+        dsStage->setGBufferProgram(shGBuffer);
+
+        // ambient shader
+        vpAmbient->readProgram("DSAmbient.vp.glsl");
+        fpAmbient->readProgram("DSAmbient.fp.glsl");
+        fpAmbient->addUniformVariable<Int32>("texBufNorm", 1);
+        shAmbient->addShader(vpAmbient);
+        shAmbient->addShader(fpAmbient);
+        dsStage->setAmbientProgram(shAmbient);
+
+        // ds light
+        lightVP = ShaderProgram::createVertexShader();
+        lightFP = ShaderProgram::createFragmentShader();
+        lightSH = ShaderProgramChunk::create();
+        lightVP->readProgram("DSDirLight.vp.glsl");
+        lightFP->readProgram("DSDirLight.fp.glsl");
+        lightFP->addUniformVariable<Int32>("texBufPos",  0);
+        lightFP->addUniformVariable<Int32>("texBufNorm", 1);
+        lightFP->addUniformVariable<Int32>("texBufDiff", 2);
+        lightSH->addShader(lightVP);
+        lightSH->addShader(lightFP);
+        dsStage->editMFLights()->push_back(light);
+        dsStage->editMFLightPrograms()->push_back(lightSH);
+    }
+};
+
 VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
     if (!cam) return 0;
 
@@ -262,23 +368,17 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
             clearLinks();
         }
 
-        if (true) { // works only once ??
-            data->fboView = FBOViewport::create();
-            data->fboView->setSize(0, 0, 1, 1);
-            data->fboView->setFrameBufferObject(data->fbo); // replaces stage!
-            data->win->addPort(data->fboView);
-            data->fboView->setCamera(cam->getCam()->cam);
-            data->fboView->setBackground(scene->getBackground());
-            data->fboView->setRoot(data->deferredStageRoot->getNode()->node);
-        } else {
-            data->view = Viewport::create();
-            data->view->setSize(0, 0, 1, 1);
-            data->win->addPort(data->view);
-            data->view->setCamera(cam->getCam()->cam);
-            data->view->setBackground(scene->getBackground());
-            data->view->setRoot(data->stageRoot->getNode()->node);
-            data->stageRoot->addChild(data->deferredStageRoot);
-        }
+        OsgTestScene testscene;
+
+
+        data->fboView = FBOViewport::create();
+        data->fboView->setSize(0, 0, 1, 1);
+        data->fboView->setFrameBufferObject(data->fbo); // replaces stage!
+        data->win->addPort(data->fboView);
+        data->fboView->setCamera(testscene.cam);
+        data->fboView->setBackground(testscene.background);
+        //data->fboView->setRoot(testscene.lightNode);
+        data->fboView->setRoot(testscene.dsStageN);
 
         data->win->init();
         data->win->setSize(data->fboWidth, data->fboHeight);
