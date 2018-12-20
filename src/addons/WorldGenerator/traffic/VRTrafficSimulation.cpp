@@ -267,7 +267,6 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
     if (auto t = tw.lock()) if (t->control_flag == false) return;
 
     this_thread::sleep_for(chrono::microseconds(1));
-    this_thread::sleep_for(chrono::microseconds(2000));
     PLock lock(mtx);
 
     if (!roadNetwork) return;
@@ -800,13 +799,11 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         //seeing if incoming traffic at next intersection coming from right/left/front
             if (!nextInterE) return;
             auto inLanes = nextInterE->getInLanes();
-            float crossingOffset = 0.0;
-            if (nextInterE->hasCrossings) { crossingOffset = 60.0; }
 
             auto posDetection = [&](Vehicle& vOne, Vehicle& vTwo){
                 auto p = vOne.simPose;
                 auto D = (pose->pos() - p->pos()).length();
-                if ( ( D > 1.5*sightRadius && vTwo.turnAhead != 1 ) || D > 50 + crossingOffset ) return;
+                if ( ( D > 1.5*sightRadius && vTwo.turnAhead != 1 ) || D > 50 ) return;
                 auto dir = p->dir();
                 auto vDir = vTwo.simPose->dir();
                 auto left = Vec3d(0,1,0).cross(vDir);
@@ -827,7 +824,6 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                         posDetection(vehicles[IDpair.second],vehicle);
                     }
                     if (g->getPrevEdges(g->getEdge(eID)).size()==1) {
-                        cout << "hello world" << endl;
                         auto nextID = g->getPrevEdges(g->getEdge(eID))[0].ID;
                         auto nextLane = roadNetwork->getLane(nextID);
                         auto nIE = roadNetwork->getIntersection(nextLane->getEntity("nextIntersection"));
