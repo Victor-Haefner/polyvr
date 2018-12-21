@@ -7,6 +7,7 @@
 #include "core/math/polygon.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 #include "addons/WorldGenerator/VRWorldModule.h"
+#include <boost/thread/recursive_mutex.hpp>
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -43,12 +44,15 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         float resolution = 1; // shader parameter
         float heightScale = 1; // shader parameter
         double grid = 64;
-        VRTexturePtr tex;
+        VRTexturePtr heigthsTex;
         VRMaterialPtr mat;
         shared_ptr<vector<float>> physicsHeightBuffer;
 
         map<string, VREmbankmentPtr> embankments;
 
+        boost::recursive_mutex& mtx(); // physics
+
+        void setHeightTexture(VRTexturePtr t);
         void updateTexelSize();
         void setupGeo();
         void setupMat();
