@@ -10,12 +10,7 @@
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/scene/VRScene.h"
-#include "core/setup/windows/VRView.h"
-#include "core/setup/VRSetup.h"
-#include "core/scene/rendering/VRRenderStudio.h"
-#include "core/scene/rendering/VRDeferredRenderStage.h"
 #include "core/scene/rendering/VRDefShading.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/math/boundingbox.h"
 
 #include <OpenSG/OSGBackground.h>
@@ -34,19 +29,9 @@
 #include <OpenSG/OSGGLUTWindow.h>
 #include <OpenSG/OSGPassiveWindow.h>
 #include <OpenSG/OSGViewport.h>
+#include <OpenSG/OSGFBOViewport.h>
 #include <OpenSG/OSGRenderAction.h>
 #include <OpenSG/OSGSolidBackground.h>
-
-#include "core/setup/VRSetup.h"
-#include "core/setup/windows/VRView.h"
-#include "core/scene/rendering/VRRenderStudio.h"
-#include <OpenSG/OSGFBOViewport.h>
-
-#include <OpenSG/OSGTransform.h>
-#include <OpenSG/OSGPerspectiveCamera.h>
-#include <OpenSG/OSGDirectionalLight.h>
-#include <OpenSG/OSGShaderProgram.h>
-#include <OpenSG/OSGShaderProgramChunk.h>
 
 #define GLSL(shader) #shader
 
@@ -72,14 +57,12 @@ struct VRTextureRenderer::Data {
     ImageRefPtr             fboTexImg;
     TextureObjChunkRefPtr   fboDTex;
     ImageRefPtr             fboDTexImg;
-    StageRefPtr             stage;
-    VRObjectPtr             stageRoot;
+    SimpleStageRefPtr       stage;
 
     // render once ressources
     RenderActionRefPtr ract;
-    WindowMTRecPtr win;
-    ViewportMTRecPtr view;
-    FBOViewportMTRecPtr fboView;
+    WindowMTRecPtr     win;
+    ViewportMTRecPtr   view;
     VRDefShadingPtr deferredStage;
     VRObjectPtr deferredStageRoot;
 };
@@ -142,7 +125,6 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     data->fbo->setColorAttachment(texBuf, 0);
     //data->fbo->setColorAttachment(texDBuf, 1);
     data->fbo->setDepthAttachment(texDBuf); //HERE depthBuf/texDBuf
-    data->fbo->editMFDrawBuffers()->clear();
     data->fbo->editMFDrawBuffers()->push_back(GL_DEPTH_ATTACHMENT_EXT);
     data->fbo->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
     data->fbo->setWidth (data->fboWidth );
@@ -161,14 +143,14 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     auto scene = VRScene::getCurrent();
 
     // Stage
-    data->stage = Stage::create();
+    data->stage = SimpleStage::create();
     data->stage->setRenderTarget(data->fbo);
-    //data->stage->setSize(0.0f, 0.0f, 1.0f, 1.0f);
-    //data->stage->setBackground( scene->getBackground() );
-    data->stageRoot = VRObject::create("TextureRendererStageRoot");
-    data->stageRoot->setCore(OSGCore::create(data->stage), "TextureRenderer");
+    data->stage->setSize(0.0f, 0.0f, 1.0f, 1.0f);
+    data->stage->setBackground( scene->getBackground() );
 
-    // Stage2
+    setCore(OSGCore::create(data->stage), "TextureRenderer");
+
+    // for deferred rendering
     data->deferredStageRoot = VRObject::create("TextureRendererDeferredRoot");
     data->deferredStage = VRDefShading::create();
     data->deferredStage->initDeferredShading(data->deferredStageRoot);
@@ -177,17 +159,15 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
 }
 
 VRTextureRenderer::~VRTextureRenderer() { delete data; }
-VRTextureRendererPtr VRTextureRenderer::create(string name) {
-    auto tr = VRTextureRendererPtr( new VRTextureRenderer(name) );
-    return tr;
-}
+VRTextureRendererPtr VRTextureRenderer::create(string name) { return VRTextureRendererPtr( new VRTextureRenderer(name) ); }
 
 void VRTextureRenderer::setBackground(Color3f c) {
     SolidBackgroundMTRecPtr bg = SolidBackground::create();
     bg->setAlpha(0);
     bg->setColor(c);
     mat->enableTransparency();
-    //data->stage->setBackground( bg );
+    data->stage->setBackground( bg );
+    //if (data->deferredStage) data->deferredStage->setBackground( bg );
 }
 
 void VRTextureRenderer::setup(VRCameraPtr c, int width, int height, bool alpha) {
@@ -204,11 +184,8 @@ void VRTextureRenderer::setup(VRCameraPtr c, int width, int height, bool alpha) 
         data->fboTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
         data->fboDTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
     }
-    //data->stage->setCamera( cam->getCam()->cam );
-    if (data->deferredStage) {
-        data->deferredStage->setDSCamera( cam->getCam() );
-        //data->deferredStage->setSize(Vec2i(width, height));
-    }
+    data->stage->setCamera(cam->getCam()->cam);
+    if (data->deferredStage) data->deferredStage->setDSCamera( cam->getCam() );
 }
 
 VRMaterialPtr VRTextureRenderer::getMaterial() { return mat; }
@@ -253,151 +230,47 @@ void VRTextureRenderer::setMaterialSubstitutes(map<VRMaterial*, VRMaterialPtr> s
     substitutes[c] = s;
 }
 
-struct OsgTestScene {
-    TransformUnrecPtr camBeacon;
-    NodeUnrecPtr camBeaconNode;
-    PerspectiveCameraUnrecPtr cam;
-    SolidBackgroundUnrecPtr background;
-    NodeUnrecPtr lightNode;
-    DirectionalLightUnrecPtr light;
-
-    NodeUnrecPtr dsStageN;
-    DeferredShadingStageUnrecPtr dsStage;
-    ShaderProgramUnrecPtr lightVP;
-    ShaderProgramUnrecPtr lightFP;
-    ShaderProgramChunkUnrecPtr lightSH;
-
-    OsgTestScene() {
-        // camera
-        camBeacon = Transform::create();
-        camBeaconNode = makeNodeFor( camBeacon );
-        cam = PerspectiveCamera::create();
-        cam->setBeacon(camBeaconNode);
-        cam->setFov   (osgDegree2Rad(90));
-        cam->setNear  (0.1f);
-        cam->setFar   (1000);
-
-        // light
-        light = DirectionalLight::create();
-        lightNode = makeNodeFor(light);
-        light->setAmbient  (.3f, .3f, .3f, 1);
-        light->setDiffuse  ( 1,  1,  1, 1);
-        light->setDirection( 0,  -1, 0   );
-        light->setBeacon   (camBeaconNode);
-
-        // background
-        background = SolidBackground::create();
-        background->setColor(Color3f(0,1,0));
-
-        // scene
-        NodeUnrecPtr torus = makeTorus(.5, 2, 16, 16);
-        lightNode->addChild(camBeaconNode);
-        lightNode->addChild(torus);
-
-        Matrix m;
-        m.setTranslate(Vec3f(0,0,5));
-        camBeacon->setMatrix(m);
-
-
-        // deferred stage
-        ShaderProgramUnrecPtr      vpGBuffer = ShaderProgram::createVertexShader  ();
-        ShaderProgramUnrecPtr      fpGBuffer = ShaderProgram::createFragmentShader();
-        ShaderProgramUnrecPtr      vpAmbient = ShaderProgram::createVertexShader  ();
-        ShaderProgramUnrecPtr      fpAmbient = ShaderProgram::createFragmentShader();
-        ShaderProgramChunkUnrecPtr shGBuffer = ShaderProgramChunk::create();
-        ShaderProgramChunkUnrecPtr shAmbient = ShaderProgramChunk::create();
-
-        dsStage  = DeferredShadingStage::create();
-        dsStageN = makeNodeFor(dsStage);
-        //dsStageN = makeNodeFor(Group::create());
-        dsStage->setCamera(cam);
-        dsStage->setBackground(background);
-        dsStageN->addChild(lightNode);
-
-        dsStage->editMFPixelFormats()->push_back(Image::OSG_RGBA_PF);// positions (RGB) + ambient (A) term buffer
-        dsStage->editMFPixelTypes  ()->push_back(Image::OSG_FLOAT32_IMAGEDATA);
-        dsStage->editMFPixelFormats()->push_back(Image::OSG_RGB_PF); // normals (RGB) buffer
-        dsStage->editMFPixelTypes  ()->push_back(Image::OSG_FLOAT32_IMAGEDATA);
-        dsStage->editMFPixelFormats()->push_back(Image::OSG_RGB_PF); // diffuse (RGB) buffer
-        dsStage->editMFPixelTypes  ()->push_back(Image::OSG_UINT8_IMAGEDATA);
-
-        // G Buffer shader (one for the whole scene)
-        vpGBuffer->readProgram("DSGBuffer.vp.glsl");
-        fpGBuffer->readProgram("DSGBuffer.fp.glsl");
-        fpGBuffer->addUniformVariable<Int32>("tex0", 0);
-        shGBuffer->addShader(vpGBuffer);
-        shGBuffer->addShader(fpGBuffer);
-        dsStage->setGBufferProgram(shGBuffer);
-
-        // ambient shader
-        vpAmbient->readProgram("DSAmbient.vp.glsl");
-        fpAmbient->readProgram("DSAmbient.fp.glsl");
-        fpAmbient->addUniformVariable<Int32>("texBufNorm", 1);
-        shAmbient->addShader(vpAmbient);
-        shAmbient->addShader(fpAmbient);
-        dsStage->setAmbientProgram(shAmbient);
-
-        // ds light
-        lightVP = ShaderProgram::createVertexShader();
-        lightFP = ShaderProgram::createFragmentShader();
-        lightSH = ShaderProgramChunk::create();
-        lightVP->readProgram("DSDirLight.vp.glsl");
-        lightFP->readProgram("DSDirLight.fp.glsl");
-        lightFP->addUniformVariable<Int32>("texBufPos",  0);
-        lightFP->addUniformVariable<Int32>("texBufNorm", 1);
-        lightFP->addUniformVariable<Int32>("texBufDiff", 2);
-        lightSH->addShader(lightVP);
-        lightSH->addShader(lightFP);
-        dsStage->editMFLights()->push_back(light);
-        dsStage->editMFLightPrograms()->push_back(lightSH);
-    }
-};
-
 VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
     if (!cam) return 0;
 
+    bool deferred = VRScene::getCurrent()->getDefferedShading();
+
     if (!data->ract) {
         data->ract = RenderAction::create();
-        data->win = PassiveWindow::create();
+        if (deferred) {
+            GLUTWindowRecPtr gwin = GLUTWindow::create();
+            glutInitWindowSize(data->fboWidth, data->fboHeight);
+            int winID = glutCreateWindow("PolyVR");
+            gwin->setGlutId(winID);
+            gwin->setSize(data->fboWidth, data->fboHeight);
+            gwin->init();
+            data->win = gwin;
 
-        GLUTWindowRecPtr gwin = GLUTWindow::create();
-        glutInitWindowSize(data->fboWidth, data->fboHeight);
-        int winID = glutCreateWindow("PolyVR");
-        gwin->setGlutId(winID);
-        gwin->setSize(data->fboWidth, data->fboHeight);
-        gwin->init();
-        data->win = gwin;
+            FBOViewportRecPtr fboView = FBOViewport::create();
+            fboView->setFrameBufferObject(data->fbo); // replaces stage!
+            fboView->setRoot(data->deferredStageRoot->getNode()->node);
+            data->view = fboView;
 
-        if (data->deferredStage) {
             auto lights = VRScene::getCurrent()->getRoot()->getChildren(true, "Light");
             for (auto obj : lights) if (auto l = dynamic_pointer_cast<VRLight>(obj)) data->deferredStage->addDSLight(l);
             data->deferredStage->setDSCamera( cam->getCam() );
             for (auto link : getLinks()) data->deferredStageRoot->addLink(link);
             for (auto child : getChildren()) data->deferredStageRoot->addChild(child);
             clearLinks();
+        } else {
+            data->win = PassiveWindow::create();
+            data->view = Viewport::create();
+            data->view->setRoot(getNode()->node);
         }
 
-        data->fboView = FBOViewport::create();
-        data->fboView->setSize(0, 0, 1, 1);
-        data->fboView->setFrameBufferObject(data->fbo); // replaces stage!
-        data->win->addPort(data->fboView);
-
-        auto scene = VRScene::getCurrent();
-        data->fboView->setCamera(cam->getCam()->cam);
-        data->fboView->setBackground(scene->getBackground());
-        data->fboView->setRoot(data->deferredStageRoot->getNode()->node);
-
-        /*OsgTestScene testscene;
-        data->fboView->setCamera(testscene.cam);
-        data->fboView->setBackground(testscene.background);
-        //data->fboView->setRoot(testscene.lightNode);
-        data->fboView->setRoot(testscene.dsStageN);*/
+        data->win->addPort(data->view);
+        data->view->setSize(0, 0, 1, 1);
+        data->view->setCamera(cam->getCam()->cam);
+        data->view->setBackground(data->stage->getBackground());
     }
 
     if (c != RENDER) setChannelSubstitutes(c);
     data->win->render(data->ract);
-    //data->win->frameInit(); // TODO: test those calls
-    //data->win->frameExit();
     ImageMTRecPtr img = Image::create();
     img->set( data->fboTexImg );
     if (c != RENDER) resetChannelSubstitutes();
@@ -452,6 +325,3 @@ VRMaterialPtr VRTextureRenderer::createTextureLod(VRObjectPtr obj, PosePtr camP,
 	if (deferred) scene->setDeferredShading(true);
     return mat;
 }
-
-
-
