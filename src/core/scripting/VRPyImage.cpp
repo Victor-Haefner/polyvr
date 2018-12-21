@@ -112,8 +112,9 @@ PyObject* VRPyImage::read(VRPyImage* self, PyObject *args) {
 
 PyObject* VRPyImage::write(VRPyImage* self, PyObject *args) {
     const char* path = 0;
-    if (! PyArg_ParseTuple(args, "s", (char*)&path)) return NULL;
-    if (path) self->objPtr->write(path);
+    int doThread = 0;
+    if (! PyArg_ParseTuple(args, "s|i", (char*)&path, &doThread) ) return NULL;
+    if (path) self->objPtr->write(path, doThread);
     Py_RETURN_TRUE;
 }
 

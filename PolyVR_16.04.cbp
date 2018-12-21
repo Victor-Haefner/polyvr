@@ -89,10 +89,10 @@
 			<Add option="-DBOOST_NO_CXX11_DECLTYPE_N3276" />
 			<Add option="-DBOOST_NO_CXX11_HDR_ATOMIC=1" />
 			<Add option="-DGL_GLEXT_PROTOTYPES" />
-			<Add option="-DWITH_SHADOW_VOLUME" />
 			<Add option="-DWITH_OPCUA" />
 			<Add option="-DWITH_STEP" />
 			<Add option="-DWITH_CLUSTERING_FIX" />
+			<Add option="-DWITH_SHADOW_VOLUME" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
 			<Add directory="/usr/lib64/glib-2.0/include" />
@@ -1103,6 +1103,7 @@
 		<Unit filename="src/core/setup/windows/VRWindow.h" />
 		<Unit filename="src/core/setup/windows/VRWindowManager.cpp" />
 		<Unit filename="src/core/setup/windows/VRWindowManager.h" />
+		<Unit filename="src/core/tests/osg/DeferredTextureRendering.h" />
 		<Unit filename="src/core/tools/VRAnalyticGeometry.cpp" />
 		<Unit filename="src/core/tools/VRAnalyticGeometry.h" />
 		<Unit filename="src/core/tools/VRAnnotationEngine.cpp" />

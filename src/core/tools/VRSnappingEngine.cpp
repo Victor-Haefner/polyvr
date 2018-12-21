@@ -264,8 +264,11 @@ void VRSnappingEngine::update() {
             }
         }
 
-        if (event->snap) obj->setWorldMatrix(event->m);
-        else obj->setMatrix( gobj->getMatrix() );
+        if (event->snap) {
+            Vec3d scale = obj->getScale(); // conserve scale
+            obj->setWorldMatrix(event->m);
+            obj->setScale(scale);
+        } else obj->setMatrix( gobj->getMatrix() );
 
         if (lastEvent != event->snap || lastEventID != event->snapID) {
             if (event->o1 == obj) {

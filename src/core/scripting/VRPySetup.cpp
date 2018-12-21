@@ -43,6 +43,9 @@ PyMethodDef VRPyView::methods[] = {
     {"getName", (PyCFunction)VRPyView::getName, METH_NOARGS, "Get the name of the view - getName()" },
     {"getUser", PyWrap(View, getUser, "Get the user node", VRTransformPtr ) },
     {"testUpdate", PyWrap(View, testUpdate, "Trigger a test update for debug purpose", void ) },
+    {"getRoot", PyWrap(View, getRoot, "Get the root node of the view", VRObjectPtr ) },
+    {"getRenderingL", PyWrap(View, getRenderingL, "Get the left rendering studio", VRRenderStudioPtr ) },
+    {"getRenderingR", PyWrap(View, getRenderingR, "Get the right rendering studio", VRRenderStudioPtr ) },
     {NULL}  /* Sentinel */
 };
 

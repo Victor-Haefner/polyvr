@@ -10,6 +10,7 @@ ptrFwd(VRProjectEntry);
 ptrFwd(VRProjectsList);
 ptrFwd(VRSemanticManager);
 ptrFwd(VRPhysicsManager);
+ptrFwd(VRDefShading);
 ptrFwd(VRDeferredRenderStage);
 ptrFwd(VRRenderManager);
 ptrFwd(VRRenderStudio);

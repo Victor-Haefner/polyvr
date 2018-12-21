@@ -14,6 +14,8 @@ VRDeferredRenderStage::VRDeferredRenderStage(string name) {
 
 VRDeferredRenderStage::~VRDeferredRenderStage() {}
 
+VRDeferredRenderStagePtr VRDeferredRenderStage::create(string name) { return VRDeferredRenderStagePtr( new VRDeferredRenderStage(name) ); }
+
 VRMaterialPtr VRDeferredRenderStage::setupRenderLayer(string name) {
     layer = VRGeometry::create(name+"_renderlayer");
     auto mat = VRMaterial::create(name+"_mat");
@@ -31,6 +33,14 @@ void VRDeferredRenderStage::initDeferred() {
     defRendering = shared_ptr<VRDefShading>( new VRDefShading() );
     defRendering->initDeferredShading(root);
     defRendering->setDeferredShading(false);
+}
+
+void VRDeferredRenderStage::setCamera(OSGCameraPtr cam) {
+    if (auto r = getRendering()) r->setDSCamera(cam);
+}
+
+void VRDeferredRenderStage::addLight(VRLightPtr l) {
+    if (auto r = getRendering()) r->addDSLight(l);
 }
 
 VRObjectPtr VRDeferredRenderStage::getTop() { return layer; }
