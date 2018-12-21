@@ -30,6 +30,8 @@
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGSimpleTexturedMaterial.h>
 
+#include <OpenSG/OSGGLUT.h>
+#include <OpenSG/OSGGLUTWindow.h>
 #include <OpenSG/OSGPassiveWindow.h>
 #include <OpenSG/OSGViewport.h>
 #include <OpenSG/OSGRenderAction.h>
@@ -75,7 +77,7 @@ struct VRTextureRenderer::Data {
 
     // render once ressources
     RenderActionRefPtr ract;
-    PassiveWindowMTRecPtr win;
+    WindowMTRecPtr win;
     ViewportMTRecPtr view;
     FBOViewportMTRecPtr fboView;
     VRDefShadingPtr deferredStage;
@@ -355,9 +357,16 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
     if (!cam) return 0;
 
     if (!data->ract) {
-        auto scene = VRScene::getCurrent();
         data->ract = RenderAction::create();
         data->win = PassiveWindow::create();
+
+        GLUTWindowRecPtr gwin = GLUTWindow::create();
+        glutInitWindowSize(data->fboWidth, data->fboHeight);
+        int winID = glutCreateWindow("PolyVR");
+        gwin->setGlutId(winID);
+        gwin->setSize(data->fboWidth, data->fboHeight);
+        gwin->init();
+        data->win = gwin;
 
         if (data->deferredStage) {
             auto lights = VRScene::getCurrent()->getRoot()->getChildren(true, "Light");
@@ -368,24 +377,27 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
             clearLinks();
         }
 
-        OsgTestScene testscene;
-
-
         data->fboView = FBOViewport::create();
         data->fboView->setSize(0, 0, 1, 1);
         data->fboView->setFrameBufferObject(data->fbo); // replaces stage!
         data->win->addPort(data->fboView);
+
+        auto scene = VRScene::getCurrent();
+        data->fboView->setCamera(cam->getCam()->cam);
+        data->fboView->setBackground(scene->getBackground());
+        data->fboView->setRoot(data->deferredStageRoot->getNode()->node);
+
+        /*OsgTestScene testscene;
         data->fboView->setCamera(testscene.cam);
         data->fboView->setBackground(testscene.background);
         //data->fboView->setRoot(testscene.lightNode);
-        data->fboView->setRoot(testscene.dsStageN);
-
-        data->win->init();
-        data->win->setSize(data->fboWidth, data->fboHeight);
+        data->fboView->setRoot(testscene.dsStageN);*/
     }
 
     if (c != RENDER) setChannelSubstitutes(c);
     data->win->render(data->ract);
+    //data->win->frameInit(); // TODO: test those calls
+    //data->win->frameExit();
     ImageMTRecPtr img = Image::create();
     img->set( data->fboTexImg );
     if (c != RENDER) resetChannelSubstitutes();
