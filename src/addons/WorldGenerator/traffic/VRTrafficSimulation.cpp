@@ -698,7 +698,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             p->setPos(p->pos() - globalOffset);
             auto simpleDis = (pose->pos() - p->pos()).length();
             if (simpleDis < disDis) disDis = simpleDis;
-            if (simpleDis < 80) userInRange = true;
+            if (simpleDis < 150) userInRange = true;
             if (simpleDis > safetyDis + 10) continue;
             calcFramePoints(v);
             if (simpleDis < 2.5*vehicle.length) {
@@ -858,8 +858,8 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 left.normalize();
 
                 if ( left.dot(dir2) >  0.6 && left.dot(D) > 0 && left.dot(D) <  50 ) { vehicle.incTrafficRight = true; continue; }
-                if ( left.dot(dir2) < -0.6 && left.dot(D) < 0 && left.dot(D) > -50) { vehicle.incTrafficLeft = true; continue; }
-                if ( dir1.dot(dir2) >  0.5) { vehicle.incTrafficFront = true; }
+                if ( left.dot(dir2) < -0.6 && left.dot(D) < 0 && left.dot(D) > -50 ) { vehicle.incTrafficLeft = true; continue; }
+                if ( dir1.dot(dir2) >  0.5 && dir1.dot(D) > 0 && dir1.dot(D) <  60 ) { vehicle.incTrafficFront = true; }
             }
         };
 
@@ -1038,6 +1038,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                         if (  signalAhead && signalBlock && !safeTravel ) return false; //red light
                         if (  signalAhead && signalTransit && nextStopDistance - nextMoveAcc < safetyDis + 2 && !inIntersec ) return false; //orange light
                         if ( !signalAhead && vehicle.incTrafficRight && vehicle.turnAhead != 2 && !safeTravel ) return false;
+                        if ( !signalAhead && vehicle.turnAhead == 1 && vehicle.incTrafficFront && !safeTravel ) return false;
                         if ( vehicle.turnAhead == 1 && vehicle.incTrafficFront && nextStopDistance < 5  ) return false;
                         if ( vehicle.turnAhead == 1 && vehicle.incTrafficFront && nextIntersection < 5  ) return false;
                         if ( inFront() ) {
@@ -1056,6 +1057,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                         if (  signalAhead && signalBlock && !safeTravel ) return false;
                         if (  signalAhead && signalTransit && !safeTravel && !inIntersec ) return false; //orange light
                         if ( !signalAhead && vehicle.incTrafficRight && vehicle.turnAhead != 2 && !safeTravel ) return false;
+                        if ( !signalAhead && vehicle.turnAhead == 1 && vehicle.incTrafficFront && !safeTravel ) return false;
                         if ( vehicle.turnAhead == 1 && vehicle.incTrafficFront && nextStopDistance < 1.5  ) return false;
                         if ( vehicle.turnAhead == 1 && vehicle.incTrafficFront && nextIntersection < 1.5  ) return false;
                         if ( inFront() ) {
