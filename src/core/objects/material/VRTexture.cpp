@@ -13,7 +13,7 @@ template<> string typeName(const VRTexturePtr& t) { return "Texture"; }
 
 VRTexture::VRTexture() { img = Image::create(); }
 VRTexture::VRTexture(ImageMTRecPtr img) { this->img = img; }
-VRTexture::~VRTexture() { cout << "VRTexture::~VRTexture " << endl; }
+VRTexture::~VRTexture() {}
 
 VRTexturePtr VRTexture::create() { return shared_ptr<VRTexture>(new VRTexture() ); }
 VRTexturePtr VRTexture::create(ImageMTRecPtr img) { return shared_ptr<VRTexture>(new VRTexture(img) ); }
