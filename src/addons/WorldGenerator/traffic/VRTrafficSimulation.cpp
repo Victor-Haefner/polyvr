@@ -268,6 +268,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
 
     this_thread::sleep_for(chrono::microseconds(1));
     PLock lock(mtx);
+    if (vehicles.size() < 50) this_thread::sleep_for(chrono::microseconds(600));
 
     if (!roadNetwork) return;
     auto g = roadNetwork->getGraph();
@@ -689,6 +690,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             //if (vehicle.currentVelocity > 6 && D <  0.1) vehicle.collisionDetected = true;
         }
         bool tmpUser = false;
+        bool userInRange = false;
         float disDis = 800;
         for (auto& v : users) {
             //if (!v.t) continue;
@@ -696,6 +698,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             p->setPos(p->pos() - globalOffset);
             auto simpleDis = (pose->pos() - p->pos()).length();
             if (simpleDis < disDis) disDis = simpleDis;
+            if (simpleDis < 80) userInRange = true;
             if (simpleDis > safetyDis + 10) continue;
             calcFramePoints(v);
             if (simpleDis < 2.5*vehicle.length) {
@@ -839,6 +842,27 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             }
         };
 
+        auto userDetection = [&](){
+            if (!userInRange) return;
+            for (auto& u : users) {
+                auto p1 = vehicle.simPose;
+                auto p2 = u.simPose;
+                auto D = p2->pos() - p1->pos();
+
+                auto dir1 = p1->dir();
+                dir1.normalize();
+                auto dir2 = p2->dir();
+                dir2.normalize();
+
+                Vec3d left = dir1.cross(Vec3d(0,1,0));
+                left.normalize();
+
+                if ( left.dot(dir2) >  0.6 && left.dot(D) > 0 && left.dot(D) <  50 ) { vehicle.incTrafficRight = true; continue; }
+                if ( left.dot(dir2) < -0.6 && left.dot(D) < 0 && left.dot(D) > -50) { vehicle.incTrafficLeft = true; continue; }
+                if ( dir1.dot(dir2) >  0.5) { vehicle.incTrafficFront = true; }
+            }
+        };
+
         auto laneE = roadNetwork->getLane(vehicle.pos.edge);
 
         vehicle.distanceToNextIntersec = 10000;
@@ -850,6 +874,9 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
 
         recSearch(laneE,vehicle.pos.edge,vehicle.simPose->pos());
         recDetection(nextInterE);
+
+        userDetection();
+
         if (vehicle.nextTurnLane != -1) {
             auto nextRoad = roadNetwork->getLane(vehicle.nextTurnLane);
             if (nextRoad->get("turnDirection")) {
