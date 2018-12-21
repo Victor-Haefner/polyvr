@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include "core/objects/VRObjectFwd.h"
+#include "core/scene/VRSceneFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -22,6 +23,11 @@ class VRDeferredRenderStage {
     public:
         VRDeferredRenderStage(string name);
         ~VRDeferredRenderStage();
+
+        static VRDeferredRenderStagePtr create(string name);
+
+        void setCamera(OSGCameraPtr cam);
+        void addLight(VRLightPtr l);
 
         VRObjectPtr getTop();
         VRObjectPtr getBottom();

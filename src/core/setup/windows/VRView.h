@@ -129,8 +129,8 @@ class VRView : public std::enable_shared_from_this<VRView> {
         void setOffset(Vec3d);
 
         VRTransformPtr getUser();
-        VRCameraPtr getCamera();
         VRObjectPtr getRoot();
+        VRCameraPtr getCamera();
         ProjectionCameraDecoratorMTRecPtr getCameraDecoratorLeft();
         ProjectionCameraDecoratorMTRecPtr getCameraDecoratorRight();
         bool isStereo();

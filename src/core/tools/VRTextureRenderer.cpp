@@ -10,6 +10,7 @@
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/scene/VRScene.h"
+#include "core/scene/rendering/VRDefShading.h"
 #include "core/math/boundingbox.h"
 
 #include <OpenSG/OSGBackground.h>
@@ -24,8 +25,11 @@
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGSimpleTexturedMaterial.h>
 
+#include <OpenSG/OSGGLUT.h>
+#include <OpenSG/OSGGLUTWindow.h>
 #include <OpenSG/OSGPassiveWindow.h>
 #include <OpenSG/OSGViewport.h>
+#include <OpenSG/OSGFBOViewport.h>
 #include <OpenSG/OSGRenderAction.h>
 #include <OpenSG/OSGSolidBackground.h>
 
@@ -57,8 +61,10 @@ struct VRTextureRenderer::Data {
 
     // render once ressources
     RenderActionRefPtr ract;
-    PassiveWindowMTRecPtr win;
-    ViewportMTRecPtr view;
+    WindowMTRecPtr     win;
+    ViewportMTRecPtr   view;
+    VRDefShadingPtr deferredStage;
+    VRObjectPtr deferredStageRoot;
 };
 OSG_END_NAMESPACE;
 
@@ -143,6 +149,13 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     data->stage->setBackground( scene->getBackground() );
 
     setCore(OSGCore::create(data->stage), "TextureRenderer");
+
+    // for deferred rendering
+    data->deferredStageRoot = VRObject::create("TextureRendererDeferredRoot");
+    data->deferredStage = VRDefShading::create();
+    data->deferredStage->initDeferredShading(data->deferredStageRoot);
+    data->deferredStage->setDeferredShading(true);
+    data->deferredStage->setBackground( scene->getBackground() );
 }
 
 VRTextureRenderer::~VRTextureRenderer() { delete data; }
@@ -154,6 +167,7 @@ void VRTextureRenderer::setBackground(Color3f c) {
     bg->setColor(c);
     mat->enableTransparency();
     data->stage->setBackground( bg );
+    //if (data->deferredStage) data->deferredStage->setBackground( bg );
 }
 
 void VRTextureRenderer::setup(VRCameraPtr c, int width, int height, bool alpha) {
@@ -171,6 +185,7 @@ void VRTextureRenderer::setup(VRCameraPtr c, int width, int height, bool alpha) 
         data->fboDTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
     }
     data->stage->setCamera(cam->getCam()->cam);
+    if (data->deferredStage) data->deferredStage->setDSCamera( cam->getCam() );
 }
 
 VRMaterialPtr VRTextureRenderer::getMaterial() { return mat; }
@@ -215,37 +230,43 @@ void VRTextureRenderer::setMaterialSubstitutes(map<VRMaterial*, VRMaterialPtr> s
     substitutes[c] = s;
 }
 
-#include "core/setup/VRSetup.h"
-#include "core/setup/windows/VRView.h"
-#include "core/scene/rendering/VRRenderStudio.h"
-#include <OpenSG/OSGFBOViewport.h>
-
 VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
     if (!cam) return 0;
 
+    bool deferred = VRScene::getCurrent()->getDefferedShading();
+
     if (!data->ract) {
         data->ract = RenderAction::create();
-        data->win = PassiveWindow::create();
-        data->win->init();
-        data->win->setSize(data->fboWidth, data->fboHeight);
+        if (deferred) {
+            GLUTWindowRecPtr gwin = GLUTWindow::create();
+            glutInitWindowSize(data->fboWidth, data->fboHeight);
+            int winID = glutCreateWindow("PolyVR");
+            gwin->setGlutId(winID);
+            gwin->setSize(data->fboWidth, data->fboHeight);
+            gwin->init();
+            data->win = gwin;
 
-        /*data->view = Viewport::create();
+            FBOViewportRecPtr fboView = FBOViewport::create();
+            fboView->setFrameBufferObject(data->fbo); // replaces stage!
+            fboView->setRoot(data->deferredStageRoot->getNode()->node);
+            data->view = fboView;
+
+            auto lights = VRScene::getCurrent()->getRoot()->getChildren(true, "Light");
+            for (auto obj : lights) if (auto l = dynamic_pointer_cast<VRLight>(obj)) data->deferredStage->addDSLight(l);
+            data->deferredStage->setDSCamera( cam->getCam() );
+            for (auto link : getLinks()) data->deferredStageRoot->addLink(link);
+            for (auto child : getChildren()) data->deferredStageRoot->addChild(child);
+            clearLinks();
+        } else {
+            data->win = PassiveWindow::create();
+            data->view = Viewport::create();
+            data->view->setRoot(getNode()->node);
+        }
+
         data->win->addPort(data->view);
-        data->view->setRoot(getNode()->node);
+        data->view->setSize(0, 0, 1, 1);
         data->view->setCamera(cam->getCam()->cam);
-        data->view->setBackground(data->stage->getBackground());*/
-
-        auto port = VRSetup::getCurrent()->getView(0)->getViewportL();
-        auto renderingL = VRSetup::getCurrent()->getView(0)->getRenderingL();
-        renderingL->resize( Vec2i(data->fboWidth, data->fboHeight) ); // not working??
-
-        // works appart from minor issues with size
-        FBOViewportMTRecPtr view = FBOViewport::create();
-        view->setFrameBufferObject(data->fbo); // replaces stage!
-        data->win->addPort(view);
-        view->setRoot(port->getRoot());
-        view->setCamera(cam->getCam()->cam);
-        view->setBackground(data->stage->getBackground());
+        data->view->setBackground(data->stage->getBackground());
     }
 
     if (c != RENDER) setChannelSubstitutes(c);
@@ -304,6 +325,3 @@ VRMaterialPtr VRTextureRenderer::createTextureLod(VRObjectPtr obj, PosePtr camP,
 	if (deferred) scene->setDeferredShading(true);
     return mat;
 }
-
-
-

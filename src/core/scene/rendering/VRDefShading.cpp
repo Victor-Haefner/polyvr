@@ -49,6 +49,8 @@ VRDefShading::VRDefShading() {
 
 VRDefShading::~VRDefShading() {}
 
+VRDefShadingPtr VRDefShading::create() { return VRDefShadingPtr( new VRDefShading() ); }
+
 void VRDefShading::init() {
     shadowMapWidth = shadowRes;
     shadowMapHeight = shadowRes;
@@ -104,15 +106,15 @@ void VRDefShading::init() {
     // fbo -> TODO
     /*FrameBufferObjectRefPtr fbo = FrameBufferObject::create();
     ImageMTRecPtr img = Image::create();
-    tex = TextureObjChunk::create();
+    fboTex = TextureObjChunk::create();
     TextureBufferRefPtr texBuf = TextureBuffer::create();
     RenderBufferRefPtr depthBuf = RenderBuffer::create();
 
     fbo->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
     fbo->setPostProcessOnDeactivate(true);
     dsStage->setRenderTarget(fbo);
-    tex->setImage(img);
-    texBuf->setTexture(tex);
+    fboTex->setImage(img);
+    texBuf->setTexture(fboTex);
     depthBuf->setInternalFormat(GL_DEPTH_COMPONENT24); // 16 24 32
     fbo->setColorAttachment(texBuf, 0);
     fbo->setDepthAttachment(depthBuf);
@@ -155,11 +157,15 @@ void VRDefShading::initDeferredShading(VRObjectPtr o) {
     setDeferredShading(enabled);
 }
 
+void VRDefShading::setActive(bool b) {
+    if (b) stageObject->setCore(OSGCore::create(dsStage), "defShading", true);
+    else stageObject->setCore(OSGCore::create(Group::create()), "Object", true);
+}
+
 void VRDefShading::setDeferredShading(bool b) {
     enabled = b;
     if (stageObject == 0) return;
-    if (b) stageObject->setCore(OSGCore::create(dsStage), "defShading", true);
-    else stageObject->setCore(OSGCore::create(Group::create()), "Object", true);
+    setActive(b);
     for (auto li : lightInfos) {
         auto l = li.second.vrlight.lock();
         //if (b) l->setDeferred(b);
@@ -236,7 +242,9 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
 
     dsStage->editMFLights         ()->push_back(li.light  );
     dsStage->editMFLightPrograms  ()->push_back(li.lightSH);
+#ifndef NO_PHOTOMETRIC
     dsStage->editMFPhotometricMaps()->push_back(li.texChunk);
+#endif // WITH_PHOTOMETRIC
 
     lightInfos[ID] = li;
 
@@ -279,7 +287,9 @@ void VRDefShading::updateLight(VRLightPtr l) {
     if (tex) {
         auto img = tex->getImage();
         if (img != li.texChunk->getImage()) {
+#ifndef NO_PHOTOMETRIC
             dsStage->editMFPhotometricMaps();
+#endif
             li.texChunk->setImage(img);
             li.texChunk->setInternalFormat(tex->getInternalFormat());
         }
@@ -287,6 +297,7 @@ void VRDefShading::updateLight(VRLightPtr l) {
 }
 
 TextureObjChunkRefPtr VRDefShading::getTarget() { return fboTex; }
+DeferredShadingStageMTRecPtr VRDefShading::getOSGStage() { return dsStage; }
 
 // file containing vertex shader code for the light type
 const std::string& VRDefShading::getLightVPFile(LightTypeE lightType) {
@@ -322,10 +333,12 @@ void VRDefShading::subLight(int ID) {
     auto& li = lightInfos[ID];
     auto lItr = dsStage->editMFLights()->find(li.light);
     auto lpItr = dsStage->editMFLightPrograms()->find(li.lightSH);
-    auto pmItr = dsStage->editMFPhotometricMaps()->find(li.texChunk);
     dsStage->editMFLights()->erase(lItr);
     dsStage->editMFLightPrograms()->erase(lpItr);
+#ifndef NO_PHOTOMETRIC
+    auto pmItr = dsStage->editMFPhotometricMaps()->find(li.texChunk);
     dsStage->editMFPhotometricMaps()->erase(pmItr);
+#endif
     lightInfos.erase(ID);
 }
 
