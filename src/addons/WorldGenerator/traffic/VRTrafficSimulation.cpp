@@ -698,7 +698,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             p->setPos(p->pos() - globalOffset);
             auto simpleDis = (pose->pos() - p->pos()).length();
             if (simpleDis < disDis) disDis = simpleDis;
-            if (simpleDis < 150) userInRange = true;
+            if (simpleDis < 60) userInRange = true;
             if (simpleDis > safetyDis + 10) continue;
             calcFramePoints(v);
             if (simpleDis < 2.5*vehicle.length) {
