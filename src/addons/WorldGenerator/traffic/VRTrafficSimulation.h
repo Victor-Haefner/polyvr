@@ -10,6 +10,7 @@
 #include "core/objects/object/VRObject.h"
 #include "core/utils/VRDoublebuffer.h"
 #include <boost/thread/recursive_mutex.hpp>
+#include "addons/Bullet/CarDynamics/CarDynamics.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -92,7 +93,6 @@ class VRTrafficSimulation : public VRObject {
             DecisionSTATE state = DRIVE;
             Vec3d lastMove;
 
-            float speed;
             float currentVelocity;
             float targetVelocity;
             float roadVelocity;
@@ -100,6 +100,8 @@ class VRTrafficSimulation : public VRObject {
             float maxDecceleration;
             float acceleration;
             float decceleration;
+
+            float deltaTt;
 
             float lastMoveTS = 0;
             float indicatorTS = 0;
@@ -127,9 +129,6 @@ class VRTrafficSimulation : public VRObject {
             void hide();
             void setDefaults();
             void show();
-
-            int getID();
-            void setID(int vID);
 
             bool operator==(const Vehicle& v);
 
@@ -173,8 +172,8 @@ class VRTrafficSimulation : public VRObject {
         vector<int> seedRoads;
         vector<int> nearRoads;
         vector<int> forceSeedRoads;
-        vector<int> toBeAddedVehicles;
         vector<Vehicle> users;
+        vector<VRCarDynamicsPtr> userCarDyns;
         list<int> vehiclePool;
         vector<VRObjectPtr> models;
         int maxUnits = 0;
@@ -205,6 +204,7 @@ class VRTrafficSimulation : public VRObject {
         void updateIntersectionVis(bool in);
 
         ///Diagnostics
+        map<int,int> bugDelete;
         bool hidden = false;
         int stopVehicleID = -1;
         int deleteVehicleID = -1;
@@ -221,6 +221,7 @@ class VRTrafficSimulation : public VRObject {
         float speedMultiplier = 1.0;
         int debugOverRideSeedRoad = -1;
         float visibilityRadius = 100;
+        map<int,bool> debuggerCars;
 
     public:
         VRTrafficSimulation();
@@ -239,7 +240,6 @@ class VRTrafficSimulation : public VRObject {
         VRTransformPtr getUser();
 
         void addVehicle(int roadID, float density, int type);
-        void addVehicles(int roadID, float density, int type);
         void setTrafficDensity(float density, int type, int maxUnits = 0);
 
         int addVehicleModel(VRObjectPtr mesh);
@@ -270,6 +270,8 @@ class VRTrafficSimulation : public VRObject {
         void setSeedRoadVec(vector<int> forceSeedRoads);
         void setVisibilityRadius(float visibilityRadius);
         bool isSeedRoad(int roadID);
+
+        void addDcar(int i);
 };
 
 OSG_END_NAMESPACE;

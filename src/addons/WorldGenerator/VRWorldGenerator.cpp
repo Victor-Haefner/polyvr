@@ -397,7 +397,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 
         for (auto tag : way->tags) {
             if (tag.first == "highway") {
-                if (tag.second == "footway") {
+                if (tag.second == "footway" || tag.second == "pedestrian") {
                     bool addedFootway = false;
                     /*for (auto tag : way->tags) {
                         if (!addedFootway && ( (tag.first == "crossing" && tag.second == "zebra") || (tag.first == "footway" && tag.second == "crossing")) ) {
@@ -406,7 +406,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                             continue;
                         }
                     }*/
-                    if (!addedFootway) { addRoad(way, tag.second, 1, true); }
+                    if (!addedFootway) { addRoad(way, "footway", 1, true); }
                     continue;
                 }
                 addRoad(way, tag.second, 4, false); // default road

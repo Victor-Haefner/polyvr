@@ -223,6 +223,8 @@ void VRRainCarWindshield::update() {
     setShaderParameter("accelerationVec", convertV3dToV3f(accelerationVec));
     setShaderParameter("mapOffset0", mapOffset0);
     setShaderParameter("mapOffset1", mapOffset1);
+    setShaderParameter("wiperPos", wiperPos);
+    setShaderParameter("wiperSize", wiperSize);
 }
 
 void VRRainCarWindshield::doTestFunction() {
@@ -252,6 +254,14 @@ void VRRainCarWindshield::setWipers(bool isWiping, float newWiperSpeed) {
     hasPower = true;
     setShaderParameter("hasPower", hasPower);
     cout << "VRRainCarWindshield::setWipers(" << isWiping <<","<< newWiperSpeed << ")" << endl;
+}
+
+void VRRainCarWindshield::setWiperPos(Vec2d in) {
+    wiperPos = convertV2dToV2f(in);
+}
+
+void VRRainCarWindshield::setWiperSize(float in) {
+    wiperSize = in;
 }
 
 void VRRainCarWindshield::cutPower() {

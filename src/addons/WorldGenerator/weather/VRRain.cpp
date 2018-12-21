@@ -218,7 +218,7 @@ void VRRain::updateScale( float scaleNow ){
     scaleRN = scaleNow;
     float rainDensity = scaleRN == 0 ? 0 : 0.2 * 10/scaleRN;
     mat->setShaderParameter<float>("rainDensity", rainDensity);
-    cout << " rain density: " << rainDensity << endl;
+    //cout << " rain density: " << rainDensity << endl;
 }
 
 void VRRain::setupShaderLocations() {
