@@ -84,7 +84,7 @@ struct VRPyLine : VRPyBaseT<OSG::Line> {
     static PyObject* dir(VRPyLine* self);
 };
 
-struct VRPyExpression : VRPyBaseT<OSG::Expression> {
+struct VRPyMathExpression : VRPyBaseT<OSG::MathExpression> {
     static PyMethodDef methods[];
 };
 

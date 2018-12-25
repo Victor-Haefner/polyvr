@@ -3,96 +3,96 @@
 #include <stack>
 
 namespace OSG {
-    template<> Expression::ValueBase* Expression::Value<Vec3d>::compL(Expression::ValueBase* n) { return 0; }
-    template<> Expression::ValueBase* Expression::Value<Vec3d>::compLE(Expression::ValueBase* n) { return 0; }
-    template<> Expression::ValueBase* Expression::Value<Vec3d>::compG(Expression::ValueBase* n) { return 0; }
-    template<> Expression::ValueBase* Expression::Value<Vec3d>::compGE(Expression::ValueBase* n) { return 0; }
+    template<> MathExpression::ValueBase* MathExpression::Value<Vec3d>::compL(MathExpression::ValueBase* n) { return 0; }
+    template<> MathExpression::ValueBase* MathExpression::Value<Vec3d>::compLE(MathExpression::ValueBase* n) { return 0; }
+    template<> MathExpression::ValueBase* MathExpression::Value<Vec3d>::compG(MathExpression::ValueBase* n) { return 0; }
+    template<> MathExpression::ValueBase* MathExpression::Value<Vec3d>::compGE(MathExpression::ValueBase* n) { return 0; }
 }
 
 using namespace OSG;
 
-Expression::ValueBase::~ValueBase() {}
+MathExpression::ValueBase::~ValueBase() {}
 
 template<typename T>
-Expression::Value<T>::Value(const T& t) : value(t) {}
+MathExpression::Value<T>::Value(const T& t) : value(t) {}
 
 template<typename T>
-Expression::Value<T>::~Value() {}
+MathExpression::Value<T>::~Value() {}
 
 template<typename T>
-string Expression::Value<T>::toString() { return ::toString(value); }
+string MathExpression::Value<T>::toString() { return ::toString(value); }
 
 namespace OSG {
-    template<> string Expression::Value<Vec3d>::toString() { return "[" + ::toString(value[0]) + "," + ::toString(value[1]) + "," + ::toString(value[2]) + "]"; }
+    template<> string MathExpression::Value<Vec3d>::toString() { return "[" + ::toString(value[0]) + "," + ::toString(value[1]) + "," + ::toString(value[2]) + "]"; }
 }
 
 template<typename T>
-Expression::ValueBase* Expression::Value<T>::add(Expression::ValueBase* n) {
+MathExpression::ValueBase* MathExpression::Value<T>::add(MathExpression::ValueBase* n) {
     if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value + v2->value);
     return 0;
 }
 
 template<typename T>
-Expression::ValueBase* Expression::Value<T>::sub(Expression::ValueBase* n) {
+MathExpression::ValueBase* MathExpression::Value<T>::sub(MathExpression::ValueBase* n) {
     if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value - v2->value);
     return 0;
 }
 
 template<typename T>
-Expression::ValueBase* Expression::Value<T>::mult(Expression::ValueBase* n) {
+MathExpression::ValueBase* MathExpression::Value<T>::mult(MathExpression::ValueBase* n) {
     if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value * v2->value);
     return 0;
 }
 
 template<typename T>
-Expression::ValueBase* Expression::Value<T>::div(Expression::ValueBase* n) {
+MathExpression::ValueBase* MathExpression::Value<T>::div(MathExpression::ValueBase* n) {
     //if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value / v2->value);
     return 0;
 }
 
 
 template<typename T>
-Expression::ValueBase* Expression::Value<T>::compE(Expression::ValueBase* n) {
+MathExpression::ValueBase* MathExpression::Value<T>::compE(MathExpression::ValueBase* n) {
     if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value == v2->value);
     return 0;
 }
 
 template<typename T>
-Expression::ValueBase* Expression::Value<T>::compL(Expression::ValueBase* n) {
+MathExpression::ValueBase* MathExpression::Value<T>::compL(MathExpression::ValueBase* n) {
     if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value < v2->value);
     return 0;
 }
 
 template<typename T>
-Expression::ValueBase* Expression::Value<T>::compLE(Expression::ValueBase* n) {
+MathExpression::ValueBase* MathExpression::Value<T>::compLE(MathExpression::ValueBase* n) {
     if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value <= v2->value);
     return 0;
 }
 
 template<typename T>
-Expression::ValueBase* Expression::Value<T>::compG(Expression::ValueBase* n) {
+MathExpression::ValueBase* MathExpression::Value<T>::compG(MathExpression::ValueBase* n) {
     if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value > v2->value);
     return 0;
 }
 
 template<typename T>
-Expression::ValueBase* Expression::Value<T>::compGE(Expression::ValueBase* n) {
+MathExpression::ValueBase* MathExpression::Value<T>::compGE(MathExpression::ValueBase* n) {
     if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value >= v2->value);
     return 0;
 }
 
 // vector only
 
-template<typename T> Expression::ValueBase* Expression::Value<T>::cross(Expression::ValueBase* n) { return 0; }
-template<typename T> Expression::ValueBase* Expression::Value<T>::dot(Expression::ValueBase* n) { return 0; }
+template<typename T> MathExpression::ValueBase* MathExpression::Value<T>::cross(MathExpression::ValueBase* n) { return 0; }
+template<typename T> MathExpression::ValueBase* MathExpression::Value<T>::dot(MathExpression::ValueBase* n) { return 0; }
 
 namespace OSG {
-    template<> Expression::ValueBase* Expression::Value<Vec3d>::cross(Expression::ValueBase* n) {
+    template<> MathExpression::ValueBase* MathExpression::Value<Vec3d>::cross(MathExpression::ValueBase* n) {
         if (auto v2 = dynamic_cast<Value<Vec3d>*>(n)) return new Value<Vec3d>(value.cross(v2->value));
         return 0;
     }
 
-    template<> Expression::ValueBase* Expression::Value<Vec3d>::dot(Expression::ValueBase* n) {
+    template<> MathExpression::ValueBase* MathExpression::Value<Vec3d>::dot(MathExpression::ValueBase* n) {
         if (auto v2 = dynamic_cast<Value<Vec3d>*>(n)) return new Value<float>(value.dot(v2->value));
         return 0;
     }
@@ -100,13 +100,13 @@ namespace OSG {
 
 
 
-Expression::Node::Node(string s) : param(s) {;}
-Expression::Node::~Node() { if (value) delete value; }
+MathExpression::Node::Node(string s) : param(s) {;}
+MathExpression::Node::~Node() { if (value) delete value; }
 
-void Expression::Node::setValue(float f) { value = new Value<float>(f); }
-void Expression::Node::setValue(Vec3d v) { value = new Value<Vec3d>(v); }
+void MathExpression::Node::setValue(float f) { value = new Value<float>(f); }
+void MathExpression::Node::setValue(Vec3d v) { value = new Value<Vec3d>(v); }
 
-void Expression::Node::setValue(string s) {
+void MathExpression::Node::setValue(string s) {
     int N = std::count(s.begin(), s.end(), ',');
     if (N == 0) {
         float f;
@@ -120,7 +120,7 @@ void Expression::Node::setValue(string s) {
     }
 }
 
-string Expression::Node::toString() {
+string MathExpression::Node::toString() {
     string res = value ? value->toString() : param;
     if (isMathFunction(res) && left && right) {
         res += "{" + left->toString() + "," + right->toString() + "}";
@@ -131,14 +131,14 @@ string Expression::Node::toString() {
     return res;
 }
 
-string Expression::Node::toString2() {
+string MathExpression::Node::toString2() {
     string res = param + "(" + (value ? value->toString() : "") + ")";
     if (right) res = right->toString() + res;
     if (left) res += left->toString();
     return res;
 }
 
-string Expression::Node::treeToString(string indent) {
+string MathExpression::Node::treeToString(string indent) {
     string res = param;
     if (value) res += " ("+value->toString()+")";
     if (left) res += "\n"+indent+" " + left->treeToString(indent+" ");
@@ -146,7 +146,7 @@ string Expression::Node::treeToString(string indent) {
     return res;
 }
 
-void Expression::Node::compute() { // compute value based on left and right values and param as operator
+void MathExpression::Node::compute() { // compute value based on left and right values and param as operator
     if (!left || !right) return;
     if (left->value == 0 || right->value == 0) return;
     char op = param[0];
@@ -164,7 +164,7 @@ void Expression::Node::compute() { // compute value based on left and right valu
 }
 
 
-bool Expression::isMathToken(char c) {
+bool MathExpression::isMathToken(char c) {
     if (c == '+' || c == '-' || c == '*' || c == '/') return true;
     if (c == '(' || c == ')') return true;
     if (c == '[' || c == ']') return true; // delimits vector
@@ -173,7 +173,7 @@ bool Expression::isMathToken(char c) {
     return false;
 }
 
-bool Expression::isMathFunction(string f) {
+bool MathExpression::isMathFunction(string f) {
     if (f == "cos") return true;
     if (f == "sin") return true;
     if (f == "cross") return true;
@@ -182,7 +182,7 @@ bool Expression::isMathFunction(string f) {
     return false;
 }
 
-void Expression::convToPrefixExpr() { // convert infix to prefix expression
+void MathExpression::convToPrefixExpr() { // convert infix to prefix expression
     vector<string> tokens;
 
     // split into tokens
@@ -245,7 +245,7 @@ void Expression::convToPrefixExpr() { // convert infix to prefix expression
         return s;
     };
 
-    //cout << "Expression::convToPrefixExpr data: " << data << endl;
+    //cout << "MathExpression::convToPrefixExpr data: " << data << endl;
     for (auto t : tokens) {
         //cout << " token " << t << "   \toperators: " << operatorsToStr() << endl;
         if (isMathFunction(t)) { OperatorStack.push(t); continue; }
@@ -293,20 +293,20 @@ void Expression::convToPrefixExpr() { // convert infix to prefix expression
 
     while( OperatorStack.size() ) processTriple();
     if (OperandStack.size()) {
-        prefixExpression = OperandStack.top(); // store prefix expression
+        prefixMathExpression = OperandStack.top(); // store prefix expression
         prefixExpr = true;
-        //cout << " resulting prefix espression: " << prefixExpression << endl;
+        //cout << " resulting prefix espression: " << prefixMathExpression << endl;
     }
 }
 
-void Expression::buildTree() { // build a binary expression tree from the prefix expression data
+void MathExpression::buildTree() { // build a binary expression tree from the prefix expression data
     if (!prefixExpr) return;
     stack<Node*> nodeStack;
     Node* node = 0;
 
     /*vector<string> tokens; // split string in tokens
     string token;
-    for (auto c : prefixExpression) {
+    for (auto c : prefixMathExpression) {
         if (isMathToken(c)) {
             tokens.push_back(token);
             tokens.push_back(string()+c);
@@ -315,8 +315,8 @@ void Expression::buildTree() { // build a binary expression tree from the prefix
     }
     if (token.size()) tokens.push_back(token);*/
 
-    //cout << "Expression::buildTree from prefix expression: " << prefixExpression << endl;
-    vector<string> tokens = splitString(prefixExpression, ' '); // prefix expression is delimited by spaces!
+    //cout << "MathExpression::buildTree from prefix expression: " << prefixMathExpression << endl;
+    vector<string> tokens = splitString(prefixMathExpression, ' '); // prefix expression is delimited by spaces!
 
     for (uint i=0; i<tokens.size(); i++) {
         string t = tokens[tokens.size()-i-1];
@@ -334,7 +334,7 @@ void Expression::buildTree() { // build a binary expression tree from the prefix
     //cout << "expression tree:\n" << tree->treeToString() << " " << tree->parent << endl;
 }
 
-Expression::Expression(string s) {
+MathExpression::MathExpression(string s) {
     set(s);
 
     OperatorHierarchy["dot"] = 0;
@@ -352,34 +352,34 @@ Expression::Expression(string s) {
     OperatorHierarchy["="] = 1;
 }
 
-Expression::~Expression() {}
+MathExpression::~MathExpression() {}
 
-ExpressionPtr Expression::create() { return ExpressionPtr( new Expression("") ); }
+MathExpressionPtr MathExpression::create() { return MathExpressionPtr( new MathExpression("") ); }
 
-bool Expression::isMathExpression() {
+bool MathExpression::isMathMathExpression() {
     for (auto c : data) if (isMathToken(c)) return true;
     return false;
 }
 
-void Expression::makeTree() {
+void MathExpression::makeTree() {
     convToPrefixExpr();
     buildTree();
 }
 
-vector<Expression::Node*> Expression::getLeafs() {
+vector<MathExpression::Node*> MathExpression::getLeafs() {
     vector<Node*> res;
     for (auto n : nodes) if (!n->left && !n->right) res.push_back(n);
     return res;
 }
 
-void Expression::set(string s) {
+void MathExpression::set(string s) {
     data = s;
     data.erase(std::remove(data.begin(), data.end(), ' '), data.end());
     data.erase(std::remove(data.begin(), data.end(), '\t'), data.end());
     data.erase(std::remove(data.begin(), data.end(), '\n'), data.end());
 }
 
-string Expression::computeTree() { // compute result of binary expression tree
+string MathExpression::computeTree() { // compute result of binary expression tree
     //if (tree) cout << tree->treeToString() << endl;
     std::function<void(Node*)> subCompute = [&](Node* n) {
         if (!n) return;
@@ -392,13 +392,13 @@ string Expression::computeTree() { // compute result of binary expression tree
     return tree->value->toString();
 }
 
-string Expression::compute() {
+string MathExpression::compute() {
     makeTree();
     return computeTree();
 }
 
-string Expression::toString() { return tree->toString(); }
-string Expression::treeAsString() {
+string MathExpression::toString() { return tree->toString(); }
+string MathExpression::treeAsString() {
     if (!tree) makeTree();
     return tree ? tree->treeToString() : "No tree";
 }

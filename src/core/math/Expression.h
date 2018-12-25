@@ -10,7 +10,7 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class Expression {
+class MathExpression {
     public:
         struct ValueBase {
             virtual ~ValueBase();
@@ -72,7 +72,7 @@ class Expression {
 
     public:
         string data;
-        string prefixExpression;
+        string prefixMathExpression;
         Node* tree = 0;
         vector<Node*> nodes;
         map<string,int> OperatorHierarchy;
@@ -84,12 +84,12 @@ class Expression {
         void buildTree();
 
     public:
-        Expression(string s);
-        ~Expression();
+        MathExpression(string s);
+        ~MathExpression();
 
-        static ExpressionPtr create();
+        static MathExpressionPtr create();
 
-        bool isMathExpression();
+        bool isMathMathExpression();
         void makeTree();
         vector<Node*> getLeafs();
         void set(string s);

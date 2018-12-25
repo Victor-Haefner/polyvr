@@ -375,15 +375,15 @@ string Query::toString() {
 
 Term::Term(string s) : path(s), str(s) {}
 
-bool Term::isMathExpression() { Expression e(str); return e.isMathExpression(); }
+bool Term::isMathMathExpression() { MathExpression e(str); return e.isMathMathExpression(); }
 
-vector<string> Term::computeExpression(VRSemanticContextPtr context) {
-    Expression me(str);
-    if (!me.isMathExpression()) return vector<string>();
+vector<string> Term::computeMathExpression(VRSemanticContextPtr context) {
+    MathExpression me(str);
+    if (!me.isMathMathExpression()) return vector<string>();
     me.makeTree(); // build RDP tree
 
-    cout << "Term::computeExpression " << str << endl;
-    cout << "Term::computeExpression tree:\n" << me.treeAsString() << endl;
+    cout << "Term::computeMathExpression " << str << endl;
+    cout << "Term::computeMathExpression tree:\n" << me.treeAsString() << endl;
     vector<vector<string>> valuesMap;
     for (auto l : me.getLeafs()) {
         VPath p(l->param);
@@ -440,8 +440,8 @@ bool Term::valid() { return var ? var->valid : false; }
 
 bool Term::is(Term& t, VRSemanticContextPtr context) {
     auto v = t.var;
-    if (t.isMathExpression()) {
-        auto res = t.computeExpression(context);
+    if (t.isMathMathExpression()) {
+        auto res = t.computeMathExpression(context);
         v = Variable::create(0,res);
     }
     return var->is(v, path, t.path);
@@ -449,8 +449,8 @@ bool Term::is(Term& t, VRSemanticContextPtr context) {
 
 bool Term::has(Term& t, VRSemanticContextPtr context) {
     auto v = t.var;
-    /*if (t.isMathExpression()) { // TODO: sure this does not apply?
-        auto res = t.computeExpression(context);
+    /*if (t.isMathMathExpression()) { // TODO: sure this does not apply?
+        auto res = t.computeMathExpression(context);
         v = Variable::create(0,res);
     }*/
     return var->has(v, path, t.path, context->onto);
@@ -485,8 +485,8 @@ void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of
         cout << " substitute statement " << statement->toString() << endl;
         for (auto& ts : statement->terms) {
             cout << "  substitute term " << ts.str << endl;
-            if (ts.isMathExpression()) {
-                Expression e(ts.str);
+            if (ts.isMathMathExpression()) {
+                MathExpression e(ts.str);
                 e.makeTree();
                 cout << "   substitute expression: " << e.toString() << " leafs: " << e.getLeafs().size() << endl;
                 for (auto& l : e.getLeafs()) {
