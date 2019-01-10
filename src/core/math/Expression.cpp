@@ -12,6 +12,8 @@ Expression::Token::Token(string token, int priority, vector<string> types) {
     this->types = types;
 }
 
+bool Expression::Token::is(string t) { token == t; }
+
 bool Expression::Token::isA(string t) {
     for (auto i : types) if (t == i) return true;
     return false;
@@ -105,6 +107,11 @@ string Expression::TreeNode::prettyString(string padding) {
     string res = padding + toString() + "\n";
     for (auto child : children) res += child->prettyString(padding + "   ");
     return res;
+}
+
+bool Expression::TreeNode::is(string s) {
+    if (token) if (token->is(s)) return true;
+    return chunk == s;
 }
 
 bool Expression::TreeNode::isA(string s) {
@@ -451,12 +458,30 @@ string MathExpression::compute() {
     parse();
     subCompute(tree);
 
-    cout << "MathExpression::compute " << values.size() << endl;
+    cout << "MathExpression::compute, found " << values.size() << " values!" << endl;
 
-    if (!tree ) return "AA1";
-    if (tree->children.size() == 0) return "AA2";
-    if (!values.count(tree->children[0])) return "AA3";
-    return values[tree->children[0]]->toString();
+    if (!tree ) return "No tree!";
+    if (tree->children.size() == 0) return "Tree has no child!";
+
+    vector<ValueBase*> results;
+
+    function<void(TreeNode*)> aggregateResults = [&](TreeNode* node) {
+        if (values.count(node)) results.push_back( values[node] );
+        if (node->is(",")) {
+            for (auto c : node->children) aggregateResults(c);
+        }
+    };
+
+    auto n0 = tree->children[0];
+    aggregateResults(n0);
+    if (results.size() == 0) return "No value found";
+
+    string res;
+    for (auto v : results) {
+        if (v != results[0]) res += ",";
+        res += v->toString();
+    }
+    return res;
 }
 
 

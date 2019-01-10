@@ -21,6 +21,7 @@ class Expression {
             public:
                 Token(string token, int priority, vector<string> types);
 
+                bool is(string t);
                 bool isA(string t);
 
                 static void add(string token, int priority, vector<string> types);
@@ -51,6 +52,7 @@ class Expression {
                 void prettyPrint(string padding = "");
                 string prettyString(string padding = "");
 
+                bool is(string s);
                 bool isA(string s);
                 string collapseString();
         };
