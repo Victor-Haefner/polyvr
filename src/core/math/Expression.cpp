@@ -401,6 +401,17 @@ string MathExpression::compute() {
         }
     };
 
+    auto getList = [&](TreeNode* root) {
+        vector<ValueBase*> results;
+        function<void(TreeNode*)> aggregateList= [&](TreeNode* node) {
+            if (node->is("(")) for (auto c : node->children) aggregateList(c);
+            if (node->is(",")) for (auto c : node->children) aggregateList(c);
+            else if (values.count(node)) results.push_back( values[node] );
+        };
+        aggregateList(root);
+        return results;
+    };
+
     auto computeOperator = [&](TreeNode* node) {
         if (!node) return;
         if (!node->token) return;
@@ -428,21 +439,21 @@ string MathExpression::compute() {
 
     auto computeFunction = [&](TreeNode* node) {
         if (!node) return;
-        cout << node->chunk << " computeFunction1" << endl;
         if (node->children.size() == 0) return;
-        auto left  = node->children[0];
-        auto right = node->children[1];
-        cout << node->chunk << " computeFunction2 " << values.count(left) << "  " << values.count(right) << endl;
-        cout << node->chunk << " computeFunction2 " << left->collapseString() << "  " << right->collapseString() << endl;
-        if (values.count(left) == 0 || values.count(right) == 0) return;
-        cout << node->chunk << " computeFunction3" << endl;
-        auto leftV = values[left];
-        auto rightV = values[right];
+
+        auto args = getList(node->children[0]);
+
         string op = node->chunk;
         ValueBase* value = 0;
-        if (op == "cross") value = leftV->cross(rightV);
-        if (op == "dot") value = leftV->dot(rightV);
-        if (value) values[node] = value;
+        if (op == "cross" && args.size() == 2) value = args[0]->cross(args[1]);
+        if (op == "dot" && args.size() == 2) value = args[0]->dot(args[1]);
+        if (!value) return;
+
+        values[node] = value;
+
+        /*cout << node->chunk << " computeFunction " << op << " ( ";
+        for (auto arg : args) cout << arg->toString() << " ";
+        cout << ") = " << value->toString() << endl;*/
     };
 
     //if (tree) cout << tree->treeToString() << endl;
