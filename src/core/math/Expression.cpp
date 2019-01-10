@@ -12,7 +12,7 @@ Expression::Token::Token(string token, int priority, vector<string> types) {
     this->types = types;
 }
 
-bool Expression::Token::is(string t) { token == t; }
+bool Expression::Token::is(string t) { return token == t; }
 
 bool Expression::Token::isA(string t) {
     for (auto i : types) if (t == i) return true;
