@@ -375,20 +375,20 @@ string Query::toString() {
 
 Term::Term(string s) : path(s), str(s) {}
 
-bool Term::isMathMathExpression() { MathExpression e(str); return e.isMathMathExpression(); }
+bool Term::isMathExpression() { MathExpression e(str); return e.isMathExpression(); }
 
 vector<string> Term::computeMathExpression(VRSemanticContextPtr context) {
     MathExpression me(str);
-    if (!me.isMathMathExpression()) return vector<string>();
-    me.makeTree(); // build RDP tree
+    if (!me.isMathExpression()) return vector<string>();
+    me.parse(); // build RDP tree
 
     cout << "Term::computeMathExpression " << str << endl;
-    cout << "Term::computeMathExpression tree:\n" << me.treeAsString() << endl;
+    cout << "Term::computeMathExpression tree:\n" << me.toString() << endl;
     vector<vector<string>> valuesMap;
     for (auto l : me.getLeafs()) {
-        VPath p(l->param);
+        VPath p(l->chunk);
         vector<string> values;
-        cout << " expression leaf " << l->param << endl;
+        cout << " expression leaf " << l->chunk << endl;
         if (context->vars.count(p.root)) {
             auto v = context->vars[p.root];
             for (auto e : v->entities) {
@@ -420,7 +420,7 @@ vector<string> Term::computeMathExpression(VRSemanticContextPtr context) {
         for (int i=0; i<valuesMap.size(); i++) {
             leafs[i]->setValue( valuesMap[i][config[i]] );
         }
-        res.push_back( me.computeTree() );
+        res.push_back( me.compute() );
     };
 
     function<void(int)> aggregate = [&](int k) {
@@ -440,7 +440,7 @@ bool Term::valid() { return var ? var->valid : false; }
 
 bool Term::is(Term& t, VRSemanticContextPtr context) {
     auto v = t.var;
-    if (t.isMathMathExpression()) {
+    if (t.isMathExpression()) {
         auto res = t.computeMathExpression(context);
         v = Variable::create(0,res);
     }
@@ -449,7 +449,7 @@ bool Term::is(Term& t, VRSemanticContextPtr context) {
 
 bool Term::has(Term& t, VRSemanticContextPtr context) {
     auto v = t.var;
-    /*if (t.isMathMathExpression()) { // TODO: sure this does not apply?
+    /*if (t.isMathExpression()) { // TODO: sure this does not apply?
         auto res = t.computeMathExpression(context);
         v = Variable::create(0,res);
     }*/
@@ -485,12 +485,12 @@ void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of
         cout << " substitute statement " << statement->toString() << endl;
         for (auto& ts : statement->terms) {
             cout << "  substitute term " << ts.str << endl;
-            if (ts.isMathMathExpression()) {
+            if (ts.isMathExpression()) {
                 MathExpression e(ts.str);
-                e.makeTree();
+                e.parse();
                 cout << "   substitute expression: " << e.toString() << " leafs: " << e.getLeafs().size() << endl;
                 for (auto& l : e.getLeafs()) {
-                    cout << "    substitute leaf: " << l->toString2() << endl;
+                    cout << "    substitute leaf: " << l->chunk << endl;
                     /*for (uint i=0; i<request->terms.size(); i++) {
                         auto& t1 = request->terms[i];
                         //cout << " substitute " << l->param << " , " << t1.path.root << " in expression " << ts.str << " ?" << endl;
@@ -504,15 +504,15 @@ void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of
                             }
                         }
                     }*/
-                    if (ts.path.root == l->param) {
-                        cout << "     substitute 1 param: " << l->param << endl;
-                        substitute(l->param);
+                    if (ts.path.root == l->chunk) {
+                        cout << "     substitute 1 param: " << l->chunk << endl;
+                        substitute(l->chunk);
                     } else {
-                        VPath lpath(l->param);
+                        VPath lpath(l->chunk);
                         cout << "     substitute 2 param: " << lpath.root << endl;
                         substitute(lpath.root);
                         lpath.nodes[0] = lpath.root;
-                        l->param = lpath.toString();
+                        l->chunk = lpath.toString();
                     }
                 }
                 ts.str = e.toString();

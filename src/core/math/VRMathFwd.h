@@ -17,6 +17,7 @@ ptrFwd(Graph);
 ptrFwd(Octree);
 ptrFwd(Triangulator);
 ptrFwd(VRKinematics);
+ptrFwd(Expression);
 ptrFwd(MathExpression);
 
 ptrTemplateFwd( VRStateMachine, VRStateMachinePy, PyObject* );

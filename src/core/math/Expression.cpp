@@ -2,14 +2,260 @@
 #include "core/utils/toString.h"
 #include <stack>
 
+using namespace OSG;
+
+map<string, Expression::Token*> Expression::tokens = map<string, Expression::Token*>();
+
+Expression::Token::Token(string token, int priority, vector<string> types) {
+    this->token = token;
+    this->priority = priority;
+    this->types = types;
+}
+
+bool Expression::Token::isA(string t) {
+    for (auto i : types) if (t == i) return true;
+    return false;
+}
+
+void Expression::Token::add(string token, int priority, vector<string> types) {
+    tokens[token] = new Token(token, priority, types);
+}
+
+bool Expression::Token::check(string c) {
+    initTokens();
+    for (auto i : tokens) if (c == i.second->token) return true;
+    return false;
+}
+
+void Expression::Token::initTokens() {
+    if (tokens.size() > 0) return;
+    add("=", 2, {"bracket", "math"});
+    add("<", 2, {"bracket", "math", "openingBracket"});
+    add(">", 2, {"bracket", "math", "closingBracket"});
+
+    add("(", 3, {"bracket", "math", "openingBracket"});
+    add(")", 3, {"bracket", "math", "closingBracket"});
+    add("[", 3, {"bracket", "math", "openingBracket"});
+    add("]", 3, {"bracket", "math", "closingBracket"});
+    add("{", 3, {"bracket"});
+    add("}", 3, {"bracket"});
+
+    add(".", 4, {"delimiter", "math", "operator"});
+    add(",", 4.5, {"delimiter", "math", "operator"});
+
+    add("*", 5, {"math", "operator"});
+    add("/", 5, {"math", "operator"});
+
+    add("+", 6, {"math", "operator"});
+    add("-", 6, {"math", "operator"});
+
+    add(";", 8, {"delimiter", "operator"});
+    add(":", 9, {"inference", "operator"});
+}
+
+Expression::TreeNode::TreeNode(string chunk, Token* token) {
+    this->chunk = chunk;
+    this->token = token;
+}
+
+void Expression::TreeNode::remChild(TreeNode* child) {
+    if (child->parent == this) child->parent = 0;
+    children.erase(std::remove(children.begin(), children.end(), child), children.end());
+}
+
+void Expression::TreeNode::addChild(TreeNode* child) {
+    if (child->parent) child->parent->remChild(child);
+    children.push_back(child);
+    child->parent = this;
+}
+
+Expression::TreeNode* Expression::TreeNode::getChild(int i) {
+    if (i >= 0 && i < children.size()) return children[i];
+    return 0;
+}
+
+Expression::TreeNode* Expression::TreeNode::getSibling(int offset) {
+    if (!parent) return 0;
+    auto siblings = parent->children;
+    for (int i=0; i<siblings.size(); i++) {
+        if (siblings[i] == this) {
+            int k = i+offset;
+            if (k >= 0 && k < siblings.size()) return siblings[k];
+        }
+    }
+    return 0;
+}
+
+void Expression::TreeNode::setValue(string s) {
+    chunk = s;
+}
+
+string Expression::TreeNode::toString() {
+    string s = chunk;
+    for (auto m : meaning) s += " " + decorate(m, "blue");
+    return s;
+}
+
+void Expression::TreeNode::prettyPrint(string padding) {
+    cout << padding << toString() << endl;
+    for (auto child : children) child->prettyPrint(padding + "   ");
+}
+
+string Expression::TreeNode::prettyString(string padding) {
+    string res = padding + toString() + "\n";
+    for (auto child : children) res += child->prettyString(padding + "   ");
+    return res;
+}
+
+bool Expression::TreeNode::isA(string s) {
+    for (auto m : meaning) if (m == s) return true;
+    if (token) if (token->isA(s)) return true;
+    return false;
+}
+
+string Expression::TreeNode::collapseString() {
+    int N = children.size();
+    string result = chunk;
+    if (N == 2 && !isA("bracket")) result = children[0]->collapseString() + chunk + children[1]->collapseString();
+    else for (auto child : children) result += child->collapseString();
+    return result;
+}
+
+Expression::Expression(string data) {
+    this->data = data;
+    tree = new TreeNode("");
+}
+
+Expression::~Expression() {}
+
+ExpressionPtr Expression::create() { return ExpressionPtr( new Expression("") ); }
+
+void Expression::segment() {
+    nodes.clear();
+    string aggregate = "";
+    for (auto c : data) {
+        string C; C += c;
+        if (Token::check(C)) {
+            if (aggregate != "") nodes.push_back( new TreeNode(aggregate) );
+            nodes.push_back( new TreeNode(C, tokens[C]) );
+            aggregate = "";
+        } else aggregate += c;
+    }
+    if (aggregate != "") nodes.push_back( new TreeNode(aggregate) );
+}
+
+void Expression::buildTree() {
+    tree = new TreeNode("");
+    TreeNode* parent = tree;
+
+    // process brackets
+    for (auto node : nodes) {
+        parent->addChild(node);
+        auto token = node->token;
+        if (token) {
+            if (token->isA("openingBracket")) parent = node;
+            if (token->isA("closingBracket")) parent = parent->parent;
+        }
+    }
+
+    // process function names
+    for (auto node : nodes) {
+        auto token = node->token;
+        if (token && token->isA("openingBracket")) {
+            auto name = node->getSibling(-1);
+            if (name && !name->token) name->addChild(node);
+        }
+    }
+
+
+    // process math operators && delimiters
+    vector<TreeNode*> operators;
+    for (auto node : nodes) if(node->token && node->token->isA("operator")) operators.push_back(node);
+
+    auto compPriority = [](const TreeNode* a, const TreeNode* b) -> bool {
+        return a->token->priority > b->token->priority;
+    };
+
+    sort(operators.begin(), operators.end(), compPriority);
+
+    for (auto op : operators) {
+        auto operand1 = op->getSibling(-1);
+        auto operand2 = op->getSibling( 1);
+        op->addChild(operand1);
+        op->addChild(operand2);
+    }
+}
+
+void Expression::classify(TreeNode* node) {
+    if (!node) node = tree;
+    auto token = node->token;
+
+    if (token) {
+        if (token->token == "[") { node->meaning.push_back("Vector"); node->meaning.push_back("NumericValue"); }
+        if (token->token == "+") node->meaning.push_back("Addition");
+        if (token->token == "-") node->meaning.push_back("Substraction");
+        if (token->token == "*") node->meaning.push_back("Multiplication");
+        if (token->token == "/") node->meaning.push_back("Division");
+        if (token->token == ".") {
+            auto s1 = node->getChild(0);
+            auto s2 = node->getChild(1);
+            if (s1 && s2) {
+                if (isNumber(s1->chunk) && isNumber(s2->chunk)) { node->meaning.push_back("Float"); node->meaning.push_back("NumericValue"); }
+                else node->meaning.push_back("Path");
+            }
+        }
+    }
+
+    if (!token) {
+        auto c0 = node->getChild(0);
+        if (c0 && c0->token && c0->token->token == "(") node->meaning.push_back("Function");
+        if (isNumber(node->chunk)) { node->meaning.push_back("Integer"); node->meaning.push_back("NumericValue"); }
+    }
+
+    for (auto child : node->children) classify(child);
+}
+
+void Expression::parse() {
+    segment();
+    buildTree();
+    classify();
+}
+
+string Expression::decorate(string s, string color) {
+    if (color == "red") return "\033[91m" + s + "\033[0m";
+    if (color == "green") return "\033[92m" + s + "\033[0m";
+    if (color == "orange") return "\033[93m" + s + "\033[0m";
+    if (color == "blue") return "\033[94m" + s + "\033[0m";
+    return s;
+}
+
+bool Expression::isNumber(const string s) {
+    if (s == "") return false;
+    return s.find_first_not_of( "0123456789" ) == string::npos;
+}
+
+vector<Expression::TreeNode*> Expression::getLeafs() { return nodes; }
+
+void Expression::set(string s) {
+    data = s;
+    data.erase(std::remove(data.begin(), data.end(), ' '), data.end());
+    data.erase(std::remove(data.begin(), data.end(), '\t'), data.end());
+    data.erase(std::remove(data.begin(), data.end(), '\n'), data.end());
+}
+
+string Expression::toString() { return tree->collapseString(); }
+string Expression::treeToString() { return tree->prettyString(); }
+
+
+
+
+
 namespace OSG {
     template<> MathExpression::ValueBase* MathExpression::Value<Vec3d>::compL(MathExpression::ValueBase* n) { return 0; }
     template<> MathExpression::ValueBase* MathExpression::Value<Vec3d>::compLE(MathExpression::ValueBase* n) { return 0; }
     template<> MathExpression::ValueBase* MathExpression::Value<Vec3d>::compG(MathExpression::ValueBase* n) { return 0; }
     template<> MathExpression::ValueBase* MathExpression::Value<Vec3d>::compGE(MathExpression::ValueBase* n) { return 0; }
 }
-
-using namespace OSG;
 
 MathExpression::ValueBase::~ValueBase() {}
 
@@ -98,72 +344,6 @@ namespace OSG {
     }
 }
 
-
-
-MathExpression::Node::Node(string s) : param(s) {;}
-MathExpression::Node::~Node() { if (value) delete value; }
-
-void MathExpression::Node::setValue(float f) { value = new Value<float>(f); }
-void MathExpression::Node::setValue(Vec3d v) { value = new Value<Vec3d>(v); }
-
-void MathExpression::Node::setValue(string s) {
-    int N = std::count(s.begin(), s.end(), ',');
-    if (N == 0) {
-        float f;
-        bool b = toValue(s,f);
-        if (b) setValue(f);
-    }
-    if (N == 2) {
-        Vec3d f;
-        bool b = toValue(s,f);
-        if (b) setValue(f);
-    }
-}
-
-string MathExpression::Node::toString() {
-    string res = value ? value->toString() : param;
-    if (isMathFunction(res) && left && right) {
-        res += "{" + left->toString() + "," + right->toString() + "}";
-    } else {
-        if (left) res = left->toString() + res;
-        if (right) res += right->toString();
-    }
-    return res;
-}
-
-string MathExpression::Node::toString2() {
-    string res = param + "(" + (value ? value->toString() : "") + ")";
-    if (right) res = right->toString() + res;
-    if (left) res += left->toString();
-    return res;
-}
-
-string MathExpression::Node::treeToString(string indent) {
-    string res = param;
-    if (value) res += " ("+value->toString()+")";
-    if (left) res += "\n"+indent+" " + left->treeToString(indent+" ");
-    if (right) res += "\n"+indent+" " + right->treeToString(indent+" ");
-    return res;
-}
-
-void MathExpression::Node::compute() { // compute value based on left and right values and param as operator
-    if (!left || !right) return;
-    if (left->value == 0 || right->value == 0) return;
-    char op = param[0];
-    if (op == '+') value = left->value->add(right->value);
-    if (op == '-') value = left->value->sub(right->value);
-    if (op == '*') value = left->value->mult(right->value);
-    if (op == '/') value = left->value->div(right->value);
-    if (op == '=') value = left->value->compE(right->value);
-    if (op == '<') value = left->value->compL(right->value);
-    //if (op == '<') value = left->value->compLE(right->value); // TODO
-    if (op == '>') value = left->value->compG(right->value);
-    //if (op == '>') value = left->value->compGE(right->value); // TODO
-    if (param == "cross") value = left->value->cross(right->value);
-    if (param == "dot") value = left->value->dot(right->value);
-}
-
-
 bool MathExpression::isMathToken(char c) {
     if (c == '+' || c == '-' || c == '*' || c == '/') return true;
     if (c == '(' || c == ')') return true;
@@ -182,225 +362,101 @@ bool MathExpression::isMathFunction(string f) {
     return false;
 }
 
-void MathExpression::convToPrefixExpr() { // convert infix to prefix expression
-    vector<string> tokens;
-
-    // split into tokens
-    string last;
-    bool inVector = false;
-    for (uint i=0; i<data.size(); i++) {
-        char c = data[i];
-        if (isMathToken(c) || (c == ',' && !inVector)) {
-            if (c == '[') inVector = true;
-            if (c == ']') inVector = false;
-            if (last.size() > 0 ) tokens.push_back(last);
-            last = "";
-            string t; t+=c;
-            tokens.push_back(t);
-        } else last += c;
-    }
-    if (last.size() > 0 ) tokens.push_back(last);
-
-    stack<string> OperandStack;
-    stack<string> OperatorStack;
-
-    auto topOperator = [&](bool pop = 0) -> string {
-        if (OperatorStack.size()) {
-            auto t = OperatorStack.top();
-            if (pop) OperatorStack.pop();
-            return t;
-        }
-        return "";
-    };
-
-    auto processTriple = [&]() {
-        if (OperandStack.size() > 1) {
-            string Operator = topOperator(1);
-            string RightOperand = OperandStack.top(); OperandStack.pop();
-            string LeftOperand = OperandStack.top(); OperandStack.pop();
-            string op; op += Operator;
-            string tmp = op +" "+ LeftOperand +" "+ RightOperand;
-            OperandStack.push( tmp );
-        }
-    };
-
-    auto isSecondaryToken = [&](string t) {
-        if (t == ",") return true;
-        return false;
-    };
-
-    auto checkCharacter = [&](string c) {
-        auto t = topOperator();
-        if (t == "") return false; // something went wrong!
-        return bool(topOperator() != c);
-    };
-
-    auto operatorsToStr = [&]() {
-        auto stackCopy = OperatorStack;
-        string s;
-        while (!stackCopy.empty( ) ) {
-            s = stackCopy.top() + " " + s;
-            stackCopy.pop( );
-        }
-        return s;
-    };
-
-    //cout << "MathExpression::convToPrefixExpr data: " << data << endl;
-    for (auto t : tokens) {
-        //cout << " token " << t << "   \toperators: " << operatorsToStr() << endl;
-        if (isMathFunction(t)) { OperatorStack.push(t); continue; }
-
-        if (!isSecondaryToken(t)) {
-            if ( t.size() != 1 || !isMathToken(t[0]) ) {
-                OperandStack.push(t); continue;
-            }
-        }
-
-        if ( t == "[" || t == "]" ) continue;
-
-        if ( t == "," ) { // single comma delimits function parameters, acts like "}{"
-            while( checkCharacter("{") ) processTriple();
-            t = topOperator(1);
-            OperatorStack.push("{");
-            continue;
-        }
-
-        if ( t == "{" || t == "(" || OperatorStack.size() == 0 || OperatorHierarchy[t] < OperatorHierarchy[topOperator()] ) {
-            OperatorStack.push(t); continue;
-        }
-
-        if ( t == ")" ) {
-            while( checkCharacter("(") ) processTriple();
-            t = topOperator(1);
-            continue;
-        }
-
-        if ( t == "}" ) {
-            while( checkCharacter("{") ) processTriple();
-            t = topOperator(1);
-            continue;
-        }
-
-        if ( OperatorHierarchy[t] >= OperatorHierarchy[topOperator()] ) {
-            int i=0;
-            while( OperatorStack.size() != 0 && OperatorHierarchy[t] >= OperatorHierarchy[topOperator()] && i < 50 ) {
-                processTriple();
-                i++;
-            }
-            OperatorStack.push(t);
-        }
-    }
-
-    while( OperatorStack.size() ) processTriple();
-    if (OperandStack.size()) {
-        prefixMathExpression = OperandStack.top(); // store prefix expression
-        prefixExpr = true;
-        //cout << " resulting prefix espression: " << prefixMathExpression << endl;
-    }
-}
-
-void MathExpression::buildTree() { // build a binary expression tree from the prefix expression data
-    if (!prefixExpr) return;
-    stack<Node*> nodeStack;
-    Node* node = 0;
-
-    /*vector<string> tokens; // split string in tokens
-    string token;
-    for (auto c : prefixMathExpression) {
-        if (isMathToken(c)) {
-            tokens.push_back(token);
-            tokens.push_back(string()+c);
-            token = "";
-        } else token += c;
-    }
-    if (token.size()) tokens.push_back(token);*/
-
-    //cout << "MathExpression::buildTree from prefix expression: " << prefixMathExpression << endl;
-    vector<string> tokens = splitString(prefixMathExpression, ' '); // prefix expression is delimited by spaces!
-
-    for (uint i=0; i<tokens.size(); i++) {
-        string t = tokens[tokens.size()-i-1];
-        node = new Node(t);
-        nodes.push_back(node);
-        if ( (t.size() == 1 && isMathToken(t[0])) || isMathFunction(t) ) { // found operator
-            node->left = nodeStack.top(); nodeStack.pop();
-            node->right = nodeStack.top(); nodeStack.pop();
-            nodeStack.push(node);
-        } else nodeStack.push(node);
-    }
-    tree = nodeStack.top(); nodeStack.pop();
-
-    for (auto l : getLeafs()) l->setValue(l->param);
-    //cout << "expression tree:\n" << tree->treeToString() << " " << tree->parent << endl;
-}
-
-MathExpression::MathExpression(string s) {
-    set(s);
-
-    OperatorHierarchy["dot"] = 0;
-    OperatorHierarchy["cross"] = 0;
-    OperatorHierarchy["{"] = 7;
-    OperatorHierarchy["}"] = 7;
-    OperatorHierarchy["+"] = 6;
-    OperatorHierarchy["-"] = 6;
-    OperatorHierarchy["*"] = 5;
-    OperatorHierarchy["/"] = 5;
-    OperatorHierarchy["("] = 2;
-    OperatorHierarchy[")"] = 2;
-    OperatorHierarchy["<"] = 1;
-    OperatorHierarchy[">"] = 1;
-    OperatorHierarchy["="] = 1;
-}
-
+MathExpression::MathExpression(string s) : Expression(s) {}
 MathExpression::~MathExpression() {}
 
 MathExpressionPtr MathExpression::create() { return MathExpressionPtr( new MathExpression("") ); }
 
-bool MathExpression::isMathMathExpression() {
+bool MathExpression::isMathExpression() {
     for (auto c : data) if (isMathToken(c)) return true;
     return false;
 }
 
-void MathExpression::makeTree() {
-    convToPrefixExpr();
-    buildTree();
-}
-
-vector<MathExpression::Node*> MathExpression::getLeafs() {
-    vector<Node*> res;
-    for (auto n : nodes) if (!n->left && !n->right) res.push_back(n);
-    return res;
-}
-
-void MathExpression::set(string s) {
-    data = s;
-    data.erase(std::remove(data.begin(), data.end(), ' '), data.end());
-    data.erase(std::remove(data.begin(), data.end(), '\t'), data.end());
-    data.erase(std::remove(data.begin(), data.end(), '\n'), data.end());
-}
-
-string MathExpression::computeTree() { // compute result of binary expression tree
-    //if (tree) cout << tree->treeToString() << endl;
-    std::function<void(Node*)> subCompute = [&](Node* n) {
-        if (!n) return;
-        subCompute(n->left);
-        subCompute(n->right);
-        n->compute();
-    };
-    subCompute(tree);
-    if (!tree || !tree->value) return "";
-    return tree->value->toString();
-}
-
 string MathExpression::compute() {
-    makeTree();
-    return computeTree();
-}
+    auto setValue = [&](TreeNode* node) {
+        if (node->isA("Float")) {
+            float f;
+            bool b = toValue(node->collapseString(),f);
+            if (b) values[node] = new Value<float>(f);
+        }
 
-string MathExpression::toString() { return tree->toString(); }
-string MathExpression::treeAsString() {
-    if (!tree) makeTree();
-    return tree ? tree->treeToString() : "No tree";
+        if (node->isA("Integer")) {
+            int f;
+            bool b = toValue(node->collapseString(),f);
+            if (b) values[node] = new Value<int>(f);
+        }
+
+        if (node->isA("Vector")) {
+            Vec3d f;
+            bool b = toValue(node->collapseString(),f);
+            cout << "MathExpression::compute::setValue " << f << "   " << node->collapseString() << endl;
+            if (b) values[node] = new Value<Vec3d>(f);
+        }
+    };
+
+    auto computeOperator = [&](TreeNode* node) {
+        if (!node) return;
+        if (!node->token) return;
+        if (node->children.size() < 2) return;
+        auto left  = node->children[0];
+        auto right = node->children[1];
+        if (values.count(left) == 0 || values.count(right) == 0) return;
+        auto leftV = values[left];
+        auto rightV = values[right];
+        string op = node->token->token;
+        ValueBase* value = 0;
+        if (op == "+") value = leftV->add(rightV);
+        if (op == "-") value = leftV->sub(rightV);
+        if (op == "*") value = leftV->mult(rightV);
+        if (op == "/") value = leftV->div(rightV);
+        if (op == "=") value = leftV->compE(rightV);
+        if (op == "<") value = leftV->compL(rightV);
+        //if (op == "<") value = leftV->compLE(rightV); // TODO
+        if (op == ">") value = leftV->compG(rightV);
+        //if (op == ">") value = leftV->compGE(rightV); // TODO
+        if (op == "cross") value = leftV->cross(rightV);
+        if (op == "dot") value = leftV->dot(rightV);
+        if (value) values[node] = value;
+    };
+
+    auto computeFunction = [&](TreeNode* node) {
+        if (!node) return;
+        cout << node->chunk << " computeFunction1" << endl;
+        if (node->children.size() == 0) return;
+        auto left  = node->children[0];
+        auto right = node->children[1];
+        cout << node->chunk << " computeFunction2 " << values.count(left) << "  " << values.count(right) << endl;
+        cout << node->chunk << " computeFunction2 " << left->collapseString() << "  " << right->collapseString() << endl;
+        if (values.count(left) == 0 || values.count(right) == 0) return;
+        cout << node->chunk << " computeFunction3" << endl;
+        auto leftV = values[left];
+        auto rightV = values[right];
+        string op = node->chunk;
+        ValueBase* value = 0;
+        if (op == "cross") value = leftV->cross(rightV);
+        if (op == "dot") value = leftV->dot(rightV);
+        if (value) values[node] = value;
+    };
+
+    //if (tree) cout << tree->treeToString() << endl;
+    std::function<void(TreeNode*)> subCompute = [&](TreeNode* node) {
+        if (!node) return;
+        for (auto child : node->children) subCompute(child);
+
+        if (node->isA("NumericValue")) setValue(node);
+        if (node->isA("operator")) computeOperator(node);
+        if (node->isA("Function")) computeFunction(node);
+    };
+
+    parse();
+    subCompute(tree);
+
+    cout << "MathExpression::compute " << values.size() << endl;
+
+    if (!tree ) return "AA1";
+    if (tree->children.size() == 0) return "AA2";
+    if (!values.count(tree->children[0])) return "AA3";
+    return values[tree->children[0]]->toString();
 }
 
 

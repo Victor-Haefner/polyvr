@@ -29,13 +29,49 @@ VRConsoleWidget::VRConsoleWidget() {
     setToolButtonCallback("toolbutton24", sigc::mem_fun(*this, &VRConsoleWidget::clear));
     setToolButtonCallback("toolbutton25", sigc::mem_fun(*this, &VRConsoleWidget::forward));
     setToolButtonCallback("pause_terminal", sigc::mem_fun(*this, &VRConsoleWidget::pause));
+
+    addStyle( "console91", "#ff3311", "#ffffff", false, false, false );
+    addStyle( "console92", "#11ff33", "#ffffff", false, false, false );
+    addStyle( "console93", "#aa8811", "#ffffff", false, false, false );
+    addStyle( "console94", "#1133ff", "#ffffff", false, false, false );
 }
 
 VRConsoleWidget::~VRConsoleWidget() {}
 
 void VRConsoleWidget::write(string msg, string style, shared_ptr< VRFunction<string> > link) {
     PLock lock(mtx);
-    msg_queue.push( message(msg,style,link) );
+
+    if (style == "" && msg.find('\033') != string::npos) { // check for style tags
+        string aggregate = "";
+        string tag = "";
+        bool inTag = false;
+        for (auto c : msg) {
+            if (c == '\033') {
+                inTag = true;
+                tag = "";
+                if (aggregate != "") msg_queue.push( message(aggregate,style,link) );
+                aggregate = "";
+                continue;
+            }
+
+            if (inTag) {
+                if (c == 'm') {
+                    inTag = false;
+                    if (tag == "[0") style = "";
+                    else if (tag == "[91") style = "console91";
+                    else if (tag == "[92") style = "console92";
+                    else if (tag == "[93") style = "console93";
+                    else if (tag == "[94") style = "console94";
+                    continue;
+                }
+                tag += c;
+                continue;
+            }
+
+            aggregate += c;
+        }
+        if (aggregate != "") msg_queue.push( message(aggregate,style,link) );
+    } else msg_queue.push( message(msg,style,link) );
 }
 
 void VRConsoleWidget::clear() {

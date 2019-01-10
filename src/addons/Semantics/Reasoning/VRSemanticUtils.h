@@ -67,7 +67,7 @@ struct Term {
     Term(string s);
     bool valid();
 
-    bool isMathMathExpression();
+    bool isMathExpression();
     vector<string> computeMathExpression(VRSemanticContextPtr c);
 
     bool is(Term& t, VRSemanticContextPtr context);
