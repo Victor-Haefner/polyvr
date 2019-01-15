@@ -546,7 +546,7 @@ void VRRoadNetwork::computeSigns() {
                 pose->setUp(Vec3d(0,1,0));
                 tfsigns->addSign(input, pose);
 
-                if (input == "CN:Prohibitory:1") { // STOP SHIELD - TODO: use lanes widths
+                if (input == "CN:Prohibitory:1") {
                     Vec3d x = pose->x();
                     auto width = road->getWidth();
                     Vec3d p1 = pose->pos() - x*0.5;
