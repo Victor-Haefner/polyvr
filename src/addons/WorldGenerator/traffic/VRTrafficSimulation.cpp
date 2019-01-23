@@ -325,6 +325,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         v.simPose = roadNetwork->getPosition( Graph::position(roadID, 0.0) );
         v.pos = Graph::position(roadID, 0.0);
         v.simVisible = true;
+        v.lastLaneSwitchTS = float(glutGet(GLUT_ELAPSED_TIME)*0.001);
 
         road.vehicleIDs[v.vID] = v.vID;
         road.lastVehicleID = v.vID;
@@ -624,8 +625,19 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             auto dir = v1.simPose->dir(); //t->getPose()->dir();
             for (auto p : v2.vehicleFPs) {
                 //float cc = abs((p.second - v1.t->getPose()->pos()).dot(dir.cross(v1.t->getPose()->up())));
-                float cc = abs((p.second - v1.simPose->pos()).dot(dir.cross(v1.simPose->up())));
+                auto thisRoad = roadNetwork->getLane(vehicle.pos.edge);
+                if (thisRoad->get("turnDirection")) {
+                    auto turnDir = thisRoad->get("turnDirection")->value;
+                    if (turnDir == "right") continue;
+                }
+                float cc  = abs((p.second - v1.simPose->pos()).dot(dir.cross(v1.simPose->up())));
                 if (res > cc) res = cc;
+            }
+            for (auto p : v2.vehicleFPs) {
+                if ( v1.simFutPose->pos().length()<0.1 || (v2.simPose->pos() - v1.simFutPose->pos()).length() > 3 ) continue;
+                auto dir2 = v1.simFutPose->dir(); //t->getPose()->dir();
+                float cc2 = abs((p.second - v1.simFutPose->pos()).dot(dir2.cross(v1.simFutPose->up())));
+                if (res > cc2) res = cc2;
             }
             return res;
         };
@@ -810,11 +822,13 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 auto dir = p->dir();
                 auto vDir = vTwo.simPose->dir();
                 auto left = Vec3d(0,1,0).cross(vDir);
+                vTwo.incVFront = -1;
                 if (dir.dot(left)>0.7 && D < 35) vTwo.incTrafficRight = true; //cout << "incoming right" << endl;
                 if (dir.dot(left)<-0.7 && D < 35) vTwo.incTrafficLeft = true; //cout << "incoming left" << endl;
                 if (dir.dot(vDir)<-0.7) {
                     if (vOne.turnAhead == 1) return;
                     vTwo.incTrafficFront = true;
+                    vTwo.incVFront = vOne.vID;
                     vTwo.frontVehicLastMove = vOne.lastMoveTS;
                 }
             };
@@ -840,6 +854,44 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 int lID = roadNetwork->getLaneID(l);
                 recL(l, lID, vehicle.simPose->pos());
             }
+        };
+
+        ///FUTURE POSITION CALCULATION
+        auto futPositioning =[&]() {
+        //calculate future position of vehicle
+            float safetyDis = vehicle.currentVelocity*3.6 * environmentFactor * roadFactor / 4.0 + vehicle.length + 1;
+            auto g = roadNetwork->getGraph();
+
+            auto currentID = vehicle.pos.edge;
+            auto currentPos = vehicle.pos.pos;
+
+            auto& road = roads[currentID];
+
+            auto vPos = vehicle.pos;
+
+            vPos.pos = vPos.pos + (safetyDis - (1-vPos.pos)*road.length)/road.length;
+            float dis = (1-vPos.pos)*road.length;
+
+            while (vPos.pos > 1) {
+                auto& oldEdge = g->getEdge(vPos.edge);
+                int nextID;
+                auto nextEdges = g->getNextEdges(oldEdge);
+                if (nextEdges.size() > 0) {
+                    bool tmpchecknext = false;
+                    for (auto e : nextEdges) {
+                        if (e.ID == vehicle.nextTurnLane) tmpchecknext = true;
+                    }
+                    if (tmpchecknext) nextID = vehicle.nextTurnLane;
+                    if (nextEdges.size() == 1) nextID = nextEdges[0].ID;
+                } else { vehicle.simFutPose = Pose::create(Vec3d(0,0,0),Vec3d(0,0,-1),Vec3d(0,1,0)); return; }
+
+                vPos.edge = nextID;
+                auto& nRoad = roads[nextID];
+                vPos.pos = (safetyDis - dis)/nRoad.length;
+                dis += nRoad.length;
+            }
+
+            vehicle.simFutPose = roadNetwork->getPosition(vPos);
         };
 
         auto userDetection = [&](){
@@ -874,6 +926,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
 
         recSearch(laneE,vehicle.pos.edge,vehicle.simPose->pos());
         recDetection(nextInterE);
+        futPositioning();
 
         userDetection();
 
@@ -906,6 +959,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         float current = float(glutGet(GLUT_ELAPSED_TIME)*0.001);
         //cout << current << endl;
         deltaT = current - lastT;
+        if (deltaT == 0) cout << "TrafficSim:WARNING - delta time = 0" << endl;
         /*if (deltaT == 0) {
             this_thread::sleep_for(chrono::microseconds(1000));
             float current = float(glutGet(GLUT_ELAPSED_TIME)*0.001);
@@ -1738,7 +1792,7 @@ string VRTrafficSimulation::getVehicleData(int ID){
     res+= nl + " nextSignal: " + toString(v.distanceToNextSignal);
     res+= nl + " nextSignalB: " + toString(v.signalAhead);
     res+= nl + " nextSignalState: " + v.nextSignalState;*/
-    res+= nl + " incTrafficFront: " + toString(v.incTrafficFront);
+    res+= nl + " incTrafficFront: " + toString(v.incTrafficFront) + " " + toString(v.incVFront);
     string turnDir = "";
     if (v.turnAhead == 0) turnDir = "straight";
     if (v.turnAhead == 1) turnDir = "left";

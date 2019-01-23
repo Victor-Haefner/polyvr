@@ -57,6 +57,7 @@ class VRTrafficSimulation : public VRObject {
             bool vrwVisible = false;
             bool collisionDetected;
             PosePtr simPose;
+            PosePtr simFutPose = Pose::create(Vec3d(0,0,0),Vec3d(0,0,-1),Vec3d(0,1,0));
             Pose simPose2;
             //doubleBuffer poseBuffer;
             int type;
@@ -80,6 +81,7 @@ class VRTrafficSimulation : public VRObject {
             bool incTrafficLeft = false;
             bool incTrafficStraight = false;
             bool incTrafficFront = false;
+            int incVFront = -1;
             float frontVehicLastMove = 0;
 
             map<int, float> vehiclesight;
