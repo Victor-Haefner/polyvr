@@ -633,18 +633,13 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 float cc  = abs((p.second - v1.simPose->pos()).dot(dir.cross(v1.simPose->up())));
                 if (res > cc) res = cc;
             }
-            for (auto p : v2.vehicleFPs) {
-                if ( v1.simFutPose->pos().length()<0.1 || (v2.simPose->pos() - v1.simFutPose->pos()).length() > 3 ) continue;
-                auto dir2 = v1.simFutPose->dir(); //t->getPose()->dir();
-                float cc2 = abs((p.second - v1.simFutPose->pos()).dot(dir2.cross(v1.simFutPose->up())));
-                if (res > cc2) res = cc2;
-            }
             return res;
         };
 
         auto setSight = [&](int dir, float D, int ID) {
         //set nearest vehicleID as neighbor, also set Distance
             if (dir==-1) return;
+            //if (!bIN && dir == INFRONT) return;
             if (!vehicle.vehiclesightFar.count(dir)) {
                 vehicle.vehiclesightFar[dir] = D;
                 vehicle.vehiclesightFarID[dir] = ID;
@@ -856,42 +851,42 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             }
         };
 
-        ///FUTURE POSITION CALCULATION
-        auto futPositioning =[&]() {
-        //calculate future position of vehicle
-            float safetyDis = vehicle.currentVelocity*3.6 * environmentFactor * roadFactor / 4.0 + vehicle.length + 1;
-            auto g = roadNetwork->getGraph();
+        ///RECURSIVE FRONT CHECK FOR TURN LANES
+        function<bool (int)> recFrontCheck =[&](int roadID){
+            auto thisLane = roadNetwork->getLane(roadID);
+            auto& thisEdge = g->getEdge(roadID);
+            auto& segment = roads[roadID];
+            auto posV = vehicle.simPose->pos();
+            float safetyDisT = vehicle.currentVelocity*3.6 * environmentFactor * roadFactor / 4.0 + vehicle.length + 1;
 
-            auto currentID = vehicle.pos.edge;
-            auto currentPos = vehicle.pos.pos;
-
-            auto& road = roads[currentID];
-
-            auto vPos = vehicle.pos;
-
-            vPos.pos = vPos.pos + (safetyDis - (1-vPos.pos)*road.length)/road.length;
-            float dis = (1-vPos.pos)*road.length;
-
-            while (vPos.pos > 1) {
-                auto& oldEdge = g->getEdge(vPos.edge);
-                int nextID;
-                auto nextEdges = g->getNextEdges(oldEdge);
-                if (nextEdges.size() > 0) {
-                    bool tmpchecknext = false;
-                    for (auto e : nextEdges) {
-                        if (e.ID == vehicle.nextTurnLane) tmpchecknext = true;
-                    }
-                    if (tmpchecknext) nextID = vehicle.nextTurnLane;
-                    if (nextEdges.size() == 1) nextID = nextEdges[0].ID;
-                } else { vehicle.simFutPose = Pose::create(Vec3d(0,0,0),Vec3d(0,0,-1),Vec3d(0,1,0)); return; }
-
-                vPos.edge = nextID;
-                auto& nRoad = roads[nextID];
-                vPos.pos = (safetyDis - dis)/nRoad.length;
-                dis += nRoad.length;
+            for (auto vehicID : segment.vehicleIDs) {
+                if (vehicID.second == vehicle.vID) continue;
+                auto vPos = vehicles[vehicID.second].simPose->pos();
+                auto D = (vPos - posV).length();
+                bool inFr = vehicle.simPose->dir().dot(vPos - posV) > 0;
+                if (D < safetyDisT && inFr) setSight(INFRONT,D,vehicID.second);
             }
 
-            vehicle.simFutPose = roadNetwork->getPosition(vPos);
+            auto interE = roadNetwork->getIntersection(thisLane->getEntity("nextIntersection"));
+            if (interE) {
+                auto node = thisLane->getEntity("nextIntersection")->getEntity("node");
+                Vec3d pNode = node->getVec3("position");
+                nextInterE = interE;
+                if ( (pNode - posV).length() > safetyDisT ) { return false; }
+            }
+
+            auto nextEdges = g->getNextEdges(thisEdge);
+            int nextID = -1;
+            if (nextEdges.size() > 1) {
+                bool tmpchecknext = false;
+                for (auto e : nextEdges) {
+                    if (e.ID == vehicle.nextTurnLane) tmpchecknext = true;
+                }
+                if (tmpchecknext) nextID = vehicle.nextTurnLane;
+            }
+            if (nextEdges.size() == 1) nextID = nextEdges[0].ID;
+            if (nextID != -1) return recFrontCheck(nextID);
+            return false;
         };
 
         auto userDetection = [&](){
@@ -926,7 +921,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
 
         recSearch(laneE,vehicle.pos.edge,vehicle.simPose->pos());
         recDetection(nextInterE);
-        futPositioning();
+        recFrontCheck(vehicle.pos.edge);
 
         userDetection();
 
@@ -1085,20 +1080,28 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                         }
                     };
 
+                    auto reason =[&](string in) {
+                        if ( isSimRunning ) {
+                            if ( vehicle.movementReason.length() > 0 ) vehicle.movementReason += "|";
+                            vehicle.movementReason += in;
+                        }
+                        return false;
+                    };
+
                     ///PRIORITY 1: Acceleration
                     auto checkAcceleration =[&]() {
                         bool safeTravel = nextStopDistance - nextMoveAcc > safetyDis;
-                        if ( vehicle.currentVelocity > vehicle.targetVelocity*0.95 ) return false; //target velocity reached
-                        if (  signalAhead && signalBlock && !safeTravel ) return false; //red light
-                        if (  signalAhead && signalTransit && nextStopDistance - nextMoveAcc < safetyDis + 2 && !inIntersec ) return false; //orange light
-                        if ( !signalAhead && vehicle.incTrafficRight && vehicle.turnAhead != 2 && !safeTravel ) return false;
-                        if ( !signalAhead && vehicle.turnAhead == 1 && vehicle.incTrafficFront && !safeTravel ) return false;
-                        if ( vehicle.turnAhead == 1 && vehicle.incTrafficFront && nextStopDistance < 5  ) return false;
-                        if ( vehicle.turnAhead == 1 && vehicle.incTrafficFront && nextIntersection < 5  ) return false;
+                        if ( vehicle.currentVelocity > vehicle.targetVelocity*0.95 ) return reason("1-velReached"); //target velocity reached
+                        if (  signalAhead && signalBlock && !safeTravel ) return reason("1-redLight"); //red light
+                        if (  signalAhead && signalTransit && nextStopDistance - nextMoveAcc < safetyDis + 2 && !inIntersec ) return reason("1-orangeLight"); //orange light
+                        if ( !signalAhead && vehicle.incTrafficRight && vehicle.turnAhead != 2 && !safeTravel ) return reason("1-rightOfWay");
+                        if ( !signalAhead && vehicle.turnAhead == 1 && vehicle.incTrafficFront && !safeTravel ) return reason("1-leftTurn,incFront,a");
+                        if ( vehicle.turnAhead == 1 && vehicle.incTrafficFront && nextStopDistance < 5  ) return reason("1-leftTurn,incFront,b");
+                        if ( vehicle.turnAhead == 1 && vehicle.incTrafficFront && nextIntersection < 5  ) return reason("1-leftTurn,incFront,c");
                         if ( inFront() ) {
                             int frontID = vehicle.vehiclesightFarID[INFRONT];
                             float disToFrontV = vehicle.vehiclesightFar[INFRONT];
-                            if ( disToFrontV - nextMoveAcc < safetyDis + 3 ) return false;
+                            if ( disToFrontV - nextMoveAcc < safetyDis + 3 ) return reason("1-inFront");
                         }
                         if ( !signalAhead && comingRight() && vehicle.turnAhead == 0 ) return false;
                         return true;
@@ -1107,27 +1110,28 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                     ///PRIORITY 2: Holding Velocity
                     auto checkHoldVelocity =[&]() {
                         bool safeTravel = nextStopDistance - nextMove > safetyDis - 2;
-                        if ( vehicle.currentVelocity > vehicle.targetVelocity ) return false;
-                        if (  signalAhead && signalBlock && !safeTravel ) return false;
-                        if (  signalAhead && signalTransit && !safeTravel && !inIntersec ) return false; //orange light
-                        if ( !signalAhead && vehicle.incTrafficRight && vehicle.turnAhead != 2 && !safeTravel ) return false;
-                        if ( !signalAhead && vehicle.turnAhead == 1 && vehicle.incTrafficFront && !safeTravel ) return false;
-                        if ( vehicle.turnAhead == 1 && vehicle.incTrafficFront && nextStopDistance < 1.5  ) return false;
-                        if ( vehicle.turnAhead == 1 && vehicle.incTrafficFront && nextIntersection < 1.5  ) return false;
+                        if ( vehicle.currentVelocity > vehicle.targetVelocity ) return reason("2-velReached");
+                        if (  signalAhead && signalBlock && !safeTravel ) return reason("2-redLight");
+                        if (  signalAhead && signalTransit && !safeTravel && !inIntersec ) return reason("2-orangeLight"); //orange light
+                        if ( !signalAhead && vehicle.incTrafficRight && vehicle.turnAhead != 2 && !safeTravel ) return reason("2-rightOfWay");
+                        if ( !signalAhead && vehicle.turnAhead == 1 && vehicle.incTrafficFront && !safeTravel ) return reason("2-leftTurn,incFront,a");
+                        if ( vehicle.turnAhead == 1 && vehicle.incTrafficFront && nextStopDistance < 1.5  ) return reason("2-leftTurn,incFront,b");
+                        if ( vehicle.turnAhead == 1 && vehicle.incTrafficFront && nextIntersection < 1.5  ) return reason("2-leftTurn,incFront,c");
                         if ( inFront() ) {
                             int frontID = vehicle.vehiclesightFarID[INFRONT];
                             float disToFrontV = vehicle.vehiclesightFar[INFRONT];
-                            if ( disToFrontV - nextMove < safetyDis + 1 ) return false;
+                            if ( disToFrontV - nextMove < safetyDis + 1 ) return reason("2-inFront");
                         }
                         return true;
                     };
 
-                    ///PRIORITY 4: Braking
+                    ///PRIORITY 3: Braking
                     auto checkDeceleration =[&]() {
                         return true;
                     };
 
                     checkLaneSwitch();
+                    if ( isSimRunning ) vehicle.movementReason = "";
                     if ( checkAcceleration() ) { accelerate(1); return; }
                     if ( checkHoldVelocity() ) { holdVelocity(); return; }
                     if ( checkDeceleration() ) { decelerate(1); return; }
@@ -1793,6 +1797,7 @@ string VRTrafficSimulation::getVehicleData(int ID){
     res+= nl + " nextSignalB: " + toString(v.signalAhead);
     res+= nl + " nextSignalState: " + v.nextSignalState;*/
     res+= nl + " incTrafficFront: " + toString(v.incTrafficFront) + " " + toString(v.incVFront);
+    res+= nl + " movementReason: " + v.movementReason;
     string turnDir = "";
     if (v.turnAhead == 0) turnDir = "straight";
     if (v.turnAhead == 1) turnDir = "left";
