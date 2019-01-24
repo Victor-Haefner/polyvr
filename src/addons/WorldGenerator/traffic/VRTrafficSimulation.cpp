@@ -857,7 +857,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             auto& thisEdge = g->getEdge(roadID);
             auto& segment = roads[roadID];
             auto posV = vehicle.simPose->pos();
-            float safetyDisT = vehicle.currentVelocity*3.6 * environmentFactor * roadFactor / 4.0 + vehicle.length + 1;
+            float safetyDisT = vehicle.currentVelocity*3.6 * environmentFactor * roadFactor / 4.0 + vehicle.length + 4;
 
             for (auto vehicID : segment.vehicleIDs) {
                 if (vehicID.second == vehicle.vID) continue;
@@ -1101,9 +1101,10 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                         if ( inFront() ) {
                             int frontID = vehicle.vehiclesightFarID[INFRONT];
                             float disToFrontV = vehicle.vehiclesightFar[INFRONT];
-                            if ( disToFrontV - nextMoveAcc < safetyDis + 3 ) return reason("1-inFront");
+                            if ( disToFrontV - nextMoveAcc < safetyDis + 3 && vehicle.turnAhead != 2 ) return reason("1-inFront,a");
+                            if ( disToFrontV - nextMoveAcc < safetyDis + 0.5 && vehicle.turnAhead == 2 ) return reason("1-inFront,b");
                         }
-                        if ( !signalAhead && comingRight() && vehicle.turnAhead == 0 ) return false;
+                        if ( !signalAhead && vehicle.incTrafficRight && vehicle.turnAhead == 0 && !safeTravel ) return reason("1-comingRight");
                         return true;
                     };
 
@@ -1120,7 +1121,8 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                         if ( inFront() ) {
                             int frontID = vehicle.vehiclesightFarID[INFRONT];
                             float disToFrontV = vehicle.vehiclesightFar[INFRONT];
-                            if ( disToFrontV - nextMove < safetyDis + 1 ) return reason("2-inFront");
+                            if ( disToFrontV - nextMove < safetyDis + 1 && vehicle.turnAhead != 2 ) return reason("2-inFront,a");
+                            if ( disToFrontV - nextMove < safetyDis + 0.1 && vehicle.turnAhead == 2 ) return reason("2-inFront,b");
                         }
                         return true;
                     };
