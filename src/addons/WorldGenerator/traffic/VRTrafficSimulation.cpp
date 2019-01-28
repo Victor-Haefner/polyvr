@@ -721,8 +721,6 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         }
         else vehicle.simVisible = false;
 
-        visionVec[vehicle.vID] = vehicle.vehiclesightFarID;
-
         //========================
 
         VRTrafficLightPtr nextSignalE;
@@ -806,7 +804,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
 
         ///INCOMING TRAFFIC DETECTION: at next intersection
         auto recDetection = [&](VRRoadIntersectionPtr nextInterE){
-        //seeing if incoming traffic at next intersection coming from right/left/front
+        //detecting if incoming traffic at next intersection coming from right/left/front
             if (!nextInterE) return;
             auto inLanes = nextInterE->getInLanes();
 
@@ -817,18 +815,36 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 auto dir = p->dir();
                 auto vDir = vTwo.simPose->dir();
                 auto left = Vec3d(0,1,0).cross(vDir);
-                vTwo.incVFront = -1;
                 if (dir.dot(left)>0.7 && D < 35) vTwo.incTrafficRight = true; //cout << "incoming right" << endl;
                 if (dir.dot(left)<-0.7 && D < 35) vTwo.incTrafficLeft = true; //cout << "incoming left" << endl;
-                if (dir.dot(vDir)<-0.7) {
+                if (dir.dot(vDir)<-0.56) {
                     if (vOne.turnAhead == 1) return;
+                    if (vTwo.incTrafficFront) {
+                        auto& viv1 = vehicles[vTwo.incVFront];
+                        auto D2 = (pose->pos() - viv1.simPose->pos()).length();
+                        if (D2 > D) return;
+                    }
                     vTwo.incTrafficFront = true;
                     vTwo.incVFront = vOne.vID;
                     vTwo.frontVehicLastMove = vOne.lastMoveTS;
+                    if (vTwo.turnAhead == 1) setSight(6,D,vOne.vID);
                 }
             };
 
             for (auto l : inLanes) {
+                function<bool (VREntityPtr, int, Vec3d)> checkIntersectionLane =[&](VREntityPtr newLane, int eID, Vec3d posV) {
+                    //get vehicles within intersection
+                    auto nEdges = g->getNextEdges(g->getEdge(eID));
+                    for (auto nE : nEdges) {
+                        auto nextID = nE.ID;
+                        auto ls = roads[nextID];
+                        for (auto IDpair : ls.vehicleIDs) {
+                            posDetection(vehicles[IDpair.second],vehicle);
+                        }
+                    }
+                    return false;
+                };
+
                 function<bool (VREntityPtr, int, Vec3d)> recL =[&](VREntityPtr newLane, int eID, Vec3d posV) {
                     //get vehicles
                     auto ls = roads[eID];
@@ -846,13 +862,16 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                     }
                     return false;
                 };
+
                 int lID = roadNetwork->getLaneID(l);
+                checkIntersectionLane(l, lID, vehicle.simPose->pos());
                 recL(l, lID, vehicle.simPose->pos());
             }
         };
 
         ///RECURSIVE FRONT CHECK FOR TURN LANES
         function<bool (int)> recFrontCheck =[&](int roadID){
+        //detecting whether there are vehicles in the curve
             auto thisLane = roadNetwork->getLane(roadID);
             auto& thisEdge = g->getEdge(roadID);
             auto& segment = roads[roadID];
@@ -918,12 +937,15 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         vehicle.incTrafficRight = false;
         vehicle.incTrafficLeft = false;
         vehicle.incTrafficFront = false;
+        vehicle.incVFront = -1;
 
         recSearch(laneE,vehicle.pos.edge,vehicle.simPose->pos());
         recDetection(nextInterE);
         recFrontCheck(vehicle.pos.edge);
 
         userDetection();
+
+        visionVec[vehicle.vID] = vehicle.vehiclesightFarID;
 
         if (vehicle.nextTurnLane != -1) {
             auto nextRoad = roadNetwork->getLane(vehicle.nextTurnLane);
@@ -1624,7 +1646,7 @@ void VRTrafficSimulation::updateVehicVision(){
             int ID1 = vv.first;
             int ID2 = vVis.second;
 
-            if (!vehicles[ID1].t->isVisible() || !vehicles[ID2].t->isVisible()) continue;
+            //if (!vehicles[ID1].t->isVisible() || !vehicles[ID2].t->isVisible()) continue;
 
             auto nPose1 = vehicles[ID1].simPose;
             auto nPose2 = vehicles[ID2].simPose;
@@ -1632,7 +1654,7 @@ void VRTrafficSimulation::updateVehicVision(){
             auto p1 = nPose1->pos() + Vec3d(0,2.2,0);
             auto p2 = nPose2->pos() + Vec3d(0,1.6,0);
             int vID1 = gg0.pushVert(p1);
-            int r = n==4 || n==5;
+            int r = n==4 || n==5 || n==6;
             int g = n==2 || n==3;
             int b = n==1 || n==3 || n==5;
             gg0.pushColor(Color3f(r,g,b));
