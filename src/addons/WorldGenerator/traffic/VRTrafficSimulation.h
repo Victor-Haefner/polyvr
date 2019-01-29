@@ -56,6 +56,7 @@ class VRTrafficSimulation : public VRObject {
             bool simVisible = false;
             bool vrwVisible = false;
             bool collisionDetected;
+            bool collisionDetectedMem;
             PosePtr simPose;
             Pose simPose2;
             //doubleBuffer poseBuffer;
@@ -242,6 +243,7 @@ class VRTrafficSimulation : public VRObject {
         VRTransformPtr getUser();
 
         void addVehicle(int roadID, float density, int type);
+        bool getUserCollisionState(int i);
         void setTrafficDensity(float density, int type, int maxUnits = 0);
 
         int addVehicleModel(VRObjectPtr mesh);

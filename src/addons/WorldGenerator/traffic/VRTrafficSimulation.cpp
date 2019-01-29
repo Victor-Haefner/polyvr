@@ -710,7 +710,10 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             calcFramePoints(v);
             if (simpleDis < 2.5*vehicle.length) {
                 bool check = collisionCheck(vehicle,v);
-                if ( check ) cout << " user collision detected with vehicle " << vehicle.vID << endl;
+                if (simpleDis < vehicle.width) check = true;
+                //if ( check ) cout << " user collision detected with vehicle " << vehicle.vID << endl;
+                if ( check ) v.collisionDetectedMem = true;
+                v.collisionDetected = check;
             }
             float diss = calcDisToFP(vehicle,v);
             int farP = relativePosition(vehicle.vID, pose, p, diss, vehicle.lastMove);
@@ -727,7 +730,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         VRRoadIntersectionPtr nextInterE;
         Vec3d nextSignalP;
 
-        ///RECURSIVE INTERSECTION SEARCH
+        ///RECURSIVE INTERSECTION SEARCH + TURN OPTION DETECTION + SIGNAL DETECTION
         function<bool (VREntityPtr, int, Vec3d)> recSearch =[&](VREntityPtr newLane, int eID, Vec3d posV) {
         //searches for next intersection in graph, also searches for trafficSignals at intersection
             if (!newLane) return false;
@@ -770,6 +773,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                     vehicle.distanceToNextStop = (vehicle.nextStop - posV).dot(vehicle.simPose->dir());
                     vehicle.distanceToNextIntersec = (pNode - posV).dot(vehicle.simPose->dir());
                     vehicle.nextIntersection = pNode;
+                    vehicle.lastFoundIntersection = interE;
 
                     ///--------------TURN OPTION DETECTION
                     //trying to set up turn decision at next intersection before actually reaching/crossing intersection
@@ -803,12 +807,13 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         };
 
         ///INCOMING TRAFFIC DETECTION: at next intersection
-        auto recDetection = [&](VRRoadIntersectionPtr nextInterE){
+        function<void (VRRoadIntersectionPtr)> recDetection = [&](VRRoadIntersectionPtr nextInterE){
         //detecting if incoming traffic at next intersection coming from right/left/front
-            if (!nextInterE) return;
+            if (!nextInterE) return;// recDetection(vehicle.lastFoundIntersection);
             auto inLanes = nextInterE->getInLanes();
 
             auto posDetection = [&](Vehicle& vOne, Vehicle& vTwo){
+                if (vOne.vID == vTwo.vID) return;
                 auto p = vOne.simPose;
                 auto D = (pose->pos() - p->pos()).length();
                 if ( ( D > 1.5*sightRadius && vTwo.turnAhead != 1 ) || D > 50 ) return;
@@ -867,6 +872,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 checkIntersectionLane(l, lID, vehicle.simPose->pos());
                 recL(l, lID, vehicle.simPose->pos());
             }
+            return;
         };
 
         ///RECURSIVE FRONT CHECK FOR TURN LANES
@@ -1339,6 +1345,16 @@ void VRTrafficSimulation::addUser(VRTransformPtr t) {
     cout << "VRTrafficSimulation::addUser " << nID << endl;
 }
 
+bool VRTrafficSimulation::getUserCollisionState(int i) {
+    PLock lock(mtx);
+    if ( i < 0 || i > users.size()-1 ) { cout << "VRTrafficSimulation::getUserCollisionState " << i << " out of bounds" << endl; return false; }
+    auto ID = users[i].vID;
+    bool check = users[i].collisionDetected;
+    //cout << "VRTrafficSimulation::getUserCollisionState " << ID << " " << check << endl;
+    return check;
+    //users[i].collisionDetectedMem;
+}
+
 void VRTrafficSimulation::setGlobalOffset(Vec3d globalOffset) { this->globalOffset = globalOffset; }
 
 void VRTrafficSimulation::addVehicle(int roadID, float density, int type) {
@@ -1752,6 +1768,7 @@ void VRTrafficSimulation::updateVehicIntersecs(){
         gg0.pushPoint();
         vehicAnn->set(vID1, p2 + Vec3d(0,0.2,0), "V: "+toString(v.vID));
         auto node = v.nextStop;
+        if (whichVehicleMarkers == 1) node = v.nextIntersection;
         if (node.length() > 0) {
             auto po1 = vPose->pos() + Vec3d(0,.5,0);
             auto po2 = node + Vec3d(0,.5,0);
