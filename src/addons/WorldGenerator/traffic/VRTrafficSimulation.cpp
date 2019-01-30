@@ -754,6 +754,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 auto node = newLane->getEntity("nextIntersection")->getEntity("node");
                 Vec3d pNode = node->getVec3("position");
                 nextInterE = interE;
+                vehicle.nextIntersectionE = interE;
 
                 auto type = newLane->getEntity("nextIntersection")->get("type")->value;
                 auto g = roadNetwork->getGraph();
@@ -810,12 +811,14 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         function<void (VRRoadIntersectionPtr)> recDetection = [&](VRRoadIntersectionPtr nextInterE){
         //detecting if incoming traffic at next intersection coming from right/left/front
             if (!nextInterE) return;// recDetection(vehicle.lastFoundIntersection);
+            if (vehicle.distanceToNextIntersec > 60) return;
             auto inLanes = nextInterE->getInLanes();
 
             auto posDetection = [&](Vehicle& vOne, Vehicle& vTwo){
                 if (vOne.vID == vTwo.vID) return;
                 auto p = vOne.simPose;
-                auto D = (pose->pos() - p->pos()).length();
+                auto p2 = vTwo.simPose;
+                auto D = (p2->pos() - p->pos()).length();
                 if ( ( D > 1.5*sightRadius && vTwo.turnAhead != 1 ) || D > 50 ) return;
                 auto dir = p->dir();
                 auto vDir = vTwo.simPose->dir();
@@ -824,10 +827,11 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 if (dir.dot(left)<-0.7 && D < 35) vTwo.incTrafficLeft = true; //cout << "incoming left" << endl;
                 if (dir.dot(vDir)<-0.56) {
                     if (vOne.turnAhead == 1) return;
+                    if (vOne.turnAhead == 2) return;
                     if (vTwo.incTrafficFront) {
                         auto& viv1 = vehicles[vTwo.incVFront];
-                        auto D2 = (pose->pos() - viv1.simPose->pos()).length();
-                        if (D2 > D) return;
+                        auto D2 = (p2->pos() - viv1.simPose->pos()).length();
+                        if (D2 < D) return;
                     }
                     vTwo.incTrafficFront = true;
                     vTwo.incVFront = vOne.vID;
@@ -946,7 +950,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         vehicle.incVFront = -1;
 
         recSearch(laneE,vehicle.pos.edge,vehicle.simPose->pos());
-        recDetection(nextInterE);
+        recDetection(vehicle.lastFoundIntersection);
         recFrontCheck(vehicle.pos.edge);
 
         userDetection();
@@ -1844,6 +1848,7 @@ string VRTrafficSimulation::getVehicleData(int ID){
     if (v.turnAhead == 1) turnDir = "left";
     if (v.turnAhead == 2) turnDir = "right";
     res+= nl + " turnAhead: " + toString(turnDir);
+    res+= nl + " nextInter: " + toString(v.nextIntersectionE->getEntity()->get("type")->value);
     res+= nl + " roadEdge: " + toString(v.pos.edge);
     res+= nl + " roadPos: " + toString(v.pos.pos);
     res+= nl + " roadLength: " + toString(roads[v.pos.edge].length);

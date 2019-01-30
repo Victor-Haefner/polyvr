@@ -120,6 +120,7 @@ class VRTrafficSimulation : public VRObject {
             Vec3d currentOffset;
             Vec3d currentdOffset;
             Vec3d nextIntersection = Vec3d(0,-20,0);
+            VRRoadIntersectionPtr nextIntersectionE;
             VRRoadIntersectionPtr lastIntersection;
             VRRoadIntersectionPtr lastFoundIntersection;
 
