@@ -69,7 +69,7 @@ PyMethodDef VRPyProcessLayout::methods[] = {
     {"remElement", PyWrap(ProcessLayout, remElement, "Remove element", void, VRObjectPtr ) },
     {"setEngine", PyWrap(ProcessLayout, setEngine, "Set process engine", void, VRProcessEnginePtr ) },
     {"storeLayout", PyWrapOpt(ProcessLayout, storeLayout, "Store layout to file", "", void, string ) },
-    {"loadLayout", PyWrapOpt(ProcessLayout, loadLayout, "Load layour from file", "", void, string ) },
+    {"loadLayout", PyWrapOpt(ProcessLayout, loadLayout, "Load layout from file", "", void, string ) },
     {NULL}  /* Sentinel */
 };
 
@@ -80,6 +80,7 @@ PyMethodDef VRPyProcessEngine::methods[] = {
     {"reset", PyWrap(ProcessEngine, reset, "Reset simulation - reset()", void ) },
     {"pause", PyWrap(ProcessEngine, pause, "Pause simulation - pause()", void ) },
     {"getCurrentStates", PyWrap(ProcessEngine, getCurrentStates, "Current states of all subjects - [ProcessNode] getCurrentStates()", vector<VRProcessNodePtr> ) },
+    {"getCurrentState", PyWrap(ProcessEngine, getCurrentState, "returns the current state of a subject - ProcessNode getCurrentState(int subjectID)", VRProcessNodePtr, int ) },
     {"continueWith", PyWrap(ProcessEngine, continueWith, "Continue execution with this next transition", void, VRProcessNodePtr ) },
     {"tryAdvance", PyWrap(ProcessEngine, tryAdvance, "Try advancing subject sID", void, int ) },
     {NULL}  /* Sentinel */

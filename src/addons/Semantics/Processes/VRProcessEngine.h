@@ -112,6 +112,7 @@ class VRProcessEngine {
         void pause();
 
         vector<VRProcessNodePtr> getCurrentStates();
+        VRProcessNodePtr getCurrentState(int sID);
         Transition& getTransition(int sID, int tID);
 
         void continueWith(VRProcessNodePtr n);

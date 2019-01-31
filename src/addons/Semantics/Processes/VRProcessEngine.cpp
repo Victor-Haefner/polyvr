@@ -169,6 +169,10 @@ vector<VRProcessNodePtr> VRProcessEngine::getCurrentStates() {
     return res;
 }
 
+VRProcessNodePtr VRProcessEngine::getCurrentState(int sID) {
+    return subjects[sID].currentState;
+}
+
 void VRProcessEngine::continueWith(VRProcessNodePtr n) {
     int sID = n->subject;
     Actor& a = subjects[sID];
