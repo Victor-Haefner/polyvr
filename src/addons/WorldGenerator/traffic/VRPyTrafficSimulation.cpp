@@ -11,6 +11,7 @@ PyMethodDef VRPyTrafficSimulation::methods[] = {
     {"setTrafficDensity", PyWrapOpt( TrafficSimulation, setTrafficDensity, "Set overall traffic", "0", void, float, int, int ) },
     {"addVehicleModel", PyWrap( TrafficSimulation, addVehicleModel, "Set vehicle geometry", int, VRObjectPtr ) },
     {"addUser", PyWrap( TrafficSimulation, addUser, "Set vehicle geometry", void, VRTransformPtr ) },
+    {"getUserCollisionState", PyWrap( TrafficSimulation, getUserCollisionState, "getUserCollisionState: int input = userID", bool, int ) },
     ///Diagnostics
     {"getUser", PyWrap( TrafficSimulation, getUser, "Get first user vehicle geometry", VRTransformPtr ) },
     {"toggleSim", PyWrap( TrafficSimulation, toggleSim, "toggleSim - pause/resume", void, void ) },
@@ -26,7 +27,7 @@ PyMethodDef VRPyTrafficSimulation::methods[] = {
     {"runDiagnostics", PyWrap( TrafficSimulation, runDiagnostics, "runDiagnostics", void ) },
     {"runVehicleDiagnostics", PyWrap( TrafficSimulation, runVehicleDiagnostics, "runVehicleDiagnostics", void ) },
     //{"isSeedRoad", PyWrap( TrafficSimulation, isSeedRoad, "isSeedRoad", bool, int ) },
-    //{"forceIntention", PyWrap( TrafficSimulation, forceIntention, "forceIntention", void, int, int ) },
+    {"forceIntention", PyWrap( TrafficSimulation, forceIntention, "forceIntention (int vID,int behavior)", void, int, int ) },
     {"toggleGraph", PyWrap( TrafficSimulation, toggleGraph, "enables/disables visualisation of: roadnetwork graph", void ) },
     {"toggleVehicMarkers", PyWrap( TrafficSimulation, toggleVehicMarkers, "enables/disables visualisation of: next Intersection in vehicle sight", void, int ) },
     {"toggleIntersections", PyWrap( TrafficSimulation, toggleIntersections, "enables/disables visualisation of: intersection location and type", void ) },

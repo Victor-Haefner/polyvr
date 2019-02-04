@@ -56,6 +56,7 @@ class VRTrafficSimulation : public VRObject {
             bool simVisible = false;
             bool vrwVisible = false;
             bool collisionDetected;
+            bool collisionDetectedMem;
             PosePtr simPose;
             Pose simPose2;
             //doubleBuffer poseBuffer;
@@ -80,6 +81,7 @@ class VRTrafficSimulation : public VRObject {
             bool incTrafficLeft = false;
             bool incTrafficStraight = false;
             bool incTrafficFront = false;
+            int incVFront = -1;
             float frontVehicLastMove = 0;
 
             map<int, float> vehiclesight;
@@ -91,6 +93,7 @@ class VRTrafficSimulation : public VRObject {
 
             ///Behavior
             DecisionSTATE state = DRIVE;
+            string movementReason = "";
             Vec3d lastMove;
 
             float currentVelocity;
@@ -117,6 +120,7 @@ class VRTrafficSimulation : public VRObject {
             Vec3d currentOffset;
             Vec3d currentdOffset;
             Vec3d nextIntersection = Vec3d(0,-20,0);
+            VRRoadIntersectionPtr nextIntersectionE;
             VRRoadIntersectionPtr lastIntersection;
             VRRoadIntersectionPtr lastFoundIntersection;
 
@@ -240,12 +244,13 @@ class VRTrafficSimulation : public VRObject {
         VRTransformPtr getUser();
 
         void addVehicle(int roadID, float density, int type);
+        bool getUserCollisionState(int i);
         void setTrafficDensity(float density, int type, int maxUnits = 0);
 
         int addVehicleModel(VRObjectPtr mesh);
         void setGlobalOffset(Vec3d globalOffset);
 
-        void changeLane(int ID, int direction);
+        void changeLane(int ID, int direction, bool forced);
 
         ///Diagnostics:
         void toggleSim();
