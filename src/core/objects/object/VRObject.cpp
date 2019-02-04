@@ -183,6 +183,11 @@ int VRObject::getTravMask() {
     return getNode()->node->getTravMask();
 }
 
+VRObjectPtr VRObject::getLink(int i) {
+    if (i < 0 || i >= links.size()) return 0;
+    return links[i].second.lock();
+}
+
 vector<VRObjectPtr> VRObject::getLinks() {
     vector<VRObjectPtr> res;
     for (auto wl : links) if (auto l = wl.second.lock()) res.push_back(l);
@@ -198,9 +203,10 @@ void VRObject::addLink(VRObjectPtr obj) {
     NodeMTRecPtr visit_node = makeNodeFor(visitor);
     OSG::setName(visit_node, getName()+"_link");
     addChild(OSGObject::create(visit_node));
-
-    links[obj.get()] = obj;
     osg->links[obj.get()] = visit_node;
+
+    for (auto l : links) if (l.first == obj.get()) return; // dont add links twice!
+    links.push_back( make_pair(obj.get(), VRObjectWeakPtr(obj)) );
 }
 
 void VRObject::remLink(VRObjectPtr obj) {
@@ -209,7 +215,13 @@ void VRObject::remLink(VRObjectPtr obj) {
     NodeMTRecPtr node = osg->links[obj.get()];
     subChild(OSGObject::create(node));
     osg->links.erase(obj.get());
-    links.erase(obj.get());
+
+    for (uint i=0; i<links.size(); i++) {
+        if (links[i].first == obj.get()) {
+            links.erase(links.begin() + i);
+            return;
+        }
+    }
 }
 
 void VRObject::clearLinks() {

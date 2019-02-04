@@ -8,6 +8,7 @@
 #include "core/math/polygon.h"
 #include "core/math/triangulator.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/VRLodTree.h"
 #include "core/scene/VRObjectManager.h"
 #include "addons/Semantics/Reasoning/VREntity.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
@@ -517,7 +518,7 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
         Vec3d pNode = node->getVec3("position");
         int N = roadFronts.size();
         float disToCrossing = 0.4;
-        float disToIntersec = 1.5;
+        float disToIntersec = 2.0;
         map<VREntityPtr, bool> processedLanes; // keep list of already processed lanes
         map<VREntityPtr, bool> crossroadFronts; // keep list of already processed lanes
         map<VREntityPtr, Vec3d> roadOffsets;
@@ -908,7 +909,6 @@ VRGeometryPtr VRRoadIntersection::createGeometry() {
     intersection->setFrom(p);
     intersection->applyTransformation();
 	setupTexCoords( intersection, entity );
-	addChild(intersection);
 	return intersection;
 }
 
@@ -946,16 +946,20 @@ VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d 
     //cout << "  VRRoadIntersection::addTrafficLight" << endl;
     float R = 0.05;
     VRTransformPtr geo = world.lock()->getAssetManager()->copy(asset, Pose::create());
-    VRGeometryPtr red, orange, green;
+    VRGeometryPtr red, orange, green, box, caps;
     bool checked = false;
     if (geo) {
         red = dynamic_pointer_cast<VRGeometry>( geo->findFirst("red") );
         orange = dynamic_pointer_cast<VRGeometry>( geo->findFirst("yellow") );
         green = dynamic_pointer_cast<VRGeometry>( geo->findFirst("green") );
+        box = dynamic_pointer_cast<VRGeometry>( geo->findFirst("box") );
+        caps = dynamic_pointer_cast<VRGeometry>( geo->findFirst("caps") );
         if (!red) {
             red = dynamic_pointer_cast<VRGeometry>( geo->findFirst("Red") );
             orange = dynamic_pointer_cast<VRGeometry>( geo->findFirst("Orange") );
             green = dynamic_pointer_cast<VRGeometry>( geo->findFirst("Green") );
+            box = dynamic_pointer_cast<VRGeometry>( geo->findFirst("Box") );
+            caps = dynamic_pointer_cast<VRGeometry>( geo->findFirst("Caps") );
         }
         red->makeUnique();
         orange->makeUnique();
@@ -965,7 +969,7 @@ VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d 
         green->setColors(0);
         checked = true;
     } else {
-        auto box = VRGeometry::create("trafficLight");
+        box = VRGeometry::create("trafficLight");
         box->setPrimitive("Box 0.2 0.2 0.6 1 1 1");
         box->setColor("grey");
         geo = box;
@@ -991,8 +995,14 @@ VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d 
     light->setEntity(signal);
     light->setUsingAsset(checked);
     matchedLights[lane] = light;
-    addChild(light);
-    addChild(pole);
+
+    auto pose = light->getPose();
+    lodTree->addObject(light, light->getWorldPosition(), 3, false);
+    light->setOrientation(pose->dir(), pose->up());
+
+    auto roads = world.lock()->getRoadNetwork();
+    auto mergeGeoPoles = roads->getTrafficSignalsPolesGeo();
+    mergeGeoPoles->merge(pole, pole->getWorldPose());
     return 0;
 }
 

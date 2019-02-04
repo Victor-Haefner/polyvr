@@ -165,6 +165,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyNavigator>("Navigator", pModVR);
     sm->registerModule<VRPyNavPreset>("NavPreset", pModVR);
     sm->registerModule<VRPyRendering>("Rendering", pModVR);
+    sm->registerModule<VRPyRenderStudio>("RenderStudio", pModVR);
     sm->registerModule<VRPySky>("Sky", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyScenegraphInterface>("ScenegraphInterface", pModVR, VRPyObject::typeRef);
 #ifdef WITH_OPCUA
@@ -237,7 +238,8 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyVec2f>("Vec2", pModMath, 0, "Math");
     sm->registerModule<VRPyVec3f>("Vec3", pModMath, 0, "Math");
     sm->registerModule<VRPyLine>("Line", pModMath, 0, "Math");
-    sm->registerModule<VRPyExpression>("Expression", pModMath, 0, "Math");
+    sm->registerModule<VRPyExpression>("Expression", pModVR);
+    sm->registerModule<VRPyMathExpression>("MathExpression", pModMath, VRPyExpression::typeRef, "Math");
 
     PyObject* pModSetup = sm->newModule("Setup", VRSceneGlobals::methods, "VR setup module");
     sm->registerModule<VRPySetup>("Setup", pModSetup, 0, "Setup");

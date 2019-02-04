@@ -7,6 +7,7 @@
 using namespace OSG;
 
 simpleVRPyType(Rendering, 0);
+simpleVRPyType(RenderStudio, 0);
 
 PyMethodDef VRPyRendering::methods[] = {
     {"addStage", PyWrap(Rendering, addStage, "Add a stage to the rendering pipeline - addStage( str name, str insert_point )\n\ta common insertion point is the 'shading' stage", void, string, string ) },
@@ -18,5 +19,10 @@ PyMethodDef VRPyRendering::methods[] = {
     {"setDeferredShading", PyWrap(Rendering, setDeferredShading, "Toggle deferred shading", void, bool ) },
     {"reloadStageShaders", PyWrap(Rendering, reloadStageShaders, "Reload shaders of rendering stages", void ) },
     {"setFogParams", PyWrap(Rendering, setFogParams, "Set fog", void, Color4f, Color4f ) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyRenderStudio::methods[] = {
+    {"getRoot", PyWrap(RenderStudio, getRoot, "Get root object", VRObjectPtr ) },
     {NULL}  /* Sentinel */
 };

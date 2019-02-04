@@ -38,10 +38,17 @@ class VRRoadNetwork : public VRRoadBase {
 
         VRUpdateCbPtr updateCb;
 
+        VRGeometryPtr roadsGeo;
         VRGeometryPtr arrows;
+        VRGeometryPtr fences;
+        VRGeometryPtr kirbs;
+        VRGeometryPtr guardRails;
         VRGeometryPtr guardRailPoles;
         VRTexturePtr arrowTexture;
         map<Vec4i, int> arrowTemplates;
+
+        VRGeometryPtr trafficSignalsGeo;
+        VRGeometryPtr trafficSignalsPolesGeo;
 
         VRGeometryPtr collisionMesh;
 
@@ -126,6 +133,8 @@ class VRRoadNetwork : public VRRoadBase {
         double getMemoryConsumption();
 
         VRGeometryPtr getAssetCollisionObject();
+        VRGeometryPtr getTrafficSignalsGeo();
+        VRGeometryPtr getTrafficSignalsPolesGeo();
 };
 
 OSG_END_NAMESPACE;

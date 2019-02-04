@@ -75,6 +75,9 @@ VRGuiManager::VRGuiManager() {
     g_mon = new VRGuiMonitor();
     g_scene->updateTreeView();
 
+    auto editor = g_sc->getEditor();
+    editor->addKeyBinding("wipe", VRUpdateCb::create("wipeCb", boost::bind(&VRGuiBits::wipeConsoles, g_bits)));
+
     VRDeviceCbPtr fkt;
     fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateSceneViewer", boost::bind(&VRGuiScene::updateTreeView, g_scene) );
     VRGuiSignals::get()->getSignal("scene_modified")->add( fkt );

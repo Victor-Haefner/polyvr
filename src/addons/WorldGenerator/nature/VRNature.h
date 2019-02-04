@@ -2,14 +2,15 @@
 #define VRWOODS_H_INCLUDED
 
 #include "../VRWorldModule.h"
-#include "core/objects/VRLodTree.h"
 #include "core/scene/VRObjectManager.h"
+#include "core/objects/object/VRObject.h"
 #include "core/math/VRMathFwd.h"
+#include "core/math/Octree.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRNature : public VRLodTree, public VRWorldModule {
+class VRNature : public VRObject, public VRWorldModule {
     private:
         map<int, VRTreePtr> treesByID;
         map<string, VRTreePtr> treeTemplates;

@@ -9,8 +9,8 @@ using namespace std;
 class doubleBuffer {
     private:
 
-    Matrix4d* t1;
-    Matrix4d* t2;
+    Matrix4d t1;
+    Matrix4d t2;
 
     bool read1;
     bool read2;

@@ -31,6 +31,8 @@ PyMethodDef VRPyRainCarWindshield::methods[] = {
     {"setWipers", PyWrap(RainCarWindshield, setWipers, "setWipers", void, bool, float) },
     {"start", PyWrap(RainCarWindshield, start, "starts rain on windshield", void, void) },
     {"stop", PyWrap(RainCarWindshield, stop, "stops rain on windshield", void, void) },
+    {"setWiperPos", PyWrap(RainCarWindshield, setWiperPos, "reposition wipers on windshield", void, Vec2d) },
+    {"setWiperSize", PyWrap(RainCarWindshield, setWiperSize, "sets wiper length", void, float) },
     {"cutPower", PyWrap(RainCarWindshield, cutPower, "cuts power, wipers will stop where they are", void, void) },
     {NULL}  /* Sentinel */
 };

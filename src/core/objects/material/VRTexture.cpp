@@ -2,8 +2,10 @@
 #include "core/math/boundingbox.h"
 #include "core/utils/toString.h"
 #include "core/utils/system/VRSystem.h"
+#include "core/scene/VRScene.h"
 
 #include <OpenSG/OSGImage.h>
+#include <boost/bind.hpp>
 
 using namespace OSG;
 
@@ -27,10 +29,24 @@ void VRTexture::read(string path) {
     if (!img->read(path.c_str())) cout << " VRTexture::read from file '" << path << "' failed!" << endl;
 }
 
-void VRTexture::write(string path) {
+void VRTexture::writeThreaded(string path, VRTexturePtr self, VRThreadWeakPtr tw) { // TODO: add mutex!
     string folder = getFolderName(path);
     if (!exists(folder)) makedir(folder);
     if (!img->write(path.c_str())) cout << " VRTexture::write to file '" << path << "' failed!" << endl;
+    self.reset();
+    writeWorker.reset();
+}
+
+void VRTexture::write(string path, bool doThread) {
+    if (!doThread) {
+        string folder = getFolderName(path);
+        if (!exists(folder)) makedir(folder);
+        if (!img->write(path.c_str())) cout << " VRTexture::write to file '" << path << "' failed!" << endl;
+    } else {
+        auto scene = VRScene::getCurrent();
+        if (!writeWorker) writeWorker = VRThreadCb::create("writeThreaded", boost::bind(&VRTexture::writeThreaded, this, path, ptr(), _1));
+        scene->initThread(writeWorker, "write image to disk");
+    }
 }
 
 struct Pixel {

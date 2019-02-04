@@ -13,6 +13,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRSpatialCollisionManager.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/VRLodTree.h"
 #include "core/scene/VRObjectManager.h"
 #include "core/utils/toString.h"
 #include "core/math/path.h"
@@ -73,6 +74,7 @@ VRTerrainPtr VRWorldGenerator::getTerrain() { return terrain; }
 VRNaturePtr VRWorldGenerator::getNature() { return nature; }
 VRPlanetPtr VRWorldGenerator::getPlanet() { return planet; }
 VRDistrictPtr VRWorldGenerator::getDistrict() { return district; }
+VRLodTreePtr VRWorldGenerator::getLodTree() { return lodTree; }
 
 void VRWorldGenerator::addMaterial( string name, VRMaterialPtr mat ) { materials[name] = mat; }
 void VRWorldGenerator::addAsset( string name, VRTransformPtr geo ) {
@@ -106,6 +108,9 @@ void VRWorldGenerator::init() {
         mat->setFragmentShader(dfp, name+"DFS", true);
         addMaterial(name, mat);
     };
+
+    lodTree = VRLodTree::create(name, 5);
+    addChild(lodTree);
 
     collisionShape = VRSpatialCollisionManager::create(12);
     addChild(collisionShape);
@@ -392,7 +397,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 
         for (auto tag : way->tags) {
             if (tag.first == "highway") {
-                if (tag.second == "footway") {
+                if (tag.second == "footway" || tag.second == "pedestrian") {
                     bool addedFootway = false;
                     /*for (auto tag : way->tags) {
                         if (!addedFootway && ( (tag.first == "crossing" && tag.second == "zebra") || (tag.first == "footway" && tag.second == "crossing")) ) {
@@ -401,7 +406,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                             continue;
                         }
                     }*/
-                    if (!addedFootway) { addRoad(way, tag.second, 1, true); }
+                    if (!addedFootway) { addRoad(way, "footway", 1, true); }
                     continue;
                 }
                 addRoad(way, tag.second, 4, false); // default road
@@ -531,6 +536,8 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             if (tag.first == "surveillance:type") {
                 if (tag.second == "camera") {
                     auto cam = assets->copy("Camera", Pose::create(pos, dir), false);
+                    lodTree->addObject(cam, cam->getWorldPosition(), 3, false);
+                    cam->setDir(dir);
                     collisionShape->addQuad(0.1, 2, Pose(pos, dir), cam->getID());
                 }
             }
@@ -538,6 +545,8 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             if (tag.first == "highway") {
                 if (tag.second == "street_lamp") {
                     auto lamp = assets->copy("Streetlamp", Pose::create(pos, dir), false);
+                    lodTree->addObject(lamp, lamp->getWorldPosition(), 3, false);
+                    lamp->setDir(dir);
                     collisionShape->addQuad(0.1, 2, Pose(pos, dir), lamp->getID());
                 }
             }

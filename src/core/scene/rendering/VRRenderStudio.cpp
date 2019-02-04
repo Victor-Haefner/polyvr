@@ -66,7 +66,7 @@ VRRenderStudioPtr VRRenderStudio::create(EYE e) { return VRRenderStudioPtr( new 
 
 void VRRenderStudio::addStage(string name, string parent) {
     if (stages.count(name)) return;
-    auto s = VRDeferredRenderStagePtr( new VRDeferredRenderStage(name) );
+    auto s = VRDeferredRenderStage::create( name );
     stages[name] = s;
     if (!stages.count(parent)) s->getTop()->switchParent( root_system );
     else {
@@ -222,8 +222,7 @@ void VRRenderStudio::initMarker(VRMaterialPtr mat) {
 
 void VRRenderStudio::addLight(VRLightPtr l) {
     light_map[l->getID()] = l;
-    auto defShading = stages["shading"]->getRendering();
-    if (defShading) defShading->addDSLight(l);
+    stages["shading"]->addLight(l);
 }
 
 VRLightPtr VRRenderStudio::getLight(int ID) { return light_map.count(ID) ? light_map[ID].lock() : 0; }
@@ -265,7 +264,7 @@ void VRRenderStudio::setFogParams(Color4f fogParams, Color4f fogColor) {
 }
 
 void VRRenderStudio::setCamera(OSGCameraPtr cam) {
-    for (auto s : stages) if (auto r = s.second->getRendering()) r->setDSCamera(cam);
+    for (auto s : stages) s.second->setCamera(cam);
     if (hmdd) hmdd->setCamera(cam);
     if (fxaa) fxaa->setCamera(cam);
     this->cam = cam;

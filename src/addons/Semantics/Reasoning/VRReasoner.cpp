@@ -91,7 +91,7 @@ bool VRReasoner::findRule(VRStatementPtr statement, VRSemanticContextPtr context
         if (query.request->verb != statement->verb) continue; // rule verb does not match
         print("      found rule with matching name: " + query.request->toString(), GREEN);
         if (!statement->match(query.request)) continue; // statements are not similar enough
-        print("      found rule: " + query.request->toString(), GREEN);
+        print("      found rule: " + query.toString(), GREEN);
 
         query.substituteRequest(statement);
         //query.request->updateLocalVariables(context.vars, context.onto);
@@ -117,7 +117,7 @@ bool VRReasoner::builtin(VRStatementPtr s, VRSemanticContextPtr c) {
         params.push_back( map<VREntity*, vector<string> >() );
         //cout << "builtin params in: " << t.str << endl;
 
-        if (t.isMathExpression()) { params[i][0] = t.computeExpression(c); continue; }
+        if (t.isMathExpression()) { params[i][0] = t.computeMathExpression(c); continue; }
 
         auto r = t.path.root;
         if (c->vars.count(r)) {
@@ -240,8 +240,8 @@ bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
         bool lim = left.isMathExpression();
         bool rim = right.isMathExpression();
         vector<string> lmv, rmv;
-        if (lim) lmv = left.computeExpression(context);
-        if (rim) rmv = right.computeExpression(context);
+        if (lim) lmv = left.computeMathExpression(context);
+        if (rim) rmv = right.computeMathExpression(context);
         if (lim) print("  left term " + left.str + " is math expression! -> (" + aggr(lmv)+")", GREEN);
         if (rim) print("  right term " + right.str + " is math expression! -> (" + aggr(rmv)+")", GREEN);
 

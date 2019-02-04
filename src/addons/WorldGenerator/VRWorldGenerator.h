@@ -15,6 +15,7 @@ OSG_BEGIN_NAMESPACE;
 
 class VRWorldGenerator : public VRTransform {
     private:
+        VRLodTreePtr lodTree;
         VRSpatialCollisionManagerPtr collisionShape;
         VROntologyPtr ontology;
         VRPlanetPtr planet;
@@ -46,6 +47,7 @@ class VRWorldGenerator : public VRTransform {
         void reloadOSMMap(double subN = -1, double subE = -1, double subSize = -1);
         void clear();
 
+        VRLodTreePtr getLodTree();
         VROntologyPtr getOntology();
         VRPlanetPtr getPlanet();
         Vec2d getPlanetCoords();

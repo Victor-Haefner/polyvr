@@ -16,6 +16,7 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
     private:
         ImageMTRecPtr img;
         int internal_format = 0;
+        VRThreadCbPtr writeWorker;
 
         void clampToImage(Vec3i& p);
 
@@ -37,7 +38,8 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         ImageMTRecPtr getImage();
 
         void read(string path);
-        void write(string path);
+        void write(string path, bool doThread = false);
+        void writeThreaded(string path, VRTexturePtr self, VRThreadWeakPtr tw);
         int getChannels();
         Vec3i getSize();
         Color4f getPixel(Vec2d uv);

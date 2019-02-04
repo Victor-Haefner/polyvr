@@ -321,13 +321,22 @@ float VRCarDynamics::computeEngineBreak(float gearRatio, float coupling ) {
 }
 
 void VRCarDynamics::updateEngineRPM( float gearRPM, float deltaRPM, float throttleImpactOnRPM, float breakImpactOnRPM, float engineFriction, float coupling ) {
-    if (coupling>0.9) engine->rpm = abs(gearRPM); /**INDUCES PROBLEM FOR HIGH SPEEDS, IF CAR LOSES CONTROL**/
+    float slidingFactor = 0.0;
+    for (int each = 0; each < wheels.size(); each ++) {
+        btWheelInfo& wheelInf =  vehicle->getWheelInfo(each);
+        auto skidInf = float(wheelInf.m_skidInfo);
+        slidingFactor += skidInf;
+        //cout << " VRCarDynamics::skidInfo " << toString(skidInf) << endl;
+    }
+    slidingFactor *= 1.0/float(wheels.size());
+    //if (slidingFactor < 1) cout << " VRCarDynamics::skidInfo " << slidingFactor << endl;
+    if (coupling > 0.98 && slidingFactor>0.80) engine->rpm = abs(gearRPM);
     engine->rpm += throttleImpactOnRPM;
     engine->rpm -= engine->frictionCoefficient * engineFriction + breakImpactOnRPM;
     if (type != SIMPLE) {
         engine->rpm += 0.1 * deltaRPM;
     }
-    if (coupling>0.9) engine->rpm = abs(gearRPM); /**INDUCES PROBLEM FOR HIGH SPEEDS, IF CAR LOSES CONTROL**/
+    if (coupling > 0.98 && slidingFactor>0.98) engine->rpm = abs(gearRPM);
 }
 
 void VRCarDynamics::updateEngine() {

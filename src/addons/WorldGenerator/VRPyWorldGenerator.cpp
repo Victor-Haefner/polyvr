@@ -31,6 +31,7 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"getNature", PyWrap( WorldGenerator, getNature, "Access nature module", VRNaturePtr ) },
     {"getTerrain", PyWrap( WorldGenerator, getTerrain, "Access the terrain", VRTerrainPtr ) },
     {"getDistrict", PyWrap( WorldGenerator, getDistrict, "Access the district module", VRDistrictPtr ) },
+    {"getLodTree", PyWrap( WorldGenerator, getLodTree, "Access the lod tree", VRLodTreePtr ) },
     {"setOntology", PyWrap( WorldGenerator, setOntology, "Set ontology", void, VROntologyPtr ) },
     {"addMaterial", PyWrap( WorldGenerator, addMaterial, "Add a named material", void, string, VRMaterialPtr ) },
     {"getMaterial", PyWrap( WorldGenerator, getMaterial, "Get a material by name", VRMaterialPtr, string ) },

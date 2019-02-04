@@ -19,6 +19,9 @@ bool moveB = true;
 //float radius = 0.3;
 float disBD = 0.03;
 float radius = 0.3;
+float dbw;
+
+vec2 center = vec2(0,0);
 
 uniform float scale;
 uniform int pass;
@@ -27,6 +30,7 @@ uniform vec2 OSGViewportSize;
 uniform float tnow;
 uniform float wiperState;
 uniform float offset;
+uniform float wiperSize;
 
 uniform bool isRaining;
 uniform bool isWiping;
@@ -42,6 +46,7 @@ uniform vec3 velocityVec;
 uniform vec3 accelerationVec;
 uniform vec2 mapOffset0;
 uniform vec2 mapOffset1;
+uniform vec2 wiperPos;
 
 void computeDirection() {
 	fragDir = normalize( miN * (miP * pos).xyz );
@@ -178,21 +183,22 @@ float calcLocalDeltaTime(float alpha, float phi, int whichWiper) {
 
 bool calcTime(vec2 uvC) {
 	vec2 uvG = worldToLocal(worldVec);
-	float xAC = -floor((uvC.x-0.6)/disBD);
-	float yAC = floor((uvC.y)/disBD);
-	float xBC = -floor(uvC.x/disBD);
-	float yBC = floor((uvC.y)/disBD);
 
-	float xA = -(uvG.x-0.6);
-	float yA = uvG.y;
-	float xB = -(uvG.x);
-	float yB = uvG.y;
+	float xAC = center.x - floor((uvC.x-dbw)/disBD);
+	float yAC =-center.y + floor((uvC.y)/disBD);
+	float xBC = center.x - floor(uvC.x/disBD);
+	float yBC =-center.y + floor((uvC.y)/disBD);
+
+	float xA = center.x -(uvG.x-dbw);
+	float yA =-center.y + uvG.y;
+	float xB = center.x -(uvG.x);
+	float yB =-center.y +  uvG.y;
 	float hashTime = hash(vec2(xBC,yBC));
 	if (hashTime<0.05) hashTime=0.05;
 
-	bool ctrlAbounds = (atan(yA,xA)>0 && atan(yA,xA)<3.1416/2 && distance(uvG,vec2(0+0.6,0))<0.5);
+	bool ctrlAbounds = (atan(yA,xA)>0 && atan(yA,xA)<3.1416/2 && distance(uvG,center + vec2(dbw,0))<wiperSize);
 	bool ctrlAWiper = (hashTime*25/(scale+3) > calcLocalDeltaTime(atan(yA,xA), angles().x, 0));
-	bool ctrlBbounds = (atan(yB,xB)>0 && atan(yB,xB)<4.8/2 && distance(uvG,vec2(0,0))<0.5);
+	bool ctrlBbounds = (atan(yB,xB)>0 && atan(yB,xB)<4.8/2 && distance(uvG,center)<wiperSize);
 	bool ctrlBWiper = (hashTime*25/(scale+3) > calcLocalDeltaTime(atan(yB,xB), angles().y, 1));
 	
 	if (ctrlAbounds) if (ctrlAWiper) return false;
@@ -202,13 +208,13 @@ bool calcTime(vec2 uvC) {
 
 bool drawWipers(){
 	vec2 uvG = worldToLocal(worldVec);
-	float xA = -(uvG.x-0.6);
-	float yA = uvG.y;
-	float xB = -(uvG.x);
-	float yB = uvG.y;
+	float xA = center.x -(uvG.x-dbw);
+	float yA =-center.y +uvG.y;
+	float xB = center.x -(uvG.x);
+	float yB =-center.y +uvG.y;
 	
-	if (distance(uvG,vec2(0+0.6,0))<0.5) if ((atan(yA,xA)-angles().x>0.0) && (atan(yA,xA)-angles().x<0.01)) return true; 
-	if (distance(uvG,vec2(0,0))<0.5) if ((atan(yB,xB)-angles().y>0.0) && (atan(yB,xB)-angles().y<0.02)) return true;
+	if (distance(uvG,center+vec2(dbw,0))<wiperSize) if ((atan(yA,xA)-angles().x>0.0) && (atan(yA,xA)-angles().x<0.01)) return true; 
+	if (distance(uvG,center)<wiperSize) if ((atan(yB,xB)-angles().y>0.0) && (atan(yB,xB)-angles().y<0.02)) return true;
 	return false;
 }
 
@@ -287,6 +293,8 @@ void main() {
 	if (pass > 0) discard;
 	radius *= scale*0.1;
 	radius = clamp(radius, 0.0501, 0.3);
+	center = vec2(-wiperPos.x,wiperPos.y);
+	dbw = wiperSize + 0.1; //distance between wipers
 
 	computeDirection();
 	computePCam();
