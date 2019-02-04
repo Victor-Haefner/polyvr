@@ -268,6 +268,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
 
     this_thread::sleep_for(chrono::microseconds(1));
     PLock lock(mtx);
+    if (vehicles.size() < 10) this_thread::sleep_for(chrono::microseconds(1600));
     if (vehicles.size() < 50) this_thread::sleep_for(chrono::microseconds(600));
 
     if (!roadNetwork) return;
@@ -504,9 +505,10 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         if (vS == 0) vehicle.currentOffset = Vec3d(0,0,0);
         if (vS == 0) vehicle.currentdOffset = Vec3d(0,0,0);
 
-        float offsetVel = 0.006;
-        float doffsetVel = 0.0006;
+        float offsetVel = drIn/15.0; //0.006;
+        float doffsetVel = drIn/300.0; //0.0006;
         //if ( vehicle.currentVelocity*3.6 < 25 ) { offsetVel = 0.008; doffsetVel = 0.0015*2.0; }
+        //cout << deltaT << " " << drIn << endl;
         if (intention==vehicle.STRAIGHT) { offset = vehicle.currentOffset + Vec3d(0,0,0); doffset = vehicle.currentdOffset + Vec3d(0,0,0); }
         if (intention==vehicle.SWITCHLEFT && vehicle.indicatorTS > 2 ) { offset = vehicle.currentOffset + left*offsetVel; doffset = vehicle.currentdOffset + left*vS*doffsetVel; }
         if (intention==vehicle.SWITCHRIGHT && vehicle.indicatorTS > 2 ) { offset = vehicle.currentOffset + right*offsetVel; doffset = vehicle.currentdOffset + -left*vS*doffsetVel; }
@@ -819,7 +821,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 auto p = vOne.simPose;
                 auto p2 = vTwo.simPose;
                 auto D = (p2->pos() - p->pos()).length();
-                if ( ( D > 1.5*sightRadius && vTwo.turnAhead != 1 ) || D > 50 ) return;
+                if ( ( D > 4.0*sightRadius && vTwo.turnAhead != 1 ) || D > 100 ) return;
                 auto dir = p->dir();
                 auto vDir = vTwo.simPose->dir();
                 auto left = Vec3d(0,1,0).cross(vDir);
@@ -1223,7 +1225,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
 
     auto resolveLaneChanges = [&]() {
         for (auto l : toChangeLane) {
-            changeLane(l.first,l.second);
+            changeLane(l.first,l.second, false);
         }
     };
 
@@ -1366,7 +1368,7 @@ void VRTrafficSimulation::addVehicle(int roadID, float density, int type) {
 }
 
 /** CHANGE LANE **/
-void VRTrafficSimulation::changeLane(int ID, int direction) {
+void VRTrafficSimulation::changeLane(int ID, int direction, bool forced) {
     if ( !laneChange ) return;
     PLock lock(mtx);
 
@@ -1392,7 +1394,7 @@ void VRTrafficSimulation::changeLane(int ID, int direction) {
             if (roadNetwork->getGraph()->getEdge(opt).ID == -1) return false;
             pos.edge = opt;
             auto pose = roadNetwork->getPosition(pos);
-            if ((pose->pos() - poseV->pos()).length() > 3.5) return false;
+            if ((pose->pos() - poseV->pos()).length() > 4.5) return false;
             float res = vUp.cross(vDir).dot(pose->pos() - poseV->pos());
             if (res > 0 && input==1) { edgeLeft = opt; return true; }
             if (res < 0 && input==2) { edgeRight = opt; return true; }
@@ -1402,12 +1404,13 @@ void VRTrafficSimulation::changeLane(int ID, int direction) {
                 if (roadNetwork->getGraph()->getEdge(opt).ID == -1) return false;
                 pos.edge = opt;
                 pose = roadNetwork->getPosition(pos);
-                if ((pose->pos() - poseV->pos()).length() > 3.5) return false;
+                if ((pose->pos() - poseV->pos()).length() > 4.5) return false;
                 res = vUp.cross(vDir).dot(pose->pos() - poseV->pos());
                 if (res > 0 && input==1) { edgeLeft = opt; return true; }
                 if (res < 0 && input==2) { edgeRight = opt; return true; }
             }
         }
+        if (forced) return true;
         return false;
     };
 
@@ -1852,7 +1855,7 @@ string VRTrafficSimulation::getVehicleData(int ID){
     res+= nl + " roadEdge: " + toString(v.pos.edge);
     res+= nl + " roadPos: " + toString(v.pos.pos);
     res+= nl + " roadLength: " + toString(roads[v.pos.edge].length);
-    res+= nl + " time: " + toString(v.deltaTt);
+    //res+= nl + " time: " + toString(v.deltaTt);
 
     return res;
 }
@@ -1885,7 +1888,7 @@ string VRTrafficSimulation::getEdgeData(int ID){
 
 void VRTrafficSimulation::forceIntention(int vID,int behavior){
     //vehicles[vID].behavior = behavior;
-    changeLane(vID,behavior);
+    changeLane(vID,behavior,true);
     //cout << "Vehicle " << toString(vID) << " set to" << vehicles[vID].behavior << endl;
 }
 

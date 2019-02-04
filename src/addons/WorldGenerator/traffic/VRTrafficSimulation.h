@@ -250,7 +250,7 @@ class VRTrafficSimulation : public VRObject {
         int addVehicleModel(VRObjectPtr mesh);
         void setGlobalOffset(Vec3d globalOffset);
 
-        void changeLane(int ID, int direction);
+        void changeLane(int ID, int direction, bool forced);
 
         ///Diagnostics:
         void toggleSim();
