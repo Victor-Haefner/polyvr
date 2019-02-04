@@ -88,7 +88,7 @@ PyMethodDef VRPyOntology::methods[] = {
     {"getConcept", PyWrap(Ontology, getConcept, "Return a concept by name - concept getConcept( str name )\n\tThe first concept is named 'Thing'", VRConceptPtr, string ) },
     {"getConcepts", PyWrap(Ontology, getConcepts, "Return all concepts - [concept] getConcepts()", vector<VRConceptPtr> ) },
     {"getEntities", PyWrapOpt(Ontology, getEntities, "Return all entities by concept name - [entity] getEntities( str concept )", "", vector<VREntityPtr>, string ) },
-    {"addConcept", PyWrapOpt(Ontology, addConcept, "Add a new concept - concept addConcept( str concept, str parent = "", dict properties {str:str} )", "||", VRConceptPtr, string, string, map<string, string>, string ) },
+    {"addConcept", PyWrapOpt(Ontology, addConcept, "Add a new concept, (concept, parent, properties, comment )", "||", VRConceptPtr, string, string, map<string, string>, string ) },
     {"addEntity", PyWrapOpt(Ontology, addEntity, "Add a new entity, str name, str concept", "|", VREntityPtr, string, string, map<string, string>) },
     {"addVectorEntity", PyWrapOpt(Ontology, addVec3Entity, "Add a new entity, str name, str concept", "|", VREntityPtr, string, string, Vec3d) },
     {"getEntity", PyWrap(Ontology, getEntity, "Get an entity by name - entity getEntity( str name )", VREntityPtr, string ) },
