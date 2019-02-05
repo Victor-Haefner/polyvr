@@ -9,13 +9,23 @@ using namespace std;
 
 class VRText {
     private:
+        string text;
+        size_t Nlines = 0;
+        size_t maxLineLength = 0;
+
+        int resolution = 20;
+        int padding = 3;
+        int texWidth = 1;
+        int texHeight = 1;
+
+        void analyzeText();
+        void computeTexParams();
         void convertData(UChar8* data, int width, int height);
-        VRTexturePtr createBmp (string text, string font, int width, int height, Color4f c, Color4f bg);
+        VRTexturePtr createBmp (string text, string font, Color4f c, Color4f bg);
 
     public:
         static VRText* get();
-        VRTexturePtr create(string text, string font, int height, Color4f fg, Color4f bg);
-        VRTexturePtr create(string text, string font, int width, int height, Color4f fg, Color4f bg);
+        VRTexturePtr create(string text, string font, int res, Color4f fg, Color4f bg);
 };
 
 

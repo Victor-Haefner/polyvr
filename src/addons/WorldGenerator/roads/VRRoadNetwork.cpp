@@ -486,19 +486,9 @@ vector<VREntityPtr> VRRoadNetwork::getRoadNodes() { // all nodes from all paths 
     return res;
 }
 
-Vec2i replaceChar(string& txt, char c1, char c2) {
-    Vec2i N;
-    int k = 0;
+void replaceChar(string& txt, char c1, char c2) {
     for (int i=0; i<int(txt.size()); i++)
-        if (txt[i] == c1) {
-            txt[i] = c2;
-            N[1]++;
-
-            N[0] = max(N[0],i-k);
-            k = i;
-        }
-    N[0] = max(N[0],int(txt.size())-1-k);
-    return N;
+        if (txt[i] == c1) txt[i] = c2;
 }
 
 void VRRoadNetwork::computeSigns() {
@@ -517,8 +507,8 @@ void VRRoadNetwork::computeSigns() {
             if (sign) { // TODO: add label
                 auto surface = dynamic_pointer_cast<VRGeometry>( sign->findAll("Sign")[3] );
                 surface->makeUnique();
-                Vec2i N = replaceChar(type, ' ', '\n');
-                auto tex = VRText::get()->create(type, "MONO 20", 20*N[0], 10*N[0]*N[1], Color4f(0,0,0,1), Color4f(1,1,1,1));
+                replaceChar(type, ' ', '\n');
+                auto tex = VRText::get()->create(type, "MONO 20", 20, Color4f(0,0,0,1), Color4f(1,1,1,1));
                 auto m = VRMaterial::create("sign");
                 m->setTexture(tex);
                 surface->setMaterial(m);

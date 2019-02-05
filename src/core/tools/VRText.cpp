@@ -20,9 +20,38 @@
 #include "core/objects/material/VRTexture.h"
 
 
-OSG_BEGIN_NAMESPACE;
 using namespace std;
+using namespace OSG;
 
+
+VRText* VRText::get() {
+    static VRText* singleton_opt = new VRText();
+    return singleton_opt;
+}
+
+VRTexturePtr VRText::create(string text, string font, int res, Color4f fg, Color4f bg) {
+    resolution = res;
+    return createBmp(text, font, fg, bg);
+}
+
+void VRText::analyzeText() {
+    Nlines = 0;
+    maxLineLength = 0;
+
+    stringstream ss(text);
+    for (string line; getline(ss, line); ) {
+        maxLineLength = max(maxLineLength, line.size());
+        Nlines++;
+    }
+}
+
+void VRText::computeTexParams() {
+    texWidth = resolution*maxLineLength;
+    texHeight = resolution*1.5;
+    texWidth += 2*padding;
+    texHeight += 2*padding;
+    texHeight *= Nlines;
+}
 
 void VRText::convertData(UChar8* data, int width, int height) {
     UChar8* buffer = new UChar8[height*width*4];
@@ -42,75 +71,48 @@ void VRText::convertData(UChar8* data, int width, int height) {
     delete buffer;
 }
 
-VRTexturePtr VRText::createBmp (string text, string font, int width, int height, Color4f fg, Color4f bg) {
-    //Cairo
-    cairo_t *cr;
-    cairo_surface_t *surface;
+VRTexturePtr VRText::createBmp (string text, string font, Color4f fg, Color4f bg) {
+    this->text = text;
+    analyzeText();
+    computeTexParams();
 
-    size_t Nlines = 1 + count(text.begin(), text.end(), '\n');
-    height *= Nlines;
-
-    int R = 3; // padding px
-    width += 2*R;
-    height += 2*R;
-
-    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
-    cr = cairo_create (surface);
-
-    //Pango Layout
-    PangoLayout *layout;
-    layout = pango_cairo_create_layout (cr);
+    cairo_surface_t* surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, texWidth, texHeight);
+    cairo_t* cr = cairo_create (surface);
+    PangoLayout* layout = pango_cairo_create_layout (cr);
     pango_layout_set_text(layout, text.c_str(), -1);
     //pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);//MACHT IRGENDWIE NIX
 
     //Pango Description
-    PangoFontDescription *desc;
-    desc = pango_font_description_from_string (font.c_str());
+    PangoFontDescription* desc = pango_font_description_from_string (font.c_str());
     pango_layout_set_font_description (layout, desc);
     pango_font_description_free (desc);
 
     //hier wird gemalt!
     //background
     cairo_set_source_rgba(cr, bg[0],bg[1],bg[2],bg[3]);
-    cairo_rectangle(cr, 0, 0, width, height);
+    cairo_rectangle(cr, 0, 0, texWidth, texHeight);
     cairo_fill(cr);
 
     //text
     cairo_set_source_rgba (cr, fg[0],fg[1],fg[2],fg[3]);
-    cairo_translate(cr, R, R);
+    cairo_translate(cr, padding, padding);
     pango_cairo_update_layout (cr, layout);
     pango_cairo_show_layout (cr, layout);
 
     cairo_set_source_rgba(cr, bg[0],bg[1],bg[2],bg[3]);
-    cairo_rectangle(cr, 0, 0, width, R-1); cairo_fill(cr);
-    cairo_rectangle(cr, 0, height-R-1, width, R-1); cairo_fill(cr);
-    cairo_rectangle(cr, 0, 0, R-1, height); cairo_fill(cr);
-    cairo_rectangle(cr, width-R-1, 0, R-1, height); cairo_fill(cr);
+    cairo_rectangle(cr, 0, 0, texWidth, padding-1); cairo_fill(cr);
+    cairo_rectangle(cr, 0, texHeight-padding-1, texWidth, padding-1); cairo_fill(cr);
+    cairo_rectangle(cr, 0, 0, padding-1, texHeight); cairo_fill(cr);
+    cairo_rectangle(cr, texWidth-padding-1, 0, padding-1, texHeight); cairo_fill(cr);
 
     UChar8* data = cairo_image_surface_get_data(surface);
-    convertData(data, width, height);
+    convertData(data, texWidth, texHeight);
 
     VRTexturePtr tex = VRTexture::create();
-    tex->getImage()->set( Image::OSG_BGRA_PF, width, height, 1, 1, 1, 0, data);
+    tex->getImage()->set( Image::OSG_BGRA_PF, texWidth, texHeight, 1, 1, 1, 0, data);
 
     cairo_destroy (cr);
     cairo_surface_destroy (surface);
-
     return tex;
 }
 
-VRText* VRText::get() {
-    static VRText* singleton_opt = new VRText();
-    return singleton_opt;
-}
-
-VRTexturePtr VRText::create(string text, string font, int height, Color4f fg, Color4f bg) {
-    int l = text.size();
-    return createBmp(text, font, height*l, height*1.5, fg, bg);
-}
-
-VRTexturePtr VRText::create(string text, string font, int width, int height, Color4f fg, Color4f bg) {
-    return createBmp(text, font, width, height, fg, bg);
-}
-
-OSG_END_NAMESPACE;
