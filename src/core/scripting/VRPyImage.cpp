@@ -52,6 +52,7 @@ PyMethodDef VRPyImage::methods[] = {
     {"write", (PyCFunction)VRPyImage::write, METH_VARARGS, "Write an image to disk - write( str path )" },
     {"getPixel", (PyCFunction)VRPyImage::getPixel, METH_VARARGS, "Return pixel at coordinates u,v - getPixel( [u,v] )" },
     {"getSize", (PyCFunction)VRPyImage::getSize, METH_NOARGS, "Return pixel at coordinates u,v - getPixel( [u,v] )" },
+    {"getAspectRatio", (PyCFunction)VRPyImage::getAspectRatio, METH_NOARGS, "Return aspect ratio between width and height" },
     {"getChannels", (PyCFunction)VRPyImage::getChannels, METH_NOARGS, "Return pixel at coordinates u,v - getPixel( [u,v] )" },
     {NULL}  /* Sentinel */
 };
@@ -101,6 +102,11 @@ PyObject* VRPyImage::getChannels(VRPyImage* self, PyObject *args) {
 
 PyObject* VRPyImage::getSize(VRPyImage* self, PyObject *args) {
     return toPyTuple(self->objPtr->getSize());
+}
+
+PyObject* VRPyImage::getAspectRatio(VRPyImage* self, PyObject *args) {
+    float f = self->objPtr->getAspectRatio();
+    return PyFloat_FromDouble(f);
 }
 
 PyObject* VRPyImage::read(VRPyImage* self, PyObject *args) {

@@ -47,6 +47,9 @@ VRTexturePtr VRText::createBmp (string text, string font, int width, int height,
     cairo_t *cr;
     cairo_surface_t *surface;
 
+    size_t Nlines = 1 + count(text.begin(), text.end(), '\n');
+    height *= Nlines;
+
     int R = 3; // padding px
     width += 2*R;
     height += 2*R;

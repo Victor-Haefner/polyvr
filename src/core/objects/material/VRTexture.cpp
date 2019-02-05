@@ -278,5 +278,9 @@ Vec3i VRTexture::getSize() {
     return Vec3i(w,h,d);
 }
 
+float VRTexture::getAspectRatio() {
+    return float(img->getWidth()) / img->getHeight();
+}
+
 
 
