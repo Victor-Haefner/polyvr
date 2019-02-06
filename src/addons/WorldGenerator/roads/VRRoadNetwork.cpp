@@ -265,6 +265,8 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
     for (int i=0; i<Nlanes-Nm; i++) road->addLane(-1, 4 );
     roads.push_back(road);
     roadsByEntity[road->getEntity()] = road;
+    string streetName = road->getEntity()->getValue<string>("name", "unnamed");
+    roadsByName[streetName].push_back(road);
     return road;
 }
 
@@ -709,6 +711,8 @@ void VRRoadNetwork::computeIntersections() {
         roads.push_back(r);
         ways.push_back(r);
         roadsByEntity[r->getEntity()] = r;
+        string streetName = r->getEntity()->getValue<string>("name", "unnamed");
+        roadsByName[streetName].push_back(r);
     }
 
     for (auto node : getRoadNodes()) {
@@ -890,6 +894,12 @@ VRRoadPtr VRRoadNetwork::getRoad(VREntityPtr road) {
     if (roadsByEntity.count(road)) return roadsByEntity[road];
     return 0;
 }
+
+vector<VRRoadPtr> VRRoadNetwork::getRoadByName(string name) {
+    if (roadsByName.count(name)) return roadsByName[name];
+    return vector<VRRoadPtr>();
+}
+
 VRRoadIntersectionPtr VRRoadNetwork::getIntersection(VREntityPtr intersection) {
     if (intersectionsByEntity.count(intersection)) return intersectionsByEntity[intersection];
     return 0;

@@ -3,6 +3,7 @@
 #include "VRPyBoundingbox.h"
 #include "VRPyGeometry.h"
 #include "VRPySprite.h"
+#include "VRPyStroke.h"
 #include "VRPyMaterial.h"
 #include "VRPyLod.h"
 #include "VRPyClipPlane.h"
@@ -10,6 +11,7 @@
 #include "VRPyCamera.h"
 #include "VRPyMenu.h"
 #include "VRPyLightBeacon.h"
+#include "VRPyAnnotationEngine.h"
 #include "VRPyTextureRenderer.h"
 #include "VRPyWaypoint.h"
 #include "VRPyGeoPrimitive.h"
@@ -36,7 +38,7 @@ template<> PyObject* VRPyTypeCaster::cast(const VRObjectPtr& obj) {
     else if (type == "Object") return VRPyObject::fromSharedPtr( static_pointer_cast<VRObject>(obj) );
     else if (type == "Sprite") return VRPySprite::fromSharedPtr( static_pointer_cast<VRSprite>(obj) );
     else if (type == "CSGGeometry") return VRPyCSG::fromSharedPtr( static_pointer_cast<CSGGeometry>(obj) );
-    else if (type == "Sprite") return VRPySprite::fromSharedPtr( static_pointer_cast<VRSprite>(obj) );
+    else if (type == "Stroke") return VRPyStroke::fromSharedPtr( static_pointer_cast<VRStroke>(obj) );
     else if (type == "Material") return VRPyMaterial::fromSharedPtr( static_pointer_cast<VRMaterial>(obj) );
     else if (type == "Lod") return VRPyLod::fromSharedPtr( static_pointer_cast<VRLod>(obj) );
     else if (type == "ClipPlane") return VRPyClipPlane::fromSharedPtr( static_pointer_cast<VRClipPlane>(obj) );
@@ -45,6 +47,7 @@ template<> PyObject* VRPyTypeCaster::cast(const VRObjectPtr& obj) {
     else if (type == "Menu") return VRPyMenu::fromSharedPtr( static_pointer_cast<VRMenu>(obj) );
     else if (type == "LightBeacon") return VRPyLightBeacon::fromSharedPtr( static_pointer_cast<VRLightBeacon>(obj) );
     else if (type == "TextureRenderer") return VRPyTextureRenderer::fromSharedPtr( static_pointer_cast<VRTextureRenderer>(obj) );
+    else if (type == "AnnotationEngine") return VRPyAnnotationEngine::fromSharedPtr( static_pointer_cast<VRAnnotationEngine>(obj) );
     else if (type == "Waypoint") return VRPyWaypoint::fromSharedPtr( static_pointer_cast<VRWaypoint>(obj) );
     else if (type == "JointTool") return VRPyJointTool::fromSharedPtr( static_pointer_cast<VRJointTool>(obj) );
     else if (type == "Handle") return VRPyBaseT<VRGeometry>::fromSharedPtr( static_pointer_cast<VRGeometry>(obj) ); // TODO

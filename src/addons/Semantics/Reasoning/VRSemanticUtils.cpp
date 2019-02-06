@@ -192,11 +192,11 @@ bool Variable::is(VariablePtr other, VPath& path1, VPath& path2) {
         return false;
     };
 
-    cout << "Variable::is " << toString() << " at path " << path1.toString() << " =?= " << other->toString() << " at path " << path2.toString() << endl;
+    //cout << "Variable::is " << toString() << " at path " << path1.toString() << " =?= " << other->toString() << " at path " << path2.toString() << endl;
     bool res = false;
     for (auto e : entities) {
         vector<string> val1 = path1.getValue(e.second);
-        for (auto v : val1) cout << " var1 value: " << v << endl;
+        //for (auto v : val1) cout << " var1 value: " << v << endl;
         auto r = hasSameVal2(val1);
         if (!r) evaluations[e.first].state = Evaluation::INVALID;
         if (r) res = true;

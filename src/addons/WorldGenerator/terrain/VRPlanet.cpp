@@ -119,18 +119,35 @@ Vec2d VRPlanet::fromLatLongSize(double north1, double east1, double north2, doub
 }
 
 Vec2d VRPlanet::fromPosLatLong(Pnt3d p, bool local) { // TODO: increase resolution by enhancing getWorldMatrix
+    Pnt3d p1 = p;
     if (local) {
         auto m = origin->getWorldMatrix();
         m.invert();
-        m.mult(p,p);
+        m.mult(p,p1);
     }
 
-    Vec3d n = Vec3d(p);
+    Vec3d n = Vec3d(p1);
     n.normalize();
-    double cT = n[1];
-    double north = toDeg(acos(cT));
+    double north = -toDeg(acos(n[1]))+90;
     double east = toDeg(atan2(-n[2], n[0]));
-    return Vec2d(-north+90, east);
+
+    if (local) {
+        // increase precision by 2D planar approximation
+        Vec2d s = fromLatLongSize(north-0.5, east-0.5, north+0.5, east+0.5);
+        Vec3d p2 = fromLatLongPosition(north, east, local);
+        int pr = cout.precision();
+        cout.precision(17);
+        cout << "p1: " << p << " p2: " << p2 << endl;
+        Vec3d d = Vec3d(p)-p2;
+        cout << std::setprecision (15) << Vec2d(north, east);
+        north += -d[2]*1.0/s[1];
+        east  += d[0]*1.0/s[0];
+        cout << std::setprecision (15) << " -> " << Vec2d(north, east) << "  d: " << d << " s: " << s << endl;
+        cout.precision(pr);
+    }
+
+    cout << "VRPlanet::fromPosLatLong p:" << p1 << " n:" << n << " acos:" << acos(n[1]) << " atan2: " << atan2(-n[2], n[0]) << endl;
+    return Vec2d(north, east);
 }
 
 void VRPlanet::rebuild() {
