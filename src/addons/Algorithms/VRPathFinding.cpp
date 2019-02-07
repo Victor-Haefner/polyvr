@@ -101,7 +101,6 @@ vector<VRPathFinding::Position> VRPathFinding::getNeighbors(Position& p) {
             for (auto eID2 : e.relations) { // bridges between edges
                 if (graph->hasEdge(eID2)) {
                     auto edge = graph->getEdge(eID2);
-                    //res.push_back(Position(edge.from));
                     res.push_back(Position(edge.from));
                 }
             }

@@ -170,7 +170,7 @@ bool Graph::hasRelation(int e1, int e2) {
     return false;
 }
 
-float Graph::getLength(int e) {
+float Graph::getEdgeLength(int e) {
     if (!hasEdge(e)) return 0.0;
     float res = ( getPosition(edges[e].to)->pos() - getPosition(edges[e].from)->pos() ).length();
     return res;

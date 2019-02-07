@@ -1394,6 +1394,7 @@ void VRTrafficSimulation::changeLane(int ID, int direction, bool forced) {
             if (roadNetwork->getGraph()->getEdge(opt).ID == -1) return false;
             pos.edge = opt;
             auto pose = roadNetwork->getPosition(pos);
+            if (!pose) return false;
             if ((pose->pos() - poseV->pos()).length() > 4.5) return false;
             float res = vUp.cross(vDir).dot(pose->pos() - poseV->pos());
             if (res > 0 && input==1) { edgeLeft = opt; return true; }
@@ -1510,15 +1511,17 @@ void VRTrafficSimulation::updateGraph(){
 		idx[node.first] = vID;
 	}
 
-	for (auto connection : graph->getEdges()){
-		auto edge = connection.first;
-		auto& road = roads[edge];
-		if (isSeedRoad(edge)) { gg2.pushLine(idx[connection.second.from], idx[connection.second.to]); }
-		if (!isSeedRoad(edge) && !road.macro) { gg1.pushLine(idx[connection.second.from], idx[connection.second.to]); }
+	for (auto& connection : graph->getEdges()) {
+		auto& edge = connection.second;
+		int eID = edge.ID;
+		if (eID == 0) continue;
+		auto& road = roads[eID];
+		if (isSeedRoad(eID)) { gg2.pushLine(idx[connection.second.from], idx[connection.second.to]); }
+		if (!isSeedRoad(eID) && !road.macro) { gg1.pushLine(idx[connection.second.from], idx[connection.second.to]); }
 		if (road.macro) { gg4.pushLine(idx[connection.second.from], idx[connection.second.to]); }
 		auto pos1 = graph->getNode(connection.second.from).p.pos();
 		auto pos2 = graph->getNode(connection.second.to).p.pos();
-		graphAnn->set(edge+100, (pos1+pos2)*0.5 + Vec3d(0,2.6,0), "Edge "+toString(edge)+"("+toString(connection.second.from)+"-"+toString(connection.second.to)+")");
+		graphAnn->set(eID+100, (pos1+pos2)*0.5 + Vec3d(0,2.6,0), "Edge "+toString(eID)+"("+toString(connection.second.from)+"-"+toString(connection.second.to)+")");
 	}
 
     for (auto connection : graph->getEdges()){

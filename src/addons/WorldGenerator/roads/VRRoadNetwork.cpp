@@ -318,7 +318,7 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
             int eID = graph->getEdgeID(nID1,nID2);
 
             ///checking minimum length for lane relations
-            if (graph->getLength(eID) < 10) continue;
+            if (graph->getEdgeLength(eID) < 10) continue;
             laneEdges.push_back(eID);
             //cout << toString(laneEdges[i-1]) << endl;
         }
@@ -1010,19 +1010,26 @@ void VRRoadNetwork::connectGraph(vector<VREntityPtr> nodes, vector<Vec3d> norms,
 
 PosePtr VRRoadNetwork::getPosition(Graph::position p) {
     int eID = p.edge;
+    if (eID == 0) return 0;
     auto edge = graph->getEdge(eID);
+    if (edge.ID == 0) return 0;
+
     int n1 = edge.from;
     int n2 = edge.to;
 
+    if (!graphNormals.count(eID)) return 0;
     auto eNorms = graphNormals[eID];
+    if (!graphEdgeEntities.count(eID)) return 0;
     auto lane = graphEdgeEntities[eID];
-    auto nodes = lane->getEntity("path")->getAllEntities("nodes");
+    auto pathE = lane->getEntity("path");
+    auto nodes = pathE->getAllEntities("nodes");
 
     Vec3d node1;
     Vec3d node2;
 
     for (auto nE : nodes) {
         auto n = nE->getEntity("node");
+        if (!n) continue;
         if (n->getValue<int>("graphID", 0) == n1) node1 = n->getVec3("position");
         if (n->getValue<int>("graphID", 0) == n2) node2 = n->getVec3("position");
     }
