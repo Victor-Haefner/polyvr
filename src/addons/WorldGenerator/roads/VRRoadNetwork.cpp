@@ -313,7 +313,13 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
         vector<int> laneEdges;
         for (uint i=1; i<nodes.size(); i++) {
             connectGraph({nodes[i-1], nodes[i]}, {norms[i-1], norms[i]}, lane);
-            laneEdges.push_back(graph->getEdgeID(nodes[i-1]->getValue<int>("graphID", -1),nodes[i]->getValue<int>("graphID", -1)));
+            int nID1 = nodes[i-1]->getValue<int>("graphID", -1);
+            int nID2 = nodes[i]->getValue<int>("graphID", -1);
+            int eID = graph->getEdgeID(nID1,nID2);
+
+            ///checking minimum length for lane relations
+            if (graph->getLength(eID) < 10) continue;
+            laneEdges.push_back(eID);
             //cout << toString(laneEdges[i-1]) << endl;
         }
 
@@ -322,7 +328,7 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
 		widthSum += width;
 		if (direction > 0) { lanesD1.push_back(laneEdges); }
 		if (direction < 0) { lanesD2.push_back(laneEdges); }
-		}
+    }
 
 	if (lanesD1.size()>1) {
         for (int i = 0; i<lanesD1[0].size();i++) {
