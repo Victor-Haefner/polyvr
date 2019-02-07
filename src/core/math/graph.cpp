@@ -170,6 +170,12 @@ bool Graph::hasRelation(int e1, int e2) {
     return false;
 }
 
+float Graph::getLength(int e) {
+    if (!hasEdge(e)) return 0.0;
+    float res = ( getPosition(edges[e].to)->pos() - getPosition(edges[e].from)->pos() ).length();
+    return res;
+}
+
 int Graph::getEdgeID(int n1, int n2) {
     auto edge = getEdge(n1, n2);
     return edge.ID;
