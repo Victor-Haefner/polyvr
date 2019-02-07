@@ -69,6 +69,7 @@ class VRProcessEngine {
             string initialState = "";
             string label = "";
             VRProcessNodePtr currentState;
+            vector<VRProcessNodePtr> traversedPath; //contains transitions the engine has chosen to traverse
 
             Actor() : sm("ProcessActor") {}
 
@@ -87,6 +88,7 @@ class VRProcessEngine {
         VRProcessPtr process;
         map<int, Actor> subjects;
         //vector<Message> processMessages;
+//        map<> subjectToTraversedPath; //traversed path for each subject
 
         VRUpdateCbPtr updateCb;
         bool running = false;
@@ -112,8 +114,10 @@ class VRProcessEngine {
         void pause();
 
         vector<VRProcessNodePtr> getCurrentStates();
+        //vector<VRProcessNodePtr> getCurrentPath(int sID);
         VRProcessNodePtr getCurrentState(int sID);
         Transition& getTransition(int sID, int tID);
+        vector<VRProcessNodePtr> getTraversedPath(int sID);
 
         void continueWith(VRProcessNodePtr n);
         void tryAdvance(int sID);

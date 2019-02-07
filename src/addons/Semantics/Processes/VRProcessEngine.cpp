@@ -80,6 +80,7 @@ string VRProcessEngine::Actor::transitioning( float t ) {
                 //auto len2 = sentMessages.size();
                 //if (len1 != len2) cout << "Message removed! " << this->label << " sentMessages: " << this->sentMessages.size() << endl;
             }
+            traversedPath.push_back(transition.node);
             return transition.nextState->getLabel();
         }
     }
@@ -152,6 +153,7 @@ void VRProcessEngine::reset() {
     for (auto& actor : subjects) {
         actor.second.inventory.messages.clear();
         //actor.second.sentMessages.clear();
+        actor.second.traversedPath.clear();
     }
 }
 
@@ -171,6 +173,10 @@ vector<VRProcessNodePtr> VRProcessEngine::getCurrentStates() {
 
 VRProcessNodePtr VRProcessEngine::getCurrentState(int sID) {
     return subjects[sID].currentState;
+}
+
+vector<VRProcessNodePtr> VRProcessEngine::getTraversedPath(int sID){
+    return subjects[sID].traversedPath;
 }
 
 void VRProcessEngine::continueWith(VRProcessNodePtr n) {
