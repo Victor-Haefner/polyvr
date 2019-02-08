@@ -161,14 +161,6 @@ vector<string> VRObject::getTags() {
     return res;
 }
 
-vector<VRObjectPtr> VRObject::getChildrenWithTag(string name) {
-    vector<VRObjectPtr> res;
-    for (auto c : getChildren()) {
-        if (c->hasTag(name)) res.push_back(c);
-    }
-    return res;
-}
-
 VRObjectPtr VRObject::hasAncestorWithTag(string name) {
     if (hasTag(name)) return ptr();
     if (getParent() == 0) return 0;
@@ -371,6 +363,23 @@ VRObjectPtr VRObject::getAtPath(string path) {
         res = res->getChild(c);
     }
 
+    return res;
+}
+
+vector<VRObjectPtr> VRObject::getChildrenWithTag(string tag, bool recursive, bool includeSelf) {
+    if (!recursive) {
+        vector<VRObjectPtr> res;
+        for (auto c : children) if (c->hasTag(tag)) res.push_back(c);
+        return res;
+    }
+
+    vector<VRObjectPtr> res = getChildrenWithTag(tag);
+    if (includeSelf && (hasTag(tag))) res.push_back( ptr() );
+
+    for (auto c : children) {
+        vector<VRObjectPtr> tmp = c->getChildrenWithTag(tag, true);
+        res.insert( res.end(), tmp.begin(), tmp.end() );
+    }
     return res;
 }
 
