@@ -122,7 +122,7 @@ PyObject* proxyWrap<allowPacking, sT, R (T::*)(Args...), mf, O>::exec(sT* self, 
 // actual py wrapper macros
 
 #define PyWrapDoku(F, D, R, ...) \
-D " - " #R " " #F "( " FOR_EACH( __VA_ARGS__ ) " )"
+#R " " #F "( " FOR_EACH( __VA_ARGS__ ) " )\n\t" D
 
 #define PyWrap(X, Y, D, R, ...) \
 (PyCFunction)proxyWrap<0, VRPy ## X, R (OSG::VR ## X::*)( __VA_ARGS__ ), &OSG::VR ## X::Y, VRCallbackWrapperParams<MACRO_GET_STR( "" )> >::exec , METH_VARARGS, PyWrapDoku(Y,D,R,__VA_ARGS__)

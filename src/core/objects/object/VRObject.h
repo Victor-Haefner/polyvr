@@ -76,7 +76,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         void remTag(string name);
         vector<string> getTags();
         VRObjectPtr hasAncestorWithTag(string name);
-        vector<VRObjectPtr> getChildrenWithTag(string name);
+        vector<VRObjectPtr> getChildrenWithTag(string name, bool recursive = false, bool includeSelf = false);
 
         void setCore(OSGCorePtr c, string _type, bool force = false);
         OSGCorePtr getCore();
