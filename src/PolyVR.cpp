@@ -21,8 +21,11 @@
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGNode.h>
 #include <GL/glut.h>
+
+#ifndef _WIN32
 #include <unistd.h>
 #include <termios.h>
+#endif
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
