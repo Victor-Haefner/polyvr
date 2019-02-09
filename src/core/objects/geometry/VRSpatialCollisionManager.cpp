@@ -90,7 +90,7 @@ void VRSpatialCollisionManager::add(VRObjectPtr o, int objID) {
 
     int N = 0;
 
-    for (auto obj : o->getChildren(true, "Geometry", true)) {
+    for (auto obj : o->getChildrenWithTag("geometry", true, true)) {
         auto geo = dynamic_pointer_cast<VRGeometry>(obj);
         if (!geo) continue;
         if (geo->getMesh() == 0) continue;
