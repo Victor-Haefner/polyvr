@@ -316,9 +316,6 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
             int nID1 = nodes[i-1]->getValue<int>("graphID", -1);
             int nID2 = nodes[i]->getValue<int>("graphID", -1);
             int eID = graph->getEdgeID(nID1,nID2);
-
-            ///checking minimum length for lane relations
-            if (graph->getEdgeLength(eID) < 10) continue;
             laneEdges.push_back(eID);
             //cout << toString(laneEdges[i-1]) << endl;
         }
@@ -333,6 +330,9 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
 	if (lanesD1.size()>1) {
         for (int i = 0; i<lanesD1[0].size();i++) {
             for (int j = 1; j<lanesD1.size();j++) {
+                ///checking minimum length for lane relations
+                if (graph->getEdgeLength(lanesD1[j][i]) < 10) continue;
+                if (graph->getEdgeLength(lanesD1[j-1][i]) < 10) continue;
                 graph->addRelation(lanesD1[j][i],lanesD1[j-1][i]);
                 //cout << toString(lanesD1[j][i]) << " -- " << toString(lanesD1[j-1][i]) << endl;
             }
@@ -341,6 +341,9 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
     if (lanesD2.size()>1) {
         for (int i = 0; i<lanesD2[0].size();i++) {
             for (int j = 1; j<lanesD2.size();j++) {
+                ///checking minimum length for lane relations
+                if (graph->getEdgeLength(lanesD2[j][i]) < 10) continue;
+                if (graph->getEdgeLength(lanesD2[j-1][i]) < 10) continue;
                 graph->addRelation(lanesD2[j][i],lanesD2[j-1][i]);
                 //cout << toString(lanesD2[j][i]) << " -- " << toString(lanesD2[j-1][i]) << endl;
             }
