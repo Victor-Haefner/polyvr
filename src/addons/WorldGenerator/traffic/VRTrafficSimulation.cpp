@@ -562,6 +562,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         auto p = roadNetwork->getPosition(vehicle.pos);
         //cout << "propagated vehicle pos " <<toString(p) << endl;
         if (offset.length()>20) offset = Vec3d(0,0,0); //DEBUGGING FAIL SAFE
+        if (!p) p = vehicle.simPose;
         vehicle.lastMove = p->pos() + offset - vehicle.simPose->pos();
         p->setPos(p->pos()+offset);
         //doffset = Vec3d(0,0,0);
