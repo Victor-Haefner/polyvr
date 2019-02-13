@@ -1067,10 +1067,15 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 bool inIntersec = vehicle.distanceToNextIntersec < intersectionWidth;
                 //if (nextSignal != "000") cout << toString(nextSignal) << endl;
 
-                vehicle.targetVelocity = roadVelocity;
-                if ( vehicle.distanceToNextStop < 15 && vehicle.turnAhead>0 && !inIntersec ) vehicle.targetVelocity = 30/3.6;
-                if ( vehicle.distanceToNextStop < 5 && vehicle.turnAhead>0 && !inIntersec) vehicle.targetVelocity = 23/3.6;
-                if ( vehicle.distanceToNextStop > 15 || inIntersec) vehicle.targetVelocity = 50/3.6;
+                auto laneE = roadNetwork->getLane(vehicle.pos.edge);
+                if ( laneE->getValue<string>("maxspeed", "").length() > 0 ) vehicle.targetVelocity = toFloat(laneE->getValue<string>("maxspeed", ""));
+                else vehicle.targetVelocity = roadVelocity;
+
+                if (vehicle.targetVelocity > 23/3.6) {
+                    if ( vehicle.distanceToNextStop < 15 && vehicle.turnAhead>0 && !inIntersec) vehicle.targetVelocity = 30/3.6;
+                    if ( vehicle.distanceToNextStop < 5 && vehicle.turnAhead>0 && !inIntersec) vehicle.targetVelocity = 23/3.6;
+                    if ( vehicle.distanceToNextStop > 15 || inIntersec) vehicle.targetVelocity = 50/3.6;
+                }
 
                 auto inFront = [&]() { return vehicle.vehiclesightFarID.count(INFRONT); };
                 auto comingLeft = [&]() { return vehicle.vehiclesightFarID.count(FRONTLEFT); };
