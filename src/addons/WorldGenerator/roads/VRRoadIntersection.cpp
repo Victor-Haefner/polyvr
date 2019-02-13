@@ -486,6 +486,31 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             //if (crossingRoads.size()>0) cout << " found crossings: " << toString(crossingRoads.size()) << endl;
         };
 
+        float disToIntersec = 2.0;
+
+        auto  checkForLaneLength = [&](){
+            for (auto match : laneMatches) {
+                auto laneIn = match.first;
+                auto laneOut = match.second;
+                auto roadIn = laneIn->getEntity("road");
+                auto roadOut = laneOut->getEntity("road");
+
+                auto nodes1 = laneIn->getEntity("path")->getAllEntities("nodes");
+                auto node11Ent = *nodes1.rbegin();
+                auto node12Ent = nodes1[nodes1.size()-2];
+                Vec3d p11 = node11Ent->getEntity("node")->getVec3("position");
+                Vec3d p12 = node12Ent->getEntity("node")->getVec3("position");
+                if ( (p12 - p11).length() < 3.5) { disToIntersec = 0.0; return; }
+
+                auto nodes2 = laneOut->getEntity("path")->getAllEntities("nodes");
+                auto node21Ent = nodes2[0];
+                auto node22Ent = nodes2[1];
+                Vec3d p21 = node21Ent->getEntity("node")->getVec3("position");
+                Vec3d p22 = node22Ent->getEntity("node")->getVec3("position");
+                if ( (p22 - p21).length() < 3.5) { disToIntersec = 0.0; return; }
+            }
+        };
+
         auto checkForSignals = [&]() {
             function<bool (VRRoadPtr, VRRoadIntersectionPtr, VRRoadIntersectionPtr)> recSearch = [&](VRRoadPtr nRoad, VRRoadIntersectionPtr nIntersec, VRRoadIntersectionPtr firstIntersec) {
                 Vec3d newPos = nIntersec->entity->getEntity("node")->getVec3("position");
@@ -525,12 +550,12 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 
 	    crossingRoads.clear();
         checkForCrossings();
+        checkForLaneLength();
 	    //checkForSignals();
         auto node = entity->getEntity("node");
         Vec3d pNode = node->getVec3("position");
         int N = roadFronts.size();
         float disToCrossing = 0.4;
-        float disToIntersec = 2.0;
         map<VREntityPtr, bool> processedLanes; // keep list of already processed lanes
         map<VREntityPtr, bool> crossroadFronts; // keep list of already processed lanes
         map<VREntityPtr, Vec3d> roadOffsets;
