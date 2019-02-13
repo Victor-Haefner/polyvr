@@ -340,7 +340,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             auto data = splitString( way->tags["maxspeed:lanes"], '|' );
             for (auto d : data) maxSpeeds.push_back(d);
         } else if ( way->hasTag("maxspeed") ) {
-            maxSpeeds.push_back(way->tags["maxspeed"]);
+            maxSpeeds = vector<string>( NlanesRight+NlanesLeft, way->tags["maxspeed"] );
         } else maxSpeeds = vector<string>( NlanesRight+NlanesLeft, "50.0");
 
         // create road and lane entities
