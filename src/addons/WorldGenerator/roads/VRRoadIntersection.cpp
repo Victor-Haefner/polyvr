@@ -728,7 +728,10 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             nextLanes[lane].push_back(laneOut);
             roads->connectGraph(nodes, norms, lane);
             lane->set("turnDirection", laneTurnDirection[zz]);
-            lane->set("maxspeed", "30.0");
+            if (laneIn->getValue<string>("maxspeed", "").length() > 0) {
+                if (toFloat(laneIn->getValue<string>("maxspeed", "")) < 30.0) lane->set("maxspeed", laneIn->getValue<string>("maxspeed", "") );
+                else lane->set("maxspeed", "30.0");
+            } else lane->set("maxspeed", "30.0");
             zz++;
         }
 
