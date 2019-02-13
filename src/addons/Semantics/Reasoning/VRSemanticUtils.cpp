@@ -168,6 +168,7 @@ bool Variable::has(VariablePtr other, VPath& path1, VPath& path2, VROntologyPtr 
 
 bool Variable::is(VariablePtr other, VPath& path1, VPath& path2) {
     if (!valid || !other->valid) return false;
+    //VRReasoner::print( " Variable::is? " + toString() + "   /   " + other->toString() );
 
     auto hasSameVal = [&](vector<string>& val1, vector<string>& val2) {
         for (string s1 : val1) {
@@ -179,24 +180,30 @@ bool Variable::is(VariablePtr other, VPath& path1, VPath& path2) {
     auto hasSameVal2 = [&](vector<string>& val1) {
         bool res = false;
         for (auto e : other->entities) {
-            cout << "  other entities: " << e.second->toString() << endl;
+            VRReasoner::print( "      other entity: " + e.second->toString() );
             vector<string> val2 = path2.getValue(e.second);
-            for (auto v : val2) cout << "  var2 value: " << v << endl;
+            for (auto v : val2) VRReasoner::print( "       var2 value: " + v );
             auto r = hasSameVal(val1, val2);
             if (!r) evaluations[e.first].state = Evaluation::INVALID;
             if (r) res = true;
         }
         if (res) return true;
 
-        for (string s : val1) for (string v : other->value) if (s == v) return true;
+        for (string s : val1) {
+            VRReasoner::print( "      val1: '" + s + "'");
+            for (string v : other->value) {
+                VRReasoner::print( "      val2: '" + v + "' -> " + ::toString(bool(s == v)) );
+                if (s == v) return true;
+            }
+        }
         return false;
     };
 
-    //cout << "Variable::is " << toString() << " at path " << path1.toString() << " =?= " << other->toString() << " at path " << path2.toString() << endl;
+    VRReasoner::print( "    Variable::is " + toString() + " at path " + path1.toString() + " =?= " + other->toString() + " at path " + path2.toString() );
     bool res = false;
     for (auto e : entities) {
         vector<string> val1 = path1.getValue(e.second);
-        //for (auto v : val1) cout << " var1 value: " << v << endl;
+        for (auto v : val1) VRReasoner::print( "     var1 value: " + v );
         auto r = hasSameVal2(val1);
         if (!r) evaluations[e.first].state = Evaluation::INVALID;
         if (r) res = true;

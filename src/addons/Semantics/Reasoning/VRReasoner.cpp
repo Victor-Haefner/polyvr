@@ -182,7 +182,7 @@ bool VRReasoner::is(VRStatementPtr statement, VRSemanticContextPtr context) {
 
     bool b = left.is(right, context);
     bool NOT = statement->verb_suffix == "not";
-    print("   " + left.str + " is" + (b?" ":" not ") + (NOT?" not ":" ") + right.var->valToString());
+    print("   " + left.str + " is" + (b?" ":" not ") + (NOT?" not ":" ") + "'" + right.var->valToString() + "'");
 
     return ( (b && !NOT) || (!b && NOT) );
 }
@@ -330,6 +330,10 @@ bool VRReasoner::evaluate(VRStatementPtr statement, VRSemanticContextPtr context
 
     if (statement->terms.size() == 1) { // resolve (anonymous?) variables
         string concept = statement->verb;
+
+        if (findRule(statement, context)) {
+            print("  found constructor for" + statement->toString(), BLUE);
+        }
 
         if (auto c = context->onto->getConcept(concept)) {
             string name = statement->terms[0].path.root;
