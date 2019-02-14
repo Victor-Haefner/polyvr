@@ -1352,13 +1352,12 @@ void VRTrafficSimulation::addUser(VRTransformPtr t) {
 }
 
 bool VRTrafficSimulation::getUserCollisionState(int i) {
-    PLock lock(mtx);
+    PLock lock(mtx2);
     if ( i < 0 || i > users.size()-1 ) { cout << "VRTrafficSimulation::getUserCollisionState " << i << " out of bounds" << endl; return false; }
     auto ID = users[i].vID;
+
     bool check = users[i].collisionDetected;
-    //cout << "VRTrafficSimulation::getUserCollisionState " << ID << " " << check << endl;
     return check;
-    //users[i].collisionDetectedMem;
 }
 
 void VRTrafficSimulation::setGlobalOffset(Vec3d globalOffset) { this->globalOffset = globalOffset; }
