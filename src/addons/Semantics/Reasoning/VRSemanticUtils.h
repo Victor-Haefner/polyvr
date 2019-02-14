@@ -30,6 +30,7 @@ struct VPath {
 struct Evaluation {
     enum STATE {VALID, INVALID, ASSUMPTION};
     STATE state = VALID; // valid, assumption, anonymous, ruled_out, ...
+    string toString();
 };
 
 struct Variable {
@@ -57,11 +58,13 @@ struct Variable {
     void discard(VREntityPtr e);
 
     void addAssumption(VRSemanticContextPtr context, string var);
+
+    vector<VREntityPtr> getEntities(Evaluation::STATE state);
 };
 
 struct Term {
     VPath path;
-    VariablePtr var;
+    VariablePtr var = 0;
     string str;
 
     Term(string s);
@@ -84,6 +87,10 @@ struct Query {
 
     void checkState();
     void substituteRequest(VRStatementPtr s);
+};
+
+struct Constructor {
+    Query query;
 };
 
 struct VRSemanticContext : public std::enable_shared_from_this<VRSemanticContext>{

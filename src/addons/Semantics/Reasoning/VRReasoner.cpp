@@ -182,9 +182,17 @@ bool VRReasoner::is(VRStatementPtr statement, VRSemanticContextPtr context) {
 
     bool b = left.is(right, context);
     bool NOT = statement->verb_suffix == "not";
-    print("   " + left.str + " is" + (b?" ":" not ") + (NOT?" not ":" ") + right.var->valToString());
+    print("   " + left.str + " is" + (b?" ":" not ") + (NOT?" not ":" ") + "'" + right.var->valToString() + "'");
 
     return ( (b && !NOT) || (!b && NOT) );
+}
+
+bool VRReasoner::set(VRStatementPtr statement, VRSemanticContextPtr context) {
+    auto& left = statement->terms[0];
+    auto& right = statement->terms[1];
+    for (auto v : left.var->value) if ( context->vars.count(v) == 0) return false; // check if context has a variable with the left value
+    if (!left.valid() || !right.valid()) return false; // return if one of the sides invalid
+    return true; // further processed on VRReasoner::apply
 }
 
 bool VRReasoner::has(VRStatementPtr statement, VRSemanticContextPtr context) { // TODO
@@ -208,7 +216,9 @@ bool VRReasoner::has(VRStatementPtr statement, VRSemanticContextPtr context) { /
 }
 
 // apply the statement changes to world
-bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
+bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextPtr context) {
+    print("Apply statement " + ::toString((void*)statement.get()) + "  " + statement->toString(), GREEN);
+
     auto clearAssumptions = [&]() {
         vector<string> toDelete;
         for (auto v : context->vars) {
@@ -233,7 +243,21 @@ bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
         return r;
     };
 
+    auto getVariable = [&](string name) -> VariablePtr {
+        if (!context->vars.count(name)) {
+            print("   Warning: variable " + name + " not known!", RED);
+            return 0;
+        }
+        VariablePtr v = context->vars[name];
+        if (!v) {
+            print("   Warning: variable " + name + " known but invalid!", RED);
+            return 0;
+        }
+        return v;
+    };
+
     if (statement->verb == "is") {
+        if (statement->terms.size() < 2) return false;
         auto& left = statement->terms[0];
         auto& right = statement->terms[1];
 
@@ -245,22 +269,24 @@ bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
         if (lim) print("  left term " + left.str + " is math expression! -> (" + aggr(lmv)+")", GREEN);
         if (rim) print("  right term " + right.str + " is math expression! -> (" + aggr(rmv)+")", GREEN);
 
-        if (left.path.size() > 1) {
-            for (auto eL : left.var->entities) {
-                for (auto eR : right.var->entities) {
-                    vector<string> vR;
-                    if (rim) vR = rmv;
-                    else vR = right.path.getValue( eR.second );
+        if (left.var && right.var) {
+            if (left.path.size() > 1) {
+                for (auto eL : left.var->entities) {
+                    for (auto eR : right.var->entities) {
+                        vector<string> vR;
+                        if (rim) vR = rmv;
+                        else vR = right.path.getValue( eR.second );
 
-                    if (vR.size()) {
-                        left.path.setValue(vR[0], eL.second);
-                        print("  set " + left.str + " to " + right.str + " -> " + vR[0], GREEN);
+                        if (vR.size()) {
+                            left.path.setValue(vR[0], eL.second);
+                            print("  set " + left.str + " to " + right.str + " -> " + vR[0], GREEN);
+                        }
                     }
                 }
+            } else {
+                left.var->value = (rim && rmv.size()) ? rmv : vector<string>( { right.var->value } );
+                print("  set " + left.str + " to " + right.str + " -> " + toString(left.var->value), GREEN);
             }
-        } else if (left.var && right.var) {
-            left.var->value = (rim && rmv.size()) ? rmv : vector<string>( { right.var->value } );
-            print("  set " + left.str + " to " + right.str + " -> " + toString(left.var->value), GREEN);
         }
         statement->state = 1;
     }
@@ -278,19 +304,82 @@ bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
         print("  give " + right.str + " to " + left.str, GREEN);
     }
 
+    if (statement->verb == "set") {
+        auto& left = statement->terms[0];
+        auto& right = statement->terms[1];
+
+        bool lim = left.isMathExpression();
+        bool rim = right.isMathExpression();
+        vector<string> lmv, rmv;
+        if (lim) lmv = left.computeMathExpression(context);
+        if (rim) rmv = right.computeMathExpression(context);
+        if (lim) print("  left term " + left.str + " is math expression! -> (" + aggr(lmv)+")", GREEN);
+        if (rim) print("  right term " + right.str + " is math expression! -> (" + aggr(rmv)+")", GREEN);
+
+        auto applySet = [&](VREntityPtr eL, VREntityPtr eR) {
+            vector<string> vR;
+            if (rim) vR = rmv;
+            else vR = right.path.getValue( eR );
+            if (vR.size()) {
+                left.path.setValue(vR[0], eL);
+                print("  set entity " + eL->toString(), GREEN);
+                print("  set " + left.str + " to " + right.str + " -> " + vR[0], GREEN);
+            }
+        };
+
+        if (left.var && right.var) {
+            if (left.path.size() > 1) {
+                auto ents1 = left.var->getEntities(Evaluation::VALID);
+                auto ents2 = right.var->getEntities(Evaluation::VALID);
+
+                if (ents1.size() == ents2.size()) {
+                    for (int i=0; i<ents1.size(); i++) applySet(ents1[i], ents2[i]);
+                } else {
+                    for (auto eL : ents1) {
+                        for (auto eR : ents2) applySet(eL, eR);
+                    }
+                }
+
+            } else {
+                left.var->value = (rim && rmv.size()) ? rmv : vector<string>( { right.var->value } );
+                print("  set " + left.str + " to " + right.str + " -> " + toString(left.var->value), GREEN);
+            }
+        }
+        statement->state = 1;
+    }
+
+    if (statement->constructor) { // 'Error(e) : Event(v) ; is(v.name,crash)'
+        string concept = statement->verb;
+        string x = statement->terms[0].var->value[0];
+        VariablePtr v = getVariable(x);
+        if (!v) return false;
+
+        //auto query = statement->constructor->query;
+        print("  apply construction rule " + query.toString(), GREEN);
+        auto statements = query.statements;
+        for (auto s : statements) {
+            if (s->terms.size() > 1) continue; // only variable declarations
+            auto v2 = getVariable( s->terms[0].var->value[0] );
+            print("   construction variable found: " + v2->toString(), GREEN);
+            for (auto E : v2->getEntities(Evaluation::VALID)) {
+                auto e = context->onto->addEntity(x, concept);
+                v->addEntity(e);
+                print("    construct entity " + e->toString(), GREEN);
+            }
+        }
+
+        for (auto s : statements) { // apply set
+            if (s->terms.size() == 1) continue; // not variable declarations
+            apply(s, query, context);
+        }
+    }
+
     if (statement->verb == "q") {
         if (statement->terms.size() == 0) { print("Warning: failed to apply " + statement->toString() + ", empty query!"); return false; }
         string x = statement->terms[0].var->value[0];
         print("  process results of queried variable " + x, GREEN);
-        if (!context->vars.count(x)) {
-            print("   Warning: variable " + x + " not known!", RED);
-            return false;
-        }
-        VariablePtr v = context->vars[x];
-        if (!v) {
-            print("   Warning: variable " + x + " known but invalid!", RED);
-            return false;
-        }
+        VariablePtr v = getVariable(x);
+        if (!v) return false;
 
         bool addAssumtions = true;
         for (auto e : v->evaluations) if(e.second.state == Evaluation::VALID) addAssumtions = false;
@@ -300,9 +389,13 @@ bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
         //cout << "query variable: " << v->toString() << endl;
 
         for (auto e : v->entities) {
-            if (!v->evaluations.count(e.first)) continue;
+            if (!v->evaluations.count(e.first)) {
+                print("    entity " + e.second->toString() + " has no evaluation!", RED);
+                continue; // ewntity has no evaluation
+            }
             auto& eval = v->evaluations[e.first];
             bool valid = (eval.state == Evaluation::VALID || addAssumtions && eval.state != Evaluation::INVALID);
+            print("    entity " + e.second->toString() + " evaluation: " + ::toString(valid), BLUE);
             if (valid) {
                 print("    add valid entity: " + e.second->toString(), GREEN);
                 context->results.push_back(e.second);
@@ -326,10 +419,31 @@ bool VRReasoner::evaluate(VRStatementPtr statement, VRSemanticContextPtr context
     if (statement->isSimpleVerb()) { // resolve basic verb
         if (statement->verb == "is") return is(statement, context);
         if (statement->verb == "has") return has(statement, context);
+        if (statement->verb == "set") return set(statement, context);
     }
 
     if (statement->terms.size() == 1) { // resolve (anonymous?) variables
         string concept = statement->verb;
+
+
+
+        auto findConstructorRules = [&](VRStatementPtr statement, VRSemanticContextPtr context) {
+            print("     search constructors for statement: " + statement->toString());
+            for ( auto r : context->onto->getRules()) { // no match found -> check rules and initiate new queries
+                if (!context->rules.count(r->rule)) continue;
+                Query query = context->rules[r->rule];
+                if (query.request->verb != statement->verb) continue; // rule verb does not match
+                if (!statement->match(query.request)) continue; // statements are not similar enough
+
+                query.substituteRequest(statement);
+                context->queries.push_back(query);
+                if (!statement->constructor) statement->constructor = ConstructorPtr(new Constructor());
+                statement->constructor->query = query;
+                print("      found constructor: " + query.toString(), BLUE);
+            }
+        };
+
+        findConstructorRules(statement, context);
 
         if (auto c = context->onto->getConcept(concept)) {
             string name = statement->terms[0].path.root;
@@ -366,8 +480,13 @@ vector<VREntityPtr> VRReasoner::process(string initial_query, VROntologyPtr onto
         Query& query = context->queries.back();
         query.checkState();
         auto request = query.request;
+        if (!request) {
+            print(" ERROR, request is null: " + query.toString(), RED);
+            continue;
+        }
+
         if (request->state == 1) {
-            apply(request, context);
+            apply(request, query, context);
             print(" solved: " + query.toString(), RED);
             context->queries.pop_back(); continue;
         }; // query answered, pop and continue
@@ -380,7 +499,7 @@ vector<VREntityPtr> VRReasoner::process(string initial_query, VROntologyPtr onto
             if (statement->state == 1) continue;
             if (evaluate(statement, context)) { statement->state = 1; continue; }
             if (findRule(statement, context)) continue;
-            apply(statement, context);
+            apply(statement, query, context);
         }
 
         context->itr++;
