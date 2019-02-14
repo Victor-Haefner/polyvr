@@ -15,6 +15,7 @@ ptrFwd(VRSemanticContext);
 ptrFwd(VRReasoner);
 ptrFwd(VRStatement);
 ptrFwd(Variable);
+ptrFwd(Constructor);
 ptrFwd(VRProcess);
 ptrFwd(VRProcessNode);
 ptrFwd(VRProcessDiagram);

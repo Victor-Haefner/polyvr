@@ -225,6 +225,20 @@ void Variable::discard(VREntityPtr e) {
     evaluations.erase(e->ID);
 }
 
+vector<VREntityPtr> Variable::getEntities(Evaluation::STATE state) {
+    vector<VREntityPtr> res;
+    for (auto e : entities) {
+        if (!evaluations.count(e.first)) {
+            VRReasoner::print("    entity " + e.second->toString() + " has no evaluation!", VRReasoner::RED);
+            continue; // ewntity has no evaluation
+        }
+        auto& eval = evaluations[e.first];
+        bool valid = (eval.state == state);
+        if (valid) res.push_back(e.second);
+    }
+    return res;
+}
+
 VPath::VPath(string p) {
     nodes = VRReasoner::split(p, '.');
     if (nodes.size() == 0) return;

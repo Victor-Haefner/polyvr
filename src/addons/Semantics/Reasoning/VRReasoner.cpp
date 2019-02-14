@@ -233,6 +233,19 @@ bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
         return r;
     };
 
+    auto getVariable = [&](string name) -> VariablePtr {
+        if (!context->vars.count(name)) {
+            print("   Warning: variable " + name + " not known!", RED);
+            return 0;
+        }
+        VariablePtr v = context->vars[name];
+        if (!v) {
+            print("   Warning: variable " + name + " known but invalid!", RED);
+            return 0;
+        }
+        return v;
+    };
+
     if (statement->verb == "is") {
         auto& left = statement->terms[0];
         auto& right = statement->terms[1];
@@ -278,19 +291,29 @@ bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
         print("  give " + right.str + " to " + left.str, GREEN);
     }
 
+    if (statement->constructor) { // 'Error(e) : Event(v) ; is(v.name,crash)'
+        string concept = statement->verb;
+        string x = statement->terms[0].var->value[0];
+        VariablePtr v = getVariable(x);
+        if (!v) return false;
+
+        auto statements = statement->constructor->query.statements;
+        for (auto s : statements) {
+            if (s->terms.size() > 1) continue; // only variable declarations
+            auto v2 = getVariable( s->terms[0].var->value[0] );
+            for (auto E : v2->getEntities(Evaluation::VALID)) {
+                auto e = context->onto->addEntity(x, concept);
+                v->addEntity(e);
+            }
+        }
+    }
+
     if (statement->verb == "q") {
         if (statement->terms.size() == 0) { print("Warning: failed to apply " + statement->toString() + ", empty query!"); return false; }
         string x = statement->terms[0].var->value[0];
         print("  process results of queried variable " + x, GREEN);
-        if (!context->vars.count(x)) {
-            print("   Warning: variable " + x + " not known!", RED);
-            return false;
-        }
-        VariablePtr v = context->vars[x];
-        if (!v) {
-            print("   Warning: variable " + x + " known but invalid!", RED);
-            return false;
-        }
+        VariablePtr v = getVariable(x);
+        if (!v) return false;
 
         bool addAssumtions = true;
         for (auto e : v->evaluations) if(e.second.state == Evaluation::VALID) addAssumtions = false;
@@ -300,9 +323,13 @@ bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
         //cout << "query variable: " << v->toString() << endl;
 
         for (auto e : v->entities) {
-            if (!v->evaluations.count(e.first)) continue;
+            if (!v->evaluations.count(e.first)) {
+                print("    entity " + e.second->toString() + " has no evaluation!", RED);
+                continue; // ewntity has no evaluation
+            }
             auto& eval = v->evaluations[e.first];
             bool valid = (eval.state == Evaluation::VALID || addAssumtions && eval.state != Evaluation::INVALID);
+            print("    entity " + e.second->toString() + " evaluation: " + ::toString(valid), BLUE);
             if (valid) {
                 print("    add valid entity: " + e.second->toString(), GREEN);
                 context->results.push_back(e.second);
@@ -332,7 +359,9 @@ bool VRReasoner::evaluate(VRStatementPtr statement, VRSemanticContextPtr context
         string concept = statement->verb;
 
         if (findRule(statement, context)) {
-            print("  found constructor for" + statement->toString(), BLUE);
+            statement->constructor = ConstructorPtr(new Constructor());
+            statement->constructor->query = context->queries.back();
+            print("  found constructor for" + statement->toString() + ": " + statement->constructor->query.toString(), BLUE);
         }
 
         if (auto c = context->onto->getConcept(concept)) {
