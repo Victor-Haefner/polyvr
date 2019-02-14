@@ -323,7 +323,7 @@ void VPath::setValue(string v, VREntityPtr e) {
         string m = first;
         auto prop = e->getProperty(m, true);
         if (!prop) return;
-        if (!e->properties.count(prop->getName())) return;
+        if (!e->properties.count(prop->getName())) e->set(prop->getName(), "");
         for (auto p : e->properties[prop->getName()]) {
             p->setValue( v );
         }

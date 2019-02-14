@@ -187,6 +187,14 @@ bool VRReasoner::is(VRStatementPtr statement, VRSemanticContextPtr context) {
     return ( (b && !NOT) || (!b && NOT) );
 }
 
+bool VRReasoner::set(VRStatementPtr statement, VRSemanticContextPtr context) {
+    auto& left = statement->terms[0];
+    auto& right = statement->terms[1];
+    for (auto v : left.var->value) if ( context->vars.count(v) == 0) return false; // check if context has a variable with the left value
+    if (!left.valid() || !right.valid()) return false; // return if one of the sides invalid
+    return true; // further processed on VRReasoner::apply
+}
+
 bool VRReasoner::has(VRStatementPtr statement, VRSemanticContextPtr context) { // TODO
     auto& left = statement->terms[0];
     auto& right = statement->terms[1];
@@ -209,6 +217,8 @@ bool VRReasoner::has(VRStatementPtr statement, VRSemanticContextPtr context) { /
 
 // apply the statement changes to world
 bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
+    print("Apply statement " + statement->toString(), GREEN);
+
     auto clearAssumptions = [&]() {
         vector<string> toDelete;
         for (auto v : context->vars) {
@@ -291,6 +301,48 @@ bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
         print("  give " + right.str + " to " + left.str, GREEN);
     }
 
+    if (statement->verb == "set") {
+        auto& left = statement->terms[0];
+        auto& right = statement->terms[1];
+
+        bool lim = left.isMathExpression();
+        bool rim = right.isMathExpression();
+        vector<string> lmv, rmv;
+        if (lim) lmv = left.computeMathExpression(context);
+        if (rim) rmv = right.computeMathExpression(context);
+        if (lim) print("  left term " + left.str + " is math expression! -> (" + aggr(lmv)+")", GREEN);
+        if (rim) print("  right term " + right.str + " is math expression! -> (" + aggr(rmv)+")", GREEN);
+
+        auto applySet = [&](VREntityPtr eL, VREntityPtr eR) {
+            vector<string> vR;
+            if (rim) vR = rmv;
+            else vR = right.path.getValue( eR );
+            if (vR.size()) {
+                left.path.setValue(vR[0], eL);
+                print("  set entity " + eL->toString(), GREEN);
+                print("  set " + left.str + " to " + right.str + " -> " + vR[0], GREEN);
+            }
+        };
+
+        if (left.path.size() > 1) {
+            auto ents1 = left.var->getEntities(Evaluation::VALID);
+            auto ents2 = right.var->getEntities(Evaluation::VALID);
+
+            if (ents1.size() == ents2.size()) {
+                for (int i=0; i<ents1.size(); i++) applySet(ents1[i], ents2[i]);
+            } else {
+                for (auto eL : ents1) {
+                    for (auto eR : ents2) applySet(eL, eR);
+                }
+            }
+
+        } else if (left.var && right.var) {
+            left.var->value = (rim && rmv.size()) ? rmv : vector<string>( { right.var->value } );
+            print("  set " + left.str + " to " + right.str + " -> " + toString(left.var->value), GREEN);
+        }
+        statement->state = 1;
+    }
+
     if (statement->constructor) { // 'Error(e) : Event(v) ; is(v.name,crash)'
         string concept = statement->verb;
         string x = statement->terms[0].var->value[0];
@@ -305,6 +357,11 @@ bool VRReasoner::apply(VRStatementPtr statement, VRSemanticContextPtr context) {
                 auto e = context->onto->addEntity(x, concept);
                 v->addEntity(e);
             }
+        }
+
+        for (auto s : statements) { // apply set
+            if (s->terms.size() == 1) continue; // not variable declarations
+            apply(s, context);
         }
     }
 
@@ -353,6 +410,7 @@ bool VRReasoner::evaluate(VRStatementPtr statement, VRSemanticContextPtr context
     if (statement->isSimpleVerb()) { // resolve basic verb
         if (statement->verb == "is") return is(statement, context);
         if (statement->verb == "has") return has(statement, context);
+        if (statement->verb == "set") return set(statement, context);
     }
 
     if (statement->terms.size() == 1) { // resolve (anonymous?) variables

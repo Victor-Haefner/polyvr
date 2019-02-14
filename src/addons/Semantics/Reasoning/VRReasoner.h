@@ -51,6 +51,7 @@ class VRReasoner {
         bool apply(VRStatementPtr s, VRSemanticContextPtr c);
         bool builtin(VRStatementPtr s, VRSemanticContextPtr c);
         bool is(VRStatementPtr s, VRSemanticContextPtr c);
+        bool set(VRStatementPtr s, VRSemanticContextPtr c);
         bool has(VRStatementPtr s, VRSemanticContextPtr c);
         bool findRule(VRStatementPtr s, VRSemanticContextPtr c);
 
