@@ -35,7 +35,7 @@ class VRTrafficSigns : public VRRoadBase {
         VRMaterialPtr baseMaterial;
         VRMaterialPtr baseMaterialPole;
 
-        int maxSignsPerRow = 40;
+        int maxSignsPerRow = 60;
 
         void setupBaseSign();
 
