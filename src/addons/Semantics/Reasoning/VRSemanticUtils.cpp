@@ -13,11 +13,18 @@
 
 using namespace OSG;
 
+string Evaluation::toString() {
+    if (state == ASSUMPTION) return "assumption";
+    if (state == INVALID) return "invalid";
+    if (state == VALID) return "valid";
+}
+
 Variable::Variable() {;}
 
 string Variable::toString() {
     string s = valToString()+" (" + concept + "){";
     for (auto i : entities) s += i.second->getName()+",";
+    for (auto i : evaluations) s += i.second.toString()+",";
     if (entities.size() > 0) s.pop_back();
     s +="}[";
     if (isAnonymous) s += "anonymous, ";

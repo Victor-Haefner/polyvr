@@ -48,7 +48,7 @@ class VRReasoner {
         VRReasoner();
 
         bool evaluate(VRStatementPtr s, VRSemanticContextPtr c);
-        bool apply(VRStatementPtr s, VRSemanticContextPtr c);
+        bool apply(VRStatementPtr s, Query query, VRSemanticContextPtr c);
         bool builtin(VRStatementPtr s, VRSemanticContextPtr c);
         bool is(VRStatementPtr s, VRSemanticContextPtr c);
         bool set(VRStatementPtr s, VRSemanticContextPtr c);
