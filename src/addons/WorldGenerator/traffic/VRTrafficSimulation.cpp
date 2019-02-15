@@ -1260,6 +1260,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             //Matrix4d m;
             //poseBuffer.read(m);
             u.simPose = Pose::create(u.simPose2);
+            u.collisionDetectedExch = u.collisionDetected;
         }
     };
 
@@ -1378,10 +1379,8 @@ void VRTrafficSimulation::addUser(VRTransformPtr t) {
 
 bool VRTrafficSimulation::getUserCollisionState(int i) {
     PLock lock(mtx2);
-    if ( i < 0 || i > users.size()-1 ) { cout << "VRTrafficSimulation::getUserCollisionState " << i << " out of bounds" << endl; return false; }
-    auto ID = users[i].vID;
-
-    bool check = users[i].collisionDetected;
+    if ( i < 0 || i >= users.size() ) { cout << "VRTrafficSimulation::getUserCollisionState " << i << " out of bounds" << endl; return false; }
+    bool check = users[i].collisionDetectedExch;
     return check;
 }
 
