@@ -23,7 +23,7 @@ class VRProjectManager : public VRObject {
         static VRProjectManagerPtr create();
 
         void setSetting(string s, string v);
-        string getSetting(string s);
+        string getSetting(string s, string d);
         void addItem(VRStoragePtr s, string mode);
         void remItem(VRStoragePtr s);
         vector<VRStoragePtr> getItems();

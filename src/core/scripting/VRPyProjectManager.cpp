@@ -20,7 +20,7 @@ PyMethodDef VRPyStorage::methods[] = {
 
 PyMethodDef VRPyProjectManager::methods[] = {
     {"setSetting", PyWrap(ProjectManager, setSetting, "Set a setting", void, string, string ) },
-    {"getSetting", PyWrap(ProjectManager, getSetting, "Get a setting", string, string ) },
+    {"getSetting", PyWrapOpt(ProjectManager, getSetting, "Get a setting", "", string, string, string ) },
     {"addItem", PyWrapOpt(ProjectManager, addItem, "Add a storable item\n\tmode can be 'RELOAD' or 'REBUILD', reload will only reload the attributes of the object", "RELOAD", void, VRStoragePtr, string ) },
     {"remItem", PyWrap(ProjectManager, remItem, "Remove an item", void, VRStoragePtr ) },
     {"getItems", PyWrap(ProjectManager, getItems, "Get all items", vector<VRStoragePtr> ) },

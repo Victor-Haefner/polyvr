@@ -35,7 +35,7 @@ void VRProjectManager::remItem(VRStoragePtr s) {
 }
 
 void VRProjectManager::setSetting(string s, string v) { settings[s] = v; }
-string VRProjectManager::getSetting(string s) { return settings[s]; }
+string VRProjectManager::getSetting(string s, string d) { return settings.count(s) ? settings[s] : d; }
 
 vector<VRStoragePtr> VRProjectManager::getItems() {
     vector<VRStoragePtr> res;
