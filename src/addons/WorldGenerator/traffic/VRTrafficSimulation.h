@@ -57,6 +57,7 @@ class VRTrafficSimulation : public VRObject {
             bool vrwVisible = false;
             bool collisionDetected;
             bool collisionDetectedMem;
+            bool collisionDetectedExch;
             PosePtr simPose;
             Pose simPose2;
             //doubleBuffer poseBuffer;
