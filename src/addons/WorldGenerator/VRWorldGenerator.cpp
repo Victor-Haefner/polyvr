@@ -332,11 +332,22 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         } else if (way->hasTag("width")) widths = vector<float>( NlanesRight+NlanesLeft+hasPLaneR+hasPLaneL, toFloat(way->tags["width"]) );
         else widths = vector<float>( NlanesRight+NlanesLeft+hasPLaneR+hasPLaneL, width );
 
+        // add tag for maximum speed to lanes
+        //TODO: might need to parse in the future
+        // ^([0-9][\.0-9]+?)(?:[ ]?(?:km/h|kmh|kph|mph|knots))?$
+        vector<string> maxSpeeds;
+        if ( way->hasTag("maxspeed:lanes") ) {
+            auto data = splitString( way->tags["maxspeed:lanes"], '|' );
+            for (auto d : data) maxSpeeds.push_back(d);
+        } else if ( way->hasTag("maxspeed") ) {
+            maxSpeeds = vector<string>( NlanesRight+NlanesLeft, way->tags["maxspeed"] );
+        } else maxSpeeds = vector<string>( NlanesRight+NlanesLeft, "50.0");
+
         // create road and lane entities
         auto road = roads->addLongRoad(name, tag, nodes, norms, 0);
         if (hasPLaneR) road->addParkingLane(1, widths[NlanesRight], getInt("parking:lane:right:capacity", 0), getString("parking:lane:right", ""));
-        for (int l=0; l < NlanesRight; l++) road->addLane(1, widths[NlanesRight-1-l], pedestrian);
-        for (int l=0; l < NlanesLeft; l++) road->addLane(-1, widths[NlanesRight+hasPLaneR+l], pedestrian);
+        for (int l=0; l < NlanesRight; l++) { auto lane = road->addLane(1, widths[NlanesRight-1-l], pedestrian); lane->set("maxspeed", maxSpeeds[NlanesRight-1-l]); }
+        for (int l=0; l < NlanesLeft; l++) { auto lane = road->addLane(-1, widths[NlanesRight+hasPLaneR+l], pedestrian); lane->set("maxspeed", maxSpeeds[NlanesRight+l]); }
         if (hasPLaneL) road->addParkingLane(-1, widths[NlanesRight+NlanesLeft+hasPLaneR], getInt("parking:lane:left:capacity", 0), getString("parking:lane:left", ""));
         RoadEntities[way->id] = road;
 
