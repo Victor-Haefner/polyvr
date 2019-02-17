@@ -23,6 +23,7 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"selectPath", PyWrap( Pathtool, selectPath, "Select path", void, PathPtr ) },
     {"deselect", PyWrap( Pathtool, deselect, "Deselect anything previously selected - deselect()", void ) },
     {"setVisuals", PyWrapOpt( Pathtool, setVisuals, "Set the tool visibility, showStrokes, showHandles)", "0", void, bool, bool ) },
+    {"setBezierVisuals", PyWrapOpt( Pathtool, setBezierVisuals, "Set the bezier visibility, controlPoints, hulls)", "0", void, bool, bool ) },
     {"getPaths", PyWrapOpt( Pathtool, getPaths, "Return all paths or paths connected to handle, handle", "0", vector<PathPtr>, VRGeometryPtr ) },
     {"getPath", PyWrap( Pathtool, getPath, "Return path between handles h1 and h2 - [path] getPath( handle h1, handle h2 )", PathPtr, VRGeometryPtr, VRGeometryPtr ) },
     {"getHandle", PyWrap( Pathtool, getHandle, "Return a handle by node ID", VRGeometryPtr, int ) },
