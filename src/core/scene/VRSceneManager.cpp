@@ -229,21 +229,27 @@ void VRSceneManager::update() {
     static VRRate FPS; int fps = FPS.getRate();
     VRTimer timer; timer.start();
 
+    int pID7 = profiler->regStart("frame gtk update");
     VRTimer t1; t1.start();
     VRGuiManager::get()->updateGtk(); // update GUI
     VRGlobals::GTK1_FRAME_RATE.update(t1);
     VRGlobals::UPDATE_LOOP1.update(timer);
+    profiler->regStop(pID7);
 
+    int pID6 = profiler->regStart("frame callbacks");
     VRTimer t4; t4.start();
     updateCallbacks();
     VRGlobals::SMCALLBACKS_FRAME_RATE.update(t4);
     VRGlobals::UPDATE_LOOP2.update(timer);
+    profiler->regStop(pID6);
 
+    int pID5 = profiler->regStart("frame devices");
     VRTimer t5; t5.start();
     if (auto setup = VRSetup::getCurrent()) {
         setup->updateTracking(); // tracking
         setup->updateDevices(); // device beacon update
     }
+    profiler->regStop(pID5);
 
     VRGlobals::SMCALLBACKS_FRAME_RATE.update(t5);
     VRGlobals::UPDATE_LOOP3.update(timer);

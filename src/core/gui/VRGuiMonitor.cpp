@@ -180,7 +180,6 @@ bool VRGuiMonitor::draw(GdkEventExpose* e) {
         float l = t1-t0;
         float h = 0.1 +l*0.9;
         draw_call(t0*width, line_height*(call.thread*5 + 2 + (1-h)*0.5*Hl), l*width, line_height*h*Hl, call.name);
-        cout << "VRGuiMonitor::draw " << call.name << "   " << call.thread << endl;
     }
 
     return true;

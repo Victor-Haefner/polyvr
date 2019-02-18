@@ -12,6 +12,7 @@
 #include "core/utils/VRTimer.h"
 #include "core/utils/VROptions.h"
 #include "core/utils/VRGlobals.h"
+#include "core/utils/VRProfiler.h"
 #include "core/scene/VRScene.h"
 #include "core/gui/VRGuiManager.h"
 
@@ -221,6 +222,8 @@ void VRGtkWindow::render(bool fromThread) {
     if (fromThread) return;
     PLock( VRGuiManager::get()->guiMutex() );
     if (!active || !content) return;
+    auto profiler = VRProfiler::get();
+    int pID = profiler->regStart("gtk window render");
     Glib::RefPtr<Gdk::Window> drawable = drawArea->get_window();
     if (drawable) {
         GdkGLContext* glcontext = gtk_widget_get_gl_context (widget);
@@ -237,6 +240,7 @@ void VRGtkWindow::render(bool fromThread) {
         VRGlobals::SWAPB_FRAME_RATE.update(t2);
         gdk_gl_drawable_gl_end (gldrawable);
     }
+    profiler->regStop(pID);
 }
 
 void VRGtkWindow::on_resize(Gtk::Allocation& allocation) {
