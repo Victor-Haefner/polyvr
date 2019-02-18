@@ -819,12 +819,17 @@ void VRRoadNetwork::computeSurfaces() {
         if (auto w = world.lock()) w->getPhysicsSystem()->add(iGeo, iGeo->getID());
     }
 
+    auto stoneMat = VRMaterial::create("stone");
+    stoneMat->setDiffuse(Color3f(0.7,0.7,0.7));
+
     for (auto tunnel : tunnels) {
         tunnel->createGeometry();
+        dynamic_pointer_cast<VRGeometry>(tunnel->getChild(0))->setMaterial(stoneMat);
     }
 
     for (auto bridge : bridges) {
         bridge->createGeometry();
+        dynamic_pointer_cast<VRGeometry>(bridge->getChild(0))->setMaterial(stoneMat);
     }
 }
 
