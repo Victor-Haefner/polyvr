@@ -4,6 +4,16 @@
 #include <time.h>
 #include <iostream>
 
+#include <boost/lexical_cast.hpp>
+#include <boost/thread.hpp>
+
+unsigned long getThreadId(){
+    std::string threadId = boost::lexical_cast<std::string>(boost::this_thread::get_id());
+    unsigned long threadNumber = 0;
+    sscanf(threadId.c_str(), "%lx", &threadNumber);
+    return threadNumber;
+}
+
 VRProfiler* VRProfiler::get() {
     static VRProfiler* instance = new VRProfiler();
     return instance;
@@ -15,11 +25,15 @@ int VRProfiler::regStart(string name) {
     if (!isActive()) return -1;
     if (current == 0) return -1;
 
+    auto tID = getThreadId();
+    if (!threadIDs.count(tID)) threadIDs[tID] = threadIDs.size();
+
     boost::mutex::scoped_lock lock(mutex);
     ID++;
     Call c;
     c.name = name;
     c.t0 = getTime();
+    c.thread = threadIDs[tID];
     current->calls[ID] = c;
     return ID;
 }
