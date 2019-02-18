@@ -555,10 +555,10 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 
             if (tag.first == "highway") {
                 if (tag.second == "street_lamp") {
-                    auto lamp = assets->copy("Streetlamp", Pose::create(pos, dir), false);
+                    auto lamp = assets->copy("Streetlamp", Pose::create(pos, -dir), false);
                     lodTree->addObject(lamp, lamp->getWorldPosition(), 3, false);
-                    lamp->setDir(dir);
-                    collisionShape->addQuad(0.1, 2, Pose(pos, dir), lamp->getID());
+                    lamp->setDir(-dir);
+                    collisionShape->addQuad(0.1, 2, Pose(pos, -dir), lamp->getID());
                 }
             }
         }
