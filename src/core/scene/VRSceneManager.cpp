@@ -223,7 +223,9 @@ void VRSceneManager::updateScene() {
 
 void VRSceneManager::update() {
     // statistics
-    VRProfiler::get()->swap();
+    auto profiler = VRProfiler::get();
+    profiler->swap();
+    int pID1 = profiler->regStart("frame");
     static VRRate FPS; int fps = FPS.getRate();
     VRTimer timer; timer.start();
 
@@ -246,11 +248,14 @@ void VRSceneManager::update() {
     VRGlobals::SMCALLBACKS_FRAME_RATE.update(t5);
     VRGlobals::UPDATE_LOOP3.update(timer);
 
+    int pID4 = profiler->regStart("frame scene");
     VRTimer t6; t6.start();
     updateScene();
     VRGlobals::SCRIPTS_FRAME_RATE.update(t6);
     VRGlobals::UPDATE_LOOP4.update(timer);
+    profiler->regStop(pID4);
 
+    int pID3 = profiler->regStart("frame draw");
     if (auto setup = VRSetup::getCurrent()) {
         VRTimer t2; t2.start();
         setup->updateWindows(); // rendering
@@ -260,16 +265,20 @@ void VRSceneManager::update() {
         VRGuiManager::get()->updateGtk();
         VRGlobals::UPDATE_LOOP6.update(timer);
     }
+    profiler->regStop(pID3);
 
     // sleep
     if (current) current->allowScriptThreads();
     VRGlobals::CURRENT_FRAME++;
     VRGlobals::FRAME_RATE.fps = fps;
     VRTimer t7; t7.start();
+    int pID2 = profiler->regStart("frame sleep");
     osgSleep(max(16-timer.stop(),0));
+    profiler->regStop(pID2);
     VRGlobals::SLEEP_FRAME_RATE.update(t7);
     VRGlobals::UPDATE_LOOP7.update(timer);
     if (current) current->blockScriptThreads();
+    profiler->regStop(pID1);
 }
 
 OSG_END_NAMESPACE
