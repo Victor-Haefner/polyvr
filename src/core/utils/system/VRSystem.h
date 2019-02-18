@@ -9,6 +9,8 @@ using namespace std;
 void printBacktrace();
 
 bool exists(string path);
+bool isFile(string path);
+bool isFolder(string path);
 bool makedir(string path);
 bool removeFile(string path);
 string canonical(string path);
