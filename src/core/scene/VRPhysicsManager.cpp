@@ -136,8 +136,10 @@ void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
     if (dt < PHYSICS_THREAD_TIMESTEP_MS * 1000) this_thread::sleep_for(chrono::microseconds(PHYSICS_THREAD_TIMESTEP_MS * 1000 -dt));
     t3 = getTime();
 
-    MLock lock(mtx);
-    if (t3-t1 > 0) fps = 1e6/(t3-t1);
+    if (active) {
+        MLock lock(mtx);
+        if (t3-t1 > 0) fps = 1e6/(t3-t1);
+    }
 }
 
 void VRPhysicsManager::addPhysicsUpdateFunction(VRUpdateCbPtr fkt, bool after) {
