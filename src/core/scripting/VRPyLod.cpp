@@ -20,6 +20,7 @@ PyMethodDef VRPyLodTree::methods[] = {
 	{"getSubTree", PyWrap( LodTree, getSubTree, "Return sub tree", vector<VRLodLeafPtr>, VRLodLeafPtr) },
 	{"showOctree", PyWrap( LodTree, showOctree, "Show octree", void) },
 	{"size", PyWrap( LodTree, size, "Get number of objects in tree", int) },
+	{"rangeSearch", PyWrapOpt( LodTree, rangeSearch, "Get objects in radius around position, pos, radius, depth = -1", "-1", vector<VRObjectPtr>, Vec3d, float, int) },
     {NULL}  /* Sentinel */
 };
 

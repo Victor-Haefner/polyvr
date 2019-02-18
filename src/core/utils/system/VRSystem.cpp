@@ -33,6 +33,9 @@ bool makedir(string path) {
 bool removeFile(string path) { return boost::filesystem::remove(path); }
 string canonical(string path) { return boost::filesystem::canonical(path).string(); }
 
+bool isFile(string path) { return boost::filesystem::is_regular_file(path); }
+bool isFolder(string path) { return boost::filesystem::is_directory(path); }
+
 string getFileName(string path) {
     size_t sp = path.rfind('/');
     if (sp == string::npos) return path;
@@ -48,6 +51,7 @@ string getFolderName(string path) {
 vector<string> openFolder(string folder) {
     vector<string> res;
     if ( !exists( folder ) ) return res;
+    if ( !isFolder( folder ) ) return res;
 
     boost::filesystem::directory_iterator End; // default construction yields past-the-end
     for ( boost::filesystem::directory_iterator itr( folder ); itr != End; ++itr ) {

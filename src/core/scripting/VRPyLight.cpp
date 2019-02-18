@@ -15,6 +15,7 @@ PyMethodDef VRPyLight::methods[] = {
     {"setAmbient", PyWrap(Light, setAmbient, "Set ambient light color", void, Color4f) },
     {"setSpecular", PyWrap(Light, setSpecular, "Set specular light color", void, Color4f) },
     {"setAttenuation", PyWrap(Light, setAttenuation, "Set light attenuation parameters, [constant, linear, quadratic]", void, Vec3d) },
+    {"getAttenuation", PyWrap(Light, getAttenuation, "Get light attenuation parameters, [constant, linear, quadratic]", Vec3d) },
     {"setType", PyWrap(Light, setType, "Set light type: 'point', 'directional', 'spot', 'photometric'", void, string) },
     {"setShadowParams", PyWrapOpt(Light, setShadowParams, "Set shadow parameters", "0 0", void, bool, int, Color4f, Vec2d) },
     {"setPhotometricMap", PyWrap(Light, setPhotometricMap, "Set map for photometric light, path to .ies file", void, VRTexturePtr) },
