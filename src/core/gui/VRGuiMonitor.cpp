@@ -1,6 +1,7 @@
 #include "VRGuiMonitor.h"
 #include "VRGuiUtils.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRGlobals.h"
 #include <gtkmm/window.h>
 #include <gtkmm/liststore.h>
 #include <gtkmm/builder.h>
@@ -187,12 +188,14 @@ bool VRGuiMonitor::draw(GdkEventExpose* e) {
 void VRGuiMonitor::selectFrame() {
     // get frame
     int f = selFrameRange - 10 + selFrame;
+    //f = VRGlobals::CURRENT_FRAME -f -1;
     frame = VRProfiler::get()->getFrame(f);
 
     map<string, float> fkts;
-    for (auto c : frame.calls) {
-        if (fkts.count(c.second.name) == 0) fkts[c.second.name] = 0;
-        fkts[c.second.name] += c.second.t1 - c.second.t0;
+    for (auto itr : frame.calls) {
+        auto call = itr.second;
+        if (fkts.count(call.name) == 0) fkts[call.name] = 0;
+        if (call.t0 > 0 && call.t1 > 0) fkts[call.name] += call.t1 - call.t0;
     }
 
     // update list
@@ -201,10 +204,14 @@ void VRGuiMonitor::selectFrame() {
     for (auto c : fkts) {
         string col = toHex( getColor(c.first) );
         Gtk::ListStore::Row row = *store->append();
+        uint T = c.second;
         gtk_list_store_set (store->gobj(), row.gobj(), 0, c.first.c_str(), -1);
-        gtk_list_store_set (store->gobj(), row.gobj(), 1, toString(c.second).c_str(), -1);
+        gtk_list_store_set (store->gobj(), row.gobj(), 1, T, -1);
         gtk_list_store_set (store->gobj(), row.gobj(), 2, col.c_str(), -1);
     }
+
+    setLabel("Nframe", toString(f));
+    setLabel("Tframe", toString((frame.t1 - frame.t0)/1000.0)+"ms");
 
     redraw();
 }
