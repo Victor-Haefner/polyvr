@@ -17,6 +17,7 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRGlobals.h"
+#include "core/utils/VRProfiler.h"
 
 #include <OpenSG/OSGGLUT.h>
 #include <OpenSG/OSGGLUTWindow.h>
@@ -199,6 +200,8 @@ void VRWindowManager::updateWindows() {
     };
 
     auto wait = [&](int timeout = -1) {
+        int pID = VRProfiler::get()->regStart("window manager barrier");
+
         if (timeout > 0) {
             size_t tEnter = time(0);
             while (barrier->getNumWaiting() < VRWindow::active_window_count) {
@@ -211,7 +214,9 @@ void VRWindowManager::updateWindows() {
                 }
             }
         }
+
         barrier->enter(VRWindow::active_window_count+1);
+        VRProfiler::get()->regStop(pID);
         return true;
     };
 

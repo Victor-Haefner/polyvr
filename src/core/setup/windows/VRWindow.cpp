@@ -8,6 +8,7 @@
 #include "core/scene/VRThreadManager.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRProfiler.h"
 #include <libxml++/nodes/element.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -80,7 +81,9 @@ void VRWindow::update( weak_ptr<VRThread>  wt) {
 
         auto wait = [&]() {
             waitingAtBarrier = true;
+            int pID = VRProfiler::get()->regStart("window barrier "+getName());
             barrier->enter(active_window_count+1);
+            VRProfiler::get()->regStop(pID);
             waitingAtBarrier = false;
             if (stopping) return true;
             return false;

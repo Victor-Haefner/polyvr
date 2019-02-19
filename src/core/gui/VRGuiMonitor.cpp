@@ -199,8 +199,8 @@ void VRGuiMonitor::selectFrame() {
     for (auto itr : frame.calls) {
         auto call = itr.second;
         if (fkts.count(call.name) == 0) fkts[call.name] = 0;
-        if (call.t0 <= 0) call.t0 = frame.t0;
-        if (call.t1 <= 0) call.t1 = frame.t1;
+        if (call.t0 == 0) call.t0 = call.t1;
+        if (call.t1 == 0) call.t1 = call.t0;
         fkts[call.name] += call.t1 - call.t0;
     }
 

@@ -268,7 +268,9 @@ void VRSceneManager::update() {
         setup.reset(); // updateGtk may close application, reset setup to avoid memory leak
         VRGlobals::WINDOWS_FRAME_RATE.update(t2);
         VRGlobals::UPDATE_LOOP5.update(timer);
+        int pID31 = profiler->regStart("frame gtk update");
         VRGuiManager::get()->updateGtk();
+        profiler->regStop(pID31);
         VRGlobals::UPDATE_LOOP6.update(timer);
     }
     profiler->regStop(pID3);
