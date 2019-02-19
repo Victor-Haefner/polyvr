@@ -17,10 +17,10 @@
 #include "core/utils/VRGlobals.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRVisualLayer.h"
+#include "core/utils/system/VRSystem.h"
 #include "VRThreadManager.h"
 #include "core/objects/geometry/VRPrimitive.h"
 
-#include <chrono>
 #include <thread>
 
 #define PHYSICS_THREAD_TIMESTEP_MS 2
@@ -85,12 +85,6 @@ VRPhysicsManager::~VRPhysicsManager() {
 boost::recursive_mutex& VRPhysicsManager::physicsMutex() { return mtx; }
 
 VRVisualLayerPtr VRPhysicsManager::getVisualLayer() { return physics_visual_layer; }
-
-long long VRPhysicsManager::getTime() { // time in seconds
-    long long l = glutGet(GLUT_ELAPSED_TIME);
-    return 1000*l;
-    //return 1e6*clock()/CLOCKS_PER_SEC; // TODO
-}
 
 btSoftBodyWorldInfo* VRPhysicsManager::getSoftBodyWorldInfo() {return softBodyWorldInfo;}
 

@@ -11,6 +11,7 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRGlobals.h"
 #include "core/utils/VRTimer.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/math/polygon.h"
 #include "core/math/graph.h"
 #include "core/math/triangulator.h"
@@ -23,10 +24,8 @@
 #include "addons/Semantics/Reasoning/VREntity.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
 #include "core/tools/VRAnnotationEngine.h"
-#include <GL/glut.h>
 
 #include <boost/bind.hpp>
-#include <chrono>
 #include <thread>
 
 #define CPRINT(x) \
@@ -332,7 +331,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         v.simVisible = true;
         v.targetVelocity = vel;
         v.currentVelocity = vel;
-        v.lastLaneSwitchTS = float(glutGet(GLUT_ELAPSED_TIME)*0.001);
+        v.lastLaneSwitchTS = float(getTime()*1e-6);
 
         road.vehicleIDs[v.vID] = v.vID;
         road.lastVehicleID = v.vID;
@@ -576,7 +575,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         vehicle.simPose = p;
         //vehicle.poseBuffer.write(p->asMatrix());
         //cout << toString(vehicle.vID) << " propagated " << toString(vehicle.simPose) << endl;
-        vehicle.lastMoveTS = float(glutGet(GLUT_ELAPSED_TIME)*0.001);
+        vehicle.lastMoveTS = float(getTime()*1e-6);
         vehicle.currentOffset = offset;
         vehicle.currentdOffset = doffset;
         //cout << "Vehicle " << vehicle.vehicleID << " " << p->pos() << " " << vehicle.pos.edge << " " << vehicle.pos.pos << endl;
@@ -1005,13 +1004,13 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
 
     auto propagateVehicles = [&]() {
         int N = 0;
-        float current = float(glutGet(GLUT_ELAPSED_TIME)*0.001);
+        float current = float(getTime()*1e-6);
         //cout << current << endl;
         deltaT = current - lastT;
         if (deltaT == 0) cout << "TrafficSim:WARNING - delta time = 0" << endl;
         /*if (deltaT == 0) {
             this_thread::sleep_for(chrono::microseconds(1000));
-            float current = float(glutGet(GLUT_ELAPSED_TIME)*0.001);
+            float current = float(getTime()1e-6);
             deltaT = current - lastT;
         }*/
         lastT = current;
@@ -1075,7 +1074,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 float nextMove = (vehicle.currentVelocity) * deltaT;
                 float nextMoveAcc = (vehicle.currentVelocity + accFactor*deltaT) * deltaT;
                 float nextMoveDec = (vehicle.currentVelocity + decFactor*deltaT) * deltaT;
-                float sinceLastLS = float(glutGet(GLUT_ELAPSED_TIME)*0.001) - vehicle.lastLaneSwitchTS;
+                float sinceLastLS = float(getTime()*1e-6) - vehicle.lastLaneSwitchTS;
 
                 float intersectionWidth = vehicle.distanceToNextIntersec - vehicle.distanceToNextStop;
                 bool signalBlock = vehicle.nextSignalState=="100";
@@ -1211,13 +1210,13 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 if (!isTimeForward) dRel = -dRel;
                 if (dRel != 0) propagateVehicle(vehicle, dRel, vbeh);
 
-                if (isSimRunning && float(glutGet(GLUT_ELAPSED_TIME)*0.001) - vehicle.lastMoveTS > killswitch1 && !interBlock && !vehicBlock) { // && !interBlock && stopVehicleID != ID.first) {
+                if (isSimRunning && float(getTime()*1e-6) - vehicle.lastMoveTS > killswitch1 && !interBlock && !vehicBlock) { // && !interBlock && stopVehicleID != ID.first) {
                     toChangeRoad[road.first].push_back( make_pair(vehicle.vID, -1) ); ///------killswitch if vehicle get's stuck
                 }
-                if (isSimRunning && float(glutGet(GLUT_ELAPSED_TIME)*0.001) - vehicle.lastMoveTS > killswitch2) { // && !interBlock && stopVehicleID != ID.first) {
+                if (isSimRunning && float(getTime()*1e-6) - vehicle.lastMoveTS > killswitch2) { // && !interBlock && stopVehicleID != ID.first) {
                     toChangeRoad[road.first].push_back( make_pair(vehicle.vID, -1) ); ///------killswitch if vehicle get's stuck
                 }
-                if (!isSimRunning) vehicle.lastMoveTS = float(glutGet(GLUT_ELAPSED_TIME)*0.001);
+                if (!isSimRunning) vehicle.lastMoveTS = float(getTime()*1e-6);
                 N++; // count vehicles!
             }
         }
@@ -1444,8 +1443,8 @@ void VRTrafficSimulation::changeLane(int ID, int direction, bool forced) {
         v.laneChangeState = 1;
         v.behavior = direction;
         v.roadFrom = gp.edge;
-        v.indicatorTS = float(glutGet(GLUT_ELAPSED_TIME)*0.001);
-        v.lastLaneSwitchTS = float(glutGet(GLUT_ELAPSED_TIME)*0.001);
+        v.indicatorTS = float(getTime()*1e-6);
+        v.lastLaneSwitchTS = float(getTime()*1e-6);
         //cout << "VRTrafficSimulation::changeLane" << toString(v.behavior) << " - " << toString(v.roadFrom) << " - " << toString(v.roadTo) << endl;
     }
     else {/*

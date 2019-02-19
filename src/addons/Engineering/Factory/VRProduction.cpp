@@ -4,10 +4,9 @@
 #include "core/objects/geometry/VRGeometry.h"
 
 #include "core/utils/VRFunction.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
-
-#include <GL/glut.h>
 
 using namespace std;
 using namespace OSG;
@@ -73,7 +72,7 @@ VRProcessResult* VRProcessFragment::addResult(string name) {
 void VRProduction::update() {
     if (!running) return;
 
-    int t = glutGet(GLUT_ELAPSED_TIME);
+    int t = getTime()*1e-3;
     int dt = t-last_takt;
     if (dt < takt) return;
     last_takt = t;

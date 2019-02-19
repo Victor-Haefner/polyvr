@@ -96,8 +96,8 @@ void VRGuiBits::on_about_clicked() {
 void VRGuiBits::on_internal_clicked() {
     Gtk::Dialog* diag;
     VRGuiBuilder()->get_widget("dialog2", diag);
-    cout << "\nPRINT NAME MAP" << flush;
-    VRName::printInternals();
+    //cout << "\nPRINT NAME MAP" << flush;
+    //VRName::printInternals();
     diag->run();
 }
 

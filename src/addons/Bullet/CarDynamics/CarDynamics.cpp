@@ -6,12 +6,12 @@
 #include "core/objects/object/VRObjectT.h"
 #include "core/math/pose.h"
 #include "core/math/path.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/utils/VRStorage_template.h"
 
 #include <OpenSG/OSGTextureEnvChunk.h>
 #include <OpenSG/OSGTextureObjChunk.h>
 #include <BulletDynamics/Vehicle/btRaycastVehicle.h>
-#include <GL/glut.h>
 #include <math.h>
 
 typedef boost::recursive_mutex::scoped_lock PLock;
@@ -277,7 +277,7 @@ float VRCarDynamics::computeThrottleTransmission( float clampedThrottle ) {
 
 float VRCarDynamics::computeBreakTransmission( WheelPtr wheel, float coupling, float clampedThrottle ) {
     float a = 11.5741; //[m/s²] max breaking deceleration
-    double time = glutGet(GLUT_ELAPSED_TIME)*0.001;
+    double time = getTime()*1e-6;
     double dt = time-a_measurement_t;
     float aRPM = a * 60 / (wheel->radius * 2 * Pi);
     float breakImpact = wheel->breaking * aRPM * dt * coupling; //parameters to stop engine if breaks are being used
@@ -404,7 +404,7 @@ void VRCarDynamics::updateEngine() {
 
 void VRCarDynamics::updateSpeedAndAcceleration() {
     speed = vehicle->getCurrentSpeedKmHour();
-    double time = glutGet(GLUT_ELAPSED_TIME)*0.001;
+    double time = getTime()*1e-6;
     double dt = time-a_measurement_t;
     if (dt > 0) {
         float a = (speed-s_measurement)/dt;

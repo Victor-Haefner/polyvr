@@ -1,6 +1,6 @@
 #include "VRProfiler.h"
+#include "core/utils/system/VRSystem.h"
 
-#include <GL/glut.h>
 #include <time.h>
 #include <iostream>
 
@@ -43,12 +43,6 @@ void VRProfiler::regStop(int ID) {
     if (!current || !current->calls.count(ID)) return;
     boost::mutex::scoped_lock lock(mutex);
     current->calls[ID].t1 = getTime();
-}
-
-int VRProfiler::getTime() {
-    clock_t c = clock();
-    //int c = glutGet(GLUT_ELAPSED_TIME);
-    return c;
 }
 
 void VRProfiler::setActive(bool b) { active = b; }

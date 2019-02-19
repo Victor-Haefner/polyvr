@@ -97,6 +97,8 @@ void PolyVR::setOption(string name, int val) { options->setOption(name, val); }
 void PolyVR::setOption(string name, float val) { options->setOption(name, val); }
 
 void PolyVR::init(int argc, char **argv) {
+    initTime();
+
     cout << "Init PolyVR\n\n";
     enableCoreDump(true);
     setlocale(LC_ALL, "C");

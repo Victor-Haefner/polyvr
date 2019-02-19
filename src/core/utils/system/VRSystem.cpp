@@ -5,6 +5,7 @@
 #include <execinfo.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <chrono>
 
 void printBacktrace() {
     void *buffer[100];
@@ -72,3 +73,24 @@ bool compileCodeblocksProject(string path) {
     cout << "compile codeblocks project: " << cmd << endl;
     return systemCall(cmd) == 0;
 }
+
+
+chrono::time_point<chrono::system_clock, chrono::nanoseconds> globalStartTime;
+
+void initTime() {
+    globalStartTime = chrono::high_resolution_clock::now();
+}
+
+long long getTime() {
+    auto elapsed = chrono::high_resolution_clock::now() - globalStartTime;
+    return chrono::duration_cast<chrono::microseconds>(elapsed).count();
+}
+
+
+
+
+
+
+
+
+

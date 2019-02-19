@@ -36,12 +36,12 @@ using namespace std;
                 VRFunction<int>* ufkt = new VRFunction<int>("realworld update fkt", boost::bind(&TestMover::update, this));
                 scene->addUpdateFkt(ufkt, 1);
 
-                timeLastFrame = glutGet(GLUT_ELAPSED_TIME);
+                timeLastFrame = getTime()/1000;
             }
 
             void update() {
                 // calc time delta in seconds
-                float timeNow = glutGet(GLUT_ELAPSED_TIME);
+                float timeNow = getTime()/1000;
                 float dt = (timeNow - timeLastFrame) * 0.001f;
                 timeLastFrame = timeNow;
 

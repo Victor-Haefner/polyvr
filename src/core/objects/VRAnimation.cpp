@@ -1,9 +1,8 @@
 #include "VRAnimation.h"
 
 #include "core/utils/VRFunction.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/scene/VRScene.h"
-
-#include <GL/glut.h>
 
 OSG_BEGIN_NAMESPACE;
 
@@ -20,7 +19,7 @@ shared_ptr<VRAnimation> VRAnimation::create(string name) { return shared_ptr<VRA
 
 void VRAnimation::start(float offset) {
     this->offset = offset;
-    start_time = glutGet(GLUT_ELAPSED_TIME)/1000.0;
+    start_time = getTime()*1e-6;
     run = true;
     VRScene::getCurrent()->addAnimation(shared_from_this());
 }

@@ -33,8 +33,6 @@ class VRProfiler {
 
         boost::mutex mutex;
 
-        int getTime();
-
         VRProfiler();
 
     public:

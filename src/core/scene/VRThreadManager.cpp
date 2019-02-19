@@ -1,13 +1,11 @@
 #include "VRThreadManager.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/system/VRSystem.h"
 
 #include <boost/thread/thread.hpp>
-//#include <boost/thread.hpp>
-
 #include <OpenSG/OSGChangeList.h>
 #include <OpenSG/OSGThread.h>
 #include <OpenSG/OSGThreadManager.h>
-#include <OpenSG/OSGGLUT.h>
 
 
 OSG_BEGIN_NAMESPACE;
@@ -142,7 +140,7 @@ int VRThreadManager::initThread(VRThreadCbPtr f, string name, bool loop, int asp
     t->name = name;
     t->ID = id;
     t->fkt = f;
-    t->t_last = glutGet(GLUT_ELAPSED_TIME);
+    t->t_last = getTime()*1e-3;
     t->selfSyncBarrier = Barrier::create();
     t->mainSyncBarrier = Barrier::create();
     t->initCl = ChangeList::create();
