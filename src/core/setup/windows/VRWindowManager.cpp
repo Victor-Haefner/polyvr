@@ -234,8 +234,8 @@ void VRWindowManager::updateWindows() {
         if (!wait()) return false;
         //if (clist->getNumCreated() > 0) cout << "VRWindowManager::updateWindows " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
-        if (!wait(20)) return false;
         clist->clear();
+        if (!wait(20)) return false;
         return true;
         //sleep(1);
     };
