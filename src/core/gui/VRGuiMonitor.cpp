@@ -216,7 +216,7 @@ void VRGuiMonitor::selectFrame() {
         gtk_list_store_set (store->gobj(), row.gobj(), 2, col.c_str(), -1);
     }
 
-    setLabel("Nframe", toString(f));
+    setLabel("Nframe", toString(frame.fID));
     setLabel("Tframe", toString((frame.t1 - frame.t0)/1000.0)+"ms");
 
     redraw();

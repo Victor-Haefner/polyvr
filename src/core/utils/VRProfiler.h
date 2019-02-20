@@ -21,6 +21,7 @@ class VRProfiler {
             int t1 = 0;
             bool running = true;
             map<int, Call> calls;
+            unsigned long int fID = 0;
         };
 
     private:

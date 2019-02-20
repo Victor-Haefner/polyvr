@@ -1,11 +1,14 @@
 #include "VRProfiler.h"
 #include "core/utils/system/VRSystem.h"
+#include "core/utils/VRGlobals.h"
 
 #include <time.h>
 #include <iostream>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
+
+using namespace OSG;
 
 unsigned long getThreadId(){
     std::string threadId = boost::lexical_cast<std::string>(boost::this_thread::get_id());
@@ -70,6 +73,7 @@ void VRProfiler::swap() {
     if (current) current->t1 = getTime();
     Frame f;
     f.t0 = getTime();
+    f.fID = VRGlobals::CURRENT_FRAME;
     frames.push_front(f);
     if (history <= (int)frames.size()) frames.pop_back();
     current = &frames.front();
