@@ -751,6 +751,9 @@ void VRGuiScripts::on_help_clicked() {
     Gtk::Dialog* diag;
     VRGuiBuilder()->get_widget("pybindings-docs", diag);
     diag->show();
+    diag->deiconify();
+    diag->raise();
+    diag->show();
 }
 
 void VRGuiScripts::updateDocumentation() {
