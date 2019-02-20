@@ -158,6 +158,8 @@ void VRWindowManager::stopWindows() {
     barrier->enter(VRWindow::active_window_count+1);
 }
 
+bool VRWindowManager::doRenderSync = false;
+
 void VRWindowManager::updateWindows() {
     if (rendering_paused) return;
     auto scene = VRScene::getCurrent();
@@ -222,11 +224,12 @@ void VRWindowManager::updateWindows() {
 
     auto tryRender = [&]() {
         if (barrier->getNumWaiting() != VRWindow::active_window_count) return true;
-
         if (!wait()) return false;
         /** let the windows clear their change lists **/
         if (!wait()) return false;
         auto clist = Thread::getCurrentChangeList();
+        auto Ncreated = clist->getNumCreated();
+        if (Ncreated > 50) doRenderSync = true; // to reduce memory issues with big scenes
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRMultiWindow>(w.second)) if (win->getState() == VRMultiWindow::INITIALIZING) win->initialize();
         commitChanges();
         if (!wait()) return false;
@@ -235,7 +238,8 @@ void VRWindowManager::updateWindows() {
         //if (clist->getNumCreated() > 0) cout << "VRWindowManager::updateWindows " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
         clist->clear();
-        if (!wait(20)) return false;
+        if (doRenderSync) if (!wait()) return false;
+        doRenderSync = false;
         return true;
         //sleep(1);
     };

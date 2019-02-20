@@ -101,7 +101,10 @@ void VRWindow::update( weak_ptr<VRThread>  wt) {
             //if (clist->getNumCreated() > 0) cout << "VRWindow::update " << name << " " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
             if (wait()) break;
             render(true);
-            if (wait()) break;
+            if (VRWindowManager::doRenderSync) {
+                clist->clear();
+                if (wait()) break;
+            }
         }
 
         osgSleep(1);
