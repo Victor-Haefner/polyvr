@@ -269,6 +269,7 @@
       <column type="gboolean"/>
     </columns>
   </object>
+  <object class="GtkAction" id="action1"/>
   <object class="GtkListStore" id="TrackingProtocols">
     <columns>
       <!-- column-name protocol -->
@@ -293,7 +294,6 @@
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkAction" id="action1"/>
   <object class="GtkAboutDialog" id="aboutdialog1">
     <property name="can_focus">False</property>
     <property name="border_width">5</property>
@@ -584,6 +584,7 @@ cave allocated</property>
     </columns>
   </object>
   <object class="GtkDialog" id="dialog2">
+    <property name="width_request">1024</property>
     <property name="can_focus">False</property>
     <property name="border_width">5</property>
     <property name="type_hint">dialog</property>
@@ -669,54 +670,11 @@ cave allocated</property>
                 <property name="n_rows">2</property>
                 <property name="n_columns">2</property>
                 <child>
-                  <object class="GtkTreeView" id="treeview15">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="model">prof_fkts</property>
-                    <property name="search_column">0</property>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="treeviewcolumn33">
-                        <property name="title" translatable="yes">function</property>
-                        <property name="clickable">True</property>
-                        <property name="sort_indicator">True</property>
-                        <property name="sort_column_id">0</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="cellrenderertext30"/>
-                          <attributes>
-                            <attribute name="foreground">2</attribute>
-                            <attribute name="text">0</attribute>
-                          </attributes>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="treeviewcolumn20">
-                        <property name="title" translatable="yes">time (μs)</property>
-                        <property name="clickable">True</property>
-                        <property name="sort_indicator">True</property>
-                        <property name="sort_column_id">1</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="cellrenderertext48"/>
-                          <attributes>
-                            <attribute name="foreground">2</attribute>
-                            <attribute name="text">1</attribute>
-                          </attributes>
-                        </child>
-                      </object>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="top_attach">1</property>
-                    <property name="bottom_attach">2</property>
-                    <property name="x_options">GTK_FILL</property>
-                  </packing>
-                </child>
-                <child>
                   <object class="GtkScrolledWindow" id="scrolledwindow1">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="hscrollbar_policy">automatic</property>
-                    <property name="vscrollbar_policy">never</property>
+                    <property name="vscrollbar_policy">automatic</property>
                     <child>
                       <object class="GtkViewport" id="viewport5">
                         <property name="visible">True</property>
@@ -802,6 +760,57 @@ cave allocated</property>
                   <packing>
                     <property name="x_options">GTK_FILL</property>
                     <property name="y_options">GTK_FILL</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkScrolledWindow" id="scrolledwindow13">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="hscrollbar_policy">never</property>
+                    <property name="vscrollbar_policy">automatic</property>
+                    <child>
+                      <object class="GtkTreeView" id="treeview15">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="model">prof_fkts</property>
+                        <property name="search_column">0</property>
+                        <child>
+                          <object class="GtkTreeViewColumn" id="treeviewcolumn33">
+                            <property name="title" translatable="yes">function</property>
+                            <property name="clickable">True</property>
+                            <property name="sort_indicator">True</property>
+                            <property name="sort_column_id">0</property>
+                            <child>
+                              <object class="GtkCellRendererText" id="cellrenderertext30"/>
+                              <attributes>
+                                <attribute name="foreground">2</attribute>
+                                <attribute name="text">0</attribute>
+                              </attributes>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkTreeViewColumn" id="treeviewcolumn20">
+                            <property name="title" translatable="yes">time (μs)</property>
+                            <property name="clickable">True</property>
+                            <property name="sort_indicator">True</property>
+                            <property name="sort_column_id">1</property>
+                            <child>
+                              <object class="GtkCellRendererText" id="cellrenderertext48"/>
+                              <attributes>
+                                <attribute name="foreground">2</attribute>
+                                <attribute name="text">1</attribute>
+                              </attributes>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="top_attach">1</property>
+                    <property name="bottom_attach">2</property>
+                    <property name="x_options">GTK_FILL</property>
                   </packing>
                 </child>
               </object>
@@ -1474,20 +1483,6 @@ cave allocated</property>
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkTreeStore" id="onto_list">
-    <columns>
-      <!-- column-name onto -->
-      <column type="gchararray"/>
-      <!-- column-name type -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkListStore" id="phys_shapes">
-    <columns>
-      <!-- column-name shapes -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
   <object class="GtkListStore" id="prim_list">
     <columns>
       <!-- column-name nav_presets -->
@@ -1509,6 +1504,20 @@ cave allocated</property>
       <!-- column-name time -->
       <column type="guint"/>
       <!-- column-name color -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkTreeStore" id="onto_list">
+    <columns>
+      <!-- column-name onto -->
+      <column type="gchararray"/>
+      <!-- column-name type -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="phys_shapes">
+    <columns>
+      <!-- column-name shapes -->
       <column type="gchararray"/>
     </columns>
   </object>
@@ -2491,6 +2500,12 @@ cave allocated</property>
                                 <child>
                                   <placeholder/>
                                 </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                               </object>
                             </child>
                           </object>
@@ -2522,6 +2537,12 @@ cave allocated</property>
                                 <property name="can_focus">False</property>
                                 <property name="n_columns">2</property>
                                 <property name="homogeneous">True</property>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                                 <child>
                                   <placeholder/>
                                 </child>
