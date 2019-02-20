@@ -223,6 +223,8 @@ void VRWindowManager::updateWindows() {
     auto tryRender = [&]() {
         if (barrier->getNumWaiting() != VRWindow::active_window_count) return true;
 
+        //if (!wait()) return false; // do not do this the first time!
+        // /** let the windows clear their change lists **/
         if (!wait()) return false;
         auto clist = Thread::getCurrentChangeList();
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRMultiWindow>(w.second)) if (win->getState() == VRMultiWindow::INITIALIZING) win->initialize();
