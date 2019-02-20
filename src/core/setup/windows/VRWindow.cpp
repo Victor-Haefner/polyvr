@@ -93,13 +93,14 @@ void VRWindow::update( weak_ptr<VRThread>  wt) {
 
         if (t->control_flag) {
             if (wait()) break;
+            clist->clear();
+            if (wait()) break;
             /** let the window manager initiate multi windows if necessary **/
             if (wait()) break;
             clist->merge(*appCL);
             //if (clist->getNumCreated() > 0) cout << "VRWindow::update " << name << " " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
             if (wait()) break;
             render(true);
-            clist->clear();
             if (wait()) break;
         }
 
