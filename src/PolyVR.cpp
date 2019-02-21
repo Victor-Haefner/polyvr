@@ -21,8 +21,11 @@
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGNode.h>
 #include <GL/glut.h>
+
+#ifndef _WIN32
 #include <unistd.h>
 #include <termios.h>
+#endif
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -94,6 +97,8 @@ void PolyVR::setOption(string name, int val) { options->setOption(name, val); }
 void PolyVR::setOption(string name, float val) { options->setOption(name, val); }
 
 void PolyVR::init(int argc, char **argv) {
+    initTime();
+
     cout << "Init PolyVR\n\n";
     enableCoreDump(true);
     setlocale(LC_ALL, "C");

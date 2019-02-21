@@ -5,6 +5,7 @@
 #include "core/objects/geometry/VRSky.h"
 #include "core/tools/VRTextureRenderer.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/scene/VRScene.h"
 
 #include "core/objects/VRCamera.h"
@@ -14,8 +15,6 @@
 #include <math.h>
 #include <random>
 #include <boost/bind.hpp>
-#include <time.h>
-#include <GL/glut.h>
 
 using namespace OSG;
 
@@ -218,7 +217,7 @@ void VRRain::updateScale( float scaleNow ){
     scaleRN = scaleNow;
     float rainDensity = scaleRN == 0 ? 0 : 0.2 * 10/scaleRN;
     mat->setShaderParameter<float>("rainDensity", rainDensity);
-    cout << " rain density: " << rainDensity << endl;
+    //cout << " rain density: " << rainDensity << endl;
 }
 
 void VRRain::setupShaderLocations() {
@@ -234,7 +233,7 @@ void VRRain::setupShaderLocations() {
 void VRRain::update() {
     if (!isVisible()) return;
 
-    double offset = glutGet(GLUT_ELAPSED_TIME)*0.001; //seconds
+    double offset = getTime()*1e-6; //seconds
 
     auto camDef = VRScene::getCurrent()->getActiveCamera();
     if (debugRain) cout << "defcam: " << camDef->getName() << endl;

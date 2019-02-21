@@ -23,7 +23,7 @@ template<> int toValue(stringstream& ss, OSG::VRStroke::CAP& c) {
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRStroke::VRStroke(string name) : VRGeometry(name) { }
+VRStroke::VRStroke(string name) : VRGeometry(name) { type = "Stroke"; }
 VRStrokePtr VRStroke::create(string name) { return shared_ptr<VRStroke>(new VRStroke(name) ); }
 VRStrokePtr VRStroke::ptr() { return static_pointer_cast<VRStroke>( shared_from_this() ); }
 

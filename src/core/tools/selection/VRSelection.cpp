@@ -133,10 +133,19 @@ Vec3d VRSelection::computeCentroid() {
     for (auto& s : selected) {
         auto geo = s.second.geo.lock();
         auto pos = geo->getMesh()->geo->getPositions();
-        N += s.second.subselection.size();
-        for (auto i : s.second.subselection) {
-            auto p = Vec3d(pos->getValue<Pnt3f>(i));
-            res += p;
+        int n = s.second.subselection.size();
+        if (n > 0) {
+            N += n;
+            for (auto i : s.second.subselection) {
+                auto p = Vec3d(pos->getValue<Pnt3f>(i));
+                res += p;
+            }
+        } else {
+            N += pos->size();
+            for (int i = 0; i< pos->size(); i++) {
+                auto p = Vec3d(pos->getValue<Pnt3f>(i));
+                res += p;
+            }
         }
     }
 
@@ -153,18 +162,35 @@ Matrix4d VRSelection::computeCovMatrix() {
     for (auto& s : selected) {
         auto geo = s.second.geo.lock();
         auto pos = geo->getMesh()->geo->getPositions();
-        N += s.second.subselection.size();
-        for (auto i : s.second.subselection) {
-            auto pg = Vec3d(pos->getValue<Pnt3f>(i));
-            Vec3d p = pg - center;
-            res[0][0] += p[0]*p[0];
-            res[1][1] += p[1]*p[1];
-            res[2][2] += p[2]*p[2];
-            res[0][1] += p[0]*p[1];
-            res[0][2] += p[0]*p[2];
-            res[1][2] += p[1]*p[2];
+        int n = s.second.subselection.size();
+        if (n > 0) {
+            N += n;
+            for (auto i : s.second.subselection) {
+                auto pg = Vec3d(pos->getValue<Pnt3f>(i));
+                Vec3d p = pg - center;
+                res[0][0] += p[0]*p[0];
+                res[1][1] += p[1]*p[1];
+                res[2][2] += p[2]*p[2];
+                res[0][1] += p[0]*p[1];
+                res[0][2] += p[0]*p[2];
+                res[1][2] += p[1]*p[2];
+            }
+        } else {
+            N += pos->size();
+            for (int i = 0; i< pos->size(); i++) {
+                auto pg = Vec3d(pos->getValue<Pnt3f>(i));
+                Vec3d p = pg - center;
+                res[0][0] += p[0]*p[0];
+                res[1][1] += p[1]*p[1];
+                res[2][2] += p[2]*p[2];
+                res[0][1] += p[0]*p[1];
+                res[0][2] += p[0]*p[2];
+                res[1][2] += p[1]*p[2];
+            }
         }
     }
+
+    cout << "VRSelection::computeCovMatrix " << center << " " << N << endl;
 
     for (int i=0; i<3; i++)
         for (int j=i; j<3; j++) res[i][j] *= 1.0/N;
@@ -217,13 +243,8 @@ Pose VRSelection::computePCA() {
     Matrix4d cov = computeCovMatrix();
     Matrix4d ev  = computeEigenvectors(cov);
 
-    cout << "computePCA:\n" << ev << endl;
-
-    Vec3d pos = Vec3d(cov[3]);
-    //dir =
-
-    res.set(pos, Vec3d(ev[0]), Vec3d(ev[2]));
-
+    cout << "computePCA:\n" << cov << "\n\n" << ev << endl;
+    res.set(Vec3d(ev[3]), Vec3d(ev[0]), Vec3d(ev[2]));
     return res;
 }
 

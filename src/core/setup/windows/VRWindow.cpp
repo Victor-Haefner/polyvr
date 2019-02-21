@@ -8,6 +8,7 @@
 #include "core/scene/VRThreadManager.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRProfiler.h"
 #include <libxml++/nodes/element.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -77,10 +78,14 @@ void VRWindow::update( weak_ptr<VRThread>  wt) {
     do {
         t = wt.lock();
         BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
+        auto appCL = t->appThread->getChangeList();
+        auto clist = Thread::getCurrentChangeList();
 
         auto wait = [&]() {
             waitingAtBarrier = true;
+            int pID = VRProfiler::get()->regStart("window barrier "+getName());
             barrier->enter(active_window_count+1);
+            VRProfiler::get()->regStop(pID);
             waitingAtBarrier = false;
             if (stopping) return true;
             return false;
@@ -88,16 +93,18 @@ void VRWindow::update( weak_ptr<VRThread>  wt) {
 
         if (t->control_flag) {
             if (wait()) break;
+            clist->clear();
+            if (wait()) break;
             /** let the window manager initiate multi windows if necessary **/
             if (wait()) break;
-            auto appCL = t->appThread->getChangeList();
-            auto clist = Thread::getCurrentChangeList();
             clist->merge(*appCL);
             //if (clist->getNumCreated() > 0) cout << "VRWindow::update " << name << " " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
             if (wait()) break;
             render(true);
-            clist->clear();
-            if (wait()) break;
+            if (VRWindowManager::doRenderSync) {
+                clist->clear();
+                if (wait()) break;
+            }
         }
 
         osgSleep(1);

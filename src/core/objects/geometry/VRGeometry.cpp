@@ -415,8 +415,14 @@ void VRGeometry::updateNormals(bool face) {
 }
 
 void VRGeometry::flipNormals() {
-    VRGeoData data(ptr());
-    for (int i=0; i<data.getDataSize(4); i++) data.setNorm( i, - data.getNormal(i) );
+    if (!mesh || !mesh->geo) return;
+    GeoVectorPropertyMTRecPtr normals = mesh->geo->getNormals();
+    for (int i=0; i<normals->size(); i++) {
+        Vec3f n = normals->getValue<Vec3f>(i);
+        normals->setValue(-n, i);
+    }
+    //VRGeoData data(ptr()); // fails with for example sphere primitive
+    //for (int i=0; i<data.getDataSize(4); i++) data.setNorm( i, - data.getNormal(i) );
 }
 
 int VRGeometry::getLastMeshChange() { return lastMeshChange; }

@@ -12,6 +12,80 @@ OSG_BEGIN_NAMESPACE;
 
 class Expression {
     public:
+        class Token {
+            public:
+                string token;
+                int priority;
+                vector<string> types;
+
+            public:
+                Token(string token, int priority, vector<string> types);
+
+                bool is(string t);
+                bool isA(string t);
+
+                static void add(string token, int priority, vector<string> types);
+                static bool check(string c);
+                static void initTokens();
+        };
+
+        class TreeNode {
+            public:
+                string chunk;
+                Token* token = 0;
+                vector<string> meaning;
+
+                vector<TreeNode*> children;
+                TreeNode* parent = 0;
+
+            public:
+                TreeNode(string chunk, Token* token = 0);
+
+                void remChild(TreeNode* child);
+                void addChild(TreeNode* child);
+
+                TreeNode* getChild(int i);
+                TreeNode* getSibling(int offset);
+
+                void setValue(string s);
+                string toString();
+                void prettyPrint(string padding = "");
+                string prettyString(string padding = "");
+
+                bool is(string s);
+                bool isA(string s);
+                string collapseString();
+        };
+
+        static string decorate(string s, string color);
+        static bool isNumber(const string s);
+
+        static map<string, Token*> tokens;
+
+        string data;
+        vector<TreeNode*> nodes;
+        TreeNode* tree = 0;
+
+    public:
+        Expression(string data);
+        ~Expression();
+
+        static ExpressionPtr create();
+
+        void segment();
+        void buildTree();
+        void classify(TreeNode* node = 0);
+        void parse();
+
+        vector<TreeNode*> getLeafs();
+        void set(string s);
+
+        string toString();
+        string treeToString();
+};
+
+class MathExpression : public Expression {
+    public:
         struct ValueBase {
             virtual ~ValueBase();
             virtual string toString() = 0;
@@ -34,7 +108,7 @@ class Expression {
             ~Value();
             string toString();
 
-            // TODO: only declare here, use partial template implementations!
+            // TODO { only declare here, use partial template implementations!
             ValueBase* add(ValueBase* n);
             ValueBase* sub(ValueBase* n);
             ValueBase* mult(ValueBase* n);
@@ -48,55 +122,20 @@ class Expression {
             ValueBase* dot(ValueBase* n);
         };
 
-        //ValueBase* add(Value<Vec3d>* v1, Value<Vec3d>* v2) { return new Value<T>(v1->value + v2->value); }
-
-        struct Node {
-            string param;
-            ValueBase* value = 0;
-            Node* parent = 0;
-            Node* left = 0;
-            Node* right = 0;
-
-            Node(string s);
-            ~Node();
-
-            void setValue(float f);
-            void setValue(Vec3d v);
-            void setValue(string s);
-
-            string toString();
-            string toString2();
-            string treeToString(string indent = "");
-            void compute();
-        };
-
     public:
-        string data;
-        string prefixExpression;
-        Node* tree = 0;
-        vector<Node*> nodes;
-        map<string,int> OperatorHierarchy;
-        bool prefixExpr = false;
+        map<TreeNode*, ValueBase*> values;
 
         bool isMathToken(char c);
         static bool isMathFunction(string f);
-        void convToPrefixExpr();
-        void buildTree();
 
     public:
-        Expression(string s);
-        ~Expression();
+        MathExpression(string s);
+        ~MathExpression();
 
-        static ExpressionPtr create();
+        static MathExpressionPtr create();
 
         bool isMathExpression();
-        void makeTree();
-        vector<Node*> getLeafs();
-        void set(string s);
-        string computeTree();
         string compute();
-        string toString();
-        string treeAsString();
 };
 
 OSG_END_NAMESPACE;

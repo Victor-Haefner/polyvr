@@ -526,13 +526,20 @@ PyObject* VRPyLine::intersect(VRPyLine* self, PyObject *args) {
 // expression bindings
 
 simplePyType(Expression, New_ptr);
+simplePyType(MathExpression, New_ptr);
 
 PyMethodDef VRPyExpression::methods[] = {
     {"set", PyWrap2( Expression, set, "Set expression", void, string ) },
-    {"compute", PyWrap2( Expression, compute, "Compute expression", string ) },
-    {"makeTree", PyWrap2( Expression, makeTree, "Build tree structure", void ) },
-    {"toString", PyWrap2( Expression, toString, "Compute tree structure", string ) },
-    {"treeAsString", PyWrap2( Expression, treeAsString, "Compute tree structure", string ) },
+    {"segment", PyWrap2( Expression, segment, "Build tree structure", void ) },
+    {"buildTree", PyWrap2( Expression, buildTree, "Compute tree structure", void ) },
+    {"parse", PyWrap2( Expression, parse, "Compute tree structure", void ) },
+    {"toString", PyWrap2( Expression, toString, "Return expression as string", string ) },
+    {"treeToString", PyWrap2( Expression, treeToString, "Return tree as string", string ) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyMathExpression::methods[] = {
+    {"compute", PyWrap2( MathExpression, compute, "Compute expression", string ) },
     {NULL}  /* Sentinel */
 };
 

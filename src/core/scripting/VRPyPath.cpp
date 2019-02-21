@@ -16,6 +16,7 @@ PyMethodDef VRPyPath::methods[] = {
     {"addPoint2", PyCastWrap2(Path, addPoint, "Add a point to the path - int addPoint( Pose pose, vec3 up)", int, Pose p, Color3f ) },
     {"getPose", PyWrapOpt2(Path, getPose, "Return the pose at the path length t, t on the interval between point i and j - pose getPose( float t | int i, int j)", "0|0", PosePtr, float, int, int ) },
     {"getPoints", PyWrap2(Path, getPoints, "Return a list of the path points", vector<Pose> ) },
+    {"getControlPoints", PyWrap2(Path, getControlPoints, "Return a list of the path control points", vector<Vec3d> ) },
     {"close", PyWrap2(Path, close, "Close the path - close()", void ) },
     {"getPositions", PyWrap2(Path, getPositions, "Return the positions from the computed path - [[x,y,z]] getPositions()", vector<Vec3d> ) },
     {"getDirections", PyWrap2(Path, getDirections, "Return the directions from the computed path - [[x,y,z]] getDirections()", vector<Vec3d> ) },

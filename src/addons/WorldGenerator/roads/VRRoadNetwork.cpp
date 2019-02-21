@@ -265,6 +265,8 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
     for (int i=0; i<Nlanes-Nm; i++) road->addLane(-1, 4 );
     roads.push_back(road);
     roadsByEntity[road->getEntity()] = road;
+    string streetName = road->getEntity()->getValue<string>("name", "unnamed");
+    roadsByName[streetName].push_back(road);
     return road;
 }
 
@@ -311,7 +313,10 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
         vector<int> laneEdges;
         for (uint i=1; i<nodes.size(); i++) {
             connectGraph({nodes[i-1], nodes[i]}, {norms[i-1], norms[i]}, lane);
-            laneEdges.push_back(graph->getEdgeID(nodes[i-1]->getValue<int>("graphID", -1),nodes[i]->getValue<int>("graphID", -1)));
+            int nID1 = nodes[i-1]->getValue<int>("graphID", -1);
+            int nID2 = nodes[i]->getValue<int>("graphID", -1);
+            int eID = graph->getEdgeID(nID1,nID2);
+            laneEdges.push_back(eID);
             //cout << toString(laneEdges[i-1]) << endl;
         }
 
@@ -320,11 +325,14 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
 		widthSum += width;
 		if (direction > 0) { lanesD1.push_back(laneEdges); }
 		if (direction < 0) { lanesD2.push_back(laneEdges); }
-		}
+    }
 
 	if (lanesD1.size()>1) {
         for (int i = 0; i<lanesD1[0].size();i++) {
             for (int j = 1; j<lanesD1.size();j++) {
+                ///checking minimum length for lane relations
+                if (graph->getEdgeLength(lanesD1[j][i]) < 10) continue;
+                if (graph->getEdgeLength(lanesD1[j-1][i]) < 10) continue;
                 graph->addRelation(lanesD1[j][i],lanesD1[j-1][i]);
                 //cout << toString(lanesD1[j][i]) << " -- " << toString(lanesD1[j-1][i]) << endl;
             }
@@ -333,6 +341,9 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
     if (lanesD2.size()>1) {
         for (int i = 0; i<lanesD2[0].size();i++) {
             for (int j = 1; j<lanesD2.size();j++) {
+                ///checking minimum length for lane relations
+                if (graph->getEdgeLength(lanesD2[j][i]) < 10) continue;
+                if (graph->getEdgeLength(lanesD2[j-1][i]) < 10) continue;
                 graph->addRelation(lanesD2[j][i],lanesD2[j-1][i]);
                 //cout << toString(lanesD2[j][i]) << " -- " << toString(lanesD2[j-1][i]) << endl;
             }
@@ -486,19 +497,9 @@ vector<VREntityPtr> VRRoadNetwork::getRoadNodes() { // all nodes from all paths 
     return res;
 }
 
-Vec2i replaceChar(string& txt, char c1, char c2) {
-    Vec2i N;
-    int k = 0;
+void replaceChar(string& txt, char c1, char c2) {
     for (int i=0; i<int(txt.size()); i++)
-        if (txt[i] == c1) {
-            txt[i] = c2;
-            N[1]++;
-
-            N[0] = max(N[0],i-k);
-            k = i;
-        }
-    N[0] = max(N[0],int(txt.size())-1-k);
-    return N;
+        if (txt[i] == c1) txt[i] = c2;
 }
 
 void VRRoadNetwork::computeSigns() {
@@ -517,8 +518,8 @@ void VRRoadNetwork::computeSigns() {
             if (sign) { // TODO: add label
                 auto surface = dynamic_pointer_cast<VRGeometry>( sign->findAll("Sign")[3] );
                 surface->makeUnique();
-                Vec2i N = replaceChar(type, ' ', '\n');
-                auto tex = VRText::get()->create(type, "MONO 20", 20*N[0], 10*N[0]*N[1], Color4f(0,0,0,1), Color4f(1,1,1,1));
+                replaceChar(type, ' ', '\n');
+                auto tex = VRText::get()->create(type, "MONO 20", 20, Color4f(0,0,0,1), Color4f(1,1,1,1));
                 auto m = VRMaterial::create("sign");
                 m->setTexture(tex);
                 surface->setMaterial(m);
@@ -541,9 +542,21 @@ void VRRoadNetwork::computeSigns() {
                 auto d = pose->dir(); d[1] = 0; d.normalize();
                 if (laneEnt->get("direction")->value == "-1" || input == "CN:Prohibitory:5") { pose = road->getLeftEdge(pos); d=-d; }
                 if (input == "CN:Indicative:7") { pose = road->getSplit(pos); pose->setPos(pose->pos() - Vec3d(0,1.5,0)); }
+
                 pose->setDir(d);
                 pose->setUp(Vec3d(0,1,0));
                 tfsigns->addSign(input, pose);
+
+                if (input == "CN:Prohibitory:1") {
+                    Vec3d x = pose->x();
+                    auto width = road->getWidth();
+                    Vec3d p1 = pose->pos() - x*0.5;
+                    Vec3d p2 = pose->pos() - x*width + x*0.5;
+                    auto mL = road->addPath("StopLine", "Stopline", { road->addNode(0, p2), road->addNode(0, p1) }, { x, x });
+                    mL->set("width", toString(0.3));
+                    mL->set("color", "yellow");
+                    roadEnt->add("markings", mL->getName());
+                }
             }
         }
 
@@ -707,6 +720,8 @@ void VRRoadNetwork::computeIntersections() {
         roads.push_back(r);
         ways.push_back(r);
         roadsByEntity[r->getEntity()] = r;
+        string streetName = r->getEntity()->getValue<string>("name", "unnamed");
+        roadsByName[streetName].push_back(r);
     }
 
     for (auto node : getRoadNodes()) {
@@ -804,12 +819,17 @@ void VRRoadNetwork::computeSurfaces() {
         if (auto w = world.lock()) w->getPhysicsSystem()->add(iGeo, iGeo->getID());
     }
 
+    auto stoneMat = VRMaterial::create("stone");
+    stoneMat->setDiffuse(Color3f(0.7,0.7,0.7));
+
     for (auto tunnel : tunnels) {
         tunnel->createGeometry();
+        dynamic_pointer_cast<VRGeometry>(tunnel->getChild(0))->setMaterial(stoneMat);
     }
 
     for (auto bridge : bridges) {
         bridge->createGeometry();
+        dynamic_pointer_cast<VRGeometry>(bridge->getChild(0))->setMaterial(stoneMat);
     }
 }
 
@@ -888,6 +908,12 @@ VRRoadPtr VRRoadNetwork::getRoad(VREntityPtr road) {
     if (roadsByEntity.count(road)) return roadsByEntity[road];
     return 0;
 }
+
+vector<VRRoadPtr> VRRoadNetwork::getRoadByName(string name) {
+    if (roadsByName.count(name)) return roadsByName[name];
+    return vector<VRRoadPtr>();
+}
+
 VRRoadIntersectionPtr VRRoadNetwork::getIntersection(VREntityPtr intersection) {
     if (intersectionsByEntity.count(intersection)) return intersectionsByEntity[intersection];
     return 0;
@@ -992,19 +1018,26 @@ void VRRoadNetwork::connectGraph(vector<VREntityPtr> nodes, vector<Vec3d> norms,
 
 PosePtr VRRoadNetwork::getPosition(Graph::position p) {
     int eID = p.edge;
+    if (eID == 0) return 0;
     auto edge = graph->getEdge(eID);
+    if (edge.ID == 0) return 0;
+
     int n1 = edge.from;
     int n2 = edge.to;
 
+    if (!graphNormals.count(eID)) return 0;
     auto eNorms = graphNormals[eID];
+    if (!graphEdgeEntities.count(eID)) return 0;
     auto lane = graphEdgeEntities[eID];
-    auto nodes = lane->getEntity("path")->getAllEntities("nodes");
+    auto pathE = lane->getEntity("path");
+    auto nodes = pathE->getAllEntities("nodes");
 
     Vec3d node1;
     Vec3d node2;
 
     for (auto nE : nodes) {
         auto n = nE->getEntity("node");
+        if (!n) continue;
         if (n->getValue<int>("graphID", 0) == n1) node1 = n->getVec3("position");
         if (n->getValue<int>("graphID", 0) == n2) node2 = n->getVec3("position");
     }

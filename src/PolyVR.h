@@ -2,6 +2,7 @@
 #define VRFRAMEWORK_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
+#include <string>
 #include "core/objects/VRObjectFwd.h"
 
 class VROptions;

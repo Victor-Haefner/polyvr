@@ -1,6 +1,7 @@
 #include "VRGuiMonitor.h"
 #include "VRGuiUtils.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRGlobals.h"
 #include <gtkmm/window.h>
 #include <gtkmm/liststore.h>
 #include <gtkmm/builder.h>
@@ -171,6 +172,9 @@ bool VRGuiMonitor::draw(GdkEventExpose* e) {
     draw_timeline(0, N,   L, L*width, line_height, 0,           selFrameRange);
     draw_timeline(0, N/L, 1, width,   line_height, line_height, selFrame);
 
+    map<int, int> threadMap;
+    for (auto itr : frame.calls) if (!threadMap.count(itr.second.thread)) threadMap[itr.second.thread] = threadMap.size();
+
     float fl = 1./(frame.t1 - frame.t0);
     for (auto itr : frame.calls) {
         auto call = itr.second;
@@ -178,7 +182,8 @@ bool VRGuiMonitor::draw(GdkEventExpose* e) {
         float t1 = (call.t1 - frame.t0)*fl;
         float l = t1-t0;
         float h = 0.1 +l*0.9;
-        draw_call(t0*width, line_height*(2 + (1-h)*0.5*Hl), l*width, line_height*h*Hl, call.name);
+        int tID = threadMap[call.thread];
+        draw_call(t0*width, line_height*(tID*6 + 2 + (1-h)*0.5*Hl), l*width, line_height*h*Hl, call.name);
     }
 
     return true;
@@ -187,12 +192,16 @@ bool VRGuiMonitor::draw(GdkEventExpose* e) {
 void VRGuiMonitor::selectFrame() {
     // get frame
     int f = selFrameRange - 10 + selFrame;
+    //f = VRGlobals::CURRENT_FRAME -f -1;
     frame = VRProfiler::get()->getFrame(f);
 
     map<string, float> fkts;
-    for (auto c : frame.calls) {
-        if (fkts.count(c.second.name) == 0) fkts[c.second.name] = 0;
-        fkts[c.second.name] += c.second.t1 - c.second.t0;
+    for (auto itr : frame.calls) {
+        auto call = itr.second;
+        if (fkts.count(call.name) == 0) fkts[call.name] = 0;
+        if (call.t0 == 0) call.t0 = call.t1;
+        if (call.t1 == 0) call.t1 = call.t0;
+        fkts[call.name] += call.t1 - call.t0;
     }
 
     // update list
@@ -201,10 +210,14 @@ void VRGuiMonitor::selectFrame() {
     for (auto c : fkts) {
         string col = toHex( getColor(c.first) );
         Gtk::ListStore::Row row = *store->append();
+        uint T = c.second;
         gtk_list_store_set (store->gobj(), row.gobj(), 0, c.first.c_str(), -1);
-        gtk_list_store_set (store->gobj(), row.gobj(), 1, toString(c.second).c_str(), -1);
+        gtk_list_store_set (store->gobj(), row.gobj(), 1, T, -1);
         gtk_list_store_set (store->gobj(), row.gobj(), 2, col.c_str(), -1);
     }
+
+    setLabel("Nframe", toString(frame.fID));
+    setLabel("Tframe", toString((frame.t1 - frame.t0)/1000.0)+"ms");
 
     redraw();
 }

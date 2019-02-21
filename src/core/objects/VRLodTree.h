@@ -55,6 +55,7 @@ class VRLodTree : public VRObject {
         vector<VRLodLeafPtr> getSubTree(VRLodLeafPtr l);
         VRLodLeafPtr getLeaf(OctreeNode* o);
         map<OctreeNode*, VRLodLeafPtr>& getLeafs();
+        vector<VRObjectPtr> rangeSearch(Vec3d p, float r, int depth = -1);
 
         void showOctree();
 };

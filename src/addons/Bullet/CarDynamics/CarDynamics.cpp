@@ -6,12 +6,12 @@
 #include "core/objects/object/VRObjectT.h"
 #include "core/math/pose.h"
 #include "core/math/path.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/utils/VRStorage_template.h"
 
 #include <OpenSG/OSGTextureEnvChunk.h>
 #include <OpenSG/OSGTextureObjChunk.h>
 #include <BulletDynamics/Vehicle/btRaycastVehicle.h>
-#include <GL/glut.h>
 #include <math.h>
 
 typedef boost::recursive_mutex::scoped_lock PLock;
@@ -277,7 +277,7 @@ float VRCarDynamics::computeThrottleTransmission( float clampedThrottle ) {
 
 float VRCarDynamics::computeBreakTransmission( WheelPtr wheel, float coupling, float clampedThrottle ) {
     float a = 11.5741; //[m/s²] max breaking deceleration
-    double time = glutGet(GLUT_ELAPSED_TIME)*0.001;
+    double time = getTime()*1e-6;
     double dt = time-a_measurement_t;
     float aRPM = a * 60 / (wheel->radius * 2 * Pi);
     float breakImpact = wheel->breaking * aRPM * dt * coupling; //parameters to stop engine if breaks are being used
@@ -321,13 +321,22 @@ float VRCarDynamics::computeEngineBreak(float gearRatio, float coupling ) {
 }
 
 void VRCarDynamics::updateEngineRPM( float gearRPM, float deltaRPM, float throttleImpactOnRPM, float breakImpactOnRPM, float engineFriction, float coupling ) {
-    if (coupling>0.9) engine->rpm = abs(gearRPM); /**INDUCES PROBLEM FOR HIGH SPEEDS, IF CAR LOSES CONTROL**/
+    float slidingFactor = 0.0;
+    for (int each = 0; each < wheels.size(); each ++) {
+        btWheelInfo& wheelInf =  vehicle->getWheelInfo(each);
+        auto skidInf = float(wheelInf.m_skidInfo);
+        slidingFactor += skidInf;
+        //cout << " VRCarDynamics::skidInfo " << toString(skidInf) << endl;
+    }
+    slidingFactor *= 1.0/float(wheels.size());
+    //if (slidingFactor < 1) cout << " VRCarDynamics::skidInfo " << slidingFactor << endl;
+    if (coupling > 0.98 && slidingFactor>0.80) engine->rpm = abs(gearRPM);
     engine->rpm += throttleImpactOnRPM;
     engine->rpm -= engine->frictionCoefficient * engineFriction + breakImpactOnRPM;
     if (type != SIMPLE) {
         engine->rpm += 0.1 * deltaRPM;
     }
-    if (coupling>0.9) engine->rpm = abs(gearRPM); /**INDUCES PROBLEM FOR HIGH SPEEDS, IF CAR LOSES CONTROL**/
+    if (coupling > 0.98 && slidingFactor>0.98) engine->rpm = abs(gearRPM);
 }
 
 void VRCarDynamics::updateEngine() {
@@ -395,7 +404,7 @@ void VRCarDynamics::updateEngine() {
 
 void VRCarDynamics::updateSpeedAndAcceleration() {
     speed = vehicle->getCurrentSpeedKmHour();
-    double time = glutGet(GLUT_ELAPSED_TIME)*0.001;
+    double time = getTime()*1e-6;
     double dt = time-a_measurement_t;
     if (dt > 0) {
         float a = (speed-s_measurement)/dt;

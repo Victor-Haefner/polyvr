@@ -89,15 +89,30 @@ VRPathFinding::Position VRPathFinding::getMinFromOpenSet() {
     return res;
 }
 
+// changed behaviour to use directed graph edges
 vector<VRPathFinding::Position> VRPathFinding::getNeighbors(Position& p) {
     vector<Position> res;
     if (!graph) return res;
-    if (graph->hasNode(p.nID)) for (auto n : graph->getNeighbors(p.nID)) res.push_back( Position(n.ID) );
+
+    if (graph->hasNode(p.nID)) {
+        for (auto n : graph->getNextNodes(p.nID)) res.push_back( Position(n.ID) );
+
+        for (auto e : graph->getOutEdges(p.nID)) {
+            for (auto eID2 : e.relations) { // bridges between edges
+                if (graph->hasEdge(eID2)) {
+                    auto edge = graph->getEdge(eID2);
+                    res.push_back(Position(edge.from));
+                }
+            }
+        }
+    }
+
     if (graph->hasEdge(p.eID)) {
         auto edge = graph->getEdge(p.eID);
-        res.push_back(Position(edge.from));
+        //res.push_back(Position(edge.from));
         res.push_back(Position(edge.to));
     }
+
     return res;
 }
 

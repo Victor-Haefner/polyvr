@@ -143,7 +143,7 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     string l = n->label;
     int lineN = wrapString(l, wrapN);
 
-    auto txt = VRText::get()->create(l, "MONO 20", 18*wrapN, 32*lineN, fg, bg);
+    auto txt = VRText::get()->create(l, "MONO 20", 20, fg, bg);
     auto mat = VRMaterial::create("ProcessElement");
     mat->setTexture(txt, false);
     mat->setTextureParams(GL_LINEAR, GL_LINEAR);
@@ -344,7 +344,7 @@ void VRProcessLayout::setElementName(int ID, string name) {
     if (n->type == MESSAGE) wrapN = 22;
     int lineN = wrapString(name, wrapN);
 
-    auto txt = VRText::get()->create(name, "MONO 20", 18*wrapN, 32*lineN, fg, bg);
+    auto txt = VRText::get()->create(name, "MONO 20", 20, fg, bg);
     auto mat = VRMaterial::create("ProcessElement");
     mat->setTexture(txt, false);
     mat->setTextureParams(GL_LINEAR, GL_LINEAR);

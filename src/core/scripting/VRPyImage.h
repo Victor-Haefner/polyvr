@@ -13,6 +13,7 @@ struct VRPyImage : VRPyBaseT<OSG::VRTexture> {
     static PyObject* write(VRPyImage* self, PyObject *args);
     static PyObject* getPixel(VRPyImage* self, PyObject *args);
     static PyObject* getSize(VRPyImage* self, PyObject *args);
+    static PyObject* getAspectRatio(VRPyImage* self, PyObject *args);
     static PyObject* getChannels(VRPyImage* self, PyObject *args);
 };
 

@@ -15,6 +15,8 @@ VRAnnotationEngine::VRAnnotationEngine(string name) : VRGeometry(name) {
     fg = Color4f(0,0,0,1);
     bg = Color4f(1,0,1,0);
 
+    type = "AnnotationEngine";
+
     mat = VRMaterial::create("AnnEngMat");
     mat->setVertexShader(vp, "annotationVS");
     mat->setFragmentShader(fp, "annotationFS");

@@ -92,14 +92,20 @@ class VRPathtool : public VRObject {
         typedef shared_ptr<entry> entryPtr;
 
         void updateHandlePose(knot& knot, map<int, Vec3d>& hPositions, bool doUpdateEntry = true);
+        void updateBezierVisuals();
 
     private:
         GraphPtr graph;
         map<int, PathPtr> paths;
         map<int, option > options;
         vector<VRGeometryWeakPtr> handles;
-        vector<VRGeometryWeakPtr> controlhandles;
+        vector<VRGeometryWeakPtr> controlHandles;
+        VRGeometryWeakPtr controlPoints;
+        VRGeometryWeakPtr bezierHulls;
         VRGeometryPtr arrowTemplate;
+
+        bool showBControlPoints = false;
+        bool showBHulls = false;
 
         map<Path*, entryPtr> pathToEntry;
         map<VRGeometry*, vector<entryPtr> > handleToEntries; // map handle geometries to the entries
@@ -156,6 +162,7 @@ class VRPathtool : public VRObject {
 
         void addPath(PathPtr p, VRObjectPtr anchor = 0, VRGeometryPtr ha = 0, VRGeometryPtr he = 0, bool handles = true);
         void setVisuals(bool handles, bool lines);
+        void setBezierVisuals(bool controlPoints, bool hulls);
         void setHandleGeometry(VRGeometryPtr geo);
         void clear(PathPtr p = 0);
 
@@ -169,7 +176,7 @@ class VRPathtool : public VRObject {
         VRMaterialPtr getArrowMaterial();
         void setArrowSize(float s);
 
-        // options
+        // edge options
         void setEdgeResolution(int eID, int resolution);
         void setEdgeColor(int eID, Color3f color1, Color3f color2);
         void setEdgeBulge(int eID, Vec3d bulge);

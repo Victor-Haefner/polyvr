@@ -15,6 +15,8 @@ class Path : public VRStorage {
         vector<Pose> points;
         vector<Color3f> point_colors;
 
+        vector<Vec3d> controlPoints;
+
         int degree = 3;
         int direction = 1;
         int iterations = 80;
@@ -45,6 +47,7 @@ class Path : public VRStorage {
         Color3f getPointColor(int i);
         void setPointColor(int i, Color3f c);
         vector<Pose> getPoints();
+        vector<Vec3d> getControlPoints();
 
         void invert();
         void close();

@@ -6,6 +6,7 @@
 #include "core/objects/geometry/VRSky.h"
 #include "core/tools/VRTextureRenderer.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/scene/VRScene.h"
 
 #include "core/objects/VRCamera.h"
@@ -15,8 +16,6 @@
 #include <math.h>
 #include <random>
 #include <boost/bind.hpp>
-#include <time.h>
-#include <GL/glut.h>
 
 using namespace OSG;
 
@@ -144,7 +143,7 @@ Vec2f VRRainCarWindshield::calcAccComp(Vec3d accelerationVec,Vec3d windshieldDir
 void VRRainCarWindshield::update() {
     if (!isVisible()) return;
 
-    tnow = glutGet(GLUT_ELAPSED_TIME)*0.001; //seconds
+    tnow = getTime()*1e-6; //seconds
     tdelta = tnow-tlast;
     tlast = tnow;
 
@@ -223,6 +222,8 @@ void VRRainCarWindshield::update() {
     setShaderParameter("accelerationVec", convertV3dToV3f(accelerationVec));
     setShaderParameter("mapOffset0", mapOffset0);
     setShaderParameter("mapOffset1", mapOffset1);
+    setShaderParameter("wiperPos", wiperPos);
+    setShaderParameter("wiperSize", wiperSize);
 }
 
 void VRRainCarWindshield::doTestFunction() {
@@ -252,6 +253,14 @@ void VRRainCarWindshield::setWipers(bool isWiping, float newWiperSpeed) {
     hasPower = true;
     setShaderParameter("hasPower", hasPower);
     cout << "VRRainCarWindshield::setWipers(" << isWiping <<","<< newWiperSpeed << ")" << endl;
+}
+
+void VRRainCarWindshield::setWiperPos(Vec2d in) {
+    wiperPos = convertV2dToV2f(in);
+}
+
+void VRRainCarWindshield::setWiperSize(float in) {
+    wiperSize = in;
 }
 
 void VRRainCarWindshield::cutPower() {

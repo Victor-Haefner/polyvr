@@ -88,4 +88,8 @@ struct VRPyExpression : VRPyBaseT<OSG::Expression> {
     static PyMethodDef methods[];
 };
 
+struct VRPyMathExpression : VRPyBaseT<OSG::MathExpression> {
+    static PyMethodDef methods[];
+};
+
 #endif // VRPYMATH_H_INCLUDED

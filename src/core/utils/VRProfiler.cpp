@@ -1,8 +1,21 @@
 #include "VRProfiler.h"
+#include "core/utils/system/VRSystem.h"
+#include "core/utils/VRGlobals.h"
 
-#include <GL/glut.h>
 #include <time.h>
 #include <iostream>
+
+#include <boost/lexical_cast.hpp>
+#include <boost/thread.hpp>
+
+using namespace OSG;
+
+unsigned long getThreadId(){
+    std::string threadId = boost::lexical_cast<std::string>(boost::this_thread::get_id());
+    unsigned long threadNumber = 0;
+    sscanf(threadId.c_str(), "%lx", &threadNumber);
+    return threadNumber;
+}
 
 VRProfiler* VRProfiler::get() {
     static VRProfiler* instance = new VRProfiler();
@@ -15,11 +28,15 @@ int VRProfiler::regStart(string name) {
     if (!isActive()) return -1;
     if (current == 0) return -1;
 
+    auto tID = getThreadId();
+    if (!threadIDs.count(tID)) threadIDs[tID] = threadIDs.size();
+
     boost::mutex::scoped_lock lock(mutex);
     ID++;
     Call c;
     c.name = name;
     c.t0 = getTime();
+    c.thread = threadIDs[tID];
     current->calls[ID] = c;
     return ID;
 }
@@ -29,12 +46,6 @@ void VRProfiler::regStop(int ID) {
     if (!current || !current->calls.count(ID)) return;
     boost::mutex::scoped_lock lock(mutex);
     current->calls[ID].t1 = getTime();
-}
-
-int VRProfiler::getTime() {
-    clock_t c = clock();
-    //int c = glutGet(GLUT_ELAPSED_TIME);
-    return c;
 }
 
 void VRProfiler::setActive(bool b) { active = b; }
@@ -62,6 +73,7 @@ void VRProfiler::swap() {
     if (current) current->t1 = getTime();
     Frame f;
     f.t0 = getTime();
+    f.fID = VRGlobals::CURRENT_FRAME;
     frames.push_front(f);
     if (history <= (int)frames.size()) frames.pop_back();
     current = &frames.front();

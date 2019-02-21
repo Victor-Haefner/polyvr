@@ -3,8 +3,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/math/pose.h"
-
-#include <GL/glut.h>
+#include "core/utils/system/VRSystem.h"
 
 using namespace OSG;
 
@@ -138,8 +137,8 @@ map<int, vector<VRTrafficLightPtr>> VRTrafficLights::getMap() {
 }
 
 void VRTrafficLights::update() { // TODO, use time instead of counter!
-    static int lastT = int(glutGet(GLUT_ELAPSED_TIME)*0.001);
-    int thisT = int(glutGet(GLUT_ELAPSED_TIME)*0.001);
+    static int lastT = int(getTime()*1e-6);
+    int thisT = int(getTime()*1e-6);
     int deltaT = thisT - lastT;
     int t = deltaT;
     if (t > 120) lastT = thisT;

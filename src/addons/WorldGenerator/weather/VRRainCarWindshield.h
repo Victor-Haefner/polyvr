@@ -59,6 +59,8 @@ class VRRainCarWindshield : public VRGeometry {
         Vec2f oldMapOffset0 = Vec2f(0,0);
         Vec2f oldMapOffset1 = Vec2f(0,0);
         Vec2f oldAccelerationComponent = Vec2f(0,0);
+        Vec2f wiperPos = Vec2f(0,0);
+        float wiperSize = 0.5;
 
         template<typename T> void setShaderParameter(string name, T t);
 
@@ -78,6 +80,9 @@ class VRRainCarWindshield : public VRGeometry {
         void doTestFunction();
         void start();
         void stop();
+
+        void setWiperPos(Vec2d in);
+        void setWiperSize(float in);
 
         void reloadShader();
 };

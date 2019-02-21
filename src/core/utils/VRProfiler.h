@@ -13,6 +13,7 @@ class VRProfiler {
             string name;
             int t0 = 0;
             int t1 = 0;
+            int thread = 0;
         };
 
         struct Frame {
@@ -20,6 +21,7 @@ class VRProfiler {
             int t1 = 0;
             bool running = true;
             map<int, Call> calls;
+            unsigned long int fID = 0;
         };
 
     private:
@@ -28,10 +30,9 @@ class VRProfiler {
         int ID = 0;
         int history = 100;
         bool active = true;
+        map<ulong, int> threadIDs;
 
         boost::mutex mutex;
-
-        int getTime();
 
         VRProfiler();
 

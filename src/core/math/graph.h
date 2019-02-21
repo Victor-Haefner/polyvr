@@ -86,6 +86,7 @@ class Graph : public VRStorage {
         bool connected(int i1, int i2);
         void setPosition(int i, PosePtr v);
         void addRelation(int e1, int e2);
+        float getEdgeLength(int e);
         PosePtr getPosition(int i);
 
         bool hasNode(int i);

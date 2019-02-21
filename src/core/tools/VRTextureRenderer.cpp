@@ -271,6 +271,9 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
 
     if (c != RENDER) setChannelSubstitutes(c);
     data->win->render(data->ract);
+    if (deferred) { // hack, TODO: for some reason the fbo gets not updated the first render call..
+        data->win->render(data->ract);
+    }
     ImageMTRecPtr img = Image::create();
     img->set( data->fboTexImg );
     if (c != RENDER) resetChannelSubstitutes();

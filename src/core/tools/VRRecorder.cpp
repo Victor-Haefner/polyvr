@@ -9,9 +9,9 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRGlobals.h"
+#include "core/utils/system/VRSystem.h"
 
 #include <OpenSG/OSGImage.h>
-#include <GL/glut.h>
 
 extern "C" {
     #include <libavutil/opt.h>
@@ -125,7 +125,7 @@ void VRRecorder::capture() {
     VRFrame* f = new VRFrame();
     captures.push_back(f);
     f->capture = v->grab();
-    f->timestamp = glutGet(GLUT_ELAPSED_TIME);
+    f->timestamp = getTime()*1e-3;
 
     VRTransformPtr t = v->getCamera();
     if (t == 0) return;

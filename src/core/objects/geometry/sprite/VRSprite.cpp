@@ -53,8 +53,10 @@ void VRSprite::setLabel (string l, float res) {
     if (l == label) return;
     label = l;
     auto tex = VRText::get()->create(l, font, 20*res, fontColor, backColor );
+    auto m = VRMaterial::create(getName()+"label");
     //labelMat->setSortKey(1);
-    getMaterial()->setTexture(tex);
+    m->setTexture(tex);
+    setMaterial(m);
 }
 
 void VRSprite::webOpen(string path, int res, float ratio){

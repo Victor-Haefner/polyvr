@@ -13,11 +13,18 @@
 
 using namespace OSG;
 
+string Evaluation::toString() {
+    if (state == ASSUMPTION) return "assumption";
+    if (state == INVALID) return "invalid";
+    if (state == VALID) return "valid";
+}
+
 Variable::Variable() {;}
 
 string Variable::toString() {
     string s = valToString()+" (" + concept + "){";
     for (auto i : entities) s += i.second->getName()+",";
+    for (auto i : evaluations) s += i.second.toString()+",";
     if (entities.size() > 0) s.pop_back();
     s +="}[";
     if (isAnonymous) s += "anonymous, ";
@@ -168,6 +175,7 @@ bool Variable::has(VariablePtr other, VPath& path1, VPath& path2, VROntologyPtr 
 
 bool Variable::is(VariablePtr other, VPath& path1, VPath& path2) {
     if (!valid || !other->valid) return false;
+    //VRReasoner::print( " Variable::is? " + toString() + "   /   " + other->toString() );
 
     auto hasSameVal = [&](vector<string>& val1, vector<string>& val2) {
         for (string s1 : val1) {
@@ -179,24 +187,30 @@ bool Variable::is(VariablePtr other, VPath& path1, VPath& path2) {
     auto hasSameVal2 = [&](vector<string>& val1) {
         bool res = false;
         for (auto e : other->entities) {
-            cout << "  other entities: " << e.second->toString() << endl;
+            VRReasoner::print( "      other entity: " + e.second->toString() );
             vector<string> val2 = path2.getValue(e.second);
-            for (auto v : val2) cout << "  var2 value: " << v << endl;
+            for (auto v : val2) VRReasoner::print( "       var2 value: " + v );
             auto r = hasSameVal(val1, val2);
             if (!r) evaluations[e.first].state = Evaluation::INVALID;
             if (r) res = true;
         }
         if (res) return true;
 
-        for (string s : val1) for (string v : other->value) if (s == v) return true;
+        for (string s : val1) {
+            VRReasoner::print( "      val1: '" + s + "'");
+            for (string v : other->value) {
+                VRReasoner::print( "      val2: '" + v + "' -> " + ::toString(bool(s == v)) );
+                if (s == v) return true;
+            }
+        }
         return false;
     };
 
-    cout << "Variable::is " << toString() << " at path " << path1.toString() << " =?= " << other->toString() << " at path " << path2.toString() << endl;
+    VRReasoner::print( "    Variable::is " + toString() + " at path " + path1.toString() + " =?= " + other->toString() + " at path " + path2.toString() );
     bool res = false;
     for (auto e : entities) {
         vector<string> val1 = path1.getValue(e.second);
-        for (auto v : val1) cout << " var1 value: " << v << endl;
+        for (auto v : val1) VRReasoner::print( "     var1 value: " + v );
         auto r = hasSameVal2(val1);
         if (!r) evaluations[e.first].state = Evaluation::INVALID;
         if (r) res = true;
@@ -216,6 +230,20 @@ void Variable::discard(VREntityPtr e) {
     if (!entities.count(e->ID)) return;
     entities.erase(e->ID);
     evaluations.erase(e->ID);
+}
+
+vector<VREntityPtr> Variable::getEntities(Evaluation::STATE state) {
+    vector<VREntityPtr> res;
+    for (auto e : entities) {
+        if (!evaluations.count(e.first)) {
+            VRReasoner::print("    entity " + e.second->toString() + " has no evaluation!", VRReasoner::RED);
+            continue; // ewntity has no evaluation
+        }
+        auto& eval = evaluations[e.first];
+        bool valid = (eval.state == state);
+        if (valid) res.push_back(e.second);
+    }
+    return res;
 }
 
 VPath::VPath(string p) {
@@ -302,7 +330,7 @@ void VPath::setValue(string v, VREntityPtr e) {
         string m = first;
         auto prop = e->getProperty(m, true);
         if (!prop) return;
-        if (!e->properties.count(prop->getName())) return;
+        if (!e->properties.count(prop->getName())) e->set(prop->getName(), "");
         for (auto p : e->properties[prop->getName()]) {
             p->setValue( v );
         }
@@ -375,20 +403,20 @@ string Query::toString() {
 
 Term::Term(string s) : path(s), str(s) {}
 
-bool Term::isMathExpression() { Expression e(str); return e.isMathExpression(); }
+bool Term::isMathExpression() { MathExpression e(str); return e.isMathExpression(); }
 
-vector<string> Term::computeExpression(VRSemanticContextPtr context) {
-    Expression me(str);
+vector<string> Term::computeMathExpression(VRSemanticContextPtr context) {
+    MathExpression me(str);
     if (!me.isMathExpression()) return vector<string>();
-    me.makeTree(); // build RDP tree
+    me.parse(); // build RDP tree
 
-    cout << "Term::computeExpression " << str << endl;
-    cout << "Term::computeExpression tree:\n" << me.treeAsString() << endl;
+    cout << "Term::computeMathExpression " << str << endl;
+    cout << "Term::computeMathExpression tree:\n" << me.toString() << endl;
     vector<vector<string>> valuesMap;
     for (auto l : me.getLeafs()) {
-        VPath p(l->param);
+        VPath p(l->chunk);
         vector<string> values;
-        cout << " expression leaf " << l->param << endl;
+        cout << " expression leaf " << l->chunk << endl;
         if (context->vars.count(p.root)) {
             auto v = context->vars[p.root];
             for (auto e : v->entities) {
@@ -420,7 +448,7 @@ vector<string> Term::computeExpression(VRSemanticContextPtr context) {
         for (int i=0; i<valuesMap.size(); i++) {
             leafs[i]->setValue( valuesMap[i][config[i]] );
         }
-        res.push_back( me.computeTree() );
+        res.push_back( me.compute() );
     };
 
     function<void(int)> aggregate = [&](int k) {
@@ -441,7 +469,7 @@ bool Term::valid() { return var ? var->valid : false; }
 bool Term::is(Term& t, VRSemanticContextPtr context) {
     auto v = t.var;
     if (t.isMathExpression()) {
-        auto res = t.computeExpression(context);
+        auto res = t.computeMathExpression(context);
         v = Variable::create(0,res);
     }
     return var->is(v, path, t.path);
@@ -450,7 +478,7 @@ bool Term::is(Term& t, VRSemanticContextPtr context) {
 bool Term::has(Term& t, VRSemanticContextPtr context) {
     auto v = t.var;
     /*if (t.isMathExpression()) { // TODO: sure this does not apply?
-        auto res = t.computeExpression(context);
+        auto res = t.computeMathExpression(context);
         v = Variable::create(0,res);
     }*/
     return var->has(v, path, t.path, context->onto);
@@ -486,11 +514,11 @@ void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of
         for (auto& ts : statement->terms) {
             cout << "  substitute term " << ts.str << endl;
             if (ts.isMathExpression()) {
-                Expression e(ts.str);
-                e.makeTree();
+                MathExpression e(ts.str);
+                e.parse();
                 cout << "   substitute expression: " << e.toString() << " leafs: " << e.getLeafs().size() << endl;
                 for (auto& l : e.getLeafs()) {
-                    cout << "    substitute leaf: " << l->toString2() << endl;
+                    cout << "    substitute leaf: " << l->chunk << endl;
                     /*for (uint i=0; i<request->terms.size(); i++) {
                         auto& t1 = request->terms[i];
                         //cout << " substitute " << l->param << " , " << t1.path.root << " in expression " << ts.str << " ?" << endl;
@@ -504,15 +532,15 @@ void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of
                             }
                         }
                     }*/
-                    if (ts.path.root == l->param) {
-                        cout << "     substitute 1 param: " << l->param << endl;
-                        substitute(l->param);
+                    if (ts.path.root == l->chunk) {
+                        cout << "     substitute 1 param: " << l->chunk << endl;
+                        substitute(l->chunk);
                     } else {
-                        VPath lpath(l->param);
+                        VPath lpath(l->chunk);
                         cout << "     substitute 2 param: " << lpath.root << endl;
                         substitute(lpath.root);
                         lpath.nodes[0] = lpath.root;
-                        l->param = lpath.toString();
+                        l->chunk = lpath.toString();
                     }
                 }
                 ts.str = e.toString();

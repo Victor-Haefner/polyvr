@@ -90,6 +90,15 @@ vector<VRLodLeafPtr> VRLodTree::getSubTree(VRLodLeafPtr l) {
     return res;
 }
 
+vector<VRObjectPtr> VRLodTree::rangeSearch(Vec3d p, float r, int d) {
+    vector<VRObjectPtr> res;
+    for (auto obj : octree->radiusSearch(p, r, d)) {
+        VRObjectPtr o = ((VRObject*)obj)->ptr();
+        res.push_back(o);
+    }
+    return res;
+}
+
 void VRLodTree::showOctree() {
     VRGeometryPtr o = octree->getVisualization();
     addChild(o);
