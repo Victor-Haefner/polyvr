@@ -17,6 +17,7 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRGlobals.h"
+#include "core/utils/VRProfiler.h"
 
 #include <OpenSG/OSGGLUT.h>
 #include <OpenSG/OSGGLUTWindow.h>
@@ -157,6 +158,8 @@ void VRWindowManager::stopWindows() {
     barrier->enter(VRWindow::active_window_count+1);
 }
 
+bool VRWindowManager::doRenderSync = false;
+
 void VRWindowManager::updateWindows() {
     if (rendering_paused) return;
     auto scene = VRScene::getCurrent();
@@ -199,6 +202,8 @@ void VRWindowManager::updateWindows() {
     };
 
     auto wait = [&](int timeout = -1) {
+        int pID = VRProfiler::get()->regStart("window manager barrier");
+
         if (timeout > 0) {
             size_t tEnter = time(0);
             while (barrier->getNumWaiting() < VRWindow::active_window_count) {
@@ -211,15 +216,20 @@ void VRWindowManager::updateWindows() {
                 }
             }
         }
+
         barrier->enter(VRWindow::active_window_count+1);
+        VRProfiler::get()->regStop(pID);
         return true;
     };
 
     auto tryRender = [&]() {
         if (barrier->getNumWaiting() != VRWindow::active_window_count) return true;
-
+        if (!wait()) return false;
+        /** let the windows clear their change lists **/
         if (!wait()) return false;
         auto clist = Thread::getCurrentChangeList();
+        auto Ncreated = clist->getNumCreated();
+        if (Ncreated > 50) doRenderSync = true; // to reduce memory issues with big scenes
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRMultiWindow>(w.second)) if (win->getState() == VRMultiWindow::INITIALIZING) win->initialize();
         commitChanges();
         if (!wait()) return false;
@@ -227,8 +237,9 @@ void VRWindowManager::updateWindows() {
         if (!wait()) return false;
         //if (clist->getNumCreated() > 0) cout << "VRWindowManager::updateWindows " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
-        if (!wait(20)) return false;
         clist->clear();
+        if (doRenderSync) if (!wait()) return false;
+        doRenderSync = false;
         return true;
         //sleep(1);
     };

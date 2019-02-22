@@ -7,6 +7,7 @@
 #include <libxml++/nodes/element.h>
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/VRProfiler.h"
 
 
 #include <OpenSG/OSGChangeList.h>
@@ -132,17 +133,21 @@ keep this in mind when trying to optimize regarding to system state like the fla
 
 void VRMultiWindow::render(bool fromThread) {
     if (state == JUSTCONNECTED) {
+        int pID = VRProfiler::get()->regStart("Multiwindow init "+getName());
         Thread::getCurrentChangeList()->clear();
         Thread::getCurrentChangeList()->fillFromCurrentState();
         state = CONNECTED;
+        VRProfiler::get()->regStop(pID);
     }
 
     if (state == CONNECTED) {
         //try { OSG_render(_win, ract); }
         try {
+            int pID = VRProfiler::get()->regStart("Multiwindow render "+getName());
             state = RENDERING;
             _win->render(ract);
             state = CONNECTED;
+            VRProfiler::get()->regStop(pID);
         } catch(exception& e) { reset(); }
     }
 }

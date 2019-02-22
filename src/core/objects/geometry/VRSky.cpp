@@ -3,12 +3,12 @@
 #include "core/objects/material/VRMaterialT.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/scene/VRScene.h"
 #include <math.h>
 
 #include <boost/bind.hpp>
 #include <time.h>
-#include <GL/glut.h>
 
 using namespace OSG;
 
@@ -98,7 +98,7 @@ VRSkyPtr VRSky::ptr() { return static_pointer_cast<VRSky>( shared_from_this() );
 void VRSky::update() {
     if (!isVisible()) return;
 
-    double current = glutGet(GLUT_ELAPSED_TIME)*0.001;
+    double current = getTime()*1e-6;
     float dt = (current - lastTime)*speed;
     lastTime = current;
 

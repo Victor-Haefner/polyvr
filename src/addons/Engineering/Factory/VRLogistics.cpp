@@ -2,10 +2,10 @@
 #include "core/objects/geometry/sprite/VRSprite.h"
 #include "core/objects/VRTransform.h"
 #include "core/math/path.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/objects/geometry/VRStroke.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/toString.h"
-#include <GL/glut.h>
 
 #include <OpenSG/OSGMatrixUtility.h>
 
@@ -470,9 +470,8 @@ vector<shared_ptr<FContainer>> FLogistics::getContainers() {
 shared_ptr<FLogistics> FLogistics::create() { return shared_ptr<FLogistics>(new FLogistics()); }
 
 void FLogistics::update() {
-
     static float t2 = 0;
-    float t1 = glutGet(GLUT_ELAPSED_TIME)/1000.0;//in seconds
+    float t1 = getTime()*1e-6;//in seconds
     if (t2 == 0) { t2 = t1; return; } // first update
     float dt = t1 - t2;
     t2 = t1;

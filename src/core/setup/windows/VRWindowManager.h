@@ -51,6 +51,8 @@ class VRWindowManager {
 
         void save(xmlpp::Element* node);
         void load(xmlpp::Element* node);
+
+        static bool doRenderSync;
 };
 
 OSG_END_NAMESPACE;

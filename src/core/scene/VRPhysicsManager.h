@@ -62,8 +62,6 @@ class VRPhysicsManager {
         VRMaterialPtr phys_mat = 0;
 
         boost::recursive_mutex mtx;
-
-        long long getTime();
         int fps = 500;
 
     protected:

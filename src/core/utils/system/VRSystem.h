@@ -22,5 +22,8 @@ vector<string> openFolder(string folder);
 int systemCall(string cmd);
 bool compileCodeblocksProject(string path);
 
+void initTime();
+long long getTime();
+
 
 #endif // VRSYSTEM_H_INCLUDED

@@ -1,24 +1,24 @@
 #include "VRTimer.h"
-#include <GL/glut.h>
+#include "core/utils/system/VRSystem.h"
 #include <iostream>
 
 using namespace std;
 
 VRTimer::VRTimer() { start(); }
 
-void VRTimer::start() { single.start = glutGet(GLUT_ELAPSED_TIME); }
-int VRTimer::stop() { return glutGet(GLUT_ELAPSED_TIME) - single.start; }
+void VRTimer::start() { single.start = getTime()*1e-3; }
+int VRTimer::stop() { return getTime()*1e-3- single.start; }
 void VRTimer::reset() { start(); }
 
 map<string, VRTimer::timer> VRTimer::beacons = map<string, VRTimer::timer>();
 
 void VRTimer::start(string t) {
     if (timers.count(t) == 0) timers[t] = timer();
-    timers[t].start = glutGet(GLUT_ELAPSED_TIME);
+    timers[t].start = getTime()*1e-3;
 }
 
 int VRTimer::stop(string t) {
-    timers[t].total += glutGet(GLUT_ELAPSED_TIME) - timers[t].start;
+    timers[t].total += getTime()*1e-3 - timers[t].start;
     return timers[t].total;
 }
 
@@ -33,7 +33,7 @@ void VRTimer::print() {
 void VRTimer::emitBeacon(string b) {
     if (!beacons.count(b)) beacons[b] = timer();
     else {
-        int t = glutGet(GLUT_ELAPSED_TIME);
+        int t = getTime()*1e-3;
         cout << "time beacon " << b << ": " << t - beacons[b].start << endl;
         beacons[b].start = t;
     }
@@ -41,7 +41,7 @@ void VRTimer::emitBeacon(string b) {
 
 int VRTimer::getBeacon(string b) {
     if (!beacons.count(b)) beacons[b] = timer();
-    int t = glutGet(GLUT_ELAPSED_TIME);
+    int t = getTime()*1e-3;
     int res = t - beacons[b].start;
     beacons[b].start = t;
     return res;
