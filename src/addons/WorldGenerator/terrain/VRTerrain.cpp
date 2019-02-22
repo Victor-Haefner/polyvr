@@ -814,6 +814,7 @@ void main( void ) {
 	}
 
 	norm = normalize( gl_NormalMatrix * norm );
+	norm = normalize( gl_NormalMatrix * norm ) + vec3(0,0,0.2); // bending normal towards camera to increase lightning
     gl_FragData[0] = vec4(vertex.xyz/vertex.w, 1.0);
     gl_FragData[1] = vec4(norm, 1);
     gl_FragData[2] = color;
