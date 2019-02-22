@@ -267,18 +267,20 @@ VRGuiEditor::VRGuiEditor(string window) {
     Glib::RefPtr<Gtk::ScrolledWindow> win = Glib::RefPtr<Gtk::ScrolledWindow>::cast_static(VRGuiBuilder()->get_object(window));
     editor = gtk_source_view_new_with_buffer(sourceBuffer);
     editorBuffer = Glib::wrap( gtk_text_view_get_buffer(GTK_TEXT_VIEW(editor)) );
-    auto vbox = gtk_vbox_new(false, 0);
+
+    // try adding margin at bottom, messes up VRGuiEditor::focus
+    /*auto alignment = gtk_alignment_new(0.5,0.5,1,1);
+    gtk_alignment_set_padding(GTK_ALIGNMENT(alignment), 0, 600, 0, 0);
     auto vport = gtk_viewport_new(0, 0);
-    auto space = gtk_fixed_new();
     auto white = new GdkColor();
     gdk_color_parse("#fff", white);
     gtk_widget_modify_bg(vport, GTK_STATE_NORMAL, white);
     delete white;
-    gtk_widget_set_size_request (space, -1, 600);
-    gtk_container_add (GTK_CONTAINER (vbox), editor);
-    gtk_container_add (GTK_CONTAINER (vbox), space);
-    gtk_container_add (GTK_CONTAINER (vport), vbox);
-    gtk_container_add (GTK_CONTAINER (win->gobj()), vport);
+    gtk_container_add (GTK_CONTAINER (alignment), editor);
+    gtk_container_add (GTK_CONTAINER (vport), alignment);
+    gtk_container_add (GTK_CONTAINER (win->gobj()), vport);*/
+
+    gtk_container_add(GTK_CONTAINER (win->gobj()), editor);
 
     // buffer changed callback
     win->signal_key_press_event().connect( sigc::mem_fun(*this, &VRGuiEditor::on_editor_shortkey) );
