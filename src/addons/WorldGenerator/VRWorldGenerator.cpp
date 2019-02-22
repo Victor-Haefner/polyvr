@@ -189,7 +189,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         auto addPnt = [&](Vec3d p, Vec3d d) {
             //d.normalize(); // TODO: necessary because of projectTangent, can be optimized!
             if (terrain) {
-                terrain->elevatePoint(p,p[1]);
+                p = terrain->elevatePoint(p,p[1]);
                 terrain->projectTangent(d, p);
             } else d.normalize();
             path->addPoint( Pose( p, d ) );
@@ -226,7 +226,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 
         auto addPnt = [&](Vec3d p, Vec3d d) {
             if (terrain) {
-                terrain->elevatePoint(p);
+                p = terrain->elevatePoint(p);
                 terrain->projectTangent(d, p);
             }
             //d[1] = 0;
@@ -470,7 +470,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         Vec3d pos = planet->fromLatLongPosition(node->lat, node->lon, true);
         Vec3d dir = getDir(node);
         bool hasDir = node->tags.count("direction");
-        if (terrain) terrain->elevatePoint(pos);
+        if (terrain) pos = terrain->elevatePoint(pos);
         bool addToOnto = false;
         bool added = false;
         for (auto tag : node->tags) {

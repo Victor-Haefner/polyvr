@@ -942,7 +942,7 @@ void VRRoadIntersection::computePatch() {
     patch->translate(median);
     if (auto t = terrain.lock()) t->elevatePolygon(patch, roads->getTerrainOffset());
     patch->translate(-median);
-    if (auto t = terrain.lock()) t->elevatePoint(median, roads->getTerrainOffset()); // TODO: elevate each point of the polygon
+    if (auto t = terrain.lock()) median = t->elevatePoint(median, roads->getTerrainOffset()); // TODO: elevate each point of the polygon
 }
 
 VRGeometryPtr VRRoadIntersection::createGeometry() {

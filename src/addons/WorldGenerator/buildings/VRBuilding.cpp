@@ -44,7 +44,7 @@ void VRBuilding::addFoundation(VRPolygon polygon, float H) {
     auto t = terrain.lock();
     if (t && ground == 0) {
         Vec3d median = polygon.getBoundingBox().center();
-        t->elevatePoint(median);
+        median = t->elevatePoint(median);
         ground = median[1];
     }
     foundations.push_back( make_pair(H, polygon) );
@@ -54,7 +54,7 @@ void VRBuilding::addFloor(VRPolygon polygon, float H) {
     auto t = terrain.lock();
     if (t && ground == 0) {
         Vec3d median = polygon.getBoundingBox().center();
-        t->elevatePoint(median);
+        median = t->elevatePoint(median);
         ground = median[1];
     }
     stories.push_back( make_pair(H, polygon) );

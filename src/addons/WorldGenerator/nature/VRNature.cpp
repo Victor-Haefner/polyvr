@@ -83,7 +83,7 @@ VRTreePtr VRNature::createTree(string type, Vec3d p) {
     auto t = dynamic_pointer_cast<VRTree>(treeTemplates[type]->duplicate());
     if (!t) return 0;
     t->addAttachment("tree", 0);
-    if (auto t = terrain.lock()) t->elevatePoint(p);
+    if (auto t = terrain.lock()) p = t->elevatePoint(p);
     t->setFrom(p);
     lodTree->addObject(t, p, 0);
     treeRefs[t.get()] = treeTemplates[type];
@@ -97,7 +97,7 @@ VRTreePtr VRNature::createBush(string type, Vec3d p) {
     auto t = dynamic_pointer_cast<VRTree>(bushTemplates[type]->duplicate());
     if (!t) return 0;
     t->addAttachment("tree", 0);
-    if (auto t = terrain.lock()) t->elevatePoint(p);
+    if (auto t = terrain.lock()) p = t->elevatePoint(p);
     t->setFrom(p);
     lodTree->addObject(t, p, 0);
     treeRefs[t.get()] = bushTemplates[type];
