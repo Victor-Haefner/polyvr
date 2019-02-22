@@ -15,9 +15,12 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 using namespace Gtk;
 
+string padding = "\n\n\n\n\n\n\n\n\n";
+
 void VRGuiEditor::setCore(string core) {
     gtk_source_buffer_begin_not_undoable_action(sourceBuffer);
-    gtk_text_buffer_set_text(GTK_TEXT_BUFFER(sourceBuffer), core.c_str(), core.size());
+    string data = core+padding;
+    gtk_text_buffer_set_text(GTK_TEXT_BUFFER(sourceBuffer), data.c_str(), data.size());
     gtk_source_buffer_end_not_undoable_action(sourceBuffer);
 }
 
@@ -25,8 +28,10 @@ string VRGuiEditor::getCore(int i) {
     GtkTextIter itr_s, itr_e;
     gtk_text_buffer_get_start_iter(GTK_TEXT_BUFFER(sourceBuffer), &itr_s);
     gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(sourceBuffer), &itr_e);
-    for (int j=0; j<i; j++) gtk_text_iter_forward_line(&itr_s);// skip head
-    return string( gtk_text_buffer_get_text( GTK_TEXT_BUFFER(sourceBuffer), &itr_s, &itr_e, true) );
+    for (int j=0; j<i; j++) gtk_text_iter_forward_line(&itr_s); // skip head
+    string data = string( gtk_text_buffer_get_text( GTK_TEXT_BUFFER(sourceBuffer), &itr_s, &itr_e, true) );
+    while(data.back() == '\n') data.pop_back();
+    return data;
 }
 
 void VRGuiEditor::focus(int line, int column) {
@@ -279,6 +284,14 @@ VRGuiEditor::VRGuiEditor(string window) {
     gtk_container_add (GTK_CONTAINER (alignment), editor);
     gtk_container_add (GTK_CONTAINER (vport), alignment);
     gtk_container_add (GTK_CONTAINER (win->gobj()), vport);*/
+
+    /*auto vadjustment = gtk_text_view_get_vadjustment(GTK_TEXT_VIEW(editor));
+    //gtk_scrolled_window_set_vadjustment(GTK_SCROLLED_WINDOW(win->gobj()), vadjustment);
+    gtk_viewport_set_vadjustment(GTK_VIEWPORT(vport), vadjustment);
+    //auto vadjustment = gtk_viewport_get_vadjustment(GTK_VIEWPORT(vport));
+    //gtk_text_view_set_vadjustment(GTK_TEXT_VIEW(editor), vadjustment);
+    gtk_widget_set_size_request(vport,-1,600);
+    gtk_widget_set_size_request(alignment,-1,600);*/
 
     gtk_container_add(GTK_CONTAINER (win->gobj()), editor);
 
