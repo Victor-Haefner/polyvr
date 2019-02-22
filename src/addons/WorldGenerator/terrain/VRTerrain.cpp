@@ -813,7 +813,7 @@ void main( void ) {
         color = mix(color, vec4(atmoColor,1), clamp(atmoThickness*length(pos.xyz), 0.0, 0.9)); // atmospheric effects
 	}
 
-	norm = normalize( gl_NormalMatrix * norm );
+	//norm = normalize( gl_NormalMatrix * norm );
 	norm = normalize( gl_NormalMatrix * norm ) + vec3(0,0,0.2); // bending normal towards camera to increase lightning
     gl_FragData[0] = vec4(vertex.xyz/vertex.w, 1.0);
     gl_FragData[1] = vec4(norm, 1);
