@@ -267,7 +267,18 @@ VRGuiEditor::VRGuiEditor(string window) {
     Glib::RefPtr<Gtk::ScrolledWindow> win = Glib::RefPtr<Gtk::ScrolledWindow>::cast_static(VRGuiBuilder()->get_object(window));
     editor = gtk_source_view_new_with_buffer(sourceBuffer);
     editorBuffer = Glib::wrap( gtk_text_view_get_buffer(GTK_TEXT_VIEW(editor)) );
-    gtk_container_add (GTK_CONTAINER (win->gobj()), editor);
+    auto vbox = gtk_vbox_new(false, 0);
+    auto vport = gtk_viewport_new(0, 0);
+    auto space = gtk_fixed_new();
+    auto white = new GdkColor();
+    gdk_color_parse("#fff", white);
+    gtk_widget_modify_bg(vport, GTK_STATE_NORMAL, white);
+    delete white;
+    gtk_widget_set_size_request (space, -1, 600);
+    gtk_container_add (GTK_CONTAINER (vbox), editor);
+    gtk_container_add (GTK_CONTAINER (vbox), space);
+    gtk_container_add (GTK_CONTAINER (vport), vbox);
+    gtk_container_add (GTK_CONTAINER (win->gobj()), vport);
 
     // buffer changed callback
     win->signal_key_press_event().connect( sigc::mem_fun(*this, &VRGuiEditor::on_editor_shortkey) );
