@@ -459,9 +459,9 @@ double VRTerrain::getHeight(const Vec2d& p, bool useEmbankments) {
     return h;
 }
 
-void VRTerrain::elevateObject(VRTransformPtr t, float offset) { auto p = t->getFrom(); elevatePoint(p, offset); t->setFrom(p); }
-void VRTerrain::elevatePose(PosePtr p, float offset) { auto P = p->pos(); elevatePoint(P, offset); p->setPos(P); }
-void VRTerrain::elevatePoint(Vec3d& p, float offset, bool useEmbankments) { p[1] = getHeight(Vec2d(p[0], p[2]), useEmbankments) + offset; }
+void VRTerrain::elevateObject(VRTransformPtr t, float offset) { auto p = t->getFrom(); p = elevatePoint(p, offset); t->setFrom(p); }
+void VRTerrain::elevatePose(PosePtr p, float offset) { auto P = p->pos(); P = elevatePoint(P, offset); p->setPos(P); }
+Vec3d VRTerrain::elevatePoint(Vec3d p, float offset, bool useEmbankments) { p[1] = getHeight(Vec2d(p[0], p[2]), useEmbankments) + offset;  return p; }
 
 void VRTerrain::elevateVertices(VRGeometryPtr geo, float offset) {
     auto t = terrain.lock();
@@ -478,7 +478,7 @@ void VRTerrain::elevateVertices(VRGeometryPtr geo, float offset) {
 void VRTerrain::elevatePolygon(VRPolygonPtr poly, float offset, bool useEmbankments) {
     for (auto p2 : poly->get()) {
         Vec3d p3(p2[0], 0, p2[1]);
-        elevatePoint(p3, offset, useEmbankments);
+        p3 = elevatePoint(p3, offset, useEmbankments);
         poly->addPoint(p3);
     }
     poly->get().clear();
@@ -813,7 +813,8 @@ void main( void ) {
         color = mix(color, vec4(atmoColor,1), clamp(atmoThickness*length(pos.xyz), 0.0, 0.9)); // atmospheric effects
 	}
 
-	norm = normalize( gl_NormalMatrix * norm );
+	//norm = normalize( gl_NormalMatrix * norm );
+	norm = normalize( gl_NormalMatrix * norm ) + vec3(0,0,0.2); // bending normal towards camera to increase lightning
     gl_FragData[0] = vec4(vertex.xyz/vertex.w, 1.0);
     gl_FragData[1] = vec4(norm, 1);
     gl_FragData[2] = color;

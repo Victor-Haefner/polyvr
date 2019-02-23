@@ -451,9 +451,9 @@ void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
         Vec3d p23 = p2 + d2*0.01 + median;
         Vec3d p22 = (p21+p23)*0.5;
         if (auto t = terrain.lock()) {
-            t->elevatePoint(p21);
-            t->elevatePoint(p22);
-            t->elevatePoint(p23);
+            p21 = t->elevatePoint(p21);
+            p22 = t->elevatePoint(p22);
+            p23 = t->elevatePoint(p23);
         }
         path->addPoint( Pose(p21, d1) );
         path->addPoint( Pose(p22, n ) );

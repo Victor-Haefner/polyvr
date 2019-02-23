@@ -61,7 +61,7 @@ VREntityPtr VRRoadBase::addNode( int nodeID, Vec3d pos, bool elevate, float elev
     if (!o) return 0; // TODO
     //cout << "VRRoadBase::addNode " << pos;
     auto roads = world.lock()->getRoadNetwork();
-    if (t && elevate) t->elevatePoint(pos, roads->getTerrainOffset() + elevationOffset);
+    if (t && elevate) pos = t->elevatePoint(pos, roads->getTerrainOffset() + elevationOffset);
     //cout << " -> " << pos << endl;
 
     auto node = o->addEntity("node", "Node");
