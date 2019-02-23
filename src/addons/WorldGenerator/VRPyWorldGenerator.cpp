@@ -96,6 +96,7 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"getGraphEdgeDirections", PyWrap( RoadNetwork, getGraphEdgeDirections, "Get a road ID", vector<Vec3d>, int ) },
     {"getRoadID", PyWrap( RoadNetwork, getRoadID, "Get a road ID", int ) },
     {"getMaterial", PyWrap( RoadNetwork, getMaterial, "Get road material", VRAsphaltPtr ) },
+    {"getArrowMaterial", PyWrap( RoadNetwork, getArrowMaterial, "Get road arrows material", VRAsphaltPtr ) },
     {"updateAsphaltTexture", PyWrap( RoadNetwork, updateAsphaltTexture, "Update markings and tracks on asphalt texture", void ) },
     {"computeGreenBelts", PyWrap( RoadNetwork, computeGreenBelts, "Compute green belt areas", vector<VRPolygonPtr> ) },
     {"clear", PyWrap( RoadNetwork, clear, "Clear all data", void ) },

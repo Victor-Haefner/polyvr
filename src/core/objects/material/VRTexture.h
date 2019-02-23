@@ -38,6 +38,7 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         ImageMTRecPtr getImage();
 
         void read(string path);
+        void writeImage(ImageMTRecPtr img, string path);
         void write(string path, bool doThread = false);
         void writeThreaded(string path, VRTexturePtr self, VRThreadWeakPtr tw);
         int getChannels();

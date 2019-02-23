@@ -105,6 +105,7 @@ void VRRoadNetwork::init() {
 
 int VRRoadNetwork::getRoadID() { return ++nextRoadID; }
 VRAsphaltPtr VRRoadNetwork::getMaterial() { return asphalt; }
+VRAsphaltPtr VRRoadNetwork::getArrowMaterial() { return asphaltArrow; }
 GraphPtr VRRoadNetwork::getGraph() { return graph; }
 
 vector<Vec3d> VRRoadNetwork::getGraphEdgeDirections(int e) { return graphNormals[e]; }
@@ -616,7 +617,7 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p, int type) {
     //if (arrowTemplates.size() > 20) { cout << "VRRoadNetwork::createArrow, Warning! arrowTexture too big!\n"; return; }
 
     if (!arrowTemplates.count(dirs)) {
-        //cout << "VRRoadNetwork::createArrow " << dirs << "  " << N << endl;
+        cout << "VRRoadNetwork::createArrow " << dirs << "  " << N << endl;
         arrowTemplates[dirs] = arrowTemplates.size();
 
         VRTextureGenerator tg;

@@ -32,7 +32,7 @@ void VRTexture::read(string path) {
 void VRTexture::writeThreaded(string path, VRTexturePtr self, VRThreadWeakPtr tw) { // TODO: add mutex!
     string folder = getFolderName(path);
     if (!exists(folder)) makedir(folder);
-    if (!img->write(path.c_str())) cout << " VRTexture::write to file '" << path << "' failed!" << endl;
+    writeImage(img, path);
     self.reset();
     writeWorker.reset();
 }
@@ -41,12 +41,28 @@ void VRTexture::write(string path, bool doThread) {
     if (!doThread) {
         string folder = getFolderName(path);
         if (!exists(folder)) makedir(folder);
-        if (!img->write(path.c_str())) cout << " VRTexture::write to file '" << path << "' failed!" << endl;
+        writeImage(img, path);
     } else {
         auto scene = VRScene::getCurrent();
         if (!writeWorker) writeWorker = VRThreadCb::create("writeThreaded", boost::bind(&VRTexture::writeThreaded, this, path, ptr(), _1));
         scene->initThread(writeWorker, "write image to disk");
     }
+}
+
+void VRTexture::writeImage(ImageMTRecPtr img, string path) {
+    //auto format = hasAlpha ? OSG::Image::OSG_RGBA_PF : OSG::Image::OSG_RGB_PF;
+    auto format = img->getPixelFormat();
+
+    //OSG::Image::OSG_FLOAT32_IMAGEDATA
+    auto dtype = img->getDataType();
+    if (dtype != OSG::Image::OSG_UINT8_IMAGEDATA) { // need to convert image data to write to file
+        ImageMTRecPtr img2 = Image::create();
+        img2->set(img);
+        img2->convertDataTypeTo(OSG::Image::OSG_UINT8_IMAGEDATA);
+        img = img2;
+    }
+
+    if (!img->write(path.c_str())) cout << " VRTexture::write to file '" << path << "' failed!" << endl;
 }
 
 struct Pixel {
