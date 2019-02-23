@@ -178,5 +178,29 @@ void VRSoundManager::stopAllSounds(void) {
     for (auto s : sounds) s.second->stop();
 }
 
+struct VRSoundQueue {
+    int current = 0;
+    vector<VRSoundPtr> sounds;
+
+    VRSoundQueue(vector<VRSoundPtr> sounds) : sounds(sounds) {
+        auto cb = VRUpdateCb::create("sound queue", boost::bind(&VRSoundQueue::next, this));
+        for (auto sound : sounds) {
+            sound->setCallback( cb );
+        }
+    }
+
+    void next() {
+        if (current >= sounds.size()) return;
+        sounds[current]->play();
+        current++;
+    }
+
+    void play() { current = 0; next(); }
+};
+
+void VRSoundManager::queueSounds(vector<VRSoundPtr> sounds) { // TODO: this doesnt work if sound used twice!
+    soundQueue = new VRSoundQueue(sounds);
+    soundQueue->play();
+}
 
 OSG_END_NAMESPACE;

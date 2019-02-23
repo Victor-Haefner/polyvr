@@ -12,11 +12,13 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 struct VRSoundChannel;
+struct VRSoundQueue;
 
 class VRSoundManager {
 public:
     map<string, VRSoundPtr> sounds;
     VRSoundChannel* channel = 0;
+    VRSoundQueue* soundQueue = 0;
 
     VRSoundManager();
     VRSoundPtr getSound(string path);
@@ -28,6 +30,7 @@ public:
 
     VRSoundPtr setupSound(string path, bool loop = false, bool play = false);
     void playPositionalSound(string path, Vec3d vec);
+    void queueSounds(vector<VRSoundPtr> sounds);
 
     void stopSound(string path);
     void stopAllSounds(void);

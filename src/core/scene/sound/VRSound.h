@@ -5,6 +5,7 @@
 #include <OpenSG/OSGVector.h>
 
 #include "VRSoundFwd.h"
+#include "core/utils/VRFunctionFwd.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -13,6 +14,7 @@ class VRSound {
     private:
         struct ALData;
         shared_ptr<ALData> al;
+        VRUpdateCbPtr callback;
 
         int queuedBuffers = 0;
         uint source = 0;
@@ -46,6 +48,7 @@ class VRSound {
         void setPitch(float pitch);
         void setGain(float gain);
         void setUser(Vec3d p, Vec3d v);
+        void setCallback(VRUpdateCbPtr callback);
 
         bool isRunning();
         int getState();
