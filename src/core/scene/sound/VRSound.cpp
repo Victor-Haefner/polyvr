@@ -258,7 +258,8 @@ void VRSound::playFrame() {
             av_free(al->frame);
             al->state = loop ? AL_INITIAL : AL_STOPPED;
 
-            if (al->state == AL_STOPPED && callback) (*callback)();
+            if (al->state == AL_STOPPED)
+                if (auto cb = callback.lock()) (*cb)();
             return;
         } // End of stream. Done decoding.
 

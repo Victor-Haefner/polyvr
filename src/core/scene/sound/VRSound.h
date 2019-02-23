@@ -14,7 +14,7 @@ class VRSound {
     private:
         struct ALData;
         shared_ptr<ALData> al;
-        VRUpdateCbPtr callback;
+        VRUpdateCbWeakPtr callback;
 
         int queuedBuffers = 0;
         uint source = 0;

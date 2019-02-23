@@ -181,12 +181,11 @@ void VRSoundManager::stopAllSounds(void) {
 struct VRSoundQueue {
     int current = 0;
     vector<VRSoundPtr> sounds;
+    VRUpdateCbPtr callback;
 
     VRSoundQueue(vector<VRSoundPtr> sounds) : sounds(sounds) {
-        auto cb = VRUpdateCb::create("sound queue", boost::bind(&VRSoundQueue::next, this));
-        for (auto sound : sounds) {
-            sound->setCallback( cb );
-        }
+        callback = VRUpdateCb::create("sound queue", boost::bind(&VRSoundQueue::next, this));
+        for (auto sound : sounds) sound->setCallback( callback );
     }
 
     void next() {
