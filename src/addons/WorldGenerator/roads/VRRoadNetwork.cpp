@@ -597,9 +597,19 @@ void VRRoadNetwork::computeArrows() {
         if (!lane || !lane->getEntity("path")) continue;
         auto lpath = toPath( lane->getEntity("path"), 16 );
         t /= lpath->getLength();
+
         auto dirs = arrow->getAllValues<float>("direction");
+        map<int, int> uniqueDirs;
+        for (auto& d : dirs) uniqueDirs[ int(d*5/pi)*180/5 ] = 0; // discretize directions
         Vec4i drs(999,999,999,999);
-        for (uint i=0; i<4 && i < dirs.size(); i++) drs[i] = int(dirs[i]*5/pi)*180/5;
+        int N = min(int(uniqueDirs.size()),4);
+        int i=0;
+        for (auto d : uniqueDirs) {
+            drs[i] = d.first;
+            i++;
+            if (i >= N) break;
+        }
+
         if (t < 0) t = 1+t; // from the end
         auto pose = lpath->getPose(t);
         auto dir = pose->dir();
@@ -607,7 +617,7 @@ void VRRoadNetwork::computeArrows() {
             float offset = toFloat(arrow->get("offset")->value);
             pose->setPos(pose->pos() + dir*offset);
         }
-        createArrow(drs, min(int(dirs.size()),4), *pose, arrow->getValue<int>("type", 0));
+        createArrow(drs, N, *pose, arrow->getValue<int>("type", 0));
     }
 }
 
