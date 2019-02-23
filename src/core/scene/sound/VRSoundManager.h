@@ -5,6 +5,7 @@
 #include <map>
 
 #include "VRSoundFwd.h"
+#include "core/utils/VRFunctionFwd.h"
 
 namespace boost { class thread; }
 
@@ -12,13 +13,12 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 struct VRSoundChannel;
-struct VRSoundQueue;
 
 class VRSoundManager {
 public:
     map<string, VRSoundPtr> sounds;
     VRSoundChannel* channel = 0;
-    VRSoundQueue* soundQueue = 0;
+    VRUpdateCbPtr soundQueue = 0;
 
     VRSoundManager();
     VRSoundPtr getSound(string path);
