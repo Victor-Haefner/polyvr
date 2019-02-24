@@ -105,6 +105,7 @@ void VRRoadNetwork::init() {
 
 int VRRoadNetwork::getRoadID() { return ++nextRoadID; }
 VRAsphaltPtr VRRoadNetwork::getMaterial() { return asphalt; }
+VRAsphaltPtr VRRoadNetwork::getArrowMaterial() { return asphaltArrow; }
 GraphPtr VRRoadNetwork::getGraph() { return graph; }
 
 vector<Vec3d> VRRoadNetwork::getGraphEdgeDirections(int e) { return graphNormals[e]; }
@@ -596,9 +597,19 @@ void VRRoadNetwork::computeArrows() {
         if (!lane || !lane->getEntity("path")) continue;
         auto lpath = toPath( lane->getEntity("path"), 16 );
         t /= lpath->getLength();
+
         auto dirs = arrow->getAllValues<float>("direction");
+        map<int, int> uniqueDirs;
+        for (auto& d : dirs) uniqueDirs[ int(d*5/pi)*180/5 ] = 0; // discretize directions
         Vec4i drs(999,999,999,999);
-        for (uint i=0; i<4 && i < dirs.size(); i++) drs[i] = int(dirs[i]*5/pi)*180/5;
+        int N = min(int(uniqueDirs.size()),4);
+        int i=0;
+        for (auto d : uniqueDirs) {
+            drs[i] = d.first;
+            i++;
+            if (i >= N) break;
+        }
+
         if (t < 0) t = 1+t; // from the end
         auto pose = lpath->getPose(t);
         auto dir = pose->dir();
@@ -606,7 +617,7 @@ void VRRoadNetwork::computeArrows() {
             float offset = toFloat(arrow->get("offset")->value);
             pose->setPos(pose->pos() + dir*offset);
         }
-        createArrow(drs, min(int(dirs.size()),4), *pose, arrow->getValue<int>("type", 0));
+        createArrow(drs, N, *pose, arrow->getValue<int>("type", 0));
     }
 }
 
@@ -616,8 +627,8 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p, int type) {
     //if (arrowTemplates.size() > 20) { cout << "VRRoadNetwork::createArrow, Warning! arrowTexture too big!\n"; return; }
 
     if (!arrowTemplates.count(dirs)) {
-        //cout << "VRRoadNetwork::createArrow " << dirs << "  " << N << endl;
         arrowTemplates[dirs] = arrowTemplates.size();
+        //cout << "VRRoadNetwork::createArrow " << dirs << "  " << N << ", ID: " << arrowTemplates[dirs] << endl;
 
         VRTextureGenerator tg;
         tg.setSize(Vec3i(400,400,1), false);
@@ -673,14 +684,12 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p, int type) {
         asphaltArrow->setShaderParameter("NArrowTex", (int)arrowTemplates.size());
     }
 
-    GeoVec4fPropertyMTRecPtr cols = GeoVec4fProperty::create();
-    Vec4d color = Vec4d((arrowTemplates[dirs]-1)*0.001, 0, 0);
-    for (int i=0; i<4; i++) cols->addValue(color);
+    Color4f color(arrowTemplates[dirs]*0.001, 0, 0, 0);
 
     VRGeoData gdata;
     gdata.pushQuad(Vec3d(0,0.025,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(2,2), true);
+    gdata.addVertexColors(color);
     auto geo = gdata.asGeometry("arrow");
-    geo->setColors(cols);
     geo->setPositionalTexCoords2D(1.0, 1, Vec2i(0,2));
     arrows->merge(geo, Pose::create(p));
 }
