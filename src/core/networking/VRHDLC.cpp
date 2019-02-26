@@ -129,7 +129,7 @@ void VRHDLC::pauseReceive(int T) {
 }
 
 string VRHDLC::getInterface() {
-    auto interfaces = { "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyACM0", "/dev/car-interface" };
+    auto interfaces = { "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3", "/dev/ttyUSB4", "/dev/ttyUSB5", "/dev/ttyACM0", "/dev/car-interface" };
     for (auto i : interfaces) {
         if (boost::filesystem::exists(i)) return i;
     }
