@@ -120,6 +120,7 @@ class VRAppManager {
         void on_diag_load_clicked();
         void on_new_clicked();
         void on_saveas_clicked();
+        void on_stop_clicked();
         void on_load_clicked();
 
         void on_toggle_encryption(Gtk::CheckButton* b);
