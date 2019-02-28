@@ -1,6 +1,7 @@
 #include "VRMechanism.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRPrimitive.h"
+#include "core/utils/VRGlobals.h"
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
@@ -19,9 +20,12 @@ MThread::~MThread() {}
 
 bool MPart::changed() {
     if (geo == 0) return false;
-    bool b = (timestamp != geo->getLastChange());
-    timestamp = geo->getLastChange();
+    bool b = geo->changedSince(timestamp);
+    timestamp = VRGlobals::CURRENT_FRAME;
     return b;
+    /*bool b = (timestamp != geo->getLastChange());
+    timestamp = geo->getLastChange();
+    return b;*/
 }
 
 void MPart::setBack() { if (geo) geo->setWorldMatrix(reference); }
@@ -275,6 +279,7 @@ void MChain::updateNeighbors(vector<MPart*> parts) {
     dirs = "";
     for (auto p : parts) {
         if (p == this) continue;
+        if (!p->prim) continue;
         if (p->prim->getType() == "Gear") {
             MRelation* rel = checkChainPart(this, p);
             if (rel) addNeighbor(p, rel);

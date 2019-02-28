@@ -58,6 +58,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"getSceneMaterials", (PyCFunction)VRSceneGlobals::getSceneMaterials, METH_NOARGS, "Get all materials of the scene - getSceneMaterials()" },
 	{"getSky", (PyCFunction)VRSceneGlobals::getSky, METH_NOARGS, "Get sky module" },
 	{"getSoundManager", (PyCFunction)VRSceneGlobals::getSoundManager, METH_NOARGS, "Get sound manager module" },
+	{"getFrame", (PyCFunction)VRSceneGlobals::getFrame, METH_NOARGS, "Get current frame number" },
     {NULL}  /* Sentinel */
 };
 
@@ -65,6 +66,10 @@ PyMethodDef VRSceneGlobals::methods[] = {
 // ==============
 // Python methods
 // ==============
+
+PyObject* VRSceneGlobals::getFrame(VRSceneGlobals* self) {
+    return PyInt_FromLong(VRGlobals::CURRENT_FRAME);
+}
 
 PyObject* VRSceneGlobals::getSoundManager(VRSceneGlobals* self) {
     return VRPySoundManager::fromSharedPtr( VRSoundManager::get() );

@@ -38,6 +38,7 @@ class VRSceneGlobals: public VRPyBase {
 		static PyObject* getSceneMaterials(VRSceneGlobals* self);
 		static PyObject* getSky(VRSceneGlobals* self);
 		static PyObject* getSoundManager(VRSceneGlobals* self);
+		static PyObject* getFrame(VRSceneGlobals* self);
 };
 
 OSG_END_NAMESPACE;
