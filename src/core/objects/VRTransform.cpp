@@ -156,6 +156,42 @@ uint VRTransform::getLastChange() { return change_time_stamp; }
 //bool VRTransform::changedNow() { return (change_time_stamp >= VRGlobals::get()->CURRENT_FRAME-1); }
 bool VRTransform::changedNow() { return checkWorldChange(); }
 
+bool VRTransform::changedSince(uint& frame) {
+    uint f = frame;
+    frame = VRGlobals::CURRENT_FRAME;
+    if (change_time_stamp >= f) return true;
+    if (wchange_time_stamp >= f) return true;
+    for (auto a : getAncestry()) {
+        auto t = dynamic_pointer_cast<VRTransform>(a);
+        if (t && t->change_time_stamp > f) return true;
+    }
+    return false;
+}
+
+bool VRTransform::changedSince2(uint f) {
+    if (change_time_stamp >= f) return true;
+    if (wchange_time_stamp >= f) return true;
+    for (auto a : getAncestry()) {
+        auto t = dynamic_pointer_cast<VRTransform>(a);
+        if (t && t->change_time_stamp > f) return true;
+    }
+    return false;
+}
+
+bool VRTransform::checkWorldChange() {
+    if (frame == 0) { frame = 1; return true; }
+    if (VRGlobals::CURRENT_FRAME == change_time_stamp) return true;
+    if (VRGlobals::CURRENT_FRAME == wchange_time_stamp) return true;
+    if (hasGraphChanged()) return true;
+
+    for (auto a : getAncestry()) {
+        auto t = dynamic_pointer_cast<VRTransform>(a);
+        if (t && t->change_time_stamp > wchange_time_stamp) { wchange_time_stamp = VRGlobals::CURRENT_FRAME; return true; }
+    }
+
+    return false;
+}
+
 void VRTransform::initCoords() {
     if (coords != 0) return;
     coords = OSGObject::create( makeCoordAxis(0.3, 3, false) );
@@ -222,28 +258,6 @@ void VRTransform::setMatrixTo(Matrix4d m, VRObjectPtr obj) {
     Matrix4d m1 = ent->getWorldMatrix();
     m1.mult(m);
     setWorldMatrix(m1);
-}
-
-bool VRTransform::checkWorldChange() {
-    if (frame == 0) { frame = 1; return true; }
-    if (VRGlobals::CURRENT_FRAME == change_time_stamp) return true;
-    if (VRGlobals::CURRENT_FRAME == wchange_time_stamp) return true;
-    if (hasGraphChanged()) return true;
-
-    VRObjectPtr obj = ptr();
-    VRTransformPtr ent;
-    while(obj) {
-        if (obj->hasTag("transform")) {
-            ent = static_pointer_cast<VRTransform>(obj);
-            if (ent->change_time_stamp > wchange_time_stamp) {
-                wchange_time_stamp = VRGlobals::CURRENT_FRAME;
-                return true;
-            }
-        }
-        obj = obj->getParent();
-    }
-
-    return false;
 }
 
 Vec3d VRTransform::getRelativePosition(VRObjectPtr o, bool parentOnly) {
