@@ -166,7 +166,7 @@ bool sphere_box_intersect(Vec3d Ps, Vec3d Pb, float Rs, float Sb)  {
     return dmin <= r2;
 }
 
-void OctreeNode::findInSphere(Vec3d p, float r, vector<void*>& res) { // TODO: optimize!!
+void OctreeNode::findInSphere(Vec3d p, float r, int d, vector<void*>& res) { // TODO: optimize!!
     if (!sphere_box_intersect(p, center, r, size)) return;
 
     float r2 = r*r;
@@ -175,8 +175,9 @@ void OctreeNode::findInSphere(Vec3d p, float r, vector<void*>& res) { // TODO: o
             res.push_back(data[i]);
     }
 
+    if (level == d && d != -1) return;
     for (int i=0; i<8; i++) {
-        if (children[i]) children[i]->findInSphere(p, r, res);
+        if (children[i]) children[i]->findInSphere(p, r, d, res);
     }
 }
 
@@ -194,15 +195,16 @@ bool box_box_intersect(Vec3d min, Vec3d max, Vec3d Bpos, float Sb)  {
     return (abs(diff[0]) <= ABdiag[0]) && (abs(diff[1]) <= ABdiag[1]) && (abs(diff[2]) <= ABdiag[2]);
 }
 
-void OctreeNode::findInBox(const Boundingbox& b, vector<void*>& res) { // TODO: optimize!!
+void OctreeNode::findInBox(const Boundingbox& b, int d, vector<void*>& res) { // TODO: optimize!!
     if (!box_box_intersect(b.min(), b.max(), center, size)) return;
 
     for (unsigned int i=0; i<data.size(); i++) {
         if (b.isInside( points[i] )) res.push_back(data[i]);
     }
 
+    if (level == d && d != -1) return;
     for (int i=0; i<8; i++) {
-        if (children[i]) children[i]->findInBox(b, res);
+        if (children[i]) children[i]->findInBox(b, d, res);
     }
 }
 
@@ -279,15 +281,15 @@ void Octree::updateRoot() { while (auto p = root->getParent()) root = p; }
 
 vector<void*> Octree::getAllData() { return getRoot()->getAllData(); }
 
-vector<void*> Octree::radiusSearch(Vec3d p, float r) {
+vector<void*> Octree::radiusSearch(Vec3d p, float r, int d) {
     vector<void*> res;
-    getRoot()->findInSphere(p, r, res);
+    getRoot()->findInSphere(p, r, d, res);
     return res;
 }
 
-vector<void*> Octree::boxSearch(const Boundingbox& b) {
+vector<void*> Octree::boxSearch(const Boundingbox& b, int d) {
     vector<void*> res;
-    getRoot()->findInBox(b, res);
+    getRoot()->findInBox(b, d, res);
     return res;
 }
 

@@ -11,6 +11,7 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRGlobals.h"
 #include "core/utils/VRTimer.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/math/polygon.h"
 #include "core/math/graph.h"
 #include "core/math/triangulator.h"
@@ -23,10 +24,8 @@
 #include "addons/Semantics/Reasoning/VREntity.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
 #include "core/tools/VRAnnotationEngine.h"
-#include <GL/glut.h>
 
 #include <boost/bind.hpp>
-#include <chrono>
 #include <thread>
 
 #define CPRINT(x) \
@@ -321,12 +320,18 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             }
         };
 
+        auto laneE = roadNetwork->getLane(roadID);
+        float vel = roadVelocity;
+        if ( laneE->getValue<string>("maxspeed", "").length() > 0 ) vel = toFloat(laneE->getValue<string>("maxspeed", ""))/3.6;
+
         auto& v = vehicles[getVehicle()];
         v.setDefaults();
         v.simPose = roadNetwork->getPosition( Graph::position(roadID, 0.0) );
         v.pos = Graph::position(roadID, 0.0);
         v.simVisible = true;
-        v.lastLaneSwitchTS = float(glutGet(GLUT_ELAPSED_TIME)*0.001);
+        v.targetVelocity = vel;
+        v.currentVelocity = vel;
+        v.lastLaneSwitchTS = float(getTime()*1e-6);
 
         road.vehicleIDs[v.vID] = v.vID;
         road.lastVehicleID = v.vID;
@@ -393,7 +398,9 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 float D2 = (ep2-p).length();
 
                 if (D1 > userRadius && D2 > userRadius) continue; // outside
+                if (D1 < 15 || D2 < 15) continue;
                 if (debugOverRideSeedRoad<0 && graph->getPrevEdges(e).size() == 0  && !isPedestrian(e.ID) && !isParkingLane(e.ID) && !isIntersectionLane(e.ID)) { // roads that start out of "nowhere"
+                    if (D1 < 15 || D2 < 15) continue;
                     newSeedRoads.push_back( e.ID );
                     continue;
                 }
@@ -562,6 +569,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         auto p = roadNetwork->getPosition(vehicle.pos);
         //cout << "propagated vehicle pos " <<toString(p) << endl;
         if (offset.length()>20) offset = Vec3d(0,0,0); //DEBUGGING FAIL SAFE
+        if (!p) { p = Pose::create(Vec3d(0,0,0),Vec3d(0,0,-1),Vec3d(0,1,0)); toChangeRoad[vehicle.roadFrom].push_back( make_pair(vehicle.vID, -1) ); } //BUG CATCH
         vehicle.lastMove = p->pos() + offset - vehicle.simPose->pos();
         p->setPos(p->pos()+offset);
         //doffset = Vec3d(0,0,0);
@@ -569,7 +577,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         vehicle.simPose = p;
         //vehicle.poseBuffer.write(p->asMatrix());
         //cout << toString(vehicle.vID) << " propagated " << toString(vehicle.simPose) << endl;
-        vehicle.lastMoveTS = float(glutGet(GLUT_ELAPSED_TIME)*0.001);
+        vehicle.lastMoveTS = float(getTime()*1e-6);
         vehicle.currentOffset = offset;
         vehicle.currentdOffset = doffset;
         //cout << "Vehicle " << vehicle.vehicleID << " " << p->pos() << " " << vehicle.pos.edge << " " << vehicle.pos.pos << endl;
@@ -760,7 +768,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
 
                 auto type = newLane->getEntity("nextIntersection")->get("type")->value;
                 auto g = roadNetwork->getGraph();
-                if (type != "intersection" && g->getNextEdges(g->getEdge(eID)).size()==1) {
+                if (type != "intersection" && type != "fork" && g->getNextEdges(g->getEdge(eID)).size()==1) {
                     if ( (pNode - posV).length()<safetyDis + 50 ) {
                         auto nextID = g->getNextEdges(g->getEdge(eID))[0].ID;
                         auto nextLane = roadNetwork->getLane(nextID);
@@ -804,6 +812,9 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                     }
                     return true;
                 }
+                if (type == "fork") {
+                    return true; //TODO: decision making at forks
+                }
             }
             vehicle.signalAhead = false;
             return false;
@@ -815,6 +826,13 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             if (!nextInterE) return;// recDetection(vehicle.lastFoundIntersection);
             if (vehicle.distanceToNextIntersec > 60) return;
             auto inLanes = nextInterE->getInLanes();
+            auto ttype = nextInterE->getEntity()->get("type")->value;
+            //if ( ttype == "fork" ) return;
+
+            if (ttype == "fork") {
+                if ( vehicles[vehicle.vID].vehiclesightFar[FRONTRIGHT]>0 ) vehicle.incTrafficRight = true;
+                return;
+            }
 
             auto posDetection = [&](Vehicle& vOne, Vehicle& vTwo){
                 if (vOne.vID == vTwo.vID) return;
@@ -825,7 +843,8 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 auto dir = p->dir();
                 auto vDir = vTwo.simPose->dir();
                 auto left = Vec3d(0,1,0).cross(vDir);
-                if (dir.dot(left)>0.7 && D < 35) vTwo.incTrafficRight = true; //cout << "incoming right" << endl;
+                if (dir.dot(left)>0.7 && D < 35 && ttype != "fork") vTwo.incTrafficRight = true; //cout << "incoming right" << endl;
+                //if (ttype == "fork" && D < 10 && left.dot((p->pos() - p2->pos())) < -0.3 && vDir.dot((p->pos() - p2->pos())) > 0.1 ) vTwo.incTrafficRight = true; //cout << "incoming right" << endl;
                 if (dir.dot(left)<-0.7 && D < 35) vTwo.incTrafficLeft = true; //cout << "incoming left" << endl;
                 if (dir.dot(vDir)<-0.56) {
                     if (vOne.turnAhead == 1) return;
@@ -868,6 +887,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                         auto nIE = roadNetwork->getIntersection(nextLane->getEntity("nextIntersection"));
                         if (nIE) {
                             auto type = nextLane->getEntity("nextIntersection")->get("type")->value;
+                            //if (type == "fork") cout << "lul found fork" << endl;
                             if (type != "intersection") { return recL(nextLane, nextID, posV); }
                         }
                     }
@@ -875,6 +895,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 };
 
                 int lID = roadNetwork->getLaneID(l);
+                if (lID == vehicle.pos.edge) continue;
                 checkIntersectionLane(l, lID, vehicle.simPose->pos());
                 recL(l, lID, vehicle.simPose->pos());
             }
@@ -985,13 +1006,13 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
 
     auto propagateVehicles = [&]() {
         int N = 0;
-        float current = float(glutGet(GLUT_ELAPSED_TIME)*0.001);
+        float current = float(getTime()*1e-6);
         //cout << current << endl;
         deltaT = current - lastT;
         if (deltaT == 0) cout << "TrafficSim:WARNING - delta time = 0" << endl;
         /*if (deltaT == 0) {
             this_thread::sleep_for(chrono::microseconds(1000));
-            float current = float(glutGet(GLUT_ELAPSED_TIME)*0.001);
+            float current = float(getTime()1e-6);
             deltaT = current - lastT;
         }*/
         lastT = current;
@@ -1055,7 +1076,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 float nextMove = (vehicle.currentVelocity) * deltaT;
                 float nextMoveAcc = (vehicle.currentVelocity + accFactor*deltaT) * deltaT;
                 float nextMoveDec = (vehicle.currentVelocity + decFactor*deltaT) * deltaT;
-                float sinceLastLS = float(glutGet(GLUT_ELAPSED_TIME)*0.001) - vehicle.lastLaneSwitchTS;
+                float sinceLastLS = float(getTime()*1e-6) - vehicle.lastLaneSwitchTS;
 
                 float intersectionWidth = vehicle.distanceToNextIntersec - vehicle.distanceToNextStop;
                 bool signalBlock = vehicle.nextSignalState=="100";
@@ -1066,10 +1087,15 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 bool inIntersec = vehicle.distanceToNextIntersec < intersectionWidth;
                 //if (nextSignal != "000") cout << toString(nextSignal) << endl;
 
-                vehicle.targetVelocity = roadVelocity;
-                if ( vehicle.distanceToNextStop < 15 && vehicle.turnAhead>0 && !inIntersec ) vehicle.targetVelocity = 30/3.6;
-                if ( vehicle.distanceToNextStop < 5 && vehicle.turnAhead>0 && !inIntersec) vehicle.targetVelocity = 23/3.6;
-                if ( vehicle.distanceToNextStop > 15 || inIntersec) vehicle.targetVelocity = 50/3.6;
+                auto laneE = roadNetwork->getLane(vehicle.pos.edge);
+                if ( laneE->getValue<string>("maxspeed", "").length() > 0 ) vehicle.targetVelocity = toFloat(laneE->getValue<string>("maxspeed", ""))/3.6;
+                else vehicle.targetVelocity = roadVelocity;
+
+                if (vehicle.targetVelocity > 23/3.6) {
+                    if ( vehicle.distanceToNextStop < 15 && vehicle.turnAhead>0 && !inIntersec) vehicle.targetVelocity = 30/3.6;
+                    if ( vehicle.distanceToNextStop < 5 && vehicle.turnAhead>0 && !inIntersec) vehicle.targetVelocity = 23/3.6;
+                    if ( vehicle.distanceToNextStop > 15 || inIntersec) vehicle.targetVelocity = 50/3.6;
+                }
 
                 auto inFront = [&]() { return vehicle.vehiclesightFarID.count(INFRONT); };
                 auto comingLeft = [&]() { return vehicle.vehiclesightFarID.count(FRONTLEFT); };
@@ -1186,13 +1212,13 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 if (!isTimeForward) dRel = -dRel;
                 if (dRel != 0) propagateVehicle(vehicle, dRel, vbeh);
 
-                if (isSimRunning && float(glutGet(GLUT_ELAPSED_TIME)*0.001) - vehicle.lastMoveTS > killswitch1 && !interBlock && !vehicBlock) { // && !interBlock && stopVehicleID != ID.first) {
+                if (isSimRunning && float(getTime()*1e-6) - vehicle.lastMoveTS > killswitch1 && !interBlock && !vehicBlock) { // && !interBlock && stopVehicleID != ID.first) {
                     toChangeRoad[road.first].push_back( make_pair(vehicle.vID, -1) ); ///------killswitch if vehicle get's stuck
                 }
-                if (isSimRunning && float(glutGet(GLUT_ELAPSED_TIME)*0.001) - vehicle.lastMoveTS > killswitch2) { // && !interBlock && stopVehicleID != ID.first) {
+                if (isSimRunning && float(getTime()*1e-6) - vehicle.lastMoveTS > killswitch2) { // && !interBlock && stopVehicleID != ID.first) {
                     toChangeRoad[road.first].push_back( make_pair(vehicle.vID, -1) ); ///------killswitch if vehicle get's stuck
                 }
-                if (!isSimRunning) vehicle.lastMoveTS = float(glutGet(GLUT_ELAPSED_TIME)*0.001);
+                if (!isSimRunning) vehicle.lastMoveTS = float(getTime()*1e-6);
                 N++; // count vehicles!
             }
         }
@@ -1235,6 +1261,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             //Matrix4d m;
             //poseBuffer.read(m);
             u.simPose = Pose::create(u.simPose2);
+            u.collisionDetectedExch = u.collisionDetected;
         }
     };
 
@@ -1352,13 +1379,10 @@ void VRTrafficSimulation::addUser(VRTransformPtr t) {
 }
 
 bool VRTrafficSimulation::getUserCollisionState(int i) {
-    PLock lock(mtx);
-    if ( i < 0 || i > users.size()-1 ) { cout << "VRTrafficSimulation::getUserCollisionState " << i << " out of bounds" << endl; return false; }
-    auto ID = users[i].vID;
-    bool check = users[i].collisionDetected;
-    //cout << "VRTrafficSimulation::getUserCollisionState " << ID << " " << check << endl;
+    PLock lock(mtx2);
+    if ( i < 0 || i >= users.size() ) { cout << "VRTrafficSimulation::getUserCollisionState " << i << " out of bounds" << endl; return false; }
+    bool check = users[i].collisionDetectedExch;
     return check;
-    //users[i].collisionDetectedMem;
 }
 
 void VRTrafficSimulation::setGlobalOffset(Vec3d globalOffset) { this->globalOffset = globalOffset; }
@@ -1394,6 +1418,7 @@ void VRTrafficSimulation::changeLane(int ID, int direction, bool forced) {
             if (roadNetwork->getGraph()->getEdge(opt).ID == -1) return false;
             pos.edge = opt;
             auto pose = roadNetwork->getPosition(pos);
+            if (!pose) return false;
             if ((pose->pos() - poseV->pos()).length() > 4.5) return false;
             float res = vUp.cross(vDir).dot(pose->pos() - poseV->pos());
             if (res > 0 && input==1) { edgeLeft = opt; return true; }
@@ -1420,8 +1445,8 @@ void VRTrafficSimulation::changeLane(int ID, int direction, bool forced) {
         v.laneChangeState = 1;
         v.behavior = direction;
         v.roadFrom = gp.edge;
-        v.indicatorTS = float(glutGet(GLUT_ELAPSED_TIME)*0.001);
-        v.lastLaneSwitchTS = float(glutGet(GLUT_ELAPSED_TIME)*0.001);
+        v.indicatorTS = float(getTime()*1e-6);
+        v.lastLaneSwitchTS = float(getTime()*1e-6);
         //cout << "VRTrafficSimulation::changeLane" << toString(v.behavior) << " - " << toString(v.roadFrom) << " - " << toString(v.roadTo) << endl;
     }
     else {/*
@@ -1510,15 +1535,17 @@ void VRTrafficSimulation::updateGraph(){
 		idx[node.first] = vID;
 	}
 
-	for (auto connection : graph->getEdges()){
-		auto edge = connection.first;
-		auto& road = roads[edge];
-		if (isSeedRoad(edge)) { gg2.pushLine(idx[connection.second.from], idx[connection.second.to]); }
-		if (!isSeedRoad(edge) && !road.macro) { gg1.pushLine(idx[connection.second.from], idx[connection.second.to]); }
+	for (auto& connection : graph->getEdges()) {
+		auto& edge = connection.second;
+		int eID = edge.ID;
+		if (eID == 0) continue;
+		auto& road = roads[eID];
+		if (isSeedRoad(eID)) { gg2.pushLine(idx[connection.second.from], idx[connection.second.to]); }
+		if (!isSeedRoad(eID) && !road.macro) { gg1.pushLine(idx[connection.second.from], idx[connection.second.to]); }
 		if (road.macro) { gg4.pushLine(idx[connection.second.from], idx[connection.second.to]); }
 		auto pos1 = graph->getNode(connection.second.from).p.pos();
 		auto pos2 = graph->getNode(connection.second.to).p.pos();
-		graphAnn->set(edge+100, (pos1+pos2)*0.5 + Vec3d(0,2.6,0), "Edge "+toString(edge)+"("+toString(connection.second.from)+"-"+toString(connection.second.to)+")");
+		graphAnn->set(eID+100, (pos1+pos2)*0.5 + Vec3d(0,2.6,0), "Edge "+toString(eID)+"("+toString(connection.second.from)+"-"+toString(connection.second.to)+")");
 	}
 
     for (auto connection : graph->getEdges()){

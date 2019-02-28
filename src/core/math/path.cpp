@@ -297,6 +297,7 @@ void Path::setPoint(int i, const Pose& p, Color3f c ) {
 }
 
 vector<Pose> Path::getPoints() { return points; }
+vector<Vec3d> Path::getControlPoints() { return controlPoints; }
 Pose& Path::getPoint(int i) { return points[i]; }
 int Path::size() { return points.size(); }
 
@@ -320,6 +321,8 @@ void Path::compute(int N) {
     Vec3d* _drs = &directions[0];
     Vec3d* _ups = &up_vectors[0];
     Vec3d* _cls = &colors[0];
+
+    controlPoints.clear();
 
     if (degree == 2) {
         for (int i=0; i<Nsegs; i++) {
@@ -346,6 +349,8 @@ void Path::compute(int N) {
             float L = r.length();
             Vec3d h1 = p1.pos() + p1.dir()*L/3.0;
             Vec3d h2 = p2.pos() - p2.dir()*L/3.0;
+            controlPoints.push_back(h1);
+            controlPoints.push_back(h2);
 
             // berechne die hilfspunkte fuer die directions B'(0.5)
             //  B(t) = (1 - t)^3 * p1 + 3t(1-t)^2 * h1 + 3t^2 (1-t) * h2 + t^3 * p2

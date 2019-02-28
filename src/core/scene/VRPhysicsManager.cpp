@@ -17,10 +17,10 @@
 #include "core/utils/VRGlobals.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRVisualLayer.h"
+#include "core/utils/system/VRSystem.h"
 #include "VRThreadManager.h"
 #include "core/objects/geometry/VRPrimitive.h"
 
-#include <chrono>
 #include <thread>
 
 #define PHYSICS_THREAD_TIMESTEP_MS 2
@@ -86,12 +86,6 @@ boost::recursive_mutex& VRPhysicsManager::physicsMutex() { return mtx; }
 
 VRVisualLayerPtr VRPhysicsManager::getVisualLayer() { return physics_visual_layer; }
 
-long long VRPhysicsManager::getTime() { // time in seconds
-    long long l = glutGet(GLUT_ELAPSED_TIME);
-    return 1000*l;
-    //return 1e6*clock()/CLOCKS_PER_SEC; // TODO
-}
-
 btSoftBodyWorldInfo* VRPhysicsManager::getSoftBodyWorldInfo() {return softBodyWorldInfo;}
 
 void VRPhysicsManager::setPhysicsActive(bool a) {
@@ -136,8 +130,10 @@ void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
     if (dt < PHYSICS_THREAD_TIMESTEP_MS * 1000) this_thread::sleep_for(chrono::microseconds(PHYSICS_THREAD_TIMESTEP_MS * 1000 -dt));
     t3 = getTime();
 
-    MLock lock(mtx);
-    if (t3-t1 > 0) fps = 1e6/(t3-t1);
+    if (active) {
+        MLock lock(mtx);
+        if (t3-t1 > 0) fps = 1e6/(t3-t1);
+    }
 }
 
 void VRPhysicsManager::addPhysicsUpdateFunction(VRUpdateCbPtr fkt, bool after) {

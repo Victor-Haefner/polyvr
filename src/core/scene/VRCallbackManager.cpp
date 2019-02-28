@@ -1,10 +1,10 @@
 #include "VRCallbackManager.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRGlobals.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/objects/object/VRObject.h"
 #include <iostream>
 #include <vector>
-#include <GL/glut.h>
 #include <boost/thread/recursive_mutex.hpp>
 
 OSG_BEGIN_NAMESPACE;
@@ -46,7 +46,7 @@ void VRCallbackManager::addTimeoutFkt(VRUpdateCbWeakPtr p, int priority, int tim
     timeoutFkt tof;
     tof.fktPtr = p;
     tof.timeout = timeout;
-    tof.last_call = glutGet(GLUT_ELAPSED_TIME);
+    tof.last_call = getTime()*1e-3;
     timeoutFktPtrs[priority]->push_back(tof);
 }
 
@@ -96,7 +96,7 @@ void VRCallbackManager::updateCallbacks() {
     for (auto fl : updateFktPtrs) for (auto f : *fl.second) cbsPtr.push_back(f);
 
     // gather all timeout callbacks
-    int time = glutGet(GLUT_ELAPSED_TIME);
+    int time = getTime()*1e-3;
     for (auto tfl : timeoutFktPtrs)
         for (auto& tf : *tfl.second)
             if (time - tf.last_call >= tf.timeout) {

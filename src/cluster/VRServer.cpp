@@ -22,11 +22,12 @@ ClusterServer      *server;
 void enableCoreDumps() {
     string file = boost::filesystem::current_path().string()+"/core";
     remove(file.c_str()); // remove old coredump in current folder
-
+#ifndef _WIN32
     struct rlimit corelim;
     corelim.rlim_cur = -1;
     corelim.rlim_max = -1;
     if (setrlimit (RLIMIT_CORE, &corelim) != 0) cerr << "Couldn't set core limit\n";
+#endif
 }
 
 bool doPrint() {

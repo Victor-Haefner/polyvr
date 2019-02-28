@@ -1,5 +1,6 @@
 #include "VRPathtool.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRStroke.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/scene/VRScene.h"
@@ -375,6 +376,7 @@ void VRPathtool::update() { // call in script to have smooth knots
     }
 
     for (auto e : pathToEntry) updateEntry(e.second);
+    updateBezierVisuals();
 }
 
 void VRPathtool::updateEntry(entryPtr e) { // update path representation
@@ -492,6 +494,7 @@ void VRPathtool::updateDevs() { // update when something is dragged
         if (!handleToNode.count(obj.get()) && !handleToEntries.count(obj.get())) continue;
         projectHandle(obj, dev.second);
         updateHandle(obj);
+        updateBezierVisuals();
     }
 }
 
@@ -567,7 +570,7 @@ VRGeometryPtr VRPathtool::newControlHandle(VRGeometryPtr handle, Vec3d p) {
     h->setPersistency(0);
     //h->setRelativePosition(p, ptr());
     h->setWorldPosition(p);
-    controlhandles.push_back(h);
+    controlHandles.push_back(h);
     return h;
 }
 
@@ -719,6 +722,84 @@ void VRPathtool::setVisuals(bool hvis, bool lines) {
         if (auto hs = h.lock()) hs->setVisible(hvis);
     }
 }
+
+void VRPathtool::setBezierVisuals(bool cpvis, bool hvis) {
+    showBControlPoints = cpvis;
+    showBHulls = hvis;
+    updateBezierVisuals();
+}
+
+void VRPathtool::updateBezierVisuals() {
+    auto cps = controlPoints.lock();
+    auto bhs = bezierHulls.lock();
+
+    if (!showBControlPoints && cps) cps->destroy();
+    if (!showBHulls && bhs) bhs->destroy();
+
+    if (showBControlPoints) {
+        if (!cps) {
+            cps = VRGeometry::create("BezierControlPoints");
+            addChild(cps);
+            auto m = VRMaterial::create("BezierControlPointsMat");
+            m->setPointSize(5);
+            m->setWireFrame(true);
+            m->setLit(false);
+            m->setDiffuse(Color3f(0,0,1));
+            cps->setMaterial(m);
+            cps->hide("SHADOW");
+            controlPoints = cps;
+        }
+        VRGeoData data;
+        for (auto pE : pathToEntry) {
+            if (auto path = pE.second->p) {
+                for (auto cP : path->getControlPoints()) {
+                    data.pushVert(cP);
+                    data.pushPoint();
+                }
+                for (auto P : path->getPoints()) {
+                    data.pushVert(P.pos());
+                    data.pushPoint();
+                }
+            }
+        }
+        data.apply(cps);
+    }
+
+    if (showBHulls) {
+        if (!bhs) {
+            bhs = VRGeometry::create("BezierHulls");
+            addChild(bhs);
+            auto m = VRMaterial::create("BezierHullsMat");
+            m->setPointSize(5);
+            m->setWireFrame(true);
+            m->setLit(false);
+            m->setDiffuse(Color3f(0,0,1));
+            bhs->setMaterial(m);
+            bhs->hide("SHADOW");
+            bezierHulls = bhs;
+        }
+        VRGeoData data;
+        for (auto pE : pathToEntry) {
+            if (auto path = pE.second->p) {
+                auto cPs = path->getControlPoints();
+                auto Ps = path->getPoints();
+                if ((Ps.size()-1)*2 != cPs.size()) continue;
+                for (int i=0; i<Ps.size()-1; i++) {
+                    int p1 = data.pushVert(Ps[i].pos());
+                    int p2 = data.pushVert(cPs[i*2]);
+                    int p3 = data.pushVert(cPs[i*2+1]);
+                    int p4 = data.pushVert(Ps[i+1].pos());
+                    data.pushTri(p1, p4, p2);
+                    data.pushTri(p1, p3, p4);
+                    data.pushTri(p1, p2, p3);
+                    data.pushTri(p2, p4, p3);
+                }
+            }
+        }
+        data.apply(bhs);
+    }
+}
+
 
 void VRPathtool::select(VRGeometryPtr h) {
     manip->handle(h);

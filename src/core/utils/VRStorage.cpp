@@ -51,7 +51,8 @@ void VRStorage::load_strstr_map_cb(map<string, string>* m, string tag, xmlpp::El
     if (!e) return;
     for (auto el : getChildren(e)) {
         string name = el->get_name();
-        string val = el->get_child_text()->get_content();
+        auto txt = el->get_child_text();
+        string val = txt ? txt->get_content() : "";
         (*m)[name] = val;
     }
 }

@@ -105,6 +105,7 @@ void VRRoadNetwork::init() {
 
 int VRRoadNetwork::getRoadID() { return ++nextRoadID; }
 VRAsphaltPtr VRRoadNetwork::getMaterial() { return asphalt; }
+VRAsphaltPtr VRRoadNetwork::getArrowMaterial() { return asphaltArrow; }
 GraphPtr VRRoadNetwork::getGraph() { return graph; }
 
 vector<Vec3d> VRRoadNetwork::getGraphEdgeDirections(int e) { return graphNormals[e]; }
@@ -265,6 +266,8 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
     for (int i=0; i<Nlanes-Nm; i++) road->addLane(-1, 4 );
     roads.push_back(road);
     roadsByEntity[road->getEntity()] = road;
+    string streetName = road->getEntity()->getValue<string>("name", "unnamed");
+    roadsByName[streetName].push_back(road);
     return road;
 }
 
@@ -311,7 +314,10 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
         vector<int> laneEdges;
         for (uint i=1; i<nodes.size(); i++) {
             connectGraph({nodes[i-1], nodes[i]}, {norms[i-1], norms[i]}, lane);
-            laneEdges.push_back(graph->getEdgeID(nodes[i-1]->getValue<int>("graphID", -1),nodes[i]->getValue<int>("graphID", -1)));
+            int nID1 = nodes[i-1]->getValue<int>("graphID", -1);
+            int nID2 = nodes[i]->getValue<int>("graphID", -1);
+            int eID = graph->getEdgeID(nID1,nID2);
+            laneEdges.push_back(eID);
             //cout << toString(laneEdges[i-1]) << endl;
         }
 
@@ -320,11 +326,14 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
 		widthSum += width;
 		if (direction > 0) { lanesD1.push_back(laneEdges); }
 		if (direction < 0) { lanesD2.push_back(laneEdges); }
-		}
+    }
 
 	if (lanesD1.size()>1) {
         for (int i = 0; i<lanesD1[0].size();i++) {
             for (int j = 1; j<lanesD1.size();j++) {
+                ///checking minimum length for lane relations
+                if (graph->getEdgeLength(lanesD1[j][i]) < 10) continue;
+                if (graph->getEdgeLength(lanesD1[j-1][i]) < 10) continue;
                 graph->addRelation(lanesD1[j][i],lanesD1[j-1][i]);
                 //cout << toString(lanesD1[j][i]) << " -- " << toString(lanesD1[j-1][i]) << endl;
             }
@@ -333,6 +342,9 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
     if (lanesD2.size()>1) {
         for (int i = 0; i<lanesD2[0].size();i++) {
             for (int j = 1; j<lanesD2.size();j++) {
+                ///checking minimum length for lane relations
+                if (graph->getEdgeLength(lanesD2[j][i]) < 10) continue;
+                if (graph->getEdgeLength(lanesD2[j-1][i]) < 10) continue;
                 graph->addRelation(lanesD2[j][i],lanesD2[j-1][i]);
                 //cout << toString(lanesD2[j][i]) << " -- " << toString(lanesD2[j-1][i]) << endl;
             }
@@ -440,9 +452,9 @@ void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
         Vec3d p23 = p2 + d2*0.01 + median;
         Vec3d p22 = (p21+p23)*0.5;
         if (auto t = terrain.lock()) {
-            t->elevatePoint(p21);
-            t->elevatePoint(p22);
-            t->elevatePoint(p23);
+            p21 = t->elevatePoint(p21);
+            p22 = t->elevatePoint(p22);
+            p23 = t->elevatePoint(p23);
         }
         path->addPoint( Pose(p21, d1) );
         path->addPoint( Pose(p22, n ) );
@@ -486,19 +498,9 @@ vector<VREntityPtr> VRRoadNetwork::getRoadNodes() { // all nodes from all paths 
     return res;
 }
 
-Vec2i replaceChar(string& txt, char c1, char c2) {
-    Vec2i N;
-    int k = 0;
+void replaceChar(string& txt, char c1, char c2) {
     for (int i=0; i<int(txt.size()); i++)
-        if (txt[i] == c1) {
-            txt[i] = c2;
-            N[1]++;
-
-            N[0] = max(N[0],i-k);
-            k = i;
-        }
-    N[0] = max(N[0],int(txt.size())-1-k);
-    return N;
+        if (txt[i] == c1) txt[i] = c2;
 }
 
 void VRRoadNetwork::computeSigns() {
@@ -517,8 +519,8 @@ void VRRoadNetwork::computeSigns() {
             if (sign) { // TODO: add label
                 auto surface = dynamic_pointer_cast<VRGeometry>( sign->findAll("Sign")[3] );
                 surface->makeUnique();
-                Vec2i N = replaceChar(type, ' ', '\n');
-                auto tex = VRText::get()->create(type, "MONO 20", 20*N[0], 10*N[0]*N[1], Color4f(0,0,0,1), Color4f(1,1,1,1));
+                replaceChar(type, ' ', '\n');
+                auto tex = VRText::get()->create(type, "MONO 20", 20, Color4f(0,0,0,1), Color4f(1,1,1,1));
                 auto m = VRMaterial::create("sign");
                 m->setTexture(tex);
                 surface->setMaterial(m);
@@ -595,9 +597,19 @@ void VRRoadNetwork::computeArrows() {
         if (!lane || !lane->getEntity("path")) continue;
         auto lpath = toPath( lane->getEntity("path"), 16 );
         t /= lpath->getLength();
+
         auto dirs = arrow->getAllValues<float>("direction");
+        map<int, int> uniqueDirs;
+        for (auto& d : dirs) uniqueDirs[ int(d*5/pi)*180/5 ] = 0; // discretize directions
         Vec4i drs(999,999,999,999);
-        for (uint i=0; i<4 && i < dirs.size(); i++) drs[i] = int(dirs[i]*5/pi)*180/5;
+        int N = min(int(uniqueDirs.size()),4);
+        int i=0;
+        for (auto d : uniqueDirs) {
+            drs[i] = d.first;
+            i++;
+            if (i >= N) break;
+        }
+
         if (t < 0) t = 1+t; // from the end
         auto pose = lpath->getPose(t);
         auto dir = pose->dir();
@@ -605,7 +617,7 @@ void VRRoadNetwork::computeArrows() {
             float offset = toFloat(arrow->get("offset")->value);
             pose->setPos(pose->pos() + dir*offset);
         }
-        createArrow(drs, min(int(dirs.size()),4), *pose, arrow->getValue<int>("type", 0));
+        createArrow(drs, N, *pose, arrow->getValue<int>("type", 0));
     }
 }
 
@@ -615,8 +627,8 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p, int type) {
     //if (arrowTemplates.size() > 20) { cout << "VRRoadNetwork::createArrow, Warning! arrowTexture too big!\n"; return; }
 
     if (!arrowTemplates.count(dirs)) {
-        //cout << "VRRoadNetwork::createArrow " << dirs << "  " << N << endl;
         arrowTemplates[dirs] = arrowTemplates.size();
+        //cout << "VRRoadNetwork::createArrow " << dirs << "  " << N << ", ID: " << arrowTemplates[dirs] << endl;
 
         VRTextureGenerator tg;
         tg.setSize(Vec3i(400,400,1), false);
@@ -672,14 +684,12 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p, int type) {
         asphaltArrow->setShaderParameter("NArrowTex", (int)arrowTemplates.size());
     }
 
-    GeoVec4fPropertyMTRecPtr cols = GeoVec4fProperty::create();
-    Vec4d color = Vec4d((arrowTemplates[dirs]-1)*0.001, 0, 0);
-    for (int i=0; i<4; i++) cols->addValue(color);
+    Color4f color(arrowTemplates[dirs]*0.001, 0, 0, 0);
 
     VRGeoData gdata;
     gdata.pushQuad(Vec3d(0,0.025,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(2,2), true);
+    gdata.addVertexColors(color);
     auto geo = gdata.asGeometry("arrow");
-    geo->setColors(cols);
     geo->setPositionalTexCoords2D(1.0, 1, Vec2i(0,2));
     arrows->merge(geo, Pose::create(p));
 }
@@ -719,6 +729,8 @@ void VRRoadNetwork::computeIntersections() {
         roads.push_back(r);
         ways.push_back(r);
         roadsByEntity[r->getEntity()] = r;
+        string streetName = r->getEntity()->getValue<string>("name", "unnamed");
+        roadsByName[streetName].push_back(r);
     }
 
     for (auto node : getRoadNodes()) {
@@ -816,12 +828,17 @@ void VRRoadNetwork::computeSurfaces() {
         if (auto w = world.lock()) w->getPhysicsSystem()->add(iGeo, iGeo->getID());
     }
 
+    auto stoneMat = VRMaterial::create("stone");
+    stoneMat->setDiffuse(Color3f(0.7,0.7,0.7));
+
     for (auto tunnel : tunnels) {
         tunnel->createGeometry();
+        dynamic_pointer_cast<VRGeometry>(tunnel->getChild(0))->setMaterial(stoneMat);
     }
 
     for (auto bridge : bridges) {
         bridge->createGeometry();
+        dynamic_pointer_cast<VRGeometry>(bridge->getChild(0))->setMaterial(stoneMat);
     }
 }
 
@@ -900,6 +917,12 @@ VRRoadPtr VRRoadNetwork::getRoad(VREntityPtr road) {
     if (roadsByEntity.count(road)) return roadsByEntity[road];
     return 0;
 }
+
+vector<VRRoadPtr> VRRoadNetwork::getRoadByName(string name) {
+    if (roadsByName.count(name)) return roadsByName[name];
+    return vector<VRRoadPtr>();
+}
+
 VRRoadIntersectionPtr VRRoadNetwork::getIntersection(VREntityPtr intersection) {
     if (intersectionsByEntity.count(intersection)) return intersectionsByEntity[intersection];
     return 0;
@@ -1004,19 +1027,26 @@ void VRRoadNetwork::connectGraph(vector<VREntityPtr> nodes, vector<Vec3d> norms,
 
 PosePtr VRRoadNetwork::getPosition(Graph::position p) {
     int eID = p.edge;
+    if (eID == 0) return 0;
     auto edge = graph->getEdge(eID);
+    if (edge.ID == 0) return 0;
+
     int n1 = edge.from;
     int n2 = edge.to;
 
+    if (!graphNormals.count(eID)) return 0;
     auto eNorms = graphNormals[eID];
+    if (!graphEdgeEntities.count(eID)) return 0;
     auto lane = graphEdgeEntities[eID];
-    auto nodes = lane->getEntity("path")->getAllEntities("nodes");
+    auto pathE = lane->getEntity("path");
+    auto nodes = pathE->getAllEntities("nodes");
 
     Vec3d node1;
     Vec3d node2;
 
     for (auto nE : nodes) {
         auto n = nE->getEntity("node");
+        if (!n) continue;
         if (n->getValue<int>("graphID", 0) == n1) node1 = n->getVec3("position");
         if (n->getValue<int>("graphID", 0) == n2) node2 = n->getVec3("position");
     }

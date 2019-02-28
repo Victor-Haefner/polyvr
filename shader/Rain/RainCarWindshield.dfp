@@ -220,7 +220,7 @@ bool drawWipers(){
 
 vec4 locateDrop() {
 	vec2 uv = worldToLocal(worldVec) + vec2(0.5,0.5)*disBD*pass*3.54;
-	if(distance(uv,vec2(0,0))>1.5) return vec4(-10,-10,0,0);
+	if(distance(uv,vec2(0,0))>0.8) return vec4(-10,-10,0,0);
 	if(pass<0.5) uv= uv + mapOffset0;
 	if(pass>0.5) uv= uv + mapOffset1;
 	// + 0.01*vec2(0,1)*tnow/20*(1+0.2*pass+0.2*scale); //TODO: INSERT INERTIA DRIVEN OFFSET TO SIMULATE RAIN MOVEMENT ON GLASS

@@ -16,10 +16,12 @@ OSG_BEGIN_NAMESPACE;
 class VRRoadNetwork : public VRRoadBase {
     private:
         vector<VRRoadPtr> roads;
-        map<VREntityPtr, VRRoadPtr> roadsByEntity;
-        map<VREntityPtr, VRRoadIntersectionPtr> intersectionsByEntity;
         vector<VRRoadPtr> ways;
+        map<VREntityPtr, VRRoadPtr> roadsByEntity;
+        map<string, vector<VRRoadPtr>> roadsByName;
+
         vector<VRRoadIntersectionPtr> intersections;
+        map<VREntityPtr, VRRoadIntersectionPtr> intersectionsByEntity;
         vector<VRGeometryPtr> assets;
 
         vector<VRTunnelPtr> tunnels;
@@ -84,6 +86,7 @@ class VRRoadNetwork : public VRRoadBase {
         vector<Vec3d> getGraphEdgeDirections(int e);
         void updateAsphaltTexture();
         VRAsphaltPtr getMaterial();
+        VRAsphaltPtr getArrowMaterial();
         int getRoadID();
 
         PosePtr getPosition(Graph::position p);
@@ -95,6 +98,7 @@ class VRRoadNetwork : public VRRoadBase {
         VRRoadIntersectionPtr getIntersection(VREntityPtr intersection);
 
         vector<VRRoadPtr> getRoads();
+        vector<VRRoadPtr> getRoadByName(string name);
         vector<VRRoadIntersectionPtr> getIntersections();
         vector<VREntityPtr> getPreviousRoads(VREntityPtr road);
         vector<VREntityPtr> getNextRoads(VREntityPtr road);

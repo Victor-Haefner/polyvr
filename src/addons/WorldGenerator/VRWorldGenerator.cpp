@@ -189,7 +189,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         auto addPnt = [&](Vec3d p, Vec3d d) {
             //d.normalize(); // TODO: necessary because of projectTangent, can be optimized!
             if (terrain) {
-                terrain->elevatePoint(p,p[1]);
+                p = terrain->elevatePoint(p,p[1]);
                 terrain->projectTangent(d, p);
             } else d.normalize();
             path->addPoint( Pose( p, d ) );
@@ -226,7 +226,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 
         auto addPnt = [&](Vec3d p, Vec3d d) {
             if (terrain) {
-                terrain->elevatePoint(p);
+                p = terrain->elevatePoint(p);
                 terrain->projectTangent(d, p);
             }
             //d[1] = 0;
@@ -332,11 +332,22 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         } else if (way->hasTag("width")) widths = vector<float>( NlanesRight+NlanesLeft+hasPLaneR+hasPLaneL, toFloat(way->tags["width"]) );
         else widths = vector<float>( NlanesRight+NlanesLeft+hasPLaneR+hasPLaneL, width );
 
+        // add tag for maximum speed to lanes
+        //TODO: might need to parse in the future
+        // ^([0-9][\.0-9]+?)(?:[ ]?(?:km/h|kmh|kph|mph|knots))?$
+        vector<string> maxSpeeds;
+        if ( way->hasTag("maxspeed:lanes") ) {
+            auto data = splitString( way->tags["maxspeed:lanes"], '|' );
+            for (auto d : data) maxSpeeds.push_back(d);
+        } else if ( way->hasTag("maxspeed") ) {
+            maxSpeeds = vector<string>( NlanesRight+NlanesLeft, way->tags["maxspeed"] );
+        } else maxSpeeds = vector<string>( NlanesRight+NlanesLeft, "50.0");
+
         // create road and lane entities
         auto road = roads->addLongRoad(name, tag, nodes, norms, 0);
         if (hasPLaneR) road->addParkingLane(1, widths[NlanesRight], getInt("parking:lane:right:capacity", 0), getString("parking:lane:right", ""));
-        for (int l=0; l < NlanesRight; l++) road->addLane(1, widths[NlanesRight-1-l], pedestrian);
-        for (int l=0; l < NlanesLeft; l++) road->addLane(-1, widths[NlanesRight+hasPLaneR+l], pedestrian);
+        for (int l=0; l < NlanesRight; l++) { auto lane = road->addLane(1, widths[NlanesRight-1-l], pedestrian); lane->set("maxspeed", maxSpeeds[NlanesRight-1-l]); }
+        for (int l=0; l < NlanesLeft; l++) { auto lane = road->addLane(-1, widths[NlanesRight+hasPLaneR+l], pedestrian); lane->set("maxspeed", maxSpeeds[NlanesRight+l]); }
         if (hasPLaneL) road->addParkingLane(-1, widths[NlanesRight+NlanesLeft+hasPLaneR], getInt("parking:lane:left:capacity", 0), getString("parking:lane:left", ""));
         RoadEntities[way->id] = road;
 
@@ -459,7 +470,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         Vec3d pos = planet->fromLatLongPosition(node->lat, node->lon, true);
         Vec3d dir = getDir(node);
         bool hasDir = node->tags.count("direction");
-        if (terrain) terrain->elevatePoint(pos);
+        if (terrain) pos = terrain->elevatePoint(pos);
         bool addToOnto = false;
         bool added = false;
         for (auto tag : node->tags) {
@@ -544,10 +555,10 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 
             if (tag.first == "highway") {
                 if (tag.second == "street_lamp") {
-                    auto lamp = assets->copy("Streetlamp", Pose::create(pos, dir), false);
+                    auto lamp = assets->copy("Streetlamp", Pose::create(pos, -dir), false);
                     lodTree->addObject(lamp, lamp->getWorldPosition(), 3, false);
-                    lamp->setDir(dir);
-                    collisionShape->addQuad(0.1, 2, Pose(pos, dir), lamp->getID());
+                    lamp->setDir(-dir);
+                    collisionShape->addQuad(0.1, 2, Pose(pos, -dir), lamp->getID());
                 }
             }
         }

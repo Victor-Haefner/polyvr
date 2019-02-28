@@ -12,6 +12,7 @@ extern "C" {
 #include "VRSound.h"
 #include "../VRSceneManager.h"
 #include "../VRScene.h"
+#include "core/utils/VRFunction.h"
 
 #if _WIN32
 #include <al.h>
@@ -178,5 +179,32 @@ void VRSoundManager::stopAllSounds(void) {
     for (auto s : sounds) s.second->stop();
 }
 
+struct VRSoundQueue {
+    int current = 0;
+    vector<VRSoundPtr> sounds;
+    VRUpdateCbPtr callback;
+
+    VRSoundQueue(vector<VRSoundPtr> sounds) : sounds(sounds) {
+        callback = VRUpdateCb::create("sound queue", boost::bind(&VRSoundQueue::next, *this));
+        for (auto sound : sounds) sound->setCallback( callback );
+    }
+
+    static void next(VRSoundQueue& q) {
+        if (q.current >= q.sounds.size()) return;
+        q.sounds[q.current]->play();
+        q.current++;
+    }
+
+    void play() { current = 0; (*callback)(); }
+};
+
+void VRSoundManager::queueSounds(vector<VRSoundPtr> sounds) { // TODO: only one queue at the same time
+    VRSoundQueue queue(sounds);
+    queue.play();
+    soundQueue = queue.callback;
+}
 
 OSG_END_NAMESPACE;
+
+
+

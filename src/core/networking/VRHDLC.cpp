@@ -1,5 +1,6 @@
 #include "VRHDLC.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/toString.h"
 #include "core/utils/system/VRSystem.h"
 
 #include <boost/filesystem.hpp>
@@ -129,9 +130,12 @@ void VRHDLC::pauseReceive(int T) {
 }
 
 string VRHDLC::getInterface() {
-    auto interfaces = { "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyACM0", "/dev/car-interface" };
+    auto interfaces = { "/dev/ttyACM0", "/dev/car-interface" };
     for (auto i : interfaces) {
         if (boost::filesystem::exists(i)) return i;
+    }
+    for (auto f : openFolder("/dev")) {
+        if (startsWith(f, "ttyUSB")) return "/dev/"+f;
     }
     return "";
 }

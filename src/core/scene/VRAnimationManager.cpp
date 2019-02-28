@@ -1,15 +1,15 @@
 #include "VRAnimationManager.h"
 #include "VRAnimationManagerT.h"
-#include <GL/glut.h>
 #include <boost/bind.hpp>
 #include <vector>
 #include "core/utils/VRFunction.h"
+#include "core/utils/system/VRSystem.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 void VRAnimationManager::updateAnimations() {
-    float t = glutGet(GLUT_ELAPSED_TIME)*0.001;//in seconds
+    float t = getTime()*1e-6;//in seconds
     vector<string> toRemove;
     for (auto a : anim_map)
         if (a.second->update(t) == false) toRemove.push_back(a.first);

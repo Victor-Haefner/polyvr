@@ -692,6 +692,8 @@
 		<Unit filename="src/core/networking/VRProtocol.h" />
 		<Unit filename="src/core/networking/VRSSH.cpp" />
 		<Unit filename="src/core/networking/VRSSH.h" />
+		<Unit filename="src/core/networking/VRSceneSync.cpp" />
+		<Unit filename="src/core/networking/VRSceneSync.h" />
 		<Unit filename="src/core/networking/VRSharedMemory.cpp" />
 		<Unit filename="src/core/networking/VRSharedMemory.h" />
 		<Unit filename="src/core/networking/VRSocket.cpp" />
