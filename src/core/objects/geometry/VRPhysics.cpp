@@ -364,7 +364,7 @@ void VRPhysics::update() {
 
     btVector3 inertiaVector(0,0,0);
     float _mass = mass;
-    if (!dynamic) _mass = 0;
+    if (!dynamic || paused) _mass = 0;
 
     if (soft) {
         if (physicsShape == "Cloth") soft_body = createCloth();
@@ -1117,9 +1117,10 @@ OSG::Matrix4d VRPhysics::fromBTTransform(const btTransform t) {
 }
 
 void VRPhysics::pause(bool b) {
+    paused = b;
     if (body == 0) return;
-    if (dynamic == !b) return;
-    setDynamic(!b);
+    if (!dynamic) return;
+    update();
 }
 
 void VRPhysics::resetForces() {

@@ -78,6 +78,7 @@ class VRPhysics : public VRStorage {
         int collisionMask = 1;
         bool physicalized = false;
         bool dynamic = false;
+        bool paused = false;
         bool ghost = false;
         bool soft = false;
         bool physTree = true;
