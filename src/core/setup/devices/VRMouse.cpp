@@ -233,12 +233,13 @@ void VRMouse::motion(int x, int y) {
     auto sv = view.lock();
     if (!sv) return;
 
-    float _x, _y;
     ViewportMTRecPtr v = sv->getViewportL();
+    if (!v) return;
+
+    float _x, _y;
     v->calcNormalizedCoordinates(_x, _y, x, y);
     change_slider(5,_x);
     change_slider(6,_y);
-
     updatePosition(x,y);
 }
 

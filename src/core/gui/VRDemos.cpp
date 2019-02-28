@@ -185,7 +185,8 @@ void VRAppSection::clearTable(string t, Gtk::Table* tab) {
     }
 }
 
-void VRAppSection::setGuiState(VRAppLauncherPtr e, bool running) {
+void VRAppSection::setGuiState(VRAppLauncherPtr e, bool running, bool noLauncherScene) {
+    if (noLauncherScene) running = true; // disables widget
     for (auto i : apps) {
         VRAppLauncherPtr d = i.second;
         if (d->widget) d->widget->set_sensitive(!running);
@@ -291,17 +292,19 @@ void VRAppManager::clearTable(string t) {
 }
 
 void VRAppManager::setGuiState(VRAppLauncherPtr e) {
-    bool running = (e == 0) ? 0 : e->running;
+    bool running = (e == 0) ? noLauncherScene : e->running;
     setVPanedSensitivity("vpaned1", running);
     setNotebookSensitivity("notebook3", running);
 
-    examplesSection->setGuiState(e, running);
-    recentsSection->setGuiState(e, running);
-    favoritesSection->setGuiState(e, running);
+    examplesSection->setGuiState(e, running, noLauncherScene);
+    recentsSection->setGuiState(e, running, noLauncherScene);
+    favoritesSection->setGuiState(e, running, noLauncherScene);
 
-    if (e) if (e->widget) e->widget->set_sensitive(true);
-    if (running) { if (e->imgPlay) e->imgPlay->set(Gtk::Stock::MEDIA_STOP, Gtk::ICON_SIZE_BUTTON); }
-    else if (e) { if (e->imgPlay) e->imgPlay->set(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON); }
+    if (e) {
+        if (e->widget) e->widget->set_sensitive(true);
+        if (running) { if (e->imgPlay) e->imgPlay->set(Gtk::Stock::MEDIA_STOP, Gtk::ICON_SIZE_BUTTON); }
+        else { if (e->imgPlay) e->imgPlay->set(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON); }
+    }
 
     setToolButtonSensitivity("toolbutton4", running); // toggle 'save' button availability
     setToolButtonSensitivity("toolbutton5", running); // toggle 'save as' button availability
@@ -424,6 +427,16 @@ void VRAppManager::on_diag_save_clicked() { // TODO: check if ending is .pvr
     addEntry(path, "favorites_tab", true);
 }
 
+void VRAppManager::toggleDemo(VRAppLauncherPtr e) {
+    bool run = !e->running;
+    VRSceneManager::get()->closeScene();
+    if (run) {
+        string encryptionKey;
+        if (endsWith(e->path, ".pvc")) encryptionKey = askUserPass("Please insert encryption key");
+        VRSceneManager::get()->loadScene(e->path, e->write_protected, encryptionKey);
+    }
+}
+
 void VRAppManager::on_saveas_clicked() {
     auto scene = VRScene::getCurrent();
     if (!scene) return;
@@ -439,9 +452,13 @@ void VRAppManager::on_saveas_clicked() {
 }
 
 void VRAppManager::on_stop_clicked() {
-    auto scene = VRScene::getCurrent();
-    if (!scene) return;
-    if (current_demo->running) toggleDemo(current_demo); // close demo if it is running
+    if (noLauncherScene) {
+        VRSceneManager::get()->closeScene();
+        noLauncherScene = false;
+        update();
+    }
+
+    if (current_demo && current_demo->running) toggleDemo(current_demo); // close demo if it is running
 }
 
 void VRAppManager::on_diag_load_clicked() {
@@ -457,7 +474,16 @@ void VRAppManager::on_diag_load_clicked() {
         if (e) toggleDemo(e);
     } else {
         cout << "load model '" << path << "'" << endl;
+        VRSceneManager::get()->setWorkdir( getFolderName(path) );
+        VRSceneManager::get()->newScene("PolyVR Model Viewer");
 
+        noLauncherScene = true;
+        update();
+
+        auto scene = VRScene::getCurrent();
+        if (!scene) return;
+        auto light = scene->get("light");
+        VRImport::get()->load(path, light);
     }
 }
 
@@ -504,10 +530,8 @@ void VRAppManager::on_new_clicked() {
 void VRAppManager::update() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) {
-        if (current_demo) {
-            current_demo->running = false;
-            setGuiState(current_demo);
-        }
+        if (current_demo) current_demo->running = false;
+        setGuiState(current_demo);
         return;
     }
 
@@ -531,16 +555,10 @@ void VRAppManager::update() {
         current_demo->running = true;
         setGuiState(current_demo);
     }
-}
 
-void VRAppManager::toggleDemo(VRAppLauncherPtr e) {
-    bool run = !e->running;
-    VRSceneManager::get()->closeScene();
-    if (run) {
-        string encryptionKey;
-        if (endsWith(e->path, ".pvc")) encryptionKey = askUserPass("Please insert encryption key");
-        VRSceneManager::get()->loadScene(e->path, e->write_protected, encryptionKey);
-    }
+    if (noLauncherScene) setGuiState(0);
 }
 
 OSG_END_NAMESPACE;
+
+

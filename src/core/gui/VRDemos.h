@@ -80,7 +80,7 @@ class VRAppSection : public std::enable_shared_from_this<VRAppSection>, public V
 
         void fillTable(string t, Gtk::Table* tab, int& i);
         void clearTable(string t, Gtk::Table* tab);
-        void setGuiState(VRAppLauncherPtr e, bool running);
+        void setGuiState(VRAppLauncherPtr e, bool running, bool noLauncherScene);
 };
 
 class VRAppManager {
@@ -95,6 +95,7 @@ class VRAppManager {
         VRAppSectionPtr recentsSection;
         VRGuiContextMenu* menu;
         VRDeviceCbPtr updateCb;
+        bool noLauncherScene = false;
 
         void clearTable(string t);
         void updateTable(string t);
