@@ -635,7 +635,19 @@ void VRTransform::drag(VRTransformPtr new_parent) {
     if (physics) {
         physics->updateTransformation( ptr() );
         physics->resetForces();
-        physics->pause(true);
+        //physics->pause(true);
+        //physics->setGravity(Vec3d(0,0,0));
+        if (!new_parent->physics) new_parent->physicalize(1,0,"Box",0.01);
+        auto c = VRConstraint::create();
+        c->free({0,1,2,3,4,5});
+        auto cs = VRConstraint::create();
+        for (int i=0; i<3; i++) {
+            cs->setMinMax(i,1000,0.01); // stiffness, dampness
+            cs->setMinMax(i+3,-1,0);
+        }
+        c->setReferenceA(Pose::create(Vec3d(0,0,0)));
+        c->setReferenceB(Pose::create(getFrom()));
+        physics->setConstraint(new_parent->physics, c, cs);
     }
     reg_change();
     updateChange();
@@ -648,6 +660,7 @@ void VRTransform::drop() {
     Matrix4d wm, m1, m2;
     getWorldMatrix(wm);
     m1 = getMatrix();
+    auto dragParent = dynamic_pointer_cast<VRTransform>( getParent() );
     if (auto p = old_parent.lock()) switchParent(p, old_child_id);
     setWorldMatrix(wm);
     recUndo(&VRTransform::setMatrix, ptr(), old_transformation, getMatrix());
@@ -655,7 +668,9 @@ void VRTransform::drop() {
     if (physics) {
         physics->updateTransformation( ptr() );
         physics->resetForces();
-        physics->pause(false);
+        //physics->pause(false);
+        //physics->setGravity(Vec3d(0,-10,0));
+        if (dragParent && dragParent->physics) physics->deleteConstraints(dragParent->physics);
     }
     reg_change();
     updateChange();
@@ -778,8 +793,9 @@ void VRTransform::apply_constraints(bool force) { // TODO: check efficiency
     }
 }
 
+void VRTransform::setNoBltFlag() { noBlt = true; }
+
 void VRTransform::updateFromBullet() {
-    if (held) return;
     Matrix4d m = physics->getTransformation();
     setWorldMatrix(m);
     auto vs = physics->getVisualShape();
@@ -787,12 +803,10 @@ void VRTransform::updateFromBullet() {
     setNoBltFlag();
 }
 
-void VRTransform::setNoBltFlag() { noBlt = true; }
-
 void VRTransform::resolvePhysics() {
     if (!physics) return;
     if (physics->isGhost()) { updatePhysics(); return; }
-    if (physics->isDynamic() && !held) { updateFromBullet(); return; }
+    if (physics->isDynamic()) { updateFromBullet(); return; }
     physics->updateTransformation( ptr() );
 }
 
