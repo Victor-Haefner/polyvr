@@ -24,6 +24,9 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/import/VRImport.h"
+#include "core/objects/VRTransform.h"
+#include "core/objects/VRCamera.h"
+#include "core/math/boundingbox.h"
 #include "core/scene/VRProjectsList.h"
 #include "core/setup/devices/VRSignal.h"
 #include "core/utils/system/VRSystem.h"
@@ -482,8 +485,19 @@ void VRAppManager::on_diag_load_clicked() {
 
         auto scene = VRScene::getCurrent();
         if (!scene) return;
+
+        scene->setBackground(VRBackground::SKY);
+
+        auto cam = dynamic_pointer_cast<VRCamera>(scene->get("Default"));
         auto light = scene->get("light");
-        VRImport::get()->load(path, light);
+        auto model = VRImport::get()->load(path, light);
+
+        auto bb = model->getBoundingbox();
+        if (bb->volume() < 1e-4) return;
+        double h = bb->center()[1];
+        Vec3d p = Vec3d(0,h,0);
+        cam->setTransform(p, Vec3d(0,0,-1), Vec3d(0,1,0));
+        cam->focusObject(model);
     }
 }
 
