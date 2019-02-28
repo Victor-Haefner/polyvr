@@ -1,13 +1,14 @@
 ﻿Victor Häfner - Main developer
 Polina Häfner - Quality assurance
 Michael Cormier - Abacus file parser
-Marcel Brüggeborg - CSG
+Marcel Brüggeborg - CSG module
 Filip Szeliga - Car dynamics
-Julius Eckert - RealWorld basics
-Viktor Eberhardt - RealWorld enhancements
-Sebastian Friebe - RealWorld traffic simulation
-Philipp Beisel - Haptic device integration
+Julius Eckert - RealWorld basics (deprecated)
+Viktor Eberhardt - RealWorld enhancements (deprecated)
+Sebastian Friebe - RealWorld traffic simulation (deprecated)
+Philipp Beisel - Haptic device integration (deprecated)
 Valentin Kautz - Milling block
 Andreas Pfeil - Particles and SPH fluids
 Asher Zarth - Sky module
-Felix Michels - Rain
+Felix Michels - Weather module, driving dynamics, road generation and traffic simulation
+Anjela Mayer - Process engine
