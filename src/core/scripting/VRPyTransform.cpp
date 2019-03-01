@@ -102,7 +102,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setDamping", PyWrap(Transform, setDamping, "sets the damping of this object. 1st param is the linear, 2nd the angular damping", void, float, float ) },
     {"applyChange", PyWrap(Transform, updateChange, "Apply all changes", void ) },
     {"setCenterOfMass", PyWrap(Transform, setCenterOfMass, "Set a custom center of mass", void, Vec3d ) },
-    {"drag", PyWrap(Transform, drag, "Drag this object by new parent", void, VRTransformPtr ) },
+    {"drag", PyWrapOpt(Transform, drag, "Drag this object by new parent", "", void, VRTransformPtr, VRIntersection ) },
     {"drop", PyWrap(Transform, drop, "Drop this object, if held, to old parent", void ) },
     {"rebaseDrag", PyWrap( Transform, rebaseDrag, "Rebase drag, use instead of switchParent", void, VRObjectPtr ) },
     {"isDragged", PyWrap( Transform, isDragged, "Check if transform is beeing dragged", bool ) },

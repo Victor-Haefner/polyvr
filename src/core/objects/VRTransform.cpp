@@ -618,7 +618,7 @@ void VRTransform::move(float d) {
     translate(Vec3d(dv*d));
 }
 
-void VRTransform::drag(VRTransformPtr new_parent) {
+void VRTransform::drag(VRTransformPtr new_parent, VRIntersection i) {
     if (held) return;
     held = true;
     if (auto p = getParent()) old_parent = p;
@@ -645,7 +645,12 @@ void VRTransform::drag(VRTransformPtr new_parent) {
             cs->setMinMax(i,1000,0.01); // stiffness, dampness
             cs->setMinMax(i+3,-1,0);
         }
-        c->setReferenceA(Pose::create(Vec3d(0,0,0)));
+
+        Pnt3d P = i.point; // intersection point in world coords
+        m.invert();
+        m.mult(P, P);
+
+        c->setReferenceA(Pose::create(Vec3d(P)));
         c->setReferenceB(Pose::create(getFrom()));
         physics->setConstraint(new_parent->physics, c, cs);
     }

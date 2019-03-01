@@ -162,7 +162,7 @@ class VRTransform : public VRObject {
         void move(float d);
         void rotateYonZ();
 
-        virtual void drag(VRTransformPtr new_parent);
+        virtual void drag(VRTransformPtr new_parent, VRIntersection i = VRIntersection());
         virtual void drop();
         void rebaseDrag(VRObjectPtr new_parent);
         VRObjectPtr getDragParent();
