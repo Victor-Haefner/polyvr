@@ -12,6 +12,9 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRSky& o) { return "Sky"; }
+
+
 // not accounting for leap or other inconsistencies
 void VRSky::Date::propagate(double seconds) {
     int sign = (seconds > 0) - (seconds < 0); // check sign

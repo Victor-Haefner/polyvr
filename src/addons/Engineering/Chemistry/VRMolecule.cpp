@@ -16,7 +16,7 @@ using namespace OSG;
 map<string, PeriodicTableEntry> PeriodicTable;
 map<string, vector<Matrix4d> > AtomicStructures;
 
-template<> string typeName(const VRMoleculePtr& m) { return "Molecule"; }
+template<> string typeName(const VRMolecule& m) { return "Molecule"; }
 
 void initAtomicTables() { // TODO: set colors
 	PeriodicTable["H"] = PeriodicTableEntry(1, 0.37, Vec3d(1,1,1));

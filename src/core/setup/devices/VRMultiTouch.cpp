@@ -22,8 +22,10 @@
 
 typedef __u64 mstime_t;
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRMultiTouch& t) { return "MultiTouch"; }
+
 
 VRMultiTouch::Touch::Touch(int k) : key(k) {}
 
@@ -473,4 +475,3 @@ void VRMultiTouch::setWindow(VRWindowPtr win) { this->window = win; }
 Line VRMultiTouch::getRay() { return ray; }
 
 
-OSG_END_NAMESPACE;

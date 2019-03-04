@@ -6,7 +6,7 @@
 #include <libxml++/nodes/element.h>
 #include <boost/bind.hpp>
 
-template<> string typeName(const OSG::VRDevicePtr& t) { return "Device"; }
+template<> string typeName(const OSG::VRDevice& t) { return "Device"; }
 
 OSG_BEGIN_NAMESPACE;
 

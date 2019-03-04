@@ -18,7 +18,7 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRObjectPtr& o) { return o?o->getType():"Object(null)"; }
+template<> string typeName(const VRObject& o) { return o.getType(); }
 
 VRObject::VRObject(string _name) {
     static int _ID = 0;
@@ -150,7 +150,7 @@ VRObjectPtr VRObject::copy(vector<VRObjectPtr> children) {
 }
 
 int VRObject::getID() { return ID; }
-string VRObject::getType() { return type; }
+string VRObject::getType() const { return type; }
 void VRObject::addTag(string name) { addAttachment(name, 0); }
 bool VRObject::hasTag(string name) { return attachments.count(name); }
 void VRObject::remTag(string name) { attachments.erase(name); }

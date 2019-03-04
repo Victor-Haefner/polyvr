@@ -1,5 +1,6 @@
 #include "triangulator.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/utils/toString.h"
 #include <GL/glut.h>
 #include <iostream>
 #include <sstream>
@@ -8,8 +9,10 @@
 
 #include <OpenSG/OSGGeoProperties.h>
 
-using namespace std;
 using namespace OSG;
+
+template<> string typeName(const Triangulator& o) { return "Triangulator"; }
+
 
 Triangulator* current_triangulator;
 vector<Vec3d> tmpVertices;

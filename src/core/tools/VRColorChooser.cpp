@@ -4,14 +4,17 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
+#include "core/utils/toString.h"
 
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGImage.h>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRColorChooser& t) { return "ColorChooser"; }
+
 
 VRColorChooser::VRColorChooser() {
     mat = VRMaterial::create("color choose");
@@ -70,4 +73,3 @@ void VRColorChooser::resolve(VRDevicePtr dev) {
     setColor(colFromUV(ins.texel));
 }
 
-OSG_END_NAMESPACE;

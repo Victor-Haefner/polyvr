@@ -16,8 +16,9 @@
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/utils/VRLogger.h"
 
-using namespace std;
 using namespace OSG;
+
+template<> string typeName(const CEF& o) { return "CEF"; }
 
 vector< weak_ptr<CEF> > instances;
 bool cef_gl_init = false;

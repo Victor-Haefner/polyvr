@@ -23,10 +23,13 @@
 #include "Modules/ModuleWalls.h"
 #include "Elevation.h"
 #include "Config.h"
+#include "core/utils/toString.h"
 
 #define PI 3.14159265
 
 using namespace OSG;
+
+template<> string typeName(const RealWorld& o) { return "RealWorld"; }
 
 map<string, string> RealWorld::options = map<string, string>();
 RealWorld* RealWorld::singelton = 0;

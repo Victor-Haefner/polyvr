@@ -12,6 +12,7 @@
 #include "VRPySky.h"
 #include "VRPySound.h"
 #include "VRPyMaterial.h"
+#include "VRPyCodeCompletion.h"
 
 #include "core/scene/VRAnimationManagerT.h"
 #include "core/scene/import/VRImport.h"
@@ -59,6 +60,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"getSky", (PyCFunction)VRSceneGlobals::getSky, METH_NOARGS, "Get sky module" },
 	{"getSoundManager", (PyCFunction)VRSceneGlobals::getSoundManager, METH_NOARGS, "Get sound manager module" },
 	{"getFrame", (PyCFunction)VRSceneGlobals::getFrame, METH_NOARGS, "Get current frame number" },
+	{"getScript", (PyCFunction)VRSceneGlobals::getScript, METH_VARARGS, "Get python script by name" },
     {NULL}  /* Sentinel */
 };
 
@@ -66,6 +68,12 @@ PyMethodDef VRSceneGlobals::methods[] = {
 // ==============
 // Python methods
 // ==============
+
+PyObject* VRSceneGlobals::getScript(VRSceneGlobals* self, PyObject* args) {
+    string name = parseString(args);
+    VRScriptPtr s = VRScene::getCurrent()->getScript(name);
+    return VRPyScript::fromSharedPtr( s );
+}
 
 PyObject* VRSceneGlobals::getFrame(VRSceneGlobals* self) {
     return PyInt_FromLong(VRGlobals::CURRENT_FRAME);

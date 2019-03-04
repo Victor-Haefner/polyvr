@@ -2,11 +2,14 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRPrimitive.h"
 #include "core/utils/VRGlobals.h"
+#include "core/utils/toString.h"
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
 
-OSG_BEGIN_NAMESPACE;
+using namespace OSG;
+
+template<> string typeName(const VRMechanism& m) { return "Mechanism"; }
 
 
 MPart::MPart() {}
@@ -216,14 +219,14 @@ vector<pointPolySegment> MChain::toVRPolygon(Vec3d p) {
 }
 
 
-/*bool checkThreadNut(VRThread* t, VRNut* n, Matrix4d r1, Matrix4d r2) {
+/*bool checkThreadNut(VRScrewthread* t, VRNut* n, Matrix4d r1, Matrix4d r2) {
     ; // TODO: check if nut center on thread line
     ; // TODO: check if nut && thread same orientation
     return true;
 }*/
 
 VRGear* MGear::gear() { return (VRGear*)prim; }
-VRThread* MThread::thread() { return (VRThread*)prim; }
+VRScrewthread* MThread::thread() { return (VRScrewthread*)prim; }
 
 void MPart::move() {}
 void MGear::move() { trans->rotate(change.dx/gear()->radius(), Vec3d(0,0,1)); }
@@ -495,4 +498,3 @@ void VRMechanism::update() {
 
 shared_ptr<VRMechanism> VRMechanism::create() { return shared_ptr<VRMechanism>(new VRMechanism()); }
 
-OSG_END_NAMESPACE;

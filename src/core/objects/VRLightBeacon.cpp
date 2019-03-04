@@ -11,7 +11,7 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRLightBeaconPtr& o) { return o->getType(); }
+template<> string typeName(const VRLightBeacon& o) { return "LightBeacon"; }
 
 VRMaterialPtr getLightGeoMat() {
     VRMaterialPtr mat = VRMaterial::create("light_geo_mat");

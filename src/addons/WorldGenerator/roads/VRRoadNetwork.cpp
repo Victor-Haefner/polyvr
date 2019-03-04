@@ -39,7 +39,7 @@ const double pi = 2*acos(0.0);
 
 using namespace OSG;
 
-template<> string typeName(const VRRoadNetworkPtr& o) { return "RoadNetwork"; }
+template<> string typeName(const VRRoadNetwork& o) { return "RoadNetwork"; }
 
 VRRoadNetwork::VRRoadNetwork() : VRRoadBase("RoadNetwork") {
     updateCb = VRUpdateCb::create( "roadNetworkUpdate", boost::bind(&VRRoadNetwork::update, this) );

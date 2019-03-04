@@ -9,8 +9,10 @@
 #include <GL/glut.h>
 #include <OpenSG/OSGPerspectiveCamera.h>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRMouse& t) { return "Mouse"; }
+
 
 VRMouse::VRMouse() : VRDevice("mouse") {}
 VRMouse::~VRMouse() {}
@@ -256,4 +258,3 @@ void VRMouse::load(xmlpp::Element* e) {
     VRDevice::load(e);
 }
 
-OSG_END_NAMESPACE;

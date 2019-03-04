@@ -27,8 +27,10 @@
 #include <frameobject.h>
 #include <pyerrors.h>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRScript& t) { return "Script"; }
+
 
 void updateArgPtr(VRScript::argPtr a) {
     string t = a->type;
@@ -706,4 +708,3 @@ void VRScript::load(xmlpp::Element* e) {
 
 VRGlobals::Int VRScript::loadingFrame = 0;
 
-OSG_END_NAMESPACE;

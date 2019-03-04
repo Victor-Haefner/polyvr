@@ -19,6 +19,8 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRDistrict& t) { return "District"; }
+
 VRDistrict::VRDistrict() : VRObject("District") {}
 VRDistrict::~VRDistrict() {}
 

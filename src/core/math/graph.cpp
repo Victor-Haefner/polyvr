@@ -5,7 +5,7 @@
 
 using namespace OSG;
 
-template<> string typeName(const GraphPtr& g) { return "Graph"; }
+template<> string typeName(const Graph& g) { return "Graph"; }
 
 string toString(Graph::edge& e) {
     return toString(Vec3i(e.from, e.to, e.connection));

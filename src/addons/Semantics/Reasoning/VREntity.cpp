@@ -8,7 +8,9 @@
 
 using namespace OSG;
 
-template<> string typeName(const VREntityPtr& o) { return "Entity"; }
+template<> string typeName(const VREntity& o) { return "Entity"; }
+
+VREntity::VREntity() {}
 
 VREntity::VREntity(string name, VROntologyPtr o, VRConceptPtr c) {
     ontology = o;

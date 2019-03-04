@@ -4,6 +4,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/utils/toString.h"
 
 #include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGGeoProperties.h>
@@ -11,6 +12,9 @@
 #define GLSL(shader) #shader
 
 using namespace OSG;
+
+template<> string typeName(const VRAnalyticGeometry& t) { return "AnalyticGeometry"; }
+
 
 VRAnalyticGeometry::VRAnalyticGeometry(string name) : VRTransform(name) {
     ae = VRAnnotationEngine::create();

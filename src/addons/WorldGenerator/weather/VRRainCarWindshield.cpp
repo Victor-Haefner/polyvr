@@ -19,6 +19,8 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRRainCarWindshield& t) { return "RainCarWindshield"; }
+
 /* Python usage example:
 	def initDummyWindshield():
 		VR.dummyWindshield = VR.Geometry('windshield')

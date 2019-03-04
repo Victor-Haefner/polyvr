@@ -10,7 +10,10 @@
 #include "core/setup/devices/VRDevice.h"
 #include "core/setup/devices/VRSignal.h"
 
-OSG_BEGIN_NAMESPACE;
+using namespace OSG;
+
+template<> string typeName(const VRConstructionKit& t) { return "ConstructionKit"; }
+
 
 VRConstructionKit::VRConstructionKit() {
     snapping = VRSnappingEngine::create();
@@ -139,4 +142,3 @@ VRGeometryPtr VRConstructionKit::addObjectAnchor(VRTransformPtr t, int a, Vec3d 
     return anc;
 }
 
-OSG_END_NAMESPACE;

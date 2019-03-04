@@ -4,8 +4,10 @@
 
 #include <OpenSG/OSGMatrix.h>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRClipPlane& t) { return "ClipPlane"; }
+
 
 VRClipPlane::VRClipPlane(string name) : VRGeometry(name) {
     // init plane geometry
@@ -86,4 +88,3 @@ void VRClipPlane::deactivate() {
     mats.clear();
 }
 
-OSG_END_NAMESPACE;

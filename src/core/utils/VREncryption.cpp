@@ -1,6 +1,10 @@
 #include "VREncryption.h"
+#include "core/utils/toString.h"
 
 using namespace OSG;
+
+template<> string typeName(const VREncryption& t) { return "Encryption"; }
+
 
 VREncryption::VREncryption() {}
 VREncryption::~VREncryption() {}

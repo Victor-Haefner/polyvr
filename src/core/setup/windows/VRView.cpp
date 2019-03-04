@@ -26,8 +26,10 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/rendering/VRRenderStudio.h"
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRView& o) { return "View"; }
+
 
 bool onBox(int i, int j, int c) {
     if(abs(i) > c || abs(j) > c) return false;
@@ -656,4 +658,3 @@ Vec2d VRView::getProjectionWarp() { return proj_warp; }
 void VRView::setProjectionUser(Vec3d v) { proj_user = v; update(); }
 Vec3d VRView::getProjectionUser() { return proj_user; }
 
-OSG_END_NAMESPACE;

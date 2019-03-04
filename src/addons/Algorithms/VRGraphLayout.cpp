@@ -1,7 +1,10 @@
 #include "VRGraphLayout.h"
 #include "core/math/Octree.h"
+#include "core/utils/toString.h"
 
 using namespace OSG;
+
+template<> string typeName(const VRGraphLayout& o) { return "GraphLayout"; }
 
 VRGraphLayout::VRGraphLayout() {}
 

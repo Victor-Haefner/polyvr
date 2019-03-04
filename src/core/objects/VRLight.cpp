@@ -22,8 +22,10 @@
 #include <OpenSG/OSGTrapezoidalShadowMapEngine.h>
 #include <OpenSG/OSGBoxVolume.h>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRLight& t) { return "Light"; }
+
 
 VRLight::VRLight(string name) : VRObject(name) {
     DirectionalLightMTRecPtr d_light = DirectionalLight::create();
@@ -438,4 +440,3 @@ void VRLight::loadPhotometricMap(string path) { // ies files
 }
 
 
-OSG_END_NAMESPACE;

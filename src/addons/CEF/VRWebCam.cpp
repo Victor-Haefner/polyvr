@@ -4,6 +4,8 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRWebCam& o) { return "WebCam"; }
+
 VRWebCam::VRWebCam(string name) : VRSprite(name) {}
 VRWebCam::~VRWebCam() {}
 

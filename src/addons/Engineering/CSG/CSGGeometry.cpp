@@ -7,11 +7,14 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/math/Octree.h"
 #include "core/math/pose.h"
+#include "core/utils/toString.h"
 
 #include <OpenSG/OSGGeoFunctions.h>
 
 using namespace OSG;
-using namespace std;
+
+template<> string typeName(const CSGGeometry& o) { return "CSGGeometry"; }
+
 
 vector<string> CSGGeometry::getOperations() {
 	vector<string> ops;

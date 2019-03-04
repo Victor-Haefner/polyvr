@@ -18,6 +18,9 @@ const double pi = 3.14159265359;
 
 using namespace OSG;
 
+template<> string typeName(const VRRoadBase& t) { return "RoadBase"; }
+
+
 VRRoadBase::VRRoadBase(string name) : VRObject(name) {}
 VRRoadBase::~VRRoadBase() {}
 

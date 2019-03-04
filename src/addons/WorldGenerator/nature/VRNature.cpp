@@ -28,7 +28,7 @@
 
 using namespace OSG;
 
-template<> string typeName(const OSG::VRNaturePtr& t) { return "Nature"; }
+template<> string typeName(const OSG::VRNature& t) { return "Nature"; }
 
 // --------------------------------------------------------------------------------------------------
 

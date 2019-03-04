@@ -10,6 +10,7 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRSelector& o) { return "VRSelector"; }
 template<> string typeName(const VRSelector::VISUAL& o) { return "VRSelector::VISUAL"; }
 
 template<> int toValue(stringstream& ss, VRSelector::VISUAL& e) {

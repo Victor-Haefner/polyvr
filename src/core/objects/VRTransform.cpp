@@ -23,10 +23,10 @@
 #include <OpenSG/OSGDepthChunk.h>
 #include <OpenSG/OSGSimpleSHLChunk.h>
 
-template<> string typeName(const OSG::VRTransformPtr& t) { return "Transform"; }
+using namespace OSG;
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+template<> string typeName(const VRTransform& t) { return "Transform"; }
+
 
 VRTransform::VRTransform(string name, bool doOpt) : VRObject(name) {
     doOptimizations = doOpt;
@@ -66,6 +66,7 @@ VRObjectPtr VRTransform::copy(vector<VRObjectPtr> children) {
     return t;
 }
 
+namespace OSG {
 bool MatrixLookDir(Matrix4d &result, Pnt3d from, Vec3d dir, Vec3d up) {
     dir.normalize();
     Vec3d right = up.cross(dir);
@@ -90,6 +91,7 @@ bool isIdentity(const Matrix4d& m) {
     static bool mSet = false;
     if (!mSet) { mSet = true; r.setIdentity(); }
     return (m == r);
+}
 }
 
 void VRTransform::computeMatrix4d() {
@@ -876,6 +878,7 @@ void VRTransform::stopAnimation() {
 list<VRTransformWeakPtr > VRTransform::dynamicObjects = list<VRTransformWeakPtr >();
 list<VRTransformWeakPtr > VRTransform::changedObjects = list<VRTransformWeakPtr >();
 
+namespace OSG {
 Matrix4f toMatrix4f(Matrix4d md) {
     Matrix4f mf;
     for (int i=0; i<4; i++) for (int j=0; j<4; j++) mf[i][j] = md[i][j];
@@ -886,6 +889,7 @@ Matrix4d toMatrix4d(Matrix4f mf) {
     Matrix4d md;
     for (int i=0; i<4; i++) for (int j=0; j<4; j++) md[i][j] = mf[i][j];
     return md;
+}
 }
 
 void VRTransform::applyTransformation(PosePtr po) {
@@ -992,4 +996,3 @@ Vec3d VRTransform::getForce() { if (auto p = getPhysics()) return p->getForce();
 Vec3d VRTransform::getTorque() { if (auto p = getPhysics()) return p->getTorque(); else return Vec3d(); }
 
 
-OSG_END_NAMESPACE;

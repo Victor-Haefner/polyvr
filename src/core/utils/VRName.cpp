@@ -8,8 +8,10 @@
 #include "VRFunction.h"
 #include <libxml++/nodes/element.h>
 
-using namespace std;
 using namespace OSG;
+
+template<> string typeName(const VRName& t) { return "Name"; }
+
 
 struct VRNamePool {
     list<pair<int,int>> ranges; // ranges of suffixes

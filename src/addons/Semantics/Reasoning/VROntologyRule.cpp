@@ -8,7 +8,7 @@
 
 using namespace OSG;
 
-template<> string typeName(const VROntologyRulePtr& o) { return "OntologyRule"; }
+template<> string typeName(const VROntologyRule& o) { return "OntologyRule"; }
 
 VROntologyRule::VROntologyRule(string r, string ac) {
     associatedConcept = ac;

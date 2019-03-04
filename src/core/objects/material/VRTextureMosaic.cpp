@@ -1,8 +1,11 @@
 #include "VRTextureMosaic.h"
+#include "core/utils/toString.h"
 
 #include <OpenSG/OSGImage.h>
 
 using namespace OSG;
+
+template<> string typeName(const VRTextureMosaic& o) { return "TextureMosaic"; }
 
 void VRTextureMosaic::add(VRTexturePtr tex, Vec2i pos, Vec2i ID) {
     Entry entry;

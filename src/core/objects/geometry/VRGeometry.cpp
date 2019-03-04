@@ -32,7 +32,7 @@
 #include <OpenSG/OSGLineIterator.h>
 #include <OpenSG/OSGSimpleAttachment.h>
 
-template<> string typeName(const OSG::VRGeometryPtr& t) { return "Geometry"; }
+template<> string typeName(const OSG::VRGeometry& t) { return "Geometry"; }
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

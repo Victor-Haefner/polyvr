@@ -27,9 +27,11 @@ extern "C" {
 #include <boost/thread/thread.hpp>
 //#include <boost/thread.hpp>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
 
+template<> string typeName(const VRSoundManager& o) { return "SoundManager"; }
+
+namespace OSG {
 string toString(ALenum error) {
     if(error == AL_INVALID_NAME) return "Invalid name";
     if(error == AL_INVALID_ENUM) return "Invalid enum ";
@@ -37,6 +39,7 @@ string toString(ALenum error) {
     if(error == AL_INVALID_OPERATION) return "Invalid operation ";
     if(error == AL_OUT_OF_MEMORY) return "Out of memory";
     return "Unknown error " + toString(error);
+}
 }
 
 struct VRSoundContext {
@@ -74,6 +77,7 @@ struct VRSoundContext {
     }
 };
 
+namespace OSG {
 struct VRSoundChannel {
     bool running = true;
     boost::thread* thread = 0;
@@ -119,6 +123,7 @@ struct VRSoundChannel {
         if (context) delete context;
     }
 };
+}
 
 VRSoundManager::VRSoundManager() {
     cout << "Init VRSoundManager..";
@@ -203,8 +208,6 @@ void VRSoundManager::queueSounds(vector<VRSoundPtr> sounds) { // TODO: only one 
     queue.play();
     soundQueue = queue.callback;
 }
-
-OSG_END_NAMESPACE;
 
 
 

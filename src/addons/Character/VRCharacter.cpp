@@ -9,8 +9,9 @@ const float Pi = 3.14159;
 using namespace std;
 using namespace OSG;
 
-template<> string typeName(const VRBehaviorPtr& m) { return "Behavior"; }
-template<> string typeName(const VRSkeletonPtr& m) { return "Skeleton"; }
+template<> string typeName(const VRBehavior& m) { return "Behavior"; }
+template<> string typeName(const VRSkeleton& m) { return "Skeleton"; }
+template<> string typeName(const VRCharacter& m) { return "Character"; }
 
 VRBehavior::Action::Action(string n) { setNameSpace("bhAction"); setName(n); }
 VRBehavior::Action::~Action() {}

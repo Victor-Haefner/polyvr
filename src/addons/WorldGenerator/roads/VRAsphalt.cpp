@@ -9,6 +9,9 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRAsphalt& t) { return "Asphalt"; }
+
+
 VRAsphalt::VRAsphalt() : VRMaterial("asphalt") {}
 
 VRAsphalt::~VRAsphalt() {}

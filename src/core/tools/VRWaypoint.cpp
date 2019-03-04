@@ -11,6 +11,9 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRWaypoint& o) { return "Waypoint"; }
+
+
 VRWaypoint::VRWaypoint(string name) : VRGeometry(name) {
     type = "Waypoint";
 

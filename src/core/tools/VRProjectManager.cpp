@@ -9,7 +9,9 @@
 #include <algorithm>
 
 using namespace OSG;
-using namespace std;
+
+template<> string typeName(const VRProjectManager& t) { return "ProjectManager"; }
+
 
 VRProjectManager::VRProjectManager() : VRObject("ProjectManager") {
     storage.storeMap("settings", settings);

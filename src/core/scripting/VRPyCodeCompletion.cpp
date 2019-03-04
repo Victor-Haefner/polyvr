@@ -1,11 +1,13 @@
 #include "VRPyCodeCompletion.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
+#include "VRPyBaseT.h"
 
 #include <string.h>
 #include <iostream>
 
 using namespace std;
+using namespace OSG;
 
 VRPyCodeCompletion::VRPyCodeCompletion() {}
 VRPyCodeCompletion::~VRPyCodeCompletion() {}
@@ -72,6 +74,17 @@ vector<string> VRPyCodeCompletion::getSuggestions(string input) {
     }
     return res;
 }
+
+
+
+
+simpleVRPyType(Script, 0);
+
+PyMethodDef VRPyScript::methods[] = {
+    {"getScript", PyWrap(Script, getScript, "Get script content as string", string ) },
+    {NULL}  /* Sentinel */
+};
+
 
 /**
 

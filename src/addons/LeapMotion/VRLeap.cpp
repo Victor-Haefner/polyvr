@@ -10,7 +10,7 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRLeapPtr& o) { return "Leap"; }
+template<> string typeName(const VRLeap& o) { return "Leap"; }
 
 VRLeap::VRLeap() : VRDevice("leap") {
     transformation = Pose::create();

@@ -17,6 +17,9 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRScenegraphInterface& o) { return "ScenegraphInterface"; }
+
+
 VRScenegraphInterface::VRScenegraphInterface(string name) : VRObject(name) {
     resetWebsocket();
 }

@@ -18,6 +18,9 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRProcessLayout& o) { return "ProcessLayout"; }
+
+
 VRProcessLayout::VRProcessLayout(string name) : VRTransform(name) {
     updateCb = VRUpdateCb::create("process layout update", boost::bind(&VRProcessLayout::update, this));
     VRScene::getCurrent()->addUpdateFkt(updateCb);

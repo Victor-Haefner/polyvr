@@ -15,6 +15,9 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRPathtool& t) { return "Pathtool"; }
+
+
 template<> string toString(const VRPathtool::option& n) {
     stringstream ss;
     ss << n.resolution << " " << n.useControlHandles;

@@ -44,11 +44,11 @@
 #include <GL/glext.h>
 #include <GL/glx.h>
 
-template<> string typeName(const OSG::VRMaterialPtr& t) { return "Material"; }
+using namespace OSG;
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+template<> string typeName(const VRMaterial& o) { return "Material"; }
 
+namespace OSG {
 struct VRMatData {
     ChunkMaterialMTRecPtr mat;
     MaterialChunkMTRecPtr colChunk;
@@ -176,6 +176,7 @@ struct VRMatData {
         if (c) { mat->subChunk(c); c = 0; }
     }
 };
+}
 
 map<string, VRMaterialWeakPtr> VRMaterial::materials;
 map<MaterialMTRecPtr, VRMaterialWeakPtr> VRMaterial::materialsByPtr;
@@ -776,9 +777,10 @@ class MAC : private SimpleTexturedMaterial {
         }
 };
 
+namespace OSG {
 Color4f toColor4f(Color3f c, float t) { return Color4f(c[0], c[1], c[2], t); }
 Color3f toColor3f(Color4f c) { return Color3f(c[0], c[1], c[2]); }
-
+}
 
 
 void VRMaterial::setTransparency(float c) {
@@ -1078,4 +1080,3 @@ Color3f VRMaterial::toColor(string c) {
     return colorMap.count(c) ? colorMap[c] : Color3f();
 }
 
-OSG_END_NAMESPACE;

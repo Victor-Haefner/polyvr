@@ -12,6 +12,9 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRSpatialCollisionManager& o) { return "SpatialCollisionManager"; }
+
+
 VRSpatialCollisionManager::VRSpatialCollisionManager(float resolution) : VRGeometry("spatialCollisionShape") {
     space = Octree::create(resolution,10,"spatialCollisionShape");
     hide("SHADOW");

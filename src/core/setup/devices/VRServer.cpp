@@ -11,8 +11,10 @@
 #include "core/utils/VRLogger.h"
 #include <boost/bind.hpp>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRServer& t) { return "Server"; }
+
 
 VRServer::VRServer(int port) : VRDevice("server") {
     soc = VRSceneManager::get()->getSocket(port);
@@ -117,4 +119,3 @@ void VRServer::remWebSite(string uri) {
 
 void VRServer::updateClients(string path) { CEF::reloadScripts(path); }
 
-OSG_END_NAMESPACE;

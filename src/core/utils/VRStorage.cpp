@@ -7,10 +7,10 @@
 #include <libxml++/nodes/element.h>
 #include <boost/bind.hpp>
 
-template<> string typeName(const OSG::VRStoragePtr& o) { return "Storage"; }
+using namespace OSG;
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+template<> string typeName(const VRStorage& o) { return "Storage"; }
+
 
 VRStorageContextPtr VRStorageContext::create(bool onlyReload) {
     auto c = VRStorageContextPtr( new VRStorageContext() );
@@ -171,12 +171,14 @@ vector<xmlpp::Element*> VRStorage::getChildren(xmlpp::Element* e) {
     return res;
 }
 
+namespace OSG {
 int getID(xmlpp::Element* el) {
     if (!el->get_attribute("ID")) return -1;
     string _ID = el->get_attribute("ID")->get_value();
     int ID;
     toValue( _ID, ID );
     return ID;
+}
 }
 
 bool VRStorage::saveToFile(string path, bool createDirs) {
@@ -199,4 +201,3 @@ bool VRStorage::loadFromFile(string path, VRStorageContextPtr context) {
     return true;
 }
 
-OSG_END_NAMESPACE;

@@ -4,8 +4,9 @@
 
 #include <boost/bind.hpp>
 
-OSG_BEGIN_NAMESPACE
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRMillingWorkPiece& o) { return "MillingWorkPiece"; }
 
 VRMillingWorkPiece::VRMillingWorkPiece(string name) : VRGeometry(name), rootElement(nullptr) {
 	type = "MillingWorkPiece";
@@ -416,4 +417,3 @@ const Vec3d VRWorkpieceElement::vertexOffsetMasks[2][3][4] = {
 
 const float VRWorkpieceElement::sign[2] = {1.0f, -1.0f};
 
-OSG_END_NAMESPACE

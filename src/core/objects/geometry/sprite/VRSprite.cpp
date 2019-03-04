@@ -16,8 +16,10 @@
 #include <sstream>
 
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRSprite& o) { return "Sprite"; }
+
 
 VRSprite::VRSprite (string name, bool alpha, float w, float h) : VRGeometry(name) {
     width = w;
@@ -122,4 +124,3 @@ void VRSprite::convertToCloth() {
     getPhysics()->setPhysicalized(true);
 }
 
-OSG_END_NAMESPACE;

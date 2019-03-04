@@ -3,7 +3,8 @@
 #include "core/objects/VRTransform.h"
 
 using namespace OSG;
-template<> string typeName(const VRLeapFramePtr& o) { return "LeapFrame"; }
+
+template<> string typeName(const VRLeapFrame& o) { return "LeapFrame"; }
 
 
 VRLeapFramePtr VRLeapFrame::create() {

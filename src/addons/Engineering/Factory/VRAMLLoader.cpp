@@ -16,14 +16,17 @@
 #include "core/objects/material/VRMaterial.h"
 
 #include "core/objects/geometry/VRPhysics.h"
+#include "core/utils/toString.h"
 
 
 #define AI_MAX_NUMBER_OF_TEXTURECOORDS   0x8
 
 
+using namespace OSG;
 using namespace boost;
 using namespace boost::property_tree;
-OSG_BEGIN_NAMESPACE;
+
+template<> string typeName(const VRAMLLoader& o) { return "AMLLoader"; }
 
 VRObjectPtr root;
 string directory;
@@ -481,4 +484,4 @@ VRObjectPtr VRAMLLoader::load(string path) {
     return root;
 
 }
-OSG_END_NAMESPACE;
+

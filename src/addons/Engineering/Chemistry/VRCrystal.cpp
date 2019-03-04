@@ -6,6 +6,8 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRCrystal& m) { return "Crystal"; }
+
 VRCrystal::VRCrystal(string name) : VRMolecule(name) {}
 VRCrystal::~VRCrystal(){}
 

@@ -4,6 +4,11 @@
 #include <map>
 #include <vector>
 #include "VRPyBase.h"
+#include "core/scripting/VRScript.h"
+
+struct VRPyScript : VRPyBaseT<OSG::VRScript> {
+    static PyMethodDef methods[];
+};
 
 using namespace std;
 

@@ -19,6 +19,9 @@
 using namespace OpcUa;
 using namespace OSG;
 
+template<> string typeName(const VROPCUA& t) { return "OPCUA"; }
+template<> string typeName(const VROPCUANode& t) { return "OPCUANode"; }
+
 
 string VROPCUANode::typeToString(uint8_t v) {
     if (v == 0) return "null";
