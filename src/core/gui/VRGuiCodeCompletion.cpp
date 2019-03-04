@@ -1,7 +1,9 @@
 #include "VRGuiCodeCompletion.h"
+#include "VRGuiManager.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
 #include "core/scripting/VRPyCodeCompletion.h"
+#include "core/scripting/VRScriptFwd.h"
 
 #include <gtksourceview/gtksourcecompletionprovider.h>
 #include <gtksourceview/gtksourceview-typebuiltins.h>
@@ -11,7 +13,7 @@
 #include <iostream>
 #include <map>
 
-using namespace std;
+using namespace OSG;
 using GtkProvider = GtkSourceCompletionProvider;
 
 GType vr_code_completion_get_type (void) G_GNUC_CONST;
@@ -71,7 +73,12 @@ void provPopulate(GtkProvider* provider, GtkSourceCompletionContext* context) {
 	VRGuiCodeCompletion* data = VRGuiCodeCompletionCast(provider);
 	string word = get_word(context);
 	vector<string> suggestions = data->priv->pyCompletion.getSuggestions(word);
-	//vector<string> suggestions = data->priv->pyCompletion.getJediSuggestions("init",3,7); // TODO: get corrent script name, lne and column
+
+	/*VRScriptPtr script;
+	int line;
+	int column;
+	VRGuiManager::get()->getScriptFocus(script, line, column);
+	vector<string> suggestions = data->priv->pyCompletion.getJediSuggestions(script,line,column);*/
 	if (suggestions.size() == 0) { setProposals(); return; }
 
     GList* ret = NULL;

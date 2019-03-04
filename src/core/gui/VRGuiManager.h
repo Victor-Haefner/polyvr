@@ -7,6 +7,7 @@
 #include <map>
 #include <boost/thread/recursive_mutex.hpp>
 #include "core/utils/VRFunctionFwd.h"
+#include "core/scripting/VRScriptFwd.h"
 #include "VRGuiFwd.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -35,6 +36,7 @@ class VRGuiManager {
 
         VRConsoleWidgetPtr getConsole(string t);
         void focusScript(string name, int line, int column);
+        void getScriptFocus(VRScriptPtr& script, int& line, int& column);
         void updateGtk();
         void updateGtkThreaded(VRThreadWeakPtr t);
         void startThreadedUpdate();

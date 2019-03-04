@@ -926,6 +926,8 @@ void VRGuiScripts::focusScript(string name, int line, int column) {
     editor->setCursor(line, column);
 }
 
+void VRGuiScripts::getLineFocus(int& line, int& column) { editor->getCursor(line, column); }
+
 void VRGuiScripts::on_search_link_clicked(searchResult res, string s) {
     focusScript(res.scriptName, res.line, res.column);
 }

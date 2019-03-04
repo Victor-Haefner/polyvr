@@ -182,6 +182,14 @@ void VRGuiEditor::setCursor(int line, int column) {
     gtk_text_view_scroll_to_mark((GtkTextView*)editor, mark, 0.25, false, 0, 0);
 }
 
+void VRGuiEditor::getCursor(int& line, int& column) {
+    GtkTextIter itr;
+    GtkTextBuffer* buffer = gtk_text_view_get_buffer((GtkTextView*)editor);
+    gtk_text_buffer_get_iter_at_mark(buffer, &itr, gtk_text_buffer_get_insert(buffer));
+    line = gtk_text_iter_get_line(&itr);
+    column = gtk_text_iter_get_line_offset(&itr);
+}
+
 void VRGuiEditor::highlightStrings(string search, string style) {
     auto tag = editorStyles[style];
     if (styleStates[style]) editorBuffer->remove_tag(tag, editorBuffer->begin(), editorBuffer->end());

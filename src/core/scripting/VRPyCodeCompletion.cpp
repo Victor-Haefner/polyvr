@@ -1,6 +1,8 @@
 #include "VRPyCodeCompletion.h"
 #include "core/scene/VRScene.h"
+#include "core/scripting/VRScript.h"
 #include "core/utils/toString.h"
+#include "core/gui/VRGuiManager.h"
 #include "VRPyBaseT.h"
 
 #include <string.h>
@@ -84,12 +86,15 @@ vector<string> VRPyCodeCompletion::getSuggestions(string input) {
 }
 
 
-vector<string> VRPyCodeCompletion::getJediSuggestions(string script, int line, int column) {
+vector<string> VRPyCodeCompletion::getJediSuggestions(VRScriptPtr script, int line, int column) {
     vector<string> res;
-    auto scene = VRScene::getCurrent();
+
+    line += 1;
+
+    cout << "VRPyCodeCompletion::getJediSuggestions " << script->getName() << "  l " << line << "  c " << column << endl;
 
     if (!jediWrap) {
-        //string jediScript = "def jediScript():\n\treturn 'hi'";
+        auto scene = VRScene::getCurrent();
         string jediScript = "def jediScript(script,l,c):\n\timport jedi\n\treturn [ c.name for c in jedi.Script(script, l, c, '').completions() ]";
         PyObject* pCode = Py_CompileString(jediScript.c_str(), "jediScript", Py_file_input);
         if (!pCode) { PyErr_Print(); return res; }
@@ -102,7 +107,7 @@ vector<string> VRPyCodeCompletion::getJediSuggestions(string script, int line, i
     }
 
     if (jediWrap) {
-        string data = scene->getScript(script)->getScript();
+        string data = script->getScript();
         PyGILState_STATE gstate = PyGILState_Ensure();
         auto args = PyTuple_New(3);
         PyTuple_SetItem(args, 0, PyString_FromString(data.c_str()));
@@ -114,7 +119,6 @@ vector<string> VRPyCodeCompletion::getJediSuggestions(string script, int line, i
             auto c = PyList_GetItem(r,i);
             res.push_back(PyString_AsString(c));
         }
-        //cout << "VRPyCodeCompletion::getJediSuggestions " << PyString_AsString(r) << endl;
         PyGILState_Release(gstate);
     }
 

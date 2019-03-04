@@ -4,7 +4,7 @@
 #include <map>
 #include <vector>
 #include "VRPyBase.h"
-#include "core/scripting/VRScript.h"
+#include "core/scripting/VRScriptFwd.h"
 
 using namespace std;
 
@@ -31,7 +31,7 @@ class VRPyCodeCompletion {
         vector<string> getSuggestions(string s);
 
         // jedi wrapper
-        vector<string> getJediSuggestions(string script, int line, int column);
+        vector<string> getJediSuggestions(OSG::VRScriptPtr script, int line, int column);
 };
 
 #endif // VRCODECOMPLETION_H_INCLUDED
