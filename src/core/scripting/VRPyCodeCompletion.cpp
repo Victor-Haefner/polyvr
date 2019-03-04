@@ -27,9 +27,21 @@ PyObject* VRPyCodeCompletion::getObject(string name, PyObject* parent) {
     auto scene = VRScene::getCurrent();
     if (!scene) return 0;
     if (name == "VR" && parent == 0) return scene->getGlobalModule();
-    for (auto m : getMembers(parent)) {
-        if (m.first == name) return m.second;
-    }
+    /*if (parent == 0) { // TODO: may not work out because the variable names are there, but not the values as the values only exist during the execution of the function!
+        VRScriptPtr script; int line, column;
+        VRGuiManager::get()->getScriptFocus(script, line, column);
+        PyFunctionObject* func = (PyFunctionObject*)script->getFunction();
+        PyCodeObject* code = func->func_code;
+        PyTupleObject* varnames = code->co_varnames; // local variable
+        for (int i=0; i<PyTuple_Size(varnames); i++) {
+            string n = PyString_AsString(PyTuple_GetItem(varnames, i));
+            if (n == name) {
+                ;
+            }
+        }
+        //PyTupleObject* names = code->co_names; // global variables
+    }*/
+    for (auto m : getMembers(parent)) if (m.first == name) return m.second;
     return 0;
 }
 
@@ -52,27 +64,6 @@ map<string, PyObject*> VRPyCodeCompletion::getMembers(PyObject* obj) {
         res[name] = PyObject_GetAttr(obj, attrib);
     }
     return res;
-
-    /*PyObject* dict = 0;
-    if (PyModule_Check(obj)) dict = PyModule_GetDict(obj);
-    else if (PyType_Check(obj)) dict = ((PyTypeObject*)obj)->tp_dict;
-    else {
-    }
-
-    if (!dict) {
-        cout << " VRPyCodeCompletion::getMembers failed! could not get dict for type: " << obj->ob_type->tp_name << endl;
-        return res;
-    }
-
-    PyObject *key, *value;
-    Py_ssize_t pos = 0;
-    while (PyDict_Next(dict, &pos, &key, &value)) {
-        string name = PyString_AsString(key);
-        if (startsWith(name, "__")) continue;
-        res[name] = value;
-    }
-
-    return res;*/
 }
 
 bool VRPyCodeCompletion::startsWith(const string& a, const string& b) {

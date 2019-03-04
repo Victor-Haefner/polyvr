@@ -511,6 +511,8 @@ void VRScript::pyErrPrint(string channel) {
     PyErr_Clear();
 }
 
+PyObject* VRScript::getFunction() { return fkt; }
+
 void VRScript::compile( PyObject* pGlobal, PyObject* pModVR ) {
     setFunction( 0 );
     PyObject* pCode = Py_CompileString(getScript().c_str(), getName().c_str(), Py_file_input);

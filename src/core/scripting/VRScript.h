@@ -120,6 +120,7 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
         string getUri();
         string getServer();
         int getHeadSize();
+        PyObject* getFunction();
 
         void enable(bool b);
         bool enabled();
