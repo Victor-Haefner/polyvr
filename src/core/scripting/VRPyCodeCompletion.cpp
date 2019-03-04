@@ -44,20 +44,19 @@ map<string, PyObject*> VRPyCodeCompletion::getMembers(PyObject* obj) {
     map<string, PyObject*> res;
     if (!obj) return res;
 
-    cout << "VRPyCodeCompletion::getMembers " << obj->ob_type->tp_name << endl;
+    auto attribs = PyObject_Dir(obj);
+    for (int i=0; i<PyList_Size(attribs); i++) {
+        auto attrib = PyList_GetItem(attribs, i);
+        string name = PyString_AsString(attrib);
+        if (startsWith(name, "__")) continue;
+        res[name] = PyObject_GetAttr(obj, attrib);
+    }
+    return res;
 
-    PyObject* dict = 0;
+    /*PyObject* dict = 0;
     if (PyModule_Check(obj)) dict = PyModule_GetDict(obj);
     else if (PyType_Check(obj)) dict = ((PyTypeObject*)obj)->tp_dict;
     else {
-        auto attribs = PyObject_Dir(obj);
-        for (int i=0; i<PyList_Size(attribs); i++) {
-            auto attrib = PyList_GetItem(attribs, i);
-            string name = PyString_AsString(attrib);
-            if (startsWith(name, "__")) continue;
-            res[name] = PyObject_GetAttr(obj, attrib);
-        }
-        return res;
     }
 
     if (!dict) {
@@ -73,7 +72,7 @@ map<string, PyObject*> VRPyCodeCompletion::getMembers(PyObject* obj) {
         res[name] = value;
     }
 
-    return res;
+    return res;*/
 }
 
 bool VRPyCodeCompletion::startsWith(const string& a, const string& b) {

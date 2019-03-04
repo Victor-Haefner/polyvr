@@ -23,6 +23,9 @@
 	attribNames = dir(VR.a)
 	for a in attribNames:
 		print a, getattr(VR.a, a)
+
+
+	VR.AdjacencyGraph.computeCurvatures
 </core>
     </Script>
     <Script base_name="click" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
