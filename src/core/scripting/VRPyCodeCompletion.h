@@ -16,6 +16,7 @@ class VRPyCodeCompletion {
     private:
         map<PyObject*, vector<string>> members;
         map<string, PyObject*> objects;
+        PyObject* jediWrap = 0;
 
         bool startsWith(const string& a, const string& b);
 
@@ -28,6 +29,9 @@ class VRPyCodeCompletion {
         ~VRPyCodeCompletion();
 
         vector<string> getSuggestions(string s);
+
+        // jedi wrapper
+        vector<string> getJediSuggestions(string script, int line, int column);
 };
 
 #endif // VRCODECOMPLETION_H_INCLUDED

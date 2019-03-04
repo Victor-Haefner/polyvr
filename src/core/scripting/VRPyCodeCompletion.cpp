@@ -84,6 +84,42 @@ vector<string> VRPyCodeCompletion::getSuggestions(string input) {
 }
 
 
+vector<string> VRPyCodeCompletion::getJediSuggestions(string script, int line, int column) {
+    vector<string> res;
+    auto scene = VRScene::getCurrent();
+
+    if (!jediWrap) {
+        //string jediScript = "def jediScript():\n\treturn 'hi'";
+        string jediScript = "def jediScript(script,l,c):\n\timport jedi\n\treturn [ c.name for c in jedi.Script(script, l, c, '').completions() ]";
+        PyObject* pCode = Py_CompileString(jediScript.c_str(), "jediScript", Py_file_input);
+        if (!pCode) { PyErr_Print(); return res; }
+        auto pModVR = scene->getGlobalModule();
+        PyObject* pValue = PyEval_EvalCode((PyCodeObject*)pCode, scene->getGlobalDict(), PyModule_GetDict(pModVR));
+        if (!pValue) { PyErr_Print(); return res; }
+        Py_DECREF(pCode);
+        Py_DECREF(pValue);
+        jediWrap = PyObject_GetAttrString(pModVR, "jediScript");
+    }
+
+    if (jediWrap) {
+        string data = scene->getScript(script)->getScript();
+        PyGILState_STATE gstate = PyGILState_Ensure();
+        auto args = PyTuple_New(3);
+        PyTuple_SetItem(args, 0, PyString_FromString(data.c_str()));
+        PyTuple_SetItem(args, 1, PyInt_FromLong(line));
+        PyTuple_SetItem(args, 2, PyInt_FromLong(column));
+        auto r = PyObject_CallObject(jediWrap, args);
+        if (!r) { PyErr_Print(); return res; }
+        for (int i=0; i<PyList_Size(r); i++) {
+            auto c = PyList_GetItem(r,i);
+            res.push_back(PyString_AsString(c));
+        }
+        //cout << "VRPyCodeCompletion::getJediSuggestions " << PyString_AsString(r) << endl;
+        PyGILState_Release(gstate);
+    }
+
+    return res;
+}
 
 
 

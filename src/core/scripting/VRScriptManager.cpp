@@ -207,6 +207,9 @@ void VRScriptManager::redirectPyOutput(string pyOutput, string console) {
 //  such a script can be called from another script, but only by passing all the variables again
 //  it should be possible to call the script with any parameter, the gui parameter should be used as default ones!
 
+PyObject* VRScriptManager::getGlobalModule() { return pModVR; }
+PyObject* VRScriptManager::getGlobalDict() { return pGlobal; }
+
 void VRScriptManager::initPyModules() {
     modOut = 0;
     modErr = 0;

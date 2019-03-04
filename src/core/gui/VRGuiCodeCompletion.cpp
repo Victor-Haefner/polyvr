@@ -71,6 +71,7 @@ void provPopulate(GtkProvider* provider, GtkSourceCompletionContext* context) {
 	VRGuiCodeCompletion* data = VRGuiCodeCompletionCast(provider);
 	string word = get_word(context);
 	vector<string> suggestions = data->priv->pyCompletion.getSuggestions(word);
+	//vector<string> suggestions = data->priv->pyCompletion.getJediSuggestions("init",3,7); // TODO: get corrent script name, lne and column
 	if (suggestions.size() == 0) { setProposals(); return; }
 
     GList* ret = NULL;
