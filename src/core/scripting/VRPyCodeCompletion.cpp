@@ -44,17 +44,29 @@ map<string, PyObject*> VRPyCodeCompletion::getMembers(PyObject* obj) {
     map<string, PyObject*> res;
     if (!obj) return res;
 
+    cout << "VRPyCodeCompletion::getMembers " << obj->ob_type->tp_name << endl;
+
     PyObject* dict = 0;
     if (PyModule_Check(obj)) dict = PyModule_GetDict(obj);
-    if (PyType_Check(obj)) dict = ((PyTypeObject*)obj)->tp_dict;
-
-    if (!dict) {
-        cout << " VRPyCodeCompletion::getMembers no dict!! type: " << obj->ob_type->tp_name << endl;
+    else if (PyType_Check(obj)) dict = ((PyTypeObject*)obj)->tp_dict;
+    else {
+        auto attribs = PyObject_Dir(obj);
+        for (int i=0; i<PyList_Size(attribs); i++) {
+            auto attrib = PyList_GetItem(attribs, i);
+            string name = PyString_AsString(attrib);
+            if (startsWith(name, "__")) continue;
+            res[name] = PyObject_GetAttr(obj, attrib);
+        }
         return res;
     }
+
+    if (!dict) {
+        cout << " VRPyCodeCompletion::getMembers failed! could not get dict for type: " << obj->ob_type->tp_name << endl;
+        return res;
+    }
+
     PyObject *key, *value;
     Py_ssize_t pos = 0;
-
     while (PyDict_Next(dict, &pos, &key, &value)) {
         string name = PyString_AsString(key);
         if (startsWith(name, "__")) continue;
