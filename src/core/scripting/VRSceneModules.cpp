@@ -66,6 +66,7 @@
 #include "VRPySky.h"
 #include "VRPyScenegraphInterface.h"
 #include "VRPyOPCUA.h"
+#include "VRPyCodeCompletion.h"
 #ifndef NO_ENCRYPTION
 #include "VRPyEncryption.h"
 #endif
@@ -224,6 +225,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyConcept>("Concept", pModVR, VRPyName::typeRef);
     sm->registerModule<VRPyEntity>("Entity", pModVR, VRPyName::typeRef);
     sm->registerModule<VRPyReasoner>("Reasoner", pModVR);
+    sm->registerModule<VRPyScript>("Script", pModVR);
 
     sm->registerModule<VRPyHandGeo>("HandGeo", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyLeap>("Leap", pModVR, VRPyDevice::typeRef);

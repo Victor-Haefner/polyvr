@@ -6,11 +6,11 @@
 #include "VRPyBase.h"
 #include "core/scripting/VRScript.h"
 
+using namespace std;
+
 struct VRPyScript : VRPyBaseT<OSG::VRScript> {
     static PyMethodDef methods[];
 };
-
-using namespace std;
 
 class VRPyCodeCompletion {
     private:

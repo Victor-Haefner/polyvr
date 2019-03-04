@@ -6,8 +6,16 @@
 #include <string.h>
 #include <iostream>
 
-using namespace std;
 using namespace OSG;
+
+simpleVRPyType(Script, 0);
+
+PyMethodDef VRPyScript::methods[] = {
+    {"getScript", PyWrap(Script, getScript, "Get script content as string", string ) },
+    {NULL}  /* Sentinel */
+};
+
+
 
 VRPyCodeCompletion::VRPyCodeCompletion() {}
 VRPyCodeCompletion::~VRPyCodeCompletion() {}
@@ -78,12 +86,6 @@ vector<string> VRPyCodeCompletion::getSuggestions(string input) {
 
 
 
-simpleVRPyType(Script, 0);
-
-PyMethodDef VRPyScript::methods[] = {
-    {"getScript", PyWrap(Script, getScript, "Get script content as string", string ) },
-    {NULL}  /* Sentinel */
-};
 
 
 /**
