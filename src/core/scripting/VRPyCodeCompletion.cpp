@@ -22,43 +22,45 @@ PyMethodDef VRPyScript::methods[] = {
 VRPyCodeCompletion::VRPyCodeCompletion() {}
 VRPyCodeCompletion::~VRPyCodeCompletion() {}
 
-PyObject* VRPyCodeCompletion::resolvePath(vector<string>& path) { // TODO
-    string mod = "VR";
-    string member = "";
-    int N = path.size();
-    if (N >= 2) mod = path[N-2];
-    return getObject(mod);
-
-    string objPath;
-    for (uint i=0; i<path.size()-1; i++) objPath += path[i] + "."; // TODO
-}
-
-PyObject* VRPyCodeCompletion::getObject(string name) { // TODO
-    if (objects.count(name)) return objects[name];
-    auto scene = OSG::VRScene::getCurrent();
+PyObject* VRPyCodeCompletion::getObject(string name, PyObject* parent) {
+    if (name == "") return 0;
+    auto scene = VRScene::getCurrent();
     if (!scene) return 0;
-    auto mod = scene->getPyModule(name);
-    if (mod) objects[name] = mod;
-    return mod;
+    if (name == "VR" && parent == 0) return scene->getGlobalModule();
+    for (auto m : getMembers(parent)) {
+        if (m.first == name) return m.second;
+    }
+    return 0;
 }
 
-vector<string> VRPyCodeCompletion::getMembers(PyObject* obj) {
-    vector<string> res;
-    if (!obj) return res;
-    if (members.count(obj)) return members[obj];
+PyObject* VRPyCodeCompletion::resolvePath(vector<string>& path) {
+    vector<PyObject*> oPath;
+    PyObject* obj = 0;
+    for (auto p : path) { obj = getObject(p, obj); if (obj) oPath.push_back(obj); }
+    return oPath.size() ? oPath.back() : 0;
+}
 
-    PyObject* dict = PyModule_GetDict(obj);
+map<string, PyObject*> VRPyCodeCompletion::getMembers(PyObject* obj) {
+    map<string, PyObject*> res;
+    if (!obj) return res;
+
+    PyObject* dict = 0;
+    if (PyModule_Check(obj)) dict = PyModule_GetDict(obj);
+    if (PyType_Check(obj)) dict = ((PyTypeObject*)obj)->tp_dict;
+
+    if (!dict) {
+        cout << " VRPyCodeCompletion::getMembers no dict!! type: " << obj->ob_type->tp_name << endl;
+        return res;
+    }
     PyObject *key, *value;
     Py_ssize_t pos = 0;
 
     while (PyDict_Next(dict, &pos, &key, &value)) {
         string name = PyString_AsString(key);
         if (startsWith(name, "__")) continue;
-        res.push_back(name);
+        res[name] = value;
     }
 
-    sort (res.begin(), res.end());
-    members[obj] = res;
     return res;
 }
 
@@ -68,24 +70,22 @@ bool VRPyCodeCompletion::startsWith(const string& a, const string& b) {
 
 vector<string> VRPyCodeCompletion::getSuggestions(string input) {
     vector<string> res;
-	if (input.size() <= 2) return res;
+	if (input.size() <= 2) return res; // limit to min 2 chars!
 
     auto path = splitString(input, '.');
-    if (input[input.size()-1] == '.') path.push_back("");
+    if (input.back() == '.') path.push_back("");
     int N = path.size();
     if (N == 0) return res;
 
     PyObject* obj = resolvePath(path);
 	if (!obj) return res;
 
-    string guess = path[N-1];
-    for (auto m : getMembers(obj)) {
-        if (startsWith(m, guess)) res.push_back(m);
-    }
+    string guess = path.back();
+    for (auto m : getMembers(obj)) if (startsWith(m.first, guess)) res.push_back(m.first);
     return res;
 }
 
-
+// jedi sucks, not used!
 vector<string> VRPyCodeCompletion::getJediSuggestions(VRScriptPtr script, int line, int column) {
     vector<string> res;
 

@@ -20,9 +20,9 @@ class VRPyCodeCompletion {
 
         bool startsWith(const string& a, const string& b);
 
-        PyObject* getObject(string);
+        PyObject* getObject(string, PyObject* parent = 0);
         PyObject* resolvePath(vector<string>& path);
-        vector<string> getMembers(PyObject* obj);
+        map<string, PyObject*> getMembers(PyObject* obj);
 
 	public:
         VRPyCodeCompletion();
