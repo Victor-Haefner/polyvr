@@ -162,6 +162,9 @@ bool VRTrafficSimulation::Vehicle::operator==(const Vehicle& v) {
 VRTrafficSimulation::VRTrafficSimulation() : VRObject("TrafficSimulation") {
     PLock lock(mtx);
 
+    //store("maxUnits", &maxUnits);
+    //storeMap("maxUnits", vehicles);
+
     updateCb = VRUpdateCb::create( "traffic", boost::bind(&VRTrafficSimulation::updateSimulation, this) );
     VRScene::getCurrent()->addUpdateFkt(updateCb);
 
@@ -398,7 +401,6 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 float D2 = (ep2-p).length();
 
                 if (D1 > userRadius && D2 > userRadius) continue; // outside
-                if (D1 < 15 || D2 < 15) continue;
                 if (debugOverRideSeedRoad<0 && graph->getPrevEdges(e).size() == 0  && !isPedestrian(e.ID) && !isParkingLane(e.ID) && !isIntersectionLane(e.ID)) { // roads that start out of "nowhere"
                     if (D1 < 15 || D2 < 15) continue;
                     newSeedRoads.push_back( e.ID );
