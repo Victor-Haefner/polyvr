@@ -3,6 +3,8 @@
 
 #include "core/scripting/VRPyBase.h"
 #include "VRCharacter.h"
+#include "VRSkeleton.h"
+#include "VRBehavior.h"
 
 struct VRPyBehavior : VRPyBaseT<OSG::VRBehavior> {
     static PyMethodDef methods[];
