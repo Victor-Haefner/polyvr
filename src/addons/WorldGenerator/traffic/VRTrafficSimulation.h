@@ -46,9 +46,9 @@ class VRTrafficSimulation : public VRObject {
 
             ///Data
             int vID = -1;
-            VRTransformPtr t;
+            //VRTransformPtr t;
             VRTransformPtr offset;
-            VRObjectPtr mesh;
+            //VRObjectPtr mesh;
             Graph::position pos;
             float length = 4.4;
             float width = 1.7;
@@ -58,18 +58,19 @@ class VRTrafficSimulation : public VRObject {
             bool collisionDetected;
             bool collisionDetectedMem;
             bool collisionDetectedExch;
-            PosePtr simPose;
-            Pose simPose2;
+            PosePtr simPose; //thread intern, simulation pose
+            Pose simPose2; //VR pose
             //doubleBuffer poseBuffer;
             int type;
             vector<int> signaling;
-
+            /*
             vector<VRGeometryPtr> turnsignalsBL;
             vector<VRGeometryPtr> turnsignalsBR;
             vector<VRGeometryPtr> turnsignalsFL;
             vector<VRGeometryPtr> turnsignalsFR;
             vector<VRGeometryPtr> headlights;
             vector<VRGeometryPtr> backlights;
+            */
 
             ///Perception
             float distanceToNextSignal;
@@ -129,15 +130,40 @@ class VRTrafficSimulation : public VRObject {
             Vehicle();
             ~Vehicle();
 
+            //void setupSG(VRObjectPtr g, map<string, VRMaterialPtr>& lightMaterials);
+            //void destroy();
+            //void hide();
+            void setDefaults();
+            //void show();
+
+            //bool operator==(const Vehicle& v);
+
+            //void signalLights(int input, map<string, VRMaterialPtr>& lightMaterials);
+        };
+
+        struct VehicleTransform {
+            int vtfID = -1;
+            int vID = -1;
+            int type;
+            VRTransformPtr t;
+            VRObjectPtr mesh;
+            vector<VRGeometryPtr> turnsignalsBL;
+            vector<VRGeometryPtr> turnsignalsBR;
+            vector<VRGeometryPtr> turnsignalsFL;
+            vector<VRGeometryPtr> turnsignalsFR;
+            vector<VRGeometryPtr> headlights;
+            vector<VRGeometryPtr> backlights;
+
+            VehicleTransform(int type);
+            VehicleTransform();
+            ~VehicleTransform();
+
             void setupSG(VRObjectPtr g, map<string, VRMaterialPtr>& lightMaterials);
+            void signalLights(int input, map<string, VRMaterialPtr>& lightMaterials);
+            void show();
             void destroy();
             void hide();
-            void setDefaults();
-            void show();
-
-            bool operator==(const Vehicle& v);
-
-            void signalLights(int input, map<string, VRMaterialPtr>& lightMaterials);
+            bool operator==(const VehicleTransform& vtf);
         };
 
         struct signal {
@@ -167,11 +193,13 @@ class VRTrafficSimulation : public VRObject {
         VRRoadNetworkPtr roadNetwork;
         VRThreadCbPtr worker;
 
-        boost::recursive_mutex mtx;
-        boost::recursive_mutex mtx2;
+        boost::recursive_mutex mtx; //locks main thread
+        boost::recursive_mutex mtx2; //locks transform updating
 
         map<int, laneSegment> roads;
         map<int, Vehicle> vehicles;
+        map<int, VehicleTransform> vehicleTransformPool;
+        map<int,int> userTransformsIDs;
         map<string, VRMaterialPtr> lightMaterials;
         map<int, map<int, int>> visionVecSaved;
         vector<int> seedRoads;
@@ -179,11 +207,17 @@ class VRTrafficSimulation : public VRObject {
         vector<int> forceSeedRoads;
         vector<Vehicle> users;
         vector<VRCarDynamicsPtr> userCarDyns;
+        vector<pair<float,int>> vehiclesDistanceToUsers;
+        vector<pair<float,int>> vehiclesDistanceToUsers2;
         list<int> vehiclePool;
         vector<VRObjectPtr> models;
         int maxUnits = 0;
         int numUnits = 0;
+        int maxTransformUnits = 0;
+        int numTransformUnits = 0;
+        float userRadius = 800; // x meter radius around users
         size_t nID = -1;
+        size_t tID = -1;
         float deltaT;
         float lastT = 0.0;
         Vec3d globalOffset = Vec3d(0,0,0);
@@ -207,6 +241,8 @@ class VRTrafficSimulation : public VRObject {
         void updateVehicVision();
         void updateVehicIntersecs();
         void updateIntersectionVis(bool in);
+
+        void addVehicleTransform(int type);
 
         ///Diagnostics
         map<int,int> bugDelete;
@@ -246,7 +282,7 @@ class VRTrafficSimulation : public VRObject {
 
         void addVehicle(int roadID, float density, int type);
         bool getUserCollisionState(int i);
-        void setTrafficDensity(float density, int type, int maxUnits = 0);
+        void setTrafficDensity(float density, int type, int maxUnits = 0, int maxTransforms = 5);
 
         int addVehicleModel(VRObjectPtr mesh);
         void setGlobalOffset(Vec3d globalOffset);
