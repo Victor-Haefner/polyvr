@@ -101,6 +101,10 @@ void VRSkeleton::setupGeometry() {
 }
 
 void VRSkeleton::updateGeometry() {
+    VRGeoData geo;
+    asGeometry(geo);
+    geo.apply( ptr() );
+
     /*VRGeoData data(ptr());
     auto& bones = armature->getNodes();
     for (uint i=0; i<joints.size(); i++) {
@@ -170,7 +174,11 @@ void VRSkeleton::setupSimpleHumanoid() {
     setRootBone(abdomen);
 }
 
-
+void VRSkeleton::move(string endEffector, PosePtr pose) {
+    auto& bone = bones[ endEffectors[endEffector] ];
+    bone.pose = *pose;
+    updateGeometry();
+}
 
 
 

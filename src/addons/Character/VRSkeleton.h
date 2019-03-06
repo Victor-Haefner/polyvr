@@ -64,6 +64,8 @@ class VRSkeleton : public VRGeometry {
         void asGeometry(VRGeoData& data);
         void setupGeometry();
         void updateGeometry();
+
+        void move(string endEffector, PosePtr pose);
 };
 
 OSG_END_NAMESPACE;

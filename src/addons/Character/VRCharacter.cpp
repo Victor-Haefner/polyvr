@@ -24,6 +24,11 @@ VRSkeletonPtr VRCharacter::getSkeleton() { return skeleton; }
 void VRCharacter::addBehavior(VRBehaviorPtr b) { behaviors[b->getName()] = b; }
 //void VRCharacter::addAction(VRBehavior::ActionPtr a) { actions[a->getName()] = a; }
 
+void VRCharacter::move(string endEffector, PosePtr pose) {
+    if (!skeleton) return;
+    skeleton->move(endEffector, pose);
+}
+
 void VRCharacter::simpleSetup() {
     auto s = VRSkeleton::create();
     s->setupSimpleHumanoid();

@@ -25,6 +25,8 @@ class VRCharacter : public VRGeometry {
         void setSkeleton(VRSkeletonPtr s);
         VRSkeletonPtr getSkeleton();
 
+        void move(string endEffector, PosePtr pose);
+
         void addBehavior(VRBehaviorPtr b);
         //void addAction(VRBehavior::ActionPtr a);
 
