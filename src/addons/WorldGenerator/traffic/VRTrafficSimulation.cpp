@@ -336,10 +336,10 @@ void VRTrafficSimulation::addVehicleTransform(int type) { //VRObjectPtr m, map<s
     auto vtf = VehicleTransform(type);
     tID++;
     numTransformUnits++;
-    vehicleTransformPool[tID] = vtf;
-    vtf.setupSG(models[vtf.type]->duplicate(), lightMaterials);
-    addChild(vtf.t);
     vtf.vtfID = tID;
+    vehicleTransformPool[tID] = vtf;
+    vehicleTransformPool[tID].setupSG(models[vtf.type]->duplicate(), lightMaterials);
+    addChild(vehicleTransformPool[tID].t);
 }
 
 void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
@@ -1383,7 +1383,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
 
     float ttime = timer.stop("mainThread")/1000.0;
     if (ttime > 0) {
-        //if (1/ttime < 60) cout << "trafficSimThread is running at " << 1/ttime  << "Hz, running "  << vehicles.size() << " Vehicles" << endl;
+        if (1/ttime < 60) cout << "trafficSimThread is running at " << 1/ttime  << "Hz, running "  << vehicles.size() << " Vehicles" << endl;
     }
     //else cout << "trafficSimThread is running at immeasurable speeds" << endl;
 
@@ -1403,12 +1403,15 @@ void VRTrafficSimulation::updateSimulation() {
         for (auto& vtfD : vehicleTransformPool){
             auto& vtf = vtfD.second;
             //if (vtf.vID < 0) continue;
-            if (n >= vehiclesDistanceToUsers2.size()) continue;
-            cout << vehiclesDistanceToUsers2.size() << endl;
+            if (n >= vehiclesDistanceToUsers2.size()) {
+                if (vtf.vID >= 0) { auto& v2 = vehicles[vtf.vID]; if (!v2.isUser) { vtf.hide(); } }
+                n++;
+                continue;
+            }
             auto& v = vehicles[vehiclesDistanceToUsers2[n].second];
             if (vtf.vID >= 0) { auto& v2 = vehicles[vtf.vID]; if (v2.isUser) { n++; continue; } }
             if (v.isUser) continue;
-            cout << toString(v.simPose2.asMatrix()) << endl;
+            //if (!vtf.t) { cout << "AREGH1" << endl; continue; }
             vtf.t->setMatrix(v.simPose2.asMatrix());
             vtf.t->setVisible(v.vrwVisible);
             if (  v.vrwVisible ) vtf.show();
