@@ -3,7 +3,9 @@
 #include "core/math/graph.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
+#include "addons/Algorithms/VRPathFinding.h"
 
+#include <OpenSG/OSGQuaternion.h>
 
 using namespace OSG;
 
@@ -64,7 +66,7 @@ void VRSkeleton::asGeometry(VRGeoData& data) {
         int v1 = data.pushVert(p1, n, green);
         int v2 = data.pushVert(p2, n, green);
         data.pushLine(v1, v2);
-        cout << "create bone geo " << bone.length << "  " << bone.pose.pos() << endl;
+        //cout << "create bone geo " << bone.length << "  " << bone.pose.pos() << endl;
     }
 
     for (auto& j : joints) {
@@ -142,31 +144,31 @@ void VRSkeleton::setupSimpleHumanoid() {
     addJoint(back, head, neck);
 
     // legs
-    auto ankle = ballJoint(Vec3d(0,0,0.1), Vec3d(0,0,-0.25));
-    auto knee  = hingeJoint(Vec3d(0,0,0.25), Vec3d(0,0,-0.25));
+    auto ankle = ballJoint(Vec3d(0,0,-0.25), Vec3d(0,0,0.1));
+    auto knee  = hingeJoint(Vec3d(0,0,-0.25), Vec3d(0,0,0.25));
     for (auto i : {-0.25,0.25}) {
-        auto hip = ballJoint(Vec3d(0,0,0.25), Vec3d(i,0,-0.15));
+        auto hip = ballJoint(Vec3d(i,0,-0.15), Vec3d(0,0,0.25));
         int foot     = addBone(Pose::create(Vec3d(i,0,-0.1),Vec3d(0,0,-1),Vec3d(0,1,0)), 0.2);
         int lowerLeg = addBone(Pose::create(Vec3d(i,0.25,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.5);
         int upperLeg = addBone(Pose::create(Vec3d(i,0.75,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.5);
-        addJoint(foot, lowerLeg, ankle);
-        addJoint(lowerLeg, upperLeg, knee);
-        addJoint(upperLeg, abdomen, hip);
+        addJoint(abdomen, upperLeg, hip);
+        addJoint(upperLeg, lowerLeg, knee);
+        addJoint(lowerLeg, foot, ankle);
         if (i > 0) setEndEffector("footRight", foot);
         if (i < 0) setEndEffector("footLeft", foot);
     }
 
     // arms
-    auto wrist = ballJoint(Vec3d(0,0,0.05), Vec3d(0,0,-0.15));
-    auto elbow = hingeJoint(Vec3d(0,0,0.15), Vec3d(0,0,-0.15));
+    auto wrist = ballJoint(Vec3d(0,0,-0.15), Vec3d(0,0,0.05));
+    auto elbow = hingeJoint(Vec3d(0,0,-0.15), Vec3d(0,0,0.15));
     for (auto i : {-0.2,0.2}) {
-        auto shoulder = ballJoint(Vec3d(0,0,0.15), Vec3d(i,0,0.2));
+        auto shoulder = ballJoint( Vec3d(-i,0,0.2), Vec3d(0,0,0.15));
         int hand     = addBone(Pose::create(Vec3d(i,1.05,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.1);
         int lowerArm = addBone(Pose::create(Vec3d(i,1.25,0) ,Vec3d(0,-1,0),Vec3d(0,0,1)), 0.3);
         int upperArm = addBone(Pose::create(Vec3d(i,1.55,0) ,Vec3d(0,-1,0),Vec3d(0,0,1)), 0.3);
-        addJoint(hand, lowerArm, wrist);
-        addJoint(lowerArm, upperArm, elbow);
-        addJoint(upperArm, back, shoulder);
+        addJoint(back, upperArm, shoulder);
+        addJoint(upperArm, lowerArm, elbow);
+        addJoint(lowerArm, hand, wrist);
         if (i > 0) setEndEffector("handRight", hand);
         if (i < 0) setEndEffector("handLeft", hand);
     }
@@ -175,8 +177,123 @@ void VRSkeleton::setupSimpleHumanoid() {
 }
 
 void VRSkeleton::move(string endEffector, PosePtr pose) {
-    auto& bone = bones[ endEffectors[endEffector] ];
-    bone.pose = *pose;
+    auto sum = [](vector<float> v) {
+        float r = 0;
+        for (auto f : v) r += f;
+        return r;
+    };
+
+    auto getJointPosition = [&](int jID) {
+        auto& joint = joints[jID];
+        auto& bone1 = bones[joint.bone1];
+        return bone1.pose.transform( joint.constraint->getReferenceA()->pos() );
+    };
+
+    auto getBonesChain = [&]() {
+        int e = endEffectors[endEffector];
+        VRPathFinding::Position pR(rootBone);
+        VRPathFinding::Position pE(e);
+        VRPathFinding pathFinding;
+        pathFinding.setGraph(armature);
+        auto path = pathFinding.computePath(pR, pE);
+        vector<int> chainedBones;
+        for (auto p : path) chainedBones.push_back(p.nID);
+        return chainedBones;
+    };
+
+    auto getJointsChain = [&](vector<int>& chainedBones) {
+        vector<int> chainedJoints;
+        for (int i=1; i<chainedBones.size(); i++) {
+            int nID1 = chainedBones[i-1];
+            int nID2 = chainedBones[i];
+            int eID = armature->getEdgeID(nID1, nID2);
+            chainedJoints.push_back(eID);
+        }
+        return chainedJoints;
+    };
+
+    auto chainedBones = getBonesChain();
+    auto chainedJoints = getJointsChain(chainedBones);
+
+    vector<Vec3d> p; // joint positions
+    vector<float> d; // joint distances
+    for (auto jID : chainedJoints) p.push_back( getJointPosition(jID) );
+    for (int i=1; i<chainedBones.size(); i++) d.push_back( (p[i] - p[i-1]).length() );
+    int n = p.size()-1;
+    auto p_old = p;
+
+    // distance to target, from first joint position to targeted last joint position
+    auto& joint = joints[ chainedJoints.back() ];
+    Vec3d targetPos = pose->transform( joint.constraint->getReferenceB()->pos() );
+    float Dtarget = (targetPos - p[0]).length();
+
+    // basic FABRIK algorithm
+    if (Dtarget > sum(d)) { // position unreachable
+        for (int i=0; i<n; i++) {
+            float ri = (targetPos-p[i]).length();
+            float li = d[i]/ri;
+            p[i+1] = p[i]*(1-li) + targetPos*li;
+        }
+    } else { // position reachable
+        Vec3d b = p[0];
+        float tol = 0.001; // 1 mm tolerance
+        float difA = (p[n]-targetPos).length();
+        while (difA > tol) {
+            p[n] = targetPos;
+            for (int i=n-1; i>= 0; i--) {
+                float ri = (p[i+1]-p[i]).length();
+                float li = d[i]/ri;
+                p[i] = p[i+1]*(1-li) + p[i]*li;
+            }
+            p[0] = b;
+            for (int i=0; i<n; i++) {
+                float ri = (p[i+1]-p[i]).length();
+                float li = d[i]/ri;
+                p[i+1] = p[i]*(1-li) + p[i+1]*li;
+            }
+            difA = (p[n]-targetPos).length();
+        }
+    }
+
+    // update bones based on new joint positions
+    for (int i=1; i<=n; i++) {
+        int jID1 = chainedJoints[i-1];
+        int jID2 = chainedJoints[i];
+        auto& joint1 = joints[jID1];
+        auto& joint2 = joints[jID2];
+        auto& bone = bones[joint1.bone2]; // bone between joint1 and joint2
+
+        Vec3d M1 = (p_old[i] + p_old[i-1])*0.5;
+        Vec3d M2 = (p[i] + p[i-1])*0.5;
+        Vec3d D1 = p_old[i] - p_old[i-1];
+        Vec3d D2 = p[i] - p[i-1];
+        Vec3d a = D1.cross(D2);
+
+        float A = -asin(a.length()/D1.length()/D2.length());
+        a.normalize();
+        //float A = acos(D1.dot(D2)/D1.squareLength());
+
+        Matrix4d m1, m2, m3;
+        m1.setTranslate(M2-M1);
+        m2.setRotate(Quaterniond(a,A));
+        m3 = bone.pose.asMatrix();
+        m3.multLeft(m1);
+        m3.mult(m2);
+        bone.pose = Pose(m3);
+
+        cout << "set bone " << joint1.bone2 << " " << bone.length << endl;
+        cout << " t: " << m3[3] << endl;
+    }
+    bones[ chainedBones.back() ].pose = *pose;
+
+    /*cout << "AAA" << endl;
+    for (auto f : p_old) cout << "   " << f;
+    cout << endl;
+    for (auto f : p) cout << "   " << f;
+    cout << endl;
+    for (int i=0; i<p.size(); i++) cout << "   " << p[i]-p_old[i];
+    cout << endl;*/
+
     updateGeometry();
 }
 
