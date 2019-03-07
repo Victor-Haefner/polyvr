@@ -213,102 +213,122 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
         return chainedJoints;
     };
 
-    auto updateBones = [&](vector<int>& chainedJoints, vector<Vec3d>& p_old, vector<Vec3d>& p, PosePtr endPose) {
-        for (int i=1; i<p.size(); i++) {
-            int jID1 = chainedJoints[i-1];
-            int jID2 = chainedJoints[i];
-            auto& joint1 = joints[jID1];
-            auto& joint2 = joints[jID2];
-            auto& bone = bones[joint1.bone2]; // bone between joint1 and joint2
-
-            Vec3d D1 = p_old[i] - p_old[i-1];
-            Vec3d D2 = p[i] - p[i-1];
-            Vec3d pW = p_old[i] - bone.pose.pos();
-
-            Matrix4d m0, mM;
-            m0 = bone.pose.asMatrix();
-            mM.setTranslate(p[i] - p_old[i] + Vec3d(m0[3]) + pW);
-            mM.setRotate(Quaterniond(D1, D2));
-            m0.setTranslate(-pW);
-            mM.mult(m0);
-            bone.pose = Pose(mM);
-        }
-
-        int jID = chainedJoints.back();
-        bones[joints[jID].bone2].pose = *endPose;
-    };
-
     struct EEData {
         vector<int> chainedBones;
-        vector<int> chainedJoints;
-        vector<Vec3d> p;
-        vector<Vec3d> p_old;
+        vector<int> joints;
         vector<float> d;
         Vec3d targetPos;
         float Dtarget;
     };
 
+    map<int, Vec3d> jointPositions;
+    map<int, Vec3d> jointPositionsOld;
+
     map<string, EEData> EEDataMap;
 
-    auto applyFABRIK = [&]() {
-        vector<int>& chainedBones = EEDataMap[endEffector].chainedBones;
-        vector<int>& chainedJoints = EEDataMap[endEffector].chainedJoints;
-        auto& targetPos = EEDataMap[endEffector].targetPos;
+    auto updateBones = [&](EEData& data) {
+        cout << "updateBones" << endl;
+        for (int i=1; i<data.joints.size(); i++) {
+            auto& bone = bones[joints[data.joints[i-1]].bone2];
+            int jID1 = data.joints[i-1];
+            int jID2 = data.joints[i];
 
-        vector<Vec3d>& p = EEDataMap[endEffector].p; // joint positions
-        vector<float>& d = EEDataMap[endEffector].d; // joint distances
+            Vec3d D1 = jointPositionsOld[jID2] - jointPositionsOld[jID1];
+            Vec3d D2 = jointPositions[jID2] - jointPositions[jID1];
+            Vec3d pW = jointPositionsOld[jID2] - bone.pose.pos();
+            cout << " joints: " << D1 << "    " << D2 << endl;
+
+            Matrix4d m0, mM;
+            m0 = bone.pose.asMatrix();
+            mM.setTranslate(jointPositions[jID2] - jointPositionsOld[jID2] + Vec3d(m0[3]) + pW);
+            mM.setRotate(Quaterniond(D1, D2));
+            m0.setTranslate(-pW);
+            mM.mult(m0);
+            bone.pose = Pose(mM);
+        }
+    };
+
+    auto applyFABRIK = [&](EEData& data, bool useTarget) {
+        auto targetPos = data.targetPos;
+        //if (!useTarget) targetPos = data.p.back();
+        float tol = 0.001; // 1 mm tolerance
+
+        vector<int>& joints = data.joints;
+        vector<float>& jointDistances1 = data.d;
+
+        EEData& data2 = EEDataMap["handRight"];
+        vector<int>& joints2 = data2.joints;
+        vector<float>& jointDistances2 = data2.d;
 
         // basic FABRIK algorithm
-        int n = p.size()-1;
-        float Dtarget = (targetPos - p[0]).length();
-        if (Dtarget > sum(d)) { // position unreachable
+        int n = jointDistances1.size();
+        int n2 = jointDistances2.size();
+        float Dtarget = (targetPos - jointPositions[joints[0]]).length();
+        if (Dtarget > sum(jointDistances1)) { // position unreachable
             for (int i=0; i<n; i++) {
-                float ri = (targetPos-p[i]).length();
-                float li = d[i]/ri;
-                p[i+1] = p[i]*(1-li) + targetPos*li;
+                float ri = (targetPos-jointPositions[joints[i]]).length();
+                float li = jointDistances1[i]/ri;
+                jointPositions[joints[i+1]] = jointPositions[joints[i]]*(1-li) + targetPos*li;
             }
         } else { // position reachable
-            Vec3d b = p[0];
-            float tol = 0.001; // 1 mm tolerance
-            float difA = (p[n]-targetPos).length();
+            Vec3d rootJointStart = jointPositions[joints[0]];
+            float difA = (jointPositions[joints[n]]-targetPos).length();
             int k=0;
+            cout << "FABRIK loop" << endl;
             while (difA > tol) {
                 k++; if(k>50) break;
-                p[n] = targetPos;
+                jointPositions[joints[n]] = targetPos;
                 for (int i=n-1; i>= 0; i--) {
-                    float ri = (p[i+1]-p[i]).length();
-                    float li = d[i]/ri;
-                    p[i] = p[i+1]*(1-li) + p[i]*li;
+                    float ri = (jointPositions[joints[i+1]]-jointPositions[joints[i]]).length();
+                    float li = jointDistances1[i]/ri;
+                    jointPositions[joints[i]] = jointPositions[joints[i+1]]*(1-li) + jointPositions[joints[i]]*li;
                 }
-                p[0] = b;
+                jointPositions[joints[0]] = rootJointStart;
                 for (int i=0; i<n; i++) {
-                    float ri = (p[i+1]-p[i]).length();
-                    float li = d[i]/ri;
-                    p[i+1] = p[i]*(1-li) + p[i+1]*li;
+                    float ri = (jointPositions[joints[i+1]]-jointPositions[joints[i]]).length();
+                    float li = jointDistances1[i]/ri;
+                    jointPositions[joints[i+1]] = jointPositions[joints[i]]*(1-li) + jointPositions[joints[i+1]]*li;
                 }
-                difA = (p[n]-targetPos).length();
+                difA = (jointPositions[joints[n]]-targetPos).length();
+
+                // check second chain!
+                for (int i=0; i<n2; i++) {
+                    float ri = (jointPositions[joints2[i+1]]-jointPositions[joints2[i]]).length();
+                    float li = jointDistances2[i]/ri;
+                    jointPositions[joints2[i+1]] = jointPositions[joints2[i]]*(1-li) + jointPositions[joints2[i+1]]*li;
+                    cout << " p2 i " << i << "   " << joints2[i+1] << "    " << jointPositions[joints2[i+1]] << endl;
+                }
             }
         }
-
-        // update bones based on new joint positions
-        updateBones(chainedJoints, EEDataMap[endEffector].p_old, p, pose);
     };
+
+    for (auto j : joints) jointPositions[j.first] = getJointPosition(j.first);
+    jointPositionsOld = jointPositions;
 
     for (auto e : endEffectors) {
         EEDataMap[e.first] = EEData();
         EEDataMap[e.first].chainedBones = getBonesChain(e.first);
-        EEDataMap[e.first].chainedJoints = getJointsChain(EEDataMap[e.first].chainedBones);
+        EEDataMap[e.first].joints = getJointsChain(EEDataMap[e.first].chainedBones);
 
-        for (auto jID : EEDataMap[e.first].chainedJoints) EEDataMap[e.first].p.push_back( getJointPosition(jID) );
-        for (int i=1; i<EEDataMap[e.first].chainedBones.size(); i++) EEDataMap[e.first].d.push_back( (EEDataMap[e.first].p[i] - EEDataMap[e.first].p[i-1]).length() );
-        EEDataMap[e.first].p_old = EEDataMap[e.first].p;
+        for (int i=1; i<EEDataMap[e.first].joints.size(); i++) {
+            int jID1 = EEDataMap[e.first].joints[i-1];
+            int jID2 = EEDataMap[e.first].joints[i];
+            float d = (jointPositions[jID1] - jointPositions[jID2]).length();
+            EEDataMap[e.first].d.push_back( d );
+        }
 
         // distance to target, from first joint position to targeted last joint position
-        auto& joint = joints[ EEDataMap[e.first].chainedJoints.back() ];
+        auto& joint = joints[ EEDataMap[e.first].joints.back() ];
         EEDataMap[e.first].targetPos = pose->transform( joint.constraint->getReferenceB()->pos() );
     }
 
-    applyFABRIK();
+    applyFABRIK(EEDataMap[endEffector], true);
+    //for (auto e : endEffectors) if (e.first != endEffector) applyFABRIK(EEDataMap[e.first], false);
+
+    // update bones based on new joint positions
+    for (auto e : EEDataMap) updateBones(e.second);
+    int jID = EEDataMap[endEffector].joints.back();
+    bones[joints[jID].bone2].pose = *pose;
 
     updateGeometry();
 }
