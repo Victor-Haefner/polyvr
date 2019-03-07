@@ -266,19 +266,16 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
         auto& joint2 = joints[jID2];
         auto& bone = bones[joint1.bone2]; // bone between joint1 and joint2
 
-        Vec3d M1 = (p_old[i] + p_old[i-1])*0.5;
-        Vec3d M2 = (p[i] + p[i-1])*0.5;
         Vec3d D1 = p_old[i] - p_old[i-1];
         Vec3d D2 = p[i] - p[i-1];
 
         Matrix4d m0R, m0T, mM, mW, mWi;
-        //mM.setTranslate(p[i]-p_old[i]);
-        mM.setTranslate(M2-M1);
+        mM.setTranslate(p[i]-p_old[i]);
         mM.setRotate(Quaterniond(D1, D2));
         m0R = bone.pose.asMatrix();
         m0T.setTranslate(Vec3d(m0R[3]));
         m0R[3] = Vec4d(0,0,0,1);
-        Vec3d pW = M1 - bone.pose.pos();
+        Vec3d pW = p_old[i] - bone.pose.pos();
         mW.setTranslate(pW);
         mWi.setTranslate(-pW);
 
