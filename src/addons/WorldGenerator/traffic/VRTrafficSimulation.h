@@ -46,9 +46,7 @@ class VRTrafficSimulation : public VRObject {
 
             ///Data
             int vID = -1;
-            //VRTransformPtr t;
             VRTransformPtr offset;
-            //VRObjectPtr mesh;
             Graph::position pos;
             float length = 4.4;
             float width = 1.7;
@@ -58,19 +56,12 @@ class VRTrafficSimulation : public VRObject {
             bool collisionDetected;
             bool collisionDetectedMem;
             bool collisionDetectedExch;
-            PosePtr simPose; //thread intern, simulation pose
-            Pose simPose2; //VR pose
+            PosePtr simPose;    //thread intern, simulation pose
+            Pose simPose2;      //VR pose
             //doubleBuffer poseBuffer;
             int type;
             vector<int> signaling;
-            /*
-            vector<VRGeometryPtr> turnsignalsBL;
-            vector<VRGeometryPtr> turnsignalsBR;
-            vector<VRGeometryPtr> turnsignalsFL;
-            vector<VRGeometryPtr> turnsignalsFR;
-            vector<VRGeometryPtr> headlights;
-            vector<VRGeometryPtr> backlights;
-            */
+            vector<int> signalingVT;
 
             ///Perception
             float distanceToNextSignal;
@@ -130,15 +121,7 @@ class VRTrafficSimulation : public VRObject {
             Vehicle();
             ~Vehicle();
 
-            //void setupSG(VRObjectPtr g, map<string, VRMaterialPtr>& lightMaterials);
-            //void destroy();
-            //void hide();
             void setDefaults();
-            //void show();
-
-            //bool operator==(const Vehicle& v);
-
-            //void signalLights(int input, map<string, VRMaterialPtr>& lightMaterials);
         };
 
         struct VehicleTransform {
@@ -177,6 +160,7 @@ class VRTrafficSimulation : public VRObject {
             int rID = -1;
             float density = 0;
             float length = 0;
+            float width = 3;
             bool macro = true;
             map<int, int> vehicleIDs;
             int lastVehicleID = 0;

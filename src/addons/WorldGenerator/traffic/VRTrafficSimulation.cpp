@@ -56,34 +56,6 @@ VRTrafficSimulation::Vehicle::Vehicle(Graph::position p, int type) : pos(p), typ
 VRTrafficSimulation::Vehicle::Vehicle() {}
 VRTrafficSimulation::Vehicle::~Vehicle() {}
 
-/*void VRTrafficSimulation::Vehicle::setupSG(VRObjectPtr m, map<string, VRMaterialPtr>& mats) {
-    if (t) return;
-    t = VRTransform::create("t");
-    mesh = m;
-    t->addChild(mesh);
-    for (auto obj : mesh->getChildren(true, "Geometry")) {
-        VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(obj);
-        string name = geo->getBaseName();
-        if (name == "TurnSignalBL" || name == "turnsignalBL") { geo->makeUnique(); turnsignalsBL.push_back(geo); }
-        if (name == "TurnSignalBR" || name == "turnsignalBR") { geo->makeUnique(); turnsignalsBR.push_back(geo); }
-        if (name == "TurnSignalFL" || name == "turnsignalFL") { geo->makeUnique(); turnsignalsFL.push_back(geo); }
-        if (name == "TurnSignalFR" || name == "turnsignalFR") { geo->makeUnique(); turnsignalsFR.push_back(geo); }
-        if (name == "Headlight" || name == "headlight") { geo->makeUnique(); headlights.push_back(geo); }
-        if (name == "Backlight" || name == "backlight") { geo->makeUnique(); backlights.push_back(geo); }
-    }
-
-    for (auto l : turnsignalsBL) l->setMaterial(mats["carLightOrangeOff"]);
-    for (auto l : turnsignalsBR) l->setMaterial(mats["carLightOrangeOff"]);
-    for (auto l : turnsignalsFL) l->setMaterial(mats["carLightOrangeOff"]);
-    for (auto l : turnsignalsFR) l->setMaterial(mats["carLightOrangeOff"]);
-    for (auto l : headlights) l->setMaterial(mats["carLightWhiteOn"]);
-    for (auto l : backlights) l->setMaterial(mats["carLightRedOff"]);
-}*/
-/*
-void VRTrafficSimulation::Vehicle::hide() {
-    if (t) t->hide();
-}*/
-
 void VRTrafficSimulation::Vehicle::setDefaults() {
     targetVelocity = 50.0/3.6; //try m/s  - km/h
     currentVelocity = targetVelocity;
@@ -119,43 +91,6 @@ void VRTrafficSimulation::Vehicle::setDefaults() {
     Vec3d asdf;
     nextStop = asdf;
 }
-/*
-void VRTrafficSimulation::Vehicle::signalLights(int input, map<string, VRMaterialPtr>& mats) {
-    if (input < 0) return;
-    if (input == 0) { //straight
-        for (auto l : turnsignalsBL) l->setMaterial(mats["carLightOrangeOff"]);
-        for (auto l : turnsignalsFL) l->setMaterial(mats["carLightOrangeOff"]);
-        for (auto l : turnsignalsBR) l->setMaterial(mats["carLightOrangeOff"]);
-        for (auto l : turnsignalsFR) l->setMaterial(mats["carLightOrangeOff"]);
-    }
-    if (input == 1) { //left
-        for (auto l : turnsignalsBL) l->setMaterial(mats["carLightOrangeBlink"]);
-        for (auto l : turnsignalsFL) l->setMaterial(mats["carLightOrangeBlink"]);
-    }
-    if (input == 2) { //right
-        for (auto l : turnsignalsBR) l->setMaterial(mats["carLightOrangeBlink"]);
-        for (auto l : turnsignalsFR) l->setMaterial(mats["carLightOrangeBlink"]);
-    }
-    if (input == 3) { //brake
-        for (auto l : backlights) l->setMaterial(mats["carLightRedOn"]);
-    }
-    if (input == 4) { //not braking
-        for (auto l : backlights) l->setMaterial(mats["carLightRedOff"]);
-    }
-}
-
-void VRTrafficSimulation::Vehicle::show() {
-    if (t) t->show();
-}
-
-void VRTrafficSimulation::Vehicle::destroy() {
-    if (t) t->destroy();
-    t = 0;
-}*/
-/*
-bool VRTrafficSimulation::Vehicle::operator==(const Vehicle& v) {
-    return t == v.t;
-}*/
 
 void VRTrafficSimulation::VehicleTransform::setupSG(VRObjectPtr m, map<string, VRMaterialPtr>& mats) {
     t = VRTransform::create("t");
@@ -279,6 +214,7 @@ void VRTrafficSimulation::setRoadNetwork(VRRoadNetworkPtr rds) {
         roads[eID].length = (p2-p1).length();
         roads[eID].rID = eID;
         roads[eID].lane = roadNetwork->getLane(eID);
+        roads[eID].width = toFloat( roadNetwork->getLane(eID)->get("width")->value );
         //roads[eID].road = roadNetwork->getRoad(roads[eID].lane);
 
         //cout << eID <<" "<< roads[eID].lane->getName() << endl;
@@ -606,7 +542,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         //cout << intention << " -- " << toString(vehicle.vID) << " -- " << toString(vehicle.behavior) <<  toString(vehicles[vehicle.vID].behavior) << " -- "<< toString(offset) << endl;
 
         auto road = roads[gp.edge];
-        float lanewidth = 3.0; //TODO: should be called from real data
+        float lanewidth = road.width; //TODO: should be called from real data
         float dirOffset;
         if (intention == 1 && vS > 0.5) dirOffset = left.dot(offset);
         if (intention == 2 && vS > 0.5) dirOffset = right.dot(offset);
@@ -759,6 +695,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         //========================
 
         vehicle.vehiclesight.clear();
+        vehicle.signaling.clear();
         if (isSimRunning){
             vehicle.vehiclesightFar.clear();
             vehicle.vehiclesightFarID.clear();
@@ -799,7 +736,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             auto p = v.simPose;
             p->setPos(p->pos() - globalOffset);
             auto simpleDis = (pose->pos() - p->pos()).length();
-            if (simpleDis < 100) {
+            if (simpleDis < 300) {
                 pair<float,int> disUser = make_pair(simpleDis, vehicle.vID);
                 vehiclesDistanceToUsers.push_back(disUser);
             }
@@ -1361,6 +1298,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             if (u.second.isUser) continue;
             if (u.second.simPose) u.second.simPose2 = *u.second.simPose;
             u.second.vrwVisible = u.second.simVisible;
+            u.second.signalingVT = u.second.signaling;
         }
         vehiclesDistanceToUsers2 = vehiclesDistanceToUsers;
     };
@@ -1383,9 +1321,9 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
     clearGhosts();
 
     float ttime = timer.stop("mainThread")/1000.0;
-    if (ttime > 0) {
+    /*if (ttime > 0) {
         if (1/ttime < 60) cout << "trafficSimThread is running at " << 1/ttime  << "Hz, running "  << vehicles.size() << " Vehicles" << endl;
-    }
+    }*/
     //else cout << "trafficSimThread is running at immeasurable speeds" << endl;
 
     //cout << "-------hello, this is traffic sim thread " << deltaT << endl;
@@ -1419,29 +1357,8 @@ void VRTrafficSimulation::updateSimulation() {
             vtf.t->setMatrix(v.simPose2.asMatrix());
             vtf.t->setVisible(true);
 
-            for (auto i : v.signaling) vtf.signalLights(i, lightMaterials);
-            v.signaling.clear();
+            for (auto i : v.signalingVT) vtf.signalLights(i, lightMaterials);
             n++;
-        }
-
-        for (auto& vD : vehicles) {
-            auto& v = vD.second;
-            if (v.isUser) continue;
-            /*if (!v.t){
-                v.setupSG(models[v.type]->duplicate(), lightMaterials);
-                addChild(v.t);
-            }
-            if (v.t) {
-                //v.t->setPose(v.getPose());
-                v.t->setMatrix(v.simPose2.asMatrix());
-                v.t->setVisible(v.vrwVisible);
-                if (  v.vrwVisible ) v.show();
-                if ( !v.vrwVisible ) v.hide();
-
-                for (auto i : v.signaling) v.signalLights(i, lightMaterials);
-                v.signaling.clear();
-                N[3]++;
-            }*/
         }
     };
 
