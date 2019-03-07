@@ -257,6 +257,7 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
         }
     }
 
+
     // update bones based on new joint positions
     for (int i=1; i<=n; i++) {
         int jID1 = chainedJoints[i-1];
@@ -272,14 +273,22 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
         Vec3d M2 = (p[i] + p[i-1])*0.5;
         Vec3d D1 = p_old[i] - p_old[i-1];
         Vec3d D2 = p[i] - p[i-1];
-        Vec3d a = D1.cross(D2);
-        //float A = acos(D1.dot(D2)/D1.squareLength());
-        float A = asin(a.length()/D1.squareLength());
-        a.normalize();
+
+        /*Matrix4d m0, mM, mW, mWi;
+        mM.setTranslate(p[i]-p_old[i]);
+        mM.setRotate(Quaterniond(D1, D2));
+        m0 = bone.pose.asMatrix();
+        mW = joint2.constraint->getReferenceA()->asMatrix();
+        mW.inverse(mWi);
+
+        m0.mult(mW);
+        m0.mult(mM);
+        m0.mult(mWi);
+        bone.pose = Pose(m0);*/
 
         Matrix4d m1, m2, m3;
         m1.setTranslate(M2-M1);
-        m2.setRotate(Quaterniond(a,A));
+        m2.setRotate(Quaterniond(D1, D2));
         m3 = bone.pose.asMatrix();
         Vec3d p3 = Vec3d(m1[3]) + Vec3d(m3[3]);
         m3[3] = Vec4d(0,0,0,1);
@@ -287,10 +296,11 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
         m3.setTranslate(p3);
         bone.pose = Pose(m3);
 
-        cout << "set bone " << joint1.bone2 << " " << bone.length << endl;
+
+        /*cout << "set bone " << joint1.bone2 << " " << bone.length << endl;
         cout << " p_old: " << p_old[i-1] << " -> " << p_old[i] << endl;
         cout << " p    : " << p[i-1] << " -> " << p[i] << endl;
-        cout << " t: " << m3[3] << endl;
+        cout << " t: " << m3[3] << endl;*/
     }
     bones[ chainedBones.back() ].pose = *pose;
 
