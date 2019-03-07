@@ -268,22 +268,15 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
 
         Vec3d D1 = p_old[i] - p_old[i-1];
         Vec3d D2 = p[i] - p[i-1];
-
-        Matrix4d m0R, m0T, mM, mW, mWi;
-        mM.setTranslate(p[i]-p_old[i]);
-        mM.setRotate(Quaterniond(D1, D2));
-        m0R = bone.pose.asMatrix();
-        m0T.setTranslate(Vec3d(m0R[3]));
-        m0R[3] = Vec4d(0,0,0,1);
         Vec3d pW = p_old[i] - bone.pose.pos();
-        mW.setTranslate(pW);
-        mWi.setTranslate(-pW);
 
-        m0T.mult(mW);
-        m0T.mult(mM);
-        m0T.mult(mWi);
-        m0T.mult(m0R);
-        bone.pose = Pose(m0T);
+        Matrix4d m0, mM;
+        m0 = bone.pose.asMatrix();
+        mM.setTranslate(p[i] - p_old[i] + Vec3d(m0[3]) + pW);
+        mM.setRotate(Quaterniond(D1, D2));
+        m0.setTranslate(-pW);
+        mM.mult(m0);
+        bone.pose = Pose(mM);
     }
     bones[ chainedBones.back() ].pose = *pose;
 
