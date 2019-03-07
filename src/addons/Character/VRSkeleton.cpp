@@ -286,15 +286,14 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
         m0.mult(mWi);
         bone.pose = Pose(m0);*/
 
-        Matrix4d mT, mR, m0R, m0T;
-        mT.setTranslate(M2-M1);
-        mR.setRotate(Quaterniond(D1, D2));
+        Matrix4d m, m0R, m0T;
+        m.setTranslate(M2-M1);
+        m.setRotate(Quaterniond(D1, D2));
         m0R = bone.pose.asMatrix();
         m0T.setTranslate(Vec3d(m0R[3]));
         m0R[3] = Vec4d(0,0,0,1);
 
-        m0T.mult(mT);
-        m0T.mult(mR);
+        m0T.mult(m);
         m0T.mult(m0R);
         bone.pose = Pose(m0T);
 
