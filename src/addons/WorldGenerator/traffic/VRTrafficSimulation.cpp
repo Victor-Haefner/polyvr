@@ -63,7 +63,7 @@ void VRTrafficSimulation::Vehicle::setDefaults() {
     targetVelocity = targetVelocity*(1.0+0.2*0.01*(rand()%100));
     roadVelocity = targetVelocity;
     distanceToNextIntersec = 10000;
-    simPose = Pose::create(Vec3d(0,0,0),Vec3d(0,0,-1),Vec3d(0,1,0));
+    simPose = Pose::create(Vec3d(0,-20,0),Vec3d(0,0,-1),Vec3d(0,1,0));
 
     maxAcceleration = 5;
     maxAcceleration += (targetVelocity - tmp)/5;
@@ -112,6 +112,14 @@ void VRTrafficSimulation::VehicleTransform::setupSG(VRObjectPtr m, map<string, V
     for (auto l : turnsignalsFL) l->setMaterial(mats["carLightOrangeOff"]);
     for (auto l : turnsignalsFR) l->setMaterial(mats["carLightOrangeOff"]);
     for (auto l : headlights) l->setMaterial(mats["carLightWhiteOn"]);
+    for (auto l : backlights) l->setMaterial(mats["carLightRedOff"]);
+}
+
+void VRTrafficSimulation::VehicleTransform::resetLights(map<string, VRMaterialPtr>& mats){
+    for (auto l : turnsignalsBL) l->setMaterial(mats["carLightOrangeOff"]);
+    for (auto l : turnsignalsFL) l->setMaterial(mats["carLightOrangeOff"]);
+    for (auto l : turnsignalsBR) l->setMaterial(mats["carLightOrangeOff"]);
+    for (auto l : turnsignalsFR) l->setMaterial(mats["carLightOrangeOff"]);
     for (auto l : backlights) l->setMaterial(mats["carLightRedOff"]);
 }
 
@@ -466,7 +474,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         //if (debuggerCars.count(vehicle.vID)) { cout << vehicle.vID << " " << dNew << " " << gp.edge << endl; }
         if (!isTimeForward && gp.pos + dNew < 0) { toChangeRoad[gp.edge].push_back( make_pair(vehicle.vID, -1) );}
         if (gp.pos + dNew > 1) {
-            if (gp.pos + dNew > 2) { toChangeRoad[gp.edge].push_back( make_pair(vehicle.vID, -1) ); cout << "VRTrafficSim: warning, skipping road" <<endl; }
+            if (gp.pos + dNew > 2) { toChangeRoad[gp.edge].push_back( make_pair(vehicle.vID, -1) ); } //cout << "VRTrafficSim: warning, skipping road" <<endl; }
             int road1ID = gp.edge;
             auto& edge = g->getEdge(gp.edge);
             auto nextEdges = g->getNextEdges(edge);
@@ -569,7 +577,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             }
             else {
                 toChangeRoad[vehicle.roadFrom].push_back( make_pair(vehicle.vID, -1) );
-                cout << "VRTrafficSimulation::trafficSimThread: Forbidden Action: vehicle "<< toString(vehicle.vID) <<" tried to change lane in intersection" << endl;
+                //cout << "VRTrafficSimulation::trafficSimThread: Forbidden Action: vehicle "<< toString(vehicle.vID) <<" tried to change lane in intersection" << endl;
             }
             //cout << "trafficsim changing state " << toString(vehicle.vID) << " " << toString(dirOffset) <<endl;
         }
@@ -587,7 +595,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         auto p = roadNetwork->getPosition(vehicle.pos);
         //cout << "propagated vehicle pos " <<toString(p) << endl;
         if (offset.length()>20) offset = Vec3d(0,0,0); //DEBUGGING FAIL SAFE
-        if (!p) { p = Pose::create(Vec3d(0,0,0),Vec3d(0,0,-1),Vec3d(0,1,0)); toChangeRoad[vehicle.roadFrom].push_back( make_pair(vehicle.vID, -1) ); } //BUG CATCH
+        if (!p) { p = Pose::create(Vec3d(0,-20,0),Vec3d(0,0,-1),Vec3d(0,1,0)); toChangeRoad[vehicle.roadFrom].push_back( make_pair(vehicle.vID, -1) ); } //BUG CATCH
         vehicle.lastMove = p->pos() + offset - vehicle.simPose->pos();
         p->setPos(p->pos()+offset);
         //doffset = Vec3d(0,0,0);
@@ -1345,6 +1353,7 @@ void VRTrafficSimulation::updateSimulation() {
         int n = 0;
         for (auto& vtfP : vehicleTransformPool){
             auto& vtf = vtfP.second;
+            vtf.resetLights(lightMaterials);
             if (vtf.isUser) { continue; }
 
             if (n >= vehiclesDistanceToUsers2.size()) {

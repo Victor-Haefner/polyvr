@@ -144,6 +144,7 @@ class VRTrafficSimulation : public VRObject {
 
             void setupSG(VRObjectPtr g, map<string, VRMaterialPtr>& lightMaterials);
             void signalLights(int input, map<string, VRMaterialPtr>& lightMaterials);
+            void resetLights(map<string, VRMaterialPtr>& mats);
             void show();
             void destroy();
             void hide();
