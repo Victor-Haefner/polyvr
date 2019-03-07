@@ -266,42 +266,27 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
         auto& joint2 = joints[jID2];
         auto& bone = bones[joint1.bone2]; // bone between joint1 and joint2
 
-        //if (i == 1) p_old[i] = Vec3d(0,1.7,0);
-        //if (i == 1) p[i] = Vec3d(-0.4,1.3,0);
-
         Vec3d M1 = (p_old[i] + p_old[i-1])*0.5;
         Vec3d M2 = (p[i] + p[i-1])*0.5;
         Vec3d D1 = p_old[i] - p_old[i-1];
         Vec3d D2 = p[i] - p[i-1];
 
-        /*Matrix4d m0, mM, mW, mWi;
-        mM.setTranslate(p[i]-p_old[i]);
+        Matrix4d m0R, m0T, mM, mW, mWi;
+        //mM.setTranslate(p[i]-p_old[i]);
+        mM.setTranslate(M2-M1);
         mM.setRotate(Quaterniond(D1, D2));
-        m0 = bone.pose.asMatrix();
-        mW = joint2.constraint->getReferenceA()->asMatrix();
-        mW.inverse(mWi);
-
-        m0.mult(mW);
-        m0.mult(mM);
-        m0.mult(mWi);
-        bone.pose = Pose(m0);*/
-
-        Matrix4d m, m0R, m0T;
-        m.setTranslate(M2-M1);
-        m.setRotate(Quaterniond(D1, D2));
         m0R = bone.pose.asMatrix();
         m0T.setTranslate(Vec3d(m0R[3]));
         m0R[3] = Vec4d(0,0,0,1);
+        Vec3d pW = M1 - bone.pose.pos();
+        mW.setTranslate(pW);
+        mWi.setTranslate(-pW);
 
-        m0T.mult(m);
+        m0T.mult(mW);
+        m0T.mult(mM);
+        m0T.mult(mWi);
         m0T.mult(m0R);
         bone.pose = Pose(m0T);
-
-
-        /*cout << "set bone " << joint1.bone2 << " " << bone.length << endl;
-        cout << " p_old: " << p_old[i-1] << " -> " << p_old[i] << endl;
-        cout << " p    : " << p[i-1] << " -> " << p[i] << endl;
-        cout << " t: " << m3[3] << endl;*/
     }
     bones[ chainedBones.back() ].pose = *pose;
 
