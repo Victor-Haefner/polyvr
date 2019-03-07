@@ -238,7 +238,9 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
         Vec3d b = p[0];
         float tol = 0.001; // 1 mm tolerance
         float difA = (p[n]-targetPos).length();
+        int k=0;
         while (difA > tol) {
+            k++; if(k>50) break;
             p[n] = targetPos;
             for (int i=n-1; i>= 0; i--) {
                 float ri = (p[i+1]-p[i]).length();
@@ -263,25 +265,31 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
         auto& joint2 = joints[jID2];
         auto& bone = bones[joint1.bone2]; // bone between joint1 and joint2
 
+        //if (i == 1) p_old[i] = Vec3d(0,1.7,0);
+        //if (i == 1) p[i] = Vec3d(-0.4,1.3,0);
+
         Vec3d M1 = (p_old[i] + p_old[i-1])*0.5;
         Vec3d M2 = (p[i] + p[i-1])*0.5;
         Vec3d D1 = p_old[i] - p_old[i-1];
         Vec3d D2 = p[i] - p[i-1];
         Vec3d a = D1.cross(D2);
-
-        float A = -asin(a.length()/D1.length()/D2.length());
-        a.normalize();
         //float A = acos(D1.dot(D2)/D1.squareLength());
+        float A = asin(a.length()/D1.squareLength());
+        a.normalize();
 
         Matrix4d m1, m2, m3;
         m1.setTranslate(M2-M1);
         m2.setRotate(Quaterniond(a,A));
         m3 = bone.pose.asMatrix();
-        m3.multLeft(m1);
-        m3.mult(m2);
+        Vec3d p3 = Vec3d(m1[3]) + Vec3d(m3[3]);
+        m3[3] = Vec4d(0,0,0,1);
+        m3.multLeft(m2);
+        m3.setTranslate(p3);
         bone.pose = Pose(m3);
 
         cout << "set bone " << joint1.bone2 << " " << bone.length << endl;
+        cout << " p_old: " << p_old[i-1] << " -> " << p_old[i] << endl;
+        cout << " p    : " << p[i-1] << " -> " << p[i] << endl;
         cout << " t: " << m3[3] << endl;
     }
     bones[ chainedBones.back() ].pose = *pose;
