@@ -225,6 +225,24 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
     map<int, Vec3d> jointPositionsOld;
 
     map<string, EEData> EEDataMap;
+    map<int, EEData> SystemDataMap;
+
+    auto getJointSystems = [&]() {
+        for (auto& b : bones) {
+            auto joints = armature->getConnectedEdges(armature->getNode(b.first));
+            if (joints.size() <= 2) continue;
+            for (auto j : joints) SystemDataMap[b.first].joints.push_back(j.ID);
+            SystemDataMap[b.first].joints.push_back(joints[0].ID); // close cycle
+            SystemDataMap[b.first].chainedBones = { b.first };
+
+            for (int i=1; i<SystemDataMap[b.first].joints.size(); i++) {
+                int jID1 = SystemDataMap[b.first].joints[i-1];
+                int jID2 = SystemDataMap[b.first].joints[i];
+                float d = (jointPositions[jID1] - jointPositions[jID2]).length();
+                SystemDataMap[b.first].d.push_back( d );
+            }
+        }
+    };
 
     auto updateBones = [&](EEData& data) {
         cout << "updateBones" << endl;
@@ -248,56 +266,52 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
         }
     };
 
+    auto doBackAndForth = [&](EEData& data) {
+        vector<int>& joints = data.joints;
+        int n = joints.size()-1;
+
+        Vec3d start = jointPositions[joints[0]];
+        for (int i=n-1; i>= 0; i--) {
+            float ri = (jointPositions[joints[i+1]]-jointPositions[joints[i]]).length();
+            float li = data.d[i]/ri;
+            jointPositions[joints[i]] = jointPositions[joints[i+1]]*(1-li) + jointPositions[joints[i]]*li;
+        }
+        jointPositions[joints[0]] = start;
+        for (int i=0; i<n; i++) {
+            float ri = (jointPositions[joints[i+1]]-jointPositions[joints[i]]).length();
+            float li = data.d[i]/ri;
+            jointPositions[joints[i+1]] = jointPositions[joints[i]]*(1-li) + jointPositions[joints[i+1]]*li;
+        }
+    };
+
     auto applyFABRIK = [&](EEData& data, bool useTarget) {
         auto targetPos = data.targetPos;
         //if (!useTarget) targetPos = data.p.back();
         float tol = 0.001; // 1 mm tolerance
 
         vector<int>& joints = data.joints;
-        vector<float>& jointDistances1 = data.d;
-
-        EEData& data2 = EEDataMap["handRight"];
-        vector<int>& joints2 = data2.joints;
-        vector<float>& jointDistances2 = data2.d;
+        vector<float>& distances = data.d;
 
         // basic FABRIK algorithm
-        int n = jointDistances1.size();
-        int n2 = jointDistances2.size();
         float Dtarget = (targetPos - jointPositions[joints[0]]).length();
-        if (Dtarget > sum(jointDistances1)) { // position unreachable
-            for (int i=0; i<n; i++) {
+        if (Dtarget > sum(distances)) { // position unreachable
+            for (int i=0; i<distances.size(); i++) {
                 float ri = (targetPos-jointPositions[joints[i]]).length();
-                float li = jointDistances1[i]/ri;
+                float li = distances[i]/ri;
                 jointPositions[joints[i+1]] = jointPositions[joints[i]]*(1-li) + targetPos*li;
             }
         } else { // position reachable
             Vec3d rootJointStart = jointPositions[joints[0]];
-            float difA = (jointPositions[joints[n]]-targetPos).length();
+            float difA = (jointPositions[joints.back()]-targetPos).length();
             int k=0;
-            cout << "FABRIK loop" << endl;
             while (difA > tol) {
                 k++; if(k>50) break;
-                jointPositions[joints[n]] = targetPos;
-                for (int i=n-1; i>= 0; i--) {
-                    float ri = (jointPositions[joints[i+1]]-jointPositions[joints[i]]).length();
-                    float li = jointDistances1[i]/ri;
-                    jointPositions[joints[i]] = jointPositions[joints[i+1]]*(1-li) + jointPositions[joints[i]]*li;
-                }
-                jointPositions[joints[0]] = rootJointStart;
-                for (int i=0; i<n; i++) {
-                    float ri = (jointPositions[joints[i+1]]-jointPositions[joints[i]]).length();
-                    float li = jointDistances1[i]/ri;
-                    jointPositions[joints[i+1]] = jointPositions[joints[i]]*(1-li) + jointPositions[joints[i+1]]*li;
-                }
-                difA = (jointPositions[joints[n]]-targetPos).length();
+                jointPositions[joints.back()] = targetPos;
+                doBackAndForth(data);
+                difA = (jointPositions[joints.back()]-targetPos).length();
 
-                // check second chain!
-                for (int i=0; i<n2; i++) {
-                    float ri = (jointPositions[joints2[i+1]]-jointPositions[joints2[i]]).length();
-                    float li = jointDistances2[i]/ri;
-                    jointPositions[joints2[i+1]] = jointPositions[joints2[i]]*(1-li) + jointPositions[joints2[i+1]]*li;
-                    cout << " p2 i " << i << "   " << joints2[i+1] << "    " << jointPositions[joints2[i+1]] << endl;
-                }
+                for (auto& s : SystemDataMap) doBackAndForth(s.second);
+                for (auto e : EEDataMap) if (e.first != endEffector) doBackAndForth(e.second);
             }
         }
     };
@@ -321,6 +335,8 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
         auto& joint = joints[ EEDataMap[e.first].joints.back() ];
         EEDataMap[e.first].targetPos = pose->transform( joint.constraint->getReferenceB()->pos() );
     }
+
+    getJointSystems();
 
     applyFABRIK(EEDataMap[endEffector], true);
     //for (auto e : endEffectors) if (e.first != endEffector) applyFABRIK(EEDataMap[e.first], false);

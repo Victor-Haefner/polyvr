@@ -78,6 +78,13 @@ vector< Graph::edge > Graph::getOutEdges(int i) {
     return res;
 }
 
+vector<Graph::edge> Graph::getConnectedEdges(node& n) {
+    vector<edge> edges;
+    for (int eID : n.inEdges) edges.push_back(getEdge(eID));
+    for (int eID : n.outEdges) edges.push_back(getEdge(eID));
+    return edges;
+}
+
 vector<Graph::edge> Graph::getPrevEdges(edge& e) {
     vector<edge> edges;
     auto& n = getNode(e.from);
