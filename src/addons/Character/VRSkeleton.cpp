@@ -189,7 +189,7 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
         return bone1.pose.transform( joint.constraint->getReferenceA()->pos() );
     };
 
-    auto getBonesChain = [&]() {
+    auto getBonesChain = [&](string endEffector) {
         int e = endEffectors[endEffector];
         VRPathFinding::Position pR(rootBone);
         VRPathFinding::Position pE(e);
@@ -212,9 +212,10 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
         return chainedJoints;
     };
 
-    auto chainedBones = getBonesChain();
+    auto chainedBones = getBonesChain(endEffector);
     auto chainedJoints = getJointsChain(chainedBones);
 
+    //auto
     vector<Vec3d> p; // joint positions
     vector<float> d; // joint distances
     for (auto jID : chainedJoints) p.push_back( getJointPosition(jID) );

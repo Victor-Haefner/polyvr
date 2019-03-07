@@ -590,6 +590,9 @@ void VRRoadNetwork::setRoadStyle(int aType) { arrowType = aType; }
 int VRRoadNetwork::getArrowStyle() { return arrowType; }
 
 void VRRoadNetwork::computeArrows() {
+    arrowTemplates.clear();
+    arrowTexture = VRTexture::create();
+
     auto w = world.lock();
     for (auto arrow : w->getOntology()->getEntities("Arrow")) {
         float t = toFloat( arrow->get("position")->value );
@@ -624,10 +627,9 @@ void VRRoadNetwork::computeArrows() {
 void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p, int type) {
     if (N == 0) return;
 
-    //if (arrowTemplates.size() > 20) { cout << "VRRoadNetwork::createArrow, Warning! arrowTexture too big!\n"; return; }
-
     if (!arrowTemplates.count(dirs)) {
-        arrowTemplates[dirs] = arrowTemplates.size();
+        int aID = arrowTemplates.size();
+        arrowTemplates[dirs] = aID;
         //cout << "VRRoadNetwork::createArrow " << dirs << "  " << N << ", ID: " << arrowTemplates[dirs] << endl;
 
         VRTextureGenerator tg;
