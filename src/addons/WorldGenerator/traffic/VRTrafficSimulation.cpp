@@ -340,6 +340,7 @@ void VRTrafficSimulation::addVehicleTransform(int type) { //VRObjectPtr m, map<s
     vehicleTransformPool[tID] = vtf;
     vehicleTransformPool[tID].setupSG(models[vtf.type]->duplicate(), lightMaterials);
     addChild(vehicleTransformPool[tID].t);
+    vehicleTransformPool[tID].t->setVisible(false);;
 }
 
 void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
@@ -1395,27 +1396,28 @@ void VRTrafficSimulation::updateSimulation() {
 
     auto updateTransforms = [&]() {
         sort(vehiclesDistanceToUsers2.begin(),vehiclesDistanceToUsers2.end());
+        /*if (vehiclesDistanceToUsers2.size() > 0) {
+            for (auto e : vehiclesDistanceToUsers2) cout << e.first << "-" << e.second << " ";
+            cout << endl;
+        }*/ ///DEBUG
         if (vehicleTransformPool.size() < maxTransformUnits){
             addVehicleTransform(1);
         }
 
         int n = 0;
-        for (auto& vtfD : vehicleTransformPool){
-            auto& vtf = vtfD.second;
-            //if (vtf.vID < 0) continue;
+        for (auto& vtfP : vehicleTransformPool){
+            auto& vtf = vtfP.second;
+            if (vtf.isUser) { continue; }
+
             if (n >= vehiclesDistanceToUsers2.size()) {
-                if (vtf.vID >= 0) { auto& v2 = vehicles[vtf.vID]; if (!v2.isUser) { vtf.hide(); } }
+                if (!vtf.isUser) vtf.t->setVisible(false);
                 n++;
                 continue;
             }
             auto& v = vehicles[vehiclesDistanceToUsers2[n].second];
-            if (vtf.vID >= 0) { auto& v2 = vehicles[vtf.vID]; if (v2.isUser) { n++; continue; } }
-            if (v.isUser) continue;
-            //if (!vtf.t) { cout << "AREGH1" << endl; continue; }
+            if (!vtf.t) { cout << "VRTrafficSimulation::updateSimulation no transform" << endl; continue; }
             vtf.t->setMatrix(v.simPose2.asMatrix());
-            vtf.t->setVisible(v.vrwVisible);
-            if (  v.vrwVisible ) vtf.show();
-            if ( !v.vrwVisible ) vtf.hide();
+            vtf.t->setVisible(true);
 
             for (auto i : v.signaling) vtf.signalLights(i, lightMaterials);
             v.signaling.clear();
@@ -1507,9 +1509,10 @@ void VRTrafficSimulation::addUser(VRTransformPtr t) {
     tID++;
     numTransformUnits++;
     vtf.t = t;
+    vtf.vID = nID;
+    vtf.isUser = true;
     userTransformsIDs[nID] = tID;
     vehicleTransformPool[tID] = vtf;
-    vehicleTransformPool[tID].vID = nID;
     //users[users.size()-1].t = t;
     //userCarDyns.push_back(userCar);
     cout << "VRTrafficSimulation::addUser " << nID << endl;

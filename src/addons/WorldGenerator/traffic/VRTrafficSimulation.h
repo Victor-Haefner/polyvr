@@ -145,6 +145,7 @@ class VRTrafficSimulation : public VRObject {
             int vtfID = -1;
             int vID = -1;
             int type;
+            bool isUser;
             VRTransformPtr t;
             VRObjectPtr mesh;
             vector<VRGeometryPtr> turnsignalsBL;
