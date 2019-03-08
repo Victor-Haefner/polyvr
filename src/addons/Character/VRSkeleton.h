@@ -34,6 +34,7 @@ class VRSkeleton : public VRGeometry {
         };
 
         struct Joint {
+            Vec3d pos;
             int bone1;
             int bone2;
             VRConstraintPtr constraint;
@@ -46,6 +47,8 @@ class VRSkeleton : public VRGeometry {
         map<string, int> endEffectors;
 
         void initMaterial(); // skeleton visualisation
+        void updateJointPositions();
+        vector<int> getBoneJoints(int bone);
 
     public:
         VRSkeleton();

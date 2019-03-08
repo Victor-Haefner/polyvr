@@ -177,14 +177,23 @@ void VRSkeleton::setupSimpleHumanoid() {
     setRootBone(abdomen);
 }
 
-map<int, Vec3d> VRSkeleton::getJointsPositions() {
-    auto getJointPosition = [&](auto& joint) {
-        auto& bone1 = bones[joint.bone1];
-        return bone1.pose.transform( joint.constraint->getReferenceA()->pos() );
-    };
+void VRSkeleton::updateJointPositions() {
+    for (auto& j : joints) {
+        auto& bone1 = bones[j.second.bone1];
+        j.second.pos = bone1.pose.transform( j.second.constraint->getReferenceA()->pos() );
+    }
+};
 
+map<int, Vec3d> VRSkeleton::getJointsPositions() {
     map<int, Vec3d> res;
-    for (auto j : joints) res[j.first] = getJointPosition(j.second);
+    for (auto j : joints) res[j.first] = j.second.pos;
+    return res;
+}
+
+vector<int> VRSkeleton::getBoneJoints(int bone) {
+    vector<int> res;
+    auto edges = armature->getConnectedEdges( armature->getNode(bone) );
+    for (auto e : edges) res.push_back(e.ID);
     return res;
 }
 
@@ -194,8 +203,6 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
         for (auto f : v) r += f;
         return r;
     };
-
-
 
     auto getBonesChain = [&](string endEffector) {
         int e = endEffectors[endEffector];
@@ -228,6 +235,7 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
         float Dtarget;
     };
 
+    updateJointPositions();
     map<int, Vec3d> jointPositions = getJointsPositions();
     map<int, Vec3d> jointPositionsOld = jointPositions;
 
@@ -236,17 +244,18 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
 
     auto getJointSystems = [&]() {
         for (auto& b : bones) {
-            auto joints = armature->getConnectedEdges(armature->getNode(b.first));
+            auto& data = SystemDataMap[b.first];
+            auto joints = getBoneJoints(b.first);
             if (joints.size() <= 2) continue;
-            for (auto j : joints) SystemDataMap[b.first].joints.push_back(j.ID);
-            SystemDataMap[b.first].joints.push_back(joints[0].ID); // close cycle
-            SystemDataMap[b.first].chainedBones = { b.first };
+            for (auto j : joints) data.joints.push_back(j);
+            data.joints.push_back(joints[0]); // close cycle
+            data.chainedBones = { b.first };
 
-            for (int i=1; i<SystemDataMap[b.first].joints.size(); i++) {
-                int jID1 = SystemDataMap[b.first].joints[i-1];
-                int jID2 = SystemDataMap[b.first].joints[i];
+            for (int i=1; i<data.joints.size(); i++) {
+                int jID1 = data.joints[i-1];
+                int jID2 = data.joints[i];
                 float d = (jointPositions[jID1] - jointPositions[jID2]).length();
-                SystemDataMap[b.first].d.push_back( d );
+                data.d.push_back( d );
             }
         }
     };
