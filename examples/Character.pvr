@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0 1 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-0.264502 1.89759 -1.31928" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0 1 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.254469 2.45424 -0.660721" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <constraint persistency="666"/>
           </Object>
@@ -43,6 +43,25 @@
 	#a.start()
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="proto" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	from VR.Math import Vec3
+	
+	if hasattr(VR, 'joints'): VR.joints.destroy()
+	VR.joints = VR.Geometry('joints', 'light')
+	
+	m = VR.Material('mat')
+	m.setPointSize(15)
+	m.setLit(0)
+	VR.joints.setMaterial(m)
+	
+	skeleton = VR.character.getSkeleton()	
+	for i,p in skeleton.getJointsPositions().items():
+		VR.joints.addVertex(p)
+		VR.joints.addPoint()
+</core>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>

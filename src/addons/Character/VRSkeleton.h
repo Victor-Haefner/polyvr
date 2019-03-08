@@ -58,6 +58,8 @@ class VRSkeleton : public VRGeometry {
         void setEndEffector(string label, int bone);
         void setRootBone(int bone);
 
+        map<int, Vec3d> getJointsPositions();
+
         void clear();
         void setupSimpleHumanoid();
 

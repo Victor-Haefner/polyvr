@@ -201,6 +201,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyAdjacencyGraph>("AdjacencyGraph", pModVR);
     sm->registerModule<VRPyMechanism>("Mechanism", pModVR);
     sm->registerModule<VRPyNumberingEngine>("NumberingEngine", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPySkeleton>("Skeleton", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyCharacter>("Character", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTree>("Tree", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyNature>("Nature", pModVR, VRPyObject::typeRef);

@@ -12,13 +12,16 @@ PyMethodDef VRPyBehavior::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+typedef map<int,Vec3d> vectorMap;
+
 PyMethodDef VRPySkeleton::methods[] = {
+    {"getJointsPositions", PyWrap( Skeleton, getJointsPositions, "Get all skeleton joints positions", vectorMap ) },
     {NULL}  /* Sentinel */
 };
 
-
 PyMethodDef VRPyCharacter::methods[] = {
     {"setSkeleton", PyWrap( Character, setSkeleton, "Set the skeleton", void, VRSkeletonPtr ) },
+    {"getSkeleton", PyWrap( Character, getSkeleton, "Get the skeleton", VRSkeletonPtr ) },
     //{"setSkin", PyWrap( Character, setSkin, "Set the skin geometry", void, string, bool ) },
     {"addBehavior", PyWrap( Character, addBehavior, "Add a behavior pattern", void, VRBehaviorPtr ) },
     //{"triggerBehavior", PyWrap( Character, triggerBehavior, "Trigger a certain behavior", void, string ) },
