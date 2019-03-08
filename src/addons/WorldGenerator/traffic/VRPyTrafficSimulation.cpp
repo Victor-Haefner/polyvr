@@ -12,6 +12,8 @@ PyMethodDef VRPyTrafficSimulation::methods[] = {
     {"addVehicleModel", PyWrap( TrafficSimulation, addVehicleModel, "Set vehicle geometry", int, VRObjectPtr ) },
     {"addUser", PyWrap( TrafficSimulation, addUser, "Set vehicle geometry", void, VRTransformPtr ) },
     {"getUserCollisionState", PyWrap( TrafficSimulation, getUserCollisionState, "getUserCollisionState: int input = userID", bool, int ) },
+    {"saveSim", PyWrap( TrafficSimulation, saveSim, "saves Simulation as file", void, string ) },
+    {"loadSim", PyWrap( TrafficSimulation, loadSim, "loads Simulation from file", void, string ) },
     ///Diagnostics
     {"getUser", PyWrap( TrafficSimulation, getUser, "Get first user vehicle geometry", VRTransformPtr ) },
     {"toggleSim", PyWrap( TrafficSimulation, toggleSim, "toggleSim - pause/resume", void, void ) },

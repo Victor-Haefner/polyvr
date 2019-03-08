@@ -45,12 +45,17 @@ template<> string typeName(const OSG::VRTrafficSimulation& t) { return "TrafficS
 
 VRTrafficSimulation::Vehicle::Vehicle(Graph::position p, int type) : pos(p), type(type) {
     setDefaults();
+    storeSettings();
     vehiclesight[INFRONT] = -1.0;
     vehiclesight[FRONTLEFT] = -1.0;
     vehiclesight[FRONTRIGHT] = -1.0;
     vehiclesight[BEHINDLEFT] = -1.0;
     vehiclesight[BEHINDRIGHT] = -1.0;
     vehiclesight[BEHIND] = -1.0;
+}
+
+void VRTrafficSimulation::Vehicle::storeSettings() {
+    store("vID", &vID);
 }
 
 VRTrafficSimulation::Vehicle::Vehicle() {}
@@ -171,9 +176,6 @@ VRTrafficSimulation::VehicleTransform::~VehicleTransform() {}
 VRTrafficSimulation::VRTrafficSimulation() : VRObject("TrafficSimulation") {
     PLock lock(mtx);
 
-    //store("maxUnits", &maxUnits);
-    //storeMap("maxUnits", vehicles);
-
     updateCb = VRUpdateCb::create( "traffic", boost::bind(&VRTrafficSimulation::updateSimulation, this) );
     VRScene::getCurrent()->addUpdateFkt(updateCb);
 
@@ -190,6 +192,9 @@ VRTrafficSimulation::VRTrafficSimulation() : VRObject("TrafficSimulation") {
 
     roadVelocity = 50.0/3.6;
 
+    simSettings = VRProjectManager::create();
+    storeSettings();
+
     setupLightMaterial("carLightWhiteOn"  , Color3f(1,1,1), false);
     setupLightMaterial("carLightWhiteOff" , Color3f(0.5,0.5,0.5), true);
     setupLightMaterial("carLightRedOn"    , Color3f(1,0.2,0.2), false);
@@ -202,6 +207,37 @@ VRTrafficSimulation::VRTrafficSimulation() : VRObject("TrafficSimulation") {
     VRScene::getCurrent()->addTimeoutFkt(turnSignalCb, 0, 500);
 
     initiateWorker();
+}
+
+void VRTrafficSimulation::storeSettings() {
+    simSettings->setSetting("maxUnits", toString(maxUnits));
+    simSettings->setSetting("numUnits", toString(numUnits));
+    simSettings->setSetting("maxTransformUnits", toString(maxTransformUnits));
+    simSettings->setSetting("numTransformUnits", toString(numTransformUnits));
+    simSettings->setSetting("userRadius", toString(userRadius));
+    simSettings->setSetting("visibilityRadius", toString(visibilityRadius));
+    //store("nID", &nID);
+    simSettings->setSetting("globalOffset", toString(globalOffset));
+    simSettings->setSetting("killswitch1", toString(killswitch1));
+    simSettings->setSetting("killswitch2", toString(killswitch2));
+}
+
+void VRTrafficSimulation::storeVehicles() {
+    for (auto& veh : vehicles) {
+        //simSettings->addItem(veh.second.storage, "REBUILD");
+    }
+}
+
+void VRTrafficSimulation::setSettings() {
+    maxUnits = toInt(simSettings->getSetting("maxUnits", toString(maxUnits)));
+    //numUnits = simSettings->getSetting("numUnits", toString(numUnits));
+    maxTransformUnits = toInt(simSettings->getSetting("maxTransformUnits", toString(maxTransformUnits)));
+    //numTransformUnits = simSettings->getSetting("numTransformUnits", toString(numTransformUnits));
+    userRadius = toFloat(simSettings->getSetting("userRadius", toString(userRadius)));
+    visibilityRadius = toFloat(simSettings->getSetting("visibilityRadius", toString(visibilityRadius)));
+    //globalOffset = simSettings->getSetting("globalOffset", toString(globalOffset));
+    killswitch1 = toFloat(simSettings->getSetting("killswitch1", toString(killswitch1)));
+    killswitch2 = toFloat(simSettings->getSetting("killswitch2", toString(killswitch2)));
 }
 
 VRTrafficSimulation::~VRTrafficSimulation() {}
@@ -355,7 +391,6 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         v.setDefaults();
         v.simPose = roadNetwork->getPosition( Graph::position(roadID, 0.0) );
         v.pos = Graph::position(roadID, 0.0);
-        v.simVisible = true;
         v.targetVelocity = vel;
         v.currentVelocity = vel;
         v.lastLaneSwitchTS = float(getTime()*1e-6);
@@ -442,7 +477,6 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             auto& road = roads[roadID];
             //for (auto v : road.vehicles) { v.destroy(); numUnits--; }
             for (auto ID : road.vehicleIDs) {
-                vehicles[ID.first].simVisible = false;
                 vehiclePool.push_front(ID.first);
                 numUnits--;
             }
@@ -744,7 +778,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             auto p = v.simPose;
             p->setPos(p->pos() - globalOffset);
             auto simpleDis = (pose->pos() - p->pos()).length();
-            if (simpleDis < 300) {
+            if (simpleDis < visibilityRadius) {
                 pair<float,int> disUser = make_pair(simpleDis, vehicle.vID);
                 vehiclesDistanceToUsers.push_back(disUser);
             }
@@ -763,10 +797,6 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             int farP = relativePosition(vehicle.vID, pose, p, diss, vehicle.lastMove);
             setSight(farP,simpleDis,v.vID);
         }
-        if (disDis < visibilityRadius) {
-            vehicle.simVisible = true;
-        }
-        else vehicle.simVisible = false;
 
         //========================
 
@@ -1272,7 +1302,6 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                     vehicle.setDefaults();
                     vehiclePool.push_front(v.first);
                     vehicle.signaling.push_back(0);
-                    vehicle.simVisible = false;
                     numUnits--;
                 }
                 else {
@@ -1305,7 +1334,6 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         for (auto& u : vehicles) {
             if (u.second.isUser) continue;
             if (u.second.simPose) u.second.simPose2 = *u.second.simPose;
-            u.second.vrwVisible = u.second.simVisible;
             u.second.signalingVT = u.second.signaling;
         }
         vehiclesDistanceToUsers2 = vehiclesDistanceToUsers;
@@ -1418,10 +1446,20 @@ void VRTrafficSimulation::updateTurnSignal() {
     lightMaterials["carLightOrangeBlink"]->setLit(l);
 }
 
+void VRTrafficSimulation::saveSim(string path) {
+    storeSettings();
+    storeVehicles();
+    simSettings->save(path);
+}
+
+void VRTrafficSimulation::loadSim(string path) {
+    simSettings->load(path);
+    setSettings();
+}
+
 VRTransformPtr VRTrafficSimulation::getUser() { return vehicleTransformPool[userTransformsIDs[users[0].vID]].t; }
 
 void VRTrafficSimulation::addUser(VRTransformPtr t) {
-
     PLock lock(mtx);
 
     auto v = Vehicle( Graph::position(0, 0.0), 1 );
@@ -1440,7 +1478,6 @@ void VRTrafficSimulation::addUser(VRTransformPtr t) {
     userTransformsIDs[nID] = tID;
     vehicleTransformPool[tID] = vtf;
     //users[users.size()-1].t = t;
-    //userCarDyns.push_back(userCar);
     cout << "VRTrafficSimulation::addUser " << nID << endl;
 }
 
@@ -2086,7 +2123,6 @@ void VRTrafficSimulation::runVehicleDiagnostics(){
         velInfo += toString(v.second.currentVelocity * 3.6) + " ";
         tarVelInfo += toString(v.second.targetVelocity * 3.6) + " ";
         maxAccel += toString(v.second.maxAcceleration) + " ";
-        if (v.second.vrwVisible) vis ++;
         n1++;
     }
 
@@ -2096,7 +2132,7 @@ void VRTrafficSimulation::runVehicleDiagnostics(){
     returnInfo += nl + fit(n1) + "--" + velInfo;
     returnInfo += nl + fit(n1) + "--" + tarVelInfo;
     returnInfo += nl + fit(n1) + "--" + maxAccel;
-    returnInfo += nl + fit(vis) + "-- visible";
+    //returnInfo += nl + fit(vis) + "-- visible";
 
     CPRINT(returnInfo);
 }

@@ -8,7 +8,7 @@
 #include "core/math/pose.h"
 #include "core/math/graph.h"
 #include "core/objects/object/VRObject.h"
-#include "core/utils/VRDoublebuffer.h"
+#include "core/tools/VRProjectManager.h"
 #include <boost/thread/recursive_mutex.hpp>
 #include "addons/Bullet/CarDynamics/CarDynamics.h"
 
@@ -32,7 +32,7 @@ class VRTrafficSimulation : public VRObject {
         };
 
     private:
-        struct Vehicle {
+        struct Vehicle : public VRObject {
             enum INTENTION {
                 STRAIGHT = 0,
                 SWITCHLEFT = 1,
@@ -51,8 +51,6 @@ class VRTrafficSimulation : public VRObject {
             float length = 4.4;
             float width = 1.7;
             bool isUser = false;
-            bool simVisible = false;
-            bool vrwVisible = false;
             bool collisionDetected;
             bool collisionDetectedMem;
             bool collisionDetectedExch;
@@ -122,6 +120,7 @@ class VRTrafficSimulation : public VRObject {
             ~Vehicle();
 
             void setDefaults();
+            void storeSettings();
         };
 
         struct VehicleTransform {
@@ -177,6 +176,7 @@ class VRTrafficSimulation : public VRObject {
         };
 
         VRRoadNetworkPtr roadNetwork;
+        VRProjectManagerPtr simSettings;
         VRThreadCbPtr worker;
 
         boost::recursive_mutex mtx; //locks main thread
@@ -192,7 +192,6 @@ class VRTrafficSimulation : public VRObject {
         vector<int> nearRoads;
         vector<int> forceSeedRoads;
         vector<Vehicle> users;
-        vector<VRCarDynamicsPtr> userCarDyns;
         vector<pair<float,int>> vehiclesDistanceToUsers;
         vector<pair<float,int>> vehiclesDistanceToUsers2;
         list<int> vehiclePool;
@@ -202,6 +201,7 @@ class VRTrafficSimulation : public VRObject {
         int maxTransformUnits = 0;
         int numTransformUnits = 0;
         float userRadius = 800; // x meter radius around users
+        float visibilityRadius = 100;
         size_t nID = -1;
         size_t tID = -1;
         float deltaT;
@@ -221,6 +221,10 @@ class VRTrafficSimulation : public VRObject {
 
         VRUpdateCbPtr updateCb;
         VRGeometryPtr flowGeo;
+
+        void storeSettings();
+        void storeVehicles();
+        void setSettings();
 
         void updateTurnSignal();
         void updateGraph();
@@ -247,7 +251,6 @@ class VRTrafficSimulation : public VRObject {
         bool laneChange = true;
         float speedMultiplier = 1.0;
         int debugOverRideSeedRoad = -1;
-        float visibilityRadius = 100;
         map<int,bool> debuggerCars;
 
     public:
@@ -274,6 +277,9 @@ class VRTrafficSimulation : public VRObject {
         void setGlobalOffset(Vec3d globalOffset);
 
         void changeLane(int ID, int direction, bool forced);
+
+        void saveSim(string path);
+        void loadSim(string path);
 
         ///Diagnostics:
         void toggleSim();
