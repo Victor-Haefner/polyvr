@@ -90,16 +90,22 @@ void VRSkeleton::asGeometry(VRGeoData& data) {
 }
 
 void VRSkeleton::setupGeometry() {
-    VRGeoData geo;
-    asGeometry(geo);
-    geo.apply( ptr() );
+    auto mS = VRMaterial::get("skeleton");
+    mS->setLit(0);
+    mS->setLineWidth(2);
+    mS->setPointSize(4);
+    setMaterial(mS);
 
-    auto m = VRMaterial::get("skeleton");
-    m->setLit(0);
-    m->setDiffuse(Color3f(0,1,0));
-    m->setLineWidth(2);
-    m->setPointSize(4);
-    setMaterial(m);
+    jointsGeo = VRGeometry::create("joints");
+    addChild(jointsGeo);
+
+    auto mJ = VRMaterial::get("skeletonJoints");
+    mJ->setLit(0);
+    mJ->setPointSize(15);
+    mJ->setZOffset(1,1);
+	jointsGeo->setMaterial(mJ);
+
+	updateGeometry();
 }
 
 void VRSkeleton::updateGeometry() {
@@ -107,12 +113,12 @@ void VRSkeleton::updateGeometry() {
     asGeometry(geo);
     geo.apply( ptr() );
 
-    /*VRGeoData data(ptr());
-    auto& bones = armature->getNodes();
-    for (uint i=0; i<joints.size(); i++) {
-        auto& joint = joints[i];
-        data.setVert(i, Pnt3d(joint.box.center()) );
-    }*/
+    VRGeoData geo2;
+    for (auto j : joints) {
+        geo2.pushVert(j.second.pos);
+		geo2.pushPoint();
+    }
+    geo2.apply( jointsGeo );
 }
 
 void VRSkeleton::setupSimpleHumanoid() {
@@ -197,6 +203,8 @@ vector<int> VRSkeleton::getBoneJoints(int bone) {
     return res;
 }
 
+Vec3d& VRSkeleton::jointPos(int j) { return joints[j].pos; };
+
 void VRSkeleton::move(string endEffector, PosePtr pose) {
     auto sum = [](vector<float> v) {
         float r = 0;
@@ -236,25 +244,24 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
     };
 
     updateJointPositions();
-    map<int, Vec3d> jointPositions = getJointsPositions();
-    map<int, Vec3d> jointPositionsOld = jointPositions;
+    map<int, Vec3d> jointPositionsOld = getJointsPositions();
 
     map<string, EEData> EEDataMap;
     map<int, EEData> SystemDataMap;
 
     auto getJointSystems = [&]() {
         for (auto& b : bones) {
-            auto& data = SystemDataMap[b.first];
             auto joints = getBoneJoints(b.first);
             if (joints.size() <= 2) continue;
-            for (auto j : joints) data.joints.push_back(j);
+            auto& data = SystemDataMap[b.first];
+            data.joints = joints;
             data.joints.push_back(joints[0]); // close cycle
             data.chainedBones = { b.first };
 
             for (int i=1; i<data.joints.size(); i++) {
                 int jID1 = data.joints[i-1];
                 int jID2 = data.joints[i];
-                float d = (jointPositions[jID1] - jointPositions[jID2]).length();
+                float d = (jointPos(jID1) - jointPos(jID2)).length();
                 data.d.push_back( d );
             }
         }
@@ -268,13 +275,13 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
             int jID2 = data.joints[i];
 
             Vec3d D1 = jointPositionsOld[jID2] - jointPositionsOld[jID1];
-            Vec3d D2 = jointPositions[jID2] - jointPositions[jID1];
+            Vec3d D2 = jointPos(jID2) - jointPos(jID1);
             Vec3d pW = jointPositionsOld[jID2] - bone.pose.pos();
             cout << " joints: " << D1 << "    " << D2 << endl;
 
             Matrix4d m0, mM;
             m0 = bone.pose.asMatrix();
-            mM.setTranslate(jointPositions[jID2] - jointPositionsOld[jID2] + Vec3d(m0[3]) + pW);
+            mM.setTranslate(jointPos(jID2) - jointPositionsOld[jID2] + Vec3d(m0[3]) + pW);
             mM.setRotate(Quaterniond(D1, D2));
             m0.setTranslate(-pW);
             mM.mult(m0);
@@ -286,17 +293,17 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
         vector<int>& joints = data.joints;
         int n = joints.size()-1;
 
-        Vec3d start = jointPositions[joints[0]];
+        Vec3d start = jointPos(joints[0]);
         for (int i=n-1; i>= 0; i--) {
-            float ri = (jointPositions[joints[i+1]]-jointPositions[joints[i]]).length();
+            float ri = (jointPos(joints[i+1])-jointPos(joints[i])).length();
             float li = data.d[i]/ri;
-            jointPositions[joints[i]] = jointPositions[joints[i+1]]*(1-li) + jointPositions[joints[i]]*li;
+            jointPos(joints[i]) = jointPos(joints[i+1])*(1-li) + jointPos(joints[i])*li;
         }
-        jointPositions[joints[0]] = start;
+        jointPos(joints[0]) = start;
         for (int i=0; i<n; i++) {
-            float ri = (jointPositions[joints[i+1]]-jointPositions[joints[i]]).length();
+            float ri = (jointPos(joints[i+1])-jointPos(joints[i])).length();
             float li = data.d[i]/ri;
-            jointPositions[joints[i+1]] = jointPositions[joints[i]]*(1-li) + jointPositions[joints[i+1]]*li;
+            jointPos(joints[i+1]) = jointPos(joints[i])*(1-li) + jointPos(joints[i+1])*li;
         }
     };
 
@@ -307,21 +314,21 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
         vector<float>& distances = data.d;
 
         // basic FABRIK algorithm
-        float Dtarget = (targetPos - jointPositions[joints[0]]).length();
+        float Dtarget = (targetPos - jointPos(joints[0])).length();
         if (Dtarget > sum(distances)) { // position unreachable
             for (int i=0; i<distances.size(); i++) {
-                float ri = (targetPos-jointPositions[joints[i]]).length();
+                float ri = (targetPos-jointPos(joints[i])).length();
                 float li = distances[i]/ri;
-                jointPositions[joints[i+1]] = jointPositions[joints[i]]*(1-li) + targetPos*li;
+                jointPos(joints[i+1]) = jointPos(joints[i])*(1-li) + targetPos*li;
             }
         } else { // position reachable
-            float difA = (jointPositions[joints.back()]-targetPos).length();
+            float difA = (jointPos(joints.back())-targetPos).length();
             int k=0;
             while (difA > tol) {
                 k++; if(k>50) break;
-                jointPositions[joints.back()] = targetPos;
+                jointPos(joints.back()) = targetPos;
                 doBackAndForth(data);
-                difA = (jointPositions[joints.back()]-targetPos).length();
+                difA = (jointPos(joints.back())-targetPos).length();
             }
         }
     };
@@ -335,7 +342,7 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
             for (int i=1; i<EEDataMap[e.first].joints.size(); i++) {
                 int jID1 = EEDataMap[e.first].joints[i-1];
                 int jID2 = EEDataMap[e.first].joints[i];
-                float d = (jointPositions[jID1] - jointPositions[jID2]).length();
+                float d = (jointPos(jID1) - jointPos(jID2)).length();
                 EEDataMap[e.first].d.push_back( d );
             }
         }

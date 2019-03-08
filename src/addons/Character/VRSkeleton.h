@@ -46,9 +46,12 @@ class VRSkeleton : public VRGeometry {
         int rootBone = -1;
         map<string, int> endEffectors;
 
+        VRGeometryPtr jointsGeo;
+
         void initMaterial(); // skeleton visualisation
         void updateJointPositions();
         vector<int> getBoneJoints(int bone);
+        Vec3d& jointPos(int j);
 
     public:
         VRSkeleton();
