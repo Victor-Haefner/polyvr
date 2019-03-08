@@ -686,8 +686,7 @@ void VRRoadNetwork::createArrow(Vec4i dirs, int N, const Pose& p, int type) {
         asphaltArrow->setShaderParameter("NArrowTex", (int)arrowTemplates.size());
     }
 
-    Color4f color((arrowTemplates[dirs]-1)*0.001, 0, 0, 0);
-    //Color4f color(arrowTemplates[dirs]*0.001, 0, 0, 0);
+    Color4f color(arrowTemplates[dirs]*0.001, 0, 0, 0);
 
     VRGeoData gdata;
     gdata.pushQuad(Vec3d(0,0.025,0), Vec3d(0,1,0), Vec3d(0,0,1), Vec2d(2,2), true);
