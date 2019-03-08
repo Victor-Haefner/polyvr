@@ -127,7 +127,7 @@ class VRTrafficSimulation : public VRObject {
             int vtfID = -1;
             int vID = -1;
             int type;
-            bool isUser;
+            bool isUser = false;
             VRTransformPtr t;
             VRObjectPtr mesh;
             vector<VRGeometryPtr> turnsignalsBL;
@@ -144,9 +144,9 @@ class VRTrafficSimulation : public VRObject {
             void setupSG(VRObjectPtr g, map<string, VRMaterialPtr>& lightMaterials);
             void signalLights(int input, map<string, VRMaterialPtr>& lightMaterials);
             void resetLights(map<string, VRMaterialPtr>& mats);
-            void show();
+            //void show();
             void destroy();
-            void hide();
+            //void hide();
             bool operator==(const VehicleTransform& vtf);
         };
 
@@ -201,7 +201,7 @@ class VRTrafficSimulation : public VRObject {
         int maxTransformUnits = 0;
         int numTransformUnits = 0;
         float userRadius = 800; // x meter radius around users
-        float visibilityRadius = 100;
+        float visibilityRadius = 600;
         size_t nID = -1;
         size_t tID = -1;
         float deltaT;

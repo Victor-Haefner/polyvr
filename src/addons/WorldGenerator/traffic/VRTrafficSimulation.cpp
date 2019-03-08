@@ -152,17 +152,9 @@ void VRTrafficSimulation::VehicleTransform::signalLights(int input, map<string, 
     }
 }
 
-void VRTrafficSimulation::VehicleTransform::show() {
-    if (t) t->show();
-}
-
 void VRTrafficSimulation::VehicleTransform::destroy() {
     if (t) t->destroy();
     t = 0;
-}
-
-void VRTrafficSimulation::VehicleTransform::hide() {
-    if (t) t->hide();
 }
 
 bool VRTrafficSimulation::VehicleTransform::operator==(const VehicleTransform& vtf) {
@@ -1379,6 +1371,7 @@ void VRTrafficSimulation::updateSimulation() {
         }
 
         int n = 0;
+        int k = 0;
         for (auto& vtfP : vehicleTransformPool){
             auto& vtf = vtfP.second;
             vtf.resetLights(lightMaterials);
@@ -1391,12 +1384,15 @@ void VRTrafficSimulation::updateSimulation() {
             }
             auto& v = vehicles[vehiclesDistanceToUsers2[n].second];
             if (!vtf.t) { cout << "VRTrafficSimulation::updateSimulation no transform" << endl; continue; }
+            cout << vtfP.first << endl;
             vtf.t->setMatrix(v.simPose2.asMatrix());
             vtf.t->setVisible(true);
+            k++;
 
             for (auto i : v.signalingVT) vtf.signalLights(i, lightMaterials);
             n++;
         }
+        //cout << k << " vehicles moved " << vehicleTransformPool.size() << " " << vehiclesDistanceToUsers2.size() << endl;
     };
 
     auto updateUsers =[&]() {
