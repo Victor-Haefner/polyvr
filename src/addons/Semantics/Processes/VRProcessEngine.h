@@ -63,7 +63,6 @@ class VRProcessEngine {
 
         struct Actor {
             map<string, vector<Transition>> transitions; // maps state name (see VRStateMachine) to possible transitions
-            //map<Action, Message> sendToMessage; //maps send Action to sent message
             VRStateMachine<float> sm;
             Inventory inventory;
             string initialState = "";
@@ -87,8 +86,6 @@ class VRProcessEngine {
     private:
         VRProcessPtr process;
         map<int, Actor> subjects;
-        //vector<Message> processMessages;
-//        map<> subjectToTraversedPath; //traversed path for each subject
 
         VRUpdateCbPtr updateCb;
         bool running = false;

@@ -63,22 +63,14 @@ string VRProcessEngine::Actor::transitioning( float t ) {
     string stateName = state->getName();
 
     for (auto& transition : transitions[stateName]) { // check if any actions are ready to start
-        //cout << "VRProcessEngine::Actor::transitioning check preqs, actor: " << this << endl;
         if (transition.valid(&inventory)) {
             currentState = transition.nextState;
             for (auto& action : transition.actions){
                 (*action.cb)();
-                //send a new message if there is an action
                 sendMessage(&action.message);
-                //Message* m = new Message(action.message.message, action.message.sender, action.message.receiver);
             }
             for ( auto p : transition.prerequisites){
                 inventory.remMessage(p.message);
-                //remove the message instance
-                //auto len1 = sentMessages.size();
-                //sentMessages.erase(std::remove(sentMessages.begin(), sentMessages.end(), &p.message), sentMessages.end());
-                //auto len2 = sentMessages.size();
-                //if (len1 != len2) cout << "Message removed! " << this->label << " sentMessages: " << this->sentMessages.size() << endl;
             }
             traversedPath.push_back(transition.node);
             return transition.nextState->getLabel();
