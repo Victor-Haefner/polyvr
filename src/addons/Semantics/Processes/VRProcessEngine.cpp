@@ -10,7 +10,7 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRProcessEnginePtr& o) { return "ProcessEngine"; }
+template<> string typeName(const VRProcessEngine& o) { return "ProcessEngine"; }
 
 // ----------- process engine prerequisites --------------
 

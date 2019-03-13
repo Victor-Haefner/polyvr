@@ -2,8 +2,10 @@
 #include "core/utils/toString.h"
 
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRMeasure& t) { return "Measure"; }
+
 
 VRMeasure::VRMeasure(string name) : VRAnalyticGeometry(name) {
     setLabelParams(0.05, true, true);
@@ -63,4 +65,3 @@ void VRMeasure::update() {
     setAngle (8, p3, -v1, v2, g,y, "k: " + toString( a3, 4 ) + " deg");
 }
 
-OSG_END_NAMESPACE

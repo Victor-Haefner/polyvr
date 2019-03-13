@@ -25,9 +25,9 @@
 
 #define GLSL(shader) #shader
 
-template<> string typeName(const OSG::VRTreePtr& t) { return "Tree"; }
-
 using namespace OSG;
+
+template<> string typeName(const VRTree& t) { return "Tree"; }
 
 struct OSG::seg_params : public VRStorage {
     int nodes = 1; //number of iterations

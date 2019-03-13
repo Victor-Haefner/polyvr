@@ -3,10 +3,13 @@
 #include "core/math/path.h"
 #include "core/objects/VRAnimation.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/toString.h"
 #include "core/tools/VRAnalyticGeometry.h"
 #include <boost/bind.hpp>
 
 using namespace OSG;
+
+template<> string typeName(const VRRobotArm& m) { return "RobotArm"; }
 
 VRRobotArm::VRRobotArm() {
     angles.resize(N,0);

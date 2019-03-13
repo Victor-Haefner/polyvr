@@ -10,8 +10,9 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 
-using namespace std;
 using namespace OSG;
+
+template<> string typeName(const VRReasoner& o) { return "Reasoner"; }
 
 bool VRReasoner::verbGui = true;
 bool VRReasoner::verbConsole = true;

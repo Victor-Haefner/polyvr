@@ -11,8 +11,10 @@
 #include <OpenSG/OSGLine.h>
 #include <boost/bind.hpp>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRJointTool& t) { return "JointTool"; }
+
 
 VRJointTool::VRJointTool(string name) : VRGeometry(name) {
     type = "JointTool";
@@ -182,4 +184,4 @@ Interaction:
 
 **/
 
-OSG_END_NAMESPACE
+

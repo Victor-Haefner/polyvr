@@ -23,10 +23,10 @@
 #include <OpenSG/OSGDepthChunk.h>
 #include <OpenSG/OSGSimpleSHLChunk.h>
 
-template<> string typeName(const OSG::VRTransformPtr& t) { return "Transform"; }
+using namespace OSG;
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+template<> string typeName(const VRTransform& t) { return "Transform"; }
+
 
 VRTransform::VRTransform(string name, bool doOpt) : VRObject(name) {
     doOptimizations = doOpt;
@@ -66,6 +66,7 @@ VRObjectPtr VRTransform::copy(vector<VRObjectPtr> children) {
     return t;
 }
 
+namespace OSG {
 bool MatrixLookDir(Matrix4d &result, Pnt3d from, Vec3d dir, Vec3d up) {
     dir.normalize();
     Vec3d right = up.cross(dir);
@@ -90,6 +91,7 @@ bool isIdentity(const Matrix4d& m) {
     static bool mSet = false;
     if (!mSet) { mSet = true; r.setIdentity(); }
     return (m == r);
+}
 }
 
 void VRTransform::computeMatrix4d() {
@@ -155,6 +157,42 @@ void VRTransform::printInformation() { Matrix4d m; getMatrix(m); cout << " pos "
 uint VRTransform::getLastChange() { return change_time_stamp; }
 //bool VRTransform::changedNow() { return (change_time_stamp >= VRGlobals::get()->CURRENT_FRAME-1); }
 bool VRTransform::changedNow() { return checkWorldChange(); }
+
+bool VRTransform::changedSince(uint& frame) {
+    uint f = frame;
+    frame = VRGlobals::CURRENT_FRAME;
+    if (change_time_stamp >= f) return true;
+    if (wchange_time_stamp >= f) return true;
+    for (auto a : getAncestry()) {
+        auto t = dynamic_pointer_cast<VRTransform>(a);
+        if (t && t->change_time_stamp > f) return true;
+    }
+    return false;
+}
+
+bool VRTransform::changedSince2(uint f) {
+    if (change_time_stamp >= f) return true;
+    if (wchange_time_stamp >= f) return true;
+    for (auto a : getAncestry()) {
+        auto t = dynamic_pointer_cast<VRTransform>(a);
+        if (t && t->change_time_stamp > f) return true;
+    }
+    return false;
+}
+
+bool VRTransform::checkWorldChange() {
+    if (frame == 0) { frame = 1; return true; }
+    if (VRGlobals::CURRENT_FRAME == change_time_stamp) return true;
+    if (VRGlobals::CURRENT_FRAME == wchange_time_stamp) return true;
+    if (hasGraphChanged()) return true;
+
+    for (auto a : getAncestry()) {
+        auto t = dynamic_pointer_cast<VRTransform>(a);
+        if (t && t->change_time_stamp > wchange_time_stamp) { wchange_time_stamp = VRGlobals::CURRENT_FRAME; return true; }
+    }
+
+    return false;
+}
 
 void VRTransform::initCoords() {
     if (coords != 0) return;
@@ -222,28 +260,6 @@ void VRTransform::setMatrixTo(Matrix4d m, VRObjectPtr obj) {
     Matrix4d m1 = ent->getWorldMatrix();
     m1.mult(m);
     setWorldMatrix(m1);
-}
-
-bool VRTransform::checkWorldChange() {
-    if (frame == 0) { frame = 1; return true; }
-    if (VRGlobals::CURRENT_FRAME == change_time_stamp) return true;
-    if (VRGlobals::CURRENT_FRAME == wchange_time_stamp) return true;
-    if (hasGraphChanged()) return true;
-
-    VRObjectPtr obj = ptr();
-    VRTransformPtr ent;
-    while(obj) {
-        if (obj->hasTag("transform")) {
-            ent = static_pointer_cast<VRTransform>(obj);
-            if (ent->change_time_stamp > wchange_time_stamp) {
-                wchange_time_stamp = VRGlobals::CURRENT_FRAME;
-                return true;
-            }
-        }
-        obj = obj->getParent();
-    }
-
-    return false;
 }
 
 Vec3d VRTransform::getRelativePosition(VRObjectPtr o, bool parentOnly) {
@@ -604,7 +620,7 @@ void VRTransform::move(float d) {
     translate(Vec3d(dv*d));
 }
 
-void VRTransform::drag(VRTransformPtr new_parent) {
+void VRTransform::drag(VRTransformPtr new_parent, VRIntersection i) {
     if (held) return;
     held = true;
     if (auto p = getParent()) old_parent = p;
@@ -621,7 +637,24 @@ void VRTransform::drag(VRTransformPtr new_parent) {
     if (physics) {
         physics->updateTransformation( ptr() );
         physics->resetForces();
-        physics->pause(true);
+        //physics->pause(true);
+        //physics->setGravity(Vec3d(0,0,0));
+        if (!new_parent->physics) new_parent->physicalize(1,0,"Box",0.01);
+        auto c = VRConstraint::create();
+        c->free({0,1,2,3,4,5});
+        auto cs = VRConstraint::create();
+        for (int i=0; i<3; i++) {
+            cs->setMinMax(i,1000,0.01); // stiffness, dampness
+            cs->setMinMax(i+3,-1,0);
+        }
+
+        Pnt3d P = i.point; // intersection point in world coords
+        m.invert();
+        m.mult(P, P);
+
+        c->setReferenceA(Pose::create(Vec3d(P)));
+        c->setReferenceB(Pose::create(getFrom()));
+        physics->setConstraint(new_parent->physics, c, cs);
     }
     reg_change();
     updateChange();
@@ -634,6 +667,7 @@ void VRTransform::drop() {
     Matrix4d wm, m1, m2;
     getWorldMatrix(wm);
     m1 = getMatrix();
+    auto dragParent = dynamic_pointer_cast<VRTransform>( getParent() );
     if (auto p = old_parent.lock()) switchParent(p, old_child_id);
     setWorldMatrix(wm);
     recUndo(&VRTransform::setMatrix, ptr(), old_transformation, getMatrix());
@@ -641,7 +675,9 @@ void VRTransform::drop() {
     if (physics) {
         physics->updateTransformation( ptr() );
         physics->resetForces();
-        physics->pause(false);
+        //physics->pause(false);
+        //physics->setGravity(Vec3d(0,-10,0));
+        if (dragParent && dragParent->physics) physics->deleteConstraints(dragParent->physics);
     }
     reg_change();
     updateChange();
@@ -764,8 +800,9 @@ void VRTransform::apply_constraints(bool force) { // TODO: check efficiency
     }
 }
 
+void VRTransform::setNoBltFlag() { noBlt = true; }
+
 void VRTransform::updateFromBullet() {
-    if (held) return;
     Matrix4d m = physics->getTransformation();
     setWorldMatrix(m);
     auto vs = physics->getVisualShape();
@@ -773,12 +810,10 @@ void VRTransform::updateFromBullet() {
     setNoBltFlag();
 }
 
-void VRTransform::setNoBltFlag() { noBlt = true; }
-
 void VRTransform::resolvePhysics() {
     if (!physics) return;
     if (physics->isGhost()) { updatePhysics(); return; }
-    if (physics->isDynamic() && !held) { updateFromBullet(); return; }
+    if (physics->isDynamic()) { updateFromBullet(); return; }
     physics->updateTransformation( ptr() );
 }
 
@@ -843,6 +878,7 @@ void VRTransform::stopAnimation() {
 list<VRTransformWeakPtr > VRTransform::dynamicObjects = list<VRTransformWeakPtr >();
 list<VRTransformWeakPtr > VRTransform::changedObjects = list<VRTransformWeakPtr >();
 
+namespace OSG {
 Matrix4f toMatrix4f(Matrix4d md) {
     Matrix4f mf;
     for (int i=0; i<4; i++) for (int j=0; j<4; j++) mf[i][j] = md[i][j];
@@ -853,6 +889,7 @@ Matrix4d toMatrix4d(Matrix4f mf) {
     Matrix4d md;
     for (int i=0; i<4; i++) for (int j=0; j<4; j++) md[i][j] = mf[i][j];
     return md;
+}
 }
 
 void VRTransform::applyTransformation(PosePtr po) {
@@ -959,4 +996,3 @@ Vec3d VRTransform::getForce() { if (auto p = getPhysics()) return p->getForce();
 Vec3d VRTransform::getTorque() { if (auto p = getPhysics()) return p->getTorque(); else return Vec3d(); }
 
 
-OSG_END_NAMESPACE;

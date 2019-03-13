@@ -7,6 +7,8 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRFluids& o) { return "Fluids"; }
+
 VRFluids::VRFluids(string name, bool spawnParticles) : VRParticles(name, false) {
     this->collideWithSelf = false;
     if (spawnParticles) {

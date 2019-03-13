@@ -16,7 +16,7 @@ sudo apt-get install liblapacke-dev
 
 using namespace OSG;
 
-template<> string typeName(const VRSelectionPtr& t) { return "Selection"; }
+template<> string typeName(const VRSelection& t) { return "Selection"; }
 
 VRSelection::VRSelection() { clear(); }
 

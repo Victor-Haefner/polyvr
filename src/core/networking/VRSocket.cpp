@@ -17,8 +17,9 @@
 #include <libxml++/nodes/element.h>
 #include <boost/bind.hpp>
 
-OSG_BEGIN_NAMESPACE
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRSocket& o) { return "Socket"; }
 
 
 //mongoose server-------------------------------------------------------------
@@ -53,6 +54,7 @@ HTTP_args* HTTP_args::copy() {
     return res;
 }
 
+namespace OSG {
 void server_answer_job(HTTP_args* args) {
     if (VRLog::tag("net")) {
         stringstream ss; ss << "server_answer_job: " << args->cb << endl;
@@ -297,6 +299,7 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
 
     VRLog::log("net", "unhandled event: " + toString(ev));
 }
+}
 
 
 VRSocket::VRSocket(string name) {
@@ -354,10 +357,12 @@ void VRSocket::handle(string s) {
 }
 
 //CURL HTTP client--------------------------------------------------------------
+namespace OSG {
 size_t httpwritefkt( char *ptr, size_t size, size_t nmemb, void *userdata) {
     string* s = (string*)userdata;
     s->append(ptr, size*nmemb);
     return size*nmemb;
+}
 }
 
 void VRSocket::sendHTTPGet(string uri) {
@@ -587,4 +592,4 @@ bool VRSocket::ping(string IP, string port) {
     return ping.start(IP, port, 0);
 }
 
-OSG_END_NAMESPACE
+

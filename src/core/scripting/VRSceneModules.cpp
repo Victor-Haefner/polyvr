@@ -66,6 +66,7 @@
 #include "VRPySky.h"
 #include "VRPyScenegraphInterface.h"
 #include "VRPyOPCUA.h"
+#include "VRPyCodeCompletion.h"
 #ifndef NO_ENCRYPTION
 #include "VRPyEncryption.h"
 #endif
@@ -200,6 +201,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyAdjacencyGraph>("AdjacencyGraph", pModVR);
     sm->registerModule<VRPyMechanism>("Mechanism", pModVR);
     sm->registerModule<VRPyNumberingEngine>("NumberingEngine", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPySkeleton>("Skeleton", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyCharacter>("Character", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTree>("Tree", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyNature>("Nature", pModVR, VRPyObject::typeRef);
@@ -224,6 +226,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyConcept>("Concept", pModVR, VRPyName::typeRef);
     sm->registerModule<VRPyEntity>("Entity", pModVR, VRPyName::typeRef);
     sm->registerModule<VRPyReasoner>("Reasoner", pModVR);
+    sm->registerModule<VRPyScript>("Script", pModVR);
 
     sm->registerModule<VRPyHandGeo>("HandGeo", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyLeap>("Leap", pModVR, VRPyDevice::typeRef);

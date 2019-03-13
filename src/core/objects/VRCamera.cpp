@@ -15,10 +15,10 @@
 #include <OpenSG/OSGOrthographicCamera.h>
 #include <libxml++/nodes/element.h>
 
-template<> string typeName(const OSG::VRCameraPtr& t) { return "Camera"; }
+using namespace OSG;
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+template<> string typeName(const OSG::VRCamera& t) { return "Camera"; }
+
 
 VRMaterialPtr getCamGeoMat() {
     VRMaterialPtr mat = VRMaterial::get("cam_geo_mat");
@@ -223,4 +223,3 @@ void VRCamera::focusObject(VRObjectPtr t) {
     //cout << "VRCamera::focus " << t->getName() << " pos " << c << " size " << r << endl;
 }
 
-OSG_END_NAMESPACE;

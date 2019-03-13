@@ -61,7 +61,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         VRObjectPtr ptr();
 
         int getID();
-        string getType();
+        string getType() const;
 
         VRObjectPtr getRoot();
         string getPath();

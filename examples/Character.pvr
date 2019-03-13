@@ -2,8 +2,8 @@
 <Scene base_name="Character" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
-      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0 1 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="1.78348 2.42678 -1.78348" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="0 1 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.254469 2.45424 -0.660721" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <constraint persistency="666"/>
           </Object>
@@ -12,18 +12,56 @@
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Cameras activeCam="Default" persistency="666"/>
+  <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
     <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
+	from VR.Math import Vec3
 	
+	if hasattr(VR, 'character'): VR.character.destroy()
 	VR.character = VR.Character('john')
 	VR.character.simpleSetup()
 	
 	VR.find('light').addChild(VR.character)
+	
+	#VR.character.move('handLeft', VR.Pose([-0.1,1.2,-0.2]))
+	VR.character.move('handLeft', VR.Pose([-0.2,1.2,-0.5]))
+
+
+	def cb(t):
+		p = 4*(t-0.5)**2
+		p1 = Vec3([0.2,1.2,-0.5]) - Vec3([0.1,0,0])*p
+		p2 = Vec3([-0.2,1.2,-0.5]) + Vec3([0.1,0,0])*p
+		VR.character.move('handLeft', VR.Pose(p2))
+		#VR.character.move('handRight', VR.Pose(p1))
+	
+	a = VR.Animation('movement')
+	a.setCallback(cb)
+	a.setDuration(4)
+	#a.start()
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="proto" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	from VR.Math import Vec3
+	
+	if hasattr(VR, 'joints'): VR.joints.destroy()
+	VR.joints = VR.Geometry('joints', 'light')
+	
+	m = VR.Material('mat')
+	m.setPointSize(15)
+	m.setLit(0)
+	VR.joints.setMaterial(m)
+	
+	skeleton = VR.character.getSkeleton()	
+	for i,p in skeleton.getJointsPositions().items():
+		VR.joints.addVertex(p)
+		VR.joints.addPoint()
+</core>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>

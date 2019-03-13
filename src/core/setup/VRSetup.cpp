@@ -25,8 +25,10 @@
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGVisitSubTree.h>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRSetup& o) { return "Setup"; }
+
 
 VRSetup::VRSetup(string name) {
     setName(name);
@@ -293,4 +295,3 @@ void VRSetup::makeTestCube() {
     getRoot()->addChild(cube);
 }
 
-OSG_END_NAMESPACE;

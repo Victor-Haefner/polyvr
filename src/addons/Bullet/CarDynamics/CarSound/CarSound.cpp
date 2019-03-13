@@ -3,10 +3,13 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include "core/utils/toString.h"
 
 #define FILTER_SPECTRUM
 
 using namespace OSG;
+
+template<> string typeName(const VRCarSound& o) { return "CarSound"; }
 
 VRCarSound::VRCarSound() {
     sound = VRSound::create();

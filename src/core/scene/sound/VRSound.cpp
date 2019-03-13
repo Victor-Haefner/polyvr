@@ -1,6 +1,8 @@
 #include "VRSound.h"
 #include "VRSoundUtils.h"
 #include "core/math/path.h"
+#include "core/utils/toString.h"
+#include "core/utils/VRFunction.h"
 #include "VRSoundManager.h"
 
 #include "core/gui/VRGuiManager.h"
@@ -18,22 +20,17 @@ extern "C" {
 #include <AL/alc.h>
 #include <AL/alext.h>
 
-/*
-not compiling?
-open a terminal and type:
-sudo apt-get install libfftw3-dev
-*/
-
 #include <fstream>
 #include <fftw3.h>
 #include <map>
 #include <climits>
-//#include <complex>
 
 #define WARN(x) \
 VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
 
 using namespace OSG;
+
+template<> string typeName(const VRSound& o) { return "Sound"; }
 
 string avErrToStr(const int& e) {
     char buf[100];
@@ -76,6 +73,7 @@ void VRSound::setLoop(bool loop) { this->loop = loop; doUpdate = true; }
 void VRSound::setPitch(float pitch) { this->pitch = pitch; doUpdate = true; }
 void VRSound::setGain(float gain) { this->gain = gain; doUpdate = true; }
 void VRSound::setUser(Vec3d p, Vec3d v) { pos = p; vel = v; doUpdate = true; }
+void VRSound::setCallback(VRUpdateCbPtr cb) { callback = cb; }
 bool VRSound::isRunning() {
     recycleBuffer();
     //cout << "isRunning " << bool(al->state == AL_PLAYING) << " " << bool(al->state == AL_INITIAL) << " " << getQueuedBuffer()<< endl;
@@ -259,6 +257,9 @@ void VRSound::playFrame() {
             //cout << "  free frame" << endl;
             av_free(al->frame);
             al->state = loop ? AL_INITIAL : AL_STOPPED;
+
+            if (al->state == AL_STOPPED)
+                if (auto cb = callback.lock()) (*cb)();
             return;
         } // End of stream. Done decoding.
 

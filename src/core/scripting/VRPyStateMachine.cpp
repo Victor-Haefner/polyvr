@@ -4,6 +4,9 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRStateMachinePy& o) { return "StateMachine"; }
+template<> string typeName(const VRStateMachinePy::State& o) { return "StateMachineState"; }
+
 newPyType(VRStateMachinePy, StateMachine, New_named_ptr);
 newPyType(VRStateMachinePy::State, State, 0);
 

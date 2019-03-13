@@ -4,6 +4,8 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRUndoManager& o) { return "UndoManager"; }
+
 
 VRUndoAtom::VRUndoAtom(string name) {
     setNameSpace("UndoAtom");

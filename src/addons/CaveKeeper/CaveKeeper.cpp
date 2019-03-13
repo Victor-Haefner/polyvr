@@ -16,6 +16,9 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
 
+
+template<> string typeName(const OSG::CaveKeeper& o) { return "CaveKeeper"; }
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 

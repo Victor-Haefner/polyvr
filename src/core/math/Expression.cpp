@@ -4,6 +4,10 @@
 
 using namespace OSG;
 
+template<> string typeName(const Expression& t) { return "Expression"; }
+template<> string typeName(const MathExpression& t) { return "MathExpression"; }
+
+
 map<string, Expression::Token*> Expression::tokens = map<string, Expression::Token*>();
 
 Expression::Token::Token(string token, int priority, vector<string> types) {

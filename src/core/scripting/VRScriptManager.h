@@ -66,6 +66,8 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         string getPyVRMethodDoc(string mod, string type, string method);
 
         PyObject* getPyModule(string name);
+        PyObject* getGlobalModule();
+        PyObject* getGlobalDict();
 
         void redirectPyOutput(string pyOutput, string console);
 

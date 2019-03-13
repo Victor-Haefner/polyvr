@@ -7,6 +7,8 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRConcept& o) { return "Concept"; }
+
 map<int, VRConceptPtr> VRConcept::ConceptsByID = map<int, VRConceptPtr>();
 map<string, VRConceptPtr> VRConcept::ConceptsByName = map<string, VRConceptPtr>();
 

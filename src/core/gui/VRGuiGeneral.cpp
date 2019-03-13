@@ -18,8 +18,7 @@
 #include "core/objects/material/VRMaterial.h"
 
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
 
 // --------------------------
 // ---------Main-------------
@@ -228,4 +227,3 @@ void VRGuiGeneral::updateScene() {
 }
 
 
-OSG_END_NAMESPACE;

@@ -12,6 +12,7 @@ extern "C" {
 #include "VRSound.h"
 #include "../VRSceneManager.h"
 #include "../VRScene.h"
+#include "core/utils/VRFunction.h"
 
 #if _WIN32
 #include <al.h>
@@ -26,9 +27,11 @@ extern "C" {
 #include <boost/thread/thread.hpp>
 //#include <boost/thread.hpp>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
 
+template<> string typeName(const VRSoundManager& o) { return "SoundManager"; }
+
+namespace OSG {
 string toString(ALenum error) {
     if(error == AL_INVALID_NAME) return "Invalid name";
     if(error == AL_INVALID_ENUM) return "Invalid enum ";
@@ -36,6 +39,7 @@ string toString(ALenum error) {
     if(error == AL_INVALID_OPERATION) return "Invalid operation ";
     if(error == AL_OUT_OF_MEMORY) return "Out of memory";
     return "Unknown error " + toString(error);
+}
 }
 
 struct VRSoundContext {
@@ -73,6 +77,7 @@ struct VRSoundContext {
     }
 };
 
+namespace OSG {
 struct VRSoundChannel {
     bool running = true;
     boost::thread* thread = 0;
@@ -118,6 +123,7 @@ struct VRSoundChannel {
         if (context) delete context;
     }
 };
+}
 
 VRSoundManager::VRSoundManager() {
     cout << "Init VRSoundManager..";
@@ -178,5 +184,30 @@ void VRSoundManager::stopAllSounds(void) {
     for (auto s : sounds) s.second->stop();
 }
 
+struct VRSoundQueue {
+    int current = 0;
+    vector<VRSoundPtr> sounds;
+    VRUpdateCbPtr callback;
 
-OSG_END_NAMESPACE;
+    VRSoundQueue(vector<VRSoundPtr> sounds) : sounds(sounds) {
+        callback = VRUpdateCb::create("sound queue", boost::bind(&VRSoundQueue::next, *this));
+        for (auto sound : sounds) sound->setCallback( callback );
+    }
+
+    static void next(VRSoundQueue& q) {
+        if (q.current >= q.sounds.size()) return;
+        q.sounds[q.current]->play();
+        q.current++;
+    }
+
+    void play() { current = 0; (*callback)(); }
+};
+
+void VRSoundManager::queueSounds(vector<VRSoundPtr> sounds) { // TODO: only one queue at the same time
+    VRSoundQueue queue(sounds);
+    queue.play();
+    soundQueue = queue.callback;
+}
+
+
+

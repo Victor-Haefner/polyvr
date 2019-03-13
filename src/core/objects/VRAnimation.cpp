@@ -4,7 +4,10 @@
 #include "core/utils/system/VRSystem.h"
 #include "core/scene/VRScene.h"
 
-OSG_BEGIN_NAMESPACE;
+using namespace OSG;
+
+template<> string typeName(const VRAnimation& t) { return "Animation"; }
+
 
 VRAnimation::interpolator::~interpolator() {;}
 
@@ -77,4 +80,3 @@ bool VRAnimation::update(float current_time) {
     return true;
 }
 
-OSG_END_NAMESPACE;

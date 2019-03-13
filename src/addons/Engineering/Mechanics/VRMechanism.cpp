@@ -1,11 +1,15 @@
 #include "VRMechanism.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRPrimitive.h"
+#include "core/utils/VRGlobals.h"
+#include "core/utils/toString.h"
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
 
-OSG_BEGIN_NAMESPACE;
+using namespace OSG;
+
+template<> string typeName(const VRMechanism& m) { return "Mechanism"; }
 
 
 MPart::MPart() {}
@@ -19,9 +23,12 @@ MThread::~MThread() {}
 
 bool MPart::changed() {
     if (geo == 0) return false;
-    bool b = (timestamp != geo->getLastChange());
-    timestamp = geo->getLastChange();
+    bool b = geo->changedSince(timestamp);
+    timestamp = VRGlobals::CURRENT_FRAME;
     return b;
+    /*bool b = (timestamp != geo->getLastChange());
+    timestamp = geo->getLastChange();
+    return b;*/
 }
 
 void MPart::setBack() { if (geo) geo->setWorldMatrix(reference); }
@@ -212,14 +219,14 @@ vector<pointPolySegment> MChain::toVRPolygon(Vec3d p) {
 }
 
 
-/*bool checkThreadNut(VRThread* t, VRNut* n, Matrix4d r1, Matrix4d r2) {
+/*bool checkThreadNut(VRScrewthread* t, VRNut* n, Matrix4d r1, Matrix4d r2) {
     ; // TODO: check if nut center on thread line
     ; // TODO: check if nut && thread same orientation
     return true;
 }*/
 
 VRGear* MGear::gear() { return (VRGear*)prim; }
-VRThread* MThread::thread() { return (VRThread*)prim; }
+VRScrewthread* MThread::thread() { return (VRScrewthread*)prim; }
 
 void MPart::move() {}
 void MGear::move() { trans->rotate(change.dx/gear()->radius(), Vec3d(0,0,1)); }
@@ -275,6 +282,7 @@ void MChain::updateNeighbors(vector<MPart*> parts) {
     dirs = "";
     for (auto p : parts) {
         if (p == this) continue;
+        if (!p->prim) continue;
         if (p->prim->getType() == "Gear") {
             MRelation* rel = checkChainPart(this, p);
             if (rel) addNeighbor(p, rel);
@@ -490,4 +498,3 @@ void VRMechanism::update() {
 
 shared_ptr<VRMechanism> VRMechanism::create() { return shared_ptr<VRMechanism>(new VRMechanism()); }
 
-OSG_END_NAMESPACE;

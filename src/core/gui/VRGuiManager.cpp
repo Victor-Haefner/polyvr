@@ -1,6 +1,7 @@
 #include "VRGuiManager.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetupManager.h"
+#include "core/scripting/VRScript.h"
 #include "VRGuiUtils.h"
 #include "VRDemos.h"
 #include "VRGuiScene.h"
@@ -144,6 +145,11 @@ VRGuiManager* VRGuiManager::get(bool init) {
 
 void VRGuiManager::focusScript(string name, int line, int column) {
     g_sc->focusScript(name, line, column);
+}
+
+void VRGuiManager::getScriptFocus(VRScriptPtr& script, int& line, int& column) {
+    script = g_sc->getSelectedScript();
+    g_sc->getLineFocus(line, column);
 }
 
 void VRGuiManager::broadcast(string sig) {

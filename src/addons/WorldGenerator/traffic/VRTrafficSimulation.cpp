@@ -40,7 +40,7 @@ void erase(vector<T>& v, const T& t) {
     v.erase(remove(v.begin(), v.end(), t), v.end());
 }
 
-template<> string typeName(const OSG::VRTrafficSimulationPtr& t) { return "TrafficSimulation"; }
+template<> string typeName(const OSG::VRTrafficSimulation& t) { return "TrafficSimulation"; }
 
 
 VRTrafficSimulation::Vehicle::Vehicle(Graph::position p, int type) : pos(p), type(type) {
@@ -398,7 +398,9 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 float D2 = (ep2-p).length();
 
                 if (D1 > userRadius && D2 > userRadius) continue; // outside
+                if (D1 < 15 || D2 < 15) continue;
                 if (debugOverRideSeedRoad<0 && graph->getPrevEdges(e).size() == 0  && !isPedestrian(e.ID) && !isParkingLane(e.ID) && !isIntersectionLane(e.ID)) { // roads that start out of "nowhere"
+                    if (D1 < 15 || D2 < 15) continue;
                     newSeedRoads.push_back( e.ID );
                     continue;
                 }

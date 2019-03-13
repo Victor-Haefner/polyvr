@@ -86,6 +86,8 @@ class VRTransform : public VRObject {
 
         uint getLastChange();
         bool changedNow();
+        bool changedSince(uint& frame);
+        bool changedSince2(uint frame);
 
         Vec3d getFrom();
         Vec3d getDir();
@@ -160,7 +162,7 @@ class VRTransform : public VRObject {
         void move(float d);
         void rotateYonZ();
 
-        virtual void drag(VRTransformPtr new_parent);
+        virtual void drag(VRTransformPtr new_parent, VRIntersection i = VRIntersection());
         virtual void drop();
         void rebaseDrag(VRObjectPtr new_parent);
         VRObjectPtr getDragParent();

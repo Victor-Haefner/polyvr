@@ -13,8 +13,10 @@
 
 #include <OpenSG/OSGRenderAction.h>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRRenderManager& o) { return "RenderManager"; }
+
 
 VRRenderManager::VRRenderManager() {
     root = VRObject::create("Root");
@@ -175,4 +177,3 @@ void VRRenderManager::setHMDD(bool b) { do_hmdd = b; update(); }
 void VRRenderManager::setMarker(bool b) { do_marker = b; update(); }
 void VRRenderManager::setFXAA(bool b) { do_fxaa = b; update(); }
 
-OSG_END_NAMESPACE;

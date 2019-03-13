@@ -14,8 +14,10 @@
 #define FPS_WATCHDOG_TOLERANCE_EPSILON 0.3
 #define FPS_WATCHDOG_COOLDOWNFRAMES 1000
 
-using namespace std;
 using namespace OSG;
+
+template<> string typeName(const VRHaptic& t) { return "Haptic"; }
+
 
 VRHaptic::VRHaptic() : VRDevice("haptic") {
     v = new virtuose();

@@ -9,7 +9,8 @@
 #define GLSL(shader) #shader
 
 using namespace OSG;
-using namespace std;
+
+template<> string typeName(const VRNumberingEngine& m) { return "NumberingEngine"; }
 
 VRNumberingEngine::VRNumberingEngine(string name) : VRGeometry(name) {
     group g;

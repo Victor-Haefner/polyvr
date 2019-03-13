@@ -24,6 +24,9 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/import/VRImport.h"
+#include "core/objects/VRTransform.h"
+#include "core/objects/VRCamera.h"
+#include "core/math/boundingbox.h"
 #include "core/scene/VRProjectsList.h"
 #include "core/setup/devices/VRSignal.h"
 #include "core/utils/system/VRSystem.h"
@@ -185,7 +188,8 @@ void VRAppSection::clearTable(string t, Gtk::Table* tab) {
     }
 }
 
-void VRAppSection::setGuiState(VRAppLauncherPtr e, bool running) {
+void VRAppSection::setGuiState(VRAppLauncherPtr e, bool running, bool noLauncherScene) {
+    if (noLauncherScene) running = true; // disables widget
     for (auto i : apps) {
         VRAppLauncherPtr d = i.second;
         if (d->widget) d->widget->set_sensitive(!running);
@@ -233,10 +237,12 @@ VRAppManager::VRAppManager() {
 
     setToolButtonCallback("toolbutton1", sigc::mem_fun(*this, &VRAppManager::on_new_clicked));
     setToolButtonCallback("toolbutton5", sigc::mem_fun(*this, &VRAppManager::on_saveas_clicked));
+    setToolButtonCallback("toolbutton28", sigc::mem_fun(*this, &VRAppManager::on_stop_clicked));
     setToolButtonCallback("toolbutton21", sigc::mem_fun(*this, &VRAppManager::on_load_clicked));
 
     setToolButtonSensitivity("toolbutton4", false); // disable 'save' button on startup
     setToolButtonSensitivity("toolbutton5", false); // disable 'save as' button on startup
+    setToolButtonSensitivity("toolbutton28", false); // disable 'stop' button on startup
 }
 
 VRAppManager::~VRAppManager() {}
@@ -289,20 +295,23 @@ void VRAppManager::clearTable(string t) {
 }
 
 void VRAppManager::setGuiState(VRAppLauncherPtr e) {
-    bool running = (e == 0) ? 0 : e->running;
+    bool running = (e == 0) ? noLauncherScene : e->running;
     setVPanedSensitivity("vpaned1", running);
     setNotebookSensitivity("notebook3", running);
 
-    examplesSection->setGuiState(e, running);
-    recentsSection->setGuiState(e, running);
-    favoritesSection->setGuiState(e, running);
+    examplesSection->setGuiState(e, running, noLauncherScene);
+    recentsSection->setGuiState(e, running, noLauncherScene);
+    favoritesSection->setGuiState(e, running, noLauncherScene);
 
-    if (e) if (e->widget) e->widget->set_sensitive(true);
-    if (running) { if (e->imgPlay) e->imgPlay->set(Gtk::Stock::MEDIA_STOP, Gtk::ICON_SIZE_BUTTON); }
-    else if (e) { if (e->imgPlay) e->imgPlay->set(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON); }
+    if (e) {
+        if (e->widget) e->widget->set_sensitive(true);
+        if (running) { if (e->imgPlay) e->imgPlay->set(Gtk::Stock::MEDIA_STOP, Gtk::ICON_SIZE_BUTTON); }
+        else { if (e->imgPlay) e->imgPlay->set(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON); }
+    }
 
     setToolButtonSensitivity("toolbutton4", running); // toggle 'save' button availability
     setToolButtonSensitivity("toolbutton5", running); // toggle 'save as' button availability
+    setToolButtonSensitivity("toolbutton28", running); // toggle 'stop' button availability
 }
 
 VRAppLauncherPtr VRAppManager::addEntry(string path, string table, bool running, string timestamp, bool recent) {
@@ -421,9 +430,19 @@ void VRAppManager::on_diag_save_clicked() { // TODO: check if ending is .pvr
     addEntry(path, "favorites_tab", true);
 }
 
+void VRAppManager::toggleDemo(VRAppLauncherPtr e) {
+    bool run = !e->running;
+    VRSceneManager::get()->closeScene();
+    if (run) {
+        string encryptionKey;
+        if (endsWith(e->path, ".pvc")) encryptionKey = askUserPass("Please insert encryption key");
+        VRSceneManager::get()->loadScene(e->path, e->write_protected, encryptionKey);
+    }
+}
+
 void VRAppManager::on_saveas_clicked() {
     auto scene = VRScene::getCurrent();
-    if (scene == 0) return;
+    if (!scene) return;
     encryptionKey = "";
     VRGuiFile::gotoPath( scene->getWorkdir() );
     VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRAppManager::on_diag_save_clicked) );
@@ -435,13 +454,51 @@ void VRAppManager::on_saveas_clicked() {
     VRGuiFile::setFile( scene->getFile() );
 }
 
+void VRAppManager::on_stop_clicked() {
+    if (noLauncherScene) {
+        VRSceneManager::get()->closeScene();
+        noLauncherScene = false;
+        update();
+    }
+
+    if (current_demo && current_demo->running) toggleDemo(current_demo); // close demo if it is running
+}
+
 void VRAppManager::on_diag_load_clicked() {
     string path = VRGuiFile::getPath();
     if (!exists(path)) return;
     if (current_demo) if (current_demo->running) toggleDemo(current_demo); // close demo if it is running
-    auto e = addEntry(path, "favorites_tab", false);
-    VRSceneManager::get()->addFavorite(path);
-    if (e) toggleDemo(e);
+    bool loadProject = bool( endsWith(path, ".xml") || endsWith(path, ".pvr") || endsWith(path, ".pvc") );
+
+    if (loadProject) {
+        cout << "load project '" << path << "'" << endl;
+        auto e = addEntry(path, "favorites_tab", false);
+        VRSceneManager::get()->addFavorite(path);
+        if (e) toggleDemo(e);
+    } else {
+        cout << "load model '" << path << "'" << endl;
+        VRSceneManager::get()->setWorkdir( getFolderName(path) );
+        VRSceneManager::get()->newScene("PolyVR Model Viewer");
+
+        noLauncherScene = true;
+        update();
+
+        auto scene = VRScene::getCurrent();
+        if (!scene) return;
+
+        scene->setBackground(VRBackground::SKY);
+
+        auto cam = dynamic_pointer_cast<VRCamera>(scene->get("Default"));
+        auto light = scene->get("light");
+        auto model = VRImport::get()->load(path, light);
+
+        auto bb = model->getBoundingbox();
+        if (bb->volume() < 1e-4) return;
+        double h = bb->center()[1];
+        Vec3d p = Vec3d(0,h,0);
+        cam->setTransform(p, Vec3d(0,0,-1), Vec3d(0,1,0));
+        cam->focusObject(model);
+    }
 }
 
 void VRAppManager::on_load_clicked() {
@@ -449,6 +506,7 @@ void VRAppManager::on_load_clicked() {
     VRGuiFile::gotoPath( g_get_home_dir() );
     VRGuiFile::clearFilter();
     VRGuiFile::addFilter("Project", 3, "*.xml", "*.pvr", "*.pvc");
+    VRGuiFile::addFilter("Model", 19, "*.dae", "*.wrl", "*.obj", "*.3ds", "*.3DS", "*.ply", "*.hgt", "*.tif", "*.tiff", "*.pdf", "*.shp", "*.e57", "*.xyz", "*.STEP", "*.STP", "*.step", "*.stp", "*.ifc", "*.dxf");
     VRGuiFile::addFilter("All", 1, "*");
     VRGuiFile::open( "Load", Gtk::FILE_CHOOSER_ACTION_OPEN, "Load project" );
 }
@@ -486,10 +544,8 @@ void VRAppManager::on_new_clicked() {
 void VRAppManager::update() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) {
-        if (current_demo) {
-            current_demo->running = false;
-            setGuiState(current_demo);
-        }
+        if (current_demo) current_demo->running = false;
+        setGuiState(current_demo);
         return;
     }
 
@@ -513,16 +569,10 @@ void VRAppManager::update() {
         current_demo->running = true;
         setGuiState(current_demo);
     }
-}
 
-void VRAppManager::toggleDemo(VRAppLauncherPtr e) {
-    bool run = !e->running;
-    VRSceneManager::get()->closeScene();
-    if (run) {
-        string encryptionKey;
-        if (endsWith(e->path, ".pvc")) encryptionKey = askUserPass("Please insert encryption key");
-        VRSceneManager::get()->loadScene(e->path, e->write_protected, encryptionKey);
-    }
+    if (noLauncherScene) setGuiState(0);
 }
 
 OSG_END_NAMESPACE;
+
+

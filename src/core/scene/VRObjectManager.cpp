@@ -4,8 +4,9 @@
 #include "core/utils/VRStorage_template.h"
 #include <boost/bind.hpp>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRObjectManager& t) { return "ObjectManager"; }
 
 
 VRObjectManager::Entry::Entry(string name) {
@@ -109,4 +110,3 @@ vector<VRTransformPtr> VRObjectManager::getCatalog() {
     return res;
 }
 
-OSG_END_NAMESPACE;

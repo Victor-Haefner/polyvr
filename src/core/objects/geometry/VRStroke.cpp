@@ -10,7 +10,7 @@
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGTriangleIterator.h>
 
-template<> string typeName(const OSG::VRStrokePtr& s) { return "Stroke"; }
+template<> string typeName(const OSG::VRStroke& s) { return "Stroke"; }
 template<> string typeName(const OSG::VRStroke::CAP& s) { return "StrokeCap"; }
 
 template<> int toValue(stringstream& ss, OSG::VRStroke::CAP& c) {

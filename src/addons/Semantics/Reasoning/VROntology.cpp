@@ -17,7 +17,7 @@ VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
 
 using namespace OSG;
 
-template<> string typeName(const VROntologyPtr& o) { return "Ontology"; }
+template<> string typeName(const VROntology& o) { return "Ontology"; }
 
 VROntology::VROntology(string name) {
     setStorageType("Ontology");

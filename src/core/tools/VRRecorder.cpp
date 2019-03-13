@@ -21,9 +21,11 @@ extern "C" {
     #include <libswscale/swscale.h>
 }
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
 
+template<> string typeName(const VRRecorder& o) { return "Recorder"; }
+
+namespace OSG {
 class VRFrame {
     public:
         VRTexturePtr capture = 0;
@@ -73,6 +75,7 @@ class VRFrame {
             if (valid) fwrite(pktData, 1, pktSize, f);
         }
 };
+}
 
 VRRecorder::VRRecorder() {
     av_register_all();
@@ -461,4 +464,3 @@ map<string, int> VRRecorder::codecs = {
 
 
 
-OSG_END_NAMESPACE;

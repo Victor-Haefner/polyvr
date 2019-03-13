@@ -2,7 +2,7 @@
 #include "core/utils/toString.h"
 #include <AL/al.h>
 
-using namespace std;
+using namespace OSG;
 
 string toString(ALenum a) {
     switch (a) {

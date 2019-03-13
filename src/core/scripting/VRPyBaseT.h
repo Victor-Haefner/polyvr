@@ -116,8 +116,15 @@ PyObject* VRPyBaseT<T>::fromObject(T obj) {
 template<class T>
 PyObject* VRPyBaseT<T>::fromSharedPtr(std::shared_ptr<T> obj) {
     if (obj == 0) Py_RETURN_NONE;
+    if (typeRef->tp_alloc == 0) {
+        cout << "VRPyBase::fromSharedPtr for type " << typeName<T>(*obj) << " failed because of missing type alloc" << endl;
+        Py_RETURN_NONE;
+    }
     VRPyBaseT<T> *self = (VRPyBaseT<T> *)typeRef->tp_alloc(typeRef, 0);
-    if (self == NULL) Py_RETURN_NONE;
+    if (self == NULL) {
+        cout << "VRPyBase::fromSharedPtr for type " << typeName<T>(*obj) << " failed because of failed type alloc" << endl;
+        Py_RETURN_NONE;
+    }
     self->objPtr = obj;
     self->owner = false;
     return (PyObject *)self;

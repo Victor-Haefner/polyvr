@@ -6,7 +6,7 @@
 #include <libxml++/nodes/element.h>
 #include <boost/bind.hpp>
 
-template<> string typeName(const OSG::VRDevicePtr& t) { return "Device"; }
+template<> string typeName(const OSG::VRDevice& t) { return "Device"; }
 
 OSG_BEGIN_NAMESPACE;
 
@@ -166,7 +166,12 @@ void VRDevice::printMap() {
 void VRDevice::setSpeed(Vec2d s) { speed = s; }
 Vec2d VRDevice::getSpeed() { return speed; }
 
-void VRDevice::drag(VRObjectPtr obj) { VRIntersect::drag(obj, getBeacon()); }
+void VRDevice::drag(VRObjectPtr obj) {
+    VRIntersection i;
+    i.object = obj;
+    VRIntersect::drag(i, getBeacon());
+}
+
 void VRDevice::drop() { VRIntersect::drop(); }
 
 bool VRDevice::intersect2(VRObjectPtr subtreeRoot, bool force, VRTransformPtr caster, Vec3d dir) {

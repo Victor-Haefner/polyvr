@@ -6,9 +6,12 @@
 #include <boost/bind.hpp>
 #include <OpenSG/OSGNode.h>
 #include "core/utils/VRFunction.h"
+#include "core/utils/toString.h"
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRSignal& t) { return "Signal"; }
+
 
 VRSignal_base::VRSignal_base() {}
 VRSignal_base::~VRSignal_base() {}
@@ -53,4 +56,3 @@ void VRSignal::sub(VRBaseCbWeakPtr fkt) {
     for (int i = toErase.size()-1; i>=0; i--) callbacksPtr.erase(callbacksPtr.begin()+toErase[i]);
 }
 
-OSG_END_NAMESPACE

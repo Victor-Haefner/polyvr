@@ -17,7 +17,8 @@
 typedef boost::recursive_mutex::scoped_lock PLock;
 
 using namespace OSG;
-using namespace std;
+
+template<> string typeName(const VRCarDynamics& o) { return "CarDynamics"; }
 
 
 VRCarDynamics::Wheel::Wheel() {

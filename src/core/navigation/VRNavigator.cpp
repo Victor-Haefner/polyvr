@@ -12,8 +12,11 @@
 #include "core/scene/VRScene.h"
 #include "core/math/path.h"
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRNavigator& t) { return "Navigator"; }
+template<> string typeName(const VRNavPreset& t) { return "NavPreset"; }
+
 
 #define sign(x) (( x >> 31 ) | ( (unsigned int)( -x ) >> 31 ))
 
@@ -493,4 +496,3 @@ void VRNavigator::update() {
 }
 
 
-OSG_END_NAMESPACE;

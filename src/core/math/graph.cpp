@@ -5,7 +5,7 @@
 
 using namespace OSG;
 
-template<> string typeName(const GraphPtr& g) { return "Graph"; }
+template<> string typeName(const Graph& g) { return "Graph"; }
 
 string toString(Graph::edge& e) {
     return toString(Vec3i(e.from, e.to, e.connection));
@@ -76,6 +76,13 @@ vector< Graph::edge > Graph::getOutEdges(int i) {
     vector<edge> res;
     for (int e : getNode(i).outEdges) res.push_back(edges[e]);
     return res;
+}
+
+vector<Graph::edge> Graph::getConnectedEdges(node& n) {
+    vector<edge> edges;
+    for (int eID : n.inEdges) edges.push_back(getEdge(eID));
+    for (int eID : n.outEdges) edges.push_back(getEdge(eID));
+    return edges;
 }
 
 vector<Graph::edge> Graph::getPrevEdges(edge& e) {

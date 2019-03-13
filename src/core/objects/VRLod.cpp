@@ -8,8 +8,10 @@
 #include <boost/bind.hpp>
 #include <OpenSG/OSGDistanceLOD.h>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRLod& t) { return "Lod"; }
+
 
 VRLod::VRLod(string name) : VRObject(name) {
     lod = DistanceLOD::create();
@@ -109,4 +111,3 @@ void VRLod::addEmpty() {
     addChild(VRObject::create("lod_empty"));
 }
 
-OSG_END_NAMESPACE;

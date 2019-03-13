@@ -10,7 +10,7 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRLeapPtr& o) { return "Leap"; }
+template<> string typeName(const VRLeap& o) { return "Leap"; }
 
 VRLeap::VRLeap() : VRDevice("leap") {
     transformation = Pose::create();
@@ -393,7 +393,7 @@ void VRLeap::dragCB(VRTransformWeakPtr wcaster, VRObjectWeakPtr wtree, VRDeviceW
         if (ins.hit) break;
     }
 
-    VRIntersect::drag(ins.object, caster);
+    VRIntersect::drag(ins, caster);
 }
 
 void VRLeap::setPose(PosePtr pose) {

@@ -11,8 +11,9 @@
 #include "core/utils/VRProfiler.h"
 #include <libxml++/nodes/element.h>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRWindow& o) { return "Window"; }
 
 unsigned int VRWindow::active_window_count = 0;
 
@@ -185,4 +186,3 @@ void VRWindow::load(xmlpp::Element* node) {
     }
 }
 
-OSG_END_NAMESPACE;

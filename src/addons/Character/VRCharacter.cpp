@@ -1,4 +1,6 @@
 #include "VRCharacter.h"
+#include "VRSkeleton.h"
+#include "VRBehavior.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/toString.h"
@@ -6,165 +8,9 @@
 
 const float Pi = 3.14159;
 
-using namespace std;
 using namespace OSG;
 
-template<> string typeName(const VRBehaviorPtr& m) { return "Behavior"; }
-template<> string typeName(const VRSkeletonPtr& m) { return "Skeleton"; }
-
-VRBehavior::Action::Action(string n) { setNameSpace("bhAction"); setName(n); }
-VRBehavior::Action::~Action() {}
-VRBehavior::ActionPtr VRBehavior::Action::create(string n) { return ActionPtr(new Action(n) ); }
-
-void VRBehavior::Action::addConfiguration(VRSkeleton::ConfigurationPtr c) {
-    configurations[c->getName()] = c;
-}
-
-
-VRBehavior::VRBehavior(string n) { setNameSpace("behavior"); setName(n); }
-VRBehavior::~VRBehavior() {}
-VRBehaviorPtr VRBehavior::create(string n) { return VRBehaviorPtr(new VRBehavior(n) ); }
-
-void VRBehavior::setSkeleton(VRSkeletonPtr s) { skeleton = s; }
-
-void VRBehavior::updateBones() {
-
-}
-
-
-
-
-void VRSkeleton::Joint::update(Graph::node& n, bool changed) {
-    ;
-}
-
-VRSkeleton::JointPtr VRSkeleton::Joint::create() { return JointPtr(new Joint() ); }
-
-VRSkeleton::JointPtr VRSkeleton::Joint::duplicate() {
-    auto j = Joint::create();
-    *j = *this;
-    return j;
-}
-
-
-
-VRSkeleton::Configuration::Configuration(string n) { setNameSpace("skConfig"); setName(n); }
-VRSkeleton::Configuration::~Configuration() {}
-VRSkeleton::ConfigurationPtr VRSkeleton::Configuration::create(string n) { return ConfigurationPtr(new Configuration(n) ); }
-
-void VRSkeleton::Configuration::setPose(int i, Vec3d p) { joints[i] = p; }
-
-
-VRSkeleton::VRSkeleton() {
-    armature = Armature::create();
-}
-
-VRSkeleton::~VRSkeleton() {}
-
-VRSkeletonPtr VRSkeleton::create() { return VRSkeletonPtr(new VRSkeleton() ); }
-
-int VRSkeleton::addBone(int j1, int j2) {
-    int eID = armature->connect(j1, j2);
-    auto& edge = armature->getEdge(eID);
-    return edge.ID; // TODO
-    //return 0;
-}
-
-int VRSkeleton::addJoint(JointPtr c, Vec3d p) {
-    auto i = armature->addNode();
-    joints[i] = Joint::create();
-    armature->getNode(i).box.setCenter(p);
-    return i;
-}
-
-//Graph::edge VRSkeleton::getBone(int id) { /*return armature->getEdge(id);*/ } // TODO
-VRConstraintPtr VRSkeleton::getJoint(int id) { return dynamic_pointer_cast<VRConstraint>( joints[id] ); }
-
-void VRSkeleton::asGeometry(VRGeoData& data) {
-    for (auto& joint : armature->getNodes()) {
-        data.pushVert( Pnt3d(joint.second.box.center()) );
-    }
-
-    for (auto& j : armature->getEdges()) {
-        auto& e = j.second;
-        data.pushLine(e.from, e.to);
-    }
-}
-
-void VRSkeleton::setupGeometry() {
-    VRGeoData geo;
-    asGeometry(geo);
-    geo.apply( ptr() );
-
-    auto m = VRMaterial::get("skeleton");
-    m->setLit(0);
-    m->setDiffuse(Color3f(0,1,0));
-    setMaterial(m);
-}
-
-void VRSkeleton::updateGeometry() {
-    VRGeoData data(ptr());
-    auto& joints = armature->getNodes();
-    for (uint i=0; i<joints.size(); i++) {
-        auto& joint = joints[i];
-        data.setVert(i, Pnt3d(joint.box.center()) );
-    }
-}
-
-void VRSkeleton::simpleHumanoid() {
-    auto ball = Joint::create();
-    auto hinge = Joint::create();
-
-    for (int i=3; i<6; i++) ball->setMinMax(i, -Pi*0.5, Pi*0.5);
-    hinge->setMinMax(5, 0, Pi*0.5);
-
-    auto ballJoint = [&]() { return ball->duplicate(); };
-    auto hingeJoint = [&]() { return hinge->duplicate(); };
-
-    // spine
-    auto s1 = addJoint(ballJoint(), Vec3d(0,1,0) ); // lower spine
-    auto s2 = addJoint(ballJoint(), Vec3d(0,1.2,0) );
-    auto s3 = addJoint(ballJoint(), Vec3d(0,1.4,0) );
-    auto s4 = addJoint(ballJoint(), Vec3d(0,1.5,0) );
-    auto s5 = addJoint(ballJoint(), Vec3d(0,1.6,0) );
-    auto s6 = addJoint(ballJoint(), Vec3d(0,1.8,0) ); // head
-
-    addBone(s1,s2);
-    addBone(s2,s3);
-    addBone(s3,s4);
-    addBone(s4,s5);
-    addBone(s5,s6);
-
-    auto doLeg = [&](float d) {
-        auto l1 = addJoint(ballJoint(), Vec3d(d,1,0) ); // hip
-        auto l2 = addJoint(hingeJoint(), Vec3d(d,0.5,0) ); // knee
-        auto l3 = addJoint(ballJoint(), Vec3d(d,0,0) );
-        auto l4 = addJoint(ballJoint(), Vec3d(d,0,-0.2) ); // toes
-
-        addBone(s1,l1);
-        addBone(l1,l2);
-        addBone(l2,l3);
-        addBone(l3,l4);
-    };
-
-    auto doArm = [&](float d) {
-        auto a1 = addJoint(ballJoint(), Vec3d(d,1.5,0) ); // shoulder
-        auto a2 = addJoint(hingeJoint(), Vec3d(d,1.2,0) ); // elbow
-        auto a3 = addJoint(ballJoint(), Vec3d(d,0.8,0) );
-        auto a4 = addJoint(ballJoint(), Vec3d(d,0.7,0) ); // hand
-
-        addBone(s4,a1);
-        addBone(a1,a2);
-        addBone(a2,a3);
-        addBone(a3,a4);
-    };
-
-    doLeg(-0.2); // left
-    doLeg(0.2); // right
-    doArm(-0.3); // left
-    doArm(0.3); // right
-}
-
+template<> string typeName(const VRCharacter& m) { return "Character"; }
 
 VRCharacter::VRCharacter (string name) : VRGeometry(name) {}
 VRCharacter::~VRCharacter() {}
@@ -176,11 +22,16 @@ void VRCharacter::setSkeleton(VRSkeletonPtr s) { skeleton = s; }
 VRSkeletonPtr VRCharacter::getSkeleton() { return skeleton; }
 
 void VRCharacter::addBehavior(VRBehaviorPtr b) { behaviors[b->getName()] = b; }
-void VRCharacter::addAction(VRBehavior::ActionPtr a) { actions[a->getName()] = a; }
+//void VRCharacter::addAction(VRBehavior::ActionPtr a) { actions[a->getName()] = a; }
+
+void VRCharacter::move(string endEffector, PosePtr pose) {
+    if (!skeleton) return;
+    skeleton->move(endEffector, pose);
+}
 
 void VRCharacter::simpleSetup() {
     auto s = VRSkeleton::create();
-    s->simpleHumanoid();
+    s->setupSimpleHumanoid();
     setSkeleton(s);
 
     s->setupGeometry(); // visualize skeleton
@@ -198,11 +49,11 @@ void VRCharacter::simpleSetup() {
 
 
     // actions
-    auto stomp_L = VRBehavior::Action::create("stomp_L");
+    /*auto stomp_L = VRBehavior::Action::create("stomp_L");
     stomp_L->addConfiguration( stretched_leg_L );
     stomp_L->addConfiguration( lifted_leg_L );
     stomp_L->addConfiguration( stretched_leg_L );
-    addAction(stomp_L);
+    addAction(stomp_L);*/
 }
 
 

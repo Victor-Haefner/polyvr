@@ -10,6 +10,8 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRMetaBalls& o) { return "MetaBalls"; }
+
 VRMetaBalls::VRMetaBalls(string name) : VRObject(name) {
     type = "MetaBalls";
 }

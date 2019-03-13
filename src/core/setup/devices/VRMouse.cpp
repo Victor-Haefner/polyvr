@@ -9,8 +9,10 @@
 #include <GL/glut.h>
 #include <OpenSG/OSGPerspectiveCamera.h>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRMouse& t) { return "Mouse"; }
+
 
 VRMouse::VRMouse() : VRDevice("mouse") {}
 VRMouse::~VRMouse() {}
@@ -233,12 +235,13 @@ void VRMouse::motion(int x, int y) {
     auto sv = view.lock();
     if (!sv) return;
 
-    float _x, _y;
     ViewportMTRecPtr v = sv->getViewportL();
+    if (!v) return;
+
+    float _x, _y;
     v->calcNormalizedCoordinates(_x, _y, x, y);
     change_slider(5,_x);
     change_slider(6,_y);
-
     updatePosition(x,y);
 }
 
@@ -255,4 +258,3 @@ void VRMouse::load(xmlpp::Element* e) {
     VRDevice::load(e);
 }
 
-OSG_END_NAMESPACE;

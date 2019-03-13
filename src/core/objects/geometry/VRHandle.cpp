@@ -9,6 +9,9 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRHandle& t) { return "Handle"; }
+
+
 VRHandle::VRHandle(string name) : VRGeometry(name) {
     type = "Handle";
     updateCb = VRUpdateCb::create("handle_update", boost::bind(&VRHandle::updateHandle, this, true) );

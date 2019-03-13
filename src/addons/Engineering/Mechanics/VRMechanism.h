@@ -6,7 +6,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 
 class VRGear;
-class VRThread;
+class VRScrewthread;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -125,7 +125,7 @@ class MThread : public MPart {
         MThread();
         ~MThread();
 
-        VRThread* thread();
+        VRScrewthread* thread();
 
         void move();
         void updateNeighbors(vector<MPart*> parts);

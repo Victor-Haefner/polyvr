@@ -9,7 +9,9 @@
 #define GLSL(shader) #shader
 
 using namespace OSG;
-using namespace std;
+
+template<> string typeName(const VRAnnotationEngine& t) { return "AnnotationEngine"; }
+
 
 VRAnnotationEngine::VRAnnotationEngine(string name) : VRGeometry(name) {
     fg = Color4f(0,0,0,1);

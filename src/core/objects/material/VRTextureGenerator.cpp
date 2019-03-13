@@ -9,9 +9,12 @@
 #include "core/objects/material/VRTexture.h"
 #include "core/math/path.h"
 #include "core/math/polygon.h"
+#include "core/utils/toString.h"
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRTextureGenerator& o) { return "TextureGenerator"; }
+
 
 VRTextureGenerator::VRTextureGenerator() {}
 VRTextureGenerator::~VRTextureGenerator() {}
@@ -339,4 +342,3 @@ void VRTextureGenerator::addSimpleNoise(Vec3i dim, bool doAlpha, Color4f fg, Col
     add(PERLIN, amount*1./32, bg, fg);
 }
 
-OSG_END_NAMESPACE;

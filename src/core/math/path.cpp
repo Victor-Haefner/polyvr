@@ -5,10 +5,9 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
 
-using namespace std;
 using namespace OSG;
 
-template<> string typeName(const PathPtr& p) { return "Path"; }
+template<> string typeName(const Path& p) { return "Path"; }
 
 Path::Path(int d) : degree(d) {
     storeVec("points", points);

@@ -27,8 +27,10 @@
 #include <frameobject.h>
 #include <pyerrors.h>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRScript& t) { return "Script"; }
+
 
 void updateArgPtr(VRScript::argPtr a) {
     string t = a->type;
@@ -509,6 +511,8 @@ void VRScript::pyErrPrint(string channel) {
     PyErr_Clear();
 }
 
+PyObject* VRScript::getFunction() { return fkt; }
+
 void VRScript::compile( PyObject* pGlobal, PyObject* pModVR ) {
     setFunction( 0 );
     PyObject* pCode = Py_CompileString(getScript().c_str(), getName().c_str(), Py_file_input);
@@ -706,4 +710,3 @@ void VRScript::load(xmlpp::Element* e) {
 
 VRGlobals::Int VRScript::loadingFrame = 0;
 
-OSG_END_NAMESPACE;

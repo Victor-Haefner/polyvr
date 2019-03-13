@@ -1,9 +1,11 @@
 #include "VRMillingCuttingToolProfile.h"
+#include "core/utils/toString.h"
 
 #include <iostream>
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
+
+template<> string typeName(const VRMillingCuttingToolProfile& o) { return "MillingCuttingToolProfile"; }
 
 VRMillingCuttingToolProfile::VRMillingCuttingToolProfile() {}
 VRMillingCuttingToolProfile::~VRMillingCuttingToolProfile() {}
@@ -200,4 +202,3 @@ float VRMillingCuttingToolProfile::lookForMaxInList(vector<Vec2d> liste) {
     return maximum;
 }
 
-OSG_END_NAMESPACE;

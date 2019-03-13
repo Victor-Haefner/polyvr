@@ -42,6 +42,7 @@ class VRGuiEditor {
         void setLanguage(string lang);
         void grabFocus();
         void setCursor(int line, int column);
+        void getCursor(int& line, int& column);
         void setSelection(string s);
         string getSelection();
         _GtkSourceBuffer* getSourceBuffer();

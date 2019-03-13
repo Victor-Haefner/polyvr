@@ -86,6 +86,7 @@ class VRRoadNetwork : public VRRoadBase {
         vector<Vec3d> getGraphEdgeDirections(int e);
         void updateAsphaltTexture();
         VRAsphaltPtr getMaterial();
+        VRAsphaltPtr getArrowMaterial();
         int getRoadID();
 
         PosePtr getPosition(Graph::position p);

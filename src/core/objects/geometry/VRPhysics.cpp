@@ -364,7 +364,7 @@ void VRPhysics::update() {
 
     btVector3 inertiaVector(0,0,0);
     float _mass = mass;
-    if (!dynamic) _mass = 0;
+    if (!dynamic || paused) _mass = 0;
 
     if (soft) {
         if (physicsShape == "Cloth") soft_body = createCloth();
@@ -1117,9 +1117,10 @@ OSG::Matrix4d VRPhysics::fromBTTransform(const btTransform t) {
 }
 
 void VRPhysics::pause(bool b) {
+    paused = b;
     if (body == 0) return;
-    if (dynamic == !b) return;
-    setDynamic(!b);
+    if (!dynamic) return;
+    update();
 }
 
 void VRPhysics::resetForces() {
@@ -1252,7 +1253,7 @@ void VRPhysics::setConstraint(VRPhysics* p,int nodeIndex,OSG::Vec3d localPivot,b
 }
 
 void VRPhysics::setConstraint(VRPhysics* p, OSG::VRConstraintPtr c, OSG::VRConstraintPtr cs) {
-    if (body == 0) return;
+    if (body == 0 || p == 0) return;
     if (p->body == 0) return;
     PLock lock(VRPhysics_mtx());
 
@@ -1266,13 +1267,13 @@ void VRPhysics::setConstraint(VRPhysics* p, OSG::VRConstraintPtr c, OSG::VRConst
 }
 
 void VRPhysics::updateConstraint(VRPhysics* p) {
-    if (body == 0) return;
+    if (body == 0 || p == 0) return;
     if (p->body == 0) return;
     if (joints.count(p) == 0) return;
 
     VRPhysicsJoint* joint = joints[p];
     OSG::VRConstraintPtr c = joint->constraint;
-    if (c == 0) return;
+    if (!c) return;
 
     PLock lock(VRPhysics_mtx());
     if (joint->btJoint != 0) {
@@ -1290,13 +1291,6 @@ void VRPhysics::updateConstraint(VRPhysics* p) {
     //Constraint.getReferenceFrameInB
     localA = fromMatrix( c->getReferenceA()->asMatrix(), -CoMOffset );
     localB = p->fromMatrix( c->getReferenceB()->asMatrix(), -p->CoMOffset );
-
-    // TODO: possible bug - p is not valid, may have been deleted!
-
-    //cout << "\nCreate Joint " << fromTransform(body->getWorldTransform())[3] << " " << fromTransform(p->body->getWorldTransform())[3] << endl;
-    //btTransform t = p->body->getWorldTransform().inverse();
-    //t.mult(t, body->getWorldTransform()); // the position of the first object in the local coords of the second
-
     joint->btJoint = new btGeneric6DofSpringConstraint(*body, *p->body, localA, localB, true);
     world->addConstraint(joint->btJoint, true);
 
@@ -1310,19 +1304,16 @@ void VRPhysics::updateConstraint(VRPhysics* p) {
     joint->btJoint->setAngularLowerLimit(btVector3(c->getMin(3), c->getMin(4), c->getMin(5)));
     joint->btJoint->setAngularUpperLimit(btVector3(c->getMax(3), c->getMax(4), c->getMax(5)));
 
-
-    // SPRING PARAMETERS
-
-    OSG::VRConstraintPtr cs = joint->spring;
-    if (cs == 0) return;
-    for (int i=0; i<6; i++) {
-        bool b = (cs->getMin(i) > 0);
-        float stiffness = cs->getMin(i);
-        float damping = cs->getMax(i);
-        joint->btJoint->enableSpring(i, b);
-        joint->btJoint->setStiffness(i, stiffness);
-        joint->btJoint->setDamping(i, damping);
-        joint->btJoint->setEquilibriumPoint(i);
+    if (auto cs = joint->spring) { // SPRING PARAMETERS
+        for (int i=0; i<6; i++) {
+            bool b = (cs->getMin(i) > 0);
+            float stiffness = cs->getMin(i);
+            float damping = cs->getMax(i);
+            joint->btJoint->enableSpring(i, b);
+            joint->btJoint->setStiffness(i, stiffness);
+            joint->btJoint->setDamping(i, damping);
+            joint->btJoint->setEquilibriumPoint(i);
+        }
     }
 }
 

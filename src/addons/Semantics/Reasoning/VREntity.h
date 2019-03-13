@@ -25,6 +25,7 @@ struct VREntity : public VROntoID, public VRName {
     VRObjectWeakPtr sgObject;
 
     VREntity(string name, VROntologyPtr o, VRConceptPtr c = 0);
+    VREntity();
 
     static VREntityPtr create(string name = "none", VROntologyPtr o = 0, VRConceptPtr c = 0);
     VREntityPtr copy();

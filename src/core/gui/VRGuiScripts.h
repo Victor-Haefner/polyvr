@@ -121,6 +121,7 @@ class VRGuiScripts {
         void updateList();
         VRScriptPtr getSelectedScript();
         void focusScript(string name, int line, int column);
+        void getLineFocus(int& line, int& column);
         void update();
         shared_ptr<VRGuiEditor> getEditor();
 };

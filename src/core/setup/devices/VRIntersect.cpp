@@ -9,12 +9,13 @@
 #include "core/objects/OSGObject.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRGlobals.h"
+#include "core/utils/toString.h"
 #include "VRSignal.h"
 #include "VRDevice.h"
 
-OSG_BEGIN_NAMESPACE;
-using namespace std;
+using namespace OSG;
 
+template<> string typeName(const VRIntersection& p) { return "Intersection"; }
 
 VRObjectPtr VRIntersection::getIntersected() { return object.lock(); }
 Pnt3d VRIntersection::getIntersection() { return point; }
@@ -177,12 +178,13 @@ void VRIntersect::initIntersect(VRDevicePtr dev) {
 
 void VRIntersect::dragCB(VRTransformWeakPtr caster, VRObjectWeakPtr tree, VRDeviceWeakPtr dev) {
     VRIntersection ins = intersect(tree);
-    drag(ins.object, caster);
+    drag(ins, caster);
 }
 
 void VRIntersect::clearDynTrees() { dynTrees.clear(); }
 
-void VRIntersect::drag(VRObjectWeakPtr wobj, VRTransformWeakPtr wcaster) {
+void VRIntersect::drag(VRIntersection i, VRTransformWeakPtr wcaster) {
+    VRObjectWeakPtr wobj = i.object;
     auto obj = wobj.lock();
     auto caster = wcaster.lock();
     if (!obj || !caster) return;
@@ -196,7 +198,7 @@ void VRIntersect::drag(VRObjectWeakPtr wobj, VRTransformWeakPtr wcaster) {
 
     auto dobj = static_pointer_cast<VRTransform>(obj);
     dragged = dobj;
-    dobj->drag(caster);
+    dobj->drag(caster, i);
 
     dragged_ghost->setMatrix(dobj->getMatrix());
     dragged_ghost->switchParent(caster);
@@ -297,5 +299,3 @@ VRDeviceCbPtr VRIntersect::getDrop() { return drop_fkt; }
 
 VRIntersection VRIntersect::getLastIntersection() { return lastIntersection; }
 
-
-OSG_END_NAMESPACE;

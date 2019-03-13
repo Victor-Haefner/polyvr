@@ -13,6 +13,8 @@ Kinematics structure
     - Graph
         - Node is VRConstraint
 
+- Graph: nodes = joints, edges = segments, theta = state/angle, l = segment length
+
 - Graph traversal
     - traversal priority
         - depth first
