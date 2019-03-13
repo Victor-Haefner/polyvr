@@ -109,14 +109,10 @@ size_t CSGGeometry::isKnownPoint(Pnt3f newPoint) {
 	return numeric_limits<size_t>::max();
 }
 
-void CSGGeometry::enableEditMode() {
-	// Reset our result geometry
+void CSGGeometry::enableEditMode() { // Reset our result geometry
 	CGALPolyhedron* p = new CGALPolyhedron();
 	setCSGGeometry(p);
-
-	for (auto c : children) {
-		if (c->getType() == string("Geometry") || c->getType() == string("CSGGeometry")) c->setVisible(true);
-	}
+	for (auto c : children) if (c->hasTag("geometry")) c->setVisible(true);
 }
 
 bool CSGGeometry::setEditMode(const bool editModeActive) {
