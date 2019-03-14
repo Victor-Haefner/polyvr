@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene base_name="Materials" name_space="Scene" name_suffix="0" persistency="666">
+  <Objects>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="4294967295">
+      <Object ambient="1 1 1 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="1 1 1 1" type="Light" visible="4294967295">
+        <Object at="-1 -1 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="4294967295">
+          <constraint persistency="666"/>
+        </Object>
+        <Object accept_root="1" aspect="1" at="0 0 4" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.0596256 0.0212249 4.998" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+          <constraint persistency="666"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Cameras activeCam="Default" persistency="666"/>
+  <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="Script" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+
+
+	def makeSnapshot():
+		tr = VR.TextureRenderer()
+		tr.setup(VR.find('Default'), 400, 400)
+		tex = tr.renderOnce()
+		tex.write('test.png')
+		return tex
+		
+	
+	makeSnapshot()
+</core>
+    </Script>
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	if hasattr(VR, 'scene'): VR.scene.destroy()
+	VR.scene = VR.Object('scene', 'light')
+	
+	VR.find('Default').setTransform([0,0,5], [0,0,-1], [0,1,0])
+
+	def addSphere(pos, mat):
+		sphere = VR.Geometry('sphere')
+		sphere.setPrimitive('Sphere 0.4 3')
+		sphere.setFrom(pos)
+		sphere.setMaterial(mat)
+		VR.scene.addChild(sphere)
+		
+		
+	# simple materials
+	def simpleMaterial(diffuse, specular, ambient):
+		mat = VR.Material('simple')
+		mat.setDiffuse(diffuse)
+		mat.setSpecular(specular)
+		mat.setAmbient(ambient)
+		return mat
+	
+	mat1 = simpleMaterial([0,0.4,0.7], [0,0,0], [0,0,0])
+	mat2 = simpleMaterial([0,0.4,0.7], [1,1,1], [0,0,0])
+	mat3 = simpleMaterial([0,0.4,0.7], [1,1,1], [0,0.2,0.4])
+
+	addSphere([-1, 1, 0], mat1)
+	addSphere([ 0, 1, 0], mat2)
+	addSphere([ 1, 1, 0], mat3)
+	
+	# textured materials
+	def simpleNoise(color1, color2):
+		tg = VR.TextureGenerator()
+		tg.addSimpleNoise([200,200,1], False, color1, color2)
+		return tg.compose(0)
+		
+	def makeSnapshot():
+		tr = VR.TextureRenderer('tr')
+		tr.setup(VR.find('Default'), 400, 400)
+		tr.addLink(VR.find('light'))
+		tex = tr.renderOnce()
+		tex.write('test.png')
+		return tex
+		
+		
+	mat4 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.2,0.2,0.2])
+	mat5 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.2,0.2,0.2])
+	mat6 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.2,0.2,0.2])
+	
+	addSphere([-1, 0, 0], mat4)
+	addSphere([ 0, 0, 0], mat5)
+	addSphere([ 1, 0, 0], mat6)
+	
+	mat7 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.2,0.2,0.2])
+	mat8 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.2,0.2,0.2])
+	mat9 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.2,0.2,0.2])
+	
+	addSphere([-1,-1, 0], mat7)
+	addSphere([ 0,-1, 0], mat8)
+	addSphere([ 1,-1, 0], mat9)
+
+
+	noise1 = simpleNoise([0,1,0], [0.3,0.5,0])
+	noise2 = simpleNoise([1,1,1], [0.5,0.5,0.5])
+	
+	mat4.setTexture(noise1)
+	
+	mat5.setTexture(noise1)
+	mat5.setTexture(makeSnapshot(), 1)
+	mat5.setTextureType('SphereEnv',1)
+	
+	
+	mat6.setTexture(noise1)
+	mat6.setTexture(makeSnapshot(), 1)
+	mat6.setTextureType('CubeEnv',1)
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+    </Script>
+  </Scripts>
+  <Sockets persistency="666"/>
+  <Background color="1 1 1" format=".png" path="" persistency="666" type="0"/>
+  <Navigation active="Orbit" persistency="666"/>
+  <Materials persistency="666"/>
+  <Semantics persistency="666"/>
+</Scene>
