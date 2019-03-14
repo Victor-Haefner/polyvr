@@ -151,7 +151,10 @@ PyObject* VRPyMaterial::setStencilBuffer(VRPyMaterial* self, PyObject* args) {
 
 PyObject* VRPyMaterial::setTextureType(VRPyMaterial* self, PyObject* args) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setTextureType, C obj is invalid"); return NULL; }
-	self->objPtr->setTextureType(parseString(args));
+    const char* t = 0;
+    int u = 0;
+    if (! PyArg_ParseTuple(args, "s|i", &t, &u)) return NULL;
+	self->objPtr->setTextureType(t?string(t):"", u);
 	Py_RETURN_TRUE;
 }
 

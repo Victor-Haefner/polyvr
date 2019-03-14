@@ -90,7 +90,7 @@ class VRMaterial : public VRObject {
         void setTextureParams(int min, int mag, int envMode = GL_MODULATE, int wrapS = GL_REPEAT, int wrapT = GL_REPEAT, int unit = 0);
         void setMagMinFilter(int mag, int min, int unit = 0);
         void setTextureWrapping(int wrapS, int wrapT, int unit = 0);
-        void setTextureType(string type);
+        void setTextureType(string type, int unit = 0);
         void setQRCode(string s, Vec3d fg, Vec3d bg, int offset);
         void setVideo(string vid_path);
         VRVideo* getVideo();
