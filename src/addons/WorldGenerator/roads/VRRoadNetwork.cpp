@@ -31,6 +31,7 @@
 #include "core/utils/VRTimer.h"
 #include "core/utils/VRFunction.h"
 #include "core/scene/VRScene.h"
+#include "core/tools/VRAnnotationEngine.h"
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGMatrix22.h>
@@ -1029,9 +1030,9 @@ void VRRoadNetwork::connectGraph(vector<VREntityPtr> nodes, vector<Vec3d> norms,
 
 PosePtr VRRoadNetwork::getPosition(Graph::position p) {
     int eID = p.edge;
-    if (eID == 0) return 0;
+    if (eID < 0) return 0;
     auto edge = graph->getEdge(eID);
-    if (edge.ID == 0) return 0;
+    if (edge.ID < 0) return 0;
 
     int n1 = edge.from;
     int n2 = edge.to;
@@ -1128,6 +1129,82 @@ VRTexturePtr arrowTexture;
 VRGeometryPtr arrows;
 VRGeometryPtr collisionMesh;
 */
+
+void VRRoadNetwork::toggleGraph(){
+    isShowingGraph = !isShowingGraph;
+    map<int,int> idx;
+	map<int,int> idx2;
+	map<string, VRGeometryPtr> vizGeos;
+	//auto graph = getGraph();
+	auto scene = VRScene::getCurrent();
+	for (string strInput : {"RoadNetworkPoints", "RoadNetworkLines", "RoadNetworkRelations"}) {
+		if ( scene->getRoot()->find(strInput) ) scene->getRoot()->find(strInput)->destroy();
+		auto graphViz = VRGeometry::create(strInput);
+        graphViz->setPersistency(0);
+		addChild(graphViz);
+		vizGeos[strInput] = graphViz;
+	}
+	string gAnn = "RoadNetworkAnnotation";
+	if (scene->getRoot()->find(gAnn)) scene->getRoot()->find(gAnn)->destroy();
+    if (!isShowingGraph) return;
+	auto graphAnn = VRAnnotationEngine::create(gAnn);
+	graphAnn->setPersistency(0);
+	graphAnn->setBillboard(true);
+	graphAnn->setBackground(Color4f(1,1,1,1));
+	addChild(graphAnn);
+
+	VRGeoData gg0;
+	VRGeoData gg1;
+	VRGeoData gg2;
+
+	for (auto node : graph->getNodes()){
+		auto nPose = graph->getNode(node.first).p;
+		auto p = nPose.pos() + Vec3d(0,2,0);
+		int vID = gg0.pushVert(p);
+		gg1.pushVert(p);
+		gg0.pushPoint();
+		graphAnn->set(vID, nPose.pos() + Vec3d(0,2.2,0), "Node "+toString(node.first));
+		idx[node.first] = vID;
+	}
+
+	for (auto& connection : graph->getEdges()) {
+		auto& edge = connection.second;
+		int eID = edge.ID;
+		if (eID < 0) continue;
+		gg1.pushLine(idx[connection.second.from], idx[connection.second.to]);
+		auto pos1 = graph->getNode(connection.second.from).p.pos();
+		auto pos2 = graph->getNode(connection.second.to).p.pos();
+		graphAnn->set(eID+100, (pos1+pos2)*0.5 + Vec3d(0,2.6,0), "Edge "+toString(eID)+"("+toString(connection.second.from)+"-"+toString(connection.second.to)+")");
+	}
+
+    for (auto connection : graph->getEdges()){
+		auto edge = connection.first;
+		for (auto rel : graph->getRelations(edge)) {
+            auto pos1 = (graph->getNode(connection.second.from).p.pos()+graph->getNode(connection.second.to).p.pos())/2 + Vec3d(0,2,0);
+            auto pos2 = (graph->getNode(graph->getEdgeCopyByID(rel).from).p.pos()+graph->getNode(graph->getEdgeCopyByID(rel).to).p.pos())/2 + Vec3d(0,2,0);
+            int pID1 = gg2.pushVert(pos1);
+            int pID2 = gg2.pushVert(pos2);
+            gg2.pushLine(pID1,pID2);
+            //graphAnn->set(edge+100, (pos1+pos2)*0.5 + Vec3d(0,4,0), "Edge "+toString(edge)+"("+toString(connection.second.from)+"-"+toString(connection.second.to)+")");
+		}
+	}
+
+	gg0.apply( vizGeos["RoadNetworkPoints"] );
+	gg1.apply( vizGeos["RoadNetworkLines"] );
+	gg2.apply( vizGeos["RoadNetworkRelations"] );
+
+	for (auto geo : vizGeos) {
+		auto mat = VRMaterial::create(geo.first+"_mat");
+		mat->setLit(0);
+		int r = (geo.first ==  "RoadNetworkRelations");
+		int g = (geo.first == "RoadNetworkPoints" || geo.first ==  "RoadNetworkRelations");
+		int b = (geo.first == "RoadNetworkLines"|| geo.first ==  "RoadNetworkRelations");
+		mat->setDiffuse(Color3f(r,g,b));
+		mat->setLineWidth(3);
+		mat->setPointSize(5);
+		geo.second->setMaterial(mat);
+	}
+}
 
 double VRRoadNetwork::getMemoryConsumption() {
     double res = sizeof(*this);

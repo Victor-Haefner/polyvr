@@ -59,6 +59,8 @@ class VRRoadNetwork : public VRRoadBase {
         float markingsWidth = 0.15;
         int arrowType = 0;
 
+        bool isShowingGraph = false;
+
         void createArrow(Vec4i dirs, int N, const Pose& p, int type = 0);
 
         vector<VREntityPtr> getRoadNodes();
@@ -133,6 +135,7 @@ class VRRoadNetwork : public VRRoadBase {
         void update();
 
         void test1();
+        void toggleGraph();
 
         double getMemoryConsumption();
 
