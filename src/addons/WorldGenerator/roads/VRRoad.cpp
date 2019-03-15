@@ -341,6 +341,7 @@ void VRRoad::computeMarkings() {
 
             if (lane->is_a("ParkingLane")) {
                 auto linePath = toPath(mL, 12);
+                if (!linePath) continue;
                 int N = lane->getValue<int>("capacity", -1);
                 float W = lane->getValue<float>("width", 0);
                 for (int si = 0; si < N+1; si++) {
