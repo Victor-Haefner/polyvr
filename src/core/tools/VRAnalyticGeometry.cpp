@@ -102,7 +102,7 @@ void VRAnalyticGeometry::init() {
     }
 }
 
-void VRAnalyticGeometry::setLabelParams(float size, bool screen_size, bool billboard, Color4f fg, Color4f bg) {
+void VRAnalyticGeometry::setLabelParams(float size, bool screen_size, bool billboard, Color4f fg, Color4f bg, Vec3d offset) {
     if (ae) {
         ae->setSize(size);
         ae->setBillboard(billboard);
@@ -110,6 +110,7 @@ void VRAnalyticGeometry::setLabelParams(float size, bool screen_size, bool billb
         ae->setColor(fg);
         ae->setBackground(bg);
     }
+    labelOffset = offset;
 }
 
 void VRAnalyticGeometry::resize(int i, int j, int k) {
@@ -153,7 +154,7 @@ void VRAnalyticGeometry::resize(int i, int j, int k) {
 
 void VRAnalyticGeometry::setAngle(int i, Vec3d p, Vec3d v1, Vec3d v2, Color3f c1, Color3f c2, string label) {
     if (!vectorLinesGeometry) return;
-    if (ae) ae->set(i, p+v1*0.1+v2*0.1, label);
+    if (ae) ae->set(i, labelOffset+p+v1*0.1+v2*0.1, label);
     resize(2*i+1);
 
     // line
@@ -187,7 +188,7 @@ void VRAnalyticGeometry::setCircle(int i, Vec3d p, Vec3d n, float r, Color3f col
     }
 
     if (!circlesGeometry) return;
-    if (ae && label != "") ae->set(i, p, label);
+    if (ae && label != "") ae->set(i, labelOffset+p, label);
     resize(-1, -1, 4*i+3);
 
     Vec3d v1 = Vec3d(0, -n[2], n[1]);
@@ -223,9 +224,9 @@ void VRAnalyticGeometry::setCircle(int i, Vec3d p, Vec3d n, float r, Color3f col
     norms->setValue(norm, 4*i+3);
 }
 
-void VRAnalyticGeometry::setVector(int i, Vec3d p, Vec3d vec, Color3f color, string label) {
+void VRAnalyticGeometry::setVector(int i, Vec3d p, Vec3d vec, Color3f color, string label, bool doArrow) {
     if (!vectorLinesGeometry) return;
-    if (ae) ae->set(i, p+vec*0.5, label);
+    if (ae) ae->set(i, labelOffset+p+vec*0.5, label);
     resize(2*i+1, i);
 
     // line
@@ -240,13 +241,18 @@ void VRAnalyticGeometry::setVector(int i, Vec3d p, Vec3d vec, Color3f color, str
     if (!vectorEndsGeometry) return;
     pos = vectorEndsGeometry->getMesh()->geo->getPositions();
     cols = vectorEndsGeometry->getMesh()->geo->getColors();
-    pos->setValue(p+vec, i);
-    cols->setValue(color, i);
+    if (doArrow) {
+        pos->setValue(p+vec, i);
+        cols->setValue(color, i);
+    } else { // TODO
+        pos->setValue(Vec3d(0,-10000,0), i);
+        cols->setValue(color, i);
+    }
 }
 
-int VRAnalyticGeometry::addVector(Vec3d pos, Vec3d vec, Color3f color, string label) {
+int VRAnalyticGeometry::addVector(Vec3d pos, Vec3d vec, Color3f color, string label, bool doArrow) {
     int i = vectorEndsGeometry->getMesh()->geo->getPositions()->size();
-    setVector(i, pos, vec, color, label);
+    setVector(i, pos, vec, color, label, doArrow);
     return i;
 }
 
