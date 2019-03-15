@@ -382,6 +382,7 @@ void VRRoad::addTrafficLight( Vec3d pos ) {
         Vec3d dir; // direction from intersection to traffic light
         Vec3d as;
         Vec3d df;
+        bool check = edgePoints.size() == 0;
         VREntityPtr nodeEnt;
         for (auto ep : getEdgePoints()) {
             Vec3d p = (ep.second.p1+ep.second.p2)*0.5;
@@ -411,6 +412,7 @@ void VRRoad::addTrafficLight( Vec3d pos ) {
             } //else cout << "   VRRoad::addTrafficLight-" << "\033[31mnot set\033[0m" << endl;
 
         }
+        if ( check ) edgePoints.clear();
     }
 }
 
