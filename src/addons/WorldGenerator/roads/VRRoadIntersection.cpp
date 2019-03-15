@@ -134,7 +134,10 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
 
 	    auto checkContinuationMatch = [](int i, int j, int Nin, int Nout, int reSignIn, int reSignOut) {
         ///CONTINUATION
-	        if (Nout == Nin && i == j) return true;
+	        if (Nout == Nin){
+                if (reSignIn != reSignOut) if (i == j) return true;
+                if (reSignIn == reSignOut) if (i == Nout-j-1) return true;
+	        }
 	        //if (Nout > Nin && i == j-1) return true;
 	        //if (Nout > Nin && i< Nin/2 && j< Nout/2 && i == Nout-j-1) return true; // TODO
             //if (Nout > Nin && i>= Nin/2 && j> Nout/2 && i == j) return true;
@@ -1069,6 +1072,7 @@ void VRRoadIntersection::computeTrafficLights() {
 
     */
     auto type = entity->get("type")->value;
+    auto node1 = entity->getEntity("node");
     if (type != "intersection") return;
     //if (type == "crossing") return;
     struct signalData {
@@ -1084,12 +1088,15 @@ void VRRoadIntersection::computeTrafficLights() {
     for (auto roadFront : roadFronts) {
         auto roadE = roadFront->road->getEntity();
         auto lanes = roadE->getAllEntities("lanes");
-        for (auto laneE : lanes) {
+        for (auto laneE : roadFront->inLanes) {
+        //for (auto laneE : lanes) {
             auto signs = laneE->getAllEntities("signs");
             for (auto signE : signs) {
                 Vec3d pos = signE->getVec3("position");
                 if (signE->is_a("TrafficLight")) {
+                    if ( (pos - node1->getVec3("position")).length() > 30 ) continue;
                     signals.push_back( signalData(roadFront, laneE, signE) );
+                    //cout << "ftl " << entity->getName() << " - " << node1->getVec3("position") << " " << toString(pos) << " - " << (pos - node1->getVec3("position")).length() << endl;
                     //cout << "   VRRoadIntersection:computeTrafficLights " << toString(pos) << " " << toString (signE->getName()) << endl;
                 }
             }
@@ -1109,19 +1116,17 @@ void VRRoadIntersection::computeTrafficLights() {
         return P;
     };
 
-    auto node = entity->getEntity("node");
     for (auto s : signals) {
         auto signalNode = s.signal->getEntity("node");
         //if (signalNode != node) continue;
         auto p = s.roadFront->pose;
-        auto eP = s.roadFront->road->getEdgePoint( node );
+        auto eP = s.roadFront->road->getEdgePoint( node1 );
         Vec3d root = eP.p1;
 
         auto lP = getLaneNode(s.lane);
-        if ( (signalNode->getVec3("position") - node->getVec3("position")).length() > 30 ) continue;
+        if ( (signalNode->getVec3("position") - node1->getVec3("position")).length() > 30 ) continue;
         addTrafficLight(lP, "trafficLight", root, s.lane, s.signal);
     }
-
 
     /*auto node = entity->getEntity("node");
     for (auto road : inLanes) {
