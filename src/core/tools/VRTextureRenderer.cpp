@@ -333,34 +333,122 @@ VRMaterialPtr VRTextureRenderer::createTextureLod(VRObjectPtr obj, PosePtr camP,
 
 #include <OpenSG/OSGCubeMapGenerator.h>
 #include <OpenSG/OSGVisitSubTree.h>
+#include <OpenSG/OSGConfig.h>
+
+#include <iostream>
+
+#include <OpenSG/OSGGLUT.h>
+#include <OpenSG/OSGNode.h>
+
+#include <OpenSG/OSGTrackball.h>
+#include <OpenSG/OSGLine.h>
+#include <OpenSG/OSGPerspectiveCamera.h>
+#include <OpenSG/OSGTransform.h>
+#include <OpenSG/OSGComponentTransform.h>
+#include <OpenSG/OSGRenderAction.h>
+#include <OpenSG/OSGWindow.h>
+#include <OpenSG/OSGSceneFileHandler.h>
+#include <OpenSG/OSGSolidBackground.h>
+#include <OpenSG/OSGSkyBackground.h>
+#include <OpenSG/OSGGLUTWindow.h>
+#include <OpenSG/OSGDirectionalLight.h>
+#include <OpenSG/OSGSimpleGeometry.h>
+#include <OpenSG/OSGSimpleMaterial.h>
+#include <OpenSG/OSGCubeMapGenerator.h>
+#include <OpenSG/OSGImageFileHandler.h>
+#include <OpenSG/OSGVisitSubTree.h>
+
+
+OSG::NodeTransitPtr setupAnim(OSG::Node* lightBeacon) {
+    OSG::NodeTransitPtr           dlight = OSG::Node::create();
+    OSG::DirectionalLightUnrecPtr dl     = OSG::DirectionalLight::create();
+
+    dlight->setCore(dl);
+    dl->setAmbient( .3f, .3f, .3f, 1 );
+    dl->setDiffuse( .8f, .8f, .8f, .8f );
+    dl->setDirection(0,0,1);
+    dl->setBeacon( lightBeacon);
+
+    OSG::NodeRecPtr scene = makeNodeFor( OSG::Group::create() );
+    dlight->addChild(scene);
+
+    static const OSG::Real32 aOffsets[6][3] = {
+        { -5.5,  0.0,  0.0 },
+        {  5.5,  0.0,  0.0 },
+        {  0.0, -5.5,  0.0 },
+        {  0.0,  5.5,  0.0 },
+        {  0.0,  0.0, -5.5 },
+        {  0.0,  0.0,  5.5 }
+    };
+
+    static const OSG::Real32 aDiffuse[6][3] = {
+        { 1.f, 0.f, 0.f },
+        { 0.f, 1.f, 0.f },
+        { 0.f, 0.f, 1.f },
+        { 1.f, 1.f, 0.f },
+        { 1.f, 0.f, 1.f },
+        { 0.f, 1.f, 1.f }
+    };
+
+    for(OSG::UInt32 i = 0; i < 6; ++i) {
+        OSG::NodeUnrecPtr pTN          = OSG::Node::create();
+        OSG::GeometryUnrecPtr pGeo     = OSG::makeBoxGeo(1.f, 1.f, 1.f, 2,   2,   2);
+        OSG::NodeUnrecPtr     pGeoNode = OSG::Node::create();
+
+        pGeoNode->setCore(pGeo);
+        OSG::SimpleMaterialUnrecPtr pMat = OSG::SimpleMaterial::create();
+        pMat->setDiffuse(OSG::Color3f(aDiffuse[i][0], aDiffuse[i][1], aDiffuse[i][2]));
+        pMat->setAmbient(OSG::Color3f(aDiffuse[i][0], aDiffuse[i][1], aDiffuse[i][2]));
+        pGeo->setMaterial(pMat);
+
+        OSG::ComponentTransformRecPtr t = OSG::ComponentTransform::create();
+        t->editTranslation().setValues(aOffsets[i][0], aOffsets[i][1], aOffsets[i][2]);
+
+        pTN->setCore(t);
+        pTN->addChild(pGeoNode);
+        scene->addChild(pTN);
+    }
+
+    return dlight;
+}
 
 VRTexturePtr VRTextureRenderer::createCubeMap() {
     OSG::CubeMapGeneratorUnrecPtr pCubeGen = OSG::CubeMapGenerator::create();
-    pCubeGen->setRoot         (getNode()->node);
+    OSG::SolidBackgroundUnrecPtr cubeBkgnd = OSG::SolidBackground::create();
+    cubeBkgnd->setColor(OSG::Color3f(0.5f, 0.3f, 0.3f));
+    OSG::TransformRecPtr scene_trans = OSG::Transform::create();
+    scene_trans->editMatrix()[3][2] = -9;
+    OSG::NodeRecPtr pCubeRoot = makeNodeFor(pCubeGen);
+    OSG::NodeRecPtr sceneTrN  = makeNodeFor(scene_trans);
+    OSG::NodeRecPtr root = makeNodeFor(OSG::Group::create());
+    root->addChild(sceneTrN);
+    sceneTrN->addChild(pCubeRoot);
+    pCubeRoot->addChild(OSG::makeSphere(4, 2.0));
+    root->editVolume().setInfinite();
+    root->editVolume().setStatic  ();
+    OSG::NodeRecPtr pAnimRoot = setupAnim(root);
     pCubeGen->setTextureFormat(GL_RGB32F_ARB );
     pCubeGen->setSize         (512, 512);
     pCubeGen->setTexUnit      (0);
+    pCubeGen->setBackground(data->stage->getBackground());
+    pCubeGen->setRoot(pAnimRoot);
+    addChild(OSGObject::create(root));
+
+    /*
+    pCubeGen->setRoot         (getNode()->node);
     pCubeGen->setTexture      (data->fboTex);
-    pCubeGen->setBackground   (data->stage->getBackground());
     pCubeGen->setCamera       (cam->getCam()->cam);
+    */
 
-    OSG::NodeUnrecPtr pCubeRoot = OSG::Node::create();
-    pCubeRoot->setCore(pCubeGen);
+    data->ract = RenderAction::create();
+    data->win = PassiveWindow::create();
+    data->view = Viewport::create();
+    data->view->setRoot(getNode()->node);
 
-    if (!cam) return 0;
-
-    if (!data->ract) {
-        data->ract = RenderAction::create();
-        data->win = PassiveWindow::create();
-        data->view = Viewport::create();
-        data->view->setRoot(pCubeRoot);
-        //data->view->setRoot(getNode()->node);
-
-        data->win->addPort(data->view);
-        data->view->setSize(0, 0, 1, 1);
-        data->view->setCamera(cam->getCam()->cam);
-        data->view->setBackground(data->stage->getBackground());
-    }
+    data->win->addPort(data->view);
+    data->view->setSize(0, 0, 1, 1);
+    data->view->setCamera(cam->getCam()->cam);
+    data->view->setBackground(data->stage->getBackground());
 
     data->win->render(data->ract);
     ImageMTRecPtr img = Image::create();

@@ -24,11 +24,12 @@
 	def makeSnapshot():
 		tr = VR.TextureRenderer()
 		tr.setup(VR.find('Default'), 400, 400)
-		tr.addLink(VR.find('light'))
+		#tr.addLink(VR.find('light'))
+		VR.find('Root').addChild(tr)
 		#tex = tr.renderOnce()
 		tex = tr.createCubeMap()
 		tex.write('test.png')
-		return tex
+		#return tex
 		
 	
 	makeSnapshot()
