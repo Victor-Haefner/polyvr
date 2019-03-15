@@ -329,7 +329,7 @@ VRMaterialPtr VRTextureRenderer::createTextureLod(VRObjectPtr obj, PosePtr camP,
     return mat;
 }
 
-
+#define protected public
 
 #include <OpenSG/OSGCubeMapGenerator.h>
 #include <OpenSG/OSGVisitSubTree.h>
@@ -412,7 +412,7 @@ OSG::NodeTransitPtr setupAnim(OSG::Node* lightBeacon) {
     return dlight;
 }
 
-VRTexturePtr VRTextureRenderer::createCubeMap() {
+/*VRTexturePtr VRTextureRenderer::createCubeMap() {
     OSG::CubeMapGeneratorUnrecPtr pCubeGen = OSG::CubeMapGenerator::create();
     OSG::SolidBackgroundUnrecPtr cubeBkgnd = OSG::SolidBackground::create();
     cubeBkgnd->setColor(OSG::Color3f(0.5f, 0.3f, 0.3f));
@@ -427,6 +427,7 @@ VRTexturePtr VRTextureRenderer::createCubeMap() {
     root->editVolume().setInfinite();
     root->editVolume().setStatic  ();
     OSG::NodeRecPtr pAnimRoot = setupAnim(root);
+    pCubeGen->setRenderTarget(data->fbo);
     pCubeGen->setTextureFormat(GL_RGB32F_ARB );
     pCubeGen->setSize         (512, 512);
     pCubeGen->setTexUnit      (0);
@@ -434,16 +435,11 @@ VRTexturePtr VRTextureRenderer::createCubeMap() {
     pCubeGen->setRoot(pAnimRoot);
     addChild(OSGObject::create(root));
 
-    /*
-    pCubeGen->setRoot         (getNode()->node);
-    pCubeGen->setTexture      (data->fboTex);
-    pCubeGen->setCamera       (cam->getCam()->cam);
-    */
-
     data->ract = RenderAction::create();
     data->win = PassiveWindow::create();
     data->view = Viewport::create();
-    data->view->setRoot(getNode()->node);
+    //data->view->setRoot(getNode()->node);
+    data->view->setRoot(pCubeRoot);
 
     data->win->addPort(data->view);
     data->view->setSize(0, 0, 1, 1);
@@ -454,4 +450,26 @@ VRTexturePtr VRTextureRenderer::createCubeMap() {
     ImageMTRecPtr img = Image::create();
     img->set( data->fboTexImg );
     return VRTexture::create( img );
+}*/
+
+vector<VRTexturePtr> VRTextureRenderer::createCubeMaps() {
+    if (!cam) return {};
+    auto pose = cam->getPose();
+    auto p = cam->getFrom();
+
+    cam->setTransform(p, Vec3d(0,0,-1), Vec3d(0,1,0));
+    auto texFront = renderOnce();
+    cam->setTransform(p, Vec3d(0,0,1), Vec3d(0,1,0));
+    auto texBack = renderOnce();
+    cam->setTransform(p, Vec3d(-1,0,0), Vec3d(0,1,0));
+    auto texLeft = renderOnce();
+    cam->setTransform(p, Vec3d(1,0,0), Vec3d(0,1,0));
+    auto texRight = renderOnce();
+    cam->setTransform(p, Vec3d(0,1,0), Vec3d(0,0,1));
+    auto texUp = renderOnce();
+    cam->setTransform(p, Vec3d(0,-1,0), Vec3d(0,0,-1));
+    auto texDown = renderOnce();
+
+    cam->setPose(pose);
+    return {texFront, texBack, texLeft, texRight, texUp, texDown};
 }

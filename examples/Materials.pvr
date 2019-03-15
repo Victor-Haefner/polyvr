@@ -6,7 +6,7 @@
         <Object at="-1 -1 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="4294967295">
           <constraint persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="0 0 4" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0 0 5" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+        <Object accept_root="1" aspect="1" at="0.996297 0.0187981 0.398313" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.954604 0.16117 2.07965" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
           <constraint persistency="666"/>
         </Object>
       </Object>
@@ -24,12 +24,11 @@
 	def makeSnapshot():
 		tr = VR.TextureRenderer()
 		tr.setup(VR.find('Default'), 400, 400)
-		#tr.addLink(VR.find('light'))
+		tr.addLink(VR.find('light'))
 		VR.find('Root').addChild(tr)
 		#tex = tr.renderOnce()
-		tex = tr.createCubeMap()
-		tex.write('test.png')
-		#return tex
+		maps = tr.createCubeMaps()
+		for i,tex in enumerate(maps): tex.write('test'+str(i)+'.png')
 		
 	
 	makeSnapshot()
@@ -110,9 +109,19 @@
 	mat5.setTextureType('SphereEnv',1)
 	
 	
-	mat6.setTexture(noise1)
-	mat6.setTexture(makeSnapshot(), 1)
+	#mat6.setTexture(noise1)
+	mat6.setTexture('test0.png', 0)
+	mat6.setTexture('test1.png', 1)
+	mat6.setTexture('test2.png', 2)
+	mat6.setTexture('test3.png', 3)
+	mat6.setTexture('test4.png', 4)
+	mat6.setTexture('test5.png', 5)
+	mat6.setTextureType('CubeEnv',0)
 	mat6.setTextureType('CubeEnv',1)
+	mat6.setTextureType('CubeEnv',2)
+	mat6.setTextureType('CubeEnv',3)
+	mat6.setTextureType('CubeEnv',4)
+	mat6.setTextureType('CubeEnv',5)
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
     </Script>
