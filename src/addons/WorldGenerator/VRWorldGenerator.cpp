@@ -557,11 +557,21 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             }
 
             if (tag.first == "highway") {
+                added = true;
                 if (tag.second == "street_lamp") {
                     auto lamp = assets->copy("Streetlamp", Pose::create(pos, -dir), false);
                     lodTree->addObject(lamp, lamp->getWorldPosition(), 3, false);
                     lamp->setDir(-dir);
                     collisionShape->addQuad(0.1, 2, Pose(pos, -dir), lamp->getID());
+                }
+                if (tag.second == "traffic_signals") {
+                   //cout << " VRWorldGenerator::processOSMMap tr_signal " << endl;
+                    for (auto way : node->ways) {
+                        if (!RoadEntities.count(way)) continue;
+                        auto road = RoadEntities[node->ways[0]];
+                        road->addTrafficLight(pos);
+                        //cout << "    VRWorldGenerator::processOSMMap " <<toString(road->getID()) << endl;
+                    }
                 }
             }
         }
