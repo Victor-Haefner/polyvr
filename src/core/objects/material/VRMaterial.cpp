@@ -653,6 +653,17 @@ void VRMaterial::setTextureType(string type, int unit) {
         md->genChunks[unit]->setGenFuncS(GL_SPHERE_MAP);
         md->genChunks[unit]->setGenFuncT(GL_SPHERE_MAP);
     }
+
+    if (type == "CubeEnv") {
+        if (!md->genChunks.count(unit)) { md->genChunks[unit] = TexGenChunk::create(); md->mat->addChunk(md->genChunks[unit], unit); }
+        md->genChunks[unit]->setGenFuncS(GL_REFLECTION_MAP);
+        md->genChunks[unit]->setGenFuncT(GL_REFLECTION_MAP);
+        md->genChunks[unit]->setGenFuncR(GL_REFLECTION_MAP);
+
+        // OSGCubeMapGenerator.cpp
+        // OSGCubeTextureChunk.cpp
+        // System/NodeCores/Groups/Effects/HDR/testHDRStage.cpp
+    }
 }
 
 void VRMaterial::setQRCode(string s, Vec3d fg, Vec3d bg, int offset) {

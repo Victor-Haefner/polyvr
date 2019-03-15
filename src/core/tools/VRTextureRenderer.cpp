@@ -328,3 +328,42 @@ VRMaterialPtr VRTextureRenderer::createTextureLod(VRObjectPtr obj, PosePtr camP,
 	if (deferred) scene->setDeferredShading(true);
     return mat;
 }
+
+
+
+#include <OpenSG/OSGCubeMapGenerator.h>
+#include <OpenSG/OSGVisitSubTree.h>
+
+VRTexturePtr VRTextureRenderer::createCubeMap() {
+    OSG::CubeMapGeneratorUnrecPtr pCubeGen = OSG::CubeMapGenerator::create();
+    pCubeGen->setRoot         (getNode()->node);
+    pCubeGen->setTextureFormat(GL_RGB32F_ARB );
+    pCubeGen->setSize         (512, 512);
+    pCubeGen->setTexUnit      (0);
+    pCubeGen->setTexture      (data->fboTex);
+    pCubeGen->setBackground   (data->stage->getBackground());
+    pCubeGen->setCamera       (cam->getCam()->cam);
+
+    OSG::NodeUnrecPtr pCubeRoot = OSG::Node::create();
+    pCubeRoot->setCore(pCubeGen);
+
+    if (!cam) return 0;
+
+    if (!data->ract) {
+        data->ract = RenderAction::create();
+        data->win = PassiveWindow::create();
+        data->view = Viewport::create();
+        data->view->setRoot(pCubeRoot);
+        //data->view->setRoot(getNode()->node);
+
+        data->win->addPort(data->view);
+        data->view->setSize(0, 0, 1, 1);
+        data->view->setCamera(cam->getCam()->cam);
+        data->view->setBackground(data->stage->getBackground());
+    }
+
+    data->win->render(data->ract);
+    ImageMTRecPtr img = Image::create();
+    img->set( data->fboTexImg );
+    return VRTexture::create( img );
+}
