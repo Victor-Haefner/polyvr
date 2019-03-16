@@ -6,7 +6,7 @@
         <Object at="-1 -1 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="4294967295">
           <constraint persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="0.996297 0.0187981 0.398313" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.954604 0.16117 2.07965" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+        <Object accept_root="1" aspect="1" at="0.934674 0 0.393226" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.338727 0.338215 2.14836" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
           <constraint persistency="666"/>
         </Object>
       </Object>
@@ -41,7 +41,7 @@
 	if hasattr(VR, 'scene'): VR.scene.destroy()
 	VR.scene = VR.Object('scene', 'light')
 	
-	VR.find('Default').setTransform([0,0,5], [0,0,-1], [0,1,0])
+	#VR.find('Default').setTransform([0,0,5], [0,0,-1], [0,1,0])
 
 	def addSphere(pos, mat):
 		sphere = VR.Geometry('sphere')
@@ -49,7 +49,7 @@
 		sphere.setFrom(pos)
 		sphere.setMaterial(mat)
 		VR.scene.addChild(sphere)
-		
+		return sphere
 		
 	# simple materials
 	def simpleMaterial(diffuse, specular, ambient):
@@ -88,7 +88,7 @@
 	
 	addSphere([-1, 0, 0], mat4)
 	addSphere([ 0, 0, 0], mat5)
-	addSphere([ 1, 0, 0], mat6)
+	S6 = addSphere([ 1, 0, 0], mat6)
 	
 	mat7 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.2,0.2,0.2])
 	mat8 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.2,0.2,0.2])
@@ -108,20 +108,11 @@
 	mat5.setTexture(makeSnapshot(), 1)
 	mat5.setTextureType('SphereEnv',1)
 	
-	
-	#mat6.setTexture(noise1)
-	mat6.setTexture('test0.png', 0)
-	mat6.setTexture('test1.png', 1)
-	mat6.setTexture('test2.png', 2)
-	mat6.setTexture('test3.png', 3)
-	mat6.setTexture('test4.png', 4)
-	mat6.setTexture('test5.png', 5)
-	mat6.setTextureType('CubeEnv',0)
-	mat6.setTextureType('CubeEnv',1)
-	mat6.setTextureType('CubeEnv',2)
-	mat6.setTextureType('CubeEnv',3)
-	mat6.setTextureType('CubeEnv',4)
-	mat6.setTextureType('CubeEnv',5)
+	mat6.setTextureType('CubeEnv')
+	for i,side in enumerate(['front', 'back', 'left', 'right', 'top', 'bottom']):
+		tex = VR.Image()
+		tex.read('test'+str(i)+'.png')
+		mat6.setCubeTexture(tex, side)
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
     </Script>
