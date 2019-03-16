@@ -452,24 +452,43 @@ OSG::NodeTransitPtr setupAnim(OSG::Node* lightBeacon) {
     return VRTexture::create( img );
 }*/
 
-vector<VRTexturePtr> VRTextureRenderer::createCubeMaps() {
+vector<VRTexturePtr> VRTextureRenderer::createCubeMaps(VRTransformPtr focusObject) {
     if (!cam) return {};
-    auto pose = cam->getPose();
-    auto p = cam->getFrom();
+    if (!focusObject) return {};
 
-    cam->setTransform(p, Vec3d(0,0,-1), Vec3d(0,1,0));
+    auto pose = cam->getPose();
+    auto near = cam->getNear();
+    auto aspect = cam->getAspect();
+    auto fov = cam->getFov();
+
+    auto bb = focusObject->getBoundingbox();
+    auto p = bb->center();
+    auto s2 = bb->size()*0.51;
+
+    cam->setAspect(1);
+    cam->setFov(1.57079632679); // 90°
+
+    cam->setNear(s2[2]);
+    cam->setTransform(p, Vec3d(0,0,-1), Vec3d(0,-1,0));
     auto texFront = renderOnce();
-    cam->setTransform(p, Vec3d(0,0,1), Vec3d(0,1,0));
+    cam->setTransform(p, Vec3d(0,0,1), Vec3d(0,-1,0));
     auto texBack = renderOnce();
-    cam->setTransform(p, Vec3d(-1,0,0), Vec3d(0,1,0));
+
+    cam->setNear(s2[0]);
+    cam->setTransform(p, Vec3d(-1,0,0), Vec3d(0,-1,0));
     auto texLeft = renderOnce();
-    cam->setTransform(p, Vec3d(1,0,0), Vec3d(0,1,0));
+    cam->setTransform(p, Vec3d(1,0,0), Vec3d(0,-1,0));
     auto texRight = renderOnce();
+
+    cam->setNear(s2[1]);
     cam->setTransform(p, Vec3d(0,1,0), Vec3d(0,0,1));
     auto texUp = renderOnce();
     cam->setTransform(p, Vec3d(0,-1,0), Vec3d(0,0,-1));
     auto texDown = renderOnce();
 
+    cam->setAspect(aspect);
+    cam->setFov(fov);
+    cam->setNear(near);
     cam->setPose(pose);
     return {texFront, texBack, texLeft, texRight, texUp, texDown};
 }
