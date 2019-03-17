@@ -6,7 +6,7 @@
         <Object at="-1 -1 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="4294967295">
           <constraint persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="0.999056 0.0637773 -0.39343" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-0.448926 0.414519 3.9393" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+        <Object accept_root="1" aspect="1" at="-0.973467 -0.806791 0.348418" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.349897 -0.453955 5.30852" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
           <constraint persistency="666"/>
         </Object>
       </Object>
@@ -15,9 +15,82 @@
   <Cameras activeCam="Default" persistency="666"/>
   <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
-    <Script base_name="Script" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="bumpmapFP" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
       <core>
-	import VR
+uniform sampler2D diffuseTexture;
+uniform sampler2D normalTexture;
+	
+varying vec3 lightVec;
+varying vec3 halfVec;
+varying vec3 eyeVec;
+
+vec3 normal;
+vec4 color;
+
+void applyLightning() {
+	float NdotL = max(dot(lightVec, normal), 0.0);
+	float NdotHV = max (dot (halfVec, normal), 0.0);
+	vec4 ambient  = gl_FrontMaterial.ambient * gl_LightSource[0].ambient * color;
+	vec4 diffuse  = gl_FrontMaterial.diffuse * gl_LightSource[0].diffuse * NdotL * color;
+	vec4 specular = gl_FrontMaterial.specular * gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
+	gl_FragColor = ambient + diffuse + specular;	
+}
+
+void main() {
+	color = texture2D (diffuseTexture, gl_TexCoord[0].st);
+	
+	// lookup normal from normal map, move from [0,1] to  [-1, 1] range, normalize
+	normal = 2.0 * texture2D (normalTexture, gl_TexCoord[0].st).rgb - 1.0;
+	normal = normalize (normal);
+	
+	applyLightning();
+}	
+</core>
+    </Script>
+    <Script base_name="bumpmapVP" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+in vec4 osg_Vertex;
+in vec3 osg_Normal;
+in vec4 osg_MultiTexCoord0;
+
+varying vec3 lightVec;
+varying vec3 halfVec;
+varying vec3 eyeVec;
+	
+void main() {
+	gl_TexCoord[0] = osg_MultiTexCoord0;
+	
+	// Building the matrix Eye Space -&gt; Tangent Space
+	vec3 n = normalize (gl_NormalMatrix * osg_Normal);
+	vec3 t = vec3(n[0],-n[2],n[1]);
+	vec3 b = cross (n, t);
+	t = cross(b,n);
+	
+	vec3 vertexPosition = vec3(gl_ModelViewMatrix *  osg_Vertex);
+	vec3 lightDir = normalize(gl_LightSource[0].position.xyz); // directional light source
+	//vec3 lightDir = normalize(gl_LightSource[0].position.xyz - vertexPosition); // point light source
+		
+	// transform light and half angle vectors by tangent basis
+	vec3 v;
+	v.x = dot(lightDir, t);
+	v.y = dot(lightDir, b);
+	v.z = dot(lightDir, n);
+	lightVec = normalize(v);
+	  
+	v.x = dot(vertexPosition, t);
+	v.y = dot(vertexPosition, b);
+	v.z = dot(vertexPosition, n);
+	eyeVec = normalize(v);
+	
+	vertexPosition = normalize(vertexPosition);
+	vec3 halfVector = normalize(gl_LightSource[0].halfVector.xyz);
+	v.x = dot (halfVector, t);
+	v.y = dot (halfVector, b);
+	v.z = dot (halfVector, n);
+	halfVec = v;
+	
+	gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex;
+}
 </core>
     </Script>
     <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
@@ -56,7 +129,7 @@
 	# textured materials
 	def simpleNoise(color1, color2):
 		tg = VR.TextureGenerator()
-		tg.addSimpleNoise([200,200,1], False, color1, color2)
+		tg.addSimpleNoise([512,512,1], False, color1, color2)
 		return tg.compose(0)
 		
 	def makeSnapshot():
@@ -86,7 +159,7 @@
 	mat8 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.2,0.2,0.2])
 	mat9 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.2,0.2,0.2])
 	
-	addSphere([-1,-1, 0], mat7)
+	S7 = addSphere([-1,-1, 0], mat7)
 	addSphere([ 0,-1, 0], mat8)
 	addSphere([ 1,-1, 0], mat9)
 
@@ -94,20 +167,36 @@
 	noise1 = simpleNoise([0,1,0], [0.3,0.5,0])
 	noise2 = simpleNoise([1,1,1], [0.5,0.5,0.5])
 	
+	# simple texture
 	mat4.setTexture(noise1)
 	
-	mat5.setTexture(noise1)
-	mat5.setTexture(makeSnapshot(), 1)
-	mat5.setTextureType('SphereEnv',1)
+	# metalic effect
+	mat5.setTexture(noise2)
+	mat5.addPass()
+	mat5.setTexture(noise2)
+	mat5.setTransparency(0.3)
+	mat5.setTextureType('SphereEnv')
 	
+	# bumpmap
+	#mat7.setTexture(noise1)
+	#mat7.setTextureType('BumpMap')
+	bmt = VR.Image()
+	bmt.read('test.png')
+	mat7.setTexture(noise1)
+	mat7.setTexture(bmt,1)
+	mat7.setVertexProgram('bumpmapVP')
+	mat7.setFragmentProgram('bumpmapFP')
+	mat7.setShaderParameter('diffuseTexture', 0)
+	mat7.setShaderParameter('normalTexture', 1)
 	
+	# reflection (last to get cubemap with other spheres on it)
 	maps = makeCubeMap(S6)
 	mat6.setTexture(noise2)
 	mat6.addPass()
-	mat6.setTextureType('CubeEnv', 0)
+	mat6.setTextureType('CubeEnv')
 	mat6.setTransparency(0.5)
 	for tex,side in zip(maps, ['front', 'back', 'left', 'right', 'top', 'bottom']):
-		mat6.setCubeTexture(tex, side, 0)
+		mat6.setCubeTexture(tex, side)
 		
 		
 			
