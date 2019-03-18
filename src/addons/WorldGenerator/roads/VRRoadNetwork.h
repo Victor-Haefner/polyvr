@@ -31,6 +31,7 @@ class VRRoadNetwork : public VRRoadBase {
         map<int, vector<Vec3d> > graphNormals;
         map<int, VREntityPtr> graphEdgeEntities;
         map<VREntityPtr, int> graphEdgeIDs;
+        map<int, VREntityPtr> laneSegmentsByEdgeID;
         //map<int, VRRoadPtr> roadsByEdgeID;
 
         VRAsphaltPtr asphalt;
@@ -95,6 +96,7 @@ class VRRoadNetwork : public VRRoadBase {
         VREntityPtr addRoute(vector<int> nodes);
 
         VREntityPtr getLane(int edgeID);
+        VREntityPtr getLaneSegment(int edgeID);
         int getLaneID(VREntityPtr lane);
         VRRoadPtr getRoad(VREntityPtr road);
         VRRoadIntersectionPtr getIntersection(VREntityPtr intersection);
@@ -125,6 +127,7 @@ class VRRoadNetwork : public VRRoadBase {
         void computeMarkings();
         void computeArrows();
         void computeSigns();
+        void computeIntersectionSemantic();
         void physicalizeAssets(Boundingbox volume);
         vector<VRPolygonPtr> computeGreenBelts();
 
@@ -136,6 +139,7 @@ class VRRoadNetwork : public VRRoadBase {
 
         void test1();
         void toggleGraph();
+        bool isIntersection(VREntityPtr isec);
 
         double getMemoryConsumption();
 

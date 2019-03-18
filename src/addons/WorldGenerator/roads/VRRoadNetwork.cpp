@@ -754,6 +754,11 @@ void VRRoadNetwork::computeIntersections() {
     }
 }
 
+VREntityPtr VRRoadNetwork::getLaneSegment(int edgeID){
+    if (!laneSegmentsByEdgeID.count(edgeID) || edgeID < 0) return 0;
+    return laneSegmentsByEdgeID[edgeID];
+}
+
 VRTunnelPtr VRRoadNetwork::addTunnel(VRRoadPtr road) { auto t = VRTunnel::create(road); addChild(t); tunnels.push_back(t); return t; }
 VRBridgePtr VRRoadNetwork::addBridge(VRRoadPtr road) { auto b = VRBridge::create(road); addChild(b); bridges.push_back(b); return b; }
 
@@ -845,6 +850,15 @@ void VRRoadNetwork::computeSurfaces() {
     }
 }
 
+void VRRoadNetwork::computeIntersectionSemantic() {
+    cout << "VRRoadNetwork::computeIntersectionSemantic\n";
+    auto w = world.lock();
+    for (auto intersec : intersections) {
+        intersec->computeSemantics();
+    }
+    //cout << "VRRoadNetwork::computeIntersectionSemantic - Intersections: " << intersections.size() << endl;
+}
+
 void VRRoadNetwork::computeMarkings() {
     cout << "VRRoadNetwork::computeMarkings\n";
     auto w = world.lock();
@@ -897,6 +911,7 @@ void VRRoadNetwork::compute() {
     computeMarkings();
     computeArrows();
     computeSigns();
+    computeIntersectionSemantic();
     //computeGreenBelts();
     updateAsphaltTexture();
     //physicalizeAssets();
@@ -1025,6 +1040,12 @@ void VRRoadNetwork::connectGraph(vector<VREntityPtr> nodes, vector<Vec3d> norms,
     graphNormals[eID] = norms;
     graphEdgeEntities[eID] = lane;
     graphEdgeIDs[lane] = eID;
+
+    if (eID < 0) return;
+    auto w = world.lock();
+    auto laneSegment = w->getOntology()->addEntity("laneSegment", "LaneSegment");
+    laneSegment->set("graphID", toString(eID));
+    laneSegmentsByEdgeID[eID] = laneSegment;
 }
 
 
@@ -1130,6 +1151,11 @@ VRGeometryPtr arrows;
 VRGeometryPtr collisionMesh;
 */
 
+bool VRRoadNetwork::isIntersection(VREntityPtr isec){
+    if (intersectionsByEntity.count(isec)) return true;
+    return false;
+}
+
 void VRRoadNetwork::toggleGraph(){
     isShowingGraph = !isShowingGraph;
     map<int,int> idx;
@@ -1137,7 +1163,7 @@ void VRRoadNetwork::toggleGraph(){
 	map<string, VRGeometryPtr> vizGeos;
 	//auto graph = getGraph();
 	auto scene = VRScene::getCurrent();
-	for (string strInput : {"RoadNetworkPoints", "RoadNetworkLines", "RoadNetworkRelations"}) {
+	for (string strInput : {"RoadNetworkPoints", "RoadNetworkLines", "RoadNetworkRelations", "RoadNetworkIntersec"}) {
 		if ( scene->getRoot()->find(strInput) ) scene->getRoot()->find(strInput)->destroy();
 		auto graphViz = VRGeometry::create(strInput);
         graphViz->setPersistency(0);
@@ -1156,12 +1182,14 @@ void VRRoadNetwork::toggleGraph(){
 	VRGeoData gg0;
 	VRGeoData gg1;
 	VRGeoData gg2;
+	VRGeoData gg3;
 
 	for (auto node : graph->getNodes()){
 		auto nPose = graph->getNode(node.first).p;
 		auto p = nPose.pos() + Vec3d(0,2,0);
 		int vID = gg0.pushVert(p);
 		gg1.pushVert(p);
+		gg3.pushVert(p);
 		gg0.pushPoint();
 		graphAnn->set(vID, nPose.pos() + Vec3d(0,2.2,0), "Node "+toString(node.first));
 		idx[node.first] = vID;
@@ -1171,7 +1199,8 @@ void VRRoadNetwork::toggleGraph(){
 		auto& edge = connection.second;
 		int eID = edge.ID;
 		if (eID < 0) continue;
-		gg1.pushLine(idx[connection.second.from], idx[connection.second.to]);
+		if (!getLaneSegment(eID)->getEntity("nextIntersection")) gg1.pushLine(idx[connection.second.from], idx[connection.second.to]);
+		else gg3.pushLine(idx[connection.second.from], idx[connection.second.to]);
 		auto pos1 = graph->getNode(connection.second.from).p.pos();
 		auto pos2 = graph->getNode(connection.second.to).p.pos();
 		graphAnn->set(eID+100, (pos1+pos2)*0.5 + Vec3d(0,2.6,0), "Edge "+toString(eID)+"("+toString(connection.second.from)+"-"+toString(connection.second.to)+")");
@@ -1192,13 +1221,14 @@ void VRRoadNetwork::toggleGraph(){
 	gg0.apply( vizGeos["RoadNetworkPoints"] );
 	gg1.apply( vizGeos["RoadNetworkLines"] );
 	gg2.apply( vizGeos["RoadNetworkRelations"] );
+	gg3.apply( vizGeos["RoadNetworkIntersec"] );
 
 	for (auto geo : vizGeos) {
 		auto mat = VRMaterial::create(geo.first+"_mat");
 		mat->setLit(0);
-		int r = (geo.first ==  "RoadNetworkRelations");
-		int g = (geo.first == "RoadNetworkPoints" || geo.first ==  "RoadNetworkRelations");
-		int b = (geo.first == "RoadNetworkLines"|| geo.first ==  "RoadNetworkRelations");
+		int r = (geo.first ==  "RoadNetworkRelations" || geo.first == "RoadNetworkIntersec");
+		int g = (geo.first == "RoadNetworkPoints" || geo.first ==  "RoadNetworkRelations"|| geo.first == "RoadNetworkIntersec");
+		int b = (geo.first == "RoadNetworkLines"|| geo.first ==  "RoadNetworkRelations"|| geo.first == "RoadNetworkIntersec");
 		mat->setDiffuse(Color3f(r,g,b));
 		mat->setLineWidth(3);
 		mat->setPointSize(5);

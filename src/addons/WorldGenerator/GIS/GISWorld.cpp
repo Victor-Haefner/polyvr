@@ -34,6 +34,7 @@ void GISWorld::setupOntology() {
     auto Crossing = world->addConcept("Crossing", "Node");
     auto RoadIntersection = world->addConcept("RoadIntersection", "Way");
     auto Lane = world->addConcept("Lane", "Area");
+    auto LaneSegment = world->addConcept("LaneSegment", "Lane");
     auto ParkingLane = world->addConcept("ParkingLane", "Lane");
     auto GreenBelt = world->addConcept("GreenBelt", "Area");
     auto Building = world->addConcept("Building", "Area");
@@ -73,10 +74,12 @@ void GISWorld::setupOntology() {
     Lane->addProperty("pedestrian", "bool");
     Lane->addProperty("signs", Sign);
     Lane->addProperty("graphIDs", "int");
-    Lane->addProperty("nextIntersection", RoadIntersection);
-    Lane->addProperty("lastIntersection", RoadIntersection);
     Lane->addProperty("turnDirection", "string");
     Lane->addProperty("maxspeed", "float");
+    Lane->addProperty("laneSegments", LaneSegment);
+    LaneSegment->addProperty("graphID", "int");
+    LaneSegment->addProperty("nextIntersection", RoadIntersection);
+    LaneSegment->addProperty("lastIntersection", RoadIntersection);
     ParkingLane->addProperty("angle", "float");
     ParkingLane->addProperty("capacity", "int");
     GreenBelt->addProperty("width", "float");

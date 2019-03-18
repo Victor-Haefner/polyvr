@@ -55,6 +55,8 @@ class VRRoadIntersection : public VRRoadBase {
 
         VRTrafficLightsPtr system;
 
+        vector<vector<int>> lsIDs;
+
     public:
         VRRoadIntersection();
         ~VRRoadIntersection();
@@ -70,6 +72,7 @@ class VRRoadIntersection : public VRRoadBase {
         void computeMarkings();
         void computeTrafficLights();
         void computeTrafficSigns();
+        void computeSemantics();
 
         void addRoad(VRRoadPtr road);
         vector<VRRoadPtr> getRoads();
