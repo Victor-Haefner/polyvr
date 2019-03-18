@@ -331,9 +331,17 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
     map<int, vector<pair<int, int>>> toChangeRoad;
     map<int, int> toChangeLane;
     map<int, map<int, int>> visionVec;
+    map<int, int> vehicsInRange;
+    bool updater = false;
 
     auto clearVecs =[&](){
         visionVecSaved.clear();
+        if (vehiclesDistanceToUsers.size() < 1) return;
+        sort(vehiclesDistanceToUsers.begin(),vehiclesDistanceToUsers.end());
+        for (int i = 0; i < numTransformUnits; i++) {
+            if (vehiclesDistanceToUsers.size() < i) continue;
+            vehicsInRange[vehiclesDistanceToUsers[i].second] = i;
+        }
         vehiclesDistanceToUsers.clear();
     };
 
@@ -413,7 +421,9 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
 
     auto updateSimulationArea = [&]() {
         // compare new and old list of roads in range -> remove vehicles on diff roads!
-
+        if (getTime()*1e-6 - worldUpdateTS < 0.5 && numUnits > 0.8*maxUnits) return;
+        updater = true;
+        worldUpdateTS = getTime()*1e-6;
         auto graph = roadNetwork->getGraph();
         vector<int> newSeedRoads;
         vector<int> newNearRoads;
@@ -1082,14 +1092,15 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         int N = 0;
         float current = float(getTime()*1e-6);
         //cout << current << endl;
-        deltaT = current - lastT;
-        if (deltaT == 0) cout << "TrafficSim:WARNING - delta time = 0" << endl;
-        /*if (deltaT == 0) {
+        threadDeltaT = current - lastT;
+        if (threadDeltaT == 0) cout << "TrafficSim:WARNING - delta time = 0" << endl;
+        /*if (threadDeltaT == 0) {
             this_thread::sleep_for(chrono::microseconds(1000));
             float current = float(getTime()1e-6);
-            deltaT = current - lastT;
+            threadDeltaT = current - lastT;
         }*/
         lastT = current;
+
         for (auto& road : roads) {
             for (auto& ID : road.second.vehicleIDs) {
                 auto& vehicle = vehicles[ID.first];
@@ -1100,6 +1111,12 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                     bugDelete[road.first] = ID.first;
                     continue;
                 }
+                if (!vehicsInRange.count(ID.first)) {
+                    if (float(getTime()*1e-6) - vehicle.lastSimTS < 1 && updater) continue;
+                    if (float(getTime()*1e-6) - vehicle.lastSimTS < 0.5) continue;
+                }
+                vehicle.deltaT = float(getTime()*1e-6) - vehicle.lastSimTS;
+                vehicle.lastSimTS = float(getTime()*1e-6);
 
                 computePerception(vehicle);
                 computeRoutingDecision(vehicle);
@@ -1147,9 +1164,9 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                     return false;
                 };
 
-                float nextMove = (vehicle.currentVelocity) * deltaT;
-                float nextMoveAcc = (vehicle.currentVelocity + accFactor*deltaT) * deltaT;
-                float nextMoveDec = (vehicle.currentVelocity + decFactor*deltaT) * deltaT;
+                float nextMove = (vehicle.currentVelocity) * vehicle.deltaT;
+                float nextMoveAcc = (vehicle.currentVelocity + accFactor*vehicle.deltaT) * vehicle.deltaT;
+                float nextMoveDec = (vehicle.currentVelocity + decFactor*vehicle.deltaT) * vehicle.deltaT;
                 float sinceLastLS = float(getTime()*1e-6) - vehicle.lastLaneSwitchTS;
 
                 float intersectionWidth = vehicle.distanceToNextIntersec - vehicle.distanceToNextStop;
@@ -1177,11 +1194,11 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
 
                 ///Velocity control functions
                 auto accelerate = [&](float f) {
-                    dRel = vehicle.currentVelocity + accFactor*deltaT*f;
+                    dRel = vehicle.currentVelocity + accFactor*vehicle.deltaT*f;
                     vehicle.signaling.push_back(4);
                 };
                 auto decelerate = [&](float f) {
-                    dRel = vehicle.currentVelocity + decFactor*deltaT*f;
+                    dRel = vehicle.currentVelocity + decFactor*vehicle.deltaT*f;
                     vehicle.signaling.push_back(3);
                 };
                 auto holdVelocity = [&]() {
@@ -1275,7 +1292,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 behave();
                 vehicle.currentVelocity = dRel;
                 if (debuggerCars.count(ID.first)) cout << "car " << ID.first << " - " << road.first << endl;
-                dRel *= deltaT;
+                dRel *= vehicle.deltaT;
                 //if (dRel<0.00003 && vehicle.pos.pos > 0.1 && signalBlock) { dRel = 0; vehicle.currentVelocity = dRel; }
                 //if (nextSignalDistance > 0.5 && nextSignalDistance < 5 && nextSignalState=="100") d = 0; //hack
                 if (!isSimRunning) dRel = 0;
@@ -1357,15 +1374,19 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
     updateUsers();
     clearVecs();
     float prC = timer.stop("precheck")/1000.0;
+
     timer.start("updateSimulationArea");
     updateSimulationArea();
     float upA = timer.stop("updateSimulationArea")/1000.0;
+
     timer.start("fillOctree");
     fillOctree();
     float tfO = timer.stop("fillOctree")/1000.0;
+
     timer.start("propagateVehicles");
     propagateVehicles();
     float tpV = timer.stop("propagateVehicles")/1000.0;
+
     //resolveCollisions();
     //updateDensityVisual();
     resolveRoadChanges();
@@ -1375,7 +1396,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
 
     float ttime = timer.stop("mainThread")/1000.0;
     if (ttime > 0) {
-        if (1/ttime < 60) cout << "thread " << 1/ttime  << "Hz, "<< upA << "-" << tfO << "-" << tpV << ", "<< vehicles.size() << endl;
+        if (1/ttime < 60) cout << "thread " << 1/ttime  << "Hz, "<< prC << "-" << upA << "-" << tfO << "-" << tpV << ", "<< vehicles.size() << ", " << updater << endl;
     }
     //else cout << "trafficSimThread is running at immeasurable speeds" << endl;
 

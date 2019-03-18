@@ -95,7 +95,7 @@ class VRTrafficSimulation : public VRObject {
             float acceleration;
             float decceleration;
 
-            float deltaTt;
+            float deltaT;
 
             float lastMoveTS = 0;
             float indicatorTS = 0;
@@ -114,6 +114,9 @@ class VRTrafficSimulation : public VRObject {
             VRRoadIntersectionPtr nextIntersectionE;
             VRRoadIntersectionPtr lastIntersection;
             VRRoadIntersectionPtr lastFoundIntersection;
+
+            ///Performance
+            double lastSimTS = 0.0;
 
             Vehicle(Graph::position p, int type);
             Vehicle();
@@ -204,7 +207,7 @@ class VRTrafficSimulation : public VRObject {
         float visibilityRadius = 600;
         size_t nID = -1;
         size_t tID = -1;
-        float deltaT;
+        float threadDeltaT;
         float lastT = 0.0;
         Vec3d globalOffset = Vec3d(0,0,0);
 
@@ -252,6 +255,9 @@ class VRTrafficSimulation : public VRObject {
         float speedMultiplier = 1.0;
         int debugOverRideSeedRoad = -1;
         map<int,bool> debuggerCars;
+
+        ///Performance
+        double worldUpdateTS = 0.0;
 
     public:
         VRTrafficSimulation();
