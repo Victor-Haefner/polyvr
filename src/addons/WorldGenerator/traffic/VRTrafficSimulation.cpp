@@ -800,6 +800,8 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         function<bool (VREntityPtr, int, Vec3d)> recSearch =[&](VREntityPtr newLane, int eID, Vec3d posV) {
         //searches for next intersection in graph, also searches for trafficSignals at intersection
             if (!newLane) return false;
+            auto newLaneSegment = roadNetwork->getLaneSegment(eID);
+            if (!newLaneSegment) return false;
             ///--------------TRAFFIC SIGN DETECTION
             auto signs = newLane->getAllEntities("signs");
             for (auto signEnt : signs) {
@@ -815,16 +817,18 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             }
 
             ///--------------INTERSECTION DETECTION
-            auto interE = roadNetwork->getIntersection(newLane->getEntity("nextIntersection"));
+
+            auto interE = roadNetwork->getIntersection(newLaneSegment->getEntity("nextIntersection"));
             if (interE) {
-                auto node = newLane->getEntity("nextIntersection")->getEntity("node");
+                auto node = newLaneSegment->getEntity("nextIntersection")->getEntity("node");
                 Vec3d pNode = node->getVec3("position");
                 nextInterE = interE;
                 vehicle.nextIntersectionE = interE;
 
-                auto type = newLane->getEntity("nextIntersection")->get("type")->value;
+                auto type = newLaneSegment->getEntity("nextIntersection")->get("type")->value;
                 auto g = roadNetwork->getGraph();
-                if (type != "intersection" && type != "fork" && g->getNextEdges(g->getEdge(eID)).size()==1) {
+                //cout << type << endl;
+                if (type != "intersection" && type != "fork" && g->getNextEdges(g->getEdge(eID)).size()==1 || !roadNetwork->isIntersection(interE->getEntity())) {
                     if ( (pNode - posV).length()<safetyDis + 50 ) {
                         auto nextID = g->getNextEdges(g->getEdge(eID))[0].ID;
                         auto nextLane = roadNetwork->getLane(nextID);
@@ -871,6 +875,17 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 if (type == "fork") {
                     return true; //TODO: decision making at forks
                 }
+            }
+            if (!interE) {
+                if (g->getNextEdges(g->getEdge(eID)).size() > 0) {
+                    auto nextID = g->getNextEdges(g->getEdge(eID))[0].ID;
+                    Vec3d pNode = g->getPosition(g->getEdge(nextID).to)->pos();
+                    if ( (pNode - posV).length()<safetyDis + 50 ) {
+                        auto nextLane = roadNetwork->getLane(nextID);
+                        return recSearch (nextLane, nextID, posV);
+                    }
+                }
+                else { vehicle.nextTurnLane = -1; vehicle.signalAhead = false; return false; }
             }
             vehicle.signalAhead = false;
             return false;
@@ -941,9 +956,10 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                     if (g->getPrevEdges(g->getEdge(eID)).size()==1) {
                         auto nextID = g->getPrevEdges(g->getEdge(eID))[0].ID;
                         auto nextLane = roadNetwork->getLane(nextID);
-                        auto nIE = roadNetwork->getIntersection(nextLane->getEntity("nextIntersection"));
+                        auto nextLaneSegment = roadNetwork->getLaneSegment(eID);
+                        auto nIE = roadNetwork->getIntersection(nextLaneSegment->getEntity("nextIntersection"));
                         if (nIE) {
-                            auto type = nextLane->getEntity("nextIntersection")->get("type")->value;
+                            auto type = nextLaneSegment->getEntity("nextIntersection")->get("type")->value;
                             //if (type == "fork") cout << "lul found fork" << endl;
                             if (type != "intersection") { return recL(nextLane, nextID, posV); }
                         }
@@ -975,10 +991,11 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                 bool inFr = vehicle.simPose->dir().dot(vPos - posV) > 0;
                 if (D < safetyDisT && inFr) setSight(INFRONT,D,vehicID.second);
             }
-
-            auto interE = roadNetwork->getIntersection(thisLane->getEntity("nextIntersection"));
+            auto thisLaneSegment = roadNetwork->getLaneSegment(roadID);
+            if (!thisLaneSegment->getEntity("nextIntersection")) return false;
+            auto interE = roadNetwork->getIntersection(thisLaneSegment->getEntity("nextIntersection"));
             if (interE) {
-                auto node = thisLane->getEntity("nextIntersection")->getEntity("node");
+                auto node = thisLaneSegment->getEntity("nextIntersection")->getEntity("node");
                 Vec3d pNode = node->getVec3("position");
                 nextInterE = interE;
                 if ( (pNode - posV).length() > safetyDisT ) { return false; }
@@ -1336,11 +1353,19 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         bugDelete.clear();
     };
 
+    timer.start("precheck");
     updateUsers();
     clearVecs();
+    float prC = timer.stop("precheck")/1000.0;
+    timer.start("updateSimulationArea");
     updateSimulationArea();
+    float upA = timer.stop("updateSimulationArea")/1000.0;
+    timer.start("fillOctree");
     fillOctree();
+    float tfO = timer.stop("fillOctree")/1000.0;
+    timer.start("propagateVehicles");
     propagateVehicles();
+    float tpV = timer.stop("propagateVehicles")/1000.0;
     //resolveCollisions();
     //updateDensityVisual();
     resolveRoadChanges();
@@ -1349,9 +1374,9 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
     clearGhosts();
 
     float ttime = timer.stop("mainThread")/1000.0;
-    /*if (ttime > 0) {
-        if (1/ttime < 60) cout << "trafficSimThread is running at " << 1/ttime  << "Hz, running "  << vehicles.size() << " Vehicles" << endl;
-    }*/
+    if (ttime > 0) {
+        if (1/ttime < 60) cout << "thread " << 1/ttime  << "Hz, "<< upA << "-" << tfO << "-" << tpV << ", "<< vehicles.size() << endl;
+    }
     //else cout << "trafficSimThread is running at immeasurable speeds" << endl;
 
     //cout << "-------hello, this is traffic sim thread " << deltaT << endl;
@@ -1995,6 +2020,8 @@ string VRTrafficSimulation::getEdgeData(int ID){
     string prevEdges = "prev Edges: ";
     string edgeNeighbors = "Relations: ";
     string edgeLength = "FromTo: ";
+    string nextIE = "Next Intersec: ";
+    string lastIE = "Last Intersec: ";
     string nl = "\n ";
     auto graph = roadNetwork->getGraph();
     if (!graph->hasEdge(ID)) { return "Road "+toString(ID)+" does not exist in network"; }
@@ -2005,11 +2032,20 @@ string VRTrafficSimulation::getEdgeData(int ID){
     for (auto nn : graph->getPrevEdges(edge)) { prevEdges +=" " + toString(nn.ID); }
     for (auto nn : graph->getNextEdges(edge)) { nextEdges +=" " + toString(nn.ID); }
     edgeLength += toString(graph->getPosition(edge.from)->pos()) + " " + toString(graph->getPosition(edge.to)->pos());
+    if (!roadNetwork->getLaneSegment(ID)) cout << "LaneSeg not found" << endl;
+    else {
+        if (roadNetwork->getLaneSegment(ID)->getEntity("nextIntersection")) nextIE += roadNetwork->getLaneSegment(ID)->getEntity("nextIntersection")->getName() + " - " + roadNetwork->getLaneSegment(ID)->getEntity("nextIntersection")->get("type")->value;
+        else nextIE += "not found";
+        if (roadNetwork->getLaneSegment(ID)->getEntity("lastIntersection")) lastIE += roadNetwork->getLaneSegment(ID)->getEntity("lastIntersection")->getName() + " - " + roadNetwork->getLaneSegment(ID)->getEntity("lastIntersection")->get("type")->value;
+        else lastIE += "not found";
+    }
 
     res+="Road " + toString(ID) + nl;
     res+=edgeNeighbors + nl;
     res+=prevEdges + nl;
     res+=nextEdges + nl;
+    res+=nextIE+nl;
+    res+=lastIE+nl;
     res+=edgeLength;
 
     return res;
