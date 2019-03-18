@@ -6,7 +6,7 @@
         <Object at="-1 -1 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="4294967295">
           <constraint persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="2 -1.5 -2" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.750759 -0.782177 2.89123" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+        <Object accept_root="1" aspect="1" at="0 0 0" at_dir="1" base_name="Default" far="512" fov="1.0472" from="-2 0 4" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
           <constraint persistency="666"/>
         </Object>
       </Object>
@@ -22,7 +22,6 @@ uniform sampler2D normalTexture;
 	
 varying vec3 lightVec;
 varying vec3 halfVec;
-varying vec3 eyeVec;
 
 vec3 normal;
 vec4 color;
@@ -55,7 +54,6 @@ in vec4 osg_MultiTexCoord0;
 
 varying vec3 lightVec;
 varying vec3 halfVec;
-varying vec3 eyeVec;
 	
 void main() {
 	gl_TexCoord[0] = osg_MultiTexCoord0;
@@ -76,11 +74,6 @@ void main() {
 	v.y = dot(lightDir, b);
 	v.z = dot(lightDir, n);
 	lightVec = normalize(v);
-	  
-	v.x = dot(vertexPosition, t);
-	v.y = dot(vertexPosition, b);
-	v.z = dot(vertexPosition, n);
-	eyeVec = normalize(v);
 	
 	vertexPosition = normalize(vertexPosition);
 	vec3 halfVector = normalize(gl_LightSource[0].halfVector.xyz);
@@ -98,12 +91,27 @@ void main() {
 #version 400 compatibility
 
 uniform sampler2D tex;
-const vec2 size = vec2(0.2,0.0);
 const ivec3 off = ivec3(-1,0,1);
 
 in float height;
+in vec3 teNormal;
+in float texelLength;
 
-vec3 getNormal() {
+vec3 normal;
+vec4 color;
+
+void applyLightning() {
+	vec3 lightVec = normalize(gl_LightSource[0].position.xyz);
+	vec3 halfVec = normalize(gl_LightSource[0].halfVector.xyz);
+	float NdotL = max(dot(lightVec, normal), 0.0);
+	float NdotHV = max (dot (halfVec, normal), 0.0);
+	vec4 ambient  = gl_FrontMaterial.ambient * gl_LightSource[0].ambient * color;
+	vec4 diffuse  = gl_FrontMaterial.diffuse * gl_LightSource[0].diffuse * NdotL * color;
+	vec4 specular = gl_FrontMaterial.specular * gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
+	gl_FragColor = ambient + diffuse + specular;
+}
+
+vec3 computeNormal() {
 	vec2 tc = gl_TexCoord[0].xy;
     float s11 = texture(tex, tc).r;
     float s01 = textureOffset(tex, tc, off.xy).r;
@@ -111,23 +119,34 @@ vec3 getNormal() {
     float s10 = textureOffset(tex, tc, off.yx).r;
     float s12 = textureOffset(tex, tc, off.yz).r;
     
-    vec3 va = normalize(vec3(size.xy,s21-s01));
-    vec3 vb = normalize(vec3(size.yx,s12-s10));
-    vec3 n = cross(va,vb);
-	return n;
+    vec3 va = normalize(vec3(texelLength, 0.0 ,s21-s01));
+    vec3 vb = normalize(vec3(0.0, texelLength ,s12-s10));
+    vec3 norm = cross(va,vb);
+    
+	// Building the matrix Eye Space -&gt; Tangent Space
+	vec3 n = normalize(gl_NormalMatrix * teNormal);
+	vec3 t = vec3(n[0],-n[2],n[1]);
+	vec3 b = cross (n, t);
+	t = cross(b,n);
+	
+	vec3 v;
+	v.x = dot(norm, -b);
+	v.y = dot(norm, t);
+	v.z = dot(norm, n);
+	return normalize(v);
 }
 
-vec3 mixColor(vec3 c1, vec3 c2, float t) {
+vec4 mixColor(vec4 c1, vec4 c2, float t) {
 	t = clamp(t, 0.0, 1.0);
 	return mix(c1, c2, t);
 }
 
-vec3 getColor() {
-	vec3 green = vec3(0.2,0.5,0.2);
-	vec3 black = vec3(0.0);
-	vec3 brown = vec3(0.6,0.5,0.2);
-	vec3 grey = vec3(0.7);
-	vec3 white = vec3(1.0);
+vec4 getColor() {
+	vec4 green = vec4(0.2,0.5,0.2,1.0);
+	vec4 black = vec4(0.0,0.0,0.0,1.0);
+	vec4 brown = vec4(0.6,0.5,0.2,1.0);
+	vec4 grey  = vec4(0.7,0.7,0.7,1.0);
+	vec4 white = vec4(1.0,1.0,1.0,1.0);
 	
 	float h = height;
 	if (h &gt; 1.2) return mixColor(grey, white, 10*(h-1.2));
@@ -139,15 +158,17 @@ vec3 getColor() {
 
 // TODO: fix lightning
 void main( void ) {
-	vec3 n = normalize(gl_NormalMatrix * normalize(getNormal()));
-	vec3 c = getColor();
+	normal = computeNormal();
+	color = getColor();
 	
-	// diffuse lightning
+	/* diffuse lightning
 	vec3 lightDir = normalize(gl_LightSource[0].position.xyz);
 	vec4 aCol = vec4(c * 0.4, 1.0f);
 	float dFac = dot(n, lightDir);
 	vec4 dCol = vec4(c * 0.6 * dFac, 1.0f);	
-	gl_FragColor = aCol+dCol;
+	gl_FragColor = aCol+dCol;*/
+	
+	applyLightning();
 }
 </core>
     </Script>
@@ -195,25 +216,16 @@ in vec3 tcNormal[];
 in vec2 tcTexCoords[];
 
 out float height;
+out vec3 teNormal;
+out float texelLength;
 
 uniform sampler2D texture;
+uniform int scale;
+uniform int offset;
 
 void main() {
     float u = gl_TessCoord.x; 
     float v = gl_TessCoord.y;
-    
-    /*vec2 ta = mix(tcTexCoords[0], tcTexCoords[1], u);
-    vec2 tb = mix(tcTexCoords[3], tcTexCoords[2], u);
-    vec2 tc = mix(ta, tb, v);
-    gl_TexCoord[0] = vec4(tc.x, tc.y, 1.0, 1.0);
-	
-    vec3 a = mix(tcPosition[0], tcPosition[1], u);
-    vec3 b = mix(tcPosition[3], tcPosition[2], u);
-    vec3 tePosition = mix(a, b, v);
-    
-    a = mix(tcNormal[0], tcNormal[1], u);
-    b = mix(tcNormal[3], tcNormal[2], u);
-    vec3 teNormal = mix(a, b, v);*/
     
     vec2 ta = mix(tcTexCoords[0], tcTexCoords[1], u);
     vec2 tb = mix(ta, tcTexCoords[2], v);
@@ -223,10 +235,15 @@ void main() {
     vec3 tePosition = mix(a, tcPosition[2], v);
     
     a = mix(tcNormal[0], tcNormal[1], u);
-    vec3 teNormal = mix(a, tcNormal[2], v);
+    teNormal = mix(a, tcNormal[2], v);
     
     height = texture2D(texture, gl_TexCoord[0].xy).g;
-    tePosition += teNormal*height*0.05;
+    float displacement = (offset + height*scale)*0.01;
+    tePosition += teNormal*displacement;
+    
+    float L = length(tcPosition[1] - tcPosition[0]) + length(tcPosition[2] - tcPosition[0]);
+    float T = length(tcTexCoords[1] - tcTexCoords[0]) + length(tcTexCoords[2] - tcTexCoords[0]);
+    texelLength = 0.5*T/L;
     
     gl_Position = gl_ModelViewProjectionMatrix * vec4(tePosition, 1);
 }
@@ -256,14 +273,16 @@ void main(void) {
 	if hasattr(VR, 'scene'): VR.scene.destroy()
 	VR.scene = VR.Object('scene', 'light')
 	
-	VR.find('Default').setFrom([-2.5,0,4])
-	#VR.find('Default').setAt([0,0,0])
-	VR.find('Default').setAt([0.5,-1,0])
+	VR.find('Default').setFrom([-2.0,0,4])
+	VR.find('Default').setAt([0,0,0])
 
-	def addSphere(pos, mat):
+	def addObject(pos, mat):
 		sphere = VR.Geometry('sphere')
-		sphere.setPrimitive('Sphere 0.4 3')
+		#sphere.setPrimitive('Sphere 0.4 3')
+		#sphere.setPrimitive('Teapot 6 0.2')
+		sphere.setPrimitive('Torus 0.2 0.3 32 32')
 		sphere.setFrom(pos)
+		sphere.rotate(-1.2, [1,1,1])
 		sphere.setMaterial(mat)
 		VR.scene.addChild(sphere)
 		return sphere
@@ -279,24 +298,15 @@ void main(void) {
 	mat1 = simpleMaterial([0,0.4,0.7], [0,0,0], [0,0,0])
 	mat2 = simpleMaterial([0,0.4,0.7], [1,1,1], [0,0,0])
 	mat3 = simpleMaterial([0,0.4,0.7], [1,1,1], [0,0.2,0.4])
-
-	addSphere([-1, 1, 0], mat1)
-	addSphere([ 0, 1, 0], mat2)
-	addSphere([ 1, 1, 0], mat3)
+	addObject([-1, 1, 0], mat1)
+	addObject([ 0, 1, 0], mat2)
+	addObject([ 1, 1, 0], mat3)
 	
 	# textured materials
 	def simpleNoise(color1, color2, size):
 		tg = VR.TextureGenerator()
 		tg.addSimpleNoise([size,size,1], False, color1, color2)
 		return tg.compose(0)
-		
-	def makeSnapshot():
-		tr = VR.TextureRenderer('tr')
-		tr.setup(VR.find('Default'), 400, 400)
-		tr.addLink(VR.find('light'))
-		tex = tr.renderOnce()
-		tex.write('test.png')
-		return tex
 		
 	def makeCubeMap(sphere):
 		tr = VR.TextureRenderer()
@@ -308,36 +318,31 @@ void main(void) {
 	mat4 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.2,0.2,0.2])
 	mat5 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.2,0.2,0.2])
 	mat6 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.2,0.2,0.2])
-	
-	addSphere([-1, 0, 0], mat4)
-	addSphere([ 1, 0, 0], mat5)
-	S6 = addSphere([ 0, 0, 0], mat6)
+	addObject([-1, 0, 0], mat4)
+	addObject([ 1, 0, 0], mat5)
+	S6 = addObject([ 0, 0, 0], mat6)
 	
 	mat7 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.2,0.2,0.2])
-	mat8 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.2,0.2,0.2])
-	
-	S7 = addSphere([-0.5,-1, 0], mat7)
-	S8 = addSphere([ 0.5,-1, 0], mat8)
-
-
-	noise1 = simpleNoise([0,1,0], [0.3,0.5,0], 512)
-	noise2 = simpleNoise([1,1,1], [0.5,0.5,0.5], 512)
-	noise3 = simpleNoise([1,1,1], [0.5,0.5,0.5], 128)
+	mat8 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.4,0.4,0.4])
+	S7 = addObject([-0.5,-1, 0], mat7)
+	S8 = addObject([ 0.5,-1, 0], mat8)
 	
 	# simple texture
+	noise1 = simpleNoise([0,0.9,1], [0,0.7,0.8], 512)
 	mat4.setTexture(noise1)
 	
 	# metalic effect
+	noise2 = simpleNoise([1,1,1], [0.5,0.5,0.5], 512)
 	mat5.setTexture(noise2)
 	mat5.addPass()
-	mat5.setTexture(noise2)
-	mat5.setTransparency(0.3)
+	mat5.setTexture('sphereEnv.jpg')
+	mat5.setTransparency(0.5)
 	mat5.setTextureType('SphereEnv')
 	
 	# bumpmap
 	bmt = VR.Image()
 	bmt.read('bumpmap.png')
-	mat7.setTexture(noise1)
+	mat7.setTexture(noise2)
 	mat7.setTexture(bmt,1)
 	mat7.setVertexProgram('bumpmapVP')
 	mat7.setFragmentProgram('bumpmapFP')
@@ -345,21 +350,24 @@ void main(void) {
 	mat7.setShaderParameter('normalTexture', 1)
 	
 	# displacement map
+	noise3 = simpleNoise([1,1,1], [0.5,0.5,0.5], 128)
 	mat8.setTexture(noise3)
 	mat8.setVertexProgram('displacementVP')
 	mat8.setFragmentProgram('displacementFP')
 	#mat8.setGeometryProgram('displacementGP')
 	mat8.setTessControlProgram('displacementTCP')
 	mat8.setTessEvaluationProgram('displacementTEP')
+	mat8.setShaderParameter('offset', -5)
+	mat8.setShaderParameter('scale', 5)
 	S8.convertToTrianglePatches()
 	
 	
-	# reflection (last to get cubemap with other spheres on it)
+	# reflection (last to get environment with other spheres on it)
 	maps = makeCubeMap(S6)
 	mat6.setTexture(noise2)
 	mat6.addPass()
 	mat6.setTextureType('CubeEnv')
-	mat6.setTransparency(0.3)
+	mat6.setTransparency(0.5)
 	for tex,side in zip(maps, ['front', 'back', 'left', 'right', 'top', 'bottom']):
 		mat6.setCubeTexture(tex, side)
 		

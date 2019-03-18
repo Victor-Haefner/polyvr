@@ -669,6 +669,9 @@ void VRMaterial::setCubeTexture(VRTexturePtr img, string side, int unit) {
     auto md = mats[activePass];
     // TODO: check for textureobj chunk and remove it
 
+    if (!md->envChunks.count(unit)) { md->envChunks[unit] = TextureEnvChunk::create(); md->mat->addChunk(md->envChunks[unit], unit); }
+    md->envChunks[unit]->setEnvMode(GL_MODULATE);
+
     if (!md->ctxChunks.count(unit)) { md->ctxChunks[unit] = CubeTextureObjChunk::create(); md->mat->addChunk(md->ctxChunks[unit], unit); }
     if (side == "front")  md->ctxChunks[unit]->setImage    (img->getImage());
     if (side == "back")   md->ctxChunks[unit]->setPosZImage(img->getImage());
