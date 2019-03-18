@@ -1384,7 +1384,7 @@ void VRTrafficSimulation::updateSimulation() {
             }
             auto& v = vehicles[vehiclesDistanceToUsers2[n].second];
             if (!vtf.t) { cout << "VRTrafficSimulation::updateSimulation no transform" << endl; continue; }
-            cout << vtfP.first << endl;
+            //cout << vtfP.first << endl;
             vtf.t->setMatrix(v.simPose2.asMatrix());
             vtf.t->setVisible(true);
             k++;
@@ -1515,9 +1515,11 @@ void VRTrafficSimulation::changeLane(int ID, int direction, bool forced) {
         if (rSize > 0) {
             auto opt = edge.relations[0];
             if (roadNetwork->getGraph()->getEdge(opt).ID == -1) return false;
+            if (roadNetwork->getGraph()->getEdge(opt).ID == 0) return false;
             pos.edge = opt;
             auto pose = roadNetwork->getPosition(pos);
             if (!pose) return false;
+            if (pose->pos() == NULL) return false;
             if ((pose->pos() - poseV->pos()).length() > 4.5) return false;
             float res = vUp.cross(vDir).dot(pose->pos() - poseV->pos());
             if (res > 0 && input==1) { edgeLeft = opt; return true; }
