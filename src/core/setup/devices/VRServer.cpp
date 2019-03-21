@@ -17,6 +17,7 @@ template<> string typeName(const VRServer& t) { return "Server"; }
 
 
 VRServer::VRServer(int port) : VRDevice("server") {
+    addBeacon();
     soc = VRSceneManager::get()->getSocket(port);
     this->port = port;
     cb = new VRHTTP_cb( "Mobile_server_callback", boost::bind(&VRServer::callback, this, _1) );

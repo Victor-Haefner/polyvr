@@ -14,7 +14,7 @@ OSG_BEGIN_NAMESPACE;
 class VRProcessEngine {
     public:
         struct Message {
-            VRProcessNodePtr messageNode; //TODO: remove if not needed
+            VRProcessNodePtr messageNode;
             string message;
             string sender;
             string receiver;
@@ -111,7 +111,6 @@ class VRProcessEngine {
         void pause();
 
         vector<VRProcessNodePtr> getCurrentStates();
-        //vector<VRProcessNodePtr> getCurrentPath(int sID);
         VRProcessNodePtr getCurrentState(int sID);
         Transition& getTransition(int sID, int tID);
         vector<VRProcessNodePtr> getTraversedPath(int sID);

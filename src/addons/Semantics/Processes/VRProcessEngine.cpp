@@ -32,9 +32,7 @@ void VRProcessEngine::Inventory::remMessage(Message m) {
 // ----------- process engine prerequisite --------------
 
 bool VRProcessEngine::Prerequisite::valid(Inventory* inventory) {
-    //cout << " VRProcessEngine::Prerequisite::valid check for '" << message.message << "' inv: " << inventory << endl;
     bool b = inventory->hasMessage(message);
-    //if (b) inventory->remMessage(message);
     return b;
 }
 
@@ -85,12 +83,9 @@ void VRProcessEngine::Actor::receiveMessage(Message message) {
     inventory.messages.push_back( message );
 }
 
-
 void VRProcessEngine::Actor::sendMessage(Message* m) {
     cout << "VRProcessEngine::Actor::sendMessage '" << m->message << "' to '" << m->sender << "' inv: " << &inventory << ", actor: " << this << endl;
     Message* message = new Message(m->message, m->sender, m->receiver, m->messageNode);
-    //sentMessages.push_back( message );
-    //cout << this->label << " sent messages: " << sentMessages.size() << endl;
 }
 
 void VRProcessEngine::Actor::tryAdvance() {
@@ -144,7 +139,6 @@ void VRProcessEngine::reset() {
 
     for (auto& actor : subjects) {
         actor.second.inventory.messages.clear();
-        //actor.second.sentMessages.clear();
         actor.second.traversedPath.clear();
     }
 }

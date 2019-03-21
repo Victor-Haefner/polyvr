@@ -59,6 +59,7 @@ class VRLeapFrame : public std::enable_shared_from_this<VRLeapFrame> {
 
 typedef VRLeapFrame::HandPtr HandPtr;
 typedef VRLeapFrame::PenPtr PenPtr;
+//typedef VRLeapFrame::InteractionBoxPtr InteractionBoxPtr;
 
 OSG_END_NAMESPACE;
 

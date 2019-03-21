@@ -40,7 +40,7 @@ class VRIntersect {
 
         VRSignalPtr dragSignal = 0;
         VRSignalPtr dropSignal = 0;
-        VRTransformWeakPtr dragged;
+        map<VRTransform*, VRTransformWeakPtr> dragged;
         VRTransformPtr dragged_ghost;
         uint drop_time = 0;
         VRGeometryPtr cross = 0;
@@ -64,7 +64,7 @@ class VRIntersect {
 
         VRIntersection intersect(VRObjectWeakPtr wtree, bool force = false, VRTransformPtr caster = 0, Vec3d dir = Vec3d(0,0,-1));
         void drag(VRIntersection i, VRTransformWeakPtr caster);
-        void drop(VRDeviceWeakPtr dev = VRDevicePtr(0));
+        void drop(VRDeviceWeakPtr dev = VRDevicePtr(0), VRTransformWeakPtr beacon = VRTransformPtr(0));
         VRDeviceCbPtr addDrag(VRTransformWeakPtr caster, VRObjectWeakPtr tree);
         VRDeviceCbPtr addDrag(VRTransformWeakPtr caster);
         VRDeviceCbPtr getDrop();
@@ -80,7 +80,7 @@ class VRIntersect {
 
         VRSignalPtr getDragSignal();
         VRSignalPtr getDropSignal();
-        VRTransformPtr getDraggedObject();
+        VRTransformPtr getDraggedObject(VRTransformPtr beacon = 0);
         VRTransformPtr getDraggedGhost();
         VRIntersection getLastIntersection();
 };

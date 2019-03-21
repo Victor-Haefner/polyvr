@@ -166,13 +166,13 @@ void VRDevice::printMap() {
 void VRDevice::setSpeed(Vec2d s) { speed = s; }
 Vec2d VRDevice::getSpeed() { return speed; }
 
-void VRDevice::drag(VRObjectPtr obj) {
+void VRDevice::drag(VRObjectPtr obj, int bID) {
     VRIntersection i;
     i.object = obj;
-    VRIntersect::drag(i, getBeacon());
+    VRIntersect::drag(i, getBeacon(bID));
 }
 
-void VRDevice::drop() { VRIntersect::drop(); }
+void VRDevice::drop(int bID) { VRIntersect::drop( VRDevicePtr(0), getBeacon(bID) ); }
 
 bool VRDevice::intersect2(VRObjectPtr subtreeRoot, bool force, VRTransformPtr caster, Vec3d dir) {
     OSG::VRIntersection ins = VRIntersect::intersect(subtreeRoot, force, caster, dir);

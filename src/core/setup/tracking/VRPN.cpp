@@ -65,6 +65,7 @@ void VRPN_CALLBACK handle_analog(void* data, const vrpn_ANALOGCB analog ) {
 }
 
 VRPN_device::VRPN_device() : VRDevice("vrpn_device") {
+    addBeacon();
     store("address", &address);
     store("offset", &offset);
     store("scale", &scale);
