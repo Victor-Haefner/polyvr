@@ -34,19 +34,6 @@ HandPtr VRLeapFrame::Hand::clone() {
     return copy;
 }
 
-/*
-InteractionBoxPtr VRLeapFrame::InteractionBox::clone() {
-    auto copy = make_shared<VRLeapFrame::InteractionBox>();
-
-    copy->center = center;
-    copy->depth = depth;
-    copy->height = height;
-    copy->width = width;
-
-    return copy;
-};
-*/
-
 VRLeapFramePtr VRLeapFrame::ptr() { return static_pointer_cast<VRLeapFrame>( shared_from_this() ); }
 
 Pose getDirTransform(Pose transformation) {
