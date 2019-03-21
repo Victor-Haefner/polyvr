@@ -28,7 +28,6 @@ PyMethodDef VRPyLeap::methods[] = {
     {"getGrabStrength",       PyWrap(Leap, getGrabStrength,     "Get GrabStrength value of grab interaction", float, int ) },
     {"getConfidence",         PyWrap(Leap, getConfidence,       "Get Confidence value of grab interaction", float, int ) },
     {"getIsPinching",         PyWrap(Leap, getIsPinching,       "Get isPinching boolean value of grab interaction", bool, int ) },
-    //{"enablePichObject",      PyWrap(Leap, enablePichObject,    "Enable Leap Pinch interaction for an Object", void, VRObjectPtr ) },
     {"addHandsGeometry",      PyWrap(Leap, addHandsGeometry,    "Add Leap Hands Geometry", vector<VRObjectPtr> ) },
     {"enableDnD",             PyWrap(Leap, enableDnD,           "Enable leap DnD", void, VRObjectPtr ) },
     {NULL} /* Sentinel */

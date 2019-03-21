@@ -439,22 +439,26 @@ float VRLeap::getDropThreshold(){
 }
 
 float VRLeap::getPinchStrength(int hand) {
-    if (hands[hand] == nullptr) return 0;
-    else return hands[hand]->pinchStrength;
+    if (hands[hand] == nullptr) {
+            return 0;
+    } else return hands[hand]->pinchStrength;
 
 }
 
 float VRLeap::getGrabStrength(int hand) {
-    if (hands[hand] == nullptr) return 0;
-    else return hands[hand]->grabStrength;
+    if (hands[hand] == nullptr) {
+            return 0;
+    } else return hands[hand]->grabStrength;
 }
 float VRLeap::getConfidence(int hand) {
-    if (hands[hand] == nullptr) return 0;
-    else return hands[hand]->confidence;
+    if (hands[hand] == nullptr) {
+            return 0;
+    } else return hands[hand]->confidence;
 }
 bool VRLeap::getIsPinching(int hand) {
-    if (hands[hand] == nullptr) return 0;
-    else return hands[hand]->isPinching;
+    if (hands[hand] == nullptr) {
+            return 0;
+    } else return hands[hand]->isPinching;
 }
 
 void VRLeap::enableDnD(VRObjectPtr root) {
@@ -465,47 +469,22 @@ void VRLeap::enableDnD(VRObjectPtr root) {
 void VRLeap::leapDnD(VRDeviceWeakPtr dev) {
     if (!doDnD) return;
 
-    for (auto key : {0,1}) { //use hands.size()
+    for (auto key : {0,1}) {
         int bID = key*6; // 0 and 6
         auto s = b_state(key);
 
         auto beacon = getBeacon(bID);
         if (s == 1) {
-            cout << "  leapDnD 3" << endl;
             if (intersect2(dndRoot, 0, beacon, Vec3d(0,1,-1))) {
-                cout << "   leapDnD 4" << endl;
                 auto i = getIntersected();
                 if (i) {
                     drag(i, bID);
-                    cout << "    drag " << i->getName() << endl;
                 }
             }
         } else {
             drop(bID);
-            cout << "           drop " << endl; //do only call drop if an object is dragged
         }
     }
-
-
-    /*
-    for bID, key in zip([0,6],[0,1]):
-        if not leap in VR.leapStates: VR.leapStates[leap] = {}
-        if not bID in VR.leapStates[leap]: VR.leapStates[leap][bID] = 0
-
-        s = leap.getKeyState(key)
-        if VR.leapStates[leap][bID] != s:
-            VR.leapStates[leap][bID] = s
-            beacon = leap.getBeacon(bID)
-
-            if s == 1:
-                if leap.intersect(VR.find('Box'), False, beacon, [0,1,-1]):
-                    i = leap.getIntersected()
-                    if i:
-                        leap.drag(i,bID)
-
-
-            else: leap.drop(bID)
-    */
 }
 
 VRLeapPtr VRLeap::ptr() { return static_pointer_cast<VRLeap>( shared_from_this() ); }

@@ -32,8 +32,8 @@ class VRLeap : public VRDevice {
         string serial;
 
         vector<HandPtr> hands;
-        float dragThreshold = 0.7; // 0.5
-        float dropThreshold = 0.5; // 0.3
+        float dragThreshold = 0.05; // 0.5
+        float dropThreshold = 0.03; // 0.3
 
         void newFrame(Json::Value json);
         void updateHandFromJson(Json::Value& handData, Json::Value& pointableData, HandPtr hand);
