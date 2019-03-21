@@ -165,7 +165,13 @@ bool CSGGeometry::disableEditMode() {
 		VRObjectPtr obj = children[i];
         obj->setVisible(false);
 
-		if (obj->getType() == string("Geometry")) {
+		if(obj->getType() == "CSGGeometry") {
+			CSGGeometryPtr geo = static_pointer_cast<CSGGeometry>(obj);
+			polys[i] = geo->getCSGGeometry(); // TODO: where does this come from?? keep the old!
+			continue;
+		}
+
+		if (obj->hasTag("geometry")) {
 			VRGeometryPtr geo = static_pointer_cast<VRGeometry>(obj);
             cout << "child: " << geo->getName() << " toPolyhedron\n";
             bool success;
@@ -182,12 +188,6 @@ bool CSGGeometry::disableEditMode() {
                 //obj->setVisible(true); // We stay in edit mode, so both children need to be visible
                 return false;
             }
-			continue;
-		}
-
-		if(obj->getType() == "CSGGeometry") {
-			CSGGeometryPtr geo = static_pointer_cast<CSGGeometry>(obj);
-			polys[i] = geo->getCSGGeometry(); // TODO: where does this come from?? keep the old!
 			continue;
 		}
 

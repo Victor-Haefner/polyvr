@@ -28,7 +28,6 @@ using namespace boost::property_tree;
 
 template<> string typeName(const VRAMLLoader& o) { return "AMLLoader"; }
 
-VRObjectPtr root;
 string directory;
 
 VRAMLLoader::VRAMLLoader() {
@@ -357,7 +356,7 @@ void VRAMLLoader::loadProducts(string path, Matrix4f m)
 }
 
 VRObjectPtr VRAMLLoader::load(string path) {
-    root = VRObject::create("aml_root");
+    VRObjectPtr root = VRObject::create("aml_root");
 
     /**
     Assimp::Importer importer;

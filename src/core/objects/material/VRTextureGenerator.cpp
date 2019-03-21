@@ -341,4 +341,3 @@ void VRTextureGenerator::addSimpleNoise(Vec3i dim, bool doAlpha, Color4f fg, Col
     add(PERLIN, amount*1./16, bg, fg);
     add(PERLIN, amount*1./32, bg, fg);
 }
-

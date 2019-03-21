@@ -29,6 +29,7 @@
 #include <OpenSG/OSGTextureObjChunk.h>
 #include <OpenSG/OSGTextureEnvChunk.h>
 #include <OpenSG/OSGTexGenChunk.h>
+#include <OpenSG/OSGTextureTransformChunk.h>
 #include <OpenSG/OSGLineChunk.h>
 #include <OpenSG/OSGPointChunk.h>
 #include <OpenSG/OSGPolygonChunk.h>
@@ -39,6 +40,7 @@
 #include <OpenSG/OSGStencilChunk.h>
 #include <OpenSG/OSGDepthChunk.h>
 #include <OpenSG/OSGMaterialChunk.h>
+#include <OpenSG/OSGCubeTextureObjChunk.h>
 
 #include <libxml++/nodes/element.h>
 #include <GL/glext.h>
@@ -54,9 +56,11 @@ struct VRMatData {
     MaterialChunkMTRecPtr colChunk;
     BlendChunkMTRecPtr blendChunk;
     DepthChunkMTRecPtr depthChunk;
-    map<int, TextureObjChunkMTRecPtr> texChunks;
-    map<int, TextureEnvChunkMTRecPtr> envChunks;
-    TexGenChunkMTRecPtr genChunk;
+    map<int, TextureObjChunkMTRecPtr>       texChunks;
+    map<int, TextureEnvChunkMTRecPtr>       envChunks;
+    map<int, CubeTextureObjChunkMTRecPtr>   ctxChunks;
+    map<int, TexGenChunkMTRecPtr>           genChunks;
+    map<int, TextureTransformChunkMTRecPtr> tnsChunks;
     LineChunkMTRecPtr lineChunk;
     PointChunkMTRecPtr pointChunk;
     PolygonChunkMTRecPtr polygonChunk;
@@ -100,9 +104,13 @@ struct VRMatData {
         mat->addChunk(colChunk);
         twoSidedChunk = TwoSidedLightingChunk::create();
         mat->addChunk(twoSidedChunk);
+        texChunks.clear();
+        envChunks.clear();
+        genChunks.clear();
+        ctxChunks.clear();
+        tnsChunks.clear();
         blendChunk = 0;
         depthChunk = 0;
-        genChunk = 0;
         lineChunk = 0;
         pointChunk = 0;
         polygonChunk = 0;
@@ -129,7 +137,9 @@ struct VRMatData {
         if (depthChunk) { m->depthChunk = dynamic_pointer_cast<DepthChunk>(depthChunk->shallowCopy()); m->mat->addChunk(m->depthChunk); }
         for (auto t : texChunks) { TextureObjChunkMTRecPtr mt = dynamic_pointer_cast<TextureObjChunk>(t.second->shallowCopy()); m->texChunks[t.first] = mt; m->mat->addChunk(mt, t.first); }
         for (auto t : envChunks) { TextureEnvChunkMTRecPtr mt = dynamic_pointer_cast<TextureEnvChunk>(t.second->shallowCopy()); m->envChunks[t.first] = mt; m->mat->addChunk(mt, t.first); }
-        if (genChunk) { m->genChunk = dynamic_pointer_cast<TexGenChunk>(genChunk->shallowCopy()); m->mat->addChunk(m->genChunk); }
+        for (auto t : genChunks) { TexGenChunkMTRecPtr     mt = dynamic_pointer_cast<TexGenChunk>    (t.second->shallowCopy()); m->genChunks[t.first] = mt; m->mat->addChunk(mt, t.first); }
+        for (auto t : ctxChunks) { CubeTextureObjChunkMTRecPtr     mt = dynamic_pointer_cast<CubeTextureObjChunk>    (t.second->shallowCopy()); m->ctxChunks[t.first] = mt; m->mat->addChunk(mt, t.first); }
+        for (auto t : tnsChunks) { TextureTransformChunkMTRecPtr   mt = dynamic_pointer_cast<TextureTransformChunk>  (t.second->shallowCopy()); m->tnsChunks[t.first] = mt; m->mat->addChunk(mt, t.first); }
         if (lineChunk) { m->lineChunk = dynamic_pointer_cast<LineChunk>(lineChunk->shallowCopy()); m->mat->addChunk(m->lineChunk); }
         if (pointChunk) { m->pointChunk = dynamic_pointer_cast<PointChunk>(pointChunk->shallowCopy()); m->mat->addChunk(m->pointChunk); }
         if (polygonChunk) { m->polygonChunk = dynamic_pointer_cast<PolygonChunk>(polygonChunk->shallowCopy()); m->mat->addChunk(m->polygonChunk); }
@@ -637,19 +647,63 @@ void VRMaterial::setTextureAndUnit(VRTexturePtr img, int unit) {
     texChunk->setImage(img->getImage());
 }
 
-void VRMaterial::setTextureType(string type) {
+void VRMaterial::setMappingBeacon(VRObjectPtr obj, int unit) {
+    auto md = mats[activePass];
+    if (!md->genChunks.count(unit)) { md->genChunks[unit] = TexGenChunk::create(); md->mat->addChunk(md->genChunks[unit], unit); }
+    md->genChunks[unit]->setSBeacon(obj->getNode()->node);
+    md->genChunks[unit]->setTBeacon(obj->getNode()->node);
+    md->genChunks[unit]->setRBeacon(obj->getNode()->node);
+    md->genChunks[unit]->setQBeacon(obj->getNode()->node);
+}
+
+void VRMaterial::setMappingPlanes(Vec4d p1, Vec4d p2, Vec4d p3, Vec4d p4, int unit) {
+    auto md = mats[activePass];
+    if (!md->genChunks.count(unit)) { md->genChunks[unit] = TexGenChunk::create(); md->mat->addChunk(md->genChunks[unit], unit); }
+    md->genChunks[unit]->setGenFuncSPlane(Vec4f(p1)); // GL_REFLECTION_MAP
+    md->genChunks[unit]->setGenFuncTPlane(Vec4f(p2));
+    md->genChunks[unit]->setGenFuncRPlane(Vec4f(p3));
+    md->genChunks[unit]->setGenFuncQPlane(Vec4f(p4));
+}
+
+void VRMaterial::setCubeTexture(VRTexturePtr img, string side, int unit) {
+    auto md = mats[activePass];
+    // TODO: check for textureobj chunk and remove it
+
+    if (!md->envChunks.count(unit)) { md->envChunks[unit] = TextureEnvChunk::create(); md->mat->addChunk(md->envChunks[unit], unit); }
+    md->envChunks[unit]->setEnvMode(GL_MODULATE);
+
+    if (!md->ctxChunks.count(unit)) { md->ctxChunks[unit] = CubeTextureObjChunk::create(); md->mat->addChunk(md->ctxChunks[unit], unit); }
+    if (side == "front")  md->ctxChunks[unit]->setImage    (img->getImage());
+    if (side == "back")   md->ctxChunks[unit]->setPosZImage(img->getImage());
+    if (side == "left")   md->ctxChunks[unit]->setNegXImage(img->getImage());
+    if (side == "right")  md->ctxChunks[unit]->setPosXImage(img->getImage());
+    if (side == "top")    md->ctxChunks[unit]->setPosYImage(img->getImage());
+    if (side == "bottom") md->ctxChunks[unit]->setNegYImage(img->getImage());
+}
+
+void VRMaterial::setTextureType(string type, int unit) {
     auto md = mats[activePass];
     if (type == "Normal") {
-        if (md->genChunk == 0) return;
-        md->mat->subChunk(md->genChunk);
-        md->genChunk = 0;
+        if (!md->genChunks.count(unit)) return;
+        md->mat->subChunk(md->genChunks[unit]);
+        md->genChunks.erase(unit);
         return;
     }
 
     if (type == "SphereEnv") {
-        if (md->genChunk == 0) { md->genChunk = TexGenChunk::create(); md->mat->addChunk(md->genChunk); }
-        md->genChunk->setGenFuncS(GL_SPHERE_MAP);
-        md->genChunk->setGenFuncT(GL_SPHERE_MAP);
+        if (!md->genChunks.count(unit)) { md->genChunks[unit] = TexGenChunk::create(); md->mat->addChunk(md->genChunks[unit], unit); }
+        md->genChunks[unit]->setGenFuncS(GL_SPHERE_MAP);
+        md->genChunks[unit]->setGenFuncT(GL_SPHERE_MAP);
+    }
+
+    if (type == "CubeEnv") {
+        if (!md->genChunks.count(unit)) { md->genChunks[unit] = TexGenChunk::create(); md->mat->addChunk(md->genChunks[unit], unit); }
+        md->genChunks[unit]->setGenFuncS(GL_REFLECTION_MAP); // GL_REFLECTION_MAP
+        md->genChunks[unit]->setGenFuncT(GL_REFLECTION_MAP);
+        md->genChunks[unit]->setGenFuncR(GL_REFLECTION_MAP);
+
+        if (!md->tnsChunks.count(unit)) { md->tnsChunks[unit] = TextureTransformChunk::create(); md->mat->addChunk(md->tnsChunks[unit], unit); }
+        md->tnsChunks[unit]->setUseCameraBeacon(true);
     }
 }
 
