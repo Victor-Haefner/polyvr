@@ -130,7 +130,7 @@ VRIntersection VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray) {
 * @param wtree: root of sub scene graph to be intersected with
 * @param force: determines if reevaluation of intersection within a single frame should be forced
 * @param caster: beacon which should be used for intersection (for use of multiple beacons with multitouch)
-* @param dir: currently unused
+* @param dir: local ray casting vector
 */
 VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force, VRTransformPtr caster, Vec3d dir) {
 
@@ -156,7 +156,7 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force, VRTrans
             }
         }
 
-        Line ray = caster->castRay(t);
+        Line ray = caster->castRay(t, dir);
         auto ins_tmp = intersectRay(t, ray);
         if (ins_tmp.hit) return ins_tmp;
     }
@@ -165,7 +165,7 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force, VRTrans
 
 VRIntersect::VRIntersect() {
     initCross();
-    drop_fkt = VRFunction<VRDeviceWeakPtr>::create("Intersect_drop", boost::bind(&VRIntersect::drop, this, _1));
+    drop_fkt = VRFunction<VRDeviceWeakPtr>::create("Intersect_drop", boost::bind(&VRIntersect::drop, this, _1, VRTransformPtr(0)));
     dragged_ghost = VRTransform::create("dev_ghost");
 }
 
@@ -189,7 +189,7 @@ void VRIntersect::drag(VRIntersection i, VRTransformWeakPtr wcaster) {
     auto caster = wcaster.lock();
     if (!obj || !caster) return;
 
-    auto d = getDraggedObject();
+    auto d = getDraggedObject(caster);
     if (obj == 0 || d != 0 || !dnd) return;
 
     obj = obj->findPickableAncestor();
@@ -197,7 +197,7 @@ void VRIntersect::drag(VRIntersection i, VRTransformWeakPtr wcaster) {
     if (!obj->hasTag("transform")) return;
 
     auto dobj = static_pointer_cast<VRTransform>(obj);
-    dragged = dobj;
+    dragged[caster.get()] = dobj;
     dobj->drag(caster, i);
 
     dragged_ghost->setMatrix(dobj->getMatrix());
@@ -206,17 +206,21 @@ void VRIntersect::drag(VRIntersection i, VRTransformWeakPtr wcaster) {
     dragSignal->triggerPtr<VRDevice>();
 }
 
-void VRIntersect::drop(VRDeviceWeakPtr dev) {
-    auto d = getDraggedObject();
+void VRIntersect::drop(VRDeviceWeakPtr dev, VRTransformWeakPtr beacon) {
+    auto d = getDraggedObject(beacon.lock());
     if (d) {
         d->drop();
         dropSignal->triggerPtr<VRDevice>();
         drop_time = VRGlobals::CURRENT_FRAME;
-        dragged.reset();
+        dragged.erase(beacon.lock().get());
     }
 }
 
-VRTransformPtr VRIntersect::getDraggedObject() { return dragged.lock(); }
+VRTransformPtr VRIntersect::getDraggedObject(VRTransformPtr beacon) {
+    if (beacon == 0) return dragged.begin()->second.lock();
+    if (!dragged.count(beacon.get())) return 0;
+    return dragged[beacon.get()].lock();
+}
 
 VRTransformPtr VRIntersect::getDraggedGhost() { return dragged_ghost; }
 VRSignalPtr VRIntersect::getDragSignal() { return dragSignal; }

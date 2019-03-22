@@ -78,8 +78,8 @@ class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, p
         void setSpeed(Vec2d s);
         Vec2d getSpeed();
 
-        void drag(VRObjectPtr obj);
-        void drop();
+        void drag(VRObjectPtr obj, int bID = 0);
+        void drop(int bID = 0);
 
         VRTransformPtr getBeacon(int i = 0);
         void setBeacon(VRTransformPtr, int i = 0);

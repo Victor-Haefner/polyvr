@@ -47,6 +47,7 @@ class VRProcessLayout : public VRTransform {
         VRProcessLayoutPtr ptr();
 
         void setProcess(VRProcessPtr p);
+        VRProcessPtr getProcess();
         void setEngine(VRProcessEnginePtr e);
         VRObjectPtr getElement(int i);
         void remElement(VRObjectPtr o);
