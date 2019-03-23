@@ -111,6 +111,12 @@ void VRTransform::computeMatrix4d() {
     }
 }
 
+void VRTransform::enableOptimization(bool b) {
+    doOptimizations = b;
+    if (b) updateTransformation();
+    else enableCore();
+}
+
 void VRTransform::updateTransformation() {
     if (!t->trans) {
         cout << "Error in VRTransform::updateTransformation of " << getName() << "(" << this << "): t->trans is invalid! (" << t->trans << ")" << endl;

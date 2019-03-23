@@ -146,6 +146,7 @@ class VRTransform : public VRObject {
 
         int get_orientation_mode();
         void set_orientation_mode(int b);
+        void enableOptimization(bool b);
 
         void applyTransformation(PosePtr p = 0);
 
