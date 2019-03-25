@@ -46,14 +46,14 @@ void Expression::Token::initTokens() {
     add("{", 3, {"bracket"});
     add("}", 3, {"bracket"});
 
-    add(".", 4, {"delimiter", "math", "operator"});
-    add(",", 4.5, {"delimiter", "math", "operator"});
-
     add("*", 5, {"math", "operator"});
     add("/", 5, {"math", "operator"});
 
     add("+", 6, {"math", "operator"});
     add("-", 6, {"math", "operator"});
+
+    add(".", 7, {"delimiter", "math", "operator"});
+    add(",", 7.5, {"delimiter", "math", "operator"});
 
     add(";", 8, {"delimiter", "operator"});
     add(":", 9, {"inference", "operator"});
@@ -310,7 +310,7 @@ MathExpression::ValueBase* MathExpression::Value<T>::mult(MathExpression::ValueB
 
 template<typename T>
 MathExpression::ValueBase* MathExpression::Value<T>::div(MathExpression::ValueBase* n) {
-    //if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value / v2->value);
+    if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value / v2->value);
     return 0;
 }
 
@@ -360,6 +360,10 @@ namespace OSG {
         if (auto v2 = dynamic_cast<Value<Vec3d>*>(n)) return new Value<float>(value.dot(v2->value));
         return 0;
     }
+
+    template<> MathExpression::ValueBase* MathExpression::Value<Vec3d>::div(MathExpression::ValueBase* n) {
+        return 0;
+    }
 }
 
 bool MathExpression::isMathToken(char c) {
@@ -393,15 +397,15 @@ bool MathExpression::isMathExpression() {
 string MathExpression::compute() {
     auto setValue = [&](TreeNode* node) {
         if (node->isA("Float")) {
-            float f;
+            double f;
             bool b = toValue(node->collapseString(),f);
-            if (b) values[node] = new Value<float>(f);
+            if (b) values[node] = new Value<double>(f);
         }
 
         if (node->isA("Integer")) {
-            int f;
+            double f;
             bool b = toValue(node->collapseString(),f);
-            if (b) values[node] = new Value<int>(f);
+            if (b) values[node] = new Value<double>(f);
         }
 
         if (node->isA("Vector")) {
@@ -446,6 +450,7 @@ string MathExpression::compute() {
         if (op == "cross") value = leftV->cross(rightV);
         if (op == "dot") value = leftV->dot(rightV);
         if (value) values[node] = value;
+        else cout << "Warning! operation " << op << " failed! " << leftV->toString() << " with " << rightV->toString() << endl;
     };
 
     auto computeFunction = [&](TreeNode* node) {
@@ -496,6 +501,7 @@ string MathExpression::compute() {
 
     auto n0 = tree->children[0];
     aggregateResults(n0);
+    //for (auto v : values) cout << " node: " << v.first->chunk << ", value: " << v.second->toString() << endl;
     if (results.size() == 0) return "No value found";
 
     string res;
