@@ -70,7 +70,7 @@ class Expression {
         Expression(string data);
         ~Expression();
 
-        static ExpressionPtr create();
+        static ExpressionPtr create(string data = "");
 
         void segment();
         void buildTree();
@@ -79,6 +79,7 @@ class Expression {
 
         vector<TreeNode*> getLeafs();
         void set(string s);
+        void substitute(string var, string val);
 
         string toString();
         string treeToString();
@@ -132,7 +133,7 @@ class MathExpression : public Expression {
         MathExpression(string s);
         ~MathExpression();
 
-        static MathExpressionPtr create();
+        static MathExpressionPtr create(string s = "");
 
         bool isMathExpression();
         string compute();

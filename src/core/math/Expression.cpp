@@ -133,13 +133,20 @@ string Expression::TreeNode::collapseString() {
 }
 
 Expression::Expression(string data) {
-    this->data = data;
     tree = new TreeNode("");
+    set(data);
 }
 
 Expression::~Expression() {}
 
-ExpressionPtr Expression::create() { return ExpressionPtr( new Expression("") ); }
+ExpressionPtr Expression::create(string data) { return ExpressionPtr( new Expression(data) ); }
+
+void Expression::substitute(string var, string val) {
+    if (!tree) return;
+    for (auto& n : nodes) {
+        if (n->is(var)) n->setValue(val);
+    }
+}
 
 void Expression::segment() {
     nodes.clear();
@@ -376,7 +383,7 @@ bool MathExpression::isMathFunction(string f) {
 MathExpression::MathExpression(string s) : Expression(s) {}
 MathExpression::~MathExpression() {}
 
-MathExpressionPtr MathExpression::create() { return MathExpressionPtr( new MathExpression("") ); }
+MathExpressionPtr MathExpression::create(string s) { return MathExpressionPtr( new MathExpression(s) ); }
 
 bool MathExpression::isMathExpression() {
     for (auto c : data) if (isMathToken(c)) return true;
