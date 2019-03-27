@@ -22,6 +22,7 @@
 #include <OpenSG/OSGChunkMaterial.h>
 #include <OpenSG/OSGDepthChunk.h>
 #include <OpenSG/OSGSimpleSHLChunk.h>
+#include <OpenSG/OSGGeoProperties.h>
 
 using namespace OSG;
 
@@ -200,20 +201,6 @@ bool VRTransform::checkWorldChange() {
     return false;
 }
 
-void VRTransform::initCoords() {
-    if (coords != 0) return;
-    coords = OSGObject::create( makeCoordAxis(0.3, 3, false) );
-    coords->node->setTravMask(0);
-    addChild(coords);
-    GeometryMTRecPtr geo = dynamic_cast<Geometry*>(coords->node->getCore());
-    ChunkMaterialMTRecPtr mat = ChunkMaterial::create();
-    DepthChunkMTRecPtr depthChunk = DepthChunk::create();
-    depthChunk->setFunc( GL_ALWAYS );
-    mat->addChunk(depthChunk);
-    mat->setSortKey(100);// render last
-    geo->setMaterial(mat);
-}
-
 void VRTransform::initTranslator() { // TODO
     if (translator != 0) return;
 
@@ -348,6 +335,17 @@ Vec3d VRTransform::getWorldAt(bool parentOnly) {
     return Vec3d(a);
 }
 
+Vec3d VRTransform::getWorldScale(bool parentOnly) {
+    Matrix4d m;
+    getWorldMatrix(m, parentOnly);
+    Vec3d s = Vec3d(1,1,1), x = Vec3d(1,0,0), y = Vec3d(0,1,0), z = Vec3d(0,0,1);
+    m.mult(x,x); x.normalize();
+    m.mult(y,y); y.normalize();
+    m.mult(z,z); z.normalize();
+    m.mult(s,s);
+    return Vec3d(s.dot(x), s.dot(y), s.dot(z));
+}
+
 
 void VRTransform::updateTransform(VRTransformPtr t) {
     if (!t) return;
@@ -447,6 +445,12 @@ void VRTransform::setWorldAt(Vec3d at) {
     setAt(Vec3d(a));
 }
 
+void VRTransform::setWorldScale(Vec3d s) {
+    Vec3d sP = getWorldScale(true);
+    for (int i=0; i<3; i++) s[i] = s[i]/sP[i];
+    setScale(s);
+}
+
 //local pose setter--------------------
 void VRTransform::setFrom(Vec3d pos) {
     if (isNan(pos)) return;
@@ -515,11 +519,37 @@ void VRTransform::setMatrix(Matrix4d m) {
     setTransform(Vec3d(m[3]), Vec3d(-m[2])*1.0/s3, Vec3d(m[1])*1.0/s2);
     setScale(Vec3d(s1,s2,s3));
 }
+
 //-------------------------------------
+
+void VRTransform::initCoords() {
+    if (coords != 0) return;
+    coords = OSGObject::create( makeCoordAxis(0.3, 3, false) );
+    coords->node->setTravMask(0);
+    addChild(coords);
+    GeometryMTRecPtr geo = dynamic_cast<Geometry*>(coords->node->getCore());
+    ChunkMaterialMTRecPtr mat = ChunkMaterial::create();
+    DepthChunkMTRecPtr depthChunk = DepthChunk::create();
+    depthChunk->setFunc( GL_ALWAYS );
+    mat->addChunk(depthChunk);
+    mat->setSortKey(100);// render last
+    geo->setMaterial(mat);
+}
 
 void VRTransform::showCoordAxis(bool b) {
     initCoords();
-    if (b) coords->node->setTravMask(0xffffffff);
+    if (b) {
+        coords->node->setTravMask(0xffffffff);
+        Vec3d scale = getWorldScale();
+        for (int j=0; j<3; j++) scale[j] = 1.0/scale[j];
+        GeometryMTRecPtr geo = dynamic_cast<Geometry*>(coords->node->getCore());
+        GeoPnt3fPropertyMTRecPtr pos = (GeoPnt3fProperty*)geo->getPositions();
+        for (int i=0; i<pos->size(); i++) {
+            Pnt3f p = pos->getValue(i);
+            for (int j=0; j<3; j++) p[j] *= scale[j];
+            pos->setValue(p,i);
+        }
+    }
     else coords->node->setTravMask(0);
 }
 
