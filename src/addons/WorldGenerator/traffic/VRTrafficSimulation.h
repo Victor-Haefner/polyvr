@@ -203,7 +203,7 @@ class VRTrafficSimulation : public VRObject {
         int numUnits = 0;
         int maxTransformUnits = 0;
         int numTransformUnits = 0;
-        float userRadius = 800; // x meter radius around users
+        float userRadius = 1000; // x meter radius around users
         float visibilityRadius = 600;
         size_t nID = -1;
         size_t tID = -1;
@@ -218,7 +218,7 @@ class VRTrafficSimulation : public VRObject {
 
         string lastseedRoadsString = "";
         //int debugOverRideSeedRoad = -1;
-        float killswitch1 = 5;
+        float killswitch1 = 30;
         float killswitch2 = 200;
         VRUpdateCbPtr turnSignalCb;
 
@@ -255,6 +255,17 @@ class VRTrafficSimulation : public VRObject {
         float speedMultiplier = 1.0;
         int debugOverRideSeedRoad = -1;
         map<int,bool> debuggerCars;
+        bool debugOutput = false;
+        map<int,int> debugCounter;
+            //0: killswitch1
+            //1: killswitch2
+            //2: roadMacro
+            //3: noNextEdge
+            //4: noNextEdges
+            //5: newVehicle
+            //6: roadskipper
+            //7: interSectionChanger
+        int debugMovedCars = 0;
 
         ///Performance
         double worldUpdateTS = 0.0;
