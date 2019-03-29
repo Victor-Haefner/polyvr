@@ -1308,13 +1308,16 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
                     turnAhead = true;
 
                     ///INDICATORS
+                    if (vehicle.laneChangeState == 0) vehicle.signaling.push_back(0);
                     if (nextIntersection > 35 && nextStopDistance > 30) vehicle.signaling.push_back(0);
                     if (vehicle.turnAhead == 1 && nextIntersection < 35 && nextStopDistance < 30) vehicle.signaling.push_back(1); //left
                     if (vehicle.turnAhead == 2 && nextIntersection < 35 && nextStopDistance < 30) vehicle.signaling.push_back(2); //right
+                    if (vehicle.laneChangeState != 0 && vehicle.behavior == 1) vehicle.signaling.push_back(1); //left
+                    if (vehicle.laneChangeState != 0 && vehicle.behavior == 2) vehicle.signaling.push_back(2); //right
 
                     ///LANE SWITCH
                     auto checkLaneSwitch =[&]() {
-                        if (sinceLastLS < 10 || nextStopDistance < 35 || vehicle.currentVelocity < 15/3.6 ) return;
+                        if (sinceLastLS < 10 || nextStopDistance < 60 || vehicle.currentVelocity < 25/3.6 ) return;
                         if ( inFront() ) {
                             if ( checkL(vehicle.vID) ) toChangeLane[vehicle.vID] = 1;
                         }
@@ -1518,6 +1521,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
     float debugTime = timer.stop("debugTime");
 
     float ttime = timer.stop("mainThread")/1000.0;
+    return;
     if (ttime > 0) { //if (1/ttime < 60 && !updater)\033[1;31mbold red text\033[0m\n
         if (1/ttime < 30){
             string rout = "\033[1;31m"+fit2(1/ttime,8)+"\033[0m";
