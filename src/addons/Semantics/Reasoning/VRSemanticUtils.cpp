@@ -114,8 +114,9 @@ void Variable::addEntity(VREntityPtr e, bool assumtion) {
 }
 
 bool Variable::has(VariablePtr other, VPath& path1, VPath& path2, VROntologyPtr onto) {
-    map<VREntityPtr, vector<VREntityPtr>> matches;
+    if (!other) return false;
 
+    map<VREntityPtr, vector<VREntityPtr>> matches;
     map<VREntity*, bool> visited;
 
     function<bool(VREntityPtr, string&)> computeMatches = [&](VREntityPtr e, string& oName) -> bool {
@@ -474,6 +475,7 @@ bool Term::is(Term& t, VRSemanticContextPtr context) {
 }
 
 bool Term::has(Term& t, VRSemanticContextPtr context) {
+    if (!var) return false;
     auto v = t.var;
     /*if (t.isMathExpression()) { // TODO: sure this does not apply?
         auto res = t.computeMathExpression(context);

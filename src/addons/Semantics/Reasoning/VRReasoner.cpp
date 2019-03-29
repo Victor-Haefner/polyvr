@@ -197,8 +197,10 @@ bool VRReasoner::set(VRStatementPtr statement, VRSemanticContextPtr context) {
 }
 
 bool VRReasoner::has(VRStatementPtr statement, VRSemanticContextPtr context) { // TODO
+    if (statement->terms.size() < 2) return false;
     auto& left = statement->terms[0];
     auto& right = statement->terms[1];
+    if (!right.var || !left.var) return false;
 
     bool b = left.has(right, context);
     print("  " + left.str + " has " + (b?"":"not") + " " + right.str);
@@ -292,7 +294,7 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
         statement->state = 1;
     }
 
-    if (statement->verb == "has") {
+    if (statement->verb == "has" && statement->terms.size() >= 2) {
         auto& left = statement->terms[0];
         auto& right = statement->terms[1];
         auto Cconcept = context->onto->getConcept( right.var->concept ); // child concept
@@ -305,7 +307,7 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
         print("  give " + right.str + " to " + left.str, GREEN);
     }
 
-    if (statement->verb == "set") {
+    if (statement->verb == "set" && statement->terms.size() >= 2) {
         auto& left = statement->terms[0];
         auto& right = statement->terms[1];
 
@@ -349,7 +351,7 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
         statement->state = 1;
     }
 
-    if (statement->constructor) { // 'Error(e) : Event(v) ; is(v.name,crash)'
+    if (statement->constructor && statement->terms.size() >= 1) { // 'Error(e) : Event(v) ; is(v.name,crash)'
         string concept = statement->verb;
         string x = statement->terms[0].var->value[0];
         VariablePtr v = getVariable(x);

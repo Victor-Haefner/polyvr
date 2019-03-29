@@ -34,15 +34,16 @@ bool MPart::changed() {
 void MPart::setBack() { if (geo) geo->setWorldMatrix(reference); }
 void MPart::apply() { if (geo) reference = geo->getWorldMatrix(); }
 
-MPart* MPart::make(VRGeometryPtr g, VRTransformPtr t) {
-    string type = g->getPrimitive()->getType();
+MPart* MPart::make(VRTransformPtr g, VRTransformPtr t) {
+    VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(g);
+    string type = geo->getPrimitive()->getType();
     MPart* p = 0;
     if (type == "Gear") p = new MGear();
     if (type == "Thread") p = new MThread();
     if (type == "Chain") p = new MChain();
     if (p) {
         p->geo = g;
-        p->prim = g->getPrimitive();
+        p->prim = geo->getPrimitive();
         p->trans = t == 0 ? g : t;
     }
     return p;
@@ -294,7 +295,7 @@ void MThread::updateNeighbors(vector<MPart*> parts) {
     clearNeighbors();
     for (auto part : parts) {
         if (part == this) continue;
-        VRPrimitive* p = part->geo->getPrimitive();
+        VRPrimitive* p = part->prim;
         if (p->getType() == "Gear") {
             MRelation* rel = checkGearThread((MGear*)part, this);
             if (rel) addNeighbor(part, rel);
@@ -400,21 +401,27 @@ void MChain::updateGeo() {
     }
     lengths->addValue(j);
 
-    geo->setPositions(pos);
-    geo->setNormals(norms);
-    geo->setColors(cols);
-    geo->setIndices(inds);
-    geo->setLengths(lengths);
+    VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(geo);
+    if (g) {
+        g->setPositions(pos);
+        g->setNormals(norms);
+        g->setColors(cols);
+        g->setIndices(inds);
+        g->setLengths(lengths);
+    }
 }
 
-VRGeometryPtr MChain::init() {
+VRTransformPtr MChain::init() {
     geo = VRGeometry::create("chain");
     updateGeo();
     VRMaterialPtr cm = VRMaterial::get("chain_mat");
     cm->setLit(false);
     cm->setLineWidth(3);
-    geo->setMaterial(cm);
-    geo->setType(GL_LINES);
+    VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(geo);
+    if (g) {
+        g->setMaterial(cm);
+        g->setType(GL_LINES);
+    }
     return geo;
 }
 
@@ -428,22 +435,32 @@ void VRMechanism::clear() {
     cache.clear();
 }
 
-void VRMechanism::add(VRGeometryPtr part, VRTransformPtr trans) {
+void VRMechanism::add(VRTransformPtr part, VRTransformPtr trans) {
     MPart* p = MPart::make(part, trans);
     if (p == 0) return;
     cache[part] = p;
     parts.push_back(p);
 }
 
-VRGeometryPtr VRMechanism::addChain(float w, vector<VRGeometryPtr> geos, string dirs) {
+void VRMechanism::addGear(VRTransformPtr trans, float width, float hole, float pitch, int N_teeth, float teeth_size, float bevel) {
+    auto gPrim = VRPrimitive::create("Gear "+toString(width)+" "+toString(hole)+" "+toString(pitch)+" "+toString(N_teeth)+" "+toString(teeth_size)+" "+toString(bevel));
+    auto p = new MGear();
+    p->geo = trans;
+    p->prim = gPrim;
+    p->trans = trans;
+    cache[trans] = p;
+    parts.push_back(p);
+}
+
+VRTransformPtr VRMechanism::addChain(float w, vector<VRTransformPtr> geos, string dirs) {
     MChain* c = new MChain();
     for (uint i=0; i<geos.size(); i++) {
         int j = (i+1)%geos.size();
         int k = (i+2)%geos.size();
 
-        VRGeometryPtr g1 = geos[i];
-        VRGeometryPtr g2 = geos[j];
-        VRGeometryPtr g3 = geos[k];
+        VRTransformPtr g1 = geos[i];
+        VRTransformPtr g2 = geos[j];
+        VRTransformPtr g3 = geos[k];
 
         if (cache.count(g1) == 0) continue;
         if (cache.count(g2) == 0) continue;

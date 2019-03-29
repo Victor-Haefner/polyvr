@@ -75,7 +75,7 @@ class MPart {
 
         map<MPart*, MRelation*> neighbors;
         vector<MPart*> group;
-        VRGeometryPtr geo = 0;
+        VRTransformPtr geo = 0;
         VRTransformPtr trans = 0;
         VRPrimitive* prim = 0;
         MChange change;
@@ -105,7 +105,7 @@ class MPart {
         virtual void move();
         virtual void updateNeighbors(vector<MPart*> parts) = 0;
 
-        static MPart* make(VRGeometryPtr g, VRTransformPtr t);
+        static MPart* make(VRTransformPtr g, VRTransformPtr t);
 };
 
 class MGear : public MPart {
@@ -145,7 +145,7 @@ class MChain : public MPart {
         MChain();
         ~MChain();
 
-        VRGeometryPtr init();
+        VRTransformPtr init();
         void setDirs(string dirs);
         void addDir(char dir);
         void updateGeo();
@@ -157,7 +157,7 @@ class MChain : public MPart {
 
 class VRMechanism {
     private:
-        map<VRGeometryPtr, MPart*> cache;
+        map<VRTransformPtr, MPart*> cache;
         vector<MPart*> parts;
 
     public:
@@ -165,10 +165,11 @@ class VRMechanism {
         ~VRMechanism();
         static shared_ptr<VRMechanism> create();
 
-        void add(VRGeometryPtr part, VRTransformPtr trans = 0);
+        void add(VRTransformPtr part, VRTransformPtr trans = 0);
+        void addGear(VRTransformPtr trans, float width, float hole, float pitch, int N_teeth, float teeth_size, float bevel);
         void clear();
         void update();
-        VRGeometryPtr addChain(float w, vector<VRGeometryPtr> geos, string dirs);
+        VRTransformPtr addChain(float w, vector<VRTransformPtr> geos, string dirs);
 };
 
 typedef shared_ptr<VRMechanism> VRMechanismPtr;
