@@ -302,8 +302,8 @@ void VRGuiScene::setEntity(VREntityPtr e) {
         for (auto p : pvec.second) {
             Gtk::ListStore::Row row = *store->append();
             gtk_list_store_set (store->gobj(), row.gobj(), 0, pvec.first.c_str(), -1);
-            gtk_list_store_set (store->gobj(), row.gobj(), 1, p->value.c_str(), -1);
-            gtk_list_store_set (store->gobj(), row.gobj(), 2, p->type.c_str(), -1);
+            gtk_list_store_set (store->gobj(), row.gobj(), 1, p.second->value.c_str(), -1);
+            gtk_list_store_set (store->gobj(), row.gobj(), 2, p.second->type.c_str(), -1);
         }
     }
 }

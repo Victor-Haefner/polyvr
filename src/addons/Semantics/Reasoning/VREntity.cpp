@@ -79,11 +79,10 @@ vector<VRPropertyPtr> VREntity::getProperties() {
 }
 
 void VREntity::set(string name, string value, int pos) {
-    if (!properties.count(name)) { add(name, value); return; }
-    auto prop = get(name);
+    auto prop = getProperty(name, true);
     if (!prop) { WARN("Warning (set): Entity " + this->name + " has no property " + name); return; }
+    if (!properties[name].count(pos)) properties[name][pos] = prop->copy();
     properties[name][pos]->setValue( value );
-    // TODO: warn if vector size bigger 1
 }
 
 void VREntity::add(string name, string value) {
@@ -91,7 +90,8 @@ void VREntity::add(string name, string value) {
     if (!prop) { WARN("Warning (add): Entity " + this->name + " has no property " + name); return; }
     prop = prop->copy();
     prop->setValue( value );
-    properties[name].push_back( prop );
+    int i = properties[name].size();
+    properties[name][i] = prop;
 }
 
 void VREntity::clear(string name) {
@@ -103,8 +103,10 @@ void VREntity::clear(string name) {
 void VREntity::rem(VRPropertyPtr p) {
     string name = p->getName();
     if (properties.count(name)) {
-        auto& v = properties[name];
-        v.erase( remove(v.begin(), v.end(), p), v.end() );
+        auto& m = properties[name];
+        vector<int> keys;
+        for (auto k : m) if (k.second == p) keys.push_back(k.first);
+        for (auto k : keys) m.erase(k);
     }
 }
 
@@ -160,9 +162,11 @@ vector< vector<VRPropertyPtr> > VREntity::getAllVector(const string& prop) { // 
 }
 
 vector<VRPropertyPtr> VREntity::getAll(const string& name) {
-    if (name != "" && properties.count(name)) return properties[name];
     vector<VRPropertyPtr> res;
-    if (name == "") for (auto pv : properties) for (auto p : pv.second) res.push_back(p);
+    if (name != "" && properties.count(name)) {
+        for (auto k : properties[name]) res.push_back(k.second);
+    }
+    if (name == "") for (auto pv : properties) for (auto p : pv.second) res.push_back(p.second);
     return res;
 }
 
@@ -238,8 +242,8 @@ VREntityPtr VREntity::copy() {
     for (auto wc : concepts) if (auto c = wc.lock()) e->addConcept(c);
     e->conceptNames = conceptNames;
     for (auto pv : properties) {
-        e->properties[pv.first] = vector<VRPropertyPtr>();
-        for (auto p : pv.second) e->properties[pv.first].push_back(p->copy());
+        e->properties[pv.first] = map<int, VRPropertyPtr>();
+        for (auto k : pv.second) e->properties[pv.first][k.first] = k.second->copy();
     }
     map<string, vector<VRPropertyPtr> > properties;
     return e;
@@ -251,7 +255,7 @@ string VREntity::toString() {
     data += " with properties:";
     for (auto p : properties) {
         for (auto sp : p.second) {
-            data += " "+sp->getName()+"("+sp->type+")="+sp->value;
+            data += " "+sp.second->getName()+"("+sp.second->type+")="+sp.second->value;
         }
     }
     return data;
@@ -272,9 +276,9 @@ void VREntity::save(xmlpp::Element* e, int p) {
     for (auto p : properties) {
         auto e2 = e->add_child(p.first);
         for (auto sp : p.second) {
-            auto e3 = e2->add_child(sp->getName());
-            e3->set_attribute("value", sp->value);
-            e3->set_attribute("type", sp->type);
+            auto e3 = e2->add_child(sp.second->getName());
+            e3->set_attribute("value", sp.second->value);
+            e3->set_attribute("type", sp.second->type);
         }
     }
 }
@@ -288,7 +292,8 @@ void VREntity::load(xmlpp::Element* e) {
             auto p = VRProperty::create(n,"");
             if (el2->get_attribute("value")) p->setValue( el2->get_attribute("value")->get_value() );
             if (el2->get_attribute("type")) p->setType( el2->get_attribute("type")->get_value() );
-            properties[n].push_back(p);
+            int i = properties[n].size();
+            properties[n][i] = p;
         }
     }
 }
