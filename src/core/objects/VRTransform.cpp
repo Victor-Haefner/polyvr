@@ -165,26 +165,21 @@ uint VRTransform::getLastChange() { return change_time_stamp; }
 //bool VRTransform::changedNow() { return (change_time_stamp >= VRGlobals::get()->CURRENT_FRAME-1); }
 bool VRTransform::changedNow() { return checkWorldChange(); }
 
-bool VRTransform::changedSince(uint& frame) {
+bool VRTransform::changedSince(uint& frame, bool includingFrame) {
     uint f = frame;
     frame = VRGlobals::CURRENT_FRAME;
-    if (change_time_stamp >= f) return true;
-    if (wchange_time_stamp >= f) return true;
+    int offset = includingFrame?1:0;
+    if (change_time_stamp + offset > f) return true;
+    if (wchange_time_stamp + offset > f) return true;
     for (auto a : getAncestry()) {
         auto t = dynamic_pointer_cast<VRTransform>(a);
-        if (t && t->change_time_stamp > f) return true;
+        if (t && t->change_time_stamp + offset > f) return true;
     }
     return false;
 }
 
-bool VRTransform::changedSince2(uint f) {
-    if (change_time_stamp >= f) return true;
-    if (wchange_time_stamp >= f) return true;
-    for (auto a : getAncestry()) {
-        auto t = dynamic_pointer_cast<VRTransform>(a);
-        if (t && t->change_time_stamp > f) return true;
-    }
-    return false;
+bool VRTransform::changedSince2(uint frame, bool includingFrame) { // for py binding
+    return changedSince(frame, includingFrame);
 }
 
 bool VRTransform::checkWorldChange() {

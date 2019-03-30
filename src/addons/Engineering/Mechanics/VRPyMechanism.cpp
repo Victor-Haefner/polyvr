@@ -13,6 +13,7 @@ PyMethodDef VRPyMechanism::methods[] = {
     {"clear", (PyCFunction)VRPyMechanism::clear, METH_NOARGS, "Clear mechanism parts" },
     {"addChain", (PyCFunction)VRPyMechanism::addChain, METH_VARARGS, "Add chain - addChain(float width, [G1, G2, G3, ...])" },
     {"addGear", PyWrap(Mechanism, addGear, "Add custom geo as gear, (geo, width, hole, pitch, N_teeth, teeth_size, bevel)", void, VRTransformPtr, float, float, float, int, float, float) },
+    {"updateNeighbors", PyWrap(Mechanism, updateNeighbors, "updateNeighbors", void) },
     {NULL}  /* Sentinel */
 };
 

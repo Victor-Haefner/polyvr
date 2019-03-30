@@ -169,6 +169,7 @@ class VRMechanism {
         void addGear(VRTransformPtr trans, float width, float hole, float pitch, int N_teeth, float teeth_size, float bevel);
         void clear();
         void update();
+        void updateNeighbors();
         VRTransformPtr addChain(float w, vector<VRTransformPtr> geos, string dirs);
 };
 

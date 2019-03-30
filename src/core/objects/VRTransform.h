@@ -86,8 +86,8 @@ class VRTransform : public VRObject {
 
         uint getLastChange();
         bool changedNow();
-        bool changedSince(uint& frame);
-        bool changedSince2(uint frame);
+        bool changedSince(uint& frame, bool includingFrame = true);
+        bool changedSince2(uint frame, bool includingFrame = true);
 
         Vec3d getFrom();
         Vec3d getDir();

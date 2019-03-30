@@ -12,6 +12,19 @@ using namespace OSG;
 template<> string typeName(const VRMechanism& m) { return "Mechanism"; }
 
 
+/**
+
+Simulation workflows:
+
+1)
+    component gets changed in SG
+    register change of component
+    update neighbors of component
+    propagate change through system
+    apply change to component
+
+*/
+
 MPart::MPart() {}
 MPart::~MPart() {}
 MGear::MGear() {}
@@ -23,16 +36,17 @@ MThread::~MThread() {}
 
 bool MPart::changed() {
     if (geo == 0) return false;
-    bool b = geo->changedSince(timestamp);
-    timestamp = VRGlobals::CURRENT_FRAME;
+    cout << "  part " << geo->getName() << " changed from timestamp " << timestamp << " (last change: " << geo->getLastChange() << ")";
+    bool b = geo->changedSince(timestamp, true);
+    cout << " to " << timestamp << ", -> " << b << endl;
     return b;
-    /*bool b = (timestamp != geo->getLastChange());
-    timestamp = geo->getLastChange();
-    return b;*/
 }
 
 void MPart::setBack() { if (geo) geo->setWorldMatrix(reference); }
-void MPart::apply() { if (geo) reference = geo->getWorldMatrix(); }
+void MPart::apply() {
+    if (geo) reference = geo->getWorldMatrix();
+    timestamp++;
+}
 
 MPart* MPart::make(VRTransformPtr g, VRTransformPtr t) {
     VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(g);
@@ -58,6 +72,7 @@ void MPart::clearNeighbors() {
 }
 
 void MPart::addNeighbor(MPart* p, MRelation* r) {
+    cout << "      MPart::addNeighbor " << p->geo->getName() << endl;
     neighbors[p] = r;
     p->neighbors[this] = r;
 }
@@ -96,9 +111,11 @@ bool MPart::propagateMovement() { // recursion
 bool MPart::propagateMovement(MChange c, MRelation* r) { // change
     r->translateChange(c);
     if (change.time == c.time) {
+        cout << " propagateMovement change times are the same?" << endl;
         return change.same(c);
     } // TODO: either it is the same change || another change in the same timestep..
 
+    cout << " propagateMovement do move" << endl;
     change = c;
     move();
 
@@ -127,21 +144,28 @@ void MPart::printNeighbors() {
 
 
 MGearGearRelation* checkGearGear(MPart* p1, MPart* p2) {
-    VRGear* g1 = (VRGear*)p1->prim;
-    VRGear* g2 = (VRGear*)p2->prim;
     Matrix4d r1 = p1->reference;
     Matrix4d r2 = p2->reference;
+    //Matrix4d r1 = p1->geo->getWorldMatrix();
+    //Matrix4d r2 = p2->geo->getWorldMatrix();
+
+    VRGear* g1 = (VRGear*)p1->prim;
+    VRGear* g2 = (VRGear*)p2->prim;
     float R = g1->radius() + g2->radius();
     Vec3d d = Vec3d(r1[3] - r2[3]);
     float D = d.length();
     float t = 0.5*g1->teeth_size;
-    if (R+t < D || R-t > D) return 0; // too far apart
+    if (R+t < D || R-t > D) {
+        //cout << "     checkGearGear failed! D: " << D << ", R1 " << R-t << " -> R2 " << R+t << endl;
+        return 0; // too far apart
+    }
     ;// TODO: check if intersection line of gear planes is at the edge of both gears
     ;// TODO: check if coplanar
 
     MGearGearRelation* rel = new MGearGearRelation();
     rel->part1 = p1;
     rel->part2 = p2;
+    //cout << "     checkGearGear found between " << p1->geo->getName() << " and " << p2->geo->getName() << endl;
     return rel;
 }
 
@@ -230,7 +254,7 @@ VRGear* MGear::gear() { return (VRGear*)prim; }
 VRScrewthread* MThread::thread() { return (VRScrewthread*)prim; }
 
 void MPart::move() {}
-void MGear::move() { trans->rotate(change.dx/gear()->radius(), Vec3d(0,0,1)); }
+void MGear::move() { cout << " gear move " << geo->getName() << endl ; trans->rotate(change.dx/gear()->radius(), Vec3d(0,0,1)); }
 void MChain::move() { if (geo == 0) return; updateGeo(); }
 void MThread::move() { trans->rotate(change.a, Vec3d(0,0,1)); }
 
@@ -246,7 +270,7 @@ void MPart::computeChange() {
     change.n = Vec3d(m[2][1] - m[1][2], m[0][2] - m[2][0], m[1][0] - m[0][1]);
     change.n.normalize();
 
-    if (change.n[2] > 0) { change.n *= -1; change.a *= -1; }
+    if (change.n[2] < 0) { change.n *= -1; change.a *= -1; }
 
     change.time = timestamp;
 }
@@ -257,9 +281,11 @@ void MGear::computeChange() {
 }
 
 void MGear::updateNeighbors(vector<MPart*> parts) {
+    cout << "   MGear::updateNeighbors of " << geo->getName() << endl;
     clearNeighbors();
     for (auto part : parts) {
         if (part == this) continue;
+        //cout << "    MGear::updateNeighbors check part " << part->geo->getName() << endl;
         VRPrimitive* p = part->prim;
 
         if (p == 0) { // chain
@@ -269,6 +295,7 @@ void MGear::updateNeighbors(vector<MPart*> parts) {
         }
         if (p->getType() == "Gear") {
             MRelation* rel = checkGearGear(this, part);
+            //cout << "     MGear::updateNeighbors check Gear, rel " << rel << endl;
             if (rel) addNeighbor(part, rel);
         }
         if (p->getType() == "Thread") {
@@ -440,6 +467,8 @@ void VRMechanism::add(VRTransformPtr part, VRTransformPtr trans) {
     if (p == 0) return;
     cache[part] = p;
     parts.push_back(p);
+    p->apply();
+    p->updateNeighbors(parts);
 }
 
 void VRMechanism::addGear(VRTransformPtr trans, float width, float hole, float pitch, int N_teeth, float teeth_size, float bevel) {
@@ -487,7 +516,14 @@ bool MChange::isNull() {
 
 MChange MPart::getChange() { return change; }
 
+void VRMechanism::updateNeighbors() {
+    for (auto p : parts) p->apply(); // first apply the part transformations
+    for (auto p : parts) p->updateNeighbors(parts);
+}
+
 void VRMechanism::update() {
+    cout << "\nVRMechanism::update" << endl;
+
     vector<MPart*> changed_parts;
     for (auto& part : parts) if (part->changed()) changed_parts.push_back(part);
 
@@ -495,13 +531,15 @@ void VRMechanism::update() {
         part->updateNeighbors(parts);
         part->computeState();
         part->computeChange();
-        //part->printChange();
+        part->printChange();
     }
 
     for (auto& part : changed_parts) {
+        cout << " update changes " << part->geo->getName() << endl;
         if (part->getChange().isNull()) continue;
         bool block = !part->propagateMovement();
         if (block) { // mechanism is blocked
+            cout << "  block!" << endl;
             for (auto part : changed_parts) {
                 if (part->state == MPart::ENGAGED) part->setBack();
             }
