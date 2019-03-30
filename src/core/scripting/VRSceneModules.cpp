@@ -35,6 +35,7 @@
 #include "VRPyLightBeacon.h"
 #include "VRPyCamera.h"
 #include "VRPyLod.h"
+#include "VRPyKinematics.h"
 #include "VRPyRecorder.h"
 #include "VRPyPathtool.h"
 #include "VRPyConstructionKit.h"
@@ -121,6 +122,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyLight>("Light", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyLightBeacon>("LightBeacon", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyCamera>("Camera", pModVR, VRPyTransform::typeRef);
+    sm->registerModule<VRPyKinematics>("Kinematics", pModVR);
     sm->registerModule<VRPyLod>("Lod", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyLodLeaf>("LodLeaf", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyLodTree>("LodTree", pModVR, VRPyObject::typeRef);
