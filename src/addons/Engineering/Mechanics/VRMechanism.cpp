@@ -186,6 +186,7 @@ MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
 
     vector<pointPolySegment> psegs;
     for (auto ps : c->toVRPolygon(pp) ) if ( abs(ps.dist2 - r*r) < eps ) psegs.push_back(ps);
+    //for (auto ps : c->toVRPolygon(pp) ) psegs.push_back(ps);
     if (psegs.size() == 0) return 0;
 
     dir.normalize();
