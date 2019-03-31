@@ -148,26 +148,25 @@ void MPart::printNeighbors() {
 MGearGearRelation* checkGearGear(MPart* p1, MPart* p2) {
     Matrix4d r1 = p1->reference;
     Matrix4d r2 = p2->reference;
-    //Matrix4d r1 = p1->geo->getWorldMatrix();
-    //Matrix4d r2 = p2->geo->getWorldMatrix();
+    Vec3d P1 = Vec3d(r1[3]);
+    Vec3d P2 = Vec3d(r2[3]);
+    Vec3d n1 = Vec3d(r1[2]); n1.normalize();
+    Vec3d n2 = Vec3d(r2[2]); n2.normalize();
 
     VRGear* g1 = (VRGear*)p1->prim;
     VRGear* g2 = (VRGear*)p2->prim;
-    float R = g1->radius() + g2->radius();
-    Vec3d d = Vec3d(r1[3] - r2[3]);
-    float D = d.length();
-    float t = 0.5*g1->teeth_size;
-    if (R+t < D || R-t > D) {
-        //cout << "     checkGearGear failed! D: " << D << ", R1 " << R-t << " -> R2 " << R+t << endl;
-        return 0; // too far apart
-    }
-    ;// TODO: check if intersection line of gear planes is at the edge of both gears
-    ;// TODO: check if coplanar
+    Vec3d d = P2 - P1;
+    float t = g1->teeth_size;
+
+    Vec3d R1 = d - n1*n1.dot( d); R1.normalize();
+    Vec3d R2 =-d - n2*n2.dot(-d); R2.normalize();
+    R1 *= g1->radius();
+    R2 *= g2->radius();
+    if ( (P1+R1 - (P2+R2)).length() > t) return 0; // not touching!
 
     MGearGearRelation* rel = new MGearGearRelation();
     rel->part1 = p1;
     rel->part2 = p2;
-    //cout << "     checkGearGear found between " << p1->geo->getName() << " and " << p2->geo->getName() << endl;
     return rel;
 }
 
@@ -580,6 +579,13 @@ void VRMechanism::updateVisuals() {
     }
 
     geo->clear();
+
+    for (auto p : parts) {
+        if (p->type != "gear") continue;
+        VRGear* g = (VRGear*)p->prim;
+        Vec3d n = Vec3d(p->reference[2]); n.normalize(); n *= g->radius();
+        geo->addVector(Vec3d(p->reference[3]), n, Color3f(0.2,1,0.3));
+    }
 
     for (auto p1 : parts) {
         auto pos1 = Vec3d(p1->reference[3]);
