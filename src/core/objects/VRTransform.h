@@ -86,8 +86,8 @@ class VRTransform : public VRObject {
 
         uint getLastChange();
         bool changedNow();
-        bool changedSince(uint& frame);
-        bool changedSince2(uint frame);
+        bool changedSince(uint& frame, bool includingFrame = true);
+        bool changedSince2(uint frame, bool includingFrame = true);
 
         Vec3d getFrom();
         Vec3d getDir();
@@ -123,6 +123,7 @@ class VRTransform : public VRObject {
         Vec3d getWorldDirection(bool parentOnly = false);
         Vec3d getWorldUp(bool parentOnly = false);
         Vec3d getWorldAt(bool parentOnly = false);
+        Vec3d getWorldScale(bool parentOnly = false);
 
         void setWorldPose(PosePtr p);
         void setWorldMatrix(Matrix4d _m);
@@ -131,6 +132,7 @@ class VRTransform : public VRObject {
         void setWorldDir(Vec3d dir);
         void setWorldUp(Vec3d up);
         void setWorldAt(Vec3d at);
+        void setWorldScale(Vec3d s);
 
         void getRelativeMatrix(Matrix4d& m, VRObjectPtr o, bool parentOnly = false);
         Matrix4d getRelativeMatrix(VRObjectPtr o, bool parentOnly = false);
@@ -146,6 +148,7 @@ class VRTransform : public VRObject {
 
         int get_orientation_mode();
         void set_orientation_mode(int b);
+        void enableOptimization(bool b);
 
         void applyTransformation(PosePtr p = 0);
 

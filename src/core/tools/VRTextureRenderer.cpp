@@ -329,41 +329,43 @@ VRMaterialPtr VRTextureRenderer::createTextureLod(VRObjectPtr obj, PosePtr camP,
     return mat;
 }
 
+vector<VRTexturePtr> VRTextureRenderer::createCubeMaps(VRTransformPtr focusObject) {
+    if (!cam) return {};
+    if (!focusObject) return {};
 
+    auto pose = cam->getPose();
+    auto near = cam->getNear();
+    auto aspect = cam->getAspect();
+    auto fov = cam->getFov();
 
-#include <OpenSG/OSGCubeMapGenerator.h>
-#include <OpenSG/OSGVisitSubTree.h>
+    auto bb = focusObject->getBoundingbox();
+    auto p = bb->center();
+    auto s2 = bb->size()*0.51;
 
-VRTexturePtr VRTextureRenderer::createCubeMap() {
-    OSG::CubeMapGeneratorUnrecPtr pCubeGen = OSG::CubeMapGenerator::create();
-    pCubeGen->setRoot         (getNode()->node);
-    pCubeGen->setTextureFormat(GL_RGB32F_ARB );
-    pCubeGen->setSize         (512, 512);
-    pCubeGen->setTexUnit      (0);
-    pCubeGen->setTexture      (data->fboTex);
-    pCubeGen->setBackground   (data->stage->getBackground());
-    pCubeGen->setCamera       (cam->getCam()->cam);
+    cam->setAspect(1);
+    cam->setFov(1.57079632679); // 90°
 
-    OSG::NodeUnrecPtr pCubeRoot = OSG::Node::create();
-    pCubeRoot->setCore(pCubeGen);
+    cam->setNear(s2[2]);
+    cam->setTransform(p, Vec3d(0,0,-1), Vec3d(0,-1,0));
+    auto texFront = renderOnce();
+    cam->setTransform(p, Vec3d(0,0,1), Vec3d(0,-1,0));
+    auto texBack = renderOnce();
 
-    if (!cam) return 0;
+    cam->setNear(s2[0]);
+    cam->setTransform(p, Vec3d(-1,0,0), Vec3d(0,-1,0));
+    auto texLeft = renderOnce();
+    cam->setTransform(p, Vec3d(1,0,0), Vec3d(0,-1,0));
+    auto texRight = renderOnce();
 
-    if (!data->ract) {
-        data->ract = RenderAction::create();
-        data->win = PassiveWindow::create();
-        data->view = Viewport::create();
-        data->view->setRoot(pCubeRoot);
-        //data->view->setRoot(getNode()->node);
+    cam->setNear(s2[1]);
+    cam->setTransform(p, Vec3d(0,1,0), Vec3d(0,0,1));
+    auto texUp = renderOnce();
+    cam->setTransform(p, Vec3d(0,-1,0), Vec3d(0,0,-1));
+    auto texDown = renderOnce();
 
-        data->win->addPort(data->view);
-        data->view->setSize(0, 0, 1, 1);
-        data->view->setCamera(cam->getCam()->cam);
-        data->view->setBackground(data->stage->getBackground());
-    }
-
-    data->win->render(data->ract);
-    ImageMTRecPtr img = Image::create();
-    img->set( data->fboTexImg );
-    return VRTexture::create( img );
+    cam->setAspect(aspect);
+    cam->setFov(fov);
+    cam->setNear(near);
+    cam->setPose(pose);
+    return {texFront, texBack, texLeft, texRight, texUp, texDown};
 }

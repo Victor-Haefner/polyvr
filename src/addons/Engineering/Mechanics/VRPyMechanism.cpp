@@ -12,6 +12,8 @@ PyMethodDef VRPyMechanism::methods[] = {
     {"update", (PyCFunction)VRPyMechanism::update, METH_NOARGS, "Update mechanism simulation" },
     {"clear", (PyCFunction)VRPyMechanism::clear, METH_NOARGS, "Clear mechanism parts" },
     {"addChain", (PyCFunction)VRPyMechanism::addChain, METH_VARARGS, "Add chain - addChain(float width, [G1, G2, G3, ...])" },
+    {"addGear", PyWrap(Mechanism, addGear, "Add custom geo as gear, (geo, width, hole, pitch, N_teeth, teeth_size, bevel)", void, VRTransformPtr, float, float, float, int, float, float) },
+    {"updateNeighbors", PyWrap(Mechanism, updateNeighbors, "updateNeighbors", void) },
     {NULL}  /* Sentinel */
 };
 
@@ -42,9 +44,9 @@ PyObject* VRPyMechanism::addChain(VRPyMechanism* self, PyObject* args) {
     float w; PyObject *l, *dirs;
     if (! PyArg_ParseTuple(args, "fOO", &w, &l, &dirs)) return NULL;
     vector<PyObject*> objs = pyListToVector(l);
-    vector<OSG::VRGeometryPtr> geos;
+    vector<OSG::VRTransformPtr> geos;
     for (auto o : objs) {
-        VRPyGeometry* g = (VRPyGeometry*)o;
+        VRPyTransform* g = (VRPyTransform*)o;
         geos.push_back( g->objPtr );
     }
     return VRPyTypeCaster::cast( self->objPtr->addChain(w, geos, PyString_AsString(dirs) ) );

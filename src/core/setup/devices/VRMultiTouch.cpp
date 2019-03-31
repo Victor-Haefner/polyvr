@@ -30,6 +30,7 @@ template<> string typeName(const VRMultiTouch& t) { return "MultiTouch"; }
 VRMultiTouch::Touch::Touch(int k) : key(k) {}
 
 VRMultiTouch::VRMultiTouch() : VRDevice("multitouch") {
+    addBeacon();
     fingers[0] = Touch(0);
     fingers[0].beaconID = 0;
 

@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.3698 0.0924088 -0.005898" at_dir="0" base_name="Default" far="250" fov="1.0472" from="0.672609 0.782112 -1.27267" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.0101394 -0.0493385 -0.00999996" at_dir="0" base_name="Default" far="250" fov="1.0472" from="0.875987 0.686713 -1.38834" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <constraint persistency="666"/>
           </Object>
@@ -332,13 +332,8 @@
 	c = VR.mechanism.addChain(0.02, [VR.P3, VR.P7, VR.P8], 'lll')
 	VR.gears.addChild(c)
 	
-	m = VR.Material('blue')
-	m.setDiffuse([0.5,0.7,1.0])
-	VR.P1.setMaterial(m)
-	
-	m = VR.Material('red')
-	m.setDiffuse([1.0,0.5,0.5])
-	VR.P4.setMaterial(m)
+	VR.P1.setColor('blue')
+	VR.P4.setColor('red')
 	
 	VR.P1.setPickable(0)
 	VR.P4.setPickable(0)
@@ -356,11 +351,10 @@
 	VR.PL2.setPickable(0)
 	VR.PL1.getConstraint().setRotationConstraint([0,0,1], 'LINE', 0)
 	VR.PL1.getConstraint().setTranslationConstraint([0,0.5,0], 'POINT', 0)
+	VR.PL1.setColor('green')
 	
-	m = VR.Material('green')
-	m.setDiffuse([0.6,1,0.6])
-	VR.PL1.setMaterial(m)
 	
+	VR.mechanism.updateNeighbors()
 	
 	
 	
@@ -374,21 +368,23 @@
 	import VR
 	
 	if hasattr(VR, 'P1') and VR.rotate:
-		VR.P1.rotate(0.01, [0,0,1])
+		print 'rotate P1: 0.01 around [0,0,1]'
+		VR.P1.rotate(0.02, [0,0,1])
 		
 	if hasattr(VR, 'mechanism'):
 	
+		VR.mechanism.update()
 	
 		if hasattr(VR, 'lf'):
 			for o in VR.gears.getChildren():
 				if o.changedSince(VR.lf):
-					print 'object change detected:', o.getName(), 'at', VR.lf
+					print ' object change detected:', o.getName(), 'at', VR.lf
 		VR.lf = VR.getFrame()
 	
-		VR.mechanism.update()
 		
 </core>
       <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="32" base_name="trigger" name_space="__global__" name_suffix="6" persistency="666"/>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>

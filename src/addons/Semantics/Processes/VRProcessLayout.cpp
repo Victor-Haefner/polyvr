@@ -203,6 +203,12 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
     rebuild();
 }
 
+
+VRProcessPtr VRProcessLayout::getProcess(){
+    if (!process) { cout << "WARNING in ProcessLayout, getProcess: process is null!\n"; }
+    return process;
+}
+
 void VRProcessLayout::setEngine(VRProcessEnginePtr e) { engine = e; }
 
 void VRProcessLayout::rebuild() {

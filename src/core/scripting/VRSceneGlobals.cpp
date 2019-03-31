@@ -166,17 +166,18 @@ PyObject* VRSceneGlobals::loadGeometry(VRSceneGlobals* self, PyObject *args, PyO
     const char* path = "";
     int ignoreCache = 0;
     int threaded = 0;
+    int useBinaryCache = 0;
     const char* preset = "OSG";
     const char* parent = "";
     const char* options = "";
 
-    const char* kwlist[] = {"path", "cached", "preset", "threaded", "parent", "options", NULL};
-    string format = "s|isiss:loadGeometry";
-    if (! PyArg_ParseTupleAndKeywords(args, kwargs, format.c_str(), (char**)kwlist, &path, &ignoreCache, &preset, &threaded, &parent, &options)) return NULL;
+    const char* kwlist[] = {"path", "cached", "preset", "threaded", "parent", "options", "useBinaryCache", NULL};
+    string format = "s|isissi:loadGeometry";
+    if (! PyArg_ParseTupleAndKeywords(args, kwargs, format.c_str(), (char**)kwlist, &path, &ignoreCache, &preset, &threaded, &parent, &options, &useBinaryCache)) return NULL;
 
     VRObjectPtr prnt = VRScene::getCurrent()->getRoot()->find( parent );
 
-    VRTransformPtr obj = VRImport::get()->load( path, prnt, !ignoreCache, preset, threaded, options);
+    VRTransformPtr obj = VRImport::get()->load( path, prnt, !ignoreCache, preset, threaded, options, useBinaryCache);
     if (obj == 0) {
         VRGuiManager::get()->getConsole("Errors")->write( "Warning: " + string(path) + " not loaded!\n");
         Py_RETURN_NONE;
