@@ -147,6 +147,7 @@ struct VRGear : public VRPrimitive {
     int teeth_number = 32;
 
     VRGear();
+    VRGear(float width, float hole, float pitch, int N_teeth, float teeth_size, float bevel);
     void fromStream(stringstream& ss);
     void toStream(stringstream& ss);
     OSG::GeometryMTRecPtr make();

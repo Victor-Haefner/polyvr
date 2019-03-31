@@ -177,15 +177,23 @@ MRelation* checkGearThread(MPart* p1, MPart* p2) {
 }
 
 MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
-    Vec3d pp = p->geo->getWorldPosition();
+    Vec3d wpos = p->geo->getWorldPosition();
+    if (!p->prim) return 0;
     if (p->prim->getType() != "Gear") return 0;
     float r = ((VRGear*)p->prim)->radius();
     Vec3d dir = p->geo->getWorldDirection();
 
-    float eps = 0.0001;
+    float eps = 1e-4; // 1e-4
 
     vector<pointPolySegment> psegs;
-    for (auto ps : c->toVRPolygon(pp) ) if ( abs(ps.dist2 - r*r) < eps ) psegs.push_back(ps);
+    for (auto ps : c->toVRPolygon(wpos) ) {
+        double d = abs(ps.dist2 - r*r);
+        if ( d < eps ) {
+            cout << "checkChainPart " << d << endl;
+            psegs.push_back(ps);
+        }
+    }
+
     //for (auto ps : c->toVRPolygon(pp) ) psegs.push_back(ps);
     if (psegs.size() == 0) return 0;
 
@@ -360,6 +368,7 @@ void MChain::updateGeo() {
         j = (i+1) % nbrs.size(); // next
         VRPrimitive* p1 = nbrs[i]->prim;
         VRPrimitive* p2 = nbrs[j]->prim;
+        if (!p1 || !p2) continue;
         if (p1->getType() != "Gear") continue;
         if (p2->getType() != "Gear") continue;
         VRGear* g1 = (VRGear*)p1;
@@ -466,20 +475,22 @@ void VRMechanism::clear() {
 void VRMechanism::add(VRTransformPtr part, VRTransformPtr trans) {
     MPart* p = MPart::make(part, trans);
     if (p == 0) return;
+
     cache[part] = p;
     parts.push_back(p);
     p->apply();
     p->updateNeighbors(parts);
 }
 
-void VRMechanism::addGear(VRTransformPtr trans, float width, float hole, float pitch, int N_teeth, float teeth_size, float bevel) {
-    auto gPrim = VRPrimitive::create("Gear "+toString(width)+" "+toString(hole)+" "+toString(pitch)+" "+toString(N_teeth)+" "+toString(teeth_size)+" "+toString(bevel));
+void VRMechanism::addGear(VRTransformPtr part, float width, float hole, float pitch, int N_teeth, float teeth_size, float bevel) {
     auto p = new MGear();
-    p->geo = trans;
-    p->prim = gPrim;
-    p->trans = trans;
-    cache[trans] = p;
+    p->prim = new VRGear(width, hole, pitch, N_teeth, teeth_size, bevel);
+    p->geo = part;
+    p->trans = part;
+    cache[part] = p;
     parts.push_back(p);
+    p->apply();
+    p->updateNeighbors(parts);
 }
 
 VRTransformPtr VRMechanism::addChain(float w, vector<VRTransformPtr> geos, string dirs) {

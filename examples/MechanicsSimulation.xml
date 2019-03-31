@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.0101394 -0.0493385 -0.00999996" at_dir="0" base_name="Default" far="250" fov="1.0472" from="0.875987 0.686713 -1.38834" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.399731 0.207649 0.272251" at_dir="0" base_name="Default" far="250" fov="1.0472" from="1.21696 0.592893 -0.682034" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <constraint persistency="666"/>
           </Object>
@@ -290,7 +290,7 @@
 	else: VR.mechanism = VR.Mechanism()
 	
 	# primitives
-	def addPrimitive(params, mecha):
+	def addPrimitive(params, mecha, Nt):
 		p = VR.Geometry(params[0])
 		s = string.join([str(i) for i in params])
 		p.setPrimitive( s )
@@ -298,7 +298,8 @@
 		p.getConstraint().setRotationConstraint([0,0,1], 'LINE', 1)
 		VR.gears.addChild(p)
 		p.addTag('gear')
-		if mecha: VR.mechanism.add(p)
+		#if mecha: VR.mechanism.add(p)
+		if mecha: VR.mechanism.addGear(p, 0.02, 0.01, 0.02, Nt, 0.01, 0)
 		return p
 		
 	# parameters
@@ -313,23 +314,25 @@
 	VR.cgr = cgr
 		
 	# pads
-	VR.P1 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)
-	VR.P2 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)
-	VR.P3 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)
-	VR.P4 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)
-	VR.P5 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)
-	VR.P6 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)
-	VR.P7 = addPrimitive(['Gear', 0.02, ar, gp, 16, 0.01, 0], True)
-	VR.P8 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)
+	VR.P1 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True, cgN)
+	VR.P2 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True, cgN)
+	VR.P3 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True, cgN)
+	VR.P4 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True, cgN)
+	VR.P5 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True, cgN)
+	VR.P6 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True, cgN)
+	VR.P7 = addPrimitive(['Gear', 0.02, ar, gp, 16, 0.01, 0], True, 16)
+	VR.P8 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True, cgN)
+	VR.P9 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True, cgN)
 	VR.P2.translate([cgr*2,0,0])
 	VR.P3.translate([cgr*4,0,0])
 	VR.P4.translate([cgr,cgr*math.sqrt(3), -0.1]) # block wheel
 	VR.P5.translate([cgr*2,-cgr*2,0])
 	VR.P6.translate([cgr*4,-cgr*2,0])
-	VR.P7.translate([cgr*8,0,0])
-	VR.P8.translate([cgr*8,cgr*3,0])
+	VR.P7.translate([cgr*8,0,0.2])
+	VR.P8.translate([cgr*4,0,0.2])
+	VR.P9.translate([cgr*8,cgr*3,0.2])
 	
-	c = VR.mechanism.addChain(0.02, [VR.P3, VR.P7, VR.P8], 'lll')
+	c = VR.mechanism.addChain(0.02, [VR.P7, VR.P9, VR.P8], 'lll')
 	VR.gears.addChild(c)
 	
 	VR.P1.setColor('blue')
@@ -340,18 +343,19 @@
 	
 	
 	# lever example
-	VR.PL1 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)
-	VR.PL2 = addPrimitive(['Gear', 0.02, ar, gp, int(0.2*cgN), 0.01, 0], True)
-	VR.PL1.setFrom([0,0.5,0])
-	VR.PL2.setFrom([cgr*2,0.5,0])
+	if 0:
+		VR.PL1 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True, cgN)
+		VR.PL2 = addPrimitive(['Gear', 0.02, ar, gp, int(0.2*cgN), 0.01, 0], True, int(0.2*cgN))
+		VR.PL1.setFrom([0,0.5,0])
+		VR.PL2.setFrom([cgr*2,0.5,0])
 	
-	c = VR.mechanism.addChain(0.02, [VR.PL1, VR.PL2], 'll')
-	VR.gears.addChild(c)
+		c = VR.mechanism.addChain(0.02, [VR.PL1, VR.PL2], 'll')
+		VR.gears.addChild(c)
 	
-	VR.PL2.setPickable(0)
-	VR.PL1.getConstraint().setRotationConstraint([0,0,1], 'LINE', 0)
-	VR.PL1.getConstraint().setTranslationConstraint([0,0.5,0], 'POINT', 0)
-	VR.PL1.setColor('green')
+		VR.PL2.setPickable(0)
+		VR.PL1.getConstraint().setRotationConstraint([0,0,1], 'LINE', 0)
+		VR.PL1.getConstraint().setTranslationConstraint([0,0.5,0], 'POINT', 0)
+		VR.PL1.setColor('green')
 	
 	
 	VR.mechanism.updateNeighbors()
@@ -368,22 +372,24 @@
 	import VR
 	
 	if hasattr(VR, 'P1') and VR.rotate:
-		print 'rotate P1: 0.01 around [0,0,1]'
+		#print 'rotate P1: 0.01 around [0,0,1]'
 		VR.P1.rotate(0.02, [0,0,1])
 		
 	if hasattr(VR, 'mechanism'):
 	
 		VR.mechanism.update()
 	
+		"""
 		if hasattr(VR, 'lf'):
 			for o in VR.gears.getChildren():
 				if o.changedSince(VR.lf):
 					print ' object change detected:', o.getName(), 'at', VR.lf
+		"""
 		VR.lf = VR.getFrame()
 	
 		
 </core>
-      <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
+      <trig type="none" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="32" base_name="trigger" name_space="__global__" name_suffix="6" persistency="666"/>
     </Script>
   </Scripts>
