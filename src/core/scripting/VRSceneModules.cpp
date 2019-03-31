@@ -199,7 +199,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyWebCam>("Webcam", pModVR, VRPySprite::typeRef);
     sm->registerModule<VRPySegmentation>("Segmentation", pModVR);
     sm->registerModule<VRPyAdjacencyGraph>("AdjacencyGraph", pModVR);
-    sm->registerModule<VRPyMechanism>("Mechanism", pModVR);
+    sm->registerModule<VRPyMechanism>("Mechanism", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyNumberingEngine>("NumberingEngine", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPySkeleton>("Skeleton", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyCharacter>("Character", pModVR, VRPyObject::typeRef);

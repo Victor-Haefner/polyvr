@@ -1134,3 +1134,57 @@ Color3f VRMaterial::toColor(string c) {
     return colorMap.count(c) ? colorMap[c] : Color3f();
 }
 
+string VRMaterial::diffPass(VRMaterialPtr m, int pass) {
+    string res;
+    auto& p1 = mats[pass];
+    auto& p2 = m->mats[pass];
+
+    auto either = [](bool a, bool b) { return (a && !b || !a && b); };
+
+    if (either(p1->mat, p2->mat)) res += "\ndiff on mat|"+toString(bool(p1->mat))+"|"+toString(bool(p2->mat));
+    if (either(p1->colChunk, p2->colChunk)) res += "\ndiff on colChunk|"+toString(bool(p1->colChunk))+"|"+toString(bool(p2->colChunk));
+    if (either(p1->blendChunk, p2->blendChunk)) res += "\ndiff on blendChunk|"+toString(bool(p1->blendChunk))+"|"+toString(bool(p2->blendChunk));
+    if (either(p1->depthChunk, p2->depthChunk)) res += "\ndiff on depthChunk|"+toString(bool(p1->depthChunk))+"|"+toString(bool(p2->depthChunk));
+    if (either(p1->lineChunk, p2->lineChunk)) res += "\ndiff on lineChunk|"+toString(bool(p1->lineChunk))+"|"+toString(bool(p2->lineChunk));
+    if (either(p1->pointChunk, p2->pointChunk)) res += "\ndiff on pointChunk|"+toString(bool(p1->pointChunk))+"|"+toString(bool(p2->pointChunk));
+    if (either(p1->polygonChunk, p2->polygonChunk)) res += "\ndiff on polygonChunk|"+toString(bool(p1->polygonChunk))+"|"+toString(bool(p2->polygonChunk));
+    if (either(p1->twoSidedChunk, p2->twoSidedChunk)) res += "\ndiff on twoSidedChunk|"+toString(bool(p1->twoSidedChunk))+"|"+toString(bool(p2->twoSidedChunk));
+    if (either(p1->shaderChunk, p2->shaderChunk)) res += "\ndiff on shaderChunk|"+toString(bool(p1->shaderChunk))+"|"+toString(bool(p2->shaderChunk));
+    if (either(p1->clipChunk, p2->clipChunk)) res += "\ndiff on clipChunk|"+toString(bool(p1->clipChunk))+"|"+toString(bool(p2->clipChunk));
+    if (either(p1->stencilChunk, p2->stencilChunk)) res += "\ndiff on stencilChunk|"+toString(bool(p1->stencilChunk))+"|"+toString(bool(p2->stencilChunk));
+
+    if (either(p1->vProgram, p2->vProgram)) res += "\ndiff on vProgram|"+toString(bool(p1->vProgram))+"|"+toString(bool(p2->vProgram));
+    if (either(p1->fProgram, p2->fProgram)) res += "\ndiff on fProgram|"+toString(bool(p1->fProgram))+"|"+toString(bool(p2->fProgram));
+    if (either(p1->fdProgram, p2->fdProgram)) res += "\ndiff on fdProgram|"+toString(bool(p1->fdProgram))+"|"+toString(bool(p2->fdProgram));
+    if (either(p1->gProgram, p2->gProgram)) res += "\ndiff on gProgram|"+toString(bool(p1->gProgram))+"|"+toString(bool(p2->gProgram));
+    if (either(p1->tcProgram, p2->tcProgram)) res += "\ndiff on tcProgram|"+toString(bool(p1->tcProgram))+"|"+toString(bool(p2->tcProgram));
+    if (either(p1->teProgram, p2->teProgram)) res += "\ndiff on teProgram|"+toString(bool(p1->teProgram))+"|"+toString(bool(p2->teProgram));
+
+    if (either(p1->video, p2->video)) res += "\ndiff on video|"+toString(bool(p1->video))+"|"+toString(bool(p2->video));
+    if (either(p1->deferred, p2->deferred)) res += "\ndiff on deferred|"+toString(bool(p1->deferred))+"|"+toString(bool(p2->deferred));
+    if (either(p1->tmpDeferredShdr, p2->tmpDeferredShdr)) res += "\ndiff on tmpDeferredShdr|"+toString(bool(p1->tmpDeferredShdr))+"|"+toString(bool(p2->tmpDeferredShdr));
+
+    if (p1->vertexScript != p2->vertexScript) res += "\ndiff on vertexScript|"+p1->vertexScript+"|"+p2->vertexScript;
+    if (p1->fragmentScript != p2->fragmentScript) res += "\ndiff on fragmentScript|"+p1->fragmentScript+"|"+p2->fragmentScript;
+    if (p1->fragmentDScript != p2->fragmentDScript) res += "\ndiff on fragmentDScript|"+p1->fragmentDScript+"|"+p2->fragmentDScript;
+    if (p1->geometryScript != p2->geometryScript) res += "\ndiff on geometryScript|"+p1->geometryScript+"|"+p2->geometryScript;
+    if (p1->tessControlScript != p2->tessControlScript) res += "\ndiff on tessControlScript|"+p1->tessControlScript+"|"+p2->tessControlScript;
+    if (p1->tessEvalScript != p2->tessEvalScript) res += "\ndiff on tessEvalScript|"+p1->tessEvalScript+"|"+p2->tessEvalScript;
+
+    if (p1->texChunks.size() != p2->texChunks.size()) res += "\ndiff on N texChunks|"+toString(p1->texChunks.size())+"|"+toString(p2->texChunks.size());
+    if (p1->envChunks.size() != p2->envChunks.size()) res += "\ndiff on N envChunks|"+toString(p1->envChunks.size())+"|"+toString(p2->envChunks.size());
+    if (p1->ctxChunks.size() != p2->ctxChunks.size()) res += "\ndiff on N ctxChunks|"+toString(p1->ctxChunks.size())+"|"+toString(p2->ctxChunks.size());
+    if (p1->genChunks.size() != p2->genChunks.size()) res += "\ndiff on N genChunks|"+toString(p1->genChunks.size())+"|"+toString(p2->genChunks.size());
+    if (p1->tnsChunks.size() != p2->tnsChunks.size()) res += "\ndiff on N tnsChunks|"+toString(p1->tnsChunks.size())+"|"+toString(p2->tnsChunks.size());
+
+    return res;
+}
+
+string VRMaterial::diff(VRMaterialPtr m) {
+    string res;
+    if (mats.size() != m->mats.size()) res += "\nN passes|"+toString(mats.size())+"|"+toString(m->mats.size());
+    else {
+        for (int i=0; i<mats.size(); i++) res += diffPass(m, i);
+    }
+    return res;
+}

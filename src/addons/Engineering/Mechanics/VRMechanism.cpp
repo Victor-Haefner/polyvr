@@ -1,8 +1,10 @@
 #include "VRMechanism.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRPrimitive.h"
+#include "core/math/boundingbox.h"
 #include "core/utils/VRGlobals.h"
 #include "core/utils/toString.h"
+#include "core/tools/VRAnalyticGeometry.h"
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
@@ -27,11 +29,11 @@ Simulation workflows:
 
 MPart::MPart() {}
 MPart::~MPart() {}
-MGear::MGear() {}
+MGear::MGear() { type = "gear"; }
 MGear::~MGear() {}
-MChain::MChain() {}
+MChain::MChain() { type = "chain"; }
 MChain::~MChain() {}
-MThread::MThread() {}
+MThread::MThread() { type = "thread"; }
 MThread::~MThread() {}
 
 bool MPart::changed() {
@@ -44,7 +46,7 @@ bool MPart::changed() {
 
 void MPart::setBack() { if (geo) geo->setWorldMatrix(reference); }
 void MPart::apply() {
-    if (geo) reference = geo->getWorldMatrix();
+    if (geo && type != "chain") reference = geo->getWorldMatrix();
     timestamp++;
 }
 
@@ -186,7 +188,7 @@ MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
     float eps = 1e-4; // 1e-4
 
     vector<pointPolySegment> psegs;
-    for (auto ps : c->toVRPolygon(wpos) ) {
+    for (auto ps : c->toPolygon(wpos) ) {
         double d = abs(ps.dist2 - r*r);
         if ( d < eps ) {
             cout << "checkChainPart " << d << endl;
@@ -194,7 +196,7 @@ MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
         }
     }
 
-    //for (auto ps : c->toVRPolygon(pp) ) psegs.push_back(ps);
+    //for (auto ps : c->toPolygon(pp) ) psegs.push_back(ps);
     if (psegs.size() == 0) return 0;
 
     dir.normalize();
@@ -220,11 +222,11 @@ MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
     return rel;
 }
 
-vector<pointPolySegment> MChain::toVRPolygon(Vec3d p) {
+vector<pointPolySegment> MChain::toPolygon(Vec3d p) {
     vector<pointPolySegment> res;
-    for (uint i=0; i<VRPolygon.size(); i+=2) {
-        Vec3d p1 = VRPolygon[i];
-        Vec3d p2 = VRPolygon[i+1];
+    for (uint i=0; i<polygon.size(); i+=2) {
+        Vec3d p1 = polygon[i];
+        Vec3d p2 = polygon[i+1];
         Vec3d d = p2-p1;
         Vec3d d1 = p1-p;
         Vec3d d2 = p2-p;
@@ -355,9 +357,9 @@ void MChain::updateGeo() {
     GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
     GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
 
-    // collect all VRPolygon points
+    // collect all polygon points
     //printNeighbors();
-    VRPolygon.clear();
+    polygon.clear();
     vector<MPart*> nbrs;
     map<int, MPart*> nbrs_m;
     for (auto n : neighbors) nbrs_m[((MChainGearRelation*)n.second)->segID] = n.first;
@@ -412,8 +414,8 @@ void MChain::updateGeo() {
         Vec3d t2 = dn.cross(nbrs[j]->geo->getWorldDirection());
         t1 = c1 + t1*y1 + dn*x1;
         t2 = c2 + t2*y2 - dn*x2;
-        VRPolygon.push_back(t1);
-        VRPolygon.push_back(t2);
+        polygon.push_back(t1);
+        polygon.push_back(t2);
 
         /*Vec3d check = t2-t1;
         cout << nbrs[i]->geo->getName() << " " << nbrs[j]->geo->getName();
@@ -422,11 +424,11 @@ void MChain::updateGeo() {
         cout << endl;*/
     }
 
-    // draw VRPolygon
+    // draw polygon
     j=0;
-    for (uint i=0; i<VRPolygon.size(); i+=2) {
-        Vec3d p1 = VRPolygon[i];
-        Vec3d p2 = VRPolygon[i+1];
+    for (uint i=0; i<polygon.size(); i+=2) {
+        Vec3d p1 = polygon[i];
+        Vec3d p2 = polygon[i+1];
         pos->addValue(p1);
         pos->addValue(p2);
         norms->addValue(Vec3d(0,1,0));
@@ -446,6 +448,11 @@ void MChain::updateGeo() {
         g->setIndices(inds);
         g->setLengths(lengths);
     }
+
+    Vec3d c;
+    for (auto v : polygon) c += v;
+    c *= (1.0/polygon.size());
+    reference[3] = Vec4d(c[0], c[1], c[2], 1 );
 }
 
 VRTransformPtr MChain::init() {
@@ -464,8 +471,11 @@ VRTransformPtr MChain::init() {
 
 // -------------- mechanism ------------------------
 
-VRMechanism::VRMechanism() {;}
+VRMechanism::VRMechanism() : VRObject("mechanism") {;}
 VRMechanism::~VRMechanism() { clear();}
+
+shared_ptr<VRMechanism> VRMechanism::create() { return shared_ptr<VRMechanism>(new VRMechanism()); }
+
 void VRMechanism::clear() {
     for (auto part : parts) delete part;
     parts.clear();
@@ -563,5 +573,24 @@ void VRMechanism::update() {
     for (auto part : changed_parts) part->changed();
 }
 
-shared_ptr<VRMechanism> VRMechanism::create() { return shared_ptr<VRMechanism>(new VRMechanism()); }
+void VRMechanism::updateVisuals() {
+    if (!geo) {
+        geo = VRAnalyticGeometry::create();
+        addChild(geo);
+    }
+
+    geo->clear();
+
+    for (auto p1 : parts) {
+        auto pos1 = Vec3d(p1->reference[3]);
+        for (auto p2 : p1->neighbors) {
+            auto color = Color3f(0.4,0.6,1.0);
+            if (p1->type == "chain" || p2.first->type == "chain") color = Color3f(1.0,0.6,0.4);
+            auto pos2 = Vec3d(p2.first->reference[3]);
+            geo->addVector(pos1, pos2-pos1, color);
+        }
+    }
+}
+
+
 

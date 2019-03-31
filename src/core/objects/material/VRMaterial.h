@@ -176,6 +176,9 @@ class VRMaterial : public VRObject {
         ChunkMaterialMTRecPtr getMaterial(int i);
         VRTexturePtr getTexture(int unit = 0);
         TextureObjChunkMTRecPtr getTextureObjChunk(int unit = 0);
+
+        string diffPass(VRMaterialPtr, int pass);
+        string diff(VRMaterialPtr);
 };
 
 OSG_END_NAMESPACE;

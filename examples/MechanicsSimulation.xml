@@ -3,11 +3,25 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.399731 0.207649 0.272251" at_dir="0" base_name="Default" far="250" fov="1.0472" from="1.21696 0.592893 -0.682034" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.245282 -0.00722078 -0.00999978" at_dir="0" base_name="Default" far="250" fov="1.0472" from="0.640918 0.237124 -0.688546" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <constraint persistency="666"/>
           </Object>
           <constraint persistency="666"/>
+        </Object>
+        <Object base_name="mechanism" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="4294967295">
+          <Object at="0 0 -1" at_dir="1" base_name="AnalyticGeometry" from="0 0 0" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="Transform" up="0 1 0" visible="4294967295">
+            <Object at="0 0 -1" at_dir="1" base_name="AGLines" from="0 0 0" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="Geometry" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <Object at="0 0 -1" at_dir="1" base_name="AGPoints" from="0 0 0" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="Geometry" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <Object at="0 0 -1" at_dir="1" base_name="AnnotationEngine" from="0 0 0" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="AnnotationEngine" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <constraint persistency="666"/>
+          </Object>
         </Object>
       </Object>
     </Object>
@@ -15,6 +29,25 @@
   <Cameras activeCam="Default" persistency="666"/>
   <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
+    <Script base_name="Script" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+
+	VR.P2.show()
+	m = VR.P2.getMaterial()
+	"""
+	m.setDepthTest('GL_NONE')
+	m.clearTransparency()
+	m.setFrontBackModes('GL_FILL', 'GL_NONE')
+	m.setZOffset(0,0)
+	m.setSortKey(0)
+	"""
+	
+	g = VR.loadGeometry('robotArm.dae')
+	VR.gears.addChild(g)
+</core>
+    </Script>
     <Script base_name="addGear" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
@@ -287,7 +320,9 @@
 	root.addChild(VR.gears)
 	
 	if hasattr(VR, 'mechanism'): VR.mechanism.clear()
-	else: VR.mechanism = VR.Mechanism()
+	else: 
+		VR.mechanism = VR.Mechanism()
+	root.addChild(VR.mechanism)
 	
 	# primitives
 	def addPrimitive(params, mecha, Nt):
@@ -378,6 +413,7 @@
 	if hasattr(VR, 'mechanism'):
 	
 		VR.mechanism.update()
+		VR.mechanism.updateVisuals()
 	
 		"""
 		if hasattr(VR, 'lf'):
