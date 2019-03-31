@@ -16,6 +16,9 @@ PyMethodDef VRPyKinematics::methods[] = {
     {"setupFixedJoint", PyWrap( Kinematics, setupFixedJoint, "Set graph - setGraph(graph)2", int, int, int, PosePtr, PosePtr) },
     {"setupCustomJoint", PyWrap( Kinematics, setupCustomJoint, "Set graph - setGraph(graph)3", int, int, int, PosePtr, PosePtr, vector<int>, vector<float>, vector<float>) },
     {"getGraph", PyWrap( Kinematics, getGraph, "Set graph - setGraph(graph)4", GraphPtr) },
+    {"physicalizeAll", PyWrap( Kinematics, physicalizeAll, "Set graph - setGraph(graph)4", void, bool) },
+    {"physicalize", PyWrap( Kinematics, physicalize, "Set graph - setGraph(graph)4", void, int, bool) },
+    {"clearAll", PyWrap( Kinematics, clearAll, "Set graph - setGraph(graph)4", void) },
 
 
     {NULL}  /* Sentinel */

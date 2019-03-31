@@ -51,7 +51,9 @@ class VRKinematics {
         int setupFixedJoint(int nID1, int nID2, PosePtr d1, PosePtr d2);
         int setupCustomJoint(int nID1, int nID2, PosePtr d1, PosePtr d2, vector<int> dofs, vector<float> minRange, vector<float> maxRange);
         GraphPtr getGraph();
-
+        void physicalizeAll(bool dynamic);
+        void physicalize(int nID, bool dynamic);
+        void clearAll();
 };
 
 OSG_END_NAMESPACE;

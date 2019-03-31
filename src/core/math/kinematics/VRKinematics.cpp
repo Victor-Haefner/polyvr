@@ -64,12 +64,8 @@ int VRKinematics::setupHinge(int nID1, int nID2, PosePtr d1, PosePtr d2, int axi
 int VRKinematics::setupBallJoint(int nID1, int nID2, PosePtr d1, PosePtr d2)
 {
     VRConstraintPtr c = VRConstraint::create();
-    vector<int> dof;
-    dof.push_back(3);
-    dof.push_back(4);
-    dof.push_back(5);
-
-    c->free(dof);
+    vector<int> dofs{3,4,5};
+    c->free(dofs);
     c->setReferenceA(d1);
     c->setReferenceB(d2);
 
@@ -98,3 +94,26 @@ return 0;
 GraphPtr VRKinematics::getGraph() {
     return graph;
 }
+
+void VRKinematics::physicalize(int nID, bool dynamic) {
+    float ld = 1;
+    float ad = 5;
+    bodies[nID].obj->setDamping(ld,ad);
+    bodies[nID].obj->setGravity(Vec3d(0, 0, 0));
+    bodies[nID].obj->physicalize(true, dynamic, "Convex");
+}
+
+void VRKinematics::physicalizeAll(bool dynamic) {
+    for (auto b : bodies) physicalize(b.first, dynamic);
+}
+
+
+void VRKinematics::clearAll() {
+    graph->clear();
+    bodies.clear();
+    joints.clear();
+}
+
+
+
+
