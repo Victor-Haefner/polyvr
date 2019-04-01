@@ -48,6 +48,7 @@ int VRKinematics::addBody(VRTransformPtr obj, bool dynamic) {
     bodies[nID] = Body(nID, obj);
     physicalize(nID, dynamic);
     obj->setPhysicsActivationMode(4);
+    obj->setCollisionGroup({1});
     return nID;
 }
 
@@ -72,8 +73,8 @@ int VRKinematics::addBallJoint(int nID1, int nID2, PosePtr d1, PosePtr d2)
     return addJoint(nID1, nID2, c);
 }
 
-int VRKinematics::addFixedJoint(int nID1, int nID2, PosePtr d1, PosePtr d2)
-{
+int VRKinematics::addFixedJoint(int nID1, int nID2, PosePtr d1, PosePtr d2) {
+    if (!d1 || !d2) return -1;
     VRConstraintPtr c = VRConstraint::create();
     c->setReferenceA(d1);
     c->setReferenceB(d2);
@@ -100,10 +101,11 @@ void VRKinematics::setDynamic(int nID, bool dynamic) {
 
 void VRKinematics::physicalize(int nID, bool dynamic) {
     float ld = 1;
-    float ad = 5;
+    float ad = 1;
     bodies[nID].obj->setDamping(ld,ad);
     bodies[nID].obj->setGravity(Vec3d(0, 0, 0));
     bodies[nID].obj->physicalize(true, dynamic, "Convex");
+    bodies[nID].obj->setCollisionMargin(0);
 }
 
 void VRKinematics::physicalizeAll(bool dynamic) {

@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.245282 -0.00722078 -0.00999978" at_dir="0" base_name="Default" far="250" fov="1.0472" from="0.875551 0.422097 -0.466688" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.245282 -0.00722078 -0.00999978" at_dir="0" base_name="Default" far="250" fov="1.0472" from="1.44493 -0.414614 -0.714599" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <constraint persistency="666"/>
           </Object>
@@ -199,6 +199,118 @@
           </Object>
         </Object>
         <Object base_name="mechanism" name_space="__global__" name_suffix="24" persistency="666" pickable="0" type="Object" visible="4294967295"/>
+        <Object base_name="mechanism" name_space="__global__" name_suffix="25" persistency="666" pickable="0" type="Object" visible="4294967295">
+          <Object at="0 0 -1" at_dir="0" base_name="AnalyticGeometry" from="0 0 0" name_space="__global__" name_suffix="15" persistency="666" pickable="0" scale="1 1 1" type="Transform" up="0 1 0" visible="4294967295">
+            <Object at="0 0 -1" at_dir="0" base_name="AGLines" from="0 0 0" name_space="__global__" name_suffix="15" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="Geometry" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <Object at="0 0 -1" at_dir="0" base_name="AGPoints" from="0 0 0" name_space="__global__" name_suffix="15" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="Geometry" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <Object base_name="AnnotationEngine" name_space="__global__" name_suffix="15" persistency="666" pickable="0" type="AnnotationEngine" visible="4294967295"/>
+            <constraint persistency="666"/>
+          </Object>
+        </Object>
+        <Object base_name="mechanism" name_space="__global__" name_suffix="26" persistency="666" pickable="0" type="Object" visible="4294967295">
+          <Object at="0 0 -1" at_dir="0" base_name="AnalyticGeometry" from="0 0 0" name_space="__global__" name_suffix="16" persistency="666" pickable="0" scale="1 1 1" type="Transform" up="0 1 0" visible="4294967295">
+            <Object at="0 0 -1" at_dir="0" base_name="AGLines" from="0 0 0" name_space="__global__" name_suffix="16" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="Geometry" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <Object at="0 0 -1" at_dir="0" base_name="AGPoints" from="0 0 0" name_space="__global__" name_suffix="16" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="Geometry" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <Object base_name="AnnotationEngine" name_space="__global__" name_suffix="16" persistency="666" pickable="0" type="AnnotationEngine" visible="4294967295"/>
+            <constraint persistency="666"/>
+          </Object>
+        </Object>
+        <Object base_name="mechanism" name_space="__global__" name_suffix="27" persistency="666" pickable="0" type="Object" visible="4294967295">
+          <Object at="0 0 -1" at_dir="0" base_name="AnalyticGeometry" from="0 0 0" name_space="__global__" name_suffix="17" persistency="666" pickable="0" scale="1 1 1" type="Transform" up="0 1 0" visible="4294967295">
+            <Object at="0 0 -1" at_dir="0" base_name="AGLines" from="0 0 0" name_space="__global__" name_suffix="17" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="Geometry" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <Object at="0 0 -1" at_dir="0" base_name="AGPoints" from="0 0 0" name_space="__global__" name_suffix="17" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="Geometry" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <Object base_name="AnnotationEngine" name_space="__global__" name_suffix="17" persistency="666" pickable="0" type="AnnotationEngine" visible="4294967295"/>
+            <constraint persistency="666"/>
+          </Object>
+        </Object>
+        <Object base_name="mechanism" name_space="__global__" name_suffix="28" persistency="666" pickable="0" type="Object" visible="4294967295">
+          <Object at="0 0 -1" at_dir="0" base_name="AnalyticGeometry" from="0 0 0" name_space="__global__" name_suffix="18" persistency="666" pickable="0" scale="1 1 1" type="Transform" up="0 1 0" visible="4294967295">
+            <Object at="0 0 -1" at_dir="0" base_name="AGLines" from="0 0 0" name_space="__global__" name_suffix="18" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="Geometry" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <Object at="0 0 -1" at_dir="0" base_name="AGPoints" from="0 0 0" name_space="__global__" name_suffix="18" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="Geometry" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <Object base_name="AnnotationEngine" name_space="__global__" name_suffix="18" persistency="666" pickable="0" type="AnnotationEngine" visible="4294967295"/>
+            <constraint persistency="666"/>
+          </Object>
+        </Object>
+        <Object base_name="mechanism" name_space="__global__" name_suffix="29" persistency="666" pickable="0" type="Object" visible="4294967295">
+          <Object at="0 0 -1" at_dir="0" base_name="AnalyticGeometry" from="0 0 0" name_space="__global__" name_suffix="19" persistency="666" pickable="0" scale="1 1 1" type="Transform" up="0 1 0" visible="4294967295">
+            <Object at="0 0 -1" at_dir="0" base_name="AGLines" from="0 0 0" name_space="__global__" name_suffix="19" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="Geometry" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <Object at="0 0 -1" at_dir="0" base_name="AGPoints" from="0 0 0" name_space="__global__" name_suffix="19" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="Geometry" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <Object base_name="AnnotationEngine" name_space="__global__" name_suffix="19" persistency="666" pickable="0" type="AnnotationEngine" visible="4294967295"/>
+            <constraint persistency="666"/>
+          </Object>
+        </Object>
+        <Object base_name="mechanism" name_space="__global__" name_suffix="30" persistency="666" pickable="0" type="Object" visible="4294967295">
+          <Object at="0 0 -1" at_dir="0" base_name="AnalyticGeometry" from="0 0 0" name_space="__global__" name_suffix="20" persistency="666" pickable="0" scale="1 1 1" type="Transform" up="0 1 0" visible="4294967295">
+            <Object at="0 0 -1" at_dir="0" base_name="AGLines" from="0 0 0" name_space="__global__" name_suffix="20" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="Geometry" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <Object at="0 0 -1" at_dir="0" base_name="AGPoints" from="0 0 0" name_space="__global__" name_suffix="20" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="Geometry" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <Object base_name="AnnotationEngine" name_space="__global__" name_suffix="20" persistency="666" pickable="0" type="AnnotationEngine" visible="4294967295"/>
+            <constraint persistency="666"/>
+          </Object>
+        </Object>
+        <Object base_name="mechanism" name_space="__global__" name_suffix="31" persistency="666" pickable="0" type="Object" visible="4294967295"/>
+        <Object base_name="mechanism" name_space="__global__" name_suffix="32" persistency="666" pickable="0" type="Object" visible="4294967295"/>
+        <Object base_name="mechanism" name_space="__global__" name_suffix="33" persistency="666" pickable="0" type="Object" visible="4294967295">
+          <Object at="0 0 -1" at_dir="0" base_name="AnalyticGeometry" from="0 0 0" name_space="__global__" name_suffix="21" persistency="666" pickable="0" scale="1 1 1" type="Transform" up="0 1 0" visible="4294967295">
+            <Object at="0 0 -1" at_dir="0" base_name="AGLines" from="0 0 0" name_space="__global__" name_suffix="21" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="Geometry" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <Object at="0 0 -1" at_dir="0" base_name="AGPoints" from="0 0 0" name_space="__global__" name_suffix="21" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="Geometry" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <Object base_name="AnnotationEngine" name_space="__global__" name_suffix="21" persistency="666" pickable="0" type="AnnotationEngine" visible="4294967295"/>
+            <constraint persistency="666"/>
+          </Object>
+        </Object>
+        <Object base_name="mechanism" name_space="__global__" name_suffix="34" persistency="666" pickable="0" type="Object" visible="4294967295">
+          <Object at="0 0 -1" at_dir="0" base_name="AnalyticGeometry" from="0 0 0" name_space="__global__" name_suffix="22" persistency="666" pickable="0" scale="1 1 1" type="Transform" up="0 1 0" visible="4294967295">
+            <Object at="0 0 -1" at_dir="0" base_name="AGLines" from="0 0 0" name_space="__global__" name_suffix="22" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="Geometry" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <Object at="0 0 -1" at_dir="0" base_name="AGPoints" from="0 0 0" name_space="__global__" name_suffix="22" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="Geometry" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <Object base_name="AnnotationEngine" name_space="__global__" name_suffix="22" persistency="666" pickable="0" type="AnnotationEngine" visible="4294967295"/>
+            <constraint persistency="666"/>
+          </Object>
+        </Object>
+        <Object base_name="mechanism" name_space="__global__" name_suffix="35" persistency="666" pickable="0" type="Object" visible="4294967295">
+          <Object at="0 0 -1" at_dir="1" base_name="AnalyticGeometry" from="0 0 0" name_space="__global__" name_suffix="23" persistency="666" pickable="0" scale="1 1 1" type="Transform" up="0 1 0" visible="4294967295">
+            <Object at="0 0 -1" at_dir="1" base_name="AGLines" from="0 0 0" name_space="__global__" name_suffix="23" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="Geometry" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <Object at="0 0 -1" at_dir="1" base_name="AGPoints" from="0 0 0" name_space="__global__" name_suffix="23" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="Geometry" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <Object at="0 0 -1" at_dir="1" base_name="AnnotationEngine" from="0 0 0" name_space="__global__" name_suffix="23" persistency="666" pickable="0" scale="1 1 1" sourceparam="" sourcetype="0" type="AnnotationEngine" up="0 1 0" visible="4294967295">
+              <constraint persistency="666"/>
+            </Object>
+            <constraint persistency="666"/>
+          </Object>
+        </Object>
       </Object>
     </Object>
   </Objects>
@@ -496,9 +608,11 @@
 	root.addChild(VR.gears)
 	
 	if hasattr(VR, 'mechanism'): VR.mechanism.clear()
-	else: 
-		VR.mechanism = VR.Mechanism()
+	else: VR.mechanism = VR.Mechanism()
 	root.addChild(VR.mechanism)
+	
+	if hasattr(VR, 'kinematics'): VR.kinematics.clear()
+	else: VR.kinematics = VR.Kinematics()
 	
 	# primitives
 	def addPrimitive(params, mecha, Nt):
@@ -578,32 +692,18 @@
 	axis.setTransform([cgr*4,0,0.1], [0,1,0], [0,0,1])
 	VR.gears.addChild(axis)
 	
-	if False:
-		VR.setPhysicsActive(0)
+	VR.setPhysicsActive(0)
 	
-		def prepPhys(obj, dynamic):
-			obj.physicalize(1,dynamic,'Convex')
-			obj.setGravity([0,0,0])
-			obj.setDamping(1,1)
-			obj.setCollisionMargin(0)
-			obj.setCollisionGroup([1])
-			obj.setPhysicsActivationMode(4)
+	aID = VR.kinematics.addBody(axis)
+	p3ID = VR.kinematics.addBody(VR.P3)
+	p8ID = VR.kinematics.addBody(VR.P8)
 	
-		prepPhys(axis, 1)
-		prepPhys(VR.P3,1)
-		prepPhys(VR.P8,1)
+	p1 = VR.Pose([0,-0.1,0],[0,1,0],[0,0,1])
+	p2 = VR.Pose([0, 0.1,0],[0,1,0],[0,0,1])
+	VR.kinematics.addFixedJoint(aID, p3ID, p1, VR.Pose())
+	VR.kinematics.addFixedJoint(aID, p8ID, p2, VR.Pose())
 	
-		def setupJoint(a,b,d):
-			c = VR.Constraint()
-			c.setOffsetA(VR.Pose([0,-d,0],[0,1,0],[0,0,1]))
-			cs = VR.Constraint()
-			a.attach(b, c, cs)
-	
-		setupJoint(axis, VR.P3,  0.1)
-		setupJoint(axis, VR.P8, -0.1)
-	
-		VR.setPhysicsActive(1)
-	
+	VR.setPhysicsActive(1)
 	
 	
 </core>
@@ -633,7 +733,7 @@
 	
 		
 </core>
-      <trig type="none" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
+      <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="32" base_name="trigger" name_space="__global__" name_suffix="6" persistency="666"/>
     </Script>
   </Scripts>
