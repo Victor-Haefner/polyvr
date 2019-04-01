@@ -34,6 +34,7 @@ PyMethodDef VRPyConcept::methods[] = {
     {"getProperties", PyWrap(Concept, getProperties, "Return all properties - [property] getProperties()", vector<VRPropertyPtr> ) },
     {"addProperty", PyWrap(Concept, addProperty, "Add new property - property addProperty( str name, str value )", VRPropertyPtr, string, string ) },
     {"append", PyWrapOpt(Concept, append, "Add another existing concept as child - concept append( str name )", "0", VRConceptPtr, string, bool ) },
+    {"getID", PyWrap(Concept, getID, "Get local ID", int ) },
     {NULL}  /* Sentinel */
 };
 
@@ -81,6 +82,8 @@ PyMethodDef VRPyEntity::methods[] = {
 
 // --------------------- Ontology --------------------
 
+typedef map<int, vector<VRConceptPtr>> parentChildMap;
+
 PyMethodDef VRPyOntology::methods[] = {
     {"open", PyWrap(Ontology, openOWL, "Open OWL file", void, string) },
     {"save", PyWrap(Ontology, saveOWL, "Write to OWL file", void, string) },
@@ -100,6 +103,7 @@ PyMethodDef VRPyOntology::methods[] = {
     {"copy", PyWrap(Ontology, copy, "Copy the ontology - ontology copy()", VROntologyPtr ) },
     {"addModule", PyWrap(Ontology, addModule, "Add module from library", void, string) },
     {"process", PyWrapOpt(Ontology, process, "Process a query - process( str query )", "0", vector<VREntityPtr>, string, bool ) },
+    {"getChildrenMap", PyWrap(Ontology, getChildrenMap, "Get the parent child mapping", parentChildMap ) },
     {NULL}  /* Sentinel */
 };
 

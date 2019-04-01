@@ -153,6 +153,8 @@ bool VRConcept::hasParent(VRConceptPtr c) {
     return false;
 }
 
+int VRConcept::getID() { return ID; }
+
 vector<VRConceptPtr> VRConcept::getParents() {
     vector<VRConceptPtr> res;
     for (auto p : parents) res.push_back(p.second);

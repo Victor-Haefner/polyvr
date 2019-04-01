@@ -42,6 +42,8 @@ struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VROnto
     static VRConceptPtr create(string name = "none", VROntologyPtr o = 0);
     VRConceptPtr ptr();
 
+    int getID();
+
     VRConceptPtr copy();
     VRConceptPtr append(string name, bool link = false);
     void append(VRConceptPtr c, bool link = false);
@@ -64,7 +66,7 @@ struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VROnto
 
     bool hasParent(VRConceptPtr c = 0);
     vector<VRConceptPtr> getParents();
-    //void getDescendance(map<int, VRConceptPtr>& concepts);
+    //vector<VRConceptPtr> getChildren();
     void detach();
 
     bool is_a(VRConceptPtr c);
