@@ -4,6 +4,7 @@
 #include "core/math/boundingbox.h"
 #include "core/utils/VRGlobals.h"
 #include "core/utils/toString.h"
+#include "core/utils/isNan.h"
 #include "core/tools/VRAnalyticGeometry.h"
 
 #include <OpenSG/OSGGeoProperties.h>
@@ -38,9 +39,9 @@ MThread::~MThread() {}
 
 bool MPart::changed() {
     if (geo == 0) return false;
-    cout << "  part " << geo->getName() << " changed from timestamp " << timestamp << " (last change: " << geo->getLastChange() << ")";
+    //cout << "  part " << geo->getName() << " changed from timestamp " << timestamp << " (last change: " << geo->getLastChange() << ")";
     bool b = geo->changedSince(timestamp, true);
-    cout << " to " << timestamp << ", -> " << b << endl;
+    //cout << " to " << timestamp << ", -> " << b << endl;
     return b;
 }
 
@@ -74,7 +75,7 @@ void MPart::clearNeighbors() {
 }
 
 void MPart::addNeighbor(MPart* p, MRelation* r) {
-    cout << "      MPart::addNeighbor " << p->geo->getName() << endl;
+    //cout << "      MPart::addNeighbor " << p->geo->getName() << endl;
     neighbors[p] = r;
     p->neighbors[this] = r;
 }
@@ -111,13 +112,16 @@ bool MPart::propagateMovement() { // recursion
 }
 
 bool MPart::propagateMovement(MChange c, MRelation* r) { // change
+    if (trans) if (trans->getName() == "Gear.2") cout << "MPart::propagateMovement 1\n";
     r->translateChange(c);
     if (change.time == c.time) {
-        cout << " propagateMovement change times are the same?" << endl;
+        if (trans) if (trans->getName() == "Gear.2") cout << "MPart::propagateMovement 1 -> " << change.time << endl;
+        //cout << " propagateMovement change times are the same?" << endl;
         return change.same(c);
     } // TODO: either it is the same change || another change in the same timestep..
 
-    cout << " propagateMovement do move" << endl;
+    //cout << " propagateMovement do move" << endl;
+    if (trans) if (trans->getName() == "Gear.2") cout << "MPart::propagateMovement 2\n";
     change = c;
     move();
 
@@ -190,7 +194,7 @@ MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
     for (auto ps : c->toPolygon(wpos) ) {
         double d = abs(ps.dist2 - r*r);
         if ( d < eps ) {
-            cout << "checkChainPart " << d << endl;
+            //cout << "checkChainPart " << d << endl;
             psegs.push_back(ps);
         }
     }
@@ -264,7 +268,7 @@ VRGear* MGear::gear() { return (VRGear*)prim; }
 VRScrewthread* MThread::thread() { return (VRScrewthread*)prim; }
 
 void MPart::move() {}
-void MGear::move() { trans->rotate(change.dx/gear()->radius(), Vec3d(0,0,1)); }
+void MGear::move() { trans->rotate(change.dx/gear()->radius(), Vec3d(0,0,1)); trans->setBltOverrideFlag(); trans->updatePhysics(); }
 void MChain::move() { if (geo == 0) return; updateGeo(); }
 void MThread::move() { trans->rotate(change.a, Vec3d(0,0,1)); }
 
@@ -277,11 +281,14 @@ void MPart::computeChange() {
     change.l = change.t.length();
 
     change.a = acos( (m[0][0] + m[1][1] + m[2][2] - 1)*0.5 );
+    if (isNan(change.a)) change.a = 0;
+
     change.n = Vec3d(m[2][1] - m[1][2], m[0][2] - m[2][0], m[1][0] - m[0][1]);
     change.n.normalize();
 
     if (change.n[2] < 0) { change.n *= -1; change.a *= -1; }
-
+    if (abs(change.a) < 1e-5) return;
+    cout << "computeChange " << geo->getName() << "  " << change.a << "  " << change.n << endl;
     change.time = timestamp;
 }
 
@@ -291,7 +298,7 @@ void MGear::computeChange() {
 }
 
 void MGear::updateNeighbors(vector<MPart*> parts) {
-    cout << "   MGear::updateNeighbors of " << geo->getName() << endl;
+    //cout << "   MGear::updateNeighbors of " << geo->getName() << endl;
     clearNeighbors();
     for (auto part : parts) {
         if (part == this) continue;
@@ -543,7 +550,7 @@ void VRMechanism::updateNeighbors() {
 }
 
 void VRMechanism::update() {
-    cout << "\nVRMechanism::update" << endl;
+    //cout << "\nVRMechanism::update" << endl;
 
     vector<MPart*> changed_parts;
     for (auto& part : parts) if (part->changed()) changed_parts.push_back(part);
@@ -552,11 +559,11 @@ void VRMechanism::update() {
         part->updateNeighbors(parts);
         part->computeState();
         part->computeChange();
-        part->printChange();
+        //part->printChange();
     }
 
     for (auto& part : changed_parts) {
-        cout << " update changes " << part->geo->getName() << endl;
+        //cout << " update changes " << part->geo->getName() << endl;
         if (part->getChange().isNull()) continue;
         bool block = !part->propagateMovement();
         if (block) { // mechanism is blocked
