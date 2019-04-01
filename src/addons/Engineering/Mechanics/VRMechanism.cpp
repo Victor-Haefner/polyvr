@@ -1,6 +1,7 @@
 #include "VRMechanism.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRPrimitive.h"
+#include "core/objects/geometry/VRPhysics.h"
 #include "core/math/boundingbox.h"
 #include "core/utils/VRGlobals.h"
 #include "core/utils/toString.h"
@@ -265,9 +266,24 @@ VRGear* MGear::gear() { return (VRGear*)prim; }
 VRScrewthread* MThread::thread() { return (VRScrewthread*)prim; }
 
 void MPart::move() {}
-void MGear::move() { trans->rotate(change.dx/gear()->radius(), Vec3d(0,0,1)); trans->setBltOverrideFlag(); trans->updatePhysics(); }
 void MChain::move() { if (geo == 0) return; updateGeo(); }
 void MThread::move() { trans->rotate(change.a, Vec3d(0,0,1)); }
+
+void MGear::move() {
+    float a = change.dx/gear()->radius();
+
+    if (trans->getPhysics()->isPhysicalized()) {
+        trans->getPhysics()->setDynamic(false, true);
+        resetPhysics = true;
+    }
+
+    trans->rotate(a, Vec3d(0,0,1));
+
+    if (trans->getPhysics()->isPhysicalized()) {
+        trans->setBltOverrideFlag();
+        trans->updatePhysics();
+    }
+}
 
 void MPart::computeChange() {
     Matrix4d m = reference;
@@ -550,6 +566,13 @@ void VRMechanism::update() {
     //cout << "\nVRMechanism::update" << endl;
 
     vector<MPart*> changed_parts;
+    for (auto& part : parts) {
+        if (part->resetPhysics) {
+            part->trans->getPhysics()->setDynamic(true, true);
+            part->resetPhysics = false;
+        }
+    }
+
     for (auto& part : parts) if (part->changed()) changed_parts.push_back(part);
 
     for (auto& part : changed_parts) {

@@ -75,6 +75,7 @@ class MPart {
             DISENGAGING
         };
 
+        bool resetPhysics = false;
         string type = "part";
         map<MPart*, MRelation*> neighbors;
         vector<MPart*> group;
