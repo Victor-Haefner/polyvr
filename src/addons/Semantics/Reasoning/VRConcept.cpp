@@ -121,23 +121,17 @@ vector<VRPropertyPtr> VRConcept::getProperties(string type) {
     return res;
 }
 
-vector<VRPropertyPtr> VRConcept::getProperties() {
+vector<VRPropertyPtr> VRConcept::getProperties(bool inherited) {
     vector<VRPropertyPtr> res;
     map<string, VRPropertyPtr> tmp;
-    getProperties(tmp);
+    getProperties(tmp, inherited);
     for (auto p : tmp) res.push_back(p.second);
     return res;
 }
 
-void VRConcept::getProperties(map<string, VRPropertyPtr>& res) {
-    //for (auto p : getParents()) cout << "VRConcept::getParentProperties parent " << p->getName() << " of " << getName() << " Np " << getParents().size() << " ID " << ID << endl;
-    for (auto p : getParents()) {
-        //cout << "VRConcept::getParentProperties parent " << p->getName() << " of " << getName() << endl;
-        p->getProperties(res);
-    }
-    for (auto p : properties) {
-        res[p.second->getName()] = p.second;
-    }
+void VRConcept::getProperties(map<string, VRPropertyPtr>& res, bool inherited) {
+    if (inherited) for (auto p : getParents()) p->getProperties(res);
+    for (auto p : properties) res[p.second->getName()] = p.second;
 }
 
 void VRConcept::detach() {

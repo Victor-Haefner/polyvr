@@ -31,7 +31,7 @@ PyMethodDef VRPyProperty::methods[] = {
 PyMethodDef VRPyConcept::methods[] = {
     {"toString", PyWrapOpt(Concept, toString, "Return the concept as string - str toString()", "", string, string ) },
     {"getProperty", PyWrapOpt(Concept, getProperty, "Return a property by name - property getProperty( str name )", "1", VRPropertyPtr, string, bool ) },
-    {"getProperties", PyWrap(Concept, getProperties, "Return all properties - [property] getProperties()", vector<VRPropertyPtr> ) },
+    {"getProperties", PyWrapOpt(Concept, getProperties, "Return all properties", "1", vector<VRPropertyPtr>, bool ) },
     {"addProperty", PyWrap(Concept, addProperty, "Add new property - property addProperty( str name, str value )", VRPropertyPtr, string, string ) },
     {"append", PyWrapOpt(Concept, append, "Add another existing concept as child - concept append( str name )", "0", VRConceptPtr, string, bool ) },
     {"getID", PyWrap(Concept, getID, "Get local ID", int ) },

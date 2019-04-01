@@ -61,8 +61,8 @@ struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VROnto
     VRPropertyPtr getProperty(string name, bool warn = true);
     vector<VRPropertyPtr> getProperties(string type);
     VRPropertyPtr getProperty(int ID);
-    vector<VRPropertyPtr> getProperties();
-    void getProperties(map<string, VRPropertyPtr>& res);
+    vector<VRPropertyPtr> getProperties(bool inherited = true);
+    void getProperties(map<string, VRPropertyPtr>& res, bool inherited = true);
 
     bool hasParent(VRConceptPtr c = 0);
     vector<VRConceptPtr> getParents();
