@@ -1,6 +1,7 @@
 #include "VRKinematics.h"
 #include "VRConstraint.h"
 #include "core/objects/VRTransform.h"
+#include "core/objects/geometry/VRPhysics.h"
 #include "core/utils/VRGlobals.h"
 #include "core/utils/toString.h"
 #include "core/math/pose.h"
@@ -40,13 +41,14 @@ int VRKinematics::addJoint(int nID1, int nID2, VRConstraintPtr c)
     return eID;
 }
 
-int VRKinematics::addBody(VRTransformPtr obj)
-{
+int VRKinematics::addBody(VRTransformPtr obj, bool dynamic) {
     int nID = graph->addNode(obj->getPose());
     bodies[nID] = Body(nID, obj);
+    physicalize(nID, dynamic);
     return nID;
-
 }
+
+VRTransformPtr VRKinematics::getTransform(int nID) { return bodies[nID].obj; }
 
 int VRKinematics::setupHinge(int nID1, int nID2, PosePtr d1, PosePtr d2, int axis, float minRange, float maxRange)
 {
@@ -88,11 +90,24 @@ int VRKinematics::setupFixedJoint(int nID1, int nID2, PosePtr d1, PosePtr d2)
 
 int VRKinematics::setupCustomJoint(int nID1, int nID2, PosePtr d1, PosePtr d2, vector<int> dofs, vector<float> minRange, vector<float> maxRange)
 {
-return 0;
+    if (!(dofs.size() == minRange.size() || dofs.size() == maxRange.size())) return -1;
+    VRConstraintPtr c = VRConstraint::create();
+    for (int i = 0; i < dofs.size(); i++) c->setMinMax(dofs[i], minRange[i], maxRange[i]);
+    c->setReferenceA(d1);
+    c->setReferenceB(d2);
+
+    VRConstraintPtr c2 = VRConstraint::create();
+    bodies[nID1].obj->attach(bodies[nID2].obj, c, c2);
+
+    return addJoint(nID1, nID2, c);
 }
 
 GraphPtr VRKinematics::getGraph() {
     return graph;
+}
+
+void VRKinematics::setDynamic(int nID, bool dynamic) {
+    bodies[nID].obj->getPhysics()->setDynamic(dynamic);
 }
 
 void VRKinematics::physicalize(int nID, bool dynamic) {

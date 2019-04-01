@@ -38,6 +38,9 @@ class VRKinematics {
         map<int, Joint> joints; // map to graph nodes
         map<int, Body> bodies; // map to graph edges
 
+        void physicalizeAll(bool dynamic);
+        void physicalize(int nID, bool dynamic);
+
     public:
         VRKinematics();
         ~VRKinematics();
@@ -45,14 +48,14 @@ class VRKinematics {
         static VRKinematicsPtr create();
 
         int addJoint(int nID1, int nID2, VRConstraintPtr c);
-        int addBody(VRTransformPtr obj);
+        int addBody(VRTransformPtr obj, bool dynamic = 1);
+        VRTransformPtr getTransform(int nID);
         int setupHinge(int nID1, int nID2, PosePtr d1, PosePtr d2, int axis, float minRange, float maxRange);
         int setupBallJoint(int nID1, int nID2, PosePtr d1, PosePtr d2);
         int setupFixedJoint(int nID1, int nID2, PosePtr d1, PosePtr d2);
         int setupCustomJoint(int nID1, int nID2, PosePtr d1, PosePtr d2, vector<int> dofs, vector<float> minRange, vector<float> maxRange);
         GraphPtr getGraph();
-        void physicalizeAll(bool dynamic);
-        void physicalize(int nID, bool dynamic);
+        void setDynamic(int nID, bool dynamic);
         void clearAll();
 };
 
