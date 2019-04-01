@@ -11,6 +11,8 @@ class VRScrewthread;
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class MPart;
+
 class VRProfile {
     private:
         vector<Vec2d> pnts;
@@ -30,13 +32,13 @@ struct MChange {
     float a = 0; // rotation angle
     float dx = 0;
     uint time = 0;
+    MPart* origin = 0;
 
     void flip();
     bool same(MChange c);
     bool isNull();
 };
 
-class MPart;
 struct MRelation {
     MPart* part1 = 0;
     MPart* part2 = 0;
@@ -73,6 +75,8 @@ class MPart {
             DISENGAGING
         };
 
+        bool resetPhysics = false;
+        string type = "part";
         map<MPart*, MRelation*> neighbors;
         vector<MPart*> group;
         VRTransformPtr geo = 0;
@@ -140,7 +144,7 @@ class MChain : public MPart {
 
         string dirs;
         CSTATE cstate = WHOLE;
-        vector<Vec3d> VRPolygon;
+        vector<Vec3d> polygon;
 
         MChain();
         ~MChain();
@@ -149,28 +153,32 @@ class MChain : public MPart {
         void setDirs(string dirs);
         void addDir(char dir);
         void updateGeo();
-        vector<pointPolySegment> toVRPolygon(Vec3d p);
+        vector<pointPolySegment> toPolygon(Vec3d p);
 
         void move();
         void updateNeighbors(vector<MPart*> parts);
 };
 
-class VRMechanism {
+class VRMechanism : public VRObject {
     private:
         map<VRTransformPtr, MPart*> cache;
         vector<MPart*> parts;
+
+        VRAnalyticGeometryPtr geo;
 
     public:
         VRMechanism();
         ~VRMechanism();
         static shared_ptr<VRMechanism> create();
 
+        void clear();
         void add(VRTransformPtr part, VRTransformPtr trans = 0);
         void addGear(VRTransformPtr trans, float width, float hole, float pitch, int N_teeth, float teeth_size, float bevel);
-        void clear();
+        VRTransformPtr addChain(float w, vector<VRTransformPtr> geos, string dirs);
+
         void update();
         void updateNeighbors();
-        VRTransformPtr addChain(float w, vector<VRTransformPtr> geos, string dirs);
+        void updateVisuals();
 };
 
 typedef shared_ptr<VRMechanism> VRMechanismPtr;

@@ -30,6 +30,7 @@ class VRTransform : public VRObject {
         Matrix4d matrix;
         OSGTransformPtr t;
         bool noBlt = false;
+        bool bltOverride = false;
         bool doOptimizations = true;
         VRPhysics* physics = 0;
         VRAnimCbPtr pathAnimPtr;
@@ -201,6 +202,7 @@ class VRTransform : public VRObject {
         vector<VRCollision> getCollisions();
 
         void setNoBltFlag();
+        void setBltOverrideFlag();
         virtual void updateChange();
         void setup(VRStorageContextPtr context);
 

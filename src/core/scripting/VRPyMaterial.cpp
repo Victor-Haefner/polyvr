@@ -79,6 +79,8 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"getGeometryShader", PyWrap( Material, getGeometryShader, "Get geometry shader", string ) },
     {"getTessControlShader", PyWrap( Material, getTessControlShader, "Get tesselation control shader", string ) },
     {"getTessEvaluationShader", PyWrap( Material, getTessEvaluationShader, "Get tesselation evaluation shader", string ) },
+
+    {"diff", PyWrap( Material, diff, "Returns a diff report with another material", string, VRMaterialPtr ) },
     {NULL}  /* Sentinel */
 };
 

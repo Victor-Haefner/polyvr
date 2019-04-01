@@ -135,6 +135,16 @@ VRArrow::VRArrow() { N = 5; type = "Arrow"; }
 VRScrewThread::VRScrewThread() { N = 4; type = "Thread"; }
 VRGear::VRGear() { N = 6; type = "Gear"; }
 
+VRGear::VRGear(float w, float h, float p, int Nt, float St, float b) {
+    width = w;
+    hole = h;
+    pitch = p;
+    teeth_size = St;
+    bevel = b;
+    teeth_number = Nt;
+    N = 6; type = "Gear";
+}
+
 void VRPlane::fromStream(stringstream& ss) { ss >> width >> height >> Nx >> Ny; }
 void VRBox::fromStream(stringstream& ss) { ss >> width >> height >> depth >> Nx >> Ny >> Nz; }
 void VRSphere::fromStream(stringstream& ss) { ss >> radius >> iterations; }

@@ -53,6 +53,8 @@ class VRAnalyticGeometry : public VRTransform {
         int addVector(Vec3d pos, Vec3d vec, Color3f color, string label="", bool doArrow = false);
 
         void clear();
+
+        void setZOffset(float factor, float bias);
 };
 
 OSG_END_NAMESPACE;

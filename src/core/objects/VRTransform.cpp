@@ -144,13 +144,42 @@ void VRTransform::setIdentity() {
     setMatrix(Matrix4d());
 }
 
+void VRTransform::updateChange() {
+    apply_constraints();
+    if (held) updatePhysics();
+    computeMatrix4d();
+    updateTransformation();
+    updatePhysics();
+}
+
 void VRTransform::updatePhysics() { //should be called from the main thread only
     if (physics == 0) return;
-    if (noBlt && !held) { noBlt = false; return; }
+    //if (physics->isPhysicalized()) cout << getName() << "  VRTransform::updatePhysics from SG " << bltOverride << endl;
+    if (noBlt && !held && !bltOverride) { noBlt = false; return; }
     if (!physics->isPhysicalized()) return;
 
     physics->updateTransformation( ptr() );
     physics->resetForces();
+    bltOverride = false;
+}
+
+void VRTransform::setNoBltFlag() { noBlt = true; }
+void VRTransform::setBltOverrideFlag() { bltOverride = true; }
+
+void VRTransform::updateFromBullet() {
+    //cout << getName() << "  VRTransform::updateFromBullet!" << endl;
+    Matrix4d m = physics->getTransformation();
+    setWorldMatrix(m);
+    auto vs = physics->getVisualShape();
+    if (vs && vs->isVisible()) vs->setWorldMatrix(m);
+    setNoBltFlag();
+}
+
+void VRTransform::resolvePhysics() {
+    if (!physics) return;
+    if (physics->isGhost()) { updatePhysics(); return; }
+    if (physics->isDynamic() && !bltOverride) { updateFromBullet(); return; }
+    physics->updateTransformation( ptr() );
 }
 
 void VRTransform::reg_change() {
@@ -831,23 +860,6 @@ void VRTransform::apply_constraints(bool force) { // TODO: check efficiency
     }
 }
 
-void VRTransform::setNoBltFlag() { noBlt = true; }
-
-void VRTransform::updateFromBullet() {
-    Matrix4d m = physics->getTransformation();
-    setWorldMatrix(m);
-    auto vs = physics->getVisualShape();
-    if (vs && vs->isVisible()) vs->setWorldMatrix(m);
-    setNoBltFlag();
-}
-
-void VRTransform::resolvePhysics() {
-    if (!physics) return;
-    if (physics->isGhost()) { updatePhysics(); return; }
-    if (physics->isDynamic()) { updateFromBullet(); return; }
-    physics->updateTransformation( ptr() );
-}
-
 VRPhysics* VRTransform::getPhysics() {
     if (physics == 0) physics = new VRPhysics( ptr() );
     return physics;
@@ -860,14 +872,6 @@ vector<VRCollision> VRTransform::getCollisions() {
 
 void VRTransform::setConvexDecompositionParameters(float cw, float vw, float nc, float nv, float c, bool aedp, bool andp, bool afp) {
     getPhysics()->setConvexDecompositionParameters(cw, vw, nc, nv, c, aedp, andp, afp);
-}
-
-void VRTransform::updateChange() {
-    apply_constraints();
-    if (held) updatePhysics();
-    computeMatrix4d();
-    updateTransformation();
-    updatePhysics();
 }
 
 void VRTransform::setup(VRStorageContextPtr context) {
