@@ -158,9 +158,28 @@ void VRTransform::updatePhysics() { //should be called from the main thread only
     if (noBlt && !held && !bltOverride) { noBlt = false; return; }
     if (!physics->isPhysicalized()) return;
 
-    cout << getName() << "  VRTransform::updatePhysics from SG\n";
     physics->updateTransformation( ptr() );
     physics->resetForces();
+    bltOverride = false;
+}
+
+void VRTransform::setNoBltFlag() { noBlt = true; }
+void VRTransform::setBltOverrideFlag() { bltOverride = true; }
+
+void VRTransform::updateFromBullet() {
+    //cout << getName() << "  VRTransform::updateFromBullet!" << endl;
+    Matrix4d m = physics->getTransformation();
+    setWorldMatrix(m);
+    auto vs = physics->getVisualShape();
+    if (vs && vs->isVisible()) vs->setWorldMatrix(m);
+    setNoBltFlag();
+}
+
+void VRTransform::resolvePhysics() {
+    if (!physics) return;
+    if (physics->isGhost()) { updatePhysics(); return; }
+    if (physics->isDynamic() && !bltOverride) { updateFromBullet(); return; }
+    physics->updateTransformation( ptr() );
 }
 
 void VRTransform::reg_change() {
@@ -839,25 +858,6 @@ void VRTransform::apply_constraints(bool force) { // TODO: check efficiency
         VRTransformPtr child = joint.second.second.lock();
         //if (child) child->apply_constraints(true); // TODO: may introduce loops?
     }
-}
-
-void VRTransform::setNoBltFlag() { noBlt = true; }
-void VRTransform::setBltOverrideFlag() { bltOverride = true; cout << getName() << "   VRTransform::setBltOverrideFlag " << bltOverride << endl; }
-
-void VRTransform::updateFromBullet() {
-    //cout << getName() << "  VRTransform::updateFromBullet!" << endl;
-    Matrix4d m = physics->getTransformation();
-    setWorldMatrix(m);
-    auto vs = physics->getVisualShape();
-    if (vs && vs->isVisible()) vs->setWorldMatrix(m);
-    setNoBltFlag();
-}
-
-void VRTransform::resolvePhysics() {
-    if (!physics) return;
-    if (physics->isGhost()) { updatePhysics(); return; }
-    if (physics->isDynamic()) { updateFromBullet(); return; }
-    physics->updateTransformation( ptr() );
 }
 
 VRPhysics* VRTransform::getPhysics() {

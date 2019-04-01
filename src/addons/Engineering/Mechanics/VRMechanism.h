@@ -11,6 +11,8 @@ class VRScrewthread;
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class MPart;
+
 class VRProfile {
     private:
         vector<Vec2d> pnts;
@@ -30,13 +32,13 @@ struct MChange {
     float a = 0; // rotation angle
     float dx = 0;
     uint time = 0;
+    MPart* origin = 0;
 
     void flip();
     bool same(MChange c);
     bool isNull();
 };
 
-class MPart;
 struct MRelation {
     MPart* part1 = 0;
     MPart* part2 = 0;

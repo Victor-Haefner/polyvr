@@ -98,7 +98,8 @@ void MChange::flip() {
     dx *= -1;
 }
 
-bool MChange::same(MChange c) {
+bool MChange::same(MChange c) { // returning true, blocks the mechanism
+    if (origin != c.origin) return false;
     if (a*c.a < 0) return false;
     return true;
 }
@@ -112,16 +113,12 @@ bool MPart::propagateMovement() { // recursion
 }
 
 bool MPart::propagateMovement(MChange c, MRelation* r) { // change
-    if (trans) if (trans->getName() == "Gear.2") cout << "MPart::propagateMovement 1\n";
     r->translateChange(c);
-    if (change.time == c.time) {
-        if (trans) if (trans->getName() == "Gear.2") cout << "MPart::propagateMovement 1 -> " << change.time << endl;
-        //cout << " propagateMovement change times are the same?" << endl;
-        return change.same(c);
-    } // TODO: either it is the same change || another change in the same timestep..
+    if (change.time == c.time) { // either it is the same change OR another change in the same timestep
+        if (change.origin == c.origin) return change.same(c); // the same change
+        else {} // another change in the same timestep
+    }
 
-    //cout << " propagateMovement do move" << endl;
-    if (trans) if (trans->getName() == "Gear.2") cout << "MPart::propagateMovement 2\n";
     change = c;
     move();
 
@@ -288,8 +285,8 @@ void MPart::computeChange() {
 
     if (change.n[2] < 0) { change.n *= -1; change.a *= -1; }
     if (abs(change.a) < 1e-5) return;
-    cout << "computeChange " << geo->getName() << "  " << change.a << "  " << change.n << endl;
     change.time = timestamp;
+    change.origin = this;
 }
 
 void MGear::computeChange() {
