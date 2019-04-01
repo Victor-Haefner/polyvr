@@ -50,13 +50,13 @@ class VRKinematics {
         int addJoint(int nID1, int nID2, VRConstraintPtr c);
         int addBody(VRTransformPtr obj, bool dynamic = 1);
         VRTransformPtr getTransform(int nID);
-        int setupHinge(int nID1, int nID2, PosePtr d1, PosePtr d2, int axis, float minRange, float maxRange);
-        int setupBallJoint(int nID1, int nID2, PosePtr d1, PosePtr d2);
-        int setupFixedJoint(int nID1, int nID2, PosePtr d1, PosePtr d2);
-        int setupCustomJoint(int nID1, int nID2, PosePtr d1, PosePtr d2, vector<int> dofs, vector<float> minRange, vector<float> maxRange);
+        int addHinge(int nID1, int nID2, PosePtr d1, PosePtr d2, int axis, float minRange, float maxRange);
+        int addBallJoint(int nID1, int nID2, PosePtr d1, PosePtr d2);
+        int addFixedJoint(int nID1, int nID2, PosePtr d1, PosePtr d2);
+        int addCustomJoint(int nID1, int nID2, PosePtr d1, PosePtr d2, vector<int> dofs, vector<float> minRange, vector<float> maxRange);
         GraphPtr getGraph();
         void setDynamic(int nID, bool dynamic);
-        void clearAll();
+        void clear();
 };
 
 OSG_END_NAMESPACE;

@@ -45,12 +45,13 @@ int VRKinematics::addBody(VRTransformPtr obj, bool dynamic) {
     int nID = graph->addNode(obj->getPose());
     bodies[nID] = Body(nID, obj);
     physicalize(nID, dynamic);
+    obj->setPhysicsActivationMode(4);
     return nID;
 }
 
 VRTransformPtr VRKinematics::getTransform(int nID) { return bodies[nID].obj; }
 
-int VRKinematics::setupHinge(int nID1, int nID2, PosePtr d1, PosePtr d2, int axis, float minRange, float maxRange)
+int VRKinematics::addHinge(int nID1, int nID2, PosePtr d1, PosePtr d2, int axis, float minRange, float maxRange)
 {
     VRConstraintPtr c = VRConstraint::create();
     c->setMinMax(axis, minRange, maxRange);
@@ -63,7 +64,7 @@ int VRKinematics::setupHinge(int nID1, int nID2, PosePtr d1, PosePtr d2, int axi
     return addJoint(nID1, nID2, c);
 }
 
-int VRKinematics::setupBallJoint(int nID1, int nID2, PosePtr d1, PosePtr d2)
+int VRKinematics::addBallJoint(int nID1, int nID2, PosePtr d1, PosePtr d2)
 {
     VRConstraintPtr c = VRConstraint::create();
     vector<int> dofs{3,4,5};
@@ -77,7 +78,7 @@ int VRKinematics::setupBallJoint(int nID1, int nID2, PosePtr d1, PosePtr d2)
     return addJoint(nID1, nID2, c);
 }
 
-int VRKinematics::setupFixedJoint(int nID1, int nID2, PosePtr d1, PosePtr d2)
+int VRKinematics::addFixedJoint(int nID1, int nID2, PosePtr d1, PosePtr d2)
 {
     VRConstraintPtr c = VRConstraint::create();
     c->setReferenceA(d1);
@@ -88,7 +89,7 @@ int VRKinematics::setupFixedJoint(int nID1, int nID2, PosePtr d1, PosePtr d2)
     return addJoint(nID1, nID2, c);
 }
 
-int VRKinematics::setupCustomJoint(int nID1, int nID2, PosePtr d1, PosePtr d2, vector<int> dofs, vector<float> minRange, vector<float> maxRange)
+int VRKinematics::addCustomJoint(int nID1, int nID2, PosePtr d1, PosePtr d2, vector<int> dofs, vector<float> minRange, vector<float> maxRange)
 {
     if (!(dofs.size() == minRange.size() || dofs.size() == maxRange.size())) return -1;
     VRConstraintPtr c = VRConstraint::create();
@@ -123,7 +124,7 @@ void VRKinematics::physicalizeAll(bool dynamic) {
 }
 
 
-void VRKinematics::clearAll() {
+void VRKinematics::clear() {
     graph->clear();
     bodies.clear();
     joints.clear();
