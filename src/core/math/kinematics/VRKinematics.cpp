@@ -38,6 +38,8 @@ int VRKinematics::addJoint(int nID1, int nID2, VRConstraintPtr c)
     joints[eID] = Joint(eID, nID1, nID2, c);
     bodies[nID1].joints.push_back(eID);
     bodies[nID2].joints.push_back(eID);
+    VRConstraintPtr c2 = VRConstraint::create();
+    bodies[nID1].obj->attach(bodies[nID2].obj, c, c2);
     return eID;
 }
 
@@ -57,10 +59,6 @@ int VRKinematics::addHinge(int nID1, int nID2, PosePtr d1, PosePtr d2, int axis,
     c->setMinMax(axis, minRange, maxRange);
     c->setReferenceA(d1);
     c->setReferenceB(d2);
-
-    VRConstraintPtr c2 = VRConstraint::create();
-    bodies[nID1].obj->attach(bodies[nID2].obj, c, c2);
-
     return addJoint(nID1, nID2, c);
 }
 
@@ -71,10 +69,6 @@ int VRKinematics::addBallJoint(int nID1, int nID2, PosePtr d1, PosePtr d2)
     c->free(dofs);
     c->setReferenceA(d1);
     c->setReferenceB(d2);
-
-    VRConstraintPtr c2 = VRConstraint::create();
-    bodies[nID1].obj->attach(bodies[nID2].obj, c, c2);
-
     return addJoint(nID1, nID2, c);
 }
 
@@ -83,9 +77,6 @@ int VRKinematics::addFixedJoint(int nID1, int nID2, PosePtr d1, PosePtr d2)
     VRConstraintPtr c = VRConstraint::create();
     c->setReferenceA(d1);
     c->setReferenceB(d2);
-
-    VRConstraintPtr c2 = VRConstraint::create();
-    bodies[nID1].obj->attach(bodies[nID2].obj, c, c2);
     return addJoint(nID1, nID2, c);
 }
 
@@ -96,10 +87,6 @@ int VRKinematics::addCustomJoint(int nID1, int nID2, PosePtr d1, PosePtr d2, vec
     for (int i = 0; i < dofs.size(); i++) c->setMinMax(dofs[i], minRange[i], maxRange[i]);
     c->setReferenceA(d1);
     c->setReferenceB(d2);
-
-    VRConstraintPtr c2 = VRConstraint::create();
-    bodies[nID1].obj->attach(bodies[nID2].obj, c, c2);
-
     return addJoint(nID1, nID2, c);
 }
 
