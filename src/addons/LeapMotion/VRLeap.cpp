@@ -48,7 +48,8 @@ VRLeap::VRLeap() : VRDevice("leap") {
 //    regStorageSetupFkt( VRUpdateCb::create("leap setup", boost::bind(&VRLeap::setup, this)) );
 
     //reconnect();
-    enableAvatar("ray");
+    enableAvatar("ray", 0);
+    enableAvatar("ray", 6);
 }
 
 VRLeapPtr VRLeap::create() {
@@ -464,6 +465,7 @@ bool VRLeap::getIsPinching(int hand) {
 void VRLeap::enableDnD(VRObjectPtr root) {
     doDnD = true;
     dndRoot = root;
+
 }
 
 void VRLeap::leapDnD(VRDeviceWeakPtr dev) {
@@ -495,23 +497,14 @@ vector<VRObjectPtr> VRLeap::addHandsGeometry(){
     handLeft->setLeft();
     handLeft->connectToLeap(ptr());
     res.push_back(handLeft);
+    getBeaconRoot()->addChild(handLeft);
 
     auto handRight = VRHandGeo::create("rightHand");
     handRight->setRight();
     handRight->connectToLeap(ptr());
     res.push_back(handRight);
+    getBeaconRoot()->addChild(handRight);
 
     return res;
-    /*
-	hand_left[0] = VR.HandGeo('hand_left0')
-	hand_left[0].setLeft()
-	hand_left[0].connectToLeap(leap)
-	base[0].addChild(hand_left[0])
-
-	hand_right[0] = VR.HandGeo('hand_right0')
-	hand_right[0].setRight()
-	hand_right[0].connectToLeap(leap)
-	base[0].addChild(hand_right[0])
-    */
 }
 
