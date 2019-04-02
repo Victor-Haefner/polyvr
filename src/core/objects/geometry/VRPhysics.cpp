@@ -101,7 +101,14 @@ void VRPhysics::setPhysicalized(bool b) { physicalized = b; update(); }
 void VRPhysics::setShape(string s, float param) { physicsShape = s; shape_param = param; update(); }
 bool VRPhysics::isPhysicalized() { return physicalized; }
 string VRPhysics::getShape() { return physicsShape; }
-void VRPhysics::setDynamic(bool b) { dynamic = b; update(); }
+
+void VRPhysics::setDynamic(bool b, bool fast) {
+    if (fast && body) {
+        if (!b) body->setCollisionFlags(body->getCollisionFlags() |  btCollisionObject::CF_STATIC_OBJECT);
+        else    body->setCollisionFlags(body->getCollisionFlags() & ~btCollisionObject::CF_STATIC_OBJECT);
+    } else { dynamic = b; update(); }
+}
+
 bool VRPhysics::isDynamic() { return dynamic; }
 void VRPhysics::setMass(float m) { mass = m; update(); }
 float VRPhysics::getMass() { return mass; }

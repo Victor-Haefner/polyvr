@@ -14,6 +14,7 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-g" />
+					<Add directory="src/core/math/kinematics" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -23,6 +24,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add directory="src/core/math/kinematics" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -670,8 +672,10 @@
 		<Unit filename="src/core/math/interpolator.h" />
 		<Unit filename="src/core/math/kinematics/VRConstraint.cpp" />
 		<Unit filename="src/core/math/kinematics/VRConstraint.h" />
+		<Unit filename="src/core/math/kinematics/VRJoint.h" />
 		<Unit filename="src/core/math/kinematics/VRKinematics.cpp" />
 		<Unit filename="src/core/math/kinematics/VRKinematics.h" />
+		<Unit filename="src/core/math/kinematics/VRPart.h" />
 		<Unit filename="src/core/math/patch.cpp" />
 		<Unit filename="src/core/math/patch.h" />
 		<Unit filename="src/core/math/path.cpp" />
@@ -944,6 +948,8 @@
 		<Unit filename="src/core/scripting/VRPyIntersection.h" />
 		<Unit filename="src/core/scripting/VRPyJointTool.cpp" />
 		<Unit filename="src/core/scripting/VRPyJointTool.h" />
+		<Unit filename="src/core/scripting/VRPyKinematics.cpp" />
+		<Unit filename="src/core/scripting/VRPyKinematics.h" />
 		<Unit filename="src/core/scripting/VRPyLight.cpp" />
 		<Unit filename="src/core/scripting/VRPyLight.h" />
 		<Unit filename="src/core/scripting/VRPyLightBeacon.cpp" />

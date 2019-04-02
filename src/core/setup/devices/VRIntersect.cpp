@@ -133,7 +133,6 @@ VRIntersection VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray) {
 * @param dir: local ray casting vector
 */
 VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force, VRTransformPtr caster, Vec3d dir) {
-
     vector<VRObjectPtr> trees;
     if (auto sp = wtree.lock()) trees.push_back(sp);
     else for (auto grp : dynTrees) {
@@ -213,6 +212,7 @@ void VRIntersect::drop(VRDeviceWeakPtr dev, VRTransformWeakPtr beacon) {
         dropSignal->triggerPtr<VRDevice>();
         drop_time = VRGlobals::CURRENT_FRAME;
         dragged.erase(beacon.lock().get());
+        if (beacon.lock() == 0) dragged.clear();
     }
 }
 

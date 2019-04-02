@@ -22,6 +22,7 @@
 #include <OpenSG/OSGChunkMaterial.h>
 #include <OpenSG/OSGDepthChunk.h>
 #include <OpenSG/OSGSimpleSHLChunk.h>
+#include <OpenSG/OSGGeoProperties.h>
 
 using namespace OSG;
 
@@ -111,6 +112,12 @@ void VRTransform::computeMatrix4d() {
     }
 }
 
+void VRTransform::enableOptimization(bool b) {
+    doOptimizations = b;
+    if (b) updateTransformation();
+    else enableCore();
+}
+
 void VRTransform::updateTransformation() {
     if (!t->trans) {
         cout << "Error in VRTransform::updateTransformation of " << getName() << "(" << this << "): t->trans is invalid! (" << t->trans << ")" << endl;
@@ -137,13 +144,42 @@ void VRTransform::setIdentity() {
     setMatrix(Matrix4d());
 }
 
+void VRTransform::updateChange() {
+    apply_constraints();
+    if (held) updatePhysics();
+    computeMatrix4d();
+    updateTransformation();
+    updatePhysics();
+}
+
 void VRTransform::updatePhysics() { //should be called from the main thread only
     if (physics == 0) return;
-    if (noBlt && !held) { noBlt = false; return; }
+    //if (physics->isPhysicalized()) cout << getName() << "  VRTransform::updatePhysics from SG " << bltOverride << endl;
+    if (noBlt && !held && !bltOverride) { noBlt = false; return; }
     if (!physics->isPhysicalized()) return;
 
     physics->updateTransformation( ptr() );
     physics->resetForces();
+    bltOverride = false;
+}
+
+void VRTransform::setNoBltFlag() { noBlt = true; }
+void VRTransform::setBltOverrideFlag() { bltOverride = true; }
+
+void VRTransform::updateFromBullet() {
+    //cout << getName() << "  VRTransform::updateFromBullet!" << endl;
+    Matrix4d m = physics->getTransformation();
+    setWorldMatrix(m);
+    auto vs = physics->getVisualShape();
+    if (vs && vs->isVisible()) vs->setWorldMatrix(m);
+    setNoBltFlag();
+}
+
+void VRTransform::resolvePhysics() {
+    if (!physics) return;
+    if (physics->isGhost()) { updatePhysics(); return; }
+    if (physics->isDynamic() && !bltOverride) { updateFromBullet(); return; }
+    physics->updateTransformation( ptr() );
 }
 
 void VRTransform::reg_change() {
@@ -158,26 +194,21 @@ uint VRTransform::getLastChange() { return change_time_stamp; }
 //bool VRTransform::changedNow() { return (change_time_stamp >= VRGlobals::get()->CURRENT_FRAME-1); }
 bool VRTransform::changedNow() { return checkWorldChange(); }
 
-bool VRTransform::changedSince(uint& frame) {
+bool VRTransform::changedSince(uint& frame, bool includingFrame) {
     uint f = frame;
     frame = VRGlobals::CURRENT_FRAME;
-    if (change_time_stamp >= f) return true;
-    if (wchange_time_stamp >= f) return true;
+    int offset = includingFrame?1:0;
+    if (change_time_stamp + offset > f) return true;
+    if (wchange_time_stamp + offset > f) return true;
     for (auto a : getAncestry()) {
         auto t = dynamic_pointer_cast<VRTransform>(a);
-        if (t && t->change_time_stamp > f) return true;
+        if (t && t->change_time_stamp + offset > f) return true;
     }
     return false;
 }
 
-bool VRTransform::changedSince2(uint f) {
-    if (change_time_stamp >= f) return true;
-    if (wchange_time_stamp >= f) return true;
-    for (auto a : getAncestry()) {
-        auto t = dynamic_pointer_cast<VRTransform>(a);
-        if (t && t->change_time_stamp > f) return true;
-    }
-    return false;
+bool VRTransform::changedSince2(uint frame, bool includingFrame) { // for py binding
+    return changedSince(frame, includingFrame);
 }
 
 bool VRTransform::checkWorldChange() {
@@ -192,20 +223,6 @@ bool VRTransform::checkWorldChange() {
     }
 
     return false;
-}
-
-void VRTransform::initCoords() {
-    if (coords != 0) return;
-    coords = OSGObject::create( makeCoordAxis(0.3, 3, false) );
-    coords->node->setTravMask(0);
-    addChild(coords);
-    GeometryMTRecPtr geo = dynamic_cast<Geometry*>(coords->node->getCore());
-    ChunkMaterialMTRecPtr mat = ChunkMaterial::create();
-    DepthChunkMTRecPtr depthChunk = DepthChunk::create();
-    depthChunk->setFunc( GL_ALWAYS );
-    mat->addChunk(depthChunk);
-    mat->setSortKey(100);// render last
-    geo->setMaterial(mat);
 }
 
 void VRTransform::initTranslator() { // TODO
@@ -342,6 +359,17 @@ Vec3d VRTransform::getWorldAt(bool parentOnly) {
     return Vec3d(a);
 }
 
+Vec3d VRTransform::getWorldScale(bool parentOnly) {
+    Matrix4d m;
+    getWorldMatrix(m, parentOnly);
+    Vec3d s = Vec3d(1,1,1), x = Vec3d(1,0,0), y = Vec3d(0,1,0), z = Vec3d(0,0,1);
+    m.mult(x,x); x.normalize();
+    m.mult(y,y); y.normalize();
+    m.mult(z,z); z.normalize();
+    m.mult(s,s);
+    return Vec3d(s.dot(x), s.dot(y), s.dot(z));
+}
+
 
 void VRTransform::updateTransform(VRTransformPtr t) {
     if (!t) return;
@@ -441,6 +469,12 @@ void VRTransform::setWorldAt(Vec3d at) {
     setAt(Vec3d(a));
 }
 
+void VRTransform::setWorldScale(Vec3d s) {
+    Vec3d sP = getWorldScale(true);
+    for (int i=0; i<3; i++) s[i] = s[i]/sP[i];
+    setScale(s);
+}
+
 //local pose setter--------------------
 void VRTransform::setFrom(Vec3d pos) {
     if (isNan(pos)) return;
@@ -509,11 +543,37 @@ void VRTransform::setMatrix(Matrix4d m) {
     setTransform(Vec3d(m[3]), Vec3d(-m[2])*1.0/s3, Vec3d(m[1])*1.0/s2);
     setScale(Vec3d(s1,s2,s3));
 }
+
 //-------------------------------------
+
+void VRTransform::initCoords() {
+    if (coords != 0) return;
+    coords = OSGObject::create( makeCoordAxis(0.3, 3, false) );
+    coords->node->setTravMask(0);
+    addChild(coords);
+    GeometryMTRecPtr geo = dynamic_cast<Geometry*>(coords->node->getCore());
+    ChunkMaterialMTRecPtr mat = ChunkMaterial::create();
+    DepthChunkMTRecPtr depthChunk = DepthChunk::create();
+    depthChunk->setFunc( GL_ALWAYS );
+    mat->addChunk(depthChunk);
+    mat->setSortKey(100);// render last
+    geo->setMaterial(mat);
+}
 
 void VRTransform::showCoordAxis(bool b) {
     initCoords();
-    if (b) coords->node->setTravMask(0xffffffff);
+    if (b) {
+        coords->node->setTravMask(0xffffffff);
+        Vec3d scale = getWorldScale();
+        for (int j=0; j<3; j++) scale[j] = 1.0/scale[j];
+        GeometryMTRecPtr geo = dynamic_cast<Geometry*>(coords->node->getCore());
+        GeoPnt3fPropertyMTRecPtr pos = (GeoPnt3fProperty*)geo->getPositions();
+        for (int i=0; i<pos->size(); i++) {
+            Pnt3f p = pos->getValue(i);
+            for (int j=0; j<3; j++) p[j] *= scale[j];
+            pos->setValue(p,i);
+        }
+    }
     else coords->node->setTravMask(0);
 }
 
@@ -800,23 +860,6 @@ void VRTransform::apply_constraints(bool force) { // TODO: check efficiency
     }
 }
 
-void VRTransform::setNoBltFlag() { noBlt = true; }
-
-void VRTransform::updateFromBullet() {
-    Matrix4d m = physics->getTransformation();
-    setWorldMatrix(m);
-    auto vs = physics->getVisualShape();
-    if (vs && vs->isVisible()) vs->setWorldMatrix(m);
-    setNoBltFlag();
-}
-
-void VRTransform::resolvePhysics() {
-    if (!physics) return;
-    if (physics->isGhost()) { updatePhysics(); return; }
-    if (physics->isDynamic()) { updateFromBullet(); return; }
-    physics->updateTransformation( ptr() );
-}
-
 VRPhysics* VRTransform::getPhysics() {
     if (physics == 0) physics = new VRPhysics( ptr() );
     return physics;
@@ -829,14 +872,6 @@ vector<VRCollision> VRTransform::getCollisions() {
 
 void VRTransform::setConvexDecompositionParameters(float cw, float vw, float nc, float nv, float c, bool aedp, bool andp, bool afp) {
     getPhysics()->setConvexDecompositionParameters(cw, vw, nc, nv, c, aedp, andp, afp);
-}
-
-void VRTransform::updateChange() {
-    apply_constraints();
-    if (held) updatePhysics();
-    computeMatrix4d();
-    updateTransformation();
-    updatePhysics();
 }
 
 void VRTransform::setup(VRStorageContextPtr context) {

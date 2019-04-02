@@ -25,18 +25,22 @@ VRAnalyticGeometry::VRAnalyticGeometry(string name) : VRTransform(name) {
     vecMat->setLit(false);
     vecMat->setLineWidth(3);
     vecMat->setDepthTest(GL_ALWAYS);
+    vecMat->setSortKey(-100);
     if (vectorLinesGeometry) vectorLinesGeometry->setMaterial(vecMat);
 
     pntMat = VRMaterial::create("AnalyticGeometry2");
     pntMat->setLit(false);
     pntMat->setPointSize(11);
     pntMat->setDepthTest(GL_ALWAYS);
+    pntMat->setSortKey(-100);
     if (vectorEndsGeometry) vectorEndsGeometry->setMaterial(pntMat);
 
     cirMat = VRMaterial::create("AnalyticGeometry3");
     cirMat->setLit(false);
     cirMat->setVertexShader(circle_vp, "analyticCircleVS");
     cirMat->setFragmentShader(circle_fp, "analyticCircleFS");
+    cirMat->setDepthTest(GL_ALWAYS);
+    cirMat->setSortKey(-100);
 }
 
 VRAnalyticGeometry::~VRAnalyticGeometry() {}
@@ -259,6 +263,12 @@ int VRAnalyticGeometry::addVector(Vec3d pos, Vec3d vec, Color3f color, string la
 void VRAnalyticGeometry::clear() {
     if (ae) ae->clear();
     init();
+}
+
+void VRAnalyticGeometry::setZOffset(float factor, float bias) {
+    cirMat->setZOffset(factor, bias);
+    pntMat->setZOffset(factor, bias);
+    vecMat->setZOffset(factor, bias);
 }
 
 

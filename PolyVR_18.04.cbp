@@ -942,6 +942,8 @@
 		<Unit filename="src/core/scripting/VRPyIntersection.h" />
 		<Unit filename="src/core/scripting/VRPyJointTool.cpp" />
 		<Unit filename="src/core/scripting/VRPyJointTool.h" />
+		<Unit filename="src/core/scripting/VRPyKinematics.cpp" />
+		<Unit filename="src/core/scripting/VRPyKinematics.h" />
 		<Unit filename="src/core/scripting/VRPyLight.cpp" />
 		<Unit filename="src/core/scripting/VRPyLight.h" />
 		<Unit filename="src/core/scripting/VRPyLightBeacon.cpp" />
