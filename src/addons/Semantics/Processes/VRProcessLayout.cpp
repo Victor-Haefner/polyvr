@@ -203,6 +203,7 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
     rebuild();
 }
 
+void VRProcessLayout::pauseUpdate(bool b) { updatePaused = b; }
 
 VRProcessPtr VRProcessLayout::getProcess(){
     if (!process) { cout << "WARNING in ProcessLayout, getProcess: process is null!\n"; }
@@ -356,6 +357,8 @@ void VRProcessLayout::setElementName(int ID, string name) {
 }
 
 void VRProcessLayout::update() {
+    if (updatePaused) return;
+
     toolSID->update();
 	for(auto toolSBD : toolSBDs) toolSBD.second->update();
 

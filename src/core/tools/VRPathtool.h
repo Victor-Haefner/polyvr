@@ -56,6 +56,7 @@ class VRPathtool : public VRObject {
     public:
         struct entry {
             int edge = 0;
+            bool doUpdate = 1;
             PathPtr p = 0;
             map<VRGeometry*, int> points;
             vector<VRGeometryWeakPtr> handles;

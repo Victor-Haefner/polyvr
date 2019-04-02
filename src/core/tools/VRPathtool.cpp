@@ -314,6 +314,11 @@ void VRPathtool::updateHandlePose(knot& knot, map<int, Vec3d>& hPositions, bool 
         return hPositions[ID];
     };
 
+    bool didChange = false;
+    for (auto k : knot.in ) if (auto h = knots[k].handle.lock()) if (h->changedNow()) { didChange = true; break; }
+    for (auto k : knot.out) if (auto h = knots[k].handle.lock()) if (h->changedNow()) { didChange = true; break; }
+    if (!didChange) return;
+
     Vec3d pos = getPose(knot.ID);
     Vec3d dir;
 
@@ -342,6 +347,7 @@ void VRPathtool::updateHandlePose(knot& knot, map<int, Vec3d>& hPositions, bool 
                 }
                 po.setDir(dir - opt.bulge*(2.0*i/(e->p->size()-1)-1));
                 e->p->setPoint( e->points[key], po );
+                e->doUpdate = true;
                 updateEntry(e);
             }
         }
@@ -357,6 +363,7 @@ void VRPathtool::update() { // call in script to have smooth knots
     for (auto wh : handles) { // apply handle transformation to path points
         auto handle = wh.lock();
         if (!handle) continue;
+        if (!handle->changedNow()) continue;
         auto key = handle.get();
         if (!handleToEntries.count(key)) continue;
         for (auto e : handleToEntries[key]) {
@@ -375,6 +382,7 @@ void VRPathtool::update() { // call in script to have smooth knots
             }
             po.setDir( po.dir() - opt.bulge*(2.0*i/(e->p->size()-1)-1) );
             e->p->setPoint( i, po );
+            e->doUpdate = true;
         }
     }
 
@@ -384,6 +392,7 @@ void VRPathtool::update() { // call in script to have smooth knots
 
 void VRPathtool::updateEntry(entryPtr e) { // update path representation
     if (!e) return;
+    if (!e->doUpdate) return;
     int hN = e->handles.size();
     if (hN <= 0) return;
     auto opt = options[e->edge];
@@ -428,6 +437,8 @@ void VRPathtool::updateEntry(entryPtr e) { // update path representation
         a->setPose(e->p->getPose(0.5));
         a->setVisible(opt.isVisible);
     }
+
+    e->doUpdate = false;
 }
 
 void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle belongs to
