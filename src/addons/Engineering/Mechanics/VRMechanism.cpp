@@ -181,23 +181,20 @@ MRelation* checkGearThread(MPart* p1, MPart* p2) {
 
 MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
     Vec3d wpos = p->geo->getWorldPosition();
+    float s = p->geo->getWorldScale()[0];
     if (!p->prim) return 0;
     if (p->prim->getType() != "Gear") return 0;
-    float r = ((VRGear*)p->prim)->radius();
+    float r = ((VRGear*)p->prim)->radius()*s;
     Vec3d dir = p->geo->getWorldDirection();
 
-    float eps = 1e-4; // 1e-4
+    float eps = 1e-2*s; // 1e-3
 
     vector<pointPolySegment> psegs;
     for (auto ps : c->toPolygon(wpos) ) {
         double d = abs(ps.dist2 - r*r);
-        if ( d < eps ) {
-            //cout << "checkChainPart " << d << endl;
-            psegs.push_back(ps);
-        }
+        if ( d < eps ) psegs.push_back(ps);
     }
 
-    //for (auto ps : c->toPolygon(pp) ) psegs.push_back(ps);
     if (psegs.size() == 0) return 0;
 
     dir.normalize();
@@ -404,8 +401,11 @@ void MChain::updateGeo() {
         Vec3d D = c2-c1;
         float d = D.length();
 
-        float r1 = g1->radius();
-        float r2 = g2->radius();
+        float s1 = 1;//nbrs[i]->geo->getWorldScale()[0];
+        float s2 = 1;//nbrs[j]->geo->getWorldScale()[0];
+
+        float r1 = g1->radius()*s1;
+        float r2 = g2->radius()*s2;
         int z2 = r2 > r1 ? z1 : 1;
         r2 *= z1;
 
