@@ -104,6 +104,7 @@ string VRPhysics::getShape() { return physicsShape; }
 
 void VRPhysics::setDynamic(bool b, bool fast) {
     if (fast && body) {
+        PLock lock(VRPhysics_mtx());
         if (!b) body->setCollisionFlags(body->getCollisionFlags() |  btCollisionObject::CF_STATIC_OBJECT);
         else    body->setCollisionFlags(body->getCollisionFlags() & ~btCollisionObject::CF_STATIC_OBJECT);
     } else { dynamic = b; update(); }
@@ -305,6 +306,7 @@ void VRPhysics::clear() {
         }
 
         for (auto j : joints2) {
+            if (!j.first) continue;
             if (j.first->joints.count(this) == 0) continue;
             VRPhysicsJoint* joint = j.first->joints[this];
             if (joint->btJoint != 0) {

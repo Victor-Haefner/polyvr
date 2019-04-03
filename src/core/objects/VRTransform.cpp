@@ -525,7 +525,7 @@ void VRTransform::setTransform(Vec3d from, Vec3d dir, Vec3d up) {
 
 void VRTransform::setPose(PosePtr p) { if (p) setTransform(p->pos(), p->dir(), p->up()); }
 void VRTransform::setPose2(const Pose& p) { setTransform(p.pos(), p.dir(), p.up()); }
-PosePtr VRTransform::getPose() { return Pose::create(Vec3d(_from), Vec3d(_dir), Vec3d(_up)); }
+PosePtr VRTransform::getPose() { cout << " VRTransform::getPose " << _scale << "   " << getName() << endl; return Pose::create(_from, _dir, _up, _scale); }
 PosePtr VRTransform::getWorldPose() { return Pose::create( getWorldMatrix() ); }
 void VRTransform::setWorldPose(PosePtr p) { setWorldMatrix(p->asMatrix()); }
 
@@ -581,7 +581,7 @@ void VRTransform::setScale(float s) { setScale(Vec3d(s,s,s)); }
 
 void VRTransform::setScale(Vec3d s) {
     if (isNan(s)) return;
-    //cout << "setScale " << s << endl;
+    if (getName() == "Gear.8") cout << "VRTransform::setScale " << s << "   " << getName() << endl;
     _scale = s;
     reg_change();
 }
@@ -930,6 +930,7 @@ Matrix4d toMatrix4d(Matrix4f mf) {
 void VRTransform::applyTransformation(PosePtr po) {
     if (!po) po = getPose();
     Matrix4d m0 = po->asMatrix();
+    cout << "VRTransform::applyTransformation " << po->scale() << "    " << m0 << endl;
     map<GeoVectorPropertyMTRecPtr, bool> applied;
 
     auto applyMatrix = [&](OSGGeometryPtr mesh, Matrix4d& m) {
