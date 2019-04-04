@@ -8,39 +8,40 @@ using namespace OSG;
 template<> string typeName(const PosePtr& p) { return "Pose"; }
 template<> string typeName(const Pose& p) { return "Pose"; }
 
-Pose::Pose() { set(Vec3d(), Vec3d(0,0,-1), Vec3d(0,1,0)); }
+Pose::Pose() { set(Vec3d(), Vec3d(0,0,-1), Vec3d(0,1,0), Vec3d(1,1,1)); }
 Pose::Pose(const Pose& p) { *this = p; }
-Pose::Pose(Vec3d p, Vec3d d, Vec3d u) { set(p,d,u); }
+Pose::Pose(Vec3d p, Vec3d d, Vec3d u, Vec3d s) { set(p,d,u,s); }
 
 Pose::Pose(const Matrix4d& m) {
     if (isNan(m)) return;
-    //float s1 = m[0].length();
+    float s1 = m[0].length();
     float s2 = m[1].length();
     float s3 = m[2].length();
-    set(Vec3d(m[3]), Vec3d(-m[2])*1.0/s3, Vec3d(m[1])*1.0/s2);
+    set(Vec3d(m[3]), Vec3d(-m[2])*1.0/s3, Vec3d(m[1])*1.0/s2, Vec3d(s1,s2,s3));
 }
 
 Pose::Pose(const Matrix& m) {
     if (isNan(m)) return;
-    //float s1 = m[0].length();
+    float s1 = m[0].length();
     float s2 = m[1].length();
     float s3 = m[2].length();
-    set(Vec3d(m[3]), Vec3d(-m[2])*1.0/s3, Vec3d(m[1])*1.0/s2);
+    set(Vec3d(m[3]), Vec3d(-m[2])*1.0/s3, Vec3d(m[1])*1.0/s2, Vec3d(s1,s2,s3));
 }
 
 PosePtr Pose::create() { return PosePtr( new Pose() ); }
 PosePtr Pose::create(const Matrix4d& m) { return PosePtr( new Pose(m) ); }
 PosePtr Pose::create(const Pose& p) { return PosePtr( new Pose(p) ); }
 
-PosePtr Pose::create(Vec3d p, Vec3d d, Vec3d u) {
-    return PosePtr( new Pose(p,d,u) );
+PosePtr Pose::create(Vec3d p, Vec3d d, Vec3d u, Vec3d s) {
+    return PosePtr( new Pose(p,d,u,s) );
 }
 
-void Pose::set(Vec3d p, Vec3d d, Vec3d u) {
-    data.resize(3);
+void Pose::set(Vec3d p, Vec3d d, Vec3d u, Vec3d s) {
+    data.resize(4);
     data[0] = p;
     data[1] = d;
     data[2] = u;
+    data[3] = s;
 }
 
 Vec3d Pose::transform(Vec3d p) {
@@ -91,7 +92,11 @@ string Pose::toString() {
 void Pose::invert() {
     Matrix4d m = asMatrix();
     m.invert();
-    set(Vec3d(m[3]), Vec3d(-m[2]), Vec3d(m[1]));
+    //set(Vec3d(m[3]), Vec3d(-m[2]), Vec3d(m[1]));
+    float s1 = m[0].length();
+    float s2 = m[1].length();
+    float s3 = m[2].length();
+    set(Vec3d(m[3]), Vec3d(-m[2])*1.0/s3, Vec3d(m[1])*1.0/s2, Vec3d(s1,s2,s3));
 }
 
 bool Pose::operator == (const Pose& other) const {

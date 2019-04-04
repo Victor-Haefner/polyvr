@@ -6,6 +6,4 @@ int guid() {
     return id;
 }
 
-VROntoID::VROntoID() {
-    ID = guid();
-}
+VROntoID::VROntoID() { ID = guid(); }

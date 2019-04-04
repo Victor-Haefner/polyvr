@@ -672,11 +672,9 @@
 		<Unit filename="src/core/math/interpolator.h" />
 		<Unit filename="src/core/math/kinematics/VRConstraint.cpp" />
 		<Unit filename="src/core/math/kinematics/VRConstraint.h" />
-		<Unit filename="src/core/math/kinematics/VRJoint.cpp" />
 		<Unit filename="src/core/math/kinematics/VRJoint.h" />
 		<Unit filename="src/core/math/kinematics/VRKinematics.cpp" />
 		<Unit filename="src/core/math/kinematics/VRKinematics.h" />
-		<Unit filename="src/core/math/kinematics/VRPart.cpp" />
 		<Unit filename="src/core/math/kinematics/VRPart.h" />
 		<Unit filename="src/core/math/patch.cpp" />
 		<Unit filename="src/core/math/patch.h" />

@@ -149,6 +149,7 @@ class VRPhysics : public VRStorage {
         btPairCachingGhostObject* getGhostBody();
         btCollisionObject* getCollisionObject();
         btCollisionShape* getCollisionShape();
+        Vec3d getCenterOfMass();
 
         void setShape(string s, float param = -1);
         void setCustomShape(btCollisionShape* shape);
