@@ -274,7 +274,10 @@ void MGear::move() {
         resetPhysics = true;
     }
 
-    trans->rotate(a, Vec3d(0,0,-1));
+    auto m = trans->getMatrix();
+    Vec3d ax;
+    m.mult(axis, ax);
+    trans->rotate(a, ax);
 
     if (trans->getPhysics()->isPhysicalized()) {
         trans->setBltOverrideFlag();
@@ -490,8 +493,8 @@ VRTransformPtr MChain::init() {
 
 // -------------- mechanism ------------------------
 
-VRMechanism::VRMechanism() : VRObject("mechanism") {;}
-VRMechanism::~VRMechanism() { clear();}
+VRMechanism::VRMechanism() : VRObject("mechanism") { setPersistency(0); }
+VRMechanism::~VRMechanism() { clear(); }
 
 shared_ptr<VRMechanism> VRMechanism::create() { return shared_ptr<VRMechanism>(new VRMechanism()); }
 
@@ -499,6 +502,7 @@ void VRMechanism::clear() {
     for (auto part : parts) delete part;
     parts.clear();
     cache.clear();
+    clearChildren();
 }
 
 void VRMechanism::add(VRTransformPtr part, VRTransformPtr trans) {
@@ -511,8 +515,9 @@ void VRMechanism::add(VRTransformPtr part, VRTransformPtr trans) {
     p->updateNeighbors(parts);
 }
 
-void VRMechanism::addGear(VRTransformPtr part, float width, float hole, float pitch, int N_teeth, float teeth_size, float bevel) {
+void VRMechanism::addGear(VRTransformPtr part, float width, float hole, float pitch, int N_teeth, float teeth_size, float bevel, Vec3d axis) {
     auto p = new MGear();
+    p->axis = axis;
     p->prim = new VRGear(width, hole, pitch, N_teeth, teeth_size, bevel);
     p->geo = part;
     p->trans = part;
@@ -600,11 +605,8 @@ void VRMechanism::update() {
 }
 
 void VRMechanism::updateVisuals() {
-    if (!geo) {
-        geo = VRAnalyticGeometry::create();
-        addChild(geo);
-    }
-
+    if (!geo) geo = VRAnalyticGeometry::create();
+    addChild(geo);
     geo->clear();
 
     for (auto p : parts) {

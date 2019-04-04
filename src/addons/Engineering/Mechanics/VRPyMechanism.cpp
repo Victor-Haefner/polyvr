@@ -12,7 +12,7 @@ PyMethodDef VRPyMechanism::methods[] = {
     {"update", PyWrap(Mechanism, update, "Update mechanism simulation", void ) },
     {"clear", PyWrap(Mechanism, clear, "Clear mechanism parts", void ) },
     {"addChain", PyWrap(Mechanism, addChain, "Add chain - addChain(float width, [G1, G2, G3, ...])", VRTransformPtr, float, vector<VRTransformPtr>, string ) },
-    {"addGear", PyWrap(Mechanism, addGear, "Add custom geo as gear, (geo, width, hole, pitch, N_teeth, teeth_size, bevel)", void, VRTransformPtr, float, float, float, int, float, float) },
+    {"addGear", PyWrap(Mechanism, addGear, "Add custom geo as gear, (geo, width, hole, pitch, N_teeth, teeth_size, bevel, axis)", void, VRTransformPtr, float, float, float, int, float, float, Vec3d) },
     {"updateNeighbors", PyWrap(Mechanism, updateNeighbors, "updateNeighbors", void) },
     {"updateVisuals", PyWrap(Mechanism, updateVisuals, "update semantic visuals", void) },
     {NULL}  /* Sentinel */
