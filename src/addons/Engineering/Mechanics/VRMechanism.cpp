@@ -187,6 +187,7 @@ MRelation* checkGearThread(MPart* p1, MPart* p2) {
 }
 
 MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
+    //cout << "checkChainPart " << endl;
     Matrix4d M = p->reference;
     Vec3d wpos = Vec3d(M[3]);
     float s = p->geo->getWorldScale()[0];
@@ -196,7 +197,7 @@ MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
     Vec3d dir = ((MGear*)p)->axis;
     M.mult(dir,dir);
 
-    float eps = 1e-2*s; // 1e-3
+    float eps = 1e-2; // 1e-3
 
     vector<pointPolySegment> psegs;
     for (auto ps : c->toPolygon(wpos) ) {
@@ -204,7 +205,7 @@ MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
         if ( d < eps ) psegs.push_back(ps);
     }
 
-    if (psegs.size() == 0) return 0;
+    if (psegs.size() == 0) { cout << " fail1" << endl; return 0; }
 
     dir.normalize();
     float fd = 0;
@@ -215,8 +216,8 @@ MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
         ps.Pseg.normalize();
         ps.seg.normalize();
         float n = ps.Pseg.cross(dir).dot(ps.seg);
-        //cout << " checkChainPart " << n << endl;
-        if (abs(n) < (1-eps)) continue;
+        //cout << " checkChainPart n: " << n << ", d: " << dir << ", Pseg: " << ps.Pseg << ", seg: " << ps.seg << endl;
+        if (abs(n) < (1-eps)) { cout << " fail2" << endl; continue; }
         if (IDmin > ps.ID) {
             //cout << " checkChainPart " << IDmin << "  " << ps.ID << endl;
             IDmin = ps.ID;
