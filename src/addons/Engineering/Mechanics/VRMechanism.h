@@ -56,6 +56,8 @@ struct MChainGearRelation : public MRelation {
 };
 
 struct MGearGearRelation : public MRelation {
+    bool doFlip = true;
+
     void translateChange(MChange& change);
 };
 

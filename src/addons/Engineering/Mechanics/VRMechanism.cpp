@@ -146,14 +146,17 @@ void MPart::printNeighbors() {
     cout << endl;
 }
 
-
 MGearGearRelation* checkGearGear(MPart* p1, MPart* p2) {
     Matrix4d r1 = p1->reference;
     Matrix4d r2 = p2->reference;
     Vec3d P1 = Vec3d(r1[3]);
     Vec3d P2 = Vec3d(r2[3]);
-    Vec3d n1 = Vec3d(r1[2]); n1.normalize();
-    Vec3d n2 = Vec3d(r2[2]); n2.normalize();
+    Vec3d a1 = ((MGear*)p1)->axis;
+    Vec3d a2 = ((MGear*)p2)->axis;
+    r1.mult(a1,a1);
+    r2.mult(a2,a2);
+    Vec3d n1 = a1; n1.normalize();
+    Vec3d n2 = a2; n2.normalize();
 
     VRGear* g1 = (VRGear*)p1->prim;
     VRGear* g2 = (VRGear*)p2->prim;
@@ -166,9 +169,13 @@ MGearGearRelation* checkGearGear(MPart* p1, MPart* p2) {
     R2 *= g2->radius();
     if ( (P1+R1 - (P2+R2)).length() > t) return 0; // not touching!
 
+    Vec3d w1 = R1.cross(a1);
+    Vec3d w2 = R2.cross(a2);
+
     MGearGearRelation* rel = new MGearGearRelation();
     rel->part1 = p1;
     rel->part2 = p2;
+    rel->doFlip = bool(w1.dot(w2) < 0);
     return rel;
 }
 
@@ -361,8 +368,11 @@ void MThread::updateNeighbors(vector<MPart*> parts) {
 }
 
 void MRelation::translateChange(MChange& change) {;}
-void MGearGearRelation::translateChange(MChange& change) { change.flip();}
 void MChainGearRelation::translateChange(MChange& change) { if (dir == -1) change.flip();}
+
+void MGearGearRelation::translateChange(MChange& change) {
+    if (doFlip) change.flip();
+}
 
 void MChain::setDirs(string dirs) { this->dirs = dirs; }
 void MChain::addDir(char dir) { dirs.push_back(dir); }
