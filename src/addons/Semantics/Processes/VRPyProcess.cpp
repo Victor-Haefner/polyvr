@@ -71,6 +71,7 @@ PyMethodDef VRPyProcessLayout::methods[] = {
     {"storeLayout", PyWrapOpt(ProcessLayout, storeLayout, "Store layout to file", "", void, string ) },
     {"loadLayout", PyWrapOpt(ProcessLayout, loadLayout, "Load layout from file", "", void, string ) },
     {"pauseUpdate", PyWrapOpt(ProcessLayout, pauseUpdate, "Pause update", "1", void, bool ) },
+    {"updatePathtools", PyWrap(ProcessLayout, updatePathtools, "Update Process Pathtools", void ) },
     {NULL}  /* Sentinel */
 };
 

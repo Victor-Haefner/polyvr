@@ -359,9 +359,6 @@ void VRProcessLayout::setElementName(int ID, string name) {
 void VRProcessLayout::update() {
     if (updatePaused) return;
 
-    //toolSID->update();
-	//for(auto toolSBD : toolSBDs) toolSBD.second->update();
-
 	auto setElementDisplay = [&](int eID, Color3f color, bool isLit) {
         auto element = getElement(eID);
         auto geo = dynamic_pointer_cast<VRGeometry>(element);
@@ -403,6 +400,11 @@ void VRProcessLayout::update() {
             }
         }
     }
+}
+
+void VRProcessLayout::updatePathtools(){
+    toolSID->update();
+	for(auto toolSBD : toolSBDs) toolSBD.second->update();
 }
 
 void VRProcessLayout::storeLayout(string path) {

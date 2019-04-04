@@ -462,6 +462,15 @@ bool VRLeap::getIsPinching(int hand) {
     } else return hands[hand]->isPinching;
 }
 
+vector<PosePtr> VRLeap::getHandPose(){
+    vector<PosePtr> res;
+    for (auto h : hands) {
+        if(!h) return res;
+        res.push_back(h->pose);
+    }
+    return res;
+}
+
 void VRLeap::enableDnD(VRObjectPtr root) {
     doDnD = true;
     dndRoot = root;

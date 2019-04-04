@@ -93,6 +93,7 @@ class VRLeap : public VRDevice {
         float getGrabStrength(int hand);
         float getConfidence(int hand);
         bool getIsPinching(int hand);
+        vector<PosePtr> getHandPose();
 
         vector<VRObjectPtr> addHandsGeometry();
 };

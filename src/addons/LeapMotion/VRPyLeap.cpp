@@ -30,6 +30,7 @@ PyMethodDef VRPyLeap::methods[] = {
     {"getIsPinching",         PyWrap(Leap, getIsPinching,       "Get isPinching boolean value of grab interaction", bool, int ) },
     {"addHandsGeometry",      PyWrap(Leap, addHandsGeometry,    "Add Leap Hands Geometry", vector<VRObjectPtr> ) },
     {"enableDnD",             PyWrap(Leap, enableDnD,           "Enable leap DnD", void, VRObjectPtr ) },
+    {"getHandPose",           PyWrap(Leap, getHandPose,         "Get pose of the leap hands", vector<PosePtr> ) },
     {NULL} /* Sentinel */
 };
 

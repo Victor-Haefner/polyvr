@@ -66,6 +66,7 @@ class VRProcessLayout : public VRTransform {
 
         void update();
         void pauseUpdate(bool b);
+        void updatePathtools();
 };
 
 OSG_END_NAMESPACE;
