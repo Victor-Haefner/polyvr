@@ -264,7 +264,7 @@ VRScrewthread* MThread::thread() { return (VRScrewthread*)prim; }
 
 void MPart::move() {}
 void MChain::move() { if (geo == 0) return; updateGeo(); }
-void MThread::move() { trans->rotate(change.a, Vec3d(0,0,1)); }
+void MThread::move() { trans->rotate(change.a, Vec3d(0,0,-1)); }
 
 void MGear::move() {
     float a = change.dx/gear()->radius();
@@ -274,7 +274,7 @@ void MGear::move() {
         resetPhysics = true;
     }
 
-    trans->rotate(a, Vec3d(0,0,1));
+    trans->rotate(a, Vec3d(0,0,-1));
 
     if (trans->getPhysics()->isPhysicalized()) {
         trans->setBltOverrideFlag();

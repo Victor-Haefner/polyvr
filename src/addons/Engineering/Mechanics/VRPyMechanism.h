@@ -7,12 +7,7 @@
 class VRPyGeometry;
 
 struct VRPyMechanism : VRPyBaseT<OSG::VRMechanism> {
-    static PyMethodDef methods[];
-
-    static PyObject* add(VRPyMechanism* self, PyObject* args);
-    static PyObject* clear(VRPyMechanism* self);
-    static PyObject* update(VRPyMechanism* self);
-    static PyObject* addChain(VRPyMechanism* self, PyObject* args);
+    static PyMethodDef methods[];;
 };
 
 #endif // VRPYMECHANISM_H_INCLUDED
