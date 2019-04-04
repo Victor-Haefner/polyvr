@@ -187,12 +187,14 @@ MRelation* checkGearThread(MPart* p1, MPart* p2) {
 }
 
 MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
-    Vec3d wpos = p->geo->getWorldPosition();
+    Matrix4d M = p->reference;
+    Vec3d wpos = Vec3d(M[3]);
     float s = p->geo->getWorldScale()[0];
     if (!p->prim) return 0;
     if (p->prim->getType() != "Gear") return 0;
     float r = ((VRGear*)p->prim)->radius()*s;
-    Vec3d dir = p->geo->getWorldDirection();
+    Vec3d dir = ((MGear*)p)->axis;
+    M.mult(dir,dir);
 
     float eps = 1e-2*s; // 1e-3
 
