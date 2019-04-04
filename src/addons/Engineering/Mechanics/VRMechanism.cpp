@@ -211,11 +211,14 @@ MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
     int IDmin = 1e6;
 
     for (auto ps : psegs) {
+        //cout << " checkChainPart " << ps.ID << endl;
         ps.Pseg.normalize();
         ps.seg.normalize();
         float n = ps.Pseg.cross(dir).dot(ps.seg);
+        //cout << " checkChainPart " << n << endl;
         if (abs(n) < (1-eps)) continue;
         if (IDmin > ps.ID) {
+            //cout << " checkChainPart " << IDmin << "  " << ps.ID << endl;
             IDmin = ps.ID;
             fd = n;
         }
@@ -226,6 +229,7 @@ MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
     rel->part2 = p;
     rel->dir = fd > 0 ? -1 : 1;
     rel->segID = IDmin;
+    //cout << "checkChainPart " << IDmin << endl;
     return rel;
 }
 
@@ -397,6 +401,7 @@ void MChain::updateGeo() {
     for (auto n : nbrs_m) nbrs.push_back(n.second);
 
     int j=0;
+    //cout << "MChain::updateGeo " << nbrs.size() << "   " << neighbors.size() << endl;
     for (uint i=0; i<nbrs.size(); i++) {
         j = (i+1) % nbrs.size(); // next
         VRPrimitive* p1 = nbrs[i]->prim;
@@ -443,9 +448,16 @@ void MChain::updateGeo() {
             y2 = z1*d2*r2*rCh2/dCh2;
         }
 
+        Matrix4d M1 = nbrs[i]->reference;
+        Matrix4d M2 = nbrs[j]->reference;
+        Vec3d a1 = ((MGear*)nbrs[i])->axis; // nbrs[i]->geo->getWorldDirection()
+        Vec3d a2 = ((MGear*)nbrs[j])->axis; // nbrs[j]->geo->getWorldDirection()
+        M1.mult(a1,a1);
+        M2.mult(a2,a2);
+
         Vec3d dn = D/d;
-        Vec3d t1 = dn.cross(nbrs[i]->geo->getWorldDirection());
-        Vec3d t2 = dn.cross(nbrs[j]->geo->getWorldDirection());
+        Vec3d t1 = dn.cross(a1);
+        Vec3d t2 = dn.cross(a2);
         t1 = c1 + t1*y1 + dn*x1;
         t2 = c2 + t2*y2 - dn*x2;
         polygon.push_back(t1);
@@ -514,7 +526,6 @@ void VRMechanism::clear() {
     for (auto part : parts) delete part;
     parts.clear();
     cache.clear();
-    clearChildren();
 }
 
 void VRMechanism::add(VRTransformPtr part, VRTransformPtr trans) {
@@ -624,8 +635,12 @@ void VRMechanism::updateVisuals() {
     for (auto p : parts) {
         if (p->type != "gear") continue;
         VRGear* g = (VRGear*)p->prim;
-        Vec3d n = Vec3d(p->reference[2]); n.normalize(); n *= g->radius();
-        geo->addVector(Vec3d(p->reference[3]), n, Color3f(0.2,1,0.3));
+        Vec3d a = ((MGear*)p)->axis;
+        p->reference.mult(a,a);
+        float s = p->geo->getWorldScale()[0];
+        a.normalize();
+        a *= g->radius()*s;
+        geo->addVector(Vec3d(p->reference[3]), a, Color3f(0.2,1,0.3));
     }
 
     for (auto p1 : parts) {
@@ -634,7 +649,8 @@ void VRMechanism::updateVisuals() {
             auto color = Color3f(0.4,0.6,1.0);
             if (p1->type == "chain" || p2.first->type == "chain") color = Color3f(1.0,0.6,0.4);
             auto pos2 = Vec3d(p2.first->reference[3]);
-            geo->addVector(pos1, pos2-pos1, color);
+            Vec3d d = (pos2-pos1)*0.45;
+            geo->addVector(pos1, d, color);
         }
     }
 }

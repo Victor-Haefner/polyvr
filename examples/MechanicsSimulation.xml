@@ -420,34 +420,9 @@
 	import VR, string
 
 
-	if hasattr(VR, 'mechanism'): VR.mechanism.destroy()
-	VR.mechanism = VR.Mechanism()
-	root.addChild(VR.mechanism)
 
 
-	def addPrimitive(params, mecha, Nt):
-		p = VR.Geometry(params[0])
-		s = string.join([str(i) for i in params])
-		p.setPrimitive( s )
-		VR.mechanism.addChild(p)
-		p.addTag('gear')
-		if mecha: VR.mechanism.add(p)
-		#if mecha: VR.mechanism.addGear(p, 0.02, 0.01, 0.02, Nt, 0.01, 0)
-		return p
-
-	VR.P1 = addPrimitive(['Gear', 0.02, 0.01, 0.02, 32, 0.01, 0], True, 32)
-	VR.P2 = addPrimitive(['Gear', 0.02, 0.01, 0.02, 32, 0.01, 0], True, 32)
-	VR.P2.translate([0.4,0,0])
-	#VR.P2.setScale([2,2,2])
-
-	c = VR.mechanism.addChain(0.02, [VR.P1, VR.P2], 'll')
-	VR.mechanism.addChild(c)
-
-
-	VR.rotate = True
-
-
-
+	#VR.mechanism.updateNeighbors()
 	VR.mechanism.updateVisuals()
 </core>
       <arg type="VRPyObjectType" value="Headlight" base_name="root" name_space="test" name_suffix="0" persistency="666"/>
