@@ -568,10 +568,10 @@ void VRTransform::showCoordAxis(bool b) {
         for (int j=0; j<3; j++) scale[j] = 1.0/scale[j];
         GeometryMTRecPtr geo = dynamic_cast<Geometry*>(coords->node->getCore());
         GeoPnt3fPropertyMTRecPtr pos = (GeoPnt3fProperty*)geo->getPositions();
-        for (int i=0; i<pos->size(); i++) {
-            Pnt3f p = pos->getValue(i);
-            for (int j=0; j<3; j++) p[j] *= scale[j];
-            pos->setValue(p,i);
+        for (int i : {0,1,2}) {
+            Pnt3f p;
+            p[i] = 0.3*scale[i];
+            pos->setValue(p,i*2+1);
         }
     }
     else coords->node->setTravMask(0);
