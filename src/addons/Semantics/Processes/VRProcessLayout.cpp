@@ -192,10 +192,13 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
         }
     };
 
+    auto g = VRGeometry::create("asd");
+    g->setPrimitive("Box 0.00001 0.00001 0.00001 1 1 1");
     //initialize pathtool for each sbd
     for (auto subject : p->getSubjects()) {
         if (!p->getBehaviorDiagram(subject->getID())) return;
         VRPathtoolPtr toolSBD = VRPathtool::create();
+        toolSBD->setHandleGeometry(g);
         toolSBD->setPersistency(0);
         toolSBDs[subject->getID()] = toolSBD;
         addChild(toolSBD);

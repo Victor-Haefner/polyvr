@@ -100,6 +100,7 @@ VRIntersection VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray) {
     iAct.apply(tree->getNode()->node);
 
     ins.hit = iAct.didHit();
+    //cout << "VRIntersect::intersectRay " << ray << " " << ins.hit << endl;
     if (ins.hit) {
         ins.object = tree->find(OSGObject::create(iAct.getHitObject()->getParent()));
         if (auto sp = ins.object.lock()) ins.name = sp->getName();
