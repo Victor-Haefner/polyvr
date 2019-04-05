@@ -525,7 +525,7 @@ void VRTransform::setTransform(Vec3d from, Vec3d dir, Vec3d up) {
 
 void VRTransform::setPose(PosePtr p) { if (p) setTransform(p->pos(), p->dir(), p->up()); }
 void VRTransform::setPose2(const Pose& p) { setTransform(p.pos(), p.dir(), p.up()); }
-PosePtr VRTransform::getPose() { return Pose::create(Vec3d(_from), Vec3d(_dir), Vec3d(_up)); }
+PosePtr VRTransform::getPose() { return Pose::create(_from, _dir, _up, _scale); }
 PosePtr VRTransform::getWorldPose() { return Pose::create( getWorldMatrix() ); }
 void VRTransform::setWorldPose(PosePtr p) { setWorldMatrix(p->asMatrix()); }
 
@@ -568,10 +568,10 @@ void VRTransform::showCoordAxis(bool b) {
         for (int j=0; j<3; j++) scale[j] = 1.0/scale[j];
         GeometryMTRecPtr geo = dynamic_cast<Geometry*>(coords->node->getCore());
         GeoPnt3fPropertyMTRecPtr pos = (GeoPnt3fProperty*)geo->getPositions();
-        for (int i=0; i<pos->size(); i++) {
-            Pnt3f p = pos->getValue(i);
-            for (int j=0; j<3; j++) p[j] *= scale[j];
-            pos->setValue(p,i);
+        for (int i : {0,1,2}) {
+            Pnt3f p;
+            p[i] = 0.3*scale[i];
+            pos->setValue(p,i*2+1);
         }
     }
     else coords->node->setTravMask(0);
@@ -581,7 +581,6 @@ void VRTransform::setScale(float s) { setScale(Vec3d(s,s,s)); }
 
 void VRTransform::setScale(Vec3d s) {
     if (isNan(s)) return;
-    //cout << "setScale " << s << endl;
     _scale = s;
     reg_change();
 }
@@ -1029,5 +1028,6 @@ void VRTransform::setDamping(float ld, float ad) { if (auto p = getPhysics()) p-
 
 Vec3d VRTransform::getForce() { if (auto p = getPhysics()) return p->getForce(); else return Vec3d(); }
 Vec3d VRTransform::getTorque() { if (auto p = getPhysics()) return p->getTorque(); else return Vec3d(); }
+Vec3d VRTransform::getCenterOfMass() { if (auto p = getPhysics()) return p->getCenterOfMass(); else return Vec3d(); }
 
 

@@ -47,8 +47,6 @@ int VRKinematics::addBody(VRTransformPtr obj, bool dynamic) {
     int nID = graph->addNode(obj->getPose());
     bodies[nID] = Body(nID, obj);
     physicalize(nID, dynamic);
-    obj->setPhysicsActivationMode(4);
-    obj->setCollisionGroup({1});
     return nID;
 }
 
@@ -102,6 +100,9 @@ void VRKinematics::setDynamic(int nID, bool dynamic) {
 void VRKinematics::physicalize(int nID, bool dynamic) {
     float ld = 1;
     float ad = 1;
+    bodies[nID].obj->setPhysicsActivationMode(4);
+    bodies[nID].obj->setCollisionGroup({1});
+    bodies[nID].obj->setCenterOfMass(Vec3d(0,0,0));
     bodies[nID].obj->setDamping(ld,ad);
     bodies[nID].obj->setGravity(Vec3d(0, 0, 0));
     bodies[nID].obj->physicalize(true, dynamic, "Convex");
