@@ -20,6 +20,7 @@ class VRProcessLayout : public VRTransform {
         map<int, VRObjectWeakPtr> elements;
         map<VRObject*, int> elementIDs;
         float height = 2;
+        bool updatePaused = false;
         Color3f colorState = Color3f(1,0.9,0.8);
         Color3f colorActiveState = Color3f(1,0.51,0.22);
         Color3f colorSendState = Color3f(0.62,0.99,0.66);
@@ -64,6 +65,7 @@ class VRProcessLayout : public VRTransform {
         void loadLayout(string path);
 
         void update();
+        void pauseUpdate(bool b);
 };
 
 OSG_END_NAMESPACE;

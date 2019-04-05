@@ -10,6 +10,8 @@ void VRGlobals::FPS::update(VRTimer& t) {
 }
 
 VRGlobals::Int VRGlobals::CURRENT_FRAME = 0;
+VRGlobals::Int VRGlobals::NCHANGED = 0;
+VRGlobals::Int VRGlobals::NCREATED = 0;
 VRGlobals::FPS VRGlobals::FRAME_RATE(0,0,"statFPS", "PolyVR framerate");
 VRGlobals::FPS VRGlobals::WINDOWS_FRAME_RATE(0,0,"statWinFPS", "PolyVR windows framerate");
 VRGlobals::FPS VRGlobals::RENDER_FRAME_RATE(0,0,"statRenderFPS", "PolyVR rendering framerate");

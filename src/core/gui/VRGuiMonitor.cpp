@@ -218,6 +218,8 @@ void VRGuiMonitor::selectFrame() {
 
     setLabel("Nframe", toString(frame.fID));
     setLabel("Tframe", toString((frame.t1 - frame.t0)/1000.0)+"ms");
+    setLabel("Nchanges", toString(frame.Nchanged));
+    setLabel("Ncreated", toString(frame.Ncreated));
 
     redraw();
 }

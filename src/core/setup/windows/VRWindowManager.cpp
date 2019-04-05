@@ -229,6 +229,8 @@ void VRWindowManager::updateWindows() {
         if (!wait()) return false;
         auto clist = Thread::getCurrentChangeList();
         auto Ncreated = clist->getNumCreated();
+        VRGlobals::NCHANGED = clist->getNumChanged();
+        VRGlobals::NCREATED = Ncreated;
         if (Ncreated > 50) doRenderSync = true; // to reduce memory issues with big scenes
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRMultiWindow>(w.second)) if (win->getState() == VRMultiWindow::INITIALIZING) win->initialize();
         commitChanges();
