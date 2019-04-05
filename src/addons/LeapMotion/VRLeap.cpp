@@ -1,13 +1,14 @@
 #include "VRLeap.h"
-#include <core/objects/VRTransform.h>
-#include <core/utils/toString.h>
-#include <core/utils/VRStorage_template.h>
-#include <core/setup/devices/VRSignal.h>
-#include <core/objects/OSGObject.h>
-#include <core/utils/VRGlobals.h>
-#include <core/math/boundingbox.h>
-#include <core/scene/VRScene.h>
-#include <addons/LeapMotion/VRHandGeo.h>
+#include "core/objects/VRTransform.h"
+#include "core/utils/toString.h"
+#include "core/utils/VRStorage_template.h"
+#include "core/setup/devices/VRSignal.h"
+#include "core/objects/OSGObject.h"
+#include "core/utils/VRGlobals.h"
+#include "core/tools/VRAnalyticGeometry.h"
+#include "core/math/boundingbox.h"
+#include "core/scene/VRScene.h"
+#include "addons/LeapMotion/VRHandGeo.h"
 
 using namespace OSG;
 
@@ -20,14 +21,16 @@ VRLeap::VRLeap() : VRDevice("leap") {
     numPens = 0;
 
     // left hand beacons
-    addBeacon(Vec3d(0,1,-1)); // left root
+    //addBeacon(Vec3d(0,1,-1)); // left root
+    addBeacon(Vec3d(0,0,-1)); // left root
     for (int i = 1; i <= 5; ++i) {
             addBeacon(Vec3d(0,1,-1));
             getBeacon(i)->switchParent(getBeacon(0));
     }
 
     // right hand beacons
-    addBeacon(Vec3d(0,1,-1)); // right root
+    //addBeacon(Vec3d(0,1,-1)); // right root
+    addBeacon(Vec3d(0,0,-1)); // right root
     for (int i = 7; i <= 11; ++i) {
             addBeacon(Vec3d(0,1,-1));
             getBeacon(i)->switchParent(getBeacon(6));
@@ -157,11 +160,10 @@ void VRLeap::updateSceneData(vector<HandPtr> hands) {
     auto parent = getBeaconRoot()->getParent()->getParent();
 
     for (int i = 0; i < 2; ++i) {
-
         HandPtr hand = hands[i];
-
         int dnd_btn = i; // drag button 0 for left, 1 for right hand
         if (hand) {
+            enableAvatar("ray", 6*i);
 
             // update beacons
             int rootIdx = i * 6;
@@ -183,8 +185,8 @@ void VRLeap::updateSceneData(vector<HandPtr> hands) {
             if (BStates[dnd_btn] != dnd_state || BStates.count(dnd_btn) == 0) {
                 change_button(dnd_btn, dnd_state);
             }
-
         } else { // hand is not there, make it drop if needed
+            disableAvatar("ray", 6*i);
             if (BStates[dnd_btn] != 0) {
                 change_button(dnd_btn, 0);
             }
@@ -480,21 +482,28 @@ void VRLeap::enableDnD(VRObjectPtr root) {
 void VRLeap::leapDnD(VRDeviceWeakPtr dev) {
     if (!doDnD) return;
 
+    /*if (!ageo) {
+        ageo = VRAnalyticGeometry::create();
+        getBeacon()->getParent()->getParent()->getParent()->getParent()->addChild(ageo);
+    }*/
+
     for (auto key : {0,1}) {
         int bID = key*6; // 0 and 6
         auto s = b_state(key);
 
         auto beacon = getBeacon(bID);
         if (s == 1) {
-            if (intersect2(dndRoot, 0, beacon, Vec3d(0,1,-1))) {
-                auto i = getIntersected();
-                if (i) {
-                    drag(i, bID);
-                }
+            Pnt3f p0 = Pnt3f(beacon->getWorldPosition());
+            Vec3f d = Vec3f(0,-1,0);
+            //ageo->setVector(key, Vec3d(p0), Vec3d(0,-1,0), Color3f(1,0,0));
+
+            Line ray(p0, d);
+            auto intersection = intersectRay(dndRoot, ray);
+            if ( intersection.hit ) {
+                auto i = intersection.object.lock();
+                if (i) drag(i, bID);
             }
-        } else {
-            drop(bID);
-        }
+        } else drop(bID);
     }
 }
 

@@ -1,7 +1,9 @@
-#pragma once
+#ifndef VRLEAP_H_INCLUDED
+#define VRLEAP_H_INCLUDED
 
-#include <core/setup/devices/VRDevice.h>
-#include <core/networking/VRWebSocket.h>
+#include "core/setup/devices/VRDevice.h"
+#include "core/networking/VRWebSocket.h"
+#include "core/tools/VRToolsFwd.h"
 
 #include <boost/thread/recursive_mutex.hpp>
 
@@ -17,6 +19,8 @@ class VRLeap : public VRDevice {
         int numPens;
         VRObjectPtr dndRoot;
         bool doDnD = false;
+
+        VRAnalyticGeometryPtr ageo;
 
         vector<std::function<void(VRLeapFramePtr)>> frameCallbacks;
 
@@ -99,3 +103,5 @@ class VRLeap : public VRDevice {
 };
 
 OSG_END_NAMESPACE;
+
+#endif // VRLEAP_H_INCLUDED

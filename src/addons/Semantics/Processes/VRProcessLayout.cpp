@@ -38,6 +38,9 @@ VRProcessLayoutPtr VRProcessLayout::create(string name) {
 void VRProcessLayout::init() {
     toolSID = VRPathtool::create();
     toolSID->setPersistency(0);
+    auto g = VRGeometry::create("sdf");
+    g->setPrimitive("Box 0.00001 0.00001 0.00001 1 1 1");
+    toolSID->setHandleGeometry(g);
     addChild(toolSID);
 }
 
@@ -83,10 +86,12 @@ Vec4i pushRectVerts(VRGeoData& geo, float x0, float x1, float y0, float y1, Vec3
     Pnt3d p3(x1,y1,0); m.mult(p3,p3);
     Pnt3d p4(x0,y1,0); m.mult(p4,p4);
 
-    int A = geo.pushVert(p1 - n*d, n, Vec2d(0,0));
-    int B = geo.pushVert(p2 - n*d, n, Vec2d(1,0));
-    int C = geo.pushVert(p3 - n*d, n, Vec2d(1,1));
-    int D = geo.pushVert(p4 - n*d, n, Vec2d(0,1));
+    float s = 0.005;
+
+    int A = geo.pushVert((p1 - n*d)*s, n, Vec2d(0,0));
+    int B = geo.pushVert((p2 - n*d)*s, n, Vec2d(1,0));
+    int C = geo.pushVert((p3 - n*d)*s, n, Vec2d(1,1));
+    int D = geo.pushVert((p4 - n*d)*s, n, Vec2d(0,1));
     return Vec4i(A,B,C,D);
 }
 
