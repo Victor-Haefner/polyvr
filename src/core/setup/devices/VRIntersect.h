@@ -15,6 +15,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 struct VRIntersection {
+    Line ray;
     bool hit = false;
     uint time = 0;
     string name;

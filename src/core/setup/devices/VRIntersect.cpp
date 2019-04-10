@@ -99,7 +99,9 @@ VRIntersection VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray) {
     iAct.setLine(ray);
     iAct.apply(tree->getNode()->node);
 
+    ins.ray = ray;
     ins.hit = iAct.didHit();
+    //cout << "VRIntersect::intersectRay " << ray << " " << ins.hit << endl;
     if (ins.hit) {
         ins.object = tree->find(OSGObject::create(iAct.getHitObject()->getParent()));
         if (auto sp = ins.object.lock()) ins.name = sp->getName();
@@ -144,7 +146,6 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force, VRTrans
 
     if (caster == 0) caster = dev->getBeacon();
     if (caster == 0) { cout << "Warning: VRIntersect::intersect, caster is 0!\n"; return ins; }
-
     uint now = VRGlobals::CURRENT_FRAME;
     for (auto t : trees) {
         if (intersections.count(t.get())) {
@@ -157,7 +158,9 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force, VRTrans
 
         Line ray = caster->castRay(t, dir);
         auto ins_tmp = intersectRay(t, ray);
+        //if (force) cout << ray.getPosition()[1] << " " << caster->getWorldPosition()[1] << endl;
         if (ins_tmp.hit) return ins_tmp;
+        else ins.ray = ray;
     }
     return ins;
 }
