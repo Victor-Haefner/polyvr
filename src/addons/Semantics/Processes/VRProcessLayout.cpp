@@ -5,6 +5,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/utils/toString.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/tools/VRText.h"
 #include "core/tools/VRPathtool.h"
 #include "core/scene/VRScene.h"
@@ -434,6 +435,8 @@ void VRProcessLayout::storeLayout(string path) {
 void VRProcessLayout::loadLayout(string path) {
     if (path == "") path = ".process_layout.plt";
     auto context = VRStorageContext::create(true);
+
+    if (!exists(path)) return;
 
     xmlpp::DomParser parser;
     parser.set_validate(false);
