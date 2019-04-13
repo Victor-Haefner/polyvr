@@ -231,7 +231,7 @@ void VRTexture::clampToImage(Vec3i& p) {
     if (p[2] < 0) p[2] = 0; if (p[2] >= img->getDepth()) p[2] = img->getDepth()-1;
 }
 
-Color4f VRTexture::getPixel(Vec3i p) { // TODO: check data format (float/integer/char)
+Color4f VRTexture::getPixel(Vec3i p) {
     auto res = Color4f(0,0,0,1);
     if (!img) return res;
     int N = getChannels();
@@ -259,6 +259,8 @@ Color4f VRTexture::getPixel(int i) {
     auto res = Color4f(0,0,0,1);
     if (!img) return res;
     int N = getChannels();
+    int pbN = getPixelByteN();
+    auto f = img->getDataType();
     auto data = img->getData();
 
     if (N == 1) {
@@ -274,8 +276,17 @@ Color4f VRTexture::getPixel(int i) {
     }
 
     if (N == 3) {
-        Color3f* data3 = (Color3f*)data;
-        Color3f d = data3[i];
+        Color3f d;
+
+        if (f == Image::OSG_UINT8_IMAGEDATA)   for (int j=0; j<3; j++) d[j] = ((UInt8*)data)[3*i+j]/256.0;
+        if (f == Image::OSG_INT16_IMAGEDATA)   for (int j=0; j<3; j++) d[j] = ((Int16*)data)[3*i+j]/32768.0;
+        if (f == Image::OSG_UINT16_IMAGEDATA)  for (int j=0; j<3; j++) d[j] = ((UInt16*)data)[3*i+j]/65536.0;
+        if (f == Image::OSG_FLOAT16_IMAGEDATA) for (int j=0; j<3; j++) d[j] = ((Real16*)data)[3*i+j];
+        //if (f == Image::OSG_UINT24_8_IMAGEDATA)for (int j=0; j<3; j++) d[j] = ((UInt24*)data)[3*i+j];
+        if (f == Image::OSG_INT32_IMAGEDATA)   for (int j=0; j<3; j++) d[j] = ((Int32*)data)[3*i+j]/2147483648.0;
+        if (f == Image::OSG_UINT32_IMAGEDATA)  for (int j=0; j<3; j++) d[j] = ((UInt32*)data)[3*i+j]/4294967296.0;
+        if (f == Image::OSG_FLOAT32_IMAGEDATA) for (int j=0; j<3; j++) d[j] = ((Real32*)data)[3*i+j];
+
         res = Color4f(d[0], d[1], d[2], 1.0);
     }
 

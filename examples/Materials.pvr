@@ -39,7 +39,7 @@ void main() {
 	color = texture2D (diffuseTexture, gl_TexCoord[0].st);
 	
 	// lookup normal from normal map, move from [0,1] to  [-1, 1] range, normalize
-	normal = 2.0 * texture2D (normalTexture, gl_TexCoord[0].st).rgb - 1.0;
+	normal = 2.0 * texture2D (normalTexture, gl_TexCoord[0].st*3.0).rgb - 1.0;
 	normal = normalize (normal);
 	
 	applyLightning();
@@ -341,7 +341,7 @@ void main(void) {
 	
 	# bumpmap
 	bmt = VR.Image()
-	bmt.read('bumpmap.png')
+	bmt.read('bumpmap.jpg')
 	mat7.setTexture(noise2)
 	mat7.setTexture(bmt,1)
 	mat7.setVertexProgram('bumpmapVP')

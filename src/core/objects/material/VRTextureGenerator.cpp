@@ -1,6 +1,7 @@
 #include "VRTextureGenerator.h"
 #include "VRPerlin.h"
 #include "VRBricks.h"
+#include "VRNormalmap.h"
 #include "core/networking/VRSharedMemory.h"
 
 #include <OpenSG/OSGImage.h>
@@ -24,9 +25,24 @@ void VRTextureGenerator::setSize(Vec3i dim, bool a) { width = dim[0]; height = d
 void VRTextureGenerator::setSize(int w, int h, int d) { width = w; height = h; depth = d; }
 Vec3i VRTextureGenerator::getSize() { return Vec3i(width, height, depth); };
 
+void VRTextureGenerator::set(VRTexturePtr t) {
+    setSize(t->getSize(), 0);
+    Layer l;
+    l.type = TEXTURE;
+    l.tex = t;
+    layers.push_back(l);
+}
+
+void VRTextureGenerator::read(string path) {
+    auto t = VRTexture::create();
+    t->read(path);
+    set(t);
+}
+
 void VRTextureGenerator::add(string type, float amount, Color4f c1, Color4f c2) {
     GEN_TYPE t = PERLIN;
     if (type == "Bricks") t = BRICKS;
+    if (type == "Normalmap") t = NORMALMAP;
     add(t, amount, c1, c2);
 }
 
@@ -99,6 +115,42 @@ void VRTextureGenerator::applyFill(Color3f* data, Color4f c) {
     fill(data, data+N, c3);
     //Color3f c3 = Color3f(c[0], c[1], c[2])*c[3];
     //for (int i=0; i<N; i++) data[i] = c3 + data[i]*(1.0-c[3]);
+}
+
+void VRTextureGenerator::applyTexture(Color3f* data, VRTexturePtr t, float amount) {
+
+    cout << "apply texture! Nc: " << t->getChannels() << endl;
+
+    Vec3i s = t->getSize();
+    for (int k = 0; k<s[2]; k++) {
+        for (int j = 0; j<s[1]; j++) {
+            for (int i = 0; i<s[0]; i++) {
+                int l = k*s[1]*s[0] + j*s[0] + i;
+                //Color4f c = t->getPixel(Vec3i(i,j,k));
+                Color4f c = t->getPixel(l);
+                data[l][0] = c[0];
+                data[l][1] = c[1];
+                data[l][2] = c[2];
+            }
+        }
+    }
+}
+
+void VRTextureGenerator::applyTexture(Color4f* data, VRTexturePtr t, float amount) {
+    Vec3i s = t->getSize();
+    for (int k = 0; k<s[2]; k++) {
+        for (int j = 0; j<s[1]; j++) {
+            for (int i = 0; i<s[0]; i++) {
+                int l = k*s[1]*s[0] + j*s[0] + i;
+                Color4f c = t->getPixel(l);
+                //Color4f c = t->getPixel(Vec3i(i,j,k));
+                data[l][0] = c[0];
+                data[l][1] = c[1];
+                data[l][2] = c[2];
+                data[l][3] = 1;
+            }
+        }
+    }
 }
 
 bool VRTextureGenerator::inBox(Pnt3d& p, Vec3d& s) {
@@ -275,20 +327,24 @@ VRTexturePtr VRTextureGenerator::compose(int seed) { // TODO: optimise!
         if (!hasAlpha) {
             if (l.type == BRICKS) VRBricks::apply(data3, dims, l.amount, l.c31, l.c32);
             if (l.type == PERLIN) VRPerlin::apply(data3, dims, l.amount, l.c31, l.c32);
+            if (l.type == NORMALMAP) VRNormalmap::apply(data3, dims, l.amount);
             if (l.type == LINE) applyLine(data3, Vec3d(l.c31), Vec3d(l.c32), l.c41, l.amount);
             if (l.type == FILL) applyFill(data3, l.c41);
             if (l.type == PIXEL) applyPixel(data3, l.p1, l.c41);
             if (l.type == PATH) applyPath(data3, l.p, l.c41, l.amount);
             if (l.type == POLYGON) applyPolygon(data3, l.pgon, l.c41, l.amount);
+            if (l.type == TEXTURE) applyTexture(data3, l.tex, l.amount);
         }
         if (hasAlpha) {
             if (l.type == BRICKS) VRBricks::apply(data4, dims, l.amount, l.c41, l.c42);
             if (l.type == PERLIN) VRPerlin::apply(data4, dims, l.amount, l.c41, l.c42);
+            if (l.type == NORMALMAP) VRNormalmap::apply(data4, dims, l.amount);
             if (l.type == LINE) applyLine(data4, Vec3d(l.c31), Vec3d(l.c32), l.c41, l.amount);
             if (l.type == FILL) applyFill(data4, l.c41);
             if (l.type == PIXEL) applyPixel(data4, l.p1, l.c41);
             if (l.type == PATH) applyPath(data4, l.p, l.c41, l.amount);
             if (l.type == POLYGON) applyPolygon(data4, l.pgon, l.c41, l.amount);
+            if (l.type == TEXTURE) applyTexture(data4, l.tex, l.amount);
         }
     }
 
