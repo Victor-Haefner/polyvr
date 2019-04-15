@@ -20,6 +20,7 @@ PyMethodDef VRPyTextureGenerator::methods[] = {
     {"setSize", PyWrapOpt( TextureGenerator, setSize, "Set the size\n   set depth to 1 for 2D textures", "0", void, Vec3i, bool ) },
     {"getSize", PyWrap( TextureGenerator, getSize, "Get the size", Vec3i ) },
     {"compose", PyWrapOpt( TextureGenerator, compose, "Bake the layers into an image, optional seed", "0", VRTexturePtr, int ) },
+    {"read", PyWrap( TextureGenerator, read, "Read an image from file", void, string ) },
     {"readSharedMemory", PyWrap( TextureGenerator, readSharedMemory, "Read an image from shared memory, segment, data", VRTexturePtr, string, string ) },
     {"addSimpleNoise", PyWrapOpt( TextureGenerator, addSimpleNoise, "Add simple noise based on front and backcolor, texture dimension, alpha channel, fg, bg, amount", "1", void, Vec3i, bool, Color4f, Color4f, float) },
     {NULL}  /* Sentinel */

@@ -2,6 +2,7 @@
 #include "core/math/pose.h"
 #include "core/math/path.h"
 #include "core/math/kinematics/VRConstraint.h"
+#include "core/math/boundingbox.h"
 #include "core/utils/isNan.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
@@ -616,7 +617,20 @@ void VRTransform::applyEulerAngles(Matrix4d& t, Vec3d e) {
     MatrixLookDir(t, p, d, u);
 }
 
-void VRTransform::rotate(float a, Vec3d v) {//rotate around axis
+void VRTransform::rotateWorld(float a, Vec3d v, Vec3d o) {
+    auto pW = getWorldMatrix();
+    auto posW = Vec3d(pW[3]);
+
+    Matrix4d R;
+    R.setRotate( Quaterniond(Vec3d(v), a) );
+    R.setTranslate(o + posW);
+
+    pW.setTranslate(-o);
+    pW.multLeft(R);
+    setWorldMatrix(pW);
+}
+
+void VRTransform::rotate(float a, Vec3d v, Vec3d o) {//rotate around axis
     if (isNan(a) || isNan(v)) return;
     v.normalize();
     Quaterniond q(Vec3d(v), a);

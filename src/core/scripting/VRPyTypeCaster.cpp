@@ -78,6 +78,13 @@ template<> PyObject* VRPyTypeCaster::cast(const Color4f& b) { return VRPyBase::t
 //template<> PyObject* VRPyTypeCaster::cast(const Line& b) {}
 template<> PyObject* VRPyTypeCaster::cast(const Boundingbox& b) { return VRPyBoundingbox::fromObject(b); }
 
+template<> PyObject* VRPyTypeCaster::cast(const Line& l) {
+    auto L = PyTuple_New(2);
+    PyTuple_SetItem(L,0,VRPyBase::toPyTuple(Vec3d(l.getPosition())));
+    PyTuple_SetItem(L,1,VRPyBase::toPyTuple(Vec3d(l.getDirection())));
+    return L;
+}
+
 PyObject* VRPyTypeCaster::pack(const vector<PyObject*>& v) {
     auto l = PyList_New(v.size());
     for (uint i=0; i<v.size(); i++) PyList_SetItem(l,i,v[i]);

@@ -183,6 +183,7 @@ Pnt3d VRDevice::getIntersectionPoint() { return getLastIntersection().point; }
 Vec3i VRDevice::getIntersectionTriangle() { return getLastIntersection().triangleVertices; }
 Vec3d VRDevice::getIntersectionNormal() { return getLastIntersection().normal; }
 Vec2d VRDevice::getIntersectionUV() { return getLastIntersection().texel; }
+Line  VRDevice::getIntersectionRay() { return getLastIntersection().ray; }
 VRObjectPtr VRDevice::getIntersected() { return getLastIntersection().object.lock(); }
 
 void VRDevice::addIntersection(VRObjectPtr obj) { addDynTree(obj); }
