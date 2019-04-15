@@ -12,6 +12,26 @@
 
 OSG_BEGIN_NAMESPACE;
 
+struct VRLeapHistory {
+    int N = 200;// history
+    int K = 150; // mean
+    int I = -1;
+    vector< pair<float,Vec3d> > history;
+
+    Vec3d add(Vec3d v, float f);
+};
+
+/* TODO
+
+            VRLeapHistory posHistory;
+            VRLeapHistory dirHistory;
+            VRLeapHistory  upHistory;
+
+    auto pos  = hand->posHistory.add( toVec3d(handData["palmPosition"]) * 0.001f, hand->confidence );
+    auto dir  = hand->posHistory.add( toVec3d(handData["direction"]), hand->confidence );
+    auto norm = hand->posHistory.add( toVec3d(handData["palmNormal"]), hand->confidence );
+
+*/
 
 class VRLeap : public VRDevice {
     private:

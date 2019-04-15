@@ -14,6 +14,31 @@ using namespace OSG;
 
 template<> string typeName(const VRLeap& o) { return "Leap"; }
 
+Vec3d VRLeapHistory::add(Vec3d v, float f) { // TODO
+    return v;
+
+    // extend history
+    I++;
+    if (I >= N) I = 0;
+    if (I >= history.size()) history.push_back( make_pair(f,v) );
+    else history[I] = make_pair(f,v);
+    cout << "  " << I << "  " << history[I].second << endl;
+
+    // get mean over K last values
+    Vec3d mean;
+    float weight = 0;
+    for (int j=0; j<K; j++) {
+        int k = I-j;
+        while (k < 0) k += history.size();
+        float w = history[k].first;
+        mean += history[k].second*w;
+        weight += w;
+    }
+    //return mean*(1.0/weight);
+    return history[0].second;
+}
+
+
 VRLeap::VRLeap() : VRDevice("leap") {
     transformation = Pose::create();
 
