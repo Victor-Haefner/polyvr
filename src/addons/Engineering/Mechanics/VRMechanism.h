@@ -33,6 +33,7 @@ struct MChange {
     float dx = 0;
     uint time = 0;
     MPart* origin = 0;
+    bool doMove = true;
 
     void flip();
     bool same(MChange c);
@@ -58,6 +59,10 @@ struct MChainGearRelation : public MRelation {
 struct MGearGearRelation : public MRelation {
     bool doFlip = true;
 
+    void translateChange(MChange& change);
+};
+
+struct MObjRelation : public MRelation {
     void translateChange(MChange& change);
 };
 

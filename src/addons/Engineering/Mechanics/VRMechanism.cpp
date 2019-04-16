@@ -179,6 +179,14 @@ MGearGearRelation* checkGearGear(MGear* p1, MGear* p2) {
     return rel;
 }
 
+MObjRelation* checkPartObj(MPart* p1, MPart* p2) { // TODO
+    if (p1->trans != p2->trans) return 0;
+    MObjRelation* rel = new MObjRelation();
+    rel->part1 = p1;
+    rel->part2 = p2;
+    return rel;
+}
+
 MRelation* checkGearThread(MPart* p1, MPart* p2) {
     //float R = g->radius() + t->radius;
     ; // TODO: check if line center distance is the gear + thread radius
@@ -281,6 +289,11 @@ void MChain::move() { if (geo == 0) return; updateGeo(); }
 void MThread::move() { trans->rotate(change.a, Vec3d(0,0,-1)); }
 
 void MGear::move() {
+    if (!change.doMove) {
+        change.dx = change.a*gear()->radius();
+        return;
+    }
+
     float a = change.dx/gear()->radius();
 
     if (trans->getPhysics()->isPhysicalized()) {
@@ -335,16 +348,19 @@ void MGear::updateNeighbors(vector<MPart*> parts) {
         if (p == 0) { // chain
             MRelation* rel = checkChainPart((MChain*)part, this);
             if (rel) addNeighbor(part, rel);
-            continue;
-        }
-        if (p->getType() == "Gear") {
-            MRelation* rel = checkGearGear(this, (MGear*)part);
-            //cout << "     MGear::updateNeighbors check Gear, rel " << rel << endl;
+        } else {
+            MRelation* rel = checkPartObj(this, part);
             if (rel) addNeighbor(part, rel);
-        }
-        if (p->getType() == "Thread") {
-            MRelation* rel = checkGearThread(this, part);
-            if (rel) addNeighbor(part, rel);
+            else {
+                if (p->getType() == "Gear") {
+                    MRelation* rel = checkGearGear(this, (MGear*)part);
+                    if (rel) addNeighbor(part, rel);
+                }
+                if (p->getType() == "Thread") {
+                    MRelation* rel = checkGearThread(this, part);
+                    if (rel) addNeighbor(part, rel);
+                }
+            }
         }
     }
 }
@@ -374,12 +390,10 @@ void MThread::updateNeighbors(vector<MPart*> parts) {
     }
 }
 
-void MRelation::translateChange(MChange& change) {;}
-void MChainGearRelation::translateChange(MChange& change) { if (dir == -1) change.flip();}
-
-void MGearGearRelation::translateChange(MChange& change) {
-    if (doFlip) change.flip();
-}
+void MRelation::translateChange(MChange& change) { change.doMove = true; }
+void MObjRelation::translateChange(MChange& change) { change.doMove = false; }
+void MChainGearRelation::translateChange(MChange& change) { change.doMove = true; if (dir == -1) change.flip(); }
+void MGearGearRelation::translateChange(MChange& change) { change.doMove = true; if (doFlip) change.flip(); }
 
 void MChain::setDirs(string dirs) { this->dirs = dirs; }
 void MChain::addDir(char dir) { dirs.push_back(dir); }
