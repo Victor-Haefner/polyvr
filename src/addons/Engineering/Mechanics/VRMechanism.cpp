@@ -533,7 +533,7 @@ void VRMechanism::add(VRTransformPtr part, VRTransformPtr trans) {
     MPart* p = MPart::make(part, trans);
     if (p == 0) return;
 
-    cache[part] = p;
+    cache[part].push_back(p);
     parts.push_back(p);
     p->apply();
     p->updateNeighbors(parts);
@@ -546,7 +546,7 @@ void VRMechanism::addGear(VRTransformPtr part, float width, float hole, float pi
     p->prim = new VRGear(width, hole, pitch, N_teeth, teeth_size, bevel);
     p->geo = part;
     p->trans = part;
-    cache[part] = p;
+    cache[part].push_back(p);
     parts.push_back(p);
     p->apply();
     p->updateNeighbors(parts);
@@ -568,12 +568,12 @@ VRTransformPtr VRMechanism::addChain(float w, vector<VRTransformPtr> geos, strin
 
         MChainGearRelation* rel = new MChainGearRelation();
         rel->part1 = c;
-        rel->part2 = cache[g2];
+        rel->part2 = cache[g2][0]; // TODO
         rel->dir = (dirs[i] == 'l') ? 1 : -1;
-        rel->prev = cache[g1];
-        rel->next = cache[g3];
+        rel->prev = cache[g1][0]; // TODO
+        rel->next = cache[g3][0]; // TODO
         rel->segID = j;
-        c->addNeighbor(cache[g2], rel);
+        c->addNeighbor(cache[g2][0], rel); // TODO
     }
     c->setDirs(dirs);
     parts.push_back(c);

@@ -166,7 +166,7 @@ class MChain : public MPart {
 
 class VRMechanism : public VRObject {
     private:
-        map<VRTransformPtr, MPart*> cache;
+        map<VRTransformPtr, vector<MPart*>> cache;
         vector<MPart*> parts;
 
         VRAnalyticGeometryPtr geo;
