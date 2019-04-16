@@ -117,6 +117,7 @@ class MPart {
 class MGear : public MPart {
     public:
         Vec3d axis = Vec3d(0,0,-1);
+        Vec3d offset = Vec3d(0,0,0);
 
         MGear();
         ~MGear();
@@ -177,7 +178,7 @@ class VRMechanism : public VRObject {
 
         void clear();
         void add(VRTransformPtr part, VRTransformPtr trans = 0);
-        void addGear(VRTransformPtr trans, float width, float hole, float pitch, int N_teeth, float teeth_size, float bevel, Vec3d axis);
+        void addGear(VRTransformPtr trans, float width, float hole, float pitch, int N_teeth, float teeth_size, float bevel, Vec3d axis, Vec3d offset);
         VRTransformPtr addChain(float w, vector<VRTransformPtr> geos, string dirs);
 
         void update();

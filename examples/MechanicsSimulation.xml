@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.245282 -0.00722078 -0.00999978" at_dir="0" base_name="Default" far="250" fov="1.0472" from="0.798618 0.169811 -1.00748" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.217842 0.230838 -0.03" at_dir="0" base_name="Default" far="250" fov="1.0472" from="0.519677 0.336667 -0.24938" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <constraint persistency="666"/>
           </Object>
@@ -358,8 +358,6 @@
 	VR.P9.translate([cgr*8,cgr*3,0.2])
 	VR.P7.rotate(3.14, [0,1,0])
 	
-	
-	
 	c = VR.mechanism.addChain(0.02, [VR.P7, VR.P8, VR.P9], 'lll')
 	VR.gears.addChild(c)
 	
@@ -369,9 +367,7 @@
 	VR.P1.setPickable(0)
 	VR.P4.setPickable(0)
 	
-	
-	# lever example
-	if 0:
+	if 0: # lever example
 		VR.PL1 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True, cgN)
 		VR.PL2 = addPrimitive(['Gear', 0.02, ar, gp, int(0.2*cgN), 0.01, 0], True, int(0.2*cgN))
 		VR.PL1.setFrom([0,0.5,0])
@@ -385,6 +381,23 @@
 		VR.PL1.getConstraint().setTranslationConstraint([0,0.5,0], 'POINT', 0)
 		VR.PL1.setColor('green')
 	
+	if 1: # compound example
+		G0 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True, cgN)
+		G1 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], False, cgN)
+		G2 = addPrimitive(['Gear', 0.02, ar, gp, 16, 0.01, 0], False, int(0.2*cgN))
+		G0.setColor('orange')
+		G1.setColor('orange')
+		G0.setTransform([cgr*2,cgr*3.5,-0.02],[0,0,-1],[0,1,0])
+		G1.setTransform([cgr*2,cgr*2,0],[0,0,-1],[0,1,0])
+		G2.setTransform([cgr*2,cgr*2,-0.02],[0,0,-1],[0,1,0])
+		
+		G1.merge(G2)
+		G2.destroy()
+		
+		VR.mechanism.addGear(G1, 0.02, 0.01, 0.02, cgN, 0.01, 0, [0,0,-1])
+		VR.mechanism.addGear(G1, 0.02, 0.01, 0.02, 16,  0.01, 0, [0,0,-1], [0,0,-0.02])
+		
+		
 	
 	VR.mechanism.updateNeighbors()
 	

@@ -146,13 +146,13 @@ void MPart::printNeighbors() {
     cout << endl;
 }
 
-MGearGearRelation* checkGearGear(MPart* p1, MPart* p2) {
+MGearGearRelation* checkGearGear(MGear* p1, MGear* p2) {
     Matrix4d r1 = p1->reference;
     Matrix4d r2 = p2->reference;
-    Vec3d P1 = Vec3d(r1[3]);
-    Vec3d P2 = Vec3d(r2[3]);
-    Vec3d a1 = ((MGear*)p1)->axis;
-    Vec3d a2 = ((MGear*)p2)->axis;
+    Vec3d P1 = Vec3d(r1[3]) + p1->offset;
+    Vec3d P2 = Vec3d(r2[3]) + p2->offset;
+    Vec3d a1 = p1->axis;
+    Vec3d a2 = p2->axis;
     r1.mult(a1,a1);
     r2.mult(a2,a2);
     Vec3d n1 = a1; n1.normalize();
@@ -338,7 +338,7 @@ void MGear::updateNeighbors(vector<MPart*> parts) {
             continue;
         }
         if (p->getType() == "Gear") {
-            MRelation* rel = checkGearGear(this, part);
+            MRelation* rel = checkGearGear(this, (MGear*)part);
             //cout << "     MGear::updateNeighbors check Gear, rel " << rel << endl;
             if (rel) addNeighbor(part, rel);
         }
@@ -539,9 +539,10 @@ void VRMechanism::add(VRTransformPtr part, VRTransformPtr trans) {
     p->updateNeighbors(parts);
 }
 
-void VRMechanism::addGear(VRTransformPtr part, float width, float hole, float pitch, int N_teeth, float teeth_size, float bevel, Vec3d axis) {
+void VRMechanism::addGear(VRTransformPtr part, float width, float hole, float pitch, int N_teeth, float teeth_size, float bevel, Vec3d axis, Vec3d offset) {
     auto p = new MGear();
     p->axis = axis;
+    p->offset = offset;
     p->prim = new VRGear(width, hole, pitch, N_teeth, teeth_size, bevel);
     p->geo = part;
     p->trans = part;
@@ -637,19 +638,23 @@ void VRMechanism::updateVisuals() {
         if (p->type != "gear") continue;
         VRGear* g = (VRGear*)p->prim;
         Vec3d a = ((MGear*)p)->axis;
+        Vec3d o = ((MGear*)p)->offset;
         p->reference.mult(a,a);
         float s = p->geo->getWorldScale()[0];
         a.normalize();
         a *= g->radius()*s;
-        geo->addVector(Vec3d(p->reference[3]), a, Color3f(0.2,1,0.3));
+        Vec3d pos = Vec3d(p->reference[3]) + o;
+        geo->addVector(pos, a, Color3f(0.2,1,0.3));
     }
 
     for (auto p1 : parts) {
         auto pos1 = Vec3d(p1->reference[3]);
+        if (p1->type == "gear") pos1 += ((MGear*)p1)->offset;
         for (auto p2 : p1->neighbors) {
             auto color = Color3f(0.4,0.6,1.0);
             if (p1->type == "chain" || p2.first->type == "chain") color = Color3f(1.0,0.6,0.4);
             auto pos2 = Vec3d(p2.first->reference[3]);
+            if (p2.first->type == "gear") pos2 += ((MGear*)p2.first)->offset;
             Vec3d d = (pos2-pos1)*0.45;
             geo->addVector(pos1, d, color);
         }

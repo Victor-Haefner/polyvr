@@ -167,6 +167,21 @@ struct VRCallbackWrapperT<P, U, R (T::*)(Args...)> : public VRCallbackWrapper<P>
         r = (obj->*callback)( a, b, c, d, e, f, g, h ); return true;
     }
 
+    template<class O, class A, class B, class C, class D, class E, class F, class G, class H, class I>
+    bool call(T* obj, const vector<P>& params, R& r, const vector<string>& defaultParams) {
+        CW_CHECK_SIZE(9);
+        CW_GET_VALUE(0,A,a,9);
+        CW_GET_VALUE(1,B,b,9);
+        CW_GET_VALUE(2,C,c,9);
+        CW_GET_VALUE(3,D,d,9);
+        CW_GET_VALUE(4,E,e,9);
+        CW_GET_VALUE(5,F,f,9);
+        CW_GET_VALUE(6,G,g,9);
+        CW_GET_VALUE(7,H,h,9);
+        CW_GET_VALUE(8,I,i,9);
+        r = (obj->*callback)( a, b, c, d, e, f, g, h, i ); return true;
+    }
+
     bool execute(void* o, const vector<P>& params, P& result) {
         if (!callback) return false;
         R res;
@@ -277,6 +292,21 @@ struct VRCallbackWrapperT<P, U, void (T::*)(Args...)> : public VRCallbackWrapper
         CW_GET_VALUE(6,G,g,8);
         CW_GET_VALUE(7,H,h,8);
         (obj->*callback)( a, b, c, d, e, f, g, h ); return true;
+    }
+
+    template<class O, class A, class B, class C, class D, class E, class F, class G, class H, class I>
+    bool call(T* obj, const vector<P>& params, const vector<string>& defaultParams) {
+        CW_CHECK_SIZE(9);
+        CW_GET_VALUE(0,A,a,9);
+        CW_GET_VALUE(1,B,b,9);
+        CW_GET_VALUE(2,C,c,9);
+        CW_GET_VALUE(3,D,d,9);
+        CW_GET_VALUE(4,E,e,9);
+        CW_GET_VALUE(5,F,f,9);
+        CW_GET_VALUE(6,G,g,9);
+        CW_GET_VALUE(7,H,h,9);
+        CW_GET_VALUE(8,I,i,9);
+        (obj->*callback)( a, b, c, d, e, f, g, h, i ); return true;
     }
 
     bool execute(void* o, const vector<P>& params, P& result) {

@@ -311,7 +311,7 @@ void VRPhysics::clear() {
             if (!j.first) continue;
             if (j.first->joints.count(this) == 0) continue;
             VRPhysicsJoint* joint = j.first->joints[this];
-            if (joint->btJoint != 0) {
+            if (joint && joint->btJoint != 0) {
                 if (world) world->removeConstraint(joint->btJoint);
                 delete joint->btJoint;
                 joint->btJoint = 0;
