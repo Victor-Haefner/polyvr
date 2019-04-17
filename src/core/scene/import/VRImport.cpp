@@ -81,6 +81,7 @@ void VRImport::osgLoad(string path, VRObjectPtr res) {
     fixEmptyNames(n,m);
     auto obj = OSGConstruct(n, res, path, path);
     if (obj) res->addChild( obj );
+    cout << " done " << endl;
 }
 
 int fileSize(string path) {
@@ -210,32 +211,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
     else name = "Unnamed";
     if (name == "") name = "NAN";
 
-    if (name[0] == 'F' && name[1] == 'T') {
-        string g = name; g.erase(0,2);
-        if (g.find('.') != string::npos) g.erase(g.find('.'));
-        if (g.find('_') != string::npos) g.erase(g.find('_'));
-
-        tmp_gr = VRGroup::create(g);
-        tmp_gr->setActive(true);
-        tmp_gr->setGroup(g);
-        tmp = tmp_gr;
-
-        if (t_name == "Transform") {
-            tmp_e = VRTransform::create(g);
-            tmp_e->setMatrix(toMatrix4d(dynamic_cast<Transform *>(n->getCore())->getMatrix()));
-            tmp = tmp_e;
-            tmp->addChild(tmp_gr);
-        }
-
-        for (uint i=0;i<n->getNChildren();i++) {
-            auto obj = OSGConstruct(n->getChild(i), parent, name, geoTransName);
-            if (obj) tmp_gr->addChild(obj);
-        }
-
-        return tmp;
-    }
-
-    else if (t_name == "Group") {//OpenSG Group
+    if (t_name == "Group") {//OpenSG Group
         tmp = VRObject::create(name);
         tmp->setCore(OSGCore::create(core), "Object");
         tmp->addAttachment("collada_name", name);
