@@ -30,21 +30,26 @@ void VRGraphLayout::applySprings(float eps, float v) {
 
         auto& n1 = graph->getNode(e.from);
         auto& n2 = graph->getNode(e.to);
-        Vec3d p1 = n1.box.center();
-        Vec3d p2 = n2.box.center();
-
-        float r = radius + n1.box.radius() + n2.box.radius();
-        Vec3d d = p2 - p1;
-        float x = d.length() - r; // displacement
-        d.normalize();
-        if (abs(x) < eps) continue;
-
-        p1 += d*x*v;
-        p2 += -d*x*v;
         auto po1 = graph->getPosition(e.from);
         auto po2 = graph->getPosition(e.to);
-        po1->setPos(p1);
-        po2->setPos(p2);
+        float x = (po2->pos()-po1->pos()).length() - radius;
+
+        if (!n1.box.empty() && !n2.box.empty()) {
+            Vec3d p1 = n1.box.center();
+            Vec3d p2 = n2.box.center();
+
+            float r = radius + n1.box.radius() + n2.box.radius();
+            Vec3d d = p2 - p1;
+            x = d.length() - r; // displacement
+            d.normalize();
+            if (abs(x) < eps) continue;
+
+            p1 += d*x*v;
+            p2 += -d*x*v;
+            po1->setPos(p1);
+            po2->setPos(p2);
+        }
+
         switch (e.connection) {
             case Graph::SIMPLE:
                 if (!(f1 & FIXED)) graph->setPosition(e.from, po1);

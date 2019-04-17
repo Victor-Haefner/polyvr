@@ -198,10 +198,11 @@ void Graph::setPosition(int i, PosePtr p) {
 
 PosePtr Graph::getPosition(int i) { auto p = Pose::create(); *p = nodes[i].p; return p; }
 
-int Graph::addNode(PosePtr p) {
+int Graph::addNode(PosePtr p, BoundingboxPtr b) {
     static size_t nID = -1; nID++;
     nodes[nID] = node();
     nodes[nID].ID = nID;
+    nodes[nID].box = b ? *b : Boundingbox();
     if (p) setPosition(nID, p);
     return nID;
 }

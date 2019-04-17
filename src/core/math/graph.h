@@ -97,7 +97,7 @@ class Graph : public VRStorage {
         vector<edge> getPrevEdges(edge& e);
         vector<edge> getNextEdges(edge& e);
 
-        virtual int addNode(PosePtr p = 0);
+        virtual int addNode(PosePtr p = 0, BoundingboxPtr b = 0);
         virtual void remNode(int i);
         virtual void update(int i, bool changed);
         virtual void clear();
