@@ -104,6 +104,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"addQuad", PyWrapOpt( Geometry, addQuad, "Add a quad to geometry - addQuad( | [i1,i2,i3,i4] )", "-4 -3 -2 -1", void, Vec4i ) },
     {"clear", PyWrap( Geometry, clear, "Clear all geometric data - clear()", void ) },
     {"size", PyWrap( Geometry, size, "Returns the size of the positions vector", int ) },
+    {"remColors", PyWrapOpt( Geometry, remColors, "Removes color data", "0", void, bool ) },
     {NULL}  /* Sentinel */
 };
 
@@ -343,7 +344,8 @@ PyObject* VRPyGeometry::setNormals(VRPyGeometry* self, PyObject *args) {
 PyObject* VRPyGeometry::setColors(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     PyObject* vec;
-    if (! PyArg_ParseTuple(args, "O", &vec)) return NULL;
+    int b = 1;
+    if (! PyArg_ParseTuple(args, "O|i", &vec, &b)) return NULL;
     VRGeometryPtr geo = (VRGeometryPtr) self->objPtr;
 
     GeoVec4fPropertyMTRecPtr cols = GeoVec4fProperty::create();
@@ -351,7 +353,7 @@ PyObject* VRPyGeometry::setColors(VRPyGeometry* self, PyObject *args) {
     if (tname == "numpy.ndarray") feed2Dnp<GeoVec4fPropertyMTRecPtr, Vec4d>( vec, cols);
     else feed2D<GeoVec4fPropertyMTRecPtr, Color4f>( vec, cols);
 
-    geo->setColors(cols, true);
+    geo->setColors(cols, b);
     Py_RETURN_TRUE;
 }
 

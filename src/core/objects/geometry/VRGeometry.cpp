@@ -12,6 +12,7 @@
 #include <OpenSG/OSGFaceIterator.h>
 #include <OpenSG/OSGTypedGeoIntegralProperty.h>
 #include <OpenSG/OSGTypedGeoVectorProperty.h>
+#include <OpenSG/OSGSceneFileHandler.h>
 
 #include <OpenSG/OSGTriangleIterator.h>
 #include "core/scene/import/VRImport.h"
@@ -300,10 +301,6 @@ void VRGeometry::makeUnique() {
     setMesh( OSGGeometry::create( dynamic_cast<Geometry*>( clone->getCore() ) ), source );
 }
 
-void VRGeometry::fixColorMapping() {
-    mesh->geo->setIndex(mesh->geo->getIndex(Geometry::PositionsIndex), Geometry::ColorsIndex);
-}
-
 // OSG 2.0 function not implemented :(
 // this is a port of the function in OSG 1.8
 void calcFaceNormals(GeometryMTRecPtr geo) {
@@ -429,12 +426,81 @@ int VRGeometry::getLastMeshChange() { return lastMeshChange; }
 
 void VRGeometry::setTypes(GeoIntegralProperty* types) { if (!meshSet) setMesh(); mesh->geo->setTypes(types); }
 void VRGeometry::setNormals(GeoVectorProperty* Norms) { if (!meshSet) setMesh(); mesh->geo->setNormals(Norms); }
+
+void VRGeometry::fixColorMapping() {
+    mesh->geo->setIndex(mesh->geo->getIndex(Geometry::PositionsIndex), Geometry::ColorsIndex);
+}
+
 void VRGeometry::setColors(GeoVectorProperty* Colors, bool fixMapping) {
     if (!meshSet) setMesh();
-    if (!Colors || Colors->size() == 0) fixColorMapping();
     mesh->geo->setColors(Colors);
+    if (Colors) {
+        auto N1 = mesh->geo->getPositions()->size();
+        auto N2 = Colors->size();
+        if (N1 != N2) mesh->geo->setColors(0);
+    }
+    if (!Colors || Colors->size() == 0) fixColorMapping();
     if (fixMapping) fixColorMapping();
 }
+
+void VRGeometry::remColors(bool copyGeometry) {
+    if (!meshSet) return;
+    if (!mesh) return;
+    if (!mesh->geo) return;
+    if (!mesh->geo->getColors()) return;
+
+
+    /*auto checkGeo = [&](Geometry* geo) {
+        cout << "checkGeo " << geo << endl;
+        cout << " t " << geo->getTypes          () << endl;
+        cout << " l " << geo->getLengths        () << endl;
+        cout << " p " << geo->getPositions      () << endl;
+        cout << " n " << geo->getNormals        () << endl;
+        cout << " c " << geo->getColors         () << endl;
+        cout << " c " << geo->getSecondaryColors() << endl;
+        cout << " t " << geo->getTexCoords      () << endl;
+        cout << " t " << geo->getTexCoords1     () << endl;
+        cout << " t " << geo->getTexCoords2     () << endl;
+        cout << " t " << geo->getTexCoords3     () << endl;
+        cout << " t " << geo->getTexCoords4     () << endl;
+        cout << " t " << geo->getTexCoords5     () << endl;
+        cout << " t " << geo->getTexCoords6     () << endl;
+        cout << " t " << geo->getTexCoords7     () << endl;
+        cout << " m " << geo->getMaterial     () << endl;
+        cout << " i " << geo->isSingleIndex     () << endl;
+        cout << " i  " << geo->getIndices     () << endl;
+        cout << " ip " << geo->getIndex     (Geometry::PositionsIndex) << endl;
+        cout << " in " << geo->getIndex     (Geometry::NormalsIndex) << endl;
+        cout << " ic " << geo->getIndex     (Geometry::ColorsIndex) << endl;
+        cout << " ic " << geo->getIndex     (Geometry::SecondaryColorsIndex) << endl;
+        cout << " it " << geo->getIndex     (Geometry::TexCoordsIndex) << endl;
+        cout << " it " << geo->getIndex     (Geometry::TexCoords1Index) << endl;
+        cout << " it " << geo->getIndex     (Geometry::TexCoords2Index) << endl;
+        cout << " it " << geo->getIndex     (Geometry::TexCoords3Index) << endl;
+        cout << " it " << geo->getIndex     (Geometry::TexCoords4Index) << endl;
+        cout << " it " << geo->getIndex     (Geometry::TexCoords5Index) << endl;
+        cout << " it " << geo->getIndex     (Geometry::TexCoords6Index) << endl;
+        cout << " it " << geo->getIndex     (Geometry::TexCoords7Index) << endl;
+        cout << " ig " << geo->getClassicGLId     () << endl;
+        cout << " ia " << geo->getAttGLId     () << endl;
+        //cout << " iu " << geo->getUniqueIndexBag     () << endl;
+        cout << " if " << geo->getFuncIdDrawElementsInstanced     () << endl;
+        cout << " if " << geo->getFuncIdDrawArraysInstanced     () << endl;
+        //cout << " ip " << geo->getPumpGroupStorage     () << endl;
+    };
+
+    //checkGeo(mesh->geo);
+    //SceneFileHandler::the()->write(mesh_node->node, "temp1.osg");*/
+
+    if (copyGeometry) {
+        VRGeoData data(ptr());
+        setMesh();
+        data.apply(ptr());
+    }
+
+    mesh->geo->setColors(0);
+}
+
 void VRGeometry::setLengths(GeoIntegralProperty* lengths) { if (!meshSet) setMesh(); mesh->geo->setLengths(lengths); }
 void VRGeometry::setTexCoords(GeoVectorProperty* Tex, int i, bool fixMapping) {
     if (!meshSet) setMesh();

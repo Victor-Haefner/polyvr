@@ -162,9 +162,9 @@ bool VRGeoData::validIndices() const {
     if (!checkMaxIndex(data->indices, data->pos->size())) { cout << "VRGeoData invalid: coord indices have too big values!\n"; return false; }
     if (!checkMaxIndex(data->indicesNormals, data->norms->size())) { cout << "VRGeoData invalid: normal indices have too big values!\n"; return false; }
     if (data->cols3->size())
-        if (!checkMaxIndex(data->indicesColors, data->cols3->size())) { cout << "VRGeoData invalid: normal indices have too big values!\n"; return false; }
+        if (!checkMaxIndex(data->indicesColors, data->cols3->size())) { cout << "VRGeoData invalid: color3 indices have too big values!\n"; return false; }
     if (data->cols4->size())
-        if (!checkMaxIndex(data->indicesColors, data->cols4->size())) { cout << "VRGeoData invalid: normal indices have too big values!\n"; return false; }
+        if (!checkMaxIndex(data->indicesColors, data->cols4->size())) { cout << "VRGeoData invalid: color4 indices have too big values!\n"; return false; }
     return true;
 }
 

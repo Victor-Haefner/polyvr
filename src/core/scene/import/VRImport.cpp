@@ -164,15 +164,17 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
     };
 
     string osbPath = getFolderName(path) + "/." + getFileName(path) + ".osb";
+    bool loadedFromCache = false;
     if (useBinaryCache && exists(osbPath)) {
         // TODO: create descriptive hash of file, load hash and compare
         osgLoad(osbPath, res);
+        loadedFromCache = true;
     } else loadSwitch();
 
     VRImport::get()->fillCache(path, res);
     if (t) t->syncToMain();
 
-    if (useBinaryCache) {
+    if (useBinaryCache && !loadedFromCache) {
         for (auto c : res->getChildren(true)) { if (auto t = dynamic_pointer_cast<VRTransform>(c)) t->enableOptimization(false); }
         string osbPath = getFolderName(path) + "/." + getFileName(path) + ".osb";
         SceneFileHandler::the()->write(res->getChild(0)->getNode()->node, osbPath.c_str());
