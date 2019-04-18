@@ -302,7 +302,7 @@ void MGear::move() {
         resetPhysics = true;
     }
 
-    cout << "MGear::move " << a << " / " << rAxis << " " << trans->getName() << endl;
+    //cout << "MGear::move " << a << " / " << rAxis << " " << trans->getName() << endl;
     //trans->rotate(a, rAxis);
     trans->rotateWorld(a, rAxis);
 
@@ -402,7 +402,7 @@ void MChainGearRelation::translateChange(MChange& change) { change.doMove = true
 
 void MGearGearRelation::translateChange(MChange& change) {
     change.doMove = true;
-    cout << "MGearGearRelation::translateChange doFlip " << doFlip << endl;
+    //cout << "MGearGearRelation::translateChange doFlip " << doFlip << endl;
     if (doFlip) change.flip();
 }
 
@@ -652,7 +652,7 @@ void VRMechanism::update() {
         //cout << " update changes " << part->geo->getName() << endl;
         if (part->getChange().isNull()) continue;
         bool block = !part->propagateMovement();
-        if (block) { // mechanism is blocked
+        if (block && 0) { // mechanism is blocked, TODO: add parameter to allow blocking or not
             cout << "  block!" << endl;
             for (auto part : changed_parts) {
                 if (part->state == MPart::ENGAGED) part->setBack();
