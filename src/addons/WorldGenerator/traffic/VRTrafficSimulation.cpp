@@ -1516,6 +1516,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         }
         return res;
     };
+    return;
     cout << "VRTrafficSimulation::info: " << fit(debugMovedCars, 3);
     for (auto each : debugCounter) cout << ","<< fit(each.second, 2);
     float debugTime = timer.stop("debugTime");
@@ -1885,6 +1886,7 @@ void VRTrafficSimulation::updateIntersectionVis(bool in){
 	if (scene->getRoot()->find(insecA)) scene->getRoot()->find(insecA)->destroy();
 	string insecTA = "insecTypeAnn";
 	if (scene->getRoot()->find(insecTA)) scene->getRoot()->find(insecTA)->destroy();
+    cout << "VRTrafficSimulation::updateIntersectionVis - " << in << endl;
 
 	if (!in) return;
 	auto insecAnn = VRAnnotationEngine::create(insecA);
@@ -1960,15 +1962,17 @@ void VRTrafficSimulation::updateVehicVision(){
     if ( scene->getRoot()->find(strInputvM) ) scene->getRoot()->find(strInputvM)->destroy();
     string vAnn = "vehicAnn";
     if (scene->getRoot()->find(vAnn)) scene->getRoot()->find(vAnn)->destroy();
-
+    cout << "VRTrafficSimulation::updateVehicVision - " << isShowingVehicleVision << endl;
     if (!isShowingVehicleVision) return;
     PLock lock(mtx2);
     VRGeoData gg0;
+    cout << "Vision: " << visionVecSaved.size();
     if (visionVecSaved.size()==0) return;
     for (auto vv : visionVecSaved){
         for (auto vVis : vv.second){
             if (!vVis.second) continue;
             int n = vVis.first;
+            cout << " " << n;
             //if (n == INFRONT) continue;
             //if (n == FRONTLEFT) continue;
             //if (n == FRONTRIGHT) continue;
@@ -1996,6 +2000,7 @@ void VRTrafficSimulation::updateVehicVision(){
             gg0.pushLine(vID1,vID2);
         }
     }
+    cout << endl;
     if (gg0.size() > 0) {
         auto graphViz = VRGeometry::create(strInputvL);
         graphViz->setPersistency(0);
