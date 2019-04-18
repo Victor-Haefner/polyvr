@@ -20,7 +20,7 @@ struct VRPropertyValue {// allows to cast type in py bindings
 struct VREntity : public VROntoID, public VRName {
     vector<VRConceptWeakPtr> concepts;
     vector<string> conceptNames;
-    map<string, vector<VRPropertyPtr> > properties;
+    map<string, map<int, VRPropertyPtr> > properties;
     VROntologyWeakPtr ontology;
     VRObjectWeakPtr sgObject;
 

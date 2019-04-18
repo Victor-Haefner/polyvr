@@ -13,11 +13,13 @@ using namespace std;
 enum GEN_TYPE {
     PERLIN,
     BRICKS,
+    NORMALMAP,
     LINE,
     FILL,
     PATH,
     POLYGON,
-    PIXEL
+    PIXEL,
+    TEXTURE
 };
 
 class VRTextureGenerator {
@@ -35,6 +37,7 @@ class VRTextureGenerator {
             Vec3i p1;
             PathPtr p;
             VRPolygonPtr pgon;
+            VRTexturePtr tex;
             int Nchannels = 3;
         };
 
@@ -45,6 +48,8 @@ class VRTextureGenerator {
         void applyPixel(Color4f* data, Vec3i p, Color4f c);
         void applyFill(Color3f* data, Color4f c); // fill does not use template, too slow!
         void applyFill(Color4f* data, Color4f c);
+        void applyTexture(Color3f* data, VRTexturePtr t, float amount);
+        void applyTexture(Color4f* data, VRTexturePtr t, float amount);
         template<typename T> void applyLine(T* data, Vec3d p1, Vec3d p2, Color4f c, float width);
         template<typename T> void applyPath(T* data, PathPtr p, Color4f c, float width);
         template<typename T> void applyPolygon(T* data, VRPolygonPtr p, Color4f c, float height);
@@ -58,6 +63,7 @@ class VRTextureGenerator {
         ~VRTextureGenerator();
         static shared_ptr<VRTextureGenerator> create();
 
+        void set(VRTexturePtr t);
         void setSize(Vec3i dim, bool doAlpha = 0);
         void setSize(int w, int h, int d = 1);
         Vec3i getSize();
@@ -74,6 +80,7 @@ class VRTextureGenerator {
         void clearStage();
         VRTexturePtr compose(int seed = 0);
 
+        void read(string path);
         VRTexturePtr readSharedMemory(string segment, string object);
 
         void addSimpleNoise(Vec3i dim, bool doAlpha, Color4f fg, Color4f bg, float amount = 1);

@@ -114,8 +114,9 @@ void Variable::addEntity(VREntityPtr e, bool assumtion) {
 }
 
 bool Variable::has(VariablePtr other, VPath& path1, VPath& path2, VROntologyPtr onto) {
-    map<VREntityPtr, vector<VREntityPtr>> matches;
+    if (!other) return false;
 
+    map<VREntityPtr, vector<VREntityPtr>> matches;
     map<VREntity*, bool> visited;
 
     function<bool(VREntityPtr, string&)> computeMatches = [&](VREntityPtr e, string& oName) -> bool {
@@ -127,7 +128,7 @@ bool Variable::has(VariablePtr other, VPath& path1, VPath& path2, VROntologyPtr 
             for (auto v : p.second) { // local properties
                 //cout << " prop: " << v->value << " " << oName << " " << bool(v->value == oName) << endl;
                 //if (v->value == other->value) matches[e].push_back(0); // TODO: direct match with other variable value
-                if (v->value == oName) return true;
+                if (v.second->value == oName) return true;
                 //auto childEntity = onto->getEntity(v->value); // TODO: this might by stupid..
                 //if (childEntity && computeMatches(childEntity, oName)) return true;
             }
@@ -296,7 +297,7 @@ vector<string> VPath::getValue(VREntityPtr e) {
         auto prop = e->getProperty(m, true);
         if (!prop) return res;
         if (!e->properties.count(prop->getName())) return res;
-        for (auto p : e->properties[prop->getName()]) res.push_back(p);
+        for (auto p : e->properties[prop->getName()]) res.push_back(p.second);
         if (!doSubset) return res;
         if (k < 0) k+=res.size();
         return vector<VRPropertyPtr>({ res[k] });
@@ -331,9 +332,7 @@ void VPath::setValue(string v, VREntityPtr e) {
         auto prop = e->getProperty(m, true);
         if (!prop) return;
         if (!e->properties.count(prop->getName())) e->set(prop->getName(), "");
-        for (auto p : e->properties[prop->getName()]) {
-            p->setValue( v );
-        }
+        for (auto p : e->properties[prop->getName()]) p.second->setValue( v );
     }
 }
 
@@ -476,6 +475,7 @@ bool Term::is(Term& t, VRSemanticContextPtr context) {
 }
 
 bool Term::has(Term& t, VRSemanticContextPtr context) {
+    if (!var) return false;
     auto v = t.var;
     /*if (t.isMathExpression()) { // TODO: sure this does not apply?
         auto res = t.computeMathExpression(context);

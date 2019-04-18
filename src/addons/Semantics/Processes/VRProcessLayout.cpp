@@ -5,6 +5,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/utils/toString.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/tools/VRText.h"
 #include "core/tools/VRPathtool.h"
 #include "core/scene/VRScene.h"
@@ -38,6 +39,9 @@ VRProcessLayoutPtr VRProcessLayout::create(string name) {
 void VRProcessLayout::init() {
     toolSID = VRPathtool::create();
     toolSID->setPersistency(0);
+    auto g = VRGeometry::create("sdf");
+    g->setPrimitive("Box 0.00001 0.00001 0.00001 1 1 1");
+    toolSID->setHandleGeometry(g);
     addChild(toolSID);
 }
 
@@ -83,10 +87,12 @@ Vec4i pushRectVerts(VRGeoData& geo, float x0, float x1, float y0, float y1, Vec3
     Pnt3d p3(x1,y1,0); m.mult(p3,p3);
     Pnt3d p4(x0,y1,0); m.mult(p4,p4);
 
-    int A = geo.pushVert(p1 - n*d, n, Vec2d(0,0));
-    int B = geo.pushVert(p2 - n*d, n, Vec2d(1,0));
-    int C = geo.pushVert(p3 - n*d, n, Vec2d(1,1));
-    int D = geo.pushVert(p4 - n*d, n, Vec2d(0,1));
+    float s = 0.005;
+
+    int A = geo.pushVert((p1 - n*d)*s, n, Vec2d(0,0));
+    int B = geo.pushVert((p2 - n*d)*s, n, Vec2d(1,0));
+    int C = geo.pushVert((p3 - n*d)*s, n, Vec2d(1,1));
+    int D = geo.pushVert((p4 - n*d)*s, n, Vec2d(0,1));
     return Vec4i(A,B,C,D);
 }
 
@@ -187,10 +193,13 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
         }
     };
 
+    auto g = VRGeometry::create("asd");
+    g->setPrimitive("Box 0.00001 0.00001 0.00001 1 1 1");
     //initialize pathtool for each sbd
     for (auto subject : p->getSubjects()) {
         if (!p->getBehaviorDiagram(subject->getID())) return;
         VRPathtoolPtr toolSBD = VRPathtool::create();
+        toolSBD->setHandleGeometry(g);
         toolSBD->setPersistency(0);
         toolSBDs[subject->getID()] = toolSBD;
         addChild(toolSBD);
@@ -201,6 +210,13 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
     constrainHandles(toolSID);
 
     rebuild();
+}
+
+void VRProcessLayout::pauseUpdate(bool b) { updatePaused = b; }
+
+VRProcessPtr VRProcessLayout::getProcess(){
+    if (!process) { cout << "WARNING in ProcessLayout, getProcess: process is null!\n"; }
+    return process;
 }
 
 void VRProcessLayout::setEngine(VRProcessEnginePtr e) { engine = e; }
@@ -350,8 +366,7 @@ void VRProcessLayout::setElementName(int ID, string name) {
 }
 
 void VRProcessLayout::update() {
-    toolSID->update();
-	for(auto toolSBD : toolSBDs) toolSBD.second->update();
+    if (updatePaused) return;
 
 	auto setElementDisplay = [&](int eID, Color3f color, bool isLit) {
         auto element = getElement(eID);
@@ -396,6 +411,11 @@ void VRProcessLayout::update() {
     }
 }
 
+void VRProcessLayout::updatePathtools(){
+    toolSID->update();
+	for(auto toolSBD : toolSBDs) toolSBD.second->update();
+}
+
 void VRProcessLayout::storeLayout(string path) {
     if (path == "") path = ".process_layout.plt";
 
@@ -418,6 +438,8 @@ void VRProcessLayout::storeLayout(string path) {
 void VRProcessLayout::loadLayout(string path) {
     if (path == "") path = ".process_layout.plt";
     auto context = VRStorageContext::create(true);
+
+    if (!exists(path)) return;
 
     xmlpp::DomParser parser;
     parser.set_validate(false);

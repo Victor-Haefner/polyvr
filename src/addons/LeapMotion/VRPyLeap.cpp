@@ -20,6 +20,17 @@ PyMethodDef VRPyLeap::methods[] = {
                                                                 "Vec3d dir: direction from pos to leap \n"
                                                                 "Vec3d up: relative up direction \n", void, Vec3d, Vec3d, Vec3d) },
     {"open",                  PyWrap(Leap, setAddress,          "Add description", void, string ) },
+    {"getDragThreshold",      PyWrap(Leap, getDragThreshold,    "Get drag threshold value of grab interaction", float ) },
+    {"getDropThreshold",      PyWrap(Leap, getDropThreshold,    "Get drop threshold value of grab interaction", float ) },
+    {"setDragThreshold",      PyWrap(Leap, setDragThreshold,    "Set drag threshold of grab interaction, float [0,1]", void, float ) },
+    {"setDropThreshold",      PyWrap(Leap, setDropThreshold,    "Set drop threshold of grab interaction, float [0,1]", void, float ) },
+    {"getPinchStrength",      PyWrap(Leap, getPinchStrength,    "Get PinchStrength value of grab interaction", float, int ) },
+    {"getGrabStrength",       PyWrap(Leap, getGrabStrength,     "Get GrabStrength value of grab interaction", float, int ) },
+    {"getConfidence",         PyWrap(Leap, getConfidence,       "Get Confidence value of grab interaction", float, int ) },
+    {"getIsPinching",         PyWrap(Leap, getIsPinching,       "Get isPinching boolean value of grab interaction", bool, int ) },
+    {"addHandsGeometry",      PyWrap(Leap, addHandsGeometry,    "Add Leap Hands Geometry", vector<VRObjectPtr> ) },
+    {"enableDnD",             PyWrap(Leap, enableDnD,           "Enable leap DnD", void, VRObjectPtr ) },
+    {"getHandPose",           PyWrap(Leap, getHandPose,         "Get pose of the leap hands", vector<PosePtr> ) },
     {NULL} /* Sentinel */
 };
 

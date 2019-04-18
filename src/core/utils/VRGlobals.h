@@ -45,6 +45,9 @@ class VRGlobals {
         static FPS UPDATE_LOOP5;
         static FPS UPDATE_LOOP6;
         static FPS UPDATE_LOOP7;
+
+        static Int NCHANGED;
+        static Int NCREATED;
 };
 
 OSG_END_NAMESPACE;

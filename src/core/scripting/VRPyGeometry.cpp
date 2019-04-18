@@ -94,6 +94,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"readSharedMemory", PyWrap( Geometry, readSharedMemory, "Read the geometry from shared memory buffers - readSharedMemory( str segment, str object )", void, string, string ) },
     {"setPatchVertices", PyWrap(Geometry, setPatchVertices, "Set patch primitives for tesselation shader", void, int) },
     {"setMeshVisibility", PyWrap(Geometry, setMeshVisibility, "Set mesh visibility", void, bool) },
+    {"convertToTrianglePatches", PyWrap(Geometry, convertToTrianglePatches, "Convert to triangles patches, necessary for displacement maps", void) },
 
     {"addVertex", (PyCFunction)VRPyGeometry::addVertex, METH_VARARGS, "Add a vertex to geometry - addVertex( pos | norm, col, tc )" },
     {"setVertex", (PyCFunction)VRPyGeometry::setVertex, METH_VARARGS, "Set a vertex - setVertex( int i, pos | norm, col, tc )" },

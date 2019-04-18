@@ -30,6 +30,7 @@ class VRTransform : public VRObject {
         Matrix4d matrix;
         OSGTransformPtr t;
         bool noBlt = false;
+        bool bltOverride = false;
         bool doOptimizations = true;
         VRPhysics* physics = 0;
         VRAnimCbPtr pathAnimPtr;
@@ -86,8 +87,8 @@ class VRTransform : public VRObject {
 
         uint getLastChange();
         bool changedNow();
-        bool changedSince(uint& frame);
-        bool changedSince2(uint frame);
+        bool changedSince(uint& frame, bool includingFrame = true);
+        bool changedSince2(uint frame, bool includingFrame = true);
 
         Vec3d getFrom();
         Vec3d getDir();
@@ -123,6 +124,7 @@ class VRTransform : public VRObject {
         Vec3d getWorldDirection(bool parentOnly = false);
         Vec3d getWorldUp(bool parentOnly = false);
         Vec3d getWorldAt(bool parentOnly = false);
+        Vec3d getWorldScale(bool parentOnly = false);
 
         void setWorldPose(PosePtr p);
         void setWorldMatrix(Matrix4d _m);
@@ -131,6 +133,7 @@ class VRTransform : public VRObject {
         void setWorldDir(Vec3d dir);
         void setWorldUp(Vec3d up);
         void setWorldAt(Vec3d at);
+        void setWorldScale(Vec3d s);
 
         void getRelativeMatrix(Matrix4d& m, VRObjectPtr o, bool parentOnly = false);
         Matrix4d getRelativeMatrix(VRObjectPtr o, bool parentOnly = false);
@@ -146,6 +149,7 @@ class VRTransform : public VRObject {
 
         int get_orientation_mode();
         void set_orientation_mode(int b);
+        void enableOptimization(bool b);
 
         void applyTransformation(PosePtr p = 0);
 
@@ -153,7 +157,8 @@ class VRTransform : public VRObject {
 
         void showCoordAxis(bool b);
 
-        void rotate(float a, Vec3d v = Vec3d(0,1,0));
+        void rotate(float a, Vec3d v = Vec3d(0,1,0), Vec3d o = Vec3d(0,0,0));
+        void rotateWorld(float a, Vec3d v = Vec3d(0,1,0), Vec3d o = Vec3d(0,0,0));
         void rotateUp(float a);
         void rotateX(float a);
         void rotateAround(float a, Vec3d v = Vec3d(0,1,0));
@@ -198,6 +203,7 @@ class VRTransform : public VRObject {
         vector<VRCollision> getCollisions();
 
         void setNoBltFlag();
+        void setBltOverrideFlag();
         virtual void updateChange();
         void setup(VRStorageContextPtr context);
 
@@ -217,6 +223,7 @@ class VRTransform : public VRObject {
         void applyConstantTorque(Vec3d f);
         void setGravity(Vec3d g);
         void setCenterOfMass(Vec3d g);
+        Vec3d getCenterOfMass();
         void setGhost(bool g);
         void setDamping(float ld, float ad);
 

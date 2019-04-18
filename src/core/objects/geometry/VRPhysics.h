@@ -149,6 +149,7 @@ class VRPhysics : public VRStorage {
         btPairCachingGhostObject* getGhostBody();
         btCollisionObject* getCollisionObject();
         btCollisionShape* getCollisionShape();
+        Vec3d getCenterOfMass();
 
         void setShape(string s, float param = -1);
         void setCustomShape(btCollisionShape* shape);
@@ -161,7 +162,7 @@ class VRPhysics : public VRStorage {
         void physicalizeTree(bool b);
         void setCollisionCallback(CallbackPtr cb);
 
-        void setDynamic(bool b);
+        void setDynamic(bool b, bool fast = false);
         bool isDynamic();
         void setActivationMode(int m);
         int getActivationMode();

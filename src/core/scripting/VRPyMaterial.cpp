@@ -63,6 +63,9 @@ PyMethodDef VRPyMaterial::methods[] = {
         void, string) },
     {"setDefaultVertexShader", (PyCFunction)VRPyMaterial::setDefaultVertexShader, METH_NOARGS, "Set a default vertex shader - setDefaultVertexShader()" },
     {"testFix", PyWrap( Material, testFix, "Debug helper", void ) },
+    {"setMappingBeacon", PyWrapOpt( Material, setMappingBeacon, "Set beacon for cube mapping", "0", void, VRObjectPtr, int ) },
+    {"setMappingPlanes", PyWrapOpt( Material, setMappingPlanes, "Set planes for cube mapping", "0", void, Vec4d, Vec4d, Vec4d, Vec4d, int ) },
+    {"setCubeTexture", PyWrapOpt( Material, setCubeTexture, "Set cube texture, (texture, side, unit)\nside can be (front, back, left, right, top, bottom)", "0", void, VRTexturePtr, string, int ) },
     {"updateDeferredShader", PyWrap( Material, updateDeferredShader, "Reload deferred system parameters and shaders", void ) },
 
     {"readVertexShader", PyWrap( Material, readVertexShader, "Read vertex shader from file", void, string ) },
@@ -76,6 +79,8 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"getGeometryShader", PyWrap( Material, getGeometryShader, "Get geometry shader", string ) },
     {"getTessControlShader", PyWrap( Material, getTessControlShader, "Get tesselation control shader", string ) },
     {"getTessEvaluationShader", PyWrap( Material, getTessEvaluationShader, "Get tesselation evaluation shader", string ) },
+
+    {"diff", PyWrap( Material, diff, "Returns a diff report with another material", string, VRMaterialPtr ) },
     {NULL}  /* Sentinel */
 };
 
@@ -151,7 +156,10 @@ PyObject* VRPyMaterial::setStencilBuffer(VRPyMaterial* self, PyObject* args) {
 
 PyObject* VRPyMaterial::setTextureType(VRPyMaterial* self, PyObject* args) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setTextureType, C obj is invalid"); return NULL; }
-	self->objPtr->setTextureType(parseString(args));
+    const char* t = 0;
+    int u = 0;
+    if (! PyArg_ParseTuple(args, "s|i", &t, &u)) return NULL;
+	self->objPtr->setTextureType(t?string(t):"", u);
 	Py_RETURN_TRUE;
 }
 

@@ -26,6 +26,7 @@ class VRAnalyticGeometry : public VRTransform {
 
         Color4f foreground;
         Color4f background;
+        Vec3d labelOffset;
 
         static string circle_vp;
         static string circle_fp;
@@ -43,15 +44,17 @@ class VRAnalyticGeometry : public VRTransform {
         //int getNewID(); //TODO
         //void remove(int ID);
 
-        void setLabelParams(float size, bool screen_size = false, bool billboard = false, Color4f fg = Color4f(0,0,0,1), Color4f bg = Color4f(0,0,0,0));
+        void setLabelParams(float size, bool screen_size = false, bool billboard = false, Color4f fg = Color4f(0,0,0,1), Color4f bg = Color4f(0,0,0,0), Vec3d offset = Vec3d(0,0,0));
 
-        void setVector(int i, Vec3d pos, Vec3d vec, Color3f color, string label="");
+        void setVector(int i, Vec3d pos, Vec3d vec, Color3f color, string label="", bool doArrow = false);
         void setAngle(int i, Vec3d pos, Vec3d v1, Vec3d v2, Color3f c1, Color3f c2, string label="");
         void setCircle(int i, Vec3d pos, Vec3d norm, float r, Color3f color, string label="");
 
-        int addVector(Vec3d pos, Vec3d vec, Color3f color, string label="");
+        int addVector(Vec3d pos, Vec3d vec, Color3f color, string label="", bool doArrow = false);
 
         void clear();
+
+        void setZOffset(float factor, float bias);
 };
 
 OSG_END_NAMESPACE;

@@ -101,6 +101,7 @@ class VRGeometry : public VRTransform {
         void fixColorMapping();
         void updateNormals(bool face = false);
         void flipNormals();
+        void convertToTrianglePatches();
 
         int getLastMeshChange();
 

@@ -508,6 +508,25 @@ BoundingboxPtr VRObject::getBoundingbox() {
     return b;
 }
 
+#include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
+
+BoundingboxPtr VRObject::getWorldBoundingbox() {
+    BoundingboxPtr b = shared_ptr<Boundingbox>( new Boundingbox );
+    for (auto obj : getChildren(true, "", true)) {
+        auto geo = dynamic_pointer_cast<VRGeometry>(obj);
+        if (!geo) continue;
+        Matrix4d M = geo->getWorldMatrix();
+        auto pos = geo->getMesh()->geo->getPositions();
+        for (int i=0; i<pos->size(); i++) {
+            Pnt3d p = Pnt3d( pos->getValue<Pnt3f>(i) );
+            M.mult(p,p);
+            b->update(Vec3d(p));
+        }
+    }
+    return b;
+}
+
 void VRObject::flattenHiarchy() {
     map<VRTransformPtr, Matrix4d> geos;
     for(auto g : getChildren(true, "Geometry") ) {

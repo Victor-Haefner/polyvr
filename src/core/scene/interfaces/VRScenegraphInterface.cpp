@@ -148,7 +148,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 	string Radius2A, Radius2B, Radius2C;
 	Vec3d XyzA, XyzB, XyzC;
 	Vec3d IjkA, IjkB, IjkC;
-	float MaximumVariation, MinimumVariation;
+	float MaximumVariation = 0, MinimumVariation = 0;
 	PosePtr newC;
 
 	for (int i = 0; i< m.size(); i++) {

@@ -77,6 +77,11 @@ VRProcessDiagramPtr VRProcess::getInteractionDiagram() {
 
 VRProcessDiagramPtr VRProcess::getBehaviorDiagram(int subject) { return behaviorDiagrams.count(subject) ? behaviorDiagrams[subject] : 0; }
 
+bool VRProcess::isFunctionState(VRProcessNodePtr state){ return (state->isSendState || state->isReceiveState); }
+bool VRProcess::isSendState(VRProcessNodePtr state){ return state->isSendState; }
+bool VRProcess::isReceiveState(VRProcessNodePtr state){ return state->isReceiveState; }
+bool VRProcess::isInitialState(VRProcessNodePtr state){ return state->isInitialState; }
+
 vector<VRProcessNodePtr> VRProcess::getSubjects() {
     vector<VRProcessNodePtr> res;
     if (!interactionDiagram) return res;
@@ -257,6 +262,7 @@ vector<VRProcessNodePtr> VRProcess::getInitialStates() {
 }
 
 VRProcessNodePtr VRProcess::getStateMessage(VRProcessNodePtr state){
+    if (!stateToMessage.count(state)) return 0;
     return stateToMessage[state];
 }
 
@@ -285,10 +291,15 @@ void VRProcess::update() {
     for ( auto subject : query(q_subjects) ) {
         string label;
         if (auto l = subject->get("hasModelComponentLabel") ) label = l->value;
+        //if subject->get("InterfaceSubject")...
+        //add Multisubject
         int nID = addSubject(label)->ID;
         if (auto ID = subject->get("hasModelComponentID") ) nodes[ID->value] = nID;
         //cout << " VRProcess::update subject: " << label << endl;
     }
+
+    //TODO: parse InterfaceSubject
+    //string q_interfaceSubjects = "q(x):InterfaceSubject(x);ModelLayer("+layer->getName()+");has("+layer->getName()+",x)";
 
     map<string, map<string, vector<VREntityPtr>>> messages;
     string q_messages = "q(x):MessageExchange(x);ModelLayer("+layer->getName()+");has("+layer->getName()+",x)";
@@ -365,15 +376,21 @@ void VRProcess::update() {
             if (auto r = transition->get("hasTargetState") ) target = r->value;
             transitions[source][target].push_back(transition);
 
-            VREntityPtr transitionConditionEntity;
             if (auto transitionCondition = transition->get("hasTransitionCondition") ) {
-                transitionConditionEntity = ontology->getEntity(transitionCondition->value);
+                auto transitionConditionEntity = ontology->getEntity(transitionCondition->value);
                 if (transitionConditionEntity->is_a("ReceiveTransitionCondition") ) transitionToCondition[transition] = RECEIVE_CONDITION;
                 else if (transitionConditionEntity->is_a("SendTransitionCondition") ) transitionToCondition[transition] = SEND_CONDITION;
 
-
-                //VREntityPtr messageEntity;
+                /* old standard pass
                 if (auto messageConnector = transition->get("refersTo")) {
+                    if (auto connector = ontology->getEntity(messageConnector->value)) {
+                        if (auto m = connector->get("hasMessageType")){
+                            if (auto messageEntity = ontology->getEntity(m->value)) transitionsToMessages[transition] = messageEntity;
+                        }
+                    }
+                }
+                */
+                if (auto messageConnector = transitionConditionEntity->get("requiresPerformedMessageExchange")){
                     if (auto connector = ontology->getEntity(messageConnector->value)) {
                         if (auto m = connector->get("hasMessageType")){
                             if (auto messageEntity = ontology->getEntity(m->value)) transitionsToMessages[transition] = messageEntity;
@@ -399,6 +416,10 @@ void VRProcess::update() {
                             auto messageEntity = transitionsToMessages[transitionEntity];
                             auto messageNode = messageEntityToNode[messageEntity];
                             transitionToMessage[transitionNode] = messageNode;
+                            auto sourceNode = getNode(nodes[source.first]);
+                            auto targetNode = getNode(nodes[target.first]);
+                            stateToMessage[sourceNode] = messageNode;
+                            stateToMessage[targetNode] = messageNode;
                         }
                     }
                 }

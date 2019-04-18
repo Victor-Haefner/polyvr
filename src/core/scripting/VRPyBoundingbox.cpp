@@ -26,5 +26,6 @@ PyMethodDef VRPyBoundingbox::methods[] = {
     {"intersectedBy", PyCastWrap(Boundingbox, intersectedBy, "Get the size", bool, Line) },
     {"clamp", PyCastWrap(Boundingbox, clamp, "Get the size", void, Vec3d) },
     {"getRandomPoint", PyCastWrap(Boundingbox, getRandomPoint, "Get the size", Vec3d) },
+    {"intersect", PyCastWrap(Boundingbox, intersect, "Check if intersects other boundingbox", bool, BoundingboxPtr) },
     {NULL}  /* Sentinel */
 };

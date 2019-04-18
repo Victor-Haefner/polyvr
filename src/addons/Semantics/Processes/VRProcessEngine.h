@@ -14,11 +14,12 @@ OSG_BEGIN_NAMESPACE;
 class VRProcessEngine {
     public:
         struct Message {
+            VRProcessNodePtr messageNode;
             string message;
             string sender;
             string receiver;
 
-            Message(string m, string s, string r) : message(m), sender(s), receiver(r) {}
+            Message(string m, string s, string r, VRProcessNodePtr node) : message(m), sender(s), receiver(r), messageNode(node) {}
 
             bool operator==(const Message& m) { return m.message == message && m.sender == sender; }
         };
@@ -40,8 +41,9 @@ class VRProcessEngine {
 
         struct Action {
             VRUpdateCbPtr cb;
+            Message message; //sends an instance of this message
 
-            Action(VRUpdateCbPtr cb) : cb(cb) {}
+            Action(VRUpdateCbPtr cb, Message m) : cb(cb), message(m) {}
         };
 
         struct Transition {
@@ -61,12 +63,12 @@ class VRProcessEngine {
 
         struct Actor {
             map<string, vector<Transition>> transitions; // maps state name (see VRStateMachine) to possible transitions
-            //map<Action, Message> sendToMessage; //maps send Action to sent message
             VRStateMachine<float> sm;
             Inventory inventory;
             string initialState = "";
             string label = "";
             VRProcessNodePtr currentState;
+            vector<VRProcessNodePtr> traversedPath; //contains transitions the engine has chosen to traverse
 
             Actor() : sm("ProcessActor") {}
 
@@ -74,6 +76,7 @@ class VRProcessEngine {
             string transitioning( float t ); // performs transitions to next states
 
             void receiveMessage(Message message);
+            void sendMessage(Message* message);
 
             void tryAdvance();
 
@@ -83,7 +86,6 @@ class VRProcessEngine {
     private:
         VRProcessPtr process;
         map<int, Actor> subjects;
-        vector<Message> processMessages;
 
         VRUpdateCbPtr updateCb;
         bool running = false;
@@ -109,7 +111,9 @@ class VRProcessEngine {
         void pause();
 
         vector<VRProcessNodePtr> getCurrentStates();
+        VRProcessNodePtr getCurrentState(int sID);
         Transition& getTransition(int sID, int tID);
+        vector<VRProcessNodePtr> getTraversedPath(int sID);
 
         void continueWith(VRProcessNodePtr n);
         void tryAdvance(int sID);

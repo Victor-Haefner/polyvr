@@ -96,6 +96,36 @@ void Boundingbox::inflate(float D) {
     bb2 += Vec3d(D, D, D);
 }
 
+bool Boundingbox::intersect(BoundingboxPtr bb) {
+    Vec3d S = size();
+    vector<Vec3d> corners = {
+        bb1,
+        bb1+Vec3d(S[0], 0   , 0   ),
+        bb1+Vec3d(S[0], S[1], 0   ),
+        bb1+Vec3d(0   , S[1], 0   ),
+        bb1+Vec3d(0   , 0   , S[2]),
+        bb1+Vec3d(S[0], 0   , S[2]),
+        bb1+Vec3d(S[0], S[1], S[2]),
+        bb1+Vec3d(0   , S[1], S[2])
+    };
+    for (auto c : corners) if (bb->isInside(c)) return true;
+
+    S = bb->size();
+    corners = {
+        bb->bb1,
+        bb->bb1+Vec3d(S[0], 0   , 0   ),
+        bb->bb1+Vec3d(S[0], S[1], 0   ),
+        bb->bb1+Vec3d(0   , S[1], 0   ),
+        bb->bb1+Vec3d(0   , 0   , S[2]),
+        bb->bb1+Vec3d(S[0], 0   , S[2]),
+        bb->bb1+Vec3d(S[0], S[1], S[2]),
+        bb->bb1+Vec3d(0   , S[1], S[2])
+    };
+    for (auto c : corners) if (isInside(c)) return true;
+
+    return false;
+}
+
 bool Boundingbox::intersectedBy(Line l) {
     Vec3d p0 = Vec3d(l.getPosition());
     Vec3d dir = Vec3d(l.getDirection());

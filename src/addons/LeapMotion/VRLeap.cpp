@@ -1,16 +1,43 @@
 #include "VRLeap.h"
-#include <core/objects/VRTransform.h>
-#include <core/utils/toString.h>
-#include <core/utils/VRStorage_template.h>
-#include <core/setup/devices/VRSignal.h>
-#include <core/objects/OSGObject.h>
-#include <core/utils/VRGlobals.h>
-#include <core/math/boundingbox.h>
-#include <core/scene/VRScene.h>
+#include "core/objects/VRTransform.h"
+#include "core/utils/toString.h"
+#include "core/utils/VRStorage_template.h"
+#include "core/setup/devices/VRSignal.h"
+#include "core/objects/OSGObject.h"
+#include "core/utils/VRGlobals.h"
+#include "core/tools/VRAnalyticGeometry.h"
+#include "core/math/boundingbox.h"
+#include "core/scene/VRScene.h"
+#include "addons/LeapMotion/VRHandGeo.h"
 
 using namespace OSG;
 
 template<> string typeName(const VRLeap& o) { return "Leap"; }
+
+Vec3d VRLeapHistory::add(Vec3d v, float f) { // TODO
+    return v;
+
+    // extend history
+    I++;
+    if (I >= N) I = 0;
+    if (I >= history.size()) history.push_back( make_pair(f,v) );
+    else history[I] = make_pair(f,v);
+    cout << "  " << I << "  " << history[I].second << endl;
+
+    // get mean over K last values
+    Vec3d mean;
+    float weight = 0;
+    for (int j=0; j<K; j++) {
+        int k = I-j;
+        while (k < 0) k += history.size();
+        float w = history[k].first;
+        mean += history[k].second*w;
+        weight += w;
+    }
+    //return mean*(1.0/weight);
+    return history[0].second;
+}
+
 
 VRLeap::VRLeap() : VRDevice("leap") {
     transformation = Pose::create();
@@ -19,15 +46,18 @@ VRLeap::VRLeap() : VRDevice("leap") {
     numPens = 0;
 
     // left hand beacons
+    //addBeacon(Vec3d(0,1,-1)); // left root
+    addBeacon(Vec3d(0,0,-1)); // left root
     for (int i = 1; i <= 5; ++i) {
-            addBeacon();
+            addBeacon(Vec3d(0,1,-1));
             getBeacon(i)->switchParent(getBeacon(0));
     }
 
     // right hand beacons
-    addBeacon(); // right root
+    //addBeacon(Vec3d(0,1,-1)); // right root
+    addBeacon(Vec3d(0,0,-1)); // right root
     for (int i = 7; i <= 11; ++i) {
-            addBeacon();
+            addBeacon(Vec3d(0,1,-1));
             getBeacon(i)->switchParent(getBeacon(6));
     }
 
@@ -46,14 +76,14 @@ VRLeap::VRLeap() : VRDevice("leap") {
 //    regStorageSetupFkt( VRUpdateCb::create("leap setup", boost::bind(&VRLeap::setup, this)) );
 
     //reconnect();
-    enableAvatar("ray");
+    enableAvatar("ray", 0);
+    enableAvatar("ray", 6);
 }
 
 VRLeapPtr VRLeap::create() {
     auto d = VRLeapPtr(new VRLeap());
     d->initIntersect(d);
     d->clearSignals();
-
     return d;
 }
 
@@ -155,11 +185,10 @@ void VRLeap::updateSceneData(vector<HandPtr> hands) {
     auto parent = getBeaconRoot()->getParent()->getParent();
 
     for (int i = 0; i < 2; ++i) {
-
         HandPtr hand = hands[i];
-
         int dnd_btn = i; // drag button 0 for left, 1 for right hand
         if (hand) {
+            enableAvatar("ray", 6*i);
 
             // update beacons
             int rootIdx = i * 6;
@@ -177,12 +206,12 @@ void VRLeap::updateSceneData(vector<HandPtr> hands) {
             // update buttons
             int dnd_state = hand->isPinching;
 
-            cout << "VRLeap::updateSceneData " << dnd_state << "   " << hand->pinchStrength << "   " << dropThreshold << endl;
+            //cout << "VRLeap::updateSceneData " << dnd_state << "   " << hand->pinchStrength << "   " << dropThreshold << endl;
             if (BStates[dnd_btn] != dnd_state || BStates.count(dnd_btn) == 0) {
                 change_button(dnd_btn, dnd_state);
             }
-
         } else { // hand is not there, make it drop if needed
+            disableAvatar("ray", 6*i);
             if (BStates[dnd_btn] != 0) {
                 change_button(dnd_btn, 0);
             }
@@ -203,7 +232,7 @@ void VRLeap::newFrame(Json::Value json) {
     }
 
     VRLeapFramePtr frame = VRLeapFrame::create();
-    vector<HandPtr> hands(2, nullptr);
+    hands = vector<HandPtr>(2, nullptr);//vector<HandPtr> hands(2, nullptr);
 
     for (uint i = 0; i < json["hands"].size(); ++i) { // Get the hands
 
@@ -344,6 +373,13 @@ void VRLeap::clearSignals() {
     // right
     newSignal( 1, 0)->add( getDrop() );
     newSignal( 1, 1)->add( addDrag( getBeacon(6) ) ); // 7
+
+    // TODO: maybe use the drag and drop signals?
+    auto dndCb = new VRFunction<VRDeviceWeakPtr>("leapDnD", boost::bind(&VRLeap::leapDnD, this, _1));
+    newSignal(0, 1)->add(dndCb);
+    newSignal(1, 1)->add(dndCb);
+    newSignal(0, 0)->add(dndCb);
+    newSignal(1, 0)->add(dndCb);
 }
 
 VRIntersection findInside(VRObjectWeakPtr wtree, Vec3d point) {
@@ -413,3 +449,105 @@ void VRLeap::startCalibration() {
 void VRLeap::stopCalibration() {
     calibrate = false;
 }
+
+void VRLeap::setDragThreshold(float t){
+    dragThreshold = t;
+}
+
+void VRLeap::setDropThreshold(float t){
+    dropThreshold = t;
+}
+
+float VRLeap::getDragThreshold(){
+    return dragThreshold;
+}
+
+float VRLeap::getDropThreshold(){
+    return dropThreshold;
+}
+
+float VRLeap::getPinchStrength(int hand) {
+    if (hands[hand] == nullptr) {
+            return 0;
+    } else return hands[hand]->pinchStrength;
+
+}
+
+float VRLeap::getGrabStrength(int hand) {
+    if (hands[hand] == nullptr) {
+            return 0;
+    } else return hands[hand]->grabStrength;
+}
+float VRLeap::getConfidence(int hand) {
+    if (hands[hand] == nullptr) {
+            return 0;
+    } else return hands[hand]->confidence;
+}
+bool VRLeap::getIsPinching(int hand) {
+    if (hands[hand] == nullptr) {
+            return 0;
+    } else return hands[hand]->isPinching;
+}
+
+vector<PosePtr> VRLeap::getHandPose(){
+    vector<PosePtr> res;
+    for (auto h : hands) {
+        if(!h) return res;
+        res.push_back(h->pose);
+    }
+    return res;
+}
+
+void VRLeap::enableDnD(VRObjectPtr root) {
+    doDnD = true;
+    dndRoot = root;
+
+}
+
+void VRLeap::leapDnD(VRDeviceWeakPtr dev) {
+    if (!doDnD) return;
+
+    /*if (!ageo) {
+        ageo = VRAnalyticGeometry::create();
+        getBeacon()->getParent()->getParent()->getParent()->getParent()->addChild(ageo);
+    }*/
+
+    for (auto key : {0,1}) {
+        int bID = key*6; // 0 and 6
+        auto s = b_state(key);
+
+        auto beacon = getBeacon(bID);
+        if (s == 1) {
+            Pnt3f p0 = Pnt3f(beacon->getWorldPosition());
+            Vec3f d = Vec3f(0,-1,0);
+            //ageo->setVector(key, Vec3d(p0), Vec3d(0,-1,0), Color3f(1,0,0));
+
+            Line ray(p0, d);
+            auto intersection = intersectRay(dndRoot, ray);
+            if ( intersection.hit ) {
+                auto i = intersection.object.lock();
+                if (i) drag(i, bID);
+            }
+        } else drop(bID);
+    }
+}
+
+VRLeapPtr VRLeap::ptr() { return static_pointer_cast<VRLeap>( shared_from_this() ); }
+
+vector<VRObjectPtr> VRLeap::addHandsGeometry(){
+    vector<VRObjectPtr> res;
+    auto handLeft = VRHandGeo::create("leftHand"); //new VRHandGeo("leftHand");
+    handLeft->setLeft();
+    handLeft->connectToLeap(ptr());
+    res.push_back(handLeft);
+    getBeaconRoot()->addChild(handLeft);
+
+    auto handRight = VRHandGeo::create("rightHand");
+    handRight->setRight();
+    handRight->connectToLeap(ptr());
+    res.push_back(handRight);
+    getBeaconRoot()->addChild(handRight);
+
+    return res;
+}
+

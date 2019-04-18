@@ -194,7 +194,8 @@ class STEPLoader {
             anApp->NewDocument("MDTV-XCAF",aDoc);
 
             STEPCAFControl_Reader reader(on_update);
-            reader.ReadFile(path.c_str());
+            auto status = reader.ReadFile(path.c_str());
+            if (!status) { cout << "failed to read file" << endl; return; }
             cout << "Number of roots in STEP file: " << reader.NbRootsForTransfer() << endl;
             reader.SetNameMode(true);
             reader.SetMatMode(true);

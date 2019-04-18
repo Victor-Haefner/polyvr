@@ -17,12 +17,12 @@ class Pose {
         Pose(const Matrix& m);
         Pose(const Matrix4d& m);
         Pose(const Pose& p);
-        Pose(Vec3d p, Vec3d d = Vec3d(0,0,-1), Vec3d u = Vec3d(0,1,0));
-        void set(Vec3d p, Vec3d d = Vec3d(0,0,-1), Vec3d u = Vec3d(0,1,0));
+        Pose(Vec3d p, Vec3d d = Vec3d(0,0,-1), Vec3d u = Vec3d(0,1,0), Vec3d s = Vec3d(1,1,1));
+        void set(Vec3d p, Vec3d d = Vec3d(0,0,-1), Vec3d u = Vec3d(0,1,0), Vec3d s = Vec3d(1,1,1));
         static PosePtr create();
         static PosePtr create(const Matrix4d& m);
         static PosePtr create(const Pose& p);
-        static PosePtr create(Vec3d p, Vec3d d = Vec3d(0,0,-1), Vec3d u = Vec3d(0,1,0));
+        static PosePtr create(Vec3d p, Vec3d d = Vec3d(0,0,-1), Vec3d u = Vec3d(0,1,0), Vec3d s = Vec3d(1,1,1));
 
         void setPos(Vec3d p);
         void setDir(Vec3d d);

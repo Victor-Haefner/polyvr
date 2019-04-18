@@ -101,7 +101,15 @@ void VRPhysics::setPhysicalized(bool b) { physicalized = b; update(); }
 void VRPhysics::setShape(string s, float param) { physicsShape = s; shape_param = param; update(); }
 bool VRPhysics::isPhysicalized() { return physicalized; }
 string VRPhysics::getShape() { return physicsShape; }
-void VRPhysics::setDynamic(bool b) { dynamic = b; update(); }
+
+void VRPhysics::setDynamic(bool b, bool fast) {
+    if (fast && body) {
+        PLock lock(VRPhysics_mtx());
+        if (!b) body->setCollisionFlags(body->getCollisionFlags() |  btCollisionObject::CF_STATIC_OBJECT);
+        else    body->setCollisionFlags(body->getCollisionFlags() & ~btCollisionObject::CF_STATIC_OBJECT);
+    } else { dynamic = b; update(); }
+}
+
 bool VRPhysics::isDynamic() { return dynamic; }
 void VRPhysics::setMass(float m) { mass = m; update(); }
 float VRPhysics::getMass() { return mass; }
@@ -274,6 +282,8 @@ vector<string> VRPhysics::getPhysicsShapes() {
     return shapes;
 }
 
+Vec3d VRPhysics::getCenterOfMass() { return CoMOffset; }
+
 void VRPhysics::setCenterOfMass(OSG::Vec3d com) {
     CoMOffset = com;
     comType = "custom";
@@ -298,9 +308,10 @@ void VRPhysics::clear() {
         }
 
         for (auto j : joints2) {
+            if (!j.first) continue;
             if (j.first->joints.count(this) == 0) continue;
             VRPhysicsJoint* joint = j.first->joints[this];
-            if (joint->btJoint != 0) {
+            if (joint && joint->btJoint != 0) {
                 if (world) world->removeConstraint(joint->btJoint);
                 delete joint->btJoint;
                 joint->btJoint = 0;
@@ -564,6 +575,19 @@ vector<OSG::VRGeometryPtr> VRPhysics::getGeometries() {
     return res;
 }
 
+OSG::GeometryMTRecPtr getMeshGeometry(VRGeometryPtr geo) {
+    if (!geo) return 0;
+    if (!geo->getMesh()) return 0;
+    return geo->getMesh()->geo;
+}
+
+OSG::GeoVectorPropertyMTRecPtr getMeshPositions(VRGeometryPtr geo) {
+    if (!geo) return 0;
+    if (!geo->getMesh()) return 0;
+    if (!geo->getMesh()->geo) return 0;
+    return geo->getMesh()->geo->getPositions();
+}
+
 btCollisionShape* VRPhysics::getBoxShape() {
     auto obj = vr_obj.lock();
     if (!obj) return 0;
@@ -573,8 +597,7 @@ btCollisionShape* VRPhysics::getBoxShape() {
     x=y=z=0;
 
     for (auto geo : getGeometries()) {
-        if (!geo) continue;
-        OSG::GeoVectorPropertyMTRecPtr pos = geo->getMesh()->geo->getPositions();
+        auto pos = getMeshPositions(geo);
         if (!pos) continue;
 		for (unsigned int i = 0; i<pos->size(); i++) {
             OSG::Vec3d p;
@@ -613,8 +636,8 @@ btCollisionShape* VRPhysics::getSphereShape() {
     center *= 1.0/N;*/
 
     for (auto geo : getGeometries()) {
-        if (!geo) continue;
-        OSG::GeoVectorPropertyMTRecPtr pos = geo->getMesh()->geo->getPositions();
+        auto pos = getMeshPositions(geo);
+        if (!pos) continue;
 		for (unsigned int i = 0; i<pos->size(); i++) {
             pos->getValue(p,i);
             //r2 = max( r2, (p-center).squareLength() );
@@ -637,10 +660,8 @@ btCollisionShape* VRPhysics::getConvexShape(OSG::Vec3d& mc) {
 
     if (comType == "geometric") mc = OSG::Vec3d(); // center of mass
     for (auto geo : getGeometries()) {
-        if (!geo) continue;
-        if (geo->getMesh()->geo == 0) continue;
-        OSG::GeoVectorPropertyMTRecPtr pos = geo->getMesh()->geo->getPositions();
-        if (pos == 0) continue;
+        auto pos = getMeshPositions(geo);
+        if (!pos) continue;
 
         if (geo != obj) {
             m = geo->getWorldMatrix();
@@ -673,9 +694,9 @@ btCollisionShape* VRPhysics::getConcaveShape() {
 
     int N = 0;
     for (auto geo : getGeometries()) {
-        if (!geo) continue;
-        if (geo->getMesh()->geo == 0) continue;
-        OSG::TriangleIterator ti(geo->getMesh()->geo);
+        auto g = getMeshGeometry(geo);
+        if (!g) continue;
+        OSG::TriangleIterator ti(g);
 
         btVector3 vertexPos[3];
 
@@ -708,10 +729,8 @@ btCollisionShape* VRPhysics::getCompoundShape() {
     M.invert();
 
     for (auto geo : getGeometries()) {
-        if (!geo) continue;
-        if (geo->getMesh()->geo == 0) continue;
-        OSG::GeoVectorPropertyMTRecPtr pos = geo->getMesh()->geo->getPositions();
-        if (pos == 0) continue;
+        auto pos = getMeshPositions(geo);
+        if (!pos) continue;
 
         if (geo != obj) {
             m = geo->getWorldMatrix();

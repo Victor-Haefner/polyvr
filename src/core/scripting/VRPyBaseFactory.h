@@ -110,9 +110,10 @@ PyObject* proxyWrap<allowPacking, sT, R (T::*)(Args...), mf, O>::exec(sT* self, 
 #define FOR_EACH6(X, ...) #X ", " FOR_EACH5( __VA_ARGS__ )
 #define FOR_EACH7(X, ...) #X ", " FOR_EACH6( __VA_ARGS__ )
 #define FOR_EACH8(X, ...) #X ", " FOR_EACH7( __VA_ARGS__ )
+#define FOR_EACH9(X, ...) #X ", " FOR_EACH8( __VA_ARGS__ )
 
-#define FOR_EACH_NARG(...) FOR_EACH_ARG_N(__VA_ARGS__, 8, 7, 6, 5, 4, 3, 2, 1, 0)
-#define FOR_EACH_ARG_N(_1, _2, _3, _4, _5, _6, _7, _8, N, ...) N
+#define FOR_EACH_NARG(...) FOR_EACH_ARG_N(__VA_ARGS__, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
+#define FOR_EACH_ARG_N(_1, _2, _3, _4, _5, _6, _7, _8, _9, N, ...) N
 
 #define CONCATENATE(arg1, arg2) arg1##arg2
 #define FOR_EACH_(N, ...) CONCATENATE(FOR_EACH, N)(__VA_ARGS__)

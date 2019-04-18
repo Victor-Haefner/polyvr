@@ -6,7 +6,6 @@ using namespace OSG;
 
 template<> string typeName(const VRLeapFrame& o) { return "LeapFrame"; }
 
-
 VRLeapFramePtr VRLeapFrame::create() {
     auto d = VRLeapFramePtr(new VRLeapFrame());
     return d;

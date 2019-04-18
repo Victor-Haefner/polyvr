@@ -21,5 +21,3 @@ PyMethodDef VRPyAnimation::methods[] = {
     {"getLoop", PyWrap(Animation, getLoop, "Return loop settings flag", bool) },
     {NULL}  /* Sentinel */
 };
-
-

@@ -81,6 +81,7 @@ void VRImport::osgLoad(string path, VRObjectPtr res) {
     fixEmptyNames(n,m);
     auto obj = OSGConstruct(n, res, path, path);
     if (obj) res->addChild( obj );
+    cout << " done " << endl;
 }
 
 int fileSize(string path) {
@@ -90,7 +91,7 @@ int fileSize(string path) {
     return L;
 }
 
-VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, string preset, bool thread, string options) {
+VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, string preset, bool thread, string options, bool useBinaryCache) {
     cout << "VRImport::load " << path << " " << preset << endl;
     if (ihr_flag) if (fileSize(path) > 3e7) return 0;
     setlocale(LC_ALL, "C");
@@ -108,25 +109,26 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
 
     VRTransformPtr res = VRTransform::create("proxy");
     if (!thread) {
-        LoadJob job(path, preset, res, progress, options);
+        LoadJob job(path, preset, res, progress, options, useBinaryCache);
         job.load(VRThreadWeakPtr());
         return cache[path].retrieve(parent);
     } else {
         fillCache(path, res);
         auto r = cache[path].retrieve(parent);
-        auto job = new LoadJob(path, preset, r, progress, options); // TODO: fix memory leak!
+        auto job = new LoadJob(path, preset, r, progress, options, useBinaryCache); // TODO: fix memory leak!
         job->loadCb = VRFunction< VRThreadWeakPtr >::create( "geo load", boost::bind(&LoadJob::load, job, _1) );
         VRScene::getCurrent()->initThread(job->loadCb, "geo load thread", false, 1);
         return r;
     }
 }
 
-VRImport::LoadJob::LoadJob(string p, string pr, VRTransformPtr r, VRProgressPtr pg, string opt) {
+VRImport::LoadJob::LoadJob(string p, string pr, VRTransformPtr r, VRProgressPtr pg, string opt, bool ubc) {
     path = p;
     res = r;
     progress = pg;
     preset = pr;
     options = opt;
+    useBinaryCache = ubc;
 }
 
 void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
@@ -161,9 +163,22 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         if (preset == "COLLADA") loadCollada(path, res);
     };
 
-    loadSwitch();
+    string osbPath = getFolderName(path) + "/." + getFileName(path) + ".osb";
+    if (useBinaryCache && exists(osbPath)) {
+        // TODO: create descriptive hash of file, load hash and compare
+        osgLoad(osbPath, res);
+    } else loadSwitch();
+
     VRImport::get()->fillCache(path, res);
     if (t) t->syncToMain();
+
+    if (useBinaryCache) {
+        for (auto c : res->getChildren(true)) { if (auto t = dynamic_pointer_cast<VRTransform>(c)) t->enableOptimization(false); }
+        string osbPath = getFolderName(path) + "/." + getFileName(path) + ".osb";
+        SceneFileHandler::the()->write(res->getChild(0)->getNode()->node, osbPath.c_str());
+        for (auto c : res->getChildren(true)) { if (auto t = dynamic_pointer_cast<VRTransform>(c)) t->enableOptimization(true); }
+        // TODO: create descriptive hash of file, store hash
+    }
 }
 
 string repSpaces(string s) {
@@ -196,32 +211,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
     else name = "Unnamed";
     if (name == "") name = "NAN";
 
-    if (name[0] == 'F' && name[1] == 'T') {
-        string g = name; g.erase(0,2);
-        if (g.find('.') != string::npos) g.erase(g.find('.'));
-        if (g.find('_') != string::npos) g.erase(g.find('_'));
-
-        tmp_gr = VRGroup::create(g);
-        tmp_gr->setActive(true);
-        tmp_gr->setGroup(g);
-        tmp = tmp_gr;
-
-        if (t_name == "Transform") {
-            tmp_e = VRTransform::create(g);
-            tmp_e->setMatrix(toMatrix4d(dynamic_cast<Transform *>(n->getCore())->getMatrix()));
-            tmp = tmp_e;
-            tmp->addChild(tmp_gr);
-        }
-
-        for (uint i=0;i<n->getNChildren();i++) {
-            auto obj = OSGConstruct(n->getChild(i), parent, name, geoTransName);
-            if (obj) tmp_gr->addChild(obj);
-        }
-
-        return tmp;
-    }
-
-    else if (t_name == "Group") {//OpenSG Group
+    if (t_name == "Group") {//OpenSG Group
         tmp = VRObject::create(name);
         tmp->setCore(OSGCore::create(core), "Object");
         tmp->addAttachment("collada_name", name);

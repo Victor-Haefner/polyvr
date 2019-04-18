@@ -39,6 +39,7 @@ class Boundingbox {
 
         bool isInside(Vec3d p) const;
         bool intersectedBy(Line l);
+        bool intersect(BoundingboxPtr bb);
 
         void clamp(Vec3d& p) const;
 

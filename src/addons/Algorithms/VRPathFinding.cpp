@@ -153,7 +153,7 @@ vector<VRPathFinding::Position> VRPathFinding::computePath(Position start, Posit
             fCost[neighbor] = gCost[neighbor] + getDistance(neighbor, goal); //heuristic_cost_estimate(node, end)
         }
     }
-    cout << "VRPathFinding::computePath Error: no route found from " << start.toString() << " to " << goal.toString() << endl;
+    //cout << "VRPathFinding::computePath Error: no route found from " << start.toString() << " to " << goal.toString() << endl;
     return vector<Position>();
 }
 

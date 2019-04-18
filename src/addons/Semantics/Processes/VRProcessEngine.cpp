@@ -32,9 +32,7 @@ void VRProcessEngine::Inventory::remMessage(Message m) {
 // ----------- process engine prerequisite --------------
 
 bool VRProcessEngine::Prerequisite::valid(Inventory* inventory) {
-    //cout << " VRProcessEngine::Prerequisite::valid check for '" << message.message << "' inv: " << inventory << endl;
     bool b = inventory->hasMessage(message);
-    if (b) inventory->remMessage(message);
     return b;
 }
 
@@ -63,19 +61,31 @@ string VRProcessEngine::Actor::transitioning( float t ) {
     string stateName = state->getName();
 
     for (auto& transition : transitions[stateName]) { // check if any actions are ready to start
-        //cout << "VRProcessEngine::Actor::transitioning check preqs, actor: " << this << endl;
         if (transition.valid(&inventory)) {
             currentState = transition.nextState;
-            for (auto& action : transition.actions) (*action.cb)();
+            for (auto& action : transition.actions){
+                (*action.cb)();
+                sendMessage(&action.message);
+            }
+            for ( auto p : transition.prerequisites){
+                inventory.remMessage(p.message);
+            }
+            traversedPath.push_back(transition.node);
             return transition.nextState->getLabel();
         }
     }
     return "";
 }
 
+//TODO: Actor should receive all messages that were sent to him without knowing the message
 void VRProcessEngine::Actor::receiveMessage(Message message) {
     cout << "VRProcessEngine::Actor::receiveMessage '" << message.message << "' to '" << message.receiver << "' inv: " << &inventory << ", actor: " << this << endl;
     inventory.messages.push_back( message );
+}
+
+void VRProcessEngine::Actor::sendMessage(Message* m) {
+    cout << "VRProcessEngine::Actor::sendMessage '" << m->message << "' to '" << m->sender << "' inv: " << &inventory << ", actor: " << this << endl;
+    Message* message = new Message(m->message, m->sender, m->receiver, m->messageNode);
 }
 
 void VRProcessEngine::Actor::tryAdvance() {
@@ -129,6 +139,7 @@ void VRProcessEngine::reset() {
 
     for (auto& actor : subjects) {
         actor.second.inventory.messages.clear();
+        actor.second.traversedPath.clear();
     }
 }
 
@@ -144,6 +155,14 @@ vector<VRProcessNodePtr> VRProcessEngine::getCurrentStates() {
         if (state) res.push_back(state);
     }
     return res;
+}
+
+VRProcessNodePtr VRProcessEngine::getCurrentState(int sID) {
+    return subjects[sID].currentState;
+}
+
+vector<VRProcessNodePtr> VRProcessEngine::getTraversedPath(int sID){
+    return subjects[sID].traversedPath;
 }
 
 void VRProcessEngine::continueWith(VRProcessNodePtr n) {
@@ -186,7 +205,7 @@ void VRProcessEngine::initialize() {
                         auto sender = process->getMessageSender(message->getID())[0];
                         auto receiver = process->getMessageReceiver(message->getID())[0];
                         if (message && sender && receiver) {
-                            Message m(message->getLabel(), sender->getLabel(), receiver->getLabel());
+                            Message m(message->getLabel(), sender->getLabel(), receiver->getLabel(), state);
                             transition.prerequisites.push_back( Prerequisite(m) );
                         }
                     }
@@ -196,10 +215,10 @@ void VRProcessEngine::initialize() {
                         auto sender = process->getMessageSender(message->getID())[0];
                         auto receiver = process->getMessageReceiver(message->getID())[0];
                         if (sender && receiver) {
-                            Message m(message->getLabel(), sender->getLabel(), receiver->getLabel());
+                            Message m(message->getLabel(), sender->getLabel(), receiver->getLabel(), state);
                             Actor& rActor = subjects[receiver->getID()];
-                            auto cb = VRUpdateCb::create("action", boost::bind(&VRProcessEngine::Actor::receiveMessage, &rActor, m));
-                            transition.actions.push_back( Action(cb) );
+                            auto cb = VRUpdateCb::create("action", boost::bind(&VRProcessEngine::Actor::receiveMessage, &rActor, m)); //better to trigger receiveMessage during receive transition of the receiver actor
+                            transition.actions.push_back( Action(cb, m) );
                         }
                     }
                 }
@@ -207,8 +226,6 @@ void VRProcessEngine::initialize() {
                 actor.second.transitions[state->getLabel()].push_back(transition);
             }
         }
-
-        cout << "initialized, message count: " << processMessages.size() << endl;
     }
 }
 

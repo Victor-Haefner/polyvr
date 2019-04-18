@@ -11,6 +11,8 @@ class VRScrewthread;
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class MPart;
+
 class VRProfile {
     private:
         vector<Vec2d> pnts;
@@ -30,13 +32,14 @@ struct MChange {
     float a = 0; // rotation angle
     float dx = 0;
     uint time = 0;
+    MPart* origin = 0;
+    bool doMove = true;
 
     void flip();
     bool same(MChange c);
     bool isNull();
 };
 
-class MPart;
 struct MRelation {
     MPart* part1 = 0;
     MPart* part2 = 0;
@@ -54,6 +57,12 @@ struct MChainGearRelation : public MRelation {
 };
 
 struct MGearGearRelation : public MRelation {
+    bool doFlip = true;
+
+    void translateChange(MChange& change);
+};
+
+struct MObjRelation : public MRelation {
     void translateChange(MChange& change);
 };
 
@@ -73,9 +82,11 @@ class MPart {
             DISENGAGING
         };
 
+        bool resetPhysics = false;
+        string type = "part";
         map<MPart*, MRelation*> neighbors;
         vector<MPart*> group;
-        VRGeometryPtr geo = 0;
+        VRTransformPtr geo = 0;
         VRTransformPtr trans = 0;
         VRPrimitive* prim = 0;
         MChange change;
@@ -105,11 +116,14 @@ class MPart {
         virtual void move();
         virtual void updateNeighbors(vector<MPart*> parts) = 0;
 
-        static MPart* make(VRGeometryPtr g, VRTransformPtr t);
+        static MPart* make(VRTransformPtr g, VRTransformPtr t);
 };
 
 class MGear : public MPart {
     public:
+        Vec3d axis = Vec3d(0,0,-1);
+        Vec3d offset = Vec3d(0,0,0);
+
         MGear();
         ~MGear();
 
@@ -140,35 +154,41 @@ class MChain : public MPart {
 
         string dirs;
         CSTATE cstate = WHOLE;
-        vector<Vec3d> VRPolygon;
+        vector<Vec3d> polygon;
 
         MChain();
         ~MChain();
 
-        VRGeometryPtr init();
+        VRTransformPtr init();
         void setDirs(string dirs);
         void addDir(char dir);
         void updateGeo();
-        vector<pointPolySegment> toVRPolygon(Vec3d p);
+        vector<pointPolySegment> toPolygon(Vec3d p);
 
         void move();
         void updateNeighbors(vector<MPart*> parts);
 };
 
-class VRMechanism {
+class VRMechanism : public VRObject {
     private:
-        map<VRGeometryPtr, MPart*> cache;
+        map<VRTransformPtr, vector<MPart*>> cache;
         vector<MPart*> parts;
+
+        VRAnalyticGeometryPtr geo;
 
     public:
         VRMechanism();
         ~VRMechanism();
         static shared_ptr<VRMechanism> create();
 
-        void add(VRGeometryPtr part, VRTransformPtr trans = 0);
         void clear();
+        void add(VRTransformPtr part, VRTransformPtr trans = 0);
+        void addGear(VRTransformPtr trans, float width, float hole, float pitch, int N_teeth, float teeth_size, float bevel, Vec3d axis, Vec3d offset);
+        VRTransformPtr addChain(float w, vector<VRTransformPtr> geos, string dirs);
+
         void update();
-        VRGeometryPtr addChain(float w, vector<VRGeometryPtr> geos, string dirs);
+        void updateNeighbors();
+        void updateVisuals();
 };
 
 typedef shared_ptr<VRMechanism> VRMechanismPtr;

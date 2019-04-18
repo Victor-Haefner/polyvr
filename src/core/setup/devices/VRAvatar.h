@@ -1,7 +1,7 @@
 #ifndef VRAVATAR_H_INCLUDED
 #define VRAVATAR_H_INCLUDED
 
-#include <OpenSG/OSGConfig.h>
+#include <OpenSG/OSGVector.h>
 #include <string>
 #include <map>
 #include <vector>
@@ -24,7 +24,7 @@ class VRAvatar {
         VRTransformPtr deviceRoot = 0;
         vector<Beacon> beacons;
 
-        VRObjectPtr initRay(int beaconID);
+        VRObjectPtr initRay(int beaconID, Vec3d dir = Vec3d(0,0,-1));
         VRObjectPtr initCone();
         VRObjectPtr initBroadRay();
 
@@ -41,7 +41,7 @@ class VRAvatar {
         void enableAvatar(string avatar, int i = 0);
         void disableAvatar(string avatar, int i = 0);
 
-        int addBeacon();
+        int addBeacon(Vec3d castDir = Vec3d(0,0,-1));
         VRTransformPtr getBeaconRoot();
         VRTransformPtr getBeacon(int i = 0);
         VRTransformPtr editBeacon(int i = 0);

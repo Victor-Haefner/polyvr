@@ -269,17 +269,6 @@
       <column type="gboolean"/>
     </columns>
   </object>
-  <object class="GtkListStore" id="VRPN_list">
-    <columns>
-      <!-- column-name active -->
-      <column type="gboolean"/>
-      <!-- column-name ID -->
-      <column type="guint"/>
-      <!-- column-name Tracker -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkAction" id="action1"/>
   <object class="GtkListStore" id="TrackingProtocols">
     <columns>
       <!-- column-name protocol -->
@@ -294,6 +283,17 @@
       </row>
     </data>
   </object>
+  <object class="GtkListStore" id="VRPN_list">
+    <columns>
+      <!-- column-name active -->
+      <column type="gboolean"/>
+      <!-- column-name ID -->
+      <column type="guint"/>
+      <!-- column-name Tracker -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkAction" id="action1"/>
   <object class="GtkAboutDialog" id="aboutdialog1">
     <property name="can_focus">False</property>
     <property name="border_width">5</property>
@@ -532,16 +532,6 @@ Germany</property>
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkImage" id="image16">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-add</property>
-  </object>
-  <object class="GtkImage" id="image17">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-remove</property>
-  </object>
   <object class="GtkListStore" id="cam_proj">
     <columns>
       <!-- column-name proj -->
@@ -709,7 +699,7 @@ cave allocated</property>
                   <object class="GtkTable" id="table47">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="n_rows">2</property>
+                    <property name="n_rows">4</property>
                     <property name="n_columns">2</property>
                     <child>
                       <object class="GtkLabel" id="label163">
@@ -764,6 +754,66 @@ cave allocated</property>
                         <property name="right_attach">2</property>
                         <property name="top_attach">1</property>
                         <property name="bottom_attach">2</property>
+                        <property name="x_options">GTK_FILL</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="Nchanges">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="xalign">0</property>
+                        <property name="label" translatable="yes">0</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="right_attach">2</property>
+                        <property name="top_attach">2</property>
+                        <property name="bottom_attach">3</property>
+                        <property name="x_options">GTK_FILL</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="Ncreated">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="xalign">0</property>
+                        <property name="label" translatable="yes">0</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="right_attach">2</property>
+                        <property name="top_attach">3</property>
+                        <property name="bottom_attach">4</property>
+                        <property name="x_options">GTK_FILL</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="label169">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="xalign">0</property>
+                        <property name="xpad">2</property>
+                        <property name="ypad">2</property>
+                        <property name="label" translatable="yes">SG changes:</property>
+                      </object>
+                      <packing>
+                        <property name="top_attach">2</property>
+                        <property name="bottom_attach">3</property>
+                        <property name="x_options">GTK_FILL</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="label170">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="xalign">0</property>
+                        <property name="xpad">2</property>
+                        <property name="ypad">2</property>
+                        <property name="label" translatable="yes">SG created:</property>
+                      </object>
+                      <packing>
+                        <property name="top_attach">3</property>
+                        <property name="bottom_attach">4</property>
                         <property name="x_options">GTK_FILL</property>
                       </packing>
                     </child>
@@ -1106,6 +1156,19 @@ cave allocated</property>
       <action-widget response="0">button29</action-widget>
     </action-widgets>
   </object>
+  <object class="GtkListStore" id="geodata">
+    <columns>
+      <!-- column-name Datatype -->
+      <column type="gchararray"/>
+      <!-- column-name N -->
+      <column type="gint"/>
+    </columns>
+  </object>
+  <object class="GtkImage" id="image17">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-remove</property>
+  </object>
   <object class="GtkImage" id="image18">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -1115,14 +1178,6 @@ cave allocated</property>
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-remove</property>
-  </object>
-  <object class="GtkListStore" id="geodata">
-    <columns>
-      <!-- column-name Datatype -->
-      <column type="gchararray"/>
-      <!-- column-name N -->
-      <column type="gint"/>
-    </columns>
   </object>
   <object class="GtkImage" id="image1">
     <property name="visible">True</property>
@@ -1155,6 +1210,36 @@ cave allocated</property>
     <property name="stock">gtk-add</property>
   </object>
   <object class="GtkImage" id="image15">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-remove</property>
+  </object>
+  <object class="GtkImage" id="image16">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-add</property>
+  </object>
+  <object class="GtkImage" id="image2">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-add</property>
+  </object>
+  <object class="GtkImage" id="image20">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-add</property>
+  </object>
+  <object class="GtkImage" id="image21">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-remove</property>
+  </object>
+  <object class="GtkImage" id="image22">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-add</property>
+  </object>
+  <object class="GtkImage" id="image23">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-remove</property>
@@ -1458,31 +1543,6 @@ cave allocated</property>
       <!-- column-name nav_presets -->
       <column type="gchararray"/>
     </columns>
-  </object>
-  <object class="GtkImage" id="image2">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-add</property>
-  </object>
-  <object class="GtkImage" id="image20">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-add</property>
-  </object>
-  <object class="GtkImage" id="image21">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-remove</property>
-  </object>
-  <object class="GtkImage" id="image22">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-add</property>
-  </object>
-  <object class="GtkImage" id="image23">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-remove</property>
   </object>
   <object class="GtkTreeStore" id="onto_list">
     <columns>
@@ -2526,6 +2586,12 @@ cave allocated</property>
                                 <child>
                                   <placeholder/>
                                 </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                               </object>
                             </child>
                           </object>
@@ -2557,6 +2623,12 @@ cave allocated</property>
                                 <property name="can_focus">False</property>
                                 <property name="n_columns">2</property>
                                 <property name="homogeneous">True</property>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                                 <child>
                                   <placeholder/>
                                 </child>

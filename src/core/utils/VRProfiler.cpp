@@ -74,6 +74,8 @@ void VRProfiler::swap() {
     Frame f;
     f.t0 = getTime();
     f.fID = VRGlobals::CURRENT_FRAME;
+    f.Nchanged = VRGlobals::NCHANGED;
+    f.Ncreated = VRGlobals::NCREATED;
     frames.push_front(f);
     if (history <= (int)frames.size()) frames.pop_back();
     current = &frames.front();

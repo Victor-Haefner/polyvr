@@ -85,6 +85,11 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         VRProcessDiagramPtr getBehaviorDiagram(int subject);
         VRProcessNodePtr getNode(int i, VRProcessDiagramPtr diag = 0);
 
+        bool isFunctionState(VRProcessNodePtr); // = neither send/receive state
+        bool isSendState(VRProcessNodePtr);
+        bool isReceiveState(VRProcessNodePtr);
+        bool isInitialState(VRProcessNodePtr);
+
         vector<VRProcessNodePtr> getSubjectMessages(int subjectID);
         vector<VRProcessNodePtr> getOutgoingMessages(int subjectID);
         vector<VRProcessNodePtr> getIncomingMessages(int subjectID);

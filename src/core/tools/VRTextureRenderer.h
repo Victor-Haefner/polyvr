@@ -49,6 +49,7 @@ class VRTextureRenderer : public VRObject {
         VRCameraPtr getCamera();
 
         VRTexturePtr renderOnce(CHANNEL c = RENDER);
+        vector<VRTexturePtr> createCubeMaps(VRTransformPtr focusObject);
         VRMaterialPtr createTextureLod(VRObjectPtr scene, PosePtr cam, int res, float aspect, float fov, Color3f bg);
 };
 

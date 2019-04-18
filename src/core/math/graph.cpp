@@ -78,6 +78,13 @@ vector< Graph::edge > Graph::getOutEdges(int i) {
     return res;
 }
 
+vector<Graph::edge> Graph::getConnectedEdges(node& n) {
+    vector<edge> edges;
+    for (int eID : n.inEdges) edges.push_back(getEdge(eID));
+    for (int eID : n.outEdges) edges.push_back(getEdge(eID));
+    return edges;
+}
+
 vector<Graph::edge> Graph::getPrevEdges(edge& e) {
     vector<edge> edges;
     auto& n = getNode(e.from);
@@ -191,10 +198,11 @@ void Graph::setPosition(int i, PosePtr p) {
 
 PosePtr Graph::getPosition(int i) { auto p = Pose::create(); *p = nodes[i].p; return p; }
 
-int Graph::addNode(PosePtr p) {
+int Graph::addNode(PosePtr p, BoundingboxPtr b) {
     static size_t nID = -1; nID++;
     nodes[nID] = node();
     nodes[nID].ID = nID;
+    nodes[nID].box = b ? *b : Boundingbox();
     if (p) setPosition(nID, p);
     return nID;
 }

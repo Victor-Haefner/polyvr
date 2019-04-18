@@ -29,6 +29,7 @@
 #include <OpenSG/OSGTextureObjChunk.h>
 #include <OpenSG/OSGTextureEnvChunk.h>
 #include <OpenSG/OSGTexGenChunk.h>
+#include <OpenSG/OSGTextureTransformChunk.h>
 #include <OpenSG/OSGLineChunk.h>
 #include <OpenSG/OSGPointChunk.h>
 #include <OpenSG/OSGPolygonChunk.h>
@@ -39,6 +40,7 @@
 #include <OpenSG/OSGStencilChunk.h>
 #include <OpenSG/OSGDepthChunk.h>
 #include <OpenSG/OSGMaterialChunk.h>
+#include <OpenSG/OSGCubeTextureObjChunk.h>
 
 #include <libxml++/nodes/element.h>
 #include <GL/glext.h>
@@ -54,9 +56,11 @@ struct VRMatData {
     MaterialChunkMTRecPtr colChunk;
     BlendChunkMTRecPtr blendChunk;
     DepthChunkMTRecPtr depthChunk;
-    map<int, TextureObjChunkMTRecPtr> texChunks;
-    map<int, TextureEnvChunkMTRecPtr> envChunks;
-    TexGenChunkMTRecPtr genChunk;
+    map<int, TextureObjChunkMTRecPtr>       texChunks;
+    map<int, TextureEnvChunkMTRecPtr>       envChunks;
+    map<int, CubeTextureObjChunkMTRecPtr>   ctxChunks;
+    map<int, TexGenChunkMTRecPtr>           genChunks;
+    map<int, TextureTransformChunkMTRecPtr> tnsChunks;
     LineChunkMTRecPtr lineChunk;
     PointChunkMTRecPtr pointChunk;
     PolygonChunkMTRecPtr polygonChunk;
@@ -100,9 +104,13 @@ struct VRMatData {
         mat->addChunk(colChunk);
         twoSidedChunk = TwoSidedLightingChunk::create();
         mat->addChunk(twoSidedChunk);
+        texChunks.clear();
+        envChunks.clear();
+        genChunks.clear();
+        ctxChunks.clear();
+        tnsChunks.clear();
         blendChunk = 0;
         depthChunk = 0;
-        genChunk = 0;
         lineChunk = 0;
         pointChunk = 0;
         polygonChunk = 0;
@@ -129,7 +137,9 @@ struct VRMatData {
         if (depthChunk) { m->depthChunk = dynamic_pointer_cast<DepthChunk>(depthChunk->shallowCopy()); m->mat->addChunk(m->depthChunk); }
         for (auto t : texChunks) { TextureObjChunkMTRecPtr mt = dynamic_pointer_cast<TextureObjChunk>(t.second->shallowCopy()); m->texChunks[t.first] = mt; m->mat->addChunk(mt, t.first); }
         for (auto t : envChunks) { TextureEnvChunkMTRecPtr mt = dynamic_pointer_cast<TextureEnvChunk>(t.second->shallowCopy()); m->envChunks[t.first] = mt; m->mat->addChunk(mt, t.first); }
-        if (genChunk) { m->genChunk = dynamic_pointer_cast<TexGenChunk>(genChunk->shallowCopy()); m->mat->addChunk(m->genChunk); }
+        for (auto t : genChunks) { TexGenChunkMTRecPtr     mt = dynamic_pointer_cast<TexGenChunk>    (t.second->shallowCopy()); m->genChunks[t.first] = mt; m->mat->addChunk(mt, t.first); }
+        for (auto t : ctxChunks) { CubeTextureObjChunkMTRecPtr     mt = dynamic_pointer_cast<CubeTextureObjChunk>    (t.second->shallowCopy()); m->ctxChunks[t.first] = mt; m->mat->addChunk(mt, t.first); }
+        for (auto t : tnsChunks) { TextureTransformChunkMTRecPtr   mt = dynamic_pointer_cast<TextureTransformChunk>  (t.second->shallowCopy()); m->tnsChunks[t.first] = mt; m->mat->addChunk(mt, t.first); }
         if (lineChunk) { m->lineChunk = dynamic_pointer_cast<LineChunk>(lineChunk->shallowCopy()); m->mat->addChunk(m->lineChunk); }
         if (pointChunk) { m->pointChunk = dynamic_pointer_cast<PointChunk>(pointChunk->shallowCopy()); m->mat->addChunk(m->pointChunk); }
         if (polygonChunk) { m->polygonChunk = dynamic_pointer_cast<PolygonChunk>(polygonChunk->shallowCopy()); m->mat->addChunk(m->polygonChunk); }
@@ -637,19 +647,63 @@ void VRMaterial::setTextureAndUnit(VRTexturePtr img, int unit) {
     texChunk->setImage(img->getImage());
 }
 
-void VRMaterial::setTextureType(string type) {
+void VRMaterial::setMappingBeacon(VRObjectPtr obj, int unit) {
+    auto md = mats[activePass];
+    if (!md->genChunks.count(unit)) { md->genChunks[unit] = TexGenChunk::create(); md->mat->addChunk(md->genChunks[unit], unit); }
+    md->genChunks[unit]->setSBeacon(obj->getNode()->node);
+    md->genChunks[unit]->setTBeacon(obj->getNode()->node);
+    md->genChunks[unit]->setRBeacon(obj->getNode()->node);
+    md->genChunks[unit]->setQBeacon(obj->getNode()->node);
+}
+
+void VRMaterial::setMappingPlanes(Vec4d p1, Vec4d p2, Vec4d p3, Vec4d p4, int unit) {
+    auto md = mats[activePass];
+    if (!md->genChunks.count(unit)) { md->genChunks[unit] = TexGenChunk::create(); md->mat->addChunk(md->genChunks[unit], unit); }
+    md->genChunks[unit]->setGenFuncSPlane(Vec4f(p1)); // GL_REFLECTION_MAP
+    md->genChunks[unit]->setGenFuncTPlane(Vec4f(p2));
+    md->genChunks[unit]->setGenFuncRPlane(Vec4f(p3));
+    md->genChunks[unit]->setGenFuncQPlane(Vec4f(p4));
+}
+
+void VRMaterial::setCubeTexture(VRTexturePtr img, string side, int unit) {
+    auto md = mats[activePass];
+    // TODO: check for textureobj chunk and remove it
+
+    if (!md->envChunks.count(unit)) { md->envChunks[unit] = TextureEnvChunk::create(); md->mat->addChunk(md->envChunks[unit], unit); }
+    md->envChunks[unit]->setEnvMode(GL_MODULATE);
+
+    if (!md->ctxChunks.count(unit)) { md->ctxChunks[unit] = CubeTextureObjChunk::create(); md->mat->addChunk(md->ctxChunks[unit], unit); }
+    if (side == "front")  md->ctxChunks[unit]->setImage    (img->getImage());
+    if (side == "back")   md->ctxChunks[unit]->setPosZImage(img->getImage());
+    if (side == "left")   md->ctxChunks[unit]->setNegXImage(img->getImage());
+    if (side == "right")  md->ctxChunks[unit]->setPosXImage(img->getImage());
+    if (side == "top")    md->ctxChunks[unit]->setPosYImage(img->getImage());
+    if (side == "bottom") md->ctxChunks[unit]->setNegYImage(img->getImage());
+}
+
+void VRMaterial::setTextureType(string type, int unit) {
     auto md = mats[activePass];
     if (type == "Normal") {
-        if (md->genChunk == 0) return;
-        md->mat->subChunk(md->genChunk);
-        md->genChunk = 0;
+        if (!md->genChunks.count(unit)) return;
+        md->mat->subChunk(md->genChunks[unit]);
+        md->genChunks.erase(unit);
         return;
     }
 
     if (type == "SphereEnv") {
-        if (md->genChunk == 0) { md->genChunk = TexGenChunk::create(); md->mat->addChunk(md->genChunk); }
-        md->genChunk->setGenFuncS(GL_SPHERE_MAP);
-        md->genChunk->setGenFuncT(GL_SPHERE_MAP);
+        if (!md->genChunks.count(unit)) { md->genChunks[unit] = TexGenChunk::create(); md->mat->addChunk(md->genChunks[unit], unit); }
+        md->genChunks[unit]->setGenFuncS(GL_SPHERE_MAP);
+        md->genChunks[unit]->setGenFuncT(GL_SPHERE_MAP);
+    }
+
+    if (type == "CubeEnv") {
+        if (!md->genChunks.count(unit)) { md->genChunks[unit] = TexGenChunk::create(); md->mat->addChunk(md->genChunks[unit], unit); }
+        md->genChunks[unit]->setGenFuncS(GL_REFLECTION_MAP); // GL_REFLECTION_MAP
+        md->genChunks[unit]->setGenFuncT(GL_REFLECTION_MAP);
+        md->genChunks[unit]->setGenFuncR(GL_REFLECTION_MAP);
+
+        if (!md->tnsChunks.count(unit)) { md->tnsChunks[unit] = TextureTransformChunk::create(); md->mat->addChunk(md->tnsChunks[unit], unit); }
+        md->tnsChunks[unit]->setUseCameraBeacon(true);
     }
 }
 
@@ -1080,3 +1134,57 @@ Color3f VRMaterial::toColor(string c) {
     return colorMap.count(c) ? colorMap[c] : Color3f();
 }
 
+string VRMaterial::diffPass(VRMaterialPtr m, int pass) {
+    string res;
+    auto& p1 = mats[pass];
+    auto& p2 = m->mats[pass];
+
+    auto either = [](bool a, bool b) { return (a && !b || !a && b); };
+
+    if (either(p1->mat, p2->mat)) res += "\ndiff on mat|"+toString(bool(p1->mat))+"|"+toString(bool(p2->mat));
+    if (either(p1->colChunk, p2->colChunk)) res += "\ndiff on colChunk|"+toString(bool(p1->colChunk))+"|"+toString(bool(p2->colChunk));
+    if (either(p1->blendChunk, p2->blendChunk)) res += "\ndiff on blendChunk|"+toString(bool(p1->blendChunk))+"|"+toString(bool(p2->blendChunk));
+    if (either(p1->depthChunk, p2->depthChunk)) res += "\ndiff on depthChunk|"+toString(bool(p1->depthChunk))+"|"+toString(bool(p2->depthChunk));
+    if (either(p1->lineChunk, p2->lineChunk)) res += "\ndiff on lineChunk|"+toString(bool(p1->lineChunk))+"|"+toString(bool(p2->lineChunk));
+    if (either(p1->pointChunk, p2->pointChunk)) res += "\ndiff on pointChunk|"+toString(bool(p1->pointChunk))+"|"+toString(bool(p2->pointChunk));
+    if (either(p1->polygonChunk, p2->polygonChunk)) res += "\ndiff on polygonChunk|"+toString(bool(p1->polygonChunk))+"|"+toString(bool(p2->polygonChunk));
+    if (either(p1->twoSidedChunk, p2->twoSidedChunk)) res += "\ndiff on twoSidedChunk|"+toString(bool(p1->twoSidedChunk))+"|"+toString(bool(p2->twoSidedChunk));
+    if (either(p1->shaderChunk, p2->shaderChunk)) res += "\ndiff on shaderChunk|"+toString(bool(p1->shaderChunk))+"|"+toString(bool(p2->shaderChunk));
+    if (either(p1->clipChunk, p2->clipChunk)) res += "\ndiff on clipChunk|"+toString(bool(p1->clipChunk))+"|"+toString(bool(p2->clipChunk));
+    if (either(p1->stencilChunk, p2->stencilChunk)) res += "\ndiff on stencilChunk|"+toString(bool(p1->stencilChunk))+"|"+toString(bool(p2->stencilChunk));
+
+    if (either(p1->vProgram, p2->vProgram)) res += "\ndiff on vProgram|"+toString(bool(p1->vProgram))+"|"+toString(bool(p2->vProgram));
+    if (either(p1->fProgram, p2->fProgram)) res += "\ndiff on fProgram|"+toString(bool(p1->fProgram))+"|"+toString(bool(p2->fProgram));
+    if (either(p1->fdProgram, p2->fdProgram)) res += "\ndiff on fdProgram|"+toString(bool(p1->fdProgram))+"|"+toString(bool(p2->fdProgram));
+    if (either(p1->gProgram, p2->gProgram)) res += "\ndiff on gProgram|"+toString(bool(p1->gProgram))+"|"+toString(bool(p2->gProgram));
+    if (either(p1->tcProgram, p2->tcProgram)) res += "\ndiff on tcProgram|"+toString(bool(p1->tcProgram))+"|"+toString(bool(p2->tcProgram));
+    if (either(p1->teProgram, p2->teProgram)) res += "\ndiff on teProgram|"+toString(bool(p1->teProgram))+"|"+toString(bool(p2->teProgram));
+
+    if (either(p1->video, p2->video)) res += "\ndiff on video|"+toString(bool(p1->video))+"|"+toString(bool(p2->video));
+    if (either(p1->deferred, p2->deferred)) res += "\ndiff on deferred|"+toString(bool(p1->deferred))+"|"+toString(bool(p2->deferred));
+    if (either(p1->tmpDeferredShdr, p2->tmpDeferredShdr)) res += "\ndiff on tmpDeferredShdr|"+toString(bool(p1->tmpDeferredShdr))+"|"+toString(bool(p2->tmpDeferredShdr));
+
+    if (p1->vertexScript != p2->vertexScript) res += "\ndiff on vertexScript|"+p1->vertexScript+"|"+p2->vertexScript;
+    if (p1->fragmentScript != p2->fragmentScript) res += "\ndiff on fragmentScript|"+p1->fragmentScript+"|"+p2->fragmentScript;
+    if (p1->fragmentDScript != p2->fragmentDScript) res += "\ndiff on fragmentDScript|"+p1->fragmentDScript+"|"+p2->fragmentDScript;
+    if (p1->geometryScript != p2->geometryScript) res += "\ndiff on geometryScript|"+p1->geometryScript+"|"+p2->geometryScript;
+    if (p1->tessControlScript != p2->tessControlScript) res += "\ndiff on tessControlScript|"+p1->tessControlScript+"|"+p2->tessControlScript;
+    if (p1->tessEvalScript != p2->tessEvalScript) res += "\ndiff on tessEvalScript|"+p1->tessEvalScript+"|"+p2->tessEvalScript;
+
+    if (p1->texChunks.size() != p2->texChunks.size()) res += "\ndiff on N texChunks|"+toString(p1->texChunks.size())+"|"+toString(p2->texChunks.size());
+    if (p1->envChunks.size() != p2->envChunks.size()) res += "\ndiff on N envChunks|"+toString(p1->envChunks.size())+"|"+toString(p2->envChunks.size());
+    if (p1->ctxChunks.size() != p2->ctxChunks.size()) res += "\ndiff on N ctxChunks|"+toString(p1->ctxChunks.size())+"|"+toString(p2->ctxChunks.size());
+    if (p1->genChunks.size() != p2->genChunks.size()) res += "\ndiff on N genChunks|"+toString(p1->genChunks.size())+"|"+toString(p2->genChunks.size());
+    if (p1->tnsChunks.size() != p2->tnsChunks.size()) res += "\ndiff on N tnsChunks|"+toString(p1->tnsChunks.size())+"|"+toString(p2->tnsChunks.size());
+
+    return res;
+}
+
+string VRMaterial::diff(VRMaterialPtr m) {
+    string res;
+    if (mats.size() != m->mats.size()) res += "\nN passes|"+toString(mats.size())+"|"+toString(m->mats.size());
+    else {
+        for (int i=0; i<mats.size(); i++) res += diffPass(m, i);
+    }
+    return res;
+}

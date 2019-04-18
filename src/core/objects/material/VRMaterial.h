@@ -87,10 +87,13 @@ class VRMaterial : public VRObject {
         void setTexture(VRTexturePtr img, bool alpha = true, int unit = 0);
         void setTexture(char* data, int format, Vec3i dims, bool isfloat);
         void setTextureAndUnit(VRTexturePtr img, int unit = 0);
+        void setCubeTexture(VRTexturePtr img, string side, int unit = 0);
         void setTextureParams(int min, int mag, int envMode = GL_MODULATE, int wrapS = GL_REPEAT, int wrapT = GL_REPEAT, int unit = 0);
         void setMagMinFilter(int mag, int min, int unit = 0);
         void setTextureWrapping(int wrapS, int wrapT, int unit = 0);
-        void setTextureType(string type);
+        void setTextureType(string type, int unit = 0);
+        void setMappingBeacon(VRObjectPtr obj, int unit = 0);
+        void setMappingPlanes(Vec4d p1, Vec4d p2, Vec4d p3, Vec4d p4, int unit = 0);
         void setQRCode(string s, Vec3d fg, Vec3d bg, int offset);
         void setVideo(string vid_path);
         VRVideo* getVideo();
@@ -173,6 +176,9 @@ class VRMaterial : public VRObject {
         ChunkMaterialMTRecPtr getMaterial(int i);
         VRTexturePtr getTexture(int unit = 0);
         TextureObjChunkMTRecPtr getTextureObjChunk(int unit = 0);
+
+        string diffPass(VRMaterialPtr, int pass);
+        string diff(VRMaterialPtr);
 };
 
 OSG_END_NAMESPACE;

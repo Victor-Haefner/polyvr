@@ -20,6 +20,8 @@ template<> string typeName(const VRHaptic& t) { return "Haptic"; }
 
 
 VRHaptic::VRHaptic() : VRDevice("haptic") {
+    addBeacon();
+
     v = new virtuose();
 
     updatePtr = VRUpdateCb::create( "Haptic object update", boost::bind(&VRHaptic::applyTransformation, this, editBeacon()) );

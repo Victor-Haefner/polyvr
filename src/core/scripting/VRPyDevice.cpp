@@ -42,9 +42,10 @@ PyMethodDef VRPyDevice::methods[] = {
                                                                     "  beacon: [optional] default=device.getBeacon()\n"
                                                                     "          Specifies which beacon of the device will be intersected, in case of multiple beacons (Multitouch).\n\n"
                                                                     "  dir:    [optional] default=[0,0,-1]\n"
-                                                                    "          Currently not implemented! Creates a beacon from device position in given direction for intersect.", "0|0|0|0 0 -1", bool, VRObjectPtr, bool, VRTransformPtr, Vec3d ) },
+                                                                    "          Direction of intersection ray in beacon coordinates", "0|0|0|0 0 -1", bool, VRObjectPtr, bool, VRTransformPtr, Vec3d ) },
     {"getIntersected", PyWrap(Device, getIntersected, "Get device intersected object.", VRObjectPtr ) },
     {"getIntersection", PyWrap(Device, getIntersectionPoint, "Get device intersection point", Pnt3d ) },
+    {"getIntersectionRay", PyWrap(Device, getIntersectionRay, "Get intersection ray", Line ) },
     {"getIntersectionNormal", PyWrap(Device, getIntersectionNormal, "Get normal at intersection point", Vec3d ) },
     {"getIntersectionUV", PyWrap(Device, getIntersectionUV, "Get uv at intersection point", Vec2d ) },
     {"getIntersectionTriangle", PyWrap(Device, getIntersectionTriangle, "Get triangle at intersection point", Vec3i ) },
@@ -52,8 +53,8 @@ PyMethodDef VRPyDevice::methods[] = {
     {"remIntersection", PyWrap( Device, remIntersection, "Remove device intersection node.", void, VRObjectPtr ) },
     {"getDragged", PyWrap( Device, getDragged, "Get dragged object.", VRTransformPtr ) },
     {"getDragGhost", PyWrap( Device, getDragGhost, "Get drag ghost.", VRTransformPtr ) },
-    {"drag", PyWrap( Device, drag, "Start to drag an object", void, VRObjectPtr ) },
-    {"drop", PyWrap( Device, drop, "Drop any object", void ) },
+    {"drag", PyWrapOpt( Device, drag, "Drag an object", "0", void, VRObjectPtr, int ) },
+    {"drop", PyWrapOpt( Device, drop, "Drop the held object", "0", void, int ) },
     {"setSpeed", PyWrap( Device, setSpeed, "Set the navigation speed of the device", void, Vec2d ) },
     {"getSpeed", PyWrap( Device, getSpeed, "Get the navigation speed of the device", Vec2d ) },
     {"addSignal", PyWrap( Device, newSignal, "Add a new signal, key, state", VRSignalPtr, int, int ) },
