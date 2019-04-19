@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.217842 0.230838 -0.03" at_dir="0" base_name="Default" far="250" fov="1.0472" from="1.14494 0.555894 -0.703831" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.311215 -0.159443 -0.065475" at_dir="0" base_name="Default" far="250" fov="1.0472" from="0.924131 0.396974 -0.543974" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <constraint persistency="666"/>
           </Object>
@@ -397,6 +397,10 @@
 		VR.mechanism.addGear(G1, 0.02, 0.01, 0.02, cgN, 0.01, 0, [0,0,-1])
 		VR.mechanism.addGear(G1, 0.02, 0.01, 0.02, 16,  0.01, 0, [0,0,-1], [0,0,-0.02])
 		
+		
+		
+	P22 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True, cgN)
+	P22.translate([cgr*2,0,0.2])
 		
 	
 	VR.mechanism.updateNeighbors()

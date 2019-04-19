@@ -41,6 +41,7 @@ struct MChange {
 };
 
 struct MRelation {
+    string type;
     MPart* part1 = 0;
     MPart* part2 = 0;
 
@@ -53,16 +54,20 @@ struct MChainGearRelation : public MRelation {
     MPart* prev = 0;
     int segID = 0;
 
+    MChainGearRelation();
     void translateChange(MChange& change);
 };
 
 struct MGearGearRelation : public MRelation {
     bool doFlip = true;
 
+    MGearGearRelation();
     void translateChange(MChange& change);
 };
 
 struct MObjRelation : public MRelation {
+
+    MObjRelation();
     void translateChange(MChange& change);
 };
 
@@ -112,6 +117,7 @@ class MPart {
         void printChange();
         void printNeighbors();
 
+        virtual void setup();
         virtual void computeChange();
         virtual void move();
         virtual void updateNeighbors(vector<MPart*> parts) = 0;
@@ -123,11 +129,14 @@ class MGear : public MPart {
     public:
         Vec3d axis = Vec3d(0,0,-1);
         Vec3d offset = Vec3d(0,0,0);
+        Vec3d rAxis;
 
         MGear();
         ~MGear();
 
         VRGear* gear();
+
+        void setup();
 
         void computeChange();
         void move();
