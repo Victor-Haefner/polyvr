@@ -93,6 +93,7 @@ PyMethodDef VRPyRoadNetwork::methods[] = {
     {"computeMarkings", PyWrap( RoadNetwork, computeMarkings, "Compute the markings", void ) },
     {"compute", PyWrap( RoadNetwork, compute, "Compute everything", void ) },
     {"getGraph", PyWrap( RoadNetwork, getGraph, "Get a road ID", GraphPtr ) },
+    {"toggleGraph", PyWrap( RoadNetwork, toggleGraph, "enables/disables visualisation of: roadnetwork graph", void ) },
     {"getGraphEdgeDirections", PyWrap( RoadNetwork, getGraphEdgeDirections, "Get a road ID", vector<Vec3d>, int ) },
     {"getRoadID", PyWrap( RoadNetwork, getRoadID, "Get a road ID", int ) },
     {"getMaterial", PyWrap( RoadNetwork, getMaterial, "Get road material", VRAsphaltPtr ) },

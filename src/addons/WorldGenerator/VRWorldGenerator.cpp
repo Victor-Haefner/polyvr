@@ -263,6 +263,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
     };
 
     auto addTunnel = [&](OSMWayPtr& way, VRRoadPtr road) {
+        if (way->hasTag("layer")) return;
         roads->addTunnel(road);
     };
 
@@ -317,6 +318,11 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         int NlanesRight = way->hasTag("lanes:forward") ? toInt( way->tags["lanes:forward"] ) : 0;
         int NlanesLeft = way->hasTag("lanes:backward") ? toInt( way->tags["lanes:backward"] ) : 0;
         if (NlanesRight == 0 && NlanesLeft == 0) NlanesRight = way->hasTag("lanes") ? toInt( way->tags["lanes"] ) : 1;
+        if (!way->hasTag("lanes:forward") && !way->hasTag("lanes:backward") && !way->hasTag("lanes") && !way->hasTag("oneway")){
+            if (tag == "residential") { NlanesRight = 1; NlanesLeft = 1; }
+            if (tag == "service") { NlanesRight = 1; NlanesLeft = 1; }
+            if (tag == "living_street") { NlanesRight = 1; NlanesLeft = 1; }
+        }
         //cout << endl << way->hasTag("lanes") << " hasForw " << way->hasTag("lanes:forward") << " hasBack " << way->hasTag("lanes:backward") << " Nright " << NlanesRight << " Nleft " << NlanesLeft << endl;
 
         bool hasPLaneR = bool(way->hasTag("parking:lane:right"));
@@ -513,6 +519,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                 for (auto way : node->ways) {
                     if (!RoadEntities.count(way)) continue;
                     auto road = RoadEntities[node->ways[0]];
+                    if (!road) continue;
                     auto roadEnt = road->getEntity();
                     for (auto laneEnt : roadEnt->getAllEntities("lanes")) {
                         auto laneDir = laneEnt->getValue("direction", 1);
@@ -557,11 +564,23 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             }
 
             if (tag.first == "highway") {
+                added = true;
                 if (tag.second == "street_lamp") {
                     auto lamp = assets->copy("Streetlamp", Pose::create(pos, -dir), false);
-                    lodTree->addObject(lamp, lamp->getWorldPosition(), 3, false);
-                    lamp->setDir(-dir);
-                    collisionShape->addQuad(0.1, 2, Pose(pos, -dir), lamp->getID());
+                    if (lamp) {
+                        lodTree->addObject(lamp, lamp->getWorldPosition(), 3, false);
+                        lamp->setDir(-dir);
+                        collisionShape->addQuad(0.1, 2, Pose(pos, -dir), lamp->getID());
+                    }
+                }
+                if (tag.second == "traffic_signals") {
+                   //cout << " VRWorldGenerator::processOSMMap tr_signal " << endl;
+                    for (auto way : node->ways) {
+                        if (!RoadEntities.count(way)) continue;
+                        auto road = RoadEntities[node->ways[0]];
+                        road->addTrafficLight(pos);
+                        //cout << "    VRWorldGenerator::processOSMMap " <<toString(road->getID()) << endl;
+                    }
                 }
             }
         }
