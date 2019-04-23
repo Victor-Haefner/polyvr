@@ -46,7 +46,7 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"getNPasses", PyWrap( Material, getNPasses, "Get number of passes", int ) },
     {"setFrontBackModes", (PyCFunction)VRPyMaterial::setFrontBackModes, METH_VARARGS, "Set the draw mode of front and back faces - setFrontBackModes(front, back)\n\tmode can be: GL_NONE, GL_FILL, GL_BACK" },
     {"setZOffset", PyWrap(Material, setZOffset, "Set Z buffer offset and bias, set to 1/1 to push behind or -1/-1 to pull to front", void, float, float) },
-    {"setSortKey", (PyCFunction)VRPyMaterial::setSortKey, METH_VARARGS, "Set the sort key" },
+    {"setSortKey", (PyCFunction)VRPyMaterial::setSortKey, METH_VARARGS, "Set the sort key, higher key means rendered later, for example 0 is rendered first, 1 second.." },
     {"setTexture", (PyCFunction)VRPyMaterial::setTexture, METH_VARARGS, "Set the texture - setTexture(str path, int pos = 0)"
                                                                         "\n\t setTexture( Texture, int pos = 0)"
                                                                         "\n\t setTexture([[r,g,b]], [xN, yN, zN], bool isFloat)"

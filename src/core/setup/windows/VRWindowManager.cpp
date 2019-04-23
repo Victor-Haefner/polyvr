@@ -222,6 +222,9 @@ void VRWindowManager::updateWindows() {
         return true;
     };
 
+    //TODO:
+    // [0423/180710:WARNING:message_in_transit_queue.cc(18)] Destroying nonempty message queue
+
     auto tryRender = [&]() {
         if (barrier->getNumWaiting() != VRWindow::active_window_count) return true;
         if (!wait()) return false;
@@ -240,7 +243,7 @@ void VRWindowManager::updateWindows() {
         //if (clist->getNumCreated() > 0) cout << "VRWindowManager::updateWindows " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
         clist->clear();
-        if (doRenderSync) if (!wait()) return false;
+        if (doRenderSync) if (!wait(60)) return false;
         doRenderSync = false;
         return true;
         //sleep(1);

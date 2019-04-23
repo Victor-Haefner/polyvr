@@ -720,6 +720,7 @@ void VRMaterial::setZOffset(float factor, float bias) {
     md->polygonChunk->setOffsetFill(true);
 }
 
+// higher key means rendered later, for example 0 is rendered first, 1 second
 void VRMaterial::setSortKey(int key) {
     auto md = mats[activePass];
     //if (md->polygonChunk == 0) { md->polygonChunk = polygonChunk::create(); md->mat->addChunk(md->polygonChunk); }
