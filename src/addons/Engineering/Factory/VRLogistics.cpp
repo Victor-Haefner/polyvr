@@ -49,7 +49,7 @@ void FObject::setMetaData(string s) {
         metaData->setUp(Vec3d(0,1,0));
     }
 
-    metaData->setLabel(s);
+    metaData->setText(s);
     float k = 0.2;
     metaData->setSize(0.5*k*s.size(), k);
 }

@@ -559,7 +559,7 @@ struct VRMLNode : VRMLUtils {
         if (!s) { cout << "WARNING in VRML handleAsciiText, cast failed" << endl; return; }
         string t;
         for (auto l : text) t += l + "\n";
-        s->setLabel(t);
+        s->setText(t);
         applyPose();
         applyMaterial();
     }

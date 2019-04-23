@@ -11,9 +11,6 @@ class CEF;
 
 class VRSprite : public VRGeometry {
     protected:
-        string font = "SANS 20";
-        Color4f fontColor;
-        Color4f backColor;
         float width;
         float height;
         string label;
@@ -30,12 +27,9 @@ class VRSprite : public VRGeometry {
         VRSpritePtr ptr();
 
         void setSize(float w, float h);
-        void setLabel(string l, float res = 1);
+        VRTexturePtr setText(string l, float res = 1, Color4f c1 = Color4f(0,0,0,1), Color4f c2 = Color4f(0,0,0,0), string font = "SANS 20");
         void setTexture(string path);
         void webOpen(string path, int res, float ratio);
-        void setFont(string f);
-        void setFontColor(Color4f c);
-        void setBackColor(Color4f c);
 
         Vec2d getSize();
         string getLabel();
