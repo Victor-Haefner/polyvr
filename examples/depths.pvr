@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="4294967295">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="4294967295">
-        <Object accept_root="1" aspect="1" at="0 0 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.133824 0.175246 4.43891" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+        <Object accept_root="1" aspect="1" at="0 0 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-0.141531 1.84659 4.04013" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="4294967295">
             <constraint persistency="666"/>
           </Object>
@@ -13,7 +13,7 @@
     </Object>
   </Objects>
   <Cameras activeCam="Default" persistency="666"/>
-  <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="1" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
     <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
@@ -27,7 +27,7 @@
 		tex = s.setText(txt, 1, [0,0,0,1], c, 'arial narrow italic 20')
 		a = tex.getAspectRatio()
 		s.setSize(W*a, W)
-		VR.scene.addChild(s,1,0)
+		VR.scene.addChild(s,1,-1)
 		s.setFrom(pos)
 		if not doT: s.getMaterial().clearTransparency()
 		m = s.getMaterial()
@@ -35,9 +35,9 @@
 		return m
 		
 	a = 0.5 # transparancy breaks the depth test setting
+	m2 = addSprite('green', 1, [0,0,0], [0,1,0,a], 0)
 	m1 = addSprite('red', 1, [0,0,-0.5+1.5], [1,0,0,a], 0)
 	m3 = addSprite('yellow', 1, [0,0,0.5], [1,1,0,a], 0)
-	m2 = addSprite('green', 1, [0,0,0], [0,1,0,a], 0)
 	
 	# no impact, only for intersecting geometries
 	if 0:
@@ -46,9 +46,10 @@
 			print m.getName(), k
 
 	m2.setDepthTest('GL_ALWAYS')
+	m2.setSortKey(5)
 	
 	if 1:
-		print 'rendering order (reverse children order):'
+		print 'rendering order (reverse children order):' # occlusion culling affects this somehow
 		for i,c in enumerate(VR.scene.getChildren()[::-1]):
 			print ' ',i,c.getName()
 		

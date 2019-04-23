@@ -53,6 +53,7 @@ void VRRenderManager::update() {
     ract->setFrustumCulling(frustumCulling);
     ract->setOcclusionCulling(occlusionCulling);
     ract->setCorrectTwoSidedLighting(twoSided);
+    //ract->setSortTrans(true); // renders transparent objects from back to front
     ract->setZWriteTrans(true); // enables the zbuffer for transparent objects
 
     for (auto v : setup->getViews()) {
