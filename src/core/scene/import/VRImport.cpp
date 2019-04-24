@@ -174,7 +174,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
     VRImport::get()->fillCache(path, res);
     if (t) t->syncToMain();
 
-    if (useBinaryCache && !loadedFromCache) {
+    if (useBinaryCache && !loadedFromCache && res->getChild(0)) {
         for (auto c : res->getChildren(true)) { if (auto t = dynamic_pointer_cast<VRTransform>(c)) t->enableOptimization(false); }
         string osbPath = getFolderName(path) + "/." + getFileName(path) + ".osb";
         SceneFileHandler::the()->write(res->getChild(0)->getNode()->node, osbPath.c_str());
