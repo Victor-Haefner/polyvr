@@ -23,6 +23,7 @@ VRPrimitive* VRPrimitive::create(string p) {
     if (p == "Cylinder") return new VRCylinder();
     if (p == "Cone") return new VRCone();
     if (p == "Arrow") return new VRArrow();
+    if (p == "Pill") return new VRPill();
     if (p == "Gear") return new VRGear();
     if (p == "Thread") return new VRScrewThread();
     return 0;
@@ -42,6 +43,7 @@ vector<string> VRPrimitive::getTypes() {
         prims.push_back("Torus");
         prims.push_back("Teapot");
         prims.push_back("Arrow");
+        prims.push_back("Pill");
         prims.push_back("Gear");
         prims.push_back("Thread");
     }
@@ -86,6 +88,13 @@ vector<string> VRPrimitive::getTypeParameter(string type) {
         params["Cylinder"].push_back("Do bottom");
         params["Cylinder"].push_back("Do top");
         params["Cylinder"].push_back("Do sides");
+
+        params["Pill"].push_back("Height");
+        params["Pill"].push_back("Radius");
+        params["Pill"].push_back("Sides");
+        params["Pill"].push_back("Do bottom");
+        params["Pill"].push_back("Do top");
+        params["Pill"].push_back("Do sides");
 
         params["Cone"].push_back("Height");
         params["Cone"].push_back("Radius");
@@ -132,6 +141,7 @@ VRTeapot::VRTeapot() { N = 2; type = "Teapot"; }
 VRCylinder::VRCylinder() { N = 6; type = "Cylinder"; }
 VRCone::VRCone() { N = 5; type = "Cone"; }
 VRArrow::VRArrow() { N = 5; type = "Arrow"; }
+VRPill::VRPill() { N = 6; type = "Pill"; }
 VRScrewThread::VRScrewThread() { N = 4; type = "Thread"; }
 VRGear::VRGear() { N = 6; type = "Gear"; }
 
@@ -151,6 +161,7 @@ void VRSphere::fromStream(stringstream& ss) { ss >> radius >> iterations; }
 void VRTorus::fromStream(stringstream& ss) { ss >> inner_radius >> outer_radius >> Nsegments >> Nrings; }
 void VRTeapot::fromStream(stringstream& ss) { ss >> iterations >> scale; }
 void VRCylinder::fromStream(stringstream& ss) { ss >> height >> radius >> Nsides >> doTop >> doBottom >> doSides; }
+void VRPill::fromStream(stringstream& ss) { ss >> height >> radius >> Nsides >> doTop >> doBottom >> doSides; }
 void VRCone::fromStream(stringstream& ss) { ss >> height >> radius >> Nsides >> doBottom >> doSides; }
 void VRArrow::fromStream(stringstream& ss) { ss >> height >> width >> trunc >> hat >> thickness; }
 void VRScrewThread::fromStream(stringstream& ss) { ss >> length >> radius >> pitch >> Nsegments; }
@@ -162,6 +173,7 @@ void VRSphere::toStream(stringstream& ss) { ss << radius << " " << iterations; }
 void VRTorus::toStream(stringstream& ss) { ss << inner_radius << " " << outer_radius << " " << Nsegments << " " << Nrings; }
 void VRTeapot::toStream(stringstream& ss) { ss << iterations << " " << scale; }
 void VRCylinder::toStream(stringstream& ss) { ss << height << " " << radius << " " << Nsides << " " << doTop << " " << doBottom << " " << doSides; }
+void VRPill::toStream(stringstream& ss) { ss << height << " " << radius << " " << Nsides << " " << doTop << " " << doBottom << " " << doSides; }
 void VRCone::toStream(stringstream& ss) { ss << height << " " << radius << " " << Nsides << " " << doBottom << " " << doSides; }
 void VRArrow::toStream(stringstream& ss) { ss << height << " " << width << " " << trunc << " " << hat << " " << thickness; }
 void VRScrewThread::toStream(stringstream& ss) { ss << length << " " << radius << " " << pitch << " " << Nsegments; }
@@ -174,6 +186,7 @@ GeometryMTRecPtr VRTorus::make() { return makeTorusGeo(inner_radius, outer_radiu
 GeometryMTRecPtr VRTeapot::make() { return makeTeapotGeo(iterations, scale); }
 GeometryMTRecPtr VRCylinder::make() { return makeCylinderGeo(height, radius, Nsides, doSides, doTop, doBottom); }
 GeometryMTRecPtr VRCone::make() { return makeConeGeo(height, radius, Nsides, doSides, doBottom); }
+
 GeometryMTRecPtr VRArrow::make() {
     VRGeoData data;
 
@@ -218,6 +231,71 @@ GeometryMTRecPtr VRArrow::make() {
     }
 
     auto geo = data.asGeometry("Arrow");
+    return geo->getMesh()->geo;
+}
+
+GeometryMTRecPtr VRPill::make() {
+    VRGeoData data;
+
+    int RN = 0;
+
+    auto pushRing = [&](float r, float h, float b) {
+        for (int i=0; i<Nsides; i++) {
+            float a = i*2.0*M_PI/Nsides;
+            Vec3d n = Vec3d(cos(a)*cos(b), sin(b), sin(a)*cos(b));
+            Vec3d p = n*r + Vec3d(0, h, 0);
+            data.pushVert(p, n);
+        }
+        return RN++;
+    };
+
+    auto pushRingInds = [&](int r1, int r2, int order) {
+        int N1 = r1*Nsides;
+        int N2 = r2*Nsides;
+        for (int i=0; i<Nsides; i++) {
+            int j = i+1; if (j == Nsides) j = 0;
+            if (order == 1) data.pushQuad(i+N1, j+N1, j+N2, i+N2);
+            else            data.pushQuad(i+N1, i+N2, j+N2, j+N1);
+        }
+    };
+
+    auto fillRing = [&](int r, float h, float n, int order) {
+        int N0 = data.pushVert(Vec3d(0,h,0), Vec3d(0,n,0));
+        int N = r*Nsides;
+        for (int i=0; i<Nsides; i++) {
+            int j = i+1; if (j == Nsides) j = 0;
+            if (order == 1) data.pushTri(i+N, j+N, N0);
+            else            data.pushTri(j+N, i+N, N0);
+        }
+    };
+
+    int R1, R2, RT, RB;
+    if (doSides || doTop   ) R1 = pushRing(radius, height*0.5, 0);
+    if (doSides || doBottom) R2 = pushRing(radius,-height*0.5, 0);
+    if (doSides) pushRingInds(R1, R2, 1);
+
+    if (doTop) {
+        for (int i=1; i<Nsides; i++) {
+            float b = i*0.5*M_PI/Nsides;
+            RT = pushRing(radius, height*0.5, b);
+            if (i == 1) pushRingInds(R1,  RT,-1);
+            else        pushRingInds(RT-1,RT,-1);
+        }
+    }
+
+    if (doBottom) {
+        for (int i=1; i<Nsides; i++) {
+            float b = i*0.5*M_PI/Nsides;
+            RB = pushRing(radius, -height*0.5, -b);
+            if (i == 1) pushRingInds(R2,  RB, 1);
+            else        pushRingInds(RB-1,RB, 1);
+        }
+    }
+
+    if (doTop)    fillRing(RT, height*0.5+radius, 1,-1);
+    if (doBottom) fillRing(RB,-height*0.5-radius,-1, 1);
+
+    auto geo = data.asGeometry("Pill");
     return geo->getMesh()->geo;
 }
 
