@@ -374,6 +374,7 @@ bool VRGeoData::isStripOrFan(int t) {
     if (t == GL_LINE_LOOP || t == GL_LINE_STRIP) return true;
     if (t == GL_TRIANGLE_FAN || t == GL_TRIANGLE_STRIP) return true;
     if (t == GL_QUAD_STRIP) return true;
+    if (t == GL_POLYGON) return true;
     return false;
 }
 
@@ -441,7 +442,7 @@ void VRGeoData::pushPrim(Primitive p) {
     int N = p.indices.size();
     //int iN0 = size();
     //cout << "pushPrim: " << p.asString() << endl;
-    //cout << "pushPrim: " << No << " " << p.lid << " " << iN0 << endl;
+    //cout << "pushPrim: " << No << " " << p.lid << " " << size() << endl;
     for (int i = No; i<N; i++) {
         data->indices->addValue( p.indices[i] );
         //cout << "add index: " << p.indices[i] << endl;
@@ -507,7 +508,7 @@ int VRGeoData::primN(int type) const {
     if (type == GL_TRIANGLE_FAN) return 3;
     if (type == GL_TRIANGLE_STRIP) return 3;
     if (type == GL_QUAD_STRIP) return 4;
-    //if (type == GL_POLYGON) return 0; // TODO
+    if (type == GL_POLYGON) return -1;
 
     cout << "VRGeoData::primN WARNING: unknown GL type " << type << endl;
     return 0;
@@ -526,7 +527,7 @@ int VRGeoData::primNOffset(int lID, int type) const {
     if (type == GL_TRIANGLE_FAN) return 2;
     if (type == GL_TRIANGLE_STRIP) return 2;
     if (type == GL_QUAD_STRIP) return 2;
-    //if (type == GL_POLYGON) return 0; // TODO
+    if (type == GL_POLYGON) return 0;
 
     cout << "VRGeoData::primN WARNING: unknown GL type " << type << endl;
     return 0;
@@ -541,11 +542,17 @@ bool VRGeoData::setIndices(Primitive& p) const {
     int l = data->lengths->getValue(p.tID);
     int Np = primN(t);
     int Npo = primNOffset(p.lID, t);
+
+    if (Np < 0) { // GL_POLYGON
+        Np = l;
+    }
+
     for (int j=0; j<Np; j++) {
         int k = p.pID + j - Npo;
         int i = data->indices->getValue(k);
         inds.push_back(i);
     }
+
     p.type = t;
     p.indices = inds;
     p.lid = p.lID;
