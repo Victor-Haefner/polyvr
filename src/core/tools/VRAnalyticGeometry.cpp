@@ -24,14 +24,14 @@ VRAnalyticGeometry::VRAnalyticGeometry(string name) : VRTransform(name) {
     vecMat->setLit(false);
     vecMat->setLineWidth(3);
     vecMat->setDepthTest(GL_ALWAYS);
-    vecMat->setSortKey(-100);
+    vecMat->setSortKey(100);
     if (vectorLinesGeometry) vectorLinesGeometry->setMaterial(vecMat);
 
     pntMat = VRMaterial::create("AnalyticGeometry2");
     pntMat->setLit(false);
     pntMat->setPointSize(11);
     pntMat->setDepthTest(GL_ALWAYS);
-    pntMat->setSortKey(-100);
+    pntMat->setSortKey(100);
     if (vectorEndsGeometry) vectorEndsGeometry->setMaterial(pntMat);
 
     cirMat = VRMaterial::create("AnalyticGeometry3");
@@ -39,7 +39,7 @@ VRAnalyticGeometry::VRAnalyticGeometry(string name) : VRTransform(name) {
     cirMat->setVertexShader(circle_vp, "analyticCircleVS");
     cirMat->setFragmentShader(circle_fp, "analyticCircleFS");
     cirMat->setDepthTest(GL_ALWAYS);
-    cirMat->setSortKey(-100);
+    cirMat->setSortKey(100);
 }
 
 VRAnalyticGeometry::~VRAnalyticGeometry() {}
