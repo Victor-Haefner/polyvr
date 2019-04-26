@@ -92,7 +92,8 @@ void VRProjectManager::load(string path) {
         if (mode == "REBUILD") { s = VRStorage::createFromStore(e); vault_rebuild.push_back(s); }
         if (!s) { cout << "VRProjectManager::load Warning! element unhandled"; continue; }
 
-        s->load(e);
+        auto ctx = VRStorageContext::create(mode == "RELOAD");
+        s->load(e, ctx);
     }
 }
 
