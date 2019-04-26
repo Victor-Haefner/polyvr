@@ -323,8 +323,8 @@ void VRImport::Cache::setup(VRTransformPtr root) {
     objects.clear();
     this->root = root;
     //for (auto c : root->getChildren(true)) objects[getName(c->getNode()->node)] = c;
-    //for (auto c : root->getChildren(true)) objects[c->getName()] = c;
-    for (auto c : root->getChildren(true)) objects[c->getBaseName()] = c;
+    for (auto c : root->getChildren(true)) objects[c->getName()] = c;
+    //for (auto c : root->getChildren(true)) objects[c->getBaseName()] = c; // not a valid option as basename is not unique! SW VRML import does not provide unique names
 
     root->setNameSpace("VRImportCache");
     for (auto o : root->getChildren(true) ) o->setNameSpace("VRImportCache");
@@ -343,7 +343,7 @@ VRTransformPtr VRImport::Cache::retrieve(VRObjectPtr parent) {
 void VRImport::fillCache(string path, VRTransformPtr obj) {
     if (cache.count(path) == 0) cache[path] = Cache();
     cache[path].setup(obj);
-    cout << "VRImport::fillCache " << path << ", cache size: " << cache[path].objects.size() << endl;
+    cout << "\nVRImport::fillCache " << path << ", cache size: " << cache[path].objects.size() << endl;
 }
 
 
