@@ -54,6 +54,7 @@ void MPart::apply() {
 
 MPart* MPart::make(VRTransformPtr g, VRTransformPtr t) {
     VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(g);
+    if (!geo) return 0;
     string type = geo->getPrimitive()->getType();
     MPart* p = 0;
     if (type == "Gear") p = new MGear();
