@@ -10,6 +10,7 @@
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
+#include <OpenSG/OSGQuaternion.h>
 
 using namespace OSG;
 
@@ -122,6 +123,7 @@ bool MPart::propagateMovement(MChange c, MRelation* r) { // change
     }
 
     change = c;
+    change.n = Vec3d();
     move();
 
     return propagateMovement();
@@ -314,29 +316,32 @@ void MGear::move() {
 }
 
 void MPart::computeChange() {
-    Matrix4d m = reference;
-    m.invert();
-    m.mult(geo->getWorldMatrix());
+    Matrix4d m1 = reference; // last world matrix
+    Matrix4d m = geo->getWorldMatrix();
+    Matrix4d r1 = m1; r1.setTranslate(Pnt3d()); // last world rotation matrix
+    r1.invert();
+    m.mult(r1);
 
-    change.t = Vec3d(m[3]);
-    change.l = change.t.length();
+    //change.t = Vec3d(m[3]);
+    //change.l = change.t.length();
 
     change.a = acos( (m[0][0] + m[1][1] + m[2][2] - 1)*0.5 );
     if (isNan(change.a)) change.a = 0;
 
-    change.n = Vec3d(m[2][1] - m[1][2], m[0][2] - m[2][0], m[1][0] - m[0][1]);
+    change.n = -Vec3d(m[2][1] - m[1][2], m[0][2] - m[2][0], m[1][0] - m[0][1]);
     change.n.normalize();
 
-    if (change.n[2] < 0) { change.n *= -1; change.a *= -1; }
+    //if (change.n[2] < 0) { change.n *= -1; change.a *= -1; }
     if (abs(change.a) < 1e-5) return;
+    //cout << "MPart::computeChange n " << change.n << "  a " << change.a << endl;
     change.time = timestamp;
     change.origin = this;
 }
 
 void MGear::computeChange() {
     MPart::computeChange();
-    float d = rAxis.dot(Vec3d(0,0,-1));
-    if (d > 0) change.a *= -1;
+    change.a *= rAxis.dot(change.n);
+    //if (abs(change.a) > 1e-2) cout << "MGear::computeChange " << rAxis << "  n " << change.n << "  " << change.a << endl;
     change.dx = change.a*gear()->radius();
 }
 
@@ -640,6 +645,7 @@ void VRMechanism::update() {
         }
     }
 
+    //for (auto& part : parts) part->change = MChange();
     for (auto& part : parts) if (part->changed()) changed_parts.push_back(part);
 
     for (auto& part : changed_parts) {
@@ -678,9 +684,22 @@ void VRMechanism::updateVisuals() {
         Vec3d a = ((MGear*)p)->rAxis;
         Vec3d o = ((MGear*)p)->offset;
         float w = g->width*0.5;
+        auto u = Vec3d(0,1,0); // TODO: change to orthogonal to a!
+        float ts = g->teeth_size;
+        float r = g->radius();
         a.normalize();
         Vec3d pos = Vec3d(p->reference[3]) + o;
         geo->addVector(pos, a*w, Color3f(0.2,1,0.3));
+
+        // last change
+        Vec3d t = p->change.n.cross(u);
+        Vec3d cP = pos + a*w + u*(r+ts*0.5);
+        float A = p->change.a;
+        float d = p->change.n.dot(a);
+        if (abs(d) > 1e-2) A /= d;
+        geo->addVector(cP, p->change.n*w, Color3f(0.9,0,0.7)); // change rot axis
+        geo->addVector(cP, t*A, Color3f(0.6,0,0.4)); // tangant * angle
+        geo->addVector(cP, u*A, Color3f(0.2,0,0.4)); // up * angle
 
 
         bool b = false;
@@ -692,16 +711,14 @@ void VRMechanism::updateVisuals() {
             auto d = pos2-pos;
             d.normalize();
             float ts = g->teeth_size;
-            geo->addVector(pos + a*w, d*g->radius()-d*ts*0.5, Color3f(1,1,0));
-            geo->addVector(pos + a*w + d*g->radius()-d*ts*0.5, d*ts, Color3f(0.9,0.4,0));
+            geo->addVector(pos + a*w, d*(r-ts*0.5), Color3f(1,1,0));
+            geo->addVector(pos + a*w + d*(r-ts*0.5), d*ts, Color3f(0.9,0.4,0));
             b = true;
         }
 
         if (!b) {
-            auto d = Vec3d(0,1,0);
-            float ts = g->teeth_size;
-            geo->addVector(pos + a*w, d*g->radius()-d*ts*0.5, Color3f(1,1,0));
-            geo->addVector(pos + a*w + d*g->radius()-d*ts*0.5, d*ts, Color3f(0.9,0.4,0));
+            geo->addVector(pos + a*w, u*(r-ts*0.5), Color3f(1,1,0));
+            geo->addVector(pos + a*w + u*(r-ts*0.5), u*ts, Color3f(0.9,0.4,0));
         }
     }
 

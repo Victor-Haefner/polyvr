@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.176373 -0.126933 -0.00951612" at_dir="0" base_name="Default" far="250" fov="1.0472" from="0.954011 0.966084 -0.715242" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.0369902 1.52636 0.21" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-0.380954 1.97029 0.729258" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <constraint persistency="666"/>
           </Object>
@@ -295,10 +295,12 @@
 	import VR
 	import math
 	import string
+	from VR.Math import Vec3
 	
 	VR.tool = None
 	VR.rotate = 1
 	VR.block = 0
+	PI = 3.14159265359
 	
 	# root node and reset
 	if hasattr(VR, 'scene'): VR.scene.destroy()
@@ -337,6 +339,23 @@
 	
 	cgr = gp*cgN*0.5/math.pi # chain gear radius
 	VR.cgr = cgr
+	
+	VR.testChangeComputationGears = []
+	
+	def addGearPair(pos, d):
+		p1 = addGear(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True, cgN)
+		p2 = addGear(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True, cgN)
+		p3 = addGear(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True, cgN)
+		p1.setColor('blue')
+		p1.translate(pos)
+		p2.translate(pos+d*cgr*2)
+		p3.translate(pos-d*cgr*2)
+		VR.testChangeComputationGears.append(p1)
+		return p1
+	
+	addGearPair(Vec3([0,1.5,0]), Vec3([1,0,0]))
+	p = addGearPair(Vec3([0,1.5,0.2]), Vec3([1,0,0]))
+	p.rotate(PI, [0,1,0])
 		
 	# pads
 	VR.P1 = addGear(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True, cgN)
@@ -360,6 +379,8 @@
 	VR.P9.translate([cgr*8,cgr*3,0.2])
 	VR.P7.rotate(3.14, [0,1,0])
 	
+	# test 
+	VR.P1.rotate(3.14, [0,1,0])
 	
 	P22 = addGear(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True, cgN)
 	P22.translate([cgr*2,0,0.2])
@@ -453,7 +474,14 @@
 	
 	if hasattr(VR, 'P1') and VR.rotate:
 		#print 'rotate P1: 0.01 around [0,0,1]'
-		VR.P1.rotate(0.02, [0,0,1])
+		VR.P1.rotate(0.02, [0,0,-1])
+		pass
+		
+	for gear in VR.testChangeComputationGears:
+		gear.rotate(0.02, [0,0,1])
+		#gear.rotate(0.02, [1,0,0])
+		#gear.rotate(0.02, [1,1,1])
+		
 		
 	if hasattr(VR, 'mechanism'):
 	
