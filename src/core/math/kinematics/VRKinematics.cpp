@@ -39,7 +39,10 @@ int VRKinematics::addJoint(int nID1, int nID2, VRConstraintPtr c)
     bodies[nID1].joints.push_back(eID);
     bodies[nID2].joints.push_back(eID);
     VRConstraintPtr c2 = VRConstraint::create();
-    bodies[nID1].obj->attach(bodies[nID2].obj, c, c2);
+    //bodies[nID1].obj->attach(bodies[nID2].obj, c, c2);
+    auto P1 = bodies[nID1].obj->getPhysics();
+    auto P2 = bodies[nID2].obj->getPhysics();
+    if (P1 && P2) P1->setConstraint( P2, c, c2 );
     return eID;
 }
 

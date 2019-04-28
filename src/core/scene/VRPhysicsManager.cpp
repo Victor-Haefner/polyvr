@@ -117,7 +117,7 @@ void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
             MLock lock(mtx);
             prepareObjects();
             for (auto f : updateFktsPre) (*(f.lock()))();
-            dynamicsWorld->stepSimulation(1e-6*dt, 30);
+            dynamicsWorld->stepSimulation(1e-6*dt, 30, 1.0/500);
             for (auto f : updateFktsPost) (*(f.lock()))();
         }
     }
