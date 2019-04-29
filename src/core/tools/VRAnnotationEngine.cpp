@@ -73,30 +73,37 @@ int VRAnnotationEngine::add(Vec3d p, string s) {
     return i;
 }
 
-void VRAnnotationEngine::set(int i, Vec3d p, string s) {
-    if (i < 0) return;
-    while (i >= (int)labels.size()) labels.push_back(Label());
+void VRAnnotationEngine::set(int i0, Vec3d p0, string str) {
+    auto strings = splitString(str, '\n');
+    for (int y = 0; y<strings.size(); y++) {
+        string s = strings[y];
+        Vec3d p = p0;
+        p[1] -= y*size;
+        int i = i0+y;
+        if (i < 0) return;
+        while (i >= (int)labels.size()) labels.push_back(Label());
+        int N = ceil(str.size()/3.0); // number of points, 3 chars per point
+        auto& l = labels[i];
 
-    int N = ceil(s.size()/3.0); // number of points, 3 chars per point
-    auto& l = labels[i];
-    resize(l,p,N + 4); // plus 4 bounding points
+        resize(l,p,N + 4); // plus 4 bounding points
 
-    for (int j=0; j<N; j++) {
-        char c[] = {0,0,0};
-        for (int k = 0; k<3; k++) {
-            uint si = j*3+k;
-            if (si < s.size()) c[k] = s[si];
+        for (int j=0; j<N; j++) {
+            char c[] = {0,0,0};
+            for (int k = 0; k<3; k++) {
+                uint si = j*3+k;
+                if (si < s.size()) c[k] = s[si];
+            }
+            float f = c[0] + c[1]*256 + c[2]*256*256;
+            int k = l.entries[j];
+            data->setVert(k, p, Vec3d(f,0,j));
         }
-        float f = c[0] + c[1]*256 + c[2]*256*256;
-        int k = l.entries[j];
-        data->setVert(k, p, Vec3d(f,0,j));
-    }
 
-    // bounding points to avoid word clipping
-    data->setVert(l.entries[N], p+Vec3d(-0.25*size, -0.5*size, 0), Vec3d(0,0,-1));
-    data->setVert(l.entries[N+1], p+Vec3d(-0.25*size,  0.5*size, 0), Vec3d(0,0,-1));
-    data->setVert(l.entries[N+2], p+Vec3d((s.size()-0.25)*size, -0.5*size, 0), Vec3d(0,0,-1));
-    data->setVert(l.entries[N+3], p+Vec3d((s.size()-0.25)*size,  0.5*size, 0), Vec3d(0,0,-1));
+        // bounding points to avoid word clipping
+        data->setVert(l.entries[N], p+Vec3d(-0.25*size, -0.5*size, 0), Vec3d(0,0,-1));
+        data->setVert(l.entries[N+1], p+Vec3d(-0.25*size,  0.5*size, 0), Vec3d(0,0,-1));
+        data->setVert(l.entries[N+2], p+Vec3d((s.size()-0.25)*size, -0.5*size, 0), Vec3d(0,0,-1));
+        data->setVert(l.entries[N+3], p+Vec3d((s.size()-0.25)*size,  0.5*size, 0), Vec3d(0,0,-1));
+    }
 }
 
 void VRAnnotationEngine::setSize(float f) { mat->setShaderParameter("size", Real32(f)); size = f; }

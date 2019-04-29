@@ -182,6 +182,7 @@ void VRGear::toStream(stringstream& ss) { ss << width << " " << hole << " " << p
 GeometryMTRecPtr VRPlane::make() { return makePlaneGeo(width, height, Nx, Ny); }
 
 GeometryMTRecPtr VRBox::make() {
+    //return makeBoxGeo(width, height, depth, Nx, Ny, Nz);
     VRGeoData data;
 
     Pnt3d o = -Pnt3d(width, height, depth)*0.5;
@@ -217,16 +218,18 @@ GeometryMTRecPtr VRBox::make() {
     for (int i=0; i<=Nx; i++) {
         for (int j=0; j<=Ny; j++) {
             for (int k=0; k<=Nz; k++) {
-                if (i == 0 || i == Nx) if (j < Ny && k < Nz) pushQuad(Vec3i(i,j,k), Vec3i(i,j+1,k), Vec3i(i,j+1,k+1), Vec3i(i,j,k+1), 0);
-                if (j == 0 || j == Ny) if (i < Nx && k < Nz) pushQuad(Vec3i(i,j,k), Vec3i(i+1,j,k), Vec3i(i+1,j,k+1), Vec3i(i,j,k+1), 1);
-                if (k == 0 || k == Nz) if (i < Nx && j < Ny) pushQuad(Vec3i(i,j,k), Vec3i(i+1,j,k), Vec3i(i+1,j+1,k), Vec3i(i,j+1,k), 2);
+                if (i == 0 ) if (j < Ny && k < Nz) pushQuad(Vec3i(i,j,k), Vec3i(i,j,k+1), Vec3i(i,j+1,k+1), Vec3i(i,j+1,k), 0);
+                if (i == Nx) if (j < Ny && k < Nz) pushQuad(Vec3i(i,j,k), Vec3i(i,j+1,k), Vec3i(i,j+1,k+1), Vec3i(i,j,k+1), 0);
+                if (j == 0 ) if (i < Nx && k < Nz) pushQuad(Vec3i(i,j,k), Vec3i(i+1,j,k), Vec3i(i+1,j,k+1), Vec3i(i,j,k+1), 1);
+                if (j == Ny) if (i < Nx && k < Nz) pushQuad(Vec3i(i,j,k), Vec3i(i,j,k+1), Vec3i(i+1,j,k+1), Vec3i(i+1,j,k), 1);
+                if (k == 0 ) if (i < Nx && j < Ny) pushQuad(Vec3i(i,j,k), Vec3i(i,j+1,k), Vec3i(i+1,j+1,k), Vec3i(i+1,j,k), 2);
+                if (k == Nz) if (i < Nx && j < Ny) pushQuad(Vec3i(i,j,k), Vec3i(i+1,j,k), Vec3i(i+1,j+1,k), Vec3i(i,j+1,k), 2);
             }
         }
     }
 
     auto geo = data.asGeometry("Box");
     return geo->getMesh()->geo;
-    //return makeBoxGeo(width, height, depth, Nx, Ny, Nz);
 }
 
 GeometryMTRecPtr VRSphere::make() { return makeSphereGeo(iterations, radius); }
