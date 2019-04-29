@@ -19,6 +19,7 @@ struct VRGeoData::Data {
     GeoVec2fPropertyMTRecPtr texs2;
     GeoUInt32PropertyMTRecPtr indicesNormals;
     GeoUInt32PropertyMTRecPtr indicesColors;
+    GeoUInt32PropertyMTRecPtr indicesTexCoords;
 
     int lastPrim = -1;
 
@@ -67,6 +68,7 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
 
         data->indicesNormals = (GeoUInt32Property*)geo->getMesh()->geo->getIndex(Geometry::NormalsIndex);
         data->indicesColors = (GeoUInt32Property*)geo->getMesh()->geo->getIndex(Geometry::ColorsIndex);
+        data->indicesTexCoords = (GeoUInt32Property*)geo->getMesh()->geo->getIndex(Geometry::TexCoordsIndex);
     }
 
     if (data->types && data->types->size() > 0) data->lastPrim = data->types->getValue( data->types->size()-1 );
@@ -81,6 +83,7 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
     if (!data->texs2) data->texs2 = GeoVec2fProperty::create();
     if (!data->indicesNormals) data->indicesNormals = GeoUInt32Property::create();
     if (!data->indicesColors) data->indicesColors = GeoUInt32Property::create();
+    if (!data->indicesTexCoords) data->indicesTexCoords = GeoUInt32Property::create();
 
     // TODO: might not be really possible.. ..maybe live with it and check that all algorithms take it into account!
     /*auto nIdx = geo->getMesh()->geo->getIndex(Geometry::NormalsIndex);
@@ -126,6 +129,8 @@ void VRGeoData::reset() {
     else data->indicesNormals = GeoUInt32Property::create();
     if (data->indicesColors) data->indicesColors->clear();
     else data->indicesColors = GeoUInt32Property::create();
+    if (data->indicesTexCoords) data->indicesTexCoords->clear();
+    else data->indicesTexCoords = GeoUInt32Property::create();
     data->lastPrim = -1;
 }
 
@@ -137,12 +142,15 @@ bool VRGeoData::valid() const {
     int Ni = data->indices->size();
     int Nni = data->indicesNormals->size();
     int Nci = data->indicesColors->size();
+    int Nti = data->indicesTexCoords->size();
     if (Ni > 0) {
         if (Nni > 0 && Nni != Ni) { cout << "VRGeoData invalid: coord and normal indices lengths mismatch!\n"; return false; }
         if (Nci > 0 && Nci != Ni) { cout << "VRGeoData invalid: coord and color indices lengths mismatch!\n"; return false; }
+        if (Nti > 0 && Nti != Ni) { cout << "VRGeoData invalid: coord and texcoords indices lengths mismatch!\n"; return false; }
     } else {
         if (Nni > 0) { cout << "VRGeoData invalid: normal indices defined but no coord indices!\n"; return false; }
         if (Nci > 0) { cout << "VRGeoData invalid: color indices defined but no coord indices!\n"; return false; }
+        if (Nti > 0) { cout << "VRGeoData invalid: texcoords indices defined but no coord indices!\n"; return false; }
     }
     return true;
 }
@@ -161,6 +169,7 @@ bool VRGeoData::validIndices() const {
 
     if (!checkMaxIndex(data->indices, data->pos->size())) { cout << "VRGeoData invalid: coord indices have too big values!\n"; return false; }
     if (!checkMaxIndex(data->indicesNormals, data->norms->size())) { cout << "VRGeoData invalid: normal indices have too big values!\n"; return false; }
+    if (!checkMaxIndex(data->indicesTexCoords, data->texs->size())) { cout << "VRGeoData invalid: tex coords indices have too big values!\n"; return false; }
     if (data->cols3->size())
         if (!checkMaxIndex(data->indicesColors, data->cols3->size())) { cout << "VRGeoData invalid: color3 indices have too big values!\n"; return false; }
     if (data->cols4->size())
@@ -184,6 +193,8 @@ void VRGeoData::apply(VRGeometryPtr geo, bool check, bool checkIndices) const {
         if (data->indicesNormals->size() == data->indices->size()) geo->getMesh()->geo->setIndex( data->indicesNormals, Geometry::NormalsIndex );
     if (data->indicesColors->size() > 0)
         if (data->indicesColors->size() == data->indices->size()) geo->getMesh()->geo->setIndex( data->indicesColors, Geometry::ColorsIndex );
+    if (data->indicesTexCoords->size() > 0)
+        if (data->indicesTexCoords->size() == data->indices->size()) geo->getMesh()->geo->setIndex( data->indicesTexCoords, Geometry::TexCoordsIndex );
 
     GeoVectorProperty* c3 = data->cols3->size() > 0 ? data->cols3 : 0;
     GeoVectorProperty* c4 = data->cols4->size() > 0 ? data->cols4 : 0;
@@ -263,6 +274,7 @@ int VRGeoData::getDataSize(int type) {
     if (type == 8) return data->texs2->size();
     if (type == 9) return data->indicesNormals->size();
     if (type == 10) return data->indicesColors->size();
+    if (type == 11) return data->indicesTexCoords->size();
     return 0;
 }
 
@@ -289,6 +301,7 @@ int VRGeoData::pushColor(Color4f c) { data->cols4->addValue(c); return data->col
 
 int VRGeoData::pushNormalIndex(int i) { data->indicesNormals->addValue(i); return data->indicesNormals->size()-1; }
 int VRGeoData::pushColorIndex(int i) { data->indicesColors->addValue(i); return data->indicesColors->size()-1; }
+int VRGeoData::pushTexCoordIndex(int i) { data->indicesTexCoords->addValue(i); return data->indicesTexCoords->size()-1; }
 
 bool VRGeoData::setVert(int i, Pnt3d p) { if (size() > i) data->pos->setValue(p,i); else return 0; return 1; }
 bool VRGeoData::setVert(int i, Pnt3d p, Vec3d n) { if (size() > i) data->norms->setValue(n,i); else return 0; return setVert(i,p); }

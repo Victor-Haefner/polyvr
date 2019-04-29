@@ -190,6 +190,7 @@ GeometryMTRecPtr VRBox::make() {
 
     map<Vec3i, int> pIDs;
     map<Vec4i, int> nIDs;
+    map<Vec4i, int> tIDs;
 
     for (int i=0; i<=Nx; i++) {
         for (int j=0; j<=Ny; j++) {
@@ -203,6 +204,13 @@ GeometryMTRecPtr VRBox::make() {
                 if (j == Ny) nIDs[Vec4i(i,j,k,1)] = data.pushNorm(Vec3d(0, 1,0));
                 if (k == 0 ) nIDs[Vec4i(i,j,k,2)] = data.pushNorm(Vec3d(0,0,-1));
                 if (k == Nz) nIDs[Vec4i(i,j,k,2)] = data.pushNorm(Vec3d(0,0, 1));
+
+                if (i == 0 ) tIDs[Vec4i(i,j,k,0)] = data.pushTexCoord(Vec2d(float(k)/Nz,float(j)/Ny));
+                if (i == Nx) tIDs[Vec4i(i,j,k,0)] = data.pushTexCoord(Vec2d(float(k)/Nz,float(j)/Ny));
+                if (j == 0 ) tIDs[Vec4i(i,j,k,1)] = data.pushTexCoord(Vec2d(float(i)/Nx,float(k)/Nz));
+                if (j == Ny) tIDs[Vec4i(i,j,k,1)] = data.pushTexCoord(Vec2d(float(i)/Nx,float(k)/Nz));
+                if (k == 0 ) tIDs[Vec4i(i,j,k,2)] = data.pushTexCoord(Vec2d(float(i)/Nx,float(j)/Ny));
+                if (k == Nz) tIDs[Vec4i(i,j,k,2)] = data.pushTexCoord(Vec2d(float(i)/Nx,float(j)/Ny));
             }
         }
     }
@@ -213,6 +221,10 @@ GeometryMTRecPtr VRBox::make() {
         data.pushNormalIndex( nIDs[Vec4i(I2[0], I2[1], I2[2], d)] );
         data.pushNormalIndex( nIDs[Vec4i(I3[0], I3[1], I3[2], d)] );
         data.pushNormalIndex( nIDs[Vec4i(I4[0], I4[1], I4[2], d)] );
+        data.pushTexCoordIndex( tIDs[Vec4i(I1[0], I1[1], I1[2], d)] );
+        data.pushTexCoordIndex( tIDs[Vec4i(I2[0], I2[1], I2[2], d)] );
+        data.pushTexCoordIndex( tIDs[Vec4i(I3[0], I3[1], I3[2], d)] );
+        data.pushTexCoordIndex( tIDs[Vec4i(I4[0], I4[1], I4[2], d)] );
     };
 
     for (int i=0; i<=Nx; i++) {
