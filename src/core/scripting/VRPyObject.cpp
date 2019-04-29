@@ -69,7 +69,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"hide", PyWrapOpt(Object, hide, "Hide object", "", void, string) },
     {"show", PyWrapOpt(Object, show, "Show object", "", void, string) },
     {"isVisible", PyWrapOpt(Object, isVisible, "Return if object is visible", "", bool, string) },
-    {"setVisible", PyWrapOpt(Object, setVisible, "Set the visibility of the object", "", void, bool, string) },
+    {"setVisible", PyWrapOpt(Object, setVisible, "Set the visibility of the object, flag changes behaviour, for example 'SHADOW'", "", void, bool, string) },
     {"getType", PyCastWrap(Object, getType, "Return the object type string (such as \"Geometry\")", string) },
     {"getID", PyWrap(Object, getID, "Return the object internal ID", int) },
     {"duplicate", PyWrapOpt(Object, duplicate, "Duplicate object including subtree", "0|1", VRObjectPtr, bool, bool) },

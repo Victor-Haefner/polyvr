@@ -100,7 +100,7 @@ vector<string> VRPrimitive::getTypeParameter(string type) {
         params["Cone"].push_back("Radius");
         params["Cone"].push_back("Sides");
         params["Cone"].push_back("Do bottom");
-        params["Cone"].push_back("Do sides");
+        params["Cone"].push_back("DBoxo sides");
 
         params["Torus"].push_back("Inner radius");
         params["Torus"].push_back("Outer radius");
@@ -180,7 +180,55 @@ void VRScrewThread::toStream(stringstream& ss) { ss << length << " " << radius <
 void VRGear::toStream(stringstream& ss) { ss << width << " " << hole << " " << pitch << " " << teeth_number << " " << teeth_size << " " << bevel; }
 
 GeometryMTRecPtr VRPlane::make() { return makePlaneGeo(width, height, Nx, Ny); }
-GeometryMTRecPtr VRBox::make() { return makeBoxGeo(width, height, depth, Nx, Ny, Nz); }
+
+GeometryMTRecPtr VRBox::make() {
+    VRGeoData data;
+
+    Pnt3d o = -Pnt3d(width, height, depth)*0.5;
+    Vec3d s = Vec3d(width/Nx, height/Ny, depth/Nz);
+
+    map<Vec3i, int> pIDs;
+    map<Vec4i, int> nIDs;
+
+    for (int i=0; i<=Nx; i++) {
+        for (int j=0; j<=Ny; j++) {
+            for (int k=0; k<=Nz; k++) {
+                if (i == 0 || i == Nx || j == 0 || j == Ny || k == 0 || k == Nz)
+                    pIDs[Vec3i(i,j,k)] = data.pushPos( o + Vec3d(s[0]*i,s[1]*j,s[2]*k) );
+
+                if (i == 0 ) nIDs[Vec4i(i,j,k,0)] = data.pushNorm(Vec3d(-1,0,0));
+                if (i == Nx) nIDs[Vec4i(i,j,k,0)] = data.pushNorm(Vec3d( 1,0,0));
+                if (j == 0 ) nIDs[Vec4i(i,j,k,1)] = data.pushNorm(Vec3d(0,-1,0));
+                if (j == Ny) nIDs[Vec4i(i,j,k,1)] = data.pushNorm(Vec3d(0, 1,0));
+                if (k == 0 ) nIDs[Vec4i(i,j,k,2)] = data.pushNorm(Vec3d(0,0,-1));
+                if (k == Nz) nIDs[Vec4i(i,j,k,2)] = data.pushNorm(Vec3d(0,0, 1));
+            }
+        }
+    }
+
+    auto pushQuad = [&](Vec3i I1, Vec3i I2, Vec3i I3, Vec3i I4, int d) {
+        data.pushQuad( pIDs[I1], pIDs[I2], pIDs[I3], pIDs[I4] );
+        data.pushNormalIndex( nIDs[Vec4i(I1[0], I1[1], I1[2], d)] );
+        data.pushNormalIndex( nIDs[Vec4i(I2[0], I2[1], I2[2], d)] );
+        data.pushNormalIndex( nIDs[Vec4i(I3[0], I3[1], I3[2], d)] );
+        data.pushNormalIndex( nIDs[Vec4i(I4[0], I4[1], I4[2], d)] );
+    };
+
+    for (int i=0; i<=Nx; i++) {
+        for (int j=0; j<=Ny; j++) {
+            for (int k=0; k<=Nz; k++) {
+                if (i == 0 || i == Nx) if (j < Ny && k < Nz) pushQuad(Vec3i(i,j,k), Vec3i(i,j+1,k), Vec3i(i,j+1,k+1), Vec3i(i,j,k+1), 0);
+                if (j == 0 || j == Ny) if (i < Nx && k < Nz) pushQuad(Vec3i(i,j,k), Vec3i(i+1,j,k), Vec3i(i+1,j,k+1), Vec3i(i,j,k+1), 1);
+                if (k == 0 || k == Nz) if (i < Nx && j < Ny) pushQuad(Vec3i(i,j,k), Vec3i(i+1,j,k), Vec3i(i+1,j+1,k), Vec3i(i,j+1,k), 2);
+            }
+        }
+    }
+
+    auto geo = data.asGeometry("Box");
+    return geo->getMesh()->geo;
+    //return makeBoxGeo(width, height, depth, Nx, Ny, Nz);
+}
+
 GeometryMTRecPtr VRSphere::make() { return makeSphereGeo(iterations, radius); }
 GeometryMTRecPtr VRTorus::make() { return makeTorusGeo(inner_radius, outer_radius, Nsegments, Nrings); }
 GeometryMTRecPtr VRTeapot::make() { return makeTeapotGeo(iterations, scale); }

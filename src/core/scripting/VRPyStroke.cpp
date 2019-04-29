@@ -16,7 +16,7 @@ PyMethodDef VRPyStroke::methods[] = {
     {"addPath", PyWrap( Stroke, addPath, "Add a path", void, PathPtr ) },
     {"setPaths", PyWrap( Stroke, setPaths, "Set a list of paths", void, vector<PathPtr> ) },
     {"getPaths", PyWrap( Stroke, getPaths, "Get the list of paths", vector<PathPtr> ) },
-    {"strokeProfile", PyWrapOpt( Stroke, strokeProfile, "Stroke along path using a profile", "1|0|0", void, vector<Vec3d>, bool, bool, bool, VRStroke::CAP, VRStroke::CAP) },
+    {"strokeProfile", PyWrapOpt( Stroke, strokeProfile, "Stroke along path using a profile, (profile, closed, lit, useColors, cap1, cap2)", "1|0|0", void, vector<Vec3d>, bool, bool, bool, VRStroke::CAP, VRStroke::CAP) },
     {"strokeStrew", PyWrap( Stroke, strokeStrew, "Stew objects along path", void, VRGeometryPtr ) },
     {"update", PyWrap( Stroke, update, "Update stroke", void ) },
     {"convertToRope", PyWrap( Stroke, convertToRope, "converts this Stroke  to a rope (softbody)", void ) },
