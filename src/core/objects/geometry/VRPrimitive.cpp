@@ -192,9 +192,17 @@ GeometryMTRecPtr VRBox::make() {
     map<Vec4i, int> nIDs;
     map<Vec4i, int> tIDs;
 
+    auto spaceSkip = [&](int& i, int& j, int& k) {
+        if (i > 0 && i < Nx)
+            if (j > 0 && j < Ny)
+                if (k == 1) k = Nz;
+    };
+
     for (int i=0; i<=Nx; i++) {
         for (int j=0; j<=Ny; j++) {
             for (int k=0; k<=Nz; k++) {
+                spaceSkip(i,j,k);
+
                 if (i == 0 || i == Nx || j == 0 || j == Ny || k == 0 || k == Nz)
                     pIDs[Vec3i(i,j,k)] = data.pushPos( o + Vec3d(s[0]*i,s[1]*j,s[2]*k) );
 
@@ -230,6 +238,8 @@ GeometryMTRecPtr VRBox::make() {
     for (int i=0; i<=Nx; i++) {
         for (int j=0; j<=Ny; j++) {
             for (int k=0; k<=Nz; k++) {
+                spaceSkip(i,j,k);
+
                 if (i == 0 ) if (j < Ny && k < Nz) pushQuad(Vec3i(i,j,k), Vec3i(i,j,k+1), Vec3i(i,j+1,k+1), Vec3i(i,j+1,k), 0);
                 if (i == Nx) if (j < Ny && k < Nz) pushQuad(Vec3i(i,j,k), Vec3i(i,j+1,k), Vec3i(i,j+1,k+1), Vec3i(i,j,k+1), 0);
                 if (j == 0 ) if (i < Nx && k < Nz) pushQuad(Vec3i(i,j,k), Vec3i(i+1,j,k), Vec3i(i+1,j,k+1), Vec3i(i,j,k+1), 1);
