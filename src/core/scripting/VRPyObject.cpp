@@ -105,6 +105,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"getWorldBoundingbox", PyWrap(Object, getWorldBoundingbox, "get world Boundingbox", BoundingboxPtr) },
     {"setVolume", PyCastWrap(Object, setVolume, "Set the scenegraph volume to boundingbox", void, Boundingbox) },
     {"getPoseTo", PyWrap(Object, getPoseTo, "Get the transformation from this object to another, returns a pose", PosePtr, VRObjectPtr ) },
+    {"exportToFile", PyWrap(Object, exportToFile, "Export subtree to file", void, string) },
     {NULL}  /* Sentinel */
 };
 

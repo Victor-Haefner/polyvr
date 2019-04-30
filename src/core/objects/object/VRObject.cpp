@@ -15,6 +15,7 @@
 #include <OpenSG/OSGTransform.h>
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGVisitSubTree.h>
+#include <OpenSG/OSGSceneFileHandler.h>
 
 using namespace OSG;
 
@@ -644,6 +645,10 @@ int getVisibleMaskBit(const string& mode) {
 bool VRObject::isVisible(string mode) {
     int b = getVisibleMaskBit(mode);
     return getBit(visibleMask, b);
+}
+
+void VRObject::exportToFile(string path) {
+    SceneFileHandler::the()->write(getNode()->node, path.c_str());
 }
 
 void VRObject::setVisible(bool b, string mode) {

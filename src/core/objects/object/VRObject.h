@@ -160,6 +160,8 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
 
         PosePtr getPoseTo(VRObjectPtr o);
         Matrix4d getMatrixTo(VRObjectPtr o, bool parentOnly = false);
+
+        void exportToFile(string path);
 };
 
 OSG_END_NAMESPACE;
