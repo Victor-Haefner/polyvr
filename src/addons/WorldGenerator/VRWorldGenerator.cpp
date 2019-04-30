@@ -407,6 +407,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             if (graphNodes.count(pID)) continue;
             Node n;
             n.n = osmMap->getNode(pID);
+            if (!n.n) continue;
             n.p = planet->fromLatLongPosition(n.n->lat, n.n->lon, true);
             graphNodes[pID] = n;
         }
