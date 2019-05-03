@@ -340,3 +340,15 @@ int VRPyBase::toGLConst(string s) {
 
 bool VRPyBase::isNone(PyObject* o) { return (o == Py_None); }
 
+void VRPyBase::execPyCallVoid(PyObject* pyFkt, PyObject* pArgs) {
+    if (pyFkt == 0) return;
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    if (PyErr_Occurred() != NULL) PyErr_Print();
+
+    PyObject_CallObject(pyFkt, pArgs);
+
+    //Py_XDECREF(pArgs); Py_DecRef(pyFkt); // TODO!!
+
+    if (PyErr_Occurred() != NULL) PyErr_Print();
+    PyGILState_Release(gstate);
+}

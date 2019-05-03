@@ -3,6 +3,7 @@
 #include "VRPyMath.h"
 #include "VRPyPose.h"
 #include "core/utils/VRCallbackWrapper.h"
+#include "core/utils/VRFunction.h"
 
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGColor.h>
@@ -78,6 +79,15 @@ template<> bool toValue(PyObject* o, Pose& m) {
     return 1;
 }
 
+template<> bool toValue(PyObject* o, std::shared_ptr<VRFunction<void>>& v) {
+    //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!
+    if (VRPyBase::isNone(o)) v = 0;
+    else {
+        Py_IncRef(o);
+        v = VRFunction<void>::create( "pyExecCall", boost::bind(VRPyBase::execPyCallVoid, o, PyTuple_New(0)) );
+    }
+    return 1;
+}
 
 
 

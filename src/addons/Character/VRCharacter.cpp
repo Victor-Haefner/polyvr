@@ -56,9 +56,9 @@ void VRCharacter::simpleSetup() {
     addAction(stomp_L);*/
 }
 
-void VRCharacter::overrideSim() {
+void VRCharacter::overrideSim(VRUpdateCbPtr cb) {
     if (!skeleton) return;
-    skeleton->overrideSim();
+    skeleton->overrideSim(cb);
 }
 
 /** TODO

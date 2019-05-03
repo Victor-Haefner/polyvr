@@ -66,6 +66,8 @@ class VRSkeleton : public VRGeometry {
         int rootBone = -1;
         map<string, EndEffector> endEffectors;
 
+        VRUpdateCbPtr simCB; // sim override
+
         VRGeometryPtr jointsGeo;
 
         void initMaterial(); // skeleton visualisation
@@ -98,7 +100,7 @@ class VRSkeleton : public VRGeometry {
 
         void move(string endEffector, PosePtr pose);
 
-        void overrideSim();
+        void overrideSim(VRUpdateCbPtr cb);
 };
 
 OSG_END_NAMESPACE;

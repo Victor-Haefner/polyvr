@@ -54,6 +54,8 @@ template<typename T> bool toValue(PyObject* o, std::shared_ptr<VRFunction<T>>& v
     return 1;
 }
 
+template<> bool toValue(PyObject* o, std::shared_ptr<VRFunction<void>>& v);
+
 template<>
 struct VRCallbackWrapper<PyObject*> : VRCallbackWrapperBase {
     VRCallbackWrapper() {}

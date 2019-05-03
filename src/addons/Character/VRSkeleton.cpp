@@ -1,5 +1,6 @@
 #include "VRSkeleton.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRFunction.h"
 #include "core/math/graph.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
@@ -205,11 +206,14 @@ vector<int> VRSkeleton::getBoneJoints(int bone) {
 
 Vec3d& VRSkeleton::jointPos(int j) { return joints[j].pos; };
 
-void VRSkeleton::overrideSim() {
-    ;
-}
+void VRSkeleton::overrideSim(VRUpdateCbPtr cb) { simCB = cb; }
 
 void VRSkeleton::simStep(map<string, ChainData>& ChainDataMap) {
+    if (simCB) {
+        (*simCB)();
+        return;
+    }
+
     auto sum = [](vector<float> v) {
         float r = 0;
         for (auto f : v) r += f;
@@ -260,12 +264,8 @@ void VRSkeleton::simStep(map<string, ChainData>& ChainDataMap) {
         }
     };
 
-
-
     map<int, SystemData> SystemDataMap;
     map<int, Vec3d> jointPositionsOld = getJointsPositions();
-
-
 
     auto getJointSystems = [&]() {
         for (auto& b : bones) {
@@ -296,7 +296,6 @@ void VRSkeleton::simStep(map<string, ChainData>& ChainDataMap) {
             }*/
         }
     };
-
 
     getJointSystems();
 

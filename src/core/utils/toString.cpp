@@ -166,6 +166,7 @@ template<> string typeName(const Color3f& t) { return "Vec3d"; }
 template<> string typeName(const Color4f& t) { return "Vec4d"; }
 template<> string typeName(const Line& t) { return "Line"; }
 template<> string typeName(const Boundingbox& t) { return "Boundingbox"; }
+string typeName(const std::shared_ptr<VRFunction<void>> t) { return "callback()"; }
 
 template <typename T> int ssToVal(stringstream& ss, T& t) {
     int N = ss.tellg();

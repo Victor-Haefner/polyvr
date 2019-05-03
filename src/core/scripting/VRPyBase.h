@@ -32,6 +32,7 @@ struct VRPyBase {
 
     template <typename T>
     static void execPyCall(PyObject* pyFkt, PyObject* pArgs, T t);
+    static void execPyCallVoid(PyObject* pyFkt, PyObject* pArgs);
     template <typename T>
     static VRFunction<T>* parseCallback(PyObject *args);
 

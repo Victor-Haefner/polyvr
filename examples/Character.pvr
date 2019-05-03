@@ -29,7 +29,7 @@
 	def simCb():
 		VR.sim()
 		
-	#VR.character.overrideSim(simCb)
+	VR.character.overrideSim(simCb)
 	
 	
 	

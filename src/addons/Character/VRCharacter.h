@@ -32,7 +32,7 @@ class VRCharacter : public VRGeometry {
 
         void simpleSetup();
 
-        void overrideSim();
+        void overrideSim(VRUpdateCbPtr cb);
 };
 
 OSG_END_NAMESPACE;
