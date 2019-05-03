@@ -50,7 +50,7 @@ int VRSkeleton::addJoint(int bone1, int bone2, VRConstraintPtr constraint) {
     return eID;
 }
 
-void VRSkeleton::setEndEffector(string label, int bone) { endEffectors[label] = bone; }
+void VRSkeleton::setEndEffector(string label, int bone) { if (!endEffectors.count(label)) endEffectors[label] = EndEffector(); endEffectors[label].ID = bone; }
 void VRSkeleton::setRootBone(int bone) { rootBone = bone; }
 
 void VRSkeleton::asGeometry(VRGeoData& data) {
@@ -205,121 +205,15 @@ vector<int> VRSkeleton::getBoneJoints(int bone) {
 
 Vec3d& VRSkeleton::jointPos(int j) { return joints[j].pos; };
 
-void VRSkeleton::move(string endEffector, PosePtr pose) {
+void VRSkeleton::overrideSim() {
+    ;
+}
+
+void VRSkeleton::simStep(map<string, ChainData>& ChainDataMap) {
     auto sum = [](vector<float> v) {
         float r = 0;
         for (auto f : v) r += f;
         return r;
-    };
-
-    auto getBonesChain = [&](string endEffector) {
-        int e = endEffectors[endEffector];
-        VRPathFinding::Position pR(rootBone);
-        VRPathFinding::Position pE(e);
-        VRPathFinding pathFinding;
-        pathFinding.setGraph(armature);
-        auto path = pathFinding.computePath(pR, pE);
-        vector<int> chainedBones;
-        for (auto p : path) chainedBones.push_back(p.nID);
-        return chainedBones;
-    };
-
-    auto getJointsChain = [&](vector<int>& chainedBones) {
-        vector<int> chainedJoints;
-        for (int i=1; i<chainedBones.size(); i++) {
-            int nID1 = chainedBones[i-1];
-            int nID2 = chainedBones[i];
-            int eID = armature->getEdgeID(nID1, nID2);
-            chainedJoints.push_back(eID);
-        }
-        return chainedJoints;
-    };
-
-    struct ChainData {
-        vector<int> chainedBones;
-        vector<int> joints;
-        vector<float> d;
-        Vec3d targetPos;
-        float Dtarget;
-    };
-
-    struct SystemData {
-        int bone;
-        vector<int> joints;
-        map<int,map<int,float>> d;
-    };
-
-    updateJointPositions();
-    map<int, Vec3d> jointPositionsOld = getJointsPositions();
-
-    map<string, ChainData> ChainDataMap;
-    map<int, SystemData> SystemDataMap;
-
-    auto getChains = [&]() {
-        for (auto e : endEffectors) {
-            ChainDataMap[e.first] = ChainData();
-            ChainDataMap[e.first].chainedBones = getBonesChain(e.first);
-            ChainDataMap[e.first].joints = getJointsChain(ChainDataMap[e.first].chainedBones);
-
-            for (int i=1; i<ChainDataMap[e.first].joints.size(); i++) {
-                int jID1 = ChainDataMap[e.first].joints[i-1];
-                int jID2 = ChainDataMap[e.first].joints[i];
-                float d = (jointPos(jID1) - jointPos(jID2)).length();
-                ChainDataMap[e.first].d.push_back( d );
-            }
-        }
-    };
-
-    auto getJointSystems = [&]() {
-        for (auto& b : bones) {
-            auto joints = getBoneJoints(b.first);
-            if (joints.size() <= 2) continue; // not a system!
-
-            auto& data = SystemDataMap[b.first];
-            data.joints = joints;
-            //data.joints.push_back(joints[0]); // close cycle
-            data.bone = b.first;
-
-            cout << "a " << endl;
-            for (auto j1 : data.joints) {
-                cout << " a " << j1 << endl;
-                for (auto j2 : data.joints) {
-                    if (j2 == j1) continue;
-                    float d = (jointPos(j1) - jointPos(j2)).length();
-                    data.d[j1][j2] = d;
-                    cout << "  a " << Vec2i(j1,j2) << "   " << d << " " << endl;
-                }
-            }
-
-            /*for (int i=1; i<data.joints.size(); i++) {
-                int jID1 = data.joints[i-1];
-                int jID2 = data.joints[i];
-                float d = (jointPos(jID1) - jointPos(jID2)).length();
-                data.d.push_back( d );
-            }*/
-        }
-    };
-
-    auto updateBones = [&](ChainData& data) {
-        //cout << "updateBones" << endl;
-        for (int i=1; i<data.joints.size(); i++) {
-            auto& bone = bones[joints[data.joints[i-1]].bone2];
-            int jID1 = data.joints[i-1];
-            int jID2 = data.joints[i];
-
-            Vec3d D1 = jointPositionsOld[jID2] - jointPositionsOld[jID1];
-            Vec3d D2 = jointPos(jID2) - jointPos(jID1);
-            Vec3d pW = jointPositionsOld[jID2] - bone.pose.pos();
-            //cout << " joints: " << D1 << "    " << D2 << endl;
-
-            Matrix4d m0, mM;
-            m0 = bone.pose.asMatrix();
-            mM.setTranslate(jointPos(jID2) - jointPositionsOld[jID2] + Vec3d(m0[3]) + pW);
-            mM.setRotate(Quaterniond(D1, D2));
-            m0.setTranslate(-pW);
-            mM.mult(m0);
-            bone.pose = Pose(mM);
-        }
     };
 
     auto doBackAndForth = [&](ChainData& data) {
@@ -366,15 +260,45 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
         }
     };
 
-    getChains();
-    getJointSystems();
 
-    for (auto& e : ChainDataMap) {
-        auto& joint = joints[ e.second.joints.back() ];
-        e.second.targetPos = bones[joint.bone2].pose.transform( joint.constraint->getReferenceB()->pos() );
-    }
-    auto& joint = joints[ ChainDataMap[endEffector].joints.back() ];
-    ChainDataMap[endEffector].targetPos = pose->transform( joint.constraint->getReferenceB()->pos() );
+
+    map<int, SystemData> SystemDataMap;
+    map<int, Vec3d> jointPositionsOld = getJointsPositions();
+
+
+
+    auto getJointSystems = [&]() {
+        for (auto& b : bones) {
+            auto joints = getBoneJoints(b.first);
+            if (joints.size() <= 2) continue; // not a system!
+
+            auto& data = SystemDataMap[b.first];
+            data.joints = joints;
+            //data.joints.push_back(joints[0]); // close cycle
+            data.bone = b.first;
+
+            cout << "a " << endl;
+            for (auto j1 : data.joints) {
+                cout << " a " << j1 << endl;
+                for (auto j2 : data.joints) {
+                    if (j2 == j1) continue;
+                    float d = (jointPos(j1) - jointPos(j2)).length();
+                    data.d[j1][j2] = d;
+                    cout << "  a " << Vec2i(j1,j2) << "   " << d << " " << endl;
+                }
+            }
+
+            /*for (int i=1; i<data.joints.size(); i++) {
+                int jID1 = data.joints[i-1];
+                int jID2 = data.joints[i];
+                float d = (jointPos(jID1) - jointPos(jID2)).length();
+                data.d.push_back( d );
+            }*/
+        }
+    };
+
+
+    getJointSystems();
 
     applyFABRIK(ChainDataMap["handLeft"]);
     applyFABRIK(ChainDataMap["handRight"]);
@@ -425,12 +349,91 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
         }
     }
 
+
+
+    auto updateBones = [&](ChainData& data) {
+        //cout << "updateBones" << endl;
+        for (int i=1; i<data.joints.size(); i++) {
+            auto& bone = bones[joints[data.joints[i-1]].bone2];
+            int jID1 = data.joints[i-1];
+            int jID2 = data.joints[i];
+
+            Vec3d D1 = jointPositionsOld[jID2] - jointPositionsOld[jID1];
+            Vec3d D2 = jointPos(jID2) - jointPos(jID1);
+            Vec3d pW = jointPositionsOld[jID2] - bone.pose.pos();
+            //cout << " joints: " << D1 << "    " << D2 << endl;
+
+            Matrix4d m0, mM;
+            m0 = bone.pose.asMatrix();
+            mM.setTranslate(jointPos(jID2) - jointPositionsOld[jID2] + Vec3d(m0[3]) + pW);
+            mM.setRotate(Quaterniond(D1, D2));
+            m0.setTranslate(-pW);
+            mM.mult(m0);
+            bone.pose = Pose(mM);
+        }
+    };
+
     // update bones based on new joint positions
     for (auto e : ChainDataMap) updateBones(e.second);
-    int jID = ChainDataMap[endEffector].joints.back();
-    bones[joints[jID].bone2].pose = *pose;
+    //int jID = ChainDataMap[endEffector].joints.back();
+    //bones[joints[jID].bone2].pose = *pose;
+}
 
+void VRSkeleton::resolveKinematics() {
+    auto getBonesChain = [&](string endEffector) {
+        int e = endEffectors[endEffector].ID;
+        VRPathFinding::Position pR(rootBone);
+        VRPathFinding::Position pE(e);
+        VRPathFinding pathFinding;
+        pathFinding.setGraph(armature);
+        auto path = pathFinding.computePath(pR, pE);
+        vector<int> chainedBones;
+        for (auto p : path) chainedBones.push_back(p.nID);
+        return chainedBones;
+    };
+
+    auto getJointsChain = [&](vector<int>& chainedBones) {
+        vector<int> chainedJoints;
+        for (int i=1; i<chainedBones.size(); i++) {
+            int nID1 = chainedBones[i-1];
+            int nID2 = chainedBones[i];
+            int eID = armature->getEdgeID(nID1, nID2);
+            chainedJoints.push_back(eID);
+        }
+        return chainedJoints;
+    };
+
+    updateJointPositions();
+
+    map<string, ChainData> ChainDataMap;
+
+    auto getChains = [&]() {
+        for (auto e : endEffectors) {
+            ChainDataMap[e.first] = ChainData();
+            ChainDataMap[e.first].chainedBones = getBonesChain(e.first);
+            ChainDataMap[e.first].joints = getJointsChain(ChainDataMap[e.first].chainedBones);
+            auto& joint = joints[ ChainDataMap[e.first].joints.back() ];
+            auto pose = e.second.target;
+            if (pose) ChainDataMap[e.first].targetPos = pose->transform( joint.constraint->getReferenceB()->pos() );
+            else ChainDataMap[e.first].targetPos = bones[joint.bone2].pose.transform( joint.constraint->getReferenceB()->pos() );
+
+            for (int i=1; i<ChainDataMap[e.first].joints.size(); i++) {
+                int jID1 = ChainDataMap[e.first].joints[i-1];
+                int jID2 = ChainDataMap[e.first].joints[i];
+                float d = (jointPos(jID1) - jointPos(jID2)).length();
+                ChainDataMap[e.first].d.push_back( d );
+            }
+        }
+    };
+
+    getChains();
+    simStep(ChainDataMap);
     updateGeometry();
+}
+
+void VRSkeleton::move(string endEffector, PosePtr pose) {
+    endEffectors[endEffector].target = pose;
+    resolveKinematics();
 }
 
 

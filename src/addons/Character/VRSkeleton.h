@@ -40,11 +40,31 @@ class VRSkeleton : public VRGeometry {
             VRConstraintPtr constraint;
         };
 
+        struct EndEffector {
+            string name;
+            int ID = -1;
+            PosePtr target;
+        };
+
+        struct ChainData {
+            vector<int> chainedBones;
+            vector<int> joints;
+            vector<float> d;
+            Vec3d targetPos;
+            float Dtarget;
+        };
+
+        struct SystemData {
+            int bone;
+            vector<int> joints;
+            map<int,map<int,float>> d;
+        };
+
         GraphPtr armature;
         map<int, Bone > bones;
         map<int, Joint> joints;
         int rootBone = -1;
-        map<string, int> endEffectors;
+        map<string, EndEffector> endEffectors;
 
         VRGeometryPtr jointsGeo;
 
@@ -52,6 +72,9 @@ class VRSkeleton : public VRGeometry {
         void updateJointPositions();
         vector<int> getBoneJoints(int bone);
         Vec3d& jointPos(int j);
+
+        void simStep(map<string, ChainData>& ChainDataMap);
+        void resolveKinematics();
 
     public:
         VRSkeleton();
@@ -74,6 +97,8 @@ class VRSkeleton : public VRGeometry {
         void updateGeometry();
 
         void move(string endEffector, PosePtr pose);
+
+        void overrideSim();
 };
 
 OSG_END_NAMESPACE;

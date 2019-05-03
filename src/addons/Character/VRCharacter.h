@@ -31,6 +31,8 @@ class VRCharacter : public VRGeometry {
         //void addAction(VRBehavior::ActionPtr a);
 
         void simpleSetup();
+
+        void overrideSim();
 };
 
 OSG_END_NAMESPACE;

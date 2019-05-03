@@ -27,6 +27,7 @@ PyMethodDef VRPyCharacter::methods[] = {
     //{"triggerBehavior", PyWrap( Character, triggerBehavior, "Trigger a certain behavior", void, string ) },
     {"simpleSetup", PyWrap( Character, simpleSetup, "Simple character setup", void ) },
     {"move", PyWrap( Character, move, "Move end effector, 'handLeft', 'handRight', footLeft', 'footRight'", void, string, PosePtr ) },
+    {"overrideSim", PyWrap( Character, overrideSim, "Override kinematics simulation", void ) },
     {NULL}  /* Sentinel */
 };
 
