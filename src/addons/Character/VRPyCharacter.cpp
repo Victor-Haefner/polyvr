@@ -1,6 +1,8 @@
 #include "VRPyCharacter.h"
 #include "core/scripting/VRPyBaseT.h"
 #include "core/scripting/VRPyPose.h"
+#include "core/scripting/VRPyMath.h"
+#include "core/scripting/VRPyConstraint.h"
 
 using namespace OSG;
 
@@ -9,6 +11,16 @@ template<> PyObject* VRPyTypeCaster::cast(const VRSkeleton::EndEffector& e) {
     PyTuple_SetItem(epy, 0, PyString_FromString(e.name.c_str()));
     PyTuple_SetItem(epy, 1, PyInt_FromLong(e.boneID));
     PyTuple_SetItem(epy, 2, VRPyPose::fromSharedPtr(e.target));
+    return epy;
+}
+
+template<> PyObject* VRPyTypeCaster::cast(const VRSkeleton::Joint& e) {
+    PyObject* epy = PyTuple_New(5);
+    PyTuple_SetItem(epy, 0, PyString_FromString(e.name.c_str()));
+    PyTuple_SetItem(epy, 1, VRPyVec3f::fromObject(e.pos));
+    PyTuple_SetItem(epy, 2, PyInt_FromLong(e.bone1));
+    PyTuple_SetItem(epy, 3, PyInt_FromLong(e.bone2));
+    PyTuple_SetItem(epy, 4, VRPyConstraint::fromSharedPtr(e.constraint));
     return epy;
 }
 
@@ -27,6 +39,7 @@ typedef map<string, VRSkeleton::EndEffector> eeMap;
 PyMethodDef VRPySkeleton::methods[] = {
     {"getJointsPositions", PyWrap( Skeleton, getJointsPositions, "Get all skeleton joints positions", vectorMap ) },
     {"getEndEffectors", PyWrap( Skeleton, getEndEffectors, "Get end effectors", eeMap ) },
+    {"getChain", PyWrap( Skeleton, getChain, "Get chain of joints to end effector", vector<VRSkeleton::Joint>, string ) },
     {NULL}  /* Sentinel */
 };
 

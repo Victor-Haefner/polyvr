@@ -104,6 +104,9 @@ class VRSkeleton : public VRGeometry {
 
         void overrideSim(VRUpdateCbPtr cb);
         map<string, EndEffector> getEndEffectors();
+        vector<Joint> getChain(string endEffector);
+        vector<int> getBonesChain(string endEffector);
+        vector<int> getJointsChain(vector<int>& chainedBones);
 };
 
 OSG_END_NAMESPACE;

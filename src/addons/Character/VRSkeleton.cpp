@@ -390,30 +390,30 @@ void VRSkeleton::simStep(map<string, ChainData>& ChainDataMap) {
     //bones[joints[jID].bone2].pose = *pose;
 }
 
+vector<int> VRSkeleton::getBonesChain(string endEffector) {
+    int e = endEffectors[endEffector].boneID;
+    VRPathFinding::Position pR(rootBone);
+    VRPathFinding::Position pE(e);
+    VRPathFinding pathFinding;
+    pathFinding.setGraph(armature);
+    auto path = pathFinding.computePath(pR, pE);
+    vector<int> chainedBones;
+    for (auto p : path) chainedBones.push_back(p.nID);
+    return chainedBones;
+};
+
+vector<int> VRSkeleton::getJointsChain(vector<int>& chainedBones) {
+    vector<int> chainedJoints;
+    for (int i=1; i<chainedBones.size(); i++) {
+        int nID1 = chainedBones[i-1];
+        int nID2 = chainedBones[i];
+        int eID = armature->getEdgeID(nID1, nID2);
+        chainedJoints.push_back(eID);
+    }
+    return chainedJoints;
+};
+
 void VRSkeleton::resolveKinematics() {
-    auto getBonesChain = [&](string endEffector) {
-        int e = endEffectors[endEffector].boneID;
-        VRPathFinding::Position pR(rootBone);
-        VRPathFinding::Position pE(e);
-        VRPathFinding pathFinding;
-        pathFinding.setGraph(armature);
-        auto path = pathFinding.computePath(pR, pE);
-        vector<int> chainedBones;
-        for (auto p : path) chainedBones.push_back(p.nID);
-        return chainedBones;
-    };
-
-    auto getJointsChain = [&](vector<int>& chainedBones) {
-        vector<int> chainedJoints;
-        for (int i=1; i<chainedBones.size(); i++) {
-            int nID1 = chainedBones[i-1];
-            int nID2 = chainedBones[i];
-            int eID = armature->getEdgeID(nID1, nID2);
-            chainedJoints.push_back(eID);
-        }
-        return chainedJoints;
-    };
-
     updateJointPositions();
 
     map<string, ChainData> ChainDataMap;
@@ -445,6 +445,14 @@ void VRSkeleton::resolveKinematics() {
     getChains();
     simStep(ChainDataMap);
     updateGeometry();
+}
+
+vector<VRSkeleton::Joint> VRSkeleton::getChain(string endEffector) {
+    vector<Joint> res;
+    auto bChain = getBonesChain(endEffector);
+    auto jChain = getJointsChain(bChain);
+    for (auto j : jChain) res.push_back(joints[j]);
+    return res;
 }
 
 void VRSkeleton::move(string endEffector, PosePtr pose) {
