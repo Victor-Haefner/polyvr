@@ -41,6 +41,7 @@ class VRSkeleton : public VRGeometry {
         struct EndEffector {
             string name;
             int boneID = -1;
+            int jointID = -1;
             PosePtr target;
         };
 
@@ -79,6 +80,7 @@ class VRSkeleton : public VRGeometry {
 
         void simStep(map<string, ChainData>& ChainDataMap);
         void resolveKinematics();
+        void updateBones(map<string, ChainData>& ChainDataMap, map<int, Vec3d>& jointPositionsOld);
 
     public:
         VRSkeleton();

@@ -53,7 +53,12 @@ int VRSkeleton::addJoint(int bone1, int bone2, VRConstraintPtr constraint, strin
     return eID;
 }
 
-void VRSkeleton::setEndEffector(string label, int bone) { if (!endEffectors.count(label)) endEffectors[label] = EndEffector(); endEffectors[label].boneID = bone; }
+void VRSkeleton::setEndEffector(string label, int bone) {
+    if (!endEffectors.count(label)) endEffectors[label] = EndEffector();
+    endEffectors[label].boneID = bone;
+    endEffectors[label].jointID = armature->getInEdges( bone )[0].ID;
+}
+
 void VRSkeleton::setRootBone(int bone) { rootBone = bone; }
 
 void VRSkeleton::asGeometry(VRGeoData& data) {
@@ -124,8 +129,7 @@ void VRSkeleton::updateGeometry() {
 
     for (auto e : endEffectors) {
         if (!e.second.target) continue;
-        int jID = armature->getInEdges( e.second.boneID )[0].ID;
-        auto& joint = joints[ jID ];
+        auto& joint = joints[ e.second.jointID ];
         Vec3d p = e.second.target->transform( joint.constraint->getReferenceB()->pos() );
         geo2.pushVert(p, Vec3d(0,1,0), Color3f(1,0.5,0.2));
 		geo2.pushPoint();
@@ -277,7 +281,6 @@ void VRSkeleton::simStep(map<string, ChainData>& ChainDataMap) {
     };
 
     map<int, SystemData> SystemDataMap;
-    map<int, Vec3d> jointPositionsOld = getJointsPositions();
 
     auto getJointSystems = [&]() {
         for (auto& b : bones) {
@@ -359,35 +362,6 @@ void VRSkeleton::simStep(map<string, ChainData>& ChainDataMap) {
             }*/
         }
     }
-
-
-
-    auto updateBones = [&](ChainData& data) {
-        //cout << "updateBones" << endl;
-        for (int i=1; i<data.joints.size(); i++) {
-            auto& bone = bones[joints[data.joints[i-1]].bone2];
-            int jID1 = data.joints[i-1];
-            int jID2 = data.joints[i];
-
-            Vec3d D1 = jointPositionsOld[jID2] - jointPositionsOld[jID1];
-            Vec3d D2 = jointPos(jID2) - jointPos(jID1);
-            Vec3d pW = jointPositionsOld[jID2] - bone.pose.pos();
-            //cout << " joints: " << D1 << "    " << D2 << endl;
-
-            Matrix4d m0, mM;
-            m0 = bone.pose.asMatrix();
-            mM.setTranslate(jointPos(jID2) - jointPositionsOld[jID2] + Vec3d(m0[3]) + pW);
-            mM.setRotate(Quaterniond(D1, D2));
-            m0.setTranslate(-pW);
-            mM.mult(m0);
-            bone.pose = Pose(mM);
-        }
-    };
-
-    // update bones based on new joint positions
-    for (auto e : ChainDataMap) updateBones(e.second);
-    //int jID = ChainDataMap[endEffector].joints.back();
-    //bones[joints[jID].bone2].pose = *pose;
 }
 
 vector<int> VRSkeleton::getBonesChain(string endEffector) {
@@ -424,7 +398,7 @@ void VRSkeleton::resolveKinematics() {
             ChainDataMap[e.first].chainedBones = getBonesChain(e.first);
             ChainDataMap[e.first].joints = getJointsChain(ChainDataMap[e.first].chainedBones);
 
-            auto& joint = joints[ ChainDataMap[e.first].joints.back() ];
+            auto& joint = joints[ e.second.jointID ];
             auto pose = e.second.target;
 
             if (pose) ChainDataMap[e.first].targetPos = pose->transform( joint.constraint->getReferenceB()->pos() );
@@ -442,9 +416,50 @@ void VRSkeleton::resolveKinematics() {
         }
     };
 
+    map<int, Vec3d> jointPositionsOld = getJointsPositions();
     getChains();
     simStep(ChainDataMap);
+    updateBones(ChainDataMap, jointPositionsOld);
     updateGeometry();
+}
+
+void VRSkeleton::updateBones(map<string, ChainData>& ChainDataMap, map<int, Vec3d>& jointPositionsOld) {
+    auto updateChain = [&](ChainData& data) {
+        //cout << "updateBones" << endl;
+        for (int i=1; i<data.joints.size(); i++) {
+            auto& bone = bones[joints[data.joints[i-1]].bone2];
+            int jID1 = data.joints[i-1];
+            int jID2 = data.joints[i];
+
+            Vec3d D1 = jointPositionsOld[jID2] - jointPositionsOld[jID1];
+            Vec3d D2 = jointPos(jID2) - jointPos(jID1);
+            Vec3d pW = jointPositionsOld[jID2] - bone.pose.pos();
+            //cout << " joints: " << D1 << "    " << D2 << endl;
+
+            Matrix4d m0, mM;
+            m0 = bone.pose.asMatrix();
+            mM.setTranslate(jointPos(jID2) - jointPositionsOld[jID2] + Vec3d(m0[3]) + pW);
+            mM.setRotate(Quaterniond(D1, D2));
+            m0.setTranslate(-pW);
+            mM.mult(m0);
+            bone.pose = Pose(mM);
+        }
+    };
+
+    // update bones based on new joint positions
+    for (auto e : ChainDataMap) updateChain(e.second);
+
+    for (auto ee : endEffectors) {
+        auto& bone = bones[ee.second.boneID];
+        auto& joint = joints[ee.second.jointID];
+
+        auto pose = *ee.second.target;
+        pose.setPos(Vec3d(0,0,0));
+        auto o = pose.transform( joint.constraint->getReferenceB()->pos() );
+
+        bone.pose = pose;
+        bone.pose.setPos( joint.pos - o );
+    }
 }
 
 vector<VRSkeleton::Joint> VRSkeleton::getChain(string endEffector) {
