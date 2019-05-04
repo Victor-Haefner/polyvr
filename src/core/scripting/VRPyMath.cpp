@@ -300,6 +300,8 @@ VRPyVec3f* toPyVec3f(const Vec3d& v) {
 
 PyObject* toPyObject(const Vec3d& v) { return (PyObject*)toPyVec3f(v); }
 
+PyObject* VRPyVec3f::fromVector(OSG::Vec3d v) { return toPyObject(v); }
+
 PyObject* VRPyVec3f::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     PyObject* v = 0;
     float a,b,c;

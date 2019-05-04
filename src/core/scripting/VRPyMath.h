@@ -47,6 +47,8 @@ struct VRPyVec3f : VRPyBaseT<OSG::Vec3d> {
     static PyNumberMethods nMethods;
     static PySequenceMethods sMethods;
 
+    static PyObject* fromVector(OSG::Vec3d v);
+
     static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* Print(PyObject* self);
 

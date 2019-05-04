@@ -15,9 +15,10 @@ template<> PyObject* VRPyTypeCaster::cast(const VRSkeleton::EndEffector& e) {
 }
 
 template<> PyObject* VRPyTypeCaster::cast(const VRSkeleton::Joint& e) {
+    cout << "VRPyTypeCaster::cast " << e.pos << endl;
     PyObject* epy = PyTuple_New(5);
     PyTuple_SetItem(epy, 0, PyString_FromString(e.name.c_str()));
-    PyTuple_SetItem(epy, 1, VRPyVec3f::fromObject(e.pos));
+    PyTuple_SetItem(epy, 1, VRPyVec3f::fromVector(e.pos));
     PyTuple_SetItem(epy, 2, PyInt_FromLong(e.bone1));
     PyTuple_SetItem(epy, 3, PyInt_FromLong(e.bone2));
     PyTuple_SetItem(epy, 4, VRPyConstraint::fromSharedPtr(e.constraint));
