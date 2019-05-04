@@ -36,22 +36,24 @@ void VRSkeleton::clear() {
     rootBone = -1;
 }
 
-int VRSkeleton::addBone(PosePtr pose, float length) {
+int VRSkeleton::addBone(PosePtr pose, float length, string name) {
     int nID = armature->addNode();
     bones[nID].pose = *pose;
     bones[nID].length = length;
+    bones[nID].name = name;
     return nID;
 }
 
-int VRSkeleton::addJoint(int bone1, int bone2, VRConstraintPtr constraint) {
+int VRSkeleton::addJoint(int bone1, int bone2, VRConstraintPtr constraint, string name) {
     int eID = armature->connect(bone1, bone2);
     joints[eID].bone1 = bone1;
     joints[eID].bone2 = bone2;
     joints[eID].constraint = constraint;
+    joints[eID].name = name;
     return eID;
 }
 
-void VRSkeleton::setEndEffector(string label, int bone) { if (!endEffectors.count(label)) endEffectors[label] = EndEffector(); endEffectors[label].ID = bone; }
+void VRSkeleton::setEndEffector(string label, int bone) { if (!endEffectors.count(label)) endEffectors[label] = EndEffector(); endEffectors[label].boneID = bone; }
 void VRSkeleton::setRootBone(int bone) { rootBone = bone; }
 
 void VRSkeleton::asGeometry(VRGeoData& data) {
@@ -116,9 +118,20 @@ void VRSkeleton::updateGeometry() {
 
     VRGeoData geo2;
     for (auto j : joints) {
-        geo2.pushVert(j.second.pos);
+        geo2.pushVert(j.second.pos, Vec3d(0,1,0), Color3f(1,1,1));
 		geo2.pushPoint();
     }
+
+    for (auto e : endEffectors) {
+        if (!e.second.target) continue;
+        int jID = armature->getInEdges( e.second.boneID )[0].ID;
+        auto& joint = joints[ jID ];
+        Vec3d p = e.second.target->transform( joint.constraint->getReferenceB()->pos() );
+        cout << "VRSkeleton::updateGeometry " << joint.name << " " << p << "  " << bones[ e.second.boneID ].name << endl;
+        geo2.pushVert(p, Vec3d(0,1,0), Color3f(1,0.5,0.2));
+		geo2.pushPoint();
+    }
+
     geo2.apply( jointsGeo );
 }
 
@@ -144,11 +157,11 @@ void VRSkeleton::setupSimpleHumanoid() {
     // spine
     auto waist = ballJoint(Vec3d(0,0,0.15), Vec3d(0,0,-0.2));
     auto neck  = ballJoint(Vec3d(0,0,0.2), Vec3d(0,0,-0.1));
-    int abdomen = addBone(Pose::create(Vec3d(0,1.15,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.3);
-    int back    = addBone(Pose::create(Vec3d(0,1.5,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.4);
-    int head    = addBone(Pose::create(Vec3d(0,1.8,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.2);
-    addJoint(abdomen, back, waist);
-    addJoint(back, head, neck);
+    int abdomen = addBone(Pose::create(Vec3d(0,1.15,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.3, "abdomen");
+    int back    = addBone(Pose::create(Vec3d(0,1.5,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.4, "back");
+    int head    = addBone(Pose::create(Vec3d(0,1.8,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.2, "head");
+    addJoint(abdomen, back, waist, "waist");
+    addJoint(back, head, neck, "neck");
     setEndEffector("head", head);
 
     // legs
@@ -156,12 +169,12 @@ void VRSkeleton::setupSimpleHumanoid() {
     auto knee  = hingeJoint(Vec3d(0,0,-0.25), Vec3d(0,0,0.25));
     for (auto i : {-0.25,0.25}) {
         auto hip = ballJoint(Vec3d(i,0,-0.15), Vec3d(0,0,0.25));
-        int foot     = addBone(Pose::create(Vec3d(i,0,-0.1),Vec3d(0,0,-1),Vec3d(0,1,0)), 0.2);
-        int lowerLeg = addBone(Pose::create(Vec3d(i,0.25,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.5);
-        int upperLeg = addBone(Pose::create(Vec3d(i,0.75,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.5);
-        addJoint(abdomen, upperLeg, hip);
-        addJoint(upperLeg, lowerLeg, knee);
-        addJoint(lowerLeg, foot, ankle);
+        int foot     = addBone(Pose::create(Vec3d(i,0,-0.1),Vec3d(0,0,-1),Vec3d(0,1,0)), 0.2, "foot");
+        int lowerLeg = addBone(Pose::create(Vec3d(i,0.25,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.5, "lLeg");
+        int upperLeg = addBone(Pose::create(Vec3d(i,0.75,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.5, "uLeg");
+        addJoint(abdomen, upperLeg, hip, "hip");
+        addJoint(upperLeg, lowerLeg, knee, "knee");
+        addJoint(lowerLeg, foot, ankle, "ankle");
         if (i > 0) setEndEffector("footRight", foot);
         if (i < 0) setEndEffector("footLeft", foot);
     }
@@ -171,12 +184,12 @@ void VRSkeleton::setupSimpleHumanoid() {
     auto elbow = hingeJoint(Vec3d(0,0,-0.15), Vec3d(0,0,0.15));
     for (auto i : {-0.2,0.2}) {
         auto shoulder = ballJoint( Vec3d(-i,0,0.2), Vec3d(0,0,0.15));
-        int hand     = addBone(Pose::create(Vec3d(i,1.05,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.1);
-        int lowerArm = addBone(Pose::create(Vec3d(i,1.25,0) ,Vec3d(0,-1,0),Vec3d(0,0,1)), 0.3);
-        int upperArm = addBone(Pose::create(Vec3d(i,1.55,0) ,Vec3d(0,-1,0),Vec3d(0,0,1)), 0.3);
-        addJoint(back, upperArm, shoulder);
-        addJoint(upperArm, lowerArm, elbow);
-        addJoint(lowerArm, hand, wrist);
+        int hand     = addBone(Pose::create(Vec3d(i,1.05,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.1, "hand");
+        int lowerArm = addBone(Pose::create(Vec3d(i,1.25,0) ,Vec3d(0,-1,0),Vec3d(0,0,1)), 0.3, "lArm");
+        int upperArm = addBone(Pose::create(Vec3d(i,1.55,0) ,Vec3d(0,-1,0),Vec3d(0,0,1)), 0.3, "uArm");
+        addJoint(back, upperArm, shoulder, "shoulder");
+        addJoint(upperArm, lowerArm, elbow, "elbow");
+        addJoint(lowerArm, hand, wrist, "wrist");
         if (i > 0) setEndEffector("handRight", hand);
         if (i < 0) setEndEffector("handLeft", hand);
     }
@@ -380,7 +393,7 @@ void VRSkeleton::simStep(map<string, ChainData>& ChainDataMap) {
 
 void VRSkeleton::resolveKinematics() {
     auto getBonesChain = [&](string endEffector) {
-        int e = endEffectors[endEffector].ID;
+        int e = endEffectors[endEffector].boneID;
         VRPathFinding::Position pR(rootBone);
         VRPathFinding::Position pE(e);
         VRPathFinding pathFinding;
@@ -411,10 +424,12 @@ void VRSkeleton::resolveKinematics() {
             ChainDataMap[e.first] = ChainData();
             ChainDataMap[e.first].chainedBones = getBonesChain(e.first);
             ChainDataMap[e.first].joints = getJointsChain(ChainDataMap[e.first].chainedBones);
+
             auto& joint = joints[ ChainDataMap[e.first].joints.back() ];
             auto pose = e.second.target;
             if (pose) ChainDataMap[e.first].targetPos = pose->transform( joint.constraint->getReferenceB()->pos() );
             else ChainDataMap[e.first].targetPos = bones[joint.bone2].pose.transform( joint.constraint->getReferenceB()->pos() );
+            cout << "EE joint: " << joint.name << " " << bones[joint.bone2].name << "  " << ChainDataMap[e.first].targetPos << endl;
 
             for (int i=1; i<ChainDataMap[e.first].joints.size(); i++) {
                 int jID1 = ChainDataMap[e.first].joints[i-1];

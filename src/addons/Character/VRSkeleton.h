@@ -29,11 +29,13 @@ class VRSkeleton : public VRGeometry {
     private:
 
         struct Bone {
+            string name;
             Pose pose;
             float length;
         };
 
         struct Joint {
+            string name;
             Vec3d pos;
             int bone1;
             int bone2;
@@ -42,7 +44,7 @@ class VRSkeleton : public VRGeometry {
 
         struct EndEffector {
             string name;
-            int ID = -1;
+            int boneID = -1;
             PosePtr target;
         };
 
@@ -84,8 +86,8 @@ class VRSkeleton : public VRGeometry {
 
         static VRSkeletonPtr create();
 
-        int addBone(PosePtr pose, float length);
-        int addJoint(int bone1, int bone2, VRConstraintPtr constraint);
+        int addBone(PosePtr pose, float length, string name);
+        int addJoint(int bone1, int bone2, VRConstraintPtr constraint, string name);
         void setEndEffector(string label, int bone);
         void setRootBone(int bone);
 
