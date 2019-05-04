@@ -1,7 +1,16 @@
 #include "VRPyCharacter.h"
 #include "core/scripting/VRPyBaseT.h"
+#include "core/scripting/VRPyPose.h"
 
 using namespace OSG;
+
+template<> PyObject* VRPyTypeCaster::cast(const VRSkeleton::EndEffector& e) {
+    PyObject* epy = PyTuple_New(3);
+    PyTuple_SetItem(epy, 0, PyString_FromString(e.name.c_str()));
+    PyTuple_SetItem(epy, 1, PyInt_FromLong(e.boneID));
+    PyTuple_SetItem(epy, 2, VRPyPose::fromSharedPtr(e.target));
+    return epy;
+}
 
 simpleVRPyType(Behavior, New_ptr);
 simpleVRPyType(Skeleton, New_ptr);
@@ -13,9 +22,11 @@ PyMethodDef VRPyBehavior::methods[] = {
 };
 
 typedef map<int,Vec3d> vectorMap;
+typedef map<string, VRSkeleton::EndEffector> eeMap;
 
 PyMethodDef VRPySkeleton::methods[] = {
     {"getJointsPositions", PyWrap( Skeleton, getJointsPositions, "Get all skeleton joints positions", vectorMap ) },
+    {"getEndEffectors", PyWrap( Skeleton, getEndEffectors, "Get end effectors", eeMap ) },
     {NULL}  /* Sentinel */
 };
 

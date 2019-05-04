@@ -24,10 +24,6 @@ class VRSkeleton : public VRGeometry {
             Configuration interpolate(Configuration& other);
         };
 
-        typedef shared_ptr<Configuration> ConfigurationPtr;
-
-    private:
-
         struct Bone {
             string name;
             Pose pose;
@@ -61,6 +57,10 @@ class VRSkeleton : public VRGeometry {
             vector<int> joints;
             map<int,map<int,float>> d;
         };
+
+        typedef shared_ptr<Configuration> ConfigurationPtr;
+
+    private:
 
         GraphPtr armature;
         map<int, Bone > bones;
@@ -103,6 +103,7 @@ class VRSkeleton : public VRGeometry {
         void move(string endEffector, PosePtr pose);
 
         void overrideSim(VRUpdateCbPtr cb);
+        map<string, EndEffector> getEndEffectors();
 };
 
 OSG_END_NAMESPACE;

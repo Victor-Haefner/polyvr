@@ -127,7 +127,6 @@ void VRSkeleton::updateGeometry() {
         int jID = armature->getInEdges( e.second.boneID )[0].ID;
         auto& joint = joints[ jID ];
         Vec3d p = e.second.target->transform( joint.constraint->getReferenceB()->pos() );
-        cout << "VRSkeleton::updateGeometry " << joint.name << " " << p << "  " << bones[ e.second.boneID ].name << endl;
         geo2.pushVert(p, Vec3d(0,1,0), Color3f(1,0.5,0.2));
 		geo2.pushPoint();
     }
@@ -420,16 +419,19 @@ void VRSkeleton::resolveKinematics() {
     map<string, ChainData> ChainDataMap;
 
     auto getChains = [&]() {
-        for (auto e : endEffectors) {
+        for (auto& e : endEffectors) {
             ChainDataMap[e.first] = ChainData();
             ChainDataMap[e.first].chainedBones = getBonesChain(e.first);
             ChainDataMap[e.first].joints = getJointsChain(ChainDataMap[e.first].chainedBones);
 
             auto& joint = joints[ ChainDataMap[e.first].joints.back() ];
             auto pose = e.second.target;
+
             if (pose) ChainDataMap[e.first].targetPos = pose->transform( joint.constraint->getReferenceB()->pos() );
-            else ChainDataMap[e.first].targetPos = bones[joint.bone2].pose.transform( joint.constraint->getReferenceB()->pos() );
-            cout << "EE joint: " << joint.name << " " << bones[joint.bone2].name << "  " << ChainDataMap[e.first].targetPos << endl;
+            else {
+                ChainDataMap[e.first].targetPos = bones[joint.bone2].pose.transform( joint.constraint->getReferenceB()->pos() );
+                e.second.target = Pose::create( bones[joint.bone2].pose );
+            }
 
             for (int i=1; i<ChainDataMap[e.first].joints.size(); i++) {
                 int jID1 = ChainDataMap[e.first].joints[i-1];
@@ -449,6 +451,8 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
     endEffectors[endEffector].target = pose;
     resolveKinematics();
 }
+
+map<string, VRSkeleton::EndEffector> VRSkeleton::getEndEffectors() { return endEffectors; }
 
 
 
