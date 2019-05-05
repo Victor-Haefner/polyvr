@@ -2,6 +2,8 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/math/graph.h"
+#include "core/math/Eigendecomposition.h"
+#include "core/math/SingularValueDecomposition.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "addons/Algorithms/VRPathFinding.h"
@@ -423,6 +425,121 @@ void VRSkeleton::resolveKinematics() {
     updateGeometry();
 }
 
+class KabschAlgorithm {
+    private:
+        vector<Vec3d> points1;
+        vector<Vec3d> points2;
+        vector<Vec2i> matches;
+
+        Vec3d centroid(vector<Vec3d> pnts) {
+            Vec3d r;
+            for (auto p : pnts) r += p;
+            if (pnts.size() > 0) r /= pnts.size();
+            return r;
+        }
+
+    public:
+        KabschAlgorithm() {}
+
+        void setPoints1( vector<Vec3d>& pnts ) { points1 = pnts; }
+        void setPoints2( vector<Vec3d>& pnts ) { points2 = pnts; }
+        void setMatches( vector<Vec2i>& mths ) { matches = mths; }
+
+        void setSimpleMatches() {
+            matches.clear();
+            for (int i=0; i<points1.size(); i++) {
+                matches.push_back(Vec2i(i,i));
+            }
+        }
+
+        Matrix4d compute() {
+            Vec3d c1 = centroid(points1);
+            Vec3d c2 = centroid(points2);
+
+            Matrix4d H, D, Ut, V, T;
+            H.setScale(Vec3d(0,0,0));
+
+            // covariance matrix H
+            for (auto& m : matches) {
+                Vec3d p1 = points1[m[0]] - c1;
+                Vec3d p2 = points2[m[1]] - c2;
+                for (int i=0; i<3; i++) {
+                    for (int j=0; j<3; j++) {
+                        H[i][j] += p1[i]*p2[j];
+                    }
+                }
+            }
+
+            SingularValueDecomposition svd(H);
+
+            V = svd.V;
+            Ut.transposeFrom(svd.U);
+
+            D = V;
+            D.mult(Ut);
+            float d = D.det(); // det( V Ut )
+
+            // R = V diag(1,1,d) Ut
+            T[2] = Vec4d(0,0,d,0);
+            cout << "AAA T\n" << T << endl;
+            cout << "H\n" << H << endl;
+            cout << "V\n" << V << endl;
+            cout << "S\n" << svd.S << endl;
+            cout << "U\n" << svd.U << endl;
+            cout << "Ut\n" << Ut << endl;
+            cout << "check\n" << svd.check() << endl;
+            V.mult(T);
+            V.mult(Ut);
+            V.setTranslate(c2-c1);
+            return V;
+        }
+
+        static void test() {
+            KabschAlgorithm a;
+            vector<Vec3d> p1, p2;
+
+            //Pnt3d t(1,2,3);
+            Pnt3d t(0,0,0);
+            Quaterniond r(Vec3d(1,0,0), 0.2);
+
+            Matrix4d M;
+            M.setTranslate(t);
+            M.setRotate(r);
+
+            //p1 = vector<Vec3d>( { Vec3d(1,0,0), Vec3d(1,2,0), Vec3d(1,0,3), Vec3d(4,0,-2) } );
+            //p1 = vector<Vec3d>( { Vec3d(1,0,0), Vec3d(-1,0,0), Vec3d(0,0,1), Vec3d(0,0,-1) } );
+            p1 = vector<Vec3d>( { Vec3d(0,0,1), Vec3d(0,0,-1), Vec3d(1,1,1), Vec3d(-1,-1,-1) } );
+            for (auto v : p1) {
+                Pnt3d p(v);
+                M.mult(p,p);
+                p2.push_back(Vec3d(p));
+            }
+
+            a.setPoints1( p1 );
+            a.setPoints2( p2 );
+            a.setSimpleMatches();
+            auto R = a.compute();
+
+            Vec3d ax; double f;
+            r.getValueAsAxisRad(ax,f);
+            cout << "\nKabschAlgorithm::test\nM:\n" << M << "\n t: " << t << "\n r: " << ax << "  " << f << endl;
+            cout << " R\n" << R << endl;
+
+            Vec3d Rt, Rs, Rc;
+            Quaterniond Rr, Rso;
+            R.getTransform(Rt,Rr,Rs,Rso);
+
+            Rr.getValueAsAxisRad(ax,f);
+            cout << " Rt: " << Rt << "\n Rr: " << ax << "  " << f << endl;
+
+            for (int i=0; i<p1.size(); i++) {
+                Pnt3d p;
+                R.mult(Pnt3d(p1[i]),p);
+                cout << " D " << Vec3d(p-p2[i]).length() << " PP " << p2[i] << " / " << p << endl;
+            }
+        }
+};
+
 void VRSkeleton::updateBones(map<string, ChainData>& ChainDataMap, map<int, Vec3d>& jointPositionsOld) {
     auto updateChain = [&](ChainData& data) {
         //cout << "updateBones" << endl;
@@ -447,7 +564,40 @@ void VRSkeleton::updateBones(map<string, ChainData>& ChainDataMap, map<int, Vec3
     };
 
     // update bones based on new joint positions
-    for (auto e : ChainDataMap) updateChain(e.second);
+    //for (auto e : ChainDataMap) updateChain(e.second);
+
+    for (auto& b : bones) {
+        Bone& bone = b.second;
+        auto bJoints = getBoneJoints(b.first);
+        if (bJoints.size() <= 1) continue;
+
+        vector<Vec3d> pnts1;
+        vector<Vec3d> pnts2;
+
+        map<int, Vec3d> jbPositions;
+
+        for (auto e : armature->getOutEdges(b.first)) {
+            Vec3d p = joints[e.ID].constraint->getReferenceA()->pos();
+            jbPositions[e.ID] = bone.pose.transform( p );
+        }
+
+        for (auto e : armature->getInEdges(b.first)) {
+            Vec3d p = joints[e.ID].constraint->getReferenceB()->pos();
+            jbPositions[e.ID] = bone.pose.transform( p );
+        }
+
+        for (auto j : bJoints) pnts1.push_back( jbPositions[j] );
+        for (auto j : bJoints) pnts2.push_back( jointPos(j) );
+
+        KabschAlgorithm a;
+        a.setPoints1(pnts1);
+        a.setPoints2(pnts2);
+        a.setSimpleMatches();
+        auto M = a.compute();
+        M.mult( bone.pose.asMatrix() );
+        bone.pose = Pose(M);
+        cout << "update joints " << bone.pose.toString() << endl;
+    }
 
     for (auto ee : endEffectors) {
         auto& bone = bones[ee.second.boneID];
@@ -471,6 +621,9 @@ vector<VRSkeleton::Joint> VRSkeleton::getChain(string endEffector) {
 }
 
 void VRSkeleton::move(string endEffector, PosePtr pose) {
+    KabschAlgorithm::test();
+    return;
+
     endEffectors[endEffector].target = pose;
     resolveKinematics();
 }
