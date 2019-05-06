@@ -456,7 +456,7 @@ class KabschAlgorithm {
             Vec3d c1 = centroid(points1);
             Vec3d c2 = centroid(points2);
 
-            Matrix4d H, D, Ut, V, T;
+            Matrix4d H, D, U, Ut, V, Vt, T;
             H.setScale(Vec3d(0,0,0));
 
             // covariance matrix H
@@ -472,35 +472,41 @@ class KabschAlgorithm {
 
             SingularValueDecomposition svd(H);
 
+            U = svd.U;
             V = svd.V;
             Ut.transposeFrom(svd.U);
+            Vt.transposeFrom(svd.V);
 
             D = V;
             D.mult(Ut);
             float d = D.det(); // det( V Ut )
 
             // R = V diag(1,1,d) Ut
-            T[2] = Vec4d(0,0,d,0);
-            cout << "AAA T\n" << T << endl;
+            T.setScale(Vec3d(1,1,d));
+            /*cout << "T\n" << T << endl;
             cout << "H\n" << H << endl;
             cout << "V\n" << V << endl;
             cout << "S\n" << svd.S << endl;
             cout << "U\n" << svd.U << endl;
             cout << "Ut\n" << Ut << endl;
-            cout << "check\n" << svd.check() << endl;
-            V.mult(T);
-            V.mult(Ut);
-            V.setTranslate(c2-c1);
-            return V;
+            cout << "check\n" << svd.check() << endl;*/
+            T.multLeft(U);
+            T.mult(Vt);
+
+            // compute translation
+            Vec3d P;
+            T.mult(points1[0], P);
+            T.setTranslate(points2[0]-P);
+            return T;
         }
 
         static void test() {
             KabschAlgorithm a;
             vector<Vec3d> p1, p2;
 
-            //Pnt3d t(1,2,3);
-            Pnt3d t(0,0,0);
-            Quaterniond r(Vec3d(1,0,0), 0.2);
+            Pnt3d t(1,2,3);
+            //Pnt3d t(0,0,0);
+            Quaterniond r(Vec3d(1,0,1), -0.35);
 
             Matrix4d M;
             M.setTranslate(t);
@@ -508,7 +514,7 @@ class KabschAlgorithm {
 
             //p1 = vector<Vec3d>( { Vec3d(1,0,0), Vec3d(1,2,0), Vec3d(1,0,3), Vec3d(4,0,-2) } );
             //p1 = vector<Vec3d>( { Vec3d(1,0,0), Vec3d(-1,0,0), Vec3d(0,0,1), Vec3d(0,0,-1) } );
-            p1 = vector<Vec3d>( { Vec3d(0,0,1), Vec3d(0,0,-1), Vec3d(1,1,1), Vec3d(-1,-1,-1) } );
+            p1 = vector<Vec3d>( { Vec3d(0,0,1), Vec3d(0,0,-1), Vec3d(1,1,1), Vec3d(-1,-1,-1), Vec3d(2,2,2) } );
             for (auto v : p1) {
                 Pnt3d p(v);
                 M.mult(p,p);
@@ -621,8 +627,8 @@ vector<VRSkeleton::Joint> VRSkeleton::getChain(string endEffector) {
 }
 
 void VRSkeleton::move(string endEffector, PosePtr pose) {
-    KabschAlgorithm::test();
-    return;
+    //KabschAlgorithm::test();
+    //return;
 
     endEffectors[endEffector].target = pose;
     resolveKinematics();
