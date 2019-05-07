@@ -46,12 +46,13 @@ int VRSkeleton::addBone(PosePtr pose, float length, string name) {
     return nID;
 }
 
-int VRSkeleton::addJoint(int bone1, int bone2, VRConstraintPtr constraint, string name) {
+int VRSkeleton::addJoint(int bone1, int bone2, VRConstraintPtr constraint, string name, Color3f col) {
     int eID = armature->connect(bone1, bone2);
     joints[eID].bone1 = bone1;
     joints[eID].bone2 = bone2;
     joints[eID].constraint = constraint;
     joints[eID].name = name;
+    joints[eID].col = col;
     return eID;
 }
 
@@ -125,7 +126,7 @@ void VRSkeleton::updateGeometry() {
 
     VRGeoData geo2;
     for (auto j : joints) {
-        geo2.pushVert(j.second.pos, Vec3d(0,1,0), Color3f(1,1,1));
+        geo2.pushVert(j.second.pos, Vec3d(0,1,0), j.second.col);
 		geo2.pushPoint();
     }
 
@@ -173,30 +174,32 @@ void VRSkeleton::setupSimpleHumanoid() {
     auto ankle = ballJoint(Vec3d(0,0,-0.25), Vec3d(0,0,0.1));
     auto knee  = hingeJoint(Vec3d(0,0,-0.25), Vec3d(0,0,0.25));
     for (auto i : {-0.25,0.25}) {
+        string side = i < 0 ? "Left" : "Right";
+        Color3f sc = i < 0 ? Color3f(1,0,0) : Color3f(0,0,1);
         auto hip = ballJoint(Vec3d(i,0,-0.15), Vec3d(0,0,0.25));
-        int foot     = addBone(Pose::create(Vec3d(i,0,-0.1),Vec3d(0,0,-1),Vec3d(0,1,0)), 0.2, "foot");
-        int lowerLeg = addBone(Pose::create(Vec3d(i,0.25,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.5, "lLeg");
-        int upperLeg = addBone(Pose::create(Vec3d(i,0.75,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.5, "uLeg");
-        addJoint(abdomen, upperLeg, hip, "hip");
-        addJoint(upperLeg, lowerLeg, knee, "knee");
-        addJoint(lowerLeg, foot, ankle, "ankle");
-        if (i > 0) setEndEffector("footRight", foot);
-        if (i < 0) setEndEffector("footLeft", foot);
+        int foot     = addBone(Pose::create(Vec3d(i,0,-0.1),Vec3d(0,0,-1),Vec3d(0,1,0)), 0.2, "foot"+side);
+        int lowerLeg = addBone(Pose::create(Vec3d(i,0.25,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.5, "lLeg"+side);
+        int upperLeg = addBone(Pose::create(Vec3d(i,0.75,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.5, "uLeg"+side);
+        addJoint(abdomen, upperLeg, hip, "hip"+side, sc);
+        addJoint(upperLeg, lowerLeg, knee, "knee"+side, sc);
+        addJoint(lowerLeg, foot, ankle, "ankle"+side, sc);
+        setEndEffector("foot"+side, foot);
     }
 
     // arms
     auto wrist = ballJoint(Vec3d(0,0,-0.15), Vec3d(0,0,0.05));
     auto elbow = hingeJoint(Vec3d(0,0,-0.15), Vec3d(0,0,0.15));
     for (auto i : {-0.2,0.2}) {
+        string side = i < 0 ? "Left" : "Right";
+        Color3f sc = i < 0 ? Color3f(1,0,0) : Color3f(0,0,1);
         auto shoulder = ballJoint( Vec3d(-i,0,0.2), Vec3d(0,0,0.15));
-        int hand     = addBone(Pose::create(Vec3d(i,1.05,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.1, "hand");
-        int lowerArm = addBone(Pose::create(Vec3d(i,1.25,0) ,Vec3d(0,-1,0),Vec3d(0,0,1)), 0.3, "lArm");
-        int upperArm = addBone(Pose::create(Vec3d(i,1.55,0) ,Vec3d(0,-1,0),Vec3d(0,0,1)), 0.3, "uArm");
-        addJoint(back, upperArm, shoulder, "shoulder");
-        addJoint(upperArm, lowerArm, elbow, "elbow");
-        addJoint(lowerArm, hand, wrist, "wrist");
-        if (i > 0) setEndEffector("handRight", hand);
-        if (i < 0) setEndEffector("handLeft", hand);
+        int hand     = addBone(Pose::create(Vec3d(i,1.05,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.1, "hand"+side);
+        int lowerArm = addBone(Pose::create(Vec3d(i,1.25,0) ,Vec3d(0,-1,0),Vec3d(0,0,1)), 0.3, "lArm"+side);
+        int upperArm = addBone(Pose::create(Vec3d(i,1.55,0) ,Vec3d(0,-1,0),Vec3d(0,0,1)), 0.3, "uArm"+side);
+        addJoint(back, upperArm, shoulder, "shoulder"+side, sc);
+        addJoint(upperArm, lowerArm, elbow, "elbow"+side, sc);
+        addJoint(lowerArm, hand, wrist, "wrist"+side, sc);
+        setEndEffector("hand"+side, hand);
     }
 
     setRootBone(abdomen);
@@ -294,14 +297,14 @@ void VRSkeleton::simStep(map<string, ChainData>& ChainDataMap) {
             //data.joints.push_back(joints[0]); // close cycle
             data.bone = b.first;
 
-            cout << "a " << endl;
+            //cout << "a " << endl;
             for (auto j1 : data.joints) {
-                cout << " a " << j1 << endl;
+                //cout << " a " << j1 << endl;
                 for (auto j2 : data.joints) {
                     if (j2 == j1) continue;
                     float d = (jointPos(j1) - jointPos(j2)).length();
                     data.d[j1][j2] = d;
-                    cout << "  a " << Vec2i(j1,j2) << "   " << d << " " << endl;
+                    //cout << "  a " << Vec2i(j1,j2) << "   " << d << " " << endl;
                 }
             }
 
@@ -325,9 +328,9 @@ void VRSkeleton::simStep(map<string, ChainData>& ChainDataMap) {
         bool doContinue = true;
         while(doContinue) {
             doContinue = false;
-            cout << "b " << endl;
+            //cout << "b " << endl;
             for (auto j1 : e.second.joints) {
-                cout << " b " << j1 << endl;
+                //cout << " b " << j1 << endl;
                 for (auto j2 : e.second.joints) {
                     if (j2 == j1) continue;
                     Vec3d M = (jointPos(j1) + jointPos(j2))*0.5;
@@ -340,7 +343,7 @@ void VRSkeleton::simStep(map<string, ChainData>& ChainDataMap) {
                         jointPos(j1) = M - D;
                         jointPos(j2) = M + D;
                         doContinue = true;
-                        cout << "  b " << Vec2i(j1,j2) << "  " << d2 << " " << d << endl;
+                        //cout << "  b " << Vec2i(j1,j2) << "  " << d2 << " " << d << endl;
                     }
                 }
             }
@@ -452,7 +455,7 @@ class KabschAlgorithm {
             }
         }
 
-        Matrix4d compute() {
+        Matrix4d compute(bool verbose = false) {
             Vec3d c1 = centroid(points1);
             Vec3d c2 = centroid(points2);
 
@@ -470,26 +473,34 @@ class KabschAlgorithm {
                 }
             }
 
-            SingularValueDecomposition svd(H);
+            SingularValueDecomposition svd(H, verbose);
 
             U = svd.U;
             V = svd.V;
             Ut.transposeFrom(svd.U);
             Vt.transposeFrom(svd.V);
 
-            D = V;
-            D.mult(Ut);
-            float d = D.det(); // det( V Ut )
+            D = U;
+            D.mult(Vt);
+            float d = D.det(); // det( V Ut ) / det( U Vt )
 
-            // R = V diag(1,1,d) Ut
-            T.setScale(Vec3d(1,1,d));
-            /*cout << "T\n" << T << endl;
-            cout << "H\n" << H << endl;
-            cout << "V\n" << V << endl;
-            cout << "S\n" << svd.S << endl;
-            cout << "U\n" << svd.U << endl;
-            cout << "Ut\n" << Ut << endl;
-            cout << "check\n" << svd.check() << endl;*/
+            // R = V diag(1,1,d) Ut / R = U diag(1,1,d) Vt
+            //T.setScale(Vec3d(1,1,d));
+            //T.setScale(Vec3d(1,d,1));
+            T.setScale(Vec3d(d,d,d));
+            //T.setScale(Vec3d(1,1,1));
+            if (verbose) {
+                cout << "T\n" << T << endl;
+                cout << "H\n" << H << endl;
+                cout << "V\n" << V << endl;
+                cout << "S\n" << svd.S << endl;
+                cout << "U\n" << svd.U << endl;
+                cout << "Ut\n" << Ut << endl;
+                Matrix4d C = svd.check();
+                cout << "check\n" << C;
+                float f = 0; for (int i=0; i<4; i++) for (int j=0; j<4; j++) f += H[i][j] - C[i][j];
+                cout << " -> " << f << endl << endl;
+            }
             T.multLeft(U);
             T.mult(Vt);
 
@@ -497,6 +508,15 @@ class KabschAlgorithm {
             Vec3d P;
             T.mult(points1[0], P);
             T.setTranslate(points2[0]-P);
+            if (verbose) {
+                double f;
+                Vec3d Rt, Rs, Rc, ax;
+                Quaterniond Rr, Rso;
+                T.getTransform(Rt,Rr,Rs,Rso);
+                Rr.getValueAsAxisRad(ax,f);
+                cout << " Rt: " << Rt << "\n Rr: " << ax << "  " << f << endl;
+                cout << " R:\n" << T << endl;
+            }
             return T;
         }
 
@@ -534,7 +554,6 @@ class KabschAlgorithm {
             Vec3d Rt, Rs, Rc;
             Quaterniond Rr, Rso;
             R.getTransform(Rt,Rr,Rs,Rso);
-
             Rr.getValueAsAxisRad(ax,f);
             cout << " Rt: " << Rt << "\n Rr: " << ax << "  " << f << endl;
 
@@ -592,17 +611,28 @@ void VRSkeleton::updateBones(map<string, ChainData>& ChainDataMap, map<int, Vec3
             jbPositions[e.ID] = bone.pose.transform( p );
         }
 
+        bool verbose = (bone.name == "uLegRight");
+
         for (auto j : bJoints) pnts1.push_back( jbPositions[j] );
-        for (auto j : bJoints) pnts2.push_back( jointPos(j) );
+        for (auto j : bJoints) {
+            pnts2.push_back( jointPos(j) );  // TODO: fix points!
+            if (verbose) cout << "new joint position, joint: " << joints[j].name << " P: " << joints[j].pos << endl;
+        }
+
+
+        if (verbose) {
+            cout << "update bone " << bone.name << ", pose: " << bone.pose.toString() << endl;
+            for (auto p1 : pnts1) cout << " p1: " << p1 << endl;
+            for (auto p2 : pnts2) cout << " p2: " << p2 << endl;
+        }
 
         KabschAlgorithm a;
         a.setPoints1(pnts1);
         a.setPoints2(pnts2);
         a.setSimpleMatches();
-        auto M = a.compute();
+        auto M = a.compute(verbose && 0);
         M.mult( bone.pose.asMatrix() );
         bone.pose = Pose(M);
-        cout << "update joints " << bone.pose.toString() << endl;
     }
 
     for (auto ee : endEffectors) {

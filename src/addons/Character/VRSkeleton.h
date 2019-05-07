@@ -6,6 +6,8 @@
 #include "core/math/pose.h"
 #include "VRCharacterFwd.h"
 
+#include <OpenSG/OSGColor.h>
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -32,6 +34,7 @@ class VRSkeleton : public VRGeometry {
 
         struct Joint {
             string name;
+            Color3f col;
             Vec3d pos;
             int bone1;
             int bone2;
@@ -89,7 +92,7 @@ class VRSkeleton : public VRGeometry {
         static VRSkeletonPtr create();
 
         int addBone(PosePtr pose, float length, string name);
-        int addJoint(int bone1, int bone2, VRConstraintPtr constraint, string name);
+        int addJoint(int bone1, int bone2, VRConstraintPtr constraint, string name, Color3f col = Color3f(1,1,1));
         void setEndEffector(string label, int bone);
         void setRootBone(int bone);
 
