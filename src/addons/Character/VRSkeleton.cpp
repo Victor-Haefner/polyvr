@@ -508,10 +508,8 @@ class KabschAlgorithm {
             float d = D.det(); // det( V Ut ) / det( U Vt )
 
             // R = V diag(1,1,d) Ut / R = U diag(1,1,d) Vt
-            //T.setScale(Vec3d(1,1,d));
-            //T.setScale(Vec3d(1,d,1));
-            T.setScale(Vec3d(d,d,d));
-            //T.setScale(Vec3d(1,1,1));
+            T.setScale(Vec3d(1,1,d));
+            //T.setScale(Vec3d(d,d,d));
             if (verbose) {
                 cout << "T\n" << T << endl;
                 cout << "H\n" << H << endl;
@@ -641,7 +639,7 @@ void VRSkeleton::updateBones(map<string, ChainData>& ChainDataMap, map<int, Vec3
             jbPositions[e.ID] = bone.pose.transform( p );
         }
 
-        bool verbose = (bone.name == "uArmRight");
+        bool verbose = (bone.name == "uArmLeft");
 
         for (auto j : bJoints) pnts1.push_back( jbPositions[j] );
         for (auto j : bJoints) {
