@@ -509,9 +509,15 @@ class KabschAlgorithm {
             T.mult(Vt);
 
             // compute translation
-            Vec3d P;
+            vector<Vec3d> pntsT;
+            for (auto p : points1) { T.mult(p,p); pntsT.push_back( p ); }
+            auto cT = centroid(pntsT);
+            T.setTranslate(c2-cT);
+
+            /*Vec3d P;
             T.mult(points1[0], P);
-            T.setTranslate(points2[0]-P);
+            T.setTranslate(points2[0]-P);*/
+
             if (verbose) {
                 double f;
                 Vec3d Rt, Rs, Rc, ax;
@@ -615,7 +621,7 @@ void VRSkeleton::updateBones(map<string, ChainData>& ChainDataMap, map<int, Vec3
             jbPositions[e.ID] = bone.pose.transform( p );
         }
 
-        bool verbose = (bone.name == "uLegRight");
+        bool verbose = (bone.name == "uArmRight");
 
         for (auto j : bJoints) pnts1.push_back( jbPositions[j] );
         for (auto j : bJoints) {
@@ -634,7 +640,7 @@ void VRSkeleton::updateBones(map<string, ChainData>& ChainDataMap, map<int, Vec3
         a.setPoints1(pnts1);
         a.setPoints2(pnts2);
         a.setSimpleMatches();
-        auto M = a.compute(verbose && 0);
+        auto M = a.compute(verbose);
         M.mult( bone.pose.asMatrix() );
         bone.pose = Pose(M);
     }
