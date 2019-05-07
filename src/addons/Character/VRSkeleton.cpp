@@ -639,7 +639,7 @@ void VRSkeleton::updateBones(map<string, ChainData>& ChainDataMap, map<int, Vec3
             jbPositions[e.ID] = bone.pose.transform( p );
         }
 
-        bool verbose = (bone.name == "uArmLeft");
+        bool verbose = (bone.name == "back");
 
         for (auto j : bJoints) pnts1.push_back( jbPositions[j] );
         for (auto j : bJoints) {
