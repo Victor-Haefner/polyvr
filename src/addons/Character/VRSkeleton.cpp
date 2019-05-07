@@ -74,9 +74,28 @@ void VRSkeleton::asGeometry(VRGeoData& data) {
         auto& bone = b.second;
         Pnt3d p1 = bone.pose.pos() + bone.pose.dir() * bone.length*0.5;
         Pnt3d p2 = bone.pose.pos() - bone.pose.dir() * bone.length*0.5;
+        Pnt3d p3 = bone.pose.pos() - bone.pose.dir() * bone.length*0.3 + bone.pose.up()*0.1*bone.length;
+        Pnt3d p4 = bone.pose.pos() - bone.pose.dir() * bone.length*0.3 - bone.pose.up()*0.1*bone.length;
+        Pnt3d p5 = bone.pose.pos() - bone.pose.dir() * bone.length*0.3 + bone.pose.x()*0.1*bone.length;
+        Pnt3d p6 = bone.pose.pos() - bone.pose.dir() * bone.length*0.3 - bone.pose.x()*0.1*bone.length;
         int v1 = data.pushVert(p1, n, green);
         int v2 = data.pushVert(p2, n, green);
-        data.pushLine(v1, v2);
+        int v3 = data.pushVert(p3, n, yellow);
+        int v4 = data.pushVert(p4, n, green*0.5);
+        int v5 = data.pushVert(p5, n, green);
+        int v6 = data.pushVert(p6, n, green);
+        data.pushLine(v1, v3);
+        data.pushLine(v3, v2);
+        data.pushLine(v1, v4);
+        data.pushLine(v4, v2);
+        data.pushLine(v1, v5);
+        data.pushLine(v5, v2);
+        data.pushLine(v1, v6);
+        data.pushLine(v6, v2);
+        data.pushLine(v3, v5);
+        data.pushLine(v5, v4);
+        data.pushLine(v4, v6);
+        data.pushLine(v6, v3);
         //cout << "create bone geo " << bone.length << "  " << bone.pose.pos() << endl;
     }
 
@@ -163,9 +182,9 @@ void VRSkeleton::setupSimpleHumanoid() {
     // spine
     auto waist = ballJoint(Vec3d(0,0,0.15), Vec3d(0,0,-0.2));
     auto neck  = ballJoint(Vec3d(0,0,0.2), Vec3d(0,0,-0.1));
-    int abdomen = addBone(Pose::create(Vec3d(0,1.15,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.3, "abdomen");
-    int back    = addBone(Pose::create(Vec3d(0,1.5,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.4, "back");
-    int head    = addBone(Pose::create(Vec3d(0,1.8,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.2, "head");
+    int abdomen = addBone(Pose::create(Vec3d(0,1.15,0),Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.3, "abdomen");
+    int back    = addBone(Pose::create(Vec3d(0,1.5,0),Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.4, "back");
+    int head    = addBone(Pose::create(Vec3d(0,1.8,0),Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.2, "head");
     addJoint(abdomen, back, waist, "waist");
     addJoint(back, head, neck, "neck");
     setEndEffector("head", head);
@@ -176,10 +195,10 @@ void VRSkeleton::setupSimpleHumanoid() {
     for (auto i : {-0.25,0.25}) {
         string side = i < 0 ? "Left" : "Right";
         Color3f sc = i < 0 ? Color3f(1,0,0) : Color3f(0,0,1);
-        auto hip = ballJoint(Vec3d(-i,0,-0.15), Vec3d(0,0,0.25));
+        auto hip = ballJoint(Vec3d(i,0,-0.15), Vec3d(0,0,0.25));
         int foot     = addBone(Pose::create(Vec3d(i,0,-0.1),Vec3d(0,0,-1),Vec3d(0,1,0)), 0.2, "foot"+side);
-        int lowerLeg = addBone(Pose::create(Vec3d(i,0.25,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.5, "lLeg"+side);
-        int upperLeg = addBone(Pose::create(Vec3d(i,0.75,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.5, "uLeg"+side);
+        int lowerLeg = addBone(Pose::create(Vec3d(i,0.25,0),Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.5, "lLeg"+side);
+        int upperLeg = addBone(Pose::create(Vec3d(i,0.75,0),Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.5, "uLeg"+side);
         addJoint(abdomen, upperLeg, hip, "hip"+side, sc);
         addJoint(upperLeg, lowerLeg, knee, "knee"+side, sc);
         addJoint(lowerLeg, foot, ankle, "ankle"+side, sc);
@@ -192,10 +211,10 @@ void VRSkeleton::setupSimpleHumanoid() {
     for (auto i : {-0.2,0.2}) {
         string side = i < 0 ? "Left" : "Right";
         Color3f sc = i < 0 ? Color3f(1,0,0) : Color3f(0,0,1);
-        auto shoulder = ballJoint( Vec3d(-i,0,0.2), Vec3d(0,0,0.15));
-        int hand     = addBone(Pose::create(Vec3d(i,1.05,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.1, "hand"+side);
-        int lowerArm = addBone(Pose::create(Vec3d(i,1.25,0) ,Vec3d(0,-1,0),Vec3d(0,0,1)), 0.3, "lArm"+side);
-        int upperArm = addBone(Pose::create(Vec3d(i,1.55,0) ,Vec3d(0,-1,0),Vec3d(0,0,1)), 0.3, "uArm"+side);
+        auto shoulder = ballJoint( Vec3d(i,0,0.2), Vec3d(0,0,0.15));
+        int hand     = addBone(Pose::create(Vec3d(i,1.05,0),Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.1, "hand"+side);
+        int lowerArm = addBone(Pose::create(Vec3d(i,1.25,0) ,Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.3, "lArm"+side);
+        int upperArm = addBone(Pose::create(Vec3d(i,1.55,0) ,Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.3, "uArm"+side);
         addJoint(back, upperArm, shoulder, "shoulder"+side, sc);
         addJoint(upperArm, lowerArm, elbow, "elbow"+side, sc);
         addJoint(lowerArm, hand, wrist, "wrist"+side, sc);
@@ -509,14 +528,15 @@ class KabschAlgorithm {
             T.mult(Vt);
 
             // compute translation
-            vector<Vec3d> pntsT;
+
+            /*vector<Vec3d> pntsT; // looks nice but is wrong :(
             for (auto p : points1) { T.mult(p,p); pntsT.push_back( p ); }
             auto cT = centroid(pntsT);
-            T.setTranslate(c2-cT);
+            T.setTranslate(c2-cT);*/
 
-            /*Vec3d P;
+            Vec3d P;
             T.mult(points1[0], P);
-            T.setTranslate(points2[0]-P);*/
+            T.setTranslate(points2[0]-P);
 
             if (verbose) {
                 double f;
