@@ -176,7 +176,7 @@ void VRSkeleton::setupSimpleHumanoid() {
     for (auto i : {-0.25,0.25}) {
         string side = i < 0 ? "Left" : "Right";
         Color3f sc = i < 0 ? Color3f(1,0,0) : Color3f(0,0,1);
-        auto hip = ballJoint(Vec3d(i,0,-0.15), Vec3d(0,0,0.25));
+        auto hip = ballJoint(Vec3d(-i,0,-0.15), Vec3d(0,0,0.25));
         int foot     = addBone(Pose::create(Vec3d(i,0,-0.1),Vec3d(0,0,-1),Vec3d(0,1,0)), 0.2, "foot"+side);
         int lowerLeg = addBone(Pose::create(Vec3d(i,0.25,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.5, "lLeg"+side);
         int upperLeg = addBone(Pose::create(Vec3d(i,0.75,0),Vec3d(0,-1,0),Vec3d(0,0,1)), 0.5, "uLeg"+side);
@@ -206,9 +206,11 @@ void VRSkeleton::setupSimpleHumanoid() {
 }
 
 void VRSkeleton::updateJointPositions() {
+    //cout << "VRSkeleton::updateJointPositions" << endl;
     for (auto& j : joints) {
         auto& bone1 = bones[j.second.bone1];
         j.second.pos = bone1.pose.transform( j.second.constraint->getReferenceA()->pos() );
+        //cout << " joint: " << j.second.name << ", bone1: " << bone1.name << ", jPos: " << j.second.pos << ", refA: " << j.second.constraint->getReferenceA()->pos() << endl;
     }
 };
 
@@ -382,12 +384,14 @@ vector<int> VRSkeleton::getBonesChain(string endEffector) {
 };
 
 vector<int> VRSkeleton::getJointsChain(vector<int>& chainedBones) {
+    //cout << "VRSkeleton::getJointsChain:" << endl;
     vector<int> chainedJoints;
     for (int i=1; i<chainedBones.size(); i++) {
         int nID1 = chainedBones[i-1];
         int nID2 = chainedBones[i];
         int eID = armature->getEdgeID(nID1, nID2);
         chainedJoints.push_back(eID);
+        //cout << " joint: " << joints[eID].name << " between " << bones[nID1].name << " and " << bones[nID2].name << endl;
     }
     return chainedJoints;
 };
