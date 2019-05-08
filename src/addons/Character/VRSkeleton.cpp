@@ -594,35 +594,10 @@ class KabschAlgorithm {
 };
 
 void VRSkeleton::updateBones(map<string, ChainData>& ChainDataMap, map<int, Vec3d>& jointPositionsOld) {
-    auto updateChain = [&](ChainData& data) {
-        //cout << "updateBones" << endl;
-        for (int i=1; i<data.joints.size(); i++) {
-            auto& bone = bones[joints[data.joints[i-1]].bone2];
-            int jID1 = data.joints[i-1];
-            int jID2 = data.joints[i];
-
-            Vec3d D1 = jointPositionsOld[jID2] - jointPositionsOld[jID1];
-            Vec3d D2 = jointPos(jID2) - jointPos(jID1);
-            Vec3d pW = jointPositionsOld[jID2] - bone.pose.pos();
-            //cout << " joints: " << D1 << "    " << D2 << endl;
-
-            Matrix4d m0, mM;
-            m0 = bone.pose.asMatrix();
-            mM.setTranslate(jointPos(jID2) - jointPositionsOld[jID2] + Vec3d(m0[3]) + pW);
-            mM.setRotate(Quaterniond(D1, D2));
-            m0.setTranslate(-pW);
-            mM.mult(m0);
-            bone.pose = Pose(mM);
-        }
-    };
-
-    // update bones based on new joint positions
-    //for (auto e : ChainDataMap) updateChain(e.second);
-
     for (auto& b : bones) {
         Bone& bone = b.second;
         auto bJoints = getBoneJoints(b.first);
-        if (bJoints.size() <= 1) continue;
+        if (bJoints.size() <= 1) continue; // ignore EE for now
 
         vector<Vec3d> pnts1;
         vector<Vec3d> pnts2;
@@ -639,7 +614,7 @@ void VRSkeleton::updateBones(map<string, ChainData>& ChainDataMap, map<int, Vec3
             jbPositions[e.ID] = bone.pose.transform( p );
         }
 
-        bool verbose = (bone.name == "back");
+        bool verbose = (bone.name == "uArmLeft");
 
         for (auto j : bJoints) pnts1.push_back( jbPositions[j] );
         for (auto j : bJoints) {
@@ -658,11 +633,12 @@ void VRSkeleton::updateBones(map<string, ChainData>& ChainDataMap, map<int, Vec3
         a.setPoints1(pnts1);
         a.setPoints2(pnts2);
         a.setSimpleMatches();
-        auto M = a.compute(verbose);
+        auto M = a.compute(verbose && 0);
         M.mult( bone.pose.asMatrix() );
         bone.pose = Pose(M);
     }
 
+    // set EE bone poses
     for (auto ee : endEffectors) {
         auto& bone = bones[ee.second.boneID];
         auto& joint = joints[ee.second.jointID];
@@ -673,6 +649,61 @@ void VRSkeleton::updateBones(map<string, ChainData>& ChainDataMap, map<int, Vec3
 
         bone.pose = pose;
         bone.pose.setPos( joint.pos - o );
+    }
+
+    // compute up vectors for limbs through interpolation between EE and bones with more than 2 joints
+    /*for (auto& b : bones) {
+        Bone& bone = b.second;
+        auto bJoints = getBoneJoints(b.first);
+        if (bJoints.size() != 2) continue; // only consider limbs
+
+        // bone.pose.setUp(Vec3d(0,0,-1));
+        ;
+    }*/
+
+    map<int, Vec2i> jointBonesNjoints;
+    map<int, pair<Vec3d, Vec3d>> jointBonesUpVectors;
+
+    for (auto j : joints) { // gather info -> TODO: optimize
+        Joint& joint = j.second;
+        Bone& bone1 = bones[joint.bone1];
+        Bone& bone2 = bones[joint.bone2];
+
+        auto bJoints1 = getBoneJoints(joint.bone1);
+        auto bJoints2 = getBoneJoints(joint.bone2);
+
+        jointBonesNjoints[j.first] = Vec2i(bJoints1.size(), bJoints2.size());
+        jointBonesUpVectors[j.first] = make_pair(bone1.pose.up(), bone2.pose.up());
+    }
+
+    vector< vector<int> > subChains; // sub chains to interpolate
+    for (auto c : ChainDataMap) {
+        vector<int> subChain;
+        for (auto j : c.second.joints) {
+            Joint& joint = joints[j];
+            int b1 = joint.bone1;
+            int b2 = joint.bone2;
+            Vec2i Nj = jointBonesNjoints[j];
+            if (Nj[0] != 2 && Nj[1] == 2) { subChain.push_back(b1); subChain.push_back(b2); } // first sub joint
+            if (Nj[0] == 2 && Nj[1] == 2) subChain.push_back(b2); // mid sub joint
+            if (Nj[0] == 2 && Nj[1] != 2) { subChain.push_back(b2); subChains.push_back(subChain); subChain.clear(); } // end sub joint
+        }
+    }
+
+    for (auto& subChain : subChains) {
+        cout << "Update subchain: ";
+        for (auto s : subChain) cout << bones[s].name << " ";
+        cout << endl;
+        int N = subChain.size();
+        Vec3d up1 = bones[subChain[0]].pose.up();
+        Vec3d up2 = bones[subChain[N-1]].pose.up();
+        cout << " ups: " << up1 << " -> " << up2 << endl;
+        for (int i=1; i<N-1; i++) {
+            float k = float(i)/(N-1);
+            Vec3d u = up1 + (up2-up1)*k;
+            bones[subChain[i]].pose.setUp(u);
+            cout << "  bone: " << bones[subChain[i]].name << " -> " << u << endl;
+        }
     }
 }
 
