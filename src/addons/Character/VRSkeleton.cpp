@@ -614,7 +614,7 @@ void VRSkeleton::updateBones(map<string, ChainData>& ChainDataMap, map<int, Vec3
             jbPositions[e.ID] = bone.pose.transform( p );
         }
 
-        bool verbose = (bone.name == "uArmLeft");
+        bool verbose = false; //(bone.name == "uArmLeft");
 
         for (auto j : bJoints) pnts1.push_back( jbPositions[j] );
         for (auto j : bJoints) {
@@ -652,31 +652,15 @@ void VRSkeleton::updateBones(map<string, ChainData>& ChainDataMap, map<int, Vec3
     }
 
     // compute up vectors for limbs through interpolation between EE and bones with more than 2 joints
-    /*for (auto& b : bones) {
-        Bone& bone = b.second;
-        auto bJoints = getBoneJoints(b.first);
-        if (bJoints.size() != 2) continue; // only consider limbs
+    map<int, Vec2i> jointBonesNjoints; // TODO: optimize by computing all chains only once!
+    vector< vector<int> > subChains; // sub chains to interpolate
 
-        // bone.pose.setUp(Vec3d(0,0,-1));
-        ;
-    }*/
-
-    map<int, Vec2i> jointBonesNjoints;
-    map<int, pair<Vec3d, Vec3d>> jointBonesUpVectors;
-
-    for (auto j : joints) { // gather info -> TODO: optimize
-        Joint& joint = j.second;
-        Bone& bone1 = bones[joint.bone1];
-        Bone& bone2 = bones[joint.bone2];
-
-        auto bJoints1 = getBoneJoints(joint.bone1);
-        auto bJoints2 = getBoneJoints(joint.bone2);
-
+    for (auto j : joints) {
+        auto bJoints1 = getBoneJoints(j.second.bone1);
+        auto bJoints2 = getBoneJoints(j.second.bone2);
         jointBonesNjoints[j.first] = Vec2i(bJoints1.size(), bJoints2.size());
-        jointBonesUpVectors[j.first] = make_pair(bone1.pose.up(), bone2.pose.up());
     }
 
-    vector< vector<int> > subChains; // sub chains to interpolate
     for (auto c : ChainDataMap) {
         vector<int> subChain;
         for (auto j : c.second.joints) {
@@ -691,18 +675,13 @@ void VRSkeleton::updateBones(map<string, ChainData>& ChainDataMap, map<int, Vec3
     }
 
     for (auto& subChain : subChains) {
-        cout << "Update subchain: ";
-        for (auto s : subChain) cout << bones[s].name << " ";
-        cout << endl;
         int N = subChain.size();
         Vec3d up1 = bones[subChain[0]].pose.up();
         Vec3d up2 = bones[subChain[N-1]].pose.up();
-        cout << " ups: " << up1 << " -> " << up2 << endl;
         for (int i=1; i<N-1; i++) {
             float k = float(i)/(N-1);
             Vec3d u = up1 + (up2-up1)*k;
             bones[subChain[i]].pose.setUp(u);
-            cout << "  bone: " << bones[subChain[i]].name << " -> " << u << endl;
         }
     }
 }
