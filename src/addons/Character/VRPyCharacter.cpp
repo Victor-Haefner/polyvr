@@ -41,6 +41,8 @@ PyMethodDef VRPySkeleton::methods[] = {
     {"getJointsPositions", PyWrap( Skeleton, getJointsPositions, "Get all skeleton joints positions", vectorMap ) },
     {"getEndEffectors", PyWrap( Skeleton, getEndEffectors, "Get end effectors", eeMap ) },
     {"getChain", PyWrap( Skeleton, getChain, "Get chain of joints to end effector", vector<VRSkeleton::Joint>, string ) },
+    {"resolveSystem", PyWrap( Skeleton, resolveSystem, "Resolve bone system consistency", void, string ) },
+    {"applyFABRIK", PyWrap( Skeleton, applyFABRIK, "Apply FABRIK to endeffector chains", void, string ) },
     {NULL}  /* Sentinel */
 };
 

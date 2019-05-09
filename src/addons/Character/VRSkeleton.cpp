@@ -250,11 +250,12 @@ Vec3d& VRSkeleton::jointPos(int j) { return joints[j].pos; };
 
 void VRSkeleton::overrideSim(VRUpdateCbPtr cb) { simCB = cb; }
 
-void VRSkeleton::simStep(map<string, ChainData>& ChainDataMap) {
-    if (simCB) {
-        (*simCB)();
-        return;
-    }
+void VRSkeleton::applyFABRIK(string EE) {
+    ChainData& data = ChainDataMap[EE];
+    auto targetPos = data.targetPos;
+    float tol = 0.001; // 1 mm tolerance
+    vector<int>& joints = data.joints;
+    vector<float>& distances = data.d;
 
     auto sum = [](vector<float> v) {
         float r = 0;
@@ -280,114 +281,84 @@ void VRSkeleton::simStep(map<string, ChainData>& ChainDataMap) {
         }
     };
 
-    auto applyFABRIK = [&](ChainData& data) {
-        auto targetPos = data.targetPos;
-        float tol = 0.001; // 1 mm tolerance
-        vector<int>& joints = data.joints;
-        vector<float>& distances = data.d;
 
-        // basic FABRIK algorithm
-        float Dtarget = (targetPos - jointPos(joints[0])).length();
-        if (Dtarget > sum(distances)) { // position unreachable
-            for (int i=0; i<distances.size(); i++) {
-                float ri = (targetPos-jointPos(joints[i])).length();
-                float li = distances[i]/ri;
-                jointPos(joints[i+1]) = jointPos(joints[i])*(1-li) + targetPos*li;
-            }
-        } else { // position reachable
-            float difA = (jointPos(joints.back())-targetPos).length();
-            int k=0;
-            while (difA > tol) {
-                k++; if(k>50) break;
-                jointPos(joints.back()) = targetPos;
-                doBackAndForth(data);
-                difA = (jointPos(joints.back())-targetPos).length();
-            }
+    // basic FABRIK algorithm
+    float Dtarget = (targetPos - jointPos(joints[0])).length();
+    if (Dtarget > sum(distances)) { // position unreachable
+        for (int i=0; i<distances.size(); i++) {
+            float ri = (targetPos-jointPos(joints[i])).length();
+            float li = distances[i]/ri;
+            jointPos(joints[i+1]) = jointPos(joints[i])*(1-li) + targetPos*li;
         }
-    };
-
-    map<int, SystemData> SystemDataMap;
-
-    auto getJointSystems = [&]() {
-        for (auto& b : bones) {
-            auto joints = getBoneJoints(b.first);
-            if (joints.size() <= 2) continue; // not a system!
-
-            auto& data = SystemDataMap[b.first];
-            data.joints = joints;
-            //data.joints.push_back(joints[0]); // close cycle
-            data.bone = b.first;
-
-            //cout << "a " << endl;
-            for (auto j1 : data.joints) {
-                //cout << " a " << j1 << endl;
-                for (auto j2 : data.joints) {
-                    if (j2 == j1) continue;
-                    float d = (jointPos(j1) - jointPos(j2)).length();
-                    data.d[j1][j2] = d;
-                    //cout << "  a " << Vec2i(j1,j2) << "   " << d << " " << endl;
-                }
-            }
-
-            /*for (int i=1; i<data.joints.size(); i++) {
-                int jID1 = data.joints[i-1];
-                int jID2 = data.joints[i];
-                float d = (jointPos(jID1) - jointPos(jID2)).length();
-                data.d.push_back( d );
-            }*/
+    } else { // position reachable
+        float difA = (jointPos(joints.back())-targetPos).length();
+        int k=0;
+        while (difA > tol) {
+            k++; if(k>50) break;
+            jointPos(joints.back()) = targetPos;
+            doBackAndForth(data);
+            difA = (jointPos(joints.back())-targetPos).length();
         }
-    };
+    }
+}
 
-    getJointSystems();
-
-    applyFABRIK(ChainDataMap["handLeft"]);
-    applyFABRIK(ChainDataMap["handRight"]);
-    //for (auto e : ChainDataMap) applyFABRIK(e.second);
-
-    for (auto e : SystemDataMap) {
-        //doBackAndForth(e.second);
-        bool doContinue = true;
-        while(doContinue) {
-            doContinue = false;
-            //cout << "b " << endl;
-            for (auto j1 : e.second.joints) {
-                //cout << " b " << j1 << endl;
-                for (auto j2 : e.second.joints) {
-                    if (j2 == j1) continue;
-                    Vec3d M = (jointPos(j1) + jointPos(j2))*0.5;
-                    Vec3d D = jointPos(j2) - jointPos(j1);
-                    float d = e.second.d[j1][j2];
-                    float d2 = D.length();
-                    if (abs(d2-d) > 0.001) {
-                        D.normalize();
-                        D *= d*0.5;
-                        jointPos(j1) = M - D;
-                        jointPos(j2) = M + D;
-                        doContinue = true;
-                        //cout << "  b " << Vec2i(j1,j2) << "  " << d2 << " " << d << endl;
-                    }
-                }
-            }
-
-            break;
-
-            /*for (int i=1; i<e.second.joints.size(); i++) {
-                int jID1 = e.second.joints[i-1];
-                int jID2 = e.second.joints[i];
-                Vec3d M = (jointPos(jID1) + jointPos(jID2))*0.5;
-                Vec3d D = jointPos(jID2) - jointPos(jID1);
-                float d = e.second.d[i-1];
+void VRSkeleton::resolveSystem(string bone) {
+    auto& system = SystemDataMap[bone];
+    //doBackAndForth(system);
+    bool doContinue = true;
+    while(doContinue) {
+        doContinue = false;
+        //cout << "b " << endl;
+        for (auto j1 : system.joints) {
+            //cout << " b " << j1 << endl;
+            for (auto j2 : system.joints) {
+                if (j2 == j1) continue;
+                Vec3d M = (jointPos(j1) + jointPos(j2))*0.5;
+                Vec3d D = jointPos(j2) - jointPos(j1);
+                float d = system.d[j1][j2];
                 float d2 = D.length();
                 if (abs(d2-d) > 0.001) {
                     D.normalize();
                     D *= d*0.5;
-                    jointPos(jID1) = M - D;
-                    jointPos(jID2) = M + D;
+                    jointPos(j1) = M - D;
+                    jointPos(j2) = M + D;
                     doContinue = true;
+                    //cout << "  b " << Vec2i(j1,j2) << "  " << d2 << " " << d << endl;
                 }
-            }*/
+            }
         }
+
+        break;
+
+        /*for (int i=1; i<system.joints.size(); i++) {
+            int jID1 = system.joints[i-1];
+            int jID2 = system.joints[i];
+            Vec3d M = (jointPos(jID1) + jointPos(jID2))*0.5;
+            Vec3d D = jointPos(jID2) - jointPos(jID1);
+            float d = system.d[i-1];
+            float d2 = D.length();
+            if (abs(d2-d) > 0.001) {
+                D.normalize();
+                D *= d*0.5;
+                jointPos(jID1) = M - D;
+                jointPos(jID2) = M + D;
+                doContinue = true;
+            }
+        }*/
     }
+}
+
+void VRSkeleton::simStep() {
+    if (simCB) {
+        (*simCB)();
+        return;
+    }
+
+    //applyFABRIK("handLeft");
+    //applyFABRIK("handRight");
+
+    for (auto e : ChainDataMap) applyFABRIK(e.first);
+    for (auto e : SystemDataMap) resolveSystem(e.first);
 }
 
 vector<int> VRSkeleton::getBonesChain(string endEffector) {
@@ -418,7 +389,8 @@ vector<int> VRSkeleton::getJointsChain(vector<int>& chainedBones) {
 void VRSkeleton::resolveKinematics() {
     updateJointPositions();
 
-    map<string, ChainData> ChainDataMap;
+    ChainDataMap.clear();
+    SystemDataMap.clear();
 
     auto getChains = [&]() {
         for (auto& e : endEffectors) {
@@ -444,10 +416,40 @@ void VRSkeleton::resolveKinematics() {
         }
     };
 
-    map<int, Vec3d> jointPositionsOld = getJointsPositions();
+    auto getJointSystems = [&]() {
+        for (auto& b : bones) {
+            auto joints = getBoneJoints(b.first);
+            if (joints.size() <= 2) continue; // not a system!
+
+            auto& data = SystemDataMap[b.second.name];
+            data.joints = joints;
+            //data.joints.push_back(joints[0]); // close cycle
+            data.bone = b.first;
+
+            //cout << "a " << endl;
+            for (auto j1 : data.joints) {
+                //cout << " a " << j1 << endl;
+                for (auto j2 : data.joints) {
+                    if (j2 == j1) continue;
+                    float d = (jointPos(j1) - jointPos(j2)).length();
+                    data.d[j1][j2] = d;
+                    //cout << "  a " << Vec2i(j1,j2) << "   " << d << " " << endl;
+                }
+            }
+
+            /*for (int i=1; i<data.joints.size(); i++) {
+                int jID1 = data.joints[i-1];
+                int jID2 = data.joints[i];
+                float d = (jointPos(jID1) - jointPos(jID2)).length();
+                data.d.push_back( d );
+            }*/
+        }
+    };
+
     getChains();
-    simStep(ChainDataMap);
-    updateBones(ChainDataMap, jointPositionsOld);
+    getJointSystems();
+    simStep();
+    updateBones();
     updateGeometry();
 }
 
@@ -593,7 +595,7 @@ class KabschAlgorithm {
         }
 };
 
-void VRSkeleton::updateBones(map<string, ChainData>& ChainDataMap, map<int, Vec3d>& jointPositionsOld) {
+void VRSkeleton::updateBones() {
     for (auto& b : bones) {
         Bone& bone = b.second;
         auto bJoints = getBoneJoints(b.first);

@@ -71,6 +71,8 @@ class VRSkeleton : public VRGeometry {
         map<int, Joint> joints;
         int rootBone = -1;
         map<string, EndEffector> endEffectors;
+        map<string, ChainData> ChainDataMap;
+        map<string, SystemData> SystemDataMap;
 
         VRUpdateCbPtr simCB; // sim override
 
@@ -81,9 +83,9 @@ class VRSkeleton : public VRGeometry {
         vector<int> getBoneJoints(int bone);
         Vec3d& jointPos(int j);
 
-        void simStep(map<string, ChainData>& ChainDataMap);
+        void simStep();
         void resolveKinematics();
-        void updateBones(map<string, ChainData>& ChainDataMap, map<int, Vec3d>& jointPositionsOld);
+        void updateBones();
 
     public:
         VRSkeleton();
@@ -112,6 +114,9 @@ class VRSkeleton : public VRGeometry {
         vector<Joint> getChain(string endEffector);
         vector<int> getBonesChain(string endEffector);
         vector<int> getJointsChain(vector<int>& chainedBones);
+
+        void resolveSystem(string bone);
+        void applyFABRIK(string EE);
 };
 
 OSG_END_NAMESPACE;
