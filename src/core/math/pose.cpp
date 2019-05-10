@@ -44,10 +44,15 @@ void Pose::set(Vec3d p, Vec3d d, Vec3d u, Vec3d s) {
     data[3] = s;
 }
 
-Vec3d Pose::transform(Vec3d p) {
-    Pnt3d P(p);
-    asMatrix().mult(P,P);
-    return Vec3d(P);
+Vec3d Pose::transform(Vec3d p, bool doTranslate) {
+    if (doTranslate) {
+        Pnt3d P(p);
+        asMatrix().mult(P,P);
+        return Vec3d(P);
+    } else {
+        asMatrix().mult(p,p);
+        return p;
+    }
 }
 
 Vec3d Pose::transformInv(Vec3d p) {

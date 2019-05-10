@@ -39,7 +39,7 @@ class Pose {
 
         Matrix4d asMatrix() const;
         void invert();
-        Vec3d transform(Vec3d p);
+        Vec3d transform(Vec3d p, bool doTranslate = true);
         Vec3d transformInv(Vec3d p);
 
         PosePtr multLeft(PosePtr p);

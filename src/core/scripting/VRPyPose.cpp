@@ -18,7 +18,7 @@ PyMethodDef VRPyPose::methods[] = {
     {"setUp", PyWrap2(Pose, setUp, "Set the up vector", void, Vec3d ) },
     {"setScale", PyWrap2(Pose, setScale, "Set the scale vector", void, Vec3d ) },
     {"set", PyWrapOpt2(Pose, set, "Set the pose: pos, dir, up, scale", "1 1 1", void, Vec3d, Vec3d, Vec3d, Vec3d ) },
-    {"mult", PyWrap2(Pose, transform, "Transform a vector", Vec3d, Vec3d ) },
+    {"mult", PyWrapOpt2(Pose, transform, "Transform a vector", "1", Vec3d, Vec3d, bool ) },
     {"multInv", PyWrap2(Pose, transformInv, "Transform back a vector", Vec3d, Vec3d ) },
     {"multLeft", PyWrap2(Pose, multLeft, "Transform back a vector", PosePtr, PosePtr ) },
     {"multRight", PyWrap2(Pose, multRight, "Transform back a vector", PosePtr, PosePtr ) },

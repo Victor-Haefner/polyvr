@@ -128,12 +128,19 @@ void VRSkeleton::setupGeometry() {
 
     jointsGeo = VRGeometry::create("joints");
     addChild(jointsGeo);
-
     auto mJ = VRMaterial::get("skeletonJoints");
     mJ->setLit(0);
     mJ->setPointSize(15);
     mJ->setZOffset(1,1);
 	jointsGeo->setMaterial(mJ);
+
+    constraintsGeo = VRGeometry::create("constraints");
+    addChild(constraintsGeo);
+    auto mC = VRMaterial::get("constraints");
+    mC->setLit(0);
+    mC->setLineWidth(2);
+    mC->setWireFrame(1);
+	constraintsGeo->setMaterial(mC);
 
 	updateGeometry();
 }
@@ -143,12 +150,14 @@ void VRSkeleton::updateGeometry() {
     asGeometry(geo);
     geo.apply( ptr() );
 
+    // joints
     VRGeoData geo2;
     for (auto j : joints) {
         geo2.pushVert(j.second.pos, Vec3d(0,1,0), j.second.col);
 		geo2.pushPoint();
     }
 
+    // endeffectors
     for (auto e : endEffectors) {
         if (!e.second.target) continue;
         auto& joint = joints[ e.second.jointID ];
@@ -156,32 +165,62 @@ void VRSkeleton::updateGeometry() {
         geo2.pushVert(p, Vec3d(0,1,0), Color3f(1,0.5,0.2));
 		geo2.pushPoint();
     }
-
     geo2.apply( jointsGeo );
+
+    // TODO
+    // constraints
+    VRGeoData geo3;
+    Color3f col(0.6,0.8,1.0);
+    Color3f col2(1.0,0.8,0.5);
+
+    for (auto j : joints) {
+        Vec3d d = j.second.dir1;
+        geo3.pushVert(j.second.pos, Vec3d(0,1,0), col);
+        geo3.pushVert(j.second.pos + d*0.2, Vec3d(0,1,0), col);
+        geo3.pushLine();
+
+        d = j.second.dir2;
+        geo3.pushVert(j.second.pos, Vec3d(0,1,0), col);
+        geo3.pushVert(j.second.pos + d*0.2, Vec3d(0,1,0), col);
+        geo3.pushLine();
+
+        Vec3d u = j.second.up1;
+        geo3.pushVert(j.second.pos, Vec3d(0,1,0), col2);
+        geo3.pushVert(j.second.pos + u*0.2, Vec3d(0,1,0), col2);
+        geo3.pushLine();
+
+        u = j.second.up2;
+        geo3.pushVert(j.second.pos, Vec3d(0,1,0), col2);
+        geo3.pushVert(j.second.pos + u*0.2, Vec3d(0,1,0), col2);
+        geo3.pushLine();
+    }
+
+    geo3.apply( constraintsGeo );
+
 }
 
 void VRSkeleton::setupSimpleHumanoid() {
     clear();
 
-    auto ballJoint = [&](Vec3d offsetA, Vec3d offsetB) {
+    auto ballJoint = [&](PosePtr offsetA, PosePtr offsetB) {
         auto joint = VRConstraint::create();
         for (int i=3; i<6; i++) joint->setMinMax(i, -Pi*0.5, Pi*0.5);
-        joint->setReferenceA(Pose::create(offsetA));
-        joint->setReferenceB(Pose::create(offsetB));
+        joint->setReferenceA(offsetA);
+        joint->setReferenceB(offsetB);
         return joint;
     };
 
-    auto hingeJoint = [&](Vec3d offsetA, Vec3d offsetB) {
+    auto hingeJoint = [&](PosePtr offsetA, PosePtr offsetB) {
         auto joint = VRConstraint::create();
         joint->setMinMax(5, 0, Pi*0.5);
-        joint->setReferenceA(Pose::create(offsetA));
-        joint->setReferenceB(Pose::create(offsetB));
+        joint->setReferenceA(offsetA);
+        joint->setReferenceB(offsetB);
         return joint;
     };
 
     // spine
-    auto waist = ballJoint(Vec3d(0,0,0.15), Vec3d(0,0,-0.2));
-    auto neck  = ballJoint(Vec3d(0,0,0.2), Vec3d(0,0,-0.1));
+    auto waist = ballJoint(Pose::create(Vec3d(0,0,0.15), Vec3d(0,0,1)), Pose::create(Vec3d(0,0,-0.2)));
+    auto neck  = ballJoint(Pose::create(Vec3d(0,0,0.2), Vec3d(0,0,1)), Pose::create(Vec3d(0,0,-0.1)));
     int abdomen = addBone(Pose::create(Vec3d(0,1.15,0),Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.3, "abdomen");
     int back    = addBone(Pose::create(Vec3d(0,1.5,0),Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.4, "back");
     int head    = addBone(Pose::create(Vec3d(0,1.8,0),Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.2, "head");
@@ -190,12 +229,12 @@ void VRSkeleton::setupSimpleHumanoid() {
     setEndEffector("head", head);
 
     // legs
-    auto ankle = ballJoint(Vec3d(0,0,-0.25), Vec3d(0,0,0.1));
-    auto knee  = hingeJoint(Vec3d(0,0,-0.25), Vec3d(0,0,0.25));
+    auto ankle = ballJoint(Pose::create(Vec3d(0,0,-0.25)), Pose::create(Vec3d(0,0,0.1), Vec3d(0,0,1)));
+    auto knee  = hingeJoint(Pose::create(Vec3d(0,0,-0.25)), Pose::create(Vec3d(0,0,0.25), Vec3d(0,0,1)));
     for (auto i : {-0.25,0.25}) {
         string side = i < 0 ? "Left" : "Right";
         Color3f sc = i < 0 ? Color3f(1,0,0) : Color3f(0,0,1);
-        auto hip = ballJoint(Vec3d(i,0,-0.15), Vec3d(0,0,0.25));
+        auto hip = ballJoint(Pose::create(Vec3d(i,0,-0.15), Vec3d(i*4,0,0)), Pose::create(Vec3d(0,0,0.25), Vec3d(0,0,1)));
         int foot     = addBone(Pose::create(Vec3d(i,0,-0.1),Vec3d(0,0,-1),Vec3d(0,1,0)), 0.2, "foot"+side);
         int lowerLeg = addBone(Pose::create(Vec3d(i,0.25,0),Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.5, "lLeg"+side);
         int upperLeg = addBone(Pose::create(Vec3d(i,0.75,0),Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.5, "uLeg"+side);
@@ -206,12 +245,12 @@ void VRSkeleton::setupSimpleHumanoid() {
     }
 
     // arms
-    auto wrist = ballJoint(Vec3d(0,0,-0.15), Vec3d(0,0,0.05));
-    auto elbow = hingeJoint(Vec3d(0,0,-0.15), Vec3d(0,0,0.15));
+    auto wrist = ballJoint(Pose::create(Vec3d(0,0,-0.15)), Pose::create(Vec3d(0,0,0.05), Vec3d(0,0,1)));
+    auto elbow = hingeJoint(Pose::create(Vec3d(0,0,-0.15)), Pose::create(Vec3d(0,0,0.15), Vec3d(0,0,1)));
     for (auto i : {-0.2,0.2}) {
         string side = i < 0 ? "Left" : "Right";
         Color3f sc = i < 0 ? Color3f(1,0,0) : Color3f(0,0,1);
-        auto shoulder = ballJoint( Vec3d(i,0,0.2), Vec3d(0,0,0.15));
+        auto shoulder = ballJoint( Pose::create(Vec3d(i,0,0.2), Vec3d(i*5,0,0)), Pose::create(Vec3d(0,0,0.15), Vec3d(0,0,1)));
         int hand     = addBone(Pose::create(Vec3d(i,1.05,0),Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.1, "hand"+side);
         int lowerArm = addBone(Pose::create(Vec3d(i,1.25,0) ,Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.3, "lArm"+side);
         int upperArm = addBone(Pose::create(Vec3d(i,1.55,0) ,Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.3, "uArm"+side);
@@ -228,7 +267,12 @@ void VRSkeleton::updateJointPositions() {
     //cout << "VRSkeleton::updateJointPositions" << endl;
     for (auto& j : joints) {
         auto& bone1 = bones[j.second.bone1];
+        auto& bone2 = bones[j.second.bone2];
         j.second.pos = bone1.pose.transform( j.second.constraint->getReferenceA()->pos() );
+        j.second.dir1 = bone1.pose.transform( j.second.constraint->getReferenceA()->dir(), false );
+        j.second.dir2 = bone2.pose.transform( j.second.constraint->getReferenceB()->dir(), false );
+        j.second.up1  = bone1.pose.transform( j.second.constraint->getReferenceA()->up(), false );
+        j.second.up2  = bone2.pose.transform( j.second.constraint->getReferenceB()->up(), false );
         //cout << " joint: " << j.second.name << ", bone1: " << bone1.name << ", jPos: " << j.second.pos << ", refA: " << j.second.constraint->getReferenceA()->pos() << endl;
     }
 };
@@ -706,7 +750,35 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
 
 map<string, VRSkeleton::EndEffector> VRSkeleton::getEndEffectors() { return endEffectors; }
 
+/* working on constrained FABRIK
 
+- joint is
+    - position
+    - constraint
+    - prev bone
+    - next bone
+
+- arm chain
+    joints:            waist    shoulder    elbow    wrist
+    bones :     abdomen--|--back----|---uArm--|--lArm--|--hand
+
+    1) doFabrik FB on joints
+        - new wrist position
+        - move elbow towards wrist to satisfy lArm length
+        - project shoulder cone generated from orientation constraint
+        - move shoulder towards elbow to satisfy uArm length
+
+
+- interprete constraint:
+    - define dir1 and dir2 for each joint
+    - dot between dir1 and dir2 corresponds to rotation around x
+    - define up1 and up2 for each joint
+    - dot between up1 and up2 corresponds to rotation around z
+    - compute those vectors based on
+        - vectors between joint positions
+        - reference positions of each joint
+
+*/
 
 
 

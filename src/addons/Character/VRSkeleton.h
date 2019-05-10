@@ -36,6 +36,10 @@ class VRSkeleton : public VRGeometry {
             string name;
             Color3f col;
             Vec3d pos;
+            Vec3d dir1;
+            Vec3d dir2;
+            Vec3d up1;
+            Vec3d up2;
             int bone1;
             int bone2;
             VRConstraintPtr constraint;
@@ -77,6 +81,7 @@ class VRSkeleton : public VRGeometry {
         VRUpdateCbPtr simCB; // sim override
 
         VRGeometryPtr jointsGeo;
+        VRGeometryPtr constraintsGeo;
 
         void initMaterial(); // skeleton visualisation
         void updateJointPositions();
