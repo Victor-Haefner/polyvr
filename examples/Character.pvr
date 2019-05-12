@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0 1 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.452276 2.33031 -0.94158" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0 1 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.107726 1.01577 -2.15862" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <constraint persistency="666"/>
           </Object>
@@ -88,6 +88,7 @@
       <core>
 	import VR
 	from VR.Math import Vec3
+	from math import sin, cos
 	
 	
 	#VR.character.move('handLeft', VR.Pose([-0.1,1.2,-0.2]))
@@ -98,13 +99,16 @@
 		print t
 		p = 4*(t-0.5)**2
 		p1 = Vec3([0.2,1.2,-0.5]) - Vec3([0.1,0,0.1])*p
-		p2 = Vec3([-0.2,1.2,-0.5]) + Vec3([0.1,0,0.1])*p
-		VR.character.move('handLeft', VR.Pose(p2))
 		#VR.character.move('handRight', VR.Pose(p1))
+		
+		a = t*2*3.14 * 4
+		R = 0.3
+		p2 = Vec3([-0.3,1.5,-0.3]) + Vec3([cos(a)*R,sin(a)*R,0])
+		VR.character.move('handLeft', VR.Pose(p2))
 	
 	a = VR.Animation('movement')
 	a.setCallback(cb)
-	a.setDuration(4)
+	a.setDuration(16)
 	a.start()
 </core>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="32" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>

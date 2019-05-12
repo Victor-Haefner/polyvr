@@ -300,6 +300,7 @@ void VRSkeleton::applyFABRIK(string EE) {
     float tol = 0.001; // 1 mm tolerance
     vector<int>& joints = data.joints;
     vector<float>& distances = data.d;
+    int Nd = distances.size();
 
     auto sum = [](vector<float> v) {
         float r = 0;
@@ -307,32 +308,27 @@ void VRSkeleton::applyFABRIK(string EE) {
         return r;
     };
 
-    auto doBackAndForth = [&](ChainData& data) {
-        vector<int>& joints = data.joints;
-        int n = joints.size()-1;
-
-        Vec3d start = jointPos(joints[0]);
-        for (int i=n-1; i>= 0; i--) {
-            float ri = (jointPos(joints[i+1])-jointPos(joints[i])).length();
-            float li = data.d[i]/ri;
-            jointPos(joints[i]) = jointPos(joints[i+1])*(1-li) + jointPos(joints[i])*li;
-        }
-        jointPos(joints[0]) = start;
-        for (int i=0; i<n; i++) {
-            float ri = (jointPos(joints[i+1])-jointPos(joints[i])).length();
-            float li = data.d[i]/ri;
-            jointPos(joints[i+1]) = jointPos(joints[i])*(1-li) + jointPos(joints[i+1])*li;
-        }
+    auto interp = [](Vec3d& a, Vec3d& b, float t) {
+        return a*t + b*(1-t);
     };
 
+    auto movePointTowards = [&](int i1, int i2, int id) {
+        float ri = (jointPos(joints[i2])-jointPos(joints[i1])).length();
+        float li = distances[id]/ri;
+        jointPos(joints[i1]) = interp(jointPos(joints[i1]), jointPos(joints[i2]), li);
+    };
+
+    auto doBackAndForth = [&](ChainData& data) {
+        for (int i = Nd-1; i > 0; i--) movePointTowards(i,i+1,i);
+        for (int i = 1; i <= Nd; i++) movePointTowards(i,i-1,i-1);
+    };
 
     // basic FABRIK algorithm
     float Dtarget = (targetPos - jointPos(joints[0])).length();
     if (Dtarget > sum(distances)) { // position unreachable
-        for (int i=0; i<distances.size(); i++) {
-            float ri = (targetPos-jointPos(joints[i])).length();
-            float li = distances[i]/ri;
-            jointPos(joints[i+1]) = jointPos(joints[i])*(1-li) + targetPos*li;
+        for (int i=1; i<=Nd; i++) {
+            jointPos(joints[i]) = targetPos;
+            movePointTowards(i,i-1,i-1);
         }
     } else { // position reachable
         float difA = (jointPos(joints.back())-targetPos).length();
