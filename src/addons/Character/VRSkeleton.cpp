@@ -298,9 +298,14 @@ void VRSkeleton::applyFABRIK(string EE) {
     ChainData& data = ChainDataMap[EE];
     auto targetPos = data.targetPos;
     float tol = 0.001; // 1 mm tolerance
-    vector<int>& joints = data.joints;
     vector<float>& distances = data.d;
     int Nd = distances.size();
+
+    auto pQuat = [](Quaterniond& q) {
+        double a; Vec3d d;
+        q.getValueAsAxisRad(d,a);
+        return "(" + toString(d) + ") " + toString(a);
+    };
 
     auto sum = [](vector<float> v) {
         float r = 0;
@@ -312,32 +317,87 @@ void VRSkeleton::applyFABRIK(string EE) {
         return a*t + b*(1-t);
     };
 
-    auto movePointTowards = [&](int i1, int i2, int id) {
-        float ri = (jointPos(joints[i2])-jointPos(joints[i1])).length();
-        float li = distances[id]/ri;
-        jointPos(joints[i1]) = interp(jointPos(joints[i1]), jointPos(joints[i2]), li);
+    auto movePointTowards = [&](int i, Vec3d target, float t) -> Vec3d {
+        auto& J = joints[data.joints[i]];
+        Vec3d pOld = J.pos;
+        J.pos = interp(J.pos, target, t);
+        cout << " movePointTowards: " << J.name << " (" << pOld << ") -> " << 1-t << " / " << target << " -> " << J.pos << endl;
+        return pOld;
     };
 
-    auto doBackAndForth = [&](ChainData& data) {
-        for (int i = Nd-1; i > 0; i--) movePointTowards(i,i+1,i);
-        for (int i = 1; i <= Nd; i++) movePointTowards(i,i-1,i-1);
+    auto checkDistance = [&](int i1, int i2, int id) -> Vec3d {
+        auto& J1 = joints[data.joints[i1]];
+        auto& J2 = joints[data.joints[i2]];
+        cout << "checkDistance between: " << J1.name << " -> " << J2.name << endl;
+        float li = distances[id] / (J2.pos - J1.pos).length();
+        return movePointTowards(i1, J2.pos, li);
+    };
+
+    auto getRotation = [&](int i1, int i2, Vec3d pOld) -> Quaterniond {
+        auto& J1 = joints[data.joints[i1]];
+        auto& J2 = joints[data.joints[i2]];
+        Vec3d d1 = pOld   - J1.pos;
+        Vec3d d2 = J2.pos - J1.pos;
+        d1.normalize();
+        d2.normalize();
+        auto q = Quaterniond(d1,d2);
+        cout << " getRotation " << J1.name << " / " << J2.name << ", " << pQuat(q) << endl;
+        cout << "      " << d1 << " / " << d2 << endl;
+        return q;
+    };
+
+    auto rotateJoints = [&](int i1, int i2, Quaterniond& R) {
+        auto& J1 = joints[data.joints[i1]];
+        auto& J2 = joints[data.joints[i2]];
+        R.multVec( J1.dir2, J1.dir2 );
+        R.multVec( J1.up2, J1.up2 );
+        R.multVec( J2.dir1, J2.dir1 );
+        R.multVec( J2.up1, J2.up1 );
+        cout << "   Rotate " << bones[J1.bone2].name << "  " << bones[J2.bone1].name << " " << pQuat(R) << endl << endl;
+    };
+
+    auto doBackAndForth = [&]() {
+        for (int i = Nd-1; i > 0; i--) {
+            auto pOld = checkDistance(i,i+1,i);
+            if (i > 0) {
+                auto R = getRotation(i-1, i, pOld);
+                rotateJoints(i-1,i,R);
+            }
+        }
+
+        for (int i = 1; i <= Nd; i++) {
+            auto pOld = checkDistance(i,i-1,i-1);
+            if (i < Nd) {
+                auto R = getRotation(i+1, i, pOld);
+                //rotateJoints(i+1,i,R);
+                rotateJoints(i,i+1,R);
+            }
+        }
     };
 
     // basic FABRIK algorithm
-    float Dtarget = (targetPos - jointPos(joints[0])).length();
+    float Dtarget = (targetPos - jointPos(data.joints[0])).length();
     if (Dtarget > sum(distances)) { // position unreachable
         for (int i=1; i<=Nd; i++) {
-            jointPos(joints[i]) = targetPos;
-            movePointTowards(i,i-1,i-1);
+            jointPos(data.joints[i]) = targetPos;
+            checkDistance(i,i-1,i-1);
         }
     } else { // position reachable
-        float difA = (jointPos(joints.back())-targetPos).length();
+        float difA = (jointPos(data.joints.back())-targetPos).length();
         int k=0;
         while (difA > tol) {
             k++; if(k>50) break;
-            jointPos(joints.back()) = targetPos;
-            doBackAndForth(data);
-            difA = (jointPos(joints.back())-targetPos).length();
+            cout << "itr " << k << endl;
+
+            int iE = data.joints.size()-1;
+            Vec3d pOld = movePointTowards(iE, targetPos, 0);
+            auto R = getRotation(iE-1, iE, pOld);
+            rotateJoints(iE-1,iE,R);
+
+            //jointPos(iE) = targetPos;
+            doBackAndForth();
+            difA = (jointPos(data.joints[iE])-targetPos).length();
+            break;
         }
     }
 }
@@ -394,10 +454,11 @@ void VRSkeleton::simStep() {
         return;
     }
 
-    //applyFABRIK("handLeft");
+    cout << "simStep" << endl;
+    applyFABRIK("handLeft");
     //applyFABRIK("handRight");
 
-    for (auto e : ChainDataMap) applyFABRIK(e.first);
+    //for (auto e : ChainDataMap) applyFABRIK(e.first);
     for (auto e : SystemDataMap) resolveSystem(e.first);
 }
 
