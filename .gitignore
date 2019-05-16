@@ -24,6 +24,6 @@ extras/python/Myo/*.pyc
 examples/vals*.dat
 *blend1
 .local*
-core
+./core
 cscope.out
 *.cscope_file_list
