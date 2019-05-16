@@ -4,6 +4,7 @@
 #include "core/math/graph.h"
 #include "core/math/Eigendecomposition.h"
 #include "core/math/SingularValueDecomposition.h"
+#include "core/math/equation.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "addons/Algorithms/VRPathFinding.h"
@@ -327,7 +328,7 @@ void VRSkeleton::applyFABRIK(string EE) {
         return pOld;
     };
 
-    auto moveToDistance = [&](int i1, int i2, int id) -> Vec3d {
+    auto moveToDistance = [&](int i1, int i2, int dID1, int dID2) -> Vec3d {
         auto& J1 = joints[data.joints[i1]];
         auto& J2 = joints[data.joints[i2]];
         Vec3d pOld = J1.pos;
@@ -342,15 +343,35 @@ void VRSkeleton::applyFABRIK(string EE) {
             cout << " aD " << aD << ", aU " << aU << endl;
             // elbow: constrain aD between 0 and 90
             if (aD < Pi) {
-                float d = -0.2;
+                double z = Pi;
+
+                double d1 = distances[dID1];
+                double d2 = distances[dID2];
+                double C = sin(aD*0.5)/tan(z);
+                double cosA = cos(aD*0.5);
+
+                double b = - (1.0/d1 + 1.0/d2) * d1*d2*(cosA + C);
+                double c = 2*cosA * d1*d2*(cosA + C) - d1*d2;
+
+                equation eq(0,1,b,c);
+                double x1 = 0, x2 = 0, x3 = 0;
+                int resN = eq.solve(x1,x2,x3);
+                double d = x1;
+                if (abs(x1) > abs(x2)) d = x2;
+
                 Vec3d D = J1.up1 + J1.up2;
                 D.normalize();
-                J1.pos += D*d;
+                J1.pos -= D*d*0.5;
+
+                cout << "  ct: " << dID1 << " " << dID2 << " " << tan(z) << " " << sin(aD*0.5) << " " << endl;
+                cout << "  ct: " << C << " " << cosA << " " << d1 << " " << d2 << " " << endl;
+                cout << "  ct: " << 1 << " " << b << " " << c << " " << endl;
+                cout << "  ct: " << resN << " " << x1 << " " << x2 << " " << x3 << endl;
             }
         }
 
         // move point to fix distance
-        float li = distances[id] / (J2.pos - J1.pos).length();
+        float li = distances[dID1] / (J2.pos - J1.pos).length();
         movePointTowards(i1, J2.pos, li);
 
         return pOld;
@@ -397,7 +418,7 @@ void VRSkeleton::applyFABRIK(string EE) {
 
     auto doBackAndForth = [&]() {
         for (int i = Nd-1; i > 0; i--) {
-            auto pOld = moveToDistance(i,i+1,i);
+            auto pOld = moveToDistance(i,i+1,i,i-1);
             if (i > 0) {
                 auto R = getRotation(i-1, i, pOld);
                 rotateJoints(i-1,i,R);
@@ -406,7 +427,7 @@ void VRSkeleton::applyFABRIK(string EE) {
         }
 
         for (int i = 1; i <= Nd; i++) {
-            auto pOld = moveToDistance(i,i-1,i-1);
+            auto pOld = moveToDistance(i,i-1,i-1,i);
             if (i < Nd) {
                 auto R = getRotation(i+1, i, pOld);
                 rotateJoints(i,i+1,R);
@@ -419,7 +440,7 @@ void VRSkeleton::applyFABRIK(string EE) {
     if (Dtarget > sum(distances)) { // position unreachable
         for (int i=1; i<=Nd; i++) {
             jointPos(data.joints[i]) = targetPos;
-            moveToDistance(i,i-1,i-1);
+            moveToDistance(i,i-1,i-1,i);
         }
     } else { // position reachable
         float difA = (jointPos(data.joints.back())-targetPos).length();
