@@ -327,12 +327,33 @@ void VRSkeleton::applyFABRIK(string EE) {
         return pOld;
     };
 
-    auto checkDistance = [&](int i1, int i2, int id) -> Vec3d {
+    auto moveToDistance = [&](int i1, int i2, int id) -> Vec3d {
         auto& J1 = joints[data.joints[i1]];
         auto& J2 = joints[data.joints[i2]];
-        if (verbose) cout << "checkDistance between: " << J1.name << " -> " << J2.name << endl;
+        Vec3d pOld = J1.pos;
+        if (verbose) cout << "moveToDistance between: " << J1.name << " -> " << J2.name << endl;
+
+        // check constraint
+        float aD = J1.dir2.enclosedAngle(J1.dir1);
+        float aU = J1.up2.enclosedAngle(J1.up1);
+
+        if (J1.name == "elbowLeft" && J2.name == "wristLeft") { // test first constraint
+            cout << "moveToDistance between: " << J1.name << " -> " << J2.name << endl;
+            cout << " aD " << aD << ", aU " << aU << endl;
+            // elbow: constrain aD between 0 and 90
+            if (aD < Pi) {
+                float d = -0.2;
+                Vec3d D = J1.up1 + J1.up2;
+                D.normalize();
+                J1.pos += D*d;
+            }
+        }
+
+        // move point to fix distance
         float li = distances[id] / (J2.pos - J1.pos).length();
-        return movePointTowards(i1, J2.pos, li);
+        movePointTowards(i1, J2.pos, li);
+
+        return pOld;
     };
 
     auto getRotation = [&](int i1, int i2, Vec3d pOld) -> Quaterniond {
@@ -355,20 +376,37 @@ void VRSkeleton::applyFABRIK(string EE) {
         R.multVec( J1.up2, J1.up2 );
         R.multVec( J2.dir1, J2.dir1 );
         R.multVec( J2.up1, J2.up1 );
-        if (verbose) cout << "   Rotate " << bones[J1.bone2].name << "  " << bones[J2.bone1].name << " " << pQuat(R) << endl << endl;
+        if (verbose) cout << "   Rotate " << bones[J1.bone2].name << "  " << bones[J2.bone1].name << " " << pQuat(R) << endl;
+        /*if (bones[J1.bone2].name == "uArmLeft") {
+            float aD = J1.dir2.enclosedAngle(J2.dir1);
+            float aU = J1.up2.enclosedAngle(J2.up1);
+            cout << "   Rotate " << bones[J1.bone2].name << "  " << pQuat(R) << ", aD " << aD << ", aU " << aU << endl;
+        }*/
     };
+
+
+    /*"
+    - define dir1 and dir2 for each joint
+    - define up1 and up2 for each joint
+    - dot between dir1 and dir2 corresponds to rotation around x
+    - dot between up1 and up2 corresponds to rotation around z
+    - compute those vectors based on
+        - vectors between joint positions
+        - reference positions of each joint
+    */
 
     auto doBackAndForth = [&]() {
         for (int i = Nd-1; i > 0; i--) {
-            auto pOld = checkDistance(i,i+1,i);
+            auto pOld = moveToDistance(i,i+1,i);
             if (i > 0) {
                 auto R = getRotation(i-1, i, pOld);
                 rotateJoints(i-1,i,R);
+                //
             }
         }
 
         for (int i = 1; i <= Nd; i++) {
-            auto pOld = checkDistance(i,i-1,i-1);
+            auto pOld = moveToDistance(i,i-1,i-1);
             if (i < Nd) {
                 auto R = getRotation(i+1, i, pOld);
                 rotateJoints(i,i+1,R);
@@ -381,7 +419,7 @@ void VRSkeleton::applyFABRIK(string EE) {
     if (Dtarget > sum(distances)) { // position unreachable
         for (int i=1; i<=Nd; i++) {
             jointPos(data.joints[i]) = targetPos;
-            checkDistance(i,i-1,i-1);
+            moveToDistance(i,i-1,i-1);
         }
     } else { // position reachable
         float difA = (jointPos(data.joints.back())-targetPos).length();
