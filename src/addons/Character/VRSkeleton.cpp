@@ -301,6 +301,8 @@ void VRSkeleton::applyFABRIK(string EE) {
     vector<float>& distances = data.d;
     int Nd = distances.size();
 
+    bool verbose = false;
+
     auto pQuat = [](Quaterniond& q) {
         double a; Vec3d d;
         q.getValueAsAxisRad(d,a);
@@ -321,14 +323,14 @@ void VRSkeleton::applyFABRIK(string EE) {
         auto& J = joints[data.joints[i]];
         Vec3d pOld = J.pos;
         J.pos = interp(J.pos, target, t);
-        cout << " movePointTowards: " << J.name << " (" << pOld << ") -> " << 1-t << " / " << target << " -> " << J.pos << endl;
+        if (verbose) cout << " movePointTowards: " << J.name << " (" << pOld << ") -> " << 1-t << " / " << target << " -> " << J.pos << endl;
         return pOld;
     };
 
     auto checkDistance = [&](int i1, int i2, int id) -> Vec3d {
         auto& J1 = joints[data.joints[i1]];
         auto& J2 = joints[data.joints[i2]];
-        cout << "checkDistance between: " << J1.name << " -> " << J2.name << endl;
+        if (verbose) cout << "checkDistance between: " << J1.name << " -> " << J2.name << endl;
         float li = distances[id] / (J2.pos - J1.pos).length();
         return movePointTowards(i1, J2.pos, li);
     };
@@ -341,8 +343,8 @@ void VRSkeleton::applyFABRIK(string EE) {
         d1.normalize();
         d2.normalize();
         auto q = Quaterniond(d1,d2);
-        cout << " getRotation " << J1.name << " / " << J2.name << ", " << pQuat(q) << endl;
-        cout << "      " << d1 << " / " << d2 << endl;
+        if (verbose) cout << " getRotation " << J1.name << " / " << J2.name << ", " << pQuat(q) << endl;
+        if (verbose) cout << "      " << d1 << " / " << d2 << endl;
         return q;
     };
 
@@ -353,7 +355,7 @@ void VRSkeleton::applyFABRIK(string EE) {
         R.multVec( J1.up2, J1.up2 );
         R.multVec( J2.dir1, J2.dir1 );
         R.multVec( J2.up1, J2.up1 );
-        cout << "   Rotate " << bones[J1.bone2].name << "  " << bones[J2.bone1].name << " " << pQuat(R) << endl << endl;
+        if (verbose) cout << "   Rotate " << bones[J1.bone2].name << "  " << bones[J2.bone1].name << " " << pQuat(R) << endl << endl;
     };
 
     auto doBackAndForth = [&]() {
@@ -369,7 +371,6 @@ void VRSkeleton::applyFABRIK(string EE) {
             auto pOld = checkDistance(i,i-1,i-1);
             if (i < Nd) {
                 auto R = getRotation(i+1, i, pOld);
-                //rotateJoints(i+1,i,R);
                 rotateJoints(i,i+1,R);
             }
         }
@@ -387,7 +388,7 @@ void VRSkeleton::applyFABRIK(string EE) {
         int k=0;
         while (difA > tol) {
             k++; if(k>50) break;
-            cout << "itr " << k << endl;
+            if (verbose) cout << "\n\nitr " << k << endl;
 
             int iE = data.joints.size()-1;
             Vec3d pOld = movePointTowards(iE, targetPos, 0);
@@ -397,7 +398,7 @@ void VRSkeleton::applyFABRIK(string EE) {
             //jointPos(iE) = targetPos;
             doBackAndForth();
             difA = (jointPos(data.joints[iE])-targetPos).length();
-            break;
+            //break;
         }
     }
 }
