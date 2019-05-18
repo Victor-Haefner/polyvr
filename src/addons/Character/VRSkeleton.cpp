@@ -334,16 +334,31 @@ void VRSkeleton::applyFABRIK(string EE) {
         Vec3d pOld = J1.pos;
         if (verbose) cout << "moveToDistance between: " << J1.name << " -> " << J2.name << endl;
 
-        // check constraint
+        // joint angles
         float aD = J1.dir2.enclosedAngle(J1.dir1);
         float aU = J1.up2.enclosedAngle(J1.up1);
+
+        // joint angle direction
+        Vec3d cX = J1.dir1.cross(J1.up1);
+        Vec3d cD = J1.dir2.cross(J1.dir1);
+        Vec3d cU = J1.up2.cross(J1.up1);
+        if (cD.dot(cX) < 0) aD = 2*Pi - aD;
+        if (cU.dot(cX) < 0) aU = 2*Pi - aU;
+
+
 
         if (J1.name == "elbowLeft" && J2.name == "wristLeft") { // test first constraint
             cout << "moveToDistance between: " << J1.name << " -> " << J2.name << endl;
             cout << " aD " << aD << ", aU " << aU << endl;
             // elbow: constrain aD between 0 and 90
-            if (aD < Pi) {
-                double z = Pi;
+
+            double cA1 = 0.1; // some small angle
+            double cA2 = Pi*0.95; // nearly stretched arm
+
+            if (aD < cA1 || aD > cA2) {
+                double z = cA1;
+                if (aD > cA2) z = cA2;
+
 
                 double d1 = distances[dID1];
                 double d2 = distances[dID2];
@@ -361,7 +376,7 @@ void VRSkeleton::applyFABRIK(string EE) {
 
                 Vec3d D = J1.up1 + J1.up2;
                 D.normalize();
-                J1.pos -= D*d*0.5;
+                J1.pos += D*d*0.5;
 
                 cout << "  ct: " << dID1 << " " << dID2 << " " << tan(z) << " " << sin(aD*0.5) << " " << endl;
                 cout << "  ct: " << C << " " << cosA << " " << d1 << " " << d2 << " " << endl;
