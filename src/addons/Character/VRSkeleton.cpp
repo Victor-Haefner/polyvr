@@ -179,29 +179,30 @@ void VRSkeleton::updateGeometry() {
     // TODO
     // constraints
     VRGeoData geo3;
-    Color3f col(0.6,0.8,1.0);
-    Color3f col2(1.0,0.8,0.5);
+    Color3f col1(0.6,0.8,1.0);
+    Color3f col2(0.8,0.6,1.0);
+    Color3f col3(1.0,0.8,0.5);
 
     for (auto j : joints) {
         Vec3d d = j.second.dir1;
-        geo3.pushVert(j.second.pos, Vec3d(0,1,0), col);
-        geo3.pushVert(j.second.pos + d*0.2, Vec3d(0,1,0), col);
+        geo3.pushVert(j.second.pos, Vec3d(0,1,0), col1);
+        geo3.pushVert(j.second.pos + d*0.2, Vec3d(0,1,0), col1);
         geo3.pushLine();
 
         d = j.second.dir2;
-        geo3.pushVert(j.second.pos, Vec3d(0,1,0), col);
-        geo3.pushVert(j.second.pos + d*0.2, Vec3d(0,1,0), col);
+        geo3.pushVert(j.second.pos, Vec3d(0,1,0), col2);
+        geo3.pushVert(j.second.pos + d*0.2, Vec3d(0,1,0), col2);
         geo3.pushLine();
 
-        Vec3d u = j.second.up1;
-        geo3.pushVert(j.second.pos, Vec3d(0,1,0), col2);
-        geo3.pushVert(j.second.pos + u*0.2, Vec3d(0,1,0), col2);
+        /*Vec3d u = j.second.up1;
+        geo3.pushVert(j.second.pos, Vec3d(0,1,0), col3);
+        geo3.pushVert(j.second.pos + u*0.2, Vec3d(0,1,0), col3);
         geo3.pushLine();
 
         u = j.second.up2;
-        geo3.pushVert(j.second.pos, Vec3d(0,1,0), col2);
-        geo3.pushVert(j.second.pos + u*0.2, Vec3d(0,1,0), col2);
-        geo3.pushLine();
+        geo3.pushVert(j.second.pos, Vec3d(0,1,0), col3);
+        geo3.pushVert(j.second.pos + u*0.2, Vec3d(0,1,0), col3);
+        geo3.pushLine();*/
     }
 
     geo3.apply( constraintsGeo );
@@ -282,6 +283,10 @@ void VRSkeleton::updateJointPositions() {
         j.second.dir2 = bone2.pose.transform( j.second.constraint->getReferenceB()->dir(), false );
         j.second.up1  = bone1.pose.transform( j.second.constraint->getReferenceA()->up(), false );
         j.second.up2  = bone2.pose.transform( j.second.constraint->getReferenceB()->up(), false );
+        j.second.dir1.normalize();
+        j.second.dir2.normalize();
+        j.second.up1.normalize();
+        j.second.up2.normalize();
         //cout << " joint: " << j.second.name << ", bone1: " << bone1.name << ", jPos: " << j.second.pos << ", refA: " << j.second.constraint->getReferenceA()->pos() << endl;
     }
 };
@@ -350,6 +355,8 @@ double VRSkeleton::computeAngleProjection(double l, double g, double d1, double 
     double d = x1;
     if (abs(x1) > abs(x2)) d = x2;
 
+    //d = x2;
+
     if (1) { // debug
         Vec3d n(0,1,0);
         Vec3d O(0,2.5,0);
@@ -362,11 +369,11 @@ double VRSkeleton::computeAngleProjection(double l, double g, double d1, double 
 
         VRGeoData geo;
         int i1 = geo.pushVert(O, n, Color3f(1,1,0));
-        int i2 = geo.pushVert(O+Vec3d(0,d,0), n, Color3f(1,1,0));
-        int i3 = geo.pushVert(O+Vec3d(-sin(l),cos(l),0)*d1, n, Color3f(1,0,0));
-        int i4 = geo.pushVert(O+Vec3d( sin(l),cos(l),0)*d2, n, Color3f(0,1,0));
-        int i5 = geo.pushVert(O+Vec3d(0,dx,0), n, Color3f(1,0,0));
-        int i6 = geo.pushVert(O+Vec3d(0,dy,0), n, Color3f(0,1,0));
+        int i2 = geo.pushVert(O+Vec3d(0,-d,0), n, Color3f(1,1,0));
+        int i3 = geo.pushVert(O+Vec3d(-sin(l),-cos(l),0)*d1, n, Color3f(1,0,0));
+        int i4 = geo.pushVert(O+Vec3d( sin(l),-cos(l),0)*d2, n, Color3f(0,1,0));
+        int i5 = geo.pushVert(O+Vec3d(0,-dx,0), n, Color3f(1,0,0));
+        int i6 = geo.pushVert(O+Vec3d(0,-dy,0), n, Color3f(0,1,0));
         geo.pushLine(i1,i2);
         geo.pushLine(i1,i3);
         geo.pushLine(i1,i4);
@@ -413,12 +420,23 @@ void VRSkeleton::applyFABRIK(string EE) {
         Vec3d pOld = J.pos;
         J.pos = interp(J.pos, target, t);
         if (verbose) cout << " movePointTowards: " << J.name << " (" << pOld << ") -> " << 1-t << " / " << target << " -> " << J.pos << endl;
+        //if (J.name == "elbowLeft")
+        cout << " movePointTowards: " << J.name << " (" << pOld << ") -> " << 1-t << " / " << target << " -> " << J.pos << endl;
         return pOld;
     };
 
     auto moveToDistance = [&](int i1, int i2, int dID1, int dID2) -> Vec3d {
         auto& J1 = joints[data.joints[i1]];
         auto& J2 = joints[data.joints[i2]];
+
+        /*if (bones[J1.bone2].name == "lArmLeft" || bones[J2.bone1].name == "lArmLeft") {
+            cout << "   moveToDistance " << J1.name << " around " << J2.name << endl;
+            Vec3d seg = J2.pos - J1.pos;
+            seg.normalize();
+            cout << "       check seg1: " << seg << ",  dir1: " << J1.dir1 << ", dot: " << J1.dir1.dot(seg) << endl;
+            cout << "       check seg1: " << seg << ",  dir2: " << J1.dir2 << ", dot: " << J1.dir2.dot(seg) << endl;
+        }*/
+
         Vec3d pOld = J1.pos;
         if (verbose) cout << "moveToDistance between: " << J1.name << " -> " << J2.name << endl;
 
@@ -434,8 +452,7 @@ void VRSkeleton::applyFABRIK(string EE) {
         if (cU.dot(cX) < 0) aU = 2*Pi - aU;
 
 
-
-        if (J1.name == "elbowLeft" && J2.name == "wristLeft") { // test first constraint
+        if (J1.name == "elbowLeft") { // test first constraint
             cout << "moveToDistance between: " << J1.name << " -> " << J2.name << endl;
             cout << " aD " << aD << ", aU " << aU << endl;
             // elbow: constrain aD between 0 and 90
@@ -460,16 +477,22 @@ void VRSkeleton::applyFABRIK(string EE) {
         return pOld;
     };
 
-    auto getRotation = [&](int i1, int i2, Vec3d pOld) -> Quaterniond {
+    auto getRotation = [&](int i1, int i2, Vec3d pOld, bool inv = false) -> Quaterniond {
         auto& J1 = joints[data.joints[i1]];
         auto& J2 = joints[data.joints[i2]];
-        Vec3d d1 = pOld   - J1.pos;
+        Vec3d d1 = J2.pos - pOld;
         Vec3d d2 = J2.pos - J1.pos;
         d1.normalize();
         d2.normalize();
-        auto q = Quaterniond(d1,d2);
+        auto q = inv ? Quaterniond(d2,d1) : Quaterniond(d1,d2);
         if (verbose) cout << " getRotation " << J1.name << " / " << J2.name << ", " << pQuat(q) << endl;
         if (verbose) cout << "      " << d1 << " / " << d2 << endl;
+
+        if (J1.name == "elbowLeft") {
+            cout << " getRotation " << J1.name << " / " << J2.name << ", " << pQuat(q) << endl;
+            cout << "      " << d1 << " / " << d2 << endl;
+        }
+
         return q;
     };
 
@@ -480,12 +503,20 @@ void VRSkeleton::applyFABRIK(string EE) {
         R.multVec( J1.up2, J1.up2 );
         R.multVec( J2.dir1, J2.dir1 );
         R.multVec( J2.up1, J2.up1 );
+        J2.dir1.normalize();
+        J1.dir2.normalize();
+        J2.up1.normalize();
+        J1.up2.normalize();
+
         if (verbose) cout << "   Rotate " << bones[J1.bone2].name << "  " << bones[J2.bone1].name << " " << pQuat(R) << endl;
-        /*if (bones[J1.bone2].name == "uArmLeft") {
-            float aD = J1.dir2.enclosedAngle(J2.dir1);
-            float aU = J1.up2.enclosedAngle(J2.up1);
-            cout << "   Rotate " << bones[J1.bone2].name << "  " << pQuat(R) << ", aD " << aD << ", aU " << aU << endl;
-        }*/
+
+        if (J1.name == "elbowLeft" || J2.name == "elbowLeft") {
+            cout << "   rotateJoints " << J1.name << " around " << J2.name << ", " << pQuat(R) << endl;
+            Vec3d seg = J2.pos - J1.pos;
+            seg.normalize();
+            //cout << "       check seg2: " << seg << ",  dir1: " << J1.dir1 << ", dot: " << J1.dir1.dot(seg) << endl;
+            cout << "       check seg: " << seg << ",  dir2: " << J1.dir2 << ", dot: " << -J1.dir2.dot(seg) << endl;
+        }
     };
 
 
@@ -501,19 +532,32 @@ void VRSkeleton::applyFABRIK(string EE) {
 
     auto doBackAndForth = [&]() {
         for (int i = Nd-1; i > 0; i--) {
+            cout << "\nmove1 " << joints[data.joints[i]].name << endl;
             auto pOld = moveToDistance(i,i+1,i,i-1);
+            //auto pOld = joints[data.joints[i]].pos;
             if (i > 0) {
-                auto R = getRotation(i-1, i, pOld);
+                auto R = getRotation(i, i-1, pOld, 0);
                 rotateJoints(i-1,i,R);
-                //
+            }
+
+            if (i < Nd) {
+                auto R = getRotation(i, i+1, pOld, 0);
+                rotateJoints(i,i+1,R);
             }
         }
 
         for (int i = 1; i <= Nd; i++) {
+            cout << "\nmove2 " << joints[data.joints[i]].name << endl;
             auto pOld = moveToDistance(i,i-1,i-1,i);
+            //auto pOld = joints[data.joints[i]].pos;
             if (i < Nd) {
-                auto R = getRotation(i+1, i, pOld);
+                auto R = getRotation(i, i+1, pOld);
                 rotateJoints(i,i+1,R);
+            }
+
+            if (i > 0) {
+                auto R = getRotation(i, i-1, pOld, 0);
+                rotateJoints(i-1,i,R);
             }
         }
     };
@@ -534,7 +578,7 @@ void VRSkeleton::applyFABRIK(string EE) {
 
             int iE = data.joints.size()-1;
             Vec3d pOld = movePointTowards(iE, targetPos, 0);
-            auto R = getRotation(iE-1, iE, pOld);
+            auto R = getRotation(iE, iE-1, pOld);
             rotateJoints(iE-1,iE,R);
 
             //jointPos(iE) = targetPos;
