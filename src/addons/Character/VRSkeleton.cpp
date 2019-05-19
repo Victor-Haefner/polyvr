@@ -143,6 +143,14 @@ void VRSkeleton::setupGeometry() {
     mC->setWireFrame(1);
 	constraintsGeo->setMaterial(mC);
 
+    angleProjGeo = VRGeometry::create("angleProj");
+    addChild(angleProjGeo);
+    auto mA = VRMaterial::get("angleProj");
+    mA->setLit(0);
+    mA->setLineWidth(2);
+    mA->setWireFrame(1);
+	angleProjGeo->setMaterial(mA);
+
 	updateGeometry();
 }
 
@@ -310,7 +318,8 @@ Method to solve constraint:
     - length to compute, used to move joint, is 'd'
     - angles enclosed by segment a-d and b-d is l
     - angle oposed to a is x, oposed to b is y
-    - g =x+y the angle needed to satisfy the constraint
+    - g' the angle needed to satisfy the constraint
+    - work with complementary angle: g = x+y with g = 2*Pi - g'
 
 - computation:
     - sinus law:
@@ -328,6 +337,7 @@ Method to solve constraint:
 */
 
 double VRSkeleton::computeAngleProjection(double l, double g, double d1, double d2) {
+    g = 2*Pi - g;
     double C = sin(l)/tan(g);
     double cosA = cos(l);
 
@@ -340,14 +350,35 @@ double VRSkeleton::computeAngleProjection(double l, double g, double d1, double 
     double d = x1;
     if (abs(x1) > abs(x2)) d = x2;
 
-    d *= 0.5; // 0.5 is strange, where is this comming from?
+    if (1) { // debug
+        Vec3d n(0,1,0);
+        Vec3d O(0,2.5,0);
 
+        double x = atan( sin(l)/(d/d1 - cos(l)) );
+        double y = g-x;
+        //double y = atan( sin(l)/(d/d2 - cos(l)) );
+        double dx = d1*sin(x+l)/sin(x);
+        double dy = d2*sin(y+l)/sin(y);
 
-    cout << "  ct: " << " " << tan(g) << " " << sin(l) << " " << endl;
-    cout << "  ct: " << C << " " << cosA << " " << d1 << " " << d2 << " " << endl;
-    cout << "  ct: " << 1 << " " << b << " " << c << " " << endl;
-    cout << "  ct: " << resN << " " << x1 << " " << x2 << " " << x3 << endl;
+        VRGeoData geo;
+        int i1 = geo.pushVert(O, n, Color3f(1,1,0));
+        int i2 = geo.pushVert(O+Vec3d(0,d,0), n, Color3f(1,1,0));
+        int i3 = geo.pushVert(O+Vec3d(-sin(l),cos(l),0)*d1, n, Color3f(1,0,0));
+        int i4 = geo.pushVert(O+Vec3d( sin(l),cos(l),0)*d2, n, Color3f(0,1,0));
+        int i5 = geo.pushVert(O+Vec3d(0,dx,0), n, Color3f(1,0,0));
+        int i6 = geo.pushVert(O+Vec3d(0,dy,0), n, Color3f(0,1,0));
+        geo.pushLine(i1,i2);
+        geo.pushLine(i1,i3);
+        geo.pushLine(i1,i4);
+        geo.pushLine(i3,i5);
+        geo.pushLine(i4,i6);
+        geo.apply(angleProjGeo);
 
+        cout << "  ct: " << 2*l << " -> " << 2*Pi-g << " " << tan(g) << " " << sin(l) << " " << endl;
+        cout << "  ct: " << C << " " << cosA << " " << d1 << " " << d2 << " " << endl;
+        cout << "  ct: " << 1 << " " << b << " " << c << " " << endl;
+        cout << "  ct: " << resN << " " << x1 << " " << x2 << " " << x3 << endl;
+    }
 
     return d;
 }

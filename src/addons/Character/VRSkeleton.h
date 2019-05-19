@@ -82,6 +82,7 @@ class VRSkeleton : public VRGeometry {
 
         VRGeometryPtr jointsGeo;
         VRGeometryPtr constraintsGeo;
+        VRGeometryPtr angleProjGeo;
 
         void initMaterial(); // skeleton visualisation
         void updateJointPositions();
