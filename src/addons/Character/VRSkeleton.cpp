@@ -295,6 +295,63 @@ Vec3d& VRSkeleton::jointPos(int j) { return joints[j].pos; };
 
 void VRSkeleton::overrideSim(VRUpdateCbPtr cb) { simCB = cb; }
 
+
+/*
+
+Method to solve constraint:
+
+- aim: check constraints limits and move accordingly
+    - compute angles between dir1 and dir2 as well as up1 and up2
+    - compute rotation direction to extend angles to 2Pi
+    - move along vector between the dir vectors, simply take up vectors, until constraint satisfied
+
+- 2D system:
+    - lengths of bone1 and bone2 are 'a' and 'b'
+    - length to compute, used to move joint, is 'd'
+    - angles enclosed by segment a-d and b-d is l
+    - angle oposed to a is x, oposed to b is y
+    - g =x+y the angle needed to satisfy the constraint
+
+- computation:
+    - sinus law:
+        a/sin(x) = b/sin(y) = d/sin(pi-x-l)
+        sin(pi-x-l) = sin(x+l)
+        => d = a * sin(x+l)/sin(x) = b * sin(y+l)/sin(y)
+        => d = a * [ cos(l) + sin(l)/tan(x) ] = b * [ cos(l) + sin(l)/tan(y) ]
+        => tan(x) = sin(l) / [d/a - cos(l)]
+        => tan(y) = sin(l) / [d/b - cos(l)]
+        g = x+y
+        tan(g) = tan(x+y) = [tan(x) + tan(y)] / [1 - tan(x)*tan(y)]
+        => ... => d² - d * (1/a + 1/b) * a*b * [ (sin(l)/tan(g)) + cos(l) ] + 2*cos(l)*a*b*[ (sin(l)/tan(g)) + cos(l) ] - a*b  =  0
+        solve equation
+
+*/
+
+double VRSkeleton::computeAngleProjection(double l, double g, double d1, double d2) {
+    double C = sin(l)/tan(g);
+    double cosA = cos(l);
+
+    double b = - (1.0/d1 + 1.0/d2) * d1*d2*(cosA + C);
+    double c = 2*cosA * d1*d2*(cosA + C) - d1*d2;
+
+    equation eq(0,1,b,c);
+    double x1 = 0, x2 = 0, x3 = 0;
+    int resN = eq.solve(x1,x2,x3);
+    double d = x1;
+    if (abs(x1) > abs(x2)) d = x2;
+
+    d *= 0.5; // 0.5 is strange, where is this comming from?
+
+
+    cout << "  ct: " << " " << tan(g) << " " << sin(l) << " " << endl;
+    cout << "  ct: " << C << " " << cosA << " " << d1 << " " << d2 << " " << endl;
+    cout << "  ct: " << 1 << " " << b << " " << c << " " << endl;
+    cout << "  ct: " << resN << " " << x1 << " " << x2 << " " << x3 << endl;
+
+
+    return d;
+}
+
 void VRSkeleton::applyFABRIK(string EE) {
     ChainData& data = ChainDataMap[EE];
     auto targetPos = data.targetPos;
@@ -356,39 +413,19 @@ void VRSkeleton::applyFABRIK(string EE) {
             double cA2 = Pi*0.95; // nearly stretched arm
 
             if (aD < cA1 || aD > cA2) {
-                double z = cA1;
-                if (aD > cA2) z = cA2;
-
-
-                double d1 = distances[dID1];
-                double d2 = distances[dID2];
-                double C = sin(aD*0.5)/tan(z);
-                double cosA = cos(aD*0.5);
-
-                double b = - (1.0/d1 + 1.0/d2) * d1*d2*(cosA + C);
-                double c = 2*cosA * d1*d2*(cosA + C) - d1*d2;
-
-                equation eq(0,1,b,c);
-                double x1 = 0, x2 = 0, x3 = 0;
-                int resN = eq.solve(x1,x2,x3);
-                double d = x1;
-                if (abs(x1) > abs(x2)) d = x2;
-
-                Vec3d D = J1.up1 + J1.up2;
+                double g = cA1;
+                if (aD > cA2) g = cA2;
+                double d = computeAngleProjection(aD*0.5, g, distances[dID1], distances[dID2]);
+                //Vec3d D = J1.up1 + J1.up2;
+                Vec3d D = J1.dir1 + J1.dir2;
                 D.normalize();
-                J1.pos += D*d*0.5;
-
-                cout << "  ct: " << dID1 << " " << dID2 << " " << tan(z) << " " << sin(aD*0.5) << " " << endl;
-                cout << "  ct: " << C << " " << cosA << " " << d1 << " " << d2 << " " << endl;
-                cout << "  ct: " << 1 << " " << b << " " << c << " " << endl;
-                cout << "  ct: " << resN << " " << x1 << " " << x2 << " " << x3 << endl;
+                J1.pos += D*d;
             }
         }
 
         // move point to fix distance
         float li = distances[dID1] / (J2.pos - J1.pos).length();
         movePointTowards(i1, J2.pos, li);
-
         return pOld;
     };
 
@@ -530,10 +567,10 @@ void VRSkeleton::simStep() {
     }
 
     cout << "simStep" << endl;
-    applyFABRIK("handLeft");
+    //applyFABRIK("handLeft");
     //applyFABRIK("handRight");
 
-    //for (auto e : ChainDataMap) applyFABRIK(e.first);
+    for (auto e : ChainDataMap) applyFABRIK(e.first);
     for (auto e : SystemDataMap) resolveSystem(e.first);
 }
 

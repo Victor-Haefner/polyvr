@@ -88,6 +88,7 @@ class VRSkeleton : public VRGeometry {
         vector<int> getBoneJoints(int bone);
         Vec3d& jointPos(int j);
 
+        double computeAngleProjection(double l, double g, double d1, double d2);
         void simStep();
         void resolveKinematics();
         void updateBones();
