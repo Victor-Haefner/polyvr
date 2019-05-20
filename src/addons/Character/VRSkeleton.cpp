@@ -941,6 +941,7 @@ void VRSkeleton::updateBones() {
         bone.pose.setPos( joint.pos - o );
     }
 
+
     // compute up vectors for limbs through interpolation between EE and bones with more than 2 joints
     map<int, Vec2i> jointBonesNjoints; // TODO: optimize by computing all chains only once!
     vector< vector<int> > subChains; // sub chains to interpolate
@@ -966,13 +967,21 @@ void VRSkeleton::updateBones() {
 
     for (auto& subChain : subChains) {
         int N = subChain.size();
-        Vec3d up1 = bones[subChain[0]].pose.up();
+
+        for (int i=1; i<N-1; i++) {
+            auto& bone = bones[subChain[i]];
+            auto bJoints = getBoneJoints(subChain[i]);
+            Vec3d u = joints[bJoints[0]].up2;
+            bone.pose.setUp(u);
+        }
+
+        /*Vec3d up1 = bones[subChain[0]].pose.up();
         Vec3d up2 = bones[subChain[N-1]].pose.up();
         for (int i=1; i<N-1; i++) {
             float k = float(i)/(N-1);
             Vec3d u = up1 + (up2-up1)*k;
             bones[subChain[i]].pose.setUp(u);
-        }
+        }*/
     }
 }
 
@@ -995,6 +1004,13 @@ void VRSkeleton::move(string endEffector, PosePtr pose) {
 map<string, VRSkeleton::EndEffector> VRSkeleton::getEndEffectors() { return endEffectors; }
 
 /* working on constrained FABRIK
+
+
+TODOs
+- resolve constraints for x and up vectors
+
+
+
 
 - joint is
     - position
