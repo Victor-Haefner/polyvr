@@ -7,6 +7,7 @@
 #include "VRCharacterFwd.h"
 
 #include <OpenSG/OSGColor.h>
+#include <OpenSG/OSGQuaternion.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -32,16 +33,20 @@ class VRSkeleton : public VRGeometry {
             float length;
         };
 
-        struct Joint {
-            string name;
-            Color3f col;
-            Vec3d pos;
+        struct JointOrientation {
             Vec3d dir1;
             Vec3d dir2;
             Vec3d up1;
             Vec3d up2;
+        };
+
+        struct Joint {
+            string name;
+            Color3f col;
+            Vec3d pos;
             int bone1;
             int bone2;
+            vector<string> chains;
             VRConstraintPtr constraint;
         };
 
@@ -55,7 +60,8 @@ class VRSkeleton : public VRGeometry {
         struct ChainData {
             vector<int> chainedBones;
             vector<int> joints;
-            vector<float> d;
+            map<int, JointOrientation> orientations;
+            vector<float> distances;
             Vec3d targetPos;
             float Dtarget;
         };
@@ -63,7 +69,7 @@ class VRSkeleton : public VRGeometry {
         struct SystemData {
             int bone;
             vector<int> joints;
-            map<int,map<int,float>> d;
+            map<int,map<int,float>> distances;
         };
 
         typedef shared_ptr<Configuration> ConfigurationPtr;
@@ -84,10 +90,18 @@ class VRSkeleton : public VRGeometry {
         VRGeometryPtr constraintsGeo;
         VRGeometryPtr angleProjGeo;
 
+        string pQuat(Quaterniond& q);
         void initMaterial(); // skeleton visualisation
         void updateJointPositions();
+        void setupChains();
+        void updateChains();
         vector<int> getBoneJoints(int bone);
         Vec3d& jointPos(int j);
+
+        Quaterniond getVecRotation(int i1, int i2, Vec3d dOld);
+        Quaterniond getRotation(int i1, int i2, Vec3d pOld);
+        Quaterniond getRotation(int i1, int i2, Vec3d pOld1, Vec3d pOld2);
+        void rotateJoints(int i1, int i2, Quaterniond& R, ChainData& chain);
 
         double computeAngleProjection(double l, double g, double d1, double d2);
         void simStep();
