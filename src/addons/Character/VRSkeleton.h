@@ -47,6 +47,7 @@ class VRSkeleton : public VRGeometry {
             int bone1;
             int bone2;
             vector<string> chains;
+            map<string, int> chainIDs;
             VRConstraintPtr constraint;
         };
 

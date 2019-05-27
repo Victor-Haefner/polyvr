@@ -627,23 +627,43 @@ void VRSkeleton::resolveSystem(string bone) {
         }
     }
 
+    // update joint orientations
     auto getOldJointPos = [&](int jID) {
         return oldPos.count(jID) ? oldPos[jID] : joints[jID].pos;
     };
 
     for (auto m : moved) {
         Vec3d pOld1 = getOldJointPos(m.first);
-        Joint& joint1 = joints[m.first];
-        for (auto c : joint1.chains) {
+        Joint& joint = joints[m.first];
+
+        for (auto c : joint.chains) {
             ChainData& chain = ChainDataMap[c];
-            for (auto j2 : system.joints) {
+
+            int cID1 = joint.chainIDs[c];
+            int cID0 = cID1-1;
+            int cID2 = cID1+1;
+
+            if (cID0 >= 0) {
+                Vec3d pOld0 = getOldJointPos(chain.joints[cID0]);
+                auto R = getRotation(m.first, chain.joints[cID0], pOld1, pOld0);
+                rotateJoints(chain.joints[cID0], m.first, R, chain);
+            }
+
+            if (cID2 < chain.joints.size()) {
+                Vec3d pOld2 = getOldJointPos(chain.joints[cID2]);
+                auto R = getRotation(m.first, chain.joints[cID2], pOld1, pOld2);
+                rotateJoints(m.first, chain.joints[cID2], R, chain);
+            }
+
+            /*for (auto j2 : system.joints) {
                 if (j2 == m.first) continue;
                 if (!chain.orientations.count(j2)) continue;
+
                 Joint& joint2 = joints[j2];
                 Vec3d pOld2 = getOldJointPos(j2);
                 auto R = getRotation(m.first, j2, pOld1, pOld2);
                 rotateJoints(m.first, j2, R, chain);
-            }
+            }*/
         }
     }
 }
@@ -707,6 +727,7 @@ void VRSkeleton::setupChains() {
             int jID = ChainDataMap[e.first].joints[i];
             auto& joint = joints[jID];
             joint.chains.push_back(e.first);
+            joint.chainIDs[e.first] = i;
             JointOrientation o;
             o.dir1 = bones[joint.bone1].pose.transform( joint.constraint->getReferenceA()->dir(), false );
             o.dir2 = bones[joint.bone2].pose.transform( joint.constraint->getReferenceB()->dir(), false );
