@@ -23,6 +23,7 @@ class VRWorldGenerator : public VRTransform {
         VRNaturePtr nature;
         VRTerrainPtr terrain;
         map<string, VRMaterialPtr> materials;
+        map<VREntityPtr, VRGeometryPtr> miscAreaByEnt;
         VRRoadNetworkPtr roads;
         VRTrafficSignsPtr trafficSigns;
         VRDistrictPtr district;
@@ -58,6 +59,7 @@ class VRWorldGenerator : public VRTransform {
         VRTerrainPtr getTerrain();
         VRDistrictPtr getDistrict();
         VRMaterialPtr getMaterial(string name);
+        VRGeometryPtr getMiscArea(VREntityPtr mEnt);
 
         void setupPhysics();
         void updatePhysics(Boundingbox box);
