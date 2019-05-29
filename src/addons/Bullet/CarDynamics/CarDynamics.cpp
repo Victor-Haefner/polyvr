@@ -452,7 +452,6 @@ void VRCarDynamics::updateWheel(int w, float t, float b, float s, float c, int g
 
 void VRCarDynamics::setParameter(float mass, float enginePower, float breakPower, Vec3d massOffset) {
     if (mass > 0) chassis->mass = mass;
-    chassis->mass = 1300;
     engine->power = enginePower;
     engine->breakPower = breakPower;
 

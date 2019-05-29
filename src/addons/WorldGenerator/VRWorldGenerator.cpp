@@ -99,6 +99,11 @@ VRMaterialPtr VRWorldGenerator::getMaterial(string name) {
     return materials[name];
 }
 
+VRGeometryPtr VRWorldGenerator::getMiscArea(VREntityPtr mEnt){
+    if (miscAreaByEnt.count(mEnt)) return miscAreaByEnt[mEnt];
+    return 0;
+}
+
 void VRWorldGenerator::init() {
     auto addMat = [&](string name, int texDim) {
         auto mat = VRMaterial::create(name);
@@ -411,6 +416,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             n.p = planet->fromLatLongPosition(n.n->lat, n.n->lon, true);
             graphNodes[pID] = n;
         }
+        bool wayAdded = false;
 
         auto getHeight = [&](float d) {
             return way->hasTag("height") ? toFloat( way->tags["height"] ) : d;
@@ -427,50 +433,87 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                             continue;
                         }
                     }*/
-                    if (!addedFootway) { addRoad(way, "footway", 1, true); }
+                    if (!addedFootway) { addRoad(way, "footway", 1, true); wayAdded = true; }
                     continue;
                 }
                 addRoad(way, tag.second, 4, false); // default road
+                wayAdded = true;
                 continue;
             }
 
-            if (tag.first == "building") { addBuilding(way); continue; }
+            if (tag.first == "building") {
+                addBuilding(way);
+                wayAdded = true;
+                continue;
+            }
 
             if (tag.first == "barrier") {
                 if (tag.second == "guard_rail") {
                     roads->addGuardRail( wayToPath(way, 8), getHeight(0.5) );
+                    wayAdded = true;
                 }
                 if (tag.second == "kerb") {
                     roads->addKirb( wayToPolygon(way), getHeight(0.2) );
+                    wayAdded = true;
                 }
                 if (tag.second == "fence") {
                     roads->addFence( wayToPath(way, 8), getHeight(1.8) );
+                    wayAdded = true;
                 }
                 continue;
             }
 
             if (tag.first == "natural") {
                 //if (tag.second == "woods") nature->addWoods( wayToPolygon(way), 1);
-                if (tag.second == "scrub") nature->addScrub( wayToPolygon(way), 1);
+                if (tag.second == "scrub") { nature->addScrub( wayToPolygon(way), 1); wayAdded = true; }
                 //if (tag.second == "grassland") nature->addGrassPatch( wayToPolygon(way), 0, 1, 0);
                 continue;
             }
 
             if (tag.first == "landuse") { // TODO
-                auto patch = VRGeometry::create("patch");
-                patch->hide("SHADOW");
-                auto poly = wayToPolygon(way);
-                if (poly->size() == 0) continue;
-                for (auto p : poly->gridSplit(5)) {
-                    if (terrain) terrain->elevatePolygon(p, 0.03, false);
-                    Triangulator tri;
-                    tri.add(*p);
-                    patch->merge( tri.compute() );
+                if (tag.second == "industrial") {
+                    auto patch = VRGeometry::create("patch");
+                    patch->hide("SHADOW");
+                    auto poly = wayToPolygon(way);
+                    if (poly->size() == 0) continue;
+                    for (auto p : poly->gridSplit(5)) {
+                        if (terrain) terrain->elevatePolygon(p, 0.03, false);
+                        Triangulator tri;
+                        tri.add(*p);
+                        patch->merge( tri.compute() );
+                    }
+                    patch->setMaterial(roads->getMaterial());
+                    patch->setPositionalTexCoords(1.0, 0, Vec3i(0,2,1));
+                    addChild(patch);
+                    wayAdded = true;
+                    continue;
                 }
-                patch->setMaterial(roads->getMaterial());
-                patch->setPositionalTexCoords(1.0, 0, Vec3i(0,2,1));
-                addChild(patch);
             }
+        }
+        if (!wayAdded) {
+            //TODO: might want to check if ways are closed loops or just undefined ways/roads
+            auto areaEnt = ontology->addEntity("miscArea", "MiscArea");
+            for (auto tag : way->tags) {
+                string newTag = tag.first+":"+tag.second;
+                areaEnt->add("tags", newTag);
+            }
+
+            auto patch = VRGeometry::create("miscArea");
+            patch->hide("SHADOW");
+            auto poly = wayToPolygon(way);
+            if (poly->size() == 0) continue;
+            for (auto p : poly->gridSplit(5)) {
+                if (terrain) terrain->elevatePolygon(p, 0.03, false);
+                Triangulator tri;
+                tri.add(*p);
+                patch->merge( tri.compute() );
+            }
+            patch->setMaterial(roads->getMaterial());
+            patch->setPositionalTexCoords(1.0, 0, Vec3i(0,2,1));
+            addChild(patch);
+            miscAreaByEnt[areaEnt] = patch;
+            wayAdded = true;
+            continue;
         }
     }
 
@@ -585,6 +628,15 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                 }
             }
         }
+        if (!added) {
+            auto nodeEnt = ontology->addEntity("misc", "Misc");
+            nodeEnt->setVec3("position", pos, "Position");
+            nodeEnt->setVec3("direction", dir, "Direction");
+            for (auto tag : node->tags) {
+                string newTag = tag.first+":"+tag.second;
+                nodeEnt->add("tags", newTag);
+            }
+        }
     }
 }
 
@@ -602,6 +654,7 @@ void VRWorldGenerator::clear() {
     assets->clear(false);
     terrain->clear();
     nature->clear();
+    miscAreaByEnt.clear();
 }
 
 string VRWorldGenerator::getStats() {
