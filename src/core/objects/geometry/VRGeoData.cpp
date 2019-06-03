@@ -202,6 +202,7 @@ void VRGeoData::apply(VRGeometryPtr geo, bool check, bool checkIndices) const {
 }
 
 int VRGeoData::size() const { return data->pos->size(); }
+int VRGeoData::sizeNormals() const { return data->norms->size(); }
 
 int VRGeoData::getNFaces() const {
     int N = 0;
