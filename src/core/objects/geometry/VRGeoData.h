@@ -31,6 +31,7 @@ class VRGeoData {
         static VRGeoDataPtr create();
 
         int size() const;
+        int sizeNormals() const;
         int getNFaces() const;
         int getFaceSize(int fID) const;
 

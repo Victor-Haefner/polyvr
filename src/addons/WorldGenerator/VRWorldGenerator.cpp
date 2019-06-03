@@ -508,6 +508,12 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                 tri.add(*p);
                 patch->merge( tri.compute() );
             }
+            patch->updateNormals();
+            VRGeoData nData(patch);
+            for (int i=0; i<nData.sizeNormals(); i++) {
+                auto n = nData.getNormal(i);
+                if (n[1] < 0) nData.setNorm(i,-n);
+            }
             patch->setMaterial(roads->getMaterial());
             patch->setPositionalTexCoords(1.0, 0, Vec3i(0,2,1));
             addChild(patch);
