@@ -48,6 +48,8 @@ void GISWorld::setupOntology() {
     auto PerpendicularParkingLot = world->addConcept("PerpendicularParkingLot", "ParkingLot");
     auto AngledParkingLot = world->addConcept("AngledParkingLot", "ParkingLot");
     auto Sign = world->addConcept("Sign", "Object");
+    auto Misc = world->addConcept("Misc", "Object");
+    auto MiscArea = world->addConcept("MiscArea", "Area");
     auto TrafficLight = world->addConcept("TrafficLight", "Sign");
 
     World->addProperty("ways", WayNetwork);
@@ -106,6 +108,13 @@ void GISWorld::setupOntology() {
     Building->addProperty("area", "Area");
     TrafficLight->addProperty("state", "string");
     TrafficLight->addProperty("node", "Node");
+
+    Misc->addProperty("tags", "string");
+    Misc->addProperty("direction", "Direction");
+    MiscArea->addProperty("tags", "string");
+    MiscArea->addProperty("type", "string");
+    MiscArea->addProperty("geometry", "string");
+    MiscArea->addProperty("area", "Area");
 
     auto Plant = world->addConcept("Plant");
     auto Tree = world->addConcept("Tree", "Plant");
