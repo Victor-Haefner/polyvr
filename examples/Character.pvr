@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0 1 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.0261486 1.87656 -1.49332" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.054776 0.0208994 -0.0174574" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-2.1302 0.427515 -1.89311" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <constraint persistency="666"/>
           </Object>
@@ -32,7 +32,72 @@
 	#VR.character.overrideSim(simCb)
 	VR.testMove(None)
 </core>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+      <trig type="none" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="init2" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	from VR.Math import Vec3
+	
+	if hasattr(VR, 'scene'): VR.scene.destroy()
+	VR.scene = VR.Object('scene', 'light')
+	
+	k = VR.Kinematics()
+	VR.kinematiks = k
+	
+	VR.bodyParts = {}
+	VR.partIDs = {}
+	
+	def addObj(name, params, pos):
+		g = VR.Geometry(name)
+		g.setPrimitive(params)
+		g.setPickable(True)
+		g.setFrom(pos)
+		VR.bodyParts[name] = g
+		VR.scene.addChild(g)
+		return g
+		
+	def addJoint(o1, o2, j, aMin, aMax):
+		b1 = VR.partIDs[o1]
+		b2 = VR.partIDs[o2]
+		d1 = Vec3(j)
+		d2 = d1 + o1.getFrom() - o2.getFrom()
+		p1 = VR.Pose( d1)
+		p2 = VR.Pose( d2)
+		return k.addCustomJoint(b1, b2, p1, p2, [0,1,2,3,4,5], [0,0,0]+aMin, [0,0,0]+aMax)
+		
+	def grow(name, parent, box, offset, dynamic, j = [], aMin = [], aMax = []):
+		pos = Vec3(offset)
+		if parent: pos += parent.getFrom()
+		part = addObj(name, 'Box '+box+' 1 1 1', pos)
+		partID = k.addBody(part, dynamic)
+		VR.partIDs[part] = partID 
+		if parent:
+			addJoint(parent, part, j, aMin, aMax)
+		return part
+		
+	def growArm(side, offset):
+		uArm = grow('uArm'+side, bBack, '0.08 0.25 0.08', [ offset, -0.02,0], 1, [ offset*0.9,0.05,0], [-1,-1,-1], [1,1,1])
+		lArm = grow('lArm'+side, uArm, '0.06 0.20 0.06', [ 0,-0.225,0], 1, [ 0,-0.125,0], [-2.8,0,0], [0,0,0])
+		hand = grow('hand'+side, lArm, '0.1 0.05 0.1', [ 0,-0.125,0], 1, [ 0,-0.1,0], [-1,-1,-1], [1,1,1])
+		
+	def growLeg(side, offset):
+		uLeg = grow('uLeg'+side, bAbdomen, '0.09 0.35 0.09', [ offset,-0.3,0], 1, [ offset,-0.175,0], [-1,-1,-1], [1,1,1])
+		lLeg = grow('lLeg'+side, uLeg, '0.08 0.30 0.08', [ 0,-0.325,0], 1, [ 0,-0.175,0], [0,0,0], [2.8,0,0])
+		foot = grow('foot'+side, lLeg, '0.1 0.05 0.15', [ 0,-0.175,0], 1, [ 0,-0.15,0], [-1,-1,-1], [1,1,1])
+	
+	bBack = grow('back', None, '0.3 0.25 0.15', [0,-0.2,0], 0)
+	bAbdomen = grow('abdomen', bBack, '0.2 0.3 0.1', [0,-0.275,0], 1, [0,-0.225,0], [-0.1,-0.1,-0.1], [0.1,0.1,0.1])
+	grow('head', bBack, '0.13 0.15 0.13', [0,0.2,0], 1, [0,0.225,0], [-0.3,-0.3,-0.3], [0.3,0.3,0.3])
+	growArm('L', 0.2)
+	growArm('R',-0.2)
+	growLeg('L', 0.15)
+	growLeg('R',-0.15)
+	
+	
+	
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
     </Script>
     <Script base_name="proto" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
@@ -95,8 +160,8 @@
 	#VR.character.move('handLeft', VR.Pose([-0.2,1.35,-0.2], [0,-1,0], [0,0,-1])) # forward
 	
 	#VR.character.move('handLeft', VR.Pose([-0.2,1.1,0.25], [0,-1,0], [0,0,-1])) # backward
-	VR.character.move('handLeft', VR.Pose([-0.2,1.0,0.35], [0,-1,0], [0,0,-1])) # backward
-	return
+	#VR.character.move('handLeft', VR.Pose([-0.2,1.0,0.35], [0,-1,0], [0,0,-1])) # backward
+	#return
 	
 	def cb2(t):
 		z = 0.25
@@ -104,7 +169,7 @@
 		VR.character.move('handLeft', p)
 		
 	def cb1(t):
-		a = t*2*3.14 * 4
+		a = t*2*3.14 * 1
 		R = 0.3
 		p = Vec3([-0.3,1.5,-0.3]) + Vec3([cos(a)*R,sin(a)*R,0])
 		VR.character.move('handLeft', VR.Pose(p))
@@ -112,7 +177,7 @@
 	a = VR.Animation('movement')
 	a.setCallback(cb1)
 	#a.setCallback(cb2)
-	a.setDuration(16)
+	a.setDuration(3)
 	a.start()
 </core>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="32" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>

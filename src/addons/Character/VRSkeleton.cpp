@@ -186,6 +186,9 @@ void VRSkeleton::updateGeometry() {
     for (auto& c : ChainDataMap) {
         for (int i=0; i<c.second.joints.size(); i++) {
             int jID = c.second.joints[i];
+            //if (joints[jID].name != "waist") continue;
+            //if (c.second.name != "handLeft") continue;
+
             Vec3d p = joints[jID].pos;
             JointOrientation& o = c.second.orientations[jID];
 
@@ -199,7 +202,7 @@ void VRSkeleton::updateGeometry() {
             geo3.pushVert(p + d*0.2, Vec3d(0,1,0), col2);
             geo3.pushLine();
 
-            /*Vec3d u = o.up1;
+            Vec3d u = o.up1;
             geo3.pushVert(p, Vec3d(0,1,0), col3);
             geo3.pushVert(p + u*0.2, Vec3d(0,1,0), col3);
             geo3.pushLine();
@@ -207,7 +210,7 @@ void VRSkeleton::updateGeometry() {
             u = o.up2;
             geo3.pushVert(p, Vec3d(0,1,0), col3);
             geo3.pushVert(p + u*0.2, Vec3d(0,1,0), col3);
-            geo3.pushLine();*/
+            geo3.pushLine();
         }
     }
 
@@ -522,6 +525,22 @@ void VRSkeleton::applyFABRIK(string EE) {
             }
         }
 
+
+        /*if (J1.name == "waist") { // test first spring, not usefull like this
+            // elbow: constrain aD between 0 and 90
+
+            double cA1 = -0.1; // some small angle
+            double cA2 =  0.1; // nearly stretched arm
+
+            if (aU < cA1 || aU > cA2) {
+                double g = (cA1+cA2)*0.5;
+                double d = computeAngleProjection(aU*0.5, g, distances[dID1], distances[dID2]);
+                Vec3d U = O1.up1 + O1.up2;
+                U.normalize();
+                J1.pos += U*d;
+            }
+        }*/
+
         // move point to fix distance
         float li = distances[dID1] / (J2.pos - J1.pos).length();
         movePointTowards(i1, J2.pos, li);
@@ -715,6 +734,7 @@ void VRSkeleton::setupChains() {
         ChainDataMap[e.first] = ChainData();
         ChainDataMap[e.first].chainedBones = getBonesChain(e.first);
         ChainDataMap[e.first].joints = getJointsChain(ChainDataMap[e.first].chainedBones);
+        ChainDataMap[e.first].name = e.first;
 
         for (int i=1; i<ChainDataMap[e.first].joints.size(); i++) {
             int jID1 = ChainDataMap[e.first].joints[i-1];
@@ -775,15 +795,40 @@ void VRSkeleton::updateChains() {
     }
 }
 
+void VRSkeleton::mixOrientations() {
+    for (auto& j : joints) {
+        int N = j.second.chains.size();
+        if (N <= 1) continue;
+
+        JointOrientation mean;
+        for (auto& c : j.second.chains) {
+            auto& chain = ChainDataMap[c];
+            JointOrientation& o = chain.orientations[j.first];
+            mean.dir1 += o.dir1;
+            mean.dir2 += o.dir2;
+            mean.up1  += o.up1;
+            mean.up2  += o.up2;
+        }
+
+        mean.dir1.normalize();
+        mean.dir2.normalize();
+        mean.up1.normalize();
+        mean.up2.normalize();
+
+        for (auto& c : j.second.chains) {
+            auto& chain = ChainDataMap[c];
+            chain.orientations[j.first] = mean;
+        }
+    }
+}
+
 void VRSkeleton::resolveKinematics() {
     //updateJointPositions();
     //setupChains();
     updateChains();
-
-    //cout << " AAAA " << ChainDataMap.size() << " " << SystemDataMap.size() << endl;
-
     simStep();
     updateBones();
+    mixOrientations();
     updateGeometry();
 }
 

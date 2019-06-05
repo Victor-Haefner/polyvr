@@ -59,6 +59,7 @@ class VRSkeleton : public VRGeometry {
         };
 
         struct ChainData {
+            string name;
             vector<int> chainedBones;
             vector<int> joints;
             map<int, JointOrientation> orientations;
@@ -107,6 +108,7 @@ class VRSkeleton : public VRGeometry {
         double computeAngleProjection(double l, double g, double d1, double d2);
         void simStep();
         void resolveKinematics();
+        void mixOrientations();
         void updateBones();
 
     public:

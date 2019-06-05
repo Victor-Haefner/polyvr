@@ -79,7 +79,7 @@ Vec3d Pose::scale() const { return data.size() > 3 ? data[3] : Vec3d(1,1,1); }
 
 Matrix4d Pose::asMatrix() const {
     Matrix4d m;
-    MatrixLookAt(m, data[0], data[0]+data[1], data[2]);
+    if (data.size() > 2) MatrixLookAt(m, data[0], data[0]+data[1], data[2]);
     if (data.size() > 3) {
         Matrix4d ms;
         ms.setScale(data[3]);
