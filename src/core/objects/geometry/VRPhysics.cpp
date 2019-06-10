@@ -103,11 +103,12 @@ bool VRPhysics::isPhysicalized() { return physicalized; }
 string VRPhysics::getShape() { return physicsShape; }
 
 void VRPhysics::setDynamic(bool b, bool fast) {
+    dynamic = b;
     if (fast && body) {
         PLock lock(VRPhysics_mtx());
         if (!b) body->setCollisionFlags(body->getCollisionFlags() |  btCollisionObject::CF_STATIC_OBJECT);
         else    body->setCollisionFlags(body->getCollisionFlags() & ~btCollisionObject::CF_STATIC_OBJECT);
-    } else { dynamic = b; update(); }
+    } else { update(); }
 }
 
 bool VRPhysics::isDynamic() { return dynamic; }

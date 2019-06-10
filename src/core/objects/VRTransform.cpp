@@ -145,6 +145,9 @@ void VRTransform::setIdentity() {
     setMatrix(Matrix4d());
 }
 
+bool VRTransform::getPhysicsDynamic() { return getPhysics()->isDynamic(); }
+void VRTransform::setPhysicsDynamic(bool b) { getPhysics()->setDynamic(b,true); }
+
 void VRTransform::updateChange() {
     apply_constraints();
     if (held) updatePhysics();

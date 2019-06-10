@@ -227,6 +227,9 @@ class VRTransform : public VRObject {
         void setGhost(bool g);
         void setDamping(float ld, float ad);
 
+        bool getPhysicsDynamic();
+        void setPhysicsDynamic(bool b);
+
         Vec3d getForce();
         Vec3d getTorque();
         void updatePhysics();

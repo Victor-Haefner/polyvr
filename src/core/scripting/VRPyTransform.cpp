@@ -117,6 +117,8 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setWorldDir", PyWrap(Transform, setWorldDir, "Set the direction in world coordinates", void, Vec3d ) },
     {"setWorldUp", PyWrap(Transform, setWorldUp, "Set the up vector in world coordinates", void, Vec3d ) },
     {"applyTransformation", PyWrap(Transform, applyTransformation, "Apply a transformation to the mesh - applyTransformation( pose )", void, PosePtr ) },
+    {"getPhysicsDynamic", PyWrap(Transform, getPhysicsDynamic, "get if dynamic physics object", bool ) },
+    {"setPhysicsDynamic", PyWrap(Transform, setPhysicsDynamic, "set if dynamic physics object", void, bool ) },
     {NULL}  /* Sentinel */
 };
 
