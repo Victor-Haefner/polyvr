@@ -121,6 +121,7 @@ class VRPhysics : public VRStorage {
         VRGeometryPtr visShape;
         VRConstraintPtr constraint = 0;
         Vec3d scale = Vec3d(1,1,1);
+        btVector3 inertia;
 
         vector<VRGeometryPtr> getGeometries();
 

@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="-0.0103027 1.42119 0.0737083" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-1.79526 1.50539 -0.780018" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.15 -0.213586 -0.0583682" at_dir="0" base_name="Default" far="512" fov="1.0472" from="1.49613 0.722123 -5.13668" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <constraint persistency="666"/>
           </Object>
@@ -80,6 +80,7 @@
 		uArm = grow('uArm'+side, bBack, '0.08 0.25 0.08', [ offset, -0.02,0], 1, [ offset*0.9,0.05,0], [-1,-1,-1], [1,1,1])
 		lArm = grow('lArm'+side, uArm, '0.06 0.20 0.06', [ 0,-0.225,0], 1, [ 0,-0.125,0], [-2.8,0,0], [0,0,0])
 		hand = grow('hand'+side, lArm, '0.1 0.05 0.1', [ 0,-0.125,0], 1, [ 0,-0.1,0], [-1,-1,-1], [1,1,1])
+		#hand = grow('hand'+side, lArm, '0.1 0.05 0.1', [ 0,-0.125,0], 0, [ 0,-0.1,0], [-1,-1,-1], [1,1,1])
 		
 	def growLeg(side, offset):
 		uLeg = grow('uLeg'+side, bAbdomen, '0.09 0.35 0.09', [ offset,-0.3,0], 1, [ offset,-0.175,0], [-1,-1,-1], [1,1,1])
@@ -95,9 +96,47 @@
 	growLeg('R',-0.15)
 	
 	
+	VR.testMove(0)
+	
+	
 	
 </core>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
+      <trig type="none" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
+    </Script>
+    <Script base_name="init3" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	# setup
+
+	VR.fabrik = VR.FABRIK()
+	
+	VR.fabrik.addJoint(0, VR.Pose([0,0,0]), [], [])
+	VR.fabrik.addJoint(1, VR.Pose([0,1,0]), [], [])
+	VR.fabrik.addJoint(2, VR.Pose([0,2,0]), [], [])
+	VR.fabrik.addJoint(3, VR.Pose([0,3,0]), [], [])
+	
+	VR.fabrik.addChain('chain', [0,1,2,3])
+	
+	
+	# sim
+	
+	#VR.fabrik.setTarget(3, VR.Pose([2.237,2,0]))
+	VR.fabrik.setTarget(3, VR.Pose([1.5,2,0]))
+	VR.fabrik.iterationStr('chain')
+
+
+
+	# visu
+	
+	if not hasattr(VR, 'visu'):
+		VR.visu = VR.Geometry('fabrik', 'light')
+	
+	
+	VR.fabrik.visualize(VR.visu)
+	print VR.visu.getPositions()
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="4" persistency="666"/>
     </Script>
     <Script base_name="proto" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
@@ -154,6 +193,30 @@
 	import VR
 	from VR.Math import Vec3
 	from math import sin, cos
+	
+	
+	def sayHi():
+		back = VR.bodyParts['back']
+		hand = VR.bodyParts['handL']
+		hand.setPhysicsDynamic(False)
+		
+		pH0 = hand.getFrom()
+		bP = back.getPose()
+		
+		def cb(t):
+			p = bP.pos() + bP.x()*(sin(t*15)*0.1+0.4) + bP.up()*(cos(t*15)*0.1+0.1)
+			hand.setFrom(p)
+			print p
+			if t == 1: hand.setPhysicsDynamic(True)
+		
+		a = VR.Animation('movement')
+		a.setCallback(cb)
+		a.setDuration(3)
+		a.start()
+		
+		
+	sayHi()
+	return
 	
 	
 	#VR.character.move('handLeft', VR.Pose([-0.2,1.05,0], [0,-1,0], [0,0,-1])) # origin

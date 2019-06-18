@@ -670,6 +670,8 @@
 		<Unit filename="src/core/math/interpolator.h" />
 		<Unit filename="src/core/math/kinematics/VRConstraint.cpp" />
 		<Unit filename="src/core/math/kinematics/VRConstraint.h" />
+		<Unit filename="src/core/math/kinematics/VRFABRIK.cpp" />
+		<Unit filename="src/core/math/kinematics/VRFABRIK.h" />
 		<Unit filename="src/core/math/kinematics/VRKinematics.cpp" />
 		<Unit filename="src/core/math/kinematics/VRKinematics.h" />
 		<Unit filename="src/core/math/patch.cpp" />

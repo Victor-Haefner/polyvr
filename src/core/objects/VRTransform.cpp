@@ -710,7 +710,7 @@ void VRTransform::drag(VRTransformPtr new_parent, VRIntersection i) {
     switchParent(new_parent);
     setWorldMatrix(m);
 
-    if (physics) {
+    if (physics && physics->isDynamic()) {
         physics->updateTransformation( ptr() );
         physics->resetForces();
         //physics->pause(true);

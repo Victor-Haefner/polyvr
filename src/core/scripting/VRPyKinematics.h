@@ -3,8 +3,13 @@
 
 #include "core/scripting/VRPyBase.h"
 #include "core/math/kinematics/VRKinematics.h"
+#include "core/math/kinematics/VRFABRIK.h"
 
 struct VRPyKinematics : VRPyBaseT<OSG::VRKinematics> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyFABRIK : VRPyBaseT<OSG::FABRIK> {
     static PyMethodDef methods[];
 };
 

@@ -102,15 +102,6 @@ void VRPhysics::setShape(string s, float param) { physicsShape = s; shape_param 
 bool VRPhysics::isPhysicalized() { return physicalized; }
 string VRPhysics::getShape() { return physicsShape; }
 
-void VRPhysics::setDynamic(bool b, bool fast) {
-    dynamic = b;
-    if (fast && body) {
-        PLock lock(VRPhysics_mtx());
-        if (!b) body->setCollisionFlags(body->getCollisionFlags() |  btCollisionObject::CF_STATIC_OBJECT);
-        else    body->setCollisionFlags(body->getCollisionFlags() & ~btCollisionObject::CF_STATIC_OBJECT);
-    } else { update(); }
-}
-
 bool VRPhysics::isDynamic() { return dynamic; }
 void VRPhysics::setMass(float m) { mass = m; update(); }
 float VRPhysics::getMass() { return mass; }
@@ -362,6 +353,20 @@ bool customContactAddedCallback( btManifoldPoint& cp, const btCollisionObjectWra
 	return true; // ignored
 }
 
+void VRPhysics::setDynamic(bool b, bool fast) {
+    dynamic = b;
+    if (fast && body) {
+        PLock lock(VRPhysics_mtx());
+        if (!b) {
+            body->setMassProps(0, btVector3());
+            body->setCollisionFlags(body->getCollisionFlags() |  btCollisionObject::CF_STATIC_OBJECT);
+        } else {
+            body->setMassProps(mass, inertia);
+            body->setCollisionFlags(body->getCollisionFlags() & ~btCollisionObject::CF_STATIC_OBJECT);
+        }
+    } else { update(); }
+}
+
 void VRPhysics::update() {
     auto scene = OSG::VRScene::getCurrent();
     if (scene == 0) return;
@@ -374,7 +379,6 @@ void VRPhysics::update() {
 
     if (!physicalized) return;
 
-    btVector3 inertiaVector(0,0,0);
     float _mass = mass;
     if (!dynamic || paused) _mass = 0;
 
@@ -403,7 +407,7 @@ void VRPhysics::update() {
 
     motionState = new btDefaultMotionState( fromVRTransform( vr_obj.lock(), scale, CoMOffset ) );
 
-    if (_mass != 0) shape->calculateLocalInertia(_mass, inertiaVector);
+    if (_mass != 0) shape->calculateLocalInertia(_mass, inertia);
 
     if (ghost) {
         ghost_body = new btPairCachingGhostObject();
@@ -413,7 +417,7 @@ void VRPhysics::update() {
         world->addCollisionObject(ghost_body, collisionGroup, collisionMask);
         ghost_body->setUserPointer(this);
     } else {
-        btRigidBody::btRigidBodyConstructionInfo rbInfo( _mass, motionState, shape, inertiaVector );
+        btRigidBody::btRigidBodyConstructionInfo rbInfo( _mass, motionState, shape, inertia );
         body = new btRigidBody(rbInfo);
         if (useCallbacks) body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
         body->setActivationState(activation_mode);

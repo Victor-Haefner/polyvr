@@ -7,6 +7,7 @@
 
 using namespace OSG;
 simpleVRPyType(Kinematics, New_ptr);
+simplePyType(FABRIK, New_ptr);
 
 PyMethodDef VRPyKinematics::methods[] = {
     {"addJoint", PyWrap( Kinematics, addJoint, "add joint - setGraph(graph)", int, int, int, VRConstraintPtr ) },
@@ -19,7 +20,14 @@ PyMethodDef VRPyKinematics::methods[] = {
     {"getGraph", PyWrap( Kinematics, getGraph, "Set graph - setGraph(graph)4", GraphPtr) },
     {"setDynamic", PyWrap( Kinematics, setDynamic, "Set graph - setGraph(graph)4", void, int, bool) },
     {"clear", PyWrap( Kinematics, clear, "Set graph - setGraph(graph)4", void) },
+    {NULL}  /* Sentinel */
+};
 
-
+PyMethodDef VRPyFABRIK::methods[] = {
+    {"addJoint", PyWrap2( FABRIK, addJoint, "Add joint, ID, pose, in, out", void, int, PosePtr, vector<int>, vector<int> ) },
+    {"addChain", PyWrap2( FABRIK, addChain, "Add chain, name, joints", void, string, vector<int> ) },
+    {"iterationStr", PyWrap2( FABRIK, iterationStr, "Execute FABRIK iteration, pass chain name", void, string ) },
+    {"setTarget", PyWrap2( FABRIK, setTarget, "Set joint target", void, int, PosePtr ) },
+    {"visualize", PyWrap2( FABRIK, visualize, "Visualize joints and chains", void, VRGeometryPtr ) },
     {NULL}  /* Sentinel */
 };
