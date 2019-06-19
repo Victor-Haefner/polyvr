@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="-0.15 -0.213586 -0.0583682" at_dir="0" base_name="Default" far="512" fov="1.0472" from="1.49613 0.722123 -5.13668" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.15 -0.213586 -0.0583682" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.651391 5.00637 -10.8277" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <constraint persistency="666"/>
           </Object>
@@ -108,33 +108,36 @@
 	import VR
 
 	# setup
-
 	VR.fabrik = VR.FABRIK()
 	
 	VR.fabrik.addJoint(0, VR.Pose([0,0,0]), [], [])
 	VR.fabrik.addJoint(1, VR.Pose([0,1,0]), [], [])
-	VR.fabrik.addJoint(2, VR.Pose([0,2,0]), [], [])
-	VR.fabrik.addJoint(3, VR.Pose([0,3,0]), [], [])
 	
-	VR.fabrik.addChain('chain', [0,1,2,3])
+	VR.fabrik.addJoint(2, VR.Pose([0.5,2,0]), [], [])
+	VR.fabrik.addJoint(3, VR.Pose([0.5,3,0]), [], [])
+	VR.fabrik.addJoint(4, VR.Pose([0.5,4,0]), [], [])
+	
+	VR.fabrik.addJoint(5, VR.Pose([0,2,0]), [], [])
+	VR.fabrik.addJoint(6, VR.Pose([0,3,0]), [], [])
+	VR.fabrik.addJoint(7, VR.Pose([0,4,0]), [], [])
+	
+	VR.fabrik.addChain('chain1', [0,1,2,3,4])
+	VR.fabrik.addChain('chain2', [0,1,5,6,7])
 	
 	
 	# sim
 	
 	#VR.fabrik.setTarget(3, VR.Pose([2.237,2,0]))
-	VR.fabrik.setTarget(3, VR.Pose([1.5,2,0]))
-	VR.fabrik.iterationStr('chain')
+	VR.fabrik.setTarget(4, VR.Pose([2.2,3,0]))
+	VR.fabrik.setTarget(7, VR.Pose([-2.5,3,0]))
+	VR.fabrik.iterate()
 
 
 
 	# visu
-	
 	if not hasattr(VR, 'visu'):
 		VR.visu = VR.Geometry('fabrik', 'light')
-	
-	
 	VR.fabrik.visualize(VR.visu)
-	print VR.visu.getPositions()
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="4" persistency="666"/>
     </Script>

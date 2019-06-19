@@ -49,10 +49,11 @@ class FABRIK {
 
         void forward(Chain& chain);
         void backward(Chain& chain);
-        void iteration(Chain& chain);
+        void chainIteration(Chain& chain);
 
         void setTarget(int i, PosePtr p);
-        void iterationStr(string chain);
+        void iterate();
+        void iterateChain(string chain);
 
         void visualize(VRGeometryPtr geo);
 };

@@ -26,7 +26,8 @@ PyMethodDef VRPyKinematics::methods[] = {
 PyMethodDef VRPyFABRIK::methods[] = {
     {"addJoint", PyWrap2( FABRIK, addJoint, "Add joint, ID, pose, in, out", void, int, PosePtr, vector<int>, vector<int> ) },
     {"addChain", PyWrap2( FABRIK, addChain, "Add chain, name, joints", void, string, vector<int> ) },
-    {"iterationStr", PyWrap2( FABRIK, iterationStr, "Execute FABRIK iteration, pass chain name", void, string ) },
+    {"iterate", PyWrap2( FABRIK, iterate, "Execute FABRIK iteration", void ) },
+    {"iterateChain", PyWrap2( FABRIK, iterateChain, "Execute single chain FABRIK iteration, pass chain name", void, string ) },
     {"setTarget", PyWrap2( FABRIK, setTarget, "Set joint target", void, int, PosePtr ) },
     {"visualize", PyWrap2( FABRIK, visualize, "Visualize joints and chains", void, VRGeometryPtr ) },
     {NULL}  /* Sentinel */

@@ -155,9 +155,12 @@ void FABRIK::backward(Chain& chain) {
     }
 }
 
-void FABRIK::iteration(Chain& chain) {
+void FABRIK::chainIteration(Chain& chain) {
     //ChainData& data = ChainDataMap[EE];
-    auto target = joints[chain.joints.back()].target;
+    if (chain.joints.size() == 0) return;
+    int ee = chain.joints.back();
+    if (!joints.count(ee)) return;
+    auto target = joints[ee].target;
     if (!target) return;
 
     auto targetPos = target->pos();
@@ -174,16 +177,6 @@ void FABRIK::iteration(Chain& chain) {
         return r;
     };
 
-    /*"
-    - define dir1 and dir2 for each joint
-    - define up1 and up2 for each joint
-    - dot between dir1 and dir2 corresponds to rotation around x
-    - dot between up1 and up2 corresponds to rotation around z
-    - compute those vectors based on
-        - vectors between joint positions
-        - reference positions of each joint
-    */
-
     // basic FABRIK algorithm
     float Dtarget = (targetPos - joints[chain.joints[0]].p->pos()).length();
     if (Dtarget > sum(distances)) { // position unreachable
@@ -192,18 +185,13 @@ void FABRIK::iteration(Chain& chain) {
             moveToDistance(chain,i,i-1,i-1,i);
         }
     } else { // position reachable
-        float difA = (joints[chain.joints.back()].p->pos()-targetPos).length();
+        float difA = (joints[ee].p->pos()-targetPos).length();
         int k=0;
         while (difA > tol) {
-            k++; if(k>15) break;
-            if (verbose || 1) cout << "\n\nitr " << k << endl;
-
+            k++; if (k>15) break;
             int iE = chain.joints.size()-1;
             Vec3d pOld = movePointTowards(chain, iE, targetPos, 0);
-            /*auto R = getRotation(chain.joints[iE], chain.joints[iE-1], pOld);
-            rotateJoints(chain.joints[iE-1],chain.joints[iE],R,chain);*/
 
-            //jointPos(iE) = targetPos;
             backward(chain);
             forward(chain);
             difA = (joints[chain.joints[iE]].p->pos()-targetPos).length();
@@ -215,8 +203,15 @@ void FABRIK::setTarget(int i, PosePtr p) {
     joints[i].target = p;
 }
 
-void FABRIK::iterationStr(string chain) {
-    iteration(chains[chain]);
+void FABRIK::iterate() {
+    for (auto chain : chains) {
+        chainIteration(chain.second);
+    }
+}
+
+void FABRIK::iterateChain(string chain) {
+    if (!chains.count(chain)) return;
+    chainIteration(chains[chain]);
 }
 
 void FABRIK::visualize(VRGeometryPtr geo) {
@@ -225,7 +220,9 @@ void FABRIK::visualize(VRGeometryPtr geo) {
     for (auto j : joints) {
         data.pushVert(j.second.p->pos(), Vec3d(0,0,0), Color3f(1,0,0));
         data.pushPoint();
+    }
 
+    for (auto j : joints) {
         if (j.second.target) {
             data.pushVert(j.second.target->pos(), Vec3d(0,0,0), Color3f(0,0,1));
             data.pushPoint();
