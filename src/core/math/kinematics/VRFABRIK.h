@@ -35,7 +35,7 @@ class FABRIK {
         float tolerance = 0.01;
 
         Vec3d movePointTowards(Chain& chain, int i, Vec3d target, float t);
-        Vec3d moveToDistance(Chain& chain, int i1, int i2, int dID1, int dID2);
+        Vec3d moveToDistance(Chain& chain, int i1, int i2, int dID);
 
     public:
         FABRIK();
