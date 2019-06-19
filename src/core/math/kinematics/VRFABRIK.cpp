@@ -86,9 +86,12 @@ void FABRIK::iterate() {
     stack<job> jobs;
     for (auto& c : chains) {
         auto& chain = c.second;
-        job j(chain.joints.back(), 0, c.first, false, joints[j.joint].target);
+        int J = chain.joints.back();
+        job j(J, 0, c.first, false, joints[J].target);
         jobs.push(j);
     }
+
+    //jobs.push( job(5,0,"chain1",false,joints[5].target) );
 
     while (jobs.size()) {
         auto j = jobs.top();
@@ -105,7 +108,7 @@ void FABRIK::iterate() {
         if (!j.fwd && distTarget < tolerance) continue;
 
 
-        cout << "doJob: " << j.joint << " -> " << j.base << ", " << string(j.fwd?"forward":"backward") << endl;
+        cout << "doJob: " << j.chain << ", " << j.joint << " -> " << j.base << ", " << string(j.fwd?"forward":"backward") << endl;
 
         if (j.fwd) {
             for (int i = 1; i <= chain.distances.size(); i++) { // 1 bis Nj-1
