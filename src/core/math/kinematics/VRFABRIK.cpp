@@ -84,14 +84,23 @@ void FABRIK::iterate() {
     };
 
     stack<job> jobs;
-    for (auto& c : chains) {
+
+    /*for (auto& c : chains) {
         auto& chain = c.second;
         int J = chain.joints.back();
         job j(J, 0, c.first, false, joints[J].target);
         jobs.push(j);
+    }*/
+
+    for (int i=0; i<10; i++) {
+        jobs.push( job(5,0,"chain1",true,joints[5].target) );
+        jobs.push( job(5,0,"chain1",false,joints[5].target) );
     }
 
-    //jobs.push( job(5,0,"chain1",false,joints[5].target) );
+    for (int i=0; i<20; i++) {
+        jobs.push( job(8,0,"chain2",true,joints[8].target) );
+        jobs.push( job(8,0,"chain2",false,joints[8].target) );
+    }
 
     while (jobs.size()) {
         auto j = jobs.top();
@@ -124,9 +133,9 @@ void FABRIK::iterate() {
             }
         }
 
-        job next = j;
+        /*job next = j;
         next.fwd = !j.fwd;
-        jobs.push(next);
+        jobs.push(next);*/
     }
 }
 
