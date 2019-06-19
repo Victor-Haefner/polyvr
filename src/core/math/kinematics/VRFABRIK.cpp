@@ -140,6 +140,7 @@ void FABRIK::iterate() {
 
     struct job {
         int joint;
+        int base;
         string chain;
         bool fwd = false;
         PosePtr target;
@@ -153,6 +154,7 @@ void FABRIK::iterate() {
         j.joint = chain.joints.back();
         j.chain = c.first;
         j.target = joints[j.joint].target;
+        j.base = chain.joints.front();
         jobs.push(j);
     }
 
@@ -170,16 +172,14 @@ void FABRIK::iterate() {
         float distTarget = (joints[j.joint].p->pos()-targetPos).length();
         if (!j.fwd && distTarget < tolerance) continue;
 
-
-        int iE = chain.joints.size()-1;
-        movePointTowards(chain, iE, targetPos, 0);
-
         if (j.fwd) {
-            for (int i = 1; i <= chain.distances.size(); i++) {
+            for (int i = 1; i <= chain.distances.size(); i++) { // 1 bis Nj-1
                 auto pOld = moveToDistance(chain, i,i-1,i-1,i);
             }
         } else {
-            for (int i = chain.distances.size()-1; i > 0; i--) {
+            int iE = chain.joints.size()-1;
+            movePointTowards(chain, iE, targetPos, 0);
+            for (int i = chain.distances.size()-1; i > 0; i--) { // bis Nj-2 bis 1
                 auto pOld = moveToDistance(chain, i,i+1,i,i-1);
             }
         }
