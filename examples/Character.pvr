@@ -125,7 +125,6 @@
 	VR.fabrik.addChain('chain1', [0,1,2,3,4,5])
 	VR.fabrik.addChain('chain2', [0,1,2,6,7,8])
 	
-	
 	# sim
 	
 	#VR.fabrik.setTarget(3, VR.Pose([2.237,2,0]))

@@ -139,16 +139,20 @@ void FABRIK::iterate() {
     };
 
     struct job {
-        int node;
+        int joint;
         string chain;
+        bool fwd = false;
+        PosePtr target;
     };
 
     stack<job> jobs;
     for (auto& c : chains) {
         auto& chain = c.second;
+
         job j;
-        j.node = chain.joints.back();
+        j.joint = chain.joints.back();
         j.chain = c.first;
+        j.target = joints[j.joint].target;
         jobs.push(j);
     }
 
@@ -158,30 +162,31 @@ void FABRIK::iterate() {
 
         auto& chain = chains[j.chain];
         if (chain.joints.size() == 0) continue;
-        int ee = chain.joints.back();
-        if (!joints.count(ee)) continue;
-        auto target = joints[ee].target;
-        if (!target) continue;
+        if (!joints.count(j.joint)) continue;
+        if (!j.target) continue;
 
-        // basic FABRIK algorithm
-        auto targetPos = target->pos();
-        float difA = (joints[ee].p->pos()-targetPos).length();
-        int k=0;
-        while (difA > tolerance) {
-            k++; if (k>15) break;
-            int iE = chain.joints.size()-1;
-            movePointTowards(chain, iE, targetPos, 0);
 
-            for (int i = chain.distances.size()-1; i > 0; i--) {
-                auto pOld = moveToDistance(chain, i,i+1,i,i-1);
-            }
+        auto targetPos = j.target->pos();
+        float distTarget = (joints[j.joint].p->pos()-targetPos).length();
+        if (distTarget < tolerance) continue;
 
+
+        int iE = chain.joints.size()-1;
+        movePointTowards(chain, iE, targetPos, 0);
+
+        if (j.fwd) {
             for (int i = 1; i <= chain.distances.size(); i++) {
                 auto pOld = moveToDistance(chain, i,i-1,i-1,i);
             }
-
-            difA = (joints[chain.joints[iE]].p->pos()-targetPos).length();
+        } else {
+            for (int i = chain.distances.size()-1; i > 0; i--) {
+                auto pOld = moveToDistance(chain, i,i+1,i,i-1);
+            }
         }
+
+        job next = j;
+        next.fwd = !j.fwd;
+        jobs.push(next);
     }
 }
 
