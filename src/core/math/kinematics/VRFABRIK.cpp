@@ -4,6 +4,8 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 
+#include <stack>
+
 using namespace OSG;
 
 template<> string typeName(const FABRIK& k) { return "FABRIK"; }
@@ -130,25 +132,36 @@ void FABRIK::setTarget(int i, PosePtr p) {
 }
 
 void FABRIK::iterate() {
-    /*stack<int> nodes;
-    for (auto& c : chains) {
-        auto& chain = c.second;
-        nodes.push_back( chain.joints.back() );
-    }*/
+    auto sum = [](vector<float> v) {
+        float r = 0;
+        for (auto f : v) r += f;
+        return r;
+    };
 
+    struct job {
+        int node;
+        string chain;
+    };
+
+    stack<job> jobs;
     for (auto& c : chains) {
         auto& chain = c.second;
+        job j;
+        j.node = chain.joints.back();
+        j.chain = c.first;
+        jobs.push(j);
+    }
+
+    while (jobs.size()) {
+        auto j = jobs.top();
+        jobs.pop();
+
+        auto& chain = chains[j.chain];
         if (chain.joints.size() == 0) continue;
         int ee = chain.joints.back();
         if (!joints.count(ee)) continue;
         auto target = joints[ee].target;
         if (!target) continue;
-
-        auto sum = [](vector<float> v) {
-            float r = 0;
-            for (auto f : v) r += f;
-            return r;
-        };
 
         // basic FABRIK algorithm
         auto targetPos = target->pos();
