@@ -73,30 +73,20 @@ void FABRIK::setTarget(int i, PosePtr p) {
 }
 
 void FABRIK::iterate() {
-    auto sum = [](vector<float> v) {
-        float r = 0;
-        for (auto f : v) r += f;
-        return r;
-    };
-
     struct job {
         int joint;
         int base;
         string chain;
         bool fwd = false;
         PosePtr target;
+
+        job(int j, int b, string c, bool f, PosePtr t) : joint(j), base(b), chain(c), fwd(f), target(t) {};
     };
 
     stack<job> jobs;
     for (auto& c : chains) {
         auto& chain = c.second;
-
-        job j;
-        j.joint = chain.joints.back();
-        j.chain = c.first;
-        j.target = joints[j.joint].target;
-        //j.base = chain.joints.front();
-        j.base = 0;
+        job j(chain.joints.back(), 0, c.first, false, joints[j.joint].target);
         jobs.push(j);
     }
 
