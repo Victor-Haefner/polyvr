@@ -168,7 +168,7 @@ void FABRIK::iterate() {
 
         auto targetPos = j.target->pos();
         float distTarget = (joints[j.joint].p->pos()-targetPos).length();
-        if (distTarget < tolerance) continue;
+        if (!j.fwd && distTarget < tolerance) continue;
 
 
         int iE = chain.joints.size()-1;
