@@ -32,6 +32,8 @@ class FABRIK {
         map<int, Joint> joints;
         map<string, Chain> chains;
 
+        float tolerance = 0.001;
+
         Vec3d movePointTowards(Chain& chain, int i, Vec3d target, float t);
         Vec3d moveToDistance(Chain& chain, int i1, int i2, int dID1, int dID2);
 

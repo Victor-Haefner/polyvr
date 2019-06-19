@@ -121,91 +121,62 @@ Vec3d FABRIK::moveToDistance(Chain& chain, int i1, int i2, int dID1, int dID2) {
     return pOld;
 }
 
-void FABRIK::forward(Chain& chain) {
-    for (int i = 1; i <= chain.distances.size(); i++) {
-        //cout << "\nmove2 " << joints[data.joints[i]].name << endl;
-        auto pOld = moveToDistance(chain, i,i-1,i-1,i);
-        //auto pOld = joints[data.joints[i]].pos;
-        /*if (i < Nd) {
-            auto R = getRotation(data.joints[i], data.joints[i+1], pOld);
-            rotateJoints(data.joints[i], data.joints[i+1], R, data);
-        }
-
-        if (i > 0) { // waist 2
-            auto R = getRotation(data.joints[i], data.joints[i-1], pOld);
-            rotateJoints(data.joints[i-1], data.joints[i], R, data);
-        }*/
-    }
-}
-
-void FABRIK::backward(Chain& chain) {
-    for (int i = chain.distances.size()-1; i > 0; i--) {
-        //cout << "\nmove1 " << joints[data.joints[i]].name << endl;
-        auto pOld = moveToDistance(chain, i,i+1,i,i-1);
-        //auto pOld = joints[data.joints[i]].pos;
-        /*if (i > 0) { // waist 1
-            auto R = getRotation(data.joints[i], data.joints[i-1], pOld);
-            rotateJoints(data.joints[i-1], data.joints[i], R, data);
-        }
-
-        if (i < Nd) {
-            auto R = getRotation(data.joints[i], data.joints[i+1], pOld);
-            rotateJoints(data.joints[i], data.joints[i+1], R, data);
-        }*/
-    }
-}
-
-void FABRIK::chainIteration(Chain& chain) {
-    //ChainData& data = ChainDataMap[EE];
-    if (chain.joints.size() == 0) return;
-    int ee = chain.joints.back();
-    if (!joints.count(ee)) return;
-    auto target = joints[ee].target;
-    if (!target) return;
-
-    auto targetPos = target->pos();
-
-    float tol = 0.001; // 1 mm tolerance
-    vector<float>& distances = chain.distances;
-    int Nd = distances.size();
-
-    bool verbose = false;
-
-    auto sum = [](vector<float> v) {
-        float r = 0;
-        for (auto f : v) r += f;
-        return r;
-    };
-
-    // basic FABRIK algorithm
-    float Dtarget = (targetPos - joints[chain.joints[0]].p->pos()).length();
-    if (Dtarget > sum(distances)) { // position unreachable
-        for (int i=1; i<=Nd; i++) {
-            joints[chain.joints[i]].p->setPos( targetPos );
-            moveToDistance(chain,i,i-1,i-1,i);
-        }
-    } else { // position reachable
-        float difA = (joints[ee].p->pos()-targetPos).length();
-        int k=0;
-        while (difA > tol) {
-            k++; if (k>15) break;
-            int iE = chain.joints.size()-1;
-            Vec3d pOld = movePointTowards(chain, iE, targetPos, 0);
-
-            backward(chain);
-            forward(chain);
-            difA = (joints[chain.joints[iE]].p->pos()-targetPos).length();
-        }
-    }
-}
+void FABRIK::forward(Chain& chain) {}
+void FABRIK::backward(Chain& chain) {}
+void FABRIK::chainIteration(Chain& chain) {}
 
 void FABRIK::setTarget(int i, PosePtr p) {
     joints[i].target = p;
 }
 
 void FABRIK::iterate() {
-    for (auto chain : chains) {
-        chainIteration(chain.second);
+    /*stack<int> nodes;
+    for (auto& c : chains) {
+        auto& chain = c.second;
+        nodes.push_back( chain.joints.back() );
+    }*/
+
+    for (auto& c : chains) {
+        auto& chain = c.second;
+        if (chain.joints.size() == 0) continue;
+        int ee = chain.joints.back();
+        if (!joints.count(ee)) continue;
+        auto target = joints[ee].target;
+        if (!target) continue;
+
+        auto sum = [](vector<float> v) {
+            float r = 0;
+            for (auto f : v) r += f;
+            return r;
+        };
+
+        // basic FABRIK algorithm
+        auto targetPos = target->pos();
+        float Dtarget = (targetPos - joints[chain.joints[0]].p->pos()).length();
+        if (Dtarget > sum(chain.distances)) { // position unreachable
+            for (int i=1; i<=chain.distances.size(); i++) {
+                joints[chain.joints[i]].p->setPos( targetPos );
+                moveToDistance( chain,i,i-1,i-1,i );
+            }
+        } else { // position reachable
+            float difA = (joints[ee].p->pos()-targetPos).length();
+            int k=0;
+            while (difA > tolerance) {
+                k++; if (k>15) break;
+                int iE = chain.joints.size()-1;
+                movePointTowards(chain, iE, targetPos, 0);
+
+                for (int i = chain.distances.size()-1; i > 0; i--) {
+                    auto pOld = moveToDistance(chain, i,i+1,i,i-1);
+                }
+
+                for (int i = 1; i <= chain.distances.size(); i++) {
+                    auto pOld = moveToDistance(chain, i,i-1,i-1,i);
+                }
+
+                difA = (joints[chain.joints[iE]].p->pos()-targetPos).length();
+            }
+        }
     }
 }
 
