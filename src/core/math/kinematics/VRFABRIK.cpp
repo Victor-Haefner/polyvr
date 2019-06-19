@@ -165,30 +165,22 @@ void FABRIK::iterate() {
 
         // basic FABRIK algorithm
         auto targetPos = target->pos();
-        float Dtarget = (targetPos - joints[chain.joints[0]].p->pos()).length();
-        if (Dtarget > sum(chain.distances)) { // position unreachable
-            for (int i=1; i<=chain.distances.size(); i++) {
-                joints[chain.joints[i]].p->setPos( targetPos );
-                moveToDistance( chain,i,i-1,i-1,i );
+        float difA = (joints[ee].p->pos()-targetPos).length();
+        int k=0;
+        while (difA > tolerance) {
+            k++; if (k>15) break;
+            int iE = chain.joints.size()-1;
+            movePointTowards(chain, iE, targetPos, 0);
+
+            for (int i = chain.distances.size()-1; i > 0; i--) {
+                auto pOld = moveToDistance(chain, i,i+1,i,i-1);
             }
-        } else { // position reachable
-            float difA = (joints[ee].p->pos()-targetPos).length();
-            int k=0;
-            while (difA > tolerance) {
-                k++; if (k>15) break;
-                int iE = chain.joints.size()-1;
-                movePointTowards(chain, iE, targetPos, 0);
 
-                for (int i = chain.distances.size()-1; i > 0; i--) {
-                    auto pOld = moveToDistance(chain, i,i+1,i,i-1);
-                }
-
-                for (int i = 1; i <= chain.distances.size(); i++) {
-                    auto pOld = moveToDistance(chain, i,i-1,i-1,i);
-                }
-
-                difA = (joints[chain.joints[iE]].p->pos()-targetPos).length();
+            for (int i = 1; i <= chain.distances.size(); i++) {
+                auto pOld = moveToDistance(chain, i,i-1,i-1,i);
             }
+
+            difA = (joints[chain.joints[iE]].p->pos()-targetPos).length();
         }
     }
 }

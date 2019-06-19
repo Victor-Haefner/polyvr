@@ -111,25 +111,26 @@
 	VR.fabrik = VR.FABRIK()
 	
 	VR.fabrik.addJoint(0, VR.Pose([0,0,0]), [], [])
-	VR.fabrik.addJoint(1, VR.Pose([0,1,0]), [], [])
+	VR.fabrik.addJoint(1, VR.Pose([0,0.5,0]), [], [])
+	VR.fabrik.addJoint(2, VR.Pose([0,1,0]), [], [])
 	
-	VR.fabrik.addJoint(2, VR.Pose([0.5,2,0]), [], [])
-	VR.fabrik.addJoint(3, VR.Pose([0.5,3,0]), [], [])
-	VR.fabrik.addJoint(4, VR.Pose([0.5,4,0]), [], [])
+	VR.fabrik.addJoint(3, VR.Pose([0.5,2,0]), [], [])
+	VR.fabrik.addJoint(4, VR.Pose([0.5,3,0]), [], [])
+	VR.fabrik.addJoint(5, VR.Pose([0.5,4,0]), [], [])
 	
-	VR.fabrik.addJoint(5, VR.Pose([0,2,0]), [], [])
-	VR.fabrik.addJoint(6, VR.Pose([0,3,0]), [], [])
-	VR.fabrik.addJoint(7, VR.Pose([0,4,0]), [], [])
+	VR.fabrik.addJoint(6, VR.Pose([0,2,0]), [], [])
+	VR.fabrik.addJoint(7, VR.Pose([0,3,0]), [], [])
+	VR.fabrik.addJoint(8, VR.Pose([0,4,0]), [], [])
 	
-	VR.fabrik.addChain('chain1', [0,1,2,3,4])
-	VR.fabrik.addChain('chain2', [0,1,5,6,7])
+	VR.fabrik.addChain('chain1', [0,1,2,3,4,5])
+	VR.fabrik.addChain('chain2', [0,1,2,6,7,8])
 	
 	
 	# sim
 	
 	#VR.fabrik.setTarget(3, VR.Pose([2.237,2,0]))
-	VR.fabrik.setTarget(4, VR.Pose([2.2,3,0]))
-	VR.fabrik.setTarget(7, VR.Pose([-2.5,3,0]))
+	VR.fabrik.setTarget(5, VR.Pose([2.2,3,0]))
+	VR.fabrik.setTarget(8, VR.Pose([-2.5,3,0]))
 	VR.fabrik.iterate()
 
 
