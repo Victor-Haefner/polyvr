@@ -106,30 +106,78 @@ void FABRIK::setTarget(int i, PosePtr p) {
 void FABRIK::updateExecutionQueue() {
     executionQueue.clear();
 
+    cout << "FABRIK::updateExecutionQueue" << endl;
 
-    /*for (auto& c : chains) {
+    map<int, string> splits;
+
+    for (auto& c : chains) {
         auto& chain = c.second;
-        int J = chain.joints.back();
-        job j(J, 0, c.first, false, joints[J].target);
-        jobs.push(j);
-    }*/
 
-    /*for (int i=0; i<20; i++) {
-        jobs.push_back( job(8,0,"chain2",false,joints[8].target) );
-        jobs.push_back( job(8,0,"chain2",true,joints[8].target) );
+        int ee = chain.joints.back();
+        int b = 0;
+        int i1 = chain.distances.size()-1;
+        int i2 = 0;
+
+        for (int i=chain.joints.size()-1; i>=0; i--) {
+            auto& J = joints[chain.joints[i]];
+            b = chain.joints[i];
+            i2 = max(i,1);
+
+            if (J.out.size() > 1) splits[b] = chain.name;
+
+            if (J.out.size() > 1 || i == 0) {
+                //cout << " add step: " << ee << " " << b << " " << i1 << " " << i2 << " " << chain.name << endl;
+                executionQueue.push_back( step(ee, b, i1, i2, chain.name, joints[ee].target, false, true) );
+                break;
+            }
+        }
     }
 
-    for (int i=0; i<10; i++) {
-        jobs.push_back( job(5,0,"chain1",false,joints[5].target) );
-        jobs.push_back( job(5,0,"chain1",true,joints[5].target) );
-    }*/
+    for (auto s : splits) {
+        auto& chain = chains[s.second];
 
-    executionQueue.push_back( step(5,2,4,1,"chain1",joints[5].target,false,true) );
-    executionQueue.push_back( step(8,2,4,1,"chain2",joints[8].target,false,true) );
-    executionQueue.push_back( step(2,0,1,0,"chain2",joints[2].p     ,false,false) );
+        int ee = chain.joints[s.first];
+        int b = 0;
+        int i1 = s.first-1;
+        int i2 = 0;
+
+        for (int i=s.first-1; i>=0; i--) {
+            auto& J = joints[chain.joints[i]];
+            b = chain.joints[i];
+            i2 = max(i,1);
+
+            if (J.out.size() > 1) splits[b] = chain.name;
+
+            if (J.out.size() > 1 || i == 0) {
+                //cout << " add step: " << ee << " " << b << " " << i1 << " " << i2 << " " << chain.name << endl;
+                executionQueue.push_back( step(ee, b, i1, i2, chain.name, joints[ee].p, false, false) );
+                break;
+            }
+        }
+    }
+
+    // add reverse direction!
+    for (int i=executionQueue.size()-1; i>=0; i--) {
+        auto s = executionQueue[i];
+        s.fwd = true;
+        int i1 = s.i2+1;
+        if (s.i2 == 1) i1 = 1;
+        int i2 = s.i1+1;
+        s.i1 = i1;
+        s.i2 = i2;
+        //cout << " add step: " << s.joint << " " << s.base << " " << s.i1 << " " << s.i2 << " " << s.chain << endl;
+        executionQueue.push_back( s );
+    }
+
+    /*executionQueue.clear();
+
+    executionQueue.push_back( step(5,2,4,2,"chain1",joints[5].target,false,true) );
+    executionQueue.push_back( step(8,2,4,2,"chain2",joints[8].target,false,true) );
+    executionQueue.push_back( step(2,0,1,1,"chain2",joints[2].p     ,false,false) );
     executionQueue.push_back( step(2,0,1,2,"chain2",joints[2].p     ,true,false) );
     executionQueue.push_back( step(8,2,3,5,"chain2",joints[8].target,true,true) );
     executionQueue.push_back( step(5,2,3,5,"chain1",joints[5].target,true,true) );
+    */
 }
 
 void FABRIK::iterate() {
@@ -174,7 +222,7 @@ void FABRIK::iterate() {
                 }
             } else {
                 movePointTowards(j.joint, targetPos, 0);
-                for (int i = j.i1; i > j.i2; i--) { // bis Nj-2 bis 1
+                for (int i = j.i1; i >= j.i2; i--) { // bis Nj-2 bis 1
                     auto pOld = moveToDistance(chain.joints[i], chain.joints[i+1], chain.distances[i]);
                 }
             }
