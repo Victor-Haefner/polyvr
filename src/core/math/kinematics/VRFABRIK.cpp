@@ -135,13 +135,16 @@ void FABRIK::iterate() {
         jobs.push_back( job(5,0,"chain1",true,joints[5].target) );
     }*/
 
-    jobs.push_back( job(5,2,4,1,"chain1",joints[5].target,false,true) );
-    jobs.push_back( job(8,2,4,1,"chain2",joints[8].target,false,true) );
-    jobs.push_back( job(2,0,1,0,"chain2",joints[2].p     ,false,false) );
+    for (int i=0; i<10; i++) {
+        jobs.push_back( job(5,2,4,1,"chain1",joints[5].target,false,true) );
+        jobs.push_back( job(8,2,4,1,"chain2",joints[8].target,false,true) );
+        jobs.push_back( job(2,0,1,0,"chain2",joints[2].p     ,false,false) );
 
-    jobs.push_back( job(2,0,1,2,"chain2",joints[2].p     ,true,false) );
-    jobs.push_back( job(8,2,3,5,"chain2",joints[8].target,true,true) );
-    jobs.push_back( job(5,2,3,5,"chain1",joints[5].target,true,true) );
+        jobs.push_back( job(2,0,1,2,"chain2",joints[2].p     ,true,false) );
+        jobs.push_back( job(8,2,3,5,"chain2",joints[8].target,true,true) );
+        jobs.push_back( job(5,2,3,5,"chain1",joints[5].target,true,true) );
+    }
+
 
     for (auto j : jobs) {
         cout << "doJob: " << j.chain << ", " << j.joint << " -> " << j.base << ", " << string(j.fwd?"forward":"backward") << endl;
