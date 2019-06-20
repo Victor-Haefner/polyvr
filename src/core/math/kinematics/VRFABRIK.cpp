@@ -79,6 +79,7 @@ Vec3d FABRIK::movePointTowards(int j, Vec3d target, float t) {
     auto& J = joints[j];
     Vec3d pOld = J.p->pos();
     J.p->setPos( interp(pOld, target, t) );
+    cout << "  movePoint " << j << " to " << target << endl;
     return pOld;
 };
 
@@ -104,12 +105,14 @@ void FABRIK::iterate() {
     struct job {
         int joint;
         int base;
+        int i1;
+        int i2;
         string chain;
         PosePtr target;
         bool fwd = false;
         bool mid = false;
 
-        job(int j, int b, string c, PosePtr t, bool f, bool m) : joint(j), base(b), chain(c), target(t), fwd(f), mid(m) {};
+        job(int j, int b, int i1, int i2, string c, PosePtr t, bool f, bool m) : joint(j), base(b), i1(i1), i2(i2), chain(c), target(t), fwd(f), mid(m) {};
     };
 
     vector<job> jobs;
@@ -132,44 +135,53 @@ void FABRIK::iterate() {
         jobs.push_back( job(5,0,"chain1",true,joints[5].target) );
     }*/
 
-    jobs.push_back( job(5,2,"chain1",joints[5].target,false,true) );
-    jobs.push_back( job(8,2,"chain2",joints[8].target,false,true) );
-    //jobs.push_back( job(2,0,"chain1",joints[8].target,false,true) );
+    jobs.push_back( job(5,2,4,1,"chain1",joints[5].target,false,true) );
+    jobs.push_back( job(8,2,4,1,"chain2",joints[8].target,false,true) );
+    jobs.push_back( job(2,0,1,0,"chain2",joints[2].p,false,false) );
 
     for (auto j : jobs) {
+        cout << "doJob: " << j.chain << ", " << j.joint << " -> " << j.base << ", " << string(j.fwd?"forward":"backward") << endl;
+
         auto& chain = chains[j.chain];
-        if (chain.joints.size() == 0) continue;
-        if (!joints.count(j.joint)) continue;
-        if (!j.target) continue;
+        if (chain.joints.size() == 0) { cout << "A1" << endl; continue; }
+        if (!joints.count(j.joint)) { cout << "A2" << endl; continue; }
+        if (!j.target) { cout << "A3" << endl; continue; }
 
 
         auto targetPos = j.target->pos();
         float distTarget = (joints[j.joint].p->pos()-targetPos).length();
-        if (!j.fwd && distTarget < tolerance) continue;
+        //if (!j.fwd && distTarget < tolerance) continue;
 
 
-        cout << "doJob: " << j.chain << ", " << j.joint << " -> " << j.base << ", " << string(j.fwd?"forward":"backward") << endl;
+
+        /*i1 = 1
+        i2 = chain.distances.size()
+
+        i1 = chain.distances.size()-1;
+        i2 = 0*/
+
+        cout << " " << Vec2i(chain.distances.size()-1,0) << "  " << Vec2i(j.i1, j.i2) << endl;
 
         if (j.fwd) {
-            for (int i = 1; i <= chain.distances.size(); i++) { // 1 bis Nj-1
+            for (int i = j.i1; i <= j.i2; i++) { // 1 bis Nj-1
                 auto pOld = moveToDistance(chain.joints[i], chain.joints[i-1], chain.distances[i-1]);
-                if (chain.joints[i] == j.base) break;
             }
         } else {
             movePointTowards(j.joint, targetPos, 0);
-            for (int i = chain.distances.size()-1; i > 0; i--) { // bis Nj-2 bis 1
+            for (int i = j.i1; i > j.i2; i--) { // bis Nj-2 bis 1
                 auto pOld = moveToDistance(chain.joints[i], chain.joints[i+1], chain.distances[i]);
-                if (chain.joints[i] == j.base) break;
             }
         }
 
         if (j.mid) {
+            cout << "  add for centroid: " << j.base << ", " << joints[j.base].out.size() << endl;
             knotPositions[j.base].push_back( joints[j.base].p->pos() );
             if (knotPositions[j.base].size() == joints[j.base].out.size()) { // apply centroid
                 Vec3d c;
                 for (auto p : knotPositions[j.base]) c += p;
                 c *= 1.0/knotPositions[j.base].size();
                 joints[j.base].p->setPos(c);
+                cout << "   apply centroid: " << j.base << ", " << c << endl;
                 knotPositions[j.base].clear();
             }
         }
