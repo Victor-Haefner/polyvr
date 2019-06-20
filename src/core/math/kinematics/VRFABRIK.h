@@ -29,13 +29,28 @@ class FABRIK {
             vector<float> distances;
         };
 
+        struct step {
+            int joint;
+            int base;
+            int i1;
+            int i2;
+            string chain;
+            PosePtr target;
+            bool fwd = false;
+            bool mid = false;
+
+            step(int j, int b, int i1, int i2, string c, PosePtr t, bool f, bool m) : joint(j), base(b), i1(i1), i2(i2), chain(c), target(t), fwd(f), mid(m) {};
+        };
+
         map<int, Joint> joints;
         map<string, Chain> chains;
+        vector<step> executionQueue;
 
         float tolerance = 0.01;
 
         Vec3d movePointTowards(int j, Vec3d target, float t);
         Vec3d moveToDistance(int j1, int j2, float d);
+        void updateExecutionQueue();
 
     public:
         FABRIK();
