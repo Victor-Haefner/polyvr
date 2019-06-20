@@ -83,7 +83,7 @@ void FABRIK::iterate() {
         job(int j, int b, string c, bool f, PosePtr t) : joint(j), base(b), chain(c), fwd(f), target(t) {};
     };
 
-    stack<job> jobs;
+    vector<job> jobs;
 
     /*for (auto& c : chains) {
         auto& chain = c.second;
@@ -92,20 +92,17 @@ void FABRIK::iterate() {
         jobs.push(j);
     }*/
 
-    for (int i=0; i<10; i++) {
-        jobs.push( job(5,0,"chain1",true,joints[5].target) );
-        jobs.push( job(5,0,"chain1",false,joints[5].target) );
-    }
-
     for (int i=0; i<20; i++) {
-        jobs.push( job(8,0,"chain2",true,joints[8].target) );
-        jobs.push( job(8,0,"chain2",false,joints[8].target) );
+        jobs.push_back( job(8,0,"chain2",false,joints[8].target) );
+        jobs.push_back( job(8,0,"chain2",true,joints[8].target) );
     }
 
-    while (jobs.size()) {
-        auto j = jobs.top();
-        jobs.pop();
+    for (int i=0; i<10; i++) {
+        jobs.push_back( job(5,0,"chain1",false,joints[5].target) );
+        jobs.push_back( job(5,0,"chain1",true,joints[5].target) );
+    }
 
+    for (auto j : jobs) {
         auto& chain = chains[j.chain];
         if (chain.joints.size() == 0) continue;
         if (!joints.count(j.joint)) continue;
@@ -132,10 +129,6 @@ void FABRIK::iterate() {
                 if (chain.joints[i] == j.base) break;
             }
         }
-
-        /*job next = j;
-        next.fwd = !j.fwd;
-        jobs.push(next);*/
     }
 }
 
