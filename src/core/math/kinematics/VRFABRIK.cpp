@@ -5,6 +5,7 @@
 #include "core/objects/material/VRMaterial.h"
 
 #include <stack>
+#include <algorithm>
 
 using namespace OSG;
 
@@ -15,12 +16,10 @@ FABRIK::~FABRIK() {}
 
 FABRIKPtr FABRIK::create() { return FABRIKPtr( new FABRIK() ); }
 
-void FABRIK::addJoint(int ID, PosePtr p, vector<int> in, vector<int> out) {
+void FABRIK::addJoint(int ID, PosePtr p) {
     Joint j;
     j.ID = ID;
     j.p = p;
-    j.in = in;
-    j.out = out;
     joints[ID] = j;
 }
 
@@ -35,12 +34,23 @@ void FABRIK::addChain(string name, vector<int> joints) {
         auto p2 = this->joints[joints[i+1]].p->pos();
         c.distances.push_back((p2-p1).length());
     }
+
+    auto has = [](vector<int> v, int i) {
+        return (find(v.begin(), v.end(), i) != v.end());
+    };
+
+    for (int i=0; i<joints.size(); i++) {
+        auto& in = this->joints[joints[i]].in;
+        auto& out = this->joints[joints[i]].out;
+        if (i > 0 && has(in, joints[i-1]) == 0) in.push_back(joints[i-1]);
+        if (i < joints.size()-1 && has(out, joints[i+1]) == 0) out.push_back(joints[i+1]);
+    }
     chains[name] = c;
 }
 
 vector<int> FABRIK::getChainJoints(string name) { return chains[name].joints; }
 
-Vec3d FABRIK::movePointTowards(Chain& chain, int i, Vec3d target, float t) {
+/*Vec3d FABRIK::movePointTowards(Chain& chain, int i, Vec3d target, float t) {
     auto interp = [](Vec3d& a, Vec3d& b, float t) {
         return a*t + b*(1-t);
     };
@@ -48,9 +58,6 @@ Vec3d FABRIK::movePointTowards(Chain& chain, int i, Vec3d target, float t) {
     auto& J = joints[chain.joints[i]];
     Vec3d pOld = J.p->pos();
     J.p->setPos( interp(pOld, target, t) );
-    //if (verbose) cout << " movePointTowards: " << J.name << " (" << pOld << ") -> " << 1-t << " / " << target << " -> " << J.pos << endl;
-    //if (J.name == "elbowLeft")
-    //cout << " movePointTowards: " << J.name << " (" << pOld << ") -> " << 1-t << " / " << target << " -> " << J.pos << endl;
     return pOld;
 };
 
@@ -61,6 +68,27 @@ Vec3d FABRIK::moveToDistance(Chain& chain, int i1, int i2, int dID) {
     Vec3d pOld = J1.p->pos();
     float li = chain.distances[dID] / (J2.p->pos() - J1.p->pos()).length();
     movePointTowards(chain, i1, J2.p->pos(), li);
+    return pOld;
+}*/
+
+Vec3d FABRIK::movePointTowards(int j, Vec3d target, float t) {
+    auto interp = [](Vec3d& a, Vec3d& b, float t) {
+        return a*t + b*(1-t);
+    };
+
+    auto& J = joints[j];
+    Vec3d pOld = J.p->pos();
+    J.p->setPos( interp(pOld, target, t) );
+    return pOld;
+};
+
+Vec3d FABRIK::moveToDistance(int j1, int j2, float d) {
+    auto& J1 = joints[j1];
+    auto& J2 = joints[j2];
+
+    Vec3d pOld = J1.p->pos();
+    float li = d / (J2.p->pos() - J1.p->pos()).length();
+    movePointTowards(j1, J2.p->pos(), li);
     return pOld;
 }
 
@@ -77,13 +105,15 @@ void FABRIK::iterate() {
         int joint;
         int base;
         string chain;
-        bool fwd = false;
         PosePtr target;
+        bool fwd = false;
+        bool mid = false;
 
-        job(int j, int b, string c, bool f, PosePtr t) : joint(j), base(b), chain(c), fwd(f), target(t) {};
+        job(int j, int b, string c, PosePtr t, bool f, bool m) : joint(j), base(b), chain(c), target(t), fwd(f), mid(m) {};
     };
 
     vector<job> jobs;
+    map<int,vector<Vec3d>> knotPositions;
 
     /*for (auto& c : chains) {
         auto& chain = c.second;
@@ -92,7 +122,7 @@ void FABRIK::iterate() {
         jobs.push(j);
     }*/
 
-    for (int i=0; i<20; i++) {
+    /*for (int i=0; i<20; i++) {
         jobs.push_back( job(8,0,"chain2",false,joints[8].target) );
         jobs.push_back( job(8,0,"chain2",true,joints[8].target) );
     }
@@ -100,7 +130,11 @@ void FABRIK::iterate() {
     for (int i=0; i<10; i++) {
         jobs.push_back( job(5,0,"chain1",false,joints[5].target) );
         jobs.push_back( job(5,0,"chain1",true,joints[5].target) );
-    }
+    }*/
+
+    jobs.push_back( job(5,2,"chain1",joints[5].target,false,true) );
+    jobs.push_back( job(8,2,"chain2",joints[8].target,false,true) );
+    //jobs.push_back( job(2,0,"chain1",joints[8].target,false,true) );
 
     for (auto j : jobs) {
         auto& chain = chains[j.chain];
@@ -118,15 +152,25 @@ void FABRIK::iterate() {
 
         if (j.fwd) {
             for (int i = 1; i <= chain.distances.size(); i++) { // 1 bis Nj-1
-                auto pOld = moveToDistance(chain, i,i-1,i-1);
+                auto pOld = moveToDistance(chain.joints[i], chain.joints[i-1], chain.distances[i-1]);
                 if (chain.joints[i] == j.base) break;
             }
         } else {
-            int iE = chain.joints.size()-1;
-            movePointTowards(chain, iE, targetPos, 0);
+            movePointTowards(j.joint, targetPos, 0);
             for (int i = chain.distances.size()-1; i > 0; i--) { // bis Nj-2 bis 1
-                auto pOld = moveToDistance(chain, i,i+1,i);
+                auto pOld = moveToDistance(chain.joints[i], chain.joints[i+1], chain.distances[i]);
                 if (chain.joints[i] == j.base) break;
+            }
+        }
+
+        if (j.mid) {
+            knotPositions[j.base].push_back( joints[j.base].p->pos() );
+            if (knotPositions[j.base].size() == joints[j.base].out.size()) { // apply centroid
+                Vec3d c;
+                for (auto p : knotPositions[j.base]) c += p;
+                c *= 1.0/knotPositions[j.base].size();
+                joints[j.base].p->setPos(c);
+                knotPositions[j.base].clear();
             }
         }
     }

@@ -24,7 +24,7 @@ PyMethodDef VRPyKinematics::methods[] = {
 };
 
 PyMethodDef VRPyFABRIK::methods[] = {
-    {"addJoint", PyWrap2( FABRIK, addJoint, "Add joint, ID, pose, in, out", void, int, PosePtr, vector<int>, vector<int> ) },
+    {"addJoint", PyWrap2( FABRIK, addJoint, "Add joint, ID, pose, in, out", void, int, PosePtr ) },
     {"addChain", PyWrap2( FABRIK, addChain, "Add chain, name, joints", void, string, vector<int> ) },
     {"iterate", PyWrap2( FABRIK, iterate, "Execute FABRIK iteration", void ) },
     {"iterateChain", PyWrap2( FABRIK, iterateChain, "Execute single chain FABRIK iteration, pass chain name", void, string ) },

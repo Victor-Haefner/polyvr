@@ -34,8 +34,8 @@ class FABRIK {
 
         float tolerance = 0.01;
 
-        Vec3d movePointTowards(Chain& chain, int i, Vec3d target, float t);
-        Vec3d moveToDistance(Chain& chain, int i1, int i2, int dID);
+        Vec3d movePointTowards(int j, Vec3d target, float t);
+        Vec3d moveToDistance(int j1, int j2, float d);
 
     public:
         FABRIK();
@@ -43,7 +43,7 @@ class FABRIK {
 
         static FABRIKPtr create();
 
-        void addJoint(int ID, PosePtr p, vector<int> in, vector<int> out);
+        void addJoint(int ID, PosePtr p);
         PosePtr getJointPose(int ID);
 
         void addChain(string name, vector<int> joints);
