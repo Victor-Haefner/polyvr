@@ -58,27 +58,6 @@ void FABRIK::addConstraint(int j, Vec4d angles) {
     joints[j].constraintAngles = angles;
 }
 
-/*Vec3d FABRIK::movePointTowards(Chain& chain, int i, Vec3d target, float t) {
-    auto interp = [](Vec3d& a, Vec3d& b, float t) {
-        return a*t + b*(1-t);
-    };
-
-    auto& J = joints[chain.joints[i]];
-    Vec3d pOld = J.p->pos();
-    J.p->setPos( interp(pOld, target, t) );
-    return pOld;
-};
-
-Vec3d FABRIK::moveToDistance(Chain& chain, int i1, int i2, int dID) {
-    auto& J1 = joints[chain.joints[i1]];
-    auto& J2 = joints[chain.joints[i2]];
-
-    Vec3d pOld = J1.p->pos();
-    float li = chain.distances[dID] / (J2.p->pos() - J1.p->pos()).length();
-    movePointTowards(chain, i1, J2.p->pos(), li);
-    return pOld;
-}*/
-
 Vec3d FABRIK::movePointTowards(int j, Vec3d target, float t) {
     auto interp = [](Vec3d& a, Vec3d& b, float t) {
         return a*t + b*(1-t);
@@ -87,7 +66,6 @@ Vec3d FABRIK::movePointTowards(int j, Vec3d target, float t) {
     auto& J = joints[j];
     Vec3d pOld = J.p->pos();
     J.p->setPos( interp(pOld, target, t) );
-    //cout << "  movePoint " << j << " to " << target << endl;
     return pOld;
 };
 
@@ -97,9 +75,30 @@ Vec3d FABRIK::moveToDistance(int j1, int j2, float d) {
 
     Vec3d pOld = J1.p->pos();
     Vec3d D = J2.p->pos() - J1.p->pos();
-    float li = d / D.length();
+
+    float A = J2.constraintAngles[0];
+    float L = D.length();
+
+    if (J2.constrained) {
+        float y = D.dot(J2.p->up());
+        float x = D.dot(J2.p->x());
+        float a = atan2(y,x);
+        float ex = D.dot(J2.p->dir())*tan(A)*cos(a);
+        float ey = D.dot(J2.p->dir())*tan(A)*sin(a);
+        float er2 = ex*ex+ey*ey;
+        float r2  = x*x+y*y;
+        //float ey = B*sin(a);
+        if (er2 < r2) {
+        }
+        cout << "AAA, outside? " << bool(er2 < r2) << ", j1 " << j1 << ", j2 " << j2 << " , A " << A << ", a " << a << ", er " << sqrt(er2) << ", r " << sqrt(r2) << endl;
+    }
+
+    float li = d / L;
     movePointTowards(j1, J2.p->pos(), li);
-    J1.p->setDir(J2.p->pos() - J1.p->pos());
+    Vec3d nD = J2.p->pos() - J1.p->pos();
+    nD.normalize();
+    J1.p->setDir(nD);
+    J1.p->makeUpOrthogonal();
     return pOld;
 }
 
