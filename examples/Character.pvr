@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="-0.15 -0.213586 -0.0583682" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-1.09566 5.35012 -10.6423" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.15 -0.213586 -0.0583682" at_dir="0" base_name="Default" far="512" fov="1.0472" from="1.48535 5.25617 -5.58711" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <constraint persistency="666"/>
           </Object>
@@ -121,6 +121,9 @@
 	VR.fabrik.addJoint(6, VR.Pose([0,2,0]))
 	VR.fabrik.addJoint(7, VR.Pose([0,3,0]))
 	VR.fabrik.addJoint(8, VR.Pose([0,4,0]))
+	
+	a = 0.05
+	VR.fabrik.addConstraint(3, [a,a,a,a])
 	
 	VR.fabrik.addChain('chain1', [0,1,2,3,4,5])
 	VR.fabrik.addChain('chain2', [0,1,2,6,7,8])

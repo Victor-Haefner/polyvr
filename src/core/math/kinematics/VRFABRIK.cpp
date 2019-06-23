@@ -1,5 +1,7 @@
 #include "VRFABRIK.h"
 #include "core/utils/toString.h"
+#include "core/math/polygon.h"
+#include "core/math/triangulator.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
@@ -50,6 +52,11 @@ void FABRIK::addChain(string name, vector<int> joints) {
 }
 
 vector<int> FABRIK::getChainJoints(string name) { return chains[name].joints; }
+
+void FABRIK::addConstraint(int j, Vec4d angles) {
+    joints[j].constrained = true;
+    joints[j].constraintAngles = angles;
+}
 
 /*Vec3d FABRIK::movePointTowards(Chain& chain, int i, Vec3d target, float t) {
     auto interp = [](Vec3d& a, Vec3d& b, float t) {
@@ -251,18 +258,13 @@ void FABRIK::iterateChain(string chain) {
 void FABRIK::visualize(VRGeometryPtr geo) {
     VRGeoData data;
 
+    // joint points
     for (auto j : joints) {
         data.pushVert(j.second.p->pos(), Vec3d(0,0,0), Color3f(1,0,0));
         data.pushPoint();
     }
 
-    for (auto j : joints) {
-        if (j.second.target) {
-            data.pushVert(j.second.target->pos(), Vec3d(0,0,0), Color3f(0,0,1));
-            data.pushPoint();
-        }
-    }
-
+    // chain lines
     for (auto c : chains) {
         int nj = c.second.joints.size();
         for (int i=0; i<nj-1; i++) {
@@ -270,12 +272,45 @@ void FABRIK::visualize(VRGeometryPtr geo) {
         }
     }
 
-    data.apply(geo);
+    // targets
+    for (auto j : joints) {
+        if (j.second.target) {
+            data.pushVert(j.second.target->pos(), Vec3d(0,0,0), Color3f(0,0,1));
+            data.pushPoint();
+        }
+    }
 
+    data.apply(geo);
     auto m = VRMaterial::get("fabrikPnts");
     m->setPointSize(5);
     m->setLit(0);
     geo->setMaterial(m);
+
+
+    // constraints
+    VRGeoData cones;
+    double R = 0.2;
+    Vec3d d(0,1,0);
+
+    for (auto j : joints) {
+        if (!j.second.constrained) continue;
+        Pnt3d P0 = Pnt3d(j.second.p->pos());
+        int v0ID = cones.pushVert(P0, Vec3d(0,-1,0));
+        for (int i=0; i<=32; i++) {
+            float a = 2*Pi*i/32.0;
+            float x = R*cos(a);
+            float y = R*sin(a);
+            Vec3d v = Vec3d(x,2*R,y);
+            Vec3d n = Vec3d(x,0,y);
+            v = j.second.p->transform(v, false);
+            n = j.second.p->transform(n, false);
+            int vID = cones.pushVert(P0 + v, n);
+            if (i > 0) cones.pushTri(v0ID, vID-1, vID);
+        }
+    }
+
+    auto cgeo = cones.asGeometry("kcones");
+    geo->addChild(cgeo);
 }
 
 

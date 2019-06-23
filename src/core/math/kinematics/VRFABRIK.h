@@ -21,6 +21,8 @@ class FABRIK {
             vector<int> in;
             vector<int> out;
             PosePtr target;
+            bool constrained = false;
+            Vec4d constraintAngles;
         };
 
         struct Chain {
@@ -63,6 +65,8 @@ class FABRIK {
 
         void addChain(string name, vector<int> joints);
         vector<int> getChainJoints(string name);
+
+        void addConstraint(int j, Vec4d angles);
 
         void forward(Chain& chain);
         void backward(Chain& chain);
