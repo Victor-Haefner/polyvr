@@ -289,8 +289,12 @@ void FABRIK::visualize(VRGeometryPtr geo) {
 
     // constraints
     VRGeoData cones;
-    double R = 0.2;
+    double R = 0.4;
     Vec3d d(0,1,0);
+
+    /*auto ellipse = [&](float a, float A, float B) {
+        ;
+    };*/
 
     for (auto j : joints) {
         if (!j.second.constrained) continue;
@@ -298,9 +302,29 @@ void FABRIK::visualize(VRGeometryPtr geo) {
         int v0ID = cones.pushVert(P0, Vec3d(0,-1,0));
         for (int i=0; i<=32; i++) {
             float a = 2*Pi*i/32.0;
-            float x = R*cos(a);
-            float y = R*sin(a);
-            Vec3d v = Vec3d(x,2*R,y);
+            auto angles = j.second.constraintAngles;
+            float A = 0, B = 0;
+            if (a >= 0      && a <  Pi*0.5) { A = angles[0]; B = angles[1]; }
+            if (a >= Pi*0.5 && a <  Pi*1.0) { A = angles[2]; B = angles[1]; }
+            if (a >= Pi*1.0 && a <  Pi*1.5) { A = angles[0]; B = angles[3]; }
+            if (a >= Pi*1.5 && a <= Pi*2.0) { A = angles[2]; B = angles[3]; }
+
+            /*if (a >= 0      && a <  Pi*0.5) r = ellipse( a,        R*tan(angles[0]), R*tan(angles[1]) );
+            if (a >= Pi*0.5 && a <  Pi*1.0) r = ellipse( a-Pi*0.5, R*tan(angles[1]), R*tan(angles[2]) );
+            if (a >= Pi*1.0 && a <  Pi*1.5) r = ellipse( a-Pi*1.0, R*tan(angles[2]), R*tan(angles[3]) );
+            if (a >= Pi*1.5 && a <= Pi*2.0) r = ellipse( a-Pi*1.5, R*tan(angles[3]), R*tan(angles[0]) );*/
+
+            /*float o = 0, t = 0;
+            if (a >= 0      && a <  Pi*0.5) { t = a/Pi/0.5;          o = j.second.constraintAngles[0]*(1-t)+j.second.constraintAngles[1]*t; }
+            if (a >= Pi*0.5 && a <  Pi*1.0) { t = (a-Pi*0.5)/Pi/0.5; o = j.second.constraintAngles[1]*(1-t)+j.second.constraintAngles[2]*t; }
+            if (a >= Pi*1.0 && a <  Pi*1.5) { t = (a-Pi*1.0)/Pi/0.5; o = j.second.constraintAngles[2]*(1-t)+j.second.constraintAngles[3]*t; }
+            if (a >= Pi*1.5 && a <= Pi*2.0) { t = (a-Pi*1.5)/Pi/0.5; o = j.second.constraintAngles[3]*(1-t)+j.second.constraintAngles[0]*t; }
+            float r = R*tan(o);*/
+            cout << "angles " << j.second.constraintAngles << endl;
+            //cout << "i " << i << ", t " << t << ", a " << a << ", r " << r << endl;
+            float x = A*cos(a);
+            float y = B*sin(a);
+            Vec3d v = Vec3d(x,R,y);
             Vec3d n = Vec3d(x,0,y);
             v = j.second.p->transform(v, false);
             n = j.second.p->transform(n, false);
