@@ -96,8 +96,10 @@ Vec3d FABRIK::moveToDistance(int j1, int j2, float d) {
     auto& J2 = joints[j2];
 
     Vec3d pOld = J1.p->pos();
-    float li = d / (J2.p->pos() - J1.p->pos()).length();
+    Vec3d D = J2.p->pos() - J1.p->pos();
+    float li = d / D.length();
     movePointTowards(j1, J2.p->pos(), li);
+    J1.p->setDir(J2.p->pos() - J1.p->pos());
     return pOld;
 }
 
@@ -175,16 +177,6 @@ void FABRIK::updateExecutionQueue() {
         //cout << " add step: " << s.joint << " " << s.base << " " << s.i1 << " " << s.i2 << " " << s.chain << endl;
         executionQueue.push_back( s );
     }
-
-    /*executionQueue.clear();
-
-    executionQueue.push_back( step(5,2,4,2,"chain1",joints[5].target,false,true) );
-    executionQueue.push_back( step(8,2,4,2,"chain2",joints[8].target,false,true) );
-    executionQueue.push_back( step(2,0,1,1,"chain2",joints[2].p     ,false,false) );
-    executionQueue.push_back( step(2,0,1,2,"chain2",joints[2].p     ,true,false) );
-    executionQueue.push_back( step(8,2,3,5,"chain2",joints[8].target,true,true) );
-    executionQueue.push_back( step(5,2,3,5,"chain1",joints[5].target,true,true) );
-    */
 }
 
 void FABRIK::iterate() {
@@ -290,16 +282,11 @@ void FABRIK::visualize(VRGeometryPtr geo) {
     // constraints
     VRGeoData cones;
     double R = 0.4;
-    Vec3d d(0,1,0);
-
-    /*auto ellipse = [&](float a, float A, float B) {
-        ;
-    };*/
 
     for (auto j : joints) {
         if (!j.second.constrained) continue;
         Pnt3d P0 = Pnt3d(j.second.p->pos());
-        int v0ID = cones.pushVert(P0, Vec3d(0,-1,0));
+        int v0ID = cones.pushVert(P0, Vec3d(0,0,-1));
         for (int i=0; i<=32; i++) {
             float a = 2*Pi*i/32.0;
             auto angles = j.second.constraintAngles;
@@ -311,12 +298,12 @@ void FABRIK::visualize(VRGeometryPtr geo) {
 
             float x = A*cos(a);
             float y = B*sin(a);
-            Vec3d v = Vec3d(x,R,y);
-            Vec3d n = Vec3d(x,0,y);
+            Vec3d v = Vec3d(x,y,R);
+            Vec3d n = Vec3d(x,y,0);
             v = j.second.p->transform(v, false);
             n = j.second.p->transform(n, false);
             int vID = cones.pushVert(P0 + v, n);
-            if (i > 0) cones.pushTri(v0ID, vID-1, vID);
+            if (i > 0) cones.pushTri(v0ID, vID, vID-1);
         }
     }
 
