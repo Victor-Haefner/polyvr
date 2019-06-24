@@ -16,6 +16,7 @@
 #include "core/objects/VRLodTree.h"
 #include "core/scene/VRObjectManager.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRFunction.h"
 #include "core/math/path.h"
 #include "core/math/triangulator.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
@@ -25,6 +26,7 @@
 using namespace OSG;
 
 template<> string typeName(const VRWorldGenerator& t) { return "WorldGenerator"; }
+template<> string typeName(const VRWorldGenerator::VRUserGenCb& t) { return "WorldGenerator Callback"; }
 
 
 VRWorldGenerator::VRWorldGenerator() : VRTransform("WorldGenerator") {}
@@ -408,15 +410,25 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
     for (auto wayItr : osmMap->getWays()) { // use way->id to filter for debugging!
         auto& way = wayItr.second;
         if (!wayInSubarea(way)) continue;
+
+        vector<Vec3d> pnts;
         for (auto pID : way->nodes) {
             if (graphNodes.count(pID)) continue;
             Node n;
             n.n = osmMap->getNode(pID);
             if (!n.n) continue;
             n.p = planet->fromLatLongPosition(n.n->lat, n.n->lon, true);
+            pnts.push_back(n.p);
             graphNodes[pID] = n;
         }
         bool wayAdded = false;
+
+        if (userCbPtr) {
+            OsmEntity e;
+            e.pnts = pnts;
+            e.tags = way->tags;
+            if ( !(*userCbPtr)(e) ) continue;
+        }
 
         auto getHeight = [&](float d) {
             return way->hasTag("height") ? toFloat( way->tags["height"] ) : d;
@@ -524,9 +536,18 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
     }
 
     for (auto nodeItr : osmMap->getNodes()) {
+
         auto& node = nodeItr.second;
         if (!nodeInSubarea(node)) continue;
         Vec3d pos = planet->fromLatLongPosition(node->lat, node->lon, true);
+
+        if (userCbPtr) {
+            OsmEntity e;
+            e.pnts = {pos};
+            e.tags = node->tags;
+            if ( !(*userCbPtr)(e) ) continue;
+        }
+
         Vec3d dir = getDir(node);
         bool hasDir = node->tags.count("direction");
         if (terrain) pos = terrain->elevatePoint(pos);
@@ -645,6 +666,8 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         }
     }
 }
+
+void VRWorldGenerator::setUserCallback(VRUserGenCbPtr cb) { userCbPtr = cb; }
 
 void VRWorldGenerator::reloadOSMMap(double subN, double subE, double subSize) {
     clear();

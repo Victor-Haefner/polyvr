@@ -12,6 +12,23 @@
 
 using namespace OSG;
 
+template<> PyObject* VRPyTypeCaster::cast(const VRWorldGenerator::OsmEntity& e) {
+    PyObject* epy = PyTuple_New(2);
+    PyTuple_SetItem(epy, 0, VRPyTypeCaster::cast(e.pnts));
+    PyTuple_SetItem(epy, 1, VRPyTypeCaster::cast(e.tags));
+    return epy;
+}
+
+template<> bool toValue(PyObject* o, VRWorldGenerator::VRUserGenCbPtr& v) {
+    //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!
+    if (VRPyBase::isNone(o)) v = 0;
+    else {
+        Py_IncRef(o);
+        v = VRWorldGenerator::VRUserGenCb::create( "pyExecCall", boost::bind(VRPyBase::execPyCall<VRWorldGenerator::OsmEntity, bool>, o, PyTuple_New(1), _1) );
+    }
+    return 1;
+}
+
 simpleVRPyType(WorldGenerator, New_ptr );
 simpleVRPyType(RoadBase, 0);
 simpleVRPyType(Road, New_ptr);
@@ -43,6 +60,7 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"setupPhysics", PyWrap( WorldGenerator, setupPhysics, "Process collision shapes", void ) },
     {"updatePhysics", PyWrap( WorldGenerator, updatePhysics, "Update physicalized region", void, Boundingbox ) },
     {"getPhysicsSystem", PyWrap( WorldGenerator, getPhysicsSystem, "Return dynamic collision manager", VRSpatialCollisionManagerPtr ) },
+    {"setUserCallback", PyWrap( WorldGenerator, setUserCallback, "Setup user callback", void, VRWorldGenerator::VRUserGenCbPtr ) },
     {NULL}  /* Sentinel */
 };
 

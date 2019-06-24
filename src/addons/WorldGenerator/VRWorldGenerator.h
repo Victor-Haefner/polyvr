@@ -14,6 +14,14 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRWorldGenerator : public VRTransform {
+    public:
+        struct OsmEntity {
+            vector<Vec3d> pnts;
+            map<string, string> tags;
+        };
+
+        ptrRFctFwd( VRUserGen, OsmEntity, bool );
+
     private:
         VRLodTreePtr lodTree;
         VRSpatialCollisionManagerPtr collisionShape;
@@ -29,6 +37,7 @@ class VRWorldGenerator : public VRTransform {
         VRDistrictPtr district;
         OSMMapPtr osmMap;
         Vec2d coords;
+        VRUserGenCbPtr userCbPtr;
 
         void processOSMMap(double subN = -1, double subE = -1, double subSize = -1);
         void init();
@@ -64,6 +73,8 @@ class VRWorldGenerator : public VRTransform {
         void setupPhysics();
         void updatePhysics(Boundingbox box);
         VRSpatialCollisionManagerPtr getPhysicsSystem();
+
+        void setUserCallback(VRUserGenCbPtr cb);
 
         string getStats();
 };

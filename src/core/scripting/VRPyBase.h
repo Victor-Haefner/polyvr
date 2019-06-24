@@ -30,11 +30,13 @@ struct VRPyBase {
         if ((PyObject*)t == Py_None) t = 0;
     }
 
+    template <typename T, typename R>
+    static R execPyCall(PyObject* pyFkt, PyObject* pArgs, T t);
     template <typename T>
     static void execPyCall(PyObject* pyFkt, PyObject* pArgs, T t);
     static void execPyCallVoid(PyObject* pyFkt, PyObject* pArgs);
-    template <typename T>
-    static VRFunction<T>* parseCallback(PyObject *args);
+    template <typename T, typename R>
+    static VRFunction<T, R>* parseCallback(PyObject *args);
 
     static vector<PyObject*> parseList(PyObject *args);
     static OSG::Vec2d parseVec2f(PyObject *args);
