@@ -23,6 +23,7 @@ class FABRIK {
             PosePtr target;
             bool constrained = false;
             Vec4d constraintAngles;
+            Vec3d debugPnt1, debugPnt2;
         };
 
         struct Chain {

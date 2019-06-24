@@ -76,23 +76,32 @@ Vec3d FABRIK::moveToDistance(int j1, int j2, float d) {
     Vec3d pOld = J1.p->pos();
     Vec3d D = J2.p->pos() - J1.p->pos();
 
-    float A = J2.constraintAngles[0];
-    float L = D.length();
-
     if (J2.constrained) {
-        float y = D.dot(J2.p->up());
-        float x = D.dot(J2.p->x());
+        float A = J2.constraintAngles[0]; // TODO: implement full ellipse!
+        Vec3d cU =-J2.p->up(); cU.normalize();
+        Vec3d cX = J2.p->x();  cX.normalize();
+        Vec3d cD = J2.p->dir();cD.normalize();
+        float y = D.dot(cU);
+        float x = D.dot(cX);
+        float h = D.dot(cD);
         float a = atan2(y,x);
-        float ex = D.dot(J2.p->dir())*tan(A)*cos(a);
-        float ey = D.dot(J2.p->dir())*tan(A)*sin(a);
+        float ex = h*tan(A)*cos(a);
+        float ey = h*tan(A)*sin(a);
         float er2 = ex*ex+ey*ey;
         float r2  = x*x+y*y;
-        //float ey = B*sin(a);
         if (er2 < r2) {
+            J1.p->setPos( J2.p->transform( Vec3d(ex, ey, h) ) );
+            D = J2.p->pos() - J1.p->pos();
         }
-        cout << "AAA, outside? " << bool(er2 < r2) << ", j1 " << j1 << ", j2 " << j2 << " , A " << A << ", a " << a << ", er " << sqrt(er2) << ", r " << sqrt(r2) << endl;
+        /*cout << "AAA, outside? " << bool(er2 < r2) << ", j1 " << j1 << ", j2 " << j2 << " , A " << A << ", a " << a << ", er " << sqrt(er2) << ", r " << sqrt(r2) << endl;
+
+        Vec3d p1(x, y, h);
+        Vec3d p2(ex, ey, h);
+        J2.debugPnt1 = J2.p->transform(p1);
+        J2.debugPnt2 = J2.p->transform(p2);*/
     }
 
+    float L = D.length();
     float li = d / L;
     movePointTowards(j1, J2.p->pos(), li);
     Vec3d nD = J2.p->pos() - J1.p->pos();
@@ -271,6 +280,14 @@ void FABRIK::visualize(VRGeometryPtr geo) {
         }
     }
 
+    // targets
+    for (auto j : joints) {
+        data.pushVert(j.second.debugPnt1, Vec3d(0,0,0), Color3f(0,1,0));
+        data.pushPoint();
+        data.pushVert(j.second.debugPnt2, Vec3d(0,0,0), Color3f(0,1,1));
+        data.pushPoint();
+    }
+
     data.apply(geo);
     auto m = VRMaterial::get("fabrikPnts");
     m->setPointSize(5);
@@ -295,8 +312,8 @@ void FABRIK::visualize(VRGeometryPtr geo) {
             if (a >= Pi*1.0 && a <  Pi*1.5) { A = angles[2]; B = angles[3]; }
             if (a >= Pi*1.5 && a <= Pi*2.0) { A = angles[0]; B = angles[3]; }
 
-            float x = A*cos(a);
-            float y = B*sin(a);
+            float x = R*tan(A)*cos(a);
+            float y = R*tan(B)*sin(a);
             Vec3d v = Vec3d(x,y,R);
             Vec3d n = Vec3d(x,y,0);
             v = j.second.p->transform(v, false);
