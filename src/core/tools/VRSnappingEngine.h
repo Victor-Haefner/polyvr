@@ -69,6 +69,8 @@ class VRSnappingEngine {
         EventSnap* event = 0;
         VRSignalPtr snapSignal = 0;
 
+        bool active = true;
+
     public:
         VRSnappingEngine();
         ~VRSnappingEngine();
@@ -79,6 +81,9 @@ class VRSnappingEngine {
         void clear();
 
         Type typeFromStr(string t);
+
+        void setActive(bool b);
+        bool isActive();
 
         void addCallback(VRSnapCbPtr cb);
 

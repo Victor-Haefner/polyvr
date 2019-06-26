@@ -46,6 +46,8 @@ PyMethodDef VRPySnappingEngine::methods[] = {
     {"clearObjectAnchors", PyWrap(SnappingEngine, clearObjectAnchors, "Remove a rule - clearObjectAnchors(obj transform)", void, VRTransformPtr ) },
     {"remLocalRules", PyWrap(SnappingEngine, remLocalRules, "Remove all object relative rules - clearObjectAnchors(obj transform)", void, VRTransformPtr ) },
     {"addCallback", PyWrap(SnappingEngine, addCallback, "Set snap callback", void, VRSnappingEngine::VRSnapCbPtr ) },
+    {"setActive", PyWrap(SnappingEngine, setActive, "Set engine active or not", void, bool ) },
+    {"isActive", PyWrap(SnappingEngine, isActive, "Returns if engine is active", bool ) },
     {NULL}  /* Sentinel */
 };
 
