@@ -199,6 +199,7 @@ void FABRIK::iterate() {
     auto checkConvergence = [&]() {
         for (auto& c : chains) {
             int ee = c.second.joints.back();
+            if (!joints[ee].target) continue;
             auto targetPos = joints[ee].target->pos();
             float distTarget = (joints[ee].p->pos()-targetPos).length();
             cout << "convergence: " << distTarget << ", " << distTarget/tolerance << endl;
