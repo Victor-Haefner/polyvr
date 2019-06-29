@@ -154,6 +154,9 @@ VRSnappingEngine::Type VRSnappingEngine::typeFromStr(string t) {
     return NONE;
 }
 
+void VRSnappingEngine::setActive(bool b) { active = b; }
+bool VRSnappingEngine::isActive() { return active; }
+
 int VRSnappingEngine::addRule(Type t, Type o, PosePtr pt, PosePtr po, float d, int g, VRTransformPtr l) {
     Rule* r = new Rule(t,o,pt,po,d,g,l);
     rules[r->ID] = r;
@@ -201,6 +204,8 @@ void VRSnappingEngine::addTree(VRObjectPtr obj, int group) {
 VRSignalPtr VRSnappingEngine::getSignalSnap() { return snapSignal; }
 
 void VRSnappingEngine::update() {
+    if (!active) return;
+
     for (auto dev : VRSetup::getCurrent()->getDevices()) { // get dragged objects
         VRTransformPtr obj = dev.second->getDraggedObject();
         VRTransformPtr gobj = dev.second->getDraggedGhost();
