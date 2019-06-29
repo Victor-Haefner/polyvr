@@ -77,7 +77,6 @@ Vec3d FABRIK::moveToDistance(int j1, int j2, float d) {
     Vec3d D = J2.p->pos() - J1.p->pos();
 
     if (J2.constrained) {
-        float A = J2.constraintAngles[0]; // TODO: implement full ellipse!
         Vec3d cU =-J2.p->up(); cU.normalize();
         Vec3d cX = J2.p->x();  cX.normalize();
         Vec3d cD = J2.p->dir();cD.normalize();
@@ -85,8 +84,17 @@ Vec3d FABRIK::moveToDistance(int j1, int j2, float d) {
         float x = D.dot(cX);
         float h = D.dot(cD);
         float a = atan2(y,x);
+        if (a < 0) a += 2*Pi;
+
+        auto angles = J2.constraintAngles;
+        float A = 0, B = 0;
+        if (a >= 0      && a <  Pi*0.5) { A = angles[0]; B = angles[1]; }
+        if (a >= Pi*0.5 && a <  Pi*1.0) { A = angles[2]; B = angles[1]; }
+        if (a >= Pi*1.0 && a <  Pi*1.5) { A = angles[2]; B = angles[3]; }
+        if (a >= Pi*1.5 && a <= Pi*2.0) { A = angles[0]; B = angles[3]; }
+
         float ex = h*tan(A)*cos(a);
-        float ey = h*tan(A)*sin(a);
+        float ey = h*tan(B)*sin(a);
         float er2 = ex*ex+ey*ey;
         float r2  = x*x+y*y;
         if (er2 < r2) {
