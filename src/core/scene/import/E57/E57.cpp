@@ -93,7 +93,7 @@ VRTransformPtr OSG::fancyyE57import(string path) {
             progress->update( gotCount );
             //if (progress->get() > 0.2) break;
         } while(gotCount);
-        system->addChild(octree->getVisualization());
+        //system->addChild(octree->getVisualization());
 
         cout << "setup lods" << endl;
         for (auto leaf : octree->getAllLeafs()) {
