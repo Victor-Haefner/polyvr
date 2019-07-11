@@ -92,7 +92,7 @@ OctreeNode* OctreeNode::add(Vec3d p, void* d, int targetLevel, bool checkPositio
     data.push_back(d);
     points.push_back(p);
 
-    if (partitionLimit > 0 && points.size() > partitionLimit && currentLevel != targetLevel) {
+    if (partitionLimit > 0 && points.size() > partitionLimit && (currentLevel != targetLevel || targetLevel == -1)) {
         while (size <= resolution) resolution *= 0.5;
         for (int i=0; i<points.size(); i++) {
             add(points[i], data[i], targetLevel, checkPosition, partitionLimit);
@@ -100,6 +100,8 @@ OctreeNode* OctreeNode::add(Vec3d p, void* d, int targetLevel, bool checkPositio
         data.clear();
         points.clear();
     }
+
+    if (partitionLimit > 0 && points.size() > partitionLimit) cout << "AAAAAAAA " << currentLevel << "   " << targetLevel << endl;
 
     return this;
 }

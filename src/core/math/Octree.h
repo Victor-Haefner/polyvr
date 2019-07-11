@@ -60,6 +60,13 @@ class OctreeNode {
         void* getData(int i);
         Vec3d getPoint(int i);
 
+        template<class T>
+        void delContent() {
+            for (void* o : data) delete (T*)o;
+            points.clear();
+            data.clear();
+        }
+
         //void destroy(OctreeNode* guard);
         void findInSphere(Vec3d p, float r, int d, vector<void*>& res);
         void findInBox(const Boundingbox& b, int d, vector<void*>& res);
