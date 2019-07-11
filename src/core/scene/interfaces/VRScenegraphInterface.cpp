@@ -1031,6 +1031,9 @@ void VRScenegraphInterface::handle(string msg) {
 		return m;
 	};
 
+	if (m.size() > 1)   cout << "receive data, cmd: " << m[0] << " " << m[1] << endl;
+	else                cout << "receive data, cmd: " << m[0] << endl;
+
 	if (m[0] == "set" && m.size() > 2) {
 		string objID = m[2];
 		VRGeometryPtr geo;
@@ -1055,7 +1058,7 @@ void VRScenegraphInterface::handle(string msg) {
                 replace( m[3].begin(), m[3].end(), ',', '.');
                 parseOSGVec2<float, Pnt3f>(m[3], pos);
                 geo->setPositions(pos);
-                //cout << "set geo positions " << geo->getName() << "  " << pos->size() << endl;
+                cout << "set geo positions " << geo->getName() << "  " << pos->size() << endl;
             }
 		}
 
@@ -1065,13 +1068,13 @@ void VRScenegraphInterface::handle(string msg) {
                 replace( m[3].begin(), m[3].end(), ',', '.');
                 parseOSGVec2<float, Vec3f>(m[3], norms);
                 geo->setNormals(norms);
-                //cout << "set geo normals " << geo->getName() << "  " << norms->size() << endl;
+                cout << "set geo normals " << geo->getName() << "  " << norms->size() << endl;
             }
 		}
 
 		if (m[1] == "indices") {
             if (geo && m.size() > 3) {
-                //cout << "set geo indices " << geo->getName() << endl;
+                cout << "set geo indices " << geo->getName() << endl;
                 GeoUInt8PropertyMTRecPtr types = GeoUInt8Property::create();;
                 GeoUInt32PropertyMTRecPtr lengths = GeoUInt32Property::create();;
                 GeoUInt32PropertyMTRecPtr indices = GeoUInt32Property::create();
@@ -1161,12 +1164,13 @@ void VRScenegraphInterface::handle(string msg) {
 		if (m[1] == "Material") {
 			if (objName == "") objName = "__default__";
 			materials[objName] = VRMaterial::create(objName);
+			return;
 		}
+
+		if (!o) { cout << "bad type:" << m[1] << endl; return; }
 
 		objects[objID] = o;
 		objectIDs[o.get()] = objID;
-
-		if (!o) { cout << "bad type:" << m[1] << endl; return; }
 
 		VRObjectPtr p;
 		if (m.size() > 4) {

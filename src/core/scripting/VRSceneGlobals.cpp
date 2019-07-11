@@ -25,6 +25,8 @@
 #include "core/utils/VRTests.h"
 #include "PolyVR.h"
 
+#include "core/scene/import/E57/E57.h"
+
 #include <boost/bind.hpp>
 #include <sigc++/adaptors/bind.h>
 #include <gtkmm/filechooser.h>
@@ -61,6 +63,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"getSoundManager", (PyCFunction)VRSceneGlobals::getSoundManager, METH_NOARGS, "Get sound manager module" },
 	{"getFrame", (PyCFunction)VRSceneGlobals::getFrame, METH_NOARGS, "Get current frame number" },
 	{"getScript", (PyCFunction)VRSceneGlobals::getScript, METH_VARARGS, "Get python script by name" },
+	{"fancyE57import", (PyCFunction)VRSceneGlobals::fancyE57import, METH_VARARGS, "Bla blub" },
     {NULL}  /* Sentinel */
 };
 
@@ -178,6 +181,31 @@ PyObject* VRSceneGlobals::loadGeometry(VRSceneGlobals* self, PyObject *args, PyO
     VRObjectPtr prnt = VRScene::getCurrent()->getRoot()->find( parent );
 
     VRTransformPtr obj = VRImport::get()->load( path, prnt, !ignoreCache, preset, threaded, options, useBinaryCache);
+    if (obj == 0) {
+        VRGuiManager::get()->getConsole("Errors")->write( "Warning: " + string(path) + " not loaded!\n");
+        Py_RETURN_NONE;
+    }
+    obj->setPersistency(0);
+    return VRPyTypeCaster::cast(obj);
+}
+
+PyObject* VRSceneGlobals::fancyE57import(VRSceneGlobals* self, PyObject *args, PyObject *kwargs) {
+    const char* path = "";
+    int ignoreCache = 0;
+    int threaded = 0;
+    int useBinaryCache = 0;
+    const char* preset = "OSG";
+    const char* parent = "";
+    const char* options = "";
+
+    const char* kwlist[] = {"path", "cached", "preset", "threaded", "parent", "options", "useBinaryCache", NULL};
+    string format = "s|isissi:fancyE57import";
+    if (! PyArg_ParseTupleAndKeywords(args, kwargs, format.c_str(), (char**)kwlist, &path, &ignoreCache, &preset, &threaded, &parent, &options, &useBinaryCache)) return NULL;
+
+    VRObjectPtr prnt = VRScene::getCurrent()->getRoot()->find( parent );
+
+    VRTransformPtr obj = OSG::fancyyE57import(path);
+
     if (obj == 0) {
         VRGuiManager::get()->getConsole("Errors")->write( "Warning: " + string(path) + " not loaded!\n");
         Py_RETURN_NONE;

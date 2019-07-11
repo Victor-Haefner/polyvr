@@ -40,6 +40,7 @@ class VRSceneGlobals: public VRPyBase {
 		static PyObject* getSoundManager(VRSceneGlobals* self);
 		static PyObject* getFrame(VRSceneGlobals* self);
 		static PyObject* getScript(VRSceneGlobals* self, PyObject *args);
+		static PyObject* fancyE57import(VRSceneGlobals* self, PyObject *args, PyObject *kwargs);
 };
 
 OSG_END_NAMESPACE;
