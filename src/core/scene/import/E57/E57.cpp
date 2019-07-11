@@ -7,6 +7,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRLod.h"
 #include "core/math/boundingbox.h"
+#include "core/math/Octree.h"
 #include "core/utils/VRProgress.h"
 
 using namespace e57;
@@ -81,8 +82,25 @@ VRTransformPtr OSG::fancyyE57import(string path) {
         wmat->setLit(0);
         wmat->setWireFrame(1);
 
+
+        auto octree = Octree::create(10);
+        if (true) { // setup system
+            do {
+                gotCount = reader.read();
+                for (unsigned j=0; j < gotCount; j++) {
+                    Vec3d p = Vec3d(x[j], y[j], z[j]);
+                    Color3f col(r[j]/255.0, g[j]/255.0, b[j]/255.0);
+                    octree->add(p, new Color3f(col), -1, true, 1e5);
+                }
+                progress->update( gotCount );
+                if (progress->get() > 0.05) break;
+            } while(gotCount);
+        }
+        system->addChild(octree->getVisualization());
+
+
         map<Vec3i, VRLodPtr> lods;
-        if (true) {
+        if (false) {
             for (int i=0; i<10; i++) {
                 for (int j=0; j<10; j++) {
                     for (int k=0; k<10; k++) {
@@ -111,7 +129,7 @@ VRTransformPtr OSG::fancyyE57import(string path) {
 
         map<Vec3i, VRGeoData> chunks1;
         map<Vec3i, VRGeoData> chunks2;
-        if (true) { // setup system
+        if (false) { // setup system
             do {
                 gotCount = reader.read();
                 for (unsigned j=0; j < gotCount; j++) {
@@ -140,6 +158,52 @@ VRTransformPtr OSG::fancyyE57import(string path) {
         auto mat = VRMaterial::create("pcmat");
         mat->setPointSize(5);
         mat->setLit(0);
+
+        for (auto leaf : octree->getAllLeafs()) {
+            Vec3d c = leaf->getCenter();
+
+            auto geo1 = VRGeometry::create("high");
+            auto geo2 = VRGeometry::create("low");
+            geo1->setFrom(c);
+            geo2->setFrom(c);
+
+            auto l = VRLod::create("chunk");
+            l->setCenter(c);
+            l->addDistance(10);
+            l->addChild( geo1 );
+            l->addChild( geo2 );
+
+            /*auto b = VRGeometry::create("box");
+            b->setPrimitive("Box 3.2 4.2 2.3 1 1 1");
+            l->getChild(1)->addChild(b);
+            b->setMaterial(wmat);*/
+
+            system->addChild(l);
+
+            VRGeoData chunk1;
+            VRGeoData chunk2;
+
+            for (int i = 0; i < leaf->dataSize(); i++) {
+                void* d = leaf->getData(i);
+                Vec3d p = leaf->getPoint(i);
+                Color3f col = *((Color3f*)d);
+
+                //if (chunk1.size() > 1e6) break;
+                chunk1.pushVert(p - c, Vec3d(0,1,0), col);
+                chunk1.pushPoint();
+
+                if (chunk2.size() > 2e3) continue;
+                chunk2.pushVert(p - c, Vec3d(0,1,0), col);
+                chunk2.pushPoint();
+            }
+
+            chunk1.apply( geo1 );
+            chunk2.apply( geo2 );
+            geo1->setMaterial(mat);
+            geo2->setMaterial(mat);
+        }
+
+        octree->delContent<Color3f>();
 
         for (auto chunk : chunks1) {
             Vec3i P = chunk.first;
