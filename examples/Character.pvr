@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.527199 2.12426 -0.00769556" at_dir="0" base_name="Default" far="512" fov="1.0472" from="1.9228 3.22747 3.06476" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.196122 0.0689503 0.0835426" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.653611 0.528261 0.349279" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <constraint persistency="666"/>
           </Object>
@@ -129,22 +129,30 @@
 		VR.fabrik.addChain('chain1', [0,1,2,3,4,5])
 		VR.fabrik.addChain('chain2', [0,1,2,6,7,8])
 	
-		# sim
-	
 		#VR.fabrik.setTarget(3, VR.Pose([2.237,2,0]))
 		#VR.fabrik.setTarget(5, VR.Pose([2.2,3,0]))
 		VR.fabrik.setTarget(5, VR.Pose([2.2,2,0]))
 		VR.fabrik.setTarget(8, VR.Pose([-2.5,3,0]))
 		
 	def test2():
-		VR.fabrik.addJoint(0, VR.Pose([0,1.2,0]))
+		VR.fabrik.addJoint(0, VR.Pose([0,1.2,0], [0,1,0], [0,0,1]))
 		
 		def addLeg(n,w,i):
-			VR.fabrik.addJoint(i+1, VR.Pose([w,1.0,0]))
-			VR.fabrik.addJoint(i+2, VR.Pose([w,0.5,0]))
-			VR.fabrik.addJoint(i+3, VR.Pose([w,0,0]))
-			VR.fabrik.addJoint(i+4, VR.Pose([w,0,0.2]))
+			VR.fabrik.addJoint(i+1, VR.Pose([w,1.0,0], [0,1,0], [0,0,1]))
+			VR.fabrik.addJoint(i+2, VR.Pose([w,0.5,0], [0,1,0], [0,0,1]))
+			VR.fabrik.addJoint(i+3, VR.Pose([w,0,0], [0,1,0], [0,0,1]))
+			VR.fabrik.addJoint(i+4, VR.Pose([w,0,0.2], [0,0,1], [0,1,0]))
 			VR.fabrik.addChain(n, [0,i+1,i+2,i+3,i+4])
+			
+			#VR.fabrik.addConstraint(i+2, [0.1,0.9,0.1,0.1])
+			#VR.fabrik.addConstraint(i+3, [0.05,2.9,0.05,0.1])
+			#VR.fabrik.addConstraint(i+3, [0.1,0.2,0.3,0.4])
+			VR.fabrik.addConstraint(i+3, [2.9,2.9,2.9,2.9])
+			#VR.fabrik.addConstraint(i+3, [0.2,0.2,0.2,0.2])
+			#VR.fabrik.addConstraint(i+3, [0.1,0.2,0.2,0.2])
+			
+			VR.fabrik.setTarget(i+4, VR.Pose([w,0,0.2]))
+			#VR.fabrik.setTarget(i+4, VR.Pose([w,0.2,0.5]))
 			
 		def addArm(n,w,i):
 			VR.fabrik.addJoint(i+1, VR.Pose([w,1.5,0]))
@@ -152,6 +160,8 @@
 			VR.fabrik.addJoint(i+3, VR.Pose([w,0.9,0]))
 			VR.fabrik.addJoint(i+4, VR.Pose([w,0.8,0]))
 			VR.fabrik.addChain(n, [0,i+1,i+2,i+3,i+4])
+			
+			VR.fabrik.setTarget(i+4, VR.Pose([w,0.8,0]))
 			
 		addLeg('leg1', 0.2, 0)
 		addLeg('leg2',-0.2, 4)
@@ -161,6 +171,8 @@
 		VR.fabrik.addJoint(17, VR.Pose([0,1.6,0]))
 		VR.fabrik.addJoint(18, VR.Pose([0,1.8,0]))
 		VR.fabrik.addChain('head', [0,17,18])
+		VR.fabrik.setTarget(18, VR.Pose([0.1,1.8,0]))
+		VR.fabrik.setTarget(18, VR.Pose([-0.1,1.8,0]))
 		
 		
 	test2()

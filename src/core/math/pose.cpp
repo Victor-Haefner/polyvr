@@ -124,6 +124,7 @@ void Pose::makeUpOrthogonal() {
         else if (abs(d[0]) > abs(d[1]) && abs(d[0]) > abs(d[2])) u = Vec3d(-d[1], d[0], d[2]);
     }
 
+    u.normalize();
     setUp(u);
 }
 
