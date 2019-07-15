@@ -12,6 +12,8 @@ void loadE57(string path, VRTransformPtr res);
 void loadXYZ(string path, VRTransformPtr res);
 //void writeE57(VRGeometryPtr geo, string path);
 
+VRTransformPtr fancyyE57import(string path);
+
 OSG_END_NAMESPACE;
 
 #endif // E57_H_INCLUDED
