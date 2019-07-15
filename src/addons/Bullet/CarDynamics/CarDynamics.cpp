@@ -343,6 +343,10 @@ void VRCarDynamics::updateEngineRPM( float gearRPM, float deltaRPM, float thrott
 void VRCarDynamics::updateEngine() {
     if (!vehicle) return;
     if (!wheels.size()) return;
+
+    //VRTimer timer;
+    //timer.start("D1");
+
     PLock lock(mtx());
 
     for (uint i=0; i<wheels.size(); i++) {
@@ -401,6 +405,9 @@ void VRCarDynamics::updateEngine() {
 
     updateSpeedAndAcceleration();
     carSound->play(engine->rpm);
+
+	//auto D1 = timer.stop("D1");
+	//if (D1 > 3) cout << "   TTT " << D1 << endl;
 }
 
 void VRCarDynamics::updateSpeedAndAcceleration() {

@@ -21,6 +21,7 @@ ATTRIBUTE_ALIGNED16(class)  VRTerrainPhysicsShape : public btConcaveShape {
         Vec2f texelSize;
         Boundingbox boundingbox;
         btVector3 scale = btVector3(1,1,1);
+        static map<int, map<int, btVector3>> cache;
 
     public:
         BT_DECLARE_ALIGNED_ALLOCATOR();

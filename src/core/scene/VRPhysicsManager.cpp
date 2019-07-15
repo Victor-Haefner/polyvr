@@ -151,9 +151,16 @@ void VRPhysicsManager::dropPhysicsUpdateFunction(VRUpdateCbPtr fkt, bool after) 
  }
 
 void VRPhysicsManager::updatePhysObjects() {
+    //VRTimer timer;
+    //timer.start("D1");
+
     MLock lock(mtx);
+    //timer.start("D2");
     VRGlobals::PHYSICS_FRAME_RATE.fps = fps;
     for (auto o : OSGobjs) if (auto so = o.second.lock()) so->resolvePhysics();
+
+    //auto D = timer.stop("D1");
+    //if (D > 3) cout << "      tt " << D << " " << timer.stop("D2") << endl;
 
     //the soft bodies
     btSoftBodyArray arr = dynamicsWorld->getSoftBodyArray();

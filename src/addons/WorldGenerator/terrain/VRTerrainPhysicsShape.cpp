@@ -2,6 +2,7 @@
 #include "VRTerrain.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/math/pose.h"
+#include "core/utils/VRTimer.h"
 #include "core/objects/material/VRTexture.h"
 
 #include <bullet/LinearMath/btTransformUtil.h>
@@ -45,6 +46,9 @@ Vec2d VRTerrain::fromUVSpace(Vec2d uv) {
 };*/
 
 void VRTerrainPhysicsShape::processAllTriangles(btTriangleCallback* callback, const btVector3& aabbMin, const btVector3& aabbMax) const {
+    //VRTimer timer;
+    //timer.start();
+
     Vec3d Min = VRPhysics::toVec3d(aabbMin);
     Vec3d Max = VRPhysics::toVec3d(aabbMax);
     boundingbox.clamp( Min );
@@ -54,10 +58,14 @@ void VRTerrainPhysicsShape::processAllTriangles(btTriangleCallback* callback, co
     res[0] = resolution > 0 ? resolution : texelSize[0];
     res[1] = resolution > 0 ? resolution : texelSize[1];
 
-    auto toSpace = [&](double X, double Y) {
-        double x = (X-0.5)*res[0];
-        double y = (Y-0.5)*res[1];
-        return btVector3( x, terrain->getHeight(Vec2d(x,y), false), y );
+    auto toSpace = [&](int X, int Y) {
+        if (cache.count(X)) if (cache[X].count(Y)) return cache[X][Y];
+        if (cache.size() > 50) cache.clear();
+        double x = (double(X)-0.5)*res[0];
+        double y = (double(Y)-0.5)*res[1];
+        auto b = btVector3( x, terrain->getHeight(Vec2d(x,y), false), y );
+        cache[X][Y] = b;
+        return b;
     };
 
 	int x0 = round(Min[0]/res[0]);
@@ -82,7 +90,12 @@ void VRTerrainPhysicsShape::processAllTriangles(btTriangleCallback* callback, co
             callback->processTriangle(vertices,x,y);
 		}
 	}
+
+	//auto D = timer.stop();
+	//if (D > 3) cout << "   TTT " << D << endl;
 }
+
+map<int, map<int, btVector3>> VRTerrainPhysicsShape::cache;
 
 
 
