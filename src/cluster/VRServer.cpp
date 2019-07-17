@@ -157,8 +157,9 @@ int main(int argc, char **argv) {
     evalParams(argc, argv);
     if (active_stereo) glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL | GLUT_STEREO);
     else glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
-
-    /*OSG::preloadSharedObject("OSGBase");
+	
+#ifdef _WIN32
+    OSG::preloadSharedObject("OSGBase");
     OSG::preloadSharedObject("OSGContribCSMSimplePlugin");
     OSG::preloadSharedObject("OSGContribWebInterface");
     OSG::preloadSharedObject("OSGGroup");
@@ -173,15 +174,16 @@ int main(int argc, char **argv) {
     OSG::preloadSharedObject("OSGDynamics");
     OSG::preloadSharedObject("OSGState");
     OSG::preloadSharedObject("OSGWindow");
-    OSG::preloadSharedObject("OSGContribCgFX");
+    //OSG::preloadSharedObject("OSGContribCgFX");
     OSG::preloadSharedObject("OSGContribPLY");
     OSG::preloadSharedObject("OSGEffectGroups");
     OSG::preloadSharedObject("OSGSystem");
-    OSG::preloadSharedObject("OSGWindowX");
+    //OSG::preloadSharedObject("OSGWindowX");
     OSG::preloadSharedObject("OSGContribComputeBase");
     OSG::preloadSharedObject("OSGContribTrapezoidalShadowMaps");
     OSG::preloadSharedObject("OSGFileIO");
-    OSG::preloadSharedObject("OSGText");*/
+    OSG::preloadSharedObject("OSGText");
+#endif
 
     try { initServer(argc, argv); }
     catch(OSG_STDEXCEPTION_NAMESPACE::exception &e) {

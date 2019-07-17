@@ -12,14 +12,24 @@ done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 cd $DIR
 
+echo "Start compiler windows slave"
+echo " which VS Version? (2017/2019/..)"
+
+read VSversion
+VSgenerator="Visual Studio 15 2017 Win64"
+
+if [ $VSversion == "2019" ]; then
+VSgenerator="Visual Studio 16 2019"
+fi
+
 if [ ! -e build ]; then
 	mkdir build
 fi
 
 cd build
 rm -rf *
-cmake -G "Visual Studio 15 2017 Win64" ..
+cmake -G "$VSgenerator" ..
 cmake --build . --config Release
 cd $DIR
 
-cp build/Release/VRServer.exe VRServer
+cp build/Release/VRServer.exe VRServer.exe
