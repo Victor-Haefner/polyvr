@@ -5,6 +5,12 @@
 #include <sys/resource.h>
 #endif
 
+#ifdef _WIN32
+#include <windows.h>
+#include <tchar.h>
+#include <vector>
+#endif
+
 #include <OpenSG/OSGGLUT.h>
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGClusterServer.h>
@@ -93,8 +99,8 @@ void initServer(int argc, char **argv) {
 	OSG::osgInit(argc, argv);
 
 	int winid = glutCreateWindow(name);
-	if (argc>1) glutPositionWindow(atoi(argv[1]),0);
-	if(fullscreen) glutFullScreen();
+	//if (argc>1) glutPositionWindow(atoi(argv[1]),0);
+	if (fullscreen) glutFullScreen();
 	glutDisplayFunc(display);
 	glutIdleFunc(update);
 	glutReshapeFunc(reshape);
@@ -150,6 +156,61 @@ int main(int argc, char **argv) {
         fullscreen = false;
         name = "localhost";
     }
+	
+#ifdef _WIN32
+	/*DISPLAY_DEVICE dd;
+	DWORD idx = 0;
+	dd.cb = sizeof(dd);
+	while(EnumDisplayDevices(NULL, idx, &dd, 0) != false) {
+		_tprintf(_T("Name: %s\n"), dd.DeviceName);
+		_tprintf(_T("String: %s\n"), dd.DeviceString);
+		_tprintf(_T("ID: %s\n"), dd.DeviceID);
+		_tprintf(_T("Key: %s\n"), dd.DeviceKey);
+		_tprintf(_T("\n"));
+		idx++;
+	}*/
+	
+	/*BOOL CALLBACK MyInfoEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) {
+		MONITORINFOEX iMonitor;
+		iMonitor.cbSize = sizeof(MONITORINFOEX);
+		GetMonitorInfo(hMonitor, &iMonitor);
+
+		if (iMonitor.dwFlags == DISPLAY_DEVICE_MIRRORING_DRIVER) return true;
+		else {
+			reinterpret_cast< std::vector<ScreenArray>* >(dwData)->push_back(ScreenArray(&iMonitor));
+			return true;
+		};
+	}
+
+	std::vector<ScreenArray> monitorArray;
+	EnumDisplayMonitors(NULL, NULL, &MyInfoEnumProc, reinterpret_cast<LPARAM>(&monitorArray));*/
+	
+	struct MonitorRects {
+		static BOOL CALLBACK MonitorEnum(HMONITOR hMon, HDC hdc, LPRECT lprcMonitor, LPARAM pData) {
+			MONITORINFO info;
+			info.cbSize = sizeof(MONITORINFO);
+			GetMonitorInfo(hMon, &info);
+			cout << endl;
+			cout << "Top of the selected monitor: " << info.rcMonitor.top << endl;
+			cout << "bottom of selected monitor: " << info.rcMonitor.bottom << endl;
+			cout << "left extreme of selected monitor: " << info.rcMonitor.left << endl;
+			cout << "right extreme of selected monitor: " << info.rcMonitor.right << endl;
+			cout << "Top of the selected monitor: " << info.rcWork.top << endl;
+			cout << "bottom of selected monitor: " << info.rcWork.bottom << endl;
+			cout << "left extreme of selected monitor: " << info.rcWork.left << endl;
+			cout << "right extreme of selected monitor: " << info.rcWork.right << endl;
+			return TRUE;
+		}
+
+		MonitorRects() {
+			EnumDisplayMonitors(0, 0, MonitorEnum, (LPARAM)this);
+		}
+	};
+	
+	MonitorRects monitors;
+#endif
+
+
 
     // initialize Glut
     enableCoreDumps();
