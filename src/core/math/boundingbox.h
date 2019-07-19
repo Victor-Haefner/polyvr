@@ -44,6 +44,8 @@ class Boundingbox {
         void clamp(Vec3d& p) const;
 
         Vec3d getRandomPoint();
+
+        VRGeometryPtr asGeometry();
 };
 
 OSG_END_NAMESPACE;

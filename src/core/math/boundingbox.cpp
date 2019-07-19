@@ -1,6 +1,8 @@
 #include "boundingbox.h"
 
 #include "core/utils/toString.h"
+#include "core/objects/material/VRMaterial.h"
+#include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include <OpenSG/OSGGeometry.h>
@@ -155,3 +157,34 @@ bool Boundingbox::intersectedBy(Line l) {
     if (tmin > tmax) return false; // if tmin > tmax, ray doesn't intersect AABB
     return true;
 }
+
+VRGeometryPtr Boundingbox::asGeometry() {
+    VRGeoData data;
+    data.pushVert(Pnt3d(bb1[0], bb1[1], bb1[2]));
+    data.pushVert(Pnt3d(bb2[0], bb1[1], bb1[2]));
+    data.pushVert(Pnt3d(bb2[0], bb2[1], bb1[2]));
+    data.pushVert(Pnt3d(bb1[0], bb2[1], bb1[2]));
+
+    data.pushVert(Pnt3d(bb1[0], bb1[1], bb2[2]));
+    data.pushVert(Pnt3d(bb2[0], bb1[1], bb2[2]));
+    data.pushVert(Pnt3d(bb2[0], bb2[1], bb2[2]));
+    data.pushVert(Pnt3d(bb1[0], bb2[1], bb2[2]));
+
+    data.pushQuad(0,1,2,3);
+    data.pushQuad(4,5,6,7);
+    data.pushQuad(0,1,5,4);
+    data.pushQuad(3,0,4,7);
+    data.pushQuad(2,3,7,6);
+    data.pushQuad(1,2,6,5);
+
+    auto m = VRMaterial::get("defaultBBmat");
+    m->setLineWidth(2);
+    m->setLit(0);
+    m->setWireFrame(1);
+    auto res = data.asGeometry("bbox");
+    res->setMaterial(m);
+    return res;
+}
+
+
+
