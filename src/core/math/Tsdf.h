@@ -19,7 +19,7 @@ class TSDF {
         TSDF(Vec3i size);
         ~TSDF();
 
-        TSDFPtr create(Vec3i size);
+        static TSDFPtr create(Vec3i size);
 
         void set(float f, Vec3i p);
         float get(Vec3i p);

@@ -97,6 +97,8 @@ struct VRPyMathExpression : VRPyBaseT<OSG::MathExpression> {
 
 struct VRPyTSDF : VRPyBaseT<OSG::TSDF> {
     static PyMethodDef methods[];
+
+    static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
 };
 
 #endif // VRPYMATH_H_INCLUDED

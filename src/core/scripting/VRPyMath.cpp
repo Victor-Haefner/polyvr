@@ -529,6 +529,7 @@ PyObject* VRPyLine::intersect(VRPyLine* self, PyObject *args) {
 
 simplePyType(Expression, New_named_ptr);
 simplePyType(MathExpression, New_named_ptr);
+simplePyType(TSDF, VRPyTSDF::New );
 
 PyMethodDef VRPyExpression::methods[] = {
     {"set", PyWrap2( Expression, set, "Set expression", void, string ) },
@@ -552,6 +553,13 @@ PyMethodDef VRPyTSDF::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+PyObject* VRPyTSDF::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+    PyObject* s = 0;
+    if (! PyArg_ParseTuple(args, "O", &s)) return NULL;
+    Vec3i size = Vec3i(1,1,1);
+    if (s) size = parseVec3iList(s);
+    return allocPtr( type, TSDF::create(size) );
+}
 
 
 

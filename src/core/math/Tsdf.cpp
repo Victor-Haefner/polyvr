@@ -1,6 +1,9 @@
 #include "Tsdf.h"
+#include "core/utils/toString.h"
 
 using namespace OSG;
+
+template<> string typeName(const TSDF& t) { return "TSDF"; }
 
 TSDF::TSDF(Vec3i s) : size(s) {
     size_t N = s[0]*s[1]*s[2];
