@@ -2,6 +2,7 @@
 #define TSDF_H_INCLUDED
 
 #include <OpenSG/OSGVector.h>
+#include "core/objects/VRObjectFwd.h"
 #include "core/math/VRMathFwd.h"
 
 using namespace std;
@@ -23,6 +24,8 @@ class TSDF {
 
         void set(float f, Vec3i p);
         float get(Vec3i p);
+
+        VRGeometryPtr extractMesh();
 };
 
 OSG_END_NAMESPACE;

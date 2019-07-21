@@ -550,12 +550,13 @@ PyMethodDef VRPyMathExpression::methods[] = {
 PyMethodDef VRPyTSDF::methods[] = {
     {"get", PyWrap2( TSDF, get, "Get field", float, Vec3i ) },
     {"set", PyWrap2( TSDF, set, "Set field", void, float, Vec3i ) },
+    {"extractMesh", PyWrap2( TSDF, extractMesh, "Extract surfaces as mesh", VRGeometryPtr ) },
     {NULL}  /* Sentinel */
 };
 
 PyObject* VRPyTSDF::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     PyObject* s = 0;
-    if (! PyArg_ParseTuple(args, "O", &s)) return NULL;
+    if (!PyArg_ParseTuple(args, "O", &s)) return NULL;
     Vec3i size = Vec3i(1,1,1);
     if (s) size = parseVec3iList(s);
     return allocPtr( type, TSDF::create(size) );
