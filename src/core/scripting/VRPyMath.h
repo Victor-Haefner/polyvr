@@ -3,6 +3,7 @@
 
 #include "VRPyObject.h"
 #include "core/math/Expression.h"
+#include "core/math/Tsdf.h"
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
@@ -91,6 +92,10 @@ struct VRPyExpression : VRPyBaseT<OSG::Expression> {
 };
 
 struct VRPyMathExpression : VRPyBaseT<OSG::MathExpression> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyTSDF : VRPyBaseT<OSG::TSDF> {
     static PyMethodDef methods[];
 };
 

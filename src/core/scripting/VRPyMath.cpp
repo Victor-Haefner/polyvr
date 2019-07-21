@@ -546,6 +546,12 @@ PyMethodDef VRPyMathExpression::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+PyMethodDef VRPyTSDF::methods[] = {
+    {"get", PyWrap2( TSDF, get, "Get field", float, Vec3i ) },
+    {"set", PyWrap2( TSDF, set, "Set field", void, float, Vec3i ) },
+    {NULL}  /* Sentinel */
+};
+
 
 
 

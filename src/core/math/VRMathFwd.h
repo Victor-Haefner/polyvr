@@ -19,6 +19,7 @@ ptrFwd(Triangulator);
 ptrFwd(VRKinematics);
 ptrFwd(Expression);
 ptrFwd(MathExpression);
+ptrFwd(TSDF);
 
 ptrTemplateFwd( VRStateMachine, VRStateMachinePy, PyObject* );
 typedef std::map<std::string, std::string> strMap;
