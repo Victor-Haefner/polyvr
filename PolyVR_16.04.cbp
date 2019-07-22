@@ -656,6 +656,8 @@
 		<Unit filename="src/core/math/Octree.h" />
 		<Unit filename="src/core/math/SingularValueDecomposition.cpp" />
 		<Unit filename="src/core/math/SingularValueDecomposition.h" />
+		<Unit filename="src/core/math/Tsdf.cpp" />
+		<Unit filename="src/core/math/Tsdf.h" />
 		<Unit filename="src/core/math/VRConvexHull.cpp" />
 		<Unit filename="src/core/math/VRConvexHull.h" />
 		<Unit filename="src/core/math/VRMathFwd.h" />
