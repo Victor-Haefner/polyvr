@@ -247,6 +247,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyExpression>("Expression", pModVR);
     sm->registerModule<VRPyMathExpression>("MathExpression", pModMath, VRPyExpression::typeRef, "Math");
     sm->registerModule<VRPyTSDF>("TSDF", pModVR, 0, "Math");
+    sm->registerModule<VRPyOctree>("Octree", pModVR, 0, "Math");
 
     PyObject* pModSetup = sm->newModule("Setup", VRSceneGlobals::methods, "VR setup module");
     sm->registerModule<VRPySetup>("Setup", pModSetup, 0, "Setup");

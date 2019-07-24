@@ -530,6 +530,8 @@ PyObject* VRPyLine::intersect(VRPyLine* self, PyObject *args) {
 simplePyType(Expression, New_named_ptr);
 simplePyType(MathExpression, New_named_ptr);
 simplePyType(TSDF, VRPyTSDF::New );
+simplePyType(OctreeNode, 0 );
+simplePyType(Octree, VRPyOctree::New );
 
 PyMethodDef VRPyExpression::methods[] = {
     {"set", PyWrap2( Expression, set, "Set expression", void, string ) },
@@ -561,6 +563,29 @@ PyObject* VRPyTSDF::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     if (s) size = parseVec3iList(s);
     return allocPtr( type, TSDF::create(size) );
 }
+
+PyMethodDef VRPyOctree::methods[] = {
+    /*{"get", PyWrap2( Octree, get, "Get field", float, Vec3i ) },
+    {"set", PyWrap2( Octree, set, "Set field", void, float, Vec3i ) },
+    {"extractMesh", PyWrap2( Octree, extractMesh, "Extract surfaces as mesh", VRGeometryPtr ) },*/
+    {NULL}  /* Sentinel */
+};
+
+PyObject* VRPyOctree::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+    float res = 0.1;
+    float size = 10;
+    char* name = 0;
+    if (!PyArg_ParseTuple(args, "f|fs", &res, &size, &name)) return NULL;
+    string Name = name?name:"";
+    return allocPtr( type, Octree::create(res, size, Name) );
+}
+
+PyMethodDef VRPyOctreeNode::methods[] = {
+    /*{"get", PyWrap2( Octree, get, "Get field", float, Vec3i ) },
+    {"set", PyWrap2( Octree, set, "Set field", void, float, Vec3i ) },
+    {"extractMesh", PyWrap2( Octree, extractMesh, "Extract surfaces as mesh", VRGeometryPtr ) },*/
+    {NULL}  /* Sentinel */
+};
 
 
 

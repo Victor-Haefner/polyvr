@@ -4,6 +4,7 @@
 #include "VRPyObject.h"
 #include "core/math/Expression.h"
 #include "core/math/Tsdf.h"
+#include "core/math/Octree.h"
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
@@ -96,6 +97,16 @@ struct VRPyMathExpression : VRPyBaseT<OSG::MathExpression> {
 };
 
 struct VRPyTSDF : VRPyBaseT<OSG::TSDF> {
+    static PyMethodDef methods[];
+
+    static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
+};
+
+struct VRPyOctreeNode : VRPyBaseT<OSG::OctreeNode> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyOctree : VRPyBaseT<OSG::Octree> {
     static PyMethodDef methods[];
 
     static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);

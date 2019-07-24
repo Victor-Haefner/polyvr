@@ -11,7 +11,10 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 
-OSG_BEGIN_NAMESPACE
+using namespace OSG;
+
+template<> string typeName(const OctreeNode& p) { return "OctreeNode"; }
+template<> string typeName(const Octree& p) { return "Octree"; }
 
 OctreeNode::OctreeNode(OctreePtr tree, float res, float s, int lvl) : resolution(res), size(s), level(lvl) { this->tree = tree; }
 OctreeNode::~OctreeNode() {
@@ -418,4 +421,3 @@ VRGeometryPtr Octree::getVisualization() {
 }
 
 
-OSG_END_NAMESPACE
