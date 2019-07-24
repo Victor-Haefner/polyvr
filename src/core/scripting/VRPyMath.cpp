@@ -564,6 +564,10 @@ PyObject* VRPyTSDF::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     return allocPtr( type, TSDF::create(size) );
 }
 
+
+typedef OctreeNode* onPtr;
+template<> PyObject* VRPyTypeCaster::cast(const onPtr& n) { Py_RETURN_NONE; }
+
 PyMethodDef VRPyOctree::methods[] = {
     /*{"get", PyWrap2( Octree, get, "Get field", float, Vec3i ) },
     {"set", PyWrap2( Octree, set, "Set field", void, float, Vec3i ) },
@@ -581,9 +585,7 @@ PyObject* VRPyOctree::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 }
 
 PyMethodDef VRPyOctreeNode::methods[] = {
-    /*{"get", PyWrap2( Octree, get, "Get field", float, Vec3i ) },
-    {"set", PyWrap2( Octree, set, "Set field", void, float, Vec3i ) },
-    {"extractMesh", PyWrap2( Octree, extractMesh, "Extract surfaces as mesh", VRGeometryPtr ) },*/
+    {"add", PyWrap2( OctreeNode, add, "Get field", OctreeNode*, Vec3d, void*, int, bool, int ) },
     {NULL}  /* Sentinel */
 };
 

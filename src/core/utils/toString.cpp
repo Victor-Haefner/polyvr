@@ -144,6 +144,9 @@ template<> string toString(const Matrix4d& m) {
     return ss.str();
 }
 
+typedef void* voidPtr;
+
+template<> string typeName(const voidPtr& t) { return "pointer"; }
 template<> string typeName(const string& t) { return "string"; }
 template<> string typeName(const int& t) { return "int"; }
 template<> string typeName(const unsigned int& t) { return "int"; }
@@ -182,6 +185,7 @@ template <typename T> int ssToVal(stringstream& ss, T& t) {
     return (int(ss.tellg()) - N)*b;
 }
 
+template<> int toValue(stringstream& ss, void*& s) { return true; }
 template<> int toValue(stringstream& ss, string& s) { s = ss.str(); return true; }
 template<> int toValue(stringstream& ss, bool& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, char& v) { return ssToVal(ss, v); }
