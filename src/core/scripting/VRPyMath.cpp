@@ -532,6 +532,7 @@ simplePyType(MathExpression, New_named_ptr);
 simplePyType(TSDF, VRPyTSDF::New );
 simplePyType(OctreeNode, 0 );
 simplePyType(Octree, VRPyOctree::New );
+simplePyType(PCA, New_ptr);
 
 PyMethodDef VRPyExpression::methods[] = {
     {"set", PyWrap2( Expression, set, "Set expression", void, string ) },
@@ -586,6 +587,12 @@ PyObject* VRPyOctree::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 
 PyMethodDef VRPyOctreeNode::methods[] = {
     {"getData", PyWrap2( OctreeNode, getData, "Get leaf data", vector<void*> ) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyPCA::methods[] = {
+    {"add", PyWrap2( PCA, add, "Add point", void, Vec3d ) },
+    {"compute", PyWrap2( PCA, compute, "Compute", Pose ) },
     {NULL}  /* Sentinel */
 };
 
