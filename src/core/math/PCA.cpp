@@ -1,9 +1,12 @@
 #include "PCA.h"
+#include "core/utils/toString.h"
 
 #include <lapacke.h>
 #define dgeev LAPACKE_dgeev_work
 
 using namespace OSG;
+
+template<> string typeName(const PCA& t) { return "PCA"; }
 
 Vec3d PCA::computeCentroid() {
     Vec3d res;
