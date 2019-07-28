@@ -654,6 +654,8 @@
 		<Unit filename="src/core/math/Expression.h" />
 		<Unit filename="src/core/math/Octree.cpp" />
 		<Unit filename="src/core/math/Octree.h" />
+		<Unit filename="src/core/math/PCA.cpp" />
+		<Unit filename="src/core/math/PCA.h" />
 		<Unit filename="src/core/math/SingularValueDecomposition.cpp" />
 		<Unit filename="src/core/math/SingularValueDecomposition.h" />
 		<Unit filename="src/core/math/Tsdf.cpp" />
