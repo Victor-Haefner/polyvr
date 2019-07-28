@@ -566,7 +566,7 @@ PyObject* VRPyTSDF::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 
 
 typedef OctreeNode* onPtr;
-template<> PyObject* VRPyTypeCaster::cast(const onPtr& n) { Py_RETURN_NONE; }
+template<> PyObject* VRPyTypeCaster::cast(const onPtr& n) { return VRPyOctreeNode::fromPtr(n); }
 
 PyMethodDef VRPyOctree::methods[] = {
     /*{"get", PyWrap2( Octree, get, "Get field", float, Vec3i ) },

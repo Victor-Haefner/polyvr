@@ -82,7 +82,7 @@ struct VRPyBase {
 
 template<class T>
 struct VRPyBaseT : public VRPyBase {
-    //T* obj = 0;
+    T* obj = 0;
     std::shared_ptr<T> objPtr = 0;
     bool owner = true;
     static PyTypeObject type;
@@ -96,6 +96,7 @@ struct VRPyBaseT : public VRPyBase {
     static bool check(PyObject* o);
 
     static PyObject* fromObject(T obj);
+    static PyObject* fromPtr(T* obj);
     static PyObject* fromSharedPtr(std::shared_ptr<T> obj);
     static bool      parse(PyObject *args, T** obj);
     static bool      parse(PyObject *args, std::shared_ptr<T>* obj);

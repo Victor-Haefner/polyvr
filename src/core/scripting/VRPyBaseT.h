@@ -28,10 +28,23 @@ bool toValue(PyObject* o, std::shared_ptr<X>& v) { \
     v = ((VRPy ## Y*)o)->objPtr; return 1; \
 }; \
 \
+template <> \
+bool toValue(PyObject* o, X*& v) { \
+    if (VRPyBase::isNone(o)) { v = 0; return 1; } \
+    if (!VRPy ## Y::check(o)) return 0; \
+    v = ((VRPy ## Y*)o)->obj; return 1; \
+}; \
+\
 template<> \
 PyObject* VRPyTypeCaster::cast(const std::shared_ptr<X>& e) { \
     return VRPy ## Y::fromSharedPtr(e); \
-};
+};\
+\
+/*typedef X* X ## ptr ;\
+template<> \
+PyObject* VRPyTypeCaster::cast(const X ## ptr& e) { \
+    return VRPy ## Y::fromPtr(e); \
+};*/
 
 #define simpleVRPyType( X, NEWfkt ) newPyType( VR ## X , X , NEWfkt )
 #define simplePyType( X, NEWfkt ) newPyType( X , X , NEWfkt )
@@ -44,7 +57,7 @@ template<class T> VRPyBaseT<T>::VRPyBaseT() {;}
 
 template <typename T>
 bool VRPyBaseT<T>::valid() {
-    if (objPtr && objPtr.get()) return true;
+    if ((objPtr && objPtr.get()) || obj) return true;
     setErr("Py object is invalid!");
     return false;
 }
@@ -126,8 +139,16 @@ PyObject* VRPyBaseT<T>::fromObject(T obj) {
     VRPyBaseT<T> *self = (VRPyBaseT<T> *)typeRef->tp_alloc(typeRef, 0);
     if (self == NULL) Py_RETURN_NONE;
     T* optr = new T(obj);
-    //*optr = obj;
     self->objPtr = std::shared_ptr<T>( optr );
+    self->owner = false;
+    return (PyObject *)self;
+}
+
+template<class T>
+PyObject* VRPyBaseT<T>::fromPtr(T* obj) {
+    VRPyBaseT<T> *self = (VRPyBaseT<T> *)typeRef->tp_alloc(typeRef, 0);
+    if (self == NULL) Py_RETURN_NONE;
+    self->obj = obj;
     self->owner = false;
     return (PyObject *)self;
 }
