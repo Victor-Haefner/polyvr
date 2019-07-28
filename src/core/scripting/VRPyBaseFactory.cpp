@@ -29,7 +29,7 @@ template<> bool toValue(PyObject* o, int& v) {
     return 0;
 }
 
-template<> bool toValue(PyObject* o, void*& v) { return 1; }
+template<> bool toValue(PyObject* o, void*& v) { v = o; Py_INCREF(o); return 1; }
 template<> bool toValue(PyObject* o, bool& v) { if (!PyNumber_Check(o)) return 0; v = PyInt_AsLong(o); return 1; }
 template<> bool toValue(PyObject* o, char& v) { if (!PyNumber_Check(o)) return 0; v = PyInt_AsLong(o); return 1; }
 template<> bool toValue(PyObject* o, unsigned char& v) { if (!PyNumber_Check(o)) return 0; v = PyInt_AsLong(o); return 1; }

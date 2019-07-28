@@ -57,6 +57,8 @@ template<> PyObject* VRPyTypeCaster::cast(const VRObjectPtr& obj) {
     return VRPyObject::fromSharedPtr(obj);
 }
 
+typedef void* voidPtr;
+template<> PyObject* VRPyTypeCaster::cast(const voidPtr& v) { if (v) { PyObject* o = (PyObject*)v; Py_INCREF(o); return o; } else Py_RETURN_NONE; }
 template<> PyObject* VRPyTypeCaster::cast(const int& i) { return PyInt_FromLong(i); }
 template<> PyObject* VRPyTypeCaster::cast(const uint& i) { return PyInt_FromLong(i); }
 template<> PyObject* VRPyTypeCaster::cast(const short& s) { return PyInt_FromLong(s); }

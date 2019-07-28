@@ -98,10 +98,10 @@ void VRLight::setup(VRStorageContextPtr context) {
 }
 
 void VRLight::setup_after() {
-    auto root = VRScene::getCurrent()->getRoot();
+    //auto root = VRScene::getCurrent()->getRoot();
     VRObjectPtr tmp = getRoot()->find(beacon_name);
     if (tmp) setBeacon( static_pointer_cast<VRLightBeacon>(tmp) );
-    else cout << "  !! could not find light beacon: " << root << " " << this << endl;
+    else cout << "  !! could not find light beacon: " << getRoot() << " " << this << endl;
 }
 
 VRObjectPtr VRLight::copy(vector<VRObjectPtr> children) {

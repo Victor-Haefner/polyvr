@@ -569,9 +569,9 @@ typedef OctreeNode* onPtr;
 template<> PyObject* VRPyTypeCaster::cast(const onPtr& n) { return VRPyOctreeNode::fromPtr(n); }
 
 PyMethodDef VRPyOctree::methods[] = {
-    /*{"get", PyWrap2( Octree, get, "Get field", float, Vec3i ) },
-    {"set", PyWrap2( Octree, set, "Set field", void, float, Vec3i ) },
-    {"extractMesh", PyWrap2( Octree, extractMesh, "Extract surfaces as mesh", VRGeometryPtr ) },*/
+    {"add", PyWrapOpt2( Octree, add, "Add to tree - will leak memory!", "0|-1|1|-1", OctreeNode*, Vec3d, void*, int, bool, int ) },
+    {"getVisualization", PyWrap2( Octree, getVisualization, "Get tree visual", VRGeometryPtr ) },
+    {"getAllLeafs", PyWrap2( Octree, getAllLeafs, "Get all leafs", vector<OctreeNode*> ) },
     {NULL}  /* Sentinel */
 };
 
@@ -585,7 +585,7 @@ PyObject* VRPyOctree::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 }
 
 PyMethodDef VRPyOctreeNode::methods[] = {
-    {"add", PyWrap2( OctreeNode, add, "Get field", OctreeNode*, Vec3d, void*, int, bool, int ) },
+    {"getData", PyWrap2( OctreeNode, getData, "Get leaf data", vector<void*> ) },
     {NULL}  /* Sentinel */
 };
 

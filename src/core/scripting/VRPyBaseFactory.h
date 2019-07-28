@@ -96,7 +96,8 @@ PyObject* proxyWrap<allowPacking, sT, R (T::*)(Args...), mf, O>::exec(sT* self, 
 
     wrap->callback = mf;
     PyObject* res = 0;
-    bool success = wrap->execute(self->objPtr.get(), params, res);
+    T* tPtr = self->objPtr ? self->objPtr.get() : self->obj;
+    bool success = wrap->execute(tPtr, params, res);
     if (!success) { self->setErr(wrap->err); return NULL; }
     if (!res) Py_RETURN_TRUE;
     else return res;
