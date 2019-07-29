@@ -80,13 +80,11 @@ Matrix4d PCA::computeEigenvectors(Matrix4d m) {
     return res;
 }
 
-Pose PCA::compute() {
+Pose PCA::compute() { // TODO: ditch it at some point!
     Pose res;
     Matrix4d cov = computeCovMatrix();
     Matrix4d ev  = computeEigenvectors(cov);
-
-    cout << "computePCA:\n" << cov << "\n\n" << ev << endl;
-    res.set(Vec3d(ev[3]), Vec3d(ev[0]), Vec3d(ev[2]));
+    res.set(Vec3d(cov[3]), Vec3d(ev[0]), Vec3d(ev[2]), Vec3d(ev[3]));
     return res;
 }
 
