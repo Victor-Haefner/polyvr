@@ -533,6 +533,7 @@ simplePyType(TSDF, VRPyTSDF::New );
 simplePyType(OctreeNode, 0 );
 simplePyType(Octree, VRPyOctree::New );
 simplePyType(PCA, New_ptr);
+simplePyType(Patch, New_ptr);
 
 PyMethodDef VRPyExpression::methods[] = {
     {"set", PyWrap2( Expression, set, "Set expression", void, string ) },
@@ -571,7 +572,7 @@ template<> PyObject* VRPyTypeCaster::cast(const onPtr& n) { return VRPyOctreeNod
 
 PyMethodDef VRPyOctree::methods[] = {
     {"add", PyWrapOpt2( Octree, add, "Add to tree - will leak memory!", "0|-1|1|-1", OctreeNode*, Vec3d, void*, int, bool, int ) },
-    {"getVisualization", PyWrap2( Octree, getVisualization, "Get tree visual", VRGeometryPtr ) },
+    {"getVisualization", PyWrapOpt2( Octree, getVisualization, "Get tree visual", "0", VRGeometryPtr, bool ) },
     {"getAllLeafs", PyWrap2( Octree, getAllLeafs, "Get all leafs", vector<OctreeNode*> ) },
     {NULL}  /* Sentinel */
 };
@@ -593,6 +594,12 @@ PyMethodDef VRPyOctreeNode::methods[] = {
 PyMethodDef VRPyPCA::methods[] = {
     {"add", PyWrap2( PCA, add, "Add point", void, Vec3d ) },
     {"compute", PyWrap2( PCA, compute, "Compute", Pose ) },
+    {"size", PyWrap2( PCA, size, "Get amount of points", int ) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyPatch::methods[] = {
+    {"fromGeometry", PyWrap2( Patch, fromGeometry, "Create patch from Geometry", VRObjectPtr, VRGeometryPtr, int, bool ) },
     {NULL}  /* Sentinel */
 };
 

@@ -1,36 +1,36 @@
 #include "patch.h"
 
+#include "core/utils/toString.h"
+#include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/geometry/OSGGeometry.h"
+#include "core/objects/material/VRMaterial.h"
+
 #include <OpenSG/OSGFaceIterator.h>
 #include <OpenSG/OSGTriangleIterator.h>
 
-OSG_BEGIN_NAMESPACE;
 using namespace std;
+using namespace OSG;
 
-//TODO
+template<> string typeName(const OSG::Patch& t) { return "Patch"; }
 
-
+Patch::Patch() {}
+Patch::~Patch() {}
+PatchPtr Patch::create() { return PatchPtr(new Patch()); }
 
 template <int S>
-patch::bezVRPolygon<S>::bezVRPolygon() {
+Patch::bezVRPolygon<S>::bezVRPolygon() {
     initVRPolygon();
 }
 
 template <int S>
-patch::bezVRPolygon<S>::~bezVRPolygon() {
-    delete[] p;
-    delete[] n;
-    delete[] tex;
-}
+Patch::bezVRPolygon<S>::~bezVRPolygon() {}
 
 template <int S>
-void patch::bezVRPolygon<S>::initVRPolygon() {
-    geo = 0;
-    N = 0;
-    wired = false;
-
-    p = new Vec3d[S];
-    n = new Vec3d[S];
-    tex = new Vec2d[S];
+void Patch::bezVRPolygon<S>::initVRPolygon() {
+    p = vector<Vec3d>(S);
+    n = vector<Vec3d>(S);
+    tex = vector<Vec2d>(S);
 
     for (int i=0;i<S;i++) {
         for (int j=0;j<3;j++){
@@ -42,7 +42,7 @@ void patch::bezVRPolygon<S>::initVRPolygon() {
 }
 
 
-Vec3d patch::projectInPlane(Vec3d v, Vec3d n, bool keep_length) {
+Vec3d Patch::projectInPlane(Vec3d v, Vec3d n, bool keep_length) {
     n.normalize();
     float l;
     if (keep_length) l = v.length();
@@ -52,98 +52,46 @@ Vec3d patch::projectInPlane(Vec3d v, Vec3d n, bool keep_length) {
     return v;
 }
 
-Vec3d patch::reflectInPlane(Vec3d v, Vec3d n) {
+Vec3d Patch::reflectInPlane(Vec3d v, Vec3d n) {
     n.normalize();
     float k = v.dot(n);
     v -= n*(k*2);
     return v;
 }
 
-/*GeometryMTRecPtr patch::makeTrianglePlaneGeo(int N, bool wire = false) {
-    GeoPTypesPtr                Type = GeoPTypesUI8::create();
-    GeoPLengthsPtr              Length = GeoPLengthsUI32::create();
-    GeoPositions3fPtr           Pos = GeoPositions3f::create();
-    GeoNormals3fPtr             Norms = GeoNormals3f::create();
-    GeoIndicesUI32Ptr           Indices = GeoIndicesUI32::create();
-    SimpleTexturedMaterialPtr   Mat = SimpleTexturedMaterial::create();
-    GeoTexCoords2fPtr           Tex = GeoTexCoords2f::create();
+VRGeometryPtr Patch::makeTrianglePlane(int N, bool wire) {
+    VRGeoData data;
 
-    beginEditCP(Type, GeoPTypesUI8::GeoPropDataFieldMask);
-    beginEditCP(Length, GeoPLengthsUI32::GeoPropDataFieldMask);
-    beginEditCP(Pos, GeoPositions3f::GeoPropDataFieldMask);
-    beginEditCP(Norms, GeoNormals3f::GeoPropDataFieldMask);
-    beginEditCP(Indices, GeoIndicesUI32::GeoPropDataFieldMask);
-    beginEditCP(Tex, GeoTexCoords2f::GeoPropDataFieldMask);
-    beginEditCP(Mat);
-        int tN = N*N;
-        Type->addValue(GL_TRIANGLES);
-        Length->addValue(3*tN);
-
-        //positionen und Normalen
-        int PosCount = 0;
-        int NormsCount = 0;
-        for(int i=0;i<N+1;i++) {
-            for(int j=0;j<N+1-i;j++) {
-                PosCount++;
-                NormsCount++;
-                Pos->addValue(Vec3d((float)i/(N+1),(float)j/(N+1),0));
-                Norms->addValue(Vec3d(0,0,1));
-                Tex->addValue(Vec2d(0,0));
-            }
+    // vertices
+    for(int i=0;i<N+1;i++) {
+        for(int j=0;j<N+1-i;j++) {
+            Vec3d pos((float)i/(N+1),(float)j/(N+1),0);
+            data.pushVert( pos, Vec3d(0,0,1), Vec2d(0,0) );
         }
-        //indizierung
-        int k=0;
-        for(int i=0;i<N;i++) {
-            for(int j=0;j<N-i;j++) {
-                Indices->addValue(k+j);
-                Indices->addValue(k+j+1);
-                Indices->addValue(k+j+N-i+1);
-                if (j != N-1-i) {
-                    Indices->addValue(k+j+1);
-                    Indices->addValue(k+j+N-i+2);
-                    Indices->addValue(k+j+N-i+1);
-                }
-            }
-            k+=N+1-i;
+    }
+
+    //indizierung
+    int k = 0;
+    for(int i=0;i<N;i++) {
+        for(int j=0;j<N-i;j++) {
+            data.pushTri(k+j, k+j+1, k+j+N-i+1);
+            if (j != N-1-i) data.pushTri(k+j+1, k+j+N-i+2, k+j+N-i+1);
         }
+        k += N+1-i;
+    }
 
-        Mat->setDiffuse(Color3f(0.8,0.8,0.6));
-        Mat->setAmbient(Color3f(0.4, 0.4, 0.2));
-        //Mat->setSpecular(Color3f(0.1, 0.1, 0.1));
+    auto mat = VRMaterial::get("subPatchMat");
+    mat->setDiffuse(Color3f(0,1,0));
+    mat->setAmbient(Color3f(0.4, 0.4, 0.2));
+    mat->setLit(0);
+    if (wire) mat->setWireFrame(true);
 
-    endEditCP(Type, GeoPTypesUI8::GeoPropDataFieldMask);
-    endEditCP(Length, GeoPLengthsUI32::GeoPropDataFieldMask);
-    endEditCP(Pos, GeoPositions3f::GeoPropDataFieldMask);
-    endEditCP(Norms, GeoNormals3f::GeoPropDataFieldMask);
-    endEditCP(Indices, GeoIndicesUI32::GeoPropDataFieldMask);
-    endEditCP(Tex, GeoTexCoords2f::GeoPropDataFieldMask);
-    endEditCP(Mat);
-
-    GeometryPtr geo = Geometry::create();
-    beginEditCP(geo);
-        geo->setTypes(Type);
-        geo->setLengths(Length);
-        geo->setIndices(Indices);
-        geo->setPositions(Pos);
-        geo->setNormals(Norms);
-        geo->setTexCoords(Tex);
-        if (wire) geo->setMaterial(getWiredMaterial());
-        else geo->setMaterial(Mat);
-    endEditCP(geo);
-
+    auto geo = data.asGeometry("subpatch");
+    geo->setMaterial(mat);
     return geo;
-}*/
+}
 
-/*NodeMTRecPtr patch::makeTrianglePlane(int N, bool wire = false) {
-    NodePtr n = Node::create();
-    GeometryPtr geo = makeTrianglePlaneGeo(N, wire);
-    beginEditCP(n);
-        n->setCore(geo);
-    endEditCP(n);
-    return n;
-}*/
-
-void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
+void Patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
     //schrittweite
     float step = 1./(q.N-1);
 
@@ -287,7 +235,8 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
     }
 }
 
-/*void patch::calcBezTrianglePlane(bezVRPolygon<3>& q) {
+void Patch::calcBezTrianglePlane(bezVRPolygon<3>& q) {
+    cout << "calcBezTrianglePlane\n";
     //schrittweite
     float step = 1./(q.N-1);
 
@@ -324,13 +273,13 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
     P[0][0][3] = q.p[2];
 
     //Hilfspunkte auf kanten
-    P[2][1][0] = P[3][0][0]+projectInPlane(r[0]*(1./3.),q.n[0],false);
+    P[2][1][0] = P[3][0][0]+projectInPlane( r[0]*(1./3.),q.n[0],false);
     P[1][2][0] = P[0][3][0]+projectInPlane(-r[0]*(1./3.),q.n[1],false);
 
     P[2][0][1] = P[3][0][0]+projectInPlane(-r[1]*(1./3.),q.n[0],false);
-    P[1][0][2] = P[0][0][3]+projectInPlane(r[1]*(1./3.),q.n[2],false);
+    P[1][0][2] = P[0][0][3]+projectInPlane( r[1]*(1./3.),q.n[2],false);
 
-    P[0][2][1] = P[0][3][0]+projectInPlane(r[2]*(1./3.),q.n[1],false);
+    P[0][2][1] = P[0][3][0]+projectInPlane( r[2]*(1./3.),q.n[1],false);
     P[0][1][2] = P[0][0][3]+projectInPlane(-r[2]*(1./3.),q.n[2],false);
 
     //berechne die distanzen zwischen den hilfspunkten
@@ -356,7 +305,7 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
     Vec4d b = Vec4d(n[0].dot(P[2][1][0]), n[1].dot(P[0][2][1]), n[2].dot(P[1][0][2]), 0);
     Matrix4d Ai;
 
-    if (A.det() < 0.0001 && A.det() > -0.0001) {
+    if (abs(A.det()) > 0.0001) {
         for (int l=0;l<3;l++) {
             Ai = A;
             Ai[l] = b;
@@ -366,20 +315,18 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
         //cout << "\n det = 0";
         float h = -r[0].dot(r[1])/r[1].dot(r[1]);
         P[1][1][1] = (P[1][2][0] + P[1][0][2]
-                    + h*(P[0][1][2]*2-P[0][2][1]-P[0][0][3])
-                    + (1-h)*(P[0][2][1]*2-P[0][3][0]-P[0][1][2]))*(1./2.);
+                    + (P[0][1][2]*2-P[0][2][1]-P[0][0][3])*h
+                    + (P[0][2][1]*2-P[0][3][0]-P[0][1][2])*(1-h))*0.5;
     }
 
     //forward diff
-    q.geo = makeTrianglePlaneGeo(q.N-1,q.wired);
+    q.geo = makeTrianglePlane(q.N-1,q.wired);
 
     Vec3d DELu[3];
     Vec3d Bu[4];
     Vec3d DELv[3][3];
     Vec3d Bv[4][4];
     Vec3d T[3][q.N];
-
-    GeoPositions3fPtr Pos = GeoPositions3fPtr::dcast(q.geo->getPositions());
 
     //Bv03 * v³ + Bv02 * v² + Bv01 * v + Bv00 = Bu0
     Bv[0][0] = P[0][0][3];
@@ -391,13 +338,19 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
     Bv[1][0] = (P[1][0][2] - P[0][0][3])*3;
     Bv[1][1] = (P[0][0][3] - P[1][0][2] + P[1][1][1] - P[0][1][2])*6;
     Bv[1][2] = (P[1][2][0] + P[1][0][2] - P[0][2][1] - P[0][0][3])*3 + (P[0][1][2] - P[1][1][1])*6;
+    Bv[1][3] = Vec3d();
 
     //u² * [Bv23 * v³ + Bv22 * v² + Bv21 * v + Bv20] = Bu2
     Bv[2][0] = (P[2][0][1] + P[0][0][3])*3 - P[1][0][2]*6;
     Bv[2][1] = (P[2][1][0] - P[2][0][1] + P[0][1][2] - P[0][0][3])*3 + (P[1][0][2] - P[1][1][1])*6;
+    Bv[2][2] = Vec3d();
+    Bv[2][3] = Vec3d();
 
     //u³ * [Bv33 * v³ + Bv32 * v² + Bv31 * v + Bv30] = Bu3
     Bv[3][0] = P[3][0][0] - P[0][0][3] + (P[1][0][2] - P[2][0][1])*3;
+    Bv[3][1] = Vec3d();
+    Bv[3][2] = Vec3d();
+    Bv[3][3] = Vec3d();
 
     //berechne schritte
     DELv[0][2] = Bv[0][3]*6*step*step*step;
@@ -416,8 +369,14 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
     T[1][0] = Bv[1][0];
     T[2][0] = Bv[2][0];
 
+    GeoPnt3fPropertyMTRecPtr Pos = (GeoPnt3fProperty*)q.geo->getMesh()->geo->getPositions();
+    if (!Pos) { cout << "AAAA, pos invalid\n"; return; }
+
     int iter = 0;
     for (int i=0;i<q.N;i++) {
+        if (iter >= Pos->size()) { cout << "AA " << iter << endl; break; }
+        //cout << "Ti " << T[0][i] << ",    " << T[1][i] << ",    " << T[2][i] << endl;
+
         for (int k=0; k<3 && i>0;k++) {
             T[k][i] = T[k][i-1]+DELv[k][0];
             DELv[k][0] += DELv[k][1];
@@ -434,10 +393,17 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
         DELu[2] = Bu[3]*6*step*step*step;
         DELu[1] = Bu[2]*2*step*step + DELu[2];
         DELu[0] = Bu[1]*step + Bu[2]*step*step + DELu[2]*(1./6.);
+
+        //cout << " Bu " << Bu[0] << ", " << Bu[1] << ", " << Bu[2] << ", " << Bu[3] << endl;
+        //cout << " DELu " << DELu[0] << ", " << DELu[1] << ", " << DELu[2] << endl;
+
         Pos->setValue(Bu[0], iter);
         iter++;
         for (int j=1;j<q.N-i;j++) {
-            Pos->setValue(Pos->getValue(iter-1)+DELu[0], iter);
+            if (iter >= Pos->size()) { cout << "BB " << iter << endl; break; }
+            Pnt3f p0 = Pos->getValue(iter);
+            Pos->setValue(Vec3d(Pos->getValue(iter-1))+DELu[0], iter);
+            //cout << " B " << p0 << " -> " << Pos->getValue(iter) << "   " << DELu[0] << endl;
             iter++;
             DELu[0] += DELu[1];
             DELu[1] += DELu[2];
@@ -445,7 +411,7 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
     }
 
     //calculate the normals------------------------------------------------------------
-    GeoNormals3fPtr Norms = GeoNormals3fPtr::dcast(q.geo->getNormals());
+    GeoVec3fPropertyMTRecPtr Norms = (GeoVec3fProperty*)q.geo->getMesh()->geo->getNormals();
 
     P[2][0][0] = q.n[0];
     P[0][2][0] = q.n[1];
@@ -509,7 +475,7 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
         Norms->setValue(Bu[0], iter);
         iter++;
         for (int j=1;j<q.N-i;j++) {
-            Vec3d temp = Norms->getValue(iter-1)+DELu[0];
+            Vec3d temp = Vec3d(Norms->getValue(iter-1)) + DELu[0];
             Norms->setValue(temp, iter);
             DELu[0] += DELu[1];
 
@@ -519,7 +485,7 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
 
     //calc texture coords---------------------------------------------------------
     //nicht getestet
-    GeoTexCoords2fPtr Texs = GeoTexCoords2fPtr::dcast(q.geo->getTexCoords());
+    GeoVec2fPropertyMTRecPtr Texs = (GeoVec2fProperty*)q.geo->getMesh()->geo->getTexCoords();
 
     //Baustelle
     Vec2d r1 = (q.tex[1]-q.tex[2])*step;
@@ -533,45 +499,30 @@ void patch::calcBezQuadPlane(bezVRPolygon<4>& q) {
             iter++;
         }
     }
-
-}*/
+}
 
 //iteriert über die flächen der geometrie und macht bezierflächen hin
-/*NodePtr patch::applyBezierOnGeometry(GeometryPtr geo, int N) {
-    NodePtr n = Node::create();
-    beginEditCP(n);
-        //n->addChild(drawFaceNormals(geo,0.1));//
-        n->setCore(Group::create());
-        for (TriangleIterator it = geo->beginTriangles(); it != geo->endTriangles(); ++it) {
-            bezVRPolygon<3> q;
-            q.N = N;
-            q.p[0] = it.getPosition(0);
-            q.p[1] = it.getPosition(1);
-            q.p[2] = it.getPosition(2);
-            q.n[0] = it.getNormal(0);
-            q.n[1] = it.getNormal(1);
-            q.n[2] = it.getNormal(2);
-            q.tex[0] = it.getTexCoords(0);
-            q.tex[1] = it.getTexCoords(1);
-            q.tex[2] = it.getTexCoords(2);
+VRObjectPtr Patch::fromGeometry(VRGeometryPtr geo, int N, bool wire) {
+    auto obj = VRObject::create("patch");
+    auto g = geo->getMesh()->geo;
+    for (TriangleIterator it = g->beginTriangles(); it != g->endTriangles(); ++it) {
+        bezVRPolygon<3> q;
+        q.N = N;
+        q.wired = wire;
+        q.p[0] = Vec3d( it.getPosition(0) );
+        q.p[1] = Vec3d( it.getPosition(1) );
+        q.p[2] = Vec3d( it.getPosition(2) );
+        q.n[0] = Vec3d( it.getNormal(0) );
+        q.n[1] = Vec3d( it.getNormal(1) );
+        q.n[2] = Vec3d( it.getNormal(2) );
+        q.tex[0] = Vec2d( it.getTexCoords(0) );
+        q.tex[1] = Vec2d( it.getTexCoords(1) );
+        q.tex[2] = Vec2d( it.getTexCoords(2) );
 
-            calcBezTrianglePlane(q);
-
-            beginEditCP(q.geo);
-                MaterialPtr mat = geo->getMaterial();
-                if (mat != NullFC) q.geo->setMaterial(mat);
-            endEditCP(q.geo);
-
-            NodePtr geoN = Node::create();
-            beginEditCP(geoN);
-                geoN->setCore(q.geo);
-            endEditCP(geoN);
-            n->addChild(geoN);
-        }
-    endEditCP(n);
-
-    return n;
-}*/
+        calcBezTrianglePlane(q);
+        obj->addChild(q.geo);
+    }
+    return obj;
+}
 
 
-OSG_END_NAMESPACE;

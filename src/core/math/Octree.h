@@ -114,7 +114,7 @@ class Octree : public std::enable_shared_from_this<Octree> {
 
         void test();
 
-        VRGeometryPtr getVisualization();
+        VRGeometryPtr getVisualization(bool onlyLeafes = false);
 };
 
 OSG_END_NAMESPACE

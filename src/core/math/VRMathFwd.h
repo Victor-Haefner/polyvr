@@ -13,6 +13,7 @@ ptrFwd(Boundingbox);
 ptrFwd(Path);
 ptrFwd(Pose);
 ptrFwd(VRPolygon);
+ptrFwd(Patch);
 ptrFwd(Graph);
 ptrFwd(Octree);
 ptrFwd(OctreeNode);

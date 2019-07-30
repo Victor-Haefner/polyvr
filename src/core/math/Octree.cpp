@@ -123,7 +123,8 @@ vector<OctreeNode*> OctreeNode::getChildren() {
 }
 
 bool OctreeNode::isLeaf() {
-    for (int i=0; i<8; i++) if (children[i] != 0) return false;
+    if ( resolution < size ) return false;
+    for (int i=0; i<8; i++) if (children[i]) return false;
     return true;
 }
 
@@ -389,10 +390,14 @@ void Octree::test() {
     cout << "\nOctreeNode test passed with " << radSearchRes_tree.size() << " found Vec3fs!\n";
 }
 
-VRGeometryPtr Octree::getVisualization() {
+VRGeometryPtr Octree::getVisualization(bool onlyLeafes) {
     VRGeoData data;
-    auto nodes = root->getRoot()->getSubtree();
-    nodes.push_back(root);
+    vector<OctreeNode*> nodes;
+    if (!onlyLeafes) {
+        nodes = root->getRoot()->getSubtree();
+        nodes.push_back(root);
+    } else nodes = getAllLeafs();
+
     for (auto c : nodes) {
         Pnt3d p = c->getCenter();
         float s = c->getSize()*0.499;

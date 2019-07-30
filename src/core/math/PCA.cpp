@@ -93,6 +93,7 @@ PCA::~PCA() {}
 PCAPtr PCA::create() { return PCAPtr( new PCA() ); }
 
 void PCA::add(Vec3d p) { pnts.push_back(p); }
+int PCA::size() { return pnts.size(); }
 
 
 

@@ -6,6 +6,7 @@
 #include "core/math/Tsdf.h"
 #include "core/math/Octree.h"
 #include "core/math/PCA.h"
+#include "core/math/patch.h"
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
@@ -114,6 +115,10 @@ struct VRPyOctree : VRPyBaseT<OSG::Octree> {
 };
 
 struct VRPyPCA : VRPyBaseT<OSG::PCA> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyPatch : VRPyBaseT<OSG::Patch> {
     static PyMethodDef methods[];
 };
 

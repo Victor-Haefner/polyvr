@@ -23,6 +23,7 @@ class PCA {
 
         Pose compute();
         void add(Vec3d p);
+        int size();
 };
 
 OSG_END_NAMESPACE;
