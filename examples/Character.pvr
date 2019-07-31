@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.196122 0.0689503 0.0835426" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.896413 0.346166 -0.0591766" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.000499606 0.0101134 2.00269" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.389045 0.169775 -0.524835" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <constraint persistency="666"/>
           </Object>
@@ -199,7 +199,7 @@
 		VR.fabrik.addJoint(i, VR.Pose([0,0,l]))
 	
 	VR.fabrik.addChain('chain', range(N))
-	VR.fabrik.setTarget(N-1, VR.Pose([0,0.8,L-0.5]))
+	VR.fabrik.setTarget(N-1, VR.Pose([0,0,L]))
 	VR.fabrik.iterate()
 
 	# visu
@@ -326,13 +326,21 @@
     <Script base_name="updateArm" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
-
+	from math import sin, cos
+	#return
+	L = 2.0
 	N = 8
 	
 	if not hasattr(VR, 'target1'): 
 		VR.target1 = VR.Geometry('target1', 'light')
-		VR.target1.setPrimitive('Box 0.02 0.02 0.02 1 1 1')
+		VR.target1.setPrimitive('Box 0.05 0.05 0.05 1 1 1')
 		VR.target1.setPickable(1)
+		VR.target1.setFrom([0,0,L])
+		
+	if not hasattr(VR, 'rA'): VR.rA = 0
+	VR.rA += 0.02
+		
+	VR.fabrik.setJoint(0, VR.Pose([0,0,0], [0,0,-1], [sin(VR.rA),cos(VR.rA),0]))
 
 	VR.fabrik.setTarget(N-1, VR.target1.getWorldPose())
 	VR.fabrik.iterate()
@@ -342,7 +350,7 @@
     </Script>
   </Scripts>
   <Sockets persistency="666"/>
-  <Background color="0.6 0.6 0.6" format=".png" path="" persistency="666" type="0"/>
+  <Background color="0.417746 0.417746 0.417746" format=".png" path="" persistency="666" type="0"/>
   <Navigation active="Orbit" persistency="666"/>
   <Materials persistency="666"/>
   <Semantics persistency="666"/>

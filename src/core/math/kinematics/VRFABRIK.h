@@ -62,6 +62,7 @@ class FABRIK {
         static FABRIKPtr create();
 
         void addJoint(int ID, PosePtr p);
+        void setJoint(int ID, PosePtr p);
         PosePtr getJointPose(int ID);
 
         void addChain(string name, vector<int> joints);

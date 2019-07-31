@@ -8,6 +8,7 @@
 
 #include <stack>
 #include <algorithm>
+#include <OpenSG/OSGQuaternion.h>
 
 using namespace OSG;
 
@@ -23,6 +24,10 @@ void FABRIK::addJoint(int ID, PosePtr p) {
     j.ID = ID;
     j.p = p;
     joints[ID] = j;
+}
+
+void FABRIK::setJoint(int ID, PosePtr p) {
+    joints[ID].p = p;
 }
 
 PosePtr FABRIK::getJointPose(int ID) { return joints[ID].p; }
@@ -175,10 +180,21 @@ Vec3d FABRIK::moveToDistance(int j1, int j2, float d) {
     float L = D.length();
     float li = d / L;
     movePointTowards(j1, J2.p->pos(), li);
+
+    // update joint direction
     Vec3d nD = J2.p->pos() - J1.p->pos();
     nD.normalize();
     J1.p->setDir(nD);
-    J1.p->makeUpOrthogonal(); // TODO: replace by correct up vector computation?
+
+    // update joint up vector
+    Vec3d u1 = J1.p->up();
+    Vec3d u2 = J2.p->up();
+    u1 -= nD * u1.dot(nD);
+    u2 -= nD * u2.dot(nD);
+    Quaterniond q(u1, u2);
+    q.multVec(u1, u1);
+    u1.normalize();
+    J1.p->setUp(u1);
     return pOld;
 }
 
