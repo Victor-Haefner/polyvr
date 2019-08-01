@@ -79,7 +79,7 @@ Vec3d FABRIK::moveToDistance(int j1, int j2, float d) {
     auto& J2 = joints[j2];
 
     Vec3d pOld = J1.p->pos();
-    Vec3d D = J2.p->pos() - J1.p->pos();
+    Vec3d D = J1.p->pos() - J2.p->pos();
 
     if (J2.constrained && 0) {
         Vec3d cU =-J2.p->up(); cU.normalize();
@@ -124,9 +124,9 @@ Vec3d FABRIK::moveToDistance(int j1, int j2, float d) {
     }
 
     if (J2.constrained) {
-        Vec3d cU =-J2.p->up(); cU.normalize();
+        Vec3d cU = J2.p->up(); cU.normalize();
         Vec3d cX = J2.p->x();  cX.normalize();
-        Vec3d cD = J2.p->dir();cD.normalize();
+        Vec3d cD =-J2.p->dir();cD.normalize();
         float y = D.dot(cU);
         float x = D.dot(cX);
         float h = D.dot(cD);
@@ -151,29 +151,35 @@ Vec3d FABRIK::moveToDistance(int j1, int j2, float d) {
 
         Vec3d p = J1.p->pos();
         float t = pN.dot(p-p0);
-        Vec3d pP = p - pN*t;
-        Vec3d pn1 = (pP - p0).cross(v1);
-        Vec3d pn2 = (pP - p0).cross(v2);
-        float f1 = pn1.dot(pN);
-        float f2 = pn2.dot(pN);
+        Vec3d pP = p - pN*t; // projection on plane
 
-        //if (J1.ID == 4) {
-        if (t > 0) {
-            if (f1 < 1 && f1 < f2) {
-                Vec3d kN = pN.cross(v1); kN.normalize();
-                //J1.p->setPos( pP - kN * kN.dot(pP - p0) );
-                //D = J2.p->pos() - J1.p->pos();
+        J2.debugPnt1 = p0 + v1*0.1 + v2*0.1;
+        J2.debugPnt2 = p;
 
-            }
-            if (f2 < 1 && f2 < f1) {
+        if (t < 0) {
+            Vec3d pn1 = (pP - p0).cross(v1);
+            Vec3d pn2 = (pP - p0).cross(v2);
+            float f1 = pn1.dot(pN);
+            float f2 = pn2.dot(pN);
+            Vec3d kN1 = pN.cross(v1); kN1.normalize();
+            Vec3d kN2 = pN.cross(v2); kN2.normalize();
+
+            Vec3d eP1 = pP - kN1 * kN1.dot(pP - p0);
+            Vec3d eP2 = pP - kN2 * kN2.dot(pP - p0);
+            J2.debugPnt1 = eP1;
+            J2.debugPnt2 = eP2;
+
+            if (f1 > 0) pP = eP1;
+            if (f2 < 0) pP = eP2;
+            /*if (f2 < 1 && f2 < f1) {
                 Vec3d kN = pN.cross(v2); kN.normalize();
                 //J1.p->setPos( pP - kN * kN.dot(pP - p0) );
-                //D = J2.p->pos() - J1.p->pos();
-            }
-            cout << " t " << t << " p " << p << ", " << f1 << ", " << f2 << "   " << J1.ID << endl;
+            }*/
 
-            //J1.p->setPos( p );
-            // compute distance and side to plane
+            J1.p->setPos( pP );
+
+            D = J1.p->pos() - J2.p->pos();
+            cout << " xy " << Vec2d(x,y) << ", a " << a << "  t " << t << " p " << p << ", " << f1 << ", " << f2 << "   " << J1.ID << endl;
         }
     }
 
@@ -182,7 +188,7 @@ Vec3d FABRIK::moveToDistance(int j1, int j2, float d) {
     movePointTowards(j1, J2.p->pos(), li);
 
     // update joint direction
-    Vec3d nD = J2.p->pos() - J1.p->pos();
+    Vec3d nD = -D;
     nD.normalize();
     J1.p->setDir(nD);
 
@@ -283,7 +289,7 @@ void FABRIK::iterate() {
             if (!joints[ee].target) continue;
             auto targetPos = joints[ee].target->pos();
             float distTarget = (joints[ee].p->pos()-targetPos).length();
-            cout << "convergence: " << distTarget << ", " << distTarget/tolerance << endl;
+            //cout << "convergence: " << distTarget << ", " << distTarget/tolerance << endl;
             if (distTarget > tolerance) return false;
         }
         return true;
@@ -292,7 +298,6 @@ void FABRIK::iterate() {
     map<int,vector<Vec3d>> knotPositions;
 
     for (int i=0; i<10; i++) {
-        if (checkConvergence()) break;
         cout << "exec FABRIK iteration " << i << endl;
 
         for (auto j : executionQueue) {
@@ -337,6 +342,8 @@ void FABRIK::iterate() {
                 }
             }
         }
+
+        if (checkConvergence()) break;
     }
 }
 
