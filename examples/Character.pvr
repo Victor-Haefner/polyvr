@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.0297661 0.0635094 0.733562" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-2.41789 1.06945 0.268727" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.200871 0.0069073 -0.438341" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-1.60021 1.50448 1.84502" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <constraint persistency="666"/>
           </Object>
@@ -15,7 +15,7 @@
   <Cameras activeCam="Default" persistency="666"/>
   <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
-    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="init" group="version1" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	from VR.Math import Vec3
@@ -34,7 +34,7 @@
 </core>
       <trig type="none" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
     </Script>
-    <Script base_name="init2" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="init2" group="version2" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	from VR.Math import Vec3
@@ -103,79 +103,48 @@
 </core>
       <trig type="none" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
     </Script>
-    <Script base_name="init3" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="init3" group="version3" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 
 	# setup
 	VR.fabrik = VR.FABRIK()
-	
-	def test1():
-		VR.fabrik.addJoint(0, VR.Pose([0,0,0]))
-		VR.fabrik.addJoint(1, VR.Pose([0,0.5,0]))
-		VR.fabrik.addJoint(2, VR.Pose([0,1,0]))
-	
-		VR.fabrik.addJoint(3, VR.Pose([0.5,2,0]))
-		VR.fabrik.addJoint(4, VR.Pose([0.5,3,0]))
-		VR.fabrik.addJoint(5, VR.Pose([0.5,4,0]))
-	
-		VR.fabrik.addJoint(6, VR.Pose([0,2,0]))
-		VR.fabrik.addJoint(7, VR.Pose([0,3,0]))
-		VR.fabrik.addJoint(8, VR.Pose([0,4,0]))
-	
-		a = 0.1
-		VR.fabrik.addConstraint(3, [a,a,a,3*a])
-	
-		VR.fabrik.addChain('chain1', [0,1,2,3,4,5])
-		VR.fabrik.addChain('chain2', [0,1,2,6,7,8])
-	
-		#VR.fabrik.setTarget(3, VR.Pose([2.237,2,0]))
-		#VR.fabrik.setTarget(5, VR.Pose([2.2,3,0]))
-		VR.fabrik.setTarget(5, VR.Pose([2.2,2,0]))
-		VR.fabrik.setTarget(8, VR.Pose([-2.5,3,0]))
 		
-	def test2():
-		VR.fabrik.addJoint(0, VR.Pose([0,1.2,0], [0,1,0], [0,0,1]))
+	VR.fabrik.addJoint(0, VR.Pose([0,1.2,0], [0,1,0], [0,0,1]))
+	
+	def addLeg(n,w,i):
+		VR.fabrik.addJoint(i+1, VR.Pose([w,1.0,0], [0,1,0], [0,0,1]))
+		VR.fabrik.addJoint(i+2, VR.Pose([w,0.5,0], [0,1,0], [0,0,1]))
+		VR.fabrik.addJoint(i+3, VR.Pose([w,0,0], [0,1,0], [0,0,1]))
+		VR.fabrik.addJoint(i+4, VR.Pose([w,-0.2,0], [0,1,0], [0,0,1]))
+		VR.fabrik.addChain(n, [0,i+1,i+2,i+3,i+4])
 		
-		def addLeg(n,w,i):
-			VR.fabrik.addJoint(i+1, VR.Pose([w,1.0,0], [0,1,0], [0,0,1]))
-			VR.fabrik.addJoint(i+2, VR.Pose([w,0.5,0], [0,1,0], [0,0,1]))
-			VR.fabrik.addJoint(i+3, VR.Pose([w,0,0], [0,1,0], [0,0,1]))
-			VR.fabrik.addJoint(i+4, VR.Pose([w,0,0.2], [0,0,1], [0,1,0]))
-			VR.fabrik.addChain(n, [0,i+1,i+2,i+3,i+4])
-			
-			#VR.fabrik.addConstraint(i+2, [0.1,0.9,0.1,0.1])
-			#VR.fabrik.addConstraint(i+3, [0.05,2.9,0.05,0.1])
-			#VR.fabrik.addConstraint(i+3, [0.1,0.2,0.3,0.4])
-			VR.fabrik.addConstraint(i+3, [2.9,2.9,2.9,2.9])
-			#VR.fabrik.addConstraint(i+3, [0.2,0.2,0.2,0.2])
-			#VR.fabrik.addConstraint(i+3, [0.1,0.2,0.2,0.2])
-			
-			VR.fabrik.setTarget(i+4, VR.Pose([w,0,0.2]))
-			#VR.fabrik.setTarget(i+4, VR.Pose([w,0.2,0.5]))
-			
-		def addArm(n,w,i):
-			VR.fabrik.addJoint(i+1, VR.Pose([w,1.5,0]))
-			VR.fabrik.addJoint(i+2, VR.Pose([w,1.2,0]))
-			VR.fabrik.addJoint(i+3, VR.Pose([w,0.9,0]))
-			VR.fabrik.addJoint(i+4, VR.Pose([w,0.8,0]))
-			VR.fabrik.addChain(n, [0,i+1,i+2,i+3,i+4])
-			
-			VR.fabrik.setTarget(i+4, VR.Pose([w,0.8,0]))
-			
-		addLeg('leg1', 0.2, 0)
-		addLeg('leg2',-0.2, 4)
-		addArm('arm1', 0.3, 8)
-		addArm('arm2',-0.3,12)
+		VR.fabrik.addConstraint(i+2, [0.1,0.1,0.1,2.9]) # knee
+		VR.fabrik.addConstraint(i+3, [0.1,2.0,0.1,0.1]) # ankle
 		
-		VR.fabrik.addJoint(17, VR.Pose([0,1.6,0]))
-		VR.fabrik.addJoint(18, VR.Pose([0,1.8,0]))
-		VR.fabrik.addChain('head', [0,17,18])
-		VR.fabrik.setTarget(18, VR.Pose([0.1,1.8,0]))
-		VR.fabrik.setTarget(18, VR.Pose([-0.1,1.8,0]))
+		VR.fabrik.setTarget(i+4, VR.Pose([w,-0.01,0.2]))
+		print i+4, w
 		
+	def addArm(n,w,i):
+		VR.fabrik.addJoint(i+1, VR.Pose([w,1.5,0]))
+		VR.fabrik.addJoint(i+2, VR.Pose([w,1.2,0]))
+		VR.fabrik.addJoint(i+3, VR.Pose([w,0.9,0]))
+		VR.fabrik.addJoint(i+4, VR.Pose([w,0.8,0]))
+		VR.fabrik.addChain(n, [0,i+1,i+2,i+3,i+4])
 		
-	test2()
+		VR.fabrik.setTarget(i+4, VR.Pose([w,0.8,0]))
+		
+	addLeg('leg1', 0.2, 0)
+	addLeg('leg2',-0.2, 4)
+	addArm('arm1', 0.3, 8)
+	addArm('arm2',-0.3,12)
+	
+	VR.fabrik.addJoint(17, VR.Pose([0,1.6,0]))
+	VR.fabrik.addJoint(18, VR.Pose([0,1.8,0]))
+	VR.fabrik.addChain('head', [0,17,18])
+	VR.fabrik.setTarget(18, VR.Pose([0.1,1.8,0]))
+	VR.fabrik.setTarget(18, VR.Pose([-0.1,1.8,0]))
+		
 	VR.fabrik.iterate()
 
 	# visu
@@ -183,9 +152,9 @@
 		VR.visu = VR.Geometry('fabrik', 'light')
 	VR.fabrik.visualize(VR.visu)
 </core>
-      <trig type="none" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="4" persistency="666"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="4" persistency="666"/>
     </Script>
-    <Script base_name="initArm" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="initArm" group="version3" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 
@@ -212,9 +181,31 @@
 	if not hasattr(VR, 'visu'): VR.visu = VR.Geometry('fabrik', 'light')
 	
 </core>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="6" persistency="666"/>
+      <trig type="none" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="6" persistency="666"/>
     </Script>
-    <Script base_name="proto" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="makeStep" group="version3" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	VR.fabrik.setTarget(4, VR.Pose([0.2,-0.1,0.2]))
+	return
+	
+	H = 0.45
+	
+	def cb(t):
+		t = (t-0.5)*2 # -1 -&gt; 1
+		h = H - t*t*H
+		p = [0.2,h-0.01,0.2]
+		print p
+		VR.fabrik.setTarget(4, VR.Pose(p))
+	
+	a = VR.Animation('movement')
+	a.setCallback(cb)
+	a.setDuration(3)
+	a.start()
+</core>
+    </Script>
+    <Script base_name="proto" group="version1" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	from VR.Math import Vec3
@@ -233,7 +224,7 @@
 		VR.joints.addPoint()
 </core>
     </Script>
-    <Script base_name="sim" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="sim" group="version1" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -264,7 +255,7 @@
 		
 </core>
     </Script>
-    <Script base_name="testMove" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="testMove" group="version2" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	from VR.Math import Vec3
@@ -326,7 +317,16 @@
 </core>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="32" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
     </Script>
-    <Script base_name="updateArm" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="update" group="version3" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	VR.fabrik.iterate()
+	VR.fabrik.visualize(VR.visu)
+</core>
+      <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="9" persistency="666"/>
+    </Script>
+    <Script base_name="updateArm" group="version3" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	from math import sin, cos
@@ -336,18 +336,11 @@
 		VR.target1 = VR.Geometry('target1', 'light')
 		VR.target1.setPrimitive('Box 0.05 0.05 0.05 1 1 1')
 		VR.target1.setPickable(1)
-		VR.target1.setFrom([0,0,VR.armL])
-	#k=0.1 # k=0
-	#VR.target1.setFrom([-k,-k,VR.armL-k])
+		#VR.target1.setFrom([0,0,VR.armL])
+		VR.target1.setFrom([0.2,-0.01,0.2])
 		
-	if not hasattr(VR, 'rA'): VR.rA = 0
-	VR.rA += 0.02
-		
-	#VR.fabrik.setJoint(0, VR.Pose([0,0,0], [0,0,-1], [sin(VR.rA),cos(VR.rA),0]))
-
-	VR.fabrik.setTarget(VR.armN-1, VR.target1.getWorldPose())
-	VR.fabrik.iterate()
-	VR.fabrik.visualize(VR.visu)
+	#VR.fabrik.setTarget(VR.armN-1, VR.target1.getWorldPose())
+	VR.fabrik.setTarget(4, VR.target1.getWorldPose())
 </core>
       <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="7" persistency="666"/>
     </Script>

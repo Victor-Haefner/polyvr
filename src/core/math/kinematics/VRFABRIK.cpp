@@ -74,56 +74,14 @@ Vec3d FABRIK::movePointTowards(int j, Vec3d target, float t) {
     return pOld;
 };
 
-Vec3d FABRIK::moveToDistance(int j1, int j2, float d) {
+Vec3d FABRIK::moveToDistance(int j1, int j2, float d, bool constrained) {
     auto& J1 = joints[j1];
     auto& J2 = joints[j2];
 
     Vec3d pOld = J1.p->pos();
     Vec3d D = J1.p->pos() - J2.p->pos();
 
-    if (J2.constrained && 0) {
-        Vec3d cU =-J2.p->up(); cU.normalize();
-        Vec3d cX = J2.p->x();  cX.normalize();
-        Vec3d cD = J2.p->dir();cD.normalize();
-        float y = D.dot(cU);
-        float x = D.dot(cX);
-        float h = D.dot(cD);
-
-        if (h < 1e-2) h = 1e-2;
-
-        float a = atan2(y,x);
-        if (a < 0) a += 2*Pi;
-        cout << " J: " << Vec2i(j1,j2) << ", " << J1.p->pos() << ", " << J2.p->pos() << ", D " << D << endl;
-        cout << "  cUXD: " << cU << ", " << cX << ", " << cD << ", D " << D << endl;
-        cout << "   XY: " << Vec2d(x,y) << ", a " << a << endl;
-
-        auto angles = J2.constraintAngles;
-        float A = 0, B = 0;
-        if (a >= 0      && a <  Pi*0.5) { A = angles[0]; B = angles[1]; }
-        if (a >= Pi*0.5 && a <  Pi*1.0) { A = angles[2]; B = angles[1]; }
-        if (a >= Pi*1.0 && a <  Pi*1.5) { A = angles[2]; B = angles[3]; }
-        if (a >= Pi*1.5 && a <= Pi*2.0) { A = angles[0]; B = angles[3]; }
-
-        float ex = h*tan(A)*cos(a);
-        float ey = h*tan(B)*sin(a);
-        float er2 = ex*ex+ey*ey;
-        float r2  = x*x+y*y;
-        if (er2 < r2) {
-            Vec3d P = Vec3d(ex, ey, h);
-            Vec3d p = J2.p->transform( P );
-            J1.p->setPos( p );
-            D = J2.p->pos() - J1.p->pos();
-            cout << "    Pp: " << P << ", p " << p << endl;
-        }
-        cout << "      AAA, outside? " << bool(er2 < r2) << ", j1 " << j1 << ", j2 " << j2 << " , A " << A << ", a " << a << ", er " << sqrt(er2) << ", r " << sqrt(r2) << endl;
-
-        /*Vec3d p1(x, y, h);
-        Vec3d p2(ex, ey, h);
-        J2.debugPnt1 = J2.p->transform(p1);
-        J2.debugPnt2 = J2.p->transform(p2);*/
-    }
-
-    if (J2.constrained) {
+    if (J2.constrained && constrained) {
         Vec3d cU = J2.p->up(); cU.normalize();
         Vec3d cX = J2.p->x();  cX.normalize();
         Vec3d cD =-J2.p->dir();cD.normalize();
@@ -171,10 +129,6 @@ Vec3d FABRIK::moveToDistance(int j1, int j2, float d) {
 
             if (f1 > 0) pP = eP1;
             if (f2 < 0) pP = eP2;
-            /*if (f2 < 1 && f2 < f1) {
-                Vec3d kN = pN.cross(v2); kN.normalize();
-                //J1.p->setPos( pP - kN * kN.dot(pP - p0) );
-            }*/
 
             J1.p->setPos( pP );
 
@@ -193,6 +147,7 @@ Vec3d FABRIK::moveToDistance(int j1, int j2, float d) {
     J1.p->setDir(nD);
 
     // update joint up vector
+    //J1.p->makeUpOrthogonal();
     Vec3d u1 = J1.p->up();
     Vec3d u2 = J2.p->up();
     u1 -= nD * u1.dot(nD);
@@ -320,12 +275,12 @@ void FABRIK::iterate() {
 
             if (j.fwd) {
                 for (int i = j.i1; i <= j.i2; i++) { // 1 bis Nj-1
-                    auto pOld = moveToDistance(chain.joints[i], chain.joints[i-1], chain.distances[i-1]);
+                    auto pOld = moveToDistance(chain.joints[i], chain.joints[i-1], chain.distances[i-1], true);
                 }
             } else {
                 movePointTowards(j.joint, targetPos, 0);
                 for (int i = j.i1; i >= j.i2; i--) { // bis Nj-2 bis 1
-                    auto pOld = moveToDistance(chain.joints[i], chain.joints[i+1], chain.distances[i]);
+                    auto pOld = moveToDistance(chain.joints[i], chain.joints[i+1], chain.distances[i], true);
                 }
             }
 

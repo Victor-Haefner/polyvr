@@ -52,7 +52,7 @@ class FABRIK {
         float tolerance = 0.01;
 
         Vec3d movePointTowards(int j, Vec3d target, float t);
-        Vec3d moveToDistance(int j1, int j2, float d);
+        Vec3d moveToDistance(int j1, int j2, float d, bool constrained = false);
         void updateExecutionQueue();
 
     public:
