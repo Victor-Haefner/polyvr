@@ -192,7 +192,6 @@ VRScript::VRScript(string _name) {
 }
 
 VRScript::~VRScript() {
-    //cout << "VRScript::~VRScript " << getName() << endl;
     for (auto t : trigs) {
         if (t->trigger == "on_scene_close") VRSceneManager::get()->getSignal_on_scene_close()->sub(cbfkt_sys);
     }
@@ -609,6 +608,7 @@ void VRScript::changeTrigDev(string name, string dev) { clean(); if (auto t = ge
 void VRScript::changeTrigParams(string name, string params) { clean(); if (auto t = getTrig(name)) t->param = params; update(); }
 void VRScript::changeTrigKey(string name, int key) { clean(); if (auto t = getTrig(name)) t->key = key; update(); }
 void VRScript::changeTrigState(string name, string state) { clean(); if (auto t = getTrig(name)) t->state = state; update(); }
+bool VRScript::hasTrigger(string type) { for (auto t : trigs) if (t->trigger == type) return true; return false; }
 
 void VRScript::remTrigger(string name) {
     if (auto t = getTrig(name)) {
@@ -695,10 +695,8 @@ void VRScript::load(xmlpp::Element* e) {
             t->load(el);
             trigs.push_back(t);
 
-            if (t->trigger == "on_scene_load" && active) {
-                auto scene = VRScene::getCurrent();
-                //scene->queueJob(cbfkt_sys, 0, 1); // strange effect, breaks the clustering when slaves connected bevore scene started
-                scene->queueJob(cbfkt_sys);
+            if ((t->trigger == "on_scene_load" && active) || (t->trigger == "on_scene_import" && active)) {
+                //queueExecution();
                 isInitScript = true;
                 loadingFrame = VRGlobals::CURRENT_FRAME;
             }
@@ -706,6 +704,11 @@ void VRScript::load(xmlpp::Element* e) {
     }
 
     update();
+}
+
+void VRScript::queueExecution() {
+    auto scene = VRScene::getCurrent();
+    scene->queueJob(cbfkt_sys);
 }
 
 VRGlobals::Int VRScript::loadingFrame = 0;

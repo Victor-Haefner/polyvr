@@ -146,11 +146,13 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
         void changeTrigParams(string name, string params);
         void changeTrigKey(string name, int key);
         void changeTrigState(string name, string state);
+        bool hasTrigger(string type);
 
         void compile( PyObject* pGlobal, PyObject* pModVR );
         void execute();
         void execute_dev(VRDeviceWeakPtr dev);
         void execute_soc(string);
+        void queueExecution();
 
         string getTriggerParams();
         string getTrigger();

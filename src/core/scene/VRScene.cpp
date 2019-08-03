@@ -1,4 +1,6 @@
 #include "VRScene.h"
+#include "core/scripting/VRScript.h"
+#include "core/gui/VRGuiManager.h"
 #include "core/setup/devices/VRFlystick.h"
 #include "core/setup/devices/VRMouse.h"
 #include "core/setup/devices/VRMultiTouch.h"
@@ -289,6 +291,7 @@ void VRScene::loadScene(xmlpp::Element* e) {
     VRCameraManager::loadChildFrom(e);
     VRRenderManager::loadChildFrom(e);
     VRScriptManager::loadChildFrom(e);
+    VRScriptManager::triggerOnLoad();
     VRNetworkManager::loadChildFrom(e);
     VRBackground::loadChildFrom(e);
     VRNavigator::loadChildFrom(e);
@@ -305,6 +308,34 @@ void VRScene::loadScene(xmlpp::Element* e) {
     semanticManager->update();
 
     queueJob(loadingTimeCb, 0, 2);
+}
+
+void VRScene::importScene(xmlpp::Element* e) {
+    if (e == 0) return;
+    auto oldScripts = getScripts();
+    VRScriptManager::loadChildFrom(e);
+    VRScriptManager::update();
+    VRScriptManager::triggerOnImport();
+    for (auto s : getScripts()) if (!oldScripts.count(s.first)) s.second->setPersistency(0);
+    VRGuiManager::get()->broadcast("scriptlist_changed");
+
+    /*VRName::load(e);
+    VRCameraManager::loadChildFrom(e);
+    VRRenderManager::loadChildFrom(e);
+
+    VRNetworkManager::loadChildFrom(e);
+    VRBackground::loadChildFrom(e);
+    VRNavigator::loadChildFrom(e);
+    VRMaterialManager::loadChildFrom(e);
+    semanticManager->loadChildFrom(e);
+
+    VRCameraManager::CMsetup();
+    VRRenderManager::update();
+    VRNetworkManager::update();
+    VRBackground::update();
+    VRNavigator::update();
+    VRMaterialManager::update();
+    semanticManager->update();*/
 }
 
 VRSemanticManagerPtr VRScene::getSemanticManager() { return semanticManager; }

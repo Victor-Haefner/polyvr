@@ -122,6 +122,7 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScriptPtr script, bool 
     for (auto trig : script->getTriggers()) {
         if (trig->trigger == "on_scene_load") trig_lvl |= 1;
         if (trig->trigger == "on_scene_close") trig_lvl |= 2;
+        if (trig->trigger == "on_scene_import") trig_lvl |= 1;
         if (trig->trigger == "on_timeout") trig_lvl |= 4;
         if (trig->trigger == "on_device") trig_lvl |= 8;
         if (trig->trigger == "on_socket") trig_lvl |= 16;
@@ -1157,7 +1158,7 @@ VRGuiScripts::VRGuiScripts() {
 
     // fill combolists
     const char *arg_types[] = {"int", "float", "str", "VRPyObjectType", "VRPyTransformType", "VRPyGeometryType", "VRPyLightType", "VRPyLodType", "VRPyDeviceType", "VRPyMouseType", "VRPyHapticType", "VRPySocketType", "VRPyLeapFrameType"};
-    const char *trigger_types[] = {"none", "on_scene_load", "on_scene_close", "on_timeout", "on_device", "on_socket"};
+    const char *trigger_types[] = {"none", "on_scene_load", "on_scene_close", "on_scene_import", "on_timeout", "on_device", "on_socket"};
     const char *device_types[] = {"mouse", "multitouch", "keyboard", "flystick", "haptic", "server1", "leap", "vrpn_device"}; // TODO: get from a list in devicemanager or something
     const char *trigger_states[] = {"Pressed", "Released", "Drag", "Drop", "To edge", "From edge"};
     const char *script_types[] = {"Python", "GLSL", "HTML"};

@@ -101,6 +101,7 @@ VRGuiManager::VRGuiManager() {
 
     fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateScripts", boost::bind(&VRGuiScripts::updateList, g_sc) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
+    VRGuiSignals::get()->getSignal("scriptlist_changed")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
     fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateBackground", boost::bind(&VRGuiGeneral::updateScene, g_gen) );

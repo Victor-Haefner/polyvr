@@ -42,6 +42,7 @@ class VRSceneLoader {
 
         void saveScene(string file, xmlpp::Element* guiN = 0, string encryption = "");
         void loadScene(string file, string encryptionKey = "");
+        VRObjectPtr importScene(string file, string encryptionKey = "");
 };
 
 OSG_END_NAMESPACE;

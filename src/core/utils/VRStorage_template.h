@@ -32,7 +32,7 @@ void VRStorage::save_str_map_cb(map<string, T*>* mt, string tag, bool under, xml
     if (under) e = e->add_child(tag);
     for (auto t : *mt) {
         auto ei = t.second->saveUnder(e);
-        if (t.second->overrideCallbacks) t.second->save(ei); // TODO: some classes like VRScript have a custom save method
+        if (ei && t.second->overrideCallbacks) t.second->save(ei); // TODO: some classes like VRScript have a custom save method
     }
 }
 
@@ -42,7 +42,7 @@ void VRStorage::save_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string 
     if (under) e = e->add_child(tag);
     for (auto t : *mt) {
         auto ei = t.second->saveUnder(e);
-        if (t.second->overrideCallbacks) t.second->save(ei); // TODO: some classes like VRScript have a custom save method
+        if (ei && t.second->overrideCallbacks) t.second->save(ei); // TODO: some classes like VRScript have a custom save method
     }
 }
 
@@ -52,7 +52,7 @@ void VRStorage::save_int_map_cb(map<int, T*>* mt, string tag, bool under, xmlpp:
     if (under) e = e->add_child(tag);
     for (auto t : *mt) {
         auto ei = t.second->saveUnder(e);
-        ei->set_attribute("ID", toString(t.first));
+        if (ei) ei->set_attribute("ID", toString(t.first));
     }
 }
 
@@ -62,8 +62,10 @@ void VRStorage::save_int_map2_cb(map<int, T>* mt, string tag, bool under, xmlpp:
     if (under) e = e->add_child(tag);
     for (auto t : *mt) {
         auto ei = e->add_child("e");
-        ei->set_attribute("ID", toString(t.first));
-        ei->set_attribute("data", toString(t.second));
+        if (ei) {
+            ei->set_attribute("ID", toString(t.first));
+            ei->set_attribute("data", toString(t.second));
+        }
     }
 }
 
@@ -73,7 +75,7 @@ void VRStorage::save_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag
     if (under) e = e->add_child(tag);
     for (auto t : *mt) {
         auto ei = t.second->saveUnder(e);
-        ei->set_attribute("ID", toString(t.first));
+        if (ei) ei->set_attribute("ID", toString(t.first));
     }
 }
 
@@ -83,7 +85,7 @@ void VRStorage::save_int_objumap_cb(unordered_map<int, std::shared_ptr<T> >* mt,
     if (under) e = e->add_child(tag);
     for (auto t : *mt) {
         auto ei = t.second->saveUnder(e);
-        ei->set_attribute("ID", toString(t.first));
+        if (ei) ei->set_attribute("ID", toString(t.first));
     }
 }
 

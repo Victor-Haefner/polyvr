@@ -37,10 +37,8 @@
 
 #include "import/VRImport.h"
 
-OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-VRSceneWeakPtr VRSceneLoader_current_scene;
+using namespace OSG;
 
 void VRSceneLoader::optimizeGraph(VRObjectPtr obj) { //TODO
     VRObjectPtr p = obj->getParent();
@@ -145,6 +143,7 @@ xmlpp::Element* VRSceneLoader_getElementChild_(xmlpp::Element* e, int i) {
 void VRSceneLoader::loadScene(string path, string encryptionKey) {
     xmlpp::DomParser parser;
     parser.set_validate(false);
+    if (!exists(path)) return;
 
     if (encryptionKey== "")  parser.parse_file(path.c_str());
 #ifndef NO_ENCRYPTION
@@ -168,18 +167,48 @@ void VRSceneLoader::loadScene(string path, string encryptionKey) {
 
     xmlpp::Node* n = parser.get_document()->get_root_node();
     xmlpp::Element* sceneN = dynamic_cast<xmlpp::Element*>(n);
-
-    // load scenegraph
     xmlpp::Element* objectsN = VRSceneLoader_getElementChild_(sceneN, "Objects");
     xmlpp::Element* root = VRSceneLoader_getElementChild_(objectsN, 0);
 
     auto scene = VRScene::getCurrent();
-    VRSceneLoader_current_scene = scene;
-
     scene->getRoot()->load(root);
     scene->loadScene(sceneN);
     VRSceneManager::get()->setScene(scene);
 }
 
+VRObjectPtr VRSceneLoader::importScene(string path, string encryptionKey) {
+    xmlpp::DomParser parser;
+    parser.set_validate(false);
+    if (!exists(path)) return 0;
 
-OSG_END_NAMESPACE;
+    if (encryptionKey== "")  parser.parse_file(path.c_str());
+#ifndef NO_ENCRYPTION
+     else {
+        auto e = VREncryption::create();
+        ifstream f(path, ios::binary);
+        stringstream strm;
+        strm << f.rdbuf();
+        string data = e->decrypt(strm.str(), encryptionKey, "0000000000000000");
+        if (data == "") {
+            cout << "ERROR: loading scene " << path << " failed during decryption attempt, try load anyway!\n";
+            parser.parse_file(path.c_str());
+        } else {
+            //data.pop_back(); // remove last char
+            stringstream strm2(data);
+            parser.parse_stream( strm2 );
+        }
+        f.close();
+    }
+#endif
+
+    xmlpp::Node* n = parser.get_document()->get_root_node();
+    xmlpp::Element* sceneN = dynamic_cast<xmlpp::Element*>(n);
+    xmlpp::Element* objectsN = VRSceneLoader_getElementChild_(sceneN, "Objects");
+    xmlpp::Element* root = VRSceneLoader_getElementChild_(objectsN, 0);
+
+    auto scene = VRScene::getCurrent();
+    auto rootNode = VRObject::create("sceneProxy");
+    rootNode->load(root);
+    scene->importScene(sceneN);
+    return rootNode;
+}

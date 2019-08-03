@@ -366,4 +366,17 @@ void VRScriptManager::blockScriptThreads() {
     if (pyThreadState) { PyEval_RestoreThread(pyThreadState); pyThreadState = 0; }
 }
 
+void VRScriptManager::triggerOnLoad() {
+    for (auto script : scripts) if (script.second->hasTrigger("on_scene_load")) script.second->queueExecution();
+}
+
+void VRScriptManager::triggerOnImport() {
+    for (auto script : scripts) {
+        if (script.second->hasTrigger("on_scene_import")) {
+            script.second->execute();
+            //script.second->queueExecution(); // not working??
+        }
+    }
+}
+
 OSG_END_NAMESPACE

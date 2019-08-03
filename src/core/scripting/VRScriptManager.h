@@ -75,6 +75,9 @@ class VRScriptManager : public VRStorage, public VRPyBase {
 
         template<class T>
         void registerModule(string mod, PyObject* parent, PyTypeObject* base = 0, string mod_parent = "VR");
+
+        void triggerOnLoad();
+        void triggerOnImport();
 };
 
 OSG_END_NAMESPACE

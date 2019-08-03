@@ -1,5 +1,6 @@
 #include "VRSceneGlobals.h"
 #include "core/scene/VRScene.h"
+#include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetup.h"
 
@@ -63,7 +64,8 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"getSoundManager", (PyCFunction)VRSceneGlobals::getSoundManager, METH_NOARGS, "Get sound manager module" },
 	{"getFrame", (PyCFunction)VRSceneGlobals::getFrame, METH_NOARGS, "Get current frame number" },
 	{"getScript", (PyCFunction)VRSceneGlobals::getScript, METH_VARARGS, "Get python script by name" },
-	{"fancyE57import", (PyCFunction)VRSceneGlobals::fancyE57import, METH_VARARGS, "Bla blub" },
+	{"fancyE57import", (PyCFunction)VRSceneGlobals::fancyE57import, METH_VARARGS, "Test import for huge e57 pointclouds" },
+	{"importScene", (PyCFunction)VRSceneGlobals::importScene, METH_VARARGS, "Import scene" },
     {NULL}  /* Sentinel */
 };
 
@@ -163,6 +165,14 @@ PyObject* VRSceneGlobals::findByID(VRSceneGlobals* self, PyObject *args) {
 
 PyObject* VRSceneGlobals::getRoot(VRSceneGlobals* self) {
     return VRPyTypeCaster::cast( VRScene::getCurrent()->getRoot() );
+}
+
+PyObject* VRSceneGlobals::importScene(VRSceneGlobals* self, PyObject *args) {
+    const char* path = "";
+    if (! PyArg_ParseTuple(args, "s", &path)) return NULL;
+    auto res = VRSceneLoader::get()->importScene( path?path:"" );
+    if (res) return VRPyTypeCaster::cast(res);
+    else Py_RETURN_NONE;
 }
 
 PyObject* VRSceneGlobals::loadGeometry(VRSceneGlobals* self, PyObject *args, PyObject *kwargs) {
