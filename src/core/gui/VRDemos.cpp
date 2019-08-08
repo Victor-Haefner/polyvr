@@ -66,6 +66,8 @@ void VRAppLauncher::updatePixmap() {
     } catch (...) { cout << "Warning: Caught exception in VRAppManager::updatePixmap, ignoring.."; }
 }
 
+void VRAppLauncher::show() { widget->set_size_request(-1, -1); widget->show_all(); }
+void VRAppLauncher::hide() { widget->hide_all(); widget->set_size_request(-1,  0); } // TODO: update table??
 
 /** Section **/
 
@@ -201,16 +203,16 @@ void VRAppSection::setGuiState(VRAppLauncherPtr e, bool running, bool noLauncher
 void VRAppSection::remLauncher(string path) { apps.erase(path); }
 VRAppLauncherPtr VRAppSection::getLauncher(string path) { return apps.count(path) ? apps[path] : 0; }
 
+map<string, VRAppLauncherPtr> VRAppSection::getLaunchers() { return apps; }
 
 /** Manager **/
-
 
 VRAppManager::VRAppManager() {
     initMenu();
 
-    examplesSection = VRAppSection::create("Examples");
-    favoritesSection = VRAppSection::create("Favorites");
-    recentsSection = VRAppSection::create("Recents");
+    auto examplesSection = addSection("examples");
+    auto favoritesSection = addSection("favorites");
+    auto recentsSection = addSection("recents");
 
     auto examples = VRSceneManager::get()->getExamplePaths();
     for (auto p : examples->getPaths() ) examplesSection->addLauncher(p, "", menu, this, true, false, "examples_tab");
@@ -243,11 +245,19 @@ VRAppManager::VRAppManager() {
     setToolButtonSensitivity("toolbutton4", false); // disable 'save' button on startup
     setToolButtonSensitivity("toolbutton5", false); // disable 'save as' button on startup
     setToolButtonSensitivity("toolbutton28", false); // disable 'stop' button on startup
+
+    setEntryCallback("appSearch", sigc::mem_fun(*this, &VRAppManager::on_search), true); // app search
 }
 
 VRAppManager::~VRAppManager() {}
 
 VRAppManagerPtr VRAppManager::create() { return VRAppManagerPtr( new VRAppManager() ); }
+
+VRAppSectionPtr VRAppManager::addSection(string name) {
+    auto s = VRAppSection::create(name);
+    sections[name] = s;
+    return s;
+}
 
 bool VRAppManager::on_any_event(GdkEvent* event, VRAppLauncherPtr entry) {
     if (event->type == GDK_BUTTON_PRESS) current_demo = entry;
@@ -270,15 +280,15 @@ void VRAppManager::updateTable(string t) {
     VRGuiBuilder()->get_widget(t, tab);
 
     int N = 4;
-    if (t == "examples_tab") N += examplesSection->getSize();
-    if (t == "favorites_tab") N += recentsSection->getSize() + favoritesSection->getSize();
+    if (t == "examples_tab") N += sections["examples"]->getSize();
+    if (t == "favorites_tab") N += sections["recents"]->getSize() + sections["favorites"]->getSize();
     tab->resize(N*0.5+1, 2);
 
     int i = 0;
-    if (t == "examples_tab") examplesSection->fillTable(t, tab, i);
+    if (t == "examples_tab") sections["examples"]->fillTable(t, tab, i);
     if (t == "favorites_tab") {
-        recentsSection->fillTable(t, tab, i);
-        favoritesSection->fillTable(t, tab, i);
+        sections["recents"]->fillTable(t, tab, i);
+        sections["favorites"]->fillTable(t, tab, i);
     }
 
     tab->show();
@@ -287,10 +297,10 @@ void VRAppManager::updateTable(string t) {
 void VRAppManager::clearTable(string t) {
     Gtk::Table* tab;
     VRGuiBuilder()->get_widget(t, tab);
-    if (t == "examples_tab") examplesSection->clearTable(t, tab);
+    if (t == "examples_tab") sections["examples"]->clearTable(t, tab);
     if (t == "favorites_tab") {
-        recentsSection->clearTable(t, tab);
-        favoritesSection->clearTable(t, tab);
+        sections["recents"]->clearTable(t, tab);
+        sections["favorites"]->clearTable(t, tab);
     }
 }
 
@@ -299,9 +309,7 @@ void VRAppManager::setGuiState(VRAppLauncherPtr e) {
     setVPanedSensitivity("vpaned1", running);
     setNotebookSensitivity("notebook3", running);
 
-    examplesSection->setGuiState(e, running, noLauncherScene);
-    recentsSection->setGuiState(e, running, noLauncherScene);
-    favoritesSection->setGuiState(e, running, noLauncherScene);
+    for (auto section : sections) section.second->setGuiState(e, running, noLauncherScene);
 
     if (e) {
         if (e->widget) e->widget->set_sensitive(true);
@@ -319,9 +327,9 @@ VRAppLauncherPtr VRAppManager::addEntry(string path, string table, bool running,
     clearTable(table);
 
     VRAppLauncherPtr e = 0;
-    if (table == "examples_tab") e = examplesSection->addLauncher(path, timestamp, menu, this, true, false, table);
-    if (table == "favorites_tab" &&  recent) e =   recentsSection->addLauncher(path, timestamp, menu, this, false, true, table);
-    if (table == "favorites_tab" && !recent) e = favoritesSection->addLauncher(path, timestamp, menu, this, false, true, table);
+    if (table == "examples_tab") e = sections["examples"]->addLauncher(path, timestamp, menu, this, true, false, table);
+    if (table == "favorites_tab" &&  recent) e =   sections["recents"]->addLauncher(path, timestamp, menu, this, false, true, table);
+    if (table == "favorites_tab" && !recent) e = sections["favorites"]->addLauncher(path, timestamp, menu, this, false, true, table);
     if (!e) return 0;
 
     e->running = running;
@@ -353,9 +361,9 @@ void VRAppManager::on_menu_delete() {
     if (d->running) toggleDemo(d); // close demo if it is running
 
     clearTable(table);
-    if (table == "examples_tab") examplesSection->remLauncher(path);
-    if (table == "recents_tab") recentsSection->remLauncher(path);
-    if (table == "favorites_tab") favoritesSection->remLauncher(path);
+    if (table == "examples_tab") sections["examples"]->remLauncher(path);
+    if (table == "recents_tab") sections["recents"]->remLauncher(path);
+    if (table == "favorites_tab") sections["favorites"]->remLauncher(path);
 
     current_demo.reset();
     remove(path.c_str());
@@ -374,9 +382,9 @@ void VRAppManager::on_menu_unpin() {
     if (d->running) toggleDemo(d); // close demo if it is running
 
     clearTable(table);
-    if (table == "examples_tab") examplesSection->remLauncher(path);
-    if (table == "recents_tab") recentsSection->remLauncher(path);
-    if (table == "favorites_tab") favoritesSection->remLauncher(path);
+    if (table == "examples_tab") sections["examples"]->remLauncher(path);
+    if (table == "recents_tab") sections["recents"]->remLauncher(path);
+    if (table == "favorites_tab") sections["favorites"]->remLauncher(path);
 
     current_demo.reset();
     updateTable(table);
@@ -541,6 +549,18 @@ void VRAppManager::on_new_clicked() {
     VRGuiFile::open( "Create", Gtk::FILE_CHOOSER_ACTION_SAVE, "Create new project" );
 }
 
+void VRAppManager::on_search() {
+    string s = getTextEntry("appSearch");
+    for (auto section : sections) {
+        for (auto launcher : section.second->getLaunchers()) {
+            if (s == "") { launcher.second->show(); continue; }
+            string name = launcher.first;
+            if (contains(name, s)) launcher.second->show(); // TODO: extend contains with a case sensitive flag
+            else launcher.second->hide();
+        }
+    }
+}
+
 void VRAppManager::update() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) {
@@ -560,9 +580,9 @@ void VRAppManager::update() {
         setGuiState(current_demo);
     }
 
-    auto e = recentsSection->getLauncher(sPath);
-    if (!e) e = examplesSection->getLauncher(sPath);
-    if (!e) e = favoritesSection->getLauncher(sPath);
+    auto e = sections["recents"]->getLauncher(sPath);
+    if (!e) e = sections["examples"]->getLauncher(sPath);
+    if (!e) e = sections["favorites"]->getLauncher(sPath);
 
     if (e) {
         current_demo = e;

@@ -59,6 +59,9 @@ class VRAppLauncher {
         static VRAppLauncherPtr create(VRAppSectionPtr s);
 
         void updatePixmap();
+
+        void show();
+        void hide();
 };
 
 class VRAppSection : public std::enable_shared_from_this<VRAppSection>, public VRName {
@@ -76,6 +79,7 @@ class VRAppSection : public std::enable_shared_from_this<VRAppSection>, public V
         VRAppLauncherPtr addLauncher(string path, string timestamp, VRGuiContextMenu* menu, VRAppManager* mgr, bool write_protected, bool favorite, string table);
         void remLauncher(string path);
         VRAppLauncherPtr getLauncher(string path);
+        map<string, VRAppLauncherPtr> getLaunchers();
         int getSize();
 
         void fillTable(string t, Gtk::Table* tab, int& i);
@@ -90,9 +94,7 @@ class VRAppManager {
         VRSignalPtr on_scene_loaded = 0;
         VRSignalPtr on_scene_closing = 0;
         VRAppLauncherPtr current_demo = 0;
-        VRAppSectionPtr examplesSection;
-        VRAppSectionPtr favoritesSection;
-        VRAppSectionPtr recentsSection;
+        map<string, VRAppSectionPtr> sections;
         VRGuiContextMenu* menu;
         VRDeviceCbPtr updateCb;
         bool noLauncherScene = false;
@@ -126,11 +128,14 @@ class VRAppManager {
 
         void on_toggle_encryption(Gtk::CheckButton* b);
 
+        void on_search();
+
     public:
         VRAppManager();
         ~VRAppManager();
         static VRAppManagerPtr create();
 
+        VRAppSectionPtr addSection(string name);
         void toggleDemo(VRAppLauncherPtr e);
         void on_lock_toggle(VRAppLauncherPtr e);
         void on_menu_advanced(VRAppLauncherPtr e);
