@@ -66,8 +66,8 @@ void VRAppLauncher::updatePixmap() {
     } catch (...) { cout << "Warning: Caught exception in VRAppManager::updatePixmap, ignoring.."; }
 }
 
-void VRAppLauncher::show() { widget->set_size_request(-1, -1); widget->show_all(); }
-void VRAppLauncher::hide() { widget->hide_all(); widget->set_size_request(-1,  0); } // TODO: update table??
+void VRAppLauncher::show() { widget->show(); }
+void VRAppLauncher::hide() { widget->hide(); }
 
 /** Section **/
 
@@ -165,8 +165,9 @@ int VRAppSection::getSize() { return apps.size(); }
 
 void VRAppSection::fillTable(string t, Gtk::Table* tab, int& i) {
     int x,y;
-    Gtk::AttachOptions opts = Gtk::FILL|Gtk::EXPAND;
-    Gtk::AttachOptions opts2 = Gtk::AttachOptions(0);
+    Gtk::AttachOptions optsH = Gtk::FILL|Gtk::EXPAND;
+    Gtk::AttachOptions optsV = Gtk::SHRINK;
+    //Gtk::AttachOptions optsV = Gtk::AttachOptions(0);
 
     for (auto d : apps) {
         if (d.second->table != t) continue;
@@ -175,7 +176,7 @@ void VRAppSection::fillTable(string t, Gtk::Table* tab, int& i) {
         Gtk::Widget* w = d.second->widget;
         x = i%2;
         y = i/2;
-        tab->attach( *w, x, x+1, y, y+1, opts, opts2, 10, 10);
+        tab->attach( *w, x, x+1, y, y+1, optsH, optsV, 10, 10);
         i++;
     }
 }
