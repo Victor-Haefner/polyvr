@@ -556,7 +556,7 @@ void VRAppManager::on_search() {
         for (auto launcher : section.second->getLaunchers()) {
             if (s == "") { launcher.second->show(); continue; }
             string name = launcher.first;
-            if (contains(name, s)) launcher.second->show(); // TODO: extend contains with a case sensitive flag
+            if (contains(name, s, false)) launcher.second->show(); // TODO: extend contains with a case sensitive flag
             else launcher.second->hide();
         }
     }

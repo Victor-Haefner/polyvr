@@ -3,12 +3,16 @@
 #include "core/math/pose.h"
 #include "core/math/boundingbox.h"
 #include "core/utils/VRFunctionFwd.h"
+
 #include <OpenSG/OSGColor.h>
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGColor.h>
 #include <OpenSG/OSGLine.h>
 
+#include <boost/algorithm/string.hpp>
+
 using namespace OSG;
+using namespace boost::algorithm;
 
 vector<string> splitString(const string& s, char c) {
     stringstream ss(s);
@@ -20,9 +24,22 @@ vector<string> splitString(const string& s, char c) {
 
 string subString(const string& s, int beg, int len) { return s.substr(beg, len); }
 
-bool startsWith(const string& s, const string& s2) { return bool(subString(s, 0, s2.size()) == s2); }
-bool endsWith(const string& s, const string& s2) { return bool(subString(s, s.size() - s2.size(), s2.size()) == s2); }
-bool contains(const string& s, const string& s2) { return bool(s.find(s2) != std::string::npos); }
+bool startsWith(const string& s, const string& s2, bool caseSensitive) {
+    string s1 = subString(s, 0, s2.size());
+    if (caseSensitive) return bool(s1 == s2);
+    else return bool(to_lower_copy(s1) == to_lower_copy(s2));
+}
+
+bool endsWith(const string& s, const string& s2, bool caseSensitive) {
+    string s1 = subString(s, s.size() - s2.size(), s2.size());
+    if (caseSensitive) return bool(s1 == s2);
+    else return bool(to_lower_copy(s1) == to_lower_copy(s2));
+}
+
+bool contains(const string& s, const string& s2, bool caseSensitive) {
+    if (caseSensitive) return bool(s.find(s2) != std::string::npos);
+    else return bool(to_lower_copy(s).find(to_lower_copy(s2)) != std::string::npos);
+}
 
 typedef void* voidPtr;
 
