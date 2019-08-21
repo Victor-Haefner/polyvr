@@ -75,8 +75,9 @@ void VRGuiScene::setObject(VRObjectPtr o) {
     setCheckButton("checkbutton15", o->isPickable());
 
     VRObjectPtr parent = o->getParent();
-    if (parent) setTextEntry("entry17", parent->getName());
-    else setTextEntry("entry17", "");
+    string pName = parent ? parent->getName() : "";
+    setTextEntry("entry17", pName);
+    setTextEntry("entry21", toString(o->getPersistency()) );
 }
 
 void VRGuiScene::setTransform(VRTransformPtr e) {

@@ -1164,26 +1164,6 @@ cave allocated</property>
       <column type="gint"/>
     </columns>
   </object>
-  <object class="GtkImage" id="image16">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-add</property>
-  </object>
-  <object class="GtkImage" id="image17">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-remove</property>
-  </object>
-  <object class="GtkImage" id="image18">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-add</property>
-  </object>
-  <object class="GtkImage" id="image19">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-remove</property>
-  </object>
   <object class="GtkImage" id="image1">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -1215,6 +1195,26 @@ cave allocated</property>
     <property name="stock">gtk-add</property>
   </object>
   <object class="GtkImage" id="image15">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-remove</property>
+  </object>
+  <object class="GtkImage" id="image16">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-add</property>
+  </object>
+  <object class="GtkImage" id="image17">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-remove</property>
+  </object>
+  <object class="GtkImage" id="image18">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-add</property>
+  </object>
+  <object class="GtkImage" id="image19">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-remove</property>
@@ -2647,6 +2647,12 @@ cave allocated</property>
                                     <child>
                                       <placeholder/>
                                     </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
                                   </object>
                                 </child>
                               </object>
@@ -2677,6 +2683,12 @@ cave allocated</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="n_columns">2</property>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
                                     <child>
                                       <placeholder/>
                                     </child>
@@ -7592,6 +7604,18 @@ cave allocated</property>
                                                       </packing>
                                                     </child>
                                                     <child>
+                                                      <object class="GtkLabel" id="label172">
+                                                        <property name="visible">True</property>
+                                                        <property name="can_focus">False</property>
+                                                        <property name="label" translatable="yes">persistency:</property>
+                                                      </object>
+                                                      <packing>
+                                                        <property name="expand">False</property>
+                                                        <property name="fill">False</property>
+                                                        <property name="position">1</property>
+                                                      </packing>
+                                                    </child>
+                                                    <child>
                                                       <object class="GtkCheckButton" id="checkbutton6">
                                                         <property name="label" translatable="yes">visible</property>
                                                         <property name="visible">True</property>
@@ -7602,7 +7626,7 @@ cave allocated</property>
                                                       <packing>
                                                         <property name="expand">False</property>
                                                         <property name="fill">False</property>
-                                                        <property name="position">1</property>
+                                                        <property name="position">2</property>
                                                       </packing>
                                                     </child>
                                                     <child>
@@ -7616,7 +7640,7 @@ cave allocated</property>
                                                       <packing>
                                                         <property name="expand">False</property>
                                                         <property name="fill">False</property>
-                                                        <property name="position">2</property>
+                                                        <property name="position">3</property>
                                                       </packing>
                                                     </child>
                                                   </object>
@@ -7650,6 +7674,24 @@ cave allocated</property>
                                                       </packing>
                                                     </child>
                                                     <child>
+                                                      <object class="GtkEntry" id="entry21">
+                                                        <property name="width_request">120</property>
+                                                        <property name="visible">True</property>
+                                                        <property name="can_focus">True</property>
+                                                        <property name="invisible_char">•</property>
+                                                        <property name="invisible_char_set">True</property>
+                                                        <property name="primary_icon_activatable">False</property>
+                                                        <property name="secondary_icon_activatable">False</property>
+                                                        <property name="primary_icon_sensitive">True</property>
+                                                        <property name="secondary_icon_sensitive">True</property>
+                                                      </object>
+                                                      <packing>
+                                                        <property name="expand">False</property>
+                                                        <property name="fill">False</property>
+                                                        <property name="position">1</property>
+                                                      </packing>
+                                                    </child>
+                                                    <child>
                                                       <object class="GtkCheckButton" id="checkbutton15">
                                                         <property name="label" translatable="yes">pickable</property>
                                                         <property name="visible">True</property>
@@ -7660,7 +7702,7 @@ cave allocated</property>
                                                       <packing>
                                                         <property name="expand">False</property>
                                                         <property name="fill">False</property>
-                                                        <property name="position">1</property>
+                                                        <property name="position">2</property>
                                                       </packing>
                                                     </child>
                                                   </object>
