@@ -46,7 +46,7 @@ struct Geo {
 
     //void init(vector<VRGeometryPtr>& geos, VRMaterialPtr mat) {
     void init(vector<Geo>& geos, VRMaterialPtr mat, string path, bool thread) {
-        geo = VRGeometry::create("factory_part"); // init new object
+        geo = VRGeometry::create("part"); // init new object
         geo->setMaterial(mat);
 
         pos = GeoPnt3fProperty::create();
