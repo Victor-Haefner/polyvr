@@ -189,102 +189,107 @@ class STEPLoader {
         }
 
         void load(string path, VRTransformPtr res) {
-            Handle(TDocStd_Document) aDoc;
-            Handle(XCAFApp_Application) anApp = XCAFApp_Application::GetApplication();
-            anApp->NewDocument("MDTV-XCAF",aDoc);
+            try {
+                Handle(TDocStd_Document) aDoc;
+                Handle(XCAFApp_Application) anApp = XCAFApp_Application::GetApplication();
+                anApp->NewDocument("MDTV-XCAF",aDoc);
 
-            STEPCAFControl_Reader reader(on_update);
-            auto status = reader.ReadFile(path.c_str());
-            if (!status) { cout << "failed to read file" << endl; return; }
-            cout << "Number of roots in STEP file: " << reader.NbRootsForTransfer() << endl;
-            reader.SetNameMode(true);
-            reader.SetMatMode(true);
-            reader.SetColorMode(true);
-            reader.SetLayerMode(true);
-            auto transferOk = reader.Transfer(aDoc);
-            cout << endl;
-            if (!transferOk) { cout << "failed to transfer to XDS doc" << endl; return; }
-            cout << "XCAF transfer ok " << endl;
+                STEPCAFControl_Reader reader(on_update);
+                auto status = reader.ReadFile(path.c_str());
+                if (!status) { cout << "failed to read file" << endl; return; }
+                cout << "Number of roots in STEP file: " << reader.NbRootsForTransfer() << endl;
+                reader.SetNameMode(true);
+                reader.SetMatMode(true);
+                reader.SetColorMode(true);
+                reader.SetLayerMode(true);
+                auto transferOk = reader.Transfer(aDoc);
+                cout << endl;
+                if (!transferOk) { cout << "failed to transfer to XDS doc" << endl; return; }
+                cout << "XCAF transfer ok " << endl;
 
-            Handle(XCAFDoc_ShapeTool) Assembly = XCAFDoc_DocumentTool::ShapeTool(aDoc->Main());
-            TDF_LabelSequence shapes;
-            TDF_LabelSequence rootShapes;
-            Assembly->GetShapes(shapes);
-            Assembly->GetFreeShapes(rootShapes);
-            cout << "found " << shapes.Length() << " shapes, and " << rootShapes.Length() << " root shapes" << endl;
+                Handle(XCAFDoc_ShapeTool) Assembly = XCAFDoc_DocumentTool::ShapeTool(aDoc->Main());
+                TDF_LabelSequence shapes;
+                TDF_LabelSequence rootShapes;
+                Assembly->GetShapes(shapes);
+                Assembly->GetFreeShapes(rootShapes);
+                cout << "found " << shapes.Length() << " shapes, and " << rootShapes.Length() << " root shapes" << endl;
 
 
-            colors = XCAFDoc_DocumentTool::ColorTool(aDoc->Main());
-            TDF_LabelSequence cols;
-            colors->GetColors(cols);
-            cout << "imported colors: (" << cols.Length() << ")" << endl;
-            for (int i=1; i<=cols.Length(); i++) cout << " color: " << getColor( shapes.Value(i) ).second << " " << getColor( shapes.Value(i) ).first << endl;
+                colors = XCAFDoc_DocumentTool::ColorTool(aDoc->Main());
+                TDF_LabelSequence cols;
+                colors->GetColors(cols);
+                cout << "imported colors: (" << cols.Length() << ")" << endl;
+                for (int i=1; i<=cols.Length(); i++) cout << " color: " << getColor( cols.Value(i) ).second << " " << getColor( cols.Value(i) ).first << endl;
+                //for (int i=1; i<=cols.Length(); i++) cout << " color: " << getColor( shapes.Value(i) ).second << " " << getColor( shapes.Value(i) ).first << endl;
 
-            materials = XCAFDoc_DocumentTool::MaterialTool( aDoc->Main() );
-            TDF_LabelSequence mats;
-            materials->GetMaterialLabels(mats);
-            cout << "imported materials: (" << mats.Length() << ")" << endl;
+                materials = XCAFDoc_DocumentTool::MaterialTool( aDoc->Main() );
+                TDF_LabelSequence mats;
+                materials->GetMaterialLabels(mats);
+                cout << "imported materials: (" << mats.Length() << ")" << endl;
 
-            cout << "build STEP parts:" << endl;
-            map<int, VRGeometryPtr> parts;
-            for (int i=1; i<=shapes.Length(); i++) {
-                TopoDS_Shape shape = Assembly->GetShape(shapes.Value(i));
-                TDF_Label label = Assembly->FindShape(shape, false);
-                //cout << " shape label:" << endl << label << endl;
-                if ( (!label.IsNull()) && (Assembly->IsShape(label)) ) {
-                    string name = getName(label);
-                    //cout << "  shape " << name << " " << Assembly->IsSimpleShape(label) << " " << Assembly->IsAssembly(label) << " " << Assembly->IsFree(label) << endl;
-                    if (Assembly->IsSimpleShape(label)) {
-                        cout << " create shape " << name << endl;
-                        VRGeometryPtr obj = convertGeo(shape);
-                        obj->setName( name );
-                        applyMaterial(obj, shape);
-                        if (parts.count(label.Tag())) cout << "Warning in STEP import, the label tag " << label.Tag() << " is allready used!" << endl;
-                        parts[label.Tag()] = obj;
+                cout << "build STEP parts:" << endl;
+                map<int, VRGeometryPtr> parts;
+                for (int i=1; i<=shapes.Length(); i++) {
+                    TopoDS_Shape shape = Assembly->GetShape(shapes.Value(i));
+                    TDF_Label label = Assembly->FindShape(shape, false);
+                    //cout << " shape label:" << endl << label << endl;
+                    if ( (!label.IsNull()) && (Assembly->IsShape(label)) ) {
+                        string name = getName(label);
+                        //cout << "  shape " << name << " " << Assembly->IsSimpleShape(label) << " " << Assembly->IsAssembly(label) << " " << Assembly->IsFree(label) << endl;
+                        if (Assembly->IsSimpleShape(label)) {
+                            cout << " create shape " << name << endl;
+                            VRGeometryPtr obj = convertGeo(shape);
+                            obj->setName( name );
+                            applyMaterial(obj, shape);
+                            if (parts.count(label.Tag())) cout << "Warning in STEP import, the label tag " << label.Tag() << " is allready used!" << endl;
+                            parts[label.Tag()] = obj;
+                        }
                     }
                 }
+
+                auto applyTransform = [&](VRTransformPtr obj, TopoDS_Shape& shape) {
+                    TopLoc_Location l = shape.Location();
+                    gp_Trsf c = l.Transformation();
+                    gp_XYZ t = c.TranslationPart();
+                    gp_Mat m = c.VectorialPart();
+                    Matrix4d mat = Matrix4d(
+                        m(1,1)  ,m(1,2) ,m(1,3) ,t.X(),
+                        m(2,1)  ,m(2,2) ,m(2,3) ,t.Y(),
+                        m(3,1)  ,m(3,2) ,m(3,3) ,t.Z(),
+                        0       ,0      ,0      ,1
+                        );
+                    obj->setMatrix(mat);
+                };
+
+                cout << "build STEP assembly" << endl;
+                function<void (TDF_Label, VRTransformPtr)> explore = [&](TDF_Label node, VRTransformPtr parent) {
+                    TopoDS_Shape shape = Assembly->GetShape(node);
+                    TDF_Label    label = Assembly->FindShape(shape, false);
+
+                    string name = getName(label);
+                    cout << " add node: " << name << " ID: " << label.Tag() << endl;
+
+                    if (Assembly->IsSimpleShape(label)) {
+                        VRGeometryPtr part = dynamic_pointer_cast<VRGeometry>( parts[label.Tag()]->duplicate() );
+                        applyTransform(part, shape);
+                        parent->addChild( part );
+                    }
+
+                    if (Assembly->IsAssembly(label)) {
+                        TDF_LabelSequence children;
+                        Assembly->GetComponents(label, children, false);
+                        VRTransformPtr t = VRTransform::create(name);
+                        applyTransform(t, shape);
+                        parent->addChild(t);
+                        for (int i=1; i<=children.Length(); i++) explore(children.Value(i), t);
+                    }
+                };
+
+                // explore root shape
+                for (int i=1; i<=rootShapes.Length(); i++) explore(rootShapes.Value(i), res);
+            } catch(exception e) {
+                cout << " STEP import failed in load: " << e.what() << endl;
             }
-
-            auto applyTransform = [&](VRTransformPtr obj, TopoDS_Shape& shape) {
-                TopLoc_Location l = shape.Location();
-                gp_Trsf c = l.Transformation();
-                gp_XYZ t = c.TranslationPart();
-                gp_Mat m = c.VectorialPart();
-                Matrix4d mat = Matrix4d(
-                    m(1,1)  ,m(1,2) ,m(1,3) ,t.X(),
-                    m(2,1)  ,m(2,2) ,m(2,3) ,t.Y(),
-                    m(3,1)  ,m(3,2) ,m(3,3) ,t.Z(),
-                    0       ,0      ,0      ,1
-                    );
-                obj->setMatrix(mat);
-            };
-
-            cout << "build STEP assembly" << endl;
-            function<void (TDF_Label, VRTransformPtr)> explore = [&](TDF_Label node, VRTransformPtr parent) {
-                TopoDS_Shape shape = Assembly->GetShape(node);
-                TDF_Label    label = Assembly->FindShape(shape, false);
-
-                string name = getName(label);
-                cout << " add node: " << name << " ID: " << label.Tag() << endl;
-
-                if (Assembly->IsSimpleShape(label)) {
-                    VRGeometryPtr part = dynamic_pointer_cast<VRGeometry>( parts[label.Tag()]->duplicate() );
-                    applyTransform(part, shape);
-                    parent->addChild( part );
-                }
-
-                if (Assembly->IsAssembly(label)) {
-                    TDF_LabelSequence children;
-                    Assembly->GetComponents(label, children, false);
-                    VRTransformPtr t = VRTransform::create(name);
-                    applyTransform(t, shape);
-                    parent->addChild(t);
-                    for (int i=1; i<=children.Length(); i++) explore(children.Value(i), t);
-                }
-            };
-
-            // explore root shape
-            for (int i=1; i<=rootShapes.Length(); i++) explore(rootShapes.Value(i), res);
         }
 };
 
