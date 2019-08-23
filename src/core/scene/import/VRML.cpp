@@ -1056,9 +1056,6 @@ class VRMLLoader : public VRMLUtils {
             file.seekg(0, ios_base::end);
             size_t fileSize = file.tellg();
             file.seekg(0, ios_base::beg);
-            if (progress == 0) progress = VRProgress::create();
-            progress->setup("load VRML " + path, fileSize);
-            progress->reset();
             return fileSize;
         }
 
@@ -1165,6 +1162,7 @@ class VRMLLoader : public VRMLUtils {
             // coordinate system: OpenGL
             string line;
             while ( getline(file, line) ) {
+                progress->update( line.size() );
                 if (line.size() == 0) continue; // ignore empty lines
                 if (line[0] == '#') continue; // ignore comments
                 stringstream ss(line);
@@ -1204,7 +1202,12 @@ class VRMLLoader : public VRMLUtils {
         void load() {
             ifstream file;
             if (!openFile(file)) return;
-            getFileSize(file);
+            auto fileSize = getFileSize(file);
+
+            if (progress == 0) progress = VRProgress::create();
+            progress->setup("load VRML " + path, fileSize);
+            progress->reset();
+
             string versionStr = getVersion(file);
             if (versionStr == "#VRML V1.0 ascii") version = 1;
             else version = 2;
@@ -1222,6 +1225,8 @@ class VRMLLoader : public VRMLUtils {
             tree->applyMaterials();
             tree->applyGeometries(VRGeoData(), references);
             tree->resolveLinks(references);
+
+            progress->finish();
             delete tree;
         }
 };
