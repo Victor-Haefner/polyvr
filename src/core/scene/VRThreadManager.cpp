@@ -18,20 +18,6 @@ class OSGThread : public ExternalThread {
         }
 };
 
-void VRThreadManager::runLoop(VRThreadWeakPtr wt) {
-    auto t = wt.lock();
-    ExternalThreadRefPtr tr = OSGThread::create(t->name.c_str(), 0);
-    tr->initialize(t->aspect);//der hauptthread nutzt Aspect 0
-
-    t->osg_t = tr;
-    t->status = 1;
-
-    do if (t = wt.lock()) if (auto f = t->fkt.lock()) (*f)(t);
-    while(t->control_flag);
-
-    t->status = 2;
-}
-
 VRThreadManager::VRThreadManager() {
     appThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
 }
@@ -61,13 +47,15 @@ void VRThread::syncFromMain() {
         selfSyncBarrier->enter(2);
 
         if (initCl) {
-            cout << "Sync starting thread " << initCl->getNumChanged() << " " << initCl->getNumCreated() << endl;
+            cout << "Sync starting thread, changed: " << initCl->getNumChanged() << ", created: " << initCl->getNumCreated() << endl;
             initCl->applyAndClear();
         }
         appThread->getChangeList()->applyNoClear();
 
         selfSyncBarrier->enter(2);
         commitChangesAndClear();
+    } else {
+        cout << "Warning, syncFromMain aspect is 0! -> ignore" << endl;
     }
 }
 
@@ -84,9 +72,14 @@ void VRThreadManager::ThreadManagerUpdate() {
         if (t.second->mainSyncBarrier->getNumWaiting() == 1) {
             t.second->mainSyncBarrier->enter(2);
             auto cl = t.second->osg_t->getChangeList();
-            cout << "Apply thread changes to main thread " << cl->getNumChanged() << " " << cl->getNumCreated() << endl;
+            //auto clist = Thread::getCurrentChangeList();
+            //cout << "Apply thread changes to main thread, changed: " << cl->getNumChanged() << ", created: " << cl->getNumCreated() << endl;
+            //cout << " main changelist, changed: " << clist->getNumChanged() << ", created: " << clist->getNumCreated() << endl;
+
             cl->applyAndClear();
+            //cout << " main changelist, changed: " << clist->getNumChanged() << ", created: " << clist->getNumCreated() << endl;
             commitChanges();
+            //cout << " main changelist, changed: " << clist->getNumChanged() << ", created: " << clist->getNumCreated() << endl;
             t.second->mainSyncBarrier->enter(2);
         }
     }
@@ -130,6 +123,20 @@ void VRThreadManager::stopThread(int id, int tries) {
     threads.erase(id);
 }
 
+void VRThreadManager::runLoop(VRThreadWeakPtr wt) {
+    auto t = wt.lock();
+    ExternalThreadRefPtr tr = OSGThread::create(t->name.c_str(), 0);
+    tr->initialize(t->aspect);//der hauptthread nutzt Aspect 0
+
+    t->osg_t = tr;
+    t->status = 1;
+
+    do if (t = wt.lock()) if (auto f = t->fkt.lock()) (*f)(t);
+    while(t->control_flag);
+
+    t->status = 2;
+}
+
 int VRThreadManager::initThread(VRThreadCbPtr f, string name, bool loop, int aspect) { //start thread
     static int id = 1;
 
@@ -149,6 +156,11 @@ int VRThreadManager::initThread(VRThreadCbPtr f, string name, bool loop, int asp
 
     id++;
     return t->ID;
+}
+
+void VRThreadManager::waitThread(int id) {
+    if (threads.count(id) == 0) return;
+    threads[id]->boost_t->join();
 }
 
 void VRThreadManager::killThread(int id) {

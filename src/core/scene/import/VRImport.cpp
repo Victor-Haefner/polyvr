@@ -140,27 +140,32 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
     auto loadSwitch = [&]() {
         auto bpath = boost::filesystem::path(path);
         string ext = bpath.extension().string();
-        cout << "load " << path << " ext: " << ext << " preset: " << preset << "\n";
-        if (ext == ".e57") { loadE57(path, res); return; }
-        if (ext == ".xyz") { loadXYZ(path, res); return; }
-        if (ext == ".ply") { loadPly(path, res); return; }
-        //if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { VRSTEP step; step.load(path, res, options); return; }
+
+        auto clist = Thread::getCurrentChangeList();
+        /*int Ncr0 = clist->getNumCreated();
+        int Nch0 = clist->getNumChanged();
+        cout << "load " << path << " ext: " << ext << " preset: " << preset << ", until now created: " << Ncr0 << ", changed: " << Nch0 << endl;*/
+        if (ext == ".e57") { loadE57(path, res); }
+        if (ext == ".xyz") { loadXYZ(path, res); }
+        if (ext == ".ply") { loadPly(path, res); }
+        //if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { VRSTEP step; step.load(path, res, options); }
 #ifdef WITH_STEP
-        if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { loadSTEPCascade(path, res); return; }
+        if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { loadSTEPCascade(path, res); }
 #endif
-        if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res, thread)) return; else preset = "OSG"; }
-        if (ext == ".wrl" && preset == "PVR") { loadVRML(path, res, progress, thread); return; }
-        if (ext == ".vtk") { loadVtk(path, res); return; }
-        if (ext == ".shp") { loadSHP(path, res); return; }
-        if (ext == ".pdf") { loadPDF(path, res); return; }
-        if (ext == ".tiff" || ext == ".tif") { loadTIFF(path, res); return; }
-        if (ext == ".hgt") { loadTIFF(path, res); return; }
-        if (ext == ".dxf") { loadDXF(path, res); return; }
+        if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res, thread)); else preset = "OSG"; }
+        if (ext == ".wrl" && preset == "PVR") { loadVRML(path, res, progress, thread); }
+        if (ext == ".vtk") { loadVtk(path, res); }
+        if (ext == ".shp") { loadSHP(path, res); }
+        if (ext == ".pdf") { loadPDF(path, res); }
+        if (ext == ".tiff" || ext == ".tif") { loadTIFF(path, res); }
+        if (ext == ".hgt") { loadTIFF(path, res); }
+        if (ext == ".dxf") { loadDXF(path, res); }
 #ifndef NO_IFC
-        if (ext == ".ifc") { loadIFC(path, res); return; }
+        if (ext == ".ifc") { loadIFC(path, res); }
 #endif
         if (preset == "OSG" || preset == "COLLADA") osgLoad(path, res);
         if (preset == "COLLADA") loadCollada(path, res);
+        //cout << " additional created: " << clist->getNumCreated()-Ncr0 << ", changed: " << clist->getNumChanged()-Nch0 << endl;
     };
 
     string osbPath = getFolderName(path) + "/." + getFileName(path) + ".osb";
@@ -171,7 +176,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         loadedFromCache = true;
     } else loadSwitch();
 
-    VRImport::get()->fillCache(path, res);
+    if (!t) VRImport::get()->fillCache(path, res);
     if (t) t->syncToMain();
 
     if (useBinaryCache && !loadedFromCache && res->getChild(0)) {

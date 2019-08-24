@@ -230,17 +230,19 @@ void VRWindowManager::updateWindows() {
         if (!wait()) return false;
         /** let the windows clear their change lists **/
         if (!wait()) return false;
+        for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRMultiWindow>(w.second)) if (win->getState() == VRMultiWindow::INITIALIZING) win->initialize();
+        commitChanges();
+
         auto clist = Thread::getCurrentChangeList();
         auto Ncreated = clist->getNumCreated();
         VRGlobals::NCHANGED = clist->getNumChanged();
         VRGlobals::NCREATED = Ncreated;
         if (Ncreated > 50) doRenderSync = true; // to reduce memory issues with big scenes
-        for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRMultiWindow>(w.second)) if (win->getState() == VRMultiWindow::INITIALIZING) win->initialize();
-        commitChanges();
+
         if (!wait()) return false;
         /** let the windows merge the change lists **/
         if (!wait()) return false;
-        //if (clist->getNumCreated() > 0) cout << "VRWindowManager::updateWindows " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
+        //if (Ncreated > 0) cout << "VRWindowManager::updateWindows, created: " << Ncreated << ", changed: " << VRGlobals::NCHANGED << endl;
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
         clist->clear();
         if (doRenderSync) if (!wait(60)) return false;
