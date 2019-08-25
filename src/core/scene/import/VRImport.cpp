@@ -98,19 +98,18 @@ ChangeList* testCL;
 
 void testLoadCb(string path, VRThreadWeakPtr tw) {
     auto progress = VRImport::get()->getProgressObject();
-    VRThreadPtr t = tw.lock();
-
-    // prepare thread aspect
-    testBarrier->enter(2);
-    // initCl gets filled with app state
-    testBarrier->enter(2);
-    testCL->applyAndClear();
     auto appThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
     auto mCL = appThread->getChangeList(); // main thread CL
-    mCL->applyNoClear();
-    testBarrier->enter(2);
-    commitChangesAndClear();
 
+    VRThreadPtr t = tw.lock();
+    auto cl = t->osg_t->getChangeList();
+
+    //commitChangesAndClear();
+    testBarrier->enter(2);
+    testBarrier->enter(2);
+
+    testCL->applyAndClear();
+    commitChangesAndClear();
     loadVRML(path, testLoadRoot, progress, true);
 
     commitChanges();
@@ -122,6 +121,7 @@ VRTransformPtr testThreadedLoad(string path) {
     testLoadRoot = VRTransform::create("bla");
     testBarrier = Barrier::create();
     testCL = ChangeList::create();
+    auto appThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
 
     auto cb = VRFunction< VRThreadWeakPtr >::create( "geo test load", boost::bind(testLoadCb, path, _1) );
     auto t = VRScene::getCurrent()->initThread(cb, "geo load thread", false, 1);
@@ -129,16 +129,14 @@ VRTransformPtr testThreadedLoad(string path) {
 
     // sync thread aspect
     testBarrier->enter(2);
-    commitChanges();
+    auto cl = testThread->osg_t->getChangeList();
     testCL->fillFromCurrentState();
-    testBarrier->enter(2);
+    testCL->merge(*appThread->getChangeList());
     testBarrier->enter(2);
 
     // sync main aspect
     testBarrier->enter(2);
-    auto cl = testThread->osg_t->getChangeList();
     cl->applyAndClear();
-    commitChanges();
     testBarrier->enter(2);
 
     // wait
