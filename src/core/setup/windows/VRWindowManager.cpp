@@ -242,7 +242,7 @@ void VRWindowManager::updateWindows() {
         if (!wait()) return false;
         /** let the windows merge the change lists **/
         if (!wait()) return false;
-        //if (Ncreated > 0) cout << "VRWindowManager::updateWindows, created: " << Ncreated << ", changed: " << VRGlobals::NCHANGED << endl;
+        if (Ncreated > 0) cout << "VRWindowManager::updateWindows, created: " << Ncreated << ", changed: " << VRGlobals::NCHANGED << endl;
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
         clist->clear();
         if (doRenderSync) if (!wait(60)) return false;

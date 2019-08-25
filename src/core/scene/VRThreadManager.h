@@ -54,6 +54,7 @@ class VRThreadManager {
         ~VRThreadManager();
 
         int initThread(VRThreadCbPtr f, string name, bool loop = false, int aspect = 0);
+        VRThreadPtr getThread(int id);
 
         void waitThread(int id);
         void stopThread(int id, int tries = 100);

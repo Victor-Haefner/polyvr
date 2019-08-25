@@ -91,7 +91,66 @@ int fileSize(string path) {
     return L;
 }
 
+/// --------------------------------------------------
+VRTransformPtr testLoadRoot;
+BarrierRefPtr testBarrier;
+ChangeList* testCL;
+
+void testLoadCb(string path, VRThreadWeakPtr tw) {
+    auto progress = VRImport::get()->getProgressObject();
+    VRThreadPtr t = tw.lock();
+
+    // prepare thread aspect
+    testBarrier->enter(2);
+    // initCl gets filled with app state
+    testBarrier->enter(2);
+    testCL->applyAndClear();
+    auto appThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
+    auto mCL = appThread->getChangeList(); // main thread CL
+    mCL->applyNoClear();
+    testBarrier->enter(2);
+    commitChangesAndClear();
+
+    loadVRML(path, testLoadRoot, progress, true);
+
+    commitChanges();
+    testBarrier->enter(2);
+    testBarrier->enter(2);
+}
+
+VRTransformPtr testThreadedLoad(string path) {
+    testLoadRoot = VRTransform::create("bla");
+    testBarrier = Barrier::create();
+    testCL = ChangeList::create();
+
+    auto cb = VRFunction< VRThreadWeakPtr >::create( "geo test load", boost::bind(testLoadCb, path, _1) );
+    auto t = VRScene::getCurrent()->initThread(cb, "geo load thread", false, 1);
+    auto testThread = VRScene::getCurrent()->getThread(t);
+
+    // sync thread aspect
+    testBarrier->enter(2);
+    commitChanges();
+    testCL->fillFromCurrentState();
+    testBarrier->enter(2);
+    testBarrier->enter(2);
+
+    // sync main aspect
+    testBarrier->enter(2);
+    auto cl = testThread->osg_t->getChangeList();
+    cl->applyAndClear();
+    commitChanges();
+    testBarrier->enter(2);
+
+    // wait
+    VRScene::getCurrent()->waitThread(t);
+    return testLoadRoot;
+}
+/// --------------------------------------------------
+
 VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, string preset, bool thread, string options, bool useBinaryCache) {
+    return testThreadedLoad(path);
+
+
     cout << "VRImport::load " << path << " " << preset << endl;
     if (ihr_flag) if (fileSize(path) > 3e7) return 0;
     setlocale(LC_ALL, "C");
@@ -117,7 +176,8 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
         auto r = cache[path].retrieve(parent);
         auto job = new LoadJob(path, preset, r, progress, options, useBinaryCache); // TODO: fix memory leak!
         job->loadCb = VRFunction< VRThreadWeakPtr >::create( "geo load", boost::bind(&LoadJob::load, job, _1) );
-        VRScene::getCurrent()->initThread(job->loadCb, "geo load thread", false, 1);
+        auto t = VRScene::getCurrent()->initThread(job->loadCb, "geo load thread", false, 1);
+        //VRScene::getCurrent()->waitThread(t);
         return r;
     }
 }
@@ -142,9 +202,9 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         string ext = bpath.extension().string();
 
         auto clist = Thread::getCurrentChangeList();
-        /*int Ncr0 = clist->getNumCreated();
+        int Ncr0 = clist->getNumCreated();
         int Nch0 = clist->getNumChanged();
-        cout << "load " << path << " ext: " << ext << " preset: " << preset << ", until now created: " << Ncr0 << ", changed: " << Nch0 << endl;*/
+        cout << "load " << path << " ext: " << ext << " preset: " << preset << ", until now created: " << Ncr0 << ", changed: " << Nch0 << endl;
         if (ext == ".e57") { loadE57(path, res); }
         if (ext == ".xyz") { loadXYZ(path, res); }
         if (ext == ".ply") { loadPly(path, res); }
@@ -165,7 +225,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
 #endif
         if (preset == "OSG" || preset == "COLLADA") osgLoad(path, res);
         if (preset == "COLLADA") loadCollada(path, res);
-        //cout << " additional created: " << clist->getNumCreated()-Ncr0 << ", changed: " << clist->getNumChanged()-Nch0 << endl;
+        cout << " additional created: " << clist->getNumCreated()-Ncr0 << ", changed: " << clist->getNumChanged()-Nch0 << endl;
     };
 
     string osbPath = getFolderName(path) + "/." + getFileName(path) + ".osb";

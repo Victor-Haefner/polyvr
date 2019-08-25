@@ -35,22 +35,31 @@ VRThread::~VRThread() {
     }
 }
 
-void VRThread::syncToMain() {
+void VRThread::syncToMain() { // called in thread
     commitChanges();
     mainSyncBarrier->enter(2);
     mainSyncBarrier->enter(2);
 }
 
-void VRThread::syncFromMain() {
+void VRThread::syncFromMain() { // called in thread
     if (aspect != 0) {
         selfSyncBarrier->enter(2);
+        // initCl gets filled with app state
         selfSyncBarrier->enter(2);
 
         if (initCl) {
             cout << "Sync starting thread, changed: " << initCl->getNumChanged() << ", created: " << initCl->getNumCreated() << endl;
             initCl->applyAndClear();
         }
-        appThread->getChangeList()->applyNoClear();
+        auto mCL = appThread->getChangeList(); // main thread CL
+        cout << " and main CL changed: " << mCL->getNumChanged() << ", created: " << mCL->getNumCreated() << endl;
+        mCL->applyNoClear();
+        for (auto c = mCL->begin(); c != mCL->end(); c++) {
+            cout << "  changed id: " << (*c)->uiContainerId << ", desc: " << (*c)->uiEntryDesc << endl;
+        }
+        for (auto c = mCL->beginCreated(); c != mCL->endCreated(); c++) {
+            cout << "  created id: " << (*c)->uiContainerId << ", desc: " << (*c)->uiEntryDesc << endl;
+        }
 
         selfSyncBarrier->enter(2);
         commitChangesAndClear();
@@ -72,14 +81,13 @@ void VRThreadManager::ThreadManagerUpdate() {
         if (t.second->mainSyncBarrier->getNumWaiting() == 1) {
             t.second->mainSyncBarrier->enter(2);
             auto cl = t.second->osg_t->getChangeList();
-            //auto clist = Thread::getCurrentChangeList();
-            //cout << "Apply thread changes to main thread, changed: " << cl->getNumChanged() << ", created: " << cl->getNumCreated() << endl;
-            //cout << " main changelist, changed: " << clist->getNumChanged() << ", created: " << clist->getNumCreated() << endl;
+            auto clist = Thread::getCurrentChangeList();
+            cout << "Apply thread changes to main thread, changed: " << cl->getNumChanged() << ", created: " << cl->getNumCreated() << endl;
+            cout << " main changelist, changed: " << clist->getNumChanged() << ", created: " << clist->getNumCreated() << endl;
 
             cl->applyAndClear();
-            //cout << " main changelist, changed: " << clist->getNumChanged() << ", created: " << clist->getNumCreated() << endl;
             commitChanges();
-            //cout << " main changelist, changed: " << clist->getNumChanged() << ", created: " << clist->getNumCreated() << endl;
+            cout << " main changelist, changed: " << clist->getNumChanged() << ", created: " << clist->getNumCreated() << endl;
             t.second->mainSyncBarrier->enter(2);
         }
     }
@@ -156,6 +164,11 @@ int VRThreadManager::initThread(VRThreadCbPtr f, string name, bool loop, int asp
 
     id++;
     return t->ID;
+}
+
+VRThreadPtr VRThreadManager::getThread(int id) {
+    if (threads.count(id) == 0) return 0;
+    return threads[id];
 }
 
 void VRThreadManager::waitThread(int id) {
