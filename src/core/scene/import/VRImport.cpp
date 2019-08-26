@@ -96,34 +96,20 @@ VRTransformPtr testLoadRoot;
 
 void testLoadCb(string path, VRThreadWeakPtr tw) {
     auto progress = VRImport::get()->getProgressObject();
-    auto appThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
-    auto mCL = appThread->getChangeList(); // main thread CL
-
     VRThreadPtr t = tw.lock();
-    auto cl = t->osg_t->getChangeList();
-
-    t->selfSyncBarrier->enter(2);
-    t->selfSyncBarrier->enter(2);
-    commitChangesAndClear();
-    t->initCl->applyAndClear();
-    commitChangesAndClear();
-
+    t->syncFromMain();
     loadVRML(path, testLoadRoot, progress, true);
     t->syncToMain();
 }
 
-VRTransformPtr testThreadedLoad(string path) {
-    testLoadRoot = VRTransform::create("bla");
-    auto appThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
-
-    auto cb = VRFunction< VRThreadWeakPtr >::create( "geo test load", boost::bind(testLoadCb, path, _1) );
-    auto t = VRScene::getCurrent()->initThread(cb, "geo load thread", false, 1);
-    auto testThread = VRScene::getCurrent()->getThread(t);
-
+void testSync(int t) {
     // sync thread aspect
+    auto appThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
+    auto testThread = VRScene::getCurrent()->getThread(t);
     testThread->selfSyncBarrier->enter(2);
     testThread->initCl->fillFromCurrentState();
     testThread->initCl->merge(*appThread->getChangeList());
+    testThread->selfSyncBarrier->enter(2);
     testThread->selfSyncBarrier->enter(2);
 
     // sync main aspect
@@ -135,14 +121,18 @@ VRTransformPtr testThreadedLoad(string path) {
 
     // wait
     VRScene::getCurrent()->waitThread(t);
+}
+
+VRTransformPtr testThreadedLoad(string path) {
+    testLoadRoot = VRTransform::create("bla");
+    auto cb = VRFunction< VRThreadWeakPtr >::create( "geo test load", boost::bind(testLoadCb, path, _1) );
+    auto t = VRScene::getCurrent()->initThread(cb, "geo load thread", false, 1);
+    testSync(t);
     return testLoadRoot;
 }
 /// --------------------------------------------------
 
 VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, string preset, bool thread, string options, bool useBinaryCache) {
-    return testThreadedLoad(path);
-
-
     cout << "VRImport::load " << path << " " << preset << endl;
     if (ihr_flag) if (fileSize(path) > 3e7) return 0;
     setlocale(LC_ALL, "C");
@@ -169,6 +159,7 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
         auto job = new LoadJob(path, preset, r, progress, options, useBinaryCache); // TODO: fix memory leak!
         job->loadCb = VRFunction< VRThreadWeakPtr >::create( "geo load", boost::bind(&LoadJob::load, job, _1) );
         auto t = VRScene::getCurrent()->initThread(job->loadCb, "geo load thread", false, 1);
+        testSync(t);
         //VRScene::getCurrent()->waitThread(t);
         return r;
     }

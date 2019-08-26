@@ -44,27 +44,15 @@ void VRThread::syncToMain() { // called in thread
 void VRThread::syncFromMain() { // called in thread
     if (aspect != 0) {
         selfSyncBarrier->enter(2);
-        // initCl gets filled with app state
         selfSyncBarrier->enter(2);
 
         if (initCl) {
             cout << "Sync starting thread, changed: " << initCl->getNumChanged() << ", created: " << initCl->getNumCreated() << endl;
-            commitChangesAndClear();
             initCl->applyAndClear();
             commitChangesAndClear();
         }
-        //auto mCL = appThread->getChangeList(); // main thread CL
-        //cout << " and main CL changed: " << mCL->getNumChanged() << ", created: " << mCL->getNumCreated() << endl;
-        //mCL->applyNoClear();
-        /*for (auto c = mCL->begin(); c != mCL->end(); c++) {
-            cout << "  changed id: " << (*c)->uiContainerId << ", desc: " << (*c)->uiEntryDesc << endl;
-        }
-        for (auto c = mCL->beginCreated(); c != mCL->endCreated(); c++) {
-            cout << "  created id: " << (*c)->uiContainerId << ", desc: " << (*c)->uiEntryDesc << endl;
-        }*/
 
         selfSyncBarrier->enter(2);
-        //commitChangesAndClear();
     } else {
         cout << "Warning, syncFromMain aspect is 0! -> ignore" << endl;
     }
