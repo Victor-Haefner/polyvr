@@ -58,30 +58,33 @@ void VRThread::syncFromMain() { // called in thread
     }
 }
 
+void VRThreadManager::setupThreadState(VRThreadPtr t) {
+    t->selfSyncBarrier->enter(2);
+    t->initCl->fillFromCurrentState();
+    t->initCl->merge(*appThread->getChangeList());
+    //commitChanges();
+    t->selfSyncBarrier->enter(2);
+    t->selfSyncBarrier->enter(2);
+}
+
+void VRThreadManager::importThreadState(VRThreadPtr t) {
+    t->mainSyncBarrier->enter(2);
+    auto cl = t->osg_t->getChangeList();
+    auto clist = Thread::getCurrentChangeList();
+    cout << "Apply thread changes to main thread, changed: " << cl->getNumChanged() << ", created: " << cl->getNumCreated() << endl;
+    cout << " main changelist, changed: " << clist->getNumChanged() << ", created: " << clist->getNumCreated() << endl;
+
+    clist->merge(*cl);
+    cl->applyAndClear();
+    //commitChanges();
+    cout << " main changelist, changed: " << clist->getNumChanged() << ", created: " << clist->getNumCreated() << endl;
+    t->mainSyncBarrier->enter(2);
+}
+
 void VRThreadManager::ThreadManagerUpdate() {
     for (auto t : threads) {
-        if (t.second->selfSyncBarrier->getNumWaiting() == 1) {
-            t.second->selfSyncBarrier->enter(2);
-            t.second->initCl->fillFromCurrentState();
-            t.second->initCl->merge(*appThread->getChangeList());
-            //commitChanges();
-            t.second->selfSyncBarrier->enter(2);
-            t.second->selfSyncBarrier->enter(2);
-        }
-
-        if (t.second->mainSyncBarrier->getNumWaiting() == 1) {
-            t.second->mainSyncBarrier->enter(2);
-            auto cl = t.second->osg_t->getChangeList();
-            auto clist = Thread::getCurrentChangeList();
-            cout << "Apply thread changes to main thread, changed: " << cl->getNumChanged() << ", created: " << cl->getNumCreated() << endl;
-            cout << " main changelist, changed: " << clist->getNumChanged() << ", created: " << clist->getNumCreated() << endl;
-
-            cl->applyAndClear();
-            clist->merge(*cl);
-            //commitChanges();
-            cout << " main changelist, changed: " << clist->getNumChanged() << ", created: " << clist->getNumCreated() << endl;
-            t.second->mainSyncBarrier->enter(2);
-        }
+        if (t.second->selfSyncBarrier->getNumWaiting() == 1) setupThreadState(t.second);
+        if (t.second->mainSyncBarrier->getNumWaiting() == 1) importThreadState(t.second);
     }
 }
 

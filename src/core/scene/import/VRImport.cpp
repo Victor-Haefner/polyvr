@@ -94,23 +94,9 @@ int fileSize(string path) {
 /// --------------------------------------------------
 
 void testSync(int t) {
-    // sync thread aspect
-    auto appThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
     auto testThread = VRScene::getCurrent()->getThread(t);
-    testThread->selfSyncBarrier->enter(2);
-    testThread->initCl->fillFromCurrentState();
-    testThread->initCl->merge(*appThread->getChangeList());
-    testThread->selfSyncBarrier->enter(2);
-    testThread->selfSyncBarrier->enter(2);
-
-    // sync main aspect
-    testThread->mainSyncBarrier->enter(2);
-    auto cl = testThread->osg_t->getChangeList();
-    appThread->getChangeList()->merge(*cl);
-    cl->applyAndClear();
-    testThread->mainSyncBarrier->enter(2);
-
-    // wait
+    VRScene::getCurrent()->setupThreadState(testThread);
+    VRScene::getCurrent()->importThreadState(testThread);
     VRScene::getCurrent()->waitThread(t);
 }
 

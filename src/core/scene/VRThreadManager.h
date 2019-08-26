@@ -65,8 +65,8 @@ class VRThreadManager {
 
         void printThreadsStats();
 
-    protected:
-
+        void setupThreadState(VRThreadPtr t);
+        void importThreadState(VRThreadPtr t);
         void ThreadManagerUpdate();
 };
 
