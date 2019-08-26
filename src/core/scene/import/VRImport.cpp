@@ -104,15 +104,15 @@ void testLoadCb(string path, VRThreadWeakPtr tw) {
     VRThreadPtr t = tw.lock();
     auto cl = t->osg_t->getChangeList();
 
-    //commitChangesAndClear();
     testBarrier->enter(2);
     testBarrier->enter(2);
-
+    commitChangesAndClear();
     testCL->applyAndClear();
     commitChangesAndClear();
-    loadVRML(path, testLoadRoot, progress, true);
 
+    loadVRML(path, testLoadRoot, progress, true);
     commitChanges();
+
     testBarrier->enter(2);
     testBarrier->enter(2);
 }
@@ -129,14 +129,18 @@ VRTransformPtr testThreadedLoad(string path) {
 
     // sync thread aspect
     testBarrier->enter(2);
-    auto cl = testThread->osg_t->getChangeList();
     testCL->fillFromCurrentState();
+    //commitChanges();
     testCL->merge(*appThread->getChangeList());
     testBarrier->enter(2);
 
     // sync main aspect
     testBarrier->enter(2);
-    cl->applyAndClear();
+    auto cl = testThread->osg_t->getChangeList();
+    //cl->applyAndClear();
+    cl->applyNoClear();
+    appThread->getChangeList()->merge(*cl);
+    //cl->merge(*appThread->getChangeList());
     testBarrier->enter(2);
 
     // wait
