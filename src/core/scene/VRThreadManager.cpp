@@ -47,7 +47,7 @@ void VRThread::syncFromMain() { // called in thread
         selfSyncBarrier->enter(2);
 
         if (initCl) {
-            cout << "Sync starting thread, changed: " << initCl->getNumChanged() << ", created: " << initCl->getNumCreated() << endl;
+            //cout << "Sync starting thread, changed: " << initCl->getNumChanged() << ", created: " << initCl->getNumCreated() << endl;
             initCl->applyAndClear();
             commitChangesAndClear();
         }
@@ -71,13 +71,8 @@ void VRThreadManager::importThreadState(VRThreadPtr t) {
     t->mainSyncBarrier->enter(2);
     auto cl = t->osg_t->getChangeList();
     auto clist = Thread::getCurrentChangeList();
-    cout << "Apply thread changes to main thread, changed: " << cl->getNumChanged() << ", created: " << cl->getNumCreated() << endl;
-    cout << " main changelist, changed: " << clist->getNumChanged() << ", created: " << clist->getNumCreated() << endl;
-
     clist->merge(*cl);
     cl->applyAndClear();
-    //commitChanges();
-    cout << " main changelist, changed: " << clist->getNumChanged() << ", created: " << clist->getNumCreated() << endl;
     t->mainSyncBarrier->enter(2);
 }
 
