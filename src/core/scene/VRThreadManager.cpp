@@ -49,20 +49,22 @@ void VRThread::syncFromMain() { // called in thread
 
         if (initCl) {
             cout << "Sync starting thread, changed: " << initCl->getNumChanged() << ", created: " << initCl->getNumCreated() << endl;
+            commitChangesAndClear();
             initCl->applyAndClear();
+            commitChangesAndClear();
         }
-        auto mCL = appThread->getChangeList(); // main thread CL
-        cout << " and main CL changed: " << mCL->getNumChanged() << ", created: " << mCL->getNumCreated() << endl;
-        mCL->applyNoClear();
-        for (auto c = mCL->begin(); c != mCL->end(); c++) {
+        //auto mCL = appThread->getChangeList(); // main thread CL
+        //cout << " and main CL changed: " << mCL->getNumChanged() << ", created: " << mCL->getNumCreated() << endl;
+        //mCL->applyNoClear();
+        /*for (auto c = mCL->begin(); c != mCL->end(); c++) {
             cout << "  changed id: " << (*c)->uiContainerId << ", desc: " << (*c)->uiEntryDesc << endl;
         }
         for (auto c = mCL->beginCreated(); c != mCL->endCreated(); c++) {
             cout << "  created id: " << (*c)->uiContainerId << ", desc: " << (*c)->uiEntryDesc << endl;
-        }
+        }*/
 
         selfSyncBarrier->enter(2);
-        commitChangesAndClear();
+        //commitChangesAndClear();
     } else {
         cout << "Warning, syncFromMain aspect is 0! -> ignore" << endl;
     }
@@ -72,8 +74,9 @@ void VRThreadManager::ThreadManagerUpdate() {
     for (auto t : threads) {
         if (t.second->selfSyncBarrier->getNumWaiting() == 1) {
             t.second->selfSyncBarrier->enter(2);
-            commitChanges();
             t.second->initCl->fillFromCurrentState();
+            t.second->initCl->merge(*appThread->getChangeList());
+            //commitChanges();
             t.second->selfSyncBarrier->enter(2);
             t.second->selfSyncBarrier->enter(2);
         }
@@ -86,7 +89,8 @@ void VRThreadManager::ThreadManagerUpdate() {
             cout << " main changelist, changed: " << clist->getNumChanged() << ", created: " << clist->getNumCreated() << endl;
 
             cl->applyAndClear();
-            commitChanges();
+            clist->merge(*cl);
+            //commitChanges();
             cout << " main changelist, changed: " << clist->getNumChanged() << ", created: " << clist->getNumCreated() << endl;
             t.second->mainSyncBarrier->enter(2);
         }

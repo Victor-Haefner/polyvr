@@ -93,8 +93,6 @@ int fileSize(string path) {
 
 /// --------------------------------------------------
 VRTransformPtr testLoadRoot;
-BarrierRefPtr testBarrier;
-ChangeList* testCL;
 
 void testLoadCb(string path, VRThreadWeakPtr tw) {
     auto progress = VRImport::get()->getProgressObject();
@@ -104,23 +102,18 @@ void testLoadCb(string path, VRThreadWeakPtr tw) {
     VRThreadPtr t = tw.lock();
     auto cl = t->osg_t->getChangeList();
 
-    testBarrier->enter(2);
-    testBarrier->enter(2);
+    t->selfSyncBarrier->enter(2);
+    t->selfSyncBarrier->enter(2);
     commitChangesAndClear();
-    testCL->applyAndClear();
+    t->initCl->applyAndClear();
     commitChangesAndClear();
 
     loadVRML(path, testLoadRoot, progress, true);
-    commitChanges();
-
-    testBarrier->enter(2);
-    testBarrier->enter(2);
+    t->syncToMain();
 }
 
 VRTransformPtr testThreadedLoad(string path) {
     testLoadRoot = VRTransform::create("bla");
-    testBarrier = Barrier::create();
-    testCL = ChangeList::create();
     auto appThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
 
     auto cb = VRFunction< VRThreadWeakPtr >::create( "geo test load", boost::bind(testLoadCb, path, _1) );
@@ -128,20 +121,17 @@ VRTransformPtr testThreadedLoad(string path) {
     auto testThread = VRScene::getCurrent()->getThread(t);
 
     // sync thread aspect
-    testBarrier->enter(2);
-    testCL->fillFromCurrentState();
-    //commitChanges();
-    testCL->merge(*appThread->getChangeList());
-    testBarrier->enter(2);
+    testThread->selfSyncBarrier->enter(2);
+    testThread->initCl->fillFromCurrentState();
+    testThread->initCl->merge(*appThread->getChangeList());
+    testThread->selfSyncBarrier->enter(2);
 
     // sync main aspect
-    testBarrier->enter(2);
+    testThread->mainSyncBarrier->enter(2);
     auto cl = testThread->osg_t->getChangeList();
-    //cl->applyAndClear();
-    cl->applyNoClear();
     appThread->getChangeList()->merge(*cl);
-    //cl->merge(*appThread->getChangeList());
-    testBarrier->enter(2);
+    cl->applyAndClear();
+    testThread->mainSyncBarrier->enter(2);
 
     // wait
     VRScene::getCurrent()->waitThread(t);
