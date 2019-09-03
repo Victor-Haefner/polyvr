@@ -210,14 +210,15 @@ int main(int argc, char **argv) {
 	MonitorRects monitors;
 #endif
 
-
+	#define  GLUT_CAPTIONLESS                   0x0400
+	#define  GLUT_BORDERLESS                    0x0800
 
     // initialize Glut
     enableCoreDumps();
     glutInit(&argc, argv);
     evalParams(argc, argv);
-    if (active_stereo) glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL | GLUT_STEREO);
-    else glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
+    if (active_stereo) glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL | GLUT_STEREO | GLUT_BORDERLESS | GLUT_CAPTIONLESS);
+    else glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL | GLUT_BORDERLESS | GLUT_CAPTIONLESS);
 	
 #ifdef _WIN32
     OSG::preloadSharedObject("OSGBase");
