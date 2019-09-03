@@ -288,7 +288,7 @@ VRGear* MGear::gear() { return (VRGear*)prim; }
 VRScrewthread* MThread::thread() { return (VRScrewthread*)prim; }
 
 void MPart::move() {}
-void MChain::move() { if (geo == 0) return; updateGeo(); }
+void MChain::move() { if (!geo || !geo->isVisible("", true)) return; updateGeo(); }
 void MThread::move() { trans->rotateWorld(change.a, Vec3d(0,0,-1)); }
 
 void MGear::move() {
@@ -674,6 +674,7 @@ void VRMechanism::update() {
 
 void VRMechanism::updateVisuals() {
     if (!geo) geo = VRAnalyticGeometry::create();
+    if(!geo->isVisible("", true)) return;
     addChild(geo);
     geo->clear();
 

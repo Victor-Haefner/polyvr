@@ -68,7 +68,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"hasAncestor", PyWrap(Object, hasAncestor, "Check if object is an ancestor", bool, VRObjectPtr) },
     {"hide", PyWrapOpt(Object, hide, "Hide object", "", void, string) },
     {"show", PyWrapOpt(Object, show, "Show object", "", void, string) },
-    {"isVisible", PyWrapOpt(Object, isVisible, "Return if object is visible", "", bool, string) },
+    {"isVisible", PyWrapOpt(Object, isVisible, "Return if object is visible", "|0", bool, string, bool) },
     {"setVisible", PyWrapOpt(Object, setVisible, "Set the visibility of the object, flag changes behaviour, for example 'SHADOW'", "", void, bool, string) },
     {"getType", PyCastWrap(Object, getType, "Return the object type string (such as \"Geometry\")", string) },
     {"getID", PyWrap(Object, getID, "Return the object internal ID", int) },

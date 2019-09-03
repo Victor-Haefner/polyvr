@@ -642,8 +642,11 @@ int getVisibleMaskBit(const string& mode) {
     return 0;
 }
 
-bool VRObject::isVisible(string mode) {
+bool VRObject::isVisible(string mode, bool recursive) {
     int b = getVisibleMaskBit(mode);
+    if (!recursive) return getBit(visibleMask, b);
+    if (!isVisible(mode)) return false;
+    if (auto p = parent.lock()) return p->isVisible(mode, true);
     return getBit(visibleMask, b);
 }
 

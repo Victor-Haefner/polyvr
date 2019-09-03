@@ -17,8 +17,8 @@
 
 #define NO_IMPORT_ARRAY
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include "numpy/ndarraytypes.h"
-#include "numpy/ndarrayobject.h"
+#include <numpy/ndarraytypes.h>
+#include <numpy/ndarrayobject.h>
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>

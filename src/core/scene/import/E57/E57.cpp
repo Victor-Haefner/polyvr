@@ -15,6 +15,7 @@ using namespace std;
 using namespace OSG;
 
 VRTransformPtr OSG::fancyyE57import(string path) {
+    cout << "fancyE57import " << path << endl;
     ImageFile imf(path, "r"); // Read file from disk
     StructureNode root = imf.root();
     if (!root.isDefined("/data3D")) { cout << "File doesn't contain 3D images" << endl; return 0; }
@@ -35,7 +36,7 @@ VRTransformPtr OSG::fancyyE57import(string path) {
         CompressedVectorNode points( scan.get("points") );
         string pname = points.pathName();
         auto cN = points.childCount();
-        cout << "  scan " << i << " contains " << cN << " points\n";
+        cout << "  scan " << i << " contains " << double(cN)/1e6 << " M points\n";
 
 
 
@@ -78,24 +79,33 @@ VRTransformPtr OSG::fancyyE57import(string path) {
         CompressedVectorReader reader = points.reader(destBuffers);
 
         auto mat = VRMaterial::create("pcmat");
-        mat->setPointSize(5);
+        mat->setPointSize(10);
         mat->setLit(0);
 
         cout << "fill octree" << endl;
+        int Nd = 30;
+        int Nc = 0;
+        size_t Np = 0;
         auto octree = Octree::create(10);
         do {
             gotCount = reader.read();
-            for (unsigned j=0; j < gotCount; j+=5) {
-                Vec3d p = Vec3d(x[j], y[j], z[j]);
-                Color3f col(r[j]/255.0, g[j]/255.0, b[j]/255.0);
-                octree->add(p, new Color3f(col), -1, true, 1e5);
+            if (Nc+gotCount<Nd) Nc += gotCount;
+            else for (unsigned j=0; j < gotCount; j++) {
+                Nc++;
+                if (Nc >= Nd) {
+                    Vec3d p = Vec3d(x[j], y[j], z[j]);
+                    Color3f col(r[j]/255.0, g[j]/255.0, b[j]/255.0);
+                    octree->add(p, new Color3f(col), -1, true, 1e5);
+                    Nc = 0;
+                    Np++;
+                }
             }
             progress->update( gotCount );
             //if (progress->get() > 0.2) break;
         } while(gotCount);
         //system->addChild(octree->getVisualization());
 
-        cout << "setup lods" << endl;
+        cout << "\nsetup lods for " << double(Np)/1e6 << " M points" << endl;
         for (auto leaf : octree->getAllLeafs()) {
             Vec3d c = leaf->getCenter();
 
@@ -108,8 +118,8 @@ VRTransformPtr OSG::fancyyE57import(string path) {
 
             auto l = VRLod::create("chunk");
             l->setCenter(c);
-            l->addDistance(2.5);
-            l->addDistance(6);
+            l->addDistance(4.5);
+            l->addDistance(7);
             l->addChild( geo1 );
             l->addChild( geo2 );
             l->addChild( geo3 );
@@ -130,7 +140,7 @@ VRTransformPtr OSG::fancyyE57import(string path) {
                 chunk1.pushPoint();
             }
 
-            for (int i = 0; i < leaf->dataSize(); i+=30) {
+            for (int i = 0; i < leaf->dataSize(); i+=20) {
                 void* d = leaf->getData(i);
                 Vec3d p = leaf->getPoint(i);
                 Color3f col = *((Color3f*)d);
@@ -138,7 +148,7 @@ VRTransformPtr OSG::fancyyE57import(string path) {
                 chunk2.pushPoint();
             }
 
-            for (int i = 0; i < leaf->dataSize(); i+=300) {
+            for (int i = 0; i < leaf->dataSize(); i+=200) {
                 void* d = leaf->getData(i);
                 Vec3d p = leaf->getPoint(i);
                 Color3f col = *((Color3f*)d);
