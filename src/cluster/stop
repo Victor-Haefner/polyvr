@@ -1,0 +1,17 @@
+unameOut="$(uname -s)"
+case "${unameOut}" in
+    Linux*)     machine=Linux;;
+    Darwin*)    machine=Mac;;
+    CYGWIN*)    machine=Cygwin;;
+    MINGW*)     machine=MinGw;;
+    *)          machine="UNKNOWN:${unameOut}"
+esac
+echo "detected OS: " ${machine}
+
+if [ "$machine" = "Linux" ]; then
+	killall VRServer
+fi
+
+if [ "$machine" = "Cygwin" ]; then
+        taskkill -F -IM VRServer.exe
+fi

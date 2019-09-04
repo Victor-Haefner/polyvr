@@ -97,6 +97,7 @@ class VRNetworkNode : public VRManager<VRNetworkSlave>, public std::enable_share
         void setSlavePath(string);
         void set(string a, string u, string p);
 
+        bool hasFile(string path);
         void distributeKey();
         string execCmd(string cmd, bool read = true);
         void stopSlaves();

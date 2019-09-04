@@ -23,7 +23,7 @@ VRNetworkNode::VRNetworkNode(string name) : VRManager("NetworkNode") {
     setNameSpace("NetworkNode");
     setName(name);
 
-    slavePath = VRSceneManager::get()->getOriginalWorkdir() + "/src/cluster/start";
+    slavePath = VRSceneManager::get()->getOriginalWorkdir();
 
     store("address", &address);
     store("user", &user);
@@ -98,6 +98,12 @@ void VRNetworkNode::stopSlaves() {
     update();
 }
 
+bool VRNetworkNode::hasFile(string path) {
+    string res = execCmd("ls "+path, true);
+    bool b = res.substr(0, path.size()) == path;
+    return b;
+}
+
 void VRNetworkNode::update() {
     stat_node = "ok";
     stat_ssh = "";
@@ -113,9 +119,9 @@ void VRNetworkNode::update() {
     stat_ssh_key = ssh->getKeyStat();
     if (stat_ssh != "ok") { stat_path = "no ssh access"; return; }
 
-    string res = execCmd("ls "+slavePath, true);
-    bool b = res.substr(0, slavePath.size()) == slavePath;
-    if (b) stat_path = "ok";
+    bool b1 = hasFile(slavePath + "/src/cluster/start");
+    bool b2 = hasFile(slavePath + "/src/cluster/stop");
+    if (b1 && b2) stat_path = "ok";
     else stat_path = "not found";
 }
 
@@ -147,6 +153,7 @@ void VRNetworkSlave::start() {
 
     string disp = "export DISPLAY=\"" + display + "\" && ";
     string pipes = " > /dev/null 2> /dev/null < /dev/null &";
+    string script = node->getSlavePath() + "/src/cluster/start";
     //string pipes = " > /dev/null 2> /dev/null < /dev/null"; // TODO: without & it returns the correct code, but it also makes the app stuck!
     string args;
     if (!fullscreen) args += " -w";
@@ -155,13 +162,14 @@ void VRNetworkSlave::start() {
     if (connection_type == "SockPipeline") args += " -p " + node->getAddress() + ":" + toString(port);
     if (connection_type == "StreamSock") args += " " + node->getAddress() + ":" + toString(port);
 
-    stat = node->execCmd(disp + node->getSlavePath() + args + pipes, false);
+    stat = node->execCmd(disp + script + args + pipes, false);
     update();
 }
 
 void VRNetworkSlave::stop() {
     if (!node) return;
-    node->execCmd("killall VRServer");
+    string script = node->getSlavePath() + "/src/cluster/stop";
+    node->execCmd(script);
     update();
 }
 
