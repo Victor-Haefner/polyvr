@@ -1,6 +1,28 @@
 #!/bin/bash
 
 path="`dirname \"$0\"`"
-libs="OSGBase:OSGGroup:OSGUtil:OSGCluster:OSGDrawable:OSGImageFileIO:OSGWindowGLUT:OSGDynamics:OSGState:OSGWindow:OSGEffectGroups:OSGSystem:OSGWindowX:OSGContribComputeBase:OSGContribTrapezoidalShadowMaps:OSGText"
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/opensg && export OSG_LOAD_LIBS=$libs && $path/VRServer $@ -geometry 512x512+0+0
+unameOut="$(uname -s)"
+case "${unameOut}" in
+    Linux*)     machine=Linux;;
+    Darwin*)    machine=Mac;;
+    CYGWIN*)    machine=Cygwin;;
+    MINGW*)     machine=MinGw;;
+    *)          machine="UNKNOWN:${unameOut}"
+esac
+echo "detected OS: " ${machine}
+
+if [ "$machine" = "Linux" ]; then
+	libs="OSGBase:OSGGroup:OSGUtil:OSGCluster:OSGDrawable:OSGImageFileIO:OSGWindowGLUT:OSGDynamics:OSGState:OSGWindow:OSGEffectGroups:OSGSystem:OSGWindowX:OSGContribComputeBase:OSGContribTrapezoidalShadowMaps:OSGText"
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/opensg && export OSG_LOAD_LIBS=$libs && $path/VRServer $@ -geometry 512x512+0+0
+fi
+
+if [ "$machine" = "Cygwin" ]; then
+	cd $path
+        ./start-win-cave.bat
+fi
+
+if [ "$machine" = "MinGw" ]; then
+	cd $path
+        ./start-win-cave.bat
+fi
