@@ -1,4 +1,6 @@
 unameOut="$(uname -s)"
+echo "uname result: " ${unameOut}
+
 case "${unameOut}" in
     Linux*)     machine=Linux;;
     Darwin*)    machine=Mac;;
@@ -13,5 +15,9 @@ if [ "$machine" = "Linux" ]; then
 fi
 
 if [ "$machine" = "Cygwin" ]; then
+        taskkill -F -IM VRServer.exe
+fi
+
+if [ "$machine" = "MinGw" ]; then
         taskkill -F -IM VRServer.exe
 fi
