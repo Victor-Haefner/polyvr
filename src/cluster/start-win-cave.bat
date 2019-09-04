@@ -1,6 +1,3 @@
-rem cd C:\Users\ic-1\Projects\polyvr\src\cluster
-
-
 cd %~dp0
 set PATH=%PATH%;C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64;C:\opensg;C:\freeglut;C:\boost\lib64-msvc-14.1;C:\zlib;C:\Windows\SysWOW64\downlevel\
 start VRServer.exe -w -m l1 -geometry 5120x1600+0+0 -display \\.\DISPLAY2

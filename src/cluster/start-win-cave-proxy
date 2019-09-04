@@ -1,0 +1,2 @@
+path="`dirname \"$0\"`"
+$path/PsExec64.exe -accepteula -i -d -s \\\\127.0.0.1 CMD /C "C:\Users\ic-1\Projects\polyvr\src\cluster\start-win-cave.bat"
