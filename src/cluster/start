@@ -19,10 +19,10 @@ fi
 
 if [ "$machine" = "Cygwin" ]; then
 	cd $path
-        ./start-win-cave.bat
+        ./start-win-cave-proxy
 fi
 
 if [ "$machine" = "MinGw" ]; then
 	cd $path
-        ./start-win-cave.bat
+        ./start-win-cave-proxy
 fi
