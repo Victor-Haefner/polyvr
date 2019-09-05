@@ -85,8 +85,11 @@ void VRNetworkNode::initSlaves() {
 
     for (auto s : getData()) {
         s->setNode(ptr());
-        if (s->getAutostart()) s->start();
+        if (s->getAutostart()) {
+            s->start();
+        }
     }
+    if (hasAutostart) sleep(10);
 }
 
 void VRNetwork::stopSlaves() {
@@ -94,7 +97,8 @@ void VRNetwork::stopSlaves() {
 }
 
 void VRNetworkNode::stopSlaves() {
-    execCmd("killall VRServer");
+    string script = getSlavePath() + "/src/cluster/stop";
+    execCmd(script);
     update();
 }
 
@@ -168,8 +172,7 @@ void VRNetworkSlave::start() {
 
 void VRNetworkSlave::stop() {
     if (!node) return;
-    string script = node->getSlavePath() + "/src/cluster/stop";
-    node->execCmd(script);
+    node->stopSlaves();
     update();
 }
 
