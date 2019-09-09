@@ -95,6 +95,7 @@ void parseOSGVec(string& data, V& v) {
 
 template<class T, class U, typename V>
 void parseOSGVec2(string& data, V& v) {
+    int N = sizeof(U)/sizeof(T);
     stringstream ss(data);
     T f;
     U u;
@@ -102,7 +103,7 @@ void parseOSGVec2(string& data, V& v) {
     while (ss >> f) {
         u[i] = f;
         i++;
-        if (i == 3) {
+        if (i == N) {
             i = 0;
             v->addValue(u);
         }
@@ -1058,7 +1059,7 @@ void VRScenegraphInterface::handle(string msg) {
                 replace( m[3].begin(), m[3].end(), ',', '.');
                 parseOSGVec2<float, Pnt3f>(m[3], pos);
                 geo->setPositions(pos);
-                cout << "set geo positions " << geo->getName() << "  " << pos->size() << endl;
+                //cout << "set geo positions " << geo->getName() << "  " << pos->size() << endl;
             }
 		}
 
@@ -1068,13 +1069,23 @@ void VRScenegraphInterface::handle(string msg) {
                 replace( m[3].begin(), m[3].end(), ',', '.');
                 parseOSGVec2<float, Vec3f>(m[3], norms);
                 geo->setNormals(norms);
-                cout << "set geo normals " << geo->getName() << "  " << norms->size() << endl;
+                //cout << "set geo normals " << geo->getName() << "  " << norms->size() << endl;
+            }
+		}
+
+		if (m[1] == "colors") {
+            if (geo && m.size() > 3) {
+                GeoColor4fPropertyMTRecPtr cols = GeoColor4fProperty::create();
+                replace( m[3].begin(), m[3].end(), ',', '.');
+                parseOSGVec2<float, Color4f>(m[3], cols);
+                geo->setColors(cols);
+                //cout << "set geo colors " << geo->getName() << "  " << cols->size() << endl;
             }
 		}
 
 		if (m[1] == "indices") {
             if (geo && m.size() > 3) {
-                cout << "set geo indices " << geo->getName() << endl;
+                //cout << "set geo indices " << geo->getName() << endl;
                 GeoUInt8PropertyMTRecPtr types = GeoUInt8Property::create();;
                 GeoUInt32PropertyMTRecPtr lengths = GeoUInt32Property::create();;
                 GeoUInt32PropertyMTRecPtr indices = GeoUInt32Property::create();
@@ -1116,6 +1127,9 @@ void VRScenegraphInterface::handle(string msg) {
                 //print obj, mat
                 //materials[obj].setAmbient([r*a,g*a,b*a])
                 materials[objID]->setDiffuse(rgb * ads[1]);
+                if (matData.size() > 9 && matData[9] > 0.5) {
+                    materials[objID]->ignoreMeshColors(true);
+                }
                 //materials[obj].setSpecular([r*s,g*s,b*s])
                 //materials[obj].setTransparency(1-mat[7])
             }

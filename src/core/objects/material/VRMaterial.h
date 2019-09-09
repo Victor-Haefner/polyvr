@@ -112,6 +112,7 @@ class VRMaterial : public VRObject {
         void setEmission(Color3f c);
         void setTransparency(float t);
         void setDepthTest(int d);
+        void ignoreMeshColors(bool b);
         void enableTransparency(bool user_override = false);
         void clearTransparency(bool user_override = false);
         void setLineWidth(int w, bool smooth = true);

@@ -850,6 +850,17 @@ void VRMaterial::setTransparency(float c) {
     //enableTransparency();
 }
 
+void VRMaterial::ignoreMeshColors(bool b) {
+    auto md = mats[activePass];
+    if (b) {
+        md->colChunk->setColorMaterial(GL_NONE);
+        md->colChunk->setBackColorMaterial(GL_NONE);
+    } else {
+        md->colChunk->setColorMaterial(GL_DIFFUSE);
+        md->colChunk->setBackColorMaterial(GL_DIFFUSE);
+    }
+}
+
 void VRMaterial::enableTransparency(bool user_override) {
     if (deferred) return;
     force_transparency = user_override;

@@ -1265,6 +1265,7 @@ void VRGuiScene::initMenu() {
     menu->appendItem("SGM_AddMenu", "Object", sigc::mem_fun(*this, &VRGuiScene::on_menu_add<VRObject>) );
     menu->appendItem("SGM_AddMenu", "Transform", sigc::mem_fun(*this, &VRGuiScene::on_menu_add<VRTransform>) );
     menu->appendItem("SGM_AddMenu", "Geometry", sigc::mem_fun(*this, &VRGuiScene::on_menu_add<VRGeometry>) );
+    menu->appendItem("SGM_AddMenu", "Material", sigc::mem_fun(*this, &VRGuiScene::on_menu_add<VRMaterial>) );
     menu->appendItem("SGM_AddMenu", "Light", sigc::mem_fun(*this, &VRGuiScene::on_menu_add_light));
     menu->appendItem("SGM_AddMenu", "Camera", sigc::mem_fun(*this, &VRGuiScene::on_menu_add_camera));
     menu->appendItem("SGM_AddMenu", "Group", sigc::mem_fun(*this, &VRGuiScene::on_menu_add<VRGroup>));

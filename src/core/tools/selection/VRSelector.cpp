@@ -105,9 +105,11 @@ VRMaterialPtr VRSelector::getMat() {
         mat->setFrontBackModes(GL_LINE, GL_LINE);
         mat->setLit(false);
         mat->setStencilBuffer(false, 1,-1, GL_NOTEQUAL, GL_KEEP, GL_KEEP, GL_REPLACE);
+        mat->ignoreMeshColors(true);
     }
     if (visual == OVERLAY) {
         mat->setTransparency(transparency);
+        mat->ignoreMeshColors(true);
         //mat->addPass();
     }
 

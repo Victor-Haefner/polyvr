@@ -37,6 +37,7 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setGeometryProgram", (PyCFunction)VRPyMaterial::setGeometryProgram, METH_VARARGS, "Set geometry program - setGeometryProgram( myScript )" },
     {"setTessControlProgram", (PyCFunction)VRPyMaterial::setTessControlProgram, METH_VARARGS, "Set tess control program - setTessControlProgram( myScript )" },
     {"setTessEvaluationProgram", (PyCFunction)VRPyMaterial::setTessEvaluationProgram, METH_VARARGS, "Set tess evaluation program - setTessEvaluationProgram( myScript )" },
+    {"ignoreMeshColors", PyWrapOpt( Material, ignoreMeshColors, "Allows to ignore vertex colors, only works if lit", "1", void, bool ) },
     {"setWireFrame", PyWrap( Material, setWireFrame, "Set front and back to wireframe", void, bool ) },
     {"isWireFrame", PyWrap( Material, isWireFrame, "Check if wireframe", bool ) },
     {"setLit", (PyCFunction)VRPyMaterial::setLit, METH_VARARGS, "Set if geometry is lit - setLit(bool)" },
