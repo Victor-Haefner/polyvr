@@ -43,6 +43,7 @@ class VRTextureRenderer : public VRObject {
         void setup(VRCameraPtr cam, int width, int height, bool alpha = false);
         void setMaterialSubstitutes(map<VRMaterial*, VRMaterialPtr> substitutes, CHANNEL c);
         void setBackground(Color3f c);
+        void updateBackground();
 
         void setActive(bool b);
         VRMaterialPtr getMaterial();
@@ -51,6 +52,8 @@ class VRTextureRenderer : public VRObject {
         VRTexturePtr renderOnce(CHANNEL c = RENDER);
         vector<VRTexturePtr> createCubeMaps(VRTransformPtr focusObject);
         VRMaterialPtr createTextureLod(VRObjectPtr scene, PosePtr cam, int res, float aspect, float fov, Color3f bg);
+
+        static void updateSceneBackground();
 };
 
 OSG_END_NAMESPACE;

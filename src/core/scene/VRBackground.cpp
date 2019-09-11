@@ -13,6 +13,7 @@
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/objects/geometry/VRSky.h"
+#include "core/tools/VRTextureRenderer.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -174,6 +175,7 @@ string VRBackground::getBackgroundPath() { return base->path; }
 void VRBackground::updateBackground() {
     auto setup = VRSetup::getCurrent();
     if (setup) setup->setViewBackground(getBackground());
+    VRTextureRenderer::updateSceneBackground();
 }
 
 void VRBackground::update() { setBackground(TYPE(base->type)); }

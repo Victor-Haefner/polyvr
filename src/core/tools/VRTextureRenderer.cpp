@@ -9,6 +9,7 @@
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/VRSky.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/rendering/VRDefShading.h"
 #include "core/math/boundingbox.h"
@@ -67,6 +68,8 @@ struct VRTextureRenderer::Data {
     VRObjectPtr deferredStageRoot;
 };
 OSG_END_NAMESPACE;
+
+vector<VRTextureRendererWeakPtr> TRinstances;
 
 void VRTextureRenderer::test() {
     NodeRefPtr     flagScene = makeCoredNode<Group>();
@@ -146,7 +149,6 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     data->stage = SimpleStage::create();
     data->stage->setRenderTarget(data->fbo);
     data->stage->setSize(0.0f, 0.0f, 1.0f, 1.0f);
-    data->stage->setBackground( scene->getBackground() );
 
     setCore(OSGCore::create(data->stage), "TextureRenderer");
 
@@ -155,11 +157,24 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     data->deferredStage = VRDefShading::create();
     data->deferredStage->initDeferredShading(data->deferredStageRoot);
     data->deferredStage->setDeferredShading(true);
-    data->deferredStage->setBackground( scene->getBackground() );
+
+    updateBackground();
 }
 
 VRTextureRenderer::~VRTextureRenderer() { delete data; }
-VRTextureRendererPtr VRTextureRenderer::create(string name) { return VRTextureRendererPtr( new VRTextureRenderer(name) ); }
+
+VRTextureRendererPtr VRTextureRenderer::create(string name) {
+    auto tg = VRTextureRendererPtr( new VRTextureRenderer(name) );
+    TRinstances.push_back(tg);
+    return tg;
+}
+
+void VRTextureRenderer::updateSceneBackground() {
+    for (auto i : TRinstances) {
+        auto tg = i.lock();
+        if (tg) tg->updateBackground();
+    }
+}
 
 void VRTextureRenderer::setBackground(Color3f c) {
     SolidBackgroundMTRecPtr bg = SolidBackground::create();
@@ -168,6 +183,15 @@ void VRTextureRenderer::setBackground(Color3f c) {
     mat->enableTransparency();
     data->stage->setBackground( bg );
     //if (data->deferredStage) data->deferredStage->setBackground( bg );
+}
+
+void VRTextureRenderer::updateBackground() {
+    auto scene = VRScene::getCurrent();
+
+    data->stage->setBackground( scene->getBackground() );
+    if (data->deferredStage) data->deferredStage->setBackground( scene->getBackground() );
+
+    if (auto sky = scene->getSky()) addLink(sky);
 }
 
 void VRTextureRenderer::setup(VRCameraPtr c, int width, int height, bool alpha) {
@@ -186,6 +210,7 @@ void VRTextureRenderer::setup(VRCameraPtr c, int width, int height, bool alpha) 
     }
     data->stage->setCamera(cam->getCam()->cam);
     if (data->deferredStage) data->deferredStage->setDSCamera( cam->getCam() );
+    data->stage->setBackground( VRScene::getCurrent()->getBackground() );
 }
 
 VRMaterialPtr VRTextureRenderer::getMaterial() { return mat; }
