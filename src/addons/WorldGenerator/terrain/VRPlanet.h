@@ -36,7 +36,7 @@ class VRPlanet : public VRTransform {
         double toRad(double deg);
         double toDeg(double rad);
 
-        void setParameters( double radius, double sectorSize = 0.1 );
+        void setParameters( double radius, string texture, bool isLit, double sectorSize = 0.1 );
         VRWorldGeneratorPtr addSector( double north, double east );
         VRWorldGeneratorPtr getSector( double north, double east );
         vector<VRWorldGeneratorPtr> getSectors();
@@ -55,6 +55,8 @@ class VRPlanet : public VRTransform {
         void localize(double north, double east);
 
         VRMaterialPtr getMaterial();
+        void setupMaterial(string texture, bool isLit);
+        void setLit(bool b);
 };
 
 OSG_END_NAMESPACE;

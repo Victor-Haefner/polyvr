@@ -158,13 +158,14 @@ void VRPlanet::rebuild() {
         sphereMat = VRMaterial::create("planet");
         sphereMat->setVertexShader(surfaceVP, "planet surface VS");
         sphereMat->setFragmentShader(surfaceFP, "planet surface FS");
+        setLit(false);
     }
 
     // spheres
     if (lod) lod->destroy();
     lod = VRLod::create("planetLod");
     auto addLod = [&](int i, double d) {
-        auto s = VRGeometry::create("sphere");
+        auto s = VRGeometry::create(getBaseName()+"Sphere");
         s->setPrimitive("Sphere " + toString(radius)+" "+toString(i));
         s->setMaterial(sphereMat);
         lod->addChild(s);
@@ -188,7 +189,12 @@ void VRPlanet::rebuild() {
     }
 }
 
-void VRPlanet::setParameters( double r, double s ) { radius = r; sectorSize = s; }//rebuild(); } // TODO: rebuild breaks the pins
+void VRPlanet::setParameters( double r, string t, bool l, double s ) {
+    radius = r;
+    sectorSize = s;
+    rebuild();
+    setupMaterial(t, l);
+} // TODO: rebuild breaks the pins
 
 VRWorldGeneratorPtr VRPlanet::addSector( double north, double east ) {
     auto generator = VRWorldGenerator::create();
@@ -215,7 +221,9 @@ vector<VRWorldGeneratorPtr> VRPlanet::getSectors() {
     return res;
 }
 
+void VRPlanet::setupMaterial(string texture, bool isLit) { sphereMat->setTexture(texture); setLit(isLit); }
 VRMaterialPtr VRPlanet::getMaterial() { return sphereMat; }
+void VRPlanet::setLit(bool b) { sphereMat->setShaderParameter("isLit", b?1:0); }
 
 int VRPlanet::addPin( string label, double north, double east, double length ) {
     if (!metaGeo) {
@@ -261,6 +269,7 @@ string VRPlanet::surfaceFP =
 "#version 120\n"
 GLSL(
 uniform sampler2D tex;
+uniform int isLit;
 
 varying vec3 tcs;
 varying vec3 normal;
@@ -271,15 +280,16 @@ const float pi = 3.1415926;
 vec4 color;
 
 void applyLightning() {
-	vec3 n = normal;
+	vec3 n = normalize( normal);
 	vec3  light = normalize( gl_LightSource[0].position.xyz - position.xyz ); // point light
 	float NdotL = max(dot( n, light ), 0.0);
 	vec4  ambient = gl_LightSource[0].ambient * color;
 	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;
 	float NdotHV = max(dot(n, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
 	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
-	gl_FragColor = diffuse + specular;
+	gl_FragColor = diffuse + ambient;// + specular;
 	//gl_FragColor = ambient + diffuse + specular;
+	//gl_FragColor = vec4(gl_LightSource[0].position.xyz,1);
 }
 
 void main( void ) {
@@ -292,8 +302,8 @@ void main( void ) {
 	vec4 c2 = texture2D(tex, vec2(u2,v));
 	float s = clamp( (tcs.x+1)*0.3, 0, 1 );
 	color = mix(c2, c1, u0);
-	//applyLightning(); // TODO
-	gl_FragColor = color;
+	if (isLit != 0) applyLightning();
+	else gl_FragColor = color;
 }
 );
 

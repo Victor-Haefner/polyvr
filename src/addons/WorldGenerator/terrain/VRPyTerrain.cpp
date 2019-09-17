@@ -31,7 +31,7 @@ PyMethodDef VRPyPlanet::methods[] = {
     {"getSector", PyWrap(Planet, getSector, "Return sector at N E", VRWorldGeneratorPtr, double, double ) },
     {"getSectors", PyWrap(Planet, getSectors, "Return all sectors", vector<VRWorldGeneratorPtr> ) },
     {"getMaterial", PyWrap(Planet, getMaterial, "Get planet material", VRMaterialPtr ) },
-    {"setParameters", PyWrapOpt(Planet, setParameters, "Set planet parameters: radius, sector size", "0.1", void, double, double ) },
+    {"setParameters", PyWrapOpt(Planet, setParameters, "Set planet parameters: radius, texture, isLit, sector size", "0.1", void, double, string, bool, double ) },
     {"addPin", PyWrapOpt(Planet, addPin, "Add a pin: label, north, east, length", "10000", int, string, double, double, double) },
     {"remPin", PyWrap(Planet, remPin, "Remove a pin: ID", void, int) },
     {"fromLatLongPosition", PyWrapOpt(Planet, fromLatLongPosition, "Get Position on planet based on lat and long", "0", Vec3d, double, double, bool) },
