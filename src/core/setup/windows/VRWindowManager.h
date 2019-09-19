@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGRenderAction.h>
 #include "core/setup/VRSetupFwd.h"
+#include "core/utils/VRChangeList.h"
 
 namespace xmlpp{ class Element; }
 namespace Gtk{ class Window; }
@@ -17,6 +18,7 @@ class VRWindowManager {
         map<string, VRWindowPtr> windows;
         VRGtkWindowPtr editorWindow;
         RenderActionRefPtr ract;
+        VRChangeList changeListStats;
         bool rendering_paused = false;
 
         bool checkWin(string name);

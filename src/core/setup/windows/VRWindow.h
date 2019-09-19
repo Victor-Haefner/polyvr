@@ -7,6 +7,7 @@
 #include "core/setup/VRSetupFwd.h"
 #include "core/utils/VRDeviceFwd.h"
 #include "core/utils/VRName.h"
+#include "core/utils/VRChangeList.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -25,6 +26,7 @@ class VRWindow : public std::enable_shared_from_this<VRWindow>, public VRName {
         WindowMTRecPtr _win;
         RenderActionRefPtr ract;
         vector<VRViewWeakPtr> views;
+        VRChangeList changeListStats;
 
         VRMousePtr mouse = 0;
         VRMultiTouchPtr multitouch = 0;
