@@ -521,6 +521,7 @@ void VRMaterial::setMaterial(MaterialMTRecPtr m) {
             TextureObjChunkMTRecPtr tc = dynamic_pointer_cast<TextureObjChunk>(chunk);
             DepthChunkMTRecPtr dc = dynamic_pointer_cast<DepthChunk>(chunk);
             TwoSidedLightingChunkMTRecPtr tsc = dynamic_pointer_cast<TwoSidedLightingChunk>(chunk);
+            ShaderProgramChunkMTRecPtr sp = dynamic_pointer_cast<ShaderProgramChunk>(chunk);
 
             if (mc) { md->colChunk = mc; mc->setBackMaterial(false); md->mat->addChunk(mc,unit); continue; }
             if (bc) { md->blendChunk = bc; md->mat->addChunk(bc,unit); continue; }
@@ -528,6 +529,7 @@ void VRMaterial::setMaterial(MaterialMTRecPtr m) {
             if (tc) { md->texChunks[unit] = tc; md->mat->addChunk(tc,unit); continue; }
             if (dc) { md->depthChunk = dc; md->mat->addChunk(dc,unit); continue; }
             if (tsc) { md->twoSidedChunk = tsc; md->mat->addChunk(tsc,unit); continue; }
+            if (sp) { md->shaderChunk = sp; md->mat->addChunk(sp,unit); continue; }
 
             cout << "isCMat unhandled chunk: " << chunk->getClass()->getName() << endl;
         }
