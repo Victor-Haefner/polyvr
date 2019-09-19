@@ -2,6 +2,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRPrimitive.h"
 #include "core/objects/geometry/VRPhysics.h"
+#include "core/objects/geometry/VRGeoData.h"
 #include "core/math/boundingbox.h"
 #include "core/utils/VRGlobals.h"
 #include "core/utils/toString.h"
@@ -418,11 +419,6 @@ void MChain::addDir(char dir) { dirs.push_back(dir); }
 void MChain::updateGeo() {
     //cout << "update chain\n";
     // update chain geometry
-    GeoVec3fPropertyRecPtr pos = GeoVec3fProperty::create();
-    GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
-    GeoVec4fPropertyRecPtr cols = GeoVec4fProperty::create();
-    GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
-    GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
 
     // collect all polygon points
     //printNeighbors();
@@ -502,35 +498,20 @@ void MChain::updateGeo() {
         cout << endl;*/
     }
 
-    // draw polygon
-    j=0;
-    for (uint i=0; i<polygon.size(); i+=2) {
-        Vec3d p1 = polygon[i];
-        Vec3d p2 = polygon[i+1];
-        pos->addValue(p1);
-        pos->addValue(p2);
-        norms->addValue(Vec3d(0,1,0));
-        norms->addValue(Vec3d(0,1,0));
-        cols->addValue(Vec4d(0,1,0,1));
-        cols->addValue(Vec4d(1,1,0,1));
-        inds->addValue(j++);
-        inds->addValue(j++);
-    }
-    lengths->addValue(j);
-
-    VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(geo);
-    if (g) {
-        g->setPositions(pos);
-        g->setNormals(norms);
-        g->setColors(cols);
-        g->setIndices(inds);
-        g->setLengths(lengths);
-    }
+    if (polygon.size() < 2) return;
 
     Vec3d c;
     for (auto v : polygon) c += v;
     c *= (1.0/polygon.size());
     reference[3] = Vec4d(c[0], c[1], c[2], 1 );
+
+    VRGeoData data; // draw polygon
+    for (uint i=0; i<polygon.size()-1; i+=2) {
+        data.pushVert(polygon[i], Vec3d(0,1,0), Color4f(0,1,0,1));
+        data.pushVert(polygon[i+1], Vec3d(0,1,0), Color4f(1,1,0,1));
+        data.pushLine();
+    }
+    data.apply( dynamic_pointer_cast<VRGeometry>(geo) );
 }
 
 VRTransformPtr MChain::init() {
@@ -540,10 +521,7 @@ VRTransformPtr MChain::init() {
     cm->setLit(false);
     cm->setLineWidth(3);
     VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(geo);
-    if (g) {
-        g->setMaterial(cm);
-        g->setType(GL_LINES);
-    }
+    g->setMaterial(cm);
     return geo;
 }
 
