@@ -6,13 +6,11 @@
 
 template<typename T>
 void OSG::VRMaterial::setShaderParameter(string name, const T &value) {
-    //shaderChunk->updateUniformVariable(name.c_str(), value);
-    //shaderChunk->subUniformVariable(name.c_str());
-    //shaderChunk->addUniformVariable(name.c_str(), value);
-    auto p = getShaderProgram();
-    if (!p) cout << "Warning! setShaderParameter failed for parameter " << name << endl;
-    if (p) p->subUniformVariable(name.c_str());
-    if (p) p->addUniformVariable(name.c_str(), value);
+    ShaderProgramMTRecPtr p = getShaderProgram();
+    if (!p) { cout << "Warning! setShaderParameter failed for parameter " << name << endl; return; }
+    T t;
+    if (p->getUniformVariable(name.c_str(), t)) p->updateUniformVariable(name.c_str(), value);
+    else p->addUniformVariable(name.c_str(), value);
 }
 
 #endif // VRMATERIALT_H_INCLUDED
