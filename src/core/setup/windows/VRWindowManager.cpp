@@ -21,6 +21,7 @@
 
 #include <OpenSG/OSGGLUT.h>
 #include <OpenSG/OSGGLUTWindow.h>
+#include <OpenSG/OSGChangeList.h>
 
 #include "VRView.h"
 #include "VRGlutWindow.h"

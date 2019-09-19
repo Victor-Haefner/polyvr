@@ -1175,6 +1175,8 @@
 		<Unit filename="src/core/utils/VRCallbackWrapper.cpp" />
 		<Unit filename="src/core/utils/VRCallbackWrapper.h" />
 		<Unit filename="src/core/utils/VRCallbackWrapperT.h" />
+		<Unit filename="src/core/utils/VRChangeList.cpp" />
+		<Unit filename="src/core/utils/VRChangeList.h" />
 		<Unit filename="src/core/utils/VRDeviceFwd.h" />
 		<Unit filename="src/core/utils/VRDoublebuffer.cpp" />
 		<Unit filename="src/core/utils/VRDoublebuffer.h" />
