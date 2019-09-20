@@ -89,7 +89,7 @@ void VRNetworkNode::initSlaves() {
             s->start();
         }
     }
-    //if (hasAutostart) sleep(10);
+    if (hasAutostart) sleep(10);
 }
 
 void VRNetwork::stopSlaves() {

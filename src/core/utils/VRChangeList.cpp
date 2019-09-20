@@ -15,7 +15,7 @@ int VRChangeList::getDestroyed() { return 0; }
 int VRChangeList::getCreated() { return 0; }
 int VRChangeList::getChanged() { return 0; }
 
-size_t VRChangeList::getTotalEntities() { return totalEntites; }
+size_t VRChangeList::getTotalEntities() { return totalEntites[0]; }
 
 bool doOutput = true;
 void VRChangeList::stopOutput() { doOutput = false; }
@@ -57,11 +57,19 @@ void VRChangeList::update() {
         if (desc == ContainerChangeEntry::SubField) NsubField++;
     }
 
-    totalEntites += Ncreate;
+    totalEntites[0] += Ncreate;
+    totalEntites[1] += NaddRef;
+    totalEntites[2] += NsubRef;
+    totalEntites[3] += NdepSubRef;
+    totalEntites[4] += Nchange;
+    totalEntites[5] += NaddField;
+    totalEntites[6] += NsubField;
 
     //cout << "VRChangeList::update " << Vec3i(Ncreate, NaddRef, NsubRef) << "   " << Vec4i(NdepSubRef, Nchange, NaddField, NsubField) << endl;
-    if (!doOutput) return;
-    if (Ncreate > 0) cout << VRGlobals::CURRENT_FRAME << " VRChangeList::update " << name << ": " << Ncreate << "  / " << totalEntites << endl;
+    if (!doOutput || Ncreate == 0) return;
+    cout << VRGlobals::CURRENT_FRAME << " VRChangeList::update " << name << ": ";
+    for (auto e : totalEntites) cout << e << " ";
+    cout << endl;
 }
 
 

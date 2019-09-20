@@ -11,7 +11,7 @@ OSG_BEGIN_NAMESPACE;
 class VRChangeList {
     private:
         string name;
-        size_t totalEntites = 0;
+        vector<size_t> totalEntites = vector<size_t>(7,0);
 
     public:
         VRChangeList(string name);

@@ -92,35 +92,21 @@ void VRMultiWindow::initialize() {
     cout << " done " << getStateString() << endl;
 }
 
-void OSG_render(WindowMTRecPtr _win, RenderActionRefPtr ract) {
+void OSG_sync(WindowMTRecPtr _win, RenderActionRefPtr ract) {
     auto win = dynamic_pointer_cast<MultiDisplayWindow>(_win);
-
     win->activate();
     win->frameInit();
+    //win->renderAllViewports(ract);
+    //win->doSwap();
+    //win->frameExit();
+}
+
+void OSG_render(WindowMTRecPtr _win, RenderActionRefPtr ract) {
+    auto win = dynamic_pointer_cast<MultiDisplayWindow>(_win);
+    //win->activate();
+    //win->frameInit();
     win->renderAllViewports(ract);
-    if (win->getNetwork()->getMainConnection() && win->getNetwork()->getAspect()) {
-        Connection* connection = win->getNetwork()->getMainConnection();
-        GroupConnection* cgroup = win->getNetwork()->getMainGroupConnection(); // ok! :D
-        GroupMCastConnection* cmgroup = dynamic_cast<GroupMCastConnection*>(cgroup); // 0
-        GroupSockConnection* csgroup = dynamic_cast<GroupSockConnection*>(cgroup); // ok! :D
-
-        if(!win->getInterleave()) {
-            ChangeList* tCL = Thread::getCurrentChangeList();
-            //auto _pContainerChanges = win->getContainerChanges();
-            //ChangeList* pCL = _pContainerChanges->pList;
-
-            //cout << "A  " << pCL << " " << tCL << endl;
-            cgroup->wait(); // wait for all servers to finish
-            //cout << " B " << (pCL == tCL) << endl;
-
-            connection->signal(); // initiate swap
-        }
-
-        if (win->getClientWindow()) {
-            win->getClientWindow()->swap();
-            win->getClientWindow()->frameExit();
-        }
-    }
+    win->swap();
     win->frameExit();
 }
 
@@ -131,7 +117,7 @@ keep this in mind when trying to optimize regarding to system state like the fla
 
 */
 
-void VRMultiWindow::render(bool fromThread) {
+void VRMultiWindow::sync(bool fromThread) {
     if (state == JUSTCONNECTED) {
         int pID = VRProfiler::get()->regStart("Multiwindow init "+getName());
         Thread::getCurrentChangeList()->clear();
@@ -141,11 +127,20 @@ void VRMultiWindow::render(bool fromThread) {
     }
 
     if (state == CONNECTED) {
-        //try { OSG_render(_win, ract); }
+        try {
+            int pID = VRProfiler::get()->regStart("Multiwindow sync "+getName());
+            OSG_sync(_win, ract);
+            VRProfiler::get()->regStop(pID);
+        } catch(exception& e) { reset(); }
+    }
+}
+
+void VRMultiWindow::render(bool fromThread) {
+    if (state == CONNECTED) {
         try {
             int pID = VRProfiler::get()->regStart("Multiwindow render "+getName());
             state = RENDERING;
-            _win->render(ract);
+            OSG_render(_win, ract);
             state = CONNECTED;
             VRProfiler::get()->regStop(pID);
         } catch(exception& e) { reset(); }

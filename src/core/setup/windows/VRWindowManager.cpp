@@ -223,9 +223,6 @@ void VRWindowManager::updateWindows() {
         return true;
     };
 
-    //TODO:
-    // [0423/180710:WARNING:message_in_transit_queue.cc(18)] Destroying nonempty message queue
-
     auto tryRender = [&]() {
         if (barrier->getNumWaiting() != VRWindow::active_window_count) return true;
         if (!wait()) return false;
@@ -237,18 +234,14 @@ void VRWindowManager::updateWindows() {
         auto clist = Thread::getCurrentChangeList();
         VRGlobals::NCHANGED = clist->getNumChanged();
         VRGlobals::NCREATED = clist->getNumCreated();
-        changeListStats.update();
-        //if (Ncreated > 50) doRenderSync = true; // to reduce memory issues with big scenes
-
+        //changeListStats.update();
         if (!wait()) return false;
         /** let the windows merge the change lists **/
         if (!wait()) return false;
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
         clist->clear();
-        //if (doRenderSync) if (!wait(60)) return false;
-        //doRenderSync = false;
+        if (!wait()) return false;
         return true;
-        //sleep(1);
     };
 
     updateSceneLinks();

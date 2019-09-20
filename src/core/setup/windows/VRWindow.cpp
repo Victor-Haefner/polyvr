@@ -55,6 +55,7 @@ void VRWindow::setAction(RenderActionRefPtr ract) { this->ract = ract; }
 bool VRWindow::hasType(int i) { return (i == type); }
 Vec2i VRWindow::getSize() { return Vec2i(width, height); }
 void VRWindow::render(bool fromThread) { if(_win) _win->render(ract); }
+void VRWindow::sync(bool fromThread) { ; }
 void VRWindow::clear(Color3f c) { ; }
 
 void VRWindow::resize(int w, int h) {
@@ -73,6 +74,10 @@ vector<VRViewPtr> VRWindow::getViews() {
     for (auto v : views) if (auto r = v.lock()) res.push_back(r);
     return res;
 }
+
+// ----------------- clustering pitfalls
+// clist->clear() will crash when an object is instantiated in main thread (VRGeometry::setMesh -> OSG::Window::registerGLObject)
+// will also crash in OSG::RemoteAspect::sendSync
 
 void VRWindow::update( weak_ptr<VRThread>  wt) {
     auto t = wt.lock();
@@ -99,14 +104,11 @@ void VRWindow::update( weak_ptr<VRThread>  wt) {
             /** let the window manager initiate multi windows if necessary **/
             if (wait()) break;
             clist->merge(*appCL);
-            //if (clist->getNumCreated() > 0) cout << "VRWindow::update " << name << " " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
             if (wait()) break;
-            changeListStats.update();
+            //changeListStats.update();
+            sync(true);
+            if (wait()) break;
             render(true);
-            /*if (VRWindowManager::doRenderSync) {
-                clist->clear();
-                if (wait()) break;
-            }*/
         }
 
         osgSleep(1);

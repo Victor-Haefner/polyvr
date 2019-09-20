@@ -20,6 +20,7 @@ class VRMultiWindow : public VRWindow {
         int tries = 0;
 
         void render(bool fromThread = false);
+        void sync(bool fromThread = false);
 
     public:
         VRMultiWindow();
