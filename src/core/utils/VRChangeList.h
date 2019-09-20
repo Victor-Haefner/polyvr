@@ -1,6 +1,7 @@
 #ifndef VRCHANGELIST_H_INCLUDED
 #define VRCHANGELIST_H_INCLUDED
 
+#include <vector>
 #include <OpenSG/OSGConfig.h>
 
 using namespace std;
