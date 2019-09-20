@@ -62,7 +62,7 @@ int VRMultiWindow::getNYTiles() { return Ny; }
 bool VRMultiWindow::init_win(const std::string &msg, const std::string &server, Real32 progress) {
     cout << endl << msg << " to " << server << " : " << progress;
     if (progress == 1) { state = JUSTCONNECTED; return true; }
-    if (tries == 3) { state = NO_CONNECTION; return false; }
+    if (tries == 3) { state = NO_CONNECTION; changeListStats.stopOutput(); return false; }
     tries++;
     return true;
 }

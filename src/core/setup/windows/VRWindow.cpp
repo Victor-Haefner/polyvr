@@ -17,7 +17,7 @@ template<> string typeName(const VRWindow& o) { return "Window"; }
 
 unsigned int VRWindow::active_window_count = 0;
 
-VRWindow::VRWindow() {
+VRWindow::VRWindow() : changeListStats("remote") {
     active_window_count++;
     string n = getName();
     winThread = VRThreadCb::create("VRWindow", boost::bind(&VRWindow::update, this, _1) );
@@ -101,11 +101,12 @@ void VRWindow::update( weak_ptr<VRThread>  wt) {
             clist->merge(*appCL);
             //if (clist->getNumCreated() > 0) cout << "VRWindow::update " << name << " " << clist->getNumCreated() << " " << clist->getNumChanged() << endl;
             if (wait()) break;
+            changeListStats.update();
             render(true);
-            if (VRWindowManager::doRenderSync) {
+            /*if (VRWindowManager::doRenderSync) {
                 clist->clear();
                 if (wait()) break;
-            }
+            }*/
         }
 
         osgSleep(1);

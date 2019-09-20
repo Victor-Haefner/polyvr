@@ -37,7 +37,7 @@ VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRWindowManager::VRWindowManager() {
+VRWindowManager::VRWindowManager() : changeListStats("manager"){
     cout << "Init VRWindowManager\n";
     ract = RenderAction::create();
 }
@@ -235,22 +235,18 @@ void VRWindowManager::updateWindows() {
         commitChanges();
 
         auto clist = Thread::getCurrentChangeList();
-        auto Ncreated = clist->getNumCreated();
         VRGlobals::NCHANGED = clist->getNumChanged();
-        VRGlobals::NCREATED = Ncreated;
-        if (Ncreated > 50) doRenderSync = true; // to reduce memory issues with big scenes
+        VRGlobals::NCREATED = clist->getNumCreated();
+        changeListStats.update();
+        //if (Ncreated > 50) doRenderSync = true; // to reduce memory issues with big scenes
 
         if (!wait()) return false;
         /** let the windows merge the change lists **/
         if (!wait()) return false;
-        if (Ncreated > 0) {
-            cout << "VRWindowManager::updateWindows, created: " << Ncreated << ", changed: " << VRGlobals::NCHANGED << endl;
-            changeListStats.update();
-        }
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
         clist->clear();
-        if (doRenderSync) if (!wait(60)) return false;
-        doRenderSync = false;
+        //if (doRenderSync) if (!wait(60)) return false;
+        //doRenderSync = false;
         return true;
         //sleep(1);
     };

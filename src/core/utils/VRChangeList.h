@@ -1,6 +1,7 @@
 #ifndef VRCHANGELIST_H_INCLUDED
 #define VRCHANGELIST_H_INCLUDED
 
+#include <string>
 #include <vector>
 #include <OpenSG/OSGConfig.h>
 
@@ -9,10 +10,11 @@ OSG_BEGIN_NAMESPACE;
 
 class VRChangeList {
     private:
+        string name;
         size_t totalEntites = 0;
 
     public:
-        VRChangeList();
+        VRChangeList(string name);
         ~VRChangeList();
 
         int getDestroyed();
@@ -22,6 +24,7 @@ class VRChangeList {
         size_t getTotalEntities();
 
         void update();
+        void stopOutput();
 };
 
 OSG_END_NAMESPACE;

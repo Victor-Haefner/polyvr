@@ -1,4 +1,5 @@
 #include "VRChangeList.h"
+#include "core/utils/VRGlobals.h"
 
 #include <OpenSG/OSGThread.h>
 #include <OpenSG/OSGChangeList.h>
@@ -7,7 +8,7 @@
 using namespace OSG;
 
 
-VRChangeList::VRChangeList() {}
+VRChangeList::VRChangeList(string n) : name(n) {}
 VRChangeList::~VRChangeList() {}
 
 int VRChangeList::getDestroyed() { return 0; }
@@ -16,11 +17,13 @@ int VRChangeList::getChanged() { return 0; }
 
 size_t VRChangeList::getTotalEntities() { return totalEntites; }
 
+bool doOutput = true;
+void VRChangeList::stopOutput() { doOutput = false; }
+
 void VRChangeList::update() {
     ChangeList* clist = Thread::getCurrentChangeList();
     //UInt32 Ncreated = clist->getNumCreated();
     //UInt32 Nchanged = clist->getNumChanged();
-
 
     UInt32 Ncreate = 0;
     UInt32 NaddRef = 0;
@@ -54,5 +57,19 @@ void VRChangeList::update() {
         if (desc == ContainerChangeEntry::SubField) NsubField++;
     }
 
-    cout << "VRChangeList::update " << Vec3i(Ncreate, NaddRef, NsubRef) << "   " << Vec4i(NdepSubRef, Nchange, NaddField, NsubField) << endl;
+    totalEntites += Ncreate;
+
+    //cout << "VRChangeList::update " << Vec3i(Ncreate, NaddRef, NsubRef) << "   " << Vec4i(NdepSubRef, Nchange, NaddField, NsubField) << endl;
+    if (!doOutput) return;
+    if (Ncreate > 0) cout << VRGlobals::CURRENT_FRAME << " VRChangeList::update " << name << ": " << Ncreate << "  / " << totalEntites << endl;
 }
+
+
+
+
+
+
+
+
+
+
