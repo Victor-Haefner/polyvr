@@ -226,8 +226,6 @@ void VRWindowManager::updateWindows() {
     auto tryRender = [&]() {
         if (barrier->getNumWaiting() != VRWindow::active_window_count) return true;
         if (!wait()) return false;
-        /** let the windows clear their change lists **/
-        if (!wait()) return false;
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRMultiWindow>(w.second)) if (win->getState() == VRMultiWindow::INITIALIZING) win->initialize();
         commitChanges();
 
@@ -236,11 +234,10 @@ void VRWindowManager::updateWindows() {
         VRGlobals::NCREATED = clist->getNumCreated();
         //changeListStats.update();
         if (!wait()) return false;
-        /** let the windows merge the change lists **/
+        /** let the windows merge the change lists, sync and clear **/
         if (!wait()) return false;
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
         clist->clear();
-        if (!wait()) return false;
         return true;
     };
 
