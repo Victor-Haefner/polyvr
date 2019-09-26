@@ -179,7 +179,38 @@ void VRArrow::toStream(stringstream& ss) { ss << height << " " << width << " " <
 void VRScrewThread::toStream(stringstream& ss) { ss << length << " " << radius << " " << pitch << " " << Nsegments; }
 void VRGear::toStream(stringstream& ss) { ss << width << " " << hole << " " << pitch << " " << teeth_number << " " << teeth_size << " " << bevel; }
 
-GeometryMTRecPtr VRPlane::make() { return makePlaneGeo(width, height, Nx, Ny); }
+GeometryMTRecPtr VRPlane::make() {
+    //return makePlaneGeo(width, height, Nx, Ny);
+    VRGeoData data;
+
+    Pnt3d o = -Pnt3d(width, height, 0)*0.5;
+    Vec3d s = Vec3d(width/Nx, height/Ny, 1);
+
+    map<Vec2i, int> pIDs;
+    map<Vec2i, int> nIDs;
+    map<Vec2i, int> tIDs;
+
+    for (int i=0; i<=Nx; i++) {
+        for (int j=0; j<=Ny; j++) {
+            pIDs[Vec2i(i,j)] = data.pushPos( o + Vec3d(s[0]*i,s[1]*j,0) );
+            nIDs[Vec2i(i,j)] = data.pushNorm(Vec3d(0,0,-1));
+            tIDs[Vec2i(i,j)] = data.pushTexCoord(Vec2d(float(i)/Nx,float(j)/Ny));
+        }
+    }
+
+    auto pushQuad = [&](Vec2i I1, Vec2i I2, Vec2i I3, Vec2i I4) {
+        data.pushQuad( pIDs[I1], pIDs[I2], pIDs[I3], pIDs[I4] );
+    };
+
+    for (int i=0; i<Nx; i++) {
+        for (int j=0; j<Ny; j++) {
+            pushQuad(Vec2i(i,j), Vec2i(i,j+1), Vec2i(i+1,j+1), Vec2i(i+1,j));
+        }
+    }
+
+    auto geo = data.asGeometry("Plane");
+    return geo->getMesh()->geo;
+}
 
 GeometryMTRecPtr VRBox::make() {
     //return makeBoxGeo(width, height, depth, Nx, Ny, Nz);
