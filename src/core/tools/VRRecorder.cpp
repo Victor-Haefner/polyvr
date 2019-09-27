@@ -293,7 +293,7 @@ weak_ptr<VRFunction<bool> > VRRecorder::getToggleCallback() { return toggleCallb
 map<string, int> VRRecorder::codecs = {
     make_pair("MPEG1VIDEO",AV_CODEC_ID_MPEG1VIDEO),
     make_pair("MPEG2VIDEO",AV_CODEC_ID_MPEG2VIDEO), ///< preferred ID for MPEG-1/2 video decoding
-    make_pair("MPEG2VIDEO_XVMC",AV_CODEC_ID_MPEG2VIDEO_XVMC),
+    //make_pair("MPEG2VIDEO_XVMC",AV_CODEC_ID_MPEG2VIDEO_XVMC),
     make_pair("H261",AV_CODEC_ID_H261),
     make_pair("H263",AV_CODEC_ID_H263),
     make_pair("RV10",AV_CODEC_ID_RV10),
