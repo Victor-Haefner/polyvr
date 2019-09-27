@@ -42,7 +42,7 @@ class VRTextureRenderer : public VRObject {
 
         void setup(VRCameraPtr cam, int width, int height, bool alpha = false);
         void setMaterialSubstitutes(map<VRMaterial*, VRMaterialPtr> substitutes, CHANNEL c);
-        void setBackground(Color3f c);
+        void setBackground(Color3f c, float a = 0);
         void updateBackground();
 
         void setActive(bool b);

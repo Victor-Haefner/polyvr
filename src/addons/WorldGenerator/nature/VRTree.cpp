@@ -595,6 +595,7 @@ vector<VRMaterialPtr> VRTree::createLODtextures(int& Hmax, VRGeoData& data) {
         VRMaterialPtr tm = VRMaterial::create("lod");
         if (!loadSprite(path, tm)) {
             auto tr = VRTextureRenderer::create("treeLODtexR");
+            tr->setBackground(Color3f(0,0,0), 0);
             tr->setMaterialSubstitutes(matSubsDiff, VRTextureRenderer::DIFFUSE);
             tr->setMaterialSubstitutes(matSubsNorm, VRTextureRenderer::NORMAL);
             tm = tr->createTextureLod(t, p, 512, W/H, fov, Color3f(0,0.5,0));

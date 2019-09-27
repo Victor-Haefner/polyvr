@@ -176,13 +176,15 @@ void VRTextureRenderer::updateSceneBackground() {
     }
 }
 
-void VRTextureRenderer::setBackground(Color3f c) {
-    SolidBackgroundMTRecPtr bg = SolidBackground::create();
-    bg->setAlpha(0);
+void VRTextureRenderer::setBackground(Color3f c, float a) {
+    SolidBackgroundRecPtr bg = SolidBackground::create();
+    bg->setAlpha(a);
     bg->setColor(c);
     mat->enableTransparency();
     data->stage->setBackground( bg );
-    //if (data->deferredStage) data->deferredStage->setBackground( bg );
+    if (data->deferredStage) data->deferredStage->setBackground( bg );
+    auto scene = VRScene::getCurrent();
+    if (auto sky = scene->getSky()) remLink(sky);
 }
 
 void VRTextureRenderer::updateBackground() {
@@ -210,7 +212,6 @@ void VRTextureRenderer::setup(VRCameraPtr c, int width, int height, bool alpha) 
     }
     data->stage->setCamera(cam->getCam()->cam);
     if (data->deferredStage) data->deferredStage->setDSCamera( cam->getCam() );
-    data->stage->setBackground( VRScene::getCurrent()->getBackground() );
 }
 
 VRMaterialPtr VRTextureRenderer::getMaterial() { return mat; }
@@ -282,16 +283,17 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
             for (auto link : getLinks()) data->deferredStageRoot->addLink(link);
             for (auto child : getChildren()) data->deferredStageRoot->addChild(child);
             clearLinks();
+            data->view->setBackground(data->deferredStage->getOSGStage()->getBackground());
         } else {
             data->win = PassiveWindow::create();
             data->view = Viewport::create();
             data->view->setRoot(getNode()->node);
+            data->view->setBackground(data->stage->getBackground());
         }
 
         data->win->addPort(data->view);
         data->view->setSize(0, 0, 1, 1);
         data->view->setCamera(cam->getCam()->cam);
-        data->view->setBackground(data->stage->getBackground());
     }
 
     if (c != RENDER) setChannelSubstitutes(c);
