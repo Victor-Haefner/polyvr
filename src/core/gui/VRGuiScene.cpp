@@ -542,6 +542,7 @@ void VRGuiScene::on_group_edited() {
     if(!trigger_cbs) return;
 
     VRGroupPtr obj = static_pointer_cast<VRGroup>( getSelected() );
+    if (!obj) return;
     string old_group = getComboboxText("combobox14");
     string new_group = getTextEntry("entry41");
 
@@ -562,6 +563,7 @@ void VRGuiScene::on_group_edited() {
 void VRGuiScene::on_change_from(Vec3d v) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    if (!obj) return;
     if (transformModeLocal) obj->setFrom(v);
     else obj->setWorldPosition(v);
     updateObjectForms();
@@ -570,6 +572,7 @@ void VRGuiScene::on_change_from(Vec3d v) {
 void VRGuiScene::on_change_at(Vec3d v) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    if (!obj) return;
     if (transformModeLocal) obj->setAt(v);
     else obj->setWorldAt(v);
     updateObjectForms();
@@ -578,6 +581,7 @@ void VRGuiScene::on_change_at(Vec3d v) {
 void VRGuiScene::on_change_dir(Vec3d v) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    if (!obj) return;
     if (transformModeLocal) obj->setDir(v);
     else obj->setWorldDir(v);
     updateObjectForms();
@@ -586,6 +590,7 @@ void VRGuiScene::on_change_dir(Vec3d v) {
 void VRGuiScene::on_change_up(Vec3d v) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    if (!obj) return;
     if (transformModeLocal) obj->setUp(v);
     else obj->setWorldUp(v);
     updateObjectForms();
@@ -594,6 +599,7 @@ void VRGuiScene::on_change_up(Vec3d v) {
 void VRGuiScene::on_scale_changed(Vec3d v) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    if (!obj) return;
     if (transformModeLocal) obj->setScale(v);
     //else obj->setWorldScale(v); TODO
     else obj->setScale(v);
@@ -603,6 +609,7 @@ void VRGuiScene::on_scale_changed(Vec3d v) {
 void VRGuiScene::on_change_lod_center(Vec3d v) {
     if(!trigger_cbs) return;
     VRLodPtr obj = static_pointer_cast<VRLod>( getSelected() );
+    if (!obj) return;
     obj->setCenter(v);
     updateObjectForms();
 }
@@ -610,6 +617,7 @@ void VRGuiScene::on_change_lod_center(Vec3d v) {
 void VRGuiScene::on_focus_clicked() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    if (!obj) return;
     auto scene = VRScene::getCurrent();
     if (scene) scene->getActiveCamera()->focusObject( obj );
 }
@@ -617,6 +625,7 @@ void VRGuiScene::on_focus_clicked() {
 void VRGuiScene::on_identity_clicked() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
+    if (!obj) return;
     obj->setIdentity();
     updateObjectForms();
 }
