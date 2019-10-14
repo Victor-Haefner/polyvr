@@ -210,5 +210,6 @@ VRObjectPtr VRSceneLoader::importScene(string path, string encryptionKey) {
     auto rootNode = VRObject::create("sceneProxy");
     rootNode->load(root);
     scene->importScene(sceneN);
+    scene->getRoot()->addChild(rootNode);
     return rootNode;
 }
