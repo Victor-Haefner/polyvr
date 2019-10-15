@@ -172,8 +172,10 @@ void VRPlanet::rebuild() {
         lod->addDistance(d);
     };
 
-    origin = VRTransform::create("origin");
-    addChild(origin);
+    if (!origin) {
+        origin = VRTransform::create("origin");
+        addChild(origin);
+    }
     origin->addChild(lod);
     anchor = VRObject::create("lod0");
     lod->addChild( anchor );
@@ -196,8 +198,13 @@ void VRPlanet::setParameters( double r, string t, bool l, double s ) {
     setupMaterial(t, l);
 } // TODO: rebuild breaks the pins
 
+void VRPlanet::setLayermode( string mode ) {
+    if (mode == "full") layermode = 0;
+    if (mode == "minimum") layermode = 1;
+}
+
 VRWorldGeneratorPtr VRPlanet::addSector( double north, double east ) {
-    auto generator = VRWorldGenerator::create();
+    auto generator = VRWorldGenerator::create(layermode);
     auto sid = toSID(north, east);
     sectors[sid] = generator;
     anchor->addChild(generator);
@@ -235,7 +242,7 @@ int VRPlanet::addPin( string label, double north, double east, double length ) {
     Vec3d n = fromLatLongNormal(north, east);
     Vec3d p = fromLatLongPosition(north, east);
     static int ID = -1; ID++;//metaGeo->getNewID(); // TODO
-    metaGeo->setVector(ID, Vec3d(p), Vec3d(n)*length, Color3f(1,1,0.5), label);
+    metaGeo->setVector(ID, Vec3d(p), Vec3d(n)*length, Color3f(1,1,0.5), label, true);
     return ID;
 }
 

@@ -13,6 +13,7 @@ class VRPlanet : public VRTransform {
         static string surfaceFP;
 
         double sectorSize = 0.1; // in spherical coordinates
+        int layermode = 0;
 
         double radius = 6371000; // earth radius
         map<Vec2i, VRWorldGeneratorPtr> sectors;
@@ -37,6 +38,7 @@ class VRPlanet : public VRTransform {
         double toDeg(double rad);
 
         void setParameters( double radius, string texture, bool isLit, double sectorSize = 0.1 );
+        void setLayermode( string mode );
         VRWorldGeneratorPtr addSector( double north, double east );
         VRWorldGeneratorPtr getSector( double north, double east );
         vector<VRWorldGeneratorPtr> getSectors();
