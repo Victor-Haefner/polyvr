@@ -39,6 +39,20 @@ VRWorldGeneratorPtr VRWorldGenerator::create() {
     return wg;
 }
 
+VRWorldGeneratorPtr VRWorldGenerator::create(int meta) {
+    if (meta == 0) {
+        auto wg = VRWorldGeneratorPtr( new VRWorldGenerator() );
+        wg->init();
+        return wg;
+    }
+    if ( meta == 1 ) {
+        auto wg = VRWorldGeneratorPtr( new VRWorldGenerator() );
+        wg->initMinimum();
+        return wg;
+    }
+    return 0;
+}
+
 VRWorldGeneratorPtr VRWorldGenerator::ptr() { return dynamic_pointer_cast<VRWorldGenerator>( shared_from_this() ); }
 
 VRSpatialCollisionManagerPtr VRWorldGenerator::getPhysicsSystem() { return collisionShape; }
@@ -151,6 +165,30 @@ void VRWorldGenerator::init() {
     district = VRDistrict::create();
     district->setWorld( ptr() );
     addChild(district);
+}
+
+void VRWorldGenerator::initMinimum() {
+    auto addMat = [&](string name, int texDim) {
+        auto mat = VRMaterial::create(name);
+        mat->setDefaultVertexShader();
+        string fp = mat->constructShaderFP(0, false, texDim);
+        string dfp = mat->constructShaderFP(0, true, texDim);
+
+        //mat->setVertexShader(vp, name+"VS");
+        mat->setFragmentShader(fp, name+"FS");
+        mat->setFragmentShader(dfp, name+"DFS", true);
+        addMaterial(name, mat);
+    };
+
+    addMat("phong", 0);
+    addMat("phongTex", 2);
+
+    terrain = VRTerrain::create();
+    terrain->setWorld( ptr() );
+    addChild(terrain);
+
+    assets = VRObjectManager::create();
+    addChild(assets);
 }
 
 Vec2d VRWorldGenerator::getPlanetCoords() { return coords; }

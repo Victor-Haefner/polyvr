@@ -41,12 +41,14 @@ class VRWorldGenerator : public VRTransform {
 
         void processOSMMap(double subN = -1, double subE = -1, double subSize = -1);
         void init();
+        void initMinimum();
 
     public:
         VRWorldGenerator();
         ~VRWorldGenerator();
 
         static VRWorldGeneratorPtr create();
+        static VRWorldGeneratorPtr create(int meta);
         VRWorldGeneratorPtr ptr();
 
         void setOntology(VROntologyPtr ontology);
