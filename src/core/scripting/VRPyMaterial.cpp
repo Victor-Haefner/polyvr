@@ -45,7 +45,7 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setActivePass", PyWrap( Material, setActivePass, "Set active pass", void, int ) },
     {"remPass", PyWrap( Material, remPass, "Remove a pass", void, int ) },
     {"getNPasses", PyWrap( Material, getNPasses, "Get number of passes", int ) },
-    {"setFrontBackModes", (PyCFunction)VRPyMaterial::setFrontBackModes, METH_VARARGS, "Set the draw mode of front and back faces - setFrontBackModes(front, back)\n\tmode can be: GL_NONE, GL_FILL, GL_BACK" },
+    {"setFrontBackModes", PyWrap(Material, setFrontBackModes, "Set the draw mode of front and back faces - setFrontBackModes(front, back)\n\tmode can be: GL_NONE, GL_FILL, GL_LINE, GL_BACK", void, int, int) },
     {"setZOffset", PyWrap(Material, setZOffset, "Set Z buffer offset and bias, set to 1/1 to push behind or -1/-1 to pull to front", void, float, float) },
     {"setSortKey", (PyCFunction)VRPyMaterial::setSortKey, METH_VARARGS, "Set the sort key, higher key means rendered later, for example 0 is rendered first, 1 second.." },
     {"setTexture", (PyCFunction)VRPyMaterial::setTexture, METH_VARARGS, "Set the texture - setTexture(str path, int pos = 0)"
@@ -84,19 +84,6 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"diff", PyWrap( Material, diff, "Returns a diff report with another material", string, VRMaterialPtr ) },
     {NULL}  /* Sentinel */
 };
-
-PyObject* VRPyMaterial::setFrontBackModes(VRPyMaterial* self, PyObject* args) {
-	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::enableTransparency, C obj is invalid"); return NULL; }
-	const char* s1 = "GL_FILL";
-	const char* s2 = "GL_FILL";
-    if (! PyArg_ParseTuple(args, "s|s", &s1, &s2)) return NULL;
-    //cout << "setFrontBackModes " << s1 << " " << s2 << endl;
-    int m1 = toGLConst(string(s1));
-    int m2 = toGLConst(string(s2));
-    //cout << "setFrontBackModes " << m1 << " " << m2 << endl;
-	self->objPtr->setFrontBackModes(m1, m2);
-	Py_RETURN_TRUE;
-}
 
 PyObject* VRPyMaterial::enableTransparency(VRPyMaterial* self) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::enableTransparency, C obj is invalid"); return NULL; }
