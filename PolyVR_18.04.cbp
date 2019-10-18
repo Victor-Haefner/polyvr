@@ -118,6 +118,7 @@
 			<Add directory="/usr/include/OPCUA" />
 		</Compiler>
 		<Linker>
+			<Add option="-lTKV3d" />
 			<Add option="-lTKernel" />
 			<Add option="-lTKMath" />
 			<Add option="-lTKBRep" />
